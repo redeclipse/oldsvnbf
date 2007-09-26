@@ -1599,7 +1599,11 @@ struct fpsserver : igameserver
 	int welcomepacket(ucharbuf &p, int n)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
+#ifdef BFRONTIER
+		int hasmap = smapname[0] ? (sents.length() ? 1 : 2) : 0;
+#else
 		int hasmap = (gamemode==1 && clients.length()>1) || (smapname[0] && (minremain>0 || (ci && ci->state.state==CS_SPECTATOR) || nonspectators(n)));
+#endif
 		putint(p, SV_INITS2C);
 		putint(p, n);
 		putint(p, PROTOCOL_VERSION);

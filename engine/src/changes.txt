@@ -9,6 +9,10 @@ Legend [
 ]
 
 = wip edition =
+mod: removed gui2d and forced all code to use 2d menus
+mod: don't remove top level menu unless connected
+mod: show menu unless loading a map or connecting to server
+mod: enabled connection-less state with basic hud and menus (for startup)
 mod: removed damageblend, cleaned up gethudcolour
 mod: screenshots now use mapname and timestamp
 mod: etz backups now made, all backups now use timestamp

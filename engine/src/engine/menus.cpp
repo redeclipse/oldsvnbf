@@ -28,8 +28,12 @@ vec menuinfrontofplayer()
 
 int cleargui(int n = 0)
 {
+#ifdef BFRONTIER
+	int m = guistack.length() - (curpeer!=NULL ? 0 : 1), clear = n > 0 ? min(m, n) : m;
+#else
 	int clear = guistack.length();
 	if(n>0) clear = min(clear, n);
+#endif
 	loopi(clear) delete[] guistack.pop();
 	if(!guistack.empty()) showgui(guistack.last());
 #ifdef BFRONTIER
@@ -297,9 +301,13 @@ void g3d_mainmenu()
 {
 	if(!guistack.empty()) 
 	{	
+#ifdef BFRONTIER
+		g3d_addgui(&mmcb, menupos, true);
+#else
 		extern int gui2d;
 		if(!gui2d && camera1->o.dist(menupos) > menuautoclose) cleargui();
 		else g3d_addgui(&mmcb, menupos, true);
+#endif
 	}
 }
 

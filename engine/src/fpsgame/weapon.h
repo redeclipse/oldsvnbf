@@ -389,6 +389,14 @@ struct weaponstate
 		return dist;
 	}
 
+#ifdef BFRONTIER
+	void wobeffect(vec &v, int qdam)
+	{
+		vec dir;
+		float dist = rocketdist(cl.player1, dir, v);
+		if (dist < RL_DAMRAD*5.f) cl.camerawobble = max(cl.camerawobble, int(qdam*(1-dist/RL_DISTSCALE/(RL_DAMRAD*5.f))));
+	}
+#endif
 	void explode(bool local, fpsent *owner, vec &v, dynent *notthis, int qdam, int gun)
 	{
 		particle_splash(0, 200, 300, v);
@@ -405,9 +413,7 @@ struct weaponstate
 			loopi(numdebris) spawnbouncer(debrisorigin, debrisvel, owner, BNC_DEBRIS);
 #ifdef BFRONTIER
         }
-
-		float scale = camera1->o.dist(v)/RL_DAMRAD;
-		if (scale < 10.f) cl.camerawobble = max(cl.camerawobble, int(100.f*((10.f-scale)/10.f)));
+        wobeffect(v, qdam);
 #endif
 		if(!local) return;
 		loopi(cl.numdynents())

@@ -453,7 +453,11 @@ void recomputecamera()
 #endif
 }
 
+#ifdef BFRONTIER
+void project(float fovy, float aspect, int farplane, bool flipx, bool flipy)
+#else
 void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false)
+#endif
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();

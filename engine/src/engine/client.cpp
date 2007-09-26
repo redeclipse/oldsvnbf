@@ -441,6 +441,7 @@ void clientkeepalive()
 		if(b->clienthost) enet_host_service(b->clienthost, NULL, 0);
 	}
 }
+void connected() { intret(curpeer!=NULL); } COMMAND(connected, "");
 #else
 void clientkeepalive() { if(clienthost) enet_host_service(clienthost, NULL, 0); }
 #endif

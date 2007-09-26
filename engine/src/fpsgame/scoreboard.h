@@ -415,10 +415,6 @@ struct scoreboard : g3d_callback
 	{
 		if(scoreson) 
 		{
-#ifdef BFRONTIER
-			extern int gui2d;
-			if (!gui2d) menupos = menuinfrontofplayer();
-#endif
 			g3d_addgui(this, menupos, true);
 		}
 	}

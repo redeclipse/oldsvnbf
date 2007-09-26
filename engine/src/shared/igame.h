@@ -39,7 +39,9 @@ struct iclientcom
     virtual void edittoggled(bool on) {}
     virtual void writeclientinfo(FILE *f) = 0;
     virtual void toserver(char *text) = 0;
+#ifndef BFRONTIER
     virtual void changemap(const char *name) = 0;
+#endif
     virtual int numchannels() { return 1; }
 #ifdef BFRONTIER
 	virtual bool ready() { return true; }
@@ -91,11 +93,11 @@ struct igameclient
 #ifndef BFRONTIER
     virtual char *gameident() = 0;
     virtual char *defaultmap() = 0;
-#endif
     virtual char *savedconfig() = 0;
     virtual char *defaultconfig() = 0;
     virtual char *autoexec() = 0;
     virtual char *savedservers() { return NULL; }
+#endif
 
     virtual icliententities *getents() = 0;
 #ifdef BFRONTIER
@@ -272,6 +274,7 @@ struct igameserver
     virtual char *getdefaultmaster() = 0;
     virtual void sendservmsg(const char *s) = 0;
 #ifdef BFRONTIER
+    virtual void changemap(const char *s, int mode = 0) { return; }
 	virtual int getmastertype() { return 0; }
     virtual char *gameident() = 0;
 	virtual char *gamepakdir() = 0;
