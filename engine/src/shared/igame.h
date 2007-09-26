@@ -207,31 +207,11 @@ struct igameclient
 		extern int hidehud;
 		extern bool menuactive();
 		return !(hidehud || player->state==CS_SPECTATOR) || menuactive();
-	};
-	virtual bool gamethirdperson() { extern int thirdperson; return thirdperson; } ;
-	
-	virtual bool gethudcolour(vec &colour)
-	{
-		extern physent *camera1;
-		int fogmat = getmatvec(camera1->o);
-		if (fogmat == MAT_WATER || fogmat == MAT_LAVA)
-		{
-			uchar col[3];
-			if(fogmat == MAT_WATER) getwatercolour(col);
-			else getlavacolour(col);
-	
-			float maxc = max(col[0], max(col[1], col[2]));
-			float blend[3];
-	
-			loopi(3) blend[i] = col[i] / min(32 + maxc*7/8, 255);
-	
-			colour = vec(blend[0], blend[1], blend[2]);
-	
-			return true;
-		}
-		return false;
 	}
 	
+	virtual bool gamethirdperson() { extern int thirdperson; return thirdperson; } ;
+	virtual bool gethudcolour(vec &colour) { return false; }
+
 	virtual void loadworld(const char *name) { return; };
 	virtual void saveworld(const char *name) { return; };
 

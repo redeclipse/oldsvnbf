@@ -300,7 +300,7 @@ extern client &addclient();
 
 #ifndef STANDALONE
 // main
-extern void updateframe(bool doframe = true, bool dorender = true);
+extern void updateframe(bool dorender = false);
 extern int grabmouse, perf, colorpos;
 extern int getmatvec(vec v);
 
@@ -327,7 +327,11 @@ extern bool menuactive();
 #define CARDTIME			5000	// title card duration
 #define CARDFADE			3000	// title card fade in/out
 
-extern int maxfps, hidehud, hidestats, hudblend;
+extern int fov, maxfps, hidehud, hidestats, hudblend;
+
+extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false);
+extern void transplayer();
+extern void drawcrosshair(int w, int h);
 
 extern void renderprimitive(bool on);
 extern void renderline(vec &fr, vec &to, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);

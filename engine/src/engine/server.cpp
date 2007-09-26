@@ -565,9 +565,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 
 	if(!serverhost) 
 	{
-#ifdef BFRONTIER
-		fatal("failed to create server host!");
-#else
+#ifndef BFRONTIER
 		sv->serverupdate(lastmillis, totalmillis);
 		sv->sendpackets();
 #endif
