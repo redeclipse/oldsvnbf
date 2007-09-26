@@ -1,12 +1,101 @@
 <?xml version="1.0"?>
 <!DOCTYPE CodeBlocks_layout_file>
 <CodeBlocks_layout_file>
+	<File name="..\..\data\brush.cfg" open="1" top="0">
+		<Cursor position="715" topLine="0"/>
+	</File>
+	<File name="..\..\data\fps\defaults.cfg" open="1" top="0">
+		<Cursor position="85" topLine="0"/>
+	</File>
+	<File name="..\..\data\fps\map.cfg" open="1" top="0">
+		<Cursor position="45" topLine="0"/>
+	</File>
+	<File name="..\..\data\menus.cfg" open="0" top="0">
+		<Cursor position="5486" topLine="162"/>
+	</File>
+	<File name="..\..\data\ssp\menus.cfg" open="0" top="0">
+		<Cursor position="71" topLine="0"/>
+	</File>
 	<File name="changes.txt" open="1" top="0">
-		<Cursor position="0" topLine="0"/>
+		<Cursor position="5216" topLine="88"/>
 	</File>
-	<File name="todo.txt" open="1" top="1">
-		<Cursor position="226" topLine="57"/>
+	<File name="engine\3dgui.cpp" open="0" top="0">
+		<Cursor position="20069" topLine="756"/>
 	</File>
+	<File name="engine\client.cpp" open="0" top="0">
+		<Cursor position="9607" topLine="421"/>
+	</File>
+	<File name="engine\command.cpp" open="1" top="0">
+		<Cursor position="15347" topLine="609"/>
+	</File>
+	<File name="engine\cubeloader.cpp" open="1" top="0">
+		<Cursor position="9502" topLine="334"/>
+	</File>
+	<File name="engine\engine.h" open="1" top="0">
+		<Cursor position="12328" topLine="339"/>
+	</File>
+	<File name="engine\main.cpp" open="1" top="0">
+		<Cursor position="14976" topLine="578"/>
+	</File>
+	<File name="engine\menus.cpp" open="0" top="0">
+		<Cursor position="6927" topLine="283"/>
+	</File>
+	<File name="engine\physics.cpp" open="0" top="0">
+		<Cursor position="362" topLine="0"/>
+	</File>
+	<File name="engine\rendergl.cpp" open="1" top="0">
+		<Cursor position="36192" topLine="1224"/>
+	</File>
+	<File name="engine\server.cpp" open="0" top="0">
+		<Cursor position="14296" topLine="8"/>
+	</File>
+	<File name="engine\serverbrowser.cpp" open="1" top="0">
+		<Cursor position="11069" topLine="456"/>
+	</File>
+	<File name="engine\world.cpp" open="1" top="1">
+		<Cursor position="20147" topLine="923"/>
+	</File>
+	<File name="fpsgame\bot.h" open="1" top="0">
+		<Cursor position="633" topLine="24"/>
+	</File>
+	<File name="fpsgame\client.h" open="1" top="0">
+		<Cursor position="9131" topLine="308"/>
+	</File>
+	<File name="fpsgame\fps.cpp" open="1" top="0">
+		<Cursor position="17928" topLine="618"/>
+	</File>
+	<File name="fpsgame\fpsserver.h" open="0" top="0">
+		<Cursor position="41887" topLine="1595"/>
+	</File>
+	<File name="fpsgame\scoreboard.h" open="0" top="0">
+		<Cursor position="13141" topLine="392"/>
+	</File>
+	<File name="fpsgame\weapon.h" open="1" top="0">
+		<Cursor position="9905" topLine="377"/>
+	</File>
+	<File name="krsgame\krs.cpp" open="1" top="0">
+		<Cursor position="3241" topLine="130"/>
+	</File>
+	<File name="krsgame\krsgame.h" open="0" top="0">
+		<Cursor position="1959" topLine="66"/>
+	</File>
+	<File name="shared\iengine.h" open="0" top="0">
+		<Cursor position="12314" topLine="307"/>
+	</File>
+	<File name="shared\igame.h" open="1" top="0">
+		<Cursor position="3618" topLine="90"/>
+	</File>
+	<File name="shared\tools.cpp" open="0" top="0">
+		<Cursor position="320" topLine="51"/>
+	</File>
+	<File name="sspgame\ssp.cpp" open="1" top="0">
+		<Cursor position="7211" topLine="168"/>
+	</File>
+	<File name="sspgame\sspgame.h" open="0" top="0">
+		<Cursor position="11563" topLine="513"/>
+	</File>
+	<Expand folder="/data/fps"/>
+	<Expand folder="/data"/>
 	<Expand folder="/engine/src"/>
 	<Expand folder="/engine"/>
 </CodeBlocks_layout_file>

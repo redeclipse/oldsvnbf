@@ -6,7 +6,6 @@
 		<Option title="bloodfrontier"/>
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
-		<Option active_target="1"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -170,61 +169,19 @@
 		<Compiler>
 			<Add option="-DBFRONTIER=32"/>
 		</Compiler>
-		<Unit filename="..\..\data\bfg\defaults.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\bfg\game.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\bfg\map.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\bfg\menus.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\bfg\sounds.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\bloodfrontier.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
 		<Unit filename="..\..\data\brush.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\default_map_models.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\default_map_settings.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
 		<Unit filename="..\..\data\defaults.cfg">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="data"/>
+		</Unit>
+		<Unit filename="..\..\data\engine.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
@@ -242,19 +199,7 @@
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\fps\game.cfg">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
 		<Unit filename="..\..\data\fps\map.cfg">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\fps\menus.cfg">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>
 			<Option link="0"/>
@@ -262,12 +207,6 @@
 		</Unit>
 		<Unit filename="..\..\data\fps\sounds.cfg">
 			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\game_fps.cfg">
-			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
@@ -309,18 +248,6 @@
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="..\..\data\menus.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\sounds.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\spark.png">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

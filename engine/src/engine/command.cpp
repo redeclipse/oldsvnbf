@@ -616,12 +616,14 @@ void exec(char *cfgfile)
 void writecfg()
 {
 #ifdef BFRONTIER
-	FILE *f = gameopen(cl->savedconfig(), "w");
+	FILE *f = gameopen("config.cfg", "w");
+	if(!f) return;
+	fprintf(f, "// automatically written on exit\n\n");
 #else
     FILE *f = openfile(cl->savedconfig(), "w");
-#endif
 	if(!f) return;
 	fprintf(f, "// automatically written on exit, DO NOT MODIFY\n// delete this file to have %s overwrite these settings\n// modify settings in game, or put settings in %s to override anything\n\n", cl->defaultconfig(), cl->autoexec());
+#endif
 	cc->writeclientinfo(f);
 	fprintf(f, "\n");
     writecrosshairs(f);
@@ -833,10 +835,6 @@ char *getdefaultmap() { return sv->defaultmap(); }
 void gamedefaultmap() { result(getdefaultmap()); }			COMMAND(gamedefaultmap, "");
 
 #ifndef STANDALONE
-void gamesavedconfig() { result(cl->savedconfig()); }		COMMAND(gamesavedconfig, "");
-void gamedefaultconfig() { result(cl->defaultconfig()); }	COMMAND(gamedefaultconfig, "");
-void gameautoexec() { result(cl->autoexec()); }				COMMAND(gameautoexec, "");
-void gamesavedservers() { result(cl->savedservers()); }		COMMAND(gamesavedservers, "");
 void maptitle() { result(getmaptitle()); }					COMMAND(maptitle, "");
 #endif
 

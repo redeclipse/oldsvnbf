@@ -143,11 +143,6 @@ struct krsclient : igameclient
 	ibotcom *getbot() { return &bc; }
     iclientcom *getcom() { return &cc; }
 
-	char *savedconfig() { return "config.cfg"; }
-	char *defaultconfig() { return "defaults.cfg"; }
-	char *autoexec() { return "autoexec.cfg"; }
-	char *savedservers() { return "servers.cfg"; }
-
 	bool gui3d() { return false; }
 
 	vec feetpos(physent *d)

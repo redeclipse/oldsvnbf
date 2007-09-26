@@ -1127,11 +1127,6 @@ struct fpsclient : igameclient
 	{
 	}
 
-	char *savedconfig() { return "config.cfg"; }
-	char *defaultconfig() { return "defaults.cfg"; }
-	char *autoexec() { return "autoexec.cfg"; }
-	char *savedservers() { return "servers.cfg"; }
-
 	bool gethudcolour(vec &colour)
 	{
 		if (lastmillis-maptime <= CARDTIME)

@@ -16,7 +16,6 @@ struct clientcom : iclientcom
 #ifdef BFRONTIER
 	IVARP(centerchat, 0, 1, 1);
 #endif
-
     clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false), player1(_cl.player1)
 	{
 		CCOMMAND(clientcom, say, "C", self->toserver(args[0]));
@@ -461,7 +460,22 @@ struct clientcom : iclientcom
 					return;
 				}
 				player1->clientnum = mycn;	  // we are now fully connected
+#ifdef BFRONTIER
+				switch (hasmap)
+				{
+					case 0:
+						changemap(cl.getclientmap()[0] ? cl.getclientmap() : sv->defaultmap());
+						break;
+					case 2:
+						senditemstoserver = true;
+						break;
+					case 1:
+					default:
+						break;
+				}
+#else
 				if(!hasmap && (cl.gamemode==1 || cl.getclientmap()[0])) changemap(cl.getclientmap()); // we are the first client on this server, set map
+#endif
 				break;
 			}
 
@@ -552,7 +566,9 @@ struct clientcom : iclientcom
 			case SV_ITEMLIST:
 			{
 				int n;
+#ifndef BFRONTIER
 				if(mapchanged) { senditemstoserver = false; cl.et.resetspawns(); }
+#endif
 				while((n = getint(p))!=-1)
 				{
 					if(mapchanged) cl.et.setspawn(n, true);

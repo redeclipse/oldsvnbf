@@ -561,6 +561,29 @@ void perfcheck()
 	}
 }
 
+void loadconfig(bool reload)
+{
+	if (reload)
+	{
+		writeservercfg();
+		writecfg();
+	}
+
+	persistidents = false;
+	
+	// engine and overridables
+	exec("data/engine.cfg");
+
+	// the rest is specific to game - makes things cleaner
+	gameexec("servers.cfg", true);
+	gameexec("defaults.cfg");
+
+	persistidents = true;
+
+	gameexec("config.cfg");
+	gameexec("autoexec.cfg");
+}
+
 int frames = 0;
 
 void updateframe(bool dorender)
@@ -648,6 +671,13 @@ void updateframe(bool dorender)
 
 			glLoadIdentity();
 			glOrtho(0, w*3, h*3, 0, -1, 1);
+
+			int abovegameplayhud = h*3*1650/1800-FONTH*3/2; // hack
+			int hoff = abovegameplayhud - (editmode ? FONTH*4 : 0);
+		
+			char *command = getcurcommand();
+			if (command) rendercommand(FONTH/2, hoff); else hoff += FONTH;
+			if (!hidehud) renderconsole(w, h);
 
 			defaultshader->set();
 			drawcrosshair(w, h);
@@ -870,31 +900,19 @@ int main(int argc, char **argv)
 #endif
 
 	log("cfg");
+#ifdef BFRONTIER
+	loadconfig(false);
+	cc->gameconnect(false);
+	sv->changemap(load ? load : sv->defaultmap(), 1);
+	if (initscript) execute(initscript);
+	if (!connpeer && !curpeer)
+	{
+		if (load) localconnect();
+		else showgui("main");
+	}
+#else
 	exec("data/keymap.cfg");
 	exec("data/stdedit.cfg");
-#ifdef BFRONTIER
-	// engine and overridables
-	exec("data/bloodfrontier.cfg");
-
-	exec("data/brush.cfg");
-	execfile("mybrushes.cfg");
-
-	// the rest is specific to game - makes things cleaner
-	gameexec("menus.cfg");
-	gameexec("sounds.cfg");
-
-	if(cl->savedservers()) gameexec(cl->savedservers(), true);
-
-	persistidents = true;
-
-	gameexec(cl->defaultconfig()); // then only fpsgame asks for regular ol' default
-	gameexec(cl->savedconfig());
-	gameexec(cl->autoexec());
-
-	persistidents = false;
-
-	gameexec("game.cfg");
-#else
 	exec("data/menus.cfg");
 	exec("data/sounds.cfg");
 	exec("data/brush.cfg");
@@ -913,13 +931,9 @@ int main(int argc, char **argv)
 	s_strcat(gamecfgname, cl->gameident());
 	s_strcat(gamecfgname, ".cfg");
 	exec(gamecfgname);
-#endif
+
 	persistidents = true;
 
-#ifdef BFRONTIER
-	if (initscript) execute(initscript);
-	if (!connpeer && !curpeer) showgui("main");
-#else
 	log("localconnect");
 	localconnect();
 	cc->gameconnect(false);
