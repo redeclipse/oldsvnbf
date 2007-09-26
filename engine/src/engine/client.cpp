@@ -285,6 +285,9 @@ void abortconnect()
 	if(curpeer) return;
 	enet_host_destroy(clienthost);
 	clienthost = NULL;
+#ifdef BFRONTIER
+	localconnect();
+#endif
 }
 
 void connects(char *servername)
@@ -431,8 +434,6 @@ void localservertoclient(int chan, uchar *buf, int len)	// processes any updates
 #ifdef BFRONTIER
 void clientkeepalive()
 {
-	extern ENetHost *serverhost;
-	if (serverhost) enet_host_service(serverhost, NULL, 0);
 	if (clienthost) enet_host_service(clienthost, NULL, 0);
 	loopv(bots)
 	{

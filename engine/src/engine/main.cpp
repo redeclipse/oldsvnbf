@@ -234,7 +234,7 @@ void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, 
 	if(!inbetweenframes) return;
 
 #ifdef BFRONTIER
-	updateframe(true, false);
+	updateframe(false);
 #else
 	clientkeepalive();	  // make sure our connection doesn't time out while loading maps etc.
 #endif
@@ -563,64 +563,105 @@ void perfcheck()
 
 int frames = 0;
 
-void updateframe(bool doframe, bool dorender)
+void updateframe(bool dorender)
 {
 	int millis = SDL_GetTicks() - clockrealbase;
 	
-	if (doframe)
-	{
-		if(clockfix) millis = int(millis*(double(clockerror)/1000000));
-		millis += clockvirtbase;
-		if(millis<totalmillis) millis = totalmillis;
+	if (clockfix) millis = int(millis*(double(clockerror)/1000000));
+	if ((millis += clockvirtbase) < totalmillis) millis = totalmillis;
+
+	if (dorender) limitfps(millis, totalmillis);
 	
-		limitfps(millis, totalmillis);
-	
-	}
 	int elapsed = millis-totalmillis;
 
-	if (paused || !doframe) curtime = 0;
+	if (paused) curtime = 0;
 	else curtime = (elapsed*gamespeed)/100;
 	
-	if (doframe)
+	if (dorender)
 	{
-		if (dorender)
-		{
-			if(lastmillis) cl->updateworld(worldpos, curtime, lastmillis);
-			menuprocess();
-		}
-		else clientkeepalive();
-	}
-	if (doframe)
-	{
-		lastmillis += curtime;
-		totalmillis = millis;
+		cl->updateworld(worldpos, curtime, lastmillis);
+		menuprocess();
 	}
 
-	if (dorender && doframe) checksleep(lastmillis);
+	lastmillis += curtime;
+	totalmillis = millis;
 
-	if (doframe)
+	serverslice(0);
+
+	if (dorender)
 	{
-		serverslice(0);
-		
 		if (frames) updatefpshistory(elapsed);
 		frames++;
 		
 		perfcheck();
 
-		if (dorender)
-		{
-			// miscellaneous general game effects
-			findorientation();
-			entity_particles();
-			updatevol();
-			checkmapsounds();
+		checksleep(lastmillis);
 		
-			inbetweenframes = false;
-			SDL_GL_SwapBuffers();
+		// miscellaneous general game effects
+		findorientation();
+		entity_particles();
+		updatevol();
+		checkmapsounds();
+	
+		inbetweenframes = false;
+		SDL_GL_SwapBuffers();
+
+		if (cc->ready())
+		{
 			if(frames>2) gl_drawframe(screen->w, screen->h);
-			inbetweenframes = true;
 		}
+		else
+		{
+			int w = screen->w, h = screen->h;
+			float fovy = (float)fov*h/w;
+			float aspect = w/(float)h;
+			project(fovy, aspect, hdr.worldsize*2);
+			transplayer();
+		
+			glEnable(GL_TEXTURE_2D);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			
+			xtravertsva = xtraverts = glde = 0;
+		
+			glClearColor(0.f, 0.f, 0.f, 1);
+			glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
+
+			glDisable(GL_FOG);
+			glDisable(GL_CULL_FACE);
+		
+			defaultshader->set();
+			g3d_render();
+		
+			glDisable(GL_DEPTH_TEST);
+		
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+		
+			gettextres(w, h);
+		
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			glOrtho(0, w, h, 0, -1, 1);
+			glColor3f(1, 1, 1);
+
+			glEnable(GL_BLEND);
+
+			glLoadIdentity();
+			glOrtho(0, w*3, h*3, 0, -1, 1);
+
+			defaultshader->set();
+			drawcrosshair(w, h);
+
+			glDisable(GL_BLEND);
+			glDisable(GL_TEXTURE_2D);
+			glEnable(GL_DEPTH_TEST);
+		
+			glEnable(GL_CULL_FACE);
+			glEnable(GL_FOG);
+		}
+		inbetweenframes = true;
 	}
+	else clientkeepalive();
 }
 #endif
 
@@ -875,16 +916,17 @@ int main(int argc, char **argv)
 #endif
 	persistidents = true;
 
+#ifdef BFRONTIER
+	if (initscript) execute(initscript);
+	if (!connpeer && !curpeer) showgui("main");
+#else
 	log("localconnect");
 	localconnect();
 	cc->gameconnect(false);
-#ifdef BFRONTIER
-	cc->changemap(load ? load : sv->defaultmap());
-#else
 	cc->changemap(load ? load : cl->defaultmap());
-#endif
 
 	if(initscript) execute(initscript);
+#endif
 
 	log("mainloop");
 
@@ -898,7 +940,7 @@ int main(int argc, char **argv)
 	for(;;)
 	{
 #ifdef BFRONTIER
-		updateframe(true, cc->ready());
+		updateframe(true);
 #else
 		static int frames = 0;
         int millis = SDL_GetTicks() - clockrealbase;
