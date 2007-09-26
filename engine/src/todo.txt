@@ -1,0 +1,148 @@
+= MOD =
+Modifications for the Engine.
+
+* motd from master server -> title screen?
+* all-in-one package for maps
+* moving sounds?
+* simple (2d/sprite) models?
+* camera paths?
+* textured materials?
+* water transitions?
+* adapt tables to server browser
+* fix titlecards
+* enable smaller gridsizes?
+* make more things game module controlled (loading screens, etc)
+* particle intelligence/physics (collision, fire, etc)?
+* command line completion in linux style?
+* make text shadow optional
+* more scripting hooks?
+* configurable hud (and toggles)
+	- clock
+	- player/item in crosshair
+	- awards/obituraries
+	- scores
+	- console
+	- ping time/graph?
+	- optimize, improve (new gfx, ideas)?
+* SDL_ttf support?
+* push/pop font for various areas of the hud
+* lightmap levels, editing/importing/adjustment/fading/switching?
+* extension for texture friction (bw compatible?)
+* internal autosave function?
+* dedicated server irc/www interface (bot or server?)
+* mod on server browser
+* modification and package manager module?
+* improve editmode (config editor?)
+* move extents, etc. engine side
+* entity extensions: hurt, wind, elevator/train/platform, trigger (explode), fog?
+* music/mp3 player?
+* game module ideas
+	- third person adventure (eg. Mario 64/DS)
+	- arcade shooter (eg. Parodius / ZeroWing)
+	- putt-putt golf (eg. Neverputt)
+	- side scroller beat 'em up (eg. Golden Axe, Streets of Rage)
+	- action bomber (eg. Bomberman)
+	- realtime strategy (eg. Starcraft) [that uses geometry editing stuff?]
+	- a sort of inverse tetris that uses tetris shaped editing selections to destroy cubes
+	- online collaborative environment (coopworld) [random: xrcd, dynamic db binary]
+	- extended/pro fps game -> sgs?
+	
+= FPS =
+Modifications for the First Person Shooter (FPS).
+
+* hud-based capturing feedback
+* slow zoom?
+* ejections (shells, etc)
+* screen rattle/move/blur/flash (when damaged)?
+* spectator: automatically follow powerup/killer/bases?
+* fix switching cameras available any time
+* auto map up/down load?
+* show direction to nearest enemy/base (ala UT)?
+* footstep sounds?
+* connect to server with password
+* hack into spawntime?
+* warmup on map start?
+* limit number of players on a team?
+* option to follow killer when fragged instead (behind and from the ground)?
+* bots need more communication with the server (esp. with fpssrv mod)
+* extended fps gameplay for bloodfrontier clients (ctf done server-side)?
+* more hud improvements?
+* headshot, etc? server side.
+
+= BFG =
+The Blood Frontier Game (BFG) based on FPS.
+
+* port content
+* head shots
+* S_SMGLOAD, S_REGEN, S_HEADSHOT
+* unlimited ammo on all but grenade, reload (sound, only when empty?)
+* fov lock 100-125
+* remove entities: armour, health, pickups, carrot, checkpoint
+* only two guns at same time
+* drop guns, etc
+* masterserver stuff, online accounts?
+* secondary fire modes (grenade: flash mines)
+* precaching
+
+= BOT =
+Bots for the First Person Shooter (FPS).
+
+* move primary logic engine side?
+* make bots communicate with the server the client is on
+* support special game modes (capture, arena, etc)
+* projectile evasion
+* mod to enable online bots by using a connected client?
+
+= SSP =
+Extra gameplay module Side Scrolling Platformer (SSP).
+
+* move entities fully to dynents
+* scriptify/separate more logic? (blockstyle, powerupstyle, healthstyle, etc)
+* other platformer types (adventure, etc)
+	- sonic: attack/spin/loops/rings
+	- dkc: attack/special/team/friends
+	- mario: switches/yoshi/cape
+	- kirby: powerup/jump/attack
+	- special levels (bonus [gauntlet/labyrinth], overworld [hall of doors], minecart mayhem (DKC, minecart model))?
+* enemy invulnerability time
+* camera axis rotation/more camera controls?
+* win (goal)/lose (time up) animations?
+* wall kicks/stompimg?
+* exploding barrels
+* train platforms, paths (switchable)
+* online/coop and edit (super smash bros, vs battle)?
+* pickup/throw enemies (projectile/bouncer)?
+
+Stuff that's (possibly) needed:
+
+* item models and sounds (powerups, etc)
+* bg music (gameplay, "reached goal", etc)
+
+= SMS =
+Extensions for the Blood Frontier Master Server.
+
+* get core functionality going
+
+= SGS =
+Extra gameplay module Sport Game Simulator (SGS).
+
+* fpsgame re-implementation (eg. use core fpsgame but override)?
+* game modes:
+	- capture the flag
+	- jailbreak
+	- king of the hill
+	- bot war
+	- ball game (eg. Deathball, Bombing Run, etc)
+	- grenade golf
+	- sword duel/jousts?
+	- races
+
+= KRS =
+Extra gameplay module Kart Racing Simulator (KRS).
+
+* gameplay dynamics
+* physics (brakes, nitro, jumping)
+* entities (items, turbopads, hazards, etc)
+* powerups
+* online multiplayer (racing and battle)
+* more karts!

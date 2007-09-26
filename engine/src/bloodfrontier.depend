@@ -1,0 +1,4240 @@
+# depslib dependency file v1.0
+1181543988 c:\games\sauercvs\tmp\mod\src\enet\callbacks.c
+	"enet/enet.h"
+
+1181543991 c:\games\sauercvs\tmp\mod\src\enet\include\enet\enet.h
+	<stdlib.h>
+	"enet/win32.h"
+	"enet/unix.h"
+	"enet/types.h"
+	"enet/protocol.h"
+	"enet/list.h"
+	"enet/callbacks.h"
+
+1181543991 c:\games\sauercvs\tmp\mod\src\enet\include\enet\win32.h
+	<stdlib.h>
+	<winsock2.h>
+
+1181543991 c:\games\sauercvs\tmp\mod\src\enet\include\enet\unix.h
+	<stdlib.h>
+	<sys/types.h>
+	<netinet/in.h>
+
+1181543991 c:\games\sauercvs\tmp\mod\src\enet\include\enet\types.h
+
+1181543991 c:\games\sauercvs\tmp\mod\src\enet\include\enet\protocol.h
+	"enet/types.h"
+
+1181543991 c:\games\sauercvs\tmp\mod\src\enet\include\enet\list.h
+	<stdlib.h>
+
+1181543991 c:\games\sauercvs\tmp\mod\src\enet\include\enet\callbacks.h
+	<stdlib.h>
+
+1181543989 c:\games\sauercvs\tmp\mod\src\enet\host.c
+	<string.h>
+	"enet/enet.h"
+
+1181543989 c:\games\sauercvs\tmp\mod\src\enet\list.c
+	"enet/list.h"
+
+1181543989 c:\games\sauercvs\tmp\mod\src\enet\packet.c
+	<string.h>
+	"enet/enet.h"
+
+1181543989 c:\games\sauercvs\tmp\mod\src\enet\peer.c
+	<string.h>
+	"enet/enet.h"
+
+1184311766 c:\games\sauercvs\tmp\mod\src\enet\protocol.c
+	<stdio.h>
+	<string.h>
+	"enet/utility.h"
+	"enet/time.h"
+	"enet/enet.h"
+
+1181543991 c:\games\sauercvs\tmp\mod\src\enet\include\enet\utility.h
+
+1181543991 c:\games\sauercvs\tmp\mod\src\enet\include\enet\time.h
+
+1181543989 c:\games\sauercvs\tmp\mod\src\enet\unix.c
+	<sys/types.h>
+	<sys/socket.h>
+	<sys/ioctl.h>
+	<sys/time.h>
+	<arpa/inet.h>
+	<netdb.h>
+	<unistd.h>
+	<string.h>
+	<errno.h>
+	<time.h>
+	"enet/enet.h"
+	<fcntl.h>
+	<sys/poll.h>
+
+1181543989 c:\games\sauercvs\tmp\mod\src\enet\win32.c
+	<time.h>
+	"enet/enet.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\3dgui.cpp
+	"pch.h"
+	"engine.h"
+
+1181543995 c:\games\sauercvs\tmp\mod\src\shared\pch.h
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<stdarg.h>
+	<limits.h>
+	<assert.h>
+	<new>
+	<new.h>
+	<time.h>
+	"windows.h"
+	<SDL.h>
+	<SDL_image.h>
+	<SDL_opengl.h>
+	"GL/glext.h"
+	<enet/enet.h>
+	<eh.h>
+	<dbghelp.h>
+	<zlib.h>
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl.h
+	"SDL_main.h"
+	"SDL_stdinc.h"
+	"SDL_audio.h"
+	"SDL_cdrom.h"
+	"SDL_cpuinfo.h"
+	"SDL_endian.h"
+	"SDL_error.h"
+	"SDL_events.h"
+	"SDL_loadso.h"
+	"SDL_mutex.h"
+	"SDL_rwops.h"
+	"SDL_thread.h"
+	"SDL_timer.h"
+	"SDL_video.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_main.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_stdinc.h
+	"SDL_config.h"
+	<sys/types.h>
+	<stdio.h>
+	<stdlib.h>
+	<stddef.h>
+	<stdarg.h>
+	<stdlib.h>
+	<malloc.h>
+	<stddef.h>
+	<stdarg.h>
+	<memory.h>
+	<string.h>
+	<strings.h>
+	<inttypes.h>
+	<stdint.h>
+	<ctype.h>
+	<iconv.h>
+	"begin_code.h"
+	<alloca.h>
+	<malloc.h>
+	<malloc.h>
+	<stdlib.h>
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_config.h
+	"SDL_platform.h"
+	"SDL_config_amiga.h"
+	"SDL_config_dreamcast.h"
+	"SDL_config_macos.h"
+	"SDL_config_macosx.h"
+	"SDL_config_win32.h"
+	"SDL_config_os2.h"
+	"SDL_config_minimal.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_platform.h
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_config_macosx.h
+	"SDL_platform.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_config_win32.h
+	"SDL_platform.h"
+
+1181543994 c:\games\sauercvs\tmp\mod\src\include\begin_code.h
+
+1181543994 c:\games\sauercvs\tmp\mod\src\include\close_code.h
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_audio.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_endian.h"
+	"SDL_mutex.h"
+	"SDL_thread.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_error.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_endian.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_mutex.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_thread.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_mutex.h"
+	"begin_code.h"
+	<process.h>
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_rwops.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_cdrom.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_cpuinfo.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_events.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_active.h"
+	"SDL_keyboard.h"
+	"SDL_mouse.h"
+	"SDL_joystick.h"
+	"SDL_quit.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_active.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_keyboard.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_keysym.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_keysym.h
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_mouse.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_video.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_video.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_joystick.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_quit.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_loadso.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_timer.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_version.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_image.h
+	"SDL.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_opengl.h
+	"SDL_config.h"
+	<windows.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<gl.h>
+	<glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<windows.h>
+	<stddef.h>
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\gl\glext.h
+	<windows.h>
+	<stddef.h>
+
+1181543994 c:\games\sauercvs\tmp\mod\src\include\zlib.h
+	"zconf.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\include\zconf.h
+	<windows.h>
+	<sys/types.h>
+	<unistd.h>
+	<unixio.h>
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\engine.h
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"world.h"
+	"octa.h"
+	"lightmap.h"
+	"spheretree.h"
+	"texture.h"
+	"model.h"
+
+1181543995 c:\games\sauercvs\tmp\mod\src\shared\cube.h
+	"tools.h"
+	"geom.h"
+	"ents.h"
+	"command.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\shared\tools.h
+	<crtdbg.h>
+
+1184948746 c:\games\sauercvs\tmp\mod\src\shared\geom.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\shared\ents.h
+
+1181661932 c:\games\sauercvs\tmp\mod\src\shared\command.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\shared\iengine.h
+	"mod.h"
+
+1185163463 c:\games\sauercvs\tmp\mod\src\engine\mod\mod.h
+
+1184948746 c:\games\sauercvs\tmp\mod\src\shared\igame.h
+	"modient.h"
+	"modigame.h"
+	"modiserv.h"
+
+1177674850 c:\games\sauercvs\tmp\mod\src\engine\mod\modient.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\engine\mod\modigame.h
+
+1182478739 c:\games\sauercvs\tmp\mod\src\engine\mod\modiserv.h
+
+1181543987 c:\games\sauercvs\tmp\mod\src\engine\world.h
+
+1181543985 c:\games\sauercvs\tmp\mod\src\engine\octa.h
+
+1181543985 c:\games\sauercvs\tmp\mod\src\engine\lightmap.h
+
+1181543986 c:\games\sauercvs\tmp\mod\src\engine\spheretree.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\texture.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\model.h
+
+1181543984 c:\games\sauercvs\tmp\mod\src\engine\client.cpp
+	"pch.h"
+	"engine.h"
+
+1181966007 c:\games\sauercvs\tmp\mod\src\engine\command.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\console.cpp
+	"pch.h"
+	"engine.h"
+	<dirent.h>
+	<X11/Xlib.h>
+	<SDL_syswm.h>
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_syswm.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_version.h"
+	"begin_code.h"
+	<X11/Xlib.h>
+	<X11/Xatom.h>
+	<microwin/nano-X.h>
+	<windows.h>
+	<sys/neutrino.h>
+	<Ph.h>
+	"close_code.h"
+
+1181543984 c:\games\sauercvs\tmp\mod\src\engine\crypto.cpp
+	"pch.h"
+	"engine.h"
+	"hash.h"
+
+1181543985 c:\games\sauercvs\tmp\mod\src\engine\hash.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\cubeloader.cpp
+	"pch.h"
+	"engine.h"
+
+1184063976 c:\games\sauercvs\tmp\mod\src\engine\grass.cpp
+	"pch.h"
+	"engine.h"
+
+1183626270 c:\games\sauercvs\tmp\mod\src\engine\lightmap.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\main.cpp
+	"pch.h"
+	"engine.h"
+	"joystick.h"
+
+1179566235 c:\games\sauercvs\tmp\mod\src\engine\mod\joystick.h
+	"SDL_events.h"
+	"SDL.h"
+
+1181543985 c:\games\sauercvs\tmp\mod\src\engine\material.cpp
+	"pch.h"
+	"engine.h"
+
+1184948745 c:\games\sauercvs\tmp\mod\src\engine\menus.cpp
+	"pch.h"
+	"engine.h"
+
+1185163463 c:\games\sauercvs\tmp\mod\src\engine\mod\modengine.cpp
+	"pch.h"
+	"engine.h"
+
+1185163463 c:\games\sauercvs\tmp\mod\src\engine\mod\modrender.cpp
+	"pch.h"
+	"engine.h"
+
+1181543985 c:\games\sauercvs\tmp\mod\src\engine\normal.cpp
+	"pch.h"
+	"engine.h"
+
+1181543985 c:\games\sauercvs\tmp\mod\src\engine\octa.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\octaedit.cpp
+	"pch.h"
+	"engine.h"
+
+1181543986 c:\games\sauercvs\tmp\mod\src\engine\octarender.cpp
+	"pch.h"
+	"engine.h"
+
+1183799473 c:\games\sauercvs\tmp\mod\src\engine\physics.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\rendergl.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\rendermodel.cpp
+	"pch.h"
+	"engine.h"
+	"tristrip.h"
+	"vertmodel.h"
+	"md2.h"
+	"md3.h"
+
+1181543987 c:\games\sauercvs\tmp\mod\src\engine\tristrip.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\vertmodel.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\md2.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\md3.h
+
+1184948745 c:\games\sauercvs\tmp\mod\src\engine\renderparticles.cpp
+	"pch.h"
+	"engine.h"
+	"modpart.h"
+
+1183021044 c:\games\sauercvs\tmp\mod\src\engine\mod\modpart.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\rendersky.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\rendertext.cpp
+	"pch.h"
+	"engine.h"
+	"modtext.h"
+
+1184948745 c:\games\sauercvs\tmp\mod\src\engine\mod\modtext.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\renderva.cpp
+	"pch.h"
+	"engine.h"
+
+1184948745 c:\games\sauercvs\tmp\mod\src\engine\server.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\serverbrowser.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_thread.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\shader.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\sound.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_mixer.h"
+	"fmod.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\include\sdl_mixer.h
+	"SDL_types.h"
+	"SDL_rwops.h"
+	"SDL_audio.h"
+	"SDL_byteorder.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\tmp\mod\src\include\sdl_types.h
+	"SDL_stdinc.h"
+
+1181543992 c:\games\sauercvs\tmp\mod\src\include\sdl_byteorder.h
+	"SDL_endian.h"
+
+1181543994 c:\games\sauercvs\tmp\mod\src\include\fmod.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\spheretree.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\texture.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\water.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\engine\world.cpp
+	"pch.h"
+	"engine.h"
+	"modworld.h"
+
+1181543991 c:\games\sauercvs\tmp\mod\src\engine\mod\modworld.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\engine\worldio.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\fpsgame\fps.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"game.h"
+	"fpsserver.h"
+	"weapon.h"
+	"monster.h"
+	"scoreboard.h"
+	"fpsrender.h"
+	"entities.h"
+	"client.h"
+	"capture.h"
+	"fpsmod.h"
+
+1184948746 c:\games\sauercvs\tmp\mod\src\fpsgame\game.h
+	"botent.h"
+
+1183799473 c:\games\sauercvs\tmp\mod\src\fpsgame\bot\botent.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\fpsgame\fpsserver.h
+	"capture.h"
+	"fpssrv.h"
+
+1185146555 c:\games\sauercvs\tmp\mod\src\fpsgame\capture.h
+
+1184063977 c:\games\sauercvs\tmp\mod\src\fpsgame\mod\fpssrv.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\fpsgame\weapon.h
+
+1183567069 c:\games\sauercvs\tmp\mod\src\fpsgame\monster.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\fpsgame\scoreboard.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\fpsgame\fpsrender.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\fpsgame\entities.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\fpsgame\client.h
+
+1181735060 c:\games\sauercvs\tmp\mod\src\fpsgame\mod\fpsmod.h
+	"fpsdef.h"
+	"fpsent.h"
+	"fpsext.h"
+	"botdef.h"
+	"fpsutl.h"
+
+1181742681 c:\games\sauercvs\tmp\mod\src\fpsgame\mod\fpsdef.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\fpsgame\mod\fpsent.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\fpsgame\mod\fpsext.h
+
+1180867410 c:\games\sauercvs\tmp\mod\src\fpsgame\bot\botdef.h
+	"botext.h"
+	"botutl.h"
+	"botemu.h"
+	"botmgr.h"
+	"botway.h"
+	"botai.h"
+
+1183799473 c:\games\sauercvs\tmp\mod\src\fpsgame\bot\botext.h
+
+1184063976 c:\games\sauercvs\tmp\mod\src\fpsgame\bot\botutl.h
+
+1184063976 c:\games\sauercvs\tmp\mod\src\fpsgame\bot\botemu.h
+
+1184063976 c:\games\sauercvs\tmp\mod\src\fpsgame\bot\botmgr.h
+
+1184311766 c:\games\sauercvs\tmp\mod\src\fpsgame\bot\botway.h
+
+1184311766 c:\games\sauercvs\tmp\mod\src\fpsgame\bot\botai.h
+
+1185184736 c:\games\sauercvs\tmp\mod\src\fpsgame\mod\fpsutl.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\krsgame\krs.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"krsgame.h"
+	"krsrender.h"
+	"krsents.h"
+
+1185163463 c:\games\sauercvs\tmp\mod\src\krsgame\krsgame.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\krsgame\krsrender.h
+
+1183021045 c:\games\sauercvs\tmp\mod\src\krsgame\krsents.h
+
+1181543995 c:\games\sauercvs\tmp\mod\src\shared\geom.cpp
+	"pch.h"
+	"tools.h"
+	"geom.h"
+
+1181543995 c:\games\sauercvs\tmp\mod\src\shared\pch.cpp
+	"pch.h"
+
+1185163463 c:\games\sauercvs\tmp\mod\src\shared\tools.cpp
+	"pch.h"
+	"tools.h"
+	<unistd.h>
+	<sys/stat.h>
+	<sys/types.h>
+
+1185163463 c:\games\sauercvs\tmp\mod\src\sspgame\ssp.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"sspgame.h"
+	"ssprender.h"
+	"sspents.h"
+	"sspprojs.h"
+	"sspweap.h"
+	"sspblock.h"
+	"sspenemy.h"
+
+1185163463 c:\games\sauercvs\tmp\mod\src\sspgame\sspgame.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\sspgame\ssprender.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\sspgame\sspents.h
+
+1185146555 c:\games\sauercvs\tmp\mod\src\sspgame\sspprojs.h
+
+1180288525 c:\games\sauercvs\tmp\mod\src\sspgame\sspweap.h
+
+1185163463 c:\games\sauercvs\tmp\mod\src\sspgame\sspblock.h
+
+1180768241 c:\games\sauercvs\tmp\mod\src\sspgame\sspenemy.h
+
+1181543988 c:\games\sauercvs\bloodfrontier\mod\src\enet\callbacks.c
+	"enet/enet.h"
+
+1181543991 c:\games\sauercvs\bloodfrontier\mod\src\enet\include\enet\enet.h
+	<stdlib.h>
+	"enet/win32.h"
+	"enet/unix.h"
+	"enet/types.h"
+	"enet/protocol.h"
+	"enet/list.h"
+	"enet/callbacks.h"
+
+1181543991 c:\games\sauercvs\bloodfrontier\mod\src\enet\include\enet\win32.h
+	<stdlib.h>
+	<winsock2.h>
+
+1181543991 c:\games\sauercvs\bloodfrontier\mod\src\enet\include\enet\unix.h
+	<stdlib.h>
+	<sys/types.h>
+	<netinet/in.h>
+
+1181543991 c:\games\sauercvs\bloodfrontier\mod\src\enet\include\enet\types.h
+
+1181543991 c:\games\sauercvs\bloodfrontier\mod\src\enet\include\enet\protocol.h
+	"enet/types.h"
+
+1181543991 c:\games\sauercvs\bloodfrontier\mod\src\enet\include\enet\list.h
+	<stdlib.h>
+
+1181543991 c:\games\sauercvs\bloodfrontier\mod\src\enet\include\enet\callbacks.h
+	<stdlib.h>
+
+1181543989 c:\games\sauercvs\bloodfrontier\mod\src\enet\host.c
+	<string.h>
+	"enet/enet.h"
+
+1181543989 c:\games\sauercvs\bloodfrontier\mod\src\enet\list.c
+	"enet/list.h"
+
+1181543989 c:\games\sauercvs\bloodfrontier\mod\src\enet\packet.c
+	<string.h>
+	"enet/enet.h"
+
+1181543989 c:\games\sauercvs\bloodfrontier\mod\src\enet\peer.c
+	<string.h>
+	"enet/enet.h"
+
+1184311766 c:\games\sauercvs\bloodfrontier\mod\src\enet\protocol.c
+	<stdio.h>
+	<string.h>
+	"enet/utility.h"
+	"enet/time.h"
+	"enet/enet.h"
+
+1181543991 c:\games\sauercvs\bloodfrontier\mod\src\enet\include\enet\utility.h
+
+1181543991 c:\games\sauercvs\bloodfrontier\mod\src\enet\include\enet\time.h
+
+1181543989 c:\games\sauercvs\bloodfrontier\mod\src\enet\unix.c
+	<sys/types.h>
+	<sys/socket.h>
+	<sys/ioctl.h>
+	<sys/time.h>
+	<arpa/inet.h>
+	<netdb.h>
+	<unistd.h>
+	<string.h>
+	<errno.h>
+	<time.h>
+	"enet/enet.h"
+	<fcntl.h>
+	<sys/poll.h>
+
+1181543989 c:\games\sauercvs\bloodfrontier\mod\src\enet\win32.c
+	<time.h>
+	"enet/enet.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\3dgui.cpp
+	"pch.h"
+	"engine.h"
+
+1181543995 c:\games\sauercvs\bloodfrontier\mod\src\shared\pch.h
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<stdarg.h>
+	<limits.h>
+	<assert.h>
+	<new>
+	<new.h>
+	<time.h>
+	"windows.h"
+	<SDL.h>
+	<SDL_image.h>
+	<SDL_opengl.h>
+	"GL/glext.h"
+	<enet/enet.h>
+	<eh.h>
+	<dbghelp.h>
+	<zlib.h>
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl.h
+	"SDL_main.h"
+	"SDL_stdinc.h"
+	"SDL_audio.h"
+	"SDL_cdrom.h"
+	"SDL_cpuinfo.h"
+	"SDL_endian.h"
+	"SDL_error.h"
+	"SDL_events.h"
+	"SDL_loadso.h"
+	"SDL_mutex.h"
+	"SDL_rwops.h"
+	"SDL_thread.h"
+	"SDL_timer.h"
+	"SDL_video.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_main.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_stdinc.h
+	"SDL_config.h"
+	<sys/types.h>
+	<stdio.h>
+	<stdlib.h>
+	<stddef.h>
+	<stdarg.h>
+	<stdlib.h>
+	<malloc.h>
+	<stddef.h>
+	<stdarg.h>
+	<memory.h>
+	<string.h>
+	<strings.h>
+	<inttypes.h>
+	<stdint.h>
+	<ctype.h>
+	<iconv.h>
+	"begin_code.h"
+	<alloca.h>
+	<malloc.h>
+	<malloc.h>
+	<stdlib.h>
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_config.h
+	"SDL_platform.h"
+	"SDL_config_amiga.h"
+	"SDL_config_dreamcast.h"
+	"SDL_config_macos.h"
+	"SDL_config_macosx.h"
+	"SDL_config_win32.h"
+	"SDL_config_os2.h"
+	"SDL_config_minimal.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_platform.h
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_config_macosx.h
+	"SDL_platform.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_config_win32.h
+	"SDL_platform.h"
+
+1181543994 c:\games\sauercvs\bloodfrontier\mod\src\include\begin_code.h
+
+1181543994 c:\games\sauercvs\bloodfrontier\mod\src\include\close_code.h
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_audio.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_endian.h"
+	"SDL_mutex.h"
+	"SDL_thread.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_error.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_endian.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_mutex.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_thread.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_mutex.h"
+	"begin_code.h"
+	<process.h>
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_rwops.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_cdrom.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_cpuinfo.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_events.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_active.h"
+	"SDL_keyboard.h"
+	"SDL_mouse.h"
+	"SDL_joystick.h"
+	"SDL_quit.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_active.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_keyboard.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_keysym.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_keysym.h
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_mouse.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_video.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_video.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_joystick.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_quit.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_loadso.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_timer.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_version.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_image.h
+	"SDL.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_opengl.h
+	"SDL_config.h"
+	<windows.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<gl.h>
+	<glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<windows.h>
+	<stddef.h>
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\gl\glext.h
+	<windows.h>
+	<stddef.h>
+
+1181543994 c:\games\sauercvs\bloodfrontier\mod\src\include\zlib.h
+	"zconf.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\include\zconf.h
+	<windows.h>
+	<sys/types.h>
+	<unistd.h>
+	<unixio.h>
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\engine.h
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"world.h"
+	"octa.h"
+	"lightmap.h"
+	"spheretree.h"
+	"texture.h"
+	"model.h"
+
+1181543995 c:\games\sauercvs\bloodfrontier\mod\src\shared\cube.h
+	"tools.h"
+	"geom.h"
+	"ents.h"
+	"command.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\shared\tools.h
+	<crtdbg.h>
+
+1184948746 c:\games\sauercvs\bloodfrontier\mod\src\shared\geom.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\shared\ents.h
+
+1181661932 c:\games\sauercvs\bloodfrontier\mod\src\shared\command.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\shared\iengine.h
+	"mod.h"
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\engine\mod\mod.h
+
+1184948746 c:\games\sauercvs\bloodfrontier\mod\src\shared\igame.h
+	"modient.h"
+	"modigame.h"
+	"modiserv.h"
+
+1177674850 c:\games\sauercvs\bloodfrontier\mod\src\engine\mod\modient.h
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\engine\mod\modigame.h
+
+1182478739 c:\games\sauercvs\bloodfrontier\mod\src\engine\mod\modiserv.h
+
+1181543987 c:\games\sauercvs\bloodfrontier\mod\src\engine\world.h
+
+1181543985 c:\games\sauercvs\bloodfrontier\mod\src\engine\octa.h
+
+1181543985 c:\games\sauercvs\bloodfrontier\mod\src\engine\lightmap.h
+
+1181543986 c:\games\sauercvs\bloodfrontier\mod\src\engine\spheretree.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\texture.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\model.h
+
+1181543984 c:\games\sauercvs\bloodfrontier\mod\src\engine\client.cpp
+	"pch.h"
+	"engine.h"
+
+1181966007 c:\games\sauercvs\bloodfrontier\mod\src\engine\command.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\console.cpp
+	"pch.h"
+	"engine.h"
+	<dirent.h>
+	<X11/Xlib.h>
+	<SDL_syswm.h>
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_syswm.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_version.h"
+	"begin_code.h"
+	<X11/Xlib.h>
+	<X11/Xatom.h>
+	<microwin/nano-X.h>
+	<windows.h>
+	<sys/neutrino.h>
+	<Ph.h>
+	"close_code.h"
+
+1181543984 c:\games\sauercvs\bloodfrontier\mod\src\engine\crypto.cpp
+	"pch.h"
+	"engine.h"
+	"hash.h"
+
+1181543985 c:\games\sauercvs\bloodfrontier\mod\src\engine\hash.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\cubeloader.cpp
+	"pch.h"
+	"engine.h"
+
+1184063976 c:\games\sauercvs\bloodfrontier\mod\src\engine\grass.cpp
+	"pch.h"
+	"engine.h"
+
+1183626270 c:\games\sauercvs\bloodfrontier\mod\src\engine\lightmap.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\main.cpp
+	"pch.h"
+	"engine.h"
+	"joystick.h"
+
+1179566235 c:\games\sauercvs\bloodfrontier\mod\src\engine\mod\joystick.h
+	"SDL_events.h"
+	"SDL.h"
+
+1181543985 c:\games\sauercvs\bloodfrontier\mod\src\engine\material.cpp
+	"pch.h"
+	"engine.h"
+
+1184948745 c:\games\sauercvs\bloodfrontier\mod\src\engine\menus.cpp
+	"pch.h"
+	"engine.h"
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\engine\mod\modengine.cpp
+	"pch.h"
+	"engine.h"
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\engine\mod\modrender.cpp
+	"pch.h"
+	"engine.h"
+
+1181543985 c:\games\sauercvs\bloodfrontier\mod\src\engine\normal.cpp
+	"pch.h"
+	"engine.h"
+
+1181543985 c:\games\sauercvs\bloodfrontier\mod\src\engine\octa.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\octaedit.cpp
+	"pch.h"
+	"engine.h"
+
+1181543986 c:\games\sauercvs\bloodfrontier\mod\src\engine\octarender.cpp
+	"pch.h"
+	"engine.h"
+
+1183799473 c:\games\sauercvs\bloodfrontier\mod\src\engine\physics.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\rendergl.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\rendermodel.cpp
+	"pch.h"
+	"engine.h"
+	"tristrip.h"
+	"vertmodel.h"
+	"md2.h"
+	"md3.h"
+
+1181543987 c:\games\sauercvs\bloodfrontier\mod\src\engine\tristrip.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\vertmodel.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\md2.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\md3.h
+
+1184948745 c:\games\sauercvs\bloodfrontier\mod\src\engine\renderparticles.cpp
+	"pch.h"
+	"engine.h"
+	"modpart.h"
+
+1183021044 c:\games\sauercvs\bloodfrontier\mod\src\engine\mod\modpart.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\rendersky.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\rendertext.cpp
+	"pch.h"
+	"engine.h"
+	"modtext.h"
+
+1184948745 c:\games\sauercvs\bloodfrontier\mod\src\engine\mod\modtext.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\renderva.cpp
+	"pch.h"
+	"engine.h"
+
+1184948745 c:\games\sauercvs\bloodfrontier\mod\src\engine\server.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\serverbrowser.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_thread.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\shader.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\sound.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_mixer.h"
+	"fmod.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_mixer.h
+	"SDL_types.h"
+	"SDL_rwops.h"
+	"SDL_audio.h"
+	"SDL_byteorder.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1181543993 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_types.h
+	"SDL_stdinc.h"
+
+1181543992 c:\games\sauercvs\bloodfrontier\mod\src\include\sdl_byteorder.h
+	"SDL_endian.h"
+
+1181543994 c:\games\sauercvs\bloodfrontier\mod\src\include\fmod.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\spheretree.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\texture.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\water.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\engine\world.cpp
+	"pch.h"
+	"engine.h"
+	"modworld.h"
+
+1181543991 c:\games\sauercvs\bloodfrontier\mod\src\engine\mod\modworld.h
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\engine\worldio.cpp
+	"pch.h"
+	"engine.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\fps.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"game.h"
+	"fpsserver.h"
+	"weapon.h"
+	"monster.h"
+	"scoreboard.h"
+	"fpsrender.h"
+	"entities.h"
+	"client.h"
+	"capture.h"
+	"fpsmod.h"
+
+1184948746 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\game.h
+	"botent.h"
+
+1183799473 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\bot\botent.h
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\fpsserver.h
+	"capture.h"
+	"fpssrv.h"
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\capture.h
+
+1184063977 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\mod\fpssrv.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\weapon.h
+
+1183567069 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\monster.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\scoreboard.h
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\fpsrender.h
+
+1185146555 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\entities.h
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\client.h
+
+1181735060 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\mod\fpsmod.h
+	"fpsdef.h"
+	"fpsent.h"
+	"fpsext.h"
+	"botdef.h"
+	"fpsutl.h"
+
+1181742681 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\mod\fpsdef.h
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\mod\fpsent.h
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\mod\fpsext.h
+
+1180867410 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\bot\botdef.h
+	"botext.h"
+	"botutl.h"
+	"botemu.h"
+	"botmgr.h"
+	"botway.h"
+	"botai.h"
+
+1183799473 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\bot\botext.h
+
+1184063976 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\bot\botutl.h
+
+1184063976 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\bot\botemu.h
+
+1184063976 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\bot\botmgr.h
+
+1184311766 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\bot\botway.h
+
+1184311766 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\bot\botai.h
+
+1185184736 c:\games\sauercvs\bloodfrontier\mod\src\fpsgame\mod\fpsutl.h
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\krsgame\krs.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"krsgame.h"
+	"krsrender.h"
+	"krsents.h"
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\krsgame\krsgame.h
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\krsgame\krsrender.h
+
+1183021045 c:\games\sauercvs\bloodfrontier\mod\src\krsgame\krsents.h
+
+1181543995 c:\games\sauercvs\bloodfrontier\mod\src\shared\geom.cpp
+	"pch.h"
+	"tools.h"
+	"geom.h"
+
+1181543995 c:\games\sauercvs\bloodfrontier\mod\src\shared\pch.cpp
+	"pch.h"
+
+1185163463 c:\games\sauercvs\bloodfrontier\mod\src\shared\tools.cpp
+	"pch.h"
+	"tools.h"
+	<unistd.h>
+	<sys/stat.h>
+	<sys/types.h>
+
+1182137397 c:\games\sauercvs\bloodfrontier\mod\src\master\dbg.c
+	"def.h"
+
+1182137397 c:\games\sauercvs\bloodfrontier\mod\src\master\def.h
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<signal.h>
+	<unistd.h>
+	<ctype.h>
+	<errno.h>
+	<time.h>
+	<sys/types.h>
+	"dbg.h"
+	"cgi.h"
+	"utl.h"
+
+1182137397 c:\games\sauercvs\bloodfrontier\mod\src\master\dbg.h
+
+1182137397 c:\games\sauercvs\bloodfrontier\mod\src\master\cgi.h
+
+1182137397 c:\games\sauercvs\bloodfrontier\mod\src\master\utl.h
+
+1182137397 c:\games\sauercvs\bloodfrontier\mod\src\master\ms.c
+	"def.h"
+
+1182137397 c:\games\sauercvs\bloodfrontier\mod\src\master\utl.c
+	"def.h"
+
+1183021045 c:\games\sauercvs\bloodfrontier\mod\src\master\cgi.c
+	"def.h"
+
+1180625179 c:\games\sauercvs\mod\src\enet\callbacks.c
+	"enet/enet.h"
+
+1188638886 c:\games\sauercvs\mod\src\enet\include\enet\enet.h
+	<stdlib.h>
+	"enet/win32.h"
+	"enet/unix.h"
+	"enet/types.h"
+	"enet/protocol.h"
+	"enet/list.h"
+	"enet/callbacks.h"
+
+1142240876 c:\games\sauercvs\mod\src\enet\include\enet\win32.h
+	<stdlib.h>
+	<winsock2.h>
+
+1141710974 c:\games\sauercvs\mod\src\enet\include\enet\unix.h
+	<stdlib.h>
+	<sys/types.h>
+	<netinet/in.h>
+
+1141710974 c:\games\sauercvs\mod\src\enet\include\enet\types.h
+
+1163413960 c:\games\sauercvs\mod\src\enet\include\enet\protocol.h
+	"enet/types.h"
+
+1141710974 c:\games\sauercvs\mod\src\enet\include\enet\list.h
+	<stdlib.h>
+
+1141710974 c:\games\sauercvs\mod\src\enet\include\enet\callbacks.h
+	<stdlib.h>
+
+1152215511 c:\games\sauercvs\mod\src\enet\host.c
+	<string.h>
+	"enet/enet.h"
+
+1141710973 c:\games\sauercvs\mod\src\enet\list.c
+	"enet/list.h"
+
+1175076033 c:\games\sauercvs\mod\src\enet\packet.c
+	<string.h>
+	"enet/enet.h"
+
+1169199913 c:\games\sauercvs\mod\src\enet\peer.c
+	<string.h>
+	"enet/enet.h"
+
+1188638908 c:\games\sauercvs\mod\src\enet\protocol.c
+	<stdio.h>
+	<string.h>
+	"enet/utility.h"
+	"enet/time.h"
+	"enet/enet.h"
+
+1141710974 c:\games\sauercvs\mod\src\enet\include\enet\utility.h
+
+1141710974 c:\games\sauercvs\mod\src\enet\include\enet\time.h
+
+1180745970 c:\games\sauercvs\mod\src\enet\unix.c
+	<sys/types.h>
+	<sys/socket.h>
+	<sys/ioctl.h>
+	<sys/time.h>
+	<arpa/inet.h>
+	<netdb.h>
+	<unistd.h>
+	<string.h>
+	<errno.h>
+	<time.h>
+	"enet/enet.h"
+	<fcntl.h>
+	<sys/poll.h>
+
+1176651000 c:\games\sauercvs\mod\src\enet\win32.c
+	<time.h>
+	"enet/enet.h"
+
+1189496005 c:\games\sauercvs\mod\src\engine\3dgui.cpp
+	"pch.h"
+	"engine.h"
+
+1185501158 c:\games\sauercvs\mod\src\shared\pch.h
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<stdarg.h>
+	<limits.h>
+	<assert.h>
+	<new>
+	<new.h>
+	<time.h>
+	"windows.h"
+	<SDL.h>
+	<SDL_image.h>
+	<SDL_opengl.h>
+	"GL/glext.h"
+	<enet/enet.h>
+	<eh.h>
+	<dbghelp.h>
+	<zlib.h>
+
+1187156329 c:\games\sauercvs\mod\src\include\sdl.h
+	"SDL_main.h"
+	"SDL_stdinc.h"
+	"SDL_audio.h"
+	"SDL_cdrom.h"
+	"SDL_cpuinfo.h"
+	"SDL_endian.h"
+	"SDL_error.h"
+	"SDL_events.h"
+	"SDL_loadso.h"
+	"SDL_mutex.h"
+	"SDL_rwops.h"
+	"SDL_thread.h"
+	"SDL_timer.h"
+	"SDL_video.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156343 c:\games\sauercvs\mod\src\include\sdl_main.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156491 c:\games\sauercvs\mod\src\include\sdl_stdinc.h
+	"SDL_config.h"
+	<sys/types.h>
+	<stdio.h>
+	<stdlib.h>
+	<stddef.h>
+	<stdarg.h>
+	<stdlib.h>
+	<malloc.h>
+	<stddef.h>
+	<stdarg.h>
+	<memory.h>
+	<string.h>
+	<strings.h>
+	<inttypes.h>
+	<stdint.h>
+	<ctype.h>
+	<iconv.h>
+	"begin_code.h"
+	<alloca.h>
+	<malloc.h>
+	<malloc.h>
+	<stdlib.h>
+	"close_code.h"
+
+1187156335 c:\games\sauercvs\mod\src\include\sdl_config.h
+	"SDL_platform.h"
+	"SDL_config_dreamcast.h"
+	"SDL_config_macos.h"
+	"SDL_config_macosx.h"
+	"SDL_config_symbian.h"
+	"SDL_config_win32.h"
+	"SDL_config_os2.h"
+	"SDL_config_minimal.h"
+
+1187156466 c:\games\sauercvs\mod\src\include\sdl_platform.h
+
+1187156335 c:\games\sauercvs\mod\src\include\sdl_config_macosx.h
+	"SDL_platform.h"
+	<AvailabilityMacros.h>
+
+1187156335 c:\games\sauercvs\mod\src\include\sdl_config_win32.h
+	"SDL_platform.h"
+
+1187156579 c:\games\sauercvs\mod\src\include\begin_code.h
+
+1187156579 c:\games\sauercvs\mod\src\include\close_code.h
+
+1187156334 c:\games\sauercvs\mod\src\include\sdl_audio.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_endian.h"
+	"SDL_mutex.h"
+	"SDL_thread.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\games\sauercvs\mod\src\include\sdl_error.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\games\sauercvs\mod\src\include\sdl_endian.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156349 c:\games\sauercvs\mod\src\include\sdl_mutex.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156491 c:\games\sauercvs\mod\src\include\sdl_thread.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_mutex.h"
+	"begin_code.h"
+	<process.h>
+	"close_code.h"
+
+1187156469 c:\games\sauercvs\mod\src\include\sdl_rwops.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156335 c:\games\sauercvs\mod\src\include\sdl_cdrom.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\games\sauercvs\mod\src\include\sdl_cpuinfo.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\games\sauercvs\mod\src\include\sdl_events.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_active.h"
+	"SDL_keyboard.h"
+	"SDL_mouse.h"
+	"SDL_joystick.h"
+	"SDL_quit.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156329 c:\games\sauercvs\mod\src\include\sdl_active.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156342 c:\games\sauercvs\mod\src\include\sdl_keyboard.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_keysym.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156343 c:\games\sauercvs\mod\src\include\sdl_keysym.h
+
+1187156349 c:\games\sauercvs\mod\src\include\sdl_mouse.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_video.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156578 c:\games\sauercvs\mod\src\include\sdl_video.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\games\sauercvs\mod\src\include\sdl_joystick.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156467 c:\games\sauercvs\mod\src\include\sdl_quit.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+
+1187156343 c:\games\sauercvs\mod\src\include\sdl_loadso.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156518 c:\games\sauercvs\mod\src\include\sdl_timer.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156574 c:\games\sauercvs\mod\src\include\sdl_version.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\games\sauercvs\mod\src\include\sdl_image.h
+	"SDL.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156466 c:\games\sauercvs\mod\src\include\sdl_opengl.h
+	"SDL_config.h"
+	<windows.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<gl.h>
+	<glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<windows.h>
+	<stddef.h>
+
+1187156651 c:\games\sauercvs\mod\src\include\gl\glext.h
+	<windows.h>
+	<stddef.h>
+
+1187156604 c:\games\sauercvs\mod\src\include\zlib.h
+	"zconf.h"
+
+1188947115 c:\games\sauercvs\mod\src\include\zconf.h
+	<windows.h>
+	<sys/types.h>
+	<unistd.h>
+	<unixio.h>
+
+1189983598 c:\games\sauercvs\mod\src\engine\engine.h
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"world.h"
+	"octa.h"
+	"lightmap.h"
+	"bih.h"
+	"texture.h"
+	"model.h"
+
+1185501158 c:\games\sauercvs\mod\src\shared\cube.h
+	"tools.h"
+	"geom.h"
+	"ents.h"
+	"command.h"
+
+1189955155 c:\games\sauercvs\mod\src\shared\tools.h
+	<crtdbg.h>
+
+1189115127 c:\games\sauercvs\mod\src\shared\geom.h
+
+1188466874 c:\games\sauercvs\mod\src\shared\ents.h
+
+1189507031 c:\games\sauercvs\mod\src\shared\command.h
+
+1190156500 c:\games\sauercvs\mod\src\shared\iengine.h
+
+1188938215 c:\games\sauercvs\mod\src\engine\mod\mod.h
+
+1190606549 c:\games\sauercvs\mod\src\shared\igame.h
+
+1185501105 c:\games\sauercvs\mod\src\engine\mod\modient.h
+
+1188823565 c:\games\sauercvs\mod\src\engine\mod\modigame.h
+
+1186233614 c:\games\sauercvs\mod\src\engine\mod\modiserv.h
+
+1189695306 c:\games\sauercvs\mod\src\engine\world.h
+
+1187156165 c:\games\sauercvs\mod\src\engine\octa.h
+
+1187156158 c:\games\sauercvs\mod\src\engine\lightmap.h
+
+1187156158 c:\games\sauercvs\mod\src\engine\spheretree.h
+
+1189695295 c:\games\sauercvs\mod\src\engine\texture.h
+
+1189116899 c:\games\sauercvs\mod\src\engine\model.h
+
+1190158643 c:\games\sauercvs\mod\src\engine\client.cpp
+	"pch.h"
+	"engine.h"
+
+1189282670 c:\games\sauercvs\mod\src\engine\command.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1188941783 c:\games\sauercvs\mod\src\engine\console.cpp
+	"pch.h"
+	"engine.h"
+	<X11/Xlib.h>
+	<SDL_syswm.h>
+
+1187156491 c:\games\sauercvs\mod\src\include\sdl_syswm.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_version.h"
+	"begin_code.h"
+	<X11/Xlib.h>
+	<X11/Xatom.h>
+	<microwin/nano-X.h>
+	<windows.h>
+	<sys/neutrino.h>
+	<Ph.h>
+	"close_code.h"
+
+1186155291 c:\games\sauercvs\mod\src\engine\crypto.cpp
+	"pch.h"
+	"engine.h"
+	"hash.h"
+
+1186155292 c:\games\sauercvs\mod\src\engine\hash.h
+
+1189955494 c:\games\sauercvs\mod\src\engine\cubeloader.cpp
+	"pch.h"
+	"engine.h"
+
+1188942717 c:\games\sauercvs\mod\src\engine\grass.cpp
+	"pch.h"
+	"engine.h"
+
+1189124017 c:\games\sauercvs\mod\src\engine\lightmap.cpp
+	"pch.h"
+	"engine.h"
+
+1190595629 c:\games\sauercvs\mod\src\engine\main.cpp
+	"pch.h"
+	"engine.h"
+
+1187156166 c:\games\sauercvs\mod\src\engine\mod\joystick.h
+	"SDL_events.h"
+	"SDL.h"
+
+1190174318 c:\games\sauercvs\mod\src\engine\material.cpp
+	"pch.h"
+	"engine.h"
+
+1188942717 c:\games\sauercvs\mod\src\engine\menus.cpp
+	"pch.h"
+	"engine.h"
+
+1188810675 c:\games\sauercvs\mod\src\engine\mod\modengine.cpp
+	"pch.h"
+	"engine.h"
+
+1188467983 c:\games\sauercvs\mod\src\engine\mod\modrender.cpp
+	"pch.h"
+	"engine.h"
+
+1187156165 c:\games\sauercvs\mod\src\engine\normal.cpp
+	"pch.h"
+	"engine.h"
+
+1189282755 c:\games\sauercvs\mod\src\engine\octa.cpp
+	"pch.h"
+	"engine.h"
+
+1189123914 c:\games\sauercvs\mod\src\engine\octaedit.cpp
+	"pch.h"
+	"engine.h"
+
+1189955243 c:\games\sauercvs\mod\src\engine\octarender.cpp
+	"pch.h"
+	"engine.h"
+
+1190606418 c:\games\sauercvs\mod\src\engine\physics.cpp
+	"pch.h"
+	"engine.h"
+
+1189955285 c:\games\sauercvs\mod\src\engine\rendermodel.cpp
+	"pch.h"
+	"engine.h"
+	"tristrip.h"
+	"vertmodel.h"
+	"md2.h"
+	"md3.h"
+
+1187156158 c:\games\sauercvs\mod\src\engine\tristrip.h
+
+1190606418 c:\games\sauercvs\mod\src\engine\vertmodel.h
+
+1188467094 c:\games\sauercvs\mod\src\engine\md2.h
+
+1189332506 c:\games\sauercvs\mod\src\engine\md3.h
+
+1189695561 c:\games\sauercvs\mod\src\engine\renderparticles.cpp
+	"pch.h"
+	"engine.h"
+
+1187156166 c:\games\sauercvs\mod\src\engine\mod\modpart.h
+
+1189116512 c:\games\sauercvs\mod\src\engine\rendersky.cpp
+	"pch.h"
+	"engine.h"
+
+1189955298 c:\games\sauercvs\mod\src\engine\renderva.cpp
+	"pch.h"
+	"engine.h"
+
+1190143056 c:\games\sauercvs\mod\src\engine\server.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1189963459 c:\games\sauercvs\mod\src\engine\serverbrowser.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_thread.h"
+
+1190174249 c:\games\sauercvs\mod\src\engine\shader.cpp
+	"pch.h"
+	"engine.h"
+
+1188941005 c:\games\sauercvs\mod\src\engine\sound.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_mixer.h"
+	"fmod.h"
+
+1188947115 c:\games\sauercvs\mod\src\include\sdl_mixer.h
+	"SDL_types.h"
+	"SDL_rwops.h"
+	"SDL_audio.h"
+	"SDL_endian.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156574 c:\games\sauercvs\mod\src\include\sdl_types.h
+	"SDL_stdinc.h"
+
+1185501134 c:\games\sauercvs\mod\src\include\sdl_byteorder.h
+	"SDL_endian.h"
+
+1187156591 c:\games\sauercvs\mod\src\include\fmod.h
+
+1187156166 c:\games\sauercvs\mod\src\engine\spheretree.cpp
+	"pch.h"
+	"engine.h"
+
+1189329702 c:\games\sauercvs\mod\src\engine\world.cpp
+	"pch.h"
+	"engine.h"
+
+1187156159 c:\games\sauercvs\mod\src\engine\mod\modworld.h
+
+1188952305 c:\games\sauercvs\mod\src\engine\worldio.cpp
+	"pch.h"
+	"engine.h"
+
+1190606418 c:\games\sauercvs\mod\src\krsgame\krs.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"krsgame.h"
+	"krsrender.h"
+	"krsents.h"
+
+1190606051 c:\games\sauercvs\mod\src\krsgame\krsgame.h
+
+1190606921 c:\games\sauercvs\mod\src\krsgame\krsrender.h
+
+1185501145 c:\games\sauercvs\mod\src\krsgame\krsents.h
+
+1186155315 c:\games\sauercvs\mod\src\shared\geom.cpp
+	"pch.h"
+	"tools.h"
+	"geom.h"
+
+1185501158 c:\games\sauercvs\mod\src\shared\pch.cpp
+	"pch.h"
+
+1186977064 c:\games\sauercvs\mod\src\shared\tools.cpp
+	"pch.h"
+	"tools.h"
+	<unistd.h>
+	<sys/stat.h>
+	<sys/types.h>
+	<dirent.h>
+
+1190152715 c:\games\sauercvs\mod\src\sspgame\ssp.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"sspgame.h"
+	"ssprender.h"
+	"sspents.h"
+	"sspprojs.h"
+	"sspweap.h"
+	"sspblock.h"
+	"sspenemy.h"
+
+1190590514 c:\games\sauercvs\mod\src\sspgame\sspgame.h
+
+1190589905 c:\games\sauercvs\mod\src\sspgame\ssprender.h
+
+1190145550 c:\games\sauercvs\mod\src\sspgame\sspents.h
+
+1190590708 c:\games\sauercvs\mod\src\sspgame\sspprojs.h
+
+1190590554 c:\games\sauercvs\mod\src\sspgame\sspweap.h
+
+1189507296 c:\games\sauercvs\mod\src\sspgame\sspblock.h
+
+1189507259 c:\games\sauercvs\mod\src\sspgame\sspenemy.h
+
+1185501150 c:\games\sauercvs\mod\src\master\dbg.c
+	"def.h"
+
+1185501150 c:\games\sauercvs\mod\src\master\def.h
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<signal.h>
+	<unistd.h>
+	<ctype.h>
+	<errno.h>
+	<time.h>
+	<sys/types.h>
+	"dbg.h"
+	"cgi.h"
+	"utl.h"
+
+1185501150 c:\games\sauercvs\mod\src\master\dbg.h
+
+1185501150 c:\games\sauercvs\mod\src\master\cgi.h
+
+1185501150 c:\games\sauercvs\mod\src\master\utl.h
+
+1185501150 c:\games\sauercvs\mod\src\master\ms.c
+	"def.h"
+
+1185501150 c:\games\sauercvs\mod\src\master\utl.c
+	"def.h"
+
+1185501150 c:\games\sauercvs\mod\src\master\cgi.c
+	"def.h"
+
+1190174362 c:\games\sauercvs\mod\src\engine\rendergl.cpp
+	"pch.h"
+	"engine.h"
+
+1188941952 c:\games\sauercvs\mod\src\engine\rendertext.cpp
+	"pch.h"
+	"engine.h"
+
+1188811159 c:\games\sauercvs\mod\src\engine\mod\modtext.h
+
+1189695284 c:\games\sauercvs\mod\src\engine\texture.cpp
+	"pch.h"
+	"engine.h"
+
+1188940718 c:\games\sauercvs\mod\src\engine\water.cpp
+	"pch.h"
+	"engine.h"
+
+1190606635 c:\games\sauercvs\mod\src\fpsgame\fps.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"game.h"
+	"fpsserver.h"
+	"weapon.h"
+	"monster.h"
+	"scoreboard.h"
+	"fpsrender.h"
+	"entities.h"
+	"client.h"
+	"capture.h"
+	"bot.h"
+
+1190595542 c:\games\sauercvs\mod\src\fpsgame\game.h
+	"botent.h"
+
+1188823566 c:\games\sauercvs\mod\src\fpsgame\bot\botent.h
+
+1190595455 c:\games\sauercvs\mod\src\fpsgame\fpsserver.h
+	<io.h>
+	<unistd.h>
+	"capture.h"
+	"duel.h"
+
+1189330276 c:\games\sauercvs\mod\src\fpsgame\capture.h
+
+1188942717 c:\games\sauercvs\mod\src\fpsgame\mod\fpssrv.h
+	"fpsduel.h"
+
+1190591677 c:\games\sauercvs\mod\src\fpsgame\weapon.h
+
+1189984123 c:\games\sauercvs\mod\src\fpsgame\monster.h
+
+1189497144 c:\games\sauercvs\mod\src\fpsgame\scoreboard.h
+
+1189984123 c:\games\sauercvs\mod\src\fpsgame\fpsrender.h
+
+1190158780 c:\games\sauercvs\mod\src\fpsgame\entities.h
+
+1190158256 c:\games\sauercvs\mod\src\fpsgame\client.h
+
+1188904510 c:\games\sauercvs\mod\src\fpsgame\mod\fpsmod.h
+	"fpsdef.h"
+	"fpsent.h"
+	"fpsext.h"
+	"botdef.h"
+	"fpsutl.h"
+
+1188904497 c:\games\sauercvs\mod\src\fpsgame\mod\fpsdef.h
+
+1188942927 c:\games\sauercvs\mod\src\fpsgame\mod\fpsent.h
+
+1188943963 c:\games\sauercvs\mod\src\fpsgame\mod\fpsext.h
+
+1189330765 c:\games\sauercvs\mod\src\fpsgame\bot\botdef.h
+	"botutl.h"
+	"botmgr.h"
+	"botway.h"
+	"botai.h"
+
+1188823567 c:\games\sauercvs\mod\src\fpsgame\bot\botext.h
+
+1190158647 c:\games\sauercvs\mod\src\fpsgame\bot\botutl.h
+
+1189984719 c:\games\sauercvs\mod\src\fpsgame\bot\botmgr.h
+
+1189985311 c:\games\sauercvs\mod\src\fpsgame\bot\botway.h
+
+1189985247 c:\games\sauercvs\mod\src\fpsgame\bot\botai.h
+
+1188906249 c:\games\sauercvs\mod\src\fpsgame\mod\fpsutl.h
+
+1188811997 c:\games\sauercvs\mod\src\engine\mod\modcon.h
+
+1187141524 c:\games\sauercvs\mod\src\engine\mod\modgui.h
+
+1189116918 c:\games\sauercvs\mod\src\engine\bih.h
+
+1189116909 c:\games\sauercvs\mod\src\engine\bih.cpp
+	"pch.h"
+	"engine.h"
+
+1187156410 c:\media\games\sauercvs\mod\src\enet\callbacks.c
+	"enet/enet.h"
+
+1187156735 c:\media\games\sauercvs\mod\src\enet\include\enet\enet.h
+	<stdlib.h>
+	"enet/win32.h"
+	"enet/unix.h"
+	"enet/types.h"
+	"enet/protocol.h"
+	"enet/list.h"
+	"enet/callbacks.h"
+
+1187156736 c:\media\games\sauercvs\mod\src\enet\include\enet\win32.h
+	<stdlib.h>
+	<winsock2.h>
+
+1187156736 c:\media\games\sauercvs\mod\src\enet\include\enet\unix.h
+	<stdlib.h>
+	<sys/types.h>
+	<netinet/in.h>
+
+1187156736 c:\media\games\sauercvs\mod\src\enet\include\enet\types.h
+
+1187156736 c:\media\games\sauercvs\mod\src\enet\include\enet\protocol.h
+	"enet/types.h"
+
+1187156735 c:\media\games\sauercvs\mod\src\enet\include\enet\list.h
+	<stdlib.h>
+
+1187156732 c:\media\games\sauercvs\mod\src\enet\include\enet\callbacks.h
+	<stdlib.h>
+
+1187156708 c:\media\games\sauercvs\mod\src\enet\host.c
+	<string.h>
+	"enet/enet.h"
+
+1187156710 c:\media\games\sauercvs\mod\src\enet\list.c
+	"enet/list.h"
+
+1187156712 c:\media\games\sauercvs\mod\src\enet\packet.c
+	<string.h>
+	"enet/enet.h"
+
+1187156715 c:\media\games\sauercvs\mod\src\enet\peer.c
+	<string.h>
+	"enet/enet.h"
+
+1187156722 c:\media\games\sauercvs\mod\src\enet\protocol.c
+	<stdio.h>
+	<string.h>
+	"enet/utility.h"
+	"enet/time.h"
+	"enet/enet.h"
+
+1181543991 c:\media\games\sauercvs\mod\src\enet\include\enet\utility.h
+
+1181543991 c:\media\games\sauercvs\mod\src\enet\include\enet\time.h
+
+1187156726 c:\media\games\sauercvs\mod\src\enet\unix.c
+	<sys/types.h>
+	<sys/socket.h>
+	<sys/ioctl.h>
+	<sys/time.h>
+	<arpa/inet.h>
+	<netdb.h>
+	<unistd.h>
+	<string.h>
+	<errno.h>
+	<time.h>
+	"enet/enet.h"
+	<fcntl.h>
+	<sys/poll.h>
+
+1187156727 c:\media\games\sauercvs\mod\src\enet\win32.c
+	<time.h>
+	"enet/enet.h"
+
+1187460252 c:\media\games\sauercvs\mod\src\engine\3dgui.cpp
+	"pch.h"
+	"engine.h"
+
+1185501158 c:\media\games\sauercvs\mod\src\shared\pch.h
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<stdarg.h>
+	<limits.h>
+	<assert.h>
+	<new>
+	<new.h>
+	<time.h>
+	"windows.h"
+	<SDL.h>
+	<SDL_image.h>
+	<SDL_opengl.h>
+	"GL/glext.h"
+	<enet/enet.h>
+	<eh.h>
+	<dbghelp.h>
+	<zlib.h>
+
+1187156329 c:\media\games\sauercvs\mod\src\include\sdl.h
+	"SDL_main.h"
+	"SDL_stdinc.h"
+	"SDL_audio.h"
+	"SDL_cdrom.h"
+	"SDL_cpuinfo.h"
+	"SDL_endian.h"
+	"SDL_error.h"
+	"SDL_events.h"
+	"SDL_loadso.h"
+	"SDL_mutex.h"
+	"SDL_rwops.h"
+	"SDL_thread.h"
+	"SDL_timer.h"
+	"SDL_video.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156343 c:\media\games\sauercvs\mod\src\include\sdl_main.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156491 c:\media\games\sauercvs\mod\src\include\sdl_stdinc.h
+	"SDL_config.h"
+	<sys/types.h>
+	<stdio.h>
+	<stdlib.h>
+	<stddef.h>
+	<stdarg.h>
+	<stdlib.h>
+	<malloc.h>
+	<stddef.h>
+	<stdarg.h>
+	<memory.h>
+	<string.h>
+	<strings.h>
+	<inttypes.h>
+	<stdint.h>
+	<ctype.h>
+	<iconv.h>
+	"begin_code.h"
+	<alloca.h>
+	<malloc.h>
+	<malloc.h>
+	<stdlib.h>
+	"close_code.h"
+
+1187156335 c:\media\games\sauercvs\mod\src\include\sdl_config.h
+	"SDL_platform.h"
+	"SDL_config_dreamcast.h"
+	"SDL_config_macos.h"
+	"SDL_config_macosx.h"
+	"SDL_config_symbian.h"
+	"SDL_config_win32.h"
+	"SDL_config_os2.h"
+	"SDL_config_minimal.h"
+
+1187156466 c:\media\games\sauercvs\mod\src\include\sdl_platform.h
+
+1187156335 c:\media\games\sauercvs\mod\src\include\sdl_config_macosx.h
+	"SDL_platform.h"
+	<AvailabilityMacros.h>
+
+1187156335 c:\media\games\sauercvs\mod\src\include\sdl_config_win32.h
+	"SDL_platform.h"
+
+1187156579 c:\media\games\sauercvs\mod\src\include\begin_code.h
+
+1187156579 c:\media\games\sauercvs\mod\src\include\close_code.h
+
+1187156334 c:\media\games\sauercvs\mod\src\include\sdl_audio.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_endian.h"
+	"SDL_mutex.h"
+	"SDL_thread.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\media\games\sauercvs\mod\src\include\sdl_error.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\media\games\sauercvs\mod\src\include\sdl_endian.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156349 c:\media\games\sauercvs\mod\src\include\sdl_mutex.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156491 c:\media\games\sauercvs\mod\src\include\sdl_thread.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_mutex.h"
+	"begin_code.h"
+	<process.h>
+	"close_code.h"
+
+1187156469 c:\media\games\sauercvs\mod\src\include\sdl_rwops.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156335 c:\media\games\sauercvs\mod\src\include\sdl_cdrom.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\media\games\sauercvs\mod\src\include\sdl_cpuinfo.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\media\games\sauercvs\mod\src\include\sdl_events.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_active.h"
+	"SDL_keyboard.h"
+	"SDL_mouse.h"
+	"SDL_joystick.h"
+	"SDL_quit.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156329 c:\media\games\sauercvs\mod\src\include\sdl_active.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156342 c:\media\games\sauercvs\mod\src\include\sdl_keyboard.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_keysym.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156343 c:\media\games\sauercvs\mod\src\include\sdl_keysym.h
+
+1187156349 c:\media\games\sauercvs\mod\src\include\sdl_mouse.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_video.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156578 c:\media\games\sauercvs\mod\src\include\sdl_video.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\media\games\sauercvs\mod\src\include\sdl_joystick.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156467 c:\media\games\sauercvs\mod\src\include\sdl_quit.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+
+1187156343 c:\media\games\sauercvs\mod\src\include\sdl_loadso.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156518 c:\media\games\sauercvs\mod\src\include\sdl_timer.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156574 c:\media\games\sauercvs\mod\src\include\sdl_version.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\media\games\sauercvs\mod\src\include\sdl_image.h
+	"SDL.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156466 c:\media\games\sauercvs\mod\src\include\sdl_opengl.h
+	"SDL_config.h"
+	<windows.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<gl.h>
+	<glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<windows.h>
+	<stddef.h>
+
+1187156651 c:\media\games\sauercvs\mod\src\include\gl\glext.h
+	<windows.h>
+	<stddef.h>
+
+1187156604 c:\media\games\sauercvs\mod\src\include\zlib.h
+	"zconf.h"
+
+1187156596 c:\media\games\sauercvs\mod\src\include\zconf.h
+	<windows.h>
+	<sys/types.h>
+	<unistd.h>
+	<unixio.h>
+
+1187511209 c:\media\games\sauercvs\mod\src\engine\engine.h
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"world.h"
+	"octa.h"
+	"lightmap.h"
+	"bih.h"
+	"texture.h"
+	"model.h"
+
+1185501158 c:\media\games\sauercvs\mod\src\shared\cube.h
+	"tools.h"
+	"geom.h"
+	"ents.h"
+	"command.h"
+
+1186977073 c:\media\games\sauercvs\mod\src\shared\tools.h
+	<crtdbg.h>
+
+1186155316 c:\media\games\sauercvs\mod\src\shared\geom.h
+
+1187516196 c:\media\games\sauercvs\mod\src\shared\ents.h
+
+1186155315 c:\media\games\sauercvs\mod\src\shared\command.h
+
+1187510912 c:\media\games\sauercvs\mod\src\shared\iengine.h
+	"mod.h"
+
+1187567949 c:\media\games\sauercvs\mod\src\engine\mod\mod.h
+
+1185933247 c:\media\games\sauercvs\mod\src\shared\igame.h
+	"modient.h"
+	"modigame.h"
+	"modiserv.h"
+
+1185501105 c:\media\games\sauercvs\mod\src\engine\mod\modient.h
+
+1187156159 c:\media\games\sauercvs\mod\src\engine\mod\modigame.h
+
+1186233614 c:\media\games\sauercvs\mod\src\engine\mod\modiserv.h
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\world.h
+
+1187156165 c:\media\games\sauercvs\mod\src\engine\octa.h
+
+1187156158 c:\media\games\sauercvs\mod\src\engine\lightmap.h
+
+1187352438 c:\media\games\sauercvs\mod\src\engine\bih.h
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\texture.h
+
+1187376343 c:\media\games\sauercvs\mod\src\engine\model.h
+
+1187354691 c:\media\games\sauercvs\mod\src\engine\bih.cpp
+	"pch.h"
+	"engine.h"
+
+1187156165 c:\media\games\sauercvs\mod\src\engine\client.cpp
+	"pch.h"
+	"engine.h"
+
+1187156165 c:\media\games\sauercvs\mod\src\engine\command.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1187403706 c:\media\games\sauercvs\mod\src\engine\console.cpp
+	"pch.h"
+	"engine.h"
+	<X11/Xlib.h>
+	<SDL_syswm.h>
+	"modcon.h"
+
+1187156491 c:\media\games\sauercvs\mod\src\include\sdl_syswm.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_version.h"
+	"begin_code.h"
+	<X11/Xlib.h>
+	<X11/Xatom.h>
+	<microwin/nano-X.h>
+	<windows.h>
+	<sys/neutrino.h>
+	<Ph.h>
+	"close_code.h"
+
+1187568646 c:\media\games\sauercvs\mod\src\engine\mod\modcon.h
+
+1187566422 c:\media\games\sauercvs\mod\src\engine\cubeloader.cpp
+	"pch.h"
+	"engine.h"
+
+1187156158 c:\media\games\sauercvs\mod\src\engine\grass.cpp
+	"pch.h"
+	"engine.h"
+
+1187511229 c:\media\games\sauercvs\mod\src\engine\lightmap.cpp
+	"pch.h"
+	"engine.h"
+
+1187160132 c:\media\games\sauercvs\mod\src\engine\main.cpp
+	"pch.h"
+	"engine.h"
+	"joystick.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\mod\joystick.h
+	"SDL_events.h"
+	"SDL.h"
+
+1187156165 c:\media\games\sauercvs\mod\src\engine\material.cpp
+	"pch.h"
+	"engine.h"
+
+1187156165 c:\media\games\sauercvs\mod\src\engine\menus.cpp
+	"pch.h"
+	"engine.h"
+
+1187429733 c:\media\games\sauercvs\mod\src\engine\mod\modengine.cpp
+	"pch.h"
+	"engine.h"
+
+1187405636 c:\media\games\sauercvs\mod\src\engine\mod\modrender.cpp
+	"pch.h"
+	"engine.h"
+
+1187156165 c:\media\games\sauercvs\mod\src\engine\normal.cpp
+	"pch.h"
+	"engine.h"
+
+1187566426 c:\media\games\sauercvs\mod\src\engine\octa.cpp
+	"pch.h"
+	"engine.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\octaedit.cpp
+	"pch.h"
+	"engine.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\octarender.cpp
+	"pch.h"
+	"engine.h"
+
+1187511287 c:\media\games\sauercvs\mod\src\engine\physics.cpp
+	"pch.h"
+	"engine.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\rendergl.cpp
+	"pch.h"
+	"engine.h"
+
+1187495171 c:\media\games\sauercvs\mod\src\engine\rendermodel.cpp
+	"pch.h"
+	"engine.h"
+	"tristrip.h"
+	"vertmodel.h"
+	"md2.h"
+	"md3.h"
+
+1187156158 c:\media\games\sauercvs\mod\src\engine\tristrip.h
+
+1187376296 c:\media\games\sauercvs\mod\src\engine\vertmodel.h
+
+1187511238 c:\media\games\sauercvs\mod\src\engine\md2.h
+
+1187156165 c:\media\games\sauercvs\mod\src\engine\md3.h
+
+1187156158 c:\media\games\sauercvs\mod\src\engine\rendersky.cpp
+	"pch.h"
+	"engine.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\rendertext.cpp
+	"pch.h"
+	"engine.h"
+	"modtext.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\mod\modtext.h
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\renderva.cpp
+	"pch.h"
+	"engine.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\server.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1187430556 c:\media\games\sauercvs\mod\src\engine\serverbrowser.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_thread.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\shader.cpp
+	"pch.h"
+	"engine.h"
+
+1187156158 c:\media\games\sauercvs\mod\src\engine\sound.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_mixer.h"
+	"fmod.h"
+
+1187156348 c:\media\games\sauercvs\mod\src\include\sdl_mixer.h
+	"SDL_types.h"
+	"SDL_rwops.h"
+	"SDL_audio.h"
+	"SDL_endian.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156574 c:\media\games\sauercvs\mod\src\include\sdl_types.h
+	"SDL_stdinc.h"
+
+1187156591 c:\media\games\sauercvs\mod\src\include\fmod.h
+
+1187495176 c:\media\games\sauercvs\mod\src\engine\texture.cpp
+	"pch.h"
+	"engine.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\water.cpp
+	"pch.h"
+	"engine.h"
+
+1187566440 c:\media\games\sauercvs\mod\src\engine\world.cpp
+	"pch.h"
+	"engine.h"
+	"modworld.h"
+
+1187156159 c:\media\games\sauercvs\mod\src\engine\mod\modworld.h
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\worldio.cpp
+	"pch.h"
+	"engine.h"
+
+1187420970 c:\media\games\sauercvs\mod\src\krsgame\krs.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"krsgame.h"
+	"krsrender.h"
+	"krsents.h"
+
+1187420989 c:\media\games\sauercvs\mod\src\krsgame\krsgame.h
+
+1187420978 c:\media\games\sauercvs\mod\src\krsgame\krsrender.h
+
+1185501145 c:\media\games\sauercvs\mod\src\krsgame\krsents.h
+
+1186155315 c:\media\games\sauercvs\mod\src\shared\geom.cpp
+	"pch.h"
+	"tools.h"
+	"geom.h"
+
+1185501158 c:\media\games\sauercvs\mod\src\shared\pch.cpp
+	"pch.h"
+
+1186977064 c:\media\games\sauercvs\mod\src\shared\tools.cpp
+	"pch.h"
+	"tools.h"
+	<unistd.h>
+	<sys/stat.h>
+	<sys/types.h>
+	<dirent.h>
+
+1187497241 c:\media\games\sauercvs\mod\src\sspgame\ssp.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"sspgame.h"
+	"ssprender.h"
+	"sspents.h"
+	"sspprojs.h"
+	"sspweap.h"
+	"sspblock.h"
+	"sspenemy.h"
+
+1187497648 c:\media\games\sauercvs\mod\src\sspgame\sspgame.h
+
+1187497630 c:\media\games\sauercvs\mod\src\sspgame\ssprender.h
+
+1187567891 c:\media\games\sauercvs\mod\src\sspgame\sspents.h
+
+1186803085 c:\media\games\sauercvs\mod\src\sspgame\sspprojs.h
+
+1186629562 c:\media\games\sauercvs\mod\src\sspgame\sspweap.h
+
+1186629504 c:\media\games\sauercvs\mod\src\sspgame\sspblock.h
+
+1185501163 c:\media\games\sauercvs\mod\src\sspgame\sspenemy.h
+
+1185501150 c:\media\games\sauercvs\mod\src\master\dbg.c
+	"def.h"
+
+1185501150 c:\media\games\sauercvs\mod\src\master\def.h
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<signal.h>
+	<unistd.h>
+	<ctype.h>
+	<errno.h>
+	<time.h>
+	<sys/types.h>
+	"dbg.h"
+	"cgi.h"
+	"utl.h"
+
+1185501150 c:\media\games\sauercvs\mod\src\master\dbg.h
+
+1185501150 c:\media\games\sauercvs\mod\src\master\cgi.h
+
+1185501150 c:\media\games\sauercvs\mod\src\master\utl.h
+
+1185501150 c:\media\games\sauercvs\mod\src\master\ms.c
+	"def.h"
+
+1185501150 c:\media\games\sauercvs\mod\src\master\utl.c
+	"def.h"
+
+1185501150 c:\media\games\sauercvs\mod\src\master\cgi.c
+	"def.h"
+
+1187669145 c:\media\games\sauercvs\mod\src\engine\renderparticles.cpp
+	"pch.h"
+	"engine.h"
+	"modpart.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\engine\mod\modpart.h
+
+1187669127 c:\media\games\sauercvs\mod\src\fpsgame\fps.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"game.h"
+	"fpsserver.h"
+	"weapon.h"
+	"monster.h"
+	"scoreboard.h"
+	"fpsrender.h"
+	"entities.h"
+	"client.h"
+	"capture.h"
+	"fpsmod.h"
+
+1187511112 c:\media\games\sauercvs\mod\src\fpsgame\game.h
+	"botent.h"
+	"botext.h"
+
+1187446372 c:\media\games\sauercvs\mod\src\fpsgame\bot\botent.h
+
+1187454834 c:\media\games\sauercvs\mod\src\fpsgame\bot\botext.h
+
+1187668959 c:\media\games\sauercvs\mod\src\fpsgame\fpsserver.h
+	<io.h>
+	<unistd.h>
+	"capture.h"
+	"fpssrv.h"
+
+1187156166 c:\media\games\sauercvs\mod\src\fpsgame\capture.h
+
+1187362990 c:\media\games\sauercvs\mod\src\fpsgame\mod\fpssrv.h
+
+1187566413 c:\media\games\sauercvs\mod\src\fpsgame\weapon.h
+
+1187568331 c:\media\games\sauercvs\mod\src\fpsgame\monster.h
+
+1187511143 c:\media\games\sauercvs\mod\src\fpsgame\scoreboard.h
+
+1187516161 c:\media\games\sauercvs\mod\src\fpsgame\fpsrender.h
+
+1187669047 c:\media\games\sauercvs\mod\src\fpsgame\entities.h
+
+1187669664 c:\media\games\sauercvs\mod\src\fpsgame\client.h
+
+1187404159 c:\media\games\sauercvs\mod\src\fpsgame\mod\fpsmod.h
+	"fpsdef.h"
+	"fpsent.h"
+	"fpsext.h"
+	"botdef.h"
+	"fpsutl.h"
+
+1186210072 c:\media\games\sauercvs\mod\src\fpsgame\mod\fpsdef.h
+
+1187437169 c:\media\games\sauercvs\mod\src\fpsgame\mod\fpsent.h
+
+1187567401 c:\media\games\sauercvs\mod\src\fpsgame\mod\fpsext.h
+
+1187446508 c:\media\games\sauercvs\mod\src\fpsgame\bot\botdef.h
+	"botutl.h"
+	"botmgr.h"
+	"botway.h"
+	"botai.h"
+
+1187451862 c:\media\games\sauercvs\mod\src\fpsgame\bot\botutl.h
+
+1187450427 c:\media\games\sauercvs\mod\src\fpsgame\bot\botmgr.h
+
+1187446552 c:\media\games\sauercvs\mod\src\fpsgame\bot\botway.h
+
+1187451153 c:\media\games\sauercvs\mod\src\fpsgame\bot\botai.h
+
+1187567842 c:\media\games\sauercvs\mod\src\fpsgame\mod\fpsutl.h
+
+1188823565 c:\games\sauercvs\mod\src\engine\mod\modicom.h
+
+1188659473 c:\games\sauercvs\mod\src\fpsgame\mod\fpsduel.h
+
+1188956647 c:\games\sauercvs\mod\src\fpsgame\duel.h
+
+1180625179 c:\games\sauercvs\mod\src.old\enet\callbacks.c
+	"enet/enet.h"
+
+1188638886 c:\games\sauercvs\mod\src.old\enet\include\enet\enet.h
+	<stdlib.h>
+	"enet/win32.h"
+	"enet/unix.h"
+	"enet/types.h"
+	"enet/protocol.h"
+	"enet/list.h"
+	"enet/callbacks.h"
+
+1142240876 c:\games\sauercvs\mod\src.old\enet\include\enet\win32.h
+	<stdlib.h>
+	<winsock2.h>
+
+1141710974 c:\games\sauercvs\mod\src.old\enet\include\enet\unix.h
+	<stdlib.h>
+	<sys/types.h>
+	<netinet/in.h>
+
+1141710974 c:\games\sauercvs\mod\src.old\enet\include\enet\types.h
+
+1163413960 c:\games\sauercvs\mod\src.old\enet\include\enet\protocol.h
+	"enet/types.h"
+
+1141710974 c:\games\sauercvs\mod\src.old\enet\include\enet\list.h
+	<stdlib.h>
+
+1141710974 c:\games\sauercvs\mod\src.old\enet\include\enet\callbacks.h
+	<stdlib.h>
+
+1152215511 c:\games\sauercvs\mod\src.old\enet\host.c
+	<string.h>
+	"enet/enet.h"
+
+1141710973 c:\games\sauercvs\mod\src.old\enet\list.c
+	"enet/list.h"
+
+1175076033 c:\games\sauercvs\mod\src.old\enet\packet.c
+	<string.h>
+	"enet/enet.h"
+
+1169199913 c:\games\sauercvs\mod\src.old\enet\peer.c
+	<string.h>
+	"enet/enet.h"
+
+1188638908 c:\games\sauercvs\mod\src.old\enet\protocol.c
+	<stdio.h>
+	<string.h>
+	"enet/utility.h"
+	"enet/time.h"
+	"enet/enet.h"
+
+1141710974 c:\games\sauercvs\mod\src.old\enet\include\enet\utility.h
+
+1141710974 c:\games\sauercvs\mod\src.old\enet\include\enet\time.h
+
+1180745970 c:\games\sauercvs\mod\src.old\enet\unix.c
+	<sys/types.h>
+	<sys/socket.h>
+	<sys/ioctl.h>
+	<sys/time.h>
+	<arpa/inet.h>
+	<netdb.h>
+	<unistd.h>
+	<string.h>
+	<errno.h>
+	<time.h>
+	"enet/enet.h"
+	<fcntl.h>
+	<sys/poll.h>
+
+1176651000 c:\games\sauercvs\mod\src.old\enet\win32.c
+	<time.h>
+	"enet/enet.h"
+
+1188942717 c:\games\sauercvs\mod\src.old\engine\3dgui.cpp
+	"pch.h"
+	"engine.h"
+
+1185501158 c:\games\sauercvs\mod\src.old\shared\pch.h
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<stdarg.h>
+	<limits.h>
+	<assert.h>
+	<new>
+	<new.h>
+	<time.h>
+	"windows.h"
+	<SDL.h>
+	<SDL_image.h>
+	<SDL_opengl.h>
+	"GL/glext.h"
+	<enet/enet.h>
+	<eh.h>
+	<dbghelp.h>
+	<zlib.h>
+
+1187156329 c:\games\sauercvs\mod\src.old\include\sdl.h
+	"SDL_main.h"
+	"SDL_stdinc.h"
+	"SDL_audio.h"
+	"SDL_cdrom.h"
+	"SDL_cpuinfo.h"
+	"SDL_endian.h"
+	"SDL_error.h"
+	"SDL_events.h"
+	"SDL_loadso.h"
+	"SDL_mutex.h"
+	"SDL_rwops.h"
+	"SDL_thread.h"
+	"SDL_timer.h"
+	"SDL_video.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156343 c:\games\sauercvs\mod\src.old\include\sdl_main.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156491 c:\games\sauercvs\mod\src.old\include\sdl_stdinc.h
+	"SDL_config.h"
+	<sys/types.h>
+	<stdio.h>
+	<stdlib.h>
+	<stddef.h>
+	<stdarg.h>
+	<stdlib.h>
+	<malloc.h>
+	<stddef.h>
+	<stdarg.h>
+	<memory.h>
+	<string.h>
+	<strings.h>
+	<inttypes.h>
+	<stdint.h>
+	<ctype.h>
+	<iconv.h>
+	"begin_code.h"
+	<alloca.h>
+	<malloc.h>
+	<malloc.h>
+	<stdlib.h>
+	"close_code.h"
+
+1187156335 c:\games\sauercvs\mod\src.old\include\sdl_config.h
+	"SDL_platform.h"
+	"SDL_config_dreamcast.h"
+	"SDL_config_macos.h"
+	"SDL_config_macosx.h"
+	"SDL_config_symbian.h"
+	"SDL_config_win32.h"
+	"SDL_config_os2.h"
+	"SDL_config_minimal.h"
+
+1187156466 c:\games\sauercvs\mod\src.old\include\sdl_platform.h
+
+1187156335 c:\games\sauercvs\mod\src.old\include\sdl_config_macosx.h
+	"SDL_platform.h"
+	<AvailabilityMacros.h>
+
+1187156335 c:\games\sauercvs\mod\src.old\include\sdl_config_win32.h
+	"SDL_platform.h"
+
+1187156579 c:\games\sauercvs\mod\src.old\include\begin_code.h
+
+1187156579 c:\games\sauercvs\mod\src.old\include\close_code.h
+
+1187156334 c:\games\sauercvs\mod\src.old\include\sdl_audio.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_endian.h"
+	"SDL_mutex.h"
+	"SDL_thread.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\games\sauercvs\mod\src.old\include\sdl_error.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\games\sauercvs\mod\src.old\include\sdl_endian.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156349 c:\games\sauercvs\mod\src.old\include\sdl_mutex.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156491 c:\games\sauercvs\mod\src.old\include\sdl_thread.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_mutex.h"
+	"begin_code.h"
+	<process.h>
+	"close_code.h"
+
+1187156469 c:\games\sauercvs\mod\src.old\include\sdl_rwops.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156335 c:\games\sauercvs\mod\src.old\include\sdl_cdrom.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\games\sauercvs\mod\src.old\include\sdl_cpuinfo.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\games\sauercvs\mod\src.old\include\sdl_events.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_active.h"
+	"SDL_keyboard.h"
+	"SDL_mouse.h"
+	"SDL_joystick.h"
+	"SDL_quit.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156329 c:\games\sauercvs\mod\src.old\include\sdl_active.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156342 c:\games\sauercvs\mod\src.old\include\sdl_keyboard.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_keysym.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156343 c:\games\sauercvs\mod\src.old\include\sdl_keysym.h
+
+1187156349 c:\games\sauercvs\mod\src.old\include\sdl_mouse.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_video.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156578 c:\games\sauercvs\mod\src.old\include\sdl_video.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\games\sauercvs\mod\src.old\include\sdl_joystick.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156467 c:\games\sauercvs\mod\src.old\include\sdl_quit.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+
+1187156343 c:\games\sauercvs\mod\src.old\include\sdl_loadso.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156518 c:\games\sauercvs\mod\src.old\include\sdl_timer.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156574 c:\games\sauercvs\mod\src.old\include\sdl_version.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\games\sauercvs\mod\src.old\include\sdl_image.h
+	"SDL.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156466 c:\games\sauercvs\mod\src.old\include\sdl_opengl.h
+	"SDL_config.h"
+	<windows.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<gl.h>
+	<glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<windows.h>
+	<stddef.h>
+
+1187156651 c:\games\sauercvs\mod\src.old\include\gl\glext.h
+	<windows.h>
+	<stddef.h>
+
+1187156604 c:\games\sauercvs\mod\src.old\include\zlib.h
+	"zconf.h"
+
+1188947115 c:\games\sauercvs\mod\src.old\include\zconf.h
+	<windows.h>
+	<sys/types.h>
+	<unistd.h>
+	<unixio.h>
+
+1188467038 c:\games\sauercvs\mod\src.old\engine\engine.h
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"world.h"
+	"octa.h"
+	"lightmap.h"
+	"bih.h"
+	"texture.h"
+	"model.h"
+
+1185501158 c:\games\sauercvs\mod\src.old\shared\cube.h
+	"tools.h"
+	"geom.h"
+	"ents.h"
+	"command.h"
+
+1188743111 c:\games\sauercvs\mod\src.old\shared\tools.h
+	<crtdbg.h>
+
+1189115127 c:\games\sauercvs\mod\src.old\shared\geom.h
+
+1188466874 c:\games\sauercvs\mod\src.old\shared\ents.h
+
+1188943928 c:\games\sauercvs\mod\src.old\shared\command.h
+
+1189122180 c:\games\sauercvs\mod\src.old\shared\iengine.h
+
+1188949539 c:\games\sauercvs\mod\src.old\shared\igame.h
+
+1188942515 c:\games\sauercvs\mod\src.old\engine\world.h
+
+1187156165 c:\games\sauercvs\mod\src.old\engine\octa.h
+
+1187156158 c:\games\sauercvs\mod\src.old\engine\lightmap.h
+
+1189116918 c:\games\sauercvs\mod\src.old\engine\bih.h
+
+1188939360 c:\games\sauercvs\mod\src.old\engine\texture.h
+
+1189116899 c:\games\sauercvs\mod\src.old\engine\model.h
+
+1189116909 c:\games\sauercvs\mod\src.old\engine\bih.cpp
+	"pch.h"
+	"engine.h"
+
+1188950855 c:\games\sauercvs\mod\src.old\engine\client.cpp
+	"pch.h"
+	"engine.h"
+
+1188941783 c:\games\sauercvs\mod\src.old\engine\console.cpp
+	"pch.h"
+	"engine.h"
+	<X11/Xlib.h>
+	<SDL_syswm.h>
+
+1187156491 c:\games\sauercvs\mod\src.old\include\sdl_syswm.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_version.h"
+	"begin_code.h"
+	<X11/Xlib.h>
+	<X11/Xatom.h>
+	<microwin/nano-X.h>
+	<windows.h>
+	<sys/neutrino.h>
+	<Ph.h>
+	"close_code.h"
+
+1189116960 c:\games\sauercvs\mod\src.old\engine\cubeloader.cpp
+	"pch.h"
+	"engine.h"
+
+1188942717 c:\games\sauercvs\mod\src.old\engine\grass.cpp
+	"pch.h"
+	"engine.h"
+
+1189124017 c:\games\sauercvs\mod\src.old\engine\lightmap.cpp
+	"pch.h"
+	"engine.h"
+
+1189125343 c:\games\sauercvs\mod\src.old\engine\main.cpp
+	"pch.h"
+	"engine.h"
+
+1189116873 c:\games\sauercvs\mod\src.old\engine\material.cpp
+	"pch.h"
+	"engine.h"
+
+1188942717 c:\games\sauercvs\mod\src.old\engine\menus.cpp
+	"pch.h"
+	"engine.h"
+
+1187156165 c:\games\sauercvs\mod\src.old\engine\normal.cpp
+	"pch.h"
+	"engine.h"
+
+1189281972 c:\games\sauercvs\mod\src.old\engine\octa.cpp
+	"pch.h"
+	"engine.h"
+
+1189123914 c:\games\sauercvs\mod\src.old\engine\octaedit.cpp
+	"pch.h"
+	"engine.h"
+
+1187156166 c:\games\sauercvs\mod\src.old\engine\octarender.cpp
+	"pch.h"
+	"engine.h"
+
+1189116311 c:\games\sauercvs\mod\src.old\engine\physics.cpp
+	"pch.h"
+	"engine.h"
+
+1189123931 c:\games\sauercvs\mod\src.old\engine\rendergl.cpp
+	"pch.h"
+	"engine.h"
+
+1189116502 c:\games\sauercvs\mod\src.old\engine\rendermodel.cpp
+	"pch.h"
+	"engine.h"
+	"tristrip.h"
+	"vertmodel.h"
+	"md2.h"
+	"md3.h"
+
+1187156158 c:\games\sauercvs\mod\src.old\engine\tristrip.h
+
+1189116180 c:\games\sauercvs\mod\src.old\engine\vertmodel.h
+
+1188467094 c:\games\sauercvs\mod\src.old\engine\md2.h
+
+1189116888 c:\games\sauercvs\mod\src.old\engine\md3.h
+
+1188944329 c:\games\sauercvs\mod\src.old\engine\renderparticles.cpp
+	"pch.h"
+	"engine.h"
+
+1189116512 c:\games\sauercvs\mod\src.old\engine\rendersky.cpp
+	"pch.h"
+	"engine.h"
+
+1188941952 c:\games\sauercvs\mod\src.old\engine\rendertext.cpp
+	"pch.h"
+	"engine.h"
+
+1189116517 c:\games\sauercvs\mod\src.old\engine\renderva.cpp
+	"pch.h"
+	"engine.h"
+
+1188950658 c:\games\sauercvs\mod\src.old\engine\server.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1188942887 c:\games\sauercvs\mod\src.old\engine\serverbrowser.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_thread.h"
+
+1188467314 c:\games\sauercvs\mod\src.old\engine\shader.cpp
+	"pch.h"
+	"engine.h"
+
+1188941005 c:\games\sauercvs\mod\src.old\engine\sound.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_mixer.h"
+	"fmod.h"
+
+1188947115 c:\games\sauercvs\mod\src.old\include\sdl_mixer.h
+	"SDL_types.h"
+	"SDL_rwops.h"
+	"SDL_audio.h"
+	"SDL_endian.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156574 c:\games\sauercvs\mod\src.old\include\sdl_types.h
+	"SDL_stdinc.h"
+
+1187156591 c:\games\sauercvs\mod\src.old\include\fmod.h
+
+1189116542 c:\games\sauercvs\mod\src.old\engine\texture.cpp
+	"pch.h"
+	"engine.h"
+
+1188940718 c:\games\sauercvs\mod\src.old\engine\water.cpp
+	"pch.h"
+	"engine.h"
+
+1188942753 c:\games\sauercvs\mod\src.old\engine\world.cpp
+	"pch.h"
+	"engine.h"
+
+1188952305 c:\games\sauercvs\mod\src.old\engine\worldio.cpp
+	"pch.h"
+	"engine.h"
+
+1189125387 c:\games\sauercvs\mod\src.old\fpsgame\fps.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"game.h"
+	"fpsserver.h"
+	"weapon.h"
+	"monster.h"
+	"scoreboard.h"
+	"fpsrender.h"
+	"entities.h"
+	"client.h"
+	"capture.h"
+	"botdef.h"
+
+1189072775 c:\games\sauercvs\mod\src.old\fpsgame\game.h
+	"botent.h"
+
+1188823566 c:\games\sauercvs\mod\src.old\fpsgame\bot\botent.h
+
+1189116077 c:\games\sauercvs\mod\src.old\fpsgame\fpsserver.h
+	<io.h>
+	<unistd.h>
+	"capture.h"
+	"duel.h"
+
+1188942717 c:\games\sauercvs\mod\src.old\fpsgame\capture.h
+
+1188956647 c:\games\sauercvs\mod\src.old\fpsgame\duel.h
+
+1189072649 c:\games\sauercvs\mod\src.old\fpsgame\weapon.h
+
+1188955086 c:\games\sauercvs\mod\src.old\fpsgame\monster.h
+
+1189115340 c:\games\sauercvs\mod\src.old\fpsgame\scoreboard.h
+
+1188955086 c:\games\sauercvs\mod\src.old\fpsgame\fpsrender.h
+
+1188955086 c:\games\sauercvs\mod\src.old\fpsgame\entities.h
+
+1189115918 c:\games\sauercvs\mod\src.old\fpsgame\client.h
+
+1188954439 c:\games\sauercvs\mod\src.old\fpsgame\bot\botdef.h
+	"botutl.h"
+	"botmgr.h"
+	"botway.h"
+	"botai.h"
+
+1188955086 c:\games\sauercvs\mod\src.old\fpsgame\bot\botutl.h
+
+1188957115 c:\games\sauercvs\mod\src.old\fpsgame\bot\botmgr.h
+
+1188635432 c:\games\sauercvs\mod\src.old\fpsgame\bot\botway.h
+
+1188943108 c:\games\sauercvs\mod\src.old\fpsgame\bot\botai.h
+
+1188713383 c:\games\sauercvs\mod\src.old\krsgame\krs.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"krsgame.h"
+	"krsrender.h"
+	"krsents.h"
+
+1188712891 c:\games\sauercvs\mod\src.old\krsgame\krsgame.h
+
+1188713241 c:\games\sauercvs\mod\src.old\krsgame\krsrender.h
+
+1185501145 c:\games\sauercvs\mod\src.old\krsgame\krsents.h
+
+1186155315 c:\games\sauercvs\mod\src.old\shared\geom.cpp
+	"pch.h"
+	"tools.h"
+	"geom.h"
+
+1185501158 c:\games\sauercvs\mod\src.old\shared\pch.cpp
+	"pch.h"
+
+1186977064 c:\games\sauercvs\mod\src.old\shared\tools.cpp
+	"pch.h"
+	"tools.h"
+	<unistd.h>
+	<sys/stat.h>
+	<sys/types.h>
+	<dirent.h>
+
+1189119722 c:\games\sauercvs\mod\src.old\sspgame\ssp.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"sspgame.h"
+	"ssprender.h"
+	"sspents.h"
+	"sspprojs.h"
+	"sspweap.h"
+	"sspblock.h"
+	"sspenemy.h"
+
+1188629042 c:\games\sauercvs\mod\src.old\sspgame\sspgame.h
+
+1189124427 c:\games\sauercvs\mod\src.old\sspgame\ssprender.h
+
+1187567891 c:\games\sauercvs\mod\src.old\sspgame\sspents.h
+
+1188943963 c:\games\sauercvs\mod\src.old\sspgame\sspprojs.h
+
+1186629562 c:\games\sauercvs\mod\src.old\sspgame\sspweap.h
+
+1186629504 c:\games\sauercvs\mod\src.old\sspgame\sspblock.h
+
+1188943108 c:\games\sauercvs\mod\src.old\sspgame\sspenemy.h
+
+1189539760 c:\games\sauercvs\mod\src\engine\joystick.cpp
+	"pch.h"
+	"engine.h"
+
+1190174304 c:\games\sauercvs\mod\src\engine\shadowmap.cpp
+	"pch.h"
+	"engine.h"
+
+1189986573 c:\games\sauercvs\mod\src\fpsgame\bot.h
+	"botutl.h"
+	"botmgr.h"
+	"botway.h"
+	"botai.h"
+
+1180625179 c:\games\blood frontier\engine\src\enet\callbacks.c
+	"enet/enet.h"
+
+1188638886 c:\games\blood frontier\engine\src\enet\include\enet\enet.h
+	<stdlib.h>
+	"enet/win32.h"
+	"enet/unix.h"
+	"enet/types.h"
+	"enet/protocol.h"
+	"enet/list.h"
+	"enet/callbacks.h"
+
+1142240876 c:\games\blood frontier\engine\src\enet\include\enet\win32.h
+	<stdlib.h>
+	<winsock2.h>
+
+1141710974 c:\games\blood frontier\engine\src\enet\include\enet\unix.h
+	<stdlib.h>
+	<sys/types.h>
+	<netinet/in.h>
+
+1141710974 c:\games\blood frontier\engine\src\enet\include\enet\types.h
+
+1163413960 c:\games\blood frontier\engine\src\enet\include\enet\protocol.h
+	"enet/types.h"
+
+1141710974 c:\games\blood frontier\engine\src\enet\include\enet\list.h
+	<stdlib.h>
+
+1141710974 c:\games\blood frontier\engine\src\enet\include\enet\callbacks.h
+	<stdlib.h>
+
+1152215511 c:\games\blood frontier\engine\src\enet\host.c
+	<string.h>
+	"enet/enet.h"
+
+1141710973 c:\games\blood frontier\engine\src\enet\list.c
+	"enet/list.h"
+
+1175076033 c:\games\blood frontier\engine\src\enet\packet.c
+	<string.h>
+	"enet/enet.h"
+
+1169199913 c:\games\blood frontier\engine\src\enet\peer.c
+	<string.h>
+	"enet/enet.h"
+
+1188638908 c:\games\blood frontier\engine\src\enet\protocol.c
+	<stdio.h>
+	<string.h>
+	"enet/utility.h"
+	"enet/time.h"
+	"enet/enet.h"
+
+1141710974 c:\games\blood frontier\engine\src\enet\include\enet\utility.h
+
+1141710974 c:\games\blood frontier\engine\src\enet\include\enet\time.h
+
+1180745970 c:\games\blood frontier\engine\src\enet\unix.c
+	<sys/types.h>
+	<sys/socket.h>
+	<sys/ioctl.h>
+	<sys/time.h>
+	<arpa/inet.h>
+	<netdb.h>
+	<unistd.h>
+	<string.h>
+	<errno.h>
+	<time.h>
+	"enet/enet.h"
+	<fcntl.h>
+	<sys/poll.h>
+
+1176651000 c:\games\blood frontier\engine\src\enet\win32.c
+	<time.h>
+	"enet/enet.h"
+
+1189116909 c:\games\blood frontier\engine\src\engine\bih.cpp
+	"pch.h"
+	"engine.h"
+
+1185501158 c:\games\blood frontier\engine\src\shared\pch.h
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<stdarg.h>
+	<limits.h>
+	<assert.h>
+	<new>
+	<new.h>
+	<time.h>
+	"windows.h"
+	<SDL.h>
+	<SDL_image.h>
+	<SDL_opengl.h>
+	"GL/glext.h"
+	<enet/enet.h>
+	<eh.h>
+	<dbghelp.h>
+	<zlib.h>
+
+1187156329 c:\games\blood frontier\engine\src\include\sdl.h
+	"SDL_main.h"
+	"SDL_stdinc.h"
+	"SDL_audio.h"
+	"SDL_cdrom.h"
+	"SDL_cpuinfo.h"
+	"SDL_endian.h"
+	"SDL_error.h"
+	"SDL_events.h"
+	"SDL_loadso.h"
+	"SDL_mutex.h"
+	"SDL_rwops.h"
+	"SDL_thread.h"
+	"SDL_timer.h"
+	"SDL_video.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156343 c:\games\blood frontier\engine\src\include\sdl_main.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156491 c:\games\blood frontier\engine\src\include\sdl_stdinc.h
+	"SDL_config.h"
+	<sys/types.h>
+	<stdio.h>
+	<stdlib.h>
+	<stddef.h>
+	<stdarg.h>
+	<stdlib.h>
+	<malloc.h>
+	<stddef.h>
+	<stdarg.h>
+	<memory.h>
+	<string.h>
+	<strings.h>
+	<inttypes.h>
+	<stdint.h>
+	<ctype.h>
+	<iconv.h>
+	"begin_code.h"
+	<alloca.h>
+	<malloc.h>
+	<malloc.h>
+	<stdlib.h>
+	"close_code.h"
+
+1187156335 c:\games\blood frontier\engine\src\include\sdl_config.h
+	"SDL_platform.h"
+	"SDL_config_dreamcast.h"
+	"SDL_config_macos.h"
+	"SDL_config_macosx.h"
+	"SDL_config_symbian.h"
+	"SDL_config_win32.h"
+	"SDL_config_os2.h"
+	"SDL_config_minimal.h"
+
+1187156466 c:\games\blood frontier\engine\src\include\sdl_platform.h
+
+1187156335 c:\games\blood frontier\engine\src\include\sdl_config_macosx.h
+	"SDL_platform.h"
+	<AvailabilityMacros.h>
+
+1187156335 c:\games\blood frontier\engine\src\include\sdl_config_win32.h
+	"SDL_platform.h"
+
+1187156579 c:\games\blood frontier\engine\src\include\begin_code.h
+
+1187156579 c:\games\blood frontier\engine\src\include\close_code.h
+
+1187156334 c:\games\blood frontier\engine\src\include\sdl_audio.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_endian.h"
+	"SDL_mutex.h"
+	"SDL_thread.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\games\blood frontier\engine\src\include\sdl_error.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\games\blood frontier\engine\src\include\sdl_endian.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156349 c:\games\blood frontier\engine\src\include\sdl_mutex.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156491 c:\games\blood frontier\engine\src\include\sdl_thread.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_mutex.h"
+	"begin_code.h"
+	<process.h>
+	"close_code.h"
+
+1187156469 c:\games\blood frontier\engine\src\include\sdl_rwops.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156335 c:\games\blood frontier\engine\src\include\sdl_cdrom.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156336 c:\games\blood frontier\engine\src\include\sdl_cpuinfo.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\games\blood frontier\engine\src\include\sdl_events.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_active.h"
+	"SDL_keyboard.h"
+	"SDL_mouse.h"
+	"SDL_joystick.h"
+	"SDL_quit.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156329 c:\games\blood frontier\engine\src\include\sdl_active.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156342 c:\games\blood frontier\engine\src\include\sdl_keyboard.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_keysym.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156343 c:\games\blood frontier\engine\src\include\sdl_keysym.h
+
+1187156349 c:\games\blood frontier\engine\src\include\sdl_mouse.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_video.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156578 c:\games\blood frontier\engine\src\include\sdl_video.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_rwops.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\games\blood frontier\engine\src\include\sdl_joystick.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156467 c:\games\blood frontier\engine\src\include\sdl_quit.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+
+1187156343 c:\games\blood frontier\engine\src\include\sdl_loadso.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156518 c:\games\blood frontier\engine\src\include\sdl_timer.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156574 c:\games\blood frontier\engine\src\include\sdl_version.h
+	"SDL_stdinc.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156339 c:\games\blood frontier\engine\src\include\sdl_image.h
+	"SDL.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156466 c:\games\blood frontier\engine\src\include\sdl_opengl.h
+	"SDL_config.h"
+	<windows.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<gl.h>
+	<glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<windows.h>
+	<stddef.h>
+
+1187156651 c:\games\blood frontier\engine\src\include\gl\glext.h
+	<windows.h>
+	<stddef.h>
+
+1187156604 c:\games\blood frontier\engine\src\include\zlib.h
+	"zconf.h"
+
+1188947115 c:\games\blood frontier\engine\src\include\zconf.h
+	<windows.h>
+	<sys/types.h>
+	<unistd.h>
+	<unixio.h>
+
+1190723512 c:\games\blood frontier\engine\src\engine\engine.h
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"world.h"
+	"octa.h"
+	"lightmap.h"
+	"bih.h"
+	"texture.h"
+	"model.h"
+
+1185501158 c:\games\blood frontier\engine\src\shared\cube.h
+	"tools.h"
+	"geom.h"
+	"ents.h"
+	"command.h"
+
+1190612442 c:\games\blood frontier\engine\src\shared\tools.h
+	<crtdbg.h>
+
+1189115127 c:\games\blood frontier\engine\src\shared\geom.h
+
+1190686047 c:\games\blood frontier\engine\src\shared\ents.h
+
+1190612442 c:\games\blood frontier\engine\src\shared\command.h
+
+1190783959 c:\games\blood frontier\engine\src\shared\iengine.h
+
+1190749321 c:\games\blood frontier\engine\src\shared\igame.h
+
+1190619712 c:\games\blood frontier\engine\src\engine\world.h
+
+1187156165 c:\games\blood frontier\engine\src\engine\octa.h
+
+1187156158 c:\games\blood frontier\engine\src\engine\lightmap.h
+
+1189116918 c:\games\blood frontier\engine\src\engine\bih.h
+
+1189695295 c:\games\blood frontier\engine\src\engine\texture.h
+
+1190686375 c:\games\blood frontier\engine\src\engine\model.h
+
+1190723091 c:\games\blood frontier\engine\src\engine\cubeloader.cpp
+	"pch.h"
+	"engine.h"
+
+1189539760 c:\games\blood frontier\engine\src\engine\joystick.cpp
+	"pch.h"
+	"engine.h"
+
+1190686360 c:\games\blood frontier\engine\src\engine\material.cpp
+	"pch.h"
+	"engine.h"
+
+1187156165 c:\games\blood frontier\engine\src\engine\normal.cpp
+	"pch.h"
+	"engine.h"
+
+1189282755 c:\games\blood frontier\engine\src\engine\octa.cpp
+	"pch.h"
+	"engine.h"
+
+1189955243 c:\games\blood frontier\engine\src\engine\octarender.cpp
+	"pch.h"
+	"engine.h"
+
+1190686243 c:\games\blood frontier\engine\src\engine\rendermodel.cpp
+	"pch.h"
+	"engine.h"
+	"tristrip.h"
+	"vertmodel.h"
+	"md2.h"
+	"md3.h"
+
+1187156158 c:\games\blood frontier\engine\src\engine\tristrip.h
+
+1190724938 c:\games\blood frontier\engine\src\engine\vertmodel.h
+
+1190686364 c:\games\blood frontier\engine\src\engine\md2.h
+
+1190686367 c:\games\blood frontier\engine\src\engine\md3.h
+
+1189116512 c:\games\blood frontier\engine\src\engine\rendersky.cpp
+	"pch.h"
+	"engine.h"
+
+1190686259 c:\games\blood frontier\engine\src\engine\renderva.cpp
+	"pch.h"
+	"engine.h"
+
+1190174249 c:\games\blood frontier\engine\src\engine\shader.cpp
+	"pch.h"
+	"engine.h"
+
+1188941005 c:\games\blood frontier\engine\src\engine\sound.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_mixer.h"
+	"fmod.h"
+
+1188947115 c:\games\blood frontier\engine\src\include\sdl_mixer.h
+	"SDL_types.h"
+	"SDL_rwops.h"
+	"SDL_audio.h"
+	"SDL_endian.h"
+	"SDL_version.h"
+	"begin_code.h"
+	"close_code.h"
+
+1187156574 c:\games\blood frontier\engine\src\include\sdl_types.h
+	"SDL_stdinc.h"
+
+1187156591 c:\games\blood frontier\engine\src\include\fmod.h
+
+1190783959 c:\games\blood frontier\engine\src\engine\texture.cpp
+	"pch.h"
+	"engine.h"
+
+1188940718 c:\games\blood frontier\engine\src\engine\water.cpp
+	"pch.h"
+	"engine.h"
+
+1186155315 c:\games\blood frontier\engine\src\shared\geom.cpp
+	"pch.h"
+	"tools.h"
+	"geom.h"
+
+1185501158 c:\games\blood frontier\engine\src\shared\pch.cpp
+	"pch.h"
+
+1186977064 c:\games\blood frontier\engine\src\shared\tools.cpp
+	"pch.h"
+	"tools.h"
+	<unistd.h>
+	<sys/stat.h>
+	<sys/types.h>
+	<dirent.h>
+
+1190612442 c:\games\blood frontier\engine\src\engine\3dgui.cpp
+	"pch.h"
+	"engine.h"
+
+1190723111 c:\games\blood frontier\engine\src\engine\client.cpp
+	"pch.h"
+	"engine.h"
+
+1190686758 c:\games\blood frontier\engine\src\engine\command.cpp
+	"pch.h"
+	"minimal.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1190679673 c:\games\blood frontier\engine\src\engine\console.cpp
+	"pch.h"
+	"engine.h"
+	<X11/Xlib.h>
+	<SDL_syswm.h>
+
+1187156491 c:\games\blood frontier\engine\src\include\sdl_syswm.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"SDL_version.h"
+	"begin_code.h"
+	<X11/Xlib.h>
+	<X11/Xatom.h>
+	<microwin/nano-X.h>
+	<windows.h>
+	<sys/neutrino.h>
+	<Ph.h>
+	"close_code.h"
+
+1190612442 c:\games\blood frontier\engine\src\engine\grass.cpp
+	"pch.h"
+	"engine.h"
+
+1190612442 c:\games\blood frontier\engine\src\engine\lightmap.cpp
+	"pch.h"
+	"engine.h"
+
+1190784278 c:\games\blood frontier\engine\src\engine\main.cpp
+	"pch.h"
+	"engine.h"
+
+1190612442 c:\games\blood frontier\engine\src\engine\menus.cpp
+	"pch.h"
+	"engine.h"
+
+1190723091 c:\games\blood frontier\engine\src\engine\octaedit.cpp
+	"pch.h"
+	"engine.h"
+
+1190724916 c:\games\blood frontier\engine\src\engine\physics.cpp
+	"pch.h"
+	"engine.h"
+
+1190749226 c:\games\blood frontier\engine\src\engine\rendergl.cpp
+	"pch.h"
+	"engine.h"
+
+1190612442 c:\games\blood frontier\engine\src\engine\renderparticles.cpp
+	"pch.h"
+	"engine.h"
+
+1190612442 c:\games\blood frontier\engine\src\engine\rendertext.cpp
+	"pch.h"
+	"engine.h"
+
+1190723590 c:\games\blood frontier\engine\src\engine\server.cpp
+	"pch.h"
+	"minimal.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"engine.h"
+
+1190612442 c:\games\blood frontier\engine\src\engine\serverbrowser.cpp
+	"pch.h"
+	"engine.h"
+	"SDL_thread.h"
+
+1190686299 c:\games\blood frontier\engine\src\engine\shadowmap.cpp
+	"pch.h"
+	"engine.h"
+
+1190674034 c:\games\blood frontier\engine\src\engine\world.cpp
+	"pch.h"
+	"engine.h"
+
+1190726914 c:\games\blood frontier\engine\src\krsgame\krs.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"krsgame.h"
+	"krsrender.h"
+	"krsents.h"
+
+1190749226 c:\games\blood frontier\engine\src\krsgame\krsgame.h
+
+1190749321 c:\games\blood frontier\engine\src\krsgame\krsrender.h
+
+1190612376 c:\games\blood frontier\engine\src\krsgame\krsents.h
+
+1190749440 c:\games\blood frontier\engine\src\sspgame\ssp.cpp
+	"pch.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"sspgame.h"
+	"ssprender.h"
+	"sspents.h"
+	"sspprojs.h"
+	"sspweap.h"
+	"sspblock.h"
+	"sspenemy.h"
+
+1190749226 c:\games\blood frontier\engine\src\sspgame\sspgame.h
+
+1190749513 c:\games\blood frontier\engine\src\sspgame\ssprender.h
+
+1190727003 c:\games\blood frontier\engine\src\sspgame\sspents.h
+
+1190727003 c:\games\blood frontier\engine\src\sspgame\sspprojs.h
+
+1190725766 c:\games\blood frontier\engine\src\sspgame\sspweap.h
+
+1190612377 c:\games\blood frontier\engine\src\sspgame\sspblock.h
+
+1190612377 c:\games\blood frontier\engine\src\sspgame\sspenemy.h
+
+1190747386 c:\games\blood frontier\engine\src\engine\worldio.cpp
+	"pch.h"
+	"engine.h"
+
+1190749321 c:\games\blood frontier\engine\src\fpsgame\fps.cpp
+	"pch.h"
+	"minimal.h"
+	"engine.h"
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+	"game.h"
+	"fpsserver.h"
+	"weapon.h"
+	"monster.h"
+	"scoreboard.h"
+	"fpsrender.h"
+	"entities.h"
+	"client.h"
+	"capture.h"
+	"physics.h"
+	"bot.h"
+
+1190725766 c:\games\blood frontier\engine\src\fpsgame\game.h
+	"botent.h"
+
+1190711792 c:\games\blood frontier\engine\src\fpsgame\bot\botent.h
+
+1190732075 c:\games\blood frontier\engine\src\fpsgame\fpsserver.h
+	<io.h>
+	<unistd.h>
+	"capture.h"
+	"duel.h"
+
+1190612442 c:\games\blood frontier\engine\src\fpsgame\capture.h
+
+1188956647 c:\games\blood frontier\engine\src\fpsgame\duel.h
+
+1190732884 c:\games\blood frontier\engine\src\fpsgame\weapon.h
+
+1190716330 c:\games\blood frontier\engine\src\fpsgame\monster.h
+
+1190612442 c:\games\blood frontier\engine\src\fpsgame\scoreboard.h
+
+1190716409 c:\games\blood frontier\engine\src\fpsgame\fpsrender.h
+
+1190702214 c:\games\blood frontier\engine\src\fpsgame\entities.h
+
+1190732187 c:\games\blood frontier\engine\src\fpsgame\client.h
+
+1190725514 c:\games\blood frontier\engine\src\fpsgame\bot.h
+	"botutl.h"
+	"botmgr.h"
+	"botway.h"
+	"botai.h"
+
+1190716409 c:\games\blood frontier\engine\src\fpsgame\bot\botutl.h
+
+1190714707 c:\games\blood frontier\engine\src\fpsgame\bot\botmgr.h
+
+1190716409 c:\games\blood frontier\engine\src\fpsgame\bot\botway.h
+
+1190726012 c:\games\blood frontier\engine\src\fpsgame\bot\botai.h
+
+1190723512 c:\games\blood frontier\engine\src\shared\minimal.h
+	"cube.h"
+	"iengine.h"
+	"igame.h"
+
+1190726360 c:\games\blood frontier\engine\src\fpsgame\physics.h
+

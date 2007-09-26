@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE CodeBlocks_layout_file>
+<CodeBlocks_layout_file>
+	<File name="changes.txt" open="1" top="0">
+		<Cursor position="0" topLine="0"/>
+	</File>
+	<File name="todo.txt" open="1" top="1">
+		<Cursor position="226" topLine="57"/>
+	</File>
+	<Expand folder="/engine/src"/>
+	<Expand folder="/engine"/>
+</CodeBlocks_layout_file>
