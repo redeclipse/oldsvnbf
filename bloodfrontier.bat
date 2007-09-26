@@ -1,9 +1,9 @@
 @ECHO OFF
 
 set SDL_VIDEO_WINDOW_POS=0,0
-
+set BF_DIR=.
 set BF_HOME=home
-set BF_OPTIONS="-q%BF_HOME%" -r
+set BF_OPTIONS=-q%BF_HOME% -r -k%BF_DIR%
 
 IF EXIST engine\bloodfrontier_client.exe (
 	engine\bloodfrontier_client.exe %BF_OPTIONS% %*
@@ -13,6 +13,6 @@ IF EXIST engine\bloodfrontier_client.exe (
 		engine\bloodfrontier_client.exe %BF_OPTIONS% %*
 		popd
 	) ELSE (
-		echo Unable to find 'bloodfrontier_client.exe'
+		echo Unable to find the Blood Frontier client
 	)
 )
