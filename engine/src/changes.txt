@@ -9,6 +9,7 @@ Legend [
 ]
 
 = wip edition =
+fps: quad timer hud blending
 mod: removed gui2d and forced all code to use 2d menus
 mod: don't remove top level menu unless connected
 mod: show menu unless loading a map or connecting to server
