@@ -764,6 +764,7 @@ struct gui : g3d_gui
 			xsize = max(tx, xsize);
 			ysize = max(ty, ysize);
 			ysize = max(ysize, (skiny[6]-skiny[5])*SKIN_SCALE);
+
 			if(tcurrent) *tcurrent = max(1, min(*tcurrent, tpos));
 #ifdef BFRONTIER
 			adjustscale();

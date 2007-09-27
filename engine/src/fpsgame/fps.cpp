@@ -1137,7 +1137,11 @@ struct fpsclient : igameclient
 		}
 		else if (player1->state == CS_ALIVE && player1->quadmillis)
 		{
-			colour = vec((float(player1->quadmillis)/float(getitem(I_QUAD-I_SHELLS).max))+0.1f, 0.5f, 0.5f);
+			int offset = (player1->quadmillis%1000)+1;
+			if (offset > 500) offset = 1000 - offset;
+			float scale = (float(player1->quadmillis)/float(getitem(I_QUAD-I_SHELLS).max))+0.1f;
+
+			colour = vec(0.25f+(((float(offset)/500.f)*0.75f)*scale)+(0.75f*(1.f-scale)), 1.f-scale, 1.f-scale);
 			return true;
 		}
 		else
