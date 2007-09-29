@@ -9,6 +9,7 @@ Legend [
 ]
 
 = wip edition =
+fps: titlecard fixes in line with newly interpreted maptime (todo: merge to load screen)
 ssp: updated sparks
 mod: spark particle now uses new lightning type
 fps: quad timer hud blending

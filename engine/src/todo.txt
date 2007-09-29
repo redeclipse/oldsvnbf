@@ -1,6 +1,7 @@
 = MOD =
 Modifications for the Engine.
 
+* integrate all modules together into switchable type
 * motd from master server -> title screen?
 * all-in-one package for maps
 * moving sounds?
@@ -50,7 +51,7 @@ Modifications for the Engine.
 = FPS =
 Modifications for the First Person Shooter (FPS).
 
-* directional wobble effect
+* directional wobble effect?
 * hud-based capturing feedback
 * slow zoom?
 * ejections (shells, etc)
@@ -79,8 +80,7 @@ The Blood Frontier Game (BFG) based on FPS.
 * unlimited ammo on all but grenade, reload (sound, only when empty?)
 * fov lock 100-125
 * remove entities: armour, health, pickups, carrot, checkpoint
-* only two guns at same time
-* drop guns, etc
+* only two guns at same time (drop guns, etc)
 * masterserver stuff, online accounts?
 * secondary fire modes (grenade: flash mines)
 * precaching
