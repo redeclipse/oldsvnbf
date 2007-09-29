@@ -325,8 +325,8 @@ extern bool menuactive();
 #define RENDERPUSHX			8.0f
 #define RENDERPUSHZ			0.1f
 
-#define CARDTIME			5000	// title card duration
-#define CARDFADE			3000	// title card fade in/out
+#define CARDTIME			3000	// title card duration
+#define CARDFADE			1500	// title card fade in/out
 
 extern int fov, maxfps, hidehud, hidestats, hudblend;
 

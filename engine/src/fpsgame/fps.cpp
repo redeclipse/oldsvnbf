@@ -839,7 +839,7 @@ struct fpsclient : igameclient
 			
 			glEnable(GL_BLEND);
 			
-			if (!titlecard(ox, oy, lastmillis-maptime))
+			if (maptime && !titlecard(ox, oy, lastmillis-maptime))
 			{
 				extern int hudblend;
 				float fade = 1.f, amt = hudblend*0.01f;
@@ -1138,7 +1138,7 @@ struct fpsclient : igameclient
 
 	bool gethudcolour(vec &colour)
 	{
-		if (lastmillis-maptime <= CARDTIME)
+		if (!maptime || lastmillis-maptime <= CARDTIME)
 		{
 			float fade = (float(lastmillis-maptime)/float(CARDTIME));
 			colour = vec(fade, fade, fade);
