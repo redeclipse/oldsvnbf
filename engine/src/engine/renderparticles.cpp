@@ -522,9 +522,9 @@ static void cleanupexplosion()
 }
 
 #ifdef BFRONTIER
-#define MAXPARTYPES 22
+#define MAXPARTYPES 23
 #else
-#define MAXPARTYPES 21
+#define MAXPARTYPES 22
 #endif
 
 struct particle
@@ -536,6 +536,7 @@ struct particle
 	{
 		char *text;		 // will call delete[] on this only if it starts with an @
 		float val;
+        physent *owner;
 	};
 };
 	
@@ -559,10 +560,10 @@ static bool emit_particles()
 }
 
 #ifdef BFRONTIER
-#define PART_TEXS 10
+#define PART_TEXS 11
 static Texture *parttexs[PART_TEXS];
 #else
-static Texture *parttexs[9];
+static Texture *parttexs[10];
 #endif
 
 void particleinit()
@@ -576,8 +577,9 @@ void particleinit()
 	parttexs[6] = textureload("data/martin/spark.png");
 	parttexs[7] = textureload("data/explosion.jpg");	
 	parttexs[8] = textureload("data/blood.png");
+    parttexs[9] = textureload("data/lightning.jpg");
 #ifdef BFRONTIER
-	parttexs[9] = textureload("data/spark.png");
+	parttexs[10] = textureload("data/spark.png");
 #endif
 	loopi(MAXPARTYPES) parlist[i] = NULL;
 }
@@ -593,11 +595,13 @@ enum
 	PT_METERVS,
 	PT_FIREBALL,
 	PT_DECAL,
+    PT_LIGHTNING,
 
 	PT_ENT  = 1<<8,
 	PT_MOD  = 1<<9,
 	PT_RND4 = 1<<10,
-	PT_LERP = 1<<11 // Use very sparingly!
+    PT_LERP  = 1<<11, // Use very sparingly!
+    PT_TRACK = 1<<12,
 };
 
 // @TODO reorder so as to draw meters & lerps first to reduce visual errors
@@ -623,11 +627,10 @@ static struct parttype { int type; int gr, tex; float sz; int collide; } parttyp
 	{ PT_ENT,		-20,  2,  2.4f,  0 }, // 17 big  slowly rising smoke, entity
 	{ 0,			 -15,  2,  2.4f,  0 }, // 18 big  fast rising smoke		  
 	{ PT_ENT|PT_TRAIL|PT_LERP, 2, 0, 0.60f, 0 }, // 19 water, entity 
-#ifdef BFRONTIER
 	{ PT_ENT,		 20,  1,  4.8f,  0 }, // 20 fireball1, entity
-	{ PT_FLARE,		0,  9,  2.4f,  0 }, // 21 spark
-#else
-    { PT_ENT,         20,  1,  4.8f,  0 }  // 20 fireball1, entity
+    { PT_LIGHTNING|PT_TRACK,    0,  9, 0.28f,  0 }, // 21 lightning
+#ifdef BFRONTIER
+	{ PT_LIGHTNING|PT_TRACK,    0,  10, 0.60f,  0 }, // 22 spark
 #endif
 };
 
@@ -675,12 +678,37 @@ void clearparticles()
 	}
 }	
 
+void removetrackedparticles(physent *owner)
+{
+    loopi(MAXPARTYPES) if(parttypes[i].type&PT_TRACK)
+    { 
+        for(particle **prev = &parlist[i], *cur = parlist[i]; cur; cur = *prev)
+        {
+            if(!owner || cur->owner==owner) 
+            {
+                *prev = cur->next;
+                cur->next = parempty;
+                parempty = cur;
+            }
+            else prev = &cur->next;
+        }
+    }
+}
+
 VARP(outlinemeters, 0, 0, 1);
 
 #define COLLIDERADIUS 8.0f
 #define COLLIDEERROR 1.0f
 
 VARP(decalfade, 1, 10000, 60000);
+
+#define MAXLIGHTNINGSTEPS 64
+#define LIGHTNINGSTEP 8
+int lnjitterx[MAXLIGHTNINGSTEPS], lnjittery[MAXLIGHTNINGSTEPS];
+int lastlnjitter = 0;
+
+VAR(lnjittermillis, 0, 100, 1000);
+VAR(lnjitterradius, 0, 2, 100);
 
 void render_particles(int time)
 {
@@ -713,36 +741,62 @@ void render_particles(int time)
 		}
 		if(pt.tex >= 0) glBindTexture(GL_TEXTURE_2D, parttexs[pt.tex]->gl);
 	
-		bool quads = (type == PT_PART || type == PT_FLARE || type == PT_TRAIL || type == PT_DECAL);
-		if(quads) glBegin(GL_QUADS);
-		else
+        bool quads = false;
+        switch(type)
 		{
-			if(type==PT_FIREBALL) setupexplosion();
-			else
+            case PT_PART:
+            case PT_FLARE:
+            case PT_TRAIL:
+            case PT_DECAL:
+                quads = true;
+                glBegin(GL_QUADS);
+                break;
+
+            case PT_LIGHTNING:
+                if(lastmillis-lastlnjitter > lnjittermillis)
 			{
-				if(type==PT_METER || type==PT_METERVS)
+                    lastlnjitter = lastmillis - (lastmillis%lnjittermillis);
+                    loopi(MAXLIGHTNINGSTEPS)
 				{
-					glDisable(GL_BLEND);
-					glDisable(GL_TEXTURE_2D);
-					foggednotextureshader->set();
-				}
+                        lnjitterx[i] = -lnjitterradius + rnd(2*lnjitterradius + 1);
+                        lnjittery[i] = -lnjitterradius + rnd(2*lnjitterradius + 1);
+                    }
+                }
+
+                quads = true;
+                glDisable(GL_CULL_FACE);
+                break;
+
+            case PT_FIREBALL:
+                setupexplosion();
+                break;
+           
+            case PT_METER:
+            case PT_METERVS:
+				glDisable(GL_BLEND);
+				glDisable(GL_TEXTURE_2D);
+				foggednotextureshader->set();
 				glFogfv(GL_FOG_COLOR, oldfogc);
-			} 
+                break;
+
+            default:
+                glFogfv(GL_FOG_COLOR, oldfogc);
+                break;
 		}
 			
 		for(particle *p, **pp = &parlist[i]; (p = *pp);)
 		{	
-			int ts = (lastmillis-p->millis);
+            int ts = lastmillis-p->millis, blend;
 			bool remove = false;
-			int blend;
-			vec o = p->o;
+            vec o = p->o, d = p->d;
+            if(pt.type&PT_TRACK && p->owner) cl->particletrack(p->owner, o, d);
 			uchar color[3] = {p->color>>16, (p->color>>8)&0xFF, p->color&0xFF};
 			if(p->fade > 5) 
 			{	//parametric coordinate generation (but only if its going to show for more than one frame)
 				if(pt.gr)
 				{
 					float t = (float)(ts);
-					vec v = p->d;
+                    vec v = d;
 					v.mul(t/5000.0f);
 					o.add(v);
 					o.z -= t*t/(2.0f * 5000.0f * pt.gr);
@@ -775,9 +829,46 @@ void render_particles(int time)
 					ty = 0.5f*((i>>1)&1);
 					tsz = 0.5f;
 				}
-				if(type==PT_FLARE || type==PT_TRAIL)
+                if(type==PT_LIGHTNING)
 				{					
-					vec e = p->d;
+                    vec step(d);
+                    step.sub(o);
+                    float len = step.magnitude();
+                    int numsteps = min(int(ceil(len/LIGHTNINGSTEP)), MAXLIGHTNINGSTEPS);
+                    if(numsteps > 1) step.mul(LIGHTNINGSTEP/len);
+                    int jitteroffset = detrnd((size_t)p, MAXLIGHTNINGSTEPS);
+                    vec cur(o), up, right;
+                    up.orthogonal(step);
+                    up.normalize();
+                    right.cross(up, step);
+                    right.normalize();
+                    glBegin(GL_QUAD_STRIP);
+                    loopj(numsteps)
+                    {
+                        vec next(cur);
+                        next.add(step);
+                        if(j+1==numsteps) next = d;
+                        next.add(vec(right).mul(sz*lnjitterx[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
+                        next.add(vec(up).mul(sz*lnjittery[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
+                        vec dir1 = next, dir2 = next, across;
+                        dir1.sub(cur);
+                        dir2.sub(camera1->o);
+                        across.cross(dir2, dir1).normalize().mul(sz);
+                        float tx1 = j&1 ? tx : tx+tsz, tx2 = j&1 ? tx+tsz : tx;
+                        glTexCoord2f(tx2, ty+tsz); glVertex3f(cur.x-across.x, cur.y-across.y, cur.z-across.z);
+                        glTexCoord2f(tx2, ty);     glVertex3f(cur.x+across.x, cur.y+across.y, cur.z+across.z);
+                        if(j+1==numsteps)
+                        {
+                            glTexCoord2f(tx1, ty+tsz); glVertex3f(next.x-across.x, next.y-across.y, next.z-across.z);
+                            glTexCoord2f(tx1, ty);     glVertex3f(next.x+across.x, next.y+across.y, next.z+across.z);
+                        }
+                        cur = next;
+                    }
+                    glEnd();
+                }
+                else if(type==PT_FLARE || type==PT_TRAIL)
+                {					
+                    vec e = d;
 					if(type==PT_TRAIL)
 					{
 						if(pt.gr) e.z -= float(ts)/pt.gr;
@@ -799,10 +890,10 @@ void render_particles(int time)
 					if(type==PT_DECAL)
 					{
 						vec udir, vdir;		
-						udir.orthogonal(p->d);
+                        udir.orthogonal(d);
 						udir.normalize();
 						udir.mul(sz);
-						vdir.cross(p->d, udir);
+                        vdir.cross(d, udir);
 						v[0].add(udir);
 						v[1].add(vdir);
 						v[2].sub(udir);
@@ -976,21 +1067,35 @@ void render_particles(int time)
 				pp = &p->next;
 		}
 		
-		if(quads) glEnd();
-		else
-		{
-			if(type==PT_FIREBALL) cleanupexplosion();
-			else
-			{
-				if(type==PT_METER || type==PT_METERVS)
+        switch(type)
 				{
-					glEnable(GL_BLEND);
-					glEnable(GL_TEXTURE_2D);
-					foggedshader->set();
-				}
-				else glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            case PT_PART:
+            case PT_FLARE:
+            case PT_TRAIL:
+            case PT_DECAL:
+                glEnd();
+                break;
+
+            case PT_LIGHTNING:
+                glEnable(GL_CULL_FACE);
+                break;
+
+            case PT_FIREBALL:
+                cleanupexplosion();
+                break;
+
+            case PT_METER:
+            case PT_METERVS:
+				glEnable(GL_BLEND);
+				glEnable(GL_TEXTURE_2D);
+				foggedshader->set();
 				glFogfv(GL_FOG_COLOR, zerofog);
-			}
+                break;
+    
+            default:
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+                glFogfv(GL_FOG_COLOR, zerofog);
+                break;
 		}
 		
 		if(pt.type&PT_MOD) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -1084,7 +1189,8 @@ static struct partmap { int type; int color; } partmaps[] =
 	{ 17, 0x897661}, // 24 greyish-brown:	big  slowly rising smoke
 	{ 18, 0x897661}, // 25 greyish-brown:	big  fast rising smoke		  
 	{ 19, 0x3232FF}, // 26 water  
-	{ 20, 0xFFC8C8}  // 27 yellow: fireball1
+    { 20, 0xFFC8C8}, // 27 yellow: fireball1
+    { 21, 0xFFFFFF}, // 28 lightning
 };
 
 void regular_particle_splash(int type, int num, int fade, const vec &p, int delay) 
@@ -1133,10 +1239,10 @@ void particle_meter(const vec &s, float val, int type, int fade)
 	newparticle(s, vec(0, 0, 1), fade, partmaps[type].type, partmaps[type].color)->val = val;
 }
 
-void particle_flare(const vec &p, const vec &dest, int fade, int type)
+void particle_flare(const vec &p, const vec &dest, int fade, int type, physent *owner)
 {
     if(shadowmapping) return;
-	newparticle(p, dest, fade, partmaps[type].type, partmaps[type].color);
+    newparticle(p, dest, fade, partmaps[type].type, partmaps[type].color)->owner = owner;
 }
 
 void particle_fireball(const vec &dest, float max, int type)
@@ -1258,10 +1364,14 @@ static void makeparticles(entity &e)
 		case 3: //fire ball - <size> <rgb>
 			newparticle(e.o, vec(0, 0, 1), 1, 16, colorfromattr(e.attr3))->val = 1+e.attr2;
 			break;
-		case 4: //tape - <dir> <length> <rgb>
-			if(e.attr2 >= 256) regularshape(10, 1+e.attr3, colorfromattr(e.attr4), e.attr2-256, 5, 200, e.o);
-			else newparticle(e.o, offsetvec(e.o, e.attr2, 1+e.attr3), 1, 10, colorfromattr(e.attr4));
+        case 4: //tape/lightning - <dir> <length> <rgb>
+        case 7:
+        {
+            int type = (e.attr1==4) ? 10 : 21;
+            if(e.attr2 >= 256) regularshape(type, 1+e.attr3, colorfromattr(e.attr4), e.attr2-256, 5, 200, e.o);
+            else newparticle(e.o, offsetvec(e.o, e.attr2, 1+e.attr3), 1, type, colorfromattr(e.attr4));
 			break;
+        }
 		case 5: //meter, metervs - <percent> <rgb>
 		case 6:
 			newparticle(e.o, vec(0, 0, 1), 1, (e.attr1==5)?13:14, colorfromattr(e.attr3))->val = min(1.0, float(e.attr2)/100);
@@ -1376,10 +1486,10 @@ void part_meter(const vec &s, float val, int type, int fade, int color)
 	newparticle(s, vec(0, 0, 1), fade, type, color)->val = val;
 }
 
-void part_flare(const vec &p, const vec &dest, int fade, int type, int color)
+void part_flare(const vec &p, const vec &dest, int fade, int type, int color, physent *owner)
 {
     if(shadowmapping) return;
-	newparticle(p, dest, fade, type, color);
+    newparticle(p, dest, fade, type, color)->owner = owner;
 }
 
 void part_fireball(const vec &dest, float max, int type, int color)
@@ -1403,6 +1513,21 @@ void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fa
 		vec w(rnd(int(v.x*2))-int(v.x), rnd(int(v.y*2))-int(v.y), rnd(int(v.z*2))-int(v.z)+z);
 		w.add(o);
 		part_splash(type, 1, fade, w, color);
+	}
+}
+
+void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, physent *owner)
+{
+    if(shadowmapping) return;
+	loopi(amt)
+	{
+		vec from(rnd(int(v.x*2))-int(v.x), rnd(int(v.y*2))-int(v.y), rnd(int(v.z*2))-int(v.z)+z1);
+		from.add(o);
+
+		vec to(rnd(int(w.x*2))-int(w.x), rnd(int(w.y*2))-int(w.y), rnd(int(w.z*2))-int(w.z)+z1);
+		to.add(d);
+
+		newparticle(from, to, fade, type, color)->owner = owner;
 	}
 }
 #endif

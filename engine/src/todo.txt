@@ -50,6 +50,7 @@ Modifications for the Engine.
 = FPS =
 Modifications for the First Person Shooter (FPS).
 
+* directional wobble effect
 * hud-based capturing feedback
 * slow zoom?
 * ejections (shells, etc)

@@ -9,6 +9,8 @@ Legend [
 ]
 
 = wip edition =
+ssp: updated sparks
+mod: spark particle now uses new lightning type
 fps: quad timer hud blending
 mod: removed gui2d and forced all code to use 2d menus
 mod: don't remove top level menu unless connected

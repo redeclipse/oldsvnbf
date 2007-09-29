@@ -238,14 +238,12 @@ struct fpsclient : igameclient
 				continue;
 			}
             if(lagtime && (players[i]->state==CS_ALIVE || (players[i]->state==CS_DEAD && lastmillis-players[i]->lastpain<2000)) && !intermission) moveplayer(players[i], 2, false);   // use physics to extrapolate player position
-#ifndef BFRONTIER
-            if(player1->state==CS_SPECTATOR && following>=0 && following==players[i]->clientnum) followplayer(players[i]);
-#endif
 		}
 	}
 
 	void updateworld(vec &pos, int curtime, int lm)		// main game update loop
 	{
+        if(!maptime) { maptime = lm + curtime; return; }
 		lastmillis = lm;
 		if(!curtime) return;
 		physicsframe();
@@ -409,6 +407,7 @@ struct fpsclient : igameclient
 
 		if(local) damage = d->dodamage(damage);
 		else if(actor==player1) return;
+
 		if(d==player1)
 		{
 			damageblend(damage);
@@ -600,6 +599,7 @@ struct fpsclient : igameclient
 		if(d->name[0]) conoutf("player %s disconnected", colorname(d));
 		ws.removebouncers(d);
 		ws.removeprojectiles(d);
+        removetrackedparticles(d);
 		DELETEP(players[cn]);
 		cleardynentcache();
 	}
@@ -642,8 +642,7 @@ struct fpsclient : igameclient
 		s_strcpy(clientmap, name);
 		sb.showscores(false);
 		intermission = false;
-        maptime = lastmillis;
-
+        maptime = 0;
 #ifdef BFRONTIER
 		if(m_sp)
 		{
@@ -801,7 +800,7 @@ struct fpsclient : igameclient
 			drawhudmodel(ANIM_GUNIDLE|ANIM_LOOP);
 		}
 #endif
-	}
+    }
 
 #ifdef BFRONTIER
 	void drawicon(float tx, float ty, int x, int y, int s = 64)
@@ -1056,6 +1055,16 @@ struct fpsclient : igameclient
 #endif
 	}
 #endif
+
+    void particletrack(physent *owner, vec &o, vec &d)
+    {
+        if(owner->type!=ENT_PLAYER && owner->type!=ENT_AI) return;
+        float dist = o.dist(d);
+        vecfromyawpitch(owner->yaw, owner->pitch, 1, 0, d);
+        float newdist = raycube(owner->o, d, dist, RAY_CLIPMAT|RAY_POLY);
+        d.mul(min(newdist, dist)).add(owner->o);
+        o = ws.hudgunorigin(GUN_PISTOL, owner->o, d, (fpsent *)owner);
+    }
 
 	void newmap(int size)
 	{

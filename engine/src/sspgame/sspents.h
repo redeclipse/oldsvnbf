@@ -789,9 +789,7 @@ struct sspentities : icliententities
 			{
 				if (inbounds(m, getvar("elecsize")/2, getvar("elecsize"), o, t.height, t.radius))
 				{
-					part_flare(vec(m).add(vec(rnd(int(d->xradius*2))-d->xradius, rnd(int(d->yradius*2))-d->yradius, rnd(int(eye*2))-eye)),
-						vec(vec(o).add(vec(0, 0, t.height))).add(vec(rnd(int(t.radius*2))-t.radius, rnd(int(t.radius*2))-t.radius, rnd(int(t.height*2))-t.height)),
-						100, 21, scol[SH_ELEC]);
+					part_flares(m, vec(d->xradius, d->yradius, eye), eye/2.f, vec(o).add(vec(0, 0, t.height)), vec(t.radius, t.radius, t.height), t.height/2.f, 22, rnd(10)+1, 1, scol[SH_ELEC]);
 
 					if (idx >= 0)
 					{

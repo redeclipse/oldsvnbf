@@ -110,6 +110,7 @@ struct clientcom : iclientcom
 		player1->lifesequence = 0;
 		player1->privilege = PRIV_NONE;
 		spectator = false;
+        removetrackedparticles();
 		loopv(cl.players) DELETEP(cl.players[i]);
 		cleardynentcache();
 	}
@@ -185,7 +186,8 @@ struct clientcom : iclientcom
 #else
 		if(!remote) return;
 #endif
-		int i = arg2[0] ? parseplayer(arg2) : player1->clientnum, val = atoi(arg1);
+        int i = arg2[0] ? parseplayer(arg2) : player1->clientnum,
+            val = atoi(arg1);
 		if(i>=0) addmsg(SV_SPECTATOR, "rii", i, val);
 	}
 
@@ -446,9 +448,7 @@ struct clientcom : iclientcom
 		int type;
 		bool mapchanged = false;
 
-		while(p.remaining())
-		{
-		switch(type = getint(p))
+        while(p.remaining()) switch(type = getint(p))
 		{
 			case SV_INITS2C:					// welcome messsage from the server
 			{
@@ -1019,8 +1019,6 @@ struct clientcom : iclientcom
 			default:
 				neterr("type");
 				return;
-		}
-		//conoutf("client msg: %d (%s)", type, msgnames[type]);
 		}
 	}
 

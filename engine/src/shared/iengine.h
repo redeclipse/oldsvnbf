@@ -132,8 +132,9 @@ extern void particle_splash(int type, int num, int fade, const vec &p);
 extern void particle_trail(int type, int fade, const vec &from, const vec &to);
 extern void particle_text(const vec &s, char *t, int type, int fade = 2000);
 extern void particle_meter(const vec &s, float val, int type, int fade = 1);
-extern void particle_flare(const vec &p, const vec &dest, int fade, int type = 10);
+extern void particle_flare(const vec &p, const vec &dest, int fade, int type = 10, physent *owner = NULL);
 extern void particle_fireball(const vec &dest, float max, int type);
+extern void removetrackedparticles(physent *owner = NULL);
 
 // worldio
 extern void load_world(const char *mname, const char *cname = NULL);
@@ -382,10 +383,11 @@ extern void part_text(const vec &s, char *t, bool moving, int fade, int color);
 extern void part_splash(int type, int num, int fade, const vec &p, int color);
 extern void part_trail(int type, int fade, const vec &s, const vec &e, int color);
 extern void part_meter(const vec &s, float val, int type, int fade, int color);
-extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color);
+extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color, physent *owner = NULL);
 extern void part_fireball(const vec &dest, float max, int type, int color);
 extern void part_firerad(const vec &dest, float size, int type, int color);
 extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color);
+extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, physent *owner = NULL);
 
 // rendertext
 enum

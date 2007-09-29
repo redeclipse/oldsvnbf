@@ -752,30 +752,32 @@ GLuint cubemapfromsky(int size)
 {
 	extern Texture *sky[6];
 	if(!sky[0]) return 0;
+    
+    int tsize = 0, cmw, cmh;
+    GLint tw[6], th[6]; 
+    loopi(6)
+    {
+        glBindTexture(GL_TEXTURE_2D, sky[i]->gl);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &tw[i]);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &th[i]);
+        tsize = max(tsize, max(tw[i], th[i]));
+    }
+    cmw = cmh = min(tsize, size);
+    resizetexture(cmw, cmh, true, GL_RGB5, GL_TEXTURE_CUBE_MAP_ARB);
+    
 	GLuint tex;
-	int w, h;
-	GLint tw, th;
-	uchar *pixels = NULL;
 	glGenTextures(1, &tex);
+    uchar *pixels = new uchar[3*max(cmw, tsize)*max(cmh, tsize)];
 	loopi(6)
 	{
 		glBindTexture(GL_TEXTURE_2D, sky[i]->gl);
-		if(!pixels)
-		{
-			glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &tw);
-			glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &th);
-			w = min(size, tw);
-			h = min(size, th);
-            resizetexture(w, h, true, GL_RGB5, GL_TEXTURE_CUBE_MAP_ARB);
-			pixels = new uchar[3*max(size, tw)*max(size, th)]; 
-		}
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-		if(tw!=w || th!=h) gluScaleImage(GL_RGB, tw, th, GL_UNSIGNED_BYTE, pixels, w, h, GL_UNSIGNED_BYTE, pixels);
-		createtexture(!i ? tex : 0, w, h, pixels, 3, true, GL_RGB5, cubemapsides[i].target);
+        if(tw[i]!=cmw || th[i]!=cmh) gluScaleImage(GL_RGB, tw[i], th[i], GL_UNSIGNED_BYTE, pixels, cmw, cmh, GL_UNSIGNED_BYTE, pixels);
+        createtexture(!i ? tex : 0, cmw, cmh, pixels, 3, true, GL_RGB5, cubemapsides[i].target);
 	}
 	delete[] pixels;
-	if(canhwmipmap(compressedformat(GL_RGB5, w, h))) glGenerateMipmap_(GL_TEXTURE_CUBE_MAP_ARB);
+    if(canhwmipmap(compressedformat(GL_RGB5, cmw, cmh))) glGenerateMipmap_(GL_TEXTURE_CUBE_MAP_ARB);
 	return tex;
 }
 
@@ -790,6 +792,8 @@ Texture *cubemaploadwildcard(const char *name, bool mipit, bool msg)
 	SDL_Surface *surface[6];
 	string sname;
 	if(!wildcard) s_strcpy(sname, tname);
+    GLenum format = 0;
+    int tsize = 0;
 	loopi(6)
 	{
 		if(wildcard)
@@ -799,23 +803,26 @@ Texture *cubemaploadwildcard(const char *name, bool mipit, bool msg)
 			s_strcat(sname, wildcard+1);
 		}
 		surface[i] = texturedata(sname, NULL, msg);
-		if(!surface[i] || 
-			(i > 0 && 
-				(surface[i]->format->BitsPerPixel != surface[0]->format->BitsPerPixel ||
-				 surface[i]->w != surface[0]->w || surface[i]->h != surface[0]->h)))
+        if(!surface[i])
 		{
-			if(surface[i] && msg) conoutf("cubemap texture %s doesn't match other sides", sname);
 			loopj(i) SDL_FreeSurface(surface[j]);
 			return NULL;
 		}
+        if(!format) format = texformat(surface[i]->format->BitsPerPixel);
+        else if(texformat(surface[i]->format->BitsPerPixel)!=format)
+        {
+            if(surface[i] && msg) conoutf("cubemap texture %s doesn't match other sides' format", sname);
+            loopj(i) SDL_FreeSurface(surface[j]);
+            return NULL;
+        }
+        tsize = max(tsize, max(surface[i]->w, surface[i]->h));
 	}
 	char *key = newstring(tname);
 	t = &textures[key];
 	t->name = key;
 	t->bpp = surface[0]->format->BitsPerPixel;
-	int w = t->xs = surface[0]->w;
-	int h = t->ys = surface[0]->h;
-	GLenum format = texformat(surface[0]->format->BitsPerPixel);
+    int w = t->xs = tsize;
+    int h = t->ys = tsize;
     resizetexture(w, h, mipit, format, GL_TEXTURE_CUBE_MAP_ARB);
 	glGenTextures(1, &t->gl);
 	loopi(6)
