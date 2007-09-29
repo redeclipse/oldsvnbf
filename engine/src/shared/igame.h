@@ -85,7 +85,6 @@ struct iphysics
     virtual void trigger(physent *d, bool local, int floorlevel, int waterlevel) { return; }
 };
 #endif
-
 struct igameclient
 {
     virtual ~igameclient() {}
@@ -132,6 +131,7 @@ struct igameclient
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}
     virtual void setupcamera() {}
     virtual void adddynlights() {}
+    virtual void particletrack(physent *owner, vec &o, vec &d) {}
 #ifdef BFRONTIER
 	virtual void recomputecamera()
 	{

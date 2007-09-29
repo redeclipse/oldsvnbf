@@ -352,7 +352,6 @@ struct weaponstate
 			{
 				h.dir = ivec(int(vel.x*DNF), int(vel.y*DNF), int(vel.z*DNF));
 				playsound(S_PAIN1+rnd(5), &d->o); 
-				if(at==player1) playsound(S_DAMAGE1+cl.damagesnd(damage));
 			}
 		}
 #endif
@@ -379,7 +378,7 @@ struct weaponstate
 		}
 	}
 
-	float rocketdist(fpsent *o, vec &dir, vec &v)
+    float rocketdist(fpsent *o, vec &dir, const vec &v)
 	{
 		vec middle = o->o;
 		middle.z += (o->aboveeye-o->eyeheight)/2;
@@ -426,7 +425,7 @@ struct weaponstate
 
 	void splash(projectile &p, vec &v, dynent *notthis, int qdam)
 	{
-		if(p.gun!=GUN_RL)
+        if(guns[p.gun].part)
 		{
 			particle_splash(0, 100, 200, v);
 			playsound(S_FEXPLODE, &v);
@@ -448,7 +447,8 @@ struct weaponstate
 		splash(p, v, o, qdam);
 #endif
 		vec dir;
-		rocketdist(o, dir, v);
+        if(guns[p.gun].part) { dir = v; dir.normalize(); }
+        else rocketdist(o, dir, v);
 		hit(qdam, o, p.owner, dir, p.gun, 0);
 		return true;
 	}
@@ -479,7 +479,7 @@ struct weaponstate
 				{
 					fpsent *o = (fpsent *)cl.iterdynents(j);
 					if(!o || p.owner==o || o->o.reject(v, 10.0f)) continue;
-					if(projdamage(o, p, v, qdam)) exploded = true;
+                    if(projdamage(o, p, v, qdam)) { exploded = true; break; }
 				}
 			}
 			if(!exploded)
@@ -495,18 +495,14 @@ struct weaponstate
 				{	
                     vec pos(v);
                     pos.add(vec(p.offset).mul(p.offsetmillis/float(OFFSETMILLIS)));
-					if(p.gun==GUN_RL) 
+                    if(guns[p.gun].part)
 					{
-                        regular_particle_splash(5, 2, 300, pos);
+                         regular_particle_splash(1, 2, 300, pos);
+                         particle_splash(guns[p.gun].part, 1, 1, pos);
 					}
 					else 
 					{
-                         regular_particle_splash(1, 2, 300, pos);
-#ifdef BFRONTIER
-                         particle_splash(getgun(p.gun).part, 1, 1, pos);
-#else
-                         particle_splash(guns[p.gun].part, 1, 1, pos);
-#endif
+                        regular_particle_splash(5, 2, 300, pos);
 					}
 				}	
 			}
@@ -523,12 +519,24 @@ struct weaponstate
 
 	vec hudgunorigin(int gun, const vec &from, const vec &to, fpsent *d)
 	{
-		if(d!=player1) return from;
 		vec offset(from);
-		offset.add(vec(to).sub(from).normalize().mul(6));
+        if(d!=player1 || isthirdperson()) 
+        {
+            vec front, right;
+            vecfromyawpitch(d->yaw, 0, 1, 0, front);
+            offset.add(front.mul(d->radius));
+            if(d->type!=ENT_AI || cl.ms.monstertypes[((monsterset::monster *)d)->mtype].vwepname)
+            {
+                offset.z -= d->eyeheight/2;
+                vecfromyawpitch(d->yaw, 0, 0, -1, right);
+                offset.add(right.mul(0.5f*d->radius));
+            }
+            return offset;
+        }
+        offset.add(vec(to).sub(from).normalize().mul(2));
 		if(cl.hudgun())
 		{
-			offset.sub(vec(camup).mul(0.2f));
+            offset.sub(vec(camup).mul(1.0f));
 			offset.add(vec(camright).mul(0.8f));
 		}
 		return offset;
@@ -542,7 +550,6 @@ struct weaponstate
 		playsound(guns[gun].sound, d==player1 ? NULL : &d->o);
 #endif
 		int pspeed = 25;
-		vec behind = vec(from).sub(to).normalize().mul(4).add(from);
 		switch(gun)
 		{
 			case GUN_FIST:
@@ -553,7 +560,7 @@ struct weaponstate
 				loopi(SGRAYS)
 				{
 					particle_splash(0, 20, 250, sg[i]);
-					particle_flare(hudgunorigin(gun, behind, sg[i], d), sg[i], 300, 10);
+                    particle_flare(hudgunorigin(gun, from, sg[i], d), sg[i], 300, 10);
 				}
 				break;
 			}
@@ -563,7 +570,7 @@ struct weaponstate
 			{
 				particle_splash(0, 200, 250, to);
 				//particle_trail(1, 10, from, to);
-				particle_flare(hudgunorigin(gun, behind, to, d), to, 600, 10);
+                particle_flare(hudgunorigin(gun, from, to, d), to, 600, 10);
 				break;
 			}
 
@@ -724,7 +731,6 @@ struct weaponstate
 		if(d->gunselect) d->ammo[d->gunselect]--;
 		vec from = d->o;
 		vec to = targ;
-		from.z -= 0.8f;	// below eye
 
 		vec unitv;
 		float dist = to.dist(from, unitv);
@@ -744,12 +750,11 @@ struct weaponstate
 #else
 		kickback.mul(guns[d->gunselect].kickamount*-2.5f);
 		d->vel.add(kickback);
-
 		if(d->pitch<80.0f) d->pitch += guns[d->gunselect].kickamount*0.05f;
 		float shorten = 0.0f;
+        
 		if(dist>1024) shorten = 1024;
 #endif
-	
 		if(d->gunselect==GUN_FIST || d->gunselect==GUN_BITE) shorten = 12;
 		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
 		if(barrier < dist && (!shorten || barrier < shorten))
