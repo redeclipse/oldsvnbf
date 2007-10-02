@@ -242,7 +242,11 @@ struct fpsclient : igameclient
 				players[i]->state = CS_LAGGED;
 				continue;
 			}
+#ifdef BFRONTIER
+            if(lagtime && (players[i]->state==CS_ALIVE || (players[i]->state==CS_DEAD && lastmillis-players[i]->lastpain<2000)) && !intermission) ph.move(players[i], 2, false);
+#else
             if(lagtime && (players[i]->state==CS_ALIVE || (players[i]->state==CS_DEAD && lastmillis-players[i]->lastpain<2000)) && !intermission) moveplayer(players[i], 2, false);   // use physics to extrapolate player position
+#endif
 		}
 	}
 
@@ -289,14 +293,14 @@ struct fpsclient : igameclient
 		gets2c();			// do this first, so we have most accurate information when our player moves
 		otherplayers();
 		ms.monsterthink(curtime, gamemode);
+#ifdef BFRONTIER
 		if(player1->state==CS_DEAD)
 		{
 			if(lastmillis-player1->lastpain<2000)
 			{
 				player1->move = player1->strafe = 0;
-				moveplayer(player1, 10, false);
+				ph.move(player1, 10, false);
 			}
-#ifdef BFRONTIER
 			else if(!intermission && player1->state == CS_DEAD)
 			{
 				int last = lastmillis-player1->lastpain;
@@ -306,7 +310,26 @@ struct fpsclient : igameclient
 					respawnself();
 				}
 			}
-#endif
+		}
+		else if(!intermission)
+		{
+			ph.move(player1, 20, true);
+			if(player1->physstate>=PHYS_SLOPE) swaymillis += curtime;
+			float k = pow(0.7f, curtime/10.0f);
+			swaydir.mul(k); 
+			ph.updatewater(player1, 0);
+			swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.speed(player1)))));
+			et.checkitems(player1);
+			if(m_classicsp) checktriggers();
+		}
+#else
+		if(player1->state==CS_DEAD)
+		{
+			if(lastmillis-player1->lastpain<2000)
+			{
+				player1->move = player1->strafe = 0;
+				moveplayer(player1, 10, false);
+			}
 		}
 		else if(!intermission)
 		{
@@ -314,15 +337,11 @@ struct fpsclient : igameclient
 			if(player1->physstate>=PHYS_SLOPE) swaymillis += curtime;
 			float k = pow(0.7f, curtime/10.0f);
 			swaydir.mul(k); 
-#ifdef BFRONTIER
-			ph.updatewater(player1, 0);
-			swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.speed(player1)))));
-#else
 			swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), player1->maxspeed))));
-#endif
 			et.checkitems(player1);
 			if(m_classicsp) checktriggers();
 		}
+#endif
 		if(player1->clientnum>=0) c2sinfo(player1);	// do this last, to reduce the effective frame lag
 	}
 
@@ -1145,7 +1164,7 @@ struct fpsclient : igameclient
 	{
 		if (!maptime || lastmillis-maptime <= CARDTIME)
 		{
-			float fade = (float(lastmillis-maptime)/float(CARDTIME));
+			float fade = maptime ? (float(lastmillis-maptime)/float(CARDTIME)) : 0.f;
 			colour = vec(fade, fade, fade);
 			return true;
 		}
@@ -1323,7 +1342,7 @@ struct fpsclient : igameclient
 					
 					loopi(10)
 					{
-						if(!moveplayer(camera1, 10, false, thirdpersondistance))
+						if(!ph.move(camera1, 10, false, thirdpersondistance))
 							break;
 					}
 					

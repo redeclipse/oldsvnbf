@@ -34,7 +34,7 @@ struct botcom : ibotcom
 				if(cl.lastmillis-botd(b)->lastpain<2000)
 				{
 					botd(b)->move = botd(b)->strafe = 0;
-					moveplayer(botd(b), 10, false);
+					cl.ph.move(botd(b), 10, false);
 				}
 				else if(!cl.intermission && botd(b)->state == CS_DEAD)
 				{
@@ -48,7 +48,7 @@ struct botcom : ibotcom
 			}
 			else if(!cl.intermission)
 			{
-				moveplayer(botd(b), 20, true);
+				cl.ph.move(botd(b), 20, true);
 			}
 		}
 	}

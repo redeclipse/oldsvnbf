@@ -83,6 +83,13 @@ struct iphysics
 	virtual bool movepitch(physent *d) { return true; }
 	virtual void updateroll(physent *d) { return; }
     virtual void trigger(physent *d, bool local, int floorlevel, int waterlevel) { return; }
+    virtual bool move(physent *pl, int moveres = 20, bool local = true, int secs = 0, int repeat = 0)
+    {
+		if (!secs) secs = curtime;
+		if (!repeat) repeat = physicsrepeat;
+		loopi(repeat) if (!moveplayer(pl, moveres, local, min(secs, minframetime))) return false;
+		return true;
+    }
 };
 #endif
 struct igameclient

@@ -164,6 +164,12 @@ struct weaponstate
 		int bouncetype;
 		vec offset;
 		int offsetmillis;
+#ifdef BFRONTIER
+		float elasticity, waterfric;
+		
+		bouncent() : elasticity(0.6f), waterfric(3.0f) {}
+		~bouncent() {}
+#endif
 	};
 
 	vector<bouncent *> bouncers;
@@ -182,6 +188,19 @@ struct weaponstate
 		bnc.local = local;
 		bnc.owner = owner;
 		bnc.bouncetype = type;
+#ifdef BFRONTIER
+		switch(bnc.bouncetype)
+		{
+			case BNC_GRENADE:
+				bnc.elasticity = 0.2f;
+				bnc.waterfric = 2.0f;
+				break;
+			default:
+				bnc.elasticity = 0.6f;
+				bnc.waterfric = 3.0f;
+				break;
+		}
+#endif
 
 		vec dir(to);
 		dir.sub(from).normalize();
@@ -212,11 +231,17 @@ struct weaponstate
 			{
 				int qtime = min(bnc.bouncetype==BNC_GRENADE ? 10 : 30, rtime);
 				rtime -= qtime;
+#ifdef BFRONTIER
+				if ((bnc.lifetime -= qtime) < 0 || bounce(&bnc, qtime/1000.0f, bnc.elasticity, bnc.waterfric))
+#else
 				if((bnc.lifetime -= qtime)<0 || bounce(&bnc, qtime/1000.0f, 0.6f))
+#endif
 				{
 					if(bnc.bouncetype==BNC_GRENADE)
 					{
 #ifdef BFRONTIER
+						extern physent *hitplayer;
+						if (g_bf && bnc.lifetime > 0 && hitplayer != NULL) continue;
 						int qdam = getgun(GUN_GL).damage*(bnc.owner->quadmillis ? 4 : 1);
 #else
 						int qdam = guns[GUN_GL].damage*(bnc.owner->quadmillis ? 4 : 1);
