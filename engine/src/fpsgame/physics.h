@@ -142,4 +142,22 @@ struct physics : iphysics
 			playsound(S_LAND, d != cl.player1 ? &d->o : NULL);
 		}
 	}
+	
+	bool move(physent *d, int moveres = 20, bool local = true, int secs = 0, int repeat = 0)
+	{
+		loopi(physicsrepeat)
+		if (!secs) secs = curtime;
+		if (!repeat) repeat = physicsrepeat;
+		
+		loopi(repeat)
+		{
+			if (!moveplayer(d, moveres, local, min(secs, minframetime))) return false;
+			if (d->o.z < 0 && d->state == CS_ALIVE)
+			{
+				cl.suicide(d);
+				return false;
+			}
+		}
+		return true;
+	}
 };

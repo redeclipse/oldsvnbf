@@ -328,7 +328,7 @@ extern bool menuactive();
 #define CARDTIME			3000	// title card duration
 #define CARDFADE			1500	// title card fade in/out
 
-extern int fov, maxfps, hidehud, hidestats, hudblend;
+extern int fov, maxfps, hidehud, hidestats, hudblend, lastmillis, curtime;
 
 extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false);
 extern void transplayer();
@@ -404,6 +404,13 @@ extern bool popfont(int num);
 // command
 extern ENetHost *clienthost;
 extern ENetPeer *curpeer, *connpeer;
+
+extern bool inside;
+extern physent *hitplayer;
+extern vec wall;
+extern float walldistance;
+extern int physicsfraction, physicsrepeat, minframetime;
+
 #endif // STANDALONE
 
 extern bool gameexec(char *name, bool quiet = false);

@@ -99,7 +99,7 @@ void think(int time, fpsent *d)
 			}
 		}
 
-		moveplayer(d, d->botflags & BOT_PLAYER ? 20 : 2, false);
+		cl.ph.move(d, d->botflags & BOT_PLAYER ? 20 : 2, false);
 		cl.ph.updatewater(d, 0);
 
 		d->move = move;
@@ -149,7 +149,7 @@ void think(int time, fpsent *d)
 
 		if (cl.lastmillis - d->lastpain < 2000)
 		{ 
-			moveplayer(d, d->botflags & BOT_PLAYER ? 10 : 2, false);
+			cl.ph.move(d, d->botflags & BOT_PLAYER ? 10 : 2, false);
 		}
 	}
 	d->lastupdate = cl.lastmillis;

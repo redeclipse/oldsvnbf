@@ -9,6 +9,8 @@ Legend [
 ]
 
 = wip edition =
+bfg: grenades don't explode when they hit a player
+bfg: modified bouncer elasticity and waterfric for grenades
 mod: 'causticnum' added for variable number of caustic frames
 fps: titlecard fixes in line with newly interpreted maptime (todo: merge to load screen)
 ssp: updated sparks
