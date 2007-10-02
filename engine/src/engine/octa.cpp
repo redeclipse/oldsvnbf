@@ -245,6 +245,7 @@ int getmippedtexture(cube &p, int orient)
 void forcemip(cube &c)
 {	
 	cube *ch = c.children;
+    emptyfaces(c);
 
 	loopi(8) loopj(8)
 	{

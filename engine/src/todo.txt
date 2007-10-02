@@ -74,7 +74,7 @@ Modifications for the First Person Shooter (FPS).
 = BFG =
 The Blood Frontier Game (BFG) based on FPS.
 
-* port content
+* address issues with alpha blended models
 * head shots
 * S_SMGLOAD, S_REGEN, S_HEADSHOT
 * unlimited ammo on all but grenade, reload (sound, only when empty?)

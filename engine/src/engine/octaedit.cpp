@@ -802,7 +802,7 @@ namespace hmap
 		//		look at loopoctabox + precache for help
         t[d] += f;    
         cube *c = &lookupcube(t.x, t.y, t.z, -gridsize);
-        if(!isheightmap(sel.orient, d, dr<0, c)) return NULL;        
+        if(!isheightmap(sel.orient, d, true, c)) return NULL;        
 		if(lusize > gridsize)
             c = &lookupcube(t.x, t.y, t.z, gridsize);
 		discardchildren(*c); // necessary? for ext?	 
@@ -824,7 +824,7 @@ namespace hmap
 	{
         if(v) 
 		{
-            c->texture[sel.orient] = tex;       
+            loopi(6) c->texture[i] = tex;       
 			c->faces[R[d]] = F_SOLID;
 			c->faces[C[d]] = F_SOLID;		
 			c->faces[D[d]] = v | fo;
@@ -860,14 +860,14 @@ namespace hmap
         bool painted = (flags[x][y] & PAINTED)!=0;
         snap &= mask[x][y];
         if(painted && 0 == snap) return;        
-        uint paint = snap + (painted ? 0 : brush[x][y].face);
+        uint paint = (snap*8) + (painted ? 0 : brush[x][y].face & ~(snap*7));        
         if (!paint) return;
         if (!painted)
             flags[x][y] |= PAINTED | (z + 64);  
         else 
             z = (flags[x][y] & 0x7f) - 64;
         if(snap) 
-            mask[x][y] &= ~(bitnormal(snap)*0xf);                
+            mask[x][y] &= ~snap;
 	
         // get cubes and initialize
 		cube *a = NULL, *b = NULL, *c, *e = NULL;				
@@ -897,8 +897,8 @@ namespace hmap
         }
 
         face = getface(c, d);                          
-        b = getcube(t, -fg);
-        a = getcube(t, -fg-fg);
+        b = getcube(t, -(int)fg);
+        a = getcube(t, -(int)fg-(int)fg);
         b = !b || isempty(*b) ? NULL : b;
         a = !a || isempty(*a) ? NULL : a;
         
@@ -934,7 +934,7 @@ namespace hmap
         { // debug            
         DPRINT("face %x = %x + %x : %p %p \n", face, c->faces[d], b ? b->faces[d] : 0, c, b);       
         DPRINT("brush %x + %x { %x } \n", brush[x][y].face, snap, paint);
-        cface test, ext, fac;
+        cface test, ext;
         test.face = paint;
         ext.face  = snap;
 
@@ -943,17 +943,12 @@ namespace hmap
             {
                 DPRINT("WARNING!!!!!\n");            
             }
+        }
 
+        if(dr > 0) face += snap*7;
+        face &= ~(snap * 7);        
         face += -dr * paint;
        
-        fac.face = face;
-        loopi(4) // assertion
-            if(ext.edge[i] > 0 && (fac.edge[i] & 7)) 
-            {
-                DPRINT("NOT ALIGNED!!!!!\n");
-        }
-        }
-
 		// seperate heights into 4 layers
         uint hvn =(face & 0x20202020) >> 2; 
 		uint ovr =(face & 0x10101010) >> 1;
@@ -1043,8 +1038,10 @@ namespace hmap
             else if(c)             pushside(c->faces[R[d]], hi);
 		}
 		
+        snap = bitnormal(snap);
+
         if(snap) 
-            mask[x][y] &= ~(bitnormal(snap)*0xf);  
+            mask[x][y] &= ~snap;          
 
         DPRINT("new: %x %x %x %x (%x) mask %x\n", oh, hi, lo, ul, snap, mask[x][y]);
  
@@ -1070,8 +1067,10 @@ namespace hmap
         br = dir>0 ? 0x08080808 : 0;
      //   biasup = mode == dir<0;
         biasup = dir<0;
-        gx = (cur[R[d]] >> gridpower) + (sel.corner&1 ? 0 : -1) - MAXBRUSH2;
-        gy = (cur[C[d]] >> gridpower) + (sel.corner&2 ? 0 : -1) - MAXBRUSH2;
+        int cx = (sel.corner&1 ? 0 : -1);
+        int cy = (sel.corner&2 ? 0 : -1);
+        gx = (cur[R[d]] >> gridpower) + cx - MAXBRUSH2;
+        gy = (cur[C[d]] >> gridpower) + cy - MAXBRUSH2;
         gz = (cur[D[d]] >> gridpower);
         fs = dc ? 4 : 0;
         fo = dc ? 0 : F_SOLID;
@@ -1087,18 +1086,13 @@ namespace hmap
         
         loopi(MAXBRUSH) loopj(MAXBRUSH) 
         { // TODO: init in hedit
-            mask [i][j] = 0x0f0f0f0f;
+            mask [i][j] = 0x01010101;
             flags[i][j] = 0;
         }
-        int x = clamp(MAXBRUSH2, mx, nx);
-        int y = clamp(MAXBRUSH2, my, ny);
+        int x = clamp(MAXBRUSH2-cx, mx, nx);
+        int y = clamp(MAXBRUSH2-cy, my, ny);
         int z = f1;        
-        ivec t(d, x+gx, y+gy, z+gz);
-        t.shl(gridpower);
-        cube *c = getcube(t, 0);
-        if(!c || isempty(*c)) {
-            z = 0;
-        }
+        
         
    //     printf("----------------\n%x g %d %d %d \n----------------\n", fs, gx, gy, gz);
    //     printf(" cur %d %d %d : %d\n", cur.x, cur.y, cur.z, gridsize);
@@ -1124,7 +1118,7 @@ void edithmap(int dir, int mode) {
         conoutf("negative orientations not supported yet");
         return;
 	}
-//    long time = SDL_GetTicks();
+ //   long time = SDL_GetTicks();
     hmap::run(dir, mode);    
  //   conoutf("-- edit time (%d) ms --", SDL_GetTicks()-time);
 }

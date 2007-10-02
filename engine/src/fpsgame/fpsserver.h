@@ -629,6 +629,9 @@ struct fpsserver : igameserver
 		gzclose(demorecord);
 		demorecord = NULL;
 
+#ifdef WIN32
+        demotmp = fopen("demorecord", "rb");
+#endif    
 		if(!demotmp) return;
 
 		fseek(demotmp, 0, SEEK_END);
@@ -656,6 +659,10 @@ struct fpsserver : igameserver
 	void setupdemorecord()
 	{
 		if(haslocalclients() || !m_mp(gamemode) || gamemode==1) return;
+#ifdef WIN32
+        demorecord = gzopen("demorecord", "wb9");
+        if(!demorecord) return;
+#else
 		demotmp = tmpfile();
 		if(!demotmp) return;
 		setvbuf(demotmp, NULL, _IONBF, 0);
@@ -667,6 +674,7 @@ struct fpsserver : igameserver
 			demotmp = NULL;
 			return;
 		}
+#endif
 
         sendservmsg("recording demo");
 
@@ -1121,7 +1129,6 @@ struct fpsserver : igameserver
 				cn = getint(p);
 				if(cn<0 || cn>=getnumclients() || cn!=sender)
 				{
-					conoutf("parsepacket pos from %d on %d but cn = %d", sender, chan, cn);
 					disconnect_client(sender, DISC_CN);
 					return;
 				}
@@ -1267,7 +1274,6 @@ struct fpsserver : igameserver
                     else event.millis = ci->gameoffset + getint(p); \
 				}
 #endif
-
                 seteventmillis(shot.shot);
 #ifndef BFRONTIER
 				shot.shot.gun = getint(p);
@@ -2205,8 +2211,9 @@ struct fpsserver : igameserver
 		sendstring(smapname, p);
 		sendstring(serverdesc, p);
 	}
-
 #ifdef BFRONTIER
+	IVARP(serversplit, 3, 10, INT_MAX-1);
+
 	int serverstat(serverinfo *a)
 	{
 		if (a->attr.length() > 3 && a->numplayers >= a->attr[3])
@@ -2236,22 +2243,20 @@ struct fpsserver : igameserver
 		s_sprintfd(u)("serversort = \"%d %d %d\"", SINFO_STATUS, SINFO_PLAYERS, SINFO_PING);
 		executeret(u);
 	}
-
 	int servercompare(serverinfo *a, serverinfo *b)
 	{
 		int ac = 0, bc = 0;
-		
+
 		if (a->address.host != ENET_HOST_ANY && a->ping < 999 &&
 			a->attr.length() && a->attr[0] == PROTOCOL_VERSION) ac = 1;
-		
+
 		if (b->address.host != ENET_HOST_ANY && b->ping < 999 &&
 			b->attr.length() && b->attr[0] == PROTOCOL_VERSION) bc = 1;
-		
+
 		if(ac > bc) return -1;
 		if(ac < bc) return 1;
 
 		#define retcp(c) if (c) { return c; }
-
 		#define retsw(c,d,e) \
 			if (c != d) \
 			{ \
@@ -2265,17 +2270,17 @@ struct fpsserver : igameserver
 		loopi(len)
 		{
 			s_sprintfd(s)("at $serversort %d", i);
-			
+
 			int style = atoi(executeret(s));
 			serverinfo *aa = a, *ab = b;
-			
+
 			if (style < 0)
 			{
 				style = 0-style;
 				aa = b;
 				ab = a;
 			}
-			
+
 			switch (style)
 			{
 				case SINFO_STATUS:
@@ -2347,9 +2352,6 @@ struct fpsserver : igameserver
 		}
 		return strcmp(a->name, b->name);
 	}
-	
-	IVARP(serversplit, 3, 10, INT_MAX-1);
-
 	const char *serverinfogui(g3d_gui *cgui, vector<serverinfo> &servers)
 	{
 		const char *name = NULL;
@@ -2369,15 +2371,13 @@ struct fpsserver : igameserver
 			{
 				string st; st[0] = 0;
 				bool invert = false;
-				
 				if (!identexists("serversort")) { serversortreset(); }
 				int len = atoi(executeret("listlen $serversort"));
-				
 				loopk(len)
 				{
 					s_sprintfd(s)("at $serversort %d", k);
+
 					int n = atoi(executeret(s));
-					
 					if (abs(n) != i)
 					{
 						s_sprintfd(t)("%s%d", st[0] ? " " : "", n);
@@ -2405,9 +2405,7 @@ struct fpsserver : igameserver
 				if (si.address.host != ENET_HOST_ANY && si.ping != 999)
 				{
 					string text;
-					
 					cgui->pushlist(); // h
-	
 					switch (i)
 					{
 						case SINFO_ICON:
@@ -2448,7 +2446,6 @@ struct fpsserver : igameserver
 						{
 							if (si.attr.length() > 3 && si.attr[3] >= 0) s_sprintf(text)("%d", si.attr[3]);
 							else text[0] = 0;
-
 							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
 							break;
 						}
@@ -2456,7 +2453,6 @@ struct fpsserver : igameserver
 						{
 							if (si.attr.length() > 1) s_sprintf(text)("%s", modestr(si.attr[1]));
 							else text[0] = 0;
-							
 							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
 							break;
 						}
@@ -2470,49 +2466,46 @@ struct fpsserver : igameserver
 						{
 							if (si.attr.length() > 2 && si.attr[2] >= 0) s_sprintf(text)("%d %s", si.attr[2], si.attr[2] == 1 ? "min" : "mins");
 							else text[0] = 0;
-							
 							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
 							break;
 						}
 						default:
 							break;
 					}
-					
 					cgui->text(" ", 0xFFFFDD, NULL);
-					
 					cgui->poplist(); // v
 				}
 			}
 			cgui->poplist(); // h
 		}
-		
+
 		cgui->poplist(); // v
-		
 		return name;
 	}
 #else
-	bool servercompatible(char *name, char *sdec, char *map, int ping, const vector<int> &attr, int np)
-	{
-		return attr.length() && attr[0]==PROTOCOL_VERSION;
-	}
 
-	void serverinfostr(char *buf, const char *name, const char *sdesc, const char *map, int ping, const vector<int> &attr, int np)
-	{
-		if(attr[0]!=PROTOCOL_VERSION) s_sprintf(buf)("[%s protocol] %s", attr[0]<PROTOCOL_VERSION ? "older" : "newer", name);
-		else 
-		{
-			string numcl;
-			if(attr.length()>=4) s_sprintf(numcl)("%d/%d", np, attr[3]);
-			else s_sprintf(numcl)("%d", np);
-			if(attr.length()>=5) switch(attr[4])
-			{
-				case MM_LOCKED: s_strcat(numcl, " L"); break;
-				case MM_PRIVATE: s_strcat(numcl, " P"); break;
-			}
-			
-			s_sprintf(buf)("%d\t%s\t%s, %s: %s %s", ping, numcl, map[0] ? map : "[unknown]", modestr(attr[1]), name, sdesc);
-		}
-	}
+    bool servercompatible(char *name, char *sdec, char *map, int ping, const vector<int> &attr, int np)
+    {
+        return attr.length() && attr[0]==PROTOCOL_VERSION;
+    }
+
+    void serverinfostr(char *buf, const char *name, const char *sdesc, const char *map, int ping, const vector<int> &attr, int np)
+    {
+        if(attr[0]!=PROTOCOL_VERSION) s_sprintf(buf)("[%s protocol] %s", attr[0]<PROTOCOL_VERSION ? "older" : "newer", name);
+        else 
+        {
+            string numcl;
+            if(attr.length()>=4) s_sprintf(numcl)("%d/%d", np, attr[3]);
+            else s_sprintf(numcl)("%d", np);
+            if(attr.length()>=5) switch(attr[4])
+            {
+                case MM_LOCKED: s_strcat(numcl, " L"); break;
+                case MM_PRIVATE: s_strcat(numcl, " P"); break;
+            }
+            
+            s_sprintf(buf)("%d\t%s\t%s, %s: %s %s", ping, numcl, map[0] ? map : "[unknown]", modestr(attr[1]), name, sdesc);
+        }
+    }
 #endif
 
 	void receivefile(int sender, uchar *data, int len)

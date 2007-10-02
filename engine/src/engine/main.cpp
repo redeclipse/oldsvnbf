@@ -181,7 +181,11 @@ void computescreen(const char *text, Texture *t)
 			glEnable(GL_BLEND);
 		}
 		int x = (w-512)/2, y = 128;
+#ifdef BFRONTIER
+		settexture("packages/textures/sauer_logo_512_256a.png");
+#else
 		settexture("data/sauer_logo_512_256a.png");
+#endif
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); glVertex2i(x,	 y);
 		glTexCoord2f(1, 0); glVertex2i(x+512, y);
@@ -873,7 +877,11 @@ int main(int argc, char **argv)
 	persistidents = false;
 	if(!execfile("data/stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
     gl_init(scr_w, scr_h, hasbpp ? colorbits : 0, config&1 ? depthbits : 0, config&4 ? fsaa : 0);
+#ifdef BFRONTIER
+    notexture = textureload("packages/textures/notexture.png");
+#else
     notexture = textureload("data/notexture.png");
+#endif
     if(!notexture) fatal("could not find core textures");
 
 	log("console");

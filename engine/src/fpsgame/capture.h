@@ -262,7 +262,11 @@ struct captureclient : capturestate
 
 	void drawblips(int x, int y, int s, int type, bool skipenemy = false)
 	{
+#ifdef BFRONTIER
+		const char *textures[3] = {"packages/textures/blip_red.png", "packages/textures/blip_grey.png", "packages/textures/blip_blue.png"};
+#else
 		const char *textures[3] = {"data/blip_red.png", "data/blip_grey.png", "data/blip_blue.png"};
+#endif
 		settexture(textures[max(type+1, 0)]);
 		glBegin(GL_QUADS);
 		float scale = radarscale<=0 || radarscale>maxradarscale() ? maxradarscale() : radarscale;
@@ -295,11 +299,12 @@ struct captureclient : capturestate
 #ifdef BFRONTIER
 		int x = 1800*w/h*1/80, y = 1800*(hidehud || hidestats ? 28 : 27)/40, s = 1800*w/h*5/40;
 		glColor4f(1, 1, 1, hudblend*0.01f);
+		settexture("packages/textures/radar.png");
 #else
         int x = 1800*w/h*34/40, y = 1800*1/40, s = 1800*w/h*5/40;
         glColor3f(1, 1, 1);
-#endif
 		settexture("data/radar.png");
+#endif
 		glBegin(GL_QUADS);
 		drawradar(float(x), float(y), float(s));
 		glEnd();

@@ -796,7 +796,7 @@ VAR(testanims, 0, 0, 1);
 
 void interpolateorientation(dynent *d, float &interpyaw, float &interppitch)
 {
-    if(!orientinterpolationtime) { interpyaw = d->yaw; interppitch = d->pitch; }
+    if(!orientinterpolationtime) { interpyaw = d->yaw; interppitch = d->pitch; return; }
 	if(d->orientmillis!=lastmillis)
 	{
         float yaw = d->yaw, pitch = d->pitch;
