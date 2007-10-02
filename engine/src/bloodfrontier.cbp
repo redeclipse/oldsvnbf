@@ -169,6 +169,30 @@
 		<Compiler>
 			<Add option="-DBFRONTIER=32"/>
 		</Compiler>
+		<Unit filename="..\..\data\bfg\defaults.cfg">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="data"/>
+		</Unit>
+		<Unit filename="..\..\data\bfg\map.cfg">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="data"/>
+		</Unit>
+		<Unit filename="..\..\data\bfg\menus.cfg">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="data"/>
+		</Unit>
+		<Unit filename="..\..\data\bfg\sounds.cfg">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="data"/>
+		</Unit>
 		<Unit filename="..\..\data\brush.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
@@ -217,97 +241,7 @@
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\krs\defaults.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\krs\game.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\krs\map.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\krs\menus.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\krs\sounds.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
 		<Unit filename="..\..\data\menus.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\ssp\block.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\ssp\defaults.cfg">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\ssp\enemy.cfg">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\ssp\game.cfg">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\ssp\map.cfg">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\ssp\menus.cfg">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\ssp\sounds.cfg">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\ssp\textd.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\ssp\textx.cfg">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="..\..\data\ssp\trigs.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

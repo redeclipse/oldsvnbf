@@ -86,7 +86,11 @@ static void renderflares(int time)
 	glDisable(GL_DEPTH_TEST);
 
 	static Texture *flaretex = NULL;
+#ifdef BFRONTIER
+	if(!flaretex) flaretex = textureload("packages/textures/lensflares.png");
+#else
 	if(!flaretex) flaretex = textureload("data/lensflares.png");
+#endif
 	glBindTexture(GL_TEXTURE_2D, flaretex->gl);
 	glBegin(GL_QUADS);
 	loopi(flarecnt)
@@ -568,6 +572,19 @@ static Texture *parttexs[10];
 
 void particleinit()
 {	
+#ifdef BFRONTIER
+    parttexs[0] = textureload("packages/textures/base.png");
+    parttexs[1] = textureload("packages/textures/ball1.png");
+    parttexs[2] = textureload("packages/textures/smoke.png");
+    parttexs[3] = textureload("packages/textures/ball2.png");
+    parttexs[4] = textureload("packages/textures/ball3.png");
+    parttexs[5] = textureload("packages/textures/flare.jpg");
+    parttexs[6] = textureload("packages/textures/spark.png");
+    parttexs[7] = textureload("packages/textures/explosion.jpg");   
+    parttexs[8] = textureload("packages/textures/blood.png");
+    parttexs[9] = textureload("packages/textures/lightning.jpg");
+	parttexs[10] = textureload("packages/textures/electricty.png");
+#else
 	parttexs[0] = textureload("data/martin/base.png");
 	parttexs[1] = textureload("data/martin/ball1.png");
 	parttexs[2] = textureload("data/martin/smoke.png");
@@ -578,8 +595,6 @@ void particleinit()
 	parttexs[7] = textureload("data/explosion.jpg");	
 	parttexs[8] = textureload("data/blood.png");
     parttexs[9] = textureload("data/lightning.jpg");
-#ifdef BFRONTIER
-	parttexs[10] = textureload("data/spark.png");
 #endif
 	loopi(MAXPARTYPES) parlist[i] = NULL;
 }

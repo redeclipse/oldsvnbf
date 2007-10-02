@@ -233,7 +233,11 @@ struct scoreboard : g3d_callback
             if((k%2)==0) g.pushlist(); // horizontal
             
             scoregroup &sg = *groups[k];
+#ifdef BFRONTIER
+            const char *icon = sg.team && m_teammode ? (isteam(cl.player1->team, sg.team) ? "player_blue" : "player_red") : "player";
+#else
             const char *icon = cl.fr.ogro() ? "ogro" : (sg.team && m_teammode ? (isteam(cl.player1->team, sg.team) ? "player_blue" : "player_red") : "player");
+#endif
             int bgcolor = sg.team && m_teammode ? (isteam(cl.player1->team, sg.team) ? 0x3030C0 : 0xC03030) : 0,
                 fgcolor = 0xFFFF80;
 
@@ -369,7 +373,11 @@ struct scoreboard : g3d_callback
                         g.pushlist();
                         g.background(0x808080, 3);
 					}
+#ifdef BFRONTIER
+                    g.text(cl.colorname(o), 0xFFFFDD, "player");
+#else
                     g.text(cl.colorname(o), 0xFFFFDD, cl.fr.ogro() ? "ogro" : "player");
+#endif
                     if(o==cl.player1 && highlightscore()) g.poplist();
 				}
                 g.poplist();
@@ -390,7 +398,11 @@ struct scoreboard : g3d_callback
                     if((i%3)==0) 
 					{
                         g.pushlist();
+#ifdef BFRONTIER
+                        g.text("", 0xFFFFDD, "player");
+#else
                         g.text("", 0xFFFFDD, cl.fr.ogro() ? "ogro" : "player");
+#endif
                     }
                     fpsent *o = spectators[i];
                     int status = 0xFFFFDD;

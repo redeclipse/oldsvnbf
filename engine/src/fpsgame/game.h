@@ -177,31 +177,31 @@ struct demoheader
 
 static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
 {
-    {10,    30,    S_ITEMAMMO,   "SG", GUN_SG},
-    {20,    60,    S_ITEMAMMO,   "CG", GUN_CG},
-    {5,     15,    S_ITEMAMMO,   "RL", GUN_RL},
-    {5,     15,    S_ITEMAMMO,   "RI", GUN_RIFLE},
-    {10,    30,    S_ITEMAMMO,   "GL", GUN_GL},
-    {30,    120,   S_ITEMAMMO,   "PI", GUN_PISTOL},
-    {25,    100,   S_ITEMHEALTH, "H"},
-    {10,    1000,  S_ITEMHEALTH, "MH"},
-    {100,   100,   S_ITEMARMOUR, "GA", A_GREEN},
-    {200,   200,   S_ITEMARMOUR, "YA", A_YELLOW},
-    {20000, 30000, S_ITEMPUP,    "Q"},
+    {10,	30,		S_ITEMAMMO,		"SG",	GUN_SG} ,
+    {20,	60,		S_ITEMAMMO,		"CG",	GUN_CG },
+    {5,		15,		S_ITEMAMMO,		"RL",	GUN_RL },
+    {5,		15,		S_ITEMAMMO,		"RI",	GUN_RIFLE },
+    {10,	30,		S_ITEMAMMO,		"GL",	GUN_GL} ,
+    {30,	120,	S_ITEMAMMO,		"PI",	GUN_PISTOL },
+    {25,	100,	S_ITEMHEALTH,	"H" },
+    {10,	1000,	S_ITEMHEALTH,	"MH" },
+    {100,	100,	S_ITEMARMOUR,	"GA",	A_GREEN },
+    {200,	200,	S_ITEMARMOUR,	"YA",	A_YELLOW },
+    {20000,	30000,	S_ITEMPUP,		"Q" },
 #ifdef BFRONTIER
 }, bfitemstats[] =
 {
-    {8,     8,    S_ITEMAMMO,   "SG", GUN_SG},
-    {30,    30,    S_ITEMAMMO,   "CG", GUN_CG},
-    {1,     1,    S_ITEMAMMO,   "RL", GUN_RL},
-    {5,     5,    S_ITEMAMMO,   "RI", GUN_RIFLE},
-    {2,     4,    S_ITEMAMMO,   "GL", GUN_GL},
-    {10,    10,   S_ITEMAMMO,   "PI", GUN_PISTOL},
-	{0,    0,   S_ITEMHEALTH, "H"},
-    {0,    0,  S_ITEMHEALTH, "MH"},
-    {0,   0,   S_ITEMARMOUR, "GA", A_GREEN},
-    {0,   0,   S_ITEMARMOUR, "YA", A_YELLOW},
-    {0, 0, S_ITEMPUP,    "Q"},
+    {8,		8,		S_ITEMAMMO,		"SG",	GUN_SG },
+    {30,	30,		S_ITEMAMMO,		"CG",	GUN_CG },
+    {1,		1,		S_ITEMAMMO,		"RL",	GUN_RL },
+    {5,		5,		S_ITEMAMMO,		"RI",	GUN_RIFLE },
+    {2,		4,		S_ITEMAMMO,		"GL",	GUN_GL },
+    {10,	10,		S_ITEMAMMO,		"PI",	GUN_PISTOL },
+	{0,		0,		S_ITEMHEALTH,	"H" },
+    {0,		0,		S_ITEMHEALTH,	"MH" },
+    {0,		0,		S_ITEMARMOUR,	"GA",	A_GREEN },
+    {0,		0,		S_ITEMARMOUR,	"YA",	A_YELLOW },
+    {0,		0,		S_ITEMPUP,		"Q" },
 };
 #define getitem(n) (g_bf ? bfitemstats[n] : itemstats[n])
 

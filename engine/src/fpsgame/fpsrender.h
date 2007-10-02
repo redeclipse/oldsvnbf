@@ -8,14 +8,16 @@ struct fpsrender
 	vector<fpsent *> bestplayers;
     vector<const char *> bestteams;
 
+#ifndef BFRONTIER
     IVARP(ogro, 0, 0, 1);
+#endif
 
 	void renderplayer(fpsent *d, const char *mdlname)
 	{
 #ifdef BFRONTIER
         int lastaction = gunvar(d->gunlast, d->gunselect),
 			attack = d->gunselect == GUN_FIST ? ANIM_PUNCH : ANIM_SHOOT,
-			delay = ogro() ? 300 : gunvar(d->gunwait, d->gunselect) + 50;
+			delay = gunvar(d->gunwait, d->gunselect) + 50;
 #else
         int lastaction = d->lastaction, attack = d->gunselect==GUN_FIST ? ANIM_PUNCH : ANIM_SHOOT, delay = ogro() ? 300 : cl.ws.reloadtime(d->gunselect)+50;
 #endif
@@ -42,12 +44,18 @@ struct fpsrender
 #ifdef BFRONTIER
 		static const char *vweps[] = {"vwep/fist", "vwep/shotg", "vwep/chaing", "vwep/rocket", "vwep/rifle", "vwep/gl", "vwep/pistol", NULL, NULL, NULL, NULL, "vwep/fist"};
         int ai = 0;
-        if((!ogro() || d->gunselect!=GUN_FIST) && d->gunselect<=GUN_PISTOL)
+        if (d->gunselect<=GUN_PISTOL)
+		{
+            a[ai].name = vweps[d->gunselect];
+            a[ai].type = MDL_ATTACH_VWEP;
+            a[ai].anim = ANIM_VWEP|ANIM_LOOP;
+            a[ai].basetime = 0;
+            ai++;
+		}
 #else
         static const char *vweps[] = {"vwep/fist", "vwep/shotg", "vwep/chaing", "vwep/rocket", "vwep/rifle", "vwep/gl", "vwep/pistol"};
         int ai = 0;
         if((!ogro() || d->gunselect!=GUN_FIST) && d->gunselect<=GUN_PISTOL)
-#endif
 		{
             a[ai].name = ogro() ? "monster/ogro/vwep" : vweps[d->gunselect];
             a[ai].type = MDL_ATTACH_VWEP;
@@ -74,6 +82,7 @@ struct fpsrender
                 ai++;
             }
         }
+#endif
         renderclient(d, mdlname, a[0].name ? a : NULL, attack, delay, lastaction, cl.intermission ? 0 : d->lastpain);
 #if 0
 		if(d->state!=CS_DEAD && d->quadmillis) 
@@ -96,9 +105,13 @@ struct fpsrender
 
 		startmodelbatches();
 
+#ifdef BFRONTIER
+        const char *ffamdl = "mtroop", *bluemdl = "mtroop/blue", *redmdl = "mtroop/red";
+#else
         const char *ffamdl = ogro() ? "monster/ogro" : "ironsnout",
                    *bluemdl = ogro() ? "monster/ogro/blue" : "ironsnout/blue",
                    *redmdl = ogro() ? "monster/ogro/red" : "ironsnout/red";
+#endif
 
 		fpsent *d;
         loopv(cl.players) if((d = cl.players[i]) && d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING)

@@ -65,7 +65,12 @@ struct fpsclient : igameclient
 	IVARP(capturespawn, 0, 1, 1);			// auto respawn in capture games
 	IVAR(cameracycle, 0, 0, 600);			// cycle camera every N secs
 	IVARP(crosshair, 0, 1, 1);				// show the crosshair
-	IVARP(damagewobble, 0, 1, 1);			// wobble camera when damaged
+
+	IVARP(wobblescale, 0, 100, 1000);		// wobble camera when damaged
+	IVARP(wobbleyaw, 0, 10, 180);			// wobble yaw amount
+	IVARP(wobblepitch, 0, 5, 180);			// wobble pitch amount
+	IVARP(wobbleroll, 0, 5, 180);			// wobble roll amount
+
 	IVARP(hudstyle, 0, HD_RIGHT, HD_MAX-1);	// use new or old hud style
 	IVARP(rankhud, 0, 0, 1);				// show ranks on the hud
 	IVARP(ranktime, 0, 15000, 600000);		// display unchanged rank no earlier than every N ms
@@ -388,7 +393,7 @@ struct fpsclient : igameclient
 		if (d == player1)
 		{
 			if (g_bf) d->nexthealth = lastmillis + 3000;
-			if (damagewobble()) camerawobble = max(camerawobble, damage);
+			if (wobblescale()) camerawobble = max(camerawobble, damage);
 			d->damageroll(damage);
 			playsound(S_PAIN6);
 		}
@@ -807,7 +812,7 @@ struct fpsclient : igameclient
 	{
 		rendericon("packages/icons/overlay.png", x, y, s, s);
 		
-		settexture("data/items.png");
+		settexture("packages/textures/items.png");
 		
 		glBegin(GL_QUADS);
 		
@@ -1150,7 +1155,7 @@ struct fpsclient : igameclient
 			if (offset > 500) offset = 1000 - offset;
 			float scale = (float(player1->quadmillis)/float(getitem(I_QUAD-I_SHELLS).max))+0.1f;
 
-			colour = vec(0.25f+(((float(offset)/500.f)*0.75f)*scale)+(0.75f*(1.f-scale)), 1.f-scale, 1.f-scale);
+			colour = vec(1.f-((((float(offset)/500.f)*0.5f)*scale)+(scale*0.5f)), 1.f-(scale*0.5f), 1.f-(scale*0.5f));
 			return true;
 		}
 		else
@@ -1341,11 +1346,11 @@ struct fpsclient : igameclient
 		
 		if (camerawobble > 0 && curtime)
 		{
-			float pc = float(camerawobble)/200.f;
+			float pc = (float(camerawobble)/100.f)*(float(wobblescale())/100.f);
 			#define wobble(n) (float(rnd(n*2)-n)*pc)
-			camera1->yaw += wobble(20);
-			camera1->pitch += wobble(10);
-			camera1->roll += wobble(10);
+			camera1->yaw += wobble(wobbleyaw());
+			camera1->pitch += wobble(wobblepitch());
+			camera1->roll += wobble(wobbleroll());
 			camerawobble -= max(curtime/10, 1);
 		}
 		

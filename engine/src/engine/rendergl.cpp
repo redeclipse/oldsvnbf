@@ -875,7 +875,11 @@ static Texture *crosshair = NULL;
 void loadcrosshair(const char *name)
 {
     crosshair = textureload(name, 3, true);
+#ifdef BFRONTIER
+    if(crosshair==notexture) crosshair = textureload("packages/textures/crosshair.png", 3, true);
+#else
     if(crosshair==notexture) crosshair = textureload("data/crosshair.png", 3, true);
+#endif
 }
 
 COMMAND(loadcrosshair, "s");
@@ -896,8 +900,13 @@ void drawcrosshair(int w, int h)
 #endif
 
 	static Texture *cursor = NULL;
+#ifdef BFRONTIER
+    if(!cursor) cursor = textureload("packages/textures/guicursor.png", 3, true);
+    if(!crosshair) crosshair = textureload("packages/textures/crosshair.png", 3, true);
+#else
     if(!cursor) cursor = textureload("data/guicursor.png", 3, true);
     if(!crosshair) crosshair = textureload("data/crosshair.png", 3, true);
+#endif
 	if((windowhit ? cursor : crosshair)->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	else glBlendFunc(GL_ONE, GL_ONE);
 	float r = 1, g = 1, b = 1;

@@ -466,7 +466,11 @@ void autograss(char *name)
 	Slot &s = slots.last();
 	DELETEA(s.autograss);
 	s_sprintfd(pname)("packages/%s", name);
+#ifdef BFRONTIER
+	s.autograss = newstring(name[0] ? pname : "packages/textures/grass.png");
+#else
 	s.autograss = newstring(name[0] ? pname : "data/grass.png");
+#endif
 }
 
 COMMAND(autograss, "s");

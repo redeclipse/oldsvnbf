@@ -36,12 +36,6 @@ struct monsterset
 				mtype = 0;
 			}
 			monstertype *t = monstertypes+mtype;
-			eyeheight = 8.0f;
-			aboveeye = 7.0f;
-			radius *= t->bscale/10.0f;
-			xradius = yradius = radius;
-			eyeheight *= t->bscale/10.0f;
-			aboveeye *= t->bscale/10.0f;
 			weight = t->weight;
 			if(_state!=M_SLEEP) cl.spawnplayer(this);
 			yaw = (float)_yaw;
@@ -275,6 +269,16 @@ struct monsterset
 	{
 		static monstertype _monstertypes[NUMMONSTERTYPES] =
 		{	
+#ifdef BFRONTIER
+			{ GUN_FIREBALL,		15,	100,	3,	0,		100,	800,	1,	10,	90,		S_PAINO,	S_DIE1,		"an ogro",		"mtroop/red",	"vwep/rocket" },
+			{ GUN_CG,			18,	70,		2,	70,		10,		400,	2,	10,	50,		S_PAINR,	S_DEATHR,	"a rhino",		"mtroop/red",	"vwep/chaing" },
+			{ GUN_SG,			13,	120,	1,	100,	300,	400,	4,	14,	115,	S_PAINE,	S_DEATHE,	"ratamahatta",	"mtroop/red",	"vwep/shotg" },
+			{ GUN_RIFLE,		14,	200,	1,	80,		400,	300,	4,	18,	145,	S_PAINS,	S_DEATHS,	"a slith",		"mtroop/red",	"vwep/rifle" },
+			{ GUN_RL,			12,	500,	1,	0,		200,	200,	6,	24,	210,	S_PAINB,	S_DEATHB,	"bauul",		"mtroop/red",	"vwep/rocket" },
+			{ GUN_BITE,			22,	50,		3,	0,		100,	400,	1,	15,	75,		S_PAINP,	S_PIGGR2,	"a hellpig",	"mtroop/red",	NULL },
+			{ GUN_ICEBALL,		11,	250,	1,	0,		10,		400,	6,	18,	160,	S_PAINH,	S_DEATHH,	"a knight",		"mtroop/red",	"vwep/rocket" },
+			{ GUN_SLIMEBALL,	15,	100,	1,	0,		200,	400,	2,	10,	60,		S_PAIND,	S_DEATHD,	"a goblin",		"mtroop/red",	"vwep/rocket" },
+#else
 			{ GUN_FIREBALL,		15,	100,	3,	0,		100,	800,	1, 10,  90, S_PAINO, S_DIE1,	"an ogro",	 "monster/ogro",		"monster/ogro/vwep"},
 			{ GUN_CG,			18,	70,		2,	70,		10,		400,	2, 10,  50, S_PAINR, S_DEATHR, "a rhino",	 "monster/rhino",	  NULL},
 			{ GUN_SG,			13,	120,	1,	100,	300,	400,	4, 14, 115, S_PAINE, S_DEATHE, "ratamahatta", "monster/rat",		"monster/rat/vwep"},
@@ -283,6 +287,7 @@ struct monsterset
 			{ GUN_BITE,			22,	50,		3,	0,		100,	400,	1, 15,  75, S_PAINP, S_PIGGR2, "a hellpig",	"monster/hellpig",	NULL},
 			{ GUN_ICEBALL,		11,	250,	1,	0,		10,		400,	6, 18, 160, S_PAINH, S_DEATHH, "a knight",	"monster/knight",	 "monster/knight/vwep"},
 			{ GUN_SLIMEBALL,	15,	100,	1,	0,		200,	400,	2, 10,  60, S_PAIND, S_DEATHD, "a goblin",	"monster/goblin",	 "monster/goblin/vwep"},
+#endif
 		};
 		monstertypes = _monstertypes;
 	}
