@@ -19,7 +19,7 @@
 				<Option projectResourceIncludeDirsRelation="0"/>
 			</Target>
 			<Target title="client">
-				<Option output="..\bloodfrontier_client.exe"/>
+				<Option output="..\bin\bloodfrontier_client.exe"/>
 				<Option working_dir="..\"/>
 				<Option object_output=".objs\client"/>
 				<Option deps_output=".deps"/>
@@ -65,7 +65,7 @@
 				</Linker>
 			</Target>
 			<Target title="debug">
-				<Option output="..\bloodfrontier_debug.exe"/>
+				<Option output="..\bin\bloodfrontier_debug.exe"/>
 				<Option working_dir="..\"/>
 				<Option object_output=".objs\debug"/>
 				<Option deps_output=".deps"/>
@@ -110,7 +110,7 @@
 				</Linker>
 			</Target>
 			<Target title="server">
-				<Option output="..\bloodfrontier_server.exe"/>
+				<Option output="..\bin\bloodfrontier_server.exe"/>
 				<Option working_dir="..\"/>
 				<Option object_output=".objs\server"/>
 				<Option deps_output=".deps"/>
@@ -145,7 +145,7 @@
 				</Linker>
 			</Target>
 			<Target title="master">
-				<Option output="..\bloodfrontier_master.exe"/>
+				<Option output="..\bin\bloodfrontier_master.exe"/>
 				<Option working_dir="..\bin"/>
 				<Option object_output=".objs\master"/>
 				<Option deps_output=".deps\master"/>
@@ -169,97 +169,97 @@
 		<Compiler>
 			<Add option="-DBFRONTIER=32"/>
 		</Compiler>
-		<Unit filename="..\..\data\bfg\defaults.cfg">
+		<Unit filename="..\data\bfg\defaults.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\bfg\map.cfg">
+		<Unit filename="..\data\bfg\map.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\bfg\menus.cfg">
+		<Unit filename="..\data\bfg\menus.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\bfg\sounds.cfg">
+		<Unit filename="..\data\bfg\sounds.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\brush.cfg">
+		<Unit filename="..\data\brush.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\defaults.cfg">
+		<Unit filename="..\data\defaults.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\engine.cfg">
+		<Unit filename="..\data\engine.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\font.cfg">
+		<Unit filename="..\data\font.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\fps\defaults.cfg">
+		<Unit filename="..\data\fps\defaults.cfg">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\fps\map.cfg">
+		<Unit filename="..\data\fps\map.cfg">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\fps\sounds.cfg">
+		<Unit filename="..\data\fps\sounds.cfg">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\keymap.cfg">
+		<Unit filename="..\data\keymap.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\menus.cfg">
+		<Unit filename="..\data\menus.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\stdedit.cfg">
+		<Unit filename="..\data\stdedit.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\stdlib.cfg">
+		<Unit filename="..\data\stdlib.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="..\..\data\stdshader.cfg">
+		<Unit filename="..\data\stdshader.cfg">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

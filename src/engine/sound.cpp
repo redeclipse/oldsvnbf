@@ -339,17 +339,38 @@ void playsound(int n, const vec *loc, extentity *ent)
 
 	if(!slot.s->sound)
 	{
+#ifdef BFRONTIER
+		string buf;
+
+		loopi(3)
+#else
 		s_sprintfd(buf)("packages/sounds/%s", slot.s->name);
 
 		loopi(2)
+#endif
 		{
+#ifdef BFRONTIER
+			switch(i)
+			{
+				case 1:
+					s_sprintf(buf)("packages/sounds/%s.wav", slot.s->name);
+					break;
+				case 2:
+					s_sprintf(buf)("packages/sounds/%s.ogg", slot.s->name);
+					break;
+				default:
+					s_sprintf(buf)("packages/sounds/%s", slot.s->name);
+					break;
+			}
+#else
 			if(i) s_strcat(buf, ".wav");
+#endif
 			const char *file = findfile(path(buf), "rb");
-			#ifdef USE_MIXER
-				slot.s->sound = Mix_LoadWAV(file);
-			#else
-				slot.s->sound = FSOUND_Sample_Load(ent ? n+gamesounds.length() : n, file, FSOUND_LOOP_OFF, 0, 0);
-			#endif
+#ifdef USE_MIXER
+			slot.s->sound = Mix_LoadWAV(file);
+#else
+			slot.s->sound = FSOUND_Sample_Load(ent ? n+gamesounds.length() : n, file, FSOUND_LOOP_OFF, 0, 0);
+#endif
 			if(slot.s->sound) break;
 		}
 

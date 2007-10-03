@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
 	<paths>
-		<left>..\..\..\Sauerbraten\</left>
+		<left>..\..\Sauerbraten\</left>
 		<left-readonly>1</left-readonly>
 		<right>..\</right>
 		<right-readonly>0</right-readonly>

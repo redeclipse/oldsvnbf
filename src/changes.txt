@@ -7,6 +7,8 @@ Legend [
 ]
 
 = wip edition =
+bfg: updated map config
+mod: imported some sauerbraten content which permission was given for
 mod: ssp and krs removed for future integration elsewhere
 mod: aligned extended entities to top of game specific table
 bfg: thirdperson fov restricted to <=100
