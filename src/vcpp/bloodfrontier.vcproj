@@ -1,4 +1,4 @@
-bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
@@ -39,7 +39,7 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName=".\Release/bloodfrontier.tlb"
+				TypeLibraryName=".\Release/cube.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -62,8 +62,8 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 				DisableLanguageExtensions="false"
 				ForceConformanceInForLoopScope="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderThrough="bloodfrontier.h"
-				PrecompiledHeaderFile=".\Release/bloodfrontier.pch"
+				PrecompiledHeaderThrough="cube.h"
+				PrecompiledHeaderFile=".\Release/cube.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -89,15 +89,15 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="msvcrt.lib zdll.lib opengl32.lib glu32.lib SDLmain.lib SDL.lib SDL_image.lib ws2_32.lib SDL_mixer.lib fmodvc.lib winmm.lib dbghelp.lib"
-				OutputFile="..\..\bin\bloodfrontier_client.exe"
+				OutputFile="..\..\bloodfrontier_client.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\lib"
 				IgnoreAllDefaultLibraries="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Release/bloodfrontier.pdb"
+				ProgramDatabaseFile=".\Release/sauerbraten.pdb"
 				GenerateMapFile="true"
-				MapFileName=".\Release/bloodfrontier.map"
+				MapFileName=".\Release/cube.map"
 				MapExports="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -127,7 +127,7 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy release\bloodfrontier.pdb ..\.."
+				CommandLine="copy release\sauerbraten.pdb ..\.."
 			/>
 		</Configuration>
 		<Configuration
@@ -155,7 +155,7 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName=".\Debug/bloodfrontier.tlb"
+				TypeLibraryName=".\Debug/cube.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -166,8 +166,8 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 				BasicRuntimeChecks="1"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="bloodfrontier.h"
-				PrecompiledHeaderFile=".\Debug/bloodfrontier.pch"
+				PrecompiledHeaderThrough="cube.h"
+				PrecompiledHeaderFile=".\Debug/cube.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
@@ -191,13 +191,13 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="zdll.lib opengl32.lib glu32.lib SDLmain.lib SDL.lib SDL_image.lib SDL_mixer.lib ws2_32.lib winmm.lib"
-				OutputFile="..\..\bin\bloodfrontier_debug.exe"
+				OutputFile="..\..\bin\sauerbraten_debug.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\lib"
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/bloodfrontier_debug.pdb"
+				ProgramDatabaseFile=".\Debug/cube_debug.pdb"
 				SubSystem="1"
 				HeapReserveSize="0"
 				HeapCommitSize="0"
@@ -251,7 +251,7 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName=".\Release/bloodfrontier.tlb"
+				TypeLibraryName=".\Release/cube.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -270,7 +270,7 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 				EnableFunctionLevelLinking="false"
 				ForceConformanceInForLoopScope="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/bloodfrontier.pch"
+				PrecompiledHeaderFile=".\Release/cube.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -294,15 +294,15 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="msvcrt.lib zlib.lib opengl32.lib glu32.lib SDLmain.lib SDL.lib SDL_image.lib ws2_32.lib SDL_mixer.lib fmodvc.lib"
-				OutputFile="c:\w\bloodfrontier\bloodfrontier\bin\bloodfrontier.exe"
+				OutputFile="c:\w\sauerbraten\sauerbraten\bin\sauerbraten.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="C:\w\bloodfrontier\lib"
+				AdditionalLibraryDirectories="C:\w\cube\lib"
 				IgnoreAllDefaultLibraries="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Release/bloodfrontier.pdb"
+				ProgramDatabaseFile=".\Release/cube.pdb"
 				GenerateMapFile="true"
-				MapFileName=".\Release/bloodfrontier.map"
+				MapFileName=".\Release/cube.map"
 				MapExports="true"
 				SubSystem="1"
 				OptimizeForWindows98="1"
@@ -349,7 +349,7 @@ bloodfrontier<?xml version="1.0" encoding="Windows-1252"?>
 				>
 			</File>
 			<File
-				RelativePath=".\bloodfrontier.rc"
+				RelativePath=".\sauerbraten.rc"
 				>
 			</File>
 			<File
