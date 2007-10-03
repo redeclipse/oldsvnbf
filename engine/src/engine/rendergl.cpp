@@ -1068,16 +1068,16 @@ void gl_drawhud(int w, int h, int fogmat)
 VARP(hudblend, 0, 60, 100);
 VARP(showentdir, 0, 1, 1);
 
-#define rendernearfar(r,g,b,t,f) \
-	if (t) { \
+#define rendernearfar(a,b,c,d,e) \
+	if (d) { \
 		loopj(2) { \
-			if (!j) { glDepthFunc(GL_GREATER); glColor3f(r*0.25f, g*0.25f, b*0.25f); } \
-			else { glDepthFunc(GL_LESS); glColor3f(r, g, b); } \
-			f; \
+			if (!j) { glDepthFunc(GL_GREATER); glColor3f(a*0.25f, b*0.25f, c*0.25f); } \
+			else { glDepthFunc(GL_LESS); glColor3f(a, b, c); } \
+			e; \
 		} \
 	} else { \
-		glColor3f(r, g, b); \
-		f; \
+		glColor3f(a, b, c); \
+		e; \
 	}
 
 

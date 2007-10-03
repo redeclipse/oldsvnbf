@@ -605,7 +605,8 @@ struct entities : icliententities
 		
 		if (version >= 2)
 		{
-			int r = reg >= 0 ? reg : 0, n = id + n; // realign to entity table
+			// realign to entity table
+			int r = reg >= 0 ? reg : 0;//, n = id + n;
 			
 			switch (f.type)
 			{
