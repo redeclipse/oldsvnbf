@@ -6,10 +6,6 @@ extern int curtexnum, curtime, gamespeed, lastmillis;
 extern int hidehud, fov, invmouse, sensitivity, sensitivityscale;
 extern int musicvol, soundvol, entselradius;
 extern int testanims, animoverride, orientinterpolationtime;
-
-extern physent *player, *camera1, *hitplayer;
-
-extern bool menuactive();
 extern void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2 = 0, const char *text2 = NULL, GLuint tex = 0);
 
 enum

@@ -143,7 +143,8 @@ struct igameclient
 	virtual void recomputecamera()
 	{
 		extern bool deathcam;
-		extern physent *player, *camera1;
+		extern physent *camera1;
+		extern dynent *player;
 		
 		if(deathcam && player->state!=CS_DEAD) deathcam = false;
 		extern int testanims;
@@ -198,7 +199,8 @@ struct igameclient
 	virtual void mousemove(int dx, int dy)
 	{
 		extern int sensitivity, sensitivityscale, invmouse;
-		extern physent *player, *camera1;
+		extern physent *camera1;
+		extern dynent *player;
 		const float SENSF = 33.0f;	 // try match quake sens
 		camera1->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 		camera1->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
@@ -212,7 +214,7 @@ struct igameclient
 	}
 	virtual bool wantcrosshair()
 	{
-		extern physent *player;
+		extern dynsent *player;
 		extern int hidehud;
 		extern bool menuactive();
 		return !(hidehud || player->state==CS_SPECTATOR) || menuactive();
