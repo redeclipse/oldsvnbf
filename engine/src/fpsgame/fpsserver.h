@@ -2164,7 +2164,7 @@ struct fpsserver : igameserver
 	}
 
 #ifdef BFRONTIER
-	char *servername() { return "someserver"; }
+	char *servername() { return "bloodfrontierserver"; }
 	int serverinfoport()
 	{
 		switch (gameid)
