@@ -291,8 +291,31 @@ char *parseexp(char *&p, int right)		  // parse any nested set of () or []
 	return s;
 }
 
+char *expanddot(char *n, int o) 
+{
+    char *act = idents->access(".")->_action;
+    int a = strlen(act)+o;
+    int s = strlen(n+o)+a+1;
+    char x[s];
+    char *r = x+a;
+    strncpy(x, n, o);
+    x[o] = 0;
+    strncat(x, act, s);    
+    for(;;)                     // deep bound 
+    {              
+        strncat(x, n+o, s);     
+        if(idents->access(x+o)) return exchangestr(n, x);
+        *r = 0;                 // rm n from path
+        r = strrchr(x, '.');    // dynamic lexical scope
+        if(!r) break;
+        *r = 0;                 // up
+    }
+    return n;
+}
+
 char *lookup(char *n)							// find value of ident referenced with $ in exp
 {
+    if(*(n+1)=='.') n = expanddot(n, 1);
 	ident *id = idents->access(n+1);
 	if(id) switch(id->_type)
 	{
@@ -429,11 +452,18 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 
 		if(w[1][0]=='=' && !w[1][1])
 		{
+            if(*c=='.') {                        // dot expansion
+                ident *dotid = idents->access(".");
+                s_sprintfd(dot)("%s%s", dotid->_action, c);
+                c = dot;
+            }
 			aliasa(c, numargs>2 ? w[2] : newstring(""));
 			w[2] = NULL;
 		}
 		else
 		{	 
+            if(*c=='.')
+                c = w[0] = expanddot(c, 0);           
 			ident *id = idents->access(c);
 #ifdef BFRONTIER
 			if (isserver && (!id || id->_type != ID_ICOMMAND || id->_server == false))
@@ -547,6 +577,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 					
 				case ID_ALIAS:							  // alias, also used as functions and (global) variables
 				{
+                    push(".", c);
 					for(int i = 1; i<numargs; i++)
 					{
 						s_sprintfd(t)("arg%d", i);		  // set any arguments as (global) arg values so functions can access them
@@ -571,6 +602,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 						s_sprintfd(t)("arg%d", i);		  // set any arguments as (global) arg values so functions can access them
 						pop(t);
 					}
+                    pop(".");
 					break;
 				}
 			}

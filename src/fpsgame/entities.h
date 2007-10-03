@@ -399,7 +399,7 @@ struct entities : icliententities
 		extentity &e = *ents[i];
 #ifdef BFRONTIER
 		extentedit(i);
-		if (multiplayer(false) && (!g_sauer || e.type < CAMERA)) cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
+		if (multiplayer(false) && e.type < CAMERA) cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
 #else
 		cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4);
 #endif
@@ -529,23 +529,21 @@ struct entities : icliententities
 		{
 			fpsentity &e = (fpsentity &)d;
 
-			e.links.setsize(0);
-
 			switch (e.type)
 			{
 				case CAMERA:  // place with "newent camera idx [pan]"
-				e.attr4 = e.attr1;
-				e.attr3 = e.attr2;
-				e.attr2 = (int)cl.player1->pitch;
-				e.attr1 = (int)cl.player1->yaw;
-				break;
+					e.attr4 = e.attr1;
+					e.attr3 = e.attr2;
+					e.attr2 = (int)cl.player1->pitch;
+					e.attr1 = (int)cl.player1->yaw;
+					break;
 				case WAYPOINT:
-				e.attr1 = e.attr1 >= 0 && e.attr1 <= 1 ? e.attr1 : (e.attr1 > 1 ? 0 : 1);
-				e.attr2 = e.attr2 >= 0 ? e.attr2 : 0;
-				e.attr3 = e.attr3 >= 0 ? e.attr3 : 0;
-				break;
+					e.attr1 = e.attr1 >= 0 && e.attr1 <= 1 ? e.attr1 : (e.attr1 > 1 ? 0 : 1);
+					e.attr2 = e.attr2 >= 0 ? e.attr2 : 0;
+					e.attr3 = e.attr3 >= 0 ? e.attr3 : 0;
+					break;
 				default:
-				break;
+					break;
 			}
 		}
 	}

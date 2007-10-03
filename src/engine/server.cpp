@@ -722,6 +722,7 @@ void initserver(bool dedicated)
 		address.port = sv->serverinfoport();
 		pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
 		if(pongsock == ENET_SOCKET_NULL) fatal("could not create server info socket");
+        else enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 #ifndef BFRONTIER
 	}
 #endif

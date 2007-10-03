@@ -192,8 +192,16 @@ struct weaponstate
 		switch(bnc.bouncetype)
 		{
 			case BNC_GRENADE:
-				bnc.elasticity = 0.2f;
-				bnc.waterfric = 2.0f;
+				if (g_bf)
+				{
+					bnc.elasticity = 0.2f;
+					bnc.waterfric = 2.0f;
+				}
+				else
+				{
+					bnc.elasticity = 0.6f;
+					bnc.waterfric = 3.0f;
+				}
 				break;
 			default:
 				bnc.elasticity = 0.6f;

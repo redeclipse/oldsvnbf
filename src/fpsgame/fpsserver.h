@@ -1152,7 +1152,7 @@ struct fpsserver : igameserver
 					if(ci->state.armourtype==A_YELLOW && ci->state.armour>0) f |= 1<<5;
 					if(ci->state.quadmillis) f |= 1<<6;
 #ifdef BFRONTIER
-					if(!g_bf && ci->state.maxhealth>100) f |= ((ci->state.maxhealth-100)/getitem(I_BOOST-I_SHELLS).add)<<7;
+					if(ci->state.maxhealth>100) f |= ((ci->state.maxhealth-100)/getitem(I_BOOST-I_SHELLS).add)<<7;
 #else
 					if(ci->state.maxhealth>100) f |= ((ci->state.maxhealth-100)/itemstats[I_BOOST-I_SHELLS].add)<<7;
 #endif
@@ -1209,7 +1209,7 @@ struct fpsserver : igameserver
 #ifdef BFRONTIER
 			case SV_TRYRELOAD:
 			{
-				if (g_bf) getint(p);
+				getint(p);
 				break;
 			}
 #endif
@@ -1594,12 +1594,12 @@ struct fpsserver : igameserver
 			default:
 			{
 				int size = msgsizelookup(type);
-				if(size==-1) { disconnect_client(sender, DISC_TAGT); return; }
+				if(size==-1) { conoutf("msg: %.2d", type); disconnect_client(sender, DISC_TAGT); return; }
 				if(size>0) loopi(size-1) getint(p);
 				if(ci) QUEUE_MSG;
 				break;
 			}
-		}
+        }
 	}
 
 	int welcomepacket(ucharbuf &p, int n)
