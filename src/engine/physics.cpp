@@ -1080,7 +1080,11 @@ void vectoyawpitch(const vec &v, float &yaw, float &pitch)
 	pitch = asin(v.z/v.magnitude())/RAD;
 }
 
+#ifdef BFRONTIER
+VARP(maxroll, 0, 1, 90);
+#else
 VARP(maxroll, 0, 3, 20);
+#endif
 VAR(floatspeed, 10, 100, 1000);
 
 void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime)

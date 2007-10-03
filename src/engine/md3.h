@@ -348,6 +348,17 @@ void md3envmap(char *meshname, char *envmap)
 	loopmd3skins(meshname, s, s.envmap = tex);
 }
 
+void md3bumpmap(char *meshname, char *skin, char *normalmap)
+{
+    if(renderpath==R_FIXEDFUNCTION || !hasVBO) return;
+    Texture *skintex, *normalmaptex;
+    s_sprintfd(spath)("%s/%s", md3dir, skin);
+    skintex = textureload(spath, 0, true, false);
+    s_sprintf(spath)("%s/%s", md3dir, normalmap);
+    normalmaptex = textureload(spath, 0, true, false);
+    loopmd3skins(meshname, s, { s.unlittex = skintex; s.normalmap = normalmaptex; m.calctangents(); });
+}
+
 void md3translucent(char *meshname, float *translucency)
 {
 	loopmd3skins(meshname, s, s.translucency = *translucency);
@@ -397,6 +408,7 @@ COMMAND(md3glow, "si");
 COMMAND(md3alphatest, "sf");
 COMMAND(md3alphablend, "si");
 COMMAND(md3envmap, "ss");
+COMMAND(md3bumpmap, "sss");
 COMMAND(md3translucent, "sf");
 COMMAND(md3fullbright, "sf");
 COMMAND(md3shader, "ss");
