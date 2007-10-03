@@ -780,7 +780,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 	initlights();
 #ifdef BFRONTIER
-	mpremip(false); // enables the smaller gridsizes
+	mpremip(true); // enables the smaller gridsizes
 #endif
 	allchanged(true);
 

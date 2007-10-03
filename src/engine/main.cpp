@@ -593,7 +593,7 @@ void startgame(bool start, char *load, char *initscript)
 	if (start) cc->gameconnect(false);
 	else disconnect();
 
-	sv->changemap(start && load ? load : sv->defaultmap(), 1);
+	sv->changemap(start && load ? load : sv->defaultmap(), 0);
 
 	if (start && initscript) execute(initscript);
 
@@ -714,7 +714,6 @@ void updateframe(bool dorender)
 	else clientkeepalive();
 }
 #endif
-
 int main(int argc, char **argv)
 {
 	#ifdef WIN32
@@ -891,6 +890,7 @@ int main(int argc, char **argv)
 
 	log("gl");
 	persistidents = false;
+    alias(".", ""); // init dot call stack. must be done before any dynamic aliases
 	if(!execfile("data/stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
     gl_init(scr_w, scr_h, hasbpp ? colorbits : 0, config&1 ? depthbits : 0, config&4 ? fsaa : 0);
 #ifdef BFRONTIER
@@ -984,12 +984,21 @@ int main(int argc, char **argv)
         //if(curtime>200) curtime = 200;
         //else if(curtime<1) curtime = 1;
 		if(paused) curtime = 0;
+
 		if(lastmillis) cl->updateworld(worldpos, curtime, lastmillis);
 		
 		menuprocess();
 
 		lastmillis += curtime;
 		totalmillis = millis;
+
+        checksleep(lastmillis);
+
+        serverslice(0);
+
+        if(frames) updatefpshistory(elapsed);
+        frames++;
+
 		// miscellaneous general game effects
 		findorientation();
 		entity_particles();

@@ -659,6 +659,7 @@ VAR(botnum, 0, 0, MAXCLIENTS-1);			// set to force a number of bots in botauto
 VAR(botwaydist, 0, BOTJUMPMAX, BOTISFAR);	// drop botwaypoints this far apart
 VAR(botwaynear, 0, BOTISNEAR, BOTISFAR);	// waypoints join when this close to them
 
+#endif
 static char *msgnames[] = {
 	"SV_INITS2C",
 	"SV_INITC2S",
@@ -734,5 +735,4 @@ static char *msgnames[] = {
 	"SV_SERVCMD",
 	"SV_TRYRELOAD",
 };
-#endif
 #endif
