@@ -523,7 +523,7 @@ if test -x / >/dev/null 2>&1; then
 else
   if ls -dL / >/dev/null 2>&1; then
     as_ls_L_option=L
-else
+  else
     as_ls_L_option=
   fi
   as_test_x='
@@ -4898,7 +4898,7 @@ if test -x / >/dev/null 2>&1; then
 else
   if ls -dL / >/dev/null 2>&1; then
     as_ls_L_option=L
-else
+  else
     as_ls_L_option=
   fi
   as_test_x='

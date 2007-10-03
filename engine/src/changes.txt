@@ -9,6 +9,8 @@ Legend [
 ]
 
 = wip edition =
+mod: reimported enet
+mod: "gun reload" and "gun zoom" animations added
 mod: enabled grid sizes 0-2 for smaller geometry editing ability
 fps: camera wobble intensity lowered and made configurable
 bfg: grenades don't explode when they hit a player

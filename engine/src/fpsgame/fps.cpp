@@ -810,10 +810,17 @@ struct fpsclient : igameclient
 		if(!hudgun() || editmode || player1->state==CS_SPECTATOR) return;
 
 #ifdef BFRONTIER
-		int rtime = gunvar(player1->gunwait, player1->gunselect);
-		if (lastmillis - gunvar(player1->gunlast, player1->gunselect) > rtime)
+		int rtime = gunvar(player1->gunwait, player1->gunselect),
+			wtime = gunvar(player1->gunlast, player1->gunselect),
+			otime = lastmillis - wtime;
+
+		// TODO: zoom
+		if (otime < rtime)
 		{
-			drawhudmodel(ANIM_GUNSHOOT, rtime/17.0f, gunvar(player1->gunlast, player1->gunselect));
+			int anim = getgun(player1->gunselect).reloaddelay &&
+				rtime == getgun(player1->gunselect).reloaddelay ? ANIM_GUNRELOAD : ANIM_GUNSHOOT;
+			
+			drawhudmodel(anim, rtime/17.0f, gunvar(player1->gunlast, player1->gunselect));
 		}
 		else
 		{
