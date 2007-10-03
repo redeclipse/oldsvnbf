@@ -1103,9 +1103,9 @@ enet_protocol_check_timeouts (ENetHost * host, ENetPeer * peer, ENetEvent * even
        if (ENET_TIME_DIFFERENCE (host -> serviceTime, outgoingCommand -> sentTime) < outgoingCommand -> roundTripTimeout)
          continue;
 
-       if(peer -> earliestTimeout == 0 ||
-          ENET_TIME_LESS(outgoingCommand -> sentTime, peer -> earliestTimeout))
-           peer -> earliestTimeout = outgoingCommand -> sentTime;
+       if (peer -> earliestTimeout == 0 ||
+           ENET_TIME_LESS (outgoingCommand -> sentTime, peer -> earliestTimeout))
+         peer -> earliestTimeout = outgoingCommand -> sentTime;
 
        if (peer -> earliestTimeout != 0 &&
              (ENET_TIME_DIFFERENCE (host -> serviceTime, peer -> earliestTimeout) >= ENET_PEER_TIMEOUT_MAXIMUM ||

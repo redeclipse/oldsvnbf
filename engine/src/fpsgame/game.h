@@ -45,7 +45,11 @@ enum
 	GAME_MAX
 };
 
-VAR(gameid, 1, GAME_BF, -1); // persistant var
+#ifdef STANDALONE
+VARF(gameid, GAME_BF, GAME_BF, GAME_MAX-1, sv->changemap(sv->defaultmap()));
+#else
+VARF(gameid, GAME_BF, GAME_BF, GAME_MAX-1, loadconfig(); startgame(););
+#endif
 
 #define g_bf			(gameid == GAME_BF)
 #define g_sauer			(gameid == GAME_SAUER)

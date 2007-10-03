@@ -4,18 +4,15 @@ Modifications for the Engine.
 * integrate all modules together into switchable type
 * motd from master server -> title screen?
 * all-in-one package for maps
-* moving sounds?
-* simple (2d/sprite) models?
+* moving sounds (OpenAL)?
+* simple (2d/sprite) models (at a distance)?
 * camera paths?
-* textured materials?
+* texture, friction, etc on materials?
 * water transitions?
-* adapt tables to server browser
 * fix titlecards
-* enable smaller gridsizes?
-* make more things game module controlled (loading screens, etc)
 * particle intelligence/physics (collision, fire, etc)?
 * command line completion in linux style?
-* make text shadow optional
+* make text shadow optional?
 * more scripting hooks?
 * configurable hud (and toggles)
 	- clock
@@ -28,7 +25,6 @@ Modifications for the Engine.
 * SDL_ttf support?
 * push/pop font for various areas of the hud
 * lightmap levels, editing/importing/adjustment/fading/switching?
-* extension for friction (material)
 * internal autosave function?
 * dedicated server irc/www interface (bot or server?)
 * mod on server browser

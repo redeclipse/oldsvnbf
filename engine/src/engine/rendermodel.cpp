@@ -763,6 +763,9 @@ void findanims(const char *pattern, vector<int> &anims)
 		"jump", "sink", "swim", 
 		"edit", "lag", "taunt", "win", "lose", 
 		"gun shoot", "gun idle",
+#ifdef BFRONTIER
+		"gun reload", "gun zoom",
+#endif
 		"vwep", "shield", "powerup", 
 		"mapmodel", "trigger" 
 	};

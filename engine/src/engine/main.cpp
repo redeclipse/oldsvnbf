@@ -588,6 +588,22 @@ void loadconfig(bool reload)
 	gameexec("autoexec.cfg");
 }
 
+void startgame(bool start, char *load, char *initscript)
+{
+	if (start) cc->gameconnect(false);
+	else disconnect();
+
+	sv->changemap(start && load ? load : sv->defaultmap(), 1);
+
+	if (start && initscript) execute(initscript);
+
+	if (!connpeer && !curpeer)
+	{
+		if (start && load) localconnect();
+		else showgui("main");
+	}
+}
+
 int frames = 0;
 
 void updateframe(bool dorender)
@@ -910,14 +926,7 @@ int main(int argc, char **argv)
 	log("cfg");
 #ifdef BFRONTIER
 	loadconfig(false);
-	cc->gameconnect(false);
-	sv->changemap(load ? load : sv->defaultmap(), 1);
-	if (initscript) execute(initscript);
-	if (!connpeer && !curpeer)
-	{
-		if (load) localconnect();
-		else showgui("main");
-	}
+	startgame(true, load, initscript);
 #else
 	exec("data/keymap.cfg");
 	exec("data/stdedit.cfg");

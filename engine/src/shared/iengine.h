@@ -477,6 +477,9 @@ extern void getlavacolour(uchar *lcol);
 extern int thirdperson, thirdpersondistance, thirdpersonheight,
 	thirdpersonscale, thirdpersonstick;
 
+extern void loadconfig(bool reload = true);
+extern void startgame(bool start = false, char *load = NULL, char *initscript = NULL);
+
 // world
 enum							// cube empty-space materials
 {
