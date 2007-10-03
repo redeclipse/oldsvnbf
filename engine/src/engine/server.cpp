@@ -426,7 +426,11 @@ ENetSocket httpgetsend(ENetAddress &remoteaddress, char *hostname, char *req, ch
 	buf.data = httpget;
 	buf.dataLength = strlen((char *)buf.data);
 #ifdef STANDALONE
+#ifdef BFRONTIER
+	printf("sending request to %s...\n-\n%s", hostname, httpget);
+#else
 	printf("sending request to %s...\n", hostname);
+#endif
 #endif
 	enet_socket_send(sock, NULL, &buf, 1);
 	return sock;
