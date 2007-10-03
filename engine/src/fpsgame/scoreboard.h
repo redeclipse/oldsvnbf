@@ -260,24 +260,29 @@ struct scoreboard : g3d_callback
                 g.poplist();
             }
             g.text("", 0, "server");
+#ifdef BFRONTIER
             loopscoregroup(o,
             {
-#ifdef BFRONTIER
                 if(o==cl.player1 && highlightscore() && cl.cc.demoplayback)
-#else
-                if(o==cl.player1 && highlightscore() && (multiplayer(false) || cl.cc.demoplayback))
-#endif
                 {
                     g.pushlist();
                     g.background(0x808080, numgroups>1 ? 3 : 5);
                 }
                 g.text("", 0, icon);
-#ifdef BFRONTIER
                 if(o==cl.player1 && highlightscore() && cl.cc.demoplayback) g.poplist();
-#else
-                if(o==cl.player1 && highlightscore() && (multiplayer(false) || cl.cc.demoplayback)) g.poplist();
-#endif
             });
+#else
+            loopscoregroup(o,
+            {
+                if(o==cl.player1 && highlightscore() && (multiplayer(false) || cl.cc.demoplayback))
+                {
+                    g.pushlist();
+                    g.background(0x808080, numgroups>1 ? 3 : 5);
+                }
+                g.text("", 0, icon);
+                if(o==cl.player1 && highlightscore() && (multiplayer(false) || cl.cc.demoplayback)) g.poplist();
+            });
+#endif
             g.poplist();
 
             if(sg.team && m_teammode)
