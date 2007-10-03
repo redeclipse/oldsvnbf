@@ -517,7 +517,6 @@ struct sspdummyserver : igameserver
 	int getmastertype() { return 1; }
 	void sendservmsg(const char *s) {}
 	char *gameident() { return "ssp"; }
-	char *gamepakdir() { return "ssp"; }
 
 	char *defaultmap() { return "start"; }
 	char *gamename() { return "Side Scrolling Platformer"; }

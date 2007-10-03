@@ -828,9 +828,6 @@ COMMANDN(clearsleep, clearsleep_, "i");
 char *getgameident() { return sv->gameident(); }
 void gameident() { result(getgameident()); }				COMMAND(gameident, "");
 
-char *getgamepakdir() { return sv->gamepakdir(); }
-void gamepakdir() { result(getgamepakdir()); }				COMMAND(gamepakdir, "");
-
 char *getdefaultmap() { return sv->defaultmap(); }
 void gamedefaultmap() { result(getdefaultmap()); }			COMMAND(gamedefaultmap, "");
 

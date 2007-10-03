@@ -78,7 +78,6 @@ struct krsdummyserver : igameserver
 	int getmastertype() { return 1; }
 	void sendservmsg(const char *s) {}
 	char *gameident() { return "krs"; }
-	char *gamepakdir() { return "krs"; }
 
 	char *defaultmap() { return "start"; }
 	char *gamename() { return "Kart Racing Simulator"; }

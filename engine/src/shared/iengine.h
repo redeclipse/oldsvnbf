@@ -421,7 +421,6 @@ extern int gzgetint(gzFile f);
 extern void gzputint(gzFile f, int x);
 
 extern char *getgameident();
-extern char *getgamepakdir();
 extern char *getdefaultmap();
 extern char *gettime(char *format);
 
