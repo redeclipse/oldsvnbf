@@ -1,22 +1,22 @@
 <?xml version="1.0"?>
 <!DOCTYPE CodeBlocks_layout_file>
 <CodeBlocks_layout_file>
-	<File name="..\..\data\bfg\defaults.cfg" open="1" top="0">
+	<File name="..\data\bfg\defaults.cfg" open="1" top="0">
 		<Cursor position="57" topLine="0"/>
 	</File>
-	<File name="..\..\data\bfg\map.cfg" open="1" top="0">
+	<File name="..\data\bfg\map.cfg" open="1" top="0">
 		<Cursor position="110" topLine="0"/>
 	</File>
-	<File name="..\..\data\bfg\menus.cfg" open="1" top="0">
+	<File name="..\data\bfg\menus.cfg" open="1" top="0">
 		<Cursor position="4309" topLine="119"/>
 	</File>
-	<File name="..\..\data\font.cfg" open="1" top="0">
+	<File name="..\data\font.cfg" open="1" top="0">
 		<Cursor position="32" topLine="0"/>
 	</File>
-	<File name="..\..\data\fps\defaults.cfg" open="1" top="0">
+	<File name="..\data\fps\defaults.cfg" open="1" top="0">
 		<Cursor position="131" topLine="5"/>
 	</File>
-	<File name="..\..\data\stdshader.cfg" open="1" top="0">
+	<File name="..\data\stdshader.cfg" open="1" top="0">
 		<Cursor position="32330" topLine="1018"/>
 	</File>
 	<File name="engine\3dgui.cpp" open="1" top="0">
@@ -54,7 +54,6 @@
 	</File>
 	<Expand folder="/data/bfg"/>
 	<Expand folder="/data"/>
-	<Expand folder="/engine/src/fpsgame"/>
-	<Expand folder="/engine/src"/>
-	<Expand folder="/engine"/>
+	<Expand folder="/src/fpsgame"/>
+	<Expand folder="/src"/>
 </CodeBlocks_layout_file>

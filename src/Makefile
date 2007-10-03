@@ -82,11 +82,11 @@ server:	libenet $(SERVER_OBJS)
 	strip bloodfrontier_server
 
 install-client:
-	cp -v bloodfrontier_client ../bloodfrontier_client
-	chmod +x ../bloodfrontier_client ../../bloodfrontier.sh
+	cp -v bloodfrontier_client ../bin/bloodfrontier_client
+	chmod +x ../bin/bloodfrontier_client ../bloodfrontier.sh
 
 install-server:
-	cp -v bloodfrontier_server ../bloodfrontier_server
-	chmod +x ../bloodfrontier_server
+	cp -v bloodfrontier_server ../bin/bloodfrontier_server
+	chmod +x ../bin/bloodfrontier_server
 
 install: install-client install-server
