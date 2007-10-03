@@ -1,0 +1,30 @@
+"Red Hot" by Quinton Reeves [ qreeves -at- gmail.com ]
+
+Sauerbraten Map, Deathmatch and Capture Enabled, 9-15 players
+
+In this lava pit you must fight or die, one wrong step and your
+	soul will be condemned to the flames.
+
+This map contains several experimental features using lava,
+	particle fireballs, and pulse glowmapping.
+
+Extract this archive into your Sauerbraten folder, and then
+	to play type: /map redhot
+
+You may freely distribute this map so long as you do not
+	misrepresent it's origins, or modify any of the included
+	files. If you wish to modify this map, please contact the
+	author directly.
+
+This map may only be used with editions later that Spring Edition,
+	which contains the "lava" material for use in game.
+
+An ETZ containing waypoints for this map is in Blood Frontier's latest
+	branch. For more information on Blood Frontier visit:
+		http://sourceforge.net/project/bloodfrontier
+
+Update [v0.2] 14th August 2007:
+* lighting/item tweaks
+* lava level raised for more effective death
+
+-Quin

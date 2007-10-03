@@ -50,19 +50,11 @@ void setnames(const char *fname, const char *cname = 0)
 	}
 	else
 	{
-#ifdef BFRONTIER
-		s_strcpy(pakname, sv->gamepakdir());
-#else
 		s_strcpy(pakname, "base");
-#endif
 		s_strcpy(cfgname, name);
 	}
 	if(strpbrk(fname, "/\\")) s_strcpy(mapname, fname);
-#ifdef BFRONTIER
-	else s_sprintf(mapname)("%s/%s", sv->gamepakdir(), fname);
-#else
 	else s_sprintf(mapname)("base/%s", fname);
-#endif
 	cutogz(mapname);
 
 	s_sprintf(cgzname)("packages/%s.ogz", mapname);

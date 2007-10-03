@@ -2547,15 +2547,6 @@ struct fpsserver : igameserver
 		}
 		return "unk";
 	}
-	char *gamepakdir()
-	{
-		switch (gameid)
-		{
-			case GAME_BF: return "bf";
-			case GAME_SAUER: return "base";
-		}
-		return "unk";
-	}
 
 	char *gamename()
 	{

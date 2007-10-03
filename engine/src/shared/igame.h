@@ -286,7 +286,6 @@ struct igameserver
     virtual void changemap(const char *s, int mode = 0) { return; }
 	virtual int getmastertype() { return 0; }
     virtual char *gameident() = 0;
-	virtual char *gamepakdir() = 0;
 	virtual char *gamename() = 0;
 	virtual char *gametitle() = 0;
     virtual char *defaultmap() = 0;

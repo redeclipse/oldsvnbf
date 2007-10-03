@@ -256,7 +256,6 @@ ssp: entities are fixed as they're edited/created
 ssp: 'fov' forced to 60 when playing (as suggested by Nieb)
 ssp: entities with directions now have visual indicator
 ssp: realtime updates of entity editing, enemies now render
-mod: 'igameclient::gamepakdir()' added to tell 'worldio.cpp:setnames()' the package directory
 ssp: 'egypt' level contributed by wurfel
 ssp: (possible) enemy entity crash bug fixed
 ssp: jump velocity tweaked (fixes the 'rocket into air on slopes' bug)
