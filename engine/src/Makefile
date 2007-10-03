@@ -60,7 +60,7 @@ libenet: enet/Makefile
 	$(MAKE)	-C enet/ all
 
 clean: enet/Makefile
-	-$(RM) $(SERVER_OBJS) $(CLIENT_OBJS) bloodfrontier_server bloodfrontier_client
+	$(RM) $(SERVER_OBJS) $(CLIENT_OBJS) bloodfrontier_server bloodfrontier_client
 	$(MAKE)	-C enet/ clean
 
 shared/tools-standalone.o:
