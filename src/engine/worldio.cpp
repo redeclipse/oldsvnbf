@@ -287,6 +287,8 @@ void save_world(char *mname, bool nolms)
 		path(bakname);
 		backup(cgzname, bakname);
 
+		show_out_of_renderloop_progress(0.5f, "saving backups...");
+
 		if (et->wantext())
 		{
 			s_sprintf(bakname)("packages/%s_%li.etz", mapname, baktime);
@@ -355,7 +357,6 @@ void save_world(char *mname, bool nolms)
 	loopv(texmru) writeushort(f, texmru[i]);
 	char *ebuf = new char[et->extraentinfosize()];
 #ifdef BFRONTIER
-	show_out_of_renderloop_progress(0, "saving entities...");
 	int ecount = 0;
 	loopv(ents)
 	{
@@ -391,13 +392,11 @@ void save_world(char *mname, bool nolms)
 		if (et->wantext()) console("saved %d ent(s) to '%s'", CON_RIGHT, ecount, extname);
 	}
 
-	show_out_of_renderloop_progress(0, "saving lightmaps...");
-
 	savec(worldroot, f, nolms);
 	if(!nolms) loopv(lightmaps)
 	{
 		LightMap &lm = lightmaps[i];
-		show_out_of_renderloop_progress(float(i)/float(lightmaps.length()), "saving lightmaps...");
+		show_out_of_renderloop_progress(float(i)/float(lightmaps.length()), "saving lightmap(s)...");
 		gzputc(f, lm.type | (lm.unlitx>=0 ? 0x80 : 0));
 		if(lm.unlitx>=0)
 		{
@@ -414,11 +413,29 @@ void save_world(char *mname, bool nolms)
 
 	if (et->wantext())
 	{
+		int enumvars = 0;
+		
+		enumerate(*idents, ident, id, { if (id._type == ID_VAR && id._world) enumvars++; });
+		
+		gzputint(g, enumvars);
+		
+		enumerate(*idents, ident, id, {
+			show_out_of_renderloop_progress(float(i)/float(lightmaps.length()), "saving world variable(s)...");
+			
+			if (id._type == ID_VAR && id._world)
+			{
+				gzputint(g, strlen(id._name));
+				gzwrite(g, id._name, (int)strlen(id._name)+1);
+				gzputint(g, *id._storage);
+			}
+		});
+		if (verbose >= 2) console("saved %d variables(s) to '%s'", CON_RIGHT, enumvars, cgzname);
+
 		gzclose(g);
 		if (verbose) console("saved file '%s' version %d", CON_RIGHT, extname, EXTVERSION);
 	}
 
-	show_out_of_renderloop_progress(0, "saving...");
+	show_out_of_renderloop_progress(0, "saving world...");
 	cl->saveworld(mname);
 
 	conoutf("saved map '%s' in %.1f sec(s)", mapname, (SDL_GetTicks()-savingstart)/1000.0f);
@@ -491,7 +508,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		eversion = gzgetint(g);
 		
 		if ((eversion >= 4 && strncmp(ehead, "EXTZ", 4)!=0) ||
-			(eversion < 4 && strncmp(ehead, "ENTZ", 4)!=0)) // from our old school days
+			(eversion <= 3 && strncmp(ehead, "ENTZ", 4)!=0)) // from our old school days
 		{
 			conoutf("error loading '%s' from '%s' due to malformatted header", mapname, extname);
 			gzclose(g);
@@ -710,7 +727,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 	if (et->wantext())
 	{
-		if (g && eversion > 0)
+		if (g && eversion >= 1)
 		{
 			int enuments = gzgetint(g); // number of extents
 		
@@ -746,6 +763,31 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 			}
 			
 			if (verbose >= 2) console("loaded %d ent(s) from '%s'", CON_RIGHT, enuments, extname);
+
+			if (eversion >= 4)
+			{
+				int enumvars = gzgetint(g);
+				
+				loopi(enumvars)
+				{
+					show_out_of_renderloop_progress(float(i)/float(enuments), "loading world variables...");
+					
+					int elength = gzgetint(g);
+					string evar;
+					
+					gzread(g, evar, elength+1);
+					
+					int eval = gzgetint(g);
+					ident *id = idents->access(evar);
+					
+					if (id && id->_type == ID_VAR && id->_world)
+					{
+						setvar(evar, eval, true);
+					}
+				}
+				
+				if (verbose >= 2) console("loaded %d variable(s) from '%s'", CON_RIGHT, enumvars, extname);
+			}
 		}
 		
 		gzclose(g);

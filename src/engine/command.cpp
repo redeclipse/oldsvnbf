@@ -91,7 +91,11 @@ void pusha(char *name, char *action)
 	if(!id)
 	{
 		name = newstring(name);
+#ifdef BFRONTIER
+		ident init(ID_ALIAS, name, newstring(""), persistidents, false, false);
+#else
 		ident init(ID_ALIAS, name, newstring(""), persistidents);
+#endif
 		id = idents->access(name, &init);
 	}
 	pushident(*id, action);
@@ -117,7 +121,11 @@ void aliasa(char *name, char *action)
 	if(!b) 
 	{
 		name = newstring(name);
+#ifdef BFRONTIER
+		ident b(ID_ALIAS, name, action, persistidents, false, false);
+#else
 		ident b(ID_ALIAS, name, action, persistidents);
+#endif
 		if(overrideidents) b._override = OVERRIDDEN;
 		idents->access(name, &b);
 	}
@@ -145,6 +153,15 @@ COMMAND(alias, "ss");
 
 // variable's and commands are registered through globals, see cube.h
 
+#ifdef BFRONTIER
+int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool server, bool world)
+{
+	if(!idents) idents = new identtable;
+	ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, persist, server, world);
+	idents->access(name, &v);
+	return cur;
+}
+#else
 int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist)
 {
 	if(!idents) idents = new identtable;
@@ -152,6 +169,7 @@ int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(),
 	idents->access(name, &v);
 	return cur;
 }
+#endif
 
 #define GETVAR(id, name, retval) \
 	ident *id = idents->access(name); \
@@ -186,6 +204,15 @@ const char *getalias(char *name)
 	return i && i->_type==ID_ALIAS ? i->_action : "";
 }
 
+#ifdef BFRONTIER
+bool addcommand(char *name, void (*fun)(), char *narg, bool server, bool world)
+{
+	if(!idents) idents = new identtable;
+	ident c(ID_COMMAND, name, narg, (void *)fun, NULL, server, world);
+	idents->access(name, &c);
+	return false;
+}
+#else
 bool addcommand(char *name, void (*fun)(), char *narg)
 {
 	if(!idents) idents = new identtable;
@@ -193,6 +220,7 @@ bool addcommand(char *name, void (*fun)(), char *narg)
 	idents->access(name, &c);
 	return false;
 }
+#endif
 
 void addident(char *name, ident *id)
 {
