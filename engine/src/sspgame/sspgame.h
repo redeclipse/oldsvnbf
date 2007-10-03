@@ -33,8 +33,8 @@ enum {
 extern int curtexnum, curtime, gamespeed, lastmillis;
 extern int hidehud, fov, hudgunfov, invmouse, sensitivity, sensitivityscale;
 extern int musicvol, soundvol, entselradius;
-
-extern physent *player, *camera1, *hitplayer;
+extern physent *camera1, *hitplayer;
+extern dynent *player;
 
 extern bool menuactive();
 extern void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2 = 0, const char *text2 = NULL, GLuint tex = 0);
