@@ -95,7 +95,7 @@
 				AdditionalLibraryDirectories="..\lib"
 				IgnoreAllDefaultLibraries="true"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Release/sauerbraten.pdb"
+				ProgramDatabaseFile=".\Release/bloodfrontier.pdb"
 				GenerateMapFile="true"
 				MapFileName=".\Release/cube.map"
 				MapExports="true"
@@ -127,7 +127,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy release\sauerbraten.pdb ..\.."
+				CommandLine="copy release\bloodfrontier.pdb ..\.."
 			/>
 		</Configuration>
 		<Configuration
@@ -192,7 +192,7 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="zdll.lib opengl32.lib glu32.lib SDLmain.lib SDL.lib SDL_image.lib SDL_mixer.lib ws2_32.lib winmm.lib"
-				OutputFile="..\..\bin\sauerbraten_debug.exe"
+				OutputFile="..\..\bin\bloodfrontier_debug.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\lib"
@@ -295,7 +295,7 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="msvcrt.lib zlib.lib opengl32.lib glu32.lib SDLmain.lib SDL.lib SDL_image.lib ws2_32.lib SDL_mixer.lib fmodvc.lib"
-				OutputFile="c:\w\sauerbraten\sauerbraten\bin\sauerbraten.exe"
+				OutputFile="c:\w\bloodfrontier\bloodfrontier\bin\bloodfrontier.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="C:\w\cube\lib"
@@ -350,7 +350,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\sauerbraten.rc"
+				RelativePath=".\bloodfrontier.rc"
 				>
 			</File>
 			<File
