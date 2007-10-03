@@ -54,13 +54,13 @@ default: all
 all: client server
 
 enet/Makefile:
-	cd enet; ./configure
+	cd enet; chmod +x ./configure; ./configure
 	
 libenet: enet/Makefile
 	$(MAKE)	-C enet/ all
 
 clean: enet/Makefile
-	$(RM) $(SERVER_OBJS) $(CLIENT_OBJS) bloodfrontier_server bloodfrontier_client
+	-$(RM) -fv $(SERVER_OBJS) $(CLIENT_OBJS) bloodfrontier_server bloodfrontier_client
 	$(MAKE)	-C enet/ clean
 
 shared/tools-standalone.o:
@@ -78,11 +78,17 @@ fpsgame/fps-standalone.o:
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)
 	strip bloodfrontier_client
-	cp -v bloodfrontier_client ../bloodfrontier_client
 
 server:	libenet $(SERVER_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_server $(SERVER_OBJS) $(SERVER_LIBS)  
 	strip bloodfrontier_server
-	cp -v bloodfrontier_server ../bloodfrontier_server
 
-install: all
+install-client:
+	cp -v bloodfrontier_client ../bloodfrontier_client
+	chmod +x ../bloodfrontier_client ../../bloodfrontier.sh
+
+install-server:
+	cp -v bloodfrontier_server ../bloodfrontier_server
+	chmod +x ../bloodfrontier_server
+
+install: install-client install-server
