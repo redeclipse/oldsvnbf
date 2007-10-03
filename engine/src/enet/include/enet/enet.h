@@ -41,6 +41,14 @@ typedef enum
    ENET_SOCKET_WAIT_RECEIVE = (1 << 1)
 } ENetSocketWait;
 
+typedef enum
+{
+   ENET_SOCKOPT_NONBLOCK  = 1,
+   ENET_SOCKOPT_BROADCAST = 2,
+   ENET_SOCKOPT_RCVBUF    = 3,
+   ENET_SOCKOPT_SNDBUF    = 4
+} ENetSocketOption;
+
 enum
 {
    ENET_HOST_ANY       = 0,            /**< specifies the default server host */
@@ -286,6 +294,7 @@ typedef struct _ENetHost
    int                recalculateBandwidthLimits;
    ENetPeer *         peers;                       /**< array of peers allocated for this host */
    size_t             peerCount;                   /**< number of peers allocated for this host */
+   enet_uint32        serviceTime;
    ENetPeer *         lastServicedPeer;
    int                continueSending;
    size_t             packetSize;
@@ -393,6 +402,7 @@ ENET_API int        enet_socket_connect (ENetSocket, const ENetAddress *);
 ENET_API int        enet_socket_send (ENetSocket, const ENetAddress *, const ENetBuffer *, size_t);
 ENET_API int        enet_socket_receive (ENetSocket, ENetAddress *, ENetBuffer *, size_t);
 ENET_API int        enet_socket_wait (ENetSocket, enet_uint32 *, enet_uint32);
+ENET_API int        enet_socket_set_option (ENetSocket, ENetSocketOption, int);
 ENET_API void       enet_socket_destroy (ENetSocket);
 
 /** @} */
@@ -440,6 +450,7 @@ extern enet_uint32    enet_crc32 (const ENetBuffer *, size_t);
 ENET_API ENetHost * enet_host_create (const ENetAddress *, size_t, enet_uint32, enet_uint32);
 ENET_API void       enet_host_destroy (ENetHost *);
 ENET_API ENetPeer * enet_host_connect (ENetHost *, const ENetAddress *, size_t);
+ENET_API int        enet_host_check_events (ENetHost *, ENetEvent *);
 ENET_API int        enet_host_service (ENetHost *, ENetEvent *, enet_uint32);
 ENET_API void       enet_host_flush (ENetHost *);
 ENET_API void       enet_host_broadcast (ENetHost *, enet_uint8, ENetPacket *);
