@@ -311,6 +311,7 @@ struct waterinfo
 
 void setupmaterials()
 {
+    int hasmat = 0;
 	vector<waterinfo> water;
 	hashtable<ivec, int> watersets;
 	unionfind uf;
@@ -381,6 +382,7 @@ void setupmaterials()
 					m.envmap = closestenvmap(center);
 				}
 			}
+            hasmat |= 1<<m.material;
 		}
 	}
 	loopv(water)
@@ -398,11 +400,13 @@ void setupmaterials()
 		water[i].m->light = water[root].m->light;
 		water[i].m->depth = (short)(water[root].depth/water[root].area);
 	}
-    if(water.length()) 
+    if(hasmat&(1<<MAT_WATER))
     {
         extern void loadcaustics();
         loadcaustics();
+        lookuptexture(-MAT_WATER);
     }
+    if(hasmat&(1<<MAT_LAVA)) lookuptexture(-MAT_LAVA);
 }
 
 VARP(showmat, 0, 1, 1);
