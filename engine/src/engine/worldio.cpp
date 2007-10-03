@@ -725,6 +725,18 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 				endianswap(&e.attr1, sizeof(short), 5);
 				e.spawned = false;
 				e.inoctanode = false;
+				
+				if (eversion <= 3) e.type -= 74;
+
+				if (!samegame)
+				{
+					if (e.type >= ET_GAMESPECIFIC || hdr.version <= 14)
+					{
+						ents.pop();
+						continue;
+					}
+				}
+
 				if (!insideworld(e.o))
 				{
 					conoutf("warning: ent outside of world: enttype[%s] index %d (%f, %f, %f)", et->entname(e.type), i, e.o.x, e.o.y, e.o.z);

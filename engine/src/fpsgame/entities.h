@@ -97,7 +97,7 @@ struct entities : icliententities
 #ifdef BFRONTIER
 			if (isext(e.type))
 			{
-				extentitem &t = extentitems[e.type - EXTENT];
+				extentitem &t = extentitems[e.type - CAMERA];
 
 				if (!t.render)
 					continue;
@@ -360,7 +360,7 @@ struct entities : icliententities
 	const char *entname(int i)
 	{
 #ifdef BFRONTIER
-		if (i >= MAXENTTYPES) return extentname(i);
+		if (i >= CAMERA) return extentname(i);
 #endif
 		static const char *entnames[] =
 		{
@@ -399,7 +399,7 @@ struct entities : icliententities
 		extentity &e = *ents[i];
 #ifdef BFRONTIER
 		extentedit(i);
-		if (multiplayer(false) && e.type < MAXENTTYPES) cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
+		if (multiplayer(false) && (!g_sauer || e.type < CAMERA)) cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
 #else
 		cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4);
 #endif
@@ -416,20 +416,17 @@ struct entities : icliententities
 
 	const char *extentname(int i)
 	{
-		bool chk = isext(i);
-		if (i >= MAXENTTYPES && !chk)
-			return "reserved"; // so we can add extents
-		return chk ? extentitems[i - EXTENT].name : "";
+		return isext(i) ? extentitems[i - CAMERA].name : "";
 	}
 
 	bool isext(int type, int want = 0)
 	{
-		return type >= EXTENT && type < MAXEXTENT && (!want || type == want);
+		return type >= CAMERA && type < MAXENTTYPES && (!want || type == want);
 	}
 
 	bool extentpure(int i)
 	{
-		return ents.inrange(i) && isext(ents[i]->type) ? extentitems[i - EXTENT].pure : false;
+		return ents.inrange(i) && isext(ents[i]->type) ? extentitems[i - CAMERA].pure : false;
 	}
 
 	void extentdelink(int both)
@@ -755,10 +752,10 @@ struct entities : icliententities
 		{
 			if (isext(e.type))
 			{
-				extentitem &t = extentitems[e.type - EXTENT];
+				extentitem &t = extentitems[e.type - CAMERA];
 				renderentradius(e.o, t.dist, t.dist);
 			}
-			else if (e.type < MAXENTTYPES && e.type >= I_SHELLS &&
+			else if (e.type < CAMERA && e.type >= I_SHELLS &&
 					 e.type != TELEPORT && e.type != TELEDEST && e.type != MONSTER)
 			{
 				if (e.type == BASE)

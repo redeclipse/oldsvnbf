@@ -393,7 +393,11 @@ void transplayer()
 	glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);	
 }
 
+#ifdef BFRONTIER
+VARFP(fov, 1, 120, 360, cl->fixview());
+#else
 VARP(fov, 10, 105, 150);
+#endif
 
 int xtraverts, xtravertsva;
 
@@ -401,11 +405,11 @@ VAR(fog, 16, 4000, 1000024);
 VAR(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
 #ifdef BFRONTIER
-VARP(thirdperson, 0, 0, 1);
-VARP(thirdpersondistance, 1, 16, 1000); // distance
-VARP(thirdpersonheight, 0, 6, 1000); // height
-VARP(thirdpersonscale, 0, 150, 1000); // pitch scale
-VARP(thirdpersonstick, 0, 0, 1); // rotate around player
+VARFP(thirdperson, 0, 0, 1, cl->fixview());
+VARFP(thirdpersondistance, 1, 8, INT_MAX-1, cl->fixview()); // distance
+VARFP(thirdpersonheight, 1, 6, INT_MAX-1, cl->fixview()); // height
+VARFP(thirdpersonscale, 0, 150, INT_MAX-1, cl->fixview()); // pitch scale
+VARFP(thirdpersonstick, 0, 0, 1, cl->fixview()); // rotate around player
 #else
 VAR(thirdperson, 0, 0, 1);
 VAR(thirdpersondistance, 10, 50, 1000);

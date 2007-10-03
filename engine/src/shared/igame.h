@@ -186,6 +186,8 @@ struct igameclient
 			worldpos = dir.mul(10).add(camera1->o); //otherwise 3dgui won't work when outside of map
 	}
 	
+	virtual void fixview() { return; }
+
 	virtual void fixcamerarange()
 	{
 		extern physent *camera1;

@@ -38,9 +38,7 @@ CLIENT_OBJS= \
 	engine/world.o \
 	engine/worldio.o \
 	fpsgame/fps.o \
-	engine/joystick.o \
-	sspgame/ssp.o \
-	krsgame/krs.o
+	engine/joystick.o
 
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \

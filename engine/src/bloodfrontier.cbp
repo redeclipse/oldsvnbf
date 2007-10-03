@@ -757,30 +757,6 @@
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="krsgame\krs.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="krsgame\krsents.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="krsgame\krsgame.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="krsgame\krsrender.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
 		<Unit filename="master\cgi.c">
 			<Option compilerVar="CPP"/>
 			<Option target="master"/>
@@ -897,54 +873,6 @@
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="shared\tools.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="sspgame\ssp.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="sspgame\sspblock.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="sspgame\sspenemy.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="sspgame\sspents.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="sspgame\sspgame.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="sspgame\sspprojs.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="sspgame\ssprender.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="sspgame\sspweap.h">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>
 			<Option link="0"/>

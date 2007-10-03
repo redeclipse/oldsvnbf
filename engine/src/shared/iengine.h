@@ -491,7 +491,13 @@ enum							// cube empty-space materials
 	MAT_EDIT					// basis for the edit volumes of the above materials
 };
 
-#define EXTENT			100
+enum
+{
+	VIEW_FIRSTPERSON = 0,
+	VIEW_THIRDPERSON,
+	VIEW_MAX
+};
+
 extern string cgzname, pcfname, mcfname, picname, mapname, extname;
 extern int verbose, savebak;
 
