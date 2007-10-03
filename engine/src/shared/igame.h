@@ -85,7 +85,6 @@ struct iphysics
     virtual void trigger(physent *d, bool local, int floorlevel, int waterlevel) { return; }
     virtual bool move(physent *pl, int moveres = 20, bool local = true, int secs = 0, int repeat = 0)
     {
-		if (!secs) secs = curtime;
 		if (!repeat) repeat = physicsrepeat;
 		loopi(repeat) if (!moveplayer(pl, moveres, local, min(secs, minframetime))) return false;
 		return true;
@@ -127,6 +126,7 @@ struct igameclient
     virtual void gameplayhud(int w, int h) = 0;
     virtual void drawhudgun() = 0;
     virtual bool canjump() = 0;
+    virtual bool allowmove(physent *d) { return true; }
     virtual void doattack(bool on) = 0;
     virtual dynent *iterdynents(int i) = 0;
     virtual int numdynents() = 0;

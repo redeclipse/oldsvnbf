@@ -389,13 +389,9 @@ struct clientcom : iclientcom
 				f = getuint(p);
 				fpsent *d = cl.getclient(cn);
                 if(!d || seqcolor!=(d->lifesequence&1)) continue;
-				d->o = o;
 				d->yaw = yaw;
 				d->pitch = pitch;
 				d->roll = roll;
-				d->vel = vel;
-				d->physstate = physstate & 0x0F;
-				d->gravity = gravity;		
 				d->strafe = (f&3)==3 ? -1 : f&3;
 				f >>= 2;
 				d->move = (f&3)==3 ? -1 : f&3;
@@ -411,8 +407,15 @@ struct clientcom : iclientcom
 #else
 				d->maxhealth = 100 + f*itemstats[I_BOOST-I_SHELLS].add;
 #endif
-				updatephysstate(d);
-				updatepos(d);
+                if(cl.allowmove(d))
+                {
+                    d->o = o;
+                    d->vel = vel;
+                    d->physstate = physstate & 0x0F;
+                    d->gravity = gravity;
+                    updatephysstate(d);
+                    updatepos(d);
+                }
                 if(d->state==CS_LAGGED || d->state==CS_SPAWNING) d->state = CS_ALIVE;
 				break;
 			}

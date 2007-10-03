@@ -331,18 +331,24 @@ void save_world(char *mname, bool nolms)
 		gzputint(g, EXTVERSION);
 		gzputint(g, enuments);
 	}
-#else
-	loopv(ents) if(ents[i]->type!=ET_EMPTY) hdr.numents++;
-#endif
+
 	hdr.lightmaps = nolms ? 0 : lightmaps.length();
 	header tmp = hdr;
 	endianswap(&tmp.version, sizeof(int), 9);
 	gzwrite(f, &tmp, sizeof(header));
-	
-#ifdef BFRONTIER
-	gzputc(f, (int)strlen(sv->gameident()));
-	gzwrite(f, sv->gameident(), (int)strlen(sv->gameident())+1);
+
+	string gametype;
+	s_strcpy(gametype, "fps");
+	gzputc(f, (int)strlen(gametype));
+	gzwrite(f, sv->gameident(), (int)strlen(gametype)+1);
 #else
+	loopv(ents) if(ents[i]->type!=ET_EMPTY) hdr.numents++;
+
+	hdr.lightmaps = nolms ? 0 : lightmaps.length();
+	header tmp = hdr;
+	endianswap(&tmp.version, sizeof(int), 9);
+	gzwrite(f, &tmp, sizeof(header));
+
 	gzputc(f, (int)strlen(cl->gameident()));
 	gzwrite(f, cl->gameident(), (int)strlen(cl->gameident())+1);
 #endif
@@ -541,7 +547,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	
 	string gametype;
 #ifdef BFRONTIER
-	s_strcpy(gametype, sv->gameident());
+	s_strcpy(gametype, "fps");
 
 	show_out_of_renderloop_progress(0, "loading world...");
 	cl->loadworld(cname ? cname : mname);

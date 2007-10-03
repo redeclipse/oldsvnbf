@@ -402,6 +402,12 @@ struct fpsclient : igameclient
 		return player1->state!=CS_DEAD && !intermission; 
 	}
 
+    bool allowmove(physent *d)
+    {
+        if(d->type!=ENT_PLAYER) return true;
+        return lastmillis-((fpsent *)d)->lasttaunt>=1000;
+    }
+
 #ifdef BFRONTIER
 	void damaged(int damage, fpsent *d, fpsent *actor)
 	{
@@ -824,8 +830,7 @@ struct fpsclient : igameclient
 			drawhudmodel(ANIM_GUNIDLE|ANIM_LOOP);
 		}
 #endif
-    }
-
+	}
 #ifdef BFRONTIER
 	void drawicon(float tx, float ty, int x, int y, int s = 64)
 	{
@@ -1365,7 +1370,7 @@ struct fpsclient : igameclient
 		
 		if (camerawobble > 0 && curtime)
 		{
-			float pc = (float(camerawobble)/100.f)*(float(wobblescale())/100.f);
+			float pc = (float(camerawobble)/1000.f)*(float(wobblescale())/100.f);
 			#define wobble(n) (float(rnd(n*2)-n)*pc)
 			camera1->yaw += wobble(wobbleyaw());
 			camera1->pitch += wobble(wobblepitch());

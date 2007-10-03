@@ -882,7 +882,7 @@ bool move(physent *d, vec &dir)
 {
 	vec old(d->o);
 #if 0
-	if(d->physstate == PHYS_STEP_DOWN && dir.z <= 0.0f && (d->move || d->strafe))
+    if(d->physstate == PHYS_STEP_DOWN && dir.z <= 0.0f && cl->allowmove(pl) && (d->move || d->strafe))
 	{
 #ifdef BFRONTIER
 		float step = dir.magnitude()*ph->stepspeed(d);
@@ -1116,6 +1116,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 #else
 			pl->vel.z = JUMPVEL; // physics impulse upwards
 			if(water) { pl->vel.x /= 8.0f; pl->vel.y /= 8.0f; } // dampen velocity change even harder, gives correct water feel
+
 			cl->physicstrigger(pl, local, 1, 0);
 #endif
 		}
@@ -1149,7 +1150,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 		}
 	}
 
-	if(m.iszero() && (pl->move || pl->strafe))
+    if(m.iszero() && cl->allowmove(pl) && (pl->move || pl->strafe))
 	{
 #ifdef BFRONTIER
 		vecfromyawpitch(pl->yaw, floating || water || ph->movepitch(pl) ? pl->pitch : 0, pl->move, pl->strafe, m);
@@ -1184,7 +1185,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 	{
 		if(pl==player) d.mul(floatspeed/100.0f);
 	}
-	else if(!water) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE && pl->move>=0 ? 1.3f : 1.0f)); // EXPERIMENTAL
+    else if(!water && cl->allowmove(pl)) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE && pl->move>=0 ? 1.3f : 1.0f)); // EXPERIMENTAL
 #ifdef BFRONTIER
 	float friction = water && !floating ? ph->waterfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? ph->floorfric(pl) : ph->airfric(pl));
 #else

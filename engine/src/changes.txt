@@ -9,6 +9,7 @@ Legend [
 ]
 
 = wip edition =
+fps: camera wobble intensity lowered and made configurable
 bfg: grenades don't explode when they hit a player
 bfg: modified bouncer elasticity and waterfric for grenades
 mod: 'causticnum' added for variable number of caustic frames

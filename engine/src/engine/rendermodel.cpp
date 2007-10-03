@@ -321,8 +321,13 @@ void rendershadow(vec &dir, model *m, int anim, int varseed, const vec &o, vec c
 	if((cull&MDL_CULL_VFC) && refracting && center.z>=refracting) return;
 	if(vec(center).sub(camera1->o).dot(floor)>0) return;
 
-	vec shaddir = dir;
-	if(cull&MDL_DYNSHADOW) shaddir = vec(0, 0, 1);
+    vec shaddir; 
+    if(cull&MDL_DYNSHADOW) 
+    {
+        extern vec shadowdir;
+        shaddir = shadowdir;
+        shaddir.normalize();
+    }
 	else
 	{
 		shaddir = dir;
