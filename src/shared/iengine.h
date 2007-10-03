@@ -51,18 +51,23 @@ extern void mpdelcube(selinfo &sel, bool local);
 extern void mpremip(bool local);
 
 // command
+#ifdef BFRONTIER
+extern int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool server = false, bool world = false);
+#else
 extern int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist);
+#endif
 extern void setvar(char *name, int i, bool dofunc = false);
 extern int getvar(char *name);
 extern int getvarmin(char *name);
 extern int getvarmax(char *name);
 extern bool identexists(char *name);
 extern ident *getident(char *name);
-extern bool addcommand(char *name, void (*fun)(), char *narg);
 #ifdef BFRONTIER
+extern bool addcommand(char *name, void (*fun)(), char *narg, bool server= false, bool world = false);
 extern int execute(char *p, bool isserver = false);
 extern char *executeret(char *p, bool isserver = false);
 #else
+extern bool addcommand(char *name, void (*fun)(), char *narg);
 extern int execute(char *p);
 extern char *executeret(char *p);
 #endif

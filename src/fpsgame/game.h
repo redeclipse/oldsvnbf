@@ -517,6 +517,8 @@ struct fpsent : dynent, fpsstate
 };
 
 #ifdef BFRONTIER
+VARW(gravity,		1,			200,		INT_MAX-1);		// gravity
+
 #define BFRONTIER_SERVER_PORT		28795
 #define BFRONTIER_SERVINFO_PORT		28796
 

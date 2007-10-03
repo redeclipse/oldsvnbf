@@ -4,7 +4,7 @@ struct physics : iphysics
 	
 	physics(fpsclient &_cl) : cl(_cl)
 	{
-		CVAR(physics, gravity,		1,			200,		INT_MAX-1);	// gravity
+		//CVAR(physics, gravity,		1,			200,		INT_MAX-1);	// gravity
 		CVAR(physics, speed,		1,			100,		INT_MAX-1);	// speed
 		CVAR(physics, jumpvel,		0,			200,		INT_MAX-1);	// extra velocity to add when jumping
 		CVAR(physics, watertype,	WT_WATER,	WT_WATER,	WT_MAX-1);	// water type (0: water, 1: slime, 2: lava)
