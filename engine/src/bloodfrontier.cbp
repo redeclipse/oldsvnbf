@@ -738,6 +738,13 @@
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
+		<Unit filename="fpsgame\physics.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
 		<Unit filename="fpsgame\scoreboard.h">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>

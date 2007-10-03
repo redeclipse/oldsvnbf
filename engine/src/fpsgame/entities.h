@@ -663,12 +663,13 @@ struct entities : icliententities
 	char *extentmdl(extentity &e)
 	{
 		char *imdl = NULL;
-
+		/*
 		switch (e.type)
 		{
 			default:
-			break;
+				break;
 		}
+		*/
 		return imdl;
 	}
 
