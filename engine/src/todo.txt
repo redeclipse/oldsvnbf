@@ -28,7 +28,7 @@ Modifications for the Engine.
 * SDL_ttf support?
 * push/pop font for various areas of the hud
 * lightmap levels, editing/importing/adjustment/fading/switching?
-* extension for texture friction (bw compatible?)
+* extension for friction (material)
 * internal autosave function?
 * dedicated server irc/www interface (bot or server?)
 * mod on server browser
@@ -74,6 +74,9 @@ Modifications for the First Person Shooter (FPS).
 = BFG =
 The Blood Frontier Game (BFG) based on FPS.
 
+* fix map models
+* move world vars server side
+* move instagib to server mod
 * address issues with alpha blended models
 * head shots
 * S_SMGLOAD, S_REGEN, S_HEADSHOT
