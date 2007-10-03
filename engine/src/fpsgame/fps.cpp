@@ -1219,6 +1219,26 @@ struct fpsclient : igameclient
 		while(d->yaw<0.0f) d->yaw += 360.0f;
 		while(d->yaw>=360.0f) d->yaw -= 360.0f;
 	}
+
+	int _fov;
+	
+	void fixview()
+	{
+		if (g_bf)
+		{
+			int maxfov = isthirdperson() ? 100 : 125;
+			
+			if (fov > _fov) _fov = fov; // store our old one
+			if (fov > maxfov) fov = maxfov;
+			if (_fov > fov && _fov <= maxfov) fov = _fov;
+			
+			if (isthirdperson())
+			{
+				thirdpersondistance = 8;
+				thirdpersonheight = 6;
+			}
+		}
+	}
 	
 	void fixcamerarange()
 	{
@@ -1352,11 +1372,7 @@ struct fpsclient : igameclient
 						
 					fixcamerarange(camera1);
 					
-					loopi(10)
-					{
-						if(!ph.move(camera1, 10, false, thirdpersondistance))
-							break;
-					}
+					ph.move(camera1, 10, false, 0, thirdpersondistance);
 					
 					if (!thirdpersonstick)
 					{

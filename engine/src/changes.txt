@@ -4,11 +4,13 @@ Legend [
 	mod: engine modification
 	fps: general fps game change
 	bfg: blood frontier game change
-	ssp: side scroller game change
-	krs: kart racer game change
 ]
 
 = wip edition =
+mod: ssp and krs removed for future integration elsewhere
+mod: aligned extended entities to top of game specific table
+bfg: thirdperson fov restricted to <=100
+bfg: fov restricted to <=125
 mod: reimported enet
 mod: "gun reload" and "gun zoom" animations added
 mod: enabled grid sizes 0-2 for smaller geometry editing ability

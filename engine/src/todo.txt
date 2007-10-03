@@ -30,7 +30,6 @@ Modifications for the Engine.
 * mod on server browser
 * modification and package manager module?
 * improve editmode (config editor?)
-* move extents, etc. engine side
 * entity extensions: hurt, wind, elevator/train/platform, trigger (explode), fog?
 * music/mp3 player?
 * game module ideas
@@ -77,7 +76,6 @@ The Blood Frontier Game (BFG) based on FPS.
 * head shots
 * S_SMGLOAD, S_REGEN, S_HEADSHOT
 * unlimited ammo on all but grenade, reload (sound, only when empty?)
-* fov lock 100-125
 * remove entities: armour, health, pickups, carrot, checkpoint
 * only two guns at same time (drop guns, etc)
 * masterserver stuff, online accounts?

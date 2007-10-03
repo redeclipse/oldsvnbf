@@ -1,16 +1,16 @@
 
 // network quantization scale
-#define DMF 16.0f				// for world locations
-#define DNF 100.0f			  // for normalized vectors
-#define DVELF 1.0f			  // for playerspeed based velocity vectors
+#define DMF 16.0f			// for world locations
+#define DNF 100.0f			// for normalized vectors
+#define DVELF 1.0f			// for playerspeed based velocity vectors
 
-enum							// static entity types
+enum						// static entity types
 {
-	NOTUSED = ET_EMPTY,		 // entity slot not in use in map
-	LIGHT = ET_LIGHT,			// lightsource, attr1 = radius, attr2 = intensity
-	MAPMODEL = ET_MAPMODEL,	 // attr1 = angle, attr2 = idx
-	PLAYERSTART,				// attr1 = angle
-	ENVMAP = ET_ENVMAP,		 // attr1 = radius
+	NOTUSED = ET_EMPTY,		// entity slot not in use in map
+	LIGHT = ET_LIGHT,		// lightsource, attr1 = radius, attr2 = intensity
+	MAPMODEL = ET_MAPMODEL,	// attr1 = angle, attr2 = idx
+	PLAYERSTART,			// attr1 = angle
+	ENVMAP = ET_ENVMAP,		// attr1 = radius
 	PARTICLES = ET_PARTICLES,
 	MAPSOUND = ET_SOUND,
 	SPOTLIGHT = ET_SPOTLIGHT,
@@ -18,13 +18,17 @@ enum							// static entity types
 	I_HEALTH, I_BOOST,
 	I_GREENARMOUR, I_YELLOWARMOUR,
 	I_QUAD,
-	TELEPORT,					// attr1 = idx
-	TELEDEST,					// attr1 = angle, attr2 = idx
-	MONSTER,					// attr1 = angle, attr2 = monstertype
-	CARROT,					 // attr1 = tag, attr2 = type
-	JUMPPAD,					// attr1 = zpush, attr2 = ypush, attr3 = xpush
+	TELEPORT,				// attr1 = idx
+	TELEDEST,				// attr1 = angle, attr2 = idx
+	MONSTER,				// attr1 = angle, attr2 = monstertype
+	CARROT,					// attr1 = tag, attr2 = type
+	JUMPPAD,				// attr1 = zpush, attr2 = ypush, attr3 = xpush
 	BASE,
 	RESPAWNPOINT,
+#ifdef BFRONTIER
+	CAMERA,					// attr1 = yaw, attr2 = pitch, attr3 = pan (+:horiz/-:vert), attr4 = idx
+	WAYPOINT,				// none?
+#endif
 	MAXENTTYPES
 };
 
@@ -45,11 +49,7 @@ enum
 	GAME_MAX
 };
 
-#ifdef STANDALONE
-VARF(gameid, GAME_BF, GAME_BF, GAME_MAX-1, sv->changemap(sv->defaultmap()));
-#else
-VARF(gameid, GAME_BF, GAME_BF, GAME_MAX-1, loadconfig(); startgame(););
-#endif
+VAR(gameid, 1, GAME_BF, -1);
 
 #define g_bf			(gameid == GAME_BF)
 #define g_sauer			(gameid == GAME_SAUER)
@@ -519,12 +519,6 @@ struct fpsent : dynent, fpsstate
 #ifdef BFRONTIER
 #define BFRONTIER_SERVER_PORT		28795
 #define BFRONTIER_SERVINFO_PORT		28796
-
-enum {
-	CAMERA = EXTENT,	// attr1 = yaw, attr2 = pitch, attr3 = pan (+:horiz/-:vert), attr4 = idx
-	WAYPOINT,			// none?
-	MAXEXTENT
-};
 
 enum
 {
