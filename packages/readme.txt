@@ -1,14 +1,31 @@
-You may use any data in this directory if you abide by the ZLIB license (very similar to the BSD license http://www.opensource.org/licenses/zlib-license.php) unless a package otherwise specifies with its own 'readme.txt'.
+THAN_INDUSTRIAL TEXTURE SET RELEASE 1 [16.07.00]
 
-LICENSE
-=======
+FILENAME: than_industral_r1.zip
+FILESIZE: 1,854kb
+DATE: 16.07.00
+AUTHOR: Than
+EMAIL: than@planetquake.com
+HOMEPAGE: www.planetquake.com/cesspit
 
-Blood Frontier Extension (C) 2006 Quinton Reeves
+This is the first release of my industrial(ish) textures. This initial release
+contains walls, trims, floors and a small selection of lights. In this current state
+it is pretty likely you will need to use other texture in conjunction with these to
+obtain satisfactory results. There are few fancy detailed textures etc although I may
+make some of these for a later release. The lights also need to be expanded greatly.
 
-This software is provided 'as-is', without any express or implied warranty.  In no event will the authors be held liable for any damages arising from the use of this software.
+IMPORTANT NOTES:
 
-Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
+You may not use any of these textures as a base for additional materials without first
+contacting the author (than@planetquake.com) for permission. If you do make modified
+textures or need to modify the shader files then PLEASE rename them too to avoid problems
+later on.
 
-1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-3. This notice may not be removed or altered from any source distribution.
+There is also a Sky shader written for the Nebulah sky box by Darc Jedi which you can
+obtain separately from www.telefragged.com/soup
+
+
+
+Additional credits to:
+Lunaran for some base materials I used (some I didn't really modify very much :)
+cyBeAr for a few tips using photoshop (Lun helped here too)
+Anyone that helped that I have forgotten about.
