@@ -214,7 +214,7 @@ struct igameclient
 	}
 	virtual bool wantcrosshair()
 	{
-		extern dynsent *player;
+		extern dynent *player;
 		extern int hidehud;
 		extern bool menuactive();
 		return !(hidehud || player->state==CS_SPECTATOR) || menuactive();
