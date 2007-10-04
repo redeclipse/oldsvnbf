@@ -575,7 +575,6 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 					
 				case ID_ALIAS:							  // alias, also used as functions and (global) variables
 				{
-                    push(".", c);
 					for(int i = 1; i<numargs; i++)
 					{
 						s_sprintfd(t)("arg%d", i);		  // set any arguments as (global) arg values so functions can access them
@@ -600,7 +599,6 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 						s_sprintfd(t)("arg%d", i);		  // set any arguments as (global) arg values so functions can access them
 						pop(t);
 					}
-                    pop(".");
 					break;
 				}
 			}
