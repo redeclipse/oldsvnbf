@@ -842,14 +842,16 @@ void clearsleep_(int *clearoverrides)
 COMMANDN(clearsleep, clearsleep_, "i");
 
 #ifdef BFRONTIER
+ICOMMAND(exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
+
 char *getgameident() { return sv->gameident(); }
-void gameident() { result(getgameident()); }				COMMAND(gameident, "");
+ICOMMAND(getgameident, "", (void), result(getgameident()));
 
 char *getdefaultmap() { return sv->defaultmap(); }
-void gamedefaultmap() { result(getdefaultmap()); }			COMMAND(gamedefaultmap, "");
+ICOMMAND(getdefaultmap, "", (void), result(getdefaultmap()));
 
 #ifndef STANDALONE
-void maptitle() { result(getmaptitle()); }					COMMAND(maptitle, "");
+ICOMMAND(getmaptitle, "", (void), result(getmaptitle()));
 #endif
 
 string _gettime;
@@ -865,8 +867,7 @@ char *gettime(char *format)
 	
 	return _gettime;
 }
-void gettime_(char *format) { result(gettime(format)); }
-COMMANDN(gettime, gettime_, "s");
+ICOMMAND(gettime, "s", (char *a), result(gettime(a)));
 
 bool gameexec(char *name, bool quiet)
 {
