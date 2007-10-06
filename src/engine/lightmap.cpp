@@ -10,14 +10,22 @@ VARF(lightlod, 0, 0, 10, hdr.mapllod = lightlod);
 VARF(worldlod, 0, 0, 1,  hdr.mapwlod = worldlod);
 VARF(ambient, 1, 25, 64, hdr.ambient = ambient);
 
-void skylight(int *r, int *g, int *b)
+void skylight(char *r, char *g, char *b)
 {
-	hdr.skylight[0] = *r;
-	hdr.skylight[1] = *g ? *g : *r;
-	hdr.skylight[2] = *b ? *b : *r;
+	if(!r[0])
+	{
+		s_sprintfd(s)("%d %d %d", hdr.skylight[0], hdr.skylight[1], hdr.skylight[2]);
+		result(s);
+	}
+	else
+	{
+		hdr.skylight[0] = strtol(r, NULL, 0);
+		hdr.skylight[1] = g[0] ? strtol(g, NULL, 0) : hdr.skylight[0];
+		hdr.skylight[2] = b[0] ? strtol(b, NULL, 0) : hdr.skylight[1];
+	}
 }
 
-COMMAND(skylight, "iii");
+COMMAND(skylight, "sss");
 
 // quality parameters, set by the calclight arg
 int shadows = 1;

@@ -55,9 +55,24 @@ VAR(gameid, 1, GAME_BF, -1);
 #define g_sauer			(gameid == GAME_SAUER)
 
 enum { GUN_FIST = 0, GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL, GUN_FIREBALL, GUN_ICEBALL, GUN_SLIMEBALL, GUN_BITE, NUMGUNS };
+enum { A_BLUE, A_GREEN, A_YELLOW };	 // armour types... take 20/40/60 % off
+enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states
+
+#define m_noitems		((gamemode>=4 && gamemode<=11) || gamemode==13)
+#define m_noitemsrail	((gamemode>=4 && gamemode<=5) || (gamemode>=8 && gamemode<=9) || gamemode==13)
+#define m_arena			(gamemode>=8 && gamemode<=11)
+#define m_tarena		(gamemode>=10 && gamemode<=11)
+#define m_capture		(gamemode>=12 && gamemode<=13)
+#define m_teammode		((gamemode>2 && gamemode&1) || m_capture)
+#define m_sp			(gamemode>=-2 && gamemode<0)
+#define m_dmsp			(gamemode==-1)
+#define m_classicsp		(gamemode==-2)
+#define m_demo			(gamemode==-3)
+#define isteam(a,b)		(m_teammode && strcmp(a, b)==0)
+
+#define m_mp(mode)	(mode>=0 && mode<=13)
 #else
 enum { GUN_FIST = 0, GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL, GUN_FIREBALL, GUN_ICEBALL, GUN_SLIMEBALL, GUN_BITE, NUMGUNS };
-#endif
 enum { A_BLUE, A_GREEN, A_YELLOW };	 // armour types... take 20/40/60 % off
 enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states
 
@@ -74,6 +89,7 @@ enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  
 #define isteam(a,b)	(m_teammode && strcmp(a, b)==0)
 
 #define m_mp(mode)	(mode>=0 && mode<=13)
+#endif
 
 // hardcoded sounds, defined in sounds.cfg
 enum
