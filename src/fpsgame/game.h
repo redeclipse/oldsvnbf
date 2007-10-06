@@ -517,7 +517,6 @@ struct fpsent : dynent, fpsstate
 };
 
 #ifdef BFRONTIER
-VARW(gravity,		1,			200,		INT_MAX-1);		// gravity
 
 #define BFRONTIER_SERVER_PORT		28795
 #define BFRONTIER_SERVINFO_PORT		28796
@@ -584,13 +583,6 @@ static struct extentitem
 
 #define EXTENSIONS			(g_bf)
 #define MAXRANGE			(g_bf ? INT_MAX-1 : 1024)
-
-enum {
-	WT_WATER = 0,
-	WT_HURT,
-	WT_KILL,
-	WT_MAX
-};
 
 enum {
 	HD_OLD = 0,

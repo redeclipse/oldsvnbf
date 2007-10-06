@@ -18,27 +18,28 @@ struct clientcom : iclientcom
 #endif
     clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false), player1(_cl.player1)
 	{
-		CCOMMAND(clientcom, say, "C", self->toserver(args[0]));
-		CCOMMAND(clientcom, name, "s", self->switchname(args[0]));
-		CCOMMAND(clientcom, team, "s", self->switchteam(args[0]));
-		CCOMMAND(clientcom, map, "s", self->changemap(args[0]));
-		CCOMMAND(clientcom, clearbans, "", self->clearbans());
-		CCOMMAND(clientcom, kick, "s", self->kick(args[0]));
-		CCOMMAND(clientcom, goto, "s", self->gotoplayer(args[0])); 
-		CCOMMAND(clientcom, spectator, "ss", self->togglespectator(args[0], args[1]));
-		CCOMMAND(clientcom, mastermode, "s", if(self->remote) self->addmsg(SV_MASTERMODE, "ri", atoi(args[0])));
-		CCOMMAND(clientcom, setmaster, "s", self->setmaster(args[0]));
-		CCOMMAND(clientcom, setteam, "s", self->setteam(args[0], args[1]));
-		CCOMMAND(clientcom, getmap, "", self->getmap());
-		CCOMMAND(clientcom, sendmap, "", self->sendmap());
-		CCOMMAND(clientcom, listdemos, "", self->listdemos());
-		CCOMMAND(clientcom, getdemo, "", self->getdemo(args[0]));
-		CCOMMAND(clientcom, recorddemo, "s", self->recorddemo(args[0]));
-		CCOMMAND(clientcom, stopdemo, "", self->stopdemo());
-		CCOMMAND(clientcom, cleardemos, "s", self->cleardemos(args[0]));
+        CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s));
+        CCOMMAND(name, "s", (clientcom *self, char *s), self->switchname(s));
+        CCOMMAND(team, "s", (clientcom *self, char *s), self->switchteam(s));
+        CCOMMAND(map, "s", (clientcom *self, char *s), self->changemap(s));
+        CCOMMAND(clearbans, "", (clientcom *self, char *s), self->clearbans());
+        CCOMMAND(kick, "s", (clientcom *self, char *s), self->kick(s));
+        CCOMMAND(goto, "s", (clientcom *self, char *s), self->gotoplayer(s));
+        CCOMMAND(spectator, "is", (clientcom *self, int *val, char *who), self->togglespectator(*val, who));
+        CCOMMAND(mastermode, "i", (clientcom *self, int *val), if(self->remote) self->addmsg(SV_MASTERMODE, "ri", *val));
+        CCOMMAND(setmaster, "s", (clientcom *self, char *s), self->setmaster(s));
+        CCOMMAND(setteam, "ss", (clientcom *self, char *who, char *team), self->setteam(who, team));
+        CCOMMAND(getmap, "", (clientcom *self), self->getmap());
+        CCOMMAND(sendmap, "", (clientcom *self), self->sendmap());
+        CCOMMAND(listdemos, "", (clientcom *self), self->listdemos());
+        CCOMMAND(getdemo, "i", (clientcom *self, int *val), self->getdemo(*val));
+        CCOMMAND(recorddemo, "i", (clientcom *self, int *val), self->recorddemo(*val));
+        CCOMMAND(stopdemo, "", (clientcom *self), self->stopdemo());
+        CCOMMAND(cleardemos, "i", (clientcom *self, int *val), self->cleardemos(*val));
 
-		CCOMMAND(clientcom, getname, "", result(self->player1->name));
-		CCOMMAND(clientcom, getteam, "", result(self->player1->team));
+        extern void result(const char *s);
+        CCOMMAND(getname, "", (clientcom *self), result(self->player1->name));
+        CCOMMAND(getteam, "", (clientcom *self), result(self->player1->team));
 	}
 
 #ifdef BFRONTIER
@@ -179,15 +180,14 @@ struct clientcom : iclientcom
 		addmsg(SV_SETMASTER, "ris", val, passwd);
 	}
 
-	void togglespectator(const char *arg1, const char *arg2)
+    void togglespectator(int val, const char *who)
 	{
 #ifdef BFRONTIER
-		if (!arg2[0]) cl.cameranum = -player1->clientnum;
+		if (!who[0]) cl.cameranum = -player1->clientnum;
 #else
 		if(!remote) return;
 #endif
-        int i = arg2[0] ? parseplayer(arg2) : player1->clientnum,
-            val = atoi(arg1);
+        int i = who[0] ? parseplayer(who) : player1->clientnum;
 		if(i>=0) addmsg(SV_SPECTATOR, "rii", i, val);
 	}
 
@@ -1113,29 +1113,28 @@ struct clientcom : iclientcom
 		}
 	}
 
-	void recorddemo(char *arg)
+    void recorddemo(int val)
 	{
 #ifdef BFRONTIER
-			if(!haspriv(PRIV_ADMIN)) return;
+		if(!haspriv(PRIV_ADMIN)) return;
 #else
-            if(player1->privilege<PRIV_ADMIN) return;
+        if(player1->privilege<PRIV_ADMIN) return;
 #endif
-		addmsg(SV_RECORDDEMO, "ri", atoi(arg));	
+        addmsg(SV_RECORDDEMO, "ri", val);
 	}
 
-	void cleardemos(char *arg)
+	void cleardemos(int val)
 	{
 #ifdef BFRONTIER
-			if(!haspriv(PRIV_ADMIN)) return;
+		if(!haspriv(PRIV_ADMIN)) return;
 #else
-            if(player1->privilege<PRIV_ADMIN) return;
+        if(player1->privilege<PRIV_ADMIN) return;
 #endif
-		addmsg(SV_CLEARDEMOS, "ri", atoi(arg));
+        addmsg(SV_CLEARDEMOS, "ri", val);
 	}
 
-	void getdemo(char *arg)
+    void getdemo(int i)
 	{
-		int i = atoi(arg);
 		if(i<=0) conoutf("getting demo...");
 		else conoutf("getting demo %d...", i);
 		addmsg(SV_GETDEMO, "ri", i);

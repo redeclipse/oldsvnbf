@@ -352,7 +352,8 @@ struct fpsserver : igameserver
 		CM_MASTER
 	};
 	
-	#define SRVCMD(n, v, g, b) SCOMMAND(fpsserver, n, v, g, { \
+	#define SRVCMD(n, v, g, d, b) CCOMMANDS(n, g, d, \
+			{ \
 				if (self->cmdcontext) \
 				{ \
 					if (self->hasmode(self->cmdcontext, v)) { b; } \
@@ -361,7 +362,7 @@ struct fpsserver : igameserver
 				} \
 			});
 	
-	#define SRVVAR(n, p, v, m, x, b) SRVCMD(n, v, "i", self->servvar(self->cmdcontext, #n, p, m, x, args[0]); b)
+	#define SRVVAR(n, p, v, m, x, b) SRVCMD(n, v, "i", (fpsserver *self, char *s), self->servvar(self->cmdcontext, #n, p, m, x, s); b)
 	#define POWERUPS I_QUAD-I_SHELLS+1
 	
 	#define Q_INT(c,n) { if(!c->local) { ucharbuf buf = c->messages.reserve(5); putint(buf, n); c->messages.addbuf(buf); } }
@@ -396,7 +397,7 @@ struct fpsserver : igameserver
 					arenamode(*this), capturemode(*this), smode(NULL),
 					duelmode(*this), cmdcontext(NULL)
 	{
-		SRVCMD(version, CM_ANY, "si", self->setversion(self->cmdcontext, args[0], atoi(args[1])));
+		SRVCMD(version, CM_ANY, "si", (fpsserver *self, char *a, int *b), self->setversion(self->cmdcontext, a, *b));
 		
 		SRVVAR(timelimit, &self->timelimit, CM_ALL, 0, INT_MAX-1, self->settime());
 		SRVVAR(fraglimit, &self->fraglimit, CM_ALL, 0, INT_MAX-1, );
@@ -407,8 +408,8 @@ struct fpsserver : igameserver
 		SRVVAR(instakill, &self->instakill, CM_ALL, 0, 1, );
 		SRVVAR(teamdamage, &self->teamdamage, CM_ALL, 0, 1, );
 		
-		SRVCMD(powerup, CM_ALL, "ss", self->setpowerup(self->cmdcontext, args[0], args[1]));
-		SRVCMD(spawnstate, CM_ALL, "ss", self->setspawnstate(self->cmdcontext, args[0], args[1]));
+		SRVCMD(powerup, CM_ALL, "ss", (fpsserver *self, char *a, char *b), self->setpowerup(self->cmdcontext, a, b));
+		SRVCMD(spawnstate, CM_ALL, "ss", (fpsserver *self, char *a, char *b), self->setspawnstate(self->cmdcontext, a, b));
 		
 		motd[0] = 0;
 		resetvars();

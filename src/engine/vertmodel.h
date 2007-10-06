@@ -41,7 +41,7 @@ struct vertmodel : model
     struct vvertff { vec pos; float u, v; };
     struct vvert : vvertff { vec norm; };
     struct vvertbump : vvert { vec tangent; float bitangent; };
-    struct tcvert { float u, v; ushort index; };
+    struct tcvert { float u, v; };
     struct bumpvert { vec tangent; float bitangent; };
     struct tri { ushort vert[3]; };
 
@@ -288,12 +288,13 @@ struct vertmodel : model
 
     struct vbocacheentry
     {
+        uchar *vdata;
         GLuint vbuf;
         anpos cur, prev;
         float t;
         int millis;
-
-        vbocacheentry() : vbuf(0) { cur.fr1 = prev.fr1 = -1; }
+ 
+        vbocacheentry() : vdata(NULL), vbuf(0) { cur.fr1 = prev.fr1 = -1; }
     };
 
     struct mesh
@@ -304,25 +305,13 @@ struct vertmodel : model
         tcvert *tcverts;
         bumpvert *bumpverts;
         tri *tris;
-        int numverts, numtcverts, numtris;
-
-        vert *stripbuf;
-        ushort *stripidx;
-        int striplen;
-        bool stripnorms;
-
-        anpos cachecur, cacheprev;
-        float cachet;
-
-        enum { LIST_NOSKIN = 0, LIST_TEX, LIST_TEXNORMS, LIST_MULTITEX, LIST_MULTITEXNORMS, NUMLISTS }; 
-        GLuint lists[NUMLISTS];
+        int numverts, numtris;
 
         int voffset, eoffset, elen;
+        ushort minvert, maxvert;
 
-        mesh() : group(0), name(0), verts(0), tcverts(0), bumpverts(0), tris(0), stripbuf(0), stripidx(0)
+        mesh() : group(0), name(0), verts(0), tcverts(0), bumpverts(0), tris(0)
         {
-            cachecur.fr1 = cacheprev.fr1 = -1;
-            loopi(NUMLISTS) lists[i] = 0;
         }
 
         ~mesh()
@@ -332,9 +321,6 @@ struct vertmodel : model
             DELETEA(tcverts);
             DELETEA(bumpverts);
             DELETEA(tris);
-            loopi(NUMLISTS) if(lists[i]) glDeleteLists(lists[i], 1);
-            DELETEA(stripidx);
-            DELETEA(stripbuf);
         }
 
         mesh *copy()
@@ -344,21 +330,22 @@ struct vertmodel : model
             m.numverts = numverts;
             m.verts = new vert[numverts*group->numframes];
             memcpy(m.verts, verts, numverts*group->numframes*sizeof(vert));
-            m.numtcverts = numtcverts;
-            m.tcverts = new tcvert[numtcverts];
-            memcpy(m.tcverts, tcverts, numtcverts*sizeof(tcvert));
+            m.tcverts = new tcvert[numverts];
+            memcpy(m.tcverts, tcverts, numverts*sizeof(tcvert));
             m.numtris = numtris;
             m.tris = new tri[numtris];
             memcpy(m.tris, tris, numtris*sizeof(tri));
+            m.bumpverts = NULL;
+            if(bumpverts) m.calctangents();
             return &m;
         }
 
         void calctangents()
         {
             if(bumpverts) return;
-            vec *tangent = new vec[2*numtcverts], *bitangent = tangent+numtcverts;
-            memset(tangent, 0, 2*numtcverts*sizeof(vec));
-            bumpverts = new bumpvert[group->numframes*numtcverts];
+            vec *tangent = new vec[2*numverts], *bitangent = tangent+numverts;
+            memset(tangent, 0, 2*numverts*sizeof(vec));
+            bumpverts = new bumpvert[group->numframes*numverts];
             loopk(group->numframes)
             {
                 vert *fverts = &verts[k*numverts];
@@ -369,9 +356,9 @@ struct vertmodel : model
                                  &tc1 = tcverts[t.vert[1]],
                                  &tc2 = tcverts[t.vert[2]];
  
-                    vec v0(fverts[tc0.index].pos),
-                        e1(fverts[tc1.index].pos), 
-                        e2(fverts[tc2.index].pos);
+                    vec v0(fverts[t.vert[0]].pos),
+                        e1(fverts[t.vert[1]].pos), 
+                        e2(fverts[t.vert[2]].pos);
                     e1.sub(v0);
                     e2.sub(v0);
  
@@ -389,10 +376,10 @@ struct vertmodel : model
                         bitangent[t.vert[j]].add(v);
                     }
                 }
-                bumpvert *fbumpverts = &bumpverts[k*numtcverts];
-                loopi(numtcverts)
+                bumpvert *fbumpverts = &bumpverts[k*numverts];
+                loopi(numverts)
                 {
-                    const vec &n = fverts[tcverts[i].index].norm,
+                    const vec &n = fverts[i].norm,
                               &t = tangent[i],
                               &bt = bitangent[i];
                     bumpvert &bv = fbumpverts[i];
@@ -428,9 +415,9 @@ struct vertmodel : model
                 tcvert &av = tcverts[tris[j].vert[0]],
                        &bv = tcverts[tris[j].vert[1]],
                        &cv = tcverts[tris[j].vert[2]];
-                vec &a = fverts[av.index].pos,
-                    &b = fverts[bv.index].pos,
-                    &c = fverts[cv.index].pos;
+                vec &a = fverts[tris[j].vert[0]].pos,
+                    &b = fverts[tris[j].vert[1]].pos,
+                    &c = fverts[tris[j].vert[2]].pos;
                 loopi(3)
                 {
                     t.a[i] = m[i]*a.x + m[i+3]*a.y + m[i+6]*a.z + m[i+9];
@@ -444,18 +431,6 @@ struct vertmodel : model
                 t.tc[4] = cv.u;
                 t.tc[5] = cv.v;
             }
-        }
-
-        void genstripbuf()
-        {
-            tristrip ts;
-            ts.addtriangles((ushort *)tris, numtris);
-            vector<ushort> idxs;
-            ts.buildstrips(idxs);
-            stripbuf = new vert[numverts];
-            stripidx = new ushort[idxs.length()];
-            memcpy(stripidx, idxs.getbuf(), idxs.length()*sizeof(ushort));
-            striplen = idxs.length();
         }
 
         static inline bool comparevert(vvertff &w, int j, tcvert &tc, vert &v)
@@ -503,22 +478,25 @@ struct vertmodel : model
         {
             voffset = offset;
             eoffset = idxs.length();
+            minvert = 0xFFFF;
             loopi(numtris)
             {
                 tri &t = tris[i];
                 loopj(3) 
                 {
                     tcvert &tc = tcverts[t.vert[j]];
-                    vert &v = verts[tc.index];
+                    vert &v = verts[t.vert[j]];
                     loopvk(vverts)
                     {
-                        if(comparevert(vverts[k], j, tc, v)) { idxs.add((ushort)k); goto found; }
+                        if(comparevert(vverts[k], j, tc, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
                     }
-                        idxs.add(vverts.length());
+                    idxs.add(vverts.length());
                     assignvert(vverts.add(), j, tc, v);
                     found:;
                 }
             }
+            minvert = min(minvert, vverts.length()-1);
+            maxvert = max(minvert, vverts.length()-1);
             elen = idxs.length()-eoffset;
             return vverts.length()-voffset;
         }
@@ -532,11 +510,23 @@ struct vertmodel : model
                 tri &t = tris[i];
                 loopj(3) idxs.add(voffset+t.vert[j]);
             }
+            minvert = voffset;
+            maxvert = voffset + numverts-1;
             elen = idxs.length()-eoffset;
-            return numtcverts;
+            return numverts;
         }
 
-        void interpverts(anpos &cur, anpos *prev, float ai_t, bool norms, bool tangents, void *vbo, skin &s)
+        void filltc(uchar *vdata, size_t stride)
+        {
+            vdata = (uchar *)&((vvertff *)&vdata[voffset*stride])->u;
+            loopi(numverts)
+            {
+                *(tcvert *)vdata = tcverts[i];
+                vdata += stride;
+            }
+        }
+
+        void interpverts(anpos &cur, anpos *prev, float ai_t, bool norms, bool tangents, void *vdata, skin &s)
         {
             vert *vert1 = &verts[cur.fr1 * numverts],
                  *vert2 = &verts[cur.fr2 * numverts],
@@ -551,167 +541,88 @@ struct vertmodel : model
             #define ip_b_ai(c)      ip(ip_v(bpvert, c, prev->t), ip_v(bvert, c, cur.t), ai_t)
             #define ip_tangent      vec(ip_v(bvert, tangent.x, cur.t), ip_v(bvert, tangent.y, cur.t), ip_v(bvert, tangent.z, cur.t))
             #define ip_tangent_ai   vec(ip_b_ai(tangent.x), ip_b_ai(tangent.y), ip_b_ai(tangent.z))
-            if(!vbo)
+            #define iploop(type, body) \
+                loopi(numverts) \
+                { \
+                    type &v = ((type *)vdata)[i]; \
+                    body; \
+                }
+            if(tangents)
             {
-                if(prev)
-                {
-                    if(norms==stripnorms && cacheprev==*prev && cachecur==cur && cachet==ai_t) return;
-                    cacheprev = *prev;
-                    cachet = ai_t;
-                }
-                else
-                {
-                    if(norms==stripnorms && cacheprev.fr1<0 && cachecur==cur) return;
-                    cacheprev.fr1 = -1;
-                }
-                cachecur = cur;
-                stripnorms = norms;
-                if(!stripbuf) genstripbuf();
-                #define iploopnovbo(body) \
-                    loopi(numverts) \
-                    { \
-                        vert &v = stripbuf[i]; \
-                        body; \
-                    }
-                if(norms)
-                {
-                    if(prev) iploopnovbo({ v.pos = ip_pos_ai; v.norm = ip_norm_ai; })
-                    else iploopnovbo({ v.pos = ip_pos; v.norm = ip_norm; })
-                }
-                else if(prev) iploopnovbo(v.pos = ip_pos_ai)
-                else iploopnovbo(v.pos = ip_pos)
-                #undef iploopnovbo
+                bumpvert *bvert1 = &bumpverts[cur.fr1 * numverts],
+                         *bvert2 = &bumpverts[cur.fr2 * numverts],
+                         *bpvert1 = prev ? &bumpverts[prev->fr1 * numverts] : NULL, *bpvert2 = prev ? &bumpverts[prev->fr2 * numverts] : NULL;
+                if(prev) iploop(vvertbump, { v.pos = ip_pos_ai; v.norm = ip_norm_ai; v.tangent = ip_tangent_ai; v.bitangent = bvert1[i].bitangent; })
+                else iploop(vvertbump, { v.pos = ip_pos; v.norm = ip_norm; v.tangent = ip_tangent; v.bitangent = bvert1[i].bitangent; })
             }
-            else 
+            else if(norms)
             {
-                #define iploopvbo(type, body) \
-                    loopj(numtcverts) \
-                    { \
-                        tcvert &tc = tcverts[j]; \
-                        int i = tc.index; \
-                        type &v = ((type *)vbo)[j]; \
-                        v.u = tc.u; \
-                        v.v = tc.v; \
-                        body; \
-                    }
-                if(s.scrollu || s.scrollv)
-                {
-                    float du = s.scrollu*lastmillis/1000.0f, dv = s.scrollv*lastmillis/1000.0f;    
-                    if(tangents)
-                    {
-                        bumpvert *bvert1 = &bumpverts[cur.fr1 * numtcverts],
-                                 *bvert2 = &bumpverts[cur.fr2 * numtcverts],
-                                 *bpvert1 = prev ? &bumpverts[prev->fr1 * numtcverts] : NULL, *bpvert2 = prev ? &bumpverts[prev->fr2 * numtcverts] : NULL;
-                        if(prev) iploopvbo(vvertbump, { v.u += du; v.v += dv; v.pos = ip_pos_ai; v.norm = ip_norm_ai; v.tangent = ip_tangent_ai; v.bitangent = bvert1[j].bitangent; })
-                        else iploopvbo(vvertbump, { v.u += du; v.v += dv; v.pos = ip_pos; v.norm = ip_norm; v.tangent = ip_tangent; v.bitangent = bvert1[j].bitangent; })
-                    }
-                    else if(norms)
-                    {   
-                        if(prev) iploopvbo(vvert, { v.u += du; v.v += dv; v.pos = ip_pos_ai; v.norm = ip_norm_ai; })
-                        else iploopvbo(vvert, { v.u += du; v.v += dv; v.pos = ip_pos; v.norm = ip_norm; })
-                    }   
-                    else if(prev) iploopvbo(vvertff, { v.u += du; v.v += dv; v.pos = ip_pos_ai; })
-                    else iploopvbo(vvertff, { v.u += du; v.v += dv; v.pos = ip_pos; })
-                }
-                else if(tangents)
-                {
-                    bumpvert *bvert1 = &bumpverts[cur.fr1 * numtcverts],
-                             *bvert2 = &bumpverts[cur.fr2 * numtcverts],
-                             *bpvert1 = prev ? &bumpverts[prev->fr1 * numtcverts] : NULL, *bpvert2 = prev ? &bumpverts[prev->fr2 * numtcverts] : NULL;
-                    if(prev) iploopvbo(vvertbump, { v.pos = ip_pos_ai; v.norm = ip_norm_ai; v.tangent = ip_tangent_ai; v.bitangent = bvert1[j].bitangent; })
-                    else iploopvbo(vvertbump, { v.pos = ip_pos; v.norm = ip_norm; v.tangent = ip_tangent; v.bitangent = bvert1[j].bitangent; })
-                }
-                else if(norms)
-                {
-                    if(prev) iploopvbo(vvert, { v.pos = ip_pos_ai; v.norm = ip_norm_ai; })
-                    else iploopvbo(vvert, { v.pos = ip_pos; v.norm = ip_norm; })
-                }
-                else if(prev) iploopvbo(vvertff, v.pos = ip_pos_ai)
-                else iploopvbo(vvertff, v.pos = ip_pos)
-                #undef iploopvbo
+                if(prev) iploop(vvert, { v.pos = ip_pos_ai; v.norm = ip_norm_ai; })
+                else iploop(vvert, { v.pos = ip_pos; v.norm = ip_norm; })
             }
+            else if(prev) iploop(vvertff, v.pos = ip_pos_ai)
+            else iploop(vvertff, v.pos = ip_pos)
+            #undef iploop
             #undef ip
             #undef ip_v
             #undef ip_v_ai
         }
 
-        void render(animstate &as, anpos &cur, anpos *prev, float ai_t, skin &s, vbocacheentry *vc)
+        void render(animstate &as, anpos &cur, anpos *prev, float ai_t, skin &s, vbocacheentry &vc)
         {
             s.bind(as);
 
-            if(vc && vc->vbuf)
+            if(s.multitextured() || s.tangents())
             {
-                if(s.multitextured() || s.tangents())
+                if(!enablemtc || lastmtcbuf!=lastvbuf)
                 {
-                    if(!enablemtc)
+                    glClientActiveTexture_(GL_TEXTURE1_ARB);
+                    if(!enablemtc) glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                    if(lastmtcbuf!=lastvbuf)
                     {
                         size_t vertsize = group->vtangents ? sizeof(vvertbump) : (group->vnorms ? sizeof(vvert) : sizeof(vvertff));
-                        vvertbump *vverts = 0;
-                        glClientActiveTexture_(GL_TEXTURE1_ARB);
-                        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                        vvertbump *vverts = hasVBO ? 0 : (vvertbump *)vc.vdata;
                         glTexCoordPointer(s.tangents() ? 4 : 2, GL_FLOAT, vertsize, s.tangents() ? &vverts->tangent.x : &vverts->u);
-                        glClientActiveTexture_(GL_TEXTURE0_ARB);
-                        enablemtc = true;
                     }
+                    glClientActiveTexture_(GL_TEXTURE0_ARB);
+                    lastmtcbuf = lastvbuf;
+                    enablemtc = true;
                 }
-                else if(enablemtc) disablemtc();
-
-                if(hasDRE) glDrawRangeElements_(GL_TRIANGLES, group->numframes>1 ? voffset : 0, group->numframes>1 ? voffset+numtcverts-1 : group->vlen-1, elen, GL_UNSIGNED_SHORT, (void *)(eoffset*sizeof(ushort)));
-                else glDrawElements(GL_TRIANGLES, elen, GL_UNSIGNED_SHORT, (void *)(eoffset*sizeof(ushort)));
-                glde++;
-
-                xtravertsva += numtcverts;
-                return;
             }
-            GLuint *list = NULL;
-            bool isstat = as.frame==0 && as.range==1 && !s.scrollu && !s.scrollv, multitex = s.multitextured(), norms = s.normals();
-            if(isstat)
+            else if(enablemtc) disablemtc();
+
+            if(renderpath==R_FIXEDFUNCTION && (s.scrollu || s.scrollv))
             {
-                list = &lists[as.anim&ANIM_NOSKIN ? LIST_NOSKIN : (multitex ? (norms ? LIST_MULTITEXNORMS : LIST_MULTITEX) : (norms ? LIST_TEXNORMS : LIST_TEX))];
-                if(*list)
+                glMatrixMode(GL_TEXTURE);
+                glPushMatrix();
+                glTranslatef(s.scrollu*lastmillis/1000.0f, s.scrollv*lastmillis/1000.0f, 0);
+
+                if(s.multitextured())
                 {
-                    glCallList(*list);
-                    xtraverts += striplen;
-                    return;
+                    glActiveTexture_(GL_TEXTURE1_ARB);
+                    glPushMatrix();
+                    glTranslatef(s.scrollu*lastmillis/1000.0f, s.scrollv*lastmillis/1000.0f, 0);
                 }
-                *list = glGenLists(1);
-                glNewList(*list, GL_COMPILE);
-            } 
-            interpverts(cur, prev, ai_t, norms, false, NULL, s);
-            if(stripidx[0]<tristrip::RESTART) glBegin(GL_TRIANGLE_STRIP); 
-            #define renderstripverts(b) \
-                loopj(striplen) \
-                { \
-                    ushort index = stripidx[j]; \
-                    if(index>=tristrip::RESTART) \
-                    { \
-                        if(j) glEnd(); \
-                        glBegin(index==tristrip::LIST ? GL_TRIANGLES : GL_TRIANGLE_STRIP); \
-                        continue; \
-                    } \
-                    tcvert &tc = tcverts[index]; \
-                    vert &v = stripbuf[tc.index]; \
-                    b; \
-                    glVertex3fv(v.pos.v); \
+            }
+
+            if(hasDRE) glDrawRangeElements_(GL_TRIANGLES, minvert, maxvert, elen, GL_UNSIGNED_SHORT, &group->edata[eoffset]);
+            else glDrawElements(GL_TRIANGLES, elen, GL_UNSIGNED_SHORT, &group->edata[eoffset]);
+            glde++;
+            xtravertsva += numverts;
+
+            if(renderpath==R_FIXEDFUNCTION && (s.scrollu || s.scrollv))
+            {
+                if(s.multitextured())
+                {
+                    glPopMatrix();
+                    glActiveTexture_(GL_TEXTURE0_ARB);
                 }
-            if(as.anim&ANIM_NOSKIN) renderstripverts({})
-            else if(s.scrollu || s.scrollv)
-            {
-                float du = s.scrollu*lastmillis/1000.0f, dv = s.scrollv*lastmillis/1000.0f;
-                if(norms && multitex) renderstripverts({ glTexCoord2f(tc.u+du, tc.v+dv); glNormal3fv(v.norm.v); glMultiTexCoord2f_(GL_TEXTURE1_ARB, tc.u+du, tc.v+dv); })
-                else if(norms) renderstripverts({ glTexCoord2f(tc.u+du, tc.v+dv); glNormal3fv(v.norm.v); })
-                else if(multitex) renderstripverts({ glTexCoord2f(tc.u+du, tc.v+dv); glMultiTexCoord2f_(GL_TEXTURE1_ARB, tc.u+du, tc.v+dv); })
+
+                glPopMatrix();
+                glMatrixMode(GL_MODELVIEW);
             }
-            else if(norms && multitex) renderstripverts({ glTexCoord2f(tc.u, tc.v); glNormal3fv(v.norm.v); glMultiTexCoord2f_(GL_TEXTURE1_ARB, tc.u, tc.v); })
-            else if(norms) renderstripverts({ glTexCoord2f(tc.u, tc.v); glNormal3fv(v.norm.v); })
-            else if(multitex) renderstripverts({ glTexCoord2f(tc.u, tc.v); glMultiTexCoord2f_(GL_TEXTURE1_ARB, tc.u, tc.v); }) 
-            glEnd();
-            if(isstat)
-            {
-                glEndList();
-                glCallList(*list);
-            }
-            xtraverts += striplen;
+
+            return;
         }
     };
 
@@ -739,12 +650,13 @@ struct vertmodel : model
         static const int MAXVBOCACHE = 8;
         vbocacheentry vbocache[MAXVBOCACHE];
 
+        ushort *edata;
         GLuint ebuf;
         bool vnorms, vtangents;
         int vlen;
         uchar *vdata;
 
-        meshgroup() : next(NULL), shared(0), name(NULL), tags(NULL), numtags(0), numframes(0), scale(1), translate(0, 0, 0), ebuf(0), vdata(NULL) 
+        meshgroup() : next(NULL), shared(0), name(NULL), tags(NULL), numtags(0), numframes(0), scale(1), translate(0, 0, 0), edata(NULL), ebuf(0), vdata(NULL) 
         {
         }
 
@@ -753,8 +665,13 @@ struct vertmodel : model
             DELETEA(name);
             meshes.deletecontentsp();
             DELETEA(tags);
-            loopi(MAXVBOCACHE) if(vbocache[i].vbuf) glDeleteBuffers_(1, &vbocache[i].vbuf);
+            DELETEA(vdata);
             if(ebuf) glDeleteBuffers_(1, &ebuf);
+            loopi(MAXVBOCACHE) 
+            {
+                DELETEA(vbocache[i].vdata);
+                if(vbocache[i].vbuf) glDeleteBuffers_(1, &vbocache[i].vbuf);
+            }
             DELETEA(vdata);
             DELETEP(next);
         }
@@ -866,9 +783,24 @@ struct vertmodel : model
 
         void genvbo(bool norms, bool tangents, vbocacheentry &vc)
         {
-            glGenBuffers_(1, &vc.vbuf);
-
-            if(ebuf) return;
+            if(hasVBO) 
+            {
+                if(!vc.vbuf) glGenBuffers_(1, &vc.vbuf);
+                if(ebuf) return;
+            }
+            else if(edata) 
+            {
+                #define ALLOCVDATA(vdata) \
+                    do \
+                    { \
+                        DELETEA(vdata); \
+                        size_t vertsize = tangents ? sizeof(vvertbump) : (norms ? sizeof(vvert) : sizeof(vvertff)); \
+                        vdata = new uchar[vlen*vertsize]; \
+                        loopv(meshes) meshes[i]->filltc(vdata, vertsize); \
+                    } while(0)
+                if(!vc.vdata) ALLOCVDATA(vc.vdata);
+                return;
+            }
 
             vector<ushort> idxs;
 
@@ -879,138 +811,136 @@ struct vertmodel : model
             {
                 loopv(meshes) vlen += meshes[i]->genvbo(idxs, vlen);
                 DELETEA(vdata);
-                vdata = new uchar[vlen*(tangents ? sizeof(vvertbump) : (norms ? sizeof(vvert) : sizeof(vvertff)))];
+                if(hasVBO) ALLOCVDATA(vdata); 
+                else ALLOCVDATA(vc.vdata);
             } 
-            else
+            else 
             {
-                glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
-                if(tangents)
-                { 
-                    vector<vvertbump> vverts;
-                    loopv(meshes) vlen += meshes[i]->genvbo(idxs, vlen, vverts);
-                    glBufferData_(GL_ARRAY_BUFFER_ARB, vverts.length()*sizeof(vvertbump), vverts.getbuf(), GL_STATIC_DRAW_ARB);
-                }
-                else if(norms)
-                {
-                    vector<vvert> vverts;
-                    loopv(meshes) vlen += meshes[i]->genvbo(idxs, vlen, vverts);
-                    glBufferData_(GL_ARRAY_BUFFER_ARB, vverts.length()*sizeof(vvert), vverts.getbuf(), GL_STATIC_DRAW_ARB);
-                }
-                else
-                {
-                    vector<vvertff> vverts;
-                    loopv(meshes) vlen += meshes[i]->genvbo(idxs, vlen, vverts);
-                    glBufferData_(GL_ARRAY_BUFFER_ARB, vverts.length()*sizeof(vvertff), vverts.getbuf(), GL_STATIC_DRAW_ARB);
-                }
+                if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
+                #define GENVBO(type) \
+                    do \
+                    { \
+                        vector<type> vverts; \
+                        loopv(meshes) vlen += meshes[i]->genvbo(idxs, vlen, vverts); \
+                        if(hasVBO) glBufferData_(GL_ARRAY_BUFFER_ARB, vverts.length()*sizeof(type), vverts.getbuf(), GL_STATIC_DRAW_ARB); \
+                        else \
+                        { \
+                            DELETEA(vc.vdata); \
+                            vc.vdata = new uchar[vverts.length()*sizeof(type)]; \
+                            memcpy(vc.vdata, vverts.getbuf(), vverts.length()*sizeof(type)); \
+                        } \
+                    } while(0)
+                if(tangents) GENVBO(vvertbump);
+                else if(norms) GENVBO(vvert);
+                else GENVBO(vvertff);
             }
 
-            glGenBuffers_(1, &ebuf);
-            glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, ebuf);
-            glBufferData_(GL_ELEMENT_ARRAY_BUFFER_ARB, idxs.length()*sizeof(ushort), idxs.getbuf(), GL_STATIC_DRAW_ARB);
+            if(hasVBO)
+            {
+                glGenBuffers_(1, &ebuf);
+                glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, ebuf);
+                glBufferData_(GL_ELEMENT_ARRAY_BUFFER_ARB, idxs.length()*sizeof(ushort), idxs.getbuf(), GL_STATIC_DRAW_ARB);
+            }
+            else
+            {
+                edata = new ushort[idxs.length()];
+                memcpy(edata, idxs.getbuf(), idxs.length()*sizeof(ushort));
+            }
         }
 
         void bindvbo(animstate &as, vbocacheentry &vc)
         {
             size_t vertsize = vtangents ? sizeof(vvertbump) : (vnorms ? sizeof(vvert) : sizeof(vvertff));
-            vvert *vverts = 0;
-            if(lastvbo!=vc.vbuf)
+            vvert *vverts = hasVBO ? 0 : (vvert *)vc.vdata;
+            if(hasVBO && lastebuf!=ebuf)
             {
-                glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
                 glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, ebuf);
-                glEnableClientState(GL_VERTEX_ARRAY);
-                glVertexPointer(3, GL_FLOAT, vertsize, &vverts->pos);
-                enabletc = false;
+                lastebuf = ebuf;
             }
+            if(lastvbuf != (hasVBO ? (void *)(size_t)vc.vbuf : vc.vdata))
+            {
+                if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
+                if(!lastvbuf) glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(3, GL_FLOAT, vertsize, &vverts->pos);
+            }
+            lastvbuf = hasVBO ? (void *)(size_t)vc.vbuf : vc.vdata;
             if(as.anim&ANIM_NOSKIN)
             {
                 if(enabletc) disabletc();
             }
-            else
+            else if(!enabletc || lasttcbuf!=lastvbuf)
             {
-                if(!enabletc)
+                if(vnorms || vtangents)
                 {
-                    if(vertsize>=sizeof(vvert))
-                    {
-                        glEnableClientState(GL_NORMAL_ARRAY);
-                        glNormalPointer(GL_FLOAT, vertsize, &vverts->norm);
-                    }
-                    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                    glTexCoordPointer(2, GL_FLOAT, vertsize, &vverts->u);
-                    enabletc = true;
-                    enablemtc = false;
+                    if(!enabletc) glEnableClientState(GL_NORMAL_ARRAY);
+                    if(lasttcbuf!=lastvbuf) glNormalPointer(GL_FLOAT, vertsize, &vverts->norm);
                 }
+                if(!enabletc) glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                if(lasttcbuf!=lastvbuf) glTexCoordPointer(2, GL_FLOAT, vertsize, &vverts->u);
+                lasttcbuf = lastvbuf;
+                enabletc = true;
             }
-            lastvbo = vc.vbuf;
         }
 
         void render(animstate &as, anpos &cur, anpos *prev, float ai_t, vector<skin> &skins)
         {
-            vbocacheentry *vc = NULL;
-            if(hasVBO)
+            bool norms = false, tangents = false;
+            loopv(skins) 
             {
-                if(numframes<=1) vc = vbocache;
-                else
-                {
-                    loopi(MAXVBOCACHE)
-                    {
-                        vbocacheentry &c = vbocache[i];
-                        if(!c.vbuf) continue;
-                        if(c.cur==cur && (prev ? c.prev==*prev && c.t==ai_t : c.prev.fr1<0)) { vc = &c; break; }
-                    }
-                    if(!vc) loopi(MAXVBOCACHE) { vc = &vbocache[i]; if(!vc->vbuf || vc->millis < lastmillis) break; }
-                }
-                bool norms = false, tangents = false;
-                loopv(skins) 
-                {
-                    if(skins[i].normals()) norms = true;
-                    if(skins[i].tangents()) tangents = true;
-                }
-                if(ebuf && (norms!=vnorms || tangents!=vtangents))
-                {
-                    loopi(MAXVBOCACHE)
-                    {
-                        vbocacheentry &c = vbocache[i];
-                        if(c.vbuf) { glDeleteBuffers_(1, &c.vbuf); c.vbuf = 0; c.cur.fr1 = -1; }
-                    }
-                    glDeleteBuffers_(1, &ebuf);
-                    ebuf = 0;
-                }
-                if(!vc->vbuf) genvbo(norms, tangents, *vc);
-                if(numframes>1)
-                {
-                    if(vc->cur!=cur || (prev ? vc->prev!=*prev || vc->t!=ai_t : vc->prev.fr1>=0))
-                    {
-                        vc->cur = cur;
-                        if(prev) { vc->prev = *prev; vc->t = ai_t; }
-                        else vc->prev.fr1 = -1;
-                        vc->millis = lastmillis;
-                        loopv(meshes)
-                        {
-                            mesh &m = *meshes[i];
-                            void *mdata = tangents ? &((vvertbump *)vdata)[m.voffset] : (norms ? &((vvert *)vdata)[m.voffset] : &((vvertff *)vdata)[m.voffset]);
-                            m.interpverts(cur, prev, ai_t, norms, tangents, mdata, skins[i]);
-                        }
-                        glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc->vbuf);
-                        glBufferData_(GL_ARRAY_BUFFER_ARB, vlen * (tangents ? sizeof(vvertbump) : (norms ? sizeof(vvert) : sizeof(vvertff))), vdata, GL_STREAM_DRAW_ARB);    
-                    }
-                    else if(vc->millis!=lastmillis) loopv(meshes)
-                    {
-                        skin &s = skins[i];
-                        if(!s.scrollu && !s.scrollv) continue;
-                        if(vc->millis!=lastmillis) { glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc->vbuf); vc->millis = lastmillis; }
-                        mesh &m = *meshes[i];
-                        void *mdata = tangents ? &((vvertbump *)vdata)[m.voffset] : (norms ? &((vvert *)vdata)[m.voffset] : &((vvertff *)vdata)[m.voffset]);
-                        m.interpverts(cur, prev, ai_t, norms, tangents, mdata, s);
-                        int sublen = (i+1<meshes.length() ? meshes[i+1]->voffset : vlen) - m.voffset; 
-                        glBufferSubData_(GL_ARRAY_BUFFER_ARB, (uchar *)mdata - vdata, sublen * (tangents ? sizeof(vvertbump) : (norms ? sizeof(vvert) : sizeof(vvertff))), mdata);
-                    }
-                }
-
-                if(vc->vbuf) bindvbo(as, *vc);
-                else if(lastvbo) disablevbo();
+                if(skins[i].normals()) norms = true;
+                if(skins[i].tangents()) tangents = true;
             }
-
-            loopv(meshes) meshes[i]->render(as, cur, prev, ai_t, skins[i], vc);
+            if(norms!=vnorms || tangents!=vtangents)
+            {
+                loopi(MAXVBOCACHE) 
+                {
+                    vbocacheentry &c = vbocache[i];
+                    if(c.vbuf) { glDeleteBuffers_(1, &c.vbuf); c.vbuf = 0; }
+                    DELETEA(c.vdata);
+                    c.cur.fr1 = -1;
+                }
+                if(hasVBO) { if(ebuf) { glDeleteBuffers_(1, &ebuf); ebuf = 0; } }
+                else DELETEA(vdata);
+                lastvbuf = lasttcbuf = lastmtcbuf = NULL;
+                lastebuf = 0;
+            }
+            vbocacheentry *vc = NULL;
+            if(numframes<=1) vc = vbocache;
+            else
+            {
+                loopi(MAXVBOCACHE)
+                {
+                    vbocacheentry &c = vbocache[i];
+                    if(hasVBO ? !c.vbuf : !c.vdata) continue;
+                    if(c.cur==cur && (prev ? c.prev==*prev && c.t==ai_t : c.prev.fr1<0)) { vc = &c; break; }
+                }
+                if(!vc) loopi(MAXVBOCACHE) { vc = &vbocache[i]; if((hasVBO ? !vc->vbuf : !vc->vdata) || vc->millis < lastmillis) break; }
+            }
+            if(hasVBO ? !vc->vbuf : !vc->vdata) genvbo(norms, tangents, *vc);
+            if(numframes>1)
+            {
+                if(vc->cur!=cur || (prev ? vc->prev!=*prev || vc->t!=ai_t : vc->prev.fr1>=0))
+                {
+                    vc->cur = cur;
+                    if(prev) { vc->prev = *prev; vc->t = ai_t; }
+                    else vc->prev.fr1 = -1;
+                    vc->millis = lastmillis;
+                    size_t vertsize = tangents ? sizeof(vvertbump) : (norms ? sizeof(vvert) : sizeof(vvertff));
+                    loopv(meshes) 
+                    {
+                        mesh &m = *meshes[i];
+                        m.interpverts(cur, prev, ai_t, norms, tangents, (hasVBO ? vdata : vc->vdata) + m.voffset*vertsize, skins[i]);
+                    }
+                    if(hasVBO)
+                    {
+                        glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc->vbuf);
+                        glBufferData_(GL_ARRAY_BUFFER_ARB, vlen*vertsize, vdata, GL_STREAM_DRAW_ARB);    
+                    }
+                }
+            }
+        
+            bindvbo(as, *vc);
+            loopv(meshes) meshes[i]->render(as, cur, prev, ai_t, skins[i], *vc);
         }
     };
 
@@ -1118,404 +1048,404 @@ struct vertmodel : model
                 case ANIM_RIGHT:
                 case ANIM_SWIM:
 #ifdef BFRONTIER
-					as.speed = 5500.0f/ph->speed(d);
+                    as.speed = 5500.0f/ph->speed(d);
 #else
-					as.speed = 5500.0f/d->maxspeed;
+                    as.speed = 5500.0f/d->maxspeed;
 #endif
-					break;
+                    break;
 
-				default:
-					as.speed = 100.0f;
-					break;
-			}
-		}
-				
-		bool calcanimstate(int anim, int varseed, float speed, int basetime, dynent *d, animstate &as)
-		{
-			as.anim = anim;
-			as.speed = speed;
-			if(anims)
-			{
-				vector<animinfo> *primary = &anims[anim&ANIM_INDEX];
-				if((anim>>ANIM_SECONDARY)&ANIM_INDEX)
-				{
-					vector<animinfo> *secondary = &anims[(anim>>ANIM_SECONDARY)&ANIM_INDEX];
-					if(secondary->length() && (primary->empty() || (*secondary)[0].priority > (*primary)[0].priority))
-					{
-						primary = secondary;
-						as.anim = anim>>ANIM_SECONDARY;
-					}
-				}
-				if(primary->length())
-				{
+                default:
+                    as.speed = 100.0f;
+                    break;
+            }
+        }
+                
+        bool calcanimstate(int anim, int varseed, float speed, int basetime, dynent *d, animstate &as)
+        {
+            as.anim = anim;
+            as.speed = speed;
+            if(anims)
+            {
+                vector<animinfo> *primary = &anims[anim&ANIM_INDEX];
+                if((anim>>ANIM_SECONDARY)&ANIM_INDEX)
+                {
+                    vector<animinfo> *secondary = &anims[(anim>>ANIM_SECONDARY)&ANIM_INDEX];
+                    if(secondary->length() && (primary->empty() || (*secondary)[0].priority > (*primary)[0].priority))
+                    {
+                        primary = secondary;
+                        as.anim = anim>>ANIM_SECONDARY;
+                    }
+                }
+                if(primary->length())
+                {
                     animinfo &ai = (*primary)[uint(varseed)%primary->length()];
-					as.frame = ai.frame;
-					as.range = ai.range;
-					if(ai.speed>0) as.speed = 1000.0f/ai.speed;
-				}
-				else getdefaultanim(as, anim, varseed, d);
-			}
-			else getdefaultanim(as, anim, varseed, d);
-			if(as.speed<=0) getanimspeed(as, d);
+                    as.frame = ai.frame;
+                    as.range = ai.range;
+                    if(ai.speed>0) as.speed = 1000.0f/ai.speed;
+                }
+                else getdefaultanim(as, anim, varseed, d);
+            }
+            else getdefaultanim(as, anim, varseed, d);
+            if(as.speed<=0) getanimspeed(as, d);
 
-			as.anim &= (1<<ANIM_SECONDARY)-1;
-			as.anim |= anim&ANIM_FLAGS;
+            as.anim &= (1<<ANIM_SECONDARY)-1;
+            as.anim |= anim&ANIM_FLAGS;
             as.basetime = basetime;
             if(as.anim&(ANIM_LOOP|ANIM_START|ANIM_END) && (anim>>ANIM_SECONDARY)&ANIM_INDEX)
             {
                 as.anim &= ~ANIM_SETTIME;
                 as.basetime = -((int)(size_t)d&0xFFF);
             }
-			if(as.anim&(ANIM_START|ANIM_END))
-			{
-				if(as.anim&ANIM_END) as.frame += as.range-1;
-				as.range = 1; 
-			}
+            if(as.anim&(ANIM_START|ANIM_END))
+            {
+                if(as.anim&ANIM_END) as.frame += as.range-1;
+                as.range = 1; 
+            }
 
-			if(!meshes->hasframes(as.frame, as.range))
-			{
-				if(!meshes->hasframe(as.frame)) return false;
-				as.range = meshes->clipframes(as.frame, as.range);
-			}
+            if(!meshes->hasframes(as.frame, as.range))
+            {
+                if(!meshes->hasframe(as.frame)) return false;
+                as.range = meshes->clipframes(as.frame, as.range);
+            }
 
-			if(d && index<2)
-			{
-				if(d->lastmodel[index]!=this || d->lastanimswitchtime[index]==-1)
-				{
-					d->current[index] = as;
-					d->lastanimswitchtime[index] = lastmillis-animationinterpolationtime*2;
-				}
-				else if(d->current[index]!=as)
-				{
-					if(lastmillis-d->lastanimswitchtime[index]>animationinterpolationtime/2) d->prev[index] = d->current[index];
-					d->current[index] = as;
-					d->lastanimswitchtime[index] = lastmillis;
-				}
+            if(d && index<2)
+            {
+                if(d->lastmodel[index]!=this || d->lastanimswitchtime[index]==-1)
+                {
+                    d->current[index] = as;
+                    d->lastanimswitchtime[index] = lastmillis-animationinterpolationtime*2;
+                }
+                else if(d->current[index]!=as)
+                {
+                    if(lastmillis-d->lastanimswitchtime[index]>animationinterpolationtime/2) d->prev[index] = d->current[index];
+                    d->current[index] = as;
+                    d->lastanimswitchtime[index] = lastmillis;
+                }
                 else if(as.anim&ANIM_SETTIME) d->current[index].basetime = as.basetime;
-				d->lastmodel[index] = this;
-			}
-			return true;
-		}
+                d->lastmodel[index] = this;
+            }
+            return true;
+        }
 
-		void calcnormal(GLfloat *m, vec &dir)
-		{
-			vec n(dir);
-			dir.x = n.x*m[0] + n.y*m[1] + n.z*m[2];
-			dir.y = n.x*m[4] + n.y*m[5] + n.z*m[6];
-			dir.z = n.x*m[8] + n.y*m[9] + n.z*m[10];
-		}
+        void calcnormal(GLfloat *m, vec &dir)
+        {
+            vec n(dir);
+            dir.x = n.x*m[0] + n.y*m[1] + n.z*m[2];
+            dir.y = n.x*m[4] + n.y*m[5] + n.z*m[6];
+            dir.z = n.x*m[8] + n.y*m[9] + n.z*m[10];
+        }
 
-		void calcplane(GLfloat *m, plane &p)
-		{
-			p.offset += p.x*m[12] + p.y*m[13] + p.z*m[14];
-			calcnormal(m, p);
-		}
+        void calcplane(GLfloat *m, plane &p)
+        {
+            p.offset += p.x*m[12] + p.y*m[13] + p.z*m[14];
+            calcnormal(m, p);
+        }
 
-		void calcvertex(GLfloat *m, vec &pos)
-		{
-			vec p(pos);
-				
-			p.x -= m[12];
-			p.y -= m[13];
-			p.z -= m[14];
+        void calcvertex(GLfloat *m, vec &pos)
+        {
+            vec p(pos);
+                
+            p.x -= m[12];
+            p.y -= m[13];
+            p.z -= m[14];
 
 #if 0
-			// This is probably overkill, since just about any transformations this encounters will be orthogonal matrices 
-			// where their inverse is simply the transpose.
-			int a = fabs(m[0])>fabs(m[1]) && fabs(m[0])>fabs(m[2]) ? 0 : (fabs(m[1])>fabs(m[2]) ? 1 : 2), b = (a+1)%3, c = (a+2)%3;
-			float a1 = m[a], a2 = m[a+4], a3 = m[a+8],
-				  b1 = m[b], b2 = m[b+4], b3 = m[b+8],
-				  c1 = m[c], c2 = m[c+4], c3 = m[c+8];
+            // This is probably overkill, since just about any transformations this encounters will be orthogonal matrices 
+            // where their inverse is simply the transpose.
+            int a = fabs(m[0])>fabs(m[1]) && fabs(m[0])>fabs(m[2]) ? 0 : (fabs(m[1])>fabs(m[2]) ? 1 : 2), b = (a+1)%3, c = (a+2)%3;
+            float a1 = m[a], a2 = m[a+4], a3 = m[a+8],
+                  b1 = m[b], b2 = m[b+4], b3 = m[b+8],
+                  c1 = m[c], c2 = m[c+4], c3 = m[c+8];
 
-			pos.z = (p[c] - c1*p[a]/a1 - (c2 - c1*a2/a1)*(p[b] - b1*p[a]/a1)/(b2 - b1*a2/a1)) / (c3 - c1*a3/a1 - (c2 - c1*a2/a1)*(b3 - b1*a3/a1)/(b2 - b1*a2/a1));
-			pos.y = (p[b] - b1*p[a]/a1 - (b3 - b1*a3/a1)*pos.z)/(b2 - b1*a2/a1);
-			pos.x = (p[a] - a2*pos.y - a3*pos.z)/a1;
+            pos.z = (p[c] - c1*p[a]/a1 - (c2 - c1*a2/a1)*(p[b] - b1*p[a]/a1)/(b2 - b1*a2/a1)) / (c3 - c1*a3/a1 - (c2 - c1*a2/a1)*(b3 - b1*a3/a1)/(b2 - b1*a2/a1));
+            pos.y = (p[b] - b1*p[a]/a1 - (b3 - b1*a3/a1)*pos.z)/(b2 - b1*a2/a1);
+            pos.x = (p[a] - a2*pos.y - a3*pos.z)/a1;
 #else
-			pos.x = p.x*m[0] + p.y*m[1] + p.z*m[2];
-			pos.y = p.x*m[4] + p.y*m[5] + p.z*m[6];
-			pos.z = p.x*m[8] + p.y*m[9] + p.z*m[10];
+            pos.x = p.x*m[0] + p.y*m[1] + p.z*m[2];
+            pos.y = p.x*m[4] + p.y*m[5] + p.z*m[6];
+            pos.z = p.x*m[8] + p.y*m[9] + p.z*m[10];
 #endif
-		}
+        }
 
-		float calcpitchaxis(int anim, GLfloat pitch, vec &axis, vec &dir, vec &campos, plane &fogplane)
-		{
-			float angle = pitchscale*pitch + pitchoffset;
-			if(pitchmin || pitchmax) angle = max(pitchmin, min(pitchmax, angle));
-			if(!angle) return 0;
+        float calcpitchaxis(int anim, GLfloat pitch, vec &axis, vec &dir, vec &campos, plane &fogplane)
+        {
+            float angle = pitchscale*pitch + pitchoffset;
+            if(pitchmin || pitchmax) angle = max(pitchmin, min(pitchmax, angle));
+            if(!angle) return 0;
 
-			float c = cosf(-angle*RAD), s = sinf(-angle*RAD);
-			vec d(axis);
-			axis.rotate(c, s, d);
-			if(!(anim&ANIM_NOSKIN))
-			{
-				dir.rotate(c, s, d);
-				campos.rotate(c, s, d); 
-				fogplane.rotate(c, s, d);
-			}
+            float c = cosf(-angle*RAD), s = sinf(-angle*RAD);
+            vec d(axis);
+            axis.rotate(c, s, d);
+            if(!(anim&ANIM_NOSKIN))
+            {
+                dir.rotate(c, s, d);
+                campos.rotate(c, s, d); 
+                fogplane.rotate(c, s, d);
+            }
 
-			return angle;
-		}
+            return angle;
+        }
 
-		void render(int anim, int varseed, float speed, int basetime, float pitch, const vec &axis, dynent *d, const vec &dir, const vec &campos, const plane &fogplane)
-		{
-			animstate as;
-			if(!calcanimstate(anim, varseed, speed, basetime, d, as)) return;
-	
-			anpos prev, cur;
-			cur.setframes(d && index<2 ? d->current[index] : as);
-	
-			float ai_t = 0;
-			bool doai = d && index<2 && lastmillis-d->lastanimswitchtime[index]<animationinterpolationtime && d->prev[index].range>0;
-			if(doai)
-			{
-				prev.setframes(d->prev[index]);
-				ai_t = (lastmillis-d->lastanimswitchtime[index])/(float)animationinterpolationtime;
-			}
+        void render(int anim, int varseed, float speed, int basetime, float pitch, const vec &axis, dynent *d, const vec &dir, const vec &campos, const plane &fogplane)
+        {
+            animstate as;
+            if(!calcanimstate(anim, varseed, speed, basetime, d, as)) return;
+   
+            anpos prev, cur;
+            cur.setframes(d && index<2 ? d->current[index] : as);
+    
+            float ai_t = 0;
+            bool doai = d && index<2 && lastmillis-d->lastanimswitchtime[index]<animationinterpolationtime && d->prev[index].range>0;
+            if(doai)
+            {
+                prev.setframes(d->prev[index]);
+                ai_t = (lastmillis-d->lastanimswitchtime[index])/(float)animationinterpolationtime;
+            }
   
-			if(!model->cullface && enablecullface) { glDisable(GL_CULL_FACE); enablecullface = false; }
-			else if(model->cullface && !enablecullface) { glEnable(GL_CULL_FACE); enablecullface = true; }
+            if(!model->cullface && enablecullface) { glDisable(GL_CULL_FACE); enablecullface = false; }
+            else if(model->cullface && !enablecullface) { glEnable(GL_CULL_FACE); enablecullface = true; }
 
-			vec raxis(axis), rdir(dir), rcampos(campos);
-			plane rfogplane(fogplane);
-			float pitchamount = calcpitchaxis(anim, pitch, raxis, rdir, rcampos, rfogplane);
-			if(pitchamount)
-			{
-				glPushMatrix();
-				glRotatef(pitchamount, axis.x, axis.y, axis.z); 
-				if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
-				{
-					glMatrixMode(GL_TEXTURE);
-					glPushMatrix();
-					glRotatef(pitchamount, axis.x, axis.y, axis.z);
-					glMatrixMode(GL_MODELVIEW);
-				}
-			}
+            vec raxis(axis), rdir(dir), rcampos(campos);
+            plane rfogplane(fogplane);
+            float pitchamount = calcpitchaxis(anim, pitch, raxis, rdir, rcampos, rfogplane);
+            if(pitchamount)
+            {
+                glPushMatrix();
+                glRotatef(pitchamount, axis.x, axis.y, axis.z); 
+                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                {
+                    glMatrixMode(GL_TEXTURE);
+                    glPushMatrix();
+                    glRotatef(pitchamount, axis.x, axis.y, axis.z);
+                    glMatrixMode(GL_MODELVIEW);
+                }
+            }
 
-			if(!(anim&ANIM_NOSKIN))
-			{
-				if(renderpath!=R_FIXEDFUNCTION)
-				{
-					if(refracting) setfogplane(rfogplane);
-					setenvparamf("direction", SHPARAM_VERTEX, 0, rdir.x, rdir.y, rdir.z);
-					setenvparamf("camera", SHPARAM_VERTEX, 1, rcampos.x, rcampos.y, rcampos.z, 1);
-				}
+            if(!(anim&ANIM_NOSKIN))
+            {
+                if(renderpath!=R_FIXEDFUNCTION)
+                {
+                    if(refracting) setfogplane(rfogplane);
+                    setenvparamf("direction", SHPARAM_VERTEX, 0, rdir.x, rdir.y, rdir.z);
+                    setenvparamf("camera", SHPARAM_VERTEX, 1, rcampos.x, rcampos.y, rcampos.z, 1);
+                }
                 else if(lightmodels) loopv(skins) if(!skins[i].fullbright)
-				{
-					GLfloat pos[4] = { rdir.x*1000, rdir.y*1000, rdir.z*1000, 0 };
-					glLightfv(GL_LIGHT0, GL_POSITION, pos);
+                {
+                    GLfloat pos[4] = { rdir.x*1000, rdir.y*1000, rdir.z*1000, 0 };
+                    glLightfv(GL_LIGHT0, GL_POSITION, pos);
                     break;
-				}
-			}
+                }
+            }
 
-			meshes->render(as, cur, doai ? &prev : NULL, ai_t, skins);
+            meshes->render(as, cur, doai ? &prev : NULL, ai_t, skins);
 
-			loopv(links) if(links[i].p) // render the linked models - interpolate rotation and position of the 'link-tags'
-			{
-				part *link = links[i].p;
+            loopv(links) if(links[i].p) // render the linked models - interpolate rotation and position of the 'link-tags'
+            {
+                part *link = links[i].p;
 
-				GLfloat matrix[16];
-				meshes->calctagmatrix(i, cur, doai ? &prev : NULL, ai_t, matrix);
+                GLfloat matrix[16];
+                meshes->calctagmatrix(i, cur, doai ? &prev : NULL, ai_t, matrix);
 
-				vec naxis(raxis), ndir(rdir), ncampos(rcampos);
-				plane nfogplane(rfogplane);
-				calcnormal(matrix, naxis);
-				if(!(anim&ANIM_NOSKIN)) 
-				{
-					calcnormal(matrix, ndir);
-					calcvertex(matrix, ncampos);
-					calcplane(matrix, nfogplane);
-				}
+                vec naxis(raxis), ndir(rdir), ncampos(rcampos);
+                plane nfogplane(rfogplane);
+                calcnormal(matrix, naxis);
+                if(!(anim&ANIM_NOSKIN)) 
+                {
+                    calcnormal(matrix, ndir);
+                    calcvertex(matrix, ncampos);
+                    calcplane(matrix, nfogplane);
+                }
 
-				glPushMatrix();
-				glMultMatrixf(matrix);
-				if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP) 
-				{	
-					glMatrixMode(GL_TEXTURE); 
-					glPushMatrix(); 
-					glMultMatrixf(matrix); 
-					glMatrixMode(GL_MODELVIEW); 
-				}
-				int nanim = anim, nbasetime = basetime;
-				if(links[i].anim>=0)
-				{
-					nanim = links[i].anim | (anim&ANIM_FLAGS);
-					nbasetime = links[i].basetime;
-				}
-				link->render(nanim, varseed, speed, nbasetime, pitch, naxis, d, ndir, ncampos, nfogplane);
-				if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP) 
-				{ 
-					glMatrixMode(GL_TEXTURE); 
-					glPopMatrix(); 
-					glMatrixMode(GL_MODELVIEW); 
-				}
-				glPopMatrix();
-			}
+                glPushMatrix();
+                glMultMatrixf(matrix);
+                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP) 
+                {    
+                    glMatrixMode(GL_TEXTURE); 
+                    glPushMatrix(); 
+                    glMultMatrixf(matrix); 
+                    glMatrixMode(GL_MODELVIEW); 
+                }
+                int nanim = anim, nbasetime = basetime;
+                if(links[i].anim>=0)
+                {
+                    nanim = links[i].anim | (anim&ANIM_FLAGS);
+                    nbasetime = links[i].basetime;
+                }
+                link->render(nanim, varseed, speed, nbasetime, pitch, naxis, d, ndir, ncampos, nfogplane);
+                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP) 
+                { 
+                    glMatrixMode(GL_TEXTURE); 
+                    glPopMatrix(); 
+                    glMatrixMode(GL_MODELVIEW); 
+                }
+                glPopMatrix();
+            }
 
-			if(pitchamount)
-			{
-				glPopMatrix();
-				if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
-				{
-					glMatrixMode(GL_TEXTURE); 
-					glPopMatrix(); 
-					glMatrixMode(GL_MODELVIEW); 
-				}
-			}
-		}
+            if(pitchamount)
+            {
+                glPopMatrix();
+                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                {
+                    glMatrixMode(GL_TEXTURE); 
+                    glPopMatrix(); 
+                    glMatrixMode(GL_MODELVIEW); 
+                }
+            }
+        }
 
-		void setanim(int num, int frame, int range, float speed, int priority = 0)
-		{
-			if(frame<0 || range<=0 || !meshes->hasframes(frame, range))
-			{ 
-				conoutf("invalid frame %d, range %d in model %s", frame, range, model->loadname); 
-				return; 
-			}
-			if(!anims) anims = new vector<animinfo>[NUMANIMS];
-			animinfo &ai = anims[num].add();
-			ai.frame = frame;
-			ai.range = range;
-			ai.speed = speed;
-			ai.priority = priority;
-		}
-	};
+        void setanim(int num, int frame, int range, float speed, int priority = 0)
+        {
+            if(frame<0 || range<=0 || !meshes->hasframes(frame, range))
+            { 
+                conoutf("invalid frame %d, range %d in model %s", frame, range, model->loadname); 
+                return; 
+            }
+            if(!anims) anims = new vector<animinfo>[NUMANIMS];
+            animinfo &ai = anims[num].add();
+            ai.frame = frame;
+            ai.range = range;
+            ai.speed = speed;
+            ai.priority = priority;
+        }
+    };
 
-	bool loaded;
-	char *loadname;
-	vector<part *> parts;
+    bool loaded;
+    char *loadname;
+    vector<part *> parts;
 
-	vertmodel(const char *name) : loaded(false)
-	{
-		loadname = newstring(name);
-	}
+    vertmodel(const char *name) : loaded(false)
+    {
+        loadname = newstring(name);
+    }
 
-	~vertmodel()
-	{
-		delete[] loadname;
-		parts.deletecontentsp();
-	}
+    ~vertmodel()
+    {
+        delete[] loadname;
+        parts.deletecontentsp();
+    }
 
-	char *name() { return loadname; }
+    char *name() { return loadname; }
 
-	virtual meshgroup *loadmeshes(char *name) { return NULL; }
+    virtual meshgroup *loadmeshes(char *name) { return NULL; }
 
-	meshgroup *sharemeshes(char *name)
-	{
-		static hashtable<char *, vertmodel::meshgroup *> meshgroups;
-		if(!meshgroups.access(name))
-		{
-			meshgroup *group = loadmeshes(name);
-			if(!group) return NULL;
-			meshgroups[group->name] = group;
-		}
-		return meshgroups[name];
-	}
+    meshgroup *sharemeshes(char *name)
+    {
+        static hashtable<char *, vertmodel::meshgroup *> meshgroups;
+        if(!meshgroups.access(name))
+        {
+            meshgroup *group = loadmeshes(name);
+            if(!group) return NULL;
+            meshgroups[group->name] = group;
+        }
+        return meshgroups[name];
+    }
 
     void gentris(int frame, vector<BIH::tri> &tris)
-	{
-		if(parts.empty()) return;
-		parts[0]->gentris(frame, tris);
-	}
+    {
+        if(parts.empty()) return;
+        parts[0]->gentris(frame, tris);
+    }
 
     BIH *setBIH()
-	{
+    {
         if(bih) return bih;
         vector<BIH::tri> tris;
-		gentris(0, tris);
+        gentris(0, tris);
         bih = new BIH(tris.length(), tris.getbuf());
         return bih;
-	}
+    }
 
-	void calcbb(int frame, vec &center, vec &radius)
-	{
-		if(parts.empty()) return;
-		vec bbmin, bbmax;
-		bbmin = bbmax = parts[0]->meshes->anyvert(frame);
-		parts[0]->calcbb(frame, bbmin, bbmax);
-		radius = bbmax;
-		radius.sub(bbmin);
-		radius.mul(0.5f);
-		center = bbmin;
-		center.add(radius);
-	}
+    void calcbb(int frame, vec &center, vec &radius)
+    {
+        if(parts.empty()) return;
+        vec bbmin, bbmax;
+        bbmin = bbmax = parts[0]->meshes->anyvert(frame);
+        parts[0]->calcbb(frame, bbmin, bbmax);
+        radius = bbmax;
+        radius.sub(bbmin);
+        radius.mul(0.5f);
+        center = bbmin;
+        center.add(radius);
+    }
 
-	bool link(part *link, const char *tag, int anim = -1, int basetime = 0)
-	{
-		loopv(parts) if(parts[i]->link(link, tag, anim, basetime)) return true;
-		return false;
-	}
+    bool link(part *link, const char *tag, int anim = -1, int basetime = 0)
+    {
+        loopv(parts) if(parts[i]->link(link, tag, anim, basetime)) return true;
+        return false;
+    }
 
-	void setskin(int tex = 0)
-	{
-		loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].override = tex;
-	}
+    void setskin(int tex = 0)
+    {
+        loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].override = tex;
+    }
 
-	bool envmapped()
-	{
-		loopv(parts) loopvj(parts[i]->skins) if(parts[i]->skins[j].envmapped()) return true;
-		return false;
-	}
+    bool envmapped()
+    {
+        loopv(parts) loopvj(parts[i]->skins) if(parts[i]->skins[j].envmapped()) return true;
+        return false;
+    }
 
     virtual bool loaddefaultparts()
     {
         return true;
     }
 
-	void setshader(Shader *shader)
-	{
+    void setshader(Shader *shader)
+    {
         if(parts.empty()) loaddefaultparts();
-		loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].shader = shader;
-	}
+        loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].shader = shader;
+    }
 
-	void setenvmap(float envmapmin, float envmapmax, Texture *envmap)
-	{
+    void setenvmap(float envmapmin, float envmapmax, Texture *envmap)
+    {
         if(parts.empty()) loaddefaultparts();
-		loopv(parts) loopvj(parts[i]->skins)
-		{
-			skin &s = parts[i]->skins[j];
-			if(envmapmax)
-			{
-				s.envmapmin = envmapmin;
-				s.envmapmax = envmapmax;
-			}
-			if(envmap) s.envmap = envmap;
-		}
-	}
+        loopv(parts) loopvj(parts[i]->skins)
+        {
+            skin &s = parts[i]->skins[j];
+            if(envmapmax)
+            {
+                s.envmapmin = envmapmin;
+                s.envmapmax = envmapmax;
+            }
+            if(envmap) s.envmap = envmap;
+        }
+    }
 
     void setspec(float spec) 
-	{
+    {
         if(parts.empty()) loaddefaultparts();
-		loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].spec = spec;
-	}
+        loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].spec = spec;
+    }
 
     void setambient(float ambient)
-	{
+    {
         if(parts.empty()) loaddefaultparts();
-		loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].ambient = ambient;
-	}
+        loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].ambient = ambient;
+    }
 
     void setglow(float glow)
-	{
+    {
         if(parts.empty()) loaddefaultparts();
-		loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].glow = glow;
-	}
+        loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].glow = glow;
+    }
 
     void setalphatest(float alphatest)
-	{
+    {
         if(parts.empty()) loaddefaultparts();
-		loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].alphatest = alphatest;
-	}
+        loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].alphatest = alphatest;
+    }
 
     void setalphablend(bool alphablend)
-	{
+    {
         if(parts.empty()) loaddefaultparts();
-		loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].alphablend = alphablend;
-	}
+        loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].alphablend = alphablend;
+    }
 
     void settranslucency(float translucency)
-	{
+    {
         if(parts.empty()) loaddefaultparts();
-		loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].translucency = translucency;
-	}
+        loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].translucency = translucency;
+    }
 
     void setfullbright(float fullbright)
     {
@@ -1523,199 +1453,206 @@ struct vertmodel : model
         loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].fullbright = fullbright;
     }
 
-	virtual void render(int anim, int varseed, float speed, int basetime, float pitch, const vec &axis, dynent *d, modelattach *a, const vec &dir, const vec &campos, const plane &fogplane)
-	{
-	}
+    virtual void render(int anim, int varseed, float speed, int basetime, float pitch, const vec &axis, dynent *d, modelattach *a, const vec &dir, const vec &campos, const plane &fogplane)
+    {
+    }
 
-	void render(int anim, int varseed, float speed, int basetime, const vec &o, float yaw, float pitch, dynent *d, modelattach *a, const vec &color, const vec &dir)
-	{
-		vec rdir, campos;
-		plane fogplane;
+    void render(int anim, int varseed, float speed, int basetime, const vec &o, float yaw, float pitch, dynent *d, modelattach *a, const vec &color, const vec &dir)
+    {
+        vec rdir, campos;
+        plane fogplane;
 
-		yaw += spin*lastmillis/1000.0f;
+        yaw += spin*lastmillis/1000.0f;
 
-		if(!(anim&ANIM_NOSKIN))
-		{
-			fogplane = plane(0, 0, 1, o.z-refracting);
+        if(!(anim&ANIM_NOSKIN))
+        {
+            fogplane = plane(0, 0, 1, o.z-refracting);
 
-			lightcolor = color;
-			
-			rdir = dir;
-			rdir.rotate_around_z((-yaw-180.0f)*RAD);
+            lightcolor = color;
+            
+            rdir = dir;
+            rdir.rotate_around_z((-yaw-180.0f)*RAD);
 
-			campos = camera1->o;
-			campos.sub(o);
-			campos.rotate_around_z((-yaw-180.0f)*RAD);
+            campos = camera1->o;
+            campos.sub(o);
+            campos.rotate_around_z((-yaw-180.0f)*RAD);
 
-			if(envmapped()) anim |= ANIM_ENVMAP;
-			else if(a) for(int i = 0; a[i].name; i++) if(a[i].m && a[i].m->envmapped())
-			{
-				anim |= ANIM_ENVMAP;
-				break;
-			}
-			if(anim&ANIM_ENVMAP) closestenvmaptex = lookupenvmap(closestenvmap(o));
-		}
+            if(envmapped()) anim |= ANIM_ENVMAP;
+            else if(a) for(int i = 0; a[i].name; i++) if(a[i].m && a[i].m->envmapped())
+            {
+                anim |= ANIM_ENVMAP;
+                break;
+            }
+            if(anim&ANIM_ENVMAP) closestenvmaptex = lookupenvmap(closestenvmap(o));
+        }
 
-		if(anim&ANIM_ENVMAP)
-		{
-			if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE2_ARB);
-			glMatrixMode(GL_TEXTURE);
-			if(renderpath==R_FIXEDFUNCTION)
-			{
-				setuptmu(2, "T , P @ Pa", anim&ANIM_TRANSLUCENT ? "= Ka" : NULL);
+        if(anim&ANIM_ENVMAP)
+        {
+            if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE2_ARB);
+            glMatrixMode(GL_TEXTURE);
+            if(renderpath==R_FIXEDFUNCTION)
+            {
+                setuptmu(2, "T , P @ Pa", anim&ANIM_TRANSLUCENT ? "= Ka" : NULL);
 
-				GLfloat mm[16], mmtrans[16];
-				glGetFloatv(GL_MODELVIEW_MATRIX, mm);
-				loopi(4) // transpose modelview (mmtrans[4*i+j] = mm[4*j+i]) and convert to (-y, z, x, w)
-				{
-					GLfloat x = mm[i], y = mm[4+i], z = mm[8+i], w = mm[12+i];
-					mmtrans[4*i] = -y;
-					mmtrans[4*i+1] = z;
-					mmtrans[4*i+2] = x;
-					mmtrans[4*i+3] = w;
-				}
-				glLoadMatrixf(mmtrans);
-			}
-			else
-			{
-				glLoadIdentity();
-				glTranslatef(o.x, o.y, o.z);
-				glRotatef(yaw+180, 0, 0, 1);
-			}
-			glMatrixMode(GL_MODELVIEW);
-			if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE0_ARB);
-		}
+                GLfloat mm[16], mmtrans[16];
+                glGetFloatv(GL_MODELVIEW_MATRIX, mm);
+                loopi(4) // transpose modelview (mmtrans[4*i+j] = mm[4*j+i]) and convert to (-y, z, x, w)
+                {
+                    GLfloat x = mm[i], y = mm[4+i], z = mm[8+i], w = mm[12+i];
+                    mmtrans[4*i] = -y;
+                    mmtrans[4*i+1] = z;
+                    mmtrans[4*i+2] = x;
+                    mmtrans[4*i+3] = w;
+                }
+                glLoadMatrixf(mmtrans);
+            }
+            else
+            {
+                glLoadIdentity();
+                glTranslatef(o.x, o.y, o.z);
+                glRotatef(yaw+180, 0, 0, 1);
+            }
+            glMatrixMode(GL_MODELVIEW);
+            if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE0_ARB);
+        }
 
-		glPushMatrix();
-		glTranslatef(o.x, o.y, o.z);
-		glRotatef(yaw+180, 0, 0, 1);
+        glPushMatrix();
+        glTranslatef(o.x, o.y, o.z);
+        glRotatef(yaw+180, 0, 0, 1);
 
-		if(anim&ANIM_TRANSLUCENT)
-		{
-			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-			nocolorshader->set();
-			render(anim|ANIM_NOSKIN, varseed, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
-			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        if(anim&ANIM_TRANSLUCENT)
+        {
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+            nocolorshader->set();
+            render(anim|ANIM_NOSKIN, varseed, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
-			glDepthFunc(GL_LEQUAL);
-		}
+            glDepthFunc(GL_LEQUAL);
+        }
 
-		if(anim&(ANIM_TRANSLUCENT|ANIM_SHADOW) && !enablealphablend)
-		{
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			enablealphablend = true;
-		}
+        if(anim&(ANIM_TRANSLUCENT|ANIM_SHADOW) && !enablealphablend)
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            enablealphablend = true;
+        }
 
-		render(anim, varseed, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
+        render(anim, varseed, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
 
-		if(anim&ANIM_ENVMAP)
-		{
-			if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE2_ARB);
-			glMatrixMode(GL_TEXTURE);
-			glLoadIdentity();
-			glMatrixMode(GL_MODELVIEW);
-			if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE0_ARB);
-		}
+        if(anim&ANIM_ENVMAP)
+        {
+            if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE2_ARB);
+            glMatrixMode(GL_TEXTURE);
+            glLoadIdentity();
+            glMatrixMode(GL_MODELVIEW);
+            if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE0_ARB);
+        }
 
-		if(anim&ANIM_TRANSLUCENT) glDepthFunc(GL_LESS);
+        if(anim&ANIM_TRANSLUCENT) glDepthFunc(GL_LESS);
 
-		glPopMatrix();
-	}
+        glPopMatrix();
+    }
 
-	static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enablelighting, enablecullface;
-	static vec lightcolor;
-	static float lastalphatest;
-	static GLuint lastvbo, lastenvmaptex, closestenvmaptex;
+    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enablelighting, enablecullface;
+    static vec lightcolor;
+    static float lastalphatest;
+    static void *lastvbuf, *lasttcbuf, *lastmtcbuf;
+    static GLuint lastebuf, lastenvmaptex, closestenvmaptex;
     static Texture *lasttex, *lastmasks, *lastnormalmap;
 
-	void startrender()
-	{
-		enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enablelighting = false;
-		enablecullface = true;
-		lastalphatest = -1;
-		lastvbo = lastenvmaptex = 0;
+    void startrender()
+    {
+        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enablelighting = false;
+        enablecullface = true;
+        lastalphatest = -1;
+        lastvbuf = lasttcbuf = lastmtcbuf = NULL;
+        lastebuf = lastenvmaptex = closestenvmaptex = 0;
         lasttex = lastmasks = lastnormalmap = NULL;
 
-		static bool initlights = false;
-		if(renderpath==R_FIXEDFUNCTION && lightmodels && !initlights)
-		{
-			glEnable(GL_LIGHT0);
-			static const GLfloat zero[4] = { 0, 0, 0, 0 };
-			glLightModelfv(GL_LIGHT_MODEL_AMBIENT, zero);
-			glLightfv(GL_LIGHT0, GL_SPECULAR, zero);
-			glMaterialfv(GL_FRONT, GL_SPECULAR, zero);
-			glMaterialfv(GL_FRONT, GL_EMISSION, zero);
-			initlights = true;
-		}
-	}
+        static bool initlights = false;
+        if(renderpath==R_FIXEDFUNCTION && lightmodels && !initlights)
+        {
+            glEnable(GL_LIGHT0);
+            static const GLfloat zero[4] = { 0, 0, 0, 0 };
+            glLightModelfv(GL_LIGHT_MODEL_AMBIENT, zero);
+            glLightfv(GL_LIGHT0, GL_SPECULAR, zero);
+            glMaterialfv(GL_FRONT, GL_SPECULAR, zero);
+            glMaterialfv(GL_FRONT, GL_EMISSION, zero);
+            initlights = true;
+        }
+    }
 
-	static void disablemtc()
-	{
-		glClientActiveTexture_(GL_TEXTURE1_ARB);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glClientActiveTexture_(GL_TEXTURE0_ARB);
-		enablemtc = false;
-	}
+    static void disablemtc()
+    {
+        glClientActiveTexture_(GL_TEXTURE1_ARB);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glClientActiveTexture_(GL_TEXTURE0_ARB);
+        enablemtc = false;
+    }
 
-	static void disabletc()
-	{
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisableClientState(GL_NORMAL_ARRAY);
-		if(enablemtc) disablemtc();
-		enabletc = false;
-	}
+    static void disabletc()
+    {
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
+        if(enablemtc) disablemtc();
+        enabletc = false;
+    }
 
-	static void disablevbo()
-	{
-		glBindBuffer_(GL_ARRAY_BUFFER_ARB, 0);
-		glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-		glDisableClientState(GL_VERTEX_ARRAY);
-		if(enabletc) disabletc();
-		lastvbo = 0;
-	}
+    static void disablevbo()
+    {
+        if(hasVBO)
+        {
+            glBindBuffer_(GL_ARRAY_BUFFER_ARB, 0);
+            glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+        }
+        glDisableClientState(GL_VERTEX_ARRAY);
+        if(enabletc) disabletc();
+        lastvbuf = lasttcbuf = lastmtcbuf = NULL;
+        lastebuf = 0;
+    }
 
-	static void disableglow()
-	{
-		resettmu(0);
-		glActiveTexture_(GL_TEXTURE1_ARB);
-		resettmu(1);
-		glDisable(GL_TEXTURE_2D);
-		glActiveTexture_(GL_TEXTURE0_ARB);
-		lasttex = lastmasks = NULL;
-		enableglow = false;
-	}
+    static void disableglow()
+    {
+        resettmu(0);
+        glActiveTexture_(GL_TEXTURE1_ARB);
+        resettmu(1);
+        glDisable(GL_TEXTURE_2D);
+        glActiveTexture_(GL_TEXTURE0_ARB);
+        lasttex = lastmasks = NULL;
+        enableglow = false;
+    }
 
-	static void disableenvmap()
-	{
-		glActiveTexture_(GL_TEXTURE2_ARB);
-		glDisable(GL_TEXTURE_CUBE_MAP_ARB);
-		if(renderpath==R_FIXEDFUNCTION)
-		{
-			glDisable(GL_TEXTURE_GEN_S);
-			glDisable(GL_TEXTURE_GEN_T);
-			glDisable(GL_TEXTURE_GEN_R);
-		}
-		glActiveTexture_(GL_TEXTURE0_ARB);
-		enableenvmap = false;
-	}
+    static void disableenvmap()
+    {
+        glActiveTexture_(GL_TEXTURE2_ARB);
+        glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+        if(renderpath==R_FIXEDFUNCTION)
+        {
+            glDisable(GL_TEXTURE_GEN_S);
+            glDisable(GL_TEXTURE_GEN_T);
+            glDisable(GL_TEXTURE_GEN_R);
+        }
+        glActiveTexture_(GL_TEXTURE0_ARB);
+        enableenvmap = false;
+    }
 
-	void endrender()
-	{
-		if(lastvbo) disablevbo();
-		if(enablealphatest) glDisable(GL_ALPHA_TEST);
-		if(enablealphablend) glDisable(GL_BLEND);
-		if(enableglow) disableglow();
-		if(enablelighting) glDisable(GL_LIGHTING);
-		if(enableenvmap) disableenvmap();
-		if(!enablecullface) glEnable(GL_CULL_FACE);
-	}
+    void endrender()
+    {
+        if(lastvbuf || lastebuf) disablevbo();
+        if(enablealphatest) glDisable(GL_ALPHA_TEST);
+        if(enablealphablend) glDisable(GL_BLEND);
+        if(enableglow) disableglow();
+        if(enablelighting) glDisable(GL_LIGHTING);
+        if(enableenvmap) disableenvmap();
+        if(!enablecullface) glEnable(GL_CULL_FACE);
+    }
 };
 
 bool vertmodel::enabletc = false, vertmodel::enablemtc = false, vertmodel::enablealphatest = false, vertmodel::enablealphablend = false, 
-	 vertmodel::enableenvmap = false, vertmodel::enableglow = false, vertmodel::enablelighting = false, vertmodel::enablecullface = true;
+     vertmodel::enableenvmap = false, vertmodel::enableglow = false, vertmodel::enablelighting = false, vertmodel::enablecullface = true;
 vec vertmodel::lightcolor;
 float vertmodel::lastalphatest = -1;
-GLuint vertmodel::lastvbo = 0, vertmodel::lastenvmaptex = 0, vertmodel::closestenvmaptex = 0;
+void *vertmodel::lastvbuf = NULL, *vertmodel::lasttcbuf = NULL, *vertmodel::lastmtcbuf = NULL;
+GLuint vertmodel::lastebuf = 0, vertmodel::lastenvmaptex = 0, vertmodel::closestenvmaptex = 0;
 Texture *vertmodel::lasttex = NULL, *vertmodel::lastmasks = NULL, *vertmodel::lastnormalmap = NULL;
 

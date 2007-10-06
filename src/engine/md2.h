@@ -79,7 +79,7 @@ struct md2 : vertmodel
 
 	struct md2meshgroup : meshgroup
 	{
-		void gentcverts(int *glcommands, vector<tcvert> &tcverts, vector<tri> &tris)
+        void genverts(int *glcommands, vector<tcvert> &tcverts, vector<ushort> &vindexes, vector<tri> &tris)
 		{
 			hashtable<ivec, int> tchash;
 			vector<ushort> idxs;
@@ -104,7 +104,7 @@ struct md2 : vertmodel
 						tcvert &tc = tcverts.add();
 						tc.u = u.f;
 						tc.v = v.f;
-						tc.index = (ushort)vindex;
+                        vindexes.add((ushort)vindex);
 					}		
 					idxs.add(*idx);
 				}
@@ -152,20 +152,22 @@ struct md2 : vertmodel
 			if(numglcommands < header.numglcommands) memset(&glcommands[numglcommands], 0, (header.numglcommands-numglcommands)*sizeof(int));
 
 			vector<tcvert> tcgen;
+            vector<ushort> vgen;
 			vector<tri> trigen;
-			gentcverts(glcommands, tcgen, trigen);
+            genverts(glcommands, tcgen, vgen,trigen);
 			delete[] glcommands;
 
-			m.numtcverts = tcgen.length();
-			m.tcverts = new tcvert[m.numtcverts];
-			memcpy(m.tcverts, tcgen.getbuf(), m.numtcverts*sizeof(tcvert));
+            m.numverts = tcgen.length();
+
+            m.tcverts = new tcvert[m.numverts];
+            memcpy(m.tcverts, tcgen.getbuf(), m.numverts*sizeof(tcvert));
 			m.numtris = trigen.length();
 			m.tris = new tri[m.numtris];
 			memcpy(m.tris, trigen.getbuf(), m.numtris*sizeof(tri));
 
-			m.numverts = header.numvertices;
 			m.verts = new vert[m.numverts*numframes];
 
+            md2_vertex *tmpverts = new md2_vertex[header.numvertices];
 			int frame_offset = header.offsetframes;
 			vert *curvert = m.verts;
 			loopi(header.numframes)
@@ -174,19 +176,21 @@ struct md2 : vertmodel
 				fseek(file, frame_offset, SEEK_SET);
 				fread(&frame, sizeof(md2_frame), 1, file);
 				endianswap(&frame, sizeof(float), 6);
-				loopj(header.numvertices)
+
+                fread(tmpverts, sizeof(md2_vertex), header.numvertices, file);
+                loopj(m.numverts)
 				{
-					md2_vertex v;
-					fread(&v, sizeof(md2_vertex), 1, file);
+                    const md2_vertex &v = tmpverts[vgen[j]];
 					curvert->pos = vec(v.vertex[0]*frame.scale[0]+frame.translate[0],
 										-(v.vertex[1]*frame.scale[1]+frame.translate[1]),
 										v.vertex[2]*frame.scale[2]+frame.translate[2]);
-					float *norm = md2normaltable[v.normalindex];
+                    const float *norm = md2normaltable[v.normalindex];
 					curvert->norm = vec(norm[0], -norm[1], norm[2]);
 					curvert++;
 				}
 				frame_offset += header.framesize;
 			}
+            delete[] tmpverts;
 				 
 			fclose(file);
 

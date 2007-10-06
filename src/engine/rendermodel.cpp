@@ -7,7 +7,6 @@ VARP(orientinterpolationtime, 0, 75, 1000);
 
 model *loadingmodel = NULL;
 
-#include "tristrip.h"
 #include "vertmodel.h"
 #include "md2.h"
 #include "md3.h"

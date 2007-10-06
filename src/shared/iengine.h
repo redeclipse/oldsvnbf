@@ -496,6 +496,13 @@ enum							// cube empty-space materials
 	MAT_EDIT					// basis for the edit volumes of the above materials
 };
 
+enum {
+	WT_WATER = 0,
+	WT_HURT,
+	WT_KILL,
+	WT_MAX
+};
+
 enum
 {
 	VIEW_FIRSTPERSON = 0,

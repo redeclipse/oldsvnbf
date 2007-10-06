@@ -182,7 +182,7 @@ struct captureclient : capturestate
 
 	captureclient(fpsclient &cl) : cl(cl), radarscale(0)
 	{
-		CCOMMAND(captureclient, repammo, "", self->replenishammo()); 
+        CCOMMAND(repammo, "", (captureclient *self), self->replenishammo());
 	}
 	
 	void replenishammo()

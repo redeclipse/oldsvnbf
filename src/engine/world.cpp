@@ -459,9 +459,7 @@ void renderentradius(extentity &e)
 		}
 
 		case ET_MAPMODEL:
-#ifndef BFRONTIER
 		case ET_PLAYERSTART:
-#endif
 			radius = 4;
 			if(e.type==ET_MAPMODEL && e.attr3) ring = checktriggertype(e.attr3, TRIG_COLLIDE) ? 20 : 12;
 			vecfromyawpitch(e.attr1, 0, 1, 0, dir);
@@ -850,11 +848,11 @@ void entset(char *what, int *a1, int *a2, int *a3, int *a4)
 			  e.attr4=*a4;);
 }
 
-ICOMMAND(enthavesel,"",  addimplicit(intret(entgroup.length())));
-ICOMMAND(entselect, "s", if(!noentedit()) addgroup(e.type != ET_EMPTY && entgroup.find(n)<0 && execute(args[0])>0));
-ICOMMAND(entloop,	"s", if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(args[0])))));
-ICOMMAND(insel,	 "",  entfocus(efocus, intret(pointinsel(sel, e.o))));
-ICOMMAND(entget,	"",  entfocus(efocus, s_sprintfd(s)("%s %d %d %d %d", et->entname(e.type), e.attr1, e.attr2, e.attr3, e.attr4);  result(s)));
+ICOMMAND(enthavesel,"",  (), addimplicit(intret(entgroup.length())));
+ICOMMAND(entselect, "s", (char *body), if(!noentedit()) addgroup(e.type != ET_EMPTY && entgroup.find(n)<0 && execute(body)>0));
+ICOMMAND(entloop,   "s", (char *body), if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(body)))));
+ICOMMAND(insel,     "",  (), entfocus(efocus, intret(pointinsel(sel, e.o))));
+ICOMMAND(entget,    "",  (), entfocus(efocus, s_sprintfd(s)("%s %d %d %d %d", et->entname(e.type), e.attr1, e.attr2, e.attr3, e.attr4);  result(s)));
 COMMAND(entset, "siiii");
 
 
@@ -1015,7 +1013,6 @@ void mapname_()
 {
     result(cl->getclientmap());
 }
-
 COMMANDN(mapname, mapname_, "");
 #else
 void mapname()
