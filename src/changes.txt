@@ -7,6 +7,11 @@ Legend [
 ]
 
 = wip edition =
+mod: 'exists fname [mode]' for script checking file existence
+bfg: updated menus
+mod: 'gravity', 'speed', 'jumpvel', 'watertype', 'watervel'
+ - variables moved server side
+ - added to world variable table for etz save/load
 mod: preliminary variable saving/loading to extension file
 bfg: updated map config
 mod: imported some sauerbraten content which permission was given for
