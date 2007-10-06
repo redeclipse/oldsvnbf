@@ -464,7 +464,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 		{	 
 			ident *id = idents->access(c);
 #ifdef BFRONTIER
-			if (isserver && (!id || id->_type != ID_ICOMMAND || id->_server == false))
+			if (isserver && (!id || id->_server == false))
 			{
 				s_sprintfd(z)("invalid server command: %s", c);
 				setretval(newstring(z));
@@ -479,7 +479,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 			}
 #ifdef BFRONTIER
 #ifndef STANDALONE
-			else if (!isserver && id->_type == ID_ICOMMAND && id->_server == true)
+			else if (!isserver && id->_server == true)
 			{
 				s_sprintfd(z)("%s", conc(w, numargs, true));
 				cc->toservcmd(z, true);
@@ -488,26 +488,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 #endif
 			else switch(id->_type)
 			{
-				case ID_ICOMMAND:
-				{
-					switch(id->_narg[0])
-					{
-						default: id->run(w+1); break;
-#ifndef STANDALONE
-						case 'D': id->run((char **)addreleaseaction(id->_name)); break;
-#endif
-						case 'C': 
-						{ 
-							char *r = conc(w+1, numargs-1, true); 
-							id->run(&r); 
-							delete[] r; 
-							break;
-						}
-					}
-					setretval(commandret);
-					break;
-				}
-
+                case ID_CCOMMAND:
 				case ID_COMMAND:					 // game defined commands
 				{	
 					void *v[MAXWORDS];
@@ -517,6 +498,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 						float f;
 					} nstor[MAXWORDS];
 					int n = 0, wn = 0;
+                    if(id->_type==ID_CCOMMAND) v[n++] = id->self;
 					for(char *a = id->_narg; *a; a++) switch(*a)
 					{
 						case 's':								 v[n] = w[++wn];	 n++; break;
@@ -575,10 +557,21 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 					
 				case ID_ALIAS:							  // alias, also used as functions and (global) variables
 				{
+                    static vector<ident *> argids;
 					for(int i = 1; i<numargs; i++)
 					{
-						s_sprintfd(t)("arg%d", i);		  // set any arguments as (global) arg values so functions can access them
-						pusha(t, w[i]);
+                        if(i > argids.length())
+                        {
+                            s_sprintfd(argname)("arg%d", i);
+                            ident *id = idents->access(argname);
+                            if(!id)
+                            {
+                                ident init(ID_ALIAS, newstring(argname), newstring(""), persistidents);
+                                id = idents->access(init._name, &init);
+                            }
+                            argids.add(id);
+                        }
+                        pushident(*argids[i-1], w[i]); // set any arguments as (global) arg values so functions can access them
 						w[i] = NULL;
 					}
 					_numargs = numargs-1;
@@ -594,11 +587,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 					if(id->_isexecuting != id->_action && id->_isexecuting != wasexecuting) delete[] id->_isexecuting;
 					id->_isexecuting = wasexecuting;
 					overrideidents = wasoverriding;
-					for(int i = 1; i<numargs; i++)
-					{
-						s_sprintfd(t)("arg%d", i);		  // set any arguments as (global) arg values so functions can access them
-						pop(t);
-					}
+                    for(int i = 1; i<numargs; i++) popident(*argids[i-1]);
 					break;
 				}
 			}
@@ -684,10 +673,10 @@ COMMAND(writecfg, "");
 void intset(char *name, int v) { string b; itoa(b, v); alias(name, b); }
 void intret			(int v) { string b; itoa(b, v); commandret = newstring(b); }
 
-ICOMMAND(if, "sss", commandret = executeret(args[0][0]!='0' ? args[1] : args[2]));
+ICOMMAND(if, "sss", (char *cond, char *t, char *f), commandret = executeret(cond[0]!='0' ? t : f));
 
-ICOMMAND(loop, "sss", { int n = parseint(args[1]); loopi(n) { intset(args[0], i); execute(args[2]); } });
-ICOMMAND(while, "ss", while(execute(args[0])) execute(args[1]));	// can't get any simpler than this :)
+ICOMMAND(loop, "sis", (char *var, int *n, char *body), loopi(*n) { intset(var, i); execute(body); });
+ICOMMAND(while, "ss", (char *cond, char *body), while(execute(cond)) execute(body));    // can't get any simpler than this :)
 
 void concat(const char *s) { commandret = newstring(s); }
 void result(const char *s) { commandret = newstring(s); }
@@ -797,7 +786,7 @@ void rndn(int *a)		  { intret(*a>0 ? rnd(*a) : 0); }  COMMANDN(rnd, rndn, "i");
 
 void strcmpa(char *a, char *b) { intret(strcmp(a,b)==0); }  COMMANDN(strcmp, strcmpa, "ss");
 
-ICOMMAND(echo, "C", conoutf("\f1%s", args[0]));
+ICOMMAND(echo, "C", (char *s), conoutf("\f1%s", s));
 
 void strstra(char *a, char *b) { char *s = strstr(a, b); intret(s ? s-a : -1); } COMMANDN(strstr, strstra, "ss");
 

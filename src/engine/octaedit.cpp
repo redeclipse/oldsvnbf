@@ -214,7 +214,7 @@ cube &blockcube(int x, int y, int z, const block3 &b, int rgrid) // looks up a w
 
 int selchildcount=0;
 
-ICOMMAND(havesel, "", intret(havesel ? selchildcount : 0));
+ICOMMAND(havesel, "", (), intret(havesel ? selchildcount : 0));
 
 void countselchild(cube *c, const ivec &cor, int size)
 {
@@ -765,8 +765,8 @@ int hmaptexture = -1; // will probably want list
 
 COMMAND(clearbrush, "");
 COMMAND(brushvert, "iii");
-ICOMMAND(addhtex, "", hmaptexture = lookupcube(cur.x, cur.y, cur.z).texture[horient = orient]);
-ICOMMAND(hmapcancel, "", hmaptexture = -1; );
+ICOMMAND(addhtex, "", (), hmaptexture = lookupcube(cur.x, cur.y, cur.z).texture[horient = orient]);
+ICOMMAND(hmapcancel, "", (), hmaptexture = -1; );
 
 inline bool isheightmap(int o, int d, bool empty, cube *c) 
 {

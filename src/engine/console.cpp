@@ -11,7 +11,7 @@ VARP(centerlines, 0, 3, 5);
 VARP(conblend, 0, 99, 100); // so it doesn't get hooked by hudblend defaults
 VARP(contime, 200, 20000, INT_MAX-1);
 
-ICOMMAND(centerprint, "C", console("\f6%s", CON_CENTER, args[0]););
+ICOMMAND(centerprint, "C", (char *s), console("\f6%s", CON_CENTER, s););
 
 vector<cline> conlines[CN_MAX];
 #else

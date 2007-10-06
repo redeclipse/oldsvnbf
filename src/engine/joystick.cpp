@@ -50,16 +50,16 @@ struct joystick
 		
 	int _joyfovxaxis, _joyfovyaxis, _joysensitivity, _joyaxisminmove, _joyfovinvert, _joymousebutton;
 
-	#define JCOMMAND(a, b, c, f) \
-		if (a) CCOMMAND(joystick, b##a, c, f); \
-		else CCOMMAND(joystick, b, c, f);
+	#define JCOMMAND(a, b, c, d, f) \
+		if (a) CCOMMAND(b##a, c, d, f); \
+		else CCOMMAND(b, c, d, f);
 
 	#define JVAR(a, b, c, d, e) \
 		_##b = d; \
 		if (a) { \
-			CCOMMAND(joystick, b##a, "i", { \
-				if (args[0][0]) { \
-					int _n = atoi(args[0]); \
+			CCOMMAND(b##a, "i", (joystick *self, char *s), { \
+				if (*s) { \
+					int _n = atoi(s); \
 					if (_n <= e && _n >= c) self->_##b = _n; \
 					else conoutf("valid range for %s is %d..%d", #b#a, c, e); \
 				} \
@@ -67,9 +67,9 @@ struct joystick
 			}); \
 		} \
 		else { \
-			CCOMMAND(joystick, b, "i", { \
-				if (args[0][0]) { \
-					int _n = atoi(args[0]); \
+			CCOMMAND(b, "i", (joystick *self, char *s), { \
+				if (*s) { \
+					int _n = atoi(s); \
 					if (_n <= e && _n >= c) self->_##b = _n; \
 					else conoutf("valid range for %s is %d..%d", #b, c, e); \
 				} \
@@ -146,9 +146,9 @@ struct joystick
 		button_count = SDL_JoystickNumButtons(stick);
 		
 		// if we made it this far, everything must be ok
-		JCOMMAND(num, joyaction, "ss", self->add_joyaction(args[0], args[1]));
-		JCOMMAND(num, joyactionsay, "s", self->add_joysayaction(args[0]));
-		JCOMMAND(num, joymenu, "", self->show_menu());
+		JCOMMAND(num, joyaction, "ss", (joystick *self, char *a, char *b), self->add_joyaction(a, b));
+		JCOMMAND(num, joyactionsay, "s", (joystick *self, char *a), self->add_joysayaction(a));
+		JCOMMAND(num, joymenu, "", (joystick *self), self->show_menu());
 
 		JVAR(num, joyfovxaxis, 1, 1, 10);
 		JVAR(num, joyfovyaxis, 1, 2, 10);

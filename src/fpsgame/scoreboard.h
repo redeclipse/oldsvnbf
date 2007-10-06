@@ -19,7 +19,7 @@ struct scoreboard : g3d_callback
 
 	scoreboard(fpsclient &_cl) : scoreson(false), cl(_cl)
 	{
-		CCOMMAND(scoreboard, showscores, "D", self->showscores(args!=NULL));
+        CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0));
 	}
 
 	void showscores(bool on)

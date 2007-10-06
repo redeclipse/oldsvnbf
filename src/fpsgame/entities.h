@@ -8,8 +8,8 @@ struct entities : icliententities
 	entities(fpsclient &_cl) : cl(_cl)
 	{
 #ifdef BFRONTIER
-		CCOMMAND(entities, entdelink, "i", self->extentdelink(atoi(args[0])));
-		CCOMMAND(entities, entlink, "i", self->extentlink(atoi(args[0])));
+		CCOMMAND(entdelink, "i", (entities *self, int *val), self->extentdelink(*val));
+		CCOMMAND(entlink, "i", (entities *self, int *val), self->extentlink(*val));
 #endif
 	}
 

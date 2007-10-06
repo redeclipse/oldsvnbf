@@ -25,15 +25,15 @@ struct weaponstate
 
 	weaponstate(fpsclient &_cl) : cl(_cl), player1(_cl.player1)
 	{
-		CCOMMAND(weaponstate, weapon, "sss",
+        CCOMMAND(weapon, "sss", (weaponstate *self, char *w1, char *w2, char *w3),
 		{
-			self->weaponswitch(args[0][0] ? atoi(args[0]) : -1,
-								args[1][0] ? atoi(args[1]) : -1,
-								args[2][0] ? atoi(args[2]) : -1);
+            self->weaponswitch(w1[0] ? atoi(w1) : -1,
+                               w2[0] ? atoi(w2) : -1,
+                               w3[0] ? atoi(w3) : -1);
 
 		});
 #ifdef BFRONTIER
-		CCOMMAND(weaponstate, getweapon, "", self->getweapon());
+		CCOMMAND(getweapon, "", (weaponstate *self), self->getweapon());
 #endif
 	}
 
@@ -194,12 +194,12 @@ struct weaponstate
 			case BNC_GRENADE:
 				if (g_bf)
 				{
-					bnc.elasticity = 0.2f;
+					bnc.elasticity = 0.33f;
 					bnc.waterfric = 2.0f;
 				}
 				else
 				{
-					bnc.elasticity = 0.6f;
+					bnc.elasticity = 0.66f;
 					bnc.waterfric = 3.0f;
 				}
 				break;

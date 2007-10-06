@@ -118,17 +118,12 @@ struct md3 : vertmodel
 					loopk(3) m.tris[j].vert[k] = (ushort)tri.vertexindices[k];
 				}
 
-				m.numtcverts = mheader.numvertices;
-				m.tcverts = new tcvert[m.numtcverts];
+                m.numverts = mheader.numvertices;
+                m.tcverts = new tcvert[m.numverts];
 				fseek(f, mesh_offset + mheader.ofs_uv , SEEK_SET); 
-				loopj(m.numtcverts)
-				{
-					fread(&m.tcverts[j].u, sizeof(float), 2, f); // read the UV data
-					endianswap(&m.tcverts[j].u, sizeof(float), 2);
-					m.tcverts[j].index = j;
-				}
+                fread(m.tcverts, 2*sizeof(float), m.numverts, f); // read the UV data
+                endianswap(m.tcverts, sizeof(float), 2*m.numverts);
 				
-				m.numverts = mheader.numvertices;
 				m.verts = new vert[numframes*m.numverts];
 				fseek(f, mesh_offset + mheader.ofs_vertices, SEEK_SET); 
 				loopj(numframes*m.numverts)
