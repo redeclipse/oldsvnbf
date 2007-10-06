@@ -565,7 +565,7 @@ void perfcheck()
 	}
 }
 
-void loadconfig(bool reload)
+void rehash(bool reload)
 {
 	if (reload)
 	{
@@ -587,6 +587,7 @@ void loadconfig(bool reload)
 	gameexec("config.cfg");
 	gameexec("autoexec.cfg");
 }
+ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
 
 void startgame(bool start, char *load, char *initscript)
 {
@@ -924,7 +925,7 @@ int main(int argc, char **argv)
 
 	log("cfg");
 #ifdef BFRONTIER
-	loadconfig(false);
+	rehash(false);
 	startgame(true, load, initscript);
 #else
 	exec("data/keymap.cfg");

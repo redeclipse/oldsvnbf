@@ -30,7 +30,7 @@ VAR(shadowmapheight, 0, 32, 128);
 VARP(shadowmapdist, 128, 256, 512);
 VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
 VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
-VAR(shadowmapambient, 0, 56, 0xFFFFFF);
+VAR(shadowmapambient, 0, 0, 0xFFFFFF);
 
 void createshadowmap()
 {
@@ -156,9 +156,19 @@ void pushshadowmap()
     glClientActiveTexture_(GL_TEXTURE0_ARB);
 
     float r, g, b;
-    if(shadowmapambient<=255) r = g = b = shadowmapambient/255.0f;
-    else { r = ((shadowmapambient>>16)&0xFF)/255.0f; g = ((shadowmapambient>>8)&0xFF)/255.0f; b = (shadowmapambient&0xFF)/255.0f; }
-    setenvparamf("shadowmapambient", SHPARAM_PIXEL, 7, r, g, b);
+	if(!shadowmapambient)
+	{
+		if(hdr.skylight[0] || hdr.skylight[1] || hdr.skylight[2])
+		{
+			r = max(25, 0.4f*hdr.ambient + 0.6f*max(hdr.ambient, hdr.skylight[0]));
+			g = max(25, 0.4f*hdr.ambient + 0.6f*max(hdr.ambient, hdr.skylight[1]));
+			b = max(25, 0.4f*hdr.ambient + 0.6f*max(hdr.ambient, hdr.skylight[2]));
+		}
+		else r = g = b = max(25, 2.0f*hdr.ambient);
+	}
+    else if(shadowmapambient<=255) r = g = b = shadowmapambient;
+    else { r = (shadowmapambient>>16)&0xFF; g = (shadowmapambient>>8)&0xFF; b = shadowmapambient&0xFF; }
+    setenvparamf("shadowmapambient", SHPARAM_PIXEL, 7, r/255.0f, g/255.0f, b/255.0f);
 }
 
 void adjustshadowmatrix(const ivec &o, float scale)
