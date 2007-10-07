@@ -72,10 +72,19 @@ extern void intret(int v);
 extern void result(const char *s);
 
 // nasty macros for registering script functions, abuses globals to avoid excessive infrastructure
-#ifdef BFRONTIER
-// helpers and other misc stuff
+#ifdef BFRONTIER // helpers and other misc stuff
 typedef hashtable<char *, ident> identtable;
 extern identtable *idents;
+
+enum
+{
+	PRIV_NONE = 0,
+	PRIV_MASTER,
+	PRIV_ADMIN,
+	PRIV_HOST,
+	PRIV_MAX
+};
+
 
 #define _COMMANDN(name, fun, nargs, server, world) \
 	static bool __dummy_##fun = addcommand(#name, (void (*)())fun, nargs, server, world)
@@ -129,7 +138,7 @@ extern identtable *idents;
 #define IVARW(n, m, c, x)  _IVAR(n, m, c, x, , false, false, true)
 #define IVARFP(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, true, false, false)
 #define IVARFW(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, true, false, true)
-#else
+#else // BFRONTIER
 #define COMMANDN(name, fun, nargs) static bool __dummy_##fun = addcommand(#name, (void (*)())fun, nargs)
 #define COMMAND(name, nargs) COMMANDN(name, name, nargs)
 #define _VAR(name, global, min, cur, max, persist)  int global = variable(#name, min, cur, max, &global, NULL, persist)
@@ -162,4 +171,4 @@ extern identtable *idents;
 #define IVARFP(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, true)
 //#define ICALL(n, a) { char *args[] = a; icom_##n.run(args); }
 //
-#endif
+#endif // BFRONTIER

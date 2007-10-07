@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "engine.h"
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended console
 VARP(centerblend, 0, 99, 100); // so it doesn't get hooked by hudblend defaults
 VARP(centertime, 200, 5000, INT_MAX-1);
 VARP(centerlines, 0, 3, 5);
@@ -33,7 +33,7 @@ void setconskip(int *n)
 
 COMMANDN(conskip, setconskip, "i");
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended console
 void conline(const char *sf, int n, int type = CON_LEFT)
 {
 	int _types[] = { CON_LEFT, CON_RIGHT, CON_CENTER };
@@ -107,7 +107,7 @@ void conline(const char *sf, bool highlight)		// add a line to the console buffe
 
 #define CONSPAD (FONTH/3)
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended console
 void console(const char *s, int type, ...)
 {
 	extern int scr_w, scr_h;
@@ -214,7 +214,7 @@ void blendbox(int x1, int y1, int x2, int y2, bool border)
 
 VARP(consize, 0, 5, 100);
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended console
 int renderconsole(int w, int h)					// render buffer taking into account time & scrolling
 {
 	if (!menuactive() && centerlines)
@@ -772,7 +772,7 @@ void writecompletions(FILE *f)
 	);
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // joystick support
 char* getkeyaction(char* keyname)
 {
 	char* key = newstring(keyname);

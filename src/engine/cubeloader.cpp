@@ -356,7 +356,7 @@ struct cubeloader
 
 void importcube(char *name) 
 { 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // alternate method for localhost connection
     if(otherclients()) return;
 #else
     if(multiplayer()) return;

@@ -7,14 +7,17 @@ Legend [
 ]
 
 = wip edition =
+mod: 'fullbright' and 'fullbrightlevel' now world vars
+mod: proper world variable resetting, defaulting, saving, and reloading
+mod: menu goes back a screen on input when unconnected instead of clearing
+mod: version increment to v0.33
+mod: moved server privilege definitions engine side for commands
 mod: automatic path() in findfile() so createdir() successfully creates proper file paths
 mod: 'rehash [nosave]' for reloading all init configuration
 mod: 'exists fname [mode]' for script checking file existence
 bfg: updated menus
-mod: 'gravity', 'speed', 'jumpvel', 'watertype', 'watervel'
- - variables moved server side
- - added to world variable table for etz save/load
-mod: preliminary variable saving/loading to extension file
+mod: 'gravity', 'speed', 'jumpvel', 'watertype', 'watervel' added to world variables
+mod: world variable saving/loading to extension file
 bfg: updated map config
 mod: imported some sauerbraten content which permission was given for
 mod: ssp and krs removed for future integration elsewhere

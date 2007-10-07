@@ -7,7 +7,7 @@ struct entities : icliententities
 
 	entities(fpsclient &_cl) : cl(_cl)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 		CCOMMAND(entdelink, "i", (entities *self, int *val), self->extentdelink(*val));
 		CCOMMAND(entlink, "i", (entities *self, int *val), self->extentlink(*val));
 #endif
@@ -17,7 +17,7 @@ struct entities : icliententities
 	
 	char *itemname(int i)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities, blood frontier support
 		if (g_bf) return NULL;
 		int t = ents[i]->type;
 		if(t<I_SHELLS || t>I_QUAD) return NULL;
@@ -31,7 +31,7 @@ struct entities : icliententities
 	
 	char *entmdlname(int type)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // blood frontier support
 		if (g_bf)
 		{
 			static char *bfmdlnames[] =
@@ -69,7 +69,7 @@ struct entities : icliententities
 
 	void renderentities()
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 #define entfocus(i, f) \
 	{ int n = efocus = (i); if(n>=0) { extentity &e = *ents[n]; f; } }
 
@@ -94,7 +94,7 @@ struct entities : icliententities
 		{
 			extentity &e = *ents[i];
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 			if (isext(e.type))
 			{
 				extentitem &t = extentitems[e.type - CAMERA];
@@ -119,7 +119,7 @@ struct entities : icliententities
 				if(!e.spawned && e.type!=TELEPORT) continue;
 				if(e.type<I_SHELLS || e.type>TELEPORT) continue;
 				renderent(e, e.type, (float)(1+sin(cl.lastmillis/100.0+e.o.x+e.o.y)/20), cl.lastmillis/10.0f);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 			}
 #endif
 		}
@@ -142,7 +142,7 @@ struct entities : icliententities
 
 	void addammo(int type, int &v, bool local = true)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities, blood frontier
 		itemstat &is = getitem(type-I_SHELLS);
 #else
 		itemstat &is = itemstats[type-I_SHELLS];
@@ -167,7 +167,7 @@ struct entities : icliententities
 		if(type<I_SHELLS || type>I_QUAD) return;
         ents[n]->spawned = false;
         if(!d) return;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities, blood frontier
 		itemstat &is = getitem(type-I_SHELLS);
 		if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
 		playsound(getitem(type-I_SHELLS).sound, d!=cl.player1 ? &d->o : NULL); 
@@ -204,7 +204,7 @@ struct entities : icliententities
 			if(beenhere<0) beenhere = e;
 			if(ents[e]->attr2==tag)
 			{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 				cl.bc.wayupdpos(d, ents[n]->o);
 #endif
 				d->o = ents[e]->o;
@@ -225,7 +225,7 @@ struct entities : icliententities
 			default:
 				if(d->canpickup(ents[n]->type))
 				{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // bots
 					if (d==cl.player1) cl.cc.addmsg(SV_ITEMPICKUP, "ri", n);
 					else if (cl.bc.isbot(d)) cl.bc.pickup(n, d);
 #else
@@ -255,7 +255,7 @@ struct entities : icliententities
 			case JUMPPAD:
 			{
 				if(d->lastpickup==ents[n]->type && cl.lastmillis-d->lastpickupmillis<300) break;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 				cl.bc.wayupdpos(d, ents[n]->o);
 #endif
 				d->lastpickup = ents[n]->type;
@@ -315,7 +315,7 @@ struct entities : icliententities
 
 	void fixentity(extentity &e)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 		extentfix(e);
 #endif
 		switch(e.type)
@@ -359,7 +359,7 @@ struct entities : icliententities
 	const char *entnameinfo(entity &e) { return ""; }
 	const char *entname(int i)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 		if (i >= CAMERA) return extentname(i);
 #endif
 		static const char *entnames[] =
@@ -397,7 +397,7 @@ struct entities : icliententities
 	void editent(int i)
 	{
 		extentity &e = *ents[i];
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 		extentedit(i);
 		if (multiplayer(false) && e.type < CAMERA) cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
 #else
@@ -411,7 +411,7 @@ struct entities : icliententities
 		return 4.0f;
 	}
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 	IVARP(showallwp, 0, 0, 1);
 
 	const char *extentname(int i)

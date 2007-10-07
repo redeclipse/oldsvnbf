@@ -1153,9 +1153,11 @@ void patchlight(int *quality)
 
 COMMAND(patchlight, "i");
 
+#ifdef BFRONTIER // fullbrightlevel support, world variables
+VARFW(fullbright, 0, 0, 1, initlights());
+VARW(fullbrightlevel, 0, 128, 255);
+#else
 VARF(fullbright, 0, 0, 1, initlights());
-#ifdef BFRONTIER
-VAR(fullbrightlevel, 0, 128, 255);
 #endif
 
 vector<GLuint> lmtexids;
@@ -1177,7 +1179,7 @@ void clearlights()
 	}
 	if(nolights) return;
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // fullbright and fullbrightlevel support
 	uchar bright[3] = { fullbrightlevel, fullbrightlevel, fullbrightlevel };
 #else
     uchar bright[3] = { 128, 128, 128 };
@@ -1273,7 +1275,7 @@ static void find_unlit(int i)
 
 void initlights()
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // fullbright and fullbrightlevel support
 	if(nolights || fullbright || lightmaps.empty())
 #else
     if(nolights || (fullbright && editmode) || lightmaps.empty())
@@ -1291,7 +1293,7 @@ void initlights()
 	createtexture(lmtexids[LMID_AMBIENT], 1, 1, unlit, 0, false);
 	bvec front(128, 128, 255);
 	createtexture(lmtexids[LMID_AMBIENT1], 1, 1, &front, 0, false);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // fullbright and fullbrightlevel support
 	uchar bright[3] = { fullbrightlevel, fullbrightlevel, fullbrightlevel };
 #else
     uchar bright[3] = { 128, 128, 128 };
@@ -1317,7 +1319,7 @@ void initlights()
 
 void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float ambient)
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // fullbright and fullbrightlevel support
 	if(nolights || fullbright || lightmaps.empty())
 #else
     if(nolights || (fullbright && editmode) || lightmaps.empty())

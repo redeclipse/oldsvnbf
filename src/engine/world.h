@@ -9,7 +9,7 @@ enum							// hardcoded texture numbers
 };
 
 #define MAPVERSION 24			// bump if map format changes, see worldio.cpp
-#ifdef BFRONTIER
+#ifdef BFRONTIER // map extensions
 #define EXTVERSION 4
 #endif
 
@@ -33,7 +33,7 @@ struct header					// map file format header
 	uchar reserved[1+12];
 	char maptitle[128];
 };
-#ifndef BFRONTIER
+#ifndef BFRONTIER // moved to iengine.h
 enum							// cube empty-space materials
 {
 	MAT_AIR = 0,				// the default, fill the empty space with air
@@ -56,7 +56,7 @@ enum
 #define isclipped(mat) ((mat) >= MAT_CLIP && (mat) < MAT_NOCLIP)
 
 // VVEC_FRAC must be between 0..3
-#ifdef BFRONTIER
+#ifdef BFRONTIER // smaller editing grid size deliciousness
 #define VVEC_FRAC 3
 #else
 #define VVEC_FRAC 1

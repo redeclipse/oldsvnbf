@@ -630,7 +630,7 @@ void rendershadowmapreceivers()
     glEnable(GL_TEXTURE_2D);
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // variable caustics length
 #define NUMCAUSTICS 100
 VAR(causticnum, 0, 50, NUMCAUSTICS);
 #else
@@ -646,7 +646,7 @@ static Texture *caustictex[NUMCAUSTICS] = { NULL };
 void loadcaustics()
 {
     if(caustictex[0]) return;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // variable caustics length
     loopi(causticnum)
 #else
     loopi(NUMCAUSTICS)
@@ -687,7 +687,7 @@ void rendercaustics(float z, bool refract)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ZERO, GL_SRC_COLOR);
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // variable caustics length
 	int tex = (lastmillis/causticmillis)%causticnum;
 #else
 	int tex = (lastmillis/causticmillis)%NUMCAUSTICS;
@@ -699,7 +699,7 @@ void rendercaustics(float z, bool refract)
 	{
 		glActiveTexture_(GL_TEXTURE1_ARB);
 		glEnable(GL_TEXTURE_2D);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // vcariable caustics length
         glBindTexture(GL_TEXTURE_2D, caustictex[(tex+1)%causticnum]->gl);
 #else
         glBindTexture(GL_TEXTURE_2D, caustictex[(tex+1)%NUMCAUSTICS]->gl);

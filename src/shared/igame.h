@@ -136,10 +136,12 @@ struct igameclient
     virtual void g3d_gamemenus() = 0;
     virtual void crosshaircolor(float &r, float &g, float &b) {} 
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}
+#ifndef BFRONTIER // alternate camera
     virtual void setupcamera() {}
+#endif
     virtual void adddynlights() {}
     virtual void particletrack(physent *owner, vec &o, vec &d) {}
-#ifdef BFRONTIER
+#ifdef BFRONTIER // alternate camera
 	virtual void recomputecamera()
 	{
 		extern bool deathcam;

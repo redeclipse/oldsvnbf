@@ -138,7 +138,7 @@ void toggleedit()
 	cancelsel();
 	keyrepeat(editmode);
 	editing = entediting = editmode;
-#ifndef BFRONTIER
+#ifndef BFRONTIER // fullbright and fullbrightlevel support
 	extern int fullbright;
 	if(fullbright) initlights();
 #endif

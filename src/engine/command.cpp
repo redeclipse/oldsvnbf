@@ -3,7 +3,7 @@
 
 #include "pch.h"
 #ifdef STANDALONE
-#ifdef BFRONTIER
+#ifdef BFRONTIER // better header
 #include "minimal.h"
 #else
 #include "cube.h"
@@ -20,7 +20,7 @@ extern void conoutf(const char *s, ...);
 void itoa(char *s, int i) { s_sprintf(s)("%d", i); }
 char *exchangestr(char *o, const char *n) { delete[] o; return newstring(n); }
 
-#ifndef BFRONTIER
+#ifndef BFRONTIER // we put this in command.h
 typedef hashtable<char *, ident> identtable;
 #endif
 
@@ -91,7 +91,7 @@ void pusha(char *name, char *action)
 	if(!id)
 	{
 		name = newstring(name);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server and world vars
 		ident init(ID_ALIAS, name, newstring(""), persistidents, false, false);
 #else
 		ident init(ID_ALIAS, name, newstring(""), persistidents);
@@ -121,7 +121,7 @@ void aliasa(char *name, char *action)
 	if(!b) 
 	{
 		name = newstring(name);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server and world vars
 		ident b(ID_ALIAS, name, action, persistidents, false, false);
 #else
 		ident b(ID_ALIAS, name, action, persistidents);
@@ -153,7 +153,7 @@ COMMAND(alias, "ss");
 
 // variable's and commands are registered through globals, see cube.h
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server and world vars
 int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool server, bool world)
 {
 	if(!idents) idents = new identtable;
@@ -204,7 +204,7 @@ const char *getalias(char *name)
 	return i && i->_type==ID_ALIAS ? i->_action : "";
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server and world vars
 bool addcommand(char *name, void (*fun)(), char *narg, bool server, bool world)
 {
 	if(!idents) idents = new identtable;
@@ -331,7 +331,7 @@ char *lookup(char *n)							// find value of ident referenced with $ in exp
 	return n;
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 char *parseword(char *&p, bool isserver)						// parse single argument, including expressions
 #else
 char *parseword(char *&p)                       // parse single argument, including expressions
@@ -339,13 +339,13 @@ char *parseword(char *&p)                       // parse single argument, includ
 {
 	for(;;)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 		p += strspn(p, isserver ? " " : " \t\r");
 #else
         p += strspn(p, " \t\r");
 #endif
 		if(p[0]!='/' || p[1]!='/') break;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 		p += strcspn(p, isserver ? "\0" : "\n\0");  
 #else
         p += strcspn(p, "\n\0");  
@@ -355,7 +355,7 @@ char *parseword(char *&p)                       // parse single argument, includ
 	{
 		p++;
 		char *word = p;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 		p += strcspn(p, isserver ? "\"\0" : "\"\r\n\0");
 #else
         p += strcspn(p, "\"\r\n\0");
@@ -364,7 +364,7 @@ char *parseword(char *&p)                       // parse single argument, includ
 		if(*p=='\"') p++;
 		return s;
 	}
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 	if(!isserver && *p=='(') return parseexp(p, ')');
 	if(!isserver && *p=='[') return parseexp(p, ']');
 #else
@@ -374,7 +374,7 @@ char *parseword(char *&p)                       // parse single argument, includ
 	char *word = p;
 	for(;;)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 		p += strcspn(p, isserver ? "/ " : "/; \t\r\n\0");
 #else
         p += strcspn(p, "/; \t\r\n\0");
@@ -385,7 +385,7 @@ char *parseword(char *&p)                       // parse single argument, includ
 	}
 	if(p-word==0) return NULL;
 	char *s = newstring(word, p-word);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 	if(!isserver && *s=='$') return lookup(s);				// substitute variables
 #else
     if(*s=='$') return lookup(s);               // substitute variables
@@ -417,7 +417,7 @@ char *commandret = NULL;
 extern const char *addreleaseaction(const char *s);
 #endif
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 char *executeret(char *p, bool isserver)
 #else
 char *executeret(char *p)               // all evaluation happens here, recursively
@@ -434,7 +434,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 		{
 			w[i] = "";
 			if(i>numargs) continue;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 			char *s = parseword(p, isserver);			 // parse and evaluate exps
 #else
             char *s = parseword(p);             // parse and evaluate exps
@@ -443,7 +443,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 			else numargs = i;
 		}
 		
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 		p += strcspn(p, isserver ? "\0" : ";\n\0");
 #else
         p += strcspn(p, ";\n\0");
@@ -463,7 +463,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 		else
 		{	 
 			ident *id = idents->access(c);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 			if (isserver && (!id || id->_server == false))
 			{
 				s_sprintfd(z)("invalid server command: %s", c);
@@ -477,7 +477,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 					conoutf("unknown command: %s", c);
 				setretval(newstring(c));
 			}
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support, client only
 #ifndef STANDALONE
 			else if (!isserver && id->_server == true)
 			{
@@ -579,7 +579,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 					if(id->_override!=NO_OVERRIDE) overrideidents = true;
 					char *wasexecuting = id->_isexecuting;
 					id->_isexecuting = id->_action;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 					setretval(executeret(id->_action, isserver));
 #else
                     setretval(executeret(id->_action));
@@ -597,7 +597,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 	return retval;
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server side support
 int execute(char *p, bool isserver)
 {
 	char *ret = executeret(p, isserver);
@@ -625,14 +625,14 @@ bool execfile(char *cfgfile)
 void exec(char *cfgfile)
 {
 	if(!execfile(cfgfile)) conoutf("could not read \"%s\"", cfgfile);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // verbose support
 	else if (verbose >= 2) console("loaded script '%s'", CON_RIGHT, cfgfile);
 #endif
 }
 #ifndef STANDALONE
 void writecfg()
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // game specific configs
 	FILE *f = gameopen("config.cfg", "w");
 	if(!f) return;
 	fprintf(f, "// automatically written on exit\n\n");
@@ -841,7 +841,7 @@ void clearsleep_(int *clearoverrides)
 
 COMMANDN(clearsleep, clearsleep_, "i");
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extra script utils, definitions
 ICOMMAND(exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
 
 char *getgameident() { return sv->gameident(); }

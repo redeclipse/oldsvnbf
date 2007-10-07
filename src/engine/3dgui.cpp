@@ -83,16 +83,16 @@ bool menukey(int code, bool isdown, int cooked)
 	return true;
 }
 
-#ifndef BFRONTIER
+#ifndef BFRONTIER // we only want 2d
 VARP(gui2d, 0, 1, 1);
-#endif
+#endif // BFRONTIER
 
 static bool hascursor;
 static float cursorx = 0.5f, cursory = 0.5f;
 
 void g3d_cursorpos(float &x, float &y)
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // gui2d always
 	x = cursorx;
 	y = cursory;
 #else
@@ -108,7 +108,7 @@ void g3d_resetcursor()
 
 bool g3d_movecursor(int dx, int dy)
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // gui2d always
 	if(!hascursor) return false;
 #else
 	if(!gui2d || !hascursor) return false;
@@ -527,7 +527,7 @@ struct gui : g3d_gui
 		if(tiled) defaultshader->set();
 		if(overlaid) 
 		{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data
 			if(!overlaytex) overlaytex = textureload("packages/textures/guioverlay.png");
 #else
 			if(!overlaytex) overlaytex = textureload("data/guioverlay.png");
@@ -544,7 +544,7 @@ struct gui : g3d_gui
 	{		
 		if(visible())
 		{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data
 			if(!slidertex) slidertex = textureload("packages/textures/guislider.png");
 #else
 			if(!slidertex) slidertex = textureload("data/guislider.png");
@@ -603,7 +603,7 @@ struct gui : g3d_gui
 
 	void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n) 
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data
 		if(!skintex) skintex = textureload("packages/textures/guiskin.png");
 #else
 		if(!skintex) skintex = textureload("data/guiskin.png");
@@ -612,7 +612,7 @@ struct gui : g3d_gui
 		int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
 		float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);
 		
-#ifdef BFRONTIER
+#ifdef BFRONTIER // gui2d always
 		bool quads = false;
 		glColor4f(1.0f, 1.0f, 1.0f, 0.80f);
 #else
@@ -685,7 +685,7 @@ struct gui : g3d_gui
 				}
 			}
 			if(quads) glEnd();
-#ifndef BFRONTIER
+#ifndef BFRONTIER // gui2d always
 			else break; //if it didn't happen on the first pass, it won't happen on the second..
 		}
 		if(!gui2d) glDepthFunc(GL_ALWAYS);
@@ -715,7 +715,7 @@ struct gui : g3d_gui
 
 	void start(int starttime, float initscale, int *tab, bool allowinput)
 	{	
-#ifdef BFRONTIER
+#ifdef BFRONTIER // gui2d always
 		initscale *= 0.025f; 
 #else
 		if(gui2d) initscale *= 0.025f; 
@@ -740,14 +740,14 @@ struct gui : g3d_gui
 			curx = -xsize/2;
 			
 			glPushMatrix();
-#ifndef BFRONTIER
+#ifndef BFRONTIER // gui2d always
 			if(gui2d)
 			{
 #endif
 				glTranslatef(origin.x, origin.y, origin.z);
 				glScalef(scale.x, scale.y, scale.z);
 				light = vec(1, 1, 1);
-#ifndef BFRONTIER
+#ifndef BFRONTIER // gui2d always
 			}
 			else
 			{
@@ -778,7 +778,7 @@ struct gui : g3d_gui
 			ysize = max(ysize, (skiny[6]-skiny[5])*SKIN_SCALE);
 
 			if(tcurrent) *tcurrent = max(1, min(*tcurrent, tpos));
-#ifdef BFRONTIER
+#ifdef BFRONTIER // gui2d always, passthrough has problems
 			adjustscale();
 			if(!windowhit)
 #else
@@ -787,13 +787,13 @@ struct gui : g3d_gui
 #endif
 			{
 				int intersects = INTERSECT_MIDDLE;
-#ifndef BFRONTIER
+#ifndef BFRONTIER // gui2d always
 				if(gui2d)
 				{
 #endif
 					hitx = (cursorx - origin.x)/scale.x;
 					hity = (cursory - origin.y)/scale.y;
-#ifndef BFRONTIER
+#ifndef BFRONTIER // gui2d always
 				}
 				else
 				{
@@ -888,7 +888,7 @@ bool g3d_windowhit(bool on, bool act)
 	extern int cleargui(int n);
 	if(act) mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
 	else if(!on && windowhit) cleargui(1);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // gui2d always
 	return hascursor;
 #else
 	return gui2d ? hascursor : windowhit!=NULL;
@@ -922,7 +922,7 @@ void g3d_render()
 
 	if(guis.length())
 	{
-#ifndef BFRONTIER
+#ifndef BFRONTIER // gui2d always
 		if(gui2d)
 		{
 #endif
@@ -936,7 +936,7 @@ void g3d_render()
 			glLoadIdentity();
 
 			glDisable(GL_DEPTH_TEST);
-#ifndef BFRONTIER
+#ifndef BFRONTIER // gui2d always
 		}
 		else
 		{
@@ -956,7 +956,7 @@ void g3d_render()
 	if(guis.length())
 	{
 		glDisable(GL_BLEND);
-#ifndef BFRONTIER
+#ifndef BFRONTIER // gui2d always
 		if(gui2d)
 		{
 #endif
@@ -966,7 +966,7 @@ void g3d_render()
 			glPopMatrix();
 			glMatrixMode(GL_MODELVIEW);
 			glPopMatrix();
-#ifndef BFRONTIER
+#ifndef BFRONTIER // gui2d always
 		}
 		else
 		{ 

@@ -120,7 +120,7 @@ void draw_textf(const char *fstr, int left, int top, ...)
 	draw_text(str, left, top);
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // better text drawing with alignement, alpha, shadows, and colorpos storing
 void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, int align, ...)
 {
 	s_sprintfdlv(str, align, fstr);

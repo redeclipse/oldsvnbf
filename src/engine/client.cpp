@@ -7,7 +7,7 @@ ENetHost *clienthost = NULL;
 ENetPeer *curpeer = NULL, *connpeer = NULL;
 int connmillis = 0, connattempts = 0, discmillis = 0;
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // alternative to multiplayer because we connect to localhost
 bool otherclients(bool msg)
 {
 	// check if we're playing alone
@@ -45,7 +45,7 @@ void throttle()
 	enet_peer_throttle_configure(curpeer, throttle_interval*1000, throttle_accel, throttle_decel);
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // bot clients
 vector<bot *> bots;
 
 void botsetrate(bot *b, int rate)
@@ -285,7 +285,7 @@ void abortconnect()
 	if(curpeer) return;
 	enet_host_destroy(clienthost);
 	clienthost = NULL;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // we connect to localhost
 	localconnect();
 #endif
 }
@@ -399,7 +399,7 @@ void sendpackettoserv(ENetPacket *packet, int chan)
 
 void c2sinfo(dynent *d, int rate)					 // send update to the server
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // bot clients
 	loopv(bots)
 	{
 		bot *b = bots[i];
@@ -431,7 +431,7 @@ void localservertoclient(int chan, uchar *buf, int len)	// processes any updates
 	cc->parsepacketclient(chan, p);
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // bot clients too
 void clientkeepalive()
 {
 	if (clienthost) enet_host_service(clienthost, NULL, 0);
@@ -448,7 +448,7 @@ void clientkeepalive() { if(clienthost) enet_host_service(clienthost, NULL, 0); 
 
 void gets2c()			// get updates from the server
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // bot clients
 	loopv(bots)
 	{
 		bot *b = bots[i];

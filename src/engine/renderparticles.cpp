@@ -86,7 +86,7 @@ static void renderflares(int time)
 	glDisable(GL_DEPTH_TEST);
 
 	static Texture *flaretex = NULL;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data
 	if(!flaretex) flaretex = textureload("packages/textures/lensflares.png");
 #else
 	if(!flaretex) flaretex = textureload("data/lensflares.png");
@@ -525,7 +525,7 @@ static void cleanupexplosion()
 	}
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extra particles
 #define MAXPARTYPES 23
 #else
 #define MAXPARTYPES 22
@@ -563,7 +563,7 @@ static bool emit_particles()
 	return emit;
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extra particles
 #define PART_TEXS 11
 static Texture *parttexs[PART_TEXS];
 #else
@@ -572,7 +572,7 @@ static Texture *parttexs[10];
 
 void particleinit()
 {	
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data and extra particles
     parttexs[0] = textureload("packages/textures/base.png");
     parttexs[1] = textureload("packages/textures/ball1.png");
     parttexs[2] = textureload("packages/textures/smoke.png");
@@ -644,7 +644,7 @@ static struct parttype { int type; int gr, tex; float sz; int collide; } parttyp
 	{ PT_ENT|PT_TRAIL|PT_LERP, 2, 0, 0.60f, 0 }, // 19 water, entity 
 	{ PT_ENT,		 20,  1,  4.8f,  0 }, // 20 fireball1, entity
     { PT_LIGHTNING|PT_TRACK,    0,  9, 0.28f,  0 }, // 21 lightning
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extra particles
 	{ PT_LIGHTNING|PT_TRACK,    0,  10, 0.60f,  0 }, // 22 spark
 #endif
 };
@@ -1444,7 +1444,7 @@ void entity_particles()
 	}
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extra particle helpers
 void part_textf(const vec &s, char *t, bool moving, int fade, int color, ...)
 {
     if(shadowmapping) return;

@@ -5,7 +5,7 @@
 extern igameclient	 *cl;
 extern igameserver	 *sv;
 extern iclientcom	  *cc;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extra sub modules
 extern ibotcom *bc;
 extern iphysics *ph;
 #endif
@@ -354,7 +354,11 @@ extern void attachentities();
 extern void freeoctaentities(cube &c);
 extern bool pointinsel(selinfo &sel, vec &o);
 
+#ifdef BFRONTIER
+extern void resetmap(bool load = false);
+#else
 extern void resetmap();
+#endif
 extern void startmap(const char *name);
 
 // rendermodel

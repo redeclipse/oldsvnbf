@@ -33,7 +33,7 @@ void fatal(char *s, char *o)	// failure exit
 	s_sprintfd(msg)("%s%s\n", s, o);
 	printf(msg);
 	#ifdef WIN32
-#ifdef BFRONTIER
+#ifdef BFRONTIER // blood frontier
 		MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
 #else
 		MessageBox(NULL, msg, "sauerbraten fatal error", MB_OK|MB_SYSTEMMODAL);
@@ -55,7 +55,7 @@ bool initwarning()
 {
 	if(!initing) 
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // blood frontier
 		if(restoredinits) conoutf("Please restart Blood Frontier for this setting to take effect.");
 		else conoutf("Please restart Blood Frontier with the -r command-line option for this setting to take effect.");
 #else
@@ -114,7 +114,7 @@ void screenshot(char *filename)
 	if(!filename[0])
 	{
 		static string buf;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // better screenshot names
 		char *map = cl->getclientmap();
 		s_sprintf(buf)("%s_%li.bmp", *map ? map : "untitled", time(NULL));
 #else
@@ -140,7 +140,7 @@ void computescreen(const char *text, Texture *t)
 	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // black background
 	glClearColor(0.f, 0.f, 0.f, 1);
 #else
 	glClearColor(0.15f, 0.15f, 0.15f, 1);
@@ -182,8 +182,8 @@ void computescreen(const char *text, Texture *t)
 			glEnable(GL_BLEND);
 		}
 		int x = (w-512)/2, y = 128;
-#ifdef BFRONTIER
-		settexture("packages/textures/sauer_logo_512_256a.png");
+#ifdef BFRONTIER // blood frontier and moved data
+		settexture("packages/textures/bfrontierlogo.png");
 #else
 		settexture("data/sauer_logo_512_256a.png");
 #endif
@@ -238,7 +238,7 @@ void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, 
 {
 	if(!inbetweenframes) return;
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // unconnected state
 	updateframe(false);
 #else
 	clientkeepalive();	  // make sure our connection doesn't time out while loading maps etc.
@@ -397,7 +397,7 @@ void stackdumper(unsigned int type, EXCEPTION_POINTERS *ep)
 	EXCEPTION_RECORD *er = ep->ExceptionRecord;
 	CONTEXT *context = ep->ContextRecord;
 	string out, t;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // blood frontier
 	s_sprintf(out)("Blood Frontier Win32 Exception: 0x%x [0x%x]\n\n", er->ExceptionCode, er->ExceptionCode==EXCEPTION_ACCESS_VIOLATION ? er->ExceptionInformation[1] : -1);
 #else
 	s_sprintf(out)("Sauerbraten Win32 Exception: 0x%x [0x%x]\n\n", er->ExceptionCode, er->ExceptionCode==EXCEPTION_ACCESS_VIOLATION ? er->ExceptionInformation[1] : -1);
@@ -466,7 +466,7 @@ static void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = total
 VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
 VARFP(clockfix, 0, 0, 1, clockreset());
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // blood frontier, grabmouse, auto performance, unconnected state, rehashing
 VAR(bloodfrontier, 1, BFRONTIER, -1); // for scripts
 VARP(online, 0, 1, 1); // if so, then enable certain actions
 VARP(verbose, 0, 0, 2); // be more or less expressive to console
@@ -731,7 +731,7 @@ int main(int argc, char **argv)
 	int fs = SDL_FULLSCREEN, par = 0;
 	char *load = NULL, *initscript = NULL;
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // so we have it in the console too
 	#define log(s) conoutf("init: %s", s);
 #else
 	#define log(s) puts("init: " s)
@@ -790,17 +790,7 @@ int main(int argc, char **argv)
 	//#ifdef WIN32
 	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 	//#endif
-#ifdef BFRONTIER
-	//if (!fs)
-	//{
-	//	#ifdef WIN32
-	//	string var;
-	//	if (!GetEnvironmentVariable("SDL_VIDEO_WINDOW_POS", var, sizeof(string)-1))
-	//		SetEnvironmentVariable("SDL_VIDEO_WINDOW_POS", "0,0");
-	//	#else
-	//	setenv("SDL_VIDEO_WINDOW_POS", "0,0", 0);
-	//	#endif
-	//}
+#ifdef BFRONTIER // joytick support
 	par |= SDL_INIT_JOYSTICK;
 #endif
 
@@ -877,7 +867,7 @@ int main(int argc, char **argv)
 	fullscreen = fs!=0;
 
 	log("video: misc");
-#ifdef BFRONTIER
+#ifdef BFRONTIER // blood frontier, game name support
 	s_sprintfd(caption)("Blood Frontier: %s", sv->gamename());
 	SDL_WM_SetCaption(caption, NULL);
 #else
@@ -894,7 +884,7 @@ int main(int argc, char **argv)
 	persistidents = false;
 	if(!execfile("data/stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
     gl_init(scr_w, scr_h, hasbpp ? colorbits : 0, config&1 ? depthbits : 0, config&4 ? fsaa : 0);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data
     notexture = textureload("packages/textures/notexture.png");
 #else
     notexture = textureload("data/notexture.png");
@@ -904,7 +894,7 @@ int main(int argc, char **argv)
 	log("console");
 	if(!execfile("data/font.cfg")) fatal("cannot find font definitions");
 	if(!setfont("default")) fatal("no default font specified");
-#ifdef BFRONTIER
+#ifdef BFRONTIER // unbuffered i/o
 	setbuf(stdout, NULL);
 	setbuf(stderr, NULL);
 #endif
@@ -919,13 +909,13 @@ int main(int argc, char **argv)
 
 	log("sound");
 	initsound();
-#ifdef BFRONTIER
+#ifdef BFRONTIER // joystick support
 	log("joystick");
 	initjoy();
 #endif
 
 	log("cfg");
-#ifdef BFRONTIER
+#ifdef BFRONTIER // external functions for config and game initialisation
 	rehash(false);
 	startgame(true, load, initscript);
 #else
@@ -964,14 +954,14 @@ int main(int argc, char **argv)
 
 	resetfpshistory();
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // grabmouse support
 	int ignore = 5;
 #else
 	int ignore = 5, grabmouse = 0;
 #endif
 	for(;;)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // external frame rendering
 		updateframe(true);
 #else
 		static int frames = 0;
@@ -1034,7 +1024,7 @@ int main(int argc, char **argv)
 					break;
 
 				case SDL_ACTIVEEVENT:
-#ifdef BFRONTIER
+#ifdef BFRONTIER // grabmouse support
 					if(event.active.state & SDL_APPINPUTFOCUS)
 						setvar("grabmouse", event.active.gain, true);
 #else
@@ -1048,7 +1038,7 @@ int main(int argc, char **argv)
 
 				case SDL_MOUSEMOTION:
 					if(ignore) { ignore--; break; }
-#ifdef BFRONTIER
+#ifdef BFRONTIER // grabmouse support
 					if(!(screen->flags&SDL_FULLSCREEN) && grabmouse)
 					{	
 						#ifdef __APPLE__
@@ -1085,11 +1075,11 @@ int main(int argc, char **argv)
 					lastbut = event.button.button;
 					break;
 			}
-#ifdef BFRONTIER
+#ifdef BFRONTIER // joystick support
 			processjoy(&event);
 #endif
 		}
-#ifdef BFRONTIER
+#ifdef BFRONTIER // joystick support, text colorpos reset
 		movejoy();
 		colorpos = 0; // last but not least.
 #endif

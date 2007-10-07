@@ -28,7 +28,7 @@ vec menuinfrontofplayer()
 
 int cleargui(int n = 0)
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // unconnected state support
 	int m = guistack.length() - (curpeer!=NULL ? 0 : 1), clear = n > 0 ? min(m, n) : m;
 #else
 	int clear = guistack.length();
@@ -36,7 +36,7 @@ int cleargui(int n = 0)
 #endif
 	loopi(clear) delete[] guistack.pop();
 	if(!guistack.empty()) showgui(guistack.last());
-#ifdef BFRONTIER
+#ifdef BFRONTIER // menu sounds
 	if (clear) cl->menuevent(MN_BACK);
 #endif
 	return clear;
@@ -229,7 +229,7 @@ void showgui(char *name)
 	}
 	menutab = 1;
 	menustart = totalmillis;	
-#ifdef BFRONTIER
+#ifdef BFRONTIER // menu sounds
 	cl->menuevent(MN_INPUT);
 #endif
 }
@@ -292,7 +292,15 @@ void menuprocess()
 	executelater.deletecontentsa();
 	if(clearlater)
 	{
+#ifdef BFRONTIER // unconnected state support
+		if(level==guistack.length())
+		{
+			if (curpeer) guistack.deletecontentsa();
+			else delete[] guistack.pop();
+		}
+#else
 		if(level==guistack.length()) guistack.deletecontentsa();
+#endif
 		clearlater = false;
 	}
 }
@@ -301,7 +309,7 @@ void g3d_mainmenu()
 {
 	if(!guistack.empty()) 
 	{	
-#ifdef BFRONTIER
+#ifdef BFRONTIER // gui2d always
 		g3d_addgui(&mmcb, menupos, true);
 #else
 		extern int gui2d;
@@ -311,6 +319,6 @@ void g3d_mainmenu()
 	}
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // external access to check if menu is active
 bool menuactive() { return !guistack.empty(); };
 #endif

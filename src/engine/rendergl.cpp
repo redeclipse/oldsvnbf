@@ -365,7 +365,7 @@ vec worldpos, camright, camup;
 
 void findorientation()
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // gamme view control
 	cl->findorientation();
 #else
 	vec dir;
@@ -393,7 +393,7 @@ void transplayer()
 	glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);	
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // game view control
 VARFP(fov, 1, 120, 360, cl->fixview());
 #else
 VARP(fov, 10, 105, 150);
@@ -404,7 +404,7 @@ int xtraverts, xtravertsva;
 VAR(fog, 16, 4000, 1000024);
 VAR(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // game view control, extra thirdperson variables
 VARFP(thirdperson, 0, 0, 1, cl->fixview());
 VARFP(thirdpersondistance, 1, 8, INT_MAX-1, cl->fixview()); // distance
 VARFP(thirdpersonheight, 1, 6, INT_MAX-1, cl->fixview()); // height
@@ -416,14 +416,14 @@ VAR(thirdpersondistance, 10, 50, 1000);
 #endif
 physent *camera1 = NULL;
 bool deathcam = false;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // game view control, extra thirdperson support
 bool isthirdperson() { return cl->gamethirdperson() || (reflecting && !refracting); }
 #else
 bool isthirdperson() { return player!=camera1 || player->state==CS_DEAD || (reflecting && !refracting); }
 #endif
 void recomputecamera()
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // game view control
 	cl->recomputecamera();
 #else
     cl->setupcamera();
@@ -457,7 +457,7 @@ void recomputecamera()
 #endif
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // redefined for extern in iengine.h
 void project(float fovy, float aspect, int farplane, bool flipx, bool flipy)
 #else
 void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false)
@@ -858,7 +858,7 @@ void gl_drawframe(int w, int h)
 	glEnable(GL_FOG);
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // better crosshair support
 VARP(crosshairsize, 0, 15, 200);
 VARP(cursorsize, 0, 30, 200);
 #else
@@ -879,7 +879,7 @@ static Texture *crosshair = NULL;
 void loadcrosshair(const char *name)
 {
     crosshair = textureload(name, 3, true);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data
     if(crosshair==notexture) crosshair = textureload("packages/textures/crosshair.png", 3, true);
 #else
     if(crosshair==notexture) crosshair = textureload("data/crosshair.png", 3, true);
@@ -897,14 +897,14 @@ void writecrosshairs(FILE *f)
 void drawcrosshair(int w, int h)
 {
 	bool windowhit = g3d_windowhit(true, false);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // game crosshair control
 	if(!windowhit && !cl->wantcrosshair()) return;
 #else
     if(!windowhit && (hidehud || player->state==CS_SPECTATOR)) return;
 #endif
 
 	static Texture *cursor = NULL;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data
     if(!cursor) cursor = textureload("packages/textures/guicursor.png", 3, true);
     if(!crosshair) crosshair = textureload("packages/textures/crosshair.png", 3, true);
 #else
@@ -965,7 +965,7 @@ void gl_drawhud(int w, int h, int fogmat)
 
     glEnable(GL_BLEND);
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // game hud colour control
 	vec colour;
 	if(cl->gethudcolour(colour))
 	{
@@ -1033,7 +1033,7 @@ void gl_drawhud(int w, int h, int fogmat)
 			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
 			int fps, bestdiff, worstdiff;
 			getfps(fps, bestdiff, worstdiff);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended performace stats
 			if(showfpsrange) draw_textx("%d+%d-%d:%d", w*3-4, 4, 255, 255, 255, 255, AL_RIGHT, fps, bestdiff, worstdiff, perf);
 			else draw_textx("%d:%d", w*3-6, 4, 255, 255, 255, 255, AL_RIGHT, fps, perf);
 #else
@@ -1068,7 +1068,7 @@ void gl_drawhud(int w, int h, int fogmat)
 	glEnable(GL_DEPTH_TEST);
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // blending, entity directions, and other useful functions for primitives
 VARP(hudblend, 0, 60, 100);
 VARP(showentdir, 0, 1, 1);
 
