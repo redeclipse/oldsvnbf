@@ -715,8 +715,7 @@ static void genshadowmapvariant(Shader &s, char *sname, char *vs, char *ps)
     if(s.type & SHADER_GLSLANG)
     {
         const char *tc =
-            "shadowmaptc = vec3(gl_TextureMatrix[2] * gl_Vertex);\n"
-            "shadowmaptc.z += gl_Color.w;\n";
+            "shadowmaptc = vec3(gl_TextureMatrix[2] * gl_Vertex);\n";
         vssm.put(tc, strlen(tc));
         const char *sm =
             "vec3 smvals = texture2D(shadowmap, shadowmaptc.xy).xyz;\n"
@@ -734,8 +733,7 @@ static void genshadowmapvariant(Shader &s, char *sname, char *vs, char *ps)
             "TEMP smtc;\n"
             "DP4 smtc.x, state.matrix.texture[2].row[0], vertex.position;\n"
             "DP4 smtc.y, state.matrix.texture[2].row[1], vertex.position;\n"
-            "DP4 smtc.z, state.matrix.texture[2].row[2], vertex.position;\n"
-            "ADD smtc.z, smtc.z, vertex.color.w;\n";
+            "DP4 smtc.z, state.matrix.texture[2].row[2], vertex.position;\n";
         vssm.put(tc, strlen(tc));
         s_sprintfd(sm)("MOV result.texcoord[%d], smtc;\n", smtc);
         vssm.put(sm, strlen(sm));

@@ -122,6 +122,7 @@ void screenshot(char *filename)
 #endif
 		filename = buf;
 	}
+    else path(filename);
 	SDL_SaveBMP(image, findfile(filename, "wb"));
 	SDL_FreeSurface(image);
 }

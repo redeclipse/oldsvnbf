@@ -335,8 +335,12 @@ struct vertmodel : model
             m.numtris = numtris;
             m.tris = new tri[numtris];
             memcpy(m.tris, tris, numtris*sizeof(tri));
-            m.bumpverts = NULL;
-            if(bumpverts) m.calctangents();
+            if(bumpverts)
+            {
+                m.bumpverts = new bumpvert[numverts];
+                memcpy(m.bumpverts, bumpverts, numverts*sizeof(bumpvert));
+            }
+            else m.bumpverts = NULL;
             return &m;
         }
 
@@ -665,7 +669,6 @@ struct vertmodel : model
             DELETEA(name);
             meshes.deletecontentsp();
             DELETEA(tags);
-            DELETEA(vdata);
             if(ebuf) glDeleteBuffers_(1, &ebuf);
             loopi(MAXVBOCACHE) 
             {

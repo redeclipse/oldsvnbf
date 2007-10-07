@@ -48,7 +48,7 @@ void genverts(void *buf)
 		else if(floatvtx) { GENVERTSUV(fvertexff, buf, {}); }
 		else { GENVERTSUV(vertexff, buf, {}); }
 	}
-    else if(floatvtx) { GENVERTSUV(fvertex, buf, { f->n = v.n; f->alpha = v.alpha; }); }
+    else if(floatvtx) { GENVERTSUV(fvertex, buf, { f->n = v.n; }); }
 }
 
 struct vboinfo
@@ -174,7 +174,7 @@ struct vechash
 	vechash() { clear(); }
 	void clear() { loopi(size) table[i] = -1; chain.setsizenodelete(0); }
 
-    int access(const vvec &v, short tu, short tv, const bvec &n, uchar alpha)
+    int access(const vvec &v, short tu, short tv, const bvec &n)
 	{
 		const uchar *iv = (const uchar *)&v;
 		uint h = 5381;
@@ -183,7 +183,7 @@ struct vechash
 		for(int i = table[h]; i>=0; i = chain[i])
 		{
 			const vertex &c = verts[i];
-            if(c.x==v.x && c.y==v.y && c.z==v.z && c.n==n && c.alpha==alpha)
+            if(c.x==v.x && c.y==v.y && c.z==v.z && c.n==n)
 			{
 				 if(!tu && !tv) return i; 
 				 if(c.u==tu && c.v==tv) return i;
@@ -194,7 +194,6 @@ struct vechash
 		vtx.u = tu;
 		vtx.v = tv;
 		vtx.n = n;
-        vtx.alpha = alpha;
 		chain.add(table[h]);
 		return table[h] = verts.length()-1;
 	}
@@ -216,7 +215,7 @@ struct sortkey
 struct sortval
 {
 	 int unlit;
-	 usvector dims[3];
+     usvector dims[6];
 
 	 sortval() : unlit(0) {}
 };
@@ -288,7 +287,7 @@ struct lodcollect
 			LightMap &lm = lightmaps[t.unlit-LMID_RESERVED];
 			short u = short((lm.unlitx + 0.5f) * SHRT_MAX/LM_PACKW), 
 				  v = short((lm.unlity + 0.5f) * SHRT_MAX/LM_PACKH);
-			loopl(3) loopvj(t.dims[l])
+            loopl(6) loopvj(t.dims[l])
 			{
 				vertex &vtx = verts[t.dims[l][j]];
 				if(!vtx.u && !vtx.v)
@@ -301,12 +300,11 @@ struct lodcollect
 					// necessary to copy these in case vechash reallocates verts before copying vtx
 					vvec vv = vtx;
 					bvec n = vtx.n;
-                    uchar alpha = vtx.alpha;
-                    t.dims[l][j] = vh.access(vv, u, v, n, alpha);
+                    t.dims[l][j] = vh.access(vv, u, v, n);
 				}
 			}
 			sortval *dst = indices.access(sortkey(k.tex, t.unlit, k.envmap));
-			if(dst) loopl(3) loopvj(t.dims[l]) dst->dims[l].add(t.dims[l][j]);
+            if(dst) loopl(6) loopvj(t.dims[l]) dst->dims[l].add(t.dims[l][j]);
 		}
 	}
 					
@@ -316,7 +314,7 @@ struct lodcollect
 
 		texs.setsizenodelete(0);
 		enumeratekt(indices, sortkey, k, sortval, t,
-			loopl(3) if(t.dims[l].length() && t.unlit<=0)
+            loopl(6) if(t.dims[l].length() && t.unlit<=0)
 			{
 				if(k.lmid>=LMID_RESERVED && lightmaps[k.lmid-LMID_RESERVED].unlitx>=0)
 				{
@@ -408,9 +406,13 @@ struct lodcollect
 				e.texture = k.tex;
 				e.lmid = t.unlit>0 ? t.unlit : k.lmid;
 				e.envmap = k.envmap;
-				loopl(3) if((e.length[l] = t.dims[l].length()))
+                ushort *startbuf = curbuf;
+                loopl(6) 
+                {
+                    if(t.dims[l].length())
 				{
 					memcpy(curbuf, t.dims[l].getbuf(), t.dims[l].length() * sizeof(ushort));
+
 					e.minvert[l] = USHRT_MAX;
 					e.maxvert[l] = 0;
 					loopvj(t.dims[l])
@@ -419,8 +421,11 @@ struct lodcollect
 						e.minvert[l] = min(e.minvert[l], curbuf[j]);
 						e.maxvert[l] = max(e.maxvert[l], curbuf[j]);
 					}
+
 					curbuf += t.dims[l].length();
 				}
+                    e.length[l] = curbuf-startbuf;
+                }
 			}
 			if(hasVBO)
 			{
@@ -441,17 +446,17 @@ double skyarea = 0;
 VARF(lodsize, 0, 32, 128, hdr.mapwlod = lodsize);
 VAR(loddistance, 0, 2000, 100000);
 
-int addtriindexes(usvector &v, int index[4])
+int addtriindexes(usvector &v, int index[4], int mask = 3)
 {
 	int tris = 0;
-	if(index[0]!=index[1] && index[0]!=index[2] && index[1]!=index[2])
+    if(mask&1 && index[0]!=index[1] && index[0]!=index[2] && index[1]!=index[2])
 	{
 		tris++;
 		v.add(index[0]);
 		v.add(index[1]);
 		v.add(index[2]);
 	}
-	if(index[0]!=index[2] && index[0]!=index[3] && index[2]!=index[3])
+    if(mask&2 && index[0]!=index[2] && index[0]!=index[3] && index[2]!=index[3])
 	{
 		tris++;
 		v.add(index[0]);
@@ -461,11 +466,13 @@ int addtriindexes(usvector &v, int index[4])
 	return tris;
 }
 
-int calcshadowmask(uchar *alpha, vvec *vv)
+vvec shadowmapmin, shadowmapmax;
+
+int calcshadowmask(vvec *vv)
 {
     extern vec shadowdir;
-    int planes = 0;
-    if(renderpath==R_FIXEDFUNCTION || vv[0]==vv[2]) { memset(alpha, 0, 4); return planes; }
+    int mask = 0, used = 0;
+    if(vv[0]==vv[2]) return 0;
     if(vv[0]!=vv[1] && vv[1]!=vv[2])
     {
         vvec e1(vv[1]), e2(vv[2]);
@@ -473,8 +480,7 @@ int calcshadowmask(uchar *alpha, vvec *vv)
         e2.sub(vv[0]);
         vec v;
         v.cross(e1.tovec(), e2.tovec());
-        memset(alpha, v.dot(shadowdir)<=0 ? 255 : 0, 4); 
-        planes++;
+        if(v.dot(shadowdir)>0) { mask |= 1; used |= 0x7; } 
     }
     if(vv[0]!=vv[3] && vv[2]!=vv[3])
     {
@@ -483,19 +489,24 @@ int calcshadowmask(uchar *alpha, vvec *vv)
         e2.sub(vv[0]);
         vec v;
         v.cross(e1.tovec(), e2.tovec());
-        alpha[3] = v.dot(shadowdir)<=0 ? 255 : 0;
-        if(!planes) memset(alpha, alpha[3], 3);
-        planes++;
+        if(v.dot(shadowdir)>0) { mask |= 2; used |= 0xD; }
     }
-    if(!planes) memset(alpha, 0, 4);
-    return planes;
+    if(used) loopi(4) if(used&(1<<i))
+    {
+        const vvec &v = vv[i];
+        loopk(3)
+        {
+            if(v[k]<shadowmapmin[k]) shadowmapmin[k] = v[k];
+            if(v[k]>shadowmapmax[k]) shadowmapmax[k] = v[k];
+        }
+    }
+    return mask;
 }
 
 void addcubeverts(int orient, int size, bool lodcube, vvec *vv, ushort texture, surfaceinfo *surface, surfacenormals *normals, ushort envmap = EMID_NONE)
 {
 	int index[4];
-    uchar alpha[4];
-    calcshadowmask(alpha, vv);
+    int shadowmask = texture==DEFAULT_SKY || renderpath==R_FIXEDFUNCTION ? 0 : calcshadowmask(vv);
 	loopk(4)
 	{
 		short u, v;
@@ -505,20 +516,25 @@ void addcubeverts(int orient, int size, bool lodcube, vvec *vv, ushort texture, 
 			v = short((surface->y + (surface->texcoords[k*2 + 1] / 255.0f) * (surface->h - 1) + 0.5f) * SHRT_MAX/LM_PACKH);
 		}
 		else u = v = 0;
-        index[k] = vh.access(vv[k], u, v, renderpath!=R_FIXEDFUNCTION && normals ? normals->normals[k] : bvec(128, 128, 128), alpha[k]);
+        index[k] = vh.access(vv[k], u, v, renderpath!=R_FIXEDFUNCTION && normals ? normals->normals[k] : bvec(128, 128, 128));
 	}
 
 	extern vector<GLuint> lmtexids;
+    int dim = dimension(orient);
 	sortkey key(texture, surface && lmtexids.inrange(surface->lmid) ? surface->lmid : LMID_AMBIENT, envmap);
 	if(!lodcube)
 	{
-		int tris = addtriindexes(texture == DEFAULT_SKY ? l0.explicitskyindices : l0.indices[key].dims[dimension(orient)], index);
-		if(texture == DEFAULT_SKY) explicitsky += tris;
-		else l0.curtris += tris;
+        if(texture == DEFAULT_SKY) explicitsky += addtriindexes(l0.explicitskyindices, index);
+        else
+        {
+            sortval &val = l0.indices[key];
+            l0.curtris += addtriindexes(val.dims[2*dim], index, shadowmask^3);
+            if(shadowmask) l0.curtris += addtriindexes(val.dims[2*dim+1], index, shadowmask); 
+        }
 	}
 	if(lodsize && size>=lodsize)
 	{
-		int tris = addtriindexes(texture == DEFAULT_SKY ? l1.explicitskyindices : l1.indices[key].dims[dimension(orient)], index);
+        int tris = addtriindexes(texture == DEFAULT_SKY ? l1.explicitskyindices : l1.indices[key].dims[2*dim], index);
 		if(texture != DEFAULT_SKY) l1.curtris += tris;
 	}
 }
@@ -645,7 +661,7 @@ void addskyverts(const ivec &o, int size)
 					if(coords[dim]) vv[dim] += size<<VVEC_FRAC;
 					vv[c] = coords[c] ? m.u2 : m.u1;
 					vv[r] = coords[r] ? m.v2 : m.v1;
-                    index[k] = vh.access(vv, 0, 0, bvec(128, 128, 128), 0);
+                    index[k] = vh.access(vv, 0, 0, bvec(128, 128, 128));
 				}
 				addtriindexes((!l ? l0 : l1).skyindices, index);
 			}
@@ -667,7 +683,28 @@ vtxarray *newva(int x, int y, int z, int size)
 	int allocsize = sizeof(vtxarray) + l0.size() + l1.size();
 	int bufsize = verts.length()*VTXSIZE;
 	if(!hasVBO) allocsize += bufsize; // length of vertex buffer
+
 	vtxarray *va = (vtxarray *)new uchar[allocsize];
+    va->parent = NULL;
+    va->children = new vector<vtxarray *>;
+    va->allocsize = allocsize;
+    va->x = x; va->y = y; va->z = z; va->size = size;
+    va->explicitsky = explicitsky;
+    va->skyarea = skyarea;
+    va->curvfc = VFC_NOT_VISIBLE;
+    va->occluded = OCCLUDE_NOTHING;
+    va->query = NULL;
+    va->mapmodels = NULL;
+    if(grasstris.empty()) va->grasstris = NULL;
+    else
+    {
+        va->grasstris = new vector<grasstri>;
+        va->grasstris->move(grasstris);
+    }
+    va->grasssamples = NULL;
+    va->hasmerges = 0;
+
+    va->verts = verts.length();
 	va->vbufGL = 0;
 	va->vbuf = 0; // Offset in VBO, or just null
 	va->minvert = 0;
@@ -697,25 +734,7 @@ vtxarray *newva(int x, int y, int z, int size)
 		else memcpy(va->vbuf, verts.getbuf(), bufsize);
 	}
 
-	va->parent = NULL;
-	va->children = new vector<vtxarray *>;
-	va->allocsize = allocsize;
-	va->x = x; va->y = y; va->z = z; va->size = size;
-	va->explicitsky = explicitsky;
-	va->skyarea = skyarea;
-	va->curvfc = VFC_NOT_VISIBLE;
-	va->occluded = OCCLUDE_NOTHING;
-	va->query = NULL;
-	va->mapmodels = NULL;
-	if(grasstris.empty()) va->grasstris = NULL;
-	else
-	{
-		va->grasstris = new vector<grasstri>;
-		va->grasstris->move(grasstris);
-	}
-	va->grasssamples = NULL;
-	va->hasmerges = 0;
-	wverts += va->verts = verts.length();
+    wverts += va->verts;
 	wtris  += va->l0.tris;
 	allocva++;
 	valist.add(va);
@@ -780,7 +799,7 @@ static vector<mergedface> vamerges[VVEC_INT];
 
 void genmergedfaces(cube &c, const ivec &co, int size, int minlevel = 0)
 {
-	if(!c.ext || !c.ext->merges) return;
+    if(!c.ext || !c.ext->merges || isempty(c)) return;
 	int index = 0;
 	loopi(6) if(c.ext->mergeorigin & (1<<i))
 	{
@@ -918,6 +937,8 @@ void setva(cube &c, int cx, int cy, int cz, int size, int csi)
 
 	explicitsky = 0;
 	skyarea = 0;
+    shadowmapmin = vvec(cx+size, cy+size, cz+size);
+    shadowmapmax = vvec(cx, cy, cz);
 
 	rendercube(c, cx, cy, cz, size, csi);
 
@@ -931,6 +952,9 @@ void setva(cube &c, int cx, int cy, int cz, int size, int csi)
 	ext(c).va = va;
 	va->min = bbmin;
 	va->max = bbmax;
+    va->shadowmapmin = shadowmapmin.toivec(va->x, va->y, va->z);
+    loopk(3) shadowmapmax[k] += (1<<VVEC_FRAC)-1;
+    va->shadowmapmax = shadowmapmax.toivec(va->x, va->y, va->z); 
 	if(vamms.length()) va->mapmodels = new vector<octaentities *>(vamms);
 	va->hasmerges = vahasmerges;
 
