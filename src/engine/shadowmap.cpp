@@ -30,7 +30,11 @@ VAR(shadowmapheight, 0, 32, 128);
 VARP(shadowmapdist, 128, 256, 512);
 VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
 VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
+#ifdef BFRONTIER
+VARW(shadowmapambient, 0, 0, 0xFFFFFF);
+#else
 VAR(shadowmapambient, 0, 0, 0xFFFFFF);
+#endif
 
 void createshadowmap()
 {
@@ -352,7 +356,11 @@ void setshadowdir(int angle)
     shadowdir.rotate_around_z(angle*RAD);
 }
 
+#ifdef BFRONTIER
+VARFW(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
+#else
 VARF(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
+#endif
 
 void rendershadowmap()
 {

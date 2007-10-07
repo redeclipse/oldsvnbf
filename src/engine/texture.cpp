@@ -873,7 +873,11 @@ Texture *cubemapload(const char *name, bool mipit, bool msg)
 }
 
 VARFP(envmapsize, 4, 7, 9, setupmaterials());
+#ifdef BFRONTIER
+VARW(envmapradius, 0, 128, 10000);
+#else
 VAR(envmapradius, 0, 128, 10000);
+#endif
 
 struct envmap
 {

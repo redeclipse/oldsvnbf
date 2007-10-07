@@ -5,8 +5,13 @@ VARP(grassanimdist, 0, 500, 10000);
 VARP(grassdist, 0, 500, 10000);
 VARP(grassfalloff, 0, 100, 1000);
 
+#ifdef BFRONTIER
+VARW(grasswidth, 1, 6, 64);
+VARW(grassheight, 1, 8, 64);
+#else
 VAR(grasswidth, 1, 6, 64);
 VAR(grassheight, 1, 8, 64);
+#endif
 
 void resetgrasssamples()
 {
@@ -243,7 +248,11 @@ float loddist(const vec &o)
 	return max(dist, 0);
 }
 
+#ifdef BFRONTIER
+VARW(grassrand, 0, 30, 90);
+#else
 VAR(grassrand, 0, 30, 90);
+#endif
 
 VARP(grasssamples, 0, 50, 10000);
 
@@ -380,7 +389,11 @@ void rendergrasssamples(vtxarray *va, const vec &dir)
 	}
 }
 
+#ifdef BFRONTIER
+VARW(grassblend, 0, 0, 100);
+#else
 VAR(grassblend, 0, 0, 100);
+#endif
 
 void setupgrass()
 {

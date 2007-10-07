@@ -36,7 +36,11 @@ static flare flarelist[MAXFLARE];
 static int flarecnt;
 static unsigned int shinetime = 0; //randomish 
 				 
+#ifdef BFRONTIER
+VARW(flarelights, 0, 0, 1);
+#else
 VAR(flarelights, 0, 0, 1);
+#endif
 VARP(flarecutoff, 0, 1000, 10000);
 VARP(flaresize, 20, 100, 500);
 					

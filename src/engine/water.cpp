@@ -235,7 +235,11 @@ struct Reflection
 Reflection *findreflection(int height);
 
 VARP(reflectdist, 0, 2000, 10000);
+#ifdef BFRONTIER
+VARW(waterfog, 0, 150, 10000);
+#else
 VAR(waterfog, 0, 150, 10000);
+#endif
 
 void getwatercolour(uchar *wcol)
 {
@@ -253,7 +257,11 @@ void watercolour(int *r, int *g, int *b)
 
 COMMAND(watercolour, "iii");
 
+#ifdef BFRONTIER
+VARW(lavafog, 0, 50, 10000);
+#else
 VAR(lavafog, 0, 50, 10000);
+#endif
 
 void getlavacolour(uchar *lcol)
 {
@@ -332,7 +340,11 @@ void cleanupwaterTMUs(bool refract)
 	}
 }
 
+#ifdef BFRONTIER
+VARW(waterspec, 0, 150, 1000);
+#else
 VAR(waterspec, 0, 150, 1000);
+#endif
 
 Reflection reflections[MAXREFLECTIONS];
 GLuint reflectiondb = 0;
