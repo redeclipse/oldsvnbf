@@ -64,6 +64,9 @@ typedef unsigned int uint;
 #pragma warning (disable: 4267) // conversion from 'size_t' to 'int', possible loss of data
 #pragma warning (disable: 4355) // 'this' : used in base member initializer list
 #pragma warning (disable: 4996) // 'strncpy' was declared deprecated
+#ifdef BFRONTIER
+#pragma warning (disable: 4800) // forcing value to bool 'true' or 'false' (performance warning)
+#endif
 #endif
 
 #define strcasecmp _stricmp
