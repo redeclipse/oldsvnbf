@@ -4,7 +4,7 @@
 #include "pch.h"
 
 #ifdef STANDALONE
-#ifdef BFRONTIER
+#ifdef BFRONTIER // better minimal definitions
 #include "minimal.h"
 int lastmillis = 0, totalmillis = 0, verbose = 0;
 void conoutf(const char *s, ...) { s_sprintfdlv(str, s, s); printf("%s\n", str); }
@@ -20,7 +20,7 @@ void fatal(char *s, char *o) { void cleanupserver(); cleanupserver(); printf("se
 #include "engine.h"
 #endif
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved up here so we can use them, and others removed because of external defs
 #define DEFAULTCLIENTS 6
 bool pubserv = false;
 int uprate = 0, maxclients = DEFAULTCLIENTS;
@@ -53,7 +53,7 @@ void initgame(char *game)
 	if(cl)
 	{
 		cc = cl->getcom();
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extra sub modules
 		bc = cl->getbot();
 		ph = cl->getphysics();
 #endif
@@ -163,7 +163,7 @@ void filtertext(char *dst, const char *src, bool whitespace, int len)
 	*dst = '\0';
 }
 
-#ifndef BFRONTIER
+#ifndef BFRONTIER // moved to iengine.h
 enum { ST_EMPTY, ST_LOCAL, ST_TCPIP };
 
 struct client					// server side version of "dynent" type
@@ -426,7 +426,7 @@ ENetSocket httpgetsend(ENetAddress &remoteaddress, char *hostname, char *req, ch
 	buf.data = httpget;
 	buf.dataLength = strlen((char *)buf.data);
 #ifdef STANDALONE
-#ifdef BFRONTIER
+#ifdef BFRONTIER // verbose
 	printf("sending request to %s...\n\n%s", hostname, httpget);
 #else
 	printf("sending request to %s...\n", hostname);
@@ -468,7 +468,7 @@ ENetAddress masterserver = { ENET_HOST_ANY, 80 };
 int lastupdatemaster = 0;
 string masterbase;
 string masterpath;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // enhanced master server support
 int mastertype = 0;
 #endif
 uchar masterrep[MAXTRANS];
@@ -476,7 +476,7 @@ ENetBuffer masterb;
 
 void updatemasterserver()
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // enhanced master server support
 	string path;
 	if (mastertype > 0) { s_sprintf(path)("%s?game=%s&action=register", game, masterpath); }
 	else { s_sprintf(path)("%sregister.do?action=add", masterpath); }
@@ -506,7 +506,7 @@ void checkmasterreply()
 uchar *retrieveservers(uchar *buf, int buflen)
 {
 	buf[0] = '\0';
-#ifdef BFRONTIER
+#ifdef BFRONTIER // enhanced master server support
 	string path;
 	if (mastertype > 0) { s_sprintf(path)("%s?game=%s&action=list", game, masterpath); }
 	else { s_sprintf(path)("%sretrieve.do?item=list", masterpath); }
@@ -547,7 +547,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 	return stripheader(buf);
 }
 #endif
-#ifndef BFRONTIER
+#ifndef BFRONTIER // moved up
 #define DEFAULTCLIENTS 6
 
 int uprate = 0, maxclients = DEFAULTCLIENTS;
@@ -569,7 +569,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 
 	if(!serverhost) 
 	{
-#ifndef BFRONTIER
+#ifndef BFRONTIER // local servers
 		sv->serverupdate(lastmillis, totalmillis);
 		sv->sendpackets();
 #endif
@@ -578,14 +578,14 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 		
 	// below is network only
 
-#if !defined(BFRONTIER) || defined(STANDALONE)
+#if !defined(BFRONTIER) || defined(STANDALONE) // local servers
 	lastmillis = totalmillis = (int)enet_time_get();
 #endif
 	sv->serverupdate(lastmillis, totalmillis);
 
 	sendpongs();
 	
-#ifdef BFRONTIER
+#ifdef BFRONTIER // local servers
 	if (pubserv)
 	{
 #endif
@@ -603,7 +603,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 			if(nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
 			bsend = brec = 0;
 		}
-#ifdef BFRONTIER
+#ifdef BFRONTIER // local servers
 	}
 #endif
 
@@ -678,7 +678,7 @@ void localdisconnect()
 
 void localconnect()
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // local server support
 #ifndef STANDALONE
 	if (sv->serverport()) connects("localhost");
 #endif
@@ -696,7 +696,7 @@ void initserver(bool dedicated)
 {
 	initgame(game);
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // local servers, enhanced master server support
 	pubserv = dedicated;
 	mastertype = sv->getmastertype();
 #endif
@@ -706,7 +706,7 @@ void initserver(bool dedicated)
 	s_strcpy(masterpath, mid);
 	s_strncpy(masterbase, master, mid-master+1);
 
-#ifndef BFRONTIER
+#ifndef BFRONTIER // local server support
 	if(dedicated)
 	{
 #endif
@@ -723,7 +723,7 @@ void initserver(bool dedicated)
 		pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
 		if(pongsock == ENET_SOCKET_NULL) fatal("could not create server info socket");
         else enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
-#ifndef BFRONTIER
+#ifndef BFRONTIER // local server support
 	}
 #endif
 
@@ -731,7 +731,7 @@ void initserver(bool dedicated)
 
 	if(dedicated)		// do not return, this becomes main loop
 	{
-#if !defined(BFRONTIER) || defined(STANDALONE)
+#if !defined(BFRONTIER) || defined(STANDALONE) // local server support
 		#ifdef WIN32
 		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 		#endif

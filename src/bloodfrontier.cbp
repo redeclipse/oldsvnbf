@@ -167,7 +167,7 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-DBFRONTIER=32"/>
+			<Add option="-DBFRONTIER=33"/>
 		</Compiler>
 		<Unit filename="..\data\bfg\defaults.cfg">
 			<Option compilerVar=""/>

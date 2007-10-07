@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // better miniam defs
 #ifdef STANDALONE
 #include "minimal.h"
 #else
@@ -40,7 +40,7 @@ struct fpsclient : igameclient
 	vec swaydir;
 	int suicided;
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extra modules, alternate camera, crosshairfx, camera wobble, auto respawn, rank hud
 	#include "physics.h"
 	physics ph;
 
@@ -97,7 +97,7 @@ struct fpsclient : igameclient
 		  maptime(0), minremain(0), respawnent(-1), 
 		  swaymillis(0), swaydir(0, 0, 0),
 		  suicided(-1),
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extra modules, alternate camera, rank hud
 		  ph(*this), bc(*this), cameranum(0), cameracycled(0), myrankv(0), myranks(0),
 #else
           following(-1),
@@ -108,7 +108,7 @@ struct fpsclient : igameclient
         CCOMMAND(mode, "i", (fpsclient *self, int *val), { self->setmode(*val); });
         CCOMMAND(kill, "",  (fpsclient *self), { self->suicide(self->player1); });
         CCOMMAND(taunt, "", (fpsclient *self), { self->taunt(); });
-#ifdef BFRONTIER
+#ifdef BFRONTIER // alternate camera
 		CCOMMAND(cameradir, "ii", (fpsclient *self, int *a, int *b), self->cameradir(*a, *b!=0));
 		CCOMMAND(centerrank, "", (fpsclient *self), self->setcrank());
 		CCOMMAND(gotocamera, "i", (fpsclient *self, int *a), self->setcamera(*a));
@@ -120,7 +120,7 @@ struct fpsclient : igameclient
 	}
 
 	iclientcom *getcom() { return &cc; }
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extra modules
 	ibotcom *getbot() { return &bc; }
 	iphysics *getphysics() { return &ph; }
 #endif
@@ -140,7 +140,7 @@ struct fpsclient : igameclient
 		cc.addmsg(SV_TAUNT, "r");
 	}
 
-#ifndef BFRONTIER
+#ifndef BFRONTIER // alternate follow method
 	void follow(char *arg)
     {
         if(player1->state!=CS_SPECTATOR && arg[0]) return;
@@ -167,7 +167,7 @@ struct fpsclient : igameclient
 	{
 		d->respawn();
 		d->spawnstate(gamemode);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // respawn sound
 		playsound(S_RESPAWN, d==player1 ? NULL : &d->o);
 #endif
 		return d;
@@ -194,9 +194,7 @@ struct fpsclient : igameclient
 		return NULL;
 	}
 
-#ifdef BFRONTIER
-    void setupcamera() { return; }
-#else
+#ifndef BFRONTIER // alternate camera
     void followplayer(fpsent *target)
     {
 		if(followorient() && target->state!=CS_DEAD) interpolateorientation(target, player1->yaw, player1->pitch);

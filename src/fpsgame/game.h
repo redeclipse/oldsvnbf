@@ -128,7 +128,9 @@ enum
 
 // network messages codes, c2s, c2c, s2c
 
+#ifndef BFRONTIER
 enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN };
+#endif
 
 enum
 {

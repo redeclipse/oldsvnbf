@@ -911,7 +911,11 @@ void splitocta(cube *c, int size)
 	}
 }
 
+#ifdef BFRONTIER // loading/emtpying check
+void resetmap(bool load)
+#else
 void resetmap()
+#endif
 {
 	clearoverrides();
 	clearmapsounds();
@@ -926,6 +930,34 @@ void resetmap()
 	setvar("paused", 0);
 
 	et->getents().deletecontentsp();
+
+#ifdef BFRONTIER
+	enumerate(*idents, ident, id, {
+		if (id._type == ID_VAR && id._world) *id._storage = id._val; // reset world vars
+	});
+
+	show_out_of_renderloop_progress(0, "loading config...");
+	overrideidents = true;
+	loopi(load ? 3 : 2)
+	{
+		show_out_of_renderloop_progress(float(i)/(load ? 3.f : 2.f), "loading config...");
+		switch(i)
+		{
+			case 0:
+				gameexec("map.cfg", true);
+				break;
+			case 1:
+				execfile(pcfname);
+				break;
+			case 2:
+				execfile(mcfname);
+				break;
+			default:
+				break;
+		}
+	}
+	overrideidents = false;
+#endif
 }
 
 void startmap(const char *name)
@@ -941,7 +973,11 @@ bool emptymap(int scale, bool force)	// main empty world creation routine
 		return false;
 	}
 
+#ifdef BFRONTIER
+	resetmap(false);
+#else
 	resetmap();
+#endif
 
 	strncpy(hdr.head, "OCTA", 4);
 	hdr.version = MAPVERSION;
@@ -967,13 +1003,11 @@ bool emptymap(int scale, bool force)	// main empty world creation routine
 	clearlights();
 	allchanged();
 
+#ifndef BFRONTIER // resetmap
 	overrideidents = true;
-#ifdef BFRONTIER
-	gameexec("map.cfg", true);
-#else
 	execfile("data/default_map_settings.cfg");
-#endif
 	overrideidents = false;
+#endif
 
 	startmap("");
 	player->o.z += player->eyeheight+1;
@@ -1008,12 +1042,8 @@ void mapenlarge() { if(enlargemap(false)) cl->newmap(-1); }
 COMMAND(newmap, "i");
 COMMAND(mapenlarge, "");
 
-#ifdef BFRONTIER
-void mapname_()
-{
-    result(cl->getclientmap());
-}
-COMMANDN(mapname, mapname_, "");
+#ifdef BFRONTIER // yeah
+ICOMMAND(mapname, "", (void), result(cl->getclientmap()));
 #else
 void mapname()
 {
@@ -1191,7 +1221,7 @@ void checktriggers()
 	}
 }
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended entities
 void newentity(vec &v, int type, int a1, int a2, int a3, int a4)
 {
 	extentity *t = newentity(true, v, type, a1, a2, a3, a4);

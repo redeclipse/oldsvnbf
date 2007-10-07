@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "engine.h"
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // shadowmap on by default
 VARP(shadowmap, 0, 1, 1);
 #else
 VARP(shadowmap, 0, 0, 1);

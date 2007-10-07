@@ -262,7 +262,7 @@ struct captureclient : capturestate
 
 	void drawblips(int x, int y, int s, int type, bool skipenemy = false)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data
 		const char *textures[3] = {"packages/textures/blip_red.png", "packages/textures/blip_grey.png", "packages/textures/blip_blue.png"};
 #else
 		const char *textures[3] = {"data/blip_red.png", "data/blip_grey.png", "data/blip_blue.png"};
@@ -296,7 +296,7 @@ struct captureclient : capturestate
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data, extended hud
 		int x = 1800*w/h*1/80, y = 1800*(hidehud || hidestats ? 28 : 27)/40, s = 1800*w/h*5/40;
 		glColor4f(1, 1, 1, hudblend*0.01f);
 		settexture("packages/textures/radar.png");

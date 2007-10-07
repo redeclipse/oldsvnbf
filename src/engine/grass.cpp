@@ -307,7 +307,7 @@ void rendergrasssample(const grasssample &g, const vec &o, float dist, int seed,
 	if(grasstest>1) return;
 
 	extern int fullbright;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // fullbright and fullbrightlevel support
 	if(nolights || fullbright) glColor3ub(fullbrightlevel, fullbrightlevel, fullbrightlevel);
 #else
 	if(nolights || (fullbright && editmode)) glColor3ub(128, 128, 128);

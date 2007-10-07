@@ -471,7 +471,7 @@ void autograss(char *name)
 	Slot &s = slots.last();
 	DELETEA(s.autograss);
 	s_sprintfd(pname)("packages/%s", name);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // moved data
 	s.autograss = newstring(name[0] ? pname : "packages/textures/grass.png");
 #else
 	s.autograss = newstring(name[0] ? pname : "data/grass.png");
@@ -976,7 +976,7 @@ GLuint genenvmap(const vec &o, int envmapsize)
 	else glGenerateMipmap_(GL_TEXTURE_CUBE_MAP_ARB);
 	if(rendertex) glDeleteTextures(1, &rendertex);
 	glViewport(0, 0, screen->w, screen->h);
-#ifndef BFRONTIER
+#ifndef BFRONTIER // external frame updating
     clientkeepalive();
 #endif
 	return tex;
@@ -1007,7 +1007,7 @@ void genenvmaps()
 	loopv(envmaps)
 	{
 		envmap &em = envmaps[i];
-#ifdef BFRONTIER
+#ifdef BFRONTIER // verbosity
 		show_out_of_renderloop_progress(float(i)/float(envmaps.length()), "generating environment maps...");
 #endif
 		em.tex = genenvmap(em.o, em.size ? em.size : envmapsize);

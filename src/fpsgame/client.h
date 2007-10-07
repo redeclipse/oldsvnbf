@@ -13,7 +13,7 @@ struct clientcom : iclientcom
 
 	fpsent *player1;
 	
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server version, centerprint chat
 	int sversion;
 
 	IVARP(centerchat, 0, 1, 1);
@@ -48,7 +48,7 @@ struct clientcom : iclientcom
         CCOMMAND(getteam, "", (clientcom *self), result(self->player1->team));
 	}
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // priv checker
 	bool haspriv(int flag, bool quiet = false)
 	{
 		if (player1->privilege>=flag) return true;
@@ -95,7 +95,7 @@ struct clientcom : iclientcom
 
 	void gameconnect(bool _remote)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // local server support
 		connected = false;
 #else
 		connected = true;
@@ -106,7 +106,7 @@ struct clientcom : iclientcom
 
 	void gamedisconnect()
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // server version, alternate follow method
 		sversion = -1;
 #else
         if(remote) cl.stopfollowing();
@@ -188,7 +188,7 @@ struct clientcom : iclientcom
 
     void togglespectator(int val, const char *who)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // alternate follow method
 		if (!who[0]) cl.cameranum = -player1->clientnum;
 #else
 		if(!remote) return;
@@ -253,7 +253,7 @@ struct clientcom : iclientcom
 		loopi(len) messages.add(buf[i]);
 	}
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // centerprint chat, sounds, server commands
 	void toserver(char *text)
 	{
 		console("%s:\f0 %s", (centerchat() ? CON_CENTER : 0)|CON_LEFT, cl.colorname(player1), text);
@@ -407,7 +407,7 @@ struct clientcom : iclientcom
 				else { d->armourtype = A_BLUE; d->armour = 0; }
 				d->quadmillis = f&4 ? 1 : 0;
 				f >>= 3;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // blood frontier game
 				int gamemode = cl.gamemode;
 				d->maxhealth = g_bf ? (m_noitems ? 1 : 100) : 100+(f*getitem(I_BOOST-I_SHELLS).add);
 #else
@@ -469,7 +469,7 @@ struct clientcom : iclientcom
 					return;
 				}
 				player1->clientnum = mycn;	  // we are now fully connected
-#ifdef BFRONTIER
+#ifdef BFRONTIER // blood frontier extension, local servers
 				switch (hasmap)
 				{
 					case 0:
@@ -511,7 +511,7 @@ struct clientcom : iclientcom
 					s_sprintfd(ds)("@%s", &text);
 					particle_text(d->abovehead(), ds, 9);
 				}
-#ifdef BFRONTIER
+#ifdef BFRONTIER // centerprint chat
 				console("%s:\f0 %s", (centerchat() ? CON_CENTER : 0)|CON_LEFT, cl.colorname(d), &text);
 				playsound(S_CHAT);
 #else
@@ -530,7 +530,7 @@ struct clientcom : iclientcom
 			{
 				int acn = getint(p);
 				fpsent *alive = acn<0 ? NULL : (acn==player1->clientnum ? player1 : cl.getclient(acn));
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended console support
 				console("arena round is over! next round in 5 seconds...", CON_LEFT|CON_CENTER);
 				if(!alive) console("everyone died!", CON_LEFT|CON_CENTER);
 				else if(m_teammode) console("team %s has won the round", CON_LEFT|CON_CENTER, alive->team);
@@ -566,7 +566,7 @@ struct clientcom : iclientcom
 					cl.sb.showscores(true);
 				}
 				d->state = CS_DEAD;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // rank calculator
 				cl.calcranks();
 #endif
 				break;
@@ -575,7 +575,7 @@ struct clientcom : iclientcom
 			case SV_ITEMLIST:
 			{
 				int n;
-#ifndef BFRONTIER
+#ifndef BFRONTIER // local servers, blood frontier support
 				if(mapchanged) { senditemstoserver = false; cl.et.resetspawns(); }
 #endif
 				while((n = getint(p))!=-1)
@@ -628,7 +628,7 @@ struct clientcom : iclientcom
 				s_strncpy(d->name, text, MAXNAMELEN+1);
 				getstring(text, p);
 				filtertext(d->team, text, false, MAXTEAMLEN);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // rank calculator
 				cl.calcranks();
 #endif
 				break;
@@ -645,7 +645,7 @@ struct clientcom : iclientcom
 				d->lifesequence = ls;
 				d->gunselect = gunselect;
 				d->state = CS_SPAWNING;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // respawn sound
 				playsound(S_RESPAWN, d==player1 ? NULL : &d->o);
 #endif
 				break;
@@ -665,7 +665,7 @@ struct clientcom : iclientcom
 				player1->state = CS_ALIVE;
 				findplayerspawn(player1, m_capture ? cl.cpc.pickspawn(player1->team) : -1);
 				cl.sb.showscores(false);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended console
 				if(m_arena) console("new round starting... fight!", CON_LEFT|CON_CENTER);
 #else
                 if(m_arena) conoutf("new round starting... fight!");
@@ -684,7 +684,7 @@ struct clientcom : iclientcom
 				if(!s) break;
 				if(gun==GUN_SG) cl.ws.createrays(from, to);
 				s->gunselect = max(gun, 0);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // extended gun waiting
 				gunvar(s->gunwait, s->gunselect) = 0;
 				gunvar(s->gunlast, s->gunselect) = cl.lastmillis;
 #else
@@ -708,7 +708,7 @@ struct clientcom : iclientcom
 				if(!target || !actor) break;
 				target->armour = armour;
 				target->health = health;
-#ifdef BFRONTIER
+#ifdef BFRONTIER // local servers
 				cl.damaged(damage, target, actor);
 #else
 				cl.damaged(damage, target, actor, false);
@@ -739,7 +739,7 @@ struct clientcom : iclientcom
 				}
 				if(!victim) break;
 				cl.killed(victim, actor);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // rank calculator
 				cl.calcranks();
 #endif
 				break;
@@ -952,7 +952,7 @@ struct clientcom : iclientcom
 				fpsent *w = wn==player1->clientnum ? player1 : cl.getclient(wn);
 				if(!w) return;
 				filtertext(w->team, text, false, MAXTEAMLEN);
-#ifdef BFRONTIER
+#ifdef BFRONTIER // rank calculator
 				cl.calcranks();
 #endif
 				break;
@@ -1034,7 +1034,7 @@ struct clientcom : iclientcom
 
 	void changemapserv(const char *name, int gamemode)		// forced map change from the server
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // local servers
 		if (remote && !connected) connected = true;
 #endif
 		if(remote && !m_mp(gamemode)) gamemode = 0;
@@ -1104,7 +1104,7 @@ struct clientcom : iclientcom
 	{
 		if(remote)
 		{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // priv checker
 			if(!haspriv(PRIV_ADMIN)) return;
 #else
             if(player1->privilege<PRIV_ADMIN) return;
@@ -1122,7 +1122,7 @@ struct clientcom : iclientcom
 
     void recorddemo(int val)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // priv checker
 		if(!haspriv(PRIV_ADMIN)) return;
 #else
         if(player1->privilege<PRIV_ADMIN) return;
@@ -1132,7 +1132,7 @@ struct clientcom : iclientcom
 
 	void cleardemos(int val)
 	{
-#ifdef BFRONTIER
+#ifdef BFRONTIER // priv checker
 		if(!haspriv(PRIV_ADMIN)) return;
 #else
         if(player1->privilege<PRIV_ADMIN) return;
@@ -1187,7 +1187,7 @@ struct clientcom : iclientcom
 			player1->o.add(dir.mul(-32));
 		}
 	}
-#ifdef BFRONTIER
+#ifdef BFRONTIER // other stuff
 	bool ready() { return connected; }
 	int otherclients() { return cl.players.length(); }
 

@@ -269,7 +269,7 @@ int connectwithtimeout(ENetSocket sock, char *hostname, ENetAddress &address)
  
 enum { UNRESOLVED = 0, RESOLVING, RESOLVED };
 
-#ifndef BFRONTIER
+#ifndef BFRONTIER // moved to iengine.h
 struct serverinfo
 {
 	char *name; //NOTE if string then threading+sorting lead to overwriten values
@@ -293,7 +293,7 @@ void addserver(char *servername)
 	loopv(servers) if(!strcmp(servers[i].name, servername)) return;
 	serverinfo &si = servers.add();
 	si.name = newstring(servername);
-#ifndef BFRONTIER
+#ifndef BFRONTIER // fpsserver controlled gui
 	si.full[0] = 0;
 #endif
 	si.ping = 999;
@@ -396,7 +396,7 @@ void checkpings()
 
 int sicompare(serverinfo *a, serverinfo *b)
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // fpsserver controlled gui
 	return sv->servercompare(a, b);
 #else
     bool ac = sv->servercompatible(a->name, a->sdesc, a->map, a->ping, a->attr, a->numplayers),
@@ -420,7 +420,7 @@ void refreshservers()
 	checkresolver();
 	checkpings();
 	if(totalmillis - lastinfo >= 5000) pingservers();
-#ifndef BFRONTIER
+#ifndef BFRONTIER // fpsserver controlled gui
     servers.sort(sicompare);
 	loopv(servers)
 	{
@@ -441,7 +441,7 @@ void refreshservers()
 const char *showservers(g3d_gui *cgui)
 {
 	refreshservers();
-#ifdef BFRONTIER
+#ifdef BFRONTIER // fpsserver controlled gui
     servers.sort(sicompare);
 	return sv->serverinfogui(cgui, servers);
 #else
@@ -475,7 +475,7 @@ COMMAND(updatefrommaster, "");
 
 void writeservercfg()
 {
-#ifdef BFRONTIER
+#ifdef BFRONTIER // game specific configs
 	FILE *f = gameopen("servers.cfg", "w");
 #else
 	if(!cl->savedservers()) return;

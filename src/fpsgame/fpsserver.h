@@ -342,16 +342,6 @@ struct fpsserver : igameserver
 	servmode *smode;
 
 #ifdef BFRONTIER
-	#include "duel.h"
-	duelservmode duelmode;
-
-	enum
-	{
-		CM_ANY = 0,
-		CM_ALL,
-		CM_MASTER
-	};
-	
 	#define SRVCMD(n, v, g, d, b) CCOMMANDS(n, g, d, \
 			{ \
 				if (self->cmdcontext) \
@@ -395,21 +385,19 @@ struct fpsserver : igameserver
 					mapdata(NULL), reliablemessages(false), demonextmatch(false),
 					demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
 					arenamode(*this), capturemode(*this), smode(NULL),
-					duelmode(*this), cmdcontext(NULL)
+					cmdcontext(NULL)
 	{
-		SRVCMD(version, CM_ANY, "si", (fpsserver *self, char *a, int *b), self->setversion(self->cmdcontext, a, *b));
+		SRVCMD(version, PRIV_NONE, "si", (fpsserver *self, char *a, int *b), self->setversion(self->cmdcontext, a, *b));
 		
-		SRVVAR(timelimit, &self->timelimit, CM_ALL, 0, INT_MAX-1, self->settime());
-		SRVVAR(fraglimit, &self->fraglimit, CM_ALL, 0, INT_MAX-1, );
+		SRVVAR(timelimit, &self->timelimit, PRIV_MASTER, 0, INT_MAX-1, self->settime());
+		SRVVAR(fraglimit, &self->fraglimit, PRIV_MASTER, 0, INT_MAX-1, );
 		
-		SRVVAR(duelgame, &self->duelmode.duelgame, CM_ALL, 0, 10000, );
-
-		SRVVAR(damagescale, &self->damagescale, CM_ALL, 0, 1000, );
-		SRVVAR(instakill, &self->instakill, CM_ALL, 0, 1, );
-		SRVVAR(teamdamage, &self->teamdamage, CM_ALL, 0, 1, );
+		SRVVAR(damagescale, &self->damagescale, PRIV_MASTER, 0, 1000, );
+		SRVVAR(instakill, &self->instakill, PRIV_MASTER, 0, 1, );
+		SRVVAR(teamdamage, &self->teamdamage, PRIV_MASTER, 0, 1, );
 		
-		SRVCMD(powerup, CM_ALL, "ss", (fpsserver *self, char *a, char *b), self->setpowerup(self->cmdcontext, a, b));
-		SRVCMD(spawnstate, CM_ALL, "ss", (fpsserver *self, char *a, char *b), self->setspawnstate(self->cmdcontext, a, b));
+		SRVCMD(powerup, PRIV_MASTER, "ss", (fpsserver *self, char *a, char *b), self->setpowerup(self->cmdcontext, a, b));
+		SRVCMD(spawnstate, PRIV_MASTER, "ss", (fpsserver *self, char *a, char *b), self->setspawnstate(self->cmdcontext, a, b));
 		
 		motd[0] = 0;
 		resetvars();
@@ -871,10 +859,6 @@ struct fpsserver : igameserver
 		}
 		if(m_teammode) autoteam();
 
-#ifdef BFRONTIER
-		if (!m_capture && duelmode.duelgame) smode = &duelmode;
-		else
-#endif
 		if(m_arena) smode = &arenamode;
 		else if(m_capture) smode = &capturemode;
 		else smode = NULL;
@@ -2637,8 +2621,6 @@ struct fpsserver : igameserver
 		
 		loopi(POWERUPS) powerups[i] = true;
 		loopi(SPAWNSTATES) spawnstates[i] = -1;
-		
-		duelmode.duelgame = 0;
 	}
 	
 	bool hasmode(clientinfo *ci, int m)
@@ -2647,24 +2629,18 @@ struct fpsserver : igameserver
 		{
 			switch (m)
 			{
-				case CM_ALL:
-				case CM_MASTER:
+				case PRIV_HOST:
+				case PRIV_ADMIN:
+				case PRIV_MASTER:
 				{
-					if (ci->privilege)
-						return true;
-					else if (m == CM_MASTER)
-						return false;
-					loopv(clients) if (clients[i]->privilege && ci->clientnum != clients[i]->clientnum)
-						return false;
-					return true;
+					if (ci->privilege >= m) return true;
+					else if (m == PRIV_HOST) return false;
+					loopv(clients) if (clients[i]->privilege > ci->privilege) return false;
 					break;
 				}
-				case CM_ANY:
+				case PRIV_NONE:
 				default:
-				{
-					return true;
 					break;
-				}
 			}
 			return true;
 		}

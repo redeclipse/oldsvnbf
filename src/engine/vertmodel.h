@@ -1050,7 +1050,7 @@ struct vertmodel : model
                 case ANIM_LEFT:
                 case ANIM_RIGHT:
                 case ANIM_SWIM:
-#ifdef BFRONTIER
+#ifdef BFRONTIER // external physics support
                     as.speed = 5500.0f/ph->speed(d);
 #else
                     as.speed = 5500.0f/d->maxspeed;
