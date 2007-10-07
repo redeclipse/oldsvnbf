@@ -81,6 +81,9 @@ The Blood Frontier Game (BFG) based on FPS.
 * masterserver stuff, online accounts?
 * secondary fire modes (grenade: flash mines)
 * precaching
+* shootable triggers
+* zombie drop game mode(see design doc)
+* flashlight?
 
 = BOT =
 Bots for the First Person Shooter (FPS).
