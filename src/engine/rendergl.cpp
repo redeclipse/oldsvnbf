@@ -80,12 +80,21 @@ void *getprocaddress(const char *name)
 }
 
 VARP(ati_skybox_bug, 0, 0, 1);
+#ifdef BFRONTIER
+VARP(ati_texgen_bug, 0, 0, 1);
+VARP(ati_oq_bug, 0, 0, 1);
+VARP(nvidia_texgen_bug, 0, 0, 1);
+VARP(apple_glsldepth_bug, 0, 0, 1);
+VARP(apple_minmax_bug, 0, 0, 1);
+VARP(intel_quadric_bug, 0, 0, 1);
+#else
 VAR(ati_texgen_bug, 0, 0, 1);
 VAR(ati_oq_bug, 0, 0, 1);
 VAR(nvidia_texgen_bug, 0, 0, 1);
 VAR(apple_glsldepth_bug, 0, 0, 1);
 VAR(apple_minmax_bug, 0, 0, 1);
 VAR(intel_quadric_bug, 0, 0, 1);
+#endif
 VAR(minimizetcusage, 1, 0, 0);
 VAR(emulatefog, 1, 0, 0);
 
@@ -401,8 +410,13 @@ VARP(fov, 10, 105, 150);
 
 int xtraverts, xtravertsva;
 
+#ifdef BFRONTIER
+VARW(fog, 16, 4000, 1000024);
+VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
+#else
 VAR(fog, 16, 4000, 1000024);
 VAR(fogcolour, 0, 0x8099B3, 0xFFFFFF);
+#endif
 
 #ifdef BFRONTIER // game view control, extra thirdperson variables
 VARFP(thirdperson, 0, 0, 1, cl->fixview());

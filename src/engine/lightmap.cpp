@@ -244,7 +244,11 @@ static inline uint hthash(const compresskey &k)
 
 static hashtable<compresskey, compressval> compressed;
 
+#ifdef BFRONTIER
+VARW(lightcompress, 0, 3, 6);
+#else
 VAR(lightcompress, 0, 3, 6);
+#endif
 
 void pack_lightmap(int type, surfaceinfo &surface) 
 {
@@ -347,7 +351,11 @@ bool lumel_sample(const vec &sample, int aasample, int stride)
 	return false;
 }
 
+#ifdef BFRONTIER
+VARW(mmskylight, 0, 1, 1);
+#else
 VAR(mmskylight, 0, 1, 1);
+#endif
 
 void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *skylight, int mmshadows = 1)
 {
@@ -385,8 +393,13 @@ void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *skyli
 	loopk(3) skylight[k] = uchar(ambient + (max(hdr.skylight[k], ambient) - ambient)*hit/17.0f);
 }
 
+#ifdef BFRONTIER
+VARW(blurlms, 0, 0, 2);
+VARW(blurskylight, 0, 0, 2);
+#else
 VAR(blurlms, 0, 0, 2);
 VAR(blurskylight, 0, 0, 2);
+#endif
 
 void blurlightmap(int n)
 {
@@ -424,8 +437,13 @@ void blurlightmap(int n)
 	memcpy(lm, blur, 3*lm_w*lm_h);
 }
 
+#ifdef BFRONTIER
+VARW(edgetolerance, 1, 4, 8);
+VARW(adaptivesample, 0, 1, 1);
+#else
 VAR(edgetolerance, 1, 4, 8);
 VAR(adaptivesample, 0, 1, 1);
+#endif
 
 bool generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpvert *lv, int numv, const vec &ustep, const vec &vstep)
 {

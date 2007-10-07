@@ -114,8 +114,13 @@ bool findnormal(const ivec &origin, int orient, const vvec &offset, vec &v, int 
 	return false;
 }
 
+#ifdef BFRONTIER
+VARW(lerpsubdiv, 0, 2, 4);
+VARW(lerpsubdivsize, 4, 4, 128);
+#else
 VAR(lerpsubdiv, 0, 2, 4);
 VAR(lerpsubdivsize, 4, 4, 128);
+#endif
 
 static uint progress = 0;
 

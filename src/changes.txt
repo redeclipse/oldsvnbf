@@ -7,7 +7,11 @@ Legend [
 ]
 
 = wip edition =
-mod: 'fullbright' and 'fullbrightlevel' now world vars
+mod: changed to world variables -> 'grasswidth', 'grassheight', 'grassrand', 'grassblend',
+	'lightcompress', 'mmskylight', 'blurlms', 'blurskylight', 'edgetolerance', 'adaptivesample',
+	'lerpsubdiv', 'lerpsubdivsize', 'loddistance', 'fog', 'fogcolour', 'flarelights',
+	'shadowmapambient', 'shadowmapangle', 'envmapradius', 'waterfog', 'lavafog', 'waterspec',
+	'fullbright', 'fullbrightlevel'
 mod: proper world variable resetting, defaulting, saving, and reloading
 mod: menu goes back a screen on input when unconnected instead of clearing
 mod: version increment to v0.33

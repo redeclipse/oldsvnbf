@@ -444,7 +444,11 @@ int explicitsky = 0;
 double skyarea = 0;
 
 VARF(lodsize, 0, 32, 128, hdr.mapwlod = lodsize);
+#ifdef BFRONTIER
+VARW(loddistance, 0, 2000, 100000);
+#else
 VAR(loddistance, 0, 2000, 100000);
+#endif
 
 int addtriindexes(usvector &v, int index[4], int mask = 3)
 {
