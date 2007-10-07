@@ -14,9 +14,15 @@ struct clientcom : iclientcom
 	fpsent *player1;
 	
 #ifdef BFRONTIER
+	int sversion;
+
 	IVARP(centerchat, 0, 1, 1);
-#endif
+
+    clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false), player1(_cl.player1),
+		sversion(-1)
+#else
     clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false), player1(_cl.player1)
+#endif
 	{
         CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s));
         CCOMMAND(name, "s", (clientcom *self, char *s), self->switchname(s));
@@ -101,7 +107,7 @@ struct clientcom : iclientcom
 	void gamedisconnect()
 	{
 #ifdef BFRONTIER
-		cl.servermod = -1;
+		sversion = -1;
 #else
         if(remote) cl.stopfollowing();
 #endif
@@ -257,7 +263,7 @@ struct clientcom : iclientcom
 	
 	void toservcmd(char *text, bool msg)
 	{
-		if (cl.servermod > 0) addmsg(SV_SERVCMD, "rs", text);
+		if (sversion > 0) addmsg(SV_COMMAND, "rs", text);
 		else if (msg) console("server does not support commands", CON_LEFT, text);
 	}
 #else
@@ -863,14 +869,15 @@ struct clientcom : iclientcom
 
 			case SV_SERVMSG:
 				getstring(text, p);
-#ifdef BFRONTIER
-				if (!getservcmd(text))
-					console("%s", (centerchat() ? CON_CENTER : 0)|CON_LEFT, text);
-#else
                 conoutf("%s", text);
-#endif
 				break;
 
+//#ifdef BFRONTIER
+//			case SV_COMMAND:
+//				getstring(text, p);
+//				getservcmd(text);
+//				break;
+//#endif
 			case SV_SENDDEMOLIST:
 			{
 				int demos = getint(p);
@@ -1184,50 +1191,40 @@ struct clientcom : iclientcom
 	bool ready() { return connected; }
 	int otherclients() { return cl.players.length(); }
 
-	bool getservcmd(char *text) // messages from the server to intercept, borrowed from executeret()
+	void getservcmd(char *text) // messages from the server to intercept, borrowed from executeret()
 	{
-		//bool result = false;
-		if (*text)
+		const int MAXWORDS = 25;
+		char *w[MAXWORDS], *p = text;
+		extern char *parseword(char *&p, bool isserver);
+		
+		int numargs = MAXWORDS;
+		loopi(MAXWORDS)
 		{
-			const int MAXWORDS = 25;
-			char *w[MAXWORDS], *p = text;
-			extern char *parseword(char *&p, bool isserver);
-			
-			int numargs = MAXWORDS;
-			loopi(MAXWORDS)
+			w[i] = "";
+			if(i>numargs) continue;
+			char *s = parseword(p, true);
+			if(s) w[i] = s;
+			else numargs = i;
+		}
+		
+		p += strcspn(p, "\0");
+		
+		int n;
+		bool msg = true;
+		string buf;
+		buf[0] = 0;
+		
+		if (!strcmp(w[0], "version"))
+		{
+			if (*w[1] && (n = atoi(w[1])))
 			{
-				w[i] = "";
-				if(i>numargs) continue;
-				char *s = parseword(p, true);
-				if(s) w[i] = s;
-				else numargs = i;
-			}
-			
-			p += strcspn(p, "\0");
-			
-			if(*w[0] && !strcmp(w[0], "#MOD#") && *w[1])
-			{
-				int n;
-				bool msg = true;
-				string buf;
-				buf[0] = 0;
-				
-				if (!strcmp(w[1], "version"))
-				{
-					if (*w[2] && !strcmp(w[2], "Blood Frontier") &&
-						*w[3] && (n = atoi(w[3])))
-					{
-						cl.servermod = n;
-						s_sprintf(buf)("version Blood Frontier %d", BFRONTIER);
-						msg = false;
-					}
-				}
-				
-				if (buf[0]) toservcmd(buf, msg);
-				return true;
+				sversion = n;
+				s_sprintf(buf)("version BloodFrontier %d", BFRONTIER);
+				msg = false;
 			}
 		}
-		return false;
+		
+		if (buf[0]) toservcmd(buf, msg);
 	}
 #endif
 };

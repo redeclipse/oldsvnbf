@@ -1208,7 +1208,12 @@ struct fpsserver : igameserver
 			}
 
 #ifdef BFRONTIER
-			case SV_TRYRELOAD:
+			case SV_RELOAD:
+			{
+				getint(p);
+				break;
+			}
+			case SV_REGENERATE:
 			{
 				getint(p);
 				break;
@@ -1328,16 +1333,11 @@ struct fpsserver : igameserver
 				QUEUE_MSG;
 				getstring(text, p);
 				filtertext(text, text);
-#ifdef BFRONTIER
-				if (text[0] == '!') { servcmd(ci, text, true); QUEUE_STR(""); }
-				else QUEUE_STR(text);
-#else
                 QUEUE_STR(text);
-#endif
 				break;
 
 #ifdef BFRONTIER
-			case SV_SERVCMD:
+			case SV_COMMAND:
 				getstring(text, p);
 				filtertext(text, text);
 				servcmd(ci, text, false);
@@ -1682,9 +1682,9 @@ struct fpsserver : igameserver
 		}
 		if(smode) smode->initclient(ci, p, true);
 #ifdef BFRONTIER
-		putint(p, SV_SERVMSG);
-		s_sprintfd(ver)("#MOD# version Blood Frontier %d", BFRONTIER);
-		sendstring(ver, p);
+		//putint(p, SV_COMMAND);
+		//s_sprintfd(ver)("version %d", BFRONTIER);
+		//sendstring(ver, p);
 		
 		if (motd[0])
 		{
@@ -2693,7 +2693,7 @@ struct fpsserver : igameserver
 	void setversion(clientinfo *ci, char *mod, int version)
 	{
 		if (version > 0) ci->modver = version;
-		s_sprintf(scresult)("\f2Blood Frontier support enabled");
+		if (g_sauer) s_sprintf(scresult)("\f2Blood Frontier support enabled");
 	}
 	
 	void settime()

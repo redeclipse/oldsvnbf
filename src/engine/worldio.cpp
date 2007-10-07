@@ -337,7 +337,6 @@ void save_world(char *mname, bool nolms)
 	gzwrite(f, sv->gameident(), (int)strlen(gametype)+1);
 #else
 	loopv(ents) if(ents[i]->type!=ET_EMPTY) hdr.numents++;
-
 	hdr.lightmaps = nolms ? 0 : lightmaps.length();
 	header tmp = hdr;
 	endianswap(&tmp.version, sizeof(int), 9);
@@ -352,13 +351,13 @@ void save_world(char *mname, bool nolms)
 	writeushort(f, extras.length());
 	gzwrite(f, extras.getbuf(), extras.length());
 	
-	
+#ifdef BFRONTIER
 	writeushort(f, texmru.length());
 	loopv(texmru) writeushort(f, texmru[i]);
 	char *ebuf = new char[et->extraentinfosize()];
-#ifdef BFRONTIER
+
 	int ecount = 0;
-	loopv(ents)
+	loopv(ents) // extended
 	{
 		show_out_of_renderloop_progress(float(i)/float(ents.length()), "saving entities...");
 		if(ents[i]->type!=ET_EMPTY)
@@ -440,6 +439,10 @@ void save_world(char *mname, bool nolms)
 
 	conoutf("saved map '%s' in %.1f sec(s)", mapname, (SDL_GetTicks()-savingstart)/1000.0f);
 #else
+	
+	writeushort(f, texmru.length());
+	loopv(texmru) writeushort(f, texmru[i]);
+	char *ebuf = new char[et->extraentinfosize()];
 	loopv(ents)
 	{
 		if(ents[i]->type!=ET_EMPTY)
@@ -466,6 +469,7 @@ void save_world(char *mname, bool nolms)
 		}
 		gzwrite(f, lm.data, sizeof(lm.data));
 	}
+
 	gzclose(f);
 	conoutf("wrote map file %s", cgzname);
 #endif
@@ -847,7 +851,7 @@ void writeobj(char *name)
 	hasVBO = false;
 	allchanged();
 	s_sprintfd(fname)("%s.obj", name);
-	FILE *f = openfile(fname, "w"); 
+    FILE *f = openfile(path(fname), "w"); 
 	if(!f) return;
 #ifdef BFRONTIER
 	fprintf(f, "# obj file OCTA world\n");
@@ -873,7 +877,7 @@ void writeobj(char *name)
 			verts += vtxsize;
 		}
 		ushort *ebuf = va.l0.ebuf;
-		loopi(va.l0.texs) loopl(3) loopj(va.l0.eslist[i].length[l]/3)
+        loopi(va.l0.tris)
 		{
 			fprintf(f, "f");
 			for(int k = 0; k<3; k++) fprintf(f, " %d", ebuf[k]-va.verts);

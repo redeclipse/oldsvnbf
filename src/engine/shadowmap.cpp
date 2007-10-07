@@ -132,7 +132,8 @@ bool shadowmapping = false;
 
 GLdouble shadowmapprojection[16], shadowmapmodelview[16];
 
-VARP(shadowmapbias, 0, 20, 1024);
+VARP(shadowmapbias, 0, 5, 1024);
+VARP(shadowmappeelbias, 0, 20, 1024);
 
 void pushshadowmap()
 {
@@ -146,7 +147,7 @@ void pushshadowmap()
     glEnable(GL_TEXTURE_2D);
     glMatrixMode(GL_TEXTURE);
     glLoadIdentity();
-    glTranslatef(0.5f, 0.5f, -shadowmapbias/1024.0f);
+    glTranslatef(0.5f, 0.5f, -shadowmapbias/float(shadowmapdist));
     glScalef(0.5f, 0.5f, -1);
     glMultMatrixd(shadowmapprojection);
     glMultMatrixd(shadowmapmodelview);
@@ -275,13 +276,15 @@ bool isshadowmapreceiver(vtxarray *va)
 {
     if(!shadowmap || !shadowmaptex || !shadowmapcasters) return false;
 
-    if(va->max.z <= shadowfocus.z - shadowmapdist || va->min.z >= shadowfocus.z) return false;
+    if(va->shadowmapmax.z <= shadowfocus.z - shadowmapdist || va->shadowmapmin.z >= shadowfocus.z) return false;
 
-    vec center(va->min.tovec());
-    center.add(va->max.tovec()).mul(0.5f);
-    float xyrad = SQRT2*0.5f*max(va->max.x-va->min.x, va->max.y-va->min.y),
-          zrad = 0.5f*(va->max.z-va->min.z),
+    float xyrad = SQRT2*0.5f*max(va->shadowmapmax.x-va->shadowmapmin.x, va->shadowmapmax.y-va->shadowmapmin.y),
+          zrad = 0.5f*(va->shadowmapmax.z-va->shadowmapmin.z),
           x1, y1, x2, y2;
+    if(xyrad<0 || zrad<0) return false;
+
+    vec center(va->shadowmapmin.tovec());
+    center.add(va->shadowmapmax.tovec()).mul(0.5f);
     calcshadowmapbb(center, xyrad, zrad, x1, y1, x2, y2);
 
     float blurerror = 2.0f*float(blurshadowmap + 2) / shadowmaptexsize;
@@ -414,7 +417,7 @@ void rendershadowmap()
     glGetDoublev(GL_PROJECTION_MATRIX, shadowmapprojection);
     glGetDoublev(GL_MODELVIEW_MATRIX, shadowmapmodelview);
 
-    setenvparamf("shadowmapbias", SHPARAM_VERTEX, 0, -shadowmapbias/1024.0f, 1 - 2*shadowmapbias/1024.0f);
+    setenvparamf("shadowmapbias", SHPARAM_VERTEX, 0, -shadowmapbias/float(shadowmapdist), 1 - (shadowmapbias + shadowmappeelbias)/float(shadowmapdist));
     rendershadowmapcasters();
     if(shadowmapcasters && smdepthpeel) rendershadowmapreceivers();
 

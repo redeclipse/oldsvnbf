@@ -3,8 +3,8 @@
 struct elementset
 {
 	ushort texture, lmid, envmap;
-	ushort length[3];
-	ushort minvert[3], maxvert[3];
+    ushort length[6];
+    ushort minvert[6], maxvert[6];
 };
 
 enum
@@ -144,6 +144,7 @@ struct vtxarray
 	GLuint vbufGL;		  // VBO buffer ID
 	int x, y, z, size;	  // location and size of cube.
 	ivec min, max;		  // BB
+    ivec shadowmapmin, shadowmapmax;      // BB of shadowmapped surfaces
 	uchar curvfc, occluded;
 	occludequery *query, *rquery;
 	vector<octaentities *> *mapmodels;

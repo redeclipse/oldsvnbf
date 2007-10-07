@@ -48,7 +48,7 @@ struct fpsclient : igameclient
 	botcom bc;
 
 	string cptext;
-	int cameranum, cameracycled, camerawobble, myrankv, myranks, servermod;
+	int cameranum, cameracycled, camerawobble, myrankv, myranks;
 	
 	struct sline { string s; };
 	struct teamscore
@@ -98,7 +98,7 @@ struct fpsclient : igameclient
 		  swaymillis(0), swaydir(0, 0, 0),
 		  suicided(-1),
 #ifdef BFRONTIER
-		  ph(*this), bc(*this), cameranum(0), cameracycled(0), myrankv(0), myranks(0), servermod(-1),
+		  ph(*this), bc(*this), cameranum(0), cameracycled(0), myrankv(0), myranks(0),
 #else
           following(-1),
 #endif

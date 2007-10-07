@@ -1061,9 +1061,9 @@ void writetgaheader(FILE *f, SDL_Surface *s, int bits)
 
 void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png) -> BGR (tga)
 {
-    SDL_Surface *ns = IMG_Load(findfile(normalfile, "rb"));
+    SDL_Surface *ns = IMG_Load(findfile(path(normalfile), "rb"));
     if(!ns) return;
-    FILE *f = openfile(destfile, "wb");
+    FILE *f = openfile(path(destfile), "wb");
     if(f)
     {
         writetgaheader(f, ns, 24);
@@ -1081,8 +1081,8 @@ void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png)
 
 void mergenormalmaps(char *heightfile, char *normalfile)    // BGR (tga) -> BGR (tga) (SDL loads TGA as BGR!)
 {
-    SDL_Surface *hs = IMG_Load(findfile(heightfile, "rb"));
-    SDL_Surface *ns = IMG_Load(findfile(normalfile, "rb"));
+    SDL_Surface *hs = IMG_Load(findfile(path(heightfile), "rb"));
+    SDL_Surface *ns = IMG_Load(findfile(path(normalfile), "rb"));
     if(hs && ns)
     {
         uchar def_n[] = { 255, 128, 128 };

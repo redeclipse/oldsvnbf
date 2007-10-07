@@ -103,11 +103,17 @@ const char *findfile(const char *filename, const char *mode)
     if(homedir[0])
     {
         s_sprintf(s)("%s%s", homedir, filename);
+#ifdef BFRONTIER
+		path(s);
+#endif
         if(fileexists(s, mode)) return s;
         if(mode[0]=='w' || mode[0]=='a')
         {
             string dirs;
             s_strcpy(dirs, s);
+#ifdef BFRONTIER
+			path(dirs);
+#endif
             char *dir = strchr(dirs[0]==PATHDIV ? dirs+1 : dirs, PATHDIV);
             while(dir)
             {
@@ -123,6 +129,9 @@ const char *findfile(const char *filename, const char *mode)
     loopv(packagedirs)
     {
         s_sprintf(s)("%s%s", packagedirs[i], filename);
+#ifdef BFRONTIER
+		path(s);
+#endif
         if(fileexists(s, mode)) return s;
     }
     return filename;
