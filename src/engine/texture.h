@@ -185,6 +185,17 @@ struct Slot
 	
 	Slot() : autograss(NULL) { reset(); }
 };
+#ifdef BFRONTIER
+extern vector<Slot> slots;
+extern Slot materialslots[MAT_EDIT];
+
+extern void materialreset();
+extern void texturereset();
+extern void autograss(char *name);
+extern void setshader(char *name);
+extern void setshaderparam(char *name, int type, int n, float x, float y, float z, float w);
+extern void texture(char *type, char *name, int *rot, int *xoffet, int *yoffset, float *scale);
+#endif
 
 struct cubemapside
 {

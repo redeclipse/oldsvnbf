@@ -365,7 +365,11 @@ void disconnect(int onlyclean, int async)
 		enet_host_destroy(clienthost);
 		clienthost = NULL;
 	}
+#ifdef BFRONTIER
+	if(!onlyclean) { showgui("main"); }
+#else
 	if(!onlyclean) { localconnect(); cc->gameconnect(false); }
+#endif
 }
 
 void trydisconnect()
@@ -441,7 +445,7 @@ void clientkeepalive()
 		if(b->clienthost) enet_host_service(b->clienthost, NULL, 0);
 	}
 }
-void connected() { intret(curpeer!=NULL); } COMMAND(connected, "");
+void connected() { intret(cc->ready()); } COMMAND(connected, "");
 #else
 void clientkeepalive() { if(clienthost) enet_host_service(clienthost, NULL, 0); }
 #endif
@@ -480,6 +484,9 @@ void gets2c()			// get updates from the server
 			throttle();
 			if(rate) setrate(rate);
 			cc->gameconnect(true);
+#ifdef BFRONTIER
+			if (menuactive()) cleargui();
+#endif
 			break;
 		 
 		case ENET_EVENT_TYPE_RECEIVE:

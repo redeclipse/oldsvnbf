@@ -190,7 +190,7 @@ struct igameclient
 	
 	virtual void fixview() { return; }
 
-	virtual void fixcamerarange()
+	virtual void fixcamera()
 	{
 		extern physent *camera1;
 		const float MAXPITCH = 90.0f;
@@ -208,8 +208,7 @@ struct igameclient
 		const float SENSF = 33.0f;	 // try match quake sens
 		camera1->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 		camera1->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
-		extern void fixcamerarange();
-		fixcamerarange();
+		fixcamera();
 		if(camera1!=player && player->state!=CS_DEAD)
 		{
 			player->yaw = camera1->yaw;

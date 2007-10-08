@@ -3,12 +3,17 @@
 
 Texture *sky[6] = { 0, 0, 0, 0, 0, 0 };
 float spinsky = 0;
+#ifdef BFRONTIER
+string lastsky = "";
+#endif
 
 void loadsky(char *basename, float *spin)
 {
 	spinsky = *spin;
 
+#ifndef BFRONTIER
 	static string lastsky = "";
+#endif
 	if(strcmp(lastsky, basename)==0) return;
 	static char *side[] = { "ft", "bk", "lf", "rt", "dn", "up" };
 	loopi(6)

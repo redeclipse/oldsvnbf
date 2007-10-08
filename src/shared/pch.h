@@ -51,3 +51,7 @@
 #endif
 #include <zlib.h>
 
+#ifdef BFRONTIER
+#include "SDL_mixer.h"
+#define MAXVOL MIX_MAX_VOLUME
+#endif

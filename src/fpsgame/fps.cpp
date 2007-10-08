@@ -66,7 +66,7 @@ struct fpsclient : igameclient
 	IVAR(cameracycle, 0, 0, 600);			// cycle camera every N secs
 	IVARP(crosshair, 0, 1, 1);				// show the crosshair
 
-	IVARP(wobblescale, 0, 100, 1000);		// wobble camera when damaged
+	IVARP(wobblescale, 0, 100, 1000);		// wobble camera
 	IVARP(wobbleyaw, 0, 10, 180);			// wobble yaw amount
 	IVARP(wobblepitch, 0, 5, 180);			// wobble pitch amount
 	IVARP(wobbleroll, 0, 5, 180);			// wobble roll amount
@@ -1209,7 +1209,7 @@ struct fpsclient : igameclient
 		return false;
 	}
 	
-	void fixcamerarange(physent *d)
+	void fixrange(physent *d)
 	{
 		const float MAXPITCH = 90.0f;
 		if(d->pitch>MAXPITCH) d->pitch = MAXPITCH;
@@ -1218,31 +1218,27 @@ struct fpsclient : igameclient
 		while(d->yaw>=360.0f) d->yaw -= 360.0f;
 	}
 
-	int _fov;
-	
 	void fixview()
 	{
 		if (g_bf)
 		{
 			int maxfov = isthirdperson() ? 100 : 125;
 			
-			if (fov > _fov) _fov = fov; // store our old one
 			if (fov > maxfov) fov = maxfov;
-			if (_fov > fov && _fov <= maxfov) fov = _fov;
 			
 			if (isthirdperson())
 			{
-				thirdpersondistance = 8;
-				thirdpersonheight = 6;
+				thirdpersondistance = 12;
+				thirdpersonheight = 4;
 			}
 		}
 	}
 	
-	void fixcamerarange()
+	void fixcamera()
 	{
 		extern physent *camera1;
 		physent *d = isthirdperson() && thirdpersonstick ? camera1 : player1;
-		fixcamerarange(d);
+		fixrange(d);
 	}
 	
 	void mousemove(int dx, int dy)
@@ -1256,7 +1252,7 @@ struct fpsclient : igameclient
 		d->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 		d->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
 		
-		fixcamerarange(d);
+		fixrange(d);
 	}
 	
 	physent fpscamera;
@@ -1368,7 +1364,7 @@ struct fpsclient : igameclient
 					if (!thirdpersonstick && !cameratype && thirdpersonscale)
 						camera1->pitch = (0.f-fabs(camera1->pitch))*(thirdpersonscale/100.f);
 						
-					fixcamerarange(camera1);
+					fixrange(camera1);
 					
 					ph.move(camera1, 10, false, 0, thirdpersondistance);
 					
@@ -1399,7 +1395,7 @@ struct fpsclient : igameclient
 			camerawobble -= max(curtime/10, 1);
 		}
 		
-		fixcamerarange(camera1);
+		fixrange(camera1);
 	}
 	
 	void adddynlights()
@@ -1435,7 +1431,7 @@ struct fpsclient : igameclient
 	
 	bool wantcrosshair()
 	{
-		return (crosshair() && !(hidehud || player->state == CS_SPECTATOR)) || menuactive();
+		return (crosshair() && !(hidehud || player1->state == CS_SPECTATOR)) || menuactive();
 	}
 	
 	bool gamethirdperson()

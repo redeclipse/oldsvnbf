@@ -251,6 +251,15 @@ extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->
 
 extern int showmat;
 
+#ifdef BFRONTIER
+struct material
+{
+	const char *name;
+	uchar id;
+};
+extern material materials[];
+#endif
+
 extern int findmaterial(const char *name);
 extern void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurface> &matsurfs);
 extern void rendermatsurfs(materialsurface *matbuf, int matsurfs);
@@ -363,6 +372,11 @@ extern void startmap(const char *name);
 
 // rendermodel
 struct mapmodelinfo { string name; int tex; model *m; };
+#ifdef BFRONTIER
+extern vector<mapmodelinfo> mapmodels;
+extern void mmodel(char *name, int *tex);
+extern void mapmodelreset();
+#endif
 
 extern void findanims(const char *pattern, vector<int> &anims);
 extern void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&masks);
@@ -395,3 +409,39 @@ extern void updatevol();
 // grass
 extern void rendergrass();
 
+#ifdef BFRONTIER
+// 3dgui
+extern int cleargui(int n = 0);
+
+// octaedit
+extern void replacetexcube(cube &c, int oldtex, int newtex);
+
+// skybox
+extern float spinsky;
+extern string lastsky;
+extern void loadsky(char *basename, float *spin);
+
+// sound
+struct sample
+{
+	char *name;
+	Mix_Chunk *sound;
+	sample() : name(NULL) {}
+	~sample() { DELETEA(name); }
+};
+
+struct soundslot
+{
+	sample *s;
+	int vol;
+	int uses, maxuses;
+};
+
+struct soundloc { vec loc; bool inuse; soundslot *slot; extentity *ent; };
+
+extern hashtable<char *, sample> samples;
+extern vector<soundslot> gamesounds, mapsounds;
+extern vector<soundloc> soundlocs;
+
+extern int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds);
+#endif

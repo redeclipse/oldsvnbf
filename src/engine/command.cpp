@@ -897,4 +897,19 @@ void gzputint(gzFile f, int x)
 	gzwrite(f, &t, sizeof(int));
 }
 
+float gzgetfloat(gzFile f)
+{
+	float t;
+	gzread(f, &t, sizeof(float));
+	endianswap(&t, sizeof(float), 1);
+	return t;
+}
+
+void gzputfloat(gzFile f, float x)
+{
+	float t = (float)x;
+	endianswap(&t, sizeof(float), 1);
+	gzwrite(f, &t, sizeof(float));
+}
+
 #endif

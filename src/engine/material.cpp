@@ -122,6 +122,17 @@ void drawmaterial(int orient, int x, int y, int z, int csize, int rsize, float o
 	xtraverts += 4;
 }
 
+#ifdef BFRONTIER
+material materials[] = 
+{
+	{"air", MAT_AIR},
+	{"water", MAT_WATER},
+	{"clip", MAT_CLIP},
+	{"glass", MAT_GLASS},
+	{"noclip", MAT_NOCLIP},
+	{"lava", MAT_LAVA}
+};
+#else
 struct material
 {
 	const char *name;
@@ -135,6 +146,7 @@ struct material
 	{"noclip", MAT_NOCLIP},
 	{"lava", MAT_LAVA}
 };
+#endif
 
 int findmaterial(const char *name)
 {

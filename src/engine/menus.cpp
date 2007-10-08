@@ -26,10 +26,14 @@ vec menuinfrontofplayer()
 	return dir;
 }
 
+#ifdef BFRONTIER
+int cleargui(int n)
+#else
 int cleargui(int n = 0)
+#endif
 {
 #ifdef BFRONTIER // unconnected state support
-	int m = guistack.length() - (curpeer!=NULL ? 0 : 1), clear = n > 0 ? min(m, n) : m;
+	int m = guistack.length() - (cc->ready() ? 0 : 1), clear = n > 0 ? min(m, n) : m;
 #else
 	int clear = guistack.length();
 	if(n>0) clear = min(clear, n);
@@ -295,7 +299,7 @@ void menuprocess()
 #ifdef BFRONTIER // unconnected state support
 		if(level==guistack.length())
 		{
-			if (curpeer) guistack.deletecontentsa();
+			if (cc->ready()) guistack.deletecontentsa();
 			else delete[] guistack.pop();
 		}
 #else

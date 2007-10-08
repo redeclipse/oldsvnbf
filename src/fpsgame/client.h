@@ -96,7 +96,7 @@ struct clientcom : iclientcom
 	void gameconnect(bool _remote)
 	{
 #ifdef BFRONTIER // local server support
-		connected = false;
+		connected = _remote;
 #else
 		connected = true;
 #endif

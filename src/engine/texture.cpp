@@ -466,6 +466,36 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 
 COMMAND(texture, "ssiiif");
 
+#ifdef BFRONTIER
+void texturedel(int i, bool local)
+{
+	if (curtexnum > 8)
+	{
+		if (i >= 0 && i <= curtexnum)
+		{
+			extern selinfo sel;
+			loopj(curtexnum-i)
+			{
+				int oldtex = i+j, newtex = max(i+j-1, 0);
+				if(local) cl->edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
+				loopk(8) replacetexcube(worldroot[k], oldtex, newtex);
+			}
+			slots[i].reset();
+			slots.remove(i);
+
+			curtexnum--;
+			allchanged();
+		}
+		else if (local) conoutf("texture to delete must be in range 0..%d", curtexnum);
+	}
+	else if (local) conoutf("not enough texture slots, please add another one first");
+}
+
+ICOMMAND(texturedel, "i", (int *i), {
+	texturedel(*i, true);
+});
+#endif
+
 void autograss(char *name)
 {
 	Slot &s = slots.last();

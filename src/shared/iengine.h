@@ -424,6 +424,8 @@ extern char *getmaptitle();
 
 extern int gzgetint(gzFile f);
 extern void gzputint(gzFile f, int x);
+extern float gzgetfloat(gzFile f);
+extern void gzputfloat(gzFile f, float x);
 
 extern char *getgameident();
 extern char *getdefaultmap();
@@ -511,6 +513,6 @@ enum
 };
 
 extern string cgzname, pcfname, mcfname, picname, mapname, extname;
-extern int verbose, savebak;
+extern int verbose, savebak, extversion;
 
 #endif
