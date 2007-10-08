@@ -2,11 +2,13 @@ A log of changes, as they happen. Ordered from newest to oldest.
 
 Legend [
 	mod: engine modification
-	fps: general fps game change
 	bfg: blood frontier game change
 ]
 
 = wip edition =
+mod: unconnected state tweaks
+mod: 'texturedel index' added to delete a texture slot
+mod: added to extension file -> skybox, texture/mapmodel/mapsound slots
 mod: changed to world variables -> 'grasswidth', 'grassheight', 'grassrand', 'grassblend',
 	'lightcompress', 'mmskylight', 'blurlms', 'blurskylight', 'edgetolerance', 'adaptivesample',
 	'lerpsubdiv', 'lerpsubdivsize', 'loddistance', 'fog', 'fogcolour', 'flarelights',

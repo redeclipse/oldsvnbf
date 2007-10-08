@@ -43,10 +43,26 @@ Modifications for the Engine.
 	- online collaborative environment (coopworld) [random: xrcd, dynamic db binary]
 	- extended/pro fps game -> sgs?
 * proper rotation looping for animated models
-	
-= FPS =
-Modifications for the First Person Shooter (FPS).
+* more hud improvements?
+* precaching
 
+= BFG =
+The Blood Frontier Game (BFG) based on FPS.
+
+* fix map models
+* move world vars server side
+* move instagib to server mod
+* address issues with alpha blended models
+* head shots
+* S_SMGLOAD, S_REGEN, S_HEADSHOT
+* unlimited ammo on all but grenade, reload (sound, only when empty?)
+* remove entities: armour, health, pickups, carrot, checkpoint
+* only two guns at same time (drop guns, etc)
+* masterserver stuff, online accounts?
+* secondary fire modes (grenade: flash mines)
+* shootable triggers
+* zombie drop game mode(see design doc)
+* flashlight?
 * directional wobble effect?
 * hud-based capturing feedback
 * slow zoom?
@@ -64,71 +80,7 @@ Modifications for the First Person Shooter (FPS).
 * option to follow killer when fragged instead (behind and from the ground)?
 * bots need more communication with the server (esp. with fpssrv mod)
 * extended fps gameplay for bloodfrontier clients (ctf done server-side)?
-* more hud improvements?
-* headshot, etc? server side.
-
-= BFG =
-The Blood Frontier Game (BFG) based on FPS.
-
-* fix map models
-* move world vars server side
-* move instagib to server mod
-* address issues with alpha blended models
-* head shots
-* S_SMGLOAD, S_REGEN, S_HEADSHOT
-* unlimited ammo on all but grenade, reload (sound, only when empty?)
-* remove entities: armour, health, pickups, carrot, checkpoint
-* only two guns at same time (drop guns, etc)
-* masterserver stuff, online accounts?
-* secondary fire modes (grenade: flash mines)
-* precaching
-* shootable triggers
-* zombie drop game mode(see design doc)
-* flashlight?
-
-= BOT =
-Bots for the First Person Shooter (FPS).
-
-* move primary logic engine side?
-* make bots communicate with the server the client is on
-* support special game modes (capture, arena, etc)
-* projectile evasion
-* mod to enable online bots by using a connected client?
-
-= SSP =
-Extra gameplay module Side Scrolling Platformer (SSP).
-
-* move entities fully to dynents
-* scriptify/separate more logic? (blockstyle, powerupstyle, healthstyle, etc)
-* other platformer types (adventure, etc)
-	- sonic: attack/spin/loops/rings
-	- dkc: attack/special/team/friends
-	- mario: switches/yoshi/cape
-	- kirby: powerup/jump/attack
-	- special levels (bonus [gauntlet/labyrinth], overworld [hall of doors], minecart mayhem (DKC, minecart model))?
-* enemy invulnerability time
-* camera axis rotation/more camera controls?
-* win (goal)/lose (time up) animations?
-* wall kicks/stompimg?
-* exploding barrels
-* train platforms, paths (switchable)
-* online/coop and edit (super smash bros, vs battle)?
-* pickup/throw enemies (projectile/bouncer)?
-
-Stuff that's (possibly) needed:
-
-* item models and sounds (powerups, etc)
-* bg music (gameplay, "reached goal", etc)
-
-= SMS =
-Extensions for the Blood Frontier Master Server.
-
-* get core functionality going
-
-= SGS =
-Extra gameplay module Sport Game Simulator (SGS).
-
-* fpsgame re-implementation (eg. use core fpsgame but override)?
+* headshot, etc?
 * game modes:
 	- capture the flag
 	- jailbreak
@@ -138,13 +90,27 @@ Extra gameplay module Sport Game Simulator (SGS).
 	- grenade golf
 	- sword duel/jousts?
 	- races
+* movement types (adventure, etc)
+	- vehicle: rolling/throttle/brake
+	- sonic: attack/spin/loops/rings
+	- dkc: attack/special/team/friends
+	- mario: switches/yoshi/cape
+	- kirby: powerup/jump/attack
+	- special levels (bonus [gauntlet/labyrinth], overworld [hall of doors], minecart mayhem (DKC, minecart model))?
+* move entities fully to dynents?
+* scriptify/separate more logic? (blockstyle, powerupstyle, healthstyle, etc)
+* camera axis rotation/more camera controls?
+* wall kicks/stompimg?
+* exploding barrels
+* train platforms, paths (switchable)
+* online/coop and edit (super smash bros, vs battle)?
+* pickup/throw enemies (projectile/bouncer)?
 
-= KRS =
-Extra gameplay module Kart Racing Simulator (KRS).
+= BOT =
+Bots for the First Person Shooter (FPS).
 
-* gameplay dynamics
-* physics (brakes, nitro, jumping)
-* entities (items, turbopads, hazards, etc)
-* powerups
-* online multiplayer (racing and battle)
-* more karts!
+* move primary logic engine side?
+* make bots communicate with the server the client is on
+* support special game modes (capture, arena, etc)
+* projectile evasion
+* mod to enable online bots by using a connected client?

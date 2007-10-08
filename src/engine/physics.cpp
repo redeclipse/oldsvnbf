@@ -1454,7 +1454,7 @@ VARP(invmouse, 0, 0, 1);
 void fixcamerarange()
 {
 #ifdef BFRONTIER // alternate render storage
-	cl->fixcamerarange();
+	cl->fixcamera();
 #else
 	const float MAXPITCH = 90.0f;
 	if(camera1->pitch>MAXPITCH) camera1->pitch = MAXPITCH;

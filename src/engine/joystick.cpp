@@ -295,7 +295,6 @@ struct joystick
 	
 	void show_menu()
 	{
-		extern int cleargui(int n = 1);
 		cleargui();
 		
 		char label[200];

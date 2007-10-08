@@ -3,6 +3,12 @@
 #include "pch.h"
 #include "engine.h"
 
+#ifdef BFRONTIER
+#define USE_MIXER
+bool nosound = true;
+Mix_Music *mod = NULL;
+void *stream = NULL;	// TODO
+#else
 //#ifndef WIN32	// NOTE: fmod not being supported for the moment as it does not allow stereo pan/vol updating during playback
 #define USE_MIXER
 //#endif
@@ -44,6 +50,7 @@ struct soundslot
 };
 
 struct soundloc { vec loc; bool inuse; soundslot *slot; extentity *ent; };
+#endif
 vector<soundloc> soundlocs;
 
 void setmusicvol(int musicvol)

@@ -528,8 +528,8 @@ void perfset(int level)
 		perfvarscl(grasslodz,			100,	10000,		0);
 		perfvarscl(grasstaper,			100,	200,		0);
 		perfvarscl(loddistance,			100,	10000,		0);
-		perfvarscl(maxparticledistance,	100,	1024,		128);
-		perfvarscl(maxreflect,			100,	8,			0);
+		perfvarscl(maxparticledistance,	100,	1024,		256);
+		perfvarscl(maxreflect,			100,	8,			1);
 		perfvarscl(reflectdist,			100,	10000,		128);
 
 		//perfvarscl(shadowmapradius,		100,	256,		64);
@@ -592,18 +592,11 @@ ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
 
 void startgame(bool start, char *load, char *initscript)
 {
-	if (start) cc->gameconnect(false);
-	else disconnect();
+	sv->changemap(load ? load : sv->defaultmap(), 0);
 
-	sv->changemap(start && load ? load : sv->defaultmap(), 0);
-
-	if (start && initscript) execute(initscript);
-
-	if (!connpeer && !curpeer)
-	{
-		if (start && load) localconnect();
-		else showgui("main");
-	}
+	if (initscript) execute(initscript);
+	if (load) localconnect();
+	else showgui("main");
 }
 
 int frames = 0;
@@ -624,7 +617,8 @@ void updateframe(bool dorender)
 	
 	if (dorender)
 	{
-		cl->updateworld(worldpos, curtime, lastmillis);
+		if (cc->ready()) cl->updateworld(worldpos, curtime, lastmillis);
+		else gets2c();
 		menuprocess();
 	}
 

@@ -885,12 +885,14 @@ int g3d_sort(gui *a, gui *b) { return (int)(a->dist>b->dist)*2-1; }
 
 bool g3d_windowhit(bool on, bool act)
 {
+#ifdef BFRONTIER // gui2d always
+	if(act) mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
+	else if(!on && windowhit) cleargui(1);
+	return hascursor;
+#else
 	extern int cleargui(int n);
 	if(act) mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
 	else if(!on && windowhit) cleargui(1);
-#ifdef BFRONTIER // gui2d always
-	return hascursor;
-#else
 	return gui2d ? hascursor : windowhit!=NULL;
 #endif
 }

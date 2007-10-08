@@ -10,7 +10,7 @@ enum							// hardcoded texture numbers
 
 #define MAPVERSION 24			// bump if map format changes, see worldio.cpp
 #ifdef BFRONTIER // map extensions
-#define EXTVERSION 4
+#define EXTVERSION 5
 #endif
 
 struct header					// map file format header

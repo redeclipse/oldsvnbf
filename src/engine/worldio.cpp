@@ -16,6 +16,7 @@ void backup(char *name, char *backupname)
 
 #ifdef BFRONTIER // map extensions
 string cgzname, pcfname, mcfname, picname, mapname, extname;
+int extversion = 0;
 #else
 string cgzname, bakname, pcfname, mcfname, picname;
 #endif
@@ -275,7 +276,7 @@ void save_world(char *mname, bool nolms)
 	setnames(*mname ? mname : "untitled");
 #ifdef BFRONTIER // map extensions, alternate backups, blood frontier
 	gzFile f = opengzfile(cgzname, "wb9");
-	if(!f) { conoutf("error saving '%s' to '%s' due to file error", mapname, cgzname); return; }
+	if(!f) { conoutf("error saving '%s' to '%s': file error", mapname, cgzname); return; }
 	if(savebak)
 	{
 		long int baktime = time(NULL);
@@ -305,12 +306,12 @@ void save_world(char *mname, bool nolms)
 	hdr.numents = 0;
 	const vector<extentity *> &ents = et->getents();
 #ifdef BFRONTIER // extended entities
-	int enuments = 0;
+	int numents = 0;
 	loopv(ents)
 	{
 		if(ents[i]->type!=ET_EMPTY)
 		{
-			if (et->isext(ents[i]->type)) enuments++;
+			if (et->isext(ents[i]->type)) numents++;
 			else hdr.numents++;
 		}
 	}
@@ -323,7 +324,7 @@ void save_world(char *mname, bool nolms)
 		gzwrite(g, &head, 4);
 	
 		gzputint(g, EXTVERSION);
-		gzputint(g, enuments);
+		gzputint(g, numents);
 	}
 
 	hdr.lightmaps = nolms ? 0 : lightmaps.length();
@@ -332,7 +333,7 @@ void save_world(char *mname, bool nolms)
 	gzwrite(f, &tmp, sizeof(header));
 
 	string gametype;
-	s_strcpy(gametype, "fps");
+	s_strcpy(gametype, "fps"); // we only generate fps maps
 	gzputc(f, (int)strlen(gametype));
 	gzwrite(f, sv->gameident(), (int)strlen(gametype)+1);
 #else
@@ -387,15 +388,15 @@ void save_world(char *mname, bool nolms)
 
 	if (verbose >= 2)
 	{
-		console("saved %d ent(s) to '%s'", CON_RIGHT, hdr.numents, cgzname);
-		if (et->wantext()) console("saved %d ent(s) to '%s'", CON_RIGHT, ecount, extname);
+		console("saved %d entities", CON_RIGHT, hdr.numents);
+		if (et->wantext()) console("saved %d entities", CON_RIGHT, ecount);
 	}
 
 	savec(worldroot, f, nolms);
 	if(!nolms) loopv(lightmaps)
 	{
 		LightMap &lm = lightmaps[i];
-		show_out_of_renderloop_progress(float(i)/float(lightmaps.length()), "saving lightmap(s)...");
+		show_out_of_renderloop_progress(float(i)/float(lightmaps.length()), "saving lightmaps...");
 		gzputc(f, lm.type | (lm.unlitx>=0 ? 0x80 : 0));
 		if(lm.unlitx>=0)
 		{
@@ -404,7 +405,7 @@ void save_world(char *mname, bool nolms)
 		}
 		gzwrite(f, lm.data, sizeof(lm.data));
 	}
-	if (verbose >= 2) console("saved %d lightmap(s) to '%s'", CON_RIGHT, lightmaps.length(), cgzname);
+	if (verbose >= 2) console("saved %d lightmaps", CON_RIGHT, lightmaps.length());
 
 	gzclose(f);
 
@@ -412,14 +413,12 @@ void save_world(char *mname, bool nolms)
 
 	if (et->wantext())
 	{
-		int enumvars = 0;
-		
-		enumerate(*idents, ident, id, { if (id._type == ID_VAR && id._world) enumvars++; });
-		
-		gzputint(g, enumvars);
-		
+		// world variables
+		int numvars = 0;
+		enumerate(*idents, ident, id, { if (id._type == ID_VAR && id._world) numvars++; });
+		gzputint(g, numvars);
 		enumerate(*idents, ident, id, {
-			show_out_of_renderloop_progress(float(i)/float(lightmaps.length()), "saving world variable(s)...");
+			show_out_of_renderloop_progress(float(i)/float((*idents).size), "saving world variables...");
 			
 			if (id._type == ID_VAR && id._world)
 			{
@@ -428,7 +427,95 @@ void save_world(char *mname, bool nolms)
 				gzputint(g, *id._storage);
 			}
 		});
-		if (verbose >= 2) console("saved %d variables(s) to '%s'", CON_RIGHT, enumvars, cgzname);
+		if (verbose >= 2) console("saved %d variables", CON_RIGHT, numvars);
+
+		// skybox
+		gzputint(g, strlen(lastsky));
+		gzwrite(g, lastsky, (int)strlen(lastsky)+1);
+		gzputfloat(g, spinsky);
+
+		// texture slots
+		#define saveslot(s,b) \
+			if (b) \
+			{ \
+				if (s.shader) \
+				{ \
+					gzputint(g, strlen(s.shader->name)); \
+					gzwrite(g, s.shader->name, (int)strlen(s.shader->name)+1); \
+					gzputint(g, s.params.length()); \
+					loopvj(s.params) \
+					{ \
+						if (strlen(s.params[j].name) > 0) \
+						{ \
+							gzputint(g, strlen(s.params[j].name)); \
+							gzwrite(g, s.params[j].name, (int)strlen(s.params[j].name)+1); \
+						} \
+						else gzputint(g, 0); \
+						gzputint(g, s.params[j].type); \
+						gzputint(g, s.params[j].index); \
+						loopk(4) gzputfloat(g, s.params[j].val[k]); \
+					} \
+				} \
+				else gzputint(g, 0); \
+			} \
+			gzputint(g, s.sts.length()); \
+			loopvj(s.sts) \
+			{ \
+				gzputint(g, s.sts[j].type); \
+				gzputint(g, strlen(s.sts[j].name)); \
+				gzwrite(g, s.sts[j].name, (int)strlen(s.sts[j].name)+1); \
+				gzputint(g, s.sts[j].rotation); \
+				gzputint(g, s.sts[j].xoffset); \
+				gzputint(g, s.sts[j].yoffset); \
+				gzputfloat(g, s.sts[j].scale); \
+			} \
+			if (b) \
+			{ \
+				if (s.autograss) \
+				{ \
+					gzputint(g, strlen(s.autograss)); \
+					gzwrite(g, s.autograss, (int)strlen(s.autograss)+1); \
+				} \
+				else gzputint(g, 0); \
+			}
+
+		gzputint(g, MAT_EDIT);
+		loopi(MAT_EDIT) 
+		{
+			show_out_of_renderloop_progress(float(i)/float(MAT_EDIT), "saving material slots...");
+			saveslot(materialslots[i], false);
+		}
+		if (verbose >= 2) console("saved %d material slots", CON_RIGHT, MAT_EDIT);
+
+		gzputint(g, slots.length());
+		loopv(slots)
+		{
+			show_out_of_renderloop_progress(float(i)/float(slots.length()), "saving texture slots...");
+			saveslot(slots[i], true);
+		}
+		if (verbose >= 2) console("saved %d texture slots", CON_RIGHT, slots.length());
+
+
+		gzputint(g, mapmodels.length());
+		loopv(mapmodels)
+		{
+			show_out_of_renderloop_progress(float(i)/float(mapmodels.length()), "saving mapmodel slots...");
+			gzputint(g, strlen(mapmodels[i].name));
+			gzwrite(g, mapmodels[i].name, (int)strlen(mapmodels[i].name)+1);
+			gzputint(g, mapmodels[i].tex);
+		}
+		if (verbose >= 2) console("saved %d mapmodel slots", CON_RIGHT, mapmodels.length());
+
+		gzputint(g, mapsounds.length());
+		loopv(mapsounds)
+		{
+			show_out_of_renderloop_progress(float(i)/float(mapsounds.length()), "saving mapsound slots...");
+			gzputint(g, strlen(mapsounds[i].s->name));
+			gzwrite(g, mapsounds[i].s->name, (int)strlen(mapsounds[i].s->name)+1);
+			gzputint(g, mapsounds[i].vol);
+			gzputint(g, mapsounds[i].maxuses);
+		}
+		if (verbose >= 2) console("saved %d mapsound slots", CON_RIGHT, mapsounds.length());
 
 		gzclose(g);
 		if (verbose) console("saved file '%s' version %d", CON_RIGHT, extname, EXTVERSION);
@@ -437,7 +524,7 @@ void save_world(char *mname, bool nolms)
 	show_out_of_renderloop_progress(0, "saving world...");
 	cl->saveworld(mname);
 
-	conoutf("saved map '%s' in %.1f sec(s)", mapname, (SDL_GetTicks()-savingstart)/1000.0f);
+	conoutf("saved map '%s' in %.1f secs", mapname, (SDL_GetTicks()-savingstart)/1000.0f);
 #else
 	
 	writeushort(f, texmru.length());
@@ -497,34 +584,35 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	setnames(mname, cname);
 	gzFile f = opengzfile(cgzname, "rb9");
 #ifdef BFRONTIER // map extensions, verbosity support
-	if(!f) { conoutf("error loading '%s' from '%s' due to file error", mapname, cgzname); return; }
+	extversion = 0;
+	if(!f) { conoutf("error loading '%s' from '%s': file error", mapname, cgzname); return; }
 	header newhdr;
 	gzread(f, &newhdr, sizeof(header));
 	endianswap(&newhdr.version, sizeof(int), 9);
 	
-	if(strncmp(newhdr.head, "OCTA", 4)!=0) { conoutf("error loading '%s' from '%s' due to malformatted header", mapname, cgzname); gzclose(f); return; }
-	if(newhdr.version>MAPVERSION) { conoutf("error loading '%s' from '%s' as it requires a newer version of Blood Frontier", mapname, cgzname); gzclose(f); return; }
+	if(strncmp(newhdr.head, "OCTA", 4)!=0) { conoutf("error loading '%s' from '%s': malformatted header", mapname, cgzname); gzclose(f); return; }
+	if(newhdr.version>MAPVERSION) { conoutf("error loading '%s' from '%s': requires a newer version of Blood Frontier", mapname, cgzname); gzclose(f); return; }
 	hdr = newhdr;
 	
 	gzFile g;
 	char ehead[4];
-	int eversion = 0;
 	if (et->wantext() && (g = opengzfile(extname, "rb9")))
 	{
 		gzread(g, &ehead, 4);
-		eversion = gzgetint(g);
+		extversion = gzgetint(g);
 		
-		if ((eversion >= 4 && strncmp(ehead, "EXTZ", 4)!=0) ||
-			(eversion <= 3 && strncmp(ehead, "ENTZ", 4)!=0)) // from our old school days
+		if ((extversion >= 4 && strncmp(ehead, "EXTZ", 4)!=0) ||
+			(extversion <= 3 && strncmp(ehead, "ENTZ", 4)!=0)) // from our old school days
 		{
-			conoutf("error loading '%s' from '%s' due to malformatted header", mapname, extname);
+			conoutf("error loading '%s' from '%s': malformatted header", mapname, extname);
 			gzclose(g);
+			extversion = 0;
 		}
-		else if (eversion > EXTVERSION)
+		else if (extversion > EXTVERSION)
 		{
-			conoutf("error loading '%s' from '%s' as it needs a newer version of Blood Frontier", mapname, extname);
+			conoutf("error loading '%s' from '%s': requires a newer version of Blood Frontier", mapname, extname);
 			gzclose(g);
-			eversion = 0;
+			extversion = 0;
 		}
 	}
 
@@ -566,11 +654,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	setvar("lerpsubdivsize", hdr.lerpsubdivsize);
 	
 	string gametype;
-#ifdef BFRONTIER // map controls, verbosity support
 	s_strcpy(gametype, "fps");
-#else
-	s_strcpy(gametype, "fps");
-#endif
+
 	bool samegame = true;
 	int eif = 0;
 	if(hdr.version>=16)
@@ -672,7 +757,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	}
 	delete[] ebuf;
 #ifdef BFRONTIER // verbosity
-	if (verbose >= 2) console("loaded %d ent(s) from '%s'", CON_RIGHT, hdr.numents, cgzname);
+	if (verbose >= 2) console("loaded %d entities", CON_RIGHT, hdr.numents);
 #endif
 
 	show_out_of_renderloop_progress(0, "loading octree...");
@@ -706,20 +791,20 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	}
 
 #ifdef BFRONTIER // verbosity, map extensions, extended entities, world variables
-	if (verbose >= 2) console("loaded %d lightmap(s) from '%s'", CON_RIGHT, hdr.lightmaps, cgzname);
+	if (verbose >= 2) console("loaded %d lightmaps", CON_RIGHT, hdr.lightmaps);
 
 	gzclose(f);
 	if (verbose) console("loaded file '%s' version %d", CON_RIGHT, cgzname, hdr.version);
 
-	if (et->wantext())
+	if (et->wantext() && g)
 	{
-		if (g && eversion >= 1)
+		if (extversion >= 1)
 		{
-			int enuments = gzgetint(g); // number of extents
+			int numents = gzgetint(g); // number of extents
 		
-			loopi(enuments)
+			loopi(numents)
 			{
-				show_out_of_renderloop_progress(float(i)/float(enuments), "loading extended entities...");
+				show_out_of_renderloop_progress(float(i)/float(numents), "loading extended entities...");
 		
 				extentity &e = *et->newentity();
 				ents.add(&e);
@@ -729,7 +814,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 				e.spawned = false;
 				e.inoctanode = false;
 				
-				if (eversion <= 3) e.type -= 74;
+				if (extversion <= 3) e.type -= 74;
 
 				if (!samegame)
 				{
@@ -745,42 +830,141 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 					conoutf("warning: ent outside of world: enttype[%s] index %d (%f, %f, %f)", et->entname(e.type), i, e.o.x, e.o.y, e.o.z);
 				}
 				
-				et->readext(g, eversion, hdr.numents, i, e);
+				et->readext(g, extversion, hdr.numents, i, e);
 			}
 			
-			if (verbose >= 2) console("loaded %d ent(s) from '%s'", CON_RIGHT, enuments, extname);
-
-			if (eversion >= 4)
-			{
-				int enumvars = gzgetint(g);
-				
-				loopi(enumvars)
-				{
-					show_out_of_renderloop_progress(float(i)/float(enuments), "loading world variables...");
-					
-					int elength = gzgetint(g);
-					string evar;
-					
-					gzread(g, evar, elength+1);
-					
-					int eval = gzgetint(g);
-					ident *id = idents->access(evar);
-					
-					if (id && id->_type == ID_VAR && id->_world)
-					{
-						setvar(evar, eval, true);
-					}
-				}
-				
-				if (verbose >= 2) console("loaded %d variable(s) from '%s'", CON_RIGHT, enumvars, extname);
-			}
+			if (verbose >= 2) console("loaded %d entities", CON_RIGHT, numents);
 		}
 		
+		if (extversion >= 4)
+		{
+			int numvars = gzgetint(g);
+			
+			loopi(numvars)
+			{
+				show_out_of_renderloop_progress(float(i)/float(numvars), "loading world variables...");
+				
+				int elength = gzgetint(g);
+				string evar;
+				
+				gzread(g, evar, elength+1);
+				
+				int eval = gzgetint(g);
+				ident *id = idents->access(evar);
+				
+				if (id && id->_type == ID_VAR && id->_world)
+				{
+					setvar(evar, eval, true);
+				}
+			}
+			
+			if (verbose >= 2) console("loaded %d variables", CON_RIGHT, numvars);
+		}
+		
+		if (extversion >= 5)
+		{
+			int sbl = gzgetint(g);
+			string sbn;
+			gzread(g, sbn, sbl+1);
+			float sbs = gzgetfloat(g);
+			loadsky(sbn, &sbs);
+
+			#define loadslot(b) \
+				if (b) \
+				{ \
+					int snl = gzgetint(g); \
+					if (snl > 0) \
+					{ \
+						string sns; \
+						gzread(g, sns, snl+1); \
+						setshader(sns); \
+						int spl = gzgetint(g); \
+						loopj(spl) \
+						{ \
+							int spnl = gzgetint(g); \
+							string spns; \
+							if (spnl) gzread(g, spns, spnl+1); \
+							int spt = gzgetint(g), spi = gzgetint(g); \
+							float spv[4]; \
+							loopk(4) spv[k] = gzgetfloat(g); \
+							setshaderparam(spnl ? spns : NULL, spt, spi, spv[0], spv[1], spv[2], spv[3]); \
+						} \
+					} \
+				} \
+				int tl = gzgetint(g); \
+				loopj(tl) \
+				{ \
+					int tt = gzgetint(g), tnl = gzgetint(g); \
+					string tns; \
+					gzread(g, tns, tnl+1); \
+					int tr = gzgetint(g), tx = gzgetint(g), ty = gzgetint(g); \
+					float ts = gzgetfloat(g); \
+					string tts; \
+					if (!b && !j) { s_sprintf(tts)("%s", materials[i]); } \
+					else { s_sprintf(tts)("%d", tt); } \
+					texture(tts, tns, &tr, &tx, &ty, &ts); \
+				} \
+				if (b) \
+				{ \
+					int al = gzgetint(g); \
+					if (al) \
+					{ \
+						string as; \
+						gzread(g, as, al+1); \
+						autograss(as); \
+					} \
+				}
+			
+			materialreset();
+			int nummat = gzgetint(g);
+			loopi(nummat)
+			{
+				show_out_of_renderloop_progress(float(i)/float(nummat), "loading material slots...");
+				loadslot(false);
+			}
+			if (verbose >= 2) console("loaded %d material slots", CON_RIGHT, nummat);
+		
+			texturereset();
+			int numtex = gzgetint(g);
+			loopi(numtex)
+			{
+				show_out_of_renderloop_progress(float(i)/float(numtex), "loading texture slots...");
+				loadslot(true);
+			}
+			if (verbose >= 2) console("loaded %d texture slots", CON_RIGHT, numtex);
+
+			mapmodelreset();
+			int nummdl = gzgetint(g);
+			loopi(nummdl)
+			{
+				show_out_of_renderloop_progress(float(i)/float(nummdl), "loading mapmodel slots...");
+				int ml = gzgetint(g);
+				string mn;
+				gzread(g, mn, ml+1);
+				int mt = gzgetint(g);
+				mmodel(mn, &mt);
+			}
+			if (verbose >= 2) console("loaded %d mapmodel slots", CON_RIGHT, nummdl);
+
+			clearmapsounds();
+			int numsnd = gzgetint(g);
+			loopi(numsnd)
+			{
+				show_out_of_renderloop_progress(float(i)/float(numsnd), "loading mapsound slots...");
+				int sl = gzgetint(g);
+				string sn;
+				gzread(g, sn, sl+1);
+				int sv = gzgetint(g), sm = gzgetint(g);
+				addsound(sn, sv, sm < 0 ? 0 : max(1, sm), mapsounds);
+			}
+			if (verbose >= 2) console("loaded %d mapsound slots", CON_RIGHT, numsnd);
+		}
+
 		gzclose(g);
-		if (verbose) console("loaded file '%s' version %d", CON_RIGHT, extname, eversion);
+		if (verbose) console("loaded file '%s' version %d", CON_RIGHT, extname, extversion);
 	}
 
-	conoutf("loaded map '%s' in %.1f sec(s)", mapname, (SDL_GetTicks()-loadingstart)/1000.0f);
+	conoutf("loaded map '%s' in %.1f secs", mapname, (SDL_GetTicks()-loadingstart)/1000.0f);
 	console("%s: %s", CON_CENTER|CON_LEFT, sv->gametitle(), hdr.maptitle);
 #else
 	gzclose(f);
