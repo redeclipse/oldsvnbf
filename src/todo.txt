@@ -105,6 +105,11 @@ The Blood Frontier Game (BFG) based on FPS.
 * train platforms, paths (switchable)
 * online/coop and edit (super smash bros, vs battle)?
 * pickup/throw enemies (projectile/bouncer)?
+* background skins
+* new menu skins
+* logo(512x256)
+* tweak icon graphics
+* better weapon icons
 
 = BOT =
 Bots for the First Person Shooter (FPS).
