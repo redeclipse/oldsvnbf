@@ -42,6 +42,7 @@ Modifications for the Engine.
 	- a sort of inverse tetris that uses tetris shaped editing selections to destroy cubes
 	- online collaborative environment (coopworld) [random: xrcd, dynamic db binary]
 	- extended/pro fps game -> sgs?
+* proper rotation looping for animated models
 	
 = FPS =
 Modifications for the First Person Shooter (FPS).
