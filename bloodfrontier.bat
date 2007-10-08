@@ -6,7 +6,7 @@ set BF_HOME=home
 set BF_OPTIONS=-q%BF_HOME% -r -k%BF_DIR%
 
 IF EXIST bin\bloodfrontier_client.exe (
-	bin\bloodfrontier_client.exe %BF_OPTIONS% %*
+	bin\bloodfrontier_client.exe %BF_OPTIONS% %* 
 ) ELSE (
 	IF EXIST %BF_DIR%\bin\bloodfrontier_client.exe (
 		pushd %BF_DIR%
