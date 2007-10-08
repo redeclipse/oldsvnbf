@@ -106,7 +106,7 @@ struct fpsrender
 		startmodelbatches();
 
 #ifdef BFRONTIER
-        const char *ffamdl = "mtroop", *bluemdl = "mtroop/blue", *redmdl = "mtroop/red";
+        const char *ffamdl = "player", *bluemdl = "player/blue", *redmdl = "player/red";
 #else
         const char *ffamdl = ogro() ? "monster/ogro" : "ironsnout",
                    *bluemdl = ogro() ? "monster/ogro/blue" : "ironsnout/blue",
