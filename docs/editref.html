@@ -445,6 +445,9 @@
 <a href="#_teledest_"><tt>"teledest"</tt></a>
 </li>
 <li>
+<a href="#_jumppad_"><tt>"jumppad"</tt></a>
+</li>
+<li>
 <a href="#_mapmodel_"><tt>"mapmodel"</tt></a>
 </li>
 <li>
@@ -1723,6 +1726,14 @@ A variety of pickup-able items, see <a href="./game.html">here</a>.
 Creates a teleport connection, teleports are linked to a teledest with the same
 N (of which there should be exactly one). N can be 0..255. Y is the yaw of the destination and is
 initially taken from the current camera yaw, it cannot be specified when creating the entity.
+</p>
+
+<pre id="_jumppad_">"jumppad" Z [Y] [X]</pre>
+<p>
+A jumppad entity which gives you a push in the direction specified. For example, "jumppad 30 5" makes
+you bounce up quite a bit and also pushes you forward a bit (so it is easier to land on a higher platform).
+This entity does not render anything, so you are responsible for creating something that looks logical below
+this entity.
 </p>
 
 <pre id="_mapmodel_">"mapmodel" [Y] N T R</pre>

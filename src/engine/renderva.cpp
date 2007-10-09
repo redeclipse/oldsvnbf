@@ -1133,7 +1133,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 	}
 
 	ushort *ebuf = lod.ebuf;
-	int lastlm = -1, lastxs = -1, lastys = -1, lastl = -1, lastenvmap = -1, envmapped = 0;
+    int lastlm = -1, lastxs = -1, lastys = -1, lastl = -1, lasto = -1, lastenvmap = -1, envmapped = 0;
     bool mtglow = false, shadowmapped = false;
 	float lastscale = -1;
 	Slot *lastslot = NULL;
@@ -1297,19 +1297,20 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 					// have to pass in env, otherwise same problem as fixed function
                     setlocalparamfv("texgenS", SHPARAM_VERTEX, 0, sgen);
                     setlocalparamfv("texgenT", SHPARAM_VERTEX, 1, tgen);
-
-                    if(pass==RENDERPASS_LIGHTMAP && s && s->type&SHADER_NORMALSLMS && (lastl!=l || s->type&SHADER_GLSLANG))
-                    {
-                        setlocalparamfv("orienttangent", SHPARAM_VERTEX, 2, orientation_tangent[l]);
-                        setlocalparamfv("orientbinormal", SHPARAM_VERTEX, 3, orientation_binormal[l]);
-                    }
-				}
+                }
 
 				lastxs = tex->xs;
 				lastys = tex->ys;
 				lastl = l;
 				lastscale = scale;
 			}
+
+            if(renderpath!=R_FIXEDFUNCTION && pass==RENDERPASS_LIGHTMAP && s && s->type&SHADER_NORMALSLMS && (lasto!=l || s->type&SHADER_GLSLANG))
+            {
+                setlocalparamfv("orienttangent", SHPARAM_VERTEX, 2, orientation_tangent[l]);
+                setlocalparamfv("orientbinormal", SHPARAM_VERTEX, 3, orientation_binormal[l]);
+                lasto = l;
+            }
 
             ushort minvert = es.minvert[dim], maxvert = es.maxvert[dim];
             if(!shadowmapreceiver) { minvert = min(minvert, es.minvert[dim+1]); maxvert = max(maxvert, es.maxvert[dim+1]); }
