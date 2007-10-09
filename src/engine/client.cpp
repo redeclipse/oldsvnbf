@@ -325,6 +325,10 @@ void connects(char *servername)
 		enet_host_flush(clienthost);
 		connmillis = totalmillis;
 		connattempts = 0;
+#ifdef BFRONTIER
+		s_sprintfd(cs)("connecting to %s (esc to abort)", servername);
+		computescreen(cs);
+#endif
 	}
 	else conoutf("\f3could not connect to server");
 }
@@ -366,7 +370,7 @@ void disconnect(int onlyclean, int async)
 		clienthost = NULL;
 	}
 #ifdef BFRONTIER
-	if(!onlyclean) { showgui("main"); }
+	if(!onlyclean) { load_world("usm01"); showgui("main"); }
 #else
 	if(!onlyclean) { localconnect(); cc->gameconnect(false); }
 #endif
@@ -463,6 +467,10 @@ void gets2c()			// get updates from the server
 	if(!clienthost) return;
 	if(connpeer && totalmillis/3000 > connmillis/3000)
 	{
+#ifdef BFRONTIER
+		s_sprintfd(sp)("attempt #%d", connattempts+1);
+		show_out_of_renderloop_progress(float(connattempts)/float(3), sp);
+#endif
 		conoutf("attempting to connect...");
 		connmillis = totalmillis;
 		++connattempts; 

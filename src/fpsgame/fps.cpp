@@ -1247,7 +1247,7 @@ struct fpsclient : igameclient
 		extern int sensitivity, sensitivityscale, invmouse;
 		extern physent *camera1;
 		
-		physent *d = isthirdperson() && thirdpersonstick ? camera1 : player1;
+		physent *d = isthirdperson() && (thirdpersonstick || player1->state == CS_DEAD) ? camera1 : player1;
 		
 		d->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 		d->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
@@ -1261,7 +1261,7 @@ struct fpsclient : igameclient
 	{
 		extern physent *camera1;
 		physent *d = camera1;
-		if (isthirdperson() && !thirdpersonstick && (player1->state != CS_SPECTATOR || player1->clientnum == cameranum))
+		if (isthirdperson() && !thirdpersonstick && player1->state != CS_DEAD && (player1->state != CS_SPECTATOR || player1->clientnum == cameranum))
 			d = player1;
 			
 		vec dir;
@@ -1334,7 +1334,7 @@ struct fpsclient : igameclient
 		if (cameratype <= 0)
 		{
 			camera1->o = player1->o;
-			if (!isthirdperson() || !thirdpersonstick)
+			if (!isthirdperson() || !thirdpersonstick || player1->state != CS_DEAD)
 			{
 				camera1->yaw = player1->yaw;
 				camera1->pitch = player1->pitch;
@@ -1368,7 +1368,7 @@ struct fpsclient : igameclient
 					
 					ph.move(camera1, 10, false, 0, thirdpersondistance);
 					
-					if (!thirdpersonstick)
+					if (!thirdpersonstick && player1->state != CS_DEAD)
 					{
 						vec v(cameratype > 0 ? old : worldpos);
 						v.sub(camera1->o);

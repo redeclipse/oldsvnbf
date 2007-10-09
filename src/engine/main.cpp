@@ -590,7 +590,7 @@ void rehash(bool reload)
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
 
-void startgame(bool start, char *load, char *initscript)
+void startgame(char *load, char *initscript)
 {
 	sv->changemap(load ? load : sv->defaultmap(), 0);
 
@@ -636,76 +636,78 @@ void updateframe(bool dorender)
 
 		checksleep(lastmillis);
 		
-		// miscellaneous general game effects
-		findorientation();
-		entity_particles();
-		updatevol();
-		checkmapsounds();
+		if (!connpeer)
+		{
+			findorientation();
+			entity_particles();
+			updatevol();
+			checkmapsounds();
 	
-		inbetweenframes = false;
-		SDL_GL_SwapBuffers();
-
-		if (cc->ready())
-		{
-			if(frames>2) gl_drawframe(screen->w, screen->h);
-		}
-		else
-		{
-			int w = screen->w, h = screen->h;
-			float fovy = (float)fov*h/w;
-			float aspect = w/(float)h;
-			project(fovy, aspect, hdr.worldsize*2);
-			transplayer();
-		
-			glEnable(GL_TEXTURE_2D);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			inbetweenframes = false;
+			SDL_GL_SwapBuffers();
+	
+			if (cc->ready())
+			{
+				if(frames>2) gl_drawframe(screen->w, screen->h);
+			}
+			else
+			{
+				int w = screen->w, h = screen->h;
+				float fovy = (float)fov*h/w;
+				float aspect = w/(float)h;
+				project(fovy, aspect, hdr.worldsize*2);
+				transplayer();
 			
-			xtravertsva = xtraverts = glde = 0;
-		
-			glClearColor(0.f, 0.f, 0.f, 1);
-			glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
-
-			glDisable(GL_FOG);
-			glDisable(GL_CULL_FACE);
-		
-			defaultshader->set();
-			g3d_render();
-		
-			glDisable(GL_DEPTH_TEST);
-		
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();
-		
-			gettextres(w, h);
-		
-			glMatrixMode(GL_PROJECTION);
-			glLoadIdentity();
-			glOrtho(0, w, h, 0, -1, 1);
-			glColor3f(1, 1, 1);
-
-			glEnable(GL_BLEND);
-
-			glLoadIdentity();
-			glOrtho(0, w*3, h*3, 0, -1, 1);
-
-			int abovegameplayhud = h*3*1650/1800-FONTH*3/2; // hack
-			int hoff = abovegameplayhud - (editmode ? FONTH*4 : 0);
-		
-			char *command = getcurcommand();
-			if (command) rendercommand(FONTH/2, hoff); else hoff += FONTH;
-			if (!hidehud) renderconsole(w, h);
-
-			defaultshader->set();
-			drawcrosshair(w, h);
-
-			glDisable(GL_BLEND);
-			glDisable(GL_TEXTURE_2D);
-			glEnable(GL_DEPTH_TEST);
-		
-			glEnable(GL_CULL_FACE);
-			glEnable(GL_FOG);
+				glEnable(GL_TEXTURE_2D);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				
+				xtravertsva = xtraverts = glde = 0;
+			
+				glClearColor(0.f, 0.f, 0.f, 1);
+				glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
+	
+				glDisable(GL_FOG);
+				glDisable(GL_CULL_FACE);
+			
+				defaultshader->set();
+				g3d_render();
+			
+				glDisable(GL_DEPTH_TEST);
+			
+				glMatrixMode(GL_MODELVIEW);
+				glLoadIdentity();
+			
+				gettextres(w, h);
+			
+				glMatrixMode(GL_PROJECTION);
+				glLoadIdentity();
+				glOrtho(0, w, h, 0, -1, 1);
+				glColor3f(1, 1, 1);
+	
+				glEnable(GL_BLEND);
+	
+				glLoadIdentity();
+				glOrtho(0, w*3, h*3, 0, -1, 1);
+	
+				int abovegameplayhud = h*3*1650/1800-FONTH*3/2; // hack
+				int hoff = abovegameplayhud - (editmode ? FONTH*4 : 0);
+			
+				char *command = getcurcommand();
+				if (command) rendercommand(FONTH/2, hoff); else hoff += FONTH;
+				if (!hidehud) renderconsole(w, h);
+	
+				defaultshader->set();
+				drawcrosshair(w, h);
+	
+				glDisable(GL_BLEND);
+				glDisable(GL_TEXTURE_2D);
+				glEnable(GL_DEPTH_TEST);
+			
+				glEnable(GL_CULL_FACE);
+				glEnable(GL_FOG);
+			}
+			inbetweenframes = true;
 		}
-		inbetweenframes = true;
 	}
 	else clientkeepalive();
 }
@@ -911,7 +913,7 @@ int main(int argc, char **argv)
 	log("cfg");
 #ifdef BFRONTIER // external functions for config and game initialisation
 	rehash(false);
-	startgame(true, load, initscript);
+	startgame(load, initscript);
 #else
 	exec("data/keymap.cfg");
 	exec("data/stdedit.cfg");
