@@ -498,6 +498,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 						float f;
 					} nstor[MAXWORDS];
 					int n = 0, wn = 0;
+                    char *cargs = NULL;
                     if(id->_type==ID_CCOMMAND) v[n++] = id->self;
 					for(char *a = id->_narg; *a; a++) switch(*a)
 					{
@@ -508,7 +509,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 						case 'D': nstor[n].i = addreleaseaction(id->_name) ? 1 : 0; v[n] = &nstor[n].i; n++; break;
 #endif
 						case 'V': v[n++] = w+1; nstor[n].i = numargs-1; v[n] = &nstor[n].i; n++; break;
-						case 'C': v[n++] = conc(w+1, numargs-1, true);  break;
+                        case 'C': if(!cargs) cargs = conc(w+1, numargs-1, true); v[n++] = cargs; break;
 						default: fatal("builtin declared with illegal type");
 					}
 					switch(n)
@@ -524,7 +525,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 						case 8: ((void (__cdecl *)(void *, void *, void *, void *, void *, void *, void *, void *))id->_fun)(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]); break;
 						default: fatal("builtin declared with too many args (use V?)");
 					}
-					if(id->_narg[0]=='C') delete[] (char *)v[0];
+                    if(cargs) delete[] cargs;
 					setretval(commandret);
 					break;
 				}
@@ -637,7 +638,7 @@ void writecfg()
 	if(!f) return;
 	fprintf(f, "// automatically written on exit\n\n");
 #else
-    FILE *f = openfile(cl->savedconfig(), "w");
+    FILE *f = openfile(path(cl->savedconfig(), true), "w");
 	if(!f) return;
 	fprintf(f, "// automatically written on exit, DO NOT MODIFY\n// delete this file to have %s overwrite these settings\n// modify settings in game, or put settings in %s to override anything\n\n", cl->defaultconfig(), cl->autoexec());
 #endif

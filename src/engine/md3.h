@@ -345,7 +345,7 @@ void md3envmap(char *meshname, char *envmap)
 
 void md3bumpmap(char *meshname, char *skin, char *normalmap)
 {
-    if(renderpath==R_FIXEDFUNCTION || !hasVBO) return;
+    if(renderpath==R_FIXEDFUNCTION) return;
     Texture *skintex, *normalmaptex;
     s_sprintfd(spath)("%s/%s", md3dir, skin);
     skintex = textureload(spath, 0, true, false);

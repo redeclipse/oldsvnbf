@@ -479,7 +479,7 @@ void writeservercfg()
 	FILE *f = gameopen("servers.cfg", "w");
 #else
 	if(!cl->savedservers()) return;
-    FILE *f = openfile(cl->savedservers(), "w");
+    FILE *f = openfile(path(cl->savedservers(), true), "w");
 #endif
 	if(!f) return;
 	fprintf(f, "// servers connected to are added here automatically\n\n");

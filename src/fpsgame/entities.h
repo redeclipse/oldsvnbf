@@ -93,7 +93,6 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-
 #ifdef BFRONTIER // extended entities
 			if (isext(e.type))
 			{
@@ -343,7 +342,7 @@ struct entities : icliententities
 
 			case JUMPPAD:
 				radius = 4;
-				dir = vec(e.attr3, e.attr2, e.attr1).normalize();
+                dir = vec((int)(char)e.attr3*10.0f, (int)(char)e.attr2*10.0f, e.attr1*12.5f).normalize();
 				break;
 
 			case MONSTER:
@@ -410,7 +409,6 @@ struct entities : icliententities
 		if(e.type==MAPMODEL || e.type==BASE) return 0.0f;
 		return 4.0f;
 	}
-
 #ifdef BFRONTIER // extended entities
 	IVARP(showallwp, 0, 0, 1);
 
