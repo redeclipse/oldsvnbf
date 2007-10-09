@@ -167,7 +167,7 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-DBFRONTIER=33"/>
+			<Add option="-DBFRONTIER=32"/>
 		</Compiler>
 		<Unit filename="..\data\bfg\defaults.cfg">
 			<Option compilerVar=""/>
@@ -225,6 +225,12 @@
 		</Unit>
 		<Unit filename="..\data\fps\map.cfg">
 			<Option compilerVar="CPP"/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="data"/>
+		</Unit>
+		<Unit filename="..\data\fps\menus.cfg">
+			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>

@@ -586,7 +586,7 @@ void particleinit()
     parttexs[6] = textureload("packages/textures/spark.png");
     parttexs[7] = textureload("packages/textures/explosion.jpg");   
     parttexs[8] = textureload("packages/textures/blood.png");
-    parttexs[9] = textureload("packages/textures/lightning.jpg");
+    parttexs[9] = textureload("packages/textures/lightning.png");
 	parttexs[10] = textureload("packages/textures/electricty.png");
 #else
 	parttexs[0] = textureload("data/martin/base.png");

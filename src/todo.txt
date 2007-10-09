@@ -5,6 +5,7 @@
 * engine side bots with client side logic
 
 = HIGH PRIORITY =
+* damage hud feedback
 * vehicles, rolling/throttle/brake
 * motd from master server -> title screen
 * configurable hud (and toggles)
@@ -15,6 +16,7 @@
 	- console
 	- ping time/graph
 	- optimize, improve (new gfx, ideas)
+* add tags to commands and variables for description and usage
 
 = TODO =
 * moving sounds (OpenAL)
