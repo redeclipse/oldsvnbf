@@ -431,6 +431,17 @@ void cursorupdate()
 
     glEnable(GL_POLYGON_OFFSET_LINE);
 
+#ifdef BFRONTIER
+#define planargrid(q,r,s) \
+		for (float v = 0.f; v < (hdr.worldsize-s); v += s) \
+		{ \
+			vec a; \
+			a = q; a.x = v; boxs3D(a, r, s); \
+			a = q; a.y = v; boxs3D(a, r, s); \
+			a = q; a.z = v; boxs3D(a, r, s); \
+		}
+#endif
+
 	if(!moving && !hovering)
 	{
         if(selhmap)
@@ -441,24 +452,8 @@ void cursorupdate()
 #ifdef BFRONTIER
 		if (showcursorgrid)
 		{
-			glColor3ub(15, 20, 15);
-			float v = 0.f;
-			
-			for (v = 0; v < (hdr.worldsize-sel.grid); v += sel.grid)
-			{
-				vec a, b;
-				(a = lu.tovec()).x = v;
-				(b = vec(lusize)).x = v + sel.grid;
-				boxs3D(a, b, 1);  
-				
-				(a = lu.tovec()).y = v;
-				(b = vec(lusize)).y = v + sel.grid;
-				boxs3D(a, b, 1);  
-				
-				(a = lu.tovec()).z = v;
-				(b = vec(lusize)).z = v + sel.grid;
-				boxs3D(a, b, 1);
-			}
+			glColor3ub(20, 20, 20);
+			planargrid(lu.tovec(), vec(1, 1, 1), gridsize);
 		}
 #endif
 	}
@@ -484,24 +479,8 @@ void cursorupdate()
 #ifdef BFRONTIER
 		if (showselgrid)
 		{
-			glColor3ub(15, 20, 15);
-			float v = 0.f;
-			
-			for (v = 0; v < (hdr.worldsize-sel.grid); v += sel.grid)
-			{
-				vec a, b;
-				(a = sel.o.tovec()).x = v;
-				(b = sel.s.tovec()).x = v + sel.grid;
-				boxs3D(a, b, sel.grid);  
-				
-				(a = sel.o.tovec()).y = v;
-				(b = sel.s.tovec()).y = v + sel.grid;
-				boxs3D(a, b, sel.grid);  
-				
-				(a = sel.o.tovec()).z = v;
-				(b = sel.s.tovec()).z = v + sel.grid;
-				boxs3D(a, b, sel.grid);
-			}
+			glColor3ub(20, 10, 0);
+			planargrid(sel.o.tovec(), sel.s.tovec(), sel.grid);
 		}
 #endif
 	}
