@@ -6,6 +6,7 @@ Legend [
 ]
 
 = wip edition =
+mod: improved planar grid code and rendering
 mod: 'showselgrid' (0..1, 1) and 'showcursorgrid' (0..1, 0) to show planar grids in editmode
 mod: more unconnected state tweaks, progress screen for connection attempts
 mod: unconnected state tweaks
