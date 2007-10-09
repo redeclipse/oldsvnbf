@@ -2,6 +2,10 @@
 #include "engine.h"
 
 extern int outline;
+#ifdef BFRONTIER
+VARP(showcursorgrid, 0, 0, 1);
+VARP(showselgrid, 0, 1, 1);
+#endif
 
 void boxs(int orient, vec o, const vec &s)
 {
@@ -434,6 +438,29 @@ void cursorupdate()
         else
 		glColor3ub(120,120,120);
 		boxs(orient, lu.tovec(), vec(lusize));
+#ifdef BFRONTIER
+		if (showcursorgrid)
+		{
+			glColor3ub(15, 20, 15);
+			float v = 0.f;
+			
+			for (v = 0; v < (hdr.worldsize-sel.grid); v += sel.grid)
+			{
+				vec a, b;
+				(a = lu.tovec()).x = v;
+				(b = vec(lusize)).x = v + sel.grid;
+				boxs3D(a, b, 1);  
+				
+				(a = lu.tovec()).y = v;
+				(b = vec(lusize)).y = v + sel.grid;
+				boxs3D(a, b, 1);  
+				
+				(a = lu.tovec()).z = v;
+				(b = vec(lusize)).z = v + sel.grid;
+				boxs3D(a, b, 1);
+			}
+		}
+#endif
 	}
 
 	// selections
@@ -454,6 +481,29 @@ void cursorupdate()
 		boxs(sel.orient, co, cs);
 		glColor3ub(0,0,120);	 // 3D selection box
 		boxs3D(sel.o.tovec(), sel.s.tovec(), sel.grid);
+#ifdef BFRONTIER
+		if (showselgrid)
+		{
+			glColor3ub(15, 20, 15);
+			float v = 0.f;
+			
+			for (v = 0; v < (hdr.worldsize-sel.grid); v += sel.grid)
+			{
+				vec a, b;
+				(a = sel.o.tovec()).x = v;
+				(b = sel.s.tovec()).x = v + sel.grid;
+				boxs3D(a, b, sel.grid);  
+				
+				(a = sel.o.tovec()).y = v;
+				(b = sel.s.tovec()).y = v + sel.grid;
+				boxs3D(a, b, sel.grid);  
+				
+				(a = sel.o.tovec()).z = v;
+				(b = sel.s.tovec()).z = v + sel.grid;
+				boxs3D(a, b, sel.grid);
+			}
+		}
+#endif
 	}
 	
     glDisable(GL_POLYGON_OFFSET_LINE);
