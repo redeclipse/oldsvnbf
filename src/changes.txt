@@ -1,168 +1,171 @@
 A log of changes, as they happen. Ordered from newest to oldest.
 
 Legend [
-	mod: engine modification
-	bfg: blood frontier game change
+	eng: engine modification
+	gam: game modification
 ]
 
 = wip edition =
-mod: improved planar grid code and rendering
-mod: 'showselgrid' (0..1, 1) and 'showcursorgrid' (0..1, 0) to show planar grids in editmode
-mod: more unconnected state tweaks, progress screen for connection attempts
-mod: unconnected state tweaks
-mod: 'texturedel index' added to delete a texture slot
-mod: added to extension file -> skybox, texture/mapmodel/mapsound slots
-mod: changed to world variables -> 'grasswidth', 'grassheight', 'grassrand', 'grassblend',
+gam: removed strafe rolling
+eng: removed maxroll variable
+eng: hacked 'calclight' command so default quality is 3
+eng: improved planar grid code and rendering
+eng: 'showselgrid' (0..1, 1) and 'showcursorgrid' (0..1, 0) to show planar grids in editmode
+eng: more unconnected state tweaks, progress screen for connection attempts
+eng: unconnected state tweaks
+eng: 'texturedel index' added to delete a texture slot
+eng: added to extension file -> skybox, texture/mapmodel/mapsound slots
+eng: changed to world variables -> 'grasswidth', 'grassheight', 'grassrand', 'grassblend',
 	'lightcompress', 'mmskylight', 'blurlms', 'blurskylight', 'edgetolerance', 'adaptivesample',
 	'lerpsubdiv', 'lerpsubdivsize', 'loddistance', 'fog', 'fogcolour', 'flarelights',
 	'shadowmapambient', 'shadowmapangle', 'envmapradius', 'waterfog', 'lavafog', 'waterspec',
 	'fullbright', 'fullbrightlevel'
-mod: proper world variable resetting, defaulting, saving, and reloading
-mod: menu goes back a screen on input when unconnected instead of clearing
-mod: version increment to v0.33
-mod: moved server privilege definitions engine side for commands
-mod: automatic path() in findfile() so createdir() successfully creates proper file paths
-mod: 'rehash [nosave]' for reloading all init configuration
-mod: 'exists fname [mode]' for script checking file existence
-bfg: updated menus
-mod: 'gravity', 'speed', 'jumpvel', 'watertype', 'watervel' added to world variables
-mod: world variable saving/loading to extension file
-bfg: updated map config
-mod: imported some sauerbraten content which permission was given for
-mod: ssp and krs removed for future integration elsewhere
-mod: aligned extended entities to top of game specific table
-bfg: thirdperson fov restricted to <=100
-bfg: fov restricted to <=125
-mod: reimported enet
-mod: "gun reload" and "gun zoom" animations added
-mod: enabled grid sizes 0-2 for smaller geometry editing ability
-fps: camera wobble intensity lowered and made configurable
-bfg: grenades don't explode when they hit a player
-bfg: modified bouncer elasticity and waterfric for grenades
-mod: 'causticnum' added for variable number of caustic frames
-fps: titlecard fixes in line with newly interpreted maptime (todo: merge to load screen)
+eng: proper world variable resetting, defaulting, saving, and reloading
+eng: menu goes back a screen on input when unconnected instead of clearing
+eng: version increment to v0.33
+eng: moved server privilege definitions engine side for commands
+eng: automatic path() in findfile() so createdir() successfully creates proper file paths
+eng: 'rehash [nosave]' for reloading all init configuration
+eng: 'exists fname [mode]' for script checking file existence
+gam: updated menus
+eng: 'gravity', 'speed', 'jumpvel', 'watertype', 'watervel' added to world variables
+eng: world variable saving/loading to extension file
+gam: updated map config
+eng: imported some sauerbraten content which permission was given for
+eng: ssp and krs removed for future integration elsewhere
+eng: aligned extended entities to top of game specific table
+gam: thirdperson fov restricted to <=100
+gam: fov restricted to <=125
+eng: reimported enet
+eng: "gun reload" and "gun zoom" animations added
+eng: enabled grid sizes 0-2 for smaller geometry editing ability
+gam: camera wobble intensity lowered and made configurable
+gam: grenades don't explode when they hit a player
+gam: modified bouncer elasticity and waterfric for grenades
+eng: 'causticnum' added for variable number of caustic frames
+gam: titlecard fixes in line with newly interpreted maptime (todo: merge to load screen)
 ssp: updated sparks
-mod: spark particle now uses new lightning type
-fps: quad timer hud blending
-mod: removed gui2d and forced all code to use 2d menus
-mod: don't remove top level menu unless connected
-mod: show menu unless loading a map or connecting to server
-mod: enabled connection-less state with basic hud and menus (for startup)
-mod: removed damageblend, cleaned up gethudcolour
-mod: screenshots now use mapname and timestamp
-mod: etz backups now made, all backups now use timestamp
-mod: new physics module created
-bfg: disabled fist
-bfg: gunwait times now dependant on weapon
-fps: camera wobble from nearby explosions
-fps: camera wobble when damaged and 'damagewobble = 1'
-bfg: double jump impulse added
-bfg: imported gun and item stats
-mod: extended entites moved from fps-specific to worldio extensions
-mod: move to blood frontier complete
-mod: game module controlled speed variance
-bfg: started bloodfrontier specific extensions on fpsgame
+eng: spark particle now uses new lightning type
+gam: quad timer hud blending
+eng: removed gui2d and forced all code to use 2d menus
+eng: don't remove top level menu unless connected
+eng: show menu unless loading a map or connecting to server
+eng: enabled connection-less state with basic hud and menus (for startup)
+eng: removed damageblend, cleaned up gethudcolour
+eng: screenshots now use mapname and timestamp
+eng: etz backups now made, all backups now use timestamp
+eng: new physics module created
+gam: disabled fist
+gam: gunwait times now dependant on weapon
+gam: camera wobble from nearby explosions
+gam: camera wobble when damaged and 'damagewobble = 1'
+gam: double jump impulse added
+gam: imported gun and item stats
+eng: extended entites moved from fps-specific to worldio extensions
+eng: move to blood frontier complete
+eng: game module controlled speed variance
+gam: started bloodfrontier specific extensions on fpsgame
 ssp: dynlights attached to certain projectiles
-fps: dynlights attached to certain projectiles
-fps: render all waypoint connections in editmode as well
-mod: primitive rendering semantics changed
+gam: dynlights attached to certain projectiles
+gam: render all waypoint connections in editmode as well
+eng: primitive rendering semantics changed
 ssp: player now taunts camera after 'idletime'
 ssp: player plays win anim when reaching the goal
-mod: online game module clients now connect to local loopback server (which can be made public)
-mod: imported shadowmap code, added relevant variables to perf checker
-mod: preliminary revision to joystick for modularity and more local player support
-fps: varying hit tones depending on amount of damage dealt
-fps: 'cameradir' infinite loop fixed when no other views are available
-fps: quad dynlight fadeout fixed
-fps: 'getweapon' command added to retrieve the current weapon index
-mod: core modifications in seperate headers merged into main
-mod: all modifications now marked with 'BFRONTIER' define, allowing easier patching and code flow
-fps: 'weaponswitchstyle' modifications now more understandable (thanks to makkE)
-mod: long line breaking now saves and restores colour values
-mod: save/restore colour values now lasts entire frame
+eng: online game module clients now connect to local loopback server (which can be made public)
+eng: imported shadowmap code, added relevant variables to perf checker
+eng: preliminary revision to joystick for modularity and more local player support
+gam: varying hit tones depending on amount of damage dealt
+gam: 'cameradir' infinite loop fixed when no other views are available
+gam: quad dynlight fadeout fixed
+gam: 'getweapon' command added to retrieve the current weapon index
+eng: core modifications in seperate headers merged into main
+eng: all modifications now marked with 'BFRONTIER' define, allowing easier patching and code flow
+gam: 'weaponswitchstyle' modifications now more understandable (thanks to makkE)
+eng: long line breaking now saves and restores colour values
+eng: save/restore colour values now lasts entire frame
 krs: bug in physics code fixed
-fps: 'duelgame' moved to servmode class
+gam: 'duelgame' moved to servmode class
 bot: improvements to navigation and logic
-fps: 'damagescale' server variable added
-fps: bugfix in bot logic for reset/suicide
-fps: 'spawnstate' server variable to control variety of spawning options
-fps: 'duelgame' server variable for 1v1 arena games
+gam: 'damagescale' server variable added
+gam: bugfix in bot logic for reset/suicide
+gam: 'spawnstate' server variable to control variety of spawning options
+gam: 'duelgame' server variable for 1v1 arena games
 bot: home in on quadded players more for attacking
-fps: zoom script now uses crosshair support
+gam: zoom script now uses crosshair support
 bot: better target updates
-fps: quad dynlight fadeout
-mod: 'perfmax', 'perffps', 'perfrate' for automatic performance adjustments
-mod: 'perf' variable added for preset performance levels
+gam: quad dynlight fadeout
+eng: 'perfmax', 'perffps', 'perfrate' for automatic performance adjustments
+eng: 'perf' variable added for preset performance levels
 
 = summer edition =
-fps: 'fraglimit' no longer considered in capture gamemodes
-fps: '-M' option added for Message of the Day
-fps: more discrete updates, better jumping judgements
-fps: all bots become passive when botdrop is enabled
-fps: more sensible bot auto population logic, reuse bots from last round
+gam: 'fraglimit' no longer considered in capture gamemodes
+gam: '-M' option added for Message of the Day
+gam: more discrete updates, better jumping judgements
+gam: all bots become passive when botdrop is enabled
+gam: more sensible bot auto population logic, reuse bots from last round
 ssp: pickups now use center console as well for better display
-fps: 'centerchat' variable toggles chat printed to center
-mod: console modified to support multiple output targets at once
-fps: added toggle-able rounds to dmsp
+gam: 'centerchat' variable toggles chat printed to center
+eng: console modified to support multiple output targets at once
+gam: added toggle-able rounds to dmsp
 bot: now supports co-operative singleplayer modes
-mod: 'contime', 'centertime', 'centerlines'
-mod: 'centerprint' moved engine side, merged with console modifications
+eng: 'contime', 'centertime', 'centerlines'
+eng: 'centerprint' moved engine side, merged with console modifications
 bot: waypoints now update correctly in botdrop mode when using teleports/jumppads
 bot: now switch to melee when in very close proximity
-fps: 'weaponswitchstyle' variable added to use a normal switching method
-mod: changes to make gui2d work properly
+gam: 'weaponswitchstyle' variable added to use a normal switching method
+eng: changes to make gui2d work properly
 bot: logic revised for monsters, bots now use weapon-jumps for higher points
-fps: 'botmonster' variable added for bot-logic controlled monsters in sp
+gam: 'botmonster' variable added for bot-logic controlled monsters in sp
 ssp: electric shield uses spark flare
-mod: spark flare added
-mod: added -rinit.cfg to command line
+eng: spark flare added
+eng: added -rinit.cfg to command line
 bot: logic moved to pathfinding
-mod: now adding -qusr/ as default home directory to command line
+eng: now adding -qusr/ as default home directory to command line
 ssp: particle effects toned down for framerate boost
-mod: set 'SDL_VIDEO_WINDOW_POS' to '0,0' in windowed mode
-fps: damage, kill, respawn sounds
-fps: 'instakill' and 'teamdamage' server side variables
-fps: 'capturespawn' option to toggle auto-respawn in capture games
-mod: now using module specific config properly
+eng: set 'SDL_VIDEO_WINDOW_POS' to '0,0' in windowed mode
+gam: damage, kill, respawn sounds
+gam: 'instakill' and 'teamdamage' server side variables
+gam: 'capturespawn' option to toggle auto-respawn in capture games
+eng: now using module specific config properly
 ssp: new sfx for coin, checkpoint, goal
-mod: new sfx created
+eng: new sfx created
 bot: preliminary pathfinding
 ssp: entity detachment in response to nearby electric shield
-mod: imported and utilised new mod package loading
+eng: imported and utilised new mod package loading
 bot: emulation layers removed due to new sauerbraten support
-mod: moved grabmouse to a variable, bound to F10
+eng: moved grabmouse to a variable, bound to F10
 ssp: scripts given direction and value arguments to determine action
-mod: fullbrightlevel (0..255, 128) added to control brightness level
-mod: fullbright enabled at any time (for fullbright games/levels)
+eng: fullbrightlevel (0..255, 128) added to control brightness level
+eng: fullbright enabled at any time (for fullbright games/levels)
 ssp: shield special ability implementation started
 ssp: removed single coin pickup text to reduce onscreen clutter
 sms: bloodfrontier masterserver code enabled
-mod: fixed new server variable integration with standalone
-mod: added standalone server for windows too
-mod: globalised titlecard actions
-fps: preliminary mod detection support
-fps: server powerup enable/disable support
-fps: bots now fake clients on server for fraglimit support
-fps: timelimit, fraglimit server side command variables
-fps: server side command mod created
-mod: server side command support added
+eng: fixed new server variable integration with standalone
+eng: added standalone server for windows too
+eng: globalised titlecard actions
+gam: preliminary mod detection support
+gam: server powerup enable/disable support
+gam: bots now fake clients on server for fraglimit support
+gam: timelimit, fraglimit server side command variables
+gam: server side command mod created
+eng: server side command support added
 krs: physics and movement tweaked
 krs: basic kart movement and rotation
-mod: entire source hijacked for standalone functionality
+eng: entire source hijacked for standalone functionality
 krs: concept game module created
 bot: take more care when doing sharp turns
-fps: improved thirdperson aiming and camera integration
-mod: new thirdperson variables
-mod: ported watertype, gravity, jumpvel to global game module variables
-mod: hijacked physics for jumpvel, gravity, etc
+gam: improved thirdperson aiming and camera integration
+eng: new thirdperson variables
+eng: ported watertype, gravity, jumpvel to global game module variables
+eng: hijacked physics for jumpvel, gravity, etc
 ssp: tweaked ssp particles with new rendering code
 ssp: fixed projectile z axis
 ssp: fixed camera facing to stay inside world but still have a usable rotation
-mod: hijacked draw_text() for shadows and hudblend on all elements
+eng: hijacked draw_text() for shadows and hudblend on all elements
 ssp: powerup/inventory now works properly
 ssp: blocks can now be damaged by weapons
 ssp: now using fps quad effects for invincible
-fps: default map now "most popular map", currently 'douze'
+gam: default map now "most popular map", currently 'douze'
 bot: debugging information more visual
 bot: reaction to waypoints improved
 ssp: enemies and projectiles now follow axis rules
@@ -188,7 +191,7 @@ ssp: smooth turning and path transitions
 ssp: 'bgmusic' renamed 'map_music'
 ssp: 'map_text' added for special levels
 ssp: ironsnout added
-mod: moved player models over to ironsnout
+eng: moved player models over to ironsnout
 ssp: fade in/out
 ssp: game start map
 ssp: game saving and loading
@@ -197,8 +200,8 @@ ssp: map definitions tweaked
 ssp: goals tweaked to also acts as respawn points
 ssp: enemy waking fixed
 ssp: improved rotating camera variables
-fps: scoreshud removed in favour of clamping scores to player
-fps: fixed up rankhud and defaulted it to '0' for purists
+gam: scoreshud removed in favour of clamping scores to player
+gam: fixed up rankhud and defaulted it to '0' for purists
 ssp: y axis more active for crash style level layout
 ssp: cutscene renamed axis for broader range
 ssp: hud display overhauled
@@ -206,7 +209,7 @@ ssp: offset renamed path for better clarity
 ssp: entity height as well as radius
 ssp: inventory now unusabe unless alive
 ssp: cutscene, block and entity tweaks
-mod: editmode'd and incorporated clobbered showentradius, showentdir
+eng: editmode'd and incorporated clobbered showentradius, showentdir
 ssp: level start title card and hud bar
 ssp: variabl-ised alot of world settings
 ssp: 'lv_water' varaible for slime/lava
@@ -223,34 +226,34 @@ ssp: enemy edge detection added
 ssp: offset depth clamp added
 ssp: item/destructible blocks added
 ssp: fixed x/y axis messups
-mod: fixed entdir bug
-mod: added camera name display
-mod: tweaked calcranks for spectator mode
+eng: fixed entdir bug
+eng: added camera name display
+eng: tweaked calcranks for spectator mode
 bot: updated and simplified bot waypoint logic
-fps: fixed extents not realigning on save/reload when regular entities change
+gam: fixed extents not realigning on save/reload when regular entities change
 ssp: nextmap now controlled by 'game.cfg' (can still be overridden by map though)
 bot: 'botdrop' now goes up to 2 for auto-linking in both directions
 bot: waypoints created in autogeneration mode now drop to floor
 bot: waypoints moved to extents
-fps: extra hooks for extents, linking added
+gam: extra hooks for extents, linking added
 ssp: sfx for hits going up for consecutive hits
 ssp: entity collision now handled more accurately to compensate for lower radius
 ssp: dropheights, z position, and radius of entities fixed
 ssp: jumppad attr3 now adjusts pitch of model for better appearance
 ssp: corrected and simplified 'sspweap::clobber' code for player/enemy damage
-mod: hijacked '3dgui.cpp' for new menu functions
-fps: fixed 'fixentity' to work for extents too
-mod: added 'gotocamera' command and basic camera entity handling
-fps: fixed 'calcrank' to happen on (dis-)connects and mapchange
-mod: added 'modentradius' for visual radius circles
+eng: hijacked '3dgui.cpp' for new menu functions
+gam: fixed 'fixentity' to work for extents too
+eng: added 'gotocamera' command and basic camera entity handling
+gam: fixed 'calcrank' to happen on (dis-)connects and mapchange
+eng: added 'modentradius' for visual radius circles
 ssp: bouncing items now behave properly
 ssp: player loses a random amount of coins when hurt (kinda like sonic)
 ssp: enemies with coins throw them out when they die
 ssp: editmode now puts player at camera position
 ssp: tweaked 'menus.cfg' a little to override some default stuff
 ssp: projectiles can now use teleports/jumppads
-mod: reintroduced eisenstern (rpggame) so that work can be done on it for the main branch
-mod: added defaults for virtuals in 'modigame.h' so regular game modules work
+eng: reintroduced eisenstern (rpggame) so that work can be done on it for the main branch
+eng: added defaults for virtuals in 'modigame.h' so regular game modules work
 ssp: projectiles now check clamp offsets and behave correctly
 ssp: added konion/zonion and shockarmor models by geartrooper
 ssp: completely exposed enemies to cubescript, enemies are now totally controlled by script
@@ -261,7 +264,7 @@ ssp: complete fps enemy set imported, added a few rpg characters too
 ssp: enemy setup (name, model, weight, etc) now totally scriptable
 ssp: can now press down on offset entities to go back to a lower level
 ssp: offset entities now clamp above entire z axis until another offset changes it
-mod: check some entities for line of sight before rendering certain elements
+eng: check some entities for line of sight before rendering certain elements
 ssp: player clamp is adjusted to closest clamping entity when exiting editmode
 ssp: enemy timing fixes
 ssp: invincibility and effects
@@ -269,12 +272,12 @@ ssp: entities now checked on level end (for neat end of level effects)
 ssp: powerup system tweaked to be more mario-like and less dangerous to the player
 ssp: start map in editmode fixed
 ssp: mapmodel yaw bug fixed
-fps: entities with directions now have visual indicator
+gam: entities with directions now have visual indicator
 ssp: drop heights fixed
-mod: moved ssp rendering primitives to modengine and cleaned them up
+eng: moved ssp rendering primitives to modengine and cleaned them up
 ssp: pickup particle effects
-fps: tweaked 'centerprint' and made 'rank calculation' aware of state changes
-fps: added 'repeatrank' and 'centerrank'
+gam: tweaked 'centerprint' and made 'rank calculation' aware of state changes
+gam: added 'repeatrank' and 'centerrank'
 ssp: enemy jumping/turning/direction fixed
 ssp: entities are fixed as they're edited/created
 ssp: 'fov' forced to 60 when playing (as suggested by Nieb)
@@ -291,25 +294,25 @@ ssp: player weapons and shooting (grenades and rockets)
 ssp: music volume control and fading
 ssp: enemy/map init scripts delayed
 ssp: sounds moved to config
-mod: added coin model created for ssp by geartrooper
-mod: hijacked configuration loading for seperation by game modules
-mod: source/directory/mod structure cleaned up slightly
+eng: added coin model created for ssp by geartrooper
+eng: hijacked configuration loading for seperation by game modules
+eng: source/directory/mod structure cleaned up slightly
 ssp: preliminary code for directional (both x and y) movement
 ssp: 'sspclient:sfx()' for pickup sounds (highest volume) and directional sound (entities)
 ssp: enemy collision damage (to and from player)
-fps: 'fpsclient::defaultmap()' changed from 'metl4' to 'nmp8_d'
-fps: fixed 'show_out_of_renderloop_progress()' calls
+gam: 'fpsclient::defaultmap()' changed from 'metl4' to 'nmp8_d'
+gam: fixed 'show_out_of_renderloop_progress()' calls
 bot: bots attack again (but still needs tweaking)
 bot: hacked into fpsserver to enable entity respawning after bots pick up items
-fps: 'CAMERA' extended entity added and integrated with spectator camera
-mod: 'igameclient::saveworld()' and 'igameclient::loadworld()' added for extended entities
-mod: 'worldio.cpp' hijacked for extended entities
-fps: 'fpsclient::extents' created for mod-specific extended entity loading
-fps: hijacked all fpsgame files for future expansion
+gam: 'CAMERA' extended entity added and integrated with spectator camera
+eng: 'igameclient::saveworld()' and 'igameclient::loadworld()' added for extended entities
+eng: 'worldio.cpp' hijacked for extended entities
+gam: 'fpsclient::extents' created for mod-specific extended entity loading
+gam: hijacked all fpsgame files for future expansion
 ssp: enemy initial spawn works again, noting enemy entity in 'enemyent' strcuture
-mod: tweaked batch scripts to centralise mod repository, all binaries sourced from 'mod/bin' now
-fps: added newline aware 'centerprint'; text will be shown 'centertime' millis 
-mod: removed 'physics.cpp' changes as new physics doesn't require it
+eng: tweaked batch scripts to centralise mod repository, all binaries sourced from 'mod/bin' now
+gam: added newline aware 'centerprint'; text will be shown 'centertime' millis 
+eng: removed 'physics.cpp' changes as new physics doesn't require it
 ssp: cleanups, unified movement
 ssp: direction added to necessary entities, preliminary enemy scripting
 ssp: fixed up goal/nextmap stuff, added movement at end of level
@@ -326,49 +329,49 @@ ssp: items and logic created (powerup, invincible, lives, jumppad, teleport/tele
 ssp: velocity hacks for jumping (jumpheight = four "gridsize 3" cubes)
 ssp: logic to keep camera in the level for aesthetic reasons
 ssp: when a menu is active or in editmode, allow the camera to move pitch/yaw so the menu is usable
-mod: 'menuactive()' added to so the game module can tell a menu is active
+eng: 'menuactive()' added to so the game module can tell a menu is active
 ssp: go to start map when respawning on game over
 ssp: lives tally, death on timelimit, game over on no lives
-mod: 'igameclient::defaultmap()' added to tell the engine the default map for the game module
-mod: 'igameclient::wantcrosshair()' added to accomodate ssp not needing a crosshair
+eng: 'igameclient::defaultmap()' added to tell the engine the default map for the game module
+eng: 'igameclient::wantcrosshair()' added to accomodate ssp not needing a crosshair
 ssp: camera hacks for 2d (mario) and 3d behindview (crash bandicoot) views
 ssp: lives, coins, power (health/ability) and timelimit added
 ssp: core framework added for new gameplay module SSP (Side Scrolling Platformer)
-mod: streamlined mod sources to reference unchanged engine code from sauerbraten's own 'src/'
-mod: preliminary code written for mod-friendly master server cgi (non-working)
-fps: camera pitch/yaw tied to player pitch/yaw in thirdperson to allow independant view rotation
+eng: streamlined mod sources to reference unchanged engine code from sauerbraten's own 'src/'
+eng: preliminary code written for mod-friendly master server cgi (non-working)
+gam: camera pitch/yaw tied to player pitch/yaw in thirdperson to allow independant view rotation
 bot: improved bot logic
 bot: tweaked waypoint dropping constants to reduce clutter and 'twirly circles'
 bot: improved waypoint navigating and enemy homing
-fps: streamlined 'mod.cfg' into 'defaults.cfg' and had it cover loading of all game/bot defaults
-mod: moved 'config.cfg' so pure sauerbraten config isn't overwritten/changed
-fps: streamlined 'bot' modifications into general 'mod' modifications, allowing broader (and heirarchial) access
-fps: hud improved for 'scoreshud' and 'cameradir' integration
-fps: 'cameradir' for camera switching, 'cameracycle' for timed auto cycle
-fps: preliminary camera support
+gam: streamlined 'mod.cfg' into 'defaults.cfg' and had it cover loading of all game/bot defaults
+eng: moved 'config.cfg' so pure sauerbraten config isn't overwritten/changed
+gam: streamlined 'bot' modifications into general 'mod' modifications, allowing broader (and heirarchial) access
+gam: hud improved for 'scoreshud' and 'cameradir' integration
+gam: 'cameradir' for camera switching, 'cameracycle' for timed auto cycle
+gam: preliminary camera support
 bot: fixed spectator/editmode bug in 'botstate::botspawn()'
-fps: 'scoreshud' for team hud addons
+gam: 'scoreshud' for team hud addons
 bot: better server emulation, meaning the timelimit works and map rotation!
 bot: circle around enemies at close range
 bot: home in on targets via waypoints (less suicides)
 bot: 'botwaydrop' added for forcing a waypoint to be dropped
-mod: moved 'mousemove()' to 'igameclient::mousemove()' to accomodate 'igameclient::recomputecamera()'
-mod: moved 'recomputecamera()' to 'igameclient::recomputecamera()' so the game module controls the camera
+eng: moved 'mousemove()' to 'igameclient::mousemove()' to accomodate 'igameclient::recomputecamera()'
+eng: moved 'recomputecamera()' to 'igameclient::recomputecamera()' so the game module controls the camera
 
 = sauerbraten gui edition =
 bot: softened damage velocity multiplier (flying bot fix)
 bot: fixed movement being treated as local (spectator/editmode fix)
 bot: preliminary retaliation, so bots hold a grudge
-mod: added 'igameclient::saveconfig()' for cleanup and saving actions
+eng: added 'igameclient::saveconfig()' for cleanup and saving actions
 bot: change pitch as well as yaw (slowly) to reduce fake movement
 bot: bots emulate 'aimat()' so they don't shoot thin air
 bot: load settings for bots from 'mapname.bcf' (for botnum, etc)
 bot: 'botrate' and 'botauto' settings are now saved to 'bot.cfg'
-fps: added 'mod.cfg' for loading mod config
+gam: added 'mod.cfg' for loading mod config
 bot: added 'bot.cfg' for loading bot config
 bot: now loading/saving waypoint files from 'mapname.wpz'
 doc: html-ified the readme
-mod: rearranged source for change from bot mod to gameplay extension mod
+eng: rearranged source for change from bot mod to gameplay extension mod
 interim release
 bot: make cg shooting smarter/faster
 bot: don't populate bots automatically on waypointless maps

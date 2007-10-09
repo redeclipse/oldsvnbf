@@ -70,18 +70,8 @@ struct physics : iphysics
 
 	void updateroll(physent *d)
 	{
-		extern int maxroll, curtime;
-		
-		if(d->strafe==0)
-		{
-			d->roll = d->roll/(1+(float)sqrtf((float)curtime)/25);
-		}
-		else
-		{
-			d->roll += d->strafe*curtime/-30.0f;
-			if(d->roll>maxroll) d->roll = (float)maxroll;
-			if(d->roll<-maxroll) d->roll = (float)-maxroll;
-		}
+		extern int curtime;
+		d->roll = d->roll/(1+(float)sqrtf((float)curtime)/25);
 	}
 
 	void updatewater(fpsent *d, int waterlevel)

@@ -1086,9 +1086,7 @@ void vectoyawpitch(const vec &v, float &yaw, float &pitch)
 	pitch = asin(v.z/v.magnitude())/RAD;
 }
 
-#ifdef BFRONTIER // less initial roll please
-VARP(maxroll, 0, 1, 90);
-#else
+#ifndef BFRONTIER // no maxroll
 VARP(maxroll, 0, 3, 20);
 #endif
 VAR(floatspeed, 10, 100, 1000);

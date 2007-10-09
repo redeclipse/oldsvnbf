@@ -1118,7 +1118,11 @@ void calclight(int *quality)
 			(end - start) / 1000.0f);
 }
 
+#ifdef BFRONTIER
+ICOMMAND(calclight, "s", (char *s), int n = *s ? atoi(s) : 3; calclight(&n));
+#else
 COMMAND(calclight, "i");
+#endif
 
 VAR(patchnormals, 0, 0, 1);
 
