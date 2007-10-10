@@ -26,9 +26,11 @@
 * only two guns at same time (drop guns, etc)
 * secondary fire modes (grenade: flash mines)
 * shootable triggers
-* background skins
 * new menu skins
-* logo(512x256)
+* hands for hudguns
+* akimbo versions of pistol and smg
+* zombies with mixable parts
+
 
 = IDEAS =
 * game/movement types
