@@ -13,8 +13,7 @@ struct weaponstate
 	#define gunallowed(am,gn,gs) (\
 			gn >= GUN_FIST && gn < NUMGUNS && (gs < 0 || gn != gs) && \
 			(am[gn] || g_bf || gn == GUN_FIST) && \
-			(gn != GUN_FIST || !g_bf) && \
-			(gn != GUN_RIFLE || (g_bf && m_noitems)) \
+			(gn != GUN_FIST || !g_bf) \
 		)
 
 	IVARP(maxdebris, 0, 25, 1000);
@@ -41,7 +40,7 @@ struct weaponstate
 	{
 		if(player1->state!=CS_ALIVE || a<-1 || b<-1 || c<-1 || a>=NUMGUNS || b>=NUMGUNS || c>=NUMGUNS) return;
 #ifdef BFRONTIER
-		int gamemode = cl.gamemode, s = player1->gunselect;
+		int s = player1->gunselect;
 		
 		if (weaponswitchstyle())
 		{
@@ -713,8 +712,6 @@ struct weaponstate
 		gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
 		d->lastattackgun = d->gunselect;
 		
-		int gamemode = cl.gamemode;
-		
 		if (!d->ammo[d->gunselect])
 		{ 
 			if(d == player1)
@@ -731,7 +728,7 @@ struct weaponstate
 					else
 					{
 						gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).reloaddelay;
-						d->ammo[d->gunselect] = getitem(d->gunselect).max;
+						d->ammo[d->gunselect] = getitem(d->gunselect-1).max;
 					}
 				}
 				else

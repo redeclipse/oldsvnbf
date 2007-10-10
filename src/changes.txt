@@ -6,6 +6,7 @@ Legend [
 ]
 
 = wip edition =
+gam: fixed weapon reloading and rifle selection
 eng: particle entities now render in editmode in place of particle splash
 gam: removed strafe rolling
 eng: removed maxroll variable
