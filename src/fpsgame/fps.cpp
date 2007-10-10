@@ -1278,9 +1278,11 @@ struct fpsclient : igameclient
 	{
 		if (bf)
 		{
-			int maxfov = isthirdperson() ? 100 : 125;
+			int maxfov = isthirdperson() ? 100 : 125,
+				minfov = player1->gunselect == GUN_RIFLE ? 0 : 90;
 			
 			if (fov > maxfov) fov = maxfov;
+			if (fov < minfov) fov = minfov;
 			
 			if (isthirdperson())
 			{

@@ -32,7 +32,19 @@ struct weaponstate
 
 		});
 #ifdef BFRONTIER
-		CCOMMAND(getweapon, "", (weaponstate *self), self->getweapon());
+		CCOMMAND(getgun, "", (weaponstate *self), intret(self->player1->gunselect));
+		CCOMMAND(getammo, "", (weaponstate *self), intret(self->player1->ammo[self->player1->gunselect]));
+		CCOMMAND(getweapon, "", (weaponstate *self), {
+			int t = -1;
+			if (self->weaponswitchstyle())
+			{
+				loopi(WSAMT) if (wsguns[i] == self->player1->gunselect) { t = i; break; }
+			}
+			else t = self->player1->gunselect;
+			
+			s_sprintfd(s)("%d", t);
+			result(s);
+		});
 #endif
 	}
 
@@ -109,22 +121,7 @@ struct weaponstate
 		player1->gunselect = s;
 	}
 
-#ifdef BFRONTIER
-	void getweapon()
-	{
-		int t = -1;
-		
-		if (weaponswitchstyle())
-		{
-			loopi(WSAMT) if (wsguns[i] == player1->gunselect) { t = i; break; }
-		}
-		else
-			t = player1->gunselect;
-		
-		s_sprintfd(s)("%d", t);
-		result(s);
-	}
-#else
+#ifndef BFRONTIER
 	int reloadtime(int gun) { return guns[gun].attackdelay; }
 #endif	
 
