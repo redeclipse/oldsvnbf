@@ -461,7 +461,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 			w[2] = NULL;
 		}
 		else
-		{	 
+		{
 			ident *id = idents->access(c);
 #ifdef BFRONTIER // server side support
 			if (isserver && (!id || id->_server == false))
@@ -843,6 +843,9 @@ void clearsleep_(int *clearoverrides)
 COMMANDN(clearsleep, clearsleep_, "i");
 
 #ifdef BFRONTIER // extra script utils, definitions
+ICOMMAND(max, "ii", (int a, int b), intret(max(a, b)));
+ICOMMAND(min, "ii", (int a, int b), intret(min(a, b)));
+
 ICOMMAND(exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
 
 char *getgameident() { return sv->gameident(); }
