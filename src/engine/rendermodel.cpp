@@ -251,6 +251,10 @@ model *loadmodel(const char *name, int i, bool msg)
 	return m;
 }
 
+#ifdef BFRONTIER
+ICOMMAND(registermodel, "s", (char *name), loadmodel(name, -1, true));
+#endif
+
 void clear_mdls()
 {
 	enumerate(mdllookup, model *, m, delete m);

@@ -937,8 +937,8 @@ void g3d_render()
 			glPushMatrix();
 			glLoadIdentity();
 
-			glDisable(GL_DEPTH_TEST);
 #ifndef BFRONTIER // gui2d always
+			glDisable(GL_DEPTH_TEST);
 		}
 		else
 		{
@@ -961,8 +961,8 @@ void g3d_render()
 #ifndef BFRONTIER // gui2d always
 		if(gui2d)
 		{
-#endif
 			glEnable(GL_DEPTH_TEST);
+#endif
 	
 			glMatrixMode(GL_PROJECTION);
 			glPopMatrix();

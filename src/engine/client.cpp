@@ -370,7 +370,7 @@ void disconnect(int onlyclean, int async)
 		clienthost = NULL;
 	}
 #ifdef BFRONTIER
-	if(!onlyclean) { load_world("usm01"); showgui("main"); }
+	if(!onlyclean) { emptymap(0, true); showgui("main"); }
 #else
 	if(!onlyclean) { localconnect(); cc->gameconnect(false); }
 #endif
