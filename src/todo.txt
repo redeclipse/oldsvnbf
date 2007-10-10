@@ -52,6 +52,8 @@
 * logo(512x256)
 * tweak icon graphics
 * better weapon icons
+* weapon icons need alpha enabled
+* weapon icons need to be 128x64 instead of 64x64
 
 = IDEAS =
 * game/movement types
