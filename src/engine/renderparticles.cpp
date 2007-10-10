@@ -1422,6 +1422,30 @@ void entity_particles()
 	makelightflares();
  
 	const vector<extentity *> &ents = et->getents();
+#ifdef BFRONTIER
+	if (editmode)
+	{
+		loopv(entgroup)
+		{
+			entity &e = *ents[entgroup[i]];
+			particle_text(e.o, entname(e), 13, 1);
+		}
+	}
+	loopv(ents)
+	{
+		entity &e = *ents[i];
+		if (e.type == ET_EMPTY) continue;
+
+		if (e.type == ET_PARTICLES && e.o.dist(camera1->o) <= maxparticledistance)
+			makeparticles(e);
+
+		if (editmode)
+		{
+			particle_text(e.o, entname(e), 11, 1);
+			if (e.type != ET_PARTICLES) regular_particle_splash(2, 2, 40, e.o);
+		}
+	}
+#else
 	if(!editmode) 
 	{
 		loopv(ents)
@@ -1443,10 +1467,12 @@ void entity_particles()
 		{
 			entity &e = *ents[i];
 			if(e.type==ET_EMPTY) continue;
+
 			particle_text(e.o, entname(e), 11, 1);
 			regular_particle_splash(2, 2, 40, e.o);
 		}
 	}
+#endif
 }
 
 #ifdef BFRONTIER // extra particle helpers

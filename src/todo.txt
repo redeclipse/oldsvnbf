@@ -1,59 +1,37 @@
-= IN PROGRESS =
+= WIP =
 * integrate all modules together into switchable type
 * all-in-one package for maps
 * improve editmode
 * engine side bots with client side logic
 
-= HIGH PRIORITY =
+= TODO =
 * damage hud feedback
 * vehicles, rolling/throttle/brake
 * motd from master server -> title screen
-* configurable hud (and toggles)
-	- clock
-	- player/item in crosshair
-	- awards/obituraries
-	- scores
-	- console
-	- ping time/graph
-	- optimize, improve (new gfx, ideas)
+* configurable hud (clock, in crosshair, awards/obits, score, console, ping time/graph)
+* add alpha channels (hud icons)
+* new icons (weapons/hud/etc)
 * add tags to commands and variables for description and usage
-
-= TODO =
+* slow zoom
+* headshot, etc
 * moving sounds (OpenAL)
-* camera paths
 * fix material transitions and depth testing
 * make text shadow optional
-* more scripting hooks
-* mod on server browser
 * modification and package manager module
-* entity extensions: hurt, wind, elevator/train/platform, trigger (explode), fog
-* music/mp3 player
 * proper rotation looping for animated models
-* more hud improvements
 * precaching
-* fix map models
 * move world vars server side
-* move instagib to server mod
+* move instagib etc to server mod
 * address issues with alpha blended models
-* head shots
 * S_SMGLOAD, S_REGEN, S_HEADSHOT
 * unlimited ammo on all but grenade, reload (sound, only when empty)
 * remove entities: armour, health, pickups, carrot, checkpoint
 * only two guns at same time (drop guns, etc)
-* masterserver stuff, online accounts
 * secondary fire modes (grenade: flash mines)
 * shootable triggers
-* slow zoom
-* headshot, etc
-* exploding barrels
-* train platforms, paths (switchable)
 * background skins
 * new menu skins
 * logo(512x256)
-* tweak icon graphics
-* better weapon icons
-* weapon icons need alpha enabled
-* weapon icons need to be 128x64 instead of 64x64
 
 = IDEAS =
 * game/movement types
@@ -99,3 +77,9 @@
 * camera axis rotation/more camera controls
 * wall kicks/stompimg
 * pickup/throw enemies (projectile/bouncer)
+* explosion blast waves
+* more scripting hooks
+* mod on server browser
+* entity extensions: hurt, wind, elevator/train/platform, trigger (explode), fog, exploding barrels, camera paths
+* music/mp3 player
+* masterserver stuff, online accounts

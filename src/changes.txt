@@ -6,6 +6,7 @@ Legend [
 ]
 
 = wip edition =
+eng: particle entities now render in editmode in place of particle splash
 gam: removed strafe rolling
 eng: removed maxroll variable
 eng: hacked 'calclight' command so default quality is 3
