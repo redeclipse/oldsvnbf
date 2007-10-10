@@ -766,110 +766,141 @@ void gl_drawhud(int w, int h, int fogmat);
 
 void gl_drawframe(int w, int h)
 {
-	defaultshader->set();
-
-	recomputecamera();
-	
-	cleardynlights();
-	cl->adddynlights();
-
-	float fovy = (float)fov*h/w;
-	float aspect = w/(float)h;
-	cube &c = lookupcube((int)camera1->o.x, (int)camera1->o.y, int(camera1->o.z + camera1->aboveeye*0.5f));
-	int fogmat = c.ext ? c.ext->material : MAT_AIR;
-	if(fogmat!=MAT_WATER && fogmat!=MAT_LAVA) fogmat = MAT_AIR;
-
-	setfog(fogmat);
-	if(fogmat!=MAT_AIR)
+#ifdef BFRONTIER
+	if (cc->ready())
 	{
-		fovy += (float)sin(lastmillis/1000.0)*2.0f;
-		aspect += (float)sin(lastmillis/1000.0+PI)*0.1f;
-	}
-
-	int farplane = max(max(fog*2, 384), hdr.worldsize*2);
-
-	project(fovy, aspect, farplane);
-
-	transplayer();
-
-	glEnable(GL_TEXTURE_2D);
-
-	glPolygonMode(GL_FRONT_AND_BACK, wireframe && editmode ? GL_LINE : GL_FILL);
-	
-	xtravertsva = xtraverts = glde = 0;
-
-	if(!hasFBO) drawreflections();
-
-    visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, fov);
-    
-    extern GLuint shadowmapfb;
-    if(shadowmap && !shadowmapfb) rendershadowmap();
-
-	glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
-
-	if(limitsky()) drawskybox(farplane, true);
-
-	rendergeom();
-
-	queryreflections();
-
-    if(!wireframe) renderoutline();
-
-	rendermapmodels();
-
-	extern int waterrefract;
-	if(!waterrefract) 
-	{
+#endif
 		defaultshader->set();
-		cl->rendergame();
-	}
-
-	if(fogmat==MAT_WATER)
-	{
-		cube &s = lookupcube((int)camera1->o.x, (int)camera1->o.y, int(camera1->o.z + camera1->aboveeye*1.25f));
-		if(s.ext && s.ext->material==MAT_WATER) rendercaustics(0, false);
-	}
-
-	defaultshader->set();
-
-	if(!limitsky()) drawskybox(farplane, false);
-
-	if(hasFBO) drawreflections();
-
-	if(waterrefract) 
-	{
-		defaultshader->set();
-		cl->rendergame();
-	}
-
-    renderwater();
-    rendergrass();
-
-	rendermaterials();
-    render_particles(curtime);
-
-	if(!isthirdperson()) 
-	{
-		project(hudgunfov, aspect, farplane);
-		cl->drawhudgun();
+	
+		recomputecamera();
+		
+		cleardynlights();
+		cl->adddynlights();
+	
+		float fovy = (float)fov*h/w;
+		float aspect = w/(float)h;
+		cube &c = lookupcube((int)camera1->o.x, (int)camera1->o.y, int(camera1->o.z + camera1->aboveeye*0.5f));
+		int fogmat = c.ext ? c.ext->material : MAT_AIR;
+		if(fogmat!=MAT_WATER && fogmat!=MAT_LAVA) fogmat = MAT_AIR;
+	
+		setfog(fogmat);
+		if(fogmat!=MAT_AIR)
+		{
+			fovy += (float)sin(lastmillis/1000.0)*2.0f;
+			aspect += (float)sin(lastmillis/1000.0+PI)*0.1f;
+		}
+	
+		int farplane = max(max(fog*2, 384), hdr.worldsize*2);
+	
 		project(fovy, aspect, farplane);
-	}
-
-	glDisable(GL_FOG);
-	glDisable(GL_CULL_FACE);
-
-	renderfullscreenshader(w, h);
 	
-	defaultshader->set();
-	g3d_render();
+		transplayer();
+	
+		glEnable(GL_TEXTURE_2D);
+	
+		glPolygonMode(GL_FRONT_AND_BACK, wireframe && editmode ? GL_LINE : GL_FILL);
+		
+		xtravertsva = xtraverts = glde = 0;
+	
+		if(!hasFBO) drawreflections();
+	
+		visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, fov);
+		
+		extern GLuint shadowmapfb;
+		if(shadowmap && !shadowmapfb) rendershadowmap();
+	
+		glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
+	
+		if(limitsky()) drawskybox(farplane, true);
+	
+		rendergeom();
+	
+		queryreflections();
+	
+		if(!wireframe) renderoutline();
+	
+		rendermapmodels();
+	
+		extern int waterrefract;
+		if(!waterrefract) 
+		{
+			defaultshader->set();
+			cl->rendergame();
+		}
+	
+		if(fogmat==MAT_WATER)
+		{
+			cube &s = lookupcube((int)camera1->o.x, (int)camera1->o.y, int(camera1->o.z + camera1->aboveeye*1.25f));
+			if(s.ext && s.ext->material==MAT_WATER) rendercaustics(0, false);
+		}
+	
+		defaultshader->set();
+	
+		if(!limitsky()) drawskybox(farplane, false);
+	
+		if(hasFBO) drawreflections();
+	
+		if(waterrefract) 
+		{
+			defaultshader->set();
+			cl->rendergame();
+		}
+	
+		renderwater();
+		rendergrass();
+	
+		rendermaterials();
+		render_particles(curtime);
+	
+		if(!isthirdperson()) 
+		{
+			project(hudgunfov, aspect, farplane);
+			cl->drawhudgun();
+			project(fovy, aspect, farplane);
+		}
+	
+		glDisable(GL_FOG);
+		glDisable(GL_CULL_FACE);
+	
+		renderfullscreenshader(w, h);
+		
+#ifndef BFRONTIER
+		defaultshader->set();
+		g3d_render();
+#endif
 
-	glDisable(GL_TEXTURE_2D);
-	notextureshader->set();
+		glDisable(GL_TEXTURE_2D);
+		notextureshader->set();
+	
+		gl_drawhud(w, h, fogmat);
+	
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_FOG);
+#ifdef BFRONTIER
+	}
+	else
+	{
+		float fovy = (float)fov*h/w;
+		float aspect = w/(float)h;
+		project(fovy, aspect, hdr.worldsize*2);
+		transplayer();
+	
+		glEnable(GL_TEXTURE_2D);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		
+		xtravertsva = xtraverts = glde = 0;
+	
+		glClearColor(0.f, 0.f, 0.f, 1);
+		glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
 
-	gl_drawhud(w, h, fogmat);
-
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_FOG);
+		glDisable(GL_FOG);
+		glDisable(GL_CULL_FACE);
+	
+		gl_drawhud(w, h, MAT_AIR);
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_FOG);
+	}
+#endif
 }
 
 #ifdef BFRONTIER // better crosshair support
@@ -967,7 +998,6 @@ void gl_drawhud(int w, int h, int fogmat)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, w, h, 0, -1, 1);
-
     glColor3f(1, 1, 1);
 
     extern int debugsm;
@@ -981,7 +1011,7 @@ void gl_drawhud(int w, int h, int fogmat)
 
 #ifdef BFRONTIER // game hud colour control
 	vec colour;
-	if(cl->gethudcolour(colour))
+	if(cc->ready() && cl->gethudcolour(colour))
 	{
 		glDepthMask(GL_FALSE);
 		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
@@ -994,6 +1024,17 @@ void gl_drawhud(int w, int h, int fogmat)
 		glEnd();
 		glDepthMask(GL_TRUE);
 	}
+
+	glEnable(GL_TEXTURE_2D);
+	defaultshader->set();
+
+	glDisable(GL_BLEND);
+	cl->gameplayhud(w, h); // can make more dramatic changes this way without getting in the way
+	g3d_render();
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glEnable(GL_BLEND);
 #else
 	if(dblend || fogmat==MAT_WATER || fogmat==MAT_LAVA)
 	{
@@ -1021,15 +1062,9 @@ void gl_drawhud(int w, int h, int fogmat)
 		dblend -= curtime*100/damageblendfactor;
 		if(dblend<0) dblend = 0;
 	}
-#endif
 
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
-
-#ifdef BFRONTIER // moved up here
-	glDisable(GL_BLEND);
-	cl->gameplayhud(w, h); // can make more dramatic changes this way without getting in the way
-	glEnable(GL_BLEND);
 #endif
 
 	glLoadIdentity();

@@ -248,78 +248,84 @@ struct fpsclient : igameclient
         if(!maptime) { maptime = lm + curtime; return; }
 		lastmillis = lm;
 		if(!curtime) return;
-		physicsframe();
 #ifdef BFRONTIER
-		int scale = max(curtime/5, 1);
-		#define adjust(n,m) { if (n > 0) { n -= scale*m; } if (n < 0) { n = 0; } }
-		adjust(camerawobble, 1);
-		adjust(damageresidue, 1);
-		
-		if (bf)
+		if (cc.ready() && player1->clientnum >= 0)
 		{
-			if (player1->state == CS_ALIVE && !intermission)
+			int scale = max(curtime/5, 1);
+			#define adjust(n,m) { if (n > 0) { n -= scale*m; } if (n < 0) { n = 0; } }
+			adjust(camerawobble, 1);
+			adjust(damageresidue, 1);
+			
+			if (bf)
 			{
-				if (player1->health < player1->maxhealth && player1->nexthealth <= lastmillis)
+				if (player1->state == CS_ALIVE && !intermission)
 				{
-					int na = lastmillis-player1->nexthealth, 
-						nb = na%300, inc = ((na-nb)+300)/300;
-					player1->health = min(player1->health + inc, player1->maxhealth);
-					player1->nexthealth = lastmillis + 300 - nb;
-				}
-				
-				if (player1->timeinair)
-				{
-					if (player1->jumpnext && lastmillis-player1->lastimpulse > 3000)
+					if (player1->health < player1->maxhealth && player1->nexthealth <= lastmillis)
 					{
-						vec dir;
-						vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
-						dir.normalize();
-						dir.mul(ph.jumpvel(player1));
-						player1->vel.add(dir);
-						player1->lastimpulse = lastmillis;
-						player1->jumpnext = false;
+						int na = lastmillis-player1->nexthealth, 
+							nb = na%300, inc = ((na-nb)+300)/300;
+						player1->health = min(player1->health + inc, player1->maxhealth);
+						player1->nexthealth = lastmillis + 300 - nb;
+					}
+					
+					if (player1->timeinair)
+					{
+						if (player1->jumpnext && lastmillis-player1->lastimpulse > 3000)
+						{
+							vec dir;
+							vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
+							dir.normalize();
+							dir.mul(ph.jumpvel(player1));
+							player1->vel.add(dir);
+							player1->lastimpulse = lastmillis;
+							player1->jumpnext = false;
+						}
+					}
+					else player1->lastimpulse = 0;
+				}
+			}
+
+			physicsframe();
+#endif
+			et.checkquad(curtime, player1);
+			ws.moveprojectiles(curtime);
+			if(player1->clientnum>=0 && player1->state==CS_ALIVE) ws.shoot(player1, pos); // only shoot when connected to server
+			ws.bounceupdate(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
+			gets2c();			// do this first, so we have most accurate information when our player moves
+			otherplayers();
+			ms.monsterthink(curtime, gamemode);
+#ifdef BFRONTIER
+			if(player1->state==CS_DEAD)
+			{
+				if(lastmillis-player1->lastpain<2000)
+				{
+					player1->move = player1->strafe = 0;
+					ph.move(player1, 10, false);
+				}
+				else if(!intermission && player1->state == CS_DEAD)
+				{
+					int last = lastmillis-player1->lastpain;
+					
+					if(m_capture && capturespawn() && last >= cpc.RESPAWNSECS*1000)
+					{
+						respawnself();
 					}
 				}
-				else player1->lastimpulse = 0;
 			}
-		}
-#endif
-		et.checkquad(curtime, player1);
-		ws.moveprojectiles(curtime);
-		if(player1->clientnum>=0 && player1->state==CS_ALIVE) ws.shoot(player1, pos); // only shoot when connected to server
-		ws.bounceupdate(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
-		gets2c();			// do this first, so we have most accurate information when our player moves
-		otherplayers();
-		ms.monsterthink(curtime, gamemode);
-#ifdef BFRONTIER
-		if(player1->state==CS_DEAD)
-		{
-			if(lastmillis-player1->lastpain<2000)
+			else if(!intermission)
 			{
-				player1->move = player1->strafe = 0;
-				ph.move(player1, 10, false);
+				ph.move(player1, 20, true);
+				if(player1->physstate>=PHYS_SLOPE) swaymillis += curtime;
+				float k = pow(0.7f, curtime/10.0f);
+				swaydir.mul(k); 
+				ph.updatewater(player1, 0);
+				swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.speed(player1)))));
+				et.checkitems(player1);
+				if(m_classicsp) checktriggers();
 			}
-			else if(!intermission && player1->state == CS_DEAD)
-			{
-				int last = lastmillis-player1->lastpain;
-				
-				if(m_capture && capturespawn() && last >= cpc.RESPAWNSECS*1000)
-				{
-					respawnself();
-				}
-			}
+			c2sinfo(player1);
 		}
-		else if(!intermission)
-		{
-			ph.move(player1, 20, true);
-			if(player1->physstate>=PHYS_SLOPE) swaymillis += curtime;
-			float k = pow(0.7f, curtime/10.0f);
-			swaydir.mul(k); 
-			ph.updatewater(player1, 0);
-			swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.speed(player1)))));
-			et.checkitems(player1);
-			if(m_classicsp) checktriggers();
-		}
+		else gets2c();
 #else
 		if(player1->state==CS_DEAD)
 		{
@@ -339,8 +345,8 @@ struct fpsclient : igameclient
 			et.checkitems(player1);
 			if(m_classicsp) checktriggers();
 		}
-#endif
 		if(player1->clientnum>=0) c2sinfo(player1);	// do this last, to reduce the effective frame lag
+#endif
 	}
 
 	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
@@ -813,7 +819,6 @@ struct fpsclient : igameclient
 			wtime = gunvar(player1->gunlast, player1->gunselect),
 			otime = lastmillis - wtime;
 
-		// TODO: zoom
 		if (otime < rtime)
 		{
 			int anim = getgun(player1->gunselect).reloaddelay &&
@@ -865,185 +870,205 @@ struct fpsclient : igameclient
 
 	void gameplayhud(int w, int h)
 	{
-		int ox = w*900/h, oy = 900;
-
-		glLoadIdentity();
-		glOrtho(0, ox, oy, 0, -1, 1);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		if (!hidehud && maptime)
+		if (!hidehud)
 		{
-			int secs = lastmillis-maptime;
-			float fade = 1.f, amt = hudblend*0.01f;
-			
-			if (secs <= CARDTIME+CARDFADE)
+			if (cc.ready() && player1->clientnum >= 0 && maptime)
 			{
-				int x = ox;
+				int ox = w*900/h, oy = 900;
 		
-				if (secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
-				else if (secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
-		
-				const char *maptitle = getmaptitle();
-				if (!*maptitle) maptitle = "Untitled by Unknown";
+				glLoadIdentity();
+				glOrtho(0, ox, oy, 0, -1, 1);
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+				int secs = lastmillis-maptime;
+				float fade = 1.f, amt = hudblend*0.01f;
 				
-				glColor4f(1.f, 1.f, 1.f, amt);
+				if (secs <= CARDTIME+CARDFADE)
+				{
+					int x = ox;
+			
+					if (secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
+					else if (secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
+			
+					const char *maptitle = getmaptitle();
+					if (!*maptitle) maptitle = "Untitled by Unknown";
+					
+					glColor4f(1.f, 1.f, 1.f, amt);
+			
+					rendericon("packages/icons/sauer.jpg", ox+20-x, oy-75, 64, 64);
+			
+					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT, maptitle);
+			
+					glColor4f(1.f, 1.f, 1.f, fade);
+					rendericon("packages/icons/overlay.png", ox+20-x, oy-260, 144, 144);
+					if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
+						rendericon("packages/icons/sauer.jpg", ox+20-x, oy-260, 144, 144);
+					
+					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), AL_LEFT, sv->gametitle());
+				}
+				else
+				{
+					fpsent *d = player1;
 		
-				rendericon("packages/icons/sauer.jpg", ox+20-x, oy-75, 64, 64);
+					if (lastmillis-maptime <= CARDTIME+CARDFADE+CARDFADE)
+						fade = amt*(float(lastmillis-maptime-CARDTIME-CARDFADE)/float(CARDFADE));
+					else fade *= amt;
+						
+					if (player1->state == CS_SPECTATOR)
+					{
+						if (player1->clientnum == -cameranum)
+							d = player1;
+						else if (players.inrange(-cameranum) && players[-cameranum])
+							d = players[-cameranum];
+					}
+					
+					if (getvar("fov") < 90)
+					{
+						settexture("packages/textures/overlay_zoom.png");
+						
+						glColor4f(1.f, 1.f, 1.f, 1.f);
 		
-				draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT, maptitle);
-		
-				glColor4f(1.f, 1.f, 1.f, fade);
-				rendericon("packages/icons/overlay.png", ox+20-x, oy-260, 144, 144);
-				if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
-					rendericon("packages/icons/sauer.jpg", ox+20-x, oy-260, 144, 144);
+						glBegin(GL_QUADS);
 				
-				draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), AL_LEFT, sv->gametitle());
+						glTexCoord2f(0, 0); glVertex2i(0, 0);
+						glTexCoord2f(1, 0); glVertex2i(ox, 0);
+						glTexCoord2f(1, 1); glVertex2i(ox, oy);
+						glTexCoord2f(0, 1); glVertex2i(0, oy);
+									
+						glEnd();
+					}
+					
+					if (damageresidue > 0)
+					{
+						float pc = float(damageresidue)/500.f;
+						settexture("packages/textures/overlay_damage.png");
+						
+						glColor4f(1.f, 1.f, 1.f, pc);
+		
+						glBegin(GL_QUADS);
+				
+						glTexCoord2f(0, 0); glVertex2i(0, 0);
+						glTexCoord2f(1, 0); glVertex2i(ox, 0);
+						glTexCoord2f(1, 1); glVertex2i(ox, oy);
+						glTexCoord2f(0, 1); glVertex2i(0, oy);
+									
+						glEnd();
+					}
+					
+					glColor4f(1.f, 1.f, 1.f, amt);
+					rendericon("packages/icons/sauer.jpg", 20, oy-75, 64, 64);
+					
+					if (d != NULL)
+					{
+						if (d->health > 0 && d->state == CS_ALIVE)
+						{
+							int hs[4][HD_MAX][5] = {
+								{
+									{ 80, 75, 96, 75, AL_LEFT },
+									{ 80, 75, 96, 75, AL_LEFT },
+									{ 80, 75, 96, 75, AL_RIGHT },
+								},
+								{
+									{ 280, 75, 296, 75, AL_LEFT },
+									{ 80, 145, 96, 145, AL_LEFT },
+									{ 80, 145, 96, 145, AL_RIGHT },
+								},
+								{
+									{ 480, 75, 496, 75, AL_LEFT },
+									{ 80, 215, 96, 215, AL_LEFT },
+									{ 80, 215, 96, 215, AL_RIGHT },
+								},
+								{
+									{ 680, 75, 648, 75, AL_CENTER },
+									{ 80, 285, 48, 285, AL_CENTER },
+									{ 80, 285, 48, 285, AL_CENTER },
+								},
+							};
+							
+							#define style(a,b) \
+								(hudstyle() == HD_RIGHT && b != 4 ? (b%2 ? oy : ox)-hs[a][hudstyle()][b] : (b%2 ? oy-hs[a][hudstyle()][b] : hs[a][hudstyle()][b]))
+							
+							glColor4f(1.f, 1.f, 1.f, fade);
+							drawicon(192.f, 0.f, style(0,0), style(0,1));
+							draw_textx("%d", style(0,2), style(0,3), 255, d->health<=50 ? (d->health<=25 ? 0 : 128) : 255, d->health<=50 ? 0 : 255, int(255.f*fade), style(0,4), d->health);
+							
+							glColor4f(1.f, 1.f, 1.f, fade);
+							drawicon((float)(d->armourtype*64), 0.f, style(1,0), style(1,1));
+							draw_textx("%d", style(1,2), style(1,3), 255, d->armour<=50 ? (d->armour<=25 ? 0 : 128) : 255, d->armour<=50 ? 0 : 255, int(255.f*fade), style(1,4), d->armour);
+							
+							glColor4f(1.f, 1.f, 1.f, fade);
+							
+							int g = d->gunselect;
+							int r = 64;
+							if(g==GUN_PISTOL)
+							{
+								g = 4;
+								r = 0;
+							}
+							int mx[NUMGUNS] =
+								{
+									0, 30, 60, 15, 15, 30, 120, 0, 0, 0, 0
+								};
+								
+							drawicon((float)(g*64), (float)r, style(2,0), style(2,1));
+							
+							glColor4f(1.f, 1.f, 1.f, fade);
+							draw_textx("%d", style(2,2), style(2,3), 255, d->ammo[d->gunselect]<=mx[d->gunselect]/2 ? (d->ammo[d->gunselect]<=mx[d->gunselect]/4 ? 0 : 128) : 255, mx[d->gunselect]/2 ? 0 : 255, int(255.f*fade), style(2,4), d->ammo[d->gunselect]);
+							
+							if (d->quadmillis)
+							{
+								string qs;
+								s_sprintf(qs)("%d", d->quadmillis/1000);
+								float c = d->quadmillis <= CARDTIME+CARDFADE+CARDFADE ? 1.f-float(d->quadmillis)/float(CARDTIME+CARDFADE+CARDFADE) : 0.f;
+								float f = d->quadmillis <= CARDFADE ? fade*(float(d->quadmillis)/float(CARDFADE)) : fade;
+								
+								glColor4f(1.f, 1.f, 1.f, f);
+								rendericon("packages/icons/blank.jpg", style(3,0), style(3,1), 64, 64);
+								draw_textx("%s", style(3,2), style(3,3), 255-int(255.f*c), int(255.f*c), 0, int(255.f*f), style(3,4), qs);
+							}
+						}
+						else if (d->state == CS_DEAD)
+						{
+							int action = lastmillis-d->lastpain;
+							
+							if (m_capture && action < cpc.RESPAWNSECS*1000)
+							{
+								float c = float((cpc.RESPAWNSECS*1000)-action)/1000.f;
+								draw_textx("Fragged! Down for %.1fs", 100, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT, c);
+							}
+							else
+								draw_textx("Fragged! Press attack to respawn", 100, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT);
+						}
+					}
+		
+					if (!editmode && m_capture)
+					{
+						glDisable(GL_BLEND);
+						cpc.capturehud(w, h);
+						glEnable(GL_BLEND);
+					}
+				}
+				glDisable(GL_BLEND);
 			}
 			else
 			{
-				fpsent *d = player1;
-	
-				if (lastmillis-maptime <= CARDTIME+CARDFADE+CARDFADE)
-					fade = amt*(float(lastmillis-maptime-CARDTIME-CARDFADE)/float(CARDFADE));
-				else fade *= amt;
-					
-				if (player1->state == CS_SPECTATOR)
-				{
-					if (player1->clientnum == -cameranum)
-						d = player1;
-					else if (players.inrange(-cameranum) && players[-cameranum])
-						d = players[-cameranum];
-				}
-				
-				if (getvar("fov") < 90)
-				{
-					settexture("packages/textures/overlay_zoom.png");
-					
-					glColor4f(1.f, 1.f, 1.f, 1.f);
-	
-					glBegin(GL_QUADS);
+				glLoadIdentity();
+				glOrtho(0, w, h, 0, -1, 1);
+				glColor3f(1, 1, 1);
+		
+				settexture("packages/textures/loadback.jpg");
 			
-					glTexCoord2f(0, 0); glVertex2i(0, 0);
-					glTexCoord2f(1, 0); glVertex2i(ox, 0);
-					glTexCoord2f(1, 1); glVertex2i(ox, oy);
-					glTexCoord2f(0, 1); glVertex2i(0, oy);
-								
-					glEnd();
-				}
-				
-				if (damageresidue > 0)
-				{
-					float pc = float(damageresidue)/500.f;
-					settexture("packages/textures/overlay_damage.png");
-					
-					glColor4f(1.f, 1.f, 1.f, pc);
-	
-					glBegin(GL_QUADS);
+				glBegin(GL_QUADS);
 			
-					glTexCoord2f(0, 0); glVertex2i(0, 0);
-					glTexCoord2f(1, 0); glVertex2i(ox, 0);
-					glTexCoord2f(1, 1); glVertex2i(ox, oy);
-					glTexCoord2f(0, 1); glVertex2i(0, oy);
-								
-					glEnd();
-				}
-				
-				glColor4f(1.f, 1.f, 1.f, amt);
-				rendericon("packages/icons/sauer.jpg", 20, oy-75, 64, 64);
-				
-				if (d != NULL)
-				{
-					if (d->health > 0 && d->state == CS_ALIVE)
-					{
-						int hs[4][HD_MAX][5] = {
-							{
-								{ 80, 75, 96, 75, AL_LEFT },
-								{ 80, 75, 96, 75, AL_LEFT },
-								{ 80, 75, 96, 75, AL_RIGHT },
-							},
-							{
-								{ 280, 75, 296, 75, AL_LEFT },
-								{ 80, 145, 96, 145, AL_LEFT },
-								{ 80, 145, 96, 145, AL_RIGHT },
-							},
-							{
-								{ 480, 75, 496, 75, AL_LEFT },
-								{ 80, 215, 96, 215, AL_LEFT },
-								{ 80, 215, 96, 215, AL_RIGHT },
-							},
-							{
-								{ 680, 75, 648, 75, AL_CENTER },
-								{ 80, 285, 48, 285, AL_CENTER },
-								{ 80, 285, 48, 285, AL_CENTER },
-							},
-						};
-						
-						#define style(a,b) \
-							(hudstyle() == HD_RIGHT && b != 4 ? (b%2 ? oy : ox)-hs[a][hudstyle()][b] : (b%2 ? oy-hs[a][hudstyle()][b] : hs[a][hudstyle()][b]))
-						
-						glColor4f(1.f, 1.f, 1.f, fade);
-						drawicon(192.f, 0.f, style(0,0), style(0,1));
-						draw_textx("%d", style(0,2), style(0,3), 255, d->health<=50 ? (d->health<=25 ? 0 : 128) : 255, d->health<=50 ? 0 : 255, int(255.f*fade), style(0,4), d->health);
-						
-						glColor4f(1.f, 1.f, 1.f, fade);
-						drawicon((float)(d->armourtype*64), 0.f, style(1,0), style(1,1));
-						draw_textx("%d", style(1,2), style(1,3), 255, d->armour<=50 ? (d->armour<=25 ? 0 : 128) : 255, d->armour<=50 ? 0 : 255, int(255.f*fade), style(1,4), d->armour);
-						
-						glColor4f(1.f, 1.f, 1.f, fade);
-						
-						int g = d->gunselect;
-						int r = 64;
-						if(g==GUN_PISTOL)
-						{
-							g = 4;
-							r = 0;
-						}
-						int mx[NUMGUNS] =
-							{
-								0, 30, 60, 15, 15, 30, 120, 0, 0, 0, 0
-							};
+				glTexCoord2f(0, 0); glVertex2i(0, 0);
+				glTexCoord2f(1, 0); glVertex2i(w, 0);
+				glTexCoord2f(1, 1); glVertex2i(w, h);
+				glTexCoord2f(0, 1); glVertex2i(0, h);
 							
-						drawicon((float)(g*64), (float)r, style(2,0), style(2,1));
-						
-						glColor4f(1.f, 1.f, 1.f, fade);
-						draw_textx("%d", style(2,2), style(2,3), 255, d->ammo[d->gunselect]<=mx[d->gunselect]/2 ? (d->ammo[d->gunselect]<=mx[d->gunselect]/4 ? 0 : 128) : 255, mx[d->gunselect]/2 ? 0 : 255, int(255.f*fade), style(2,4), d->ammo[d->gunselect]);
-						
-						if (d->quadmillis)
-						{
-							string qs;
-							s_sprintf(qs)("%d", d->quadmillis/1000);
-							float c = d->quadmillis <= CARDTIME+CARDFADE+CARDFADE ? 1.f-float(d->quadmillis)/float(CARDTIME+CARDFADE+CARDFADE) : 0.f;
-							float f = d->quadmillis <= CARDFADE ? fade*(float(d->quadmillis)/float(CARDFADE)) : fade;
-							
-							glColor4f(1.f, 1.f, 1.f, f);
-							rendericon("packages/icons/blank.jpg", style(3,0), style(3,1), 64, 64);
-							draw_textx("%s", style(3,2), style(3,3), 255-int(255.f*c), int(255.f*c), 0, int(255.f*f), style(3,4), qs);
-						}
-					}
-					else if (d->state == CS_DEAD)
-					{
-						int action = lastmillis-d->lastpain;
-						
-						if (m_capture && action < cpc.RESPAWNSECS*1000)
-						{
-							float c = float((cpc.RESPAWNSECS*1000)-action)/1000.f;
-							draw_textx("Fragged! Down for %.1fs", 100, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT, c);
-						}
-						else
-							draw_textx("Fragged! Press attack to respawn", 100, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT);
-					}
-				}
-	
-				if (!editmode && m_capture)
-				{
-					glDisable(GL_BLEND);
-					cpc.capturehud(w, h);
-					glEnable(GL_BLEND);
-				}
+				glEnd();
 			}
 		}
-		glDisable(GL_BLEND);
 	}
 
 	void crosshaircolor(float &r, float &g, float &b)
@@ -1228,9 +1253,9 @@ struct fpsclient : igameclient
 
 	bool gethudcolour(vec &colour)
 	{
-		if (!maptime || lastmillis-maptime <= CARDTIME)
+		if (maptime && lastmillis-maptime <= CARDTIME)
 		{
-			float fade = maptime ? (float(lastmillis-maptime)/float(CARDTIME)) : 0.f;
+			float fade = float(lastmillis-maptime)/float(CARDTIME);
 			colour = vec(fade, fade, fade);
 			return true;
 		}

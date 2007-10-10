@@ -6,6 +6,8 @@ Legend [
 ]
 
 = wip edition =
+eng: 'registermodel name' added for precaching models
+eng: loadback added, rearranged hud rendering
 gam: fov < 90 only available when using the rifle
 gam: mapmodel menu now uses thumbnails, paging, and getmapmodel for dynamic lists
 eng: 'min a b' and 'max a b' commands added

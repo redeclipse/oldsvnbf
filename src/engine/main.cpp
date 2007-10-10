@@ -150,9 +150,27 @@ void computescreen(const char *text, Texture *t)
 	glMatrixMode(GL_PROJECTION);
 	loopi(2)
 	{
+#ifdef BFRONTIER
+		glClear(GL_COLOR_BUFFER_BIT);
+		glLoadIdentity();
+		glOrtho(0, w, h, 0, -1, 1);
+		settexture("packages/textures/loadback.jpg");
+	
+		glBegin(GL_QUADS);
+	
+		glTexCoord2f(0, 0); glVertex2i(0, 0);
+		glTexCoord2f(1, 0); glVertex2i(w, 0);
+		glTexCoord2f(1, 1); glVertex2i(w, h);
+		glTexCoord2f(0, 1); glVertex2i(0, h);
+					
+		glEnd();
+		glLoadIdentity();
+		glOrtho(0, w*3, h*3, 0, -1, 1);
+#else
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
+#endif
 		draw_text(text, 70, 2*FONTH + FONTH/2);
 		glLoadIdentity();
 		glOrtho(0, w, h, 0, -1, 1);
@@ -617,8 +635,7 @@ void updateframe(bool dorender)
 	
 	if (dorender)
 	{
-		if (cc->ready()) cl->updateworld(worldpos, curtime, lastmillis);
-		else gets2c();
+		cl->updateworld(worldpos, curtime, lastmillis);
 		menuprocess();
 	}
 
@@ -645,67 +662,7 @@ void updateframe(bool dorender)
 	
 			inbetweenframes = false;
 			SDL_GL_SwapBuffers();
-	
-			if (cc->ready())
-			{
-				if(frames>2) gl_drawframe(screen->w, screen->h);
-			}
-			else
-			{
-				int w = screen->w, h = screen->h;
-				float fovy = (float)fov*h/w;
-				float aspect = w/(float)h;
-				project(fovy, aspect, hdr.worldsize*2);
-				transplayer();
-			
-				glEnable(GL_TEXTURE_2D);
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				
-				xtravertsva = xtraverts = glde = 0;
-			
-				glClearColor(0.f, 0.f, 0.f, 1);
-				glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
-	
-				glDisable(GL_FOG);
-				glDisable(GL_CULL_FACE);
-			
-				defaultshader->set();
-				g3d_render();
-			
-				glDisable(GL_DEPTH_TEST);
-			
-				glMatrixMode(GL_MODELVIEW);
-				glLoadIdentity();
-			
-				gettextres(w, h);
-			
-				glMatrixMode(GL_PROJECTION);
-				glLoadIdentity();
-				glOrtho(0, w, h, 0, -1, 1);
-				glColor3f(1, 1, 1);
-	
-				glEnable(GL_BLEND);
-	
-				glLoadIdentity();
-				glOrtho(0, w*3, h*3, 0, -1, 1);
-	
-				int abovegameplayhud = h*3*1650/1800-FONTH*3/2; // hack
-				int hoff = abovegameplayhud - (editmode ? FONTH*4 : 0);
-			
-				char *command = getcurcommand();
-				if (command) rendercommand(FONTH/2, hoff); else hoff += FONTH;
-				if (!hidehud) renderconsole(w, h);
-	
-				defaultshader->set();
-				drawcrosshair(w, h);
-	
-				glDisable(GL_BLEND);
-				glDisable(GL_TEXTURE_2D);
-				glEnable(GL_DEPTH_TEST);
-			
-				glEnable(GL_CULL_FACE);
-				glEnable(GL_FOG);
-			}
+			if(frames>2) gl_drawframe(screen->w, screen->h);
 			inbetweenframes = true;
 		}
 	}
