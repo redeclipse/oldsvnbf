@@ -272,6 +272,11 @@ extern void g3d_cursorpos(float &x, float &y);
 extern void g3d_resetcursor();
 
 #ifdef BFRONTIER
+struct sometype
+{
+	char *name; uchar id;
+};
+
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 extern bool otherclients(bool msg = true);
@@ -351,8 +356,6 @@ extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 12
 
 extern bool getlos(vec &o, vec &q, float yaw, float pitch, float mdist = 0.f, float fx = 0.f, float fy = 0.f);
 extern bool getsight(physent *d, vec &q, vec &v, float mdist, float fx = 0.f, float fy = 0.f);
-
-extern bool titlecard(int ox, int oy, int secs);
 
 // renderparticles
 #define COL_WHITE			0xFFFFFF

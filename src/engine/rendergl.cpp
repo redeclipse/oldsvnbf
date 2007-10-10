@@ -873,8 +873,8 @@ void gl_drawframe(int w, int h)
 }
 
 #ifdef BFRONTIER // better crosshair support
-VARP(crosshairsize, 0, 15, 200);
-VARP(cursorsize, 0, 30, 200);
+VARP(crosshairsize, 0, 15, 1000);
+VARP(cursorsize, 0, 30, 1000);
 #else
 VARP(crosshairsize, 0, 15, 50);
 VARP(cursorsize, 0, 30, 50);
@@ -1026,6 +1026,12 @@ void gl_drawhud(int w, int h, int fogmat)
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
 
+#ifdef BFRONTIER // moved up here
+	glDisable(GL_BLEND);
+	cl->gameplayhud(w, h); // can make more dramatic changes this way without getting in the way
+	glEnable(GL_BLEND);
+#endif
+
 	glLoadIdentity();
 	glOrtho(0, w*3, h*3, 0, -1, 1);
 
@@ -1073,7 +1079,9 @@ void gl_drawhud(int w, int h, int fogmat)
 			}
 		}
 
+#ifndef BFRONTIER
 		cl->gameplayhud(w, h);
+#endif
 		render_texture_panel(w, h);
 	}
 
@@ -1264,38 +1272,6 @@ bool getlos(vec &o, vec &q, float yaw, float pitch, float mdist, float fx, float
 bool getsight(physent *d, vec &q, vec &v, float mdist, float fx, float fy)
 {
 	if (getlos(d->o, q, d->yaw, d->pitch, mdist, fx, fy)) return raycubelos(d->o, q, v);
-	return false;
-}
-
-bool titlecard(int ox, int oy, int secs)
-{
-	if (secs <= CARDTIME+CARDFADE)
-	{
-		float fade = 1.f, amt = hudblend*0.01f;
-		int x = ox;
-
-		if (secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
-		else if (secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
-
-		const char *maptitle = getmaptitle();
-		if (!*maptitle) maptitle = "Untitled by Unknown";
-		
-		glColor4f(1.f, 1.f, 1.f, amt);
-
-		rendericon("packages/icons/sauer.jpg", ox+20-x, oy-75, 64, 64);
-
-		draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT, maptitle);
-
-		glColor4f(1.f, 1.f, 1.f, fade);
-		rendericon("packages/icons/overlay.png", ox+20-x, oy-260, 144, 144);
-		if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
-			rendericon("packages/icons/sauer.jpg", ox+20-x, oy-260, 144, 144);
-		
-		draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), AL_LEFT, sv->gametitle());
-		
-		return true;
-	}
-	
 	return false;
 }
 #endif

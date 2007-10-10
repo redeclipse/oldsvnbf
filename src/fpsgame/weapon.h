@@ -12,8 +12,8 @@ struct weaponstate
 #ifdef BFRONTIER
 	#define gunallowed(am,gn,gs) (\
 			gn >= GUN_FIST && gn < NUMGUNS && (gs < 0 || gn != gs) && \
-			(am[gn] || g_bf || gn == GUN_FIST) && \
-			(gn != GUN_FIST || !g_bf) \
+			(am[gn] || bf || gn == GUN_FIST) && \
+			(gn != GUN_FIST || !bf) \
 		)
 
 	IVARP(maxdebris, 0, 25, 1000);
@@ -191,7 +191,7 @@ struct weaponstate
 		switch(bnc.bouncetype)
 		{
 			case BNC_GRENADE:
-				if (g_bf)
+				if (bf)
 				{
 					bnc.elasticity = 0.33f;
 					bnc.waterfric = 2.0f;
@@ -248,7 +248,7 @@ struct weaponstate
 					{
 #ifdef BFRONTIER
 						extern physent *hitplayer;
-						if (g_bf && bnc.lifetime > 0 && hitplayer != NULL) continue;
+						if (bf && bnc.lifetime > 0 && hitplayer != NULL) continue;
 						int qdam = getgun(GUN_GL).damage*(bnc.owner->quadmillis ? 4 : 1);
 #else
 						int qdam = guns[GUN_GL].damage*(bnc.owner->quadmillis ? 4 : 1);
@@ -425,7 +425,7 @@ struct weaponstate
 	{
 		vec dir;
 		float dist = rocketdist(cl.player1, dir, v);
-		if (dist < RL_DAMRAD*5.f) cl.camerawobble = max(cl.camerawobble, int(qdam*(1-dist/RL_DISTSCALE/(RL_DAMRAD*5.f))));
+		if (dist < RL_DAMRAD*5.f) cl.camerawobble = max(cl.camerawobble, int(qdam*(1-dist/(RL_DAMRAD*5.f))));
 	}
 #endif
 	void explode(bool local, fpsent *owner, vec &v, dynent *notthis, int qdam, int gun)
@@ -719,7 +719,7 @@ struct weaponstate
 				cl.playsoundc(S_NOAMMO, d); 
 				d->lastattackgun = -1; 
 				
-				if (g_bf)
+				if (bf)
 				{
 					if (!gunallowed(d->ammo, d->gunselect, -1))
 					{
@@ -768,7 +768,7 @@ struct weaponstate
 		vec kickback(unitv);
 #ifdef BFRONTIER
 		kickback.mul(getgun(d->gunselect).kickamount*-2.5f);
-		if (g_bf)
+		if (bf)
 		{
 			kickback.mul(getgun(d->gunselect).kickamount*0.005f);
 		}

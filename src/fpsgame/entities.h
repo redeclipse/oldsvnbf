@@ -18,7 +18,7 @@ struct entities : icliententities
 	char *itemname(int i)
 	{
 #ifdef BFRONTIER // extended entities, blood frontier support
-		if (g_bf) return NULL;
+		if (bf) return NULL;
 		int t = ents[i]->type;
 		if(t<I_SHELLS || t>I_QUAD) return NULL;
 		return getitem(t-I_SHELLS).name;
@@ -32,7 +32,7 @@ struct entities : icliententities
 	char *entmdlname(int type)
 	{
 #ifdef BFRONTIER // blood frontier support
-		if (g_bf)
+		if (bf)
 		{
 			static char *bfmdlnames[] =
 			{
@@ -587,8 +587,6 @@ struct entities : icliententities
 			}
 		}
 	}
-
-	bool wantext() { return true; }
 
 	void readext(gzFile &g, int version, int reg, int id, entity &e)
 	{

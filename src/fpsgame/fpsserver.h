@@ -2035,12 +2035,8 @@ struct fpsserver : igameserver
 			case 'M': s_strcpy(motd, &arg[2]); return true;
 			case 'G':
 			{
-				gameid = atoi(&arg[2]);
-				if (gameid < 0 || gameid >= GAME_MAX)
-				{
-					conoutf("invalid game id '%d'", gameid);
-					gameid = GAME_BF;
-				}
+				if (strcasecmp(&arg[2], "sauer") == 0) bf = 0;
+				else bf = 1;
 				return true;
 			}
 #endif
@@ -2152,30 +2148,16 @@ struct fpsserver : igameserver
 	char *servername() { return "bloodfrontierserver"; }
 	int serverinfoport()
 	{
-		switch (gameid)
-		{
-			case GAME_BF: return BFRONTIER_SERVINFO_PORT;
-			case GAME_SAUER: return SAUERBRATEN_SERVINFO_PORT;
-		}
-		return 0;
+		return bf ? BFRONTIER_SERVINFO_PORT : SAUERBRATEN_SERVINFO_PORT;
 	}
 	int serverport()
 	{
-		switch (gameid)
-		{
-			case GAME_BF: return BFRONTIER_SERVER_PORT;
-			case GAME_SAUER: return SAUERBRATEN_SERVER_PORT;
-		}
-		return 0;
+		return bf ? BFRONTIER_SERVER_PORT : SAUERBRATEN_SERVER_PORT;
 	}
 	char *getdefaultmaster()
 	{
-		switch (gameid)
-		{
-			case GAME_BF: return "acord.woop.us/";
-			case GAME_SAUER: return "sauerbraten.org/masterserver/";
-		}
-		return "none";
+		if (!bf) return "sauerbraten.org/masterserver/";
+		return "acord.woop.us/";
 	}
 #else
     char *servername() { return "sauerbratenserver"; }
@@ -2525,22 +2507,14 @@ struct fpsserver : igameserver
 #ifdef BFRONTIER
 	char *gameident()
 	{
-		switch (gameid)
-		{
-			case GAME_BF: return "bfg";
-			case GAME_SAUER: return "fps";
-		}
-		return "unk";
+		if (!bf) return "fps";
+		return "bfg";
 	}
 
 	char *gamename()
 	{
-		switch (gameid)
-		{
-			case GAME_BF: return "Alpha";
-			case GAME_SAUER: return "Sauerbraten";
-		}
-		return "Unknown";
+		if (!bf) return "Sauerbraten";
+		return "Alpha";
 	}
 
 	char *gametitle()
@@ -2570,18 +2544,14 @@ struct fpsserver : igameserver
 
 	char *defaultmap()
 	{
-		switch (gameid)
-		{
-			case GAME_BF: return "usm01";
-			case GAME_SAUER: return "metl4";
-		}
-		return "start";
+		if (!bf) return "metl4";
+		return "usm01";
 	}
 
 	bool canload(char *type, int version)
 	{
 		if (!strcmp(type, gameident())) return true;
-		else if (g_bf && !strcmp(type, "fps")) return true;
+		else if (bf && !strcmp(type, "fps")) return true;
 		return false;
 	}
 
@@ -2669,7 +2639,7 @@ struct fpsserver : igameserver
 	void setversion(clientinfo *ci, char *mod, int version)
 	{
 		if (version > 0) ci->modver = version;
-		if (g_sauer) s_sprintf(scresult)("\f2Blood Frontier support enabled");
+		if (!bf) s_sprintf(scresult)("\f2Blood Frontier support enabled");
 	}
 	
 	void settime()

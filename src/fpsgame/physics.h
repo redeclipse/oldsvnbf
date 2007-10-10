@@ -108,7 +108,7 @@ struct physics : iphysics
 				else if (waterlevel < 0 && ((mat == MAT_WATER && (water == WT_KILL || water == WT_HURT)) || mat == MAT_LAVA))
 				{
 					part_spawn(v, vec(d->xradius, d->yradius, ENTPART), 0, 5, 200, 500, COL_WHITE);
-					if (!g_sauer && mat != MAT_LAVA && (d == cl.player1 || cl.bc.isbot(d))) cl.suicide(d);
+					if (bf && mat != MAT_LAVA && (d == cl.player1 || cl.bc.isbot(d))) cl.suicide(d);
 				}
 			}
 		}

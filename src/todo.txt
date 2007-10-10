@@ -5,7 +5,7 @@
 * engine side bots with client side logic
 
 = TODO =
-* damage hud feedback
+* generate cfgs for sauer backward compatibilty (with remip added to the end)
 * vehicles, rolling/throttle/brake
 * motd from master server -> title screen
 * configurable hud (clock, in crosshair, awards/obits, score, console, ping time/graph)

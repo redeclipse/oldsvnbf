@@ -123,7 +123,7 @@ void drawmaterial(int orient, int x, int y, int z, int csize, int rsize, float o
 }
 
 #ifdef BFRONTIER
-material materials[] = 
+sometype materials[] = 
 {
 	{"air", MAT_AIR},
 	{"water", MAT_WATER},
@@ -132,6 +132,22 @@ material materials[] =
 	{"noclip", MAT_NOCLIP},
 	{"lava", MAT_LAVA}
 };
+
+int findmaterial(const char *name)
+{
+	int n = -1;
+	loopi(sizeof(materials)/sizeof(materials[0])) if(!strcmp(materials[i].name, name)) { n = materials[i].id; break; }
+	return n;
+	return -1;
+}  
+	
+
+char *findmaterialname(int type)
+{
+	loopi(sizeof(materials)/sizeof(materials[0])) if(materials[i].id == type) { return materials[i].name; }
+	return NULL;
+}
+
 #else
 struct material
 {
@@ -146,7 +162,6 @@ struct material
 	{"noclip", MAT_NOCLIP},
 	{"lava", MAT_LAVA}
 };
-#endif
 
 int findmaterial(const char *name)
 {
@@ -156,7 +171,8 @@ int findmaterial(const char *name)
 	} 
 	return -1;
 }  
-	
+#endif
+
 int visiblematerial(cube &c, int orient, int x, int y, int z, int size)
 {	
 	if(c.ext) switch(c.ext->material)

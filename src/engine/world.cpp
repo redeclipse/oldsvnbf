@@ -938,7 +938,7 @@ void resetmap()
 
 	show_out_of_renderloop_progress(0, "loading config...");
 	overrideidents = true;
-	int cfgs = !load || extversion >= 5 ? 2 : 3;
+	int cfgs = load ? 3 : 2;
 	loopi(cfgs)
 	{
 		show_out_of_renderloop_progress(float(i)/float(cfgs), "loading configs...");
