@@ -49,10 +49,7 @@ enum
 	GAME_MAX
 };
 
-VAR(gameid, 1, GAME_BF, -1);
-
-#define g_bf			(gameid == GAME_BF)
-#define g_sauer			(gameid == GAME_SAUER)
+VAR(bf, 1, 1, 0);
 
 enum { GUN_FIST = 0, GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL, GUN_FIREBALL, GUN_ICEBALL, GUN_SLIMEBALL, GUN_BITE, NUMGUNS };
 enum { A_BLUE, A_GREEN, A_YELLOW };	 // armour types... take 20/40/60 % off
@@ -225,12 +222,12 @@ static struct itemstat { int add, max, sound; char *name; int info; } itemstats[
     {0,		0,		S_ITEMARMOUR,	"YA",	A_YELLOW },
     {0,		0,		S_ITEMPUP,		"Q" },
 };
-#define getitem(n) (g_bf ? bfitemstats[n] : itemstats[n])
+#define getitem(n) (bf ? bfitemstats[n] : itemstats[n])
 
 #define SGRAYS 20
-#define SGSPREAD (g_bf ? 3 : 4)
+#define SGSPREAD (bf ? 3 : 4)
 
-#define RL_DAMRAD (g_bf ? 30 : 40)
+#define RL_DAMRAD (bf ? 30 : 40)
 #define RL_SELFDAMDIV 2
 #define RL_DISTSCALE 1.5f
 
@@ -261,7 +258,7 @@ static struct guninfo { short sound, attackdelay, reloaddelay, damage, projspeed
 	{ S_SLIMEBALL,	200,	0,		30,		160,	7,	0,	"slimeball" },
 	{ S_PIGR1,		250,	0,		100,	0,		0,	0,	"bite" },
 };
-#define getgun(n) (g_bf ? bfguns[n] : guns[n])
+#define getgun(n) (bf ? bfguns[n] : guns[n])
 #else
 };
 
@@ -402,16 +399,16 @@ struct fpsstate
 			{
 				health = 1;
 #ifdef BFRONTIER
-				if (g_bf) maxhealth = 1;
+				if (bf) maxhealth = 1;
 #endif
 				ammo[GUN_RIFLE] = 100;
 			}
 			else
 			{
 #ifdef BFRONTIER
-				armour = g_bf ? 0 : 100;
-				armourtype = g_bf ? A_BLUE : A_GREEN;
-				if (g_bf) maxhealth = 100;
+				armour = bf ? 0 : 100;
+				armourtype = bf ? A_BLUE : A_GREEN;
+				if (bf) maxhealth = 100;
 #else
 				armour = 100;
 				armourtype = A_GREEN;
@@ -420,7 +417,7 @@ struct fpsstate
 				if(m_tarena || m_capture)
 				{
 #ifdef BFRONTIER
-					ammo[GUN_PISTOL] = g_bf ? 10 : 80;
+					ammo[GUN_PISTOL] = bf ? 10 : 80;
 #else
 					ammo[GUN_PISTOL] = 80;
 #endif
@@ -442,8 +439,8 @@ struct fpsstate
 		else
 		{
 #ifdef BFRONTIER
-			ammo[GUN_PISTOL] = g_bf ? 10 : (m_sp ? 80 : 40);
-			ammo[GUN_GL] = g_bf ? 2 : 1;
+			ammo[GUN_PISTOL] = bf ? 10 : (m_sp ? 80 : 40);
+			ammo[GUN_GL] = bf ? 2 : 1;
 #else
 			ammo[GUN_PISTOL] = m_sp ? 80 : 40;
 			ammo[GUN_GL] = 1;
@@ -463,7 +460,7 @@ struct fpsstate
 	}
 };
 #ifdef BFRONTIER
-#define gunvar(gw,gn) (gw)[g_bf ? gn : GUN_FIST]
+#define gunvar(gw,gn) (gw)[bf ? gn : GUN_FIST]
 #endif
 
 struct fpsent : dynent, fpsstate
@@ -529,7 +526,7 @@ struct fpsent : dynent, fpsstate
 #ifdef BFRONTIER
 		spree = lastimpulse = 0;
 		extern int lastmillis;
-		if (g_bf) nexthealth = lastmillis + 300;
+		if (bf) nexthealth = lastmillis + 300;
 #endif
 	}
 };
@@ -599,8 +596,8 @@ static struct extentitem
 #define ILLUMINATE			48.f
 #define ENTPART				4.f
 
-#define EXTENSIONS			(g_bf)
-#define MAXRANGE			(g_bf ? INT_MAX-1 : 1024)
+#define EXTENSIONS			(bf)
+#define MAXRANGE			(bf ? INT_MAX-1 : 1024)
 
 enum {
 	HD_OLD = 0,

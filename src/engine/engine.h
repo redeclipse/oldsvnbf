@@ -252,12 +252,8 @@ extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->
 extern int showmat;
 
 #ifdef BFRONTIER
-struct material
-{
-	const char *name;
-	uchar id;
-};
-extern material materials[];
+extern sometype materials[], textypes[];
+extern char *findmaterialname(int type);
 #endif
 
 extern int findmaterial(const char *name);

@@ -48,7 +48,7 @@ struct fpsclient : igameclient
 	botcom bc;
 
 	string cptext;
-	int cameranum, cameracycled, camerawobble, myrankv, myranks;
+	int cameranum, cameracycled, camerawobble, damageresidue, myrankv, myranks;
 	
 	struct sline { string s; };
 	struct teamscore
@@ -65,11 +65,6 @@ struct fpsclient : igameclient
 	IVARP(capturespawn, 0, 1, 1);			// auto respawn in capture games
 	IVAR(cameracycle, 0, 0, 600);			// cycle camera every N secs
 	IVARP(crosshair, 0, 1, 1);				// show the crosshair
-
-	IVARP(wobblescale, 0, 100, 1000);		// wobble camera
-	IVARP(wobbleyaw, 0, 10, 180);			// wobble yaw amount
-	IVARP(wobblepitch, 0, 5, 180);			// wobble pitch amount
-	IVARP(wobbleroll, 0, 5, 180);			// wobble roll amount
 
 	IVARP(hudstyle, 0, HD_RIGHT, HD_MAX-1);	// use new or old hud style
 	IVARP(rankhud, 0, 0, 1);				// show ranks on the hud
@@ -255,7 +250,12 @@ struct fpsclient : igameclient
 		if(!curtime) return;
 		physicsframe();
 #ifdef BFRONTIER
-		if (g_bf)
+		int scale = max(curtime/5, 1);
+		#define adjust(n,m) { if (n > 0) { n -= scale*m; } if (n < 0) { n = 0; } }
+		adjust(camerawobble, 1);
+		adjust(damageresidue, 1);
+		
+		if (bf)
 		{
 			if (player1->state == CS_ALIVE && !intermission)
 			{
@@ -415,8 +415,9 @@ struct fpsclient : igameclient
 
 		if (d == player1)
 		{
-			if (g_bf) d->nexthealth = lastmillis + 3000;
-			if (wobblescale()) camerawobble = max(camerawobble, damage);
+			if (bf) d->nexthealth = lastmillis + 3000;
+			camerawobble = max(camerawobble, damage);
+			damageresidue = max(damageresidue, damage);
 			d->damageroll(damage);
 			playsound(S_PAIN6);
 		}
@@ -679,7 +680,7 @@ struct fpsclient : igameclient
 			if(*best) conoutf("\f2try to beat your best score so far: %s", best);
 		}
 		cameranum = 0;
-		if (g_sauer && *name)
+		if (!bf && *name)
 		{
 			s_sprintfd(cfgname)("packages/%s.cfx", mapname);
 			path(cfgname);
@@ -864,25 +865,48 @@ struct fpsclient : igameclient
 
 	void gameplayhud(int w, int h)
 	{
-		if (!hidehud)
+		int ox = w*900/h, oy = 900;
+
+		glLoadIdentity();
+		glOrtho(0, ox, oy, 0, -1, 1);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		if (!hidehud && maptime)
 		{
-			int ox = w*900/h, oy = 900;
+			int secs = lastmillis-maptime;
+			float fade = 1.f, amt = hudblend*0.01f;
 			
-			glLoadIdentity();
-			glOrtho(0, ox, oy, 0, -1, 1);
-			
-			glEnable(GL_BLEND);
-			
-			if (maptime && !titlecard(ox, oy, lastmillis-maptime))
+			if (secs <= CARDTIME+CARDFADE)
 			{
-				extern int hudblend;
-				float fade = 1.f, amt = hudblend*0.01f;
-				fpsent *d = player1;
+				int x = ox;
+		
+				if (secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
+				else if (secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
+		
+				const char *maptitle = getmaptitle();
+				if (!*maptitle) maptitle = "Untitled by Unknown";
 				
+				glColor4f(1.f, 1.f, 1.f, amt);
+		
+				rendericon("packages/icons/sauer.jpg", ox+20-x, oy-75, 64, 64);
+		
+				draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT, maptitle);
+		
+				glColor4f(1.f, 1.f, 1.f, fade);
+				rendericon("packages/icons/overlay.png", ox+20-x, oy-260, 144, 144);
+				if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
+					rendericon("packages/icons/sauer.jpg", ox+20-x, oy-260, 144, 144);
+				
+				draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), AL_LEFT, sv->gametitle());
+			}
+			else
+			{
+				fpsent *d = player1;
+	
 				if (lastmillis-maptime <= CARDTIME+CARDFADE+CARDFADE)
 					fade = amt*(float(lastmillis-maptime-CARDTIME-CARDFADE)/float(CARDFADE));
-				else
-					fade *= amt;
+				else fade *= amt;
 					
 				if (player1->state == CS_SPECTATOR)
 				{
@@ -890,6 +914,39 @@ struct fpsclient : igameclient
 						d = player1;
 					else if (players.inrange(-cameranum) && players[-cameranum])
 						d = players[-cameranum];
+				}
+				
+				if (getvar("fov") < 90)
+				{
+					settexture("packages/textures/overlay_zoom.png");
+					
+					glColor4f(1.f, 1.f, 1.f, 1.f);
+	
+					glBegin(GL_QUADS);
+			
+					glTexCoord2f(0, 0); glVertex2i(0, 0);
+					glTexCoord2f(1, 0); glVertex2i(ox, 0);
+					glTexCoord2f(1, 1); glVertex2i(ox, oy);
+					glTexCoord2f(0, 1); glVertex2i(0, oy);
+								
+					glEnd();
+				}
+				
+				if (damageresidue > 0)
+				{
+					float pc = float(damageresidue)/500.f;
+					settexture("packages/textures/overlay_damage.png");
+					
+					glColor4f(1.f, 1.f, 1.f, pc);
+	
+					glBegin(GL_QUADS);
+			
+					glTexCoord2f(0, 0); glVertex2i(0, 0);
+					glTexCoord2f(1, 0); glVertex2i(ox, 0);
+					glTexCoord2f(1, 1); glVertex2i(ox, oy);
+					glTexCoord2f(0, 1); glVertex2i(0, oy);
+								
+					glEnd();
 				}
 				
 				glColor4f(1.f, 1.f, 1.f, amt);
@@ -977,17 +1034,16 @@ struct fpsclient : igameclient
 							draw_textx("Fragged! Press attack to respawn", 100, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT);
 					}
 				}
-				if (!editmode)
+	
+				if (!editmode && m_capture)
 				{
-					glLoadIdentity();
-					glOrtho(0, w*1800/h, 1800, 0, -1, 1);
-					
 					glDisable(GL_BLEND);
-					
-					if(m_capture) cpc.capturehud(w, h);
+					cpc.capturehud(w, h);
+					glEnable(GL_BLEND);
 				}
 			}
 		}
+		glDisable(GL_BLEND);
 	}
 
 	void crosshaircolor(float &r, float &g, float &b)
@@ -1220,7 +1276,7 @@ struct fpsclient : igameclient
 
 	void fixview()
 	{
-		if (g_bf)
+		if (bf)
 		{
 			int maxfov = isthirdperson() ? 100 : 125;
 			
@@ -1385,14 +1441,13 @@ struct fpsclient : igameclient
 			}
 		}
 		
-		if (camerawobble > 0 && curtime)
+		if (camerawobble > 0)
 		{
-			float pc = (float(camerawobble)/1000.f)*(float(wobblescale())/100.f);
-			#define wobble(n) (float(rnd(n*2)-n)*pc)
-			camera1->yaw += wobble(wobbleyaw());
-			camera1->pitch += wobble(wobblepitch());
-			camera1->roll += wobble(wobbleroll());
-			camerawobble -= max(curtime/10, 1);
+			float pc = float(camerawobble)/500.f;
+			#define wobble(n) (float(rnd(10)-5)*pc)
+			camera1->yaw += wobble();
+			camera1->pitch += wobble();
+			camera1->roll += wobble();
 		}
 		
 		fixrange(camera1);
@@ -1427,7 +1482,6 @@ struct fpsclient : igameclient
 		
 		ws.dynlightprojectiles();
 	}
-	
 	
 	bool wantcrosshair()
 	{

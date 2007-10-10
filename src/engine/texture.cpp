@@ -424,9 +424,39 @@ void materialreset()
 
 COMMAND(materialreset, "");
 
+#ifdef BFRONTIER
+sometype textypes[] =
+{
+	{"c", TEX_DIFFUSE},
+	{"u", TEX_UNKNOWN},
+	{"d", TEX_DECAL},
+	{"n", TEX_NORMAL},
+	{"g", TEX_GLOW},
+	{"s", TEX_SPEC},
+	{"z", TEX_DEPTH},
+	{"e", TEX_ENVMAP}
+};
+
+int findtexturetype(char *name)
+{
+	int n = -1;
+	loopi(sizeof(textypes)/sizeof(textypes[0])) if(!strcmp(textypes[i].name, name)) { n = textypes[i].id; break; }
+	return n;
+}
+
+char *findtexturename(int type)
+{
+	loopi(sizeof(textypes)/sizeof(textypes[0])) if(textypes[i].id == type) { return textypes[i].name; }
+	return NULL;
+}
+#endif
+
 void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale)
 {
 	if(curtexnum<0 || curtexnum>=0x10000) return;
+#ifdef BFRONTIER
+	int tnum = findtexturetype(type), matslot = findmaterial(type);
+#else
 	struct { const char *name; int type; } types[] =
 	{
 		{"c", TEX_DIFFUSE},
@@ -440,6 +470,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	};
 	int tnum = -1, matslot = findmaterial(type);
 	loopi(sizeof(types)/sizeof(types[0])) if(!strcmp(types[i].name, type)) { tnum = i; break; }
+#endif
 	if(tnum<0) tnum = atoi(type);
 	if(tnum==TEX_DIFFUSE)
 	{
@@ -460,6 +491,9 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	st.yoffset = max(*yoffset, 0);
 	st.scale = max(*scale, 0);
 	st.t = NULL;
+#ifdef BFRONTIER
+	s_strcpy(st.lname, name);
+#endif
 	s_strcpy(st.name, name);
 	path(st.name);
 }

@@ -6,6 +6,14 @@ Legend [
 ]
 
 = wip edition =
+gam: implemented slow zoom on MOUSE2
+eng: added slow zoom aliases to engine config
+eng: increased 'crosshairsize' and 'cursorsize' maximums to 1000
+gam: hud now renders with alpha channels
+gam: added hud overlay for damage
+end: moved call to gameplayhud before other hud elements for visibility (re: overlays)
+gam: added hud overlay for zooming (fov < 90)
+eng: engine now saves map configs
 gam: fixed weapon reloading and rifle selection
 eng: particle entities now render in editmode in place of particle splash
 gam: removed strafe rolling
@@ -16,7 +24,7 @@ eng: 'showselgrid' (0..1, 1) and 'showcursorgrid' (0..1, 0) to show planar grids
 eng: more unconnected state tweaks, progress screen for connection attempts
 eng: unconnected state tweaks
 eng: 'texturedel index' added to delete a texture slot
-eng: added to extension file -> skybox, texture/mapmodel/mapsound slots
+eng: added to saving -> skybox, texture/mapmodel/mapsound slots
 eng: changed to world variables -> 'grasswidth', 'grassheight', 'grassrand', 'grassblend',
 	'lightcompress', 'mmskylight', 'blurlms', 'blurskylight', 'edgetolerance', 'adaptivesample',
 	'lerpsubdiv', 'lerpsubdivsize', 'loddistance', 'fog', 'fogcolour', 'flarelights',
@@ -31,7 +39,7 @@ eng: 'rehash [nosave]' for reloading all init configuration
 eng: 'exists fname [mode]' for script checking file existence
 gam: updated menus
 eng: 'gravity', 'speed', 'jumpvel', 'watertype', 'watervel' added to world variables
-eng: world variable saving/loading to extension file
+eng: world variable saving/loading
 gam: updated map config
 eng: imported some sauerbraten content which permission was given for
 eng: ssp and krs removed for future integration elsewhere

@@ -159,7 +159,11 @@ struct Slot
 	{
 		int type;
 		Texture *t;
+#ifdef BFRONTIER
+		string lname, name;
+#else
 		string name;
+#endif
 		int rotation, xoffset, yoffset;
 		float scale;
 		int combined;
@@ -194,6 +198,8 @@ extern void texturereset();
 extern void autograss(char *name);
 extern void setshader(char *name);
 extern void setshaderparam(char *name, int type, int n, float x, float y, float z, float w);
+extern int findtexturetype(char *name);
+extern char *findtexturename(int type);
 extern void texture(char *type, char *name, int *rot, int *xoffet, int *yoffset, float *scale);
 #endif
 

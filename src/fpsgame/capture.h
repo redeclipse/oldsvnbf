@@ -322,7 +322,6 @@ struct captureclient : capturestate
             draw_textf("%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, wait);
 			glPopMatrix();
 		}
-		glDisable(GL_BLEND);
 	}
 
 	void setupbases()
