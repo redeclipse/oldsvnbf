@@ -6,6 +6,9 @@ Legend [
 ]
 
 = wip edition =
+gam: mapmodel menu now uses thumbnails, paging, and getmapmodel for dynamic lists
+eng: 'min a b' and 'max a b' commands added
+eng: 'getmapmodel [num]' returns mapmodel in slot num or if no num returns number of mapmodels
 gam: implemented slow zoom on MOUSE2
 eng: added slow zoom aliases to engine config
 eng: increased 'crosshairsize' and 'cursorsize' maximums to 1000

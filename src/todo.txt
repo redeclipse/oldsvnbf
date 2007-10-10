@@ -5,14 +5,11 @@
 * engine side bots with client side logic
 
 = TODO =
-* generate cfgs for sauer backward compatibilty (with remip added to the end)
 * vehicles, rolling/throttle/brake
 * motd from master server -> title screen
 * configurable hud (clock, in crosshair, awards/obits, score, console, ping time/graph)
-* add alpha channels (hud icons)
 * new icons (weapons/hud/etc)
 * add tags to commands and variables for description and usage
-* slow zoom
 * headshot, etc
 * moving sounds (OpenAL)
 * fix material transitions and depth testing

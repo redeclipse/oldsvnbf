@@ -196,6 +196,17 @@ COMMAND(mmodel, "si");
 COMMANDN(mapmodel, mapmodelcompat, "iiiss");
 COMMAND(mapmodelreset, "");
 
+#ifdef BFRONTIER
+ICOMMAND(getmapmodel, "s", (char *a), {
+	if (!*a) intret(mapmodels.length());
+	else
+	{
+		int num = atoi(a);
+		if (mapmodels.inrange(num)) result(mapmodels[num].name);
+	}
+});
+#endif
+
 // model registry
 
 hashtable<const char *, model *> mdllookup;

@@ -1444,10 +1444,10 @@ struct fpsclient : igameclient
 		if (camerawobble > 0)
 		{
 			float pc = float(camerawobble)/500.f;
-			#define wobble(n) (float(rnd(10)-5)*pc)
-			camera1->yaw += wobble();
-			camera1->pitch += wobble();
-			camera1->roll += wobble();
+			#define wobble (float(rnd(10)-5)*pc)
+			camera1->yaw += wobble;
+			camera1->pitch += wobble;
+			camera1->roll += wobble;
 		}
 		
 		fixrange(camera1);
