@@ -42,15 +42,6 @@ struct fpsentity : extentity
 };
 
 #ifdef BFRONTIER
-enum
-{
-	GAME_BF = 0,
-	GAME_SAUER,
-	GAME_MAX
-};
-
-VAR(bf, 1, 1, 0);
-
 enum { GUN_FIST = 0, GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL, GUN_FIREBALL, GUN_ICEBALL, GUN_SLIMEBALL, GUN_BITE, NUMGUNS };
 enum { A_BLUE, A_GREEN, A_YELLOW };	 // armour types... take 20/40/60 % off
 enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states
@@ -67,7 +58,7 @@ enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  
 #define m_demo			(gamemode==-3)
 #define isteam(a,b)		(m_teammode && strcmp(a, b)==0)
 
-#define m_mp(mode)	(mode>=0 && mode<=13)
+#define m_mp(mode)		(mode>=0 && mode<=13)
 #else
 enum { GUN_FIST = 0, GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL, GUN_FIREBALL, GUN_ICEBALL, GUN_SLIMEBALL, GUN_BITE, NUMGUNS };
 enum { A_BLUE, A_GREEN, A_YELLOW };	 // armour types... take 20/40/60 % off
@@ -194,6 +185,46 @@ struct demoheader
 #define MAXNAMELEN 15
 #define MAXTEAMLEN 4
 
+#ifdef BFRONTIER
+static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
+{
+	{8,		8,		S_ITEMAMMO,		"SG",	GUN_SG },
+    {30,	30,		S_ITEMAMMO,		"CG",	GUN_CG },
+    {1,		1,		S_ITEMAMMO,		"RL",	GUN_RL },
+    {5,		5,		S_ITEMAMMO,		"RI",	GUN_RIFLE },
+    {2,		4,		S_ITEMAMMO,		"GL",	GUN_GL },
+    {10,	10,		S_ITEMAMMO,		"PI",	GUN_PISTOL },
+	{0,		0,		S_ITEMHEALTH,	"H" },
+    {0,		0,		S_ITEMHEALTH,	"MH" },
+    {0,		0,		S_ITEMARMOUR,	"GA",	A_GREEN },
+    {0,		0,		S_ITEMARMOUR,	"YA",	A_YELLOW },
+    {0,		0,		S_ITEMPUP,		"Q" },
+};
+#define getitem(n) (itemstats[n])
+
+#define SGRAYS 20
+#define SGSPREAD 3
+
+#define RL_DAMRAD 30
+#define RL_SELFDAMDIV 2
+#define RL_DISTSCALE 1.5f
+
+static struct guninfo { short sound, attackdelay, reloaddelay, damage, projspeed, part, kickamount; char *name; } guns[NUMGUNS] =
+{
+	{ S_PUNCH1,		400,	0,		40,		0,		0,	0,	"fist" },
+	{ S_SG,			1000,	4000,	5,		0,		0,	50,	"shotgun" },
+	{ S_CG,			75,		3075,	8,		0,		0,	20,	"chaingun" },
+	{ S_RLFIRE,		2500,	5000,	250,	80,		0,	30,	"rocketlauncher" },
+	{ S_RIFLE,		1500,	4500,	50,		0,		0,	50,	"rifle" },
+	{ S_FLAUNCH,	1500,	600,	400,	40,		0,	0,	"grenadelauncher" },
+	{ S_PISTOL,		250,	2250,	13,		0,		0,	15,	"pistol" },
+	{ S_FLAUNCH,	200,	0,		20,		200,	4,	0,	"fireball" },
+	{ S_ICEBALL,	200,	0,		40,		30,		6,	0,	"iceball" },
+	{ S_SLIMEBALL,	200,	0,		30,		160,	7,	0,	"slimeball" },
+	{ S_PIGR1,		250,	0,		100,	0,		0,	0,	"bite" },
+};
+#define getgun(n) (guns[n])
+#else
 static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
 {
     {10,	30,		S_ITEMAMMO,		"SG",	GUN_SG} ,
@@ -207,59 +238,6 @@ static struct itemstat { int add, max, sound; char *name; int info; } itemstats[
     {100,	100,	S_ITEMARMOUR,	"GA",	A_GREEN },
     {200,	200,	S_ITEMARMOUR,	"YA",	A_YELLOW },
     {20000,	30000,	S_ITEMPUP,		"Q" },
-#ifdef BFRONTIER
-}, bfitemstats[] =
-{
-    {8,		8,		S_ITEMAMMO,		"SG",	GUN_SG },
-    {30,	30,		S_ITEMAMMO,		"CG",	GUN_CG },
-    {1,		1,		S_ITEMAMMO,		"RL",	GUN_RL },
-    {5,		5,		S_ITEMAMMO,		"RI",	GUN_RIFLE },
-    {2,		4,		S_ITEMAMMO,		"GL",	GUN_GL },
-    {10,	10,		S_ITEMAMMO,		"PI",	GUN_PISTOL },
-	{0,		0,		S_ITEMHEALTH,	"H" },
-    {0,		0,		S_ITEMHEALTH,	"MH" },
-    {0,		0,		S_ITEMARMOUR,	"GA",	A_GREEN },
-    {0,		0,		S_ITEMARMOUR,	"YA",	A_YELLOW },
-    {0,		0,		S_ITEMPUP,		"Q" },
-};
-#define getitem(n) (bf ? bfitemstats[n] : itemstats[n])
-
-#define SGRAYS 20
-#define SGSPREAD (bf ? 3 : 4)
-
-#define RL_DAMRAD (bf ? 30 : 40)
-#define RL_SELFDAMDIV 2
-#define RL_DISTSCALE 1.5f
-
-static struct guninfo { short sound, attackdelay, reloaddelay, damage, projspeed, part, kickamount; char *name; } guns[NUMGUNS] =
-{
-	{ S_PUNCH1,		250,	0,		50,		0,		0,  1,	"fist" },
-	{ S_SG,			1400,	0,		10,		0,		0,	20,	"shotgun" },
-	{ S_CG,			100,	0,		30,		0,		0,	7,	"chaingun" },
-	{ S_RLFIRE,		800,	0,		120,	80,		0,	10,	"rocketlauncher" },
-	{ S_RIFLE,		1500,	0,		100,	0,		0,	30,	"rifle" },
-	{ S_FLAUNCH,	500,	0,		75,		80,		0,	10,	"grenadelauncher" },
-	{ S_PISTOL,		500,	0,		25,		0,		0,	7,	"pistol" },
-	{ S_FLAUNCH,	200,	0,		20,		50,		4,	1,	"fireball" },
-	{ S_ICEBALL,	200,	0,		40,		30,		6,	1,	"iceball" },
-	{ S_SLIMEBALL,	200,	0,		30,		160,	7,	1,	"slimeball" },
-	{ S_PIGR1,		250,	0,		50,		0,		0,	1,	"bite" },
-}, bfguns[NUMGUNS] =
-{
-	{ S_PUNCH1,		400,	0,		40,		0,		0,	0,	NULL },
-	{ S_SG,			1000,	4000,	5,		0,		0,	50,	"shotgun" },
-	{ S_CG,			75,		3075,	8,		0,		0,	20,	"chaingun" },
-	{ S_RLFIRE,		2500,	5000,	250,	80,		0,	30,	"rocketlauncher" },
-	{ S_RIFLE,		1500,	4500,	50,		0,		0,	50,	"rifle" },
-	{ S_FLAUNCH,	1500,	600,	400,	40,		0,	0,	"grenadelauncher" },
-	{ S_PISTOL,		250,	2250,	13,		0,		0,	15,	"pistol" },
-	{ S_FLAUNCH,	200,	0,		20,		200,	4,	0,	"fireball" },
-	{ S_ICEBALL,	200,	0,		40,		30,		6,	0,	"iceball" },
-	{ S_SLIMEBALL,	200,	0,		30,		160,	7,	0,	"slimeball" },
-	{ S_PIGR1,		250,	0,		100,	0,		0,	0,	"bite" },
-};
-#define getgun(n) (bf ? bfguns[n] : guns[n])
-#else
 };
 
 #define SGRAYS 20
@@ -399,16 +377,16 @@ struct fpsstate
 			{
 				health = 1;
 #ifdef BFRONTIER
-				if (bf) maxhealth = 1;
+				maxhealth = 1;
 #endif
 				ammo[GUN_RIFLE] = 100;
 			}
 			else
 			{
 #ifdef BFRONTIER
-				armour = bf ? 0 : 100;
-				armourtype = bf ? A_BLUE : A_GREEN;
-				if (bf) maxhealth = 100;
+				armour = 0;
+				armourtype = A_BLUE;
+				maxhealth = 100;
 #else
 				armour = 100;
 				armourtype = A_GREEN;
@@ -417,7 +395,7 @@ struct fpsstate
 				if(m_tarena || m_capture)
 				{
 #ifdef BFRONTIER
-					ammo[GUN_PISTOL] = bf ? 10 : 80;
+					ammo[GUN_PISTOL] = 10;
 #else
 					ammo[GUN_PISTOL] = 80;
 #endif
@@ -439,8 +417,8 @@ struct fpsstate
 		else
 		{
 #ifdef BFRONTIER
-			ammo[GUN_PISTOL] = bf ? 10 : (m_sp ? 80 : 40);
-			ammo[GUN_GL] = bf ? 2 : 1;
+			ammo[GUN_PISTOL] = 10;
+			ammo[GUN_GL] = 2;
 #else
 			ammo[GUN_PISTOL] = m_sp ? 80 : 40;
 			ammo[GUN_GL] = 1;
@@ -460,7 +438,7 @@ struct fpsstate
 	}
 };
 #ifdef BFRONTIER
-#define gunvar(gw,gn) (gw)[bf ? gn : GUN_FIST]
+#define gunvar(gw,gn) (gw)[gn]
 #endif
 
 struct fpsent : dynent, fpsstate
@@ -526,7 +504,7 @@ struct fpsent : dynent, fpsstate
 #ifdef BFRONTIER
 		spree = lastimpulse = 0;
 		extern int lastmillis;
-		if (bf) nexthealth = lastmillis + 300;
+		nexthealth = lastmillis + 300;
 #endif
 	}
 };
@@ -595,9 +573,6 @@ static struct extentitem
 	
 #define ILLUMINATE			48.f
 #define ENTPART				4.f
-
-#define EXTENSIONS			(bf)
-#define MAXRANGE			(bf ? INT_MAX-1 : 1024)
 
 enum {
 	HD_OLD = 0,

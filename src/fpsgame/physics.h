@@ -24,15 +24,15 @@ struct physics : iphysics
 	}
 	float jumpvel(physent *d)
 	{
-		return EXTENSIONS ? (d->inwater ? float(getvar("watervel")) : float(getvar("jumpvel"))) : 125.f;
+		return d->inwater ? float(getvar("watervel")) : float(getvar("jumpvel"));
 	}
 	float gravity(physent *d)
 	{
-		return EXTENSIONS ? float(getvar("gravity")) : 200.f;
+		return float(getvar("gravity"));
 	}
 	float speed(physent *d)
 	{
-		if (EXTENSIONS && d->state != CS_SPECTATOR && d->state != CS_EDITING)
+		if (d->state != CS_SPECTATOR && d->state != CS_EDITING)
 		{
 			return d->maxspeed * (float(getvar("speed"))/100.f);
 		}
@@ -108,7 +108,7 @@ struct physics : iphysics
 				else if (waterlevel < 0 && ((mat == MAT_WATER && (water == WT_KILL || water == WT_HURT)) || mat == MAT_LAVA))
 				{
 					part_spawn(v, vec(d->xradius, d->yradius, ENTPART), 0, 5, 200, 500, COL_WHITE);
-					if (bf && mat != MAT_LAVA && (d == cl.player1 || cl.bc.isbot(d))) cl.suicide(d);
+					if (mat != MAT_LAVA && (d == cl.player1 || cl.bc.isbot(d))) cl.suicide(d);
 				}
 			}
 		}

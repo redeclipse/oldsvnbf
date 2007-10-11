@@ -409,7 +409,7 @@ struct clientcom : iclientcom
 				f >>= 3;
 #ifdef BFRONTIER // blood frontier game
 				int gamemode = cl.gamemode;
-				d->maxhealth = bf ? (m_noitems ? 1 : 100) : 100+(f*getitem(I_BOOST-I_SHELLS).add);
+				d->maxhealth = m_noitems ? 1 : 100;
 #else
 				d->maxhealth = 100 + f*itemstats[I_BOOST-I_SHELLS].add;
 #endif

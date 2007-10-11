@@ -432,7 +432,7 @@ void save_world(char *mname, bool nolms)
 	string gametype;
 	s_strcpy(gametype, "fps"); // we only generate fps maps
 	gzputc(f, (int)strlen(gametype));
-	gzwrite(f, sv->gameident(), (int)strlen(gametype)+1);
+	gzwrite(f, gametype, (int)strlen(gametype)+1);
 #else
 	loopv(ents) if(ents[i]->type!=ET_EMPTY) hdr.numents++;
 	hdr.lightmaps = nolms ? 0 : lightmaps.length();
@@ -581,28 +581,27 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	hdr = newhdr;
 	
 	gzFile g = opengzfile(extname, "rb9");
-	if(!g) { conoutf("error loading '%s' from '%s': file error", mapname, extname); return; }
-	
-	char ehead[4];
-	gzread(g, &ehead, 4);
-	extversion = gzgetint(g);
-	
-	if ((extversion >= 4 && strncmp(ehead, "EXTZ", 4)!=0) ||
-		(extversion <= 3 && strncmp(ehead, "ENTZ", 4)!=0)) // from our old school days
+	if(!g) { conoutf("error loading '%s' from '%s': file error", mapname, extname); }
+	else
 	{
-		conoutf("error loading '%s' from '%s': malformatted header", mapname, extname);
-		gzclose(g);
-		extversion = 0;
-		return;
+		char ehead[4];
+		gzread(g, &ehead, 4);
+		extversion = gzgetint(g);
+		
+		if ((extversion >= 4 && strncmp(ehead, "EXTZ", 4)!=0) ||
+			(extversion <= 3 && strncmp(ehead, "ENTZ", 4)!=0)) // from our old school days
+		{
+			conoutf("error loading '%s' from '%s': malformatted header", mapname, extname);
+			gzclose(g);
+			extversion = 0;
+		}
+		else if (extversion > EXTVERSION)
+		{
+			conoutf("error loading '%s' from '%s': requires a newer version of Blood Frontier", mapname, extname);
+			gzclose(g);
+			extversion = 0;
+		}
 	}
-	else if (extversion > EXTVERSION)
-	{
-		conoutf("error loading '%s' from '%s': requires a newer version of Blood Frontier", mapname, extname);
-		gzclose(g);
-		extversion = 0;
-		return;
-	}
-
 	resetmap(true);
 
 	show_out_of_renderloop_progress(0, "loading world...");
@@ -651,7 +650,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		gzread(f, gametype, len+1);
 	}
 #ifdef BFRONTIER // game canload control
-	if(!sv->canload(gametype, hdr.version))
+	if(strcmp(gametype, "fps")!=0 && strcmp(gametype, "bfg")!=0)
 #else
 	if(strcmp(gametype, cl->gameident())!=0)
 #endif
@@ -783,7 +782,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	gzclose(f);
 	if (verbose) console("loaded file '%s' version %d", CON_RIGHT, cgzname, hdr.version);
 
-	if (extversion >= 1)
+	if (g && extversion >= 1)
 	{
 		int numents = gzgetint(g); // number of extents
 	
@@ -821,8 +820,11 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		if (verbose >= 2) console("loaded %d entities", CON_RIGHT, numents);
 	}
 
-	gzclose(g);
-	if (verbose) console("loaded file '%s' version %d", CON_RIGHT, extname, extversion);
+	if (g)
+	{
+		gzclose(g);
+		if (verbose) console("loaded file '%s' version %d", CON_RIGHT, extname, extversion);
+	}
 
 	conoutf("loaded map '%s' in %.1f secs", mapname, (SDL_GetTicks()-loadingstart)/1000.0f);
 	console("%s: %s", CON_CENTER|CON_LEFT, sv->gametitle(), hdr.maptitle);

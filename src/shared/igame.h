@@ -288,16 +288,9 @@ struct igameserver
 #ifdef BFRONTIER
     virtual void changemap(const char *s, int mode = 0) { return; }
 	virtual int getmastertype() { return 0; }
-    virtual char *gameident() = 0;
 	virtual char *gamename() = 0;
 	virtual char *gametitle() = 0;
     virtual char *defaultmap() = 0;
-
-	virtual bool canload(char *type, int version)
-	{
-		if (!strcmp(type, gameident())) return true;
-		return false;
-	}
 #endif
 };
 

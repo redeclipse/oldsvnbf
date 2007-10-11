@@ -476,7 +476,7 @@ COMMAND(updatefrommaster, "");
 void writeservercfg()
 {
 #ifdef BFRONTIER // game specific configs
-	FILE *f = gameopen("servers.cfg", "w");
+	FILE *f = openfile("servers.cfg", "w");
 #else
 	if(!cl->savedservers()) return;
     FILE *f = openfile(path(cl->savedservers(), true), "w");

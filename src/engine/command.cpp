@@ -634,7 +634,7 @@ void exec(char *cfgfile)
 void writecfg()
 {
 #ifdef BFRONTIER // game specific configs
-	FILE *f = gameopen("config.cfg", "w");
+	FILE *f = openfile("config.cfg", "w");
 	if(!f) return;
 	fprintf(f, "// automatically written on exit\n\n");
 #else
@@ -848,9 +848,6 @@ ICOMMAND(min, "ii", (int a, int b), intret(min(a, b)));
 
 ICOMMAND(exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
 
-char *getgameident() { return sv->gameident(); }
-ICOMMAND(getgameident, "", (void), result(getgameident()));
-
 char *getdefaultmap() { return sv->defaultmap(); }
 ICOMMAND(getdefaultmap, "", (void), result(getdefaultmap()));
 
@@ -872,19 +869,6 @@ char *gettime(char *format)
 	return _gettime;
 }
 ICOMMAND(gettime, "s", (char *a), result(gettime(a)));
-
-bool gameexec(char *name, bool quiet)
-{
-	s_sprintfd(s)("data/%s/%s", getgameident(), name);
-	if (quiet) { return execfile(s); }
-	else { exec(s); return true; }
-}
-
-FILE *gameopen(char *name, char *mode)
-{
-	s_sprintfd(s)("data/%s/%s", getgameident(), name);
-	return openfile(s, mode);
-}
 
 int gzgetint(gzFile f)
 {

@@ -373,11 +373,11 @@ physent *hitplayer; // whether the collection hit a player
 vec wall; // just the normal vectors.
 float walldistance;
 #ifdef BFRONTIER // world variables, alternate physics storage
-VARW(gravity,		1,			200,		INT_MAX-1);		// gravity
-VARW(speed,			1,			100,		INT_MAX-1);	// speed
-VARW(jumpvel,		0,			200,		INT_MAX-1);	// extra velocity to add when jumping
+VARW(gravity,		1,			25,			INT_MAX-1);		// gravity
+VARW(speed,			1,			45,			INT_MAX-1);	// speed
+VARW(jumpvel,		0,			60,			INT_MAX-1);	// extra velocity to add when jumping
 VARW(watertype,		WT_WATER,	WT_WATER,	WT_MAX-1);	// water type (0: water, 1: slime, 2: lava)
-VARW(watervel,		0,			200,		1024);		// extra water velocity
+VARW(watervel,		0,			60,			1024);		// extra water velocity
 #else
 const float STAIRHEIGHT = 4.1f;
 const float FLOORZ = 0.867f;

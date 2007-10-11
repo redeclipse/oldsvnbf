@@ -10,11 +10,7 @@ struct weaponstate
 	vec sg[SGRAYS];
 
 #ifdef BFRONTIER
-	#define gunallowed(am,gn,gs) (\
-			gn >= GUN_FIST && gn < NUMGUNS && (gs < 0 || gn != gs) && \
-			(am[gn] || bf || gn == GUN_FIST) && \
-			(gn != GUN_FIST || !bf) \
-		)
+	#define gunallowed(gn,gs) (gn > GUN_FIST && gn < NUMGUNS && (gs < 0 || gn != gs))
 
 	IVARP(maxdebris, 0, 25, 1000);
 	IVARP(weaponswitchstyle, 0, 1, 1);
@@ -68,7 +64,7 @@ struct weaponstate
 				while (t >= WSAMT) t -= WSAMT;
 				while (t < 0) t += WSAMT;
 				
-				if (!gunallowed(player1->ammo, wsguns[t], player1->gunselect))
+				if (!gunallowed(wsguns[t], player1->gunselect))
 				{
 					if (a >= 0)
 					{
@@ -83,14 +79,14 @@ struct weaponstate
 		}
 		else
 		{
-			if (gunallowed(player1->ammo, a, player1->gunselect)) s = a;
-			else if (gunallowed(player1->ammo, b, player1->gunselect)) s = b;
-			else if (gunallowed(player1->ammo, c, player1->gunselect)) s = c;
+			if (gunallowed(a, player1->gunselect)) s = a;
+			else if (gunallowed(b, player1->gunselect)) s = b;
+			else if (gunallowed(c, player1->gunselect)) s = c;
 			else
 			{
 				loopi(WSAMT)
 				{
-					if (gunallowed(player1->ammo, wsguns[i], player1->gunselect))
+					if (gunallowed(wsguns[i], player1->gunselect))
 					{
 						s = wsguns[i];
 						break;
@@ -188,16 +184,8 @@ struct weaponstate
 		switch(bnc.bouncetype)
 		{
 			case BNC_GRENADE:
-				if (bf)
-				{
-					bnc.elasticity = 0.33f;
-					bnc.waterfric = 2.0f;
-				}
-				else
-				{
-					bnc.elasticity = 0.66f;
-					bnc.waterfric = 3.0f;
-				}
+				bnc.elasticity = 0.33f;
+				bnc.waterfric = 2.0f;
 				break;
 			default:
 				bnc.elasticity = 0.6f;
@@ -245,7 +233,7 @@ struct weaponstate
 					{
 #ifdef BFRONTIER
 						extern physent *hitplayer;
-						if (bf && bnc.lifetime > 0 && hitplayer != NULL) continue;
+						if (bnc.lifetime > 0 && hitplayer != NULL) continue;
 						int qdam = getgun(GUN_GL).damage*(bnc.owner->quadmillis ? 4 : 1);
 #else
 						int qdam = guns[GUN_GL].damage*(bnc.owner->quadmillis ? 4 : 1);
@@ -716,22 +704,14 @@ struct weaponstate
 				cl.playsoundc(S_NOAMMO, d); 
 				d->lastattackgun = -1; 
 				
-				if (bf)
+				if (!gunallowed(d->gunselect, -1))
 				{
-					if (!gunallowed(d->ammo, d->gunselect, -1))
-					{
-						weaponswitch();
-					}
-					else
-					{
-						gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).reloaddelay;
-						d->ammo[d->gunselect] = getitem(d->gunselect-1).max;
-					}
+					weaponswitch();
 				}
 				else
 				{
-					gunvar(d->gunwait, d->gunselect) = 600; 
-					weaponswitch();
+					gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).reloaddelay;
+					d->ammo[d->gunselect] = getitem(d->gunselect-1).max;
 				}
 			}
 			return; 
@@ -764,17 +744,14 @@ struct weaponstate
 		unitv.div(dist);
 		vec kickback(unitv);
 #ifdef BFRONTIER
-		kickback.mul(getgun(d->gunselect).kickamount*-2.5f);
-		if (bf)
-		{
-			kickback.mul(getgun(d->gunselect).kickamount*0.005f);
-		}
+		kickback.mul(getgun(d->gunselect).kickamount*-1.5f);
 		d->vel.add(kickback);
-
-		if(d->pitch<80.0f) d->pitch += getgun(d->gunselect).kickamount*0.05f;
 		float shorten = 0.0f;
-		if(dist>MAXRANGE) shorten = MAXRANGE;
+		if(dist>INT_MAX-1) shorten = INT_MAX-1;
+		int kickwobble = getgun(d->gunselect).kickamount;
+		if (d == player1 && kickwobble) cl.camerawobble = max(cl.camerawobble, kickwobble);
 #else
+		vec kickback(unitv);
 		kickback.mul(guns[d->gunselect].kickamount*-2.5f);
 		d->vel.add(kickback);
 		if(d->pitch<80.0f) d->pitch += guns[d->gunselect].kickamount*0.05f;
