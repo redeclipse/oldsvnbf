@@ -20,31 +20,7 @@ int waynode(vec &v, fpsent *d = NULL)
 
 void wayspawn()
 { 
-	loopv(cl.et.ents)
-	{
-		switch (cl.et.ents[i]->type)
-		{
-			case I_SHELLS:
-			case I_BULLETS:
-			case I_ROCKETS:
-			case I_ROUNDS:
-			case I_GRENADES:
-			case I_CARTRIDGES:
-			case I_HEALTH:
-			case I_BOOST:
-			case I_GREENARMOUR:
-			case I_YELLOWARMOUR:
-			case I_QUAD:
-				newentity(vec(cl.et.ents[i]->o).sub(vec(0, 0, 2)), WAYPOINT, 0, 0, 0, 0);
-				break;
-			case TELEPORT:
-			case TELEDEST:
-			case JUMPPAD:
-			case BASE:
-				newentity(vec(cl.et.ents[i]->o).add(vec(0, 0, 2)), WAYPOINT, 0, 0, 0, 0);
-				break;
-		}
-	}
+	return;
 }
 
 void waylink(int n, int m)

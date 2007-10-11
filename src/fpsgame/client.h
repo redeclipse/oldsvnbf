@@ -402,15 +402,14 @@ struct clientcom : iclientcom
 				f >>= 2;
 				d->move = (f&3)==3 ? -1 : f&3;
 				f >>= 2;
+#ifdef BFRONTIER // blood frontier game
+				f >>= 3;
+#else
 				if(f&1) { d->armourtype = A_GREEN; d->armour = 1; }
 				else if(f&2) { d->armourtype = A_YELLOW; d->armour = 1; }
 				else { d->armourtype = A_BLUE; d->armour = 0; }
 				d->quadmillis = f&4 ? 1 : 0;
 				f >>= 3;
-#ifdef BFRONTIER // blood frontier game
-				int gamemode = cl.gamemode;
-				d->maxhealth = m_noitems ? 1 : 100;
-#else
 				d->maxhealth = 100 + f*itemstats[I_BOOST-I_SHELLS].add;
 #endif
                 if(cl.allowmove(d))
@@ -657,11 +656,16 @@ struct clientcom : iclientcom
 				player1->respawn();
 				player1->lifesequence = getint(p); 
 				player1->health = getint(p);
+#ifdef BFRONTIER
+				player1->gunselect = getint(p);
+				loopi(NUMGUNS) player1->ammo[i] = getint(p);
+#else
 				player1->maxhealth = getint(p);
 				player1->armour = getint(p);
 				player1->armourtype = getint(p);
 				player1->gunselect = getint(p);
 				loopi(GUN_PISTOL-GUN_SG+1) player1->ammo[GUN_SG+i] = getint(p);
+#endif
 				player1->state = CS_ALIVE;
 				findplayerspawn(player1, m_capture ? cl.cpc.pickspawn(player1->team) : -1);
 				cl.sb.showscores(false);
@@ -701,16 +705,19 @@ struct clientcom : iclientcom
 				int tcn = getint(p), 
 					acn = getint(p),
 					damage = getint(p), 
+#ifndef BFRONTIER
 					armour = getint(p),
+#endif
 					health = getint(p);
 				fpsent *target = tcn==player1->clientnum ? player1 : cl.getclient(tcn),
 						*actor = acn==player1->clientnum ? player1 : cl.getclient(acn);
 				if(!target || !actor) break;
-				target->armour = armour;
-				target->health = health;
 #ifdef BFRONTIER // local servers
+				target->health = health;
 				cl.damaged(damage, target, actor);
 #else
+				target->armour = armour;
+				target->health = health;
 				cl.damaged(damage, target, actor, false);
 #endif
 				break;
@@ -767,7 +774,11 @@ struct clientcom : iclientcom
 				{
 					int cn = getint(p);
 					if(cn<0) break;
+#ifdef BFRONTIER
+					int state = getint(p), lifesequence = getint(p), gunselect = getint(p), frags = getint(p);
+#else
 					int state = getint(p), lifesequence = getint(p), gunselect = getint(p), maxhealth = getint(p), frags = getint(p);
+#endif
 					fpsent *d = (cn == player1->clientnum ? player1 : cl.newclient(cn));
 					if(!d) continue;
 					if(d!=player1) 
@@ -776,8 +787,10 @@ struct clientcom : iclientcom
 						d->gunselect = gunselect;
 					}
 					d->lifesequence = lifesequence;
+#ifndef BFRONTIER
 					if(d->state==CS_ALIVE && d->health==d->maxhealth) d->health = maxhealth;
 					d->maxhealth = maxhealth;
+#endif
 					d->frags = frags;
 				}
 				break;
@@ -962,6 +975,15 @@ struct clientcom : iclientcom
 			{
 				int base = getint(p);
 				string owner, enemy;
+#ifdef BFRONTIER
+				int converted = getint(p);
+				getstring(text, p);
+				s_strcpy(owner, text);
+				getstring(text, p);
+				s_strcpy(enemy, text);
+				int gamemode = cl.gamemode;
+				if(m_capture) cl.cpc.updatebase(base, owner, enemy, converted);
+#else
 				getstring(text, p);
 				s_strcpy(owner, text);
 				getstring(text, p);
@@ -969,11 +991,24 @@ struct clientcom : iclientcom
 				int converted = getint(p), ammo = getint(p);
 				int gamemode = cl.gamemode;
 				if(m_capture) cl.cpc.updatebase(base, owner, enemy, converted, ammo);
+#endif
 				break;
 			}
 
 			case SV_BASES:
 			{
+#ifdef BFRONTIER
+				int base = 0, converted;
+				while((converted = getint(p))>=0)
+				{
+					string owner, enemy;
+					getstring(text, p);
+					s_strcpy(owner, text);
+					getstring(text, p);
+					s_strcpy(enemy, text);
+					cl.cpc.initbase(base++, owner, enemy, converted);
+				}
+#else
 				int base = 0, ammotype;
 				while((ammotype = getint(p))>=0)
 				{
@@ -985,6 +1020,7 @@ struct clientcom : iclientcom
 					int converted = getint(p), ammo = getint(p);
 					cl.cpc.initbase(base++, ammotype, owner, enemy, converted, ammo);
 				}
+#endif
 				break;
 			}
 
@@ -996,6 +1032,7 @@ struct clientcom : iclientcom
 				break;
 			}
 
+#ifndef BFRONTIER
 			case SV_REPAMMO:
 			{
 				int ammotype = getint(p);
@@ -1011,6 +1048,7 @@ struct clientcom : iclientcom
 				else if(t==I_BOOST) { playsound(S_V_BOOST10); conoutf("\f2+10 health will spawn in 10 seconds!"); }
 				break;
 			}
+#endif
 
 			case SV_NEWMAP:
 			{

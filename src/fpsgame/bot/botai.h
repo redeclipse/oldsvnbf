@@ -36,11 +36,6 @@ void think(int time, fpsent *d)
 		if (d->botflags & BOT_PLAYER)
 		{ 
 			cl.et.checkitems(d);
-			cl.et.checkquad(time, d);
-		}
-		else if (d->botflags & BOT_MONSTER)
-		{ 
-			checkents(d);
 		}
 
 		bool aiming = aimat(d);
@@ -393,7 +388,7 @@ void coord(fpsent *d, int retry, bool doreset = false)
 
 bool find(fpsent *d, bool enemyonly = false)
 { 
-	#define BOTFINDAMT 4
+	#define BOTFINDAMT 3
 	int gamemode = cl.gamemode;
 	vec target;
 	float dist[BOTFINDAMT], c;
@@ -421,7 +416,6 @@ bool find(fpsent *d, bool enemyonly = false)
 		int bias = 1; \
 		if (getsight((physent *)d, q->o, target, BOTLOSDIST(d->botrate), BOTFOVX(d->botrate), BOTFOVY(d->botrate))) bias += 1; \
 		else if (enemyonly) bias -= 1; \
-		if (q->quadmillis) bias += 1; \
 		if (bias) settarg(d->o.dist(q->o) / float(bias), r); \
 	}
 	
@@ -433,37 +427,7 @@ bool find(fpsent *d, bool enemyonly = false)
 		{
 			if (cl.et.ents[i]->spawned && d->canpickup(cl.et.ents[i]->type))
 			{
-				int bias = 1;
-	
-				switch (cl.et.ents[i]->type)
-				{
-					case I_HEALTH:
-					if (d->health < d->botrate) bias += d->maxhealth / 10; // important
-					else if ((d->maxhealth - d->health) / 10 > 0)
-						bias += (d->maxhealth - d->health) / 10;
-					break;
-	
-					case I_SHELLS:
-					case I_BULLETS:
-					case I_ROCKETS:
-					case I_ROUNDS:
-					case I_GRENADES:
-					case I_CARTRIDGES:
-					if (d->gunselect == GUN_FIST)
-						bias += 5; // important
-					break;
-	
-					case I_GREENARMOUR:
-					case I_YELLOWARMOUR:
-					case I_QUAD:
-					case I_BOOST:
-					bias += 10; // important
-					break;
-	
-					default:
-					break;
-				}
-				settarg(cl.et.ents[i]->o.dist(d->o) / float(bias), i);
+				settarg(cl.et.ents[i]->o.dist(d->o) / float(5), i);
 			}
 		}
 	}
@@ -490,19 +454,6 @@ bool find(fpsent *d, bool enemyonly = false)
 	else
 	{
 		loopk(2) inittarg(0);
-	}
-	
-	if (d->botflags & BOT_PLAYER)
-	{
-		inittarg(cl.ms.monsters.length()); // 3 - Monsters (for SP and DMSP)
-		loopv(cl.ms.monsters)
-		{
-			disttarg(cl.ms.monsters[i], i);
-		}
-	}
-	else
-	{
-		inittarg(0);
 	}
 	
 	int a = -1;
@@ -535,10 +486,6 @@ bool find(fpsent *d, bool enemyonly = false)
 			case 2:
 			{
 				return enemy(d, cl.players[b], true);
-			}
-			case 3:
-			{
-				return enemy(d, cl.ms.monsters[b], true);
 			}
 			default:
 			break;

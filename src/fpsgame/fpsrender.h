@@ -16,7 +16,7 @@ struct fpsrender
 	{
 #ifdef BFRONTIER
         int lastaction = gunvar(d->gunlast, d->gunselect),
-			attack = d->gunselect == GUN_FIST ? ANIM_PUNCH : ANIM_SHOOT,
+			attack = ANIM_SHOOT,
 			delay = gunvar(d->gunwait, d->gunselect) + 50;
 #else
         int lastaction = d->lastaction, attack = d->gunselect==GUN_FIST ? ANIM_PUNCH : ANIM_SHOOT, delay = ogro() ? 300 : cl.ws.reloadtime(d->gunselect)+50;
@@ -42,9 +42,9 @@ struct fpsrender
 		}
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
 #ifdef BFRONTIER
-		static const char *vweps[] = {"vwep/fist", "vwep/shotg", "vwep/chaing", "vwep/rocket", "vwep/rifle", "vwep/gl", "vwep/pistol", NULL, NULL, NULL, NULL, "vwep/fist"};
+		static const char *vweps[] = { "vwep/pistol", "vwep/shotgun", "vwep/chaingun", "vwep/grenades", "vwep/rockets", "vwep/rifle"};
         int ai = 0;
-        if (d->gunselect<=GUN_PISTOL)
+        if (d->gunselect<=GUN_RIFLE)
 		{
             a[ai].name = vweps[d->gunselect];
             a[ai].type = MDL_ATTACH_VWEP;
@@ -122,7 +122,9 @@ struct fpsrender
             const char *mdlname = teamskins() || m_teammode ? (isteam(cl.player1->team, d->team) ? bluemdl : redmdl) : ffamdl;
 			if(d->state!=CS_DEAD || d->superdamage<50) renderplayer(d, mdlname);
 			s_strcpy(d->info, cl.colorname(d, NULL, "@"));
+#ifndef BFRONTIER
 			if(d->maxhealth>100) { s_sprintfd(sn)(" +%d", d->maxhealth-100); s_strcat(d->info, sn); }
+#endif
 			if(d->state!=CS_DEAD) particle_text(d->abovehead(), d->info, m_teammode ? (isteam(cl.player1->team, d->team) ? 16 : 13) : 11, 1);
 		}
 #ifdef BFRONTIER
@@ -133,8 +135,9 @@ struct fpsrender
 
 #ifdef BFRONTIER
 		cl.bc.render();
-#endif
+#else
 		cl.ms.monsterrender();
+#endif
 		cl.et.renderentities();
 		cl.ws.renderprojectiles();
 		if(m_capture) cl.cpc.renderbases();

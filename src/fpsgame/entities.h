@@ -19,8 +19,8 @@ struct entities : icliententities
 	{
 #ifdef BFRONTIER // extended entities, blood frontier support
 		int t = ents[i]->type;
-		if(t<I_SHELLS || t>I_QUAD) return NULL;
-		return getitem(t-I_SHELLS).name;
+		if(t<I_PISTOL || t>I_RIFLE) return NULL;
+		return getitem(t-I_PISTOL).name;
 #else
 		int t = ents[i]->type;
 		if(t<I_SHELLS || t>I_QUAD) return NULL;
@@ -34,8 +34,8 @@ struct entities : icliententities
 		static char *bfmdlnames[] =
 		{
 			NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-			"ammo/shells", "ammo/bullets", "ammo/rockets", "ammo/rrounds", "ammo/grenades", "ammo/cartridges",
-			"health", "boost", "armor/green", "armor/yellow", "quad", "teleporter",
+			"ammo/pistol", "ammo/shotgun", "ammo/chaingun", "ammo/grenades", "ammo/rockets", "ammo/rifle",
+			NULL, NULL, NULL, NULL, NULL, NULL,
 			NULL, NULL,
 			"carrot",
 			NULL, NULL,
@@ -113,7 +113,11 @@ struct entities : icliententities
 					continue;
 				}
 				if(!e.spawned && e.type!=TELEPORT) continue;
+#ifdef BFRONTIER
+				if(e.type<I_PISTOL || e.type>TELEPORT) continue;
+#else
 				if(e.type<I_SHELLS || e.type>TELEPORT) continue;
+#endif
 				renderent(e, e.type, (float)(1+sin(cl.lastmillis/100.0+e.o.x+e.o.y)/20), cl.lastmillis/10.0f);
 #ifdef BFRONTIER // extended entities
 			}
@@ -131,7 +135,12 @@ struct entities : icliententities
 		switch(e.attr3)
 		{
 			case 29:
+#ifdef BFRONTIER
+				int gamemode = cl.gamemode;
+				if (m_sp) cl.intermission = true;
+#else
 				cl.ms.endsp(false);
+#endif
 				break;
 		}
 	}
@@ -139,7 +148,7 @@ struct entities : icliententities
 	void addammo(int type, int &v, bool local = true)
 	{
 #ifdef BFRONTIER // extended entities, blood frontier
-		itemstat &is = getitem(type-I_SHELLS);
+		itemstat &is = getitem(type-I_PISTOL);
 #else
 		itemstat &is = itemstats[type-I_SHELLS];
 #endif
@@ -148,10 +157,12 @@ struct entities : icliententities
 		if(local) cl.playsoundc(is.sound);
 	}
 
+#ifndef BFRONTIER
 	void repammo(fpsent *d, int type)
 	{
 		addammo(type, d->ammo[type-I_SHELLS+GUN_SG]);
 	}
+#endif
 
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
@@ -160,20 +171,24 @@ struct entities : icliententities
 	{
         if(!ents.inrange(n)) return;
 		int type = ents[n]->type;
+#ifdef BFRONTIER // extended entities, blood frontier
+		if(type<I_PISTOL || type>I_RIFLE) return;
+        ents[n]->spawned = false;
+        if(!d) return;
+		itemstat &is = getitem(type-I_PISTOL);
+		if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
+		playsound(getitem(type-I_PISTOL).sound, d!=cl.player1 ? &d->o : NULL); 
+#else
 		if(type<I_SHELLS || type>I_QUAD) return;
         ents[n]->spawned = false;
         if(!d) return;
-#ifdef BFRONTIER // extended entities, blood frontier
-		itemstat &is = getitem(type-I_SHELLS);
-		if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
-		playsound(getitem(type-I_SHELLS).sound, d!=cl.player1 ? &d->o : NULL); 
-#else
 		itemstat &is = itemstats[type-I_SHELLS];
 		if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
 		playsound(itemstats[type-I_SHELLS].sound, d!=cl.player1 ? &d->o : NULL); 
 #endif
 		if(d!=cl.player1) return;
 		d->pickup(type);
+#ifndef BFRONTIER
 		switch(type)
 		{
 			case I_BOOST:
@@ -186,6 +201,7 @@ struct entities : icliententities
 				playsound(S_V_QUAD);
 				break;
 		}
+#endif
 	}
 
 	// these functions are called when the client touches the item
@@ -283,6 +299,7 @@ struct entities : icliententities
 		}
 	}
 
+#ifndef BFRONTIER
 	void checkquad(int time, fpsent *d)
 	{
 		if(d->quadmillis && (d->quadmillis -= time)<=0)
@@ -292,9 +309,18 @@ struct entities : icliententities
 			if(d==cl.player1) conoutf("\f2quad damage is over");
 		}
 	}
+#endif
 
 	void putitems(ucharbuf &p, int gamemode)			// puts items in network stream and also spawns them locally
 	{
+#ifdef BFRONTIER
+		loopv(ents) if (ents[i]->type>=I_PISTOL && ents[i]->type<=I_RIFLE)
+		{
+			putint(p, i);
+			putint(p, ents[i]->type);
+			ents[i]->spawned = true; 
+		}
+#else
 		loopv(ents) if(ents[i]->type>=I_SHELLS && ents[i]->type<=I_QUAD && (!m_capture || ents[i]->type<I_SHELLS || ents[i]->type>I_CARTRIDGES))
 		{
 			putint(p, i);
@@ -302,6 +328,7 @@ struct entities : icliententities
 			
 			ents[i]->spawned = (m_sp || (ents[i]->type!=I_QUAD && ents[i]->type!=I_BOOST)); 
 		}
+#endif
 	}
 
 	void resetspawns() { loopv(ents) ents[i]->spawned = false; }
@@ -361,8 +388,8 @@ struct entities : icliententities
 		static const char *entnames[] =
 		{
 			"none?", "light", "mapmodel", "playerstart", "envmap", "particles", "sound", "spotlight",
-			"shells", "bullets", "rockets", "riflerounds", "grenades", "cartridges",
-			"health", "healthboost", "greenarmour", "yellowarmour", "quaddamage",
+			"pistol", "shotgun", "chaingun", "grenades", "rockets", "rifle",
+			"", "", "", "", "",
 			"teleport", "teledest",
 			"monster", "carrot", "jumppad",
 			"base", "respawnpoint",
@@ -746,7 +773,7 @@ struct entities : icliententities
 				extentitem &t = extentitems[e.type - CAMERA];
 				renderentradius(e.o, t.dist, t.dist);
 			}
-			else if (e.type < CAMERA && e.type >= I_SHELLS &&
+			else if (e.type < CAMERA && e.type >= I_PISTOL &&
 					 e.type != TELEPORT && e.type != TELEDEST && e.type != MONSTER)
 			{
 				if (e.type == BASE)

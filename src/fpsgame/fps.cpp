@@ -23,7 +23,9 @@ struct fpsclient : igameclient
 {
 	// these define classes local to fpsclient
 	#include "weapon.h"
+#ifndef BFRONTIER
 	#include "monster.h"
+#endif
 	#include "scoreboard.h"
 	#include "fpsrender.h"
 	#include "entities.h"
@@ -80,7 +82,9 @@ struct fpsclient : igameclient
 	fpsent lastplayerstate;
 
 	weaponstate ws;
+#ifndef BFRONTIER
 	monsterset  ms;
+#endif
 	scoreboard  sb;
 	fpsrender	fr;
 	entities	et;
@@ -94,11 +98,13 @@ struct fpsclient : igameclient
 		  suicided(-1),
 #ifdef BFRONTIER // extra modules, alternate camera, rank hud
 		  ph(*this), bc(*this), cameranum(0), cameracycled(0), myrankv(0), myranks(0),
+		  player1(spawnstate(new fpsent())),
+		  ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this)
 #else
           following(-1),
-#endif
 		  player1(spawnstate(new fpsent())),
 		  ws(*this), ms(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this)
+#endif
 	{
         CCOMMAND(mode, "i", (fpsclient *self, int *val), { self->setmode(*val); });
         CCOMMAND(kill, "",  (fpsclient *self), { self->suicide(self->player1); });
@@ -152,7 +158,9 @@ struct fpsclient : igameclient
 	{
 		if(m_classicsp) 
 		{
+#ifndef BFRONTIER
 			ms.monsterclear(gamemode);				 // all monsters back at their spawns for editing
+#endif
 			resettriggers();
 		}
 		ws.projreset();
@@ -251,13 +259,28 @@ struct fpsclient : igameclient
 #ifdef BFRONTIER
 		if (cc.ready() && player1->clientnum >= 0)
 		{
-			int scale = max(curtime/5, 1);
+			int scale = max(curtime/10, 1);
 			#define adjust(n,m) { if (n > 0) { n -= scale*m; } if (n < 0) { n = 0; } }
 			adjust(camerawobble, 1);
 			adjust(damageresidue, 1);
 			
 			if (player1->state == CS_ALIVE && !intermission)
 			{
+				loopi(NUMGUNS)
+				{
+					if (!player1->ammo[i] && gunallowed(player1->ammo, i, -2))
+					{
+						int rtime = gunvar(player1->gunwait, player1->gunselect),
+							wtime = gunvar(player1->gunlast, player1->gunselect),
+							otime = lastmillis - wtime;
+				
+						if (otime >= rtime && rtime == getgun(player1->gunselect).reloaddelay)
+						{
+							player1->ammo[i] = getitem(i).add;
+						}
+					}
+				}
+				/*
 				if (player1->health < player1->maxhealth && player1->nexthealth <= lastmillis)
 				{
 					int na = lastmillis-player1->nexthealth, 
@@ -265,7 +288,7 @@ struct fpsclient : igameclient
 					player1->health = min(player1->health + inc, player1->maxhealth);
 					player1->nexthealth = lastmillis + 300 - nb;
 				}
-				
+				*/
 				if (player1->timeinair)
 				{
 					if (player1->jumpnext && lastmillis-player1->lastimpulse > 3000)
@@ -283,14 +306,14 @@ struct fpsclient : igameclient
 			}
 
 			physicsframe();
-#endif
+#else
 			et.checkquad(curtime, player1);
+#endif
 			ws.moveprojectiles(curtime);
 			if(player1->clientnum>=0 && player1->state==CS_ALIVE) ws.shoot(player1, pos); // only shoot when connected to server
 			ws.bounceupdate(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
 			gets2c();			// do this first, so we have most accurate information when our player moves
 			otherplayers();
-			ms.monsterthink(curtime, gamemode);
 #ifdef BFRONTIER
 			if(player1->state==CS_DEAD)
 			{
@@ -324,6 +347,7 @@ struct fpsclient : igameclient
 		}
 		else gets2c();
 #else
+		ms.monsterthink(curtime, gamemode);
 		if(player1->state==CS_DEAD)
 		{
 			if(lastmillis-player1->lastpain<2000)
@@ -377,12 +401,10 @@ struct fpsclient : igameclient
 			if(m_classicsp)
 			{
 				respawnself();
-#ifdef BFRONTIER
-				console("\f2You wasted another life! The monsters stole your armour and some ammo...", CON_LEFT|CON_CENTER);
-#else
+#ifndef BFRONTIER
                 conoutf("\f2You wasted another life! The monsters stole your armour and some ammo...");
-#endif
 				loopi(NUMGUNS) if(i!=GUN_PISTOL && (player1->ammo[i] = lastplayerstate.ammo[i])>5) player1->ammo[i] = max(player1->ammo[i]/3, 5); 
+#endif
 				return;
 			}
 			respawnself();
@@ -419,8 +441,8 @@ struct fpsclient : igameclient
 		if (d == player1)
 		{
 			d->nexthealth = lastmillis + 3000;
-			camerawobble = max(camerawobble, damage);
-			damageresidue = max(damageresidue, damage);
+			camerawobble += damage;
+			damageresidue += damage;
 			d->damageroll(damage);
 			playsound(S_PAIN6);
 		}
@@ -650,7 +672,9 @@ struct fpsclient : igameclient
 		if(multiplayer(false) && m_sp) { gamemode = 0; conoutf("coop sp not supported yet"); }
 #endif
 		cc.mapstart();
+#ifndef BFRONTIER
 		ms.monsterclear(gamemode);
+#endif
 		ws.projreset();
 
 		// reset perma-state
@@ -658,14 +682,18 @@ struct fpsclient : igameclient
 		player1->deaths = 0;
 		player1->totaldamage = 0;
 		player1->totalshots = 0;
+#ifndef BFRONTIER
 		player1->maxhealth = 100;
+#endif
 		loopv(players) if(players[i])
 		{
 			players[i]->frags = 0;
 			players[i]->deaths = 0;
 			players[i]->totaldamage = 0;
 			players[i]->totalshots = 0;
+#ifndef BFRONTIER
 			players[i]->maxhealth = 100;
+#endif
 		}
 
 		if(!m_mp(gamemode)) spawnplayer(player1);
@@ -715,7 +743,11 @@ struct fpsclient : igameclient
 		else playsound(n, &d->o);
 	}
 
+#ifdef BFRONTIER
+	int numdynents() { return 1+players.length(); }
+#else
 	int numdynents() { return 1+players.length()+ms.monsters.length(); }
+#endif
 
 	dynent *iterdynents(int i)
 	{
@@ -723,7 +755,9 @@ struct fpsclient : igameclient
 		i--;
 		if(i<players.length()) return players[i];
 		i -= players.length();
+#ifndef BFRONTIER
 		if(i<ms.monsters.length()) return ms.monsters[i];
+#endif
 		return NULL;
 	}
 
@@ -769,8 +803,8 @@ struct fpsclient : igameclient
 	void drawhudmodel(int anim, float speed = 0, int base = 0)
 	{
 #ifdef BFRONTIER
-		static char *hudgunnames[] = { "hudguns/fist", "hudguns/shotg", "hudguns/chaing", "hudguns/rocket", "hudguns/rifle", "hudguns/gl", "hudguns/pistol", NULL, NULL, NULL, NULL };
-		if(player1->gunselect>GUN_PISTOL) return;
+		if(player1->gunselect < GUN_PISTOL || player1->gunselect > GUN_RIFLE) return;
+		static char *hudgunnames[] = { "hudguns/pistol", "hudguns/shotgun", "hudguns/chaingun", "hudguns/grenades", "hudguns/rockets", "hudguns/rifle" };
 #else
         static char *hudgunnames[] = { "hudguns/fist", "hudguns/shotg", "hudguns/chaing", "hudguns/rocket", "hudguns/rifle", "hudguns/gl", "hudguns/pistol" };
         if(player1->gunselect>GUN_PISTOL) return;
@@ -889,14 +923,14 @@ struct fpsclient : igameclient
 			
 					rendericon("packages/icons/sauer.jpg", ox+20-x, oy-75, 64, 64);
 			
-					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT, maptitle);
+					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, maptitle);
 			
 					glColor4f(1.f, 1.f, 1.f, fade);
 					rendericon("packages/icons/overlay.png", ox+20-x, oy-260, 144, 144);
 					if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
 						rendericon("packages/icons/sauer.jpg", ox+20-x, oy-260, 144, 144);
 					
-					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), AL_LEFT, sv->gametitle());
+					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, sv->gametitle());
 				}
 				else
 				{
@@ -932,7 +966,7 @@ struct fpsclient : igameclient
 					
 					if (damageresidue > 0)
 					{
-						float pc = float(damageresidue)/500.f;
+						float pc = float(max(damageresidue, 500))/500.f;
 						settexture("packages/textures/overlay_damage.png");
 						
 						glColor4f(1.f, 1.f, 1.f, pc);
@@ -982,42 +1016,14 @@ struct fpsclient : igameclient
 							
 							glColor4f(1.f, 1.f, 1.f, fade);
 							drawicon(192.f, 0.f, style(0,0), style(0,1));
-							draw_textx("%d", style(0,2), style(0,3), 255, d->health<=50 ? (d->health<=25 ? 0 : 128) : 255, d->health<=50 ? 0 : 255, int(255.f*fade), style(0,4), d->health);
+							draw_textx("%d", style(0,2), style(0,3), 255, d->health<=50 ? (d->health<=25 ? 0 : 128) : 255, d->health<=50 ? 0 : 255, int(255.f*fade), false, style(0,4), d->health);
+							
+							int mx = getitem(d->gunselect).max;
+							//glColor4f(1.f, 1.f, 1.f, fade);
+							//drawicon((float)(d->gunselect*64), 0.f, style(2,0), style(2,1));
 							
 							glColor4f(1.f, 1.f, 1.f, fade);
-							drawicon((float)(d->armourtype*64), 0.f, style(1,0), style(1,1));
-							draw_textx("%d", style(1,2), style(1,3), 255, d->armour<=50 ? (d->armour<=25 ? 0 : 128) : 255, d->armour<=50 ? 0 : 255, int(255.f*fade), style(1,4), d->armour);
-							
-							glColor4f(1.f, 1.f, 1.f, fade);
-							
-							int g = d->gunselect;
-							int r = 64;
-							if(g==GUN_PISTOL)
-							{
-								g = 4;
-								r = 0;
-							}
-							int mx[NUMGUNS] =
-								{
-									0, 30, 60, 15, 15, 30, 120, 0, 0, 0, 0
-								};
-								
-							drawicon((float)(g*64), (float)r, style(2,0), style(2,1));
-							
-							glColor4f(1.f, 1.f, 1.f, fade);
-							draw_textx("%d", style(2,2), style(2,3), 255, d->ammo[d->gunselect]<=mx[d->gunselect]/2 ? (d->ammo[d->gunselect]<=mx[d->gunselect]/4 ? 0 : 128) : 255, mx[d->gunselect]/2 ? 0 : 255, int(255.f*fade), style(2,4), d->ammo[d->gunselect]);
-							
-							if (d->quadmillis)
-							{
-								string qs;
-								s_sprintf(qs)("%d", d->quadmillis/1000);
-								float c = d->quadmillis <= CARDTIME+CARDFADE+CARDFADE ? 1.f-float(d->quadmillis)/float(CARDTIME+CARDFADE+CARDFADE) : 0.f;
-								float f = d->quadmillis <= CARDFADE ? fade*(float(d->quadmillis)/float(CARDFADE)) : fade;
-								
-								glColor4f(1.f, 1.f, 1.f, f);
-								rendericon("packages/icons/blank.jpg", style(3,0), style(3,1), 64, 64);
-								draw_textx("%s", style(3,2), style(3,3), 255-int(255.f*c), int(255.f*c), 0, int(255.f*f), style(3,4), qs);
-							}
+							draw_textx("%d", style(2,2), style(2,3), 255, d->ammo[d->gunselect]<=mx/2 ? (d->ammo[d->gunselect]<=mx/4 ? 0 : 128) : 255, mx/2 ? 0 : 255, int(255.f*fade), false, style(2,4), d->ammo[d->gunselect]);
 						}
 						else if (d->state == CS_DEAD)
 						{
@@ -1026,10 +1032,10 @@ struct fpsclient : igameclient
 							if (m_capture && action < cpc.RESPAWNSECS*1000)
 							{
 								float c = float((cpc.RESPAWNSECS*1000)-action)/1000.f;
-								draw_textx("Fragged! Down for %.1fs", 100, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT, c);
+								draw_textx("Fragged! Down for %.1fs", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
 							}
 							else
-								draw_textx("Fragged! Press attack to respawn", 100, oy-75, 255, 255, 255, int(255.f*fade), AL_LEFT);
+								draw_textx("Fragged! Press attack to respawn", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 						}
 					}
 		
@@ -1075,14 +1081,6 @@ struct fpsclient : igameclient
 
 	void lighteffects(dynent *e, vec &color, vec &dir)
 	{
-		fpsent *d = (fpsent *)e;
-		if ((d->type == ENT_PLAYER || d->type == ENT_AI) && d->state == CS_ALIVE)
-		{
-			if (d->type == ENT_PLAYER && d->quadmillis)
-			{
-				color.x = 1;
-			}
-		}
 	}
 #else
 	void drawicon(float tx, float ty, int x, int y)
@@ -1117,7 +1115,6 @@ struct fpsclient : igameclient
 		draw_textf("%d",  90, 822, player1->state==CS_DEAD ? 0 : player1->health);
 		if(player1->state!=CS_DEAD)
 		{
-			if(player1->armour) draw_textf("%d", 390, 822, player1->armour);
 			draw_textf("%d", 690, 822, player1->ammo[player1->gunselect]);		
 		}
 
@@ -1129,7 +1126,6 @@ struct fpsclient : igameclient
 		drawicon(192, 0, 20, 1650);
 		if(player1->state!=CS_DEAD)
 		{
-			if(player1->armour) drawicon((float)(player1->armourtype*64), 0, 620, 1650);
 			int g = player1->gunselect;
 			int r = 64;
 			if(g==GUN_PISTOL) { g = 4; r = 0; }
@@ -1248,15 +1244,6 @@ struct fpsclient : igameclient
 		{
 			float fade = maptime ? float(lastmillis-maptime)/float(CARDTIME) : 0.f;
 			colour = vec(fade, fade, fade);
-			return true;
-		}
-		else if (player1->state == CS_ALIVE && player1->quadmillis)
-		{
-			int offset = (player1->quadmillis%1000)+1;
-			if (offset > 500) offset = 1000 - offset;
-			float scale = (float(player1->quadmillis)/float(getitem(I_QUAD-I_SHELLS).max))+0.1f;
-
-			colour = vec(1.f-((((float(offset)/500.f)*0.5f)*scale)+(scale*0.5f)), 1.f-(scale*0.5f), 1.f-(scale*0.5f));
 			return true;
 		}
 		else
@@ -1458,8 +1445,8 @@ struct fpsclient : igameclient
 		
 		if (camerawobble > 0)
 		{
-			float pc = float(camerawobble)/500.f;
-			#define wobble (float(rnd(10)-5)*pc)
+			float pc = float(max(camerawobble, 500))/500.f;
+			#define wobble (float(rnd(3)-1)*pc)
 			camera1->yaw += wobble;
 			camera1->pitch += wobble;
 			camera1->roll += wobble;
@@ -1470,31 +1457,6 @@ struct fpsclient : igameclient
 	
 	void adddynlights()
 	{
-		loopi(numdynents())
-		{
-			fpsent *d = (fpsent *)iterdynents(i);
-			
-			if (d && d->state == CS_ALIVE)
-			{
-				int illum = 0;
-				vec color(0, 0, 0);
-	
-				if (d->type == ENT_PLAYER && d->quadmillis)
-				{
-					int offset = (d->quadmillis%1000)+1;
-					float scale = (float(d->quadmillis)/float(getitem(I_QUAD-I_SHELLS).max))+0.1f;
-					if (offset > 500) offset = 1000 - offset;
-					illum = int((ILLUMINATE-(ILLUMINATE*(offset*0.001f)))*scale);
-					color = vec(1, 0, 0);
-				}
-		
-				if (illum)
-				{
-					adddynlight(vec(d->o).sub(vec(0, 0, d->eyeheight/2)), illum, color, 0, 0);
-				}
-			}
-		}
-		
 		ws.dynlightprojectiles();
 	}
 	

@@ -17,7 +17,11 @@ struct fpsserver : igameserver
 
 	static const int DEATHMILLIS = 250;
 
+#ifdef BFRONTIER
+	enum { GE_NONE = 0, GE_SHOT, GE_RELOAD, GE_EXPLODE, GE_HIT, GE_SUICIDE, GE_PICKUP };
+#else
 	enum { GE_NONE = 0, GE_SHOT, GE_EXPLODE, GE_HIT, GE_SUICIDE, GE_PICKUP };
+#endif
 
 	struct shotevent
 	{
@@ -26,6 +30,14 @@ struct fpsserver : igameserver
 		int gun;
 		float from[3], to[3];
 	};
+#ifdef BFRONTIER
+	struct reloadevent
+	{
+		int type;
+		int millis;
+		int gun;
+	};
+#endif
 
 	struct explodeevent
 	{
@@ -62,6 +74,9 @@ struct fpsserver : igameserver
 	{
 		int type;
 		shotevent shot;
+#ifdef BFRONTIER
+		reloadevent reload;
+#endif
 		explodeevent explode;
 		hitevent hit;
 		suicideevent suicide;
@@ -106,7 +121,9 @@ struct fpsserver : igameserver
 		{
 			if(state!=CS_SPECTATOR) state = CS_DEAD;
 			lifesequence = 0;
+#ifndef BFRONTIER
 			maxhealth = 100;
+#endif
 			rockets = grenades = 0;
 
 			timeplayed = 0;
@@ -132,13 +149,19 @@ struct fpsserver : igameserver
 	{
 		uint ip;
 		string name;
+#ifndef BFRONTIER
+		int frags, timeplayed;
+#else
 		int maxhealth, frags;
 		int timeplayed;
+#endif
 		float effectiveness;
 
 		void save(gamestate &gs)
 		{
+#ifndef BFRONTIER
 			maxhealth = gs.maxhealth;
+#endif
 			frags = gs.frags;
 			timeplayed = gs.timeplayed;
 			effectiveness = gs.effectiveness;
@@ -146,7 +169,9 @@ struct fpsserver : igameserver
 
 		void restore(gamestate &gs)
 		{
-			gs.maxhealth = maxhealth;
+#ifndef BFRONTIER
+			maxhealth = gs.maxhealth;
+#endif
 			gs.frags = frags;
 			gs.timeplayed = timeplayed;
 			gs.effectiveness = effectiveness;
@@ -353,7 +378,7 @@ struct fpsserver : igameserver
 			});
 	
 	#define SRVVAR(n, p, v, m, x, b) SRVCMD(n, v, "i", (fpsserver *self, char *s), self->servvar(self->cmdcontext, #n, p, m, x, s); b)
-	#define POWERUPS I_QUAD-I_SHELLS+1
+	#define POWERUPS I_RIFLE-I_PISTOL+1
 	
 	#define Q_INT(c,n) { if(!c->local) { ucharbuf buf = c->messages.reserve(5); putint(buf, n); c->messages.addbuf(buf); } }
 	#define Q_STR(c,text) { if(!c->local) { ucharbuf buf = c->messages.reserve(2*strlen(text)+1); sendstring(text, buf); c->messages.addbuf(buf); } }
@@ -448,6 +473,9 @@ struct fpsserver : igameserver
 	int spawntime(int type)
 	{
 		if(m_classicsp) return INT_MAX;
+#ifdef BFRONTIER
+		int sec = nonspectators()*4;
+#else
         int np = nonspectators();
 		np = np<3 ? 4 : (np>4 ? 2 : 3);		 // spawn times are dependent on number of players
 		int sec = 0;
@@ -465,6 +493,7 @@ struct fpsserver : igameserver
 			case I_BOOST:
 			case I_QUAD: sec = 40+rnd(40); break;
 		}
+#endif
 		return sec*1000;
 	}
 		
@@ -981,7 +1010,17 @@ struct fpsserver : igameserver
 		// only allow edit messages in coop-edit mode
 		if(type>=SV_EDITENT && type<=SV_GETMAP && gamemode!=1) return -1;
 		// server only messages
+#ifdef BFRONTIER
+		static int servtypes[] = {
+				SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG,
+				SV_DAMAGE, SV_HITPUSH, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH,
+				SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER,
+				SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_SENDDEMOLIST,
+				SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_CLIENT
+		};
+#else
 		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_HITPUSH, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_CLIENT };
+#endif
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -1107,7 +1146,9 @@ struct fpsserver : igameserver
 		#define QUEUE_UINT(n) { if(!ci->local) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(4); putuint(buf, n); ci->messages.addbuf(buf); } }
 		#define QUEUE_STR(text) { if(!ci->local) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(2*strlen(text)+1); sendstring(text, buf); ci->messages.addbuf(buf); } }
 		int curmsg;
-        while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci))
+        while((curmsg = p.length()) < p.maxlen)
+        {
+		switch(type = checktype(getint(p), ci))
 		{
 			case SV_POS:
 			{
@@ -1133,12 +1174,10 @@ struct fpsserver : igameserver
                 if(!ci->local && (ci->state.state==CS_ALIVE || ci->state.state==CS_EDITING))
 				{
 					f &= 0xF;
+#ifndef BFRONTIER
 					if(ci->state.armourtype==A_GREEN && ci->state.armour>0) f |= 1<<4;
 					if(ci->state.armourtype==A_YELLOW && ci->state.armour>0) f |= 1<<5;
 					if(ci->state.quadmillis) f |= 1<<6;
-#ifdef BFRONTIER
-					if(ci->state.maxhealth>100) f |= ((ci->state.maxhealth-100)/getitem(I_BOOST-I_SHELLS).add)<<7;
-#else
 					if(ci->state.maxhealth>100) f |= ((ci->state.maxhealth-100)/itemstats[I_BOOST-I_SHELLS].add)<<7;
 #endif
 					curmsg = p.length();
@@ -1192,11 +1231,6 @@ struct fpsserver : igameserver
 			}
 
 #ifdef BFRONTIER
-			case SV_RELOAD:
-			{
-				getint(p);
-				break;
-			}
 			case SV_REGENERATE:
 			{
 				getint(p);
@@ -1211,19 +1245,6 @@ struct fpsserver : igameserver
 				ci->state.state = CS_ALIVE;
 				ci->state.gunselect = gunselect;
 				if(smode) smode->spawned(ci);
-#ifdef BFRONTIER
-				if (spawnstates[SPAWN_QUAD] >= 0) // only works if map has a quad
-				{
-					loopv(sents)
-					{
-						if (sents[i].type == I_QUAD)
-						{
-							sendf(ci->clientnum, 1, "ri3", SV_ITEMACC, i, ci->clientnum);
-							break;
-						}
-					}
-				}
-#endif
 				QUEUE_MSG;
 				break;
 			}
@@ -1282,6 +1303,16 @@ struct fpsserver : igameserver
 				}
 				break;
 			}
+
+#ifdef BFRONTIER
+			case SV_RELOAD:
+			{
+				gameevent &reload = ci->addevent();
+				reload.type = GE_RELOAD;
+                seteventmillis(reload.reload);
+                break;
+			}
+#endif
 
 			case SV_EXPLODE:
 			{
@@ -1342,7 +1373,11 @@ struct fpsserver : igameserver
 					if(&sc) 
 					{
 						sc.restore(ci->state);
+#ifdef BFRONTIER
+						sendf(-1, 1, "ri7", SV_RESUME, sender, ci->state.state, ci->state.lifesequence, ci->state.gunselect, sc.frags, -1);
+#else
 						sendf(-1, 1, "ri8", SV_RESUME, sender, ci->state.state, ci->state.lifesequence, ci->state.gunselect, sc.maxhealth, sc.frags, -1);
+#endif
 					}
 				}
 				getstring(text, p);
@@ -1386,8 +1421,12 @@ struct fpsserver : igameserver
 					if(notgotitems)
 					{
 						while(sents.length()<=n) sents.add(se);
+#ifdef BFRONTIER
+						sents[n].spawned = true;
+#else
 						if(gamemode>=0 && (sents[n].type==I_QUAD || sents[n].type==I_BOOST)) sents[n].spawntime = spawntime(sents[n].type);
 						else sents[n].spawned = true;
+#endif
 					}
 				}
 				notgotitems = false;
@@ -1401,10 +1440,17 @@ struct fpsserver : igameserver
 				break;
 
 			case SV_BASEINFO:
+#ifdef BFRONTIER
+				getint(p);
+				getint(p);
+				getstring(text, p);
+				getstring(text, p);
+#else
 				getint(p);
 				getstring(text, p);
 				getstring(text, p);
 				getint(p);
+#endif
 				QUEUE_MSG;
 				break;
 
@@ -1412,9 +1458,11 @@ struct fpsserver : igameserver
 				if(smode==&capturemode) capturemode.parsebases(p);
 				break;
 
+#ifndef BFRONTIER
 			case SV_REPAMMO:
 				if(smode==&capturemode) capturemode.replenishammo(ci);
 				break;
+#endif
 
 			case SV_PING:
 				sendf(sender, 1, "i2", SV_PONG, getint(p));
@@ -1579,11 +1627,13 @@ struct fpsserver : igameserver
 			default:
 			{
 				int size = msgsizelookup(type);
-				if(size==-1) { conoutf("msg: %.2d", type); disconnect_client(sender, DISC_TAGT); return; }
+				if(size==-1) { disconnect_client(sender, DISC_TAGT); return; }
 				if(size>0) loopi(size-1) getint(p);
 				if(ci) QUEUE_MSG;
 				break;
 			}
+        }
+			conoutf("msg: %.2d %s", type, msgnames[type]);
         }
 	}
 
@@ -1633,11 +1683,16 @@ struct fpsserver : igameserver
 				putint(p, SV_SPAWNSTATE);
 				putint(p, gs.lifesequence);
 				putint(p, gs.health);
+#ifdef BFRONTIER
+				putint(p, gs.gunselect);
+				loopi(NUMGUNS) putint(p, gs.ammo[i]);
+#else
 				putint(p, gs.maxhealth);
 				putint(p, gs.armour);
 				putint(p, gs.armourtype);
 				putint(p, gs.gunselect);
 				loopi(GUN_PISTOL-GUN_SG+1) putint(p, gs.ammo[GUN_SG+i]);
+#endif
 				gs.lastspawn = gamemillis; 
 			}
 		}
@@ -1659,7 +1714,9 @@ struct fpsserver : igameserver
 				putint(p, oi->state.state);
 				putint(p, oi->state.lifesequence);
 				putint(p, oi->state.gunselect);
+#ifndef BFRONTIER
 				putint(p, oi->state.maxhealth);
+#endif
 				putint(p, oi->state.frags);
 			}
 			putint(p, -1);
@@ -1715,34 +1772,19 @@ struct fpsserver : igameserver
 					ci->state.health = spawnstates[i];
 					break;
 				}
-				case SPAWN_MAXHEALTH:
-				{
-					ci->state.maxhealth = spawnstates[i];
-					break;
-				}
-				case SPAWN_ARMOUR:
-				{
-					ci->state.armour = spawnstates[i];
-					break;
-				}
-				case SPAWN_ARMOURTYPE:
-				{
-					ci->state.armourtype = spawnstates[i];
-					break;
-				}
 				case SPAWN_GUNSELECT:
 				{
 					ci->state.gunselect = spawnstates[i];
 					break;
 				}
+				case SPAWN_PISTOL:
 				case SPAWN_SG:
 				case SPAWN_CG:
+				case SPAWN_GL:
 				case SPAWN_RL:
 				case SPAWN_RIFLE:
-				case SPAWN_GL:
-				case SPAWN_PISTOL:
 				{
-					ci->state.ammo[i-SPAWN_SG+1] = spawnstates[i];
+					ci->state.ammo[i-SPAWN_PISTOL] = spawnstates[i];
 					break;
 				}
 				default:
@@ -1757,10 +1799,15 @@ struct fpsserver : igameserver
 	{
 		gamestate &gs = ci->state;
 		spawnstate(ci);
+#ifdef BFRONTIER
+		sendf(ci->clientnum, 1, "ri4v", SV_SPAWNSTATE, gs.lifesequence,
+			gs.health, gs.gunselect, NUMGUNS, &gs.ammo[GUN_PISTOL]);
+#else
 		sendf(ci->clientnum, 1, "ri7v", SV_SPAWNSTATE, gs.lifesequence,
 			gs.health, gs.maxhealth,
 			gs.armour, gs.armourtype,
 			gs.gunselect, GUN_PISTOL-GUN_SG+1, &gs.ammo[GUN_SG]);
+#endif
 		gs.lastspawn = gamemillis;
 	}
 
@@ -1771,9 +1818,12 @@ struct fpsserver : igameserver
 		if (smode && !smode->damage(target, actor, damage, gun, hitpush)) return;
 		if (!teamdamage && m_teammode && !strcmp(target->team, actor->team)) return;
 		damage *= damagescale/100;
-#endif
+		ts.dodamage(damage);
+		sendf(-1, 1, "ri5", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.health); 
+#else
 		ts.dodamage(damage);
 		sendf(-1, 1, "ri6", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.armour, ts.health); 
+#endif
 		if(target!=actor && !hitpush.iszero()) 
 		{
 			vec v(hitpush);
@@ -1847,8 +1897,8 @@ struct fpsserver : igameserver
 			int damage = getgun(e.gun).damage;
 #else
 			int damage = guns[e.gun].damage;
-#endif
 			if(gs.quadmillis) damage *= 4;		
+#endif
 			damage = int(damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
 			if(e.gun==GUN_RL && target==ci) damage /= RL_SELFDAMDIV;
 			dodamage(target, ci, damage, e.gun, h.dir);
@@ -1862,10 +1912,8 @@ struct fpsserver : igameserver
 		int wait = e.millis - gunvar(gs.gunlast,e.gun);
 		if(!gs.isalive(gamemillis) ||
            wait<gunvar(gs.gunwait,e.gun) ||
-			e.gun<GUN_FIST || e.gun>GUN_PISTOL ||
-			gs.ammo[e.gun]<=0)
+			!gunallowed(gs.ammo, e.gun, -1))
 			return;
-		if(e.gun!=GUN_FIST) gs.ammo[e.gun]--;
 		gunvar(gs.gunlast,e.gun) = e.millis; 
 		gunvar(gs.gunwait,e.gun) = getgun(e.gun).attackdelay; 
 #else
@@ -1902,8 +1950,8 @@ struct fpsserver : igameserver
 					int damage = h.rays*getgun(e.gun).damage;
 #else
 					int damage = h.rays*guns[e.gun].damage;
-#endif
 					if(gs.quadmillis) damage *= 4;
+#endif
 					dodamage(target, ci, damage, e.gun, h.dir);
 				}
 				break;
@@ -1911,6 +1959,20 @@ struct fpsserver : igameserver
 		}
 	}
 
+#ifdef BFRONTIER
+	void processevent(clientinfo *ci, reloadevent &e)
+	{
+		gamestate &gs = ci->state;
+		int wait = e.millis - gunvar(gs.gunlast,e.gun);
+		if(!gs.isalive(gamemillis) ||
+			wait<gunvar(gs.gunwait,e.gun) ||
+				!gunallowed(gs.ammo, e.gun, -2))
+			return;
+		gunvar(gs.gunlast,e.gun) = e.millis; 
+		gunvar(gs.gunwait,e.gun) = getgun(e.gun).reloaddelay; 
+		gs.ammo[e.gun] = getitem(e.gun).add;
+	}
+#endif
 	void processevent(clientinfo *ci, pickupevent &e)
 	{
 		gamestate &gs = ci->state;
@@ -1923,7 +1985,9 @@ struct fpsserver : igameserver
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
+#ifndef BFRONTIER
 			if(curtime>0 && ci->state.quadmillis) ci->state.quadmillis = max(ci->state.quadmillis-curtime, 0);
+#endif
 			while(ci->events.length())
 			{
 				gameevent &e = ci->events[0];
@@ -1958,12 +2022,14 @@ struct fpsserver : igameserver
 		{
 			processevents();
 #ifdef BFRONTIER
-			if(curtime) loopv(sents) if(sents[i].spawntime && sents[i].type >= I_SHELLS && sents[i].type <= I_QUAD && powerups[sents[i].type-I_SHELLS])
+			if(curtime) loopv(sents) if(sents[i].spawntime && sents[i].type >= I_PISTOL && sents[i].type <= I_RIFLE && powerups[sents[i].type-I_PISTOL])
 #else
 			if(curtime) loopv(sents) if(sents[i].spawntime) // spawn entities when timer reached
 #endif
 			{
+#ifndef BFRONTIER
 				int oldtime = sents[i].spawntime;
+#endif
 				sents[i].spawntime -= curtime;
 				if(sents[i].spawntime<=0)
 				{
@@ -1971,10 +2037,12 @@ struct fpsserver : igameserver
 					sents[i].spawned = true;
 					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
 				}
+#ifndef BFRONTIER
 				else if(sents[i].spawntime<=10000 && oldtime>10000 && (sents[i].type==I_QUAD || sents[i].type==I_BOOST))
 				{
 					sendf(-1, 1, "ri2", SV_ANNOUNCE, sents[i].type);
 				}
+#endif
 			}
 			if(smode) smode->update();
 #ifdef BFRONTIER
@@ -2639,8 +2707,7 @@ struct fpsserver : igameserver
 				else
 				{
 					char *pups[POWERUPS] = {
-						"shells", "bullets", "rockets", "riflerounds", "grenades", "cartridges",
-						"health", "healthboost", "greenarmour", "yellowarmour", "quaddamage"
+						"pistol", "shotgun", "chaingun", "grenades", "rockets", "rifle"
 					};
 											
 					int x = -1;
@@ -2672,7 +2739,7 @@ struct fpsserver : igameserver
 								loopv(sents)
 								{
 									server_entity &e = sents[i];
-									if (e.type == I_SHELLS+x)
+									if (e.type == I_PISTOL+x)
 									{
 										if (e.spawned)
 										{
@@ -2715,9 +2782,8 @@ struct fpsserver : igameserver
 			else
 			{
 				char *sts[SPAWNSTATES] = {
-					"health", "maxhealth", "armour", "armourtype", "gunselect",
-					"shells", "bullets", "rockets", "riflerounds", "grenades", "cartridges",
-					"quaddamage"
+					"health", "gunselect",
+					"pistol", "shotgun", "chaingun", "grenades", "rockets", "rifle",
 				};
 										
 				int x = -1;
@@ -2736,17 +2802,6 @@ struct fpsserver : igameserver
 						switch (x)
 						{
 							case SPAWN_HEALTH:
-							case SPAWN_MAXHEALTH:
-							case SPAWN_ARMOUR:
-							{
-								ret = min(ret, 999); // yeah, don't be insane
-								break;
-							}
-							case SPAWN_ARMOURTYPE:
-							{
-								ret = min(ret, A_YELLOW);
-								break;
-							}
 							case SPAWN_GUNSELECT:
 							{
 								bool wastext = false;
@@ -2761,14 +2816,14 @@ struct fpsserver : igameserver
 								}
 								if (!wastext) ret = min(ret, NUMGUNS-1);
 							}
+							case SPAWN_PISTOL:
 							case SPAWN_SG:
 							case SPAWN_CG:
+							case SPAWN_GL:
 							case SPAWN_RL:
 							case SPAWN_RIFLE:
-							case SPAWN_GL:
-							case SPAWN_PISTOL:
 							{
-								ret = min(ret, getitem(x-SPAWN_SG).max);
+								ret = min(ret, getitem(x-SPAWN_PISTOL).max);
 								break;
 							}
 							case SPAWN_QUAD:

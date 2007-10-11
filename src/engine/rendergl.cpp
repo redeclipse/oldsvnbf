@@ -1093,8 +1093,8 @@ void gl_drawhud(int w, int h, int fogmat)
 			int fps, bestdiff, worstdiff;
 			getfps(fps, bestdiff, worstdiff);
 #ifdef BFRONTIER // extended performace stats
-			if(showfpsrange) draw_textx("%d+%d-%d:%d", w*3-4, 4, 255, 255, 255, 255, AL_RIGHT, fps, bestdiff, worstdiff, perf);
-			else draw_textx("%d:%d", w*3-6, 4, 255, 255, 255, 255, AL_RIGHT, fps, perf);
+			if(showfpsrange) draw_textx("%d+%d-%d:%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, bestdiff, worstdiff, perf);
+			else draw_textx("%d:%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, perf);
 #else
 			if(showfpsrange) draw_textf("fps %d+%d-%d", w*3-7*FONTH, h*3-100, fps, bestdiff, worstdiff);
 			else draw_textf("fps %d", w*3-5*FONTH, h*3-100, fps);

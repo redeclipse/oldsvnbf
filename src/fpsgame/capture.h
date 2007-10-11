@@ -8,9 +8,11 @@ struct capturestate
 	static const int OCCUPYLIMIT = 100;
 	static const int CAPTURESCORE = 1;
 	static const int SCORESECS = 10;
+#ifndef BFRONTIER
 	static const int AMMOSECS = 15;
 	static const int MAXAMMO = 5;
 	static const int REPAMMODIST = 32;
+#endif
 	static const int RESPAWNSECS = 10;		
 
 	struct baseinfo
@@ -21,7 +23,11 @@ struct capturestate
 		string name, info;
 		extentity *ent;
 #endif
+#ifdef BFRONTIER
+		int enemies, converted, capturetime;
+#else
 		int ammotype, ammo, enemies, converted, capturetime;
+#endif
 
 		baseinfo() { reset(); }
 
@@ -37,8 +43,10 @@ struct capturestate
 			noenemy();
 			owner[0] = '\0';
 			capturetime = -1;
+#ifndef BFRONTIER
 			ammotype = 0;
 			ammo = 0;
+#endif
 		}
 
 		bool enter(const char *team)
@@ -74,9 +82,14 @@ struct capturestate
 			converted += units;
 			if(converted<(owner[0] ? 2 : 1)*OCCUPYLIMIT) return -1;
 			if(owner[0]) { owner[0] = '\0'; converted = 0; s_strcpy(enemy, team); return 0; }
+#ifdef BFRONTIER
+			else { s_strcpy(owner, team); capturetime = 0; noenemy(); return 1; }
+#else
 			else { s_strcpy(owner, team); ammo = 0; capturetime = 0; noenemy(); return 1; }
+#endif
 		}
 
+#ifndef BFRONTIER
 		bool addammo(int i)
 		{
 			if(ammo>=MAXAMMO) return false;
@@ -90,6 +103,7 @@ struct capturestate
 			ammo--;
 			return true;
 		}
+#endif
 	};
 
 	vector<baseinfo> bases;
@@ -126,6 +140,22 @@ struct capturestate
 		return cs;
 	}
 
+#ifdef BFRONTIER
+	void addbase(const vec &o)
+	{
+		baseinfo &b = bases.add();
+		b.o = o;
+	}
+
+	void initbase(int i, const char *owner, const char *enemy, int converted)
+	{
+		if(!bases.inrange(i)) return;
+		baseinfo &b = bases[i];
+		s_strcpy(b.owner, owner);
+		s_strcpy(b.enemy, enemy);
+		b.converted = converted;
+	}
+#else
 	void addbase(int ammotype, const vec &o)
 	{
 		baseinfo &b = bases.add();
@@ -143,6 +173,7 @@ struct capturestate
 		b.converted = converted;
 		b.ammo = ammo;
 	}
+#endif
 
 	bool hasbases(const char *team)
 	{
@@ -182,9 +213,12 @@ struct captureclient : capturestate
 
 	captureclient(fpsclient &cl) : cl(cl), radarscale(0)
 	{
+#ifndef BFRONTIER
         CCOMMAND(repammo, "", (captureclient *self), self->replenishammo());
+#endif
 	}
 	
+#ifndef BFRONTIER
 	void replenishammo()
 	{
 		int gamemode = cl.gamemode;
@@ -203,6 +237,7 @@ struct captureclient : capturestate
 		if(type<I_SHELLS || type>I_CARTRIDGES) return;
 		cl.et.repammo(cl.player1, type);
 	}
+#endif
 
 	void renderbases()
 	{
@@ -211,6 +246,7 @@ struct captureclient : capturestate
 			baseinfo &b = bases[i];
 			const char *flagname = b.owner[0] ? (strcmp(b.owner, cl.player1->team) ? "flags/red" : "flags/blue") : "flags/neutral";
 			rendermodel(b.ent->color, b.ent->dir, flagname, ANIM_MAPMODEL|ANIM_LOOP, 0, 0, b.o, 0, 0, 0, 0, NULL, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
+#ifndef BFRONTIER
 			if(b.ammotype>0 && b.ammotype<=I_CARTRIDGES-I_SHELLS+1) loopi(b.ammo)
 			{
 				float angle = 2*M_PI*(cl.lastmillis/4000.0f + i/float(MAXAMMO));
@@ -220,6 +256,7 @@ struct captureclient : capturestate
 				p.z += 4;
 				rendermodel(b.ent->color, b.ent->dir, cl.et.entmdlname(I_SHELLS+b.ammotype-1), ANIM_MAPMODEL|ANIM_LOOP, 0, 0, p, 0, 0, 0, 0, NULL, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
 			}
+#endif
 			int ttype = 11, mtype = -1;
 			if(b.owner[0])
 			{
@@ -333,8 +370,12 @@ struct captureclient : capturestate
 			if(e->type!=BASE) continue; 
 			baseinfo &b = bases.add();
 			b.o = e->o;
+#ifdef BFRONTIER
+			s_sprintfd(alias)("base_%d", e->attr1);
+#else
 			b.ammotype = e->attr1;
 			s_sprintfd(alias)("base_%d", e->attr2);
+#endif
 			const char *name = getalias(alias);
 			if(name[0]) s_strcpy(b.name, name); else s_sprintf(b.name)("base %d", bases.length());
 			b.ent = e;
@@ -352,7 +393,9 @@ struct captureclient : capturestate
 		loopv(bases)
 		{
 			baseinfo &b = bases[i];
+#ifndef BFRONTIER
 			putint(p, max(b.ammotype, 0));
+#endif
 			putint(p, int(b.o.x*DMF));
 			putint(p, int(b.o.y*DMF));
 			putint(p, int(b.o.z*DMF));
@@ -360,7 +403,11 @@ struct captureclient : capturestate
 		putint(p, -1);
 	}
 
+#ifdef BFRONTIER
+	void updatebase(int i, const char *owner, const char *enemy, int converted)
+#else
 	void updatebase(int i, const char *owner, const char *enemy, int converted, int ammo)
+#endif
 	{
 		if(!bases.inrange(i)) return;
 		baseinfo &b = bases[i];
@@ -380,8 +427,10 @@ struct captureclient : capturestate
 		s_strcpy(b.owner, owner);
 		s_strcpy(b.enemy, enemy);
 		b.converted = converted;
+#ifndef BFRONTIER
 		if(ammo>b.ammo) playsound(S_ITEMSPAWN, &b.o);
 		b.ammo = ammo;
+#endif
 	}
 
 	void setscore(const char *team, int total)
@@ -468,6 +517,7 @@ struct captureservmode : capturestate, servmode
 		sendbaseinfo(n);
 	}
 
+#ifndef BFRONTIER
 	void replenishammo(clientinfo *ci)
 	{
 		int gamemode = sv.gamemode;
@@ -484,6 +534,7 @@ struct captureservmode : capturestate, servmode
 			}
 		}
 	}
+#endif
 
 	void movebases(const char *team, const vec &oldpos, const vec &newpos)
 	{
@@ -523,7 +574,9 @@ struct captureservmode : capturestate, servmode
 		endcheck();
 		int t = sv.gamemillis/1000 - (sv.gamemillis-sv.curtime)/1000;
 		if(t<1) return;
+#ifndef BFRONTIER
 		int gamemode = sv.gamemode;
+#endif
 		loopv(bases)
 		{
 			baseinfo &b = bases[i];
@@ -535,10 +588,16 @@ struct captureservmode : capturestate, servmode
 			else if(b.owner[0])
 			{
 				b.capturetime += t;
+#ifdef BFRONTIER
+				int score = b.capturetime/SCORESECS - (b.capturetime-t)/SCORESECS;
+				if(score) addscore(b.owner, score);
+				sendbaseinfo(i);
+#else
 				int score = b.capturetime/SCORESECS - (b.capturetime-t)/SCORESECS,
 					ammo = b.capturetime/AMMOSECS - (b.capturetime-t)/AMMOSECS;
 				if(score) addscore(b.owner, score);
 				if(!m_noitemsrail && b.addammo(ammo)) sendbaseinfo(i);
+#endif
 			}
 		}
 	}
@@ -546,7 +605,11 @@ struct captureservmode : capturestate, servmode
 	void sendbaseinfo(int i)
 	{
 		baseinfo &b = bases[i];
+#ifdef BFRONTIER
+		sendf(-1, 1, "riiiss", SV_BASEINFO, i, b.enemy[0] ? b.converted : 0, b.owner, b.enemy);
+#else
 		sendf(-1, 1, "riissii", SV_BASEINFO, i, b.owner, b.enemy, b.enemy[0] ? b.converted : 0, b.owner[0] ? b.ammo : 0);
+#endif
 	}
 
 	void sendbases()
@@ -572,11 +635,17 @@ struct captureservmode : capturestate, servmode
 		loopv(bases)
 		{
 			baseinfo &b = bases[i];
+#ifdef BFRONTIER
+			putint(p, b.converted);
+#else
 			putint(p, min(max(b.ammotype, 1), I_CARTRIDGES+1));
+#endif
 			sendstring(b.owner, p);
 			sendstring(b.enemy, p);
+#ifndef BFRONTIER
 			putint(p, b.converted);
 			putint(p, b.ammo);
+#endif
 		}
 		putint(p, -1);
 	}
@@ -649,7 +718,17 @@ struct captureservmode : capturestate, servmode
 
 	void parsebases(ucharbuf &p)
 	{
-		int ammotype;
+#ifdef BFRONTIER
+		int x = 0;
+		while((x = getint(p))>=0)
+		{
+			vec o;
+			o.x = x/DMF;
+			o.y = getint(p)/DMF;
+			o.z = getint(p)/DMF;
+			if(notgotbases) addbase(o);
+		}
+#else
 		while((ammotype = getint(p))>=0)
 		{
 			vec o;
@@ -658,6 +737,7 @@ struct captureservmode : capturestate, servmode
 			o.z = getint(p)/DMF;
 			if(notgotbases) addbase(ammotype, o);
 		}
+#endif
 		if(notgotbases)
 		{
 			notgotbases = false;
