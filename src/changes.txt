@@ -6,6 +6,9 @@ Legend [
 ]
 
 = wip edition =
+gam: replaced pitch kick with camerawobble
+gam: removed sauerbraten support
+eng: config redesign
 eng: 'registermodel name' added for precaching models
 eng: loadback added, rearranged hud rendering
 gam: fov < 90 only available when using the rifle

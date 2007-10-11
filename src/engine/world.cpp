@@ -945,7 +945,7 @@ void resetmap()
 		switch(i)
 		{
 			case 0:
-				gameexec("map.cfg", true);
+				execfile("packages/map.cfg");
 				break;
 			case 1:
 				execfile(pcfname);

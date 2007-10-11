@@ -18,7 +18,6 @@ struct entities : icliententities
 	char *itemname(int i)
 	{
 #ifdef BFRONTIER // extended entities, blood frontier support
-		if (bf) return NULL;
 		int t = ents[i]->type;
 		if(t<I_SHELLS || t>I_QUAD) return NULL;
 		return getitem(t-I_SHELLS).name;
@@ -32,21 +31,18 @@ struct entities : icliententities
 	char *entmdlname(int type)
 	{
 #ifdef BFRONTIER // blood frontier support
-		if (bf)
+		static char *bfmdlnames[] =
 		{
-			static char *bfmdlnames[] =
-			{
-				NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-				"ammo/shells", "ammo/bullets", "ammo/rockets", "ammo/rrounds", "ammo/grenades", "ammo/cartridges",
-				"health", "boost", "armor/green", "armor/yellow", "quad", "teleporter",
-				NULL, NULL,
-				"carrot",
-				NULL, NULL,
-				"checkpoint"
-			};
-			return bfmdlnames[type];
-		}
-#endif
+			NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+			"ammo/shells", "ammo/bullets", "ammo/rockets", "ammo/rrounds", "ammo/grenades", "ammo/cartridges",
+			"health", "boost", "armor/green", "armor/yellow", "quad", "teleporter",
+			NULL, NULL,
+			"carrot",
+			NULL, NULL,
+			"checkpoint"
+		};
+		return bfmdlnames[type];
+#else
 		static char *entmdlnames[] =
 		{
 			NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -58,6 +54,7 @@ struct entities : icliententities
 			"checkpoint"
 		};
 		return entmdlnames[type];
+#endif
 	}
 
 	void renderent(extentity &e, int type, float z, float yaw, int anim = ANIM_MAPMODEL|ANIM_LOOP, int basetime = 0, float speed = 10.0f)

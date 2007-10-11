@@ -593,18 +593,12 @@ void rehash(bool reload)
 	}
 
 	persistidents = false;
-	
-	// engine and overridables
-	exec("data/engine.cfg");
-
-	// the rest is specific to game - makes things cleaner
-	gameexec("servers.cfg", true);
-	gameexec("defaults.cfg");
-
+	exec("packages/defaults.cfg");
 	persistidents = true;
 
-	gameexec("config.cfg");
-	gameexec("autoexec.cfg");
+	execfile("servers.cfg");
+	execfile("config.cfg");
+	execfile("autoexec.cfg");
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
 
@@ -835,22 +829,27 @@ int main(int argc, char **argv)
 
 	log("gl");
 	persistidents = false;
-	if(!execfile("data/stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
-    gl_init(scr_w, scr_h, hasbpp ? colorbits : 0, config&1 ? depthbits : 0, config&4 ? fsaa : 0);
 #ifdef BFRONTIER // moved data
+	if(!execfile("packages/stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
+    gl_init(scr_w, scr_h, hasbpp ? colorbits : 0, config&1 ? depthbits : 0, config&4 ? fsaa : 0);
     notexture = textureload("packages/textures/notexture.png");
 #else
+	if(!execfile("data/stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
+    gl_init(scr_w, scr_h, hasbpp ? colorbits : 0, config&1 ? depthbits : 0, config&4 ? fsaa : 0);
     notexture = textureload("data/notexture.png");
 #endif
     if(!notexture) fatal("could not find core textures");
 
 	log("console");
-	if(!execfile("data/font.cfg")) fatal("cannot find font definitions");
-	if(!setfont("default")) fatal("no default font specified");
 #ifdef BFRONTIER // unbuffered i/o
 	setbuf(stdout, NULL);
 	setbuf(stderr, NULL);
+	
+	if(!execfile("packages/font.cfg")) fatal("cannot find font definitions");
+#else
+	if(!execfile("data/font.cfg")) fatal("cannot find font definitions");
 #endif
+	if(!setfont("default")) fatal("no default font specified");
 
 	computescreen("initializing...");
 	inbetweenframes = true;

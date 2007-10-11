@@ -359,7 +359,11 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
 	inittmus();
 
+#ifdef BFRONTIER
+	exec("packages/stdshader.cfg");
+#else
 	exec("data/stdshader.cfg");
+#endif
 	defaultshader = lookupshaderbyname("default");
 	notextureshader = lookupshaderbyname("notexture");
 	nocolorshader = lookupshaderbyname("nocolor");

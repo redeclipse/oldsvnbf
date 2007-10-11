@@ -256,33 +256,30 @@ struct fpsclient : igameclient
 			adjust(camerawobble, 1);
 			adjust(damageresidue, 1);
 			
-			if (bf)
+			if (player1->state == CS_ALIVE && !intermission)
 			{
-				if (player1->state == CS_ALIVE && !intermission)
+				if (player1->health < player1->maxhealth && player1->nexthealth <= lastmillis)
 				{
-					if (player1->health < player1->maxhealth && player1->nexthealth <= lastmillis)
-					{
-						int na = lastmillis-player1->nexthealth, 
-							nb = na%300, inc = ((na-nb)+300)/300;
-						player1->health = min(player1->health + inc, player1->maxhealth);
-						player1->nexthealth = lastmillis + 300 - nb;
-					}
-					
-					if (player1->timeinair)
-					{
-						if (player1->jumpnext && lastmillis-player1->lastimpulse > 3000)
-						{
-							vec dir;
-							vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
-							dir.normalize();
-							dir.mul(ph.jumpvel(player1));
-							player1->vel.add(dir);
-							player1->lastimpulse = lastmillis;
-							player1->jumpnext = false;
-						}
-					}
-					else player1->lastimpulse = 0;
+					int na = lastmillis-player1->nexthealth, 
+						nb = na%300, inc = ((na-nb)+300)/300;
+					player1->health = min(player1->health + inc, player1->maxhealth);
+					player1->nexthealth = lastmillis + 300 - nb;
 				}
+				
+				if (player1->timeinair)
+				{
+					if (player1->jumpnext && lastmillis-player1->lastimpulse > 3000)
+					{
+						vec dir;
+						vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
+						dir.normalize();
+						dir.mul(ph.jumpvel(player1));
+						player1->vel.add(dir);
+						player1->lastimpulse = lastmillis;
+						player1->jumpnext = false;
+					}
+				}
+				else player1->lastimpulse = 0;
 			}
 
 			physicsframe();
@@ -421,7 +418,7 @@ struct fpsclient : igameclient
 
 		if (d == player1)
 		{
-			if (bf) d->nexthealth = lastmillis + 3000;
+			d->nexthealth = lastmillis + 3000;
 			camerawobble = max(camerawobble, damage);
 			damageresidue = max(damageresidue, damage);
 			d->damageroll(damage);
@@ -686,12 +683,6 @@ struct fpsclient : igameclient
 			if(*best) conoutf("\f2try to beat your best score so far: %s", best);
 		}
 		cameranum = 0;
-		if (!bf && *name)
-		{
-			s_sprintfd(cfgname)("packages/%s.cfx", mapname);
-			path(cfgname);
-			execfile(cfgname);
-		}
 		bc.start(name);
 #else
 		if(*name) conoutf("\f2game mode is %s", fpsserver::modestr(gamemode));
@@ -1253,9 +1244,9 @@ struct fpsclient : igameclient
 
 	bool gethudcolour(vec &colour)
 	{
-		if (maptime && lastmillis-maptime <= CARDTIME)
+		if (!maptime && lastmillis-maptime <= CARDTIME)
 		{
-			float fade = float(lastmillis-maptime)/float(CARDTIME);
+			float fade = maptime ? float(lastmillis-maptime)/float(CARDTIME) : 0.f;
 			colour = vec(fade, fade, fade);
 			return true;
 		}
@@ -1301,19 +1292,16 @@ struct fpsclient : igameclient
 
 	void fixview()
 	{
-		if (bf)
+		int maxfov = isthirdperson() ? 100 : 125,
+			minfov = player1->gunselect == GUN_RIFLE ? 0 : 90;
+		
+		if (fov > maxfov) fov = maxfov;
+		if (fov < minfov) fov = minfov;
+		
+		if (isthirdperson())
 		{
-			int maxfov = isthirdperson() ? 100 : 125,
-				minfov = player1->gunselect == GUN_RIFLE ? 0 : 90;
-			
-			if (fov > maxfov) fov = maxfov;
-			if (fov < minfov) fov = minfov;
-			
-			if (isthirdperson())
-			{
-				thirdpersondistance = 12;
-				thirdpersonheight = 4;
-			}
+			thirdpersondistance = 12;
+			thirdpersonheight = 4;
 		}
 	}
 	

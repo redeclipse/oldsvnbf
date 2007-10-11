@@ -421,8 +421,6 @@ extern vec wall;
 extern float walldistance;
 extern int physicsfraction, physicsrepeat, minframetime;
 
-extern bool gameexec(char *name, bool quiet = false);
-extern FILE *gameopen(char *name, char *mode);
 extern char *getmaptitle();
 
 extern int gzgetint(gzFile f);
@@ -430,7 +428,6 @@ extern void gzputint(gzFile f, int x);
 extern float gzgetfloat(gzFile f);
 extern void gzputfloat(gzFile f, float x);
 
-extern char *getgameident();
 extern char *getdefaultmap();
 extern char *gettime(char *format);
 
