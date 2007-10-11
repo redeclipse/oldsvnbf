@@ -238,7 +238,11 @@ struct cubeloader
 		string pakname, cgzname;
 		s_sprintf(pakname)("cube/%s", mname);
 		s_sprintf(cgzname)("packages/%s.cgz", pakname);
+#ifdef BFRONTIER
+		gzFile f = opengzfile(cgzname, "rb9");
+#else
 		gzFile f = opengzfile(path(cgzname), "rb9");
+#endif
 		if(!f) { conoutf("could not read cube map %s", cgzname); return; }
         c_header hdr;
         gzread(f, &hdr, sizeof(c_header)-sizeof(int)*16);
@@ -342,7 +346,11 @@ struct cubeloader
 		string cfgname;
 		s_sprintf(cfgname)("packages/cube/%s.cfg", mname);
 		exec("packages/cube/package.cfg");
+#ifdef BFRONTIER
+		exec(cfgname);
+#else
 		exec(path(cfgname));
+#endif
 		create_cubes();
         mpremip(true);
 		clearlights();

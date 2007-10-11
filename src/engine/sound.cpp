@@ -369,10 +369,11 @@ void playsound(int n, const vec *loc, extentity *ent)
 					s_sprintf(buf)("packages/sounds/%s", slot.s->name);
 					break;
 			}
+			const char *file = findfile(buf, "rb");
 #else
 			if(i) s_strcat(buf, ".wav");
-#endif
 			const char *file = findfile(path(buf), "rb");
+#endif
 #ifdef USE_MIXER
 			slot.s->sound = Mix_LoadWAV(file);
 #else

@@ -1633,7 +1633,7 @@ struct fpsserver : igameserver
 				break;
 			}
         }
-			conoutf("msg: %.2d %s", type, msgnames[type]);
+		//conoutf("msg: %.2d %s", type, msgnames[type]);
         }
 	}
 

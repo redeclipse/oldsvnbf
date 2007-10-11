@@ -616,19 +616,23 @@ bool execfile(char *cfgfile)
 {
 	string s;
 	s_strcpy(s, cfgfile);
+#ifdef BFRONTIER
+	char *buf = loadfile(s, NULL);
+#else
 	char *buf = loadfile(path(s), NULL);
+#endif
 	if(!buf) return false;
 	execute(buf);
 	delete[] buf;
+#ifdef BFRONTIER // verbose support
+	if (verbose >= 2) console("loaded script '%s'", CON_RIGHT, cfgfile);
+#endif
 	return true;
 }
 
 void exec(char *cfgfile)
 {
 	if(!execfile(cfgfile)) conoutf("could not read \"%s\"", cfgfile);
-#ifdef BFRONTIER // verbose support
-	else if (verbose >= 2) console("loaded script '%s'", CON_RIGHT, cfgfile);
-#endif
 }
 #ifndef STANDALONE
 void writecfg()
@@ -654,6 +658,7 @@ void writecfg()
 	fprintf(f, "\n");
 	writebinds(f);
 	fprintf(f, "\n");
+#ifndef BFRONTIER
 	enumerate(*idents, ident, id,
 		if(id._type==ID_ALIAS && id._persist && id._override==NO_OVERRIDE && !strstr(id._name, "nextmap_") && id._action[0])
 		{
@@ -662,6 +667,7 @@ void writecfg()
 	);
 	fprintf(f, "\n");
 	writecompletions(f);
+#endif
 	fclose(f);
 }
 
@@ -899,5 +905,4 @@ void gzputfloat(gzFile f, float x)
 	endianswap(&t, sizeof(float), 1);
 	gzwrite(f, &t, sizeof(float));
 }
-
 #endif

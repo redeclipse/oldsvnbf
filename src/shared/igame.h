@@ -7,14 +7,13 @@ struct icliententities
     virtual void editent(int i) = 0;
     virtual const char *entnameinfo(entity &e) = 0;
     virtual const char *entname(int i) = 0;
+#ifdef BFRONTIER
+	virtual void readent(gzFile &g, int id, entity &e) { return; }
+	virtual void writeent(gzFile &g, int id, entity &e) { return; }
+#else
     virtual int extraentinfosize() = 0;
     virtual void writeent(entity &e, char *buf) = 0;
     virtual void readent(entity &e, char *buf) = 0;
-#ifdef BFRONTIER
-	virtual bool wantext() { return false; }
-	virtual bool isext(int type, int want = 0) { return false; }
-	virtual void readext(gzFile &g, int version, int reg, int id, entity &e) { return; }
-	virtual void writeext(gzFile &g, int reg, int id, int num, entity &e) { return; }
 #endif
     virtual float dropheight(entity &e) = 0;
     virtual void rumble(const extentity &e) = 0;
@@ -131,8 +130,10 @@ struct igameclient
     virtual dynent *iterdynents(int i) = 0;
     virtual int numdynents() = 0;
     virtual void rendergame() = 0;
+#ifndef BFRONTIER
     virtual void writegamedata(vector<char> &extras) = 0;
     virtual void readgamedata(vector<char> &extras) = 0;
+#endif
     virtual void g3d_gamemenus() = 0;
     virtual void crosshaircolor(float &r, float &g, float &b) {} 
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}

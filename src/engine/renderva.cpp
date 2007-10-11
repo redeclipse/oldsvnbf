@@ -631,8 +631,7 @@ void rendershadowmapreceivers()
 }
 
 #ifdef BFRONTIER // variable caustics length
-#define NUMCAUSTICS 100
-VAR(causticnum, 0, 50, NUMCAUSTICS);
+#define NUMCAUSTICS 50
 #else
 #define NUMCAUSTICS 32
 #endif
@@ -646,11 +645,7 @@ static Texture *caustictex[NUMCAUSTICS] = { NULL };
 void loadcaustics()
 {
     if(caustictex[0]) return;
-#ifdef BFRONTIER // variable caustics length
-    loopi(causticnum)
-#else
     loopi(NUMCAUSTICS)
-#endif
     {
         s_sprintfd(name)("<mad:0.6,0.4>packages/caustics/caust%.2d.png", i);
         caustictex[i] = textureload(name);
@@ -687,11 +682,7 @@ void rendercaustics(float z, bool refract)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ZERO, GL_SRC_COLOR);
 
-#ifdef BFRONTIER // variable caustics length
-	int tex = (lastmillis/causticmillis)%causticnum;
-#else
 	int tex = (lastmillis/causticmillis)%NUMCAUSTICS;
-#endif
     glBindTexture(GL_TEXTURE_2D, caustictex[tex]->gl);
 
     float frac = float(lastmillis%causticmillis)/causticmillis;
@@ -699,11 +690,7 @@ void rendercaustics(float z, bool refract)
 	{
 		glActiveTexture_(GL_TEXTURE1_ARB);
 		glEnable(GL_TEXTURE_2D);
-#ifdef BFRONTIER // vcariable caustics length
-        glBindTexture(GL_TEXTURE_2D, caustictex[(tex+1)%causticnum]->gl);
-#else
         glBindTexture(GL_TEXTURE_2D, caustictex[(tex+1)%NUMCAUSTICS]->gl);
-#endif
         if(renderpath==R_FIXEDFUNCTION)
         {
             glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
@@ -1415,7 +1402,11 @@ void setupTMUs()
 		glEnableClientState(GL_COLOR_ARRAY);
 		loopi(8-2) { glActiveTexture_(GL_TEXTURE2_ARB+i); glEnable(GL_TEXTURE_2D); }
 		glActiveTexture_(GL_TEXTURE0_ARB);
+#ifdef BFRONTIER
+		setenvparamf("ambient", SHPARAM_PIXEL, 5, ambient/255.0f, ambient/255.0f, ambient/255.0f);
+#else
 		setenvparamf("ambient", SHPARAM_PIXEL, 5, hdr.ambient/255.0f, hdr.ambient/255.0f, hdr.ambient/255.0f);
+#endif
 		setenvparamf("millis", SHPARAM_VERTEX, 6, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);
 	}
 }

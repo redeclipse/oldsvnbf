@@ -51,7 +51,11 @@ static inline uint hthash(const nkey &k)
 
 hashtable<nkey, nval> normals;
 
+#ifdef BFRONTIER
+VARW(lerpangle, 0, 44, 180);
+#else
 VARF(lerpangle, 0, 44, 180, hdr.lerpangle = lerpangle);
+#endif
 
 static float lerpthreshold = 0;
 

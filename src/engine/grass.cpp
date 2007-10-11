@@ -39,7 +39,11 @@ void gengrasssample(vtxarray *va, const vec &o, float tu, float tv, LightMap *lm
 		tv = min(tv, LM_PACKH-0.01f);
 		memcpy(g.color, &lm->data[3*(int(tv)*LM_PACKW + int(tu))], 3);
 	}
+#ifdef BFRONTIER
+	else loopk(3) g.color[k] = getvar("ambient");
+#else
 	else loopk(3) g.color[k] = hdr.ambient;
+#endif
 }
 
 bool gengrassheader(vtxarray *va, const vec *v)

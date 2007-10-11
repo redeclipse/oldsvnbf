@@ -413,7 +413,6 @@ extern void draw_text(const char *str, int left, int top, int r = 255, int g = 2
 extern bool pushfont(char *name);
 extern bool popfont(int num);
 
-// command
 extern ENetHost *clienthost;
 extern ENetPeer *curpeer, *connpeer;
 #endif // STANDALONE
@@ -491,6 +490,12 @@ extern void rehash(bool reload = true);
 extern void startgame(char *load = NULL, char *initscript = NULL);
 
 // world
+enum
+{
+	MAP_OCTA = 0,
+	MAP_BFGZ
+};
+
 enum							// cube empty-space materials
 {
 	MAT_AIR = 0,				// the default, fill the empty space with air
@@ -501,6 +506,8 @@ enum							// cube empty-space materials
 	MAT_LAVA,					// fill with lava
 	MAT_EDIT					// basis for the edit volumes of the above materials
 };
+
+extern int ambient, skylight, watercolour, lavacolour;
 
 enum {
 	WT_WATER = 0,
@@ -516,7 +523,7 @@ enum
 	VIEW_MAX
 };
 
-extern string cgzname, pcfname, mcfname, picname, mapname, extname;
-extern int verbose, savebak, extversion;
+extern string cgzname, pcfname, mcfname, picname, mapname;
+extern int verbose, savebak, maptype;
 
 #endif

@@ -237,10 +237,25 @@ Reflection *findreflection(int height);
 VARP(reflectdist, 0, 2000, 10000);
 #ifdef BFRONTIER
 VARW(waterfog, 0, 150, 10000);
+VARW(watercolour, 0, 0x103060, 0xFFFFFF);
+
+void getwatercolour(uchar *wcol)
+{
+	uchar gcol[3] = { (watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF };
+	memcpy(wcol, gcol, 3);
+}
+
+VARW(lavafog, 0, 50, 10000);
+VARW(lavacolour, 0, 0xFF4400, 0xFFFFFF);
+
+void getlavacolour(uchar *lcol)
+{
+	uchar gcol[3] = { (lavacolour>>16)&0xFF, (lavacolour>>8)&0xFF, lavacolour&0xFF };
+	memcpy(lcol, gcol, 3);
+}
+
 #else
 VAR(waterfog, 0, 150, 10000);
-#endif
-
 void getwatercolour(uchar *wcol)
 {
 	static const uchar defaultwcol[3] = { 20, 70, 80};
@@ -256,12 +271,7 @@ void watercolour(int *r, int *g, int *b)
 }
 
 COMMAND(watercolour, "iii");
-
-#ifdef BFRONTIER
-VARW(lavafog, 0, 50, 10000);
-#else
 VAR(lavafog, 0, 50, 10000);
-#endif
 
 void getlavacolour(uchar *lcol)
 {
@@ -278,6 +288,7 @@ void lavacolour(int *r, int *g, int *b)
 }
 
 COMMAND(lavacolour, "iii");
+#endif
 
 Shader *watershader = NULL, *waterreflectshader = NULL, *waterrefractshader = NULL;
 
@@ -460,8 +471,12 @@ void renderwater()
 
 	glDisable(GL_CULL_FACE);
 
+#ifdef BFRONTIER
+	uchar wcol[3] = { (watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF };
+#else
 	uchar wcol[3] = { 20, 70, 80 };
 	if(hdr.watercolour[0] || hdr.watercolour[1] || hdr.watercolour[2]) memcpy(wcol, hdr.watercolour, 3);
+#endif
 	glColor3ubv(wcol);
 
 	Slot &s = lookuptexture(-MAT_WATER);
@@ -496,7 +511,12 @@ void renderwater()
 
 	if(waterreflect || waterrefract) glMatrixMode(GL_TEXTURE);
 
+#ifdef BFRONTIER
+	int sky[3] = { (skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF };
+	vec amb(max(sky[0], ambient), max(sky[1], ambient), max(sky[2], ambient));
+#else
 	vec ambient(max(hdr.skylight[0], hdr.ambient), max(hdr.skylight[1], hdr.ambient), max(hdr.skylight[2], hdr.ambient));
+#endif
 	entity *lastlight = (entity *)-1;
 	int lastdepth = -1;
 	float offset = -1.1f;
@@ -536,7 +556,11 @@ void renderwater()
 				if(begin) { glEnd(); begin = false; }
 				const vec &lightpos = light ? light->o : vec(hdr.worldsize/2, hdr.worldsize/2, hdr.worldsize);
 				float lightrad = light && light->attr1 ? light->attr1 : hdr.worldsize*8.0f;
+#ifdef BFRONTIER
+				const vec &lightcol = (light ? vec(light->attr2, light->attr3, light->attr4) : vec(amb)).div(255.0f).mul(waterspec/100.0f);
+#else
 				const vec &lightcol = (light ? vec(light->attr2, light->attr3, light->attr4) : vec(ambient)).div(255.0f).mul(waterspec/100.0f);
+#endif
 				setlocalparamf("lightpos", SHPARAM_VERTEX, 2, lightpos.x, lightpos.y, lightpos.z);
 				setlocalparamf("lightcolor", SHPARAM_PIXEL, 3, lightcol.x, lightcol.y, lightcol.z);
 				setlocalparamf("lightradius", SHPARAM_PIXEL, 4, lightrad, lightrad, lightrad);

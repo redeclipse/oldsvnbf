@@ -122,7 +122,9 @@ void screenshot(char *filename)
 #endif
 		filename = buf;
 	}
+#ifndef BFRONTIER
     else path(filename);
+#endif
 	SDL_SaveBMP(image, findfile(filename, "wb"));
 	SDL_FreeSurface(image);
 }
@@ -712,7 +714,11 @@ int main(int argc, char **argv)
 			case 'l': 
 			{
 				char pkgdir[] = "packages/"; 
+#ifdef BFRONTIER
+				load = strstr(&argv[i][2], pkgdir); 
+#else
 				load = strstr(path(&argv[i][2]), path(pkgdir)); 
+#endif
 				if(load) load += sizeof(pkgdir)-1; 
 				else load = &argv[i][2]; 
 				break;

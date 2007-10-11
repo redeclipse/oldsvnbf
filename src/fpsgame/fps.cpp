@@ -1220,10 +1220,6 @@ struct fpsclient : igameclient
 	
 	void g3d_gamemenus() { sb.show(); }
 
-	// any data written into this vector will get saved with the map data. Must take care to do own versioning, and endianess if applicable. Will not get called when loading maps from other games, so provide defaults.
-	void writegamedata(vector<char> &extras) {}
-	void readgamedata(vector<char> &extras) {}
-
 #ifdef BFRONTIER
 	vec feetpos(physent *d)
 	{
@@ -1684,6 +1680,10 @@ struct fpsclient : igameclient
 		console("\f2%d%s place", CON_LEFT|CON_CENTER, myrankv+1, myrankv ? myrankv == 1 ? "nd" : myrankv == 2 ? "rd" : "th" : "st");
 	}
 #else
+	// any data written into this vector will get saved with the map data. Must take care to do own versioning, and endianess if applicable. Will not get called when loading maps from other games, so provide defaults.
+	void writegamedata(vector<char> &extras) {}
+	void readgamedata(vector<char> &extras) {}
+
 	char *gameident() { return "fps"; }
 	char *defaultmap() { return "metl4"; }
 	char *savedconfig() { return "config.cfg"; }
