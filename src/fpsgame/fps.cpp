@@ -966,7 +966,7 @@ struct fpsclient : igameclient
 					
 					if (damageresidue > 0)
 					{
-						float pc = float(max(damageresidue, 500))/500.f;
+						float pc = float(min(damageresidue, 500))/500.f;
 						settexture("packages/textures/overlay_damage.png");
 						
 						glColor4f(1.f, 1.f, 1.f, pc);
@@ -1441,7 +1441,7 @@ struct fpsclient : igameclient
 		
 		if (camerawobble > 0)
 		{
-			float pc = float(max(camerawobble, 500))/500.f;
+			float pc = float(min(camerawobble, 500))/500.f;
 			#define wobble (float(rnd(3)-1)*pc)
 			camera1->yaw += wobble;
 			camera1->pitch += wobble;
