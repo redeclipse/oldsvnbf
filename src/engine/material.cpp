@@ -92,14 +92,14 @@ void renderwaterfall(materialsurface &m, Texture *tex, float scale, float offset
 			d /= 3000.0f;
 			break;
 	}
-	float wave = m.ends&2 ? (vertwater ? 0.8f*sinf(t)-1.1f : -1.1f) : 0;
+    float wave = m.ends&2 ? (vertwater ? WATER_AMPLITUDE*sinf(t)-WATER_OFFSET : -WATER_OFFSET) : 0;
 	loopi(4)
 	{
 		vec v(m.o.tovec());
 		v[dim] += dimcoord(m.orient) ? -offset : offset;
 		if(i==1 || i==2) v[dim^1] += csize;
 		if(i<=1) v.z += rsize;
-		if(m.ends&(i<=1 ? 2 : 1)) v.z += i<=1 ? wave : -1.1f-0.8f;
+        if(m.ends&(i<=1 ? 2 : 1)) v.z += i<=1 ? wave : -WATER_OFFSET-WATER_AMPLITUDE;
 		glTexCoord2f(xf*v[dim^1], yf*(v.z+d));
 		glVertex3fv(v.v);
 	}
@@ -368,7 +368,7 @@ void setupmaterials()
 				}
 				waterinfo &wi = water.add();
 				wi.m = &m;
-				vec center(m.o.x+m.rsize/2, m.o.y+m.csize/2, m.o.z-1.1f);
+                vec center(m.o.x+m.rsize/2, m.o.y+m.csize/2, m.o.z-WATER_OFFSET);
 				m.light = brightestlight(center, vec(0, 0, 1));
 				float depth = raycube(center, vec(0, 0, -1), 10000);
 				wi.depth = double(depth)*m.rsize*m.csize;

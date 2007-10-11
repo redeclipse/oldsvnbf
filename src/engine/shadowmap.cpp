@@ -373,6 +373,46 @@ VARFW(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
 VARF(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
 #endif
 
+void guessshadowdir()
+{
+    if(shadowmapangle) return;
+    vec lightpos(0, 0, 0), casterpos(0, 0, 0);
+    int numlights = 0, numcasters = 0;
+    const vector<extentity *> &ents = et->getents();
+    loopv(ents)
+    {
+        extentity &e = *ents[i];
+        switch(e.type)
+        {
+            case ET_LIGHT:
+                if(!e.attr1) { lightpos.add(e.o); numlights++; }
+                break;
+
+             case ET_MAPMODEL:
+                casterpos.add(e.o);
+                numcasters++;
+                break;
+
+             default:
+                if(e.type<ET_GAMESPECIFIC) break;
+                casterpos.add(e.o);
+                numcasters++;
+                break;
+         }
+    }
+    if(!numlights || !numcasters) return;
+    lightpos.div(numlights);
+    casterpos.div(numcasters);
+    vec dir(lightpos);
+    dir.sub(casterpos);
+    dir.z = 0;
+    if(dir.iszero()) return;
+    dir.normalize();
+    dir.mul(SHADOWSKEW);
+    dir.z = 1;
+    shadowdir = dir;
+}
+
 void rendershadowmap()
 {
     if(!shadowmap || renderpath==R_FIXEDFUNCTION) return;
