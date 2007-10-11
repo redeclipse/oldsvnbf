@@ -85,7 +85,6 @@ enum
 	PRIV_MAX
 };
 
-
 #define _COMMANDN(name, fun, nargs, server, world) \
 	static bool __dummy_##fun = addcommand(#name, (void (*)())fun, nargs, server, world)
 #define COMMANDN(name, fun, nargs) _COMMANDN(name, fun, nargs, false, false)

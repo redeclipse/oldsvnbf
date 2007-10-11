@@ -415,7 +415,7 @@ VARP(fov, 10, 105, 150);
 int xtraverts, xtravertsva;
 
 #ifdef BFRONTIER
-VARW(fog, 16, 4000, 1000024);
+VARW(fog, 16, 4000, INT_MAX-1);
 VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 #else
 VAR(fog, 16, 4000, 1000024);

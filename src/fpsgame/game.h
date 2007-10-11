@@ -17,6 +17,11 @@ enum						// static entity types
 #ifdef BFRONTIER
 	I_PISTOL, I_SG, I_CG, I_GL, I_RL, I_RIFLE,
 	I_RESERVED1, I_RESERVED2, I_RESERVED3, I_RESERVED4, I_RESERVED5,
+#else
+    I_SHELLS, I_BULLETS, I_ROCKETS, I_ROUNDS, I_GRENADES, I_CARTRIDGES,
+    I_HEALTH, I_BOOST,
+    I_GREENARMOUR, I_YELLOWARMOUR,
+    I_QUAD,
 #endif
 	TELEPORT,				// attr1 = idx
 	TELEDEST,				// attr1 = angle, attr2 = idx
@@ -617,17 +622,7 @@ static char *serverstatustypes[] = {
 };
 
 #ifndef STANDALONE
-static struct extentitem
-{
-	char *name;       // item name
-	bool touch, pickup, render, pure; // item is touchable / collectable / renderable / pure sauer compat.
-	float dist, yaw, zoff;    // item pickup distance / yaw, z offset (-1 for bobbing)
-} extentitems[] = {
-	{ "camera", false, false, false, true, 0.f, 0.f, 0.f },
-	{ "waypoint", false, false, false, true, 0.f, 0.f, 0.f },
-};
 #define FPSMODHUDMAX		((h*3/FONTH)*FONTH)-(FONTH*5)		// max hud length
-	
 #define ILLUMINATE			48.f
 #define ENTPART				4.f
 

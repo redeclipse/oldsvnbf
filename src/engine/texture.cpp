@@ -326,7 +326,11 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 	{
 		static string pname;
 		s_sprintf(pname)("packages/%s", tex->name);
+#ifdef BFRONTIER
+		tname = pname;
+#else
 		tname = path(pname);
+#endif
 	}
 	if(!tname) return NULL;
 
@@ -387,7 +391,11 @@ Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
 {
 	string tname;
 	s_strcpy(tname, name);
+#ifdef BFRONTIER
+	Texture *t = textures.access(tname);
+#else
 	Texture *t = textures.access(path(tname));
+#endif
 	if(t) return t;
 	SDL_Surface *s = texturedata(tname, NULL, msg); 
     return s ? newtexture(tname, s, clamp, mipit) : notexture;
@@ -493,9 +501,11 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	st.t = NULL;
 #ifdef BFRONTIER
 	s_strcpy(st.lname, name);
-#endif
+	s_strcpy(st.name, name);
+#else
 	s_strcpy(st.name, name);
 	path(st.name);
+#endif
 }
 
 COMMAND(texture, "ssiiif");
@@ -622,7 +632,11 @@ static void addname(vector<char> &key, Slot &slot, Slot::Tex &t)
 {
 	if(t.combined>=0) key.add('&');
 	s_sprintfd(tname)("packages/%s", t.name);
+#ifdef BFRONTIER
+	for(const char *s = tname; *s; key.add(*s++));
+#else
 	for(const char *s = path(tname); *s; key.add(*s++));
+#endif
 	if(t.rotation)
 	{
 		s_sprintfd(rnum)("#%d", t.rotation);
@@ -791,7 +805,11 @@ Texture *loadthumbnail(Slot &slot)
 	for(const char *s = "<thumbnail>"; *s; name.add(*s++));
 	addname(name, slot, slot.sts[0]);
 	name.add('\0');
+#ifdef BFRONTIER
+	Texture *t = textures.access(name.getbuf());
+#else
 	Texture *t = textures.access(path(name.getbuf()));
+#endif
 	if(t) slot.thumbnail = t;
 	else
 	{
@@ -859,7 +877,11 @@ Texture *cubemaploadwildcard(const char *name, bool mipit, bool msg)
 	if(!hasCM) return NULL;
 	string tname;
 	s_strcpy(tname, name);
+#ifdef BFRONTIER
+	Texture *t = textures.access(tname);
+#else
 	Texture *t = textures.access(path(tname));
+#endif
 	if(t) return t;
 	char *wildcard = strchr(tname, '*');
 	SDL_Surface *surface[6];
@@ -919,7 +941,9 @@ Texture *cubemapload(const char *name, bool mipit, bool msg)
 {
 	if(!hasCM) return NULL;
 	s_sprintfd(pname)("packages/%s", name);
+#ifndef BFRONTIER
 	path(pname);
+#endif
 	Texture *t = NULL;
 	if(!strchr(pname, '*'))
 	{
@@ -1129,9 +1153,15 @@ void writetgaheader(FILE *f, SDL_Surface *s, int bits)
 
 void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png) -> BGR (tga)
 {
+#ifdef BFRONTIER
+    SDL_Surface *ns = IMG_Load(findfile(normalfile, "rb"));
+    if(!ns) return;
+    FILE *f = openfile(destfile, "wb");
+#else
     SDL_Surface *ns = IMG_Load(findfile(path(normalfile), "rb"));
     if(!ns) return;
     FILE *f = openfile(path(destfile), "wb");
+#endif
     if(f)
     {
         writetgaheader(f, ns, 24);
@@ -1149,8 +1179,13 @@ void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png)
 
 void mergenormalmaps(char *heightfile, char *normalfile)    // BGR (tga) -> BGR (tga) (SDL loads TGA as BGR!)
 {
+#ifdef BFRONTIER
+    SDL_Surface *hs = IMG_Load(findfile(heightfile, "rb"));
+    SDL_Surface *ns = IMG_Load(findfile(normalfile, "rb"));
+#else
     SDL_Surface *hs = IMG_Load(findfile(path(heightfile), "rb"));
     SDL_Surface *ns = IMG_Load(findfile(path(normalfile), "rb"));
+#endif
     if(hs && ns)
     {
         uchar def_n[] = { 255, 128, 128 };

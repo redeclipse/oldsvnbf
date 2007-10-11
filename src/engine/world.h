@@ -9,8 +9,8 @@ enum							// hardcoded texture numbers
 };
 
 #define MAPVERSION 24			// bump if map format changes, see worldio.cpp
-#ifdef BFRONTIER // map extensions
-#define EXTVERSION 6
+#ifdef BFRONTIER
+
 #endif
 
 struct header					// map file format header
@@ -20,17 +20,22 @@ struct header					// map file format header
 	int headersize;			 // sizeof(header)
 	int worldsize;
 	int numents;
+#ifdef BFRONTIER
+	int gamever, lightmaps, revision, reserved2, reserved3;
+	uchar reserved[28];
+#else
 	int waterlevel;
 	int lightmaps;
 	int mapprec, maple, mapllod;
-	uchar ambient;
-	uchar watercolour[3];
-	uchar mapwlod;
-	uchar lerpangle, lerpsubdiv, lerpsubdivsize;
-	uchar mapbe;
-	uchar skylight[3];
-	uchar lavacolour[3];
-	uchar reserved[1+12];
+	uchar ambient; // 0
+	uchar watercolour[3]; // 1 2 3 
+	uchar mapwlod; // 4
+	uchar lerpangle, lerpsubdiv, lerpsubdivsize; // 5 6 7
+	uchar mapbe; // 8
+	uchar skylight[3]; // 9 10 11
+	uchar lavacolour[3]; // 12 13 14
+	uchar reserved[1+12]; // 15...
+#endif
 	char maptitle[128];
 };
 #ifndef BFRONTIER // moved to iengine.h

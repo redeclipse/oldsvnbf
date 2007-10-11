@@ -917,6 +917,11 @@ void resetmap(bool load)
 void resetmap()
 #endif
 {
+#ifdef BFRONTIER
+	show_out_of_renderloop_progress(0, "resetting map...");
+	texturereset();
+	mapmodelreset();
+#endif
 	clearoverrides();
 	clearmapsounds();
 	cleanreflections();
@@ -936,27 +941,10 @@ void resetmap()
 		if (id._type == ID_VAR && id._world) *id._storage = id._val; // reset world vars
 	});
 
-	show_out_of_renderloop_progress(0, "loading config...");
 	overrideidents = true;
-	int cfgs = load ? 3 : 2;
-	loopi(cfgs)
-	{
-		show_out_of_renderloop_progress(float(i)/float(cfgs), "loading configs...");
-		switch(i)
-		{
-			case 0:
-				execfile("packages/map.cfg");
-				break;
-			case 1:
-				execfile(pcfname);
-				break;
-			case 2:
-				execfile(mcfname);
-				break;
-			default:
-				break;
-		}
-	}
+	exec("packages/package.cfg");
+	execfile(pcfname);
+	if (!load || !execfile(mcfname)) exec("packages/map.cfg");
 	overrideidents = false;
 #endif
 }
@@ -976,16 +964,23 @@ bool emptymap(int scale, bool force)	// main empty world creation routine
 
 #ifdef BFRONTIER
 	resetmap(false);
+	strncpy(hdr.head, "BFGZ", 4);
 #else
 	resetmap();
+	strncpy(hdr.head, "OCTA", 4);
 #endif
 
-	strncpy(hdr.head, "OCTA", 4);
 	hdr.version = MAPVERSION;
 	hdr.headersize = sizeof(header);
 	hdr.worldsize = 1 << (scale<10 ? 10 : (scale>20 ? 20 : scale));
 
 	s_strncpy(hdr.maptitle, "Untitled Map by Unknown", 128);
+#ifdef BFRONTIER
+	hdr.gamever = BFRONTIER;
+	hdr.revision = hdr.reserved2 = hdr.reserved3 = 0;
+	hdr.lightmaps = 0;
+	memset(hdr.reserved, 0, sizeof(hdr.reserved));
+#else
 	hdr.waterlevel = -100000;
 	memset(hdr.watercolour, 0, sizeof(hdr.watercolour));
 	hdr.maple = 8;
@@ -994,6 +989,7 @@ bool emptymap(int scale, bool force)	// main empty world creation routine
 	hdr.lightmaps = 0;
 	memset(hdr.skylight, 0, sizeof(hdr.skylight));
 	memset(hdr.reserved, 0, sizeof(hdr.reserved));
+#endif
 	texmru.setsize(0);
 	freeocta(worldroot);
 	worldroot = newcubes(F_EMPTY);

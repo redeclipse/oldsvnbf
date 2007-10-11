@@ -7,6 +7,10 @@ Legend [
 ]
 
 = wip edition =
+eng: config writing fixed
+eng: map storing waypoint links
+eng: map storing 'gamever' for Blood Frontier version and 'revision' for map revision
+eng: worldio redesign, etz removed, new map format 'bgz' with legacy support for 'ogz'
 gam: removed monster code
 gam: redesigned weapon, ammo, and pickup systems
 gam: added reloading
@@ -68,7 +72,6 @@ eng: enabled grid sizes 0-2 for smaller geometry editing ability
 gam: camera wobble intensity lowered and made configurable
 gam: grenades don't explode when they hit a player
 gam: modified bouncer elasticity and waterfric for grenades
-eng: 'causticnum' added for variable number of caustic frames
 gam: titlecard fixes in line with newly interpreted maptime (todo: merge to load screen)
 ssp: updated sparks
 eng: spark particle now uses new lightning type

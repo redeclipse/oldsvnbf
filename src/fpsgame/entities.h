@@ -8,8 +8,8 @@ struct entities : icliententities
 	entities(fpsclient &_cl) : cl(_cl)
 	{
 #ifdef BFRONTIER // extended entities
-		CCOMMAND(entdelink, "i", (entities *self, int *val), self->extentdelink(*val));
-		CCOMMAND(entlink, "i", (entities *self, int *val), self->extentlink(*val));
+		CCOMMAND(entdelink, "i", (entities *self, int *val), self->entdelink(*val));
+		CCOMMAND(entlink, "i", (entities *self, int *val), self->entlink(*val));
 #endif
 	}
 
@@ -39,7 +39,8 @@ struct entities : icliententities
 			NULL, NULL,
 			"carrot",
 			NULL, NULL,
-			"checkpoint"
+			"checkpoint",
+			NULL, NULL
 		};
 		return bfmdlnames[type];
 #else
@@ -90,38 +91,18 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-#ifdef BFRONTIER // extended entities
-			if (isext(e.type))
+			if(e.type==CARROT || e.type==RESPAWNPOINT)
 			{
-				extentitem &t = extentitems[e.type - CAMERA];
-
-				if (!t.render)
-					continue;
-
-				float z = (t.zoff == -1 ? (float)(1 + sin(cl.lastmillis / 100.0 + e.o.x + e.o.y) / 20) : t.zoff);
-				float yaw = (t.yaw == -1 ? cl.lastmillis / 10.0f : t.yaw);
-				char *imdl = extentmdl(e);
-
-				if (imdl) extentityrender(e, imdl, z, yaw);
+				renderent(e, e.type, (float)(1+sin(cl.lastmillis/100.0+e.o.x+e.o.y)/20), cl.lastmillis/(e.attr2 ? 1.0f : 10.0f));
+				continue;
 			}
-			else
-			{
-#endif
-				if(e.type==CARROT || e.type==RESPAWNPOINT)
-				{
-					renderent(e, e.type, (float)(1+sin(cl.lastmillis/100.0+e.o.x+e.o.y)/20), cl.lastmillis/(e.attr2 ? 1.0f : 10.0f));
-					continue;
-				}
-				if(!e.spawned && e.type!=TELEPORT) continue;
+			if(!e.spawned && e.type!=TELEPORT) continue;
 #ifdef BFRONTIER
-				if(e.type<I_PISTOL || e.type>TELEPORT) continue;
+			if(e.type<I_PISTOL || e.type>TELEPORT) continue;
 #else
-				if(e.type<I_SHELLS || e.type>TELEPORT) continue;
+			if(e.type<I_SHELLS || e.type>TELEPORT) continue;
 #endif
-				renderent(e, e.type, (float)(1+sin(cl.lastmillis/100.0+e.o.x+e.o.y)/20), cl.lastmillis/10.0f);
-#ifdef BFRONTIER // extended entities
-			}
-#endif
+			renderent(e, e.type, (float)(1+sin(cl.lastmillis/100.0+e.o.x+e.o.y)/20), cl.lastmillis/10.0f);
 		}
 	}
 
@@ -338,9 +319,6 @@ struct entities : icliententities
 
 	void fixentity(extentity &e)
 	{
-#ifdef BFRONTIER // extended entities
-		extentfix(e);
-#endif
 		switch(e.type)
 		{
 			case MONSTER:
@@ -348,6 +326,20 @@ struct entities : icliententities
 				e.attr2 = e.attr1;
 			case RESPAWNPOINT:
 				e.attr1 = (int)cl.player1->yaw;
+#ifdef BFRONTIER
+				break;
+			case CAMERA:  // place with "newent camera idx [pan]"
+				e.attr4 = e.attr1;
+				e.attr3 = e.attr2;
+				e.attr2 = (int)cl.player1->pitch;
+				e.attr1 = (int)cl.player1->yaw;
+				break;
+			case WAYPOINT:
+				e.attr1 = e.attr1 >= 0 && e.attr1 <= 1 ? e.attr1 : (e.attr1 > 1 ? 0 : 1);
+				e.attr2 = e.attr2 >= 0 ? e.attr2 : 0;
+				e.attr3 = e.attr3 >= 0 ? e.attr3 : 0;
+				break;
+#endif
 		}
 	}
 
@@ -382,22 +374,21 @@ struct entities : icliententities
 	const char *entnameinfo(entity &e) { return ""; }
 	const char *entname(int i)
 	{
-#ifdef BFRONTIER // extended entities
-		if (i >= CAMERA) return extentname(i);
-#endif
+#ifdef BFRONTIER
 		static const char *entnames[] =
 		{
 			"none?", "light", "mapmodel", "playerstart", "envmap", "particles", "sound", "spotlight",
 			"pistol", "shotgun", "chaingun", "grenades", "rockets", "rifle",
-			"", "", "", "", "",
+			"none", "none", "none", "none", "none",
 			"teleport", "teledest",
 			"monster", "carrot", "jumppad",
-			"base", "respawnpoint",
-			"", "", "", "",
+			"base", "respawnpoint", "camera", "waypoint",
 		};
+#endif
 		return i>=0 && size_t(i)<sizeof(entnames)/sizeof(entnames[0]) ? entnames[i] : "";
 	}
 	
+#ifndef BFRONTIER
 	int extraentinfosize() { return 0; }		// size in bytes of what the 2 methods below read/write... so it can be skipped by other games
 
 	void writeent(entity &e, char *buf)	// write any additional data to disk (except for ET_ ents)
@@ -416,13 +407,14 @@ struct entities : icliententities
 			if(e.type >= 8) e.type++;
 		}
 	}
+#endif
 
 	void editent(int i)
 	{
 		extentity &e = *ents[i];
 #ifdef BFRONTIER // extended entities
-		extentedit(i);
-		if (multiplayer(false) && e.type < CAMERA) cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
+		if (multiplayer(false)) cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
+		if (e.type == ET_EMPTY) entlinks(i);
 #else
 		cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4);
 #endif
@@ -436,22 +428,7 @@ struct entities : icliententities
 #ifdef BFRONTIER // extended entities
 	IVARP(showallwp, 0, 0, 1);
 
-	const char *extentname(int i)
-	{
-		return isext(i) ? extentitems[i - CAMERA].name : "";
-	}
-
-	bool isext(int type, int want = 0)
-	{
-		return type >= CAMERA && type < MAXENTTYPES && (!want || type == want);
-	}
-
-	bool extentpure(int i)
-	{
-		return ents.inrange(i) && isext(ents[i]->type) ? extentitems[i - CAMERA].pure : false;
-	}
-
-	void extentdelink(int both)
+	void entdelink(int both)
 	{
 		if (entgroup.length() > 0)
 		{
@@ -489,7 +466,7 @@ struct entities : icliententities
 		}
 	}
 
-	void extentlink(int both)
+	void entlink(int both)
 	{
 		if (entgroup.length() > 0)
 		{
@@ -525,55 +502,21 @@ struct entities : icliententities
 		}
 	}
 
-	void extentlinks(int n)
+	void entlinks(int n)
 	{
-		loopv(ents)
+		loopv(ents) if (ents[i]->type == WAYPOINT)
 		{
-			if (isext(ents[i]->type))
-			{
-				fpsentity &e = (fpsentity &)*ents[i];
+			fpsentity &e = (fpsentity &)*ents[i];
 
-				loopvj(e.links)
+			loopvj(e.links)
+			{
+				if (e.links[j] == n)
 				{
-					if (e.links[j] == n)
-					{
-						e.links.remove(j);
-						break;
-					}
+					e.links.remove(j);
+					break;
 				}
 			}
 		}
-	}
-
-	void extentfix(extentity &d)
-	{
-		if (isext(d.type))
-		{
-			fpsentity &e = (fpsentity &)d;
-
-			switch (e.type)
-			{
-				case CAMERA:  // place with "newent camera idx [pan]"
-					e.attr4 = e.attr1;
-					e.attr3 = e.attr2;
-					e.attr2 = (int)cl.player1->pitch;
-					e.attr1 = (int)cl.player1->yaw;
-					break;
-				case WAYPOINT:
-					e.attr1 = e.attr1 >= 0 && e.attr1 <= 1 ? e.attr1 : (e.attr1 > 1 ? 0 : 1);
-					e.attr2 = e.attr2 >= 0 ? e.attr2 : 0;
-					e.attr3 = e.attr3 >= 0 ? e.attr3 : 0;
-					break;
-				default:
-					break;
-			}
-		}
-	}
-
-	void extentedit(int i)
-	{
-		if (ents[i]->type == ET_EMPTY)
-			extentlinks(i); // cleanup links
 	}
 
 	void gotocamera(int n, fpsent *d, int &delta)
@@ -612,17 +555,13 @@ struct entities : icliententities
 		}
 	}
 
-	void readext(gzFile &g, int version, int reg, int id, entity &e)
+	void readent(gzFile &g, int id, entity &e)
 	{
 		fpsentity &f = (fpsentity &)e;
-		
 		f.links.setsize(0);
-		
-		if (version >= 2)
+
+		if (maptype == MAP_BFGZ)
 		{
-			// realign to entity table
-			int r = reg >= 0 ? reg : 0;//, n = id + n;
-			
 			switch (f.type)
 			{
 				case WAYPOINT:
@@ -631,15 +570,50 @@ struct entities : icliententities
 		
 					loopi(links)
 					{
-						int link = gzgetint(g) + r;
-						f.links.add(link);
+						f.links.add(gzgetint(g));
 					}
 				}
 			}
 		}
+		else if (maptype == MAP_OCTA)
+		{
+			int ver = getmapversion();
+			if(ver <= 10)
+			{
+				if(e.type >= 7) e.type++;
+			}
+			if(ver <= 12)
+			{
+				if(e.type >= 8) e.type++;
+			}
+			
+			switch (e.type)
+			{
+				case I_PISTOL:
+					e.type = I_SG;
+					break;
+				case I_SG:
+					e.type = I_CG;
+					break;
+				case I_CG:
+					e.type = I_RL;
+					break;
+				case I_GL:
+					e.type = I_RIFLE;
+					break;
+				case I_RL:
+					e.type = I_GL;
+					break;
+				case I_RIFLE:
+					e.type = I_PISTOL;
+					break;
+				default:
+					break;
+			}
+		}
 	}
 
-	void writeext(gzFile &g, int reg, int id, int num, entity &e)
+	void writeent(gzFile &g, int id, entity &e)
 	{
 		fpsentity &f = (fpsentity &)e;
 
@@ -652,7 +626,7 @@ struct entities : icliententities
 				
 				loopv(ents)
 				{
-					if (isext(ents[i]->type))
+					if (ents[i]->type != ET_EMPTY)
 					{
 						if (ents[i]->type == WAYPOINT)
 						{
@@ -671,24 +645,6 @@ struct entities : icliententities
 		}
 	}
 
-	void extentityrender(extentity &e, const char *mdlname, float z, float yaw, int frame = 0, int anim = ANIM_MAPMODEL | ANIM_LOOP, int basetime = 0, float speed = 10.0f)
-	{
-		rendermodel(e.color, e.dir, mdlname, anim, 0, 0, vec(e.o).add(vec(0, 0, z)), yaw, 0, speed, basetime, NULL, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
-	}
-
-	char *extentmdl(extentity &e)
-	{
-		char *imdl = NULL;
-		/*
-		switch (e.type)
-		{
-			default:
-				break;
-		}
-		*/
-		return imdl;
-	}
-
 	void renderwaypoint(extentity &e)
 	{
 		fpsentity &d = (fpsentity &)e;
@@ -705,7 +661,7 @@ struct entities : icliententities
 				loopvj(f.links)
 				{
 					int g = f.links[j];
-					if (ents.inrange(g) && isext(ents[g]->type))
+					if (ents.inrange(g))
 					{
 						fpsentity &h = (fpsentity &)*ents[g];
 						if (&h == &e)
@@ -768,12 +724,7 @@ struct entities : icliententities
 	{
 		if (showentradius)
 		{
-			if (isext(e.type))
-			{
-				extentitem &t = extentitems[e.type - CAMERA];
-				renderentradius(e.o, t.dist, t.dist);
-			}
-			else if (e.type < CAMERA && e.type >= I_PISTOL &&
+			if (e.type < CAMERA && e.type >= I_PISTOL &&
 					 e.type != TELEPORT && e.type != TELEDEST && e.type != MONSTER)
 			{
 				if (e.type == BASE)

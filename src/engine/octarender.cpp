@@ -443,10 +443,11 @@ struct lodcollect
 int explicitsky = 0;
 double skyarea = 0;
 
-VARF(lodsize, 0, 32, 128, hdr.mapwlod = lodsize);
 #ifdef BFRONTIER
+VARW(lodsize, 0, 32, 128);
 VARW(loddistance, 0, 2000, 100000);
 #else
+VARF(lodsize, 0, 32, 128, hdr.mapwlod = lodsize);
 VAR(loddistance, 0, 2000, 100000);
 #endif
 

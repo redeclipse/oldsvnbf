@@ -10,14 +10,6 @@ void start(const char *name)
 	waypoints = 0;
 
 	loopv(cl.et.ents) if (cl.et.ents[i]->type == WAYPOINT) waypoints++;
-
-	if (!waypoints && *name)
-	{
-		conoutf("WARNING: no waypoints found, generating them");
-		setvar("botdrop", 1);
-		wayspawn();
-	}
-	//add(-1, -1);
 }
 
 void players(int time)
