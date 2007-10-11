@@ -93,7 +93,14 @@ void guiimage(char *path, char *action, float *scale, int *overlaid)
 
 void guitext(char *name, char *icon)
 {
+#ifdef BFRONTIER // optional icon
+	if(cgui)
+	{
+		cgui->text(name, *icon ? GUI_BUTTON_COLOR : GUI_TEXT_COLOR, *icon ? icon : NULL);
+	}
+#else
 	if(cgui) cgui->text(name, icon[0] ? GUI_BUTTON_COLOR : GUI_TEXT_COLOR, icon[0] ? icon : "info");
+#endif
 }
 
 void guititle(char *name)

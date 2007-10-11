@@ -51,10 +51,9 @@ void spawn(fpsent *d)
 		{
 			if (d->state == CS_ALIVE)
 			{
-				bool hurt = d->health < d->maxhealth;
 				float dist = 1e16f, angle = 1e16f;
 				
-				if (!hurt) find(d, true); // let botfind take care of botenemy
+				find(d, true); // let botfind take care of botenemy
 
 				if (d->botenemy)
 				{
@@ -64,14 +63,13 @@ void spawn(fpsent *d)
 					angle = (float)fabs(enemyyaw - d->yaw);
 				}
 
-				if (hurt || (d->botenemy && (dist < 32 || (dist < 64 && angle < 135) || (dist < 128 && angle < 90) || (dist < 256 && angle < 45) || angle < 10)))
+				if (d->botenemy && (dist < 32 || (dist < 64 && angle < 135) || (dist < 128 && angle < 90) || (dist < 256 && angle < 45) || angle < 10))
 				{
 					vec target;
 
-					if (hurt || raycubelos(d->o, d->botenemy->o, target))
+					if (raycubelos(d->o, d->botenemy->o, target))
 					{
 						d->botstate = M_SLEEP;
-						playsound(S_GRUNT1 + rnd(2), &d->o);
 						wayposition(d);
 					}
 				}
@@ -103,9 +101,6 @@ void killed(fpsent *d)
 		d->pitch = 0;
 		d->roll = 0;
 		cl.ws.superdamageeffect(d->vel, d);
-
-		if (d->botflags & BOT_MONSTER)
-			cl.ms.monsterkilled();
 
 		trans(d, M_PAIN, 0, 0, false, 2500); // TODO: canrespawn
 		
@@ -194,48 +189,6 @@ void weapon(fpsent *d, bool push = false)
 { 
 	if (isbot(d))
 	{
-		int s = d->gunselect;
-
-		if (d->botflags & BOT_PLAYER)
-		{
-			int *ammo = d->ammo;
-
-			if (push)
-			{
-				if (ammo[GUN_RL])			s = GUN_RL;
-				else if (ammo[GUN_GL])		s = GUN_GL;
-				if (ammo[GUN_RIFLE])		s = GUN_RIFLE;
-				else if (ammo[GUN_SG])		s = GUN_SG;
-				else if (ammo[GUN_CG])		s = GUN_CG;
-				else if (ammo[GUN_PISTOL])	s = GUN_PISTOL;
-				else						s = GUN_FIST;
-			}
-			else
-			{
-				if (ammo[GUN_RL] && d->botvec.dist(d->o) >= BOTRADIALDIST)			s = GUN_RL;
-				else if (ammo[GUN_GL] && d->botvec.dist(d->o) >= BOTRADIALDIST)		s = GUN_GL;
-				else if (ammo[GUN_CG] && d->botvec.dist(d->o) >= BOTMELEEDIST)		s = GUN_CG;
-				else if (ammo[GUN_SG] && d->botvec.dist(d->o) >= BOTMELEEDIST)		s = GUN_SG;
-				else if (ammo[GUN_RIFLE] && d->botvec.dist(d->o) >= BOTMELEEDIST)	s = GUN_RIFLE;
-				else if (ammo[GUN_PISTOL] && d->botvec.dist(d->o) >= BOTMELEEDIST)	s = GUN_PISTOL;
-				else																s = GUN_FIST;
-			}
-
-			if (s != d->gunselect)
-			{
-				playsound(S_WEAPLOAD, &d->o);
-				d->gunselect = s;
-			}
-		}
-		else if (d->botflags & BOT_MONSTER)
-		{
-			fpsclient::monsterset::monster *e = (fpsclient::monsterset::monster *)d;
-
-			if (push || d->botvec.dist(d->o) >= BOTMELEEDIST) s = cl.ms.monstertypes[e->mtype].gun;
-			else if (e->gunselect != GUN_BITE) s = GUN_FIST;
-
-			if (s != d->gunselect) d->gunselect = s;
-		}
 	}
 }
 
@@ -271,8 +224,7 @@ void pickup(int n, fpsent *d)
 	if (d->botflags & BOT_PLAYER)
 	{
 		int type = ents[n]->type;
-		if (type < I_SHELLS || type > I_QUAD)
-			return ;
+		if (type < I_PISTOL || type > I_RIFLE) return;
 
 		cl.et.pickupeffects(n, d);
 		d->pickup(type);
@@ -337,13 +289,6 @@ void render()
 				renderstate(cl.players[i]);
 			}
 		}
-		loopv(cl.ms.monsters)
-		{
-			if (cl.ms.monsters.inrange(i) && isbot((fpsent *)cl.ms.monsters[i]) && cl.ms.monsters[i]->state == CS_ALIVE)
-			{
-				renderstate((fpsent *)cl.ms.monsters[i]);
-			}
-		}
 	}
 #endif
 	if (editmode || cl.et.showallwp())
@@ -355,14 +300,6 @@ void render()
 			if (cl.players.inrange(i) && isbot(cl.players[i]) && cl.players[i]->state == CS_ALIVE)
 			{
 				rendercoord(cl.players[i]);
-			}
-		}
-
-		loopv(cl.ms.monsters)
-		{
-			if (cl.ms.monsters.inrange(i) && isbot((fpsent *)cl.ms.monsters[i]) && cl.ms.monsters[i]->state == CS_ALIVE)
-			{
-				rendercoord((fpsent *)cl.ms.monsters[i]);
 			}
 		}
 		renderprimitive(false);

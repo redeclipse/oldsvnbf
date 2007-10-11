@@ -10,91 +10,62 @@ struct weaponstate
 	vec sg[SGRAYS];
 
 #ifdef BFRONTIER
-	#define gunallowed(gn,gs) (gn > GUN_FIST && gn < NUMGUNS && (gs < 0 || gn != gs))
-
 	IVARP(maxdebris, 0, 25, 1000);
-	IVARP(weaponswitchstyle, 0, 1, 1);
 #else
     IVARP(maxdebris, 10, 25, 1000);
 #endif
 
 	weaponstate(fpsclient &_cl) : cl(_cl), player1(_cl.player1)
 	{
+#ifdef BFRONTIER
         CCOMMAND(weapon, "sss", (weaponstate *self, char *w1, char *w2, char *w3),
 		{
-            self->weaponswitch(w1[0] ? atoi(w1) : -1,
-                               w2[0] ? atoi(w2) : -1,
-                               w3[0] ? atoi(w3) : -1);
+            self->weaponswitch(w1[0] ? atoi(w1) : -1, w2[0] ? atoi(w2) : -1);
 
 		});
-#ifdef BFRONTIER
 		CCOMMAND(getgun, "", (weaponstate *self), intret(self->player1->gunselect));
 		CCOMMAND(getammo, "", (weaponstate *self), intret(self->player1->ammo[self->player1->gunselect]));
-		CCOMMAND(getweapon, "", (weaponstate *self), {
-			int t = -1;
-			if (self->weaponswitchstyle())
-			{
-				loopi(WSAMT) if (wsguns[i] == self->player1->gunselect) { t = i; break; }
-			}
-			else t = self->player1->gunselect;
-			
-			s_sprintfd(s)("%d", t);
-			result(s);
-		});
+		CCOMMAND(getweapon, "", (weaponstate *self), { intret(self->player1->gunselect); });
 #endif
 	}
 
+#ifdef BFRONTIER
+	void weaponswitch(int a = -1, int b = -1, int c = -1)
+	{
+		if(player1->state!=CS_ALIVE || a<-1 || b<-1 || a>=NUMGUNS || b>=NUMGUNS) return;
+		int s = player1->gunselect;
+		
+		while (true)
+		{
+			if (a >= 0) s = a;
+			else s += b;
+			
+			while (s >= NUMGUNS) s -= NUMGUNS;
+			while (s < 0) s += NUMGUNS;
+			
+			if (!gunallowed(player1->ammo, s, player1->gunselect))
+			{
+				if (a >= 0)
+				{
+					cl.playsoundc(S_NOAMMO, player1); 
+					return; 
+				}
+			}
+			else break;
+		}
+		
+		if(s != player1->gunselect) 
+		{
+			cl.cc.addmsg(SV_GUNSELECT, "ri", s);
+			playsound(S_WEAPLOAD, &player1->o);
+		}
+		player1->gunselect = s;
+	}
+
+#else
 	void weaponswitch(int a = -1, int b = -1, int c = -1)
 	{
 		if(player1->state!=CS_ALIVE || a<-1 || b<-1 || c<-1 || a>=NUMGUNS || b>=NUMGUNS || c>=NUMGUNS) return;
-#ifdef BFRONTIER
-		int s = player1->gunselect;
-		
-		if (weaponswitchstyle())
-		{
-			int t = -1;
-			
-			loopi(WSAMT) if (wsguns[i] == s) { t = i; break; }
-			
-			while (true)
-			{
-				if (a >= 0) t = a;
-				else t += b;
-				
-				while (t >= WSAMT) t -= WSAMT;
-				while (t < 0) t += WSAMT;
-				
-				if (!gunallowed(wsguns[t], player1->gunselect))
-				{
-					if (a >= 0)
-					{
-						cl.playsoundc(S_NOAMMO, player1); 
-						return; 
-					}
-				}
-				else break;
-			}
-			
-			if (t >= 0 && t <= WSAMT) s = wsguns[t];
-		}
-		else
-		{
-			if (gunallowed(a, player1->gunselect)) s = a;
-			else if (gunallowed(b, player1->gunselect)) s = b;
-			else if (gunallowed(c, player1->gunselect)) s = c;
-			else
-			{
-				loopi(WSAMT)
-				{
-					if (gunallowed(wsguns[i], player1->gunselect))
-					{
-						s = wsguns[i];
-						break;
-					}
-				}
-			}
-		}
-#else
         int *ammo = player1->ammo;
         int s = player1->gunselect;
 
@@ -108,7 +79,6 @@ struct weaponstate
         else if(s!=GUN_GL     && ammo[GUN_GL])     s = GUN_GL;
         else if(s!=GUN_PISTOL && ammo[GUN_PISTOL]) s = GUN_PISTOL;
         else                                       s = GUN_FIST;
-#endif
 		if(s!=player1->gunselect) 
 		{
 			cl.cc.addmsg(SV_GUNSELECT, "ri", s);
@@ -117,7 +87,6 @@ struct weaponstate
 		player1->gunselect = s;
 	}
 
-#ifndef BFRONTIER
 	int reloadtime(int gun) { return guns[gun].attackdelay; }
 #endif	
 
@@ -234,7 +203,7 @@ struct weaponstate
 #ifdef BFRONTIER
 						extern physent *hitplayer;
 						if (bnc.lifetime > 0 && hitplayer != NULL) continue;
-						int qdam = getgun(GUN_GL).damage*(bnc.owner->quadmillis ? 4 : 1);
+						int qdam = getgun(GUN_GL).damage;
 #else
 						int qdam = guns[GUN_GL].damage*(bnc.owner->quadmillis ? 4 : 1);
 #endif
@@ -410,7 +379,7 @@ struct weaponstate
 	{
 		vec dir;
 		float dist = rocketdist(cl.player1, dir, v);
-		if (dist < RL_DAMRAD*5.f) cl.camerawobble = max(cl.camerawobble, int(qdam*(1-dist/(RL_DAMRAD*5.f))));
+		cl.camerawobble += int(float(qdam*RL_DAMRAD)/dist);
 	}
 #endif
 	void explode(bool local, fpsent *owner, vec &v, dynent *notthis, int qdam, int gun)
@@ -477,7 +446,7 @@ struct weaponstate
 			projectile &p = projs[i];
 			p.offsetmillis = max(p.offsetmillis-time, 0);
 #ifdef BFRONTIER
-			int qdam = getgun(p.gun).damage*(p.owner->quadmillis ? 4 : 1);
+			int qdam = getgun(p.gun).damage;
 #else
 			int qdam = guns[p.gun].damage*(p.owner->quadmillis ? 4 : 1);
 #endif
@@ -542,12 +511,16 @@ struct weaponstate
             vec front, right;
             vecfromyawpitch(d->yaw, 0, 1, 0, front);
             offset.add(front.mul(d->radius));
+#ifndef BFRONTIER
             if(d->type!=ENT_AI || cl.ms.monstertypes[((monsterset::monster *)d)->mtype].vwepname)
             {
+#endif
                 offset.z -= d->eyeheight/2;
                 vecfromyawpitch(d->yaw, 0, 0, -1, right);
                 offset.add(right.mul(0.5f*d->radius));
+#ifndef BFRONTIER
             }
+#endif
             return offset;
         }
         offset.add(vec(to).sub(from).normalize().mul(2));
@@ -569,8 +542,10 @@ struct weaponstate
 		int pspeed = 25;
 		switch(gun)
 		{
+#ifndef BFRONTIER
 			case GUN_FIST:
 				break;
+#endif
 
 			case GUN_SG:
 			{
@@ -592,9 +567,11 @@ struct weaponstate
 			}
 
 			case GUN_RL:
+#ifndef BFRONTIER
 			case GUN_FIREBALL:
 			case GUN_ICEBALL:
 			case GUN_SLIMEBALL:
+#endif
 #ifdef BFRONTIER
 				pspeed = getgun(gun).projspeed*4;
 #else
@@ -650,8 +627,8 @@ struct weaponstate
 		int qdam = getgun(d->gunselect).damage;
 #else
 		int qdam = guns[d->gunselect].damage;
-#endif
 		if(d->quadmillis) qdam *= 4;
+#endif
 		if(d->type==ENT_AI) qdam /= MONSTERDAMAGEFACTOR;
 		fpsent *o, *cl;
 		if(d->gunselect==GUN_SG)
@@ -689,33 +666,31 @@ struct weaponstate
 	{
 #ifdef BFRONTIER
 		int rtime = gunvar(d->gunwait, d->gunselect);
-		if(cl.lastmillis - gunvar(d->gunlast, d->gunselect) < rtime) return;
-		gunvar(d->gunwait, d->gunselect) = 0;
-		
-		if(d == player1 && !d->attacking) return;
-		
-		gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
-		d->lastattackgun = d->gunselect;
-		
-		if (!d->ammo[d->gunselect])
-		{ 
-			if(d == player1)
+		if(d == player1)
+		{
+			if (!d->attacking) return;
+			if (cl.lastmillis-gunvar(d->gunlast, d->gunselect) < rtime) return;
+			if (!d->ammo[d->gunselect])
 			{
-				cl.playsoundc(S_NOAMMO, d); 
-				d->lastattackgun = -1; 
-				
-				if (!gunallowed(d->gunselect, -1))
+				if (gunallowed(d->ammo, d->gunselect, -2))
 				{
-					weaponswitch();
+					cl.playsoundc(S_NOAMMO, d); 
+					d->lastattackgun = d->gunselect;
+					gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
+					gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).reloaddelay;
+					cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);
 				}
 				else
 				{
-					gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).reloaddelay;
-					d->ammo[d->gunselect] = getitem(d->gunselect-1).max;
+					weaponswitch();
 				}
+				return; 
 			}
-			return; 
 		}
+		d->lastattackgun = d->gunselect;
+		gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
+		gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).attackdelay;
+		d->ammo[d->gunselect]--;
 #else
 		int attacktime = cl.lastmillis-d->lastaction;
 		if(attacktime<d->gunwait) return;
@@ -734,8 +709,8 @@ struct weaponstate
 			}
 			return; 
 		}
-#endif
 		if(d->gunselect) d->ammo[d->gunselect]--;
+#endif
 		vec from = d->o;
 		vec to = targ;
 
@@ -744,21 +719,21 @@ struct weaponstate
 		unitv.div(dist);
 		vec kickback(unitv);
 #ifdef BFRONTIER
-		kickback.mul(getgun(d->gunselect).kickamount*-1.5f);
+		kickback.mul(getgun(d->gunselect).kickamount);
 		d->vel.add(kickback);
-		float shorten = 0.0f;
-		if(dist>INT_MAX-1) shorten = INT_MAX-1;
-		int kickwobble = getgun(d->gunselect).kickamount;
-		if (d == player1 && kickwobble) cl.camerawobble = max(cl.camerawobble, kickwobble);
+		if (d == player1) cl.camerawobble += getgun(d->gunselect).wobbleamount;
+		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
+		if(barrier < dist)
+		{
+			to = unitv;
+			to.mul(barrier);
+			to.add(from);
+		}
 #else
-		vec kickback(unitv);
 		kickback.mul(guns[d->gunselect].kickamount*-2.5f);
 		d->vel.add(kickback);
-		if(d->pitch<80.0f) d->pitch += guns[d->gunselect].kickamount*0.05f;
 		float shorten = 0.0f;
-        
 		if(dist>1024) shorten = 1024;
-#endif
 		if(d->gunselect==GUN_FIST || d->gunselect==GUN_BITE) shorten = 12;
 		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
 		if(barrier < dist && (!shorten || barrier < shorten))
@@ -769,13 +744,12 @@ struct weaponstate
 			to.mul(shorten);
 			to.add(from);
 		}
+#endif
 		
 		if(d->gunselect==GUN_SG) createrays(from, to);
 		else if(d->gunselect==GUN_CG) offsetray(from, to, 1, to);
 			
 #ifdef BFRONTIER
-		if(d->quadmillis && rtime > 200) cl.playsoundc(S_ITEMPUP, d);
-
 		hits.setsizenodelete(0);
 
 		if(!getgun(d->gunselect).projspeed) raydamage(from, to, d);
@@ -798,8 +772,7 @@ struct weaponstate
 		}
 
 #ifdef BFRONTIER
-		gunvar(d->gunwait,d->gunselect) = getgun(d->gunselect).attackdelay;
-		d->totalshots += getgun(d->gunselect).damage*(d->quadmillis ? 4 : 1)*(d->gunselect==GUN_SG ? SGRAYS : 1);
+		d->totalshots += getgun(d->gunselect).damage*(d->gunselect==GUN_SG ? SGRAYS : 1);
 #else
 		d->gunwait = guns[d->gunselect].attackdelay;
 
@@ -866,15 +839,6 @@ struct weaponstate
 			{
 				case GUN_RL:
 					adddynlight(p.o, RL_DAMRAD/2, vec(0.75f, 0.5f, 0.25f), 0, 0);
-					break;
-				case GUN_FIREBALL:
-					adddynlight(p.o, RL_DAMRAD/2, vec(0.75f, 0.25f, 0.25f), 0, 0);
-					break;
-				case GUN_ICEBALL:
-					adddynlight(p.o, RL_DAMRAD/2, vec(0.25f, 0.25f, 0.75f), 0, 0);
-					break;
-				case GUN_SLIMEBALL:
-					adddynlight(p.o, RL_DAMRAD/2, vec(0.25f, 0.75f, 0.25f), 0, 0);
 					break;
 				default:
 					break;

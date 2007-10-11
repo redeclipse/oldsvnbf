@@ -113,8 +113,10 @@ extern void registergame(char *name, igame *ig);
 // rendertext
 extern bool setfont(char *name);
 extern void gettextres(int &w, int &h);
+#ifndef BFRONTIER
 extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255);
 extern void draw_textf(const char *fstr, int left, int top, ...);
+#endif
 extern int char_width(int c, int x = 0);
 extern int text_width(const char *str, int limit = -1);
 extern int text_visible(const char *str, int max);
@@ -405,7 +407,9 @@ enum
 	AL_RIGHT
 };
 
-extern void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, int align, ...);
+extern void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool shadow, int align, ...);
+extern void draw_textf(const char *fstr, int left, int top, ...);
+extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool shadow = false);
 extern bool pushfont(char *name);
 extern bool popfont(int num);
 

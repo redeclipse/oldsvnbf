@@ -228,7 +228,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 		}
 		loopvj(refs)
 		{
-			draw_textx("%s", (w*3)/2, (((h*3)/4)*3)+(FONTH*j)-FONTH, 255, 255, 255, int(255.f*(centerblend*0.01f)), AL_CENTER, refs[j]);
+			draw_textx("%s", (w*3)/2, (((h*3)/4)*3)+(FONTH*j)-FONTH, 255, 255, 255, int(255.f*(centerblend*0.01f)), false, AL_CENTER, refs[j]);
 		}
 	}
 
@@ -257,7 +257,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 		
 		loopvrev(refs)
 		{
-			draw_textx("%s", k ? w*3-(CONSPAD+FONTH/3) : CONSPAD+FONTH/3, CONSPAD+FONTH*(refs.length()-i-1)+FONTH/3, 255, 255, 255, int(255.f*(conblend*0.01f)), k?AL_RIGHT:AL_LEFT, refs[i]);
+			draw_textx("%s", k ? w*3-(CONSPAD+FONTH/3) : CONSPAD+FONTH/3, CONSPAD+FONTH*(refs.length()-i-1)+FONTH/3, 255, 255, 255, int(255.f*(conblend*0.01f)), false, k?AL_RIGHT:AL_LEFT, refs[i]);
 		}
 		if (refs.length() > len) len = refs.length();
 	}

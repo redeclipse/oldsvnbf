@@ -14,10 +14,10 @@ enum						// static entity types
 	PARTICLES = ET_PARTICLES,
 	MAPSOUND = ET_SOUND,
 	SPOTLIGHT = ET_SPOTLIGHT,
-	I_SHELLS, I_BULLETS, I_ROCKETS, I_ROUNDS, I_GRENADES, I_CARTRIDGES,
-	I_HEALTH, I_BOOST,
-	I_GREENARMOUR, I_YELLOWARMOUR,
-	I_QUAD,
+#ifdef BFRONTIER
+	I_PISTOL, I_SG, I_CG, I_GL, I_RL, I_RIFLE,
+	I_RESERVED1, I_RESERVED2, I_RESERVED3, I_RESERVED4, I_RESERVED5,
+#endif
 	TELEPORT,				// attr1 = idx
 	TELEDEST,				// attr1 = angle, attr2 = idx
 	MONSTER,				// attr1 = angle, attr2 = monstertype
@@ -42,23 +42,42 @@ struct fpsentity : extentity
 };
 
 #ifdef BFRONTIER
-enum { GUN_FIST = 0, GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL, GUN_FIREBALL, GUN_ICEBALL, GUN_SLIMEBALL, GUN_BITE, NUMGUNS };
-enum { A_BLUE, A_GREEN, A_YELLOW };	 // armour types... take 20/40/60 % off
+enum
+{
+	GUN_PISTOL = 0,
+	GUN_SG,
+	GUN_CG,
+	GUN_GL,
+	GUN_RL,
+	GUN_RIFLE,
+	NUMGUNS
+};
 enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states
 
-#define m_noitems		((gamemode>=4 && gamemode<=11) || gamemode==13)
-#define m_noitemsrail	((gamemode>=4 && gamemode<=5) || (gamemode>=8 && gamemode<=9) || gamemode==13)
-#define m_arena			(gamemode>=8 && gamemode<=11)
-#define m_tarena		(gamemode>=10 && gamemode<=11)
-#define m_capture		(gamemode>=12 && gamemode<=13)
-#define m_teammode		((gamemode>2 && gamemode&1) || m_capture)
+#define m_noitems	 ((gamemode>=4 && gamemode<=11) || gamemode==13)
+#define m_noitemsrail ((gamemode>=4 && gamemode<=5) || (gamemode>=8 && gamemode<=9) || gamemode==13)
+#define m_arena		(gamemode>=8 && gamemode<=11)
+#define m_tarena	  (gamemode>=10 && gamemode<=11)
+#define m_capture	 (gamemode>=12 && gamemode<=13)
+#define m_teammode	((gamemode>2 && gamemode&1) || m_capture)
+#define m_sp		  (gamemode>=-2 && gamemode<0)
+#define m_dmsp		(gamemode==-1)
+#define m_classicsp	(gamemode==-2)
+#define m_demo		(gamemode==-3)
+#define isteam(a,b)	(m_teammode && strcmp(a, b)==0)
+
+#define m_mp(mode)	(mode>=0 && mode<=13)
+/*
+#define m_mp(mode)		(mode >= 0 && mode <= 3)
+#define m_dm			(gamemode == 1)
+#define m_dom			(gamemode == 2)
+
 #define m_sp			(gamemode>=-2 && gamemode<0)
 #define m_dmsp			(gamemode==-1)
 #define m_classicsp		(gamemode==-2)
 #define m_demo			(gamemode==-3)
 #define isteam(a,b)		(m_teammode && strcmp(a, b)==0)
-
-#define m_mp(mode)		(mode>=0 && mode<=13)
+*/
 #else
 enum { GUN_FIST = 0, GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL, GUN_FIREBALL, GUN_ICEBALL, GUN_SLIMEBALL, GUN_BITE, NUMGUNS };
 enum { A_BLUE, A_GREEN, A_YELLOW };	 // armour types... take 20/40/60 % off
@@ -82,13 +101,22 @@ enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  
 // hardcoded sounds, defined in sounds.cfg
 enum
 {
+#ifdef BFRONTIER
+	S_JUMP = 0, S_LAND, S_RIFLE, S_SG, S_CG,
+	S_RLFIRE, S_RLHIT, S_WEAPLOAD, S_ITEMAMMO,
+	S_ITEMSPAWN, S_TELEPORT, S_NOAMMO,
+#else
 	S_JUMP = 0, S_LAND, S_RIFLE, S_PUNCH1, S_SG, S_CG,
 	S_RLFIRE, S_RLHIT, S_WEAPLOAD, S_ITEMAMMO, S_ITEMHEALTH,
 	S_ITEMARMOUR, S_ITEMPUP, S_ITEMSPAWN, S_TELEPORT, S_NOAMMO, S_PUPOUT,
+#endif
 	S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6,
 	S_DIE1, S_DIE2,
 	S_FLAUNCH, S_FEXPLODE,
 	S_SPLASH1, S_SPLASH2,
+#ifdef BFRONTIER
+	S_RUMBLE,
+#else
 	S_GRUNT1, S_GRUNT2, S_RUMBLE,
 	S_PAINO,
 	S_PAINR, S_DEATHR,
@@ -99,12 +127,15 @@ enum
 	S_PAINH, S_DEATHH,
 	S_PAIND, S_DEATHD,
 	S_PIGR1, S_ICEBALL, S_SLIMEBALL,
+#endif
 	S_JUMPPAD, S_PISTOL,
 	
 	S_V_BASECAP, S_V_BASELOST,
 	S_V_FIGHT,
+#ifndef BFRONTIER
 	S_V_BOOST, S_V_BOOST10,
 	S_V_QUAD, S_V_QUAD10,
+#endif
 	S_V_RESPAWNPOINT, 
 #ifdef BFRONTIER
 	S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED,
@@ -133,7 +164,11 @@ enum
 	SV_SERVMSG, SV_ITEMLIST, SV_RESUME,
     SV_EDITMODE, SV_EDITENT, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP,
 	SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_SETMASTER, SV_SETTEAM,
+#ifdef BFRONTIER
+	SV_BASES, SV_BASEINFO, SV_TEAMSCORE, SV_FORCEINTERMISSION,
+#else
 	SV_BASES, SV_BASEINFO, SV_TEAMSCORE, SV_REPAMMO, SV_FORCEINTERMISSION, SV_ANNOUNCE,
+#endif
 	SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
 	SV_CLIENT,
@@ -149,7 +184,11 @@ static char msgsizelookup(int msg)
 		SV_INITS2C, 4, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_SOUND, 2, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 1,
 		SV_DIED, 4, SV_DAMAGE, 6, SV_HITPUSH, 6, SV_SHOTFX, 9,
+#ifdef BFRONTIER
+		SV_TRYSPAWN, 1, SV_SPAWNSTATE, 9, SV_SPAWN, 3, SV_FORCEDEATH, 2, SV_ARENAWIN, 2,
+#else
 		SV_TRYSPAWN, 1, SV_SPAWNSTATE, 13, SV_SPAWN, 3, SV_FORCEDEATH, 2, SV_ARENAWIN, 2,
+#endif
 		SV_GUNSELECT, 2, SV_TAUNT, 1,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMPICKUP, 2, SV_DENIED, 2,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
@@ -157,7 +196,11 @@ static char msgsizelookup(int msg)
 		SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
         SV_EDITMODE, 2, SV_EDITENT, 10, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0,
+#ifdef BFRONTIER
+		SV_BASES, 0, SV_BASEINFO, 0, SV_TEAMSCORE, 0, SV_FORCEINTERMISSION, 1,
+#else
 		SV_BASES, 0, SV_BASEINFO, 0, SV_TEAMSCORE, 0, SV_REPAMMO, 1, SV_FORCEINTERMISSION, 1,  SV_ANNOUNCE, 2,
+#endif
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 2, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
 		SV_CLIENT, 0,
@@ -170,9 +213,15 @@ static char msgsizelookup(int msg)
 	return -1;
 }
 
+#ifdef BFRONTIER
+#define BFRONTIER_SERVER_PORT		28795
+#define BFRONTIER_SERVINFO_PORT		28796
+#define PROTOCOL_VERSION BFRONTIER
+#else
 #define SAUERBRATEN_SERVER_PORT 28785
 #define SAUERBRATEN_SERVINFO_PORT 28786
 #define PROTOCOL_VERSION 254			// bump when protocol changes
+#endif
 #define DEMO_VERSION 1				  // bump when demo format changes
 #define DEMO_MAGIC "SAUERBRATEN_DEMO"
 
@@ -188,19 +237,14 @@ struct demoheader
 #ifdef BFRONTIER
 static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
 {
+    {10,	10,		S_ITEMAMMO,		"PI",	GUN_PISTOL },
 	{8,		8,		S_ITEMAMMO,		"SG",	GUN_SG },
     {30,	30,		S_ITEMAMMO,		"CG",	GUN_CG },
+    {2,		4,		S_ITEMAMMO,		"GL",	GUN_GL },
     {1,		1,		S_ITEMAMMO,		"RL",	GUN_RL },
     {5,		5,		S_ITEMAMMO,		"RI",	GUN_RIFLE },
-    {2,		4,		S_ITEMAMMO,		"GL",	GUN_GL },
-    {10,	10,		S_ITEMAMMO,		"PI",	GUN_PISTOL },
-	{0,		0,		S_ITEMHEALTH,	"H" },
-    {0,		0,		S_ITEMHEALTH,	"MH" },
-    {0,		0,		S_ITEMARMOUR,	"GA",	A_GREEN },
-    {0,		0,		S_ITEMARMOUR,	"YA",	A_YELLOW },
-    {0,		0,		S_ITEMPUP,		"Q" },
 };
-#define getitem(n) (itemstats[n])
+#define getitem(n) itemstats[n]
 
 #define SGRAYS 20
 #define SGSPREAD 3
@@ -209,21 +253,17 @@ static struct itemstat { int add, max, sound; char *name; int info; } itemstats[
 #define RL_SELFDAMDIV 2
 #define RL_DISTSCALE 1.5f
 
-static struct guninfo { short sound, attackdelay, reloaddelay, damage, projspeed, part, kickamount; char *name; } guns[NUMGUNS] =
+static struct guninfo { short sound, attackdelay, reloaddelay, damage, projspeed, part, kickamount, wobbleamount; char *name; } guns[NUMGUNS] =
 {
-	{ S_PUNCH1,		400,	0,		40,		0,		0,	0,	"fist" },
-	{ S_SG,			1000,	4000,	5,		0,		0,	50,	"shotgun" },
-	{ S_CG,			75,		3075,	8,		0,		0,	20,	"chaingun" },
-	{ S_RLFIRE,		2500,	5000,	250,	80,		0,	30,	"rocketlauncher" },
-	{ S_RIFLE,		1500,	4500,	50,		0,		0,	50,	"rifle" },
-	{ S_FLAUNCH,	1500,	600,	400,	40,		0,	0,	"grenadelauncher" },
-	{ S_PISTOL,		250,	2250,	13,		0,		0,	15,	"pistol" },
-	{ S_FLAUNCH,	200,	0,		20,		200,	4,	0,	"fireball" },
-	{ S_ICEBALL,	200,	0,		40,		30,		6,	0,	"iceball" },
-	{ S_SLIMEBALL,	200,	0,		30,		160,	7,	0,	"slimeball" },
-	{ S_PIGR1,		250,	0,		100,	0,		0,	0,	"bite" },
+	{ S_PISTOL,		250,	2250,	13,		0,		0,	-15,	7,	"pistol" },
+	{ S_SG,			1000,	4000,	5,		0,		0,	-40,	35, "shotgun" },
+	{ S_CG,			75,		3075,	8,		0,		0,	-10,	10,	"chaingun" },
+	{ S_FLAUNCH,	1500,	600,	400,	40,		0,	-10,	5,	"grenades" },
+	{ S_RLFIRE,		2500,	5000,	250,	80,		0,	-75,	50,	"rockets" },
+	{ S_RIFLE,		1500,	4500,	50,		0,		0,	-30,	25,	"rifle" },
 };
-#define getgun(n) (guns[n])
+#define getgun(n) guns[n]
+#define gunallowed(am,gn,gs) (gn >= GUN_PISTOL && gn <= GUN_RIFLE && (gs < 0 || gn != gs) && (gn != GUN_GL || (gs > -2 && am[gn]) || gs < -2))
 #else
 static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
 {
@@ -265,16 +305,44 @@ static struct guninfo { short sound, attackdelay, damage, projspeed, part, kicka
 // inherited by fpsent and server clients
 struct fpsstate
 {
+#ifdef BFRONTIER
+	int health, lastspawn, gunselect, gunwait[NUMGUNS], gunlast[NUMGUNS];
+#else
 	int health, maxhealth;
 	int armour, armourtype;
 	int quadmillis;
-#ifdef BFRONTIER
-	int lastspawn, gunselect, gunwait[NUMGUNS], gunlast[NUMGUNS];
-#else
 	int gunselect, gunwait;
 #endif
 	int ammo[NUMGUNS];
 
+#ifdef BFRONTIER
+	fpsstate() {}
+
+	void addammo(int gun)
+	{
+		ammo[gun] += itemstats[gun].add;
+	}
+
+	bool hasmaxammo(int type)
+	{
+		const itemstat &is = itemstats[type-I_PISTOL];
+		return ammo[type-I_PISTOL+GUN_PISTOL]>=is.max;
+	}
+
+	bool canpickup(int type)
+	{
+		if (type < I_PISTOL || type > I_RIFLE) return false;
+		itemstat &is = getitem(type-I_PISTOL);
+		return ammo[is.info] < is.max;
+	}
+ 
+	void pickup(int type)
+	{
+		if (type < I_PISTOL || type > I_RIFLE) return;
+		itemstat &is = getitem(type-I_PISTOL);
+		ammo[is.info] = min(ammo[is.info] + is.add, is.max);
+	}
+#else
 	fpsstate() : maxhealth(100) {}
 
 	void baseammo(int gun, int k = 2)
@@ -289,22 +357,14 @@ struct fpsstate
 
 	bool hasmaxammo(int type)
 	{
-#ifdef BFRONTIER
-		itemstat &is = getitem(type-I_SHELLS);
-#else
 		const itemstat &is = itemstats[type-I_SHELLS];
-#endif
 		return ammo[type-I_SHELLS+GUN_SG]>=is.max;
 	}
 
 	bool canpickup(int type)
 	{
 		if(type<I_SHELLS || type>I_QUAD) return false;
-#ifdef BFRONTIER
-		itemstat &is = getitem(type-I_SHELLS);
-#else
 		itemstat &is = itemstats[type-I_SHELLS];
-#endif
 		switch(type)
 		{
 			case I_BOOST: return maxhealth<is.max;
@@ -321,11 +381,7 @@ struct fpsstate
 	void pickup(int type)
 	{
 		if(type<I_SHELLS || type>I_QUAD) return;
-#ifdef BFRONTIER
-		itemstat &is = getitem(type-I_SHELLS);
-#else
 		itemstat &is = itemstats[type-I_SHELLS];
-#endif
 		switch(type)
 		{
 			case I_BOOST:
@@ -346,29 +402,49 @@ struct fpsstate
 				break;
 		}
 	}
+#endif
 
 	void respawn()
 	{
-		health = maxhealth;
-		armour = 0;
-		armourtype = A_BLUE;
-		quadmillis = 0;
-		gunselect = GUN_PISTOL;
 #ifdef BFRONTIER
+		health = 100;
 		lastspawn = -1;
 		loopi(NUMGUNS)
 		{
 			gunwait[i] = gunlast[i] = 0;
 		}
+		gunselect = GUN_PISTOL;
+		loopi(NUMGUNS) ammo[i] = 0;
 #else
+		health = maxhealth;
+		armour = 0;
+		armourtype = A_BLUE;
+		quadmillis = 0;
+		gunselect = GUN_PISTOL;
 		gunwait = 0;
-#endif
 		loopi(NUMGUNS) ammo[i] = 0;
 		ammo[GUN_FIST] = 1;
+#endif
 	}
 
 	void spawnstate(int gamemode)
 	{
+#ifdef BFRONTIER
+		if(m_noitemsrail)
+		{
+			health = 1;
+			gunselect = GUN_RIFLE;
+			addammo(GUN_RIFLE);
+		}
+		else
+		{
+			health = 100;
+			loopi(NUMGUNS)
+			{
+				if (gunallowed(ammo, i, -3)) addammo(i);
+			}
+		}
+#else
 		if(m_noitems || m_capture)
 		{
 			gunselect = GUN_RIFLE;
@@ -376,29 +452,16 @@ struct fpsstate
 			if(m_noitemsrail)
 			{
 				health = 1;
-#ifdef BFRONTIER
-				maxhealth = 1;
-#endif
 				ammo[GUN_RIFLE] = 100;
 			}
 			else
 			{
-#ifdef BFRONTIER
-				armour = 0;
-				armourtype = A_BLUE;
-				maxhealth = 100;
-#else
 				armour = 100;
 				armourtype = A_GREEN;
-#endif
 
 				if(m_tarena || m_capture)
 				{
-#ifdef BFRONTIER
-					ammo[GUN_PISTOL] = 10;
-#else
 					ammo[GUN_PISTOL] = 80;
-#endif
 					int spawngun1 = rnd(5)+1, spawngun2;
 					gunselect = spawngun1;
 					baseammo(spawngun1, m_capture ? 1 : 2);
@@ -416,23 +479,21 @@ struct fpsstate
 		}
 		else
 		{
-#ifdef BFRONTIER
-			ammo[GUN_PISTOL] = 10;
-			ammo[GUN_GL] = 2;
-#else
 			ammo[GUN_PISTOL] = m_sp ? 80 : 40;
 			ammo[GUN_GL] = 1;
-#endif
 		}
+#endif
 	}
 
 	// just subtract damage here, can set death, etc. later in code calling this 
 	int dodamage(int damage)
 	{
+#ifndef BFRONTIER
 		int ad = damage*(armourtype+1)*25/100; // let armour absorb when possible
 		if(ad>armour) ad = armour;
 		armour -= ad;
 		damage -= ad;
+#endif
 		health -= damage;
 		return damage;		
 	}
@@ -510,10 +571,6 @@ struct fpsent : dynent, fpsstate
 };
 
 #ifdef BFRONTIER
-
-#define BFRONTIER_SERVER_PORT		28795
-#define BFRONTIER_SERVINFO_PORT		28796
-
 enum
 {
 	SINFO_ICON = 0,
@@ -579,17 +636,6 @@ enum {
 	HD_LEFT,
 	HD_RIGHT,
 	HD_MAX
-};
-
-#define WSAMT 8
-static short wsguns[] = {
-	GUN_FIST,
-	GUN_PISTOL,
-	GUN_SG,
-	GUN_CG,
-	GUN_GL,
-	GUN_RL,
-	GUN_RIFLE,
 };
 
 struct botent : fpsent
@@ -704,9 +750,7 @@ static char *msgnames[] = {
 	"SV_BASES",
 	"SV_BASEINFO",
 	"SV_TEAMSCORE",
-	"SV_REPAMMO",
 	"SV_FORCEINTERMISSION",
-	"SV_ANNOUNCE",
 	"SV_LISTDEMOS",
 	"SV_SENDDEMOLIST",
 	"SV_GETDEMO",

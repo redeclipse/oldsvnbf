@@ -201,6 +201,7 @@ struct scoreboard : g3d_callback
 				if(pen)
 					g.textf("penalty for \fs\f0%d\fr deaths: \fs\f0%d\fr second(s)", 0xFFFFFF, "info", pen);
 				
+#ifndef BFRONTIER
 				pen = cl.ms.remain*10;
 				score += pen;
 				if(pen)
@@ -210,6 +211,7 @@ struct scoreboard : g3d_callback
 				score += pen;
 				if(pen)
 					g.textf("penalty for skill level: \fs\f0%d\fr second(s)", 0xFFFFFF, "info", pen);
+#endif
 				
 				pen = 100-accuracy;
 				score += pen;

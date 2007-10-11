@@ -6,6 +6,12 @@ Legend [
 ]
 
 = wip edition =
+gam: removed monster code
+gam: redesigned weapon, ammo, and pickup systems
+gam: added reloading
+gam: removed health, armour, quad, boost
+gam: rearranged config some more, improved precaching to only perform once connected
+eng: text shadow made an optional arg, default off
 gam: replaced pitch kick with camerawobble
 gam: removed sauerbraten support
 eng: config redesign
@@ -133,8 +139,6 @@ bot: waypoints now update correctly in botdrop mode when using teleports/jumppad
 bot: now switch to melee when in very close proximity
 gam: 'weaponswitchstyle' variable added to use a normal switching method
 eng: changes to make gui2d work properly
-bot: logic revised for monsters, bots now use weapon-jumps for higher points
-gam: 'botmonster' variable added for bot-logic controlled monsters in sp
 ssp: electric shield uses spark flare
 eng: spark flare added
 eng: added -rinit.cfg to command line

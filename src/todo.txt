@@ -1,5 +1,4 @@
 = WIP =
-* integrate all modules together into switchable type
 * all-in-one package for maps
 * improve editmode
 * engine side bots with client side logic
@@ -13,16 +12,11 @@
 * headshot, etc
 * moving sounds (OpenAL)
 * fix material transitions and depth testing
-* make text shadow optional
-* modification and package manager module
 * proper rotation looping for animated models
-* precaching
 * move world vars server side
 * move instagib etc to server mod
 * address issues with alpha blended models
 * S_SMGLOAD, S_REGEN, S_HEADSHOT
-* unlimited ammo on all but grenade, reload (sound, only when empty)
-* remove entities: armour, health, pickups, carrot, checkpoint
 * only two guns at same time (drop guns, etc)
 * secondary fire modes (grenade: flash mines)
 * shootable triggers
