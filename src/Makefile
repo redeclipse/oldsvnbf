@@ -1,5 +1,5 @@
 CXXOPTFLAGS= -O3 -fomit-frame-pointer
-INCLUDES= -Ishared -Iengine -Ifpsgame -Isspgame -Iengine/mod -Ifpsgame/mod -Ifpsgame/bot -Ienet/include -I/usr/X11R6/include `sdl-config --cflags`
+INCLUDES= -Ishared -Iengine -Ifpsgame -Ifpsgame/bot -Ienet/include -I/usr/X11R6/include `sdl-config --cflags`
 CXXFLAGS= -DBFRONTIER=33 -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES)
 
 CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lz -lGL -lGLU 
@@ -40,6 +40,9 @@ CLIENT_OBJS= \
 	fpsgame/fps.o \
 	engine/joystick.o
 
+SINCLUDES= -Ishared -Iengine -Ifpsgame -Ifpsgame/bot -Ienet/include
+SCXXFLAGS= -DBFRONTIER=33 -Wall -fsigned-char $(CXXOPTFLAGS) $(SINCLUDES)
+
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
 	shared/tools-standalone.o \
@@ -58,27 +61,27 @@ libenet: enet/Makefile
 	$(MAKE)	-C enet/ all
 
 clean: enet/Makefile
-	-$(RM) -fv $(SERVER_OBJS) $(CLIENT_OBJS) bloodfrontier_server bloodfrontier_client
+	@rm -fv $(SERVER_OBJS) $(CLIENT_OBJS) bloodfrontier_server bloodfrontier_client
 	$(MAKE)	-C enet/ clean
 
 shared/tools-standalone.o:
-	$(CXX) $(CXXFLAGS) -DSTANDALONE	-c -o shared/tools-standalone.o shared/tools.cpp
+	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o shared/tools-standalone.o shared/tools.cpp
 
 engine/command-standalone.o:
-	$(CXX) $(CXXFLAGS) -DSTANDALONE	-c -o engine/command-standalone.o engine/command.cpp
+	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o engine/command-standalone.o engine/command.cpp
 
 engine/server-standalone.o:
-	$(CXX) $(CXXFLAGS) -DSTANDALONE	-c -o engine/server-standalone.o engine/server.cpp
+	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o engine/server-standalone.o engine/server.cpp
 	
 fpsgame/fps-standalone.o:
-	$(CXX) $(CXXFLAGS) -DSTANDALONE	-c -o fpsgame/fps-standalone.o fpsgame/fps.cpp
+	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o fpsgame/fps-standalone.o fpsgame/fps.cpp
 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)
 	strip bloodfrontier_client
 
 server:	libenet $(SERVER_OBJS)
-	$(CXX) $(CXXFLAGS) -o bloodfrontier_server $(SERVER_OBJS) $(SERVER_LIBS)  
+	$(CXX) $(SCXXFLAGS) -o bloodfrontier_server $(SERVER_OBJS) $(SERVER_LIBS)  
 	strip bloodfrontier_server
 
 install-client:
