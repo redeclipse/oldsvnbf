@@ -3,6 +3,7 @@ A log of changes, as they happen. Ordered from newest to oldest.
 Legend [
 	eng: engine modification
 	gam: game modification
+	art: art or content
 ]
 
 = wip edition =

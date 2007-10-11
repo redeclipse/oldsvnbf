@@ -30,6 +30,10 @@
 #ifndef STANDALONE
 #include <SDL.h>
 #include <SDL_image.h>
+#ifdef BFRONTIER
+#include <SDL_mixer.h>
+#define MAXVOL MIX_MAX_VOLUME
+#endif
 
 #define GL_GLEXT_LEGACY
 #define __glext_h__
@@ -50,8 +54,3 @@
   #endif
 #endif
 #include <zlib.h>
-
-#ifdef BFRONTIER
-#include "SDL_mixer.h"
-#define MAXVOL MIX_MAX_VOLUME
-#endif
