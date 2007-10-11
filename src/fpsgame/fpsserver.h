@@ -180,9 +180,6 @@ struct fpsserver : igameserver
 
 	struct clientinfo
 	{
-#ifdef BFRONTIER
-		int modver;
-#endif
 		int clientnum;
 		string name, team, mapvote;
 		int modevote;
@@ -213,9 +210,6 @@ struct fpsserver : igameserver
 
 		void reset()
 		{
-#ifdef BFRONTIER
-			modver = 0;
-#endif
 			name[0] = team[0] = 0;
 			privilege = PRIV_NONE;
 			spectator = local = false;
@@ -412,8 +406,6 @@ struct fpsserver : igameserver
 					arenamode(*this), capturemode(*this), smode(NULL),
 					cmdcontext(NULL)
 	{
-		SRVCMD(version, PRIV_NONE, "si", (fpsserver *self, char *a, int *b), self->setversion(self->cmdcontext, a, *b));
-		
 		SRVVAR(timelimit, &self->timelimit, PRIV_MASTER, 0, INT_MAX-1, self->settime());
 		SRVVAR(fraglimit, &self->fraglimit, PRIV_MASTER, 0, INT_MAX-1, );
 		
@@ -2682,11 +2674,6 @@ struct fpsserver : igameserver
 			s_sprintf(scresult)("%s = %d", name, *var);
 	}
 
-	void setversion(clientinfo *ci, char *mod, int version)
-	{
-		if (version > 0) ci->modver = version;
-	}
-	
 	void settime()
 	{
 		gamelimit = timelimit*60000;
