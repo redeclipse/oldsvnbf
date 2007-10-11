@@ -379,7 +379,7 @@ struct weaponstate
 	{
 		vec dir;
 		float dist = rocketdist(cl.player1, dir, v);
-		cl.camerawobble += int(float(qdam*RL_DAMRAD)/dist);
+		if (dist > RL_DAMRAD) cl.camerawobble += int(float(qdam*RL_DAMRAD)/dist);
 	}
 #endif
 	void explode(bool local, fpsent *owner, vec &v, dynent *notthis, int qdam, int gun)
