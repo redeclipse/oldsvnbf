@@ -14,15 +14,9 @@ struct clientcom : iclientcom
 	fpsent *player1;
 	
 #ifdef BFRONTIER // server version, centerprint chat
-	int sversion;
-
 	IVARP(centerchat, 0, 1, 1);
-
-    clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false), player1(_cl.player1),
-		sversion(-1)
-#else
-    clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false), player1(_cl.player1)
 #endif
+    clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false), player1(_cl.player1)
 	{
         CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s));
         CCOMMAND(name, "s", (clientcom *self, char *s), self->switchname(s));
@@ -106,9 +100,7 @@ struct clientcom : iclientcom
 
 	void gamedisconnect()
 	{
-#ifdef BFRONTIER // server version, alternate follow method
-		sversion = -1;
-#else
+#ifndef BFRONTIER // server version, alternate follow method
         if(remote) cl.stopfollowing();
 #endif
 		connected = false;
@@ -263,8 +255,7 @@ struct clientcom : iclientcom
 	
 	void toservcmd(char *text, bool msg)
 	{
-		if (sversion > 0) addmsg(SV_COMMAND, "rs", text);
-		else if (msg) console("server does not support commands", CON_LEFT, text);
+		addmsg(SV_COMMAND, "rs", text);
 	}
 #else
     void toserver(char *text) { conoutf("%s:\f0 %s", cl.colorname(player1), text); addmsg(SV_TEXT, "rs", text); }
@@ -1252,13 +1243,11 @@ struct clientcom : iclientcom
 		string buf;
 		buf[0] = 0;
 		
-		if (!strcmp(w[0], "version"))
+		if (!strcmp(w[0], "something"))
 		{
 			if (*w[1] && (n = atoi(w[1])))
 			{
-				sversion = n;
-				s_sprintf(buf)("version BloodFrontier %d", BFRONTIER);
-				msg = false;
+				msg = n!=0;
 			}
 		}
 		

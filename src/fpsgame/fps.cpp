@@ -1335,6 +1335,8 @@ struct fpsclient : igameclient
 		
 		camera1 = &fpscamera;
 		
+		fixview();
+
 		if (camera1->type != ENT_CAMERA)
 		{
 			camera1->reset();
