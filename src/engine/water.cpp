@@ -15,14 +15,14 @@ float wcol[4];
 	inline void vertw(float v1, float v2, float v3, float t) \
 	{ \
 		float angle = (v1-wx1)/wsize*(v2-wy1)/wsize*(v1-wx2)*(v2-wy2)*59/23+t; \
-		float s = sinf(angle), h = 0.8f*s-1.1f; \
+        float s = sinf(angle), h = WATER_AMPLITUDE*s-WATER_OFFSET; \
 		body; \
 		glVertex3f(v1, v2, v3+h); \
 	}
 #define VERTWN(vertw, body) \
 	inline void vertw(float v1, float v2, float v3) \
 	{ \
-		float h = -1.1f; \
+        float h = -WATER_OFFSET; \
 		body; \
 		glVertex3f(v1, v2, v3+h); \
 	}
@@ -238,24 +238,21 @@ VARP(reflectdist, 0, 2000, 10000);
 #ifdef BFRONTIER
 VARW(waterfog, 0, 150, 10000);
 VARW(watercolour, 0, 0x103060, 0xFFFFFF);
-
 void getwatercolour(uchar *wcol)
 {
 	uchar gcol[3] = { (watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF };
 	memcpy(wcol, gcol, 3);
 }
-
 VARW(lavafog, 0, 50, 10000);
 VARW(lavacolour, 0, 0xFF4400, 0xFFFFFF);
-
 void getlavacolour(uchar *lcol)
 {
 	uchar gcol[3] = { (lavacolour>>16)&0xFF, (lavacolour>>8)&0xFF, lavacolour&0xFF };
 	memcpy(lcol, gcol, 3);
 }
-
 #else
 VAR(waterfog, 0, 150, 10000);
+
 void getwatercolour(uchar *wcol)
 {
 	static const uchar defaultwcol[3] = { 20, 70, 80};
@@ -271,6 +268,7 @@ void watercolour(int *r, int *g, int *b)
 }
 
 COMMAND(watercolour, "iii");
+
 VAR(lavafog, 0, 50, 10000);
 
 void getlavacolour(uchar *lcol)
@@ -384,7 +382,7 @@ void renderwaterff()
 	}
 
 	int lastdepth = -1;
-	float offset = -1.1f;
+    float offset = -WATER_OFFSET;
 
 	uchar wcolub[3];
 	getwatercolour(wcolub);
@@ -519,7 +517,7 @@ void renderwater()
 #endif
 	entity *lastlight = (entity *)-1;
 	int lastdepth = -1;
-	float offset = -1.1f;
+    float offset = -WATER_OFFSET;
 	bool blended = true;
 	loopi(MAXREFLECTIONS)
 	{
@@ -826,7 +824,7 @@ void queryreflections()
 		loopvj(ref.matsurfs)
 		{
 			materialsurface &m = *ref.matsurfs[j];
-			drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, renderpath==R_FIXEDFUNCTION || vertwater ? 0.1f : 1.1f);
+            drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, renderpath==R_FIXEDFUNCTION || vertwater ? 0.1f : WATER_OFFSET);
 		}
 		glEnd();
 		endquery(ref.query);
@@ -896,7 +894,7 @@ void drawreflections()
 
 	static int lastdrawn = 0;
 	int refs = 0, n = lastdrawn;
-	float offset = -1.1f;
+    float offset = -WATER_OFFSET;
 	loopi(MAXREFLECTIONS)
 	{
 		Reflection &ref = reflections[++n%MAXREFLECTIONS];

@@ -9,9 +9,6 @@ enum							// hardcoded texture numbers
 };
 
 #define MAPVERSION 24			// bump if map format changes, see worldio.cpp
-#ifdef BFRONTIER
-
-#endif
 
 struct header					// map file format header
 {
@@ -27,14 +24,14 @@ struct header					// map file format header
 	int waterlevel;
 	int lightmaps;
 	int mapprec, maple, mapllod;
-	uchar ambient; // 0
-	uchar watercolour[3]; // 1 2 3 
-	uchar mapwlod; // 4
-	uchar lerpangle, lerpsubdiv, lerpsubdivsize; // 5 6 7
-	uchar mapbe; // 8
-	uchar skylight[3]; // 9 10 11
-	uchar lavacolour[3]; // 12 13 14
-	uchar reserved[1+12]; // 15...
+    uchar ambient;
+    uchar watercolour[3];
+    uchar mapwlod;
+    uchar lerpangle, lerpsubdiv, lerpsubdivsize;
+    uchar mapbe;
+    uchar skylight[3];
+    uchar lavacolour[3];
+    uchar reserved[1+12];
 #endif
 	char maptitle[128];
 };
@@ -50,6 +47,10 @@ enum							// cube empty-space materials
 	MAT_EDIT					// basis for the edit volumes of the above materials
 };
 #endif
+
+#define WATER_AMPLITUDE 0.8f
+#define WATER_OFFSET 1.1f
+
 enum 
 { 
 	MATSURF_NOT_VISIBLE = 0,

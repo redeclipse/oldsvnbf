@@ -143,6 +143,7 @@ extern void pushshadowmap();
 extern void popshadowmap();
 extern void adjustshadowmatrix(const ivec &o, float scale);
 extern void rendershadowmapreceivers();
+extern void guessshadowdir();
 
 // rendergl
 extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasstencil;
@@ -255,7 +256,6 @@ extern int showmat;
 extern sometype materials[], textypes[];
 extern char *findmaterialname(int type);
 #endif
-
 extern int findmaterial(const char *name);
 extern void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurface> &matsurfs);
 extern void rendermatsurfs(materialsurface *matbuf, int matsurfs);
