@@ -11,14 +11,13 @@ enum							// hardcoded texture numbers
 #define MAPVERSION 24			// bump if map format changes, see worldio.cpp
 
 #ifdef BFRONTIER
-struct bfgz
+struct binary
 {
 	char head[4];
-	int version;			// any >8bit quantity is little endian
-	int headersize;			// sizeof(header)
+	int version, headersize;
 };
 
-struct octa : bfgz
+struct octa : binary
 {
 	int worldsize;
 	int numents;
@@ -36,7 +35,7 @@ struct octa : bfgz
 	char maptitle[128];
 };
 
-struct header : bfgz
+struct bfgz : binary
 {
 	int worldsize, numents, lightmaps;
 	int gamever, revision;

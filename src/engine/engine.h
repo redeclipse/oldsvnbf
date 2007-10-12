@@ -72,7 +72,11 @@ extern PFNGLBLENDEQUATIONEXTPROC glBlendEquation_;
 extern dynent *player;
 extern physent *camera1;				// special ent that acts as camera, same object as player1 in FPS mode
 
+#ifdef BFRONTIER
+extern bfgz hdr;					  // current map header
+#else
 extern header hdr;					  // current map header
+#endif
 extern vector<ushort> texmru;
 extern int xtraverts, xtravertsva;
 extern vector<vertex> verts;			// the vertex array for all world rendering

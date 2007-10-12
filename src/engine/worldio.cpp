@@ -284,7 +284,7 @@ void save_world(char *mname, bool nolms)
 	
 	strncpy(hdr.head, "BFGZ", 4);
 	hdr.version = MAPVERSION;
-	hdr.headersize = sizeof(header);
+	hdr.headersize = sizeof(bfgz);
 	hdr.gamever = BFRONTIER;
 	hdr.numents = 0;
 	hdr.revision++;
@@ -409,9 +409,10 @@ void save_world(char *mname, bool nolms)
 
 	hdr.lightmaps = nolms ? 0 : lightmaps.length();
 
-	header tmp = hdr;
-	endianswap(&tmp.version, sizeof(int), 7);
-	gzwrite(f, &tmp, sizeof(header));
+	bfgz tmp = hdr;
+	endianswap(&tmp.version, sizeof(int), 2); // version
+	endianswap(&tmp.worldsize, sizeof(int), 5);
+	gzwrite(f, &tmp, sizeof(bfgz));
 	writeushort(f, texmru.length());
 	loopv(texmru) writeushort(f, texmru[i]);
 
@@ -543,14 +544,14 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 	resetmap();
 
-	bfgz newhdr;
-	gzread(f, &newhdr, sizeof(bfgz));
+	binary newhdr;
+	gzread(f, &newhdr, sizeof(binary));
 	endianswap(&newhdr.version, sizeof(int), 2);
-	memcpy(&hdr, &newhdr, sizeof(bfgz));
+	memcpy(&hdr, &newhdr, sizeof(binary));
 	
 	if(strncmp(newhdr.head, "BFGZ", 4) == 0)
 	{
-		gzread(f, &hdr.worldsize, hdr.headersize-sizeof(bfgz));
+		gzread(f, &hdr.worldsize, hdr.headersize-sizeof(binary));
 		endianswap(&hdr.worldsize, sizeof(int), 5);
 
 		if(hdr.version > MAPVERSION || hdr.gamever > BFRONTIER)
@@ -564,8 +565,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	else if(strncmp(newhdr.head, "OCTA", 4) == 0)
 	{
 		octa ohdr;
-		memcpy(&ohdr, &newhdr, sizeof(bfgz));
-		gzread(f, &ohdr.worldsize, hdr.headersize-sizeof(bfgz));
+		memcpy(&ohdr, &newhdr, sizeof(binary));
+		gzread(f, &ohdr.worldsize, hdr.headersize-sizeof(binary));
 		endianswap(&ohdr.worldsize, sizeof(int), 7);
 
 		if(ohdr.version > MAPVERSION)
