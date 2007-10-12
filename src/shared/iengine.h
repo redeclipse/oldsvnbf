@@ -291,7 +291,7 @@ struct property
 	int type, prop;
 	
 	vector<int> ints;
-	vector<string> strs;
+	vector<char *> strs;
 };
 
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);

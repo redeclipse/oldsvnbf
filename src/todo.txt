@@ -24,7 +24,8 @@
 * hands for hudguns
 * akimbo versions of pistol and smg
 * zombies with mixable parts
-
+* extend projectiles, teleport etc.
+* catch/repel grenades
 
 = IDEAS =
 * game/movement types
@@ -60,7 +61,7 @@
 * dedicated server irc/www interface (bot or server)
 * ejections (shells, etc)
 * spectator: automatically follow powerup/killer/bases
-* auto map up/down load
+* auto map up/down load with version checks
 * show direction to nearest enemy/base (ala UT)
 * footstep sounds
 * connect to server with password

@@ -295,12 +295,12 @@ void save_world(char *mname, bool nolms)
 
 		show_out_of_renderloop_progress(0, "saving backups...");
 
-		s_sprintf(bakname)("packages/%s.r%d.bgz", mapname, hdr.revision);
+		s_sprintf(bakname)("packages/%s.r%.4d.bgz", mapname, hdr.revision);
 		backup(bgzname, bakname);
 
 		show_out_of_renderloop_progress(0.5f, "saving backups...");
 
-		s_sprintf(bakname)("packages/%s.r%d.cfg", mapname, hdr.revision);
+		s_sprintf(bakname)("packages/%s.r%.4d.cfg", mapname, hdr.revision);
 		backup(mcfname, bakname);
 	}
 	
