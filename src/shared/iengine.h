@@ -91,7 +91,11 @@ extern void newgui(char *name, char *contents);
 extern void showgui(char *name);
 
 // world
+#ifdef BFRONTIER
+extern bool emptymap(int factor, bool force = false, char *mname = "untitled/base");
+#else
 extern bool emptymap(int factor, bool force);
+#endif
 extern bool enlargemap(bool force);
 extern int findentity(int type, int index = 0);
 extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool local);
@@ -144,6 +148,9 @@ extern void particle_fireball(const vec &dest, float max, int type);
 extern void removetrackedparticles(physent *owner = NULL);
 
 // worldio
+#ifdef BFRONTIER
+void setnames(const char *fname, const char *cname = 0);
+#endif
 extern void load_world(const char *mname, const char *cname = NULL);
 extern void save_world(char *mname, bool nolms = false);
 

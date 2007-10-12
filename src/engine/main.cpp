@@ -111,21 +111,20 @@ void screenshot(char *filename)
 		dst += image->pitch;
 	}
 	delete[] tmp;
+#ifdef BFRONTIER
+	char *pname = "";
+	if (!*filename) pname = "packages/";
+	SDL_SaveBMP(image, findfile(makefile(*filename ? filename : mapname, pname, ".bmp", true, true), "wb"));
+#else
 	if(!filename[0])
 	{
 		static string buf;
-#ifdef BFRONTIER // better screenshot names
-		char *map = cl->getclientmap();
-		s_sprintf(buf)("%s_%li.bmp", *map ? map : "untitled", time(NULL));
-#else
 		s_sprintf(buf)("screenshot_%d.bmp", lastmillis);
-#endif
 		filename = buf;
 	}
-#ifndef BFRONTIER
     else path(filename);
-#endif
 	SDL_SaveBMP(image, findfile(filename, "wb"));
+#endif
 	SDL_FreeSurface(image);
 }
 
@@ -753,6 +752,9 @@ int main(int argc, char **argv)
 	log("enet");
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 
+#ifdef BFRONTIER
+	log("server");
+#endif
 	initserver(dedicated);  // never returns if dedicated
 
 	log("video: mode");
@@ -864,7 +866,11 @@ int main(int argc, char **argv)
 
 	log("world");
 	camera1 = player = cl->iterdynents(0);
+#ifdef BFRONTIER
 	emptymap(0, true);
+#else	
+	emptymap(0, true);
+#endif
 
 	log("sound");
 	initsound();

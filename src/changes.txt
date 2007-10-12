@@ -7,6 +7,8 @@ Legend [
 ]
 
 = wip edition =
+eng: no longer write maps with the same name as one that exists, auto updated and indexed
+eng: default names for screenshot check for file exist and create along an index
 gam: ammo entities combined into one 'weapon' entity
 gam: entity restrcuture and cleanup
 gam: camerawobble and damageresidue tweaks

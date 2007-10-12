@@ -260,7 +260,11 @@ struct cubeloader
         }
         else if(hdr.version>5) mod = true;
         if(hdr.version>5 && !mod) { conoutf("map %s requires a newer version of the cube 1 importer", cgzname); gzclose(f); return; }
+#ifdef BFRONTIER
+		emptymap(12, true, mname);
+#else
 		emptymap(12, true);
+#endif
 		freeocta(worldroot);
 		worldroot = newcubes(F_SOLID);
 		s_sprintfd(cs)("importing %s", cgzname);

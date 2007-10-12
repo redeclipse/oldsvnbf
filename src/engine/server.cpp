@@ -48,10 +48,16 @@ void initgame(char *game)
 {
 	igame **ig = gamereg->access(game);
 	if(!ig) fatal("cannot start game module: ", game);
+#if defined(BFRONTIER) && !defined(STANDALONE)
+	conoutf("game: modules");
+#endif
 	sv = (*ig)->newserver();
 	cl = (*ig)->newclient();
 	if(cl)
 	{
+#if defined(BFRONTIER) && !defined(STANDALONE)
+		conoutf("game: client");
+#endif
 		cc = cl->getcom();
 #ifdef BFRONTIER // extra sub modules
 		bc = cl->getbot();
@@ -694,6 +700,9 @@ void localconnect()
 
 void initserver(bool dedicated)
 {
+#if defined(BFRONTIER) && !defined(STANDALONE)
+	conoutf("server: game");
+#endif
 	initgame(game);
 
 #ifdef BFRONTIER // local servers, enhanced master server support
@@ -709,6 +718,9 @@ void initserver(bool dedicated)
 #ifndef BFRONTIER // local server support
 	if(dedicated)
 	{
+#endif
+#if defined(BFRONTIER) && !defined(STANDALONE)
+		conoutf("server: host");
 #endif
 		ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
 		if(*ip)
@@ -727,6 +739,9 @@ void initserver(bool dedicated)
 	}
 #endif
 
+#if defined(BFRONTIER) && !defined(STANDALONE)
+	conoutf("server: init");
+#endif
 	sv->serverinit();
 
 	if(dedicated)		// do not return, this becomes main loop
