@@ -3,7 +3,11 @@
 #include "pch.h"
 #include "engine.h"
 
+#ifdef BFRONTIER
+bfgz hdr;
+#else
 header hdr;
+#endif
 
 VAR(octaentsize, 0, 128, 1024);
 VAR(entselradius, 0, 2, 10);
@@ -958,7 +962,7 @@ bool emptymap(int scale, bool force)	// main empty world creation routine
 
 	hdr.version = MAPVERSION;
 	hdr.gamever = BFRONTIER;
-	hdr.headersize = sizeof(header);
+	hdr.headersize = sizeof(bfgz);
 	hdr.worldsize = 1 << (scale<10 ? 10 : (scale>20 ? 20 : scale));
 	hdr.revision = 0;
 	hdr.lightmaps = 0;
