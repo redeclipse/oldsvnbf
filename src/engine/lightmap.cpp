@@ -1596,9 +1596,16 @@ void dumplms()
 				uchar *dest = (uchar *)temp->pixels+temp->pitch*idx;
 				memcpy(dest, lightmaps[i].data+3*LM_PACKW*(LM_PACKH-1-idx), 3*LM_PACKW);
 			}
+#ifdef BFRONTIER
+			string fname;
+			s_strcpy(fname, mapname);
+			setnames(makefile(fname, "packages/", ".bgz", false, false));
+			SDL_SaveBMP(temp, findfile(fname, "wb"));
+#else
 			char *map = cl->getclientmap(), *name = strrchr(map, '/');
 			s_sprintfd(buf)("lightmap_%s_%d.bmp", name ? name+1 : map, i);
 			SDL_SaveBMP(temp, buf);
+#endif
 		}
 		SDL_FreeSurface(temp);
 	}

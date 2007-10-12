@@ -948,7 +948,7 @@ void startmap(const char *name)
 	cl->startmap(name);
 }
 
-bool emptymap(int scale, bool force)	// main empty world creation routine
+bool emptymap(int scale, bool force, char *mname)	// main empty world creation routine
 {
 	if(!force && !editmode) 
 	{
@@ -958,6 +958,7 @@ bool emptymap(int scale, bool force)	// main empty world creation routine
 
 	resetmap();
 #ifdef BFRONTIER
+	setnames(mname);
 	strncpy(hdr.head, "BFGZ", 4);
 
 	hdr.version = MAPVERSION;
@@ -966,6 +967,8 @@ bool emptymap(int scale, bool force)	// main empty world creation routine
 	hdr.worldsize = 1 << (scale<10 ? 10 : (scale>20 ? 20 : scale));
 	hdr.revision = 0;
 	hdr.lightmaps = 0;
+
+	s_strncpy(hdr.maptitle, "Untitled Map by Unknown Author", 128);
 #else
 	strncpy(hdr.head, "OCTA", 4);
 
@@ -996,6 +999,7 @@ bool emptymap(int scale, bool force)	// main empty world creation routine
 
 	overrideidents = true;
 #ifdef BFRONTIER // resetmap
+	if (!execfile(pcfname)) exec("packages/package.cfg");
 	exec("packages/map.cfg");
 #else
 	execfile("data/default_map_settings.cfg");
@@ -1030,14 +1034,17 @@ bool enlargemap(bool force)
 	return true;
 }
 
+#ifdef BFRONTIER // yeah
+ICOMMAND(newmap, "is", (int *i), if(emptymap(*i, false)) cl->newmap(max(*i, 0)));
+ICOMMAND(mapenlarge, "", (), if(enlargemap(false)) cl->newmap(-1));
+
+ICOMMAND(mapname, "", (void), result(mapname));
+#else
 void newmap(int *i) { if(emptymap(*i, false)) cl->newmap(max(*i, 0)); }
 void mapenlarge() { if(enlargemap(false)) cl->newmap(-1); }
 COMMAND(newmap, "i");
 COMMAND(mapenlarge, "");
 
-#ifdef BFRONTIER // yeah
-ICOMMAND(mapname, "", (void), result(cl->getclientmap()));
-#else
 void mapname()
 {
     result(cl->getclientmap());

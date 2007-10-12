@@ -161,10 +161,11 @@ struct scoreboard : g3d_callback
         g.start(menustart, 0.03f, NULL, false);
 	
 		int gamemode = cl.gamemode;
-		s_sprintfd(modemapstr)("%s: %s", fpsserver::modestr(gamemode), cl.getclientmap()[0] ? cl.getclientmap() : "[new map]");
 #ifdef BFRONTIER
+		s_sprintfd(modemapstr)("%s: %s", fpsserver::modestr(gamemode), mapname);
         if((gamemode>1 || (gamemode==0 && cl.cc.demoplayback)) && cl.minremain >= 0)
 #else
+		s_sprintfd(modemapstr)("%s: %s", fpsserver::modestr(gamemode), cl.getclientmap()[0] ? cl.getclientmap() : "[new map]");
         if((gamemode>1 || (gamemode==0 && (multiplayer(false) || cl.cc.demoplayback))) && cl.minremain >= 0)
 #endif
 		{
@@ -201,24 +202,12 @@ struct scoreboard : g3d_callback
 				if(pen)
 					g.textf("penalty for \fs\f0%d\fr deaths: \fs\f0%d\fr second(s)", 0xFFFFFF, "info", pen);
 				
-#ifndef BFRONTIER
-				pen = cl.ms.remain*10;
-				score += pen;
-				if(pen)
-					g.textf("penalty for \fs\f0%d\fr monsters remaining: \fs\f0%d\fr second(s)", 0xFFFFFF, "info", pen);
-				
-				pen = (10-cl.ms.skill())*20;
-				score += pen;
-				if(pen)
-					g.textf("penalty for skill level: \fs\f0%d\fr second(s)", 0xFFFFFF, "info", pen);
-#endif
-				
 				pen = 100-accuracy;
 				score += pen;
 				if(pen)
 					g.textf("penalty for missed shots: \fs\f0%d\fr second(s)", 0xFFFFFF, "info", pen);
 				
-				s_sprintfd(aname)("bestscore_%s", cl.getclientmap());
+				s_sprintfd(aname)("bestscore_%s", mapname);
 				const char *bestsc = getalias(aname);
 				int bestscore = *bestsc ? atoi(bestsc) : score;
 				if(score<bestscore) bestscore = score;

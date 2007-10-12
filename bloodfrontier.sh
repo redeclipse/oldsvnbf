@@ -6,7 +6,7 @@ BF_DIR=.
 
 # BF_OPTIONS contains any command line options you would like to start Blood Frontier with.
 #BF_OPTIONS="-f"
-BF_OPTIONS="-q${HOME}/.bloodfrontier -r -k${BF_DIR}"
+BF_OPTIONS="-q${HOME}/.bloodfrontier -r"
 
 if [ -e "bin/bloodfrontier_client" ]; then
 	exec bin/bloodfrontier_client ${BF_OPTIONS} $@

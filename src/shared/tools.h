@@ -550,6 +550,9 @@ inline void __cdecl operator delete(void *p, const char *fn, int l) { ::operator
 #endif 
 #endif
 
+#ifdef BFRONTIER
+extern char *makefile(char *s, char *p = "", char *e = "", bool ext = true, bool copy = false);
+#endif
 extern char *path(char *s, bool copy = false);
 extern const char *parentdir(const char *directory);
 extern bool fileexists(const char *path, const char *mode);

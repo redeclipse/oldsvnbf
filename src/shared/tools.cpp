@@ -15,6 +15,40 @@
 string homedir = "";
 vector<char *> packagedirs;
 
+#ifdef BFRONTIER
+char *makefile(char *s, char *p, char *e, bool ext, bool copy)
+{
+    if(copy)
+    {
+        static string tmp;
+        s_strcpy(tmp, s);
+        s = tmp;
+    }
+
+	int d = 1;
+	string m, f;
+	s_strcpy(m, s);
+
+	char *t = strpbrk(m, ".");
+	if (t)
+	{
+		s_strncpy(s, m, t-m+1);
+		d = min(atoi(t+1), 1);
+	}
+	else { s_strcpy(s, m); }
+	s_strcpy(m, s);
+
+	while (true)
+	{
+		s_sprintf(f)("%s%s%s", *p ? p : "", s, *e ? e : "");
+		if (fileexists(findfile(f, "r"), "r")) { s_sprintf(s)("%s.%.4d", m, d++); }
+		else break;
+	}
+	if (ext) s_strcpy(s, f);
+	return s;
+}
+#endif
+
 char *path(char *s, bool copy)
 {
     if(copy)

@@ -35,7 +35,9 @@ struct fpsclient : igameclient
 	int nextmode, gamemode;		 // nextmode becomes gamemode after next map load
 	bool intermission;
 	int lastmillis;
+#ifndef BFRONTIER
 	string clientmap;
+#endif
 	int maptime, minremain;
 	int respawnent;
 	int swaymillis;
@@ -148,9 +150,9 @@ struct fpsclient : igameclient
         following = arg[0] ? cc.parseplayer(arg) : -1;
         conoutf("follow %s", following>=0 ? "on" : "off");
 	}
-#endif
 
 	char *getclientmap() { return clientmap; }
+#endif
 
     void rendergame() { fr.rendergame(gamemode); }
 
@@ -660,7 +662,11 @@ struct fpsclient : igameclient
 
 	void initclient()
 	{
+#ifdef BFRONTIER
+		setnames("base/untitled");
+#else
 		clientmap[0] = 0;
+#endif
 		cc.initclientnet();
 	}
 
@@ -699,14 +705,16 @@ struct fpsclient : igameclient
 		if(!m_mp(gamemode)) spawnplayer(player1);
 		else findplayerspawn(player1, -1);
 		et.resetspawns();
+#ifndef BFRONTIER
 		s_strcpy(clientmap, name);
+#endif
 		sb.showscores(false);
 		intermission = false;
         maptime = 0;
 #ifdef BFRONTIER
 		if(m_sp)
 		{
-			s_sprintfd(aname)("bestscore_%s", getclientmap());
+			s_sprintfd(aname)("bestscore_%s", mapname);
 			const char *best = getalias(aname);
 			if(*best) conoutf("\f2try to beat your best score so far: %s", best);
 		}

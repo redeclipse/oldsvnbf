@@ -463,7 +463,7 @@ struct clientcom : iclientcom
 				switch (hasmap)
 				{
 					case 0:
-						changemap(cl.getclientmap()[0] ? cl.getclientmap() : sv->defaultmap());
+						changemap(mapname);
 						break;
 					case 2:
 						senditemstoserver = true;
@@ -579,9 +579,15 @@ struct clientcom : iclientcom
 
 			case SV_MAPRELOAD:		  // server requests next map
 			{
+#ifdef BFRONTIER
+				s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture ? "capture_" : "", mapname);
+				const char *map = getalias(nextmapalias);	 // look up map in the cycle
+				addmsg(SV_MAPCHANGE, "rsi", *map ? map : sv->defaultmap(), cl.nextmode);
+#else
 				s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture ? "capture_" : "", cl.getclientmap());
 				const char *map = getalias(nextmapalias);	 // look up map in the cycle
 				addmsg(SV_MAPCHANGE, "rsi", *map ? map : cl.getclientmap(), cl.nextmode);
+#endif
 				break;
 			}
 
@@ -1045,7 +1051,11 @@ struct clientcom : iclientcom
 			case SV_NEWMAP:
 			{
 				int size = getint(p);
+#ifdef BFRONTIER
 				if(size>=0) emptymap(size, true);
+#else
+				if(size>=0) emptymap(size, true);
+#endif
 				else enlargemap(true);
 				if(d && d!=player1)
 				{
@@ -1073,8 +1083,12 @@ struct clientcom : iclientcom
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle()) toggleedit();
 		if(m_demo) return;
+#ifndef BFRONTIER
+		load_world(name);
+#else
 		if(gamemode==1 && !name[0]) emptymap(0, true);
 		else load_world(name);
+#endif
 		if(m_capture) cl.cpc.setupbases();
 		if(editmode) edittoggled(editmode);
 	}
@@ -1106,6 +1120,19 @@ struct clientcom : iclientcom
 			case SV_SENDMAP:
 			{
 				if(cl.gamemode!=1) return;
+#ifdef BFRONTIER
+				string oldname;
+				s_strcpy(oldname, mapname);
+				s_sprintfd(mname)("%s", makefile(mapname, "packages/", ".bgz", false, true));
+				s_sprintfd(fname)("packages/%s.bgz", mname);
+				const char *file = findfile(fname, "wb");
+				FILE *map = fopen(file, "wb");
+				if(!map) return;
+				conoutf("received map");
+				fwrite(data, 1, len, map);
+				fclose(map);
+				load_world(mname, oldname[0] ? oldname : NULL);
+#else
 				string oldname;
 				s_strcpy(oldname, cl.getclientmap());
 				s_sprintfd(mname)("getmap_%d", cl.lastmillis);
@@ -1118,6 +1145,7 @@ struct clientcom : iclientcom
 				fclose(map);
 				load_world(mname, oldname[0] ? oldname : NULL);
 				remove(file);
+#endif
 				break;
 			}
 		}
