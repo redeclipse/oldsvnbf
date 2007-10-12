@@ -1,21 +1,21 @@
 = WIP =
-* all-in-one package for maps
+* command and variable contexts
+* entity property list
 * improve editmode
 * engine side bots with client side logic
+* configurable hud (clock, in crosshair, awards/obits, score, console, ping time/graph)
 
 = TODO =
 * vehicles, rolling/throttle/brake
 * motd from master server -> title screen
-* configurable hud (clock, in crosshair, awards/obits, score, console, ping time/graph)
 * new icons (weapons/hud/etc)
 * add tags to commands and variables for description and usage
 * headshot, etc
 * moving sounds (OpenAL)
 * fix material transitions and depth testing
 * proper rotation looping for animated models
-* move world vars server side
-* move instagib etc to server mod
-* address issues with alpha blended models
+* index gamemodes and move instagib etc to server mod
+* address issues with alpha blended models (teleport)
 * S_SMGLOAD, S_REGEN, S_HEADSHOT
 * only two guns at same time (drop guns, etc)
 * secondary fire modes (grenade: flash mines)
@@ -76,3 +76,4 @@
 * entity extensions: hurt, wind, elevator/train/platform, trigger (explode), fog, exploding barrels, camera paths
 * music/mp3 player
 * masterserver stuff, online accounts
+* teleport cubemaps?

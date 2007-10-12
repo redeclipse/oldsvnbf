@@ -10,7 +10,7 @@ struct fpsserver : igameserver
 {
 	struct server_entity			// server side version of "entity" type
 	{
-		int type;
+		int type, attr1, attr2, attr3, attr4, attr5;
 		int spawntime;
 		char spawned;
 	};
@@ -361,29 +361,9 @@ struct fpsserver : igameserver
 	servmode *smode;
 
 #ifdef BFRONTIER
-	#define SRVCMD(n, v, g, d, b) CCOMMANDS(n, g, d, \
-			{ \
-				if (self->cmdcontext) \
-				{ \
-					if (self->hasmode(self->cmdcontext, v)) { b; } \
-					else { s_sprintf(self->scresult)("insufficient access"); } \
-					result(self->scresult); \
-				} \
-			});
-	
-	#define SRVVAR(n, p, v, m, x, b) SRVCMD(n, v, "i", (fpsserver *self, char *s), self->servvar(self->cmdcontext, #n, p, m, x, s); b)
-	#define POWERUPS I_RIFLE-I_PISTOL+1
-	
 	#define Q_INT(c,n) { if(!c->local) { ucharbuf buf = c->messages.reserve(5); putint(buf, n); c->messages.addbuf(buf); } }
 	#define Q_STR(c,text) { if(!c->local) { ucharbuf buf = c->messages.reserve(2*strlen(text)+1); sendstring(text, buf); c->messages.addbuf(buf); } }
 
-	enum
-	{
-		SPAWN_HEALTH, SPAWN_MAXHEALTH, SPAWN_ARMOUR, SPAWN_ARMOURTYPE, SPAWN_GUNSELECT,
-		SPAWN_SG, SPAWN_CG, SPAWN_RL, SPAWN_RIFLE, SPAWN_GL, SPAWN_PISTOL,
-		SPAWN_QUAD, SPAWNSTATES
-	};
-	
 	struct scr
 	{
 		char *name;
@@ -394,9 +374,6 @@ struct fpsserver : igameserver
 	};
 
 	clientinfo *cmdcontext;
-	int timelimit, fraglimit, damagescale, instakill, teamdamage;
-	bool powerups[POWERUPS];
-	int spawnstates[SPAWNSTATES];
 	string scresult, motd;
 	fpsserver() : notgotitems(true), notgotbases(false),
 					gamemode(0), interm(0), minremain(0), mapreload(false),
@@ -406,18 +383,7 @@ struct fpsserver : igameserver
 					arenamode(*this), capturemode(*this), smode(NULL),
 					cmdcontext(NULL)
 	{
-		SRVVAR(timelimit, &self->timelimit, PRIV_MASTER, 0, INT_MAX-1, self->settime());
-		SRVVAR(fraglimit, &self->fraglimit, PRIV_MASTER, 0, INT_MAX-1, );
-		
-		SRVVAR(damagescale, &self->damagescale, PRIV_MASTER, 0, 1000, );
-		SRVVAR(instakill, &self->instakill, PRIV_MASTER, 0, 1, );
-		SRVVAR(teamdamage, &self->teamdamage, PRIV_MASTER, 0, 1, );
-		
-		SRVCMD(powerup, PRIV_MASTER, "ss", (fpsserver *self, char *a, char *b), self->setpowerup(self->cmdcontext, a, b));
-		SRVCMD(spawnstate, PRIV_MASTER, "ss", (fpsserver *self, char *a, char *b), self->setspawnstate(self->cmdcontext, a, b));
-		
 		motd[0] = 0;
-		resetvars();
 #else
 	fpsserver() : notgotitems(true), notgotbases(false), gamemode(0), interm(0), minremain(0), mapreload(false), lastsend(0), mastermode(MM_OPEN), mastermask(~0), currentmaster(-1), masterupdate(false), mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0), arenamode(*this), capturemode(*this), smode(NULL)
 	{
@@ -493,11 +459,19 @@ struct fpsserver : igameserver
 	{
 		if(minremain<=0 || !sents.inrange(i) || !sents[i].spawned) return false;
 		clientinfo *ci = (clientinfo *)getinfo(sender);
+#ifdef BFRONTIER
+		if(!ci || (!ci->local && !ci->state.canpickup(sents[i].attr1))) return false;
+		sents[i].spawned = false;
+		sents[i].spawntime = spawntime(sents[i].type);
+		sendf(-1, 1, "ri3", SV_ITEMACC, i, sender);
+		ci->state.pickup(sents[i].attr1, sents[i].attr2);
+#else
 		if(!ci || (!ci->local && !ci->state.canpickup(sents[i].type))) return false;
 		sents[i].spawned = false;
 		sents[i].spawntime = spawntime(sents[i].type);
 		sendf(-1, 1, "ri3", SV_ITEMACC, i, sender);
 		ci->state.pickup(sents[i].type);
+#endif
 		return true;
 	}
 
@@ -863,7 +837,7 @@ struct fpsserver : igameserver
 		gamemode = mode;
 		gamemillis = 0;
 #ifdef BFRONTIER
-		minremain = timelimit;
+		minremain = 10; // FIXME
 #else
         minremain = m_teammode ? 15 : 10;
 #endif
@@ -1347,7 +1321,7 @@ struct fpsserver : igameserver
 			case SV_COMMAND:
 				getstring(text, p);
 				filtertext(text, text);
-				servcmd(ci, text, false);
+				//servcmd(ci, text, false);
 				break;
 #endif
 			case SV_INITC2S:
@@ -1409,7 +1383,7 @@ struct fpsserver : igameserver
 				int n;
 				while((n = getint(p))!=-1)
 				{
-					server_entity se = { getint(p), false, 0 };
+					server_entity se = { getint(p), getint(p), getint(p), getint(p), getint(p), getint(p), false, 0 };
 					if(notgotitems)
 					{
 						while(sents.length()<=n) sents.add(se);
@@ -1599,9 +1573,6 @@ struct fpsserver : igameserver
 					resetitems();
 					notgotitems = false;
 					if(smode) smode->reset(true);
-#ifdef BFRONTIER
-					resetvars();
-#endif
 				}
 				QUEUE_MSG;
 				break;
@@ -1656,6 +1627,13 @@ struct fpsserver : igameserver
 			{
 				putint(p, i);
 				putint(p, sents[i].type);
+#ifdef BFRONTIER
+				putint(p, sents[i].attr1);
+				putint(p, sents[i].attr2);
+				putint(p, sents[i].attr3);
+				putint(p, sents[i].attr4);
+				putint(p, sents[i].attr5);
+#endif
 			}
 			putint(p, -1);
 		}
@@ -1752,38 +1730,6 @@ struct fpsserver : igameserver
 	{
 		gamestate &gs = ci->state;
 		gs.spawnstate(gamemode);
-#ifdef BFRONTIER
-		loopi(SPAWNSTATES)
-		{
-			if (spawnstates[i] < 0) continue;
-			
-			switch (i)
-			{
-				case SPAWN_HEALTH:
-				{
-					ci->state.health = spawnstates[i];
-					break;
-				}
-				case SPAWN_GUNSELECT:
-				{
-					ci->state.gunselect = spawnstates[i];
-					break;
-				}
-				case SPAWN_PISTOL:
-				case SPAWN_SG:
-				case SPAWN_CG:
-				case SPAWN_GL:
-				case SPAWN_RL:
-				case SPAWN_RIFLE:
-				{
-					ci->state.ammo[i-SPAWN_PISTOL] = spawnstates[i];
-					break;
-				}
-				default:
-					break;
-			}
-		}
-#endif
 		gs.lifesequence++;
 	}
 
@@ -1808,8 +1754,8 @@ struct fpsserver : igameserver
 		gamestate &ts = target->state;
 #ifdef BFRONTIER
 		if (smode && !smode->damage(target, actor, damage, gun, hitpush)) return;
-		if (!teamdamage && m_teammode && !strcmp(target->team, actor->team)) return;
-		damage *= damagescale/100;
+		//if (!teamdamage && m_teammode && !strcmp(target->team, actor->team)) return;
+		//damage *= damagescale/100;
 		ts.dodamage(damage);
 		sendf(-1, 1, "ri5", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.health); 
 #else
@@ -2014,7 +1960,7 @@ struct fpsserver : igameserver
 		{
 			processevents();
 #ifdef BFRONTIER
-			if(curtime) loopv(sents) if(sents[i].spawntime && sents[i].type >= I_PISTOL && sents[i].type <= I_RIFLE && powerups[sents[i].type-I_PISTOL])
+			if(curtime) loopv(sents) if(sents[i].spawntime && sents[i].type == WEAPON)
 #else
 			if(curtime) loopv(sents) if(sents[i].spawntime) // spawn entities when timer reached
 #endif
@@ -2038,6 +1984,7 @@ struct fpsserver : igameserver
 			}
 			if(smode) smode->update();
 #ifdef BFRONTIER
+			/*
 			if (!m_capture && fraglimit > 0 && minremain > 0)
 			{
 				vector<scr *> scrs;
@@ -2063,6 +2010,7 @@ struct fpsserver : igameserver
 				}
 				loopv(scrs) DELETEP(scrs[i]);
 			}
+			*/
 #endif
 		}
 
@@ -2102,9 +2050,6 @@ struct fpsserver : igameserver
 	{
 		smapname[0] = '\0';
 		resetitems();
-#ifdef BFRONTIER
-		resetvars();
-#endif
 	}
 	
 	const char *privname(int type)
@@ -2190,7 +2135,6 @@ struct fpsserver : igameserver
 		if(clients.empty())
 		{
 			bannedips.setsize(0);
-			resetvars();
 		}
 #else
 		if(clients.empty()) bannedips.setsize(0); // bans clear when server empties
@@ -2599,6 +2543,7 @@ struct fpsserver : igameserver
 		sendf(cn, 1, "ris", SV_SERVMSG, str);
 	}
 	
+	/*
 	void servcmd(clientinfo *ci, char *text, bool say)
 	{
 		if (say) *text++;
@@ -2616,21 +2561,6 @@ struct fpsserver : igameserver
 		cmdcontext = NULL;
 	}
 
-	void resetvars()
-	{
-		cmdcontext = NULL;
-		
-		timelimit = 10;
-		fraglimit = 0;
-		
-		damagescale = 100;
-		instakill = 0;
-		teamdamage = 1;
-		
-		loopi(POWERUPS) powerups[i] = true;
-		loopi(SPAWNSTATES) spawnstates[i] = -1;
-	}
-	
 	bool hasmode(clientinfo *ci, int m)
 	{
 		if (ci != NULL)
@@ -2680,195 +2610,7 @@ struct fpsserver : igameserver
 		checkintermission();
 	}
 	
-	void setpowerup(clientinfo *ci, char *pup, char *type)
-	{
-		if (!m_noitems && !m_capture)
-		{
-			if (*pup)
-			{
-				if (!strcasecmp("reset", pup))
-				{
-					loopi(POWERUPS) powerups[i] = true;
-					servsend(-1, "%s reset all powerups", colorname(ci));
-				}
-				else
-				{
-					char *pups[POWERUPS] = {
-						"pistol", "shotgun", "chaingun", "grenades", "rockets", "rifle"
-					};
-											
-					int x = -1;
-					loopi(POWERUPS) if (!strcasecmp(pups[i], pup))
-					{
-						x = i;
-						break;
-					}
-					
-					if (x >= 0)
-					{
-						if (*type)
-						{
-							bool ret = true;
-							
-							if (!strcasecmp("off", type) || !strcasecmp("false", type)) ret = false;
-							else if (!strcasecmp("on", type) || !strcasecmp("true", type)) ret = true;
-							else ret = atoi(type) ? true : false;
-							
-							if (ret != powerups[x])
-							{
-								powerups[x] = ret;
-								
-								// this is all a nasty hack to stay compatible with pure clients and
-								// provide an instantaneous (no map change) result during gameplay
-								// the side effect being that the issuer of the command will not see
-								// the items unspawn, but they also will not be able to pick them up
-								
-								loopv(sents)
-								{
-									server_entity &e = sents[i];
-									if (e.type == I_PISTOL+x)
-									{
-										if (e.spawned)
-										{
-											Q_INT(ci, SV_ITEMPICKUP);
-											Q_INT(ci, i);
-										}
-										
-										e.spawned = false;
-										e.spawntime = spawntime(e.type);
-									}
-								}
-								servsend(-1, "%s %s the %s", colorname(ci), powerups[x] ? "enabled" : "disabled", pups[x]);
-							}
-						}
-						else
-						{
-							s_sprintf(scresult)("powerup %s is currently: %s", pups[x], powerups[x] ? "enabled" : "disabled");
-						}
-					}
-					else
-						s_sprintf(scresult)("invalid powerup: %s", pup);
-				}
-			}
-			else
-				s_sprintf(scresult)("insufficient parameters");
-		}
-		else
-			s_sprintf(scresult)("not available in this game mode");
-	}
-	
-	void setspawnstate(clientinfo *ci, char *st, char *type)
-	{
-		if (*st)
-		{
-			if (!strcasecmp("reset", st))
-			{
-				loopi(SPAWNSTATES) spawnstates[i] = true;
-				servsend(-1, "%s reset all spawnstates", colorname(ci));
-			}
-			else
-			{
-				char *sts[SPAWNSTATES] = {
-					"health", "gunselect",
-					"pistol", "shotgun", "chaingun", "grenades", "rockets", "rifle",
-				};
-										
-				int x = -1;
-				loopi(SPAWNSTATES) if (!strcasecmp(sts[i], st))
-				{
-					x = i;
-					break;
-				}
-				
-				if (x >= 0)
-				{
-					if (*type)
-					{
-						int ret = max(atoi(type), -1);
-						
-						switch (x)
-						{
-							case SPAWN_HEALTH:
-							case SPAWN_GUNSELECT:
-							{
-								bool wastext = false;
-								loopi(NUMGUNS)
-								{
-									if (!strcasecmp(getgun(i).name, type))
-									{
-										ret = i;
-										wastext = true;
-										break;
-									}
-								}
-								if (!wastext) ret = min(ret, NUMGUNS-1);
-							}
-							case SPAWN_PISTOL:
-							case SPAWN_SG:
-							case SPAWN_CG:
-							case SPAWN_GL:
-							case SPAWN_RL:
-							case SPAWN_RIFLE:
-							{
-								ret = min(ret, getitem(x-SPAWN_PISTOL).max);
-								break;
-							}
-							case SPAWN_QUAD:
-							{
-								ret = min(ret, 1);
-							}
-							default:
-								break;
-						}
-						
-						if (ret != spawnstates[x])
-						{
-							spawnstates[x] = ret;
-							
-							if (spawnstates[x] >= 0)
-							{
-								switch (x)
-								{
-									case SPAWN_GUNSELECT: // gunselect
-										servsend(-1, "%s set spawnstate %s to %s", colorname(ci), sts[x], getgun(spawnstates[x]).name);
-										break;
-									default:
-										servsend(-1, "%s set spawnstate %s to %d", colorname(ci), sts[x], spawnstates[x]);
-										break;
-								}
-							}
-							else
-								servsend(-1, "%s reset spawnstate %s to default", colorname(ci), sts[x]);
-	
-						}
-					}
-					else
-					{
-						if (spawnstates[x] >= 0)
-						{
-							switch (x)
-							{
-								case SPAWN_GUNSELECT: // gunselect
-									s_sprintf(scresult)("spawnstate %s is currently: %s", sts[x], getgun(spawnstates[x]).name);
-									break;
-								default:
-									s_sprintf(scresult)("spawnstate %s is currently: %d", sts[x], spawnstates[x]);
-									break;
-							}
-						}
-						else
-							s_sprintf(scresult)("spawnstate %s is using defaults", sts[x]);
-					}
-				}
-				else
-					s_sprintf(scresult)("invalid spawnstate: %s", st);
-			}
-		}
-		else
-			s_sprintf(scresult)("insufficient parameters");
-	}
-
-	
+	*/
 	static int scrsort(const scr **a, const scr **b)
 	{
 		if((*a)->val > (*b)->val) return -1;

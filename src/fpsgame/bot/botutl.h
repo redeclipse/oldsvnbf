@@ -125,7 +125,6 @@ bool aimat(fpsent *d, bool force = false)
 
 	if ((d->botstate != M_SEARCH && d->botstate != M_PAIN) || force)
 	{
-		extern int curtime;
 		float bk = (curtime/10.f)*float(101-d->botrate);
 		bool aim = d->botenemy && (d->botstate == M_AIMING || d->botstate == M_ATTACKING);
 		vec h(vec(0, 0, aim ? d->botenemy->eyeheight / 2 : d->eyeheight));
@@ -224,10 +223,10 @@ void pickup(int n, fpsent *d)
 	if (d->botflags & BOT_PLAYER)
 	{
 		int type = ents[n]->type;
-		if (type < I_PISTOL || type > I_RIFLE) return;
+		if (type == WEAPON) return;
 
 		cl.et.pickupeffects(n, d);
-		d->pickup(type);
+		d->pickup(ents[n]->attr1, ents[n]->attr2);
 		// TODO: send message to server
 	}
 }

@@ -1,3 +1,4 @@
+#include "ver.h" // BFRONTIER
 #ifdef __GNUC__
 #define gamma __gamma
 #endif
@@ -32,8 +33,8 @@
 #include <SDL_image.h>
 #ifdef BFRONTIER
 #include <SDL_mixer.h>
-#define MAXVOL MIX_MAX_VOLUME
 #endif
+#define MAXVOL MIX_MAX_VOLUME
 
 #define GL_GLEXT_LEGACY
 #define __glext_h__

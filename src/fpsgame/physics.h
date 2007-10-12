@@ -70,7 +70,6 @@ struct physics : iphysics
 
 	void updateroll(physent *d)
 	{
-		extern int curtime;
 		d->roll = d->roll/(1+(float)sqrtf((float)curtime)/25);
 	}
 

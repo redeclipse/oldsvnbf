@@ -16,7 +16,6 @@ void backup(char *name, char *backupname)
 
 #ifdef BFRONTIER // map extensions
 string bgzname, ogzname, pcfname, mcfname, picname, mapname;
-int maptype = MAP_BFGZ;
 #else
 string cgzname, bakname, pcfname, mcfname, picname;
 #endif
@@ -285,6 +284,7 @@ void save_world(char *mname, bool nolms)
 	
 	strncpy(hdr.head, "BFGZ", 4);
 	hdr.version = MAPVERSION;
+	hdr.headersize = sizeof(header);
 	hdr.gamever = BFRONTIER;
 	hdr.numents = 0;
 	hdr.revision++;
@@ -315,7 +315,7 @@ void save_world(char *mname, bool nolms)
 	enumerate(*idents, ident, id, {
 		show_out_of_renderloop_progress(float(i)/float((*idents).size), "saving world variables...");
 		
-		if (id._type == ID_VAR && id._world)
+		if (id._type == ID_VAR && id._context & IDC_WORLD)
 		{
 			fprintf(h, "%s", id._name);
 			if (id._max == 0xFFFFFF) fprintf(h, " 0x%.6x", *id._storage);
@@ -410,7 +410,7 @@ void save_world(char *mname, bool nolms)
 	hdr.lightmaps = nolms ? 0 : lightmaps.length();
 
 	header tmp = hdr;
-	endianswap(&tmp.version, sizeof(int), 9);
+	endianswap(&tmp.version, sizeof(int), 7);
 	gzwrite(f, &tmp, sizeof(header));
 	writeushort(f, texmru.length());
 	loopv(texmru) writeushort(f, texmru[i]);
@@ -447,7 +447,7 @@ void save_world(char *mname, bool nolms)
 	if (verbose >= 2) console("saved %d lightmaps", CON_RIGHT, lightmaps.length());
 
 	show_out_of_renderloop_progress(0, "saving world...");
-	cl->saveworld(mname);
+	cl->saveworld(f, h);
 
 	fclose(h);
 	if (verbose) console("saved config '%s'", CON_RIGHT, mcfname);
@@ -530,10 +530,10 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	setnames(mname, cname);
 #ifdef BFRONTIER
 	Texture *mapshot = textureload(picname, 0, true, false);
+	bool samegame = true;
+	int maptype = -1, eif = 0;
     computescreen(mname, mapshot!=notexture ? mapshot : NULL);
 
-	maptype = MAP_BFGZ;
-	
 	gzFile f;
 	if (!(f = opengzfile(bgzname, "rb9")) && !(f = opengzfile(ogzname, "rb9")))
 	{
@@ -541,13 +541,19 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		return;
 	}
 
-	header newhdr;
-	gzread(f, &newhdr, sizeof(header));
-	endianswap(&newhdr.version, sizeof(int), 9);
+	resetmap();
+
+	bfgz newhdr;
+	gzread(f, &newhdr, sizeof(bfgz));
+	endianswap(&newhdr.version, sizeof(int), 2);
+	memcpy(&hdr, &newhdr, sizeof(bfgz));
 	
 	if(strncmp(newhdr.head, "BFGZ", 4) == 0)
 	{
-		if(newhdr.version > MAPVERSION || newhdr.gamever > BFRONTIER)
+		gzread(f, &hdr.worldsize, hdr.headersize-sizeof(bfgz));
+		endianswap(&hdr.worldsize, sizeof(int), 5);
+
+		if(hdr.version > MAPVERSION || hdr.gamever > BFRONTIER)
 		{
 			conoutf("error loading '%s': requires a newer version of Blood Frontier", mapname);
 			gzclose(f);
@@ -557,55 +563,46 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	}
 	else if(strncmp(newhdr.head, "OCTA", 4) == 0)
 	{
-		if(newhdr.version > MAPVERSION)
+		octa ohdr;
+		memcpy(&ohdr, &newhdr, sizeof(bfgz));
+		gzread(f, &ohdr.worldsize, hdr.headersize-sizeof(bfgz));
+		endianswap(&ohdr.worldsize, sizeof(int), 7);
+
+		if(ohdr.version > MAPVERSION)
 		{
-			conoutf("error loading '%s': requires a newer version of Blood Frontier", mapname);
+			conoutf("error loading '%s': requires a newer version of Cube 2", mapname);
 			gzclose(f);
 			return;
 		}
 		maptype = MAP_OCTA;
-	}
-	else
-	{
-		conoutf("error loading '%s': malformatted header", mapname);
-		gzclose(f);
-		return;
-	}
-	
-	hdr = newhdr;
-	resetmap(true);
 
-	show_out_of_renderloop_progress(0, "loading world...");
-	cl->loadworld(cname ? cname : mname);
-
-	bool samegame = true;
-	int eif = 0;
-	
-	if (maptype == MAP_OCTA)
-	{
-		if(hdr.version<=20) conoutf("loading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
-		if(!hdr.reserved[0]) hdr.reserved[0] = 25;
-		if(!hdr.reserved[7])
-		{
-			if(!hdr.reserved[5]) hdr.reserved[5] = 44;
-			hdr.reserved[6] = 2;
-			hdr.reserved[7] = 4;
-		}
-		setvar("lightprecision", hdr.revision ? hdr.revision : 32);
-		setvar("lighterror", hdr.reserved2 ? hdr.reserved2 : 8);
-		setvar("bumperror", hdr.reserved[8] ? hdr.reserved[8] : 3);
-		setvar("lightlod", hdr.reserved3);
-		setvar("lodsize", hdr.reserved[4]);
-		setvar("ambient", hdr.reserved[0]);
-		setvar("fullbright", 0);
-		setvar("lerpangle", hdr.reserved[5]);
-		setvar("lerpsubdiv", hdr.reserved[6]);
-		setvar("lerpsubdivsize", hdr.reserved[7]);
-		
+		strncpy(hdr.head, "BFGZ", 4);
 		hdr.gamever = BFRONTIER;
-		hdr.revision = hdr.reserved2 = hdr.reserved3 = 0;
-		memset(hdr.reserved, 0, sizeof(hdr.reserved));
-
+		hdr.worldsize = ohdr.worldsize;
+		hdr.numents = ohdr.numents;
+		hdr.lightmaps = ohdr.lightmaps;
+		hdr.revision = 1;
+		strncpy(hdr.maptitle, ohdr.maptitle, 128);
+		
+		if(ohdr.version<=20) conoutf("loading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
+		if(!ohdr.ambient) ohdr.ambient = 25;
+		if(!ohdr.lerpsubdivsize)
+		{
+			if(!ohdr.lerpangle) ohdr.lerpangle = 44;
+			ohdr.lerpsubdiv = 2;
+			ohdr.lerpsubdivsize = 4;
+		}
+		setvar("lightprecision", ohdr.mapprec ? ohdr.mapprec : 32);
+		setvar("lighterror", ohdr.maple ? ohdr.maple : 8);
+		setvar("bumperror", ohdr.mapbe ? ohdr.mapbe : 3);
+		setvar("lightlod", ohdr.mapllod);
+		setvar("lodsize", ohdr.mapwlod);
+		setvar("ambient", ohdr.ambient);
+		setvar("fullbright", 0);
+		setvar("lerpangle", ohdr.lerpangle);
+		setvar("lerpsubdiv", ohdr.lerpsubdiv);
+		setvar("lerpsubdivsize", ohdr.lerpsubdivsize);
+		
 		string gametype;
 		s_strcpy(gametype, "fps");
 	
@@ -626,6 +623,12 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 			int extrasize = readushort(f);
 			loopj(extrasize) gzgetc(f);
 		}
+	}
+	else
+	{
+		conoutf("error loading '%s': malformatted header", mapname);
+		gzclose(f);
+		return;
 	}
 #else
 	gzFile f = opengzfile(cgzname, "rb9");
@@ -724,8 +727,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		if(samegame)
 		{
 #ifdef BFRONTIER
-			if (maptype == MAP_OCTA) loopj(eif) gzgetc(f);
-			et->readent(f, i, e);
+			if (maptype == MAP_OCTA) { loopj(eif) gzgetc(f); }
+			et->readent(f, maptype, i, e);
 #else
 			if(et->extraentinfosize()) gzread(f, ebuf, et->extraentinfosize());
 			et->readent(e, ebuf); 
@@ -805,9 +808,18 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 #ifdef BFRONTIER // verbosity, map extensions, extended entities, world variables
 	if (verbose >= 2) console("loaded %d lightmaps", CON_RIGHT, hdr.lightmaps);
 
+	show_out_of_renderloop_progress(0, "loading world...");
+	cl->loadworld(f, maptype);
+
 	gzclose(f);
 	conoutf("loaded map '%s' v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
 	console("%s: %s", CON_CENTER|CON_LEFT, sv->gametitle(), hdr.maptitle);
+
+	overrideidents = true;
+	exec("packages/package.cfg");
+	execfile(pcfname);
+	if (!execfile(mcfname)) exec("packages/map.cfg");
+	overrideidents = false;
 #else
 	gzclose(f);
 

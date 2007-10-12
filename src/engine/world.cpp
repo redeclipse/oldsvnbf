@@ -911,11 +911,7 @@ void splitocta(cube *c, int size)
 	}
 }
 
-#ifdef BFRONTIER // loading/emtpying check
-void resetmap(bool load)
-#else
 void resetmap()
-#endif
 {
 #ifdef BFRONTIER
 	show_out_of_renderloop_progress(0, "resetting map...");
@@ -938,14 +934,8 @@ void resetmap()
 
 #ifdef BFRONTIER
 	enumerate(*idents, ident, id, {
-		if (id._type == ID_VAR && id._world) *id._storage = id._val; // reset world vars
+		if (id._type == ID_VAR && id._context & IDC_WORLD) *id._storage = id._val; // reset world vars
 	});
-
-	overrideidents = true;
-	exec("packages/package.cfg");
-	execfile(pcfname);
-	if (!load || !execfile(mcfname)) exec("packages/map.cfg");
-	overrideidents = false;
 #endif
 }
 
@@ -962,25 +952,25 @@ bool emptymap(int scale, bool force)	// main empty world creation routine
 		return false;
 	}
 
-#ifdef BFRONTIER
-	resetmap(false);
-	strncpy(hdr.head, "BFGZ", 4);
-#else
 	resetmap();
+#ifdef BFRONTIER
+	strncpy(hdr.head, "BFGZ", 4);
+
+	hdr.version = MAPVERSION;
+	hdr.gamever = BFRONTIER;
+	hdr.headersize = sizeof(header);
+	hdr.worldsize = 1 << (scale<10 ? 10 : (scale>20 ? 20 : scale));
+	hdr.revision = 0;
+	hdr.lightmaps = 0;
+#else
 	strncpy(hdr.head, "OCTA", 4);
-#endif
 
 	hdr.version = MAPVERSION;
 	hdr.headersize = sizeof(header);
 	hdr.worldsize = 1 << (scale<10 ? 10 : (scale>20 ? 20 : scale));
 
 	s_strncpy(hdr.maptitle, "Untitled Map by Unknown", 128);
-#ifdef BFRONTIER
-	hdr.gamever = BFRONTIER;
-	hdr.revision = hdr.reserved2 = hdr.reserved3 = 0;
-	hdr.lightmaps = 0;
-	memset(hdr.reserved, 0, sizeof(hdr.reserved));
-#else
+
 	hdr.waterlevel = -100000;
 	memset(hdr.watercolour, 0, sizeof(hdr.watercolour));
 	hdr.maple = 8;
@@ -1000,11 +990,13 @@ bool emptymap(int scale, bool force)	// main empty world creation routine
 	clearlights();
 	allchanged();
 
-#ifndef BFRONTIER // resetmap
 	overrideidents = true;
+#ifdef BFRONTIER // resetmap
+	exec("packages/map.cfg");
+#else
 	execfile("data/default_map_settings.cfg");
-	overrideidents = false;
 #endif
+	overrideidents = false;
 
 	startmap("");
 	player->o.z += player->eyeheight+1;
