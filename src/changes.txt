@@ -7,6 +7,13 @@ Legend [
 ]
 
 = wip edition =
+gam: ammo entities combined into one 'weapon' entity
+gam: entity restrcuture and cleanup
+gam: camerawobble and damageresidue tweaks
+eng: loadback screens fixed
+eng: map structure redefined, subclassing different map types for legacy support
+eng: ident structure redesigned
+eng: map file loading completely hijacked
 eng: config writing fixed
 eng: map storing waypoint links
 eng: map storing 'gamever' for Blood Frontier version and 'revision' for map revision

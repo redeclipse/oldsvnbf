@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#ifdef BFRONTIER // better miniam defs
+#ifdef BFRONTIER // better minimal defs
 #ifdef STANDALONE
 #include "minimal.h"
 #else
@@ -966,7 +966,7 @@ struct fpsclient : igameclient
 					
 					if (damageresidue > 0)
 					{
-						float pc = float(min(damageresidue, 500))/500.f;
+						float pc = float(min(damageresidue, 100))/100.f;
 						settexture("packages/textures/overlay_damage.png");
 						
 						glColor4f(1.f, 1.f, 1.f, pc);
@@ -1226,11 +1226,11 @@ struct fpsclient : igameclient
 		return vec(d->o).sub(vec(0, 0, d->eyeheight));
 	}
 
-	void loadworld(const char *name)
+	void loadworld(gzFile &f, int maptype)
 	{
 	}
 	
-	void saveworld(const char *name)
+	void saveworld(gzFile &f, FILE *h)
 	{
 	}
 
@@ -1443,8 +1443,8 @@ struct fpsclient : igameclient
 		
 		if (camerawobble > 0)
 		{
-			float pc = float(min(camerawobble, 500))/500.f;
-			#define wobble (float(rnd(3)-1)*pc)
+			float pc = float(min(camerawobble, 100))/100.f;
+			#define wobble (float(rnd(10)-5)*pc)
 			camera1->yaw += wobble;
 			camera1->pitch += wobble;
 			camera1->roll += wobble;

@@ -43,7 +43,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/I &quot;..\fpsgame\bot&quot; /DBFRONTIER=33"
+				AdditionalOptions="/I &quot;..\fpsgame\bot&quot;"
 				Optimization="1"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="false"
@@ -78,7 +78,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalOptions="-DBFRONTIER=33"
+				AdditionalOptions=""
 				PreprocessorDefinitions="NDEBUG"
 				Culture="2057"
 			/>

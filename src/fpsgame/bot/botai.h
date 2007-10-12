@@ -425,7 +425,7 @@ bool find(fpsent *d, bool enemyonly = false)
 	
 		loopv(cl.et.ents)
 		{
-			if (cl.et.ents[i]->spawned && d->canpickup(cl.et.ents[i]->type))
+			if (cl.et.ents[i]->spawned && cl.et.ents[i]->type == WEAPON && d->canpickup(cl.et.ents[i]->attr1))
 			{
 				settarg(cl.et.ents[i]->o.dist(d->o) / float(5), i);
 			}
@@ -496,8 +496,6 @@ bool find(fpsent *d, bool enemyonly = false)
 
 void action(fpsent *d)
 { 
-	extern int curtime;
-
 	if ((d->botupdate -= curtime) <= 0)
 	{ 
 		switch (d->botstate)

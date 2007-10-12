@@ -146,8 +146,8 @@ void computescreen(const char *text, Texture *t)
 	glClearColor(0.f, 0.f, 0.f, 1);
 #else
 	glClearColor(0.15f, 0.15f, 0.15f, 1);
-#endif
 	glColor3f(1, 1, 1);
+#endif
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glMatrixMode(GL_PROJECTION);
 	loopi(2)
@@ -158,6 +158,7 @@ void computescreen(const char *text, Texture *t)
 		glOrtho(0, w, h, 0, -1, 1);
 		settexture("packages/textures/loadback.jpg");
 	
+		glColor3f(1, 1, 1);
 		glBegin(GL_QUADS);
 	
 		glTexCoord2f(0, 0); glVertex2i(0, 0);

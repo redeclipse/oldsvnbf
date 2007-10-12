@@ -15,8 +15,7 @@ enum						// static entity types
 	MAPSOUND = ET_SOUND,
 	SPOTLIGHT = ET_SPOTLIGHT,
 #ifdef BFRONTIER
-	I_PISTOL, I_SG, I_CG, I_GL, I_RL, I_RIFLE,
-	I_RESERVED1, I_RESERVED2, I_RESERVED3, I_RESERVED4, I_RESERVED5,
+	WEAPON,
 #else
     I_SHELLS, I_BULLETS, I_ROCKETS, I_ROUNDS, I_GRENADES, I_CARTRIDGES,
     I_HEALTH, I_BOOST,
@@ -41,6 +40,12 @@ struct fpsentity : extentity
 {
 #ifdef BFRONTIER
 	vector<int> links;  // link list
+	
+	fpsentity()
+	{
+		links.setsize(0);
+	}
+	~fpsentity() {}
 #else
 	// extend with additional fields if needed...
 #endif
@@ -240,6 +245,34 @@ struct demoheader
 #define MAXTEAMLEN 4
 
 #ifdef BFRONTIER
+/*
+static struct entstat { int id; char *name; } entstats[] =
+{
+	{ NOTUSED,		"empty" }
+	{ LIGHT,		"light" } // lightsource, attr1 = radius, attr2 = intensity
+	{ MAPMODEL = ET_MAPMODEL,	// attr1 = angle, attr2 = idx
+	{ PLAYERSTART,			// attr1 = angle
+	{ ENVMAP = ET_ENVMAP,		// attr1 = radius
+	{ PARTICLES = ET_PARTICLES,
+	{ MAPSOUND = ET_SOUND,
+	{ SPOTLIGHT = ET_SPOTLIGHT,
+	{ I_PISTOL,
+	{ I_SG,
+	{ I_CG,
+	{ I_GL,
+	{ I_RL,
+	{ I_RIFLE,
+	{ TELEPORT,				// attr1 = idx
+	{ TELEDEST,				// attr1 = angle, attr2 = idx
+	{ MONSTER,				// attr1 = angle, attr2 = monstertype
+	{ CARROT,					// attr1 = tag, attr2 = type
+	{ JUMPPAD,				// attr1 = zpush, attr2 = ypush, attr3 = xpush
+	{ BASE,
+	{ RESPAWNPOINT,
+	{ CAMERA,					// attr1 = yaw, attr2 = pitch, attr3 = pan (+:horiz/-:vert), attr4 = idx
+	{ WAYPOINT,				// none?
+};
+*/
 static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
 {
     {10,	10,		S_ITEMAMMO,		"PI",	GUN_PISTOL },
@@ -260,12 +293,12 @@ static struct itemstat { int add, max, sound; char *name; int info; } itemstats[
 
 static struct guninfo { short sound, attackdelay, reloaddelay, damage, projspeed, part, kickamount, wobbleamount; char *name; } guns[NUMGUNS] =
 {
-	{ S_PISTOL,		250,	2250,	13,		0,		0,	-15,	7,	"pistol" },
-	{ S_SG,			1000,	4000,	5,		0,		0,	-40,	35, "shotgun" },
+	{ S_PISTOL,		250,	2250,	13,		0,		0,	-10 ,	10,	"pistol" },
+	{ S_SG,			1000,	4000,	5,		0,		0,	-50,	50, "shotgun" },
 	{ S_CG,			75,		3075,	8,		0,		0,	-10,	10,	"chaingun" },
-	{ S_FLAUNCH,	1500,	600,	400,	40,		0,	-10,	5,	"grenades" },
+	{ S_FLAUNCH,	1500,	600,	400,	40,		0,	-5,		5,	"grenades" },
 	{ S_RLFIRE,		2500,	5000,	250,	80,		0,	-75,	50,	"rockets" },
-	{ S_RIFLE,		1500,	4500,	50,		0,		0,	-30,	25,	"rifle" },
+	{ S_RIFLE,		1500,	4500,	50,		0,		0,	-30,	30,	"rifle" },
 };
 #define getgun(n) guns[n]
 #define gunallowed(am,gn,gs) (gn >= GUN_PISTOL && gn <= GUN_RIFLE && (gs < 0 || gn != gs) && (gn != GUN_GL || (gs > -2 && am[gn]) || gs < -2))
@@ -325,27 +358,25 @@ struct fpsstate
 
 	void addammo(int gun)
 	{
-		ammo[gun] += itemstats[gun].add;
+		ammo[gun] += getitem(gun).add;
 	}
 
 	bool hasmaxammo(int type)
 	{
-		const itemstat &is = itemstats[type-I_PISTOL];
-		return ammo[type-I_PISTOL+GUN_PISTOL]>=is.max;
+		const itemstat &is = getitem(type);
+		return ammo[type] >= is.max;
 	}
 
 	bool canpickup(int type)
 	{
-		if (type < I_PISTOL || type > I_RIFLE) return false;
-		itemstat &is = getitem(type-I_PISTOL);
+		itemstat &is = getitem(type);
 		return ammo[is.info] < is.max;
 	}
  
-	void pickup(int type)
+	void pickup(int type, int amt)
 	{
-		if (type < I_PISTOL || type > I_RIFLE) return;
-		itemstat &is = getitem(type-I_PISTOL);
-		ammo[is.info] = min(ammo[is.info] + is.add, is.max);
+		itemstat &is = getitem(type);
+		ammo[is.info] = min(ammo[is.info] + (amt > 0 ? amt : is.add), is.max);
 	}
 #else
 	fpsstate() : maxhealth(100) {}

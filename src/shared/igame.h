@@ -8,7 +8,7 @@ struct icliententities
     virtual const char *entnameinfo(entity &e) = 0;
     virtual const char *entname(int i) = 0;
 #ifdef BFRONTIER
-	virtual void readent(gzFile &g, int id, entity &e) { return; }
+	virtual void readent(gzFile &g, int maptype, int id, entity &e) { return; }
 	virtual void writeent(gzFile &g, int id, entity &e) { return; }
 #else
     virtual int extraentinfosize() = 0;
@@ -227,8 +227,8 @@ struct igameclient
 	virtual bool gamethirdperson() { extern int thirdperson; return thirdperson; } ;
 	virtual bool gethudcolour(vec &colour) { return false; }
 
-	virtual void loadworld(const char *name) { return; };
-	virtual void saveworld(const char *name) { return; };
+	virtual void loadworld(gzFile &f, int maptype) { return; };
+	virtual void saveworld(gzFile &f, FILE *h) { return; };
 
 	virtual int localplayers() { return 1; }
 	virtual bool gui3d() { return true; }

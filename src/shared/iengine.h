@@ -52,7 +52,7 @@ extern void mpremip(bool local);
 
 // command
 #ifdef BFRONTIER
-extern int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool server = false, bool world = false);
+extern int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), int context = IDC_GLOBAL);
 #else
 extern int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist);
 #endif
@@ -63,9 +63,9 @@ extern int getvarmax(char *name);
 extern bool identexists(char *name);
 extern ident *getident(char *name);
 #ifdef BFRONTIER
-extern bool addcommand(char *name, void (*fun)(), char *narg, bool server= false, bool world = false);
-extern int execute(char *p, bool isserver = false);
-extern char *executeret(char *p, bool isserver = false);
+extern bool addcommand(char *name, void (*fun)(), char *narg, int context = IDC_GLOBAL);
+extern int execute(char *p, int context = IDC_GLOBAL);
+extern char *executeret(char *p, int context = IDC_GLOBAL);
 #else
 extern bool addcommand(char *name, void (*fun)(), char *narg);
 extern int execute(char *p);
@@ -277,6 +277,21 @@ extern void g3d_resetcursor();
 struct sometype
 {
 	char *name; uchar id;
+};
+
+enum
+{
+	PROP_INT = 0,
+	PROP_STR,
+	PROP_MAX
+};
+
+struct property
+{
+	int type, prop;
+	
+	vector<int> ints;
+	vector<string> strs;
 };
 
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
@@ -524,6 +539,6 @@ enum
 };
 
 extern string cgzname, pcfname, mcfname, picname, mapname;
-extern int verbose, savebak, maptype;
+extern int verbose, savebak;
 
 #endif

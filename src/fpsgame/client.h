@@ -572,6 +572,7 @@ struct clientcom : iclientcom
 				{
 					if(mapchanged) cl.et.setspawn(n, true);
 					getint(p); // type
+					loopi(5) getint(p); // attr
 				}
 				break;
 			}
@@ -1224,14 +1225,14 @@ struct clientcom : iclientcom
 	{
 		const int MAXWORDS = 25;
 		char *w[MAXWORDS], *p = text;
-		extern char *parseword(char *&p, bool isserver);
+		extern char *parseword(char *&p, int context);
 		
 		int numargs = MAXWORDS;
 		loopi(MAXWORDS)
 		{
 			w[i] = "";
 			if(i>numargs) continue;
-			char *s = parseword(p, true);
+			char *s = parseword(p, IDC_SERVER);
 			if(s) w[i] = s;
 			else numargs = i;
 		}

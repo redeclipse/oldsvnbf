@@ -359,11 +359,7 @@ extern void attachentities();
 extern void freeoctaentities(cube &c);
 extern bool pointinsel(selinfo &sel, vec &o);
 
-#ifdef BFRONTIER
-extern void resetmap(bool load = false);
-#else
 extern void resetmap();
-#endif
 extern void startmap(const char *name);
 
 // rendermodel

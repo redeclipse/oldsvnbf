@@ -19,8 +19,8 @@ struct entities : icliententities
 	{
 #ifdef BFRONTIER // extended entities, blood frontier support
 		int t = ents[i]->type;
-		if(t<I_PISTOL || t>I_RIFLE) return NULL;
-		return getitem(t-I_PISTOL).name;
+		if(t != WEAPON) return NULL;
+		return getitem(ents[i]->attr1).name;
 #else
 		int t = ents[i]->type;
 		if(t<I_SHELLS || t>I_QUAD) return NULL;
@@ -28,21 +28,32 @@ struct entities : icliententities
 #endif
 	}
 	
+#ifdef BFRONTIER // blood frontier support
+	char *entmdlname(int type, int attr1)
+#else
 	char *entmdlname(int type)
+#endif
 	{
 #ifdef BFRONTIER // blood frontier support
 		static char *bfmdlnames[] =
 		{
 			NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-			"ammo/pistol", "ammo/shotgun", "ammo/chaingun", "ammo/grenades", "ammo/rockets", "ammo/rifle",
-			NULL, NULL, NULL, NULL, NULL, NULL,
-			NULL, NULL,
+			NULL, NULL, NULL,
 			"carrot",
 			NULL, NULL,
 			"checkpoint",
 			NULL, NULL
 		};
-		return bfmdlnames[type];
+		static char *bfgunnames[] = {
+			"ammo/pistol", "ammo/shotgun", "ammo/chaingun", "ammo/grenades", "ammo/rockets", "ammo/rifle"
+		};
+		switch (type)
+		{
+			case WEAPON:
+				return bfgunnames[attr1];
+			default:
+				return bfmdlnames[type];
+		}
 #else
 		static char *entmdlnames[] =
 		{
@@ -60,9 +71,19 @@ struct entities : icliententities
 
 	void renderent(extentity &e, int type, float z, float yaw, int anim = ANIM_MAPMODEL|ANIM_LOOP, int basetime = 0, float speed = 10.0f)
 	{
+#ifdef BFRONTIER
+		if (e.type==CARROT || e.type==RESPAWNPOINT || e.type == TELEPORT ||
+			(e.type==WEAPON && e.spawned))
+		{
+			char *mdlname = entmdlname(type, e.attr1);
+			if(!mdlname) return;
+			rendermodel(e.color, e.dir, mdlname, anim, 0, 0, vec(e.o).add(vec(0, 0, z)), yaw, 0, speed, basetime, NULL, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
+		}
+#else
 		char *mdlname = entmdlname(type);
 		if(!mdlname) return;
 		rendermodel(e.color, e.dir, mdlname, anim, 0, 0, vec(e.o).add(vec(0, 0, z)), yaw, 0, speed, basetime, NULL, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
+#endif
 	}
 
 	void renderentities()
@@ -90,6 +111,10 @@ struct entities : icliententities
 #endif
 		loopv(ents)
 		{
+#ifdef BFRONTIER
+			extentity &e = *ents[i];
+			renderent(e, e.type, (float)(1+sin(cl.lastmillis/100.0+e.o.x+e.o.y)/20), cl.lastmillis/(e.attr2 ? 1.0f : 10.0f));
+#else
 			extentity &e = *ents[i];
 			if(e.type==CARROT || e.type==RESPAWNPOINT)
 			{
@@ -97,12 +122,9 @@ struct entities : icliententities
 				continue;
 			}
 			if(!e.spawned && e.type!=TELEPORT) continue;
-#ifdef BFRONTIER
-			if(e.type<I_PISTOL || e.type>TELEPORT) continue;
-#else
 			if(e.type<I_SHELLS || e.type>TELEPORT) continue;
-#endif
 			renderent(e, e.type, (float)(1+sin(cl.lastmillis/100.0+e.o.x+e.o.y)/20), cl.lastmillis/10.0f);
+#endif
 		}
 	}
 
@@ -129,7 +151,7 @@ struct entities : icliententities
 	void addammo(int type, int &v, bool local = true)
 	{
 #ifdef BFRONTIER // extended entities, blood frontier
-		itemstat &is = getitem(type-I_PISTOL);
+		itemstat &is = getitem(type);
 #else
 		itemstat &is = itemstats[type-I_SHELLS];
 #endif
@@ -153,12 +175,14 @@ struct entities : icliententities
         if(!ents.inrange(n)) return;
 		int type = ents[n]->type;
 #ifdef BFRONTIER // extended entities, blood frontier
-		if(type<I_PISTOL || type>I_RIFLE) return;
+		if(type != WEAPON) return;
         ents[n]->spawned = false;
         if(!d) return;
-		itemstat &is = getitem(type-I_PISTOL);
+		itemstat &is = getitem(ents[n]->attr1);
 		if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
-		playsound(getitem(type-I_PISTOL).sound, d!=cl.player1 ? &d->o : NULL); 
+		playsound(getitem(ents[n]->attr1).sound, d!=cl.player1 ? &d->o : NULL); 
+		if(d!=cl.player1) return;
+		d->pickup(ents[n]->attr1, ents[n]->attr2);
 #else
 		if(type<I_SHELLS || type>I_QUAD) return;
         ents[n]->spawned = false;
@@ -166,10 +190,10 @@ struct entities : icliententities
 		itemstat &is = itemstats[type-I_SHELLS];
 		if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
 		playsound(itemstats[type-I_SHELLS].sound, d!=cl.player1 ? &d->o : NULL); 
-#endif
+
 		if(d!=cl.player1) return;
 		d->pickup(type);
-#ifndef BFRONTIER
+
 		switch(type)
 		{
 			case I_BOOST:
@@ -216,7 +240,11 @@ struct entities : icliententities
 		switch(ents[n]->type)
 		{
 			default:
+#ifdef BFRONTIER
+				if(ents[n]->type == WEAPON && d->canpickup(ents[n]->attr1))
+#else
 				if(d->canpickup(ents[n]->type))
+#endif
 				{
 #ifdef BFRONTIER // bots
 					if (d==cl.player1) cl.cc.addmsg(SV_ITEMPICKUP, "ri", n);
@@ -295,10 +323,15 @@ struct entities : icliententities
 	void putitems(ucharbuf &p, int gamemode)			// puts items in network stream and also spawns them locally
 	{
 #ifdef BFRONTIER
-		loopv(ents) if (ents[i]->type>=I_PISTOL && ents[i]->type<=I_RIFLE)
+		loopv(ents) if (ents[i]->type == WEAPON)
 		{
 			putint(p, i);
 			putint(p, ents[i]->type);
+			putint(p, ents[i]->attr1);
+			putint(p, ents[i]->attr2);
+			putint(p, ents[i]->attr3);
+			putint(p, ents[i]->attr4);
+			putint(p, ents[i]->attr5);
 			ents[i]->spawned = true; 
 		}
 #else
@@ -321,24 +354,22 @@ struct entities : icliententities
 	{
 		switch(e.type)
 		{
-			case MONSTER:
-			case TELEDEST:
-				e.attr2 = e.attr1;
-			case RESPAWNPOINT:
-				e.attr1 = (int)cl.player1->yaw;
 #ifdef BFRONTIER
-				break;
-			case CAMERA:  // place with "newent camera idx [pan]"
-				e.attr4 = e.attr1;
-				e.attr3 = e.attr2;
-				e.attr2 = (int)cl.player1->pitch;
-				e.attr1 = (int)cl.player1->yaw;
-				break;
+			case WEAPON:
+				while (e.attr1 <= -1) e.attr1 += NUMGUNS;
+				while (e.attr1 >= NUMGUNS) e.attr1 -= NUMGUNS;
+				if (e.attr2 < 0) e.attr2 = 0;
 			case WAYPOINT:
 				e.attr1 = e.attr1 >= 0 && e.attr1 <= 1 ? e.attr1 : (e.attr1 > 1 ? 0 : 1);
 				e.attr2 = e.attr2 >= 0 ? e.attr2 : 0;
 				e.attr3 = e.attr3 >= 0 ? e.attr3 : 0;
 				break;
+#else
+			case MONSTER:
+			case TELEDEST:
+				e.attr2 = e.attr1;
+			case RESPAWNPOINT:
+				e.attr1 = (int)cl.player1->yaw;
 #endif
 		}
 	}
@@ -378,11 +409,9 @@ struct entities : icliententities
 		static const char *entnames[] =
 		{
 			"none?", "light", "mapmodel", "playerstart", "envmap", "particles", "sound", "spotlight",
-			"pistol", "shotgun", "chaingun", "grenades", "rockets", "rifle",
-			"none", "none", "none", "none", "none",
-			"teleport", "teledest",
+			"weapon", "teleport", "teledest",
 			"monster", "carrot", "jumppad",
-			"base", "respawnpoint", "camera", "waypoint",
+			"base", "respawnpoint", "camera", "waypoint", "eof1", "eof2", "eof3"
 		};
 #endif
 		return i>=0 && size_t(i)<sizeof(entnames)/sizeof(entnames[0]) ? entnames[i] : "";
@@ -413,8 +442,9 @@ struct entities : icliententities
 	{
 		extentity &e = *ents[i];
 #ifdef BFRONTIER // extended entities
-		if (multiplayer(false)) cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
 		if (e.type == ET_EMPTY) entlinks(i);
+		fixentity(e);
+		if (multiplayer(false)) cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
 #else
 		cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4);
 #endif
@@ -555,10 +585,9 @@ struct entities : icliententities
 		}
 	}
 
-	void readent(gzFile &g, int id, entity &e)
+	void readent(gzFile &g, int maptype, int id, entity &e)
 	{
 		fpsentity &f = (fpsentity &)e;
-		f.links.setsize(0);
 
 		if (maptype == MAP_BFGZ)
 		{
@@ -567,7 +596,7 @@ struct entities : icliententities
 				case WAYPOINT:
 				{
 					int links = gzgetint(g);
-		
+					f.links.setsize(1);
 					loopi(links)
 					{
 						f.links.add(gzgetint(g));
@@ -587,29 +616,16 @@ struct entities : icliententities
 				if(e.type >= 8) e.type++;
 			}
 			
-			switch (e.type)
+			if (e.type >= 8 && e.type <= 13)
 			{
-				case I_PISTOL:
-					e.type = I_SG;
-					break;
-				case I_SG:
-					e.type = I_CG;
-					break;
-				case I_CG:
-					e.type = I_RL;
-					break;
-				case I_GL:
-					e.type = I_RIFLE;
-					break;
-				case I_RL:
-					e.type = I_GL;
-					break;
-				case I_RIFLE:
-					e.type = I_PISTOL;
-					break;
-				default:
-					break;
+				int gun = e.type-8, gunmap[NUMGUNS] = {
+					GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL
+				};
+				e.type = WEAPON;
+				e.attr1 = gunmap[gun];
+				e.attr2 = 0;
 			}
+			else if (e.type >= 14 && e.type <= 18) e.type = NOTUSED;
 		}
 	}
 
@@ -724,7 +740,7 @@ struct entities : icliententities
 	{
 		if (showentradius)
 		{
-			if (e.type < CAMERA && e.type >= I_PISTOL &&
+			if (e.type <= MAXENTTYPES && e.type >= WEAPON &&
 					 e.type != TELEPORT && e.type != TELEDEST && e.type != MONSTER)
 			{
 				if (e.type == BASE)

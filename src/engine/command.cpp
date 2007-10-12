@@ -92,7 +92,7 @@ void pusha(char *name, char *action)
 	{
 		name = newstring(name);
 #ifdef BFRONTIER // server and world vars
-		ident init(ID_ALIAS, name, newstring(""), persistidents, false, false);
+		ident init(ID_ALIAS, name, newstring(""), IDC_GLOBAL&(persistidents ? IDC_PERSIST : 0));
 #else
 		ident init(ID_ALIAS, name, newstring(""), persistidents);
 #endif
@@ -122,7 +122,7 @@ void aliasa(char *name, char *action)
 	{
 		name = newstring(name);
 #ifdef BFRONTIER // server and world vars
-		ident b(ID_ALIAS, name, action, persistidents, false, false);
+		ident b(ID_ALIAS, name, action, IDC_GLOBAL&(persistidents ? IDC_PERSIST : 0));
 #else
 		ident b(ID_ALIAS, name, action, persistidents);
 #endif
@@ -142,7 +142,12 @@ void aliasa(char *name, char *action)
 		else 
 		{
 			if(b->_override != NO_OVERRIDE) b->_override = NO_OVERRIDE;
+#ifdef BFRONTIER
+			if (b->_context & IDC_PERSIST && !persistidents) b->_context &= ~IDC_PERSIST;
+			else if (!(b->_context & IDC_PERSIST) && persistidents) b->_context |= IDC_PERSIST;
+#else
 			if(b->_persist != persistidents) b->_persist = persistidents;
+#endif
 		}
 	}
 }
@@ -154,10 +159,10 @@ COMMAND(alias, "ss");
 // variable's and commands are registered through globals, see cube.h
 
 #ifdef BFRONTIER // server and world vars
-int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool server, bool world)
+int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), int context)
 {
 	if(!idents) idents = new identtable;
-	ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, persist, server, world);
+	ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, context);
 	idents->access(name, &v);
 	return cur;
 }
@@ -205,10 +210,10 @@ const char *getalias(char *name)
 }
 
 #ifdef BFRONTIER // server and world vars
-bool addcommand(char *name, void (*fun)(), char *narg, bool server, bool world)
+bool addcommand(char *name, void (*fun)(), char *narg, int context)
 {
 	if(!idents) idents = new identtable;
-	ident c(ID_COMMAND, name, narg, (void *)fun, NULL, server, world);
+	ident c(ID_COMMAND, name, narg, (void *)fun, NULL, context);
 	idents->access(name, &c);
 	return false;
 }
@@ -332,7 +337,7 @@ char *lookup(char *n)							// find value of ident referenced with $ in exp
 }
 
 #ifdef BFRONTIER // server side support
-char *parseword(char *&p, bool isserver)						// parse single argument, including expressions
+char *parseword(char *&p, int context)						// parse single argument, including expressions
 #else
 char *parseword(char *&p)                       // parse single argument, including expressions
 #endif
@@ -340,13 +345,13 @@ char *parseword(char *&p)                       // parse single argument, includ
 	for(;;)
 	{
 #ifdef BFRONTIER // server side support
-		p += strspn(p, isserver ? " " : " \t\r");
+		p += strspn(p, context & IDC_SERVER ? " " : " \t\r");
 #else
         p += strspn(p, " \t\r");
 #endif
 		if(p[0]!='/' || p[1]!='/') break;
 #ifdef BFRONTIER // server side support
-		p += strcspn(p, isserver ? "\0" : "\n\0");  
+		p += strcspn(p, context & IDC_SERVER ? "\0" : "\n\0");  
 #else
         p += strcspn(p, "\n\0");  
 #endif
@@ -356,7 +361,7 @@ char *parseword(char *&p)                       // parse single argument, includ
 		p++;
 		char *word = p;
 #ifdef BFRONTIER // server side support
-		p += strcspn(p, isserver ? "\"\0" : "\"\r\n\0");
+		p += strcspn(p, context & IDC_SERVER ? "\"\0" : "\"\r\n\0");
 #else
         p += strcspn(p, "\"\r\n\0");
 #endif
@@ -365,8 +370,8 @@ char *parseword(char *&p)                       // parse single argument, includ
 		return s;
 	}
 #ifdef BFRONTIER // server side support
-	if(!isserver && *p=='(') return parseexp(p, ')');
-	if(!isserver && *p=='[') return parseexp(p, ']');
+	if(context != IDC_SERVER && *p=='(') return parseexp(p, ')');
+	if(context != IDC_SERVER && *p=='[') return parseexp(p, ']');
 #else
     if(*p=='(') return parseexp(p, ')');
     if(*p=='[') return parseexp(p, ']');
@@ -375,7 +380,7 @@ char *parseword(char *&p)                       // parse single argument, includ
 	for(;;)
 	{
 #ifdef BFRONTIER // server side support
-		p += strcspn(p, isserver ? "/ " : "/; \t\r\n\0");
+		p += strcspn(p, context & IDC_SERVER ? "/ " : "/; \t\r\n\0");
 #else
         p += strcspn(p, "/; \t\r\n\0");
 #endif
@@ -386,7 +391,7 @@ char *parseword(char *&p)                       // parse single argument, includ
 	if(p-word==0) return NULL;
 	char *s = newstring(word, p-word);
 #ifdef BFRONTIER // server side support
-	if(!isserver && *s=='$') return lookup(s);				// substitute variables
+	if(context != IDC_SERVER && *s=='$') return lookup(s);				// substitute variables
 #else
     if(*s=='$') return lookup(s);               // substitute variables
 #endif
@@ -418,7 +423,7 @@ extern const char *addreleaseaction(const char *s);
 #endif
 
 #ifdef BFRONTIER // server side support
-char *executeret(char *p, bool isserver)
+char *executeret(char *p, int context)
 #else
 char *executeret(char *p)               // all evaluation happens here, recursively
 #endif
@@ -435,7 +440,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 			w[i] = "";
 			if(i>numargs) continue;
 #ifdef BFRONTIER // server side support
-			char *s = parseword(p, isserver);			 // parse and evaluate exps
+			char *s = parseword(p, context);			 // parse and evaluate exps
 #else
             char *s = parseword(p);             // parse and evaluate exps
 #endif
@@ -444,7 +449,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 		}
 		
 #ifdef BFRONTIER // server side support
-		p += strcspn(p, isserver ? "\0" : ";\n\0");
+		p += strcspn(p, context & IDC_SERVER ? "\0" : ";\n\0");
 #else
         p += strcspn(p, ";\n\0");
 #endif
@@ -464,7 +469,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 		{
 			ident *id = idents->access(c);
 #ifdef BFRONTIER // server side support
-			if (isserver && (!id || id->_server == false))
+			if (context & IDC_SERVER && (!id || id->_context != IDC_SERVER))
 			{
 				s_sprintfd(z)("invalid server command: %s", c);
 				setretval(newstring(z));
@@ -479,7 +484,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 			}
 #ifdef BFRONTIER // server side support, client only
 #ifndef STANDALONE
-			else if (!isserver && id->_server == true)
+			else if (context != IDC_SERVER && id->_context & IDC_SERVER)
 			{
 				s_sprintfd(z)("%s", conc(w, numargs, true));
 				cc->toservcmd(z, true);
@@ -537,7 +542,11 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 					{
 						if(overrideidents)
 						{
+#ifdef BFRONTIER
+							if(id->_context & IDC_PERSIST)
+#else
 							if(id->_persist)
+#endif
 							{
 								conoutf("cannot override persistent variable %s", id->_name);
 								break;
@@ -567,7 +576,11 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
                             ident *id = idents->access(argname);
                             if(!id)
                             {
+#ifdef BFRONTIER
+								ident init(ID_ALIAS, newstring(argname), newstring(""), IDC_GLOBAL&(persistidents ? IDC_PERSIST : 0));
+#else
                                 ident init(ID_ALIAS, newstring(argname), newstring(""), persistidents);
+#endif
                                 id = idents->access(init._name, &init);
                             }
                             argids.add(id);
@@ -581,7 +594,7 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 					char *wasexecuting = id->_isexecuting;
 					id->_isexecuting = id->_action;
 #ifdef BFRONTIER // server side support
-					setretval(executeret(id->_action, isserver));
+					setretval(executeret(id->_action, context));
 #else
                     setretval(executeret(id->_action));
 #endif
@@ -599,9 +612,9 @@ char *executeret(char *p)               // all evaluation happens here, recursiv
 }
 
 #ifdef BFRONTIER // server side support
-int execute(char *p, bool isserver)
+int execute(char *p, int context)
 {
-	char *ret = executeret(p, isserver);
+	char *ret = executeret(p, context);
 #else
 int execute(char *p)
 {
@@ -641,11 +654,27 @@ void writecfg()
 	FILE *f = openfile("config.cfg", "w");
 	if(!f) return;
 	fprintf(f, "// automatically written on exit\n\n");
+	enumerate(*idents, ident, id,
+		if (id._type == ID_VAR && id._context & IDC_PERSIST)
+		{
+			fprintf(f, "%s %d\n", id._name, *id._storage);
+		}
+	);
+	fprintf(f, "\n");
+	writebinds(f);
+	fprintf(f, "\n");
+	enumerate(*idents, ident, id,
+		if(id._type == ID_ALIAS && id._context & IDC_PERSIST && id._override == NO_OVERRIDE && !strstr(id._name, "nextmap_") && id._action[0])
+		{
+			fprintf(f, "\"%s\" = [%s]\n", id._name, id._action);
+		}
+	);
+	fprintf(f, "\n");
+	writecompletions(f);
 #else
     FILE *f = openfile(path(cl->savedconfig(), true), "w");
 	if(!f) return;
 	fprintf(f, "// automatically written on exit, DO NOT MODIFY\n// delete this file to have %s overwrite these settings\n// modify settings in game, or put settings in %s to override anything\n\n", cl->defaultconfig(), cl->autoexec());
-#endif
 	cc->writeclientinfo(f);
 	fprintf(f, "\n");
     writecrosshairs(f);
@@ -658,7 +687,6 @@ void writecfg()
 	fprintf(f, "\n");
 	writebinds(f);
 	fprintf(f, "\n");
-#ifndef BFRONTIER
 	enumerate(*idents, ident, id,
 		if(id._type==ID_ALIAS && id._persist && id._override==NO_OVERRIDE && !strstr(id._name, "nextmap_") && id._action[0])
 		{

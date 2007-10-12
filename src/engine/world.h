@@ -10,17 +10,18 @@ enum							// hardcoded texture numbers
 
 #define MAPVERSION 24			// bump if map format changes, see worldio.cpp
 
-struct header					// map file format header
+#ifdef BFRONTIER
+struct bfgz
 {
-	char head[4];				// "OCTA"
-	int version;				// any >8bit quantity is little endian
-	int headersize;			 // sizeof(header)
+	char head[4];
+	int version;			// any >8bit quantity is little endian
+	int headersize;			// sizeof(header)
+};
+
+struct octa : bfgz
+{
 	int worldsize;
 	int numents;
-#ifdef BFRONTIER
-	int gamever, lightmaps, revision, reserved2, reserved3;
-	uchar reserved[28];
-#else
 	int waterlevel;
 	int lightmaps;
 	int mapprec, maple, mapllod;
@@ -32,10 +33,36 @@ struct header					// map file format header
     uchar skylight[3];
     uchar lavacolour[3];
     uchar reserved[1+12];
-#endif
 	char maptitle[128];
 };
-#ifndef BFRONTIER // moved to iengine.h
+
+struct header : bfgz
+{
+	int worldsize, numents, lightmaps;
+	int gamever, revision;
+	char maptitle[128];
+};
+#else
+struct header					// map file format header
+{
+	char head[4];				// "OCTA"
+	int version;				// any >8bit quantity is little endian
+	int headersize;			 // sizeof(header)
+	int worldsize;
+	int numents;
+	int waterlevel;
+	int lightmaps;
+	int mapprec, maple, mapllod;
+    uchar ambient;
+    uchar watercolour[3];
+    uchar mapwlod;
+    uchar lerpangle, lerpsubdiv, lerpsubdivsize;
+    uchar mapbe;
+    uchar skylight[3];
+    uchar lavacolour[3];
+    uchar reserved[1+12];
+	char maptitle[128];
+};
 enum							// cube empty-space materials
 {
 	MAT_AIR = 0,				// the default, fill the empty space with air
