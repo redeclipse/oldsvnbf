@@ -514,8 +514,9 @@ extern void startgame(char *load = NULL, char *initscript = NULL);
 // world
 enum
 {
-	MAP_OCTA = 0,
-	MAP_BFGZ
+	MAP_BFGZ = 0,
+	MAP_OCTA,
+	MAP_MAX
 };
 
 enum							// cube empty-space materials

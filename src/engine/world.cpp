@@ -919,6 +919,7 @@ void resetmap()
 {
 #ifdef BFRONTIER
 	show_out_of_renderloop_progress(0, "resetting map...");
+	materialreset();
 	texturereset();
 	mapmodelreset();
 #endif

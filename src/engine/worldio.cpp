@@ -14,7 +14,11 @@ void backup(char *name, char *backupname)
 #endif
 
 #ifdef BFRONTIER // map extensions
-string bgzname, ogzname, pcfname, mcfname, picname, mapname;
+sometype mapexts[] = {
+	{ ".bgz", MAP_BFGZ },
+	{ ".ogz", MAP_OCTA },
+};
+string bgzname[MAP_MAX], pcfname, mcfname, picname, mapname;
 #else
 string cgzname, bakname, pcfname, mcfname, picname;
 #endif
@@ -58,8 +62,7 @@ void setnames(const char *fname, const char *cname = 0)
 	if(strpbrk(fname, "/\\")) s_strcpy(mapname, fname);
 	else s_sprintf(mapname)("base/%s", fname);
 #ifdef BFRONTIER
-	s_sprintf(bgzname)("packages/%s.bgz", mapname);
-	s_sprintf(ogzname)("packages/%s.ogz", mapname);
+	loopi(MAP_MAX) s_sprintf(bgzname[i])("packages/%s%s", mapname, mapexts[i]);
 #else
 	cutogz(mapname);
 
@@ -278,8 +281,8 @@ void save_world(char *mname, bool nolms)
 
 	setnames(makefile(fname, "packages/", ".bgz", false, false));
 
-	gzFile f = opengzfile(bgzname, "wb9");
-	if (!f) { conoutf("error saving '%s' to '%s': file error", mapname, bgzname); return; }
+	gzFile f = opengzfile(bgzname[MAP_BFGZ], "wb9");
+	if (!f) { conoutf("error saving '%s' to '%s': file error", mapname, bgzname[MAP_BFGZ]); return; }
 	
 	FILE *h = openfile(mcfname, "w");
 	if (!h) { conoutf("could not write config to %s", mcfname); return; }
@@ -525,9 +528,12 @@ void load_world(const char *mname, const char *cname)		// still supports all map
     computescreen(mname, mapshot!=notexture ? mapshot : NULL);
 
 	gzFile f;
-	if (!(f = opengzfile(bgzname, "rb9")) && !(f = opengzfile(ogzname, "rb9")))
+	loopi(MAP_MAX) if ((f = opengzfile(bgzname[i], "rb9"))) break;
+	if (!f)
 	{
-		conoutf("error loading '%s' from '%s': file error", mapname, bgzname);
+		conoutf("error loading '%s': file unavailable", mapname);
+		s_sprintfd(m)("%s", mname);
+		emptymap(12, true, m);
 		return;
 	}
 
@@ -547,6 +553,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		{
 			conoutf("error loading '%s': requires a newer version of Blood Frontier", mapname);
 			gzclose(f);
+			s_sprintfd(m)("%s", mname);
+			emptymap(12, true, m);
 			return;
 		}
 		maptype = MAP_BFGZ;
@@ -562,6 +570,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		{
 			conoutf("error loading '%s': requires a newer version of Cube 2", mapname);
 			gzclose(f);
+			s_sprintfd(m)("%s", mname);
+			emptymap(12, true, m);
 			return;
 		}
 		maptype = MAP_OCTA;
@@ -618,6 +628,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	{
 		conoutf("error loading '%s': malformatted header", mapname);
 		gzclose(f);
+		s_sprintfd(m)("%s", mname);
+		emptymap(12, true, m);
 		return;
 	}
 #else

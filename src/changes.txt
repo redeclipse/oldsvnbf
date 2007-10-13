@@ -7,6 +7,9 @@ Legend [
 ]
 
 = wip edition =
+eng: map issues fixed
+eng: materialreset now automatically done along with texturereset and mapmodelreset
+eng: findtexturetype and findmaterial fall back to integers when not found
 eng: no longer write maps with the same name as one that exists, auto updated and indexed
 eng: default names for screenshot check for file exist and create along an index
 gam: ammo entities combined into one 'weapon' entity

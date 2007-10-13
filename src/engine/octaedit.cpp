@@ -1540,7 +1540,11 @@ void mpeditmat(int matid, selinfo &sel, bool local)
 void editmat(char *name)
 {
 	if(noedit()) return;
+#ifdef BFRONTIER
+	int id = findmaterial(name, true);
+#else
 	int id = findmaterial(name);
+#endif
 	if(id<0) { conoutf("unknown material \"%s\"", name); return; }
 	mpeditmat(id, sel, true);
 }
