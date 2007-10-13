@@ -133,12 +133,10 @@ sometype materials[] =
 	{"lava", MAT_LAVA}
 };
 
-int findmaterial(const char *name)
+int findmaterial(const char *name, bool tryint)
 {
-	int n = -1;
-	loopi(sizeof(materials)/sizeof(materials[0])) if(!strcmp(materials[i].name, name)) { n = materials[i].id; break; }
-	return n;
-	return -1;
+	loopi(sizeof(materials)/sizeof(materials[0])) if(!strcmp(materials[i].name, name)) { return materials[i].id; }
+	return tryint && *name >= '0' && *name <= '9' ? atoi(name) : -1;
 }  
 	
 

@@ -259,8 +259,8 @@ extern int showmat;
 #ifdef BFRONTIER
 extern sometype materials[], textypes[];
 extern char *findmaterialname(int type);
+extern int findmaterial(const char *name, bool tryint = false);
 #endif
-extern int findmaterial(const char *name);
 extern void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurface> &matsurfs);
 extern void rendermatsurfs(materialsurface *matbuf, int matsurfs);
 extern void rendermatgrid(materialsurface *matbuf, int matsurfs);

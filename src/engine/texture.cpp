@@ -445,11 +445,10 @@ sometype textypes[] =
 	{"e", TEX_ENVMAP}
 };
 
-int findtexturetype(char *name)
+int findtexturetype(char *name, bool tryint)
 {
-	int n = -1;
-	loopi(sizeof(textypes)/sizeof(textypes[0])) if(!strcmp(textypes[i].name, name)) { n = textypes[i].id; break; }
-	return n;
+	loopi(sizeof(textypes)/sizeof(textypes[0])) if(!strcmp(textypes[i].name, name)) { return textypes[i].id; }
+	return tryint && *name >= '0' && *name <= '9' ? atoi(name) : -1;
 }
 
 char *findtexturename(int type)
@@ -463,7 +462,8 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 {
 	if(curtexnum<0 || curtexnum>=0x10000) return;
 #ifdef BFRONTIER
-	int tnum = findtexturetype(type), matslot = findmaterial(type);
+	int tnum = findtexturetype(type, true), matslot = findmaterial(type, false);
+	if (tnum < 0) tnum = 0;
 #else
 	struct { const char *name; int type; } types[] =
 	{
@@ -478,8 +478,8 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	};
 	int tnum = -1, matslot = findmaterial(type);
 	loopi(sizeof(types)/sizeof(types[0])) if(!strcmp(types[i].name, type)) { tnum = i; break; }
-#endif
 	if(tnum<0) tnum = atoi(type);
+#endif
 	if(tnum==TEX_DIFFUSE)
 	{
 		if(matslot>=0) curmatslot = matslot;
@@ -490,7 +490,12 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
 	if(tnum==TEX_DIFFUSE) setslotshader(s);
 	s.loaded = false;
+#ifdef BFRONTIER
+	if (s.sts.length() > TEX_ENVMAP)
+		conoutf("warning: too many textures, slot %d file '%s' (%d,%d)", curtexnum, name, matslot, curmatslot);
+#else
 	if(s.sts.length()>=8) conoutf("warning: too many textures in slot %d", curtexnum);
+#endif
 	Slot::Tex &st = s.sts.add();
 	st.type = tnum;
 	st.combined = -1;
