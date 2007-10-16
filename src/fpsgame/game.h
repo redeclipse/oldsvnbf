@@ -267,19 +267,17 @@ static struct guninfo
 };
 
 #define getgun(n) guns[n]
-#define gunallowed(ge,gn,gs,ms) ( \
-	(gn > -1 && gn < NUMGUNS) && \
-	(\
-		(gs > -1 && \
-			(gn != gs && ms-gunvar((ge)->gunlast, gs) >= gunvar((ge)->gunwait, gs)) \
-		) || \
-		(gs < 0 && \
-			( \
-				((gs == -1 && (ge)->ammo[gn]) || (gs == -2 && guns[gn].reload)) && \
-				ms-gunvar((ge)->gunlast, gn) >= gunvar((ge)->gunwait, gn) \
-			) \
-		) \
-	) \
+#define gunvar(gw,gn) (gw)[gn]
+#define gunallowed(ge,gn,gs,ms) (gn > -1 && gn < NUMGUNS) && (\
+	(gs >= 0 &&  (gn != gs && ms-gunvar((ge)->gunlast, gs) >= gunvar((ge)->gunwait, gs))) || \
+	(gs <= -1 && ( \
+		( \
+			(gs == -1 && (ge)->ammo[gn]) || \
+			(gs == -2 && guns[gn].reload && !(ge)->ammo[gn]) || \
+			(gs == -3 && !(ge)->ammo[gn]) \
+		) && \
+		ms-gunvar((ge)->gunlast, gn) >= gunvar((ge)->gunwait, gn) \
+	)) \
 )
 #else
 static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
@@ -346,10 +344,9 @@ struct fpsstate
 		return ammo[type] >= is.max;
 	}
 
-	bool canpickup(int type)
+	bool canpickup(int type, int millis)
 	{
-		guninfo &is = getgun(type);
-		return ammo[is.info] < is.max;
+		return gunallowed(this, type, -3, millis);
 	}
  
 	void pickup(int type, int amt)
@@ -515,9 +512,6 @@ struct fpsstate
 		return damage;		
 	}
 };
-#ifdef BFRONTIER
-#define gunvar(gw,gn) (gw)[gn]
-#endif
 
 struct fpsent : dynent, fpsstate
 {	

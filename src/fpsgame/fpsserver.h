@@ -461,7 +461,7 @@ struct fpsserver : igameserver
 		if(minremain<=0 || !sents.inrange(i) || !sents[i].spawned) return false;
 		clientinfo *ci = (clientinfo *)getinfo(sender);
 #ifdef BFRONTIER
-		if(!ci || (!ci->local && !ci->state.canpickup(sents[i].attr1))) return false;
+		if(!ci || (!ci->local && !ci->state.canpickup(sents[i].attr1, gamemillis))) return false;
 		sents[i].spawned = false;
 		sents[i].spawntime = spawntime(sents[i].type);
 		sendf(-1, 1, "ri3", SV_ITEMACC, i, sender);

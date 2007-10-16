@@ -244,7 +244,7 @@ struct entities : icliententities
 		{
 			default:
 #ifdef BFRONTIER
-				if(ents[n]->type == WEAPON && d->canpickup(ents[n]->attr1))
+				if(ents[n]->type == WEAPON && d->canpickup(ents[n]->attr1, cl.lastmillis))
 #else
 				if(d->canpickup(ents[n]->type))
 #endif

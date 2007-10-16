@@ -146,7 +146,7 @@ void checksound()
 	{
 		extentity &e = *ents[i];
 		if (e.type != ET_SOUND || e.visible) continue;
-		playsound(e.attr1, &e.o, NULL, 1.0f, e.attr2, mapsounds);
+		playsound(e.attr1, &e.o, NULL, (e.attr3 ? e.attr3 : 1.0f), e.attr2, mapsounds);
 		e.visible = true;
 	}
 
