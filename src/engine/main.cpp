@@ -613,10 +613,20 @@ ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
 
 void startgame(char *load, char *initscript)
 {
-	sv->changemap(load ? load : sv->defaultmap(), 0);
+	int d = 0;
+	string s, m;
+	s_strcpy(m, load ? load : sv->defaultmap());
 
+	char *t = t = strpbrk(m, ":");
+	if (t)
+	{
+		s_strncpy(s, m, t-m+1);
+		d = min(atoi(t+1), 1);
+	}
+	else { s_strcpy(s, m); }
+
+	sv->changemap(s, d);
 	if (initscript) execute(initscript);
-
 	localconnect();
 }
 
