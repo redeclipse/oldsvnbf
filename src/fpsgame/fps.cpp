@@ -173,7 +173,7 @@ struct fpsclient : igameclient
 		d->respawn();
 		d->spawnstate(gamemode);
 #ifdef BFRONTIER // respawn sound
-		playsound(S_RESPAWN, d==player1 ? NULL : &d->o);
+		playsound(S_RESPAWN, &d->o);
 #endif
 		return d;
 	}
@@ -432,12 +432,8 @@ struct fpsclient : igameclient
 			camerawobble += damage;
 			damageresidue += damage;
 			d->damageroll(damage);
-			playsound(S_PAIN6);
 		}
-		else
-		{
-			playsound(S_PAIN1+rnd(5), &d->o);
-		}
+		playsound(S_PAIN1+rnd(5), &d->o, &d->vel);
 		ws.damageeffect(damage, d);
 
 		if(bc.isbot(d)) bc.damaged(damage, d, actor);
@@ -486,6 +482,40 @@ struct fpsclient : igameclient
 			if(d==player1) console("\f2you got fragged by %s", cflags, aname);
 			else console("\f2%s fragged %s", cflags, aname, dname);
 		}
+		d->state = CS_DEAD;
+		d->lastpain = lastmillis;
+        d->superdamage = max(-d->health, 0);
+		if(d==player1)
+		{
+			sb.showscores(true);
+			lastplayerstate = *player1;
+			d->attacking = false;
+			d->deaths++;
+			d->pitch = 0;
+			d->roll = 0;
+			playsound(lastmillis-d->lastspawn < 10000 ? S_V_OWNED : S_V_FRAGGED);
+		}
+		else
+		{
+            d->move = d->strafe = 0;
+		}
+		playsound(S_DIE1+rnd(2), &d->o, &d->o);
+		ws.superdamageeffect(d->vel, d);
+
+		if(bc.isbot(d)) bc.killed(d);
+			
+		actor->spree++;
+		
+		switch (actor->spree)
+		{
+			case 5:  playsound(S_V_SPREE1, &actor->o, &actor->vel); break;
+			case 10: playsound(S_V_SPREE2, &actor->o, &actor->vel); break;
+			case 25: playsound(S_V_SPREE3, &actor->o, &actor->vel); break;
+			case 50: playsound(S_V_SPREE4, &actor->o, &actor->vel); break;
+			default: if (actor == player1 && d != player1) playsound(S_DAMAGE8); break;
+		}
+	
+		bc.frags(actor, d==actor || isteam(actor->team, d->team) ? -1 : 1);
 #else
         if(actor->type==ENT_AI)
             conoutf("\f2%s got killed by %s!", dname, aname);
@@ -501,7 +531,6 @@ struct fpsclient : igameclient
             if(d==player1) conoutf("\f2you got fragged by %s", aname);
             else conoutf("\f2%s fragged %s", aname, dname);
         }
-#endif
 		d->state = CS_DEAD;
 		d->lastpain = lastmillis;
         d->superdamage = max(-d->health, 0);
@@ -521,24 +550,6 @@ struct fpsclient : igameclient
 			playsound(S_DIE1+rnd(2), &d->o);
 			ws.superdamageeffect(d->vel, d);
 		}
-#ifdef BFRONTIER
-		if(bc.isbot(d)) bc.killed(d);
-	
-		if (d == player1)
-			playsound(lastmillis-d->lastspawn < 10000 ? S_V_OWNED : S_V_FRAGGED);
-			
-		actor->spree++;
-		
-		switch (actor->spree)
-		{
-			case 5:  playsound(S_V_SPREE1, actor != player1 ? &actor->o : NULL); break;
-			case 10: playsound(S_V_SPREE2, actor != player1 ? &actor->o : NULL); break;
-			case 25: playsound(S_V_SPREE3, actor != player1 ? &actor->o : NULL); break;
-			case 50: playsound(S_V_SPREE4, actor != player1 ? &actor->o : NULL); break;
-			default: if (actor == player1 && d != player1) playsound(S_DAMAGE8); break;
-		}
-	
-		bc.frags(actor, d==actor || isteam(actor->team, d->team) ? -1 : 1);
 #endif
 	}
 
@@ -720,21 +731,19 @@ struct fpsclient : igameclient
 #ifndef BFRONTIER
 	void physicstrigger(physent *d, bool local, int floorlevel, int waterlevel)
 	{
-		if	 (waterlevel>0) playsound(S_SPLASH1, d==player1 ? NULL : &d->o);
-		else if(waterlevel<0) playsound(S_SPLASH2, d==player1 ? NULL : &d->o);
-		if	 (floorlevel>0) { if(local) playsoundc(S_JUMP, (fpsent *)d); else if(d->type==ENT_AI) playsound(S_JUMP, &d->o); }
-		else if(floorlevel<0) { if(local) playsoundc(S_LAND, (fpsent *)d); else if(d->type==ENT_AI) playsound(S_LAND, &d->o); }
+		if (waterlevel>0) playsound(S_SPLASH1, &d->o, &d->vel);
+		else if (waterlevel<0) playsound(S_SPLASH2, &d->o, &d->vel);
+		
+		if (floorlevel>0) { if (local) playsoundc(S_JUMP, (fpsent *)d); }
+		else if (floorlevel<0) { if (local) playsoundc(S_LAND, (fpsent *)d); }
 	}
 #endif
 
 	void playsoundc(int n, fpsent *d = NULL) 
 	{ 
-		if(!d || d==player1)
-		{
-			cc.addmsg(SV_SOUND, "i", n); 
-			playsound(n); 
-		}
-		else playsound(n, &d->o);
+		fpsent *c = d ? d : player1;
+		if (c == player1) cc.addmsg(SV_SOUND, "i", n); 
+		playsound(n, &d->o, &d->vel);
 	}
 
 #ifdef BFRONTIER

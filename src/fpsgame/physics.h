@@ -98,11 +98,11 @@ struct physics : iphysics
 				
 				if (waterlevel < 0 && (mat == MAT_WATER && water == WT_WATER))
 				{
-					playsound(S_SPLASH1, d != cl.player1 ? &d->o : NULL);
+					playsound(S_SPLASH1, &d->o, &d->vel);
 				}
 				else if (waterlevel > 0 && (mat == MAT_WATER && water == WT_WATER))
 				{
-					playsound(S_SPLASH2, d != cl.player1 ? &d->o : NULL);
+					playsound(S_SPLASH2, &d->o, &d->vel);
 				}
 				else if (waterlevel < 0 && ((mat == MAT_WATER && (water == WT_KILL || water == WT_HURT)) || mat == MAT_LAVA))
 				{
@@ -119,11 +119,11 @@ struct physics : iphysics
 			
 		if (floorlevel > 0)
 		{
-			playsound(S_JUMP, d != cl.player1 ? &d->o : NULL);
+			playsound(S_JUMP, &d->o, &d->vel);
 		}
 		else if (floorlevel < 0)
 		{
-			playsound(S_LAND, d != cl.player1 ? &d->o : NULL);
+			playsound(S_LAND, &d->o, &d->vel);
 		}
 	}
 	

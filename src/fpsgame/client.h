@@ -496,7 +496,11 @@ struct clientcom : iclientcom
 
 			case SV_SOUND:
 				if(!d) return;
+#ifdef BFRONTIER
+				playsound(getint(p), &d->o, &d->vel);
+#else
 				playsound(getint(p), &d->o);
+#endif
 				break;
 
 			case SV_TEXT:
@@ -653,7 +657,7 @@ struct clientcom : iclientcom
 				d->gunselect = gunselect;
 				d->state = CS_SPAWNING;
 #ifdef BFRONTIER // respawn sound
-				playsound(S_RESPAWN, d==player1 ? NULL : &d->o);
+				playsound(S_RESPAWN, &d->o);
 #endif
 				break;
 			}
@@ -765,7 +769,11 @@ struct clientcom : iclientcom
 				if(!d) return;
 				int gun = getint(p);
 				d->gunselect = max(gun, 0);
+#ifdef BFRONTIER
+				playsound(S_WEAPLOAD, &d->o, &d->vel);
+#else
 				playsound(S_WEAPLOAD, &d->o);
+#endif
 				break;
 			}
 
