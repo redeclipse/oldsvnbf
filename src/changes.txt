@@ -7,6 +7,7 @@ Legend [
 ]
 
 = wip edition =
+eng: sound system upgraded to FMOD Ex
 gam: first person camera falls to floor when dying
 gam: hudgun not shown when dead
 gam: spawntime for weapons tweaked based on players (256..0 non spectators = 4100..30000 ms)

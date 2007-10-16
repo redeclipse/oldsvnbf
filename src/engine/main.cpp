@@ -90,10 +90,16 @@ void writeinitcfg()
 	extern int useshaders, shaderprecision;
 	fprintf(f, "shaders %d\n", useshaders);
 	fprintf(f, "shaderprecision %d\n", shaderprecision);
+#ifdef BFRONTIER
+	extern int soundvchans, soundfreq;
+	fprintf(f, "soundvchans %d\n", soundvchans);
+	fprintf(f, "soundfreq %d\n", soundfreq);
+#else
 	extern int soundchans, soundfreq, soundbufferlen;
 	fprintf(f, "soundchans %d\n", soundchans);
 	fprintf(f, "soundfreq %d\n", soundfreq);
 	fprintf(f, "soundbufferlen %d\n", soundbufferlen);
+#endif
 	fclose(f);
 }
 
@@ -610,8 +616,8 @@ void startgame(char *load, char *initscript)
 	sv->changemap(load ? load : sv->defaultmap(), 0);
 
 	if (initscript) execute(initscript);
-	if (load) localconnect();
-	else showgui("main");
+
+	localconnect();
 }
 
 int frames = 0;
@@ -654,8 +660,7 @@ void updateframe(bool dorender)
 		{
 			findorientation();
 			entity_particles();
-			updatevol();
-			checkmapsounds();
+			checksound();
 	
 			inbetweenframes = false;
 			SDL_GL_SwapBuffers();
@@ -745,10 +750,11 @@ int main(int argc, char **argv)
 	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 	//#endif
 #ifdef BFRONTIER // joytick support
-	par |= SDL_INIT_JOYSTICK;
-#endif
-
+	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
+	if(SDL_Init(par)<0) fatal("Unable to initialize SDL: ", SDL_GetError());
+#else
 	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_AUDIO|par)<0) fatal("Unable to initialize SDL: ", SDL_GetError());
+#endif
 
 	log("enet");
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
@@ -851,10 +857,7 @@ int main(int argc, char **argv)
     if(!notexture) fatal("could not find core textures");
 
 	log("console");
-#ifdef BFRONTIER // unbuffered i/o
-	setbuf(stdout, NULL);
-	setbuf(stderr, NULL);
-	
+#ifdef BFRONTIER // moved data
 	if(!execfile("packages/font.cfg")) fatal("cannot find font definitions");
 #else
 	if(!execfile("data/font.cfg")) fatal("cannot find font definitions");

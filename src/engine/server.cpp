@@ -324,7 +324,11 @@ void disconnect_client(int n, int reason)
 {
 	if(clients[n]->type!=ST_TCPIP) return;
 	s_sprintfd(s)("client (%s) disconnected because: %s\n", clients[n]->hostname, disc_reasons[reason]);
+#ifdef BFRONTIER
+	conoutf("%s", s);
+#else
 	puts(s);
+#endif
 	enet_peer_disconnect(clients[n]->peer, reason);
 	sv->clientdisconnect(n);
 	clients[n]->type = ST_EMPTY;

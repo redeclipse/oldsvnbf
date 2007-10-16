@@ -16,7 +16,7 @@ struct icliententities
     virtual void readent(entity &e, char *buf) = 0;
 #endif
     virtual float dropheight(entity &e) = 0;
-    virtual void rumble(const extentity &e) = 0;
+    virtual void rumble(extentity &e) = 0;
     virtual void trigger(extentity &e) = 0;
     virtual void fixentity(extentity &e) = 0;
     virtual void entradius(extentity &e, float &radius, float &angle, vec &dir) {}
@@ -240,19 +240,7 @@ struct igameclient
 		return vec(d->o);
 	}
 	
-	virtual void menuevent(int event)
-	{
-		const char *s = NULL;
-		
-		switch (event)
-		{
-			case MN_BACK: s = "sfx/back"; break;
-			case MN_INPUT: s = "sfx/input"; break;
-			default: break;
-		}
-	
-		if (s) playsoundname((char *)s);
-	}
+	virtual void menuevent(int event) { return; }
 #endif
 };
 

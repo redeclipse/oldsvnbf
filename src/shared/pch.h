@@ -25,16 +25,16 @@
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
-#include "windows.h"
+#include <windows.h>
 #endif
 
 #ifndef STANDALONE
 #include <SDL.h>
 #include <SDL_image.h>
 #ifdef BFRONTIER
-#include <SDL_mixer.h>
+#include <fmod.h>
+#include <fmod_errors.h>
 #endif
-#define MAXVOL MIX_MAX_VOLUME
 
 #define GL_GLEXT_LEGACY
 #define __glext_h__

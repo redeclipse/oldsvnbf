@@ -383,7 +383,7 @@ void save_world(char *mname, bool nolms)
 	loopv(mapsounds)
 	{
 		show_out_of_renderloop_progress(float(i)/float(mapsounds.length()), "saving mapsound slots...");
-		fprintf(h, "mapsound \"%s\" %d %d\n", mapsounds[i].s->name, mapsounds[i].vol, mapsounds[i].maxuses);
+		fprintf(h, "mapsound \"%s\" %d %d\n", mapsounds[i].sample->name, mapsounds[i].vol, mapsounds[i].maxuses);
 	}
 	if (mapsounds.length()) fprintf(h, "\n");
 	if (verbose >= 2) console("saved %d mapsound slots", CON_RIGHT, mapsounds.length());
