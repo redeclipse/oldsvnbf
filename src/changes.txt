@@ -7,6 +7,11 @@ Legend [
 ]
 
 = wip edition =
+gam: can no longer switch back to a weapon while it is still reloading
+gam: cg and gl pushback and wobble fixed
+gam: independant reloading and shooting now works properly both client and server side
+gam: itemstat merged into guninfo
+eng: mingw tweaks and fixes
 eng: map issues fixed
 eng: materialreset now automatically done along with texturereset and mapmodelreset
 eng: findtexturetype and findmaterial fall back to integers when not found

@@ -175,7 +175,7 @@ struct igameclient
 			
 			loopi(10)
 			{
-				if(!moveplayer(camera1, 10, true, thirdpersondistance)) break;
+				if(!moveplayer(camera1, 10, true, 16)) break;
 			}
 		}
 	}
@@ -191,9 +191,7 @@ struct igameclient
 			worldpos = dir.mul(10).add(camera1->o); //otherwise 3dgui won't work when outside of map
 	}
 	
-	virtual void fixview() { return; }
-
-	virtual void fixcamera()
+	virtual void fixview()
 	{
 		extern physent *camera1;
 		const float MAXPITCH = 90.0f;
@@ -202,7 +200,7 @@ struct igameclient
 		while(camera1->yaw<0.0f) camera1->yaw += 360.0f;
 		while(camera1->yaw>=360.0f) camera1->yaw -= 360.0f;
 	}
-	
+
 	virtual void mousemove(int dx, int dy)
 	{
 		extern int sensitivity, sensitivityscale, invmouse;
@@ -211,7 +209,7 @@ struct igameclient
 		const float SENSF = 33.0f;	 // try match quake sens
 		camera1->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 		camera1->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
-		fixcamera();
+		fixview();
 		if(camera1!=player && player->state!=CS_DEAD)
 		{
 			player->yaw = camera1->yaw;
