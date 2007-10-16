@@ -175,9 +175,9 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 		glBindTexture(target, tnum);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glTexParameteri(target, GL_TEXTURE_WRAP_S, clamp&1 ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-		glTexParameteri(target, GL_TEXTURE_WRAP_T, clamp&2 ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, bilinear ? GL_LINEAR : GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, 
+        if(target!=GL_TEXTURE_1D) glTexParameteri(target, GL_TEXTURE_WRAP_T, clamp&2 ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+        glTexParameteri(target, GL_TEXTURE_MAG_FILTER, bilinear ? GL_LINEAR : GL_NEAREST);
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, 
 			mipit ?
 				(trilinear ? 
 					(bilinear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR) : 
@@ -233,11 +233,19 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 			glTexImage2D(subtarget, 0, compressed, w, h, 0, format, type, pixels); 
 			if(subtarget==target) glGenerateMipmap_(target);
 		} 
+        else if(target==GL_TEXTURE_1D)
+        {
+            if(gluBuild1DMipmaps(subtarget, compressed, w, format, type, pixels))
+            {
+                if(compressed==component || gluBuild1DMipmaps(subtarget, component, w, format, type, pixels)) conoutf("could not build mipmaps");
+            }
+        }
 		else if(gluBuild2DMipmaps(subtarget, compressed, w, h, format, type, pixels))
 		{
 			if(compressed==component || gluBuild2DMipmaps(subtarget, component, w, h, format, type, pixels)) conoutf("could not build mipmaps");
 		}
 	}
+    else if(target==GL_TEXTURE_1D) glTexImage1D(subtarget, 0, component, w, 0, format, type, pixels);
 	else glTexImage2D(subtarget, 0, component, w, h, 0, format, type, pixels);
 	if(scaled) delete[] scaled;
 }
@@ -431,7 +439,6 @@ void materialreset()
 }
 
 COMMAND(materialreset, "");
-
 #ifdef BFRONTIER
 sometype textypes[] =
 {
@@ -514,7 +521,6 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 }
 
 COMMAND(texture, "ssiiif");
-
 #ifdef BFRONTIER
 void texturedel(int i, bool local)
 {
@@ -697,7 +703,7 @@ SDL_Surface *scalesurface(SDL_Surface *os, int w, int h)
 
 static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 {
-    if(renderpath==R_FIXEDFUNCTION && t.type!=TEX_DIFFUSE && (!glowpass || t.type!=TEX_GLOW) && !forceload) { t.t = notexture; return; }
+    if(renderpath==R_FIXEDFUNCTION && t.type!=TEX_DIFFUSE && t.type!=TEX_GLOW && !forceload) { t.t = notexture; return; }
 	vector<char> key; 
 	addname(key, s, t);
 	switch(t.type)
@@ -705,7 +711,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 		case TEX_DIFFUSE:
 			if(renderpath==R_FIXEDFUNCTION)
 			{
-				for(int i = -1; (i = findtextype(s, (1<<TEX_DECAL)|(1<<TEX_NORMAL)|(!glowpass ? 1<<TEX_GLOW : 0), i))>=0;)
+                for(int i = -1; (i = findtextype(s, (1<<TEX_DECAL)|(1<<TEX_NORMAL), i))>=0;)
 				{
 					s.sts[i].combined = index;
 					addname(key, s, s.sts[i]);

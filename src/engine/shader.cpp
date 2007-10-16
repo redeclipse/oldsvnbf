@@ -536,17 +536,26 @@ static bool findunusedtexcoordcomponent(char *str, int &texcoord, int &component
         { \
             str = strstr(str, "result.color"); \
             if(!str) break; \
-            memcpy(str, tmpuse, strlen(tmpuse)); \
+            if(str[12]!='.' || (str[13]!='a' && str[13]!='w')) memcpy(str, tmpuse, strlen(tmpuse)); \
+            str += 12; \
+        } \
+        s_sprintfd(fogtcstr)("fragment.texcoord[%d].%c", fogtc, fogcomp==3 ? 'w' : 'x'+fogcomp); \
+        str = strstr(psbuf.getbuf(), "fragment.fogcoord.x"); \
+        if(str) \
+        { \
+            int fogtclen = strlen(fogtcstr); \
+            memcpy(str, fogtcstr, 19); \
+            psbuf.insert(&str[19] - psbuf.getbuf(), &fogtcstr[19], fogtclen-19); \
         } \
         char *end = strstr(psbuf.getbuf(), "END"); \
         if(end) psbuf.setsizenodelete(end - psbuf.getbuf()); \
         s_sprintfd(calcfog)( \
             "TEMP emufog;\n" \
-            "SUB emufog, state.fog.params.z, fragment.texcoord[%d].%c;\n" \
+            "SUB emufog, state.fog.params.z, %s;\n" \
             "MUL_SAT emufog, emufog, state.fog.params.w;\n" \
-            "LRP result.color, emufog, emufogcolor, state.fog.color;\n" \
+            "LRP result.color.rgb, emufog, emufogcolor, state.fog.color;\n" \
             "END\n", \
-            fogtc, fogcomp==3 ? 'w' : 'x'+fogcomp); \
+            fogtcstr); \
         psbuf.put(calcfog, strlen(calcfog)+1); \
     }
 
@@ -564,7 +573,7 @@ static void gendynlightvariant(Shader &s, char *sname, char *vs, char *ps, int r
 		uint usedtc = findusedtexcoords(vs);
 		GLint maxtc = 0;
 		glGetIntegerv(GL_MAX_TEXTURE_COORDS_ARB, &maxtc);
-        int reservetc = row ? reserveshadowmaptc : reservedynlighttc;
+        int reservetc = row%2 ? reserveshadowmaptc : reservedynlighttc;
         if(maxtc-reservetc<0) return;
         loopi(maxtc-reservetc) if(!(usedtc&(1<<i))) 
 		{
@@ -660,7 +669,7 @@ static void gendynlightvariant(Shader &s, char *sname, char *vs, char *ps, int r
 	}
 }
 
-static void genshadowmapvariant(Shader &s, char *sname, char *vs, char *ps)
+static void genshadowmapvariant(Shader &s, char *sname, char *vs, char *ps, int row = 1)
 {
     int smtc = -1, emufogtc = -1, emufogcomp = -1;
     const char *emufogcoord = NULL;
@@ -761,10 +770,30 @@ static void genshadowmapvariant(Shader &s, char *sname, char *vs, char *ps)
     EMUFOGPS(emufogcoord, pssm, emufogtc, emufogcomp);
 
     s_sprintfd(name)("<shadowmap>%s", sname);
-    Shader *variant = newshader(s.type, name, vssm.getbuf(), pssm.getbuf(), &s, 1);
+    Shader *variant = newshader(s.type, name, vssm.getbuf(), pssm.getbuf(), &s, row);
     if(!variant) return;
 
-    if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vssm.getbuf(), pssm.getbuf(), 1);
+    if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vssm.getbuf(), pssm.getbuf(), row);
+}
+
+static void genwatervariant(Shader &s, char *sname, char *vs, char *ps, int row = 2)
+{
+    char *pspragma = strstr(ps, "#pragma CUBE2_water");
+    pspragma += strcspn(pspragma, "\n");
+    if(*pspragma) pspragma++;
+
+    vector<char> psw;
+    psw.put(ps, pspragma-ps);
+    const char *fogtoalpha = s.type & SHADER_GLSLANG ? "gl_FragColor.a = gl_FogFragCoord;\n" : "MAD result.color.a, fragment.fogcoord.x, 0.25, 0.5;\n";
+    psw.put(fogtoalpha, strlen(fogtoalpha));
+    psw.put(pspragma, strlen(pspragma)+1);
+
+    s_sprintfd(name)("<water>%s", sname);
+    Shader *variant = newshader(s.type, name, vs, psw.getbuf(), &s, row);
+    if(!variant) return;
+
+    if(strstr(vs, "#pragma CUBE2_shadowmap")) genshadowmapvariant(s, name, vs, psw.getbuf(), row+1);
+    if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vs, psw.getbuf(), row);
 }
 
 void shader(int *type, char *name, char *vs, char *ps)
@@ -788,6 +817,7 @@ void shader(int *type, char *name, char *vs, char *ps)
 	if(s && renderpath!=R_FIXEDFUNCTION)
 	{
 		// '#' is a comment in vertex/fragment programs, while '#pragma' allows an escape for GLSL, so can handle both at once
+        if(strstr(ps, "#pragma CUBE2_water")) genwatervariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_shadowmap")) genshadowmapvariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(*s, s->name, vs, ps);
 	}
@@ -1094,11 +1124,17 @@ struct tmu
 	{ GL_MODULATE, { GL_TEXTURE, GL_PREVIOUS_ARB, GL_CONSTANT_ARB }, { GL_SRC_ALPHA, GL_SRC_ALPHA, GL_SRC_ALPHA }, 1 } \
 }
 
-tmu tmus[4] =
+#define MAXTMUS 8
+
+tmu tmus[MAXTMUS] =
 {
 	INVALIDTMU,
 	INVALIDTMU,
 	INVALIDTMU,
+    INVALIDTMU,
+    INVALIDTMU,
+    INVALIDTMU,
+    INVALIDTMU,
 	INVALIDTMU
 };
 
@@ -1197,7 +1233,7 @@ void inittmus()
 	if(hasTE && hasMT)
 	{
 		glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, (GLint *)&maxtmus);
-		maxtmus = max(1, min(4, maxtmus));
+        maxtmus = max(1, min(MAXTMUS, maxtmus));
 		loopi(maxtmus)
 		{
 			glActiveTexture_(GL_TEXTURE0_ARB+i);
@@ -1205,11 +1241,16 @@ void inittmus()
 		}
 		glActiveTexture_(GL_TEXTURE0_ARB);
 	}
-	if(renderpath==R_FIXEDFUNCTION && maxtmus<2)
+    if(renderpath==R_FIXEDFUNCTION)
+    {
+        if(maxtmus<4) caustics = 0;
+        if(maxtmus<2)
 	{
 		nolights = nowater = nomasks = 1;
 		extern int lightmodels;
 		lightmodels = 0;
+            refractfog = 0;
+        }
 	}
 }
 

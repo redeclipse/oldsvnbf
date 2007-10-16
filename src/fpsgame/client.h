@@ -28,6 +28,7 @@ struct clientcom : iclientcom
         CCOMMAND(spectator, "is", (clientcom *self, int *val, char *who), self->togglespectator(*val, who));
         CCOMMAND(mastermode, "i", (clientcom *self, int *val), if(self->remote) self->addmsg(SV_MASTERMODE, "ri", *val));
         CCOMMAND(setmaster, "s", (clientcom *self, char *s), self->setmaster(s));
+        CCOMMAND(approvemaster, "s", (clientcom *self, char *s), self->approvemaster(s));
         CCOMMAND(setteam, "ss", (clientcom *self, char *who, char *team), self->setteam(who, team));
         CCOMMAND(getmap, "", (clientcom *self), self->getmap());
         CCOMMAND(sendmap, "", (clientcom *self), self->sendmap());
@@ -177,6 +178,13 @@ struct clientcom : iclientcom
 		else passwd = arg;
 		addmsg(SV_SETMASTER, "ris", val, passwd);
 	}
+
+    void approvemaster(const char *who)
+    {
+        if(!remote) return;
+        int i = parseplayer(who);
+        if(i>=0) addmsg(SV_APPROVEMASTER, "ri", i);
+    }
 
     void togglespectator(int val, const char *who)
 	{
@@ -572,7 +580,9 @@ struct clientcom : iclientcom
 				{
 					if(mapchanged) cl.et.setspawn(n, true);
 					getint(p); // type
+#ifdef BFRONTIER
 					loopi(5) getint(p); // attr
+#endif
 				}
 				break;
 			}
@@ -1051,11 +1061,7 @@ struct clientcom : iclientcom
 			case SV_NEWMAP:
 			{
 				int size = getint(p);
-#ifdef BFRONTIER
 				if(size>=0) emptymap(size, true);
-#else
-				if(size>=0) emptymap(size, true);
-#endif
 				else enlargemap(true);
 				if(d && d!=player1)
 				{
@@ -1083,7 +1089,7 @@ struct clientcom : iclientcom
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle()) toggleedit();
 		if(m_demo) return;
-#ifndef BFRONTIER
+#ifdef BFRONTIER
 		load_world(name);
 #else
 		if(gamemode==1 && !name[0]) emptymap(0, true);

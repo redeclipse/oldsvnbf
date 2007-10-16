@@ -30,6 +30,7 @@ void quit()					 // normal exit
 
 void fatal(char *s, char *o)	// failure exit
 {
+    SDL_ShowCursor(1);
 	s_sprintfd(msg)("%s%s\n", s, o);
 	printf(msg);
 	#ifdef WIN32
@@ -39,7 +40,7 @@ void fatal(char *s, char *o)	// failure exit
 		MessageBox(NULL, msg, "sauerbraten fatal error", MB_OK|MB_SYSTEMMODAL);
 #endif
 	#endif
-	cleanup();
+    SDL_Quit();
 	exit(EXIT_FAILURE);
 }
 

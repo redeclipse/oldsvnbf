@@ -74,7 +74,7 @@ ivec cur, lastcur;
 extern int entediting;
 bool editmode = false;
 bool havesel = false;
-bool selhmap = false;
+bool hmapsel = false;
 int  horient = 0;
 
 extern int entmoving;
@@ -86,8 +86,6 @@ VARF(dragging, 0, 0, 1,
 	sel.grid = gridsize;
 	sel.orient = orient;
 );
-
-VAR(selectcorners, 0, 0, 1);
 
 VARF(moving, 0, 0, 1,
 	if(!moving) return;
@@ -123,6 +121,8 @@ VARF(gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
 
 VAR(passthroughsel, 0, 0, 1);
 VAR(editing, 1, 0, 0);
+VAR(selectcorners, 0, 0, 1);
+VARF(hmapedit, 0, 0, 1, cancelsel());
 
 void toggleedit()
 {
@@ -301,6 +301,7 @@ void cursorupdate()
 		odc = dimcoord(orient);
 
 	bool hovering = false;
+    hmapsel = false;
 			
 	if(moving)
 	{		
@@ -360,7 +361,7 @@ void cursorupdate()
 			v.add(player->o);
 			w = v;
             cube *c = &lookupcube(w.x, w.y, w.z);            
-            if(gridlookup && !dragging && !moving && !havesel && !selhmap) gridsize = lusize;
+            if(gridlookup && !dragging && !moving && !havesel && hmapedit!=1) gridsize = lusize;
 			int mag = lusize / gridsize;
 			normalizelookupcube(w.x, w.y, w.z);
 			if(sdist == 0 || sdist > wdist) rayrectintersect(lu.tovec(), vec(gridsize), player->o, ray, t=0, orient); // just getting orient	 
@@ -370,10 +371,10 @@ void cursorupdate()
 			od = dimension(orient);
 			d = dimension(sel.orient);
 
-            if(mag > 0)
+            if(mag > 0 && hmapedit==1)
             {
-                selhmap = isheightmap(horient, dimension(horient), false, c);     
-                    if(selhmap) 
+                hmapsel = isheightmap(horient, dimension(horient), false, c);     
+                if(hmapsel)
                     od = dimension(orient = horient);
             }
 
@@ -444,7 +445,7 @@ void cursorupdate()
 
 	if(!moving && !hovering)
 	{
-        if(selhmap)
+        if(hmapsel)
             glColor3ub(0,200,0);
         else
 		glColor3ub(120,120,120);
@@ -790,21 +791,45 @@ void brushvert(int *x, int *y, int *v)
 	brushmaxy = max(brushmaxy, *y+1);
 }
 
-int hmaptexture = -1; // will probably want list
+#define HMAPTEXMAX  64
+int htextures[HMAPTEXMAX];
+int htexsize = 0;
 
 COMMAND(clearbrush, "");
 COMMAND(brushvert, "iii");
-ICOMMAND(addhtex, "", (), hmaptexture = lookupcube(cur.x, cur.y, cur.z).texture[horient = orient]);
-ICOMMAND(hmapcancel, "", (), hmaptexture = -1; );
+ICOMMAND(hmapaddtex, "", (), htextures[htexsize++] = lookupcube(cur.x, cur.y, cur.z).texture[horient = orient]);
+ICOMMAND(hmapcancel, "", (), htexsize = 0; );
+
+bool ischildless(cube &c)
+{
+    if(!c.children)
+        return true;
+    loopi(8)
+    {
+        if(!ischildless(c.children[i]) || !isempty(c.children[i]))
+            return false;
+    }
+    emptyfaces(c);
+    discardchildren(c);    
+    return true;
+}
+
+inline bool ishtexture(int t)
+{    
+    loopi(htexsize) // TODO: optimize with special tex index region
+        if(t == htextures[i])
+            return true;
+    return false;
+}
 
 inline bool isheightmap(int o, int d, bool empty, cube *c) 
 {
-    return !c->children && 
+    return ischildless(*c) && 
            ( (empty && isempty(*c)) ||
            (         
             (c->faces[R[d]] & 0x77777777) == 0 &&
             (c->faces[C[d]] & 0x77777777) == 0 &&
-             c->texture[o] == hmaptexture
+            ishtexture(c->texture[o])
            ));
 }
 
@@ -827,14 +852,13 @@ namespace hmap
     inline uint bitspread(uint a)  { return greytoggle(((a>>24)&0x000000FF) | ((a<<8)&0xFFFFFF00) | ((a<<24)&0xFF000000) | ((a>>8)&0x00FFFFFF) | a); };
 
     inline cube *getcube(ivec t, int f) 
-	{	// TODO: This will most likely be bottle neck
-		//		look at loopoctabox + precache for help
+    {
         t[d] += f;    
         cube *c = &lookupcube(t.x, t.y, t.z, -gridsize);
         if(!isheightmap(sel.orient, d, true, c)) return NULL;        
 		if(lusize > gridsize)
             c = &lookupcube(t.x, t.y, t.z, gridsize);
-		discardchildren(*c); // necessary? for ext?	 
+        discardchildren(*c);    
         if     (t.x < changes.o.x) changes.o.x = t.x;
         else if(t.x > changes.s.x) changes.s.x = t.x;
         if     (t.y < changes.o.y) changes.o.y = t.y;
@@ -1063,8 +1087,8 @@ namespace hmap
 		if(ispair) 
 		{
                  if(e && top==&oh) pushside(e->faces[R[d]], oh);
+            else if(c && top==&hi) pushside(c->faces[R[d]], hi);
             else if(b && top==&lo) pushside(b->faces[R[d]], lo);
-            else if(c)             pushside(c->faces[R[d]], hi);
 		}
 		
         snap = bitnormal(snap);
@@ -1122,15 +1146,13 @@ namespace hmap
         int y = clamp(MAXBRUSH2-cy, my, ny);
         int z = f1;        
         
-        
    //     printf("----------------\n%x g %d %d %d \n----------------\n", fs, gx, gy, gz);
    //     printf(" cur %d %d %d : %d\n", cur.x, cur.y, cur.z, gridsize);
 
         changes.grid = gridsize;
         changes.s = changes.o = cur;
         hedit(x, y, z, 0, 0);
-        changes.s.sub(changes.o);
-        changes.s.shr(gridpower);
+        changes.s.sub(changes.o).shr(gridpower).add(1);
         changed(changes);
     }
 }
@@ -1272,10 +1294,10 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
 void editface(int *dir, int *mode)
 {
 	if(noedit(moving!=0)) return;
-    if(selhmap)
+    if(hmapedit!=1)
+        mpeditface(*dir, *mode, sel, true);        
+    else 
 		edithmap(*dir, *mode);
-	else
-		mpeditface(*dir, *mode, sel, true);
 }
 
 VAR(selectionsurf, 0, 0, 1);

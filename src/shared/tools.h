@@ -347,6 +347,14 @@ template <class T> struct vector
         return buf[i];
     }
 
+    T *insert(int i, const T *e, int n)
+    {
+        loopj(n) add(T());
+        for(int p = ulen-1; p>=i+n; p--) buf[p] = buf[p-n];
+        loopj(n) buf[i+j] = e[j];
+        return &buf[i];
+    }
+
     void reverse()
     {
         loopi(ulen/2) swap(T, buf[i], buf[ulen-1-i]);

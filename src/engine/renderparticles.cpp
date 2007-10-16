@@ -85,7 +85,8 @@ static void makeflare(vec &o, uchar r, uchar g, uchar b, bool sun, bool sparkle)
 
 static void renderflares(int time)
 {
-	glDisable(GL_FOG);
+    bool fog = glIsEnabled(GL_FOG)==GL_TRUE;
+    if(fog) glDisable(GL_FOG);
 	defaultshader->set();
 	glDisable(GL_DEPTH_TEST);
 
@@ -131,7 +132,7 @@ static void renderflares(int time)
 	}
 	glEnd();
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_FOG);
+    if(fog) glEnable(GL_FOG);
 }
 
 static void makelightflares()
@@ -518,7 +519,7 @@ static void cleanupexplosion()
 	{
 		if(explosion2d) glDisableClientState(GL_TEXTURE_COORD_ARRAY); 
 
-        if(reflecting && refracting) setfogplane(1, refracting);
+        if(refracting) setfogplane(1, refracting);
 		foggedshader->set();
 	}
 
@@ -832,13 +833,15 @@ void render_particles(int time)
 						
 			if(quads)
 			{
-				if(pt.type&PT_MOD)
+                if(type!=PT_FLARE) 
 				{	
-					blend = min(blend<<2, 255); //multiply alpha into color
+                    blend = min(blend<<2, 255);
+                    if(type!=PT_LIGHTNING && renderpath==R_FIXEDFUNCTION && refracting && refractfog) blend = (uchar)(blend * max(0, min(1, (refracting - o.z)/waterfog)));
+                } 
+                if(pt.type&PT_MOD) //multiply alpha into color
 					glColor3ub((color[0]*blend)>>8, (color[1]*blend)>>8, (color[2]*blend)>>8);
-				}
 				else
-					glColor4ub(color[0], color[1], color[2], type==PT_FLARE ? blend : min(blend<<2, 255));
+                    glColor4ub(color[0], color[1], color[2], blend);
 					
 				float tx = 0, ty = 0, tsz = 1;
 				if(pt.type&PT_RND4)
@@ -937,8 +940,11 @@ void render_particles(int time)
 				glPushMatrix();
 				glTranslatef(o.x, o.y, o.z);
 				
-                if(reflecting && refracting) setfogplane(0, refracting - o.z, true);
-
+                if(refracting)
+                {
+                    if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, refracting - o.z, true);
+                    else if(refractfog) blend = (uchar)(blend * max(0, min(1, (refracting - o.z)/waterfog)));
+                }
 				if(type==PT_FIREBALL)
 				{
 					float pmax = p->val;
@@ -1106,7 +1112,7 @@ void render_particles(int time)
             case PT_METERVS:
 				glEnable(GL_BLEND);
 				glEnable(GL_TEXTURE_2D);
-                if(reflecting && refracting) setfogplane(1, refracting);
+                if(refracting && renderpath!=R_FIXEDFUNCTION) setfogplane(1, refracting);
 				foggedshader->set();
 				glFogfv(GL_FOG_COLOR, zerofog);
                 break;
@@ -1114,7 +1120,7 @@ void render_particles(int time)
             default:
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE);
                 glFogfv(GL_FOG_COLOR, zerofog);
-                if(reflecting && refracting) setfogplane(1, refracting, true);
+                if(refracting && renderpath!=R_FIXEDFUNCTION) setfogplane(1, refracting, true);
                 break;
 		}
 		
@@ -1467,7 +1473,6 @@ void entity_particles()
 		{
 			entity &e = *ents[i];
 			if(e.type==ET_EMPTY) continue;
-
 			particle_text(e.o, entname(e), 11, 1);
 			regular_particle_splash(2, 2, 40, e.o);
 		}

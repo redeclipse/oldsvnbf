@@ -59,7 +59,7 @@ struct vertmodel : model
         skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), override(0), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), fullbright(0), envmapmin(0), envmapmax(0), translucency(0.5f), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true) {}
 
         bool multitextured() { return enableglow; }
-        bool envmapped() { return hasCM && envmapmax>0 && envmapmodels && (renderpath!=R_FIXEDFUNCTION || maxtmus>=3); }
+        bool envmapped() { return hasCM && envmapmax>0 && envmapmodels && (renderpath!=R_FIXEDFUNCTION || maxtmus >= (refracting && refractfog ? 4 : 3)); }
         bool bumpmapped() { return renderpath!=R_FIXEDFUNCTION && normalmap && bumpmodels; }
         bool normals() { return renderpath!=R_FIXEDFUNCTION || (lightmodels && !fullbright) || envmapped() || bumpmapped(); }
         bool tangents() { return bumpmapped(); }
@@ -68,6 +68,12 @@ struct vertmodel : model
         {
             if(fullbright && enablelighting) { glDisable(GL_LIGHTING); enablelighting = false; }
             else if(lightmodels && !enablelighting) { glEnable(GL_LIGHTING); enablelighting = true; }
+            int needsfog = -1;
+            if(refracting && refractfog)
+            {
+                needsfog = masked ? 2 : 1;
+                if(fogtmu!=needsfog && fogtmu>=0) disablefog(true);
+            }
             if(masked!=enableglow) lasttex = lastmasks = NULL;
             if(masked)
             {
@@ -94,11 +100,11 @@ struct vertmodel : model
 
                 if(as.anim&ANIM_ENVMAP && envmapmax>0 && as.anim&ANIM_TRANSLUCENT)
                 {
-                    glActiveTexture_(GL_TEXTURE2_ARB);
-                    colortmu(2, 0, 0, 0, translucency);
+                    glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
+                    colortmu(envmaptmu, 0, 0, 0, translucency);
                 }
 
-                glActiveTexture_(GL_TEXTURE0_ARB);
+                if(needsfog<0) glActiveTexture_(GL_TEXTURE0_ARB);
 
                 enableglow = true;
             }
@@ -112,6 +118,28 @@ struct vertmodel : model
                     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, material);
                 }
                 else glColor4f(lightcolor.x, lightcolor.y, lightcolor.z, as.anim&ANIM_TRANSLUCENT ? translucency : 1);
+            }
+            if(needsfog>=0)
+            {
+                if(needsfog!=fogtmu)
+                {
+                    fogtmu = needsfog;
+                    glActiveTexture_(GL_TEXTURE0_ARB+fogtmu);
+                    glEnable(GL_TEXTURE_1D);
+                    glEnable(GL_TEXTURE_GEN_S);
+                    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+                    setuptmu(fogtmu, "K , P @ Ta", masked && as.anim&ANIM_ENVMAP && envmapmax>0 ? "Ka , Pa @ Ta" : "= Pa");
+                    uchar wcol[3];
+                    getwatercolour(wcol);
+                    colortmu(fogtmu, wcol[0]/255.0f, wcol[1]/255.0f, wcol[2]/255.0f, 0);
+                    if(!fogtex) createfogtex();
+                    glBindTexture(GL_TEXTURE_1D, fogtex);
+                }
+                else glActiveTexture_(GL_TEXTURE0_ARB+fogtmu);
+                if(!enablefog) { glEnable(GL_TEXTURE_1D); enablefog = true; }
+                GLfloat s[4] = { -refractfogplane.x/waterfog, -refractfogplane.y/waterfog, -refractfogplane.z/waterfog, -refractfogplane.offset/waterfog };
+                glTexGenfv(GL_S, GL_OBJECT_PLANE, s);
+                glActiveTexture_(GL_TEXTURE0_ARB);
             }
             if(lightmodels && !fullbright)
             {
@@ -193,6 +221,7 @@ struct vertmodel : model
                 if(enableglow) disableglow();
                 if(enableenvmap) disableenvmap();
                 if(enablelighting) { glDisable(GL_LIGHTING); enablelighting = false; }
+                if(enablefog) disablefog(true);
                 return;
             }
             Texture *s = bumpmapped() && unlittex ? unlittex : tex, *m = masks, *n = bumpmapped() ? normalmap : NULL;
@@ -206,7 +235,10 @@ struct vertmodel : model
                     if(n && slot.sts.length() >= 3) n = slot.sts[2].t;
                 }
             }
-            if((renderpath==R_FIXEDFUNCTION || !lightmodels) && !glowmodels && (!envmapmodels || !(as.anim&ANIM_ENVMAP) || envmapmax<=0)) m = notexture;
+            if((renderpath==R_FIXEDFUNCTION || !lightmodels) && 
+               (!glowmodels || (renderpath==R_FIXEDFUNCTION && refracting && refractfog && maxtmus<=2)) &&
+               (!envmapmodels || !(as.anim&ANIM_ENVMAP) || envmapmax<=0)) 
+                m = notexture;
             setshader(as, m!=notexture);
             if(s!=lasttex)
             {
@@ -256,16 +288,16 @@ struct vertmodel : model
                 if(!enableglow) glActiveTexture_(GL_TEXTURE0_ARB);
                 lastmasks = m;
             }
-            if(as.anim&ANIM_ENVMAP && envmapmax>0)
+            if((renderpath!=R_FIXEDFUNCTION || m!=notexture) && as.anim&ANIM_ENVMAP && envmapmax>0)
             {
                 GLuint emtex = envmap ? envmap->gl : closestenvmaptex;
                 if(!enableenvmap || lastenvmaptex!=emtex)
                 {
-                    glActiveTexture_(GL_TEXTURE2_ARB);
+                    glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
                     if(!enableenvmap)
                     {
                         glEnable(GL_TEXTURE_CUBE_MAP_ARB);
-                        if(renderpath==R_FIXEDFUNCTION)
+                        if(!lastenvmaptex && renderpath==R_FIXEDFUNCTION)
                         {
                             glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
                             glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
@@ -1113,7 +1145,7 @@ struct vertmodel : model
 
             if(d && index<2)
             {
-                if(d->lastmodel[index]!=this || d->lastanimswitchtime[index]==-1)
+                if(d->lastmodel[index]!=this || d->lastanimswitchtime[index]==-1 || lastmillis-d->lastrendered>animationinterpolationtime)
                 {
                     d->prev[index] = d->current[index] = as;
                     d->lastanimswitchtime[index] = lastmillis-animationinterpolationtime*2;
@@ -1232,12 +1264,16 @@ struct vertmodel : model
                     setenvparamf("direction", SHPARAM_VERTEX, 0, rdir.x, rdir.y, rdir.z);
                     setenvparamf("camera", SHPARAM_VERTEX, 1, rcampos.x, rcampos.y, rcampos.z, 1);
                 }
-                else if(lightmodels) loopv(skins) if(!skins[i].fullbright)
+                else 
                 {
-                    GLfloat pos[4] = { rdir.x*1000, rdir.y*1000, rdir.z*1000, 0 };
-                    glLightfv(GL_LIGHT0, GL_POSITION, pos);
-                    break;
-                }
+                    if(refracting && refractfog) refractfogplane = rfogplane;
+                    if(lightmodels) loopv(skins) if(!skins[i].fullbright)
+                	{
+                    	GLfloat pos[4] = { rdir.x*1000, rdir.y*1000, rdir.z*1000, 0 };
+                   		glLightfv(GL_LIGHT0, GL_POSITION, pos);
+                    	break;
+                	}
+            	}
             }
 
             meshes->render(as, cur, doai ? &prev : NULL, ai_t, skins);
@@ -1491,11 +1527,15 @@ struct vertmodel : model
 
         if(anim&ANIM_ENVMAP)
         {
-            if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE2_ARB);
+            if(renderpath==R_FIXEDFUNCTION) 
+            {
+                envmaptmu = refracting && refractfog ? 3 : 2;
+                glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
+            }
             glMatrixMode(GL_TEXTURE);
             if(renderpath==R_FIXEDFUNCTION)
             {
-                setuptmu(2, "T , P @ Pa", anim&ANIM_TRANSLUCENT ? "= Ka" : NULL);
+                setuptmu(envmaptmu, "T , P @ Pa", anim&ANIM_TRANSLUCENT ? "= Ka" : NULL);
 
                 GLfloat mm[16], mmtrans[16];
                 glGetFloatv(GL_MODELVIEW_MATRIX, mm);
@@ -1528,7 +1568,7 @@ struct vertmodel : model
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
             nocolorshader->set();
             render(anim|ANIM_NOSKIN, varseed, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
-            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, refracting && renderpath!=R_FIXEDFUNCTION ? GL_FALSE : GL_TRUE);
 
             glDepthFunc(GL_LEQUAL);
         }
@@ -1544,7 +1584,7 @@ struct vertmodel : model
 
         if(anim&ANIM_ENVMAP)
         {
-            if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE2_ARB);
+            if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
             glMatrixMode(GL_TEXTURE);
             glLoadIdentity();
             glMatrixMode(GL_MODELVIEW);
@@ -1554,23 +1594,28 @@ struct vertmodel : model
         if(anim&ANIM_TRANSLUCENT) glDepthFunc(GL_LESS);
 
         glPopMatrix();
+
+        if(d) d->lastrendered = lastmillis;
     }
 
-    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enablelighting, enablecullface;
+    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enablelighting, enablecullface, enablefog;
     static vec lightcolor;
+    static plane refractfogplane;
     static float lastalphatest;
     static void *lastvbuf, *lasttcbuf, *lastmtcbuf;
     static GLuint lastebuf, lastenvmaptex, closestenvmaptex;
     static Texture *lasttex, *lastmasks, *lastnormalmap;
+    static int envmaptmu, fogtmu;
 
     void startrender()
     {
-        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enablelighting = false;
+        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enablelighting = enablefog = false;
         enablecullface = true;
         lastalphatest = -1;
         lastvbuf = lasttcbuf = lastmtcbuf = NULL;
         lastebuf = lastenvmaptex = closestenvmaptex = 0;
         lasttex = lastmasks = lastnormalmap = NULL;
+        envmaptmu = fogtmu = -1;
 
         static bool initlights = false;
         if(renderpath==R_FIXEDFUNCTION && lightmodels && !initlights)
@@ -1625,12 +1670,27 @@ struct vertmodel : model
         enableglow = false;
     }
 
-    static void disableenvmap()
+    static void disablefog(bool cleanup = false)
     {
-        glActiveTexture_(GL_TEXTURE2_ARB);
-        glDisable(GL_TEXTURE_CUBE_MAP_ARB);
-        if(renderpath==R_FIXEDFUNCTION)
+        glActiveTexture_(GL_TEXTURE0_ARB+fogtmu);
+        if(enablefog) glDisable(GL_TEXTURE_1D);
+        if(cleanup)
+    {
+            resettmu(fogtmu);
+            glDisable(GL_TEXTURE_GEN_S);
+            fogtmu = -1;
+        }
+        glActiveTexture_(GL_TEXTURE0_ARB);
+        enablefog = false;
+    }
+
+    static void disableenvmap(bool cleanup = false)
+    {
+        glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
+        if(enableenvmap) glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+        if(cleanup && renderpath==R_FIXEDFUNCTION)
         {
+            resettmu(envmaptmu);
             glDisable(GL_TEXTURE_GEN_S);
             glDisable(GL_TEXTURE_GEN_T);
             glDisable(GL_TEXTURE_GEN_R);
@@ -1646,16 +1706,20 @@ struct vertmodel : model
         if(enablealphablend) glDisable(GL_BLEND);
         if(enableglow) disableglow();
         if(enablelighting) glDisable(GL_LIGHTING);
-        if(enableenvmap) disableenvmap();
+        if(lastenvmaptex) disableenvmap(true);
         if(!enablecullface) glEnable(GL_CULL_FACE);
+        if(fogtmu>=0) disablefog(true);
     }
 };
 
 bool vertmodel::enabletc = false, vertmodel::enablemtc = false, vertmodel::enablealphatest = false, vertmodel::enablealphablend = false, 
-     vertmodel::enableenvmap = false, vertmodel::enableglow = false, vertmodel::enablelighting = false, vertmodel::enablecullface = true;
+     vertmodel::enableenvmap = false, vertmodel::enableglow = false, vertmodel::enablelighting = false, vertmodel::enablecullface = true,
+     vertmodel::enablefog = false;
 vec vertmodel::lightcolor;
+plane vertmodel::refractfogplane;
 float vertmodel::lastalphatest = -1;
 void *vertmodel::lastvbuf = NULL, *vertmodel::lasttcbuf = NULL, *vertmodel::lastmtcbuf = NULL;
 GLuint vertmodel::lastebuf = 0, vertmodel::lastenvmaptex = 0, vertmodel::closestenvmaptex = 0;
 Texture *vertmodel::lasttex = NULL, *vertmodel::lastmasks = NULL, *vertmodel::lastnormalmap = NULL;
+int vertmodel::envmaptmu = -1, vertmodel::fogtmu = -1;
 

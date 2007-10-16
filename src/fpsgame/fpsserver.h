@@ -10,14 +10,18 @@ struct fpsserver : igameserver
 {
 	struct server_entity			// server side version of "entity" type
 	{
+#ifdef BFRONTIER
 		int type, attr1, attr2, attr3, attr4, attr5;
+#else
+		int type;
+#endif
 		int spawntime;
 		char spawned;
 	};
 
 	static const int DEATHMILLIS = 250;
 
-#ifdef BFRONTIER
+#ifdef BFRONTIER // reload
 	enum { GE_NONE = 0, GE_SHOT, GE_RELOAD, GE_EXPLODE, GE_HIT, GE_SUICIDE, GE_PICKUP };
 #else
 	enum { GE_NONE = 0, GE_SHOT, GE_EXPLODE, GE_HIT, GE_SUICIDE, GE_PICKUP };
@@ -170,7 +174,7 @@ struct fpsserver : igameserver
 		void restore(gamestate &gs)
 		{
 #ifndef BFRONTIER
-			maxhealth = gs.maxhealth;
+            gs.maxhealth = maxhealth;
 #endif
 			gs.frags = frags;
 			gs.timeplayed = timeplayed;
@@ -184,7 +188,7 @@ struct fpsserver : igameserver
 		string name, team, mapvote;
 		int modevote;
 		int privilege;
-        bool spectator, local, timesync;
+        bool spectator, local, timesync, wantsmaster;
         int gameoffset, lastevent;
 		gamestate state;
 		vector<gameevent> events;
@@ -212,7 +216,7 @@ struct fpsserver : igameserver
 		{
 			name[0] = team[0] = 0;
 			privilege = PRIV_NONE;
-			spectator = local = false;
+            spectator = local = wantsmaster = false;
 			position.setsizenodelete(0);
 			messages.setsizenodelete(0);
 			mapchange();
@@ -231,6 +235,10 @@ struct fpsserver : igameserver
 		uint ip;
 	};
 	
+    #define MM_MODE 0xF
+    #define MM_AUTOAPPROVE 0x1000
+    #define MM_DEFAULT (MM_MODE | MM_AUTOAPPROVE)
+
 	enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
  
 	bool notgotitems, notgotbases;		// true when map has changed and waiting for clients to send item
@@ -359,7 +367,6 @@ struct fpsserver : igameserver
 	arenaservmode arenamode;
 	captureservmode capturemode;
 	servmode *smode;
-
 #ifdef BFRONTIER
 	#define Q_INT(c,n) { if(!c->local) { ucharbuf buf = c->messages.reserve(5); putint(buf, n); c->messages.addbuf(buf); } }
 	#define Q_STR(c,text) { if(!c->local) { ucharbuf buf = c->messages.reserve(2*strlen(text)+1); sendstring(text, buf); c->messages.addbuf(buf); } }
@@ -368,29 +375,23 @@ struct fpsserver : igameserver
 	{
 		char *name;
 		int val;
-		
 		scr(char *_n, int _v) : name(_n), val(_v) {}
 		~scr() {}
 	};
-
 	clientinfo *cmdcontext;
 	string scresult, motd;
-	fpsserver() : notgotitems(true), notgotbases(false),
-					gamemode(0), interm(0), minremain(0), mapreload(false),
-					lastsend(0), mastermode(MM_OPEN), mastermask(~0), currentmaster(-1), masterupdate(false),
-					mapdata(NULL), reliablemessages(false), demonextmatch(false),
-					demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
-					arenamode(*this), capturemode(*this), smode(NULL),
-					cmdcontext(NULL)
+	fpsserver() : notgotitems(true), notgotbases(false), gamemode(0), interm(0), minremain(0), mapreload(false), lastsend(0), mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0), arenamode(*this), capturemode(*this), smode(NULL)
 	{
-		motd[0] = 0;
+		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
+	}
 #else
-	fpsserver() : notgotitems(true), notgotbases(false), gamemode(0), interm(0), minremain(0), mapreload(false), lastsend(0), mastermode(MM_OPEN), mastermask(~0), currentmaster(-1), masterupdate(false), mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0), arenamode(*this), capturemode(*this), smode(NULL)
+
+    fpsserver() : notgotitems(true), notgotbases(false), gamemode(0), interm(0), minremain(0), mapreload(false), lastsend(0), mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0), arenamode(*this), capturemode(*this), smode(NULL) 
 	{
-#endif
 		serverdesc[0] = '\0';
 		masterpass[0] = '\0';
 	}
+#endif
 
 	void *newinfo() { return new clientinfo; }
 	void deleteinfo(void *ci) { delete (clientinfo *)ci; } 
@@ -1112,9 +1113,7 @@ struct fpsserver : igameserver
 		#define QUEUE_UINT(n) { if(!ci->local) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(4); putuint(buf, n); ci->messages.addbuf(buf); } }
 		#define QUEUE_STR(text) { if(!ci->local) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(2*strlen(text)+1); sendstring(text, buf); ci->messages.addbuf(buf); } }
 		int curmsg;
-        while((curmsg = p.length()) < p.maxlen)
-        {
-		switch(type = checktype(getint(p), ci))
+        while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci))
 		{
 			case SV_POS:
 			{
@@ -1383,7 +1382,11 @@ struct fpsserver : igameserver
 				int n;
 				while((n = getint(p))!=-1)
 				{
+#ifdef BFRONTIER
 					server_entity se = { getint(p), getint(p), getint(p), getint(p), getint(p), getint(p), false, 0 };
+#else
+                    server_entity se = { getint(p), false, 0 };
+#endif
 					if(notgotitems)
 					{
 						while(sents.length()<=n) sents.add(se);
@@ -1587,6 +1590,16 @@ struct fpsserver : igameserver
 				break;
 			}
 
+            case SV_APPROVEMASTER:
+            {
+                int mn = getint(p);
+                if(mastermask&MM_AUTOAPPROVE) break;
+                clientinfo *candidate = (clientinfo *)getinfo(mn);
+                if(!candidate || !candidate->wantsmaster || mn==sender) break;// || getclientip(mn)==getclientip(sender)) break;
+                setmaster(candidate, true, "", true);
+                break;
+            }
+
 			default:
 			{
 				int size = msgsizelookup(type);
@@ -1595,8 +1608,6 @@ struct fpsserver : igameserver
 				if(ci) QUEUE_MSG;
 				break;
 			}
-        }
-		//conoutf("msg: %.2d %s", type, msgnames[type]);
         }
 	}
 
@@ -2062,8 +2073,9 @@ struct fpsserver : igameserver
 		}
 	}
 
-	void setmaster(clientinfo *ci, bool val, const char *pass = "")
+    void setmaster(clientinfo *ci, bool val, const char *pass = "", bool approved = false)
 	{
+        if(approved && (!val || !ci->wantsmaster)) return;
 		const char *name = "";
 		if(val) 
 		{
@@ -2071,13 +2083,20 @@ struct fpsserver : igameserver
 			{
 				if(!masterpass[0] || !pass[0]==(ci->privilege!=PRIV_ADMIN)) return;
 			}
-			else if(ci->state.state==CS_SPECTATOR && (!masterpass[0] || !pass[0])) return;
+            else if(ci->state.state==CS_SPECTATOR && (!masterpass[0] || strcmp(masterpass, pass))) return;
             loopv(clients) if(ci!=clients[i] && clients[i]->privilege)
 			{
 				if(masterpass[0] && !strcmp(masterpass, pass)) clients[i]->privilege = PRIV_NONE;
 				else return;
 			}
-			if(masterpass[0] && pass[0] && !strcmp(masterpass, pass)) ci->privilege = PRIV_ADMIN;
+            if(masterpass[0] && !strcmp(masterpass, pass)) ci->privilege = PRIV_ADMIN;
+            else if(!approved && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
+            {
+                ci->wantsmaster = true;
+                s_sprintfd(msg)("%s wants master. Type \"/approvemaster %d\" to approve.", colorname(ci), ci->clientnum);
+                sendservmsg(msg);
+                return;
+            }
 			else ci->privilege = PRIV_MASTER;
 			name = privname(ci->privilege);
 		}		
@@ -2088,10 +2107,11 @@ struct fpsserver : igameserver
 			ci->privilege = 0;
 		}
 		mastermode = MM_OPEN;
-		s_sprintfd(msg)("%s %s %s", colorname(ci), val ? "claimed" : "relinquished", name);
+        s_sprintfd(msg)("%s %s %s", colorname(ci), val ? (approved ? "approved for" : "claimed") : "relinquished", name);
 		sendservmsg(msg);
 		currentmaster = val ? ci->clientnum : -1;
 		masterupdate = true;
+        loopv(clients) clients[i]->wantsmaster = false;
 	}
 
 	void localconnect(int n)
