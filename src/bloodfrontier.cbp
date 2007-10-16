@@ -6,18 +6,19 @@
 		<Option title="bloodfrontier"/>
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
+		<Option default_target="1"/>
 		<Option active_target="1"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
-				<Option output="C:\Games\sauercvs\mod\src\bloodfrontier.exe"/>
+				<Option output="bloodfrontier.exe"/>
 				<Option working_dir="."/>
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
-				<Option type="0"/>
+				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option includeInTargetAll="0"/>
-				<Option projectResourceIncludeDirsRelation="0"/>
+				<Option projectResourceIncludeDirsRelation="1"/>
 			</Target>
 			<Target title="client">
 				<Option output="..\bin\bloodfrontier_client.exe"/>
@@ -26,7 +27,7 @@
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
-				<Option parameters="-kmod/"/>
+				<Option parameters="-t -w1024 -h740"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
 				<Option projectResourceIncludeDirsRelation="1"/>
@@ -37,26 +38,22 @@
 					<Add option="-Wall"/>
 					<Add option="-fsigned-char"/>
 					<Add option="-fomit-frame-pointer"/>
+					<Add option="-ffast-math"/>
+					<Add directory="include"/>
+					<Add directory="enet\include"/>
+					<Add directory="engine"/>
+					<Add directory="shared"/>
 					<Add directory="fpsgame"/>
 					<Add directory="fpsgame\bot"/>
-					<Add directory="fpsgame\mod"/>
-					<Add directory="sspgame"/>
-					<Add directory="engine"/>
-					<Add directory="engine\mod"/>
-					<Add directory="shared"/>
-					<Add directory="enet\include"/>
-					<Add directory="include"/>
 				</Compiler>
 				<Linker>
 					<Add option="-s"/>
 					<Add option="-mwindows"/>
-					<Add library="stdc++"/>
 					<Add library="mingw32"/>
 					<Add library="SDLmain"/>
 					<Add library="SDL"/>
 					<Add library="SDL_image"/>
-					<Add library="SDL_mixer"/>
-					<Add library="fmod"/>
+					<Add library="fmodex"/>
 					<Add library="z"/>
 					<Add library="opengl32"/>
 					<Add library="glu32"/>
@@ -72,7 +69,7 @@
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
-				<Option parameters="-t -w1024 -h740 -kmod/"/>
+				<Option parameters="-t -w1024 -h740"/>
 				<Option includeInTargetAll="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
@@ -82,26 +79,21 @@
 					<Add option="-Wall"/>
 					<Add option="-pg"/>
 					<Add option="-fsigned-char"/>
+					<Add directory="include"/>
+					<Add directory="shared"/>
+					<Add directory="engine"/>
+					<Add directory="enet\include"/>
 					<Add directory="fpsgame"/>
 					<Add directory="fpsgame\bot"/>
-					<Add directory="fpsgame\mod"/>
-					<Add directory="sspgame"/>
-					<Add directory="engine"/>
-					<Add directory="engine\mod"/>
-					<Add directory="shared"/>
-					<Add directory="enet\include"/>
-					<Add directory="include"/>
 				</Compiler>
 				<Linker>
 					<Add option="-pg -lgmon"/>
 					<Add option="-mwindows"/>
-					<Add library="stdc++"/>
 					<Add library="mingw32"/>
 					<Add library="SDLmain"/>
 					<Add library="SDL"/>
 					<Add library="SDL_image"/>
-					<Add library="SDL_mixer"/>
-					<Add library="fmod"/>
+					<Add library="fmodex"/>
 					<Add library="z"/>
 					<Add library="opengl32"/>
 					<Add library="glu32"/>
@@ -127,15 +119,12 @@
 					<Add option="-fsigned-char"/>
 					<Add option="-fomit-frame-pointer"/>
 					<Add option="-DSTANDALONE"/>
-					<Add directory="fpsgame"/>
-					<Add directory="fpsgame\bot"/>
-					<Add directory="fpsgame\mod"/>
-					<Add directory="sspgame"/>
+					<Add directory="include"/>
+					<Add directory="enet\include"/>
 					<Add directory="engine"/>
 					<Add directory="engine\mod"/>
 					<Add directory="shared"/>
-					<Add directory="enet\include"/>
-					<Add directory="include"/>
+					<Add directory="fpsgame"/>
 				</Compiler>
 				<Linker>
 					<Add option="-s"/>
@@ -773,6 +762,14 @@
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
+		</Unit>
+		<Unit filename="shared\ver.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
 		</Unit>
 		<Unit filename="todo.txt">
 			<Option compilerVar=""/>

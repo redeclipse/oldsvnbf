@@ -128,7 +128,7 @@ struct entities : icliententities
 		}
 	}
 
-	void rumble(const extentity &e)
+	void rumble(extentity &e)
 	{
 		playsound(S_RUMBLE, &e.o);
 	}

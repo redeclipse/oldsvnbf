@@ -34,7 +34,11 @@ static bool compileasmshader(GLenum type, GLuint &idx, char *def, char *tname, c
         if(err>=0 && err<(int)strlen(def))
         {
 		loopi(err) putchar(*def++);
+#ifdef BFRONTIER
+		conoutf(" <<HERE>> ");
+#else
 		puts(" <<HERE>> ");
+#endif
 		while(*def) putchar(*def++);
 	}
     }
@@ -56,7 +60,11 @@ static void showglslinfo(GLhandleARB obj, char *tname, char *name)
 		GLcharARB *log = new GLcharARB[length];
 		glGetInfoLog_(obj, length, &length, log);
 		conoutf("GLSL ERROR (%s:%s)", tname, name);
+#ifdef BFRONTIER
+		conoutf("%s", log);
+#else
 		puts(log);
+#endif
 		delete[] log;
 	}
 }

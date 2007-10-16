@@ -405,9 +405,11 @@ extern char *g3d_fieldname();
 extern void g3d_mainmenu();
 
 // sound
+#ifndef BFRONTIER
 extern void checkmapsounds();
 extern void clearmapsounds();
 extern void updatevol();
+#endif
 
 // grass
 extern void rendergrass();
@@ -423,28 +425,4 @@ extern void replacetexcube(cube &c, int oldtex, int newtex);
 extern float spinsky;
 extern string lastsky;
 extern void loadsky(char *basename, float *spin);
-
-// sound
-struct sample
-{
-	char *name;
-	Mix_Chunk *sound;
-	sample() : name(NULL) {}
-	~sample() { DELETEA(name); }
-};
-
-struct soundslot
-{
-	sample *s;
-	int vol;
-	int uses, maxuses;
-};
-
-struct soundloc { vec loc; bool inuse; soundslot *slot; extentity *ent; };
-
-extern hashtable<char *, sample> samples;
-extern vector<soundslot> gamesounds, mapsounds;
-extern vector<soundloc> soundlocs;
-
-extern int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds);
 #endif

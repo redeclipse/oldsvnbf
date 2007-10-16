@@ -170,8 +170,42 @@ extern void cleardynentcache();
 extern bool entinmap(dynent *d, bool avoidplayers = false);
 extern void findplayerspawn(dynent *d, int forceent = -1);
 // sound
+#ifdef BFRONTIER
+struct soundsample
+{
+	FMOD_SOUND *sound;
+	char *name;
+	soundsample() : name(NULL) {}
+	~soundsample() { DELETEA(name); }
+};
+
+struct soundslot
+{
+	soundsample *sample;
+	int vol, maxuses;
+};
+
+struct soundchan
+{
+	FMOD_CHANNEL *channel;
+	vec *pos, *vel;
+	float mindist, maxdist;
+	soundslot *slot;
+};
+
+extern hashtable<char *, soundsample> soundsamples;
+extern vector<soundslot> gamesounds, mapsounds;
+extern vector<soundchan> soundchans;
+
+extern int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds);
+
+extern void clearmapsounds();
+extern void checksound();
+extern void playsound(int n,   vec *loc = NULL, vec *vel = NULL, float mindist = 1.0f, float maxdist = 10000.f, vector<soundslot> &sounds = gamesounds);
+#else
 extern void playsound    (int n,   const vec *loc = NULL, extentity *ent = NULL);
 extern void playsoundname(char *s, const vec *loc = NULL, int vol = 0);
+#endif
 extern void initsound();
 
 

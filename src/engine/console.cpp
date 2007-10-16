@@ -123,7 +123,7 @@ void console(const char *s, int type, ...)
 	else s_sprintf(fmt)("%%c");
 
 	s_sprintf(psp)("%s [%02x] %s", gettime(fmt), type, sp);
-	puts(psp);
+	printf("%s\n", psp);
 
 	s = sf;
 	int n = 0, visible;
