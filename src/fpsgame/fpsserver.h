@@ -431,10 +431,10 @@ struct fpsserver : igameserver
 
 	int spawntime(int type)
 	{
-		if(m_classicsp) return INT_MAX;
 #ifdef BFRONTIER
-		int sec = nonspectators()*4;
+		return ((MAXCLIENTS+41)-nonspectators())*100; // so, range is 4100..30000 ms
 #else
+		if(m_classicsp) return INT_MAX;
         int np = nonspectators();
 		np = np<3 ? 4 : (np>4 ? 2 : 3);		 // spawn times are dependent on number of players
 		int sec = 0;
@@ -452,8 +452,8 @@ struct fpsserver : igameserver
 			case I_BOOST:
 			case I_QUAD: sec = 40+rnd(40); break;
 		}
-#endif
 		return sec*1000;
+#endif
 	}
 		
 	bool pickup(int i, int sender)		 // server side item pickup, acknowledge first client that gets it
@@ -1383,13 +1383,15 @@ struct fpsserver : igameserver
 				while((n = getint(p))!=-1)
 				{
 #ifdef BFRONTIER
-					server_entity se = { getint(p), getint(p), getint(p), getint(p), getint(p), getint(p), false, 0 };
+					server_entity se = { getint(p), getint(p), getint(p), getint(p), getint(p), getint(p), false, 0 },
+					sn = { 0, 0, 0, 0, 0, 0, false, 0 };
 #else
                     server_entity se = { getint(p), false, 0 };
 #endif
 					if(notgotitems)
 					{
-						while(sents.length()<=n) sents.add(se);
+						while(sents.length()<n) sents.add(sn);
+						sents.add(se);
 #ifdef BFRONTIER
 						sents[n].spawned = true;
 #else
@@ -1859,6 +1861,7 @@ struct fpsserver : igameserver
 		gamestate &gs = ci->state;
 #ifdef BFRONTIER
 		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -1, e.millis)) return;
+		if (getgun(e.gun).max) gs.ammo[e.gun]--;
 		gunvar(gs.gunlast,e.gun) = e.millis; 
 		gunvar(gs.gunwait,e.gun) = getgun(e.gun).attackdelay; 
 #else

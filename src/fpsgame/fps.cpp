@@ -797,7 +797,7 @@ struct fpsclient : igameclient
 	void drawhudmodel(int anim, float speed = 0, int base = 0)
 	{
 #ifdef BFRONTIER
-		if(player1->gunselect < GUN_PISTOL || player1->gunselect > GUN_RIFLE) return;
+		if (player1->gunselect <= -1 || player1->gunselect >= NUMGUNS) return;
 		static char *hudgunnames[] = { "hudguns/pistol", "hudguns/shotgun", "hudguns/chaingun", "hudguns/grenades", "hudguns/rockets", "hudguns/rifle" };
 #else
         static char *hudgunnames[] = { "hudguns/fist", "hudguns/shotg", "hudguns/chaing", "hudguns/rocket", "hudguns/rifle", "hudguns/gl", "hudguns/pistol" };
@@ -831,9 +831,8 @@ struct fpsclient : igameclient
 
 	void drawhudgun()
 	{
-		if(!hudgun() || editmode || player1->state==CS_SPECTATOR) return;
-
 #ifdef BFRONTIER
+		if(!hudgun() || editmode || player1->state != CS_ALIVE) return;
 		int rtime = gunvar(player1->gunwait, player1->gunselect),
 			wtime = gunvar(player1->gunlast, player1->gunselect),
 			otime = lastmillis - wtime;
@@ -850,6 +849,8 @@ struct fpsclient : igameclient
 			drawhudmodel(ANIM_GUNIDLE|ANIM_LOOP);
 		}
 #else
+		if(!hudgun() || editmode || player1->state==CS_SPECTATOR) return;
+
 		int rtime = ws.reloadtime(player1->gunselect);
 		if(player1->lastattackgun==player1->gunselect && lastmillis-player1->lastaction<rtime)
 		{
@@ -1280,14 +1281,17 @@ struct fpsclient : igameclient
 	
 	void mousemove(int dx, int dy)
 	{
-		extern int sensitivity, sensitivityscale, invmouse;
-		const float SENSF = 33.0f;	 // try match quake sens
-		physent *d = isthirdperson() ? camera1 : player1;
-		
-		d->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
-		d->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
-		
-		fixrange(d);
+		if (player1->state != CS_DEAD)
+		{
+			extern int sensitivity, sensitivityscale, invmouse;
+			const float SENSF = 33.0f;	 // try match quake sens
+			physent *d = isthirdperson() ? camera1 : player1;
+			
+			d->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
+			d->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
+			
+			fixrange(d);
+		}
 	}
 	
 	physent fpscamera;
@@ -1366,9 +1370,13 @@ struct fpsclient : igameclient
 		if (cameratype <= 0)
 		{
 			camera1->o = player1->o;
-			
+
 			if (!isthirdperson())
 			{
+				if (player1->state == CS_DEAD)
+				{
+					camera1->o.z -= (float(player1->eyeheight-player1->aboveeye)/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
+				}
 				camera1->yaw = player1->yaw;
 				camera1->pitch = player1->pitch;
 				camera1->roll = player1->roll;

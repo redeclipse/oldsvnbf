@@ -7,6 +7,10 @@ Legend [
 ]
 
 = wip edition =
+gam: first person camera falls to floor when dying
+gam: hudgun not shown when dead
+gam: spawntime for weapons tweaked based on players (256..0 non spectators = 4100..30000 ms)
+gam: server properly registers ammo again
 gam: can no longer switch back to a weapon while it is still reloading
 gam: cg and gl pushback and wobble fixed
 gam: independant reloading and shooting now works properly both client and server side

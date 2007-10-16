@@ -41,9 +41,9 @@ struct weaponstate
 			else s += b;
 			
 			while (s >= NUMGUNS) s -= NUMGUNS;
-			while (s < 0) s += NUMGUNS;
+			while (s <= -1) s += NUMGUNS;
 			
-			if (!gunallowed(player1, s, player1->gunselect, cl.lastmillis))
+			if (!gunallowed(player1, player1->gunselect, s, cl.lastmillis))
 			{
 				if (a >= 0)
 				{
