@@ -424,10 +424,7 @@ VAR(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
 #ifdef BFRONTIER // game view control, extra thirdperson variables
 VARFP(thirdperson, 0, 0, 1, cl->fixview());
-VARFP(thirdpersondistance, 1, 8, INT_MAX-1, cl->fixview()); // distance
-VARFP(thirdpersonheight, 1, 6, INT_MAX-1, cl->fixview()); // height
 VARFP(thirdpersonscale, 0, 150, INT_MAX-1, cl->fixview()); // pitch scale
-VARFP(thirdpersonstick, 0, 0, 1, cl->fixview()); // rotate around player
 #else
 VAR(thirdperson, 0, 0, 1);
 VAR(thirdpersondistance, 10, 50, 1000);

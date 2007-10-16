@@ -19,8 +19,8 @@ struct entities : icliententities
 	{
 #ifdef BFRONTIER // extended entities, blood frontier support
 		int t = ents[i]->type;
-		if(t != WEAPON) return NULL;
-		return getitem(ents[i]->attr1).name;
+		if(t == WEAPON) return getgun(ents[i]->attr1).name;
+		return NULL;
 #else
 		int t = ents[i]->type;
 		if(t<I_SHELLS || t>I_QUAD) return NULL;
@@ -151,7 +151,7 @@ struct entities : icliententities
 	void addammo(int type, int &v, bool local = true)
 	{
 #ifdef BFRONTIER // extended entities, blood frontier
-		itemstat &is = getitem(type);
+		guninfo &is = getgun(type);
 #else
 		itemstat &is = itemstats[type-I_SHELLS];
 #endif
@@ -173,17 +173,20 @@ struct entities : icliententities
 	void pickupeffects(int n, fpsent *d)
 	{
         if(!ents.inrange(n)) return;
-		int type = ents[n]->type;
 #ifdef BFRONTIER // extended entities, blood frontier
-		if(type != WEAPON) return;
-        ents[n]->spawned = false;
-        if(!d) return;
-		itemstat &is = getitem(ents[n]->attr1);
-		if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
-		playsound(getitem(ents[n]->attr1).sound, d!=cl.player1 ? &d->o : NULL); 
-		if(d!=cl.player1) return;
-		d->pickup(ents[n]->attr1, ents[n]->attr2);
+		if (ents[n]->type == WEAPON && ents[n]->attr1 > -1 && ents[n]->attr1 < NUMGUNS)
+		{
+			ents[n]->spawned = false;
+			if(!d) return;
+			guninfo &is = getgun(ents[n]->attr1);
+			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
+			playsound(S_ITEMAMMO, d!=cl.player1 ? &d->o : NULL); 
+			if(d!=cl.player1) return;
+			d->pickup(ents[n]->attr1, ents[n]->attr2);
+		}
+		else return;
 #else
+		int type = ents[n]->type;
 		if(type<I_SHELLS || type>I_QUAD) return;
         ents[n]->spawned = false;
         if(!d) return;

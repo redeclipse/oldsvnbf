@@ -70,16 +70,6 @@ enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  
 #define m_demo		(gamemode==-3)
 #define isteam(a,b)	(m_teammode && strcmp(a, b)==0)
 #define m_mp(mode)	(mode>=0 && mode<=13)
-/*
-#define m_mp(mode)		(mode >= 0 && mode <= 3)
-#define m_dm			(gamemode == 1)
-#define m_dom			(gamemode == 2)
-#define m_sp			(gamemode>=-2 && gamemode<0)
-#define m_dmsp			(gamemode==-1)
-#define m_classicsp		(gamemode==-2)
-#define m_demo			(gamemode==-3)
-#define isteam(a,b)		(m_teammode && strcmp(a, b)==0)
-*/
 #else
 struct fpsentity : extentity
 {
@@ -242,63 +232,55 @@ struct demoheader
 #define MAXTEAMLEN 4
 
 #ifdef BFRONTIER
-/*
-static struct entstat { int id; char *name; } entstats[] =
-{
-	{ NOTUSED,		"empty" }
-	{ LIGHT,		"light" } // lightsource, attr1 = radius, attr2 = intensity
-	{ MAPMODEL = ET_MAPMODEL,	// attr1 = angle, attr2 = idx
-	{ PLAYERSTART,			// attr1 = angle
-	{ ENVMAP = ET_ENVMAP,		// attr1 = radius
-	{ PARTICLES = ET_PARTICLES,
-	{ MAPSOUND = ET_SOUND,
-	{ SPOTLIGHT = ET_SPOTLIGHT,
-	{ I_PISTOL,
-	{ I_SG,
-	{ I_CG,
-	{ I_GL,
-	{ I_RL,
-	{ I_RIFLE,
-	{ TELEPORT,				// attr1 = idx
-	{ TELEDEST,				// attr1 = angle, attr2 = idx
-	{ MONSTER,				// attr1 = angle, attr2 = monstertype
-	{ CARROT,					// attr1 = tag, attr2 = type
-	{ JUMPPAD,				// attr1 = zpush, attr2 = ypush, attr3 = xpush
-	{ BASE,
-	{ RESPAWNPOINT,
-	{ CAMERA,					// attr1 = yaw, attr2 = pitch, attr3 = pan (+:horiz/-:vert), attr4 = idx
-	{ WAYPOINT,				// none?
-};
-*/
-static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
-{
-    {10,	10,		S_ITEMAMMO,		"PI",	GUN_PISTOL },
-	{8,		8,		S_ITEMAMMO,		"SG",	GUN_SG },
-    {30,	30,		S_ITEMAMMO,		"CG",	GUN_CG },
-    {2,		4,		S_ITEMAMMO,		"GL",	GUN_GL },
-    {1,		1,		S_ITEMAMMO,		"RL",	GUN_RL },
-    {5,		5,		S_ITEMAMMO,		"RI",	GUN_RIFLE },
-};
-#define getitem(n) itemstats[n]
+#define MAXFOV			(isthirdperson() ? 100 : 125)
+#define MINFOV			(player1->gunselect == GUN_RIFLE ? 0 : 90)
 
-#define SGRAYS 20
-#define SGSPREAD 3
+#define TPDIST			16		// thirdperson distance
+#define TPHEIGHT		8		// thidperson height
 
-#define RL_DAMRAD 30
-#define RL_SELFDAMDIV 2
-#define RL_DISTSCALE 1.5f
+#define SGRAYS			20
+#define SGSPREAD		3
 
-static struct guninfo { short sound, attackdelay, reloaddelay, damage, projspeed, part, kickamount, wobbleamount; char *name; } guns[NUMGUNS] =
+#define RL_DAMRAD		30
+#define RL_SELFDAMDIV	2
+#define RL_DISTSCALE	1.5f
+
+#define MAXCARRY		2
+
+static struct guninfo
 {
-	{ S_PISTOL,		250,	2250,	13,		0,		0,	-10 ,	10,	"pistol" },
-	{ S_SG,			1000,	4000,	5,		0,		0,	-50,	50, "shotgun" },
-	{ S_CG,			75,		3075,	8,		0,		0,	-10,	10,	"chaingun" },
-	{ S_FLAUNCH,	1500,	600,	400,	40,		0,	-5,		5,	"grenades" },
-	{ S_RLFIRE,		2500,	5000,	250,	80,		0,	-75,	50,	"rockets" },
-	{ S_RIFLE,		1500,	4500,	50,		0,		0,	-30,	30,	"rifle" },
+	int info, sound;
+	bool reload;
+	int add, max;
+	int attackdelay, reloaddelay;
+	int damage, projspeed, part;
+	int kickamount, wobbleamount;
+	char *name;
+} guns[NUMGUNS] =
+{
+	{ GUN_PISTOL,	S_PISTOL,	true,	10,	10,	250,	2250,	13,		0,	0,	-10 ,	10,	"pistol" },
+	{ GUN_SG,		S_SG,		true,	8,	8,	1000,	4000,	5,		0,	0,	-50,	50, "shotgun" },
+	{ GUN_CG,		S_CG,		true,	30,	30,	75,		3075,	8,		0,	0,	-6,		6,	"chaingun" },
+	{ GUN_GL,		S_FLAUNCH,	false,	2,	4,	1500,	600,	400,	40,	0,	-5,		3,	"grenades" },
+	{ GUN_RL,		S_RLFIRE,	true,	1,	1,	2500,	5000,	250,	80,	0,	-75,	50,	"rockets" },
+	{ GUN_RIFLE,	S_RIFLE,	true,	5,	5,	1500,	4500,	50,		0,	0,	-30,	30,	"rifle" },
 };
+
 #define getgun(n) guns[n]
-#define gunallowed(am,gn,gs) (gn >= GUN_PISTOL && gn <= GUN_RIFLE && (gs < 0 || gn != gs) && (gn != GUN_GL || (gs > -2 && am[gn]) || gs < -2))
+#define gunallowed(ge,gn,gs,ms) ( \
+	(gn > -1 && gn < NUMGUNS) && \
+	(\
+		(gs > -1 && \
+			(gn != gs && ms-gunvar((ge)->gunlast, gs) >= gunvar((ge)->gunwait, gs)) \
+		) || \
+		(gs < 0 && \
+			( \
+				((gs == -1 && (ge)->ammo[gn]) || (gs == -2 && guns[gn].reload)) && \
+				ms-gunvar((ge)->gunlast, gn) >= gunvar((ge)->gunwait, gn) \
+			) \
+		) \
+	) \
+)
 #else
 static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
 {
@@ -355,24 +337,24 @@ struct fpsstate
 
 	void addammo(int gun)
 	{
-		ammo[gun] += getitem(gun).add;
+		ammo[gun] += getgun(gun).add;
 	}
 
 	bool hasmaxammo(int type)
 	{
-		const itemstat &is = getitem(type);
+		const guninfo &is = getgun(type);
 		return ammo[type] >= is.max;
 	}
 
 	bool canpickup(int type)
 	{
-		itemstat &is = getitem(type);
+		guninfo &is = getgun(type);
 		return ammo[is.info] < is.max;
 	}
  
 	void pickup(int type, int amt)
 	{
-		itemstat &is = getitem(type);
+		guninfo &is = getgun(type);
 		ammo[is.info] = min(ammo[is.info] + (amt > 0 ? amt : is.add), is.max);
 	}
 #else
@@ -467,14 +449,17 @@ struct fpsstate
 		{
 			health = 1;
 			gunselect = GUN_RIFLE;
-			addammo(GUN_RIFLE);
+			loopi(NUMGUNS)
+			{
+				ammo[i] = i == GUN_RIFLE ? getgun(i).add : 0;
+			}
 		}
 		else
 		{
 			health = 100;
 			loopi(NUMGUNS)
 			{
-				if (gunallowed(ammo, i, -3)) addammo(i);
+				ammo[i] = i < MAXCARRY ? getgun(i).add : 0;
 			}
 		}
 #else

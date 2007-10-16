@@ -35,7 +35,7 @@ struct weaponstate
 		if(player1->state!=CS_ALIVE || a<-1 || b<-1 || a>=NUMGUNS || b>=NUMGUNS) return;
 		int s = player1->gunselect;
 		
-		while (true)
+		loopi(NUMGUNS) // avoid infinite loop
 		{
 			if (a >= 0) s = a;
 			else s += b;
@@ -43,7 +43,7 @@ struct weaponstate
 			while (s >= NUMGUNS) s -= NUMGUNS;
 			while (s < 0) s += NUMGUNS;
 			
-			if (!gunallowed(player1->ammo, s, player1->gunselect))
+			if (!gunallowed(player1, s, player1->gunselect, cl.lastmillis))
 			{
 				if (a >= 0)
 				{
@@ -665,24 +665,18 @@ struct weaponstate
 	void shoot(fpsent *d, vec &targ)
 	{
 #ifdef BFRONTIER
-		int rtime = gunvar(d->gunwait, d->gunselect);
 		if(d == player1)
 		{
 			if (!d->attacking) return;
-			if (cl.lastmillis-gunvar(d->gunlast, d->gunselect) < rtime) return;
-			if (!d->ammo[d->gunselect])
+			if (!gunallowed(d, d->gunselect, -1, cl.lastmillis))
 			{
-				if (gunallowed(d->ammo, d->gunselect, -2))
+				if (gunallowed(d, d->gunselect, -2, cl.lastmillis))
 				{
 					cl.playsoundc(S_NOAMMO, d); 
 					d->lastattackgun = d->gunselect;
 					gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
 					gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).reloaddelay;
 					cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);
-				}
-				else
-				{
-					weaponswitch();
 				}
 				return; 
 			}

@@ -270,27 +270,13 @@ struct fpsclient : igameclient
 			{
 				loopi(NUMGUNS)
 				{
-					if (!player1->ammo[i] && gunallowed(player1->ammo, i, -2))
+					if (gunallowed(player1, i, -2, lastmillis) &&
+						gunvar(player1->gunwait, i) == getgun(i).reloaddelay) // can shoot but we reloaded!
 					{
-						int rtime = gunvar(player1->gunwait, player1->gunselect),
-							wtime = gunvar(player1->gunlast, player1->gunselect),
-							otime = lastmillis - wtime;
-				
-						if (otime >= rtime && rtime == getgun(player1->gunselect).reloaddelay)
-						{
-							player1->ammo[i] = getitem(i).add;
-						}
+						player1->ammo[i] = getgun(i).add;
+						gunvar(player1->gunwait, i) = getgun(i).attackdelay;
 					}
 				}
-				/*
-				if (player1->health < player1->maxhealth && player1->nexthealth <= lastmillis)
-				{
-					int na = lastmillis-player1->nexthealth, 
-						nb = na%300, inc = ((na-nb)+300)/300;
-					player1->health = min(player1->health + inc, player1->maxhealth);
-					player1->nexthealth = lastmillis + 300 - nb;
-				}
-				*/
 				if (player1->timeinair)
 				{
 					if (player1->jumpnext && lastmillis-player1->lastimpulse > 3000)
@@ -1026,7 +1012,7 @@ struct fpsclient : igameclient
 							drawicon(192.f, 0.f, style(0,0), style(0,1));
 							draw_textx("%d", style(0,2), style(0,3), 255, d->health<=50 ? (d->health<=25 ? 0 : 128) : 255, d->health<=50 ? 0 : 255, int(255.f*fade), false, style(0,4), d->health);
 							
-							int mx = getitem(d->gunselect).max;
+							int mx = getgun(d->gunselect).max;
 							//glColor4f(1.f, 1.f, 1.f, fade);
 							//drawicon((float)(d->gunselect*64), 0.f, style(2,0), style(2,1));
 							
@@ -1253,6 +1239,7 @@ struct fpsclient : igameclient
 		else
 		{
 			int fogmat = getmatvec(camera1->o);
+			
 			if (fogmat == MAT_WATER || fogmat == MAT_LAVA)
 			{
 				uchar col[3];
@@ -1275,41 +1262,27 @@ struct fpsclient : igameclient
 	void fixrange(physent *d)
 	{
 		const float MAXPITCH = 90.0f;
-		if(d->pitch>MAXPITCH) d->pitch = MAXPITCH;
-		if(d->pitch<-MAXPITCH) d->pitch = -MAXPITCH;
-		while(d->yaw<0.0f) d->yaw += 360.0f;
-		while(d->yaw>=360.0f) d->yaw -= 360.0f;
+
+		if (d->pitch > MAXPITCH) d->pitch = MAXPITCH;
+		if (d->pitch < -MAXPITCH) d->pitch = -MAXPITCH;
+
+		while (d->yaw < 0.0f) d->yaw += 360.0f;
+		while (d->yaw > 360.0f) d->yaw -= 360.0f;
 	}
 
 	void fixview()
 	{
-		int maxfov = isthirdperson() ? 100 : 125,
-			minfov = player1->gunselect == GUN_RIFLE ? 0 : 90;
-		
-		if (fov > maxfov) fov = maxfov;
-		if (fov < minfov) fov = minfov;
-		
-		if (isthirdperson())
-		{
-			thirdpersondistance = 12;
-			thirdpersonheight = 4;
-		}
-	}
-	
-	void fixcamera()
-	{
-		extern physent *camera1;
-		physent *d = isthirdperson() && thirdpersonstick ? camera1 : player1;
-		fixrange(d);
+		if (fov > MAXFOV) fov = MAXFOV;
+		if (fov < MINFOV) fov = MINFOV;
+
+		fixrange(player1);
 	}
 	
 	void mousemove(int dx, int dy)
 	{
-		const float SENSF = 33.0f;	 // try match quake sens
 		extern int sensitivity, sensitivityscale, invmouse;
-		extern physent *camera1;
-		
-		physent *d = isthirdperson() && (thirdpersonstick || player1->state == CS_DEAD) ? camera1 : player1;
+		const float SENSF = 33.0f;	 // try match quake sens
+		physent *d = isthirdperson() ? camera1 : player1;
 		
 		d->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 		d->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
@@ -1321,10 +1294,7 @@ struct fpsclient : igameclient
 	
 	void findorientation()
 	{
-		extern physent *camera1;
-		physent *d = camera1;
-		if (isthirdperson() && !thirdpersonstick && player1->state != CS_DEAD && (player1->state != CS_SPECTATOR || player1->clientnum == cameranum))
-			d = player1;
+		physent *d = isthirdperson() ? camera1 : player1;
 			
 		vec dir;
 		vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
@@ -1337,9 +1307,8 @@ struct fpsclient : igameclient
 	
 	void recomputecamera()
 	{
-		extern physent *camera1;
 		int secs = time(NULL);
-		int state, cameratype = 0;
+		int cameratype = 0;
 		
 		camera1 = &fpscamera;
 		
@@ -1349,6 +1318,7 @@ struct fpsclient : igameclient
 		{
 			camera1->reset();
 			camera1->type = ENT_CAMERA;
+			camera1->state = CS_ALIVE;
 		}
 		
 		if (player1->state == CS_SPECTATOR)
@@ -1362,14 +1332,13 @@ struct fpsclient : igameclient
 			if (players.inrange(-cameranum) && players[-cameranum])
 			{
 				camera1->o = players[-cameranum]->o;
-				if (!isthirdperson() || !thirdpersonstick)
+				if (!isthirdperson())
 				{
 					//camera1->yaw = players[-cameranum]->yaw;
 					//camera1->pitch = players[-cameranum]->pitch;
 					extern void interpolateorientation(dynent *d, float &interpyaw, float &interppitch);
 					interpolateorientation(players[-cameranum], camera1->yaw, camera1->pitch);
 				}
-				state = players[-cameranum]->state;
 				cameratype = 1;
 			}
 			else if (player1->clientnum != -cameranum)
@@ -1385,7 +1354,6 @@ struct fpsclient : igameclient
 							camera1->o = et.ents[i]->o;
 							camera1->yaw = et.ents[i]->attr1;
 							camera1->pitch = et.ents[i]->attr2;
-							state = CS_ALIVE;
 							cameratype = 2;
 							break;
 						}
@@ -1398,13 +1366,13 @@ struct fpsclient : igameclient
 		if (cameratype <= 0)
 		{
 			camera1->o = player1->o;
-			if (!isthirdperson() || !thirdpersonstick || player1->state != CS_DEAD)
+			
+			if (!isthirdperson())
 			{
 				camera1->yaw = player1->yaw;
 				camera1->pitch = player1->pitch;
 				camera1->roll = player1->roll;
 			}
-			state = player1->state;
 			cameratype = 0;
 		}
 		else
@@ -1416,30 +1384,24 @@ struct fpsclient : igameclient
 		
 		if (isthirdperson() || cameratype > 0)
 		{
-			if (cameratype != 2)
+			if (cameratype != 2 && isthirdperson())
 			{
-				if (isthirdperson())
-				{
-					vec old(camera1->o);
+				vec old(camera1->o);
+				
+				camera1->move = -1;
+				camera1->o.z += TPHEIGHT;
+				
+				if (!cameratype && thirdpersonscale)
+					camera1->pitch = (0.f-fabs(camera1->pitch))*(thirdpersonscale/100.f);
 					
-					camera1->move = -1;
-					camera1->o.z += thirdpersonheight;
-					
-					if (!thirdpersonstick && !cameratype && thirdpersonscale)
-						camera1->pitch = (0.f-fabs(camera1->pitch))*(thirdpersonscale/100.f);
-						
-					fixrange(camera1);
-					
-					ph.move(camera1, 10, false, 0, thirdpersondistance);
-					
-					if (!thirdpersonstick && player1->state != CS_DEAD)
-					{
-						vec v(cameratype > 0 ? old : worldpos);
-						v.sub(camera1->o);
-						v.normalize();
-						vectoyawpitch(v, camera1->yaw, camera1->pitch);
-					}
-				}
+				fixrange(camera1);
+				
+				ph.move(camera1, 10, false, 0, TPDIST);
+				
+				vec v(cameratype > 0 ? old : worldpos);
+				v.sub(camera1->o);
+				v.normalize();
+				vectoyawpitch(v, camera1->yaw, camera1->pitch);
 			}
 			
 			if (cameratype > 0)
@@ -1473,7 +1435,7 @@ struct fpsclient : igameclient
 	
 	bool gamethirdperson()
 	{
-		return !editmode && (thirdperson || player1->state == CS_DEAD);
+		return !editmode && thirdperson;
 	}
 	
 	void menuevent(int event)

@@ -1858,11 +1858,7 @@ struct fpsserver : igameserver
 	{
 		gamestate &gs = ci->state;
 #ifdef BFRONTIER
-		int wait = e.millis - gunvar(gs.gunlast,e.gun);
-		if(!gs.isalive(gamemillis) ||
-           wait<gunvar(gs.gunwait,e.gun) ||
-			!gunallowed(gs.ammo, e.gun, -1))
-			return;
+		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -1, e.millis)) return;
 		gunvar(gs.gunlast,e.gun) = e.millis; 
 		gunvar(gs.gunwait,e.gun) = getgun(e.gun).attackdelay; 
 #else
@@ -1912,14 +1908,10 @@ struct fpsserver : igameserver
 	void processevent(clientinfo *ci, reloadevent &e)
 	{
 		gamestate &gs = ci->state;
-		int wait = e.millis - gunvar(gs.gunlast,e.gun);
-		if(!gs.isalive(gamemillis) ||
-			wait<gunvar(gs.gunwait,e.gun) ||
-				!gunallowed(gs.ammo, e.gun, -2))
-			return;
+		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -2, e.millis)) return;
 		gunvar(gs.gunlast,e.gun) = e.millis; 
 		gunvar(gs.gunwait,e.gun) = getgun(e.gun).reloaddelay; 
-		gs.ammo[e.gun] = getitem(e.gun).add;
+		gs.ammo[e.gun] = getgun(e.gun).add;
 	}
 #endif
 	void processevent(clientinfo *ci, pickupevent &e)

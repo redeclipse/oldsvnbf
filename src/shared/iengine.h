@@ -505,8 +505,7 @@ enum
 extern void getwatercolour(uchar *wcol);
 extern void getlavacolour(uchar *lcol);
 
-extern int thirdperson, thirdpersondistance, thirdpersonheight,
-	thirdpersonscale, thirdpersonstick;
+extern int thirdperson, thirdpersonscale;
 
 extern void rehash(bool reload = true);
 extern void startgame(char *load = NULL, char *initscript = NULL);
