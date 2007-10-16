@@ -47,7 +47,7 @@ struct weaponstate
 			{
 				if (a >= 0)
 				{
-					cl.playsoundc(S_NOAMMO, player1); 
+					cl.playsoundc(S_NOAMMO); 
 					return; 
 				}
 			}
@@ -57,7 +57,7 @@ struct weaponstate
 		if(s != player1->gunselect) 
 		{
 			cl.cc.addmsg(SV_GUNSELECT, "ri", s);
-			playsound(S_WEAPLOAD, &player1->o);
+			playsound(S_WEAPLOAD);
 		}
 		player1->gunselect = s;
 	}
@@ -535,7 +535,7 @@ struct weaponstate
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
 #ifdef BFRONTIER
-		playsound(getgun(gun).sound, d==player1 ? NULL : &d->o);
+		playsound(getgun(gun).sound, &d->o, &d->vel);
 #else
 		playsound(guns[gun].sound, d==player1 ? NULL : &d->o);
 #endif
@@ -672,7 +672,7 @@ struct weaponstate
 			{
 				if (gunallowed(d, d->gunselect, -2, cl.lastmillis))
 				{
-					cl.playsoundc(S_NOAMMO, d); 
+					cl.playsoundc(S_NOAMMO); 
 					d->lastattackgun = d->gunselect;
 					gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
 					gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).reloaddelay;

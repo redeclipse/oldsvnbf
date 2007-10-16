@@ -180,7 +180,7 @@ struct entities : icliententities
 			if(!d) return;
 			guninfo &is = getgun(ents[n]->attr1);
 			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
-			playsound(S_ITEMAMMO, d!=cl.player1 ? &d->o : NULL); 
+			playsound(S_ITEMAMMO, &ents[n]->o); 
 			if(d!=cl.player1) return;
 			d->pickup(ents[n]->attr1, ents[n]->attr2);
 		}

@@ -124,10 +124,10 @@ void soundupdate(soundchan &s)
 	FMOD_BOOL playing;
 
 	SNDCHK(FMOD_Channel_IsPlaying(s.channel, &playing), return);
+	
 	if (playing && s.pos && s.vel)
 	{
-		FMOD_VECTOR psp = { s.pos->x, s.pos->y, s.pos->z },
-			psv = { s.vel->x, s.vel->y, s.vel->z };
+		FMOD_VECTOR psp = { s.pos->x, s.pos->y, s.pos->z }, psv = { s.vel->x, s.vel->y, s.vel->z };
 
 		SNDERR(FMOD_Channel_Set3DAttributes(s.channel, &psp, &psv), );
 		SNDERR(FMOD_Channel_Set3DMinMaxDistance(s.channel, s.mindist, s.maxdist), );
@@ -183,7 +183,7 @@ void playsound(int n, vec *loc, vec *vel, float mindist, float maxdist, vector<s
 		s_sprintfd(fname)("packages/sounds/%s", slot.sample->name);
 		const char *file = findfile(fname, "rb");
 		
-		SNDERR(FMOD_System_CreateSound(sndsys, file, FMOD_CREATESTREAM|FMOD_3D|FMOD_HARDWARE|FMOD_3D_WORLDRELATIVE, NULL, &slot.sample->sound), return);
+		SNDERR(FMOD_System_CreateSound(sndsys, file, FMOD_3D|FMOD_SOFTWARE|FMOD_3D_WORLDRELATIVE, NULL, &slot.sample->sound), return);
 		SNDERR(FMOD_Sound_SetMode(slot.sample->sound, FMOD_LOOP_NORMAL), );
 		SNDERR(FMOD_Sound_SetLoopCount(slot.sample->sound, slot.maxuses), );
 	}
@@ -209,6 +209,8 @@ void playsound(int n, vec *loc, vec *vel, float mindist, float maxdist, vector<s
 		
 		soundupdate(s);
 		SNDERR(FMOD_Channel_SetPaused(s.channel, false), return);
+		
+		if (verbose >= 2) conoutf("playing '%s' (%d)", s.slot->sample->name, index);
 	}
 }
 
