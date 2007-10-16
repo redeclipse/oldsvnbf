@@ -139,7 +139,8 @@ void drawskybox(int farplane, bool limited, float zreflect)
 		if(!drawskylimits(false, 0) && !editmode && insideworld(camera1->o)) return;
 	}
 
-	glDisable(GL_FOG);
+    bool fog = glIsEnabled(GL_FOG)==GL_TRUE;
+    if(fog) glDisable(GL_FOG);
 
 	glPushMatrix();
 	glLoadIdentity();
@@ -160,7 +161,7 @@ void drawskybox(int farplane, bool limited, float zreflect)
 		if(!zreflect && editmode && showsky) drawskyoutline();
 	}
 
-	glEnable(GL_FOG);
+    if(fog) glEnable(GL_FOG);
 }
 
 bool limitsky()

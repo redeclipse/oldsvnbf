@@ -326,6 +326,8 @@ void updatevol()
 #endif
 }
 
+VARP(maxsoundsatonce, 0, 5, 100);
+
 void playsound(int n, const vec *loc, extentity *ent)
 {
 	if(nosound) return;
@@ -336,7 +338,7 @@ void playsound(int n, const vec *loc, extentity *ent)
 		static int soundsatonce = 0, lastsoundmillis = 0;
 		if(totalmillis==lastsoundmillis) soundsatonce++; else soundsatonce = 1;
 		lastsoundmillis = totalmillis;
-		if(soundsatonce>5) return;  // avoid bursts of sounds with heavy packetloss and in sp
+        if(maxsoundsatonce && soundsatonce>maxsoundsatonce) return;  // avoid bursts of sounds with heavy packetloss and in sp
 	}
 
 	vector<soundslot> &sounds = ent ? mapsounds : gamesounds;
@@ -374,11 +376,11 @@ void playsound(int n, const vec *loc, extentity *ent)
 			if(i) s_strcat(buf, ".wav");
 			const char *file = findfile(path(buf), "rb");
 #endif
-#ifdef USE_MIXER
-			slot.s->sound = Mix_LoadWAV(file);
-#else
-			slot.s->sound = FSOUND_Sample_Load(ent ? n+gamesounds.length() : n, file, FSOUND_LOOP_OFF, 0, 0);
-#endif
+            #ifdef USE_MIXER
+                slot.s->sound = Mix_LoadWAV(file);
+            #else
+                slot.s->sound = FSOUND_Sample_Load(ent ? n+gamesounds.length() : n, file, FSOUND_LOOP_OFF, 0, 0);
+            #endif
 			if(slot.s->sound) break;
 		}
 

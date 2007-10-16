@@ -68,6 +68,7 @@ void clearoverrides()
 
 void pushident(ident &id, char *val)
 {
+    if(id._type != ID_ALIAS) return;
 	identstack *stack = new identstack;
 	stack->action = id._isexecuting==id._action ? newstring(id._action) : id._action;
 	stack->next = id._stack;
@@ -77,7 +78,7 @@ void pushident(ident &id, char *val)
 
 void popident(ident &id)
 {
-	if(!id._stack) return;
+    if(id._type != ID_ALIAS || !id._stack) return;
 	if(id._action != id._isexecuting) delete[] id._action;
 	identstack *stack = id._stack;
 	id._action = stack->action;

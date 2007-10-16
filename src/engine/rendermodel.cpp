@@ -195,7 +195,6 @@ mapmodelinfo &getmminfo(int i) { return mapmodels.inrange(i) ? mapmodels[i] : *(
 COMMAND(mmodel, "si");
 COMMANDN(mapmodel, mapmodelcompat, "iiiss");
 COMMAND(mapmodelreset, "");
-
 #ifdef BFRONTIER
 ICOMMAND(getmapmodel, "s", (char *a), {
 	if (!*a) intret(mapmodels.length());
@@ -379,10 +378,16 @@ void rendershadow(vec &dir, model *m, int anim, int varseed, const vec &o, vec c
 		glEnd();
 		glPopMatrix();
 
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, refracting && renderpath!=R_FIXEDFUNCTION ? GL_FALSE : GL_TRUE);
 	}
 
-	if(renderpath!=R_FIXEDFUNCTION && refracting) setfogplane(0, max(0.1f, refracting-center.z));
+    float intensity = dynshadow/100.0f;
+    if(refracting)
+    {
+        if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, max(0.1f, refracting-center.z));
+        else if(refractfog) intensity *= 1 - max(0, min(1, (refracting - center.z)/waterfog));
+    }
+    glColor4f(0, 0, 0, intensity);
 
 	static Shader *dynshadowshader = NULL;
 	if(!dynshadowshader) dynshadowshader = lookupshaderbyname("dynshadow");
@@ -393,8 +398,6 @@ void rendershadow(vec &dir, model *m, int anim, int varseed, const vec &o, vec c
 		glStencilFunc(GL_NOTEQUAL, bounddynshadows ? 0 : 1, 1);
 		glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
 	}
-
-	glColor4f(0, 0, 0, dynshadow/100.0f);
 
 	vec above(center);
 	above.z += 0.25f;
@@ -596,7 +599,7 @@ void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
     int br = int(radius*2)+1;
     drawbb(ivec(int(center.x-radius), int(center.y-radius), int(center.z-radius)), ivec(br, br, br));
     endquery(d->query);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, refracting && renderpath!=R_FIXEDFUNCTION ? GL_FALSE : GL_TRUE);
     glDepthMask(GL_TRUE);
 }   
 

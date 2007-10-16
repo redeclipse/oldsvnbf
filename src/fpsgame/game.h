@@ -36,9 +36,9 @@ enum						// static entity types
 	MAXENTTYPES
 };
 
+#ifdef BFRONTIER
 struct fpsentity : extentity
 {
-#ifdef BFRONTIER
 	vector<int> links;  // link list
 	
 	fpsentity()
@@ -46,12 +46,7 @@ struct fpsentity : extentity
 		links.setsize(0);
 	}
 	~fpsentity() {}
-#else
-	// extend with additional fields if needed...
-#endif
 };
-
-#ifdef BFRONTIER
 enum
 {
 	GUN_PISTOL = 0,
@@ -63,7 +58,6 @@ enum
 	NUMGUNS
 };
 enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states
-
 #define m_noitems	 ((gamemode>=4 && gamemode<=11) || gamemode==13)
 #define m_noitemsrail ((gamemode>=4 && gamemode<=5) || (gamemode>=8 && gamemode<=9) || gamemode==13)
 #define m_arena		(gamemode>=8 && gamemode<=11)
@@ -75,13 +69,11 @@ enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  
 #define m_classicsp	(gamemode==-2)
 #define m_demo		(gamemode==-3)
 #define isteam(a,b)	(m_teammode && strcmp(a, b)==0)
-
 #define m_mp(mode)	(mode>=0 && mode<=13)
 /*
 #define m_mp(mode)		(mode >= 0 && mode <= 3)
 #define m_dm			(gamemode == 1)
 #define m_dom			(gamemode == 2)
-
 #define m_sp			(gamemode>=-2 && gamemode<0)
 #define m_dmsp			(gamemode==-1)
 #define m_classicsp		(gamemode==-2)
@@ -89,6 +81,11 @@ enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  
 #define isteam(a,b)		(m_teammode && strcmp(a, b)==0)
 */
 #else
+struct fpsentity : extentity
+{
+	// extend with additional fields if needed...
+};
+
 enum { GUN_FIST = 0, GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL, GUN_FIREBALL, GUN_ICEBALL, GUN_SLIMEBALL, GUN_BITE, NUMGUNS };
 enum { A_BLUE, A_GREEN, A_YELLOW };	 // armour types... take 20/40/60 % off
 enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states
@@ -173,7 +170,7 @@ enum
 	SV_TIMEUP, SV_MAPRELOAD, SV_ITEMACC,
 	SV_SERVMSG, SV_ITEMLIST, SV_RESUME,
     SV_EDITMODE, SV_EDITENT, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP,
-	SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_SETMASTER, SV_SETTEAM,
+	SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_SETMASTER, SV_SETTEAM, SV_APPROVEMASTER,
 #ifdef BFRONTIER
 	SV_BASES, SV_BASEINFO, SV_TEAMSCORE, SV_FORCEINTERMISSION,
 #else
@@ -205,7 +202,7 @@ static char msgsizelookup(int msg)
 		SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_ITEMACC, 3,
 		SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
         SV_EDITMODE, 2, SV_EDITENT, 10, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
-		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0,
+		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0, SV_APPROVEMASTER, 2,
 #ifdef BFRONTIER
 		SV_BASES, 0, SV_BASEINFO, 0, SV_TEAMSCORE, 0, SV_FORCEINTERMISSION, 1,
 #else
@@ -230,7 +227,7 @@ static char msgsizelookup(int msg)
 #else
 #define SAUERBRATEN_SERVER_PORT 28785
 #define SAUERBRATEN_SERVINFO_PORT 28786
-#define PROTOCOL_VERSION 254			// bump when protocol changes
+#define PROTOCOL_VERSION 255			// bump when protocol changes
 #endif
 #define DEMO_VERSION 1				  // bump when demo format changes
 #define DEMO_MAGIC "SAUERBRATEN_DEMO"
@@ -305,17 +302,17 @@ static struct guninfo { short sound, attackdelay, reloaddelay, damage, projspeed
 #else
 static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
 {
-    {10,	30,		S_ITEMAMMO,		"SG",	GUN_SG} ,
-    {20,	60,		S_ITEMAMMO,		"CG",	GUN_CG },
-    {5,		15,		S_ITEMAMMO,		"RL",	GUN_RL },
-    {5,		15,		S_ITEMAMMO,		"RI",	GUN_RIFLE },
-    {10,	30,		S_ITEMAMMO,		"GL",	GUN_GL} ,
-    {30,	120,	S_ITEMAMMO,		"PI",	GUN_PISTOL },
-    {25,	100,	S_ITEMHEALTH,	"H" },
-    {10,	1000,	S_ITEMHEALTH,	"MH" },
-    {100,	100,	S_ITEMARMOUR,	"GA",	A_GREEN },
-    {200,	200,	S_ITEMARMOUR,	"YA",	A_YELLOW },
-    {20000,	30000,	S_ITEMPUP,		"Q" },
+    {10,    30,    S_ITEMAMMO,   "SG", GUN_SG},
+    {20,    60,    S_ITEMAMMO,   "CG", GUN_CG},
+    {5,     15,    S_ITEMAMMO,   "RL", GUN_RL},
+    {5,     15,    S_ITEMAMMO,   "RI", GUN_RIFLE},
+    {10,    30,    S_ITEMAMMO,   "GL", GUN_GL},
+    {30,    120,   S_ITEMAMMO,   "PI", GUN_PISTOL},
+    {25,    100,   S_ITEMHEALTH, "H"},
+    {10,    1000,  S_ITEMHEALTH, "MH"},
+    {100,   100,   S_ITEMARMOUR, "GA", A_GREEN},
+    {200,   200,   S_ITEMARMOUR, "YA", A_YELLOW},
+    {20000, 30000, S_ITEMPUP,    "Q"},
 };
 
 #define SGRAYS 20
@@ -494,7 +491,6 @@ struct fpsstate
 			{
 				armour = 100;
 				armourtype = A_GREEN;
-
 				if(m_tarena || m_capture)
 				{
 					ammo[GUN_PISTOL] = 80;

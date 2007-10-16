@@ -74,7 +74,7 @@ enum
 };
 
 #define MAXSHADERDETAIL 3
-#define MAXVARIANTROWS 2
+#define MAXVARIANTROWS 4
 
 extern int shaderdetail;
 
