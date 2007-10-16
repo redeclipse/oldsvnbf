@@ -425,7 +425,7 @@ bool find(fpsent *d, bool enemyonly = false)
 	
 		loopv(cl.et.ents)
 		{
-			if (cl.et.ents[i]->spawned && cl.et.ents[i]->type == WEAPON && d->canpickup(cl.et.ents[i]->attr1))
+			if (cl.et.ents[i]->spawned && cl.et.ents[i]->type == WEAPON && d->canpickup(cl.et.ents[i]->attr1, cl.lastmillis))
 			{
 				settarg(cl.et.ents[i]->o.dist(d->o) / float(5), i);
 			}
