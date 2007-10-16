@@ -125,6 +125,7 @@ extern GLuint cubemapfromsky(int size);
 extern Texture *cubemapload(const char *name, bool mipit = true, bool msg = true);
 extern void drawcubemap(int size, const vec &o, float yaw, float pitch);
 extern Slot	&lookuptexture(int tex, bool load = true);
+extern void loadshaders();
 extern Shader  *lookupshader(int slot);
 extern void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, GLenum component = GL_RGB, GLenum target = GL_TEXTURE_2D);
 extern void renderfullscreenshader(int w, int h);

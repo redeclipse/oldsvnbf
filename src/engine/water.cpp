@@ -833,6 +833,7 @@ void queryreflections()
 
 	if((editmode && showmat) || !hasOQ || !oqfrags || !oqwater || nowater || (!waterreflect && !waterrefract)) return;
 
+    float offset = vertwater ? 0.1f : WATER_OFFSET;
 	int refs = 0;
 	loopi(MAXREFLECTIONS)
 	{
@@ -858,7 +859,7 @@ void queryreflections()
 		loopvj(ref.matsurfs)
 		{
 			materialsurface &m = *ref.matsurfs[j];
-            drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, renderpath==R_FIXEDFUNCTION || vertwater ? 0.1f : WATER_OFFSET);
+            drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, offset);
 		}
 		glEnd();
 		endquery(ref.query);

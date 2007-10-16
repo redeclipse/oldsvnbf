@@ -54,7 +54,7 @@ eng: added slow zoom aliases to engine config
 eng: increased 'crosshairsize' and 'cursorsize' maximums to 1000
 gam: hud now renders with alpha channels
 gam: added hud overlay for damage
-end: moved call to gameplayhud before other hud elements for visibility (re: overlays)
+eng: moved call to gameplayhud before other hud elements for visibility (re: overlays)
 gam: added hud overlay for zooming (fov < 90)
 eng: engine now saves map configs
 gam: fixed weapon reloading and rifle selection
