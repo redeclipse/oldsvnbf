@@ -13,6 +13,28 @@ static vector<ShaderParam> curparams;
 static ShaderParamState vertexparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS], pixelparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS];
 static int dirtyparams = 0;
 
+void loadshaders()
+{
+#ifdef BFRONTIER
+    exec("packages/stdshader.cfg");
+#else
+    exec("data/stdshader.cfg");
+#endif
+    defaultshader = lookupshaderbyname("default");
+    notextureshader = lookupshaderbyname("notexture");
+    nocolorshader = lookupshaderbyname("nocolor");
+    foggedshader = lookupshaderbyname("fogged");
+    foggednotextureshader = lookupshaderbyname("foggednotexture");
+
+    if(renderpath!=R_FIXEDFUNCTION)
+    {
+        glEnable(GL_VERTEX_PROGRAM_ARB);
+        glEnable(GL_FRAGMENT_PROGRAM_ARB);
+    }
+
+    defaultshader->set();
+}
+
 Shader *lookupshaderbyname(const char *name) 
 { 
 	Shader *s = shaders.access(name);
@@ -34,11 +56,7 @@ static bool compileasmshader(GLenum type, GLuint &idx, char *def, char *tname, c
         if(err>=0 && err<(int)strlen(def))
         {
 		loopi(err) putchar(*def++);
-#ifdef BFRONTIER
-		conoutf(" <<HERE>> ");
-#else
 		puts(" <<HERE>> ");
-#endif
 		while(*def) putchar(*def++);
 	}
     }
@@ -60,11 +78,7 @@ static void showglslinfo(GLhandleARB obj, char *tname, char *name)
 		GLcharARB *log = new GLcharARB[length];
 		glGetInfoLog_(obj, length, &length, log);
 		conoutf("GLSL ERROR (%s:%s)", tname, name);
-#ifdef BFRONTIER
-		conoutf("%s", log);
-#else
 		puts(log);
-#endif
 		delete[] log;
 	}
 }
@@ -792,7 +806,7 @@ static void genwatervariant(Shader &s, char *sname, char *vs, char *ps, int row 
 
     vector<char> psw;
     psw.put(ps, pspragma-ps);
-    const char *fogtoalpha = s.type & SHADER_GLSLANG ? "gl_FragColor.a = gl_FogFragCoord;\n" : "MAD result.color.a, fragment.fogcoord.x, 0.25, 0.5;\n";
+    const char *fogtoalpha = s.type & SHADER_GLSLANG ? "gl_FragColor.a = gl_FogFragCoord*0.25 + 0.5;\n" : "MAD result.color.a, fragment.fogcoord.x, 0.25, 0.5;\n";
     psw.put(fogtoalpha, strlen(fogtoalpha));
     psw.put(pspragma, strlen(pspragma)+1);
 
@@ -820,6 +834,8 @@ void shader(int *type, char *name, char *vs, char *ps)
 			curparams.setsize(0);
 			return;
 		}
+        s_sprintfd(info)("shader %s", name);
+        show_out_of_renderloop_progress(0.0, info);
 	}
 	Shader *s = newshader(*type, name, vs, ps);
 	if(s && renderpath!=R_FIXEDFUNCTION)

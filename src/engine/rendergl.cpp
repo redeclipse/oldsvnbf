@@ -242,9 +242,6 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 			}
 		}
 		if(renderpath==R_ASMSHADER) conoutf("Rendering using the OpenGL 1.5 assembly shader path.");
-
-		glEnable(GL_VERTEX_PROGRAM_ARB);
-		glEnable(GL_FRAGMENT_PROGRAM_ARB);
 	}
 
 	if(strstr(exts, "GL_ARB_occlusion_query"))
@@ -358,18 +355,6 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, (GLint *)&hwtexsize);
 
 	inittmus();
-
-#ifdef BFRONTIER
-	exec("packages/stdshader.cfg");
-#else
-	exec("data/stdshader.cfg");
-#endif
-	defaultshader = lookupshaderbyname("default");
-	notextureshader = lookupshaderbyname("notexture");
-	nocolorshader = lookupshaderbyname("nocolor");
-	foggedshader = lookupshaderbyname("fogged");
-	foggednotextureshader = lookupshaderbyname("foggednotexture");
-	defaultshader->set();
 }
 
 VAR(wireframe, 0, 0, 1);
