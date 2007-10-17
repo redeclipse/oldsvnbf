@@ -114,7 +114,11 @@ struct weaponstate
 		loopi(SGRAYS) offsetray(from, to, SGSPREAD, sg[i]);
 	}
 
+#ifdef BFRONTIER
+	enum { BNC_WEAPON = 0, BNC_GIBS, BNC_DEBRIS };
+#else
 	enum { BNC_GRENADE, BNC_GIBS, BNC_DEBRIS };
+#endif
 
 	struct bouncent : physent
 	{
@@ -127,21 +131,24 @@ struct weaponstate
 		int offsetmillis;
 #ifdef BFRONTIER
 		float elasticity, waterfric;
+		int gun, schan;
 		
-		bouncent() : elasticity(0.6f), waterfric(3.0f) {}
+		bouncent() : elasticity(0.75f), waterfric(3.0f), gun(-1), schan(-1) {}
 		~bouncent() {}
 #endif
 	};
 
 	vector<bouncent *> bouncers;
 
-	void newbouncer(const vec &from, const vec &to, bool local, fpsent *owner, int type, int lifetime, int speed)
+#ifdef BFRONTIER
+	void newbouncer(const vec &from, const vec &to, bool local, fpsent *owner, int type, int lifetime, int speed, int gun, int sound)
 	{
 		bouncent &bnc = *(bouncers.add(new bouncent));
 		bnc.reset();
 		bnc.type = ENT_BOUNCE;
+		bnc.state = CS_ALIVE;
 		bnc.o = from;
-		bnc.radius = type==BNC_DEBRIS ? 0.5f : 1.5f;
+		bnc.radius = type == BNC_DEBRIS ? 0.5f : 1.5f;
 		bnc.eyeheight = bnc.radius;
 		bnc.aboveeye = bnc.radius;
 		bnc.lifetime = lifetime;
@@ -149,20 +156,139 @@ struct weaponstate
 		bnc.local = local;
 		bnc.owner = owner;
 		bnc.bouncetype = type;
-#ifdef BFRONTIER
-		switch(bnc.bouncetype)
+		bnc.gun = gun;
+		bnc.maxspeed = speed;
+
+		if (bnc.gun >= 0) switch (bnc.gun)
 		{
-			case BNC_GRENADE:
-				bnc.elasticity = 0.33f;
+			case GUN_GL:
+			{
+				bnc.elasticity = 0.5f;
 				bnc.waterfric = 2.0f;
 				break;
-			default:
-				bnc.elasticity = 0.6f;
-				bnc.waterfric = 3.0f;
+			}
+			case GUN_RL:
+			{
+				bnc.elasticity = 0.0f;
+				bnc.waterfric = 1.5f;
 				break;
+			}
+			default: break;
 		}
-#endif
 
+		vec dir(to);
+		dir.sub(from).normalize();
+		bnc.vel = dir;
+		bnc.vel.mul(cl.ph.speed(&bnc));
+
+		avoidcollision(&bnc, dir, owner, bnc.radius);
+
+		bnc.offset = hudgunorigin(bnc.gun, from, to, owner);
+		bnc.offset.sub(bnc.o);
+		bnc.offsetmillis = OFFSETMILLIS;
+		
+		if (bnc.gun == GUN_RL) bnc.schan = playsound(getgun(bnc.gun).fsound, bnc.o, bnc.vel);
+	}
+
+	void bounceupdate(int time)
+	{
+		loopv(bouncers)
+		{
+			bouncent &bnc = *(bouncers[i]);
+
+            if (bnc.bouncetype == BNC_WEAPON)
+            {
+                vec pos(bnc.o);
+                pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
+                regular_particle_splash(5, 1, 150, pos);
+            }
+
+			vec old(bnc.o);
+			int rtime = time;
+			
+			while (rtime > 0)
+			{
+				int stime = bnc.bouncetype == BNC_WEAPON ? 10 : 30, qtime = min(stime, rtime);
+				rtime -= qtime;
+				bnc.lifetime -= qtime;
+
+				if (bnc.lifetime <= 0 || bounce(&bnc, qtime/1000.0f, bnc.elasticity, bnc.waterfric))
+				{
+					if (bnc.bouncetype == BNC_WEAPON &&
+						(bnc.gun == GUN_GL || bnc.gun == GUN_RL))
+					{
+						if (bnc.gun == GUN_GL && bnc.lifetime > 0)
+						{
+							if (!soundchans.inrange(bnc.schan) || !soundplaying(soundchans[bnc.schan]))
+								bnc.schan = playsound(getgun(bnc.gun).fsound, bnc.o, bnc.vel);
+							continue; // grenades stay live until timeout
+						}
+						int qdam = getgun(bnc.gun).damage;
+						
+						hits.setsizenodelete(0);
+						explode(bnc.local, bnc.owner, bnc.o, NULL, qdam, bnc.gun);
+                        
+                        if (bnc.local)
+                        {
+                            cl.cc.addmsg(SV_EXPLODE, "ri2iv", cl.lastmillis-cl.maptime, bnc.gun,
+									hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+                        }
+					}
+					else if (bnc.lifetime > 0)
+					{
+						continue; // not handled, let it bounce until it expires
+					}
+					
+					bnc.state = CS_DEAD;
+					break; // kill 'er
+				}
+			}
+			if (bnc.state == CS_ALIVE)
+			{
+				if (soundchans.inrange(bnc.schan))
+				{
+					if (soundplaying(soundchans[bnc.schan]))
+					{
+						soundpos(soundchans[bnc.schan], bnc.o, bnc.vel);
+					}
+					else bnc.schan = -1;
+				}
+
+				bnc.roll += old.sub(bnc.o).magnitude()/(4*RAD);
+				bnc.offsetmillis = max(bnc.offsetmillis-time, 0);
+			}
+			else
+			{
+				if (soundchans.inrange(bnc.schan) && soundplaying(soundchans[bnc.schan]))
+					soundstop(soundchans[bnc.schan]);
+
+				delete &bnc;
+				bouncers.remove(i--);
+			}
+		}
+	}
+
+	void removebouncers(fpsent *owner)
+	{
+		loopv(bouncers) if(bouncers[i]->owner==owner) { delete bouncers[i]; bouncers.remove(i--); }
+	}
+
+	void bouncereset() { bouncers.deletecontentsp(); bouncers.setsize(0); }
+#else
+	void newbouncer(const vec &from, const vec &to, bool local, fpsent *owner, int type, int lifetime, int speed)
+	{
+		bouncent &bnc = *(bouncers.add(new bouncent));
+		bnc.reset();
+		bnc.type = ENT_BOUNCE;
+		bnc.o = from;
+		bnc.radius = type == BNC_DEBRIS ? 0.5f : 1.5f;
+		bnc.eyeheight = bnc.radius;
+		bnc.aboveeye = bnc.radius;
+		bnc.lifetime = lifetime;
+		bnc.roll = 0;
+		bnc.local = local;
+		bnc.owner = owner;
+		bnc.bouncetype = type;
 		vec dir(to);
 		dir.sub(from).normalize();
 		bnc.vel = dir;
@@ -170,7 +296,7 @@ struct weaponstate
 
 		avoidcollision(&bnc, dir, owner, 0.1f);
 
-		bnc.offset = hudgunorigin(type==BNC_GRENADE ? GUN_GL : -1, from, to, owner);
+		bnc.offset = hudgunorigin(type == BNC_GRENADE ? GUN_GL : -1, from, to, owner);
 		bnc.offset.sub(bnc.o);
 		bnc.offsetmillis = OFFSETMILLIS;
 	}
@@ -192,21 +318,11 @@ struct weaponstate
 			{
 				int qtime = min(bnc.bouncetype==BNC_GRENADE ? 10 : 30, rtime);
 				rtime -= qtime;
-#ifdef BFRONTIER
-				if ((bnc.lifetime -= qtime) < 0 || bounce(&bnc, qtime/1000.0f, bnc.elasticity, bnc.waterfric))
-#else
 				if((bnc.lifetime -= qtime)<0 || bounce(&bnc, qtime/1000.0f, 0.6f))
-#endif
 				{
 					if(bnc.bouncetype==BNC_GRENADE)
 					{
-#ifdef BFRONTIER
-						extern physent *hitplayer;
-						if (bnc.lifetime > 0 && hitplayer != NULL) continue;
-						int qdam = getgun(GUN_GL).damage;
-#else
 						int qdam = guns[GUN_GL].damage*(bnc.owner->quadmillis ? 4 : 1);
-#endif
 						hits.setsizenodelete(0);
 						explode(bnc.local, bnc.owner, bnc.o, NULL, qdam, GUN_GL);					
                         if(bnc.local)
@@ -247,11 +363,12 @@ struct weaponstate
 		p.gun = gun;
 		p.offsetmillis = OFFSETMILLIS;
 	}
-	
+
 	void removeprojectiles(fpsent *owner) 
 	{ 
 		loopv(projs) if(projs[i].owner==owner) projs.remove(i--);
 	}
+#endif
 
 	IVARP(blood, 0, 1, 1);
 
@@ -272,7 +389,11 @@ struct weaponstate
 		vec to(rnd(100)-50, rnd(100)-50, rnd(100)-50);
 		to.normalize();
 		to.add(p);
+#ifdef BFRONTIER
+		newbouncer(p, to, true, d, type, rnd(1000)+1000, rnd(100)+20, -1, -1);
+#else
 		newbouncer(p, to, true, d, type, rnd(1000)+1000, rnd(100)+20);
+#endif
 	}	
 
 	void superdamageeffect(vec &vel, fpsent *d)
@@ -359,7 +480,11 @@ struct weaponstate
 		if(dist<RL_DAMRAD) 
 		{
 			int damage = (int)(qdam*(1-dist/RL_DISTSCALE/RL_DAMRAD));
+#ifdef BFRONTIER
+			if(o == at) return;
+#else
 			if(gun==GUN_RL && o==at) damage /= RL_SELFDAMDIV; 
+#endif
 			hit(damage, o, at, dir, gun, int(dist*DMF));
 		}
 	}
@@ -384,22 +509,30 @@ struct weaponstate
 #endif
 	void explode(bool local, fpsent *owner, vec &v, dynent *notthis, int qdam, int gun)
 	{
-		particle_splash(0, 200, 300, v);
-		playsound(S_RLHIT, &v);
-		particle_fireball(v, RL_DAMRAD, gun==GUN_RL ? 22 : 23);
-        adddynlight(v, 1.15f*RL_DAMRAD, vec(1, 0.75f, 0.5f), 600, 400);
 #ifdef BFRONTIER
+		particle_splash(0, 200, 300, v);
+		playsound(getgun(gun).esound, v, novel, RL_DAMRAD);
+		particle_fireball(v, RL_DAMRAD, gun == GUN_RL ? 22 : 23);
+        adddynlight(v, 1.15f*RL_DAMRAD, vec(1, 0.75f, 0.5f), 800, 400);
         if (maxdebris())
         {
-#endif
 			int numdebris = rnd(maxdebris()-5)+5;
 			vec debrisvel = owner->o==v ? vec(0, 0, 0) : vec(owner->o).sub(v).normalize(), debrisorigin(v);
 			if(gun==GUN_RL) debrisorigin.add(vec(debrisvel).mul(8));
 			loopi(numdebris) spawnbouncer(debrisorigin, debrisvel, owner, BNC_DEBRIS);
-#ifdef BFRONTIER
         }
         wobeffect(v, qdam);
+#else
+		particle_splash(0, 200, 300, v);
+		playsound(S_RLHIT, &v);
+		particle_fireball(v, RL_DAMRAD, gun==GUN_RL ? 22 : 23);
+        adddynlight(v, 1.15f*RL_DAMRAD, vec(1, 0.75f, 0.5f), 600, 400);
+		int numdebris = rnd(maxdebris()-5)+5;
+		vec debrisvel = owner->o==v ? vec(0, 0, 0) : vec(owner->o).sub(v).normalize(), debrisorigin(v);
+		if(gun==GUN_RL) debrisorigin.add(vec(debrisvel).mul(8));
+		loopi(numdebris) spawnbouncer(debrisorigin, debrisvel, owner, BNC_DEBRIS);
 #endif
+
 		if(!local) return;
 		loopi(cl.numdynents())
 		{
@@ -409,6 +542,7 @@ struct weaponstate
 		}
 	}
 
+#ifndef BFRONTIER
 	void splash(projectile &p, vec &v, dynent *notthis, int qdam)
 	{
         if(guns[p.gun].part)
@@ -427,11 +561,7 @@ struct weaponstate
 	{
         if(o->state!=CS_ALIVE) return false;
 		if(!intersect(o, p.o, v)) return false;
-#ifdef BFRONTIER
-		splash(p, v, NULL, qdam);
-#else
 		splash(p, v, o, qdam);
-#endif
 		vec dir;
         if(guns[p.gun].part) { dir = v; dir.normalize(); }
         else rocketdist(o, dir, v);
@@ -445,11 +575,7 @@ struct weaponstate
 		{
 			projectile &p = projs[i];
 			p.offsetmillis = max(p.offsetmillis-time, 0);
-#ifdef BFRONTIER
-			int qdam = getgun(p.gun).damage;
-#else
 			int qdam = guns[p.gun].damage*(p.owner->quadmillis ? 4 : 1);
-#endif
 			if(p.owner->type==ENT_AI) qdam /= MONSTERDAMAGEFACTOR;
 			vec v;
 			float dist = p.to.dist(p.o, v);
@@ -502,6 +628,7 @@ struct weaponstate
 			else p.o = v;
 		}
 	}
+#endif
 
 	vec hudgunorigin(int gun, const vec &from, const vec &to, fpsent *d)
 	{
@@ -535,11 +662,11 @@ struct weaponstate
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
 #ifdef BFRONTIER
-		playsound(getgun(gun).sound, &d->o, &d->vel);
+		playsound(getgun(gun).sound, d->o, d->vel);
 #else
 		playsound(guns[gun].sound, d==player1 ? NULL : &d->o);
-#endif
 		int pspeed = 25;
+#endif
 		switch(gun)
 		{
 #ifndef BFRONTIER
@@ -567,16 +694,23 @@ struct weaponstate
 			}
 
 			case GUN_RL:
-#ifndef BFRONTIER
+#ifdef BFRONTIER
+			case GUN_GL:
+			{
+				vec up = to;
+				if (gun == GUN_GL)
+				{
+					float dist = from.dist(to);
+					up.z += dist/8;
+				}
+				newbouncer(from, up, local, d, BNC_WEAPON, getgun(gun).time, getgun(gun).speed, gun, getgun(gun).sound);
+				break;
+			}
+#else
 			case GUN_FIREBALL:
 			case GUN_ICEBALL:
 			case GUN_SLIMEBALL:
-#endif
-#ifdef BFRONTIER
-				pspeed = getgun(gun).projspeed*4;
-#else
 				pspeed = guns[gun].projspeed*4;
-#endif
 				if(d->type==ENT_AI) pspeed /= 2;
 				newprojectile(from, to, (float)pspeed, local, d, gun);
 				break;
@@ -589,6 +723,7 @@ struct weaponstate
 				newbouncer(from, up, local, d, BNC_GRENADE, 2000, 200);
 				break;
 			}
+#endif
 
 			case GUN_RIFLE: 
 				particle_splash(0, 200, 250, to);
@@ -673,18 +808,53 @@ struct weaponstate
 				if (gunallowed(d, d->gunselect, -2, cl.lastmillis))
 				{
 					cl.playsoundc(S_NOAMMO); 
-					d->lastattackgun = d->gunselect;
 					gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
-					gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).reloaddelay;
+					gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).rdelay;
 					cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);
+					d->ammo[d->gunselect] = getgun(d->gunselect).add;
 				}
 				return; 
 			}
 		}
 		d->lastattackgun = d->gunselect;
 		gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
-		gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).attackdelay;
+		gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).adelay;
 		d->ammo[d->gunselect]--;
+		d->totalshots += getgun(d->gunselect).damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
+
+		vec from = d->o;
+		vec to = targ;
+
+		vec unitv;
+		float dist = to.dist(from, unitv);
+		unitv.div(dist);
+		vec kickback(unitv);
+		kickback.mul(getgun(d->gunselect).kick);
+		d->vel.add(kickback);
+		if (d == player1) cl.camerawobble += getgun(d->gunselect).wobble;
+		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
+		if(barrier < dist)
+		{
+			to = unitv;
+			to.mul(barrier);
+			to.add(from);
+		}
+
+		if(d->gunselect==GUN_SG) createrays(from, to);
+		else if(d->gunselect==GUN_CG) offsetray(from, to, 1, to);
+
+		hits.setsizenodelete(0);
+		if(!getgun(d->gunselect).speed) raydamage(from, to, d);
+
+		shootv(d->gunselect, from, to, d, true);
+
+		if(d == player1)
+		{
+            cl.cc.addmsg(SV_SHOOT, "ri2i6iv", cl.lastmillis-cl.maptime, d->gunselect,
+							(int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF), 
+							(int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
+							hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+		}
 #else
 		int attacktime = cl.lastmillis-d->lastaction;
 		if(attacktime<d->gunwait) return;
@@ -704,7 +874,7 @@ struct weaponstate
 			return; 
 		}
 		if(d->gunselect) d->ammo[d->gunselect]--;
-#endif
+
 		vec from = d->o;
 		vec to = targ;
 
@@ -712,18 +882,6 @@ struct weaponstate
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		vec kickback(unitv);
-#ifdef BFRONTIER
-		kickback.mul(getgun(d->gunselect).kickamount);
-		d->vel.add(kickback);
-		if (d == player1) cl.camerawobble += getgun(d->gunselect).wobbleamount;
-		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
-		if(barrier < dist)
-		{
-			to = unitv;
-			to.mul(barrier);
-			to.add(from);
-		}
-#else
 		kickback.mul(guns[d->gunselect].kickamount*-2.5f);
 		d->vel.add(kickback);
 		float shorten = 0.0f;
@@ -738,22 +896,15 @@ struct weaponstate
 			to.mul(shorten);
 			to.add(from);
 		}
-#endif
-		
+
 		if(d->gunselect==GUN_SG) createrays(from, to);
 		else if(d->gunselect==GUN_CG) offsetray(from, to, 1, to);
-			
-#ifdef BFRONTIER
-		hits.setsizenodelete(0);
 
-		if(!getgun(d->gunselect).projspeed) raydamage(from, to, d);
-#else
 		if(d->quadmillis && attacktime>200) cl.playsoundc(S_ITEMPUP, d);
 
 		hits.setsizenodelete(0);
 
 		if(!guns[d->gunselect].projspeed) raydamage(from, to, d);
-#endif
 
 		shootv(d->gunselect, from, to, d, true);
 
@@ -765,15 +916,75 @@ struct weaponstate
 							hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 		}
 
-#ifdef BFRONTIER
-		d->totalshots += getgun(d->gunselect).damage*(d->gunselect==GUN_SG ? SGRAYS : 1);
-#else
 		d->gunwait = guns[d->gunselect].attackdelay;
 
 		d->totalshots += guns[d->gunselect].damage*(d->quadmillis ? 4 : 1)*(d->gunselect==GUN_SG ? SGRAYS : 1);
 #endif
 	}
 
+#ifdef BFRONTIER
+	void renderbouncers()
+	{
+		vec color, dir;
+		float yaw, pitch;
+		loopv(bouncers)
+		{
+			bouncent &bnc = *(bouncers[i]);
+
+			string mname;
+			int cull = MDL_CULL_VFC|MDL_DYNSHADOW;
+
+            if (bnc.bouncetype == BNC_WEAPON)
+            {
+            	if (bnc.gun == GUN_GL) s_sprintf(mname)("%s", "projectiles/grenade");
+            	else if (bnc.gun == GUN_RL) s_sprintf(mname)("%s", "projectiles/rocket");
+            	else continue;
+				
+				pitch = bnc.gun == GUN_GL ? -bnc.roll : 0.f;
+			}
+            else if (bnc.bouncetype == BNC_GIBS)
+            {
+				s_sprintf(mname)("%s", ((int)(size_t)&bnc)&0x40 ? "gibc" : "gibh");
+				cull |= MDL_CULL_DIST;
+				pitch = -bnc.roll;
+			}
+			else if (bnc.bouncetype == BNC_DEBRIS)
+			{
+				s_sprintf(mname)("debris/debris0%d", ((((int)(size_t)&bnc)&0xC0)>>6)+1);
+				cull |= MDL_CULL_DIST;
+				pitch = -bnc.roll;
+			}
+			else continue;
+
+			vec pos(bnc.o);
+			pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
+			lightreaching(pos, color, dir);
+
+			vectoyawpitch(bnc.vel, yaw, pitch);
+			yaw += 90;
+			bnc.lastyaw = yaw;
+
+			rendermodel(color, dir, mname, ANIM_MAPMODEL|ANIM_LOOP, 0, 0, bnc.o, yaw, pitch, 0, 0, NULL, cull);
+		}
+	}  
+
+	void dynlightbouncers()
+	{
+		loopv(bouncers)
+		{
+			bouncent &bnc = *(bouncers[i]);
+			
+			switch (bnc.gun)
+			{
+				case GUN_RL:
+					adddynlight(bnc.o, RL_DAMRAD, vec(0.55f, 0.33f, 0.11f), 0, 0);
+					break;
+				default:
+					break;
+			}
+		}
+	}
+#else
 	void renderprojectiles()
 	{
 		vec color, dir;
@@ -822,22 +1033,5 @@ struct weaponstate
 			rendermodel(color, dir, "projectiles/rocket", ANIM_MAPMODEL|ANIM_LOOP, 0, 0, v, yaw, pitch, 0, 0, NULL, MDL_CULL_VFC|MDL_DYNSHADOW);
 		}
 	}  
-#ifdef BFRONTIER
-	void dynlightprojectiles()
-	{
-		loopv(projs)
-		{
-			projectile &p = projs[i];
-			
-			switch (p.gun)
-			{
-				case GUN_RL:
-					adddynlight(p.o, RL_DAMRAD/2, vec(0.75f, 0.5f, 0.25f), 0, 0);
-					break;
-				default:
-					break;
-			}
-		}
-	}
 #endif
 };

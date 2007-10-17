@@ -99,21 +99,31 @@ enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  
 enum
 {
 #ifdef BFRONTIER
-	S_JUMP = 0, S_LAND, S_RIFLE, S_SG, S_CG,
-	S_RLFIRE, S_RLHIT, S_WEAPLOAD, S_ITEMAMMO,
-	S_ITEMSPAWN, S_TELEPORT, S_NOAMMO,
+	S_JUMP = 0, S_LAND,
+	S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6,
+	S_DIE1, S_DIE2,
+	S_SPLASH1, S_SPLASH2,
+	S_RUMBLE, S_TELEPORT, S_JUMPPAD, 
+	S_WEAPLOAD, S_NOAMMO,
+	S_PISTOL, S_SG, S_CG,
+	S_GLFIRE, S_GLEXPL, S_GLHIT,
+	S_RLFIRE, S_RLEXPL, S_RLFLY,
+	S_RIFLE,
+	S_ITEMAMMO, S_ITEMSPAWN,
+	S_V_BASECAP, S_V_BASELOST,
+	S_V_FIGHT, S_V_RESPAWNPOINT, 
+	S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED,
+	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4,
+	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
+	S_RESPAWN, S_CHAT, S_MENUPRESS, S_MENUBACK
 #else
 	S_JUMP = 0, S_LAND, S_RIFLE, S_PUNCH1, S_SG, S_CG,
 	S_RLFIRE, S_RLHIT, S_WEAPLOAD, S_ITEMAMMO, S_ITEMHEALTH,
 	S_ITEMARMOUR, S_ITEMPUP, S_ITEMSPAWN, S_TELEPORT, S_NOAMMO, S_PUPOUT,
-#endif
 	S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6,
 	S_DIE1, S_DIE2,
 	S_FLAUNCH, S_FEXPLODE,
 	S_SPLASH1, S_SPLASH2,
-#ifdef BFRONTIER
-	S_RUMBLE,
-#else
 	S_GRUNT1, S_GRUNT2, S_RUMBLE,
 	S_PAINO,
 	S_PAINR, S_DEATHR,
@@ -124,21 +134,13 @@ enum
 	S_PAINH, S_DEATHH,
 	S_PAIND, S_DEATHD,
 	S_PIGR1, S_ICEBALL, S_SLIMEBALL,
-#endif
 	S_JUMPPAD, S_PISTOL,
 	
 	S_V_BASECAP, S_V_BASELOST,
 	S_V_FIGHT,
-#ifndef BFRONTIER
+	S_V_RESPAWNPOINT, 
 	S_V_BOOST, S_V_BOOST10,
 	S_V_QUAD, S_V_QUAD10,
-#endif
-	S_V_RESPAWNPOINT, 
-#ifdef BFRONTIER
-	S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED,
-	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4,
-	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
-	S_RESPAWN, S_CHAT, S_MENUPRESS, S_MENUBACK
 #endif
 };
 
@@ -242,43 +244,36 @@ struct demoheader
 #define SGSPREAD		3
 
 #define RL_DAMRAD		30
-#define RL_SELFDAMDIV	2
 #define RL_DISTSCALE	1.5f
 
 #define MAXCARRY		2
 
 static struct guninfo
 {
-	int info, sound;
-	bool reload;
-	int add, max;
-	int attackdelay, reloaddelay;
-	int damage, projspeed, part;
-	int kickamount, wobbleamount;
-	char *name;
+	int info, 		sound, 		esound, 	fsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	part,	kick,	wobble;	char *name;
 } guns[NUMGUNS] =
 {
-	{ GUN_PISTOL,	S_PISTOL,	true,	10,	10,	250,	2250,	13,		0,	0,	-10 ,	10,	"pistol" },
-	{ GUN_SG,		S_SG,		true,	8,	8,	1000,	4000,	5,		0,	0,	-50,	50, "shotgun" },
-	{ GUN_CG,		S_CG,		true,	30,	30,	75,		3075,	8,		0,	0,	-6,		6,	"chaingun" },
-	{ GUN_GL,		S_FLAUNCH,	false,	2,	4,	1500,	600,	400,	40,	0,	-5,		3,	"grenades" },
-	{ GUN_RL,		S_RLFIRE,	true,	1,	1,	2500,	5000,	250,	80,	0,	-75,	50,	"rockets" },
-	{ GUN_RIFLE,	S_RIFLE,	true,	5,	5,	1500,	4500,	50,		0,	0,	-30,	30,	"rifle" },
+	{ GUN_PISTOL,	S_PISTOL,	-1,			-1,			10,		10,		250,	2250,	13,		0,		0,		0,		-10 ,	10,		"pistol" },
+	{ GUN_SG,		S_SG,		-1,			-1,			8,		8,		1000,	4000,	5,		0,		0,		0,		-50,	50, 	"shotgun" },
+	{ GUN_CG,		S_CG,		-1,			-1,			30,		30,		75,		3075,	8,		0,		0,		0,		-6,		6,		"chaingun" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_GLHIT,	2,		4,		1500,	0,		400,	200,	2500,	0,		-5,		3,		"grenades" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	1,		1,		2500,	5000,	250,	400,	5000,	0,		-75,	50,		"rockets" },
+	{ GUN_RIFLE,	S_RIFLE,	-1,			-1,			5,		5,		1500,	4500,	50,		0,		0,		0,		-30,	30,		"rifle" },
 };
 
-#define getgun(n) guns[n]
-#define gunvar(gw,gn) (gw)[gn]
-#define gunallowed(ge,gn,gs,ms) (gn > -1 && gn < NUMGUNS) && (\
-	(gs >= 0 &&  (gn != gs && ms-gunvar((ge)->gunlast, gs) >= gunvar((ge)->gunwait, gs))) || \
+#define getgun(gn) (guns[gn])
+#define gunvar(gw,gn) ((gw)[gn])
+#define gunallowed(ge,gn,gs,ms) ((gn > -1 && gn < NUMGUNS) && ( \
+	(gs >= 0 && gn != gs && ms-gunvar((ge)->gunlast, gs) >= gunvar((ge)->gunwait, gs)) || \
 	(gs <= -1 && ( \
 		( \
-			(gs == -1 && (ge)->ammo[gn]) || \
-			(gs == -2 && guns[gn].reload && !(ge)->ammo[gn]) || \
-			(gs == -3 && !(ge)->ammo[gn]) \
+			(gs == -1 && (ge)->ammo[gn] > 0) || \
+			(gs == -2 && getgun(gn).rdelay && (ge)->ammo[gn] <= 0) || \
+			(gs == -3 && (ge)->ammo[gn] <= 0) \
 		) && \
-		ms-gunvar((ge)->gunlast, gn) >= gunvar((ge)->gunwait, gn) \
+		(ms-gunvar((ge)->gunlast, gn) >= gunvar((ge)->gunwait, gn)) \
 	)) \
-)
+))
 #else
 static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
 {

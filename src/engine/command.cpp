@@ -639,7 +639,7 @@ bool execfile(char *cfgfile)
 	execute(buf);
 	delete[] buf;
 #ifdef BFRONTIER // verbose support
-	if (verbose >= 2) console("loaded script '%s'", CON_RIGHT, cfgfile);
+	if (verbose >= 3) console("loaded script '%s'", CON_RIGHT, cfgfile);
 #endif
 	return true;
 }

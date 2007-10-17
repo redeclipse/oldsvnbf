@@ -171,6 +171,8 @@ extern bool entinmap(dynent *d, bool avoidplayers = false);
 extern void findplayerspawn(dynent *d, int forceent = -1);
 // sound
 #ifdef BFRONTIER
+extern vec novel, plvel, plpos;
+
 struct soundsample
 {
 	FMOD_SOUND *sound;
@@ -188,20 +190,28 @@ struct soundslot
 struct soundchan
 {
 	FMOD_CHANNEL *channel;
-	vec *pos, *vel;
+	vec pos, vel;
 	float mindist, maxdist;
 	soundslot *slot;
 };
+
+#define SNDMINDIST	2.f
+#define SNDMAXDIST	10000.f
 
 extern hashtable<char *, soundsample> soundsamples;
 extern vector<soundslot> gamesounds, mapsounds;
 extern vector<soundchan> soundchans;
 
+extern bool soundplaying(soundchan &s);
+extern void soundupdate(soundchan &s);
+extern void soundpos(soundchan &s, vec &pos, vec &vel, bool update = true);
+extern void soundstop(soundchan &s);
+
+extern void checksound();
 extern int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds);
+extern int playsound(int n, vec &pos = plpos, vec &vel = plvel, float mindist = SNDMINDIST, float maxdist = SNDMAXDIST, vector<soundslot> &sounds = gamesounds);
 
 extern void clearmapsounds();
-extern void checksound();
-extern void playsound(int n,   vec *loc = NULL, vec *vel = NULL, float mindist = 1.0f, float maxdist = 10000.f, vector<soundslot> &sounds = gamesounds);
 #else
 extern void playsound    (int n,   const vec *loc = NULL, extentity *ent = NULL);
 extern void playsoundname(char *s, const vec *loc = NULL, int vol = 0);
@@ -318,21 +328,6 @@ extern void g3d_resetcursor();
 struct sometype
 {
 	char *name; uchar id;
-};
-
-enum
-{
-	PROP_INT = 0,
-	PROP_STR,
-	PROP_MAX
-};
-
-struct property
-{
-	int type, prop;
-	
-	vector<int> ints;
-	vector<char *> strs;
 };
 
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);

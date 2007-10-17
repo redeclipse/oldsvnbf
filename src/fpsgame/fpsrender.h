@@ -135,12 +135,15 @@ struct fpsrender
 
 #ifdef BFRONTIER
 		cl.bc.render();
+		cl.et.renderentities();
+		cl.ws.renderbouncers();
+		if(m_capture) cl.cpc.renderbases();
 #else
 		cl.ms.monsterrender();
-#endif
 		cl.et.renderentities();
 		cl.ws.renderprojectiles();
 		if(m_capture) cl.cpc.renderbases();
+#endif
 
 		endmodelbatches();
 	}
