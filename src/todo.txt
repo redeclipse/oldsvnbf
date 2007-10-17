@@ -1,5 +1,6 @@
 = WIP =
 * property lists
+* proper sound positions and velocities
 
 = TODO =
 * vehicles, rolling/throttle/brake
