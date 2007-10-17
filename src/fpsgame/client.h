@@ -85,7 +85,7 @@ struct clientcom : iclientcom
 
 	void writeclientinfo(FILE *f)
 	{
-		fprintf(f, "name \"%s\"\nteam \"%s\"\n", player1->name, player1->team);
+		fprintf(f, "name \"%s\"\nteam \"%s\"\n\n", player1->name, player1->team);
 	}
 
 	void gameconnect(bool _remote)

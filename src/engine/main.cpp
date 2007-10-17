@@ -210,7 +210,7 @@ void computescreen(const char *text, Texture *t)
 		}
 		int x = (w-512)/2, y = 128;
 #ifdef BFRONTIER // blood frontier and moved data
-		settexture("packages/textures/bfrontierlogo.png");
+		settexture("packages/textures/logo.png");
 #else
 		settexture("data/sauer_logo_512_256a.png");
 #endif
@@ -494,7 +494,7 @@ VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
 VARFP(clockfix, 0, 0, 1, clockreset());
 
 #ifdef BFRONTIER // blood frontier, grabmouse, auto performance, unconnected state, rehashing
-VAR(bloodfrontier, 1, BFRONTIER, -1); // for scripts
+VAR(version, 1, BFRONTIER, -1); // for scripts
 VARP(online, 0, 1, 1); // if so, then enable certain actions
 VARP(verbose, 0, 0, 3); // be more or less expressive to console
 

@@ -47,7 +47,6 @@ struct weaponstate
 			{
 				if (a >= 0)
 				{
-					cl.playsoundc(S_NOAMMO); 
 					return; 
 				}
 			}
@@ -807,7 +806,7 @@ struct weaponstate
 			{
 				if (gunallowed(d, d->gunselect, -2, cl.lastmillis))
 				{
-					cl.playsoundc(S_NOAMMO); 
+					cl.playsoundc(S_WEAPRELOAD); 
 					gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
 					gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).rdelay;
 					cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);

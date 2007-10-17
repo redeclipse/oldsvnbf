@@ -654,24 +654,24 @@ void writecfg()
 #ifdef BFRONTIER // game specific configs
 	FILE *f = openfile("config.cfg", "w");
 	if(!f) return;
-	fprintf(f, "// automatically written on exit\n\n");
+	fprintf(f, "// Automatically written by Blood Frontier\n\n");
+	cc->writeclientinfo(f);
+	fprintf(f, "if (= %d $version) [\n", BFRONTIER);
 	enumerate(*idents, ident, id,
 		if (id._type == ID_VAR && id._context & IDC_PERSIST)
 		{
-			fprintf(f, "%s %d\n", id._name, *id._storage);
+			fprintf(f, "\t%s %d\n", id._name, *id._storage);
 		}
 	);
-	fprintf(f, "\n");
 	writebinds(f);
-	fprintf(f, "\n");
 	enumerate(*idents, ident, id,
 		if(id._type == ID_ALIAS && id._context & IDC_PERSIST && id._override == NO_OVERRIDE && !strstr(id._name, "nextmap_") && id._action[0])
 		{
 			fprintf(f, "\"%s\" = [%s]\n", id._name, id._action);
 		}
 	);
-	fprintf(f, "\n");
 	writecompletions(f);
+	fprintf(f, "] [ echo \"WARNING: config from different version ignored\" ]\n");
 #else
     FILE *f = openfile(path(cl->savedconfig(), true), "w");
 	if(!f) return;
