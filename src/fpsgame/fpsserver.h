@@ -91,7 +91,7 @@ struct fpsserver : igameserver
 	{
 		vec o;
 		int state;
-#ifdef BFRONTER
+#ifdef BFRONTIER
 		int lastdeath, lifesequence;
 #else
 		int lastdeath, lastspawn, lifesequence;
@@ -1845,13 +1845,15 @@ struct fpsserver : igameserver
 			if(j<i) continue;
 
 #ifdef BFRONTIER
+			if(target == ci) continue;
 			int damage = getgun(e.gun).damage;
+			damage = int(damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
 #else
 			int damage = guns[e.gun].damage;
 			if(gs.quadmillis) damage *= 4;		
-#endif
 			damage = int(damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
 			if(e.gun==GUN_RL && target==ci) damage /= RL_SELFDAMDIV;
+#endif
 			dodamage(target, ci, damage, e.gun, h.dir);
 		}
 	}
@@ -1863,7 +1865,7 @@ struct fpsserver : igameserver
 		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -1, e.millis)) return;
 		if (getgun(e.gun).max) gs.ammo[e.gun]--;
 		gunvar(gs.gunlast,e.gun) = e.millis; 
-		gunvar(gs.gunwait,e.gun) = getgun(e.gun).attackdelay; 
+		gunvar(gs.gunwait,e.gun) = getgun(e.gun).adelay; 
 #else
 		int wait = e.millis - gs.lastshot;
 		if(!gs.isalive(gamemillis) ||
@@ -1913,7 +1915,7 @@ struct fpsserver : igameserver
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -2, e.millis)) return;
 		gunvar(gs.gunlast,e.gun) = e.millis; 
-		gunvar(gs.gunwait,e.gun) = getgun(e.gun).reloaddelay; 
+		gunvar(gs.gunwait,e.gun) = getgun(e.gun).rdelay; 
 		gs.ammo[e.gun] = getgun(e.gun).add;
 	}
 #endif

@@ -496,7 +496,7 @@ VARFP(clockfix, 0, 0, 1, clockreset());
 #ifdef BFRONTIER // blood frontier, grabmouse, auto performance, unconnected state, rehashing
 VAR(bloodfrontier, 1, BFRONTIER, -1); // for scripts
 VARP(online, 0, 1, 1); // if so, then enable certain actions
-VARP(verbose, 0, 0, 2); // be more or less expressive to console
+VARP(verbose, 0, 0, 3); // be more or less expressive to console
 
 void _grabmouse(int n)
 {

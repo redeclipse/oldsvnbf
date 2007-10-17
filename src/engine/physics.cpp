@@ -972,9 +972,28 @@ bool bounce(physent *d, float secs, float elasticity, float waterfric)
 	{
 		vec dir(d->vel);
 		if(water) dir.mul(0.5f);
+#ifdef BFRONTIER
+		if (elasticity > 0.f) dir.add(d->gravity);
+#else
 		dir.add(d->gravity);
+#endif
 		dir.mul(secs);
 		d->o.add(dir);
+#ifdef BFRONTIER
+		if (collide(d, dir) || inside || hitplayer)
+		{
+			if (inside || hitplayer)
+			{
+				d->o = old;
+				if (elasticity > 0.f)
+				{
+					d->gravity.mul(-elasticity);
+					d->vel.mul(-elasticity);
+				}
+			}
+			break;
+		}
+#else
 		if(collide(d, dir))
 		{
 			if(inside)
@@ -985,17 +1004,21 @@ bool bounce(physent *d, float secs, float elasticity, float waterfric)
 			}
 			break;
 		}
-		else if(hitplayer) break;
+        else if(hitplayer) break;
+#endif
 		d->o = old;
 		vec dvel(d->vel), wvel(wall);
 		dvel.add(d->gravity);
 		float c = wall.dot(dvel),
 			  k = 1.0f + (1.0f-elasticity)*c/dvel.magnitude();
 		wvel.mul(elasticity*2.0f*c);
-		d->gravity.mul(k);
-		d->vel.mul(k);
-		d->vel.sub(wvel);
+        d->gravity.mul(k);
+        d->vel.mul(k);
+        d->vel.sub(wvel);
 	}
+#ifdef BFRONTIER
+	return d->o == old || inside || hitplayer ? true : false;// || hitplayer != NULL;
+#else
 	if(d->physstate!=PHYS_BOUNCE)
 	{
 		// make sure bouncers don't start inside geometry
@@ -1003,6 +1026,7 @@ bool bounce(physent *d, float secs, float elasticity, float waterfric)
 		d->physstate = PHYS_BOUNCE;
 	}
 	return hitplayer!=0;
+#endif
 }
 
 void avoidcollision(physent *d, const vec &dir, physent *obstacle, float space)

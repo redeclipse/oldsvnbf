@@ -165,7 +165,11 @@ struct fpsclient : igameclient
 #endif
 			resettriggers();
 		}
+#ifdef BFRONTIER
+		ws.bouncereset();
+#else
 		ws.projreset();
+#endif
 	}
 
 	fpsent *spawnstate(fpsent *d)			  // reset player state not persistent accross spawns
@@ -173,7 +177,7 @@ struct fpsclient : igameclient
 		d->respawn();
 		d->spawnstate(gamemode);
 #ifdef BFRONTIER // respawn sound
-		playsound(S_RESPAWN, &d->o);
+		playsound(S_RESPAWN, d->o, d->vel);
 #endif
 		return d;
 	}
@@ -262,21 +266,12 @@ struct fpsclient : igameclient
 		if (cc.ready() && player1->clientnum >= 0)
 		{
 			int scale = max(curtime/10, 1);
-			#define adjust(n,m) { if (n > 0) { n -= scale*m; } if (n < 0) { n = 0; } }
-			adjust(camerawobble, 1);
-			adjust(damageresidue, 1);
+			#define adjust(n,m,x) { n = min(n, x); if (n > 0) { n -= scale*m; } if (n < 0) { n = 0; } }
+			adjust(camerawobble, 1, 200);
+			adjust(damageresidue, 1, 200);
 			
 			if (player1->state == CS_ALIVE && !intermission)
 			{
-				loopi(NUMGUNS)
-				{
-					if (gunallowed(player1, i, -2, lastmillis) &&
-						gunvar(player1->gunwait, i) == getgun(i).reloaddelay) // can shoot but we reloaded!
-					{
-						player1->ammo[i] = getgun(i).add;
-						gunvar(player1->gunwait, i) = getgun(i).attackdelay;
-					}
-				}
 				if (player1->timeinair)
 				{
 					if (player1->jumpnext && lastmillis-player1->lastimpulse > 3000)
@@ -294,12 +289,14 @@ struct fpsclient : igameclient
 			}
 
 			physicsframe();
+			if(player1->clientnum>=0 && player1->state==CS_ALIVE) ws.shoot(player1, pos); // only shoot when connected to server
+			ws.bounceupdate(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
 #else
 			et.checkquad(curtime, player1);
-#endif
 			ws.moveprojectiles(curtime);
 			if(player1->clientnum>=0 && player1->state==CS_ALIVE) ws.shoot(player1, pos); // only shoot when connected to server
 			ws.bounceupdate(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
+#endif
 			gets2c();			// do this first, so we have most accurate information when our player moves
 			otherplayers();
 #ifdef BFRONTIER
@@ -433,7 +430,7 @@ struct fpsclient : igameclient
 			damageresidue += damage;
 			d->damageroll(damage);
 		}
-		playsound(S_PAIN1+rnd(5), &d->o, &d->vel);
+		playsound(S_PAIN1+rnd(5), d->o, d->vel);
 		ws.damageeffect(damage, d);
 
 		if(bc.isbot(d)) bc.damaged(damage, d, actor);
@@ -499,7 +496,7 @@ struct fpsclient : igameclient
 		{
             d->move = d->strafe = 0;
 		}
-		playsound(S_DIE1+rnd(2), &d->o, &d->o);
+		playsound(S_DIE1+rnd(2), d->o, d->o);
 		ws.superdamageeffect(d->vel, d);
 
 		if(bc.isbot(d)) bc.killed(d);
@@ -508,10 +505,10 @@ struct fpsclient : igameclient
 		
 		switch (actor->spree)
 		{
-			case 5:  playsound(S_V_SPREE1, &actor->o, &actor->vel); break;
-			case 10: playsound(S_V_SPREE2, &actor->o, &actor->vel); break;
-			case 25: playsound(S_V_SPREE3, &actor->o, &actor->vel); break;
-			case 50: playsound(S_V_SPREE4, &actor->o, &actor->vel); break;
+			case 5:  playsound(S_V_SPREE1, actor->o, actor->vel); break;
+			case 10: playsound(S_V_SPREE2, actor->o, actor->vel); break;
+			case 25: playsound(S_V_SPREE3, actor->o, actor->vel); break;
+			case 50: playsound(S_V_SPREE4, actor->o, actor->vel); break;
 			default: if (actor == player1 && d != player1) playsound(S_DAMAGE8); break;
 		}
 	
@@ -651,7 +648,9 @@ struct fpsclient : igameclient
 		if(!d) return; 
 		if(d->name[0]) conoutf("player %s disconnected", colorname(d));
 		ws.removebouncers(d);
+#ifndef BFRONTIER
 		ws.removeprojectiles(d);
+#endif
         removetrackedparticles(d);
 		DELETEP(players[cn]);
 		cleardynentcache();
@@ -675,10 +674,12 @@ struct fpsclient : igameclient
 		if(multiplayer(false) && m_sp) { gamemode = 0; conoutf("coop sp not supported yet"); }
 #endif
 		cc.mapstart();
-#ifndef BFRONTIER
+#ifdef BFRONTIER
+		ws.bouncereset();
+#else
 		ms.monsterclear(gamemode);
-#endif
 		ws.projreset();
+#endif
 
 		// reset perma-state
 		player1->frags = 0;
@@ -728,7 +729,25 @@ struct fpsclient : igameclient
 #endif
 	}
 
-#ifndef BFRONTIER
+#ifdef BFRONTIER
+	void playsoundc(int n, fpsent *d = NULL) 
+	{ 
+		fpsent *c = d ? d : player1;
+		if (c == player1) cc.addmsg(SV_SOUND, "i", n); 
+		playsound(n, c->o, c->vel);
+	}
+
+	int numdynents() { return 1+players.length(); }
+
+	dynent *iterdynents(int i)
+	{
+		if(!i) return player1;
+		i--;
+		if(i<players.length()) return players[i];
+		i -= players.length();
+		return NULL;
+	}
+#else
 	void physicstrigger(physent *d, bool local, int floorlevel, int waterlevel)
 	{
 		if (waterlevel>0) playsound(S_SPLASH1, &d->o, &d->vel);
@@ -737,20 +756,8 @@ struct fpsclient : igameclient
 		if (floorlevel>0) { if (local) playsoundc(S_JUMP, (fpsent *)d); }
 		else if (floorlevel<0) { if (local) playsoundc(S_LAND, (fpsent *)d); }
 	}
-#endif
 
-	void playsoundc(int n, fpsent *d = NULL) 
-	{ 
-		fpsent *c = d ? d : player1;
-		if (c == player1) cc.addmsg(SV_SOUND, "i", n); 
-		playsound(n, &d->o, &d->vel);
-	}
-
-#ifdef BFRONTIER
-	int numdynents() { return 1+players.length(); }
-#else
 	int numdynents() { return 1+players.length()+ms.monsters.length(); }
-#endif
 
 	dynent *iterdynents(int i)
 	{
@@ -758,11 +765,10 @@ struct fpsclient : igameclient
 		i--;
 		if(i<players.length()) return players[i];
 		i -= players.length();
-#ifndef BFRONTIER
 		if(i<ms.monsters.length()) return ms.monsters[i];
-#endif
 		return NULL;
 	}
+#endif
 
 	bool duplicatename(fpsent *d, char *name = NULL)
 	{
@@ -848,9 +854,7 @@ struct fpsclient : igameclient
 
 		if (otime < rtime)
 		{
-			int anim = getgun(player1->gunselect).reloaddelay &&
-				rtime == getgun(player1->gunselect).reloaddelay ? ANIM_GUNRELOAD : ANIM_GUNSHOOT;
-			
+			int anim = (getgun(player1->gunselect).rdelay && rtime == getgun(player1->gunselect).rdelay) ? ANIM_GUNRELOAD : ANIM_GUNSHOOT;
 			drawhudmodel(anim, rtime/17.0f, gunvar(player1->gunlast, player1->gunselect));
 		}
 		else
@@ -1023,6 +1027,8 @@ struct fpsclient : igameclient
 							draw_textx("%d", style(0,2), style(0,3), 255, d->health<=50 ? (d->health<=25 ? 0 : 128) : 255, d->health<=50 ? 0 : 255, int(255.f*fade), false, style(0,4), d->health);
 							
 							int mx = getgun(d->gunselect).max;
+							glColor4f(1.f, 1.f, 1.f, fade);
+							drawicon(0.f, 0.f, style(0,0), style(0,1));
 							//glColor4f(1.f, 1.f, 1.f, fade);
 							//drawicon((float)(d->gunselect*64), 0.f, style(2,0), style(2,1));
 							
@@ -1442,7 +1448,7 @@ struct fpsclient : igameclient
 	
 	void adddynlights()
 	{
-		ws.dynlightprojectiles();
+		ws.dynlightbouncers();
 	}
 	
 	bool wantcrosshair()

@@ -4,6 +4,7 @@
 #include "engine.h"
 
 #ifdef BFRONTIER
+vec novel(0, 0, 0), plpos, plvel;
 FMOD_RESULT snderr;
 FMOD_SYSTEM *sndsys;
 vector<soundchan> soundchans;
@@ -90,44 +91,23 @@ int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds)
 	return sounds.length()-1;
 }
 
-ICOMMAND(registersound, "si", (char *n, int *v), intret(addsound(n, *v, 0, gamesounds)));
-ICOMMAND(mapsound, "sii", (char *n, int *v, int *m), intret(addsound(n, *v, *m, mapsounds)));
+ICOMMAND(registersound, "sii", (char *n, int *v, int *m), intret(addsound(n, *v, *m < 0 ? -1 : *m, gamesounds)));
+ICOMMAND(mapsound, "sii", (char *n, int *v, int *m), intret(addsound(n, *v, *m < 0 ? -1 : *m, mapsounds)));
 
-void clear_sound()
+bool soundplaying(soundchan &s)
 {
-	if(nosound) return;
-	gamesounds.setsizenodelete(0);
-	mapsounds.setsizenodelete(0);
-	soundsamples.clear();
-	FMOD_System_Release(sndsys);
-}
+	FMOD_BOOL playing;
 
-void clearmapsounds()
-{
-	loopv(soundchans)
-	{
-		soundchan &s = soundchans[i];
-
-		FMOD_BOOL playing;
-
-		SNDCHK(FMOD_Channel_IsPlaying(s.channel, &playing), continue);
-		if (playing)
-		{
-			SNDERR(FMOD_Channel_Stop(s.channel), return);
-		}
-	}
-	mapsounds.setsizenodelete(0);
+	SNDCHK(FMOD_Channel_IsPlaying(s.channel, &playing), return false);
+	
+	return playing != 0;
 }
 
 void soundupdate(soundchan &s)
 {
-	FMOD_BOOL playing;
-
-	SNDCHK(FMOD_Channel_IsPlaying(s.channel, &playing), return);
-	
-	if (playing && s.pos && s.vel)
+	if (soundplaying(s))
 	{
-		FMOD_VECTOR psp = { s.pos->x, s.pos->y, s.pos->z }, psv = { s.vel->x, s.vel->y, s.vel->z };
+		FMOD_VECTOR psp = { s.pos.x, s.pos.y, s.pos.z }, psv = { s.vel.x, s.vel.y, s.vel.z };
 
 		SNDERR(FMOD_Channel_Set3DAttributes(s.channel, &psp, &psv), );
 		SNDERR(FMOD_Channel_Set3DMinMaxDistance(s.channel, s.mindist, s.maxdist), );
@@ -135,26 +115,47 @@ void soundupdate(soundchan &s)
 	}
 }
 
+void soundpos(soundchan &s, vec &pos, vec &vel, bool update)
+{
+	if (soundplaying(s))
+	{
+		s.pos = pos;
+		s.vel = vel;
+		if (update) soundupdate(s);
+	}
+}
+
+void soundstop(soundchan &s)
+{
+	if (soundplaying(s))
+	{
+		SNDERR(FMOD_Channel_Stop(s.channel), );
+	}
+}
+
 void checksound()
 {
 	if(nosound) return;
 
+	plpos = vec(player->o);
+	plvel = vec(player->vel);
+
 	SNDERR(FMOD_System_SetGeometrySettings(sndsys, hdr.worldsize), return);
 
+	vec cup, cfw; // these babies handle the orientation for us
+
+	vecfromyawpitch(player->yaw, player->pitch+90.f, 1, 0, cup);
+	vecfromyawpitch(player->yaw, player->pitch, 1, 0, cfw);
+	
 	const vector<extentity *> &ents = et->getents();
 	loopv(ents)
 	{
 		extentity &e = *ents[i];
 		if (e.type != ET_SOUND || e.visible) continue;
-		playsound(e.attr1, &e.o, NULL, (e.attr3 ? e.attr3 : 1.0f), e.attr2, mapsounds);
+		playsound(e.attr1, e.o, novel, (e.attr3 > 0 ? e.attr3 : SNDMINDIST), (e.attr2 > 0 ? e.attr2 : SNDMAXDIST), mapsounds);
 		e.visible = true;
 	}
 
-	vec cup, cfw; // these babies handle the orientation for us
-
-	vecfromyawpitch(0.f, player->pitch+90.f, 1, 0, cup);
-	vecfromyawpitch(player->yaw, 0.f, 1, 0, cfw);
-	
 	FMOD_VECTOR pup = { cup.x, cup.y, cup.z };
 	FMOD_VECTOR pfw = { cfw.x, cfw.y, cfw.z };
 	FMOD_VECTOR pos = { player->o.x, player->o.y, player->o.z };
@@ -171,11 +172,13 @@ void checksound()
 	SNDERR(FMOD_System_Update(sndsys), return);
 }
 
-void playsound(int n, vec *loc, vec *vel, float mindist, float maxdist, vector<soundslot> &sounds)
+int playsound(int n, vec &pos, vec &vel, float mindist, float maxdist, vector<soundslot> &sounds)
 {
-	if (nosound || !soundvol) return;
+	int index = -1;
 
-	if (!sounds.inrange(n)) { conoutf("unregistered sound: %d", n); return; }
+	if (nosound || !soundvol) return -1;
+
+	if (!sounds.inrange(n)) { conoutf("unregistered sound: %d", n); return -1; }
 	soundslot &slot = sounds[n];
 
 	if (!slot.sample->sound)
@@ -183,38 +186,56 @@ void playsound(int n, vec *loc, vec *vel, float mindist, float maxdist, vector<s
 		s_sprintfd(fname)("packages/sounds/%s", slot.sample->name);
 		const char *file = findfile(fname, "rb");
 		
-		SNDERR(FMOD_System_CreateSound(sndsys, file, FMOD_3D|FMOD_SOFTWARE|FMOD_3D_WORLDRELATIVE, NULL, &slot.sample->sound), return);
+		SNDERR(FMOD_System_CreateSound(sndsys, file, FMOD_3D|FMOD_SOFTWARE|FMOD_3D_WORLDRELATIVE, NULL, &slot.sample->sound), return -1);
 		SNDERR(FMOD_Sound_SetMode(slot.sample->sound, FMOD_LOOP_NORMAL), );
 		SNDERR(FMOD_Sound_SetLoopCount(slot.sample->sound, slot.maxuses), );
 	}
 
 	FMOD_CHANNEL *channel;
 	
-	SNDERR(FMOD_System_PlaySound(sndsys, FMOD_CHANNEL_FREE, slot.sample->sound, true, &channel), return);
-
-	int index;
-	SNDERR(FMOD_Channel_GetIndex(channel, &index), return);
+	SNDERR(FMOD_System_PlaySound(sndsys, FMOD_CHANNEL_FREE, slot.sample->sound, true, &channel), return -1);
+	SNDERR(FMOD_Channel_GetIndex(channel, &index), return -1);
 	
 	if (soundchans.inrange(index))
 	{
-		static vec v(0, 0, 0);
 		soundchan &s = soundchans[index];
-	
+
 		s.channel = channel;
-		s.pos = loc ? loc : &player->o;
-		s.vel = vel ? vel : (loc ? &v : &player->vel);
 		s.slot = &slot;
 		s.mindist = mindist;
 		s.maxdist = maxdist;
 		
-		soundupdate(s);
-		SNDERR(FMOD_Channel_SetPaused(s.channel, false), return);
+		soundpos(s, pos, s.vel, true);
+		SNDERR(FMOD_Channel_SetPaused(s.channel, false), );
 		
-		if (verbose >= 2) conoutf("playing '%s' (%d)", s.slot->sample->name, index);
+		if (verbose >= 3) conoutf("playing '%s' (%d)", s.slot->sample->name, index);
+		
+		return index;
 	}
+	return -1;
 }
 
 ICOMMAND(sound, "i", (int *i), playsound(*i));
+
+void clearmapsounds()
+{
+	loopv(soundchans)
+	{
+		soundchan &s = soundchans[i];
+		soundstop(s);
+	}
+	mapsounds.setsizenodelete(0);
+}
+
+void clear_sound()
+{
+	if(nosound) return;
+	gamesounds.setsizenodelete(0);
+	clearmapsounds();
+	soundsamples.clear();
+	FMOD_System_Release(sndsys);
+	nosound = true;
+}
 #else
 //#ifndef WIN32	// NOTE: fmod not being supported for the moment as it does not allow stereo pan/vol updating during playback
 #define USE_MIXER

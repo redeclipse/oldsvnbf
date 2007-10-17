@@ -7,6 +7,9 @@ Legend [
 ]
 
 = wip edition =
+gam: rocket flyby sound using indexing, grenade bounce sound
+eng: added sound channel indexing
+gam: unified projectiles into bouncers
 gam: canpickup tweaked to only allow 0 ammo guns for now
 eng: '-l' cmdline modified to accept 'mapname[:gamemode]'
 eng: sound system upgraded to FMOD Ex
