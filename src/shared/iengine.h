@@ -170,144 +170,11 @@ extern void cleardynentcache();
 extern bool entinmap(dynent *d, bool avoidplayers = false);
 extern void findplayerspawn(dynent *d, int forceent = -1);
 // sound
-#ifdef BFRONTIER
-extern FMOD_RESULT snderr;
-extern FMOD_SYSTEM *sndsys;
-extern bool nosound;
-extern int soundvol;
-
-#define SNDMINDIST	1.5f
-#define SNDMAXDIST	10000.f
-
-#define SNDCHK(b,r) \
-	if ((snderr = b) != FMOD_OK) r;
-
-#define SNDERR(b,r) \
-	SNDCHK(b, \
-	{ \
-		conoutf("sound error: [%s:%d] (%d) %s", __PRETTY_FUNCTION__, __LINE__, \
-			snderr, FMOD_ErrorString(snderr)); \
-		r; \
-	})
-
-struct soundsample
-{
-	FMOD_SOUND *sound;
-	char *name;
-
-	soundsample() : name(NULL) {}
-	~soundsample() { DELETEA(name); }
-
-	void load(const char *name, int loop = 0)
-	{
-		SNDERR(FMOD_System_CreateSound(sndsys, name, FMOD_3D|FMOD_SOFTWARE|FMOD_3D_WORLDRELATIVE, NULL, &sound), return);
-		SNDERR(FMOD_Sound_SetMode(sound, FMOD_LOOP_NORMAL), );
-		SNDERR(FMOD_Sound_SetLoopCount(sound, loop), );
-	}
-};
-
-struct soundslot
-{
-	soundsample *sample;
-	int vol, maxuses;
-};
-
-struct soundchan
-{
-	FMOD_CHANNEL *channel;
-	soundslot *slot;
-	vec *pos, _pos, *vel, _vel;
-	float mindist, maxdist;
-	bool inuse;
-	
-	soundchan() { stop(); }
-	~soundchan() {}
-
-	void init(FMOD_CHANNEL *c, soundslot *s, float m = SNDMINDIST, float n = SNDMAXDIST)
-	{
-		channel = c;
-		slot = s;
-		mindist = m;
-		maxdist = n;
-		inuse = true;
-	}
-
-	void pause(bool t)
-	{
-		if (inuse)
-		{
-			SNDERR(FMOD_Channel_SetPaused(channel, t), );
-		}
-	}
-
-	void stop()
-	{
-		if (inuse)
-		{
-			if (playing()) SNDERR(FMOD_Channel_Stop(channel), );
-			inuse = false;
-			pos = vel = NULL;
-		}
-	}
-
-	bool playing()
-	{
-		FMOD_BOOL playing;
-		SNDCHK(FMOD_Channel_IsPlaying(channel, &playing), return false);
-		return playing != 0;
-	}
-	
-	void update()
-	{
-		if (inuse)
-		{
-			if (playing())
-			{
-				FMOD_VECTOR psp = { pos->x, pos->y, pos->z }, psv = { vel->x, vel->y, vel->z };
-				SNDERR(FMOD_Channel_Set3DAttributes(channel, &psp, &psv), );
-				SNDERR(FMOD_Channel_Set3DMinMaxDistance(channel, mindist, maxdist), );
-				SNDERR(FMOD_Channel_SetVolume(channel, (float(slot->vol)/255.f)*(float(soundvol)/255.f)), );
-			}
-			else stop();
-		}
-	}
-	
-	void position(vec *p, vec *v)
-	{
-		if (inuse)
-		{
-			pos = p;
-			vel = v;
-			update();
-		}
-	}
-	
-	void positionv(vec &p, vec &v)
-	{
-		if (inuse)
-		{
-			_pos = p;
-			_vel = v;
-			position(&_pos, &_vel);
-		}
-	}
-};
-
-extern hashtable<char *, soundsample> soundsamples;
-extern vector<soundslot> gamesounds, mapsounds;
-extern vector<soundchan> soundchans;
-
-extern void checksound();
-extern int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds);
-extern int playsound(int n, vec *p = NULL, vec *v = NULL, float mindist = SNDMINDIST, float maxdist = SNDMAXDIST, vector<soundslot> &sounds = gamesounds);
-extern int playsoundv(int n, vec &p, vec &v, float mindist = SNDMINDIST, float maxdist = SNDMAXDIST, vector<soundslot> &sounds = gamesounds);
-extern void clearmapsounds();
-#else
+#ifndef BFRONTIER
 extern void playsound    (int n,   const vec *loc = NULL, extentity *ent = NULL);
 extern void playsoundname(char *s, const vec *loc = NULL, int vol = 0);
-#endif
 extern void initsound();
-
+#endif
 
 // rendermodel
 enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_TRANSLUCENT = 1<<6 };
@@ -422,8 +289,6 @@ struct sometype
 
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
-extern bool otherclients(bool msg = true);
-
 // client
 struct serverinfo
 {
@@ -435,7 +300,7 @@ struct serverinfo
 	ENetAddress address;
 };
 
-enum { ST_EMPTY, ST_LOCAL, ST_TCPIP, ST_BOT };
+enum { ST_EMPTY, ST_LOCAL, ST_TCPIP };
 
 struct client					// server side version of "dynent" type
 {
@@ -453,183 +318,27 @@ extern void send_welcome(int n);
 extern client &addclient();
 
 #ifndef STANDALONE
-// main
-extern void updateframe(bool dorender = false);
-extern int grabmouse, perf, colorpos;
-extern int getmatvec(vec v);
-
-// joystick
-extern void initjoy();
-extern void processjoy(SDL_Event *event);
-extern void movejoy();
-
-// editing
-extern int efocus, enthover, entorient, showentdir, showentradius;
-extern int fullbright, fullbrightlevel;
-extern vector<int> entgroup;
-
-extern void newentity(int type, int a1, int a2, int a3, int a4);
-extern void newentity(vec &v, int type, int a1, int a2, int a3, int a4);
-
-// menu
-extern bool menuactive();
-
-// rendergl
-#define RENDERPUSHX			8.0f
-#define RENDERPUSHZ			0.1f
-
-#define CARDTIME			3000	// title card duration
-#define CARDFADE			1500	// title card fade in/out
-
-extern int fov, maxfps, hidehud, hidestats, hudblend, lastmillis, totalmillis;
-
-extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false);
-extern void transplayer();
-extern void drawcrosshair(int w, int h);
-
-extern void renderprimitive(bool on);
-extern void renderline(vec &fr, vec &to, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);
-extern void rendertris(vec &fr, float yaw, float pitch, float size = 1.f, float r = 255.f, float g = 255.f, float b = 255.f, bool fill = true, bool nf = false);
-extern void renderlineloop(vec &o, float height, float xradius, float yradius, float z = 255.f, int type = 0, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);
-
-extern void renderentdir(vec &o, float yaw, float pitch, bool nf = true);
-extern void renderentradius(vec &o, float height, float radius, bool nf = true);
-
-extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 120);
-
-extern bool getlos(vec &o, vec &q, float yaw, float pitch, float mdist = 0.f, float fx = 0.f, float fy = 0.f);
-extern bool getsight(physent *d, vec &q, vec &v, float mdist, float fx = 0.f, float fy = 0.f);
-
-// renderparticles
-#define COL_WHITE			0xFFFFFF
-#define COL_BLACK			0x000000
-#define COL_GREY			0x897661
-#define COL_YELLOW			0xB49B4B
-#define COL_ORANGE			0xB42A00
-#define COL_RED				0xFF1932
-#define COL_LRED			0xFF4B4B
-#define COL_BLUE			0x3219FF
-#define COL_LBLUE			0x4BA8FF
-#define COL_GREEN			0x32FF64
-#define COL_CYAN			0x32FFFF
-#define COL_FUSCHIA			0xFFFF32
-
-#define COL_TEXTBLUE		0x6496FF
-#define COL_TEXTYELLOW		0xFFC864
-#define COL_TEXTRED			0xFF4B19
-#define COL_TEXTGREY		0xB4B4B4
-#define COL_TEXTDGREEN		0x1EC850
-
-#define COL_FIRERED			0xFF8080
-#define COL_FIREORANGE		0xA0C080
-#define COL_FIREYELLOW		0xFFC8C8
-#define COL_WATER			0x3232FF
-#define COL_BLOOD			0x19FFFF
-
-extern int particletext, maxparticledistance;
-
-extern void part_textf(const vec &s, char *t, bool moving, int fade, int color, ...);
-extern void part_text(const vec &s, char *t, bool moving, int fade, int color);
-
-extern void part_splash(int type, int num, int fade, const vec &p, int color);
-extern void part_trail(int type, int fade, const vec &s, const vec &e, int color);
-extern void part_meter(const vec &s, float val, int type, int fade, int color);
-extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color, physent *owner = NULL);
-extern void part_fireball(const vec &dest, float max, int type, int color);
-extern void part_firerad(const vec &dest, float size, int type, int color);
-extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color);
-extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, physent *owner = NULL);
-
-// rendertext
-enum
-{
-	AL_LEFT = 0,
-	AL_CENTER,
-	AL_RIGHT
-};
-
-extern void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool shadow, int align, ...);
-extern void draw_textf(const char *fstr, int left, int top, ...);
-extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool shadow = false);
-extern bool pushfont(char *name);
-extern bool popfont(int num);
-
 extern ENetHost *clienthost;
 extern ENetPeer *curpeer, *connpeer;
 #endif // STANDALONE
 extern ENetHost *serverhost;
+
+// world
+extern void getwatercolour(uchar *wcol);
+extern void getlavacolour(uchar *lcol);
 
 extern bool inside;
 extern physent *hitplayer;
 extern vec wall;
 extern float walldistance;
 extern int physicsfraction, physicsrepeat, minframetime;
-
-extern char *getmaptitle();
+extern int thirdperson, thirdpersonscale;
 
 extern int gzgetint(gzFile f);
 extern void gzputint(gzFile f, int x);
 extern float gzgetfloat(gzFile f);
 extern void gzputfloat(gzFile f, float x);
 
-extern char *getdefaultmap();
-extern char *gettime(char *format);
-
-// console
-enum
-{
-	CN_LEFT = 0,
-	CN_RIGHT,
-	CN_CENTER,
-	CN_MAX
-};
-#define CON_LEFT		0x0001
-#define CON_RIGHT		0x0002
-#define CON_CENTER		0x0004
-
-#define CON_HILIGHT		0x0020
-
-struct cline { char *cref; int outtime; };
-extern vector<cline> conlines[CN_MAX];
-
-extern void console(const char *s, int type, ...);
-
-struct bot
-{
-	dynent *d;
-	ENetHost *clienthost;
-	ENetPeer *curpeer, *connpeer;
-	int connmillis, connattempts, discmillis, updmillis;
-	
-	bot() : d(NULL),
-		clienthost(NULL), curpeer(NULL), connpeer(NULL),
-		connmillis(0), connattempts(0), discmillis(0), updmillis(0) {}
-	
-	~bot() {}
-};
-extern vector<bot *> bots;
-
-extern void botc2sinfo(bot *, int rate = 33);
-extern void botsendpackettoserv(bot *, ENetPacket *packet, int chan);
-extern void botdisconnect(bot *, int async = 0);
-extern void botneterr(bot *, char *s, int v);
-extern void botgets2c(bot *);
-
-enum
-{
-	MN_BACK = 0,
-	MN_INPUT,
-	MN_MAX
-};
-extern void getwatercolour(uchar *wcol);
-extern void getlavacolour(uchar *lcol);
-
-extern int thirdperson, thirdpersonscale;
-
-extern void rehash(bool reload = true);
-extern void startgame(char *load = NULL, char *initscript = NULL);
-
-// world
 enum
 {
 	MAP_BFGZ = 0,
@@ -666,5 +375,7 @@ enum
 
 extern string cgzname, pcfname, mcfname, picname, mapname;
 extern int verbose, savebak;
+
+extern bool otherclients(bool msg = true);
 
 #endif

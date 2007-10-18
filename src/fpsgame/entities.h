@@ -228,9 +228,6 @@ struct entities : icliententities
 			if(beenhere<0) beenhere = e;
 			if(ents[e]->attr2==tag)
 			{
-#ifdef BFRONTIER // extended entities
-				cl.bc.wayupdpos(d, ents[n]->o);
-#endif
 				d->o = ents[e]->o;
 				d->yaw = ents[e]->attr1;
 				d->pitch = 0;
@@ -255,7 +252,6 @@ struct entities : icliententities
 				{
 #ifdef BFRONTIER // bots
 					if (d==cl.player1) cl.cc.addmsg(SV_ITEMPICKUP, "ri", n);
-					else if (cl.bc.isbot(d)) cl.bc.pickup(n, d);
 #else
 					cl.cc.addmsg(SV_ITEMPICKUP, "ri", n);
 #endif
@@ -283,9 +279,6 @@ struct entities : icliententities
 			case JUMPPAD:
 			{
 				if(d->lastpickup==ents[n]->type && cl.lastmillis-d->lastpickupmillis<300) break;
-#ifdef BFRONTIER // extended entities
-				cl.bc.wayupdpos(d, ents[n]->o);
-#endif
 				d->lastpickup = ents[n]->type;
 				d->lastpickupmillis = cl.lastmillis;
 				vec v((int)(char)ents[n]->attr3*10.0f, (int)(char)ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
@@ -717,12 +710,6 @@ struct entities : icliententities
 					dr.add(fr);
 
 					rendertris(dr, yaw, pitch, 2.f, col.x, col.y, col.z, true, hassel);
-
-					if (showentradius)
-					{
-						renderentradius(d.o, BOTISNEAR, BOTISNEAR);
-						renderentradius(d.o, BOTISFAR, BOTISFAR);
-					}
 				}
 			}
 		}

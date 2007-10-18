@@ -7,7 +7,6 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
-		<Option active_target="1"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -39,12 +38,11 @@
 					<Add option="-fsigned-char"/>
 					<Add option="-fomit-frame-pointer"/>
 					<Add option="-ffast-math"/>
-					<Add directory="include"/>
-					<Add directory="enet\include"/>
-					<Add directory="engine"/>
 					<Add directory="shared"/>
+					<Add directory="engine"/>
 					<Add directory="fpsgame"/>
-					<Add directory="fpsgame\bot"/>
+					<Add directory="enet\include"/>
+					<Add directory="include"/>
 				</Compiler>
 				<Linker>
 					<Add option="-s"/>
@@ -79,12 +77,11 @@
 					<Add option="-Wall"/>
 					<Add option="-pg"/>
 					<Add option="-fsigned-char"/>
-					<Add directory="include"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
-					<Add directory="enet\include"/>
 					<Add directory="fpsgame"/>
-					<Add directory="fpsgame\bot"/>
+					<Add directory="enet\include"/>
+					<Add directory="include"/>
 				</Compiler>
 				<Linker>
 					<Add option="-pg -lgmon"/>
@@ -119,12 +116,11 @@
 					<Add option="-fsigned-char"/>
 					<Add option="-fomit-frame-pointer"/>
 					<Add option="-DSTANDALONE"/>
-					<Add directory="include"/>
-					<Add directory="enet\include"/>
-					<Add directory="engine"/>
-					<Add directory="engine\mod"/>
 					<Add directory="shared"/>
+					<Add directory="engine"/>
 					<Add directory="fpsgame"/>
+					<Add directory="enet\include"/>
+					<Add directory="include"/>
 				</Compiler>
 				<Linker>
 					<Add option="-s"/>
@@ -488,6 +484,13 @@
 			<Option target="debug"/>
 			<Option target="data"/>
 		</Unit>
+		<Unit filename="engine\sound.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
 		<Unit filename="engine\texture.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
@@ -534,43 +537,6 @@
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\bot.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-		</Unit>
-		<Unit filename="fpsgame\bot\botai.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\bot\botent.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\bot\botmgr.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\bot\botutl.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\bot\botway.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="fpsgame\capture.h">
