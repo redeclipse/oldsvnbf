@@ -878,7 +878,7 @@ struct fpsclient : igameclient
 #ifdef BFRONTIER
 	void drawicon(float tx, float ty, int x, int y, int s = 64)
 	{
-		rendericon("packages/icons/overlay.png", x, y, s, s);
+		rendericon("packages/textures/overlay.png", x, y, s, s);
 		
 		settexture("packages/textures/items.png");
 		
@@ -929,14 +929,14 @@ struct fpsclient : igameclient
 					
 					glColor4f(1.f, 1.f, 1.f, amt);
 			
-					rendericon("packages/icons/logo.jpg", ox+20-x, oy-75, 64, 64);
+					rendericon("packages/textures/logo.jpg", ox+20-x, oy-75, 64, 64);
 			
 					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, maptitle);
 			
 					glColor4f(1.f, 1.f, 1.f, fade);
-					rendericon("packages/icons/overlay.png", ox+20-x, oy-260, 144, 144);
+					rendericon("packages/textures/overlay.png", ox+20-x, oy-260, 144, 144);
 					if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
-						rendericon("packages/icons/logo.jpg", ox+20-x, oy-260, 144, 144);
+						rendericon("packages/textures/logo.jpg", ox+20-x, oy-260, 144, 144);
 					
 					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, sv->gametitle());
 				}
@@ -990,7 +990,7 @@ struct fpsclient : igameclient
 					}
 					
 					glColor4f(1.f, 1.f, 1.f, amt);
-					rendericon("packages/icons/logo.jpg", 20, oy-75, 64, 64);
+					rendericon("packages/textures/logo.jpg", 20, oy-75, 64, 64);
 					
 					if (d != NULL)
 					{

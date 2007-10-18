@@ -1,6 +1,5 @@
 = WIP =
 * property lists
-* proper sound positions and velocities
 
 = TODO =
 * vehicles, rolling/throttle/brake
@@ -27,26 +26,6 @@
 * catch/repel grenades
 
 = IDEAS =
-* game/movement types
- * capture the flag
- * jailbreak
- * king of the hill
- * bot war
- * ball game (eg. Deathball, Bombing Run, etc)
- * grenade golf
- * sword duel/jousts
- * races
- * zombie drop
- * third person adventure (eg. Mario 64/DS)
- * arcade shooter (eg. Parodius / ZeroWing)
- * putt-putt golf (eg. Neverputt)
- * side scroller
- * action bomber (eg. Bomberman)
- * realtime strategy (eg. Starcraft) [that uses geometry editing stuff]
- * a sort of inverse tetris that uses tetris shaped editing selections to destroy cubes
- * online collaborative environment (coopworld) [random: xrcd, dynamic db binary]
- * extended/pro fps game -> sgs
- * special levels (bonus [gauntlet/labyrinth], overworld [hall of doors], minecart mayhem (DKC, minecart model))
 * flashlight
 * move entities fully to dynents
 * simple (2d/sprite) models (at a distance)
@@ -73,7 +52,27 @@
 * explosion blast waves
 * more scripting hooks
 * mod on server browser
-* entity extensions: hurt, wind, elevator/train/platform, trigger (explode), fog, exploding barrels, camera paths
+* entity extensions: elevator/train/platform, trigger (explode), exploding barrels, camera paths
 * music/mp3 player
 * masterserver stuff, online accounts
 * teleport cubemaps?
+* game/movement types
+ * capture the flag
+ * jailbreak
+ * king of the hill
+ * bot war
+ * ball game (eg. Deathball, Bombing Run, etc)
+ * grenade golf
+ * sword duel/jousts
+ * races
+ * zombie drop
+ * third person adventure (eg. Mario 64/DS)
+ * arcade shooter (eg. Parodius / ZeroWing)
+ * putt-putt golf (eg. Neverputt)
+ * side scroller
+ * action bomber (eg. Bomberman)
+ * realtime strategy (eg. Starcraft) [that uses geometry editing stuff]
+ * a sort of inverse tetris that uses tetris shaped editing selections to destroy cubes
+ * online collaborative environment (coopworld) [random: xrcd, dynamic db binary]
+ * extended/pro fps game -> sgs
+ * special levels (bonus [gauntlet/labyrinth], overworld [hall of doors], minecart mayhem (DKC, minecart model))
