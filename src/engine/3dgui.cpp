@@ -589,7 +589,11 @@ struct gui : g3d_gui
 		
 			if(icon)
 			{
+#ifdef BFRONTIER
+				s_sprintfd(tname)("packages/textures/%s.jpg", icon);
+#else
 				s_sprintfd(tname)("packages/icons/%s.jpg", icon);
+#endif
 				icon_(textureload(tname), false, false, x, cury, ICON_SIZE, clickable && hit);
 				x += ICON_SIZE;
 			}

@@ -1008,7 +1008,7 @@ int main(int argc, char **argv)
 
 				case SDL_ACTIVEEVENT:
 #ifdef BFRONTIER // grabmouse support
-					if(event.active.state & SDL_APPINPUTFOCUS)
+					if(event.active.state & SDL_APPINPUTFOCUS || event.active.gain)
 						setvar("grabmouse", event.active.gain, true);
 #else
 					if(event.active.state & SDL_APPINPUTFOCUS)
