@@ -1527,9 +1527,10 @@ struct vertmodel : model
 
         if(anim&ANIM_ENVMAP)
         {
+            envmaptmu = 2;
             if(renderpath==R_FIXEDFUNCTION) 
             {
-                envmaptmu = refracting && refractfog ? 3 : 2;
+                if(refracting && refractfog) envmaptmu = 3;
                 glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
             }
             glMatrixMode(GL_TEXTURE);

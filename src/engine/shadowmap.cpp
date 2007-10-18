@@ -218,7 +218,7 @@ void popshadowmap()
 
 #define SHADOWSKEW 0.7071068f
 
-vec shadowfocus(0, 0, 0), shadowdir(0, SHADOWSKEW, 1);
+vec shadowoffset(0, 0, 0), shadowfocus(0, 0, 0), shadowdir(0, SHADOWSKEW, 1);
 VAR(shadowmapcasters, 1, 0, 0);
 
 bool isshadowmapcaster(const vec &o, float rad)
@@ -246,8 +246,8 @@ void calcshadowmapbb(const vec &o, float xyrad, float zrad, float &x1, float &y1
     vec ro(o);
     ro.sub(camera1->o);
     ro.rotate_around_z(-camera1->yaw*RAD);
-    ro.x += ro.z * skewdir.x;
-    ro.y += ro.z * skewdir.y + shadowmapradius * cosf(camera1->pitch*RAD);
+    ro.x += ro.z * skewdir.x + shadowoffset.x;
+    ro.y += ro.z * skewdir.y + shadowmapradius * cosf(camera1->pitch*RAD) + shadowoffset.y;
 
     vec high(ro), low(ro);
     high.x += zrad * skewdir.x;
@@ -458,6 +458,12 @@ void rendershadowmap()
     dir.z = 0;
     dir.mul(shadowmapradius);
 
+    vec dirx, diry;
+    vecfromyawpitch(camera1->yaw, 0, 0, 1, dirx);
+    vecfromyawpitch(camera1->yaw, 0, 1, 0, diry);
+    shadowoffset.x = -fmod(dirx.dot(camera1->o) - skewdir.x*camera1->o.z, 2.0f*shadowmapradius/smsize);
+    shadowoffset.y = -fmod(diry.dot(camera1->o) - skewdir.y*camera1->o.z, 2.0f*shadowmapradius/smsize);
+
     GLfloat skew[] =
     {
         1, 0, 0, 0, 
@@ -466,12 +472,14 @@ void rendershadowmap()
         0, 0, 0, 1
     };
     glLoadMatrixf(skew);
-    glTranslatef(skewdir.x*shadowmapheight, skewdir.y*shadowmapheight + dir.magnitude(), -shadowmapheight);
+    glTranslatef(skewdir.x*shadowmapheight + shadowoffset.x, skewdir.y*shadowmapheight + shadowoffset.y + dir.magnitude(), -shadowmapheight);
     glRotatef(camera1->yaw, 0, 0, -1);
     glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);
     shadowfocus = camera1->o;
     shadowfocus.add(dir);
     shadowfocus.add(vec(-shadowdir.x, -shadowdir.y, 1).mul(shadowmapheight));
+    shadowfocus.add(dirx.mul(shadowoffset.x));
+    shadowfocus.add(diry.mul(shadowoffset.y));
 
     glGetDoublev(GL_PROJECTION_MATRIX, shadowmapprojection);
     glGetDoublev(GL_MODELVIEW_MATRIX, shadowmapmodelview);

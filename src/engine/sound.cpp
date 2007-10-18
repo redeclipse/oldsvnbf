@@ -4,22 +4,12 @@
 #include "engine.h"
 
 #ifdef BFRONTIER
-vec novel(0, 0, 0), plpos, plvel;
 FMOD_RESULT snderr;
 FMOD_SYSTEM *sndsys;
+hashtable<char *, soundsample> soundsamples;
+vector<soundslot> gamesounds, mapsounds;
 vector<soundchan> soundchans;
 bool nosound = true;
-
-#define SNDCHK(b,r) \
-	if ((snderr = b) != FMOD_OK) r;
-
-#define SNDERR(b,r) \
-	SNDCHK(b, \
-	{ \
-		conoutf("sound error: [%s:%d] (%d) %s", __PRETTY_FUNCTION__, __LINE__, \
-			snderr, FMOD_ErrorString(snderr)); \
-		r; \
-	})
 
 VARP(soundvol, 0, 255, 255);
 VARF(soundvchans, 0, 1024, 4093, initwarning());
@@ -62,9 +52,6 @@ void initsound()
 	nosound = false;
 }
 
-hashtable<char *, soundsample> soundsamples;
-vector<soundslot> gamesounds, mapsounds;
-
 int findsound(char *name, int vol, vector<soundslot> &sounds)
 {
 	loopv(sounds)
@@ -94,51 +81,9 @@ int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds)
 ICOMMAND(registersound, "sii", (char *n, int *v, int *m), intret(addsound(n, *v, *m < 0 ? -1 : *m, gamesounds)));
 ICOMMAND(mapsound, "sii", (char *n, int *v, int *m), intret(addsound(n, *v, *m < 0 ? -1 : *m, mapsounds)));
 
-bool soundplaying(soundchan &s)
-{
-	FMOD_BOOL playing;
-
-	SNDCHK(FMOD_Channel_IsPlaying(s.channel, &playing), return false);
-	
-	return playing != 0;
-}
-
-void soundupdate(soundchan &s)
-{
-	if (soundplaying(s))
-	{
-		FMOD_VECTOR psp = { s.pos.x, s.pos.y, s.pos.z }, psv = { s.vel.x, s.vel.y, s.vel.z };
-
-		SNDERR(FMOD_Channel_Set3DAttributes(s.channel, &psp, &psv), );
-		SNDERR(FMOD_Channel_Set3DMinMaxDistance(s.channel, s.mindist, s.maxdist), );
-		SNDERR(FMOD_Channel_SetVolume(s.channel, (float(s.slot->vol)/255.f)*(float(soundvol)/255.f)), );
-	}
-}
-
-void soundpos(soundchan &s, vec &pos, vec &vel, bool update)
-{
-	if (soundplaying(s))
-	{
-		s.pos = pos;
-		s.vel = vel;
-		if (update) soundupdate(s);
-	}
-}
-
-void soundstop(soundchan &s)
-{
-	if (soundplaying(s))
-	{
-		SNDERR(FMOD_Channel_Stop(s.channel), );
-	}
-}
-
 void checksound()
 {
 	if(nosound) return;
-
-	plpos = vec(player->o);
-	plvel = vec(player->vel);
 
 	SNDERR(FMOD_System_SetGeometrySettings(sndsys, hdr.worldsize), return);
 
@@ -152,8 +97,7 @@ void checksound()
 	{
 		extentity &e = *ents[i];
 		if (e.type != ET_SOUND || e.visible) continue;
-		playsound(e.attr1, e.o, novel, (e.attr3 > 0 ? e.attr3 : SNDMINDIST), (e.attr2 > 0 ? e.attr2 : SNDMAXDIST), mapsounds);
-		e.visible = true;
+		e.visible = playsound(e.attr1, &e.o, NULL, (e.attr3 > 0 ? e.attr3 : SNDMINDIST), (e.attr2 > 0 ? e.attr2 : SNDMAXDIST), mapsounds);
 	}
 
 	FMOD_VECTOR pup = { cup.x, cup.y, cup.z };
@@ -166,53 +110,55 @@ void checksound()
 	loopv(soundchans)
 	{
 		soundchan &s = soundchans[i];
-		soundupdate(s);
+		if (s.inuse) s.update();
 	}
 
 	SNDERR(FMOD_System_Update(sndsys), return);
 }
 
-int playsound(int n, vec &pos, vec &vel, float mindist, float maxdist, vector<soundslot> &sounds)
+#define playsnd(b) \
+	if (nosound || !soundvol) return -1; \
+	if (!sounds.inrange(n)) { conoutf("unregistered sound: %d", n); return -1; } \
+	soundslot &slot = sounds[n]; \
+	if (!slot.sample->sound) \
+	{ \
+		s_sprintfd(buf)("packages/sounds/%s", slot.sample->name); \
+		slot.sample->load(findfile(buf, "rb"), slot.maxuses); \
+	} \
+	FMOD_CHANNEL *channel = NULL; \
+	SNDERR(FMOD_System_PlaySound(sndsys, FMOD_CHANNEL_FREE, slot.sample->sound, true, &channel), return -1); \
+	if (channel) \
+	{ \
+		int index = -1; \
+		SNDERR(FMOD_Channel_GetIndex(channel, &index), return -1); \
+		if (soundchans.inrange(index)) \
+		{ \
+			soundchan &s = soundchans[index]; \
+			s.init(channel, &slot, mindist, maxdist); \
+			b; \
+			s.pause(false); \
+			if (verbose >= 3) conoutf("playing '%s' (%d)", s.slot->sample->name, index); \
+			return index; \
+		} \
+	} \
+	return -1; \
+
+int playsound(int n, vec *p, vec *v, float mindist, float maxdist, vector<soundslot> &sounds)
 {
-	int index = -1;
+	playsnd({
+		if (!p && !v) s.position(&player->o, &player->vel);
+		else if (p && !v)
+		{
+			s._vel = vec(0, 0, 0);
+			s.position(p, &s._vel);
+		}
+		else s.position(p, v);
+	});
+}
 
-	if (nosound || !soundvol) return -1;
-
-	if (!sounds.inrange(n)) { conoutf("unregistered sound: %d", n); return -1; }
-	soundslot &slot = sounds[n];
-
-	if (!slot.sample->sound)
-	{
-		s_sprintfd(fname)("packages/sounds/%s", slot.sample->name);
-		const char *file = findfile(fname, "rb");
-		
-		SNDERR(FMOD_System_CreateSound(sndsys, file, FMOD_3D|FMOD_SOFTWARE|FMOD_3D_WORLDRELATIVE, NULL, &slot.sample->sound), return -1);
-		SNDERR(FMOD_Sound_SetMode(slot.sample->sound, FMOD_LOOP_NORMAL), );
-		SNDERR(FMOD_Sound_SetLoopCount(slot.sample->sound, slot.maxuses), );
-	}
-
-	FMOD_CHANNEL *channel;
-	
-	SNDERR(FMOD_System_PlaySound(sndsys, FMOD_CHANNEL_FREE, slot.sample->sound, true, &channel), return -1);
-	SNDERR(FMOD_Channel_GetIndex(channel, &index), return -1);
-	
-	if (soundchans.inrange(index))
-	{
-		soundchan &s = soundchans[index];
-
-		s.channel = channel;
-		s.slot = &slot;
-		s.mindist = mindist;
-		s.maxdist = maxdist;
-		
-		soundpos(s, pos, s.vel, true);
-		SNDERR(FMOD_Channel_SetPaused(s.channel, false), );
-		
-		if (verbose >= 3) conoutf("playing '%s' (%d)", s.slot->sample->name, index);
-		
-		return index;
-	}
-	return -1;
+int playsoundv(int n, vec &p, vec &v, float mindist, float maxdist, vector<soundslot> &sounds)
+{
+	playsnd(s.positionv(p, v));
 }
 
 ICOMMAND(sound, "i", (int *i), playsound(*i));
@@ -222,7 +168,7 @@ void clearmapsounds()
 	loopv(soundchans)
 	{
 		soundchan &s = soundchans[i];
-		soundstop(s);
+		if (s.inuse) s.stop();
 	}
 	mapsounds.setsizenodelete(0);
 }
@@ -575,11 +521,11 @@ void playsound(int n, const vec *loc, extentity *ent)
 
 	if(!slot.s->sound)
 	{
-		s_sprintfd(buf)("packages/sounds/%s", slot.s->name);
-
-		loopi(2)
+        const char *exts[] = { "", ".wav", ".ogg" };
+        string buf;
+        loopi(sizeof(exts)/sizeof(exts[0]))
 		{
-			if(i) s_strcat(buf, ".wav");
+            s_sprintf(buf)("packages/sounds/%s%s", slot.s->name, exts[i]);
 			const char *file = findfile(path(buf), "rb");
 			#ifdef USE_MIXER
 				slot.s->sound = Mix_LoadWAV(file);

@@ -497,7 +497,7 @@ struct clientcom : iclientcom
 			case SV_SOUND:
 				if(!d) return;
 #ifdef BFRONTIER
-				playsound(getint(p), d->o, d->vel);
+				playsound(getint(p), &d->o, &d->vel);
 #else
 				playsound(getint(p), &d->o);
 #endif
@@ -657,7 +657,7 @@ struct clientcom : iclientcom
 				d->gunselect = gunselect;
 				d->state = CS_SPAWNING;
 #ifdef BFRONTIER // respawn sound
-				playsound(S_RESPAWN, d->o, d->vel);
+				playsound(S_RESPAWN, &d->o, &d->vel);
 #endif
 				break;
 			}
@@ -770,7 +770,7 @@ struct clientcom : iclientcom
 				int gun = getint(p);
 				d->gunselect = max(gun, 0);
 #ifdef BFRONTIER
-				playsound(S_WEAPLOAD, d->o, d->vel);
+				playsound(S_WEAPLOAD, &d->o, &d->vel);
 #else
 				playsound(S_WEAPLOAD, &d->o);
 #endif
@@ -818,7 +818,7 @@ struct clientcom : iclientcom
 				if(!cl.et.ents.inrange(i)) break;
 				cl.et.setspawn(i, true);
 #ifdef BFRONTIER
-				playsound(S_ITEMSPAWN, cl.et.ents[i]->o, novel);
+				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o);
 #else
 				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o);
 #endif

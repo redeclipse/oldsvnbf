@@ -7,6 +7,8 @@ Legend [
 ]
 
 = wip edition =
+eng: positional sound fixed
+gam: bouncers obey map speed settings
 gam: rocket flyby sound using indexing, grenade bounce sound
 eng: added sound channel indexing
 gam: unified projectiles into bouncers
