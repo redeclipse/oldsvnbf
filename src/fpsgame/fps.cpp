@@ -48,9 +48,6 @@ struct fpsclient : igameclient
 	#include "physics.h"
 	physics ph;
 
-	#include "bot.h"
-	botcom bc;
-
 	string cptext;
 	int cameranum, cameracycled, camerawobble, damageresidue, myrankv, myranks;
 	
@@ -99,7 +96,7 @@ struct fpsclient : igameclient
 		  swaymillis(0), swaydir(0, 0, 0),
 		  suicided(-1),
 #ifdef BFRONTIER // extra modules, alternate camera, rank hud
-		  ph(*this), bc(*this), cameranum(0), cameracycled(0), myrankv(0), myranks(0),
+		  ph(*this), cameranum(0), cameracycled(0), myrankv(0), myranks(0),
 		  player1(spawnstate(new fpsent())),
 		  ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this)
 #else
@@ -124,7 +121,6 @@ struct fpsclient : igameclient
 
 	iclientcom *getcom() { return &cc; }
 #ifdef BFRONTIER // extra modules
-	ibotcom *getbot() { return &bc; }
 	iphysics *getphysics() { return &ph; }
 #endif
 	icliententities *getents() { return &et; }
@@ -432,8 +428,6 @@ struct fpsclient : igameclient
 		}
 		playsound(S_PAIN1+rnd(5), &d->o, &d->vel);
 		ws.damageeffect(damage, d);
-
-		if(bc.isbot(d)) bc.damaged(damage, d, actor);
 	}
 #else
 	void damaged(int damage, fpsent *d, fpsent *actor, bool local = true)
@@ -498,8 +492,6 @@ struct fpsclient : igameclient
 		}
 		playsound(S_DIE1+rnd(2), &d->o, &d->vel);
 		ws.superdamageeffect(d->vel, d);
-
-		if(bc.isbot(d)) bc.killed(d);
 			
 		actor->spree++;
 		
@@ -511,8 +503,6 @@ struct fpsclient : igameclient
 			case 50: playsound(S_V_SPREE4, &actor->o, &actor->vel); break;
 			default: if (actor == player1 && d != player1) playsound(S_DAMAGE8); break;
 		}
-	
-		bc.frags(actor, d==actor || isteam(actor->team, d->team) ? -1 : 1);
 #else
         if(actor->type==ENT_AI)
             conoutf("\f2%s got killed by %s!", dname, aname);
@@ -717,7 +707,6 @@ struct fpsclient : igameclient
 			if(*best) conoutf("\f2try to beat your best score so far: %s", best);
 		}
 		cameranum = 0;
-		bc.start(name);
 #else
 		if(*name) conoutf("\f2game mode is %s", fpsserver::modestr(gamemode));
 		if(m_sp)
@@ -799,9 +788,7 @@ struct fpsclient : igameclient
 				suicided = player1->lifesequence;
 			}
 		}
-#ifdef BFRONTIER
-		else if(bc.isbot((fpsent *)d)) killed((fpsent *)d, (fpsent *)d);
-#else
+#ifndef BFRONTIER
 		else if(d->type==ENT_AI) ((monsterset::monster *)d)->monsterpain(400, player1);
 #endif
 	}

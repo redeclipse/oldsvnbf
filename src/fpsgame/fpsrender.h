@@ -134,7 +134,6 @@ struct fpsrender
 #endif
 
 #ifdef BFRONTIER
-		cl.bc.render();
 		cl.et.renderentities();
 		cl.ws.renderbouncers();
 		if(m_capture) cl.cpc.renderbases();

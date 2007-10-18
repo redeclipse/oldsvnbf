@@ -26,7 +26,6 @@ bool pubserv = false;
 int uprate = 0, maxclients = DEFAULTCLIENTS;
 char *ip = "", *master = NULL;
 char *game = "fps";
-ibotcom *bc = NULL;
 iphysics *ph = NULL;
 #endif
 igameclient *cl = NULL;
@@ -60,8 +59,7 @@ void initgame(char *game)
 #endif
 		cc = cl->getcom();
 #ifdef BFRONTIER // extra sub modules
-		bc = cl->getbot();
-		ph = cl->getphysics();
+ 		ph = cl->getphysics();
 #endif
 		et = cl->getents();
 		cl->initclient();

@@ -1,5 +1,5 @@
 CXXOPTFLAGS= -O3 -fomit-frame-pointer -ffast-math
-INCLUDES= -Ishared -Iengine -Ifpsgame -Ifpsgame/bot -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
+INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
 CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES)
 
 CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lfmodex -lSDL_image -lz -lGL -lGLU 
@@ -40,7 +40,7 @@ CLIENT_OBJS= \
 	fpsgame/fps.o \
 	engine/joystick.o
 
-SINCLUDES= -Ishared -Iengine -Ifpsgame -Ifpsgame/bot -Ienet/include -Iinclude
+SINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Iinclude
 SCXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(SINCLUDES)
 
 SERVER_LIBS=-Lenet -lenet -lz

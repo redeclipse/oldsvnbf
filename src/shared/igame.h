@@ -50,18 +50,6 @@ struct iclientcom
 };
 
 #ifdef BFRONTIER
-struct ibotcom
-{
-    virtual ~ibotcom() {}
-
-	virtual dynent *newclient() { return NULL; }
-	virtual bool allowed() { return false; }
-	virtual void update(bot *b) { return; }
-	virtual void parsepacketclient(bot *b, int chan, ucharbuf &p) { return; }
-	virtual int sendpacketclient(bot *b, ucharbuf &p, bool &reliable) { return -1; }
-	virtual void gameconnect(bot *b, bool _remote) { return; }
-};
-
 struct iphysics
 {
     virtual ~iphysics() {}
@@ -106,7 +94,6 @@ struct igameclient
     virtual icliententities *getents() = 0;
 #ifdef BFRONTIER
     virtual iphysics *getphysics() = 0;
-	virtual ibotcom *getbot() = 0;
 #endif
     virtual iclientcom *getcom() = 0;
 

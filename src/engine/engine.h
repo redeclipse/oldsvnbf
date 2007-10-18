@@ -6,7 +6,6 @@ extern igameclient	 *cl;
 extern igameserver	 *sv;
 extern iclientcom	  *cc;
 #ifdef BFRONTIER // extra sub modules
-extern ibotcom *bc;
 extern iphysics *ph;
 #endif
 extern icliententities *et;
@@ -17,6 +16,9 @@ extern icliententities *et;
 #include "bih.h"
 #include "texture.h"
 #include "model.h"
+#ifdef BFRONTIER
+#include "sound.h"
+#endif
 
 // GL_ARB_multitexture
 extern PFNGLACTIVETEXTUREARBPROC		glActiveTexture_;
@@ -426,4 +428,138 @@ extern void replacetexcube(cube &c, int oldtex, int newtex);
 extern float spinsky;
 extern string lastsky;
 extern void loadsky(char *basename, float *spin);
+
+// main
+extern void updateframe(bool dorender = false);
+extern int grabmouse, perf, colorpos;
+extern int getmatvec(vec v);
+
+// joystick
+extern void initjoy();
+extern void processjoy(SDL_Event *event);
+extern void movejoy();
+
+// editing
+extern int efocus, enthover, entorient, showentdir, showentradius;
+extern int fullbright, fullbrightlevel;
+extern vector<int> entgroup;
+
+extern void newentity(int type, int a1, int a2, int a3, int a4);
+extern void newentity(vec &v, int type, int a1, int a2, int a3, int a4);
+
+// menu
+enum
+{
+	MN_BACK = 0,
+	MN_INPUT,
+	MN_MAX
+};
+extern bool menuactive();
+
+// console
+enum
+{
+	CN_LEFT = 0,
+	CN_RIGHT,
+	CN_CENTER,
+	CN_MAX
+};
+#define CON_LEFT		0x0001
+#define CON_RIGHT		0x0002
+#define CON_CENTER		0x0004
+
+#define CON_HILIGHT		0x0020
+
+struct cline { char *cref; int outtime; };
+extern vector<cline> conlines[CN_MAX];
+
+extern void console(const char *s, int type, ...);
+
+extern void rehash(bool reload = true);
+extern void startgame(char *load = NULL, char *initscript = NULL);
+
+// command
+extern char *gettime(char *format);
+extern char *getmaptitle();
+extern char *getdefaultmap();
+
+// rendergl
+#define RENDERPUSHX			8.0f
+#define RENDERPUSHZ			0.1f
+
+#define CARDTIME			3000	// title card duration
+#define CARDFADE			1500	// title card fade in/out
+
+extern int fov, maxfps, hidehud, hidestats, hudblend, lastmillis, totalmillis;
+
+extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false);
+extern void transplayer();
+extern void drawcrosshair(int w, int h);
+
+extern void renderprimitive(bool on);
+extern void renderline(vec &fr, vec &to, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);
+extern void rendertris(vec &fr, float yaw, float pitch, float size = 1.f, float r = 255.f, float g = 255.f, float b = 255.f, bool fill = true, bool nf = false);
+extern void renderlineloop(vec &o, float height, float xradius, float yradius, float z = 255.f, int type = 0, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);
+
+extern void renderentdir(vec &o, float yaw, float pitch, bool nf = true);
+extern void renderentradius(vec &o, float height, float radius, bool nf = true);
+
+extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 120);
+
+extern bool getlos(vec &o, vec &q, float yaw, float pitch, float mdist = 0.f, float fx = 0.f, float fy = 0.f);
+extern bool getsight(physent *d, vec &q, vec &v, float mdist, float fx = 0.f, float fy = 0.f);
+
+// renderparticles
+#define COL_WHITE			0xFFFFFF
+#define COL_BLACK			0x000000
+#define COL_GREY			0x897661
+#define COL_YELLOW			0xB49B4B
+#define COL_ORANGE			0xB42A00
+#define COL_RED				0xFF1932
+#define COL_LRED			0xFF4B4B
+#define COL_BLUE			0x3219FF
+#define COL_LBLUE			0x4BA8FF
+#define COL_GREEN			0x32FF64
+#define COL_CYAN			0x32FFFF
+#define COL_FUSCHIA			0xFFFF32
+
+#define COL_TEXTBLUE		0x6496FF
+#define COL_TEXTYELLOW		0xFFC864
+#define COL_TEXTRED			0xFF4B19
+#define COL_TEXTGREY		0xB4B4B4
+#define COL_TEXTDGREEN		0x1EC850
+
+#define COL_FIRERED			0xFF8080
+#define COL_FIREORANGE		0xA0C080
+#define COL_FIREYELLOW		0xFFC8C8
+#define COL_WATER			0x3232FF
+#define COL_BLOOD			0x19FFFF
+
+extern int particletext, maxparticledistance;
+
+extern void part_textf(const vec &s, char *t, bool moving, int fade, int color, ...);
+extern void part_text(const vec &s, char *t, bool moving, int fade, int color);
+
+extern void part_splash(int type, int num, int fade, const vec &p, int color);
+extern void part_trail(int type, int fade, const vec &s, const vec &e, int color);
+extern void part_meter(const vec &s, float val, int type, int fade, int color);
+extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color, physent *owner = NULL);
+extern void part_fireball(const vec &dest, float max, int type, int color);
+extern void part_firerad(const vec &dest, float size, int type, int color);
+extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color);
+extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, physent *owner = NULL);
+
+// rendertext
+enum
+{
+	AL_LEFT = 0,
+	AL_CENTER,
+	AL_RIGHT
+};
+
+extern void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool shadow, int align, ...);
+extern void draw_textf(const char *fstr, int left, int top, ...);
+extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool shadow = false);
+extern bool pushfont(char *name);
+extern bool popfont(int num);
 #endif

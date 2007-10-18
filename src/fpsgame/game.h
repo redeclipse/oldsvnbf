@@ -526,7 +526,6 @@ struct fpsent : dynent, fpsstate
 	int frags, deaths, totaldamage, totalshots;
 	editinfo *edit;
 #ifdef BFRONTIER
-	#include "botent.h"
 	int spree, lastimpulse, nexthealth;
 #endif
 
@@ -534,7 +533,7 @@ struct fpsent : dynent, fpsstate
 
 #ifdef BFRONTIER
 	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), lastpain(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL),
-				botflags(0), botstate(M_NONE), spree(0), lastimpulse(0), nexthealth(0)
+				spree(0), lastimpulse(0), nexthealth(0)
 #else
     fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), lastpain(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL)
 #endif
@@ -633,57 +632,6 @@ enum {
 	HD_RIGHT,
 	HD_MAX
 };
-
-struct botent : fpsent
-{
-	bool c2sinit, connected, spectator;
-	int lastping;
-	vector<uchar> messages;
-	
-	botent() : c2sinit(false), connected(false), spectator(false) {}
-	~botent() {}
-};
-
-#define botd(a)			((botent *)(a->d))
-
-#define BOTMAX			MAXCLIENTS-1					// max bots
-
-#define BOTLOSDIST(x)	(514.0f - (x * 2.0))			// line of sight distance = 512 MAX
-#define BOTFOVX(x)		(96.5f - (x * 0.5))				// line of sight fov x angle = 96 MAX
-#define BOTFOVY(x)		(128.5f - (x * 0.5))			// line of sight fov y angle = 128 MAX
-
-#define BOTGAMEMODE(x)	(x >= -2 && x <= 11)			// available game modes
-
-#define PATH_ABS		0x0001
-#define PATH_AVOID		0x0002
-#define PATH_GTONE		0x0004
-#define PATH_BUTONE		0x0008
-
-#define BOT_PLAYER		0x0001
-#define BOT_MONSTER		0x0002
-
-#define BOTISNEAR		8					// is near
-#define BOTISFAR		96					// too far
-#define BOTJUMPDIST		6					// decides to jump
-#define BOTJUMPWEAP		24					// weapon to jump
-#define BOTJUMPMAX		32					// too high
-#define BOTRADIALDIST	48					// radial distance
-#define BOTMELEEDIST	12					// use melee
-#define BOTCHECKRESET	500					// check this interval for reset
-#define BOTCHECKCOORD	5000				// check this interval for coordindates
-#define BOTJUMPTIME		100					// don't jump too soon
-#define BOTJUMPWAIT		1000				// don't jump stupidly
-#define BOTSCOUTDIST	20					// scout this many nodes randomly
-
-int waypoints = 0;
-
-VARP(botrate, 1, 10, 100);					// rate of action updates and judgement errors
-VARP(botauto, 0, 0, 1);						// automically load bots on start of map
-
-VAR(botdrop, 0, 0, 1);						// drop botwaypoints during play
-VAR(botnum, 0, 0, MAXCLIENTS-1);			// set to force a number of bots in botauto
-VAR(botwaydist, 0, BOTJUMPMAX, BOTISFAR);	// drop botwaypoints this far apart
-VAR(botwaynear, 0, BOTISNEAR, BOTISFAR);	// waypoints join when this close to them
 
 #endif
 static char *msgnames[] = {

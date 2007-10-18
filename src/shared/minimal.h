@@ -10,6 +10,5 @@ extern void console(const char *s, int n, ...);
 extern igameclient *cl;
 extern igameserver *sv;
 extern iclientcom *cc;
-extern ibotcom *bc;
 extern iphysics *ph;
 extern icliententities *et;

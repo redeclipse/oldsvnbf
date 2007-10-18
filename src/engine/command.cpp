@@ -638,7 +638,7 @@ bool execfile(char *cfgfile)
 	if(!buf) return false;
 	execute(buf);
 	delete[] buf;
-#ifdef BFRONTIER // verbose support
+#if defined(BFRONTIER) && !defined(STANDALONE)
 	if (verbose >= 3) console("loaded script '%s'", CON_RIGHT, cfgfile);
 #endif
 	return true;
