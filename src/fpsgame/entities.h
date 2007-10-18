@@ -131,7 +131,7 @@ struct entities : icliententities
 	void rumble(extentity &e)
 	{
 #ifdef BFRONTIER
-		playsound(S_RUMBLE, e.o, novel);
+		playsound(S_RUMBLE, &e.o);
 #else
 		playsound(S_RUMBLE, &e.o);
 #endif
@@ -184,7 +184,7 @@ struct entities : icliententities
 			if(!d) return;
 			guninfo &is = getgun(ents[n]->attr1);
 			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
-			playsound(S_ITEMAMMO, ents[n]->o, novel); 
+			playsound(S_ITEMAMMO, &ents[n]->o); 
 			if(d!=cl.player1) return;
 			d->pickup(ents[n]->attr1, ents[n]->attr2);
 		}
@@ -277,11 +277,7 @@ struct entities : icliententities
 				if(n==cl.respawnent) break;
 				cl.respawnent = n;
 				conoutf("\f2respawn point set!");
-#ifdef BFRONTIER // extended entities
-				playsound(S_V_RESPAWNPOINT, ents[n]->o, novel);
-#else
 				playsound(S_V_RESPAWNPOINT);
-#endif
 				break;
 
 			case JUMPPAD:

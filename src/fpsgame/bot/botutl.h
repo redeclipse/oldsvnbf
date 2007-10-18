@@ -42,7 +42,7 @@ void spawn(fpsent *d)
 				entinmap(d);
 				wayposition(d);
 
-				playsound(S_RESPAWN, d->o, novel);
+				playsound(S_RESPAWN, &d->o, &d->vel);
 
 				d->botstate = M_SLEEP;
 			}

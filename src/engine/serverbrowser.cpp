@@ -385,9 +385,9 @@ void checkpings()
 				si.attr.setsize(0);
 				loopj(numattr) si.attr.add(getint(p));
 				getstring(text, p);
-				s_strcpy(si.map, text);
+                filtertext(si.map, text);
 				getstring(text, p);
-				s_strcpy(si.sdesc, text);				
+                filtertext(si.sdesc, text);
 				break;
 			}
 		}

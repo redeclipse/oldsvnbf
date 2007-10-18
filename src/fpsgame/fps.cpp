@@ -177,7 +177,7 @@ struct fpsclient : igameclient
 		d->respawn();
 		d->spawnstate(gamemode);
 #ifdef BFRONTIER // respawn sound
-		playsound(S_RESPAWN, d->o, d->vel);
+		playsound(S_RESPAWN, &d->o, &d->vel);
 #endif
 		return d;
 	}
@@ -430,7 +430,7 @@ struct fpsclient : igameclient
 			damageresidue += damage;
 			d->damageroll(damage);
 		}
-		playsound(S_PAIN1+rnd(5), d->o, d->vel);
+		playsound(S_PAIN1+rnd(5), &d->o, &d->vel);
 		ws.damageeffect(damage, d);
 
 		if(bc.isbot(d)) bc.damaged(damage, d, actor);
@@ -496,7 +496,7 @@ struct fpsclient : igameclient
 		{
             d->move = d->strafe = 0;
 		}
-		playsound(S_DIE1+rnd(2), d->o, d->o);
+		playsound(S_DIE1+rnd(2), &d->o, &d->vel);
 		ws.superdamageeffect(d->vel, d);
 
 		if(bc.isbot(d)) bc.killed(d);
@@ -505,10 +505,10 @@ struct fpsclient : igameclient
 		
 		switch (actor->spree)
 		{
-			case 5:  playsound(S_V_SPREE1, actor->o, actor->vel); break;
-			case 10: playsound(S_V_SPREE2, actor->o, actor->vel); break;
-			case 25: playsound(S_V_SPREE3, actor->o, actor->vel); break;
-			case 50: playsound(S_V_SPREE4, actor->o, actor->vel); break;
+			case 5:  playsound(S_V_SPREE1, &actor->o, &actor->vel); break;
+			case 10: playsound(S_V_SPREE2, &actor->o, &actor->vel); break;
+			case 25: playsound(S_V_SPREE3, &actor->o, &actor->vel); break;
+			case 50: playsound(S_V_SPREE4, &actor->o, &actor->vel); break;
 			default: if (actor == player1 && d != player1) playsound(S_DAMAGE8); break;
 		}
 	
@@ -734,7 +734,7 @@ struct fpsclient : igameclient
 	{ 
 		fpsent *c = d ? d : player1;
 		if (c == player1) cc.addmsg(SV_SOUND, "i", n); 
-		playsound(n, c->o, c->vel);
+		playsound(n, &c->o, &c->vel);
 	}
 
 	int numdynents() { return 1+players.length(); }
