@@ -2,9 +2,9 @@
 * property lists
 
 = TODO =
+* new individual icons (weapons/hud/etc)
 * vehicles, rolling/throttle/brake
 * tickers
-* new icons (weapons/hud/etc)
 * add tags to commands and variables for description and usage
 * improve editmode
 * engine side bots with client side logic

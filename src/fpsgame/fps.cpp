@@ -863,36 +863,11 @@ struct fpsclient : igameclient
 #endif
 	}
 #ifdef BFRONTIER
-	void drawicon(float tx, float ty, int x, int y, int s = 64)
-	{
-		rendericon("packages/textures/overlay.png", x, y, s, s);
-		
-		settexture("packages/textures/items.png");
-		
-		glBegin(GL_QUADS);
-		
-		int t = s-(s/8)-2, rx = x+(s/16)+1, ry = y+(s/16)+1;
-		
-		tx /= 384;
-		ty /= 128;
-		
-		glTexCoord2f(tx,		ty);
-		glVertex2i(rx,	ry);
-		glTexCoord2f(tx+1/6.0f, ty);
-		glVertex2i(rx+t, ry);
-		glTexCoord2f(tx+1/6.0f, ty+1/2.0f);
-		glVertex2i(rx+t, ry+t);
-		glTexCoord2f(tx,		ty+1/2.0f);
-		glVertex2i(rx,	ry+t);
-		
-		glEnd();
-	}
-
 	void gameplayhud(int w, int h)
 	{
 		if (!hidehud)
 		{
-			if (cc.ready() && player1->clientnum >= 0 && maptime)
+			if (cc.ready() && maptime)
 			{
 				int ox = w*900/h, oy = 900;
 		
@@ -981,46 +956,9 @@ struct fpsclient : igameclient
 					
 					if (d != NULL)
 					{
-						if (d->health > 0 && d->state == CS_ALIVE)
+						if (d->state == CS_ALIVE)
 						{
-							int hs[4][HD_MAX][5] = {
-								{
-									{ 80, 75, 96, 75, AL_LEFT },
-									{ 80, 75, 96, 75, AL_LEFT },
-									{ 80, 75, 96, 75, AL_RIGHT },
-								},
-								{
-									{ 280, 75, 296, 75, AL_LEFT },
-									{ 80, 145, 96, 145, AL_LEFT },
-									{ 80, 145, 96, 145, AL_RIGHT },
-								},
-								{
-									{ 480, 75, 496, 75, AL_LEFT },
-									{ 80, 215, 96, 215, AL_LEFT },
-									{ 80, 215, 96, 215, AL_RIGHT },
-								},
-								{
-									{ 680, 75, 648, 75, AL_CENTER },
-									{ 80, 285, 48, 285, AL_CENTER },
-									{ 80, 285, 48, 285, AL_CENTER },
-								},
-							};
-							
-							#define style(a,b) \
-								(hudstyle() == HD_RIGHT && b != 4 ? (b%2 ? oy : ox)-hs[a][hudstyle()][b] : (b%2 ? oy-hs[a][hudstyle()][b] : hs[a][hudstyle()][b]))
-							
-							glColor4f(1.f, 1.f, 1.f, fade);
-							drawicon(192.f, 0.f, style(0,0), style(0,1));
-							draw_textx("%d", style(0,2), style(0,3), 255, d->health<=50 ? (d->health<=25 ? 0 : 128) : 255, d->health<=50 ? 0 : 255, int(255.f*fade), false, style(0,4), d->health);
-							
-							int mx = getgun(d->gunselect).max;
-							glColor4f(1.f, 1.f, 1.f, fade);
-							drawicon(0.f, 0.f, style(0,0), style(0,1));
-							//glColor4f(1.f, 1.f, 1.f, fade);
-							//drawicon((float)(d->gunselect*64), 0.f, style(2,0), style(2,1));
-							
-							glColor4f(1.f, 1.f, 1.f, fade);
-							draw_textx("%d", style(2,2), style(2,3), 255, d->ammo[d->gunselect]<=mx/2 ? (d->ammo[d->gunselect]<=mx/4 ? 0 : 128) : 255, mx/2 ? 0 : 255, int(255.f*fade), false, style(2,4), d->ammo[d->gunselect]);
+							draw_textx("%d", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->ammo[d->gunselect]);
 						}
 						else if (d->state == CS_DEAD)
 						{

@@ -111,7 +111,7 @@ void screenshot(char *filename)
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, tmp);
 	uchar *dst = (uchar *)image->pixels;
-	loopi(scr_h)
+    loopi(screen->h)
 	{
 		memcpy(dst, &tmp[3*screen->w*(screen->h-i-1)], 3*screen->w);
 		endianswap(dst, 3, screen->w);

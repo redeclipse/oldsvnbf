@@ -453,7 +453,7 @@ void cursorupdate()
 #ifdef BFRONTIER
 		if (showcursorgrid)
 		{
-			glColor3ub(20, 20, 20);
+			glColor3ub(10, 10, 20);
 			planargrid(lu.tovec(), vec(1, 1, 1), gridsize);
 		}
 #endif
@@ -480,7 +480,7 @@ void cursorupdate()
 #ifdef BFRONTIER
 		if (showselgrid)
 		{
-			glColor3ub(20, 10, 0);
+			glColor3ub(20, 20, 20);
 			planargrid(sel.o.tovec(), sel.s.tovec(), sel.grid);
 		}
 #endif

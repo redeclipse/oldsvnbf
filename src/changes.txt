@@ -7,6 +7,7 @@ Legend [
 ]
 
 = wip edition =
+gam: grenade 'nudging/barging'
 eng: positional sound fixed
 gam: bouncers obey map speed settings
 gam: rocket flyby sound using indexing, grenade bounce sound
