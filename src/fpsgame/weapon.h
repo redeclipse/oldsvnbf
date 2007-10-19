@@ -230,6 +230,8 @@ struct weaponstate
 					{
 						if (bnc.gun == GUN_GL && bnc.lifetime > 0)
 						{
+							if (hitplayer != NULL)
+								bnc.vel.add(vec(hitplayer->vel).mul(bnc.elasticity));
 							if (!soundchans.inrange(bnc.schan))
 								bnc.schan = playsound(getgun(bnc.gun).fsound, &bnc.o, &bnc.vel);
 							continue; // grenades stay live until timeout
@@ -254,6 +256,7 @@ struct weaponstate
 					break; // kill 'er
 				}
 			}
+			
 			if (bnc.state == CS_ALIVE)
 			{
 				bnc.roll += old.sub(bnc.o).magnitude()/(4*RAD);
@@ -937,6 +940,14 @@ struct weaponstate
 
 			string mname;
 			int cull = MDL_CULL_VFC|MDL_DYNSHADOW;
+			vec pos(bnc.o);
+
+			pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
+			lightreaching(pos, color, dir);
+
+			vectoyawpitch(bnc.vel, yaw, pitch);
+			yaw += 90;
+			bnc.lastyaw = yaw;
 
             if (bnc.bouncetype == BNC_WEAPON)
             {
@@ -959,13 +970,6 @@ struct weaponstate
 				pitch = -bnc.roll;
 			}
 			else continue;
-
-			vec pos(bnc.o);
-			pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
-			lightreaching(pos, color, dir);
-			vectoyawpitch(bnc.vel, yaw, pitch);
-			yaw += 90;
-			bnc.lastyaw = yaw;
 
 			rendermodel(color, dir, mname, ANIM_MAPMODEL|ANIM_LOOP, 0, 0, bnc.o, yaw, pitch, 0, 0, NULL, cull);
 		}
