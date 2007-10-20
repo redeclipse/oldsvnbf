@@ -138,7 +138,7 @@ void disconnect(int onlyclean, int async)
 		clienthost = NULL;
 	}
 #ifdef BFRONTIER
-	if(!onlyclean) { emptymap(0, true); showgui("main"); }
+	if(!onlyclean) { localconnect(); }
 #else
 	if(!onlyclean) { localconnect(); cc->gameconnect(false); }
 #endif

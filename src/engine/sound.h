@@ -12,8 +12,7 @@ extern int soundvol;
 #define SNDERR(b,r) \
 	SNDCHK(b, \
 	{ \
-		conoutf("sound error: [%s:%d] (%d) %s", __PRETTY_FUNCTION__, __LINE__, \
-			snderr, FMOD_ErrorString(snderr)); \
+		conoutf("sound error: [%d] %s", snderr, FMOD_ErrorString(snderr)); \
 		r; \
 	})
 

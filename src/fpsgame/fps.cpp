@@ -258,76 +258,83 @@ struct fpsclient : igameclient
         if(!maptime) { maptime = lm + curtime; return; }
 		lastmillis = lm;
 		if(!curtime) return;
+		physicsframe();
 #ifdef BFRONTIER
-		if (cc.ready() && player1->clientnum >= 0)
+		gets2c();
+
+		if (cc.ready())
 		{
 			int scale = max(curtime/10, 1);
 			#define adjust(n,m,x) { n = min(n, x); if (n > 0) { n -= scale*m; } if (n < 0) { n = 0; } }
 			adjust(camerawobble, 1, 200);
 			adjust(damageresidue, 1, 200);
 			
-			if (player1->state == CS_ALIVE && !intermission)
+			if (player1->state == CS_ALIVE)
 			{
-				if (player1->timeinair)
+				if (!intermission)
 				{
-					if (player1->jumpnext && lastmillis-player1->lastimpulse > 3000)
+					if (player1->timeinair)
 					{
-						vec dir;
-						vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
-						dir.normalize();
-						dir.mul(ph.jumpvel(player1));
-						player1->vel.add(dir);
-						player1->lastimpulse = lastmillis;
-						player1->jumpnext = false;
+						if (player1->jumpnext && lastmillis-player1->lastimpulse > 3000)
+						{
+							vec dir;
+							vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
+							dir.normalize();
+							dir.mul(ph.jumpvel(player1));
+							player1->vel.add(dir);
+							player1->lastimpulse = lastmillis;
+							player1->jumpnext = false;
+						}
 					}
-				}
-				else player1->lastimpulse = 0;
-			}
+					else player1->lastimpulse = 0;
 
-			physicsframe();
-			if(player1->clientnum>=0 && player1->state==CS_ALIVE) ws.shoot(player1, pos); // only shoot when connected to server
-			ws.bounceupdate(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
-#else
-			et.checkquad(curtime, player1);
-			ws.moveprojectiles(curtime);
-			if(player1->clientnum>=0 && player1->state==CS_ALIVE) ws.shoot(player1, pos); // only shoot when connected to server
-			ws.bounceupdate(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
-#endif
-			gets2c();			// do this first, so we have most accurate information when our player moves
-			otherplayers();
-#ifdef BFRONTIER
-			if(player1->state==CS_DEAD)
+					ws.shoot(player1, pos);
+
+					ph.move(player1, 20, true);
+					ph.updatewater(player1, 0);
+
+					if (player1->physstate >= PHYS_SLOPE)
+						swaymillis += curtime;
+					
+					float k = pow(0.7f, curtime/10.0f);
+					swaydir.mul(k); 
+					
+					swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.speed(player1)))));
+
+					et.checkitems(player1);
+					if(m_classicsp) checktriggers();
+				}
+			}
+			else if (player1->state == CS_DEAD)
 			{
-				if(lastmillis-player1->lastpain<2000)
+				if (lastmillis-player1->lastpain < 2000)
 				{
 					player1->move = player1->strafe = 0;
 					ph.move(player1, 10, false);
 				}
-				else if(!intermission && player1->state == CS_DEAD)
+				else if (!intermission && player1->state == CS_DEAD)
 				{
 					int last = lastmillis-player1->lastpain;
 					
-					if(m_capture && capturespawn() && last >= cpc.RESPAWNSECS*1000)
+					if (m_capture && capturespawn() && last >= (m_noitemsrail ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000)
 					{
 						respawnself();
 					}
 				}
 			}
-			else if(!intermission)
-			{
-				ph.move(player1, 20, true);
-				if(player1->physstate>=PHYS_SLOPE) swaymillis += curtime;
-				float k = pow(0.7f, curtime/10.0f);
-				swaydir.mul(k); 
-				ph.updatewater(player1, 0);
-				swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.speed(player1)))));
-				et.checkitems(player1);
-				if(m_classicsp) checktriggers();
-			}
+			
+			ws.bounceupdate(curtime);
+
+			otherplayers();
 			c2sinfo(player1);
 		}
-		else gets2c();
 #else
+		et.checkquad(curtime, player1);
+		ws.moveprojectiles(curtime);
+		if(player1->clientnum>=0 && player1->state==CS_ALIVE) ws.shoot(player1, pos); // only shoot when connected to server
+		ws.bounceupdate(curtime); // need to do this after the player shoots so grenades don't end up inside player's BB next frame
+		gets2c();			// do this first, so we have most accurate information when our player moves
+		otherplayers();
 		ms.monsterthink(curtime, gamemode);
 		if(player1->state==CS_DEAD)
 		{
@@ -363,15 +370,18 @@ struct fpsclient : igameclient
 		if(player1->state==CS_DEAD)
 		{
 			player1->attacking = false;
-			if(m_capture && lastmillis-player1->lastpain<cpc.RESPAWNSECS*1000)
-			{
-                int wait = cpc.RESPAWNSECS-(lastmillis-player1->lastpain)/1000;
+            if(m_capture)
+            {
+                int wait = (m_noitemsrail ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)-(lastmillis-player1->lastpain)/1000;
+                if(wait>0)
+				{
 #ifdef BFRONTIER
-                console("\f2you must wait %d second%s before respawn!", CON_LEFT|CON_CENTER, wait, wait!=1 ? "s" : "");
+					console("\f2you must wait %d second%s before respawn!", CON_LEFT|CON_CENTER, wait, wait!=1 ? "s" : "");
 #else
-                conoutf("\f2you must wait %d second%s before respawn!", wait, wait!=1 ? "s" : "");
+					conoutf("\f2you must wait %d second%s before respawn!", wait, wait!=1 ? "s" : "");
 #endif
-				return;
+					return;
+				}
 			}
 #ifdef BFRONTIER
 			if(m_arena) { console("\f2waiting for new round to start...", CON_LEFT|CON_CENTER); return; }
@@ -518,6 +528,7 @@ struct fpsclient : igameclient
             if(d==player1) conoutf("\f2you got fragged by %s", aname);
             else conoutf("\f2%s fragged %s", aname, dname);
         }
+
 		d->state = CS_DEAD;
 		d->lastpain = lastmillis;
         d->superdamage = max(-d->health, 0);
@@ -717,7 +728,6 @@ struct fpsclient : igameclient
 		}
 #endif
 	}
-
 #ifdef BFRONTIER
 	void playsoundc(int n, fpsent *d = NULL) 
 	{ 
@@ -727,7 +737,6 @@ struct fpsclient : igameclient
 	}
 
 	int numdynents() { return 1+players.length(); }
-
 	dynent *iterdynents(int i)
 	{
 		if(!i) return player1;
@@ -737,14 +746,24 @@ struct fpsclient : igameclient
 		return NULL;
 	}
 #else
-	void physicstrigger(physent *d, bool local, int floorlevel, int waterlevel)
-	{
-		if (waterlevel>0) playsound(S_SPLASH1, &d->o, &d->vel);
-		else if (waterlevel<0) playsound(S_SPLASH2, &d->o, &d->vel);
-		
-		if (floorlevel>0) { if (local) playsoundc(S_JUMP, (fpsent *)d); }
-		else if (floorlevel<0) { if (local) playsoundc(S_LAND, (fpsent *)d); }
-	}
+
+    void physicstrigger(physent *d, bool local, int floorlevel, int waterlevel)
+    {
+        if     (waterlevel>0) playsound(S_SPLASH1, d==player1 ? NULL : &d->o);
+        else if(waterlevel<0) playsound(S_SPLASH2, d==player1 ? NULL : &d->o);
+        if     (floorlevel>0) { if(local) playsoundc(S_JUMP, (fpsent *)d); else if(d->type==ENT_AI) playsound(S_JUMP, &d->o); }
+        else if(floorlevel<0) { if(local) playsoundc(S_LAND, (fpsent *)d); else if(d->type==ENT_AI) playsound(S_LAND, &d->o); }
+    }
+
+    void playsoundc(int n, fpsent *d = NULL) 
+    { 
+        if(!d || d==player1)
+        {
+            cc.addmsg(SV_SOUND, "i", n); 
+            playsound(n); 
+        }
+        else playsound(n, &d->o);
+    }
 
 	int numdynents() { return 1+players.length()+ms.monsters.length(); }
 
@@ -964,9 +983,9 @@ struct fpsclient : igameclient
 						{
 							int action = lastmillis-d->lastpain;
 							
-							if (m_capture && action < cpc.RESPAWNSECS*1000)
+							if (m_capture && action < (m_noitemsrail ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000)
 							{
-								float c = float((cpc.RESPAWNSECS*1000)-action)/1000.f;
+								float c = float(((m_noitemsrail ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000)-action)/1000.f;
 								draw_textx("Fragged! Down for %.1fs", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
 							}
 							else
@@ -1050,6 +1069,7 @@ struct fpsclient : igameclient
 		draw_textf("%d",  90, 822, player1->state==CS_DEAD ? 0 : player1->health);
 		if(player1->state!=CS_DEAD)
 		{
+            if(player1->armour) draw_textf("%d", 390, 822, player1->armour);
 			draw_textf("%d", 690, 822, player1->ammo[player1->gunselect]);		
 		}
 
@@ -1061,6 +1081,7 @@ struct fpsclient : igameclient
 		drawicon(192, 0, 20, 1650);
 		if(player1->state!=CS_DEAD)
 		{
+            if(player1->armour) drawicon((float)(player1->armourtype*64), 0, 620, 1650);
 			int g = player1->gunselect;
 			int r = 64;
 			if(g==GUN_PISTOL) { g = 4; r = 0; }
