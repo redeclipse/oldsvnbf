@@ -269,13 +269,30 @@ struct fpsclient : igameclient
 			adjust(camerawobble, 1, 200);
 			adjust(damageresidue, 1, 200);
 			
-			if (player1->state == CS_ALIVE)
+			if (!intermission)
 			{
-				if (!intermission)
+				if (player1->state == CS_DEAD)
+				{
+					if (lastmillis-player1->lastpain < 2000)
+					{
+						player1->move = player1->strafe = 0;
+						ph.move(player1, 10, false);
+					}
+					else
+					{
+						int last = lastmillis-player1->lastpain;
+						
+						if (m_capture && capturespawn() && last >= (m_noitemsrail ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000)
+						{
+							respawnself();
+						}
+					}
+				}
+				else
 				{
 					if (player1->timeinair)
 					{
-						if (player1->jumpnext && lastmillis-player1->lastimpulse > 3000)
+						if (player1->jumpnext && lastmillis-player1->lastimpulse > ph.gravity(player1)*100)
 						{
 							vec dir;
 							vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
@@ -287,12 +304,12 @@ struct fpsclient : igameclient
 						}
 					}
 					else player1->lastimpulse = 0;
-
+	
 					ws.shoot(player1, pos);
-
+	
 					ph.move(player1, 20, true);
 					ph.updatewater(player1, 0);
-
+	
 					if (player1->physstate >= PHYS_SLOPE)
 						swaymillis += curtime;
 					
@@ -300,29 +317,11 @@ struct fpsclient : igameclient
 					swaydir.mul(k); 
 					
 					swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.speed(player1)))));
-
+	
 					et.checkitems(player1);
 					if(m_classicsp) checktriggers();
 				}
 			}
-			else if (player1->state == CS_DEAD)
-			{
-				if (lastmillis-player1->lastpain < 2000)
-				{
-					player1->move = player1->strafe = 0;
-					ph.move(player1, 10, false);
-				}
-				else if (!intermission && player1->state == CS_DEAD)
-				{
-					int last = lastmillis-player1->lastpain;
-					
-					if (m_capture && capturespawn() && last >= (m_noitemsrail ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000)
-					{
-						respawnself();
-					}
-				}
-			}
-			
 			ws.bounceupdate(curtime);
 			otherplayers();
 			if (player1->clientnum >= 0) c2sinfo(player1);
