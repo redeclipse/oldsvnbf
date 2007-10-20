@@ -324,9 +324,8 @@ struct fpsclient : igameclient
 			}
 			
 			ws.bounceupdate(curtime);
-
 			otherplayers();
-			c2sinfo(player1);
+			if (player1->clientnum >= 0) c2sinfo(player1);
 		}
 #else
 		et.checkquad(curtime, player1);
