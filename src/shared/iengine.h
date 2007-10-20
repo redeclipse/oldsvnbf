@@ -287,7 +287,11 @@ struct sometype
 	char *name; uchar id;
 };
 
+#ifdef __GNUC__
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
+#else
+#define _dbg_ fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
+#endif
 
 // client
 struct serverinfo

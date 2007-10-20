@@ -13,7 +13,6 @@
 * fix material transitions and depth testing
 * proper rotation looping for animated models
 * index gamemodes and move instagib etc to server mod
-* address issues with alpha blended models (teleport)
 * S_SMGLOAD, S_REGEN, S_HEADSHOT
 * only two guns at same time (drop guns, etc)
 * secondary fire modes (grenade: flash mines)

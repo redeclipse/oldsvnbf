@@ -1012,7 +1012,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 
 		setdynlights(va);
 	}
-        if(vbufchanged)
+    if(vbufchanged)
 	{
             glClientActiveTexture_(GL_TEXTURE0_ARB+cur.lightmaptmu);
 			glTexCoordPointer(2, GL_SHORT, VTXSIZE, floatvtx ? &(((fvertex *)va->vbuf)[0].u) : &(va->vbuf[0].u));
