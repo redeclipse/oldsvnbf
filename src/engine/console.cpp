@@ -613,9 +613,6 @@ void writebinds(FILE *f)
 		if(*keyms[i].action)	 fprintf(f, "bind \"%s\" [%s]\n",	 keyms[i].name, keyms[i].action);
 		if(*keyms[i].editaction) fprintf(f, "editbind \"%s\" [%s]\n", keyms[i].name, keyms[i].editaction);
 	}
-#ifdef BFRONTIER
-	fprintf(f, "\n");
-#endif
 }
 
 // tab-completion of all idents and base maps
@@ -773,9 +770,6 @@ void writecompletions(FILE *f)
 	enumeratekt(completions, char *, k, filesval *, v,
         if(v) fprintf(f, "%scomplete \"%s\" \"%s\" \"%s\"\n", v->type==FILES_LIST ? "list" : "", k, v->dir, v->type==FILES_LIST ? "" : (v->ext ? v->ext : "*"));
 	);
-#ifdef BFRONTIER
-	fprintf(f, "\n");
-#endif
 }
 
 #ifdef BFRONTIER // joystick support

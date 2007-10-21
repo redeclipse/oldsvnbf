@@ -1017,7 +1017,7 @@ bool bounce(physent *d, float secs, float elasticity, float waterfric)
         d->vel.sub(wvel);
 	}
 #ifdef BFRONTIER
-	return d->o == old || inside || hitplayer ? true : false;// || hitplayer != NULL;
+	return d->o == old;// || hitplayer != NULL;
 #else
 	if(d->physstate!=PHYS_BOUNCE)
 	{

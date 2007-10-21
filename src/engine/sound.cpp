@@ -6,47 +6,69 @@
 #ifdef BFRONTIER
 FMOD_RESULT snderr;
 FMOD_SYSTEM *sndsys;
-hashtable<char *, soundsample> soundsamples;
+hashtable<char *, soundsample> sndsamples;
 vector<soundslot> gamesounds, mapsounds;
-vector<soundchan> soundchans;
+vector<soundchan> sndchans;
 bool nosound = true;
 
 VARP(soundvol, 0, 255, 255);
-VARF(soundvchans, 0, 1024, 4093, initwarning());
+VARF(soundchans, 0, 1024, 4093, initwarning());
 VARF(soundfreq, 0, 44100, 48000, initwarning());
+VARF(soundformat,
+	FMOD_SOUND_FORMAT_PCM8,
+	FMOD_SOUND_FORMAT_PCM16,
+	FMOD_SOUND_FORMAT_MAX-1,
+	initwarning()
+);	
+VARF(sounddsp,
+	FMOD_DSP_RESAMPLER_NOINTERP,
+	FMOD_DSP_RESAMPLER_LINEAR,
+	FMOD_DSP_RESAMPLER_MAX-1,
+	initwarning()
+);
 
 void initsound()
 {
-	SNDERR(FMOD_System_Create(&sndsys), return);
+	SNDERR(FMOD_System_Create(&sndsys), "create subsystem", return);
    
 	unsigned int version;
-	SNDERR(FMOD_System_GetVersion(sndsys, &version), return);
+	SNDERR(FMOD_System_GetVersion(sndsys, &version), "get version", return);
 
 	FMOD_SPEAKERMODE speakermode;
 	FMOD_CAPS caps;
-	SNDERR(FMOD_System_GetDriverCaps(sndsys, 0, &caps, 0, 0, &speakermode), );
-	SNDERR(FMOD_System_SetSpeakerMode(sndsys, speakermode), );
+	SNDERR(FMOD_System_GetDriverCaps(sndsys, 0, &caps, 0, 0, &speakermode), "get driver caps", );
 
 	if (caps & FMOD_CAPS_HARDWARE_EMULATED)
 	{
 		conoutf("WARNING: using sound hardware emulation, check your driver settings");
-		SNDERR(FMOD_System_SetDSPBufferSize(sndsys, 1024, 10), );
+		SNDERR(FMOD_System_SetDSPBufferSize(sndsys, 1024, 10), "set dsp buffer size", );
 	}
 
-	//SNDERR(FMOD_System_SetSoftwareFormat(sndsys, soundfreq, FMOD_SOUND_FORMAT_PCM16, FMOD_SPEAKERMODE_STEREO, 0, FMOD_DSP_RESAMPLER_LINEAR), return);
-	SNDERR(FMOD_System_Init(sndsys, soundvchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), );
-
-	if (snderr == FMOD_ERR_OUTPUT_CREATEBUFFER)
-	{
-		SNDERR(FMOD_System_SetSpeakerMode(sndsys, FMOD_SPEAKERMODE_STEREO), );
-		SNDERR(FMOD_System_Init(sndsys, soundvchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), return); // reinit
+	#define initsoundsetup { \
+		SNDERR(FMOD_System_SetSoftwareFormat(sndsys, soundfreq, FMOD_SOUND_FORMAT(soundformat), 0, 0, FMOD_DSP_RESAMPLER(sounddsp)), "set software format",  \
+			SNDERR(FMOD_System_SetSoftwareFormat(sndsys, 44100, FMOD_SOUND_FORMAT_PCM16, 0, 0, FMOD_DSP_RESAMPLER_LINEAR), "set software format", return) \
+		); \
+		SNDERR(FMOD_System_SetSpeakerMode(sndsys, speakermode), "set speaker mode", \
+			SNDERR(FMOD_System_SetSpeakerMode(sndsys, FMOD_SPEAKERMODE_STEREO), "set failsafe speaker mode", return) \
+		); \
 	}
 
-	SNDERR(FMOD_System_Set3DSettings(sndsys, 1.0f, 1.0f, 1.0f), );
+	initsoundsetup;
 
-	while(soundchans.length() < soundvchans)
+	SNDERR(FMOD_System_Init(sndsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initialize", {
+		if (snderr == FMOD_ERR_OUTPUT_CREATEBUFFER)
+		{
+			initsoundsetup;
+			SNDERR(FMOD_System_Init(sndsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initalize failsafe", return); // reinit
+		}
+		else return;
+	});
+
+	SNDERR(FMOD_System_Set3DSettings(sndsys, 1.0f, 1.0f, 1.0f), "set 3d settings", );
+
+	while(sndchans.length() < soundchans)
 	{
-		soundchans.add().channel = NULL;
+		sndchans.add().channel = NULL;
 	}
 
 	nosound = false;
@@ -63,11 +85,11 @@ int findsound(char *name, int vol, vector<soundslot> &sounds)
 
 int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds)
 {
-	soundsample *s = soundsamples.access(name);
+	soundsample *s = sndsamples.access(name);
 	if(!s)
 	{
 		char *n = newstring(name);
-		s = &soundsamples[n];
+		s = &sndsamples[n];
 		s->name = n;
 		s->sound = NULL;
 	}
@@ -85,13 +107,13 @@ void checksound()
 {
 	if(nosound) return;
 
-	SNDERR(FMOD_System_SetGeometrySettings(sndsys, hdr.worldsize), return);
+	SNDERR(FMOD_System_SetGeometrySettings(sndsys, hdr.worldsize), "set geometry settings", return);
 
 	vec cup, cfw; // these babies handle the orientation for us
 
-	vecfromyawpitch(player->yaw, player->pitch+90.f, 1, 0, cup);
-	vecfromyawpitch(player->yaw, player->pitch, 1, 0, cfw);
-	
+	vecfromyawpitch(player->yaw, player->pitch+90.f, 1, 0, cup);	cup.normalize();
+	vecfromyawpitch(player->yaw, player->pitch, 1, 0, cfw);			cfw.normalize();
+		
 	const vector<extentity *> &ents = et->getents();
 	loopv(ents)
 	{
@@ -105,35 +127,37 @@ void checksound()
 	FMOD_VECTOR pos = { player->o.x, player->o.y, player->o.z };
 	FMOD_VECTOR pov = { player->vel.x, player->vel.y, player->vel.z };
 	
-	SNDERR(FMOD_System_Set3DListenerAttributes(sndsys, 0, &pos, &pov, &pfw, &pup), );
+	SNDERR(FMOD_System_Set3DListenerAttributes(sndsys, 0, &pos, &pov, &pfw, &pup), "set 3d listener attributes", );
 	
-	loopv(soundchans)
+	loopv(sndchans)
 	{
-		soundchan &s = soundchans[i];
-		if (s.inuse) s.update();
+		soundchan &s = sndchans[i];
+		if (s.playing()) s.update();
 	}
 
-	SNDERR(FMOD_System_Update(sndsys), return);
+	SNDERR(FMOD_System_Update(sndsys), "update", return);
 }
 
 #define playsnd(b) \
 	if (nosound || !soundvol) return -1; \
 	if (!sounds.inrange(n)) { conoutf("unregistered sound: %d", n); return -1; } \
 	soundslot &slot = sounds[n]; \
+	string buf; \
 	if (!slot.sample->sound) \
 	{ \
-		s_sprintfd(buf)("packages/sounds/%s", slot.sample->name); \
+		s_sprintf(buf)("packages/sounds/%s", slot.sample->name); \
 		slot.sample->load(findfile(buf, "rb"), slot.maxuses); \
 	} \
 	FMOD_CHANNEL *channel = NULL; \
-	SNDERR(FMOD_System_PlaySound(sndsys, FMOD_CHANNEL_FREE, slot.sample->sound, true, &channel), return -1); \
+	s_sprintf(buf)("play sound '%s'", slot.sample->name); \
+	SNDERR(FMOD_System_PlaySound(sndsys, FMOD_CHANNEL_FREE, slot.sample->sound, true, &channel), buf, return -1); \
 	if (channel) \
 	{ \
 		int index = -1; \
-		SNDERR(FMOD_Channel_GetIndex(channel, &index), return -1); \
-		if (soundchans.inrange(index)) \
+		SNDERR(FMOD_Channel_GetIndex(channel, &index), "get channel index", return -1); \
+		if (sndchans.inrange(index)) \
 		{ \
-			soundchan &s = soundchans[index]; \
+			soundchan &s = sndchans[index]; \
 			s.init(channel, &slot, mindist, maxdist); \
 			b; \
 			s.pause(false); \
@@ -165,10 +189,10 @@ ICOMMAND(sound, "i", (int *i), playsound(*i));
 
 void clearmapsounds()
 {
-	loopv(soundchans)
+	loopv(sndchans)
 	{
-		soundchan &s = soundchans[i];
-		if (s.inuse) s.stop();
+		soundchan &s = sndchans[i];
+		if (s.playing()) s.stop();
 	}
 	mapsounds.setsizenodelete(0);
 }
@@ -178,7 +202,7 @@ void clear_sound()
 	if(nosound) return;
 	gamesounds.setsizenodelete(0);
 	clearmapsounds();
-	soundsamples.clear();
+	sndsamples.clear();
 	FMOD_System_Release(sndsys);
 	nosound = true;
 }
