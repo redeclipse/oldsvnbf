@@ -7,6 +7,11 @@ Legend [
 ]
 
 = wip edition =
+gam: better bouncer sound tracking
+eng: 'soundformat' var for sound output format (FMOD_SOUND_FORMAT_PCM8 [1], FMOD_SOUND_FORMAT_PCM16 [2], .., FMOD_SOUND_FORMAT_MAX-1 [*])
+eng: 'sounddsp' var for dsp resample method (FMOD_DSP_RESAMPLER_NOINTERP [0], FMOD_DSP_RESAMPLER_LINEAR [1], .., FMOD_DSP_RESAMPLER_MAX-1 [3])
+eng: sound system improvements
+gam: bouncer collision and velocity tweaks
 gam: grenade 'nudging/barging'
 eng: positional sound fixed
 gam: bouncers obey map speed settings

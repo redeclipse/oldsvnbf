@@ -256,8 +256,8 @@ static struct guninfo
 	{ GUN_PISTOL,	S_PISTOL,	-1,			-1,			10,		10,		250,	2250,	13,		0,		0,		0,		-10 ,	10,		"pistol" },
 	{ GUN_SG,		S_SG,		-1,			-1,			8,		8,		1000,	4000,	5,		0,		0,		0,		-50,	50, 	"shotgun" },
 	{ GUN_CG,		S_CG,		-1,			-1,			30,		30,		75,		3075,	8,		0,		0,		0,		-6,		6,		"chaingun" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_GLHIT,	2,		4,		1500,	0,		400,	200,	2500,	0,		-5,		3,		"grenades" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	1,		1,		2500,	5000,	250,	400,	5000,	0,		-75,	50,		"rockets" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_GLHIT,	2,		4,		1500,	0,		400,	300,	2500,	0,		-5,		3,		"grenades" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	1,		1,		2500,	5000,	250,	500,	5000,	0,		-75,	50,		"rockets" },
 	{ GUN_RIFLE,	S_RIFLE,	-1,			-1,			5,		5,		1500,	4500,	50,		0,		0,		0,		-30,	30,		"rifle" },
 };
 

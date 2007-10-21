@@ -654,13 +654,13 @@ void writecfg()
 #ifdef BFRONTIER // game specific configs
 	FILE *f = openfile("config.cfg", "w");
 	if(!f) return;
-	fprintf(f, "// Automatically written by Blood Frontier\n\n");
+	fprintf(f, "// Automatically written by Blood Frontier\n");
 	cc->writeclientinfo(f);
-	fprintf(f, "if (= %d $version) [\n", BFRONTIER);
+	fprintf(f, "if (= $version %d) [\n\n", BFRONTIER);
 	enumerate(*idents, ident, id,
 		if (id._type == ID_VAR && id._context & IDC_PERSIST)
 		{
-			fprintf(f, "\t%s %d\n", id._name, *id._storage);
+			fprintf(f, "%s %d\n", id._name, *id._storage);
 		}
 	);
 	writebinds(f);

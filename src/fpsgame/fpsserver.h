@@ -1845,9 +1845,7 @@ struct fpsserver : igameserver
 			if(j<i) continue;
 
 #ifdef BFRONTIER
-			if(target == ci) continue;
-			int damage = getgun(e.gun).damage;
-			damage = int(damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
+			int damage = int(getgun(e.gun).damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
 #else
 			int damage = guns[e.gun].damage;
 			if(gs.quadmillis) damage *= 4;		

@@ -1,7 +1,8 @@
 = WIP =
-* property lists
+* sound system upgrade (fmodex)
 
 = TODO =
+* generalise input, add wiimote support
 * new individual icons (weapons/hud/etc)
 * vehicles, rolling/throttle/brake
 * tickers

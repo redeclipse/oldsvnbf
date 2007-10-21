@@ -3,18 +3,16 @@ extern FMOD_SYSTEM *sndsys;
 extern bool nosound;
 extern int soundvol;
 
-#define SNDMINDIST	1.5f
+#define SNDMINDIST	16.0f
 #define SNDMAXDIST	10000.f
 
-#define SNDCHK(b,r) \
-	if ((snderr = b) != FMOD_OK) r;
-
-#define SNDERR(b,r) \
-	SNDCHK(b, \
+#define SNDERR(b,s,r) { \
+	if ((snderr = b) != FMOD_OK) \
 	{ \
-		conoutf("sound error: [%d] %s", snderr, FMOD_ErrorString(snderr)); \
+		conoutf("sound error: failed to %s [%d] %s", s, snderr, FMOD_ErrorString(snderr)); \
 		r; \
-	})
+	} \
+}
 
 struct soundsample
 {
@@ -26,9 +24,15 @@ struct soundsample
 
 	void load(const char *name, int loop = 0)
 	{
-		SNDERR(FMOD_System_CreateSound(sndsys, name, FMOD_3D|FMOD_SOFTWARE|FMOD_3D_WORLDRELATIVE, NULL, &sound), return);
-		SNDERR(FMOD_Sound_SetMode(sound, FMOD_LOOP_NORMAL), );
-		SNDERR(FMOD_Sound_SetLoopCount(sound, loop), );
+		string buf;
+		s_sprintf(buf)("create sound '%s'", name);
+		SNDERR(FMOD_System_CreateSound(sndsys, name, FMOD_3D|FMOD_SOFTWARE|FMOD_3D_WORLDRELATIVE, NULL, &sound), buf, return);
+
+		s_sprintf(buf)("set loop mode on '%s'", name);
+		SNDERR(FMOD_Sound_SetMode(sound, FMOD_LOOP_NORMAL), buf, );
+
+		s_sprintf(buf)("set loop count on '%s'", name);
+		SNDERR(FMOD_Sound_SetLoopCount(sound, loop), buf, );
 	}
 };
 
@@ -46,61 +50,63 @@ struct soundchan
 	float mindist, maxdist;
 	bool inuse;
 	
-	soundchan() { stop(); }
+	soundchan() { reset(false); }
 	~soundchan() {}
+
+	void reset(bool i = false)
+	{
+		inuse = i;
+		pos = vel = NULL;
+	}
 
 	void init(FMOD_CHANNEL *c, soundslot *s, float m = SNDMINDIST, float n = SNDMAXDIST)
 	{
+		reset(true);
 		channel = c;
 		slot = s;
 		mindist = m;
 		maxdist = n;
-		inuse = true;
 	}
 
 	void pause(bool t)
 	{
-		if (inuse)
+		if (playing())
 		{
-			SNDERR(FMOD_Channel_SetPaused(channel, t), );
+			SNDERR(FMOD_Channel_SetPaused(channel, t), "pause channel", );
 		}
 	}
 
 	void stop()
 	{
-		if (inuse)
+		if (playing())
 		{
-			if (playing()) SNDERR(FMOD_Channel_Stop(channel), );
-			inuse = false;
-			pos = vel = NULL;
+			SNDERR(FMOD_Channel_Stop(channel), "stop channel", );
+			reset(false);
 		}
 	}
 
 	bool playing()
 	{
-		FMOD_BOOL playing;
-		SNDCHK(FMOD_Channel_IsPlaying(channel, &playing), return false);
+		FMOD_BOOL playing = (FMOD_BOOL)0;
+		if (inuse) FMOD_Channel_IsPlaying(channel, &playing);
+		if (inuse && !playing) reset(false);
 		return playing != 0;
 	}
 	
 	void update()
 	{
-		if (inuse)
+		if (playing())
 		{
-			if (playing())
-			{
-				FMOD_VECTOR psp = { pos->x, pos->y, pos->z }, psv = { vel->x, vel->y, vel->z };
-				SNDERR(FMOD_Channel_Set3DAttributes(channel, &psp, &psv), );
-				SNDERR(FMOD_Channel_Set3DMinMaxDistance(channel, mindist, maxdist), );
-				SNDERR(FMOD_Channel_SetVolume(channel, (float(slot->vol)/255.f)*(float(soundvol)/255.f)), );
-			}
-			else stop();
+			FMOD_VECTOR psp = { pos->x, pos->y, pos->z }, psv = { vel->x, vel->y, vel->z };
+			SNDERR(FMOD_Channel_Set3DAttributes(channel, &psp, &psv), "set 3d attributes", );
+			SNDERR(FMOD_Channel_Set3DMinMaxDistance(channel, mindist, maxdist), "set minmax distance", );
+			SNDERR(FMOD_Channel_SetVolume(channel, (float(slot->vol)/255.f)*(float(soundvol)/255.f)), "set volume", );
 		}
 	}
 	
 	void position(vec *p, vec *v)
 	{
-		if (inuse)
+		if (playing())
 		{
 			pos = p;
 			vel = v;
@@ -110,7 +116,7 @@ struct soundchan
 	
 	void positionv(vec &p, vec &v)
 	{
-		if (inuse)
+		if (playing())
 		{
 			_pos = p;
 			_vel = v;
@@ -119,9 +125,9 @@ struct soundchan
 	}
 };
 
-extern hashtable<char *, soundsample> soundsamples;
+extern hashtable<char *, soundsample> sndsamples;
 extern vector<soundslot> gamesounds, mapsounds;
-extern vector<soundchan> soundchans;
+extern vector<soundchan> sndchans;
 
 extern void checksound();
 extern int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds);

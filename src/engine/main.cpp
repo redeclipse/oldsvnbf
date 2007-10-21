@@ -57,8 +57,8 @@ bool initwarning()
 	if(!initing) 
 	{
 #ifdef BFRONTIER // blood frontier
-		if(restoredinits) conoutf("Please restart Blood Frontier for this setting to take effect.");
-		else conoutf("Please restart Blood Frontier with the -r command-line option for this setting to take effect.");
+		if(restoredinits) conoutf("You must restart for this setting to take effect.");
+		else conoutf("You must restart with the -r command-line option for this setting to take effect.");
 #else
 		if(restoredinits) conoutf("Please restart Sauerbraten for this setting to take effect.");
 		else conoutf("Please restart Sauerbraten with the -r command-line option for this setting to take effect.");
@@ -91,8 +91,10 @@ void writeinitcfg()
 	fprintf(f, "shaders %d\n", useshaders);
 	fprintf(f, "shaderprecision %d\n", shaderprecision);
 #ifdef BFRONTIER
-	extern int soundvchans, soundfreq;
-	fprintf(f, "soundvchans %d\n", soundvchans);
+	extern int soundchans, sounddsp, soundformat, soundfreq;
+	fprintf(f, "soundchans %d\n", soundchans);
+	fprintf(f, "sounddsp %d\n", sounddsp);
+	fprintf(f, "soundformat %d\n", soundformat);
 	fprintf(f, "soundfreq %d\n", soundfreq);
 #else
 	extern int soundchans, soundfreq, soundbufferlen;
