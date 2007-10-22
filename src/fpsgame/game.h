@@ -77,7 +77,6 @@ enum
 
 #define G_M_FRAG		G_M_TEAM|G_M_INSTA
 
-
 static struct gametypes
 {
 	int	type,			mutators;			char *name;
