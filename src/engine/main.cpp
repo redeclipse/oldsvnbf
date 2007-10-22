@@ -615,7 +615,7 @@ ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
 
 void startgame(char *load, char *initscript)
 {
-	int d = 0;
+	int d = 2;
 	string s, m;
 	s_strcpy(m, load ? load : sv->defaultmap());
 
@@ -627,7 +627,7 @@ void startgame(char *load, char *initscript)
 	}
 	else { s_strcpy(s, m); }
 
-	sv->changemap(s, d, 0);
+	sv->changemap(s, d, 0x00);
 	if (initscript) execute(initscript);
 	localconnect();
 }
