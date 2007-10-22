@@ -75,8 +75,12 @@ struct scoreboard : g3d_callback
 
 	void sortteams(vector<teamscore> &teamscores)
 	{
+#ifdef BFRONTIER
+		if(m_capture(cl.gamemode))
+#else
 		int gamemode = cl.gamemode;
 		if(m_capture)
+#endif
 		{
 			loopv(cl.cpc.scores) teamscores.add(teamscore(cl.cpc.scores[i].team, cl.cpc.scores[i].total));
 		}
@@ -87,8 +91,13 @@ struct scoreboard : g3d_callback
 			{
 				teamscore *ts = NULL;
 				loopv(teamscores) if(!strcmp(teamscores[i].team, o->team)) { ts = &teamscores[i]; break; }
+#ifdef BFRONTIER
+				if(!ts) teamscores.add(teamscore(o->team, m_capture(cl.gamemode) ? 0 : o->frags));
+				else if(!m_capture(cl.gamemode)) ts->score += o->frags;
+#else
 				if(!ts) teamscores.add(teamscore(o->team, m_capture ? 0 : o->frags));
 				else if(!m_capture) ts->score += o->frags;
+#endif
 			}
 		}
 		teamscores.sort(teamscorecmp);
@@ -125,13 +134,29 @@ struct scoreboard : g3d_callback
 
     int groupplayers()
     {
+#ifdef BFRONTIER
+        int numgroups = 0;
+#else
         int gamemode = cl.gamemode, numgroups = 0;
+#endif
         spectators.setsize(0);
         loopi(cl.numdynents())
         {
             fpsent *o = (fpsent *)cl.iterdynents(i);
             if(!o || o->type==ENT_AI || (!showconnecting() && !o->name[0])) continue;
             if(o->state==CS_SPECTATOR) { spectators.add(o); continue; }
+#ifdef BFRONTIER
+            const char *team = m_team(cl.gamemode, cl.mutators) && o->team[0] ? o->team : NULL;
+            bool found = false;
+            loopj(numgroups)
+            {
+                scoregroup &g = *groups[j];
+                if(team!=g.team && (!team || !g.team || !isteam(team, g.team))) continue;
+                if(team && !m_capture(cl.gamemode)) g.score += o->frags;
+                g.players.add(o);
+                found = true;
+            }
+#else
             const char *team = m_teammode && o->team[0] ? o->team : NULL;
             bool found = false;
             loopj(numgroups)
@@ -142,11 +167,16 @@ struct scoreboard : g3d_callback
                 g.players.add(o);
                 found = true;
             }
+#endif
             if(found) continue;
             if(numgroups>=groups.length()) groups.add(new scoregroup);
             scoregroup &g = *groups[numgroups++];
             g.team = team;
+#ifdef BFRONTIER
+            g.score = team ? (m_capture(cl.gamemode) ? cl.cpc.findscore(o->team).total : o->frags) : 0;
+#else
             g.score = team ? (m_capture ? cl.cpc.findscore(o->team).total : o->frags) : 0;
+#endif
             g.players.setsize(0);
             g.players.add(o);
         }
@@ -160,11 +190,11 @@ struct scoreboard : g3d_callback
 	{
         g.start(menustart, 0.03f, NULL, false);
 	
-		int gamemode = cl.gamemode;
 #ifdef BFRONTIER
-		s_sprintfd(modemapstr)("%s: %s", fpsserver::modestr(gamemode), mapname);
-        if((gamemode>1 || (gamemode==0 && cl.cc.demoplayback)) && cl.minremain >= 0)
+		s_sprintfd(modemapstr)("%s: %s", sv->gametitle(), mapname);
+        if((m_timed(cl.gamemode) || cl.cc.demoplayback) && cl.minremain >= 0)
 #else
+		int gamemode = cl.gamemode;
 		s_sprintfd(modemapstr)("%s: %s", fpsserver::modestr(gamemode), cl.getclientmap()[0] ? cl.getclientmap() : "[new map]");
         if((gamemode>1 || (gamemode==0 && (multiplayer(false) || cl.cc.demoplayback))) && cl.minremain >= 0)
 #endif
@@ -188,7 +218,7 @@ struct scoreboard : g3d_callback
 			g.textf("%s: \fs\f0%d\fr frag(s), \fs\f0%d\fr death(s)", 0xFFFFFF, "player", cl.player1->name, cl.player1->frags, cl.player1->deaths);
 			g.textf("damage: \fs\f0%d\fr hp, wasted: \fs\f0%d\fr, accuracy: \fs\f0%d%%\fr", 0xFFFFFF, "info", cl.player1->totaldamage, cl.player1->totalshots-cl.player1->totaldamage, accuracy);
 
-			if(m_sp)
+			if(m_sp(cl.gamemode))
 			{
 				int pen, score = 0;
 				
@@ -225,12 +255,14 @@ struct scoreboard : g3d_callback
             
             scoregroup &sg = *groups[k];
 #ifdef BFRONTIER
-            const char *icon = sg.team && m_teammode ? (isteam(cl.player1->team, sg.team) ? "player_blue" : "player_red") : "player";
+            const char *icon = sg.team && m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, sg.team) ? "player_blue" : "player_red") : "player";
+            int bgcolor = sg.team && m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, sg.team) ? 0x3030C0 : 0xC03030) : 0,
+                fgcolor = 0xFFFF80;
 #else
             const char *icon = cl.fr.ogro() ? "ogro" : (sg.team && m_teammode ? (isteam(cl.player1->team, sg.team) ? "player_blue" : "player_red") : "player");
-#endif
             int bgcolor = sg.team && m_teammode ? (isteam(cl.player1->team, sg.team) ? 0x3030C0 : 0xC03030) : 0,
                 fgcolor = 0xFFFF80;
+#endif
 
             g.pushlist(); // vertical
             g.pushlist(); // horizontal
@@ -243,7 +275,8 @@ struct scoreboard : g3d_callback
                 }    
 
             g.pushlist();
-            if(sg.team && m_teammode)
+#ifdef BFRONTIER
+            if(sg.team && m_team(cl.gamemode, cl.mutators))
             {
                 g.pushlist();
                 g.background(bgcolor, numgroups>1 ? 3 : 5);
@@ -251,7 +284,6 @@ struct scoreboard : g3d_callback
                 g.poplist();
             }
             g.text("", 0, "server");
-#ifdef BFRONTIER
             loopscoregroup(o,
             {
                 if(o==cl.player1 && highlightscore() && cl.cc.demoplayback)
@@ -262,7 +294,90 @@ struct scoreboard : g3d_callback
                 g.text("", 0, icon);
                 if(o==cl.player1 && highlightscore() && cl.cc.demoplayback) g.poplist();
             });
+            g.poplist();
+
+            if(sg.team && m_team(cl.gamemode, cl.mutators))
+            {
+                g.pushlist(); // vertical
+                if(m_capture(cl.gamemode) && sg.score>=10000) g.textf("%s: WIN", fgcolor, NULL, sg.team);
+                else g.textf("%s: %d", fgcolor, NULL, sg.team, sg.score);
+
+                g.pushlist(); // horizontal
+            }
+            if(!m_capture(cl.gamemode))
+            { 
+                g.pushlist();
+                g.strut(7);
+                g.text("frags", fgcolor);
+                loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->frags));
+                g.poplist();
+            }
+            if(multiplayer(false) || cl.cc.demoplayback)
+            {
+                if(showpj())
+                {
+                    g.pushlist();
+                    g.strut(6);
+                    g.text("pj", fgcolor);
+                    loopscoregroup(o,
+					{
+                        if(o->state==CS_LAGGED) g.text("LAG", 0xFFFFDD);
+                        else g.textf("%d", 0xFFFFDD, NULL, o->plag);
+                    });
+                    g.poplist();
+                }
+        
+                if(showping())
+				{
+                    g.pushlist();
+                    g.text("ping", fgcolor);
+                    g.strut(6);
+                    loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->ping));
+                    g.poplist();
+				}
+			}
+ 
+            g.pushlist();
+            g.text("name", fgcolor);
+            loopscoregroup(o, 
+			{
+                int status = 0xFFFFDD;
+                if(o->privilege) status = o->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;
+                else if(o->state==CS_DEAD) status = 0x606060;
+                g.text(cl.colorname(o), status);
+            });
+            g.poplist();
+
+            if(showclientnum() || cl.player1->privilege>=PRIV_MASTER)
+			{
+                g.space(1);
+                g.pushlist();
+                g.text("cn", fgcolor);
+                loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->clientnum));
+                g.poplist();
+            }
+            
+            if(sg.team && m_team(cl.gamemode, cl.mutators))
+			{ 
+                g.poplist(); // horizontal
+				g.poplist(); // vertical
+			}
+
+            g.poplist(); // horizontal
+            g.poplist(); // vertical
+
+            if(k+1<numgroups && (k+1)%2) g.space(2);
+            else g.poplist(); // horizontal
+        }
 #else
+            if(sg.team && m_teammode)
+            {
+                g.pushlist();
+                g.background(bgcolor, numgroups>1 ? 3 : 5);
+                g.strut(1);
+                g.poplist();
+            }
+            g.text("", 0, "server");
             loopscoregroup(o,
             {
                 if(o==cl.player1 && highlightscore() && (multiplayer(false) || cl.cc.demoplayback))
@@ -273,19 +388,16 @@ struct scoreboard : g3d_callback
                 g.text("", 0, icon);
                 if(o==cl.player1 && highlightscore() && (multiplayer(false) || cl.cc.demoplayback)) g.poplist();
             });
-#endif
             g.poplist();
 
             if(sg.team && m_teammode)
             {
                 g.pushlist(); // vertical
-
                 if(m_capture && sg.score>=10000) g.textf("%s: WIN", fgcolor, NULL, sg.team);
                 else g.textf("%s: %d", fgcolor, NULL, sg.team, sg.score);
 
                 g.pushlist(); // horizontal
             }
-
             if(!m_capture)
             { 
                 g.pushlist();
@@ -294,7 +406,6 @@ struct scoreboard : g3d_callback
                 loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->frags));
                 g.poplist();
             }
-	  
             if(multiplayer(false) || cl.cc.demoplayback)
             {
                 if(showpj())
@@ -343,8 +454,8 @@ struct scoreboard : g3d_callback
             if(sg.team && m_teammode)
 			{ 
                 g.poplist(); // horizontal
-               g.poplist(); // vertical
-				}
+				g.poplist(); // vertical
+			}
 
             g.poplist(); // horizontal
             g.poplist(); // vertical
@@ -352,7 +463,7 @@ struct scoreboard : g3d_callback
             if(k+1<numgroups && (k+1)%2) g.space(2);
             else g.poplist(); // horizontal
         }
-        
+#endif
         if(showspectators() && spectators.length())
         {
             if(showclientnum() || cl.player1->privilege>=PRIV_MASTER)

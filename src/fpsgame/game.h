@@ -47,6 +47,7 @@ struct fpsentity : extentity
 	}
 	~fpsentity() {}
 };
+
 enum
 {
 	GUN_PISTOL = 0,
@@ -57,20 +58,53 @@ enum
 	GUN_RIFLE,
 	NUMGUNS
 };
+
 enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states
-#define m_noitems	 ((gamemode>=4 && gamemode<=11) || gamemode==13)
-#define m_noitemsrail ((gamemode>=4 && gamemode<=5) || (gamemode>=8 && gamemode<=9) || gamemode==13)
-#define m_arena		(gamemode>=8 && gamemode<=11)
-#define m_tarena	  (gamemode>=10 && gamemode<=11)
-#define m_capture	 (gamemode>=12 && gamemode<=13)
-#define m_teammode	((gamemode>2 && gamemode&1) || m_capture)
-#define m_sp		  (gamemode>=-2 && gamemode<0)
-#define m_dmsp		(gamemode==-1)
-#define m_classicsp	(gamemode==-2)
-#define m_demo		(gamemode==-3)
-#define isteam(a,b)	(m_teammode && strcmp(a, b)==0)
-#define m_mp(mode)	(mode>=0 && mode<=13)
-#else
+
+enum
+{
+	G_DEMO = 0,
+	G_EDITMODE,
+	G_SINGLEPLAYER,
+	G_DEATHMATCH,
+	G_CAPTURE,
+	G_MAX
+};
+
+#define G_M_TEAM		0x0001
+#define G_M_INSTA		0x0002
+//#define G_M_DUEL		0x0004
+
+#define G_M_FRAG		G_M_TEAM|G_M_INSTA
+
+
+static struct gametypes
+{
+	int	type,			mutators;			char *name;
+} gametype[] = {
+	{ G_DEMO,			0,					"Demo Playback" },
+	{ G_EDITMODE,		0,					"Coop Edit" },
+	{ G_SINGLEPLAYER,	0,					"Singleplayer" },
+	{ G_DEATHMATCH,		G_M_FRAG,			"Deathmatch" },
+	{ G_CAPTURE,		G_M_FRAG,			"Capture" },
+};
+
+#define m_demo(a)			(a == G_DEMO)
+#define m_edit(a)			(a == G_EDITMODE)
+#define m_sp(a)				(a == G_SINGLEPLAYER)
+#define m_dm(a)				(a == G_DEATHMATCH)
+#define m_capture(a)		(a == G_CAPTURE)
+
+#define m_mp(a)				(a > G_DEMO && a < G_MAX)
+#define m_frag(a)			(m_dm(a) || m_capture(a))
+#define m_timed(a)			(m_frag(a))
+
+#define m_team(a,b)			((m_dm(a) && (b & G_M_TEAM)) || m_capture(a))
+#define m_insta(a,b)		(m_frag(a) && (b & G_M_INSTA))
+
+#define isteam(a,b)			(!strcmp(a,b))
+
+#else // BFRONTIER
 struct fpsentity : extentity
 {
 	// extend with additional fields if needed...
@@ -93,7 +127,7 @@ enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  
 #define isteam(a,b)	(m_teammode && strcmp(a, b)==0)
 
 #define m_mp(mode)	(mode>=0 && mode<=13)
-#endif
+#endif // BFRONTIER
 
 // hardcoded sounds, defined in sounds.cfg
 enum
@@ -434,10 +468,10 @@ struct fpsstate
 #endif
 	}
 
-	void spawnstate(int gamemode)
-	{
 #ifdef BFRONTIER
-		if(m_noitemsrail)
+	void spawnstate(int gamemode, int mutators)
+	{
+		if(m_insta(gamemode, mutators))
 		{
 			health = 1;
 			gunselect = GUN_RIFLE;
@@ -454,7 +488,10 @@ struct fpsstate
 				ammo[i] = i < MAXCARRY ? getgun(i).add : 0;
 			}
 		}
+	}
 #else
+	void spawnstate(int gamemode)
+	{
 		if(m_noitems || m_capture)
 		{
 			gunselect = GUN_RIFLE;
@@ -491,8 +528,8 @@ struct fpsstate
 			ammo[GUN_PISTOL] = m_sp ? 80 : 40;
 			ammo[GUN_GL] = 1;
 		}
-#endif
 	}
+#endif
 
 	// just subtract damage here, can set death, etc. later in code calling this 
 	int dodamage(int damage)

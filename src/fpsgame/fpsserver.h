@@ -186,7 +186,11 @@ struct fpsserver : igameserver
 	{
 		int clientnum;
 		string name, team, mapvote;
+#ifdef BFRONTIER
+		int modevote, mutsvote;
+#else
 		int modevote;
+#endif
 		int privilege;
         bool spectator, local, timesync, wantsmaster;
         int gameoffset, lastevent;
@@ -242,7 +246,11 @@ struct fpsserver : igameserver
 	enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
  
 	bool notgotitems, notgotbases;		// true when map has changed and waiting for clients to send item
+#ifdef BFRONTIER
+	int gamemode, mutators;
+#else
 	int gamemode;
+#endif
 	int gamemillis, gamelimit;
 
 	string serverdesc;
@@ -305,17 +313,14 @@ struct fpsserver : igameserver
 #endif
 	};
 
+#ifndef BFRONTIER
 	struct arenaservmode : servmode
 	{
 		int arenaround;
 
 		arenaservmode(fpsserver &sv) : servmode(sv), arenaround(0) {}
 
-#ifdef BFRONTIER
-		bool canspawn(clientinfo *ci, bool connecting = false, bool tryspawn = false) 
-#else
         bool canspawn(clientinfo *ci, bool connecting = false) 
-#endif
 		{ 
 			if(connecting && sv.nonspectators(ci->clientnum)<=1) return true;
 			return false; 
@@ -359,15 +364,16 @@ struct fpsserver : igameserver
 			arenaround = sv.gamemillis+5000;
 		}
 	};
+#endif
 
 	#define CAPTURESERV 1
 	#include "capture.h"
 	#undef CAPTURESERV
 
-	arenaservmode arenamode;
+#ifdef BFRONTIER
 	captureservmode capturemode;
 	servmode *smode;
-#ifdef BFRONTIER
+
 	#define Q_INT(c,n) { if(!c->local) { ucharbuf buf = c->messages.reserve(5); putint(buf, n); c->messages.addbuf(buf); } }
 	#define Q_STR(c,text) { if(!c->local) { ucharbuf buf = c->messages.reserve(2*strlen(text)+1); sendstring(text, buf); c->messages.addbuf(buf); } }
 
@@ -380,11 +386,20 @@ struct fpsserver : igameserver
 	};
 	clientinfo *cmdcontext;
 	string scresult, motd;
-	fpsserver() : notgotitems(true), notgotbases(false), gamemode(0), interm(0), minremain(0), mapreload(false), lastsend(0), mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0), arenamode(*this), capturemode(*this), smode(NULL)
+	fpsserver() : notgotitems(true), notgotbases(false),
+		gamemode(0), mutators(0), interm(0), minremain(0),
+		mapreload(false), lastsend(0),
+		mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
+		mapdata(NULL), reliablemessages(false),
+		demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
+		capturemode(*this), smode(NULL)
 	{
 		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
 	}
 #else
+	arenaservmode arenamode;
+	captureservmode capturemode;
+	servmode *smode;
 
     fpsserver() : notgotitems(true), notgotbases(false), gamemode(0), interm(0), minremain(0), mapreload(false), lastsend(0), mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0), arenamode(*this), capturemode(*this), smode(NULL) 
 	{
@@ -399,17 +414,14 @@ struct fpsserver : igameserver
 	vector<server_entity> sents;
 	vector<savedscore> scores;
 
+#ifdef BFRONTIER
 	static const char *modestr(int n)
 	{
-#ifdef BFRONTIER
-		static const char *modenames[] =
-		{
-			"Demo", "SP", "DMSP", "\fs\f0FFA\fr", "\fs\f5CoopEdit\fr", "\fs\f0FFA/Duel\fr", "\fs\f0Teamplay\fr",
-			"\fs\f3Insta\fr", "\fs\f3TeamInsta\fr", "\fs\f2Efficiency\fr", "\f2TeamEfficiency\fr",
-			"\fs\f3InstaArena\fr", "\fs\f3InstaClanArena\fr", "\fs\f2TacticsArena\fr", "\f2TacticsClanArena\fr",
-			"\fs\f1Capture\fr", "\fs\f1InstaCapture\fr"
-		};
+		return n >= G_DEMO && n < G_MAX ? gametype[n].name : NULL;
+	}
 #else
+	static const char *modestr(int n)
+	{
 		static const char *modenames[] =
 		{
 			"demo", "SP", "DMSP", "ffa/default", "coopedit", "ffa/duel", "teamplay",
@@ -417,9 +429,9 @@ struct fpsserver : igameserver
 			"insta arena", "insta clan arena", "tactics arena", "tactics clan arena",
 			"capture", "insta capture"
 		};
-#endif
 		return (n>=-3 && size_t(n+3)<sizeof(modenames)/sizeof(modenames[0])) ? modenames[n+3] : "unknown";
 	}
+#endif
 
 	void sendservmsg(const char *s) { sendf(-1, 1, "ris", SV_SERVMSG, s); }
 
@@ -476,6 +488,34 @@ struct fpsserver : igameserver
 		return true;
 	}
 
+#ifdef BFRONTIER
+	void vote(char *map, int reqmode, int reqmuts, int sender)
+	{
+		clientinfo *ci = (clientinfo *)getinfo(sender);
+        if(!ci || ci->state.state==CS_SPECTATOR && !ci->privilege) return;
+		s_strcpy(ci->mapvote, map);
+		ci->modevote = reqmode;
+		ci->mutsvote = reqmuts;
+		if(!ci->mapvote[0]) return;
+		if(ci->local || mapreload || (ci->privilege && mastermode>=MM_VETO))
+		{
+			if(demorecord) enddemorecord();
+			if(!ci->local && !mapreload) 
+			{
+				s_sprintfd(msg)("%s forced %s on map %s", privname(ci->privilege), modestr(reqmode), map);
+				sendservmsg(msg);
+			}
+			sendf(-1, 1, "risii", SV_MAPCHANGE, ci->mapvote, ci->modevote, ci->mutsvote);
+			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
+		}
+		else 
+		{
+			s_sprintfd(msg)("%s suggests %s on map %s (select map to vote)", colorname(ci), modestr(reqmode), map);
+			sendservmsg(msg);
+			checkvotes();
+		}
+	}
+#else
 	void vote(char *map, int reqmode, int sender)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
@@ -501,6 +541,7 @@ struct fpsserver : igameserver
 			checkvotes();
 		}
 	}
+#endif
 
 	clientinfo *choosebestclient(float &bestrank)
 	{
@@ -529,7 +570,11 @@ struct fpsserver : igameserver
 				float rank;
 				clientinfo *ci = choosebestclient(rank);
 				if(!ci) break;
+#ifdef BFRONTIER
+				if(m_capture(gamemode)) rank = 1;
+#else
 				if(m_capture) rank = 1;
+#endif
 				else if(selected && rank<=0) break;	
 				ci->state.timeplayed = -1;
 				team[first].add(ci);
@@ -545,7 +590,11 @@ struct fpsserver : igameserver
 			loopvj(team[i])
 			{
 				clientinfo *ci = team[i][j];
+#ifdef BFRONTIER
+				if(isteam(ci->team, teamnames[i])) continue;
+#else
 				if(!strcmp(ci->team, teamnames[i])) continue;
+#endif
 				s_strncpy(ci->team, teamnames[i], MAXTEAMLEN+1);
 				sendf(-1, 1, "riis", SV_SETTEAM, ci->clientnum, teamnames[i]);
 			}
@@ -572,7 +621,11 @@ struct fpsserver : igameserver
 			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 			ci->state.lasttimeplayed = lastmillis;
 
+#ifdef BFRONTIER
+			loopj(numteams) if(isteam(ci->team, teamscores[j].name)) 
+#else
 			loopj(numteams) if(!strcmp(ci->team, teamscores[j].name)) 
+#endif
 			{ 
 				teamscore &ts = teamscores[j];
 				ts.rank += ci->state.effectiveness/max(ci->state.timeplayed, 1);
@@ -584,7 +637,11 @@ struct fpsserver : igameserver
 		loopi(numteams-1)
 		{
 			teamscore &ts = teamscores[i];
+#ifdef BFRONTIER
+			if(m_capture(gamemode))
+#else
 			if(m_capture)
+#endif
 			{
 				if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.rank < worst->rank)) worst = &ts;
 			}
@@ -643,17 +700,22 @@ struct fpsserver : igameserver
 
 	void setupdemorecord()
 	{
+#ifdef BFRONTIER
+		if(!m_mp(gamemode) || m_edit(gamemode)) return;
+#else
 		if(haslocalclients() || !m_mp(gamemode) || gamemode==1) return;
+#endif
+
 #ifdef WIN32
-        demorecord = gzopen("demorecord", "wb9");
-        if(!demorecord) return;
+        gzFile f = gzopen("demorecord", "wb9");
+        if(!f) return;
 #else
 		demotmp = tmpfile();
 		if(!demotmp) return;
 		setvbuf(demotmp, NULL, _IONBF, 0);
 
-		demorecord = gzdopen(_dup(_fileno(demotmp)), "wb9");
-		if(!demorecord)
+        gzFile f = gzdopen(_dup(_fileno(demotmp)), "wb9");
+        if(!f)
 		{
 			fclose(demotmp);
 			demotmp = NULL;
@@ -662,6 +724,8 @@ struct fpsserver : igameserver
 #endif
 
         sendservmsg("recording demo");
+
+        demorecord = f;
 
 		demoheader hdr;
 		memcpy(hdr.magic, DEMO_MAGIC, sizeof(hdr.magic));
@@ -829,6 +893,50 @@ struct fpsserver : igameserver
 		}
 	}
  
+#ifdef BFRONTIER
+	void changemap(const char *s, int mode, int muts)
+	{
+		if(m_demo(gamemode)) enddemoplayback();
+		else enddemorecord();
+
+		mapreload = false;
+		gamemode = mode;
+		mutators = muts;
+		gamemillis = 0;
+		minremain = 10; // FIXME
+		gamelimit = minremain*60000;
+		interm = 0;
+		s_strcpy(smapname, s);
+		resetitems();
+		notgotitems = true;
+		scores.setsize(0);
+		loopv(clients)
+		{
+			clientinfo *ci = clients[i];
+			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
+		}
+		if (m_team(gamemode, mutators)) autoteam();
+		if (m_capture(gamemode)) smode = &capturemode;
+		else smode = NULL;
+		if(smode) smode->reset(false);
+
+		if(m_timed(gamemode) && hasnonlocalclients()) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+		loopv(clients)
+		{
+			clientinfo *ci = clients[i];
+			ci->mapchange();
+			ci->state.lasttimeplayed = lastmillis;
+            if(m_mp(gamemode) && ci->state.state!=CS_SPECTATOR) sendspawn(ci);
+		}
+
+		if(m_demo(gamemode)) setupdemoplayback();
+		else if(demonextmatch)
+		{
+			demonextmatch = false;
+			setupdemorecord();
+		}
+	}
+#else
 	void changemap(const char *s, int mode)
 	{
 		if(m_demo) enddemoplayback();
@@ -837,11 +945,7 @@ struct fpsserver : igameserver
 		mapreload = false;
 		gamemode = mode;
 		gamemillis = 0;
-#ifdef BFRONTIER
-		minremain = 10; // FIXME
-#else
         minremain = m_teammode ? 15 : 10;
-#endif
 		gamelimit = minremain*60000;
 		interm = 0;
 		s_strcpy(smapname, s);
@@ -876,6 +980,7 @@ struct fpsserver : igameserver
 			setupdemorecord();
 		}
 	}
+#endif
 
 	savedscore &findscore(clientinfo *ci, bool insert)
 	{
@@ -911,6 +1016,53 @@ struct fpsserver : igameserver
 		if(&sc) sc.save(ci->state);
 	}
 
+#ifdef BFRONTIER
+	struct votecount
+	{
+		char *map;
+		int mode, muts, count;
+		votecount() {}
+		votecount(char *s, int n, int m) : map(s), mode(n), muts(m), count(0) {}
+	};
+
+	void checkvotes(bool force = false)
+	{
+		vector<votecount> votes;
+		int maxvotes = 0;
+		loopv(clients)
+		{
+			clientinfo *oi = clients[i];
+			if(oi->state.state==CS_SPECTATOR && !oi->privilege) continue;
+			maxvotes++;
+			if(!oi->mapvote[0]) continue;
+			votecount *vc = NULL;
+			loopvj(votes) if(!strcmp(oi->mapvote, votes[j].map) && oi->modevote==votes[j].mode && oi->mutsvote==votes[j].muts)
+			{ 
+				vc = &votes[j];
+				break;
+			}
+			if(!vc) vc = &votes.add(votecount(oi->mapvote, oi->modevote, oi->mutsvote));
+			vc->count++;
+		}
+		votecount *best = NULL;
+		loopv(votes) if(!best || votes[i].count > best->count || (votes[i].count == best->count && rnd(2))) best = &votes[i];
+		if(force || (best && best->count > maxvotes/2))
+		{
+			if(demorecord) enddemorecord();
+			if(best && (best->count > (force ? 1 : maxvotes/2)))
+			{ 
+				sendservmsg(force ? "vote passed by default" : "vote passed by majority");
+				sendf(-1, 1, "risii", SV_MAPCHANGE, best->map, best->mode, best->muts);
+				changemap(best->map, best->mode, best->muts); 
+			}
+			else
+			{
+				mapreload = true;
+				if(clients.length()) sendf(-1, 1, "ri", SV_MAPRELOAD);
+			}
+		}
+	}
+#else
 	struct votecount
 	{
 		char *map;
@@ -956,6 +1108,7 @@ struct fpsserver : igameserver
 			}
 		}
 	}
+#endif
 
 	int nonspectators(int exclude = -1)
 	{
@@ -974,10 +1127,10 @@ struct fpsserver : igameserver
 			loopi(sizeof(spectypes)/sizeof(int)) if(type == spectypes[i]) return type;
 			return -1;
 		}
-		// only allow edit messages in coop-edit mode
-		if(type>=SV_EDITENT && type<=SV_GETMAP && gamemode!=1) return -1;
-		// server only messages
 #ifdef BFRONTIER
+		// only allow edit messages in coop-edit mode
+		if(type>=SV_EDITENT && type<=SV_GETMAP && !m_edit(gamemode)) return -1;
+		// server only messages
 		static int servtypes[] = {
 				SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG,
 				SV_DAMAGE, SV_HITPUSH, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH,
@@ -986,6 +1139,9 @@ struct fpsserver : igameserver
 				SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_CLIENT
 		};
 #else
+		// only allow edit messages in coop-edit mode
+		if(type>=SV_EDITENT && type<=SV_GETMAP && gamemode!=1) return -1;
+		// server only messages
 		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_HITPUSH, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_CLIENT };
 #endif
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
@@ -1268,7 +1424,6 @@ struct fpsserver : igameserver
 				}
 				break;
 			}
-
 #ifdef BFRONTIER
 			case SV_RELOAD:
 			{
@@ -1347,7 +1502,11 @@ struct fpsserver : igameserver
 				}
 				getstring(text, p);
 				filtertext(text, text, false, MAXTEAMLEN);
+#ifdef BFRONTIER
+				if(!ci->local && connected && m_team(gamemode, mutators))
+#else
 				if(!ci->local && connected && m_teammode)
+#endif
 				{
 					const char *worst = chooseworstteam(text);
 					if(worst)
@@ -1370,10 +1529,17 @@ struct fpsserver : igameserver
 			{
 				getstring(text, p);
 				filtertext(text, text);
+#ifdef BFRONTIER
+				int reqmode = getint(p), reqmuts = getint(p);
+				if(type!=SV_MAPVOTE && !mapreload) break;
+				if(!ci->local && !m_mp(reqmode)) reqmode = G_DEATHMATCH;
+				vote(text, reqmode, reqmuts, sender);
+#else
 				int reqmode = getint(p);
 				if(type!=SV_MAPVOTE && !mapreload) break;
 				if(!ci->local && !m_mp(reqmode)) reqmode = 0;
 				vote(text, reqmode, sender);
+#endif
 				break;
 			}
 
@@ -1390,11 +1556,12 @@ struct fpsserver : igameserver
 #endif
 					if(notgotitems)
 					{
+#ifdef BFRONTIER
 						while(sents.length()<n) sents.add(sn);
 						sents.add(se);
-#ifdef BFRONTIER
 						sents[n].spawned = true;
 #else
+                        while(sents.length()<=n) sents.add(se);
 						if(gamemode>=0 && (sents[n].type==I_QUAD || sents[n].type==I_BOOST)) sents[n].spawntime = spawntime(sents[n].type);
 						else sents[n].spawned = true;
 #endif
@@ -1523,7 +1690,11 @@ struct fpsserver : igameserver
 			} 
 
 			case SV_FORCEINTERMISSION:
+#ifdef BFRONTIER
+				if(m_sp(gamemode)) startintermission();
+#else
 				if(m_sp) startintermission();
+#endif
 				break;
 
 			case SV_RECORDDEMO:
@@ -1539,8 +1710,13 @@ struct fpsserver : igameserver
 			case SV_STOPDEMO:
 			{
 				if(!ci->local && ci->privilege<PRIV_ADMIN) break;
+#ifdef BFRONTIER
+				if(m_demo(gamemode)) enddemoplayback();
+				else enddemorecord();
+#else
 				if(m_demo) enddemoplayback();
 				else enddemorecord();
+#endif
 				break;
 			}
 
@@ -1630,7 +1806,12 @@ struct fpsserver : igameserver
 			putint(p, SV_MAPCHANGE);
 			sendstring(smapname, p);
 			putint(p, gamemode);
+#ifdef BFRONTIER
+			putint(p, mutators);
+			if(!ci || (m_timed(gamemode) && hasnonlocalclients()))
+#else
 			if(!ci || gamemode>1 || (gamemode==0 && hasnonlocalclients()))
+#endif
 			{
 				putint(p, SV_TIMEUP);
 				putint(p, minremain);
@@ -1650,7 +1831,11 @@ struct fpsserver : igameserver
 			}
 			putint(p, -1);
 		}
+#ifdef BFRONTIER
+		if(ci && (m_demo(gamemode) || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)
+#else
 		if(ci && (m_demo || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)
+#endif
 		{
             if(smode && !smode->canspawn(ci, true))
 			{
@@ -1742,7 +1927,11 @@ struct fpsserver : igameserver
 	void spawnstate(clientinfo *ci)
 	{
 		gamestate &gs = ci->state;
+#ifdef BFRONTIER
+		gs.spawnstate(gamemode, mutators);
+#else
 		gs.spawnstate(gamemode);
+#endif
 		gs.lifesequence++;
 	}
 
@@ -1767,7 +1956,7 @@ struct fpsserver : igameserver
 		gamestate &ts = target->state;
 #ifdef BFRONTIER
 		if (smode && !smode->damage(target, actor, damage, gun, hitpush)) return;
-		//if (!teamdamage && m_teammode && !strcmp(target->team, actor->team)) return;
+		//if (!teamdamage && m_team(gamemode, mutators) && isteam(target->team, actor->team)) return;
 		//damage *= damagescale/100;
 		ts.dodamage(damage);
 		sendf(-1, 1, "ri5", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.health); 
@@ -1784,6 +1973,17 @@ struct fpsserver : igameserver
 		}
 		if(ts.health<=0)
 		{
+#ifdef BFRONTIER
+			if(target!=actor && (!m_team(gamemode, mutators) || !isteam(target->team, actor->team)))
+			{
+				actor->state.frags++;
+
+				int friends = 0, enemies = 0; // note: friends also includes the fragger
+				if(m_team(gamemode, mutators)) loopv(clients) if(!isteam(clients[i]->team, actor->team)) enemies++; else friends++;
+				else { friends = 1; enemies = clients.length()-1; }
+				actor->state.effectiveness += friends/float(max(enemies, 1));
+			}
+#else
 			if(target!=actor && (!m_teammode || strcmp(target->team, actor->team)))
 			{
 				actor->state.frags++;
@@ -1793,6 +1993,7 @@ struct fpsserver : igameserver
 				else { friends = 1; enemies = clients.length()-1; }
 				actor->state.effectiveness += friends/float(max(enemies, 1));
 			}
+#endif
 			else actor->state.frags--;
 			sendf(-1, 1, "ri4", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags);
             target->position.setsizenodelete(0);
@@ -1961,19 +2162,13 @@ struct fpsserver : igameserver
 		lastmillis = _lastmillis;
 		totalmillis = _totalmillis;
 
-		if(m_demo) readdemo();
+#ifdef BFRONTIER
+		if(m_demo(gamemode)) readdemo();
 		else if(minremain>0)
 		{
 			processevents();
-#ifdef BFRONTIER
 			if(curtime) loopv(sents) if(sents[i].spawntime && sents[i].type == WEAPON)
-#else
-			if(curtime) loopv(sents) if(sents[i].spawntime) // spawn entities when timer reached
-#endif
 			{
-#ifndef BFRONTIER
-				int oldtime = sents[i].spawntime;
-#endif
 				sents[i].spawntime -= curtime;
 				if(sents[i].spawntime<=0)
 				{
@@ -1981,24 +2176,17 @@ struct fpsserver : igameserver
 					sents[i].spawned = true;
 					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
 				}
-#ifndef BFRONTIER
-				else if(sents[i].spawntime<=10000 && oldtime>10000 && (sents[i].type==I_QUAD || sents[i].type==I_BOOST))
-				{
-					sendf(-1, 1, "ri2", SV_ANNOUNCE, sents[i].type);
-				}
-#endif
 			}
 			if(smode) smode->update();
-#ifdef BFRONTIER
 			/*
-			if (!m_capture && fraglimit > 0 && minremain > 0)
+			if (!m_capture(gamemode) && fraglimit > 0 && minremain > 0)
 			{
 				vector<scr *> scrs;
 				
 				loopv(clients)
 				{
 					clientinfo *ci = clients[i];
-					if (m_teammode)
+					if (m_team(gamemode, mutators))
 					{
 						scradd(scrs, ci->team, ci->state.frags);
 					}
@@ -2017,8 +2205,30 @@ struct fpsserver : igameserver
 				loopv(scrs) DELETEP(scrs[i]);
 			}
 			*/
-#endif
 		}
+#else
+		if(m_demo) readdemo();
+		else if(minremain>0)
+		{
+			processevents();
+			if(curtime) loopv(sents) if(sents[i].spawntime) // spawn entities when timer reached
+			{
+				int oldtime = sents[i].spawntime;
+				sents[i].spawntime -= curtime;
+				if(sents[i].spawntime<=0)
+				{
+					sents[i].spawntime = 0;
+					sents[i].spawned = true;
+					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+				}
+				else if(sents[i].spawntime<=10000 && oldtime>10000 && (sents[i].type==I_QUAD || sents[i].type==I_BOOST))
+				{
+					sendf(-1, 1, "ri2", SV_ANNOUNCE, sents[i].type);
+				}
+			}
+			if(smode) smode->update();
+		}
+#endif
 
 		while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000) bannedips.remove(0);
 		
@@ -2029,7 +2239,11 @@ struct fpsserver : igameserver
 			masterupdate = false; 
 		} 
 	
+#ifdef BFRONTIER
+		if((m_timed(gamemode) && hasnonlocalclients()) && gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000) checkintermission();
+#else
 		if((gamemode>1 || (gamemode==0 && hasnonlocalclients())) && gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000) checkintermission();
+#endif
 		if(interm && gamemillis>interm)
 		{
 			if(demorecord) enddemorecord();
@@ -2461,6 +2675,20 @@ struct fpsserver : igameserver
 		cgui->poplist(); // v
 		return name;
 	}
+
+	void receivefile(int sender, uchar *data, int len)
+	{
+		if(!m_edit(gamemode) || len > 1024*1024) return;
+		clientinfo *ci = (clientinfo *)getinfo(sender);
+		if(ci->state.state==CS_SPECTATOR && !ci->privilege) return;
+		if(mapdata) { fclose(mapdata); mapdata = NULL; }
+		if(!len) return;
+		mapdata = tmpfile();
+		if(!mapdata) return;
+		fwrite(data, 1, len, mapdata);
+		s_sprintfd(msg)("[%s uploaded map to server, \"/getmap\" to receive it]", colorname(ci));
+		sendservmsg(msg);
+	}
 #else
 
     bool servercompatible(char *name, char *sdec, char *map, int ping, const vector<int> &attr, int np)
@@ -2485,7 +2713,6 @@ struct fpsserver : igameserver
             s_sprintf(buf)("%d\t%s\t%s, %s: %s %s", ping, numcl, map[0] ? map : "[unknown]", modestr(attr[1]), name, sdesc);
         }
     }
-#endif
 
 	void receivefile(int sender, uchar *data, int len)
 	{
@@ -2500,6 +2727,7 @@ struct fpsserver : igameserver
 		s_sprintfd(msg)("[%s uploaded map to server, \"/getmap\" to receive it]", colorname(ci));
 		sendservmsg(msg);
 	}
+#endif
 
 	bool duplicatename(clientinfo *ci, char *name)
 	{
@@ -2524,27 +2752,7 @@ struct fpsserver : igameserver
 
 	char *gametitle()
 	{
-		static char *gname[] = {
-			"",							// <
-			"Demo Playback",			// -3
-			"Singleplayer Classic",		// -2
-			"Singleplayer Deathmatch",	// -1
-			"Free for All",				// 0
-			"Cooperative Edit",			// 1
-			"Free for All / Duel",		// 2
-			"Team Deathmatch",			// 3
-			"Instagib",					// 4
-			"Team Instagib",			// 5
-			"Efficiency",				// 6
-			"Team Efficiency",			// 7
-			"Instagib Arena",			// 8
-			"Team Instagib Arena",		// 9
-			"Tactics Arena",			// 10
-			"Team Tactics Arena",		// 11
-			"Capture",					// 12
-			"Instagib Capture"			// 13
-		};
-		return gname[gamemode >= -3 && gamemode <= 13 ? gamemode+4 : 0];
+		return gamemode >= G_DEMO && gamemode < G_MAX ? gametype[gamemode].name : NULL;
 	}
 
 	char *defaultmap()

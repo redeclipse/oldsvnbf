@@ -1,5 +1,6 @@
 = WIP =
 * sound system upgrade (fmodex)
+* gamemode cleanup and mutator support
 
 = TODO =
 * generalise input, add wiimote support
@@ -13,7 +14,6 @@
 * headshot, etc
 * fix material transitions and depth testing
 * proper rotation looping for animated models
-* index gamemodes and move instagib etc to server mod
 * S_SMGLOAD, S_REGEN, S_HEADSHOT
 * only two guns at same time (drop guns, etc)
 * secondary fire modes (grenade: flash mines)

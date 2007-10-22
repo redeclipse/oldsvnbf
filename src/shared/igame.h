@@ -262,7 +262,7 @@ struct igameserver
     virtual char *getdefaultmaster() = 0;
     virtual void sendservmsg(const char *s) = 0;
 #ifdef BFRONTIER
-    virtual void changemap(const char *s, int mode = 0) { return; }
+    virtual void changemap(const char *s, int mode = 0, int muts = 0) { return; }
 	virtual int getmastertype() { return 0; }
 	virtual char *gamename() = 0;
 	virtual char *gametitle() = 0;
