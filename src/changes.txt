@@ -7,6 +7,7 @@ Legend [
 ]
 
 = wip edition =
+gam: game modes cleaned up, mutators added
 gam: better bouncer sound tracking
 eng: 'soundformat' var for sound output format (FMOD_SOUND_FORMAT_PCM8 [1], FMOD_SOUND_FORMAT_PCM16 [2], .., FMOD_SOUND_FORMAT_MAX-1 [*])
 eng: 'sounddsp' var for dsp resample method (FMOD_DSP_RESAMPLER_NOINTERP [0], FMOD_DSP_RESAMPLER_LINEAR [1], .., FMOD_DSP_RESAMPLER_MAX-1 [3])

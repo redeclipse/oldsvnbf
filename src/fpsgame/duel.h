@@ -84,8 +84,6 @@ struct duelservmode : servmode
 	void update()
 	{
 		if(sv.interm || sv.gamemillis < dueltime || sv.nonspectators() < 2) return;
-
-		int gamemode = sv.gamemode;
 		vector<clientinfo *> alive;
 		
 		alive.setsize(0);
@@ -94,7 +92,7 @@ struct duelservmode : servmode
 				(c->state.state == CS_ALIVE || c->state.state == CS_DEAD)) \
 			{ \
 				if (alive.length() < 2 && (e || c->state.state == CS_ALIVE) && \
-					(!alive.length() || !m_teammode || strcmp(c->team, alive[0]->team))) \
+					(!alive.length() || !m_team(sv.gamemode, sv.mutators) || !isteam(c->team, alive[0]->team))) \
 				{ \
 					alive.add(c); \
 				} \
@@ -143,7 +141,7 @@ struct duelservmode : servmode
 	
 				sv.servsend(-1, "duel #%d, %s vs %s", ++duelround, pl[0], pl[1]);
 
-				if (!m_noitems)
+				if (!m_insta(sv.gamemode, sv.mutators))
 				{
 					loopvj(sv.sents)
 					{
@@ -162,7 +160,7 @@ struct duelservmode : servmode
 		{
 			if (alive.length())
 			{
-				if (m_teammode)
+				if (m_team(sv.gamemode, sv.mutators))
 					sv.servsend(-1, "%s won the duel for team %s!", sv.colorname(alive[0]), alive[0]->team);
 				else
 					sv.servsend(-1, "%s won the duel!", sv.colorname(alive[0]));

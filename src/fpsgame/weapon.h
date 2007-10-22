@@ -237,11 +237,11 @@ struct weaponstate
 		bnc.o = from;
 		bnc.vel = dir;
 		bnc.vel.mul(cl.ph.speed(&bnc));
-		bnc.vel.add(bnc.owner->vel);
-
+		//bnc.vel.add(bnc.owner->vel);
 		avoidcollision(&bnc, dir, owner, 0.1f);
-		
-		if (bnc.gun == GUN_RL) bnc.tracksnd(getgun(bnc.gun).fsound);
+
+		if (bnc.gun == GUN_RL)
+			bnc.tracksnd(getgun(bnc.gun).fsound);
 
 		bouncers.add(&bnc);
 	}

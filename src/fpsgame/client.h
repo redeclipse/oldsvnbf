@@ -117,7 +117,11 @@ struct clientcom : iclientcom
 
 	bool allowedittoggle()
 	{
+#ifdef BFRONTIER
+		bool allow = !connected || !remote || m_edit(cl.gamemode);
+#else
 		bool allow = !connected || !remote || cl.gamemode==1;
+#endif
 		if(!allow) conoutf("editing in multiplayer requires coopedit mode (1)");
 		if(allow && spectator) return false;
 		return allow;
@@ -304,10 +308,16 @@ struct clientcom : iclientcom
 		{
 			reliable = true;
 			putint(p, SV_ITEMLIST);
+#ifdef BFRONTIER
+			cl.et.putitems(p);
+			putint(p, -1);
+			if(m_capture(cl.gamemode)) cl.cpc.sendbases(p);
+#else
 			int gamemode = cl.gamemode;
 			if(!m_noitems) cl.et.putitems(p, gamemode);
 			putint(p, -1);
 			if(m_capture) cl.cpc.sendbases(p);
+#endif
 			senditemstoserver = false;
 		}
 		if(!c2sinit)	// tell other clients who I am
@@ -450,7 +460,9 @@ struct clientcom : iclientcom
 
 	void parsemessages(int cn, fpsent *d, ucharbuf &p)
 	{
+#ifndef BFRONTIER
 		int gamemode = cl.gamemode;
+#endif
 		static char text[MAXTRANS];
 		int type;
 		bool mapchanged = false;
@@ -524,7 +536,12 @@ struct clientcom : iclientcom
 
 			case SV_MAPCHANGE:
 				getstring(text, p);
+#ifdef BFRONTIER
+				int mode = getint(p), muts = getint(p);
+				changemapserv(text, mode, muts);
+#else
 				changemapserv(text, getint(p));
+#endif
 				mapchanged = true;
 				break;
 
@@ -535,15 +552,14 @@ struct clientcom : iclientcom
 #ifdef BFRONTIER // extended console support
 				console("arena round is over! next round in 5 seconds...", CON_LEFT|CON_CENTER);
 				if(!alive) console("everyone died!", CON_LEFT|CON_CENTER);
-				else if(m_teammode) console("team %s has won the round", CON_LEFT|CON_CENTER, alive->team);
+				else if(m_team(cl.gamemode, cl.mutators)) console("team %s has won the round", CON_LEFT|CON_CENTER, alive->team);
 				else if(alive==player1) console("you are the last man standing!", CON_LEFT|CON_CENTER);
 				else console("%s is the last man standing", CON_LEFT|CON_CENTER, cl.colorname(alive));
 
 				bool win = false;
 				if(alive)
 				{
-					//int gamemode = cl.gamemode;
-					if(m_teammode && isteam(cl.player1->team, alive->team)) win = true;
+					if(m_team(cl.gamemode, cl.mutators) && isteam(cl.player1->team, alive->team)) win = true;
 					else if(alive == cl.player1) win = true;
 				}
 				playsound(win ? S_V_YOUWIN : S_V_YOULOSE);
@@ -594,9 +610,9 @@ struct clientcom : iclientcom
 			case SV_MAPRELOAD:		  // server requests next map
 			{
 #ifdef BFRONTIER
-				s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture ? "capture_" : "", mapname);
+				s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture(cl.gamemode) ? "capture_" : "", mapname);
 				const char *map = getalias(nextmapalias);	 // look up map in the cycle
-				addmsg(SV_MAPCHANGE, "rsi", *map ? map : sv->defaultmap(), cl.nextmode);
+				addmsg(SV_MAPCHANGE, "rsii", *map ? map : sv->defaultmap(), cl.nextmode, cl.nextmuts);
 #else
 				s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture ? "capture_" : "", cl.getclientmap());
 				const char *map = getalias(nextmapalias);	 // look up map in the cycle
@@ -671,19 +687,19 @@ struct clientcom : iclientcom
 #ifdef BFRONTIER
 				player1->gunselect = getint(p);
 				loopi(NUMGUNS) player1->ammo[i] = getint(p);
+				player1->state = CS_ALIVE;
+				findplayerspawn(player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(player1->team) : -1);
 #else
 				player1->maxhealth = getint(p);
 				player1->armour = getint(p);
 				player1->armourtype = getint(p);
 				player1->gunselect = getint(p);
 				loopi(GUN_PISTOL-GUN_SG+1) player1->ammo[GUN_SG+i] = getint(p);
-#endif
 				player1->state = CS_ALIVE;
 				findplayerspawn(player1, m_capture ? cl.cpc.pickspawn(player1->team) : -1);
+#endif
 				cl.sb.showscores(false);
-#ifdef BFRONTIER // extended console
-				if(m_arena) console("new round starting... fight!", CON_LEFT|CON_CENTER);
-#else
+#ifndef BFRONTIER // extended console
                 if(m_arena) conoutf("new round starting... fight!");
 #endif
 				addmsg(SV_SPAWN, "rii", player1->lifesequence, player1->gunselect);
@@ -1001,8 +1017,7 @@ struct clientcom : iclientcom
 				s_strcpy(owner, text);
 				getstring(text, p);
 				s_strcpy(enemy, text);
-				int gamemode = cl.gamemode;
-				if(m_capture) cl.cpc.updatebase(base, owner, enemy, converted);
+				if(m_capture(cl.gamemode)) cl.cpc.updatebase(base, owner, enemy, converted);
 #else
 				getstring(text, p);
 				s_strcpy(owner, text);
@@ -1047,8 +1062,13 @@ struct clientcom : iclientcom
 			case SV_TEAMSCORE:
 			{
 				getstring(text, p);
+#ifdef BFRONTIER
+				int total = getint(p);
+				if(m_capture(cl.gamemode)) cl.cpc.setscore(text, total);
+#else
 				int total = getint(p), gamemode = cl.gamemode;
 				if(m_capture) cl.cpc.setscore(text, total);
+#endif
 				break;
 			}
 
@@ -1090,30 +1110,43 @@ struct clientcom : iclientcom
 		}
 	}
 
+#ifdef BFRONTIER
+	void changemapserv(const char *name, int gamemode, int mutators)
+	{
+		if (remote && !connected) connected = true;
+		if (remote && !m_mp(gamemode)) gamemode = G_DEATHMATCH;
+		cl.nextmode = cl.gamemode = gamemode;
+		cl.nextmuts = cl.mutators = mutators;
+		cl.minremain = -1;
+		if(editmode && !allowedittoggle()) toggleedit();
+		if(m_demo(cl.gamemode)) return;
+		load_world(name);
+		if(m_capture(gamemode)) cl.cpc.setupbases();
+		if(editmode) edittoggled(editmode);
+	}
+#else
 	void changemapserv(const char *name, int gamemode)		// forced map change from the server
 	{
-#ifdef BFRONTIER // local servers
-		if (remote && !connected) connected = true;
-#endif
 		if(remote && !m_mp(gamemode)) gamemode = 0;
 		cl.gamemode = gamemode;
 		cl.nextmode = gamemode;
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle()) toggleedit();
 		if(m_demo) return;
-#ifdef BFRONTIER
-		load_world(name);
-#else
 		if(gamemode==1 && !name[0]) emptymap(0, true);
 		else load_world(name);
-#endif
 		if(m_capture) cl.cpc.setupbases();
 		if(editmode) edittoggled(editmode);
 	}
+#endif
 
 	void changemap(const char *name) // request map change, server may ignore
 	{
+#ifdef BFRONTIER
+		if(!spectator || player1->privilege) addmsg(SV_MAPVOTE, "rsii", name, cl.nextmode, cl.nextmuts);
+#else
 		if(!spectator || player1->privilege) addmsg(SV_MAPVOTE, "rsi", name, cl.nextmode);
+#endif
 	}
 		
 	void receivefile(uchar *data, int len)
@@ -1137,8 +1170,8 @@ struct clientcom : iclientcom
 
 			case SV_SENDMAP:
 			{
-				if(cl.gamemode!=1) return;
 #ifdef BFRONTIER
+				if(!m_edit(cl.gamemode)) return;
 				string oldname;
 				s_strcpy(oldname, mapname);
 				s_sprintfd(mname)("%s", makefile(mapname, "packages/", ".bgz", false, true));
@@ -1151,6 +1184,7 @@ struct clientcom : iclientcom
 				fclose(map);
 				load_world(mname, oldname[0] ? oldname : NULL);
 #else
+				if(cl.gamemode!=1) return;
 				string oldname;
 				s_strcpy(oldname, cl.getclientmap());
 				s_sprintfd(mname)("getmap_%d", cl.lastmillis);
@@ -1171,7 +1205,11 @@ struct clientcom : iclientcom
 
 	void getmap()
 	{
+#ifdef BFRONTIER
+		if(!m_edit(cl.gamemode)) { conoutf("\"getmap\" only works in coopedit mode"); return; }
+#else
 		if(cl.gamemode!=1) { conoutf("\"getmap\" only works in coopedit mode"); return; }
+#endif
 		conoutf("getting map...");
 		addmsg(SV_GETMAP, "r");
 	}
@@ -1231,7 +1269,11 @@ struct clientcom : iclientcom
 
 	void sendmap()
 	{
+#ifdef BFRONTIER
+		if(!m_edit(cl.gamemode) || (spectator && !player1->privilege)) { conoutf("\"sendmap\" only works in coopedit mode"); return; }
+#else
 		if(cl.gamemode!=1 || (spectator && !player1->privilege)) { conoutf("\"sendmap\" only works in coopedit mode"); return; }
+#endif
 		conoutf("sending map...");
 		s_sprintfd(mname)("sendmap_%d", cl.lastmillis);
 		save_world(mname, true);

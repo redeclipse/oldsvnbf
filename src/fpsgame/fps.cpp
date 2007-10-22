@@ -32,7 +32,11 @@ struct fpsclient : igameclient
 	#include "client.h"
 	#include "capture.h"
 
+#ifdef BFRONTIER
+	int nextmode, nextmuts, gamemode, mutators;
+#else
 	int nextmode, gamemode;		 // nextmode becomes gamemode after next map load
+#endif
 	bool intermission;
 	int lastmillis;
 #ifndef BFRONTIER
@@ -91,7 +95,7 @@ struct fpsclient : igameclient
 	captureclient cpc;
 
 	fpsclient()
-		: nextmode(0), gamemode(0), intermission(false), lastmillis(0),
+		: nextmode(0), nextmuts(0), gamemode(0), mutators(0), intermission(false), lastmillis(0),
 		  maptime(0), minremain(0), respawnent(-1), 
 		  swaymillis(0), swaydir(0, 0, 0),
 		  suicided(-1),
@@ -105,24 +109,37 @@ struct fpsclient : igameclient
 		  ws(*this), ms(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this)
 #endif
 	{
-        CCOMMAND(mode, "i", (fpsclient *self, int *val), { self->setmode(*val); });
+#ifdef BFRONTIER // alternate camera
+        CCOMMAND(mode, "ii", (fpsclient *self, int *val, int *mut), { self->setmode(*val, *mut); });
         CCOMMAND(kill, "",  (fpsclient *self), { self->suicide(self->player1); });
         CCOMMAND(taunt, "", (fpsclient *self), { self->taunt(); });
-#ifdef BFRONTIER // alternate camera
 		CCOMMAND(cameradir, "ii", (fpsclient *self, int *a, int *b), self->cameradir(*a, *b!=0));
 		CCOMMAND(centerrank, "", (fpsclient *self), self->setcrank());
 		CCOMMAND(gotocamera, "i", (fpsclient *self, int *a), self->setcamera(*a));
 
 		CCOMMAND(getgamemode, "", (fpsclient *self), intret(self->gamemode));
+		CCOMMAND(getmutators, "", (fpsclient *self), intret(self->mutators));
 #else
+        CCOMMAND(mode, "i", (fpsclient *self, int *val), { self->setmode(*val); });
+        CCOMMAND(kill, "",  (fpsclient *self), { self->suicide(self->player1); });
+        CCOMMAND(taunt, "", (fpsclient *self), { self->taunt(); });
         CCOMMAND(follow, "s", (fpsclient *self, char *s), { self->follow(s); });
 #endif
 	}
 
-	iclientcom *getcom() { return &cc; }
 #ifdef BFRONTIER // extra modules
+	iclientcom *getcom() { return &cc; }
 	iphysics *getphysics() { return &ph; }
-#endif
+	icliententities *getents() { return &et; }
+
+	void setmode(int mode, int muts)
+	{
+		if(multiplayer(false) && !m_mp(mode)) { conoutf("mode %d not supported in multiplayer", mode); return; }
+		nextmode = mode;
+		nextmuts = muts;
+	}
+#else
+	iclientcom *getcom() { return &cc; }
 	icliententities *getents() { return &et; }
 
 	void setmode(int mode)
@@ -130,6 +147,7 @@ struct fpsclient : igameclient
 		if(multiplayer(false) && !m_mp(mode)) { conoutf("mode %d not supported in multiplayer", mode); return; }
 		nextmode = mode;
 	}
+#endif
 
 	void taunt()
 	{
@@ -139,7 +157,9 @@ struct fpsclient : igameclient
 		cc.addmsg(SV_TAUNT, "r");
 	}
 
-#ifndef BFRONTIER // alternate follow method
+#ifdef BFRONTIER // alternate follow method
+    void rendergame() { fr.rendergame(); }
+#else
 	void follow(char *arg)
     {
         if(player1->state!=CS_SPECTATOR && arg[0]) return;
@@ -148,22 +168,24 @@ struct fpsclient : igameclient
 	}
 
 	char *getclientmap() { return clientmap; }
-#endif
 
     void rendergame() { fr.rendergame(gamemode); }
+#endif
 
 	void resetgamestate()
 	{
-		if(m_classicsp) 
-		{
-#ifndef BFRONTIER
-			ms.monsterclear(gamemode);				 // all monsters back at their spawns for editing
-#endif
-			resettriggers();
-		}
 #ifdef BFRONTIER
 		ws.bouncereset();
+		if (m_sp(gamemode)) 
+		{
+			resettriggers();
+		}
 #else
+		if(m_classicsp) 
+		{
+			ms.monsterclear(gamemode);				 // all monsters back at their spawns for editing
+			resettriggers();
+		}
 		ws.projreset();
 #endif
 	}
@@ -171,9 +193,11 @@ struct fpsclient : igameclient
 	fpsent *spawnstate(fpsent *d)			  // reset player state not persistent accross spawns
 	{
 		d->respawn();
-		d->spawnstate(gamemode);
 #ifdef BFRONTIER // respawn sound
 		playsound(S_RESPAWN, &d->o, &d->vel);
+		d->spawnstate(gamemode, mutators);
+#else
+		d->spawnstate(gamemode);
 #endif
 		return d;
 	}
@@ -181,11 +205,13 @@ struct fpsclient : igameclient
 	void respawnself()
 	{
         if(m_mp(gamemode)) cc.addmsg(SV_TRYSPAWN, "r");
+#ifndef BFRONTIER
 		else
 		{
 			spawnplayer(player1);
 			sb.showscores(false);
 		}
+#endif
 	}
 
 	fpsent *pointatplayer()
@@ -280,9 +306,10 @@ struct fpsclient : igameclient
 					}
 					else
 					{
-						int last = lastmillis-player1->lastpain;
+						int last = lastmillis-player1->lastpain,
+							wait = (m_insta(gamemode, mutators) ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000;
 						
-						if (m_capture && capturespawn() && last >= (m_noitemsrail ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000)
+						if (m_capture(gamemode) && capturespawn() && last >= wait)
 						{
 							respawnself();
 						}
@@ -319,7 +346,7 @@ struct fpsclient : igameclient
 					swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.speed(player1)))));
 	
 					et.checkitems(player1);
-					if(m_classicsp) checktriggers();
+					if (m_sp(gamemode)) checktriggers();
 				}
 			}
 			ws.bounceupdate(curtime);
@@ -358,7 +385,11 @@ struct fpsclient : igameclient
 
 	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
 	{
+#ifdef BFRONTIER
+		findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1));
+#else
 		findplayerspawn(d, m_capture ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1));
+#endif
 		spawnstate(d);
 		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
 	}
@@ -368,34 +399,36 @@ struct fpsclient : igameclient
 		if(player1->state==CS_DEAD)
 		{
 			player1->attacking = false;
+#ifdef BFRONTIER
+            if(m_capture(gamemode))
+            {
+                int wait = (m_insta(gamemode, mutators) ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)-(lastmillis-player1->lastpain)/1000;
+                if(wait>0)
+				{
+					console("\f2you must wait %d second%s before respawn!", CON_LEFT|CON_CENTER, wait, wait!=1 ? "s" : "");
+					return;
+				}
+			}
+#else
             if(m_capture)
             {
                 int wait = (m_noitemsrail ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)-(lastmillis-player1->lastpain)/1000;
                 if(wait>0)
 				{
-#ifdef BFRONTIER
-					console("\f2you must wait %d second%s before respawn!", CON_LEFT|CON_CENTER, wait, wait!=1 ? "s" : "");
-#else
 					conoutf("\f2you must wait %d second%s before respawn!", wait, wait!=1 ? "s" : "");
-#endif
 					return;
 				}
 			}
-#ifdef BFRONTIER
-			if(m_arena) { console("\f2waiting for new round to start...", CON_LEFT|CON_CENTER); return; }
-#else
             if(m_arena) { conoutf("\f2waiting for new round to start..."); return; }
 			if(m_dmsp) { nextmode = gamemode; cc.changemap(clientmap); return; }	// if we die in SP we try the same map again
-#endif
 			if(m_classicsp)
 			{
 				respawnself();
-#ifndef BFRONTIER
                 conoutf("\f2You wasted another life! The monsters stole your armour and some ammo...");
 				loopi(NUMGUNS) if(i!=GUN_PISTOL && (player1->ammo[i] = lastplayerstate.ammo[i])>5) player1->ammo[i] = max(player1->ammo[i]/3, 5); 
-#endif
 				return;
 			}
+#endif
 			respawnself();
 		}
 	}
@@ -561,8 +594,8 @@ struct fpsclient : igameclient
 			{
 				calcranks();
 		
-				if ((m_teammode && teamscores.length() && isteam(player1->team, teamscores[0].team)) ||
-					(!m_teammode && shplayers.length() && shplayers[0] == player1))
+				if ((m_team(gamemode, mutators) && isteam(player1->team, teamscores[0].team)) ||
+					(!m_team(gamemode, mutators) && shplayers.length() && shplayers[0] == player1))
 				{
 					conoutf("\f2intermission: you win!");
 					playsound(S_V_YOUWIN);
@@ -699,17 +732,20 @@ struct fpsclient : igameclient
 #endif
 		}
 
+#ifdef BFRONTIER
+		findplayerspawn(player1, -1);
+		et.resetspawns();
+#else
 		if(!m_mp(gamemode)) spawnplayer(player1);
 		else findplayerspawn(player1, -1);
 		et.resetspawns();
-#ifndef BFRONTIER
 		s_strcpy(clientmap, name);
 #endif
 		sb.showscores(false);
 		intermission = false;
         maptime = 0;
 #ifdef BFRONTIER
-		if(m_sp)
+		if(m_sp(gamemode))
 		{
 			s_sprintfd(aname)("bestscore_%s", mapname);
 			const char *best = getalias(aname);
@@ -798,8 +834,12 @@ struct fpsclient : igameclient
 		if(d==player1)
 		{
 			if(d->state!=CS_ALIVE) return;
+#ifdef BFRONTIER
+			if(suicided!=player1->lifesequence)
+#else
 			if(!m_mp(gamemode)) killed(player1, player1);
 			else if(suicided!=player1->lifesequence)
+#endif
 			{
 				cc.addmsg(SV_SUICIDE, "r");
 				suicided = player1->lifesequence;
@@ -979,11 +1019,12 @@ struct fpsclient : igameclient
 						}
 						else if (d->state == CS_DEAD)
 						{
-							int action = lastmillis-d->lastpain;
+							int last = lastmillis-d->lastpain,
+								wait = (m_insta(gamemode, mutators) ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000;
 							
-							if (m_capture && action < (m_noitemsrail ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000)
+							if (m_capture(gamemode) && last <= wait)
 							{
-								float c = float(((m_noitemsrail ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000)-action)/1000.f;
+								float c = float(wait-last)/1000.f;
 								draw_textx("Fragged! Down for %.1fs", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
 							}
 							else
@@ -991,7 +1032,7 @@ struct fpsclient : igameclient
 						}
 					}
 		
-					if (!editmode && m_capture)
+					if (!editmode && m_capture(gamemode))
 					{
 						glDisable(GL_BLEND);
 						cpc.capturehud(w, h);
@@ -1024,7 +1065,7 @@ struct fpsclient : igameclient
 	{
 		if(player1->state!=CS_ALIVE) return;
 		if(gunvar(player1->gunwait,player1->gunselect)) r = g = b = 0.5f;
-		else if(!editmode && !m_noitemsrail)
+		else if(!editmode && !m_insta(gamemode, mutators))
 		{
 			if(player1->health<=25) { r = 1.0f; g = b = 0; }
 			else if(player1->health<=50) { r = 1.0f; g = 0.5f; b = 0; }
@@ -1130,7 +1171,7 @@ struct fpsclient : igameclient
 	void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)
 	{
 #ifdef BFRONTIER
-        if(multiplayer(false) && gamemode==1) switch(op)
+        if(m_edit(gamemode)) switch(op)
 #else
         if(gamemode==1) switch(op)
 #endif
@@ -1495,9 +1536,9 @@ struct fpsclient : igameclient
 		if(teamscores.length())
 			teamscores.setsize(0);
 			
-		if(m_teammode)
+		if(m_team(gamemode, mutators))
 		{
-			if(m_capture)
+			if(m_capture(gamemode))
 			{
 				loopv(cpc.scores) if(cpc.scores[i].total)
 					teamscores.add(teamscore(cpc.scores[i].team, cpc.scores[i].total));

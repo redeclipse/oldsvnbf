@@ -627,7 +627,7 @@ void startgame(char *load, char *initscript)
 	}
 	else { s_strcpy(s, m); }
 
-	sv->changemap(s, d);
+	sv->changemap(s, d, 0);
 	if (initscript) execute(initscript);
 	localconnect();
 }

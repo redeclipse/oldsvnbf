@@ -109,21 +109,8 @@ VAR(hwcubetexsize, 1, 0, 0);
 VARP(maxtexsize, 0, 0, 1<<12);
 VARP(texreduce, 0, 0, 12);
 VARP(texcompress, 0, 1<<10, 1<<12);
-VARP(hwmipmap, 0, 0, 1);
 VARP(trilinear, 0, 1, 1);
 VARP(bilinear, 0, 1, 1);
-
-bool canhwmipmap(GLenum format)
-{
-	if(hwmipmap && hasFBO) switch(format)
-	{
-		case GL_RGB5:
-		case GL_RGB8:
-		case GL_RGB:
-		case GL_RGBA: return true;
-	}
-	return false;
-}
 
 GLenum compressedformat(GLenum format, int w, int h)
 {
@@ -228,12 +215,7 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 	if(mipit && pixels)
 	{
 		GLenum compressed = compressedformat(component, w, h);
-        if(canhwmipmap(compressed) && w<=hwlimit && h<=hwlimit && (hasNP2 || !(w&(w-1) || h&(h-1))))
-		{
-			glTexImage2D(subtarget, 0, compressed, w, h, 0, format, type, pixels); 
-			if(subtarget==target) glGenerateMipmap_(target);
-		} 
-        else if(target==GL_TEXTURE_1D)
+        if(target==GL_TEXTURE_1D)
         {
             if(gluBuild1DMipmaps(subtarget, compressed, w, format, type, pixels))
             {
@@ -268,7 +250,7 @@ static GLenum texformat(int bpp)
 
 static void resizetexture(int &w, int &h, bool mipit = true, GLenum format = GL_RGB, GLenum target = GL_TEXTURE_2D)
 {
-	if(mipit && !canhwmipmap(format)) return;
+    if(mipit) return;
     int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? hwcubetexsize : hwtexsize,
         sizelimit = maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
 	int w2 = w, h2 = h;
@@ -280,7 +262,6 @@ static void resizetexture(int &w, int &h, bool mipit = true, GLenum format = GL_
 		if(w2 > sizelimit || (w - w2)/2 < (w2 - w)/2) w2 /= 2;
 		if(h2 > sizelimit || (h - h2)/2 < (h2 - h)/2) h2 /= 2;
 	}
-	if(mipit && !canhwmipmap(compressedformat(format, w2, h2))) return; 
 	while(w2 > sizelimit || h2 > sizelimit)
 	{
 		w2 /= 2;
@@ -879,7 +860,6 @@ GLuint cubemapfromsky(int size)
         createtexture(!i ? tex : 0, cmw, cmh, pixels, 3, true, GL_RGB5, cubemapsides[i].target);
 	}
 	delete[] pixels;
-    if(canhwmipmap(compressedformat(GL_RGB5, cmw, cmh))) glGenerateMipmap_(GL_TEXTURE_CUBE_MAP_ARB);
 	return tex;
 }
 
@@ -944,7 +924,6 @@ Texture *cubemaploadwildcard(const char *name, bool mipit, bool msg)
 		SDL_FreeSurface(s);
 	}
     if(pixels) delete[] pixels;
-	if(mipit && canhwmipmap(compressedformat(format, w, h))) glGenerateMipmap_(GL_TEXTURE_CUBE_MAP_ARB);
 	return t;
 }
 
@@ -1008,18 +987,12 @@ GLuint genenvmap(const vec &o, int envmapsize)
     while(rendersize > sizelimit) rendersize /= 2;
 	int texsize = min(rendersize, 1<<envmapsize);
 	if(!aaenvmap) rendersize = texsize;
-	GLuint tex, rendertex = 0;
+    GLuint tex;
 	glGenTextures(1, &tex);
-	GLenum format = compressedformat(GL_RGB5, texsize, texsize);
-	if(canhwmipmap(format) && texsize < rendersize)
-	{
-		glGenTextures(1, &rendertex);
-		createtexture(rendertex, rendersize, rendersize, NULL, 3, true);
-	}
 	glViewport(0, 0, rendersize, rendersize);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	float yaw = 0, pitch = 0;
-	uchar *pixels = canhwmipmap(format) ? NULL : new uchar[3*rendersize*rendersize];
+    uchar *pixels = new uchar[3*rendersize*rendersize];
 	loopi(6)
 	{
 		const cubemapside &side = cubemapsides[i];
@@ -1039,45 +1012,11 @@ GLuint genenvmap(const vec &o, int envmapsize)
 				yaw = 90; pitch = 90; break;
 		}
 		drawcubemap(rendersize, o, yaw, pitch);
-		if(pixels)
-		{
-			glReadPixels(0, 0, rendersize, rendersize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-			if(texsize<rendersize) gluScaleImage(GL_RGB, rendersize, rendersize, GL_UNSIGNED_BYTE, pixels, texsize, texsize, GL_UNSIGNED_BYTE, pixels);
-			createtexture(tex, texsize, texsize, pixels, 3, true, GL_RGB5, side.target);
-		}
-		else
-		{
-			if(rendertex)
-			{
-				glBindTexture(GL_TEXTURE_2D, rendertex);
-				glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, rendersize, rendersize);
-				glGenerateMipmap_(GL_TEXTURE_2D);
-
-				glMatrixMode(GL_PROJECTION);
-				glLoadIdentity();
-				glOrtho(0, rendersize, 0, rendersize, -1, 1);
-				glMatrixMode(GL_MODELVIEW);
-				glLoadIdentity();
-
-				glEnable(GL_TEXTURE_2D);
-				glDisable(GL_DEPTH_TEST);
-				glColor3f(1, 1, 1);
-				glBegin(GL_QUADS);
-				glTexCoord2f(0, 0); glVertex2f(0, 0);
-				glTexCoord2f(0, 1); glVertex2f(0, texsize);
-				glTexCoord2f(1, 1); glVertex2f(texsize, texsize);
-				glTexCoord2f(1, 0); glVertex2f(texsize, 0);
-				glEnd();
-				glEnable(GL_DEPTH_TEST);
-				glDisable(GL_TEXTURE_2D);
-			}
-			createtexture(tex, texsize, texsize, NULL, 3, true, GL_RGB5, side.target);
-			glCopyTexSubImage2D(side.target, 0, 0, 0, 0, 0, texsize, texsize);
-		}
+		glReadPixels(0, 0, rendersize, rendersize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+		if(texsize<rendersize) gluScaleImage(GL_RGB, rendersize, rendersize, GL_UNSIGNED_BYTE, pixels, texsize, texsize, GL_UNSIGNED_BYTE, pixels);
+		createtexture(tex, texsize, texsize, pixels, 3, true, GL_RGB5, side.target);
 	}
-	if(pixels) delete[] pixels;
-	else glGenerateMipmap_(GL_TEXTURE_CUBE_MAP_ARB);
-	if(rendertex) glDeleteTextures(1, &rendertex);
+    delete[] pixels;
 	glViewport(0, 0, screen->w, screen->h);
 #ifndef BFRONTIER // external frame updating
     clientkeepalive();

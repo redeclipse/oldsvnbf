@@ -102,19 +102,16 @@
 <a href="#heightfield"><b>Heightfield</b></a>
 <ul class="contents2">
 <li>
-<a href="#getheightmap"><tt>getheightmap</tt></a>
+<a href="#hmapedit"><tt>hmapedit</tt></a>
+</li>
+<li>
+<a href="#hmapaddtex"><tt>hmapaddtex</tt></a>
+</li>
+<li>
+<a href="#hmapcancel"><tt>hmapcancel</tt></a>
 </li>
 <li>
 <a href="#selectbrush"><tt>selectbrush</tt></a>
-</li>
-<li>
-<a href="#copybrush"><tt>copybrush</tt></a>
-</li>
-<li>
-<a href="#savebrush"><tt>savebrush</tt></a>
-</li>
-<li>
-<a href="#smoothmap"><tt>smoothmap</tt></a>
 </li>
 <li>
 <a href="#clearbrush"><tt>clearbrush</tt></a>
@@ -522,8 +519,8 @@ Cancels out any explicit selection you currently have (default: space).
 <pre id="editface">editface D N</pre>
 <p>
 This is the main editing command. D is the direction of the action, -1 for
-towards you, 1 for away from you. N=0 to push all corners in the white box. N=1
-create or destroy cubes. N=2 push or pull a corner you are pointing at.       
+towards you, 1 for away from you (default: scroll wheel). N=0 to push all corners in the white box (hold F). N=1
+create or destroy cubes (default). N=2 push or pull a corner you are pointing at (hold Q).       
 </p>
 
 <pre id="gridpower">gridpower N</pre>
@@ -675,49 +672,24 @@ Returns 0 if the cubes are only implicitly selected.
 
 <h2 id="heightfield">Heightfield</h2>
 
-<pre id="getheightmap">getheightmap</pre>
+<pre id="hmapedit">hmapedit 0/1</pre>
 <p>
-This command will turn any selection into a heightmap mode selection (default: H). When this
-happens the selection will turn green with the orientation and gridsize denoted
-by four corner squares on one side of the selection. When the selection enters heightmap
-mode, the cubes within the selection will mimic a heightmap and so the geometry within
-the selection will be changed if it is not already of heightmap style.
+Set to 1 to turn on heightmap mode (default: hold LCTRL). In heightmap mode the cursor will turn green when hilighting heightmap cubes and the <a href="#editface">editface</a> command will now use brushes to edit heightmap cubes. In order to avoid accidental edits only heightmap cubes are editable in this mode.
+</p>
 
-The point of heightmap mode is that all editface commands will now edit
-the selected cubes using a brush instead of the default behaviour. The selection will
-also dynamically resize itself in order to generate the entire heightmap. This obviously
-means that it can overwrite cubes below and above it. Other then these changes
-the selection functions exactly the same as the normal selection, which means you can copy it,
-extend it, cancel it, etc. The only exceptions to this right now are the flip and
-rotate commands. This type of selection cannot currently be used in coop edit.
+<pre id="hmapaddtex">hmapaddtex</pre>
+<p>
+Selects the texture and orientation of the hilighted cube (default: mouse buttons while in heightmap mode). All cubes, of equal or larger size, that match the selection will be considered part of the heightmap.
+</p>
+
+<pre id="hmapcancel">hmapcancel</pre>
+<p>
+Cancel the heightmap texture selection.
 </p>
 
 <pre id="selectbrush">selectbrush D</pre>
 <p>
-This is not an actual engine command, but rather an alias which is defined
-in data/brush.cfg. It is to be used as a modifier (default: B), and switches between the
-various brushes that have been saved within that config file.
-</p>
-
-<pre id="copybrush">copybrush</pre>
-<p>
-This command (default: K) copies the current heightmap mode selection and
-saves it as a new brush. The current location of the cursor will turn into the
-new handle of the brush.
-</p>
-
-<pre id="savebrush">savebrush name</pre>
-<p>
-This will save the current brush in script format. This script will be saved in 
-a file called mybrushes.cfg file for example. This is usually used after copybrush.
-The brush can also be named for easy reference later.
-</p>
-
-<pre id="smoothmap">smoothmap</pre>
-<p>
-This will apply a simple moving average filter to the heightmap thereby making
-the change between neighbouring points less abrupt. Smoothmap can be executed 
-multiple times on a heightmap to increase the smoothness.
+Switches between the various height map brushes (default: hold B + wheel).
 </p>
 
 <pre id="clearbrush">clearbrush</pre>

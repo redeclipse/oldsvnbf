@@ -1034,39 +1034,6 @@ Example: @(result "Hello, World!") will substitute itself with Hello, World!
 </p>
 
 <p>
-Structures can be created using dot expansion. If a dot ( '.' ) prefixes an alias it 
-will expand at run time to the call path. When used as a reference, the proper path is determined using lexical scoping. <br>
-Examples:
-<pre>
-vec = [             // structure definition + constructor
-  .x = $arg1
-  .y = $arg2
-  .z = $arg3
-]
-a = $vec            // assign a as type vec
-a 1 2 3             // call constructor
-echo $a.x $a.y $a.z // results in "1 2 3"
-
-plane = [ @vec      // inheritance (multiple)
-    .offset = $arg4
-]
-
-foo = [             // scope example
-  .x = fooscope     // foo class variable
-  .f = [ echo $.x ] // method
-  .g = [            // inner class
-    .x = gscope     // local to g's scope
-    .f              // which .x will .f echo?
-  ]
-]
-foo                 // prototype constructor
-foo.g               // results in "fooscope"; ie: lexical scope
-foo.g.f = [echo $.x]// override .f in foo.g scope
-foo.g               // results in "gscope"
-</pre>
-</p>
-
-<p>
 The following commands are available for programming:
 </p>
 

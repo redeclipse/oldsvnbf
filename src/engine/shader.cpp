@@ -760,16 +760,14 @@ static void genshadowmapvariant(Shader &s, char *sname, char *vs, char *ps, int 
     }
     else
     {
-        const char *tc =
-            "TEMP smtc;\n"
-            "DP4 smtc.x, state.matrix.texture[2].row[0], vertex.position;\n"
-            "DP4 smtc.y, state.matrix.texture[2].row[1], vertex.position;\n"
-            "DP4 smtc.z, state.matrix.texture[2].row[2], vertex.position;\n";
+        s_sprintfd(tc)(
+            "DP4 result.texcoord[%d].x, state.matrix.texture[2].row[0], vertex.position;\n"
+            "DP4 result.texcoord[%d].y, state.matrix.texture[2].row[1], vertex.position;\n"
+            "DP4 result.texcoord[%d].z, state.matrix.texture[2].row[2], vertex.position;\n",
+            smtc, smtc, smtc);
         vssm.put(tc, strlen(tc));
-        s_sprintfd(sm)("MOV result.texcoord[%d], smtc;\n", smtc);
-        vssm.put(sm, strlen(sm));
 
-        s_sprintf(sm)(
+        s_sprintfd(sm)(
             "TEMP smvals, smdenom, smdiff, shadowed, smambient;\n"
             "TEX smvals, fragment.texcoord[%d], texture[7], 2D;\n"
             "RCP smdenom, smvals.y;\n"

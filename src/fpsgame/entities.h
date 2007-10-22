@@ -143,8 +143,7 @@ struct entities : icliententities
 		{
 			case 29:
 #ifdef BFRONTIER
-				int gamemode = cl.gamemode;
-				if (m_sp) cl.intermission = true;
+				if (m_sp(cl.gamemode)) cl.intermission = true;
 #else
 				cl.ms.endsp(false);
 #endif
@@ -320,9 +319,9 @@ struct entities : icliententities
 	}
 #endif
 
-	void putitems(ucharbuf &p, int gamemode)			// puts items in network stream and also spawns them locally
-	{
 #ifdef BFRONTIER
+	void putitems(ucharbuf &p)
+	{
 		loopv(ents) if (ents[i]->type == WEAPON)
 		{
 			putint(p, i);
@@ -334,7 +333,10 @@ struct entities : icliententities
 			putint(p, ents[i]->attr5);
 			ents[i]->spawned = true; 
 		}
+	}
 #else
+	void putitems(ucharbuf &p, int gamemode)			// puts items in network stream and also spawns them locally
+	{
 		loopv(ents) if(ents[i]->type>=I_SHELLS && ents[i]->type<=I_QUAD && (!m_capture || ents[i]->type<I_SHELLS || ents[i]->type>I_CARTRIDGES))
 		{
 			putint(p, i);
@@ -342,8 +344,8 @@ struct entities : icliententities
 			
 			ents[i]->spawned = (m_sp || (ents[i]->type!=I_QUAD && ents[i]->type!=I_BOOST)); 
 		}
-#endif
 	}
+#endif
 
 	void resetspawns() { loopv(ents) ents[i]->spawned = false; }
 	void setspawn(int i, bool on) { if(ents.inrange(i)) ents[i]->spawned = on; }
