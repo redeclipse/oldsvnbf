@@ -534,16 +534,22 @@ struct clientcom : iclientcom
 				break;
 			}
 
-			case SV_MAPCHANGE:
-				getstring(text, p);
 #ifdef BFRONTIER
+			case SV_MAPCHANGE:
+			{
+				getstring(text, p);
 				int mode = getint(p), muts = getint(p);
 				changemapserv(text, mode, muts);
-#else
-				changemapserv(text, getint(p));
-#endif
 				mapchanged = true;
 				break;
+			}
+#else
+			case SV_MAPCHANGE:
+				getstring(text, p);
+				changemapserv(text, getint(p));
+				mapchanged = true;
+				break;
+#endif
 
 			case SV_ARENAWIN:
 			{

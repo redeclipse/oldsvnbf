@@ -43,7 +43,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/I &quot;..\fpsgame\bot&quot;"
+				AdditionalOptions=""
 				Optimization="1"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="false"
@@ -1445,10 +1445,6 @@
 			Name="fpsgame"
 			>
 			<File
-				RelativePath="..\fpsgame\bot.h"
-				>
-			</File>
-			<File
 				RelativePath="..\fpsgame\capture.h"
 				>
 			</File>
@@ -1520,30 +1516,6 @@
 				RelativePath="..\fpsgame\weapon.h"
 				>
 			</File>
-			<Filter
-				Name="bot"
-				>
-				<File
-					RelativePath="..\fpsgame\bot\botai.h"
-					>
-				</File>
-				<File
-					RelativePath="..\fpsgame\bot\botent.h"
-					>
-				</File>
-				<File
-					RelativePath="..\fpsgame\bot\botmgr.h"
-					>
-				</File>
-				<File
-					RelativePath="..\fpsgame\bot\botutl.h"
-					>
-				</File>
-				<File
-					RelativePath="..\fpsgame\bot\botway.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 	</Files>
 	<Globals>
