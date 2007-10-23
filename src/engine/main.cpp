@@ -161,9 +161,9 @@ void computescreen(const char *text, Texture *t)
 	loopi(2)
 	{
 #ifdef BFRONTIER
-		glClear(GL_COLOR_BUFFER_BIT);
 		glLoadIdentity();
 		glOrtho(0, w, h, 0, -1, 1);
+		glClear(GL_COLOR_BUFFER_BIT);
 		settexture("packages/textures/loadback.jpg");
 	
 		glColor3f(1, 1, 1);
@@ -502,7 +502,9 @@ VARP(verbose, 0, 0, 3); // be more or less expressive to console
 
 void _grabmouse(int n)
 {
-	SDL_WM_GrabInput(n ? SDL_GRAB_ON : SDL_GRAB_OFF);
+	if (screen->flags&SDL_FULLSCREEN)
+		SDL_WM_GrabInput(n ? SDL_GRAB_ON : SDL_GRAB_OFF);
+
 	keyrepeat(n ? false : true);
 	SDL_ShowCursor(n ? 0 : 1);
 }
@@ -846,15 +848,16 @@ int main(int argc, char **argv)
 #ifdef BFRONTIER // blood frontier, game name support
 	s_sprintfd(caption)("Blood Frontier: %s", sv->gamename());
 	SDL_WM_SetCaption(caption, NULL);
+	setvar("grabmouse", 1, true);
 #else
 	SDL_WM_SetCaption("sauerbraten engine", NULL);
-#endif
 	#ifndef WIN32
 	if(fs)
 	#endif
 	SDL_WM_GrabInput(SDL_GRAB_ON);
 	keyrepeat(false);
 	SDL_ShowCursor(0);
+#endif
 
 	log("gl");
 #ifdef BFRONTIER // moved data
@@ -1010,8 +1013,8 @@ int main(int argc, char **argv)
 
 				case SDL_ACTIVEEVENT:
 #ifdef BFRONTIER // grabmouse support
-					if(event.active.state & SDL_APPINPUTFOCUS || event.active.gain)
-						setvar("grabmouse", event.active.gain, true);
+					if(event.active.state & SDL_APPINPUTFOCUS)
+						setvar("grabmouse", event.active.gain ? 1 : 0, true);
 #else
 					if(event.active.state & SDL_APPINPUTFOCUS)
 						grabmouse = event.active.gain;

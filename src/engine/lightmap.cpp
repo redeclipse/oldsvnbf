@@ -10,7 +10,7 @@ VARW(bumperror, 1, 3, 16);
 VARW(lightlod, 0, 0, 10);
 VARW(worldlod, 0, 0, 1);
 VARW(ambient, 1, 25, 64);
-VARW(skylight, 0, 0xFFFFFF, 0xFFFFFF);
+VARW(skylight, 0, 0, 0xFFFFFF);
 #else
 VARF(lightprecision, 1, 32, 256, hdr.mapprec = lightprecision);
 VARF(lighterror, 1, 8, 16, hdr.maple = lighterror);
