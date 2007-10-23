@@ -161,9 +161,9 @@ void pushshadowmap()
     glClientActiveTexture_(GL_TEXTURE0_ARB);
 
     float r, g, b;
+#ifdef BFRONTIER
 	if(!shadowmapambient)
 	{
-#ifdef BFRONTIER
 		int sky[3] = { (skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF };
 		if(sky[0] || sky[1] || sky[2])
 		{
@@ -172,7 +172,10 @@ void pushshadowmap()
 			b = max(25, 0.4f*ambient + 0.6f*max(ambient, sky[2]));
 		}
 		else r = g = b = max(25, 2.0f*ambient);
+	}
 #else
+	if(!shadowmapambient)
+	{
 		if(hdr.skylight[0] || hdr.skylight[1] || hdr.skylight[2])
 		{
 			r = max(25, 0.4f*hdr.ambient + 0.6f*max(hdr.ambient, hdr.skylight[0]));
@@ -180,10 +183,11 @@ void pushshadowmap()
 			b = max(25, 0.4f*hdr.ambient + 0.6f*max(hdr.ambient, hdr.skylight[2]));
 		}
 		else r = g = b = max(25, 2.0f*hdr.ambient);
-#endif
 	}
     else if(shadowmapambient<=255) r = g = b = shadowmapambient;
+#endif
     else { r = (shadowmapambient>>16)&0xFF; g = (shadowmapambient>>8)&0xFF; b = shadowmapambient&0xFF; }
+
     setenvparamf("shadowmapambient", SHPARAM_PIXEL, 7, r/255.0f, g/255.0f, b/255.0f);
 }
 
