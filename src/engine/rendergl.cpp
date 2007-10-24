@@ -265,13 +265,6 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 			if(ati_oq_bug) conoutf("WARNING: Using ATI occlusion query bug workaround. (use \"/ati_oq_bug 0\" to disable if unnecessary)");
 		}
 	}
-#if !defined(__APPLE__) && !defined(WIN32)
-	if(hasOQ && strstr(vendor, "ATI"))
-	{
-		conoutf("WARNING: Disabling occlusion query on ATI's fglrx driver to avoid crashes.");
-		hasOQ = false;
-	}
-#endif
 	if(!hasOQ)
 	{
 		conoutf("WARNING: No occlusion query support! (large maps may be SLOW)");
