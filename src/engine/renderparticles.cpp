@@ -1300,12 +1300,15 @@ static inline int colorfromattr(int attr)
  * 12..14 plane volume
  * 15..20 line volume, i.e. wall
  * 21 sphere
- * +32 to inverse direction of flares
+ * +32 to inverse direction
  */
 void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p)
 {
 	if(!emit_particles()) return;
 	
+    int pt = parttypes[type].type&0xFF;
+    bool flare = (pt == PT_FLARE) || (pt == PT_LIGHTNING);
+    
 	bool inv = (dir >= 32);
 	dir = dir&0x1F;
 	loopi(num)
@@ -1364,7 +1367,16 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
 			to.add(p);
 			from = p;
 		}
+        
+        if(flare)
 		newparticle(inv?to:from, inv?from:to, rnd(fade*3)+1, type, color);
+        else 
+        {  
+            vec d(to);
+            d.sub(from);
+            d.normalize().mul(inv ? -200.0f : 200.0f); //velocity
+            newparticle(inv?to:from, d, rnd(fade*3)+1, type, color);
+        }
 	}
 }
 
@@ -1390,10 +1402,14 @@ static void makeparticles(entity &e)
 		case 3: //fire ball - <size> <rgb>
 			newparticle(e.o, vec(0, 0, 1), 1, 16, colorfromattr(e.attr3))->val = 1+e.attr2;
 			break;
-        case 4: //tape/lightning - <dir> <length> <rgb>
-        case 7:
+        case 4:  //tape - <dir> <length> <rgb>
+        case 7:  //lightning 
+        case 8:  //fire
+        case 9:  //smoke
+        case 10: //water
         {
-            int type = (e.attr1==4) ? 10 : 21;
+            const int typemap[] = { 10, 0, 0, 21, 20, 17, 19 }; //PT_ENT types (dont use TEXT/TEXTUP/DECAL)
+            int type = typemap[e.attr1-4];
             if(e.attr2 >= 256) regularshape(type, 1+e.attr3, colorfromattr(e.attr4), e.attr2-256, 5, 200, e.o);
             else newparticle(e.o, offsetvec(e.o, e.attr2, 1+e.attr3), 1, type, colorfromattr(e.attr4));
 			break;
@@ -1402,14 +1418,12 @@ static void makeparticles(entity &e)
 		case 6:
 			newparticle(e.o, vec(0, 0, 1), 1, (e.attr1==5)?13:14, colorfromattr(e.attr3))->val = min(1.0, float(e.attr2)/100);
 			break;
-				
 		case 32: //lens flares - plain/sparkle/sun/sparklesun <red> <green> <blue>
 		case 33:
 		case 34:
 		case 35:
 			makeflare(e.o, e.attr2, e.attr3, e.attr4, (e.attr1&0x02)!=0, (e.attr1&0x01)!=0);
 			break;
-			
 		default:
 			s_sprintfd(ds)("@particles %d?", e.attr1);
 			particle_text(e.o, ds, 16, 1);

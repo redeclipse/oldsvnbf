@@ -3,7 +3,7 @@
 * gamemode cleanup and mutator support
 
 = TODO =
-* generalise input, add wiimote support
+* generalise input, allow all movement to be bound (mouse/turn), wiimote support
 * new individual icons (weapons/hud/etc)
 * vehicles, rolling/throttle/brake
 * tickers

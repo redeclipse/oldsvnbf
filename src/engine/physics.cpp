@@ -1473,24 +1473,30 @@ VARP(sensitivity, 0, 7, 1000);
 VARP(sensitivityscale, 1, 1, 100);
 VARP(invmouse, 0, 0, 1);
 
+#ifdef BFRONTIER
+void fixcamerarange() { cl->fixview(); }
+void mousemove(int dx, int dy) { cl->mousemove(dx, dy); }
+/* TODO: keyboard input for looking around
+**
+#define look(name,x,y) ICOMMAND(name, "D", (int *down), { if (*down!=0) mousemove(x, y); });
+look(lookup,	0,	1);
+look(lookdown,	0,	-1);
+look(lookright,	1,	0);
+look(lookleft,	-1,	0);
+**
+*/
+#else
 void fixcamerarange()
 {
-#ifdef BFRONTIER // alternate render storage
-	cl->fixview();
-#else
 	const float MAXPITCH = 90.0f;
 	if(camera1->pitch>MAXPITCH) camera1->pitch = MAXPITCH;
 	if(camera1->pitch<-MAXPITCH) camera1->pitch = -MAXPITCH;
 	while(camera1->yaw<0.0f) camera1->yaw += 360.0f;
 	while(camera1->yaw>=360.0f) camera1->yaw -= 360.0f;
-#endif
 }
 
 void mousemove(int dx, int dy)
 {
-#ifdef BFRONTIER // alternate input storage
-	cl->mousemove(dx, dy);
-#else
 	const float SENSF = 33.0f;	 // try match quake sens
 	camera1->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 	camera1->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
@@ -1500,8 +1506,8 @@ void mousemove(int dx, int dy)
 		player->yaw = camera1->yaw;
 		player->pitch = camera1->pitch;
 	}
-#endif
 }
+#endif
 
 bool entinmap(dynent *d, bool avoidplayers)		// brute force but effective way to find a free spawn spot in the map
 {

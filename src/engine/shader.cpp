@@ -89,11 +89,11 @@ static void compileglslshader(GLenum type, GLhandleARB &obj, char *def, char *tn
 	obj = glCreateShaderObject_(type);
 	glShaderSource_(obj, 1, &source, NULL);
 	glCompileShader_(obj);
-	if(msg) showglslinfo(obj, tname, name);
 	GLint success;
 	glGetObjectParameteriv_(obj, GL_OBJECT_COMPILE_STATUS_ARB, &success);
 	if(!success) 
 	{
+        if(msg) showglslinfo(obj, tname, name);
 		glDeleteObject_(obj);
 		obj = 0;
 	}
