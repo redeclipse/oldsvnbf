@@ -431,7 +431,6 @@ void cursorupdate()
 	renderentselection(player->o, ray, entmoving!=0);
 
     glEnable(GL_POLYGON_OFFSET_LINE);
-
 #ifdef BFRONTIER
 #define planargrid(q,r,s) \
 		for (float v = 0.f; v < (hdr.worldsize-s); v += s) \
@@ -902,12 +901,12 @@ namespace hmap
             printf(" ");       
     }
 
-//#define DPRINT fflush(stdout); printtab(tab); printf
-#define DPRINT 
+//#define DPRINT(args) fflush(stdout); printtab(tab); printf args
+#define DPRINT(args)
 
     void hedit(int x, int y, int z, uint snap, int tab)
     {
-        DPRINT("%d %d %d [%x] %x\n", x, y, z, snap, flags[x][y]);
+        DPRINT(("%d %d %d [%x] %x\n", x, y, z, snap, flags[x][y]));
         // return early if possible
         if((NOTHMAP & flags[x][y])) return ;
         bool painted = (flags[x][y] & PAINTED)!=0;
@@ -931,7 +930,7 @@ namespace hmap
         c = getcube(t, 0);
         if(!c || isempty(*c)) 
         {
-            DPRINT("DROP\n");
+            DPRINT(("DROP\n"));
             z -= f1; // drop down
             t[d] -= fg;
             e = c;
@@ -939,7 +938,7 @@ namespace hmap
         } 
         if(!c || isempty(*c))
         {
-            DPRINT("NOT\n");            
+            DPRINT(("NOT\n"));            
             flags[x][y] |= NOTHMAP;
             return;
         }
@@ -965,7 +964,7 @@ namespace hmap
         {
             if(face == 0x08080808 && (!e || !isempty(*e)))
             {
-                DPRINT("WALL\n");            
+                DPRINT(("WALL\n"));            
                 flags[x][y] |= NOTHMAP;
                 return;
 		}
@@ -985,8 +984,8 @@ namespace hmap
         // assert paint.edges <= 8
 
         { // debug            
-        DPRINT("face %x = %x + %x : %p %p \n", face, c->faces[d], b ? b->faces[d] : 0, c, b);       
-        DPRINT("brush %x + %x { %x } \n", brush[x][y].face, snap, paint);
+        DPRINT(("face %x = %x + %x : %p %p \n", face, c->faces[d], b ? b->faces[d] : 0, c, b));       
+        DPRINT(("brush %x + %x { %x } \n", brush[x][y].face, snap, paint));
         cface test, ext;
         test.face = paint;
         ext.face  = snap;
@@ -994,7 +993,7 @@ namespace hmap
         loopi(4) // assertion
             if(test.edge[i] > 8) 
             {
-                DPRINT("WARNING!!!!!\n");            
+                DPRINT(("WARNING!!!!!\n"));           
             }
         }
 
@@ -1013,8 +1012,8 @@ namespace hmap
         uint hi  = face & ((ovr>>3) * 0x7) | hvn | sky;
         uint lo  = face & ((mid>>3) * 0x7) | hvn | sky | ovr;
         uint ul  = face - oh - hi - lo;                
-        DPRINT("sky: %x | %x | %x | %x \n", hvn, sky, ovr, mid);        
-        DPRINT("raw: %x = %x %x %x %x\n", face, oh, hi, lo, ul);        
+        DPRINT(("sky: %x | %x | %x | %x \n", hvn, sky, ovr, mid));        
+        DPRINT(("raw: %x = %x %x %x %x\n", face, oh, hi, lo, ul));        
 				
 		// cubify to 2 layers, apply bias
         bool ispair = 0;
@@ -1096,12 +1095,12 @@ namespace hmap
         if(snap) 
             mask[x][y] &= ~snap;          
 
-        DPRINT("new: %x %x %x %x (%x) mask %x\n", oh, hi, lo, ul, snap, mask[x][y]);
+        DPRINT(("new: %x %x %x %x (%x) mask %x\n", oh, hi, lo, ul, snap, mask[x][y]));
  
         z = (flags[x][y] & 0x7f) - 64; 
         uint zovr = mask[x][y];
         
-        DPRINT("info %x z %d\n", flags[x][y], z);
+        DPRINT(("info %x z %d\n", flags[x][y], z));
          
         // continue to adjacent cubes
         // backtrack first to save some stack
@@ -1160,9 +1159,9 @@ namespace hmap
 void edithmap(int dir, int mode) {    
 
 #ifdef BFRONTIER
-    if(otherclients()) return;
+    if(otherclients() || !hmapsel) return;
 #else
-    if(multiplayer()) return;
+    if(multiplayer() || !hmapsel) return;
 #endif
     if (!dimcoord(sel.orient))
     {
