@@ -191,7 +191,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	{
 		intel_quadric_bug = 1;
 	} 
-	if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
+    //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
 	extern int useshaders;
 	if(!useshaders || !hasMT || !strstr(exts, "GL_ARB_vertex_program") || !strstr(exts, "GL_ARB_fragment_program"))

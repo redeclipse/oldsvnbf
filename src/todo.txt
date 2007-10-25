@@ -3,27 +3,25 @@
 * gamemode cleanup and mutator support
 
 = TODO =
+* ctf, new flag models (vwep), research gameplay style
+* limit to two teams, switch to traditional red/blue structure
 * generalise input, allow all movement to be bound (mouse/turn), wiimote support
+* regeneration, head shots, rewards
 * new individual icons (weapons/hud/etc)
+* only two guns at same time (drop guns, etc)
+* secondary fire modes (grenade: flash mines)
+* shootable triggers
+* akimbo versions of pistol and smg
+* extend projectiles, teleport etc, catch/repel grenades
 * vehicles, rolling/throttle/brake
 * tickers
 * add tags to commands and variables for description and usage
 * improve editmode
 * engine side bots with client side logic
 * configurable hud (clock, in crosshair, awards/obits, score, console, ping time/graph)
-* headshot, etc
 * fix material transitions and depth testing
-* proper rotation looping for animated models
-* S_SMGLOAD, S_REGEN, S_HEADSHOT
-* only two guns at same time (drop guns, etc)
-* secondary fire modes (grenade: flash mines)
-* shootable triggers
-* new menu skins
-* hands for hudguns
-* akimbo versions of pistol and smg
 * zombies with mixable parts
-* extend projectiles, teleport etc.
-* catch/repel grenades
+* proper rotation looping for animated models
 
 = IDEAS =
 * flashlight
@@ -57,15 +55,15 @@
 * masterserver stuff, online accounts
 * teleport cubemaps?
 * game/movement types
- * capture the flag
+ * races
+ * zombie drop
+ * nuke collector/builder
+ * ctf
  * jailbreak
  * king of the hill
  * bot war
  * ball game (eg. Deathball, Bombing Run, etc)
- * grenade golf
  * sword duel/jousts
- * races
- * zombie drop
  * third person adventure (eg. Mario 64/DS)
  * arcade shooter (eg. Parodius / ZeroWing)
  * putt-putt golf (eg. Neverputt)
