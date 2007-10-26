@@ -15,26 +15,16 @@ struct entities : icliententities
 
 	vector<extentity *> &getents() { return ents; }
 	
+#ifdef BFRONTIER
 	char *itemname(int i)
 	{
-#ifdef BFRONTIER // extended entities, blood frontier support
 		int t = ents[i]->type;
 		if(t == WEAPON) return getgun(ents[i]->attr1).name;
 		return NULL;
-#else
-		int t = ents[i]->type;
-		if(t<I_SHELLS || t>I_QUAD) return NULL;
-		return itemstats[t-I_SHELLS].name;
-#endif
 	}
-	
-#ifdef BFRONTIER // blood frontier support
-	char *entmdlname(int type, int attr1)
-#else
-	char *entmdlname(int type)
-#endif
+
+	char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
 	{
-#ifdef BFRONTIER // blood frontier support
 		static char *bfmdlnames[] =
 		{
 			NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -54,43 +44,11 @@ struct entities : icliententities
 			default:
 				return bfmdlnames[type];
 		}
-#else
-		static char *entmdlnames[] =
-		{
-			NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-			"ammo/shells", "ammo/bullets", "ammo/rockets", "ammo/rrounds", "ammo/grenades", "ammo/cartridges",
-			"health", "boost", "armor/green", "armor/yellow", "quad", "teleporter",
-			NULL, NULL,
-			"carrot",
-			NULL, NULL,
-			"checkpoint"
-		};
-		return entmdlnames[type];
-#endif
-	}
-
-	void renderent(extentity &e, int type, float z, float yaw, int anim = ANIM_MAPMODEL|ANIM_LOOP, int basetime = 0, float speed = 10.0f)
-	{
-#ifdef BFRONTIER
-		if (e.type==CARROT || e.type==RESPAWNPOINT || e.type == TELEPORT ||
-			(e.type==WEAPON && e.spawned))
-		{
-			char *mdlname = entmdlname(type, e.attr1);
-			if(!mdlname) return;
-			rendermodel(e.color, e.dir, mdlname, anim, 0, 0, vec(e.o).add(vec(0, 0, z)), yaw, 0, speed, basetime, NULL, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
-		}
-#else
-		char *mdlname = entmdlname(type);
-		if(!mdlname) return;
-		rendermodel(e.color, e.dir, mdlname, anim, 0, 0, vec(e.o).add(vec(0, 0, z)), yaw, 0, speed, basetime, NULL, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
-#endif
 	}
 
 	void renderentities()
 	{
-#ifdef BFRONTIER // extended entities
-#define entfocus(i, f) \
-	{ int n = efocus = (i); if(n>=0) { extentity &e = *ents[n]; f; } }
+		#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
 
 		if (editmode || showallwp())
 		{
@@ -108,13 +66,61 @@ struct entities : icliententities
 			}
 			renderprimitive(false);
 		}
-#endif
+		
 		loopv(ents)
 		{
-#ifdef BFRONTIER
 			extentity &e = *ents[i];
-			renderent(e, e.type, (float)(1+sin(cl.lastmillis/100.0+e.o.x+e.o.y)/20), cl.lastmillis/(e.attr2 ? 1.0f : 10.0f));
+
+			if (e.type == CARROT || e.type == RESPAWNPOINT || e.type == TELEPORT ||
+				(e.type==WEAPON && e.spawned))
+			{
+				char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+
+				if (mdlname)
+				{
+					rendermodel(e.color, e.dir, mdlname, ANIM_MAPMODEL|ANIM_LOOP,
+						0, 0, e.o, 0.f, 0.f, 0.f, 0, NULL,
+						MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED);
+				}
+			}
+		}
+	}
+
+	void rumble(extentity &e) { playsound(S_RUMBLE, &e.o); }
 #else
+	char *itemname(int i)
+	{
+		int t = ents[i]->type;
+		if(t<I_SHELLS || t>I_QUAD) return NULL;
+		return itemstats[t-I_SHELLS].name;
+	}
+
+	char *entmdlname(int type)
+	{
+		static char *entmdlnames[] =
+		{
+			NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+			"ammo/shells", "ammo/bullets", "ammo/rockets", "ammo/rrounds", "ammo/grenades", "ammo/cartridges",
+			"health", "boost", "armor/green", "armor/yellow", "quad", "teleporter",
+			NULL, NULL,
+			"carrot",
+			NULL, NULL,
+			"checkpoint"
+		};
+		return entmdlnames[type];
+	}
+
+	void renderent(extentity &e, int anim = , int basetime = 0, float speed = 10.0f)
+	{
+		char *mdlname = entmdlname(type);
+		if(!mdlname) return;
+		rendermodel(e.color, e.dir, mdlname, anim, 0, 0, vec(e.o).add(vec(0, 0, z)), yaw, 0, speed, basetime, NULL, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
+	}
+
+	void renderentities()
+	{
+		loopv(ents)
+		{
 			extentity &e = *ents[i];
 			if(e.type==CARROT || e.type==RESPAWNPOINT)
 			{
@@ -124,18 +130,14 @@ struct entities : icliententities
 			if(!e.spawned && e.type!=TELEPORT) continue;
 			if(e.type<I_SHELLS || e.type>TELEPORT) continue;
 			renderent(e, e.type, (float)(1+sin(cl.lastmillis/100.0+e.o.x+e.o.y)/20), cl.lastmillis/10.0f);
-#endif
 		}
 	}
 
 	void rumble(extentity &e)
 	{
-#ifdef BFRONTIER
 		playsound(S_RUMBLE, &e.o);
-#else
-		playsound(S_RUMBLE, &e.o);
-#endif
 	}
+#endif
 
 	void trigger(extentity &e)
 	{
