@@ -5,7 +5,9 @@ struct weaponstate
 	fpsclient &cl;
 	fpsent *player1;
 
+#ifndef BFRONTIER
 	static const int MONSTERDAMAGEFACTOR = 4;
+#endif
 	static const int OFFSETMILLIS = 500;
 	vec sg[SGRAYS];
 
@@ -18,14 +20,19 @@ struct weaponstate
 	weaponstate(fpsclient &_cl) : cl(_cl), player1(_cl.player1)
 	{
 #ifdef BFRONTIER
-        CCOMMAND(weapon, "sss", (weaponstate *self, char *w1, char *w2, char *w3),
+        CCOMMAND(weapon, "sss", (weaponstate *self, char *a, char *b),
 		{
-            self->weaponswitch(w1[0] ? atoi(w1) : -1, w2[0] ? atoi(w2) : -1);
+            self->weaponswitch(a[0] ? atoi(a) : -1, b[0] ? atoi(b) : -1);
 
 		});
 		CCOMMAND(getgun, "", (weaponstate *self), intret(self->player1->gunselect));
-		CCOMMAND(getammo, "", (weaponstate *self), intret(self->player1->ammo[self->player1->gunselect]));
-		CCOMMAND(getweapon, "", (weaponstate *self), { intret(self->player1->gunselect); });
+		CCOMMAND(getammo, "s", (weaponstate *self, char *a),
+		{
+			int n = a[0] ? atoi(a) : -1;
+			if (n <= -1 || n >= NUMGUNS) n = self->player1->gunselect;
+			intret(self->player1->ammo[n]);
+		});
+		CCOMMAND(getweapon, "", (weaponstate *self), intret(self->player1->gunselect));
 #else
         CCOMMAND(weapon, "sss", (weaponstate *self, char *w1, char *w2, char *w3),
         {
@@ -37,12 +44,12 @@ struct weaponstate
 #endif
 	}
 #ifdef BFRONTIER
-	void weaponswitch(int a = -1, int b = -1, int c = -1)
+	void weaponswitch(int a = -1, int b = -1)
 	{
-		if(player1->state!=CS_ALIVE || a<-1 || b<-1 || a>=NUMGUNS || b>=NUMGUNS) return;
+		if (player1->state != CS_ALIVE || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
 		int s = player1->gunselect;
 		
-		loopi(NUMGUNS) // avoid infinite loop
+		loopi(NUMGUNS) // only loop the amount of times we have guns for
 		{
 			if (a >= 0) s = a;
 			else s += b;
@@ -122,7 +129,7 @@ struct weaponstate
 	}
 
 #ifdef BFRONTIER
-	enum { BNC_WEAPON = 0, BNC_GIBS, BNC_DEBRIS };
+	enum { BNC_SHOT = 0, BNC_GIBS, BNC_DEBRIS };
 	
 	struct bouncent : physent
 	{
@@ -176,7 +183,7 @@ struct weaponstate
 		{
 			if (sndchans.inrange(schan) && !sndchans[schan].playing()) schan = -1;
 
-            if (bouncetype == BNC_WEAPON)
+            if (bouncetype == BNC_SHOT)
                 regular_particle_splash(5, 1, 150, vec(o).sub(vel));
 		}
 		
@@ -186,7 +193,7 @@ struct weaponstate
 			{
 				if (bounce(this, float(time)/1000.0f, elasticity, waterfric))
 				{
-					if (bouncetype == BNC_WEAPON && (gun == GUN_GL || gun == GUN_RL))
+					if (bouncetype == BNC_SHOT && (gun == GUN_GL || gun == GUN_RL))
 					{
 						if (gun == GUN_GL && lifetime > 0)
 						{
@@ -314,12 +321,12 @@ struct weaponstate
 			
 			while (rtime > 0)
 			{
-				int stime = bnc.bouncetype == BNC_WEAPON ? 10 : 30, qtime = min(stime, rtime);
+				int stime = bnc.bouncetype == BNC_SHOT ? 10 : 30, qtime = min(stime, rtime);
 				rtime -= qtime;
 				
 				if (!bnc.update(qtime))
 				{
-					if (bnc.bouncetype == BNC_WEAPON)
+					if (bnc.bouncetype == BNC_SHOT)
 						explode(bnc);
 
 					bnc.state = CS_DEAD;
@@ -758,7 +765,7 @@ struct weaponstate
 					float dist = from.dist(to);
 					up.z += dist/8;
 				}
-				newbouncer(from, up, local, d, BNC_WEAPON, getgun(gun).time, getgun(gun).speed, gun);
+				newbouncer(from, up, local, d, BNC_SHOT, getgun(gun).time, getgun(gun).speed, gun);
 				break;
 			}
 #else
@@ -818,8 +825,8 @@ struct weaponstate
 #else
 		int qdam = guns[d->gunselect].damage;
 		if(d->quadmillis) qdam *= 4;
-#endif
 		if(d->type==ENT_AI) qdam /= MONSTERDAMAGEFACTOR;
+#endif
 		fpsent *o, *cl;
 		if(d->gunselect==GUN_SG)
 		{
@@ -994,7 +1001,7 @@ struct weaponstate
 			yaw += 90;
 			bnc.lastyaw = yaw;
 
-            if (bnc.bouncetype == BNC_WEAPON)
+            if (bnc.bouncetype == BNC_SHOT)
             {
             	if (bnc.gun == GUN_GL) s_sprintf(mname)("%s", "projectiles/grenade");
             	else if (bnc.gun == GUN_RL) s_sprintf(mname)("%s", "projectiles/rocket");

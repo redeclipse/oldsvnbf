@@ -1,18 +1,19 @@
 = WIP =
+* property system to replace the variable mess
 * sound system upgrade (fmodex)
 * gamemode cleanup and mutator support
+* limit to two teams, switch to traditional red/blue structure
+* only two guns at same time (drop guns, etc)
+* regeneration, head shots, rewards
+* akimbo versions of pistol and smg
+* extend projectiles, teleport etc, catch/repel grenades
 
 = TODO =
 * ctf, new flag models (vwep), research gameplay style
-* limit to two teams, switch to traditional red/blue structure
 * generalise input, allow all movement to be bound (mouse/turn), wiimote support
-* regeneration, head shots, rewards
 * new individual icons (weapons/hud/etc)
-* only two guns at same time (drop guns, etc)
 * secondary fire modes (grenade: flash mines)
 * shootable triggers
-* akimbo versions of pistol and smg
-* extend projectiles, teleport etc, catch/repel grenades
 * vehicles, rolling/throttle/brake
 * tickers
 * add tags to commands and variables for description and usage
@@ -54,6 +55,7 @@
 * music/mp3 player
 * masterserver stuff, online accounts
 * teleport cubemaps?
+* seperate cube/material contexts?
 * game/movement types
  * races
  * zombie drop

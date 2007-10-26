@@ -609,11 +609,12 @@ struct entities : icliententities
 		else if (maptype == MAP_OCTA)
 		{
 			int ver = getmapversion();
-			if(ver <= 10)
+			
+			if (ver <= 10)
 			{
 				if(e.type >= 7) e.type++;
 			}
-			if(ver <= 12)
+			if (ver <= 12)
 			{
 				if(e.type >= 8) e.type++;
 			}
@@ -627,7 +628,8 @@ struct entities : icliententities
 				e.attr1 = gunmap[gun];
 				e.attr2 = 0;
 			}
-			else if (e.type >= 14 && e.type <= 18) e.type = NOTUSED;
+			else if (e.type >= 14 && e.type <= 18) e.type = NOTUSED; // no health, armour, quad
+			else if (e.type >= 19) e.type -= 10;
 		}
 	}
 
