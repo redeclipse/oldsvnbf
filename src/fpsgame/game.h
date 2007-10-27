@@ -349,7 +349,8 @@ static struct guninfo { short sound, attackdelay, damage, projspeed, part, kicka
 struct fpsstate
 {
 #ifdef BFRONTIER
-	int health, lastspawn, gunselect, gunwait[NUMGUNS], gunlast[NUMGUNS];
+	int health, lastspawn, lastpain;
+	int gunselect, gunwait[NUMGUNS], gunlast[NUMGUNS];
 #else
 	int health, maxhealth;
 	int armour, armourtype;
@@ -359,7 +360,8 @@ struct fpsstate
 	int ammo[NUMGUNS];
 
 #ifdef BFRONTIER
-	fpsstate() {}
+	fpsstate() : lastpain(0) {}
+	~fpsstate() {}
 
 	void addammo(int gun)
 	{
@@ -531,17 +533,24 @@ struct fpsstate
 #endif
 
 	// just subtract damage here, can set death, etc. later in code calling this 
+#ifdef BFRONTIER
+	int dodamage(int damage, int millis)
+	{
+		lastpain = millis;
+		health -= damage;
+		return damage;		
+	}
+#else
 	int dodamage(int damage)
 	{
-#ifndef BFRONTIER
 		int ad = damage*(armourtype+1)*25/100; // let armour absorb when possible
 		if(ad>armour) ad = armour;
 		armour -= ad;
 		damage -= ad;
-#endif
 		health -= damage;
 		return damage;		
 	}
+#endif
 };
 
 struct fpsent : dynent, fpsstate
@@ -550,7 +559,7 @@ struct fpsent : dynent, fpsstate
 	int clientnum, privilege, lastupdate, plag, ping;
 	int lifesequence;					// sequence id for each respawn, used in damage test
 #ifdef BFRONTIER
-	int lastpain, lastattackgun;
+	int lastattackgun;
 #else
 	int lastpain;
 	int lastaction, lastattackgun;
@@ -568,7 +577,7 @@ struct fpsent : dynent, fpsstate
 	string name, team, info;
 
 #ifdef BFRONTIER
-	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), lastpain(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL),
+	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL),
 				spree(0), lastimpulse(0), nexthealth(0)
 #else
     fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), lastpain(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL)

@@ -739,16 +739,19 @@ struct clientcom : iclientcom
 				int tcn = getint(p), 
 					acn = getint(p),
 					damage = getint(p), 
-#ifndef BFRONTIER
+#ifdef BFRONTIER
+					health = getint(p),
+					millis = getint(p);
+#else
 					armour = getint(p),
-#endif
 					health = getint(p);
+#endif
 				fpsent *target = tcn==player1->clientnum ? player1 : cl.getclient(tcn),
 						*actor = acn==player1->clientnum ? player1 : cl.getclient(acn);
 				if(!target || !actor) break;
 #ifdef BFRONTIER // local servers
 				target->health = health;
-				cl.damaged(damage, target, actor);
+				cl.damaged(damage, target, actor, millis);
 #else
 				target->armour = armour;
 				target->health = health;
@@ -756,6 +759,25 @@ struct clientcom : iclientcom
 #endif
 				break;
 			}
+#ifdef BFRONTIER
+			case SV_RELOAD:
+			{
+				int trg = getint(p), gun = getint(p), amt = getint(p);
+				fpsent *target = trg == player1->clientnum ? player1 : cl.getclient(trg);
+				if (!target || gun <= -1 || gun >= NUMGUNS) break;
+				target->ammo[gun] = amt;
+				break;
+			}
+
+			case SV_REGENERATE:
+			{
+				int trg = getint(p), amt = getint(p);
+				fpsent *target = trg == player1->clientnum ? player1 : cl.getclient(trg);
+				if (!target) break;
+				target->health = amt;
+				break;
+			}
+#endif
 
 			case SV_HITPUSH:
 			{

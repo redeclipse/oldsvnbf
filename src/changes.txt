@@ -7,6 +7,8 @@ Legend [
 ]
 
 = wip edition =
+gam: health regeneration and synchronisation
+gam: reload synchronisation
 gam: game modes cleaned up, mutators added
 gam: better bouncer sound tracking
 eng: 'soundformat' var for sound output format (FMOD_SOUND_FORMAT_PCM8 [1], FMOD_SOUND_FORMAT_PCM16 [2], .., FMOD_SOUND_FORMAT_MAX-1 [*])

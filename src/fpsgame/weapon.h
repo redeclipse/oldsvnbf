@@ -139,14 +139,14 @@ struct weaponstate
 		fpsent *owner;
 		int bouncetype;
 		float elasticity, waterfric;
-		int gun, schan;
+		int gun, schan, id;
 		
-		bouncent(bool _b, fpsent *_o, int _n, int _t, int _s, int _g) :
+		bouncent(bool _b, fpsent *_o, int _n, int _t, int _s, int _g, int _l) :
 			lifetime(_t),
 			lastyaw(0.f), roll(0.f),
 			local(_b), owner(_o), bouncetype(_n),
 			elasticity(0.75f), waterfric(3.0f),
-			gun(_g), schan(-1)
+			gun(_g), schan(-1), id(_l)
 		{
 			reset();
 			maxspeed = _s;
@@ -237,7 +237,7 @@ struct weaponstate
 
 	void newbouncer(const vec &from, const vec &to, bool local, fpsent *owner, int type, int lifetime, int speed, int gun)
 	{
-		bouncent &bnc = *(new bouncent(local, owner, type, lifetime, speed, gun));
+		bouncent &bnc = *(new bouncent(local, owner, type, lifetime, speed, gun, cl.lastmillis));
 
 		vec dir(vec(vec(to).sub(from)).normalize());
 
@@ -304,7 +304,7 @@ struct weaponstate
 				radialeffect(o, bnc);
 			}
 
-			cl.cc.addmsg(SV_EXPLODE, "ri2iv", cl.lastmillis-cl.maptime, bnc.gun,
+			cl.cc.addmsg(SV_EXPLODE, "ri3iv", cl.lastmillis-cl.maptime, GUN_GL, bnc.id-cl.maptime,
 					hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 		}
 	}
@@ -361,7 +361,9 @@ struct weaponstate
 		int bouncetype;
 		vec offset;
 		int offsetmillis;
+        int id;
 	};
+
 	vector<bouncent *> bouncers;
 
 	void newbouncer(const vec &from, const vec &to, bool local, fpsent *owner, int type, int lifetime, int speed)
@@ -378,6 +380,7 @@ struct weaponstate
 		bnc.local = local;
 		bnc.owner = owner;
 		bnc.bouncetype = type;
+        bnc.id = cl.lastmillis;
 
 		vec dir(to);
 		dir.sub(from).normalize();
@@ -416,7 +419,7 @@ struct weaponstate
 						hits.setsizenodelete(0);
 						explode(bnc.local, bnc.owner, bnc.o, NULL, qdam, GUN_GL);					
                         if(bnc.local)
-                            cl.cc.addmsg(SV_EXPLODE, "ri2iv", cl.lastmillis-cl.maptime, GUN_GL,
+                            cl.cc.addmsg(SV_EXPLODE, "ri3iv", cl.lastmillis-cl.maptime, GUN_GL, bnc.id-cl.maptime,
 									hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 					}
 					delete &bnc;
@@ -435,7 +438,7 @@ struct weaponstate
 		loopv(bouncers) if(bouncers[i]->owner==owner) { delete bouncers[i]; bouncers.remove(i--); }
 	}
 
-	struct projectile { vec o, to, offset; float speed; fpsent *owner; int gun; bool local; int offsetmillis; };
+    struct projectile { vec o, to, offset; float speed; fpsent *owner; int gun; bool local; int offsetmillis; int id; };
 	vector<projectile> projs;
 
 	void projreset() { projs.setsize(0); bouncers.deletecontentsp(); bouncers.setsize(0); }
@@ -452,6 +455,7 @@ struct weaponstate
 		p.owner = owner;
 		p.gun = gun;
 		p.offsetmillis = OFFSETMILLIS;
+        p.id = cl.lastmillis;
 	}
 
 	void removeprojectiles(fpsent *owner) 
@@ -503,11 +507,10 @@ struct weaponstate
 
 	void hit(int damage, fpsent *d, fpsent *at, const vec &vel, int gun, int info = 1)
 	{
-		d->lastpain = cl.lastmillis;
+#ifdef BFRONTIER
 		at->totaldamage += damage;
 		d->superdamage = 0;
 
-#ifdef BFRONTIER
 		hitmsg &h = hits.add();
 		h.target = d->clientnum;
 		h.lifesequence = d->lifesequence;
@@ -527,6 +530,10 @@ struct weaponstate
 			playsound(S_DAMAGE1+snd);
 		}
 #else
+		d->lastpain = cl.lastmillis;
+		at->totaldamage += damage;
+		d->superdamage = 0;
+
 		if(d->type==ENT_AI || !m_mp(cl.gamemode) || d==player1) d->hitpush(damage, vel, at, gun);
 
         if(d->type==ENT_AI) ((monsterset::monster *)d)->monsterpain(damage, at); 
@@ -683,7 +690,7 @@ struct weaponstate
 			if(exploded) 
 			{
                 if(p.local)
-                    cl.cc.addmsg(SV_EXPLODE, "ri2iv", cl.lastmillis-cl.maptime, p.gun,
+                    cl.cc.addmsg(SV_EXPLODE, "ri3iv", cl.lastmillis-cl.maptime, p.gun, p.id-cl.maptime,
 							hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 				projs.remove(i--);
 			}

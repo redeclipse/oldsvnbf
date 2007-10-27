@@ -454,11 +454,11 @@ struct fpsclient : igameclient
     }
 
 #ifdef BFRONTIER
-	void damaged(int damage, fpsent *d, fpsent *actor)
+	void damaged(int damage, fpsent *d, fpsent *actor, int millis = 0)
 	{
 		if(d->state!=CS_ALIVE || intermission) return;
 		
-		d->dodamage(damage);
+		d->dodamage(damage, millis ? millis : lastmillis);
 
 		if (d == player1)
 		{
@@ -515,7 +515,6 @@ struct fpsclient : igameclient
 			else console("\f2%s fragged %s", cflags, aname, dname);
 		}
 		d->state = CS_DEAD;
-		d->lastpain = lastmillis;
         d->superdamage = max(-d->health, 0);
 		if(d==player1)
 		{
@@ -1015,7 +1014,7 @@ struct fpsclient : igameclient
 					{
 						if (d->state == CS_ALIVE)
 						{
-							draw_textx("%d", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->ammo[d->gunselect]);
+							draw_textx("%d hp, %d ammo", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->health, d->ammo[d->gunselect]);
 						}
 						else if (d->state == CS_DEAD)
 						{

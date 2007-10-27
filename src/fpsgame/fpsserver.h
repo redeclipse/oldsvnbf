@@ -30,7 +30,7 @@ struct fpsserver : igameserver
 	struct shotevent
 	{
 		int type;
-		int millis;
+        int millis, id;
 		int gun;
 		float from[3], to[3];
 	};
@@ -38,7 +38,7 @@ struct fpsserver : igameserver
 	struct reloadevent
 	{
 		int type;
-		int millis;
+		int millis, id;
 		int gun;
 	};
 #endif
@@ -46,7 +46,7 @@ struct fpsserver : igameserver
 	struct explodeevent
 	{
 		int type;
-		int millis;
+        int millis, id;
 		int gun;
 	};
 
@@ -87,6 +87,33 @@ struct fpsserver : igameserver
 		pickupevent pickup;
 	};
 
+    template <int N>
+    struct projectilestate
+    {
+        int projs[N];
+        int numprojs;
+
+        projectilestate() : numprojs(0) {}
+
+        void reset() { numprojs = 0; }
+
+        void add(int val)
+        {
+            if(numprojs>=N) numprojs = 0;
+            projs[numprojs++] = val;
+        }
+
+        bool remove(int val)
+        {
+            loopi(numprojs) if(projs[i]==val)
+            {
+                projs[i] = projs[--numprojs];
+                return true;
+            }
+            return false;
+        }
+    };
+
 	struct gamestate : fpsstate
 	{
 		vec o;
@@ -97,7 +124,7 @@ struct fpsserver : igameserver
 		int lastdeath, lastspawn, lifesequence;
 		int lastshot;
 #endif
-		int rockets, grenades;
+        projectilestate<8> rockets, grenades;
 		int frags;
 		int lasttimeplayed, timeplayed;
 		float effectiveness;
@@ -109,17 +136,20 @@ struct fpsserver : igameserver
 			return state==CS_ALIVE || (state==CS_DEAD && gamemillis - lastdeath <= DEATHMILLIS);
 		}
 
-#ifdef BFRONTIER
-        bool waitexpired(int gamemillis, int gun)
-        {
-            return gamemillis - gunvar(gunlast,gun) >= gunvar(gunwait,gun);
-        }
-#else
         bool waitexpired(int gamemillis)
         {
+#ifdef BFRONTIER
+			int lastshot = 0;
+			loopi (NUMGUNS) if (lastshot < gunvar(gunlast, i)) lastshot = gunvar(gunlast, i);
+
+			int lasttime = gamemillis - lastshot;
+			loopi (NUMGUNS) if (lasttime < gunvar(gunwait, i)) return false;
+
+			return true;
+#else
             return gamemillis - lastshot >= gunwait;
-        }
 #endif
+        }
 
 		void reset()
 		{
@@ -128,7 +158,8 @@ struct fpsserver : igameserver
 #ifndef BFRONTIER
 			maxhealth = 100;
 #endif
-			rockets = grenades = 0;
+            rockets.reset();
+            grenades.reset();
 
 			timeplayed = 0;
 			effectiveness = 0;
@@ -1323,7 +1354,8 @@ struct fpsserver : igameserver
 				if(val)
 				{
 					ci->events.setsizenodelete(0);
-					ci->state.rockets = ci->state.grenades = 0;
+                    ci->state.rockets.reset();
+                    ci->state.grenades.reset();
 				}
 				QUEUE_MSG;
 				break;
@@ -1351,13 +1383,6 @@ struct fpsserver : igameserver
 				break;
 			}
 
-#ifdef BFRONTIER
-			case SV_REGENERATE:
-			{
-				getint(p);
-				break;
-			}
-#endif
 			case SV_SPAWN:
 			{
 				int ls = getint(p), gunselect = getint(p);
@@ -1381,35 +1406,19 @@ struct fpsserver : igameserver
 			{
 				gameevent &shot = ci->addevent();
 				shot.type = GE_SHOT;
-#ifdef BFRONTIER
                 #define seteventmillis(event) \
                 { \
-					int offset = getint(p); \
-					event.gun = getint(p); \
-                    if(!ci->timesync || (ci->events.length()==1 && ci->state.waitexpired(gamemillis, event.gun))) \
-                    { \
-                        ci->timesync = true; \
-                        ci->gameoffset = gamemillis - offset; \
-                        event.millis = gamemillis; \
-                    } \
-                    else event.millis = ci->gameoffset + offset; \
-				}
-#else
-                #define seteventmillis(event) \
-                { \
+                    event.id = getint(p); \
                     if(!ci->timesync || (ci->events.length()==1 && ci->state.waitexpired(gamemillis))) \
                     { \
                         ci->timesync = true; \
-                        ci->gameoffset = gamemillis - getint(p); \
+                        ci->gameoffset = gamemillis - event.id; \
                         event.millis = gamemillis; \
                     } \
-                    else event.millis = ci->gameoffset + getint(p); \
+                    else event.millis = ci->gameoffset + event.id; \
 				}
-#endif
                 seteventmillis(shot.shot);
-#ifndef BFRONTIER
 				shot.shot.gun = getint(p);
-#endif
 				loopk(3) shot.shot.from[k] = getint(p)/DMF;
 				loopk(3) shot.shot.to[k] = getint(p)/DMF;
 				int hits = getint(p);
@@ -1430,6 +1439,7 @@ struct fpsserver : igameserver
 				gameevent &reload = ci->addevent();
 				reload.type = GE_RELOAD;
                 seteventmillis(reload.reload);
+				reload.reload.gun = getint(p);
                 break;
 			}
 #endif
@@ -1439,9 +1449,8 @@ struct fpsserver : igameserver
 				gameevent &exp = ci->addevent();
 				exp.type = GE_EXPLODE;
                 seteventmillis(exp.explode);
-#ifndef BFRONTIER
 				exp.explode.gun = getint(p);
-#endif
+                exp.explode.id = getint(p);
 				int hits = getint(p);
 				loopk(hits)
 				{
@@ -1958,8 +1967,8 @@ struct fpsserver : igameserver
 		if (smode && !smode->damage(target, actor, damage, gun, hitpush)) return;
 		//if (!teamdamage && m_team(gamemode, mutators) && isteam(target->team, actor->team)) return;
 		//damage *= damagescale/100;
-		ts.dodamage(damage);
-		sendf(-1, 1, "ri5", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.health); 
+		ts.dodamage(damage, gamemillis);
+		sendf(-1, 1, "ri6", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.health, ts.lastpain); 
 #else
 		ts.dodamage(damage);
 		sendf(-1, 1, "ri6", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.armour, ts.health); 
@@ -1974,25 +1983,24 @@ struct fpsserver : igameserver
 		if(ts.health<=0)
 		{
 #ifdef BFRONTIER
-			if(target!=actor && (!m_team(gamemode, mutators) || !isteam(target->team, actor->team)))
+			if (target != actor && (!m_team(gamemode, mutators) || !isteam(target->team, actor->team)))
 			{
 				actor->state.frags++;
-
 				int friends = 0, enemies = 0; // note: friends also includes the fragger
 				if(m_team(gamemode, mutators)) loopv(clients) if(!isteam(clients[i]->team, actor->team)) enemies++; else friends++;
 				else { friends = 1; enemies = clients.length()-1; }
 				actor->state.effectiveness += friends/float(max(enemies, 1));
 			}
 #else
-			if(target!=actor && (!m_teammode || strcmp(target->team, actor->team)))
-			{
-				actor->state.frags++;
+            if(target!=actor && (!m_teammode || strcmp(target->team, actor->team)))
+            {
+                actor->state.frags++;
 
-				int friends = 0, enemies = 0; // note: friends also includes the fragger
-				if(m_teammode) loopv(clients) if(strcmp(clients[i]->team, actor->team)) enemies++; else friends++;
-				else { friends = 1; enemies = clients.length()-1; }
-				actor->state.effectiveness += friends/float(max(enemies, 1));
-			}
+                int friends = 0, enemies = 0; // note: friends also includes the fragger
+                if(m_teammode) loopv(clients) if(strcmp(clients[i]->team, actor->team)) enemies++; else friends++;
+                else { friends = 1; enemies = clients.length()-1; }
+                actor->state.effectiveness += friends/float(max(enemies, 1));
+            }
 #endif
 			else actor->state.frags--;
 			sendf(-1, 1, "ri4", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags);
@@ -2023,13 +2031,11 @@ struct fpsserver : igameserver
 		switch(e.gun)
 		{
 			case GUN_RL:
-				if(gs.rockets<1) return;
-				gs.rockets--;
+                if(!gs.rockets.remove(e.id)) return;
 				break;
 
 			case GUN_GL:
-				if(gs.grenades<1) return;
-				gs.grenades--;
+                if(!gs.grenades.remove(e.id)) return;
 				break;
 
 			default:
@@ -2082,8 +2088,8 @@ struct fpsserver : igameserver
 				ci->clientnum);
 		switch(e.gun)
 		{
-			case GUN_RL: gs.rockets = min(gs.rockets+1, 8); break;
-			case GUN_GL: gs.grenades = min(gs.grenades+1, 8); break;
+            case GUN_RL: gs.rockets.add(e.id); break;
+            case GUN_GL: gs.grenades.add(e.id); break;
 			default:
 			{
 				int totalrays = 0, maxrays = e.gun==GUN_SG ? SGRAYS : 1;
@@ -2116,6 +2122,7 @@ struct fpsserver : igameserver
 		gunvar(gs.gunlast,e.gun) = e.millis; 
 		gunvar(gs.gunwait,e.gun) = getgun(e.gun).rdelay; 
 		gs.ammo[e.gun] = getgun(e.gun).add;
+		sendf(-1, 1, "ri3", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
 #endif
 	void processevent(clientinfo *ci, pickupevent &e)
@@ -2130,7 +2137,15 @@ struct fpsserver : igameserver
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-#ifndef BFRONTIER
+#ifdef BFRONTIER
+			if (!m_insta(gamemode, mutators) && 
+				ci->state.state == CS_ALIVE && ci->state.health < 100 &&
+				ci->state.lastpain - gamemillis >= 3000)
+			{
+				ci->state.health = 100;
+				sendf(-1, 1, "ri2", SV_REGENERATE, ci->clientnum, ci->state.health);
+			}
+#else
 			if(curtime>0 && ci->state.quadmillis) ci->state.quadmillis = max(ci->state.quadmillis-curtime, 0);
 #endif
 			while(ci->events.length())
