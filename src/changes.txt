@@ -7,6 +7,9 @@ Legend [
 ]
 
 = wip edition =
+eng: ctrl+f when command line is open pastes colour char
+gam: coloured chat text
+gam: 'me' client command for actions
 gam: health regeneration and synchronisation
 gam: reload synchronisation
 gam: game modes cleaned up, mutators added

@@ -37,16 +37,16 @@ struct iclientcom
     virtual bool allowedittoggle() = 0;
     virtual void edittoggled(bool on) {}
     virtual void writeclientinfo(FILE *f) = 0;
-    virtual void toserver(char *text) = 0;
-#ifndef BFRONTIER
-    virtual void changemap(const char *name) = 0;
-#endif
-    virtual int numchannels() { return 1; }
 #ifdef BFRONTIER
+    virtual void toserver(char *text, bool action = false) = 0;
+    virtual void changemap(const char *name) = 0;
 	virtual bool ready() { return true; }
 	virtual int otherclients() { return 0; }
 	virtual void toservcmd(char *text, bool msg) { return; }
+#else
+    virtual void toserver(char *text) = 0;
 #endif
+    virtual int numchannels() { return 1; }
 };
 
 #ifdef BFRONTIER

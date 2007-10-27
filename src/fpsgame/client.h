@@ -15,10 +15,16 @@ struct clientcom : iclientcom
 	
 #ifdef BFRONTIER // server version, centerprint chat
 	IVARP(centerchat, 0, 1, 1);
+	IVARP(colourchat, 0, 1, 1);
 #endif
     clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false), player1(_cl.player1)
 	{
+#ifdef BFRONTIER
+        CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s, false));
+        CCOMMAND(me, "C", (clientcom *self, char *s), self->toserver(s, true));
+#else
         CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s));
+#endif
         CCOMMAND(name, "s", (clientcom *self, char *s), self->switchname(s));
         CCOMMAND(team, "s", (clientcom *self, char *s), self->switchteam(s));
         CCOMMAND(map, "s", (clientcom *self, char *s), self->changemap(s));
@@ -258,11 +264,19 @@ struct clientcom : iclientcom
 	}
 
 #ifdef BFRONTIER // centerprint chat, sounds, server commands
-	void toserver(char *text)
+	void saytext(fpsent *d, char *text, bool action)
 	{
-		console("%s:\f0 %s", (centerchat() ? CON_CENTER : 0)|CON_LEFT, cl.colorname(player1), text);
-		addmsg(SV_TEXT, "rs", text);
+		string s;
+		if (action) s_sprintf(s)("\fs\f5*\fr \fs\f5%s\fr \fs\f5%s\fr", cl.colorname(d), text);
+		else s_sprintf(s)("\fs\f0<\fr\fs\f0%s\fr\fs\f0>\fr \fs\f0%s\fr", cl.colorname(d), text);
+		console("%s", (centerchat() ? CON_CENTER : 0)|CON_LEFT, s);
 		playsound(S_CHAT);
+	}
+
+	void toserver(char *text, bool action)
+	{
+		saytext(player1, text, action);
+		addmsg(SV_TEXT, "rsi", text, action ? 1 : 0);
 	}
 	
 	void toservcmd(char *text, bool msg)
@@ -519,15 +533,15 @@ struct clientcom : iclientcom
 			{
 				if(!d) return;
 				getstring(text, p);
-				filtertext(text, text);
+				if (!colourchat()) filtertext(text, text);
 				if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR) 
 				{
 					s_sprintfd(ds)("@%s", &text);
 					particle_text(d->abovehead(), ds, 9);
 				}
 #ifdef BFRONTIER // centerprint chat
-				console("%s:\f0 %s", (centerchat() ? CON_CENTER : 0)|CON_LEFT, cl.colorname(d), &text);
-				playsound(S_CHAT);
+				int action = getint(p);
+				saytext(d, text, action!=0);
 #else
                 conoutf("%s:\f0 %s", cl.colorname(d), &text);
 #endif
