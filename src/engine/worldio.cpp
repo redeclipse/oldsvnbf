@@ -815,7 +815,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 	gzclose(f);
 	conoutf("loaded map '%s' v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
-	console("%s: %s", CON_CENTER|CON_LEFT, sv->gametitle(), hdr.maptitle);
+	console("%s", CON_CENTER|CON_LEFT, hdr.maptitle);
 
 	overrideidents = true;
 	if (!execfile(pcfname)) exec("packages/package.cfg");

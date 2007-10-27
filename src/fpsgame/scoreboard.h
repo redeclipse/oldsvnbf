@@ -191,7 +191,7 @@ struct scoreboard : g3d_callback
         g.start(menustart, 0.03f, NULL, false);
 	
 #ifdef BFRONTIER
-		s_sprintfd(modemapstr)("%s: %s", sv->gametitle(), mapname);
+		s_sprintfd(modemapstr)("%s: %s", m_name(cl.gamemode), mapname);
         if((m_timed(cl.gamemode) || cl.cc.demoplayback) && cl.minremain >= 0)
 #else
 		int gamemode = cl.gamemode;

@@ -481,6 +481,7 @@ extern void startgame(char *load = NULL, char *initscript = NULL);
 // command
 extern char *gettime(char *format);
 extern char *getmaptitle();
+extern char *getdefaultmode();
 extern char *getdefaultmap();
 
 // rendergl

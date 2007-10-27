@@ -880,7 +880,6 @@ struct weaponstate
 					gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
 					gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).rdelay;
 					cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);
-					d->ammo[d->gunselect] = getgun(d->gunselect).add;
 				}
 				return; 
 			}
