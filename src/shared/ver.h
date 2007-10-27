@@ -1,1 +1,1 @@
-#define BFRONTIER 37 // Blood Frontier global version controller
+#define BFRONTIER 38 // Blood Frontier global version controller

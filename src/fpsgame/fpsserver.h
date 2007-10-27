@@ -414,7 +414,7 @@ struct fpsserver : igameserver
 	clientinfo *cmdcontext;
 	string scresult, motd;
 	fpsserver() : notgotitems(true), notgotbases(false),
-		gamemode(0), mutators(0), interm(0), minremain(0),
+		gamemode(defaultmode()), mutators(0), interm(0), minremain(0),
 		mapreload(false), lastsend(0),
 		mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 		mapdata(NULL), reliablemessages(false),
@@ -1471,8 +1471,9 @@ struct fpsserver : igameserver
 #ifdef BFRONTIER
 			case SV_TEXT:
 				QUEUE_MSG;
+                int action = getint(p);
+                QUEUE_INT(action);
 				getstring(text, p); // filtering is chosen by the client
-                getint(p);
                 QUEUE_STR(text);
 				break;
 
@@ -2762,7 +2763,7 @@ struct fpsserver : igameserver
 		if(!name) name = ci->name;
 		if(name[0] && !duplicatename(ci, name)) return name;
 		static string cname;
-		s_sprintf(cname)("%s \fs\f5(%d)\fr", name, ci->clientnum);
+		s_sprintf(cname)("%s \fs\f5(%d)\fS", name, ci->clientnum);
 		return cname;
 	}	
 #ifdef BFRONTIER

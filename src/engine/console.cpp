@@ -76,7 +76,7 @@ void conline(const char *sf, int n, int type = CON_LEFT)
 					if (conlines[i].inrange(off))
 					{
 						if (j) s_sprintf(sd)("%s\fs", conlines[i][off].cref);
-						else s_sprintf(sd)("\fr%s", conlines[i][off].cref);
+						else s_sprintf(sd)("\fS%s", conlines[i][off].cref);
 						s_strcpy(conlines[i][off].cref, sd);
 					}
 				}

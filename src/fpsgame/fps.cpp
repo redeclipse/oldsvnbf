@@ -95,7 +95,7 @@ struct fpsclient : igameclient
 	captureclient cpc;
 
 	fpsclient()
-		: nextmode(0), nextmuts(0), gamemode(0), mutators(0), intermission(false), lastmillis(0),
+		: nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false), lastmillis(0),
 		  maptime(0), minremain(0), respawnent(-1), 
 		  swaymillis(0), swaydir(0, 0, 0),
 		  suicided(-1),
@@ -824,7 +824,7 @@ struct fpsclient : igameclient
 		if(!name) name = d->name;
 		if(name[0] && !duplicatename(d, name)) return name;
 		static string cname;
-		s_sprintf(cname)("%s%s \fs\f5(%d)\fr", prefix, name, d->clientnum);
+		s_sprintf(cname)("%s%s \fs\f5(%d)\fS", prefix, name, d->clientnum);
 		return cname;
 	}
 

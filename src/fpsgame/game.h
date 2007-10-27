@@ -661,11 +661,11 @@ enum
 	SSTAT_MAX
 };
 static char *serverstatustypes[] = {
-	"\fs\f0open\fr",
-	"\fs\f1locked\fr",
-	"\fs\f2private\fr",
-	"\fs\f3full\fr",
-	"\fs\f4?\fr"
+	"\fs\f0open\fS",
+	"\fs\f1locked\fS",
+	"\fs\f2private\fS",
+	"\fs\f3full\fS",
+	"\fs\f4?\fS"
 };
 
 #ifndef STANDALONE

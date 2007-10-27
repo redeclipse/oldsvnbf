@@ -638,31 +638,28 @@ int frames = 0;
 
 void updateframe(bool dorender)
 {
-	int millis = SDL_GetTicks() - clockrealbase;
-	
-	if (clockfix) millis = int(millis*(double(clockerror)/1000000));
-	if ((millis += clockvirtbase) < totalmillis) millis = totalmillis;
-
-	if (dorender) limitfps(millis, totalmillis);
-	
-	int elapsed = millis-totalmillis;
-
-	if (paused) curtime = 0;
-	else curtime = (elapsed*gamespeed)/100;
-	
 	if (dorender)
 	{
+		int millis = SDL_GetTicks() - clockrealbase;
+		
+		if (clockfix) millis = int(millis*(double(clockerror)/1000000));
+		if ((millis += clockvirtbase) < totalmillis) millis = totalmillis;
+	
+		limitfps(millis, totalmillis);
+		
+		int elapsed = millis-totalmillis;
+	
+		if (paused) curtime = 0;
+		else curtime = (elapsed*gamespeed)/100;
+		
 		cl->updateworld(worldpos, curtime, lastmillis);
 		menuprocess();
-	}
+	
+		lastmillis += curtime;
+		totalmillis = millis;
+	
+		serverslice(0);
 
-	lastmillis += curtime;
-	totalmillis = millis;
-
-	serverslice(0);
-
-	if (dorender)
-	{
 		if (frames) updatefpshistory(elapsed);
 		frames++;
 		
