@@ -88,6 +88,8 @@ static struct gametypes
 	{ G_CAPTURE,		G_M_FRAG,			"Capture" },
 };
 
+#define m_name(a) 			(a > -1 && a < G_MAX ? gametype[a].name : NULL)
+
 #define m_demo(a)			(a == G_DEMO)
 #define m_edit(a)			(a == G_EDITMODE)
 #define m_sp(a)				(a == G_SINGLEPLAYER)

@@ -119,7 +119,7 @@ struct fpsserver : igameserver
 		vec o;
 		int state;
 #ifdef BFRONTIER
-		int lastdeath, lifesequence;
+		int lastdeath, lifesequence, lastshot;
 #else
 		int lastdeath, lastspawn, lifesequence;
 		int lastshot;
@@ -139,12 +139,8 @@ struct fpsserver : igameserver
         bool waitexpired(int gamemillis)
         {
 #ifdef BFRONTIER
-			int lastshot = 0;
-			loopi (NUMGUNS) if (lastshot < gunvar(gunlast, i)) lastshot = gunvar(gunlast, i);
-
 			int lasttime = gamemillis - lastshot;
 			loopi (NUMGUNS) if (lasttime < gunvar(gunwait, i)) return false;
-
 			return true;
 #else
             return gamemillis - lastshot >= gunwait;
@@ -175,8 +171,8 @@ struct fpsserver : igameserver
 			lastdeath = 0;
 #ifndef BFRONTIER
 			lastspawn = -1;
-			lastshot = 0;
 #endif
+			lastshot = 0;
 		}
 	};
 
@@ -445,12 +441,7 @@ struct fpsserver : igameserver
 	vector<server_entity> sents;
 	vector<savedscore> scores;
 
-#ifdef BFRONTIER
-	static const char *modestr(int n)
-	{
-		return n >= G_DEMO && n < G_MAX ? gametype[n].name : NULL;
-	}
-#else
+#ifndef BFRONTIER
 	static const char *modestr(int n)
 	{
 		static const char *modenames[] =
@@ -533,15 +524,15 @@ struct fpsserver : igameserver
 			if(demorecord) enddemorecord();
 			if(!ci->local && !mapreload) 
 			{
-				s_sprintfd(msg)("%s forced %s on map %s", privname(ci->privilege), modestr(reqmode), map);
+				s_sprintfd(msg)("%s forced %s on map %s", privname(ci->privilege), m_name(reqmode), map);
 				sendservmsg(msg);
 			}
-			sendf(-1, 1, "risii", SV_MAPCHANGE, ci->mapvote, ci->modevote, ci->mutsvote);
+			sendf(-1, 1, "risi2", SV_MAPCHANGE, ci->mapvote, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 		}
 		else 
 		{
-			s_sprintfd(msg)("%s suggests %s on map %s (select map to vote)", colorname(ci), modestr(reqmode), map);
+			s_sprintfd(msg)("%s suggests %s on map %s (select map to vote)", colorname(ci), m_name(reqmode), map);
 			sendservmsg(msg);
 			checkvotes();
 		}
@@ -719,7 +710,11 @@ struct fpsserver : igameserver
 		time_t t = time(NULL);
 		char *timestr = ctime(&t), *trim = timestr + strlen(timestr);
 		while(trim>timestr && isspace(*--trim)) *trim = '\0';
+#ifdef BFRONTIER
+		s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, m_name(gamemode), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
+#else
 		s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, modestr(gamemode), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
+#endif
 		s_sprintfd(msg)("demo \"%s\" recorded", d.info);
 		sendservmsg(msg);
 		d.data = new uchar[len];
@@ -1950,7 +1945,7 @@ struct fpsserver : igameserver
 		spawnstate(ci);
 #ifdef BFRONTIER
 		sendf(ci->clientnum, 1, "ri4v", SV_SPAWNSTATE, gs.lifesequence,
-			gs.health, gs.gunselect, NUMGUNS, &gs.ammo[GUN_PISTOL]);
+			gs.health, gs.gunselect, NUMGUNS, &gs.ammo[0]);
 #else
 		sendf(ci->clientnum, 1, "ri7v", SV_SPAWNSTATE, gs.lifesequence,
 			gs.health, gs.maxhealth,
@@ -2067,10 +2062,10 @@ struct fpsserver : igameserver
 	{
 		gamestate &gs = ci->state;
 #ifdef BFRONTIER
-		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -1, e.millis)) return;
+		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -1, e.millis)) { conoutf("%s can't shoot", ci->name); return; }
 		if (getgun(e.gun).max) gs.ammo[e.gun]--;
-		gunvar(gs.gunlast,e.gun) = e.millis; 
-		gunvar(gs.gunwait,e.gun) = getgun(e.gun).adelay; 
+		gs.lastshot = gunvar(gs.gunlast, e.gun) = e.millis; 
+		gunvar(gs.gunwait, e.gun) = getgun(e.gun).adelay; 
 #else
 		int wait = e.millis - gs.lastshot;
 		if(!gs.isalive(gamemillis) ||
@@ -2118,11 +2113,11 @@ struct fpsserver : igameserver
 	void processevent(clientinfo *ci, reloadevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -2, e.millis)) return;
-		gunvar(gs.gunlast,e.gun) = e.millis; 
+		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -2, e.millis))  { conoutf("%s can't reload", ci->name); return; }
+		gs.lastshot = gunvar(gs.gunlast,e.gun) = e.millis; 
 		gunvar(gs.gunwait,e.gun) = getgun(e.gun).rdelay; 
 		gs.ammo[e.gun] = getgun(e.gun).add;
-		sendf(-1, 1, "ri3", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
+		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
 #endif
 	void processevent(clientinfo *ci, pickupevent &e)
@@ -2143,7 +2138,7 @@ struct fpsserver : igameserver
 				ci->state.lastpain - gamemillis >= 3000)
 			{
 				ci->state.health = 100;
-				sendf(-1, 1, "ri2", SV_REGENERATE, ci->clientnum, ci->state.health);
+				sendf(-1, 1, "ri3", SV_REGENERATE, ci->clientnum, ci->state.health);
 			}
 #else
 			if(curtime>0 && ci->state.quadmillis) ci->state.quadmillis = max(ci->state.quadmillis-curtime, 0);
@@ -2161,6 +2156,9 @@ struct fpsserver : igameserver
 				{
 					case GE_SHOT: processevent(ci, e.shot); break;
 					case GE_EXPLODE: processevent(ci, e.explode); break;
+#ifdef BFRONTIER
+					case GE_RELOAD: processevent(ci, e.reload); break;
+#endif
 					// untimed events
 					case GE_SUICIDE: processevent(ci, e.suicide); break;
 					case GE_PICKUP: processevent(ci, e.pickup); break;
@@ -2659,7 +2657,7 @@ struct fpsserver : igameserver
 						}
 						case SINFO_MODE:
 						{
-							if (si.attr.length() > 1) s_sprintf(text)("%s", modestr(si.attr[1]));
+							if (si.attr.length() > 1) s_sprintf(text)("%s", m_name(si.attr[1]));
 							else text[0] = 0;
 							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
 							break;
@@ -2760,20 +2758,10 @@ struct fpsserver : igameserver
 		return cname;
 	}	
 #ifdef BFRONTIER
-	char *gamename()
-	{
-		return "Alpha";
-	}
-
-	char *gametitle()
-	{
-		return gamemode >= G_DEMO && gamemode < G_MAX ? gametype[gamemode].name : NULL;
-	}
-
-	char *defaultmap()
-	{
-		return "usm01";
-	}
+	char *gamename() { return "Alpha"; }
+	char *gametitle() { return m_name(gamemode); }
+	char *defaultmap() { return "usm01"; }
+	int defaultmode() { return G_DEATHMATCH; }
 
 	void servsend(int cn, const char *s, ...)
 	{

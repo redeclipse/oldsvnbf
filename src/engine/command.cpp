@@ -886,6 +886,9 @@ ICOMMAND(exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
 char *getdefaultmap() { return sv->defaultmap(); }
 ICOMMAND(getdefaultmap, "", (void), result(getdefaultmap()));
 
+int getdefaultmode() { return sv->defaultmode(); }
+ICOMMAND(getdefaultmode, "", (void), intret(getdefaultmode()));
+
 #ifndef STANDALONE
 ICOMMAND(getmaptitle, "", (void), result(getmaptitle()));
 #endif

@@ -617,7 +617,7 @@ ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
 
 void startgame(char *load, char *initscript)
 {
-	int d = 2;
+	int d = sv->defaultmode();
 	string s, m;
 	s_strcpy(m, load ? load : sv->defaultmap());
 

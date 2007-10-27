@@ -956,7 +956,7 @@ struct fpsclient : igameclient
 					if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
 						rendericon("packages/textures/logo.jpg", ox+20-x, oy-260, 144, 144);
 					
-					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, sv->gametitle());
+					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, m_name(gamemode));
 				}
 				else
 				{

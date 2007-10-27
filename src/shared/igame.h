@@ -267,6 +267,7 @@ struct igameserver
 	virtual char *gamename() = 0;
 	virtual char *gametitle() = 0;
     virtual char *defaultmap() = 0;
+    virtual int defaultmode() = 0;
 #endif
 };
 
