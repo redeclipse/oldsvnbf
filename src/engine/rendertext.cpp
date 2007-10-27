@@ -178,21 +178,76 @@ void draw_text(const char *str, int left, int top, int r, int g, int b, int a, b
 				{
 					switch(str[++i])
 					{
-						case '0': color = bvec( 64, 255, 128); break;	// green: player talk
-						case '1': color = bvec( 96, 160, 255); break;	// blue: "echo" command
-						case '2': color = bvec(255, 192,  64); break;	// yellow: gameplay messages 
-						case '3': color = bvec(255,  64,  64); break;	// red: important errors
-						case '4': color = bvec(128, 128, 128); break;	// gray
-						case '5': color = bvec(192,  64, 192); break;	// magenta
-						case '6': color = bvec(255, 128,	0); break;	// orange
-						case 's': // save color
+						case 'w':
+						case '0':
+						{
+							color = bvec(255, 255, 255);
+							break; // white
+						}
+						case 'l':
+						case '1':
+						{
+							color = bvec( 0,   0,    0);
+							break; // black
+						}
+						case 'y':
+						case '2':
+						{
+							color = bvec(255, 192,  64);
+							break; // yellow
+						}
+						case 'r':
+						case '3':
+						{
+							color = bvec(255,  64,  64);
+							break; // red
+						}
+						case 'G':
+						case '4':
+						{
+							color = bvec(128, 128, 128);
+							break; // gray
+						}
+						case 'm':
+						case '5':
+						{
+							color = bvec(192,  64, 192);
+							break; // magenta
+						}
+						case 'o':
+						case '6':
+						{
+							color = bvec(255, 128,	 0);
+							break; // orange
+						}
+						case 'g':
+						case '7':
+						{
+							color = bvec( 64, 255, 128);
+							break; // green
+						}
+						case 'b':
+						case '8':
+						{
+							color = bvec( 96, 160, 255);
+							break; // blue
+						}
+						case 's':
+						{
 							if((size_t)colorpos<sizeof(colorstack)/sizeof(colorstack[0])) colorstack[colorpos++] = color;
-							continue;
-						case 'r': // restore color
+							continue; // save colour
+						}
+						case 'S':
+						{
 							if(colorpos<=0) continue;
 							color = colorstack[--colorpos];
-							break; 
-						default: color = bvec(r, g, b); break;		  // white: everything else
+							break; // restore colour
+						}
+						default:
+						{
+							color = bvec(r, g, b);
+							break; // default
+						}
 					}				
 					glColor4ub(color.x, color.y, color.z, a);
 				}

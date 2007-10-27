@@ -267,8 +267,8 @@ struct clientcom : iclientcom
 	void saytext(fpsent *d, char *text, bool action)
 	{
 		string s;
-		if (action) s_sprintf(s)("\fs\f5*\fr \fs\f5%s\fr \fs\f5%s\fr", cl.colorname(d), text);
-		else s_sprintf(s)("\fs\f0<\fr\fs\f0%s\fr\fs\f0>\fr \fs\f0%s\fr", cl.colorname(d), text);
+		if (action) s_sprintf(s)("\fs\fr*\fS \fs\fr%s\fS \fs\fr%s\fS", cl.colorname(d), text);
+		else s_sprintf(s)("\fs\fr<\fS\fs\fw%s\fS\fs\fr>\fS \fs\fw%s\fS", cl.colorname(d), text);
 		console("%s", (centerchat() ? CON_CENTER : 0)|CON_LEFT, s);
 		playsound(S_CHAT);
 	}
@@ -276,7 +276,7 @@ struct clientcom : iclientcom
 	void toserver(char *text, bool action)
 	{
 		saytext(player1, text, action);
-		addmsg(SV_TEXT, "rsi", text, action ? 1 : 0);
+		addmsg(SV_TEXT, "ris", action ? 1 : 0, text);
 	}
 	
 	void toservcmd(char *text, bool msg)
@@ -532,6 +532,8 @@ struct clientcom : iclientcom
 			case SV_TEXT:
 			{
 				if(!d) return;
+#ifdef BFRONTIER // centerprint chat
+				int action = getint(p);
 				getstring(text, p);
 				if (!colourchat()) filtertext(text, text);
 				if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR) 
@@ -539,10 +541,15 @@ struct clientcom : iclientcom
 					s_sprintfd(ds)("@%s", &text);
 					particle_text(d->abovehead(), ds, 9);
 				}
-#ifdef BFRONTIER // centerprint chat
-				int action = getint(p);
 				saytext(d, text, action!=0);
 #else
+				getstring(text, p);
+				if (!colourchat()) filtertext(text, text);
+				if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR) 
+				{
+					s_sprintfd(ds)("@%s", &text);
+					particle_text(d->abovehead(), ds, 9);
+				}
                 conoutf("%s:\f0 %s", cl.colorname(d), &text);
 #endif
 				break;

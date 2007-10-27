@@ -215,8 +215,8 @@ struct scoreboard : g3d_callback
 			
 			g.separator();
 
-			g.textf("%s: \fs\f0%d\fr frag(s), \fs\f0%d\fr death(s)", 0xFFFFFF, "player", cl.player1->name, cl.player1->frags, cl.player1->deaths);
-			g.textf("damage: \fs\f0%d\fr hp, wasted: \fs\f0%d\fr, accuracy: \fs\f0%d%%\fr", 0xFFFFFF, "info", cl.player1->totaldamage, cl.player1->totalshots-cl.player1->totaldamage, accuracy);
+			g.textf("%s: \fs\f0%d\fS frag(s), \fs\f0%d\fS death(s)", 0xFFFFFF, "player", cl.player1->name, cl.player1->frags, cl.player1->deaths);
+			g.textf("damage: \fs\f0%d\fS hp, wasted: \fs\f0%d\fS, accuracy: \fs\f0%d%%\fS", 0xFFFFFF, "info", cl.player1->totaldamage, cl.player1->totalshots-cl.player1->totaldamage, accuracy);
 
 			if(m_sp(cl.gamemode))
 			{
@@ -225,17 +225,17 @@ struct scoreboard : g3d_callback
 				pen = (cl.lastmillis-cl.maptime)/1000;
 				score += pen;
 				if(pen)
-					g.textf("time taken: \fs\f0%d\fr second(s)", 0xFFFFFF, "info", pen);
+					g.textf("time taken: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", pen);
 				
 				pen = cl.player1->deaths*60;
 				score += pen;
 				if(pen)
-					g.textf("penalty for \fs\f0%d\fr deaths: \fs\f0%d\fr second(s)", 0xFFFFFF, "info", pen);
+					g.textf("penalty for \fs\f0%d\fS deaths: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", pen);
 				
 				pen = 100-accuracy;
 				score += pen;
 				if(pen)
-					g.textf("penalty for missed shots: \fs\f0%d\fr second(s)", 0xFFFFFF, "info", pen);
+					g.textf("penalty for missed shots: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", pen);
 				
 				s_sprintfd(aname)("bestscore_%s", mapname);
 				const char *bestsc = getalias(aname);
@@ -243,7 +243,7 @@ struct scoreboard : g3d_callback
 				if(score<bestscore) bestscore = score;
 				s_sprintfd(nscore)("%d", bestscore);
 				alias(aname, nscore);
-				g.textf("SCORE: \fs\f0%d\fr second(s), best: \fs\f0%d\fr second(s)", 0xFFFFFF, "info", score, bestscore);
+				g.textf("SCORE: \fs\f0%d\fS second(s), best: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", score, bestscore);
 			}
 		}
 		g.separator();
