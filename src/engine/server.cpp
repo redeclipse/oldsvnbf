@@ -702,9 +702,6 @@ void localconnect()
 
 void initserver(bool dedicated)
 {
-#if defined(BFRONTIER) && !defined(STANDALONE)
-	conoutf("server: game");
-#endif
 	initgame(game);
 
 #ifdef BFRONTIER // local servers, enhanced master server support
@@ -721,9 +718,6 @@ void initserver(bool dedicated)
 	if(dedicated)
 	{
 #endif
-#if defined(BFRONTIER) && !defined(STANDALONE)
-		conoutf("server: host");
-#endif
 		ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
 		if(*ip)
 		{
@@ -739,11 +733,8 @@ void initserver(bool dedicated)
         else enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 #ifndef BFRONTIER // local server support
 	}
-#endif
+#endif // BFRONTIER
 
-#if defined(BFRONTIER) && !defined(STANDALONE)
-	conoutf("server: init");
-#endif
 	sv->serverinit();
 
 	if(dedicated)		// do not return, this becomes main loop
