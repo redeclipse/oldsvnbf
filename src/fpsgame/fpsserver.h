@@ -1468,20 +1468,28 @@ struct fpsserver : igameserver
 				break;
 			}
 
+#ifdef BFRONTIER
+			case SV_TEXT:
+				QUEUE_MSG;
+				getstring(text, p); // filtering is chosen by the client
+                getint(p);
+                QUEUE_STR(text);
+				break;
+
+			case SV_COMMAND:
+				getstring(text, p);
+				filtertext(text, text);
+				//servcmd(ci, text, false);
+				break;
+#else
 			case SV_TEXT:
 				QUEUE_MSG;
 				getstring(text, p);
 				filtertext(text, text);
                 QUEUE_STR(text);
 				break;
-
-#ifdef BFRONTIER
-			case SV_COMMAND:
-				getstring(text, p);
-				filtertext(text, text);
-				//servcmd(ci, text, false);
-				break;
 #endif
+
 			case SV_INITC2S:
 			{
 				QUEUE_MSG;

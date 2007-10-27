@@ -529,6 +529,9 @@ void keypress(int code, bool isdown, int cooked)
 
 				default:
 					resetcomplete();
+#ifdef BFRONTIER
+					if (code == SDLK_f && (SDL_GetModState()&MOD_KEYS)) cooked = '\f';
+#endif
 					if(cooked) 
 					{ 
 						size_t len = (int)strlen(commandbuf);

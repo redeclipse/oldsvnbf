@@ -174,7 +174,7 @@ void draw_text(const char *str, int left, int top, int r, int g, int b, int a, b
 			if(c=='\t') { x = ((x-left-off+PIXELTAB)/PIXELTAB)*PIXELTAB+left+off; continue; }
 			if(c=='\f')
 			{
-				if (!shadow || j)
+				if ((!shadow || j) && str[i+1] != 0)
 				{
 					switch(str[++i])
 					{
