@@ -795,6 +795,7 @@ struct clientcom : iclientcom
 				int trg = getint(p), amt = getint(p);
 				fpsent *target = trg == player1->clientnum ? player1 : cl.getclient(trg);
 				if (!target) break;
+				playsound(S_REGEN, &target->o, &target->vel);
 				target->health = amt;
 				break;
 			}
@@ -834,9 +835,7 @@ struct clientcom : iclientcom
 				if(!d) return;
 				int gun = getint(p);
 				d->gunselect = max(gun, 0);
-#ifdef BFRONTIER
-				playsound(S_WEAPLOAD, &d->o, &d->vel);
-#else
+#ifndef BFRONTIER
 				playsound(S_WEAPLOAD, &d->o);
 #endif
 				break;

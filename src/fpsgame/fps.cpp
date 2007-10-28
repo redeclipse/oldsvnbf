@@ -332,7 +332,7 @@ struct fpsclient : igameclient
 					}
 					else player1->lastimpulse = 0;
 	
-					ws.shoot(player1, pos);
+					if (player1->attacking) ws.shoot(player1, pos);
 	
 					ph.move(player1, 20, true);
 					ph.updatewater(player1, 0);
@@ -1577,7 +1577,7 @@ struct fpsclient : igameclient
 						if (player1->state != CS_SPECTATOR)
 						{
 							hold = true;
-							s_sprintf(rinfo)("You've taken %s", myrankv!=-1?"\f1the lead":"\f3first blood");
+							s_sprintf(rinfo)("You've taken %s", myrankv!=-1?"\fythe lead":"\frfirst blood");
 						}
 					}
 					else
@@ -1658,6 +1658,9 @@ struct fpsclient : igameclient
 	{
 		console("\f2%d%s place", CON_LEFT|CON_CENTER, myrankv+1, myrankv ? myrankv == 1 ? "nd" : myrankv == 2 ? "rd" : "th" : "st");
 	}
+
+	char *gametitle() { return m_name(gamemode); }
+	char *gametext() { return mapname; }
 #else
 	// any data written into this vector will get saved with the map data. Must take care to do own versioning, and endianess if applicable. Will not get called when loading maps from other games, so provide defaults.
 	void writegamedata(vector<char> &extras) {}
