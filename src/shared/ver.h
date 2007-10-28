@@ -1,1 +1,4 @@
-#define BFRONTIER 38 // Blood Frontier global version controller
+#define BFRONTIER			39					// global version controller
+#define BFRONTIER_NAME		"Blood Frontier"	// game name
+#define BFRONTIER_RELEASE	"Alpha 2"			// release name
+#define BFRONTIER_

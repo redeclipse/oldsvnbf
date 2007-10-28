@@ -634,32 +634,48 @@ void startgame(char *load, char *initscript)
 	localconnect();
 }
 
+void setcaption(char *text)
+{
+	s_sprintfd(caption)("%s [v%.2f] %s: %s",
+		BFRONTIER_NAME, float(BFRONTIER)/100.f, BFRONTIER_RELEASE, text
+	);
+	SDL_WM_SetCaption(caption, NULL);
+}
+
 int frames = 0;
 
 void updateframe(bool dorender)
 {
+	int millis = SDL_GetTicks() - clockrealbase;
+	
+	if (clockfix) millis = int(millis*(double(clockerror)/1000000));
+	if ((millis += clockvirtbase) < totalmillis) millis = totalmillis;
+
+	if (dorender) limitfps(millis, totalmillis);
+	
+	int elapsed = millis-totalmillis;
+
+	if (paused) curtime = 0;
+	else curtime = (elapsed*gamespeed)/100;
+	
+	string cap;
+	if (cc->ready()) s_sprintf(cap)("%s - %s", cl->gametitle(), cl->gametext());
+	else s_sprintf(cap)("loading..");
+	setcaption(cap);
+
 	if (dorender)
 	{
-		int millis = SDL_GetTicks() - clockrealbase;
-		
-		if (clockfix) millis = int(millis*(double(clockerror)/1000000));
-		if ((millis += clockvirtbase) < totalmillis) millis = totalmillis;
-	
-		limitfps(millis, totalmillis);
-		
-		int elapsed = millis-totalmillis;
-	
-		if (paused) curtime = 0;
-		else curtime = (elapsed*gamespeed)/100;
-		
 		cl->updateworld(worldpos, curtime, lastmillis);
 		menuprocess();
-	
-		lastmillis += curtime;
-		totalmillis = millis;
-	
-		serverslice(0);
+	}
 
+	lastmillis += curtime;
+	totalmillis = millis;
+
+	serverslice(0);
+
+	if (dorender)
+	{
 		if (frames) updatefpshistory(elapsed);
 		frames++;
 		
@@ -842,9 +858,8 @@ int main(int argc, char **argv)
 	fullscreen = fs!=0;
 
 	log("video: misc");
-#ifdef BFRONTIER // blood frontier, game name support
-	s_sprintfd(caption)("Blood Frontier: %s", sv->gamename());
-	SDL_WM_SetCaption(caption, NULL);
+#ifdef BFRONTIER // blood frontier, game name support, grab the mouse
+	setcaption("loading..");
 	setvar("grabmouse", 1, true);
 #else
 	SDL_WM_SetCaption("sauerbraten engine", NULL);

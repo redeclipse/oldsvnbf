@@ -139,8 +139,7 @@ enum
 	S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2,
 	S_RUMBLE, S_TELEPORT, S_JUMPPAD, 
-	S_WEAPLOAD, S_WEAPRELOAD,
-	S_PISTOL, S_SG, S_CG,
+	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
 	S_GLFIRE, S_GLEXPL, S_GLHIT,
 	S_RLFIRE, S_RLEXPL, S_RLFLY,
 	S_RIFLE,
@@ -148,7 +147,7 @@ enum
 	S_V_BASECAP, S_V_BASELOST,
 	S_V_FIGHT, S_V_RESPAWNPOINT, 
 	S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED,
-	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4,
+	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_MENUPRESS, S_MENUBACK
 #else
@@ -661,11 +660,11 @@ enum
 	SSTAT_MAX
 };
 static char *serverstatustypes[] = {
-	"\fs\f0open\fS",
-	"\fs\f1locked\fS",
-	"\fs\f2private\fS",
-	"\fs\f3full\fS",
-	"\fs\f4?\fS"
+	"\fs\fgopen\fS",
+	"\fs\fblocked\fS",
+	"\fs\fmprivate\fS",
+	"\fs\frfull\fS",
+	"\fs\fb?\fS"
 };
 
 #ifndef STANDALONE

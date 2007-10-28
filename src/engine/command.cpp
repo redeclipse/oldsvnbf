@@ -822,7 +822,7 @@ void rndn(int *a)		  { intret(*a>0 ? rnd(*a) : 0); }  COMMANDN(rnd, rndn, "i");
 
 void strcmpa(char *a, char *b) { intret(strcmp(a,b)==0); }  COMMANDN(strcmp, strcmpa, "ss");
 
-ICOMMAND(echo, "C", (char *s), conoutf("\f1%s", s));
+ICOMMAND(echo, "C", (char *s), conoutf("\fs\fw%s\fr", s));
 
 void strstra(char *a, char *b) { char *s = strstr(a, b); intret(s ? s-a : -1); } COMMANDN(strstr, strstra, "ss");
 

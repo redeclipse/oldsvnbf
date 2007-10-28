@@ -2767,8 +2767,6 @@ struct fpsserver : igameserver
 		return cname;
 	}	
 #ifdef BFRONTIER
-	char *gamename() { return "Alpha"; }
-	char *gametitle() { return m_name(gamemode); }
 	char *defaultmap() { return "usm01"; }
 	int defaultmode() { return G_DEATHMATCH; }
 

@@ -352,7 +352,7 @@ void save_world(char *mname, bool nolms)
 				fprintf(h, "autograss \"%s\"\n", s.autograss); \
 			} \
 		} \
-		fprintf(h, "\n"); \
+		fprintf(h, "\n");
 
 	loopi(MAT_EDIT) 
 	{

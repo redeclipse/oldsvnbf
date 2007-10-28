@@ -431,6 +431,7 @@ extern void loadsky(char *basename, float *spin);
 
 // main
 extern void updateframe(bool dorender = false);
+extern void setcaption(char *text);
 extern int grabmouse, perf, colorpos;
 extern int getmatvec(vec v);
 

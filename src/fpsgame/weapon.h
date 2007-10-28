@@ -33,6 +33,7 @@ struct weaponstate
 			intret(self->player1->ammo[n]);
 		});
 		CCOMMAND(getweapon, "", (weaponstate *self), intret(self->player1->gunselect));
+		CCOMMAND(reload, "", (weaponstate *self), self->reload(self->cl.player1));
 #else
         CCOMMAND(weapon, "sss", (weaponstate *self, char *w1, char *w2, char *w3),
         {
@@ -70,7 +71,7 @@ struct weaponstate
 		if(s != player1->gunselect) 
 		{
 			cl.cc.addmsg(SV_GUNSELECT, "ri", s);
-			playsound(S_WEAPLOAD);
+			cl.playsoundc(S_SWITCH);
 		}
 		player1->gunselect = s;
 	}
@@ -866,24 +867,23 @@ struct weaponstate
 		}
 	}
 
+	void reload(fpsent *d)
+	{
+		if (gunallowed(d, d->gunselect, -2, cl.lastmillis))
+		{
+			gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
+			gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).rdelay;
+			cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);
+			cl.playsoundc(S_RELOAD);
+		}
+	}
+
 	void shoot(fpsent *d, vec &targ)
 	{
 #ifdef BFRONTIER
-		if(d == player1)
-		{
-			if (!d->attacking) return;
-			if (!gunallowed(d, d->gunselect, -1, cl.lastmillis))
-			{
-				if (gunallowed(d, d->gunselect, -2, cl.lastmillis))
-				{
-					cl.playsoundc(S_WEAPRELOAD); 
-					gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
-					gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).rdelay;
-					cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);
-				}
-				return; 
-			}
-		}
+		if ((d == player1) && (!gunallowed(d, d->gunselect, -1, cl.lastmillis))) 
+			return; 
+
 		d->lastattackgun = d->gunselect;
 		gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
 		gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).adelay;

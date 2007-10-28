@@ -228,6 +228,8 @@ struct igameclient
 	}
 	
 	virtual void menuevent(int event) { return; }
+	virtual char *gametitle() = 0;
+	virtual char *gametext() = 0;
 #endif
 };
 
@@ -264,8 +266,6 @@ struct igameserver
 #ifdef BFRONTIER
     virtual void changemap(const char *s, int mode = 0, int muts = 0) { return; }
 	virtual int getmastertype() { return 0; }
-	virtual char *gamename() = 0;
-	virtual char *gametitle() = 0;
     virtual char *defaultmap() = 0;
     virtual int defaultmode() = 0;
 #endif
