@@ -1,5 +1,9 @@
+#include <fmod.h>
+#include <fmod_errors.h>
+
 extern FMOD_RESULT snderr;
 extern FMOD_SYSTEM *sndsys;
+
 extern bool nosound;
 extern int soundvol;
 
@@ -19,10 +23,10 @@ struct soundsample
 	FMOD_SOUND *sound;
 	char *name;
 
-	soundsample() : name(NULL) {}
-	~soundsample() { DELETEA(name); }
+	soundsample() {}
+	~soundsample() {}
 
-	void load(const char *name, int loop = 0)
+	void load(const char *file, int loop = 0)
 	{
 		string buf;
 		s_sprintf(buf)("create sound '%s'", name);
@@ -41,6 +45,7 @@ struct soundslot
 	soundsample *sample;
 	int vol, maxuses;
 };
+
 
 struct soundchan
 {
@@ -135,3 +140,42 @@ extern int playsound(int n, vec *p = NULL, vec *v = NULL, float mindist = SNDMIN
 extern int playsoundv(int n, vec &p, vec &v, float mindist = SNDMINDIST, float maxdist = SNDMAXDIST, vector<soundslot> &sounds = gamesounds);
 extern void clearmapsounds();
 extern void initsound();
+
+#ifdef USE_DESIGNER
+#include <fmod_event.h>
+extern FMOD_EVENTSYSTEM *evtsys;
+struct soundproject
+{
+	FMOD_EVENTPROJECT *project;
+
+	soundproject() {}
+	~soundproject() {}
+
+	bool load(const char *name)
+	{
+		string buf;
+		s_sprintf(buf)("create object '%s'", name);
+		SNDERR(FMOD_EventSystem_Load(evtsys, name, NULL, &project), buf, return false);
+		return true;
+	}
+};
+
+struct soundgroup
+{
+	FMOD_EVENTGROUP *group;
+
+	soundgroup() {}
+	~soundgroup() {}
+
+	bool load(soundproject *prj, const char *name)
+	{
+		string buf;
+		s_sprintf(buf)("create group '%s'", name);
+		SNDERR(FMOD_EventProject_GetGroup(prj->project, name, true, &group), buf, return false);
+		return true;
+	}
+};
+
+extern vector<soundproject> sndprojs;
+extern vector<soundgroup> sndgroups;
+#endif
