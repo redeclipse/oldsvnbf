@@ -31,10 +31,6 @@
 #ifndef STANDALONE
 #include <SDL.h>
 #include <SDL_image.h>
-#ifdef BFRONTIER
-#include <fmod.h>
-#include <fmod_errors.h>
-#endif
 
 #define GL_GLEXT_LEGACY
 #define __glext_h__
