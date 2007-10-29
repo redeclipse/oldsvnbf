@@ -51,8 +51,6 @@ void initsound()
 		SNDERR(FMOD_System_SetDSPBufferSize(sndsys, 1024, 10), "set dsp buffer size", );
 	}
 
-	SNDERR(FMOD_System_Set3DSettings(sndsys, 1.0f, 1.0f, 1.0f), "set 3d settings", );
-
 	#define initsoundsetup { \
 		SNDERR(FMOD_System_SetSoftwareFormat(sndsys, soundfreq, FMOD_SOUND_FORMAT(soundformat), 0, 0, FMOD_DSP_RESAMPLER(sounddsp)), "set software format",  \
 			SNDERR(FMOD_System_SetSoftwareFormat(sndsys, 44100, FMOD_SOUND_FORMAT_PCM16, 0, 0, FMOD_DSP_RESAMPLER_LINEAR), "set software format", return) \
@@ -83,6 +81,8 @@ void initsound()
 		else return;
 	});
 #endif
+
+	SNDERR(FMOD_System_Set3DSettings(sndsys, 1.0f, 1.0f, 1.0f), "set 3d settings", );
 
 	while(sndchans.length() < soundchans)
 	{

@@ -52,6 +52,7 @@
 					<Add library="SDL"/>
 					<Add library="SDL_image"/>
 					<Add library="fmodex"/>
+					<Add library="fmod_event"/>
 					<Add library="z"/>
 					<Add library="opengl32"/>
 					<Add library="glu32"/>
@@ -736,12 +737,6 @@
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="server"/>
-		</Unit>
-		<Unit filename="todo.txt">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
 		</Unit>
 	</Project>
 </CodeBlocks_project_file>

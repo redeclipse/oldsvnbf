@@ -134,18 +134,12 @@ enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  
 enum
 {
 #ifdef BFRONTIER
-	S_JUMP = 0, S_LAND,
-	S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6,
-	S_DIE1, S_DIE2,
-	S_SPLASH1, S_SPLASH2,
-	S_RUMBLE, S_TELEPORT, S_JUMPPAD, 
+	S_JUMP = 0, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
+	S_SPLASH1, S_SPLASH2, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR, S_RUMBLE, S_TELEPORT, S_JUMPPAD, 
 	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
-	S_GLFIRE, S_GLEXPL, S_GLHIT,
-	S_RLFIRE, S_RLEXPL, S_RLFLY,
-	S_RIFLE,
+	S_GLFIRE, S_GLEXPL, S_GLHIT, S_RLFIRE, S_RLEXPL, S_RLFLY, S_RIFLE,
 	S_ITEMAMMO, S_ITEMSPAWN,
-	S_V_BASECAP, S_V_BASELOST,
-	S_V_FIGHT, S_V_RESPAWNPOINT, 
+	S_V_BASECAP, S_V_BASELOST, S_V_FIGHT, S_V_RESPAWNPOINT, 
 	S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED,
 	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
@@ -284,15 +278,15 @@ struct demoheader
 
 static struct guninfo
 {
-	int info, 		sound, 		esound, 	fsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	part,	kick,	wobble;	char *name;
+	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	char *name;
 } guns[NUMGUNS] =
 {
-	{ GUN_PISTOL,	S_PISTOL,	-1,			-1,			10,		10,		250,	2250,	13,		0,		0,		0,		-10 ,	10,		"pistol" },
-	{ GUN_SG,		S_SG,		-1,			-1,			8,		8,		1000,	4000,	5,		0,		0,		0,		-50,	50, 	"shotgun" },
-	{ GUN_CG,		S_CG,		-1,			-1,			30,		30,		75,		3075,	8,		0,		0,		0,		-6,		6,		"chaingun" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_GLHIT,	2,		4,		1500,	0,		400,	300,	2500,	0,		-5,		3,		"grenades" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	1,		1,		2500,	5000,	250,	500,	5000,	0,		-75,	50,		"rockets" },
-	{ GUN_RIFLE,	S_RIFLE,	-1,			-1,			5,		5,		1500,	4500,	50,		0,		0,		0,		-30,	30,		"rifle" },
+	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			10,		10,		250,	2250,	10,		0,		0,		-10 ,	10,		"pistol" },
+	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			8,		8,		1000,	4000,	25,		0,		0,		-30,	30, 	"shotgun" },
+	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			30,		30,		75,		3075,	5,		0,		0,		-5,		5,		"chaingun" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	15,		"grenades" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	200,	200,	10000,	-40,	40,		"rockets" },
+	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			5,		5,		1500,	4500,	50,		500,	0,		-30,	20,		"rifle" },
 };
 
 #define getgun(gn) (guns[gn])

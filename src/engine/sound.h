@@ -23,19 +23,19 @@ struct soundsample
 	FMOD_SOUND *sound;
 	char *name;
 
-	soundsample() {}
-	~soundsample() {}
+	soundsample() : name(NULL) {}
+	~soundsample() { DELETEA(name); }
 
 	void load(const char *file, int loop = 0)
 	{
 		string buf;
-		s_sprintf(buf)("create sound '%s'", name);
-		SNDERR(FMOD_System_CreateSound(sndsys, name, FMOD_3D|FMOD_SOFTWARE|FMOD_3D_WORLDRELATIVE, NULL, &sound), buf, return);
+		s_sprintf(buf)("create sound '%s'", file);
+		SNDERR(FMOD_System_CreateSound(sndsys, file, FMOD_3D|FMOD_SOFTWARE|FMOD_3D_WORLDRELATIVE, NULL, &sound), buf, return);
 
-		s_sprintf(buf)("set loop mode on '%s'", name);
+		s_sprintf(buf)("set loop mode on '%s'", file);
 		SNDERR(FMOD_Sound_SetMode(sound, FMOD_LOOP_NORMAL), buf, );
 
-		s_sprintf(buf)("set loop count on '%s'", name);
+		s_sprintf(buf)("set loop count on '%s'", file);
 		SNDERR(FMOD_Sound_SetLoopCount(sound, loop), buf, );
 	}
 };
