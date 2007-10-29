@@ -134,50 +134,77 @@ struct weaponstate
 	
 	struct bouncent : physent
 	{
-		int lifetime;
-		float lastyaw, roll;
+		vec from, to;
+		int lifetime, lastbounce;
+		float roll;
 		bool local;
 		fpsent *owner;
 		int bouncetype;
 		float elasticity, waterfric;
 		int gun, schan, id;
 		
-		bouncent(bool _b, fpsent *_o, int _n, int _t, int _s, int _g, int _l) :
-			lifetime(_t),
-			lastyaw(0.f), roll(0.f),
-			local(_b), owner(_o), bouncetype(_n),
-			elasticity(0.75f), waterfric(3.0f),
-			gun(_g), schan(-1), id(_l)
+		bouncent() : schan(-1), id(-1)
 		{
 			reset();
-			maxspeed = _s;
-			aboveeye = eyeheight = radius = bouncetype == BNC_DEBRIS ? 0.5f : 1.5f;
-	
-			if (gun >= 0) switch (gun)
-			{
-				case GUN_GL:
-				{
-					elasticity = 0.5f;
-					waterfric = 2.0f;
-					break;
-				}
-				case GUN_RL:
-				{
-					elasticity = 0.0f;
-					waterfric = 1.5f;
-					break;
-				}
-				default: break;
-			}
 		}
 		~bouncent() {}
+		
+		void init(vec &_f, vec &_t, bool _b, fpsent *_o, int _n, int _i, int _s, int _g, int _l, float _z)
+		{
+			state = CS_ALIVE;
+
+			from = _f;
+			to = _t;
+
+			local = _b;
+			owner = _o;
+			bouncetype = _n;
+			lifetime = _i;
+			gun = _g;
+			maxspeed = _s;
+			id = lastbounce = _l;
+			aboveeye = eyeheight = radius = bouncetype == _z;
+	
+			vec dir(vec(vec(to).sub(from)).normalize());
+
+			vel = vec(vec(dir).mul(maxspeed)).add(owner->vel);
+			o = vec(from).add(vec(dir).mul(radius+owner->radius));
+
+			vectoyawpitch(dir, yaw, pitch);
+
+			if (gun >= 0)
+			{
+				switch (gun)
+				{
+					case GUN_GL:
+						elasticity = 0.45f;
+						waterfric = 2.0f;
+						break;
+					case GUN_PISTOL:
+					case GUN_SG:
+					case GUN_CG:
+					case GUN_RIFLE:
+					case GUN_RL:
+					default:
+						elasticity = 0.0f;
+						waterfric = 1.5f;
+						break;
+				}
+				if (getgun(gun).fsound >= 0) schan = playsound(getgun(gun).fsound, &o, &vel);
+			}
+			else
+			{
+				elasticity = 0.6f;
+				waterfric = 2.0f;
+				schan = playsound(S_WHIZZ, &o, &vel);
+			}
+		}
 		
 		void reset()
 		{
 			physent::reset();
 			type = ENT_BOUNCE;
-			state = CS_ALIVE;
-			roll = 0;
+			roll = 0.f;
 		}
 		
 		void check(int time)
@@ -188,27 +215,50 @@ struct weaponstate
                 regular_particle_splash(5, 1, 150, vec(o).sub(vel));
 		}
 		
-		bool update(int time)
+		bool update(int millis, int time, int qtime)
 		{
-			if ((lifetime -= time) > 0)
+			vec old(o);
+
+			if (bounce(this, float(qtime)/1000.0f, elasticity, waterfric))
 			{
-				if (bounce(this, float(time)/1000.0f, elasticity, waterfric))
+				vec wvel(wall); o = old; // store the wall, then get the sucker out of it
+
+				if (bouncetype != BNC_SHOT || gun == GUN_GL)
 				{
-					if (bouncetype == BNC_SHOT && (gun == GUN_GL || gun == GUN_RL))
+					if (millis-lastbounce > 100)
 					{
-						if (gun == GUN_GL && lifetime > 0)
-						{
-							if (hitplayer) vel.add(vec(hitplayer->vel).mul(elasticity));
-							ricochetsnd(getgun(gun).fsound);
-							return true; // grenades stay live until timeout
-						}
-						return false;
+						float c = wvel.dot(vel);
+						if (c == 0.f) c = -1.f; // no sir, we *must* bounce
+						float k = 1.0f + (1.0f - elasticity) * c / vel.magnitude();
+
+						wvel.mul(elasticity * 2.0f * c);
+						gravity.mul(k);
+						vel.mul(k);
+						vel.sub(wvel);
+
+						if (bouncetype == BNC_SHOT && getgun(gun).rsound >= 0)
+							playsound(getgun(gun).rsound, &o, &vel);
+						else if (bouncetype == BNC_GIBS)
+							playsound(S_SPLAT, &o, &vel);
+						else if (bouncetype == BNC_DEBRIS)
+							playsound(S_DEBRIS, &o, &vel);
+						
+						lastbounce = millis;
 					}
+					return true; // stay alive until timeout
 				}
-				roll += vel.magnitude()/time;
-				return true;
+				return false; // die on impact
 			}
-			return false;
+			
+			if (bouncetype == BNC_SHOT)
+			{
+				if (gun == GUN_GL)
+				{
+					roll += int(vel.magnitude()/time)%360;
+				}
+			}
+
+			return true;
 		}
 
 		void cleanup()
@@ -218,39 +268,17 @@ struct weaponstate
 			
 			schan = -1;
 		}
-		
-		void tracksnd(int s, float m = SNDMINDIST, float n = SNDMAXDIST)
-		{
-			if (sndchans.inrange(schan) && sndchans[schan].playing())
-				sndchans[schan].stop();
-
-			schan = playsound(s, &o, &vel, m, n);
-		}
-
-		void ricochetsnd(int s, float m = SNDMINDIST, float n = SNDMAXDIST)
-		{
-			if (!sndchans.inrange(schan) || !sndchans[schan].playing())
-				schan = playsound(s, &o, &vel, m, n); // don't need to track
-		}
 	};
 	
 	vector<bouncent *> bouncers;
 
-	void newbouncer(const vec &from, const vec &to, bool local, fpsent *owner, int type, int lifetime, int speed, int gun)
+	void newbouncer(vec &from, vec &to, bool local, fpsent *owner, int type, int lifetime, int speed, int gun)
 	{
-		bouncent &bnc = *(new bouncent(local, owner, type, lifetime, speed, gun, cl.lastmillis));
-
-		vec dir(vec(vec(to).sub(from)).normalize());
-
-		bnc.o = from;
-		bnc.vel = dir;
-		bnc.vel.mul(cl.ph.speed(&bnc));
-		//bnc.vel.add(bnc.owner->vel);
-		avoidcollision(&bnc, dir, owner, 0.1f);
-
-		if (bnc.gun == GUN_RL)
-			bnc.tracksnd(getgun(bnc.gun).fsound);
-
+		bouncent &bnc = *(new bouncent());
+		bnc.init(
+			from, to, local, owner, type, lifetime, speed, gun, cl.lastmillis,
+			BNC_DEBRIS ? 0.5f : 1.5f
+		);
 		bouncers.add(&bnc);
 	}
 
@@ -281,7 +309,8 @@ struct weaponstate
 		float dist = middist(cl.player1, dir, bnc.o);
 		cl.camerawobble += int(float(getgun(bnc.gun).damage)/(dist/RL_DAMRAD/RL_DISTSCALE));
 		
-		playsoundv(getgun(bnc.gun).esound, bnc.o, dir, RL_DAMRAD);
+		if (getgun(bnc.gun).esound >= 0)
+			playsoundv(getgun(bnc.gun).esound, bnc.o, dir, RL_DAMRAD);
 
 		particle_splash(0, 200, 300, bnc.o);
 		particle_fireball(bnc.o, RL_DAMRAD, bnc.gun == GUN_RL ? 22 : 23);
@@ -325,11 +354,10 @@ struct weaponstate
 				int stime = bnc.bouncetype == BNC_SHOT ? 10 : 30, qtime = min(stime, rtime);
 				rtime -= qtime;
 				
-				if (!bnc.update(qtime))
+				if ((bnc.lifetime -= qtime) <= 0 || !bnc.update(cl.lastmillis, time, qtime))
 				{
-					if (bnc.bouncetype == BNC_SHOT)
+					if (bnc.bouncetype == BNC_SHOT && (bnc.gun == GUN_GL || bnc.gun == GUN_RL))
 						explode(bnc);
-
 					bnc.state = CS_DEAD;
 					break;
 				}
@@ -733,7 +761,7 @@ struct weaponstate
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
 #ifdef BFRONTIER
-		playsound(getgun(gun).sound, &d->o, &d->vel);
+		if (getgun(gun).sound >= 0 ) playsound(getgun(gun).sound, &d->o, &d->vel);
 #else
 		playsound(guns[gun].sound, d==player1 ? NULL : &d->o);
 		int pspeed = 25;
@@ -995,42 +1023,44 @@ struct weaponstate
 	void renderbouncers()
 	{
 		vec color, dir;
-		float yaw, pitch;
 		loopv(bouncers)
 		{
 			bouncent &bnc = *(bouncers[i]);
-
+			float yaw = bnc.yaw, pitch = bnc.pitch;
 			string mname;
 			int cull = MDL_CULL_VFC|MDL_DYNSHADOW;
-			lightreaching(vec(bnc.o).sub(bnc.vel), color, dir);
 
-			vectoyawpitch(bnc.vel, yaw, pitch);
-			yaw += 90;
-			bnc.lastyaw = yaw;
+			lightreaching(vec(bnc.o).sub(bnc.vel), color, dir);
 
             if (bnc.bouncetype == BNC_SHOT)
             {
-            	if (bnc.gun == GUN_GL) s_sprintf(mname)("%s", "projectiles/grenade");
-            	else if (bnc.gun == GUN_RL) s_sprintf(mname)("%s", "projectiles/rocket");
-            	else continue;
-				
-				pitch = bnc.gun == GUN_GL ? -bnc.roll : 0.f;
+            	if (bnc.gun == GUN_GL)
+            	{
+            		yaw = pitch = -bnc.roll;
+            		s_sprintf(mname)("%s", "projectiles/grenade");
+            	}
+            	else if (bnc.gun == GUN_RL)
+            	{
+					s_sprintf(mname)("%s", "projectiles/rocket");
+            	}
+            	else
+            	{
+					s_sprintf(mname)("%s", "projectiles/frag");
+            	}
 			}
             else if (bnc.bouncetype == BNC_GIBS)
             {
 				s_sprintf(mname)("%s", ((int)(size_t)&bnc)&0x40 ? "gibc" : "gibh");
 				cull |= MDL_CULL_DIST;
-				pitch = -bnc.roll;
 			}
 			else if (bnc.bouncetype == BNC_DEBRIS)
 			{
 				s_sprintf(mname)("debris/debris0%d", ((((int)(size_t)&bnc)&0xC0)>>6)+1);
 				cull |= MDL_CULL_DIST;
-				pitch = -bnc.roll;
 			}
 			else continue;
 
-			rendermodel(color, dir, mname, ANIM_MAPMODEL|ANIM_LOOP, 0, 0, bnc.o, yaw, pitch, 0, 0, NULL, cull);
+			rendermodel(color, dir, mname, ANIM_MAPMODEL|ANIM_LOOP, 0, 0, bnc.o, yaw+90, pitch, 0, 0, NULL, cull);
 		}
 	}  
 
