@@ -1470,18 +1470,22 @@ struct fpsserver : igameserver
 
 #ifdef BFRONTIER
 			case SV_TEXT:
+			{
 				QUEUE_MSG;
                 int action = getint(p);
                 QUEUE_INT(action);
 				getstring(text, p); // filtering is chosen by the client
                 QUEUE_STR(text);
 				break;
+			}
 
 			case SV_COMMAND:
+			{
 				getstring(text, p);
 				filtertext(text, text);
 				//servcmd(ci, text, false);
 				break;
+			}
 #else
 			case SV_TEXT:
 				QUEUE_MSG;

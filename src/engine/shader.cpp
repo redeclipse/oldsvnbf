@@ -25,13 +25,11 @@ void loadshaders()
     nocolorshader = lookupshaderbyname("nocolor");
     foggedshader = lookupshaderbyname("fogged");
     foggednotextureshader = lookupshaderbyname("foggednotexture");
-
     if(renderpath!=R_FIXEDFUNCTION)
     {
         glEnable(GL_VERTEX_PROGRAM_ARB);
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
     }
-
     defaultshader->set();
 }
 
@@ -819,6 +817,7 @@ static void genwatervariant(Shader &s, char *sname, char *vs, char *ps, int row 
 void shader(int *type, char *name, char *vs, char *ps)
 {
 	if(lookupshaderbyname(name)) return;
+    
 	if(renderpath!=R_FIXEDFUNCTION)
 	{
 		if((renderpath!=R_GLSLANG && *type & SHADER_GLSLANG) ||

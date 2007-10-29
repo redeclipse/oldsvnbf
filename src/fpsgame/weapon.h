@@ -417,6 +417,7 @@ struct weaponstate
 					if(bnc.bouncetype==BNC_GRENADE)
 					{
 						int qdam = guns[GUN_GL].damage*(bnc.owner->quadmillis ? 4 : 1);
+                        if(bnc.owner->type==ENT_AI) qdam /= MONSTERDAMAGEFACTOR;
 						hits.setsizenodelete(0);
 						explode(bnc.local, bnc.owner, bnc.o, NULL, qdam, GUN_GL);					
                         if(bnc.local)

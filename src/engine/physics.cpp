@@ -1476,15 +1476,6 @@ VARP(invmouse, 0, 0, 1);
 #ifdef BFRONTIER
 void fixcamerarange() { cl->fixview(); }
 void mousemove(int dx, int dy) { cl->mousemove(dx, dy); }
-/* TODO: keyboard input for looking around
-**
-#define look(name,x,y) ICOMMAND(name, "D", (int *down), { if (*down!=0) mousemove(x, y); });
-look(lookup,	0,	1);
-look(lookdown,	0,	-1);
-look(lookright,	1,	0);
-look(lookleft,	-1,	0);
-**
-*/
 #else
 void fixcamerarange()
 {
