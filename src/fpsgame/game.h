@@ -182,7 +182,11 @@ enum
 {
 	SV_INITS2C = 0, SV_INITC2S, SV_POS, SV_TEXT, SV_SOUND, SV_CDIS,
 	SV_SHOOT, SV_EXPLODE, SV_SUICIDE, 
+#ifdef BFRONTIER
+	SV_DIED, SV_DAMAGE, SV_SHOTFX,
+#else
 	SV_DIED, SV_DAMAGE, SV_HITPUSH, SV_SHOTFX,
+#endif
 	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN, SV_FORCEDEATH, SV_ARENAWIN,
 	SV_GUNSELECT, SV_TAUNT,
 	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMPICKUP, SV_DENIED,
@@ -210,10 +214,11 @@ static char msgsizelookup(int msg)
 	{
 		SV_INITS2C, 4, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_SOUND, 2, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 1,
-		SV_DIED, 4, SV_DAMAGE, 6, SV_HITPUSH, 6, SV_SHOTFX, 9,
 #ifdef BFRONTIER
+		SV_DIED, 4, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 1, SV_SPAWNSTATE, 9, SV_SPAWN, 3, SV_FORCEDEATH, 2, SV_ARENAWIN, 2,
 #else
+		SV_DIED, 4, SV_DAMAGE, 6, SV_HITPUSH, 6, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 1, SV_SPAWNSTATE, 13, SV_SPAWN, 3, SV_FORCEDEATH, 2, SV_ARENAWIN, 2,
 #endif
 		SV_GUNSELECT, 2, SV_TAUNT, 1,
@@ -566,14 +571,14 @@ struct fpsent : dynent, fpsstate
 	int frags, deaths, totaldamage, totalshots;
 	editinfo *edit;
 #ifdef BFRONTIER
-	int spree, lastimpulse, nexthealth;
+	int spree, lastimpulse;
 #endif
 
 	string name, team, info;
 
 #ifdef BFRONTIER
 	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL),
-				spree(0), lastimpulse(0), nexthealth(0)
+				spree(0), lastimpulse(0)
 #else
     fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), lastpain(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL)
 #endif
@@ -589,8 +594,12 @@ struct fpsent : dynent, fpsstate
 	void hitpush(int damage, const vec &dir, fpsent *actor, int gun)
 	{
 		vec push(dir);
+#ifdef BFRONTIER
+		push.mul(damage/weight);
+#else
 		push.mul(80*damage/weight);
 		if(gun==GUN_RL || gun==GUN_GL) push.mul(actor==this ? 5 : (type==ENT_AI ? 3 : 2));
+#endif
 		vel.add(push);
 	}
 
@@ -609,8 +618,6 @@ struct fpsent : dynent, fpsstate
 		superdamage = 0;
 #ifdef BFRONTIER
 		spree = lastimpulse = 0;
-		extern int lastmillis;
-		nexthealth = lastmillis + 300;
 #endif
 	}
 };
@@ -674,6 +681,7 @@ enum {
 };
 
 #endif
+#if 0
 static char *msgnames[] = {
 	"SV_INITS2C",
 	"SV_INITC2S",
@@ -686,7 +694,6 @@ static char *msgnames[] = {
 	"SV_SUICIDE",
 	"SV_DIED",
 	"SV_DAMAGE",
-	"SV_HITPUSH",
 	"SV_SHOTFX",
 	"SV_TRYSPAWN",
 	"SV_SPAWNSTATE",
@@ -748,4 +755,5 @@ static char *msgnames[] = {
 	"SV_RELOAD",
 	"SV_REGENERATE",
 };
+#endif
 #endif

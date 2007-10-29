@@ -755,32 +755,25 @@ struct clientcom : iclientcom
 				break;
 			}
 
+#ifdef BFRONTIER
 			case SV_DAMAGE:
 			{
 				int tcn = getint(p), 
 					acn = getint(p),
+					gun = getint(p), 
 					damage = getint(p), 
-#ifdef BFRONTIER
 					health = getint(p),
 					millis = getint(p);
-#else
-					armour = getint(p),
-					health = getint(p);
-#endif
+				vec dir;
+				loopk(3) dir[k] = getint(p)/DNF;
 				fpsent *target = tcn==player1->clientnum ? player1 : cl.getclient(tcn),
 						*actor = acn==player1->clientnum ? player1 : cl.getclient(acn);
 				if(!target || !actor) break;
-#ifdef BFRONTIER // local servers
-				target->health = health;
-				cl.damaged(damage, target, actor, millis);
-#else
-				target->armour = armour;
-				target->health = health;
-				cl.damaged(damage, target, actor, false);
-#endif
+				cl.damaged(gun, damage, target, actor, millis, dir);
+				target->health = health; // just in case
 				break;
 			}
-#ifdef BFRONTIER
+			
 			case SV_RELOAD:
 			{
 				int trg = getint(p), gun = getint(p), amt = getint(p);
@@ -799,7 +792,22 @@ struct clientcom : iclientcom
 				target->health = amt;
 				break;
 			}
-#endif
+#else
+			case SV_DAMAGE:
+			{
+				int tcn = getint(p), 
+					acn = getint(p),
+					damage = getint(p), 
+					armour = getint(p),
+					health = getint(p);
+				fpsent *target = tcn==player1->clientnum ? player1 : cl.getclient(tcn),
+						*actor = acn==player1->clientnum ? player1 : cl.getclient(acn);
+				if(!target || !actor) break;
+				target->armour = armour;
+				target->health = health;
+				cl.damaged(damage, target, actor, false);
+				break;
+			}
 
 			case SV_HITPUSH:
 			{
@@ -809,6 +817,7 @@ struct clientcom : iclientcom
 				player1->hitpush(damage, dir, NULL, gun);
 				break;
 			}
+#endif
 
 			case SV_DIED:
 			{

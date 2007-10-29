@@ -130,6 +130,31 @@ struct weaponstate
 	}
 
 #ifdef BFRONTIER
+
+	struct hitmsg
+	{
+		int target, lifesequence, info;
+		ivec dir;
+	};
+	vector<hitmsg> hits;
+
+	void hit(fpsent *d, vec &vel, int info = 1)
+	{
+		hitmsg &h = hits.add();
+		h.target = d->clientnum;
+		h.lifesequence = d->lifesequence;
+		h.info = info;
+		h.dir = ivec(int(vel.x*DNF), int(vel.y*DNF), int(vel.z*DNF));
+	}
+
+	void hitpush(fpsent *d, vec &from, vec &to, int rays = 1)
+	{
+		vec v(to);
+		v.sub(from);
+		v.normalize();
+		hit(d, v, rays);
+	}
+
 	enum { BNC_SHOT = 0, BNC_GIBS, BNC_DEBRIS };
 	
 	struct bouncent : physent
@@ -225,10 +250,10 @@ struct weaponstate
 
 				if (bouncetype != BNC_SHOT || gun == GUN_GL)
 				{
-					if (millis-lastbounce > 100)
+					if (millis-lastbounce > 500)
 					{
 						float c = wvel.dot(vel);
-						if (c == 0.f) c = -1.f; // no sir, we *must* bounce
+						if (c == 0.f) c = -100.f; // no sir, we *must* bounce
 						float k = 1.0f + (1.0f - elasticity) * c / vel.magnitude();
 
 						wvel.mul(elasticity * 2.0f * c);
@@ -244,19 +269,16 @@ struct weaponstate
 							playsound(S_DEBRIS, &o, &vel);
 						
 						lastbounce = millis;
+
+						return update(millis, time, qtime);
 					}
 					return true; // stay alive until timeout
 				}
 				return false; // die on impact
 			}
 			
-			if (bouncetype == BNC_SHOT)
-			{
-				if (gun == GUN_GL)
-				{
-					roll += int(vel.magnitude()/time)%360;
-				}
-			}
+			if (bouncetype == BNC_SHOT && gun == GUN_GL)
+				roll += int(vel.magnitude()/time)%360;
 
 			return true;
 		}
@@ -296,11 +318,7 @@ struct weaponstate
 	{
 		vec dir;
 		float dist = middist(o, dir, bnc.o);
-		if(dist < RL_DAMRAD) 
-		{
-			int damage = (int)(getgun(bnc.gun).damage*(1-dist/RL_DISTSCALE/RL_DAMRAD));
-			hit(damage, o, bnc.owner, dir, bnc.gun, int(dist*DMF));
-		}
+		if(dist < RL_DAMRAD) hit(o, dir, int(dist*DMF));
 	}
 
 	void explode(bouncent &bnc)
@@ -500,7 +518,11 @@ struct weaponstate
 	{
 		vec p = d->o;
 		p.z += 0.6f*(d->eyeheight + d->aboveeye) - d->eyeheight;
+#ifdef BFRONTIER
+		if(blood()) particle_splash(3, damage, 1000, p);
+#else
 		if(blood()) particle_splash(3, damage/10, 1000, p);
+#endif
 		if(d!=cl.player1)
 		{
 			s_sprintfd(ds)("@%d", damage);
@@ -528,6 +550,7 @@ struct weaponstate
 		loopi(min(d->superdamage/25, 40)+1) spawnbouncer(from, vel, d, BNC_GIBS);
 	}
 
+#ifndef BFRONTIER
 	struct hitmsg
 	{
 		int target, lifesequence, info;
@@ -537,29 +560,6 @@ struct weaponstate
 
 	void hit(int damage, fpsent *d, fpsent *at, const vec &vel, int gun, int info = 1)
 	{
-#ifdef BFRONTIER
-		at->totaldamage += damage;
-		d->superdamage = 0;
-
-		hitmsg &h = hits.add();
-		h.target = d->clientnum;
-		h.lifesequence = d->lifesequence;
-		h.info = info;
-		h.dir = ivec(int(vel.x*DNF), int(vel.y*DNF), int(vel.z*DNF));
-		if (d == player1) d->hitpush(damage, vel, at, gun);
-		if (at == player1)
-		{
-			int snd;
-			if (damage > 200) snd = 0;
-			else if (damage > 175) snd = 1;
-			else if (damage > 150) snd = 2;
-			else if (damage > 125) snd = 3;
-			else if (damage > 100) snd = 4;
-			else if (damage > 50) snd = 5;
-			else snd = 6;
-			playsound(S_DAMAGE1+snd);
-		}
-#else
 		d->lastpain = cl.lastmillis;
 		at->totaldamage += damage;
 		d->superdamage = 0;
@@ -588,7 +588,6 @@ struct weaponstate
 				playsound(S_PAIN1+rnd(5), &d->o); 
 			}
 		}
-#endif
 	}
 
 	void hitpush(int damage, fpsent *d, fpsent *at, vec &from, vec &to, int gun, int rays)
@@ -599,7 +598,6 @@ struct weaponstate
 		hit(damage, d, at, v, gun, rays);
 	}
 
-#ifndef BFRONTIER
 	void radialeffect(fpsent *o, vec &v, int qdam, fpsent *at, int gun)
 	{
         if(o->state!=CS_ALIVE) return;
@@ -857,9 +855,7 @@ struct weaponstate
 
 	void raydamage(vec &from, vec &to, fpsent *d)
 	{
-#ifdef BFRONTIER
-		int qdam = getgun(d->gunselect).damage;
-#else
+#ifndef BFRONTIER
 		int qdam = guns[d->gunselect].damage;
 		if(d->quadmillis) qdam *= 4;
 		if(d->type==ENT_AI) qdam /= MONSTERDAMAGEFACTOR;
@@ -885,13 +881,21 @@ struct weaponstate
 					}
 					else raysleft = true;
 				}
+#ifdef BFRONTIER
+				if(hitrays) hitpush(o, from, to, hitrays);
+#else
 				if(hitrays) hitpush(hitrays*qdam, o, d, from, to, d->gunselect, hitrays);
+#endif
 				if(!raysleft) break;
 			}
 		}
 		else if((o = intersectclosest(from, to, d)))
 		{
+#ifdef BFRONTIER
+			hitpush(o, from, to);
+#else
 			hitpush(qdam, o, d, from, to, d->gunselect, 1);
+#endif
 			shorten(from, o->o, to);
 		}
 	}
@@ -910,8 +914,7 @@ struct weaponstate
 	void shoot(fpsent *d, vec &targ)
 	{
 #ifdef BFRONTIER
-		if ((d == player1) && (!gunallowed(d, d->gunselect, -1, cl.lastmillis))) 
-			return; 
+		if (!gunallowed(d, d->gunselect, -1, cl.lastmillis)) return; 
 
 		d->lastattackgun = d->gunselect;
 		gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
@@ -1036,7 +1039,7 @@ struct weaponstate
             {
             	if (bnc.gun == GUN_GL)
             	{
-            		yaw = pitch = -bnc.roll;
+            		yaw = pitch = bnc.roll;
             		s_sprintf(mname)("%s", "projectiles/grenade");
             	}
             	else if (bnc.gun == GUN_RL)
