@@ -93,6 +93,7 @@ VAR(ati_oq_bug, 0, 0, 1);
 VAR(nvidia_texgen_bug, 0, 0, 1);
 VAR(apple_glsldepth_bug, 0, 0, 1);
 VAR(apple_minmax_bug, 0, 0, 1);
+VAR(apple_ff_bug, 0, 0, 1);
 VAR(intel_quadric_bug, 0, 0, 1);
 #endif
 VAR(minimizetcusage, 1, 0, 0);
@@ -342,6 +343,15 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 		hasTC = true;
 		//conoutf("Using GL_EXT_texture_compression_s3tc extension.");
 	}
+
+#ifdef __APPLE__
+     extern int mac_osversion();
+     if((renderpath!=R_FIXEDFUNCTION) && (mac_osversion()>=0x1050))  /* 0x1050 = 10.5 (leopard)*/
+     {
+        apple_ff_bug = 1;
+        conoutf("WARNING: Using leopard OPTION ARB_position_invariant workaround (use \"/apple_ff_bug 0\" to disable if unnecessary)");
+    }
+#endif
 
 	if(fsaa) glEnable(GL_MULTISAMPLE);
 
