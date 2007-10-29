@@ -1159,7 +1159,7 @@ struct fpsserver : igameserver
 		// server only messages
 		static int servtypes[] = {
 				SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG,
-				SV_DAMAGE, SV_HITPUSH, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH,
+				SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH,
 				SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER,
 				SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_SENDDEMOLIST,
 				SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_CLIENT
@@ -1976,11 +1976,16 @@ struct fpsserver : igameserver
 		//if (!teamdamage && m_team(gamemode, mutators) && isteam(target->team, actor->team)) return;
 		//damage *= damagescale/100;
 		ts.dodamage(damage, gamemillis);
-		sendf(-1, 1, "ri6", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.health, ts.lastpain); 
+		sendf(
+			-1, 1, "ri7i3",
+			SV_DAMAGE,
+			target->clientnum, actor->clientnum,
+			gun, damage, ts.health, ts.lastpain,
+			int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF)
+		);
 #else
 		ts.dodamage(damage);
 		sendf(-1, 1, "ri6", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.armour, ts.health); 
-#endif
 		if(target!=actor && !hitpush.iszero()) 
 		{
 			vec v(hitpush);
@@ -1988,6 +1993,7 @@ struct fpsserver : igameserver
 			sendf(target->clientnum, 1, "ri6", SV_HITPUSH, gun, damage,
 				int(v.x*DNF), int(v.y*DNF), int(v.z*DNF));
 		}
+#endif
 		if(ts.health<=0)
 		{
 #ifdef BFRONTIER
@@ -2146,9 +2152,8 @@ struct fpsserver : igameserver
 		{
 			clientinfo *ci = clients[i];
 #ifdef BFRONTIER
-			if (!m_insta(gamemode, mutators) && 
-				ci->state.state == CS_ALIVE && ci->state.health < 100 &&
-				ci->state.lastpain - gamemillis >= 3000)
+			if (!m_insta(gamemode, mutators) && ci->state.state == CS_ALIVE &&
+				ci->state.health < 100 && gamemillis-ci->state.lastpain > 3000)
 			{
 				ci->state.health = 100;
 				sendf(-1, 1, "ri3", SV_REGENERATE, ci->clientnum, ci->state.health);

@@ -454,17 +454,33 @@ struct fpsclient : igameclient
     }
 
 #ifdef BFRONTIER
-	void damaged(int damage, fpsent *d, fpsent *actor, int millis = 0)
+	void damaged(int gun, int damage, fpsent *d, fpsent *actor, int millis, vec &dir)
 	{
-		if(d->state!=CS_ALIVE || intermission) return;
+		if(d->state != CS_ALIVE || intermission) return;
 		
-		d->dodamage(damage, millis ? millis : lastmillis);
+		d->dodamage(damage, millis);
+		d->superdamage = 0;
+
+		actor->totaldamage += damage;
+		
+		if (actor == player1)
+		{
+			int snd;
+			if (damage > 200) snd = 0;
+			else if (damage > 175) snd = 1;
+			else if (damage > 150) snd = 2;
+			else if (damage > 125) snd = 3;
+			else if (damage > 100) snd = 4;
+			else if (damage > 50) snd = 5;
+			else snd = 6;
+			playsound(S_DAMAGE1+snd);
+		}
 
 		if (d == player1)
 		{
-			d->nexthealth = lastmillis + 3000;
 			camerawobble += damage;
 			damageresidue += damage;
+			d->hitpush(damage, dir, actor, gun);
 			d->damageroll(damage);
 		}
 		playsound(S_PAIN1+rnd(5), &d->o, &d->vel);
@@ -514,9 +530,11 @@ struct fpsclient : igameclient
 			if(d==player1) console("\f2you got fragged by %s", cflags, aname);
 			else console("\f2%s fragged %s", cflags, aname, dname);
 		}
+		
 		d->state = CS_DEAD;
         d->superdamage = max(-d->health, 0);
-		if(d==player1)
+		
+		if (d == player1)
 		{
 			sb.showscores(true);
 			lastplayerstate = *player1;
@@ -530,6 +548,7 @@ struct fpsclient : igameclient
 		{
             d->move = d->strafe = 0;
 		}
+		
 		playsound(S_DIE1+rnd(2), &d->o, &d->vel);
 		ws.superdamageeffect(d->vel, d);
 			
