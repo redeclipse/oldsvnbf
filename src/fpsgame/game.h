@@ -73,9 +73,11 @@ enum
 
 #define G_M_TEAM		0x0001
 #define G_M_INSTA		0x0002
-//#define G_M_DUEL		0x0004
+#define G_M_DUEL		0x0004
 
-#define G_M_FRAG		G_M_TEAM|G_M_INSTA
+#define G_M_NUM			3
+
+#define G_M_FRAG		G_M_TEAM|G_M_INSTA|G_M_DUEL
 
 static struct gametypes
 {
@@ -86,9 +88,14 @@ static struct gametypes
 	{ G_SINGLEPLAYER,	0,					"Singleplayer" },
 	{ G_DEATHMATCH,		G_M_FRAG,			"Deathmatch" },
 	{ G_CAPTURE,		G_M_FRAG,			"Capture" },
+}, mutstype[] = {
+	{ G_M_TEAM,			0,					"Team" },
+	{ G_M_INSTA,		0,					"Instagib" },
+	{ G_M_DUEL,			0,					"Duel" },
 };
 
 #define m_name(a) 			(a > -1 && a < G_MAX ? gametype[a].name : NULL)
+#define m_mut(a) 			(a > -1 && a < G_M_NUM ? mutstype[a].name : NULL)
 
 #define m_demo(a)			(a == G_DEMO)
 #define m_edit(a)			(a == G_EDITMODE)
@@ -102,6 +109,7 @@ static struct gametypes
 
 #define m_team(a,b)			((m_dm(a) && (b & G_M_TEAM)) || m_capture(a))
 #define m_insta(a,b)		(m_frag(a) && (b & G_M_INSTA))
+#define m_duel(a,b)			(m_frag(a) && (b & G_M_DUEL))
 
 #define isteam(a,b)			(!strcmp(a,b))
 
@@ -249,13 +257,15 @@ static char msgsizelookup(int msg)
 #define BFRONTIER_SERVER_PORT		28795
 #define BFRONTIER_SERVINFO_PORT		28796
 #define PROTOCOL_VERSION			BFRONTIER
+#define DEMO_VERSION 1				  // bump when demo format changes
+#define DEMO_MAGIC "BFDZ"
 #else
 #define SAUERBRATEN_SERVER_PORT 28785
 #define SAUERBRATEN_SERVINFO_PORT 28786
 #define PROTOCOL_VERSION 255			// bump when protocol changes
-#endif
 #define DEMO_VERSION 1				  // bump when demo format changes
 #define DEMO_MAGIC "SAUERBRATEN_DEMO"
+#endif
 
 struct demoheader
 {
@@ -294,14 +304,13 @@ static struct guninfo
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			5,		5,		1500,	4500,	50,		500,	0,		-30,	20,		"rifle" },
 };
 
-#define getgun(gn) (guns[gn])
 #define gunvar(gw,gn) ((gw)[gn])
 #define gunallowed(ge,gn,gs,ms) ((gn > -1 && gn < NUMGUNS) && ( \
 	(gs >= 0 && gn != gs && ms-gunvar((ge)->gunlast, gs) >= gunvar((ge)->gunwait, gs)) || \
 	(gs <= -1 && ( \
 		( \
 			(gs == -1 && (ge)->ammo[gn] > 0) || \
-			(gs == -2 && getgun(gn).rdelay && (ge)->ammo[gn] <= 0) || \
+			(gs == -2 && guns[gn].rdelay && (ge)->ammo[gn] <= 0) || \
 			(gs == -3 && (ge)->ammo[gn] <= 0) \
 		) && \
 		(ms-gunvar((ge)->gunlast, gn) >= gunvar((ge)->gunwait, gn)) \
@@ -365,12 +374,12 @@ struct fpsstate
 
 	void addammo(int gun)
 	{
-		ammo[gun] += getgun(gun).add;
+		ammo[gun] += guns[gun].add;
 	}
 
 	bool hasmaxammo(int type)
 	{
-		const guninfo &is = getgun(type);
+		const guninfo &is = guns[type];
 		return ammo[type] >= is.max;
 	}
 
@@ -381,7 +390,7 @@ struct fpsstate
  
 	void pickup(int type, int amt)
 	{
-		guninfo &is = getgun(type);
+		guninfo &is = guns[type];
 		ammo[is.info] = min(ammo[is.info] + (amt > 0 ? amt : is.add), is.max);
 	}
 #else
@@ -478,7 +487,7 @@ struct fpsstate
 			gunselect = GUN_RIFLE;
 			loopi(NUMGUNS)
 			{
-				ammo[i] = i == GUN_RIFLE ? getgun(i).add : 0;
+				ammo[i] = i == GUN_RIFLE ? guns[i].add : 0;
 			}
 		}
 		else
@@ -486,7 +495,7 @@ struct fpsstate
 			health = 100;
 			loopi(NUMGUNS)
 			{
-				ammo[i] = i < MAXCARRY ? getgun(i).add : 0;
+				ammo[i] = i < MAXCARRY ? guns[i].add : 0;
 			}
 		}
 	}

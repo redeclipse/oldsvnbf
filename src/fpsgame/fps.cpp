@@ -916,7 +916,7 @@ struct fpsclient : igameclient
 
 		if (otime < rtime)
 		{
-			int anim = (getgun(player1->gunselect).rdelay && rtime == getgun(player1->gunselect).rdelay) ? ANIM_GUNRELOAD : ANIM_GUNSHOOT;
+			int anim = (guns[player1->gunselect].rdelay && rtime == guns[player1->gunselect].rdelay) ? ANIM_GUNRELOAD : ANIM_GUNSHOOT;
 			drawhudmodel(anim, rtime/17.0f, gunvar(player1->gunlast, player1->gunselect));
 		}
 		else

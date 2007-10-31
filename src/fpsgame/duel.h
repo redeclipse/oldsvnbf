@@ -1,6 +1,8 @@
 struct duelservmode : servmode
 {
-	int duelgame, duelround, dueltime;
+	static const int DUELMILLIS = 3000;
+
+	int duelround, dueltime;
 	vector<int> duelqueue;
 
 	duelservmode(fpsserver &sv) : servmode(sv) {}
@@ -52,9 +54,9 @@ struct duelservmode : servmode
 		if (n >= 0) duelqueue.remove(n);
 	}
 
-	void moved(clientinfo *ci, const vec &oldpos, const vec &newpos)
-	{
-	}
+	//void moved(clientinfo *ci, const vec &oldpos, const vec &newpos)
+	//{
+	//}
 
 	bool damage(clientinfo *target, clientinfo *actor, int damage, int gun, const vec &hitpush = vec(0, 0, 0))
 	{
@@ -68,9 +70,9 @@ struct duelservmode : servmode
 		return false; // you spawn when we want you to buddy
 	}
 
-	void spawned(clientinfo *ci)
-	{
-	}
+	//void spawned(clientinfo *ci)
+	//{
+	//}
 
 	void died(clientinfo *ci, clientinfo *at)
 	{
@@ -79,6 +81,7 @@ struct duelservmode : servmode
 
 	void changeteam(clientinfo *ci, const char *oldteam, const char *newteam)
 	{
+		queue(ci, true, true);
 	}
 	
 	void update()
@@ -169,14 +172,14 @@ struct duelservmode : servmode
 			{
 				sv.servsend(-1, "both duellers died!");
 			}
-			dueltime = sv.gamemillis + duelgame;
+			dueltime = sv.gamemillis + DUELMILLIS;
 		}
 	}
 
 	void reset(bool empty)
 	{
 		duelround = 0;
-		dueltime = sv.gamemillis + duelgame;
+		dueltime = sv.gamemillis + DUELMILLIS;
 		duelqueue.setsize(0);
 		
 		loopv(sv.clients)
@@ -186,7 +189,7 @@ struct duelservmode : servmode
 		}
 	}
 
-	void intermission()
-	{
-	}
+	//void intermission()
+	//{
+	//}
 };
