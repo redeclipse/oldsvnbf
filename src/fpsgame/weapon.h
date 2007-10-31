@@ -11,9 +11,7 @@ struct weaponstate
 	static const int OFFSETMILLIS = 500;
 	vec sg[SGRAYS];
 
-#ifdef BFRONTIER
-	IVARP(maxdebris, 0, 25, 1000);
-#else
+#ifndef BFRONTIER
     IVARP(maxdebris, 10, 25, 1000);
 #endif
 
@@ -164,8 +162,8 @@ struct weaponstate
 		float roll;
 		bool local;
 		fpsent *owner;
-		int bouncetype;
-		float elasticity, waterfric;
+		int bnctype;
+		float elasticity, relativity, waterfric;
 		int gun, schan, id;
 		
 		bouncent() : schan(-1), id(-1)
@@ -174,7 +172,7 @@ struct weaponstate
 		}
 		~bouncent() {}
 		
-		void init(vec &_f, vec &_t, bool _b, fpsent *_o, int _n, int _i, int _s, int _g, int _l, float _z)
+		void init(vec &_f, vec &_t, bool _b, fpsent *_o, int _n, int _i, int _s, int _g, int _l)
 		{
 			state = CS_ALIVE;
 
@@ -183,26 +181,20 @@ struct weaponstate
 
 			local = _b;
 			owner = _o;
-			bouncetype = _n;
+			bnctype = _n;
 			lifetime = _i;
 			gun = _g;
 			maxspeed = _s;
 			id = lastbounce = _l;
-			aboveeye = eyeheight = radius = bouncetype == _z;
 	
-			vec dir(vec(vec(to).sub(from)).normalize());
-
-			vel = vec(vec(dir).mul(maxspeed)).add(owner->vel);
-			o = vec(from).add(vec(dir).mul(radius+owner->radius));
-
-			vectoyawpitch(dir, yaw, pitch);
-
-			if (gun >= 0)
+			if (bnctype == BNC_SHOT)
 			{
 				switch (gun)
 				{
 					case GUN_GL:
+						aboveeye = eyeheight = radius = 0.5f;
 						elasticity = 0.45f;
+						relativity = 0.5f;
 						waterfric = 2.0f;
 						break;
 					case GUN_PISTOL:
@@ -211,18 +203,31 @@ struct weaponstate
 					case GUN_RIFLE:
 					case GUN_RL:
 					default:
+					{
+						aboveeye = eyeheight = radius = 1.5f;
 						elasticity = 0.0f;
+						relativity = 0.25f;
 						waterfric = 1.5f;
 						break;
+					}
 				}
-				if (getgun(gun).fsound >= 0) schan = playsound(getgun(gun).fsound, &o, &vel);
+				if (guns[gun].fsound >= 0) schan = playsound(guns[gun].fsound, &o, &vel);
 			}
 			else
 			{
+				aboveeye = eyeheight = radius = 1.0f;
 				elasticity = 0.6f;
+				relativity = 1.0f;
 				waterfric = 2.0f;
 				schan = playsound(S_WHIZZ, &o, &vel);
 			}
+
+			vec dir(vec(vec(to).sub(from)).normalize());
+
+			vel = vec(vec(dir).mul(maxspeed)).add(vec(owner->vel).mul(relativity));
+			o = vec(from).add(vec(dir).mul(radius+owner->radius));
+
+			vectoyawpitch(dir, yaw, pitch);
 		}
 		
 		void reset()
@@ -236,8 +241,10 @@ struct weaponstate
 		{
 			if (sndchans.inrange(schan) && !sndchans[schan].playing()) schan = -1;
 
-            if (bouncetype == BNC_SHOT)
+            if (bnctype == BNC_SHOT)
                 regular_particle_splash(5, 1, 150, vec(o).sub(vel));
+			else if (bnctype == BNC_GIBS)
+				particle_splash(3, time, 500, vec(o).sub(vel));
 		}
 		
 		bool update(int millis, int time, int qtime)
@@ -248,9 +255,9 @@ struct weaponstate
 			{
 				vec wvel(wall); o = old; // store the wall, then get the sucker out of it
 
-				if (bouncetype != BNC_SHOT || gun == GUN_GL)
+				if (bnctype != BNC_SHOT || gun == GUN_GL)
 				{
-					if (millis-lastbounce > 500)
+					if (vel.magnitude() && millis-lastbounce > 500)
 					{
 						float c = wvel.dot(vel);
 						if (c == 0.f) c = -100.f; // no sir, we *must* bounce
@@ -261,23 +268,21 @@ struct weaponstate
 						vel.mul(k);
 						vel.sub(wvel);
 
-						if (bouncetype == BNC_SHOT && getgun(gun).rsound >= 0)
-							playsound(getgun(gun).rsound, &o, &vel);
-						else if (bouncetype == BNC_GIBS)
+						if (bnctype == BNC_SHOT && guns[gun].rsound >= 0)
+							playsound(guns[gun].rsound, &o, &vel);
+						else if (bnctype == BNC_GIBS)
 							playsound(S_SPLAT, &o, &vel);
-						else if (bouncetype == BNC_DEBRIS)
+						else if (bnctype == BNC_DEBRIS)
 							playsound(S_DEBRIS, &o, &vel);
 						
 						lastbounce = millis;
-
-						return update(millis, time, qtime);
 					}
 					return true; // stay alive until timeout
 				}
 				return false; // die on impact
 			}
 			
-			if (bouncetype == BNC_SHOT && gun == GUN_GL)
+			if (bnctype == BNC_SHOT && gun == GUN_GL)
 				roll += int(vel.magnitude()/time)%360;
 
 			return true;
@@ -297,10 +302,7 @@ struct weaponstate
 	void newbouncer(vec &from, vec &to, bool local, fpsent *owner, int type, int lifetime, int speed, int gun)
 	{
 		bouncent &bnc = *(new bouncent());
-		bnc.init(
-			from, to, local, owner, type, lifetime, speed, gun, cl.lastmillis,
-			BNC_DEBRIS ? 0.5f : 1.5f
-		);
+		bnc.init(from, to, local, owner, type, lifetime, speed, gun, cl.lastmillis);
 		bouncers.add(&bnc);
 	}
 
@@ -325,21 +327,18 @@ struct weaponstate
 	{
 		vec dir;
 		float dist = middist(cl.player1, dir, bnc.o);
-		cl.camerawobble += int(float(getgun(bnc.gun).damage)/(dist/RL_DAMRAD/RL_DISTSCALE));
+		cl.camerawobble += int(float(guns[bnc.gun].damage)/(dist/RL_DAMRAD/RL_DISTSCALE));
 		
-		if (getgun(bnc.gun).esound >= 0)
-			playsoundv(getgun(bnc.gun).esound, bnc.o, dir, RL_DAMRAD);
+		if (guns[bnc.gun].esound >= 0)
+			playsoundv(guns[bnc.gun].esound, bnc.o, dir, RL_DAMRAD);
 
 		particle_splash(0, 200, 300, bnc.o);
 		particle_fireball(bnc.o, RL_DAMRAD, bnc.gun == GUN_RL ? 22 : 23);
 
         adddynlight(bnc.o, 1.15f*RL_DAMRAD, vec(1, 0.75f, 0.5f), 800, 400);
         
-        if (maxdebris())
-        {
-			loopi(rnd(maxdebris()-5)+5)
-				spawnbouncer(vec(bnc.o).add(vec(bnc.vel)), bnc.vel, bnc.owner, BNC_DEBRIS);
-        }
+		loopi(rnd(20)+10)
+			spawnbouncer(vec(bnc.o).add(vec(bnc.vel)), bnc.vel, bnc.owner, BNC_DEBRIS);
 
 		if (bnc.local)
 		{
@@ -369,12 +368,12 @@ struct weaponstate
 			
 			while (rtime > 0)
 			{
-				int stime = bnc.bouncetype == BNC_SHOT ? 10 : 30, qtime = min(stime, rtime);
+				int stime = bnc.bnctype == BNC_SHOT ? 10 : 30, qtime = min(stime, rtime);
 				rtime -= qtime;
 				
 				if ((bnc.lifetime -= qtime) <= 0 || !bnc.update(cl.lastmillis, time, qtime))
 				{
-					if (bnc.bouncetype == BNC_SHOT && (bnc.gun == GUN_GL || bnc.gun == GUN_RL))
+					if (bnc.bnctype == BNC_SHOT && (bnc.gun == GUN_GL || bnc.gun == GUN_RL))
 						explode(bnc);
 					bnc.state = CS_DEAD;
 					break;
@@ -510,16 +509,16 @@ struct weaponstate
 	{ 
 		loopv(projs) if(projs[i].owner==owner) projs.remove(i--);
 	}
-#endif
 
 	IVARP(blood, 0, 1, 1);
+#endif
 
 	void damageeffect(int damage, fpsent *d)
 	{
 		vec p = d->o;
 		p.z += 0.6f*(d->eyeheight + d->aboveeye) - d->eyeheight;
 #ifdef BFRONTIER
-		if(blood()) particle_splash(3, damage, 1000, p);
+		particle_splash(3, damage, 10000, p);
 #else
 		if(blood()) particle_splash(3, damage/10, 1000, p);
 #endif
@@ -545,9 +544,14 @@ struct weaponstate
 	void superdamageeffect(vec &vel, fpsent *d)
 	{
 		if(!d->superdamage) return;
+#ifdef BFRONTIER
+		vec from = d->abovehead();
+		loopi(rnd(d->superdamage)+5) spawnbouncer(from, vel, d, BNC_GIBS);
+#else
 		vec from = d->abovehead();
 		from.y -= 16;
 		loopi(min(d->superdamage/25, 40)+1) spawnbouncer(from, vel, d, BNC_GIBS);
+#endif
 	}
 
 #ifndef BFRONTIER
@@ -759,7 +763,7 @@ struct weaponstate
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
 #ifdef BFRONTIER
-		if (getgun(gun).sound >= 0 ) playsound(getgun(gun).sound, &d->o, &d->vel);
+		if (guns[gun].sound >= 0 ) playsound(guns[gun].sound, &d->o, &d->vel);
 #else
 		playsound(guns[gun].sound, d==player1 ? NULL : &d->o);
 		int pspeed = 25;
@@ -800,7 +804,7 @@ struct weaponstate
 					float dist = from.dist(to);
 					up.z += dist/8;
 				}
-				newbouncer(from, up, local, d, BNC_SHOT, getgun(gun).time, getgun(gun).speed, gun);
+				newbouncer(from, up, local, d, BNC_SHOT, guns[gun].time, guns[gun].speed, gun);
 				break;
 			}
 #else
@@ -905,7 +909,7 @@ struct weaponstate
 		if (gunallowed(d, d->gunselect, -2, cl.lastmillis))
 		{
 			gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
-			gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).rdelay;
+			gunvar(d->gunwait, d->gunselect) = guns[d->gunselect].rdelay;
 			cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);
 			cl.playsoundc(S_RELOAD);
 		}
@@ -918,9 +922,9 @@ struct weaponstate
 
 		d->lastattackgun = d->gunselect;
 		gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
-		gunvar(d->gunwait, d->gunselect) = getgun(d->gunselect).adelay;
+		gunvar(d->gunwait, d->gunselect) = guns[d->gunselect].adelay;
 		d->ammo[d->gunselect]--;
-		d->totalshots += getgun(d->gunselect).damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
+		d->totalshots += guns[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 
 		vec from = d->o;
 		vec to = targ;
@@ -929,9 +933,9 @@ struct weaponstate
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		vec kickback(unitv);
-		kickback.mul(getgun(d->gunselect).kick);
+		kickback.mul(guns[d->gunselect].kick);
 		d->vel.add(kickback);
-		if (d == player1) cl.camerawobble += getgun(d->gunselect).wobble;
+		if (d == player1) cl.camerawobble += guns[d->gunselect].wobble;
 		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
 		if(barrier < dist)
 		{
@@ -944,7 +948,7 @@ struct weaponstate
 		else if(d->gunselect==GUN_CG) offsetray(from, to, 1, to);
 
 		hits.setsizenodelete(0);
-		if(!getgun(d->gunselect).speed) raydamage(from, to, d);
+		if(!guns[d->gunselect].speed) raydamage(from, to, d);
 
 		shootv(d->gunselect, from, to, d, true);
 
@@ -1035,7 +1039,7 @@ struct weaponstate
 
 			lightreaching(vec(bnc.o).sub(bnc.vel), color, dir);
 
-            if (bnc.bouncetype == BNC_SHOT)
+            if (bnc.bnctype == BNC_SHOT)
             {
             	if (bnc.gun == GUN_GL)
             	{
@@ -1051,12 +1055,12 @@ struct weaponstate
 					s_sprintf(mname)("%s", "projectiles/frag");
             	}
 			}
-            else if (bnc.bouncetype == BNC_GIBS)
+            else if (bnc.bnctype == BNC_GIBS)
             {
 				s_sprintf(mname)("%s", ((int)(size_t)&bnc)&0x40 ? "gibc" : "gibh");
 				cull |= MDL_CULL_DIST;
 			}
-			else if (bnc.bouncetype == BNC_DEBRIS)
+			else if (bnc.bnctype == BNC_DEBRIS)
 			{
 				s_sprintf(mname)("debris/debris0%d", ((((int)(size_t)&bnc)&0xC0)>>6)+1);
 				cull |= MDL_CULL_DIST;

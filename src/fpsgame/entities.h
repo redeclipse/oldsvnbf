@@ -19,7 +19,12 @@ struct entities : icliententities
 	char *itemname(int i)
 	{
 		int t = ents[i]->type;
-		if(t == WEAPON) return getgun(ents[i]->attr1).name;
+		if(t == WEAPON)
+		{
+			int gun = ents[i]->attr1;
+			if (gun <= -1 || gun >= NUMGUNS) gun = 0;
+			return guns[gun].name;
+		}
 		return NULL;
 	}
 
@@ -156,7 +161,7 @@ struct entities : icliententities
 	void addammo(int type, int &v, bool local = true)
 	{
 #ifdef BFRONTIER // extended entities, blood frontier
-		guninfo &is = getgun(type);
+		guninfo &is = guns[type];
 #else
 		itemstat &is = itemstats[type-I_SHELLS];
 #endif
@@ -183,7 +188,7 @@ struct entities : icliententities
 		{
 			ents[n]->spawned = false;
 			if(!d) return;
-			guninfo &is = getgun(ents[n]->attr1);
+			guninfo &is = guns[ents[n]->attr1];
 			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
 			playsound(S_ITEMAMMO, &ents[n]->o); 
 			if(d!=cl.player1) return;

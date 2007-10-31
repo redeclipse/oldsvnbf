@@ -401,6 +401,12 @@ struct fpsserver : igameserver
 	captureservmode capturemode;
 	servmode *smode;
 
+	#include "duel.h"
+	duelservmode duelmutator; // duels are a servm
+	vector<servmode *> smuts;
+
+	#define mutate(b) loopvk(smuts) { servmode *mut = smuts[k]; { b; } }
+
 	#define Q_INT(c,n) { if(!c->local) { ucharbuf buf = c->messages.reserve(5); putint(buf, n); c->messages.addbuf(buf); } }
 	#define Q_STR(c,text) { if(!c->local) { ucharbuf buf = c->messages.reserve(2*strlen(text)+1); sendstring(text, buf); c->messages.addbuf(buf); } }
 
@@ -419,9 +425,11 @@ struct fpsserver : igameserver
 		mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 		mapdata(NULL), reliablemessages(false),
 		demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
-		capturemode(*this), smode(NULL)
+		capturemode(*this), smode(NULL),
+		duelmutator(*this)
 	{
 		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
+		smuts.setsize(0);
 	}
 #else
 	arenaservmode arenamode;
@@ -936,16 +944,26 @@ struct fpsserver : igameserver
 		resetitems();
 		notgotitems = true;
 		scores.setsize(0);
+		
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
 			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		}
+		
 		if (m_team(gamemode, mutators)) autoteam();
+		
+		// server modes
 		if (m_capture(gamemode)) smode = &capturemode;
 		else smode = NULL;
 		if(smode) smode->reset(false);
-
+		
+		// mutators
+		smuts.setsize(0);
+		if (m_duel(gamemode, mutators)) smuts.add(&duelmutator);
+		mutate(mut->reset(false));
+		
+		// and the rest
 		if(m_timed(gamemode) && hasnonlocalclients()) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 		loopv(clients)
 		{
@@ -1333,6 +1351,9 @@ struct fpsserver : igameserver
 					ci->position.addbuf(buf);
 				}
 				if(smode && ci->state.state==CS_ALIVE) smode->moved(ci, oldpos, ci->state.o);
+#ifdef BFRONTIER
+				mutate(mut->moved(ci, oldpos, ci->state.o));
+#endif
 				break;
 			}
 
@@ -1345,6 +1366,12 @@ struct fpsserver : igameserver
 					if(val) smode->leavegame(ci);
 					else smode->entergame(ci);
 				}
+#ifdef BFRONTIER
+				mutate(
+					if (val) mut->leavegame(ci);
+					else mut->entergame(ci);
+				);
+#endif
 				ci->state.state = val ? CS_EDITING : CS_ALIVE;
 				if(val)
 				{
@@ -1358,11 +1385,16 @@ struct fpsserver : igameserver
 
 			case SV_TRYSPAWN:
 #ifdef BFRONTIER
-                if(ci->state.state!=CS_DEAD || ci->state.lastspawn>=0 || (smode && !smode->canspawn(ci, false, true)))
+                if (ci->state.state!=CS_DEAD || ci->state.lastspawn>=0)
                 {
-					servsend(ci->clientnum, "you are %s", ci->state.state!=CS_DEAD ? "not dead" : (ci->state.lastspawn>=0 ? "not spawned" : "forbidden to spawn"));
-                	break;
+					int nospawn = 0;
+					if (smode && !smode->canspawn(ci, false, true)) { nospawn++; }
+					mutate(
+						if (!mut->canspawn(ci, false, true)) { nospawn++; }
+					);
+					if (nospawn) break;
                 }
+
 #else
                 if(ci->state.state!=CS_DEAD || ci->state.lastspawn>=0 || (smode && !smode->canspawn(ci))) break;
 #endif
@@ -1386,6 +1418,9 @@ struct fpsserver : igameserver
 				ci->state.state = CS_ALIVE;
 				ci->state.gunselect = gunselect;
 				if(smode) smode->spawned(ci);
+#ifdef BFRONTIER
+				mutate(mut->spawned(ci));
+#endif
 				QUEUE_MSG;
 				break;
 			}
@@ -1536,6 +1571,9 @@ struct fpsserver : igameserver
 				}
 				else QUEUE_STR(text);
 				if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, text)) smode->changeteam(ci, ci->team, text);
+#ifdef BFRONTIER
+				mutate(mut->changeteam(ci, ci->team, text));
+#endif
 				s_strncpy(ci->team, text, MAXTEAMLEN+1);
 				QUEUE_MSG;
 				break;
@@ -1678,13 +1716,25 @@ struct fpsserver : igameserver
 				if(spinfo->state.state!=CS_SPECTATOR && val)
 				{
 					if(smode && spinfo->state.state==CS_ALIVE) smode->leavegame(spinfo);
+#ifdef BFRONTIER
+					mutate(mut->leavegame(spinfo));
+#endif
 					spinfo->state.state = CS_SPECTATOR;
 				}
 				else if(spinfo->state.state==CS_SPECTATOR && !val)
 				{
 					spinfo->state.state = CS_DEAD;
 					spinfo->state.respawn();
+#ifdef BFRONTIER
+					int nospawn = 0;
+					if (smode && !smode->canspawn(spinfo)) { nospawn++; }
+					mutate(
+						if (!mut->canspawn(spinfo)) { nospawn++; }
+					);
+					if (!nospawn) sendspawn(spinfo);
+#else
                     if(!smode || smode->canspawn(spinfo)) sendspawn(spinfo);
+#endif
 				}
 				break;
 			}
@@ -1697,7 +1747,15 @@ struct fpsserver : igameserver
 				if(!ci->privilege || who<0 || who>=getnumclients()) break;
 				clientinfo *wi = (clientinfo *)getinfo(who);
 				if(!wi) break;
+#ifdef BFRONTIER
+				if (wi->state.state == CS_ALIVE && strcmp(wi->team, text))
+				{
+					if (smode) smode->changeteam(wi, wi->team, text);
+					mutate(mut->changeteam(wi, wi->team, text));
+				}
+#else
 				if(smode && wi->state.state==CS_ALIVE && strcmp(wi->team, text)) smode->changeteam(wi, wi->team, text);
+#endif
 				s_strncpy(wi->team, text, MAXTEAMLEN+1);
 				sendf(sender, 1, "riis", SV_SETTEAM, who, text);
 				QUEUE_INT(SV_SETTEAM);
@@ -1771,6 +1829,9 @@ struct fpsserver : igameserver
 					resetitems();
 					notgotitems = false;
 					if(smode) smode->reset(true);
+#ifdef BFRONTIER
+					mutate(mut->reset(true));
+#endif
 				}
 				QUEUE_MSG;
 				break;
@@ -1850,9 +1911,34 @@ struct fpsserver : igameserver
 		}
 #ifdef BFRONTIER
 		if(ci && (m_demo(gamemode) || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)
+		{
+			int nospawn = 0;
+            if(smode && !smode->canspawn(ci, true)) { nospawn++; }
+            mutate(
+				if (!mut->canspawn(ci, true)) { nospawn++; }
+			);
+			
+			if (nospawn)
+			{
+				ci->state.state = CS_DEAD;
+				putint(p, SV_FORCEDEATH);
+				putint(p, n);
+				sendf(-1, 1, "ri2x", SV_FORCEDEATH, n, n);
+			}
+			else
+			{
+				gamestate &gs = ci->state;
+				spawnstate(ci);
+				putint(p, SV_SPAWNSTATE);
+				putint(p, gs.lifesequence);
+				putint(p, gs.health);
+				putint(p, gs.gunselect);
+				loopi(NUMGUNS) putint(p, gs.ammo[i]);
+				gs.lastspawn = gamemillis; 
+			}
+		}
 #else
 		if(ci && (m_demo || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)
-#endif
 		{
             if(smode && !smode->canspawn(ci, true))
 			{
@@ -1868,19 +1954,15 @@ struct fpsserver : igameserver
 				putint(p, SV_SPAWNSTATE);
 				putint(p, gs.lifesequence);
 				putint(p, gs.health);
-#ifdef BFRONTIER
-				putint(p, gs.gunselect);
-				loopi(NUMGUNS) putint(p, gs.ammo[i]);
-#else
 				putint(p, gs.maxhealth);
 				putint(p, gs.armour);
 				putint(p, gs.armourtype);
 				putint(p, gs.gunselect);
 				loopi(GUN_PISTOL-GUN_SG+1) putint(p, gs.ammo[GUN_SG+i]);
-#endif
 				gs.lastspawn = gamemillis; 
 			}
 		}
+#endif
 		if(ci && ci->state.state==CS_SPECTATOR)
 		{
 			putint(p, SV_SPECTATOR);
@@ -1908,6 +1990,8 @@ struct fpsserver : igameserver
 		}
 		if(smode) smode->initclient(ci, p, true);
 #ifdef BFRONTIER
+		mutate(mut->initclient(ci, p, true));
+
 		//putint(p, SV_COMMAND);
 		//s_sprintfd(ver)("version %d", BFRONTIER);
 		//sendstring(ver, p);
@@ -1927,7 +2011,15 @@ struct fpsserver : igameserver
 		{
 			minremain = gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
 			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+#ifdef BFRONTIER
+			if (!minremain)
+			{
+				if (smode) smode->intermission();
+				mutate(mut->intermission());
+			}
+#else
 			if(!minremain && smode) smode->intermission();
+#endif
 		}
 		if(!interm && minremain<=0) interm = gamemillis+10000;
 	}
@@ -1972,7 +2064,8 @@ struct fpsserver : igameserver
 	{
 		gamestate &ts = target->state;
 #ifdef BFRONTIER
-		if (smode && !smode->damage(target, actor, damage, gun, hitpush)) return;
+		if (smode && !smode->damage(target, actor, damage, gun, hitpush)) { return; }
+		mutate(if (!mut->damage(target, actor, damage, gun, hitpush)) { return; });
 		//if (!teamdamage && m_team(gamemode, mutators) && isteam(target->team, actor->team)) return;
 		//damage *= damagescale/100;
 		ts.dodamage(damage, gamemillis);
@@ -2020,6 +2113,9 @@ struct fpsserver : igameserver
 			sendf(-1, 1, "ri4", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
+#ifdef BFRONTIER
+			mutate(mut->died(target, actor));
+#endif
 			ts.state = CS_DEAD;
 			ts.lastdeath = gamemillis;
 			// don't issue respawn yet until DEATHMILLIS has elapsed
@@ -2035,6 +2131,9 @@ struct fpsserver : igameserver
 		sendf(-1, 1, "ri4", SV_DIED, ci->clientnum, ci->clientnum, gs.frags);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
+#ifdef BFRONTIER
+		mutate(mut->died(ci, NULL));
+#endif
 		gs.state = CS_DEAD;
 		gs.respawn();
 	}
@@ -2066,7 +2165,7 @@ struct fpsserver : igameserver
 			if(j<i) continue;
 
 #ifdef BFRONTIER
-			int damage = int(getgun(e.gun).damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
+			int damage = int(guns[e.gun].damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
 #else
 			int damage = guns[e.gun].damage;
 			if(gs.quadmillis) damage *= 4;		
@@ -2082,9 +2181,9 @@ struct fpsserver : igameserver
 		gamestate &gs = ci->state;
 #ifdef BFRONTIER
 		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -1, e.millis)) { conoutf("%s can't shoot", ci->name); return; }
-		if (getgun(e.gun).max) gs.ammo[e.gun]--;
+		if (guns[e.gun].max) gs.ammo[e.gun]--;
 		gs.lastshot = gunvar(gs.gunlast, e.gun) = e.millis; 
-		gunvar(gs.gunwait, e.gun) = getgun(e.gun).adelay; 
+		gunvar(gs.gunwait, e.gun) = guns[e.gun].adelay; 
 #else
 		int wait = e.millis - gs.lastshot;
 		if(!gs.isalive(gamemillis) ||
@@ -2116,7 +2215,7 @@ struct fpsserver : igameserver
 					totalrays += h.rays;
 					if(totalrays>maxrays) continue;
 #ifdef BFRONTIER
-					int damage = h.rays*getgun(e.gun).damage;
+					int damage = h.rays*guns[e.gun].damage;
 #else
 					int damage = h.rays*guns[e.gun].damage;
 					if(gs.quadmillis) damage *= 4;
@@ -2134,8 +2233,8 @@ struct fpsserver : igameserver
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -2, e.millis))  { conoutf("%s can't reload", ci->name); return; }
 		gs.lastshot = gunvar(gs.gunlast,e.gun) = e.millis; 
-		gunvar(gs.gunwait,e.gun) = getgun(e.gun).rdelay; 
-		gs.ammo[e.gun] = getgun(e.gun).add;
+		gunvar(gs.gunwait,e.gun) = guns[e.gun].rdelay; 
+		gs.ammo[e.gun] = guns[e.gun].add;
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
 #endif
@@ -2209,6 +2308,8 @@ struct fpsserver : igameserver
 				}
 			}
 			if(smode) smode->update();
+			mutate(mut->update());
+
 			/*
 			if (!m_capture(gamemode) && fraglimit > 0 && minremain > 0)
 			{
@@ -2366,6 +2467,9 @@ struct fpsserver : igameserver
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
 		if(smode && ci->state.state==CS_ALIVE) smode->leavegame(ci);
+#ifdef BFRONTIER
+		mutate(mut->leavegame(ci));
+#endif
 		clients.removeobj(ci);
 	}
 
@@ -2387,6 +2491,9 @@ struct fpsserver : igameserver
 		clientinfo *ci = (clientinfo *)getinfo(n);
 		if(ci->privilege) setmaster(ci, false);
 		if(smode && ci->state.state==CS_ALIVE) smode->leavegame(ci);
+#ifdef BFRONTIER
+		mutate(mut->leavegame(ci));
+#endif
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed; 
 		savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, n); 
