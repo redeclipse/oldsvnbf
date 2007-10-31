@@ -7,6 +7,9 @@ Legend [
 ]
 
 = wip edition =
+* reload/ammo add/max values tweaked
+* reload/ammo now available any time the weapon is not firing, reloading, or has max ammo
+* reload independence from firing state (MOUSE3)
 * duel servmode mutator
 * servmode stack for mutators
 * weighted projectile velocity modifiers

@@ -307,12 +307,6 @@
 			<Option target="debug"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="engine\cubeloader.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-			<Option target="data"/>
-		</Unit>
 		<Unit filename="engine\engine.h">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>

@@ -296,12 +296,12 @@ static struct guninfo
 	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	char *name;
 } guns[NUMGUNS] =
 {
-	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			10,		10,		250,	2250,	10,		0,		0,		-10 ,	10,		"pistol" },
-	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			8,		8,		1000,	4000,	25,		0,		0,		-30,	30, 	"shotgun" },
-	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			30,		30,		75,		3075,	5,		0,		0,		-5,		5,		"chaingun" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	15,		"grenades" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	200,	200,	10000,	-40,	40,		"rockets" },
-	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			5,		5,		1500,	4500,	50,		500,	0,		-30,	20,		"rifle" },
+	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			10,		20,		250,	2250,	10,		0,		0,		-10 ,	10,		"pistol" },
+	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			2,		2,		1000,	4000,	25,		0,		0,		-30,	30, 	"shotgun" },
+	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			25,		100,	75,		3075,	5,		0,		0,		-5,		5,		"chaingun" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		6,		1500,	0,		100,	100,	3000,	-15,	15,		"grenades" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		3,		2500,	5000,	200,	200,	10000,	-40,	40,		"rockets" },
+	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	4500,	50,		500,	0,		-30,	20,		"rifle" },
 };
 
 #define gunvar(gw,gn) ((gw)[gn])
@@ -310,8 +310,8 @@ static struct guninfo
 	(gs <= -1 && ( \
 		( \
 			(gs == -1 && (ge)->ammo[gn] > 0) || \
-			(gs == -2 && guns[gn].rdelay && (ge)->ammo[gn] <= 0) || \
-			(gs == -3 && (ge)->ammo[gn] <= 0) \
+			(gs == -2 && guns[gn].rdelay && (ge)->ammo[gn] != guns[gn].max) || \
+			(gs == -3 && (ge)->ammo[gn] != guns[gn].max) \
 		) && \
 		(ms-gunvar((ge)->gunlast, gn) >= gunvar((ge)->gunwait, gn)) \
 	)) \
@@ -354,6 +354,9 @@ static struct guninfo { short sound, attackdelay, damage, projspeed, part, kicka
 };
 #endif
 
+enum { TEAM_BLUE = 0, TEAM_RED, TEAM_MAX };
+static char *teamnames[TEAM_MAX] = {"blue", "red"};
+
 // inherited by fpsent and server clients
 struct fpsstate
 {
@@ -372,26 +375,38 @@ struct fpsstate
 	fpsstate() : lastpain(0) {}
 	~fpsstate() {}
 
-	void addammo(int gun)
+	bool canpickup(int type, int attr1, int attr2, int millis)
 	{
-		ammo[gun] += guns[gun].add;
-	}
-
-	bool hasmaxammo(int type)
-	{
-		const guninfo &is = guns[type];
-		return ammo[type] >= is.max;
-	}
-
-	bool canpickup(int type, int millis)
-	{
-		return gunallowed(this, type, -3, millis);
+		switch (type)
+		{
+			case WEAPON:
+			{
+				return gunallowed(this, attr1, -3, millis);
+				break; // difference is here, can't pickup when reloading or firing
+			}
+			default:
+			{
+				return false;
+				break;
+			}
+		}
 	}
  
-	void pickup(int type, int amt)
+	void pickup(int type, int attr1, int attr2)
 	{
-		guninfo &is = guns[type];
-		ammo[is.info] = min(ammo[is.info] + (amt > 0 ? amt : is.add), is.max);
+		switch (type)
+		{
+			case WEAPON:
+			{
+				guninfo &g = guns[attr1];
+				ammo[g.info] = min(ammo[g.info] + (attr2 > 0 ? attr2 : g.add), g.max);
+				break;
+			}
+			default:
+			{
+				break;
+			}
+		}
 	}
 #else
 	fpsstate() : maxhealth(100) {}
