@@ -56,7 +56,7 @@ struct weaponstate
 			while (s >= NUMGUNS) s -= NUMGUNS;
 			while (s <= -1) s += NUMGUNS;
 			
-			if (!gunallowed(player1, player1->gunselect, s, cl.lastmillis))
+			if (!player1->canweapon(s, cl.lastmillis))
 			{
 				if (a >= 0)
 				{
@@ -906,10 +906,10 @@ struct weaponstate
 
 	void reload(fpsent *d)
 	{
-		if (gunallowed(d, d->gunselect, -2, cl.lastmillis))
+		if (d->canreload(d->gunselect, cl.lastmillis))
 		{
-			gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
-			gunvar(d->gunwait, d->gunselect) = guns[d->gunselect].rdelay;
+			d->gunlast[d->gunselect] = cl.lastmillis;
+			d->gunwait[d->gunselect] = guns[d->gunselect].rdelay;
 			cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);
 			cl.playsoundc(S_RELOAD);
 		}
@@ -918,11 +918,11 @@ struct weaponstate
 	void shoot(fpsent *d, vec &targ)
 	{
 #ifdef BFRONTIER
-		if (!gunallowed(d, d->gunselect, -1, cl.lastmillis)) return; 
+		if (!d->canshoot(d->gunselect, cl.lastmillis)) return; 
 
 		d->lastattackgun = d->gunselect;
-		gunvar(d->gunlast, d->gunselect) = cl.lastmillis;
-		gunvar(d->gunwait, d->gunselect) = guns[d->gunselect].adelay;
+		d->gunlast[d->gunselect] = cl.lastmillis;
+		d->gunwait[d->gunselect] = guns[d->gunselect].adelay;
 		d->ammo[d->gunselect]--;
 		d->totalshots += guns[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 

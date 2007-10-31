@@ -212,7 +212,7 @@ enum
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
 	SV_CLIENT,
 #ifdef BFRONTIER
-	SV_COMMAND, SV_RELOAD, SV_REGENERATE,
+	SV_COMMAND, SV_RELOAD, SV_REGEN,
 #endif
 };
 
@@ -245,7 +245,7 @@ static char msgsizelookup(int msg)
 		SV_DEMOPLAYBACK, 2, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
 		SV_CLIENT, 0,
 #ifdef BFRONTIER
-		SV_COMMAND, 0, SV_RELOAD, 0, SV_REGENERATE, 0,
+		SV_COMMAND, 0, SV_RELOAD, 0, SV_REGEN, 0,
 #endif
 		-1
 	};
@@ -303,19 +303,7 @@ static struct guninfo
 	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		3,		2500,	5000,	200,	200,	10000,	-40,	40,		"rockets" },
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	4500,	50,		500,	0,		-30,	20,		"rifle" },
 };
-
-#define gunvar(gw,gn) ((gw)[gn])
-#define gunallowed(ge,gn,gs,ms) ((gn > -1 && gn < NUMGUNS) && ( \
-	(gs >= 0 && gn != gs && ms-gunvar((ge)->gunlast, gs) >= gunvar((ge)->gunwait, gs)) || \
-	(gs <= -1 && ( \
-		( \
-			(gs == -1 && (ge)->ammo[gn] > 0) || \
-			(gs == -2 && guns[gn].rdelay && (ge)->ammo[gn] != guns[gn].max) || \
-			(gs == -3 && (ge)->ammo[gn] != guns[gn].max) \
-		) && \
-		(ms-gunvar((ge)->gunlast, gn) >= gunvar((ge)->gunwait, gn)) \
-	)) \
-))
+#define isgun(gun) (gun > -1 && gun < NUMGUNS)
 #else
 static struct itemstat { int add, max, sound; char *name; int info; } itemstats[] =
 {
@@ -361,7 +349,7 @@ static char *teamnames[TEAM_MAX] = {"blue", "red"};
 struct fpsstate
 {
 #ifdef BFRONTIER
-	int health, lastspawn, lastpain;
+	int health, lastspawn, lastpain, lastregen;
 	int gunselect, gunwait[NUMGUNS], gunlast[NUMGUNS];
 #else
 	int health, maxhealth;
@@ -372,8 +360,28 @@ struct fpsstate
 	int ammo[NUMGUNS];
 
 #ifdef BFRONTIER
-	fpsstate() : lastpain(0) {}
+	fpsstate() {}
 	~fpsstate() {}
+
+	bool canweapon(int gun, int millis)
+	{
+		return isgun(gun) && (gunselect != gun)	&& (millis-gunlast[gun] >= gunwait[gun]);
+	}
+
+	bool canshoot(int gun, int millis)
+	{
+		return isgun(gun) && (ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]);
+	}
+
+	bool canreload(int gun, int millis)
+	{
+		return isgun(gun) && (ammo[gun] < guns[gun].max) && (guns[gun].rdelay > 0) && (millis-gunlast[gun] >= gunwait[gun]);
+	}
+
+	bool canammo(int gun, int millis)
+	{
+		return isgun(gun) && (ammo[gun] < guns[gun].max) && (millis-gunlast[gun] >= gunwait[gun]);
+	}
 
 	bool canpickup(int type, int attr1, int attr2, int millis)
 	{
@@ -381,7 +389,7 @@ struct fpsstate
 		{
 			case WEAPON:
 			{
-				return gunallowed(this, attr1, -3, millis);
+				return canammo(attr1, millis);
 				break; // difference is here, can't pickup when reloading or firing
 			}
 			default:
@@ -474,7 +482,7 @@ struct fpsstate
 	{
 #ifdef BFRONTIER
 		health = 100;
-		lastspawn = -1;
+		lastspawn = lastpain = lastregen = -1;
 		loopi(NUMGUNS)
 		{
 			gunwait[i] = gunlast[i] = 0;
@@ -560,7 +568,7 @@ struct fpsstate
 #ifdef BFRONTIER
 	int dodamage(int damage, int millis)
 	{
-		lastpain = millis;
+		lastpain = lastregen = millis;
 		health -= damage;
 		return damage;		
 	}
@@ -777,7 +785,7 @@ static char *msgnames[] = {
 	"SV_CLIENT",
 	"SV_COMMAND",
 	"SV_RELOAD",
-	"SV_REGENERATE",
+	"SV_REGEN",
 };
 #endif
 #endif
