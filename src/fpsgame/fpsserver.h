@@ -503,11 +503,11 @@ struct fpsserver : igameserver
 		if(minremain<=0 || !sents.inrange(i) || !sents[i].spawned) return false;
 		clientinfo *ci = (clientinfo *)getinfo(sender);
 #ifdef BFRONTIER
-		if(!ci || (!ci->local && !ci->state.canpickup(sents[i].attr1, gamemillis))) return false;
+		if(!ci || (!ci->local && !ci->state.canpickup(sents[i].type, sents[i].attr1, sents[i].attr2, gamemillis))) return false;
 		sents[i].spawned = false;
 		sents[i].spawntime = spawntime(sents[i].type);
 		sendf(-1, 1, "ri3", SV_ITEMACC, i, sender);
-		ci->state.pickup(sents[i].attr1, sents[i].attr2);
+		ci->state.pickup(sents[i].type, sents[i].attr1, sents[i].attr2);
 #else
 		if(!ci || (!ci->local && !ci->state.canpickup(sents[i].type))) return false;
 		sents[i].spawned = false;
@@ -589,7 +589,9 @@ struct fpsserver : igameserver
 
 	void autoteam()
 	{
-		static const char *teamnames[2] = {"good", "evil"};
+#ifndef BFRONTIER
+		static const char *teamnames[2] = {"blue", "red"};
+#endif
 		vector<clientinfo *> team[2];
 		float teamrank[2] = {0, 0};
 		for(int round = 0, remaining = clients.length(); remaining>=0; round++)
@@ -642,7 +644,7 @@ struct fpsserver : igameserver
 	
 	const char *chooseworstteam(const char *suggest)
 	{
-		teamscore teamscores[2] = { teamscore("good"), teamscore("evil") };
+		teamscore teamscores[2] = { teamscore("blue"), teamscore("red") };
 		const int numteams = sizeof(teamscores)/sizeof(teamscores[0]);
 		loopv(clients)
 		{
@@ -2234,7 +2236,7 @@ struct fpsserver : igameserver
 		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -2, e.millis))  { conoutf("%s can't reload", ci->name); return; }
 		gs.lastshot = gunvar(gs.gunlast,e.gun) = e.millis; 
 		gunvar(gs.gunwait,e.gun) = guns[e.gun].rdelay; 
-		gs.ammo[e.gun] = guns[e.gun].add;
+		gs.pickup(WEAPON, e.gun, guns[e.gun].add);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
 #endif

@@ -1104,7 +1104,6 @@ namespace hmap
 }
 
 void edithmap(int dir, int mode) {    
-
 #ifdef BFRONTIER
     if(otherclients() || !hmapsel) return;
 #else

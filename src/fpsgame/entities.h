@@ -158,19 +158,15 @@ struct entities : icliententities
 		}
 	}
 
+#ifndef BFRONTIER
 	void addammo(int type, int &v, bool local = true)
 	{
-#ifdef BFRONTIER // extended entities, blood frontier
-		guninfo &is = guns[type];
-#else
 		itemstat &is = itemstats[type-I_SHELLS];
-#endif
 		v += is.add;
 		if(v>is.max) v = is.max;
 		if(local) cl.playsoundc(is.sound);
 	}
 
-#ifndef BFRONTIER
 	void repammo(fpsent *d, int type)
 	{
 		addammo(type, d->ammo[type-I_SHELLS+GUN_SG]);
@@ -188,11 +184,11 @@ struct entities : icliententities
 		{
 			ents[n]->spawned = false;
 			if(!d) return;
-			guninfo &is = guns[ents[n]->attr1];
-			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), is.name, 15);
+			guninfo &g = guns[ents[n]->attr1];
+			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), g.name, 15);
 			playsound(S_ITEMAMMO, &ents[n]->o); 
 			if(d!=cl.player1) return;
-			d->pickup(ents[n]->attr1, ents[n]->attr2);
+			d->pickup(ents[n]->type, ents[n]->attr1, ents[n]->attr2);
 		}
 		else return;
 #else
@@ -251,7 +247,7 @@ struct entities : icliententities
 		{
 			default:
 #ifdef BFRONTIER
-				if(ents[n]->type == WEAPON && d->canpickup(ents[n]->attr1, cl.lastmillis))
+				if(d->canpickup(ents[n]->type, ents[n]->attr1, ents[n]->attr2, cl.lastmillis))
 #else
 				if(d->canpickup(ents[n]->type))
 #endif

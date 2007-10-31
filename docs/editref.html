@@ -672,6 +672,12 @@ Returns 0 if the cubes are only implicitly selected.
 
 <h2 id="heightfield">Heightfield</h2>
 
+<p>
+Heightfields in Sauerbraten are very different from other games. They are just normal cubes and are NOT special meshes. Really, it's just another way of editing the same geometry.
+Editing this way is a bit different from normal editing, but just as easy. First, instead of selecting cubes,
+you select a brush (B+wheel) and textures (H or LCTRL+LMB for new selection, LCTRL+RMB to add). Once this is done, you can apply the brush to all cubes that match the textures you've selected. Making hills and valleys can be quite fast when using this feature.
+</p>
+
 <pre id="hmapedit">hmapedit 0/1</pre>
 <p>
 Set to 1 to turn on heightmap mode (default: hold LCTRL). In heightmap mode the cursor will turn green when hilighting heightmap cubes and the <a href="#editface">editface</a> command will now use brushes to edit heightmap cubes. In order to avoid accidental edits only heightmap cubes are editable in this mode.
@@ -679,7 +685,7 @@ Set to 1 to turn on heightmap mode (default: hold LCTRL). In heightmap mode the 
 
 <pre id="hmapaddtex">hmapaddtex</pre>
 <p>
-Selects the texture and orientation of the hilighted cube (default: mouse buttons while in heightmap mode). All cubes, of equal or larger size, that match the selection will be considered part of the heightmap.
+Selects the texture and orientation of the hilighted cube (default: mouse buttons while in heightmap mode, or H key). All cubes, of equal or larger size, that match the selection will be considered part of the heightmap.
 </p>
 
 <pre id="hmapcancel">hmapcancel</pre>
@@ -702,7 +708,8 @@ This resets the current brush that is used during heightmap mode editing.
 A brush is a 2D map that describes the depth that the editface commands should
 push into the cubes at various points. The first two parameters of brushvert are the X and Y
 coordinates, respectively, of a vert on this 2D map. The last parameter
-is used to set the depth.
+is used to set the depth. NOTE: if all of the brush verts are 0, then a smoothing filter will be 
+applied instead of the brush. This filter will affect the same square sized region as the brush.
 </p>
 
 <pre id="brushx">brushx</pre>
@@ -1861,8 +1868,8 @@ into view. yaw is taken from the current camera yaw.
 <pre id="_respawnpoint_">"respawnpoint"</pre>
 <p>
 
-A respawnpoint for classic SP mode (see "SP Respawning"). Place these spaced evenly in quieter areas between fights. Will actually work in
-any game mode, just probably isn't helpful in DM.
+A respawnpoint for classic SP mode (see "SP Respawning"), when the player dies, they will repsawn at the last
+one of these they touched, otherwise they start at the <a href="#_playerstart_">playerstart</a> entity.
 </p>
 
 <pre id="_particles_">"particles" type value1 value2 value3 value4</pre>
