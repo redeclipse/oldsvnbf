@@ -15,9 +15,9 @@ struct fpsrender
 	void renderplayer(fpsent *d, const char *mdlname)
 	{
 #ifdef BFRONTIER
-        int lastaction = gunvar(d->gunlast, d->gunselect),
+        int lastaction = d->gunlast[d->gunselect],
 			attack = ANIM_SHOOT,
-			delay = gunvar(d->gunwait, d->gunselect) + 50;
+			delay = d->gunwait[d->gunselect] + 50;
 		if(cl.intermission && d->state!=CS_DEAD)
 		{
 			lastaction = cl.lastmillis;

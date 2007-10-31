@@ -847,7 +847,11 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 	initlights();
 #ifdef BFRONTIER // fix the difference in gridsizes on older maps
-	if (maptype == MAP_OCTA) mpremip(true);
+	if (maptype == MAP_OCTA)
+	{
+		mpremip(true);
+		conoutf("WARNING: map imported from cube 2 format, some artifacts may be present, please check your map before saving");
+	}
 #endif
 	allchanged(true);
 

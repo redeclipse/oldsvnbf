@@ -910,14 +910,14 @@ struct fpsclient : igameclient
 	{
 #ifdef BFRONTIER
 		if(!hudgun() || editmode || player1->state != CS_ALIVE) return;
-		int rtime = gunvar(player1->gunwait, player1->gunselect),
-			wtime = gunvar(player1->gunlast, player1->gunselect),
+		int rtime = player1->gunwait[player1->gunselect],
+			wtime = player1->gunlast[player1->gunselect],
 			otime = lastmillis - wtime;
 
 		if (otime < rtime)
 		{
 			int anim = (guns[player1->gunselect].rdelay && rtime == guns[player1->gunselect].rdelay) ? ANIM_GUNRELOAD : ANIM_GUNSHOOT;
-			drawhudmodel(anim, rtime/17.0f, gunvar(player1->gunlast, player1->gunselect));
+			drawhudmodel(anim, rtime/17.0f, player1->gunlast[player1->gunselect]);
 		}
 		else
 		{
@@ -1081,12 +1081,14 @@ struct fpsclient : igameclient
 
 	void crosshaircolor(float &r, float &g, float &b)
 	{
-		if(player1->state!=CS_ALIVE) return;
-		if(gunvar(player1->gunwait,player1->gunselect)) r = g = b = 0.5f;
-		else if(!editmode && !m_insta(gamemode, mutators))
+		if( player1->state != CS_ALIVE) return;
+		
+		if (lastmillis-player1->gunlast[player1->gunselect] < player1->gunwait[player1->gunselect])
+			r = g = b = 0.5f;
+		else if (!editmode && !m_insta(gamemode, mutators))
 		{
-			if(player1->health<=25) { r = 1.0f; g = b = 0; }
-			else if(player1->health<=50) { r = 1.0f; g = 0.5f; b = 0; }
+			if( player1->health<=25) { r = 1.0f; g = b = 0; }
+			else if (player1->health<=50) { r = 1.0f; g = 0.5f; b = 0; }
 		}
 	}
 

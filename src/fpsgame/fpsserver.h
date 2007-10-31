@@ -140,7 +140,7 @@ struct fpsserver : igameserver
         {
 #ifdef BFRONTIER
 			int lasttime = gamemillis - lastshot;
-			loopi (NUMGUNS) if (lasttime < gunvar(gunwait, i)) return false;
+			loopi (NUMGUNS) if (lasttime < gunwait[i]) return false;
 			return true;
 #else
             return gamemillis - lastshot >= gunwait;
@@ -2182,10 +2182,10 @@ struct fpsserver : igameserver
 	{
 		gamestate &gs = ci->state;
 #ifdef BFRONTIER
-		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -1, e.millis)) { conoutf("%s can't shoot", ci->name); return; }
+		if(!gs.isalive(gamemillis) || !gs.canshoot(e.gun, e.millis)) { return; }
 		if (guns[e.gun].max) gs.ammo[e.gun]--;
-		gs.lastshot = gunvar(gs.gunlast, e.gun) = e.millis; 
-		gunvar(gs.gunwait, e.gun) = guns[e.gun].adelay; 
+		gs.lastshot = gs.gunlast[e.gun] = e.millis; 
+		gs.gunwait[e.gun] = guns[e.gun].adelay; 
 #else
 		int wait = e.millis - gs.lastshot;
 		if(!gs.isalive(gamemillis) ||
@@ -2233,9 +2233,9 @@ struct fpsserver : igameserver
 	void processevent(clientinfo *ci, reloadevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !gunallowed(&gs, e.gun, -2, e.millis))  { conoutf("%s can't reload", ci->name); return; }
-		gs.lastshot = gunvar(gs.gunlast,e.gun) = e.millis; 
-		gunvar(gs.gunwait,e.gun) = guns[e.gun].rdelay; 
+		if(!gs.isalive(gamemillis) || !gs.canreload(e.gun, e.millis)) { return; }
+		gs.lastshot = gs.gunlast[e.gun] = e.millis; 
+		gs.gunwait[e.gun] = guns[e.gun].rdelay; 
 		gs.pickup(WEAPON, e.gun, guns[e.gun].add);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
@@ -2253,11 +2253,20 @@ struct fpsserver : igameserver
 		{
 			clientinfo *ci = clients[i];
 #ifdef BFRONTIER
-			if (!m_insta(gamemode, mutators) && ci->state.state == CS_ALIVE &&
-				ci->state.health < 100 && gamemillis-ci->state.lastpain > 3000)
+			if (ci->state.state == CS_ALIVE)
 			{
-				ci->state.health = 100;
-				sendf(-1, 1, "ri3", SV_REGENERATE, ci->clientnum, ci->state.health);
+				int lastpain = gamemillis-ci->state.lastpain,
+					lastregen = gamemillis-ci->state.lastregen;
+				
+				if (!m_insta(gamemode, mutators) &&
+					ci->state.health < 100 && lastpain >= 3000 && lastregen >= 1000)
+				{
+					int health = ci->state.health-(ci->state.health%10);
+					ci->state.health = min(health+10, 100);
+					ci->state.lastregen = gamemillis;
+					sendf(-1, 1, "ri4", SV_REGEN,
+						ci->clientnum, ci->state.health, ci->state.lastregen);
+				}
 			}
 #else
 			if(curtime>0 && ci->state.quadmillis) ci->state.quadmillis = max(ci->state.quadmillis-curtime, 0);

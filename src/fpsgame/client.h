@@ -744,8 +744,8 @@ struct clientcom : iclientcom
 				if(gun==GUN_SG) cl.ws.createrays(from, to);
 				s->gunselect = max(gun, 0);
 #ifdef BFRONTIER // extended gun waiting
-				gunvar(s->gunwait, s->gunselect) = 0;
-				gunvar(s->gunlast, s->gunselect) = cl.lastmillis;
+				s->gunwait[s->gunselect] = 0;
+				s->gunlast[s->gunselect] = cl.lastmillis;
 #else
 				s->gunwait = 0;
 				s->lastaction = cl.lastmillis;
@@ -783,13 +783,14 @@ struct clientcom : iclientcom
 				break;
 			}
 
-			case SV_REGENERATE:
+			case SV_REGEN:
 			{
-				int trg = getint(p), amt = getint(p);
+				int trg = getint(p), amt = getint(p), ms = getint(p);
 				fpsent *target = trg == player1->clientnum ? player1 : cl.getclient(trg);
 				if (!target) break;
 				playsound(S_REGEN, &target->o, &target->vel);
 				target->health = amt;
+				target->lastregen = ms;
 				break;
 			}
 #else
