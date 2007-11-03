@@ -10,10 +10,10 @@
       <part>kdevvalgrind</part>
     </ignoreparts>
     <projectname>bloodfrontier</projectname>
-    <projectdirectory>..</projectdirectory>
+    <projectdirectory>.</projectdirectory>
     <absoluteprojectpath>false</absoluteprojectpath>
-    <description></description>
-    <defaultencoding></defaultencoding>
+    <description/>
+    <defaultencoding/>
     <versioncontrol>kdevsubversion</versioncontrol>
   </general>
   <kdevcustomproject>
@@ -21,7 +21,7 @@
       <directoryradio>executable</directoryradio>
       <mainprogram>/home/quin/devel/bf/bin/bloodfrontier_client</mainprogram>
       <programargs>-t -w1020 -h724</programargs>
-      <globaldebugarguments></globaldebugarguments>
+      <globaldebugarguments/>
       <globalcwd>/home/quin/devel/bf</globalcwd>
       <useglobalprogram>false</useglobalprogram>
       <terminal>false</terminal>
@@ -59,13 +59,13 @@
     </blacklist>
     <build>
       <buildtool>make</buildtool>
-      <builddir></builddir>
+      <builddir/>
     </build>
     <other>
       <prio>0</prio>
-      <otherbin></otherbin>
-      <defaulttarget></defaulttarget>
-      <otheroptions></otheroptions>
+      <otherbin/>
+      <defaulttarget/>
+      <otheroptions/>
       <selectedenvironment>default</selectedenvironment>
       <environments>
         <default/>
@@ -76,9 +76,9 @@
       <numberofjobs>0</numberofjobs>
       <prio>0</prio>
       <dontact>false</dontact>
-      <makebin></makebin>
+      <makebin/>
       <defaulttarget>all install</defaulttarget>
-      <makeoptions></makeoptions>
+      <makeoptions/>
       <selectedenvironment>default</selectedenvironment>
       <environments>
         <default/>
@@ -87,11 +87,11 @@
   </kdevcustomproject>
   <kdevdebugger>
     <general>
-      <dbgshell></dbgshell>
-      <gdbpath></gdbpath>
-      <configGdbScript></configGdbScript>
-      <runShellScript></runShellScript>
-      <runGdbScript></runGdbScript>
+      <dbgshell/>
+      <gdbpath/>
+      <configGdbScript/>
+      <runShellScript/>
+      <runGdbScript/>
       <breakonloadinglibs>true</breakonloadinglibs>
       <separatetty>false</separatetty>
       <floatingtoolbar>false</floatingtoolbar>
@@ -204,6 +204,7 @@
       <synchronize>true</synchronize>
       <orientation>Vertical</orientation>
     </splitheadersource>
+    <references/>
   </kdevcppsupport>
   <cppsupportpart>
     <filetemplates>
@@ -213,33 +214,41 @@
   </cppsupportpart>
   <kdevdocumentation>
     <projectdoc>
-      <docsystem></docsystem>
-      <docurl></docurl>
-      <usermanualurl></usermanualurl>
+      <docsystem/>
+      <docurl/>
+      <usermanualurl/>
     </projectdoc>
   </kdevdocumentation>
   <kdevfileview>
-    <groups/>
+    <groups>
+      <hidenonprojectfiles>false</hidenonprojectfiles>
+      <hidenonlocation>false</hidenonlocation>
+    </groups>
+    <tree>
+      <hidepatterns>*.o,*.lo,CVS</hidepatterns>
+      <hidenonprojectfiles>false</hidenonprojectfiles>
+      <showvcsfields>false</showvcsfields>
+    </tree>
   </kdevfileview>
   <ctagspart>
-    <customArguments></customArguments>
+    <customArguments/>
     <customTagfilePath>/home/quin/devel/bf/src/tags</customTagfilePath>
     <activeTagsFiles/>
   </ctagspart>
   <dist>
     <custom>false</custom>
     <bzip>true</bzip>
-    <archname></archname>
+    <archname/>
     <appname>bloodfrontier</appname>
     <version>1</version>
-    <release></release>
-    <vendor></vendor>
+    <release/>
+    <vendor/>
     <licence>ZLIB</licence>
-    <summary></summary>
-    <group></group>
+    <summary/>
+    <group/>
     <packager>Quinton Reeves</packager>
-    <description></description>
-    <changelog></changelog>
+    <description/>
+    <changelog/>
     <devpackage>false</devpackage>
     <docspackage>false</docspackage>
     <appicon>false</appicon>
@@ -248,6 +257,6 @@
     <useRPM>false</useRPM>
     <ftpkde>false</ftpkde>
     <appskde>false</appskde>
-    <url></url>
+    <url/>
   </dist>
 </kdevelop>
