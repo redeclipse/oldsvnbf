@@ -1,6 +1,6 @@
 CXXOPTFLAGS= -O3 -fomit-frame-pointer -ffast-math
 INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
-CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES)
+CXXFLAGS= -w -fsigned-char $(CXXOPTFLAGS) $(INCLUDES)
 
 CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lfmodex -lSDL_image -lz -lGL -lGLU 
 CLIENT_OBJS= \
