@@ -15,7 +15,6 @@
 string homedir = "";
 vector<char *> packagedirs;
 
-#ifdef BFRONTIER
 char *makefile(char *s, char *p, char *e, bool ext, bool copy)
 {
     if(copy)
@@ -47,7 +46,6 @@ char *makefile(char *s, char *p, char *e, bool ext, bool copy)
 	if (ext) s_strcpy(s, f);
 	return s;
 }
-#endif
 
 char *path(char *s, bool copy)
 {
@@ -68,10 +66,10 @@ char *path(char *s, bool copy)
             memmove(prevdir, curdir+1, strlen(curdir+1)+1);
             curdir = prevdir;
         }
-        else if(curdir[1]=='.' && curdir[2]=='.' && curdir[3]==PATHDIV) 
+        else if(curdir[1]=='.' && curdir[2]=='.' && curdir[3]==PATHDIV)
         {
             if(prevdir+2==curdir && prevdir[0]=='.' && prevdir[1]=='.') continue;
-            memmove(prevdir, curdir+4, strlen(curdir+4)+1); 
+            memmove(prevdir, curdir+4, strlen(curdir+4)+1);
             curdir = prevdir;
         }
     }
@@ -136,24 +134,20 @@ void addpackagedir(const char *dir)
 {
     fixdir(packagedirs.add(newstringbuf(dir)));
 }
- 
+
 const char *findfile(const char *filename, const char *mode)
 {
     static string s;
     if(homedir[0])
     {
         s_sprintf(s)("%s%s", homedir, filename);
-#ifdef BFRONTIER
 		path(s);
-#endif
         if(fileexists(s, mode)) return s;
         if(mode[0]=='w' || mode[0]=='a')
         {
             string dirs;
             s_strcpy(dirs, s);
-#ifdef BFRONTIER
 			path(dirs);
-#endif
             char *dir = strchr(dirs[0]==PATHDIV ? dirs+1 : dirs, PATHDIV);
             while(dir)
             {
@@ -163,15 +157,13 @@ const char *findfile(const char *filename, const char *mode)
                 dir = strchr(dir+1, PATHDIV);
             }
             return s;
-        } 
+        }
     }
     if(mode[0]=='w' || mode[0]=='a') return filename;
     loopv(packagedirs)
     {
         s_sprintf(s)("%s%s", packagedirs[i], filename);
-#ifdef BFRONTIER
 		path(s);
-#endif
         if(fileexists(s, mode)) return s;
     }
     return filename;
@@ -287,17 +279,17 @@ void endianswap(void *memory, int stride, int length)   // little endian as stor
 
 ////////////////////////// rnd numbers ////////////////////////////////////////
 
-#define N              (624)             
-#define M              (397)                
-#define K              (0x9908B0DFU)       
-#define hiBit(u)       ((u) & 0x80000000U)  
-#define loBit(u)       ((u) & 0x00000001U)  
-#define loBits(u)      ((u) & 0x7FFFFFFFU)  
-#define mixBits(u, v)  (hiBit(u)|loBits(v)) 
+#define N              (624)
+#define M              (397)
+#define K              (0x9908B0DFU)
+#define hiBit(u)       ((u) & 0x80000000U)
+#define loBit(u)       ((u) & 0x00000001U)
+#define loBits(u)      ((u) & 0x7FFFFFFFU)
+#define mixBits(u, v)  (hiBit(u)|loBits(v))
 
-static uint state[N+1];     
-static uint *next;          
-static int left = -1;     
+static uint state[N+1];
+static uint *next;
+static int left = -1;
 
 void seedMT(uint seed)
 {

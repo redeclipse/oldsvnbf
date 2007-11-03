@@ -38,9 +38,7 @@ typedef unsigned int uint;
 #define loopj(m) loop(j,m)
 #define loopk(m) loop(k,m)
 #define loopl(m) loop(l,m)
-#ifdef BFRONTIER
 #define loopirev(v) for(int i = v-1; i>=0; i--)
-#endif
 
 
 #define DELETEP(p) if(p) { delete   p; p = 0; }
@@ -64,9 +62,7 @@ typedef unsigned int uint;
 #pragma warning (disable: 4267) // conversion from 'size_t' to 'int', possible loss of data
 #pragma warning (disable: 4355) // 'this' : used in base member initializer list
 #pragma warning (disable: 4996) // 'strncpy' was declared deprecated
-#ifdef BFRONTIER
 #pragma warning (disable: 4800) // forcing value to bool 'true' or 'false' (performance warning)
-#endif
 #endif
 
 #define strcasecmp _stricmp
@@ -126,7 +122,7 @@ struct databuf
     int len, maxlen;
     uchar flags;
 
-    template<class U> 
+    template<class U>
     databuf(T *buf, U maxlen) : buf(buf), len(0), maxlen((int)maxlen), flags(0) {}
 
     const T &get()
@@ -259,13 +255,13 @@ template <class T> struct vector
     int length() const { return ulen; }
     T &operator[](int i) { ASSERT(i>=0 && i<ulen); return buf[i]; }
     const T &operator[](int i) const { ASSERT(i >= 0 && i<ulen); return buf[i]; }
-    
+
     void setsize(int i)         { ASSERT(i<=ulen); while(ulen>i) drop(); }
     void setsizenodelete(int i) { ASSERT(i<=ulen); ulen = i; }
-    
+
     void deletecontentsp() { while(!empty()) delete   pop(); }
     void deletecontentsa() { while(!empty()) delete[] pop(); }
-    
+
     T *getbuf() { return buf; }
     const T *getbuf() const { return buf; }
 
@@ -279,7 +275,7 @@ template <class T> struct vector
         delete[] (uchar *)p;
         return np;
     }
-    
+
     void vrealloc()
     {
         int olen = alen;
@@ -323,7 +319,7 @@ template <class T> struct vector
         loopi(ulen) if(buf[i]==o) return i;
         return -1;
     }
-    
+
     void removeobj(const T &o)
     {
         loopi(ulen) if(buf[i]==o) remove(i--);
@@ -378,7 +374,7 @@ static inline bool htcmp(const char *x, const char *y)
 }
 
 static inline uint hthash(int key)
-{   
+{
     return key;
 }
 
@@ -436,7 +432,7 @@ template <class K, class T> struct hashtable
         chain *c = unused;
         unused = unused->next;
         c->key = key;
-        c->next = table[h]; 
+        c->next = table[h];
         table[h] = c;
         numelems++;
         return c;
@@ -465,10 +461,10 @@ template <class K, class T> struct hashtable
     {
         return find(key, true)->data;
     }
-   
+
     bool remove(const K &key)
     {
-        uint h = hthash(key)&(size-1); 
+        uint h = hthash(key)&(size-1);
         for(chain **p = &table[h], *c = table[h]; c; p = &c->next, c = c->next)
         {
             if(htcmp(key, c->key))
@@ -511,7 +507,7 @@ struct unionfind
 
         ufval() : rank(0), next(-1) {}
     };
-    
+
     vector<ufval> ufvals;
 
     int find(int k)
@@ -520,13 +516,13 @@ struct unionfind
         while(ufvals[k].next>=0) k = ufvals[k].next;
         return k;
     }
-    
+
     int compressfind(int k)
     {
         if(ufvals[k].next<0) return k;
         return ufvals[k].next = compressfind(ufvals[k].next);
     }
-    
+
     void unite (int x, int y)
     {
         while(ufvals.length() <= max(x, y)) ufvals.add();
@@ -555,12 +551,10 @@ inline char *newstringbuf(const char *s)        { return newstring(s, _MAXDEFSTR
 inline void *__cdecl operator new(size_t n, const char *fn, int l) { return ::operator new(n, 1, fn, l); }
 inline void __cdecl operator delete(void *p, const char *fn, int l) { ::operator delete(p, 1, fn, l); }
 #define new new(__FILE__,__LINE__)
-#endif 
+#endif
 #endif
 
-#ifdef BFRONTIER
 extern char *makefile(char *s, char *p = "", char *e = "", bool ext = true, bool copy = false);
-#endif
 extern char *path(char *s, bool copy = false);
 extern const char *parentdir(const char *directory);
 extern bool fileexists(const char *path, const char *mode);

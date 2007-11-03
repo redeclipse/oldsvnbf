@@ -90,7 +90,7 @@ void resolverstop(resolverthread &rt)
 	rt.query = NULL;
 	rt.starttime = 0;
 	SDL_UnlockMutex(resolvermutex);
-} 
+}
 
 void resolverclear()
 {
@@ -131,12 +131,12 @@ bool resolvercheck(const char **name, ENetAddress *address)
 	else loopv(resolverthreads)
 	{
 		resolverthread &rt = resolverthreads[i];
-		if(rt.query && totalmillis - rt.starttime > RESOLVERLIMIT)		
+		if(rt.query && totalmillis - rt.starttime > RESOLVERLIMIT)
 		{
 			resolverstop(rt);
 			*name = rt.query;
 			resolved = true;
-		}	
+		}
 	}
 	SDL_UnlockMutex(resolvermutex);
 	return resolved;
@@ -154,10 +154,10 @@ bool resolverwait(const char *name, ENetAddress *address)
 	SDL_CondSignal(querycond);
 	int starttime = SDL_GetTicks(), timeout = 0;
 	bool resolved = false;
-	for(;;) 
+	for(;;)
 	{
 		SDL_CondWaitTimeout(resultcond, resolvermutex, 250);
-		loopv(resolverresults) if(resolverresults[i].query == name) 
+		loopv(resolverresults) if(resolverresults[i].query == name)
 		{
 			address->host = resolverresults[i].address.host;
 			resolverresults.remove(i);
@@ -165,7 +165,7 @@ bool resolverwait(const char *name, ENetAddress *address)
 			break;
 		}
 		if(resolved) break;
-	
+
 		timeout = SDL_GetTicks() - starttime;
 		show_out_of_renderloop_progress(min(float(timeout)/RESOLVERLIMIT, 1), text);
 		SDL_Event event;
@@ -173,7 +173,7 @@ bool resolverwait(const char *name, ENetAddress *address)
 		{
 			if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) timeout = RESOLVERLIMIT + 1;
 		}
-		if(timeout > RESOLVERLIMIT) break;	
+		if(timeout > RESOLVERLIMIT) break;
 	}
 	if(!resolved && timeout > RESOLVERLIMIT)
 	{
@@ -247,7 +247,7 @@ int connectwithtimeout(ENetSocket sock, char *hostname, ENetAddress &address)
 		{
 			if(cd.result<0) enet_socket_destroy(sock);
 			break;
-		}	  
+		}
 		timeout = SDL_GetTicks() - starttime;
 		show_out_of_renderloop_progress(min(float(timeout)/CONNLIMIT, 1), text);
 		SDL_Event event;
@@ -259,28 +259,15 @@ int connectwithtimeout(ENetSocket sock, char *hostname, ENetAddress &address)
 	}
 
 	/* thread will actually timeout eventually if its still trying to connect
-	 * so just leave it (and let it destroy socket) instead of causing problems on some platforms by killing it 
+	 * so just leave it (and let it destroy socket) instead of causing problems on some platforms by killing it
 	 */
 	connthread = NULL;
 	SDL_UnlockMutex(connmutex);
 
 	return cd.result;
 }
- 
-enum { UNRESOLVED = 0, RESOLVING, RESOLVED };
 
-#ifndef BFRONTIER // moved to iengine.h
-struct serverinfo
-{
-	char *name; //NOTE if string then threading+sorting lead to overwriten values
-	string full;
-	string map;
-	string sdesc;
-	int numplayers, ping, resolved;
-	vector<int> attr;
-	ENetAddress address;
-};
-#endif
+enum { UNRESOLVED = 0, RESOLVING, RESOLVED };
 
 vector<serverinfo> servers;
 ENetSocket pingsock = ENET_SOCKET_NULL;
@@ -293,9 +280,6 @@ void addserver(char *servername)
 	loopv(servers) if(!strcmp(servers[i].name, servername)) return;
 	serverinfo &si = servers.add();
 	si.name = newstring(servername);
-#ifndef BFRONTIER // fpsserver controlled gui
-	si.full[0] = 0;
-#endif
 	si.ping = 999;
 	si.map[0] = 0;
 	si.sdesc[0] = 0;
@@ -306,7 +290,7 @@ void addserver(char *servername)
 
 void pingservers()
 {
-    if(pingsock == ENET_SOCKET_NULL) 
+    if(pingsock == ENET_SOCKET_NULL)
     {
         pingsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, NULL);
         if(pingsock != ENET_SOCKET_NULL) enet_socket_set_option(pingsock, ENET_SOCKOPT_NONBLOCK, 1);
@@ -325,7 +309,7 @@ void pingservers()
 	}
 	lastinfo = totalmillis;
 }
-  
+
 void checkresolver()
 {
 	int resolving = 0;
@@ -350,7 +334,7 @@ void checkresolver()
 			serverinfo &si = servers[i];
 			if(name == si.name)
 			{
-				si.resolved = RESOLVED; 
+				si.resolved = RESOLVED;
 				si.address = addr;
 				addr.host = ENET_HOST_ANY;
 				break;
@@ -367,12 +351,12 @@ void checkpings()
 	ENetAddress addr;
 	uchar ping[MAXTRANS];
 	char text[MAXTRANS];
-	buf.data = ping; 
+	buf.data = ping;
 	buf.dataLength = sizeof(ping);
 	while(enet_socket_wait(pingsock, &events, 0) >= 0 && events)
 	{
 		int len = enet_socket_receive(pingsock, &addr, &buf, 1);
-		if(len <= 0) return;  
+		if(len <= 0) return;
 		loopv(servers)
 		{
 			serverinfo &si = servers[i];
@@ -394,22 +378,7 @@ void checkpings()
 	}
 }
 
-int sicompare(serverinfo *a, serverinfo *b)
-{
-#ifdef BFRONTIER // fpsserver controlled gui
-	return sv->servercompare(a, b);
-#else
-    bool ac = sv->servercompatible(a->name, a->sdesc, a->map, a->ping, a->attr, a->numplayers),
-         bc = sv->servercompatible(b->name, b->sdesc, b->map, b->ping, b->attr, b->numplayers);
-    if(ac>bc) return -1;
-    if(bc>ac) return 1;   
-    if(a->numplayers<b->numplayers) return 1;
-    if(a->numplayers>b->numplayers) return -1;
-    if(a->ping>b->ping) return 1;
-    if(a->ping<b->ping) return -1;
-    return strcmp(a->name, b->name);
-#endif
-}
+int sicompare(serverinfo *a, serverinfo *b) { return sv->servercompare(a, b); }
 
 void refreshservers()
 {
@@ -420,39 +389,13 @@ void refreshservers()
 	checkresolver();
 	checkpings();
 	if(totalmillis - lastinfo >= 5000) pingservers();
-#ifndef BFRONTIER // fpsserver controlled gui
-    servers.sort(sicompare);
-	loopv(servers)
-	{
-		serverinfo &si = servers[i];
-		if(si.address.host != ENET_HOST_ANY && si.ping != 999)
-		{
-            sv->serverinfostr(si.full, si.name, si.sdesc, si.map, si.ping, si.attr, si.numplayers);
-		}
-		else
-		{
-			s_sprintf(si.full)(si.address.host != ENET_HOST_ANY ? "[waiting for response] %s" : "[unknown host] %s\t", si.name);
-		}
-		si.full[60] = 0; // cut off too long server descriptions
-	}
-#endif
 }
 
 const char *showservers(g3d_gui *cgui)
 {
 	refreshservers();
-#ifdef BFRONTIER // fpsserver controlled gui
     servers.sort(sicompare);
 	return sv->serverinfogui(cgui, servers);
-#else
-	const char *name = NULL;
-	loopv(servers)
-	{
-		serverinfo &si = servers[i];
-        if(cgui->button(si.full, 0xFFFFDD, "server")&G3D_UP) name = si.name;
-	}
-	return name;
-#endif
 }
 
 void updatefrommaster()
@@ -475,12 +418,7 @@ COMMAND(updatefrommaster, "");
 
 void writeservercfg()
 {
-#ifdef BFRONTIER // game specific configs
 	FILE *f = openfile("servers.cfg", "w");
-#else
-	if(!cl->savedservers()) return;
-    FILE *f = openfile(path(cl->savedservers(), true), "w");
-#endif
 	if(!f) return;
 	fprintf(f, "// servers connected to are added here automatically\n\n");
 	loopvrev(servers) fprintf(f, "addserver %s\n", servers[i].name);

@@ -10,7 +10,6 @@ enum							// hardcoded texture numbers
 
 #define MAPVERSION 24			// bump if map format changes, see worldio.cpp
 
-#ifdef BFRONTIER
 struct binary
 {
 	char head[4];
@@ -41,44 +40,12 @@ struct bfgz : binary
 	int gamever, revision;
 	char maptitle[128];
 };
-#else
-struct header					// map file format header
-{
-	char head[4];				// "OCTA"
-	int version;				// any >8bit quantity is little endian
-	int headersize;			 // sizeof(header)
-	int worldsize;
-	int numents;
-	int waterlevel;
-	int lightmaps;
-	int mapprec, maple, mapllod;
-    uchar ambient;
-    uchar watercolour[3];
-    uchar mapwlod;
-    uchar lerpangle, lerpsubdiv, lerpsubdivsize;
-    uchar mapbe;
-    uchar skylight[3];
-    uchar lavacolour[3];
-    uchar reserved[1+12];
-	char maptitle[128];
-};
-enum							// cube empty-space materials
-{
-	MAT_AIR = 0,				// the default, fill the empty space with air
-	MAT_WATER,				  // fill with water, showing waves at the surface
-	MAT_CLIP,					// collisions always treat cube as solid
-	MAT_GLASS,				  // behaves like clip but is blended blueish
-	MAT_NOCLIP,				 // collisions always treat cube as empty
-	MAT_LAVA,					// fill with lava
-	MAT_EDIT					// basis for the edit volumes of the above materials
-};
-#endif
 
 #define WATER_AMPLITUDE 0.8f
 #define WATER_OFFSET 1.1f
 
-enum 
-{ 
+enum
+{
 	MATSURF_NOT_VISIBLE = 0,
 	MATSURF_VISIBLE,
 	MATSURF_EDIT_ONLY
@@ -88,11 +55,7 @@ enum
 #define isclipped(mat) ((mat) >= MAT_CLIP && (mat) < MAT_NOCLIP)
 
 // VVEC_FRAC must be between 0..3
-#ifdef BFRONTIER // smaller editing grid size deliciousness
 #define VVEC_FRAC 3
-#else
-#define VVEC_FRAC 1
-#endif
 #define VVEC_INT (15-VVEC_FRAC)
 #define VVEC_BITS (VVEC_INT + VVEC_FRAC)
 
@@ -109,7 +72,7 @@ struct vvec : svec
 	void mask(int f) { f <<= VVEC_FRAC; f |= (1<<VVEC_FRAC)-1; x &= f; y &= f; z &= f; }
 
 	ivec toivec() const					{ return ivec(x, y, z).div(1<<VVEC_FRAC); }
-	ivec toivec(int x, int y, int z) const { ivec t = toivec(); t.x += x&~VVEC_INT_MASK; t.y += y&~VVEC_INT_MASK; t.z += z&~VVEC_INT_MASK; return t; } 
+	ivec toivec(int x, int y, int z) const { ivec t = toivec(); t.x += x&~VVEC_INT_MASK; t.y += y&~VVEC_INT_MASK; t.z += z&~VVEC_INT_MASK; return t; }
 	ivec toivec(const ivec &o) const		{ return toivec(o.x, o.y, o.z); }
 
 	vec tovec() const					{ return vec(x, y, z).div(1<<VVEC_FRAC); }

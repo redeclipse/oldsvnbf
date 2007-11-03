@@ -82,7 +82,7 @@ void addvisibleva(vtxarray *va)
 
 void sortvisiblevas()
 {
-	visibleva = NULL; 
+	visibleva = NULL;
 	vtxarray **last = &visibleva;
 	loopi(VASORTSIZE) if(vasort[i])
 	{
@@ -100,7 +100,7 @@ void findvisiblevas(vector<vtxarray *> &vas, bool resetocclude = false)
 		vtxarray &v = *vas[i];
 		int prevvfc = resetocclude ? VFC_NOT_VISIBLE : v.curvfc;
 		v.curvfc = isvisiblecube(vec(v.x, v.y, v.z), v.size);
-		if(v.curvfc!=VFC_NOT_VISIBLE) 
+		if(v.curvfc!=VFC_NOT_VISIBLE)
 		{
 			addvisibleva(&v);
 			if(v.children->length()) findvisiblevas(*v.children, prevvfc==VFC_NOT_VISIBLE);
@@ -441,7 +441,7 @@ void rendermapmodels()
 				renderedmms.add(oe);
 				oe->query = doquery && oe->distance>0 && !(++skipoq%oqmm) ? newquery(oe) : NULL;
 				if(oe->query) startmodelquery(oe->query);
-			}		
+			}
 			rendermapmodel(e);
 			e.visible = false;
 		}
@@ -508,7 +508,7 @@ void renderoutline()
 
 	if(dtoutline) glDisable(GL_DEPTH_TEST);
 
-	resetorigin();	
+	resetorigin();
 	GLuint vbufGL = 0, ebufGL = 0;
 	for(vtxarray *va = visibleva; va; va = va->next)
 	{
@@ -542,7 +542,7 @@ void renderoutline()
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_POLYGON_OFFSET_LINE);
-	
+
 	glPopMatrix();
 
 	if(hasVBO)
@@ -577,7 +577,7 @@ void rendershadowmapreceivers()
     glEnable(GL_BLEND);
     glBlendEquation_(GL_MAX_EXT);
     glBlendFunc(GL_ONE, GL_ONE);
- 
+
     glPushMatrix();
 
     resetorigin();
@@ -618,7 +618,7 @@ void rendershadowmapreceivers()
     glCullFace(GL_FRONT);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);
-    
+
     if(!apple_minmax_bug) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     if(hasVBO)
@@ -644,7 +644,7 @@ struct dynlight
 	{
 		return peak>0 && expire-lastmillis>fade ? (radius/peak)*(peak-(expire-lastmillis-fade)) : radius;
 	}
-	
+
 	float intensity() const
 	{
 		if(fade + peak)
@@ -725,7 +725,7 @@ void dynlightreaching(const vec &target, vec &color, vec &dir)
 		if(x+y>0)
 		{
 			dir.mul(x);
-			dyndir.mul(y); 
+			dyndir.mul(y);
 			dir.add(dyndir).div(x+y);
 			if(dir.iszero()) dir = vec(0, 0, 1);
 			else dir.normalize();
@@ -733,7 +733,7 @@ void dynlightreaching(const vec &target, vec &color, vec &dir)
 	}
 #endif
 	color.add(dyncolor);
-}	
+}
 
 void setdynlights(vtxarray *va)
 {
@@ -794,7 +794,7 @@ void renderquery(renderstate &cur, occludequery *query, vtxarray *va)
 
 	vec camera(camera1->o);
 	if(reflecting && !refracting) camera.z = reflecting;
-	
+
 	ivec bbmin, bbmax;
 	if(va->children || va->mapmodels || va->l0.matsurfs || va->l0.sky || va->l0.explicitsky)
 	{
@@ -865,7 +865,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 	{
 		if(cur.colormask) { cur.colormask = false; glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); }
 		extern int apple_glsldepth_bug;
-		if(renderpath!=R_GLSLANG || !apple_glsldepth_bug) 
+		if(renderpath!=R_GLSLANG || !apple_glsldepth_bug)
 		{
 			nocolorshader->set();
 			drawvatris(va, 3*lod.tris, lod.ebuf);
@@ -957,7 +957,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 	if(!cur.texture)
 	{
 		cur.texture = true;
-        if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR) 
+        if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR)
         {
 		glEnable(GL_TEXTURE_2D);
             if(fogpass && cur.fogtmu<0) glColor4fv(cur.color);
@@ -1099,7 +1099,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 						noglow = false;
 					}
 				}
-				if(pass==RENDERPASS_GLOW && noglow) 
+				if(pass==RENDERPASS_GLOW && noglow)
 				{
                     ebuf += es.length[5];
 					continue;
@@ -1176,7 +1176,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 						glEnable(GL_TEXTURE_GEN_S);
 						glEnable(GL_TEXTURE_GEN_T);
 					}
-	
+
 					if(mtglow)
 					{
                         glActiveTexture_(GL_TEXTURE0_ARB+cur.glowtmu);
@@ -1214,7 +1214,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 
 	if(mtglow)
 	{
-        glActiveTexture_(GL_TEXTURE0_ARB+cur.glowtmu); 
+        glActiveTexture_(GL_TEXTURE0_ARB+cur.glowtmu);
 		glDisable(GL_TEXTURE_2D);
 	}
 	if(envmapped)
@@ -1226,7 +1226,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 		}
 	}
     if(mtglow || envmapped) glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
- 
+
 	vtris += lod.tris;
 	vverts += va->verts;
 }
@@ -1241,7 +1241,7 @@ static void setuptexgen(int dims = 2)
 {
 	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
     glEnable(GL_TEXTURE_GEN_S);
-    if(dims>=2) 
+    if(dims>=2)
     {
 		glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
 		glEnable(GL_TEXTURE_GEN_T);
@@ -1385,11 +1385,7 @@ void setupTMUs(renderstate &cur, bool causticspass, bool fogpass)
 		glEnableClientState(GL_COLOR_ARRAY);
 		loopi(8-2) { glActiveTexture_(GL_TEXTURE2_ARB+i); glEnable(GL_TEXTURE_2D); }
 		glActiveTexture_(GL_TEXTURE0_ARB);
-#ifdef BFRONTIER
 		setenvparamf("ambient", SHPARAM_PIXEL, 5, ambient/255.0f, ambient/255.0f, ambient/255.0f);
-#else
-		setenvparamf("ambient", SHPARAM_PIXEL, 5, hdr.ambient/255.0f, hdr.ambient/255.0f, hdr.ambient/255.0f);
-#endif
 		setenvparamf("millis", SHPARAM_VERTEX, 6, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);
 	}
 
@@ -1410,7 +1406,7 @@ void setupTMUs(renderstate &cur, bool causticspass, bool fogpass)
 
         glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
         glClientActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
-        glEnable(GL_TEXTURE_2D); 
+        glEnable(GL_TEXTURE_2D);
         setuptmu(cur.diffusetmu, cur.diffusetmu>0 ? "P * T" : "= T");
 	}
 
@@ -1467,7 +1463,7 @@ void cleanupTMUs(renderstate &cur)
         glDisableClientState(GL_COLOR_ARRAY);
         loopi(8-2) { glActiveTexture_(GL_TEXTURE2_ARB+i); glDisable(GL_TEXTURE_2D); }
 	}
-		
+
     if(cur.lightmaptmu>=0)
     {
 	glActiveTexture_(GL_TEXTURE0_ARB);
@@ -1487,7 +1483,7 @@ void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
 		lodlevel &lod = va->curlod ? va->l1 : va->l0;
 		if(!lod.texs || va->occluded >= OCCLUDE_GEOM) continue;
 		if(refracting || (reflecting && camera1->o.z < reflecting))
-		{	
+		{
 			if(va->curvfc == VFC_FOGGED || (refracting && camera1->o.z >= refracting ? va->min.z > refracting : va->max.z <= refracting)) continue;
 			if((!hasOQ || !oqfrags) && va->distance > reflectdist) break;
 		}
@@ -1516,7 +1512,7 @@ void rendergeom(bool causticspass, bool fogpass)
 	}
 
 	bool doOQ = !refracting && (reflecting ? camera1->o.z >= reflecting && hasOQ && oqfrags && oqreflect : zpass!=0);
-    if(!doOQ) 
+    if(!doOQ)
     {
         setupTMUs(cur, causticspass, fogpass);
         if(shadowmap) pushshadowmap();
@@ -1553,11 +1549,11 @@ void rendergeom(bool causticspass, bool fogpass)
 		}
 		else if(hasOQ && oqfrags && (zpass || va->distance > oqdist) && !insideva(va, camera1->o))
 		{
-			if(!zpass && va->query && va->query->owner == va) 
+			if(!zpass && va->query && va->query->owner == va)
 				va->occluded = checkquery(va->query) ? min(va->occluded+1, OCCLUDE_BB) : OCCLUDE_NOTHING;
-			if(zpass && va->parent && 
-				(va->parent->occluded == OCCLUDE_PARENT || 
-				(va->parent->occluded >= OCCLUDE_BB && 
+			if(zpass && va->parent &&
+				(va->parent->occluded == OCCLUDE_PARENT ||
+				(va->parent->occluded >= OCCLUDE_BB &&
 				 va->parent->query && va->parent->query->owner == va->parent && va->parent->query->fragments < 0)))
 			{
 				va->query = NULL;
@@ -1623,7 +1619,7 @@ void rendergeom(bool causticspass, bool fogpass)
 					continue;
 				}
 			}
-			else if(va->parent && va->parent->occluded >= OCCLUDE_BB && (!va->parent->query || va->parent->query->fragments >= 0)) 
+			else if(va->parent && va->parent->occluded >= OCCLUDE_BB && (!va->parent->query || va->parent->query->fragments >= 0))
 			{
 				va->query = NULL;
 				va->occluded = OCCLUDE_BB;
@@ -1650,7 +1646,7 @@ void rendergeom(bool causticspass, bool fogpass)
         glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
         glEnable(GL_BLEND);
-        static GLfloat zerofog[4] = { 0, 0, 0, 1 }, onefog[4] = { 1, 1, 1, 1 }; 
+        static GLfloat zerofog[4] = { 0, 0, 0, 1 }, onefog[4] = { 1, 1, 1, 1 };
         GLfloat oldfogc[4];
         glGetFloatv(GL_FOG_COLOR, oldfogc);
 
@@ -1667,10 +1663,10 @@ void rendergeom(bool causticspass, bool fogpass)
                 setuptexgen(1);
                 setuptmu(1, "C , P @ Ta");
                 if(!fogtex) createfogtex();
-                glBindTexture(GL_TEXTURE_1D, fogtex);    
+                glBindTexture(GL_TEXTURE_1D, fogtex);
                 glColor3f(0, 0, 0);
                 glActiveTexture_(GL_TEXTURE0_ARB);
-            } 
+            }
             else glColor3f(1, 1, 1);
             rendergeommultipass(cur, RENDERPASS_GLOW, fogpass);
             disabletexgen();
@@ -1682,7 +1678,7 @@ void rendergeom(bool causticspass, bool fogpass)
                 disabletexgen();
                 glDisable(GL_TEXTURE_1D);
                 glActiveTexture_(GL_TEXTURE0_ARB);
-            } 
+            }
         }
 
         if(causticspass && cur.causticstmu<0)
@@ -1697,7 +1693,7 @@ void rendergeom(bool causticspass, bool fogpass)
             {
                 glActiveTexture_(GL_TEXTURE0_ARB+i);
                 resettmu(i);
-                if(renderpath==R_FIXEDFUNCTION || !i) 
+                if(renderpath==R_FIXEDFUNCTION || !i)
                 {
                     resettmu(i);
                     disabletexgen();
@@ -1784,7 +1780,7 @@ void renderreflectedgeom(float z, bool refract, bool causticspass, bool fogpass)
 		restorevfcP();
 	}
     else rendergeom(causticspass, fogpass);
-}				
+}
 
 static GLuint skyvbufGL, skyebufGL;
 
@@ -1824,7 +1820,7 @@ int renderreflectedskyvas(vector<vtxarray *> &vas, float z, bool vfc = true)
 		lodlevel &lod = va->curlod ? va->l1 : va->l0;
 		if((vfc && va->curvfc == VFC_FULL_VISIBLE) && va->occluded >= OCCLUDE_BB) continue;
 		if(va->z+va->size <= z || isvisiblecube(vec(va->x, va->y, va->z), va->size) == VFC_NOT_VISIBLE) continue;
-		if(lod.sky+lod.explicitsky) 
+		if(lod.sky+lod.explicitsky)
 		{
 			renderskyva(va, lod);
 			rendered++;

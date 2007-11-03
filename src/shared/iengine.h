@@ -51,26 +51,16 @@ extern void mpdelcube(selinfo &sel, bool local);
 extern void mpremip(bool local);
 
 // command
-#ifdef BFRONTIER
 extern int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), int context = IDC_GLOBAL);
-#else
-extern int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist);
-#endif
 extern void setvar(char *name, int i, bool dofunc = false);
 extern int getvar(char *name);
 extern int getvarmin(char *name);
 extern int getvarmax(char *name);
 extern bool identexists(char *name);
 extern ident *getident(char *name);
-#ifdef BFRONTIER
 extern bool addcommand(char *name, void (*fun)(), char *narg, int context = IDC_GLOBAL);
 extern int execute(char *p, int context = IDC_GLOBAL);
 extern char *executeret(char *p, int context = IDC_GLOBAL);
-#else
-extern bool addcommand(char *name, void (*fun)(), char *narg);
-extern int execute(char *p);
-extern char *executeret(char *p);
-#endif
 extern void exec(char *cfgfile);
 extern bool execfile(char *cfgfile);
 extern void alias(char *name, char *action);
@@ -91,11 +81,7 @@ extern void newgui(char *name, char *contents);
 extern void showgui(char *name);
 
 // world
-#ifdef BFRONTIER
 extern bool emptymap(int factor, bool force = false, char *mname = "untitled/base");
-#else
-extern bool emptymap(int factor, bool force);
-#endif
 extern bool enlargemap(bool force);
 extern int findentity(int type, int index = 0);
 extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool local);
@@ -117,10 +103,6 @@ extern void registergame(char *name, igame *ig);
 // rendertext
 extern bool setfont(char *name);
 extern void gettextres(int &w, int &h);
-#ifndef BFRONTIER
-extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255);
-extern void draw_textf(const char *fstr, int left, int top, ...);
-#endif
 extern int char_width(int c, int x = 0);
 extern int text_width(const char *str, int limit = -1);
 extern int text_visible(const char *str, int max);
@@ -132,9 +114,6 @@ extern void dynlightreaching(const vec &target, vec &color, vec &dir);
 
 // rendergl
 extern vec worldpos, camright, camup;
-#ifndef BFRONTIER
-extern void damageblend(int n);
-#endif
 
 // renderparticles
 extern void render_particles(int time);
@@ -148,9 +127,7 @@ extern void particle_fireball(const vec &dest, float max, int type);
 extern void removetrackedparticles(physent *owner = NULL);
 
 // worldio
-#ifdef BFRONTIER
-void setnames(const char *fname, const char *cname = 0);
-#endif
+extern void setnames(const char *fname, const char *cname = 0);
 extern void load_world(const char *mname, const char *cname = NULL);
 extern void save_world(char *mname, bool nolms = false);
 
@@ -169,12 +146,6 @@ extern void updatephysstate(physent *d);
 extern void cleardynentcache();
 extern bool entinmap(dynent *d, bool avoidplayers = false);
 extern void findplayerspawn(dynent *d, int forceent = -1);
-// sound
-#ifndef BFRONTIER
-extern void playsound    (int n,   const vec *loc = NULL, extentity *ent = NULL);
-extern void playsoundname(char *s, const vec *loc = NULL, int vol = 0);
-extern void initsound();
-#endif
 
 // rendermodel
 enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_TRANSLUCENT = 1<<6 };
@@ -281,7 +252,6 @@ extern bool g3d_movecursor(int dx, int dy);
 extern void g3d_cursorpos(float &x, float &y);
 extern void g3d_resetcursor();
 
-#ifdef BFRONTIER
 struct sometype
 {
 	char *name; uchar id;
@@ -381,5 +351,3 @@ extern string cgzname, pcfname, mcfname, picname, mapname;
 extern int verbose, savebak;
 
 extern bool otherclients(bool msg = true);
-
-#endif

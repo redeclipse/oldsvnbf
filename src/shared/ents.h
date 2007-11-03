@@ -34,20 +34,18 @@ struct extentity : entity                       // part of the entity that doesn
 
 //extern vector<extentity *> ents;                // map entities
 
-enum 
-{ 
-    ANIM_DEAD = 0, ANIM_DYING, ANIM_IDLE, 
-    ANIM_FORWARD, ANIM_BACKWARD, ANIM_LEFT, ANIM_RIGHT, 
-    ANIM_PUNCH, ANIM_SHOOT, ANIM_PAIN, 
-    ANIM_JUMP, ANIM_SINK, ANIM_SWIM, 
-    ANIM_EDIT, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE, 
+enum
+{
+    ANIM_DEAD = 0, ANIM_DYING, ANIM_IDLE,
+    ANIM_FORWARD, ANIM_BACKWARD, ANIM_LEFT, ANIM_RIGHT,
+    ANIM_PUNCH, ANIM_SHOOT, ANIM_PAIN,
+    ANIM_JUMP, ANIM_SINK, ANIM_SWIM,
+    ANIM_EDIT, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
     ANIM_GUNSHOOT, ANIM_GUNIDLE,
-#ifdef BFRONTIER
     ANIM_GUNRELOAD, ANIM_GUNZOOM,
-#endif
-    ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP, 
-    ANIM_MAPMODEL, ANIM_TRIGGER, 
-    NUMANIMS 
+    ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
+    ANIM_MAPMODEL, ANIM_TRIGGER,
+    NUMANIMS
 };
 
 #define ANIM_INDEX       0xFF
@@ -112,11 +110,11 @@ struct physent                                  // base entity type, can be affe
     uchar state;                                // one of CS_* above
     uchar type;                                 // one of ENT_* above
 
-    physent() : o(0, 0, 0), yaw(270), pitch(0), roll(0), maxspeed(100), 
-               radius(4.1f), eyeheight(14), aboveeye(1), xradius(4.1f), yradius(4.1f), 
+    physent() : o(0, 0, 0), yaw(270), pitch(0), roll(0), maxspeed(100),
+               radius(4.1f), eyeheight(14), aboveeye(1), xradius(4.1f), yradius(4.1f),
                blocked(false), moving(true), state(CS_ALIVE), type(ENT_PLAYER)
                { reset(); }
-               
+
     void reset()
     {
     	inwater = false;
@@ -142,18 +140,18 @@ struct dynent : physent                         // animated characters, or chara
     int occluded, lastrendered;
 
     dynent() : lastyaw(0), lastpitch(0), orientmillis(0), query(NULL), occluded(0), lastrendered(0)
-    { 
-        reset(); 
-        loopi(2) { lastanimswitchtime[i] = -1; lastmodel[i] = NULL; } 
+    {
+        reset();
+        loopi(2) { lastanimswitchtime[i] = -1; lastmodel[i] = NULL; }
     }
-               
+
     void stopmoving()
     {
         k_left = k_right = k_up = k_down = jumpnext = false;
         move = strafe = 0;
         targetyaw = rotspeed = 0;
     }
-        
+
     void reset()
     {
         physent::reset();

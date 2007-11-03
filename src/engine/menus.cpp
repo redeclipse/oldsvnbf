@@ -18,7 +18,7 @@ VARP(menudistance,  16, 40,  256);
 VARP(menuautoclose, 32, 120, 4096);
 
 vec menuinfrontofplayer()
-{ 
+{
 	vec dir;
 	vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
 	dir.mul(menudistance).add(camera1->o);
@@ -26,23 +26,12 @@ vec menuinfrontofplayer()
 	return dir;
 }
 
-#ifdef BFRONTIER
 int cleargui(int n)
-#else
-int cleargui(int n = 0)
-#endif
 {
-#ifdef BFRONTIER // unconnected state support
 	int m = guistack.length() - (cc->ready() ? 0 : 1), clear = n > 0 ? min(m, n) : m;
-#else
-	int clear = guistack.length();
-	if(n>0) clear = min(clear, n);
-#endif
 	loopi(clear) delete[] guistack.pop();
-	if(!guistack.empty()) showgui(guistack.last());
-#ifdef BFRONTIER // menu sounds
+	if (!guistack.empty()) showgui(guistack.last());
 	if (clear) cl->menuevent(MN_BACK);
-#endif
 	return clear;
 }
 
@@ -60,7 +49,7 @@ void guibutton(char *name, char *action, char *icon)
 {
 	if(!cgui) return;
 	int ret = cgui->button(name, GUI_BUTTON_COLOR, *icon ? icon : (strstr(action, "showgui") ? "menu" : "action"));
-	if(ret&G3D_UP) 
+	if(ret&G3D_UP)
 	{
 		executelater.add(newstring(*action ? action : name));
 		clearlater = true;
@@ -93,14 +82,7 @@ void guiimage(char *path, char *action, float *scale, int *overlaid)
 
 void guitext(char *name, char *icon)
 {
-#ifdef BFRONTIER // optional icon
-	if(cgui)
-	{
-		cgui->text(name, *icon ? GUI_BUTTON_COLOR : GUI_TEXT_COLOR, *icon ? icon : NULL);
-	}
-#else
-	if(cgui) cgui->text(name, icon[0] ? GUI_BUTTON_COLOR : GUI_TEXT_COLOR, icon[0] ? icon : "info");
-#endif
+	if(cgui) cgui->text(name, *icon ? GUI_BUTTON_COLOR : GUI_TEXT_COLOR, *icon ? icon : NULL);
 }
 
 void guititle(char *name)
@@ -127,7 +109,7 @@ static void updateval(char *var, int val, char *onchange)
 	else if(id->_type==ID_ALIAS) s_sprintf(assign)("%s = %d", var, val);
 	else return;
 	executelater.add(newstring(assign));
-	if(onchange[0]) executelater.add(newstring(onchange)); 
+	if(onchange[0]) executelater.add(newstring(onchange));
 }
 
 static int getval(char *var)
@@ -185,17 +167,17 @@ void guiradio(char *name, char *var, int *n, char *onchange)
 }
 
 void guifield(char *var, int *maxlength, char *onchange, char *updateval)
-{	
+{
 	if(!cgui) return;
 	char *initval = "";
-	if(!cguifirstpass && strcmp(g3d_fieldname(), var)) 
+	if(!cguifirstpass && strcmp(g3d_fieldname(), var))
 	{
 		if(updateval[0]) execute(updateval);
 		ident *id = getident(var);
 		if(id && id->_type==ID_ALIAS) initval = id->_action;
 	}
 	char *result = cgui->field(var, GUI_BUTTON_COLOR, *maxlength>0 ? *maxlength : 12, initval);
-	if(result) 
+	if(result)
 	{
 		alias(var, result);
 		if(onchange[0]) execute(onchange);
@@ -210,23 +192,23 @@ void guilist(char *contents)
 	cgui->poplist();
 }
 
-void newgui(char *name, char *contents) 
-{ 
+void newgui(char *name, char *contents)
+{
 	if(guis.access(name))
 	{
 		delete[] guis[name];
 		guis[name] = newstring(contents);
 	}
-	else guis[newstring(name)] = newstring(contents); 
+	else guis[newstring(name)] = newstring(contents);
 }
 
 void showgui(char *name)
 {
 	int pos = guistack.find(name);
-	if(pos<0) 
-	{	
+	if(pos<0)
+	{
 		if(!guis.access(name)) return;
-		if(guistack.empty()) 
+		if(guistack.empty())
 		{
 			menupos = menuinfrontofplayer();
 			g3d_resetcursor();
@@ -239,16 +221,15 @@ void showgui(char *name)
 		loopi(pos) delete[] guistack.pop();
 	}
 	menutab = 1;
-	menustart = totalmillis;	
-#ifdef BFRONTIER // menu sounds
+	menustart = totalmillis;
+
 	cl->menuevent(MN_INPUT);
-#endif
 }
 
 void guiservers()
 {
 	extern const char *showservers(g3d_gui *cgui);
-	if(cgui) 
+	if(cgui)
 	{
 		const char *name = showservers(cgui);
 		if(name)
@@ -289,7 +270,7 @@ static struct mainmenucallback : g3d_callback
 		cgui = &g;
 		cguifirstpass = firstpass;
 		cgui->start(menustart, 0.03f, &menutab);
-		guitab(name);		
+		guitab(name);
 		execute(*contents);
 		cgui->end();
 		cgui = NULL;
@@ -303,33 +284,17 @@ void menuprocess()
 	executelater.deletecontentsa();
 	if(clearlater)
 	{
-#ifdef BFRONTIER // unconnected state support
-		if(level==guistack.length())
-		{
-			if (cc->ready()) guistack.deletecontentsa();
-			else delete[] guistack.pop();
-		}
-#else
-		if(level==guistack.length()) guistack.deletecontentsa();
-#endif
+		if (level == guistack.length()) guistack.deletecontentsa();
 		clearlater = false;
 	}
 }
 
 void g3d_mainmenu()
 {
-	if(!guistack.empty()) 
-	{	
-#ifdef BFRONTIER // gui2d always
+	if(!guistack.empty())
+	{
 		g3d_addgui(&mmcb, menupos, true);
-#else
-		extern int gui2d;
-		if(!gui2d && camera1->o.dist(menupos) > menuautoclose) cleargui();
-		else g3d_addgui(&mmcb, menupos, true);
-#endif
 	}
 }
 
-#ifdef BFRONTIER // external access to check if menu is active
 bool menuactive() { return !guistack.empty(); };
-#endif

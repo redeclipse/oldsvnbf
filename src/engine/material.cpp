@@ -9,11 +9,11 @@ struct QuadNode
 
 	QuadNode(int x, int y, int size) : x(x), y(y), size(size), filled(0) { loopi(4) child[i] = 0; }
 
-	void clear() 
+	void clear()
 	{
 		loopi(4) DELETEP(child[i]);
 	}
-	
+
 	~QuadNode()
 	{
 		clear();
@@ -83,12 +83,12 @@ void renderwaterfall(materialsurface &m, Texture *tex, float scale, float offset
 	float t = lastmillis;
 	switch(mat)
 	{
-		case MAT_WATER: 
-			t /= renderpath!=R_FIXEDFUNCTION ? 600.0f : 300.0f; 
+		case MAT_WATER:
+			t /= renderpath!=R_FIXEDFUNCTION ? 600.0f : 300.0f;
 			d /= 1000.0f;
 			break;
-		case MAT_LAVA: 
-			t /= 2000.0f; 
+		case MAT_LAVA:
+			t /= 2000.0f;
 			d /= 3000.0f;
 			break;
 	}
@@ -122,8 +122,7 @@ void drawmaterial(int orient, int x, int y, int z, int csize, int rsize, float o
 	xtraverts += 4;
 }
 
-#ifdef BFRONTIER
-sometype materials[] = 
+sometype materials[] =
 {
 	{"air", MAT_AIR},
 	{"water", MAT_WATER},
@@ -137,8 +136,8 @@ int findmaterial(const char *name, bool tryint)
 {
 	loopi(sizeof(materials)/sizeof(materials[0])) if(!strcmp(materials[i].name, name)) { return materials[i].id; }
 	return tryint && *name >= '0' && *name <= '9' ? atoi(name) : -1;
-}  
-	
+}
+
 
 char *findmaterialname(int type)
 {
@@ -146,33 +145,8 @@ char *findmaterialname(int type)
 	return NULL;
 }
 
-#else
-struct material
-{
-	const char *name;
-	uchar id;
-} materials[] = 
-{
-	{"air", MAT_AIR},
-	{"water", MAT_WATER},
-	{"clip", MAT_CLIP},
-	{"glass", MAT_GLASS},
-	{"noclip", MAT_NOCLIP},
-	{"lava", MAT_LAVA}
-};
-
-int findmaterial(const char *name)
-{
-	loopi(sizeof(materials)/sizeof(material))
-	{
-		if(!strcmp(materials[i].name, name)) return materials[i].id;
-	} 
-	return -1;
-}  
-#endif
-
 int visiblematerial(cube &c, int orient, int x, int y, int z, int size)
-{	
+{
 	if(c.ext) switch(c.ext->material)
 	{
 	case MAT_AIR:
@@ -370,7 +344,7 @@ void setupmaterials()
 				m.light = brightestlight(center, vec(0, 0, 1));
 				float depth = raycube(center, vec(0, 0, -1), 10000);
 				wi.depth = double(depth)*m.rsize*m.csize;
-				wi.area = m.rsize*m.csize; 
+				wi.area = m.rsize*m.csize;
 			}
 			else if(isliquid(m.material) && m.orient!=O_BOTTOM)
 			{
@@ -565,12 +539,7 @@ void rendermaterials(float zclip, bool refract)
 	glDisable(GL_CULL_FACE);
 
 	Slot &wslot = lookuptexture(-MAT_WATER), &lslot = lookuptexture(-MAT_LAVA);
-#ifdef BFRONTIER
 	uchar wcol[4] = { (watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF, 192 };
-#else
-	uchar wcol[4] = { 128, 128, 128, 192 };
-	if(hdr.watercolour[0] || hdr.watercolour[1] || hdr.watercolour[2]) memcpy(wcol, hdr.watercolour, 3);
-#endif
 	int lastorient = -1, lastmat = -1;
 	GLenum textured = GL_TEXTURE_2D;
 	bool begin = false, depth = true, blended = false, overbright = false;
@@ -611,11 +580,11 @@ void rendermaterials(float zclip, bool refract)
 						foggedshader->set();
 						fogtype = 0;
 					}
-					if(textured!=GL_TEXTURE_2D) 
-					{ 
+					if(textured!=GL_TEXTURE_2D)
+					{
 						if(textured) glDisable(textured);
 						glEnable(GL_TEXTURE_2D);
-						textured = GL_TEXTURE_2D; 
+						textured = GL_TEXTURE_2D;
 					}
 					glBindTexture(GL_TEXTURE_2D, wslot.sts[m.orient==O_TOP ? 0 : 1].t->gl);
 					break;
@@ -655,16 +624,16 @@ void rendermaterials(float zclip, bool refract)
 					if(begin) { glEnd(); begin = false; }
 					if(m.envmap!=EMID_NONE && glassenv)
 					{
-						if(textured!=GL_TEXTURE_CUBE_MAP_ARB) 
-						{ 
-							if(textured) glDisable(textured); 
-							glEnable(GL_TEXTURE_CUBE_MAP_ARB); 
-							textured = GL_TEXTURE_CUBE_MAP_ARB; 
+						if(textured!=GL_TEXTURE_CUBE_MAP_ARB)
+						{
+							if(textured) glDisable(textured);
+							glEnable(GL_TEXTURE_CUBE_MAP_ARB);
+							textured = GL_TEXTURE_CUBE_MAP_ARB;
 						}
 						if(envmapped!=m.envmap)
 						{
 							glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(m.envmap));
-							if(envmapped==EMID_NONE && renderpath!=R_FIXEDFUNCTION) 
+							if(envmapped==EMID_NONE && renderpath!=R_FIXEDFUNCTION)
 								setenvparamf("camera", SHPARAM_VERTEX, 0, camera1->o.x, camera1->o.y, camera1->o.z);
 							envmapped = m.envmap;
 						}
@@ -693,8 +662,8 @@ void rendermaterials(float zclip, bool refract)
 						}
 						else
 						{
-							if(textured) 
-							{ 
+							if(textured)
+							{
 								glDisable(textured);
 								textured = 0;
 							}
@@ -728,7 +697,7 @@ void rendermaterials(float zclip, bool refract)
 						{ 255, 0,	0	}, // MAT_GLASS - cyan,
 						{ 255, 0,	255 }, // MAT_NOCLIP - green
 						{ 0, 128,	255 }, // MAT_LAVA - orange
-						
+
 					};
 					glColor3ubv(blendcols[curmat >= MAT_EDIT ? curmat-MAT_EDIT : curmat]);
 					break;
@@ -753,7 +722,7 @@ void rendermaterials(float zclip, bool refract)
 				break;
 
 			case MAT_LAVA:
-				if(m.orient==O_TOP) 
+				if(m.orient==O_TOP)
 				{
 					if(!vertwater && !begin) { glBegin(GL_QUADS); begin = true; }
 					renderlava(m, lslot.sts[0].t, lslot.sts[0].scale ? lslot.sts[0].scale : 1);

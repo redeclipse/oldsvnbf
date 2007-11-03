@@ -2,7 +2,7 @@ CXXOPTFLAGS= -O3 -fomit-frame-pointer -ffast-math
 INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
 CXXFLAGS= -w -fsigned-char $(CXXOPTFLAGS) $(INCLUDES)
 
-CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lfmodex -lSDL_image -lz -lGL -lGLU 
+CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lfmodex -lSDL_image -lz -lGL -lGLU
 CLIENT_OBJS= \
 	shared/tools.o \
 	shared/geom.o \
@@ -40,7 +40,7 @@ CLIENT_OBJS= \
 	engine/joystick.o
 
 SINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Iinclude
-SCXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(SINCLUDES)
+SCXXFLAGS= -w -fsigned-char $(CXXOPTFLAGS) $(SINCLUDES)
 
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
@@ -51,11 +51,9 @@ SERVER_OBJS= \
 
 default: all
 
-all: client server
-
 enet/Makefile:
 	cd enet; chmod +x ./configure; ./configure
-	
+
 libenet: enet/Makefile
 	$(MAKE)	-C enet/ all
 
@@ -71,7 +69,7 @@ engine/command-standalone.o:
 
 engine/server-standalone.o:
 	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o engine/server-standalone.o engine/server.cpp
-	
+
 fpsgame/fps-standalone.o:
 	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o fpsgame/fps-standalone.o fpsgame/fps.cpp
 
@@ -80,7 +78,7 @@ client:	libenet $(CLIENT_OBJS)
 	strip bloodfrontier_client
 
 server:	libenet $(SERVER_OBJS)
-	$(CXX) $(SCXXFLAGS) -o bloodfrontier_server $(SERVER_OBJS) $(SERVER_LIBS)  
+	$(CXX) $(SCXXFLAGS) -o bloodfrontier_server $(SERVER_OBJS) $(SERVER_LIBS)
 	strip bloodfrontier_server
 
 install-client:
@@ -92,3 +90,5 @@ install-server:
 	chmod +x ../bin/bloodfrontier_server
 
 install: install-client install-server
+
+all: client server install

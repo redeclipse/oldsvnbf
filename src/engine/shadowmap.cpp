@@ -1,11 +1,7 @@
 #include "pch.h"
 #include "engine.h"
 
-#ifdef BFRONTIER // shadowmap on by default
 VARP(shadowmap, 0, 1, 1);
-#else
-VARP(shadowmap, 0, 0, 1);
-#endif
 
 GLuint shadowmaptex = 0, shadowmapfb = 0, shadowmapdb = 0;
 int shadowmaptexsize = 0;
@@ -30,11 +26,7 @@ VAR(shadowmapheight, 0, 32, 128);
 VARP(shadowmapdist, 128, 256, 512);
 VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
 VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
-#ifdef BFRONTIER
 VARW(shadowmapambient, 0, 0, 0xFFFFFF);
-#else
-VAR(shadowmapambient, 0, 0, 0xFFFFFF);
-#endif
 
 void createshadowmap()
 {
@@ -73,11 +65,11 @@ void createshadowmap()
     if(colorfmt)
     {
     static GLenum depthfmts[] = { GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT32, GL_FALSE };
-    
+
     glGenRenderbuffers_(1, &shadowmapdb);
     glBindRenderbuffer_(GL_RENDERBUFFER_EXT, shadowmapdb);
-   
-    find = 0; 
+
+    find = 0;
     do
     {
         glRenderbufferStorage_(GL_RENDERBUFFER_EXT, depthfmts[find], shadowmaptexsize, shadowmaptexsize);
@@ -95,7 +87,7 @@ void createshadowmap()
             glBindFramebuffer_(GL_FRAMEBUFFER_EXT, blurfb);
             glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, blurtex, 0);
             glFramebufferRenderbuffer_(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, shadowmapdb);
- 
+
             glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
             return;
         }
@@ -131,7 +123,7 @@ void setupblurkernel()
         float weight1 = exp(-((2*i)*(2*i)) / (2*sigma*sigma)) / sigma,
               weight2 = exp(-((2*i+1)*(2*i+1)) / (2*sigma*sigma)) / sigma,
               scale = weight1 + weight2,
-              offset = weight2 / scale; 
+              offset = weight2 / scale;
         blurweights[i+1] = scale;
         bluroffsets[i+1] = 2*i+1 + offset - bluroffsets[i];
         total += 2*scale;
@@ -168,7 +160,6 @@ void pushshadowmap()
     glClientActiveTexture_(GL_TEXTURE0_ARB);
 
     float r, g, b;
-#ifdef BFRONTIER
 	if(!shadowmapambient)
 	{
 		int sky[3] = { (skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF };
@@ -180,19 +171,6 @@ void pushshadowmap()
 		}
 		else r = g = b = max(25, 2.0f*ambient);
 	}
-#else
-	if(!shadowmapambient)
-	{
-		if(hdr.skylight[0] || hdr.skylight[1] || hdr.skylight[2])
-		{
-			r = max(25, 0.4f*hdr.ambient + 0.6f*max(hdr.ambient, hdr.skylight[0]));
-			g = max(25, 0.4f*hdr.ambient + 0.6f*max(hdr.ambient, hdr.skylight[1]));
-			b = max(25, 0.4f*hdr.ambient + 0.6f*max(hdr.ambient, hdr.skylight[2]));
-		}
-		else r = g = b = max(25, 2.0f*hdr.ambient);
-	}
-    else if(shadowmapambient<=255) r = g = b = shadowmapambient;
-#endif
     else { r = (shadowmapambient>>16)&0xFF; g = (shadowmapambient>>8)&0xFF; b = shadowmapambient&0xFF; }
     setenvparamf("shadowmapambient", SHPARAM_PIXEL, 7, r/255.0f, g/255.0f, b/255.0f);
 }
@@ -324,7 +302,7 @@ bool isshadowmapreceiver(vtxarray *va)
 
     uint mask = (BLURTILEMASK>>(BLURTILES - (tx2+1))) & (BLURTILEMASK<<tx1);
     for(int y = ty1; y <= ty2; y++) if(blurtiles[y] & mask) return true;
-    
+
     return false;
 
 #if 0
@@ -334,15 +312,15 @@ bool isshadowmapreceiver(vtxarray *va)
     float skew = va->size/2*SHADOWSKEW;
     if(!shadowmap || !shadowmaptex ||
        va->z + va->size <= shadowfocus.z - shadowmapdist || va->z >= shadowfocus.z ||
-       va->x + va->size <= cx - shadowmapradius-skew || va->x >= cx + shadowmapradius+skew || 
-       va->y + va->size <= cy - shadowmapradius-skew || va->y >= cy + shadowmapradius+skew) 
+       va->x + va->size <= cx - shadowmapradius-skew || va->x >= cx + shadowmapradius+skew ||
+       va->y + va->size <= cy - shadowmapradius-skew || va->y >= cy + shadowmapradius+skew)
         return false;
     return true;
 #endif
 }
 
 VAR(smscissor, 0, 1, 1);
-    
+
 void rendershadowmapcasters()
 {
     static Shader *shadowmapshader = NULL;
@@ -356,11 +334,11 @@ void rendershadowmapcasters()
     memset(blurtiles, 0, sizeof(blurtiles));
 
     shadowmapping = true;
-    if(smscissor) 
+    if(smscissor)
     {
-        glScissor((shadowmapfb ? 0 : screen->w-shadowmaptexsize) + 2, 
-                  (shadowmapfb ? 0 : screen->h-shadowmaptexsize) + 2, 
-                  shadowmaptexsize - 2*2, 
+        glScissor((shadowmapfb ? 0 : screen->w-shadowmaptexsize) + 2,
+                  (shadowmapfb ? 0 : screen->h-shadowmaptexsize) + 2,
+                  shadowmaptexsize - 2*2,
                   shadowmaptexsize - 2*2);
         glEnable(GL_SCISSOR_TEST);
     }
@@ -377,11 +355,7 @@ void setshadowdir(int angle)
     shadowdir.rotate_around_z(angle*RAD);
 }
 
-#ifdef BFRONTIER
 VARFW(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
-#else
-VARF(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
-#endif
 
 void guessshadowdir()
 {
@@ -431,10 +405,10 @@ void rendershadowmap()
     if(!shadowmapfb) while(smsize > min(screen->w, screen->h)) smsize /= 2;
     if(smsize!=shadowmaptexsize) cleanshadowmap();
 
-    if(!shadowmaptex) createshadowmap(); 
+    if(!shadowmaptex) createshadowmap();
     if(!shadowmaptex) return;
 
-    if(shadowmapfb) 
+    if(shadowmapfb)
     {
         if(blurfb)
         {
@@ -476,7 +450,7 @@ void rendershadowmap()
 
     GLfloat skew[] =
     {
-        1, 0, 0, 0, 
+        1, 0, 0, 0,
         0, 1, 0, 0,
         skewdir.x, skewdir.y, 1, 0,
         0, 0, 0, 1
@@ -504,7 +478,7 @@ void rendershadowmap()
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
-    int smx = int(0.5f*(smx1 + 1)*shadowmaptexsize), 
+    int smx = int(0.5f*(smx1 + 1)*shadowmaptexsize),
         smy = int(0.5f*(smy1 + 1)*shadowmaptexsize),
         smw = int(0.5f*(smx2 - smx1)*shadowmaptexsize),
         smh = int(0.5f*(smy2 - smy1)*shadowmaptexsize);
@@ -527,7 +501,7 @@ void rendershadowmap()
             blurh = smh + 2*2*blurshadowmap;
         if(blurx < 2) { blurw -= 2 - blurx; blurx = 2; }
         if(blury < 2) { blurh -= 2 - blury; blury = 2; }
-        if(blurx + blurw > smsize - 2) blurw = (smsize - 2) - blurx; 
+        if(blurx + blurw > smsize - 2) blurw = (smsize - 2) - blurx;
         if(blury + blurh > smsize - 2) blurh = (smsize - 2) - blury;
         if(!shadowmapfb)
         {
@@ -553,16 +527,16 @@ void rendershadowmap()
             setlocalparamfv("blurweights", SHPARAM_PIXEL, 0, blurweights);
             setlocalparamf("bluroffsets", SHPARAM_PIXEL, 1,
                 !i ? bluroffsets[1]/shadowmaptexsize : bluroffsets[0]/shadowmaptexsize,
-                i ? bluroffsets[1]/shadowmaptexsize : bluroffsets[0]/shadowmaptexsize, 
+                i ? bluroffsets[1]/shadowmaptexsize : bluroffsets[0]/shadowmaptexsize,
                 bluroffsets[2]/shadowmaptexsize,
                 bluroffsets[3]/shadowmaptexsize);
 
-            if(shadowmapfb) 
+            if(shadowmapfb)
             {
                 glBindFramebuffer_(GL_FRAMEBUFFER_EXT, i ? shadowmapfb : blurfb);
                 glBindTexture(GL_TEXTURE_2D, i ? blurtex : shadowmaptex);
             }
- 
+
             glBegin(GL_QUADS);
             if(blurtile)
             {
@@ -570,7 +544,7 @@ void rendershadowmap()
                 memcpy(tiles, blurtiles, sizeof(blurtiles));
 
                 float tsz = 1.0f/BLURTILES;
-                loop(y, BLURTILES+1) 
+                loop(y, BLURTILES+1)
                 {
                     uint mask = tiles[y];
                     int x = 0;
@@ -606,7 +580,7 @@ void rendershadowmap()
 
             if(!shadowmapfb) glCopyTexSubImage2D(GL_TEXTURE_2D, 0, blurx-(screen->w-shadowmaptexsize), blury-(screen->h-shadowmaptexsize), blurx, blury, blurw, blurh);
         }
-        
+
         if(smscissor) glDisable(GL_SCISSOR_TEST);
 
         glEnable(GL_DEPTH_TEST);
@@ -658,7 +632,7 @@ void viewshadowmap()
         {
             uint mask = blurtiles[y];
             int x = 0;
-            while(mask) 
+            while(mask)
             {
                 while(!(mask&0xFF)) { mask >>= 8; x += 8; }
                 while(!(mask&1)) { mask >>= 1; x++; }
@@ -673,7 +647,7 @@ void viewshadowmap()
                       vh = (yend-y)*vysz;
                 loopi(2)
                 {
-                    glColor3f(1, 1, i ? 1.0f : 0.5f); 
+                    glColor3f(1, 1, i ? 1.0f : 0.5f);
                     glBegin(i ? GL_LINE_LOOP : GL_QUADS);
                     glVertex2f(vx,    vy);
                     glVertex2f(vx+vw, vy);

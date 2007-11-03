@@ -3,7 +3,6 @@
 #include "pch.h"
 #include "engine.h"
 
-#ifdef BFRONTIER
 FMOD_RESULT snderr;
 FMOD_SYSTEM *sndsys;
 
@@ -21,7 +20,7 @@ VARF(soundformat,
 	FMOD_SOUND_FORMAT_PCM16,
 	FMOD_SOUND_FORMAT_MAX-1,
 	initwarning()
-);	
+);
 VARF(sounddsp,
 	FMOD_DSP_RESAMPLER_NOINTERP,
 	FMOD_DSP_RESAMPLER_LINEAR,
@@ -37,7 +36,7 @@ void initsound()
 #else
 	SNDERR(FMOD_System_Create(&sndsys), "create subsystem", return);
 #endif
-   
+
 	unsigned int version;
 	SNDERR(FMOD_System_GetVersion(sndsys, &version), "get version", return);
 
@@ -88,7 +87,7 @@ void initsound()
 	{
 		sndchans.add().channel = NULL;
 	}
-	
+
 	nosound = false;
 }
 
@@ -152,7 +151,7 @@ void checksound()
 
 	vecfromyawpitch(player->yaw, player->pitch+90.f, 1, 0, cup);	cup.normalize();
 	vecfromyawpitch(player->yaw, player->pitch, 1, 0, cfw);			cfw.normalize();
-		
+
 	const vector<extentity *> &ents = et->getents();
 	loopv(ents)
 	{
@@ -165,9 +164,9 @@ void checksound()
 	FMOD_VECTOR pfw = { cfw.x, cfw.y, cfw.z };
 	FMOD_VECTOR pos = { player->o.x, player->o.y, player->o.z };
 	FMOD_VECTOR pov = { player->vel.x, player->vel.y, player->vel.z };
-	
+
 	SNDERR(FMOD_System_Set3DListenerAttributes(sndsys, 0, &pos, &pov, &pfw, &pup), "set 3d listener attributes", );
-	
+
 	loopv(sndchans)
 	{
 		soundchan &s = sndchans[i];
@@ -245,13 +244,8 @@ void clear_sound()
 	FMOD_System_Release(sndsys);
 	nosound = true;
 }
-#else
-//#ifndef WIN32	// NOTE: fmod not being supported for the moment as it does not allow stereo pan/vol updating during playback
-#define USE_MIXER
-//#endif
-
+#if 0
 bool nosound = true;
-
 #ifdef USE_MIXER
 	#include "SDL_mixer.h"
 	#define MAXVOL MIX_MAX_VOLUME
@@ -340,7 +334,7 @@ void initsound()
 			conoutf("sound init failed (SDL_mixer): %s", (size_t)Mix_GetError());
 			return;
 		}
-		Mix_AllocateChannels(soundchans);	
+		Mix_AllocateChannels(soundchans);
 	#else
 		if(FSOUND_GetVersion()<FMOD_VERSION) fatal("old FMOD dll");
 		if(!FSOUND_Init(soundfreq, soundchans, FSOUND_INIT_GLOBALFOCUS))
@@ -522,7 +516,7 @@ void updatechanvol(int chan, int svol, const vec *loc = NULL, extentity *ent = N
 		FSOUND_SetVolume(chan, vol);
 		FSOUND_SetPan(chan, pan);
 	#endif
-}  
+}
 
 void newsoundloc(int chan, const vec *loc, soundslot *slot, extentity *ent = NULL)
 {
@@ -544,10 +538,10 @@ void updatevol()
 			if(FSOUND_IsPlaying(i))
 		#endif
 				updatechanvol(i, soundlocs[i].slot->vol, &soundlocs[i].loc, soundlocs[i].ent);
-			else 
+			else
 			{
 				soundlocs[i].inuse = false;
-				if(soundlocs[i].ent) 
+				if(soundlocs[i].ent)
 				{
 					soundlocs[i].ent->visible = false;
 					soundlocs[i].slot->uses--;
@@ -621,8 +615,8 @@ void playsound(int n, const vec *loc, extentity *ent)
 	#endif
 }
 
-void playsoundname(char *s, const vec *loc, int vol) 
-{ 
+void playsoundname(char *s, const vec *loc, int vol)
+{
 	if(!vol) vol = 100;
 	int id = findsound(s, vol, gamesounds);
 	if(id < 0) id = addsound(s, vol, 0, gamesounds);

@@ -2,32 +2,23 @@
 // runs dedicated or as client coroutine
 
 #include "pch.h"
+#include "engine.h"
 
 #ifdef STANDALONE
-#ifdef BFRONTIER // better minimal definitions
-#include "minimal.h"
-int lastmillis = 0, totalmillis = 0, verbose = 0;
 void conoutf(const char *s, ...) { s_sprintfdlv(str, s, s); printf("%s\n", str); }
 void console(const char *s, int n, ...) { s_sprintfdlv(str, n, s); printf("%s\n", str); }
-#else
-#include "cube.h"
-#include "iengine.h"
-#include "igame.h"
-#endif
 void localservertoclient(int chan, uchar *buf, int len) {}
 void fatal(char *s, char *o) { void cleanupserver(); cleanupserver(); printf("servererror: %s\n", s); exit(EXIT_FAILURE); }
-#else
-#include "engine.h"
 #endif
 
-#ifdef BFRONTIER // moved up here so we can use them, and others removed because of external defs
 #define DEFAULTCLIENTS 6
 bool pubserv = false;
+int totalmillis = 0, lastmillis = 0;
 int uprate = 0, maxclients = DEFAULTCLIENTS;
 char *ip = "", *master = NULL;
 char *game = "fps";
+
 iphysics *ph = NULL;
-#endif
 igameclient *cl = NULL;
 igameserver *sv = NULL;
 iclientcom *cc = NULL;
@@ -47,20 +38,12 @@ void initgame(char *game)
 {
 	igame **ig = gamereg->access(game);
 	if(!ig) fatal("cannot start game module: ", game);
-#if defined(BFRONTIER) && !defined(STANDALONE)
-	conoutf("game: modules");
-#endif
 	sv = (*ig)->newserver();
 	cl = (*ig)->newclient();
 	if(cl)
 	{
-#if defined(BFRONTIER) && !defined(STANDALONE)
-		conoutf("game: client");
-#endif
 		cc = cl->getcom();
-#ifdef BFRONTIER // extra sub modules
  		ph = cl->getphysics();
-#endif
 		et = cl->getents();
 		cl->initclient();
 	}
@@ -68,7 +51,7 @@ void initgame(char *game)
 	{
 		if(!cl || !cl->clientoption(gameargs[i]))
 		{
-			if(!sv->serveroption(gameargs[i])) 
+			if(!sv->serveroption(gameargs[i]))
 #ifdef STANDALONE
 				printf("unknown command-line option: %s\n", gameargs[i]);
 #else
@@ -91,7 +74,7 @@ int getint(ucharbuf &p)
 {
 	int c = (char)p.get();
 	if(c==-128) { int n = p.get(); n |= char(p.get())<<8; return n; }
-	else if(c==-127) { int n = p.get(); n |= p.get()<<8; n |= p.get()<<16; return n|(p.get()<<24); } 
+	else if(c==-127) { int n = p.get(); n |= p.get()<<8; n |= p.get()<<16; return n|(p.get()<<24); }
 	else return c;
 }
 
@@ -111,11 +94,11 @@ void putuint(ucharbuf &p, int n)
 		p.put(0x80 | (n & 0x7F));
 		p.put(n >> 7);
 	}
-	else 
-	{ 
-		p.put(0x80 | (n & 0x7F)); 
+	else
+	{
+		p.put(0x80 | (n & 0x7F));
 		p.put(0x80 | ((n >> 7) & 0x7F));
-		p.put(n >> 14); 
+		p.put(n >> 14);
 	}
 }
 
@@ -127,7 +110,7 @@ int getuint(ucharbuf &p)
 		n += (p.get() << 7) - 0x80;
 		if(n & (1<<14)) n += (p.get() << 14) - (1<<14);
 		if(n & (1<<21)) n += (p.get() << 21) - (1<<21);
-		if(n & (1<<28)) n |= 0xF0000000; 
+		if(n & (1<<28)) n |= 0xF0000000;
 	}
 	return n;
 }
@@ -144,7 +127,7 @@ void getstring(char *text, ucharbuf &p, int len)
 	do
 	{
 		if(t>=&text[len]) { text[len-1] = 0; return; }
-		if(!p.remaining()) { *t = 0; return; } 
+		if(!p.remaining()) { *t = 0; return; }
 		*t = getint(p);
 	}
 	while(*t++);
@@ -167,24 +150,11 @@ void filtertext(char *dst, const char *src, bool whitespace, int len)
 	*dst = '\0';
 }
 
-#ifndef BFRONTIER // moved to iengine.h
-enum { ST_EMPTY, ST_LOCAL, ST_TCPIP };
-
-struct client					// server side version of "dynent" type
-{
-	int type;
-	int num;
-	ENetPeer *peer;
-	string hostname;
-	void *info;
-};
-#endif
-
 vector<client *> clients;
 
 ENetHost *serverhost = NULL;
 size_t bsend = 0, brec = 0;
-int laststatus = 0; 
+int laststatus = 0;
 ENetSocket pongsock = ENET_SOCKET_NULL;
 
 void cleanupserver()
@@ -200,7 +170,7 @@ void sendfile(int cn, int chan, FILE *file, const char *format, ...)
 	if(cn < 0)
 	{
 #ifndef STANDALONE
-		if(!clienthost || clienthost->peers[0].state != ENET_PEER_STATE_CONNECTED) 
+		if(!clienthost || clienthost->peers[0].state != ENET_PEER_STATE_CONNECTED)
 #endif
 			return;
 	}
@@ -264,9 +234,11 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 			bsend += packet->dataLength;
 			break;
 		}
+#ifndef STANDALONE
 		case ST_LOCAL:
 			localservertoclient(chan, packet->data, (int)packet->dataLength);
 			break;
+#endif
 	}
 }
 
@@ -293,7 +265,7 @@ void sendf(int cn, int chan, const char *format, ...)
 			break;
 		}
 
-		case 'i': 
+		case 'i':
 		{
 			int n = isdigit(*format) ? *format++-'0' : 1;
 			loopi(n) putint(p, va_arg(args, int));
@@ -322,11 +294,7 @@ void disconnect_client(int n, int reason)
 {
 	if(clients[n]->type!=ST_TCPIP) return;
 	s_sprintfd(s)("client (%s) disconnected because: %s\n", clients[n]->hostname, disc_reasons[reason]);
-#ifdef BFRONTIER
 	conoutf("%s", s);
-#else
-	puts(s);
-#endif
 	enet_peer_disconnect(clients[n]->peer, reason);
 	sv->clientdisconnect(n);
 	clients[n]->type = ST_EMPTY;
@@ -396,7 +364,7 @@ void sendpongs()		// reply all server info requests
 		buf.dataLength = len + p.length();
 		enet_socket_send(pongsock, &addr, &buf, 1);
 	}
-}	  
+}
 
 #ifdef STANDALONE
 bool resolverwait(const char *name, ENetAddress *address)
@@ -422,27 +390,21 @@ ENetSocket httpgetsend(ENetAddress &remoteaddress, char *hostname, char *req, ch
 		if(!resolverwait(hostname, &remoteaddress)) return ENET_SOCKET_NULL;
 	}
 	ENetSocket sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM, localaddress);
-	if(sock==ENET_SOCKET_NULL || connectwithtimeout(sock, hostname, remoteaddress)<0) 
-	{ 
+	if(sock==ENET_SOCKET_NULL || connectwithtimeout(sock, hostname, remoteaddress)<0)
+	{
 #ifdef STANDALONE
-		printf(sock==ENET_SOCKET_NULL ? "could not open socket\n" : "could not connect\n"); 
+		printf(sock==ENET_SOCKET_NULL ? "could not open socket\n" : "could not connect\n");
 #endif
-		return ENET_SOCKET_NULL; 
+		return ENET_SOCKET_NULL;
 	}
 	ENetBuffer buf;
 	s_sprintfd(httpget)("GET %s HTTP/1.0\nHost: %s\nReferer: %s\nUser-Agent: %s\n\n", req, hostname, ref, agent);
 	buf.data = httpget;
 	buf.dataLength = strlen((char *)buf.data);
-#ifdef STANDALONE
-#ifdef BFRONTIER // verbose
-	printf("sending request to %s...\n\n%s", hostname, httpget);
-#else
-	printf("sending request to %s...\n", hostname);
-#endif
-#endif
+	conoutf("sending request to %s...\n\n%s", hostname, httpget);
 	enet_socket_send(sock, NULL, &buf, 1);
 	return sock;
-}  
+}
 
 bool httpgetreceive(ENetSocket sock, ENetBuffer &buf, int timeout = 0)
 {
@@ -461,7 +423,7 @@ bool httpgetreceive(ENetSocket sock, ENetBuffer &buf, int timeout = 0)
 		buf.dataLength -= len;
 	}
 	return true;
-}  
+}
 
 uchar *stripheader(uchar *b)
 {
@@ -476,27 +438,18 @@ ENetAddress masterserver = { ENET_HOST_ANY, 80 };
 int lastupdatemaster = 0;
 string masterbase;
 string masterpath;
-#ifdef BFRONTIER // enhanced master server support
-int mastertype = 0;
-#endif
 uchar masterrep[MAXTRANS];
 ENetBuffer masterb;
 
 void updatemasterserver()
 {
-#ifdef BFRONTIER // enhanced master server support
-	string path;
-	if (mastertype > 0) { s_sprintf(path)("%s?game=%s&action=register", game, masterpath); }
-	else { s_sprintf(path)("%sregister.do?action=add", masterpath); }
-#else
     s_sprintfd(path)("%sregister.do?action=add", masterpath);
-#endif
 	if(mssock!=ENET_SOCKET_NULL) enet_socket_destroy(mssock);
 	mssock = httpgetsend(masterserver, masterbase, path, sv->servername(), sv->servername(), &msaddress);
 	masterrep[0] = 0;
 	masterb.data = masterrep;
 	masterb.dataLength = MAXTRANS-1;
-} 
+}
 
 void checkmasterreply()
 {
@@ -505,22 +458,14 @@ void checkmasterreply()
 		mssock = ENET_SOCKET_NULL;
 		printf("masterserver reply: %s\n", stripheader(masterrep));
 	}
-} 
+}
 
 #ifndef STANDALONE
-
 #define RETRIEVELIMIT 20000
-
 uchar *retrieveservers(uchar *buf, int buflen)
 {
 	buf[0] = '\0';
-#ifdef BFRONTIER // enhanced master server support
-	string path;
-	if (mastertype > 0) { s_sprintf(path)("%s?game=%s&action=list", game, masterpath); }
-	else { s_sprintf(path)("%sretrieve.do?item=list", masterpath); }
-#else
     s_sprintfd(path)("%sretrieve.do?item=list", masterpath);
-#endif
 	ENetAddress address = masterserver;
 	ENetSocket sock = httpgetsend(address, masterbase, path, sv->servername(), sv->servername());
 	if(sock==ENET_SOCKET_NULL) return buf;
@@ -533,7 +478,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 	ENetBuffer eb;
 	eb.data = buf;
 	eb.dataLength = buflen-1;
-	
+
 	int starttime = SDL_GetTicks(), timeout = 0;
 	while(httpgetreceive(sock, eb, 250))
 	{
@@ -555,65 +500,42 @@ uchar *retrieveservers(uchar *buf, int buflen)
 	return stripheader(buf);
 }
 #endif
-#ifndef BFRONTIER // moved up
-#define DEFAULTCLIENTS 6
 
-int uprate = 0, maxclients = DEFAULTCLIENTS;
-char *ip = "", *master = NULL;
-char *game = "fps";
-
-#ifdef STANDALONE
-int lastmillis = 0, totalmillis = 0;
-#endif
-#endif
 void serverslice(uint timeout)	// main server update, called from main loop in sp, or from below in dedicated server
 {
+	if (!serverhost) return;
+
 	localclients = nonlocalclients = 0;
+
 	loopv(clients) switch(clients[i]->type)
 	{
 		case ST_LOCAL: localclients++; break;
 		case ST_TCPIP: nonlocalclients++; break;
 	}
-
-	if(!serverhost) 
-	{
-#ifndef BFRONTIER // local servers
-		sv->serverupdate(lastmillis, totalmillis);
-		sv->sendpackets();
-#endif
-		return;
-	}
-		
-	// below is network only
-
-#if !defined(BFRONTIER) || defined(STANDALONE) // local servers
+#ifdef STANDALONE
 	lastmillis = totalmillis = (int)enet_time_get();
 #endif
 	sv->serverupdate(lastmillis, totalmillis);
 
 	sendpongs();
-	
-#ifdef BFRONTIER // local servers
+
 	if (pubserv)
 	{
-#endif
 		if(*masterpath) checkmasterreply();
-	
+
 		if(totalmillis-lastupdatemaster>60*60*1000 && *masterpath)		// send alive signal to masterserver every hour of uptime
 		{
 			updatemasterserver();
 			lastupdatemaster = totalmillis;
 		}
-		
+
 		if(totalmillis-laststatus>60*1000)	// display bandwidth stats, useful for server ops
 		{
-			laststatus = totalmillis;	 
+			laststatus = totalmillis;
 			if(nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
 			bsend = brec = 0;
 		}
-#ifdef BFRONTIER // local servers
 	}
-#endif
 
 	ENetEvent event;
     bool serviced = false;
@@ -636,7 +558,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 				s_strcpy(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
 				printf("client connected (%s)\n", c.hostname);
 				int reason = DISC_MAXCLIENTS;
-				if(nonlocalclients<maxclients && !(reason = sv->clientconnect(c.num, c.peer->address.host))) 
+				if(nonlocalclients<maxclients && !(reason = sv->clientconnect(c.num, c.peer->address.host)))
 				{
 					nonlocalclients++;
 					send_welcome(c.num);
@@ -652,7 +574,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 				if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
 				break;
 			}
-			case ENET_EVENT_TYPE_DISCONNECT: 
+			case ENET_EVENT_TYPE_DISCONNECT:
 			{
 				client *c = (client *)event.peer->data;
 				if(!c) break;
@@ -674,7 +596,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 
 void localdisconnect()
 {
-	loopv(clients) if(clients[i]->type==ST_LOCAL) 
+	loopv(clients) if(clients[i]->type==ST_LOCAL)
 	{
 		sv->localdisconnect(i);
 		localclients--;
@@ -686,17 +608,8 @@ void localdisconnect()
 
 void localconnect()
 {
-#ifdef BFRONTIER // local server support
 #ifndef STANDALONE
 	if (sv->serverport()) connects("localhost");
-#endif
-#else
-	client &c = addclient();
-	c.type = ST_LOCAL;
-	s_strcpy(c.hostname, "local");
-	localclients++;
-	sv->localconnect(c.num);
-	send_welcome(c.num); 
 #endif
 }
 
@@ -704,42 +617,32 @@ void initserver(bool dedicated)
 {
 	initgame(game);
 
-#ifdef BFRONTIER // local servers, enhanced master server support
 	pubserv = dedicated;
-	mastertype = sv->getmastertype();
-#endif
 	if(!master) master = sv->getdefaultmaster();
 	char *mid = strstr(master, "/");
 	if(!mid) mid = master;
 	s_strcpy(masterpath, mid);
 	s_strncpy(masterbase, master, mid-master+1);
 
-#ifndef BFRONTIER // local server support
-	if(dedicated)
+	ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
+	if(*ip)
 	{
-#endif
-		ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
-		if(*ip)
-		{
-			if(enet_address_set_host(&address, ip)<0) printf("WARNING: server ip not resolved");
-			else msaddress.host = address.host;
-		}
-		serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
-		if(!serverhost) fatal("could not create server host");
-		loopi(maxclients) serverhost->peers[i].data = NULL;
-		address.port = sv->serverinfoport();
-		pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
-		if(pongsock == ENET_SOCKET_NULL) fatal("could not create server info socket");
-        else enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
-#ifndef BFRONTIER // local server support
+		if(enet_address_set_host(&address, ip)<0) printf("WARNING: server ip not resolved");
+		else msaddress.host = address.host;
 	}
-#endif // BFRONTIER
+	serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
+	if(!serverhost) fatal("could not create server host");
+	loopi(maxclients) serverhost->peers[i].data = NULL;
+	address.port = sv->serverinfoport();
+	pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
+	if(pongsock == ENET_SOCKET_NULL) fatal("could not create server info socket");
+	else enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 
 	sv->serverinit();
 
 	if(dedicated)		// do not return, this becomes main loop
 	{
-#if !defined(BFRONTIER) || defined(STANDALONE) // local server support
+#ifdef STANDALONE
 		#ifdef WIN32
 		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 		#endif
@@ -760,9 +663,9 @@ bool serveroption(char *opt)
 	switch(opt[1])
 	{
 		case 'u': uprate = atoi(opt+2); return true;
-		case 'c': 
+		case 'c':
 		{
-			int clients = atoi(opt+2); 
+			int clients = atoi(opt+2);
 			if(clients > 0) maxclients = min(clients, MAXCLIENTS);
 			else maxclients = DEFAULTCLIENTS;
 			return true;

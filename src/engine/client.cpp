@@ -7,7 +7,6 @@ ENetHost *clienthost = NULL;
 ENetPeer *curpeer = NULL, *connpeer = NULL;
 int connmillis = 0, connattempts = 0, discmillis = 0;
 
-#ifdef BFRONTIER // alternative to multiplayer because we connect to localhost
 bool otherclients(bool msg)
 {
 	// check if we're playing alone
@@ -15,7 +14,6 @@ bool otherclients(bool msg)
 	if (n && msg) conoutf("operation not available with other clients");
 	return n > 0;
 }
-#endif
 
 bool multiplayer(bool msg)
 {
@@ -53,13 +51,11 @@ void abortconnect()
 	if(curpeer) return;
 	enet_host_destroy(clienthost);
 	clienthost = NULL;
-#ifdef BFRONTIER // we connect to localhost
 	localconnect();
-#endif
 }
 
 void connects(char *servername)
-{	
+{
 	if(connpeer)
 	{
 		conoutf("aborting connection attempt");
@@ -89,14 +85,12 @@ void connects(char *servername)
 
 	if(clienthost)
 	{
-		connpeer = enet_host_connect(clienthost, &address, cc->numchannels()); 
+		connpeer = enet_host_connect(clienthost, &address, cc->numchannels());
 		enet_host_flush(clienthost);
 		connmillis = totalmillis;
 		connattempts = 0;
-#ifdef BFRONTIER
 		s_sprintfd(cs)("connecting to %s (esc to abort)", servername);
 		computescreen(cs);
-#endif
 	}
 	else conoutf("\f3could not connect to server");
 }
@@ -109,7 +103,7 @@ void lanconnect()
 void disconnect(int onlyclean, int async)
 {
 	bool cleanup = onlyclean!=0;
-	if(curpeer) 
+	if(curpeer)
 	{
 		if(!discmillis)
 		{
@@ -137,11 +131,7 @@ void disconnect(int onlyclean, int async)
 		enet_host_destroy(clienthost);
 		clienthost = NULL;
 	}
-#ifdef BFRONTIER
 	if(!onlyclean) { localconnect(); }
-#else
-	if(!onlyclean) { localconnect(); cc->gameconnect(false); }
-#endif
 }
 
 void trydisconnect()
@@ -200,16 +190,11 @@ void localservertoclient(int chan, uchar *buf, int len)	// processes any updates
 	cc->parsepacketclient(chan, p);
 }
 
-#ifdef BFRONTIER // bot clients too
 void clientkeepalive()
 {
 	if (clienthost) enet_host_service(clienthost, NULL, 0);
 }
 
-ICOMMAND(getready, "", (), intret(cc->ready()));
-#else
-void clientkeepalive() { if(clienthost) enet_host_service(clienthost, NULL, 0); }
-#endif
 
 void gets2c()			// get updates from the server
 {
@@ -217,13 +202,12 @@ void gets2c()			// get updates from the server
 	if(!clienthost) return;
 	if(connpeer && totalmillis/3000 > connmillis/3000)
 	{
-#ifdef BFRONTIER
 		s_sprintfd(sp)("attempt #%d", connattempts+1);
 		show_out_of_renderloop_progress(float(connattempts)/float(3), sp);
-#endif
+
 		conoutf("attempting to connect...");
 		connmillis = totalmillis;
-		++connattempts; 
+		++connattempts;
 		if(connattempts > 3)
 		{
 			conoutf("\f3could not connect to server");
@@ -235,18 +219,15 @@ void gets2c()			// get updates from the server
 	switch(event.type)
 	{
 		case ENET_EVENT_TYPE_CONNECT:
-			disconnect(1); 
+			disconnect(1);
 			curpeer = connpeer;
 			connpeer = NULL;
 			conoutf("connected to server");
 			throttle();
 			if(rate) setrate(rate);
 			cc->gameconnect(true);
-#ifdef BFRONTIER
-			if (menuactive()) cleargui();
-#endif
 			break;
-		 
+
 		case ENET_EVENT_TYPE_RECEIVE:
 			if(discmillis) conoutf("attempting to disconnect...");
 			else localservertoclient(event.channelID, event.packet->data, (int)event.packet->dataLength);

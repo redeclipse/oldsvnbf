@@ -3,11 +3,7 @@
 #include "pch.h"
 #include "engine.h"
 
-#ifdef BFRONTIER
 bfgz hdr;
-#else
-header hdr;
-#endif
 
 VAR(octaentsize, 0, 128, 1024);
 VAR(entselradius, 0, 2, 10);
@@ -63,7 +59,7 @@ void modifyoctaentity(bool add, int id, cube *c, const ivec &cor, int size, cons
 				case ET_MAPMODEL:
 					if(loadmodel(NULL, et->getents()[id]->attr2))
 					{
-						if(va && oe.mapmodels.empty()) 
+						if(va && oe.mapmodels.empty())
 						{
 							if(!va->mapmodels) va->mapmodels = new vector<octaentities *>;
 							va->mapmodels->add(&oe);
@@ -121,7 +117,7 @@ void modifyoctaentity(bool add, int id, cube *c, const ivec &cor, int size, cons
 					oe.other.removeobj(id);
 					break;
 			}
-			if(oe.mapmodels.empty() && oe.other.empty()) 
+			if(oe.mapmodels.empty() && oe.other.empty())
 				freeoctaentities(c[i]);
 		}
 		if(c[i].ext && c[i].ext->ents) c[i].ext->ents->query = NULL;
@@ -232,7 +228,7 @@ void initundoent(undoblock &u)
 		u.e->e = *et->getents()[entgroup[i]];
 		u.e++;
 	}
-	u.e -= u.n;	
+	u.e -= u.n;
 }
 
 void makeundoent()
@@ -277,8 +273,8 @@ void attachentity(extentity &e)
 		if(a->attached) continue;
 		switch(e.type)
 		{
-			case ET_SPOTLIGHT: 
-				if(a->type!=ET_LIGHT) continue; 
+			case ET_SPOTLIGHT:
+				if(a->type!=ET_LIGHT) continue;
 				break;
 
 			default:
@@ -364,7 +360,7 @@ void entrotate(int *cw)
 	);
 }
 
-void entselectionbox(const entity &e, vec &eo, vec &es) 
+void entselectionbox(const entity &e, vec &eo, vec &es)
 {
 	model *m = NULL;
 	if(e.type == ET_MAPMODEL && (m = loadmodel(NULL, e.attr2)))
@@ -372,16 +368,16 @@ void entselectionbox(const entity &e, vec &eo, vec &es)
 		m->collisionbox(0, eo, es);
 		rotatebb(eo, es, e.attr1);
 		if(m->collide)
-			eo.z -= player->aboveeye; // wacky but true. see physics collide					
+			eo.z -= player->aboveeye; // wacky but true. see physics collide
 		else
 			es.div(2);  // cause the usual bb is too big...
 		eo.add(e.o);
-	}	
+	}
 	else
 	{
 		es = vec(entselradius);
 		eo = e.o;
-	}	
+	}
 	eo.sub(es);
 	es.mul(2);
 }
@@ -405,18 +401,18 @@ void entdrag(const vec &ray)
 	int d = dimension(entorient),
 		dc= dimcoord(entorient);
 
-	entfocus(entgroup.last(),		
+	entfocus(entgroup.last(),
 		entselectionbox(e, eo, es);
 
-		editmoveplane(e.o, ray, d, eo[d] + (dc ? es[d] : 0), handle, v, initentdragging);		
+		editmoveplane(e.o, ray, d, eo[d] + (dc ? es[d] : 0), handle, v, initentdragging);
 
 		ivec g(v);
 		int z = g[d]&(~(sel.grid-1));
 		g.add(sel.grid/2).mask(~(sel.grid-1));
 		g[d] = z;
-		
+
 		r = (entselsnap ? g[R[d]] : v[R[d]]) - e.o[R[d]];
-		c = (entselsnap ? g[C[d]] : v[C[d]]) - e.o[C[d]];		
+		c = (entselsnap ? g[C[d]] : v[C[d]]) - e.o[C[d]];
 	);
 
 	if(initentdragging) makeundoent();
@@ -482,7 +478,7 @@ void renderentradius(extentity &e)
 			glDepthFunc(GL_GREATER);
 			glColor3f(0.25f, 0.25f, 0.25f);
 		}
-		else 
+		else
 		{
 			glDepthFunc(GL_LESS);
 			glColor3fv(color);
@@ -571,12 +567,12 @@ void renderentradius(extentity &e)
 }
 
 void renderentselection(const vec &o, const vec &ray, bool entmoving)
-{	
+{
 	if(noentedit()) return;
 	vec eo, es;
 
 	glColor3ub(0, 40, 0);
-	loopv(entgroup) entfocus(entgroup[i],	 
+	loopv(entgroup) entfocus(entgroup[i],
 		entselectionbox(e, eo, es);
 		boxs3D(eo, es, 1);
 	);
@@ -589,8 +585,8 @@ void renderentselection(const vec &o, const vec &ray, bool entmoving)
 		{
 			vec a, b;
 			glColor3ub(20, 20, 20);
-			(a=eo).x=0; (b=es).x=hdr.worldsize; boxs3D(a, b, 1);  
-			(a=eo).y=0; (b=es).y=hdr.worldsize; boxs3D(a, b, 1);  
+			(a=eo).x=0; (b=es).x=hdr.worldsize; boxs3D(a, b, 1);
+			(a=eo).y=0; (b=es).y=hdr.worldsize; boxs3D(a, b, 1);
 			(a=eo).z=0; (b=es).z=hdr.worldsize; boxs3D(a, b, 1);
 		}
 		glColor3ub(150,0,0);
@@ -642,18 +638,18 @@ void entpush(int *dir)
 	if(noentedit()) return;
 	int d = dimension(entorient);
 	int s = dimcoord(entorient) ? -*dir : *dir;
-	if(entmoving) 
+	if(entmoving)
 	{
 		groupeditpure(e.o[d] += float(s*sel.grid)); // editdrag supplies the undo
 	}
-	else 
+	else
 		groupedit(e.o[d] += float(s*sel.grid));
 	if(entitysurf==1)
 		player->o[d] += float(s*sel.grid);
 }
 
 VAR(entautoviewdist, 0, 25, 100);
-void entautoview(int *dir) 
+void entautoview(int *dir)
 {
 	if(!haveselent()) return;
 	static int s = 0;
@@ -811,7 +807,7 @@ void entcopy()
 	if(noentedit()) return;
 	entcopygrid = sel.grid;
 	entcopybuf.setsize(0);
-	loopv(entgroup) 
+	loopv(entgroup)
 		entfocus(entgroup[i], entcopybuf.add(e).o.sub(sel.o.v));
 }
 
@@ -895,7 +891,7 @@ void findplayerspawn(dynent *d, int forceent)	// place at random spawn. also use
 				d->yaw = et->getents()[attempt]->attr1;
 				entinmap(d);
 				break;
-			}	
+			}
 		}
 	}
 	else
@@ -917,12 +913,10 @@ void splitocta(cube *c, int size)
 
 void resetmap()
 {
-#ifdef BFRONTIER
 	show_out_of_renderloop_progress(0, "resetting map...");
 	materialreset();
 	texturereset();
 	mapmodelreset();
-#endif
 	clearoverrides();
 	clearmapsounds();
 	cleanreflections();
@@ -937,11 +931,9 @@ void resetmap()
 
 	et->getents().deletecontentsp();
 
-#ifdef BFRONTIER
 	enumerate(*idents, ident, id, {
 		if (id._type == ID_VAR && id._context & IDC_WORLD) *id._storage = id._val; // reset world vars
 	});
-#endif
 }
 
 void startmap(const char *name)
@@ -951,14 +943,13 @@ void startmap(const char *name)
 
 bool emptymap(int scale, bool force, char *mname)	// main empty world creation routine
 {
-	if(!force && !editmode) 
+	if(!force && !editmode)
 	{
 		conoutf("newmap only allowed in edit mode");
 		return false;
 	}
 
 	resetmap();
-#ifdef BFRONTIER
 	setnames(mname);
 	strncpy(hdr.head, "BFGZ", 4);
 
@@ -970,24 +961,7 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	hdr.lightmaps = 0;
 
 	s_strncpy(hdr.maptitle, "Untitled Map by Unknown Author", 128);
-#else
-	strncpy(hdr.head, "OCTA", 4);
 
-	hdr.version = MAPVERSION;
-	hdr.headersize = sizeof(header);
-	hdr.worldsize = 1 << (scale<10 ? 10 : (scale>20 ? 20 : scale));
-
-	s_strncpy(hdr.maptitle, "Untitled Map by Unknown", 128);
-
-	hdr.waterlevel = -100000;
-	memset(hdr.watercolour, 0, sizeof(hdr.watercolour));
-	hdr.maple = 8;
-	hdr.mapprec = 32;
-	hdr.mapllod = 0;
-	hdr.lightmaps = 0;
-	memset(hdr.skylight, 0, sizeof(hdr.skylight));
-	memset(hdr.reserved, 0, sizeof(hdr.reserved));
-#endif
 	texmru.setsize(0);
 	freeocta(worldroot);
 	worldroot = newcubes(F_EMPTY);
@@ -999,12 +973,8 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	allchanged();
 
 	overrideidents = true;
-#ifdef BFRONTIER // resetmap
 	if (!execfile(pcfname)) exec("packages/package.cfg");
 	exec("packages/map.cfg");
-#else
-	execfile("data/default_map_settings.cfg");
-#endif
 	overrideidents = false;
 
 	startmap("");
@@ -1035,24 +1005,10 @@ bool enlargemap(bool force)
 	return true;
 }
 
-#ifdef BFRONTIER // yeah
 ICOMMAND(newmap, "is", (int *i), if(emptymap(*i, false)) cl->newmap(max(*i, 0)));
 ICOMMAND(mapenlarge, "", (), if(enlargemap(false)) cl->newmap(-1));
-
 ICOMMAND(mapname, "", (void), result(mapname));
-#else
-void newmap(int *i) { if(emptymap(*i, false)) cl->newmap(max(*i, 0)); }
-void mapenlarge() { if(enlargemap(false)) cl->newmap(-1); }
-COMMAND(newmap, "i");
-COMMAND(mapenlarge, "");
 
-void mapname()
-{
-    result(cl->getclientmap());
-}
-
-COMMAND(mapname, "");
-#endif
 void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool local)
 {
 	if(et->getents().length()<=i)
@@ -1222,7 +1178,6 @@ void checktriggers()
 	}
 }
 
-#ifdef BFRONTIER // extended entities
 void newentity(vec &v, int type, int a1, int a2, int a3, int a4)
 {
 	extentity *t = newentity(true, v, type, a1, a2, a3, a4);
@@ -1233,4 +1188,3 @@ void newentity(vec &v, int type, int a1, int a2, int a3, int a4)
 	makeundoent();
 	entedit(i, e.type = type);
 }
-#endif

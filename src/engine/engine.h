@@ -1,3 +1,6 @@
+#ifdef STANDALONE
+#include "minimal.h"
+#else // STANDALONE
 #include "cube.h"
 #include "iengine.h"
 #include "igame.h"
@@ -5,9 +8,7 @@
 extern igameclient	 *cl;
 extern igameserver	 *sv;
 extern iclientcom	  *cc;
-#ifdef BFRONTIER // extra sub modules
 extern iphysics *ph;
-#endif
 extern icliententities *et;
 
 #include "world.h"
@@ -16,9 +17,7 @@ extern icliententities *et;
 #include "bih.h"
 #include "texture.h"
 #include "model.h"
-#ifdef BFRONTIER
 #include "sound.h"
-#endif
 
 // GL_ARB_multitexture
 extern PFNGLACTIVETEXTUREARBPROC		glActiveTexture_;
@@ -74,11 +73,7 @@ extern PFNGLBLENDEQUATIONEXTPROC glBlendEquation_;
 extern dynent *player;
 extern physent *camera1;				// special ent that acts as camera, same object as player1 in FPS mode
 
-#ifdef BFRONTIER
 extern bfgz hdr;					  // current map header
-#else
-extern header hdr;					  // current map header
-#endif
 extern vector<ushort> texmru;
 extern int xtraverts, xtravertsva;
 extern vector<vertex> verts;			// the vertex array for all world rendering
@@ -264,13 +259,9 @@ extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->
 
 extern int showmat;
 
-#ifdef BFRONTIER
 extern sometype materials[], textypes[];
 extern char *findmaterialname(int type);
 extern int findmaterial(const char *name, bool tryint = false);
-#else
-extern int findmaterial(const char *name);
-#endif
 extern void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurface> &matsurfs);
 extern void rendermatsurfs(materialsurface *matbuf, int matsurfs);
 extern void rendermatgrid(materialsurface *matbuf, int matsurfs);
@@ -378,11 +369,9 @@ extern void startmap(const char *name);
 
 // rendermodel
 struct mapmodelinfo { string name; int tex; model *m; };
-#ifdef BFRONTIER
 extern vector<mapmodelinfo> mapmodels;
 extern void mmodel(char *name, int *tex);
 extern void mapmodelreset();
-#endif
 
 extern void findanims(const char *pattern, vector<int> &anims);
 extern void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&masks);
@@ -407,17 +396,9 @@ extern char *g3d_fieldname();
 
 extern void g3d_mainmenu();
 
-// sound
-#ifndef BFRONTIER
-extern void checkmapsounds();
-extern void clearmapsounds();
-extern void updatevol();
-#endif
-
 // grass
 extern void rendergrass();
 
-#ifdef BFRONTIER
 // 3dgui
 extern int cleargui(int n = 0);
 
@@ -564,4 +545,4 @@ extern void draw_textf(const char *fstr, int left, int top, ...);
 extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool shadow = false);
 extern bool pushfont(char *name);
 extern bool popfont(int num);
-#endif
+#endif // STANDALONE

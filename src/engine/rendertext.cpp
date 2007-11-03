@@ -85,7 +85,7 @@ int char_width(int c, int x)
 int text_width(const char *str, int limit)
 {
 	int x = 0;
-	for(int i = 0; str[i] && (limit<0 ||i<limit); i++) 
+	for(int i = 0; str[i] && (limit<0 ||i<limit); i++)
 	{
 		if(str[i]=='\f')
 		{
@@ -113,20 +113,19 @@ int text_visible(const char *str, int max)
 	}
 	return i;
 }
- 
+
 void draw_textf(const char *fstr, int left, int top, ...)
 {
 	s_sprintfdlv(str, top, fstr);
 	draw_text(str, left, top);
 }
 
-#ifdef BFRONTIER // better text drawing with alignement, alpha, shadows, and colorpos storing
 void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool shadow, int align, ...)
 {
 	s_sprintfdlv(str, align, fstr);
 
 	int x = left, y = top, width = text_width(str);
-	
+
 	switch (align)
 	{
 		case AL_CENTER:
@@ -154,7 +153,7 @@ void draw_text(const char *str, int left, int top, int r, int g, int b, int a, b
 	bvec color(r, g, b);
 
 	if (a == 255) a = int(255.f*(hudblend*0.01f));
-		
+
 	glBegin(GL_QUADS);
 	glColor4ub(r, g, b, a);
  	loopj(shadow ? 2 : 1)
@@ -248,7 +247,7 @@ void draw_text(const char *str, int left, int top, int r, int g, int b, int a, b
 							color = bvec(r, g, b);
 							break; // default
 						}
-					}				
+					}
 					glColor4ub(color.x, color.y, color.z, a);
 				}
 				else { i++; continue; } // shadow
@@ -256,18 +255,18 @@ void draw_text(const char *str, int left, int top, int r, int g, int b, int a, b
 			if(c==' ') { x += curfont->defaultw; continue; }
 			c -= 33;
 			if(!curfont->chars.inrange(c)) continue;
-			
+
 			font::charinfo &info = curfont->chars[c];
 			float tc_left	= (info.x + curfont->offsetx) / float(curfont->tex->xs);
 			float tc_top	 = (info.y + curfont->offsety) / float(curfont->tex->ys);
 			float tc_right	= (info.x + info.w + curfont->offsetw) / float(curfont->tex->xs);
 			float tc_bottom  = (info.y + info.h + curfont->offseth) / float(curfont->tex->ys);
-	
+
 			glTexCoord2f(tc_left,  tc_top	); glVertex2i(x,		  y);
 			glTexCoord2f(tc_right, tc_top	); glVertex2i(x + info.w, y);
 			glTexCoord2f(tc_right, tc_bottom); glVertex2i(x + info.w, y + info.h);
 			glTexCoord2f(tc_left,  tc_bottom); glVertex2i(x,		  y + info.h);
-			
+
 			xtraverts += 4;
 			x += info.w + 1;
 		}
@@ -294,65 +293,3 @@ bool popfont(int num)
 	}
 	return (n != fontstack.length());
 }
-#else
-void draw_text(const char *str, int left, int top, int r, int g, int b, int a)
-{
-	if(!curfont) return;
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glBindTexture(GL_TEXTURE_2D, curfont->tex->gl);
-
-	static bvec colorstack[8];
-	bvec color(r, g, b);
-	int colorpos = 0, x = left, y = top;
-	
-    glBegin(GL_QUADS);
-    // ATI bug -- initial color must be set after glBegin
-	glColor4ub(color.x, color.y, color.z, a);
-	for(int i = 0; str[i]; i++)
-	{
-		int c = str[i];
-		if(c=='\t') { x = ((x-left+PIXELTAB)/PIXELTAB)*PIXELTAB+left; continue; }
-		if(c=='\f')
-		{
-			switch(str[++i])
-			{
-				case '0': color = bvec( 64, 255, 128); break;	// green: player talk
-				case '1': color = bvec( 96, 160, 255); break;	// blue: "echo" command
-				case '2': color = bvec(255, 192,  64); break;	// yellow: gameplay messages 
-				case '3': color = bvec(255,  64,  64); break;	// red: important errors
-				case '4': color = bvec(128, 128, 128); break;	// gray
-				case '5': color = bvec(192,  64, 192); break;	// magenta
-				case '6': color = bvec(255, 128,	0); break;	// orange
-				case 's': // save color
-					if((size_t)colorpos<sizeof(colorstack)/sizeof(colorstack[0])) colorstack[colorpos++] = color;
-					continue;
-				case 'r': // restore color
-					if(colorpos<=0) continue;
-					color = colorstack[--colorpos];
-					break; 
-				default: color = bvec(r, g, b); break;		  // white: everything else
-			}
-			glColor4ub(color.x, color.y, color.z, a);
-		}
-		if(c==' ') { x += curfont->defaultw; continue; }
-		c -= 33;
-		if(!curfont->chars.inrange(c)) continue;
-		
-		font::charinfo &info = curfont->chars[c];
-		float tc_left	= (info.x + curfont->offsetx) / float(curfont->tex->xs);
-		float tc_top	 = (info.y + curfont->offsety) / float(curfont->tex->ys);
-		float tc_right	= (info.x + info.w + curfont->offsetw) / float(curfont->tex->xs);
-		float tc_bottom  = (info.y + info.h + curfont->offseth) / float(curfont->tex->ys);
-
-		glTexCoord2f(tc_left,  tc_top	); glVertex2i(x,		  y);
-		glTexCoord2f(tc_right, tc_top	); glVertex2i(x + info.w, y);
-		glTexCoord2f(tc_right, tc_bottom); glVertex2i(x + info.w, y + info.h);
-		glTexCoord2f(tc_left,  tc_bottom); glVertex2i(x,		  y + info.h);
-		
-		xtraverts += 4;
-		x += info.w + 1;
-	}
-	glEnd();
-}
-#endif

@@ -9,7 +9,7 @@ struct vertmodel : model
     {
         int fr1, fr2;
         float t;
-                
+
         void setframes(const animstate &as)
         {
             int time = as.anim&ANIM_SETTIME ? as.basetime : lastmillis-as.basetime;
@@ -110,9 +110,9 @@ struct vertmodel : model
             }
             else
             {
-                if(enableglow) disableglow(); 
+                if(enableglow) disableglow();
                 if(fullbright) glColor4f(fullbright, fullbright, fullbright, as.anim&ANIM_TRANSLUCENT ? translucency : 1);
-                else if(lightmodels) 
+                else if(lightmodels)
                 {
                     GLfloat material[4] = { 1, 1, 1, as.anim&ANIM_TRANSLUCENT ? translucency : 1 };
                     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, material);
@@ -143,7 +143,7 @@ struct vertmodel : model
             }
             if(lightmodels && !fullbright)
             {
-                float ambientk = min(ambient*0.75f, 1), 
+                float ambientk = min(ambient*0.75f, 1),
                       diffusek = 1-ambientk;
                 GLfloat ambientcol[4] = { lightcolor.x*ambientk, lightcolor.y*ambientk, lightcolor.z*ambientk, 1 },
                         diffusecol[4] = { lightcolor.x*diffusek, lightcolor.y*diffusek, lightcolor.z*diffusek, 1 };
@@ -161,13 +161,13 @@ struct vertmodel : model
             if(renderpath==R_FIXEDFUNCTION) setuptmus(as, masked);
             else
             {
-                if(fullbright) 
+                if(fullbright)
                 {
                     glColor4f(fullbright/2, fullbright/2, fullbright/2, as.anim&ANIM_TRANSLUCENT ? translucency : 1);
                     setenvparamf("ambient", SHPARAM_VERTEX, 3, 2, 2, 2, 1);
                     setenvparamf("ambient", SHPARAM_PIXEL, 3, 2, 2, 2, 1);
                 }
-                else 
+                else
                 {
                     glColor4f(lightcolor.x, lightcolor.y, lightcolor.z, as.anim&ANIM_TRANSLUCENT ? translucency : 1);
                     setenvparamf("specscale", SHPARAM_PIXEL, 2, spec, spec, spec);
@@ -229,15 +229,15 @@ struct vertmodel : model
             {
                 Slot &slot = lookuptexture(override);
                 s = slot.sts[0].t;
-                if(slot.sts.length() >= 2) 
+                if(slot.sts.length() >= 2)
                 {
                     m = slot.sts[1].t;
                     if(n && slot.sts.length() >= 3) n = slot.sts[2].t;
                 }
             }
-            if((renderpath==R_FIXEDFUNCTION || !lightmodels) && 
+            if((renderpath==R_FIXEDFUNCTION || !lightmodels) &&
                (!glowmodels || (renderpath==R_FIXEDFUNCTION && refracting && refractfog && maxtmus<=2)) &&
-               (!envmapmodels || !(as.anim&ANIM_ENVMAP) || envmapmax<=0)) 
+               (!envmapmodels || !(as.anim&ANIM_ENVMAP) || envmapmax<=0))
                 m = notexture;
             setshader(as, m!=notexture);
             if(s!=lasttex)
@@ -252,7 +252,7 @@ struct vertmodel : model
                 glActiveTexture_(GL_TEXTURE3_ARB);
                 glBindTexture(GL_TEXTURE_2D, n->gl);
                 glActiveTexture_(GL_TEXTURE0_ARB);
-            } 
+            }
             if(s->bpp==32)
             {
                 if(alphablend)
@@ -325,13 +325,13 @@ struct vertmodel : model
         anpos cur, prev;
         float t;
         int millis;
- 
+
         vbocacheentry() : vdata(NULL), vbuf(0) { cur.fr1 = prev.fr1 = -1; }
     };
 
     struct mesh
     {
-        meshgroup *group;        
+        meshgroup *group;
         char *name;
         vert *verts;
         tcvert *tcverts;
@@ -391,21 +391,21 @@ struct vertmodel : model
                     const tcvert &tc0 = tcverts[t.vert[0]],
                                  &tc1 = tcverts[t.vert[1]],
                                  &tc2 = tcverts[t.vert[2]];
- 
+
                     vec v0(fverts[t.vert[0]].pos),
-                        e1(fverts[t.vert[1]].pos), 
+                        e1(fverts[t.vert[1]].pos),
                         e2(fverts[t.vert[2]].pos);
                     e1.sub(v0);
                     e2.sub(v0);
- 
-                    float u1 = tc1.u - tc0.u, v1 = tc1.v - tc0.v, 
+
+                    float u1 = tc1.u - tc0.u, v1 = tc1.v - tc0.v,
                           u2 = tc2.u - tc0.u, v2 = tc2.v - tc0.v,
                           scale = u1*v2 - u2*v1;
                     if(scale!=0) scale = 1.0f / scale;
                     vec u(e1), v(e2);
                     u.mul(v2).sub(vec(e2).mul(v1)).mul(scale);
                     v.mul(u1).sub(vec(e1).mul(u2)).mul(scale);
- 
+
                     loopj(3)
                     {
                         tangent[t.vert[j]].add(u);
@@ -518,7 +518,7 @@ struct vertmodel : model
             loopi(numtris)
             {
                 tri &t = tris[i];
-                loopj(3) 
+                loopj(3)
                 {
                     tcvert &tc = tcverts[t.vert[j]];
                     vert &v = verts[t.vert[j]];
@@ -692,7 +692,7 @@ struct vertmodel : model
         int vlen;
         uchar *vdata;
 
-        meshgroup() : next(NULL), shared(0), name(NULL), tags(NULL), numtags(0), numframes(0), scale(1), translate(0, 0, 0), edata(NULL), ebuf(0), vdata(NULL) 
+        meshgroup() : next(NULL), shared(0), name(NULL), tags(NULL), numtags(0), numframes(0), scale(1), translate(0, 0, 0), edata(NULL), ebuf(0), vdata(NULL)
         {
         }
 
@@ -702,7 +702,7 @@ struct vertmodel : model
             meshes.deletecontentsp();
             DELETEA(tags);
             if(ebuf) glDeleteBuffers_(1, &ebuf);
-            loopi(MAXVBOCACHE) 
+            loopi(MAXVBOCACHE)
             {
                 DELETEA(vbocache[i].vdata);
                 if(vbocache[i].vbuf) glDeleteBuffers_(1, &vbocache[i].vbuf);
@@ -751,7 +751,7 @@ struct vertmodel : model
             group.translate = translate;
             return &group;
         }
-           
+
         meshgroup *scaleverts(const float nscale, const vec &ntranslate)
         {
             if(nscale==scale && ntranslate==translate) { shared++; return this; }
@@ -801,7 +801,7 @@ struct vertmodel : model
                 loopj(3) matrix[j] = ip_ai_tag(transform[0][j]); // transform
                 loopj(3) matrix[4 + j] = ip_ai_tag(transform[1][j]);
                 loopj(3) matrix[8 + j] = ip_ai_tag(transform[2][j]);
-                loopj(3) matrix[12 + j] = ip_ai_tag(pos[j]); // position      
+                loopj(3) matrix[12 + j] = ip_ai_tag(pos[j]); // position
             }
             else
             {
@@ -809,21 +809,21 @@ struct vertmodel : model
                 loopj(3) matrix[4 + j] = ip(tag1->transform[1][j], tag2->transform[1][j], cur.t);
                 loopj(3) matrix[8 + j] = ip(tag1->transform[2][j], tag2->transform[2][j], cur.t);
                 loopj(3) matrix[12 + j] = ip(tag1->pos[j], tag2->pos[j], cur.t); // position
-            } 
+            }
             #undef ip_ai_tag
-            #undef ip 
+            #undef ip
             matrix[3] = matrix[7] = matrix[11] = 0.0f;
             matrix[15] = 1.0f;
         }
 
         void genvbo(bool norms, bool tangents, vbocacheentry &vc)
         {
-            if(hasVBO) 
+            if(hasVBO)
             {
                 if(!vc.vbuf) glGenBuffers_(1, &vc.vbuf);
                 if(ebuf) return;
             }
-            else if(edata) 
+            else if(edata)
             {
                 #define ALLOCVDATA(vdata) \
                     do \
@@ -846,10 +846,10 @@ struct vertmodel : model
             {
                 loopv(meshes) vlen += meshes[i]->genvbo(idxs, vlen);
                 DELETEA(vdata);
-                if(hasVBO) ALLOCVDATA(vdata); 
+                if(hasVBO) ALLOCVDATA(vdata);
                 else ALLOCVDATA(vc.vdata);
-            } 
-            else 
+            }
+            else
             {
                 if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
                 #define GENVBO(type) \
@@ -920,14 +920,14 @@ struct vertmodel : model
         void render(animstate &as, anpos &cur, anpos *prev, float ai_t, vector<skin> &skins)
         {
             bool norms = false, tangents = false;
-            loopv(skins) 
+            loopv(skins)
             {
                 if(skins[i].normals()) norms = true;
                 if(skins[i].tangents()) tangents = true;
             }
             if(norms!=vnorms || tangents!=vtangents)
             {
-                loopi(MAXVBOCACHE) 
+                loopi(MAXVBOCACHE)
                 {
                     vbocacheentry &c = vbocache[i];
                     if(c.vbuf) { glDeleteBuffers_(1, &c.vbuf); c.vbuf = 0; }
@@ -961,7 +961,7 @@ struct vertmodel : model
                     else vc->prev.fr1 = -1;
                     vc->millis = lastmillis;
                     size_t vertsize = tangents ? sizeof(vvertbump) : (norms ? sizeof(vvert) : sizeof(vvertff));
-                    loopv(meshes) 
+                    loopv(meshes)
                     {
                         mesh &m = *meshes[i];
                         m.interpverts(cur, prev, ai_t, norms, tangents, (hasVBO ? vdata : vc->vdata) + m.voffset*vertsize, skins[i]);
@@ -969,11 +969,11 @@ struct vertmodel : model
                     if(hasVBO)
                     {
                         glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc->vbuf);
-                        glBufferData_(GL_ARRAY_BUFFER_ARB, vlen*vertsize, vdata, GL_STREAM_DRAW_ARB);    
+                        glBufferData_(GL_ARRAY_BUFFER_ARB, vlen*vertsize, vdata, GL_STREAM_DRAW_ARB);
                     }
                 }
             }
-        
+
             bindvbo(as, *vc);
             loopv(meshes) meshes[i]->render(as, cur, prev, ai_t, skins[i], *vc);
         }
@@ -1082,11 +1082,7 @@ struct vertmodel : model
                 case ANIM_LEFT:
                 case ANIM_RIGHT:
                 case ANIM_SWIM:
-#ifdef BFRONTIER // external physics support
                     as.speed = 5500.0f/ph->speed(d);
-#else
-                    as.speed = 5500.0f/d->maxspeed;
-#endif
                     break;
 
                 default:
@@ -1094,7 +1090,7 @@ struct vertmodel : model
                     break;
             }
         }
-                
+
         bool calcanimstate(int anim, int varseed, float speed, int basetime, dynent *d, animstate &as)
         {
             as.anim = anim;
@@ -1134,7 +1130,7 @@ struct vertmodel : model
             if(as.anim&(ANIM_START|ANIM_END))
             {
                 if(as.anim&ANIM_END) as.frame += as.range-1;
-                as.range = 1; 
+                as.range = 1;
             }
 
             if(!meshes->hasframes(as.frame, as.range))
@@ -1179,13 +1175,13 @@ struct vertmodel : model
         void calcvertex(GLfloat *m, vec &pos)
         {
             vec p(pos);
-                
+
             p.x -= m[12];
             p.y -= m[13];
             p.z -= m[14];
 
 #if 0
-            // This is probably overkill, since just about any transformations this encounters will be orthogonal matrices 
+            // This is probably overkill, since just about any transformations this encounters will be orthogonal matrices
             // where their inverse is simply the transpose.
             int a = fabs(m[0])>fabs(m[1]) && fabs(m[0])>fabs(m[2]) ? 0 : (fabs(m[1])>fabs(m[2]) ? 1 : 2), b = (a+1)%3, c = (a+2)%3;
             float a1 = m[a], a2 = m[a+4], a3 = m[a+8],
@@ -1214,7 +1210,7 @@ struct vertmodel : model
             if(!(anim&ANIM_NOSKIN))
             {
                 dir.rotate(c, s, d);
-                campos.rotate(c, s, d); 
+                campos.rotate(c, s, d);
                 fogplane.rotate(c, s, d);
             }
 
@@ -1225,10 +1221,10 @@ struct vertmodel : model
         {
             animstate as;
             if(!calcanimstate(anim, varseed, speed, basetime, d, as)) return;
-   
+
             anpos prev, cur;
             cur.setframes(d && index<2 ? d->current[index] : as);
-    
+
             float ai_t = 0;
             bool doai = d && index<2 && lastmillis-d->lastanimswitchtime[index]<animationinterpolationtime && d->prev[index].range>0;
             if(doai)
@@ -1236,7 +1232,7 @@ struct vertmodel : model
                 prev.setframes(d->prev[index]);
                 ai_t = (lastmillis-d->lastanimswitchtime[index])/(float)animationinterpolationtime;
             }
-  
+
             if(!model->cullface && enablecullface) { glDisable(GL_CULL_FACE); enablecullface = false; }
             else if(model->cullface && !enablecullface) { glEnable(GL_CULL_FACE); enablecullface = true; }
 
@@ -1246,7 +1242,7 @@ struct vertmodel : model
             if(pitchamount)
             {
                 glPushMatrix();
-                glRotatef(pitchamount, axis.x, axis.y, axis.z); 
+                glRotatef(pitchamount, axis.x, axis.y, axis.z);
                 if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
                 {
                     glMatrixMode(GL_TEXTURE);
@@ -1264,7 +1260,7 @@ struct vertmodel : model
                     setenvparamf("direction", SHPARAM_VERTEX, 0, rdir.x, rdir.y, rdir.z);
                     setenvparamf("camera", SHPARAM_VERTEX, 1, rcampos.x, rcampos.y, rcampos.z, 1);
                 }
-                else 
+                else
                 {
                     if(refracting && refractfog) refractfogplane = rfogplane;
                     if(lightmodels) loopv(skins) if(!skins[i].fullbright)
@@ -1288,7 +1284,7 @@ struct vertmodel : model
                 vec naxis(raxis), ndir(rdir), ncampos(rcampos);
                 plane nfogplane(rfogplane);
                 calcnormal(matrix, naxis);
-                if(!(anim&ANIM_NOSKIN)) 
+                if(!(anim&ANIM_NOSKIN))
                 {
                     calcnormal(matrix, ndir);
                     calcvertex(matrix, ncampos);
@@ -1297,12 +1293,12 @@ struct vertmodel : model
 
                 glPushMatrix();
                 glMultMatrixf(matrix);
-                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP) 
-                {    
-                    glMatrixMode(GL_TEXTURE); 
-                    glPushMatrix(); 
-                    glMultMatrixf(matrix); 
-                    glMatrixMode(GL_MODELVIEW); 
+                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                {
+                    glMatrixMode(GL_TEXTURE);
+                    glPushMatrix();
+                    glMultMatrixf(matrix);
+                    glMatrixMode(GL_MODELVIEW);
                 }
                 int nanim = anim, nbasetime = basetime;
                 if(links[i].anim>=0)
@@ -1311,11 +1307,11 @@ struct vertmodel : model
                     nbasetime = links[i].basetime;
                 }
                 link->render(nanim, varseed, speed, nbasetime, pitch, naxis, d, ndir, ncampos, nfogplane);
-                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP) 
-                { 
-                    glMatrixMode(GL_TEXTURE); 
-                    glPopMatrix(); 
-                    glMatrixMode(GL_MODELVIEW); 
+                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                {
+                    glMatrixMode(GL_TEXTURE);
+                    glPopMatrix();
+                    glMatrixMode(GL_MODELVIEW);
                 }
                 glPopMatrix();
             }
@@ -1325,9 +1321,9 @@ struct vertmodel : model
                 glPopMatrix();
                 if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
                 {
-                    glMatrixMode(GL_TEXTURE); 
-                    glPopMatrix(); 
-                    glMatrixMode(GL_MODELVIEW); 
+                    glMatrixMode(GL_TEXTURE);
+                    glPopMatrix();
+                    glMatrixMode(GL_MODELVIEW);
                 }
             }
         }
@@ -1335,9 +1331,9 @@ struct vertmodel : model
         void setanim(int num, int frame, int range, float speed, int priority = 0)
         {
             if(frame<0 || range<=0 || !meshes->hasframes(frame, range))
-            { 
-                conoutf("invalid frame %d, range %d in model %s", frame, range, model->loadname); 
-                return; 
+            {
+                conoutf("invalid frame %d, range %d in model %s", frame, range, model->loadname);
+                return;
             }
             if(!anims) anims = new vector<animinfo>[NUMANIMS];
             animinfo &ai = anims[num].add();
@@ -1450,7 +1446,7 @@ struct vertmodel : model
         }
     }
 
-    void setspec(float spec) 
+    void setspec(float spec)
     {
         if(parts.empty()) loaddefaultparts();
         loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].spec = spec;
@@ -1508,7 +1504,7 @@ struct vertmodel : model
             fogplane = plane(0, 0, 1, o.z-refracting);
 
             lightcolor = color;
-            
+
             rdir = dir;
             rdir.rotate_around_z((-yaw-180.0f)*RAD);
 
@@ -1528,7 +1524,7 @@ struct vertmodel : model
         if(anim&ANIM_ENVMAP)
         {
             envmaptmu = 2;
-            if(renderpath==R_FIXEDFUNCTION) 
+            if(renderpath==R_FIXEDFUNCTION)
             {
                 if(refracting && refractfog) envmaptmu = 3;
                 glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
@@ -1713,7 +1709,7 @@ struct vertmodel : model
     }
 };
 
-bool vertmodel::enabletc = false, vertmodel::enablemtc = false, vertmodel::enablealphatest = false, vertmodel::enablealphablend = false, 
+bool vertmodel::enabletc = false, vertmodel::enablemtc = false, vertmodel::enablealphatest = false, vertmodel::enablealphablend = false,
      vertmodel::enableenvmap = false, vertmodel::enableglow = false, vertmodel::enablelighting = false, vertmodel::enablecullface = true,
      vertmodel::enablefog = false;
 vec vertmodel::lightcolor;

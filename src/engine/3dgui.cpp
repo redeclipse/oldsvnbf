@@ -13,15 +13,15 @@ static g3d_gui *windowhit = NULL;
 //text field state - only one ever active/focused
 static string fieldname, fieldtext;  //copy of while focused
 static int fieldpos = -1, fieldlen = 0; //-1=no focus, -2=wanting to commit
-static bool fieldactive; 
+static bool fieldactive;
 
-bool menukey(int code, bool isdown, int cooked) 
+bool menukey(int code, bool isdown, int cooked)
 {
-	if(code==-1 && g3d_windowhit(isdown, true)) return true;  
+	if(code==-1 && g3d_windowhit(isdown, true)) return true;
 	else if(code==-3 && g3d_windowhit(isdown, false)) return true;
-	
+
 	if(fieldpos<0) return false;
-	switch(code) 
+	switch(code)
 	{
 		case SDLK_RETURN:
 		case SDLK_KP_ENTER:
@@ -38,10 +38,10 @@ bool menukey(int code, bool isdown, int cooked)
 		default:
 			if(!cooked || (code<32) || (code>127)) return false;
 	}
-	if(!isdown) return true;	
+	if(!isdown) return true;
 	int len = strlen(fieldtext);
 	if(fieldpos>len) fieldpos = len;
-	switch(code) 
+	switch(code)
 	{
 		case SDLK_HOME:
 			fieldpos = 0;
@@ -57,15 +57,15 @@ bool menukey(int code, bool isdown, int cooked)
 			if(fieldpos < len) fieldpos++;
 			break;
 		case SDLK_DELETE:
-			if(fieldpos < len) 
+			if(fieldpos < len)
 			{
 				memmove(fieldtext+fieldpos, fieldtext+fieldpos+1, len-fieldpos);
 				fieldtext[len-1] = '\0';
 			}
 			break;
 		case SDLK_BACKSPACE:
-			if(fieldpos > 0) 
-			{	
+			if(fieldpos > 0)
+			{
 				fieldpos--;
 				memmove(fieldtext+fieldpos, fieldtext+fieldpos+1, len-fieldpos);
 				fieldtext[len-1] = '\0';
@@ -83,22 +83,13 @@ bool menukey(int code, bool isdown, int cooked)
 	return true;
 }
 
-#ifndef BFRONTIER // we only want 2d
-VARP(gui2d, 0, 1, 1);
-#endif // BFRONTIER
-
 static bool hascursor;
 static float cursorx = 0.5f, cursory = 0.5f;
 
 void g3d_cursorpos(float &x, float &y)
 {
-#ifdef BFRONTIER // gui2d always
 	x = cursorx;
 	y = cursory;
-#else
-	if(gui2d) { x = cursorx; y = cursory; }
-	else x = y = 0.5f;
-#endif
 }
 
 void g3d_resetcursor()
@@ -108,11 +99,7 @@ void g3d_resetcursor()
 
 bool g3d_movecursor(int dx, int dy)
 {
-#ifdef BFRONTIER // gui2d always
 	if(!hascursor) return false;
-#else
-	if(!gui2d || !hascursor) return false;
-#endif
 	const float CURSORSCALE = 500.0f;
 	cursorx = max(0, min(1, cursorx+dx/CURSORSCALE));
 	cursory = max(0, min(1, cursory+dy/CURSORSCALE));
@@ -148,37 +135,37 @@ struct gui : g3d_gui
 
 	static int ty, tx, tpos, *tcurrent, tcolor; //tracking tab size and position since uses different layout method...
 
-	void autotab() 
-	{ 
+	void autotab()
+	{
 		if(tcurrent)
 		{
 			if(layoutpass && !tpos) tcurrent = NULL; //disable tabs because you didn't start with one
-			if(!curdepth && (layoutpass ? 0 : cury) + ysize > guiautotab*FONTH) tab(NULL, tcolor); 
+			if(!curdepth && (layoutpass ? 0 : cury) + ysize > guiautotab*FONTH) tab(NULL, tcolor);
 		}
 	}
 
 	bool visible() { return (!tcurrent || tpos==*tcurrent) && !layoutpass; }
 
 	//tab is always at top of page
-	void tab(const char *name, int color) 
+	void tab(const char *name, int color)
 	{
 		if(curdepth != 0) return;
 		tcolor = color;
-		tpos++; 
-		if(!name) 
+		tpos++;
+		if(!name)
 		{
 			static string title;
 			s_sprintf(title)("%d", tpos);
 			name = title;
 		}
 		int w = text_width(name) - 2*INSERT;
-		if(layoutpass) 
-		{  
-			ty = max(ty, ysize); 
+		if(layoutpass)
+		{
+			ty = max(ty, ysize);
 			ysize = 0;
 		}
-		else 
-		{	
+		else
+		{
 			cury = -ysize;
 			int h = FONTH-2*INSERT,
 				x1 = curx + tx,
@@ -186,23 +173,23 @@ struct gui : g3d_gui
 				y1 = cury - ((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE-h,
 				y2 = cury;
 			bool hit = tcurrent && windowhit==this && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2;
-			if(hit) 
-			{	
+			if(hit)
+			{
 				*tcurrent = tpos; //roll-over to switch tab
 				color = 0xFF0000;
 			}
-			
+
 			skin_(x1-skinx[visible()?2:6]*SKIN_SCALE, y1-skiny[1]*SKIN_SCALE, w, h, visible()?10:19, 9);
 			text_(name, x1 + (skinx[3]-skinx[2])*SKIN_SCALE - INSERT, y1 + (skiny[2]-skiny[1])*SKIN_SCALE - INSERT, color, visible());
 		}
-		tx += w + ((skinx[5]-skinx[4]) + (skinx[3]-skinx[2]))*SKIN_SCALE; 
+		tx += w + ((skinx[5]-skinx[4]) + (skinx[3]-skinx[2]))*SKIN_SCALE;
 	}
 
 	bool ishorizontal() const { return curdepth&1; }
 	bool isvertical() const { return !ishorizontal(); }
 
 	void pushlist()
-	{	
+	{
 		if(layoutpass)
 		{
 			if(curlist>=0)
@@ -221,7 +208,7 @@ struct gui : g3d_gui
 			xsize = lists[curlist].w;
 			ysize = lists[curlist].h;
 		}
-		curdepth++;	
+		curdepth++;
 	}
 
 	void poplist()
@@ -235,7 +222,7 @@ struct gui : g3d_gui
 		curlist = l.parent;
 		curdepth--;
 		if(curlist>=0)
-		{	
+		{
 			xsize = lists[curlist].w;
 			ysize = lists[curlist].h;
 			if(ishorizontal()) cury -= l.h;
@@ -298,7 +285,7 @@ struct gui : g3d_gui
 		if(visible()) icon_(t, overlaid, false, curx, cury, size, ishit(size+SHADOW, size+SHADOW));
 		return layout(size+SHADOW, size+SHADOW);
 	}
-	
+
 	int texture(Texture *t, float scale)
 	{
 		autotab();
@@ -353,13 +340,13 @@ struct gui : g3d_gui
 	}
 
 	char *field(char *name, int color, int length, char *initval)
-	{	
+	{
 		length = min(length, (int)sizeof(string)-1);
         int w = char_width('%')*length + FONTW;
 		char *result = NULL;
         if(visible() && !layoutpass)
 		{
-			bool hit = ishit(w, FONTH), editing = !strcmp(fieldname, name);			
+			bool hit = ishit(w, FONTH), editing = !strcmp(fieldname, name);
 			if(hit && (mousebuttons&G3D_DOWN) && !editing) //mouse request focus
 			{
 				s_strcpy(fieldname, name);
@@ -371,13 +358,13 @@ struct gui : g3d_gui
 			}
 			if(editing && windowhit==this)
 			{
-				if(fieldpos==-2) 
+				if(fieldpos==-2)
 				{
 					result = fieldtext;
 					fieldpos = -1;
 					fieldname[0] = '\0';
 					editing = false;
-				} 
+				}
 				else if(hit) fieldactive = true;
 				else fieldpos = -1; // mouse wandered out of focus
 			}
@@ -393,7 +380,7 @@ struct gui : g3d_gui
 					fieldpos++;
 				}
 			}
-							
+
 			notextureshader->set();
 			glDisable(GL_TEXTURE_2D);
 			if(editing) glColor3f(1, 0, 0);
@@ -403,10 +390,10 @@ struct gui : g3d_gui
 			glEnd();
 			glEnable(GL_TEXTURE_2D);
 			defaultshader->set();
-			
+
             draw_text(editing ? fieldtext : (result ? result : initval), curx+FONTW/2, cury, color>>16, (color>>8)&0xFF, color&0xFF);
-			
-			if(editing && hit && fieldpos>=0 && (totalmillis/250)&1) 
+
+			if(editing && hit && fieldpos>=0 && (totalmillis/250)&1)
 			{
                 int fx = curx+FONTW/2 + text_width(fieldtext, fieldpos);
 				glColor3f(1, 0, 0);
@@ -414,7 +401,7 @@ struct gui : g3d_gui
 				glDisable(GL_TEXTURE_2D);
 				glBegin(GL_QUADS);
 				rect_(fx-2, cury, 4, FONTH);
-				glEnd();				
+				glEnd();
 				glEnable(GL_TEXTURE_2D);
 				defaultshader->set();
 			}
@@ -423,10 +410,10 @@ struct gui : g3d_gui
 		return result;
 	}
 
-	void rect_(float x, float y, float w, float h, int usetc = -1) 
+	void rect_(float x, float y, float w, float h, int usetc = -1)
 	{
         static const GLint tc[4][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
-		if(usetc>=0) glTexCoord2iv(tc[usetc]); 
+		if(usetc>=0) glTexCoord2iv(tc[usetc]);
 		glVertex2f(x, y);
 		if(usetc>=0) glTexCoord2iv(tc[(usetc+1)%4]);
 		glVertex2f(x + w, y);
@@ -437,11 +424,9 @@ struct gui : g3d_gui
 		xtraverts += 4;
 	}
 
-	void text_(const char *text, int x, int y, int color, bool shadow) 
+	void text_(const char *text, int x, int y, int color, bool shadow)
 	{
-#ifndef BFRONTIER
 		if(shadow) draw_text(text, x+SHADOW, y+SHADOW, 0x00, 0x00, 0x00, 0xC0);
-#endif
 		draw_text(text, x, y, color>>16, (color>>8)&0xFF, color&0xFF);
 	}
 
@@ -452,7 +437,7 @@ struct gui : g3d_gui
         notextureshader->set();
         glColor4ub(color>>16, (color>>8)&0xFF, color&0xFF, 0x80);
         int w = xsize, h = ysize;
-        if(inheritw>0) 
+        if(inheritw>0)
         {
             int parentw = curlist;
             while(inheritw>0 && lists[parentw].parent>=0)
@@ -479,17 +464,17 @@ struct gui : g3d_gui
         defaultshader->set();
     }
 
-	void icon_(Texture *t, bool overlaid, bool tiled, int x, int y, int size, bool hit) 
+	void icon_(Texture *t, bool overlaid, bool tiled, int x, int y, int size, bool hit)
 	{
 		float xs, ys, xt, yt;
 		if(tiled)
-		{	
-			xt = min(1.0f, t->xs/(float)t->ys), 
+		{
+			xt = min(1.0f, t->xs/(float)t->ys),
 			yt = min(1.0f, t->ys/(float)t->xs);
 			xs = size;
 			ys = size;
-		} 
-		else 
+		}
+		else
 		{
 			xt = 1.0f;
 			yt = 1.0f;
@@ -499,7 +484,7 @@ struct gui : g3d_gui
 			x += int((size-xs)/2);
 			y += int((size-ys)/2);
 		}
-		if(hit && actionon) 
+		if(hit && actionon)
 		{
 			glDisable(GL_TEXTURE_2D);
 			notextureshader->set();
@@ -508,9 +493,9 @@ struct gui : g3d_gui
 			rect_(x+SHADOW, y+SHADOW, xs, ys);
 			glEnd();
 			glEnable(GL_TEXTURE_2D);
-			defaultshader->set();	
+			defaultshader->set();
 		}
-		if(tiled) 
+		if(tiled)
 		{
 			static Shader *rgbonlyshader = NULL;
 			if(!rgbonlyshader) rgbonlyshader = lookupshaderbyname("rgbonly");
@@ -527,13 +512,9 @@ struct gui : g3d_gui
 		glTexCoord2f(0.0f,	1.0f/yt); glVertex2f(x,	y+ys);
 		glEnd();
 		if(tiled) defaultshader->set();
-		if(overlaid) 
+		if(overlaid)
 		{
-#ifdef BFRONTIER // moved data
 			if(!overlaytex) overlaytex = textureload("packages/textures/guioverlay.png");
-#else
-			if(!overlaytex) overlaytex = textureload("data/guioverlay.png");
-#endif
 			glColor3fv(light.v);
 			glBindTexture(GL_TEXTURE_2D, overlaytex->gl);
 			glBegin(GL_QUADS);
@@ -543,29 +524,25 @@ struct gui : g3d_gui
 	}
 
 	void line_(int size, float percent = 1.0f)
-	{		
+	{
 		if(visible())
 		{
-#ifdef BFRONTIER // moved data
 			if(!slidertex) slidertex = textureload("packages/textures/guislider.png");
-#else
-			if(!slidertex) slidertex = textureload("data/guislider.png");
-#endif
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, slidertex->gl);
 			glBegin(GL_QUADS);
-			if(percent < 0.99f) 
+			if(percent < 0.99f)
 			{
 				glColor4f(light.x, light.y, light.z, 0.375f);
-				if(ishorizontal()) 
+				if(ishorizontal())
 					rect_(curx + FONTH/2 - size, cury, size*2, ysize, 0);
 				else
 					rect_(curx, cury + FONTH/2 - size, xsize, size*2, 1);
 			}
 			glColor3fv(light.v);
-			if(ishorizontal()) 
+			if(ishorizontal())
 				rect_(curx + FONTH/2 - size, cury + ysize*(1-percent), size*2, ysize*percent, 0);
-			else 
+			else
 				rect_(curx, cury + FONTH/2 - size, xsize*percent, size*2, 1);
 			glEnd();
 		}
@@ -579,21 +556,17 @@ struct gui : g3d_gui
 		if(icon) w += ICON_SIZE;
 		if(icon && text) w += padding;
 		if(text) w += text_width(text);
-	
+
 		if(visible())
 		{
 			bool hit = ishit(w, FONTH);
-			if(hit && clickable) color = 0xFF0000;	
-			int x = curx;	
+			if(hit && clickable) color = 0xFF0000;
+			int x = curx;
 			if(isvertical() && center) x += (xsize-w)/2;
-		
+
 			if(icon)
 			{
-#ifdef BFRONTIER
 				s_sprintfd(tname)("packages/textures/%s.jpg", icon);
-#else
-				s_sprintfd(tname)("packages/icons/%s.jpg", icon);
-#endif
 				icon_(textureload(tname), false, false, x, cury, ICON_SIZE, clickable && hit);
 				x += ICON_SIZE;
 			}
@@ -607,96 +580,79 @@ struct gui : g3d_gui
 	static const int skinx[], skiny[];
 	static const struct patch { ushort left, right, top, bottom; uchar flags; } patches[];
 
-	void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n) 
+	void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n)
 	{
-#ifdef BFRONTIER // moved data
 		if(!skintex) skintex = textureload("packages/textures/guiskin.png");
-#else
-		if(!skintex) skintex = textureload("data/guiskin.png");
-#endif
 		glBindTexture(GL_TEXTURE_2D, skintex->gl);
 		int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
 		float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);
-		
-#ifdef BFRONTIER // gui2d always
+
 		bool quads = false;
 		glColor4f(1.0f, 1.0f, 1.0f, 0.80f);
-#else
-		loopj(gui2d ? 1 : 2)
-		{	
-			bool quads = false;
-			if(!gui2d) glDepthFunc(j ? GL_LEQUAL : GL_GREATER);
-			glColor4f(j ? light.x : 1.0f, j ? light.y : 1.0f, j ? light.z : 1.0f, gui2d || j ? 0.80f : 0.35f); //ghost when its behind something in depth
-#endif
-			loopi(n)
+		loopi(n)
+		{
+			const patch &p = patches[start+i];
+			int left = skinx[p.left]*SKIN_SCALE, right = skinx[p.right]*SKIN_SCALE,
+				top = skiny[p.top]*SKIN_SCALE, bottom = skiny[p.bottom]*SKIN_SCALE;
+			float tleft = left*wscale, tright = right*wscale,
+					ttop = top*hscale, tbottom = bottom*hscale;
+			if(p.flags&0x1)
 			{
-				const patch &p = patches[start+i];
-				int left = skinx[p.left]*SKIN_SCALE, right = skinx[p.right]*SKIN_SCALE,
-					top = skiny[p.top]*SKIN_SCALE, bottom = skiny[p.bottom]*SKIN_SCALE;
-				float tleft = left*wscale, tright = right*wscale,
-					  ttop = top*hscale, tbottom = bottom*hscale;
-				if(p.flags&0x1)
-				{
-					gapx1 = left;
-					gapx2 = right;
-				}
-				else if(left >= gapx2)
-				{
-					left += gapw - (gapx2-gapx1);
-					right += gapw - (gapx2-gapx1);
-				}
-				if(p.flags&0x10)
-				{
-					gapy1 = top;
-					gapy2 = bottom;
-				}
-				else if(top >= gapy2)
-				{
-					top += gaph - (gapy2-gapy1);
-					bottom += gaph - (gapy2-gapy1);
-				}
-				
-				//multiple tiled quads if necessary rather than a single stretched one
-				int ystep = bottom-top;
-				int yo = y+top;
-				while(ystep > 0) 
-				{
-					if(p.flags&0x10 && yo+ystep-(y+top) > gaph) 
-					{
-						ystep = gaph+y+top-yo;
-						tbottom = ttop+ystep*hscale;
-					}
-					int xstep = right-left;
-					int xo = x+left;
-					float tright2 = tright;
-					while(xstep > 0) 
-					{
-						if(p.flags&0x01 && xo+xstep-(x+left) > gapw) 
-						{
-							xstep = gapw+x+left-xo; 
-							tright = tleft+xstep*wscale;
-						}
-						if(!quads) { quads = true; glBegin(GL_QUADS); }
-						glTexCoord2f(tleft,  ttop);	glVertex2i(xo,		yo);
-						glTexCoord2f(tright, ttop);	glVertex2i(xo+xstep, yo);
-						glTexCoord2f(tright, tbottom); glVertex2i(xo+xstep, yo+ystep);
-						glTexCoord2f(tleft,  tbottom); glVertex2i(xo,		yo+ystep);
-						xtraverts += 4;
-						if(!(p.flags&0x01)) break;
-						xo += xstep;
-					}
-					tright = tright2;
-					if(!(p.flags&0x10)) break;
-					yo += ystep;
-				}
+				gapx1 = left;
+				gapx2 = right;
 			}
-			if(quads) glEnd();
-#ifndef BFRONTIER // gui2d always
-			else break; //if it didn't happen on the first pass, it won't happen on the second..
+			else if(left >= gapx2)
+			{
+				left += gapw - (gapx2-gapx1);
+				right += gapw - (gapx2-gapx1);
+			}
+			if(p.flags&0x10)
+			{
+				gapy1 = top;
+				gapy2 = bottom;
+			}
+			else if(top >= gapy2)
+			{
+				top += gaph - (gapy2-gapy1);
+				bottom += gaph - (gapy2-gapy1);
+			}
+
+			//multiple tiled quads if necessary rather than a single stretched one
+			int ystep = bottom-top;
+			int yo = y+top;
+			while(ystep > 0)
+			{
+				if(p.flags&0x10 && yo+ystep-(y+top) > gaph)
+				{
+					ystep = gaph+y+top-yo;
+					tbottom = ttop+ystep*hscale;
+				}
+				int xstep = right-left;
+				int xo = x+left;
+				float tright2 = tright;
+				while(xstep > 0)
+				{
+					if(p.flags&0x01 && xo+xstep-(x+left) > gapw)
+					{
+						xstep = gapw+x+left-xo;
+						tright = tleft+xstep*wscale;
+					}
+					if(!quads) { quads = true; glBegin(GL_QUADS); }
+					glTexCoord2f(tleft,  ttop);	glVertex2i(xo,		yo);
+					glTexCoord2f(tright, ttop);	glVertex2i(xo+xstep, yo);
+					glTexCoord2f(tright, tbottom); glVertex2i(xo+xstep, yo+ystep);
+					glTexCoord2f(tleft,  tbottom); glVertex2i(xo,		yo+ystep);
+					xtraverts += 4;
+					if(!(p.flags&0x01)) break;
+					xo += xstep;
+				}
+				tright = tright2;
+				if(!(p.flags&0x10)) break;
+				yo += ystep;
+			}
 		}
-		if(!gui2d) glDepthFunc(GL_ALWAYS);
-#endif
-	} 
+		if(quads) glEnd();
+	}
 
 	vec origin, scale;
 	float dist;
@@ -720,12 +676,8 @@ struct gui : g3d_gui
 	}
 
 	void start(int starttime, float initscale, int *tab, bool allowinput)
-	{	
-#ifdef BFRONTIER // gui2d always
-		initscale *= 0.025f; 
-#else
-		if(gui2d) initscale *= 0.025f; 
-#endif
+	{
+		initscale *= 0.025f;
 		basescale = initscale;
 		if(layoutpass) scale.x = scale.y = scale.z = basescale*min((totalmillis-starttime)/300.0f, 1.0f);
 		passthrough = scale.x<basescale || !allowinput;
@@ -742,33 +694,13 @@ struct gui : g3d_gui
 		else
 		{
 			if(tcurrent && !*tcurrent) tcurrent = NULL;
-			cury = -ysize; 
+			cury = -ysize;
 			curx = -xsize/2;
-			
+
 			glPushMatrix();
-#ifndef BFRONTIER // gui2d always
-			if(gui2d)
-			{
-#endif
-				glTranslatef(origin.x, origin.y, origin.z);
-				glScalef(scale.x, scale.y, scale.z);
-				light = vec(1, 1, 1);
-#ifndef BFRONTIER // gui2d always
-			}
-			else
-			{
-				float yaw = atan2f(origin.y-camera1->o.y, origin.x-camera1->o.x);
-				glTranslatef(origin.x, origin.y, origin.z);
-				glRotatef(yaw/RAD-90, 0, 0, 1); 
-				glRotatef(-90, 1, 0, 0);
-				glScalef(-scale.x, scale.y, scale.z);
-			
-				vec dir;
-				lightreaching(origin, light, dir, 0, 0.5f); 
-				float intensity = vec(yaw, 0.0f).dot(dir);
-				light.mul(1.0f + max(intensity, 0));
-			}
-#endif
+			glTranslatef(origin.x, origin.y, origin.z);
+			glScalef(scale.x, scale.y, scale.z);
+			light = vec(1, 1, 1);
 
 			skin_(curx-skinx[2]*SKIN_SCALE, cury-skiny[5]*SKIN_SCALE, xsize, ysize, 0, 9);
 			if(!tcurrent) skin_(curx-skinx[5]*SKIN_SCALE, cury-skiny[5]*SKIN_SCALE, xsize, 0, 9, 1);
@@ -778,38 +710,21 @@ struct gui : g3d_gui
 	void end()
 	{
 		if(layoutpass)
-		{	
+		{
 			xsize = max(tx, xsize);
 			ysize = max(ty, ysize);
 			ysize = max(ysize, (skiny[6]-skiny[5])*SKIN_SCALE);
 
 			if(tcurrent) *tcurrent = max(1, min(*tcurrent, tpos));
-#ifdef BFRONTIER // gui2d always, passthrough has problems
 			adjustscale();
+
 			if(!windowhit)
-#else
-			if(gui2d) adjustscale();
-			if(!windowhit && !passthrough)
-#endif
 			{
 				int intersects = INTERSECT_MIDDLE;
-#ifndef BFRONTIER // gui2d always
-				if(gui2d)
-				{
-#endif
-					hitx = (cursorx - origin.x)/scale.x;
-					hity = (cursory - origin.y)/scale.y;
-#ifndef BFRONTIER // gui2d always
-				}
-				else
-				{
-					vec planenormal = vec(origin).sub(camera1->o).set(2, 0).normalize(), intersectionpoint;
-					intersects = intersect_plane_line(camera1->o, worldpos, origin, planenormal, intersectionpoint);
-					vec intersectionvec = vec(intersectionpoint).sub(origin), xaxis(-planenormal.y, planenormal.x, 0);
-					hitx = xaxis.dot(intersectionvec)/scale.x;
-					hity = -intersectionvec.z/scale.y;
-				}
-#endif
+
+				hitx = (cursorx - origin.x)/scale.x;
+				hity = (cursory - origin.y)/scale.y;
+
 				if(intersects>=INTERSECT_MIDDLE && hitx>=-xsize/2 && hitx<=xsize/2 && hity<=0)
 				{
 					if(hity>=-ysize || (tcurrent && hity>=-ysize-(FONTH-2*INSERT)-((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE && hitx<=tx-xsize/2))
@@ -832,8 +747,8 @@ Texture *gui::skintex = NULL, *gui::overlaytex = NULL, *gui::slidertex = NULL;
 const int gui::skiny[] = {0, 7, 21, 34, 48, 56, 104, 111, 116, 128},
 		  gui::skinx[] = {0, 11, 23, 37, 105, 119, 137, 151, 215, 229, 245, 256};
 //Note: skinx[3]-skinx[2] = skinx[7]-skinx[6]
-//	  skinx[5]-skinx[4] = skinx[9]-skinx[8]		 
-const gui::patch gui::patches[] = 
+//	  skinx[5]-skinx[4] = skinx[9]-skinx[8]
+const gui::patch gui::patches[] =
 { //arguably this data can be compressed - it depends on what else needs to be skinned in the future
 	{1,2,3,5,  0},	// body
 	{2,9,4,5,  0x01},
@@ -891,16 +806,9 @@ int g3d_sort(gui *a, gui *b) { return (int)(a->dist>b->dist)*2-1; }
 
 bool g3d_windowhit(bool on, bool act)
 {
-#ifdef BFRONTIER // gui2d always
 	if(act) mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
 	else if(!on && windowhit) cleargui(1);
 	return hascursor;
-#else
-	extern int cleargui(int n);
-	if(act) mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
-	else if(!on && windowhit) cleargui(1);
-	return gui2d ? hascursor : windowhit!=NULL;
-#endif
 }
 
 char *g3d_fieldname()
@@ -908,50 +816,37 @@ char *g3d_fieldname()
 	return fieldname;
 }
 
-void g3d_render()	
+void g3d_render()
 {
 	windowhit = NULL;
 	if(actionon) mousebuttons |= G3D_PRESSED;
 	gui::reset();
 	guis.setsize(0);
-	
+
 	// call all places in the engine that may want to render a gui from here, they call g3d_addgui()
 	extern void g3d_texturemenu();
-	
+
 	g3d_texturemenu();
 	g3d_mainmenu();
 	cl->g3d_gamemenus();
-	
+
 	guis.sort(g3d_sort);
-	
+
 	bool fieldfocus = (fieldpos>=0);
 	fieldactive = false;
 	hascursor = false;
 
 	if(guis.length())
 	{
-#ifndef BFRONTIER // gui2d always
-		if(gui2d)
-		{
-#endif
-			glMatrixMode(GL_PROJECTION);
-			glPushMatrix();
-			glLoadIdentity();
-			glOrtho(0, 1, 1, 0, -1, 1);
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(0, 1, 1, 0, -1, 1);
 
-			glMatrixMode(GL_MODELVIEW);
-			glPushMatrix();
-			glLoadIdentity();
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
 
-#ifndef BFRONTIER // gui2d always
-			glDisable(GL_DEPTH_TEST);
-		}
-		else
-		{
-			glDepthFunc(GL_ALWAYS);
-			glDepthMask(GL_FALSE);
-		}
-#endif
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
@@ -964,28 +859,15 @@ void g3d_render()
 	if(guis.length())
 	{
 		glDisable(GL_BLEND);
-#ifndef BFRONTIER // gui2d always
-		if(gui2d)
-		{
-			glEnable(GL_DEPTH_TEST);
-#endif
-	
-			glMatrixMode(GL_PROJECTION);
-			glPopMatrix();
-			glMatrixMode(GL_MODELVIEW);
-			glPopMatrix();
-#ifndef BFRONTIER // gui2d always
-		}
-		else
-		{ 
-			glDepthFunc(GL_LESS);
-			glDepthMask(GL_TRUE);
-		}
-#endif
+
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
 	}
 
 	if(!fieldactive) fieldpos = -1; //no hit fields, so loose focus - mainly for menu closed
 	if((fieldpos>=0) != fieldfocus) SDL_EnableUNICODE(fieldpos>=0);
-	
+
 	mousebuttons = 0;
 }
