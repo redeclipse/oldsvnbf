@@ -453,14 +453,19 @@ int getmatvec(vec v)
 	return MAT_AIR;
 }
 
+VAR(curfps, 1, 0, -1);
+VAR(bestfps, 1, 0, -1);
+VAR(worstfps, 1, 0, -1);
+
 int lastperf = 0;
 
+VARP(perfadjust, 0, 0, 1);
+VARP(perfall, 0, 0, 1);
 VARP(perfmin, 0, 1, 100);
 VARP(perfmax, 0, 100, 100);
 VARFP(perffps, 0, 20, 100, perffps = min(perffps, maxfps-1));
 VARP(perfrate, 0, 500, 10000);
 VARFP(perflimit, 0, 10, 100, perflimit = min(perflimit, perffps-1));
-VARP(perfall, 0, 0, 1);
 
 void perfset(int level)
 {
@@ -507,10 +512,7 @@ void perfset(int level)
 	}
 }
 
-VARFP(perf, 0, 100, 100, perfset(perf));
-VAR(curfps, 1, 0, -1);
-VAR(bestfps, 1, 0, -1);
-VAR(worstfps, 1, 0, -1);
+VARFP(perflevel, 0, 100, 100, perfset(perflevel));
 
 void perfcheck()
 {
@@ -522,13 +524,13 @@ void perfcheck()
 	setvar("bestfps", fps+bestdiff);
 	setvar("worstfps", fps-worstdiff);
 
-	if (perffps && (lastmillis-lastperf > perfrate || fps-worstdiff < perflimit))
+	if (perfadjust && (lastmillis-lastperf > perfrate || fps-worstdiff < perflimit))
 	{
 		float amt = float(fps-worstdiff)/float(perffps);
 
-		if (fps-worstdiff < perflimit && perf > perfmin) setvar("perf", perfmin, true);
-		else if (amt < 1.f) setvar("perf", max(perf-int((1.f-amt)*10.f), perfmin), true);
-		else if (amt > 1.f) setvar("perf", min(perf+int(amt), perfmax), true);
+		if (fps-worstdiff < perflimit && perflevel > perfmin) setvar("perflevel", perfmin, true);
+		else if (amt < 1.f) setvar("perflevel", max(perflevel-int((1.f-amt)*10.f), perfmin), true);
+		else if (amt > 1.f) setvar("perflevel", min(perflevel+int(amt), perfmax), true);
 	}
 }
 
