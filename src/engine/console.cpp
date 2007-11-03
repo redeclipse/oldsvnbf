@@ -3,7 +3,6 @@
 #include "pch.h"
 #include "engine.h"
 
-#ifdef BFRONTIER // extended console
 VARP(centerblend, 0, 99, 100); // so it doesn't get hooked by hudblend defaults
 VARP(centertime, 200, 5000, INT_MAX-1);
 VARP(centerlines, 0, 3, 5);
@@ -14,10 +13,6 @@ VARP(contime, 200, 20000, INT_MAX-1);
 ICOMMAND(centerprint, "C", (char *s), console("\f6%s", CON_CENTER, s););
 
 vector<cline> conlines[CN_MAX];
-#else
-struct cline { char *cref; int outtime; };
-vector<cline> conlines;
-#endif
 
 int conskip = 0;
 
@@ -33,7 +28,6 @@ void setconskip(int *n)
 
 COMMANDN(conskip, setconskip, "i");
 
-#ifdef BFRONTIER // extended console
 void conline(const char *sf, int n, int type = CON_LEFT)
 {
 	int _types[] = { CON_LEFT, CON_RIGHT, CON_CENTER };
@@ -63,7 +57,7 @@ void conline(const char *sf, int n, int type = CON_LEFT)
 				addcref(' ');
 				s_strcat(cl.cref, sf);
 			}
-			
+
 			addcref(0);
 			s_strcat(cl.cref, sf);
 
@@ -84,30 +78,9 @@ void conline(const char *sf, int n, int type = CON_LEFT)
 		}
 	}
 }
-#else
-void conline(const char *sf, bool highlight)		// add a line to the console buffer
-{
-	cline cl;
-	cl.cref = conlines.length()>100 ? conlines.pop().cref : newstringbuf("");	// constrain the buffer size
-	cl.outtime = totalmillis;						// for how long to keep line on screen
-	conlines.insert(0,cl);
-	if(highlight)									// show line in a different colour, for chat etc.
-	{
-		cl.cref[0] = '\f';
-		cl.cref[1] = '0';
-		cl.cref[2] = 0;
-		s_strcat(cl.cref, sf);
-	}
-	else
-	{
-		s_strcpy(cl.cref, sf);
-	}
-}
-#endif
 
 #define CONSPAD (FONTH/3)
 
-#ifdef BFRONTIER // extended console
 void console(const char *s, int type, ...)
 {
 	extern int scr_w, scr_h;
@@ -144,29 +117,6 @@ void conoutf(const char *s, ...)
 	s_sprintfdv(sf, s);
 	console("%s", CON_LEFT, sf);
 };
-#else
-void conoutf(const char *s, ...)
-{
-	extern int scr_w, scr_h;
-	int w = screen ? screen->w : scr_w, h = screen ? screen->h : scr_h;
-	gettextres(w, h);
-	s_sprintfdv(sf, s);
-	string sp;
-	filtertext(sp, sf);
-	puts(sp);
-	s = sf;
-	int n = 0, visible;
-	while((visible = curfont ? text_visible(s, 3*w - 2*CONSPAD - 2*FONTH/3) : strlen(s))) // cut strings to fit on screen
-	{
-		const char *newline = (const char *)memchr(s, '\n', visible);
-		if(newline) visible = newline+1-s;
-		string t;
-		s_strncpy(t, s, visible+1);
-		conline(t, n++!=0);
-		s += visible;
-	}
-}
-#endif
 
 bool fullconsole = false;
 void toggleconsole() { fullconsole = !fullconsole; }
@@ -214,7 +164,6 @@ void blendbox(int x1, int y1, int x2, int y2, bool border)
 
 VARP(consize, 0, 5, 100);
 
-#ifdef BFRONTIER // extended console
 int renderconsole(int w, int h)					// render buffer taking into account time & scrolling
 {
 	if (!menuactive() && centerlines)
@@ -242,7 +191,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 	{
 		vector<char *> refs;
 		refs.setsizenodelete(0);
-		
+
 		if(numl)
 		{
 			loopv(conlines[k])
@@ -254,7 +203,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 				}
 			}
 		}
-		
+
 		loopvrev(refs)
 		{
 			draw_textx("%s", k ? w*3-(CONSPAD+FONTH/3) : CONSPAD+FONTH/3, CONSPAD+FONTH*(refs.length()-i-1)+FONTH/3, 255, 255, 255, int(255.f*(conblend*0.01f)), false, k?AL_RIGHT:AL_LEFT, refs[i]);
@@ -263,34 +212,6 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 	}
 	return CONSPAD+len*FONTH+2*FONTH/3;
 }
-#else
-int renderconsole(int w, int h)					// render buffer taking into account time & scrolling
-{
-	if(fullconsole)
-	{
-		int numl = h*3/3/FONTH;
-		int offset = min(conskip, max(conlines.length() - numl, 0));
-		blendbox(CONSPAD, CONSPAD, w*3-CONSPAD, 2*CONSPAD+numl*FONTH+2*FONTH/3, true);
-		loopi(numl) draw_text(offset+i>=conlines.length() ? "" : conlines[offset+i].cref, CONSPAD+FONTH/3, CONSPAD+FONTH*(numl-i-1)+FONTH/3); 
-		return 2*CONSPAD+numl*FONTH+2*FONTH/3;
-	}
-	else
-	{
-		static vector<char *> refs;
-		refs.setsizenodelete(0);
-		if(consize) loopv(conlines) if(conskip ? i>=conskip-1 || i>=conlines.length()-consize : totalmillis-conlines[i].outtime<20000)
-		{
-			refs.add(conlines[i].cref);
-			if(refs.length()>=consize) break;
-		}
-		loopvj(refs)
-		{
-			draw_text(refs[j], CONSPAD+FONTH/3, CONSPAD+FONTH*(refs.length()-j-1)+FONTH/3);
-		}
-		return CONSPAD+refs.length()*FONTH+2*FONTH/3;
-	}
-}
-#endif
 
 // keymap is defined externally in keymap.cfg
 
@@ -302,7 +223,7 @@ struct keym
 	~keym() { DELETEA(name); DELETEA(action); DELETEA(editaction); }
 };
 
-vector<keym> keyms;								 
+vector<keym> keyms;
 
 void keymap(char *code, char *key)
 {
@@ -313,7 +234,7 @@ void keymap(char *code, char *key)
 	km.action = newstring("");
 	km.editaction = newstring("");
 }
-	
+
 COMMAND(keymap, "ss");
 
 keym *keypressed = NULL;
@@ -323,19 +244,19 @@ keym *findbind(char *key)
 {
 	loopv(keyms) if(!strcasecmp(keyms[i].name, key)) return &keyms[i];
 	return NULL;
-}	
-	
+}
+
 void getbind(char *key)
 {
 	keym *km = findbind(key);
 	result(km ? km->action : "");
-}	
- 
+}
+
 void geteditbind(char *key)
 {
 	keym *km = findbind(key);
 	result(km ? km->editaction : "");
-}  
+}
 
 void bindkey(char *key, char *action, bool edit)
 {
@@ -378,7 +299,7 @@ COMMAND(mapmsg, "s");
 void pasteconsole()
 {
 	#ifdef WIN32
-	if(!IsClipboardFormatAvailable(CF_TEXT)) return; 
+	if(!IsClipboardFormatAvailable(CF_TEXT)) return;
 	if(!OpenClipboard(NULL)) return;
 	char *cb = (char *)GlobalLock(GetClipboardData(CF_TEXT));
 	s_strcat(commandbuf, cb);
@@ -390,7 +311,7 @@ void pasteconsole()
 	mac_pasteconsole(commandbuf);
 	#else
 	SDL_SysWMinfo wminfo;
-	SDL_VERSION(&wminfo.version); 
+	SDL_VERSION(&wminfo.version);
 	wminfo.subsystem = SDL_SYSWM_X11;
 	if(!SDL_GetWMInfo(&wminfo)) return;
 	int cbsize;
@@ -457,12 +378,12 @@ extern bool menukey(int code, bool isdown, int cooked);
 void keypress(int code, bool isdown, int cooked)
 {
 	#ifdef __APPLE__
-		#define MOD_KEYS (KMOD_LMETA|KMOD_RMETA) 
+		#define MOD_KEYS (KMOD_LMETA|KMOD_RMETA)
 	#else
 		#define MOD_KEYS (KMOD_LCTRL|KMOD_RCTRL)
 	#endif
-	
-	if(menukey(code, isdown, cooked)) return;  // 3D GUI mouse button intercept	
+
+	if(menukey(code, isdown, cooked)) return;  // 3D GUI mouse button intercept
 	else if(saycommandon)								// keystrokes go to commandline
 	{
 		if(isdown)
@@ -473,19 +394,19 @@ void keypress(int code, bool isdown, int cooked)
 				case SDLK_KP_ENTER:
 					break;
 
-				case SDLK_HOME: 
-					if(strlen(commandbuf)) commandpos = 0; 
+				case SDLK_HOME:
+					if(strlen(commandbuf)) commandpos = 0;
 					break;
 
-				case SDLK_END: 
-					commandpos = -1; 
+				case SDLK_END:
+					commandpos = -1;
 					break;
 
 				case SDLK_DELETE:
 				{
 					int len = (int)strlen(commandbuf);
 					if(commandpos<0) break;
-					memmove(&commandbuf[commandpos], &commandbuf[commandpos+1], len - commandpos);	
+					memmove(&commandbuf[commandpos], &commandbuf[commandpos+1], len - commandpos);
 					resetcomplete();
 					if(commandpos>=len-1) commandpos = -1;
 					break;
@@ -495,7 +416,7 @@ void keypress(int code, bool isdown, int cooked)
 				{
 					int len = (int)strlen(commandbuf), i = commandpos>=0 ? commandpos : len;
 					if(i<1) break;
-					memmove(&commandbuf[i-1], &commandbuf[i], len - i + 1);  
+					memmove(&commandbuf[i-1], &commandbuf[i], len - i + 1);
 					resetcomplete();
 					if(commandpos>0) commandpos--;
 					else if(!commandpos && len<=1) commandpos = -1;
@@ -510,30 +431,28 @@ void keypress(int code, bool isdown, int cooked)
 				case SDLK_RIGHT:
 					if(commandpos>=0 && ++commandpos>=(int)strlen(commandbuf)) commandpos = -1;
 					break;
-						
+
 				case SDLK_UP:
 					if(histpos) s_strcpy(commandbuf, vhistory[--histpos]);
 					break;
-				
+
 				case SDLK_DOWN:
 					if(histpos<vhistory.length()) s_strcpy(commandbuf, vhistory[histpos++]);
 					break;
-					
+
 				case SDLK_TAB:
 					complete(commandbuf);
 					if(commandpos>=0 && commandpos>=(int)strlen(commandbuf)) commandpos = -1;
 					break;
-						
+
 				case SDLK_v:
 					if(SDL_GetModState()&MOD_KEYS) { pasteconsole(); return; }
 
 				default:
 					resetcomplete();
-#ifdef BFRONTIER
-					if (code == SDLK_f && (SDL_GetModState()&MOD_KEYS)) cooked = '\f';
-#endif
-					if(cooked) 
-					{ 
+					if (code == SDLK_f && (SDL_GetModState() & MOD_KEYS)) cooked = '\f';
+					if (cooked)
+					{
 						size_t len = (int)strlen(commandbuf);
 						if(len+1<sizeof(commandbuf))
 						{
@@ -590,7 +509,7 @@ void keypress(int code, bool isdown, int cooked)
 				char *&action = editmode && k.editaction[0] ? k.editaction : k.action;
 				keyaction = action;
 				keypressed = &k;
-				execute(keyaction); 
+				execute(keyaction);
 				keypressed = NULL;
 				if(keyaction!=action) delete[] keyaction;
 			}
@@ -688,7 +607,7 @@ void addcomplete(char *command, int type, char *dir, char *ext)
 	if(!val)
 	{
         filesval *f = new filesval(type, dir, ext);
-        if(type==FILES_LIST) explodelist(dir, f->files); 
+        if(type==FILES_LIST) explodelist(dir, f->files);
         val = &completefiles[fileskey(type, f->dir, f->ext)];
 		*val = f;
 	}
@@ -775,8 +694,7 @@ void writecompletions(FILE *f)
 	);
 }
 
-#ifdef BFRONTIER // joystick support
-char* getkeyaction(char* keyname)
+char *getkeyaction(char* keyname)
 {
 	char* key = newstring(keyname);
 	for(char *x = key; *x; x++) *x = toupper(*x);
@@ -788,4 +706,3 @@ char* getkeyaction(char* keyname)
 	delete key;
 	return NULL;
 }
-#endif

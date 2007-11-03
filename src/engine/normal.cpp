@@ -6,7 +6,7 @@
 struct nvec : svec
 {
 	nvec(const vec &v) : svec(short(v.x*(1<<NORMAL_BITS)), short(v.y*(1<<NORMAL_BITS)), short(v.z*(1<<NORMAL_BITS))) {}
-	
+
 	float dot(const vec &o) const
 	{
 		return x*o.x + y*o.y + z*o.z;
@@ -14,7 +14,7 @@ struct nvec : svec
 
 	vec tovec() const { return vec(x, y, z).normalize(); }
 };
-		
+
 struct normal
 {
 	uchar face;
@@ -31,7 +31,7 @@ struct nkey
 	 : v(((origin.x&~VVEC_INT_MASK)<<VVEC_FRAC) | offset.x,
 		 ((origin.y&~VVEC_INT_MASK)<<VVEC_FRAC) | offset.y,
 		 ((origin.z&~VVEC_INT_MASK)<<VVEC_FRAC) | offset.z)
-	{}			
+	{}
 };
 
 struct nval
@@ -51,11 +51,7 @@ static inline uint hthash(const nkey &k)
 
 hashtable<nkey, nval> normals;
 
-#ifdef BFRONTIER
 VARW(lerpangle, 0, 44, 180);
-#else
-VARF(lerpangle, 0, 44, 180, hdr.lerpangle = lerpangle);
-#endif
 
 static float lerpthreshold = 0;
 
@@ -118,13 +114,8 @@ bool findnormal(const ivec &origin, int orient, const vvec &offset, vec &v, int 
 	return false;
 }
 
-#ifdef BFRONTIER
 VARW(lerpsubdiv, 0, 2, 4);
 VARW(lerpsubdivsize, 4, 4, 128);
-#else
-VAR(lerpsubdiv, 0, 2, 4);
-VAR(lerpsubdivsize, 4, 4, 128);
-#endif
 
 static uint progress = 0;
 
@@ -167,7 +158,7 @@ void addnormals(cube &c, const ivec &o, int size)
 		if(lerpsubdiv && size > lerpsubdivsize) // && faceedges(c, i) == F_SOLID)
 		{
 			subdiv = 1<<lerpsubdiv;
-			while(size/subdiv < lerpsubdivsize) subdiv >>= 1; 
+			while(size/subdiv < lerpsubdivsize) subdiv >>= 1;
 		}
 		vec avg;
 		if(numplanes >= 2)
@@ -215,7 +206,7 @@ void addnormals(cube &c, const ivec &o, int size)
 void calcnormals()
 {
 	if(!lerpangle) return;
-	lerpthreshold = (1<<NORMAL_BITS)*cos(lerpangle*RAD); 
+	lerpthreshold = (1<<NORMAL_BITS)*cos(lerpangle*RAD);
 	progress = 1;
 	loopi(8) addnormals(worldroot[i], ivec(i, 0, 0, 0, hdr.worldsize/2), hdr.worldsize/2);
 }
@@ -319,7 +310,7 @@ void updatelerpbounds(float v, const lerpvert *lv, int numv, lerpbounds &start, 
 }
 
 void lerpnormal(float v, const lerpvert *lv, int numv, lerpbounds &start, lerpbounds &end, vec &normal, vec &nstep)
-{	
+{
 	updatelerpbounds(v, lv, numv, start, end);
 
 	if(start.u + 1 > end.u)
@@ -334,7 +325,7 @@ void lerpnormal(float v, const lerpvert *lv, int numv, lerpbounds &start, lerpbo
 		vec nstart(start.normal), nend(end.normal);
 		nstart.normalize();
 		nend.normalize();
-		
+
 		nstep = nend;
 		nstep.sub(nstart);
 		nstep.div(end.u-start.u);
@@ -344,11 +335,11 @@ void lerpnormal(float v, const lerpvert *lv, int numv, lerpbounds &start, lerpbo
 		normal.add(nstart);
 		normal.normalize();
 	}
-	 
+
 	start.normal.add(start.nstep);
 	start.u += start.ustep;
 
-	end.normal.add(end.nstep); 
+	end.normal.add(end.nstep);
 	end.u += end.ustep;
 }
 

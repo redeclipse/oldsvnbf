@@ -33,13 +33,9 @@ void fatal(char *s, char *o)	// failure exit
     SDL_ShowCursor(1);
 	s_sprintfd(msg)("%s%s\n", s, o);
 	printf(msg);
-	#ifdef WIN32
-#ifdef BFRONTIER // blood frontier
-		MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
-#else
-		MessageBox(NULL, msg, "sauerbraten fatal error", MB_OK|MB_SYSTEMMODAL);
+#ifdef WIN32
+	MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
 #endif
-	#endif
     SDL_Quit();
 	exit(EXIT_FAILURE);
 }
@@ -47,22 +43,15 @@ void fatal(char *s, char *o)	// failure exit
 SDL_Surface *screen = NULL;
 
 int curtime;
-int totalmillis = 0, lastmillis = 0;
-
 dynent *player = NULL;
 
 static bool initing = false, restoredinits = false;
 bool initwarning()
 {
-	if(!initing) 
+	if(!initing)
 	{
-#ifdef BFRONTIER // blood frontier
 		if(restoredinits) conoutf("You must restart for this setting to take effect.");
 		else conoutf("You must restart with the -r command-line option for this setting to take effect.");
-#else
-		if(restoredinits) conoutf("Please restart Sauerbraten for this setting to take effect.");
-		else conoutf("Please restart Sauerbraten with the -r command-line option for this setting to take effect.");
-#endif
 	}
 	return !initing;
 }
@@ -90,18 +79,11 @@ void writeinitcfg()
 	extern int useshaders, shaderprecision;
 	fprintf(f, "shaders %d\n", useshaders);
 	fprintf(f, "shaderprecision %d\n", shaderprecision);
-#ifdef BFRONTIER
 	extern int soundchans, sounddsp, soundformat, soundfreq;
 	fprintf(f, "soundchans %d\n", soundchans);
 	fprintf(f, "sounddsp %d\n", sounddsp);
 	fprintf(f, "soundformat %d\n", soundformat);
 	fprintf(f, "soundfreq %d\n", soundfreq);
-#else
-	extern int soundchans, soundfreq, soundbufferlen;
-	fprintf(f, "soundchans %d\n", soundchans);
-	fprintf(f, "soundfreq %d\n", soundfreq);
-	fprintf(f, "soundbufferlen %d\n", soundbufferlen);
-#endif
 	fclose(f);
 }
 
@@ -120,20 +102,9 @@ void screenshot(char *filename)
 		dst += image->pitch;
 	}
 	delete[] tmp;
-#ifdef BFRONTIER
 	char *pname = "";
 	if (!*filename) pname = "packages/";
 	SDL_SaveBMP(image, findfile(makefile(*filename ? filename : mapname, pname, ".bmp", true, true), "wb"));
-#else
-	if(!filename[0])
-	{
-		static string buf;
-		s_sprintf(buf)("screenshot_%d.bmp", lastmillis);
-		filename = buf;
-	}
-    else path(filename);
-	SDL_SaveBMP(image, findfile(filename, "wb"));
-#endif
 	SDL_FreeSurface(image);
 }
 
@@ -150,38 +121,27 @@ void computescreen(const char *text, Texture *t)
 	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-#ifdef BFRONTIER // black background
 	glClearColor(0.f, 0.f, 0.f, 1);
-#else
-	glClearColor(0.15f, 0.15f, 0.15f, 1);
-	glColor3f(1, 1, 1);
-#endif
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glMatrixMode(GL_PROJECTION);
 	loopi(2)
 	{
-#ifdef BFRONTIER
 		glLoadIdentity();
 		glOrtho(0, w, h, 0, -1, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 		settexture("packages/textures/loadback.jpg");
-	
+
 		glColor3f(1, 1, 1);
 		glBegin(GL_QUADS);
-	
+
 		glTexCoord2f(0, 0); glVertex2i(0, 0);
 		glTexCoord2f(1, 0); glVertex2i(w, 0);
 		glTexCoord2f(1, 1); glVertex2i(w, h);
 		glTexCoord2f(0, 1); glVertex2i(0, h);
-					
+
 		glEnd();
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
-#else
-		glLoadIdentity();
-		glOrtho(0, w*3, h*3, 0, -1, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
-#endif
 		draw_text(text, 70, 2*FONTH + FONTH/2);
 		glLoadIdentity();
 		glOrtho(0, w, h, 0, -1, 1);
@@ -189,33 +149,17 @@ void computescreen(const char *text, Texture *t)
 		{
 			glDisable(GL_BLEND);
 			glBindTexture(GL_TEXTURE_2D, t->gl);
-#if 0
-			int x = (w-640)/2, y = (h-320)/2;
-			glBegin(GL_TRIANGLE_FAN);
-			glTexCoord2f(0.5f, 0.5f); glVertex2f(x+640/2.0f, y+320/2.0f);
-			loopj(64+1) 
-			{ 
-				float c = 0.5f+0.5f*cosf(2*M_PI*j/64.0f), s = 0.5f+0.5f*sinf(2*M_PI*j/64.0f);
-				glTexCoord2f(c, 320.0f/640.0f*(s-0.5f)+0.5f);
-				glVertex2f(x+640*c, y+320*s);
-			}
-#else
 			int sz = 256, x = (w-sz)/2, y = min(384, h-256);
 			glBegin(GL_QUADS);
 			glTexCoord2f(0, 0); glVertex2i(x,	y);
 			glTexCoord2f(1, 0); glVertex2i(x+sz, y);
 			glTexCoord2f(1, 1); glVertex2i(x+sz, y+sz);
 			glTexCoord2f(0, 1); glVertex2i(x,	y+sz);
-#endif
 			glEnd();
 			glEnable(GL_BLEND);
 		}
 		int x = (w-512)/2, y = 128;
-#ifdef BFRONTIER // blood frontier and moved data
 		settexture("packages/textures/logo.png");
-#else
-		settexture("data/sauer_logo_512_256a.png");
-#endif
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); glVertex2i(x,	 y);
 		glTexCoord2f(1, 0); glVertex2i(x+512, y);
@@ -267,11 +211,7 @@ void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, 
 {
 	if(!inbetweenframes) return;
 
-#ifdef BFRONTIER // unconnected state
 	updateframe(false);
-#else
-	clientkeepalive();	  // make sure our connection doesn't time out while loading maps etc.
-#endif
 
 	int w = screen->w, h = screen->h;
 	gettextres(w, h);
@@ -308,7 +248,7 @@ void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, 
 
 	if(text1) draw_text(text1, 2*FONTH, 4*FONTH + FONTH/2);
 	if(bar2>0) draw_text(text2, 2*FONTH, 6*FONTH + FONTH/2);
-	
+
 	glDisable(GL_BLEND);
 
 	if(tex)
@@ -426,11 +366,7 @@ void stackdumper(unsigned int type, EXCEPTION_POINTERS *ep)
 	EXCEPTION_RECORD *er = ep->ExceptionRecord;
 	CONTEXT *context = ep->ContextRecord;
 	string out, t;
-#ifdef BFRONTIER // blood frontier
 	s_sprintf(out)("Blood Frontier Win32 Exception: 0x%x [0x%x]\n\n", er->ExceptionCode, er->ExceptionCode==EXCEPTION_ACCESS_VIOLATION ? er->ExceptionInformation[1] : -1);
-#else
-	s_sprintf(out)("Sauerbraten Win32 Exception: 0x%x [0x%x]\n\n", er->ExceptionCode, er->ExceptionCode==EXCEPTION_ACCESS_VIOLATION ? er->ExceptionInformation[1] : -1);
-#endif
 	STACKFRAME sf = {{context->Eip, 0, AddrModeFlat}, {}, {context->Ebp, 0, AddrModeFlat}, {context->Esp, 0, AddrModeFlat}, 0};
 	SymInitialize(GetCurrentProcess(), NULL, TRUE);
 
@@ -495,7 +431,6 @@ static void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = total
 VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
 VARFP(clockfix, 0, 0, 1, clockreset());
 
-#ifdef BFRONTIER // blood frontier, grabmouse, auto performance, unconnected state, rehashing
 VAR(version, 1, BFRONTIER, -1); // for scripts
 VARP(online, 0, 1, 1); // if so, then enable certain actions
 VARP(verbose, 0, 0, 3); // be more or less expressive to console
@@ -513,7 +448,7 @@ VARF(grabmouse, 0, 1, 1, _grabmouse(grabmouse););
 int getmatvec(vec v)
 {
 	cube &c = lookupcube((int)v.x, (int)v.y, (int)v.z);
-	
+
 	if (c.ext) return c.ext->material;
 	return MAT_AIR;
 }
@@ -582,15 +517,15 @@ void perfcheck()
 	extern void getfps(int &fps, int &bestdiff, int &worstdiff);
 	int fps, bestdiff, worstdiff;
 	getfps(fps, bestdiff, worstdiff);
-	
+
 	setvar("curfps", fps);
 	setvar("bestfps", fps+bestdiff);
 	setvar("worstfps", fps-worstdiff);
-	
+
 	if (perffps && (lastmillis-lastperf > perfrate || fps-worstdiff < perflimit))
 	{
 		float amt = float(fps-worstdiff)/float(perffps);
-		
+
 		if (fps-worstdiff < perflimit && perf > perfmin) setvar("perf", perfmin, true);
 		else if (amt < 1.f) setvar("perf", max(perf-int((1.f-amt)*10.f), perfmin), true);
 		else if (amt > 1.f) setvar("perf", min(perf+int(amt), perfmax), true);
@@ -636,28 +571,26 @@ void startgame(char *load, char *initscript)
 
 void setcaption(char *text)
 {
-	s_sprintfd(caption)("%s [v%.2f] %s: %s",
-		BFRONTIER_NAME, float(BFRONTIER)/100.f, BFRONTIER_RELEASE, text
-	);
+	s_sprintfd(caption)("%s [v%.2f] %s: %s", BFRONTIER_NAME, float(BFRONTIER)/100.f, BFRONTIER_RELEASE, text);
 	SDL_WM_SetCaption(caption, NULL);
 }
 
-int frames = 0;
+int frames = 0, ignore = 5;
 
 void updateframe(bool dorender)
 {
 	int millis = SDL_GetTicks() - clockrealbase;
-	
+
 	if (clockfix) millis = int(millis*(double(clockerror)/1000000));
 	if ((millis += clockvirtbase) < totalmillis) millis = totalmillis;
 
 	if (dorender) limitfps(millis, totalmillis);
-	
+
 	int elapsed = millis-totalmillis;
 
 	if (paused) curtime = 0;
 	else curtime = (elapsed*gamespeed)/100;
-	
+
 	string cap;
 	if (cc->ready()) s_sprintf(cap)("%s - %s", cl->gametitle(), cl->gametext());
 	else s_sprintf(cap)("loading..");
@@ -678,17 +611,17 @@ void updateframe(bool dorender)
 	{
 		if (frames) updatefpshistory(elapsed);
 		frames++;
-		
+
 		perfcheck();
 
 		checksleep(lastmillis);
-		
+
 		if (!connpeer)
 		{
 			findorientation();
 			entity_particles();
 			checksound();
-	
+
 			inbetweenframes = false;
 			SDL_GL_SwapBuffers();
 			if(frames>2) gl_drawframe(screen->w, screen->h);
@@ -696,8 +629,62 @@ void updateframe(bool dorender)
 		}
 	}
 	else clientkeepalive();
-}
+
+	SDL_Event event;
+	int lasttype = 0, lastbut = 0;
+	while (SDL_PollEvent(&event))
+	{
+		switch (event.type)
+		{
+			case SDL_QUIT:
+				quit();
+				break;
+
+#if !defined(WIN32) && !defined(__APPLE__)
+			case SDL_VIDEORESIZE:
+				screenres(&event.resize.w, &event.resize.h);
+				break;
 #endif
+
+			case SDL_KEYDOWN:
+			case SDL_KEYUP:
+				keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
+				break;
+
+			case SDL_ACTIVEEVENT:
+				if(event.active.state & SDL_APPINPUTFOCUS)
+					setvar("grabmouse", event.active.gain ? 1 : 0, true);
+				break;
+
+			case SDL_MOUSEMOTION:
+				if (ignore) { ignore--; break; }
+				if (!(screen->flags&SDL_FULLSCREEN) && grabmouse)
+				{
+#ifdef __APPLE__
+					if (event.motion.y == 0) break;  //let mac users drag windows via the title bar
+#endif
+					if (event.motion.x == screen->w / 2 && event.motion.y == screen->h / 2) break;
+					SDL_WarpMouse(screen->w / 2, screen->h / 2);
+				}
+				if ((screen->flags&SDL_FULLSCREEN) || grabmouse)
+					if(!g3d_movecursor(event.motion.xrel, event.motion.yrel))
+						mousemove(event.motion.xrel, event.motion.yrel);
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+				if (lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
+				keypress(-event.button.button, event.button.state!=0, 0);
+				lasttype = event.type;
+				lastbut = event.button.button;
+				break;
+		}
+		processjoy(&event);
+	}
+	movejoy();
+	colorpos = 0; // last but not least.
+}
+
 int main(int argc, char **argv)
 {
 	#ifdef WIN32
@@ -712,12 +699,6 @@ int main(int argc, char **argv)
 	bool dedicated = false;
 	int fs = SDL_FULLSCREEN, par = 0;
 	char *load = NULL, *initscript = NULL;
-
-#ifdef BFRONTIER // so we have it in the console too
-	#define log(s) conoutf("init: %s", s);
-#else
-	#define log(s) puts("init: " s)
-#endif
 
 	initing = true;
 	for(int i = 1; i<argc; i++)
@@ -736,24 +717,20 @@ int main(int argc, char **argv)
 			case 'v': vsync = atoi(&argv[i][2]); break;
 			case 't': fs = 0; break;
 			case 's': stencilbits = atoi(&argv[i][2]); break;
-			case 'f': 
+			case 'f':
 			{
-				extern int useshaders, shaderprecision; 
+				extern int useshaders, shaderprecision;
 				int n = atoi(&argv[i][2]);
 				useshaders = n ? 1 : 0;
 				shaderprecision = min(max(n - 1, 0), 3);
 				break;
 			}
-			case 'l': 
+			case 'l':
 			{
-				char pkgdir[] = "packages/"; 
-#ifdef BFRONTIER
-				load = strstr(&argv[i][2], pkgdir); 
-#else
-				load = strstr(path(&argv[i][2]), path(pkgdir)); 
-#endif
-				if(load) load += sizeof(pkgdir)-1; 
-				else load = &argv[i][2]; 
+				char pkgdir[] = "packages/";
+				load = strstr(&argv[i][2], pkgdir);
+				if(load) load += sizeof(pkgdir)-1;
+				else load = &argv[i][2];
 				break;
 			}
 			case 'x': initscript = &argv[i][2]; break;
@@ -763,7 +740,7 @@ int main(int argc, char **argv)
 	}
 	initing = false;
 
-	log("sdl");
+	conoutf("init: sdl");
 
 	#ifdef _DEBUG
 	par = SDL_INIT_NOPARACHUTE;
@@ -776,23 +753,17 @@ int main(int argc, char **argv)
 	//#ifdef WIN32
 	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 	//#endif
-	
-#ifdef BFRONTIER // joytick support
-	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
-	if(SDL_Init(par)<0) fatal("Unable to initialize SDL: ", SDL_GetError());
-#else
-	if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_AUDIO|par)<0) fatal("Unable to initialize SDL: ", SDL_GetError());
-#endif
 
-	log("enet");
+	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
+	if (SDL_Init(par) < 0) fatal("Unable to initialize SDL: ", SDL_GetError());
+
+	conoutf("init: enet");
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 
-#ifdef BFRONTIER
-	log("server");
-#endif
+	conoutf("init: server");
 	initserver(dedicated);  // never returns if dedicated
 
-	log("video: mode");
+	conoutf("init: video: mode");
 	int resize = SDL_RESIZABLE;
 	#if defined(WIN32) || defined(__APPLE__)
 	resize = 0;
@@ -808,15 +779,15 @@ int main(int argc, char **argv)
 		if(!hasmode) { scr_w = modes[0]->w; scr_h = modes[0]->h; }
 	}
     bool hasbpp = true;
-    if(colorbits && modes) 
+    if(colorbits && modes)
         hasbpp = SDL_VideoModeOK(modes!=(SDL_Rect **)-1 ? modes[0]->w : scr_w, modes!=(SDL_Rect **)-1 ? modes[0]->h : scr_h, colorbits, SDL_OPENGL|resize|fs)==colorbits;
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 #if SDL_VERSION_ATLEAST(1, 2, 11)
     if(vsync>=0) SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, vsync);
 #endif
-    static int configs[] = 
-    { 
+    static int configs[] =
+    {
         0x7, /* try everything */
         0x6, 0x5, 0x3, /* try disabling one at a time */
         0x4, 0x2, 0x1, /* try disabling two at a time */
@@ -830,7 +801,7 @@ int main(int argc, char **argv)
         if(!stencilbits && config&2) continue;
         if(!fsaa && config&4) continue;
         if(depthbits) SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, config&1 ? depthbits : 0);
-		if(stencilbits) 
+		if(stencilbits)
 		{
             SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, config&2 ? 1 : 0);
             hasstencil = (config&2)!=0;
@@ -851,241 +822,54 @@ int main(int argc, char **argv)
         if(stencilbits && (config&2)==0) conoutf("Stencil buffer not supported - disabling");
         if(fsaa && (config&4)==0) conoutf("%dx anti-aliasing not supported - disabling", fsaa);
 	}
-    
+
 	scr_w = screen->w;
 	scr_h = screen->h;
 
 	fullscreen = fs!=0;
 
-	log("video: misc");
-#ifdef BFRONTIER // blood frontier, game name support, grab the mouse
+	conoutf("init: video: misc");
 	setcaption("loading..");
 	setvar("grabmouse", 1, true);
-#else
-	SDL_WM_SetCaption("sauerbraten engine", NULL);
-	#ifndef WIN32
-	if(fs)
-	#endif
-	SDL_WM_GrabInput(SDL_GRAB_ON);
-	keyrepeat(false);
-	SDL_ShowCursor(0);
-#endif
 
-	log("gl");
-#ifdef BFRONTIER // moved data
+	conoutf("init: gl");
     gl_init(scr_w, scr_h, hasbpp ? colorbits : 0, config&1 ? depthbits : 0, config&4 ? fsaa : 0);
     notexture = textureload("packages/textures/notexture.png");
-#else
-    gl_init(scr_w, scr_h, hasbpp ? colorbits : 0, config&1 ? depthbits : 0, config&4 ? fsaa : 0);
-    notexture = textureload("data/notexture.png");
-#endif
     if(!notexture) fatal("could not find core textures");
 
-	log("console");
+	conoutf("init: console");
 	persistidents = false;
-#ifdef BFRONTIER // moved data
 	if(!execfile("packages/stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
 	if(!execfile("packages/font.cfg")) fatal("cannot find font definitions");
-#else
-	if(!execfile("data/stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
-	if(!execfile("data/font.cfg")) fatal("cannot find font definitions");
-#endif
 	if(!setfont("default")) fatal("no default font specified");
 
 	computescreen("initializing...");
 	inbetweenframes = true;
 
-    log("gl: effects");
+    conoutf("init: gl: effects");
     loadshaders();
 	particleinit();
 
-	log("world");
+	conoutf("init: world");
 	camera1 = player = cl->iterdynents(0);
-#ifdef BFRONTIER
 	emptymap(0, true);
-#else	
-	emptymap(0, true);
-#endif
 
-	log("sound");
+	conoutf("init: sound");
 	initsound();
-#ifdef BFRONTIER // joystick support
-	log("joystick");
-	initjoy();
-#endif
 
-	log("cfg");
-#ifdef BFRONTIER // external functions for config and game initialisation
+	conoutf("init: joystick");
+	initjoy();
+
+	conoutf("init: cfg");
 	rehash(false);
 	startgame(load, initscript);
-#else
-	exec("data/keymap.cfg");
-	exec("data/stdedit.cfg");
-	exec("data/menus.cfg");
-	exec("data/sounds.cfg");
-	exec("data/brush.cfg");
-	execfile("mybrushes.cfg");
-	if(cl->savedservers()) execfile(cl->savedservers());
-	
-	persistidents = true;
-	
-	if(!execfile(cl->savedconfig())) exec(cl->defaultconfig());
-	execfile(cl->autoexec());
 
-	persistidents = false;
-
-	string gamecfgname;
-	s_strcpy(gamecfgname, "data/game_");
-	s_strcat(gamecfgname, cl->gameident());
-	s_strcat(gamecfgname, ".cfg");
-	exec(gamecfgname);
-
-	persistidents = true;
-
-	log("localconnect");
-	localconnect();
-	cc->gameconnect(false);
-	cc->changemap(load ? load : cl->defaultmap());
-
-	if(initscript) execute(initscript);
-#endif
-
-	log("mainloop");
+	conoutf("init: mainloop");
 
 	resetfpshistory();
+	for(;;) updateframe(true);
 
-#ifdef BFRONTIER // grabmouse support
-	int ignore = 5;
-#else
-	int ignore = 5, grabmouse = 0;
-#endif
-	for(;;)
-	{
-#ifdef BFRONTIER // external frame rendering
-		updateframe(true);
-#else
-		static int frames = 0;
-        int millis = SDL_GetTicks() - clockrealbase;
-        if(clockfix) millis = int(millis*(double(clockerror)/1000000));
-        millis += clockvirtbase;
-        if(millis<totalmillis) millis = totalmillis;
-		limitfps(millis, totalmillis);
-		int elapsed = millis-totalmillis;
-		curtime = (elapsed*gamespeed)/100;
-        //if(curtime>200) curtime = 200;
-        //else if(curtime<1) curtime = 1;
-		if(paused) curtime = 0;
-
-		if(lastmillis) cl->updateworld(worldpos, curtime, lastmillis);
-		
-		menuprocess();
-
-		lastmillis += curtime;
-		totalmillis = millis;
-
-        checksleep(lastmillis);
-
-        serverslice(0);
-
-        if(frames) updatefpshistory(elapsed);
-        frames++;
-
-		// miscellaneous general game effects
-		findorientation();
-		entity_particles();
-		updatevol();
-		checkmapsounds();
-	
-		inbetweenframes = false;
-		SDL_GL_SwapBuffers();
-		if(frames>2) gl_drawframe(screen->w, screen->h);
-		inbetweenframes = true;
-#endif
-
-		SDL_Event event;
-		int lasttype = 0, lastbut = 0;
-		while(SDL_PollEvent(&event))
-		{
-			switch(event.type)
-			{
-				case SDL_QUIT:
-					quit();
-					break;
-
-				#if !defined(WIN32) && !defined(__APPLE__)
-				case SDL_VIDEORESIZE:
-					screenres(&event.resize.w, &event.resize.h);
-					break;
-				#endif
-
-				case SDL_KEYDOWN:
-				case SDL_KEYUP:
-					keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
-					break;
-
-				case SDL_ACTIVEEVENT:
-#ifdef BFRONTIER // grabmouse support
-					if(event.active.state & SDL_APPINPUTFOCUS)
-						setvar("grabmouse", event.active.gain ? 1 : 0, true);
-#else
-					if(event.active.state & SDL_APPINPUTFOCUS)
-						grabmouse = event.active.gain;
-					else
-					if(event.active.gain)
-						grabmouse = 1;
-#endif
-					break;
-
-				case SDL_MOUSEMOTION:
-					if(ignore) { ignore--; break; }
-#ifdef BFRONTIER // grabmouse support
-					if(!(screen->flags&SDL_FULLSCREEN) && grabmouse)
-					{	
-						#ifdef __APPLE__
-						if(event.motion.y == 0) break;  //let mac users drag windows via the title bar
-						#endif
-						if(event.motion.x == screen->w / 2 && event.motion.y == screen->h / 2) break;
-						SDL_WarpMouse(screen->w / 2, screen->h / 2);
-					}
-					if((screen->flags&SDL_FULLSCREEN) || grabmouse)
-						if(!g3d_movecursor(event.motion.xrel, event.motion.yrel))
-							mousemove(event.motion.xrel, event.motion.yrel);
-#else
-					#ifndef WIN32
-					if(!(screen->flags&SDL_FULLSCREEN) && grabmouse)
-					{	
-						#ifdef __APPLE__
-						if(event.motion.y == 0) break;  //let mac users drag windows via the title bar
-						#endif
-						if(event.motion.x == screen->w / 2 && event.motion.y == screen->h / 2) break;
-						SDL_WarpMouse(screen->w / 2, screen->h / 2);
-					}
-					if((screen->flags&SDL_FULLSCREEN) || grabmouse)
-					#endif
-					if(!g3d_movecursor(event.motion.xrel, event.motion.yrel))
-						mousemove(event.motion.xrel, event.motion.yrel);
-#endif
-					break;
-
-				case SDL_MOUSEBUTTONDOWN:
-				case SDL_MOUSEBUTTONUP:
-					if(lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
-					keypress(-event.button.button, event.button.state!=0, 0);
-					lasttype = event.type;
-					lastbut = event.button.button;
-					break;
-			}
-#ifdef BFRONTIER // joystick support
-			processjoy(&event);
-#endif
-		}
-#ifdef BFRONTIER // joystick support, text colorpos reset
-		movejoy();
-		colorpos = 0; // last but not least.
-#endif
-	 }
-	
-	ASSERT(0);	
+	ASSERT(0);
 	return EXIT_FAILURE;
 
 	#if defined(WIN32) && !defined(_DEBUG) && !defined(__GNUC__)

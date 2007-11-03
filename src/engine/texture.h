@@ -42,9 +42,9 @@ struct LocalShaderParamState : ShaderParam
 {
 	float curval[4];
 
-	LocalShaderParamState() 
-	{ 
-		memset(curval, 0, sizeof(curval)); 
+	LocalShaderParamState()
+	{
+		memset(curval, 0, sizeof(curval));
 	}
 	LocalShaderParamState(const ShaderParam &p) : ShaderParam(p)
 	{
@@ -65,10 +65,10 @@ struct ShaderParamState
 	}
 };
 
-enum 
-{ 
-	SHADER_DEFAULT	= 0, 
-	SHADER_NORMALSLMS = 1<<0, 
+enum
+{
+	SHADER_DEFAULT	= 0,
+	SHADER_NORMALSLMS = 1<<0,
 	SHADER_ENVMAP	 = 1<<1,
 	SHADER_GLSLANG	= 1<<2
 };
@@ -152,18 +152,14 @@ enum
 	TEX_DEPTH,
 	TEX_ENVMAP
 };
-	
+
 struct Slot
 {
 	struct Tex
 	{
 		int type;
 		Texture *t;
-#ifdef BFRONTIER
 		string lname, name;
-#else
-		string name;
-#endif
 		int rotation, xoffset, yoffset;
 		float scale;
 		int combined;
@@ -175,7 +171,7 @@ struct Slot
 	bool loaded;
 	char *autograss;
 	Texture *grasstex, *thumbnail;
-	
+
 	void reset()
 	{
 		sts.setsize(0);
@@ -186,10 +182,10 @@ struct Slot
 		grasstex = NULL;
 		thumbnail = NULL;
 	}
-	
+
 	Slot() : autograss(NULL) { reset(); }
 };
-#ifdef BFRONTIER
+
 extern vector<Slot> slots;
 extern Slot materialslots[MAT_EDIT];
 
@@ -201,7 +197,6 @@ extern void setshaderparam(char *name, int type, int n, float x, float y, float 
 extern int findtexturetype(char *name, bool tryint = false);
 extern char *findtexturename(int type);
 extern void texture(char *type, char *name, int *rot, int *xoffet, int *yoffset, float *scale);
-#endif
 
 struct cubemapside
 {

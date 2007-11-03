@@ -1,4 +1,5 @@
-#include "ver.h" // BFRONTIER
+#include "ver.h"
+
 #ifdef __GNUC__
 #define gamma __gamma
 #endif

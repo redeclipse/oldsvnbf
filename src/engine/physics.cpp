@@ -166,7 +166,7 @@ static float shadowent(octaentities *oc, octaentities *last, const vec &o, const
 		if(e.attr3 && (e.triggerstate == TRIGGER_DISAPPEARED || !checktriggertype(e.attr3, TRIG_COLLIDE) || e.triggerstate == TRIGGERED)) continue;
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
 		if(f>0 && f<dist) dist = f;
-	} 
+	}
 	return dist;
 }
 
@@ -302,7 +302,7 @@ float raycube(const vec &o, const vec &ray, float radius, int mode, int size, ex
 float shadowray(const vec &o, const vec &ray, float radius, int mode, extentity *t)
 {
 	INITRAYCUBE
-	CHECKINSIDEWORLD 
+	CHECKINSIDEWORLD
 
 	int x = int(v.x), y = int(v.y), z = int(v.z);
 	for(;;)
@@ -311,7 +311,7 @@ float shadowray(const vec &o, const vec &ray, float radius, int mode, extentity 
 
 		cube &c = *lc;
 		if(isentirelysolid(c)) return dist;
-		else if(last==&c) return radius;		
+		else if(last==&c) return radius;
 		else if(!isempty(c))
 		{
 			float f = 0;
@@ -341,9 +341,9 @@ float raycubepos(const vec &o, vec &ray, vec &hitpos, float radius, int mode, in
 	ray.normalize();
 	hitpos = ray;
 	float dist = raycube(o, ray, radius, mode, size);
-	hitpos.mul(dist); 
+	hitpos.mul(dist);
 	hitpos.add(o);
-	return dist; 
+	return dist;
 }
 
 bool raycubelos(vec &o, vec &dest, vec &hitpos)
@@ -372,21 +372,13 @@ bool inside; // whether an internal collision happened
 physent *hitplayer; // whether the collection hit a player
 vec wall; // just the normal vectors.
 float walldistance;
-#ifdef BFRONTIER // world variables, alternate physics storage
+
 VARW(gravity,		0,			25,			INT_MAX-1);		// gravity
 VARW(speed,			1,			45,			INT_MAX-1);	// speed
 VARW(jumpvel,		0,			60,			INT_MAX-1);	// extra velocity to add when jumping
 VARW(watertype,		WT_WATER,	WT_WATER,	WT_MAX-1);	// water type (0: water, 1: slime, 2: lava)
 VARW(watervel,		0,			60,			1024);		// extra water velocity
-#else
-const float STAIRHEIGHT = 4.1f;
-const float FLOORZ = 0.867f;
-const float SLOPEZ = 0.5f;
-const float WALLZ = 0.2f;
-const float JUMPVEL = 125.0f;
-const float GRAVITY = 200.0f;
-const float STEPSPEED = 1.0f;
-#endif
+
 bool ellipsecollide(dynent *d, const vec &dir, dynent *e)
 {
 	float below = (e->o.z-e->eyeheight) - (d->o.z+d->aboveeye),
@@ -399,18 +391,18 @@ bool ellipsecollide(dynent *d, const vec &dir, dynent *e)
 	float dist = sqrtf(x*x + y*y) - sqrtf(dx*dx + dy*dy) - sqrtf(ex*ex + ey*ey);
 	if(dist < 0)
 	{
-		if(dir.iszero() || ((d->type>=ENT_CAMERA || below >= -(d->eyeheight+d->aboveeye)/4.0f) && dir.z > 0))							
-		{	
-			wall = vec(0, 0, -1); 
+		if(dir.iszero() || ((d->type>=ENT_CAMERA || below >= -(d->eyeheight+d->aboveeye)/4.0f) && dir.z > 0))
+		{
+			wall = vec(0, 0, -1);
 			return false;
 		}
-		if(dir.iszero() || ((d->type>=ENT_CAMERA || above >= -(d->eyeheight+d->aboveeye)/3.0f) && dir.z < 0))			 
-		{ 
-			wall = vec(0, 0, 1); 
+		if(dir.iszero() || ((d->type>=ENT_CAMERA || above >= -(d->eyeheight+d->aboveeye)/3.0f) && dir.z < 0))
+		{
+			wall = vec(0, 0, 1);
 			return false;
 		}
 		if(dir.iszero() || -x*dir.x + -y*dir.y < 0)
-		{	
+		{
 			wall = vec(-x, -y, 0);
 			wall.normalize();
 			return false;
@@ -567,8 +559,8 @@ bool cubecollide(physent *d, const vec &dir, float cutoff, cube &c, int x, int y
 			{
 				plane &f = p.p[i];
 				if(!wall.dot(f)) continue;
-				if(f.dist(wo) >= vec(f.x*wrad.x, f.y*wrad.y, f.z*wrad.z).magnitude()) 
-				{ 
+				if(f.dist(wo) >= vec(f.x*wrad.x, f.y*wrad.y, f.z*wrad.z).magnitude())
+				{
 					wall = vec(0, 0, 0);
 					walldistance = -1e10f;
 					break;
@@ -588,7 +580,7 @@ bool cubecollide(physent *d, const vec &dir, float cutoff, cube &c, int x, int y
 					if(f.dot(dir) >= -cutoff) continue;
 					if(d->type<ENT_CAMERA && dist < (dir.z*f.z < 0 ? -(d->eyeheight+d->aboveeye)/(dir.z < 0 ? 3.0f : 4.0f) : ((dir.x*f.x < 0 || dir.y*f.y < 0) ? -r : 0))) continue;
 				}
-                if(f.x && (f.x>0 ? o.x-p.o.x : p.o.x-o.x) + p.r.x - r < dist && f.dist(vec(p.o.x + (f.x>0 ? -p.r.x : p.r.x), o.y, o.z)) >= vec(0, f.y*r, f.z*zr).magnitude()) continue; 
+                if(f.x && (f.x>0 ? o.x-p.o.x : p.o.x-o.x) + p.r.x - r < dist && f.dist(vec(p.o.x + (f.x>0 ? -p.r.x : p.r.x), o.y, o.z)) >= vec(0, f.y*r, f.z*zr).magnitude()) continue;
                 if(f.y && (f.y>0 ? o.y-p.o.y : p.o.y-o.y) + p.r.y - r < dist && f.dist(vec(o.x, p.o.y + (f.y>0 ? -p.r.y : p.r.y), o.z)) >= vec(f.x*r, 0, f.z*zr).magnitude()) continue;
                 if(f.z && (f.z>0 ? o.z-p.o.z : p.o.z-o.z) + p.r.z - zr < dist && f.dist(vec(o.x, o.y, p.o.z + (f.z>0 ? -p.r.z : p.r.z))) >= vec(f.x*r, f.y*r, 0).magnitude()) continue;
                 w = &f;
@@ -657,19 +649,11 @@ void slideagainst(physent *d, vec &dir, const vec &obstacle)
 
 void switchfloor(physent *d, vec &dir, bool landing, const vec &floor)
 {
-#ifdef BFRONTIER // alternate physics storage
 	if(d->physstate == PHYS_FALL || d->floor.z < ph->floorz(d))
-#else
-	if(d->physstate == PHYS_FALL || d->floor.z < FLOORZ)
-#endif
 	{
 		if(landing)
 		{
-#ifdef BFRONTIER // alternate physics storage
 			if(floor.z >= ph->floorz(d))
-#else
-			if(floor.z >= FLOORZ)
-#endif
 			{
 				if(d->vel.z + d->gravity.z > 0) d->vel.add(d->gravity);
 				else if(d->vel.z > 0) d->vel.z = 0.0f;
@@ -697,11 +681,7 @@ void switchfloor(physent *d, vec &dir, bool landing, const vec &floor)
 	if(((d->physstate == PHYS_SLIDE || (d->physstate == PHYS_FALL && floor.z < 1.0f)) && landing) ||
 		(d->physstate >= PHYS_SLOPE && fabs(dir.dot(d->floor)/dir.magnitude()) < 0.01f))
 	{
-#ifdef BFRONTIER // alternate physics storage
 		if(floor.z > 0 && floor.z < ph->wallz(d)) { slideagainst(d, dir, floor); return; }
-#else
-		if(floor.z > 0 && floor.z < WALLZ) { slideagainst(d, dir, floor); return; }
-#endif
 		float dmag = dir.magnitude(), dz = -(dir.x*floor.x + dir.y*floor.y)/floor.z;
 		dir.z = dz;
 		float dfmag = dir.magnitude();
@@ -730,11 +710,7 @@ bool trystepup(physent *d, vec &dir, float maxstep)
 	}
 	/* try stepping up */
 	d->o = old;
-#ifdef BFRONTIER // alternate physics storage
 	d->o.z += dir.magnitude()*ph->stepspeed(d);
-#else
-	d->o.z += dir.magnitude()*STEPSPEED;
-#endif
 	if(collide(d, vec(0, 0, 1)))
 	{
 		if(d->physstate == PHYS_FALL)
@@ -755,15 +731,9 @@ bool trystepdown(physent *d, vec &dir, float step, float a, float b)
 {
 	vec old(d->o);
 	vec dv(dir.x*a, dir.y*a, -step*b), v(dv);
-#ifdef BFRONTIER // alternate physics storage
 	v.mul(ph->stairheight(d)/(step*b));
 	d->o.add(v);
 	if(!collide(d, vec(0, 0, -1), ph->slopez(d)))
-#else
-	v.mul(STAIRHEIGHT/(step*b));
-	d->o.add(v);
-	if(!collide(d, vec(0, 0, -1), SLOPEZ))
-#endif
 	{
 		d->o = old;
 		d->o.add(dv);
@@ -780,13 +750,8 @@ void falling(physent *d, vec &dir, const vec &floor)
 	if(d->physstate >= PHYS_FLOOR && (floor.z == 0.0f || floor.z == 1.0f))
 	{
 		vec moved(d->o);
-#ifdef BFRONTIER // alternate physics storage
 		d->o.z -= ph->stairheight(d) + 0.1f;
 		if(!collide(d, vec(0, 0, -1), ph->slopez(d)))
-#else
-		d->o.z -= STAIRHEIGHT + 0.1f;
-		if(!collide(d, vec(0, 0, -1), SLOPEZ))
-#endif
 		{
 			d->o = moved;
 			d->physstate = PHYS_STEP_DOWN;
@@ -795,11 +760,7 @@ void falling(physent *d, vec &dir, const vec &floor)
 		else d->o = moved;
 	}
 #endif
-#ifdef BFRONTIER // alternate physics storage
 	bool sliding = floor.z > 0.0f && floor.z < ph->slopez(d);
-#else
-	bool sliding = floor.z > 0.0f && floor.z < SLOPEZ;
-#endif
 	switchfloor(d, dir, sliding, sliding ? floor : vec(0, 0, 1));
 	if(sliding)
 	{
@@ -818,11 +779,7 @@ void landing(physent *d, vec &dir, const vec &floor)
 		if(dir.z < 0.0f) dir.z = d->vel.z = 0.0f;
 	}
 	switchfloor(d, dir, true, floor);
-#ifdef BFRONTIER // alternate physics storage
 	if(floor.z >= ph->floorz(d)) d->physstate = PHYS_FLOOR;
-#else
-	if(floor.z >= FLOORZ) d->physstate = PHYS_FLOOR;
-#endif
 	else d->physstate = PHYS_SLOPE;
 	d->floor = floor;
 }
@@ -832,20 +789,12 @@ bool findfloor(physent *d, bool collided, const vec &obstacle, bool &slide, vec 
 	bool found = false;
 	vec moved(d->o);
 	d->o.z -= 0.1f;
-#ifdef BFRONTIER // alternate physics storage
 	if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? ph->slopez(d) : ph->floorz(d)))
-#else
-	if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? SLOPEZ : FLOORZ))
-#endif
 	{
 		floor = wall;
 		found = true;
 	}
-#ifdef BFRONTIER // alternate physics storage
 	else if(collided && obstacle.z >= ph->slopez(d))
-#else
-	else if(collided && obstacle.z >= SLOPEZ)
-#endif
 	{
 		floor = obstacle;
 		found = true;
@@ -858,11 +807,7 @@ bool findfloor(physent *d, bool collided, const vec &obstacle, bool &slide, vec 
 			if(!collide(d, vec(0, 0, -1)) && wall.z > 0.0f)
 			{
 				floor = wall;
-#ifdef BFRONTIER // alternate physics storage
 				if(floor.z > ph->slopez(d)) found = true;
-#else
-				if(floor.z > SLOPEZ) found = true;
-#endif
 			}
 		}
 		else
@@ -871,11 +816,7 @@ bool findfloor(physent *d, bool collided, const vec &obstacle, bool &slide, vec 
 			if(d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f && !collide(d, vec(0, 0, -1)))
 			{
 				floor = wall;
-#ifdef BFRONTIER // alternate physics storage
 				if(floor.z >= ph->slopez(d) && floor.z < 1.0f) found = true;
-#else
-				if(floor.z >= SLOPEZ && floor.z < 1.0f) found = true;
-#endif
 			}
 		}
 		if(collided && (!found || obstacle.z > floor.z)) floor = obstacle;
@@ -890,11 +831,7 @@ bool move(physent *d, vec &dir)
 #if 0
     if(d->physstate == PHYS_STEP_DOWN && dir.z <= 0.0f && cl->allowmove(pl) && (d->move || d->strafe))
 	{
-#ifdef BFRONTIER // alternate physics storage
 		float step = dir.magnitude()*ph->stepspeed(d);
-#else
-		float step = dir.magnitude()*STEPSPEED;
-#endif
 		if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
 		if(trystepdown(d, dir, step, 0.5f, 0.5f)) return true;
 		if(trystepdown(d, dir, step, 0.25f, 0.75f)) return true;
@@ -911,21 +848,12 @@ bool move(physent *d, vec &dir)
 		d->o = old;
 		if(d->type == ENT_CAMERA) return false;
 		obstacle = wall;
-#ifdef BFRONTIER // alternate physics storage
 		d->o.z -= (d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f ? d->radius+0.1f : ph->stairheight(d));
 		if((d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR) || (!collide(d, vec(0, 0, -1), ph->slopez(d)) && (d->physstate == PHYS_STEP_UP || wall.z == 1.0f)))
-#else
-		d->o.z -= (d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f ? d->radius+0.1f : STAIRHEIGHT);
-		if((d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR) || (!collide(d, vec(0, 0, -1), SLOPEZ) && (d->physstate == PHYS_STEP_UP || wall.z == 1.0f)))
-#endif
 		{
 			d->o = old;
 			float floorz = (d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR ? d->floor.z : wall.z);
-#ifdef BFRONTIER // alternate physics storage
 			if(trystepup(d, dir, floorz < 1.0f ? d->radius+0.1f : ph->stairheight(d))) return true;
-#else
-			if(trystepup(d, dir, floorz < 1.0f ? d->radius+0.1f : STAIRHEIGHT)) return true;
-#endif
 		}
 		else d->o = old;
 		/* can't step over the obstacle, so just slide against it */
@@ -956,64 +884,21 @@ bool bounce(physent *d, float secs, float elasticity, float waterfric)
 	{
 		if(d->vel.z > 0 && d->vel.z + d->gravity.z < 0) d->vel.z = 0.0f;
 		d->vel.mul(1.0f - secs/waterfric);
-#ifdef BFRONTIER // alternate physics storage
 		d->gravity.z = -4.0f*ph->gravity(d)*secs;
-#else
-		d->gravity.z = -4.0f*GRAVITY*secs;
-#endif
-	} 
-#ifdef BFRONTIER // alternate physics storage
+	}
 	else d->gravity.z -= ph->gravity(d)*secs;
-#else
-	else d->gravity.z -= GRAVITY*secs;
-	vec old(d->o);
-	loopi(2)
-	{
-#endif
-		vec dir(d->vel);
-		if(water) dir.mul(0.5f);
-#ifdef BFRONTIER
-		if (elasticity > 0.f) dir.add(d->gravity);
-#else
-		dir.add(d->gravity);
-#endif
-		dir.mul(secs);
-		d->o.add(dir);
-#ifdef BFRONTIER
-		if (!collide(d, dir) || inside || hitplayer) return true;
-		return false;
-#else
-		if(collide(d, dir))
-		{
-			if(inside)
-			{
-				d->o = old;
-				d->gravity.mul(-elasticity);
-				d->vel.mul(-elasticity);
-			}
-			break;
-		}
-        else if(hitplayer) break;
 
-		d->o = old;
-		vec dvel(d->vel), wvel(wall);
-		dvel.add(d->gravity);
-		float c = wall.dot(dvel),
-			  k = 1.0f + (1.0f-elasticity)*c/dvel.magnitude();
-		wvel.mul(elasticity*2.0f*c);
-        d->gravity.mul(k);
-        d->vel.mul(k);
-        d->vel.sub(wvel);
-	}
+	vec dir(d->vel);
 
-	if(d->physstate!=PHYS_BOUNCE)
-	{
-		// make sure bouncers don't start inside geometry
-		if(d->o == old) return !hitplayer;
-		d->physstate = PHYS_BOUNCE;
-	}
-	return hitplayer!=0;
-#endif
+	if (water) dir.mul(0.5f);
+	if (elasticity > 0.f) dir.add(d->gravity);
+
+	dir.mul(secs);
+	d->o.add(dir);
+
+	if (!collide(d, dir) || inside || hitplayer) return true;
+
+	return false;
 }
 
 void avoidcollision(physent *d, const vec &dir, physent *obstacle, float space)
@@ -1097,9 +982,6 @@ void vectoyawpitch(const vec &v, float &yaw, float &pitch)
 	pitch = asin(v.z/v.magnitude())/RAD;
 }
 
-#ifndef BFRONTIER // no maxroll
-VARP(maxroll, 0, 3, 20);
-#endif
 VAR(floatspeed, 10, 100, 1000);
 
 void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime)
@@ -1109,11 +991,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 		if(pl->jumpnext)
 		{
 			pl->jumpnext = false;
-#ifdef BFRONTIER // alternate physics storage
 			pl->vel.z = ph->jumpvel(pl);
-#else
-			pl->vel.z = JUMPVEL;
-#endif
 		}
 	}
 	else
@@ -1128,16 +1006,9 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 		{
 			pl->jumpnext = false;
 
-#ifdef BFRONTIER // alternate physics storage
 			pl->vel.z = ph->jumpvel(pl);
-			if(water) { pl->vel.x /= ph->waterdampen(pl); pl->vel.y /= ph->waterdampen(pl); } 
+			if(water) { pl->vel.x /= ph->waterdampen(pl); pl->vel.y /= ph->waterdampen(pl); }
 			ph->trigger(pl, local, 1, 0);
-#else
-			pl->vel.z = JUMPVEL; // physics impulse upwards
-			if(water) { pl->vel.x /= 8.0f; pl->vel.y /= 8.0f; } // dampen velocity change even harder, gives correct water feel
-
-			cl->physicstrigger(pl, local, 1, 0);
-#endif
 		}
 	}
 	else
@@ -1152,7 +1023,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 		if(d->rotspeed && d->yaw!=d->targetyaw)
 		{
 			float oldyaw = d->yaw, diff = d->rotspeed*curtime/1000.0f, maxdiff = fabs(d->targetyaw-d->yaw);
-			if(diff >= maxdiff) 
+			if(diff >= maxdiff)
 			{
 				d->yaw = d->targetyaw;
 				d->rotspeed = 0;
@@ -1171,11 +1042,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 
     if(m.iszero() && cl->allowmove(pl) && (pl->move || pl->strafe))
 	{
-#ifdef BFRONTIER // alternate physics storage
 		vecfromyawpitch(pl->yaw, floating || water || ph->movepitch(pl) ? pl->pitch : 0, pl->move, pl->strafe, m);
-#else
-		vecfromyawpitch(pl->yaw, floating || water || pl->type==ENT_CAMERA ? pl->pitch : 0, pl->move, pl->strafe, m);
-#endif
 
 		if(!floating && pl->physstate >= PHYS_SLIDE)
 		{
@@ -1184,32 +1051,20 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 			 */
 			float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
 			if(water) m.z = max(m.z, dz);
-#ifdef BFRONTIER // alternate physics storage
 			else if(pl->floor.z >= ph->wallz(pl)) m.z = dz;
-#else
-			else if(pl->floor.z >= WALLZ) m.z = dz;
-#endif
 		}
 
 		m.normalize();
 	}
 
 	vec d(m);
-#ifdef BFRONTIER // alternate physics storage
 	d.mul(ph->speed(pl));
-#else
-	d.mul(pl->maxspeed);
-#endif
-	if(floating) 
+	if(floating)
 	{
 		if(pl==player) d.mul(floatspeed/100.0f);
 	}
     else if(!water && cl->allowmove(pl)) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE && pl->move>=0 ? 1.3f : 1.0f)); // EXPERIMENTAL
-#ifdef BFRONTIER // alternate physics storage
 	float friction = water && !floating ? ph->waterfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? ph->floorfric(pl) : ph->airfric(pl));
-#else
-	float friction = water && !floating ? 20.0f : (pl->physstate >= PHYS_SLOPE || floating ? 6.0f : 30.0f);
-#endif
 	float fpsfric = friction/curtime*20.0f;
 
 	pl->vel.mul(fpsfric-1);
@@ -1220,7 +1075,6 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 void modifygravity(physent *pl, bool water, float secs)
 {
 	vec g(0, 0, 0);
-#ifdef BFRONTIER // alternate physics storage
 	if(pl->physstate == PHYS_FALL) g.z -= ph->gravity(pl)*secs;
 	else if(!pl->floor.iszero() && pl->floor.z < ph->floorz(pl))
 	{
@@ -1229,16 +1083,6 @@ void modifygravity(physent *pl, bool water, float secs)
 	}
 	if(water) pl->gravity = g.mul(ph->watergravscale(pl));
 	else pl->gravity.add(g);
-#else
-	if(pl->physstate == PHYS_FALL) g.z -= GRAVITY*secs;
-	else if(!pl->floor.iszero() && pl->floor.z < FLOORZ)
-	{
-		float c = min(FLOORZ - pl->floor.z, FLOORZ-SLOPEZ)/(FLOORZ-SLOPEZ);
-		slopegravity(GRAVITY*secs*c, pl->floor, g);
-	}
-	if(water) pl->gravity = pl->move || pl->strafe ? vec(0, 0, 0) : g.mul(4.0f);
-	else pl->gravity.add(g);
-#endif
 }
 
 // main physics routine, moves a player/monster for a curtime step
@@ -1286,11 +1130,7 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 		loopi(moveres) if(!move(pl, d)) { if(pl->type==ENT_CAMERA) return false; if(++collisions<5) i--; } // discrete steps collision detection & sliding
 		if(timeinair > 800 && !pl->timeinair) // if we land after long time must have been a high jump, make thud sound
 		{
-#ifdef BFRONTIER // alternate physics storage
 			ph->trigger(pl, local, -1, 0);
-#else
-			cl->physicstrigger(pl, local, -1, 0);
-#endif
 		}
 	}
 
@@ -1298,35 +1138,15 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 
 	if(!pl->timeinair && pl->physstate >= PHYS_FLOOR && pl->vel.squaredlen() < 1e-4f && pl->gravity.iszero()) pl->moving = false;
 
-#ifdef BFRONTIER // alternate physics storage
 	ph->updateroll(pl);
-#else
-	// automatically apply smooth roll when strafing
-
-	if(pl->strafe==0)
-	{
-		pl->roll = pl->roll/(1+(float)sqrtf((float)curtime)/25);
-	}
-	else
-	{
-		pl->roll += pl->strafe*curtime/-30.0f;
-		if(pl->roll>maxroll) pl->roll = (float)maxroll;
-		if(pl->roll<-maxroll) pl->roll = (float)-maxroll;
-	}
-#endif
 	// play sounds on water transitions
 
 	if(pl->type!=ENT_CAMERA)
 	{
 		cube &c = lookupcube((int)pl->o.x, (int)pl->o.y, (int)pl->o.z+1);
 		bool inwater = c.ext && isliquid(c.ext->material);
-#ifdef BFRONTIER // alternate physics storage
 		if(!pl->inwater && inwater) ph->trigger(pl, local, 0, -1);
 		else if(pl->inwater && !inwater) ph->trigger(pl, local, 0, 1);
-#else
-		if(!pl->inwater && inwater) cl->physicstrigger(pl, local, 0, -1);
-		else if(pl->inwater && !inwater) cl->physicstrigger(pl, local, 0, 1);
-#endif
 		pl->inwater = inwater;
 
 		if(pl->state==CS_ALIVE && material==MAT_LAVA) cl->suicide(pl);
@@ -1374,42 +1194,25 @@ void updatephysstate(physent *d)
 		case PHYS_SLOPE:
 		case PHYS_FLOOR:
 			d->o.z -= 0.1f;
-#ifdef BFRONTIER // alternate physics storage
 			if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? ph->slopez(d) : ph->floorz(d)))
-#else
-			if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? SLOPEZ : FLOORZ))
-#endif
 				d->floor = wall;
 			else if(d->physstate == PHYS_SLOPE)
 			{
 				d->o.z -= d->radius;
-#ifdef BFRONTIER // alternate physics storage
 				if(!collide(d, vec(0, 0, -1), ph->slopez(d)))
-#else
-				if(!collide(d, vec(0, 0, -1), SLOPEZ))
-#endif
 					d->floor = wall;
 			}
 			break;
 
 		case PHYS_STEP_UP:
-#ifdef BFRONTIER // alternate physics storage
 			d->o.z -= ph->stairheight(d)+0.1f;
 			if(!collide(d, vec(0, 0, -1), ph->slopez(d)))
-#else
-			d->o.z -= STAIRHEIGHT+0.1f;
-			if(!collide(d, vec(0, 0, -1), SLOPEZ))
-#endif
 				d->floor = wall;
 			break;
 
 		case PHYS_SLIDE:
 			d->o.z -= d->radius+0.1f;
-#ifdef BFRONTIER // alternate physics storage
 			if(!collide(d, vec(0, 0, -1)) && wall.z < ph->slopez(d))
-#else
-			if(!collide(d, vec(0, 0, -1)) && wall.z < SLOPEZ)
-#endif
 				d->floor = wall;
 			break;
 	}
@@ -1460,32 +1263,8 @@ VARP(sensitivity, 0, 7, 1000);
 VARP(sensitivityscale, 1, 1, 100);
 VARP(invmouse, 0, 0, 1);
 
-#ifdef BFRONTIER
 void fixcamerarange() { cl->fixview(); }
 void mousemove(int dx, int dy) { cl->mousemove(dx, dy); }
-#else
-void fixcamerarange()
-{
-	const float MAXPITCH = 90.0f;
-	if(camera1->pitch>MAXPITCH) camera1->pitch = MAXPITCH;
-	if(camera1->pitch<-MAXPITCH) camera1->pitch = -MAXPITCH;
-	while(camera1->yaw<0.0f) camera1->yaw += 360.0f;
-	while(camera1->yaw>=360.0f) camera1->yaw -= 360.0f;
-}
-
-void mousemove(int dx, int dy)
-{
-	const float SENSF = 33.0f;	 // try match quake sens
-	camera1->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
-	camera1->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
-	fixcamerarange();
-	if(camera1!=player && player->state!=CS_DEAD)
-	{
-		player->yaw = camera1->yaw;
-		player->pitch = camera1->pitch;
-	}
-}
-#endif
 
 bool entinmap(dynent *d, bool avoidplayers)		// brute force but effective way to find a free spawn spot in the map
 {

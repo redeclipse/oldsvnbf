@@ -5,10 +5,10 @@
 
 SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type)
 {
-	// 1..3 rotate through 90..270 degrees, 4 flips X, 5 flips Y 
-	if(numrots<1 || numrots>5) return s; 
+	// 1..3 rotate through 90..270 degrees, 4 flips X, 5 flips Y
+	if(numrots<1 || numrots>5) return s;
 	SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, (numrots&5)==1 ? s->h : s->w, (numrots&5)==1 ? s->w : s->h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
-	if(!d) fatal("create surface");	
+	if(!d) fatal("create surface");
 	int depth = s->format->BytesPerPixel;
 	loop(y, s->h) loop(x, s->w)
 	{
@@ -56,7 +56,7 @@ void texmad(SDL_Surface *s, const vec &mul, const vec &add)
 {
 	int maxk = min(s->format->BytesPerPixel, 3);
 	uchar *src = (uchar *)s->pixels;
-	loopi(s->h*s->w) 
+	loopi(s->h*s->w)
 	{
 		loopk(maxk)
 		{
@@ -164,10 +164,10 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 		glTexParameteri(target, GL_TEXTURE_WRAP_S, clamp&1 ? GL_CLAMP_TO_EDGE : GL_REPEAT);
         if(target!=GL_TEXTURE_1D) glTexParameteri(target, GL_TEXTURE_WRAP_T, clamp&2 ? GL_CLAMP_TO_EDGE : GL_REPEAT);
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, bilinear ? GL_LINEAR : GL_NEAREST);
-        glTexParameteri(target, GL_TEXTURE_MIN_FILTER, 
+        glTexParameteri(target, GL_TEXTURE_MIN_FILTER,
 			mipit ?
-				(trilinear ? 
-					(bilinear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR) : 
+				(trilinear ?
+					(bilinear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR) :
 					(bilinear ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_NEAREST)) :
 				(bilinear ? GL_LINEAR : GL_NEAREST));
 	}
@@ -288,7 +288,7 @@ static Texture *newtexture(const char *rname, SDL_Surface *s, int clamp = 0, boo
 	GLenum format = texformat(t->bpp);
 	resizetexture(w, h, mipit, format);
     uchar *pixels = (uchar *)s->pixels;
-	if(w != t->xs || h != t->ys) 
+	if(w != t->xs || h != t->ys)
     {
         if(w*h > t->xs*t->ys) pixels = new uchar[formatsize(format)*w*h];
         gluScaleImage(format, t->xs, t->ys, GL_UNSIGNED_BYTE, s->pixels, w, h, GL_UNSIGNED_BYTE, pixels);
@@ -315,11 +315,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 	{
 		static string pname;
 		s_sprintf(pname)("packages/%s", tex->name);
-#ifdef BFRONTIER
 		tname = pname;
-#else
-		tname = path(pname);
-#endif
 	}
 	if(!tname) return NULL;
 
@@ -330,7 +326,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 		if(!file) { if(msg) conoutf("could not load texture %s", tname); return NULL; }
 		file++;
 	}
-	
+
 	if(msg) show_out_of_renderloop_progress(0, file);
 
 	SDL_Surface *s = IMG_Load(findfile(file, "rb"));
@@ -346,7 +342,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 	{
 		const char *cmd = &tname[1], *arg1 = strchr(cmd, ':'), *arg2 = arg1 ? strchr(arg1, ',') : NULL;
 		if(!arg1) arg1 = strchr(cmd, '>');
-		if(!strncmp(cmd, "mad", arg1-cmd)) texmad(s, parsevec(arg1+1), arg2 ? parsevec(arg2+1) : vec(0, 0, 0)); 
+		if(!strncmp(cmd, "mad", arg1-cmd)) texmad(s, parsevec(arg1+1), arg2 ? parsevec(arg2+1) : vec(0, 0, 0));
 		else if(!strncmp(cmd, "ffmask", arg1-cmd)) s = texffmask(s, atoi(arg1+1));
         else if(!strncmp(cmd, "dup", arg1-cmd)) texdup(s, atoi(arg1+1), atoi(arg2+1));
 	}
@@ -380,13 +376,9 @@ Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
 {
 	string tname;
 	s_strcpy(tname, name);
-#ifdef BFRONTIER
 	Texture *t = textures.access(tname);
-#else
-	Texture *t = textures.access(path(tname));
-#endif
 	if(t) return t;
-	SDL_Surface *s = texturedata(tname, NULL, msg); 
+	SDL_Surface *s = texturedata(tname, NULL, msg);
     return s ? newtexture(tname, s, clamp, mipit) : notexture;
 }
 
@@ -420,7 +412,6 @@ void materialreset()
 }
 
 COMMAND(materialreset, "");
-#ifdef BFRONTIER
 sometype textypes[] =
 {
 	{"c", TEX_DIFFUSE},
@@ -444,31 +435,13 @@ char *findtexturename(int type)
 	loopi(sizeof(textypes)/sizeof(textypes[0])) if(textypes[i].id == type) { return textypes[i].name; }
 	return NULL;
 }
-#endif
 
 void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale)
 {
 	if(curtexnum<0 || curtexnum>=0x10000) return;
-#ifdef BFRONTIER
 	int tnum = findtexturetype(type, true), matslot = findmaterial(type, false);
 	if (tnum < 0) tnum = 0;
-#else
-	struct { const char *name; int type; } types[] =
-	{
-		{"c", TEX_DIFFUSE},
-		{"u", TEX_UNKNOWN},
-		{"d", TEX_DECAL},
-		{"n", TEX_NORMAL},
-		{"g", TEX_GLOW},
-		{"s", TEX_SPEC},
-		{"z", TEX_DEPTH},
-		{"e", TEX_ENVMAP}
-	};
-	int tnum = -1, matslot = findmaterial(type);
-	loopi(sizeof(types)/sizeof(types[0])) if(!strcmp(types[i].name, type)) { tnum = i; break; }
-	if(tnum<0) tnum = atoi(type);
-#endif
-	if(tnum==TEX_DIFFUSE)
+	if (tnum == TEX_DIFFUSE)
 	{
 		if(matslot>=0) curmatslot = matslot;
 		else { curmatslot = -1; curtexnum++; }
@@ -478,12 +451,8 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
 	if(tnum==TEX_DIFFUSE) setslotshader(s);
 	s.loaded = false;
-#ifdef BFRONTIER
 	if (s.sts.length() > TEX_ENVMAP)
 		conoutf("warning: too many textures, slot %d file '%s' (%d,%d)", curtexnum, name, matslot, curmatslot);
-#else
-	if(s.sts.length()>=8) conoutf("warning: too many textures in slot %d", curtexnum);
-#endif
 	Slot::Tex &st = s.sts.add();
 	st.type = tnum;
 	st.combined = -1;
@@ -492,17 +461,11 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	st.yoffset = max(*yoffset, 0);
 	st.scale = max(*scale, 0);
 	st.t = NULL;
-#ifdef BFRONTIER
 	s_strcpy(st.lname, name);
 	s_strcpy(st.name, name);
-#else
-	s_strcpy(st.name, name);
-	path(st.name);
-#endif
 }
 
 COMMAND(texture, "ssiiif");
-#ifdef BFRONTIER
 void texturedel(int i, bool local)
 {
 	if (curtexnum > 8)
@@ -530,18 +493,13 @@ void texturedel(int i, bool local)
 ICOMMAND(texturedel, "i", (int *i), {
 	texturedel(*i, true);
 });
-#endif
 
 void autograss(char *name)
 {
 	Slot &s = slots.last();
 	DELETEA(s.autograss);
 	s_sprintfd(pname)("packages/%s", name);
-#ifdef BFRONTIER // moved data
 	s.autograss = newstring(name[0] ? pname : "packages/textures/grass.png");
-#else
-	s.autograss = newstring(name[0] ? pname : "data/grass.png");
-#endif
 }
 
 COMMAND(autograss, "s");
@@ -624,11 +582,7 @@ static void addname(vector<char> &key, Slot &slot, Slot::Tex &t)
 {
 	if(t.combined>=0) key.add('&');
 	s_sprintfd(tname)("packages/%s", t.name);
-#ifdef BFRONTIER
 	for(const char *s = tname; *s; key.add(*s++));
-#else
-	for(const char *s = path(tname); *s; key.add(*s++));
-#endif
 	if(t.rotation)
 	{
 		s_sprintfd(rnum)("#%d", t.rotation);
@@ -685,7 +639,7 @@ SDL_Surface *scalesurface(SDL_Surface *os, int w, int h)
 static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 {
     if(renderpath==R_FIXEDFUNCTION && t.type!=TEX_DIFFUSE && t.type!=TEX_GLOW && !forceload) { t.t = notexture; return; }
-	vector<char> key; 
+	vector<char> key;
 	addname(key, s, t);
 	switch(t.type)
 	{
@@ -718,7 +672,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 	switch(t.type)
 	{
 		case TEX_GLOW:
-			if(renderpath==R_FIXEDFUNCTION) scaleglow(ts, s);  
+			if(renderpath==R_FIXEDFUNCTION) scaleglow(ts, s);
 			break;
 
 		case TEX_DIFFUSE:
@@ -797,11 +751,7 @@ Texture *loadthumbnail(Slot &slot)
 	for(const char *s = "<thumbnail>"; *s; name.add(*s++));
 	addname(name, slot, slot.sts[0]);
 	name.add('\0');
-#ifdef BFRONTIER
 	Texture *t = textures.access(name.getbuf());
-#else
-	Texture *t = textures.access(path(name.getbuf()));
-#endif
 	if(t) slot.thumbnail = t;
 	else
 	{
@@ -835,9 +785,9 @@ GLuint cubemapfromsky(int size)
 {
 	extern Texture *sky[6];
 	if(!sky[0]) return 0;
-    
+
     int tsize = 0, cmw, cmh;
-    GLint tw[6], th[6]; 
+    GLint tw[6], th[6];
     loopi(6)
     {
         glBindTexture(GL_TEXTURE_2D, sky[i]->gl);
@@ -847,7 +797,7 @@ GLuint cubemapfromsky(int size)
     }
     cmw = cmh = min(tsize, size);
     resizetexture(cmw, cmh, true, GL_RGB5, GL_TEXTURE_CUBE_MAP_ARB);
-    
+
 	GLuint tex;
 	glGenTextures(1, &tex);
     uchar *pixels = new uchar[3*max(cmw, tsize)*max(cmh, tsize)];
@@ -868,11 +818,7 @@ Texture *cubemaploadwildcard(const char *name, bool mipit, bool msg)
 	if(!hasCM) return NULL;
 	string tname;
 	s_strcpy(tname, name);
-#ifdef BFRONTIER
 	Texture *t = textures.access(tname);
-#else
-	Texture *t = textures.access(path(tname));
-#endif
 	if(t) return t;
 	char *wildcard = strchr(tname, '*');
 	SDL_Surface *surface[6];
@@ -931,9 +877,6 @@ Texture *cubemapload(const char *name, bool mipit, bool msg)
 {
 	if(!hasCM) return NULL;
 	s_sprintfd(pname)("packages/%s", name);
-#ifndef BFRONTIER
-	path(pname);
-#endif
 	Texture *t = NULL;
 	if(!strchr(pname, '*'))
 	{
@@ -951,18 +894,14 @@ Texture *cubemapload(const char *name, bool mipit, bool msg)
 }
 
 VARFP(envmapsize, 4, 7, 9, setupmaterials());
-#ifdef BFRONTIER
 VARW(envmapradius, 0, 128, 10000);
-#else
-VAR(envmapradius, 0, 128, 10000);
-#endif
 
 struct envmap
 {
 	int radius, size;
 	vec o;
 	GLuint tex;
-};  
+};
 
 static vector<envmap> envmaps;
 static GLuint skyenvmap = 0;
@@ -1018,9 +957,6 @@ GLuint genenvmap(const vec &o, int envmapsize)
 	}
     delete[] pixels;
 	glViewport(0, 0, screen->w, screen->h);
-#ifndef BFRONTIER // external frame updating
-    clientkeepalive();
-#endif
 	return tex;
 }
 
@@ -1049,9 +985,7 @@ void genenvmaps()
 	loopv(envmaps)
 	{
 		envmap &em = envmaps[i];
-#ifdef BFRONTIER // verbosity
 		show_out_of_renderloop_progress(float(i)/float(envmaps.length()), "generating environment maps...");
-#endif
 		em.tex = genenvmap(em.o, em.size ? em.size : envmapsize);
 	}
 }
@@ -1103,15 +1037,9 @@ void writetgaheader(FILE *f, SDL_Surface *s, int bits)
 
 void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png) -> BGR (tga)
 {
-#ifdef BFRONTIER
     SDL_Surface *ns = IMG_Load(findfile(normalfile, "rb"));
     if(!ns) return;
     FILE *f = openfile(destfile, "wb");
-#else
-    SDL_Surface *ns = IMG_Load(findfile(path(normalfile), "rb"));
-    if(!ns) return;
-    FILE *f = openfile(path(destfile), "wb");
-#endif
     if(f)
     {
         writetgaheader(f, ns, 24);
@@ -1129,26 +1057,21 @@ void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png)
 
 void mergenormalmaps(char *heightfile, char *normalfile)    // BGR (tga) -> BGR (tga) (SDL loads TGA as BGR!)
 {
-#ifdef BFRONTIER
     SDL_Surface *hs = IMG_Load(findfile(heightfile, "rb"));
     SDL_Surface *ns = IMG_Load(findfile(normalfile, "rb"));
-#else
-    SDL_Surface *hs = IMG_Load(findfile(path(heightfile), "rb"));
-    SDL_Surface *ns = IMG_Load(findfile(path(normalfile), "rb"));
-#endif
     if(hs && ns)
     {
         uchar def_n[] = { 255, 128, 128 };
         FILE *f = openfile(normalfile, "wb");
         if(f)
         {
-            writetgaheader(f, ns, 24); 
+            writetgaheader(f, ns, 24);
             for(int y = ns->h-1; y>=0; y--) loop(x, ns->w)
             {
                 int off = (x+y*ns->w)*3;
                 uchar *hd = hs ? (uchar *)hs->pixels+off : def_n;
                 uchar *nd = ns ? (uchar *)ns->pixels+off : def_n;
-                #define S(x) x/255.0f*2-1 
+                #define S(x) x/255.0f*2-1
                 vec n(S(nd[0]), S(nd[1]), S(nd[2]));
                 vec h(S(hd[0]), S(hd[1]), S(hd[2]));
                 n.mul(2).add(h).normalize().add(1).div(2).mul(255);

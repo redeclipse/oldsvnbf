@@ -3,51 +3,18 @@
 #include "pch.h"
 #include "engine.h"
 
-#ifndef BFRONTIER
-void backup(char *name, char *backupname)
-{
-	string backupfile;
-	s_strcpy(backupfile, findfile(backupname, "wb"));
-	remove(backupfile);
-	rename(findfile(name, "wb"), backupfile);
-}
-#endif
-
-#ifdef BFRONTIER // map extensions
 sometype mapexts[] = {
 	{ ".bgz", MAP_BFGZ },
 	{ ".ogz", MAP_OCTA },
 };
 string bgzname[MAP_MAX], pcfname, mcfname, picname, mapname;
-#else
-string cgzname, bakname, pcfname, mcfname, picname;
-#endif
 
-#ifndef BFRONTIER
-VARP(savebak, 0, 2, 2);
-
-void cutogz(char *s)
-{
-	char *ogzp = strstr(s, ".ogz");
-	if(ogzp) *ogzp = '\0';
-}
-#endif
-
-#ifdef BFRONTIER
 void setnames(const char *fname, const char *cname)
-#else
-void setnames(const char *fname, const char *cname = 0)
-#endif
 {
 	if(!cname) cname = fname;
-#ifdef BFRONTIER // mapname defined globally
 	string name, pakname, cfgname;
 	s_strncpy(name, cname, 100);
-#else
-	string name, pakname, mapname, cfgname;
-	s_strncpy(name, cname, 100);
-	cutogz(name);
-#endif
+
 	char *slash = strpbrk(name, "/\\");
 	if(slash)
 	{
@@ -61,24 +28,12 @@ void setnames(const char *fname, const char *cname = 0)
 	}
 	if(strpbrk(fname, "/\\")) s_strcpy(mapname, fname);
 	else s_sprintf(mapname)("base/%s", fname);
-#ifdef BFRONTIER
-	loopi(MAP_MAX) s_sprintf(bgzname[i])("packages/%s%s", mapname, mapexts[i]);
-#else
-	cutogz(mapname);
 
-	s_sprintf(cgzname)("packages/%s.ogz", mapname);
-	if(savebak==1) s_sprintf(bakname)("packages/%s.BAK", mapname);
-	else s_sprintf(bakname)("packages/%s_%d.BAK", mapname, lastmillis);
-#endif
+	loopi(MAP_MAX) s_sprintf(bgzname[i])("packages/%s%s", mapname, mapexts[i]);
+
 	s_sprintf(pcfname)("packages/%s/package.cfg", pakname);
 	s_sprintf(mcfname)("packages/%s/%s.cfg",	  pakname, cfgname);
 	s_sprintf(picname)("packages/%s.jpg", mapname);
-
-#ifndef BFRONTIER
-	path(cgzname);
-	path(bakname);
-	path(picname);
-#endif
 }
 
 ushort readushort(gzFile f)
@@ -140,7 +95,7 @@ void savec(cube *c, gzFile f, bool nolms)
 					{
 						loopk(sizeof(surfaceinfo)) gzputc(f, 0);
 						gzwrite(f, &c[i].ext->normals[j], sizeof(surfacenormals));
-					} 
+					}
 				}
 			}
 			else
@@ -229,7 +184,7 @@ void loadc(gzFile f, cube &c)
 				if(c.ext->surfaces[i].lmid == LMID_BRIGHT) bright |= 1 << i;
 				else if(c.ext->surfaces[i].lmid != LMID_AMBIENT) lit |= 1 << i;
 			}
-			if(!lit) 
+			if(!lit)
 			{
 				freesurfaces(c);
 				if(bright) brightencube(c);
@@ -256,8 +211,8 @@ void loadc(gzFile f, cube &c)
 						}
 					}
 				}
-			}	
-		}				
+			}
+		}
 	}
 	c.children = (haschildren ? loadchildren(f) : NULL);
 }
@@ -272,9 +227,8 @@ cube *loadchildren(gzFile f)
 
 void save_world(char *mname, bool nolms)
 {
-#ifdef BFRONTIER // verbosity support
 	int savingstart = SDL_GetTicks();
-	
+
 	string fname;
 	if(strpbrk(mname, "/\\")) s_strcpy(fname, mname);
 	else s_sprintf(fname)("base/%s", mname);
@@ -283,10 +237,10 @@ void save_world(char *mname, bool nolms)
 
 	gzFile f = opengzfile(bgzname[MAP_BFGZ], "wb9");
 	if (!f) { conoutf("error saving '%s' to '%s': file error", mapname, bgzname[MAP_BFGZ]); return; }
-	
+
 	FILE *h = openfile(mcfname, "w");
 	if (!h) { conoutf("could not write config to %s", mcfname); return; }
-	
+
 	strncpy(hdr.head, "BFGZ", 4);
 	hdr.version = MAPVERSION;
 	hdr.headersize = sizeof(bfgz);
@@ -304,7 +258,7 @@ void save_world(char *mname, bool nolms)
 	int numvars = 0;
 	enumerate(*idents, ident, id, {
 		show_out_of_renderloop_progress(float(i)/float((*idents).size), "saving world variables...");
-		
+
 		if (id._type == ID_VAR && id._context & IDC_WORLD)
 		{
 			fprintf(h, "%s", id._name);
@@ -354,7 +308,7 @@ void save_world(char *mname, bool nolms)
 		} \
 		fprintf(h, "\n");
 
-	loopi(MAT_EDIT) 
+	loopi(MAT_EDIT)
 	{
 		show_out_of_renderloop_progress(float(i)/float(MAT_EDIT), "saving material slots...");
 
@@ -444,66 +398,11 @@ void save_world(char *mname, bool nolms)
 	if (verbose) console("saved config '%s'", CON_RIGHT, mcfname);
 	gzclose(f);
 	conoutf("saved map '%s' v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-savingstart)/1000.0f);
-#else
-	if(!*mname) mname = cl->getclientmap();
-	setnames(*mname ? mname : "untitled");
-	if(savebak) backup(cgzname, bakname);
-	gzFile f = opengzfile(cgzname, "wb9");
-	if(!f) { conoutf("could not write map to %s", cgzname); return; }
-	hdr.version = MAPVERSION;
-	hdr.numents = 0;
-	const vector<extentity *> &ents = et->getents();
-	loopv(ents) if(ents[i]->type!=ET_EMPTY) hdr.numents++;
-	hdr.lightmaps = nolms ? 0 : lightmaps.length();
-	header tmp = hdr;
-	endianswap(&tmp.version, sizeof(int), 9);
-	gzwrite(f, &tmp, sizeof(header));
-
-	gzputc(f, (int)strlen(cl->gameident()));
-	gzwrite(f, cl->gameident(), (int)strlen(cl->gameident())+1);
-	writeushort(f, et->extraentinfosize());
-	vector<char> extras;
-	cl->writegamedata(extras);
-	writeushort(f, extras.length());
-	gzwrite(f, extras.getbuf(), extras.length());
-	writeushort(f, texmru.length());
-	loopv(texmru) writeushort(f, texmru[i]);
-	char *ebuf = new char[et->extraentinfosize()];
-	loopv(ents)
-	{
-		if(ents[i]->type!=ET_EMPTY)
-		{
-			entity tmp = *ents[i];
-			endianswap(&tmp.o, sizeof(int), 3);
-			endianswap(&tmp.attr1, sizeof(short), 5);
-			gzwrite(f, &tmp, sizeof(entity));
-			et->writeent(*ents[i], ebuf);
-			if(et->extraentinfosize()) gzwrite(f, ebuf, et->extraentinfosize());
-		}
-	}
-	delete[] ebuf;
-
-	savec(worldroot, f, nolms);
-	if(!nolms) loopv(lightmaps)
-	{
-		LightMap &lm = lightmaps[i];
-		gzputc(f, lm.type | (lm.unlitx>=0 ? 0x80 : 0));
-		if(lm.unlitx>=0)
-		{
-			writeushort(f, ushort(lm.unlitx));
-			writeushort(f, ushort(lm.unlity));
-		}
-		gzwrite(f, lm.data, sizeof(lm.data));
-	}
-
-	gzclose(f);
-	conoutf("wrote map file %s", cgzname);
-#endif
 }
 
 void swapXZ(cube *c)
-{	
-	loopi(8) 
+{
+	loopi(8)
 	{
 		swap(uint,	c[i].faces[0],	c[i].faces[2]);
 		swap(ushort, c[i].texture[0], c[i].texture[4]);
@@ -521,7 +420,6 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 {
 	int loadingstart = SDL_GetTicks();
 	setnames(mname, cname);
-#ifdef BFRONTIER
 	Texture *mapshot = textureload(picname, 0, true, false);
 	bool samegame = true;
 	int maptype = -1, eif = 0;
@@ -543,7 +441,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	gzread(f, &newhdr, sizeof(binary));
 	endianswap(&newhdr.version, sizeof(int), 2);
 	memcpy(&hdr, &newhdr, sizeof(binary));
-	
+
 	if(strncmp(newhdr.head, "BFGZ", 4) == 0)
 	{
 		gzread(f, &hdr.worldsize, hdr.headersize-sizeof(binary));
@@ -583,7 +481,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		hdr.lightmaps = ohdr.lightmaps;
 		hdr.revision = 1;
 		strncpy(hdr.maptitle, ohdr.maptitle, 128);
-		
+
 		if(ohdr.version<=20) conoutf("loading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
 		if(!ohdr.ambient) ohdr.ambient = 25;
 		if(!ohdr.lerpsubdivsize)
@@ -602,16 +500,16 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		setvar("lerpangle", ohdr.lerpangle);
 		setvar("lerpsubdiv", ohdr.lerpsubdiv);
 		setvar("lerpsubdivsize", ohdr.lerpsubdivsize);
-		
+
 		string gametype;
 		s_strcpy(gametype, "fps");
-	
+
 		if(hdr.version>=16)
 		{
 			int len = gzgetc(f);
 			gzread(f, gametype, len+1);
 		}
-	
+
 		if(strcmp(gametype, "fps") != 0 && strcmp(gametype, "bfg") != 0)
 		{
 			samegame = false;
@@ -632,64 +530,6 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		emptymap(12, true, m);
 		return;
 	}
-#else
-	gzFile f = opengzfile(cgzname, "rb9");
-	if(!f) { conoutf("could not read map %s", cgzname); return; }
-	header newhdr;
-	gzread(f, &newhdr, sizeof(header));
-	endianswap(&newhdr.version, sizeof(int), 9);
-	if(strncmp(newhdr.head, "OCTA", 4)!=0) { conoutf("map %s has malformatted header", cgzname); gzclose(f); return; }
-	if(newhdr.version>MAPVERSION) { conoutf("map %s requires a newer version of cube 2", cgzname); gzclose(f); return; }
-	hdr = newhdr;
-	resetmap();
-
-	Texture *mapshot = textureload(picname, 0, true, false);
-    computescreen(mname, mapshot!=notexture ? mapshot : NULL);
-
-	if(hdr.version<=20) conoutf("loading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
-	if(!hdr.ambient) hdr.ambient = 25;
-	if(!hdr.lerpsubdivsize)
-	{
-		if(!hdr.lerpangle) hdr.lerpangle = 44;
-		hdr.lerpsubdiv = 2;
-		hdr.lerpsubdivsize = 4;
-	}
-	setvar("lightprecision", hdr.mapprec ? hdr.mapprec : 32);
-	setvar("lighterror", hdr.maple ? hdr.maple : 8);
-	setvar("bumperror", hdr.mapbe ? hdr.mapbe : 3);
-	setvar("lightlod", hdr.mapllod);
-	setvar("lodsize", hdr.mapwlod);
-	setvar("ambient", hdr.ambient);
-	setvar("fullbright", 0);
-	setvar("lerpangle", hdr.lerpangle);
-	setvar("lerpsubdiv", hdr.lerpsubdiv);
-	setvar("lerpsubdivsize", hdr.lerpsubdivsize);
-	
-	string gametype;
-	s_strcpy(gametype, "fps");
-
-	bool samegame = true;
-	int eif = 0;
-	if(hdr.version>=16)
-	{
-		int len = gzgetc(f);
-		gzread(f, gametype, len+1);
-	}
-
-	if(strcmp(gametype, cl->gameident())!=0)
-	{
-		samegame = false;
-		conoutf("WARNING: loading map from %s game, ignoring entities except for lights/mapmodels)", gametype);
-	}
-	if(hdr.version>=16)
-	{
-		eif = readushort(f);
-		int extrasize = readushort(f);
-		vector<char> extras;
-		loopj(extrasize) extras.add(gzgetc(f));
-		if(samegame) cl->readgamedata(extras);
-	}
-#endif
 	show_out_of_renderloop_progress(0, "clearing world...");
 
 	texmru.setsize(0);
@@ -711,14 +551,9 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	show_out_of_renderloop_progress(0, "loading entities...");
 
 	vector<extentity *> &ents = et->getents();
-#ifndef BFRONTIER
-	char *ebuf = new char[et->extraentinfosize()];
-#endif
 	loopi(hdr.numents)
 	{
-#ifdef BFRONTIER // verbosity
 		show_out_of_renderloop_progress(float(i)/float(hdr.numents), "loading entities...");
-#endif
 		extentity &e = *et->newentity();
 		ents.add(&e);
 		gzread(f, &e, sizeof(entity));
@@ -728,13 +563,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		e.inoctanode = false;
 		if(samegame)
 		{
-#ifdef BFRONTIER
 			if (maptype == MAP_OCTA) { loopj(eif) gzgetc(f); }
 			et->readent(f, maptype, i, e);
-#else
-			if(et->extraentinfosize()) gzread(f, ebuf, et->extraentinfosize());
-			et->readent(e, ebuf); 
-#endif
 		}
 		else
 		{
@@ -771,11 +601,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 			e.attr3 = e.attr4 = 0;
 		}
 	}
-#ifdef BFRONTIER // verbosity
 	if (verbose >= 2) console("loaded %d entities", CON_RIGHT, hdr.numents);
-#else
-	delete[] ebuf;
-#endif
 
 	show_out_of_renderloop_progress(0, "loading octree...");
 	worldroot = loadchildren(f);
@@ -807,7 +633,6 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		lm.finalize();
 	}
 
-#ifdef BFRONTIER // verbosity, map extensions, extended entities, world variables
 	if (verbose >= 2) console("loaded %d lightmaps", CON_RIGHT, hdr.lightmaps);
 
 	show_out_of_renderloop_progress(0, "loading world...");
@@ -821,18 +646,6 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	if (!execfile(pcfname)) exec("packages/package.cfg");
 	if (!execfile(mcfname)) exec("packages/map.cfg");
 	overrideidents = false;
-#else
-	gzclose(f);
-
-	conoutf("read map %s (%.1f seconds)", cgzname, (SDL_GetTicks()-loadingstart)/1000.0f);
-	conoutf("%s", hdr.maptitle);
-
-	overrideidents = true;
-	execfile("data/default_map_settings.cfg");
-	execfile(pcfname);
-	execfile(mcfname);
-	overrideidents = false;
-#endif
 
 	loopv(ents)
 	{
@@ -846,37 +659,22 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	}
 
 	initlights();
-#ifdef BFRONTIER // fix the difference in gridsizes on older maps
 	if (maptype == MAP_OCTA)
 	{
 		mpremip(true);
 		conoutf("WARNING: map imported from cube 2 format, some artifacts may be present, please check your map before saving");
 	}
-#endif
 	allchanged(true);
 
     computescreen(mname, mapshot!=notexture ? mapshot : NULL);
 	attachentities();
 
-#ifdef BFRONTIER // verbosity
 	show_out_of_renderloop_progress(0, "starting world...");
-#endif
 	startmap(cname ? cname : mname);
 }
 
-#ifdef BFRONTIER
-void savecurrentmap() {  }
-void savemap(char *mname) {  }
-
 ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? mname : mapname));
 ICOMMAND(savecurrentmap, "", (), save_world(mapname));
-#else
-void savecurrentmap() { save_world(cl->getclientmap()); }
-void savemap(char *mname) { save_world(mname); }
-
-COMMAND(savemap, "s");
-COMMAND(savecurrentmap, "");
-#endif
 
 void writeobj(char *name)
 {
@@ -884,15 +682,9 @@ void writeobj(char *name)
 	hasVBO = false;
 	allchanged();
 	s_sprintfd(fname)("%s.obj", name);
-#ifdef BFRONTIER // blood frontier
-    FILE *f = openfile(fname, "w"); 
+    FILE *f = openfile(fname, "w");
 	if(!f) return;
 	fprintf(f, "# obj file octa world\n");
-#else
-    FILE *f = openfile(path(fname), "w"); 
-	if(!f) return;
-	fprintf(f, "# obj file of sauerbraten level\n");
-#endif
 	extern vector<vtxarray *> valist;
 	loopv(valist)
 	{
@@ -900,7 +692,7 @@ void writeobj(char *name)
 		uchar *verts = (uchar *)va.vbuf;
 		if(!verts) continue;
 		int vtxsize = VTXSIZE;
-		loopj(va.verts) 
+		loopj(va.verts)
 		{
 			vvec vv;
 			if(floatvtx) { vec &f = *(vec *)verts; loopk(3) vv[k] = short(f[k]); }
@@ -923,10 +715,8 @@ void writeobj(char *name)
 	fclose(f);
 	hasVBO = oldVBO;
 	allchanged();
-}  
-	
-COMMAND(writeobj, "s"); 
+}
 
-#ifdef BFRONTIER // external map title
+COMMAND(writeobj, "s");
+
 char *getmaptitle() { return hdr.maptitle; }
-#endif

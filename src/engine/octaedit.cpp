@@ -2,10 +2,8 @@
 #include "engine.h"
 
 extern int outline;
-#ifdef BFRONTIER
 VARP(showcursorgrid, 0, 0, 1);
 VARP(showselgrid, 0, 1, 1);
-#endif
 
 void boxs(int orient, vec o, const vec &s)
 {
@@ -30,7 +28,7 @@ void boxs3D(const vec &o, vec s, int g)
 {
 	s.mul(g);
 	loopi(6)
-		boxs(i, o, s);	
+		boxs(i, o, s);
 }
 
 void boxsgrid(int orient, vec o, vec s, int g)
@@ -41,7 +39,7 @@ void boxsgrid(int orient, vec o, vec s, int g)
 		  oy = o[C[d]],
 		  xs = s[R[d]],
 		  ys = s[C[d]],
-		  f = !outline ? 0 : (dc>0 ? 0.2f : -0.2f);	
+		  f = !outline ? 0 : (dc>0 ? 0.2f : -0.2f);
 
 	o[D[d]] += dc * s[D[d]]*g + f;
 
@@ -142,10 +140,6 @@ void toggleedit()
 	cancelsel();
 	keyrepeat(editmode);
 	editing = entediting = editmode;
-#ifndef BFRONTIER // fullbright and fullbrightlevel support
-	extern int fullbright;
-	if(fullbright) initlights();
-#endif
 	cc->edittoggled(editmode);
 }
 
@@ -178,7 +172,7 @@ void reorient()
 
 void selextend()
 {
-	if(noedit(true)) return;	
+	if(noedit(true)) return;
 	loopi(3)
 	{
 		if(cur[i]<sel.o[i])
@@ -265,7 +259,7 @@ void editmoveplane(const vec &o, const vec &ray, int d, float off, vec &handle, 
 	float dist = 0.0f;
 
 	if(pl.rayintersect(player->o, ray, dist))
-	{		
+	{
 		dest = ray;
 		dest.mul(dist);
 		dest.add(player->o);
@@ -292,7 +286,7 @@ void cursorupdate()
 	if(sel.grid == 0) sel.grid = gridsize;
 
 	vec target(worldpos);
-	if(!insideworld(target)) loopi(3) 
+	if(!insideworld(target)) loopi(3)
 		target[i] = max(min(target[i], hdr.worldsize), 0);
 	vec ray(target);
 	ray.sub(player->o).normalize();
@@ -302,9 +296,9 @@ void cursorupdate()
 
 	bool hovering = false;
     hmapsel = false;
-			
+
 	if(moving)
-	{		
+	{
 		ivec e;
 		static vec v, handle;
 		editmoveplane(sel.o.tovec(), ray, od, sel.o[D[od]]+odc*sel.grid*sel.s[D[od]], handle, v, !havesel);
@@ -319,27 +313,27 @@ void cursorupdate()
 		sel.o[R[od]] = e[R[od]];
 		sel.o[C[od]] = e[C[od]];
 	}
-	else 
+	else
 	if(entmoving)
 	{
-		entdrag(ray);		
+		entdrag(ray);
 	}
 	else
-	{  
+	{
 		vec v;
 		ivec w;
 		float sdist = 0, wdist = 0, t;
 		int entorient = 0, ent = -1;
-		
+
 		wdist = rayent(player->o, ray, v, 0, (editmode && showmat ? RAY_EDITMAT : 0)	// select cubes first
 											| (!dragging && entediting ? RAY_ENTS : 0)
-											| RAY_SKIPFIRST 
+											| RAY_SKIPFIRST
 											| (passthroughcube==1 ? RAY_PASS : 0), gridsize, entorient, ent);
-	 
+
 		if((havesel || dragging) && !passthroughsel)	 // now try selecting the selection
 			if(rayrectintersect(sel.o.tovec(), vec(sel.s.tovec()).mul(sel.grid), player->o, ray, sdist, orient))
 			{	// and choose the nearest of the two
-				if(sdist < wdist) 
+				if(sdist < wdist)
 				{
 					wdist = sdist;
 					ent	= -1;
@@ -353,18 +347,18 @@ void cursorupdate()
 				sel.s = vec(0);
 			}
 		}
-		else 
+		else
 		{
-		
+
 			v = ray;
 			v.mul(wdist+0.1f);
 			v.add(player->o);
 			w = v;
-            cube *c = &lookupcube(w.x, w.y, w.z);            
+            cube *c = &lookupcube(w.x, w.y, w.z);
             if(gridlookup && !dragging && !moving && !havesel && hmapedit!=1) gridsize = lusize;
 			int mag = lusize / gridsize;
 			normalizelookupcube(w.x, w.y, w.z);
-			if(sdist == 0 || sdist > wdist) rayrectintersect(lu.tovec(), vec(gridsize), player->o, ray, t=0, orient); // just getting orient	 
+			if(sdist == 0 || sdist > wdist) rayrectintersect(lu.tovec(), vec(gridsize), player->o, ray, t=0, orient); // just getting orient
 			cur = lu;
 			cor = w;
 			cor.mul(2).div(gridsize);
@@ -373,12 +367,12 @@ void cursorupdate()
 
             if(mag > 0 && hmapedit==1)
             {
-                hmapsel = isheightmap(horient, dimension(horient), false, c);     
+                hmapsel = isheightmap(horient, dimension(horient), false, c);
                 if(hmapsel)
                     od = dimension(orient = horient);
             }
 
-			if(dragging) 
+			if(dragging)
 			{
 				updateselection();
 				sel.cx	= min(cor[R[d]], lastcor[R[d]]);
@@ -422,17 +416,17 @@ void cursorupdate()
 			if(mag>1 && selchildcount==1) selchildcount = -mag;
 		}
 	}
-	
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE);
-	
-	// cursors	
+
+	// cursors
 
 	renderentselection(player->o, ray, entmoving!=0);
 
     glEnable(GL_POLYGON_OFFSET_LINE);
-#ifdef BFRONTIER
-#define planargrid(q,r,s) \
+
+	#define planargrid(q,r,s) \
 		for (float v = 0.f; v < (hdr.worldsize-s); v += s) \
 		{ \
 			vec a; \
@@ -440,7 +434,6 @@ void cursorupdate()
 			a = q; a.y = v; boxs3D(a, r, s); \
 			a = q; a.z = v; boxs3D(a, r, s); \
 		}
-#endif
 
 	if(!moving && !hovering)
 	{
@@ -449,13 +442,12 @@ void cursorupdate()
         else
 		glColor3ub(120,120,120);
 		boxs(orient, lu.tovec(), vec(lusize));
-#ifdef BFRONTIER
+
 		if (showcursorgrid)
 		{
 			glColor3ub(0, 0, 10);
 			planargrid(lu.tovec(), vec(1, 1, 1), gridsize);
 		}
-#endif
 	}
 
 	// selections
@@ -471,20 +463,19 @@ void cursorupdate()
 		co[R[d]] += 0.5f*(sel.cx*gridsize);
 		co[C[d]] += 0.5f*(sel.cy*gridsize);
 		cs[R[d]]  = 0.5f*(sel.cxs*gridsize);
-		cs[C[d]]  = 0.5f*(sel.cys*gridsize);		
+		cs[C[d]]  = 0.5f*(sel.cys*gridsize);
 		cs[D[d]] *= gridsize;
 		boxs(sel.orient, co, cs);
 		glColor3ub(0,0,120);	 // 3D selection box
 		boxs3D(sel.o.tovec(), sel.s.tovec(), sel.grid);
-#ifdef BFRONTIER
+
 		if (showselgrid)
 		{
 			glColor3ub(10, 10, 10);
 			planargrid(sel.o.tovec(), sel.s.tovec(), sel.grid);
 		}
-#endif
 	}
-	
+
     glDisable(GL_POLYGON_OFFSET_LINE);
 
 	glDisable(GL_BLEND);
@@ -646,11 +637,7 @@ void makeundo()						// stores state of selected cubes before editing
 {
 	if(lastsel==sel || sel.s==vec(0)) return;
 	lastsel=sel;
-#ifdef BFRONTIER
     if(otherclients(false)) return;
-#else
-    if(multiplayer(false)) return;
-#endif
 	undoblock u;
 	initundocube(u, sel);
 	addundo(u);
@@ -658,12 +645,8 @@ void makeundo()						// stores state of selected cubes before editing
 
 void swapundo(vector<undoblock> &a, vector<undoblock> &b, const char *s)
 {
-#ifdef BFRONTIER
 	if(noedit() || otherclients()) return;
-#else
-	if(noedit() || multiplayer()) return;
-#endif
-	if(a.empty()) { conoutf("nothing more to %s", s); return; }	
+	if(a.empty()) { conoutf("nothing more to %s", s); return; }
 	int ts = a.last().ts;
 	while(!a.empty() && ts==a.last().ts)
 	{
@@ -806,54 +789,54 @@ bool ischildless(cube &c)
             return false;
     }
     emptyfaces(c);
-    discardchildren(c);    
+    discardchildren(c);
     return true;
 }
 
 inline bool ishtexture(int t)
-{    
+{
     loopi(htexsize) // TODO: optimize with special tex index region
         if(t == htextures[i])
             return true;
     return false;
 }
 
-inline bool isheightmap(int o, int d, bool empty, cube *c) 
+inline bool isheightmap(int o, int d, bool empty, cube *c)
 {
-    return ischildless(*c) && 
+    return ischildless(*c) &&
            ( (empty && isempty(*c)) ||
-           (         
+           (
             (c->faces[R[d]] & 0x77777777) == 0 &&
             (c->faces[C[d]] & 0x77777777) == 0 &&
             ishtexture(c->texture[o])
            ));
 }
 
-namespace hmap 
+namespace hmap
 {
 #   define PAINTED     1
 #   define NOTHMAP     2
 #   define MAPPED      16
     uchar  flags[MAXBRUSH][MAXBRUSH];
     cube   *cmap[MAXBRUSHC][MAXBRUSHC][4];
-    int    mapz[MAXBRUSHC][MAXBRUSHC];    
+    int    mapz[MAXBRUSHC][MAXBRUSHC];
     int    map [MAXBRUSH][MAXBRUSH];
-	
+
 	selinfo changes;
     bool selecting;
     int d, dc, dr, dcr, biasup, br, hws, fg;
     int gx, gy, gz, mx, my, mz, nx, ny, nz, bmx, bmy, bnx, bny;
     uint fs;
 
-    cube *getcube(ivec t, int f) 
+    cube *getcube(ivec t, int f)
     {
-        t[d] += dcr*f*gridsize;    
+        t[d] += dcr*f*gridsize;
         if(t[d] > nz || t[d] < mz) return NULL;
         cube *c = &lookupcube(t.x, t.y, t.z, -gridsize);
-        if(!isheightmap(sel.orient, d, true, c)) return NULL;        
+        if(!isheightmap(sel.orient, d, true, c)) return NULL;
 		if(lusize > gridsize)
             c = &lookupcube(t.x, t.y, t.z, gridsize);
-        discardchildren(*c);    
+        discardchildren(*c);
         if     (t.x < changes.o.x) changes.o.x = t.x;
         else if(t.x > changes.s.x) changes.s.x = t.x;
         if     (t.y < changes.o.y) changes.o.y = t.y;
@@ -881,19 +864,19 @@ namespace hmap
         if(!(flags[x][y] & MAPPED))
           map[x][y] = v + (z*8);
       flags[x][y] |= MAPPED;
-    }    
- 
+    }
+
     void select(int x, int y, int z)
     {
         if((NOTHMAP & flags[x][y]) || (PAINTED & flags[x][y])) return;
         ivec t(d, x+gx, y+gy, dc ? z : hws-z);
         t.shl(gridpower);
-        
-        cube **c = cmap[x][y];     
+
+        cube **c = cmap[x][y];
         loopk(4) c[k] = NULL;
         c[1] = getcube(t, 0);
-        if(!c[1] || !isempty(*c[1])) 
-        {   // try up             
+        if(!c[1] || !isempty(*c[1]))
+        {   // try up
             c[2] = c[1];
             c[1] = getcube(t, 1);
             if(!c[1] || isempty(*c[1])) {
@@ -902,39 +885,39 @@ namespace hmap
                 z++, t[d]+=fg;
         }
         else // drop down
-        { 
-            z--; 
-            t[d]-= fg; 
+        {
+            z--;
+            t[d]-= fg;
             c[0] = c[1];
-            c[1] = getcube(t, 0);            
+            c[1] = getcube(t, 0);
         }
-        
+
         if(!c[1] || isempty(*c[1])) { flags[x][y] |= NOTHMAP; return; }
 
         flags[x][y] |= PAINTED;
         mapz [x][y]  = z;
-        
+
         if(!c[0]) c[0] = getcube(t, 1);
         if(!c[2]) c[2] = getcube(t, -1);
         c[3] = getcube(t, -2);
         c[2] = !c[2] || isempty(*c[2]) ? NULL : c[2];
         c[3] = !c[3] || isempty(*c[3]) ? NULL : c[3];
-        
-        uint face = getface(c[1], d);          
-        if(face == 0x08080808 && (!c[0] || !isempty(*c[0]))) { flags[x][y] |= NOTHMAP; return; }              
+
+        uint face = getface(c[1], d);
+        if(face == 0x08080808 && (!c[0] || !isempty(*c[0]))) { flags[x][y] |= NOTHMAP; return; }
         if(c[1]->faces[R[d]] == F_SOLID)   // was single
-            face += 0x08080808;      
+            face += 0x08080808;
         else                               // was pair
             face += c[2] ? getface(c[2], d) : 0x08080808;
-        face += 0x08080808;                // c[3]        
+        face += 0x08080808;                // c[3]
         uchar *f = (uchar*)&face;
         addpoint(x,   y,   z, f[0]);
         addpoint(x+1, y,   z, f[1]);
         addpoint(x,   y+1, z, f[2]);
         addpoint(x+1, y+1, z, f[3]);
-                
+
         if(selecting) // continue to adjacent cubes
-        {        
+        {
             if(x>bmx) select(x-1, y, z);
             if(x<bnx) select(x+1, y, z);
             if(y>bmy) select(x, y-1, z);
@@ -972,19 +955,19 @@ namespace hmap
 
         if(biasup)
             pullhmap(0, >, <, 1, 0, -);
-        else 
-            pullhmap(hdr.worldsize, <, >, 0, 8, +);     
-   
+        else
+            pullhmap(hdr.worldsize, <, >, 0, 8, +);
+
         cube **c  = cmap[x][y];
         int e[2][2];
         int notempty = 0;
-      
+
         loopk(4) if(c[k]) {
             loopi(2) loopj(2) {
                 e[i][j] = min(8, map[x+i][y+j] - (mapz[x][y]+3-k)*8);
-                notempty |= e[i][j] > 0;         
+                notempty |= e[i][j] > 0;
             }
-            if(notempty) 
+            if(notempty)
             {
                 c[k]->texture[horient] = c[1]->texture[horient];
                 solidfaces(*c[k]);
@@ -1003,12 +986,12 @@ namespace hmap
 	        else
                 emptyfaces(*c[k]);
 		}
-        
+
         if(!changed) return;
         if(x>mx) ripple(x-1, y, mapz[x][y], true);
         if(x<nx) ripple(x+1, y, mapz[x][y], true);
         if(y>my) ripple(x, y-1, mapz[x][y], true);
-        if(y<ny) ripple(x, y+1, mapz[x][y], true);    
+        if(y<ny) ripple(x, y+1, mapz[x][y], true);
 
 #define DIAGONAL_RIPPLE(a,b,exp) if(exp) { \
             if(flags[x a][ y] & PAINTED) \
@@ -1021,21 +1004,21 @@ namespace hmap
         DIAGONAL_RIPPLE(-1, +1, (x>mx && y<ny)); //    won't unless changed
         DIAGONAL_RIPPLE(+1, +1, (x<nx && y<ny));
         DIAGONAL_RIPPLE(+1, -1, (x<nx && y>my));
-		}		
+		}
 
 #define loopbrush() for(int x=bmx; x<=bnx; x++) for(int y=bmy; y<=bny; y++)
 
     void paint()
-	{			
+	{
         loopbrush()
-            map[x][y] -= dr * brush[x][y];        
+            map[x][y] -= dr * brush[x][y];
     }
 
     void smooth()
     {
         int sum, div;
         bnx-=2, bny-=2;
-        loopbrush()        
+        loopbrush()
         {
             sum = 0;
             div = 9;
@@ -1047,16 +1030,16 @@ namespace hmap
                 map[x+1][y+1] = sum / div;
         }
         bnx+=2, bny+=2;
-		}		
+		}
 
     void rippleandset()
-    {              
+    {
         loopbrush()
-            ripple(x, y, gz, false);        
+            ripple(x, y, gz, false);
     }
 
-    void run(int dir, int mode) 
-    {                 
+    void run(int dir, int mode)
+    {
         d  = dimension(sel.orient);
         dc = dimcoord(sel.orient);
         dcr= dc ? 1 : -1;
@@ -1073,11 +1056,11 @@ namespace hmap
         fs = dc ? 4 : 0;
         fg = dc ? gridsize : -gridsize;
         bmx = max(brushminx, -gx);          // brush range
-        bmy = max(brushminy, -gy);        
+        bmy = max(brushminy, -gy);
         bnx = min(brushmaxx, hws-gx) - 1;
-        bny = min(brushmaxy, hws-gy) - 1;   
+        bny = min(brushmaxy, hws-gy) - 1;
         mx = max(0, -gx);                   // ripple range
-        my = max(0, -gy);        
+        my = max(0, -gy);
         nx = min(MAXBRUSH-1, hws-gx) - 1;
         ny = min(MAXBRUSH-1, hws-gy) - 1;
         nz = hdr.worldsize-gridsize;
@@ -1095,7 +1078,7 @@ namespace hmap
         selecting = false;
         if(paintbrush)
             paint();
-        else 
+        else
             smooth();
         rippleandset();                       // pull up points to cubify, and set
         changes.s.sub(changes.o).shr(gridpower).add(1);
@@ -1103,13 +1086,9 @@ namespace hmap
     }
 }
 
-void edithmap(int dir, int mode) {    
-#ifdef BFRONTIER
+void edithmap(int dir, int mode) {
     if(otherclients() || !hmapsel) return;
-#else
-    if(multiplayer() || !hmapsel) return;
-#endif
-    hmap::run(dir, mode);    
+    hmap::run(dir, mode);
 }
 
 ///////////// main cube edit ////////////////
@@ -1233,8 +1212,8 @@ void editface(int *dir, int *mode)
 {
 	if(noedit(moving!=0)) return;
     if(hmapedit!=1)
-        mpeditface(*dir, *mode, sel, true);        
-    else 
+        mpeditface(*dir, *mode, sel, true);
+    else
 		edithmap(*dir, *mode);
 }
 
@@ -1255,7 +1234,7 @@ void mpdelcube(selinfo &sel, bool local)
 	loopselxyz(discardchildren(c); emptyfaces(c));
 }
 
-void delcube() 
+void delcube()
 {
 	if(noedit()) return;
 	mpdelcube(sel, true);
@@ -1327,7 +1306,7 @@ void filltexlist()
 void edittex(int i)
 {
 	curtexindex = i = min(max(i, 0), curtexnum-1);
-    int t = lasttex = texmru[i];    
+    int t = lasttex = texmru[i];
 	mpedittex(t, allfaces, sel, true);
 }
 
@@ -1500,11 +1479,7 @@ void mpeditmat(int matid, selinfo &sel, bool local)
 void editmat(char *name)
 {
 	if(noedit()) return;
-#ifdef BFRONTIER
 	int id = findmaterial(name, true);
-#else
-	int id = findmaterial(name);
-#endif
 	if(id<0) { conoutf("unknown material \"%s\"", name); return; }
 	mpeditmat(id, sel, true);
 }
@@ -1519,28 +1494,28 @@ VAR(thumbtime, 0, 50, 1000);
 
 static int lastthumbnail = 0;
 
-struct texturegui : g3d_callback 
+struct texturegui : g3d_callback
 {
 	bool menuon;
 	vec menupos;
 	int menustart;
-	
+
 	void gui(g3d_gui &g, bool firstpass)
 	{
-		int menutab = 1+curtexindex/(TEXTURE_WIDTH*TEXTURE_HEIGHT);		
+		int menutab = 1+curtexindex/(TEXTURE_WIDTH*TEXTURE_HEIGHT);
 		int origtab = menutab;
 		g.start(menustart, 0.04f, &menutab);
 		loopi(1+curtexnum/(TEXTURE_WIDTH*TEXTURE_HEIGHT))
-		{	
+		{
 			g.tab((i==0)?"Textures":NULL, 0xAAFFAA);
 			if(i != origtab-1) continue; //don't load textures on non-visible tabs!
-			loopj(TEXTURE_HEIGHT) 
+			loopj(TEXTURE_HEIGHT)
 			{
 				g.pushlist();
-				loopk(TEXTURE_WIDTH) 
+				loopk(TEXTURE_WIDTH)
 				{
 					int ti = (i*TEXTURE_HEIGHT+j)*TEXTURE_WIDTH+k;
-					if(ti<curtexnum) 
+					if(ti<curtexnum)
 					{
                         Texture *tex = notexture;
 						Slot &slot = lookuptexture(texmru[ti], false);
@@ -1548,7 +1523,7 @@ struct texturegui : g3d_callback
 						else if(slot.loaded) tex = slot.sts[0].t;
 						else if(slot.thumbnail) tex = slot.thumbnail;
 						else if(lastmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = lastmillis; }
-                        if(g.texture(tex, 1.0)&G3D_UP && (slot.loaded || tex!=notexture)) 
+                        if(g.texture(tex, 1.0)&G3D_UP && (slot.loaded || tex!=notexture))
 							edittex(ti);
 					}
 					else
@@ -1567,7 +1542,7 @@ struct texturegui : g3d_callback
 	}
 
 	void show()
-	{	
+	{
 		if(!menuon) return;
 		filltexlist();
 		if(!editmode || camera1->o.dist(menupos) > menuautoclose) menuon = false;
@@ -1575,9 +1550,9 @@ struct texturegui : g3d_callback
 	}
 } gui;
 
-void g3d_texturemenu() 
-{ 
-	gui.show(); 
+void g3d_texturemenu()
+{
+	gui.show();
 }
 
 void showtexgui(int *n) { gui.showtextures(((*n==0) ? !gui.menuon : (*n==1)) && editmode); }
@@ -1599,7 +1574,7 @@ void render_texture_panel(int w, int h)
 
 		static Shader *rgbonlyshader = NULL;
 		if(!rgbonlyshader) rgbonlyshader = lookupshaderbyname("rgbonly");
-		
+
 		rgbonlyshader->set();
 
 		loopi(7)

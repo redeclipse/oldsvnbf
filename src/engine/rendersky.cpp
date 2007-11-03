@@ -3,17 +3,12 @@
 
 Texture *sky[6] = { 0, 0, 0, 0, 0, 0 };
 float spinsky = 0;
-#ifdef BFRONTIER
 string lastsky = "";
-#endif
 
 void loadsky(char *basename, float *spin)
 {
 	spinsky = *spin;
 
-#ifndef BFRONTIER
-	static string lastsky = "";
-#endif
 	if(strcmp(lastsky, basename)==0) return;
 	static char *side[] = { "ft", "bk", "lf", "rt", "dn", "up" };
 	loopi(6)
@@ -90,7 +85,7 @@ void draw_envbox(int w, float zclip = 0.0f)
 }
 
 VARP(sparklyfix, 0, 1, 1);
-VAR(showsky, 0, 1, 1); 
+VAR(showsky, 0, 1, 1);
 
 bool drawskylimits(bool explicitonly, float zreflect)
 {
@@ -121,7 +116,7 @@ void drawskyoutline()
     }
 	glColor3f(0.5f, 0.0f, 0.5f);
 	rendersky(true);
-    if(!wireframe) 
+    if(!wireframe)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDisable(GL_POLYGON_OFFSET_LINE);
@@ -134,7 +129,7 @@ void drawskyoutline()
 
 void drawskybox(int farplane, bool limited, float zreflect)
 {
-	if(limited && !zreflect) 
+	if(limited && !zreflect)
 	{
 		if(!drawskylimits(false, 0) && !editmode && insideworld(camera1->o)) return;
 	}

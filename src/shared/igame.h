@@ -7,14 +7,8 @@ struct icliententities
     virtual void editent(int i) = 0;
     virtual const char *entnameinfo(entity &e) = 0;
     virtual const char *entname(int i) = 0;
-#ifdef BFRONTIER
 	virtual void readent(gzFile &g, int maptype, int id, entity &e) { return; }
 	virtual void writeent(gzFile &g, int id, entity &e) { return; }
-#else
-    virtual int extraentinfosize() = 0;
-    virtual void writeent(entity &e, char *buf) = 0;
-    virtual void readent(entity &e, char *buf) = 0;
-#endif
     virtual float dropheight(entity &e) = 0;
     virtual void rumble(extentity &e) = 0;
     virtual void trigger(extentity &e) = 0;
@@ -37,19 +31,14 @@ struct iclientcom
     virtual bool allowedittoggle() = 0;
     virtual void edittoggled(bool on) {}
     virtual void writeclientinfo(FILE *f) = 0;
-#ifdef BFRONTIER
     virtual void toserver(char *text, bool action = false) = 0;
     virtual void changemap(const char *name) = 0;
 	virtual bool ready() { return true; }
 	virtual int otherclients() { return 0; }
 	virtual void toservcmd(char *text, bool msg) { return; }
-#else
-    virtual void toserver(char *text) = 0;
-#endif
     virtual int numchannels() { return 1; }
 };
 
-#ifdef BFRONTIER
 struct iphysics
 {
     virtual ~iphysics() {}
@@ -77,36 +66,19 @@ struct iphysics
 		return true;
     }
 };
-#endif
+
 struct igameclient
 {
     virtual ~igameclient() {}
 
-#ifndef BFRONTIER
-    virtual char *gameident() = 0;
-    virtual char *defaultmap() = 0;
-    virtual char *savedconfig() = 0;
-    virtual char *defaultconfig() = 0;
-    virtual char *autoexec() = 0;
-    virtual char *savedservers() { return NULL; }
-#endif
-
     virtual icliententities *getents() = 0;
-#ifdef BFRONTIER
     virtual iphysics *getphysics() = 0;
-#endif
     virtual iclientcom *getcom() = 0;
 
     virtual bool clientoption(char *arg) { return false; }
     virtual void updateworld(vec &pos, int curtime, int lm) = 0;
     virtual void initclient() = 0;
-#ifdef BFRONTIER
     virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
-#else
-    virtual void physicstrigger(physent *d, bool local, int floorlevel, int waterlevel) = 0;
-    virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
-    virtual char *getclientmap() = 0;
-#endif
     virtual void resetgamestate() = 0;
     virtual void suicide(physent *d) = 0;
     virtual void newmap(int size) = 0;
@@ -119,25 +91,17 @@ struct igameclient
     virtual dynent *iterdynents(int i) = 0;
     virtual int numdynents() = 0;
     virtual void rendergame() = 0;
-#ifndef BFRONTIER
-    virtual void writegamedata(vector<char> &extras) = 0;
-    virtual void readgamedata(vector<char> &extras) = 0;
-#endif
     virtual void g3d_gamemenus() = 0;
-    virtual void crosshaircolor(float &r, float &g, float &b) {} 
+    virtual void crosshaircolor(float &r, float &g, float &b) {}
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}
-#ifndef BFRONTIER // alternate camera
-    virtual void setupcamera() {}
-#endif
     virtual void adddynlights() {}
     virtual void particletrack(physent *owner, vec &o, vec &d) {}
-#ifdef BFRONTIER // alternate camera
 	virtual void recomputecamera()
 	{
 		extern bool deathcam;
 		extern physent *camera1;
 		extern dynent *player;
-		
+
 		if(deathcam && player->state!=CS_DEAD) deathcam = false;
 		extern int testanims;
 		if(((editmode && !testanims) || !thirdperson) && player->state!=CS_DEAD)
@@ -159,7 +123,7 @@ struct igameclient
 			camera1->type = ENT_CAMERA;
 			camera1->move = -1;
 			camera1->eyeheight = 2;
-			
+
 			loopi(10)
 			{
 				if(!moveplayer(camera1, 10, true, 16)) break;
@@ -173,11 +137,11 @@ struct igameclient
 		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, dir);
 		vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
 		vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
-	
+
 		if(raycubepos(camera1->o, dir, worldpos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
 			worldpos = dir.mul(10).add(camera1->o); //otherwise 3dgui won't work when outside of map
 	}
-	
+
 	virtual void fixview()
 	{
 		extern physent *camera1;
@@ -210,7 +174,7 @@ struct igameclient
 		extern bool menuactive();
 		return !(hidehud || player->state==CS_SPECTATOR) || menuactive();
 	}
-	
+
 	virtual bool gamethirdperson() { extern int thirdperson; return thirdperson; } ;
 	virtual bool gethudcolour(vec &colour) { return false; }
 
@@ -226,11 +190,10 @@ struct igameclient
 		//	return vec(d->o).sub(vec(0, 0, d->eyeheight));
 		return vec(d->o);
 	}
-	
+
 	virtual void menuevent(int event) { return; }
 	virtual char *gametitle() = 0;
 	virtual char *gametext() = 0;
-#endif
 };
 
 struct igameserver
@@ -252,23 +215,15 @@ struct igameserver
     virtual int welcomepacket(ucharbuf &p, int n) = 0;
     virtual void serverinforeply(ucharbuf &p) = 0;
     virtual void serverupdate(int lastmillis, int totalmillis) = 0;
-#ifdef BFRONTIER
 	virtual int servercompare(serverinfo *a, serverinfo *b) { return strcmp(a->name, b->name); }
     virtual const char *serverinfogui(g3d_gui *cgui, vector<serverinfo> &servers) { return NULL; }
-#else
-    virtual bool servercompatible(char *name, char *sdec, char *map, int ping, const vector<int> &attr, int np) = 0;
-    virtual void serverinfostr(char *buf, const char *name, const char *desc, const char *map, int ping, const vector<int> &attr, int np) = 0;
-#endif
     virtual int serverinfoport() = 0;
     virtual int serverport() = 0;
     virtual char *getdefaultmaster() = 0;
     virtual void sendservmsg(const char *s) = 0;
-#ifdef BFRONTIER
     virtual void changemap(const char *s, int mode = 0, int muts = 0) { return; }
-	virtual int getmastertype() { return 0; }
     virtual char *defaultmap() = 0;
     virtual int defaultmode() = 0;
-#endif
 };
 
 struct igame

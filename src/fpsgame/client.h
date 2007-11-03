@@ -12,19 +12,14 @@ struct clientcom : iclientcom
 	bool spectator;
 
 	fpsent *player1;
-	
-#ifdef BFRONTIER // server version, centerprint chat
+
 	IVARP(centerchat, 0, 1, 1);
 	IVARP(colourchat, 0, 1, 1);
-#endif
-    clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false), player1(_cl.player1)
+
+	clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false), player1(_cl.player1)
 	{
-#ifdef BFRONTIER
         CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s, false));
         CCOMMAND(me, "C", (clientcom *self, char *s), self->toserver(s, true));
-#else
-        CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s));
-#endif
         CCOMMAND(name, "s", (clientcom *self, char *s), self->switchname(s));
         CCOMMAND(team, "s", (clientcom *self, char *s), self->switchteam(s));
         CCOMMAND(map, "s", (clientcom *self, char *s), self->changemap(s));
@@ -43,13 +38,13 @@ struct clientcom : iclientcom
         CCOMMAND(recorddemo, "i", (clientcom *self, int *val), self->recorddemo(*val));
         CCOMMAND(stopdemo, "", (clientcom *self), self->stopdemo());
         CCOMMAND(cleardemos, "i", (clientcom *self, int *val), self->cleardemos(*val));
+		CCOMMAND(getready, "", (clientcom *self), intret(self->ready()));
 
         extern void result(const char *s);
         CCOMMAND(getname, "", (clientcom *self), result(self->player1->name));
         CCOMMAND(getteam, "", (clientcom *self), result(self->player1->team));
 	}
 
-#ifdef BFRONTIER // priv checker
 	bool haspriv(int flag, bool quiet = false)
 	{
 		if (player1->privilege>=flag) return true;
@@ -60,12 +55,12 @@ struct clientcom : iclientcom
 		}
 		return false;
 	}
-#endif
+
 	void switchname(const char *name)
 	{
-		if(name[0]) 
-		{ 
-			c2sinit = false; 
+		if(name[0])
+		{
+			c2sinit = false;
 			filtertext(player1->name, name, false, MAXNAMELEN);
 		}
 		else conoutf("your name is: %s", cl.colorname(player1));
@@ -73,9 +68,9 @@ struct clientcom : iclientcom
 
 	void switchteam(const char *team)
 	{
-		if(team[0]) 
-		{ 
-			c2sinit = false; 
+		if(team[0])
+		{
+			c2sinit = false;
 			filtertext(player1->team, team, false, MAXTEAMLEN);
 		}
 		else conoutf("your team is: %s", player1->team);
@@ -96,20 +91,13 @@ struct clientcom : iclientcom
 
 	void gameconnect(bool _remote)
 	{
-#ifdef BFRONTIER // local server support
 		connected = _remote;
-#else
-		connected = true;
-#endif
 		remote = _remote;
 		if(editmode) toggleedit();
 	}
 
 	void gamedisconnect()
 	{
-#ifndef BFRONTIER // server version, alternate follow method
-        if(remote) cl.stopfollowing();
-#endif
 		connected = false;
 		player1->clientnum = -1;
 		c2sinit = false;
@@ -123,11 +111,7 @@ struct clientcom : iclientcom
 
 	bool allowedittoggle()
 	{
-#ifdef BFRONTIER
 		bool allow = !connected || !remote || m_edit(cl.gamemode);
-#else
-		bool allow = !connected || !remote || cl.gamemode==1;
-#endif
 		if(!allow) conoutf("editing in multiplayer requires coopedit mode (1)");
 		if(allow && spectator) return false;
 		return allow;
@@ -184,7 +168,7 @@ struct clientcom : iclientcom
 		if(!remote || !arg[0]) return;
 		int val = 1;
 		const char *passwd = "";
-		if(!arg[1] && isdigit(arg[0])) val = atoi(arg); 
+		if(!arg[1] && isdigit(arg[0])) val = atoi(arg);
 		else passwd = arg;
 		addmsg(SV_SETMASTER, "ris", val, passwd);
 	}
@@ -198,11 +182,7 @@ struct clientcom : iclientcom
 
     void togglespectator(int val, const char *who)
 	{
-#ifdef BFRONTIER // alternate follow method
 		if (!who[0]) cl.cameranum = -player1->clientnum;
-#else
-		if(!remote) return;
-#endif
         int i = who[0] ? parseplayer(who) : player1->clientnum;
 		if(i>=0) addmsg(SV_SPECTATOR, "rii", i, val);
 	}
@@ -216,7 +196,7 @@ struct clientcom : iclientcom
 		{
 			static int spectypes[] = { SV_MAPVOTE, SV_GETMAP, SV_TEXT, SV_SETMASTER };
 			bool allowed = false;
-			loopi(sizeof(spectypes)/sizeof(spectypes[0])) if(type==spectypes[i]) 
+			loopi(sizeof(spectypes)/sizeof(spectypes[0])) if(type==spectypes[i])
 			{
 				allowed = true;
 				break;
@@ -244,7 +224,7 @@ struct clientcom : iclientcom
 					break;
 				}
 
-				case 'i': 
+				case 'i':
 				{
 					int n = isdigit(*fmt) ? *fmt++-'0' : 1;
 					loopi(n) putint(p, va_arg(args, int));
@@ -254,7 +234,7 @@ struct clientcom : iclientcom
 				case 's': sendstring(va_arg(args, const char *), p); nums++; break;
 			}
 			va_end(args);
-		} 
+		}
 		int num = nums?0:numi, msgsize = msgsizelookup(type);
         if(msgsize && num!=msgsize) { s_sprintfd(s)("inconsistent msg size for %d (%d != %d)", type, num, msgsize); fatal(s); }
 		int len = p.length();
@@ -263,7 +243,6 @@ struct clientcom : iclientcom
 		loopi(len) messages.add(buf[i]);
 	}
 
-#ifdef BFRONTIER // centerprint chat, sounds, server commands
 	void saytext(fpsent *d, char *text, bool action)
 	{
 		string s;
@@ -278,14 +257,11 @@ struct clientcom : iclientcom
 		saytext(player1, text, action);
 		addmsg(SV_TEXT, "ris", action ? 1 : 0, text);
 	}
-	
+
 	void toservcmd(char *text, bool msg)
 	{
 		addmsg(SV_COMMAND, "rs", text);
 	}
-#else
-    void toserver(char *text) { conoutf("%s:\f0 %s", cl.colorname(player1), text); addmsg(SV_TEXT, "rs", text); }
-#endif
 
 	int sendpacketclient(ucharbuf &p, bool &reliable, dynent *d)
 	{
@@ -322,16 +298,9 @@ struct clientcom : iclientcom
 		{
 			reliable = true;
 			putint(p, SV_ITEMLIST);
-#ifdef BFRONTIER
 			cl.et.putitems(p);
 			putint(p, -1);
 			if(m_capture(cl.gamemode)) cl.cpc.sendbases(p);
-#else
-			int gamemode = cl.gamemode;
-			if(!m_noitems) cl.et.putitems(p, gamemode);
-			putint(p, -1);
-			if(m_capture) cl.cpc.sendbases(p);
-#endif
 			senditemstoserver = false;
 		}
 		if(!c2sinit)	// tell other clients who I am
@@ -425,9 +394,8 @@ struct clientcom : iclientcom
 				f >>= 2;
 				d->move = (f&3)==3 ? -1 : f&3;
 				f >>= 2;
-#ifdef BFRONTIER // blood frontier game
 				f >>= 3;
-#else
+#if 0
 				if(f&1) { d->armourtype = A_GREEN; d->armour = 1; }
 				else if(f&2) { d->armourtype = A_YELLOW; d->armour = 1; }
 				else { d->armourtype = A_BLUE; d->armour = 0; }
@@ -458,15 +426,15 @@ struct clientcom : iclientcom
 	{
 		switch(chan)
 		{
-			case 0: 
-				parsepositions(p); 
+			case 0:
+				parsepositions(p);
 				break;
 
 			case 1:
 				parsemessages(-1, NULL, p);
 				break;
 
-			case 2: 
+			case 2:
 				receivefile(p.buf, p.maxlen);
 				break;
 		}
@@ -474,9 +442,6 @@ struct clientcom : iclientcom
 
 	void parsemessages(int cn, fpsent *d, ucharbuf &p)
 	{
-#ifndef BFRONTIER
-		int gamemode = cl.gamemode;
-#endif
 		static char text[MAXTRANS];
 		int type;
 		bool mapchanged = false;
@@ -493,7 +458,6 @@ struct clientcom : iclientcom
 					return;
 				}
 				player1->clientnum = mycn;	  // we are now fully connected
-#ifdef BFRONTIER // blood frontier extension, local servers
 				switch (hasmap)
 				{
 					case 0:
@@ -506,9 +470,6 @@ struct clientcom : iclientcom
 					default:
 						break;
 				}
-#else
-				if(!hasmap && (cl.gamemode==1 || cl.getclientmap()[0])) changemap(cl.getclientmap()); // we are the first client on this server, set map
-#endif
 				break;
 			}
 
@@ -522,40 +483,24 @@ struct clientcom : iclientcom
 
 			case SV_SOUND:
 				if(!d) return;
-#ifdef BFRONTIER
 				playsound(getint(p), &d->o, &d->vel);
-#else
-				playsound(getint(p), &d->o);
-#endif
 				break;
 
 			case SV_TEXT:
 			{
 				if(!d) return;
-#ifdef BFRONTIER // centerprint chat
 				int action = getint(p);
 				getstring(text, p);
 				if (!colourchat()) filtertext(text, text);
-				if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR) 
+				if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR)
 				{
 					s_sprintfd(ds)("@%s", &text);
 					particle_text(d->abovehead(), ds, 9);
 				}
 				saytext(d, text, action!=0);
-#else
-				getstring(text, p);
-				if (!colourchat()) filtertext(text, text);
-				if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR) 
-				{
-					s_sprintfd(ds)("@%s", &text);
-					particle_text(d->abovehead(), ds, 9);
-				}
-                conoutf("%s:\f0 %s", cl.colorname(d), &text);
-#endif
 				break;
 			}
 
-#ifdef BFRONTIER
 			case SV_MAPCHANGE:
 			{
 				getstring(text, p);
@@ -564,19 +509,11 @@ struct clientcom : iclientcom
 				mapchanged = true;
 				break;
 			}
-#else
-			case SV_MAPCHANGE:
-				getstring(text, p);
-				changemapserv(text, getint(p));
-				mapchanged = true;
-				break;
-#endif
 
 			case SV_ARENAWIN:
 			{
 				int acn = getint(p);
 				fpsent *alive = acn<0 ? NULL : (acn==player1->clientnum ? player1 : cl.getclient(acn));
-#ifdef BFRONTIER // extended console support
 				console("arena round is over! next round in 5 seconds...", CON_LEFT|CON_CENTER);
 				if(!alive) console("everyone died!", CON_LEFT|CON_CENTER);
 				else if(m_team(cl.gamemode, cl.mutators)) console("team %s has won the round", CON_LEFT|CON_CENTER, alive->team);
@@ -590,13 +527,6 @@ struct clientcom : iclientcom
 					else if(alive == cl.player1) win = true;
 				}
 				playsound(win ? S_V_YOUWIN : S_V_YOULOSE);
-#else
-                conoutf("arena round is over! next round in 5 seconds...");
-                if(!alive) conoutf("everyone died!");
-                else if(m_teammode) conoutf("team %s has won the round", alive->team);
-                else if(alive==player1) conoutf("you are the last man standing!");
-                else conoutf("%s is the last man standing", cl.colorname(alive));
-#endif
 				break;
 			}
 
@@ -611,40 +541,27 @@ struct clientcom : iclientcom
 					cl.sb.showscores(true);
 				}
 				d->state = CS_DEAD;
-#ifdef BFRONTIER // rank calculator
 				cl.calcranks();
-#endif
 				break;
 			}
 
 			case SV_ITEMLIST:
 			{
 				int n;
-#ifndef BFRONTIER // local servers, blood frontier support
-				if(mapchanged) { senditemstoserver = false; cl.et.resetspawns(); }
-#endif
 				while((n = getint(p))!=-1)
 				{
 					if(mapchanged) cl.et.setspawn(n, true);
 					getint(p); // type
-#ifdef BFRONTIER
 					loopi(5) getint(p); // attr
-#endif
 				}
 				break;
 			}
 
 			case SV_MAPRELOAD:		  // server requests next map
 			{
-#ifdef BFRONTIER
 				s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture(cl.gamemode) ? "capture_" : "", mapname);
 				const char *map = getalias(nextmapalias);	 // look up map in the cycle
 				addmsg(SV_MAPCHANGE, "rsii", *map ? map : sv->defaultmap(), cl.nextmode, cl.nextmuts);
-#else
-				s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture ? "capture_" : "", cl.getclientmap());
-				const char *map = getalias(nextmapalias);	 // look up map in the cycle
-				addmsg(SV_MAPCHANGE, "rsi", *map ? map : cl.getclientmap(), cl.nextmode);
-#endif
 				break;
 			}
 
@@ -682,9 +599,7 @@ struct clientcom : iclientcom
 				s_strncpy(d->name, text, MAXNAMELEN+1);
 				getstring(text, p);
 				filtertext(d->team, text, false, MAXTEAMLEN);
-#ifdef BFRONTIER // rank calculator
 				cl.calcranks();
-#endif
 				break;
 			}
 
@@ -699,9 +614,7 @@ struct clientcom : iclientcom
 				d->lifesequence = ls;
 				d->gunselect = gunselect;
 				d->state = CS_SPAWNING;
-#ifdef BFRONTIER // respawn sound
 				playsound(S_RESPAWN, &d->o, &d->vel);
-#endif
 				break;
 			}
 
@@ -709,26 +622,13 @@ struct clientcom : iclientcom
 			{
 				if(editmode) toggleedit();
 				player1->respawn();
-				player1->lifesequence = getint(p); 
+				player1->lifesequence = getint(p);
 				player1->health = getint(p);
-#ifdef BFRONTIER
 				player1->gunselect = getint(p);
 				loopi(NUMGUNS) player1->ammo[i] = getint(p);
 				player1->state = CS_ALIVE;
 				findplayerspawn(player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(player1->team) : -1);
-#else
-				player1->maxhealth = getint(p);
-				player1->armour = getint(p);
-				player1->armourtype = getint(p);
-				player1->gunselect = getint(p);
-				loopi(GUN_PISTOL-GUN_SG+1) player1->ammo[GUN_SG+i] = getint(p);
-				player1->state = CS_ALIVE;
-				findplayerspawn(player1, m_capture ? cl.cpc.pickspawn(player1->team) : -1);
-#endif
 				cl.sb.showscores(false);
-#ifndef BFRONTIER // extended console
-                if(m_arena) conoutf("new round starting... fight!");
-#endif
 				addmsg(SV_SPAWN, "rii", player1->lifesequence, player1->gunselect);
 				break;
 			}
@@ -743,25 +643,19 @@ struct clientcom : iclientcom
 				if(!s) break;
 				if(gun==GUN_SG) cl.ws.createrays(from, to);
 				s->gunselect = max(gun, 0);
-#ifdef BFRONTIER // extended gun waiting
 				s->gunwait[s->gunselect] = 0;
 				s->gunlast[s->gunselect] = cl.lastmillis;
-#else
-				s->gunwait = 0;
-				s->lastaction = cl.lastmillis;
-#endif
 				s->lastattackgun = s->gunselect;
 				cl.ws.shootv(gun, from, to, s, false);
 				break;
 			}
 
-#ifdef BFRONTIER
 			case SV_DAMAGE:
 			{
-				int tcn = getint(p), 
+				int tcn = getint(p),
 					acn = getint(p),
-					gun = getint(p), 
-					damage = getint(p), 
+					gun = getint(p),
+					damage = getint(p),
 					health = getint(p),
 					millis = getint(p);
 				vec dir;
@@ -773,7 +667,7 @@ struct clientcom : iclientcom
 				target->health = health; // just in case
 				break;
 			}
-			
+
 			case SV_RELOAD:
 			{
 				int trg = getint(p), gun = getint(p), amt = getint(p);
@@ -793,32 +687,6 @@ struct clientcom : iclientcom
 				target->lastregen = ms;
 				break;
 			}
-#else
-			case SV_DAMAGE:
-			{
-				int tcn = getint(p), 
-					acn = getint(p),
-					damage = getint(p), 
-					armour = getint(p),
-					health = getint(p);
-				fpsent *target = tcn==player1->clientnum ? player1 : cl.getclient(tcn),
-						*actor = acn==player1->clientnum ? player1 : cl.getclient(acn);
-				if(!target || !actor) break;
-				target->armour = armour;
-				target->health = health;
-				cl.damaged(damage, target, actor, false);
-				break;
-			}
-
-			case SV_HITPUSH:
-			{
-				int gun = getint(p), damage = getint(p);
-				vec dir;
-				loopk(3) dir[k] = getint(p)/DNF;
-				player1->hitpush(damage, dir, NULL, gun);
-				break;
-			}
-#endif
 
 			case SV_DIED:
 			{
@@ -834,9 +702,7 @@ struct clientcom : iclientcom
 				}
 				if(!victim) break;
 				cl.killed(victim, actor);
-#ifdef BFRONTIER // rank calculator
 				cl.calcranks();
-#endif
 				break;
 			}
 
@@ -845,9 +711,6 @@ struct clientcom : iclientcom
 				if(!d) return;
 				int gun = getint(p);
 				d->gunselect = max(gun, 0);
-#ifndef BFRONTIER
-				playsound(S_WEAPLOAD, &d->o);
-#endif
 				break;
 			}
 
@@ -864,23 +727,15 @@ struct clientcom : iclientcom
 				{
 					int cn = getint(p);
 					if(cn<0) break;
-#ifdef BFRONTIER
 					int state = getint(p), lifesequence = getint(p), gunselect = getint(p), frags = getint(p);
-#else
-					int state = getint(p), lifesequence = getint(p), gunselect = getint(p), maxhealth = getint(p), frags = getint(p);
-#endif
 					fpsent *d = (cn == player1->clientnum ? player1 : cl.newclient(cn));
 					if(!d) continue;
-					if(d!=player1) 
+					if(d!=player1)
 					{
 						d->state = state;
 						d->gunselect = gunselect;
 					}
 					d->lifesequence = lifesequence;
-#ifndef BFRONTIER
-					if(d->state==CS_ALIVE && d->health==d->maxhealth) d->health = maxhealth;
-					d->maxhealth = maxhealth;
-#endif
 					d->frags = frags;
 				}
 				break;
@@ -891,11 +746,7 @@ struct clientcom : iclientcom
 				int i = getint(p);
 				if(!cl.et.ents.inrange(i)) break;
 				cl.et.setspawn(i, true);
-#ifdef BFRONTIER
 				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o);
-#else
-				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o);
-#endif
 				char *name = cl.et.itemname(i);
 				if(name) particle_text(cl.et.ents[i]->o, name, 9);
 				break;
@@ -979,12 +830,11 @@ struct clientcom : iclientcom
                 conoutf("%s", text);
 				break;
 
-//#ifdef BFRONTIER
 //			case SV_COMMAND:
 //				getstring(text, p);
 //				getservcmd(text);
 //				break;
-//#endif
+
 			case SV_SENDDEMOLIST:
 			{
 				int demos = getint(p);
@@ -1044,7 +894,7 @@ struct clientcom : iclientcom
 					if(s==player1 && editmode) toggleedit();
 					s->state = CS_SPECTATOR;
 				}
-				else if(s->state==CS_SPECTATOR) 
+				else if(s->state==CS_SPECTATOR)
 				{
 					s->state = CS_DEAD;
 					if(s==player1) cl.sb.showscores(true);
@@ -1059,9 +909,7 @@ struct clientcom : iclientcom
 				fpsent *w = wn==player1->clientnum ? player1 : cl.getclient(wn);
 				if(!w) return;
 				filtertext(w->team, text, false, MAXTEAMLEN);
-#ifdef BFRONTIER // rank calculator
 				cl.calcranks();
-#endif
 				break;
 			}
 
@@ -1069,28 +917,17 @@ struct clientcom : iclientcom
 			{
 				int base = getint(p);
 				string owner, enemy;
-#ifdef BFRONTIER
 				int converted = getint(p);
 				getstring(text, p);
 				s_strcpy(owner, text);
 				getstring(text, p);
 				s_strcpy(enemy, text);
 				if(m_capture(cl.gamemode)) cl.cpc.updatebase(base, owner, enemy, converted);
-#else
-				getstring(text, p);
-				s_strcpy(owner, text);
-				getstring(text, p);
-				s_strcpy(enemy, text);
-				int converted = getint(p), ammo = getint(p);
-				int gamemode = cl.gamemode;
-				if(m_capture) cl.cpc.updatebase(base, owner, enemy, converted, ammo);
-#endif
 				break;
 			}
 
 			case SV_BASES:
 			{
-#ifdef BFRONTIER
 				int base = 0, converted;
 				while((converted = getint(p))>=0)
 				{
@@ -1101,52 +938,16 @@ struct clientcom : iclientcom
 					s_strcpy(enemy, text);
 					cl.cpc.initbase(base++, owner, enemy, converted);
 				}
-#else
-				int base = 0, ammotype;
-				while((ammotype = getint(p))>=0)
-				{
-					string owner, enemy;
-					getstring(text, p);
-					s_strcpy(owner, text);
-					getstring(text, p);
-					s_strcpy(enemy, text);
-					int converted = getint(p), ammo = getint(p);
-					cl.cpc.initbase(base++, ammotype, owner, enemy, converted, ammo);
-				}
-#endif
 				break;
 			}
 
 			case SV_TEAMSCORE:
 			{
 				getstring(text, p);
-#ifdef BFRONTIER
 				int total = getint(p);
 				if(m_capture(cl.gamemode)) cl.cpc.setscore(text, total);
-#else
-				int total = getint(p), gamemode = cl.gamemode;
-				if(m_capture) cl.cpc.setscore(text, total);
-#endif
 				break;
 			}
-
-#ifndef BFRONTIER
-			case SV_REPAMMO:
-			{
-				int ammotype = getint(p);
-				int gamemode = cl.gamemode;
-				if(m_capture) cl.cpc.receiveammo(ammotype);
-				break;
-			}
-
-			case SV_ANNOUNCE:
-			{
-				int t = getint(p);
-				if	 (t==I_QUAD)  { playsound(S_V_QUAD10);  conoutf("\f2quad damage will spawn in 10 seconds!"); }
-				else if(t==I_BOOST) { playsound(S_V_BOOST10); conoutf("\f2+10 health will spawn in 10 seconds!"); }
-				break;
-			}
-#endif
 
 			case SV_NEWMAP:
 			{
@@ -1168,7 +969,6 @@ struct clientcom : iclientcom
 		}
 	}
 
-#ifdef BFRONTIER
 	void changemapserv(const char *name, int gamemode, int mutators)
 	{
 		if (remote && !connected) connected = true;
@@ -1182,31 +982,12 @@ struct clientcom : iclientcom
 		if(m_capture(gamemode)) cl.cpc.setupbases();
 		if(editmode) edittoggled(editmode);
 	}
-#else
-	void changemapserv(const char *name, int gamemode)		// forced map change from the server
-	{
-		if(remote && !m_mp(gamemode)) gamemode = 0;
-		cl.gamemode = gamemode;
-		cl.nextmode = gamemode;
-		cl.minremain = -1;
-		if(editmode && !allowedittoggle()) toggleedit();
-		if(m_demo) return;
-		if(gamemode==1 && !name[0]) emptymap(0, true);
-		else load_world(name);
-		if(m_capture) cl.cpc.setupbases();
-		if(editmode) edittoggled(editmode);
-	}
-#endif
 
 	void changemap(const char *name) // request map change, server may ignore
 	{
-#ifdef BFRONTIER
 		if(!spectator || player1->privilege) addmsg(SV_MAPVOTE, "rsii", name, cl.nextmode, cl.nextmuts);
-#else
-		if(!spectator || player1->privilege) addmsg(SV_MAPVOTE, "rsi", name, cl.nextmode);
-#endif
 	}
-		
+
 	void receivefile(uchar *data, int len)
 	{
 		ucharbuf p(data, len);
@@ -1228,7 +1009,6 @@ struct clientcom : iclientcom
 
 			case SV_SENDMAP:
 			{
-#ifdef BFRONTIER
 				if(!m_edit(cl.gamemode)) return;
 				string oldname;
 				s_strcpy(oldname, mapname);
@@ -1241,21 +1021,6 @@ struct clientcom : iclientcom
 				fwrite(data, 1, len, map);
 				fclose(map);
 				load_world(mname, oldname[0] ? oldname : NULL);
-#else
-				if(cl.gamemode!=1) return;
-				string oldname;
-				s_strcpy(oldname, cl.getclientmap());
-				s_sprintfd(mname)("getmap_%d", cl.lastmillis);
-				s_sprintfd(fname)("packages/base/%s.ogz", mname);
-				const char *file = findfile(fname, "wb");
-				FILE *map = fopen(file, "wb");
-				if(!map) return;
-				conoutf("received map");
-				fwrite(data, 1, len, map);
-				fclose(map);
-				load_world(mname, oldname[0] ? oldname : NULL);
-				remove(file);
-#endif
 				break;
 			}
 		}
@@ -1263,11 +1028,7 @@ struct clientcom : iclientcom
 
 	void getmap()
 	{
-#ifdef BFRONTIER
-		if(!m_edit(cl.gamemode)) { conoutf("\"getmap\" only works in coopedit mode"); return; }
-#else
-		if(cl.gamemode!=1) { conoutf("\"getmap\" only works in coopedit mode"); return; }
-#endif
+		//if(!m_edit(cl.gamemode)) { conoutf("\"getmap\" only works in coopedit mode"); return; }
 		conoutf("getting map...");
 		addmsg(SV_GETMAP, "r");
 	}
@@ -1276,11 +1037,7 @@ struct clientcom : iclientcom
 	{
 		if(remote)
 		{
-#ifdef BFRONTIER // priv checker
 			if(!haspriv(PRIV_ADMIN)) return;
-#else
-            if(player1->privilege<PRIV_ADMIN) return;
-#endif
 			addmsg(SV_STOPDEMO, "r");
 		}
 		else
@@ -1294,21 +1051,13 @@ struct clientcom : iclientcom
 
     void recorddemo(int val)
 	{
-#ifdef BFRONTIER // priv checker
 		if(!haspriv(PRIV_ADMIN)) return;
-#else
-        if(player1->privilege<PRIV_ADMIN) return;
-#endif
         addmsg(SV_RECORDDEMO, "ri", val);
 	}
 
 	void cleardemos(int val)
 	{
-#ifdef BFRONTIER // priv checker
 		if(!haspriv(PRIV_ADMIN)) return;
-#else
-        if(player1->privilege<PRIV_ADMIN) return;
-#endif
         addmsg(SV_CLEARDEMOS, "ri", val);
 	}
 
@@ -1327,11 +1076,7 @@ struct clientcom : iclientcom
 
 	void sendmap()
 	{
-#ifdef BFRONTIER
 		if(!m_edit(cl.gamemode) || (spectator && !player1->privilege)) { conoutf("\"sendmap\" only works in coopedit mode"); return; }
-#else
-		if(cl.gamemode!=1 || (spectator && !player1->privilege)) { conoutf("\"sendmap\" only works in coopedit mode"); return; }
-#endif
 		conoutf("sending map...");
 		s_sprintfd(mname)("sendmap_%d", cl.lastmillis);
 		save_world(mname, true);
@@ -1353,7 +1098,7 @@ struct clientcom : iclientcom
 	{
 		if(player1->state!=CS_SPECTATOR && player1->state!=CS_EDITING) return;
 		int i = parseplayer(arg);
-		if(i>=0 && i!=player1->clientnum) 
+		if(i>=0 && i!=player1->clientnum)
 		{
 			fpsent *d = cl.getclient(i);
 			if(!d) return;
@@ -1363,7 +1108,7 @@ struct clientcom : iclientcom
 			player1->o.add(dir.mul(-32));
 		}
 	}
-#ifdef BFRONTIER // other stuff
+
 	bool ready() { return connected; }
 	int otherclients() { return cl.players.length(); }
 
@@ -1372,7 +1117,7 @@ struct clientcom : iclientcom
 		const int MAXWORDS = 25;
 		char *w[MAXWORDS], *p = text;
 		extern char *parseword(char *&p, int context);
-		
+
 		int numargs = MAXWORDS;
 		loopi(MAXWORDS)
 		{
@@ -1382,14 +1127,14 @@ struct clientcom : iclientcom
 			if(s) w[i] = s;
 			else numargs = i;
 		}
-		
+
 		p += strcspn(p, "\0");
-		
+
 		int n;
 		bool msg = true;
 		string buf;
 		buf[0] = 0;
-		
+
 		if (!strcmp(w[0], "something"))
 		{
 			if (*w[1] && (n = atoi(w[1])))
@@ -1397,8 +1142,7 @@ struct clientcom : iclientcom
 				msg = n!=0;
 			}
 		}
-		
+
 		if (buf[0]) toservcmd(buf, msg);
 	}
-#endif
 };

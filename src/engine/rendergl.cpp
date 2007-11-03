@@ -20,7 +20,7 @@ PFNGLACTIVETEXTUREARBPROC		glActiveTexture_		= NULL;
 PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTexture_ = NULL;
 PFNGLMULTITEXCOORD2FARBPROC	 glMultiTexCoord2f_	 = NULL;
 PFNGLMULTITEXCOORD3FARBPROC	 glMultiTexCoord3f_	 = NULL;
- 
+
 // GL_ARB_vertex_program, GL_ARB_fragment_program
 PFNGLGENPROGRAMSARBPROC			glGenPrograms_			= NULL;
 PFNGLDELETEPROGRAMSARBPROC		 glDeletePrograms_		 = NULL;
@@ -56,7 +56,7 @@ PFNGLGENERATEMIPMAPEXTPROC		  glGenerateMipmap_		  = NULL;
 // GL_ARB_shading_language_100, GL_ARB_shader_objects, GL_ARB_fragment_shader, GL_ARB_vertex_shader
 PFNGLCREATEPROGRAMOBJECTARBPROC		glCreateProgramObject_	  = NULL;
 PFNGLDELETEOBJECTARBPROC			  glDeleteObject_			 = NULL;
-PFNGLUSEPROGRAMOBJECTARBPROC		  glUseProgramObject_		 = NULL; 
+PFNGLUSEPROGRAMOBJECTARBPROC		  glUseProgramObject_		 = NULL;
 PFNGLCREATESHADEROBJECTARBPROC		glCreateShaderObject_		= NULL;
 PFNGLSHADERSOURCEARBPROC			  glShaderSource_			 = NULL;
 PFNGLCOMPILESHADERARBPROC			 glCompileShader_			= NULL;
@@ -80,22 +80,12 @@ void *getprocaddress(const char *name)
 }
 
 VARP(ati_skybox_bug, 0, 0, 1);
-#ifdef BFRONTIER
 VARP(ati_texgen_bug, 0, 0, 1);
 VARP(ati_oq_bug, 0, 0, 1);
 VARP(nvidia_texgen_bug, 0, 0, 1);
 VARP(apple_glsldepth_bug, 0, 0, 1);
 VARP(apple_minmax_bug, 0, 0, 1);
 VARP(intel_quadric_bug, 0, 0, 1);
-#else
-VAR(ati_texgen_bug, 0, 0, 1);
-VAR(ati_oq_bug, 0, 0, 1);
-VAR(nvidia_texgen_bug, 0, 0, 1);
-VAR(apple_glsldepth_bug, 0, 0, 1);
-VAR(apple_minmax_bug, 0, 0, 1);
-VAR(apple_ff_bug, 0, 0, 1);
-VAR(intel_quadric_bug, 0, 0, 1);
-#endif
 VAR(minimizetcusage, 1, 0, 0);
 VAR(emulatefog, 1, 0, 0);
 
@@ -109,15 +99,15 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	glDepthFunc(GL_LESS);
 	glEnable(GL_DEPTH_TEST);
 	glShadeModel(GL_SMOOTH);
-	
-	
+
+
 	glEnable(GL_FOG);
 	glFogi(GL_FOG_MODE, GL_LINEAR);
 	glFogf(GL_FOG_DENSITY, 0.25f);
 	glHint(GL_FOG_HINT, GL_NICEST);
 	GLfloat fogcolor[4] = { fogvalues };
 	glFogfv(GL_FOG_COLOR, fogcolor);
-	
+
 
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -132,12 +122,12 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	const char *version = (const char *)glGetString(GL_VERSION);
 	conoutf("Renderer: %s (%s)", renderer, vendor);
 	conoutf("Driver: %s", version);
-	
+
 	//extern int shaderprecision;
 	// default to low precision shaders on certain cards, can be overridden with -f3
-	// char *weakcards[] = { "GeForce FX", "Quadro FX", "6200", "9500", "9550", "9600", "9700", "9800", "X300", "X600", "FireGL", "Intel", "Chrome", NULL } 
+	// char *weakcards[] = { "GeForce FX", "Quadro FX", "6200", "9500", "9550", "9600", "9700", "9800", "X300", "X600", "FireGL", "Intel", "Chrome", NULL }
 	// if(shaderprecision==2) for(char **wc = weakcards; *wc; wc++) if(strstr(renderer, *wc)) shaderprecision = 1;
-  
+
 	if(strstr(exts, "GL_EXT_texture_env_combine") || strstr(exts, "GL_ARB_texture_env_combine")) hasTE = true;
 	else conoutf("WARNING: No texture_env_combine extension! (your video card is WAY too old)");
 
@@ -191,7 +181,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	else if(strstr(vendor, "Intel"))
 	{
 		intel_quadric_bug = 1;
-	} 
+	}
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
 	extern int useshaders;
@@ -231,7 +221,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 			glUniform4fv_ =				 (PFNGLUNIFORM4FVARBPROC)			  getprocaddress("glUniform4fvARB");
 			glUniform1i_ =				  (PFNGLUNIFORM1IARBPROC)				getprocaddress("glUniform1iARB");
 
-			extern bool checkglslsupport();			
+			extern bool checkglslsupport();
 			if(checkglslsupport())
 			{
 				renderpath = R_GLSLANG;
@@ -261,8 +251,8 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 			hasOQ = true;
 			//conoutf("Using GL_ARB_occlusion_query extension.");
 #if defined(__APPLE__) && SDL_BYTEORDER == SDL_BIG_ENDIAN
-			if(strstr(vendor, "ATI")) ati_oq_bug = 1; 
-#endif			
+			if(strstr(vendor, "ATI")) ati_oq_bug = 1;
+#endif
 			if(ati_oq_bug) conoutf("WARNING: Using ATI occlusion query bug workaround. (use \"/ati_oq_bug 0\" to disable if unnecessary)");
 		}
 	}
@@ -331,7 +321,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	}
 	else conoutf("WARNING: No cube map texture support. (no reflective glass)");
 
-	if(strstr(exts, "GL_ARB_texture_non_power_of_two")) 
+	if(strstr(exts, "GL_ARB_texture_non_power_of_two"))
 	{
 		hasNP2 = true;
 		//conoutf("Using GL_ARB_texture_non_power_of_two extension.");
@@ -364,20 +354,7 @@ VAR(wireframe, 0, 0, 1);
 
 vec worldpos, camright, camup;
 
-void findorientation()
-{
-#ifdef BFRONTIER // gamme view control
-	cl->findorientation();
-#else
-	vec dir;
-	vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, dir);
-	vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
-	vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
-
-	if(raycubepos(camera1->o, dir, worldpos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-		worldpos = dir.mul(10).add(camera1->o); //otherwise 3dgui won't work when outside of map
-#endif
-}
+void findorientation() { cl->findorientation(); }
 
 void transplayer()
 {
@@ -391,80 +368,25 @@ void transplayer()
 	glRotatef(-90, 1, 0, 0);
 	glScalef(1, -1, 1);
 
-	glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);	
+	glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);
 }
 
-#ifdef BFRONTIER // game view control
 VARFP(fov, 1, 120, 360, cl->fixview());
-#else
-VARP(fov, 10, 105, 150);
-#endif
 
 int xtraverts, xtravertsva;
 
-#ifdef BFRONTIER
 VARW(fog, 16, 4000, INT_MAX-1);
 VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
-#else
-VAR(fog, 16, 4000, 1000024);
-VAR(fogcolour, 0, 0x8099B3, 0xFFFFFF);
-#endif
 
-#ifdef BFRONTIER // game view control, extra thirdperson variables
 VARFP(thirdperson, 0, 0, 1, cl->fixview());
 VARFP(thirdpersonscale, 0, 150, INT_MAX-1, cl->fixview()); // pitch scale
-#else
-VAR(thirdperson, 0, 0, 1);
-VAR(thirdpersondistance, 10, 50, 1000);
-#endif
+
 physent *camera1 = NULL;
 bool deathcam = false;
-#ifdef BFRONTIER // game view control, extra thirdperson support
 bool isthirdperson() { return cl->gamethirdperson() || (reflecting && !refracting); }
-#else
-bool isthirdperson() { return player!=camera1 || player->state==CS_DEAD || (reflecting && !refracting); }
-#endif
-void recomputecamera()
-{
-#ifdef BFRONTIER // game view control
-	cl->recomputecamera();
-#else
-    cl->setupcamera();
-	if(deathcam && player->state!=CS_DEAD) deathcam = false;
-	extern int testanims;
-	if(((editmode && !testanims) || !thirdperson) && player->state!=CS_DEAD)
-	{
-		//if(camera1->state==CS_DEAD) camera1->o.z -= camera1->eyeheight-0.8f;
-		camera1 = player;
-	}
-	else
-	{
-		static physent tempcamera;
-		camera1 = &tempcamera;
-		if(deathcam) camera1->o = player->o;
-		else
-		{
-			*camera1 = *player;
-			if(player->state==CS_DEAD) deathcam = true;
-		}
-		camera1->reset();
-		camera1->type = ENT_CAMERA;
-		camera1->move = -1;
-		camera1->eyeheight = 2;
-		
-		loopi(10)
-		{
-			if(!moveplayer(camera1, 10, true, thirdpersondistance)) break;
-		}
-	}
-#endif
-}
+void recomputecamera() { cl->recomputecamera(); }
 
-#ifdef BFRONTIER // redefined for extern in iengine.h
 void project(float fovy, float aspect, int farplane, bool flipx, bool flipy)
-#else
-void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false)
-#endif
 {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -483,10 +405,10 @@ void genclipmatrix(float a, float b, float c, float d, GLfloat matrix[16])
 	glGetFloatv(GL_PROJECTION_MATRIX, matrix);
 	float x = ((clip[0]<0 ? -1 : (clip[0]>0 ? 1 : 0)) + matrix[8]) / matrix[0],
 		  y = ((clip[1]<0 ? -1 : (clip[1]>0 ? 1 : 0)) + matrix[9]) / matrix[5],
-		  w = (1 + matrix[10]) / matrix[14], 
+		  w = (1 + matrix[10]) / matrix[14],
 		  scale = 2 / (x*clip[0] + y*clip[1] - clip[2] + w*clip[3]);
 	matrix[2] = clip[0]*scale;
-	matrix[6] = clip[1]*scale; 
+	matrix[6] = clip[1]*scale;
 	matrix[10] = clip[2]*scale + 1.0f;
 	matrix[14] = clip[3]*scale;
 }
@@ -530,7 +452,7 @@ void setfogplane(float scale, float z, bool flush)
 
 		fogplane[2] = scale;
 		fogplane[3] = -z;
-	}  
+	}
 	setenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
 	setenvparamfv("fogplane", SHPARAM_VERTEX, 9, fogplane);
 	if(flush)
@@ -545,7 +467,7 @@ void drawreflection(float z, bool refract, bool clear)
 	uchar wcol[3];
 	getwatercolour(wcol);
 	float fogc[4] = { wcol[0]/256.0f, wcol[1]/256.0f, wcol[2]/256.0f, 1.0f };
-	
+
 	if(refract && !waterfog)
 	{
 		glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
@@ -624,7 +546,7 @@ void drawreflection(float z, bool refract, bool clear)
 	if(reflectmms) renderreflectedmapmodels(z, refract);
 	cl->rendergame();
 
-	if(!refract /*&& !explicitsky*/) 
+	if(!refract /*&& !explicitsky*/)
 	{
 		if(reflectclip) undoclipmatrix();
 		defaultshader->set();
@@ -657,7 +579,7 @@ void drawreflection(float z, bool refract, bool clear)
 		glFogf(GL_FOG_END, oldfogend);
 		glFogfv(GL_FOG_COLOR, oldfogcolor);
 	}
-	
+
 	refracting = 0;
 	reflecting = 0;
 }
@@ -669,14 +591,14 @@ static void setfog(int fogmat)
 	float fogc[4] = { (fogcolour>>16)/256.0f, ((fogcolour>>8)&255)/256.0f, (fogcolour&255)/256.0f, 1.0f };
 	glFogfv(GL_FOG_COLOR, fogc);
 	glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
-	
+
 	if(fogmat==MAT_WATER || fogmat==MAT_LAVA)
 	{
 		uchar col[3];
 		if(fogmat==MAT_WATER) getwatercolour(col);
 		else getlavacolour(col);
 		float fogwc[4] = { col[0]/256.0f, col[1]/256.0f, col[2]/256.0f, 1 };
-		glFogfv(GL_FOG_COLOR, fogwc); 
+		glFogfv(GL_FOG_COLOR, fogwc);
 		glFogi(GL_FOG_START, 0);
 		glFogi(GL_FOG_END, min(fog, max((fogmat==MAT_WATER ? waterfog : lavafog)*4, 32)));//(fog+96)/8);
 	}
@@ -700,7 +622,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch)
 	cmcamera.pitch = pitch;
 	cmcamera.roll = 0;
 	camera1 = &cmcamera;
-	
+
 	defaultshader->set();
 
 	cube &c = lookupcube(int(o.x), int(o.y), int(o.z));
@@ -754,53 +676,51 @@ void gl_drawhud(int w, int h, int fogmat);
 
 void gl_drawframe(int w, int h)
 {
-#ifdef BFRONTIER
 	if (cc->ready())
 	{
-#endif
 		defaultshader->set();
-	
+
 		recomputecamera();
-		
+
 		cleardynlights();
 		cl->adddynlights();
-	
+
 		float fovy = (float)fov*h/w;
 		float aspect = w/(float)h;
 		cube &c = lookupcube((int)camera1->o.x, (int)camera1->o.y, int(camera1->o.z + camera1->aboveeye*0.5f));
 		int fogmat = c.ext ? c.ext->material : MAT_AIR;
 		if(fogmat!=MAT_WATER && fogmat!=MAT_LAVA) fogmat = MAT_AIR;
-	
+
 		setfog(fogmat);
 		if(fogmat!=MAT_AIR)
 		{
 			fovy += (float)sin(lastmillis/1000.0)*2.0f;
 			aspect += (float)sin(lastmillis/1000.0+PI)*0.1f;
 		}
-	
+
 		int farplane = max(max(fog*2, 384), hdr.worldsize*2);
-	
+
 		project(fovy, aspect, farplane);
-	
+
 		transplayer();
-	
+
 		glEnable(GL_TEXTURE_2D);
-	
+
 		glPolygonMode(GL_FRONT_AND_BACK, wireframe && editmode ? GL_LINE : GL_FILL);
-		
+
 		xtravertsva = xtraverts = glde = 0;
-	
+
 		if(!hasFBO) drawreflections();
-	
+
 		visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, fov);
-		
+
 		extern GLuint shadowmapfb;
 		if(shadowmap && !shadowmapfb) rendershadowmap();
-	
+
 		glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
-	
+
 		if(limitsky()) drawskybox(farplane, true);
-	
+
  	   bool causticspass = false;
  	   if(caustics && fogmat==MAT_WATER)
  	   {
@@ -808,62 +728,56 @@ void gl_drawframe(int w, int h)
  	       if(s.ext && s.ext->material==MAT_WATER) causticspass = true;
  	   }
     	rendergeom(causticspass);
-	
+
 		queryreflections();
-	
+
 		if(!wireframe) renderoutline();
-	
+
 		rendermapmodels();
-	
-		if(!waterrefract) 
+
+		if(!waterrefract)
 		{
 			defaultshader->set();
 			cl->rendergame();
 		}
-	
+
 		defaultshader->set();
-	
+
 		if(!limitsky()) drawskybox(farplane, false);
-	
+
 		if(hasFBO) drawreflections();
-	
-		if(waterrefract) 
+
+		if(waterrefract)
 		{
 			defaultshader->set();
 			cl->rendergame();
 		}
-	
+
 		renderwater();
 		rendergrass();
-	
+
 		rendermaterials();
 		render_particles(curtime);
-	
-		if(!isthirdperson()) 
+
+		if(!isthirdperson())
 		{
 			project(hudgunfov, aspect, farplane);
 			cl->drawhudgun();
 			project(fovy, aspect, farplane);
 		}
-	
+
 		glDisable(GL_FOG);
 		glDisable(GL_CULL_FACE);
-	
+
 		renderfullscreenshader(w, h);
-		
-#ifndef BFRONTIER
-		defaultshader->set();
-		g3d_render();
-#endif
 
 		glDisable(GL_TEXTURE_2D);
 		notextureshader->set();
-	
+
 		gl_drawhud(w, h, fogmat);
-	
+
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_FOG);
-#ifdef BFRONTIER
 	}
 	else
 	{
@@ -871,51 +785,38 @@ void gl_drawframe(int w, int h)
 		float aspect = w/(float)h;
 		project(fovy, aspect, hdr.worldsize*2);
 		transplayer();
-	
+
 		glEnable(GL_TEXTURE_2D);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		
+
 		xtravertsva = xtraverts = glde = 0;
-	
+
 		glClearColor(0.f, 0.f, 0.f, 1);
 		glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
 
 		glDisable(GL_FOG);
 		glDisable(GL_CULL_FACE);
-	
+
 		gl_drawhud(w, h, MAT_AIR);
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_FOG);
 	}
-#endif
 }
 
-#ifdef BFRONTIER // better crosshair support
 VARP(crosshairsize, 0, 15, 1000);
-VARP(cursorsize, 0, 30, 1000);
-#else
-VARP(crosshairsize, 0, 15, 50);
-VARP(cursorsize, 0, 30, 50);
-VARP(damageblendfactor, 0, 300, 1000);
+VARP(crosshairfx, 0, 1, 1);
 
-int dblend = 0;
-void damageblend(int n) { dblend += n; }
-#endif
+VARP(cursorsize, 0, 30, 1000);
 
 VARP(hidestats, 0, 0, 1);
 VARP(hidehud, 0, 0, 1);
-VARP(crosshairfx, 0, 1, 1);
 
 static Texture *crosshair = NULL;
 
 void loadcrosshair(const char *name)
 {
     crosshair = textureload(name, 3, true);
-#ifdef BFRONTIER // moved data
     if(crosshair==notexture) crosshair = textureload("packages/textures/crosshair.png", 3, true);
-#else
-    if(crosshair==notexture) crosshair = textureload("data/crosshair.png", 3, true);
-#endif
 }
 
 COMMAND(loadcrosshair, "s");
@@ -929,20 +830,11 @@ void writecrosshairs(FILE *f)
 void drawcrosshair(int w, int h)
 {
 	bool windowhit = g3d_windowhit(true, false);
-#ifdef BFRONTIER // game crosshair control
 	if(!windowhit && !cl->wantcrosshair()) return;
-#else
-    if(!windowhit && (hidehud || player->state==CS_SPECTATOR)) return;
-#endif
 
 	static Texture *cursor = NULL;
-#ifdef BFRONTIER // moved data
     if(!cursor) cursor = textureload("packages/textures/guicursor.png", 3, true);
     if(!crosshair) crosshair = textureload("packages/textures/crosshair.png", 3, true);
-#else
-    if(!cursor) cursor = textureload("data/guicursor.png", 3, true);
-    if(!crosshair) crosshair = textureload("data/crosshair.png", 3, true);
-#endif
 	if((windowhit ? cursor : crosshair)->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	else glBlendFunc(GL_ONE, GL_ONE);
 	float r = 1, g = 1, b = 1;
@@ -997,7 +889,6 @@ void gl_drawhud(int w, int h, int fogmat)
 
     glEnable(GL_BLEND);
 
-#ifdef BFRONTIER // game hud colour control
 	vec colour;
 	if(cc->ready() && cl->gethudcolour(colour))
 	{
@@ -1023,37 +914,6 @@ void gl_drawhud(int w, int h, int fogmat)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glEnable(GL_BLEND);
-#else
-	if(dblend || fogmat==MAT_WATER || fogmat==MAT_LAVA)
-	{
-		glDepthMask(GL_FALSE);
-		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-		glBegin(GL_QUADS);
-		if(dblend) glColor3f(1.0f, 0.1f, 0.1f);
-		else
-		{
-			uchar col[3];
-			if(fogmat==MAT_WATER) getwatercolour(col);
-			else getlavacolour(col);
-			float maxc = max(col[0], max(col[1], col[2]));
-			float blend[3];
-			loopi(3) blend[i] = col[i] / min(32 + maxc*7/8, 255);
-			glColor3fv(blend);
-			//glColor3f(0.1f, 0.5f, 1.0f);
-		}
-		glVertex2i(0, 0);
-		glVertex2i(w, 0);
-		glVertex2i(w, h);
-		glVertex2i(0, h);
-		glEnd();
-		glDepthMask(GL_TRUE);
-		dblend -= curtime*100/damageblendfactor;
-		if(dblend<0) dblend = 0;
-	}
-
-	glEnable(GL_TEXTURE_2D);
-	defaultshader->set();
-#endif
 
 	glLoadIdentity();
 	glOrtho(0, w*3, h*3, 0, -1, 1);
@@ -1069,20 +929,15 @@ void gl_drawhud(int w, int h, int fogmat)
 	if(!hidehud)
 	{
         /*int coff = */ renderconsole(w, h);
-		// can render stuff below console output here		
+		// can render stuff below console output here
 
 		if(!hidestats)
 		{
 			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
 			int fps, bestdiff, worstdiff;
 			getfps(fps, bestdiff, worstdiff);
-#ifdef BFRONTIER // extended performace stats
 			if(showfpsrange) draw_textx("%d+%d-%d:%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, bestdiff, worstdiff, perf);
 			else draw_textx("%d:%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, perf);
-#else
-			if(showfpsrange) draw_textf("fps %d+%d-%d", w*3-7*FONTH, h*3-100, fps, bestdiff, worstdiff);
-			else draw_textf("fps %d", w*3-5*FONTH, h*3-100, fps);
-#endif
 
 			if(editmode)
 			{
@@ -1092,7 +947,7 @@ void gl_drawhud(int w, int h, int fogmat)
 			}
 		}
 
-		if(editmode) 
+		if(editmode)
 		{
 			char *editinfo = executeret("edithud");
 			if(editinfo)
@@ -1102,9 +957,6 @@ void gl_drawhud(int w, int h, int fogmat)
 			}
 		}
 
-#ifndef BFRONTIER
-		cl->gameplayhud(w, h);
-#endif
 		render_texture_panel(w, h);
 	}
 
@@ -1113,7 +965,6 @@ void gl_drawhud(int w, int h, int fogmat)
 	glEnable(GL_DEPTH_TEST);
 }
 
-#ifdef BFRONTIER // blending, entity directions, and other useful functions for primitives
 VARP(hudblend, 0, 60, 100);
 VARP(showentdir, 0, 1, 1);
 
@@ -1167,30 +1018,30 @@ void rendertris(vec &fr, float yaw, float pitch, float size, float r, float g, f
 	{
 		vec to;
 		float ty;
-	
+
 		glBegin(GL_TRIANGLES);
 		glPolygonMode(GL_FRONT_AND_BACK, fill ? GL_FILL : GL_LINE);
-	
+
 		glVertex3f(fr.x, fr.y, fr.z);
-	
+
 		ty = yaw - 45.f;
 		if (ty < 0.f) ty += 360.f;
 		else if (ty > 360.f) ty -= 360.f;
-	
+
 		vecfromyawpitch(ty, pitch, -1, 0, to);
 		to.mul(size);
 		to.add(fr);
 		glVertex3f(to.x, to.y, to.z);
-	
+
 		ty = yaw + 45.f;
 		if (ty < 0.f) ty += 360.f;
 		else if (ty > 360.f) ty -= 360.f;
-	
+
 		vecfromyawpitch(ty, pitch, -1, 0, to);
 		to.mul(size);
 		to.add(fr);
 		glVertex3f(to.x, to.y, to.z);
-	
+
 		glEnd();
 		xtraverts += 3;
 	});
@@ -1257,7 +1108,7 @@ void renderentradius(vec &o, float height, float radius, bool nf)
 bool rendericon(const char *icon, int x, int y, int xs, int ys)
 {
 	Texture *t;
-	
+
 	if ((t = textureload(icon, 0, true, false)) != notexture)
 	{
 		glBindTexture(GL_TEXTURE_2D, t->gl);
@@ -1297,4 +1148,3 @@ bool getsight(physent *d, vec &q, vec &v, float mdist, float fx, float fy)
 	if (getlos(d->o, q, d->yaw, d->pitch, mdist, fx, fy)) return raycubelos(d->o, q, v);
 	return false;
 }
-#endif

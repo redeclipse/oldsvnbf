@@ -5,13 +5,8 @@ VARP(grassanimdist, 0, 500, 10000);
 VARP(grassdist, 0, 500, 10000);
 VARP(grassfalloff, 0, 100, 1000);
 
-#ifdef BFRONTIER
 VARW(grasswidth, 1, 6, 64);
 VARW(grassheight, 1, 8, 64);
-#else
-VAR(grasswidth, 1, 6, 64);
-VAR(grassheight, 1, 8, 64);
-#endif
 
 void resetgrasssamples()
 {
@@ -39,11 +34,7 @@ void gengrasssample(vtxarray *va, const vec &o, float tu, float tv, LightMap *lm
 		tv = min(tv, LM_PACKH-0.01f);
 		memcpy(g.color, &lm->data[3*(int(tv)*LM_PACKW + int(tu))], 3);
 	}
-#ifdef BFRONTIER
 	else loopk(3) g.color[k] = getvar("ambient");
-#else
-	else loopk(3) g.color[k] = hdr.ambient;
-#endif
 }
 
 bool gengrassheader(vtxarray *va, const vec *v)
@@ -116,7 +107,7 @@ void gengrasssamples(vtxarray *va, const vec *v, float *tc, LightMap *lm)
 	}
 	if(dr.y==0 && (dr.x==0 || dl.y==0)) return;
 	if(dr.x==0 && dl.x==0) return;
-	
+
 	bool header = false;
 	int numsamples = 0;
 	float dy = grassgrid - fmodf(o1.y, grassgrid);
@@ -199,7 +190,7 @@ void gengrasssamples(vtxarray *va, const vec *v, float *tc, LightMap *lm)
 	{
 		grassbounds &g = *(grassbounds *)&(*va->grasssamples)[va->grasssamples->length() - numsamples - 1];
 		g.numsamples = numsamples;
-	} 
+	}
 }
 
 void gengrasssamples(vtxarray *va)
@@ -252,14 +243,8 @@ float loddist(const vec &o)
 	return max(dist, 0);
 }
 
-#ifdef BFRONTIER
 VARW(grassrand, 0, 30, 90);
-#else
-VAR(grassrand, 0, 30, 90);
-#endif
-
 VARP(grasssamples, 0, 50, 10000);
-
 VARP(grassbillboard, 0, 1, 100);
 VARP(grassbbcorrect, 0, 1, 1);
 VARP(grasstaper, 0, 200, 10000);
@@ -277,7 +262,7 @@ void rendergrasssample(const grasssample &g, const vec &o, float dist, int seed,
 		if(seed%2) return;
 		right = camright;
 		if(grassrand) right.rotate_around_z((detrnd((size_t)&g * (seed + 1), 2*grassrand)-grassrand)*RAD);
-		if(grassbbcorrect) 
+		if(grassbbcorrect)
 		{
 			if(fabs(right.x) > fabs(right.y)) width *= sqrt(right.y*right.y/(right.x*right.x) + 1);
 			else width *= sqrt(right.x*right.x/(right.y*right.y) + 1);
@@ -320,11 +305,7 @@ void rendergrasssample(const grasssample &g, const vec &o, float dist, int seed,
 	if(grasstest>1) return;
 
 	extern int fullbright;
-#ifdef BFRONTIER // fullbright and fullbrightlevel support
 	if(nolights || fullbright) glColor3ub(fullbrightlevel, fullbrightlevel, fullbrightlevel);
-#else
-	if(nolights || (fullbright && editmode)) glColor3ub(128, 128, 128);
-#endif
 	else glColor3ubv(g.color);
 	float offset = detrnd((size_t)&g * (seed + 1)*13, grasstex->xs)/float(grasstex->xs);
 	glTexCoord2f(offset, 1); glVertex3fv(b1.v);
@@ -393,11 +374,7 @@ void rendergrasssamples(vtxarray *va, const vec &dir)
 	}
 }
 
-#ifdef BFRONTIER
 VARW(grassblend, 0, 0, 100);
-#else
-VAR(grassblend, 0, 0, 100);
-#endif
 
 void setupgrass()
 {
