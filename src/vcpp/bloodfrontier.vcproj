@@ -342,15 +342,15 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
+				RelativePath=".\bloodfrontier.rc"
+				>
+			</File>
+			<File
 				RelativePath="..\engine\engine.h"
 				>
 			</File>
 			<File
 				RelativePath="..\engine\joystick.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\bloodfrontier.rc"
 				>
 			</File>
 			<File
@@ -360,37 +360,6 @@
 			<Filter
 				Name="world"
 				>
-				<File
-					RelativePath="..\engine\cubeloader.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Profile|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="2"
-							PrecompiledHeaderThrough="pch.h"
-						/>
-					</FileConfiguration>
-				</File>
 				<File
 					RelativePath="..\engine\lightmap.cpp"
 					>
