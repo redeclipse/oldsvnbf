@@ -139,39 +139,61 @@ struct weaponstate
 			maxspeed = _s;
 			id = lastbounce = _l;
 
-			if (bnctype == BNC_SHOT)
+			switch (bnctype)
 			{
-				switch (gun)
+				case BNC_SHOT:
 				{
-					case GUN_GL:
-						aboveeye = eyeheight = radius = 0.5f;
-						elasticity = 0.45f;
-						relativity = 0.5f;
-						waterfric = 2.0f;
-						break;
-					case GUN_PISTOL:
-					case GUN_SG:
-					case GUN_CG:
-					case GUN_RIFLE:
-					case GUN_RL:
-					default:
+					switch (gun)
 					{
-						aboveeye = eyeheight = radius = 1.5f;
-						elasticity = 0.0f;
-						relativity = 0.25f;
-						waterfric = 1.5f;
-						break;
+						case GUN_GL:
+							aboveeye = eyeheight = radius = 1.0f;
+							elasticity = 0.33f;
+							relativity = 0.5f;
+							waterfric = 2.0f;
+							break;
+						case GUN_RL:
+						{
+							aboveeye = eyeheight = radius = 2.0f;
+							elasticity = 0.0f;
+							relativity = 0.25f;
+							waterfric = 1.5f;
+							break;
+						}
+						case GUN_PISTOL:
+						case GUN_SG:
+						case GUN_CG:
+						case GUN_RIFLE:
+						default:
+						{
+							aboveeye = eyeheight = radius = 0.5f;
+							elasticity = 0.5f;
+							relativity = 0.25f;
+							waterfric = 1.25f;
+							break;
+						}
 					}
+					if (guns[gun].fsound >= 0) schan = playsound(guns[gun].fsound, &o, &vel);
+					break;
 				}
-				if (guns[gun].fsound >= 0) schan = playsound(guns[gun].fsound, &o, &vel);
-			}
-			else
-			{
-				aboveeye = eyeheight = radius = 1.0f;
-				elasticity = 0.6f;
-				relativity = 1.0f;
-				waterfric = 2.0f;
-				schan = playsound(S_WHIZZ, &o, &vel);
+				case BNC_GIBS:
+				{
+					aboveeye = eyeheight = radius = 0.66f;
+					elasticity = 0.25f;
+					relativity = 1.0f;
+					waterfric = 2.0f;
+					schan = playsound(S_WHIZZ, &o, &vel);
+					break;
+				}
+				case BNC_DEBRIS:
+				default:
+				{
+					aboveeye = eyeheight = radius = 1.25f;
+					elasticity = 0.66f;
+					relativity = 1.0f;
+					waterfric = 1.75f;
+					schan = playsound(S_WHIZZ, &o, &vel);
+					break;
+				}
 			}
 
 			vec dir(vec(vec(to).sub(from)).normalize());
@@ -196,7 +218,7 @@ struct weaponstate
             if (bnctype == BNC_SHOT)
                 regular_particle_splash(5, 1, 150, vec(o).sub(vel));
 			else if (bnctype == BNC_GIBS)
-				particle_splash(3, time, 500, vec(o).sub(vel));
+				particle_splash(3, 1, 10000, vec(o).sub(vel));
 		}
 
 		bool update(int millis, int time, int qtime)
