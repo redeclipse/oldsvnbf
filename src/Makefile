@@ -81,14 +81,14 @@ server:	libenet $(SERVER_OBJS)
 	$(CXX) $(SCXXFLAGS) -o bloodfrontier_server $(SERVER_OBJS) $(SERVER_LIBS)
 	strip bloodfrontier_server
 
-install-client:
+install-client: client
 	cp -v bloodfrontier_client ../bin/bloodfrontier_client
 	chmod +x ../bin/bloodfrontier_client ../bloodfrontier.sh
 
-install-server:
+install-server: server
 	cp -v bloodfrontier_server ../bin/bloodfrontier_server
 	chmod +x ../bin/bloodfrontier_server
 
 install: install-client install-server
 
-all: client server install
+all: client server

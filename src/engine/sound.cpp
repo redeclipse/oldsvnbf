@@ -63,21 +63,13 @@ void initsound()
 
 #ifdef USE_DESIGNER
 	SNDERR(FMOD_EventSystem_Init(evtsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initialize", {
-		if (snderr == FMOD_ERR_OUTPUT_CREATEBUFFER)
-		{
-			initsoundsetup;
-			SNDERR(FMOD_EventSystem_Init(evtsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initalize failsafe", return); // reinit
-		}
-		else return;
+		initsoundsetup;
+		SNDERR(FMOD_EventSystem_Init(evtsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initalize failsafe", return); // reinit
 	});
 #else
 	SNDERR(FMOD_System_Init(sndsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initialize", {
-		if (snderr == FMOD_ERR_OUTPUT_CREATEBUFFER)
-		{
-			initsoundsetup;
-			SNDERR(FMOD_System_Init(sndsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initalize failsafe", return); // reinit
-		}
-		else return;
+		initsoundsetup;
+		SNDERR(FMOD_System_Init(sndsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initalize failsafe", return); // reinit
 	});
 #endif
 
@@ -91,7 +83,7 @@ void initsound()
 	nosound = false;
 }
 
-#ifdef USE_DESIGNER
+#ifdef USE_DESIGNER // TODO: designer stuff
 FMOD_EVENTSYSTEM *evtsys;
 vector<soundgroup> sndgroups;
 vector<soundproject> sndprojects;
