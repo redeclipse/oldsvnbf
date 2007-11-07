@@ -380,6 +380,8 @@ extern mapmodelinfo &getmminfo(int i);
 extern void startmodelquery(occludequery *query);
 extern void endmodelquery();
 
+extern void interpolateorientation(dynent *d, float &interpyaw, float &interppitch);
+
 // renderparticles
 extern void particleinit();
 extern void clearparticles();
