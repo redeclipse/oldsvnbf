@@ -850,7 +850,7 @@ struct fpsclient : igameclient
 		{
 			extern int sensitivity, sensitivityscale, invmouse;
 			const float SENSF = 33.0f;	 // try match quake sens
-			physent *d = isthirdperson() ? camera1 : player1;
+			physent *d = player1; //isthirdperson() ? camera1 : player1;
 
 			d->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 			d->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
@@ -863,7 +863,7 @@ struct fpsclient : igameclient
 
 	void findorientation()
 	{
-		physent *d = isthirdperson() ? camera1 : player1;
+		physent *d = player1; //isthirdperson() ? camera1 : player1;
 
 		vec dir;
 		vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
@@ -901,13 +901,9 @@ struct fpsclient : igameclient
 			if (players.inrange(-cameranum) && players[-cameranum])
 			{
 				camera1->o = players[-cameranum]->o;
-				if (!isthirdperson())
-				{
-					//camera1->yaw = players[-cameranum]->yaw;
-					//camera1->pitch = players[-cameranum]->pitch;
-					extern void interpolateorientation(dynent *d, float &interpyaw, float &interppitch);
-					interpolateorientation(players[-cameranum], camera1->yaw, camera1->pitch);
-				}
+				//camera1->yaw = players[-cameranum]->yaw;
+				//camera1->pitch = players[-cameranum]->pitch;
+				interpolateorientation(players[-cameranum], camera1->yaw, camera1->pitch);
 				cameratype = 1;
 			}
 			else if (player1->clientnum != -cameranum)
@@ -936,16 +932,13 @@ struct fpsclient : igameclient
 		{
 			camera1->o = player1->o;
 
-			if (!isthirdperson())
+			if (player1->state == CS_DEAD)
 			{
-				if (player1->state == CS_DEAD)
-				{
-					camera1->o.z -= (float(player1->eyeheight-player1->aboveeye)/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
-				}
-				camera1->yaw = player1->yaw;
-				camera1->pitch = player1->pitch;
-				camera1->roll = player1->roll;
+				camera1->o.z -= (float(player1->eyeheight-player1->aboveeye)/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
 			}
+			camera1->yaw = player1->yaw;
+			camera1->pitch = player1->pitch;
+			camera1->roll = player1->roll;
 			cameratype = 0;
 		}
 		else
