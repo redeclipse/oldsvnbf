@@ -34,7 +34,7 @@ struct entities : icliententities
 			"carrot",
 			NULL, NULL,
 			"checkpoint",
-			NULL, NULL
+			NULL, NULL,
 		};
 		static char *bfgunnames[] = {
 			"ammo/pistol", "ammo/shotgun", "ammo/chaingun", "ammo/grenades", "ammo/rockets", "ammo/rifle"
@@ -280,7 +280,9 @@ struct entities : icliententities
 			"none?", "light", "mapmodel", "playerstart", "envmap", "particles", "sound", "spotlight",
 			"weapon", "teleport", "teledest",
 			"monster", "carrot", "jumppad",
-			"base", "respawnpoint", "camera", "waypoint", "eof1", "eof2", "eof3"
+			"base", "respawnpoint",
+			"camera", "waypoint",
+            "", "", "", ""
 		};
 		return i>=0 && size_t(i)<sizeof(entnames)/sizeof(entnames[0]) ? entnames[i] : "";
 	}
@@ -431,20 +433,17 @@ struct entities : icliententities
 
 	void readent(gzFile &g, int maptype, int id, entity &e)
 	{
-		fpsentity &f = (fpsentity &)e;
-
 		if (maptype == MAP_BFGZ)
 		{
+			fpsentity &f = (fpsentity &)e;
+			
 			switch (f.type)
 			{
 				case WAYPOINT:
 				{
 					int links = gzgetint(g);
-					f.links.setsize(1);
-					loopi(links)
-					{
-						f.links.add(gzgetint(g));
-					}
+					f.links.setsize(0);
+					loopi(links) f.links.add(gzgetint(g));
 				}
 			}
 		}
@@ -470,7 +469,7 @@ struct entities : icliententities
 				e.attr1 = gunmap[gun];
 				e.attr2 = 0;
 			}
-			else if (e.type >= 14 && e.type <= 18) e.type = NOTUSED; // no health, armour, quad
+			else if ((e.type >= 14 && e.type <= 18) || e.type >= 26) e.type = NOTUSED;
 			else if (e.type >= 19) e.type -= 10;
 		}
 	}

@@ -30,12 +30,7 @@ VARF(sounddsp,
 
 void initsound()
 {
-#ifdef USE_DESIGNER
-	SNDERR(FMOD_EventSystem_Create(&evtsys), "create event system", return);
-	SNDERR(FMOD_EventSystem_GetSystemObject(evtsys, &sndsys), "get system object", return);
-#else
 	SNDERR(FMOD_System_Create(&sndsys), "create subsystem", return);
-#endif
 
 	unsigned int version;
 	SNDERR(FMOD_System_GetVersion(sndsys, &version), "get version", return);
@@ -61,17 +56,10 @@ void initsound()
 
 	initsoundsetup;
 
-#ifdef USE_DESIGNER
-	SNDERR(FMOD_EventSystem_Init(evtsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initialize", {
-		initsoundsetup;
-		SNDERR(FMOD_EventSystem_Init(evtsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initalize failsafe", return); // reinit
-	});
-#else
 	SNDERR(FMOD_System_Init(sndsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initialize", {
 		initsoundsetup;
 		SNDERR(FMOD_System_Init(sndsys, soundchans, FMOD_INIT_VOL0_BECOMES_VIRTUAL, 0), "initalize failsafe", return); // reinit
 	});
-#endif
 
 	SNDERR(FMOD_System_Set3DSettings(sndsys, 1.0f, 1.0f, 1.0f), "set 3d settings", );
 
@@ -83,26 +71,6 @@ void initsound()
 	nosound = false;
 }
 
-#ifdef USE_DESIGNER // TODO: designer stuff
-FMOD_EVENTSYSTEM *evtsys;
-vector<soundgroup> sndgroups;
-vector<soundproject> sndprojects;
-
-ICOMMAND(soundproject, "s", (char *name), {
-	soundproject *prj = sndprojects.add();
-	if (!prj->load(name)) sndprojects.pop();
-});
-
-ICOMMAND(soundgroup, "s", (char *name), {
-	sound project *prj = sndprojects.last();
-	if (prj)
-	{
-		soundgroup *grp = sndgroups.add();
-		if (!grp->load(prj, name)) sndgroups.pop();
-	}
-	else conoutf("error loading '%s': no sound project loaded", n);
-});
-#else
 int findsound(char *name, int vol, vector<soundslot> &sounds)
 {
 	loopv(sounds)
@@ -131,7 +99,6 @@ int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds)
 
 ICOMMAND(registersound, "sii", (char *n, int *v, int *m), intret(addsound(n, *v, *m < 0 ? -1 : *m, gamesounds)));
 ICOMMAND(mapsound, "sii", (char *n, int *v, int *m), intret(addsound(n, *v, *m < 0 ? -1 : *m, mapsounds)));
-#endif
 
 void checksound()
 {

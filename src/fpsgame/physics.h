@@ -34,7 +34,7 @@ struct physics : iphysics
 	{
 		if (d->state != CS_SPECTATOR && d->state != CS_EDITING)
 		{
-			return d->maxspeed * (float(getvar("speed"))/100.f);
+			return d->maxspeed * (float(d->crouch ? getvar("crawlspeed") : getvar("speed"))/100.f);
 		}
 		return d->maxspeed;
 	}

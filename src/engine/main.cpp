@@ -56,8 +56,8 @@ bool initwarning()
 	return !initing;
 }
 
-VARF(scr_w, 0, 1024, 10000, initwarning());
-VARF(scr_h, 0, 768, 10000, initwarning());
+VARF(scr_w, 320, 1024, 10000, initwarning());
+VARF(scr_h, 240, 768, 10000, initwarning());
 VARF(colorbits, 0, 0, 32, initwarning());
 VARF(depthbits, 0, 0, 32, initwarning());
 VARF(stencilbits, 0, 1, 32, initwarning());
@@ -711,8 +711,8 @@ int main(int argc, char **argv)
 			case 'k': addpackagedir(&argv[i][2]); break;
 			case 'r': execfile(argv[i][2] ? &argv[i][2] : (char *)"init.cfg"); restoredinits = true; break;
 			case 'd': dedicated = true; break;
-			case 'w': scr_w = atoi(&argv[i][2]); if(!findarg(argc, argv, "-h")) scr_h = (scr_w*3)/4; break;
-			case 'h': scr_h = atoi(&argv[i][2]); if(!findarg(argc, argv, "-w")) scr_w = (scr_h*4)/3; break;
+            case 'w': scr_w = atoi(&argv[i][2]); if(scr_w<320) scr_w = 320; if(!findarg(argc, argv, "-h")) scr_h = (scr_w*3)/4; break;
+            case 'h': scr_h = atoi(&argv[i][2]); if(scr_h<240) scr_h = 240; if(!findarg(argc, argv, "-w")) scr_w = (scr_h*4)/3; break;
 			case 'z': depthbits = atoi(&argv[i][2]); break;
 			case 'b': colorbits = atoi(&argv[i][2]); break;
 			case 'a': fsaa = atoi(&argv[i][2]); break;
@@ -848,7 +848,7 @@ int main(int argc, char **argv)
 	computescreen("initializing...");
 	inbetweenframes = true;
 
-    conoutf("init: gl: effects");
+    conoutf("init: gl effects");
     loadshaders();
 	particleinit();
 

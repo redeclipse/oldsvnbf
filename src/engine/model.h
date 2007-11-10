@@ -3,7 +3,7 @@ enum { MDL_MD2 = 1, MDL_MD3 };
 struct model
 {
 	float spin;
-    bool collide, tricollide, cullface, shadow;
+    bool collide, ellipsecollide, cullface, shadow;
 	float scale;
 	vec translate;
     BIH *bih;
@@ -11,7 +11,7 @@ struct model
 	float eyeheight, collideradius, collideheight;
 	int batch;
 
-    model() : spin(0), collide(true), tricollide(false), cullface(true), shadow(true), scale(1.0f), translate(0, 0, 0), bih(0), bbcenter(0, 0, 0), bbradius(0, 0, 0), eyeheight(0.9f), collideradius(0), collideheight(0), batch(-1) {}
+    model() : spin(0), collide(true), ellipsecollide(false), cullface(true), shadow(true), scale(1.0f), translate(0, 0, 0), bih(0), bbcenter(0, 0, 0), bbradius(0, 0, 0), eyeheight(0.9f), collideradius(0), collideheight(0), batch(-1) {}
     virtual ~model() { DELETEP(bih); }
 	virtual void calcbb(int frame, vec &center, vec &radius) = 0;
     virtual void extendbb(int frame, vec &center, vec &radius, modelattach &a) {}

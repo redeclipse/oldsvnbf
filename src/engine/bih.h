@@ -41,5 +41,4 @@ struct BIH
 };
 
 extern bool mmintersect(const extentity &e, const vec &o, const vec &ray, float maxdist, int mode, float &dist);
-extern bool mmcollide(physent *d, const vec &dir, float cutoff, octaentities &oc, vec &normal);
 

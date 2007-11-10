@@ -106,11 +106,13 @@ void texdup(SDL_Surface *s, int srcchan, int dstchan)
 
 VAR(hwtexsize, 1, 0, 0);
 VAR(hwcubetexsize, 1, 0, 0);
+VAR(hwmaxaniso, 1, 0, 0);
 VARP(maxtexsize, 0, 0, 1<<12);
 VARP(texreduce, 0, 0, 12);
 VARP(texcompress, 0, 1<<10, 1<<12);
 VARP(trilinear, 0, 1, 1);
 VARP(bilinear, 0, 1, 1);
+VARP(aniso, 0, 0, 16);
 
 GLenum compressedformat(GLenum format, int w, int h)
 {
@@ -163,6 +165,7 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glTexParameteri(target, GL_TEXTURE_WRAP_S, clamp&1 ? GL_CLAMP_TO_EDGE : GL_REPEAT);
         if(target!=GL_TEXTURE_1D) glTexParameteri(target, GL_TEXTURE_WRAP_T, clamp&2 ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+        if(target==GL_TEXTURE_2D && hasAF && min(aniso, hwmaxaniso) > 0) glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, min(aniso, hwmaxaniso));
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, bilinear ? GL_LINEAR : GL_NEAREST);
         glTexParameteri(target, GL_TEXTURE_MIN_FILTER,
 			mipit ?
