@@ -29,13 +29,13 @@ void mdlcollide(int *collide)
 
 COMMAND(mdlcollide, "i");
 
-void mdltricollide(int *tricollide)
+void mdlellipsecollide(int *collide)
 {
     checkmdl;
-    loadingmodel->tricollide = *tricollide!=0;
+    loadingmodel->ellipsecollide = *collide!=0;
 }
 
-COMMAND(mdltricollide, "i");
+COMMAND(mdlellipsecollide, "i");
 
 void mdlspec(int *percent)
 {
@@ -770,13 +770,13 @@ void findanims(const char *pattern, vector<int> &anims)
 {
 	static const char *names[] =
 	{
-		"dead", "dying", "idle",
-		"forward", "backward", "left", "right",
+		"dead", "dying",
+		"idle", "forward", "backward", "left", "right",
+		"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
 		"punch", "shoot", "pain",
 		"jump", "sink", "swim",
 		"edit", "lag", "taunt", "win", "lose",
-		"gun shoot", "gun idle",
-		"gun reload", "gun zoom",
+		"gun shoot", "gun idle", "gun reload", "gun zoom",
 		"vwep", "shield", "powerup",
 		"mapmodel", "trigger"
 	};
@@ -831,7 +831,7 @@ void interpolateorientation(dynent *d, float &interpyaw, float &interppitch)
 
 void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, float sink)
 {
-    int anim = ANIM_IDLE|ANIM_LOOP;
+    int anim = (d->crouch ? ANIM_CROUCH : ANIM_IDLE)|ANIM_LOOP;
     float yaw = d->yaw, pitch = d->pitch;
     if(d->type==ENT_PLAYER && d!=player && orientinterpolationtime) interpolateorientation(d, yaw, pitch);
 	vec o(d->o);
@@ -868,6 +868,12 @@ void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int 
 
 		if(d->inwater && d->physstate<=PHYS_FALL) anim |= ((d->move || d->strafe || d->vel.z+d->gvel.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
 		else if(d->timeinair>100) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
+		else if(d->crouch)
+		{
+			if(d->move>0) anim |= (ANIM_CRAWL_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+			else if(d->strafe) anim |= ((d->strafe>0 ? ANIM_CRAWL_LEFT : ANIM_CRAWL_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
+			else if(d->move<0) anim |= (ANIM_CRAWL_BACKWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+		}
 		else if(d->move>0) anim |= (ANIM_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 		else if(d->strafe) anim |= ((d->strafe>0 ? ANIM_LEFT : ANIM_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
 		else if(d->move<0) anim |= (ANIM_BACKWARD|ANIM_LOOP)<<ANIM_SECONDARY;
@@ -882,15 +888,21 @@ void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int 
     rendermodel(color, dir, mdlname, anim, varseed, 0, o, testanims && d==player ? 0 : yaw+90, pitch, 0, basetime, d, flags, attachments);
 }
 
-void setbbfrommodel(dynent *d, char *mdl)
+void setbbfrommodel(dynent *d, const char *mdl)
 {
 	model *m = loadmodel(mdl);
 	if(!m) return;
 	vec center, radius;
 	m->collisionbox(0, center, radius);
+    if(d->type==ENT_INANIMATE && !m->ellipsecollide)
+    {
+        d->collidetype = COLLIDE_AABB;
+        rotatebb(center, radius, int(d->yaw));
+    }
 	d->xradius	= radius.x + fabs(center.x);
 	d->yradius	= radius.y + fabs(center.y);
 	d->radius	= max(d->xradius, d->yradius);
+    if(d->collidetype!=COLLIDE_ELLIPSE) d->xradius = d->yradius = d->radius;
 	d->eyeheight = (center.z-radius.z) + radius.z*2*m->eyeheight;
 	d->aboveeye  = radius.z*2*(1.0f-m->eyeheight);
 }

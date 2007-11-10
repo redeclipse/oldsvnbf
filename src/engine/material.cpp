@@ -129,7 +129,8 @@ sometype materials[] =
 	{"clip", MAT_CLIP},
 	{"glass", MAT_GLASS},
 	{"noclip", MAT_NOCLIP},
-	{"lava", MAT_LAVA}
+    {"lava", MAT_LAVA},
+    {"aiclip", MAT_AICLIP}
 };
 
 int findmaterial(const char *name, bool tryint)
@@ -488,6 +489,7 @@ void rendermatgrid(vector<materialsurface *> &vismats)
 		{ 0, 85, 85 }, // MAT_GLASS - cyan,
 		{ 0, 85, 0 },  // MAT_NOCLIP - green
 		{ 85, 40, 0 }, // MAT_LAVA - orange
+        { 85, 85, 0 }, // MAT_AICLIP - yellow
 	};
 	int lastmat = -1;
 	glBegin(GL_QUADS);
@@ -697,7 +699,7 @@ void rendermaterials(float zclip, bool refract)
 						{ 255, 0,	0	}, // MAT_GLASS - cyan,
 						{ 255, 0,	255 }, // MAT_NOCLIP - green
 						{ 0, 128,	255 }, // MAT_LAVA - orange
-
+                        { 0,   0,   255 }, // MAT_AICLIP - yellow
 					};
 					glColor3ubv(blendcols[curmat >= MAT_EDIT ? curmat-MAT_EDIT : curmat]);
 					break;

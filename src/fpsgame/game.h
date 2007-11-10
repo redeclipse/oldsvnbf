@@ -78,11 +78,14 @@ static struct gametypes
 	{ G_SINGLEPLAYER,	0,					"Singleplayer" },
 	{ G_DEATHMATCH,		G_M_FRAG,			"Deathmatch" },
 	{ G_CAPTURE,		G_M_FRAG,			"Capture" },
-}, mutstype[] = {
+};
+#if 0
+mutstype[] = {
 	{ G_M_TEAM,			0,					"Team" },
 	{ G_M_INSTA,		0,					"Instagib" },
 	{ G_M_DUEL,			0,					"Duel" },
 };
+#endif
 
 #define m_name(a) 			(a > -1 && a < G_MAX ? gametype[a].name : NULL)
 #define m_mut(a) 			(a > -1 && a < G_M_NUM ? mutstype[a].name : NULL)

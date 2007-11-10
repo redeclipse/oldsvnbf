@@ -36,8 +36,9 @@ struct extentity : entity                       // part of the entity that doesn
 
 enum
 {
-    ANIM_DEAD = 0, ANIM_DYING, ANIM_IDLE,
-    ANIM_FORWARD, ANIM_BACKWARD, ANIM_LEFT, ANIM_RIGHT,
+    ANIM_DEAD = 0, ANIM_DYING,
+    ANIM_IDLE, ANIM_FORWARD, ANIM_BACKWARD, ANIM_LEFT, ANIM_RIGHT,
+    ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
     ANIM_PUNCH, ANIM_SHOOT, ANIM_PAIN,
     ANIM_JUMP, ANIM_SINK, ANIM_SWIM,
     ANIM_EDIT, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
@@ -88,7 +89,9 @@ enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_LAGGED, CS_EDITING, CS_SPECTATOR }
 
 enum { PHYS_FLOAT = 0, PHYS_FALL, PHYS_SLIDE, PHYS_SLOPE, PHYS_FLOOR, PHYS_STEP_UP, PHYS_STEP_DOWN, PHYS_BOUNCE };
 
-enum { ENT_PLAYER = 0, ENT_AI, ENT_CAMERA, ENT_BOUNCE };
+enum { ENT_PLAYER = 0, ENT_AI, ENT_INANIMATE, ENT_CAMERA, ENT_BOUNCE };
+
+enum { COLLIDE_AABB = 0, COLLIDE_ELLIPSE };
 
 struct physent                                  // base entity type, can be affected by physics
 {
@@ -101,23 +104,29 @@ struct physent                                  // base entity type, can be affe
     vec floor;                                  // the normal of floor the dynent is on
 
     bool inwater;
-    bool jumpnext;
+    bool jumpnext, crouch;
     bool blocked, moving;                       // used by physics to signal ai
+    physent *onplayer;
+    int lastmove, lastmoveattempt, collisions, stacks;
 
     char move, strafe;
 
     uchar physstate;                            // one of PHYS_* above
     uchar state;                                // one of CS_* above
     uchar type;                                 // one of ENT_* above
+    uchar collidetype;                          // one of COLLIDE_* above           
 
     physent() : o(0, 0, 0), yaw(270), pitch(0), roll(0), maxspeed(100),
                radius(4.1f), eyeheight(14), aboveeye(1), xradius(4.1f), yradius(4.1f),
-               blocked(false), moving(true), state(CS_ALIVE), type(ENT_PLAYER)
+               blocked(false), moving(true), 
+               onplayer(NULL), lastmove(0), lastmoveattempt(0), collisions(0), stacks(0),
+               state(CS_ALIVE), type(ENT_PLAYER),
+               collidetype(COLLIDE_ELLIPSE)
                { reset(); }
 
     void reset()
     {
-    	inwater = false;
+    	inwater = jumpnext = crouch = false;
         timeinair = strafe = move = 0;
         physstate = PHYS_FALL;
 		vel = gvel = vec(0, 0, 0);
@@ -147,7 +156,7 @@ struct dynent : physent                         // animated characters, or chara
 
     void stopmoving()
     {
-        k_left = k_right = k_up = k_down = jumpnext = false;
+        k_left = k_right = k_up = k_down = jumpnext = crouch = false;
         move = strafe = 0;
         targetyaw = rotspeed = 0;
     }

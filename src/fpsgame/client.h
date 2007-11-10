@@ -289,7 +289,7 @@ struct clientcom : iclientcom
 			}
 			if(d->gvel.z) putint(q, (int)(d->gvel.z*DVELF));
 			// pack rest in almost always 1 byte: strafe:2, move:2, garmour: 1, yarmour: 1, quad: 1
-			uint flags = (d->strafe&3) | ((d->move&3)<<2);
+			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouch ? 1 : 0)<<3);
 			putuint(q, flags);
 			enet_packet_resize(packet, q.length());
 			sendpackettoserv(packet, 0);
@@ -394,7 +394,7 @@ struct clientcom : iclientcom
 				f >>= 2;
 				d->move = (f&3)==3 ? -1 : f&3;
 				f >>= 2;
-				f >>= 3;
+				d->crouch = f&1 ? true : false;
 #if 0
 				if(f&1) { d->armourtype = A_GREEN; d->armour = 1; }
 				else if(f&2) { d->armourtype = A_YELLOW; d->armour = 1; }

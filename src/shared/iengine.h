@@ -134,13 +134,14 @@ extern void save_world(char *mname, bool nolms = false);
 // physics
 extern void moveplayer(physent *pl, int moveres, bool local);
 extern bool moveplayer(physent *pl, int moveres, bool local, int curtime);
-extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0.0f);
+extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0.0f, bool playercol = true);
 extern void avoidcollision(physent *d, const vec &dir, physent *obstacle, float space);
 extern void physicsframe();
 extern void dropenttofloor(entity *e);
 extern void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m);
 extern void vectoyawpitch(const vec &v, float &yaw, float &pitch);
 extern bool intersect(physent *d, vec &from, vec &to);
+extern bool moveplatform(physent *p, const vec &dir);
 extern void updatephysstate(physent *d);
 extern void cleardynentcache();
 extern bool entinmap(dynent *d, bool avoidplayers = false);
@@ -327,6 +328,7 @@ enum							// cube empty-space materials
 	MAT_GLASS,				  // behaves like clip but is blended blueish
 	MAT_NOCLIP,				 // collisions always treat cube as empty
 	MAT_LAVA,					// fill with lava
+    MAT_AICLIP,                 // clip ai only
 	MAT_EDIT					// basis for the edit volumes of the above materials
 };
 

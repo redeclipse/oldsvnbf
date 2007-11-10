@@ -69,6 +69,7 @@ struct fpsclient : igameclient
 		  player1(spawnstate(new fpsent())),
 		  ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this)
 	{
+		CCOMMAND(crouch, "D", (fpsclient *self, int *down), { self->docrouch(*down!=0); });
 		CCOMMAND(jump,   "D", (fpsclient *self, int *down), { if(self->canjump()) self->player1->jumpnext = *down!=0; });
 		CCOMMAND(attack, "D", (fpsclient *self, int *down), { self->doattack(*down!=0); });
 		CCOMMAND(reload, "D", (fpsclient *self, int *down), { self->doreload(*down!=0); });
@@ -162,6 +163,7 @@ struct fpsclient : igameclient
 		ws.bounceupdate(curtime);
 
 		gets2c();
+
 		otherplayers();
 
 		if (cc.ready())
@@ -256,6 +258,12 @@ struct fpsclient : igameclient
 
 	// inputs
 
+	void docrouch(bool on)
+	{
+		if(intermission) return;
+		player1->crouch = on;
+	}
+
 	void doattack(bool on)
 	{
 		if(intermission) return;
@@ -319,11 +327,11 @@ struct fpsclient : igameclient
 
 		string dname, aname;
 		s_strcpy(dname, d==player1 ? "you" : colorname(d));
-		s_strcpy(aname, actor==player1 ? "you" : colorname(actor));
+		s_strcpy(aname, actor==player1 ? "you" : (actor->type!=ENT_INANIMATE ? colorname(actor) : ""));
 		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_RIGHT;
 		if(actor->type==ENT_AI)
 			console("\f2%s got killed by %s!", cflags, dname, aname);
-		else if(d==actor)
+        else if(d==actor || actor->type==ENT_INANIMATE)
 			console("\f2%s suicided%s", cflags, dname, d==player1 ? "!" : "");
 		else if(isteam(d->team, actor->team))
 		{
