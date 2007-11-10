@@ -8,12 +8,12 @@ VARW(lighterror, 1, 8, 16);
 VARW(bumperror, 1, 3, 16);
 VARW(lightlod, 0, 0, 10);
 VARW(worldlod, 0, 0, 1);
-VARW(ambient, 1, 25, 64);
+VARW(ambient, 0, 25, 64);
 VARW(skylight, 0, 0, 0xFFFFFF);
+VARW(lmshadows, 0, 1, 1);
+VARW(mmshadows, 0, 1, 1);
 
 // quality parameters, set by the calclight arg
-int shadows = 1;
-int mmshadows = 0;
 int aalights = 3;
 
 static int lmtype, lmorient;
@@ -276,7 +276,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 			if(spotatten <= 0) continue;
 			attenuation *= spotatten;
 		}
-		if(shadows && mag)
+		if(lmshadows && mag)
 		{
 			float dist = shadowray(light.o, ray, mag - tolerance, RAY_SHADOW | (mmshadows > 1 ? RAY_ALPHAPOLY : (mmshadows ? RAY_POLY : 0)));
 			if(dist < mag - tolerance) continue;
@@ -366,7 +366,7 @@ void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)))>1e15f) hit++;
 	}
 
-	int sky[3] = { (skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF };
+	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 	loopk(3) slight[k] = uchar(ambient + (max(sky[k], ambient) - ambient)*hit/17.0f);
 }
 
@@ -448,14 +448,14 @@ bool generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpv
 	uchar *slight = &lm[3*lm_w*y1];
 	lerpbounds start, end;
 	initlerpbounds(lv, numv, start, end);
-	int sky[3] = { (skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF };
+	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 	for(int y = y1; y < y2; ++y, v.add(vstep))
 	{
 		vec normal, nstep;
 		lerpnormal(y, lv, numv, start, end, normal, nstep);
 
 		vec u(v);
-		for(int x = 0; x < lm_w; ++x, u.add(ustep), normal.add(nstep), skylight += 3)
+		for(int x = 0; x < lm_w; ++x, u.add(ustep), normal.add(nstep), slight += 3)
 		{
 			CHECK_PROGRESS(return false);
 			generate_lumel(tolerance, lights, u, vec(normal).normalize(), *sample, x, y);
@@ -753,7 +753,7 @@ bool find_lights(int cx, int cy, int cz, int size, plane planes[2], int numplane
 		if(light.type != ET_LIGHT) continue;
 		addlight(light, cx, cy, cz, size, planes, numplanes);
 	}
-	int sky[3] = { (skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF };
+	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 	return lights1.length() || lights2.length() || sky[0]>ambient || sky[1]>ambient || sky[2]>ambient;
 }
 
@@ -981,7 +981,7 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size, bool lodcube)
 				cn[i].normals[3] = bvec(numplanes < 2 ? n[3] : n2[2]);
 			}
 		}
-		int sky[3] = { (skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF };
+		int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 		if(lights1.empty() && lights2.empty() && sky[0]<=ambient && sky[1]<=ambient && sky[2]<=ambient) continue;
 		uchar texcoords[8];
 		if(!setup_surface(planes, v, n, numplanes >= 2 ? n2 : NULL, texcoords))
@@ -1029,24 +1029,17 @@ static Uint32 calclight_timer(Uint32 interval, void *param)
 
 bool setlightmapquality(int quality)
 {
-	switch(quality)
-	{
-		case  3: shadows = 1; aalights = 3; mmshadows = 2; break;
-		case  2: shadows = 1; aalights = 3; mmshadows = 1; break;
-		case  1: shadows = 1; aalights = 3; mmshadows = 0; break;
-		case  0: shadows = 1; aalights = 2; mmshadows = 0; break;
-		case -1: shadows = 1; aalights = 1; mmshadows = 0; break;
-		case -2: shadows = 0; aalights = 0; mmshadows = 0; break;
-		default: return false;
-	}
+	if (quality < 0 || quality > 3) return false;
+
+	aalights = quality;
 	return true;
 }
 
-void calclight(int *quality)
+void calclight(int quality)
 {
-	if(!setlightmapquality(*quality))
+	if(!setlightmapquality(quality))
 	{
-		conoutf("valid range for calclight quality is -2..3");
+		conoutf("valid range for calclight quality is 0..3");
 		return;
 	}
 	computescreen("computing lightmaps... (esc to abort)");
@@ -1088,16 +1081,16 @@ void calclight(int *quality)
 			(end - start) / 1000.0f);
 }
 
-ICOMMAND(calclight, "s", (char *s), int n = *s ? atoi(s) : 3; calclight(&n));
+ICOMMAND(calclight, "s", (char *s), int n = *s ? atoi(s) : 3; calclight(n));
 
 VAR(patchnormals, 0, 0, 1);
 
-void patchlight(int *quality)
+void patchlight(int quality)
 {
 	if(noedit(true)) return;
-	if(!setlightmapquality(*quality))
+	if(!setlightmapquality(quality))
 	{
-		conoutf("valid range for patchlight quality is -2..3");
+		conoutf("valid range for patchlight quality is 0..3");
 		return;
 	}
 	computescreen("patching lightmaps... (esc to abort)");
@@ -1139,7 +1132,7 @@ void patchlight(int *quality)
 			(end - start) / 1000.0f);
 }
 
-COMMAND(patchlight, "i");
+ICOMMAND(patchlight, "s", (char *s), int n = *s ? atoi(s) : 3; patchlight(n));
 
 VARFW(fullbright, 0, 0, 1, initlights());
 VARW(fullbrightlevel, 0, 128, 255);
@@ -1341,17 +1334,17 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 		else dir.add(vec(e.o).sub(target).mul(intensity/mag));
 	}
 
-	int sky[3] = { (skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF };
+	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 	if(t && (sky[0]>ambient || sky[1]>ambient || sky[2]>ambient))
 	{
-		uchar skylight[3];
-		calcskylight(target, vec(0, 0, 0), 0.5f, skylight);
-		loopk(3) color[k] = min(1.5f, max(max(skylight[k]/255.0f, ambient), color[k]));
+		uchar slight[3];
+		calcskylight(target, vec(0, 0, 0), 0.5f, slight);
+		loopk(3) color[k] = min(1.5f, max(max(slight[k]/255.0f, ambient), color[k]));
 	}
 	else loopk(3)
 	{
-		float skylight = 0.75f*max(sky[k]/255.0f, ambient) + 0.25f*ambient;
-		color[k] = min(1.5f, max(skylight, color[k]));
+		float slight = 0.75f*max(sky[k]/255.0f, ambient) + 0.25f*ambient;
+		color[k] = min(1.5f, max(slight, color[k]));
 	}
 	if(dir.iszero()) dir = vec(0, 0, 1);
 	else dir.normalize();

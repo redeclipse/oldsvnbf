@@ -162,7 +162,7 @@ void pushshadowmap()
     float r, g, b;
 	if(!shadowmapambient)
 	{
-		int sky[3] = { (skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF };
+		int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 		if(sky[0] || sky[1] || sky[2])
 		{
 			r = max(25, 0.4f*ambient + 0.6f*max(ambient, sky[0]));
@@ -171,7 +171,7 @@ void pushshadowmap()
 		}
 		else r = g = b = max(25, 2.0f*ambient);
 	}
-    else { r = (shadowmapambient>>16)&0xFF; g = (shadowmapambient>>8)&0xFF; b = shadowmapambient&0xFF; }
+    else { r = shadowmapambient>>16; g = (shadowmapambient>>8)&0xFF; b = shadowmapambient&0xFF; }
     setenvparamf("shadowmapambient", SHPARAM_PIXEL, 7, r/255.0f, g/255.0f, b/255.0f);
 }
 

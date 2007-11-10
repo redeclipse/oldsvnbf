@@ -23,7 +23,6 @@ struct weaponstate
 			intret(self->player1->ammo[n]);
 		});
 		CCOMMAND(getweapon, "", (weaponstate *self), intret(self->player1->gunselect));
-		CCOMMAND(reload, "", (weaponstate *self), self->reload(self->cl.player1));
 	}
 
 	void weaponswitch(int a = -1, int b = -1)
@@ -128,7 +127,7 @@ struct weaponstate
 		{
 			state = CS_ALIVE;
 
-			from = _f;
+			o = from = _f;
 			to = _t;
 
 			local = _b;
@@ -146,14 +145,14 @@ struct weaponstate
 					switch (gun)
 					{
 						case GUN_GL:
-							aboveeye = eyeheight = radius = 1.0f;
+							aboveeye = eyeheight = radius = 0.5f;
 							elasticity = 0.33f;
 							relativity = 0.5f;
 							waterfric = 2.0f;
 							break;
 						case GUN_RL:
 						{
-							aboveeye = eyeheight = radius = 2.0f;
+							aboveeye = eyeheight = radius = 1.0f;
 							elasticity = 0.0f;
 							relativity = 0.25f;
 							waterfric = 1.5f;
@@ -165,7 +164,7 @@ struct weaponstate
 						case GUN_RIFLE:
 						default:
 						{
-							aboveeye = eyeheight = radius = 0.5f;
+							aboveeye = eyeheight = radius = 0.25f;
 							elasticity = 0.5f;
 							relativity = 0.25f;
 							waterfric = 1.25f;
@@ -198,10 +197,10 @@ struct weaponstate
 
 			vec dir(vec(vec(to).sub(from)).normalize());
 
-			vel = vec(vec(dir).mul(maxspeed)).add(vec(owner->vel).mul(relativity));
-			o = vec(from).add(vec(dir).mul(radius+owner->radius));
-
 			vectoyawpitch(dir, yaw, pitch);
+			vel = vec(vec(dir).mul(maxspeed)).add(vec(owner->vel).mul(relativity));
+
+			while (!collide(this, dir) && hitplayer) o.add(dir);
 		}
 
 		void reset()
@@ -214,50 +213,63 @@ struct weaponstate
 		void check(int time)
 		{
 			if (sndchans.inrange(schan) && !sndchans[schan].playing()) schan = -1;
-
-            if (bnctype == BNC_SHOT)
-                regular_particle_splash(5, 1, 150, vec(o).sub(vel));
-			else if (bnctype == BNC_GIBS)
-				particle_splash(3, 1, 10000, vec(o).sub(vel));
+            if (bnctype == BNC_SHOT) regular_particle_splash(5, 1, 500, vec(o).sub(vel));
+			else if (bnctype == BNC_GIBS) particle_splash(3, 1, 10000, vec(o).sub(vel));
 		}
 
 		bool update(int millis, int time, int qtime)
 		{
+			cube &c = lookupcube(int(o.x), int(o.y), int(o.z));
+			bool water = c.ext && isliquid(c.ext->material);
+			float secs = float(qtime) / 1000.0f;
 			vec old(o);
 
-			if (bounce(this, float(qtime)/1000.0f, elasticity, waterfric))
+			if (elasticity > 0.f) vel.sub(vec(0, 0, float(gravity)*secs));
+
+			vec dir(vel);
+			if (water) dir.div(waterfric);
+			dir.mul(secs);
+			o.add(dir);
+
+			if (!collide(this, dir) || inside || hitplayer)
 			{
-				vec wvel(wall); o = old; // store the wall, then get the sucker out of it
+				o = old;
 
 				if (bnctype != BNC_SHOT || gun == GUN_GL)
 				{
-					if (vel.magnitude() && millis-lastbounce > 500)
+					vec pos(wall);
+
+					if (gun == GUN_GL)
 					{
-						float c = wvel.dot(vel);
-						if (c == 0.f) c = -100.f; // no sir, we *must* bounce
-						float k = 1.0f + (1.0f - elasticity) * c / vel.magnitude();
+						//conoutf("BNC %d [%.1f,%.1f,%.1f]", qtime, pos.x, pos.y, pos.z);
+						//conoutf("GREANDE %.1f,%.1f [%.1f,%.1f,%.1f] %.1f", yaw, pitch, vel.x, vel.y, vel.z, vel.magnitude());
+						if (hitplayer)
+						{
+							pos = vec(vec(o).sub(hitplayer->o)).normalize();
+							//conoutf("PLAYER %.1f,%.1f [%.1f,%.1f,%.1f] %.1f", hitplayer->yaw, hitplayer->pitch, hitplayer->vel.x, hitplayer->vel.y, hitplayer->vel.z, hitplayer->vel.magnitude());
+							//conoutf("OFFSET [%.1f,%.1f,%.1f]", pos.x, pos.y, pos.z);
+						}
+					}
 
-						wvel.mul(elasticity * 2.0f * c);
-						gravity.mul(k);
-						vel.mul(k);
-						vel.sub(wvel);
+					if (vel.magnitude() > 1.f)
+					{
+						vel.apply(pos, elasticity);
+						if (hitplayer) vel.influence(pos, hitplayer->vel, elasticity);
 
-						if (bnctype == BNC_SHOT && guns[gun].rsound >= 0)
-							playsound(guns[gun].rsound, &o, &vel);
-						else if (bnctype == BNC_GIBS)
-							playsound(S_SPLAT, &o, &vel);
-						else if (bnctype == BNC_DEBRIS)
-							playsound(S_DEBRIS, &o, &vel);
-
-						lastbounce = millis;
+						if (millis-lastbounce > 500)
+						{
+							if (bnctype == BNC_SHOT && guns[gun].rsound >= 0) playsound(guns[gun].rsound, &o, &vel, vel.magnitude());
+							else if (bnctype == BNC_GIBS) playsound(S_SPLAT, &o, &vel, vel.magnitude());
+							else if (bnctype == BNC_DEBRIS) playsound(S_DEBRIS, &o, &vel, vel.magnitude());
+							lastbounce = millis;
+						}
 					}
 					return true; // stay alive until timeout
 				}
 				return false; // die on impact
 			}
 
-			if (bnctype == BNC_SHOT && gun == GUN_GL)
-				roll += int(vel.magnitude()/time)%360;
+			if (bnctype == BNC_SHOT && gun == GUN_GL) roll += int(vel.magnitude() / time) % 360;
 
 			return true;
 		}

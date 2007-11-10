@@ -14,7 +14,7 @@ enum						// static entity types
 	PARTICLES = ET_PARTICLES,
 	MAPSOUND = ET_SOUND,
 	SPOTLIGHT = ET_SPOTLIGHT,
-	WEAPON,
+	WEAPON,					// attr1 = gun, attr2 = amt
 	TELEPORT,				// attr1 = idx
 	TELEDEST,				// attr1 = angle, attr2 = idx
 	MONSTER,				// attr1 = angle, attr2 = monstertype
@@ -168,7 +168,7 @@ static char msgsizelookup(int msg)
 #define BFRONTIER_SERVER_PORT		28795
 #define BFRONTIER_SERVINFO_PORT		28796
 #define PROTOCOL_VERSION			BFRONTIER
-#define DEMO_VERSION 1				  // bump when demo format changes
+#define DEMO_VERSION				1
 #define DEMO_MAGIC "BFDZ"
 
 struct demoheader
@@ -323,7 +323,7 @@ struct fpsent : dynent, fpsstate
 	int clientnum, privilege, lastupdate, plag, ping;
 	int lifesequence;					// sequence id for each respawn, used in damage test
 	int lastattackgun;
-	bool attacking;
+	bool attacking, reloading;
 	int lasttaunt;
 	int lastpickup, lastpickupmillis;
 	int superdamage;
@@ -358,7 +358,7 @@ struct fpsent : dynent, fpsstate
 		dynent::reset();
 		fpsstate::respawn();
 		lastattackgun = gunselect;
-		attacking = false;
+		attacking = reloading = false;
 		lasttaunt = 0;
 		lastpickup = -1;
 		lastpickupmillis = 0;

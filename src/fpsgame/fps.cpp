@@ -69,7 +69,11 @@ struct fpsclient : igameclient
 		  player1(spawnstate(new fpsent())),
 		  ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this)
 	{
-        CCOMMAND(mode, "ii", (fpsclient *self, int *val, int *mut), { self->setmode(*val, *mut); });
+		CCOMMAND(jump,   "D", (fpsclient *self, int *down), { if(self->canjump()) self->player1->jumpnext = *down!=0; });
+		CCOMMAND(attack, "D", (fpsclient *self, int *down), { self->doattack(*down!=0); });
+		CCOMMAND(reload, "D", (fpsclient *self, int *down), { self->doreload(*down!=0); });
+
+		CCOMMAND(mode, "ii", (fpsclient *self, int *val, int *mut), { self->setmode(*val, *mut); });
         CCOMMAND(kill, "",  (fpsclient *self), { self->suicide(self->player1); });
         CCOMMAND(taunt, "", (fpsclient *self), { self->taunt(); });
 		CCOMMAND(cameradir, "ii", (fpsclient *self, int *a, int *b), self->cameradir(*a, *b!=0));
@@ -150,11 +154,15 @@ struct fpsclient : igameclient
 
 	void updateworld(vec &pos, int curtime, int lm)		// main game update loop
 	{
-        if(!maptime) { maptime = lm + curtime; return; }
+        if (!maptime) { maptime = lm + curtime; return; }
 		lastmillis = lm;
-		if(!curtime) return;
+		if (!curtime) return;
+
 		physicsframe();
+		ws.bounceupdate(curtime);
+
 		gets2c();
+		otherplayers();
 
 		if (cc.ready())
 		{
@@ -200,8 +208,6 @@ struct fpsclient : igameclient
 					}
 					else player1->lastimpulse = 0;
 
-					if (player1->attacking) ws.shoot(player1, pos);
-
 					ph.move(player1, 20, true);
 					ph.updatewater(player1, 0);
 
@@ -215,10 +221,10 @@ struct fpsclient : igameclient
 
 					et.checkitems(player1);
 					if (m_sp(gamemode)) checktriggers();
+					if (player1->attacking) ws.shoot(player1, pos);
+					else if (player1->reloading) ws.reload(player1);
 				}
 			}
-			ws.bounceupdate(curtime);
-			otherplayers();
 			if (player1->clientnum >= 0) c2sinfo(player1);
 		}
 	}
@@ -234,7 +240,7 @@ struct fpsclient : igameclient
 	{
 		if(player1->state==CS_DEAD)
 		{
-			player1->attacking = false;
+			player1->attacking = player1->reloading = false;
             if(m_capture(gamemode))
             {
                 int wait = (m_insta(gamemode, mutators) ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)-(lastmillis-player1->lastpain)/1000;
@@ -254,6 +260,12 @@ struct fpsclient : igameclient
 	{
 		if(intermission) return;
         if(player1->attacking = on) respawn();
+	}
+
+	void doreload(bool on)
+	{
+		if(intermission) return;
+		if(player1->reloading = on) respawn();
 	}
 
 	bool canjump()
@@ -331,7 +343,7 @@ struct fpsclient : igameclient
 		{
 			sb.showscores(true);
 			lastplayerstate = *player1;
-			d->attacking = false;
+			d->attacking = d->reloading = false;
 			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
@@ -363,7 +375,7 @@ struct fpsclient : igameclient
 		if(!timeremain)
 		{
 			intermission = true;
-			player1->attacking = false;
+			player1->attacking = player1->reloading = false;
 			if (m_mp(gamemode))
 			{
 				calcranks();

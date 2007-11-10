@@ -240,14 +240,14 @@ VARW(waterfog, 0, 150, 10000);
 VARW(watercolour, 0, 0x103060, 0xFFFFFF);
 void getwatercolour(uchar *wcol)
 {
-	uchar gcol[3] = { (watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF };
+	uchar gcol[3] = { watercolour>>16, (watercolour>>8)&0xFF, watercolour&0xFF };
 	memcpy(wcol, gcol, 3);
 }
 VARW(lavafog, 0, 50, 10000);
 VARW(lavacolour, 0, 0xFF4400, 0xFFFFFF);
 void getlavacolour(uchar *lcol)
 {
-	uchar gcol[3] = { (lavacolour>>16)&0xFF, (lavacolour>>8)&0xFF, lavacolour&0xFF };
+	uchar gcol[3] = { lavacolour>>16, (lavacolour>>8)&0xFF, lavacolour&0xFF };
 	memcpy(lcol, gcol, 3);
 }
 
@@ -430,7 +430,7 @@ void renderwater()
 
 	glDisable(GL_CULL_FACE);
 
-	uchar wcol[3] = { (watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF };
+	uchar wcol[3] = { watercolour>>16, (watercolour>>8)&0xFF, watercolour&0xFF };
 	glColor3ubv(wcol);
 
 	Slot &s = lookuptexture(-MAT_WATER);
@@ -473,7 +473,7 @@ void renderwater()
 
     GLfloat oldfogc[4];
     glGetFloatv(GL_FOG_COLOR, oldfogc);
-	int sky[3] = { (skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF };
+	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 	vec amb(max(sky[0], ambient), max(sky[1], ambient), max(sky[2], ambient));
 	entity *lastlight = (entity *)-1;
 	int lastdepth = -1;
