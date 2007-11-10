@@ -340,6 +340,8 @@ extern bool overlapsdynent(const vec &o, float radius);
 extern void rotatebb(vec &center, vec &radius, int yaw);
 extern float shadowray(const vec &o, const vec &ray, float radius, int mode, extentity *t = NULL);
 
+extern int gravity, speed, jumpvel, watertype, watervel;
+
 // world
 enum
 {

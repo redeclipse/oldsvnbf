@@ -8,8 +8,8 @@ struct vec
     };
 
     vec() {}
-    vec(int a) : x(a), y(a), z(a) {} 
-    vec(float a) : x(a), y(a), z(a) {} 
+    vec(int a) : x(a), y(a), z(a) {}
+    vec(float a) : x(a), y(a), z(a) {}
     vec(float a, float b, float c) : x(a), y(b), z(c) {}
     vec(int v[3]) : x(v[0]), y(v[1]), z(v[2]) {}
     vec(float *v) : x(v[0]), y(v[1]), z(v[2]) {}
@@ -18,7 +18,7 @@ struct vec
 
     float &operator[](int i)       { return v[i]; }
     float  operator[](int i) const { return v[i]; }
-    
+
     vec &set(int i, float f) { v[i] = f; return *this; }
 
     bool operator==(const vec &o) const { return x == o.x && y == o.y && z == o.z; }
@@ -27,8 +27,11 @@ struct vec
     bool iszero() const { return x==0 && y==0 && z==0; }
     float squaredlen() const { return x*x + y*y + z*z; }
     float dot(const vec &o) const { return x*o.x + y*o.y + z*o.z; }
-    vec &mul(float f)        { x *= f; y *= f; z *= f; return *this; }
-    vec &div(float f)        { x /= f; y /= f; z /= f; return *this; }
+	vec &abs()               { x = fabs(x); y = fabs(y); z = fabs(z); return *this; }
+	vec &mul(const vec &o)   { x *= o.x; y *= o.y; z *= o.z; return *this; }
+	vec &mul(float f)        { x *= f; y *= f; z *= f; return *this; }
+	vec &div(const vec &o)   { x /= o.x; y /= o.y; z /= o.z; return *this; }
+	vec &div(float f)        { x /= f; y /= f; z /= f; return *this; }
     vec &add(const vec &o)   { x += o.x; y += o.y; z += o.z; return *this; }
     vec &add(float f)        { x += f; y += f; z += f; return *this; }
     vec &sub(const vec &o)   { x -= o.x; y -= o.y; z -= o.z; return *this; }
@@ -41,6 +44,20 @@ struct vec
     float dist(const vec &e, vec &t) const { t = *this; t.sub(e); return t.magnitude(); }
     bool reject(const vec &o, float max) { return x>o.x+max || x<o.x-max || y>o.y+max || y<o.y-max; }
     vec &cross(const vec &a, const vec &b) { x = a.y*b.z-a.z*b.y; y = a.z*b.x-a.x*b.z; z = a.x*b.y-a.y*b.x; return *this; }
+	vec &apply(const vec &o, float elasticity = 1.0f)
+	{
+		x = ((o.x > 0.f && x < 0.f) || (o.x < 0.f && x > 0.f) ? fabs(x) * o.x : x) * elasticity;
+		y = ((o.y > 0.f && y < 0.f) || (o.y < 0.f && y > 0.f) ? fabs(y) * o.y : y) * elasticity;
+		z = ((o.z > 0.f && z < 0.f) || (o.z < 0.f && z > 0.f) ? fabs(z) * o.z : z) * elasticity;
+		return *this;
+	}
+	vec &influence(const vec &o, const vec &p, float elasticity = 1.0f)
+	{
+		if ((o.x >= 0.f && p.x > 0.f) || (o.x <= 0.f && p.x < 0.f)) x += p.x * elasticity;
+		if ((o.y >= 0.f && p.y > 0.f) || (o.y <= 0.f && p.y < 0.f)) y += p.y * elasticity;
+		if ((o.z >= 0.f && p.z > 0.f) || (o.z <= 0.f && p.z < 0.f)) z += p.z * elasticity;
+		return *this;
+	}
 
     void rotate_around_z(float angle) { *this = vec(cosf(angle)*x-sinf(angle)*y, cosf(angle)*y+sinf(angle)*x, z); }
     void rotate_around_x(float angle) { *this = vec(x, cosf(angle)*y-sinf(angle)*z, cosf(angle)*z+sinf(angle)*y); }
@@ -61,7 +78,7 @@ struct vec
 
     void orthogonal(const vec &d)
     {
-        int i = fabs(d.x) > fabs(d.y) ? (fabs(d.x) > fabs(d.z) ? 0 : 2) : (fabs(d.y) > fabs(d.z) ? 1 : 2); 
+        int i = fabs(d.x) > fabs(d.y) ? (fabs(d.x) > fabs(d.z) ? 0 : 2) : (fabs(d.y) > fabs(d.z) ? 1 : 2);
         v[i] = d[(i+1)%3];
         v[(i+1)%3] = -d[i];
         v[(i+2)%3] = 0;
@@ -125,7 +142,7 @@ struct matrix
         d = vec(X.x*d.x + Y.x*d.y + Z.x*d.z,
                 X.y*d.x + Y.y*d.y + Z.y*d.z,
                 X.z*d.x + Y.z*d.y + Z.z*d.z);
-    } 
+    }
 };
 
 struct plane : vec
@@ -137,7 +154,7 @@ struct plane : vec
     bool operator!=(const plane &p) const { return x!=p.x || y!=p.y || z!=p.z || offset!=p.offset; }
 
     plane() {}
-    plane(vec &c, float off) : vec(c), offset(off) {} 
+    plane(vec &c, float off) : vec(c), offset(off) {}
     plane(int d, float off)
     {
         x = y = z = 0.0f;
@@ -264,12 +281,12 @@ struct ivec
 static inline bool htcmp(const ivec &x, const ivec &y)
 {
     return x == y;
-}  
+}
 
 static inline uint hthash(const ivec &k)
 {
     return k.x^k.y^k.z;
-}  
+}
 
 struct svec
 {
