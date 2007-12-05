@@ -124,6 +124,11 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	conoutf("Renderer: %s (%s)", renderer, vendor);
 	conoutf("Driver: %s", version);
 
+#ifdef __APPLE__
+    extern int mac_osversion();
+    int osversion = mac_osversion();  /* 0x1050 = 10.5 (Leopard) */
+#endif
+    
 	//extern int shaderprecision;
 	// default to low precision shaders on certain cards, can be overridden with -f3
 	// char *weakcards[] = { "GeForce FX", "Quadro FX", "6200", "9500", "9550", "9600", "9700", "9800", "X300", "X600", "FireGL", "Intel", "Chrome", NULL }
@@ -228,6 +233,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 				renderpath = R_GLSLANG;
 				conoutf("Rendering using the OpenGL 1.5 GLSL shader path.");
 #ifdef __APPLE__
+                //if(osversion<0x1050) ??
 				apple_glsldepth_bug = 1;
 #endif
 				if(apple_glsldepth_bug) conoutf("WARNING: Using Apple GLSL depth bug workaround. (use \"/apple_glsldepth_bug 0\" to disable if unnecessary");
@@ -252,7 +258,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 			hasOQ = true;
 			//conoutf("Using GL_ARB_occlusion_query extension.");
 #if defined(__APPLE__) && SDL_BYTEORDER == SDL_BIG_ENDIAN
-			if(strstr(vendor, "ATI")) ati_oq_bug = 1;
+            if(strstr(vendor, "ATI") && (osversion<0x1050)) ati_oq_bug = 1; 
 #endif
 			if(ati_oq_bug) conoutf("WARNING: Using ATI occlusion query bug workaround. (use \"/ati_oq_bug 0\" to disable if unnecessary)");
 		}
@@ -302,7 +308,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         glBlendEquation_ = (PFNGLBLENDEQUATIONEXTPROC) getprocaddress("glBlendEquationEXT");
         hasBE = true;
 #ifdef __APPLE__
-        apple_minmax_bug = 1;
+        if(osversion<0x1050) apple_minmax_bug = 1;
 #endif
         //conoutf("Using GL_EXT_blend_minmax extension.");
     }
@@ -336,8 +342,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	}
 
 #ifdef __APPLE__
-     extern int mac_osversion();
-     if((renderpath!=R_FIXEDFUNCTION) && (mac_osversion()>=0x1050))  /* 0x1050 = 10.5 (leopard)*/
+     if((renderpath!=R_FIXEDFUNCTION) && (osversion>=0x1050)) 
      {
         apple_ff_bug = 1;
         conoutf("WARNING: Using leopard OPTION ARB_position_invariant workaround (use \"/apple_ff_bug 0\" to disable if unnecessary)");

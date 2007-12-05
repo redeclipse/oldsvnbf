@@ -150,8 +150,8 @@ void pushshadowmap()
     glEnable(GL_TEXTURE_2D);
     glMatrixMode(GL_TEXTURE);
     glLoadIdentity();
-    glTranslatef(0.5f, 0.5f, -shadowmapbias/float(shadowmapdist));
-    glScalef(0.5f, 0.5f, -1);
+    glTranslatef(0.5f, 0.5f, shadowmapbias/float(shadowmapdist)-1);
+    glScalef(0.5f, 0.5f, 1);
     glMultMatrixd(shadowmapprojection);
     glMultMatrixd(shadowmapmodelview);
     glPushMatrix();

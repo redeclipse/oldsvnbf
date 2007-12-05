@@ -73,7 +73,7 @@ extern int entediting;
 bool editmode = false;
 bool havesel = false;
 bool hmapsel = false;
-int  horient = 0;
+int horient = 0;
 
 extern int entmoving;
 
@@ -120,7 +120,7 @@ VARF(gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
 VAR(passthroughsel, 0, 0, 1);
 VAR(editing, 1, 0, 0);
 VAR(selectcorners, 0, 0, 1);
-VARF(hmapedit, 0, 0, 1, cancelsel());
+VARF(hmapedit, 0, 0, 1, horient = sel.orient);
 
 void toggleedit()
 {
@@ -365,7 +365,7 @@ void cursorupdate()
 			od = dimension(orient);
 			d = dimension(sel.orient);
 
-            if(mag > 0 && hmapedit==1)
+            if(mag > 0 && hmapedit==1 && dimcoord(horient) == ray[dimension(horient)]<0)
             {
                 hmapsel = isheightmap(horient, dimension(horient), false, c);
                 if(hmapsel)
@@ -437,8 +437,8 @@ void cursorupdate()
 
 	if(!moving && !hovering)
 	{
-        if(hmapsel)
-            glColor3ub(0,200,0);
+        if(hmapedit==1)
+            glColor3ub(0, hmapsel ? 255 : 40, 0);
         else
 		glColor3ub(120,120,120);
 		boxs(orient, lu.tovec(), vec(lusize));
@@ -770,14 +770,19 @@ void brushvert(int *x, int *y, int *v)
     brushminy = max(0,          min(brushminy, *y-1));
 }
 
-#define HMAPTEXMAX  64
-int htextures[HMAPTEXMAX];
-int htexsize = 0;
+vector<int> htextures;
 
 COMMAND(clearbrush, "");
 COMMAND(brushvert, "iii");
-ICOMMAND(hmapaddtex, "", (), htextures[htexsize++] = lookupcube(cur.x, cur.y, cur.z).texture[horient = orient]);
-ICOMMAND(hmapcancel, "", (), htexsize = 0; );
+ICOMMAND(hmapcancel, "", (), htextures.setsizenodelete(0); );
+ICOMMAND(hmapselect, "", (), 
+    int t = lookupcube(cur.x, cur.y, cur.z).texture[orient];
+    int i = htextures.find(t);
+    if(i<0)
+        htextures.add(t);
+    else
+        htextures.remove(i);
+);
 
 bool ischildless(cube &c)
 {
@@ -795,10 +800,10 @@ bool ischildless(cube &c)
 
 inline bool ishtexture(int t)
 {
-    loopi(htexsize) // TODO: optimize with special tex index region
+    loopv(htextures)
         if(t == htextures[i])
-            return true;
-    return false;
+            return false;
+	return true;
 }
 
 inline bool isheightmap(int o, int d, bool empty, cube *c)
@@ -969,7 +974,7 @@ namespace hmap
             }
             if(notempty)
             {
-                c[k]->texture[horient] = c[1]->texture[horient];
+                c[k]->texture[sel.orient] = c[1]->texture[sel.orient];
                 solidfaces(*c[k]);
                 loopi(2) loopj(2)
         		{
@@ -1006,19 +1011,18 @@ namespace hmap
         DIAGONAL_RIPPLE(+1, -1, (x<nx && y>my));
 		}
 
-#define loopbrush() for(int x=bmx; x<=bnx; x++) for(int y=bmy; y<=bny; y++)
+#define loopbrush(i) for(int x=bmx; x<=bnx+i; x++) for(int y=bmy; y<=bny+i; y++)
 
     void paint()
 	{
-        loopbrush()
+        loopbrush(1)
             map[x][y] -= dr * brush[x][y];
     }
 
     void smooth()
     {
         int sum, div;
-        bnx-=2, bny-=2;
-        loopbrush()
+        loopbrush(-2)        
         {
             sum = 0;
             div = 9;
@@ -1029,12 +1033,11 @@ namespace hmap
             if(div)
                 map[x+1][y+1] = sum / div;
         }
-        bnx+=2, bny+=2;
-		}
+	}
 
     void rippleandset()
     {
-        loopbrush()
+        loopbrush(0)
             ripple(x, y, gz, false);
     }
 
@@ -1055,14 +1058,21 @@ namespace hmap
         gz = (cur[D[d]] >> gridpower);
         fs = dc ? 4 : 0;
         fg = dc ? gridsize : -gridsize;
-        bmx = max(brushminx, -gx);          // brush range
-        bmy = max(brushminy, -gy);
-        bnx = min(brushmaxx, hws-gx) - 1;
-        bny = min(brushmaxy, hws-gy) - 1;
         mx = max(0, -gx);                   // ripple range
         my = max(0, -gy);
         nx = min(MAXBRUSH-1, hws-gx) - 1;
         ny = min(MAXBRUSH-1, hws-gy) - 1;
+        if(havesel)
+        {   // selection range
+            mx = max(mx, (sel.o[R[d]]>>gridpower)-gx);
+            my = max(my, (sel.o[C[d]]>>gridpower)-gy);
+            nx = min(nx, (sel.s[R[d]]+(sel.o[R[d]]>>gridpower))-gx-1);
+            ny = min(ny, (sel.s[C[d]]+(sel.o[C[d]]>>gridpower))-gy-1);
+        }
+        bmx = max(mx, brushminx); // brush range
+        bmy = max(my, brushminy);
+        bnx = min(nx, brushmaxx-1);
+        bny = min(ny, brushmaxy-1);   
         nz = hdr.worldsize-gridsize;
         mz = 0;
 
@@ -1087,7 +1097,7 @@ namespace hmap
 }
 
 void edithmap(int dir, int mode) {
-    if(otherclients() || !hmapsel) return;
+    if(otherclients() || !hmapsel || gridsize < 8) return;    
     hmap::run(dir, mode);
 }
 
@@ -1555,7 +1565,11 @@ void g3d_texturemenu()
 	gui.show();
 }
 
-void showtexgui(int *n) { gui.showtextures(((*n==0) ? !gui.menuon : (*n==1)) && editmode); }
+void showtexgui(int *n) 
+{ 
+    if(!editmode) { conoutf("operation only allowed in edit mode"); return; }
+    gui.showtextures(*n==0 ? !gui.menuon : *n==1); 
+}
 
 // 0/noargs = toggle, 1 = on, other = off - will autoclose if too far away or exit editmode
 COMMAND(showtexgui, "i");
