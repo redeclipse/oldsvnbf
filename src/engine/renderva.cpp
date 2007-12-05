@@ -1034,7 +1034,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 		Shader *s = slot.shader;
 
 		extern vector<GLuint> lmtexids;
-        int lmid = es.lmid, curlm = pass==RENDERPASS_LIGHTMAP ? lmtexids[lmid] : -1;
+        int lmid = es.lmid, curlm = pass==RENDERPASS_LIGHTMAP ? (int)lmtexids[lmid] : -1;
 		if(s && renderpath!=R_FIXEDFUNCTION && pass==RENDERPASS_LIGHTMAP)
 		{
             int tmu = cur.lightmaptmu+1;

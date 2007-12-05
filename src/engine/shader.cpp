@@ -744,8 +744,8 @@ static void genshadowmapvariant(Shader &s, char *sname, char *vs, char *ps, int 
         vssm.put(tc, strlen(tc));
         const char *sm =
             "vec3 smvals = texture2D(shadowmap, shadowmaptc.xy).xyz;\n"
-            "vec2 smdiff = shadowmaptc.zz - (smvals.xz/smvals.y + 1.0);\n"
-            "float shadowed = smdiff.x < 0.0 && smdiff.y > 0.0 ? smvals.y : 0.0;\n";
+            "vec2 smdiff = shadowmaptc.zz*smvals.y + smvals.xz;\n"
+            "float shadowed = smdiff.x > 0.0 && smdiff.y < 0.0 ? smvals.y : 0.0;\n";
         pssm.put(sm, strlen(sm));
         s_sprintfd(smlight)(
             "%s.rgb = mix(%s.rgb, min(%s.rgb, shadowmapambient.rgb), shadowed);\n",
@@ -762,16 +762,14 @@ static void genshadowmapvariant(Shader &s, char *sname, char *vs, char *ps, int 
         vssm.put(tc, strlen(tc));
 
         s_sprintfd(sm)(
-            "TEMP smvals, smdenom, smdiff, shadowed, smambient;\n"
+            "TEMP smvals, shadowed, smambient;\n"
             "TEX smvals, fragment.texcoord[%d], texture[7], 2D;\n"
-            "RCP smdenom, smvals.y;\n"
-            "MAD smvals.xz, smvals, smdenom, -1;\n"
-            "SUB smdiff, fragment.texcoord[%d].z, smvals;\n",
+            "MAD smvals.xz, fragment.texcoord[%d].z, smvals.y, smvals;\n",
             smtc, smtc);
         pssm.put(sm, strlen(sm));
         s_sprintf(sm)(
-            "CMP shadowed, smdiff.x, smvals.y, 0;\n"
-            "CMP shadowed, -smdiff.z, shadowed, 0;\n"
+            "CMP shadowed, -smvals.x, smvals.y, 0;\n"
+            "CMP shadowed, smvals.z, shadowed, 0;\n" 
             "MIN smambient.rgb, program.env[7], %s;\n"
             "LRP %s.rgb, shadowed, smambient, %s;\n",
             pslight, pslight, pslight);

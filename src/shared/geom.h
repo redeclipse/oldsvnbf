@@ -113,7 +113,7 @@ struct matrix
     vec X, Y, Z;
 
     matrix() {}
-    matrix(const vec &_X, const vec &_Y, const vec &_Z) : X(_X), Y(_Y), Z(_Z) {}
+    matrix(const vec &x, const vec &y, const vec &z) : X(x), Y(y), Z(z) {}
 
     void transform(vec &o) { o = vec(o.dot(X), o.dot(Y), o.dot(Z)); }
 

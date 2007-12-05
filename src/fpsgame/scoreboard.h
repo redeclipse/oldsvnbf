@@ -80,7 +80,7 @@ struct scoreboard : g3d_callback
 		loopi(cl.numdynents())
 		{
 			fpsent *o = (fpsent *)cl.iterdynents(i);
-			if(o && o->type!=ENT_AI)
+            if(o && o->type==ENT_PLAYER)
 			{
 				teamscore *ts = NULL;
 				loopv(teamscores) if(!strcmp(teamscores[i].team, o->team)) { ts = &teamscores[i]; break; }
@@ -127,7 +127,7 @@ struct scoreboard : g3d_callback
         loopi(cl.numdynents())
         {
             fpsent *o = (fpsent *)cl.iterdynents(i);
-            if(!o || o->type==ENT_AI || (!showconnecting() && !o->name[0])) continue;
+            if(!o || o->type!=ENT_PLAYER || (!showconnecting() && !o->name[0])) continue;
             if(o->state==CS_SPECTATOR) { spectators.add(o); continue; }
             const char *team = m_team(cl.gamemode, cl.mutators) && o->team[0] ? o->team : NULL;
             bool found = false;
@@ -253,11 +253,13 @@ struct scoreboard : g3d_callback
             if(sg.team && m_team(cl.gamemode, cl.mutators))
             {
                 g.pushlist(); // vertical
+
                 if(m_capture(cl.gamemode) && sg.score>=10000) g.textf("%s: WIN", fgcolor, NULL, sg.team);
                 else g.textf("%s: %d", fgcolor, NULL, sg.team, sg.score);
 
                 g.pushlist(); // horizontal
             }
+            
             if(!m_capture(cl.gamemode))
             {
                 g.pushlist();
@@ -266,6 +268,7 @@ struct scoreboard : g3d_callback
                 loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->frags));
                 g.poplist();
             }
+
             if(multiplayer(false) || cl.cc.demoplayback)
             {
                 if(showpj())

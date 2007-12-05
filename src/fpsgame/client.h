@@ -29,7 +29,7 @@ struct clientcom : iclientcom
         CCOMMAND(spectator, "is", (clientcom *self, int *val, char *who), self->togglespectator(*val, who));
         CCOMMAND(mastermode, "i", (clientcom *self, int *val), if(self->remote) self->addmsg(SV_MASTERMODE, "ri", *val));
         CCOMMAND(setmaster, "s", (clientcom *self, char *s), self->setmaster(s));
-        CCOMMAND(approvemaster, "s", (clientcom *self, char *s), self->approvemaster(s));
+        CCOMMAND(approve, "s", (clientcom *self, char *s), self->approvemaster(s));
         CCOMMAND(setteam, "ss", (clientcom *self, char *who, char *team), self->setteam(who, team));
         CCOMMAND(getmap, "", (clientcom *self), self->getmap());
         CCOMMAND(sendmap, "", (clientcom *self), self->sendmap());
