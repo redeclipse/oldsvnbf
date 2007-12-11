@@ -108,8 +108,8 @@ void checksound()
 
 	vec cup, cfw; // these babies handle the orientation for us
 
-	vecfromyawpitch(player->yaw, player->pitch+90.f, 1, 0, cup);	cup.normalize();
-	vecfromyawpitch(player->yaw, player->pitch, 1, 0, cfw);			cfw.normalize();
+	vecfromyawpitch(camera1->yaw, camera1->pitch+90.f, 1, 0, cup);	cup.normalize();
+	vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, cfw);		cfw.normalize();
 
 	const vector<extentity *> &ents = et->getents();
 	loopv(ents)
@@ -121,8 +121,8 @@ void checksound()
 
 	FMOD_VECTOR pup = { cup.x, cup.y, cup.z };
 	FMOD_VECTOR pfw = { cfw.x, cfw.y, cfw.z };
-	FMOD_VECTOR pos = { player->o.x, player->o.y, player->o.z };
-	FMOD_VECTOR pov = { player->vel.x, player->vel.y, player->vel.z };
+	FMOD_VECTOR pos = { camera1->o.x, camera1->o.y, camera1->o.z };
+	FMOD_VECTOR pov = { camera1->vel.x, camera1->vel.y, camera1->vel.z };
 
 	SNDERR(FMOD_System_Set3DListenerAttributes(sndsys, 0, &pos, &pov, &pfw, &pup), "set 3d listener attributes", );
 
@@ -167,7 +167,7 @@ void checksound()
 int playsound(int n, vec *p, vec *v, float mindist, float maxdist, vector<soundslot> &sounds)
 {
 	playsnd({
-		if (!p && !v) s.position(&player->o, &player->vel);
+		if (!p && !v) s.position(&camera1->o, &camera1->vel);
 		else if (p && !v)
 		{
 			s._vel = vec(0, 0, 0);

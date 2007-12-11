@@ -1,3 +1,4 @@
+// TODO: get all this into the game module
 
 // network quantization scale
 #define DMF 16.0f			// for world locations
@@ -183,7 +184,7 @@ struct demoheader
 #define MAXNAMELEN 15
 #define MAXTEAMLEN 4
 
-#define MAXFOV			(isthirdperson() ? 100 : 125)
+#define MAXFOV			(gamethirdperson() ? 100 : 125)
 #define MINFOV			(player1->gunselect == GUN_RIFLE ? 0 : 90)
 
 #define TPDIST			16		// thirdperson distance
@@ -194,6 +195,9 @@ struct demoheader
 
 #define RL_DAMRAD		30
 #define RL_DISTSCALE	1.5f
+
+#define PLATFORMBORDER	0.2f
+#define PLATFORMMARGIN	10.0f
 
 #define MAXCARRY		2
 
@@ -416,6 +420,9 @@ static char *serverstatustypes[] = {
 };
 
 #ifndef STANDALONE
+VARFP(thirdperson, 0, 0, 1, cl->fixview());
+VARFP(thirdpersonscale, 0, 150, INT_MAX-1, cl->fixview()); // pitch scale
+
 #define FPSMODHUDMAX		((h*3/FONTH)*FONTH)-(FONTH*5)		// max hud length
 #define ILLUMINATE			48.f
 #define ENTPART				4.f

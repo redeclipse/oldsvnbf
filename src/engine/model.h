@@ -15,7 +15,7 @@ struct model
     virtual ~model() { DELETEP(bih); }
 	virtual void calcbb(int frame, vec &center, vec &radius) = 0;
     virtual void extendbb(int frame, vec &center, vec &radius, modelattach &a) {}
-	virtual void render(int anim, int varseed, float speed, int basetime, const vec &o, float yaw, float pitch, dynent *d, modelattach *a = NULL, const vec &color = vec(0, 0, 0), const vec &dir = vec(0, 0, 0)) = 0;
+	virtual void render(int anim, int varseed, float speed, int basetime, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a = NULL, const vec &color = vec(0, 0, 0), const vec &dir = vec(0, 0, 0)) = 0;
 	virtual void setskin(int tex = 0) = 0;
 	virtual bool load() = 0;
 	virtual char *name() = 0;

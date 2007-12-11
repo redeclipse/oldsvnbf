@@ -1082,7 +1082,7 @@ struct vertmodel : model
                 case ANIM_LEFT:
                 case ANIM_RIGHT:
                 case ANIM_SWIM:
-                    as.speed = 5500.0f/ph->speed(d);
+                    as.speed = 550.0f;
                     break;
 
                 default:
@@ -1492,7 +1492,7 @@ struct vertmodel : model
     {
     }
 
-    void render(int anim, int varseed, float speed, int basetime, const vec &o, float yaw, float pitch, dynent *d, modelattach *a, const vec &color, const vec &dir)
+    void render(int anim, int varseed, float speed, int basetime, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a, const vec &color, const vec &dir)
     {
         vec rdir, campos;
         plane fogplane;
@@ -1551,6 +1551,7 @@ struct vertmodel : model
                 glLoadIdentity();
                 glTranslatef(o.x, o.y, o.z);
                 glRotatef(yaw+180, 0, 0, 1);
+				glRotatef(roll, -1, 0, 0);
             }
             glMatrixMode(GL_MODELVIEW);
             if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE0_ARB);
@@ -1559,6 +1560,7 @@ struct vertmodel : model
         glPushMatrix();
         glTranslatef(o.x, o.y, o.z);
         glRotatef(yaw+180, 0, 0, 1);
+        glRotatef(roll, -1, 0, 0);
 
         if(anim&ANIM_TRANSLUCENT)
         {

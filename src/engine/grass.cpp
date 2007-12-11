@@ -34,7 +34,7 @@ void gengrasssample(vtxarray *va, const vec &o, float tu, float tv, LightMap *lm
 		tv = min(tv, LM_PACKH-0.01f);
 		memcpy(g.color, &lm->data[3*(int(tv)*LM_PACKW + int(tu))], 3);
 	}
-	else loopk(3) g.color[k] = getvar("ambient");
+	else loopk(3) g.color[k] = ambient;
 }
 
 bool gengrassheader(vtxarray *va, const vec *v)
@@ -334,7 +334,7 @@ void rendergrasssamples(vtxarray *va, const vec &dir)
 					continue;
 				}
 				float dist = o.dist(camera1->o, tograss);
-				if(dist > grassdist + b.radius || (dir.dot(tograss)<0 && dist > b.radius + 2*(grassgrid + player->eyeheight)))
+				if(dist > grassdist + b.radius || (dir.dot(tograss)<0 && dist > b.radius + 2*(grassgrid + camera1->eyeheight)))
 					i += b.numsamples;
 				break;
 			}
@@ -358,7 +358,7 @@ void rendergrasssamples(vtxarray *va, const vec &dir)
 			{
 				if(reflecting && (refracting ? o.z>=reflecting : o.z+grassheight<=reflecting)) continue;
 				float dist = o.dist(camera1->o, tograss);
-				if(dist > grassdist || (dir.dot(tograss)<0 && dist > grasswidth/2 + 2*(grassgrid + player->eyeheight))) continue;
+				if(dist > grassdist || (dir.dot(tograss)<0 && dist > grasswidth/2 + 2*(grassgrid + camera1->eyeheight))) continue;
 
 				float ld = loddist(o);
 				int numsamples = int(grasssamples/100.0f*max(grassgrid - ld/grasslod, 100.0f/grasssamples));

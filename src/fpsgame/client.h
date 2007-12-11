@@ -109,16 +109,27 @@ struct clientcom : iclientcom
 		cleardynentcache();
 	}
 
-	bool allowedittoggle()
+	bool allowedittoggle(bool edit)
 	{
 		bool allow = !connected || !remote || m_edit(cl.gamemode);
-		if(!allow) conoutf("editing in multiplayer requires coopedit mode (1)");
-		if(allow && spectator) return false;
+		if (!allow) conoutf("editing in multiplayer requires coopedit mode (1)");
+		if (allow && (cl.player1->state != CS_SPECTATOR || cl.player1->state != CS_ALIVE || cl.player1->state != CS_EDITING)) return false;
 		return allow;
 	}
 
 	void edittoggled(bool on)
 	{
+		if (!(editmode = !on))
+		{
+			cl.player1->state = CS_ALIVE;
+			cl.player1->o.z -= player1->eyeheight;		// entinmap wants feet pos
+			cl.ph.entinmap(cl.player1, false);			// find spawn closest to current floating pos
+		}
+		else
+		{
+			cl.resetgamestate();
+			cl.player1->state = CS_EDITING;
+		}
 		addmsg(SV_EDITMODE, "ri", on ? 1 : 0);
 	}
 
@@ -409,7 +420,7 @@ struct clientcom : iclientcom
                     d->vel = vel;
                     d->physstate = physstate & 0x0F;
 					d->gvel = gvel;
-                    updatephysstate(d);
+                    cl.ph.updatephysstate(d);
                     updatepos(d);
                 }
                 if(d->state==CS_LAGGED || d->state==CS_SPAWNING) d->state = CS_ALIVE;
@@ -627,7 +638,7 @@ struct clientcom : iclientcom
 				player1->gunselect = getint(p);
 				loopi(NUMGUNS) player1->ammo[i] = getint(p);
 				player1->state = CS_ALIVE;
-				findplayerspawn(player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(player1->team) : -1);
+				cl.ph.findplayerspawn(player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(player1->team) : -1);
 				cl.sb.showscores(false);
 				addmsg(SV_SPAWN, "rii", player1->lifesequence, player1->gunselect);
 				break;
@@ -976,7 +987,7 @@ struct clientcom : iclientcom
 		cl.nextmode = cl.gamemode = gamemode;
 		cl.nextmuts = cl.mutators = mutators;
 		cl.minremain = -1;
-		if(editmode && !allowedittoggle()) toggleedit();
+		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(cl.gamemode)) return;
 		load_world(name);
 		if(m_capture(gamemode)) cl.cpc.setupbases();

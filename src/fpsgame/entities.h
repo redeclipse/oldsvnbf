@@ -81,7 +81,7 @@ struct entities : icliententities
 				if (mdlname)
 				{
 					rendermodel(e.color, e.dir, mdlname, ANIM_MAPMODEL|ANIM_LOOP,
-						0, 0, e.o, 0.f, 0.f, 0.f, 0, NULL,
+						0, 0, e.o, 0.f, 0.f, 0.f, 0.f, 0, NULL,
 						MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED);
 				}
 			}
@@ -135,7 +135,7 @@ struct entities : icliententities
 				d->yaw = ents[e]->attr1;
 				d->pitch = 0;
 				d->vel = vec(0, 0, 0);//vec(cosf(RAD*(d->yaw-90)), sinf(RAD*(d->yaw-90)), 0);
-				entinmap(d);
+				cl.ph.entinmap(d, false);
 				cl.playsoundc(S_TELEPORT, d);
 				break;
 			}

@@ -452,10 +452,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\engine\joystick.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\engine\lightmap.cpp"
 				>
 				<FileConfiguration

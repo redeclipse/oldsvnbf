@@ -22,7 +22,7 @@ vec menuinfrontofplayer()
 	vec dir;
 	vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
 	dir.mul(menudistance).add(camera1->o);
-	dir.z -= player->eyeheight-1;
+	dir.z -= camera1->eyeheight-1;
 	return dir;
 }
 

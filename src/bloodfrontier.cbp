@@ -324,11 +324,6 @@
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="engine\joystick.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-		</Unit>
 		<Unit filename="engine\lightmap.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>

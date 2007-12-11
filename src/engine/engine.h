@@ -8,7 +8,6 @@
 extern igameclient	 *cl;
 extern igameserver	 *sv;
 extern iclientcom	  *cc;
-extern iphysics *ph;
 extern icliententities *et;
 
 #include "world.h"
@@ -70,7 +69,6 @@ extern PFNGLBLENDEQUATIONEXTPROC glBlendEquation_;
 #define GL_DEPTH24_STENCIL8_EXT 0x88F0
 #endif
 
-extern dynent *player;
 extern physent *camera1;				// special ent that acts as camera, same object as player1 in FPS mode
 
 extern bfgz hdr;					  // current map header
@@ -334,13 +332,10 @@ extern void show_out_of_renderloop_progress(float bar1, const char *text1, float
 extern void menuprocess();
 
 // physics
-extern void mousemove(int dx, int dy);
 extern bool pointincube(const clipplanes &p, const vec &v);
 extern bool overlapsdynent(const vec &o, float radius);
 extern void rotatebb(vec &center, vec &radius, int yaw);
 extern float shadowray(const vec &o, const vec &ray, float radius, int mode, extentity *t = NULL);
-
-extern int gravity, speed, jumpvel, watertype, watervel;
 
 // world
 enum
@@ -419,11 +414,6 @@ extern void updateframe(bool dorender = false);
 extern void setcaption(char *text);
 extern int grabmouse, perflevel, colorpos;
 extern int getmatvec(vec v);
-
-// joystick
-extern void initjoy();
-extern void processjoy(SDL_Event *event);
-extern void movejoy();
 
 // editing
 extern int efocus, enthover, entorient, showentdir, showentradius;

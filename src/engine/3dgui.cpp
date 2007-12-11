@@ -795,7 +795,7 @@ static vector<gui> guis;
 
 void g3d_addgui(g3d_callback *cb, vec &origin, bool follow)
 {
-    if(follow) origin.z = player->o.z-(player->eyeheight-1);
+    if(follow) origin.z = camera1->o.z-(camera1->eyeheight-1);
 	gui &g = guis.add();
 	g.cb = cb;
 	g.origin = origin;

@@ -124,19 +124,7 @@ VARF(hmapedit, 0, 0, 1, horient = sel.orient);
 
 void toggleedit()
 {
-	if(player->state!=CS_ALIVE && player->state!=CS_EDITING) return; // do not allow dead players to edit to avoid state confusion
-	if(!editmode && !cc->allowedittoggle()) return;		 // not in most multiplayer modes
-	if(!(editmode = !editmode))
-	{
-		player->state = CS_ALIVE;
-		player->o.z -= player->eyeheight;		// entinmap wants feet pos
-		entinmap(player);						// find spawn closest to current floating pos
-	}
-	else
-	{
-		cl->resetgamestate();
-		player->state = CS_EDITING;
-	}
+	if (!cc->allowedittoggle(editmode)) return;		 // not in most multiplayer modes
 	cancelsel();
 	keyrepeat(editmode);
 	editing = entediting = editmode;
@@ -258,11 +246,11 @@ void editmoveplane(const vec &o, const vec &ray, int d, float off, vec &handle, 
 	plane pl(d, off);
 	float dist = 0.0f;
 
-	if(pl.rayintersect(player->o, ray, dist))
+	if(pl.rayintersect(camera1->o, ray, dist))
 	{
 		dest = ray;
 		dest.mul(dist);
-		dest.add(player->o);
+		dest.add(camera1->o);
 		if(first)
 		{
 			handle = dest;
@@ -289,7 +277,7 @@ void cursorupdate()
 	if(!insideworld(target)) loopi(3)
 		target[i] = max(min(target[i], hdr.worldsize), 0);
 	vec ray(target);
-	ray.sub(player->o).normalize();
+	ray.sub(camera1->o).normalize();
 	int d	= dimension(sel.orient),
 		od  = dimension(orient),
 		odc = dimcoord(orient);
@@ -325,13 +313,13 @@ void cursorupdate()
 		float sdist = 0, wdist = 0, t;
 		int entorient = 0, ent = -1;
 
-		wdist = rayent(player->o, ray, v, 0, (editmode && showmat ? RAY_EDITMAT : 0)	// select cubes first
+		wdist = rayent(camera1->o, ray, v, 0, (editmode && showmat ? RAY_EDITMAT : 0)	// select cubes first
 											| (!dragging && entediting ? RAY_ENTS : 0)
 											| RAY_SKIPFIRST
 											| (passthroughcube==1 ? RAY_PASS : 0), gridsize, entorient, ent);
 
 		if((havesel || dragging) && !passthroughsel)	 // now try selecting the selection
-			if(rayrectintersect(sel.o.tovec(), vec(sel.s.tovec()).mul(sel.grid), player->o, ray, sdist, orient))
+			if(rayrectintersect(sel.o.tovec(), vec(sel.s.tovec()).mul(sel.grid), camera1->o, ray, sdist, orient))
 			{	// and choose the nearest of the two
 				if(sdist < wdist)
 				{
@@ -352,13 +340,13 @@ void cursorupdate()
 
 			v = ray;
 			v.mul(wdist+0.1f);
-			v.add(player->o);
+			v.add(camera1->o);
 			w = v;
             cube *c = &lookupcube(w.x, w.y, w.z);
             if(gridlookup && !dragging && !moving && !havesel && hmapedit!=1) gridsize = lusize;
 			int mag = lusize / gridsize;
 			normalizelookupcube(w.x, w.y, w.z);
-			if(sdist == 0 || sdist > wdist) rayrectintersect(lu.tovec(), vec(gridsize), player->o, ray, t=0, orient); // just getting orient
+			if(sdist == 0 || sdist > wdist) rayrectintersect(lu.tovec(), vec(gridsize), camera1->o, ray, t=0, orient); // just getting orient
 			cur = lu;
 			cor = w;
 			cor.mul(2).div(gridsize);
@@ -422,7 +410,7 @@ void cursorupdate()
 
 	// cursors
 
-	renderentselection(player->o, ray, entmoving!=0);
+	renderentselection(camera1->o, ray, entmoving!=0);
 
     glEnable(GL_POLYGON_OFFSET_LINE);
 
@@ -1235,7 +1223,7 @@ void pushsel(int *dir)
 	int d = dimension(orient);
 	int s = dimcoord(orient) ? -*dir : *dir;
 	sel.o[d] += s*sel.grid;
-	if(selectionsurf==1) player->o[d] += s*sel.grid;
+	if(selectionsurf==1) camera1->o[d] += s*sel.grid;
 }
 
 void mpdelcube(selinfo &sel, bool local)
