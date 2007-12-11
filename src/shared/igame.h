@@ -28,7 +28,7 @@ struct iclientcom
     virtual void parsepacketclient(int chan, ucharbuf &p) = 0;
     virtual int sendpacketclient(ucharbuf &p, bool &reliable, dynent *d) = 0;
     virtual void gameconnect(bool _remote) = 0;
-    virtual bool allowedittoggle() = 0;
+    virtual bool allowedittoggle(bool edit) = 0;
     virtual void edittoggled(bool on) {}
     virtual void writeclientinfo(FILE *f) = 0;
     virtual void toserver(char *text, bool action = false) = 0;
@@ -39,40 +39,11 @@ struct iclientcom
     virtual int numchannels() { return 1; }
 };
 
-struct iphysics
-{
-    virtual ~iphysics() {}
-
-	virtual float stairheight(physent *d) { return 4.1f; }
-	virtual float floorz(physent *d) { return 0.867f; }
-	virtual float slopez(physent *d) { return 0.5f; }
-	virtual float wallz(physent *d) { return 0.2f; }
-	virtual float jumpvel(physent *d) { return 125.0f; }
-	virtual float gravity(physent *d) { return 200.0f; }
-	virtual float speed(physent *d) { return 100.0f; }
-	virtual float stepspeed(physent *d) { return 1.0f; }
-	virtual float watergravscale(physent *d) { return d->move || d->strafe ? 0.f : 4.f; }
-	virtual float waterdampen(physent *d) { return 8.f; }
-	virtual float waterfric(physent *d) { return 20.f; }
-	virtual float floorfric(physent *d) { return 6.f; }
-	virtual float airfric(physent *d) { return 30.f; }
-	virtual bool movepitch(physent *d) { return true; }
-	virtual void updateroll(physent *d) { return; }
-    virtual void trigger(physent *d, bool local, int floorlevel, int waterlevel) { return; }
-    virtual bool move(physent *pl, int moveres = 20, bool local = true, int secs = 0, int repeat = 0)
-    {
-		if (!repeat) repeat = physicsrepeat;
-		loopi(repeat) if (!moveplayer(pl, moveres, local, min(secs, minframetime))) return false;
-		return true;
-    }
-};
-
 struct igameclient
 {
     virtual ~igameclient() {}
 
     virtual icliententities *getents() = 0;
-    virtual iphysics *getphysics() = 0;
     virtual iclientcom *getcom() = 0;
 
     virtual bool clientoption(char *arg) { return false; }
@@ -96,40 +67,6 @@ struct igameclient
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}
     virtual void adddynlights() {}
     virtual void particletrack(physent *owner, vec &o, vec &d) {}
-	virtual void recomputecamera()
-	{
-		extern bool deathcam;
-		extern physent *camera1;
-		extern dynent *player;
-
-		if(deathcam && player->state!=CS_DEAD) deathcam = false;
-		extern int testanims;
-		if(((editmode && !testanims) || !thirdperson) && player->state!=CS_DEAD)
-		{
-			//if(camera1->state==CS_DEAD) camera1->o.z -= camera1->eyeheight-0.8f;
-			camera1 = player;
-		}
-		else
-		{
-			static physent tempcamera;
-			camera1 = &tempcamera;
-			if(deathcam) camera1->o = player->o;
-			else
-			{
-				*camera1 = *player;
-				if(player->state==CS_DEAD) deathcam = true;
-			}
-			camera1->reset();
-			camera1->type = ENT_CAMERA;
-			camera1->move = -1;
-			camera1->eyeheight = 2;
-
-			loopi(10)
-			{
-				if(!moveplayer(camera1, 10, true, 16)) break;
-			}
-		}
-	}
 	virtual void findorientation()
 	{
 		extern physent *camera1;
@@ -156,23 +93,22 @@ struct igameclient
 	{
 		extern int sensitivity, sensitivityscale, invmouse;
 		extern physent *camera1;
-		extern dynent *player;
 		const float SENSF = 33.0f;	 // try match quake sens
 		camera1->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 		camera1->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
 		fixview();
-		if(camera1!=player && player->state!=CS_DEAD)
-		{
-			player->yaw = camera1->yaw;
-			player->pitch = camera1->pitch;
-		}
 	}
+
+	virtual void recomputecamera()
+	{
+		fixview();
+	}
+
 	virtual bool wantcrosshair()
 	{
-		extern dynent *player;
 		extern int hidehud;
 		extern bool menuactive();
-		return !(hidehud || player->state==CS_SPECTATOR) || menuactive();
+		return !hidehud && !menuactive();
 	}
 
 	virtual bool gamethirdperson() { extern int thirdperson; return thirdperson; } ;

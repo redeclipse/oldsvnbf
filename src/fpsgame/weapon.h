@@ -224,7 +224,7 @@ struct weaponstate
 			float secs = float(qtime) / 1000.0f;
 			vec old(o);
 
-			if (elasticity > 0.f) vel.sub(vec(0, 0, float(gravity)*secs));
+			if (elasticity > 0.f) vel.sub(vec(0, 0, float(getvar("gravity"))*secs));
 
 			vec dir(vel);
 			if (water) dir.div(waterfric);
@@ -412,7 +412,7 @@ struct weaponstate
 	vec hudgunorigin(int gun, const vec &from, const vec &to, fpsent *d)
 	{
 		vec offset(from);
-        if(d!=player1 || isthirdperson())
+        if(d!=player1 || cl.gamethirdperson())
         {
             vec front, right;
             vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
@@ -629,7 +629,7 @@ struct weaponstate
 			}
 			else continue;
 
-			rendermodel(color, dir, mname, ANIM_MAPMODEL|ANIM_LOOP, 0, 0, bnc.o, yaw+90, pitch, 0, 0, NULL, cull);
+			rendermodel(color, dir, mname, ANIM_MAPMODEL|ANIM_LOOP, 0, 0, bnc.o, yaw+90, pitch, 0, 0, 0, NULL, cull);
 		}
 	}
 

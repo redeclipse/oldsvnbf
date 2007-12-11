@@ -69,6 +69,17 @@ struct fpsclient : igameclient
 		  player1(spawnstate(new fpsent())),
 		  ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this)
 	{
+		#define movedir(name, v, d, s, os) \
+			CCOMMAND(name, "D", (fpsclient *self, int *down), { \
+				self->player1->s = *down != 0; \
+				self->player1->v = self->player1->s ? d : (self->player1->os ? -(d) : 0); \
+			});
+		
+		movedir(backward,	move,	-1,		k_down,		k_up);
+		movedir(forward,	move,	1,		k_up,		k_down);
+		movedir(left,		strafe,	1,		k_left,		k_right);
+		movedir(right,		strafe,	-1,		k_right,	k_left);
+
 		CCOMMAND(crouch, "D", (fpsclient *self, int *down), { self->docrouch(*down!=0); });
 		CCOMMAND(jump,   "D", (fpsclient *self, int *down), { if(self->canjump()) self->player1->jumpnext = *down!=0; });
 		CCOMMAND(attack, "D", (fpsclient *self, int *down), { self->doattack(*down!=0); });
@@ -86,7 +97,6 @@ struct fpsclient : igameclient
 	}
 
 	iclientcom *getcom() { return &cc; }
-	iphysics *getphysics() { return &ph; }
 	icliententities *getents() { return &et; }
 
 	void setmode(int mode, int muts)
@@ -159,11 +169,10 @@ struct fpsclient : igameclient
 		lastmillis = lm;
 		if (!curtime) return;
 
-		physicsframe();
+		ph.update();
 		ws.bounceupdate(curtime);
 
 		gets2c();
-
 		otherplayers();
 
 		if (cc.ready())
@@ -173,6 +182,8 @@ struct fpsclient : igameclient
 			adjust(camerawobble, 1, 200);
 			adjust(damageresidue, 1, 200);
 
+			if (saycommandon || intermission) player1->stopmoving();
+			
 			if (!intermission)
 			{
 				if (player1->state == CS_DEAD)
@@ -197,12 +208,12 @@ struct fpsclient : igameclient
 				{
 					if (player1->timeinair)
 					{
-						if (player1->jumpnext && lastmillis-player1->lastimpulse > ph.gravity(player1)*100)
+						if (player1->jumpnext && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
 						{
 							vec dir;
 							vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
 							dir.normalize();
-							dir.mul(ph.jumpvel(player1));
+							dir.mul(ph.jumpvelocity(player1));
 							player1->vel.add(dir);
 							player1->lastimpulse = lastmillis;
 							player1->jumpnext = false;
@@ -219,7 +230,7 @@ struct fpsclient : igameclient
 					float k = pow(0.7f, curtime/10.0f);
 					swaydir.mul(k);
 
-					swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.speed(player1)))));
+					swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.maxspeed(player1)))));
 
 					et.checkitems(player1);
 					if (m_sp(gamemode)) checktriggers();
@@ -233,7 +244,7 @@ struct fpsclient : igameclient
 
 	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
 	{
-		findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1));
+		ph.findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1));
 		spawnstate(d);
 		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
 	}
@@ -473,7 +484,7 @@ struct fpsclient : igameclient
 			players[i]->totalshots = 0;
 		}
 
-		findplayerspawn(player1, -1);
+		ph.findplayerspawn(player1, -1);
 		et.resetspawns();
 		sb.showscores(false);
 		intermission = false;
@@ -564,7 +575,7 @@ struct fpsclient : igameclient
 		}
 #endif
 		const char *gunname = hudgunnames[player1->gunselect];
-		rendermodel(color, dir, gunname, anim, 0, 0, sway, player1->yaw+90, player1->pitch, speed, base, NULL, 0);
+		rendermodel(color, dir, gunname, anim, 0, 0, sway, player1->yaw+90, player1->pitch, player1->roll, speed, base, NULL, 0);
 	}
 
 	void drawhudgun()
@@ -640,7 +651,7 @@ struct fpsclient : igameclient
 							d = players[-cameranum];
 					}
 
-					if (getvar("fov") < 90)
+					if (fov < 90)
 					{
 						settexture("packages/textures/overlay_zoom.png");
 
@@ -968,9 +979,9 @@ struct fpsclient : igameclient
 		}
 		camera1->eyeheight = 0;
 
-		if (isthirdperson() || cameratype > 0)
+		if (gamethirdperson() || cameratype > 0)
 		{
-			if (cameratype != 2 && isthirdperson())
+			if (cameratype != 2 && gamethirdperson())
 			{
 				vec old(camera1->o);
 

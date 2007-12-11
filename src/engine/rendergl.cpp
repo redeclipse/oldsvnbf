@@ -391,13 +391,9 @@ int xtraverts, xtravertsva;
 VARW(fog, 16, 4000, INT_MAX-1);
 VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
-VARFP(thirdperson, 0, 0, 1, cl->fixview());
-VARFP(thirdpersonscale, 0, 150, INT_MAX-1, cl->fixview()); // pitch scale
-
 physent *camera1 = NULL;
 bool deathcam = false;
 bool isthirdperson() { return cl->gamethirdperson() || (reflecting && !refracting); }
-void recomputecamera() { cl->recomputecamera(); }
 
 void project(float fovy, float aspect, int farplane, bool flipx, bool flipy)
 {
@@ -627,7 +623,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch)
 
 	physent *oldcamera = camera1;
 	static physent cmcamera;
-	cmcamera = *player;
+	cmcamera = *camera1;
 	cmcamera.reset();
 	cmcamera.type = ENT_CAMERA;
 	cmcamera.o = o;
@@ -693,7 +689,7 @@ void gl_drawframe(int w, int h)
 	{
 		defaultshader->set();
 
-		recomputecamera();
+		cl->recomputecamera();
 
 		cleardynlights();
 		cl->adddynlights();

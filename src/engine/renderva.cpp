@@ -361,7 +361,7 @@ void rendermapmodel(extentity &e)
 		case TRIGGER_RESETTING: anim = ANIM_TRIGGER|ANIM_REVERSE; basetime = e.lasttrigger; break;
 	}
 	mapmodelinfo &mmi = getmminfo(e.attr2);
-	if(&mmi) rendermodel(e.color, e.dir, mmi.name, anim, 0, mmi.tex, e.o, (float)((e.attr1+7)-(e.attr1+7)%15), 0, 0, basetime, NULL, MDL_CULL_VFC | MDL_CULL_DIST);
+	if(&mmi) rendermodel(e.color, e.dir, mmi.name, anim, 0, mmi.tex, e.o, (float)((e.attr1+7)-(e.attr1+7)%15), 0, 0, 0, basetime, NULL, MDL_CULL_VFC | MDL_CULL_DIST);
 }
 
 extern int reflectdist;

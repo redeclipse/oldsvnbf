@@ -43,7 +43,6 @@ void fatal(char *s, char *o)	// failure exit
 SDL_Surface *screen = NULL;
 
 int curtime;
-dynent *player = NULL;
 
 static bool initing = false, restoredinits = false;
 bool initwarning()
@@ -670,7 +669,7 @@ void updateframe(bool dorender)
 				}
 				if ((screen->flags&SDL_FULLSCREEN) || grabmouse)
 					if(!g3d_movecursor(event.motion.xrel, event.motion.yrel))
-						mousemove(event.motion.xrel, event.motion.yrel);
+						cl->mousemove(event.motion.xrel, event.motion.yrel);
 				break;
 
 			case SDL_MOUSEBUTTONDOWN:
@@ -681,9 +680,7 @@ void updateframe(bool dorender)
 				lastbut = event.button.button;
 				break;
 		}
-		processjoy(&event);
 	}
-	movejoy();
 	colorpos = 0; // last but not least.
 }
 
@@ -853,14 +850,11 @@ int main(int argc, char **argv)
 	particleinit();
 
 	conoutf("init: world");
-	camera1 = player = cl->iterdynents(0);
+	camera1 = cl->iterdynents(0);
 	emptymap(0, true);
 
 	conoutf("init: sound");
 	initsound();
-
-	conoutf("init: joystick");
-	initjoy();
 
 	conoutf("init: cfg");
 	rehash(false);

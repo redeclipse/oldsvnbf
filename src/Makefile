@@ -36,8 +36,7 @@ CLIENT_OBJS= \
 	engine/water.o \
 	engine/world.o \
 	engine/worldio.o \
-	fpsgame/fps.o \
-	engine/joystick.o
+	fpsgame/fps.o
 
 SINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Iinclude
 SCXXFLAGS= -w -fsigned-char $(CXXOPTFLAGS) $(SINCLUDES)

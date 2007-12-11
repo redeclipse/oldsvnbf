@@ -283,7 +283,6 @@ void saycommand(char *init)						 // turns input to the command line on or off
 	if(!init) init = "";
 	s_strcpy(commandbuf, init);
 	commandpos = -1;
-	player->stopmoving(); // prevent situations where player presses direction key, open command line, then releases key
 }
 
 void mapmsg(char *s) { s_strncpy(hdr.maptitle, s, 128); }

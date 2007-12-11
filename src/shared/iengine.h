@@ -10,7 +10,6 @@ extern float raycube   (const vec &o, const vec &ray,     float radius = 0, int 
 extern float raycubepos(const vec &o, vec &ray, vec &hit, float radius = 0, int mode = RAY_CLIPMAT, int size = 0);
 extern float rayfloor  (const vec &o, vec &floor, int mode = 0, float radius = 0);
 extern bool  raycubelos(vec &o, vec &dest, vec &hitpos);
-
 extern bool isthirdperson();
 
 extern void settexture(const char *name);
@@ -75,6 +74,8 @@ extern char *getcurcommand();
 extern void resetcomplete();
 extern void complete(char *s);
 
+extern bool saycommandon;
+
 // menus
 extern vec menuinfrontofplayer();
 extern void newgui(char *name, char *contents);
@@ -87,6 +88,7 @@ extern int findentity(int type, int index = 0);
 extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool local);
 extern int getworldsize();
 extern int getmapversion();
+extern void dropenttofloor(entity *e);
 extern bool insideworld(const vec &o);
 extern void resettriggers();
 extern void checktriggers();
@@ -132,20 +134,18 @@ extern void load_world(const char *mname, const char *cname = NULL);
 extern void save_world(char *mname, bool nolms = false);
 
 // physics
-extern void moveplayer(physent *pl, int moveres, bool local);
-extern bool moveplayer(physent *pl, int moveres, bool local, int curtime);
+extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr,  float hi, float lo);
+extern bool rectcollide(physent *d, const vec &dir, const vec &o, float xr, float yr,  float hi, float lo, uchar visible = 0xFF, bool collideonly = true, float cutoff = 0);
 extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0.0f, bool playercol = true);
-extern void avoidcollision(physent *d, const vec &dir, physent *obstacle, float space);
-extern void physicsframe();
-extern void dropenttofloor(entity *e);
+extern bool plcollide(physent *d, const vec &dir);
 extern void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m);
 extern void vectoyawpitch(const vec &v, float &yaw, float &pitch);
 extern bool intersect(physent *d, vec &from, vec &to);
-extern bool moveplatform(physent *p, const vec &dir);
-extern void updatephysstate(physent *d);
+extern const vector<physent *> &checkdynentcache(int x, int y);
+extern void updatedynentcache(physent *d);
 extern void cleardynentcache();
-extern bool entinmap(dynent *d, bool avoidplayers = false);
-extern void findplayerspawn(dynent *d, int forceent = -1);
+
+extern int dynentsize, ambient, fov;
 
 // rendermodel
 enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_TRANSLUCENT = 1<<6 };
@@ -161,10 +161,10 @@ struct modelattach
 
 extern void startmodelbatches();
 extern void endmodelbatches();
-extern void rendermodel(vec &color, vec &dir, const char *mdl, int anim, int varseed, int tex, const vec &o, float yaw = 0, float pitch = 0, float speed = 0, int basetime = 0, dynent *d = NULL, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, modelattach *a = NULL);
+extern void rendermodel(vec &color, vec &dir, const char *mdl, int anim, int varseed, int tex, const vec &o, float yaw = 0, float pitch = 0, float roll = 0, float speed = 0, int basetime = 0, dynent *d = NULL, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, modelattach *a = NULL);
 extern void abovemodel(vec &o, const char *mdl);
 extern void rendershadow(dynent *d);
-extern void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, float sink = 0);
+extern void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, float sink = 0);
 extern void interpolateorientation(dynent *d, float &interpyaw, float &interppitch);
 extern void setbbfrommodel(dynent *d, char *mdl);
 
@@ -305,8 +305,6 @@ extern bool inside;
 extern physent *hitplayer;
 extern vec wall;
 extern float walldistance;
-extern int physicsfraction, physicsrepeat, minframetime;
-extern int thirdperson, thirdpersonscale;
 
 extern int gzgetint(gzFile f);
 extern void gzputint(gzFile f, int x);

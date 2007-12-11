@@ -368,7 +368,7 @@ void entselectionbox(const entity &e, vec &eo, vec &es)
 		m->collisionbox(0, eo, es);
 		rotatebb(eo, es, e.attr1);
 		if(m->collide)
-			eo.z -= player->aboveeye; // wacky but true. see physics collide
+			eo.z -= camera1->aboveeye; // wacky but true. see physics collide
 		else
 			es.div(2);  // cause the usual bb is too big...
 		eo.add(e.o);
@@ -645,7 +645,7 @@ void entpush(int *dir)
 	else
 		groupedit(e.o[d] += float(s*sel.grid));
 	if(entitysurf==1)
-		player->o[d] += float(s*sel.grid);
+		camera1->o[d] += float(s*sel.grid);
 }
 
 VAR(entautoviewdist, 0, 25, 100);
@@ -653,7 +653,7 @@ void entautoview(int *dir)
 {
 	if(!haveselent()) return;
 	static int s = 0;
-	vec v(player->o);
+	vec v(camera1->o);
 	v.sub(worldpos);
 	v.normalize();
 	v.mul(entautoviewdist);
@@ -662,7 +662,7 @@ void entautoview(int *dir)
 	if(t<0 && s>0) s = entgroup.length() - s;
 	entfocus(entgroup[s],
 		v.add(e.o);
-		player->o = v;
+		camera1->o = v;
 	);
 }
 
@@ -686,6 +686,23 @@ int findtype(char *what)
 }
 
 VAR(entdrop, 0, 2, 3);
+
+void dropenttofloor(entity *e)
+{
+	if(!insideworld(e->o)) return;
+	vec v(0.0001f, 0.0001f, -1);
+	v.normalize();
+	if(raycube(e->o, v, hdr.worldsize) >= hdr.worldsize) return;
+	physent d;
+	d.type = ENT_CAMERA;
+	d.o = e->o;
+	d.vel = vec(0, 0, -1);
+	d.radius = 1.0f;
+	d.eyeheight = et->dropheight(*e);
+	d.aboveeye = 1.0f;
+	while (!collide(&d, v) && d.o.z > 0.f) d.o.z -= 0.1f;
+	e->o = d.o;
+}
 
 bool dropentity(entity &e, int drop = -1)
 {
@@ -781,7 +798,7 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
 
 void newentity(int type, int a1, int a2, int a3, int a4)
 {
-	extentity *t = newentity(true, player->o, type, a1, a2, a3, a4);
+	extentity *t = newentity(true, camera1->o, type, a1, a2, a3, a4);
 	dropentity(*t);
 	et->getents().add(t);
 	int i = et->getents().length()-1;
@@ -864,43 +881,6 @@ int findentity(int type, int index)
 	return -1;
 }
 
-int spawncycle = -1, fixspawn = 4;
-
-void findplayerspawn(dynent *d, int forceent)	// place at random spawn. also used by monsters!
-{
-	int pick = forceent;
-	if(pick<0)
-	{
-		int r = fixspawn-->0 ? 7 : rnd(10)+1;
-		loopi(r) spawncycle = findentity(ET_PLAYERSTART, spawncycle+1);
-		pick = spawncycle;
-	}
-	if(pick!=-1)
-	{
-		d->pitch = 0;
-		d->roll = 0;
-		for(int attempt = pick;;)
-		{
-			d->o = et->getents()[attempt]->o;
-			d->yaw = et->getents()[attempt]->attr1;
-			if(entinmap(d, true)) break;
-			attempt = findentity(ET_PLAYERSTART, attempt+1);
-			if(attempt<0 || attempt==pick)
-			{
-				d->o = et->getents()[attempt]->o;
-				d->yaw = et->getents()[attempt]->attr1;
-				entinmap(d);
-				break;
-			}
-		}
-	}
-	else
-	{
-		d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
-		entinmap(d);
-	}
-}
-
 void splitocta(cube *c, int size)
 {
 	if(size <= VVEC_INT_MASK+1) return;
@@ -978,7 +958,7 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	overrideidents = false;
 
 	startmap("");
-	player->o.z += player->eyeheight+1;
+	camera1->o.z += camera1->eyeheight+1;
 
 	return true;
 }
@@ -1107,6 +1087,7 @@ void doleveltrigger(int trigger, int state)
 
 void checktriggers()
 {
+	/* TODO: game modularise..
 	if(player->state != CS_ALIVE) return;
 	vec o(player->o);
 	o.z -= player->eyeheight;
@@ -1176,6 +1157,7 @@ void checktriggers()
 				break;
 		}
 	}
+	*/
 }
 
 void newentity(vec &v, int type, int a1, int a2, int a3, int a4)

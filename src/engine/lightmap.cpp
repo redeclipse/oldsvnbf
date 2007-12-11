@@ -1321,11 +1321,6 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 			intensity *= spotatten;
 		}
 
-		//if(target==player->o)
-		//{
-		//	conoutf("%d - %f %f", i, intensity, mag);
-		//}
-
 		color.add(vec(e.attr2, e.attr3, e.attr4).div(255).mul(intensity));
 
 		intensity *= e.attr2*e.attr3*e.attr4;

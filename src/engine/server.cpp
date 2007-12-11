@@ -18,7 +18,6 @@ int uprate = 0, maxclients = DEFAULTCLIENTS;
 char *ip = "", *master = NULL;
 char *game = "fps";
 
-iphysics *ph = NULL;
 igameclient *cl = NULL;
 igameserver *sv = NULL;
 iclientcom *cc = NULL;
@@ -43,7 +42,6 @@ void initgame(char *game)
 	if(cl)
 	{
 		cc = cl->getcom();
- 		ph = cl->getphysics();
 		et = cl->getents();
 		cl->initclient();
 	}

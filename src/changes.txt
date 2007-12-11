@@ -7,6 +7,7 @@ Legend [
 ]
 
 = wip edition =
+* more game type specific code separation from engine
 * reload/ammo add/max values tweaked
 * reload/ammo now available any time the weapon is not firing, reloading, or has max ammo
 * reload independence from firing state (MOUSE3)
@@ -149,7 +150,7 @@ Legend [
 * ssp, player plays win anim when reaching the goal
 * online game module clients now connect to local loopback server (which can be made public)
 * imported shadowmap code, added relevant variables to perf checker
-* preliminary revision to joystick for modularity and more local player support
+* more local player support
 * varying hit tones depending on amount of damage dealt
 * 'cameradir' infinite loop fixed when no other views are available
 * quad dynlight fadeout fixed
