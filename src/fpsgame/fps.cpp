@@ -45,7 +45,6 @@ struct fpsclient : igameclient
 	IVAR(cameracycle, 0, 0, 600);			// cycle camera every N secs
 	IVARP(crosshair, 0, 1, 1);				// show the crosshair
 
-	IVARP(hudstyle, 0, HD_RIGHT, HD_MAX-1);	// use new or old hud style
 	IVARP(rankhud, 0, 0, 1);				// show ranks on the hud
 	IVARP(ranktime, 0, 15000, 600000);		// display unchanged rank no earlier than every N ms
 
@@ -1021,33 +1020,10 @@ struct fpsclient : igameclient
 		}
 		camera1->eyeheight = 0;
 
-		if (gamethirdperson() || cameratype > 0)
+		if (cameratype > 0)
 		{
-			if (cameratype != 2 && gamethirdperson())
-			{
-				vec old(camera1->o);
-
-				camera1->move = -1;
-				camera1->o.z += TPHEIGHT;
-
-				if (!cameratype && thirdpersonscale)
-					camera1->pitch = (0.f-fabs(camera1->pitch))*(thirdpersonscale/100.f);
-
-				fixrange(camera1);
-
-				ph.move(camera1, 10, false, 0, TPDIST);
-
-				vec v(cameratype > 0 ? old : worldpos);
-				v.sub(camera1->o);
-				v.normalize();
-				vectoyawpitch(v, camera1->yaw, camera1->pitch);
-			}
-
-			if (cameratype > 0)
-			{
-				player1->o = camera1->o;
-				player1->yaw = camera1->yaw;
-			}
+			player1->o = camera1->o;
+			player1->yaw = camera1->yaw;
 		}
 
 		if (camerawobble > 0)
@@ -1074,7 +1050,7 @@ struct fpsclient : igameclient
 
 	bool gamethirdperson()
 	{
-		return !editmode && thirdperson;
+		return false;
 	}
 
 	void menuevent(int event)
