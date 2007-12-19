@@ -7,7 +7,7 @@
 #ifdef STANDALONE
 void conoutf(const char *s, ...) { s_sprintfdlv(str, s, s); printf("%s\n", str); }
 void console(const char *s, int n, ...) { s_sprintfdlv(str, n, s); printf("%s\n", str); }
-void localservertoclient(int chan, uchar *buf, int len) {}
+void servertoclient(int chan, uchar *buf, int len) {}
 void fatal(char *s, char *o) { void cleanupserver(); cleanupserver(); printf("servererror: %s\n", s); exit(EXIT_FAILURE); }
 #endif
 
@@ -232,11 +232,6 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 			bsend += packet->dataLength;
 			break;
 		}
-#ifndef STANDALONE
-		case ST_LOCAL:
-			localservertoclient(chan, packet->data, (int)packet->dataLength);
-			break;
-#endif
 	}
 }
 
@@ -319,7 +314,7 @@ void send_welcome(int n)
 	if(packet->referenceCount==0) enet_packet_destroy(packet);
 }
 
-void localclienttoserver(int chan, ENetPacket *packet)
+void clienttoserver(int chan, ENetPacket *packet)
 {
 	process(packet, 0, chan);
 	if(packet->referenceCount==0) enet_packet_destroy(packet);
@@ -339,10 +334,9 @@ client &addclient()
 	return *c;
 }
 
-int localclients = 0, nonlocalclients = 0;
+int nonlocalclients = 0;
 
 bool hasnonlocalclients() { return nonlocalclients!=0; }
-bool haslocalclients() { return localclients!=0; }
 
 void sendpongs()		// reply all server info requests
 {
@@ -503,11 +497,10 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 {
 	if (!serverhost) return;
 
-	localclients = nonlocalclients = 0;
+	nonlocalclients = 0;
 
 	loopv(clients) switch(clients[i]->type)
 	{
-		case ST_LOCAL: localclients++; break;
 		case ST_TCPIP: nonlocalclients++; break;
 	}
 #ifdef STANDALONE
@@ -592,22 +585,10 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 	if(sv->sendpackets()) enet_host_flush(serverhost);
 }
 
-void localdisconnect()
-{
-	loopv(clients) if(clients[i]->type==ST_LOCAL)
-	{
-		sv->localdisconnect(i);
-		localclients--;
-		clients[i]->type = ST_EMPTY;
-		sv->deleteinfo(clients[i]->info);
-		clients[i]->info = NULL;
-	}
-}
-
-void localconnect()
+void lanconnect()
 {
 #ifndef STANDALONE
-	if (sv->serverport()) connects("localhost");
+	if (sv->serverport()) connects();
 #endif
 }
 
@@ -629,7 +610,7 @@ void initserver(bool dedicated)
 		else msaddress.host = address.host;
 	}
 	serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
-	if(!serverhost) fatal("could not create server host");
+	if(!serverhost) { conoutf("could not create server host"); return; }
 	loopi(maxclients) serverhost->peers[i].data = NULL;
 	address.port = sv->serverinfoport();
 	pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);

@@ -174,6 +174,7 @@ extern void validatec(cube *c, int size);
 extern bool isvalidcube(cube &c);
 extern cube &lookupcube(int tx, int ty, int tz, int tsize = 0);
 extern cube &neighbourcube(int x, int y, int z, int size, int rsize, int orient);
+extern int lookupmaterial(const vec &o);
 extern void newclipplanes(cube &c);
 extern void freeclipplanes(cube &c);
 extern uchar octantrectangleoverlap(const ivec &c, int size, const ivec &o, const ivec &s);
@@ -289,8 +290,8 @@ extern void cleanupserver();
 extern void serverslice(uint timeout);
 
 extern uchar *retrieveservers(uchar *buf, int buflen);
-extern void localclienttoserver(int chan, ENetPacket *);
-extern void localconnect();
+extern void clienttoserver(int chan, ENetPacket *);
+extern void lanconnect();
 extern bool serveroption(char *opt);
 
 // serverbrowser
@@ -301,9 +302,8 @@ extern char *getservername(int n);
 extern void writeservercfg();
 
 // client
-extern void localdisconnect();
-extern void localservertoclient(int chan, uchar *buf, int len);
-extern void connects(char *servername);
+extern void servertoclient(int chan, uchar *buf, int len);
+extern void connects(char *servername = NULL);
 extern void abortconnect();
 extern void clientkeepalive();
 

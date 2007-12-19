@@ -92,7 +92,7 @@ struct physics
 	void updatewater(fpsent *d, int waterlevel)
 	{
 		vec v(d->o.x, d->o.y, d->o.z-d->eyeheight);
-		int mat = getmatvec(v);
+		int mat = lookupmaterial(v);
 			
 		if (waterlevel || mat == MAT_WATER || mat == MAT_LAVA)
 		{
@@ -472,7 +472,7 @@ struct physics
 		vec d(m);
 		d.mul(maxspeed(pl));
 		if(floating) { if (local) d.mul(floatspeed()/100.0f); }
-		else if(!water && cl.allowmove(pl)) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE && pl->move>=0 ? 1.3f : 1.0f)); // EXPERIMENTAL
+		else if(!water && cl.allowmove(pl)) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
 		float friction = water && !floating ? waterfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
 		float fpsfric = friction/curtime*20.0f;
 	
@@ -500,8 +500,7 @@ struct physics
 	
 	bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 	{
-		cube &c = lookupcube(int(pl->o.x), int(pl->o.y), int(pl->o.z));
-		int material = c.ext ? c.ext->material : MAT_AIR;
+		int material = lookupmaterial(pl->o);
 		bool water = isliquid(material);
 		bool floating = (editmode && local) || pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
 		float secs = curtime/1000.f;
@@ -555,8 +554,8 @@ struct physics
 	
 		if(pl->type!=ENT_CAMERA)
 		{
-			cube &c = lookupcube((int)pl->o.x, (int)pl->o.y, (int)pl->o.z+1);
-			bool inwater = c.ext && isliquid(c.ext->material);
+			int mat = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z+1));
+			bool inwater = isliquid(mat);
 			if(!pl->inwater && inwater) trigger(pl, local, 0, -1);
 			else if(pl->inwater && !inwater) trigger(pl, local, 0, 1);
 			pl->inwater = inwater;

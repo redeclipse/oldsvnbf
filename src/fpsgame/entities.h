@@ -88,6 +88,16 @@ struct entities : icliententities
 		}
 	}
 
+    void preloadentities()
+    {
+        loopi(MAXENTTYPES)
+        {
+            char *mdl = entmdlname(i);
+            if(!mdl) continue;
+            loadmodel(mdl, -1, true);
+        }
+    }
+
 	void rumble(extentity &e) { playsound(S_RUMBLE, &e.o); }
 
 	void trigger(extentity &e)

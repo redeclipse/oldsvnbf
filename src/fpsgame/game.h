@@ -69,6 +69,7 @@ enum
 #define G_M_NUM			3
 
 #define G_M_FRAG		G_M_TEAM|G_M_INSTA|G_M_DUEL
+#define G_M_BASE		G_M_TEAM|G_M_INSTA
 
 static struct gametypes
 {
@@ -78,7 +79,7 @@ static struct gametypes
 	{ G_EDITMODE,		0,					"Coop Edit" },
 	{ G_SINGLEPLAYER,	0,					"Singleplayer" },
 	{ G_DEATHMATCH,		G_M_FRAG,			"Deathmatch" },
-	{ G_CAPTURE,		G_M_FRAG,			"Capture" },
+	{ G_CAPTURE,		G_M_BASE,			"Capture" },
 };
 #if 0
 mutstype[] = {
@@ -139,8 +140,7 @@ enum
 	SV_BASES, SV_BASEINFO, SV_TEAMSCORE, SV_FORCEINTERMISSION,
 	SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
-	SV_CLIENT,
-	SV_COMMAND, SV_RELOAD, SV_REGEN,
+	SV_CLIENT, SV_COMMAND, SV_RELOAD, SV_REGEN,
 };
 
 static char msgsizelookup(int msg)
@@ -161,8 +161,7 @@ static char msgsizelookup(int msg)
 		SV_BASES, 0, SV_BASEINFO, 0, SV_TEAMSCORE, 0, SV_FORCEINTERMISSION, 1,
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 2, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
-		SV_CLIENT, 0,
-		SV_COMMAND, 0, SV_RELOAD, 0, SV_REGEN, 0,
+		SV_CLIENT, 0, SV_COMMAND, 0, SV_RELOAD, 0, SV_REGEN, 0,
 		-1
 	};
 	for(char *p = msgsizesl; *p>=0; p += 2) if(*p==msg) return p[1];
@@ -203,15 +202,15 @@ struct demoheader
 
 static struct guninfo
 {
-	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	char *name;
+	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	char *name, *file;
 } guns[NUMGUNS] =
 {
-	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		-10 ,	10,		"pistol" },
-	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	"shotgun" },
-	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		"chaingun" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	15,		"grenades" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	100,	200,	10000,	-40,	40,		"rockets" },
-	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	50,		0,		0,		-30,	20,		"rifle" },
+	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		-10 ,	10,		"pistol",	"pistol" },
+	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	"shotgun",	"shotgun" },
+	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		"chaingun",	"chaingun" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	15,		"grenades",	"grenades" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	100,	200,	10000,	-40,	40,		"rockets",	"rockets" },
+	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	50,		0,		0,		-30,	20,		"rifle",	"rifle" },
 };
 #define isgun(gun) (gun > -1 && gun < NUMGUNS)
 
@@ -434,79 +433,4 @@ enum {
 	HD_MAX
 };
 
-#endif
-#if 0
-static char *msgnames[] = {
-	"SV_INITS2C",
-	"SV_INITC2S",
-	"SV_POS",
-	"SV_TEXT",
-	"SV_SOUND",
-	"SV_CDIS",
-	"SV_SHOOT",
-	"SV_EXPLODE",
-	"SV_SUICIDE",
-	"SV_DIED",
-	"SV_DAMAGE",
-	"SV_SHOTFX",
-	"SV_TRYSPAWN",
-	"SV_SPAWNSTATE",
-	"SV_SPAWN",
-	"SV_FORCEDEATH",
-	"SV_ARENAWIN",
-	"SV_GUNSELECT",
-	"SV_TAUNT",
-	"SV_MAPCHANGE",
-	"SV_MAPVOTE",
-	"SV_ITEMSPAWN",
-	"SV_ITEMPICKUP",
-	"SV_DENIED",
-	"SV_PING",
-	"SV_PONG",
-	"SV_CLIENTPING",
-	"SV_TIMEUP",
-	"SV_MAPRELOAD",
-	"SV_ITEMACC",
-	"SV_SERVMSG",
-	"SV_ITEMLIST",
-	"SV_RESUME",
-	"SV_EDITMODE",
-	"SV_EDITENT",
-	"SV_EDITF",
-	"SV_EDITT",
-	"SV_EDITM",
-	"SV_FLIP",
-	"SV_COPY",
-	"SV_PASTE",
-	"SV_ROTATE",
-	"SV_REPLACE",
-	"SV_DELCUBE",
-	"SV_REMIP",
-	"SV_NEWMAP",
-	"SV_GETMAP",
-	"SV_SENDMAP",
-	"SV_MASTERMODE",
-	"SV_KICK",
-	"SV_CLEARBANS",
-	"SV_CURRENTMASTER",
-	"SV_SPECTATOR",
-	"SV_SETMASTER",
-	"SV_SETTEAM",
-	"SV_BASES",
-	"SV_BASEINFO",
-	"SV_TEAMSCORE",
-	"SV_FORCEINTERMISSION",
-	"SV_LISTDEMOS",
-	"SV_SENDDEMOLIST",
-	"SV_GETDEMO",
-	"SV_SENDDEMO",
-	"SV_DEMOPLAYBACK",
-	"SV_RECORDDEMO",
-	"SV_STOPDEMO",
-	"SV_CLEARDEMOS",
-	"SV_CLIENT",
-	"SV_COMMAND",
-	"SV_RELOAD",
-	"SV_REGEN",
-};
 #endif

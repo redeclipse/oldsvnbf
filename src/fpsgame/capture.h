@@ -18,7 +18,7 @@ struct capturestate
 		string name, info;
 		extentity *ent;
 #endif
-		int enemies, converted, capturetime;
+		int owners, enemies, converted, capturetime;
 
 		baseinfo() { reset(); }
 
@@ -34,14 +34,23 @@ struct capturestate
 			noenemy();
 			owner[0] = '\0';
 			capturetime = -1;
+            owners = 0;
 		}
 
 		bool enter(const char *team)
 		{
-			if(!enemy[0])
+            if(!strcmp(owner, team))
 			{
-				if(!strcmp(owner, team)) return false;
-				s_strcpy(enemy, team);
+                owners++;
+                return false;
+            }
+            if(!enemies)
+            {
+                if(strcmp(enemy, team))
+                {
+                    converted = 0;
+					s_strcpy(enemy, team);
+                }
 				enemies++;
 				return true;
 			}
@@ -52,14 +61,18 @@ struct capturestate
 
 		bool steal(const char *team)
 		{
-			return !enemy[0] && strcmp(owner, team);
+            return !enemies && strcmp(owner, team);
 		}
 
 		bool leave(const char *team)
 		{
+            if(!strcmp(owner, team))
+            {
+                owners--;
+                return false;
+            }
 			if(strcmp(enemy, team)) return false;
 			enemies--;
-			if(!enemies) noenemy();
 			return !enemies;
 		}
 
@@ -67,10 +80,15 @@ struct capturestate
 		{
 			if(strcmp(enemy, team)) return -1;
 			converted += units;
-			if(converted<(owner[0] ? 2 : 1)*OCCUPYLIMIT) return -1;
+            if(units<0)
+            {
+                if(converted<=0) noenemy();
+                return -1;
+            }
+            else if(converted<(owner[0] ? 2 : 1)*OCCUPYLIMIT) return -1;
 			if(owner[0]) { owner[0] = '\0'; converted = 0; s_strcpy(enemy, team); return 0; }
-			else { s_strcpy(owner, team); capturetime = 0; noenemy(); return 1; }
-		}
+            else { s_strcpy(owner, team); capturetime = 0; owners = enemies; noenemy(); return 1; }
+        }
 	};
 
 	vector<baseinfo> bases;
@@ -207,14 +225,12 @@ struct captureclient : capturestate
 		glTexCoord2f(0.0f, 1.0f); glVertex2f(x,	y+s);
 	}
 
-	IVARP(maxradarscale, 0, 1024, 10000);
-
 	void drawblips(int x, int y, int s, int type, bool skipenemy = false)
 	{
 		const char *textures[3] = {"packages/textures/blip_red.png", "packages/textures/blip_grey.png", "packages/textures/blip_blue.png"};
 		settexture(textures[max(type+1, 0)]);
 		glBegin(GL_QUADS);
-		float scale = radarscale<=0 || radarscale>maxradarscale() ? maxradarscale() : radarscale;
+        float scale = radarscale<=0 || radarscale>cl.maxradarscale() ? cl.maxradarscale() : radarscale;
 		loopv(bases)
 		{
 			baseinfo &b = bases[i];
@@ -237,6 +253,11 @@ struct captureclient : capturestate
 		glEnd();
 	}
 
+    int respawnwait()
+    {
+        return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(cl.lastmillis-cl.player1->lastpain)/1000);
+    }
+
 	void capturehud(int w, int h)
 	{
 		glEnable(GL_BLEND);
@@ -254,13 +275,16 @@ struct captureclient : capturestate
 		if(showenemies) drawblips(x, y, s, -2);
 		if(cl.player1->state == CS_DEAD)
 		{
-			glPushMatrix();
-			glLoadIdentity();
-			glOrtho(0, w*900/h, 900, 0, -1, 1);
-            int wait = max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(cl.lastmillis-cl.player1->lastpain)/1000);
-            draw_textf("%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, wait);
-			glPopMatrix();
-		}
+            int wait = respawnwait();
+            if(wait>=0)
+            {
+				glPushMatrix();
+				glLoadIdentity();
+				glOrtho(0, w*900/h, 900, 0, -1, 1);
+	            draw_textf("%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, wait);
+				glPopMatrix();
+			}
+        }
         glDisable(GL_BLEND);
 	}
 
@@ -326,9 +350,9 @@ struct captureclient : capturestate
 		if(total>=10000) conoutf("team %s captured all bases", team);
 	}
 
-	int closesttoenemy(const char *team, bool noattacked = false)
+    int closesttoenemy(const char *team, bool noattacked = false, bool farthest = false)
 	{
-		float bestdist = 1e10f;
+        float bestdist = farthest ? -1e10f : 1e10f;
 		int best = -1;
 		int attackers = INT_MAX, attacked = -1;
 		loopv(bases)
@@ -337,7 +361,7 @@ struct captureclient : capturestate
 			if(!b.owner[0] || strcmp(b.owner, team)) continue;
 			if(noattacked && b.enemy[0]) continue;
 			float dist = disttoenemy(b);
-			if(dist < bestdist)
+            if(farthest ? dist > bestdist : dist < bestdist)
 			{
 				best = i;
 				bestdist = dist;
@@ -447,7 +471,7 @@ struct captureservmode : capturestate, servmode
 			baseinfo &b = bases[i];
 			if(b.enemy[0])
 			{
-                if(b.occupy(b.enemy, (m_insta(sv.gamemode, sv.mutators) ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*b.enemies*t)==1) addscore(b.owner, CAPTURESCORE);
+                if((!b.owners || !b.enemies) && b.occupy(b.enemy, (m_insta(sv.gamemode, sv.mutators) ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*(b.enemies ? b.enemies : -max(1, b.owners))*t)==1) addscore(b.owner, CAPTURESCORE);
 				sendbaseinfo(i);
 			}
 			else if(b.owner[0])
@@ -527,7 +551,7 @@ struct captureservmode : capturestate, servmode
 
 	void entergame(clientinfo *ci)
 	{
-		if(notgotbases) return;
+        if(notgotbases || ci->state.state!=CS_ALIVE) return;
 		enterbases(ci->team, ci->state.o);
 	}
 
@@ -537,9 +561,9 @@ struct captureservmode : capturestate, servmode
 		enterbases(ci->team, ci->state.o);
 	}
 
-	void leavegame(clientinfo *ci)
+    void leavegame(clientinfo *ci, bool disconnecting = false)
 	{
-		if(notgotbases) return;
+        if(notgotbases || ci->state.state!=CS_ALIVE) return;
 		leavebases(ci->team, ci->state.o);
 	}
 

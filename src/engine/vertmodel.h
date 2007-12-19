@@ -66,7 +66,10 @@ struct vertmodel : model
 
         void setuptmus(animstate &as, bool masked)
         {
-            if(fullbright && enablelighting) { glDisable(GL_LIGHTING); enablelighting = false; }
+            if(fullbright)
+            {
+                if(enablelighting) { glDisable(GL_LIGHTING); enablelighting = false; }
+            }
             else if(lightmodels && !enablelighting) { glEnable(GL_LIGHTING); enablelighting = true; }
             int needsfog = -1;
             if(refracting && refractfog)

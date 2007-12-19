@@ -21,7 +21,7 @@ struct fpsclient : igameclient
 	int respawnent;
 	int swaymillis;
 	vec swaydir;
-	int suicided;
+    int respawned, suicided;
 
 	#include "physics.h"
 	physics ph;
@@ -58,13 +58,16 @@ struct fpsclient : igameclient
 	fpsrender	fr;
 	entities	et;
 	clientcom	cc;
+
+    IVARP(maxradarscale, 0, 1024, 10000);
+
 	captureclient cpc;
 
 	fpsclient()
 		: nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false), lastmillis(0),
 		  maptime(0), minremain(0), respawnent(-1),
 		  swaymillis(0), swaydir(0, 0, 0),
-		  suicided(-1),
+          respawned(-1), suicided(-1), 
 		  ph(*this), cameranum(0), cameracycled(0), myrankv(0), myranks(0),
 		  player1(spawnstate(new fpsent())),
 		  ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this)
@@ -108,7 +111,7 @@ struct fpsclient : igameclient
 
 	void taunt()
 	{
-		if(player1->state!=CS_ALIVE) return;
+        if(player1->state!=CS_ALIVE || player1->physstate<PHYS_SLOPE) return;
 		if(lastmillis-player1->lasttaunt<1000) return;
 		player1->lasttaunt = lastmillis;
 		cc.addmsg(SV_TAUNT, "r");
@@ -135,7 +138,19 @@ struct fpsclient : igameclient
 
 	void respawnself()
 	{
-        if(m_mp(gamemode)) cc.addmsg(SV_TRYSPAWN, "r");
+        if(m_mp(gamemode)) 
+        {
+            if(respawned!=player1->lifesequence)
+            {
+                cc.addmsg(SV_TRYSPAWN, "r");
+                respawned = player1->lifesequence;
+            }
+        }
+        else
+        {
+            spawnplayer(player1);
+            sb.showscores(false);
+        }
 	}
 
 	fpsent *pointatplayer()
@@ -195,10 +210,7 @@ struct fpsclient : igameclient
 					}
 					else
 					{
-						int last = lastmillis-player1->lastpain,
-							wait = (m_insta(gamemode, mutators) ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000;
-
-						if (m_capture(gamemode) && capturespawn() && last >= wait)
+						if (m_capture(gamemode) && !cpc.respawnwait())
 						{
 							respawnself();
 						}
@@ -256,8 +268,8 @@ struct fpsclient : igameclient
 			player1->attacking = player1->reloading = false;
             if(m_capture(gamemode))
             {
-                int wait = (m_insta(gamemode, mutators) ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)-(lastmillis-player1->lastpain)/1000;
-                if(wait>0)
+                int wait = cpc.respawnwait();
+                if(wait > 0)
 				{
 					console("\f2you must wait %d second%s before respawn!", CON_LEFT|CON_CENTER, wait, wait!=1 ? "s" : "");
 					return;
@@ -464,9 +476,38 @@ struct fpsclient : igameclient
 		cc.initclientnet();
 	}
 
+    void preloadcharacters()
+    {
+        loadmodel("player", -1, true);
+        loadmodel("player/blue", -1, true);
+        loadmodel("player/red", -1, true);
+    }
+
+    void preloadweapons()
+    {
+        loopi(NUMGUNS)
+        {
+            const char *file = guns[i].file;
+            if(!file) continue;
+            s_sprintfd(mdl)("hudguns/%s", file);
+            loadmodel(mdl, -1, true);
+            s_sprintf(mdl)("hudguns/%s/blue", file);
+            loadmodel(mdl, -1, true);
+            s_sprintf(mdl)("vwep/%s", file);
+            loadmodel(mdl, -1, true);
+        }
+    }
+
+    void preload()
+    {
+        preloadweapons();
+        preloadcharacters();
+        et.preloadentities();
+    }
+
 	void startmap(const char *name)	// called just after a map load
 	{
-		suicided = -1;
+        respawned = suicided = -1;
 		respawnent = -1;
 		cc.mapstart();
 		ws.bouncereset();
@@ -547,11 +588,11 @@ struct fpsclient : igameclient
 
 	IVARP(hudgun, 0, 1, 1);
 	IVARP(hudgunsway, 0, 1, 1);
+    IVARP(teamhudguns, 0, 1, 1);
 
 	void drawhudmodel(int anim, float speed = 0, int base = 0)
 	{
 		if (player1->gunselect <= -1 || player1->gunselect >= NUMGUNS) return;
-		static char *hudgunnames[] = { "hudguns/pistol", "hudguns/shotgun", "hudguns/chaingun", "hudguns/grenades", "hudguns/rockets", "hudguns/rifle" };
 		vec sway, color, dir;
 		vecfromyawpitch(player1->yaw, player1->pitch, 1, 0, sway);
 		float swayspeed = min(4.0f, player1->vel.magnitude());
@@ -574,7 +615,8 @@ struct fpsclient : igameclient
 			color.y = color.y*(1-t) + t;
 		}
 #endif
-		const char *gunname = hudgunnames[player1->gunselect];
+
+        s_sprintfd(gunname)("hudguns/%s", guns[player1->gunselect].file);
 		rendermodel(color, dir, gunname, anim, 0, 0, sway, player1->yaw+90, player1->pitch, player1->roll, speed, base, NULL, 0);
 	}
 
@@ -835,7 +877,7 @@ struct fpsclient : igameclient
 		}
 		else
 		{
-			int fogmat = getmatvec(camera1->o);
+			int fogmat = lookupmaterial(camera1->o);
 
 			if (fogmat == MAT_WATER || fogmat == MAT_LAVA)
 			{

@@ -191,7 +191,6 @@ extern void getstring(char *t, ucharbuf &p, int len = MAXTRANS);
 extern void filtertext(char *dst, const char *src, bool whitespace = true, int len = sizeof(string)-1);
 extern void disconnect_client(int n, int reason);
 extern bool hasnonlocalclients();
-extern bool haslocalclients();
 
 // client
 extern void c2sinfo(dynent *d, int rate = 33);
@@ -274,7 +273,7 @@ struct serverinfo
 	ENetAddress address;
 };
 
-enum { ST_EMPTY, ST_LOCAL, ST_TCPIP };
+enum { ST_EMPTY, ST_TCPIP };
 
 struct client					// server side version of "dynent" type
 {
@@ -285,7 +284,7 @@ struct client					// server side version of "dynent" type
 	void *info;
 };
 extern vector<client *> clients;
-extern int localclients, nonlocalclients;
+extern int nonlocalclients;
 
 extern void process(ENetPacket *packet, int sender, int chan);
 extern void send_welcome(int n);

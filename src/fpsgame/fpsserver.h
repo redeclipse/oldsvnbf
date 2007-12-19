@@ -14,7 +14,7 @@ struct fpsserver : igameserver
 		char spawned;
 	};
 
-	static const int DEATHMILLIS = 250;
+    static const int DEATHMILLIS = 300;
 
 	enum { GE_NONE = 0, GE_SHOT, GE_RELOAD, GE_EXPLODE, GE_HIT, GE_SUICIDE, GE_PICKUP };
 
@@ -182,6 +182,7 @@ struct fpsserver : igameserver
 		gamestate state;
 		vector<gameevent> events;
 		vector<uchar> position, messages;
+        vector<clientinfo *> targets;
 
 		clientinfo() { reset(); }
 
@@ -197,6 +198,7 @@ struct fpsserver : igameserver
 			mapvote[0] = 0;
 			state.reset();
 			events.setsizenodelete(0);
+            targets.setsizenodelete(0);
             timesync = false;
             lastevent = 0;
 		}
@@ -274,11 +276,16 @@ struct fpsserver : igameserver
 		virtual ~servmode() {}
 
 		virtual void entergame(clientinfo *ci) {}
-		virtual void leavegame(clientinfo *ci) {}
+        virtual void leavegame(clientinfo *ci, bool disconnecting = false) {}
 
 		virtual void moved(clientinfo *ci, const vec &oldpos, const vec &newpos) {}
 		virtual bool canspawn(clientinfo *ci, bool connecting = false, bool tryspawn = false) { return true; }
 		virtual void spawned(clientinfo *ci) {}
+        virtual int fragvalue(clientinfo *victim, clientinfo *actor)
+        {
+            if(victim==actor || isteam(victim->team, actor->team)) return -1;
+            return 1;
+        }
 		virtual void died(clientinfo *victim, clientinfo *actor) {}
 		virtual void changeteam(clientinfo *ci, const char *oldteam, const char *newteam) {}
 		virtual void initclient(clientinfo *ci, ucharbuf &p, bool connecting) {}
@@ -858,13 +865,7 @@ struct fpsserver : igameserver
 		// only allow edit messages in coop-edit mode
 		if(type>=SV_EDITENT && type<=SV_GETMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = {
-				SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG,
-				SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH,
-				SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER,
-				SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_SENDDEMOLIST,
-				SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_CLIENT
-		};
+		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_CLIENT };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -1332,7 +1333,7 @@ struct fpsserver : igameserver
 
 				if(spinfo->state.state!=CS_SPECTATOR && val)
 				{
-					if(smode && spinfo->state.state==CS_ALIVE) smode->leavegame(spinfo);
+                    if(smode) smode->leavegame(spinfo);
 					mutate(mut->leavegame(spinfo));
 					spinfo->state.state = CS_SPECTATOR;
 				}
@@ -1609,15 +1610,15 @@ struct fpsserver : igameserver
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, damage, ts.health, ts.lastpain, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
 		if(ts.health<=0)
 		{
-			if (target != actor && (!m_team(gamemode, mutators) || !isteam(target->team, actor->team)))
+            int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || isteam(target->team, actor->team) ? -1 : 1);
+            actor->state.frags += fragvalue;
+            if(fragvalue > 0)
 			{
-				actor->state.frags++;
 				int friends = 0, enemies = 0; // note: friends also includes the fragger
 				if(m_team(gamemode, mutators)) loopv(clients) if(!isteam(clients[i]->team, actor->team)) enemies++; else friends++;
 				else { friends = 1; enemies = clients.length()-1; }
-				actor->state.effectiveness += friends/float(max(enemies, 1));
+                actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
 			}
-			else actor->state.frags--;
 			sendf(-1, 1, "ri4", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
@@ -1633,7 +1634,7 @@ struct fpsserver : igameserver
 	{
 		gamestate &gs = ci->state;
 		if(gs.state!=CS_ALIVE) return;
-		gs.frags--;
+        ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
 		sendf(-1, 1, "ri4", SV_DIED, ci->clientnum, ci->clientnum, gs.frags);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
@@ -1908,22 +1909,6 @@ struct fpsserver : igameserver
         loopv(clients) clients[i]->wantsmaster = false;
 	}
 
-	void localconnect(int n)
-	{
-		clientinfo *ci = (clientinfo *)getinfo(n);
-		ci->clientnum = n;
-		ci->local = true;
-		clients.add(ci);
-	}
-
-	void localdisconnect(int n)
-	{
-		clientinfo *ci = (clientinfo *)getinfo(n);
-		if(smode && ci->state.state==CS_ALIVE) smode->leavegame(ci);
-		mutate(mut->leavegame(ci));
-		clients.removeobj(ci);
-	}
-
 	int clientconnect(int n, uint ip)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
@@ -1941,7 +1926,7 @@ struct fpsserver : igameserver
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
 		if(ci->privilege) setmaster(ci, false);
-		if(smode && ci->state.state==CS_ALIVE) smode->leavegame(ci);
+		if(smode) smode->leavegame(ci, true);
 		mutate(mut->leavegame(ci));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);

@@ -51,7 +51,7 @@ void abortconnect()
 	if(curpeer) return;
 	enet_host_destroy(clienthost);
 	clienthost = NULL;
-	localconnect();
+	lanconnect();
 }
 
 void connects(char *servername)
@@ -65,7 +65,7 @@ void connects(char *servername)
 	ENetAddress address;
 	address.port = sv->serverport();
 
-	if(servername)
+	if (servername != NULL)
 	{
 		addserver(servername);
 		conoutf("attempting to connect to %s", servername);
@@ -77,7 +77,7 @@ void connects(char *servername)
 	}
 	else
 	{
-		conoutf("attempting to connect over LAN");
+		conoutf("attempting to connect to a local server");
 		address.host = ENET_HOST_BROADCAST;
 	}
 
@@ -89,15 +89,11 @@ void connects(char *servername)
 		enet_host_flush(clienthost);
 		connmillis = totalmillis;
 		connattempts = 0;
-		s_sprintfd(cs)("connecting to %s (esc to abort)", servername);
+		s_sprintfd(cs)("connecting to %s (esc to abort)", servername != NULL ? servername : "local server");
 		computescreen(cs);
 	}
+	else if (address.host == ENET_HOST_BROADCAST) fatal("unable to connect to a local server");
 	else conoutf("\f3could not connect to server");
-}
-
-void lanconnect()
-{
-	connects(0);
 }
 
 void disconnect(int onlyclean, int async)
@@ -124,14 +120,13 @@ void disconnect(int onlyclean, int async)
 	if(cleanup)
 	{
 		cc->gamedisconnect();
-		localdisconnect();
 	}
 	if(!connpeer && clienthost)
 	{
 		enet_host_destroy(clienthost);
 		clienthost = NULL;
 	}
-	if(!onlyclean) { localconnect(); }
+	if(!onlyclean) { lanconnect(); }
 }
 
 void trydisconnect()
@@ -160,7 +155,7 @@ int lastupdate = -1000;
 void sendpackettoserv(ENetPacket *packet, int chan)
 {
 	if(curpeer) enet_peer_send(curpeer, chan, packet);
-	else localclienttoserver(chan, packet);
+	else clienttoserver(chan, packet);
 }
 
 void c2sinfo(dynent *d, int rate)					 // send update to the server
@@ -184,7 +179,7 @@ void neterr(char *s)
 	disconnect();
 }
 
-void localservertoclient(int chan, uchar *buf, int len)	// processes any updates from the server
+void servertoclient(int chan, uchar *buf, int len)	// processes any updates from the server
 {
 	ucharbuf p(buf, len);
 	cc->parsepacketclient(chan, p);
@@ -194,7 +189,6 @@ void clientkeepalive()
 {
 	if (clienthost) enet_host_service(clienthost, NULL, 0);
 }
-
 
 void gets2c()			// get updates from the server
 {
@@ -210,8 +204,12 @@ void gets2c()			// get updates from the server
 		++connattempts;
 		if(connattempts > 3)
 		{
-			conoutf("\f3could not connect to server");
-			abortconnect();
+			if (connpeer->address.host == ENET_HOST_BROADCAST) fatal("unable to connect to a local server");
+			else
+			{
+				conoutf("\f3could not connect to server");
+				abortconnect();
+			}
 			return;
 		}
 	}
@@ -230,7 +228,7 @@ void gets2c()			// get updates from the server
 
 		case ENET_EVENT_TYPE_RECEIVE:
 			if(discmillis) conoutf("attempting to disconnect...");
-			else localservertoclient(event.channelID, event.packet->data, (int)event.packet->dataLength);
+			else servertoclient(event.channelID, event.packet->data, (int)event.packet->dataLength);
 			enet_packet_destroy(event.packet);
 			break;
 
@@ -239,8 +237,12 @@ void gets2c()			// get updates from the server
 			if(event.data>=DISC_NUM) event.data = DISC_NONE;
 			if(event.peer==connpeer)
 			{
-				conoutf("\f3could not connect to server");
-				abortconnect();
+				if (connpeer->address.host == ENET_HOST_BROADCAST) fatal("unable to connect to a local server");
+				else
+				{
+					conoutf("\f3could not connect to server");
+					abortconnect();
+				}
 			}
 			else
 			{

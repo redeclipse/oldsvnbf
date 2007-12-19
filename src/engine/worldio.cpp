@@ -658,6 +658,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		}
 	}
 
+    cl->preload();
+
 	initlights();
 	if (maptype == MAP_OCTA)
 	{

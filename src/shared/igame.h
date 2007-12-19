@@ -29,7 +29,7 @@ struct iclientcom
     virtual int sendpacketclient(ucharbuf &p, bool &reliable, dynent *d) = 0;
     virtual void gameconnect(bool _remote) = 0;
     virtual bool allowedittoggle(bool edit) = 0;
-    virtual void edittoggled(bool on) {}
+    virtual void edittoggled(bool edit) {}
     virtual void writeclientinfo(FILE *f) = 0;
     virtual void toserver(char *text, bool action = false) = 0;
     virtual void changemap(const char *name) = 0;
@@ -54,6 +54,7 @@ struct igameclient
     virtual void suicide(physent *d) = 0;
     virtual void newmap(int size) = 0;
     virtual void startmap(const char *name) = 0;
+    virtual void preload() {}
     virtual void gameplayhud(int w, int h) = 0;
     virtual void drawhudgun() = 0;
     virtual bool canjump() = 0;
@@ -142,8 +143,6 @@ struct igameserver
     virtual void serverinit() = 0;
     virtual void clientdisconnect(int n) = 0;
     virtual int clientconnect(int n, uint ip) = 0;
-    virtual void localdisconnect(int n) = 0;
-    virtual void localconnect(int n) = 0;
     virtual char *servername() = 0;
     virtual void recordpacket(int chan, void *data, int len) {}
     virtual void parsepacket(int sender, int chan, bool reliable, ucharbuf &p) = 0;
