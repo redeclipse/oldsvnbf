@@ -6,7 +6,6 @@ struct physics
 	IVARW(movespeed,	1,			45,			INT_MAX-1);	// speed
 	IVARW(crawlspeed,	1,			25,			INT_MAX-1);	// crawl speed
 	IVARW(jumpvel,		0,			60,			INT_MAX-1);	// extra velocity to add when jumping
-	IVARW(watertype,	WT_WATER,	WT_WATER,	WT_MAX-1);	// water type (0: water, 1: slime, 2: lava)
 	IVARW(watervel,		0,			60,			1024);		// extra water velocity
 
 	IVARP(floatspeed,	10,			100,		1000);
@@ -110,20 +109,18 @@ struct physics
 			
 			if (waterlevel || d->inwater)
 			{
-				int water = watertype();
-				
-				if (waterlevel < 0 && (mat == MAT_WATER && water == WT_WATER))
+				if (waterlevel < 0 && mat == MAT_WATER)
 				{
 					playsound(S_SPLASH1, &d->o, &d->vel);
 				}
-				else if (waterlevel > 0 && (mat == MAT_WATER && water == WT_WATER))
+				else if (waterlevel > 0 && mat == MAT_WATER)
 				{
 					playsound(S_SPLASH2, &d->o, &d->vel);
 				}
-				else if (waterlevel < 0 && ((mat == MAT_WATER && (water == WT_KILL || water == WT_HURT)) || mat == MAT_LAVA))
+				else if (waterlevel < 0 && mat == MAT_LAVA)
 				{
 					part_spawn(v, vec(d->xradius, d->yradius, ENTPART), 0, 5, 200, 500, COL_WHITE);
-					if (mat != MAT_LAVA && d == cl.player1) cl.suicide(d);
+					if (d == cl.player1) cl.suicide(d);
 				}
 			}
 		}
@@ -559,8 +556,6 @@ struct physics
 			if(!pl->inwater && inwater) trigger(pl, local, 0, -1);
 			else if(pl->inwater && !inwater) trigger(pl, local, 0, 1);
 			pl->inwater = inwater;
-	
-			if(pl->state==CS_ALIVE && material==MAT_LAVA) cl.suicide(pl);
 		}
 	
 		return true;

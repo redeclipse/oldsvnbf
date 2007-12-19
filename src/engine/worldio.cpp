@@ -505,13 +505,13 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		string gametype;
 		s_strcpy(gametype, "fps");
 
-		if(hdr.version>=16)
+		if (hdr.version >= 16)
 		{
 			int len = gzgetc(f);
 			gzread(f, gametype, len+1);
 		}
 
-		if(strcmp(gametype, "fps") != 0 && strcmp(gametype, "bfg") != 0)
+		if (strcmp(gametype, "fps") != 0)
 		{
 			samegame = false;
 			conoutf("WARNING: loading map from %s game, ignoring entities except for lights/mapmodels)", gametype);
