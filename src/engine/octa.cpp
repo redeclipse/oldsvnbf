@@ -198,6 +198,13 @@ cube &neighbourcube(int x, int y, int z, int size, int rsize, int orient)
 	return lookupcube(x, y, z, rsize);
 }
 
+int lookupmaterial(const vec &o)
+{
+    if(!insideworld(o)) return MAT_AIR;
+    cube &c = lookupcube(int(o.x), int(o.y), int(o.z));
+    return c.ext ? c.ext->material : MAT_AIR;
+}
+
 uchar octantrectangleoverlap(const ivec &c, int size, const ivec &o, const ivec &s)
 {
 	uchar p = 0xFF; // bitmask of possible collisions with octants. 0 bit = 0 octant, etc

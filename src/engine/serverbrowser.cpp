@@ -231,7 +231,7 @@ int connectthread(void *data)
 
 int connectwithtimeout(ENetSocket sock, char *hostname, ENetAddress &address)
 {
-	s_sprintfd(text)("connecting to %s... (esc to abort)", hostname);
+	s_sprintfd(text)("connecting to %s... (esc to abort)", hostname != NULL ? hostname : "local server");
 	show_out_of_renderloop_progress(0, text);
 
 	if(!connmutex) connmutex = SDL_CreateMutex();

@@ -444,14 +444,6 @@ void _grabmouse(int n)
 }
 VARF(grabmouse, 0, 1, 1, _grabmouse(grabmouse););
 
-int getmatvec(vec v)
-{
-	cube &c = lookupcube((int)v.x, (int)v.y, (int)v.z);
-
-	if (c.ext) return c.ext->material;
-	return MAT_AIR;
-}
-
 VAR(curfps, 1, 0, -1);
 VAR(bestfps, 1, 0, -1);
 VAR(worstfps, 1, 0, -1);
@@ -567,7 +559,7 @@ void startgame(char *load, char *initscript)
 
 	sv->changemap(s, d, 0x00);
 	if (initscript) execute(initscript);
-	localconnect();
+	lanconnect();
 }
 
 void setcaption(char *text)

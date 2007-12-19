@@ -52,18 +52,21 @@ struct fpsrender
 
 		startmodelbatches();
 
-        const char *ffamdl = "player", *bluemdl = "player/blue", *redmdl = "player/red";
+        const char *mdlnames[3] = 
+        { 
+            "player", "player/blue", "player/red"
+        };
 
 		fpsent *d;
         loopv(cl.players) if((d = cl.players[i]) && d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING)
 		{
 			if (cl.player1->state == CS_SPECTATOR && cl.players[i]->clientnum == -cl.cameranum && !isthirdperson()) continue;
-            const char *mdlname = teamskins() || m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? bluemdl : redmdl) : ffamdl;
-			if(d->state!=CS_DEAD || d->superdamage<50) renderplayer(d, false, mdlname);
+            int mdl = teamskins() || m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? 1 : 2) : 0;
+			if(d->state!=CS_DEAD || d->superdamage<50) renderplayer(d, false, mdlnames[mdl]);
 			s_strcpy(d->info, cl.colorname(d, NULL, "@"));
 			if(d->state!=CS_DEAD) particle_text(d->abovehead(), d->info, m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? 16 : 13) : 11, 1);
 		}
-		if(isthirdperson() && (cl.player1->state != CS_SPECTATOR || cl.player1->clientnum == -cl.cameranum)) renderplayer(cl.player1, true, teamskins() || m_team(cl.gamemode, cl.mutators) ? bluemdl : ffamdl);
+		if(isthirdperson() && (cl.player1->state != CS_SPECTATOR || cl.player1->clientnum == -cl.cameranum)) renderplayer(cl.player1, true, teamskins() || m_team(cl.gamemode, cl.mutators) ? mdlnames[1] : mdlnames[0]);
 
 		cl.et.renderentities();
 		cl.ws.renderbouncers();

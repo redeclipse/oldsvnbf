@@ -111,15 +111,15 @@ struct clientcom : iclientcom
 
 	bool allowedittoggle(bool edit)
 	{
-		bool allow = !connected || !remote || m_edit(cl.gamemode);
-		if (!allow) conoutf("editing in multiplayer requires coopedit mode (1)");
-		if (allow && (cl.player1->state != CS_SPECTATOR || cl.player1->state != CS_ALIVE || cl.player1->state != CS_EDITING)) return false;
+		bool allow = !connected || !remote || m_edit(cl.gamemode) ||
+			(cl.player1->state != CS_SPECTATOR && cl.player1->state != CS_ALIVE && cl.player1->state != CS_EDITING);
+		if (!allow) conoutf("you must be both alive and in coopedit to enter editmode");
 		return allow;
 	}
 
-	void edittoggled(bool on)
+	void edittoggled(bool edit)
 	{
-		if (!(editmode = !on))
+		if (!edit)
 		{
 			cl.player1->state = CS_ALIVE;
 			cl.player1->o.z -= player1->eyeheight;		// entinmap wants feet pos
@@ -130,7 +130,7 @@ struct clientcom : iclientcom
 			cl.resetgamestate();
 			cl.player1->state = CS_EDITING;
 		}
-		addmsg(SV_EDITMODE, "ri", on ? 1 : 0);
+		addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 	}
 
 	int parseplayer(const char *arg)
