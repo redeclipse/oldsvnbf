@@ -457,6 +457,7 @@ char *executeret(char *p, int context)
 						}
 						else
 						{
+#ifndef STANDALONE
 							if(id->_context & IDC_WORLD)
 							{
 								if (!editmode)
@@ -465,6 +466,7 @@ char *executeret(char *p, int context)
 									break;
 								}
 							}
+#endif
 							if(id->_override!=NO_OVERRIDE) id->_override = NO_OVERRIDE;
 						}
 						int i1 = parseint(w[1]);
