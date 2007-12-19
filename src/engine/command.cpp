@@ -455,7 +455,18 @@ char *executeret(char *p, int context)
 							}
 							if(id->_override==NO_OVERRIDE) id->_override = *id->_storage;
 						}
-						else if(id->_override!=NO_OVERRIDE) id->_override = NO_OVERRIDE;
+						else
+						{
+							if(id->_context & IDC_WORLD)
+							{
+								if (!editmode)
+								{
+									conoutf("world variable %s can only be modified from editmode", id->_name);
+									break;
+								}
+							}
+							if(id->_override!=NO_OVERRIDE) id->_override = NO_OVERRIDE;
+						}
 						int i1 = parseint(w[1]);
 						if(i1<id->_min || i1>id->_max)
 						{

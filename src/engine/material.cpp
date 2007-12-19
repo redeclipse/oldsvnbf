@@ -562,6 +562,7 @@ void rendermaterials(float zclip, bool refract)
 			switch(curmat)
 			{
 				case MAT_WATER:
+				{
 					if(lastmat==MAT_WATER && lastorient!=O_TOP && m.orient!=O_TOP) break;
 					if(begin) { glEnd(); begin = false; }
 					if(lastmat!=MAT_WATER || (lastorient==O_TOP)!=(m.orient==O_TOP))
@@ -588,10 +589,12 @@ void rendermaterials(float zclip, bool refract)
 						glEnable(GL_TEXTURE_2D);
 						textured = GL_TEXTURE_2D;
 					}
-					glBindTexture(GL_TEXTURE_2D, wslot.sts[m.orient==O_TOP ? 0 : 1].t->gl);
+					int tex = m.orient == O_TOP ? 0 : 1;
+					glBindTexture(GL_TEXTURE_2D, wslot.sts.length() > tex ? wslot.sts[tex].t->gl : notexture->gl);
 					break;
-
+				}
 				case MAT_LAVA:
+				{
 					if(lastmat==MAT_LAVA && lastorient!=O_TOP && m.orient!=O_TOP) break;
 					if(begin) { glEnd(); begin = false; }
 					if(lastmat!=MAT_LAVA)
@@ -614,9 +617,10 @@ void rendermaterials(float zclip, bool refract)
 						glEnable(GL_TEXTURE_2D);
 						textured = GL_TEXTURE_2D;
 					}
-					glBindTexture(GL_TEXTURE_2D, lslot.sts[m.orient==O_TOP ? 0 : 1].t->gl);
+					int tex = m.orient == O_TOP ? 0 : 1;
+					glBindTexture(GL_TEXTURE_2D, lslot.sts.length() > tex ? lslot.sts[tex].t->gl : notexture->gl);
 					break;
-
+				}
 				case MAT_GLASS:
 					if(m.envmap!=EMID_NONE && glassenv && (lastmat!=MAT_GLASS || lastorient!=m.orient))
 						normal = vec(dimension(m.orient)==0 ? dimcoord(m.orient)*2-1 : 0,
@@ -719,7 +723,7 @@ void rendermaterials(float zclip, bool refract)
 				if(m.orient!=O_TOP)
 				{
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
-					renderwaterfall(m, wslot.sts[1].t, wslot.sts[1].scale ? wslot.sts[1].scale : 1, 0.1f, MAT_WATER);
+					if (wslot.sts.length() > 1) renderwaterfall(m, wslot.sts[1].t, wslot.sts[1].scale ? wslot.sts[1].scale : 1, 0.1f, MAT_WATER);
 				}
 				break;
 
@@ -727,12 +731,12 @@ void rendermaterials(float zclip, bool refract)
 				if(m.orient==O_TOP)
 				{
 					if(!vertwater && !begin) { glBegin(GL_QUADS); begin = true; }
-					renderlava(m, lslot.sts[0].t, lslot.sts[0].scale ? lslot.sts[0].scale : 1);
+					if (lslot.sts.length() > 0) renderlava(m, lslot.sts[0].t, lslot.sts[0].scale ? lslot.sts[0].scale : 1);
 				}
 				else
 				{
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
-					renderwaterfall(m, lslot.sts[1].t, lslot.sts[1].scale ? lslot.sts[1].scale : 1, 0.1f, MAT_LAVA);
+					if (lslot.sts.length() > 1) renderwaterfall(m, lslot.sts[1].t, lslot.sts[1].scale ? lslot.sts[1].scale : 1, 0.1f, MAT_LAVA);
 				}
 				break;
 

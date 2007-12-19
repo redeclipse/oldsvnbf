@@ -496,7 +496,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		setvar("lightlod", ohdr.mapllod);
 		setvar("lodsize", ohdr.mapwlod);
 		setvar("ambient", ohdr.ambient);
-		setvar("fullbright", 0);
+		setvar("fullbright", 0, false);
+		setvar("fullbrightlevel", 128, false);
 		setvar("lerpangle", ohdr.lerpangle);
 		setvar("lerpsubdiv", ohdr.lerpsubdiv);
 		setvar("lerpsubdivsize", ohdr.lerpsubdivsize);

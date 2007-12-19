@@ -1030,7 +1030,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 	{
         const elementset &es = lod.eslist[i];
         Slot &slot = lookuptexture(es.texture);
-		Texture *tex = slot.sts[0].t;
+		Texture *tex = slot.sts.length() > 0 ? slot.sts[0].t : notexture;
 		Shader *s = slot.shader;
 
 		extern vector<GLuint> lmtexids;
