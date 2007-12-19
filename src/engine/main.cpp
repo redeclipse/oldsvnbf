@@ -705,9 +705,9 @@ int main(int argc, char **argv)
 			case 'a': fsaa = atoi(&argv[i][2]); break;
 			case 'v': vsync = atoi(&argv[i][2]); break;
 			case 't': fs = 0; break;
-			case 'D': depthbits = atoi(&argv[i][2]); break;
-			case 'C': colorbits = atoi(&argv[i][2]); break;
-			case 'S': stencilbits = atoi(&argv[i][2]); break;
+			case 'z': depthbits = atoi(&argv[i][2]); break;
+			case 'b': colorbits = atoi(&argv[i][2]); break;
+			case 'e': stencilbits = atoi(&argv[i][2]); break;
 			case 'f':
 			{
 				extern int useshaders, shaderprecision;

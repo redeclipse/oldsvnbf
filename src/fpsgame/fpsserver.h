@@ -1844,9 +1844,9 @@ struct fpsserver : igameserver
 	{
 		if(arg[0]=='-') switch(arg[1])
 		{
-			case 'n': s_strcpy(serverdesc, &arg[2]); return true;
-			case 'p': s_strcpy(masterpass, &arg[2]); return true;
-			case 'o': if(atoi(&arg[2])) mastermask = (1<<MM_OPEN) | (1<<MM_VETO); return true;
+			case 'N': s_strcpy(serverdesc, &arg[2]); return true;
+			case 'P': s_strcpy(masterpass, &arg[2]); return true;
+			case 'O': if(atoi(&arg[2])) mastermask = (1<<MM_OPEN) | (1<<MM_VETO); return true;
 			case 'M': s_strcpy(motd, &arg[2]); return true;
 		}
 		return false;
