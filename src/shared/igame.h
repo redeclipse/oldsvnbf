@@ -112,7 +112,7 @@ struct igameclient
 		return !hidehud && !menuactive();
 	}
 
-	virtual bool gamethirdperson() { extern int thirdperson; return thirdperson; } ;
+	virtual bool gamethirdperson() { return false; } ;
 	virtual bool gethudcolour(vec &colour) { return false; }
 
 	virtual void loadworld(gzFile &f, int maptype) { return; };

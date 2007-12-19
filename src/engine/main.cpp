@@ -687,7 +687,7 @@ int main(int argc, char **argv)
 	#endif
 	#endif
 
-	bool dedicated = false;
+	int dedicated = 1;
 	int fs = SDL_FULLSCREEN, par = 0;
 	char *load = NULL, *initscript = NULL;
 
@@ -699,15 +699,15 @@ int main(int argc, char **argv)
 			case 'q': sethomedir(&argv[i][2]); break;
 			case 'k': addpackagedir(&argv[i][2]); break;
 			case 'r': execfile(argv[i][2] ? &argv[i][2] : (char *)"init.cfg"); restoredinits = true; break;
-			case 'd': dedicated = true; break;
+			case 's': dedicated = atoi(&argv[i][2]); break;
             case 'w': scr_w = atoi(&argv[i][2]); if(scr_w<320) scr_w = 320; if(!findarg(argc, argv, "-h")) scr_h = (scr_w*3)/4; break;
             case 'h': scr_h = atoi(&argv[i][2]); if(scr_h<240) scr_h = 240; if(!findarg(argc, argv, "-w")) scr_w = (scr_h*4)/3; break;
-			case 'z': depthbits = atoi(&argv[i][2]); break;
-			case 'b': colorbits = atoi(&argv[i][2]); break;
 			case 'a': fsaa = atoi(&argv[i][2]); break;
 			case 'v': vsync = atoi(&argv[i][2]); break;
 			case 't': fs = 0; break;
-			case 's': stencilbits = atoi(&argv[i][2]); break;
+			case 'D': depthbits = atoi(&argv[i][2]); break;
+			case 'C': colorbits = atoi(&argv[i][2]); break;
+			case 'S': stencilbits = atoi(&argv[i][2]); break;
 			case 'f':
 			{
 				extern int useshaders, shaderprecision;
@@ -752,7 +752,7 @@ int main(int argc, char **argv)
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 
 	conoutf("init: server");
-	initserver(dedicated);  // never returns if dedicated
+	if (dedicated) initserver(dedicated);  // never returns if dedicated > 1
 
 	conoutf("init: video: mode");
 	int resize = SDL_RESIZABLE;

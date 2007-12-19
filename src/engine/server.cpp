@@ -592,11 +592,11 @@ void lanconnect()
 #endif
 }
 
-void initserver(bool dedicated)
+void initserver(int dedicated)
 {
 	initgame(game);
 
-	pubserv = dedicated;
+	pubserv = dedicated > 1;
 	if(!master) master = sv->getdefaultmaster();
 	char *mid = strstr(master, "/");
 	if(!mid) mid = master;
@@ -619,7 +619,7 @@ void initserver(bool dedicated)
 
 	sv->serverinit();
 
-	if(dedicated)		// do not return, this becomes main loop
+	if(dedicated > 2)		// do not return, this becomes main loop
 	{
 #ifdef STANDALONE
 		#ifdef WIN32

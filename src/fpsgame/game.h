@@ -183,11 +183,11 @@ struct demoheader
 #define MAXNAMELEN 15
 #define MAXTEAMLEN 4
 
-#define MAXFOV			(gamethirdperson() ? 100 : 125)
+#define MAXFOV			125
 #define MINFOV			(player1->gunselect == GUN_RIFLE ? 0 : 90)
 
-#define TPDIST			16		// thirdperson distance
-#define TPHEIGHT		8		// thidperson height
+#define ILLUMINATE		48.f
+#define ENTPART			4.f
 
 #define SGRAYS			20
 #define SGSPREAD		3
@@ -417,20 +417,3 @@ static char *serverstatustypes[] = {
 	"\fs\frfull\fS",
 	"\fs\fb?\fS"
 };
-
-#ifndef STANDALONE
-VARFP(thirdperson, 0, 0, 1, cl->fixview());
-VARFP(thirdpersonscale, 0, 150, INT_MAX-1, cl->fixview()); // pitch scale
-
-#define FPSMODHUDMAX		((h*3/FONTH)*FONTH)-(FONTH*5)		// max hud length
-#define ILLUMINATE			48.f
-#define ENTPART				4.f
-
-enum {
-	HD_OLD = 0,
-	HD_LEFT,
-	HD_RIGHT,
-	HD_MAX
-};
-
-#endif
