@@ -7,7 +7,6 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
-		<Option active_target="1"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -155,12 +154,6 @@
 		</Build>
 		<Unit filename="Makefile">
 			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="changes.txt">
-			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
