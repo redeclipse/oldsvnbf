@@ -34,7 +34,7 @@ struct entities : icliententities
 			"carrot",
 			NULL, NULL,
 			"checkpoint",
-			NULL, NULL,
+			NULL, NULL, NULL
 		};
 		static char *bfgunnames[] = {
 			"ammo/pistol", "ammo/shotgun", "ammo/chaingun", "ammo/grenades", "ammo/rockets", "ammo/rifle"
@@ -90,11 +90,12 @@ struct entities : icliententities
 
     void preloadentities()
     {
-        loopi(MAXENTTYPES)
+        loopv(ents)
         {
-            char *mdl = entmdlname(i);
-            if(!mdl) continue;
-            loadmodel(mdl, -1, true);
+        	extentity &e = *ents[i];
+			char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+            if(!mdlname) continue;
+            loadmodel(mdlname, -1, true);
         }
     }
 

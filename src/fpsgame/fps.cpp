@@ -491,8 +491,8 @@ struct fpsclient : igameclient
             if(!file) continue;
             s_sprintfd(mdl)("hudguns/%s", file);
             loadmodel(mdl, -1, true);
-            s_sprintf(mdl)("hudguns/%s/blue", file);
-            loadmodel(mdl, -1, true);
+            //s_sprintf(mdl)("hudguns/%s/blue", file);
+            //loadmodel(mdl, -1, true);
             s_sprintf(mdl)("vwep/%s", file);
             loadmodel(mdl, -1, true);
         }
