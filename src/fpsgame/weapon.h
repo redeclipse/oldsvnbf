@@ -213,8 +213,8 @@ struct weaponstate
 		void check(int time)
 		{
 			if (sndchans.inrange(schan) && !sndchans[schan].playing()) schan = -1;
-            if (bnctype == BNC_SHOT) regular_particle_splash(5, 1, 500, vec(o).sub(vel));
-			else if (bnctype == BNC_GIBS) particle_splash(3, 1, 10000, vec(o).sub(vel));
+            if (bnctype == BNC_SHOT) regular_particle_splash(5, 1, 500, o);
+			else if (bnctype == BNC_GIBS) particle_splash(3, 1, 10000, o);
 		}
 
 		bool update(int millis, int time, int qtime)
