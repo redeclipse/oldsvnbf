@@ -1135,7 +1135,7 @@ void patchlight(int quality)
 ICOMMAND(patchlight, "s", (char *s), int n = *s ? atoi(s) : 3; patchlight(n));
 
 VARFW(fullbright, 0, 0, 1, initlights());
-VARW(fullbrightlevel, 0, 128, 255);
+VARFW(fullbrightlevel, 0, 128, 255, initlights());
 
 vector<GLuint> lmtexids;
 

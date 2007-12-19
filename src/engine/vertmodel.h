@@ -231,11 +231,11 @@ struct vertmodel : model
             if(override)
             {
                 Slot &slot = lookuptexture(override);
-                s = slot.sts[0].t;
-                if(slot.sts.length() >= 2)
+                s = slot.sts.length() > 0 ? slot.sts[0].t : notexture;
+                if(slot.sts.length() > 1)
                 {
                     m = slot.sts[1].t;
-                    if(n && slot.sts.length() >= 3) n = slot.sts[2].t;
+                    if(n && slot.sts.length() > 2) n = slot.sts[2].t;
                 }
             }
             if((renderpath==R_FIXEDFUNCTION || !lightmodels) &&

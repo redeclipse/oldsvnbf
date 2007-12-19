@@ -1520,7 +1520,7 @@ struct texturegui : g3d_callback
                         Texture *tex = notexture;
 						Slot &slot = lookuptexture(texmru[ti], false);
 						if(slot.sts.empty()) continue;
-						else if(slot.loaded) tex = slot.sts[0].t;
+						else if(slot.loaded && slot.sts.length() > 0) tex = slot.sts[0].t;
 						else if(slot.thumbnail) tex = slot.thumbnail;
 						else if(lastmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = lastmillis; }
                         if(g.texture(tex, 1.0)&G3D_UP && (slot.loaded || tex!=notexture))
@@ -1586,7 +1586,8 @@ void render_texture_panel(int w, int h)
 			int s = (i == 3 ? 285 : 220), ti = curtexindex+i-3;
 			if(ti>=0 && ti<curtexnum)
 			{
-				Texture *tex = lookuptexture(texmru[ti]).sts[0].t;
+				Slot &st = lookuptexture(texmru[ti]);
+				Texture *tex = st.sts.length() > 0 ? st.sts[0].t : notexture;
 				float sx = min(1, tex->xs/(float)tex->ys), sy = min(1, tex->ys/(float)tex->xs);
 				glBindTexture(GL_TEXTURE_2D, tex->gl);
 				glColor4f(0, 0, 0, texpaneltimer/1000.0f);
