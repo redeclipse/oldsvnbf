@@ -12,7 +12,7 @@ static bool cguifirstpass;
 static hashtable<char *, char *> guis;
 static vector<char *> guistack;
 static vector<char *> executelater;
-static bool clearlater = false;
+static bool shouldclearmenu = true, clearlater = false;
 
 VARP(menudistance,  16, 40,  256);
 VARP(menuautoclose, 32, 120, 4096);
@@ -40,6 +40,14 @@ void cleargui_(int *n)
 	intret(cleargui(*n));
 }
 
+void guistayopen(char *contents)
+{
+    bool oldclearmenu = shouldclearmenu;
+    shouldclearmenu = false;
+    execute(contents);
+    shouldclearmenu = oldclearmenu;
+}
+
 #define GUI_TITLE_COLOR  0xFFDD88
 #define GUI_BUTTON_COLOR 0xFFFFFF
 #define GUI_TEXT_COLOR	0xDDFFDD
@@ -52,7 +60,7 @@ void guibutton(char *name, char *action, char *icon)
 	if(ret&G3D_UP)
 	{
 		executelater.add(newstring(*action ? action : name));
-		clearlater = true;
+        if(shouldclearmenu) clearlater = true;
 	}
 	else if(ret&G3D_ROLLOVER)
 	{
@@ -70,7 +78,7 @@ void guiimage(char *path, char *action, float *scale, int *overlaid)
 		if(*action)
 		{
 			executelater.add(newstring(action));
-			clearlater = true;
+            if(shouldclearmenu) clearlater = true;
 		}
 	}
 	else if(ret&G3D_ROLLOVER)
@@ -236,7 +244,7 @@ void guiservers()
 		{
 			s_sprintfd(connect)("connect %s", name);
 			executelater.add(newstring(connect));
-			clearlater = true;
+            if(shouldclearmenu) clearlater = true;
 		}
 	}
 }
@@ -247,6 +255,7 @@ COMMAND(guitext, "ss");
 COMMAND(guiservers, "s");
 COMMANDN(cleargui, cleargui_, "i");
 COMMAND(showgui, "s");
+COMMAND(guistayopen, "s");
 
 COMMAND(guilist, "s");
 COMMAND(guititle, "s");

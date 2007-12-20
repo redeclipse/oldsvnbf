@@ -38,6 +38,7 @@
 					<Add option="-fsigned-char"/>
 					<Add option="-fomit-frame-pointer"/>
 					<Add option="-ffast-math"/>
+					<Add option="-fno-strict-aliasing"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
 					<Add directory="fpsgame"/>
@@ -115,6 +116,7 @@
 					<Add option="-Wall"/>
 					<Add option="-fsigned-char"/>
 					<Add option="-fomit-frame-pointer"/>
+					<Add option="-fno-strict-aliasing"/>
 					<Add option="-DSTANDALONE"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
@@ -128,27 +130,6 @@
 					<Add library="winmm"/>
 					<Add library="z"/>
 					<Add directory="lib\mingw"/>
-				</Linker>
-			</Target>
-			<Target title="master">
-				<Option output="..\bin\bloodfrontier_master.exe"/>
-				<Option working_dir="..\bin"/>
-				<Option object_output=".objs\master"/>
-				<Option deps_output=".deps\master"/>
-				<Option type="1"/>
-				<Option compiler="0"/>
-				<Option includeInTargetAll="0"/>
-				<Option projectCompilerOptionsRelation="1"/>
-				<Option projectLinkerOptionsRelation="1"/>
-				<Option projectIncludeDirsRelation="1"/>
-				<Option projectResourceIncludeDirsRelation="1"/>
-				<Option projectLibDirsRelation="1"/>
-				<Compiler>
-					<Add option="-O3"/>
-					<Add option="-Wall"/>
-				</Compiler>
-				<Linker>
-					<Add option="-s"/>
 				</Linker>
 			</Target>
 		</Build>
@@ -593,50 +574,42 @@
 		</Unit>
 		<Unit filename="master\cgi.c">
 			<Option compilerVar="CPP"/>
-			<Option target="master"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="master\cgi.h">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>
 			<Option link="0"/>
-			<Option target="master"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="master\dbg.c">
 			<Option compilerVar="CPP"/>
-			<Option target="master"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="master\dbg.h">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>
 			<Option link="0"/>
-			<Option target="master"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="master\def.h">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>
 			<Option link="0"/>
-			<Option target="master"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="master\ms.c">
 			<Option compilerVar="CPP"/>
-			<Option target="master"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="master\utl.c">
 			<Option compilerVar="CPP"/>
-			<Option target="master"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="master\utl.h">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>
 			<Option link="0"/>
-			<Option target="master"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="shared\command.h">
