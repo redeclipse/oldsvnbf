@@ -285,7 +285,7 @@ extern void getlavacolour(uchar *lcol);
 // server
 extern vector<char *> gameargs;
 
-extern void initserver(int dedicated);
+extern void initserver();
 extern void cleanupserver();
 extern void serverslice(uint timeout);
 
