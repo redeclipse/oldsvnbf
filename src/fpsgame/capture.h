@@ -227,7 +227,7 @@ struct captureclient : capturestate
 
 	void drawblips(int x, int y, int s, int type, bool skipenemy = false)
 	{
-		const char *textures[3] = {"packages/textures/blip_red.png", "packages/textures/blip_grey.png", "packages/textures/blip_blue.png"};
+		const char *textures[3] = {"textures/blip_red.png", "textures/blip_grey.png", "textures/blip_blue.png"};
 		settexture(textures[max(type+1, 0)]);
 		glBegin(GL_QUADS);
         float scale = radarscale<=0 || radarscale>cl.maxradarscale() ? cl.maxradarscale() : radarscale;
@@ -264,7 +264,7 @@ struct captureclient : capturestate
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		int x = 1800*w/h*1/80, y = 1800*(hidehud || hidestats ? 28 : 27)/40, s = 1800*w/h*5/40;
 		glColor4f(1, 1, 1, hudblend*0.01f);
-		settexture("packages/textures/radar.png");
+		settexture("textures/radar.png");
 		glBegin(GL_QUADS);
 		drawradar(float(x), float(y), float(s));
 		glEnd();

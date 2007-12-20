@@ -87,7 +87,7 @@ static void renderflares(int time)
 	glDisable(GL_DEPTH_TEST);
 
 	static Texture *flaretex = NULL;
-	if(!flaretex) flaretex = textureload("packages/textures/lensflares.png");
+	if(!flaretex) flaretex = textureload("textures/lensflares.png");
 	glBindTexture(GL_TEXTURE_2D, flaretex->gl);
 	glBegin(GL_QUADS);
 	loopi(flarecnt)
@@ -561,17 +561,17 @@ static Texture *parttexs[PART_TEXS];
 
 void particleinit()
 {
-    parttexs[0] = textureload("packages/textures/base.png");
-    parttexs[1] = textureload("packages/textures/ball1.png");
-    parttexs[2] = textureload("packages/textures/smoke.png");
-    parttexs[3] = textureload("packages/textures/ball2.png");
-    parttexs[4] = textureload("packages/textures/ball3.png");
-    parttexs[5] = textureload("packages/textures/flare.jpg");
-    parttexs[6] = textureload("packages/textures/spark.png");
-    parttexs[7] = textureload("packages/textures/explosion.jpg");
-    parttexs[8] = textureload("packages/textures/blood.png");
-    parttexs[9] = textureload("packages/textures/lightning.png");
-	parttexs[10] = textureload("packages/textures/electricty.png");
+    parttexs[0] = textureload("textures/base.png");
+    parttexs[1] = textureload("textures/ball1.png");
+    parttexs[2] = textureload("textures/smoke.png");
+    parttexs[3] = textureload("textures/ball2.png");
+    parttexs[4] = textureload("textures/ball3.png");
+    parttexs[5] = textureload("textures/flare.jpg");
+    parttexs[6] = textureload("textures/spark.png");
+    parttexs[7] = textureload("textures/explosion.jpg");
+    parttexs[8] = textureload("textures/blood.png");
+    parttexs[9] = textureload("textures/lightning.png");
+	parttexs[10] = textureload("textures/electricty.png");
 	loopi(MAXPARTYPES) parlist[i] = NULL;
 }
 

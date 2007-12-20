@@ -101,9 +101,7 @@ void screenshot(char *filename)
 		dst += image->pitch;
 	}
 	delete[] tmp;
-	char *pname = "";
-	if (!*filename) pname = "packages/";
-	SDL_SaveBMP(image, findfile(makefile(*filename ? filename : mapname, pname, ".bmp", true, true), "wb"));
+	SDL_SaveBMP(image, findfile(makefile(*filename ? filename : mapname, ".bmp", true, true), "wb"));
 	SDL_FreeSurface(image);
 }
 
@@ -128,7 +126,7 @@ void computescreen(const char *text, Texture *t)
 		glLoadIdentity();
 		glOrtho(0, w, h, 0, -1, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
-		settexture("packages/textures/loadback.jpg");
+		settexture("textures/loadback.jpg");
 
 		glColor3f(1, 1, 1);
 		glBegin(GL_QUADS);
@@ -158,7 +156,7 @@ void computescreen(const char *text, Texture *t)
 			glEnable(GL_BLEND);
 		}
 		int x = (w-512)/2, y = 128;
-		settexture("packages/textures/logo.png");
+		settexture("textures/logo.png");
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); glVertex2i(x,	 y);
 		glTexCoord2f(1, 0); glVertex2i(x+512, y);
@@ -534,7 +532,7 @@ void rehash(bool reload)
 	}
 
 	persistidents = false;
-	exec("packages/defaults.cfg");
+	exec("defaults.cfg");
 	persistidents = true;
 
 	execfile("servers.cfg");
@@ -690,6 +688,7 @@ int main(int argc, char **argv)
 	char *load = NULL, *initscript = NULL;
 
 	initing = true;
+	addpackagedir("data");
 	for(int i = 1; i<argc; i++)
 	{
 		if(argv[i][0]=='-') switch(argv[i][1])
@@ -715,10 +714,7 @@ int main(int argc, char **argv)
 			}
 			case 'l':
 			{
-				char pkgdir[] = "packages/";
-				load = strstr(&argv[i][2], pkgdir);
-				if(load) load += sizeof(pkgdir)-1;
-				else load = &argv[i][2];
+				load = &argv[i][2];
 				break;
 			}
 			case 'x': initscript = &argv[i][2]; break;
@@ -822,13 +818,13 @@ int main(int argc, char **argv)
 
 	conoutf("init: gl");
     gl_init(scr_w, scr_h, hasbpp ? colorbits : 0, config&1 ? depthbits : 0, config&4 ? fsaa : 0);
-    notexture = textureload("packages/textures/notexture.png");
+    notexture = textureload("textures/notexture.png");
     if(!notexture) fatal("could not find core textures");
 
 	conoutf("init: console");
 	persistidents = false;
-	if(!execfile("packages/stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
-	if(!execfile("packages/font.cfg")) fatal("cannot find font definitions");
+	if(!execfile("stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
+	if(!execfile("font.cfg")) fatal("cannot find font definitions");
 	if(!setfont("default")) fatal("no default font specified");
 
 	computescreen("initializing...");

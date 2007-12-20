@@ -665,14 +665,14 @@ struct fpsclient : igameclient
 
 					glColor4f(1.f, 1.f, 1.f, amt);
 
-					rendericon("packages/textures/logo.jpg", ox+20-x, oy-75, 64, 64);
+					rendericon("textures/logo.jpg", ox+20-x, oy-75, 64, 64);
 
 					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, maptitle);
 
 					glColor4f(1.f, 1.f, 1.f, fade);
-					rendericon("packages/textures/overlay.png", ox+20-x, oy-260, 144, 144);
+					rendericon("textures/overlay.png", ox+20-x, oy-260, 144, 144);
 					if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
-						rendericon("packages/textures/logo.jpg", ox+20-x, oy-260, 144, 144);
+						rendericon("textures/logo.jpg", ox+20-x, oy-260, 144, 144);
 
 					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, m_name(gamemode));
 				}
@@ -694,7 +694,7 @@ struct fpsclient : igameclient
 
 					if (fov < 90)
 					{
-						settexture("packages/textures/overlay_zoom.png");
+						settexture("textures/overlay_zoom.png");
 
 						glColor4f(1.f, 1.f, 1.f, 1.f);
 
@@ -711,7 +711,7 @@ struct fpsclient : igameclient
 					if (damageresidue > 0)
 					{
 						float pc = float(min(damageresidue, 100))/100.f;
-						settexture("packages/textures/overlay_damage.png");
+						settexture("textures/overlay_damage.png");
 
 						glColor4f(1.f, 1.f, 1.f, pc);
 
@@ -726,7 +726,7 @@ struct fpsclient : igameclient
 					}
 
 					glColor4f(1.f, 1.f, 1.f, amt);
-					rendericon("packages/textures/logo.jpg", 20, oy-75, 64, 64);
+					rendericon("textures/logo.jpg", 20, oy-75, 64, 64);
 
 					if (d != NULL)
 					{
@@ -764,7 +764,7 @@ struct fpsclient : igameclient
 				glOrtho(0, w, h, 0, -1, 1);
 				glColor3f(1, 1, 1);
 
-				settexture("packages/textures/loadback.jpg");
+				settexture("textures/loadback.jpg");
 
 				glBegin(GL_QUADS);
 
@@ -1276,11 +1276,11 @@ struct fpsclient : igameclient
 	char *gametext() { return mapname; }
 };
 
-REGISTERGAME(fpsgame, "fps", new fpsclient(), new fpsserver());
+REGISTERGAME(fpsgame, "bfa", new fpsclient(), new fpsserver());
 
 #else
 
-REGISTERGAME(fpsgame, "fps", NULL, new fpsserver());
+REGISTERGAME(fpsgame, "bfa", NULL, new fpsserver());
 
 #endif
 

@@ -1041,8 +1041,8 @@ struct clientcom : iclientcom
 				if(!m_edit(cl.gamemode)) return;
 				string oldname;
 				s_strcpy(oldname, mapname);
-				s_sprintfd(mname)("%s", makefile(mapname, "packages/", ".bgz", false, true));
-				s_sprintfd(fname)("packages/%s.bgz", mname);
+				s_sprintfd(mname)("%s", makefile(mapname, ".bgz", false, true));
+				s_sprintfd(fname)("%s.bgz", mname);
 				const char *file = findfile(fname, "wb");
 				FILE *map = fopen(file, "wb");
 				if(!map) return;
@@ -1109,7 +1109,7 @@ struct clientcom : iclientcom
 		conoutf("sending map...");
 		s_sprintfd(mname)("sendmap_%d", cl.lastmillis);
 		save_world(mname, true);
-		s_sprintfd(fname)("packages/base/%s.ogz", mname);
+		s_sprintfd(fname)("maps/%s.ogz", mname);
 		const char *file = findfile(fname, "rb");
 		FILE *map = fopen(file, "rb");
 		if(map)

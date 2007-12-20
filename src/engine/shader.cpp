@@ -15,7 +15,7 @@ static int dirtyparams = 0;
 
 void loadshaders()
 {
-    exec("packages/stdshader.cfg");
+    exec("stdshader.cfg");
     defaultshader = lookupshaderbyname("default");
     notextureshader = lookupshaderbyname("notexture");
     nocolorshader = lookupshaderbyname("nocolor");

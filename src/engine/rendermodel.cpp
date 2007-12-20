@@ -224,7 +224,7 @@ model *loadmodel(const char *name, int i, bool msg)
 	{
 		if(msg)
 		{
-			s_sprintfd(filename)("packages/models/%s", name);
+			s_sprintfd(filename)("models/%s", name);
 			show_out_of_renderloop_progress(0, filename);
 		}
 		m = new md2(name);
@@ -788,13 +788,13 @@ void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&mas
 {
 #define ifnoload(tex, path) if((tex = textureload(path, 0, true, false))==notexture)
 #define tryload(tex, path, prefix, name) \
-	s_sprintfd(path)("%spackages/models/%s/%s.jpg", prefix, dir, name); \
+	s_sprintfd(path)("%smodels/%s/%s.jpg", prefix, dir, name); \
 	ifnoload(tex, path) \
 	{ \
 		strcpy(path+strlen(path)-3, "png"); \
 		ifnoload(tex, path) \
 		{ \
-			s_sprintf(path)("%spackages/models/%s/%s.jpg", prefix, altdir, name); \
+			s_sprintf(path)("%smodels/%s/%s.jpg", prefix, altdir, name); \
 			ifnoload(tex, path) \
 			{ \
 				strcpy(path+strlen(path)-3, "png"); \

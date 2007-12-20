@@ -17,7 +17,7 @@ bool pubserv = false;
 int totalmillis = 0, lastmillis = 0;
 int uprate = 0, maxclients = DEFAULTCLIENTS;
 char *ip = "", *master = NULL;
-char *game = "fps";
+char *game = "bfa";
 
 igameclient *cl = NULL;
 igameserver *sv = NULL;
@@ -38,7 +38,11 @@ void initgame(char *game)
 {
 	igame **ig = gamereg->access(game);
 	if(!ig) fatal("cannot start game module: ", game);
+
 	sv = (*ig)->newserver();
+	appendhomedir(sv->gameid());
+	addpackagedir(sv->gameid());
+
 	cl = (*ig)->newclient();
 	if(cl)
 	{
@@ -46,6 +50,7 @@ void initgame(char *game)
 		et = cl->getents();
 		cl->initclient();
 	}
+
 	loopv(gameargs)
 	{
 		if(!cl || !cl->clientoption(gameargs[i]))

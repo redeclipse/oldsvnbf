@@ -317,7 +317,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 	if(tex && !tname)
 	{
 		static string pname;
-		s_sprintf(pname)("packages/%s", tex->name);
+		s_sprintf(pname)("%s", tex->name);
 		tname = pname;
 	}
 	if(!tname) return NULL;
@@ -501,8 +501,8 @@ void autograss(char *name)
 {
 	Slot &s = slots.last();
 	DELETEA(s.autograss);
-	s_sprintfd(pname)("packages/%s", name);
-	s.autograss = newstring(name[0] ? pname : "packages/textures/grass.png");
+	s_sprintfd(pname)("%s", name);
+	s.autograss = newstring(name[0] ? pname : "textures/grass.png");
 }
 
 COMMAND(autograss, "s");
@@ -584,7 +584,7 @@ static void mergedepth(SDL_Surface *c, SDL_Surface *z)
 static void addname(vector<char> &key, Slot &slot, Slot::Tex &t)
 {
 	if(t.combined>=0) key.add('&');
-	s_sprintfd(tname)("packages/%s", t.name);
+	s_sprintfd(tname)("%s", t.name);
 	for(const char *s = tname; *s; key.add(*s++));
 	if(t.rotation)
 	{
@@ -879,7 +879,7 @@ Texture *cubemaploadwildcard(const char *name, bool mipit, bool msg)
 Texture *cubemapload(const char *name, bool mipit, bool msg)
 {
 	if(!hasCM) return NULL;
-	s_sprintfd(pname)("packages/%s", name);
+	s_sprintfd(pname)("%s", name);
 	Texture *t = NULL;
 	if(!strchr(pname, '*'))
 	{

@@ -142,7 +142,7 @@ void checksound()
 	string buf; \
 	if (!slot.sample->sound) \
 	{ \
-		s_sprintf(buf)("packages/sounds/%s", slot.sample->name); \
+		s_sprintf(buf)("sounds/%s", slot.sample->name); \
 		slot.sample->load(findfile(buf, "rb"), slot.maxuses); \
 	} \
 	FMOD_CHANNEL *channel = NULL; \
@@ -329,7 +329,7 @@ void music(char *name, char *cmd)
 	if(soundvol && musicvol && *name)
 	{
 		if(cmd[0]) musicdonecmd = newstring(cmd);
-		s_sprintfd(sn)("packages/%s", name);
+		s_sprintfd(sn)("%s", name);
 		const char *file = findfile(path(sn), "rb");
 		#ifdef USE_MIXER
 			if((mod = Mix_LoadMUS(file)))
@@ -541,7 +541,7 @@ void playsound(int n, const vec *loc, extentity *ent)
         string buf;
         loopi(sizeof(exts)/sizeof(exts[0]))
 		{
-            s_sprintf(buf)("packages/sounds/%s%s", slot.s->name, exts[i]);
+            s_sprintf(buf)("sounds/%s%s", slot.s->name, exts[i]);
 			const char *file = findfile(path(buf), "rb");
 			#ifdef USE_MIXER
 				slot.s->sound = Mix_LoadWAV(file);

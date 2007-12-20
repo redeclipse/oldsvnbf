@@ -15,7 +15,7 @@
 string homedir = "";
 vector<char *> packagedirs;
 
-char *makefile(char *s, char *p, char *e, bool ext, bool copy)
+char *makefile(char *s, char *e, bool ext, bool copy)
 {
     if(copy)
     {
@@ -39,7 +39,7 @@ char *makefile(char *s, char *p, char *e, bool ext, bool copy)
 
 	while (true)
 	{
-		s_sprintf(f)("%s%s%s", *p ? p : "", s, *e ? e : "");
+		s_sprintf(f)("%s%s", s, *e ? e : "");
 		if (fileexists(findfile(f, "r"), "r")) { s_sprintf(s)("%s.%.4d", m, d++); }
 		else break;
 	}
@@ -128,6 +128,11 @@ static void fixdir(char *dir)
 void sethomedir(const char *dir)
 {
     fixdir(s_strcpy(homedir, dir));
+}
+
+void appendhomedir(const char *dir)
+{
+    fixdir(s_strcat(homedir, dir));
 }
 
 void addpackagedir(const char *dir)

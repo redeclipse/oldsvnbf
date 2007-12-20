@@ -1281,7 +1281,7 @@ void loadcaustics()
     if(caustictex[0]) return;
     loopi(NUMCAUSTICS)
     {
-        s_sprintfd(name)("<mad:0.6,0.4>packages/caustics/caust%.2d.png", i);
+        s_sprintfd(name)("<mad:0.6,0.4>caustics/caust%.2d.png", i);
         caustictex[i] = textureload(name);
     }
 }
