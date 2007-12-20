@@ -651,17 +651,16 @@ void updateframe(bool dorender)
 
 			case SDL_MOUSEMOTION:
 				if (ignore) { ignore--; break; }
-				if (!(screen->flags&SDL_FULLSCREEN) && grabmouse)
+				if ((screen->flags&SDL_FULLSCREEN) || grabmouse)
 				{
 #ifdef __APPLE__
 					if (event.motion.y == 0) break;  //let mac users drag windows via the title bar
 #endif
-					if (event.motion.x == screen->w / 2 && event.motion.y == screen->h / 2) break;
-					SDL_WarpMouse(screen->w / 2, screen->h / 2);
-				}
-				if ((screen->flags&SDL_FULLSCREEN) || grabmouse)
+					if (event.motion.x == screen->w/2 && event.motion.y == screen->h/2) break;
 					if(!g3d_movecursor(event.motion.xrel, event.motion.yrel))
 						cl->mousemove(event.motion.xrel, event.motion.yrel);
+					SDL_WarpMouse(screen->w/2, screen->h/2);
+				}
 				break;
 
 			case SDL_MOUSEBUTTONDOWN:

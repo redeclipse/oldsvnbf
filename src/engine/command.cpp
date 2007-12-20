@@ -462,7 +462,7 @@ char *executeret(char *p, int context)
 							{
 								if (!editmode)
 								{
-									conoutf("world variable %s can only be modified from editmode", id->_name);
+									conoutf("world variable %s may only be modified in editmode", id->_name);
 									break;
 								}
 							}
@@ -481,7 +481,8 @@ char *executeret(char *p, int context)
 						id->changed();											 // call trigger function if available
 
 #ifndef STANDALONE
-						if (id->_context & IDC_WORLD) cl->editvariable(id->_name, i1);
+						if (!overrideidents && id->_context & IDC_WORLD)
+							cl->editvariable(id->_name, i1); // update others
 #endif
 					}
 					break;

@@ -1410,6 +1410,13 @@ struct fpsserver : igameserver
 				senddemo(sender, getint(p));
 				break;
 
+			case SV_EDITVAR:
+			{
+				getstring(text, p);
+				getint(p);
+				break;
+			}
+
 			case SV_GETMAP:
 				if(mapdata)
 				{
