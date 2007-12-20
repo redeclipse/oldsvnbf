@@ -12,6 +12,7 @@ void fatal(char *s, char *o) { void cleanupserver(); cleanupserver(); printf("se
 #endif
 
 #define DEFAULTCLIENTS 6
+int servertype = 1; // 0: none, 1: private, 2: public, 3: dedicated
 bool pubserv = false;
 int totalmillis = 0, lastmillis = 0;
 int uprate = 0, maxclients = DEFAULTCLIENTS;
@@ -508,22 +509,22 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 #endif
 	sv->serverupdate(lastmillis, totalmillis);
 
-	sendpongs();
-
 	if (pubserv)
 	{
-		if(*masterpath) checkmasterreply();
+		sendpongs();
+		
+		if (*masterpath) checkmasterreply();
 
-		if(totalmillis-lastupdatemaster>60*60*1000 && *masterpath)		// send alive signal to masterserver every hour of uptime
+		if (totalmillis-lastupdatemaster > 60*60*1000 && *masterpath)		// send alive signal to masterserver every hour of uptime
 		{
 			updatemasterserver();
 			lastupdatemaster = totalmillis;
 		}
 
-		if(totalmillis-laststatus>60*1000)	// display bandwidth stats, useful for server ops
+		if (totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
 		{
 			laststatus = totalmillis;
-			if(nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
+			if (nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
 			bsend = brec = 0;
 		}
 	}
@@ -592,48 +593,62 @@ void lanconnect()
 #endif
 }
 
-void initserver(int dedicated)
+void initserver()
 {
 	initgame(game);
 
-	pubserv = dedicated > 1;
-	if(!master) master = sv->getdefaultmaster();
-	char *mid = strstr(master, "/");
-	if(!mid) mid = master;
-	s_strcpy(masterpath, mid);
-	s_strncpy(masterbase, master, mid-master+1);
-
-	ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
-	if(*ip)
+	if (servertype)
 	{
-		if(enet_address_set_host(&address, ip)<0) printf("WARNING: server ip not resolved");
-		else msaddress.host = address.host;
-	}
-	serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
-	if(!serverhost) { conoutf("could not create server host"); return; }
-	loopi(maxclients) serverhost->peers[i].data = NULL;
-	address.port = sv->serverinfoport();
-	pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
-	if(pongsock == ENET_SOCKET_NULL) fatal("could not create server info socket");
-	else enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
+		pubserv = servertype >= 2 ? true : false;
+		if(!master) master = sv->getdefaultmaster();
+		char *mid = strstr(master, "/");
+		if(!mid) mid = master;
+		s_strcpy(masterpath, mid);
+		s_strncpy(masterbase, master, mid-master+1);
+	
+		ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
+		if (*ip)
+		{
+			if (enet_address_set_host(&address, ip) < 0) printf("WARNING: server ip not resolved");
+			else msaddress.host = address.host;
+		}
+		serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
+		if (!serverhost) { conoutf("could not create server socket"); return; }
+		loopi (maxclients) serverhost->peers[i].data = NULL;
 
-	sv->serverinit();
-
-	if(dedicated > 2)		// do not return, this becomes main loop
-	{
-#ifdef STANDALONE
-		#ifdef WIN32
-		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-		#endif
-		printf("dedicated server started, waiting for clients...\nCtrl-C to exit\n\n");
-		atexit(enet_deinitialize);
-		atexit(cleanupserver);
-		enet_time_set(0);
-		if(*masterpath) updatemasterserver();
-		for(;;) serverslice(5);
-#else
-		if(*masterpath) updatemasterserver();
-#endif
+		if (pubserv)
+		{
+			address.port = sv->serverinfoport();
+			pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
+			if (pongsock == ENET_SOCKET_NULL)
+			{
+				conoutf("could not create server info socket, publicity disabled");
+				pubserv = false;
+			}
+			else
+			{
+				enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
+			}
+		}
+	
+		sv->serverinit();
+	
+		if(servertype >= 3)
+		{
+			#ifdef WIN32
+			SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+			#endif
+			printf("dedicated server started, waiting for clients...\nCtrl-C to exit\n\n");
+			atexit(enet_deinitialize);
+			atexit(cleanupserver);
+			enet_time_set(0);
+			if(pubserv && *masterpath) updatemasterserver();
+			for(;;) serverslice(5);
+		}
+		else
+		{
+			if(pubserv && *masterpath) updatemasterserver();
+		}
 	}
 }
 
@@ -652,6 +667,7 @@ bool serveroption(char *opt)
 		case 'i': ip = opt+2; return true;
 		case 'm': master = opt+2; return true;
 		case 'g': game = opt+2; return true;
+		case 's': servertype = atoi(opt+2); return true;
 		default: return false;
 	}
 }
@@ -659,9 +675,10 @@ bool serveroption(char *opt)
 #ifdef STANDALONE
 int main(int argc, char* argv[])
 {
+	servertype = 3;
 	for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
-	initserver(true);
+	initserver();
 	return 0;
 }
 #endif
