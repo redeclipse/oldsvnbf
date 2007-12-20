@@ -771,7 +771,7 @@ struct clientcom : iclientcom
 				break;
 			}
 
-			case SV_EDITV:
+			case SV_EDITVAR:
 			{
 				if (!d) return;
 				getstring(text, p);

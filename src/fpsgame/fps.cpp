@@ -812,7 +812,7 @@ struct fpsclient : igameclient
 
 	void editvariable(char *name, int value)
 	{
-        if(m_edit(gamemode)) cc.addmsg(SV_EDITV, "rsi", name, value);
+        if(m_edit(gamemode)) cc.addmsg(SV_EDITVAR, "rsi", name, value);
 	}
 
 	void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)
