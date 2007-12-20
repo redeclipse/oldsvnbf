@@ -14,7 +14,7 @@ void setnames(const char *fname, const char *cname)
 	string fn, cn;
 
 	if (fname != NULL) s_sprintf(fn)("%s", fname);
-	else s_sprintf(fn)("%sgame/untitled", sv->gameid());
+	else s_sprintf(fn)("maps/untitled");
 
 	if (cname != NULL) s_sprintf(cn)("%s", cname);
 	else s_sprintf(cn)("%s", fn);
@@ -30,11 +30,11 @@ void setnames(const char *fname, const char *cname)
 	}
 	else
 	{
-		s_sprintf(pakname)("%sgame", sv->gameid());
+		s_sprintf(pakname)("maps");
 		s_strcpy(cfgname, name);
 	}
 	if(strpbrk(fn, "/\\")) s_strcpy(mapname, fn);
-	else s_sprintf(mapname)("%sgame/%s", sv->gameid(), fn);
+	else s_sprintf(mapname)("maps/%s", fn);
 
 	loopi(MAP_MAX) s_sprintf(bgzname[i])("packages/%s%s", mapname, mapexts[i]);
 
@@ -238,7 +238,7 @@ void save_world(char *mname, bool nolms)
 
 	string fname;
 	if(strpbrk(mname, "/\\")) s_strcpy(fname, mname);
-	else s_sprintf(fname)("%sgame/%s", sv->gameid(), mname);
+	else s_sprintf(fname)("maps/%s", mname);
 
 	setnames(makefile(fname, "packages/", ".bgz", false, false));
 

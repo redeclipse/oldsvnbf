@@ -931,11 +931,7 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 
 	resetmap();
 	if (mname != NULL) setnames(mname);
-	else
-	{
-		s_sprintfd(name)("%sgame/untitled", sv->gameid());
-		setnames(name);
-	}
+	else setnames("maps/untitled");
 	strncpy(hdr.head, "BFGZ", 4);
 
 	hdr.version = MAPVERSION;
