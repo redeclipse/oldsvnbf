@@ -82,7 +82,7 @@ extern void newgui(char *name, char *contents);
 extern void showgui(char *name);
 
 // world
-extern bool emptymap(int factor, bool force = false, char *mname = "base/untitled");
+extern bool emptymap(int factor, bool force = false, char *mname = NULL);
 extern bool enlargemap(bool force);
 extern int findentity(int type, int index = 0);
 extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool local);
@@ -129,7 +129,7 @@ extern void particle_fireball(const vec &dest, float max, int type);
 extern void removetrackedparticles(physent *owner = NULL);
 
 // worldio
-extern void setnames(const char *fname, const char *cname = 0);
+extern void setnames(const char *fname = NULL, const char *cname = NULL);
 extern void load_world(const char *mname, const char *cname = NULL);
 extern void save_world(char *mname, bool nolms = false);
 
@@ -330,20 +330,6 @@ enum							// cube empty-space materials
 };
 
 extern int ambient, skylight, watercolour, lavacolour;
-
-enum {
-	WT_WATER = 0,
-	WT_HURT,
-	WT_KILL,
-	WT_MAX
-};
-
-enum
-{
-	VIEW_FIRSTPERSON = 0,
-	VIEW_THIRDPERSON,
-	VIEW_MAX
-};
 
 extern string cgzname, pcfname, mcfname, picname, mapname;
 extern int verbose, savebak;

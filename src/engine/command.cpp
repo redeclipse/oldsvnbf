@@ -458,7 +458,7 @@ char *executeret(char *p, int context)
 						else
 						{
 #ifndef STANDALONE
-							if(id->_context & IDC_WORLD)
+							if (id->_context & IDC_WORLD)
 							{
 								if (!editmode)
 								{
@@ -469,14 +469,20 @@ char *executeret(char *p, int context)
 #endif
 							if(id->_override!=NO_OVERRIDE) id->_override = NO_OVERRIDE;
 						}
+
 						int i1 = parseint(w[1]);
 						if(i1<id->_min || i1>id->_max)
 						{
 							i1 = i1<id->_min ? id->_min : id->_max;				// clamp to valid range
 							conoutf("valid range for %s is %d..%d", id->_name, id->_min, id->_max);
 						}
+
 						*id->_storage = i1;
 						id->changed();											 // call trigger function if available
+
+#ifndef STANDALONE
+						if (id->_context & IDC_WORLD) cl->editvariable(id->_name, i1);
+#endif
 					}
 					break;
 

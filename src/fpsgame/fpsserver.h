@@ -2266,9 +2266,17 @@ struct fpsserver : igameserver
 		s_sprintf(cname)("%s \fs\f5(%d)\fS", name, ci->clientnum);
 		return cname;
 	}
-
+	
+    char *gameid() { return "bfa"; }
 	char *defaultmap() { return "usm01"; }
 	int defaultmode() { return G_DEATHMATCH; }
+
+	bool canload(char *type)
+	{
+		if (strcmp(type, gameid()) == 0) return true;
+		if (strcmp(type, "fps") == 0 || strcmp(type, "bfg") == 0) return true;
+		return false;
+	}
 
 	void servsend(int cn, const char *s, ...)
 	{

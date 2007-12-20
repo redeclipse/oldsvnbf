@@ -49,6 +49,7 @@ struct igameclient
     virtual bool clientoption(char *arg) { return false; }
     virtual void updateworld(vec &pos, int curtime, int lm) = 0;
     virtual void initclient() = 0;
+    virtual void editvariable(char *name, int value) = 0;
     virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
     virtual void resetgamestate() = 0;
     virtual void suicide(physent *d) = 0;
@@ -157,8 +158,10 @@ struct igameserver
     virtual char *getdefaultmaster() = 0;
     virtual void sendservmsg(const char *s) = 0;
     virtual void changemap(const char *s, int mode = 0, int muts = 0) { return; }
+    virtual char *gameid() = 0;
     virtual char *defaultmap() = 0;
     virtual int defaultmode() = 0;
+    virtual bool canload(char *type) = 0;
 };
 
 struct igame
