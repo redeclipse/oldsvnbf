@@ -471,7 +471,7 @@ struct fpsclient : igameclient
 
 	void initclient()
 	{
-		setnames("base/untitled");
+		setnames();
 		cc.initclientnet();
 	}
 
@@ -808,6 +808,11 @@ struct fpsclient : igameclient
 	void newmap(int size)
 	{
 		cc.addmsg(SV_NEWMAP, "ri", size);
+	}
+
+	void editvariable(char *name, int value)
+	{
+        if(m_edit(gamemode)) cc.addmsg(SV_EDITV, "rsi", name, value);
 	}
 
 	void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)

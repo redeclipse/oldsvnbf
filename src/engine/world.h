@@ -38,7 +38,7 @@ struct bfgz : binary
 {
 	int worldsize, numents, lightmaps;
 	int gamever, revision;
-	char maptitle[128];
+	char maptitle[128], gameid[3];
 };
 
 #define WATER_AMPLITUDE 0.8f

@@ -771,6 +771,24 @@ struct clientcom : iclientcom
 				break;
 			}
 
+			case SV_EDITV:
+			{
+				if (!d) return;
+				getstring(text, p);
+				int val = getint(p);
+				ident *id = idents->access(text);
+
+				if (id->_type == ID_VAR && id->_context & IDC_WORLD && id->_max >= id->_min)
+				{
+					if (val > id->_max) val = id->_max;
+					else if (val < id->_min) val = id->_min;
+					
+					setvar(text, val, true);
+					
+					conoutf("%s updated the value of %s to %d", d->name, text, *id->_storage);
+				}
+				break;
+			}
 			case SV_EDITF:			  // coop editing messages
 			case SV_EDITT:
 			case SV_EDITM:
@@ -781,7 +799,7 @@ struct clientcom : iclientcom
 			case SV_REPLACE:
 			case SV_DELCUBE:
 			{
-				if(!d) return;
+				if (!d) return;
 				selinfo sel;
 				sel.o.x = getint(p); sel.o.y = getint(p); sel.o.z = getint(p);
 				sel.s.x = getint(p); sel.s.y = getint(p); sel.s.z = getint(p);

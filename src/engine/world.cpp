@@ -930,7 +930,12 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	}
 
 	resetmap();
-	setnames(mname);
+	if (mname != NULL) setnames(mname);
+	else
+	{
+		s_sprintfd(name)("%sgame/untitled", sv->gameid());
+		setnames(name);
+	}
 	strncpy(hdr.head, "BFGZ", 4);
 
 	hdr.version = MAPVERSION;
@@ -941,6 +946,7 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	hdr.lightmaps = 0;
 
 	s_strncpy(hdr.maptitle, "Untitled Map by Unknown Author", 128);
+	s_strncpy(hdr.gameid, sv->gameid(), 3);
 
 	texmru.setsize(0);
 	freeocta(worldroot);
