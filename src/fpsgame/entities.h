@@ -242,16 +242,9 @@ struct entities : icliententities
 				while (e.attr1 <= -1) e.attr1 += NUMGUNS;
 				while (e.attr1 >= NUMGUNS) e.attr1 -= NUMGUNS;
 				if (e.attr2 < 0) e.attr2 = 0;
-			case WAYPOINT:
-				e.attr1 = e.attr1 >= 0 && e.attr1 <= 1 ? e.attr1 : (e.attr1 > 1 ? 0 : 1);
-				e.attr2 = e.attr2 >= 0 ? e.attr2 : 0;
-				e.attr3 = e.attr3 >= 0 ? e.attr3 : 0;
 				break;
-			case MONSTER:
-			case TELEDEST:
-				e.attr2 = e.attr1;
-			case RESPAWNPOINT:
-				e.attr1 = (int)cl.player1->yaw;
+			default:
+				break;
 		}
 	}
 
