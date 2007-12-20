@@ -36,11 +36,11 @@ void setnames(const char *fname, const char *cname)
 	if(strpbrk(fn, "/\\")) s_strcpy(mapname, fn);
 	else s_sprintf(mapname)("maps/%s", fn);
 
-	loopi(MAP_MAX) s_sprintf(bgzname[i])("packages/%s%s", mapname, mapexts[i]);
+	loopi(MAP_MAX) s_sprintf(bgzname[i])("%s%s", mapname, mapexts[i]);
 
-	s_sprintf(pcfname)("packages/%s/package.cfg", pakname);
-	s_sprintf(mcfname)("packages/%s/%s.cfg",	  pakname, cfgname);
-	s_sprintf(picname)("packages/%s.jpg", mapname);
+	s_sprintf(pcfname)("%s/package.cfg", pakname);
+	s_sprintf(mcfname)("%s/%s.cfg",	  pakname, cfgname);
+	s_sprintf(picname)("%s.jpg", mapname);
 }
 
 ushort readushort(gzFile f)
@@ -240,7 +240,7 @@ void save_world(char *mname, bool nolms)
 	if(strpbrk(mname, "/\\")) s_strcpy(fname, mname);
 	else s_sprintf(fname)("maps/%s", mname);
 
-	setnames(makefile(fname, "packages/", ".bgz", false, false));
+	setnames(makefile(fname, ".bgz", false, false));
 
 	gzFile f = opengzfile(bgzname[MAP_BFGZ], "wb9");
 	if (!f) { conoutf("error saving '%s' to '%s': file error", mapname, bgzname[MAP_BFGZ]); return; }
@@ -684,8 +684,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	console("%s", CON_CENTER|CON_LEFT, hdr.maptitle);
 
 	overrideidents = true;
-	if (!execfile(pcfname)) exec("packages/package.cfg");
-	if (!execfile(mcfname)) exec("packages/map.cfg");
+	if (!execfile(pcfname)) exec("package.cfg");
+	if (!execfile(mcfname)) exec("map.cfg");
 	overrideidents = false;
 
 	loopv(ents)
