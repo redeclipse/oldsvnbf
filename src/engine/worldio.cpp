@@ -13,10 +13,10 @@ void setnames(const char *fname, const char *cname)
 {
 	string fn, cn;
 
-	if (*fname) s_sprintf(fn)("%s", fname);
+	if (fname != NULL) s_sprintf(fn)("%s", fname);
 	else s_sprintf(fn)("%sgame/untitled", sv->gameid());
 
-	if (*cname) s_sprintf(cn)("%s", cname);
+	if (cname != NULL) s_sprintf(cn)("%s", cname);
 	else s_sprintf(cn)("%s", fn);
 
 	string name, pakname, cfgname;
