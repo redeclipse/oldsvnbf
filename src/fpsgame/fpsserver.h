@@ -316,7 +316,7 @@ struct fpsserver : igameserver
 	string scresult, motd;
 	fpsserver()
 		: notgotitems(true), notgotbases(false),
-			gamemode(defaultmode()), mutators(0), interm(0), minremain(0),
+			gamemode(defaultmode()), mutators(0), interm(0), minremain(10),
 			mapreload(false), lastsend(0),
 			mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
@@ -1563,20 +1563,27 @@ struct fpsserver : igameserver
 
 	void checkintermission()
 	{
-		if(minremain>0)
+		if (clients.length())
 		{
-			minremain = gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
-			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-			if (!minremain)
+			if(minremain > 0)
 			{
-				if (smode) smode->intermission();
-				mutate(mut->intermission());
+				minremain = gamemillis >= gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
+				sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+				if (!minremain)
+				{
+					if (smode) smode->intermission();
+					mutate(mut->intermission());
+				}
 			}
+			if (!interm && minremain <= 0) interm = gamemillis+10000;
 		}
-		if(!interm && minremain<=0) interm = gamemillis+10000;
 	}
 
-	void startintermission() { gamelimit = min(gamelimit, gamemillis); checkintermission(); }
+	void startintermission()
+	{
+		gamelimit = min(gamelimit, gamemillis);
+		checkintermission();
+	}
 
 	void clearevent(clientinfo *ci)
 	{
@@ -1955,13 +1962,13 @@ struct fpsserver : igameserver
 	void serverinforeply(ucharbuf &p)
 	{
 		putint(p, clients.length());
-		putint(p, 5);					// number of attrs following
-		putint(p, PROTOCOL_VERSION);	// a // generic attributes, passed back below
-		putint(p, gamemode);			// b
-		putint(p, mutators);			// c
-		putint(p, minremain);			// d
-		putint(p, maxclients);
-		putint(p, mastermode);
+		putint(p, 6);					// number of attrs following
+		putint(p, PROTOCOL_VERSION);	// 1 // generic attributes, passed back below
+		putint(p, gamemode);			// 2
+		putint(p, mutators);			// 3
+		putint(p, minremain);			// 4
+		putint(p, maxclients);			// 5
+		putint(p, mastermode);			// 6
 		sendstring(smapname, p);
 		sendstring(serverdesc, p);
 	}

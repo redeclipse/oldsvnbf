@@ -70,6 +70,8 @@ struct fpsclient : igameclient
 		CCOMMAND(jump,   "D", (fpsclient *self, int *down), { if(self->canjump()) self->player1->jumpnext = *down!=0; });
 		CCOMMAND(attack, "D", (fpsclient *self, int *down), { self->doattack(*down!=0); });
 		CCOMMAND(reload, "D", (fpsclient *self, int *down), { self->doreload(*down!=0); });
+		CCOMMAND(pickup, "D", (fpsclient *self, int *down), { self->dopickup(*down!=0); });
+		CCOMMAND(lean, "D", (fpsclient *self, int *down), { self->dolean(*down!=0); });
 
 		CCOMMAND(mode, "ii", (fpsclient *self, int *val, int *mut), { self->setmode(*val, *mut); });
         CCOMMAND(kill, "",  (fpsclient *self), { self->suicide(self->player1); });
@@ -105,6 +107,7 @@ struct fpsclient : igameclient
 	void resetgamestate()
 	{
 		pj.reset();
+		
 		if (m_sp(gamemode))
 		{
 			resettriggers();
@@ -248,7 +251,7 @@ struct fpsclient : igameclient
 	{
 		if(player1->state==CS_DEAD)
 		{
-			player1->attacking = player1->reloading = false;
+			player1->attacking = player1->reloading = player1->pickingup = player1->leaning = false;
             if(m_capture(gamemode))
             {
                 int wait = cpc.respawnwait();
@@ -272,14 +275,26 @@ struct fpsclient : igameclient
 
 	void doattack(bool on)
 	{
-		if(intermission) return;
-        if(player1->attacking = on) respawn();
+		if (intermission) return;
+        if (player1->attacking = on) respawn();
 	}
 
 	void doreload(bool on)
 	{
-		if(intermission) return;
-		if(player1->reloading = on) respawn();
+		if (intermission) return;
+		if (player1->reloading = on) respawn();
+	}
+
+	void dopickup(bool on)
+	{
+		if (intermission) return;
+        player1->pickingup = on;
+	}
+
+	void dolean(bool on)
+	{
+		if (intermission) return;
+        player1->leaning = on;
 	}
 
 	bool canjump()
@@ -357,7 +372,7 @@ struct fpsclient : igameclient
 		{
 			sb.showscores(true);
 			lastplayerstate = *player1;
-			d->attacking = d->reloading = false;
+			d->attacking = d->reloading = d->pickingup = d->leaning = false;
 			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
@@ -389,7 +404,7 @@ struct fpsclient : igameclient
 		if(!timeremain)
 		{
 			intermission = true;
-			player1->attacking = player1->reloading = false;
+			player1->attacking = player1->reloading = player1->pickingup = player1->leaning = false;
 			if (m_mp(gamemode))
 			{
 				calcranks();
@@ -888,9 +903,13 @@ struct fpsclient : igameclient
 	void fixrange(physent *d)
 	{
 		const float MAXPITCH = 90.0f;
+		const float MAXROLL = 45.0f;
 
 		if (d->pitch > MAXPITCH) d->pitch = MAXPITCH;
 		if (d->pitch < -MAXPITCH) d->pitch = -MAXPITCH;
+
+		if (d->roll > MAXROLL) d->roll = MAXROLL;
+		if (d->roll < -MAXROLL) d->roll = -MAXROLL;
 
 		while (d->yaw < 0.0f) d->yaw += 360.0f;
 		while (d->yaw > 360.0f) d->yaw -= 360.0f;
@@ -910,12 +929,18 @@ struct fpsclient : igameclient
 		{
 			extern int sensitivity, sensitivityscale, invmouse;
 			const float SENSF = 33.0f;	 // try match quake sens
-			physent *d = player1; //isthirdperson() ? camera1 : player1;
 
-			d->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
-			d->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
+			if (player1->leaning)
+			{
+				player1->roll += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
+				player1->lastlean = lastmillis;
+			}
+			else
+				player1->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 
-			fixrange(d);
+			player1->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
+
+			fixrange(player1);
 		}
 	}
 

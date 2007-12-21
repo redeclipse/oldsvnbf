@@ -89,13 +89,14 @@ void console(const char *s, int type, ...)
 
 	s_sprintfdlv(sf, type, s);
 
-	string psf, fmt;
+	string osf, psf, fmt;
 
 	if (identexists("contimefmt")) s_sprintf(fmt)("%s", getalias("contimefmt"));
 	else s_sprintf(fmt)("%%c");
 
-	s_sprintf(psf)("%s [%02x] %s", gettime(fmt), type, sf);
-	printf("%s\n", psf);
+	filtertext(osf, sf);
+	s_sprintf(psf)("%s [%02x] %s", gettime(fmt), type, osf);
+	printf("%s\n", osf);
 
 	s = sf;
 	int n = 0, visible;

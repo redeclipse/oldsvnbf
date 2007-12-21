@@ -85,7 +85,8 @@ struct physics
 
 	void updateroll(physent *d)
 	{
-		d->roll = d->roll/(1+(float)sqrtf((float)curtime)/25);
+		if (d->type != ENT_PLAYER || cl.lastmillis-((fpsent *)d)->lastlean > 1000)
+			d->roll = d->roll/(1+(float)sqrtf((float)curtime)/25);
 	}
 
 	void updatewater(fpsent *d, int waterlevel)

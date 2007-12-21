@@ -157,9 +157,13 @@ struct entities : icliententities
 		switch(ents[n]->type)
 		{
 			default:
-				if(d->canpickup(ents[n]->type, ents[n]->attr1, ents[n]->attr2, cl.lastmillis))
+				if (d->canpickup(ents[n]->type, ents[n]->attr1, ents[n]->attr2, cl.lastmillis))
 				{
-					if (d==cl.player1) cl.cc.addmsg(SV_ITEMPICKUP, "ri", n);
+					if (d == cl.player1)
+					{
+						if (!cl.player1->pickingup) return;
+						cl.cc.addmsg(SV_ITEMPICKUP, "ri", n);
+					}
 					ents[n]->spawned = false; // even if someone else gets it first
 				}
 				break;
