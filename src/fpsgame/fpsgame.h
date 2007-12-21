@@ -187,15 +187,15 @@ struct fpsclient : igameclient
 		{
 			if (intermission || saycommandon) player1->stopmoving();
 
-			#define adjust(n,m,x) \
-			{ \
-				n = min(n, x); \
-				if (n > 0) { n = n/int((1+(float)sqrtf((float)curtime))/m); } \
-				if (n < 0) { n = 0; } \
-			}
-			adjust(camerawobble, 10, 200);
-			adjust(damageresidue, 100, 100);
-			if (!player1->leaning) adjust(player1->roll, 10, 33);
+			#define adjust(t,n,m) \
+				if (n != 0) \
+				{ \
+					n = (t)(n/((float)1.f+(float)sqrtf((float)curtime)/float(m))); \
+				}
+			
+			adjust(int, camerawobble, 100);
+			adjust(int, damageresidue, 200);
+			if (!player1->leaning) adjust(float, player1->roll, 50);
 
 			if (player1->state == CS_DEAD)
 			{
@@ -715,27 +715,26 @@ struct fpsclient : igameclient
 						glEnd();
 					}
 
-					glColor4f(1.f, 1.f, 1.f, amt);
-					rendericon("textures/logo.jpg", 20, oy-75, 64, 64);
+					//glColor4f(1.f, 1.f, 1.f, amt);
+					//rendericon("textures/logo.jpg", 20, oy-75, 64, 64);
 
 					if (d != NULL)
 					{
 						if (d->state == CS_ALIVE)
 						{
-							draw_textx("%d hp, %d ammo", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->health, d->gunselect <= -1 ? 0 : d->ammo[d->gunselect]);
+							draw_textx("\fs\f0[\fs\fr%d\fS][\fs\fy%d\fS]\fS", 20, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->health, d->gunselect <= -1 || d->ammo[d->gunselect] <= -1 ? 0 : d->ammo[d->gunselect]);
 						}
 						else if (d->state == CS_DEAD)
 						{
-							int last = lastmillis-d->lastpain,
-								wait = (m_insta(gamemode, mutators) ? cpc.RESPAWNSECS/2 : cpc.RESPAWNSECS)*1000;
+							int wait = m_capture(gamemode) ? cpc.respawnwait() : 0 ;
 
-							if (m_capture(gamemode) && last <= wait)
+							if (wait)
 							{
-								float c = float(wait-last)/1000.f;
-								draw_textx("Fragged! Down for %.1fs", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
+								float c = float(wait)/1000.f;
+								draw_textx("Fragged! Down for %.1fs", 20, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
 							}
 							else
-								draw_textx("Fragged! Press attack to respawn", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+								draw_textx("Fragged! Press attack to respawn", 20, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 						}
 					}
 

@@ -781,7 +781,7 @@ static void bar(float bar, int w, int o, float r, float g, float b)
 
 void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, const char *text2, GLuint tex)	// also used during loading
 {
-	if(!inbetweenframes) return;
+	if (!inbetweenframes) return;
 
 	updateframe(false);
 

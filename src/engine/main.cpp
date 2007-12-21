@@ -479,10 +479,10 @@ void updateframe(bool dorender)
 					break;
 			}
 		}
+
+		colorpos = 0; // last but not least.
 	}
 	else clientkeepalive();
-
-	colorpos = 0; // last but not least.
 }
 
 int main(int argc, char **argv)
