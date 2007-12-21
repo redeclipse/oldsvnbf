@@ -181,7 +181,7 @@ struct fpsclient : igameclient
 			int scale = max(curtime/10, 1);
 			#define adjust(n,m,x) { n = min(n, x); if (n > 0) { n -= scale*m; } if (n < 0) { n = 0; } }
 			adjust(camerawobble, 1, 200);
-			adjust(damageresidue, 1, 200);
+			adjust(damageresidue, 1, 100);
 
 			if (saycommandon || intermission) player1->stopmoving();
 			
@@ -903,7 +903,7 @@ struct fpsclient : igameclient
 	void fixrange(physent *d)
 	{
 		const float MAXPITCH = 90.0f;
-		const float MAXROLL = 45.0f;
+		const float MAXROLL = 33.0f;
 
 		if (d->pitch > MAXPITCH) d->pitch = MAXPITCH;
 		if (d->pitch < -MAXPITCH) d->pitch = -MAXPITCH;
@@ -1021,9 +1021,15 @@ struct fpsclient : igameclient
 			{
 				camera1->o.z -= (float(player1->eyeheight-player1->aboveeye)/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
 			}
+			
 			camera1->yaw = player1->yaw;
 			camera1->pitch = player1->pitch;
 			camera1->roll = player1->roll;
+			vec off;
+			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? -1 : 1, off);
+			off.normalize();
+			off.mul(camera1->roll/100.f);
+			camera1->o.add(off);
 			cameratype = 0;
 		}
 		else
