@@ -298,6 +298,11 @@ struct gameserver : igameserver
 	#define CAPTURESERV 1
 	#include "capture.h"
 	#undef CAPTURESERV
+
+    #define ASSASSINSERV 1
+    #include "assassin.h"
+    #undef ASSASSINSERV
+
 	#include "duel.h"
 
 	#define mutate(b) loopvk(smuts) { servmode *mut = smuts[k]; { b; } }
@@ -321,7 +326,7 @@ struct gameserver : igameserver
 			mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
 			demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
-			smode(NULL), capturemode(*this), duelmutator(*this)
+			smode(NULL), capturemode(*this), assassinmode(*this), duelmutator(*this)
 	{
 		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
 		smuts.setsize(0);
@@ -733,6 +738,7 @@ struct gameserver : igameserver
 
 		// server modes
 		if (m_capture(gamemode)) smode = &capturemode;
+        else if(m_assassin(gamemode)) smode = &assassinmode;
 		else smode = NULL;
 		if(smode) smode->reset(false);
 
@@ -1948,11 +1954,11 @@ struct gameserver : igameserver
 	char *servername() { return "bloodfrontierserver"; }
 	int serverinfoport()
 	{
-		return BFRONTIER_SERVINFO_PORT;
+		return SERVINFO_PORT;
 	}
 	int serverport()
 	{
-		return BFRONTIER_SERVER_PORT;
+		return SERVER_PORT;
 	}
 	char *getdefaultmaster()
 	{
