@@ -1,12 +1,11 @@
-struct fpsclient : igameclient
+struct gameclient : igameclient
 {
-	// these define classes local to fpsclient
 	#include "physics.h"
 	#include "projs.h"
 	#include "weapon.h"
 	#include "scoreboard.h"
 	#include "render.h"
-	#include "ents.h"
+	#include "entities.h"
 	#include "client.h"
 	#include "capture.h"
 
@@ -47,7 +46,7 @@ struct fpsclient : igameclient
 
     IVARP(maxradarscale, 0, 1024, 10000);
 
-	fpsclient()
+	gameclient()
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false), lastmillis(0),
 			maptime(0), minremain(0), respawnent(-1),
@@ -57,7 +56,7 @@ struct fpsclient : igameclient
 			player1(spawnstate(new fpsent()))
 	{
 		#define movedir(name, v, d, s, os) \
-			CCOMMAND(name, "D", (fpsclient *self, int *down), { \
+			CCOMMAND(name, "D", (gameclient *self, int *down), { \
 				self->player1->s = *down != 0; \
 				self->player1->v = self->player1->s ? d : (self->player1->os ? -(d) : 0); \
 			});
@@ -67,22 +66,22 @@ struct fpsclient : igameclient
 		movedir(left,		strafe,	1,		k_left,		k_right);
 		movedir(right,		strafe,	-1,		k_right,	k_left);
 
-		CCOMMAND(crouch, "D", (fpsclient *self, int *down), { self->docrouch(*down!=0); });
-		CCOMMAND(jump,   "D", (fpsclient *self, int *down), { if(self->canjump()) self->player1->jumpnext = *down!=0; });
-		CCOMMAND(attack, "D", (fpsclient *self, int *down), { self->doattack(*down!=0); });
-		CCOMMAND(reload, "D", (fpsclient *self, int *down), { self->doreload(*down!=0); });
-		CCOMMAND(pickup, "D", (fpsclient *self, int *down), { self->dopickup(*down!=0); });
-		CCOMMAND(lean, "D", (fpsclient *self, int *down), { self->dolean(*down!=0); });
+		CCOMMAND(crouch, "D", (gameclient *self, int *down), { self->docrouch(*down!=0); });
+		CCOMMAND(jump,   "D", (gameclient *self, int *down), { if(self->canjump()) self->player1->jumpnext = *down!=0; });
+		CCOMMAND(attack, "D", (gameclient *self, int *down), { self->doattack(*down!=0); });
+		CCOMMAND(reload, "D", (gameclient *self, int *down), { self->doreload(*down!=0); });
+		CCOMMAND(pickup, "D", (gameclient *self, int *down), { self->dopickup(*down!=0); });
+		CCOMMAND(lean, "D", (gameclient *self, int *down), { self->dolean(*down!=0); });
 
-		CCOMMAND(mode, "ii", (fpsclient *self, int *val, int *mut), { self->setmode(*val, *mut); });
-        CCOMMAND(kill, "",  (fpsclient *self), { self->suicide(self->player1); });
-        CCOMMAND(taunt, "", (fpsclient *self), { self->taunt(); });
-		CCOMMAND(cameradir, "ii", (fpsclient *self, int *a, int *b), self->cameradir(*a, *b!=0));
-		CCOMMAND(centerrank, "", (fpsclient *self), self->setcrank());
-		CCOMMAND(gotocamera, "i", (fpsclient *self, int *a), self->setcamera(*a));
+		CCOMMAND(mode, "ii", (gameclient *self, int *val, int *mut), { self->setmode(*val, *mut); });
+        CCOMMAND(kill, "",  (gameclient *self), { self->suicide(self->player1); });
+        CCOMMAND(taunt, "", (gameclient *self), { self->taunt(); });
+		CCOMMAND(cameradir, "ii", (gameclient *self, int *a, int *b), self->cameradir(*a, *b!=0));
+		CCOMMAND(centerrank, "", (gameclient *self), self->setcrank());
+		CCOMMAND(gotocamera, "i", (gameclient *self, int *a), self->setcamera(*a));
 
-		CCOMMAND(getgamemode, "", (fpsclient *self), intret(self->gamemode));
-		CCOMMAND(getmutators, "", (fpsclient *self), intret(self->mutators));
+		CCOMMAND(getgamemode, "", (gameclient *self), intret(self->gamemode));
+		CCOMMAND(getmutators, "", (gameclient *self), intret(self->mutators));
 	}
 
 	iclientcom *getcom() { return &cc; }

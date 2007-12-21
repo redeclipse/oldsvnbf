@@ -1,6 +1,6 @@
 struct clientcom : iclientcom
 {
-	fpsclient &cl;
+	gameclient &cl;
 
 	bool c2sinit;		// whether we need to tell the other clients our stats
 
@@ -14,7 +14,7 @@ struct clientcom : iclientcom
 	IVARP(centerchat, 0, 1, 1);
 	IVARP(colourchat, 0, 1, 1);
 
-	clientcom(fpsclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false)
+	clientcom(gameclient &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false)
 	{
         CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s, false));
         CCOMMAND(me, "C", (clientcom *self, char *s), self->toserver(s, true));
@@ -1068,7 +1068,7 @@ struct clientcom : iclientcom
 			loopv(cl.players) if(cl.players[i]) cl.clientdisconnected(i);
 
 			extern igameserver *sv;
-			((fpsserver *)sv)->enddemoplayback();
+			((gameserver *)sv)->enddemoplayback();
 		}
 	}
 

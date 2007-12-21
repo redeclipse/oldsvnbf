@@ -47,7 +47,7 @@ static struct enttypes
 	{ BASE,			true,			"base" },
 	{ CHECKPOINT,	true,			"checkpoint" },
 	{ CAMERA,		true,			"camera" },
-	{ WAYPOINT,		true,			"waypoint" },
+	{ WAYPOINT,		true,			"waypoint" }
 };
 
 struct fpsentity : extentity
@@ -462,3 +462,4 @@ static char *serverstatustypes[] = {
 	"\fs\frfull\fS",
 	"\fs\fb?\fS"
 };
+

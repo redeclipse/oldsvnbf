@@ -36,8 +36,7 @@ CLIENT_OBJS= \
 	engine/water.o \
 	engine/world.o \
 	engine/worldio.o \
-	fpsgame/bfa.o \
-	fpsgame/fps.o
+	fpsgame/bfa.o 
 
 SINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Iinclude
 SCXXFLAGS= -w $(CXXOPTFLAGS) $(SINCLUDES)
@@ -47,7 +46,7 @@ SERVER_OBJS= \
 	shared/tools-standalone.o \
 	engine/command-standalone.o \
 	engine/server-standalone.o \
-	fpsgame/fps-standalone.o \
+	fpsgame/bfa-standalone.o \
 
 default: all
 
@@ -70,8 +69,8 @@ engine/command-standalone.o:
 engine/server-standalone.o:
 	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o engine/server-standalone.o engine/server.cpp
 
-fpsgame/fps-standalone.o:
-	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o fpsgame/fps-standalone.o fpsgame/fps.cpp
+fpsgame/bfa-standalone.o:
+	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o fpsgame/bfa-standalone.o fpsgame/bfa.cpp
 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)
