@@ -192,4 +192,4 @@ struct duelservmode : servmode
 	//void intermission()
 	//{
 	//}
-};
+} duelmutator;

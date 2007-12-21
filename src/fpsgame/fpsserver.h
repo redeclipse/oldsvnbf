@@ -295,16 +295,13 @@ struct fpsserver : igameserver
 		virtual bool damage(clientinfo *target, clientinfo *actor, int damage, int gun, const vec &hitpush = vec(0, 0, 0)) { return true; }
 	};
 
-	#define CAPTURESERV 1
-	#include "capture.h"
-	#undef CAPTURESERV
-
-	captureservmode capturemode;
 	servmode *smode;
-
-	#include "duel.h"
-	duelservmode duelmutator; // duels are a servm
 	vector<servmode *> smuts;
+
+	#define CAPTURESERV 1
+	#include "fpscapture.h"
+	#undef CAPTURESERV
+	#include "fpsduel.h"
 
 	#define mutate(b) loopvk(smuts) { servmode *mut = smuts[k]; { b; } }
 
@@ -320,14 +317,14 @@ struct fpsserver : igameserver
 	};
 	clientinfo *cmdcontext;
 	string scresult, motd;
-	fpsserver() : notgotitems(true), notgotbases(false),
-		gamemode(defaultmode()), mutators(0), interm(0), minremain(0),
-		mapreload(false), lastsend(0),
-		mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
-		mapdata(NULL), reliablemessages(false),
-		demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
-		capturemode(*this), smode(NULL),
-		duelmutator(*this)
+	fpsserver()
+		: notgotitems(true), notgotbases(false),
+			gamemode(defaultmode()), mutators(0), interm(0), minremain(0),
+			mapreload(false), lastsend(0),
+			mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
+			mapdata(NULL), reliablemessages(false),
+			demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
+			smode(NULL), capturemode(*this), duelmutator(*this)
 	{
 		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
 		smuts.setsize(0);
@@ -374,7 +371,7 @@ struct fpsserver : igameserver
 			if(demorecord) enddemorecord();
 			if(!ci->local && !mapreload)
 			{
-				s_sprintfd(msg)("%s forced %s on map %s", privname(ci->privilege), m_name(reqmode), map);
+				s_sprintfd(msg)("%s forced %s on map %s", privname(ci->privilege), gamename(reqmode, reqmuts), map);
 				sendservmsg(msg);
 			}
 			sendf(-1, 1, "risi2", SV_MAPCHANGE, ci->mapvote, ci->modevote, ci->mutsvote);
@@ -382,7 +379,7 @@ struct fpsserver : igameserver
 		}
 		else
 		{
-			s_sprintfd(msg)("%s suggests %s on map %s (select map to vote)", colorname(ci), m_name(reqmode), map);
+			s_sprintfd(msg)("%s suggests %s on map %s (select map to vote)", colorname(ci), gamename(reqmode, reqmuts), map);
 			sendservmsg(msg);
 			checkvotes();
 		}
@@ -516,7 +513,7 @@ struct fpsserver : igameserver
 		time_t t = time(NULL);
 		char *timestr = ctime(&t), *trim = timestr + strlen(timestr);
 		while(trim>timestr && isspace(*--trim)) *trim = '\0';
-		s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, m_name(gamemode), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
+		s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, gamename(gamemode, mutators), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
 		s_sprintfd(msg)("demo \"%s\" recorded", d.info);
 		sendservmsg(msg);
 		d.data = new uchar[len];
@@ -1193,7 +1190,7 @@ struct fpsserver : igameserver
 				QUEUE_MSG;
 				bool connected = !ci->name[0];
 				getstring(text, p);
-				filtertext(text, text, false, MAXNAMELEN);
+				//filtertext(text, text, false, MAXNAMELEN);
 				if(!text[0]) s_strcpy(text, "unnamed");
 				QUEUE_STR(text);
 				s_strncpy(ci->name, text, MAXNAMELEN+1);
@@ -1207,7 +1204,7 @@ struct fpsserver : igameserver
 					}
 				}
 				getstring(text, p);
-				filtertext(text, text, false, MAXTEAMLEN);
+				//filtertext(text, text, false, MAXTEAMLEN);
 				if(!ci->local && connected && m_team(gamemode, mutators))
 				{
 					const char *worst = chooseworstteam(text);
@@ -1355,7 +1352,7 @@ struct fpsserver : igameserver
 			{
 				int who = getint(p);
 				getstring(text, p);
-				filtertext(text, text, false, MAXTEAMLEN);
+				//filtertext(text, text, false, MAXTEAMLEN);
 				if(!ci->privilege || who<0 || who>=getnumclients()) break;
 				clientinfo *wi = (clientinfo *)getinfo(who);
 				if(!wi) break;
@@ -1966,7 +1963,8 @@ struct fpsserver : igameserver
 		putint(p, 5);					// number of attrs following
 		putint(p, PROTOCOL_VERSION);	// a // generic attributes, passed back below
 		putint(p, gamemode);			// b
-		putint(p, minremain);			// c
+		putint(p, mutators);			// c
+		putint(p, minremain);			// d
 		putint(p, maxclients);
 		putint(p, mastermode);
 		sendstring(smapname, p);
@@ -1977,11 +1975,11 @@ struct fpsserver : igameserver
 
 	int serverstat(serverinfo *a)
 	{
-		if (a->attr.length() > 3 && a->numplayers >= a->attr[3])
+		if (a->attr.length() > 4 && a->numplayers >= a->attr[4])
 		{
 			return SSTAT_FULL;
 		}
-		else if(a->attr.length() > 4) switch(a->attr[4])
+		else if(a->attr.length() > 5) switch(a->attr[5])
 		{
 			case MM_LOCKED:
 			{
@@ -2071,21 +2069,29 @@ struct fpsserver : igameserver
 				}
 				case SINFO_MAXCLIENTS:
 				{
-					if (aa->attr.length() > 3) ac = aa->attr[3];
+					if (aa->attr.length() > 4) ac = aa->attr[4];
 					else ac = 0;
 
-					if (ab->attr.length() > 3) bc = ab->attr[3];
+					if (ab->attr.length() > 4) bc = ab->attr[4];
 					else bc = 0;
 
 					retsw(ac, bc, false);
 					break;
 				}
-				case SINFO_MODE:
+				case SINFO_GAME:
 				{
 					if (aa->attr.length() > 1) ac = aa->attr[1];
 					else ac = 0;
 
 					if (ab->attr.length() > 1) bc = ab->attr[1];
+					else bc = 0;
+
+					retsw(ac, bc, true);
+
+					if (aa->attr.length() > 2) ac = aa->attr[2];
+					else ac = 0;
+
+					if (ab->attr.length() > 2) bc = ab->attr[2];
 					else bc = 0;
 
 					retsw(ac, bc, true);
@@ -2098,10 +2104,10 @@ struct fpsserver : igameserver
 				}
 				case SINFO_TIME:
 				{
-					if (aa->attr.length() > 2) ac = aa->attr[2];
+					if (aa->attr.length() > 3) ac = aa->attr[3];
 					else ac = 0;
 
-					if (ab->attr.length() > 2) bc = ab->attr[2];
+					if (ab->attr.length() > 3) bc = ab->attr[3];
 					else bc = 0;
 
 					retsw(ac, bc, false);
@@ -2205,14 +2211,16 @@ struct fpsserver : igameserver
 						}
 						case SINFO_MAXCLIENTS:
 						{
-							if (si.attr.length() > 3 && si.attr[3] >= 0) s_sprintf(text)("%d", si.attr[3]);
+							if (si.attr.length() > 4 && si.attr[4] >= 0)
+								s_sprintf(text)("%d", si.attr[4]);
 							else text[0] = 0;
 							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
 							break;
 						}
-						case SINFO_MODE:
+						case SINFO_GAME:
 						{
-							if (si.attr.length() > 1) s_sprintf(text)("%s", m_name(si.attr[1]));
+							if (si.attr.length() > 2)
+								s_sprintf(text)("%s", gamename(si.attr[1], si.attr[2]));
 							else text[0] = 0;
 							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
 							break;
@@ -2225,7 +2233,8 @@ struct fpsserver : igameserver
 						}
 						case SINFO_TIME:
 						{
-							if (si.attr.length() > 2 && si.attr[2] >= 0) s_sprintf(text)("%d %s", si.attr[2], si.attr[2] == 1 ? "min" : "mins");
+							if (si.attr.length() > 3 && si.attr[3] >= 0)
+								s_sprintf(text)("%d %s", si.attr[3], si.attr[3] == 1 ? "min" : "mins");
 							else text[0] = 0;
 							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
 							break;
@@ -2275,6 +2284,23 @@ struct fpsserver : igameserver
 	}
 	
     char *gameid() { return "bfa"; }
+    char *gamename(int mode, int muts)
+    {
+    	static string gname;
+    	gname[0] = 0;
+    	int gmode = mode >= 0 && mode < G_MAX ? mode : G_DEATHMATCH;
+		loopi(G_M_NUM)
+		{
+			if ((gametype[gmode].mutators & mutstype[i].type) && (muts & mutstype[i].type))
+			{
+				s_sprintfd(name)("%s%s%s", *gname ? gname : "", *gname ? "-" : "", mutstype[i].name);
+				s_strcpy(gname, name);
+			}
+		}
+		s_sprintfd(mname)("%s%s%s", *gname ? gname : "", *gname ? " " : "", gametype[gmode].name);
+		s_strcpy(gname, mname);
+		return gname;
+    }
 	char *defaultmap() { return "usm01"; }
 	int defaultmode() { return G_DEATHMATCH; }
 

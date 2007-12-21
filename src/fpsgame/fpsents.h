@@ -1,4 +1,3 @@
-
 struct entities : icliententities
 {
 	fpsclient &cl;
@@ -622,4 +621,4 @@ struct entities : icliententities
 			break;
 		}
 	}
-};
+} et;

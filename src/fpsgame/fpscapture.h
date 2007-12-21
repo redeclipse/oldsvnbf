@@ -398,7 +398,7 @@ struct captureclient : capturestate
 		}
 		return best;
 	}
-};
+} cpc;
 
 #else
 
@@ -604,7 +604,7 @@ struct captureservmode : capturestate, servmode
 			loopv(sv.clients) if(sv.clients[i]->state.state==CS_ALIVE) entergame(sv.clients[i]);
 		}
 	}
-};
+} capturemode;
 
 #endif
 

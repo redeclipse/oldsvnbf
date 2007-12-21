@@ -24,7 +24,7 @@ struct iclientcom
 {
     virtual ~iclientcom() {}
 
-    virtual void gamedisconnect() = 0;
+    virtual void gamedisconnect(int clean) = 0;
     virtual void parsepacketclient(int chan, ucharbuf &p) = 0;
     virtual int sendpacketclient(ucharbuf &p, bool &reliable, dynent *d) = 0;
     virtual void gameconnect(bool _remote) = 0;
@@ -159,6 +159,7 @@ struct igameserver
     virtual void sendservmsg(const char *s) = 0;
     virtual void changemap(const char *s, int mode = 0, int muts = 0) { return; }
     virtual char *gameid() = 0;
+	virtual char *gamename(int mode, int muts) = 0;
     virtual char *defaultmap() = 0;
     virtual int defaultmode() = 0;
     virtual bool canload(char *type) = 0;

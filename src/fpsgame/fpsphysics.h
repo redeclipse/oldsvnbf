@@ -848,4 +848,4 @@ struct physics
 		}
 		cleardynentcache();
 	}
-};
+} ph;

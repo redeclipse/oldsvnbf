@@ -17,7 +17,7 @@ bool pubserv = false;
 int totalmillis = 0, lastmillis = 0;
 int uprate = 0, maxclients = DEFAULTCLIENTS;
 char *ip = "", *master = NULL;
-char *game = "bfa";
+char *game = "bfa", *load = NULL;
 
 igameclient *cl = NULL;
 igameserver *sv = NULL;
@@ -34,35 +34,36 @@ void registergame(char *name, igame *ig)
 	(*gamereg)[name] = ig;
 }
 
-void initgame(char *game)
+void initgame(char *type)
 {
-	igame **ig = gamereg->access(game);
-	if(!ig) fatal("cannot start game module: ", game);
+	igame **ig = gamereg->access(type);
+	if(!ig) fatal("cannot start game module: ", type);
 
 	sv = (*ig)->newserver();
-	appendhomedir(sv->gameid());
-	addpackagedir(sv->gameid());
-
-	cl = (*ig)->newclient();
-	if(cl)
+	if (sv)
 	{
-		cc = cl->getcom();
-		et = cl->getents();
-		cl->initclient();
-	}
-
-	loopv(gameargs)
-	{
-		if(!cl || !cl->clientoption(gameargs[i]))
+		cl = (*ig)->newclient();
+		
+		if (cl)
 		{
-			if(!sv->serveroption(gameargs[i]))
-#ifdef STANDALONE
-				printf("unknown command-line option: %s\n", gameargs[i]);
-#else
-				conoutf("unknown command-line option: %s", gameargs[i]);
-#endif
+			cc = cl->getcom();
+			et = cl->getents();
+		}
+	
+		loopv(gameargs)
+		{
+			if(!cl || !cl->clientoption(gameargs[i]))
+			{
+				if(!sv->serveroption(gameargs[i]))
+	#ifdef STANDALONE
+					printf("unknown command-line option: %s\n", gameargs[i]);
+	#else
+					conoutf("unknown command-line option: %s", gameargs[i]);
+	#endif
+			}
 		}
 	}
+	else fatal("cannot start %s module server", type);
 }
 
 // all network traffic is in 32bit ints, which are then compressed using the following simple scheme (assumes that most values are small).
@@ -141,10 +142,7 @@ void filtertext(char *dst, const char *src, bool whitespace, int len)
 {
 	for(int c = *src; c; c = *++src)
 	{
-		switch(c)
-		{
-		case '\f': ++src; continue;
-		}
+		if (c == '\f') { ++src; continue; }
 		if(isspace(c) ? whitespace : isprint(c))
 		{
 			*dst++ = c;
@@ -514,10 +512,10 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 #endif
 	sv->serverupdate(lastmillis, totalmillis);
 
+	sendpongs();
+		
 	if (pubserv)
 	{
-		sendpongs();
-		
 		if (*masterpath) checkmasterreply();
 
 		if (totalmillis-lastupdatemaster > 60*60*1000 && *masterpath)		// send alive signal to masterserver every hour of uptime
@@ -598,19 +596,31 @@ void lanconnect()
 #endif
 }
 
-void initserver()
+void initruntime()
 {
 	initgame(game);
 
+	appendhomedir(sv->gameid());
+	addpackagedir(sv->gameid());
+
 	if (servertype)
 	{
-		pubserv = servertype >= 2 ? true : false;
-		if(!master) master = sv->getdefaultmaster();
+		conoutf("init: server");
+
+		if (servertype >= 2)
+		{
+			pubserv = true;
+		}
+		else
+		{
+			pubserv = false;
+		}
+		if (!master) master = sv->getdefaultmaster();
 		char *mid = strstr(master, "/");
 		if(!mid) mid = master;
 		s_strcpy(masterpath, mid);
 		s_strncpy(masterbase, master, mid-master+1);
-	
+
 		ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
 		if (*ip)
 		{
@@ -621,23 +631,34 @@ void initserver()
 		if (!serverhost) { conoutf("could not create server socket"); return; }
 		loopi (maxclients) serverhost->peers[i].data = NULL;
 
-		if (pubserv)
+		address.port = sv->serverinfoport();
+		pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
+		if (pongsock == ENET_SOCKET_NULL)
 		{
-			address.port = sv->serverinfoport();
-			pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
-			if (pongsock == ENET_SOCKET_NULL)
-			{
-				conoutf("could not create server info socket, publicity disabled");
-				pubserv = false;
-			}
-			else
-			{
-				enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
-			}
+			conoutf("could not create server info socket, publicity disabled");
+			pubserv = false;
+		}
+		else
+		{
+			enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 		}
 	
 		sv->serverinit();
+
+		int d = sv->defaultmode();
+		string s, m;
+		s_strcpy(m, load ? load : sv->defaultmap());
 	
+		char *t = t = strpbrk(m, ":");
+		if (t)
+		{
+			s_strncpy(s, m, t-m+1);
+			d = min(atoi(t+1), 1);
+		}
+		else { s_strcpy(s, m); }
+	
+		sv->changemap(s, d, 0x00);
+
 		if(servertype >= 3)
 		{
 			#ifdef WIN32
@@ -649,11 +670,9 @@ void initserver()
 			enet_time_set(0);
 			if(pubserv && *masterpath) updatemasterserver();
 			for(;;) serverslice(5);
+			return;
 		}
-		else
-		{
-			if(pubserv && *masterpath) updatemasterserver();
-		}
+		if(pubserv && *masterpath) updatemasterserver();
 	}
 }
 
@@ -672,6 +691,7 @@ bool serveroption(char *opt)
 		case 'i': ip = opt+2; return true;
 		case 'm': master = opt+2; return true;
 		case 'g': game = opt+2; return true;
+		case 'l': load = opt+2; return true;
 		case 's': servertype = atoi(opt+2); return true;
 		default: return false;
 	}
@@ -683,7 +703,7 @@ int main(int argc, char* argv[])
 	servertype = 3;
 	for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
-	initserver();
+	initruntime();
 	return 0;
 }
 #endif
