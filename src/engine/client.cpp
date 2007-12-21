@@ -51,7 +51,6 @@ void abortconnect()
 	if(curpeer) return;
 	enet_host_destroy(clienthost);
 	clienthost = NULL;
-	lanconnect();
 }
 
 void connects(char *servername)
@@ -117,16 +116,12 @@ void disconnect(int onlyclean, int async)
 		conoutf("disconnected");
 		cleanup = true;
 	}
-	if(cleanup)
-	{
-		cc->gamedisconnect();
-	}
-	if(!connpeer && clienthost)
+	if (!connpeer && clienthost)
 	{
 		enet_host_destroy(clienthost);
 		clienthost = NULL;
 	}
-	if(!onlyclean) { lanconnect(); }
+	if (cleanup) cc->gamedisconnect(onlyclean);
 }
 
 void trydisconnect()

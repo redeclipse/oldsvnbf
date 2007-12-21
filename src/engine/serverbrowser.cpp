@@ -371,7 +371,7 @@ void checkpings()
 				getstring(text, p);
                 filtertext(si.map, text);
 				getstring(text, p);
-                filtertext(si.sdesc, text);
+                //filtertext(si.sdesc, text);
 				break;
 			}
 		}

@@ -1,4 +1,3 @@
-
 struct fpsrender
 {
 	fpsclient &cl;
@@ -69,9 +68,9 @@ struct fpsrender
 		if(isthirdperson() && (cl.player1->state != CS_SPECTATOR || cl.player1->clientnum == -cl.cameranum)) renderplayer(cl.player1, true, teamskins() || m_team(cl.gamemode, cl.mutators) ? mdlnames[1] : mdlnames[0]);
 
 		cl.et.renderentities();
-		cl.ws.renderbouncers();
+		cl.pj.render();
 		if(m_capture(cl.gamemode)) cl.cpc.renderbases();
 
 		endmodelbatches();
 	}
-};
+} fr;

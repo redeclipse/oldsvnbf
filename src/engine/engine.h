@@ -285,7 +285,7 @@ extern void getlavacolour(uchar *lcol);
 // server
 extern vector<char *> gameargs;
 
-extern void initserver();
+extern void initruntime();
 extern void cleanupserver();
 extern void serverslice(uint timeout);
 
@@ -452,7 +452,6 @@ extern vector<cline> conlines[CN_MAX];
 extern void console(const char *s, int type, ...);
 
 extern void rehash(bool reload = true);
-extern void startgame(char *load = NULL, char *initscript = NULL);
 
 // command
 extern char *gettime(char *format);

@@ -1,5 +1,3 @@
-// TODO: get all this into the game module
-
 // network quantization scale
 #define DMF 16.0f			// for world locations
 #define DNF 100.0f			// for normalized vectors
@@ -39,6 +37,8 @@ struct fpsentity : extentity
 	~fpsentity() {}
 };
 
+enum { BNC_SHOT = 0, BNC_GIBS, BNC_DEBRIS };
+
 enum
 {
 	GUN_PISTOL = 0,
@@ -62,14 +62,15 @@ enum
 	G_MAX
 };
 
-#define G_M_TEAM		0x0001
-#define G_M_INSTA		0x0002
-#define G_M_DUEL		0x0004
+#define G_M_TEAM			0x0001
+#define G_M_INSTA			0x0002
+#define G_M_DUEL			0x0004
+#define G_M_LINK			0x0008
 
-#define G_M_NUM			3
+#define G_M_NUM				4
 
-#define G_M_FRAG		G_M_TEAM|G_M_INSTA|G_M_DUEL
-#define G_M_BASE		G_M_TEAM|G_M_INSTA
+#define G_M_FRAG			G_M_TEAM|G_M_INSTA|G_M_DUEL
+#define G_M_BASE			G_M_TEAM|G_M_INSTA|G_M_LINK
 
 static struct gametypes
 {
@@ -80,17 +81,12 @@ static struct gametypes
 	{ G_SINGLEPLAYER,	0,					"Singleplayer" },
 	{ G_DEATHMATCH,		G_M_FRAG,			"Deathmatch" },
 	{ G_CAPTURE,		G_M_BASE,			"Capture" },
-};
-#if 0
-mutstype[] = {
+}, mutstype[] = {
 	{ G_M_TEAM,			0,					"Team" },
 	{ G_M_INSTA,		0,					"Instagib" },
 	{ G_M_DUEL,			0,					"Duel" },
+	{ G_M_LINK,			0,					"Link" },
 };
-#endif
-
-#define m_name(a) 			(a > -1 && a < G_MAX ? gametype[a].name : NULL)
-#define m_mut(a) 			(a > -1 && a < G_M_NUM ? mutstype[a].name : NULL)
 
 #define m_demo(a)			(a == G_DEMO)
 #define m_edit(a)			(a == G_EDITMODE)
@@ -382,7 +378,7 @@ enum
 	SINFO_PING,
 	SINFO_PLAYERS,
 	SINFO_MAXCLIENTS,
-	SINFO_MODE,
+	SINFO_GAME,
 	SINFO_MAP,
 	SINFO_TIME,
 	SINFO_MAX
@@ -392,13 +388,13 @@ static char *serverinfotypes[] = {
 	"",
 	"status",
 	"host",
-	"description",
+	"desc",
 	"ping",
 	"pl",
 	"max",
-	"game mode",
-	"map name",
-	"time left"
+	"game",
+	"map",
+	"time"
 };
 
 enum

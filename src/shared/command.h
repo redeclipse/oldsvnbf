@@ -1,6 +1,5 @@
 // script binding functionality
 
-
 enum { ID_VAR, ID_COMMAND, ID_CCOMMAND, ID_ALIAS };
 
 enum { NO_OVERRIDE = INT_MAX, OVERRIDDEN = 0 };

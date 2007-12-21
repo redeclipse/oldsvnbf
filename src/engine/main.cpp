@@ -531,34 +531,12 @@ void rehash(bool reload)
 		writecfg();
 	}
 
-	persistidents = false;
 	exec("defaults.cfg");
-	persistidents = true;
-
 	execfile("servers.cfg");
 	execfile("config.cfg");
 	execfile("autoexec.cfg");
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
-
-void startgame(char *load, char *initscript)
-{
-	int d = sv->defaultmode();
-	string s, m;
-	s_strcpy(m, load ? load : sv->defaultmap());
-
-	char *t = t = strpbrk(m, ":");
-	if (t)
-	{
-		s_strncpy(s, m, t-m+1);
-		d = min(atoi(t+1), 1);
-	}
-	else { s_strcpy(s, m); }
-
-	sv->changemap(s, d, 0x00);
-	if (initscript) execute(initscript);
-	lanconnect();
-}
 
 void setcaption(char *text)
 {
@@ -685,7 +663,7 @@ int main(int argc, char **argv)
 	#endif
 
 	int fs = SDL_FULLSCREEN, par = 0;
-	char *load = NULL, *initscript = NULL;
+	char *initscript = NULL;
 
 	initing = true;
 	addpackagedir("data");
@@ -712,11 +690,6 @@ int main(int argc, char **argv)
 				shaderprecision = min(max(n - 1, 0), 3);
 				break;
 			}
-			case 'l':
-			{
-				load = &argv[i][2];
-				break;
-			}
 			case 'x': initscript = &argv[i][2]; break;
 			default: if(!serveroption(argv[i])) gameargs.add(argv[i]); break;
 		}
@@ -740,12 +713,6 @@ int main(int argc, char **argv)
 
 	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
 	if (SDL_Init(par) < 0) fatal("Unable to initialize SDL: ", SDL_GetError());
-
-	conoutf("init: enet");
-	if(enet_initialize()<0) fatal("Unable to initialise network module");
-
-	conoutf("init: server");
-	initserver();
 
 	conoutf("init: video: mode");
 	int resize = SDL_RESIZABLE;
@@ -821,11 +788,22 @@ int main(int argc, char **argv)
     notexture = textureload("textures/notexture.png");
     if(!notexture) fatal("could not find core textures");
 
-	conoutf("init: console");
-	persistidents = false;
+	conoutf("init: sound");
+	initsound();
+
+	conoutf("init: enet");
+	if(enet_initialize()<0) fatal("Unable to initialise network module");
+
+	conoutf("init: runtime");
+	initruntime();
+
+	conoutf("init: config");
 	if(!execfile("stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
 	if(!execfile("font.cfg")) fatal("cannot find font definitions");
 	if(!setfont("default")) fatal("no default font specified");
+
+	conoutf("init: rehash");
+	rehash(false);
 
 	computescreen("initializing...");
 	inbetweenframes = true;
@@ -837,15 +815,10 @@ int main(int argc, char **argv)
 	conoutf("init: world");
 	camera1 = cl->iterdynents(0);
 	emptymap(0, true);
-
-	conoutf("init: sound");
-	initsound();
-
-	conoutf("init: cfg");
-	rehash(false);
-	startgame(load, initscript);
+	cl->initclient();
 
 	conoutf("init: mainloop");
+	if (initscript) execute(initscript);
 
 	resetfpshistory();
 	for(;;) updateframe(true);
