@@ -117,7 +117,7 @@ struct clientcom : iclientcom
 		if (!edit)
 		{
 			cl.player1->state = CS_ALIVE;
-			cl.player1->o.z -= cl.player1->eyeheight; // entinmap wants feet pos
+			cl.player1->o.z -= cl.player1->height; // entinmap wants feet pos
 		}
 		else
 		{
@@ -346,7 +346,7 @@ struct clientcom : iclientcom
 		const float dx = cl.player1->o.x-d->o.x;
 		const float dy = cl.player1->o.y-d->o.y;
 		const float dz = cl.player1->o.z-d->o.z;
-		const float rz = cl.player1->aboveeye+d->eyeheight;
+		const float rz = cl.player1->aboveeye+d->height;
 		const float fx = (float)fabs(dx), fy = (float)fabs(dy), fz = (float)fabs(dz);
 		if(fx<r && fy<r && fz<rz && cl.player1->state!=CS_SPECTATOR && d->state!=CS_DEAD)
 		{

@@ -108,171 +108,6 @@ void screenshot(char *filename)
 COMMAND(screenshot, "s");
 COMMAND(quit, "");
 
-void computescreen(const char *text, Texture *t)
-{
-	int w = screen->w, h = screen->h;
-	gettextres(w, h);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glEnable(GL_BLEND);
-	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	glClearColor(0.f, 0.f, 0.f, 1);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glMatrixMode(GL_PROJECTION);
-	loopi(2)
-	{
-		glLoadIdentity();
-		glOrtho(0, w, h, 0, -1, 1);
-
-		glClear(GL_COLOR_BUFFER_BIT);
-		settexture("textures/loadback.jpg");
-
-		glColor3f(1, 1, 1);
-		glBegin(GL_QUADS);
-
-		glTexCoord2f(0, 0); glVertex2i(0, 0);
-		glTexCoord2f(1, 0); glVertex2i(w, 0);
-		glTexCoord2f(1, 1); glVertex2i(w, h);
-		glTexCoord2f(0, 1); glVertex2i(0, h);
-
-		glEnd();
-		glLoadIdentity();
-		glOrtho(0, w*3, h*3, 0, -1, 1);
-		draw_text(text, 70, 2*FONTH + FONTH/2);
-		glLoadIdentity();
-		glOrtho(0, w, h, 0, -1, 1);
-		if(t)
-		{
-			glDisable(GL_BLEND);
-			glBindTexture(GL_TEXTURE_2D, t->gl);
-			int sz = 256, x = (w-sz)/2, y = min(384, h-256);
-			glBegin(GL_QUADS);
-			glTexCoord2f(0, 0); glVertex2i(x,	y);
-			glTexCoord2f(1, 0); glVertex2i(x+sz, y);
-			glTexCoord2f(1, 1); glVertex2i(x+sz, y+sz);
-			glTexCoord2f(0, 1); glVertex2i(x,	y+sz);
-			glEnd();
-			glEnable(GL_BLEND);
-		}
-		int x = (w-512)/2, y = 128;
-		settexture("textures/logo.png");
-		glBegin(GL_QUADS);
-		glTexCoord2f(0, 0); glVertex2i(x,	 y);
-		glTexCoord2f(1, 0); glVertex2i(x+512, y);
-		glTexCoord2f(1, 1); glVertex2i(x+512, y+256);
-		glTexCoord2f(0, 1); glVertex2i(x,	 y+256);
-		glEnd();
-		SDL_GL_SwapBuffers();
-	}
-	glMatrixMode(GL_MODELVIEW);
-	glDisable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-}
-
-static void bar(float bar, int w, int o, float r, float g, float b)
-{
-	int side = 2*FONTH;
-	float x1 = side, x2 = bar*(w*3-2*side)+side;
-	float y1 = o*FONTH;
-	glColor3f(r, g, b);
-	glBegin(GL_TRIANGLE_STRIP);
-	loopk(10)
-	{
-		float c = cosf(M_PI/2 + k/9.0f*M_PI), s = 1 + sinf(M_PI/2 + k/9.0f*M_PI);
-		glVertex2f(x2 - c*FONTH, y1 + s*FONTH);
-		glVertex2f(x1 + c*FONTH, y1 + s*FONTH);
-	}
-	glEnd();
-
-#if 0
-	glColor3f(0.3f, 0.3f, 0.3f);
-	glBegin(GL_LINE_LOOP);
-	loopk(10)
-	{
-		float c = cosf(M_PI/2 + k/9.0f*M_PI), s = 1 + sinf(M_PI/2 + k/9.0f*M_PI);
-		glVertex2f(x1 + c*FONTH, y1 + s*FONTH);
-	}
-	loopk(10)
-	{
-		float c = cosf(M_PI/2 + k/9.0f*M_PI), s = 1 - sinf(M_PI/2 + k/9.0f*M_PI);
-		glVertex2f(x2 - c*FONTH, y1 + s*FONTH);
-	}
-	glEnd();
-#endif
-}
-
-void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, const char *text2, GLuint tex)	// also used during loading
-{
-	if(!inbetweenframes) return;
-
-	updateframe(false);
-
-	int w = screen->w, h = screen->h;
-	gettextres(w, h);
-
-	glDisable(GL_DEPTH_TEST);
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, w*3, h*3, 0, -1, 1);
-	notextureshader->set();
-
-	glLineWidth(3);
-
-	if(text1)
-	{
-		bar(1, w, 4, 0, 0, 0.8f);
-		if(bar1>0) bar(bar1, w, 4, 0, 0.5f, 1);
-	}
-
-	if(bar2>0)
-	{
-		bar(1, w, 6, 0.5f, 0, 0);
-		bar(bar2, w, 6, 0.75f, 0, 0);
-	}
-
-	glLineWidth(1);
-
-	glEnable(GL_BLEND);
-	glEnable(GL_TEXTURE_2D);
-	defaultshader->set();
-
-	if(text1) draw_text(text1, 2*FONTH, 4*FONTH + FONTH/2);
-	if(bar2>0) draw_text(text2, 2*FONTH, 6*FONTH + FONTH/2);
-
-	glDisable(GL_BLEND);
-
-	if(tex)
-	{
-		glBindTexture(GL_TEXTURE_2D, tex);
-		int sz = 256, x = (w-sz)/2, y = min(384, h-256);
-		sz *= 3;
-		x *= 3;
-		y *= 3;
-		glBegin(GL_QUADS);
-		glTexCoord2f(0, 0); glVertex2i(x,	y);
-		glTexCoord2f(1, 0); glVertex2i(x+sz, y);
-		glTexCoord2f(1, 1); glVertex2i(x+sz, y+sz);
-		glTexCoord2f(0, 1); glVertex2i(x,	y+sz);
-		glEnd();
-	}
-
-	glDisable(GL_TEXTURE_2D);
-
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-	glEnable(GL_DEPTH_TEST);
-	SDL_GL_SwapBuffers();
-}
-
 void setfullscreen(bool enable)
 {
 	if(enable == !(screen->flags&SDL_FULLSCREEN))
@@ -566,12 +401,6 @@ void updateframe(bool dorender)
 	else s_sprintf(cap)("loading..");
 	setcaption(cap);
 
-	if (dorender)
-	{
-		cl->updateworld(worldpos, curtime, lastmillis);
-		menuprocess();
-	}
-
 	lastmillis += curtime;
 	totalmillis = millis;
 
@@ -579,6 +408,9 @@ void updateframe(bool dorender)
 
 	if (dorender)
 	{
+		cl->updateworld(worldpos, curtime, lastmillis);
+		menuprocess();
+
 		if (frames) updatefpshistory(elapsed);
 		frames++;
 
@@ -597,58 +429,59 @@ void updateframe(bool dorender)
 			if(frames>2) gl_drawframe(screen->w, screen->h);
 			inbetweenframes = true;
 		}
+
+		SDL_Event event;
+		int lasttype = 0, lastbut = 0;
+		while (SDL_PollEvent(&event))
+		{
+			switch (event.type)
+			{
+				case SDL_QUIT:
+					quit();
+					break;
+	
+#if !defined(WIN32) && !defined(__APPLE__)
+				case SDL_VIDEORESIZE:
+					screenres(&event.resize.w, &event.resize.h);
+					break;
+#endif
+	
+				case SDL_KEYDOWN:
+				case SDL_KEYUP:
+					keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
+					break;
+	
+				case SDL_ACTIVEEVENT:
+					if(event.active.state & SDL_APPINPUTFOCUS)
+						setvar("grabmouse", event.active.gain ? 1 : 0, true);
+					break;
+	
+				case SDL_MOUSEMOTION:
+					if (ignore) { ignore--; break; }
+					if ((screen->flags&SDL_FULLSCREEN) || grabmouse)
+					{
+#ifdef __APPLE__
+						if (event.motion.y == 0) break;  //let mac users drag windows via the title bar
+#endif
+						if (event.motion.x == screen->w/2 && event.motion.y == screen->h/2) break;
+						if(!g3d_movecursor(event.motion.xrel, event.motion.yrel))
+							cl->mousemove(event.motion.xrel, event.motion.yrel);
+						SDL_WarpMouse(screen->w/2, screen->h/2);
+					}
+					break;
+	
+				case SDL_MOUSEBUTTONDOWN:
+				case SDL_MOUSEBUTTONUP:
+					if (lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
+					keypress(-event.button.button, event.button.state!=0, 0);
+					lasttype = event.type;
+					lastbut = event.button.button;
+					break;
+			}
+		}
 	}
 	else clientkeepalive();
 
-	SDL_Event event;
-	int lasttype = 0, lastbut = 0;
-	while (SDL_PollEvent(&event))
-	{
-		switch (event.type)
-		{
-			case SDL_QUIT:
-				quit();
-				break;
-
-#if !defined(WIN32) && !defined(__APPLE__)
-			case SDL_VIDEORESIZE:
-				screenres(&event.resize.w, &event.resize.h);
-				break;
-#endif
-
-			case SDL_KEYDOWN:
-			case SDL_KEYUP:
-				keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
-				break;
-
-			case SDL_ACTIVEEVENT:
-				if(event.active.state & SDL_APPINPUTFOCUS)
-					setvar("grabmouse", event.active.gain ? 1 : 0, true);
-				break;
-
-			case SDL_MOUSEMOTION:
-				if (ignore) { ignore--; break; }
-				if ((screen->flags&SDL_FULLSCREEN) || grabmouse)
-				{
-#ifdef __APPLE__
-					if (event.motion.y == 0) break;  //let mac users drag windows via the title bar
-#endif
-					if (event.motion.x == screen->w/2 && event.motion.y == screen->h/2) break;
-					if(!g3d_movecursor(event.motion.xrel, event.motion.yrel))
-						cl->mousemove(event.motion.xrel, event.motion.yrel);
-					SDL_WarpMouse(screen->w/2, screen->h/2);
-				}
-				break;
-
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-				if (lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
-				keypress(-event.button.button, event.button.state!=0, 0);
-				lasttype = event.type;
-				lastbut = event.button.button;
-				break;
-		}
-	}
 	colorpos = 0; // last but not least.
 }
 

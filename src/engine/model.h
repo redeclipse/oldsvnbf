@@ -8,10 +8,10 @@ struct model
 	vec translate;
     BIH *bih;
 	vec bbcenter, bbradius;
-	float eyeheight, collideradius, collideheight;
+	float height, collideradius, collideheight;
 	int batch;
 
-    model() : spin(0), collide(true), ellipsecollide(false), cullface(true), shadow(true), scale(1.0f), translate(0, 0, 0), bih(0), bbcenter(0, 0, 0), bbradius(0, 0, 0), eyeheight(0.9f), collideradius(0), collideheight(0), batch(-1) {}
+    model() : spin(0), collide(true), ellipsecollide(false), cullface(true), shadow(true), scale(1.0f), translate(0, 0, 0), bih(0), bbcenter(0, 0, 0), bbradius(0, 0, 0), height(0.45f), collideradius(0), collideheight(0), batch(-1) {}
     virtual ~model() { DELETEP(bih); }
 	virtual void calcbb(int frame, vec &center, vec &radius) = 0;
     virtual void extendbb(int frame, vec &center, vec &radius, modelattach &a) {}

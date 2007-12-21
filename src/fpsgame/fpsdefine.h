@@ -348,7 +348,7 @@ struct fpsent : dynent, fpsstate
 	int clientnum, privilege, lastupdate, plag, ping;
 	int lastattackgun;
 	bool attacking, reloading, pickingup, leaning;
-	int lasttaunt, lastlean;
+	int lasttaunt;
 	int lastpickup, lastpickupmillis;
 	int superdamage;
 	int frags, deaths, totaldamage, totalshots;
@@ -377,13 +377,19 @@ struct fpsent : dynent, fpsstate
 		vel.add(push);
 	}
 
+	void stopmoving()
+	{
+		dynent::stopmoving();
+		attacking = reloading = pickingup = leaning = false;
+	}
+
 	void respawn()
 	{
+		stopmoving();
 		dynent::reset();
 		fpsstate::respawn();
 		lastattackgun = gunselect;
-		attacking = reloading = pickingup = leaning = false;
-		lasttaunt = lastlean = lastpickup = lastpickupmillis = -1;
+		lasttaunt = lastpickup = lastpickupmillis = -1;
 		superdamage = spree = lastimpulse = 0;
 	}
 };

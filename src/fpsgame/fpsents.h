@@ -206,7 +206,7 @@ struct entities : icliententities
 	{
 		if(d==cl.player1 && (editmode || cl.cc.spectator)) return;
 		vec o = d->o;
-		o.z -= d->eyeheight;
+		o.z -= d->height;
 		loopv(ents)
 		{
 			extentity &e = *ents[i];

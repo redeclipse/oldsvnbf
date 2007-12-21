@@ -83,15 +83,9 @@ struct physics
 	}
 
 
-	void updateroll(physent *d)
-	{
-		if (d->type != ENT_PLAYER || cl.lastmillis-((fpsent *)d)->lastlean > 1000)
-			d->roll = d->roll/(1+(float)sqrtf((float)curtime)/25);
-	}
-
 	void updatewater(fpsent *d, int waterlevel)
 	{
-		vec v(d->o.x, d->o.y, d->o.z-d->eyeheight);
+		vec v(d->o.x, d->o.y, d->o.z-d->height);
 		int mat = lookupmaterial(v);
 			
 		if (waterlevel || mat == MAT_WATER || mat == MAT_LAVA)
@@ -546,11 +540,9 @@ struct physics
 		if(!pl->timeinair && pl->physstate >= PHYS_FLOOR && pl->vel.squaredlen() < 1e-4f && pl->gvel.iszero()) pl->moving = false;
 	
 		pl->lastmoveattempt = cl.lastmillis;
-		if(pl->o!=oldpos) pl->lastmove = cl.lastmillis;
+		if (pl->o!=oldpos) pl->lastmove = cl.lastmillis;
 	
-		updateroll(pl);
-	
-		if(pl->type!=ENT_CAMERA)
+		if (pl->type!=ENT_CAMERA)
 		{
 			int mat = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z+1));
 			bool inwater = isliquid(mat);
@@ -585,12 +577,12 @@ struct physics
 		vec bbmin(obstacle->o);
 		bbmin.x -= rad;
 		bbmin.y -= rad;
-		bbmin.z -= obstacle->eyeheight+d->aboveeye;
+		bbmin.z -= obstacle->height+d->aboveeye;
 		bbmin.sub(space);
 		vec bbmax(obstacle->o);
 		bbmax.x += rad;
 		bbmax.y += rad;
-		bbmax.z += obstacle->aboveeye+d->eyeheight;
+		bbmax.z += obstacle->aboveeye+d->height;
 		bbmax.add(space);
 	
 		loopi(3) if(d->o[i] <= bbmin[i] || d->o[i] >= bbmax[i]) return;
@@ -646,7 +638,7 @@ struct physics
 	
 	bool entinmap(dynent *d, bool avoidplayers)		// brute force but effective way to find a free spawn spot in the map
 	{
-		d->o.z += d->eyeheight;	 // pos specified is at feet
+		d->o.z += d->height;	 // pos specified is at feet
 		vec orig = d->o;
 		loopi(100)				  // try max 100 times
 		{
@@ -698,6 +690,7 @@ struct physics
 		else
 		{
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
+			d->o.z += d->height;
 			entinmap(d, false);
 		}
 	}
@@ -719,10 +712,10 @@ struct physics
 			if(rectcollide(d, dir, o->o,
 				o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius,
 				o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye,
-				o->eyeheight + margin))
+				o->height + margin))
 				return true;
 		}
-		else if(ellipsecollide(d, dir, o->o, o->yaw, o->xradius, o->yradius, o->aboveeye, o->eyeheight + margin))
+		else if(ellipsecollide(d, dir, o->o, o->yaw, o->xradius, o->yradius, o->aboveeye, o->height + margin))
 			return true;
 		return false;
 	}
@@ -747,7 +740,7 @@ struct physics
 			loopv(dynents)
 			{
 				physent *d = dynents[i];
-				if(p==d || d->o.z-d->eyeheight < p->o.z+p->aboveeye || p->o.reject(d->o, p->radius+PLATFORMBORDER+d->radius) || candidates.find(d) >= 0) continue;
+				if(p==d || d->o.z-d->height < p->o.z+p->aboveeye || p->o.reject(d->o, p->radius+PLATFORMBORDER+d->radius) || candidates.find(d) >= 0) continue;
 				candidates.add(d);
 				d->stacks = d->collisions = -1;
 			}

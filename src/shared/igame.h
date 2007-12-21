@@ -124,7 +124,7 @@ struct igameclient
 	virtual vec feetpos(physent *d)
 	{
 		//if (d->type == ENT_PLAYER || d->type == ENT_AI)
-		//	return vec(d->o).sub(vec(0, 0, d->eyeheight));
+		//	return vec(d->o).sub(vec(0, 0, d->height));
 		return vec(d->o);
 	}
 
