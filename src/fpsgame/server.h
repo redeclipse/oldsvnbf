@@ -1677,7 +1677,7 @@ struct fpsserver : igameserver
 			for(j = 1; j<i; j++) if(ci->events[j].hit.target==h.target) break;
 			if(j<i) continue;
 
-			int damage = int(guns[e.gun].damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
+			int damage = int(guntype[e.gun].damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
 			dodamage(target, ci, damage, e.gun, h.dir);
 		}
 	}
@@ -1686,9 +1686,9 @@ struct fpsserver : igameserver
 	{
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canshoot(e.gun, e.millis)) { return; }
-		if (guns[e.gun].max) gs.ammo[e.gun]--;
+		if (guntype[e.gun].max) gs.ammo[e.gun]--;
 		gs.lastshot = gs.gunlast[e.gun] = e.millis;
-		gs.gunwait[e.gun] = guns[e.gun].adelay;
+		gs.gunwait[e.gun] = guntype[e.gun].adelay;
 		sendf(-1, 1, "ri9x", SV_SHOTFX, ci->clientnum, e.gun,
 				int(e.from[0]*DMF), int(e.from[1]*DMF), int(e.from[2]*DMF),
 				int(e.to[0]*DMF), int(e.to[1]*DMF), int(e.to[2]*DMF),
@@ -1708,7 +1708,7 @@ struct fpsserver : igameserver
 
 					totalrays += h.rays;
 					if(totalrays>maxrays) continue;
-					int damage = h.rays*guns[e.gun].damage;
+					int damage = h.rays*guntype[e.gun].damage;
 					dodamage(target, ci, damage, e.gun, h.dir);
 				}
 				break;
@@ -1720,7 +1720,7 @@ struct fpsserver : igameserver
 	{
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canreload(e.gun, e.millis)) { return; }
-		gs.pickup(e.millis, WEAPON, e.gun, guns[e.gun].add);
+		gs.pickup(e.millis, WEAPON, e.gun, guntype[e.gun].add);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
 

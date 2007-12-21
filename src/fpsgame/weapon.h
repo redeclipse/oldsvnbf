@@ -125,10 +125,10 @@ struct weaponstate
 	{
 		vec dir;
 		float dist = middist(cl.player1, dir, o);
-		cl.camerawobble += int(float(guns[gun].damage)/(dist/RL_DAMRAD/RL_DISTSCALE));
+		cl.camerawobble += int(float(guntype[gun].damage)/(dist/RL_DAMRAD/RL_DISTSCALE));
 
-		if (guns[gun].esound >= 0)
-			playsoundv(guns[gun].esound, o, dir, RL_DAMRAD);
+		if (guntype[gun].esound >= 0)
+			playsoundv(guntype[gun].esound, o, dir, RL_DAMRAD);
 
 		particle_splash(0, 200, 300, o);
 		particle_fireball(o, RL_DAMRAD, gun == GUN_RL ? 22 : 23);
@@ -197,7 +197,7 @@ struct weaponstate
 
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
-		if (guns[gun].sound >= 0 ) playsound(guns[gun].sound, &d->o, &d->vel);
+		if (guntype[gun].sound >= 0 ) playsound(guntype[gun].sound, &d->o, &d->vel);
 		switch(gun)
 		{
 			case GUN_SG:
@@ -228,7 +228,7 @@ struct weaponstate
 					float dist = from.dist(to);
 					up.z += dist/8;
 				}
-				cl.pj.create(from, up, local, d, BNC_SHOT, guns[gun].time, guns[gun].speed, gun);
+				cl.pj.create(from, up, local, d, BNC_SHOT, guntype[gun].time, guntype[gun].speed, gun);
 				break;
 			}
 
@@ -302,7 +302,7 @@ struct weaponstate
 		if (d->canreload(d->gunselect, cl.lastmillis))
 		{
 			d->gunlast[d->gunselect] = cl.lastmillis;
-			d->gunwait[d->gunselect] = guns[d->gunselect].rdelay;
+			d->gunwait[d->gunselect] = guntype[d->gunselect].rdelay;
 			cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);
 			cl.playsoundc(S_RELOAD);
 		}
@@ -314,9 +314,9 @@ struct weaponstate
 
 		d->lastattackgun = d->gunselect;
 		d->gunlast[d->gunselect] = cl.lastmillis;
-		d->gunwait[d->gunselect] = guns[d->gunselect].adelay;
+		d->gunwait[d->gunselect] = guntype[d->gunselect].adelay;
 		d->ammo[d->gunselect]--;
-		d->totalshots += guns[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
+		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 
 		vec from = d->o;
 		vec to = targ;
@@ -325,9 +325,9 @@ struct weaponstate
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		vec kickback(unitv);
-		kickback.mul(guns[d->gunselect].kick);
+		kickback.mul(guntype[d->gunselect].kick);
 		d->vel.add(kickback);
-		if (d == cl.player1) cl.camerawobble += guns[d->gunselect].wobble;
+		if (d == cl.player1) cl.camerawobble += guntype[d->gunselect].wobble;
 		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
 		if(barrier < dist)
 		{
@@ -340,7 +340,7 @@ struct weaponstate
 		else if(d->gunselect==GUN_CG) offsetray(from, to, 1, to);
 
 		hits.setsizenodelete(0);
-		if(!guns[d->gunselect].speed) raydamage(from, to, d);
+		if(!guntype[d->gunselect].speed) raydamage(from, to, d);
 
 		shootv(d->gunselect, from, to, d, true);
 

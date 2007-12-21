@@ -605,7 +605,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		if(samegame)
 		{
 			if (maptype == MAP_OCTA) { loopj(eif) gzgetc(f); }
-			et->readent(f, maptype, i, e);
+			et->readent(f, maptype, i, hdr.version, e);
 		}
 		else
 		{

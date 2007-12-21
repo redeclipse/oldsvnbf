@@ -689,6 +689,8 @@ void lte	(int *a, int *b) { intret((int)(*a <= *b)); } COMMANDN(<=, lte, "ii");
 void gte	(int *a, int *b) { intret((int)(*a >= *b)); } COMMANDN(>=, gte, "ii");
 void xora (int *a, int *b) { intret(*a ^ *b); }		  COMMANDN(^, xora, "ii");
 void nota (int *a)		 { intret(*a == 0); }		  COMMANDN(!, nota, "i");
+void mina (int *a, int *b) { intret(min(*a, *b)); }      COMMANDN(min, mina, "ii");
+void maxa (int *a, int *b) { intret(max(*a, *b)); }      COMMANDN(max, maxa, "ii");
 
 void anda (char *a, char *b) { intret(execute(a)!=0 && execute(b)!=0); }
 void ora  (char *a, char *b) { intret(execute(a)!=0 || execute(b)!=0); }
@@ -754,9 +756,6 @@ void clearsleep_(int *clearoverrides)
 }
 
 COMMANDN(clearsleep, clearsleep_, "i");
-
-ICOMMAND(max, "ii", (int a, int b), intret(max(a, b)));
-ICOMMAND(min, "ii", (int a, int b), intret(min(a, b)));
 
 ICOMMAND(exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
 
