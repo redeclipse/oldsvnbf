@@ -1,14 +1,14 @@
 struct fpsclient : igameclient
 {
 	// these define classes local to fpsclient
-	#include "fpsphysics.h"
-	#include "fpsprojs.h"
-	#include "fpsweapon.h"
-	#include "fpsscore.h"
-	#include "fpsrender.h"
-	#include "fpsents.h"
-	#include "fpsclient.h"
-	#include "fpscapture.h"
+	#include "physics.h"
+	#include "projs.h"
+	#include "weapon.h"
+	#include "scoreboard.h"
+	#include "render.h"
+	#include "ents.h"
+	#include "client.h"
+	#include "capture.h"
 
 	int nextmode, nextmuts, gamemode, mutators;
 	bool intermission;
