@@ -89,7 +89,7 @@ struct clientcom : iclientcom
 	{
 		connected = _remote;
 		remote = _remote;
-		if(editmode) toggleedit();
+		if (editmode) toggleedit();
 	}
 
 	void gamedisconnect(int clean)
@@ -117,14 +117,14 @@ struct clientcom : iclientcom
 		if (!edit)
 		{
 			cl.player1->state = CS_ALIVE;
-			cl.player1->o.z -= cl.player1->eyeheight;		// entinmap wants feet pos
-			cl.ph.entinmap(cl.player1, false);			// find spawn closest to current floating pos
+			cl.player1->o.z -= cl.player1->eyeheight; // entinmap wants feet pos
 		}
 		else
 		{
 			cl.resetgamestate();
 			cl.player1->state = CS_EDITING;
 		}
+		cl.ph.entinmap(cl.player1, false); // find spawn closest to current floating pos
 		addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 	}
 

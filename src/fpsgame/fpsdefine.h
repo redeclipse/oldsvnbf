@@ -347,8 +347,8 @@ struct fpsent : dynent, fpsstate
 	int weight;						 // affects the effectiveness of hitpush
 	int clientnum, privilege, lastupdate, plag, ping;
 	int lastattackgun;
-	bool attacking, reloading;
-	int lasttaunt;
+	bool attacking, reloading, pickingup, leaning;
+	int lasttaunt, lastlean;
 	int lastpickup, lastpickupmillis;
 	int superdamage;
 	int frags, deaths, totaldamage, totalshots;
@@ -382,12 +382,9 @@ struct fpsent : dynent, fpsstate
 		dynent::reset();
 		fpsstate::respawn();
 		lastattackgun = gunselect;
-		attacking = reloading = false;
-		lasttaunt = 0;
-		lastpickup = -1;
-		lastpickupmillis = 0;
-		superdamage = 0;
-		spree = lastimpulse = 0;
+		attacking = reloading = pickingup = leaning = false;
+		lasttaunt = lastlean = lastpickup = lastpickupmillis = -1;
+		superdamage = spree = lastimpulse = 0;
 	}
 };
 

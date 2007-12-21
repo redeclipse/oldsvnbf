@@ -125,6 +125,7 @@ void computescreen(const char *text, Texture *t)
 	{
 		glLoadIdentity();
 		glOrtho(0, w, h, 0, -1, 1);
+
 		glClear(GL_COLOR_BUFFER_BIT);
 		settexture("textures/loadback.jpg");
 
@@ -796,25 +797,25 @@ int main(int argc, char **argv)
 
 	conoutf("init: runtime");
 	initruntime();
+	camera1 = cl->iterdynents(0);
+	emptymap(0, true);
 
 	conoutf("init: config");
 	if(!execfile("stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
 	if(!execfile("font.cfg")) fatal("cannot find font definitions");
 	if(!setfont("default")) fatal("no default font specified");
 
-	conoutf("init: rehash");
-	rehash(false);
-
 	computescreen("initializing...");
 	inbetweenframes = true;
+
+	conoutf("init: rehash");
+	rehash(false);
 
     conoutf("init: gl effects");
     loadshaders();
 	particleinit();
 
-	conoutf("init: world");
-	camera1 = cl->iterdynents(0);
-	emptymap(0, true);
+	conoutf("init: client");
 	cl->initclient();
 
 	conoutf("init: mainloop");

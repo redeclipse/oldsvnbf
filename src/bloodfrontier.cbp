@@ -6,8 +6,7 @@
 		<Option title="bloodfrontier"/>
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
-		<Option default_target="2"/>
-		<Option active_target="1"/>
+		<Option default_target="1"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -27,7 +26,7 @@
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
-				<Option parameters="-t -w1024 -h740"/>
+				<Option parameters="-t -f -w512 -h384 -rinit.cfg -qhome"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
 				<Option projectResourceIncludeDirsRelation="1"/>
@@ -69,7 +68,7 @@
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
-				<Option parameters="-t -f -w640 -h480 -rinit.cfg -qhome"/>
+				<Option parameters="-t -f -w512 -h384 -rinit.cfg -qhome"/>
 				<Option includeInTargetAll="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>

@@ -111,9 +111,10 @@ void cancelsel()
 
 VARF(gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
 {
-	if(dragging) return;
+	if(dragging || !hdr.worldsize) return;
 	gridsize = 1<<gridpower;
-	if(gridsize>=hdr.worldsize) gridsize = hdr.worldsize/2;
+	if(gridsize >= hdr.worldsize) gridsize = hdr.worldsize/2;
+	if(gridsize <= 0) gridsize = 1;
 	cancelsel();
 });
 
@@ -125,10 +126,10 @@ VARF(hmapedit, 0, 0, 1, horient = sel.orient);
 void toggleedit()
 {
 	if (!cc->allowedittoggle(editmode)) return;		 // not in most multiplayer modes
-	cancelsel();
 	editmode = editing = entediting = !editmode;
-	keyrepeat(editmode);
 	cc->edittoggled(editmode);
+	cancelsel();
+	keyrepeat(editmode);
 }
 
 bool noedit(bool view)
@@ -301,8 +302,7 @@ void cursorupdate()
 		sel.o[R[od]] = e[R[od]];
 		sel.o[C[od]] = e[C[od]];
 	}
-	else
-	if(entmoving)
+	else if(entmoving)
 	{
 		entdrag(ray);
 	}
@@ -337,14 +337,13 @@ void cursorupdate()
 		}
 		else
 		{
-
 			v = ray;
 			v.mul(wdist+0.1f);
 			v.add(camera1->o);
 			w = v;
             cube *c = &lookupcube(w.x, w.y, w.z);
             if(gridlookup && !dragging && !moving && !havesel && hmapedit!=1) gridsize = lusize;
-			int mag = lusize / gridsize;
+			int mag = gridsize && lusize ? lusize / gridsize : 0;
 			normalizelookupcube(w.x, w.y, w.z);
 			if(sdist == 0 || sdist > wdist) rayrectintersect(lu.tovec(), vec(gridsize), camera1->o, ray, t=0, orient); // just getting orient
 			cur = lu;
