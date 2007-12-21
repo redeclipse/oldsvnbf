@@ -8,6 +8,7 @@ struct gameclient : igameclient
 	#include "entities.h"
 	#include "client.h"
 	#include "capture.h"
+    #include "assassin.h"
 
 	int nextmode, nextmuts, gamemode, mutators;
 	bool intermission;
@@ -47,7 +48,7 @@ struct gameclient : igameclient
     IVARP(maxradarscale, 0, 1024, 10000);
 
 	gameclient()
-		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this),
+		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this), asc(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false), lastmillis(0),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
@@ -205,7 +206,7 @@ struct gameclient : igameclient
 				}
 				else
 				{
-					if (m_capture(gamemode) && !cpc.respawnwait())
+					if ((m_capture(gamemode) && !cpc.respawnwait()) || (m_assassin(gamemode) && !asc.respawnwait()))
 						respawnself();
 				}
 			}
@@ -337,6 +338,12 @@ struct gameclient : igameclient
 	{
 		if(d->state!=CS_ALIVE || intermission) return;
 
+        if(m_assassin(gamemode))
+        {
+            if(d==player1 && asc.hunters.find(actor)>=0) asc.hunters.removeobj(actor);
+            else if(actor==player1 && asc.targets.find(d)>=0) asc.targets.removeobj(d);
+        }
+
 		string dname, aname;
 		s_strcpy(dname, d==player1 ? "you" : colorname(d));
 		s_strcpy(aname, actor==player1 ? "you" : (actor->type!=ENT_INANIMATE ? colorname(actor) : ""));
@@ -455,6 +462,7 @@ struct gameclient : igameclient
 		if(d->name[0]) conoutf("player %s disconnected", colorname(d));
 		pj.remove(d);
         removetrackedparticles(d);
+        if(m_assassin(gamemode)) asc.removeplayer(d);
 		DELETEP(players[cn]);
 		cleardynentcache();
 	}
@@ -737,10 +745,11 @@ struct gameclient : igameclient
 						}
 					}
 
-					if (!editmode && m_capture(gamemode))
+					if (!editmode)
 					{
 						glDisable(GL_BLEND);
-						cpc.capturehud(w, h);
+				        if(m_capture(gamemode)) cpc.drawhud(w, h);
+				        else if(m_assassin(gamemode)) asc.drawhud(w, h);
 						glEnable(GL_BLEND);
 					}
 				}

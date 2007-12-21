@@ -258,7 +258,7 @@ struct captureclient : capturestate
         return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(cl.lastmillis-cl.player1->lastpain)/1000);
     }
 
-	void capturehud(int w, int h)
+	void drawhud(int w, int h)
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -273,18 +273,6 @@ struct captureclient : capturestate
 		drawblips(x, y, s, 0, showenemies);
 		drawblips(x, y, s, -1, showenemies);
 		if(showenemies) drawblips(x, y, s, -2);
-		if(cl.player1->state == CS_DEAD)
-		{
-            int wait = respawnwait();
-            if(wait>=0)
-            {
-				glPushMatrix();
-				glLoadIdentity();
-				glOrtho(0, w*900/h, 900, 0, -1, 1);
-	            draw_textf("%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, wait);
-				glPopMatrix();
-			}
-        }
         glDisable(GL_BLEND);
 	}
 

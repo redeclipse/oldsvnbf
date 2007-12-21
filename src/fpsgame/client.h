@@ -972,6 +972,58 @@ struct clientcom : iclientcom
 				break;
 			}
 
+            case SV_CLEARTARGETS:
+                if(m_assassin(cl.gamemode)) cl.asc.targets.setsize(0);
+                break;
+
+            case SV_CLEARHUNTERS:
+                if(m_assassin(cl.gamemode)) cl.asc.hunters.setsize(0);
+                break;
+
+            case SV_ADDTARGET:
+            {
+                int tcn = getint(p);
+                if(m_assassin(cl.gamemode)) 
+                {
+                    fpsent *t = cl.newclient(tcn);
+                    if(cl.asc.targets.find(t)<0) cl.asc.targets.add(t);
+                }
+                break;
+            }
+
+            case SV_REMOVETARGET:
+            {
+                int tcn = getint(p);
+                if(m_assassin(cl.gamemode))
+                {
+                    fpsent *t = cl.getclient(tcn);
+                    if(t) cl.asc.targets.removeobj(t);
+                }
+                break;
+            }
+
+            case SV_ADDHUNTER:
+            {
+                int hcn = getint(p);
+                if(m_assassin(cl.gamemode))
+                {
+                    fpsent *h = cl.newclient(hcn);
+                    if(cl.asc.hunters.find(h)<0) cl.asc.hunters.add(h);
+                }
+                break;
+            }
+
+            case SV_REMOVEHUNTER:
+            {
+                int hcn = getint(p);
+                if(m_assassin(cl.gamemode))
+                {
+                    fpsent *h = cl.getclient(hcn);
+                    if(h) cl.asc.hunters.removeobj(h);
+                }
+                break;
+            }    
+
 			case SV_NEWMAP:
 			{
 				int size = getint(p);
@@ -1002,7 +1054,8 @@ struct clientcom : iclientcom
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(cl.gamemode)) return;
 		load_world(name);
-		if(m_capture(gamemode)) cl.cpc.setupbases();
+		if(m_capture(cl.gamemode)) cl.cpc.setupbases();
+        else if(m_assassin(cl.gamemode)) cl.asc.reset();
 		if(editmode) edittoggled(editmode);
 	}
 
