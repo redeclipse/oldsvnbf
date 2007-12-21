@@ -40,6 +40,18 @@ void fatal(char *s, char *o)	// failure exit
 	exit(EXIT_FAILURE);
 }
 
+double getaccurateticks()
+{
+    #ifdef WIN32
+    LARGE_INTEGER count, freq;
+    QueryPerformanceCounter(&count);
+    QueryPerformanceFrequency(&freq);
+    return double(count.QuadPart)/double(freq.QuadPart)*1000;
+    #else
+    return SDL_GetTicks();  // FIXME: do something equally good on linux etc
+    #endif
+}
+
 SDL_Surface *screen = NULL;
 
 int curtime;

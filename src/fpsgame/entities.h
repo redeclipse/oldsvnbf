@@ -19,60 +19,47 @@ struct entities : icliententities
 		{
 			int gun = ents[i]->attr1;
 			if (gun <= -1 || gun >= NUMGUNS) gun = 0;
-			return guns[gun].name;
+			return guntype[gun].name;
 		}
 		return NULL;
 	}
 
 	char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
 	{
-		static char *bfmdlnames[] =
-		{
-			NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-			NULL, NULL, NULL,
-			"carrot",
-			NULL, NULL,
-			"checkpoint",
-			NULL, NULL, NULL
-		};
-		static char *bfgunnames[] = {
-			"ammo/pistol", "ammo/shotgun", "ammo/chaingun", "ammo/grenades", "ammo/rockets", "ammo/rifle"
-		};
+		static string emdl;
+		emdl[0] = 0;
+
 		switch (type)
 		{
 			case WEAPON:
-				return bfgunnames[attr1];
+				if (guntype[attr1].file) s_sprintf(emdl)("ammo/%s", guntype[attr1].file);
+				break;
 			default:
-				return bfmdlnames[type];
+				break;
 		}
+		return emdl;
 	}
 
 	void renderentities()
 	{
 		#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
 
-		if (editmode || showallwp())
-		{
-			renderprimitive(true);
-			if (editmode)
-			{	loopv(entgroup) entfocus(entgroup[i], renderentshow(e));
-				if (enthover >= 0) entfocus(enthover, renderentshow(e));
-			}
-			loopv(ents)
-			{
-				entfocus(i, {
-					if (editmode || (showallwp() && e.type == WAYPOINT))
-						renderentforce(e);
-				});
-			}
-			renderprimitive(false);
+		renderprimitive(true);
+		if (editmode)
+		{	loopv(entgroup) entfocus(entgroup[i], renderentshow(e));
+			if (enthover >= 0) entfocus(enthover, renderentshow(e));
 		}
+		loopv(ents)
+		{
+			entfocus(i, { renderentforce(e); });
+		}
+		renderprimitive(false);
 
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
 
-			if (e.type == CARROT || e.type == RESPAWNPOINT || e.type == TELEPORT ||
+			if (e.type == TRIGGER || e.type == CHECKPOINT || e.type == TELEPORT ||
 				(e.type==WEAPON && e.spawned))
 			{
 				char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
@@ -120,7 +107,7 @@ struct entities : icliententities
 		{
 			ents[n]->spawned = false;
 			if(!d) return;
-			guninfo &g = guns[ents[n]->attr1];
+			guntypes &g = guntype[ents[n]->attr1];
 			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), g.name, 15);
 			playsound(S_ITEMAMMO, &ents[n]->o);
 			if(d!=cl.player1) return;
@@ -177,12 +164,12 @@ struct entities : icliententities
 				break;
 			}
 
-			case RESPAWNPOINT:
+			case CHECKPOINT:
 				if(d!=cl.player1) break;
 				if(n==cl.respawnent) break;
 				cl.respawnent = n;
 				conoutf("\f2respawn point set!");
-				playsound(S_V_RESPAWNPOINT);
+				playsound(S_V_CHECKPOINT);
 				break;
 
 			case JUMPPAD:
@@ -211,7 +198,7 @@ struct entities : icliententities
 		{
 			extentity &e = *ents[i];
 			if(e.type==NOTUSED) continue;
-			if(!e.spawned && e.type!=TELEPORT && e.type!=JUMPPAD && e.type!=RESPAWNPOINT) continue;
+			if(!e.spawned && e.type!=TELEPORT && e.type!=JUMPPAD && e.type!=CHECKPOINT) continue;
 			float dist = e.o.dist(o);
 			if(dist<(e.type==TELEPORT ? 16 : 12)) trypickup(i, d);
 		}
@@ -272,7 +259,7 @@ struct entities : icliententities
 			case MONSTER:
 			case TELEDEST:
 			case MAPMODEL:
-			case RESPAWNPOINT:
+			case CHECKPOINT:
 				radius = 4;
 				vecfromyawpitch(e.attr1, 0, 1, 0, dir);
 				break;
@@ -280,19 +267,7 @@ struct entities : icliententities
 	}
 
 	const char *entnameinfo(entity &e) { return ""; }
-	const char *entname(int i)
-	{
-		static const char *entnames[] =
-		{
-			"none?", "light", "mapmodel", "playerstart", "envmap", "particles", "sound", "spotlight",
-			"weapon", "teleport", "teledest",
-			"monster", "carrot", "jumppad",
-			"base", "respawnpoint",
-			"camera", "waypoint",
-            "", "", "", ""
-		};
-		return i>=0 && size_t(i)<sizeof(entnames)/sizeof(entnames[0]) ? entnames[i] : "";
-	}
+	const char *entname(int i) { return i >= NOTUSED && i <= MAXENTTYPES ? enttype[i].name : ""; }
 
 	void editent(int i)
 	{
@@ -309,7 +284,10 @@ struct entities : icliententities
 		return 4.0f;
 	}
 
-	IVARP(showallwp, 0, 0, 1);
+	IVARP(showbaselinks, 0, 0, 1);
+	IVARP(showcheckpointlinks, 0, 0, 1);
+	IVARP(showcameralinks, 0, 0, 1);
+	IVARP(showwaypointlinks, 0, 0, 1);
 
 	void entdelink(int both)
 	{
@@ -321,8 +299,7 @@ struct entities : icliententities
 			{
 				int type = ents[index]->type, last = -1;
 
-				if (type != WAYPOINT)
-					return ; // we only link waypoints so far
+				if (enttype[type].links) return;
 
 				loopv(entgroup)
 				{
@@ -359,8 +336,7 @@ struct entities : icliententities
 			{
 				int type = ents[index]->type, last = -1;
 
-				if (type != WAYPOINT)
-					return ; // we only link waypoints so far
+				if (enttype[type].links) return;
 
 				loopv(entgroup)
 				{
@@ -387,7 +363,7 @@ struct entities : icliententities
 
 	void entlinks(int n)
 	{
-		loopv(ents) if (ents[i]->type == WAYPOINT)
+		loopv(ents) if (enttype[ents[i]->type].links)
 		{
 			fpsentity &e = (fpsentity &)*ents[i];
 
@@ -438,26 +414,21 @@ struct entities : icliententities
 		}
 	}
 
-	void readent(gzFile &g, int maptype, int id, entity &e)
+	void readent(gzFile &g, int maptype, int id, int ver, entity &e)
 	{
 		if (maptype == MAP_BFGZ)
 		{
 			fpsentity &f = (fpsentity &)e;
 			
-			switch (f.type)
+			if (enttype[f.type].links && (ver >= 48 || f.type == WAYPOINT))
 			{
-				case WAYPOINT:
-				{
-					int links = gzgetint(g);
-					f.links.setsize(0);
-					loopi(links) f.links.add(gzgetint(g));
-				}
+				int links = gzgetint(g);
+				f.links.setsize(0);
+				loopi(links) f.links.add(gzgetint(g));
 			}
 		}
 		else if (maptype == MAP_OCTA)
 		{
-			int ver = getmapversion();
-
 			if (ver <= 10)
 			{
 				if(e.type >= 7) e.type++;
@@ -485,35 +456,32 @@ struct entities : icliententities
 	{
 		fpsentity &f = (fpsentity &)e;
 
-		switch (f.type)
+		if (enttype[f.type].links)
 		{
-			case WAYPOINT:
+			vector<int> links;
+			int n = 0;
+
+			loopv(ents)
 			{
-				vector<int> links;
-				int n = 0;
-
-				loopv(ents)
+				if (ents[i]->type != ET_EMPTY)
 				{
-					if (ents[i]->type != ET_EMPTY)
+					if (enttype[ents[i]->type].links)
 					{
-						if (ents[i]->type == WAYPOINT)
-						{
-							if (f.links.find(i) >= 0) links.add(n); // align to indices
-						}
-						n++;
+						if (f.links.find(i) >= 0) links.add(n); // align to indices
 					}
+					n++;
 				}
+			}
 
-				gzputint(g, links.length());
-				loopv(links)
-				{
-					gzputint(g, links[i]); // aligned index
-				}
+			gzputint(g, links.length());
+			loopv(links)
+			{
+				gzputint(g, links[i]); // aligned index
 			}
 		}
 	}
 
-	void renderwaypoint(extentity &e)
+	void renderlinked(extentity &e)
 	{
 		fpsentity &d = (fpsentity &)e;
 
@@ -571,10 +539,28 @@ struct entities : icliententities
 	{
 		switch (e.type)
 		{
+			case BASE:
+			{
+				if (showentdir && showbaselinks())
+					renderlinked(e);
+				break;
+			}
+			case CHECKPOINT:
+			{
+				if (showentdir && showcheckpointlinks())
+					renderlinked(e);
+				break;
+			}
+			case CAMERA:
+			{
+				if (showentdir && showcameralinks())
+					renderlinked(e);
+				break;
+			}
 			case WAYPOINT:
 			{
-				if (showentdir && showallwp())
-					renderwaypoint(e);
+				if (showentdir && showwaypointlinks())
+					renderlinked(e);
 				break;
 			}
 			default:
@@ -607,18 +593,32 @@ struct entities : icliententities
 				}
 				break;
 			}
+			case BASE:
+			{
+				if (showentdir && !showbaselinks())
+					renderlinked(e);
+				break;
+			}
+			case CHECKPOINT:
+			{
+				if (showentdir && !showcheckpointlinks())
+					renderlinked(e);
+				break;
+			}
 			case CAMERA:
 			{
-				if (showentdir && e.attr1 >= 0.f && e.attr1 <= 360.f)
+				if (showentdir)
 				{
-					renderentdir(e.o, e.attr1, e.attr2);
+					if (!showcameralinks()) renderlinked(e);
+					if (showentdir && e.attr1 >= 0.f && e.attr1 <= 360.f)
+						renderentdir(e.o, e.attr1, e.attr2);
 				}
 				break;
 			}
 			case WAYPOINT:
 			{
-				if (showentdir && !showallwp())
-					renderwaypoint(e);
+				if (showentdir && !showwaypointlinks())
+					renderlinked(e);
 				break;
 			}
 			default:

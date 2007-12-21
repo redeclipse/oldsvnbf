@@ -17,13 +17,37 @@ enum						// static entity types
 	TELEPORT,				// attr1 = idx
 	TELEDEST,				// attr1 = angle, attr2 = idx
 	MONSTER,				// attr1 = angle, attr2 = monstertype
-	CARROT,					// attr1 = tag, attr2 = type
+	TRIGGER,				// attr1 = tag, attr2 = type
 	JUMPPAD,				// attr1 = zpush, attr2 = ypush, attr3 = xpush
 	BASE,
-	RESPAWNPOINT,
+	CHECKPOINT,
 	CAMERA,					// attr1 = yaw, attr2 = pitch, attr3 = pan (+:horiz/-:vert), attr4 = idx
 	WAYPOINT,				// none?
 	MAXENTTYPES
+};
+
+static struct enttypes
+{
+	int	type;	bool links;		char *name;
+} enttype[] = {
+	{ NOTUSED,		false,			"none" },
+	{ LIGHT,		false,			"light" },
+	{ MAPMODEL,		false,			"mapmodel" },
+	{ PLAYERSTART,	false,			"playerstart" },
+	{ ENVMAP,		false,			"envmap" },
+	{ PARTICLES,	false,			"particles" },
+	{ MAPSOUND,		false,			"sound" },
+	{ SPOTLIGHT,	false,			"spotlight" },
+	{ WEAPON,		false,			"weapon" },
+	{ TELEPORT,		false,			"teleport" },
+	{ TELEDEST,		false,			"teledest" },
+	{ MONSTER,		false,			"monster" },
+	{ TRIGGER,		false,			"trigger" },
+	{ JUMPPAD,		false,			"jumppad" },
+	{ BASE,			true,			"base" },
+	{ CHECKPOINT,	true,			"checkpoint" },
+	{ CAMERA,		true,			"camera" },
+	{ WAYPOINT,		true,			"waypoint" },
 };
 
 struct fpsentity : extentity
@@ -112,7 +136,7 @@ enum
 	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
 	S_GLFIRE, S_GLEXPL, S_GLHIT, S_RLFIRE, S_RLEXPL, S_RLFLY, S_RIFLE,
 	S_ITEMAMMO, S_ITEMSPAWN,
-	S_V_BASECAP, S_V_BASELOST, S_V_FIGHT, S_V_RESPAWNPOINT,
+	S_V_BASECAP, S_V_BASELOST, S_V_FIGHT, S_V_CHECKPOINT,
 	S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED,
 	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
@@ -196,10 +220,10 @@ struct demoheader
 
 #define MAXCARRY		2
 
-static struct guninfo
+static struct guntypes
 {
 	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	char *name, *file;
-} guns[NUMGUNS] =
+} guntype[NUMGUNS] =
 {
 	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		-10 ,	10,		"pistol",	"pistol" },
 	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	"shotgun",	"shotgun" },
@@ -225,7 +249,7 @@ struct fpsstate
 
 	bool canweapon(int gun, int millis)
 	{
-		return isgun(gun) && (gunselect != gun) && (ammo[gun] >= 0 || guns[gun].rdelay <= 0);
+		return isgun(gun) && (gunselect != gun) && (ammo[gun] >= 0 || guntype[gun].rdelay <= 0);
 	}
 
 	bool canshoot(int gun, int millis)
@@ -235,12 +259,12 @@ struct fpsstate
 
 	bool canreload(int gun, int millis)
 	{
-		return isgun(gun) && (ammo[gun] < guns[gun].max && ammo[gun] >= 0) && (guns[gun].rdelay > 0) && (millis-gunlast[gun] >= gunwait[gun]);
+		return isgun(gun) && (ammo[gun] < guntype[gun].max && ammo[gun] >= 0) && (guntype[gun].rdelay > 0) && (millis-gunlast[gun] >= gunwait[gun]);
 	}
 
 	bool canammo(int gun, int millis)
 	{
-		return isgun(gun) && (ammo[gun] < guns[gun].max) && (millis-gunlast[gun] >= gunwait[gun]);
+		return isgun(gun) && (ammo[gun] < guntype[gun].max) && (millis-gunlast[gun] >= gunwait[gun]);
 	}
 
 	bool canpickup(int type, int attr1, int attr2, int millis)
@@ -266,20 +290,20 @@ struct fpsstate
 		{
 			case WEAPON:
 			{
-				guninfo &g = guns[attr1];
+				guntypes &g = guntype[attr1];
 				
 				if (ammo[g.info] < 0) ammo[g.info] = 0;
 				
 				int carry = 0;
-				loopi(NUMGUNS) if (ammo[i] >= 0 && guns[i].rdelay > 0) carry++;
+				loopi(NUMGUNS) if (ammo[i] >= 0 && guntype[i].rdelay > 0) carry++;
 				if (carry > MAXCARRY)
 				{
-					if (gunselect != g.info && guns[gunselect].rdelay > 0)
+					if (gunselect != g.info && guntype[gunselect].rdelay > 0)
 					{
 						ammo[gunselect] = -1;
 						gunselect = g.info;
 					}
-					else loopi(NUMGUNS) if (ammo[i] >= 0 && i != g.info && guns[i].rdelay > 0)
+					else loopi(NUMGUNS) if (ammo[i] >= 0 && i != g.info && guntype[i].rdelay > 0)
 					{
 						ammo[i] = -1;
 						break;
@@ -289,7 +313,7 @@ struct fpsstate
 				ammo[g.info] = min(ammo[g.info] + (attr2 > 0 ? attr2 : g.add), g.max);
 				
 				lastshot = gunlast[g.info] = millis;
-				gunwait[g.info] = guns[g.info].rdelay;
+				gunwait[g.info] = guntype[g.info].rdelay;
 				break;
 			}
 			default:
@@ -319,7 +343,7 @@ struct fpsstate
 			gunselect = GUN_RIFLE;
 			loopi(NUMGUNS)
 			{
-				ammo[i] = i == GUN_RIFLE ? guns[i].add : -1;
+				ammo[i] = i == GUN_RIFLE ? guntype[i].add : -1;
 			}
 		}
 		else
@@ -328,7 +352,7 @@ struct fpsstate
 			gunselect = GUN_PISTOL;
 			loopi(NUMGUNS)
 			{
-				ammo[i] = i == GUN_PISTOL || i == GUN_SG ? guns[i].add : -1;
+				ammo[i] = i == GUN_PISTOL || i == GUN_SG ? guntype[i].add : -1;
 			}
 		}
 	}

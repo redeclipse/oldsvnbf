@@ -143,7 +143,7 @@ struct fpsclient : igameclient
 	bool doautoreload()
 	{
 		return autoreload() && player1->gunselect >= 0 &&
-			!player1->ammo[player1->gunselect] && guns[player1->gunselect].rdelay > 0;
+			!player1->ammo[player1->gunselect] && guntype[player1->gunselect].rdelay > 0;
 	}
 
 	fpsent *pointatplayer()
@@ -476,7 +476,7 @@ struct fpsclient : igameclient
     {
         loopi(NUMGUNS)
         {
-            const char *file = guns[i].file;
+            const char *file = guntype[i].file;
             if(!file) continue;
             s_sprintfd(mdl)("hudguns/%s", file);
             loadmodel(mdl, -1, true);
@@ -605,7 +605,7 @@ struct fpsclient : igameclient
 		}
 #endif
 
-        s_sprintfd(gunname)("hudguns/%s", guns[player1->gunselect].file);
+        s_sprintfd(gunname)("hudguns/%s", guntype[player1->gunselect].file);
 		rendermodel(color, dir, gunname, anim, 0, 0, sway, player1->yaw+90, player1->pitch, player1->roll, speed, base, NULL, 0);
 	}
 
@@ -618,7 +618,7 @@ struct fpsclient : igameclient
 
 		if (otime < rtime)
 		{
-			int anim = (guns[player1->gunselect].rdelay && rtime == guns[player1->gunselect].rdelay) ? ANIM_GUNRELOAD : ANIM_GUNSHOOT;
+			int anim = (guntype[player1->gunselect].rdelay && rtime == guntype[player1->gunselect].rdelay) ? ANIM_GUNRELOAD : ANIM_GUNSHOOT;
 			drawhudmodel(anim, rtime/17.0f, player1->gunlast[player1->gunselect]);
 		}
 		else

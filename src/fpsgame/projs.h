@@ -73,7 +73,7 @@ struct projectiles
 							break;
 						}
 					}
-					if (guns[gun].fsound >= 0) schan = playsound(guns[gun].fsound, &o, &vel);
+					if (guntype[gun].fsound >= 0) schan = playsound(guntype[gun].fsound, &o, &vel);
 					break;
 				}
 				case BNC_GIBS:
@@ -160,7 +160,7 @@ struct projectiles
 
 						if (millis-lasttime > 500)
 						{
-							if (bnctype == BNC_SHOT && guns[gun].rsound >= 0) playsound(guns[gun].rsound, &o, &vel, vel.magnitude());
+							if (bnctype == BNC_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, &vel, vel.magnitude());
 							else if (bnctype == BNC_GIBS) playsound(S_SPLAT, &o, &vel, vel.magnitude());
 							else if (bnctype == BNC_DEBRIS) playsound(S_DEBRIS, &o, &vel, vel.magnitude());
 							lasttime = millis;
