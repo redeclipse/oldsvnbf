@@ -2,9 +2,9 @@
 
 struct projectiles
 {
-	fpsclient &cl;
+	gameclient &cl;
 
-	projectiles(fpsclient &_cl) : cl(_cl)
+	projectiles(gameclient &_cl) : cl(_cl)
 	{
 	}
 

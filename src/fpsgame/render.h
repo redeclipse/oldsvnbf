@@ -1,8 +1,8 @@
 struct fpsrender
 {
-	fpsclient &cl;
+	gameclient &cl;
 
-	fpsrender(fpsclient &_cl) : cl(_cl) {}
+	fpsrender(gameclient &_cl) : cl(_cl) {}
 
 	vector<fpsent *> bestplayers;
     vector<const char *> bestteams;

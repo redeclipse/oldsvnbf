@@ -6,7 +6,7 @@
 #define _fileno fileno
 #endif
 
-struct fpsserver : igameserver
+struct gameserver : igameserver
 {
 	struct server_entity			// server side version of "entity" type
 	{
@@ -267,9 +267,9 @@ struct fpsserver : igameserver
 
 	struct servmode
 	{
-		fpsserver &sv;
+		gameserver &sv;
 
-		servmode(fpsserver &sv) : sv(sv) {}
+		servmode(gameserver &sv) : sv(sv) {}
 		virtual ~servmode() {}
 
 		virtual void entergame(clientinfo *ci) {}
@@ -314,7 +314,7 @@ struct fpsserver : igameserver
 	};
 	clientinfo *cmdcontext;
 	string scresult, motd;
-	fpsserver()
+	gameserver()
 		: notgotitems(true), notgotbases(false),
 			gamemode(defaultmode()), mutators(0), interm(0), minremain(10),
 			mapreload(false), lastsend(0),
@@ -867,7 +867,7 @@ struct fpsserver : igameserver
 	static void freecallback(ENetPacket *packet)
 	{
 		extern igameserver *sv;
-		((fpsserver *)sv)->cleanworldstate(packet);
+		((gameserver *)sv)->cleanworldstate(packet);
 	}
 
 	void cleanworldstate(ENetPacket *packet)
@@ -2285,7 +2285,7 @@ struct fpsserver : igameserver
 		return cname;
 	}
 	
-    char *gameid() { return GAMENAME; }
+    char *gameid() { return GAMEID; }
     char *gamename(int mode, int muts)
     {
     	static string gname;
@@ -2308,7 +2308,7 @@ struct fpsserver : igameserver
 
 	bool canload(char *type)
 	{
-		if (strcmp(type, GAMENAME) == 0) return true;
+		if (strcmp(type, GAMEID) == 0) return true;
 #ifdef BFAGAME
 		if (strcmp(type, "fps") == 0 || strcmp(type, "bfg") == 0) return true;
 #endif
@@ -2411,8 +2411,8 @@ struct fpsserver : igameserver
 };
 
 #ifndef STANDALONE
-#include "runtime.h"
-REGISTERGAME(fpsgame, GAMENAME, new runtime(), new server());
+#include "gameclient.h"
+REGISTERGAME(GAMENAME, GAMEID, new gameclient(), new gameserver());
 #else
-REGISTERGAME(fpsgame, GAMENAME, NULL, new server());
+REGISTERGAME(GAMENAME, GAMEID, NULL, new gameserver());
 #endif
