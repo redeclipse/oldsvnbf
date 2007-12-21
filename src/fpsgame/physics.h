@@ -48,7 +48,7 @@ struct physics
 	{
 		if (d->state != CS_SPECTATOR && d->state != CS_EDITING)
 		{
-			return d->maxspeed * (float(d->crouch ? crawlspeed() : movespeed())/100.f);
+			return d->maxspeed * (float(d->crouching ? crawlspeed() : movespeed())/100.f);
 		}
 		return d->maxspeed;
 	}
@@ -387,10 +387,10 @@ struct physics
 	{
 		if (floating)
 		{
-			if (pl->crouch) pl->crouch = false;
-			if (pl->jumpnext)
+			if (pl->crouching) pl->crouching = false;
+			if (pl->jumping)
 			{
-				pl->jumpnext = false;
+				pl->jumping = false;
 				pl->vel.z = jumpvelocity(pl);
 			}
 		}
@@ -398,16 +398,16 @@ struct physics
 		{
 			if (water)
 			{
-				if( pl->crouch) pl->crouch = false;
+				if (pl->crouching) pl->crouching = false;
 				if (pl->timeinair > 0)
 				{
 					pl->timeinair = 0;
 					pl->vel.z = 0;
 				}
 			}
-			if(pl->jumpnext)
+			if(pl->jumping)
 			{
-				pl->jumpnext = false;
+				pl->jumping = false;
 	
 				pl->vel.z = jumpvelocity(pl);
 				if(water) { pl->vel.x /= waterdampen(pl); pl->vel.y /= waterdampen(pl); }
@@ -416,7 +416,7 @@ struct physics
 		}
 		else
 		{
-			if (pl->crouch) pl->crouch = false;
+			if (pl->crouching) pl->crouching = false;
 			pl->timeinair += curtime;
 		}
 	

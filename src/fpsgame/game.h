@@ -61,7 +61,8 @@ struct fpsentity : extentity
 	~fpsentity() {}
 };
 
-enum { BNC_SHOT = 0, BNC_GIBS, BNC_DEBRIS };
+enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states
+enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
 
 enum
 {
@@ -73,8 +74,6 @@ enum
 	GUN_RIFLE,
 	NUMGUNS
 };
-
-enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states
 
 enum
 {

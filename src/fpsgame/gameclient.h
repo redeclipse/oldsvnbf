@@ -68,7 +68,7 @@ struct gameclient : igameclient
 		movedir(right,		strafe,	-1,		k_right,	k_left);
 
 		CCOMMAND(crouch, "D", (gameclient *self, int *down), { self->docrouch(*down!=0); });
-		CCOMMAND(jump,   "D", (gameclient *self, int *down), { if(self->canjump()) self->player1->jumpnext = *down!=0; });
+		CCOMMAND(jump,   "D", (gameclient *self, int *down), { self->dojump(*down!=0); });
 		CCOMMAND(attack, "D", (gameclient *self, int *down), { self->doattack(*down!=0); });
 		CCOMMAND(reload, "D", (gameclient *self, int *down), { self->doreload(*down!=0); });
 		CCOMMAND(pickup, "D", (gameclient *self, int *down), { self->dopickup(*down!=0); });
@@ -214,7 +214,7 @@ struct gameclient : igameclient
 			{
 				if (player1->timeinair)
 				{
-					if (player1->jumpnext && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
+					if (player1->jumping && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
 					{
 						vec dir;
 						vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
@@ -222,7 +222,7 @@ struct gameclient : igameclient
 						dir.mul(ph.jumpvelocity(player1));
 						player1->vel.add(dir);
 						player1->lastimpulse = lastmillis;
-						player1->jumpnext = false;
+						player1->jumping = false;
 					}
 				}
 				else player1->lastimpulse = 0;
@@ -277,21 +277,23 @@ struct gameclient : igameclient
 	}
 
 	// inputs
-	#define iput(x,y) \
+	#define iput(x,y,z) \
 		void do##x(bool on) \
 		{ \
-			player1->y = !intermission && player1->state != CS_DEAD ? on : false; \
+			bool val = !intermission ? on : false; \
+			player1->y = player1->state != CS_DEAD ? val : false; \
+			if (z && player1->state == CS_DEAD && val) respawn(); \
 		}
 		
-	iput(crouch,	crouch);
-	iput(attack,	attacking);
-	iput(reload,	reloading);
-	iput(pickup,	pickingup);
-	iput(lean,		leaning);
+	iput(crouch,	crouching,	false);
+	iput(jump,		jumping,	false);
+	iput(attack,	attacking,	true);
+	iput(reload,	reloading,	true);
+	iput(pickup,	pickingup,	true);
+	iput(lean,		leaning,	false);
 
 	bool canjump()
 	{
-        if (!intermission) respawn();
 		return player1->state != CS_DEAD && !intermission;
 	}
 
@@ -590,7 +592,7 @@ struct gameclient : igameclient
 	{
 		if (player1->gunselect <= -1 || player1->gunselect >= NUMGUNS) return;
 		vec sway, color, dir;
-		vecfromyawpitch(player1->yaw, player1->pitch, 1, 0, sway);
+		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
 		float swayspeed = min(4.0f, player1->vel.magnitude());
 		sway.mul(swayspeed);
 		float swayxy = sinf(swaymillis/115.0f)/100.0f,
@@ -599,8 +601,8 @@ struct gameclient : igameclient
 		sway.x *= -swayxy;
 		sway.y *= swayxy;
 		sway.z = -fabs(swayspeed*swayz);
-		sway.add(swaydir).add(vec(player1->o).add(vec(0, 0, player1->aboveeye)));
-		if(!hudgunsway()) sway = vec(player1->o).add(vec(0, 0, player1->aboveeye));
+		sway.add(swaydir).add(camera1->o);
+		if(!hudgunsway()) sway = camera1->o;
 		lightreaching(sway, color, dir);
         dynlightreaching(sway, color, dir);
 
@@ -613,7 +615,7 @@ struct gameclient : igameclient
 #endif
 
         s_sprintfd(gunname)("hudguns/%s", guntype[player1->gunselect].file);
-		rendermodel(color, dir, gunname, anim, 0, 0, sway, player1->yaw+90, player1->pitch, player1->roll, speed, base, NULL, 0);
+		rendermodel(color, dir, gunname, anim, 0, 0, sway, camera1->yaw+90, camera1->pitch, camera1->roll, speed, base, NULL, 0);
 	}
 
 	void drawhudgun()
@@ -944,15 +946,13 @@ struct gameclient : igameclient
 
 	void findorientation()
 	{
-		physent *d = player1; //isthirdperson() ? camera1 : player1;
-
 		vec dir;
-		vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
-		vecfromyawpitch(d->yaw, 0, 0, -1, camright);
-		vecfromyawpitch(d->yaw, d->pitch+90, 1, 0, camup);
+		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, dir);
+		vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
+		vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
 
-		if(raycubepos(d->o, dir, worldpos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-			worldpos = dir.mul(10).add(d->o); //otherwise 3dgui won't work when outside of map
+		if(raycubepos(camera1->o, dir, worldpos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
+			worldpos = dir.mul(10).add(camera1->o); //otherwise 3dgui won't work when outside of map
 	}
 
 	void recomputecamera()
@@ -1011,24 +1011,27 @@ struct gameclient : igameclient
 
 		if (cameratype <= 0)
 		{
+			cameratype = 0;
 			camera1->o = player1->o;
 
 			if (player1->state == CS_DEAD)
-				camera1->o.z -= (float(player1->height-player1->aboveeye)/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
+				camera1->o.z -= (float(player1->height-1)/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
 			else
-				camera1->o.z += player1->aboveeye;
+				camera1->o.z -= player1->aboveeye;
 			
 			camera1->yaw = player1->yaw;
 			camera1->pitch = player1->pitch;
 			camera1->roll = player1->roll;
+			
 			vec off;
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
 			camera1->o.add(off.mul(fabs(camera1->roll)/10.f));
+#if 0
 			off = worldpos;
 			off.sub(camera1->o);
 			off.normalize();
 			vectoyawpitch(off, camera1->yaw, camera1->pitch);
-			cameratype = 0;
+#endif
 		}
 		else
 		{

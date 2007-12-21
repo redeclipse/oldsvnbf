@@ -367,8 +367,6 @@ VAR(wireframe, 0, 0, 1);
 
 vec worldpos, camright, camup;
 
-void findorientation() { cl->findorientation(); }
-
 void transplayer()
 {
 	glLoadIdentity();
@@ -700,7 +698,7 @@ void computescreen(const char *text, Texture *t)
 		glLoadIdentity();
 		glOrtho(0, w, h, 0, -1, 1);
 
-		//glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 		settexture("textures/loadback.jpg");
 
 		glColor3f(1, 1, 1);
@@ -712,6 +710,7 @@ void computescreen(const char *text, Texture *t)
 		glTexCoord2f(0, 1); glVertex2i(0, h);
 
 		glEnd();
+
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
 		draw_text(text, 70, 2*FONTH + FONTH/2);
@@ -730,6 +729,7 @@ void computescreen(const char *text, Texture *t)
 			glEnd();
 			glEnable(GL_BLEND);
 		}
+
 		int x = (w-512)/2, y = 128;
 		settexture("textures/logo.png");
 		glBegin(GL_QUADS);
@@ -738,6 +738,7 @@ void computescreen(const char *text, Texture *t)
 		glTexCoord2f(1, 1); glVertex2i(x+512, y+256);
 		glTexCoord2f(0, 1); glVertex2i(x,	 y+256);
 		glEnd();
+
 		SDL_GL_SwapBuffers();
 	}
 	glMatrixMode(GL_MODELVIEW);
@@ -783,7 +784,7 @@ void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, 
 {
 	if (!inbetweenframes) return;
 
-	updateframe(false);
+	clientkeepalive();
 
 	int w = screen->w, h = screen->h;
 	gettextres(w, h);
@@ -849,125 +850,100 @@ void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, 
 
 void gl_drawframe(int w, int h)
 {
-	if (cc->ready())
+	defaultshader->set();
+
+	cl->recomputecamera();
+
+	cleardynlights();
+	cl->adddynlights();
+
+	float fovy = (float)fov*h/w;
+	float aspect = w/(float)h;
+	int fogmat = lookupmaterial(camera1->o);
+	if(fogmat!=MAT_WATER && fogmat!=MAT_LAVA) fogmat = MAT_AIR;
+
+	setfog(fogmat);
+	if(fogmat!=MAT_AIR)
+	{
+		fovy += (float)sin(lastmillis/1000.0)*2.0f;
+		aspect += (float)sin(lastmillis/1000.0+PI)*0.1f;
+	}
+
+	int farplane = max(max(fog*2, 384), hdr.worldsize*2);
+
+	project(fovy, aspect, farplane);
+
+	transplayer();
+
+	glEnable(GL_TEXTURE_2D);
+
+	glPolygonMode(GL_FRONT_AND_BACK, wireframe && editmode ? GL_LINE : GL_FILL);
+
+	xtravertsva = xtraverts = glde = 0;
+
+	if(!hasFBO) drawreflections();
+
+	visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, fov);
+
+	extern GLuint shadowmapfb;
+	if(shadowmap && !shadowmapfb) rendershadowmap();
+
+	glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
+
+	if(limitsky()) drawskybox(farplane, true);
+
+	bool causticspass = caustics && fogmat==MAT_WATER && lookupmaterial(camera1->o);
+	rendergeom(causticspass);
+
+	queryreflections();
+
+	if(!wireframe) renderoutline();
+
+	rendermapmodels();
+
+	if(!waterrefract)
 	{
 		defaultshader->set();
+		cl->rendergame();
+	}
 
-		cl->recomputecamera();
+	defaultshader->set();
 
-		cleardynlights();
-		cl->adddynlights();
+	if(!limitsky()) drawskybox(farplane, false);
 
-		float fovy = (float)fov*h/w;
-		float aspect = w/(float)h;
-    	int fogmat = lookupmaterial(vec(camera1->o.x, camera1->o.y, camera1->o.z + camera1->aboveeye*0.5f));
-		if(fogmat!=MAT_WATER && fogmat!=MAT_LAVA) fogmat = MAT_AIR;
+	if(hasFBO) drawreflections();
 
-		setfog(fogmat);
-		if(fogmat!=MAT_AIR)
-		{
-			fovy += (float)sin(lastmillis/1000.0)*2.0f;
-			aspect += (float)sin(lastmillis/1000.0+PI)*0.1f;
-		}
+	if(waterrefract)
+	{
+		defaultshader->set();
+		cl->rendergame();
+	}
 
-		int farplane = max(max(fog*2, 384), hdr.worldsize*2);
+	renderwater();
+	rendergrass();
 
+	rendermaterials();
+	render_particles(curtime);
+
+	if(!isthirdperson())
+	{
+		project(hudgunfov, aspect, farplane);
+		cl->drawhudgun();
 		project(fovy, aspect, farplane);
-
-		transplayer();
-
-		glEnable(GL_TEXTURE_2D);
-
-		glPolygonMode(GL_FRONT_AND_BACK, wireframe && editmode ? GL_LINE : GL_FILL);
-
-		xtravertsva = xtraverts = glde = 0;
-
-		if(!hasFBO) drawreflections();
-
-		visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, fov);
-
-		extern GLuint shadowmapfb;
-		if(shadowmap && !shadowmapfb) rendershadowmap();
-
-		glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
-
-		if(limitsky()) drawskybox(farplane, true);
-
-	    bool causticspass = caustics && fogmat==MAT_WATER && lookupmaterial(vec(camera1->o.x, camera1->o.y, camera1->o.z + camera1->aboveeye*1.25f));
-    	rendergeom(causticspass);
-
-		queryreflections();
-
-		if(!wireframe) renderoutline();
-
-		rendermapmodels();
-
-		if(!waterrefract)
-		{
-			defaultshader->set();
-			cl->rendergame();
-		}
-
-		defaultshader->set();
-
-		if(!limitsky()) drawskybox(farplane, false);
-
-		if(hasFBO) drawreflections();
-
-		if(waterrefract)
-		{
-			defaultshader->set();
-			cl->rendergame();
-		}
-
-		renderwater();
-		rendergrass();
-
-		rendermaterials();
-		render_particles(curtime);
-
-		if(!isthirdperson())
-		{
-			project(hudgunfov, aspect, farplane);
-			cl->drawhudgun();
-			project(fovy, aspect, farplane);
-		}
-
-		glDisable(GL_FOG);
-		glDisable(GL_CULL_FACE);
-
-		renderfullscreenshader(w, h);
-
-		glDisable(GL_TEXTURE_2D);
-		notextureshader->set();
-
-		gl_drawhud(w, h, fogmat);
-
-		glEnable(GL_CULL_FACE);
-		glEnable(GL_FOG);
 	}
-	else
-	{
-		float fovy = (float)fov*h/w;
-		float aspect = w/(float)h;
-		project(fovy, aspect, hdr.worldsize*2);
-		transplayer();
 
-		glEnable(GL_TEXTURE_2D);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glDisable(GL_FOG);
+	glDisable(GL_CULL_FACE);
 
-		xtravertsva = xtraverts = glde = 0;
+	renderfullscreenshader(w, h);
 
-		glClearColor(0.f, 0.f, 0.f, 1);
-		glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
+	glDisable(GL_TEXTURE_2D);
+	notextureshader->set();
 
-		glDisable(GL_FOG);
-		glDisable(GL_CULL_FACE);
+	gl_drawhud(w, h, fogmat);
 
-		gl_drawhud(w, h, MAT_AIR);
-		glEnable(GL_CULL_FACE);
-		glEnable(GL_FOG);
-	}
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_FOG);
 }
 
 VARP(crosshairsize, 0, 15, 1000);

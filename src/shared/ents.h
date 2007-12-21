@@ -104,7 +104,7 @@ struct physent                                  // base entity type, can be affe
     vec floor;                                  // the normal of floor the dynent is on
 
     bool inwater;
-    bool jumpnext, crouch;
+    bool jumping, crouching;
     bool blocked, moving;                       // used by physics to signal ai
     physent *onplayer;
     int lastmove, lastmoveattempt, collisions, stacks;
@@ -126,7 +126,7 @@ struct physent                                  // base entity type, can be affe
 
     void reset()
     {
-    	inwater = jumpnext = crouch = false;
+    	inwater = jumping = crouching  = false;
         timeinair = strafe = move = 0;
         physstate = PHYS_FALL;
 		vel = gvel = vec(0, 0, 0);
@@ -156,7 +156,7 @@ struct dynent : physent                         // animated characters, or chara
 
     void stopmoving()
     {
-        k_left = k_right = k_up = k_down = jumpnext = crouch = false;
+        k_left = k_right = k_up = k_down = jumping = crouching = false;
         move = strafe = 0;
         targetyaw = rotspeed = 0;
     }

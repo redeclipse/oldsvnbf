@@ -832,7 +832,7 @@ void interpolateorientation(dynent *d, float &interpyaw, float &interppitch)
 
 void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, float sink)
 {
-    int anim = (d->crouch ? ANIM_CROUCH : ANIM_IDLE)|ANIM_LOOP;
+    int anim = (d->crouching ? ANIM_CROUCH : ANIM_IDLE)|ANIM_LOOP;
     float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
     if(d->type==ENT_PLAYER && !local && orientinterpolationtime) interpolateorientation(d, yaw, pitch);
 	vec o(d->o);
@@ -871,7 +871,7 @@ void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attac
 		else if(d->timeinair>100) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
         else if(cl->allowmove(d)) 
         {
-			if(d->crouch)
+			if(d->crouching)
 			{
 				if(d->move>0) anim |= (ANIM_CRAWL_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 				else if(d->strafe) anim |= ((d->strafe>0 ? ANIM_CRAWL_LEFT : ANIM_CRAWL_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;

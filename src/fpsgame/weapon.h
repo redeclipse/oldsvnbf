@@ -136,7 +136,7 @@ struct weaponstate
         adddynlight(o, 1.15f*RL_DAMRAD, vec(1, 0.75f, 0.5f), 800, 400);
 
 		loopi(rnd(20)+10)
-			cl.pj.spawn(vec(o).add(vec(vel)), vel, d, BNC_DEBRIS);
+			cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
 
 		if (local)
 		{
@@ -170,7 +170,7 @@ struct weaponstate
 	{
 		if(!d->superdamage) return;
 		vec from = d->abovehead();
-		loopi(rnd(d->superdamage)+1) cl.pj.spawn(from, vel, d, BNC_GIBS);
+		loopi(rnd(d->superdamage)+1) cl.pj.spawn(from, vel, d, PRJ_GIBS);
 	}
 
 	vec hudgunorigin(int gun, const vec &from, const vec &to, fpsent *d)
@@ -228,7 +228,7 @@ struct weaponstate
 					float dist = from.dist(to);
 					up.z += dist/8;
 				}
-				cl.pj.create(from, up, local, d, BNC_SHOT, guntype[gun].time, guntype[gun].speed, gun);
+				cl.pj.create(from, up, local, d, PRJ_SHOT, guntype[gun].time, guntype[gun].speed, gun);
 				break;
 			}
 
