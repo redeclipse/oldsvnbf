@@ -36,6 +36,7 @@ CLIENT_OBJS= \
 	engine/water.o \
 	engine/world.o \
 	engine/worldio.o \
+	fpsgame/bfa.o \
 	fpsgame/fps.o
 
 SINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Iinclude

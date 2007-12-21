@@ -502,28 +502,28 @@
 			<Option target="debug"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="fpsgame\fps.cpp">
+		<Unit filename="fpsgame\bfa.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="server"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="fpsgame\fpscapture.h">
+		<Unit filename="fpsgame\capture.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsclient.h">
+		<Unit filename="fpsgame\client.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsdefine.h">
+		<Unit filename="fpsgame\game.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
@@ -531,63 +531,63 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsduel.h">
+		<Unit filename="fpsgame\duel.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsents.h">
+		<Unit filename="fpsgame\entities.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsgame.h">
+		<Unit filename="fpsgame\gameclient.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsphysics.h">
+		<Unit filename="fpsgame\physics.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsprojs.h">
+		<Unit filename="fpsgame\projs.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsrender.h">
+		<Unit filename="fpsgame\render.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsscore.h">
+		<Unit filename="fpsgame\scoreboard.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsserver.h">
+		<Unit filename="fpsgame\server.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsweapon.h">
+		<Unit filename="fpsgame\weapon.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

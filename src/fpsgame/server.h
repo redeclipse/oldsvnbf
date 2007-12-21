@@ -296,9 +296,9 @@ struct fpsserver : igameserver
 	vector<servmode *> smuts;
 
 	#define CAPTURESERV 1
-	#include "fpscapture.h"
+	#include "capture.h"
 	#undef CAPTURESERV
-	#include "fpsduel.h"
+	#include "duel.h"
 
 	#define mutate(b) loopvk(smuts) { servmode *mut = smuts[k]; { b; } }
 
@@ -2285,7 +2285,7 @@ struct fpsserver : igameserver
 		return cname;
 	}
 	
-    char *gameid() { return "bfa"; }
+    char *gameid() { return GAMENAME; }
     char *gamename(int mode, int muts)
     {
     	static string gname;
@@ -2308,8 +2308,10 @@ struct fpsserver : igameserver
 
 	bool canload(char *type)
 	{
-		if (strcmp(type, gameid()) == 0) return true;
+		if (strcmp(type, GAMENAME) == 0) return true;
+#ifdef BFAGAME
 		if (strcmp(type, "fps") == 0 || strcmp(type, "bfg") == 0) return true;
+#endif
 		return false;
 	}
 
@@ -2407,3 +2409,10 @@ struct fpsserver : igameserver
 		dest.add(new scr(name, amt));
 	}
 };
+
+#ifndef STANDALONE
+#include "runtime.h"
+REGISTERGAME(fpsgame, GAMENAME, new runtime(), new server());
+#else
+REGISTERGAME(fpsgame, GAMENAME, NULL, new server());
+#endif
