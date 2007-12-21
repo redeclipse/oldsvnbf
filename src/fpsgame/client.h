@@ -295,7 +295,7 @@ struct clientcom : iclientcom
 			}
 			if(d->gvel.z) putint(q, (int)(d->gvel.z*DVELF));
 			// pack rest in almost always 1 byte: strafe:2, move:2, garmour: 1, yarmour: 1, quad: 1
-			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouch ? 1 : 0)<<3);
+			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouching ? 1 : 0)<<3);
 			putuint(q, flags);
 			enet_packet_resize(packet, q.length());
 			sendpackettoserv(packet, 0);
@@ -346,7 +346,7 @@ struct clientcom : iclientcom
 		const float dx = cl.player1->o.x-d->o.x;
 		const float dy = cl.player1->o.y-d->o.y;
 		const float dz = cl.player1->o.z-d->o.z;
-		const float rz = cl.player1->aboveeye+d->height;
+		const float rz = cl.player1->aboveeye+cl.player1->height;
 		const float fx = (float)fabs(dx), fy = (float)fabs(dy), fz = (float)fabs(dz);
 		if(fx<r && fy<r && fz<rz && cl.player1->state!=CS_SPECTATOR && d->state!=CS_DEAD)
 		{
@@ -400,7 +400,7 @@ struct clientcom : iclientcom
 				f >>= 2;
 				d->move = (f&3)==3 ? -1 : f&3;
 				f >>= 2;
-				d->crouch = f&1 ? true : false;
+				d->crouching = f&1 ? true : false;
 #if 0
 				if(f&1) { d->armourtype = A_GREEN; d->armour = 1; }
 				else if(f&2) { d->armourtype = A_YELLOW; d->armour = 1; }

@@ -155,7 +155,6 @@ extern void cleangl();
 extern void gl_drawframe(int w, int h);
 extern void setfogplane(const plane &p, bool flush = false);
 extern void setfogplane(float scale = 0, float z = 0, bool flush = false);
-extern void findorientation();
 extern void writecrosshairs(FILE *f);
 
 // renderextras
@@ -410,7 +409,6 @@ extern string lastsky;
 extern void loadsky(char *basename, float *spin);
 
 // main
-extern void updateframe(bool dorender = false);
 extern void setcaption(char *text);
 extern int grabmouse, perflevel, colorpos;
 extern int getmatvec(vec v);
@@ -535,7 +533,7 @@ enum
 
 extern void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool shadow, int align, ...);
 extern void draw_textf(const char *fstr, int left, int top, ...);
-extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool shadow = false);
+extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool shadow = true);
 extern bool pushfont(char *name);
 extern bool popfont(int num);
 #endif // STANDALONE

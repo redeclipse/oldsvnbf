@@ -42,7 +42,7 @@ struct projectiles
 
 			switch (bnctype)
 			{
-				case BNC_SHOT:
+				case PRJ_SHOT:
 				{
 					switch (gun)
 					{
@@ -76,7 +76,7 @@ struct projectiles
 					if (guntype[gun].fsound >= 0) schan = playsound(guntype[gun].fsound, &o, &vel);
 					break;
 				}
-				case BNC_GIBS:
+				case PRJ_GIBS:
 				{
 					aboveeye = height = radius = 0.66f;
 					elasticity = 0.25f;
@@ -85,7 +85,7 @@ struct projectiles
 					schan = playsound(S_WHIZZ, &o, &vel);
 					break;
 				}
-				case BNC_DEBRIS:
+				case PRJ_DEBRIS:
 				default:
 				{
 					aboveeye = height = radius = 1.25f;
@@ -115,8 +115,8 @@ struct projectiles
 		void check(int time)
 		{
 			if (sndchans.inrange(schan) && !sndchans[schan].playing()) schan = -1;
-            if (bnctype == BNC_SHOT) regular_particle_splash(5, 1, 500, o);
-			else if (bnctype == BNC_GIBS) particle_splash(3, 1, 10000, o);
+            if (bnctype == PRJ_SHOT) regular_particle_splash(5, 1, 500, o);
+			else if (bnctype == PRJ_GIBS) particle_splash(3, 1, 10000, o);
 		}
 
 		bool update(int millis, int time, int qtime)
@@ -137,7 +137,7 @@ struct projectiles
 			{
 				o = old;
 
-				if (bnctype != BNC_SHOT || gun == GUN_GL)
+				if (bnctype != PRJ_SHOT || gun == GUN_GL)
 				{
 					vec pos(wall);
 
@@ -160,9 +160,9 @@ struct projectiles
 
 						if (millis-lasttime > 500)
 						{
-							if (bnctype == BNC_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, &vel, vel.magnitude());
-							else if (bnctype == BNC_GIBS) playsound(S_SPLAT, &o, &vel, vel.magnitude());
-							else if (bnctype == BNC_DEBRIS) playsound(S_DEBRIS, &o, &vel, vel.magnitude());
+							if (bnctype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, &vel, vel.magnitude());
+							else if (bnctype == PRJ_GIBS) playsound(S_SPLAT, &o, &vel, vel.magnitude());
+							else if (bnctype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, &vel, vel.magnitude());
 							lasttime = millis;
 						}
 					}
@@ -171,7 +171,7 @@ struct projectiles
 				return false; // die on impact
 			}
 
-			if (bnctype == BNC_SHOT && gun == GUN_GL) roll += int(vel.magnitude() / time) % 360;
+			if (bnctype == PRJ_SHOT && gun == GUN_GL) roll += int(vel.magnitude() / time) % 360;
 
 			return true;
 		}
@@ -206,12 +206,12 @@ struct projectiles
 
 			while (rtime > 0)
 			{
-				int stime = bnc.bnctype == BNC_SHOT ? 10 : 30, qtime = min(stime, rtime);
+				int stime = bnc.bnctype == PRJ_SHOT ? 10 : 30, qtime = min(stime, rtime);
 				rtime -= qtime;
 
 				if ((bnc.lifetime -= qtime) <= 0 || !bnc.update(cl.lastmillis, time, qtime))
 				{
-					if (bnc.bnctype == BNC_SHOT && (bnc.gun == GUN_GL || bnc.gun == GUN_RL))
+					if (bnc.bnctype == PRJ_SHOT && (bnc.gun == GUN_GL || bnc.gun == GUN_RL))
 						cl.ws.explode(bnc.owner, bnc.o, bnc.vel, bnc.id, bnc.gun, bnc.local);
 					bnc.state = CS_DEAD;
 					break;
@@ -254,7 +254,7 @@ struct projectiles
 
 			lightreaching(vec(bnc.o).sub(bnc.vel), color, dir);
 
-            if (bnc.bnctype == BNC_SHOT)
+            if (bnc.bnctype == PRJ_SHOT)
             {
             	if (bnc.gun == GUN_GL)
             	{
@@ -270,12 +270,12 @@ struct projectiles
 					s_sprintf(mname)("%s", "projectiles/frag");
             	}
 			}
-            else if (bnc.bnctype == BNC_GIBS)
+            else if (bnc.bnctype == PRJ_GIBS)
             {
 				s_sprintf(mname)("%s", ((int)(size_t)&bnc)&0x40 ? "gibc" : "gibh");
 				cull |= MDL_CULL_DIST;
 			}
-			else if (bnc.bnctype == BNC_DEBRIS)
+			else if (bnc.bnctype == PRJ_DEBRIS)
 			{
 				s_sprintf(mname)("debris/debris0%d", ((((int)(size_t)&bnc)&0xC0)>>6)+1);
 				cull |= MDL_CULL_DIST;

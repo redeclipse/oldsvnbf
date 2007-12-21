@@ -502,6 +502,14 @@
 			<Option target="debug"/>
 			<Option target="data"/>
 		</Unit>
+		<Unit filename="fpsgame\assassin.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
+		</Unit>
 		<Unit filename="fpsgame\bfa.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
@@ -515,15 +523,9 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\client.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-		</Unit>
-		<Unit filename="fpsgame\game.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
@@ -537,6 +539,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\entities.h">
 			<Option compilerVar=""/>
@@ -544,6 +547,15 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="server"/>
+		</Unit>
+		<Unit filename="fpsgame\game.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\gameclient.h">
 			<Option compilerVar=""/>
@@ -551,6 +563,15 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="server"/>
+		</Unit>
+		<Unit filename="fpsgame\gameserver.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\physics.h">
 			<Option compilerVar=""/>
@@ -558,6 +579,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\projs.h">
 			<Option compilerVar=""/>
@@ -565,6 +587,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\render.h">
 			<Option compilerVar=""/>
@@ -572,6 +595,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\scoreboard.h">
 			<Option compilerVar=""/>
@@ -579,13 +603,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
-		</Unit>
-		<Unit filename="fpsgame\server.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="client"/>
-			<Option target="debug"/>
+			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\weapon.h">
 			<Option compilerVar=""/>
@@ -593,6 +611,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="server"/>
 		</Unit>
 		<Unit filename="master\cgi.c">
 			<Option compilerVar="CPP"/>
