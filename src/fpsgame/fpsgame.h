@@ -604,7 +604,7 @@ struct fpsclient : igameclient
 
 	void drawhudgun()
 	{
-		if(!hudgun() || editmode || player1->state != CS_ALIVE) return;
+		if(!hudgun() || editmode || player1->state != CS_ALIVE || player1->gunselect <= -1) return;
 		int rtime = player1->gunwait[player1->gunselect],
 			wtime = player1->gunlast[player1->gunselect],
 			otime = lastmillis - wtime;
@@ -715,7 +715,7 @@ struct fpsclient : igameclient
 					{
 						if (d->state == CS_ALIVE)
 						{
-							draw_textx("%d hp, %d ammo", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->health, d->ammo[d->gunselect]);
+							draw_textx("%d hp, %d ammo", 100, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->health, d->gunselect <= -1 ? 0 : d->ammo[d->gunselect]);
 						}
 						else if (d->state == CS_DEAD)
 						{
@@ -763,9 +763,9 @@ struct fpsclient : igameclient
 
 	void crosshaircolor(float &r, float &g, float &b)
 	{
-		if( player1->state != CS_ALIVE) return;
+		if (player1->state != CS_ALIVE) return;
 
-		if (lastmillis-player1->gunlast[player1->gunselect] < player1->gunwait[player1->gunselect])
+		if (player1->gunselect >= 0 && lastmillis-player1->gunlast[player1->gunselect] < player1->gunwait[player1->gunselect])
 			r = g = b = 0.5f;
 		else if (!editmode && !m_insta(gamemode, mutators))
 		{

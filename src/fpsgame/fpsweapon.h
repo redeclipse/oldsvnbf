@@ -3,32 +3,31 @@
 struct weaponstate
 {
 	fpsclient &cl;
-	fpsent *player1;
 
 	static const int OFFSETMILLIS = 500;
 	vec sg[SGRAYS];
 
-	weaponstate(fpsclient &_cl) : cl(_cl), player1(_cl.player1)
+	weaponstate(fpsclient &_cl) : cl(_cl)
 	{
         CCOMMAND(weapon, "sss", (weaponstate *self, char *a, char *b),
 		{
             self->weaponswitch(a[0] ? atoi(a) : -1, b[0] ? atoi(b) : -1);
 
 		});
-		CCOMMAND(getgun, "", (weaponstate *self), intret(self->player1->gunselect));
+		CCOMMAND(getgun, "", (weaponstate *self), intret(self->cl.player1->gunselect));
 		CCOMMAND(getammo, "s", (weaponstate *self, char *a),
 		{
-			int n = a[0] ? atoi(a) : -1;
-			if (n <= -1 || n >= NUMGUNS) n = self->player1->gunselect;
-			intret(self->player1->ammo[n]);
+			int n = a[0] ? atoi(a) : self->cl.player1->gunselect;
+			if (n <= -1 || n >= NUMGUNS) return;
+			intret(self->cl.player1->ammo[n]);
 		});
-		CCOMMAND(getweapon, "", (weaponstate *self), intret(self->player1->gunselect));
+		CCOMMAND(getweapon, "", (weaponstate *self), intret(self->cl.player1->gunselect));
 	}
 
 	void weaponswitch(int a = -1, int b = -1)
 	{
-		if (player1->state != CS_ALIVE || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
-		int s = player1->gunselect;
+		if (cl.player1->state != CS_ALIVE || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
+		int s = cl.player1->gunselect;
 
 		loopi(NUMGUNS) // only loop the amount of times we have guns for
 		{
@@ -38,7 +37,7 @@ struct weaponstate
 			while (s >= NUMGUNS) s -= NUMGUNS;
 			while (s <= -1) s += NUMGUNS;
 
-			if (!player1->canweapon(s, cl.lastmillis))
+			if (!cl.player1->canweapon(s, cl.lastmillis))
 			{
 				if (a >= 0)
 				{
@@ -48,12 +47,12 @@ struct weaponstate
 			else break;
 		}
 
-		if(s != player1->gunselect)
+		if(s != cl.player1->gunselect)
 		{
 			cl.cc.addmsg(SV_GUNSELECT, "ri", s);
 			cl.playsoundc(S_SWITCH);
 		}
-		player1->gunselect = s;
+		cl.player1->gunselect = s;
 	}
 
 	void offsetray(vec &from, vec &to, int spread, vec &dest)
@@ -177,7 +176,7 @@ struct weaponstate
 	vec hudgunorigin(int gun, const vec &from, const vec &to, fpsent *d)
 	{
 		vec offset(from);
-        if(d!=player1 || cl.gamethirdperson())
+        if(d!=cl.player1 || cl.gamethirdperson())
         {
             vec front, right;
             vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
@@ -328,7 +327,7 @@ struct weaponstate
 		vec kickback(unitv);
 		kickback.mul(guns[d->gunselect].kick);
 		d->vel.add(kickback);
-		if (d == player1) cl.camerawobble += guns[d->gunselect].wobble;
+		if (d == cl.player1) cl.camerawobble += guns[d->gunselect].wobble;
 		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
 		if(barrier < dist)
 		{
@@ -345,7 +344,7 @@ struct weaponstate
 
 		shootv(d->gunselect, from, to, d, true);
 
-		if(d == player1)
+		if(d == cl.player1)
 		{
             cl.cc.addmsg(SV_SHOOT, "ri2i6iv", cl.lastmillis-cl.maptime, d->gunselect,
 							(int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),

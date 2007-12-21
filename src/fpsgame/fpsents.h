@@ -124,7 +124,7 @@ struct entities : icliententities
 			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), g.name, 15);
 			playsound(S_ITEMAMMO, &ents[n]->o);
 			if(d!=cl.player1) return;
-			d->pickup(ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+			d->pickup(cl.lastmillis, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
 		}
 		else return;
 	}

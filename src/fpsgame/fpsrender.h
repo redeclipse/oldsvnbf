@@ -9,7 +9,7 @@ struct fpsrender
 
 	void renderplayer(fpsent *d, bool local, const char *mdlname)
 	{
-        int lastaction = d->gunlast[d->gunselect], attack = ANIM_SHOOT, delay = d->gunwait[d->gunselect] + 50;
+        int lastaction = d->gunselect <= -1 ? 0 : d->gunlast[d->gunselect], attack = ANIM_SHOOT, delay = d->gunselect <= -1 ? 0 : d->gunwait[d->gunselect] + 50;
 
 		if(cl.intermission && d->state!=CS_DEAD)
 		{
@@ -28,7 +28,7 @@ struct fpsrender
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
 		static const char *vweps[] = { "vwep/pistol", "vwep/shotgun", "vwep/chaingun", "vwep/grenades", "vwep/rockets", "vwep/rifle"};
         int ai = 0;
-        if (d->gunselect<=GUN_RIFLE)
+        if (d->gunselect > -1 && d->gunselect < NUMGUNS)
 		{
             a[ai].name = vweps[d->gunselect];
             a[ai].type = MDL_ATTACH_VWEP;
