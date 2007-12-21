@@ -100,7 +100,7 @@ void console(const char *s, int type, ...)
 
 	s = sf;
 	int n = 0, visible;
-	while((visible = curfont ? text_visible(s, (3*w - 2*CONSPAD - 2*FONTH/3 + FONTW*n)/2) : strlen(s))) // cut strings to fit on screen
+	while((visible = curfont ? text_visible(s, (3*w - 2*CONSPAD - 2*FONTH/3 + FONTW*n)) : strlen(s))) // cut strings to fit on screen
 	{
 		const char *newline = (const char *)memchr(s, '\n', visible);
 		if(newline) visible = newline+1-s;
@@ -199,14 +199,17 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 				if(conskip ? i>=conskip-1 || i>=conlines[k].length()-numl : fullconsole || totalmillis-conlines[k][i].outtime<contime)
 				{
 					refs.add(conlines[k][i].cref);
-					if(refs.length()>=numl) break;
+					if (refs.length() >= numl) break;
 				}
 			}
 		}
 
 		loopvrev(refs)
 		{
-			draw_textx("%s", k ? w*3-(CONSPAD+FONTH/3) : CONSPAD+FONTH/3, CONSPAD+FONTH*(refs.length()-i-1)+FONTH/3, 255, 255, 255, int(255.f*(conblend*0.01f)), false, k?AL_RIGHT:AL_LEFT, refs[i]);
+			if (k)
+				draw_textx("%s", (w*3)-(CONSPAD+FONTH/3),	(((h*3)/4)*3)-(CONSPAD+FONTH*(i+1)+FONTH/3),	255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_RIGHT, refs[i]);
+			else
+				draw_textx("%s", (CONSPAD+FONTH/3),			(CONSPAD+FONTH*(refs.length()-i-1)+FONTH/3),	255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_LEFT, refs[i]);
 		}
 		if (refs.length() > len) len = refs.length();
 	}
