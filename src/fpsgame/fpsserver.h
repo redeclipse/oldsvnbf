@@ -106,7 +106,6 @@ struct fpsserver : igameserver
 	{
 		vec o;
 		int state;
-		int lastdeath, lifesequence, lastshot;
         projectilestate<8> rockets, grenades;
 		int frags;
 		int lasttimeplayed, timeplayed;
@@ -144,8 +143,6 @@ struct fpsserver : igameserver
 		{
 			fpsstate::respawn();
 			o = vec(-1e10f, -1e10f, -1e10f);
-			lastdeath = 0;
-			lastshot = 0;
 		}
 	};
 
@@ -354,7 +351,7 @@ struct fpsserver : igameserver
 		sents[i].spawned = false;
 		sents[i].spawntime = spawntime(sents[i].type);
 		sendf(-1, 1, "ri3", SV_ITEMACC, i, sender);
-		ci->state.pickup(sents[i].type, sents[i].attr1, sents[i].attr2);
+		ci->state.pickup(gamemillis, sents[i].type, sents[i].attr1, sents[i].attr2);
 		return true;
 	}
 
@@ -1716,9 +1713,7 @@ struct fpsserver : igameserver
 	{
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canreload(e.gun, e.millis)) { return; }
-		gs.lastshot = gs.gunlast[e.gun] = e.millis;
-		gs.gunwait[e.gun] = guns[e.gun].rdelay;
-		gs.pickup(WEAPON, e.gun, guns[e.gun].add);
+		gs.pickup(e.millis, WEAPON, e.gun, guns[e.gun].add);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
 

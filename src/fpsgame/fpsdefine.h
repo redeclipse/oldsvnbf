@@ -216,16 +216,16 @@ static char *teamnames[TEAM_MAX] = { "blue", "red" };
 // inherited by fpsent and server clients
 struct fpsstate
 {
-	int health, lastspawn, lastpain, lastregen;
+	int health, ammo[NUMGUNS];
 	int gunselect, gunwait[NUMGUNS], gunlast[NUMGUNS];
-	int ammo[NUMGUNS];
+	int lastdeath, lifesequence, lastshot, lastspawn, lastpain, lastregen;
 
-	fpsstate() {}
+	fpsstate() : lifesequence(0) {}
 	~fpsstate() {}
 
 	bool canweapon(int gun, int millis)
 	{
-		return isgun(gun) && (gunselect != gun)	&& (millis-gunlast[gun] >= gunwait[gun]);
+		return isgun(gun) && (gunselect != gun) && (ammo[gun] >= 0 || guns[gun].rdelay <= 0);
 	}
 
 	bool canshoot(int gun, int millis)
@@ -235,7 +235,7 @@ struct fpsstate
 
 	bool canreload(int gun, int millis)
 	{
-		return isgun(gun) && (ammo[gun] < guns[gun].max) && (guns[gun].rdelay > 0) && (millis-gunlast[gun] >= gunwait[gun]);
+		return isgun(gun) && (ammo[gun] < guns[gun].max && ammo[gun] >= 0) && (guns[gun].rdelay > 0) && (millis-gunlast[gun] >= gunwait[gun]);
 	}
 
 	bool canammo(int gun, int millis)
@@ -260,14 +260,36 @@ struct fpsstate
 		}
 	}
 
-	void pickup(int type, int attr1, int attr2)
+	void pickup(int millis, int type, int attr1, int attr2)
 	{
 		switch (type)
 		{
 			case WEAPON:
 			{
 				guninfo &g = guns[attr1];
+				
+				if (ammo[g.info] < 0) ammo[g.info] = 0;
+				
+				int carry = 0;
+				loopi(NUMGUNS) if (ammo[i] >= 0 && guns[i].rdelay > 0) carry++;
+				if (carry > MAXCARRY)
+				{
+					if (gunselect != g.info && guns[gunselect].rdelay > 0)
+					{
+						ammo[gunselect] = -1;
+						gunselect = g.info;
+					}
+					else loopi(NUMGUNS) if (ammo[i] >= 0 && i != g.info && guns[i].rdelay > 0)
+					{
+						ammo[i] = -1;
+						break;
+					}
+				}
+				
 				ammo[g.info] = min(ammo[g.info] + (attr2 > 0 ? attr2 : g.add), g.max);
+				
+				lastshot = gunlast[g.info] = millis;
+				gunwait[g.info] = guns[g.info].rdelay;
 				break;
 			}
 			default:
@@ -280,13 +302,13 @@ struct fpsstate
 	void respawn()
 	{
 		health = 100;
-		lastspawn = lastpain = lastregen = -1;
+		lastdeath = lastshot = lastspawn = lastpain = lastregen = -1;
 		loopi(NUMGUNS)
 		{
 			gunwait[i] = gunlast[i] = 0;
 		}
-		gunselect = GUN_PISTOL;
-		loopi(NUMGUNS) ammo[i] = 0;
+		gunselect = -1;
+		loopi(NUMGUNS) ammo[i] = -1;
 	}
 
 	void spawnstate(int gamemode, int mutators)
@@ -297,15 +319,16 @@ struct fpsstate
 			gunselect = GUN_RIFLE;
 			loopi(NUMGUNS)
 			{
-				ammo[i] = i == GUN_RIFLE ? guns[i].add : 0;
+				ammo[i] = i == GUN_RIFLE ? guns[i].add : -1;
 			}
 		}
 		else
 		{
 			health = 100;
+			gunselect = GUN_PISTOL;
 			loopi(NUMGUNS)
 			{
-				ammo[i] = i < MAXCARRY ? guns[i].add : 0;
+				ammo[i] = i == GUN_PISTOL || i == GUN_SG ? guns[i].add : -1;
 			}
 		}
 	}
@@ -323,7 +346,6 @@ struct fpsent : dynent, fpsstate
 {
 	int weight;						 // affects the effectiveness of hitpush
 	int clientnum, privilege, lastupdate, plag, ping;
-	int lifesequence;					// sequence id for each respawn, used in damage test
 	int lastattackgun;
 	bool attacking, reloading;
 	int lasttaunt;
@@ -335,7 +357,7 @@ struct fpsent : dynent, fpsstate
 
 	string name, team, info;
 
-	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), spree(0), lastimpulse(0)
+	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), spree(0), lastimpulse(0)
 	{
 		name[0] = team[0] = info[0] = 0;
 		respawn();

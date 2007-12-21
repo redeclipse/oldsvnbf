@@ -6,11 +6,12 @@
 		<Option title="bloodfrontier"/>
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
-		<Option default_target="1"/>
+		<Option default_target="2"/>
+		<Option active_target="1"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
-				<Option output="bloodfrontier.exe"/>
+				<Option output="."/>
 				<Option working_dir="."/>
 				<Option object_output=".objs"/>
 				<Option deps_output=".deps"/>
@@ -62,13 +63,13 @@
 				</Linker>
 			</Target>
 			<Target title="debug">
-				<Option output="..\bin\bloodfrontier_debug.exe"/>
+				<Option output="..\bin\bloodfrontier_client.exe"/>
 				<Option working_dir="..\"/>
 				<Option object_output=".objs\debug"/>
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
-				<Option parameters="-t -w1024 -h740"/>
+				<Option parameters="-t -f -w640 -h480 -rinit.cfg -qhome"/>
 				<Option includeInTargetAll="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
@@ -76,7 +77,7 @@
 				<Option projectLibDirsRelation="1"/>
 				<Compiler>
 					<Add option="-Wall"/>
-					<Add option="-pg"/>
+					<Add option="-g"/>
 					<Add option="-fsigned-char"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
@@ -85,7 +86,6 @@
 					<Add directory="include"/>
 				</Compiler>
 				<Linker>
-					<Add option="-pg -lgmon"/>
 					<Add option="-mwindows"/>
 					<Add library="mingw32"/>
 					<Add library="SDLmain"/>
@@ -503,31 +503,6 @@
 			<Option target="debug"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="fpsgame\capture.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\client.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\duel.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="client"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\entities.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
 		<Unit filename="fpsgame\fps.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
@@ -535,42 +510,90 @@
 			<Option target="server"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsrender.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\fpsserver.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\game.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="fpsgame\physics.h">
+		<Unit filename="fpsgame\fpscapture.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\scoreboard.h">
-			<Option compilerVar="CPP"/>
+		<Unit filename="fpsgame\fpsclient.h">
+			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
-			<Option target="data"/>
+			<Option target="client"/>
+			<Option target="debug"/>
 		</Unit>
-		<Unit filename="fpsgame\weapon.h">
-			<Option compilerVar="CPP"/>
+		<Unit filename="fpsgame\fpsdefine.h">
+			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
-			<Option target="data"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsduel.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsents.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsgame.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsphysics.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsprojs.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsrender.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsscore.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsserver.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsweapon.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
 		</Unit>
 		<Unit filename="master\cgi.c">
 			<Option compilerVar="CPP"/>
