@@ -34,6 +34,7 @@ struct fpsclient : igameclient
 	vector<fpsent *> shplayers;
 	vector<teamscore> teamscores;
 
+	IVARP(autoreload, 0, 1, 1);				// auto reload when empty
 	IVAR(cameracycle, 0, 0, 600);			// cycle camera every N secs
 	IVARP(crosshair, 0, 1, 1);				// show the crosshair
 
@@ -139,6 +140,12 @@ struct fpsclient : igameclient
         }
 	}
 
+	bool doautoreload()
+	{
+		return autoreload() && player1->gunselect >= 0 &&
+			!player1->ammo[player1->gunselect] && guns[player1->gunselect].rdelay > 0;
+	}
+
 	fpsent *pointatplayer()
 	{
 		loopv(players)
@@ -178,64 +185,66 @@ struct fpsclient : igameclient
 
 		if (cc.ready())
 		{
-			int scale = max(curtime/10, 1);
-			#define adjust(n,m,x) { n = min(n, x); if (n > 0) { n -= scale*m; } if (n < 0) { n = 0; } }
-			adjust(camerawobble, 1, 200);
-			adjust(damageresidue, 1, 100);
+			if (intermission || saycommandon) player1->stopmoving();
 
-			if (saycommandon || intermission) player1->stopmoving();
-			
-			if (!intermission)
+			#define adjust(n,m,x) \
+			{ \
+				n = min(n, x); \
+				if (n > 0) { n = n/int((1+(float)sqrtf((float)curtime))/m); } \
+				if (n < 0) { n = 0; } \
+			}
+			adjust(camerawobble, 10, 200);
+			adjust(damageresidue, 100, 100);
+			if (!player1->leaning) adjust(player1->roll, 10, 33);
+
+			if (player1->state == CS_DEAD)
 			{
-				if (player1->state == CS_DEAD)
+				if (lastmillis-player1->lastpain < 2000)
 				{
-					if (lastmillis-player1->lastpain < 2000)
-					{
-						player1->move = player1->strafe = 0;
-						ph.move(player1, 10, false);
-					}
-					else
-					{
-						if (m_capture(gamemode) && !cpc.respawnwait())
-						{
-							respawnself();
-						}
-					}
+					player1->stopmoving();
+					ph.move(player1, 10, false);
 				}
 				else
 				{
-					if (player1->timeinair)
-					{
-						if (player1->jumpnext && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
-						{
-							vec dir;
-							vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
-							dir.normalize();
-							dir.mul(ph.jumpvelocity(player1));
-							player1->vel.add(dir);
-							player1->lastimpulse = lastmillis;
-							player1->jumpnext = false;
-						}
-					}
-					else player1->lastimpulse = 0;
-
-					ph.move(player1, 20, true);
-					ph.updatewater(player1, 0);
-
-					if (player1->physstate >= PHYS_SLOPE)
-						swaymillis += curtime;
-
-					float k = pow(0.7f, curtime/10.0f);
-					swaydir.mul(k);
-
-					swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.maxspeed(player1)))));
-
-					et.checkitems(player1);
-					if (m_sp(gamemode)) checktriggers();
-					if (player1->attacking) ws.shoot(player1, pos);
-					else if (player1->reloading) ws.reload(player1);
+					if (m_capture(gamemode) && !cpc.respawnwait())
+						respawnself();
 				}
 			}
+			else
+			{
+				if (player1->timeinair)
+				{
+					if (player1->jumpnext && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
+					{
+						vec dir;
+						vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
+						dir.normalize();
+						dir.mul(ph.jumpvelocity(player1));
+						player1->vel.add(dir);
+						player1->lastimpulse = lastmillis;
+						player1->jumpnext = false;
+					}
+				}
+				else player1->lastimpulse = 0;
+
+				ph.move(player1, 20, true);
+				ph.updatewater(player1, 0);
+
+				if (player1->physstate >= PHYS_SLOPE)
+					swaymillis += curtime;
+
+				float k = pow(0.7f, curtime/10.0f);
+				swaydir.mul(k);
+
+				swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.maxspeed(player1)))));
+
+				et.checkitems(player1);
+				if (m_sp(gamemode)) checktriggers();
+				
+				if (player1->attacking) ws.shoot(player1, pos);
+				if (player1->reloading || doautoreload()) ws.reload(player1);
+			}
+
 			if (player1->clientnum >= 0) c2sinfo(player1);
 		}
 	}
@@ -251,7 +260,8 @@ struct fpsclient : igameclient
 	{
 		if(player1->state==CS_DEAD)
 		{
-			player1->attacking = player1->reloading = player1->pickingup = player1->leaning = false;
+			player1->stopmoving();
+
             if(m_capture(gamemode))
             {
                 int wait = cpc.respawnwait();
@@ -261,51 +271,33 @@ struct fpsclient : igameclient
 					return;
 				}
 			}
+
 			respawnself();
 		}
 	}
 
 	// inputs
-
-	void docrouch(bool on)
-	{
-		if(intermission) return;
-		player1->crouch = on;
-	}
-
-	void doattack(bool on)
-	{
-		if (intermission) return;
-        if (player1->attacking = on) respawn();
-	}
-
-	void doreload(bool on)
-	{
-		if (intermission) return;
-		if (player1->reloading = on) respawn();
-	}
-
-	void dopickup(bool on)
-	{
-		if (intermission) return;
-        player1->pickingup = on;
-	}
-
-	void dolean(bool on)
-	{
-		if (intermission) return;
-        player1->leaning = on;
-	}
+	#define iput(x,y) \
+		void do##x(bool on) \
+		{ \
+			player1->y = !intermission && player1->state != CS_DEAD ? on : false; \
+		}
+		
+	iput(crouch,	crouch);
+	iput(attack,	attacking);
+	iput(reload,	reloading);
+	iput(pickup,	pickingup);
+	iput(lean,		leaning);
 
 	bool canjump()
 	{
-        if(!intermission) respawn();
-		return player1->state!=CS_DEAD && !intermission;
+        if (!intermission) respawn();
+		return player1->state != CS_DEAD && !intermission;
 	}
 
     bool allowmove(physent *d)
     {
-        if(d->type!=ENT_PLAYER) return true;
+        if( d->type != ENT_PLAYER) return true;
         return lastmillis-((fpsent *)d)->lasttaunt>=1000;
     }
 
@@ -600,8 +592,8 @@ struct fpsclient : igameclient
 		sway.x *= -swayxy;
 		sway.y *= swayxy;
 		sway.z = -fabs(swayspeed*swayz);
-		sway.add(swaydir).add(player1->o);
-		if(!hudgunsway()) sway = player1->o;
+		sway.add(swaydir).add(vec(player1->o).add(vec(0, 0, player1->aboveeye)));
+		if(!hudgunsway()) sway = vec(player1->o).add(vec(0, 0, player1->aboveeye));
 		lightreaching(sway, color, dir);
         dynlightreaching(sway, color, dir);
 
@@ -858,7 +850,7 @@ struct fpsclient : igameclient
 
 	vec feetpos(physent *d)
 	{
-		return vec(d->o).sub(vec(0, 0, d->eyeheight));
+		return vec(d->o).sub(vec(0, 0, d->height));
 	}
 
 	void loadworld(gzFile &f, int maptype)
@@ -931,10 +923,7 @@ struct fpsclient : igameclient
 			const float SENSF = 33.0f;	 // try match quake sens
 
 			if (player1->leaning)
-			{
 				player1->roll += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
-				player1->lastlean = lastmillis;
-			}
 			else
 				player1->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
 
@@ -1018,18 +1007,20 @@ struct fpsclient : igameclient
 			camera1->o = player1->o;
 
 			if (player1->state == CS_DEAD)
-			{
-				camera1->o.z -= (float(player1->eyeheight-player1->aboveeye)/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
-			}
+				camera1->o.z -= (float(player1->height-player1->aboveeye)/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
+			else
+				camera1->o.z += player1->aboveeye;
 			
 			camera1->yaw = player1->yaw;
 			camera1->pitch = player1->pitch;
 			camera1->roll = player1->roll;
 			vec off;
-			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? -1 : 1, off);
+			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
+			camera1->o.add(off.mul(fabs(camera1->roll)/10.f));
+			off = worldpos;
+			off.sub(camera1->o);
 			off.normalize();
-			off.mul(camera1->roll/100.f);
-			camera1->o.add(off);
+			vectoyawpitch(off, camera1->yaw, camera1->pitch);
 			cameratype = 0;
 		}
 		else
@@ -1037,7 +1028,7 @@ struct fpsclient : igameclient
 			camera1->pitch = player1->pitch;
 			camera1->roll = 0.f;
 		}
-		camera1->eyeheight = 0;
+		camera1->height = 0;
 
 		if (cameratype > 0)
 		{

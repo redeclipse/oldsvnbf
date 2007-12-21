@@ -107,7 +107,7 @@ struct weaponstate
 	float middist(fpsent *o, vec &dir, vec &v)
 	{
 		vec middle = o->o;
-		middle.z += (o->aboveeye-o->eyeheight)/2;
+		middle.z += (o->aboveeye-o->height)/2;
 		float dist = middle.dist(v, dir);
 		dir.div(dist);
 		if (dist < 0) dist = 0;
@@ -157,7 +157,7 @@ struct weaponstate
 	void damageeffect(int damage, fpsent *d)
 	{
 		vec p = d->o;
-		p.z += 0.6f*(d->eyeheight + d->aboveeye) - d->eyeheight;
+		p.z += 0.6f*(d->height + d->aboveeye) - d->height;
 		particle_splash(3, damage, 10000, p);
 		if(d!=cl.player1)
 		{
@@ -181,7 +181,7 @@ struct weaponstate
             vec front, right;
             vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
             offset.add(front.mul(d->radius));
-			offset.z += (d->aboveeye + d->eyeheight)*0.75f - d->eyeheight;
+			offset.z += (d->aboveeye + d->height)*0.75f - d->height;
 			vecfromyawpitch(d->yaw, 0, 0, -1, right);
 			offset.add(right.mul(0.5f*d->radius));
             return offset;

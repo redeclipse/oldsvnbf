@@ -698,7 +698,7 @@ void dropenttofloor(entity *e)
 	d.o = e->o;
 	d.vel = vec(0, 0, -1);
 	d.radius = 1.0f;
-	d.eyeheight = et->dropheight(*e);
+	d.height = et->dropheight(*e);
 	d.aboveeye = 1.0f;
 	while (!collide(&d, v) && d.o.z > 0.f) d.o.z -= 0.1f;
 	e->o = d.o;
@@ -960,7 +960,7 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	overrideidents = false;
 
 	startmap("");
-	camera1->o.z += camera1->eyeheight+1;
+	camera1->o.z += camera1->height+1;
 
 	return true;
 }
@@ -1092,7 +1092,7 @@ void checktriggers()
 	/* TODO: game modularise..
 	if(player->state != CS_ALIVE) return;
 	vec o(player->o);
-	o.z -= player->eyeheight;
+	o.z -= player->height;
 	const vector<extentity *> &ents = et->getents();
 	loopv(ents)
 	{

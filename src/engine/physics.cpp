@@ -375,8 +375,8 @@ float walldistance;
 
 bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr,  float hi, float lo)
 {
-    float below = (o.z-lo) - (d->o.z+d->aboveeye),
-          above = (d->o.z-d->eyeheight) - (o.z+hi);
+    float below = (o.z-lo) - (d->o.z+d->height),
+          above = (d->o.z-d->height) - (o.z+hi);
 	if(below>=0 || above>=0) return true;
     float x = o.x - d->o.x, y = o.y - d->o.y;
     float angle = atan2f(y, x), dangle = angle-(d->yaw+90)*RAD, eangle = angle-(yaw+90)*RAD;
@@ -385,12 +385,12 @@ bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float x
 	float dist = sqrtf(x*x + y*y) - sqrtf(dx*dx + dy*dy) - sqrtf(ex*ex + ey*ey);
 	if(dist < 0)
 	{
-        if(dir.iszero() || ((d->type>=ENT_INANIMATE || below >= -(d->eyeheight+d->aboveeye)/4.0f) && dir.z > 0))
+        if(dir.iszero() || ((d->type>=ENT_INANIMATE || below >= -(d->height+d->aboveeye)/4.0f) && dir.z > 0))
 		{
 			wall = vec(0, 0, -1);
 			return false;
 		}
-        if(dir.iszero() || ((d->type>=ENT_INANIMATE || above >= -(d->eyeheight+d->aboveeye)/3.0f) && dir.z < 0))
+        if(dir.iszero() || ((d->type>=ENT_INANIMATE || above >= -(d->height+d->aboveeye)/3.0f) && dir.z < 0))
 		{
 			wall = vec(0, 0, 1);
 			return false;
@@ -414,7 +414,7 @@ bool rectcollide(physent *d, const vec &dir, const vec &o, float xr, float yr,  
     xr += dxr;
     yr += dyr;
 	walldistance = -1e10f;
-	float zr = s.z>0 ? d->eyeheight+hi : d->aboveeye+lo;
+	float zr = s.z>0 ? d->height+hi : d->aboveeye+lo;
 	float ax = fabs(s.x)-xr;
 	float ay = fabs(s.y)-yr;
 	float az = fabs(s.z)-zr;
@@ -428,8 +428,8 @@ bool rectcollide(physent *d, const vec &dir, const vec &o, float xr, float yr,  
     if(ax>ay && ax>az) TRYCOLLIDE(x, O_LEFT, O_RIGHT, ax > -dxr, ax > -dxr);
     if(ay>az) TRYCOLLIDE(y, O_BACK, O_FRONT, ay > -dyr, ay > -dyr);
 	TRYCOLLIDE(z, O_BOTTOM, O_TOP,
-		 az >= -(d->eyeheight+d->aboveeye)/4.0f,
-		 az >= -(d->eyeheight+d->aboveeye)/3.0f);
+		 az >= -(d->height+d->aboveeye)/4.0f,
+		 az >= -(d->height+d->aboveeye)/3.0f);
 	if(collideonly) inside = true;
 	return collideonly;
 }
@@ -516,14 +516,14 @@ bool plcollide(physent *d, const vec &dir)	// collide with player or monster
 			if(o==d || d->o.reject(o->o, d->radius+o->radius)) continue;
             if(d->collidetype!=COLLIDE_ELLIPSE || o->collidetype!=COLLIDE_ELLIPSE)
             { 
-                if(!rectcollide(d, dir, o->o, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye, o->eyeheight))
+                if(!rectcollide(d, dir, o->o, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye, o->height))
                 {
                     hitplayer = o;
                     if((d->type==ENT_AI || d->type==ENT_INANIMATE) && wall.z>0) d->onplayer = o;
                     return false;
                 }
             }
-            else if(!ellipsecollide(d, dir, o->o, o->yaw, o->xradius, o->yradius, o->aboveeye, o->eyeheight))
+            else if(!ellipsecollide(d, dir, o->o, o->yaw, o->xradius, o->yradius, o->aboveeye, o->height))
 			{
 				hitplayer = o;
                 if((d->type==ENT_AI || d->type==ENT_INANIMATE) && wall.z>0) d->onplayer = o;
@@ -598,9 +598,9 @@ bool cubecollide(physent *d, const vec &dir, float cutoff, cube &c, int x, int y
 	clipplanes &p = *c.ext->clip;
 
 	float r = d->radius,
-		  zr = (d->aboveeye+d->eyeheight)/2;
+		  zr = (d->aboveeye+d->height)/2;
 	vec o(d->o), *w = &wall;
-	o.z += zr - d->eyeheight;
+	o.z += zr - d->height;
 
 	if(rectcollide(d, dir, p.o, p.r.x, p.r.y, p.r.z, p.r.z, c.ext->visible, !p.size, cutoff)) return true;
 
@@ -633,7 +633,7 @@ bool cubecollide(physent *d, const vec &dir, float cutoff, cube &c, int x, int y
 				if(!dir.iszero())
 				{
 					if(f.dot(dir) >= -cutoff) continue;
-					if(d->type<ENT_CAMERA && dist < (dir.z*f.z < 0 ? -(d->eyeheight+d->aboveeye)/(dir.z < 0 ? 3.0f : 4.0f) : ((dir.x*f.x < 0 || dir.y*f.y < 0) ? -r : 0))) continue;
+					if(d->type<ENT_CAMERA && dist < (dir.z*f.z < 0 ? -(d->height+d->aboveeye)/(dir.z < 0 ? 3.0f : 4.0f) : ((dir.x*f.x < 0 || dir.y*f.y < 0) ? -r : 0))) continue;
 				}
                 if(f.x && (f.x>0 ? o.x-p.o.x : p.o.x-o.x) + p.r.x - r < dist && f.dist(vec(p.o.x + (f.x>0 ? -p.r.x : p.r.x), o.y, o.z)) >= vec(0, f.y*r, f.z*zr).magnitude()) continue;
                 if(f.y && (f.y>0 ? o.y-p.o.y : p.o.y-o.y) + p.r.y - r < dist && f.dist(vec(o.x, p.o.y + (f.y>0 ? -p.r.y : p.r.y), o.z)) >= vec(f.x*r, 0, f.z*zr).magnitude()) continue;
@@ -676,8 +676,8 @@ bool collide(physent *d, const vec &dir, float cutoff, bool playercol)
 	inside = false;
 	hitplayer = NULL;
 	wall.x = wall.y = wall.z = 0;
-	ivec bo(int(d->o.x-d->radius), int(d->o.y-d->radius), int(d->o.z-d->eyeheight)),
-		 bs(int(d->radius)*2, int(d->radius)*2, int(d->eyeheight+d->aboveeye));
+	ivec bo(int(d->o.x-d->radius), int(d->o.y-d->radius), int(d->o.z-d->height)),
+		 bs(int(d->radius)*2, int(d->radius)*2, int(d->height+d->aboveeye));
 	bs.add(2);  // guard space for rounding errors
 	if(!octacollide(d, dir, cutoff, bo, bs, worldroot, ivec(0, 0, 0), hdr.worldsize>>1)) return false; // collide with world
     return !playercol || plcollide(d, dir);
@@ -748,7 +748,7 @@ bool intersect(physent *d, vec &from, vec &to)	// if lineseg hits entity boundin
 		&& p->y <= d->o.y+d->radius
 		&& p->y >= d->o.y-d->radius
 		&& p->z <= d->o.z+d->aboveeye
-		&& p->z >= d->o.z-d->eyeheight;
+		&& p->z >= d->o.z-d->height;
 }
 
 VARP(sensitivity,		0,			7,			1000);

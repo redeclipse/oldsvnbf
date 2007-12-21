@@ -153,12 +153,12 @@ void mdlshadow(int *shadow)
 
 COMMAND(mdlshadow, "i");
 
-void mdlbb(float *rad, float *h, float *eyeheight)
+void mdlbb(float *rad, float *h, float *height)
 {
 	checkmdl;
 	loadingmodel->collideradius = *rad;
 	loadingmodel->collideheight = *h;
-	loadingmodel->eyeheight = *eyeheight;
+	loadingmodel->height = *height;
 }
 
 COMMAND(mdlbb, "fff");
@@ -658,7 +658,7 @@ void rendermodel(vec &color, vec &dir, const char *mdl, int anim, int varseed, i
 	{
 		if(d && showboundingbox==1)
 		{
-			render3dbox(d->o, d->eyeheight, d->aboveeye, d->radius);
+			render3dbox(d->o, d->height, d->aboveeye, d->radius);
 			renderellipse(d->o, d->xradius, d->yradius, d->yaw);
 		}
 		else
@@ -836,7 +836,7 @@ void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attac
     float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
     if(d->type==ENT_PLAYER && !local && orientinterpolationtime) interpolateorientation(d, yaw, pitch);
 	vec o(d->o);
-	o.z -= d->eyeheight + sink;
+	o.z -= d->height + sink;
 	int varseed = (int)(size_t)d, basetime = 0;
 	if(animoverride) anim = animoverride|ANIM_LOOP;
 	else if(d->state==CS_DEAD)
@@ -907,7 +907,7 @@ void setbbfrommodel(dynent *d, const char *mdl)
 	d->yradius	= radius.y + fabs(center.y);
 	d->radius	= max(d->xradius, d->yradius);
     if(d->collidetype!=COLLIDE_ELLIPSE) d->xradius = d->yradius = d->radius;
-	d->eyeheight = (center.z-radius.z) + radius.z*2*m->eyeheight;
-	d->aboveeye  = radius.z*2*(1.0f-m->eyeheight);
+	d->height = (center.z-radius.z) + radius.z*2*m->height;
+	d->aboveeye  = radius.z*2*(1.0f-m->height);
 }
 

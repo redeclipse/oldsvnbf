@@ -334,7 +334,7 @@ void rendergrasssamples(vtxarray *va, const vec &dir)
 					continue;
 				}
 				float dist = o.dist(camera1->o, tograss);
-				if(dist > grassdist + b.radius || (dir.dot(tograss)<0 && dist > b.radius + 2*(grassgrid + camera1->eyeheight)))
+				if(dist > grassdist + b.radius || (dir.dot(tograss)<0 && dist > b.radius + 2*(grassgrid + camera1->height)))
 					i += b.numsamples;
 				break;
 			}
@@ -358,7 +358,7 @@ void rendergrasssamples(vtxarray *va, const vec &dir)
 			{
 				if(reflecting && (refracting ? o.z>=reflecting : o.z+grassheight<=reflecting)) continue;
 				float dist = o.dist(camera1->o, tograss);
-				if(dist > grassdist || (dir.dot(tograss)<0 && dist > grasswidth/2 + 2*(grassgrid + camera1->eyeheight))) continue;
+				if(dist > grassdist || (dir.dot(tograss)<0 && dist > grasswidth/2 + 2*(grassgrid + camera1->height))) continue;
 
 				float ld = loddist(o);
 				int numsamples = int(grasssamples/100.0f*max(grassgrid - ld/grasslod, 100.0f/grasssamples));

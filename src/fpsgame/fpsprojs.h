@@ -47,14 +47,14 @@ struct projectiles
 					switch (gun)
 					{
 						case GUN_GL:
-							aboveeye = eyeheight = radius = 0.5f;
+							aboveeye = height = radius = 0.5f;
 							elasticity = 0.33f;
 							relativity = 0.5f;
 							waterfric = 2.0f;
 							break;
 						case GUN_RL:
 						{
-							aboveeye = eyeheight = radius = 1.0f;
+							aboveeye = height = radius = 1.0f;
 							elasticity = 0.0f;
 							relativity = 0.25f;
 							waterfric = 1.5f;
@@ -66,7 +66,7 @@ struct projectiles
 						case GUN_RIFLE:
 						default:
 						{
-							aboveeye = eyeheight = radius = 0.25f;
+							aboveeye = height = radius = 0.25f;
 							elasticity = 0.5f;
 							relativity = 0.25f;
 							waterfric = 1.25f;
@@ -78,7 +78,7 @@ struct projectiles
 				}
 				case BNC_GIBS:
 				{
-					aboveeye = eyeheight = radius = 0.66f;
+					aboveeye = height = radius = 0.66f;
 					elasticity = 0.25f;
 					relativity = 1.0f;
 					waterfric = 2.0f;
@@ -88,7 +88,7 @@ struct projectiles
 				case BNC_DEBRIS:
 				default:
 				{
-					aboveeye = eyeheight = radius = 1.25f;
+					aboveeye = height = radius = 1.25f;
 					elasticity = 0.66f;
 					relativity = 1.0f;
 					waterfric = 1.75f;
