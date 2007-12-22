@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule register.do sys/register.php [L]
+RewriteRule retrieve.do sys/retrieve.php [L]
