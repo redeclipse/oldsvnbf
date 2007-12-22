@@ -1044,7 +1044,7 @@ struct clientcom : iclientcom
 		}
 	}
 
-	void changemapserv(const char *name, int gamemode, int mutators)
+	void changemapserv(char *name, int gamemode, int mutators)
 	{
 		if (remote && !m_mp(gamemode)) gamemode = G_DEATHMATCH;
 		cl.nextmode = cl.gamemode = gamemode;

@@ -129,8 +129,8 @@ extern void particle_fireball(const vec &dest, float max, int type);
 extern void removetrackedparticles(physent *owner = NULL);
 
 // worldio
-extern void setnames(const char *fname = NULL, const char *cname = NULL);
-extern void load_world(const char *mname, const char *cname = NULL);
+extern void setnames(char *fname = NULL, char *cname = NULL);
+extern void load_world(char *mname, char *cname = NULL);
 extern void save_world(char *mname, bool nolms = false);
 
 // physics
