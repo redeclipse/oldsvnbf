@@ -87,14 +87,13 @@ struct clientcom : iclientcom
 
 	void gameconnect(bool _remote)
 	{
-		connected = _remote;
 		remote = _remote;
 		if (editmode) toggleedit();
 	}
 
 	void gamedisconnect(int clean)
 	{
-		connected = c2sinit = spectator = false;
+		remote = connected = c2sinit = spectator = false;
 		cl.player1->clientnum = -1;
 		cl.player1->lifesequence = 0;
 		cl.player1->privilege = PRIV_NONE;
@@ -106,7 +105,7 @@ struct clientcom : iclientcom
 
 	bool allowedittoggle(bool edit)
 	{
-		bool allow = !connected || !remote || m_edit(cl.gamemode) ||
+		bool allow = !connected || m_edit(cl.gamemode) ||
 			(cl.player1->state != CS_SPECTATOR && cl.player1->state != CS_ALIVE && cl.player1->state != CS_EDITING);
 		if (!allow) conoutf("you must be both alive and in coopedit to enter editmode");
 		return allow;
@@ -463,6 +462,7 @@ struct clientcom : iclientcom
 					disconnect();
 					return;
 				}
+				connected = true;
 				cl.player1->clientnum = mycn;	  // we are now fully connected
 				switch (hasmap)
 				{
@@ -1046,7 +1046,6 @@ struct clientcom : iclientcom
 
 	void changemapserv(const char *name, int gamemode, int mutators)
 	{
-		if (remote && !connected) connected = true;
 		if (remote && !m_mp(gamemode)) gamemode = G_DEATHMATCH;
 		cl.nextmode = cl.gamemode = gamemode;
 		cl.nextmuts = cl.mutators = mutators;

@@ -680,9 +680,10 @@ VAR(hudgunfov, 10, 65, 150);
 
 void gl_drawhud(int w, int h, int fogmat);
 
-void computescreen(const char *text, Texture *t)
+void computescreen(char *text, Texture *t)
 {
 	int w = screen->w, h = screen->h;
+	setcaption(text);
 	gettextres(w, h);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1033,7 +1034,7 @@ void gl_drawhud(int w, int h, int fogmat)
     glEnable(GL_BLEND);
 
 	vec colour;
-	if(cc->ready() && cl->gethudcolour(colour))
+	if (cl->gethudcolour(colour))
 	{
 		glDepthMask(GL_FALSE);
 		glBlendFunc(GL_ZERO, GL_SRC_COLOR);

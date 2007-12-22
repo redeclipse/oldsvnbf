@@ -324,7 +324,7 @@ extern void writecompletions(FILE *f);
 // main
 extern bool initwarning();
 
-extern void computescreen(const char *text, Texture *t = NULL);
+extern void computescreen(char *text, Texture *t = NULL);
 extern void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2 = 0, const char *text2 = NULL, GLuint tex = 0);
 
 // menu

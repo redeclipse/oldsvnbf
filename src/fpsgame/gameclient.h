@@ -244,9 +244,8 @@ struct gameclient : igameclient
 				if (player1->attacking) ws.shoot(player1, pos);
 				if (player1->reloading || doautoreload()) ws.reload(player1);
 			}
-
-			if (player1->clientnum >= 0) c2sinfo(player1);
 		}
+		if (player1->clientnum >= 0) c2sinfo(player1);
 	}
 
 	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!

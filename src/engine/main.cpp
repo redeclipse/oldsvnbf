@@ -539,8 +539,6 @@ int main(int argc, char **argv)
 
 	conoutf("init: runtime");
 	initruntime();
-	camera1 = cl->iterdynents(0);
-	emptymap(0, true);
 
 	conoutf("init: config");
 	if(!execfile("stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
@@ -558,7 +556,8 @@ int main(int argc, char **argv)
 	particleinit();
 
 	conoutf("init: client");
-	cl->initclient();
+	camera1 = cl->iterdynents(0);
+	emptymap(0, true);
 
 	conoutf("init: mainloop");
 	if (initscript) execute(initscript);
@@ -576,13 +575,7 @@ int main(int argc, char **argv)
 		if (paused) curtime = 0;
 		else curtime = (elapsed*gamespeed)/100;
 
-		string cap;
-		if (cc->ready()) s_sprintf(cap)("%s - %s", cl->gametitle(), cl->gametext());
-		else s_sprintf(cap)("loading..");
-		setcaption(cap);
-	
-	
-		if (lastmillis) cl->updateworld(worldpos, curtime, lastmillis);
+		if (frames && lastmillis) cl->updateworld(worldpos, curtime, lastmillis);
 	
 		menuprocess();
 		lastmillis += curtime;
@@ -592,21 +585,31 @@ int main(int argc, char **argv)
 	
 		serverslice(0);
 
-		if (frames) updatefpshistory(elapsed);
-		frames++;
-		perfcheck();
-
-		if (cc->ready())
+		if (frames)
 		{
-			cl->findorientation();
-			entity_particles();
-			checksound();
-	
-			inbetweenframes = false;
-			SDL_GL_SwapBuffers();
-			if(frames>2) gl_drawframe(screen->w, screen->h);
-			inbetweenframes = true;
+			updatefpshistory(elapsed);
+			perfcheck();
+
+			if (cc->ready())
+			{
+				cl->findorientation();
+				entity_particles();
+				checksound();
+		
+				inbetweenframes = false;
+				SDL_GL_SwapBuffers();
+				if(frames>2) gl_drawframe(screen->w, screen->h);
+				inbetweenframes = true;
+
+				s_sprintfd(cap)("%s - %s", cl->gametitle(), cl->gametext());
+				setcaption(cap);
+			}
 		}
+		else
+		{
+			cl->initclient();
+		}
+		frames++;
 	
 		SDL_Event event;
 		int lasttype = 0, lastbut = 0;
