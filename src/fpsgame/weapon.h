@@ -149,7 +149,7 @@ struct weaponstate
 				radialeffect(d, o);
 			}
 
-			cl.cc.addmsg(SV_EXPLODE, "ri3iv", cl.lastmillis-cl.maptime, GUN_GL, id-cl.maptime,
+			cl.cc.addmsg(SV_EXPLODE, "ri3iv", cl.lastmillis-cl.maptime, gun, id-cl.maptime,
 					hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 		}
 	}
