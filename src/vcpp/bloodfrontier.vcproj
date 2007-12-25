@@ -1381,6 +1381,10 @@
 			Name="fpsgame"
 			>
 			<File
+				RelativePath="..\fpsgame\bfa.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\fpsgame\capture.h"
 				>
 			</File>
@@ -1395,34 +1399,6 @@
 			<File
 				RelativePath="..\fpsgame\entities.h"
 				>
-			</File>
-			<File
-				RelativePath="..\fpsgame\fps.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Profile|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="pch.h"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\fpsgame\fpsrender.h"
