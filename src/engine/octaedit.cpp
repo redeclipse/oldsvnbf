@@ -126,7 +126,8 @@ VARF(hmapedit, 0, 0, 1, horient = sel.orient);
 void toggleedit()
 {
 	if (!cc->allowedittoggle(editmode)) return;		 // not in most multiplayer modes
-	editmode = editing = entediting = (editmode ? false : true);
+	editmode = !editmode;
+	editing = entediting = (editmode ? 1 : 0);
 	cc->edittoggled(editmode);
 	cancelsel();
 	keyrepeat(editmode);
