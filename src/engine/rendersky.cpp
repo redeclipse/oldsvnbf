@@ -10,7 +10,7 @@ void loadsky(char *basename, float *spin)
 	spinsky = *spin;
 
 	if(strcmp(lastsky, basename)==0) return;
-	static char *side[] = { "ft", "bk", "lf", "rt", "dn", "up" };
+    static const char *side[] = { "ft", "bk", "lf", "rt", "dn", "up" };
 	loopi(6)
 	{
 		s_sprintfd(name)("%s_%s.jpg", basename, side[i]);

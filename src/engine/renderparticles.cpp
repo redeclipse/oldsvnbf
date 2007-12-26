@@ -531,7 +531,7 @@ struct particle
 	particle *next;
 	union
 	{
-		char *text;		 // will call delete[] on this only if it starts with an @
+        const char *text;         // will call delete[] on this only if it starts with an @
 		float val;
         physent *owner;
 	};
@@ -1018,7 +1018,7 @@ void render_particles(int time)
 					}
 					else
 					{
-						char *text = p->text+(p->text[0]=='@');
+                        const char *text = p->text+(p->text[0]=='@');
 						float xoff = -text_width(text)/2;
 						float yoff = 0;
 						if(type==PT_TEXTUP) { xoff += detrnd((size_t)p, 100)-50; yoff -= detrnd((size_t)p, 101); } else blend = 255;
@@ -1220,7 +1220,7 @@ void particle_trail(int type, int fade, const vec &s, const vec &e)
 
 VARP(particletext, 0, 1, 1);
 
-void particle_text(const vec &s, char *t, int type, int fade)
+void particle_text(const vec &s, const char *t, int type, int fade)
 {
     if(shadowmapping) return;
 	if(!particletext || camera1->o.dist(s) > 128) return;

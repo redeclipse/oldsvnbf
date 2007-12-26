@@ -752,7 +752,7 @@ struct clientcom : iclientcom
 				if(!cl.et.ents.inrange(i)) break;
 				cl.et.setspawn(i, true);
 				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o);
-				char *name = cl.et.itemname(i);
+                const char *name = cl.et.itemname(i);
 				if(name) particle_text(cl.et.ents[i]->o, name, 9);
 				break;
 			}

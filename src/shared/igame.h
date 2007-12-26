@@ -49,14 +49,14 @@ struct igameclient
     virtual bool clientoption(char *arg) { return false; }
     virtual void updateworld(vec &pos, int curtime, int lm) = 0;
     virtual void initclient() = 0;
-    virtual void editvariable(char *name, int value) = 0;
+    virtual void editvariable(const char *name, int value) = 0;
     virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
     virtual void resetgamestate() = 0;
     virtual void suicide(physent *d) = 0;
     virtual void newmap(int size) = 0;
     virtual void startmap(const char *name) = 0;
     virtual void preload() {}
-    virtual void gameplayhud(int w, int h) = 0;
+    virtual void drawhud(int w, int h) = 0;
     virtual void drawhudgun() = 0;
     virtual bool allowmove(physent *d) { return true; }
     virtual dynent *iterdynents(int i) = 0;
@@ -142,7 +142,7 @@ struct igameserver
     virtual void serverinit() = 0;
     virtual void clientdisconnect(int n) = 0;
     virtual int clientconnect(int n, uint ip) = 0;
-    virtual char *servername() = 0;
+    virtual const char *servername() = 0;
     virtual void recordpacket(int chan, void *data, int len) {}
     virtual void parsepacket(int sender, int chan, bool reliable, ucharbuf &p) = 0;
     virtual bool sendpackets() = 0;
@@ -153,14 +153,14 @@ struct igameserver
     virtual const char *serverinfogui(g3d_gui *cgui, vector<serverinfo> &servers) { return NULL; }
     virtual int serverinfoport() = 0;
     virtual int serverport() = 0;
-    virtual char *getdefaultmaster() = 0;
+    virtual const char *getdefaultmaster() = 0;
     virtual void sendservmsg(const char *s) = 0;
     virtual void changemap(const char *s, int mode = 0, int muts = 0) { return; }
-    virtual char *gameid() = 0;
-	virtual char *gamename(int mode, int muts) = 0;
-    virtual char *defaultmap() = 0;
+    virtual const char *gameid() = 0;
+    virtual const char *defaultmap() = 0;
     virtual int defaultmode() = 0;
     virtual bool canload(char *type) = 0;
+	virtual char *gamename(int mode, int muts) = 0;
 };
 
 struct igame

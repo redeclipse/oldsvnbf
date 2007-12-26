@@ -9,7 +9,7 @@ sometype mapexts[] = {
 };
 string bgzname[MAP_MAX], pcfname, mcfname, picname, mapname;
 
-void setnames(char *fname, char *cname)
+void setnames(const char *fname, const char *cname)
 {
 	string fn, cn;
 
@@ -232,7 +232,7 @@ cube *loadchildren(gzFile f)
 	return c;
 }
 
-void save_world(char *mname, bool nolms)
+void save_world(const char *mname, bool nolms)
 {
 	int savingstart = SDL_GetTicks();
 
@@ -428,7 +428,7 @@ void swapXZ(cube *c)
 	}
 }
 
-void load_world(char *mname, char *cname)		// still supports all map formats that have existed since the earliest cube betas!
+void load_world(const char *mname, const char *cname)		// still supports all map formats that have existed since the earliest cube betas!
 {
 	int loadingstart = SDL_GetTicks();
 	setnames(mname, cname);
@@ -766,3 +766,4 @@ void writeobj(char *name)
 COMMAND(writeobj, "s");
 
 char *getmaptitle() { return hdr.maptitle; }
+ICOMMAND(getmaptitle, "", (void), result(getmaptitle()));

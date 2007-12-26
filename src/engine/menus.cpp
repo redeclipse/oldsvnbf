@@ -53,14 +53,14 @@ void guistayopen(char *contents)
 #define GUI_TEXT_COLOR	0xDDFFDD
 
 //@DOC name and icon are optional
-void guibutton(char *name, char *action, char *icon, char *alt)
+void guibutton(char *name, char *action, char *icon, char *altact)
 {
 	if(!cgui) return;
 	int ret = cgui->button(name, GUI_BUTTON_COLOR, *icon ? icon : (strstr(action, "showgui") ? "menu" : "action"));
 	if(ret&G3D_UP)
 	{
 		char *act = name;
-		if (*alt && ret&G3D_ALTERNATE) act = alt;
+		if (*altact && ret&G3D_ALTERNATE) act = altact;
 		else if (*action) act = action;
 		executelater.add(newstring(act));
         if(shouldclearmenu) clearlater = true;
@@ -72,14 +72,20 @@ void guibutton(char *name, char *action, char *icon, char *alt)
 	}
 }
 
-void guiimage(char *path, char *action, float *scale, int *overlaid, char *alt)
+void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpath, char *altact)
 {
 	if(!cgui) return;
-	int ret = cgui->image(path, *scale, *overlaid!=0);
+    Texture *t = textureload(path, 0, true, false);
+    if(t == notexture)
+    {
+        if(*altpath) t = textureload(altpath, 0, true, false);
+        //if(t == notexture) return;
+    }
+    int ret = cgui->image(t, *scale, *overlaid!=0);
 	if(ret&G3D_UP)
 	{
 		char *act = NULL;
-		if (*alt && ret&G3D_ALTERNATE) act = alt;
+		if (*altact && ret&G3D_ALTERNATE) act = altact;
 		else if (*action) act = action;
 		if (*act)
 		{
@@ -183,7 +189,7 @@ void guiradio(char *name, char *var, int *n, char *onchange)
 void guifield(char *var, int *maxlength, char *onchange, char *updateval)
 {
 	if(!cgui) return;
-	char *initval = "";
+    const char *initval = "";
 	if(!cguifirstpass && strcmp(g3d_fieldname(), var))
 	{
 		if(updateval[0]) execute(updateval);
@@ -266,7 +272,7 @@ COMMAND(guistayopen, "s");
 COMMAND(guilist, "s");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");
-COMMAND(guiimage,"ssfis");
+COMMAND(guiimage,"ssfiss");
 COMMAND(guislider,"siis");
 COMMAND(guilistslider, "sss");
 COMMAND(guiradio,"ssis");

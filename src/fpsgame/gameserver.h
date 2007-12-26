@@ -330,6 +330,8 @@ struct gameserver : igameserver
 	{
 		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
 		smuts.setsize(0);
+		CCOMMAND(getdefaultmap, "", (gameserver *self), result(self->defaultmap()));
+		CCOMMAND(getdefaultmode, "", (gameserver *self), intret(self->defaultmode()));
 	}
 
 	void *newinfo() { return new clientinfo; }
@@ -1951,7 +1953,7 @@ struct gameserver : igameserver
 		else checkvotes();
 	}
 
-	char *servername() { return "bloodfrontierserver"; }
+	const char *servername() { return "bloodfrontierserver"; }
 	int serverinfoport()
 	{
 		return SERVINFO_PORT;
@@ -1960,7 +1962,7 @@ struct gameserver : igameserver
 	{
 		return SERVER_PORT;
 	}
-	char *getdefaultmaster()
+	const char *getdefaultmaster()
 	{
 		return "acord.woop.us/";
 	}
@@ -2282,7 +2284,7 @@ struct gameserver : igameserver
 		return false;
 	}
 
-	char *colorname(clientinfo *ci, char *name = NULL)
+	const char *colorname(clientinfo *ci, char *name = NULL)
 	{
 		if(!name) name = ci->name;
 		if(name[0] && !duplicatename(ci, name)) return name;
@@ -2291,7 +2293,7 @@ struct gameserver : igameserver
 		return cname;
 	}
 	
-    char *gameid() { return GAMEID; }
+    const char *gameid() { return GAMEID; }
     char *gamename(int mode, int muts)
     {
     	static string gname;
@@ -2309,7 +2311,7 @@ struct gameserver : igameserver
 		s_strcpy(gname, mname);
 		return gname;
     }
-	char *defaultmap() { return "usm01"; }
+	const char *defaultmap() { return "usm01"; }
 	int defaultmode() { return G_DEATHMATCH; }
 
 	bool canload(char *type)

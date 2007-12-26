@@ -35,7 +35,7 @@ Shader *lookupshaderbyname(const char *name)
 	return s && s->altshader ? s->altshader : s;
 }
 
-static bool compileasmshader(GLenum type, GLuint &idx, char *def, char *tname, char *name, bool msg = true, bool nativeonly = false)
+static bool compileasmshader(GLenum type, GLuint &idx, const char *def, const char *tname, const char *name, bool msg = true, bool nativeonly = false)
 {
 	glGenPrograms_(1, &idx);
 	glBindProgram_(type, idx);
@@ -63,7 +63,7 @@ static bool compileasmshader(GLenum type, GLuint &idx, char *def, char *tname, c
     return native!=0;
 }
 
-static void showglslinfo(GLhandleARB obj, char *tname, char *name)
+static void showglslinfo(GLhandleARB obj, const char *tname, const char *name)
 {
 	GLint length = 0;
 	glGetObjectParameteriv_(obj, GL_OBJECT_INFO_LOG_LENGTH_ARB, &length);
@@ -77,7 +77,7 @@ static void showglslinfo(GLhandleARB obj, char *tname, char *name)
 	}
 }
 
-static void compileglslshader(GLenum type, GLhandleARB &obj, char *def, char *tname, char *name, bool msg = true)
+static void compileglslshader(GLenum type, GLhandleARB &obj, const char *def, const char *tname, const char *name, bool msg = true) 
 {
 	const GLcharARB *source = (const GLcharARB*)(def + strspn(def, " \t\r\n"));
 	obj = glCreateShaderObject_(type);
@@ -259,7 +259,7 @@ void Shader::allocenvparams(Slot *slot)
 		allocglsluniformparam(*this, SHPARAM_PIXEL, i);
 }
 
-void setenvparamf(char *name, int type, int index, float x, float y, float z, float w)
+void setenvparamf(const char *name, int type, int index, float x, float y, float z, float w)
 {
 	ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
 	val.name = name;
@@ -275,7 +275,7 @@ void setenvparamf(char *name, int type, int index, float x, float y, float z, fl
 	}
 }
 
-void setenvparamfv(char *name, int type, int index, const float *v)
+void setenvparamfv(const char *name, int type, int index, const float *v)
 {
 	ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
 	val.name = name;
@@ -309,13 +309,13 @@ void flushenvparam(int type, int index, bool local)
 	}
 }
 
-void setlocalparamf(char *name, int type, int index, float x, float y, float z, float w)
+void setlocalparamf(const char *name, int type, int index, float x, float y, float z, float w)
 {
 	setenvparamf(name, type, index, x, y, z, w);
 	flushenvparam(type, index, true);
 }
 
-void setlocalparamfv(char *name, int type, int index, const float *v)
+void setlocalparamfv(const char *name, int type, int index, const float *v)
 {
 	setenvparamfv(name, type, index, v);
 	flushenvparam(type, index, true);
@@ -431,7 +431,7 @@ void Shader::bindprograms()
 	lastshader = this;
 }
 
-VARFN(shaders, useshaders, 0, 1, 1, initwarning());
+VARFN(shaders, useshaders, -1, -1, 1, initwarning());
 VARF(shaderprecision, 0, 0, 2, initwarning());
 VARP(shaderdetail, 0, MAXSHADERDETAIL, MAXSHADERDETAIL);
 
@@ -854,7 +854,7 @@ void setshader(char *name)
 	curparams.setsize(0);
 }
 
-ShaderParam *findshaderparam(Slot &s, char *name, int type, int index)
+ShaderParam *findshaderparam(Slot &s, const char *name, int type, int index)
 {
 	if(!s.shader) return NULL;
 	loopv(s.params)

@@ -88,33 +88,6 @@ struct gameclient : igameclient
 	iclientcom *getcom() { return &cc; }
 	icliententities *getents() { return &et; }
 
-	void setmode(int mode, int muts)
-	{
-		if(multiplayer(false) && !m_mp(mode)) { conoutf("mode %d not supported in multiplayer", mode); return; }
-		nextmode = mode;
-		nextmuts = muts;
-	}
-
-	void taunt()
-	{
-        if(player1->state!=CS_ALIVE || player1->physstate<PHYS_SLOPE) return;
-		if(lastmillis-player1->lasttaunt<1000) return;
-		player1->lasttaunt = lastmillis;
-		cc.addmsg(SV_TAUNT, "r");
-	}
-
-    void rendergame() { fr.rendergame(); }
-
-	void resetgamestate()
-	{
-		pj.reset();
-
-		if (m_sp(gamemode))
-		{
-			resettriggers();
-		}
-	}
-
 	fpsent *spawnstate(fpsent *d)			  // reset player state not persistent accross spawns
 	{
 		d->respawn();
@@ -123,11 +96,72 @@ struct gameclient : igameclient
 		return d;
 	}
 
+	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
+	{
+		ph.findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1));
+		spawnstate(d);
+		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
+	}
+
+	int respawnwait()
+	{
+		int wait = 0;
+		if (m_capture(gamemode)) wait = cpc.respawnwait();
+		else if (m_assassin(gamemode)) wait = asc.respawnwait();
+		return wait;
+	}
+
+	void respawn()
+	{
+		if(player1->state == CS_DEAD)
+		{
+			int wait = respawnwait();
+
+			if (wait)
+			{
+				console("\f2you must wait %d second%s before respawn!", CON_LEFT|CON_CENTER, wait, wait!=1 ? "s" : "");
+				return;
+			}
+
+			respawnself();
+		}
+	}
+
+	// inputs
+	#define iput(x,y,z) \
+		void do##x(bool on) \
+		{ \
+			bool val = !intermission ? on : false; \
+			player1->y = player1->state != CS_DEAD ? val : false; \
+			if (z && player1->state == CS_DEAD && val) respawn(); \
+		}
+
+	iput(crouch,	crouching,	false);
+	iput(jump,		jumping,	false);
+	iput(attack,	attacking,	true);
+	iput(reload,	reloading,	true);
+	iput(pickup,	pickingup,	true);
+	iput(lean,		leaning,	false);
+
+	bool canjump()
+	{
+		return player1->state != CS_DEAD && !intermission;
+	}
+
+    bool allowmove(physent *d)
+    {
+        if (d->type != ENT_PLAYER) return true;
+        fpsent *e = (fpsent *)d;
+        return e->lasttaunt && lastmillis-e->lasttaunt >= 1000;
+    }
+
 	void respawnself()
 	{
-        if(m_mp(gamemode))
+		player1->stopmoving();
+
+        if( m_mp(gamemode))
         {
-            if(respawned!=player1->lifesequence)
+            if (respawned != player1->lifesequence)
             {
                 cc.addmsg(SV_TRYSPAWN, "r");
                 respawned = player1->lifesequence;
@@ -155,6 +189,33 @@ struct gameclient : igameclient
 			if(intersect(o, player1->o, worldpos)) return o;
 		}
 		return NULL;
+	}
+
+	void setmode(int mode, int muts)
+	{
+		if(multiplayer(false) && !m_mp(mode)) { conoutf("mode %d not supported in multiplayer", mode); return; }
+		nextmode = mode;
+		nextmuts = muts;
+	}
+
+	void taunt()
+	{
+        if(player1->state!=CS_ALIVE || player1->physstate<PHYS_SLOPE) return;
+		if(lastmillis-player1->lasttaunt<1000) return;
+		player1->lasttaunt = lastmillis;
+		cc.addmsg(SV_TAUNT, "r");
+	}
+
+    void rendergame() { fr.rendergame(); }
+
+	void resetgamestate()
+	{
+		pj.reset();
+
+		if (m_sp(gamemode))
+		{
+			resettriggers();
+		}
 	}
 
 	void otherplayers()
@@ -204,11 +265,7 @@ struct gameclient : igameclient
 					player1->stopmoving();
 					ph.move(player1, 10, false);
 				}
-				else
-				{
-					if ((m_capture(gamemode) && !cpc.respawnwait()) || (m_assassin(gamemode) && !asc.respawnwait()))
-						respawnself();
-				}
+				else if (!respawnwait()) respawnself();
 			}
 			else
 			{
@@ -248,60 +305,6 @@ struct gameclient : igameclient
 		if (player1->clientnum >= 0) c2sinfo(player1);
 	}
 
-	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
-	{
-		ph.findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1));
-		spawnstate(d);
-		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
-	}
-
-	void respawn()
-	{
-		if(player1->state==CS_DEAD)
-		{
-			player1->stopmoving();
-
-            if(m_capture(gamemode))
-            {
-                int wait = cpc.respawnwait();
-                if(wait > 0)
-				{
-					console("\f2you must wait %d second%s before respawn!", CON_LEFT|CON_CENTER, wait, wait!=1 ? "s" : "");
-					return;
-				}
-			}
-
-			respawnself();
-		}
-	}
-
-	// inputs
-	#define iput(x,y,z) \
-		void do##x(bool on) \
-		{ \
-			bool val = !intermission ? on : false; \
-			player1->y = player1->state != CS_DEAD ? val : false; \
-			if (z && player1->state == CS_DEAD && val) respawn(); \
-		}
-
-	iput(crouch,	crouching,	false);
-	iput(jump,		jumping,	false);
-	iput(attack,	attacking,	true);
-	iput(reload,	reloading,	true);
-	iput(pickup,	pickingup,	true);
-	iput(lean,		leaning,	false);
-
-	bool canjump()
-	{
-		return player1->state != CS_DEAD && !intermission;
-	}
-
-    bool allowmove(physent *d)
-    {
-        if( d->type != ENT_PLAYER) return true;
-        return lastmillis-((fpsent *)d)->lasttaunt>=1000;
-    }
-
 	void damaged(int gun, int damage, fpsent *d, fpsent *actor, int millis, vec &dir)
 	{
 		if(d->state != CS_ALIVE || intermission) return;
@@ -309,7 +312,7 @@ struct gameclient : igameclient
 		d->dodamage(damage, millis);
 		d->superdamage = 0;
 
-		actor->totaldamage += damage;
+		if (actor->type == ENT_PLAYER) actor->totaldamage += damage;
 
 		if (actor == player1)
 		{
@@ -339,12 +342,6 @@ struct gameclient : igameclient
 	{
 		if(d->state!=CS_ALIVE || intermission) return;
 
-        if(m_assassin(gamemode))
-        {
-            if(d==player1 && asc.hunters.find(actor)>=0) asc.hunters.removeobj(actor);
-            else if(actor==player1 && asc.targets.find(d)>=0) asc.targets.removeobj(d);
-        }
-
 		string dname, aname;
 		s_strcpy(dname, d==player1 ? "you" : colorname(d));
 		s_strcpy(aname, actor==player1 ? "you" : (actor->type!=ENT_INANIMATE ? colorname(actor) : ""));
@@ -358,6 +355,19 @@ struct gameclient : igameclient
 			if(d==player1) console("\f2you got fragged by a teammate (%s)", cflags, aname);
 			else console("\f2%s fragged a teammate (%s)", cflags, aname, dname);
 		}
+        else if(m_assassin(gamemode) && (d == player1 || actor == player1))
+        {
+            if(d==player1) 
+            {   
+                console("\f2you got fragged by %s (%s)", cflags, aname, asc.hunters.find(actor)>=0 ? "assassin" : (asc.targets.find(actor)>=0 ? "target" : "friend"));
+                if(asc.hunters.find(actor)>=0) asc.hunters.removeobj(actor);
+            }
+            else 
+            {
+                console("\f2you fragged %s (%s)", cflags, dname, asc.targets.find(d)>=0 ? "target +1" : (asc.hunters.find(d)>=0 ? "assassin +0" : "friend -1")); 
+                if(asc.targets.find(d)>=0) asc.targets.removeobj(d);
+            }
+        }
 		else
 		{
 			if(d==player1) console("\f2you got fragged by %s", cflags, aname);
@@ -504,7 +514,7 @@ struct gameclient : igameclient
 
 	void startmap(const char *name)	// called just after a map load
 	{
-        respawned = suicided = -1;
+        respawned = suicided = 0;
 		respawnent = -1;
 		cc.mapstart();
 		pj.reset();
@@ -561,7 +571,7 @@ struct gameclient : igameclient
 		return false;
 	}
 
-	char *colorname(fpsent *d, char *name = NULL, char *prefix = "")
+	char *colorname(fpsent *d, char *name = NULL, const char *prefix = "")
 	{
 		if(!name) name = d->name;
 		if(name[0] && !duplicatename(d, name)) return name;
@@ -589,19 +599,22 @@ struct gameclient : igameclient
 
 	void drawhudmodel(int anim, float speed = 0, int base = 0)
 	{
-		if (player1->gunselect <= -1 || player1->gunselect >= NUMGUNS) return;
+		if (!isgun(player1->gunselect)) return;
 		vec sway, color, dir;
 		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
-		float swayspeed = min(4.0f, player1->vel.magnitude());
-		sway.mul(swayspeed);
-		float swayxy = sinf(swaymillis/115.0f)/100.0f,
-			  swayz = cosf(swaymillis/115.0f)/100.0f;
-		swap(float, sway.x, sway.y);
-		sway.x *= -swayxy;
-		sway.y *= swayxy;
-		sway.z = -fabs(swayspeed*swayz);
-		sway.add(swaydir).add(camera1->o);
 		if(!hudgunsway()) sway = camera1->o;
+		else
+		{
+			float swayspeed = min(4.0f, player1->vel.magnitude());
+			sway.mul(swayspeed);
+			float swayxy = sinf(swaymillis/115.0f)/100.0f,
+				  swayz = cosf(swaymillis/115.0f)/100.0f;
+			swap(float, sway.x, sway.y);
+			sway.x *= -swayxy;
+			sway.y *= swayxy;
+			sway.z = -fabs(swayspeed*swayz);
+			sway.add(swaydir).add(camera1->o);
+		}
 		lightreaching(sway, color, dir);
         dynlightreaching(sway, color, dir);
 
@@ -619,7 +632,7 @@ struct gameclient : igameclient
 
 	void drawhudgun()
 	{
-		if(!hudgun() || editmode || player1->state != CS_ALIVE || player1->gunselect <= -1) return;
+		if(!hudgun() || editmode || player1->state != CS_ALIVE || !isgun(player1->gunselect)) return;
 		int rtime = player1->gunwait[player1->gunselect],
 			wtime = player1->gunlast[player1->gunselect],
 			otime = lastmillis - wtime;
@@ -635,7 +648,7 @@ struct gameclient : igameclient
 		}
 	}
 
-	void gameplayhud(int w, int h)
+	void drawhud(int w, int h)
 	{
 		if (!hidehud)
 		{
@@ -658,7 +671,7 @@ struct gameclient : igameclient
 					if (secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
 					else if (secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
 
-					const char *maptitle = getmaptitle();
+					char *maptitle = getmaptitle();
 					if (!*maptitle) maptitle = "Untitled by Unknown";
 
 					glColor4f(1.f, 1.f, 1.f, amt);
@@ -764,10 +777,7 @@ struct gameclient : igameclient
 						}
 						else if (d->state == CS_DEAD)
 						{
-							int wait = 0;
-
-							if (m_capture(gamemode)) wait = cpc.respawnwait();
-							else if (m_assassin(gamemode)) wait = asc.respawnwait();
+							int wait = respawnwait();
 
 							if (wait)
 							{
@@ -841,7 +851,7 @@ struct gameclient : igameclient
 		cc.addmsg(SV_NEWMAP, "ri", size);
 	}
 
-	void editvariable(char *name, int value)
+	void editvariable(const char *name, int value)
 	{
         if(m_edit(gamemode)) cc.addmsg(SV_EDITVAR, "rsi", name, value);
 	}

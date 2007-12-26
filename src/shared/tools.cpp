@@ -47,14 +47,8 @@ char *makefile(char *s, char *e, bool ext, bool copy)
 	return s;
 }
 
-char *path(char *s, bool copy)
+char *path(char *s)
 {
-    if(copy)
-    {
-        static string tmp;
-        s_strcpy(tmp, s);
-        s = tmp;
-    }
     for(char *t = s; (t = strpbrk(t, "/\\")); *t++ = PATHDIV);
     for(char *prevdir = NULL, *curdir = s;;)
     {
@@ -74,6 +68,14 @@ char *path(char *s, bool copy)
         }
     }
     return s;
+}
+
+char *path(const char *s, bool copy)
+{
+    static string tmp;
+    s_strcpy(tmp, s);
+    path(tmp);
+    return tmp;
 }
 
 const char *parentdir(const char *directory)
@@ -270,15 +272,14 @@ int listfiles(const char *dir, const char *ext, vector<char *> &files)
 
 void endianswap(void *memory, int stride, int length)   // little endian as storage format
 {
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    loop(w, length) loop(i, stride/2)
+    static const int littleendian = 1;
+    if(!*(const char *)&littleendian) loop(w, length) loop(i, stride/2)
     {
         uchar *p = (uchar *)memory+w*stride;
         uchar t = p[i];
         p[i] = p[stride-i-1];
         p[stride-i-1] = t;
     }
-#endif
 }
 
 

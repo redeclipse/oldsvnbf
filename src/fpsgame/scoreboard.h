@@ -63,7 +63,7 @@ struct scoreboard : g3d_callback
 		loopi(cl.numdynents())
 		{
 			fpsent *o = (fpsent *)cl.iterdynents(i);
-            if(o && o->type!=ENT_AI && o->state!=CS_SPECTATOR) best.add(o);
+            if(o && o->type==ENT_PLAYER && o->state!=CS_SPECTATOR) best.add(o);
 		}
         best.sort(playersort);
 		while(best.length()>1 && best.last()->frags < best[0]->frags) best.drop();

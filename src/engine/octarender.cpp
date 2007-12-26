@@ -409,22 +409,23 @@ struct lodcollect
                 ushort *startbuf = curbuf;
                 loopl(6)
                 {
+                    e.minvert[l] = USHRT_MAX;
+                    e.maxvert[l] = 0;
+
                     if(t.dims[l].length())
-				{
-					memcpy(curbuf, t.dims[l].getbuf(), t.dims[l].length() * sizeof(ushort));
-
-					e.minvert[l] = USHRT_MAX;
-					e.maxvert[l] = 0;
-					loopvj(t.dims[l])
 					{
-						curbuf[j] += offsetindices;
-						e.minvert[l] = min(e.minvert[l], curbuf[j]);
-						e.maxvert[l] = max(e.maxvert[l], curbuf[j]);
+						memcpy(curbuf, t.dims[l].getbuf(), t.dims[l].length() * sizeof(ushort));
+	
+						loopvj(t.dims[l])
+						{
+							curbuf[j] += offsetindices;
+							e.minvert[l] = min(e.minvert[l], curbuf[j]);
+							e.maxvert[l] = max(e.maxvert[l], curbuf[j]);
+						}
+	
+						curbuf += t.dims[l].length();
 					}
-
-					curbuf += t.dims[l].length();
-				}
-                    e.length[l] = curbuf-startbuf;
+	                e.length[l] = curbuf-startbuf;
                 }
 			}
 			if(hasVBO)

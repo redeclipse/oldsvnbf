@@ -229,7 +229,7 @@ int connectthread(void *data)
 
 #define CONNLIMIT 20000
 
-int connectwithtimeout(ENetSocket sock, char *hostname, ENetAddress &address)
+int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address)
 {
 	s_sprintfd(text)("connecting to %s... (esc to abort)", hostname != NULL ? hostname : "local server");
 	show_out_of_renderloop_progress(0, text);

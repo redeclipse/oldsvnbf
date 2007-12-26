@@ -644,7 +644,8 @@ struct vertmodel : model
                 }
             }
 
-            if(hasDRE) glDrawRangeElements_(GL_TRIANGLES, minvert, maxvert, elen, GL_UNSIGNED_SHORT, &group->edata[eoffset]);
+            extern int mesa_dre_bug;
+            if(hasDRE) glDrawRangeElements_(GL_TRIANGLES, mesa_dre_bug ? max(minvert-3, 0) : minvert, maxvert, elen, GL_UNSIGNED_SHORT, &group->edata[eoffset]);
             else glDrawElements(GL_TRIANGLES, elen, GL_UNSIGNED_SHORT, &group->edata[eoffset]);
             glde++;
             xtravertsva += numverts;

@@ -347,7 +347,7 @@ void setupmaterials()
 				wi.depth = double(depth)*m.rsize*m.csize;
 				wi.area = m.rsize*m.csize;
 			}
-			else if(isliquid(m.material) && m.orient!=O_BOTTOM)
+            else if(isliquid(m.material) && m.orient!=O_BOTTOM && m.orient!=O_TOP)
 			{
 				m.ends = 0;
 				int dim = dimension(m.orient), coord = dimcoord(m.orient);

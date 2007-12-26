@@ -28,11 +28,11 @@ void quit()					 // normal exit
 	exit(EXIT_SUCCESS);
 }
 
-void fatal(char *s, char *o)	// failure exit
+void fatal(const char *s, ...)    // failure exit
 {
     SDL_ShowCursor(1);
-	s_sprintfd(msg)("%s%s\n", s, o);
-	printf(msg);
+    s_sprintfdlv(msg,s,s);
+    puts(msg);
 #ifdef WIN32
 	MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
 #endif
@@ -265,7 +265,7 @@ void getfps(int &fps, int &bestdiff, int &worstdiff)
 
 bool inbetweenframes = false;
 
-static bool findarg(int argc, char **argv, char *str)
+static bool findarg(int argc, char **argv, const char *str)
 {
 	for(int i = 1; i<argc; i++) if(strstr(argv[i], str)==argv[i]) return true;
 	return false;
@@ -386,7 +386,7 @@ void rehash(bool reload)
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
 
-void setcaption(char *text)
+void setcaption(const char *text)
 {
 	s_sprintfd(caption)("%s [v%.2f] %s: %s", BFRONTIER_NAME, float(BFRONTIER)/100.f, BFRONTIER_RELEASE, text);
 	SDL_WM_SetCaption(caption, NULL);
@@ -414,8 +414,8 @@ int main(int argc, char **argv)
 	{
 		if(argv[i][0]=='-') switch(argv[i][1])
 		{
-			case 'q': sethomedir(&argv[i][2]); break;
-			case 'k': addpackagedir(&argv[i][2]); break;
+            case 'q': printf("Using home directory: %s\n", &argv[i][2]); sethomedir(&argv[i][2]); break;
+            case 'k': printf("Adding package directory: %s\n", &argv[i][2]); addpackagedir(&argv[i][2]); break;
 			case 'r': execfile(argv[i][2] ? &argv[i][2] : (char *)"init.cfg"); restoredinits = true; break;
             case 'w': scr_w = atoi(&argv[i][2]); if(scr_w<320) scr_w = 320; if(!findarg(argc, argv, "-h")) scr_h = (scr_w*3)/4; break;
             case 'h': scr_h = atoi(&argv[i][2]); if(scr_h<200) scr_h = 200; if(!findarg(argc, argv, "-w")) scr_w = (scr_h*4)/3; break;
