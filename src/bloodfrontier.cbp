@@ -132,12 +132,6 @@
 				</Linker>
 			</Target>
 		</Build>
-		<Unit filename="Makefile">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
 		<Unit filename="enet\callbacks.c">
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
