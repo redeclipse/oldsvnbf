@@ -300,7 +300,7 @@ void save_world(char *mname, bool nolms)
 
 	loopi(MAT_EDIT)
 	{
-		show_out_of_renderloop_progress(float(i)/float(MAT_EDIT), "saving material slots...");
+		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(MAT_EDIT), "saving material slots...");
 
 		if (i == MAT_WATER || i == MAT_LAVA)
 		{
@@ -311,14 +311,14 @@ void save_world(char *mname, bool nolms)
 
 	loopv(slots)
 	{
-		show_out_of_renderloop_progress(float(i)/float(slots.length()), "saving texture slots...");
+		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(slots.length()), "saving texture slots...");
 		saveslot(slots[i], true);
 	}
 	if (verbose >= 2) console("saved %d texture slots", CON_RIGHT, slots.length());
 
 	loopv(mapmodels)
 	{
-		show_out_of_renderloop_progress(float(i)/float(mapmodels.length()), "saving mapmodel slots...");
+		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(mapmodels.length()), "saving mapmodel slots...");
 		fprintf(h, "mmodel \"%s\" %d\n", mapmodels[i].name, mapmodels[i].tex);
 	}
 	if (mapmodels.length()) fprintf(h, "\n");
@@ -326,7 +326,7 @@ void save_world(char *mname, bool nolms)
 
 	loopv(mapsounds)
 	{
-		show_out_of_renderloop_progress(float(i)/float(mapsounds.length()), "saving mapsound slots...");
+		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(mapsounds.length()), "saving mapsound slots...");
 		fprintf(h, "mapsound \"%s\" %d %d\n", mapsounds[i].sample->name, mapsounds[i].vol, mapsounds[i].maxuses);
 	}
 	if (mapsounds.length()) fprintf(h, "\n");
@@ -358,7 +358,7 @@ void save_world(char *mname, bool nolms)
 		if (id._type == ID_VAR && id._context & IDC_WORLD)
 		{
 			cntvars++;
-			show_out_of_renderloop_progress(float(cntvars)/float(numvars), "saving world variables...");
+			if (verbose >= 2) show_out_of_renderloop_progress(float(cntvars)/float(numvars), "saving world variables...");
 			gzputc(f, (int)strlen(id._name));
 			gzwrite(f, id._name, (int)strlen(id._name)+1);
 			gzputint(f, *id._storage);
@@ -375,7 +375,7 @@ void save_world(char *mname, bool nolms)
 	int count = 0;
 	loopv(ents) // extended
 	{
-		show_out_of_renderloop_progress(float(i)/float(ents.length()), "saving entities...");
+		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(ents.length()), "saving entities...");
 		if(ents[i]->type!=ET_EMPTY)
 		{
 			entity tmp = *ents[i];
@@ -392,7 +392,7 @@ void save_world(char *mname, bool nolms)
 	if(!nolms) loopv(lightmaps)
 	{
 		LightMap &lm = lightmaps[i];
-		show_out_of_renderloop_progress(float(i)/float(lightmaps.length()), "saving lightmaps...");
+		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(lightmaps.length()), "saving lightmaps...");
 		gzputc(f, lm.type | (lm.unlitx>=0 ? 0x80 : 0));
 		if(lm.unlitx>=0)
 		{
@@ -490,7 +490,7 @@ void load_world(char *mname, char *cname)		// still supports all map formats tha
 		{
 			s_strncpy(hdr.gameid, "bfa", 3); // all previous maps were bfa-fps
 		}
-		
+
 		if (!sv->canload(hdr.gameid))
 		{
 			conoutf("WARNING: loading map from %s game type in %s, ignoring game specific data", hdr.gameid, sv->gameid());
@@ -597,7 +597,7 @@ void load_world(char *mname, char *cname)		// still supports all map formats tha
 	vector<extentity *> &ents = et->getents();
 	loopi(hdr.numents)
 	{
-		show_out_of_renderloop_progress(float(i)/float(hdr.numents), "loading entities...");
+		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(hdr.numents), "loading entities...");
 		extentity &e = *et->newentity();
 		ents.add(&e);
 		gzread(f, &e, sizeof(entity));
@@ -661,7 +661,7 @@ void load_world(char *mname, char *cname)		// still supports all map formats tha
 
 	if(hdr.version >= 7) loopi(hdr.lightmaps)
 	{
-		show_out_of_renderloop_progress(i/(float)hdr.lightmaps, "loading lightmaps...");
+		if (verbose >= 2) show_out_of_renderloop_progress(i/(float)hdr.lightmaps, "loading lightmaps...");
 		LightMap &lm = lightmaps.add();
 		if(hdr.version >= 17)
 		{

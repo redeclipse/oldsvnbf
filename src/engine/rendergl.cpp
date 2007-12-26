@@ -128,7 +128,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     extern int mac_osversion();
     int osversion = mac_osversion();  /* 0x1050 = 10.5 (Leopard) */
 #endif
-    
+
 	//extern int shaderprecision;
 	// default to low precision shaders on certain cards, can be overridden with -f3
 	// char *weakcards[] = { "GeForce FX", "Quadro FX", "6200", "9500", "9550", "9600", "9700", "9800", "X300", "X600", "FireGL", "Intel", "Chrome", NULL }
@@ -258,7 +258,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 			hasOQ = true;
 			//conoutf("Using GL_ARB_occlusion_query extension.");
 #if defined(__APPLE__) && SDL_BYTEORDER == SDL_BIG_ENDIAN
-            if(strstr(vendor, "ATI") && (osversion<0x1050)) ati_oq_bug = 1; 
+            if(strstr(vendor, "ATI") && (osversion<0x1050)) ati_oq_bug = 1;
 #endif
 			if(ati_oq_bug) conoutf("WARNING: Using ATI occlusion query bug workaround. (use \"/ati_oq_bug 0\" to disable if unnecessary)");
 		}
@@ -342,7 +342,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	}
 
 #ifdef __APPLE__
-     if((renderpath!=R_FIXEDFUNCTION) && (osversion>=0x1050)) 
+     if((renderpath!=R_FIXEDFUNCTION) && (osversion>=0x1050))
      {
         apple_ff_bug = 1;
         conoutf("WARNING: Using leopard OPTION ARB_position_invariant workaround (use \"/apple_ff_bug 0\" to disable if unnecessary)");
@@ -973,7 +973,7 @@ void writecrosshairs(FILE *f)
 
 void drawcrosshair(int w, int h)
 {
-	bool windowhit = g3d_windowhit(true, false);
+	bool windowhit = g3d_windowhit(0, true, false);
 	if(!windowhit && !cl->wantcrosshair()) return;
 
 	static Texture *cursor = NULL;

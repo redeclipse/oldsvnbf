@@ -52,7 +52,7 @@ struct gameclient : igameclient
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false), lastmillis(0),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			respawned(-1), suicided(-1), 
+			respawned(-1), suicided(-1),
 			cameranum(0), cameracycled(0), myrankv(0), myranks(0),
 			player1(spawnstate(new fpsent()))
 	{
@@ -61,7 +61,7 @@ struct gameclient : igameclient
 				self->player1->s = *down != 0; \
 				self->player1->v = self->player1->s ? d : (self->player1->os ? -(d) : 0); \
 			});
-		
+
 		movedir(backward,	move,	-1,		k_down,		k_up);
 		movedir(forward,	move,	1,		k_up,		k_down);
 		movedir(left,		strafe,	1,		k_left,		k_right);
@@ -108,7 +108,7 @@ struct gameclient : igameclient
 	void resetgamestate()
 	{
 		pj.reset();
-		
+
 		if (m_sp(gamemode))
 		{
 			resettriggers();
@@ -125,7 +125,7 @@ struct gameclient : igameclient
 
 	void respawnself()
 	{
-        if(m_mp(gamemode)) 
+        if(m_mp(gamemode))
         {
             if(respawned!=player1->lifesequence)
             {
@@ -192,7 +192,7 @@ struct gameclient : igameclient
 				{ \
 					n = (t)(n/((float)1.f+(float)sqrtf((float)curtime)/float(m))); \
 				}
-			
+
 			adjust(int, camerawobble, 100);
 			adjust(int, damageresidue, 200);
 			if (!player1->leaning) adjust(float, player1->roll, 50);
@@ -240,7 +240,7 @@ struct gameclient : igameclient
 
 				et.checkitems(player1);
 				if (m_sp(gamemode)) checktriggers();
-				
+
 				if (player1->attacking) ws.shoot(player1, pos);
 				if (player1->reloading || doautoreload()) ws.reload(player1);
 			}
@@ -283,7 +283,7 @@ struct gameclient : igameclient
 			player1->y = player1->state != CS_DEAD ? val : false; \
 			if (z && player1->state == CS_DEAD && val) respawn(); \
 		}
-		
+
 	iput(crouch,	crouching,	false);
 	iput(jump,		jumping,	false);
 	iput(attack,	attacking,	true);
@@ -723,26 +723,59 @@ struct gameclient : igameclient
 						glEnd();
 					}
 
-					//glColor4f(1.f, 1.f, 1.f, amt);
-					//rendericon("textures/logo.jpg", 20, oy-75, 64, 64);
+					glColor4f(1.f, 1.f, 1.f, fade);
+
+					settexture("textures/hud_status.png");
+					glBegin(GL_QUADS);
+					glTexCoord2f(0, 0); glVertex2i(0, oy-(oy/4));
+					glTexCoord2f(1, 0); glVertex2i(oy/4, oy-(oy/4));
+					glTexCoord2f(1, 1); glVertex2i(oy/4, oy);
+					glTexCoord2f(0, 1); glVertex2i(0, oy);
+					glEnd();
 
 					if (d != NULL)
 					{
 						if (d->state == CS_ALIVE)
 						{
-							draw_textx("\fs\f0[\fs\fr%d\fS][\fs\fy%d\fS]\fS", 20, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->health, d->gunselect <= -1 || d->ammo[d->gunselect] <= -1 ? 0 : d->ammo[d->gunselect]);
+							float hlt = player1->health/100.f;
+							settexture("textures/hud_health.png");
+		
+							if (hlt >= 0.5)
+							{
+								float vrt = (hlt-0.5f)*2.f;
+								glBegin(GL_QUADS);
+								glTexCoord2f(0, 1); glVertex2i(0, oy);
+								glTexCoord2f(0, 0); glVertex2i(0, oy-(oy/4));
+								glTexCoord2f(1, 0); glVertex2i(oy/4, oy-(oy/4));
+								glTexCoord2f(1, vrt); glVertex2i(oy/4, oy-int(float(oy/4)*(1.0f-vrt)));
+							}
+							else
+							{
+								float vrt = hlt*2.f;
+								glBegin(GL_TRIANGLES);
+								glTexCoord2f(0, 1); glVertex2i(0, oy);
+								glTexCoord2f(0, 0); glVertex2i(0, oy-(oy/4));
+								glTexCoord2f(vrt, 0); glVertex2i(int(float(ox/4)*vrt), oy-(oy/4));
+							}
+							glEnd();
+
+							if (d->gunselect >= 0 || d->ammo[d->gunselect] >= 0)
+								draw_textx("\fs\fy%d\fS", oy/8, oy-(oy/8)-(FONTH/2), 255, 255, 255, int(255.f*fade), false, AL_CENTER, d->ammo[d->gunselect]);
 						}
 						else if (d->state == CS_DEAD)
 						{
-							int wait = m_capture(gamemode) ? cpc.respawnwait() : 0 ;
+							int wait = 0;
+
+							if (m_capture(gamemode)) wait = cpc.respawnwait();
+							else if (m_assassin(gamemode)) wait = asc.respawnwait();
 
 							if (wait)
 							{
 								float c = float(wait)/1000.f;
-								draw_textx("Fragged! Down for %.1fs", 20, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
+								draw_textx("Fragged! Down for %.1fs", oy/4+FONTH, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
 							}
 							else
-								draw_textx("Fragged! Press attack to respawn", 20, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+								draw_textx("Fragged! Press attack to respawn", oy/4+FONTH, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 						}
 					}
 
@@ -1017,11 +1050,11 @@ struct gameclient : igameclient
 				camera1->o.z -= (float(player1->height-1)/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
 			else
 				camera1->o.z -= player1->aboveeye;
-			
+
 			camera1->yaw = player1->yaw;
 			camera1->pitch = player1->pitch;
 			camera1->roll = player1->roll;
-			
+
 			vec off;
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
 			camera1->o.add(off.mul(fabs(camera1->roll)/10.f));

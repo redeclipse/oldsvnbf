@@ -204,7 +204,7 @@ extern void gets2c();
 // 3dgui
 struct Texture;
 
-enum { G3D_DOWN = 1, G3D_UP = 2, G3D_PRESSED = 4, G3D_ROLLOVER = 8 };
+enum { G3D_DOWN = 1, G3D_UP = 2, G3D_PRESSED = 4, G3D_ROLLOVER = 8, G3D_ALTERNATE = 16 };
 
 struct g3d_gui
 {
