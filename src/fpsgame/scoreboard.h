@@ -3,7 +3,7 @@ struct scoreboard : g3d_callback
 	bool scoreson;
 	vec menupos;
 	int menustart;
-	gameclient &cl;
+	GAMECLIENT &cl;
 
 	IVARP(scoresinfo, 0, 1, 1);
 	IVARP(showclientnum, 0, 0, 1);
@@ -13,7 +13,7 @@ struct scoreboard : g3d_callback
     IVARP(highlightscore, 0, 1, 1);
     IVARP(showconnecting, 0, 0, 1);
 
-	scoreboard(gameclient &_cl) : scoreson(false), cl(_cl)
+	scoreboard(GAMECLIENT &_cl) : scoreson(false), cl(_cl)
 	{
         CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0));
 	}

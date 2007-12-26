@@ -2,9 +2,9 @@
 
 struct projectiles
 {
-	gameclient &cl;
+	GAMECLIENT &cl;
 
-	projectiles(gameclient &_cl) : cl(_cl)
+	projectiles(GAMECLIENT &_cl) : cl(_cl)
 	{
 	}
 

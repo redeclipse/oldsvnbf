@@ -6,7 +6,7 @@
 #define _fileno fileno
 #endif
 
-struct gameserver : igameserver
+struct GAMESERVER : igameserver
 {
 	struct server_entity			// server side version of "entity" type
 	{
@@ -267,9 +267,9 @@ struct gameserver : igameserver
 
 	struct servmode
 	{
-		gameserver &sv;
+		GAMESERVER &sv;
 
-		servmode(gameserver &sv) : sv(sv) {}
+		servmode(GAMESERVER &sv) : sv(sv) {}
 		virtual ~servmode() {}
 
 		virtual void entergame(clientinfo *ci) {}
@@ -319,7 +319,7 @@ struct gameserver : igameserver
 	};
 	clientinfo *cmdcontext;
 	string scresult, motd;
-	gameserver()
+	GAMESERVER()
 		: notgotitems(true), notgotbases(false),
 			gamemode(defaultmode()), mutators(0), interm(0), minremain(10),
 			mapreload(false), lastsend(0),
@@ -330,8 +330,8 @@ struct gameserver : igameserver
 	{
 		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
 		smuts.setsize(0);
-		CCOMMAND(getdefaultmap, "", (gameserver *self), result(self->defaultmap()));
-		CCOMMAND(getdefaultmode, "", (gameserver *self), intret(self->defaultmode()));
+		CCOMMAND(getdefaultmap, "", (GAMESERVER *self), result(self->defaultmap()));
+		CCOMMAND(getdefaultmode, "", (GAMESERVER *self), intret(self->defaultmode()));
 	}
 
 	void *newinfo() { return new clientinfo; }
@@ -875,7 +875,7 @@ struct gameserver : igameserver
 	static void freecallback(ENetPacket *packet)
 	{
 		extern igameserver *sv;
-		((gameserver *)sv)->cleanworldstate(packet);
+		((GAMESERVER *)sv)->cleanworldstate(packet);
 	}
 
 	void cleanworldstate(ENetPacket *packet)
@@ -2420,7 +2420,7 @@ struct gameserver : igameserver
 
 #ifndef STANDALONE
 #include "gameclient.h"
-REGISTERGAME(GAMENAME, GAMEID, new gameclient(), new gameserver());
+REGISTERGAME(GAMENAME, GAMEID, new GAMECLIENT(), new GAMESERVER());
 #else
-REGISTERGAME(GAMENAME, GAMEID, NULL, new gameserver());
+REGISTERGAME(GAMENAME, GAMEID, NULL, new GAMESERVER());
 #endif

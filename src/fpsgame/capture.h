@@ -173,10 +173,10 @@ struct capturestate
 
 struct captureclient : capturestate
 {
-	gameclient &cl;
+	GAMECLIENT &cl;
 	float radarscale;
 
-	captureclient(gameclient &cl) : cl(cl), radarscale(0)
+	captureclient(GAMECLIENT &cl) : cl(cl), radarscale(0)
 	{
 	}
 
@@ -402,7 +402,7 @@ struct captureservmode : capturestate, servmode
 	int scoresec;
 	bool notgotbases;
 
-	captureservmode(gameserver &sv) : servmode(sv), scoresec(0), notgotbases(false) {}
+	captureservmode(GAMESERVER &sv) : servmode(sv), scoresec(0), notgotbases(false) {}
 
 	void reset(bool empty)
 	{
@@ -416,7 +416,7 @@ struct captureservmode : capturestate, servmode
 		baseinfo &b = bases[n];
 		loopv(sv.clients)
 		{
-			gameserver::clientinfo *ci = sv.clients[i];
+			GAMESERVER::clientinfo *ci = sv.clients[i];
 			if(!ci->spectator && ci->state.state==CS_ALIVE && ci->team[0] && !strcmp(ci->team, team) && insidebase(b, ci->state.o))
 				b.enter(ci->team);
 		}

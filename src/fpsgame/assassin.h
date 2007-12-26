@@ -3,7 +3,7 @@ struct assassinservmode : servmode
 {
     vector<clientinfo *> targets;
 
-    assassinservmode(gameserver &sv) : servmode(sv) {}
+    assassinservmode(GAMESERVER &sv) : servmode(sv) {}
 
     void findvalidtargets()
     {
@@ -117,11 +117,11 @@ struct assassinclient
 {
     static const int RESPAWNSECS = 10;
 
-    gameclient &cl;
+    GAMECLIENT &cl;
     vector<fpsent *> targets, hunters;
     float radarscale;
 
-    assassinclient(gameclient &cl) : cl(cl), radarscale(0) {}
+    assassinclient(GAMECLIENT &cl) : cl(cl), radarscale(0) {}
 
     void removeplayer(fpsent *d)
     {

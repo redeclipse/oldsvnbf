@@ -2,12 +2,12 @@
 
 struct weaponstate
 {
-	gameclient &cl;
+	GAMECLIENT &cl;
 
 	static const int OFFSETMILLIS = 500;
 	vec sg[SGRAYS];
 
-	weaponstate(gameclient &_cl) : cl(_cl)
+	weaponstate(GAMECLIENT &_cl) : cl(_cl)
 	{
         CCOMMAND(weapon, "sss", (weaponstate *self, char *a, char *b),
 		{

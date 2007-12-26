@@ -1,10 +1,10 @@
 struct entities : icliententities
 {
-	gameclient &cl;
+	GAMECLIENT &cl;
 
 	vector<extentity *> ents;
 
-	entities(gameclient &_cl) : cl(_cl)
+	entities(GAMECLIENT &_cl) : cl(_cl)
 	{
 		CCOMMAND(entdelink, "i", (entities *self, int *val), self->entdelink(*val));
 		CCOMMAND(entlink, "i", (entities *self, int *val), self->entlink(*val));
