@@ -258,7 +258,7 @@ extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->
 extern int showmat;
 
 extern sometype materials[], textypes[];
-extern char *findmaterialname(int type);
+extern const char *findmaterialname(int type);
 extern int findmaterial(const char *name, bool tryint = false);
 extern void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurface> &matsurfs);
 extern void rendermatsurfs(materialsurface *matbuf, int matsurfs);

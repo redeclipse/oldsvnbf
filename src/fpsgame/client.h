@@ -48,7 +48,7 @@ struct clientcom : iclientcom
 		if (cl.player1->privilege>=flag) return true;
 		else if (!quiet)
 		{
-			char *_privs[] = { "none", "master", "admin" };
+			const char *_privs[] = { "none", "master", "admin" };
 			conoutf("access denied, you need %s", _privs[flag]);
 		}
 		return false;
@@ -1087,7 +1087,8 @@ struct clientcom : iclientcom
 				if(!m_edit(cl.gamemode)) return;
 				string oldname;
 				s_strcpy(oldname, mapname);
-				s_sprintfd(mname)("%s", makefile(mapname, ".bgz", false, true));
+				const char *aname = makefile(mapname, ".bgz", false, true);
+				s_sprintfd(mname)("%s", aname);
 				s_sprintfd(fname)("%s.bgz", mname);
 				const char *file = findfile(fname, "wb");
 				FILE *map = fopen(file, "wb");

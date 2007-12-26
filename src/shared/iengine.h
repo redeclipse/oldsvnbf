@@ -265,7 +265,7 @@ extern void g3d_resetcursor();
 
 struct sometype
 {
-	char *name; uchar id;
+	const char *name; uchar id;
 };
 
 #ifdef __GNUC__

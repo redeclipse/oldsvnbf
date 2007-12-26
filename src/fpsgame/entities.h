@@ -32,7 +32,7 @@ struct entities : icliententities
 		switch (type)
 		{
 			case WEAPON:
-				if (guntype[attr1].file) s_sprintf(emdl)("ammo/%s", guntype[attr1].file);
+				s_sprintf(emdl)("ammo/%s", guntype[attr1].name);
 				break;
 			default:
 				break;
