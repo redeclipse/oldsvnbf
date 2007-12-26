@@ -755,7 +755,7 @@ struct gameclient : igameclient
 								glBegin(GL_TRIANGLES);
 								glTexCoord2f(0, 1); glVertex2i(0, oy);
 								glTexCoord2f(0, 0); glVertex2i(0, oy-(oy/4));
-								glTexCoord2f(vrt, 0); glVertex2i(int(float(ox/4)*vrt), oy-(oy/4));
+								glTexCoord2f(vrt, 0); glVertex2i(int(float(oy/4)*vrt), oy-(oy/4));
 							}
 							glEnd();
 
