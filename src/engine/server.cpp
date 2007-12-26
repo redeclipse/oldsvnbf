@@ -43,23 +43,19 @@ void initgame(char *type)
 	if (sv)
 	{
 		cl = (*ig)->newclient();
-		
+
 		if (cl)
 		{
 			cc = cl->getcom();
 			et = cl->getents();
 		}
-	
+
 		loopv(gameargs)
 		{
 			if(!cl || !cl->clientoption(gameargs[i]))
 			{
 				if(!sv->serveroption(gameargs[i]))
-	#ifdef STANDALONE
-					printf("unknown command-line option: %s\n", gameargs[i]);
-	#else
 					conoutf("unknown command-line option: %s", gameargs[i]);
-	#endif
 			}
 		}
 	}
@@ -290,7 +286,7 @@ char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned
 void disconnect_client(int n, int reason)
 {
 	if(clients[n]->type!=ST_TCPIP) return;
-	s_sprintfd(s)("client (%s) disconnected because: %s\n", clients[n]->hostname, disc_reasons[reason]);
+	s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
 	conoutf("%s", s);
 	enet_peer_disconnect(clients[n]->peer, reason);
 	sv->clientdisconnect(n);
@@ -380,24 +376,20 @@ ENetSocket httpgetsend(ENetAddress &remoteaddress, char *hostname, char *req, ch
 {
 	if(remoteaddress.host==ENET_HOST_ANY)
 	{
-#ifdef STANDALONE
-		printf("looking up %s...\n", hostname);
-#endif
+		conoutf("looking up %s...", hostname);
 		if(!resolverwait(hostname, &remoteaddress)) return ENET_SOCKET_NULL;
 	}
 	ENetSocket sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM, localaddress);
 	if(sock==ENET_SOCKET_NULL || connectwithtimeout(sock, hostname, remoteaddress)<0)
 	{
-#ifdef STANDALONE
-		printf(sock==ENET_SOCKET_NULL ? "could not open socket\n" : "could not connect\n");
-#endif
+		conoutf(sock==ENET_SOCKET_NULL ? "could not open socket" : "could not connect");
 		return ENET_SOCKET_NULL;
 	}
 	ENetBuffer buf;
 	s_sprintfd(httpget)("GET %s HTTP/1.0\nHost: %s\nReferer: %s\nUser-Agent: %s\n\n", req, hostname, ref, agent);
 	buf.data = httpget;
 	buf.dataLength = strlen((char *)buf.data);
-	conoutf("sending request to %s...\n\n%s", hostname, httpget);
+	conoutf("sending request to %s...", hostname);
 	enet_socket_send(sock, NULL, &buf, 1);
 	return sock;
 }
@@ -452,7 +444,7 @@ void checkmasterreply()
 	if(mssock!=ENET_SOCKET_NULL && !httpgetreceive(mssock, masterb))
 	{
 		mssock = ENET_SOCKET_NULL;
-		printf("masterserver reply: %s\n", stripheader(masterrep));
+		conoutf("masterserver reply: %s", stripheader(masterrep));
 	}
 }
 
@@ -513,7 +505,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 	sv->serverupdate(lastmillis, totalmillis);
 
 	sendpongs();
-		
+
 	if (pubserv)
 	{
 		if (*masterpath) checkmasterreply();
@@ -527,7 +519,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 		if (totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
 		{
 			laststatus = totalmillis;
-			if (nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
+			if (nonlocalclients || bsend || brec) conoutf("status: %d remote clients, %.1f send, %.1f rec (K/sec)", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
 			bsend = brec = 0;
 		}
 	}
@@ -551,7 +543,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 				c.peer->data = &c;
 				char hn[1024];
 				s_strcpy(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
-				printf("client connected (%s)\n", c.hostname);
+				conoutf("client connected (%s)", c.hostname);
 				int reason = DISC_MAXCLIENTS;
 				if(nonlocalclients<maxclients && !(reason = sv->clientconnect(c.num, c.peer->address.host)))
 				{
@@ -573,7 +565,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 			{
 				client *c = (client *)event.peer->data;
 				if(!c) break;
-				printf("disconnected client (%s)\n", c->hostname);
+				conoutf("disconnected client (%s)", c->hostname);
 				sv->clientdisconnect(c->num);
 				nonlocalclients--;
 				c->type = ST_EMPTY;
@@ -606,15 +598,7 @@ void initruntime()
 	if (servertype)
 	{
 		conoutf("init: server");
-
-		if (servertype >= 2)
-		{
-			pubserv = true;
-		}
-		else
-		{
-			pubserv = false;
-		}
+		pubserv = servertype >= 2 ? true : false;
 		if (!master) master = sv->getdefaultmaster();
 		char *mid = strstr(master, "/");
 		if(!mid) mid = master;
@@ -624,7 +608,7 @@ void initruntime()
 		ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
 		if (*ip)
 		{
-			if (enet_address_set_host(&address, ip) < 0) printf("WARNING: server ip not resolved");
+			if (enet_address_set_host(&address, ip) < 0) conoutf("WARNING: server ip not resolved");
 			else msaddress.host = address.host;
 		}
 		serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
@@ -642,13 +626,13 @@ void initruntime()
 		{
 			enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 		}
-	
+
 		sv->serverinit();
 
 		int d = sv->defaultmode();
 		string s, m;
 		s_strcpy(m, load ? load : sv->defaultmap());
-	
+
 		char *t = t = strpbrk(m, ":");
 		if (t)
 		{
@@ -656,15 +640,15 @@ void initruntime()
 			d = min(atoi(t+1), 1);
 		}
 		else { s_strcpy(s, m); }
-	
+
 		sv->changemap(s, d, 0x00);
 
-		if(servertype >= 3)
+		if (servertype >= 3)
 		{
 			#ifdef WIN32
 			SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 			#endif
-			printf("dedicated server started, waiting for clients...\nCtrl-C to exit\n\n");
+			conoutf("dedicated server started, waiting for clients... [Ctrl-C to exit]");
 			atexit(enet_deinitialize);
 			atexit(cleanupserver);
 			enet_time_set(0);
@@ -672,7 +656,14 @@ void initruntime()
 			for(;;) serverslice(5);
 			return;
 		}
-		if(pubserv && *masterpath) updatemasterserver();
+		else
+		{
+			if (pubserv && *masterpath)
+			{
+				updatemasterserver();
+			}
+			conoutf("local server started");
+		}
 	}
 }
 

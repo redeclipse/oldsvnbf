@@ -53,13 +53,16 @@ void guistayopen(char *contents)
 #define GUI_TEXT_COLOR	0xDDFFDD
 
 //@DOC name and icon are optional
-void guibutton(char *name, char *action, char *icon)
+void guibutton(char *name, char *action, char *icon, char *alt)
 {
 	if(!cgui) return;
 	int ret = cgui->button(name, GUI_BUTTON_COLOR, *icon ? icon : (strstr(action, "showgui") ? "menu" : "action"));
 	if(ret&G3D_UP)
 	{
-		executelater.add(newstring(*action ? action : name));
+		char *act = name;
+		if (*alt && ret&G3D_ALTERNATE) act = alt;
+		else if (*action) act = action;
+		executelater.add(newstring(act));
         if(shouldclearmenu) clearlater = true;
 	}
 	else if(ret&G3D_ROLLOVER)
@@ -69,16 +72,19 @@ void guibutton(char *name, char *action, char *icon)
 	}
 }
 
-void guiimage(char *path, char *action, float *scale, int *overlaid)
+void guiimage(char *path, char *action, float *scale, int *overlaid, char *alt)
 {
 	if(!cgui) return;
 	int ret = cgui->image(path, *scale, *overlaid!=0);
 	if(ret&G3D_UP)
 	{
-		if(*action)
+		char *act = NULL;
+		if (*alt && ret&G3D_ALTERNATE) act = alt;
+		else if (*action) act = action;
+		if (*act)
 		{
-			executelater.add(newstring(action));
-            if(shouldclearmenu) clearlater = true;
+			executelater.add(newstring(act));
+			if(shouldclearmenu) clearlater = true;
 		}
 	}
 	else if(ret&G3D_ROLLOVER)
@@ -250,7 +256,7 @@ void guiservers()
 }
 
 COMMAND(newgui, "ss");
-COMMAND(guibutton, "sss");
+COMMAND(guibutton, "ssss");
 COMMAND(guitext, "ss");
 COMMAND(guiservers, "s");
 COMMANDN(cleargui, cleargui_, "i");
@@ -260,7 +266,7 @@ COMMAND(guistayopen, "s");
 COMMAND(guilist, "s");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");
-COMMAND(guiimage,"ssfi");
+COMMAND(guiimage,"ssfis");
 COMMAND(guislider,"siis");
 COMMAND(guilistslider, "sss");
 COMMAND(guiradio,"ssis");

@@ -183,6 +183,8 @@ void servertoclient(int chan, uchar *buf, int len)	// processes any updates from
 void clientkeepalive()
 {
 	if (clienthost) enet_host_service(clienthost, NULL, 0);
+	if (serverhost) enet_host_service(serverhost, NULL, 0);
+
 }
 
 void gets2c()			// get updates from the server

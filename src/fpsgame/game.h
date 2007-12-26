@@ -94,23 +94,23 @@ enum
 #define G_M_NUM				4
 
 #define G_M_FRAG			G_M_TEAM|G_M_DUEL
-#define G_M_BASE			G_M_TEAM|G_M_INSTA|G_M_LINK
+#define G_M_BASE			G_M_INSTA|G_M_LINK
 
 static struct gametypes
 {
-	int	type,			mutators;			char *name;
+	int	type,			mutators,		implied;			char *name;
 } gametype[] = {
-	{ G_DEMO,			0,					"Demo Playback" },
-	{ G_EDITMODE,		0,					"Coop Edit" },
-	{ G_SINGLEPLAYER,	0,					"Singleplayer" },
-	{ G_DEATHMATCH,		G_M_FRAG,			"Deathmatch" },
-	{ G_CAPTURE,		G_M_BASE,			"Capture" },
-	{ G_ASSASSIN,		G_M_INSTA,			"Assassin" },
+	{ G_DEMO,			0,				0,					"Demo Playback" },
+	{ G_EDITMODE,		0,				0,					"Editing" },
+	{ G_SINGLEPLAYER,	0,				0,					"Singleplayer" },
+	{ G_DEATHMATCH,		G_M_FRAG,		0,					"Deathmatch" },
+	{ G_CAPTURE,		G_M_BASE,		G_M_TEAM,			"Base Capture" },
+	{ G_ASSASSIN,		G_M_INSTA,		0,					"Assassin" },
 }, mutstype[] = {
-	{ G_M_TEAM,			0,					"Team" },
-	{ G_M_INSTA,		0,					"Instagib" },
-	{ G_M_DUEL,			0,					"Duel" },
-	{ G_M_LINK,			0,					"Link" },
+	{ G_M_TEAM,			0,				0,					"Team" },
+	{ G_M_INSTA,		0,				0,					"Instagib" },
+	{ G_M_DUEL,			0,				0,					"Duel" },
+	{ G_M_LINK,			0,				0,					"Link" },
 };
 
 #define m_demo(a)			(a == G_DEMO)

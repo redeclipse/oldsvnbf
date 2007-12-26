@@ -389,7 +389,7 @@ extern bool limitsky();
 
 // 3dgui
 extern void g3d_render();
-extern bool g3d_windowhit(bool on, bool act);
+extern bool g3d_windowhit(int code, bool on, bool act);
 extern char *g3d_fieldname();
 
 extern void g3d_mainmenu();

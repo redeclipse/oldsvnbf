@@ -17,8 +17,8 @@ static bool fieldactive;
 
 bool menukey(int code, bool isdown, int cooked)
 {
-	if(code==-1 && g3d_windowhit(isdown, true)) return true;
-	else if(code==-3 && g3d_windowhit(isdown, false)) return true;
+	if((code==-1 || code == -2) && g3d_windowhit(code, isdown, true)) return true;
+	else if(code==-3 && g3d_windowhit(code, isdown, false)) return true;
 
 	if(fieldpos<0) return false;
 	switch(code)
@@ -804,10 +804,15 @@ void g3d_addgui(g3d_callback *cb, vec &origin, bool follow)
 
 int g3d_sort(gui *a, gui *b) { return (int)(a->dist>b->dist)*2-1; }
 
-bool g3d_windowhit(bool on, bool act)
+bool g3d_windowhit(int code, bool on, bool act)
 {
-	if(act) mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
-	else if(!on && windowhit) cleargui(1);
+	if (act)
+	{
+		actionon = on;
+		mousebuttons |= actionon ? G3D_DOWN : G3D_UP;
+		if (code == -2) mousebuttons |= G3D_ALTERNATE;
+	}
+	else if (code == -3 && !on && windowhit) cleargui(1);
 	return hascursor;
 }
 

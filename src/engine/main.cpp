@@ -558,6 +558,7 @@ int main(int argc, char **argv)
 	conoutf("init: client");
 	camera1 = cl->iterdynents(0);
 	emptymap(0, true);
+	cl->initclient();
 
 	conoutf("init: mainloop");
 	if (initscript) execute(initscript);
@@ -571,18 +572,18 @@ int main(int argc, char **argv)
         if(millis<totalmillis) millis = totalmillis;
         limitfps(millis, totalmillis);
 		int elapsed = millis-totalmillis;
-	
+
 		if (paused) curtime = 0;
 		else curtime = (elapsed*gamespeed)/100;
 
 		if (frames && lastmillis) cl->updateworld(worldpos, curtime, lastmillis);
-	
+
 		menuprocess();
 		lastmillis += curtime;
 		totalmillis = millis;
-	
+
 		checksleep(lastmillis);
-	
+
 		serverslice(0);
 
 		if (frames)
@@ -595,7 +596,7 @@ int main(int argc, char **argv)
 				cl->findorientation();
 				entity_particles();
 				checksound();
-		
+
 				inbetweenframes = false;
 				SDL_GL_SwapBuffers();
 				if(frames>2) gl_drawframe(screen->w, screen->h);
@@ -605,12 +606,8 @@ int main(int argc, char **argv)
 				setcaption(cap);
 			}
 		}
-		else
-		{
-			cl->initclient();
-		}
 		frames++;
-	
+
 		SDL_Event event;
 		int lasttype = 0, lastbut = 0;
 		while (SDL_PollEvent(&event))
@@ -620,23 +617,23 @@ int main(int argc, char **argv)
 				case SDL_QUIT:
 					quit();
 					break;
-	
+
 #if !defined(WIN32) && !defined(__APPLE__)
 				case SDL_VIDEORESIZE:
 					screenres(&event.resize.w, &event.resize.h);
 					break;
 #endif
-	
+
 				case SDL_KEYDOWN:
 				case SDL_KEYUP:
 					keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
 					break;
-	
+
 				case SDL_ACTIVEEVENT:
 					if(event.active.state & SDL_APPINPUTFOCUS)
 						setvar("grabmouse", event.active.gain ? 1 : 0, true);
 					break;
-	
+
 				case SDL_MOUSEMOTION:
 					if (ignore) { ignore--; break; }
 					if ((screen->flags&SDL_FULLSCREEN) || grabmouse)
@@ -650,7 +647,7 @@ int main(int argc, char **argv)
 						SDL_WarpMouse(screen->w/2, screen->h/2);
 					}
 					break;
-	
+
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
 					if (lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
