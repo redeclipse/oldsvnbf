@@ -28,7 +28,7 @@ enum						// static entity types
 
 static struct enttypes
 {
-	int	type;	bool links;		char *name;
+	int	type;	bool links;		const char *name;
 } enttype[] = {
 	{ NOTUSED,		false,			"none" },
 	{ LIGHT,		false,			"light" },
@@ -98,7 +98,7 @@ enum
 
 static struct gametypes
 {
-	int	type,			mutators,		implied;			char *name;
+	int	type,			mutators,		implied;			const char *name;
 } gametype[] = {
 	{ G_DEMO,			0,				0,					"Demo Playback" },
 	{ G_EDITMODE,		0,				0,					"Editing" },
@@ -226,14 +226,14 @@ struct demoheader
 
 static struct guntypes
 {
-	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	char *name, *file;
+	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	const char *name, *file;
 } guntype[NUMGUNS] =
 {
 	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	15,		0,		0,		-10 ,	10,		"pistol",	"pistol" },
 	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	"shotgun",	"shotgun" },
 	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		"chaingun",	"chaingun" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		400,	100,	3000,	-15,	15,		"grenades",	"grenades" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	200,	200,	10000,	-40,	40,		"rockets",	"rockets" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		400,	100,	3000,	-15,	10,		"grenades",	"grenades" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	200,	200,	10000,	-40,	20,		"rockets",	"rockets" },
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		"rifle",	"rifle" },
 };
 #define isgun(gun) (gun > -1 && gun < NUMGUNS)
@@ -330,7 +330,7 @@ struct fpsstate
 	void respawn()
 	{
 		health = 100;
-		lastdeath = lastshot = lastspawn = lastpain = lastregen = -1;
+		lastdeath = lastshot = lastspawn = lastpain = lastregen = 0;
 		loopi(NUMGUNS)
 		{
 			gunwait[i] = gunlast[i] = 0;
@@ -417,8 +417,7 @@ struct fpsent : dynent, fpsstate
 		dynent::reset();
 		fpsstate::respawn();
 		lastattackgun = gunselect;
-		lasttaunt = lastpickup = lastpickupmillis = -1;
-		superdamage = spree = lastimpulse = 0;
+		lasttaunt = lastpickup = lastpickupmillis = superdamage = spree = lastimpulse = 0;
 	}
 };
 

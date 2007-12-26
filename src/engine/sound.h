@@ -130,12 +130,12 @@ struct soundchan
 	}
 };
 
-extern hashtable<char *, soundsample> sndsamples;
+extern hashtable<const char *, soundsample> sndsamples;
 extern vector<soundslot> gamesounds, mapsounds;
 extern vector<soundchan> sndchans;
 
 extern void checksound();
-extern int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds);
+extern int addsound(const char *name, int vol, int maxuses, vector<soundslot> &sounds);
 extern int playsound(int n, vec *p = NULL, vec *v = NULL, float mindist = SNDMINDIST, float maxdist = SNDMAXDIST, vector<soundslot> &sounds = gamesounds);
 extern int playsoundv(int n, vec &p, vec &v, float mindist = SNDMINDIST, float maxdist = SNDMAXDIST, vector<soundslot> &sounds = gamesounds);
 extern void clearmapsounds();

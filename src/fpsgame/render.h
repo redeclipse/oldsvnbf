@@ -9,9 +9,9 @@ struct fpsrender
 
 	void renderplayer(fpsent *d, bool local, const char *mdlname)
 	{
-        int lastaction = d->gunselect <= -1 ? 0 : d->gunlast[d->gunselect], attack = ANIM_SHOOT, delay = d->gunselect <= -1 ? 0 : d->gunwait[d->gunselect] + 50;
+        int lastaction = !isgun(d->gunselect) ? 0 : d->gunlast[d->gunselect], attack = ANIM_SHOOT, delay = !isgun(d->gunselect) ? 0 : d->gunwait[d->gunselect] + 50;
 
-		if(cl.intermission && d->state!=CS_DEAD)
+		if(cl.intermission && d->state != CS_DEAD)
 		{
 			lastaction = cl.lastmillis;
 			attack = ANIM_LOSE|ANIM_LOOP;
@@ -19,7 +19,7 @@ struct fpsrender
 			if(m_team(cl.gamemode, cl.mutators)) loopv(bestteams) { if(!strcmp(bestteams[i], d->team)) { attack = ANIM_WIN|ANIM_LOOP; break; } }
 			else if(bestplayers.find(d)>=0) attack = ANIM_WIN|ANIM_LOOP;
 		}
-		else if (d->state == CS_ALIVE && cl.lastmillis-d->lasttaunt < 1000 && cl.lastmillis-lastaction>delay)
+        else if (d->state == CS_ALIVE && d->lasttaunt && cl.lastmillis-d->lasttaunt<1000 && cl.lastmillis-lastaction>delay)
 		{
 			lastaction = d->lasttaunt;
 			attack = ANIM_TAUNT;

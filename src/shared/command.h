@@ -22,7 +22,7 @@ struct identstack
 struct ident
 {
     int _type;           // one of ID_* above
-    char *_name;
+    const char *_name;
     int _min, _max;      // ID_VAR
     int _override;       // either NO_OVERRIDE, OVERRIDDEN, or value
     int _context;
@@ -33,7 +33,7 @@ struct ident
     };
     union
     {
-        char *_narg;     // ID_COMMAND, ID_CCOMMAND
+        const char *_narg;     // ID_COMMAND, ID_CCOMMAND
         int _val;        // ID_VAR
         char *_action;   // ID_ALIAS
     };
@@ -45,11 +45,11 @@ struct ident
     void *self;
 
     ident() {}
-    ident(int t, char *n, int m, int c, int x, int *s, void *f = NULL, int ct = IDC_GLOBAL)
+    ident(int t, const char *n, int m, int c, int x, int *s, void *f = NULL, int ct = IDC_GLOBAL)
         : _type(t), _name(n), _min(m), _max(x), _override(NO_OVERRIDE), _context(ct), _fun((void (__cdecl *)(void))f), _val(c), _storage(s) {}
-    ident(int t, char *n, char *a, int ct = IDC_GLOBAL)
+    ident(int t, const char *n, char *a, int ct = IDC_GLOBAL)
         : _type(t), _name(n), _override(NO_OVERRIDE), _context(ct), _stack(NULL), _action(a) {}
-    ident(int t, char *n, char *narg, void *f = NULL, void *_s = NULL, int ct = IDC_GLOBAL)
+    ident(int t, const char *n, const char *narg, void *f = NULL, void *_s = NULL, int ct = IDC_GLOBAL)
         : _type(t), _name(n), _context(ct), _fun((void (__cdecl *)(void))f), _narg(narg), self(_s) {}
     virtual ~ident() {}
 
@@ -60,12 +60,12 @@ struct ident
     virtual void changed() { if(_fun) _fun(); }
 };
 
-extern void addident(char *name, ident *id);
+extern void addident(const char *name, ident *id);
 extern void intret(int v);
 extern void result(const char *s);
 
 // nasty macros for registering script functions, abuses globals to avoid excessive infrastructure
-typedef hashtable<char *, ident> identtable;
+typedef hashtable<const char *, ident> identtable;
 extern identtable *idents;
 
 enum

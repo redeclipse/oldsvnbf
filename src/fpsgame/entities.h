@@ -12,7 +12,7 @@ struct entities : icliententities
 
 	vector<extentity *> &getents() { return ents; }
 
-	char *itemname(int i)
+    const char *itemname(int i)
 	{
 		int t = ents[i]->type;
 		if(t == WEAPON)
@@ -24,7 +24,7 @@ struct entities : icliententities
 		return NULL;
 	}
 
-	char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
+	const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
 	{
 		static string emdl;
 		emdl[0] = 0;
@@ -62,7 +62,7 @@ struct entities : icliententities
 			if (e.type == TRIGGER || e.type == CHECKPOINT || e.type == TELEPORT ||
 				(e.type==WEAPON && e.spawned))
 			{
-				char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 
 				if (mdlname)
 				{
@@ -79,7 +79,7 @@ struct entities : icliententities
         loopv(ents)
         {
         	extentity &e = *ents[i];
-			char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+			const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
             if(!mdlname) continue;
             loadmodel(mdlname, -1, true);
         }

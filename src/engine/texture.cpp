@@ -206,7 +206,7 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 	}
 	uchar *scaled = NULL;
     int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? hwcubetexsize : hwtexsize,
-        sizelimit = maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
+        sizelimit = mipit && maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
     if(pixels && max(w, h) > sizelimit && (!mipit || sizelimit < hwlimit))
 	{
 		int oldw = w, oldh = h;
@@ -255,7 +255,7 @@ static void resizetexture(int &w, int &h, bool mipit = true, GLenum format = GL_
 {
     if(mipit) return;
     int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? hwcubetexsize : hwtexsize,
-        sizelimit = maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
+        sizelimit = mipit && maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
 	int w2 = w, h2 = h;
 	if(!hasNP2 && (w&(w-1) || h&(h-1)))
 	{
@@ -391,9 +391,9 @@ void cleangl()
 	textures.clear();
 }
 
-void settexture(const char *name)
+void settexture(const char *name, bool clamp)
 {
-	glBindTexture(GL_TEXTURE_2D, textureload(name, 0, true, false)->gl);
+    glBindTexture(GL_TEXTURE_2D, textureload(name, clamp, true, false)->gl);
 }
 
 vector<Slot> slots;

@@ -6,7 +6,7 @@
 FMOD_RESULT snderr;
 FMOD_SYSTEM *sndsys;
 
-hashtable<char *, soundsample> sndsamples;
+hashtable<const char *, soundsample> sndsamples;
 vector<soundslot> gamesounds, mapsounds;
 vector<soundchan> sndchans;
 
@@ -71,7 +71,7 @@ void initsound()
 	nosound = false;
 }
 
-int findsound(char *name, int vol, vector<soundslot> &sounds)
+int findsound(const char *name, int vol, vector<soundslot> &sounds)
 {
 	loopv(sounds)
 	{
@@ -80,7 +80,7 @@ int findsound(char *name, int vol, vector<soundslot> &sounds)
 	return -1;
 }
 
-int addsound(char *name, int vol, int maxuses, vector<soundslot> &sounds)
+int addsound(const char *name, int vol, int maxuses, vector<soundslot> &sounds)
 {
 	soundsample *s = sndsamples.access(name);
 	if(!s)

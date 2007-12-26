@@ -295,7 +295,7 @@ extern bool serveroption(char *opt);
 
 // serverbrowser
 extern bool resolverwait(const char *name, ENetAddress *address);
-extern int connectwithtimeout(ENetSocket sock, char *hostname, ENetAddress &address);
+extern int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address);
 extern void addserver(char *servername);
 extern char *getservername(int n);
 extern void writeservercfg();
@@ -324,7 +324,7 @@ extern void writecompletions(FILE *f);
 // main
 extern bool initwarning();
 
-extern void computescreen(char *text, Texture *t = NULL);
+extern void computescreen(const char *text, Texture *t = NULL);
 extern void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2 = 0, const char *text2 = NULL, GLuint tex = 0);
 
 // menu
@@ -409,7 +409,7 @@ extern string lastsky;
 extern void loadsky(char *basename, float *spin);
 
 // main
-extern void setcaption(char *text);
+extern void setcaption(const char *text);
 extern int grabmouse, perflevel, colorpos;
 extern int getmatvec(vec v);
 
@@ -454,8 +454,6 @@ extern void rehash(bool reload = true);
 // command
 extern char *gettime(char *format);
 extern char *getmaptitle();
-extern int getdefaultmode();
-extern char *getdefaultmap();
 
 // rendergl
 #define RENDERPUSHX			8.0f
@@ -522,18 +520,4 @@ extern void part_fireball(const vec &dest, float max, int type, int color);
 extern void part_firerad(const vec &dest, float size, int type, int color);
 extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color);
 extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, physent *owner = NULL);
-
-// rendertext
-enum
-{
-	AL_LEFT = 0,
-	AL_CENTER,
-	AL_RIGHT
-};
-
-extern void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool shadow, int align, ...);
-extern void draw_textf(const char *fstr, int left, int top, ...);
-extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool shadow = true);
-extern bool pushfont(char *name);
-extern bool popfont(int num);
 #endif // STANDALONE

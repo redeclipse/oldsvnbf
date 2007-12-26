@@ -505,10 +505,10 @@ void endmodelbatches()
 			if(bm.query!=query)
 			{
 				if(query) endquery(query);
-				if(bm.query) startquery(bm.query);
 				query = bm.query;
+                if(query) startquery(query);
 			}
-			if(bm.cull&MDL_TRANSLUCENT && !query)
+            if(bm.cull&MDL_TRANSLUCENT && (!query || query->owner==bm.d))
 			{
 				translucentmodel &tm = translucent.add();
 				tm.m = b.m;
@@ -526,6 +526,7 @@ void endmodelbatches()
 	{
 		translucent.sort(sorttranslucentmodels);
 		model *lastmodel = NULL;
+        occludequery *query = NULL;
 		loopv(translucent)
 		{
 			translucentmodel &tm = translucent[i];
@@ -534,8 +535,15 @@ void endmodelbatches()
 				if(lastmodel) lastmodel->endrender();
 				(lastmodel = tm.m)->startrender();
 			}
+            if(query!=tm.batched->query)
+            {
+                if(query) endquery(query);
+                query = tm.batched->query;
+                if(query) startquery(query);
+            }
 			renderbatchedmodel(tm.m, *tm.batched);
 		}
+        if(query) endquery(query);
 		if(lastmodel) lastmodel->endrender();
 	}
 	numbatches = -1;
@@ -888,6 +896,7 @@ void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attac
     int flags = MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
 	if(d->type!=ENT_PLAYER) flags |= MDL_CULL_DIST;
 	if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
+    if(d->state==CS_LAGGED) flags |= MDL_TRANSLUCENT;
 	vec color, dir;
     rendermodel(color, dir, mdlname, anim, varseed, 0, o, testanims && local ? 0 : yaw+90, pitch, roll, 0, basetime, d, flags, attachments);
 }

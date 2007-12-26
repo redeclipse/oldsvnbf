@@ -283,8 +283,7 @@ void saycommand(char *init)						 // turns input to the command line on or off
 {
 	SDL_EnableUNICODE(saycommandon = (init!=NULL));
 	if(!editmode) keyrepeat(saycommandon);
-	if(!init) init = "";
-	s_strcpy(commandbuf, init);
+    s_strcpy(commandbuf, init ? init : "");
 	commandpos = -1;
 }
 
@@ -656,7 +655,7 @@ void complete(char *s)
 		}
 	}
 
-	char *nextcomplete = NULL;
+    const char *nextcomplete = NULL;
 	string prefix;
 	s_strcpy(prefix, "/");
 	if(f) // complete using filenames
@@ -673,7 +672,7 @@ void complete(char *s)
 	}
 	else // complete using command names
 	{
-		extern hashtable<char *, ident> *idents;
+		//extern hashtable<const char *, ident> *idents;
 		enumerate(*idents, ident, id,
 			if(strncmp(id._name, s+1, completesize)==0 &&
 				strcmp(id._name, lastcomplete) > 0 && (!nextcomplete || strcmp(id._name, nextcomplete) < 0))

@@ -87,6 +87,7 @@ VARP(apple_glsldepth_bug, 0, 0, 1);
 VARP(apple_minmax_bug, 0, 0, 1);
 VARP(apple_ff_bug, 0, 0, 1);
 VARP(intel_quadric_bug, 0, 0, 1);
+VARP(mesa_dre_bug, 0, 0, 1);
 VAR(minimizetcusage, 1, 0, 0);
 VAR(emulatefog, 1, 0, 0);
 
@@ -169,6 +170,34 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 		hasDRE = true;
 	}
 
+    if(strstr(exts, "GL_ARB_occlusion_query"))
+    {
+        GLint bits;
+        glGetQueryiv_ = (PFNGLGETQUERYIVARBPROC)getprocaddress("glGetQueryivARB");
+        glGetQueryiv_(GL_SAMPLES_PASSED_ARB, GL_QUERY_COUNTER_BITS_ARB, &bits);
+        if(bits)
+        {
+            glGenQueries_ =        (PFNGLGENQUERIESARBPROC)       getprocaddress("glGenQueriesARB");
+            glDeleteQueries_ =     (PFNGLDELETEQUERIESARBPROC)    getprocaddress("glDeleteQueriesARB");
+            glBeginQuery_ =        (PFNGLBEGINQUERYARBPROC)       getprocaddress("glBeginQueryARB");
+            glEndQuery_ =          (PFNGLENDQUERYARBPROC)         getprocaddress("glEndQueryARB");
+            glGetQueryObjectiv_ =  (PFNGLGETQUERYOBJECTIVARBPROC) getprocaddress("glGetQueryObjectivARB");
+            glGetQueryObjectuiv_ = (PFNGLGETQUERYOBJECTUIVARBPROC)getprocaddress("glGetQueryObjectuivARB");
+            hasOQ = true;
+            //conoutf("Using GL_ARB_occlusion_query extension.");
+#if defined(__APPLE__) && SDL_BYTEORDER == SDL_BIG_ENDIAN
+            if(strstr(vendor, "ATI") && (osversion<0x1050)) ati_oq_bug = 1;
+#endif
+            if(ati_oq_bug) conoutf("WARNING: Using ATI occlusion query bug workaround. (use \"/ati_oq_bug 0\" to disable if unnecessary)");
+        }
+    }
+    if(!hasOQ)
+    {
+        conoutf("WARNING: No occlusion query support! (large maps may be SLOW)");
+        if(renderpath==R_FIXEDFUNCTION) zpass = 0;
+    }
+
+    bool avoidshaders = false;
 	if(strstr(vendor, "ATI"))
 	{
 		floatvtx = 1;
@@ -182,18 +211,32 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	}
 	else if(strstr(vendor, "Tungsten"))
 	{
+        avoidshaders = true;
 		floatvtx = 1;
+
+        extern int maxtexsize;
+        maxtexsize = 256;
+
+        if(!hasOQ) waterreflect = waterrefract = 0;
+        if(hasDRE) mesa_dre_bug = 1;
 	}
 	else if(strstr(vendor, "Intel"))
 	{
+        avoidshaders = true;
 		intel_quadric_bug = 1;
+
+        extern int maxtexsize;
+        maxtexsize = 256;
+
+        if(!hasOQ) waterreflect = waterrefract = 0;
 	}
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
 	extern int useshaders;
-	if(!useshaders || !hasMT || !strstr(exts, "GL_ARB_vertex_program") || !strstr(exts, "GL_ARB_fragment_program"))
+    if(!useshaders || (useshaders<0 && avoidshaders) || !hasMT || !strstr(exts, "GL_ARB_vertex_program") || !strstr(exts, "GL_ARB_fragment_program"))
 	{
-		conoutf("WARNING: No shader support! Using fixed function fallback. (no fancy visuals for you)");
+        if(!hasMT || !strstr(exts, "GL_ARB_vertex_program") || !strstr(exts, "GL_ARB_fragment_program")) conoutf("WARNING: No shader support! Using fixed function fallback. (no fancy visuals for you)");
+        else if(useshaders<0 && !hasTF) conoutf("WARNING: Disabling shaders for extra performance. (use \"/shaders 1\" to enable shaders if desired)");
 		renderpath = R_FIXEDFUNCTION;
 		if(strstr(vendor, "ATI") && !useshaders) ati_texgen_bug = 1;
 		else if(strstr(vendor, "NVIDIA")) nvidia_texgen_bug = 1;
@@ -242,33 +285,6 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 		if(renderpath==R_ASMSHADER) conoutf("Rendering using the OpenGL 1.5 assembly shader path.");
 	}
 
-	if(strstr(exts, "GL_ARB_occlusion_query"))
-	{
-		GLint bits;
-		glGetQueryiv_ = (PFNGLGETQUERYIVARBPROC)getprocaddress("glGetQueryivARB");
-		glGetQueryiv_(GL_SAMPLES_PASSED_ARB, GL_QUERY_COUNTER_BITS_ARB, &bits);
-		if(bits)
-		{
-			glGenQueries_ =		(PFNGLGENQUERIESARBPROC)		getprocaddress("glGenQueriesARB");
-			glDeleteQueries_ =	 (PFNGLDELETEQUERIESARBPROC)	getprocaddress("glDeleteQueriesARB");
-			glBeginQuery_ =		(PFNGLBEGINQUERYARBPROC)		getprocaddress("glBeginQueryARB");
-			glEndQuery_ =		  (PFNGLENDQUERYARBPROC)		 getprocaddress("glEndQueryARB");
-			glGetQueryObjectiv_ =  (PFNGLGETQUERYOBJECTIVARBPROC) getprocaddress("glGetQueryObjectivARB");
-			glGetQueryObjectuiv_ = (PFNGLGETQUERYOBJECTUIVARBPROC)getprocaddress("glGetQueryObjectuivARB");
-			hasOQ = true;
-			//conoutf("Using GL_ARB_occlusion_query extension.");
-#if defined(__APPLE__) && SDL_BYTEORDER == SDL_BIG_ENDIAN
-            if(strstr(vendor, "ATI") && (osversion<0x1050)) ati_oq_bug = 1;
-#endif
-			if(ati_oq_bug) conoutf("WARNING: Using ATI occlusion query bug workaround. (use \"/ati_oq_bug 0\" to disable if unnecessary)");
-		}
-	}
-	if(!hasOQ)
-	{
-		conoutf("WARNING: No occlusion query support! (large maps may be SLOW)");
-		if(renderpath==R_FIXEDFUNCTION) zpass = 0;
-	}
-
 	if(renderpath!=R_FIXEDFUNCTION)
 	{
 		if(strstr(exts, "GL_ARB_texture_rectangle"))
@@ -309,6 +325,9 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         hasBE = true;
 #ifdef __APPLE__
         if(osversion<0x1050) apple_minmax_bug = 1;
+#endif
+#ifndef WIN32
+        if(strstr(vendor, "ATI")) apple_minmax_bug = 1;
 #endif
         //conoutf("Using GL_EXT_blend_minmax extension.");
     }
@@ -680,7 +699,7 @@ VAR(hudgunfov, 10, 65, 150);
 
 void gl_drawhud(int w, int h, int fogmat);
 
-void computescreen(char *text, Texture *t)
+void computescreen(const char *text, Texture *t)
 {
 	int w = screen->w, h = screen->h;
 	setcaption(text);
@@ -1052,7 +1071,7 @@ void gl_drawhud(int w, int h, int fogmat)
 	defaultshader->set();
 
 	glDisable(GL_BLEND);
-	cl->gameplayhud(w, h); // can make more dramatic changes this way without getting in the way
+	cl->drawhud(w, h); // can make more dramatic changes this way without getting in the way
 	g3d_render();
 
 	glMatrixMode(GL_PROJECTION);

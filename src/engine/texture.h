@@ -33,7 +33,7 @@ enum { SHPARAM_VERTEX = 0, SHPARAM_PIXEL, SHPARAM_UNIFORM };
 
 struct ShaderParam
 {
-	char *name;
+    const char *name;
 	int type, index, loc;
 	float val[4];
 };
@@ -54,7 +54,7 @@ struct LocalShaderParamState : ShaderParam
 
 struct ShaderParamState
 {
-	char *name;
+    const char *name;
 	float val[4];
 	bool dirty, local;
 
@@ -216,13 +216,13 @@ extern Texture *loadthumbnail(Slot &slot);
 
 extern void setslotshader(Slot &s);
 
-extern void setenvparamf(char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
-extern void setenvparamfv(char *name, int type, int index, const float *v);
+extern void setenvparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
+extern void setenvparamfv(const char *name, int type, int index, const float *v);
 extern void flushenvparam(int type, int index, bool local = false);
-extern void setlocalparamf(char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
-extern void setlocalparamfv(char *name, int type, int index, const float *v);
+extern void setlocalparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
+extern void setlocalparamfv(const char *name, int type, int index, const float *v);
 
-extern ShaderParam *findshaderparam(Slot &s, char *name, int type, int index);
+extern ShaderParam *findshaderparam(Slot &s, const char *name, int type, int index);
 
 extern int maxtmus, nolights, nowater, nomasks;
 extern void inittmus();

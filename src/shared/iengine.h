@@ -10,9 +10,10 @@ extern float raycube   (const vec &o, const vec &ray,     float radius = 0, int 
 extern float raycubepos(const vec &o, vec &ray, vec &hit, float radius = 0, int mode = RAY_CLIPMAT, int size = 0);
 extern float rayfloor  (const vec &o, vec &floor, int mode = 0, float radius = 0);
 extern bool  raycubelos(vec &o, vec &dest, vec &hitpos);
+
 extern bool isthirdperson();
 
-extern void settexture(const char *name);
+extern void settexture(const char *name, bool clamp = false);
 
 // octaedit
 
@@ -50,20 +51,20 @@ extern void mpdelcube(selinfo &sel, bool local);
 extern void mpremip(bool local);
 
 // command
-extern int variable(char *name, int min, int cur, int max, int *storage, void (*fun)(), int context = IDC_GLOBAL);
-extern void setvar(char *name, int i, bool dofunc = false);
-extern int getvar(char *name);
-extern int getvarmin(char *name);
-extern int getvarmax(char *name);
-extern bool identexists(char *name);
-extern ident *getident(char *name);
-extern bool addcommand(char *name, void (*fun)(), char *narg, int context = IDC_GLOBAL);
-extern int execute(char *p, int context = IDC_GLOBAL);
-extern char *executeret(char *p, int context = IDC_GLOBAL);
-extern void exec(char *cfgfile);
-extern bool execfile(char *cfgfile);
-extern void alias(char *name, char *action);
-extern const char *getalias(char *name);
+extern int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), int context = IDC_GLOBAL);
+extern void setvar(const char *name, int i, bool dofunc = false);
+extern int getvar(const char *name);
+extern int getvarmin(const char *name);
+extern int getvarmax(const char *name);
+extern bool identexists(const char *name);
+extern ident *getident(const char *name);
+extern bool addcommand(const char *name, void (*fun)(), const char *narg, int context = IDC_GLOBAL);
+extern int execute(const char *p, int context = IDC_GLOBAL);
+extern char *executeret(const char *p, int context = IDC_GLOBAL);
+extern void exec(const char *cfgfile);
+extern bool execfile(const char *cfgfile);
+extern void alias(const char *name, const char *action);
+extern const char *getalias(const char *name);
 
 // console
 extern void keypress(int code, bool isdown, int cooked);
@@ -96,15 +97,26 @@ extern void checktriggers();
 // main
 struct igame;
 
-extern void fatal(char *s, char *o = "");
+extern void fatal(const char *s, ...);
 extern void keyrepeat(bool on);
-extern void registergame(char *name, igame *ig);
+extern void registergame(const char *name, igame *ig);
 
 #define REGISTERGAME(t, n, c, s) struct t : igame { t() { registergame(n, this); } igameclient *newclient() { return c; } igameserver *newserver() { return s; } } reg_##t
 
 // rendertext
-extern bool setfont(char *name);
+enum
+{
+	AL_LEFT = 0,
+	AL_CENTER,
+	AL_RIGHT
+};
+extern bool setfont(const char *name);
+extern bool pushfont(const char *name);
+extern bool popfont(int num);
 extern void gettextres(int &w, int &h);
+extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool shadow = true);
+extern void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool shadow, int align, ...);
+extern void draw_textf(const char *fstr, int left, int top, ...);
 extern int char_width(int c, int x = 0);
 extern int text_width(const char *str, int limit = -1);
 extern int text_visible(const char *str, int max);
@@ -122,16 +134,16 @@ extern void render_particles(int time);
 extern void regular_particle_splash(int type, int num, int fade, const vec &p, int delay = 0);
 extern void particle_splash(int type, int num, int fade, const vec &p);
 extern void particle_trail(int type, int fade, const vec &from, const vec &to);
-extern void particle_text(const vec &s, char *t, int type, int fade = 2000);
+extern void particle_text(const vec &s, const char *t, int type, int fade = 2000);
 extern void particle_meter(const vec &s, float val, int type, int fade = 1);
 extern void particle_flare(const vec &p, const vec &dest, int fade, int type = 10, physent *owner = NULL);
 extern void particle_fireball(const vec &dest, float max, int type);
 extern void removetrackedparticles(physent *owner = NULL);
 
 // worldio
-extern void setnames(char *fname = NULL, char *cname = NULL);
-extern void load_world(char *mname, char *cname = NULL);
-extern void save_world(char *mname, bool nolms = false);
+extern void setnames(const char *fname = NULL, const char *cname = NULL);
+extern void load_world(const char *mname, const char *cname = NULL);
+extern void save_world(const char *mname, bool nolms = false);
 
 // physics
 extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr,  float hi, float lo);
@@ -198,7 +210,7 @@ extern void sendpackettoserv(ENetPacket *packet, int chan);
 extern void disconnect(int onlyclean = 0, int async = 0);
 extern bool isconnected();
 extern bool multiplayer(bool msg = true);
-extern void neterr(char *s);
+extern void neterr(const char *s);
 extern void gets2c();
 
 // 3dgui
@@ -227,14 +239,14 @@ struct g3d_gui
 
 	virtual void tab(const char *name, int color) = 0;
     virtual int title(const char *text, int color, const char *icon = NULL) = 0;
-    virtual int image(const char *path, float scale, bool overlaid = false) = 0;
+    virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
     virtual int texture(Texture *t, float scale) = 0;
     virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL) = 0;
     virtual void separator() = 0;
 	virtual void progress(float percent) = 0;
 	virtual void strut(int size) = 0;
     virtual void space(int size) = 0;
-    virtual char *field(char *name, int color, int length, char *initval = "") = 0;
+    virtual char *field(const char *name, int color, int length, const char *initval = "") = 0;
 };
 
 struct g3d_callback
