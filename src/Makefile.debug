@@ -1,6 +1,6 @@
 CXXOPTFLAGS= -O3 -fsigned-char -fomit-frame-pointer -ffast-math -fno-strict-aliasing -ggdb3
 INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
-CXXFLAGS= -w $(CXXOPTFLAGS) $(INCLUDES)
+CXXFLAGS= -Wall $(CXXOPTFLAGS) $(INCLUDES)
 
 CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lfmodex64 -lSDL_image -lz -lGL -lGLU
 CLIENT_OBJS= \
@@ -39,7 +39,7 @@ CLIENT_OBJS= \
 	fpsgame/bfa.o 
 
 SINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Iinclude
-SCXXFLAGS= -w $(CXXOPTFLAGS) $(SINCLUDES) -ggdb3
+SCXXFLAGS= -Wall $(CXXOPTFLAGS) $(SINCLUDES) -ggdb3
 
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
