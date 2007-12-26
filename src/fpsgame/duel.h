@@ -5,7 +5,7 @@ struct duelservmode : servmode
 	int duelround, dueltime;
 	vector<int> duelqueue;
 
-	duelservmode(gameserver &sv) : servmode(sv) {}
+	duelservmode(GAMESERVER &sv) : servmode(sv) {}
 
 	void queue(clientinfo *ci, bool msg, bool dead)
 	{

@@ -694,16 +694,3 @@ void writecompletions(FILE *f)
         if(v) fprintf(f, "%scomplete \"%s\" \"%s\" \"%s\"\n", v->type==FILES_LIST ? "list" : "", k, v->dir, v->type==FILES_LIST ? "" : (v->ext ? v->ext : "*"));
 	);
 }
-
-char *getkeyaction(char* keyname)
-{
-	char* key = newstring(keyname);
-	for(char *x = key; *x; x++) *x = toupper(*x);
-	loopv(keyms) if (strcmp(keyms[i].name, key) == 0)
-	{
-		delete key;
-		return keyms[i].action;
-	}
-	delete key;
-	return NULL;
-}

@@ -1,6 +1,6 @@
 struct physics
 {
-	gameclient &cl;
+	GAMECLIENT &cl;
 	
 	IVARW(gravity,		0,			25,			INT_MAX-1);	// gravity
 	IVARW(movespeed,	1,			45,			INT_MAX-1);	// speed
@@ -13,7 +13,7 @@ struct physics
 
 	int spawncycle, fixspawn, physicsfraction, physicsrepeat;
 
-	physics(gameclient &_cl) : cl(_cl)
+	physics(GAMECLIENT &_cl) : cl(_cl)
 	{
 		physicsfraction = physicsrepeat = 0;
 		spawncycle = -1;
