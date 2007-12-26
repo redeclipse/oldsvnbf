@@ -433,7 +433,7 @@ int findtexturetype(char *name, bool tryint)
 	return tryint && *name >= '0' && *name <= '9' ? atoi(name) : -1;
 }
 
-char *findtexturename(int type)
+const char *findtexturename(int type)
 {
 	loopi(sizeof(textypes)/sizeof(textypes[0])) if(textypes[i].id == type) { return textypes[i].name; }
 	return NULL;

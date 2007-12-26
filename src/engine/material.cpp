@@ -140,7 +140,7 @@ int findmaterial(const char *name, bool tryint)
 }
 
 
-char *findmaterialname(int type)
+const char *findmaterialname(int type)
 {
 	loopi(sizeof(materials)/sizeof(materials[0])) if(materials[i].id == type) { return materials[i].name; }
 	return NULL;

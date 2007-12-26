@@ -640,7 +640,7 @@ void initruntime()
 		string s, m;
 		s_strcpy(m, load ? load : sv->defaultmap());
 
-		char *t = t = strpbrk(m, ":");
+		char *t = strpbrk(m, ":");
 		if (t)
 		{
 			s_strncpy(s, m, t-m+1);

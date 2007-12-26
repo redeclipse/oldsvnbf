@@ -494,7 +494,7 @@ struct gameclient : igameclient
     {
         loopi(NUMGUNS)
         {
-            const char *file = guntype[i].file;
+            const char *file = guntype[i].name;
             if(!file) continue;
             s_sprintfd(mdl)("hudguns/%s", file);
             loadmodel(mdl, -1, true);
@@ -626,7 +626,7 @@ struct gameclient : igameclient
 		}
 #endif
 
-        s_sprintfd(gunname)("hudguns/%s", guntype[player1->gunselect].file);
+        s_sprintfd(gunname)("hudguns/%s", guntype[player1->gunselect].name);
 		rendermodel(color, dir, gunname, anim, 0, 0, sway, camera1->yaw+90, camera1->pitch, camera1->roll, speed, base, NULL, 0);
 	}
 

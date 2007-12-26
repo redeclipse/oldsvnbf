@@ -274,7 +274,7 @@ void save_world(const char *mname, bool nolms)
 					fprintf(h, "set%sparam", s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")); \
 					if (s.params[j].type == SHPARAM_UNIFORM) fprintf(h, " \"%s\"", s.params[j].name); \
 					else fprintf(h, " %d", s.params[j].index);\
-					loopk(4) fprintf(h, " %d", s.params[j].val[k]); \
+					loopk(4) fprintf(h, " %.f", s.params[j].val[k]); \
 					fprintf(h, "\n"); \
 				} \
 			} \
