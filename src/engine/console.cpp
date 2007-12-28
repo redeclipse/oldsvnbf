@@ -28,9 +28,9 @@ void setconskip(int *n)
 
 COMMANDN(conskip, setconskip, "i");
 
-void conline(const char *sf, int n, int type = CON_LEFT)
+void conline(const char *sf, int n, int type = CON_NORMAL)
 {
-	int _types[] = { CON_LEFT, CON_RIGHT, CON_CENTER };
+	int _types[] = { CON_NORMAL, CON_CENTER };
 
 	loopi(CN_MAX)
 	{
@@ -115,7 +115,7 @@ void console(const char *s, int type, ...)
 void conoutf(const char *s, ...)
 {
 	s_sprintfdv(sf, s);
-	console("%s", CON_LEFT, sf);
+	console("%s", CON_NORMAL, sf);
 };
 
 bool fullconsole = false;
@@ -166,10 +166,11 @@ VARP(consize, 0, 5, 100);
 
 int renderconsole(int w, int h)					// render buffer taking into account time & scrolling
 {
+	vector<char *> refs;
+	refs.setsizenodelete(0);
+
 	if (!menuactive() && centerlines)
 	{
-		vector<char *> refs;
-		refs.setsizenodelete(0);
 		loopv(conlines[CN_CENTER]) if(totalmillis-conlines[CN_CENTER][i].outtime<centertime)
 		{
 			refs.add(conlines[CN_CENTER][i].cref);
@@ -187,32 +188,27 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 		numl = h*3/3/FONTH;
 		blendbox(CONSPAD, CONSPAD, w*3-CONSPAD, 2*CONSPAD+numl*FONTH+2*FONTH/3, true);
 	}
-	loopk(2)
-	{
-		vector<char *> refs;
-		refs.setsizenodelete(0);
 
-		if(numl)
+	refs.setsizenodelete(0);
+
+	if(numl)
+	{
+		loopv(conlines[CN_NORMAL])
 		{
-			loopv(conlines[k])
+			if(conskip ? i>=conskip-1 || i>=conlines[CN_NORMAL].length()-numl : fullconsole || totalmillis-conlines[CN_NORMAL][i].outtime<contime)
 			{
-				if(conskip ? i>=conskip-1 || i>=conlines[k].length()-numl : fullconsole || totalmillis-conlines[k][i].outtime<contime)
-				{
-					refs.add(conlines[k][i].cref);
-					if (refs.length() >= numl) break;
-				}
+				refs.add(conlines[CN_NORMAL][i].cref);
+				if (refs.length() >= numl) break;
 			}
 		}
-
-		loopvrev(refs)
-		{
-			if (k)
-				draw_textx("%s", (w*3)-(CONSPAD+FONTH/3),	(((h*3)/4)*3)-(CONSPAD+FONTH*(i+1)+FONTH/3),	255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_RIGHT, refs[i]);
-			else
-				draw_textx("%s", (CONSPAD+FONTH/3),			(CONSPAD+FONTH*(refs.length()-i-1)+FONTH/3),	255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_LEFT, refs[i]);
-		}
-		if (refs.length() > len) len = refs.length();
 	}
+
+	loopvrev(refs)
+	{
+		draw_textx("%s", (CONSPAD+FONTH/3), (CONSPAD+FONTH*(refs.length()-i-1)+FONTH/3), 255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_LEFT, refs[i]);
+	}
+	if (refs.length() > len) len = refs.length();
+
 	return CONSPAD+len*FONTH+2*FONTH/3;
 }
 

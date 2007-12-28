@@ -4,6 +4,31 @@
 #include "pch.h"
 #include "engine.h"
 
+vector<attr *> attrs;
+ABOOL(attrs, test_bool, true);
+AINT(attrs, test_int, 1, 0, 1);
+AFLOAT(attrs, test_float, 1.f, 0.f, 1.f);
+
+ICOMMAND(test_attr, "", (void), {
+	loopv (attrs)
+	{
+		ACASE(attrs[i],
+			{
+				conoutf("attribute %s has bad type (%d)", a->name, a->type);
+			},
+			{
+				conoutf("boolean attribute %s is set to %s", a->name, a->value ? "true" : "false");
+			},
+			{
+				conoutf("integer attribute %s is set to %d (range: %d .. %d)", a->name, a->value, a->minval, a->maxval);
+			},
+			{
+				conoutf("float attribute %s is set to %.2f (range: %.2f .. %.2f)", a->name, a->value, a->minval, a->maxval);
+			}
+		);
+	}
+});
+
 void itoa(char *s, int i) { s_sprintf(s)("%d", i); }
 char *exchangestr(char *o, const char *n) { delete[] o; return newstring(n); }
 
@@ -540,7 +565,7 @@ bool execfile(const char *cfgfile)
 	execute(buf);
 	delete[] buf;
 #ifndef STANDALONE
-	if (verbose >= 3) console("loaded script '%s'", CON_RIGHT, cfgfile);
+	if (verbose >= 3) conoutf("loaded script '%s'", cfgfile);
 #endif
 	return true;
 }

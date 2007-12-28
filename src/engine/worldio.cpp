@@ -307,14 +307,14 @@ void save_world(const char *mname, bool nolms)
 			saveslot(materialslots[i], false);
 		}
 	}
-	if (verbose >= 2) console("saved %d material slots", CON_RIGHT, MAT_EDIT);
+	if (verbose >= 2) conoutf("saved %d material slots", MAT_EDIT);
 
 	loopv(slots)
 	{
 		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(slots.length()), "saving texture slots...");
 		saveslot(slots[i], true);
 	}
-	if (verbose >= 2) console("saved %d texture slots", CON_RIGHT, slots.length());
+	if (verbose >= 2) conoutf("saved %d texture slots", slots.length());
 
 	loopv(mapmodels)
 	{
@@ -322,7 +322,7 @@ void save_world(const char *mname, bool nolms)
 		fprintf(h, "mmodel \"%s\" %d\n", mapmodels[i].name, mapmodels[i].tex);
 	}
 	if (mapmodels.length()) fprintf(h, "\n");
-	if (verbose >= 2) console("saved %d mapmodel slots", CON_RIGHT, mapmodels.length());
+	if (verbose >= 2) conoutf("saved %d mapmodel slots", mapmodels.length());
 
 	loopv(mapsounds)
 	{
@@ -330,7 +330,7 @@ void save_world(const char *mname, bool nolms)
 		fprintf(h, "mapsound \"%s\" %d %d\n", mapsounds[i].sample->name, mapsounds[i].vol, mapsounds[i].maxuses);
 	}
 	if (mapsounds.length()) fprintf(h, "\n");
-	if (verbose >= 2) console("saved %d mapsound slots", CON_RIGHT, mapsounds.length());
+	if (verbose >= 2) conoutf("saved %d mapsound slots", mapsounds.length());
 
 	const vector<extentity *> &ents = et->getents();
 	loopv(ents)
@@ -365,7 +365,7 @@ void save_world(const char *mname, bool nolms)
 		}
 	});
 
-	if (verbose >= 2) console("saved %d variables", CON_RIGHT, numvars);
+	if (verbose >= 2) conoutf("saved %d variables", numvars);
 
 	// texture slots
 	writeushort(f, texmru.length());
@@ -386,7 +386,7 @@ void save_world(const char *mname, bool nolms)
 			count++;
 		}
 	}
-	if (verbose >= 2) console("saved %d entities", CON_RIGHT, hdr.numents);
+	if (verbose >= 2) conoutf("saved %d entities", hdr.numents);
 
 	savec(worldroot, f, nolms);
 	if(!nolms) loopv(lightmaps)
@@ -401,13 +401,13 @@ void save_world(const char *mname, bool nolms)
 		}
 		gzwrite(f, lm.data, sizeof(lm.data));
 	}
-	if (verbose >= 2) console("saved %d lightmaps", CON_RIGHT, lightmaps.length());
+	if (verbose >= 2) conoutf("saved %d lightmaps", lightmaps.length());
 
 	show_out_of_renderloop_progress(0, "saving world...");
 	cl->saveworld(f, h);
 
 	fclose(h);
-	if (verbose) console("saved config '%s'", CON_RIGHT, mcfname);
+	if (verbose) conoutf("saved config '%s'", mcfname);
 	gzclose(f);
 	conoutf("saved map '%s' v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-savingstart)/1000.0f);
 }
@@ -645,7 +645,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 			e.attr3 = e.attr4 = 0;
 		}
 	}
-	if (verbose >= 2) console("loaded %d entities", CON_RIGHT, hdr.numents);
+	if (verbose >= 2) conoutf("loaded %d entities", hdr.numents);
 
 	show_out_of_renderloop_progress(0, "loading octree...");
 	worldroot = loadchildren(f);
@@ -677,14 +677,14 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		lm.finalize();
 	}
 
-	if (verbose >= 2) console("loaded %d lightmaps", CON_RIGHT, hdr.lightmaps);
+	if (verbose >= 2) conoutf("loaded %d lightmaps", hdr.lightmaps);
 
 	show_out_of_renderloop_progress(0, "loading world...");
 	cl->loadworld(f, maptype);
 
 	gzclose(f);
 	conoutf("loaded map '%s' v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
-	console("%s", CON_CENTER|CON_LEFT, hdr.maptitle);
+	console("%s", CON_CENTER|CON_NORMAL, hdr.maptitle);
 
 	overrideidents = true;
 	if (!execfile(pcfname)) exec("package.cfg");

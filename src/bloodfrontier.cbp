@@ -647,6 +647,14 @@
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
+		<Unit filename="shared\attrs.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
+		</Unit>
 		<Unit filename="shared\command.h">
 			<Option compilerVar="CPP"/>
 			<Option compile="0"/>

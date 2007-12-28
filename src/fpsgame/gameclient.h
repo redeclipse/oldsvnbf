@@ -119,7 +119,7 @@ struct GAMECLIENT : igameclient
 
 			if (wait)
 			{
-				console("\f2you must wait %d second%s before respawn!", CON_LEFT|CON_CENTER, wait, wait!=1 ? "s" : "");
+				console("\f2you must wait %d second%s before respawn!", CON_NORMAL|CON_CENTER, wait, wait!=1 ? "s" : "");
 				return;
 			}
 
@@ -345,7 +345,7 @@ struct GAMECLIENT : igameclient
 		string dname, aname;
 		s_strcpy(dname, d==player1 ? "you" : colorname(d));
 		s_strcpy(aname, actor==player1 ? "you" : (actor->type!=ENT_INANIMATE ? colorname(actor) : ""));
-		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_RIGHT;
+		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
 		if(actor->type==ENT_AI)
 			console("\f2%s got killed by %s!", cflags, dname, aname);
         else if(d==actor || actor->type==ENT_INANIMATE)
@@ -438,7 +438,7 @@ struct GAMECLIENT : igameclient
 		}
 		else if(timeremain > 0)
 		{
-			console("\f2time remaining: %d %s", CON_LEFT|CON_CENTER, timeremain, timeremain==1 ? "minute" : "minutes");
+			console("\f2time remaining: %d %s", CON_NORMAL|CON_CENTER, timeremain, timeremain==1 ? "minute" : "minutes");
 		}
 	}
 
@@ -789,13 +789,10 @@ struct GAMECLIENT : igameclient
 						}
 					}
 
-					if (!editmode)
-					{
-						glDisable(GL_BLEND);
-				        if(m_capture(gamemode)) cpc.drawhud(w, h);
-				        else if(m_assassin(gamemode)) asc.drawhud(w, h);
-						glEnable(GL_BLEND);
-					}
+					glDisable(GL_BLEND);
+					if(m_capture(gamemode)) cpc.drawhud(w, h);
+					else if(m_assassin(gamemode)) asc.drawhud(w, h);
+					glEnable(GL_BLEND);
 				}
 				glDisable(GL_BLEND);
 			}
@@ -1149,12 +1146,12 @@ struct GAMECLIENT : igameclient
 			}
 			if (!quiet)
 			{
-				if (cameranum > 0) console("camera %d selected", CON_LEFT|CON_CENTER, cameranum);
-				else if (player1->clientnum == -cameranum) console("spectator camera selected", CON_LEFT|CON_CENTER);
-				else console("chasecam %s selected", CON_LEFT|CON_CENTER, players[-cameranum]->name);
+				if (cameranum > 0) console("camera %d selected", CON_NORMAL|CON_CENTER, cameranum);
+				else if (player1->clientnum == -cameranum) console("spectator camera selected", CON_NORMAL|CON_CENTER);
+				else console("chasecam %s selected", CON_NORMAL|CON_CENTER, players[-cameranum]->name);
 			}
 		}
-		else if (!quiet) console("no other cameras available", CON_LEFT|CON_CENTER);
+		else if (!quiet) console("no other cameras available", CON_NORMAL|CON_CENTER);
 	}
 
 	void setcamera(int idx)
@@ -1326,7 +1323,7 @@ struct GAMECLIENT : igameclient
 
 	void setcrank()
 	{
-		console("\f2%d%s place", CON_LEFT|CON_CENTER, myrankv+1, myrankv ? myrankv == 1 ? "nd" : myrankv == 2 ? "rd" : "th" : "st");
+		console("\f2%d%s place", CON_NORMAL|CON_CENTER, myrankv+1, myrankv ? myrankv == 1 ? "nd" : myrankv == 2 ? "rd" : "th" : "st");
 	}
 
 	char *gametitle()

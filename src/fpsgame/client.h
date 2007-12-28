@@ -253,7 +253,7 @@ struct clientcom : iclientcom
 		string s;
 		if (action) s_sprintf(s)("\fs\fr*\fS \fs\fr%s\fS \fs\fr%s\fS", cl.colorname(d), text);
 		else s_sprintf(s)("\fs\fr<\fS\fs\fw%s\fS\fs\fr>\fS \fs\fw%s\fS", cl.colorname(d), text);
-		console("%s", (centerchat() ? CON_CENTER : 0)|CON_LEFT, s);
+		console("%s", (centerchat() ? CON_CENTER : 0)|CON_NORMAL, s);
 		playsound(S_CHAT);
 	}
 
@@ -520,11 +520,11 @@ struct clientcom : iclientcom
 			{
 				int acn = getint(p);
 				fpsent *alive = acn<0 ? NULL : (acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn));
-				console("arena round is over! next round in 5 seconds...", CON_LEFT|CON_CENTER);
-				if(!alive) console("everyone died!", CON_LEFT|CON_CENTER);
-				else if(m_team(cl.gamemode, cl.mutators)) console("team %s has won the round", CON_LEFT|CON_CENTER, alive->team);
-				else if(alive==cl.player1) console("you are the last man standing!", CON_LEFT|CON_CENTER);
-				else console("%s is the last man standing", CON_LEFT|CON_CENTER, cl.colorname(alive));
+				console("arena round is over! next round in 5 seconds...", CON_NORMAL|CON_CENTER);
+				if(!alive) console("everyone died!", CON_NORMAL|CON_CENTER);
+				else if(m_team(cl.gamemode, cl.mutators)) console("team %s has won the round", CON_NORMAL|CON_CENTER, alive->team);
+				else if(alive==cl.player1) console("you are the last man standing!", CON_NORMAL|CON_CENTER);
+				else console("%s is the last man standing", CON_NORMAL|CON_CENTER, cl.colorname(alive));
 
 				bool win = false;
 				if(alive)

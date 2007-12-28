@@ -11,7 +11,7 @@ struct entity                                   // persistent map entity
     short attr1, attr2, attr3, attr4, attr5;
     uchar type;                                 // type is one of the above
     uchar reserved;
-};
+ };
 
 enum
 {
