@@ -44,7 +44,7 @@ void registergame(const char *name, igame *ig)
 void initgame(const char *type)
 {
 	igame **ig = gamereg->access(type);
-	if(!ig) fatal("cannot start game module: ", type);
+	if(!ig) fatal("cannot start game module: %s", type);
 
 	sv = (*ig)->newserver();
 	if (sv)
