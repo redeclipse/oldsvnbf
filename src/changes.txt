@@ -1,3 +1,0 @@
-added G3D_ALTERNATE for right mouse clicks
-add alternate actions to 'guibutton' and 'guiimage'
-new hud status indicator

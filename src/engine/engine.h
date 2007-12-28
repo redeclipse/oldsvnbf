@@ -433,16 +433,13 @@ extern bool menuactive();
 // console
 enum
 {
-	CN_LEFT = 0,
-	CN_RIGHT,
+	CN_NORMAL = 0,
 	CN_CENTER,
 	CN_MAX
 };
-#define CON_LEFT		0x0001
-#define CON_RIGHT		0x0002
-#define CON_CENTER		0x0004
-
-#define CON_HILIGHT		0x0020
+#define CON_NORMAL		0x0001
+#define CON_CENTER		0x0002
+#define CON_HILIGHT		0x0004
 
 struct cline { char *cref; int outtime; };
 extern vector<cline> conlines[CN_MAX];
