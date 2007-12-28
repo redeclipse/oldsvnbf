@@ -457,7 +457,7 @@ int main(int argc, char **argv)
 	//#endif
 
 	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
-	if (SDL_Init(par) < 0) fatal("Unable to initialize SDL: ", SDL_GetError());
+	if (SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
 
 	conoutf("init: video: mode");
 	int resize = SDL_RESIZABLE;
@@ -510,7 +510,7 @@ int main(int argc, char **argv)
         screen = SDL_SetVideoMode(scr_w, scr_h, hasbpp ? colorbits : 0, SDL_OPENGL|resize|fs);
         if(screen) break;
 	}
-	if(!screen) fatal("Unable to create OpenGL screen: ", SDL_GetError());
+	if(!screen) fatal("Unable to create OpenGL screen: %s", SDL_GetError());
     else
     {
         if(!hasbpp) conoutf("%d bit color buffer not supported - disabling", colorbits);
