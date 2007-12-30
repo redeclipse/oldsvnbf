@@ -90,10 +90,8 @@ void writeinitcfg()
 	extern int useshaders, shaderprecision;
 	fprintf(f, "shaders %d\n", useshaders);
 	fprintf(f, "shaderprecision %d\n", shaderprecision);
-	extern int soundchans, sounddsp, soundformat, soundfreq;
+	extern int soundchans, soundfreq;
 	fprintf(f, "soundchans %d\n", soundchans);
-	fprintf(f, "sounddsp %d\n", sounddsp);
-	fprintf(f, "soundformat %d\n", soundformat);
 	fprintf(f, "soundfreq %d\n", soundfreq);
 	fclose(f);
 }
