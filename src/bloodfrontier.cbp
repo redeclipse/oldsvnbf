@@ -52,7 +52,6 @@
 					<Add library="SDLmain"/>
 					<Add library="SDL"/>
 					<Add library="SDL_image"/>
-					<Add library="fmodex"/>
 					<Add library="z"/>
 					<Add library="opengl32"/>
 					<Add library="glu32"/>
@@ -90,7 +89,6 @@
 					<Add library="SDLmain"/>
 					<Add library="SDL"/>
 					<Add library="SDL_image"/>
-					<Add library="fmodex"/>
 					<Add library="z"/>
 					<Add library="opengl32"/>
 					<Add library="glu32"/>

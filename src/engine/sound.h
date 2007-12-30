@@ -1,26 +1,12 @@
-#include <fmod.h>
-#include <fmod_errors.h>
-
-extern FMOD_RESULT snderr;
-extern FMOD_SYSTEM *sndsys;
-
 extern bool nosound;
 extern int soundvol;
 
 #define SNDMINDIST	16.0f
 #define SNDMAXDIST	10000.f
 
-#define SNDERR(b,s,r) { \
-	if ((snderr = b) != FMOD_OK) \
-	{ \
-		conoutf("sound error: failed to %s [%d] %s", s, snderr, FMOD_ErrorString(snderr)); \
-		r; \
-	} \
-}
-
 struct soundsample
 {
-	FMOD_SOUND *sound;
+	void *sound;
 	char *name;
 
 	soundsample() : name(NULL) {}
@@ -28,15 +14,7 @@ struct soundsample
 
 	void load(const char *file, int loop = 0)
 	{
-		string buf;
-		s_sprintf(buf)("create sound '%s'", file);
-		SNDERR(FMOD_System_CreateSound(sndsys, file, FMOD_3D|FMOD_SOFTWARE|FMOD_3D_WORLDRELATIVE, NULL, &sound), buf, return);
-
-		s_sprintf(buf)("set loop mode on '%s'", file);
-		SNDERR(FMOD_Sound_SetMode(sound, FMOD_LOOP_NORMAL), buf, );
-
-		s_sprintf(buf)("set loop count on '%s'", file);
-		SNDERR(FMOD_Sound_SetLoopCount(sound, loop), buf, );
+		return;
 	}
 };
 
@@ -49,7 +27,7 @@ struct soundslot
 
 struct soundchan
 {
-	FMOD_CHANNEL *channel;
+	void *channel;
 	soundslot *slot;
 	vec *pos, _pos, *vel, _vel;
 	float mindist, maxdist;
@@ -64,7 +42,7 @@ struct soundchan
 		pos = vel = NULL;
 	}
 
-	void init(FMOD_CHANNEL *c, soundslot *s, float m = SNDMINDIST, float n = SNDMAXDIST)
+	void init(void *c, soundslot *s, float m = SNDMINDIST, float n = SNDMAXDIST)
 	{
 		reset(true);
 		channel = c;
@@ -75,42 +53,28 @@ struct soundchan
 
 	void pause(bool t)
 	{
-		if (playing())
-		{
-			SNDERR(FMOD_Channel_SetPaused(channel, t), "pause channel", );
-		}
+		return;
 	}
 
 	void stop()
 	{
-		if (playing())
-		{
-			SNDERR(FMOD_Channel_Stop(channel), "stop channel", );
-			reset(false);
-		}
+		return;
 	}
 
 	bool playing()
 	{
-		FMOD_BOOL playing = (FMOD_BOOL)0;
-		if (inuse) FMOD_Channel_IsPlaying(channel, &playing);
-		if (inuse && !playing) reset(false);
-		return playing != 0;
+		return false;
 	}
 	
 	void update()
 	{
-		if (playing())
-		{
-			FMOD_VECTOR psp = { pos->x, pos->y, pos->z }, psv = { vel->x, vel->y, vel->z };
-			SNDERR(FMOD_Channel_Set3DAttributes(channel, &psp, &psv), "set 3d attributes", );
-			SNDERR(FMOD_Channel_Set3DMinMaxDistance(channel, mindist, maxdist), "set minmax distance", );
-			SNDERR(FMOD_Channel_SetVolume(channel, (float(slot->vol)/255.f)*(float(soundvol)/255.f)), "set volume", );
-		}
+		return;
 	}
 	
 	void position(vec *p, vec *v)
 	{
+		return;
+
 		if (playing())
 		{
 			pos = p;
@@ -121,6 +85,8 @@ struct soundchan
 	
 	void positionv(vec &p, vec &v)
 	{
+		return;
+
 		if (playing())
 		{
 			_pos = p;
