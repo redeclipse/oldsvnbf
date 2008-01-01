@@ -480,7 +480,8 @@ struct GAMECLIENT : igameclient
 
 	void initclient()
 	{
-		lanconnect();
+		if (serverhost) connects("localhost");
+		else lanconnect();
 	}
 
     void preloadcharacters()
@@ -905,7 +906,7 @@ struct GAMECLIENT : igameclient
 	{
 	}
 
-	void saveworld(gzFile &f, FILE *h)
+	void saveworld(gzFile &f)
 	{
 	}
 

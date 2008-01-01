@@ -115,7 +115,7 @@ struct igameclient
 	virtual bool gethudcolour(vec &colour) { return false; }
 
 	virtual void loadworld(gzFile &f, int maptype) { return; };
-	virtual void saveworld(gzFile &f, FILE *h) { return; };
+	virtual void saveworld(gzFile &f) { return; };
 
 	virtual int localplayers() { return 1; }
 	virtual bool gui3d() { return true; }
