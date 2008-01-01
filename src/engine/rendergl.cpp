@@ -879,7 +879,7 @@ void gl_drawframe(int w, int h)
 
 	float fovy = (float)fov*h/w;
 	float aspect = w/(float)h;
-	int fogmat = lookupmaterial(camera1->o);
+    int fogmat = lookupmaterial(vec(camera1->o.x, camera1->o.y, camera1->o.z + camera1->aboveeye*0.5f));
 	if(fogmat!=MAT_WATER && fogmat!=MAT_LAVA) fogmat = MAT_AIR;
 
 	setfog(fogmat);
@@ -912,7 +912,7 @@ void gl_drawframe(int w, int h)
 
 	if(limitsky()) drawskybox(farplane, true);
 
-	bool causticspass = caustics && fogmat==MAT_WATER && lookupmaterial(camera1->o);
+    bool causticspass = caustics && fogmat==MAT_WATER && lookupmaterial(vec(camera1->o.x, camera1->o.y, camera1->o.z + camera1->aboveeye*1.25f));
 	rendergeom(causticspass);
 
 	queryreflections();

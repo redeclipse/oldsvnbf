@@ -120,7 +120,7 @@ void draw_textf(const char *fstr, int left, int top, ...)
 	draw_text(str, left, top);
 }
 
-void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool shadow, int align, ...)
+void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool s, int align, ...)
 {
 	s_sprintfdlv(str, align, fstr);
 
@@ -137,13 +137,13 @@ void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a,
 		default:
 			break;
 	}
-	draw_text(str, x, y, r, g, b, a, shadow);
+	draw_text(str, x, y, r, g, b, a, s);
 }
 
 static bvec colorstack[256];
 int colorpos = 0;
 
-void draw_text(const char *str, int left, int top, int r, int g, int b, int a, bool shadow)
+void draw_text(const char *str, int left, int top, int r, int g, int b, int a, bool s)
 {
 	if(!curfont) return;
 
@@ -156,9 +156,9 @@ void draw_text(const char *str, int left, int top, int r, int g, int b, int a, b
 
 	glBegin(GL_QUADS);
 	glColor4ub(r, g, b, a);
- 	loopj(shadow ? 2 : 1)
+ 	loopj(s ? 2 : 1)
  	{
-		if (!shadow || j) glColor4ub(r, g, b, a);
+		if (!s || j) glColor4ub(r, g, b, a);
 		else  glColor4ub(0, 0, 0, a);
 
 		int off = (j ? -2 : 2);
@@ -173,7 +173,7 @@ void draw_text(const char *str, int left, int top, int r, int g, int b, int a, b
 			if(c=='\t') { x = ((x-left-off+PIXELTAB)/PIXELTAB)*PIXELTAB+left+off; continue; }
 			if(c=='\f')
 			{
-				if ((!shadow || j) && str[i+1] != 0)
+				if ((!s || j) && str[i+1] != 0)
 				{
 					switch(str[++i])
 					{
