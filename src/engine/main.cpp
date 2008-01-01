@@ -317,7 +317,7 @@ void perfset(int level)
 		if (perfall || !level || level < perfmin)
 		{
 			perfvarscl(shaderdetail,	100,	3,			0);
-			perfvarscl(waterreflect,	2,		1,			0);
+			//perfvarscl(waterreflect,	2,		1,			0);
 			perfvarscl(waterrefract,	2,		1,			0);
 			perfvarscl(grass,			1,		1,			0);
 			perfvarscl(glassenv,		1,		1,			0);

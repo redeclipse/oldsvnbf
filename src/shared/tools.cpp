@@ -15,7 +15,7 @@
 string homedir = "";
 vector<char *> packagedirs;
 
-char *makefile(char *s, char *e, bool ext, bool copy)
+char *makefile(char *s, char *e, bool ext, bool copy, int start)
 {
     if(copy)
     {
@@ -24,15 +24,16 @@ char *makefile(char *s, char *e, bool ext, bool copy)
         s = tmp;
     }
 
-	int d = 1;
+	int d = start;
 	string m, f;
 	s_strcpy(m, s);
 
 	char *t = strpbrk(m, ".");
-	if (t)
+	if (t) // try to detect extension and revision
 	{
 		s_strncpy(s, m, t-m+1);
-		d = min(atoi(t+1), 1);
+		char *q = t+1;
+		if (*q >= '0' && *q <= '9') d = min(atoi(q), 1);
 	}
 	else { s_strcpy(s, m); }
 	s_strcpy(m, s);

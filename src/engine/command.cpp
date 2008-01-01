@@ -5,86 +5,41 @@
 #include "engine.h"
 
 vector<attr *> attrs;
-ABOOL(attrs, attrbool, true);
-AINT(attrs, attrint, 1, 0, 1);
-AFLOAT(attrs, attrfloat, 1.f, 0.f, 1.f);
+ABOOL(attrs, attrbool, "true");
+AINT(attrs, attrint, 1, 0, 512);
+AFLOAT(attrs, attrfloat, 1.0, 0.0, 512.0);
+ASTRING(attrs, attrstring, "hello, world!", 1, 512);
+AVEC(attrs, attrvec, "1.0,1.0,1.0", "0.0,0.0,0.0", "512.0,512.0,512.0");
 
-ICOMMAND(attrprint, "", (void), {
+void printattrval(attr *a)
+{
+	if (a) conoutf("%s = %s", a->name, a->valstr);
+}
+
+void printattrrange(attr *a)
+{
+	if (a) conoutf("valid range for %s is %s .. %s", a->name, a->minstr, a->maxstr);
+}
+
+ICOMMAND(attrprint, "", (void),
+{
 	loopv (attrs)
 	{
-		ACASE(attrs[i],
-			{
-				conoutf("attribute %s has bad type (%d)", a->name, a->type);
-			},
-			{
-				conoutf("boolean attribute %s is set to %s", a->name, a->value ? "true" : "false");
-			},
-			{
-				conoutf("integer attribute %s is set to %d (range: %d .. %d)", a->name, a->value, a->minval, a->maxval);
-			},
-			{
-				conoutf("float attribute %s is set to %.2f (range: %.2f .. %.2f)", a->name, a->value, a->minval, a->maxval);
-			}
-		);
+		printattrval(attrs[i]);
 	}
 });
 
-ICOMMAND(attrset, "ss", (char *n, char *v), {
+ICOMMAND(attrset, "ss",(char *n, char *v),
+{
 	if (*n)
 	{
 		loopv (attrs)
 		{
-			ACASE(attrs[i],
-				{
-					conoutf("attribute %s has bad type (%d)", a->name, a->type);
-				},
-				{
-					if (*v)
-					{
-						bool i = atoi(v) ? true : false;
-					
-						a->value = i;
-						conoutf("attribute %s now set to %s", a->name, a->value ? true : false);
-					}
-					else
-						conoutf("boolean attribute %s is set to %s", a->name, a->value ? "true" : "false");
-					return;
-				},
-				{
-					if (*v)
-					{
-						int i = atoi(v);
-					
-						if (i > a->maxval || i < a->minval)
-							conoutf("valid range for %s is %d .. %d", a->name, a->minval, a->maxval);
-						else
-						{
-							a->value = i;
-							conoutf("attribute %s now set to %d", a->name, a->value);
-						}
-					}
-					else
-						conoutf("integer attribute %s is set to %d (range: %d .. %d)", a->name, a->value, a->minval, a->maxval);
-					return;
-				},
-				{
-					if (*v)
-					{
-						float i = atof(v);
-					
-						if (i > a->maxval || i < a->minval)
-							conoutf("valid range for %s is %.2f .. %.2f", a->name, a->minval, a->maxval);
-						else
-						{
-							a->value = i;
-							conoutf("attribute %s now set to %.2f", a->name, a->value);
-						}
-					}
-					else
-						conoutf("integer attribute %s is set to %d (range: %d .. %d)", a->name, a->value, a->minval, a->maxval);
-					return;
-				}
-			);
+			if (!strcasecmp(attrs[i]->name, n))
+			{
+				attrs[i]->setval(v, true);
+				return;
+			}
 		}
 		conoutf("attribute %s does not exist", n);
 	}

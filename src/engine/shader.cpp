@@ -49,10 +49,10 @@ static bool compileasmshader(GLenum type, GLuint &idx, const char *def, const ch
 		conoutf("COMPILE ERROR (%s:%s) - %s", tname, name, glGetString(GL_PROGRAM_ERROR_STRING_ARB));
         if(err>=0 && err<(int)strlen(def))
         {
-		loopi(err) putchar(*def++);
-		puts(" <<HERE>> ");
-		while(*def) putchar(*def++);
-	}
+			loopi(err) putchar(*def++);
+			puts(" <<HERE>> ");
+			while(*def) putchar(*def++);
+		}
     }
     else if(msg && !native) conoutf("%s:%s EXCEEDED NATIVE LIMITS", tname, name);
     if(err!=-1 || (!native && nativeonly))

@@ -942,7 +942,7 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	hdr.lightmaps = 0;
 
 	s_strncpy(hdr.maptitle, "Untitled Map by Unknown Author", 128);
-	s_strncpy(hdr.gameid, sv->gameid(), 3);
+	s_strncpy(hdr.gameid, sv->gameid(), 4);
 
 	texmru.setsize(0);
 	freeocta(worldroot);
