@@ -26,7 +26,7 @@
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
-				<Option parameters="-t -f -w512 -h384 -rinit.cfg -qhome"/>
+				<Option parameters="-t -w512 -h384 -rinit.cfg -qhome"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
 				<Option projectResourceIncludeDirsRelation="1"/>
@@ -67,7 +67,7 @@
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
-				<Option parameters="-t -f -w512 -h384 -rinit.cfg -qhome"/>
+				<Option parameters="-t -w512 -h384 -rinit.cfg -qhome"/>
 				<Option includeInTargetAll="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
@@ -604,46 +604,6 @@
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="server"/>
-		</Unit>
-		<Unit filename="master\cgi.c">
-			<Option compilerVar="CPP"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="master\cgi.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="master\dbg.c">
-			<Option compilerVar="CPP"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="master\dbg.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="master\def.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="master\ms.c">
-			<Option compilerVar="CPP"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="master\utl.c">
-			<Option compilerVar="CPP"/>
-			<Option target="data"/>
-		</Unit>
-		<Unit filename="master\utl.h">
-			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="data"/>
 		</Unit>
 		<Unit filename="shared\attrs.h">
 			<Option compilerVar=""/>
