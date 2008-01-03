@@ -42,18 +42,21 @@ struct entities : icliententities
 
 	void renderentities()
 	{
-		#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
-
-		renderprimitive(true);
-		if (editmode)
-		{	loopv(entgroup) entfocus(entgroup[i], renderentshow(e));
-			if (enthover >= 0) entfocus(enthover, renderentshow(e));
-		}
-		loopv(ents)
+		if (!shadowmapping && !reflecting && !refracting)
 		{
-			entfocus(i, { renderentforce(e); });
+			#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
+	
+			renderprimitive(true);
+			if (editmode)
+			{	loopv(entgroup) entfocus(entgroup[i], renderentshow(e));
+				if (enthover >= 0) entfocus(enthover, renderentshow(e));
+			}
+			loopv(ents)
+			{
+				entfocus(i, { renderentforce(e); });
+			}
+			renderprimitive(false);
 		}
-		renderprimitive(false);
 
 		loopv(ents)
 		{

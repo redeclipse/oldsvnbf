@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "engine.h"
 
-VARFP(waterreflect, 0, 0, -1, cleanreflections());
+VARFP(waterreflect, 0, 1, 1, cleanreflections());
 VARFP(waterrefract, 0, 1, 1, cleanreflections());
 VARP(refractfog, 0, 1, 1);
 
