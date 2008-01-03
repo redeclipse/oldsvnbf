@@ -158,7 +158,7 @@ struct weaponstate
 	{
 		vec p = d->o;
 		p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-		particle_splash(3, damage, 10000, p);
+		particle_splash(3, min(damage/4, 20), 10000, p);
 		if(d!=cl.player1)
 		{
 			s_sprintfd(ds)("@%d", damage);
