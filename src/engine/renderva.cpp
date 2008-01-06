@@ -61,11 +61,8 @@ static vtxarray *vasort[VASORTSIZE];
 
 void addvisibleva(vtxarray *va)
 {
-	extern int lodsize, loddistance;
-
 	float dist = vadist(va, camera1->o);
 	va->distance = int(dist); /*cv.dist(camera1->o) - va->size*SQRT3/2*/
-	va->curlod	= lodsize==0 || va->distance<loddistance ? 0 : 1;
 
 	int hash = min(int(dist*VASORTSIZE/hdr.worldsize), VASORTSIZE-1);
 	vtxarray **prev = &vasort[hash], *cur = vasort[hash];
@@ -512,8 +509,7 @@ void renderoutline()
 	GLuint vbufGL = 0, ebufGL = 0;
 	for(vtxarray *va = visibleva; va; va = va->next)
 	{
-		lodlevel &lod = va->curlod ? va->l1 : va->l0;
-		if(!lod.texs || va->occluded >= OCCLUDE_GEOM) continue;
+		if(!va->texs || va->occluded >= OCCLUDE_GEOM) continue;
 
 		setorigin(va);
 
@@ -526,15 +522,15 @@ void renderoutline()
 				glBindBuffer_(GL_ARRAY_BUFFER_ARB, va->vbufGL);
 				vbufGL = va->vbufGL;
 			}
-			if(ebufGL != lod.ebufGL)
+			if(ebufGL != va->ebufGL)
 			{
-				glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, lod.ebufGL);
-				ebufGL = lod.ebufGL;
+				glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, va->ebufGL);
+				ebufGL = va->ebufGL;
 			}
 		}
 		if(vbufchanged) glVertexPointer(3, floatvtx ? GL_FLOAT : GL_SHORT, VTXSIZE, &(va->vbuf[0].x));
 
-		drawvatris(va, 3*lod.tris, lod.ebuf);
+		drawvatris(va, 3*va->tris, va->ebuf);
 		xtravertsva += va->verts;
 	}
 
@@ -584,7 +580,6 @@ void rendershadowmapreceivers()
     GLuint vbufGL = 0, ebufGL = 0;
     for(vtxarray *va = visibleva; va; va = va->next)
     {
-        lodlevel &lod = va->curlod ? va->l1 : va->l0;
         if(va->curvfc >= VFC_FOGGED || !isshadowmapreceiver(va)) continue;
 
         setorigin(va);
@@ -598,15 +593,15 @@ void rendershadowmapreceivers()
                 glBindBuffer_(GL_ARRAY_BUFFER_ARB, va->vbufGL);
                 vbufGL = va->vbufGL;
             }
-            if(ebufGL != lod.ebufGL)
+            if(ebufGL != va->ebufGL)
             {
-                glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, lod.ebufGL);
-                ebufGL = lod.ebufGL;
+                glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, va->ebufGL);
+                ebufGL = va->ebufGL;
             }
         }
         if(vbufchanged) glVertexPointer(3, floatvtx ? GL_FLOAT : GL_SHORT, VTXSIZE, &(va->vbuf[0].x));
 
-        drawvatris(va, 3*lod.tris, lod.ebuf);
+        drawvatris(va, 3*va->tris, va->ebuf);
         xtravertsva += va->verts;
     }
 
@@ -796,7 +791,7 @@ void renderquery(renderstate &cur, occludequery *query, vtxarray *va)
 	if(reflecting && !refracting) camera.z = reflecting;
 
 	ivec bbmin, bbmax;
-	if(va->children || va->mapmodels || va->l0.matsurfs || va->l0.sky || va->l0.explicitsky)
+	if(va->children || va->mapmodels || va->matsurfs || va->sky || va->explicitsky)
 	{
 		bbmin = ivec(va->x, va->y, va->z);
 		bbmax = ivec(va->size, va->size, va->size);
@@ -825,14 +820,14 @@ enum
     RENDERPASS_FOG
 };
 
-void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPASS_LIGHTMAP, bool fogpass = false)
+void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bool fogpass = false)
 {
 	if(pass==RENDERPASS_GLOW)
 	{
 		bool noglow = true;
-		loopi(lod.texs)
+		loopi(va->texs)
 		{
-			Slot &slot = lookuptexture(lod.eslist[i].texture);
+			Slot &slot = lookuptexture(va->eslist[i].texture);
 			loopvj(slot.sts)
 			{
 				Slot::Tex &t = slot.sts[j];
@@ -852,10 +847,10 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 			glBindBuffer_(GL_ARRAY_BUFFER_ARB, va->vbufGL);
 			cur.vbufGL = va->vbufGL;
 		}
-		if(cur.ebufGL != lod.ebufGL)
+		if(cur.ebufGL != va->ebufGL)
 		{
-			glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, lod.ebufGL);
-			cur.ebufGL = lod.ebufGL;
+			glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, va->ebufGL);
+			cur.ebufGL = va->ebufGL;
 		}
 	}
 	if(vbufchanged) glVertexPointer(3, floatvtx ? GL_FLOAT : GL_SHORT, VTXSIZE, &(va->vbuf[0].x));
@@ -868,7 +863,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 		if(renderpath!=R_GLSLANG || !apple_glsldepth_bug)
 		{
 			nocolorshader->set();
-			drawvatris(va, 3*lod.tris, lod.ebuf);
+			drawvatris(va, 3*va->tris, va->ebuf);
 		}
 		else
 		{
@@ -876,22 +871,22 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 			if(!nocolorglslshader) nocolorglslshader = lookupshaderbyname("nocolorglsl");
 			Slot *lastslot = NULL;
 			int lastdraw = 0, offset = 0;
-			loopi(lod.texs)
+			loopi(va->texs)
 			{
-				Slot &slot = lookuptexture(lod.eslist[i].texture);
+				Slot &slot = lookuptexture(va->eslist[i].texture);
 				if(lastslot && (slot.shader->type&SHADER_GLSLANG) != (lastslot->shader->type&SHADER_GLSLANG) && offset > lastdraw)
 				{
 					(lastslot->shader->type&SHADER_GLSLANG ? nocolorglslshader : nocolorshader)->set();
-					drawvatris(va, offset-lastdraw, lod.ebuf+lastdraw);
+					drawvatris(va, offset-lastdraw, va->ebuf+lastdraw);
 					lastdraw = offset;
 				}
 				lastslot = &slot;
-                offset += lod.eslist[i].length[5];
+                offset += va->eslist[i].length[5];
 			}
 			if(offset > lastdraw)
 			{
 				(lastslot->shader->type&SHADER_GLSLANG ? nocolorglslshader : nocolorshader)->set();
-				drawvatris(va, offset-lastdraw, lod.ebuf+lastdraw);
+				drawvatris(va, offset-lastdraw, va->ebuf+lastdraw);
 			}
 		}
 		xtravertsva += va->verts;
@@ -948,8 +943,8 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 			}
 		}
 
-		drawvatris(va, 3*lod.tris, lod.ebuf);
-		vtris += lod.tris;
+		drawvatris(va, 3*va->tris, va->ebuf);
+		vtris += va->tris;
 		vverts += va->verts;
 		return;
 	}
@@ -998,37 +993,37 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
     bool shadowmapreceiver = false;
     if(pass==RENDERPASS_CAUSTICS || pass==RENDERPASS_FOG)
     {
-        drawvatris(va, 3*lod.tris, lod.ebuf);
+        drawvatris(va, 3*va->tris, va->ebuf);
         xtravertsva += va->verts;
         return;
     }
     else if(pass==RENDERPASS_LIGHTMAP)
     {
         if(renderpath!=R_FIXEDFUNCTION)
-	{
-        if(!envmapping && !va->curlod) shadowmapreceiver = isshadowmapreceiver(va);
-        if(vbufchanged) glColorPointer(3, GL_UNSIGNED_BYTE, VTXSIZE, floatvtx ? &(((fvertex *)va->vbuf)[0].n) : &(va->vbuf[0].n));
-		setenvparamfv("camera", SHPARAM_VERTEX, 4, vec4(camera1->o, 1).sub(ivec(va->x, va->y, va->z).mask(~VVEC_INT_MASK).tovec()).mul(1<<VVEC_FRAC).v);
+	    {
+            if(!envmapping) shadowmapreceiver = isshadowmapreceiver(va);
+            if(vbufchanged) glColorPointer(3, GL_UNSIGNED_BYTE, VTXSIZE, floatvtx ? &(((fvertex *)va->vbuf)[0].n) : &(va->vbuf[0].n));
+		    setenvparamfv("camera", SHPARAM_VERTEX, 4, vec4(camera1->o, 1).sub(ivec(va->x, va->y, va->z).mask(~VVEC_INT_MASK).tovec()).mul(1<<VVEC_FRAC).v);
 
-		setdynlights(va);
-	}
-    if(vbufchanged)
-	{
+		    setdynlights(va);
+	    }
+        if(vbufchanged)
+	    {
             glClientActiveTexture_(GL_TEXTURE0_ARB+cur.lightmaptmu);
 			glTexCoordPointer(2, GL_SHORT, VTXSIZE, floatvtx ? &(((fvertex *)va->vbuf)[0].u) : &(va->vbuf[0].u));
             glClientActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
         }
 	}
 
-	ushort *ebuf = lod.ebuf;
+	ushort *ebuf = va->ebuf;
     int lastlm = -1, lastxs = -1, lastys = -1, lastl = -1, lasto = -1, lastenvmap = -1, envmapped = 0;
     bool mtglow = false, shadowmapped = false;
 	float lastscale = -1;
 	Slot *lastslot = NULL;
     Shader *lastshader = NULL;
-	loopi(lod.texs)
+	loopi(va->texs)
 	{
-        const elementset &es = lod.eslist[i];
+        const elementset &es = va->eslist[i];
         Slot &slot = lookuptexture(es.texture);
 		Texture *tex = slot.sts.length() > 0 ? slot.sts[0].t : notexture;
 		Shader *s = slot.shader;
@@ -1227,7 +1222,7 @@ void renderva(renderstate &cur, vtxarray *va, lodlevel &lod, int pass = RENDERPA
 	}
     if(mtglow || envmapped) glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
 
-	vtris += lod.tris;
+	vtris += va->tris;
 	vverts += va->verts;
 }
 
@@ -1480,8 +1475,7 @@ void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
     cur.vbufGL = cur.ebufGL = 0;
 	for(vtxarray *va = FIRSTVA; va; va = NEXTVA)
 	{
-		lodlevel &lod = va->curlod ? va->l1 : va->l0;
-		if(!lod.texs || va->occluded >= OCCLUDE_GEOM) continue;
+		if(!va->texs || va->occluded >= OCCLUDE_GEOM) continue;
 		if(refracting || (reflecting && camera1->o.z < reflecting))
 		{
 			if(va->curvfc == VFC_FOGGED || (refracting && camera1->o.z >= refracting ? va->min.z > refracting : va->max.z <= refracting)) continue;
@@ -1492,7 +1486,7 @@ void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
 			if(va->max.z <= reflecting || (va->rquery && checkquery(va->rquery))) continue;
 		}
         if(fogpass ? va->z+va->size<=refracting-waterfog : va->curvfc==VFC_FOGGED) continue;
-        renderva(cur, va, lod, pass, fogpass);
+        renderva(cur, va, pass, fogpass);
 	}
 }
 
@@ -1527,8 +1521,7 @@ void rendergeom(bool causticspass, bool fogpass)
 
 	for(vtxarray *va = FIRSTVA; va; va = NEXTVA)
 	{
-		lodlevel &lod = va->curlod ? va->l1 : va->l0;
-		if(!lod.texs) continue;
+		if(!va->texs) continue;
 		if(refracting || (reflecting && camera1->o.z < reflecting))
 		{
 			if(va->curvfc == VFC_FOGGED || (refracting && camera1->o.z >= refracting ? va->min.z > refracting : va->max.z <= reflecting) || va->occluded >= OCCLUDE_GEOM) continue;
@@ -1584,7 +1577,7 @@ void rendergeom(bool causticspass, bool fogpass)
 			else if(camera1->o.z >= reflecting && va->rquery) startquery(va->rquery);
 		}
 
-        renderva(cur, va, lod, doOQ ? RENDERPASS_Z : (nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP), fogpass);
+        renderva(cur, va, doOQ ? RENDERPASS_Z : (nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP), fogpass);
 
 		if(!refracting)
 		{
@@ -1609,8 +1602,7 @@ void rendergeom(bool causticspass, bool fogpass)
         cur.texture = 0;
 		for(vtxarray **prevva = &FIRSTVA, *va = FIRSTVA; va; prevva = &NEXTVA, va = NEXTVA)
 		{
-			lodlevel &lod = va->curlod ? va->l1 : va->l0;
-			if(!lod.texs) continue;
+			if(!va->texs) continue;
 			if(reflecting)
 			{
 				if(va->max.z <= reflecting) continue;
@@ -1633,7 +1625,7 @@ void rendergeom(bool causticspass, bool fogpass)
 			}
 			else if(va->occluded == OCCLUDE_PARENT) va->occluded = OCCLUDE_NOTHING;
 
-            renderva(cur, va, lod, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP, fogpass);
+            renderva(cur, va, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP, fogpass);
 				}
 		glDepthFunc(GL_LESS);
 	}
@@ -1785,7 +1777,7 @@ void renderreflectedgeom(float z, bool refract, bool causticspass, bool fogpass)
 
 static GLuint skyvbufGL, skyebufGL;
 
-void renderskyva(vtxarray *va, lodlevel &lod, bool explicitonly = false)
+void renderskyva(vtxarray *va, bool explicitonly = false)
 {
 	setorigin(va);
 
@@ -1798,18 +1790,18 @@ void renderskyva(vtxarray *va, lodlevel &lod, bool explicitonly = false)
 			glBindBuffer_(GL_ARRAY_BUFFER_ARB, va->vbufGL);
 			skyvbufGL = va->vbufGL;
 		}
-		if(skyebufGL != lod.skybufGL)
+		if(skyebufGL != va->skybufGL)
 		{
-			glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, lod.skybufGL);
-			skyebufGL = lod.skybufGL;
+			glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, va->skybufGL);
+			skyebufGL = va->skybufGL;
 		}
 	}
 	if(vbufchanged) glVertexPointer(3, floatvtx ? GL_FLOAT : GL_SHORT, VTXSIZE, &(va->vbuf[0].x));
 
-	drawvatris(va, explicitonly ? lod.explicitsky : lod.sky+lod.explicitsky, explicitonly ? lod.skybuf+lod.sky : lod.skybuf);
+	drawvatris(va, explicitonly ? va->explicitsky : va->sky+va->explicitsky, explicitonly ? va->skybuf+va->sky : va->skybuf);
 
-	if(!explicitonly) xtraverts += lod.sky/3;
-	xtraverts += lod.explicitsky/3;
+	if(!explicitonly) xtraverts += va->sky/3;
+	xtraverts += va->explicitsky/3;
 }
 
 int renderreflectedskyvas(vector<vtxarray *> &vas, float z, bool vfc = true)
@@ -1818,12 +1810,11 @@ int renderreflectedskyvas(vector<vtxarray *> &vas, float z, bool vfc = true)
 	loopv(vas)
 	{
 		vtxarray *va = vas[i];
-		lodlevel &lod = va->curlod ? va->l1 : va->l0;
 		if((vfc && va->curvfc == VFC_FULL_VISIBLE) && va->occluded >= OCCLUDE_BB) continue;
 		if(va->z+va->size <= z || isvisiblecube(vec(va->x, va->y, va->z), va->size) == VFC_NOT_VISIBLE) continue;
-		if(lod.sky+lod.explicitsky)
+		if(va->sky+va->explicitsky)
 		{
-			renderskyva(va, lod);
+			renderskyva(va);
 			rendered++;
 		}
 		if(va->children->length()) rendered += renderreflectedskyvas(*va->children, z, vfc && va->curvfc != VFC_NOT_VISIBLE);
@@ -1850,10 +1841,9 @@ bool rendersky(bool explicitonly, float zreflect)
 	}
 	else for(vtxarray *va = visibleva; va; va = va->next)
 	{
-		lodlevel &lod = va->curlod ? va->l1 : va->l0;
-		if(va->occluded >= OCCLUDE_BB || !(explicitonly ? lod.explicitsky : lod.sky+lod.explicitsky)) continue;
+		if(va->occluded >= OCCLUDE_BB || !(explicitonly ? va->explicitsky : va->sky+va->explicitsky)) continue;
 
-		renderskyva(va, lod, explicitonly);
+		renderskyva(va, explicitonly);
 		rendered++;
 	}
 

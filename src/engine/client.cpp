@@ -53,7 +53,7 @@ void abortconnect()
 	clienthost = NULL;
 }
 
-void connects(char *servername)
+void connects(const char *servername)
 {
 	if(connpeer)
 	{

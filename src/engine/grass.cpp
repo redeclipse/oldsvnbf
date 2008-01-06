@@ -424,7 +424,7 @@ void rendergrass()
 	extern vtxarray *visibleva;
 	for(vtxarray *va = visibleva; va; va = va->next)
 	{
-		if(!va->grasstris || va->occluded >= OCCLUDE_GEOM || va->curlod) continue;
+		if(!va->grasstris || va->occluded >= OCCLUDE_GEOM) continue;
 		if(va->distance > grassdist) continue;
 		if(reflecting && (refracting ? va->z>=refracting : va->z+va->size<reflecting)) continue;
 		if(!va->grasssamples) gengrasssamples(va);

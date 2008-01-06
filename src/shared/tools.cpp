@@ -15,7 +15,7 @@
 string homedir = "";
 vector<char *> packagedirs;
 
-char *makefile(char *s, char *e, bool ext, bool copy, int start)
+char *makefile(char *s, const char *e, bool ext, bool copy, int start)
 {
     if(copy)
     {

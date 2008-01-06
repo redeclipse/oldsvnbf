@@ -275,7 +275,7 @@ int lastinfo = 0;
 
 char *getservername(int n) { return servers[n].name; }
 
-void addserver(char *servername)
+void addserver(const char *servername)
 {
 	loopv(servers) if(!strcmp(servers[i].name, servername)) return;
 	serverinfo &si = servers.add();

@@ -319,10 +319,9 @@ void setupmaterials()
 	loopv(valist)
 	{
 		vtxarray *va = valist[i];
-		lodlevel &lod = va->l0;
-		loopj(lod.matsurfs)
+		loopj(va->matsurfs)
 		{
-			materialsurface &m = lod.matbuf[j];
+			materialsurface &m = va->matbuf[j];
 			if(m.material==MAT_WATER && m.orient==O_TOP)
 			{
 				m.index = water.length();
@@ -460,12 +459,11 @@ void sortmaterials(vector<materialsurface *> &vismats, float zclip, bool refract
 
 	for(vtxarray *va = reflected ? reflectedva : visibleva; va; va = reflected ? va->rnext : va->next)
 	{
-		lodlevel &lod = va->l0;
-		if(!lod.matsurfs || va->occluded >= OCCLUDE_BB) continue;
+		if(!va->matsurfs || va->occluded >= OCCLUDE_BB) continue;
 		if(zclip && (refract ? va->z >= zclip : va->z+va->size <= zclip)) continue;
-		loopi(lod.matsurfs)
+		loopi(va->matsurfs)
 		{
-			materialsurface &m = lod.matbuf[i];
+			materialsurface &m = va->matbuf[i];
 			if(!editmode || !showmat)
 			{
 				if(m.material==MAT_WATER && m.orient==O_TOP) continue;
