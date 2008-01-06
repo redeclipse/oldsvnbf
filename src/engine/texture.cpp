@@ -16,14 +16,14 @@ SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type)
 		int dx = x, dy = y;
 		if(numrots>=2 && numrots<=4) dx = (s->w-1)-x;
 		if(numrots<=2 || numrots==5) dy = (s->h-1)-y;
-		if((numrots&5)==1) swap(int, dx, dy);
+        if((numrots&5)==1) swap(dx, dy);
 		uchar *dst = (uchar *)d->pixels+(dy*d->w+dx)*depth;
 		loopi(depth) dst[i]=src[i];
 		if(type==TEX_NORMAL)
 		{
 			if(numrots>=2 && numrots<=4) dst[0] = 255-dst[0];	  // flip X	on normal when 180/270 degrees
 			if(numrots<=2 || numrots==5) dst[1] = 255-dst[1];	  // flip Y	on normal when  90/180 degrees
-			if((numrots&5)==1) swap(uchar, dst[0], dst[1]);		// swap X/Y on normal when  90/270 degrees
+            if((numrots&5)==1) swap(dst[0], dst[1]);       // swap X/Y on normal when  90/270 degrees
 		}
 	}
 	SDL_FreeSurface(s);
@@ -54,14 +54,14 @@ SDL_Surface *texoffset(SDL_Surface *s, int xoffset, int yoffset)
 
 void texmad(SDL_Surface *s, const vec &mul, const vec &add)
 {
-	int maxk = min(s->format->BytesPerPixel, 3);
+    int maxk = min(int(s->format->BytesPerPixel), 3);
 	uchar *src = (uchar *)s->pixels;
 	loopi(s->h*s->w)
 	{
 		loopk(maxk)
 		{
 			float val = src[k]*mul[k] + 255*add[k];
-			src[k] = uchar(min(max(val, 0), 255));
+            src[k] = uchar(min(max(val, 0.0f), 255.0f));
 		}
 		src += s->format->BytesPerPixel;
 	}
@@ -102,6 +102,21 @@ void texdup(SDL_Surface *s, int srcchan, int dstchan)
         src[dstchan] = src[srcchan];
         src += s->format->BytesPerPixel;
     }
+}
+
+SDL_Surface *texdecal(SDL_Surface *s)
+{
+    SDL_Surface *m = SDL_CreateRGBSurface(SDL_SWSURFACE, s->w, s->h, 16, 0, 0, 0, 0);
+    if(!m) fatal("create surface");
+    uchar *dst = (uchar *)m->pixels, *src = (uchar *)s->pixels;
+    loopi(s->h*s->w)
+    {
+        *dst++ = *src;
+        *dst++ = 255 - *src;
+        src += s->format->BytesPerPixel;
+    }
+    SDL_FreeSurface(s);
+    return m;
 }
 
 VAR(hwtexsize, 1, 0, 0);
@@ -335,7 +350,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 	SDL_Surface *s = IMG_Load(findfile(file, "rb"));
 	if(!s) { if(msg) conoutf("could not load texture %s", tname); return NULL; }
 	int bpp = s->format->BitsPerPixel;
-	if(!texformat(bpp)) { SDL_FreeSurface(s); conoutf("texture must be 8, 24, or 32 bpp: %s", tname); return NULL; }
+    if(!texformat(bpp)) { SDL_FreeSurface(s); conoutf("texture must be 8, 16, 24, or 32 bpp: %s", tname); return NULL; }
 	if(tex)
 	{
 		if(tex->rotation) s = texrotate(s, tex->rotation, tex->type);
@@ -348,6 +363,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 		if(!strncmp(cmd, "mad", arg1-cmd)) texmad(s, parsevec(arg1+1), arg2 ? parsevec(arg2+1) : vec(0, 0, 0));
 		else if(!strncmp(cmd, "ffmask", arg1-cmd)) s = texffmask(s, atoi(arg1+1));
         else if(!strncmp(cmd, "dup", arg1-cmd)) texdup(s, atoi(arg1+1), atoi(arg2+1));
+        else if(!strncmp(cmd, "decal", arg1-cmd)) s = texdecal(s);
 	}
 	return s;
 }
@@ -430,7 +446,7 @@ sometype textypes[] =
 int findtexturetype(char *name, bool tryint)
 {
 	loopi(sizeof(textypes)/sizeof(textypes[0])) if(!strcmp(textypes[i].name, name)) { return textypes[i].id; }
-	return tryint && *name >= '0' && *name <= '9' ? atoi(name) : -1;
+	return tryint && isnumeric(*name) ? atoi(name) : -1;
 }
 
 const char *findtexturename(int type)
@@ -462,7 +478,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	st.rotation = max(*rot, 0);
 	st.xoffset = max(*xoffset, 0);
 	st.yoffset = max(*yoffset, 0);
-	st.scale = max(*scale, 0);
+    st.scale = max(*scale, 0.0f);
 	st.t = NULL;
 	s_strcpy(st.lname, name);
 	s_strcpy(st.name, name);
@@ -974,8 +990,8 @@ void initenvmaps()
 		const extentity &ent = *ents[i];
 		if(ent.type != ET_ENVMAP) continue;
 		envmap &em = envmaps.add();
-		em.radius = ent.attr1 ? max(0, min(10000, ent.attr1)) : envmapradius;
-		em.size = ent.attr2 ? max(4, min(9, ent.attr2)) : 0;
+        em.radius = ent.attr1 ? max(0, min(10000, int(ent.attr1))) : envmapradius;
+        em.size = ent.attr2 ? max(4, min(9, int(ent.attr2))) : 0;
 		em.o = ent.o;
 		em.tex = 0;
 	}

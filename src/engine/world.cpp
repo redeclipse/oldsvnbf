@@ -355,7 +355,7 @@ void entrotate(int *cw)
 	groupeditundo(
 		e.o[dd] -= (e.o[dd]-mid)*2;
 		e.o.sub(s);
-		swap(float, e.o[R[d]], e.o[C[d]]);
+        swap(e.o[R[d]], e.o[C[d]]);
 		e.o.add(s);
 	);
 }
@@ -443,7 +443,7 @@ void renderentradius(extentity &e)
 				radius = e.attached->attr1;
 				if(!radius) radius = 2*e.o.dist(e.attached->o);
 				dir = vec(e.o).sub(e.attached->o).normalize();
-				angle = max(1, min(90, e.attr1));
+                angle = max(1, min(90, int(e.attr1)));
 			}
 			break;
 
@@ -454,7 +454,7 @@ void renderentradius(extentity &e)
 		case ET_ENVMAP:
 		{
 			extern int envmapradius;
-			radius = e.attr1 ? max(0, min(10000, e.attr1)) : envmapradius;
+            radius = e.attr1 ? max(0, min(10000, int(e.attr1))) : envmapradius;
 			break;
 		}
 
@@ -902,6 +902,7 @@ void resetmap()
 	cleanreflections();
 	resetlightmaps();
 	clearparticles();
+    cleardecals();
 	clearsleep();
 	cancelsel();
 	pruneundos();
@@ -912,7 +913,24 @@ void resetmap()
 	et->getents().deletecontentsp();
 
 	enumerate(*idents, ident, id, {
-		if (id._type == ID_VAR && id._context & IDC_WORLD) *id._storage = id._val; // reset world vars
+		if (id.world) // reset world vars
+		{
+			switch (id.type)
+			{
+				case ID_VAR:
+					*id.storage.i = id.val.i;
+					break;
+				case ID_FVAR:
+					*id.storage.f = id.val.f;
+					break;
+				case ID_SVAR:
+					delete[] id.storage.s;
+					*id.storage.s = newstring(id.val.s);
+					break;
+				default:
+				break;
+			}
+		}
 	});
 }
 
@@ -954,10 +972,10 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	clearlights();
 	allchanged();
 
-	overrideidents = true;
+	overrideidents = worldidents = true;
 	if (!execfile(pcfname)) exec("package.cfg");
 	exec("map.cfg");
-	overrideidents = false;
+	overrideidents = worldidents = false;
 
 	startmap("");
 	camera1->o.z += camera1->height+1;
@@ -987,9 +1005,15 @@ bool enlargemap(bool force)
 	return true;
 }
 
-ICOMMAND(newmap, "is", (int *i), if(emptymap(*i, false)) cl->newmap(max(*i, 0)));
+ICOMMAND(newmap, "is", (int *i), if(emptymap(*i, false)) cl->newmap(::max(*i, 0)));
 ICOMMAND(mapenlarge, "", (), if(enlargemap(false)) cl->newmap(-1));
 ICOMMAND(mapname, "", (void), result(mapname));
+ICOMMAND(mapsize, "", (void), 
+{
+    int size = 0;
+    while(1<<size < hdr.worldsize) size++;
+    intret(size);
+});
 
 void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool local)
 {

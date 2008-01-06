@@ -7,6 +7,7 @@ enum
 	ATTR_FLOAT,
 	ATTR_STRING,
 	ATTR_VEC,
+	ATTR_IVEC,
 	ATTR_MAX
 };
 
@@ -45,7 +46,7 @@ struct attr_bool : attr
 	bool conval(const char *v)
 	{
 		bool retval = false;
-		if (*v >= '0' && *v <= '9') retval = atoi(v) ? true : false;
+		if (isnumeric(*v)) retval = atoi(v) ? true : false;
 		else if (!strcasecmp("false", v)) retval = false;
 		else if (!strcasecmp("true", v)) retval = true;
 		return retval;
@@ -326,6 +327,78 @@ struct attr_vec : attr
 	}
 };
 
+struct attr_ivec : attr
+{
+	ivec value, minval, maxval;
+	
+	attr_ivec(const char *n = NULL) :
+		attr(n, ATTR_IVEC), value(0, 0, 0), minval(0, 0, 0), maxval(0, 0, 0) {}
+	~attr_ivec() {}
+	
+	ivec conval(const char *v)
+	{
+		ivec retval = ivec(0, 0, 0);
+		v += strspn(v, ",");
+		int q = 0;
+		
+		while (*v)
+		{
+			int i = atoi(v);
+
+			retval.v[q] = i;
+
+			if ((q += 1) > 2) break;
+
+			v += strcspn(v, ",\0");
+			v += strspn(v, ",");
+		}
+		return retval;
+	}
+
+	char *strval(ivec &v)
+	{
+		s_sprintfd(s)("%f,%f,%f", v.x, v.y, v.z);
+		return newstring(s); // must delete yourself!
+	}
+
+	void setrange(const char *x, const char *y)
+	{
+		if (*x)
+		{
+			minval = conval(x);
+			if (minstr) DELETEA(minstr);
+			minstr = strval(minval);
+		}
+		if (*y)
+		{
+			maxval = conval(y);
+			if (maxstr) DELETEA(maxstr);
+			maxstr = strval(maxval);
+		}
+	}
+
+	void setval(const char *v, bool msg = false)
+	{
+		if (*v)
+		{
+			ivec i = conval(v);
+
+			if (i.x > maxval.x || i.x < minval.x ||
+				i.y > maxval.y || i.y < minval.y ||
+				i.z > maxval.z || i.z < minval.z)
+			{
+				if (msg) printattrrange(this);
+			}
+			else
+			{
+				value = i; getval();
+				if (msg) printattrval(this);
+			}
+		}
+		else if (msg) printattrval(this);
+	}
+};
+
 // macros
 
 #define ATTR(a, o, n, v, x, y) \
@@ -391,6 +464,12 @@ struct attr_vec : attr
 			_v; \
 			break; \
 		} \
+		case ATTR_IVEC: \
+		{ \
+			attr_ivec *a = (attr_ivec *)o; \
+			_v; \
+			break; \
+		} \
 	}
 	
 
@@ -401,3 +480,4 @@ struct attr_vec : attr
 #define AFLOAT(a, n, v, x, y)	ATTR(a, attr_float, n, #v, #x, #y);
 #define ASTRING(a, n, v, x, y)	ATTR(a, attr_string, n, v, #x, #y);
 #define AVEC(a, n, v, x, y)		ATTR(a, attr_vec, n, v, x, y);
+#define AIVEC(a, n, v, x, y)	ATTR(a, attr_ivec, n, v, x, y);

@@ -167,7 +167,7 @@ bool resolverwait(const char *name, ENetAddress *address)
 		if(resolved) break;
 
 		timeout = SDL_GetTicks() - starttime;
-		show_out_of_renderloop_progress(min(float(timeout)/RESOLVERLIMIT, 1), text);
+        show_out_of_renderloop_progress(min(float(timeout)/RESOLVERLIMIT, 1.0f), text);
 		SDL_Event event;
 		while(SDL_PollEvent(&event))
 		{
@@ -249,7 +249,7 @@ int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &addre
 			break;
 		}
 		timeout = SDL_GetTicks() - starttime;
-		show_out_of_renderloop_progress(min(float(timeout)/CONNLIMIT, 1), text);
+        show_out_of_renderloop_progress(min(float(timeout)/CONNLIMIT, 1.0f), text);
 		SDL_Event event;
 		while(SDL_PollEvent(&event))
 		{
@@ -378,7 +378,7 @@ void checkpings()
 	}
 }
 
-int sicompare(serverinfo *a, serverinfo *b) { return sv->servercompare(a, b); }
+int sicompare(serverinfo *a, serverinfo *b) { return cc->servercompare(a, b); }
 
 void refreshservers()
 {
@@ -395,7 +395,7 @@ const char *showservers(g3d_gui *cgui)
 {
 	refreshservers();
     servers.sort(sicompare);
-	return sv->serverinfogui(cgui, servers);
+	return cc->serverinfogui(cgui, servers);
 }
 
 void updatefrommaster()

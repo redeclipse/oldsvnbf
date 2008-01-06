@@ -136,7 +136,7 @@ sometype materials[] =
 int findmaterial(const char *name, bool tryint)
 {
 	loopi(sizeof(materials)/sizeof(materials[0])) if(!strcmp(materials[i].name, name)) { return materials[i].id; }
-	return tryint && *name >= '0' && *name <= '9' ? atoi(name) : -1;
+	return tryint && isnumeric(*name) ? atoi(name) : -1;
 }
 
 
@@ -454,9 +454,9 @@ void sortmaterials(vector<materialsurface *> &vismats, float zclip, bool refract
 	vec dir;
 	vecfromyawpitch(camera1->yaw, reflected ? -camera1->pitch : camera1->pitch, 1, 0, dir);
 	loopi(3) { dir[i] = fabs(dir[i]); sortdim[i] = i; }
-	if(dir[sortdim[2]] > dir[sortdim[1]]) swap(int, sortdim[2], sortdim[1]);
-	if(dir[sortdim[1]] > dir[sortdim[0]]) swap(int, sortdim[1], sortdim[0]);
-	if(dir[sortdim[2]] > dir[sortdim[1]]) swap(int, sortdim[2], sortdim[1]);
+    if(dir[sortdim[2]] > dir[sortdim[1]]) swap(sortdim[2], sortdim[1]);
+    if(dir[sortdim[1]] > dir[sortdim[0]]) swap(sortdim[1], sortdim[0]);
+    if(dir[sortdim[2]] > dir[sortdim[1]]) swap(sortdim[2], sortdim[1]);
 
 	for(vtxarray *va = reflected ? reflectedva : visibleva; va; va = reflected ? va->rnext : va->next)
 	{

@@ -479,8 +479,8 @@ const vector<physent *> &checkdynentcache(int x, int y)
 
 void updatedynentcache(physent *d)
 {
-	for(int x = int(max(d->o.x-d->radius, 0))>>dynentsize, ex = int(min(d->o.x+d->radius, hdr.worldsize-1))>>dynentsize; x <= ex; x++)
-	for(int y = int(max(d->o.y-d->radius, 0))>>dynentsize, ey = int(min(d->o.y+d->radius, hdr.worldsize-1))>>dynentsize; y <= ey; y++)
+    for(int x = int(max(d->o.x-d->radius, 0.0f))>>dynentsize, ex = int(min(d->o.x+d->radius, hdr.worldsize-1.0f))>>dynentsize; x <= ex; x++)
+    for(int y = int(max(d->o.y-d->radius, 0.0f))>>dynentsize, ey = int(min(d->o.y+d->radius, hdr.worldsize-1.0f))>>dynentsize; y <= ey; y++)
 	{
 		dynentcacheentry &dec = dynentcache[DYNENTHASH(x, y)];
 		if(dec.x != x || dec.y != y || dec.frame != dynentframe || dec.dynents.find(d) >= 0) continue;
@@ -490,8 +490,8 @@ void updatedynentcache(physent *d)
 
 bool overlapsdynent(const vec &o, float radius)
 {
-	for(int x = int(max(o.x-radius, 0))>>dynentsize, ex = int(min(o.x+radius, hdr.worldsize-1))>>dynentsize; x <= ex; x++)
-	for(int y = int(max(o.y-radius, 0))>>dynentsize, ey = int(min(o.y+radius, hdr.worldsize-1))>>dynentsize; y <= ey; y++)
+    for(int x = int(max(o.x-radius, 0.0f))>>dynentsize, ex = int(min(o.x+radius, hdr.worldsize-1.0f))>>dynentsize; x <= ex; x++)
+    for(int y = int(max(o.y-radius, 0.0f))>>dynentsize, ey = int(min(o.y+radius, hdr.worldsize-1.0f))>>dynentsize; y <= ey; y++)
 	{
 		const vector<physent *> &dynents = checkdynentcache(x, y);
 		loopv(dynents)
@@ -506,8 +506,8 @@ bool overlapsdynent(const vec &o, float radius)
 bool plcollide(physent *d, const vec &dir)	// collide with player or monster
 {
 	if(d->type==ENT_CAMERA || d->state!=CS_ALIVE) return true;
-	for(int x = int(max(d->o.x-d->radius, 0))>>dynentsize, ex = int(min(d->o.x+d->radius, hdr.worldsize-1))>>dynentsize; x <= ex; x++)
-	for(int y = int(max(d->o.y-d->radius, 0))>>dynentsize, ey = int(min(d->o.y+d->radius, hdr.worldsize-1))>>dynentsize; y <= ey; y++)
+    for(int x = int(max(d->o.x-d->radius, 0.0f))>>dynentsize, ex = int(min(d->o.x+d->radius, hdr.worldsize-1.0f))>>dynentsize; x <= ex; x++)
+    for(int y = int(max(d->o.y-d->radius, 0.0f))>>dynentsize, ey = int(min(d->o.y+d->radius, hdr.worldsize-1.0f))>>dynentsize; y <= ey; y++)
 	{
 		const vector<physent *> &dynents = checkdynentcache(x, y);
 		loopv(dynents)
@@ -547,13 +547,13 @@ void rotatebb(vec &center, vec &radius, int yaw)
             center.y = -center.y;
             break;
         case 90:
-            swap(float, radius.x, radius.y);
-            swap(float, center.x, center.y);
+            swap(radius.x, radius.y);
+            swap(center.x, center.y);
             center.x = -center.x;
             break;
         case 270:
-            swap(float, radius.x, radius.y);
-            swap(float, center.x, center.y);
+            swap(radius.x, radius.y);
+            swap(center.x, center.y);
             center.y = -center.y;
             break;
         default:

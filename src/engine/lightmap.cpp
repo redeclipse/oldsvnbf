@@ -271,7 +271,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 		if(light.attached && light.attached->type==ET_SPOTLIGHT)
 		{
 			vec spot(vec(light.attached->o).sub(light.o).normalize());
-			float maxatten = 1-cosf(max(1, min(90, light.attached->attr1))*RAD);
+            float maxatten = 1-cosf(max(1, min(90, int(light.attached->attr1)))*RAD);
 			float spotatten = 1-(1-ray.dot(spot))/maxatten;
 			if(spotatten <= 0) continue;
 			attenuation *= spotatten;
@@ -311,9 +311,9 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 			lm_ray[y*lm_w+x].add(avgray);
 			break;
 	}
-	sample.x = min(255, max(r, ambient));
-	sample.y = min(255, max(g, ambient));
-	sample.z = min(255, max(b, ambient));
+    sample.x = min(255.0f, max(r, float(ambient)));
+    sample.y = min(255.0f, max(g, float(ambient)));
+    sample.z = min(255.0f, max(b, float(ambient)));
 }
 
 bool lumel_sample(const vec &sample, int aasample, int stride)
@@ -670,8 +670,8 @@ void clearlightcache(int e)
 	{
 		const extentity &light = *et->getents()[e];
 		int radius = light.attr1;
-		for(int x = int(max(light.o.x-radius, 0))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1))>>lightcachesize; x <= ex; x++)
-		for(int y = int(max(light.o.y-radius, 0))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1))>>lightcachesize; y <= ey; y++)
+        for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
+        for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
 		{
 			lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
 			if(lce.x != x || lce.y != y) continue;
@@ -804,8 +804,8 @@ bool setup_surface(plane planes[2], const vec *p, const vec *n, const vec *n2, u
 	int scale = int(min(umax - umin, vmax - vmin));
 	if(n2) scale = min(scale, int(tmax));
 	float lpu = 16.0f / float(scale < (1 << lightlod) ? lightprecision / 2 : lightprecision);
-	uint ul((uint)ceil((umax - umin + 1) * lpu)),
-		 vl((uint)ceil((vmax - vmin + 1) * lpu)),
+    int ul((int)ceil((umax - umin + 1) * lpu)),
+        vl((int)ceil((vmax - vmin + 1) * lpu)),
 		 tl(0);
 	vl = max(LM_MINW, vl);
 	if(n2)
@@ -903,10 +903,9 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size, bool lodcube)
 	}
 	vvec vvecs[8];
 	bool usefaces[6];
-	int vertused[8];
-	calcverts(c, cx, cy, cz, size, vvecs, usefaces, vertused, lodcube);
+    int vertused = calcverts(c, cx, cy, cz, size, vvecs, usefaces, lodcube);
 	vec verts[8];
-	loopi(8) if(vertused[i]) verts[i] = vvecs[i].tovec(cx, cy, cz);
+    loopi(8) if(vertused&(1<<i)) verts[i] = vvecs[i].tovec(cx, cy, cz);
 	int mergeindex = 0;
 	loopi(6) if(usefaces[i])
 	{
@@ -1315,7 +1314,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 		if(e.attached && e.attached->type==ET_SPOTLIGHT)
 		{
 			vec spot(vec(e.attached->o).sub(e.o).normalize());
-			float maxatten = 1-cosf(max(1, min(90, e.attached->attr1))*RAD);
+            float maxatten = 1-cosf(max(1, min(90, int(e.attached->attr1)))*RAD);
 			float spotatten = 1-(1-ray.dot(spot))/maxatten;
 			if(spotatten<=0) continue;
 			intensity *= spotatten;
@@ -1372,7 +1371,7 @@ entity *brightestlight(const vec &target, const vec &dir)
 		if(e.attached && e.attached->type==ET_SPOTLIGHT)
 		{
 			vec spot(vec(e.attached->o).sub(e.o).normalize());
-			float maxatten = 1-cosf(max(1, min(90, e.attached->attr1))*RAD);
+            float maxatten = 1-cosf(max(1, min(90, int(e.attached->attr1)))*RAD);
 			float spotatten = 1-(1-ray.dot(spot))/maxatten;
 			if(spotatten<=0) continue;
 			intensity *= spotatten;

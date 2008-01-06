@@ -42,7 +42,7 @@ struct entities : icliententities
 
 	void renderentities()
 	{
-		if (!shadowmapping && !reflecting && !refracting)
+		if (rendernormally)
 		{
 			#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
 	

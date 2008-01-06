@@ -9,7 +9,7 @@ static int menutab = 1;
 static g3d_gui *cgui = NULL;
 static bool cguifirstpass;
 
-static hashtable<char *, char *> guis;
+static hashtable<const char *, char *> guis;
 static vector<char *> guistack;
 static vector<char *> executelater;
 static bool shouldclearmenu = true, clearlater = false;
@@ -125,9 +125,19 @@ static void updateval(char *var, int val, char *onchange)
 	ident *id = getident(var);
 	string assign;
 	if(!id) return;
-	else if(id->_type==ID_VAR) s_sprintf(assign)("%s %d", var, val);
-	else if(id->_type==ID_ALIAS) s_sprintf(assign)("%s = %d", var, val);
-	else return;
+    switch(id->type)
+    {
+        case ID_VAR:
+        case ID_FVAR:
+        case ID_SVAR:
+            s_sprintf(assign)("%s %d", var, val);
+            break;
+        case ID_ALIAS: 
+            s_sprintf(assign)("%s = %d", var, val);
+            break;
+        default:
+            return;
+    }
 	executelater.add(newstring(assign));
 	if(onchange[0]) executelater.add(newstring(onchange));
 }
@@ -136,9 +146,14 @@ static int getval(char *var)
 {
 	ident *id = getident(var);
 	if(!id) return 0;
-	else if(id->_type==ID_VAR) return *id->_storage;
-	else if(id->_type==ID_ALIAS) return atoi(id->_action);
-	else return 0;
+    switch(id->type)
+    {
+        case ID_VAR: return *id->storage.i;
+        case ID_FVAR: return int(*id->storage.f);
+        case ID_SVAR: return atoi(*id->storage.s);
+        case ID_ALIAS: return atoi(id->action);
+        default: return 0;
+    }
 }
 
 void guislider(char *var, int *min, int *max, char *onchange)
@@ -194,7 +209,7 @@ void guifield(char *var, int *maxlength, char *onchange, char *updateval)
 	{
 		if(updateval[0]) execute(updateval);
 		ident *id = getident(var);
-		if(id && id->_type==ID_ALIAS) initval = id->_action;
+        if(id && id->type==ID_ALIAS) initval = id->action;
 	}
 	char *result = cgui->field(var, GUI_BUTTON_COLOR, *maxlength>0 ? *maxlength : 12, initval);
 	if(result)
@@ -222,7 +237,7 @@ void newgui(char *name, char *contents)
 	else guis[newstring(name)] = newstring(contents);
 }
 
-void showgui(char *name)
+void showgui(const char *name)
 {
 	int pos = guistack.find(name);
 	if(pos<0)
@@ -314,7 +329,7 @@ void g3d_mainmenu()
 {
 	if(!guistack.empty())
 	{
-		g3d_addgui(&mmcb, menupos, true);
+		g3d_addgui(&mmcb);
 	}
 }
 

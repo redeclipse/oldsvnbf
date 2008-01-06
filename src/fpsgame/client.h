@@ -772,14 +772,14 @@ struct clientcom : iclientcom
 				int val = getint(p);
 				ident *id = idents->access(text);
 
-				if (id->_type == ID_VAR && id->_context & IDC_WORLD && id->_max >= id->_min)
+				if (id->type == ID_VAR && id->world && id->max >= id->min)
 				{
-					if (val > id->_max) val = id->_max;
-					else if (val < id->_min) val = id->_min;
+					if (val > id->max) val = id->max;
+					else if (val < id->min) val = id->min;
 					
 					setvar(text, val, true);
 					
-					conoutf("%s updated the value of %s to %d", d->name, text, *id->_storage);
+					conoutf("%s updated the value of %s to %d", d->name, id->name, *id->storage.i);
 				}
 				break;
 			}
@@ -1192,14 +1192,13 @@ struct clientcom : iclientcom
 	{
 		const int MAXWORDS = 25;
 		char *w[MAXWORDS], *p = text;
-		extern char *parseword(char *&p, int context);
-
+		
 		int numargs = MAXWORDS;
 		loopi(MAXWORDS)
 		{
 			w[i] = "";
 			if(i>numargs) continue;
-			char *s = parseword(p, IDC_SERVER);
+			char *s = parseword(p);
 			if(s) w[i] = s;
 			else numargs = i;
 		}
@@ -1220,5 +1219,289 @@ struct clientcom : iclientcom
 		}
 
 		if (buf[0]) toservcmd(buf, msg);
+	}
+
+	IVARP(serversplit, 3, 10, INT_MAX-1);
+
+	int serverstat(serverinfo *a)
+	{
+		if (a->attr.length() > 4 && a->numplayers >= a->attr[4])
+		{
+			return SSTAT_FULL;
+		}
+		else if(a->attr.length() > 5) switch(a->attr[5])
+		{
+			case MM_LOCKED:
+			{
+				return SSTAT_LOCKED;
+			}
+			case MM_PRIVATE:
+			{
+				return SSTAT_PRIVATE;
+			}
+			default:
+			{
+				return SSTAT_OPEN;
+			}
+		}
+		return SSTAT_UNKNOWN;
+	}
+
+	void serversortreset()
+	{
+		s_sprintfd(u)("serversort = \"%d %d %d\"", SINFO_STATUS, SINFO_PLAYERS, SINFO_PING);
+		executeret(u);
+	}
+
+	int servercompare(serverinfo *a, serverinfo *b)
+	{
+		int ac = 0, bc = 0;
+
+		if (a->address.host != ENET_HOST_ANY && a->ping < 999 &&
+			a->attr.length() && a->attr[0] == PROTOCOL_VERSION) ac = 1;
+
+		if (b->address.host != ENET_HOST_ANY && b->ping < 999 &&
+			b->attr.length() && b->attr[0] == PROTOCOL_VERSION) bc = 1;
+
+		if(ac > bc) return -1;
+		if(ac < bc) return 1;
+
+		#define retcp(c) if (c) { return c; }
+		#define retsw(c,d,e) \
+			if (c != d) \
+			{ \
+				if (e) { return c > d ? 1 : -1; } \
+				else { return c < d ? 1 : -1; } \
+			}
+
+		if (!identexists("serversort")) { serversortreset(); }
+		int len = atoi(executeret("listlen $serversort"));
+
+		loopi(len)
+		{
+			s_sprintfd(s)("at $serversort %d", i);
+
+			int style = atoi(executeret(s));
+			serverinfo *aa = a, *ab = b;
+
+			if (style < 0)
+			{
+				style = 0-style;
+				aa = b;
+				ab = a;
+			}
+
+			switch (style)
+			{
+				case SINFO_STATUS:
+				{
+					retsw(serverstat(aa), serverstat(ab), true);
+					break;
+				}
+				case SINFO_HOST:
+				{
+					retcp(strcmp(aa->name, ab->name));
+					break;
+				}
+				case SINFO_DESC:
+				{
+					retcp(strcmp(aa->sdesc, ab->sdesc));
+					break;
+				}
+				case SINFO_PING:
+				{
+					retsw(aa->ping, ab->ping, true);
+					break;
+				}
+				case SINFO_PLAYERS:
+				{
+					retsw(aa->numplayers, ab->numplayers, false);
+					break;
+				}
+				case SINFO_MAXCLIENTS:
+				{
+					if (aa->attr.length() > 4) ac = aa->attr[4];
+					else ac = 0;
+
+					if (ab->attr.length() > 4) bc = ab->attr[4];
+					else bc = 0;
+
+					retsw(ac, bc, false);
+					break;
+				}
+				case SINFO_GAME:
+				{
+					if (aa->attr.length() > 1) ac = aa->attr[1];
+					else ac = 0;
+
+					if (ab->attr.length() > 1) bc = ab->attr[1];
+					else bc = 0;
+
+					retsw(ac, bc, true);
+
+					if (aa->attr.length() > 2) ac = aa->attr[2];
+					else ac = 0;
+
+					if (ab->attr.length() > 2) bc = ab->attr[2];
+					else bc = 0;
+
+					retsw(ac, bc, true);
+					break;
+				}
+				case SINFO_MAP:
+				{
+					retcp(strcmp(aa->map, ab->map));
+					break;
+				}
+				case SINFO_TIME:
+				{
+					if (aa->attr.length() > 3) ac = aa->attr[3];
+					else ac = 0;
+
+					if (ab->attr.length() > 3) bc = ab->attr[3];
+					else bc = 0;
+
+					retsw(ac, bc, false);
+					break;
+				}
+				default:
+					break;
+			}
+		}
+		return strcmp(a->name, b->name);
+	}
+
+	const char *serverinfogui(g3d_gui *cgui, vector<serverinfo> &servers)
+	{
+		const char *name = NULL;
+
+		cgui->pushlist(); // h
+
+		loopi(SINFO_MAX)
+		{
+			cgui->pushlist(); // v
+			cgui->pushlist(); // h
+
+			if (i == SINFO_ICON && cgui->button("", 0xFFFFDD, "info") & G3D_UP)
+			{
+				serversortreset();
+			}
+			else if (cgui->button(serverinfotypes[i], 0xA0A0A0, NULL) & G3D_UP)
+			{
+				string st; st[0] = 0;
+				bool invert = false;
+				if (!identexists("serversort")) { serversortreset(); }
+				int len = atoi(executeret("listlen $serversort"));
+				loopk(len)
+				{
+					s_sprintfd(s)("at $serversort %d", k);
+
+					int n = atoi(executeret(s));
+					if (abs(n) != i)
+					{
+						s_sprintfd(t)("%s%d", st[0] ? " " : "", n);
+						s_sprintf(st)("%s%s", st[0] ? st : "", t);
+					}
+					else if (!k) invert = true;
+				}
+				s_sprintfd(u)("serversort = \"%d%s%s\"",
+					invert ? 0-i : i, st[0] ? " " : "", st[0] ? st : "");
+				executeret(u);
+			}
+
+			cgui->poplist(); // v
+
+			loopvj(servers)
+			{
+				serverinfo &si = servers[j];
+#if 0
+				if (j > 0 && !(j%serversplit()))
+				{
+					cgui->poplist(); // h
+					cgui->pushlist(); // v
+				}
+#endif
+				if (si.address.host != ENET_HOST_ANY && si.ping != 999)
+				{
+					string text;
+					cgui->pushlist(); // h
+					switch (i)
+					{
+						case SINFO_ICON:
+						{
+							cgui->text("", 0xFFFFDD, "server");
+							break;
+						}
+						case SINFO_STATUS:
+						{
+							s_sprintf(text)("%s", serverstatustypes[serverstat(&si)]);
+							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
+							break;
+						}
+						case SINFO_HOST:
+						{
+							if (cgui->button(si.name, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
+							break;
+						}
+						case SINFO_DESC:
+						{
+							s_strncpy(text, si.sdesc, 18);
+							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
+							break;
+						}
+						case SINFO_PING:
+						{
+							s_sprintf(text)("%d", si.ping);
+							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
+							break;
+						}
+						case SINFO_PLAYERS:
+						{
+							s_sprintf(text)("%d", si.numplayers);
+							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
+							break;
+						}
+						case SINFO_MAXCLIENTS:
+						{
+							if (si.attr.length() > 4 && si.attr[4] >= 0)
+								s_sprintf(text)("%d", si.attr[4]);
+							else text[0] = 0;
+							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
+							break;
+						}
+						case SINFO_GAME:
+						{
+							if (si.attr.length() > 2)
+								s_sprintf(text)("%s", sv->gamename(si.attr[1], si.attr[2]));
+							else text[0] = 0;
+							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
+							break;
+						}
+						case SINFO_MAP:
+						{
+							s_strncpy(text, si.map, 18);
+							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
+							break;
+						}
+						case SINFO_TIME:
+						{
+							if (si.attr.length() > 3 && si.attr[3] >= 0)
+								s_sprintf(text)("%d %s", si.attr[3], si.attr[3] == 1 ? "min" : "mins");
+							else text[0] = 0;
+							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
+							break;
+						}
+						default:
+							break;
+					}
+					cgui->text(" ", 0xFFFFDD, NULL);
+					cgui->poplist(); // v
+				}
+			}
+			cgui->poplist(); // h
+		}
+
+		cgui->poplist(); // v
+		return name;
 	}
 } cc;

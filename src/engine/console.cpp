@@ -335,12 +335,11 @@ int histpos = 0;
 
 void history(int *n)
 {
-	static bool rec = false;
-	if(!rec && vhistory.inrange(*n))
+    if(vhistory.inrange(*n))
 	{
-		rec = true;
-		execute(vhistory[vhistory.length()-*n-1]);
-		rec = false;
+        char *buf = vhistory[vhistory.length()-*n-1];
+        if(buf[0]=='/') execute(buf+1);
+        else cc->toserver(buf);
 	}
 }
 
@@ -475,7 +474,7 @@ void keypress(int code, bool isdown, int cooked)
 						vhistory.add(newstring(commandbuf));  // cap this?
 					}
 					histpos = vhistory.length();
-					if(commandbuf[0]=='/') execute(commandbuf);
+                    if(commandbuf[0]=='/') execute(commandbuf+1);
 					else cc->toserver(commandbuf);
 				}
 				saycommand(NULL);
@@ -669,9 +668,9 @@ void complete(char *s)
 	else // complete using command names
 	{
 		enumerate(*idents, ident, id,
-			if(strncmp(id._name, s+1, completesize)==0 &&
-				strcmp(id._name, lastcomplete) > 0 && (!nextcomplete || strcmp(id._name, nextcomplete) < 0))
-				nextcomplete = id._name;
+            if(strncmp(id.name, s+1, completesize)==0 &&
+               strcmp(id.name, lastcomplete) > 0 && (!nextcomplete || strcmp(id.name, nextcomplete) < 0))
+                nextcomplete = id.name;
 		);
 	}
 	if(nextcomplete)
@@ -689,3 +688,4 @@ void writecompletions(FILE *f)
         if(v) fprintf(f, "%scomplete \"%s\" \"%s\" \"%s\"\n", v->type==FILES_LIST ? "list" : "", k, v->dir, v->type==FILES_LIST ? "" : (v->ext ? v->ext : "*"));
 	);
 }
+

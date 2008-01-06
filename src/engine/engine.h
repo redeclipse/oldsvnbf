@@ -181,8 +181,10 @@ extern void forcemip(cube &c);
 extern bool subdividecube(cube &c, bool fullcheck=true, bool brighten=true);
 extern void converttovectorworld();
 extern int faceverts(cube &c, int orient, int vert);
+extern int faceconvexity(cube &c, int orient);
 extern void calcvert(cube &c, int x, int y, int z, int size, vvec &vert, int i, bool solid = false);
-extern void calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *usefaces, int *vertused, bool lodcube);
+extern void calcvert(cube &c, int x, int y, int z, int size, vec &vert, int i, bool solid = false);
+extern int calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *usefaces, bool lodcube);
 extern uint faceedges(cube &c, int orient);
 extern bool collapsedface(uint cfe);
 extern bool touchingface(cube &c, int orient);
@@ -267,6 +269,7 @@ extern int optimizematsurfs(materialsurface *matbuf, int matsurfs);
 extern void setupmaterials();
 extern void rendermaterials(float zclip = 0, bool refract = false);
 extern void drawmaterial(int orient, int x, int y, int z, int csize, int rsize, float offset);
+extern int visiblematerial(cube &c, int orient, int x, int y, int z, int size);
 
 // water
 extern float reflecting, refracting;
@@ -307,19 +310,23 @@ extern void abortconnect();
 extern void clientkeepalive();
 
 // command
-extern bool overrideidents, persistidents;
+extern bool overrideidents, persistidents, worldidents;
 
-extern void explodelist(char *s, vector<char *> &elems);
+extern char *parseword(char *&p);
+extern void explodelist(const char *s, vector<char *> &elems);
 
 extern void clearoverrides();
 extern void writecfg();
 
 extern void checksleep(int millis);
-extern void clearsleep(bool clearoverrides = true);
+extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 
 // console
 extern void writebinds(FILE *f);
 extern void writecompletions(FILE *f);
+extern const char *addreleaseaction(const char *s);
+
+extern bool saycommandon;
 
 // main
 extern bool initwarning();
@@ -382,6 +389,11 @@ extern void interpolateorientation(dynent *d, float &interpyaw, float &interppit
 extern void particleinit();
 extern void clearparticles();
 extern void entity_particles();
+
+// decal
+extern void initdecals();
+extern void cleardecals();
+extern void renderdecals(int time);
 
 // rendersky
 extern void drawskybox(int farplane, bool limited, float zreflect = 0);
@@ -477,6 +489,8 @@ extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 12
 
 extern bool getlos(vec &o, vec &q, float yaw, float pitch, float mdist = 0.f, float fx = 0.f, float fy = 0.f);
 extern bool getsight(physent *d, vec &q, vec &v, float mdist, float fx = 0.f, float fy = 0.f);
+
+#define rendernormally (!shadowmapping && !envmapping && !reflecting && !refracting)
 
 // renderparticles
 #define COL_WHITE			0xFFFFFF

@@ -62,7 +62,7 @@ COMMAND(mdlambient, "i");
 void mdlalphatest(float *cutoff)
 {
 	checkmdl;
-	loadingmodel->setalphatest(max(0, min(1, *cutoff)));
+    loadingmodel->setalphatest(max(0.0f, min(1.0f, *cutoff)));
 }
 
 COMMAND(mdlalphatest, "f");
@@ -379,7 +379,7 @@ void rendershadow(vec &dir, model *m, int anim, int varseed, const vec &o, vec c
     if(refracting)
     {
         if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, max(0.1f, refracting-center.z));
-        else if(refractfog) intensity *= 1 - max(0, min(1, (refracting - center.z)/waterfog));
+        else if(refractfog) intensity *= 1.0f - max(0.0f, min(1.0f, (refracting - center.z)/waterfog));
     }
     glColor4f(0, 0, 0, intensity);
 

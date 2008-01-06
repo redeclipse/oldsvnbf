@@ -554,6 +554,7 @@ int main(int argc, char **argv)
     conoutf("init: gl effects");
     loadshaders();
 	particleinit();
+    initdecals();
 
 	conoutf("init: client");
 	camera1 = cl->iterdynents(0);

@@ -37,6 +37,8 @@ struct iclientcom
 	virtual int otherclients() { return 0; }
 	virtual void toservcmd(char *text, bool msg) { return; }
     virtual int numchannels() { return 1; }
+	virtual int servercompare(serverinfo *a, serverinfo *b) { return strcmp(a->name, b->name); }
+    virtual const char *serverinfogui(g3d_gui *cgui, vector<serverinfo> &servers) { return NULL; }
 };
 
 struct igameclient
@@ -149,8 +151,6 @@ struct igameserver
     virtual int welcomepacket(ucharbuf &p, int n) = 0;
     virtual void serverinforeply(ucharbuf &p) = 0;
     virtual void serverupdate(int lastmillis, int totalmillis) = 0;
-	virtual int servercompare(serverinfo *a, serverinfo *b) { return strcmp(a->name, b->name); }
-    virtual const char *serverinfogui(g3d_gui *cgui, vector<serverinfo> &servers) { return NULL; }
     virtual int serverinfoport() = 0;
     virtual int serverport() = 0;
     virtual const char *getdefaultmaster() = 0;

@@ -241,7 +241,7 @@ static GLuint createexpmodtex(int size, float minval)
 	loop(y, size) loop(x, size)
 	{
 		float dx = 2*float(x)/(size-1) - 1, dy = 2*float(y)/(size-1) - 1;
-		float z = max(0, 1 - dx*dx - dy*dy);
+        float z = max(0.0f, 1.0f - dx*dx - dy*dy);
 		if(minval) z = sqrtf(z);
 		else loopk(2) z *= z;
 		*dst++ = uchar(max(z, minval)*255);
@@ -689,7 +689,7 @@ VARP(outlinemeters, 0, 0, 1);
 #define COLLIDERADIUS 8.0f
 #define COLLIDEERROR 1.0f
 
-VARP(decalfade, 1, 10000, 60000);
+//VARP(decalfade, 1, 10000, 60000);
 
 #define MAXLIGHTNINGSTEPS 64
 #define LIGHTNINGSTEP 8
@@ -805,7 +805,7 @@ void render_particles(int time)
                 if(type!=PT_FLARE)
 				{
                     blend = min(blend<<2, 255);
-                    if(type!=PT_LIGHTNING && renderpath==R_FIXEDFUNCTION && refracting && refractfog) blend = (uchar)(blend * max(0, min(1, (refracting - o.z)/waterfog)));
+                    if(type!=PT_LIGHTNING && renderpath==R_FIXEDFUNCTION && refracting && refractfog) blend = (uchar)(blend * max(0.0f, min(1.0f, (refracting - o.z)/waterfog)));
                 }
                 if(pt.type&PT_MOD) //multiply alpha into color
 					glColor3ub((color[0]*blend)>>8, (color[1]*blend)>>8, (color[2]*blend)>>8);
@@ -912,7 +912,7 @@ void render_particles(int time)
                 if(refracting)
                 {
                     if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, refracting - o.z, true);
-                    else if(refractfog) blend = (uchar)(blend * max(0, min(1, (refracting - o.z)/waterfog)));
+                    else if(refractfog) blend = (uchar)(blend * max(0.0f, min(1.0f, (refracting - o.z)/waterfog)));
                 }
 				if(type==PT_FIREBALL)
 				{
@@ -1036,7 +1036,9 @@ void render_particles(int time)
                 float floorz = rayfloor(vec(o.x, o.y, p->val), surface, RAY_CLIPMAT, COLLIDERADIUS),
                       collidez = floorz<0 ? o.z-COLLIDERADIUS : p->val - rayfloor(vec(o.x, o.y, p->val), surface, RAY_CLIPMAT, COLLIDERADIUS);
 				if(o.z >= collidez+COLLIDEERROR) p->val = collidez+COLLIDEERROR;
-				else
+                else adddecal(pt.collide, vec(o.x, o.y, collidez), vec(p->o).sub(o).normalize(), 2*sz, p->color, pt.type&PT_RND4 ? detrnd((size_t)p, 4) : 0);
+                remove = true;
+#if 0
 				{
 					*pp = p->next;
 					p->o = vec(o.x, o.y, collidez+0.25f);
@@ -1047,6 +1049,7 @@ void render_particles(int time)
 					parlist[pt.collide] = p;
 					continue;
 				}
+#endif
 			}
 
 			if(remove)
@@ -1386,7 +1389,7 @@ static void makeparticles(entity &e)
         }
 		case 5: //meter, metervs - <percent> <rgb>
 		case 6:
-			newparticle(e.o, vec(0, 0, 1), 1, (e.attr1==5)?13:14, colorfromattr(e.attr3))->val = min(1.0, float(e.attr2)/100);
+            newparticle(e.o, vec(0, 0, 1), 1, (e.attr1==5)?13:14, colorfromattr(e.attr3))->val = min(1.0f, float(e.attr2)/100);
 			break;
 		case 32: //lens flares - plain/sparkle/sun/sparklesun <red> <green> <blue>
 		case 33:
