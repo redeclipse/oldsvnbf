@@ -849,7 +849,7 @@ bool occludesface(cube &c, int orient, const ivec &o, int size, const ivec &vo, 
 	return true;
 }
 
-bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat, uchar nmat, bool lodcube)
+bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat, uchar nmat)
 {
 	uint cfe = faceedges(c, orient);
 	if(mat != MAT_AIR)
@@ -865,7 +865,7 @@ bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat, 
 	cube &o = neighbourcube(x, y, z, size, -size, orient);
 	if(&o==&c) return false;
 
-	if(lusize > size || (lusize == size && (!o.children || lodcube)))
+	if(lusize > size || (lusize == size && !o.children))
 	{
 		if(nmat != MAT_AIR && o.ext && o.ext->material == nmat) return true;
 		if(isentirelysolid(o)) return false;
@@ -903,10 +903,10 @@ void calcvert(cube &c, int x, int y, int z, int size, vec &v, int i, bool solid)
     v = vv.tovec().mul(size/8.0f).add(vec(x, y, z));
 }
 
-int calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *usefaces, bool lodcube)
+int calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *usefaces)
 {
     int vertused = 0;
-    loopi(6) if(usefaces[i] = visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR, lodcube)) loopk(4) vertused |= 1<<faceverts(c,i,k);
+    loopi(6) if(usefaces[i] = visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR)) loopk(4) vertused |= 1<<faceverts(c,i,k);
     loopi(8) if(vertused&(1<<i)) calcvert(c, x, y, z, size, verts[i], i);
     return vertused;
 }
@@ -929,7 +929,7 @@ void genclipplanes(cube &c, int x, int y, int z, int size, clipplanes &p)
 	vvec sv[8];
 	vec v[8];
 	vec mx(x, y, z), mn(x+size, y+size, z+size);
-    int vertused = calcverts(c, x, y, z, size, sv, usefaces, false);
+    int vertused = calcverts(c, x, y, z, size, sv, usefaces);
 
 	loopi(8)
 	{

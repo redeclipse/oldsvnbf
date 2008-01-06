@@ -1196,7 +1196,7 @@ struct clientcom : iclientcom
 		int numargs = MAXWORDS;
 		loopi(MAXWORDS)
 		{
-			w[i] = "";
+			w[i] = (char *)"";
 			if(i>numargs) continue;
 			char *s = parseword(p);
 			if(s) w[i] = s;

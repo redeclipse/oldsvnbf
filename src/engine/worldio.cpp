@@ -546,7 +546,6 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		setvar("lighterror", ohdr.maple ? ohdr.maple : 8);
 		setvar("bumperror", ohdr.mapbe ? ohdr.mapbe : 3);
 		setvar("lightlod", ohdr.mapllod);
-		setvar("lodsize", ohdr.mapwlod);
 		setvar("ambient", ohdr.ambient);
 		setvar("fullbright", 0, false);
 		setvar("fullbrightlevel", 128, false);
@@ -759,8 +758,8 @@ void writeobj(char *name)
 			if(vv.z&((1<<VVEC_FRAC)-1)) fprintf(f, "%.3f\n", v.z); else fprintf(f, "%d\n", int(v.z));
 			verts += vtxsize;
 		}
-		ushort *ebuf = va.l0.ebuf;
-        loopi(va.l0.tris)
+		ushort *ebuf = va.ebuf;
+        loopi(va.tris)
 		{
 			fprintf(f, "f");
 			for(int k = 0; k<3; k++) fprintf(f, " %d", ebuf[k]-va.verts);

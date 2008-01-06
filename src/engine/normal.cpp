@@ -142,7 +142,7 @@ void addnormals(cube &c, const ivec &o, int size)
 
 	vvec vvecs[8];
 	bool usefaces[6];
-    int vertused = calcverts(c, o.x, o.y, o.z, size, vvecs, usefaces, false/*lodcube*/);
+    int vertused = calcverts(c, o.x, o.y, o.z, size, vvecs, usefaces);
 	vec verts[8];
     loopi(8) if(vertused&(1<<i)) verts[i] = vvecs[i].tovec(o);
 	loopi(6) if(usefaces[i])

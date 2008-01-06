@@ -765,11 +765,10 @@ void queryreflections()
 
 	for(vtxarray *va = visibleva; va; va = va->next)
 	{
-		lodlevel &lod = va->l0;
-		if(!lod.matsurfs && va->occluded >= OCCLUDE_BB) continue;
-		loopi(lod.matsurfs)
+		if(!va->matsurfs && va->occluded >= OCCLUDE_BB) continue;
+		loopi(va->matsurfs)
 		{
-			materialsurface &m = lod.matbuf[i];
+			materialsurface &m = va->matbuf[i];
 			if(m.material==MAT_WATER && m.orient==O_TOP) addreflection(m);
 		}
 	}
