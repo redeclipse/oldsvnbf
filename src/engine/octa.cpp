@@ -542,9 +542,9 @@ void genedgespanvert(ivec &p, cube &c, vec &v)
 	//ASSERT(v.x>=0 && v.x<=8);
 	//ASSERT(v.y>=0 && v.y<=8);
 	//ASSERT(v.z>=0 && v.z<=8);
-	v.x = max(0, min(8, v.x));
-	v.y = max(0, min(8, v.y));
-	v.z = max(0, min(8, v.z));
+    v.x = max(0.0f, min(8.0f, v.x));
+    v.y = max(0.0f, min(8.0f, v.y));
+    v.z = max(0.0f, min(8.0f, v.z));
 }
 
 void edgespan2vectorcube(cube &c)
@@ -895,11 +895,20 @@ void calcvert(cube &c, int x, int y, int z, int size, vvec &v, int i, bool solid
 	v.add(vvec(x, y, z));
 }
 
-void calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *usefaces, int *vertused, bool lodcube)
+void calcvert(cube &c, int x, int y, int z, int size, vec &v, int i, bool solid)
 {
-	loopi(8) vertused[i] = 0;
-	loopi(6) if(usefaces[i] = visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR, lodcube)) loopk(4) vertused[faceverts(c,i,k)]++;
-	loopi(8) if(vertused[i]) calcvert(c, x, y, z, size, verts[i], i);
+    ivec vv;
+    if(solid || isentirelysolid(c)) vv = cubecoords[i];
+    else genvectorvert(cubecoords[i], c, vv);
+    v = vv.tovec().mul(size/8.0f).add(vec(x, y, z));
+}
+
+int calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *usefaces, bool lodcube)
+{
+    int vertused = 0;
+    loopi(6) if(usefaces[i] = visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR, lodcube)) loopk(4) vertused |= 1<<faceverts(c,i,k);
+    loopi(8) if(vertused&(1<<i)) calcvert(c, x, y, z, size, verts[i], i);
+    return vertused;
 }
 
 int genclipplane(cube &c, int orient, vec *v, plane *clip)
@@ -916,16 +925,15 @@ int genclipplane(cube &c, int orient, vec *v, plane *clip)
 
 void genclipplanes(cube &c, int x, int y, int z, int size, clipplanes &p)
 {
-	int vertused[8];
 	bool usefaces[6];
 	vvec sv[8];
 	vec v[8];
 	vec mx(x, y, z), mn(x+size, y+size, z+size);
-	calcverts(c, x, y, z, size, sv, usefaces, vertused, false);
+    int vertused = calcverts(c, x, y, z, size, sv, usefaces, false);
 
 	loopi(8)
 	{
-		if(!vertused[i]) // need all verts for proper box
+        if(!(vertused&(1<<i))) // need all verts for proper box
 			calcvert(c, x, y, z, size, sv[i], i);
 
 		v[i] = sv[i].tovec(x, y, z);
@@ -1299,7 +1307,7 @@ void genmergedverts(cube &cu, int orient, const ivec &co, int size, const mergei
 int calcmergedsize(int orient, const ivec &co, int size, const mergeinfo &m, const vvec *vv)
 {
 	int dim = dimension(orient), c = C[dim], r = R[dim];
-	int d1 = vv[3][dim], d2 = d1;
+    short d1 = vv[3][dim], d2 = d1;
 	loopi(3)
 	{
 		d1 = min(d1, vv[i][dim]);

@@ -329,7 +329,7 @@ void md3glow(char *meshname, int *percent)
 
 void md3alphatest(char *meshname, float *cutoff)
 {
-	loopmd3skins(meshname, s, s.alphatest = max(0, min(1, *cutoff)));
+    loopmd3skins(meshname, s, s.alphatest = max(0.0f, min(1.0f, *cutoff)));
 }
 
 void md3alphablend(char *meshname, int *blend)

@@ -66,11 +66,11 @@ void gengrasssamples(vtxarray *va, const vec *v, float *tc, LightMap *lm)
 	else u = v[0].y < v[2].y ? 0 : 2;
 	l = (u+2)%3;
 	r = (u+1)%3;
-	if(v[l].x > v[r].x) swap(int, l, r);
+    if(v[l].x > v[r].x) swap(l, r);
 	if(v[u].y == v[l].y)
 	{
-		if(v[l].x <= v[u].x) swap(int, u, l);
-		swap(int, l, r);
+        if(v[l].x <= v[u].x) swap(u, l);
+        swap(l, r);
 	}
 	vec o1 = v[u], dl = v[l];
 	dl.sub(o1);
@@ -239,8 +239,8 @@ float loddist(const vec &o)
 {
 	float dx = o.x - camera1->o.x, dy = o.y - camera1->o.y, dz = camera1->o.z - o.z;
 	float dist = sqrt(dx*dx + dy*dy);
-	dist -= grasslodz/100.0f * max(dz, 0);
-	return max(dist, 0);
+    dist -= grasslodz/100.0f * max(dz, 0.0f);
+    return max(dist, 0.0f);
 }
 
 VARW(grassrand, 0, 30, 90);
@@ -363,7 +363,7 @@ void rendergrasssamples(vtxarray *va, const vec &dir)
 				float ld = loddist(o);
 				int numsamples = int(grasssamples/100.0f*max(grassgrid - ld/grasslod, 100.0f/grasssamples));
 				float height = 1 - (dist + grasstaper - grassdist) / (grasstaper ? grasstaper : 1);
-				height = min(height, 1);
+                height = min(height, 1.0f);
 				loopj(2*numsamples)
 				{
 					rendergrasssample(g, o, dist, j, height, numsamples);

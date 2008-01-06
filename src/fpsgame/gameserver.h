@@ -186,7 +186,7 @@ struct GAMESERVER : igameserver
 		gameevent &addevent()
 		{
 			static gameevent dummy;
-			if(events.length()>100) return dummy;
+            if(state.state==CS_SPECTATOR || events.length()>100) return dummy;
 			return events.add();
 		}
 
@@ -222,12 +222,6 @@ struct GAMESERVER : igameserver
 		int time;
 		uint ip;
 	};
-
-    #define MM_MODE 0xF
-    #define MM_AUTOAPPROVE 0x1000
-    #define MM_DEFAULT (MM_MODE | MM_AUTOAPPROVE)
-
-	enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
 
 	bool notgotitems, notgotbases;		// true when map has changed and waiting for clients to send item
 	int gamemode, mutators;
@@ -330,8 +324,10 @@ struct GAMESERVER : igameserver
 	{
 		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
 		smuts.setsize(0);
+#ifndef STANDALONE
 		CCOMMAND(getdefaultmap, "", (GAMESERVER *self), result(self->defaultmap()));
 		CCOMMAND(getdefaultmode, "", (GAMESERVER *self), intret(self->defaultmode()));
+#endif
 	}
 
 	void *newinfo() { return new clientinfo; }
@@ -365,7 +361,7 @@ struct GAMESERVER : igameserver
 	void vote(char *map, int reqmode, int reqmuts, int sender)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
-        if(!ci || ci->state.state==CS_SPECTATOR && !ci->privilege) return;
+        if(!ci || (ci->state.state==CS_SPECTATOR && !ci->privilege)) return;
 		s_strcpy(ci->mapvote, map);
 		ci->modevote = reqmode;
 		ci->mutsvote = reqmuts;
@@ -857,13 +853,16 @@ struct GAMESERVER : igameserver
 	int checktype(int type, clientinfo *ci)
 	{
 		if(ci && ci->local) return type;
-		// spectators can only connect and talk
+#if 0
+        // other message types can get sent by accident if a master forces spectator on someone, so disabling this case for now and checking for spectator state in message handlers
+        // spectators can only connect and talk
 		static int spectypes[] = { SV_INITC2S, SV_POS, SV_TEXT, SV_PING, SV_CLIENTPING, SV_GETMAP, SV_SETMASTER };
 		if(ci && ci->state.state==CS_SPECTATOR && !ci->privilege)
 		{
 			loopi(sizeof(spectypes)/sizeof(int)) if(type == spectypes[i]) return type;
 			return -1;
 		}
+#endif
 		// only allow edit messages in coop-edit mode
 		if(type>=SV_EDITENT && type<=SV_GETMAP && !m_edit(gamemode)) return -1;
 		// server only messages
@@ -1077,6 +1076,7 @@ struct GAMESERVER : igameserver
 			case SV_GUNSELECT:
 			{
 				int gunselect = getint(p);
+                if(ci->state.state!=CS_ALIVE) break;
 				ci->state.gunselect = gunselect;
 				QUEUE_MSG;
 				break;
@@ -1243,17 +1243,15 @@ struct GAMESERVER : igameserver
 
 			case SV_ITEMLIST:
 			{
+                if(ci->state.state==CS_SPECTATOR || !notgotitems) { while(getint(p)!=-1) getint(p); break; }
 				int n;
 				while((n = getint(p))!=-1)
 				{
 					server_entity se = { getint(p), getint(p), getint(p), getint(p), getint(p), getint(p), false, 0 },
-					sn = { 0, 0, 0, 0, 0, 0, false, 0 };
-					if(notgotitems)
-					{
-						while(sents.length()<n) sents.add(sn);
-						sents.add(se);
-						sents[n].spawned = true;
-					}
+						sn = { 0, 0, 0, 0, 0, 0, false, 0 };
+					while(sents.length()<n) sents.add(sn);
+					sents.add(se);
+					sents[n].spawned = true;
 				}
 				notgotitems = false;
 				break;
@@ -1274,12 +1272,17 @@ struct GAMESERVER : igameserver
 				break;
 
 			case SV_BASES:
-				if(smode==&capturemode) capturemode.parsebases(p);
+                if(ci->state.state!=CS_SPECTATOR && smode==&capturemode) capturemode.parsebases(p);
 				break;
 
 			case SV_PING:
 				sendf(sender, 1, "i2", SV_PONG, getint(p));
 				break;
+
+            case SV_CLIENTPING:
+                getint(p);
+                QUEUE_MSG;
+                break;
 
 			case SV_MASTERMODE:
 			{
@@ -1327,7 +1330,7 @@ struct GAMESERVER : igameserver
 			case SV_SPECTATOR:
 			{
 				int spectator = getint(p), val = getint(p);
-				if(!ci->privilege && spectator!=sender) break;
+                if(!ci->privilege && (ci->state.state==CS_SPECTATOR || spectator!=sender)) break;
 				clientinfo *spinfo = (clientinfo *)getinfo(spectator);
 				if(!spinfo) break;
 
@@ -1405,12 +1408,17 @@ struct GAMESERVER : igameserver
 			}
 
 			case SV_LISTDEMOS:
+                if(ci->state.state==CS_SPECTATOR) break;
 				listdemos(sender);
 				break;
 
 			case SV_GETDEMO:
-				senddemo(sender, getint(p));
-				break;
+            {
+                int n = getint(p);
+                if(ci->state.state==CS_SPECTATOR) break;
+                senddemo(sender, n);
+                break;
+            }
 
 			case SV_EDITVAR:
 			{
@@ -1431,6 +1439,7 @@ struct GAMESERVER : igameserver
 			case SV_NEWMAP:
 			{
 				int size = getint(p);
+                if(ci->state.state==CS_SPECTATOR) break;
 				if(size>=0)
 				{
 					smapname[0] = '\0';
@@ -1455,9 +1464,9 @@ struct GAMESERVER : igameserver
             case SV_APPROVEMASTER:
             {
                 int mn = getint(p);
-                if(mastermask&MM_AUTOAPPROVE) break;
+                if(mastermask&MM_AUTOAPPROVE || ci->state.state==CS_SPECTATOR) break;
                 clientinfo *candidate = (clientinfo *)getinfo(mn);
-                if(!candidate || !candidate->wantsmaster || mn==sender) break;// || getclientip(mn)==getclientip(sender)) break;
+                if(!candidate || !candidate->wantsmaster || mn==sender || getclientip(mn)==getclientip(sender)) break;
                 setmaster(candidate, true, "", true);
                 break;
             }
@@ -1467,7 +1476,7 @@ struct GAMESERVER : igameserver
 				int size = msgsizelookup(type);
 				if(size==-1) { disconnect_client(sender, DISC_TAGT); return; }
 				if(size>0) loopi(size-1) getint(p);
-				if(ci) QUEUE_MSG;
+                if(ci && ci->state.state!=CS_SPECTATOR) QUEUE_MSG;
 				break;
 			}
         }
@@ -1979,288 +1988,6 @@ struct GAMESERVER : igameserver
 		putint(p, mastermode);			// 6
 		sendstring(smapname, p);
 		sendstring(serverdesc, p);
-	}
-
-	IVARP(serversplit, 3, 10, INT_MAX-1);
-
-	int serverstat(serverinfo *a)
-	{
-		if (a->attr.length() > 4 && a->numplayers >= a->attr[4])
-		{
-			return SSTAT_FULL;
-		}
-		else if(a->attr.length() > 5) switch(a->attr[5])
-		{
-			case MM_LOCKED:
-			{
-				return SSTAT_LOCKED;
-			}
-			case MM_PRIVATE:
-			{
-				return SSTAT_PRIVATE;
-			}
-			default:
-			{
-				return SSTAT_OPEN;
-			}
-		}
-		return SSTAT_UNKNOWN;
-	}
-
-	void serversortreset()
-	{
-		s_sprintfd(u)("serversort = \"%d %d %d\"", SINFO_STATUS, SINFO_PLAYERS, SINFO_PING);
-		executeret(u);
-	}
-	int servercompare(serverinfo *a, serverinfo *b)
-	{
-		int ac = 0, bc = 0;
-
-		if (a->address.host != ENET_HOST_ANY && a->ping < 999 &&
-			a->attr.length() && a->attr[0] == PROTOCOL_VERSION) ac = 1;
-
-		if (b->address.host != ENET_HOST_ANY && b->ping < 999 &&
-			b->attr.length() && b->attr[0] == PROTOCOL_VERSION) bc = 1;
-
-		if(ac > bc) return -1;
-		if(ac < bc) return 1;
-
-		#define retcp(c) if (c) { return c; }
-		#define retsw(c,d,e) \
-			if (c != d) \
-			{ \
-				if (e) { return c > d ? 1 : -1; } \
-				else { return c < d ? 1 : -1; } \
-			}
-
-		if (!identexists("serversort")) { serversortreset(); }
-		int len = atoi(executeret("listlen $serversort"));
-
-		loopi(len)
-		{
-			s_sprintfd(s)("at $serversort %d", i);
-
-			int style = atoi(executeret(s));
-			serverinfo *aa = a, *ab = b;
-
-			if (style < 0)
-			{
-				style = 0-style;
-				aa = b;
-				ab = a;
-			}
-
-			switch (style)
-			{
-				case SINFO_STATUS:
-				{
-					retsw(serverstat(aa), serverstat(ab), true);
-					break;
-				}
-				case SINFO_HOST:
-				{
-					retcp(strcmp(aa->name, ab->name));
-					break;
-				}
-				case SINFO_DESC:
-				{
-					retcp(strcmp(aa->sdesc, ab->sdesc));
-					break;
-				}
-				case SINFO_PING:
-				{
-					retsw(aa->ping, ab->ping, true);
-					break;
-				}
-				case SINFO_PLAYERS:
-				{
-					retsw(aa->numplayers, ab->numplayers, false);
-					break;
-				}
-				case SINFO_MAXCLIENTS:
-				{
-					if (aa->attr.length() > 4) ac = aa->attr[4];
-					else ac = 0;
-
-					if (ab->attr.length() > 4) bc = ab->attr[4];
-					else bc = 0;
-
-					retsw(ac, bc, false);
-					break;
-				}
-				case SINFO_GAME:
-				{
-					if (aa->attr.length() > 1) ac = aa->attr[1];
-					else ac = 0;
-
-					if (ab->attr.length() > 1) bc = ab->attr[1];
-					else bc = 0;
-
-					retsw(ac, bc, true);
-
-					if (aa->attr.length() > 2) ac = aa->attr[2];
-					else ac = 0;
-
-					if (ab->attr.length() > 2) bc = ab->attr[2];
-					else bc = 0;
-
-					retsw(ac, bc, true);
-					break;
-				}
-				case SINFO_MAP:
-				{
-					retcp(strcmp(aa->map, ab->map));
-					break;
-				}
-				case SINFO_TIME:
-				{
-					if (aa->attr.length() > 3) ac = aa->attr[3];
-					else ac = 0;
-
-					if (ab->attr.length() > 3) bc = ab->attr[3];
-					else bc = 0;
-
-					retsw(ac, bc, false);
-					break;
-				}
-				default:
-					break;
-			}
-		}
-		return strcmp(a->name, b->name);
-	}
-	const char *serverinfogui(g3d_gui *cgui, vector<serverinfo> &servers)
-	{
-		const char *name = NULL;
-
-		cgui->pushlist(); // h
-
-		loopi(SINFO_MAX)
-		{
-			cgui->pushlist(); // v
-			cgui->pushlist(); // h
-
-			if (i == SINFO_ICON && cgui->button("", 0xFFFFDD, "info") & G3D_UP)
-			{
-				serversortreset();
-			}
-			else if (cgui->button(serverinfotypes[i], 0xA0A0A0, NULL) & G3D_UP)
-			{
-				string st; st[0] = 0;
-				bool invert = false;
-				if (!identexists("serversort")) { serversortreset(); }
-				int len = atoi(executeret("listlen $serversort"));
-				loopk(len)
-				{
-					s_sprintfd(s)("at $serversort %d", k);
-
-					int n = atoi(executeret(s));
-					if (abs(n) != i)
-					{
-						s_sprintfd(t)("%s%d", st[0] ? " " : "", n);
-						s_sprintf(st)("%s%s", st[0] ? st : "", t);
-					}
-					else if (!k) invert = true;
-				}
-				s_sprintfd(u)("serversort = \"%d%s%s\"",
-					invert ? 0-i : i, st[0] ? " " : "", st[0] ? st : "");
-				executeret(u);
-			}
-
-			cgui->poplist(); // v
-
-			loopvj(servers)
-			{
-				serverinfo &si = servers[j];
-#if 0
-				if (j > 0 && !(j%serversplit()))
-				{
-					cgui->poplist(); // h
-					cgui->pushlist(); // v
-				}
-#endif
-				if (si.address.host != ENET_HOST_ANY && si.ping != 999)
-				{
-					string text;
-					cgui->pushlist(); // h
-					switch (i)
-					{
-						case SINFO_ICON:
-						{
-							cgui->text("", 0xFFFFDD, "server");
-							break;
-						}
-						case SINFO_STATUS:
-						{
-							s_sprintf(text)("%s", serverstatustypes[serverstat(&si)]);
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_HOST:
-						{
-							if (cgui->button(si.name, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_DESC:
-						{
-							s_strncpy(text, si.sdesc, 18);
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_PING:
-						{
-							s_sprintf(text)("%d", si.ping);
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_PLAYERS:
-						{
-							s_sprintf(text)("%d", si.numplayers);
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_MAXCLIENTS:
-						{
-							if (si.attr.length() > 4 && si.attr[4] >= 0)
-								s_sprintf(text)("%d", si.attr[4]);
-							else text[0] = 0;
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_GAME:
-						{
-							if (si.attr.length() > 2)
-								s_sprintf(text)("%s", gamename(si.attr[1], si.attr[2]));
-							else text[0] = 0;
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_MAP:
-						{
-							s_strncpy(text, si.map, 18);
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_TIME:
-						{
-							if (si.attr.length() > 3 && si.attr[3] >= 0)
-								s_sprintf(text)("%d %s", si.attr[3], si.attr[3] == 1 ? "min" : "mins");
-							else text[0] = 0;
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						default:
-							break;
-					}
-					cgui->text(" ", 0xFFFFDD, NULL);
-					cgui->poplist(); // v
-				}
-			}
-			cgui->poplist(); // h
-		}
-
-		cgui->poplist(); // v
-		return name;
 	}
 
 	void receivefile(int sender, uchar *data, int len)

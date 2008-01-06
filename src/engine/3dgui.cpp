@@ -8,7 +8,7 @@
 
 static bool layoutpass, actionon = false;
 static int mousebuttons = 0;
-static g3d_gui *windowhit = NULL;
+static struct gui *windowhit = NULL;
 
 //text field state - only one ever active/focused
 static string fieldname, fieldtext;  //copy of while focused
@@ -85,26 +85,6 @@ bool menukey(int code, bool isdown, int cooked)
 
 static bool hascursor;
 static float cursorx = 0.5f, cursory = 0.5f;
-
-void g3d_cursorpos(float &x, float &y)
-{
-	x = cursorx;
-	y = cursory;
-}
-
-void g3d_resetcursor()
-{
-	cursorx = cursory = 0.5f;
-}
-
-bool g3d_movecursor(int dx, int dy)
-{
-	if(!hascursor) return false;
-	const float CURSORSCALE = 500.0f;
-	cursorx = max(0, min(1, cursorx+dx/CURSORSCALE));
-	cursory = max(0, min(1, cursory+dy/CURSORSCALE));
-	return true;
-}
 
 #define SHADOW 4
 #define ICON_SIZE (FONTH-SHADOW)
@@ -790,13 +770,31 @@ vec gui::light;
 int gui::curdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
 int gui::ty, gui::tx, gui::tpos, *gui::tcurrent, gui::tcolor;
 static vector<gui> guis;
-
-void g3d_addgui(g3d_callback *cb, vec &origin, bool follow)
+void g3d_cursorpos(float &x, float &y)
 {
-    if(follow) origin.z = camera1->o.z-(camera1->height-1);
+	x = cursorx;
+	y = cursory;
+}
+
+void g3d_resetcursor()
+{
+	cursorx = cursory = 0.5f;
+}
+
+bool g3d_movecursor(int dx, int dy)
+{
+	if(!hascursor) return false;
+	const float CURSORSCALE = 500.0f;
+    cursorx = max(0.0f, min(1.0f, cursorx+dx/CURSORSCALE));
+    cursory = max(0.0f, min(1.0f, cursory+dy/CURSORSCALE));
+	return true;
+}
+
+void g3d_addgui(g3d_callback *cb)
+{
 	gui &g = guis.add();
 	g.cb = cb;
-	g.origin = origin;
+	g.origin = camera1->o.add(vec(vec(camera1->vel).normalize()).mul(2.f));
 	g.dist = camera1->o.dist(g.origin);
 }
 
@@ -839,8 +837,15 @@ void g3d_render()
 	fieldactive = false;
 	hascursor = false;
 
+	layoutpass = true;
+	loopv(guis) guis[i].cb->gui(guis[i], true);
+	layoutpass = false;
+
 	if(guis.length())
 	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
@@ -850,23 +855,18 @@ void g3d_render()
 		glPushMatrix();
 		glLoadIdentity();
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	}
+        glDisable(GL_DEPTH_TEST);
 
-	layoutpass = true;
-	loopv(guis) guis[i].cb->gui(guis[i], true);
-	layoutpass = false;
-	loopvrev(guis) guis[i].cb->gui(guis[i], false);
+		loopvrev(guis) guis[i].cb->gui(guis[i], false);
 
-	if(guis.length())
-	{
-		glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
 
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
+
+        glDisable(GL_BLEND);
 	}
 
 	if(!fieldactive) fieldpos = -1; //no hit fields, so loose focus - mainly for menu closed

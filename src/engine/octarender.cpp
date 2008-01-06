@@ -544,7 +544,7 @@ void gencubeverts(cube &c, int x, int y, int z, int size, int csi, bool lodcube)
 {
 	freeclipplanes(c);						  // physics planes based on rendering
 
-	loopi(6) if(visibleface(c, i, x, y, z, size, MAT_AIR, lodcube))
+    loopi(6) if(visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR, lodcube))
 	{
 		cubeext &e = ext(c);
 

@@ -44,7 +44,6 @@ SCXXFLAGS= -Wall $(CXXOPTFLAGS) $(SINCLUDES)
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
 	shared/tools-standalone.o \
-	engine/command-standalone.o \
 	engine/server-standalone.o \
 	fpsgame/bfa-standalone.o \
 
@@ -62,9 +61,6 @@ clean: enet/Makefile
 
 shared/tools-standalone.o:
 	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o shared/tools-standalone.o shared/tools.cpp
-
-engine/command-standalone.o:
-	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o engine/command-standalone.o engine/command.cpp
 
 engine/server-standalone.o:
 	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o engine/server-standalone.o engine/server.cpp

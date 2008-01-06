@@ -610,7 +610,7 @@ struct GAMECLIENT : igameclient
 			sway.mul(swayspeed);
 			float swayxy = sinf(swaymillis/115.0f)/100.0f,
 				  swayz = cosf(swaymillis/115.0f)/100.0f;
-			swap(float, sway.x, sway.y);
+			swap(sway.x, sway.y);
 			sway.x *= -swayxy;
 			sway.y *= swayxy;
 			sway.z = -fabs(swayspeed*swayz);
@@ -931,7 +931,7 @@ struct GAMECLIENT : igameclient
 				float maxc = max(col[0], max(col[1], col[2]));
 				float blend[3];
 
-				loopi(3) blend[i] = col[i] / min(32 + maxc*7/8, 255);
+				loopi(3) blend[i] = col[i] / min(32 + maxc*7/8, 255.0f);
 
 				colour = vec(blend[0], blend[1], blend[2]);
 

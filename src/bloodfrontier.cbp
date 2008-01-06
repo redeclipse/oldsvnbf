@@ -262,7 +262,6 @@
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
-			<Option target="server"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\console.cpp">
@@ -270,6 +269,11 @@
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="data"/>
+		</Unit>
+		<Unit filename="engine\decal.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="client"/>
+			<Option target="debug"/>
 		</Unit>
 		<Unit filename="engine\engine.h">
 			<Option compilerVar="CPP"/>

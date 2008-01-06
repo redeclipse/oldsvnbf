@@ -146,7 +146,7 @@ struct vertmodel : model
             }
             if(lightmodels && !fullbright)
             {
-                float ambientk = min(ambient*0.75f, 1),
+                float ambientk = min(ambient*0.75f, 1.0f), 
                       diffusek = 1-ambientk;
                 GLfloat ambientcol[4] = { lightcolor.x*ambientk, lightcolor.y*ambientk, lightcolor.z*ambientk, 1 },
                         diffusecol[4] = { lightcolor.x*diffusek, lightcolor.y*diffusek, lightcolor.z*diffusek, 1 };
@@ -231,11 +231,11 @@ struct vertmodel : model
             if(override)
             {
                 Slot &slot = lookuptexture(override);
-                s = slot.sts.length() > 0 ? slot.sts[0].t : notexture;
-                if(slot.sts.length() > 1)
+                s = slot.sts.length() >= 1 ? slot.sts[0].t : notexture;
+                if(slot.sts.length() >= 2)
                 {
                     m = slot.sts[1].t;
-                    if(n && slot.sts.length() > 2) n = slot.sts[2].t;
+                    if(n && slot.sts.length() >= 3) n = slot.sts[2].t;
                 }
             }
             if((renderpath==R_FIXEDFUNCTION || !lightmodels) &&
@@ -534,8 +534,8 @@ struct vertmodel : model
                     found:;
                 }
             }
-            minvert = min(minvert, vverts.length()-1);
-            maxvert = max(minvert, vverts.length()-1);
+            minvert = min(minvert, ushort(vverts.length()-1));
+            maxvert = max(minvert, ushort(vverts.length()-1));
             elen = idxs.length()-eoffset;
             return vverts.length()-voffset;
         }

@@ -1490,12 +1490,13 @@ void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
 		else if(reflecting)
 		{
 			if(va->max.z <= reflecting || (va->rquery && checkquery(va->rquery))) continue;
-			if(va->rquery && checkquery(va->rquery)) continue;
 		}
         if(fogpass ? va->z+va->size<=refracting-waterfog : va->curvfc==VFC_FOGGED) continue;
         renderva(cur, va, lod, pass, fogpass);
 	}
 }
+
+VAR(oqgeom, 0, 1, 1);
 
 void rendergeom(bool causticspass, bool fogpass)
 {
@@ -1547,10 +1548,10 @@ void rendergeom(bool causticspass, bool fogpass)
 				}
 			}
 		}
-		else if(hasOQ && oqfrags && (zpass || va->distance > oqdist) && !insideva(va, camera1->o))
+        else if(hasOQ && oqfrags && (zpass || va->distance > oqdist) && !insideva(va, camera1->o) && oqgeom)
 		{
 			if(!zpass && va->query && va->query->owner == va)
-				va->occluded = checkquery(va->query) ? min(va->occluded+1, OCCLUDE_BB) : OCCLUDE_NOTHING;
+                va->occluded = checkquery(va->query) ? min(va->occluded+1, int(OCCLUDE_BB)) : OCCLUDE_NOTHING;
 			if(zpass && va->parent &&
 				(va->parent->occluded == OCCLUDE_PARENT ||
 				(va->parent->occluded >= OCCLUDE_BB &&
@@ -1627,7 +1628,7 @@ void rendergeom(bool causticspass, bool fogpass)
 			}
 			else if(va->query)
 			{
-				va->occluded = checkquery(va->query) ? min(va->occluded+1, OCCLUDE_BB) : OCCLUDE_NOTHING;
+                va->occluded = checkquery(va->query) ? min(va->occluded+1, int(OCCLUDE_BB)) : OCCLUDE_NOTHING;
 				if(va->occluded >= OCCLUDE_GEOM) continue;
 			}
 			else if(va->occluded == OCCLUDE_PARENT) va->occluded = OCCLUDE_NOTHING;

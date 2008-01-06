@@ -371,6 +371,14 @@ struct fpsstate
 	}
 };
 
+enum
+{
+	PRIV_NONE = 0,
+	PRIV_MASTER,
+	PRIV_ADMIN,
+	PRIV_MAX
+};
+
 struct fpsent : dynent, fpsstate
 {
 	int weight;						 // affects the effectiveness of hitpush
@@ -422,6 +430,13 @@ struct fpsent : dynent, fpsstate
 	}
 };
 
+#define MM_MODE 0xF
+#define MM_AUTOAPPROVE 0x1000
+#define MM_DEFAULT (MM_MODE | MM_AUTOAPPROVE)
+
+enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
+
+#ifndef STANDALONE
 enum
 {
 	SINFO_ICON = 0,
@@ -459,6 +474,7 @@ enum
 	SSTAT_UNKNOWN,
 	SSTAT_MAX
 };
+
 static const char *serverstatustypes[] = {
 	"\fs\fgopen\fS",
 	"\fs\fblocked\fS",
@@ -466,4 +482,4 @@ static const char *serverstatustypes[] = {
 	"\fs\frfull\fS",
 	"\fs\fb?\fS"
 };
-
+#endif

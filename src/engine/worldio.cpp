@@ -356,17 +356,17 @@ void save_world(const char *mname, bool nolms)
 	// world variables
 	int numvars = 0, vars = 0;
 	enumerate(*idents, ident, id, {
-		if (id._type == ID_VAR && id._context & IDC_WORLD) numvars++;
+		if (id.type == ID_VAR && id.world) numvars++;
 	});
 	gzputint(f, numvars);
 	enumerate(*idents, ident, id, {
-		if (id._type == ID_VAR && id._context & IDC_WORLD)
+		if (id.type == ID_VAR && id.world)
 		{
 			vars++;
 			if (verbose >= 2) show_out_of_renderloop_progress(float(vars)/float(numvars), "saving world variables...");
-			gzputint(f, (int)strlen(id._name));
-			gzwrite(f, id._name, (int)strlen(id._name)+1);
-			gzputint(f, *id._storage);
+			gzputint(f, (int)strlen(id.name));
+			gzwrite(f, id.name, (int)strlen(id.name)+1);
+			gzputint(f, *id.storage.i);
 		}
 	});
 
@@ -421,13 +421,13 @@ void swapXZ(cube *c)
 {
 	loopi(8)
 	{
-		swap(uint,	c[i].faces[0],	c[i].faces[2]);
-		swap(ushort, c[i].texture[0], c[i].texture[4]);
-		swap(ushort, c[i].texture[1], c[i].texture[5]);
+		swap(c[i].faces[0],   c[i].faces[2]);
+		swap(c[i].texture[0], c[i].texture[4]);
+		swap(c[i].texture[1], c[i].texture[5]);
 		if(c[i].ext && c[i].ext->surfaces)
 		{
-			swap(surfaceinfo, c[i].ext->surfaces[0], c[i].ext->surfaces[4]);
-			swap(surfaceinfo, c[i].ext->surfaces[1], c[i].ext->surfaces[5]);
+			swap(c[i].ext->surfaces[0], c[i].ext->surfaces[4]);
+			swap(c[i].ext->surfaces[1], c[i].ext->surfaces[5]);
 		}
 		if(c[i].children) swapXZ(c[i].children);
 	}
@@ -486,12 +486,12 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 				gzread(f, vname, len+1);
 				int val = gzgetint(f);
 				ident *id = idents->access(vname);
-				if (id != NULL && id->_type == ID_VAR && id->_context & IDC_WORLD && id->_max >= id->_min)
+				if (id != NULL && id->type == ID_VAR && id->world && id->max >= id->min)
 				{
-					if (val > id->_max) val = id->_max;
-					else if (val < id->_min) val = id->_min;
+					if (val > id->max) val = id->max;
+					else if (val < id->min) val = id->min;
 					setvar(vname, val, true);
-					if (verbose >= 3) conoutf("%s set to %d", id->_name, *id->_storage);
+					if (verbose >= 3) conoutf("%s set to %d", id->name, *id->storage.i);
 				}
 				else conoutf("ignoring definition for %s = %d", vname, val);
 			}
@@ -696,10 +696,10 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	conoutf("loaded map '%s' v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
 	console("%s", CON_CENTER|CON_NORMAL, hdr.maptitle);
 
-	overrideidents = true;
+	overrideidents = worldidents = true;
 	if (!execfile(pcfname)) exec("package.cfg");
 	if (!execfile(mcfname)) exec("map.cfg");
-	overrideidents = false;
+	overrideidents = worldidents = false;
 
 	loopv(ents)
 	{
@@ -729,8 +729,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	startmap(cname ? cname : mname);
 }
 
-ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? mname : mapname));
-ICOMMAND(savecurrentmap, "", (), save_world(mapname));
+ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? mname : mapname, false));
+ICOMMAND(savecurrentmap, "", (), save_world(mapname, false));
 
 void writeobj(char *name)
 {

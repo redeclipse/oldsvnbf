@@ -51,16 +51,20 @@ extern void mpdelcube(selinfo &sel, bool local);
 extern void mpremip(bool local);
 
 // command
-extern int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), int context = IDC_GLOBAL);
+extern int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool world);
+extern float fvariable(const char *name, float cur, float *storage, void (*fun)(), bool persist, bool world);
+extern char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), bool persist, bool world);
 extern void setvar(const char *name, int i, bool dofunc = false);
+extern void setfvar(const char *name, float f, bool dofunc = false);
+extern void setsvar(const char *name, const char *str, bool dofunc = false);
 extern int getvar(const char *name);
 extern int getvarmin(const char *name);
 extern int getvarmax(const char *name);
 extern bool identexists(const char *name);
 extern ident *getident(const char *name);
-extern bool addcommand(const char *name, void (*fun)(), const char *narg, int context = IDC_GLOBAL);
-extern int execute(const char *p, int context = IDC_GLOBAL);
-extern char *executeret(const char *p, int context = IDC_GLOBAL);
+extern bool addcommand(const char *name, void (*fun)(), const char *narg);
+extern int execute(const char *p);
+extern char *executeret(const char *p);
 extern void exec(const char *cfgfile);
 extern bool execfile(const char *cfgfile);
 extern void alias(const char *name, const char *action);
@@ -75,12 +79,10 @@ extern char *getcurcommand();
 extern void resetcomplete();
 extern void complete(char *s);
 
-extern bool saycommandon;
-
 // menus
 extern vec menuinfrontofplayer();
 extern void newgui(char *name, char *contents);
-extern void showgui(char *name);
+extern void showgui(const char *name);
 
 // world
 extern bool emptymap(int factor, bool force = false, char *mname = NULL);
@@ -89,7 +91,6 @@ extern int findentity(int type, int index = 0);
 extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool local);
 extern int getworldsize();
 extern int getmapversion();
-extern void dropenttofloor(entity *e);
 extern bool insideworld(const vec &o);
 extern void resettriggers();
 extern void checktriggers();
@@ -140,8 +141,18 @@ extern void particle_flare(const vec &p, const vec &dest, int fade, int type = 1
 extern void particle_fireball(const vec &dest, float max, int type);
 extern void removetrackedparticles(physent *owner = NULL);
 
+// decal
+enum
+{
+    DECAL_SCORCH = 0,
+    DECAL_BLOOD,
+    DECAL_BULLET
+};
+
+extern void adddecal(int type, const vec &center, const vec &surface, float radius, int color = 0xFFFFFF, int info = 0);
+
 // worldio
-extern void setnames(const char *fname = NULL, const char *cname = NULL);
+extern void setnames(const char *fname, const char *cname = NULL);
 extern void load_world(const char *mname, const char *cname = NULL);
 extern void save_world(const char *mname, bool nolms = false);
 
@@ -178,7 +189,7 @@ extern void abovemodel(vec &o, const char *mdl);
 extern void rendershadow(dynent *d);
 extern void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, float sink = 0);
 extern void interpolateorientation(dynent *d, float &interpyaw, float &interppitch);
-extern void setbbfrommodel(dynent *d, char *mdl);
+extern void setbbfrommodel(dynent *d, const char *mdl);
 
 // server
 #define MAXCLIENTS 256                  // in a multiplayer game, can be arbitrarily changed
@@ -258,7 +269,7 @@ struct g3d_callback
     virtual void gui(g3d_gui &g, bool firstpass) = 0;
 };
 
-extern void g3d_addgui(g3d_callback *cb, vec &origin, bool follow = false);
+extern void g3d_addgui(g3d_callback *cb);
 extern bool g3d_movecursor(int dx, int dy);
 extern void g3d_cursorpos(float &x, float &y);
 extern void g3d_resetcursor();

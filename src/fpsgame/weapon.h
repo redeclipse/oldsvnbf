@@ -134,6 +134,7 @@ struct weaponstate
 		particle_fireball(o, RL_DAMRAD, gun == GUN_RL ? 22 : 23);
 
         adddynlight(o, 1.15f*RL_DAMRAD, vec(1, 0.75f, 0.5f), 800, 400);
+        adddecal(DECAL_SCORCH, o, vec(0, 0, 1), RL_DAMRAD/2);
 
 		loopi(rnd(20)+10)
 			cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
@@ -206,6 +207,7 @@ struct weaponstate
 				{
 					particle_splash(0, 20, 250, sg[i]);
                     particle_flare(hudgunorigin(gun, from, sg[i], d), sg[i], 300, 10);
+                    if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
 				break;
 			}
@@ -216,6 +218,7 @@ struct weaponstate
 				particle_splash(0, 200, 250, to);
 				//particle_trail(1, 10, from, to);
                 particle_flare(hudgunorigin(gun, from, to, d), to, 600, 10);
+                if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
 				break;
 			}
 
@@ -235,6 +238,7 @@ struct weaponstate
 			case GUN_RIFLE:
 				particle_splash(0, 200, 250, to);
 				particle_trail(21, 500, hudgunorigin(gun, from, to, d), to);
+                if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
 				break;
 		}
 	}
@@ -289,12 +293,14 @@ struct weaponstate
 				if(hitrays) hitpush(o, from, to, hitrays);
 				if(!raysleft) break;
 			}
+            loopj(SGRAYS) if(!done[j]) adddecal(DECAL_BULLET, sg[j], vec(from).sub(sg[j]).normalize(), 2.0f); 
 		}
 		else if((o = intersectclosest(from, to, d)))
 		{
 			hitpush(o, from, to);
 			shorten(from, o->o, to);
 		}
+        else adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f); 
 	}
 
 	void reload(fpsent *d)

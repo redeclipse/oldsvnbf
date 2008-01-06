@@ -733,8 +733,8 @@ struct physics
 	
 		static vector<physent *> candidates;
 		candidates.setsizenodelete(0);
-		for(int x = int(max(p->o.x-p->radius-PLATFORMBORDER, 0))>>dynentsize, ex = int(min(p->o.x+p->radius+PLATFORMBORDER, hdr.worldsize-1))>>dynentsize; x <= ex; x++)
-		for(int y = int(max(p->o.y-p->radius-PLATFORMBORDER, 0))>>dynentsize, ey = int(min(p->o.y+p->radius+PLATFORMBORDER, hdr.worldsize-1))>>dynentsize; y <= ey; y++)
+		for(int x = int(max(p->o.x-p->radius-PLATFORMBORDER, 0.f))>>dynentsize, ex = int(min(p->o.x+p->radius+PLATFORMBORDER, hdr.worldsize-1.0f))>>dynentsize; x <= ex; x++)
+		for(int y = int(max(p->o.y-p->radius-PLATFORMBORDER, 0.f))>>dynentsize, ey = int(min(p->o.y+p->radius+PLATFORMBORDER, hdr.worldsize-1.0f))>>dynentsize; y <= ey; y++)
 		{
 			const vector<physent *> &dynents = checkdynentcache(x, y);
 			loopv(dynents)

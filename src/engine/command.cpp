@@ -6,10 +6,11 @@
 
 vector<attr *> attrs;
 ABOOL(attrs, attrbool, "true");
-AINT(attrs, attrint, 1, 0, 512);
-AFLOAT(attrs, attrfloat, 1.0, 0.0, 512.0);
-ASTRING(attrs, attrstring, "hello, world!", 1, 512);
-AVEC(attrs, attrvec, "1.0,1.0,1.0", "0.0,0.0,0.0", "512.0,512.0,512.0");
+AINT(attrs, attrint, 1, -512, 512);
+AFLOAT(attrs, attrfloat, 0.0, -512.0, 512.0);
+ASTRING(attrs, attrstring, "hello, world!", 0, 512);
+AVEC(attrs, attrvec, "0.0,0.0,0.0", "-512.0,-512.0,-512.0", "512.0,512.0,512.0");
+AVEC(attrs, attrivec, "0,0,0", "-512,-512,-512", "512,512,512");
 
 void printattrval(attr *a)
 {
@@ -51,11 +52,11 @@ char *exchangestr(char *o, const char *n) { delete[] o; return newstring(n); }
 
 identtable *idents = NULL;		// contains ALL vars/commands/aliases
 
-bool overrideidents = false, persistidents = true;
+bool overrideidents = false, persistidents = true, worldidents = false;
 
 void clearstack(ident &id)
 {
-	identstack *stack = id._stack;
+    identstack *stack = id.stack;
 	while(stack)
 	{
 		delete[] stack->action;
@@ -63,64 +64,77 @@ void clearstack(ident &id)
 		stack = stack->next;
 		delete tmp;
 	}
-	id._stack = NULL;
+    id.stack = NULL;
 }
 
 void clear_command()
 {
-	enumerate(*idents, ident, i, if(i._type==ID_ALIAS) { DELETEA(i._name); DELETEA(i._action); if(i._stack) clearstack(i); });
+    enumerate(*idents, ident, i, if(i.type==ID_ALIAS) { DELETEA(i.name); DELETEA(i.action); if(i.stack) clearstack(i); });
 	if(idents) idents->clear();
 }
 
 void clearoverrides()
 {
 	enumerate(*idents, ident, i,
-		if(i._override!=NO_OVERRIDE)
+        if(i.override!=NO_OVERRIDE)
 		{
-			switch(i._type)
+            switch(i.type)
 			{
 				case ID_ALIAS:
-					if(i._action[0]) i._action = exchangestr(i._action, "");
+                    if(i.action[0]) i.action = exchangestr(i.action, ""); 
 					break;
 				case ID_VAR:
-					*i._storage = i._override;
+                    *i.storage.i = i.overrideval.i;
+                    i.changed();
+                    break;
+                case ID_FVAR:
+                    *i.storage.f = i.overrideval.f;
+                    i.changed();
+                    break;
+                case ID_SVAR:
+                    delete[] *i.storage.s;
+                    *i.storage.s = i.overrideval.s;
 					i.changed();
 					break;
 			}
-			i._override = NO_OVERRIDE;
+            i.override = NO_OVERRIDE;
 		});
 }
 
 void pushident(ident &id, char *val)
 {
-    if(id._type != ID_ALIAS) return;
+    if(id.type != ID_ALIAS) return;
 	identstack *stack = new identstack;
-	stack->action = id._isexecuting==id._action ? newstring(id._action) : id._action;
-	stack->next = id._stack;
-	id._stack = stack;
-	id._action = val;
+    stack->action = id.isexecuting==id.action ? newstring(id.action) : id.action;
+    stack->next = id.stack;
+    id.stack = stack;
+    id.action = val;
 }
 
 void popident(ident &id)
 {
-    if(id._type != ID_ALIAS || !id._stack) return;
-	if(id._action != id._isexecuting) delete[] id._action;
-	identstack *stack = id._stack;
-	id._action = stack->action;
-	id._stack = stack->next;
+    if(id.type != ID_ALIAS || !id.stack) return;
+    if(id.action != id.isexecuting) delete[] id.action;
+    identstack *stack = id.stack;
+    id.action = stack->action;
+    id.stack = stack->next;
 	delete stack;
 }
 
-void pusha(char *name, char *action)
+ident *newident(const char *name)
 {
 	ident *id = idents->access(name);
 	if(!id)
 	{
-		name = newstring(name);
-		ident init(ID_ALIAS, name, newstring(""), IDC_GLOBAL&(persistidents ? IDC_PERSIST : 0));
-		id = idents->access(name, &init);
+        ident init(ID_ALIAS, newstring(name), newstring(""), persistidents, worldidents);
+        id = idents->access(init.name, &init);
+    }
+    return id;
 	}
-	pushident(*id, action);
+
+void pusha(const char *name, char *action)
+{
+    pushident(*newident(name), action);
 }
 
 void push(char *name, char *action)
@@ -142,25 +156,25 @@ void aliasa(const char *name, char *action)
 	ident *b = idents->access(name);
 	if(!b)
 	{
-		ident b(ID_ALIAS, newstring(name), action, IDC_GLOBAL&(persistidents ? IDC_PERSIST : 0));
-		if(overrideidents) b._override = OVERRIDDEN;
-		idents->access(b._name, &b);
+        ident b(ID_ALIAS, newstring(name), action, persistidents, worldidents);
+        if(overrideidents) b.override = OVERRIDDEN;
+        idents->access(b.name, &b);
 	}
-	else if(b->_type != ID_ALIAS)
+    else if(b->type != ID_ALIAS)
 	{
 		conoutf("cannot redefine builtin %s with an alias", name);
 		delete[] action;
 	}
 	else
 	{
-		if(b->_action != b->_isexecuting) delete[] b->_action;
-		b->_action = action;
-		if(overrideidents) b->_override = OVERRIDDEN;
+        if(b->action != b->isexecuting) delete[] b->action;
+        b->action = action;
+        if(overrideidents) b->override = OVERRIDDEN;
 		else
 		{
-			if(b->_override != NO_OVERRIDE) b->_override = NO_OVERRIDE;
-			if (b->_context & IDC_PERSIST && !persistidents) b->_context &= ~IDC_PERSIST;
-			else if (!(b->_context & IDC_PERSIST) && persistidents) b->_context |= IDC_PERSIST;
+            if(b->override != NO_OVERRIDE) b->override = NO_OVERRIDE;
+            if(b->persist != persistidents) b->persist = persistidents;
+            if(b->world != worldidents && worldidents) b->world = worldidents;
 		}
 	}
 }
@@ -171,37 +185,66 @@ COMMAND(alias, "ss");
 
 // variable's and commands are registered through globals, see cube.h
 
-int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), int context)
+int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool world)
+{
+    if(!idents) idents = new identtable;
+    ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, persist, world);
+    idents->access(name, &v);
+    return cur;
+}
+
+float fvariable(const char *name, float cur, float *storage, void (*fun)(), bool persist, bool world)
 {
 	if(!idents) idents = new identtable;
-	ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, context);
+    ident v(ID_FVAR, name, cur, storage, (void *)fun, persist, world);
 	idents->access(name, &v);
 	return cur;
 }
 
-#define GETVAR(id, name, retval) \
+char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), bool persist, bool world)
+{
+    if(!idents) idents = new identtable;
+    ident v(ID_SVAR, name, newstring(cur), storage, (void *)fun, persist, world);
+    idents->access(name, &v);
+    return v.val.s;
+}
+
+#define _GETVAR(id, vartype, name, retval) \
 	ident *id = idents->access(name); \
-	if(!id || id->_type!=ID_VAR) return retval;
+    if(!id || id->type!=vartype) return retval;
+#define GETVAR(id, name, retval) _GETVAR(id, ID_VAR, name, retval)
 void setvar(const char *name, int i, bool dofunc) 
 {
 	GETVAR(id, name, );
-	*id->_storage = i;
+    *id->storage.i = i; 
+    if(dofunc) id->changed();
+} 
+void setfvar(const char *name, float f, bool dofunc)
+{
+    GETVAR(id, name, );
+    *id->storage.f = f;
+    if(dofunc) id->changed();
+}
+void setsvar(const char *name, const char *str, bool dofunc)
+{
+    GETVAR(id, name, );
+    *id->storage.s = exchangestr(*id->storage.s, str);
 	if(dofunc) id->changed();
 }
 int getvar(const char *name) 
 {
 	GETVAR(id, name, 0);
-	return *id->_storage;
+    return *id->storage.i;
 }
 int getvarmin(const char *name) 
 {
 	GETVAR(id, name, 0);
-	return id->_min;
+    return id->min;
 }
 int getvarmax(const char *name) 
 {
 	GETVAR(id, name, 0);
-	return id->_max;
+    return id->max;
 }
 bool identexists(const char *name) { return idents->access(name)!=NULL; }
 ident *getident(const char *name) { return idents->access(name); }
@@ -209,13 +252,13 @@ ident *getident(const char *name) { return idents->access(name); }
 const char *getalias(const char *name)
 {
 	ident *i = idents->access(name);
-	return i && i->_type==ID_ALIAS ? i->_action : "";
+    return i && i->type==ID_ALIAS ? i->action : "";
 }
 
-bool addcommand(const char *name, void (*fun)(), const char *narg, int context)
+bool addcommand(const char *name, void (*fun)(), const char *narg)
 {
 	if(!idents) idents = new identtable;
-	ident c(ID_COMMAND, name, narg, (void *)fun, NULL, context);
+    ident c(ID_COMMAND, name, narg, (void *)fun);
 	idents->access(name, &c);
 	return false;
 }
@@ -319,45 +362,47 @@ char *parseexp(const char *&p, int right)          // parse any nested set of ()
 char *lookup(char *n)							// find value of ident referenced with $ in exp
 {
 	ident *id = idents->access(n+1);
-	if(id) switch(id->_type)
+    if(id) switch(id->type)
 	{
-		case ID_VAR: { string t; itoa(t, *(id->_storage)); return exchangestr(n, t); }
-		case ID_ALIAS: return exchangestr(n, id->_action);
+        case ID_VAR: { s_sprintfd(t)("%d", *id->storage.i); return exchangestr(n, t); }
+        case ID_FVAR: { s_sprintfd(t)("%f", *id->storage.f); return exchangestr(n, t); }
+        case ID_SVAR: return exchangestr(n, *id->storage.s);
+        case ID_ALIAS: return exchangestr(n, id->action);
 	}
 	conoutf("unknown alias lookup: %s", n+1);
 	return n;
 }
 
-char *parseword(const char *&p, int context)						// parse single argument, including expressions
+char *parseword(const char *&p)                       // parse single argument, including expressions
 {
 	for(;;)
 	{
-		p += strspn(p, context & IDC_SERVER ? " " : " \t\r");
+        p += strspn(p, " \t\r");
 		if(p[0]!='/' || p[1]!='/') break;
-		p += strcspn(p, context & IDC_SERVER ? "\0" : "\n\0");
+        p += strcspn(p, "\n\0");  
 	}
 	if(*p=='\"')
 	{
 		p++;
 		const char *word = p;
-		p += strcspn(p, context & IDC_SERVER ? "\"\0" : "\"\r\n\0");
+        p += strcspn(p, "\"\r\n\0");
 		char *s = newstring(word, p-word);
 		if(*p=='\"') p++;
 		return s;
 	}
-	if(context != IDC_SERVER && *p=='(') return parseexp(p, ')');
-	if(context != IDC_SERVER && *p=='[') return parseexp(p, ']');
+    if(*p=='(') return parseexp(p, ')');
+    if(*p=='[') return parseexp(p, ']');
 	const char *word = p;
 	for(;;)
 	{
-		p += strcspn(p, context & IDC_SERVER ? "/ " : "/; \t\r\n\0");
+        p += strcspn(p, "/; \t\r\n\0");
 		if(p[0]!='/' || p[1]=='/') break;
 		else if(p[1]=='\0') { p++; break; }
 		p += 2;
 	}
 	if(p-word==0) return NULL;
 	char *s = newstring(word, p-word);
-	if(context != IDC_SERVER && *s=='$') return lookup(s);				// substitute variables
+    if(*s=='$') return lookup(s);               // substitute variables
 	return s;
 }
 
@@ -381,16 +426,12 @@ VARN(numargs, _numargs, 0, 0, 25);
 
 char *commandret = NULL;
 
-#ifndef STANDALONE
-extern const char *addreleaseaction(const char *s);
-#endif
-
-char *executeret(const char *p, int context)
+char *executeret(const char *p)               // all evaluation happens here, recursively
 {
 	const int MAXWORDS = 25;					// limit, remove
 	char *w[MAXWORDS];
 	char *retval = NULL;
-	#define setretval(v) { char *rv = v; if(rv) retval = rv; commandret = NULL; }
+    #define setretval(v) { char *rv = v; if(rv) retval = rv; }
 	for(bool cont = true; cont;)				// for each ; seperated statement
 	{
 		int numargs = MAXWORDS;
@@ -398,15 +439,14 @@ char *executeret(const char *p, int context)
 		{
             w[i] = (char *)"";
 			if(i>numargs) continue;
-			char *s = parseword(p, context);			 // parse and evaluate exps
+            char *s = parseword(p);             // parse and evaluate exps
 			if(s) w[i] = s;
 			else numargs = i;
 		}
 
-		p += strcspn(p, context & IDC_SERVER ? "\0" : ";\n\0");
+        p += strcspn(p, ";\n\0");
 		cont = *p++!=0;						 // more statements if this isn't the end of the string
 		char *c = w[0];
-		if(*c=='/') c++;						// strip irc-style command prefix
 		if(!*c) continue;						// empty statement
 
 		DELETEA(retval);
@@ -419,25 +459,12 @@ char *executeret(const char *p, int context)
 		else
 		{
 			ident *id = idents->access(c);
-			if (context & IDC_SERVER && (!id || id->_context != IDC_SERVER))
+            if(!id)
 			{
-				s_sprintfd(z)("invalid server command: %s", c);
-				setretval(newstring(z));
-			}
-			else if (!id)
-			{
-				if(!parseint(c) && *c!='0')
-					conoutf("unknown command: %s", c);
+                if(!isdigit(*c) && ((*c!='+' && *c!='-') || (*c && !isdigit(c[1])))) conoutf("unknown command: %s", c);
 				setretval(newstring(c));
 			}
-#ifndef STANDALONE
-			else if (context != IDC_SERVER && id->_context & IDC_SERVER)
-			{
-				s_sprintfd(z)("%s", conc(w, numargs, true));
-				cc->toservcmd(z, true);
-			}
-#endif
-			else switch(id->_type)
+            else switch(id->type)
 			{
                 case ID_CCOMMAND:
 				case ID_COMMAND:					 // game defined commands
@@ -450,80 +477,91 @@ char *executeret(const char *p, int context)
 					} nstor[MAXWORDS];
 					int n = 0, wn = 0;
                     char *cargs = NULL;
-                    if(id->_type==ID_CCOMMAND) v[n++] = id->self;
-                    for(const char *a = id->_narg; *a; a++) switch(*a)
+                    if(id->type==ID_CCOMMAND) v[n++] = id->self;
+                    for(const char *a = id->narg; *a; a++) switch(*a)
 					{
 						case 's':								 v[n] = w[++wn];	 n++; break;
 						case 'i': nstor[n].i = parseint(w[++wn]); v[n] = &nstor[n].i; n++; break;
 						case 'f': nstor[n].f = atof(w[++wn]);	 v[n] = &nstor[n].f; n++; break;
-#ifndef STANDALONE
-						case 'D': nstor[n].i = addreleaseaction(id->_name) ? 1 : 0; v[n] = &nstor[n].i; n++; break;
-#endif
+						case 'D': nstor[n].i = addreleaseaction(id->name) ? 1 : 0; v[n] = &nstor[n].i; n++; break;
 						case 'V': v[n++] = w+1; nstor[n].i = numargs-1; v[n] = &nstor[n].i; n++; break;
                         case 'C': if(!cargs) cargs = conc(w+1, numargs-1, true); v[n++] = cargs; break;
 						default: fatal("builtin declared with illegal type");
 					}
 					switch(n)
 					{
-						case 0: ((void (__cdecl *)()									  )id->_fun)();							 break;
-						case 1: ((void (__cdecl *)(void *)								)id->_fun)(v[0]);						 break;
-						case 2: ((void (__cdecl *)(void *, void *)						)id->_fun)(v[0], v[1]);					break;
-						case 3: ((void (__cdecl *)(void *, void *, void *)				)id->_fun)(v[0], v[1], v[2]);			 break;
-						case 4: ((void (__cdecl *)(void *, void *, void *, void *)		)id->_fun)(v[0], v[1], v[2], v[3]);		break;
-						case 5: ((void (__cdecl *)(void *, void *, void *, void *, void *))id->_fun)(v[0], v[1], v[2], v[3], v[4]); break;
-						case 6: ((void (__cdecl *)(void *, void *, void *, void *, void *, void *))id->_fun)(v[0], v[1], v[2], v[3], v[4], v[5]); break;
-						case 7: ((void (__cdecl *)(void *, void *, void *, void *, void *, void *, void *))id->_fun)(v[0], v[1], v[2], v[3], v[4], v[5], v[6]); break;
-						case 8: ((void (__cdecl *)(void *, void *, void *, void *, void *, void *, void *, void *))id->_fun)(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]); break;
+                        case 0: ((void (__cdecl *)()                                      )id->fun)();                             break;
+                        case 1: ((void (__cdecl *)(void *)                                )id->fun)(v[0]);                         break;
+                        case 2: ((void (__cdecl *)(void *, void *)                        )id->fun)(v[0], v[1]);                   break;
+                        case 3: ((void (__cdecl *)(void *, void *, void *)                )id->fun)(v[0], v[1], v[2]);             break;
+                        case 4: ((void (__cdecl *)(void *, void *, void *, void *)        )id->fun)(v[0], v[1], v[2], v[3]);       break;
+                        case 5: ((void (__cdecl *)(void *, void *, void *, void *, void *))id->fun)(v[0], v[1], v[2], v[3], v[4]); break;
+                        case 6: ((void (__cdecl *)(void *, void *, void *, void *, void *, void *))id->fun)(v[0], v[1], v[2], v[3], v[4], v[5]); break;
+                        case 7: ((void (__cdecl *)(void *, void *, void *, void *, void *, void *, void *))id->fun)(v[0], v[1], v[2], v[3], v[4], v[5], v[6]); break;
+                        case 8: ((void (__cdecl *)(void *, void *, void *, void *, void *, void *, void *, void *))id->fun)(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]); break;
 						default: fatal("builtin declared with too many args (use V?)");
 					}
                     if(cargs) delete[] cargs;
 					setretval(commandret);
+                    commandret = NULL;
 					break;
 				}
 
 				case ID_VAR:						// game defined variables
-					if(!w[1][0]) conoutf("%s = %d", c, *id->_storage);	  // var with no value just prints its current value
-					else if(id->_min>id->_max) conoutf("variable %s is read-only", id->_name);
+                    if(!w[1][0]) conoutf("%s = %d", c, *id->storage.i);      // var with no value just prints its current value
+                    else if(id->min>id->max) conoutf("variable %s is read-only", id->name);
 					else
 					{
-						if(overrideidents)
-						{
-							if(id->_context & IDC_PERSIST)
-							{
-								conoutf("cannot override persistent variable %s", id->_name);
-								break;
+						#define WORLDVAR \
+							if (!worldidents && !editmode && id->world) \
+							{ \
+								conoutf("cannot set world variable %s outside editmode", id->name); \
+								break; \
 							}
-							if(id->_override==NO_OVERRIDE) id->_override = *id->_storage;
-						}
-						else
+
+                        #define OVERRIDEVAR(saveval, resetval) \
+                            if(overrideidents) \
+                            { \
+                                if(id->persist && !id->world) \
+                                { \
+                                    conoutf("cannot override persistent variable %s", id->name); \
+                                    break; \
+                                } \
+                                if(id->override==NO_OVERRIDE) { saveval; id->override = OVERRIDDEN; } \
+                            } \
+                            else if(id->override!=NO_OVERRIDE) { resetval; id->override = NO_OVERRIDE; }
+						
+						WORLDVAR;
+                        OVERRIDEVAR(id->overrideval.i = *id->storage.i, )
+                        int i1 = parseint(w[1]);
+                        if(i1<id->min || i1>id->max)
 						{
-#ifndef STANDALONE
-							if (id->_context & IDC_WORLD)
-							{
-								if (!editmode)
-								{
-									conoutf("world variable %s may only be modified in editmode", id->_name);
-									break;
-								}
-							}
-#endif
-							if(id->_override!=NO_OVERRIDE) id->_override = NO_OVERRIDE;
+                            i1 = i1<id->min ? id->min : id->max;                // clamp to valid range
+                            conoutf("valid range for %s is %d..%d", id->name, id->min, id->max);
 						}
+                        *id->storage.i = i1;
+                        id->changed();                                             // call trigger function if available
+					}
+                    break;
+                  
+                case ID_FVAR:
+                    if(!w[1][0]) conoutf("%s = %f", c, *id->storage.f);
+					else
+					{
+                        OVERRIDEVAR(id->overrideval.f = *id->storage.f, );
+                        *id->storage.f = atof(w[1]);
+                        id->changed();
+                    }
+					break;
 
-						int i1 = parseint(w[1]);
-						if(i1<id->_min || i1>id->_max)
-						{
-							i1 = i1<id->_min ? id->_min : id->_max;				// clamp to valid range
-							conoutf("valid range for %s is %d..%d", id->_name, id->_min, id->_max);
-						}
-
-						*id->_storage = i1;
-						id->changed();											 // call trigger function if available
-
-#ifndef STANDALONE
-						if (!overrideidents && id->_context & IDC_WORLD)
-							cl->editvariable(id->_name, i1); // update others
-#endif
+                case ID_SVAR:
+                    if(!w[1][0]) conoutf(strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", c, *id->storage.s);
+                    else
+					{
+						WORLDVAR;
+                        OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s);
+                        *id->storage.s = newstring(w[1]);
+                        id->changed();
 					}
 					break;
 
@@ -535,28 +573,21 @@ char *executeret(const char *p, int context)
                         if(i > argids.length())
                         {
                             s_sprintfd(argname)("arg%d", i);
-                            ident *id = idents->access(argname);
-                            if(!id)
-                            {
-								ident init(ID_ALIAS, newstring(argname), newstring(""), IDC_GLOBAL&(persistidents ? IDC_PERSIST : 0));
-                                id = idents->access(init._name, &init);
-                            }
-                            argids.add(id);
+                            argids.add(newident(argname));
                         }
                         pushident(*argids[i-1], w[i]); // set any arguments as (global) arg values so functions can access them
-						w[i] = NULL;
 					}
 					_numargs = numargs-1;
 					bool wasoverriding = overrideidents;
-					if(id->_override!=NO_OVERRIDE) overrideidents = true;
-					char *wasexecuting = id->_isexecuting;
-					id->_isexecuting = id->_action;
-					setretval(executeret(id->_action, context));
-					if(id->_isexecuting != id->_action && id->_isexecuting != wasexecuting) delete[] id->_isexecuting;
-					id->_isexecuting = wasexecuting;
+                    if(id->override!=NO_OVERRIDE) overrideidents = true;
+                    char *wasexecuting = id->isexecuting;
+                    id->isexecuting = id->action;
+                    setretval(executeret(id->action));
+                    if(id->isexecuting != id->action && id->isexecuting != wasexecuting) delete[] id->isexecuting;
+                    id->isexecuting = wasexecuting;
 					overrideidents = wasoverriding;
                     for(int i = 1; i<numargs; i++) popident(*argids[i-1]);
-					break;
+                    continue;
 				}
 			}
 		}
@@ -565,9 +596,9 @@ char *executeret(const char *p, int context)
 	return retval;
 }
 
-int execute(const char *p, int context)
+int execute(const char *p)
 {
-	char *ret = executeret(p, context);
+    char *ret = executeret(p);
 	int i = 0;
 	if(ret) { i = parseint(ret); delete[] ret; }
 	return i;
@@ -581,9 +612,7 @@ bool execfile(const char *cfgfile)
 	if(!buf) return false;
 	execute(buf);
 	delete[] buf;
-#ifndef STANDALONE
 	if (verbose >= 3) conoutf("loaded script '%s'", cfgfile);
-#endif
 	return true;
 }
 
@@ -592,7 +621,6 @@ void exec(const char *cfgfile)
 	if(!execfile(cfgfile)) conoutf("could not read \"%s\"", cfgfile);
 }
 
-#ifndef STANDALONE
 void writecfg()
 {
 	FILE *f = openfile("config.cfg", "w");
@@ -601,16 +629,19 @@ void writecfg()
 	cc->writeclientinfo(f);
 	fprintf(f, "if (= $version %d) [\n\n", BFRONTIER);
 	enumerate(*idents, ident, id,
-		if (id._type == ID_VAR && id._context & IDC_PERSIST)
+        if(!id.persist || id.world) continue;
+        switch(id.type)
 		{
-			fprintf(f, "%s %d\n", id._name, *id._storage);
+            case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
+            case ID_FVAR: fprintf(f, "%s %f\n", id.name, *id.storage.f); break;
+            case ID_SVAR: fprintf(f, "%s [%s]\n", id.name, *id.storage.s); break;
 		}
 	);
 	writebinds(f);
 	enumerate(*idents, ident, id,
-		if(id._type == ID_ALIAS && id._context & IDC_PERSIST && id._override == NO_OVERRIDE && !strstr(id._name, "nextmap_") && id._action[0])
+        if(id.type==ID_ALIAS && id.persist && !id.world && id.override==NO_OVERRIDE && !strstr(id.name, "nextmap_") && id.action[0])
 		{
-			fprintf(f, "\"%s\" = [%s]\n", id._name, id._action);
+            fprintf(f, "\"%s\" = [%s]\n", id.name, id.action);
 		}
 	);
 	writecompletions(f);
@@ -619,17 +650,26 @@ void writecfg()
 }
 
 COMMAND(writecfg, "");
-#endif
 
 // below the commands that implement a small imperative language. thanks to the semantics of
 // () and [] expressions, any control construct can be defined trivially.
 
-void intset(char *name, int v) { string b; itoa(b, v); alias(name, b); }
-void intret			(int v) { string b; itoa(b, v); commandret = newstring(b); }
+void intret(int v) { s_sprintfd(b)("%d", v); commandret = newstring(b); }
 
 ICOMMAND(if, "sss", (char *cond, char *t, char *f), commandret = executeret(cond[0]!='0' ? t : f));
-
-ICOMMAND(loop, "sis", (char *var, int *n, char *body), loopi(*n) { intset(var, i); execute(body); });
+ICOMMAND(loop, "sis", (char *var, int *n, char *body), 
+{
+    if(*n<=0) return;
+    ident *id = newident(var);
+    if(id->type!=ID_ALIAS) return;
+    loopi(*n)
+    {
+        if(i) sprintf(id->action, "%d", i);
+        else pushident(*id, newstring("0", 16));
+        execute(body); 
+    } 
+    popident(*id);
+});
 ICOMMAND(while, "ss", (char *cond, char *body), while(execute(cond)) execute(body));    // can't get any simpler than this :)
 
 void concat(const char *s) { commandret = newstring(s); }
@@ -667,16 +707,30 @@ void format(char **args, int *numargs)
 #define whitespaceskip s += strspn(s, "\n\t ")
 #define elementskip *s=='"' ? (++s, s += strcspn(s, "\"\n\0"), s += *s=='"') : s += strcspn(s, "\n\t \0")
 
-void explodelist(char *s, vector<char *> &elems)
+void explodelist(const char *s, vector<char *> &elems)
 {
     whitespaceskip;
     while(*s)
     {
-        char *elem = s;
+        const char *elem = s;
         elementskip;
         elems.add(*elem=='"' ? newstring(elem+1, s-elem-(s[-1]=='"' ? 2 : 1)) : newstring(elem, s-elem));
         whitespaceskip;
     }
+}
+
+char *indexlist(const char *s, int pos)
+{
+    whitespaceskip;
+    loopi(pos) elementskip, whitespaceskip;
+    const char *e = s;
+    elementskip;
+    if(*e=='"')
+    {
+        e++;
+        if(s[-1]=='"') --s;
+    }
+    return newstring(e, s-e);
 }
 
 void listlen(char *s)
@@ -689,17 +743,7 @@ void listlen(char *s)
 
 void at(char *s, int *pos)
 {
-	whitespaceskip;
-	loopi(*pos) elementskip, whitespaceskip;
-	char *e = s;
-	elementskip;
-	if(*e=='"')
-	{
-		e++;
-        if(s[-1]=='"') --s;
-	}
-	*s = '\0';
-	result(e);
+    commandret = indexlist(s, *pos);
 }
 
 void getalias_(char *s)
@@ -750,7 +794,7 @@ struct sleepcmd
 {
 	int millis;
 	char *command;
-    bool override;
+    bool override, world;
 };
 vector<sleepcmd> sleepcmds;
 
@@ -760,6 +804,7 @@ void addsleep(int *msec, char *cmd)
 	s.millis = *msec+lastmillis;
 	s.command = newstring(cmd);
     s.override = overrideidents;
+    s.world = worldidents;
 }
 
 COMMANDN(sleep, addsleep, "is");
@@ -779,7 +824,7 @@ void checksleep(int millis)
 	}
 }
 
-void clearsleep(bool clearoverrides)
+void clearsleep(bool clearoverrides, bool clearworlds)
 {
     int len = 0;
     loopv(sleepcmds)
@@ -790,12 +835,12 @@ void clearsleep(bool clearoverrides)
     sleepcmds.setsize(len);
 }
 
-void clearsleep_(int *clearoverrides)
+void clearsleep_(int *clearoverrides, int *clearworlds)
 {
-    clearsleep(*clearoverrides!=0 || overrideidents);
+    clearsleep(*clearoverrides!=0 || overrideidents, *clearworlds!=0 || worldidents);
 }
 
-COMMANDN(clearsleep, clearsleep_, "i");
+COMMANDN(clearsleep, clearsleep_, "ii");
 
 ICOMMAND(exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
 

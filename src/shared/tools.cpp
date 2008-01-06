@@ -33,7 +33,7 @@ char *makefile(char *s, char *e, bool ext, bool copy, int start)
 	{
 		s_strncpy(s, m, t-m+1);
 		char *q = t+1;
-		if (*q >= '0' && *q <= '9') d = min(atoi(q), 1);
+		if (isnumeric(*q)) d = min(atoi(q), 1);
 	}
 	else { s_strcpy(s, m); }
 	s_strcpy(m, s);
