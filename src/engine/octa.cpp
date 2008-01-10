@@ -605,6 +605,18 @@ const ushort fv[6][4] = // indexes for cubecoords, per each vert of a face orien
 	{ 5, 4, 3, 2 },
 };
 
+const uchar fvmasks[64] = // mask of verts used given a mask of visible face orientations
+{
+    0x00, 0x66, 0x99, 0xFF, 0xF0, 0xF6, 0xF9, 0xFF,
+    0x0F, 0x6F, 0x9F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xC3, 0xE7, 0xDB, 0xFF, 0xF3, 0xF7, 0xFB, 0xFF,
+    0xCF, 0xEF, 0xDF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0x3C, 0x7E, 0xBD, 0xFF, 0xFC, 0xFE, 0xFD, 0xFF,
+    0x3F, 0x7F, 0xBF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+};
+
 const uchar faceedgesidx[6][4] = // ordered edges surrounding each orient
 {//1st face,2nd face
 	{ 4, 5, 8, 10 },
@@ -906,7 +918,8 @@ void calcvert(cube &c, int x, int y, int z, int size, vec &v, int i, bool solid)
 int calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *usefaces)
 {
     int vertused = 0;
-    loopi(6) if(usefaces[i] = visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR)) loopk(4) vertused |= 1<<faceverts(c,i,k);
+    loopi(6) if(usefaces[i] = visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR)) vertused |= fvmasks[1<<i];
+    //loopk(4) vertused |= 1<<faceverts(c,i,k);
     loopi(8) if(vertused&(1<<i)) calcvert(c, x, y, z, size, verts[i], i);
     return vertused;
 }

@@ -117,12 +117,14 @@ struct physent                                  // base entity type, can be affe
     uchar collidetype;                          // one of COLLIDE_* above           
 
     physent() : o(0, 0, 0), yaw(270), pitch(0), roll(0), maxspeed(100),
-               radius(4.1f), height(14), aboveeye(1), xradius(4.1f), yradius(4.1f),
-               blocked(false), moving(true), 
-               onplayer(NULL), lastmove(0), lastmoveattempt(0), collisions(0), stacks(0),
-               state(CS_ALIVE), type(ENT_PLAYER),
-               collidetype(COLLIDE_ELLIPSE)
-               { reset(); }
+		radius(4.1f), height(14), aboveeye(1), xradius(4.1f), yradius(4.1f),
+		blocked(false), moving(true), 
+		onplayer(NULL), lastmove(0), lastmoveattempt(0), collisions(0), stacks(0),
+		state(CS_ALIVE), type(ENT_PLAYER),
+		collidetype(COLLIDE_ELLIPSE)
+	{
+		reset();
+	}
 
     void reset()
     {

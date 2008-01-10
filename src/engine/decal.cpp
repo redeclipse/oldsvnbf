@@ -23,7 +23,9 @@ enum
     DF_OVERBRIGHT = 1<<3
 };
 
-VARP(decalfade, 1000, 5000, 60000);
+VARFP(maxdecaltris, 1, 1024, 16384, initdecals());
+VARP(decalfade, 1000, 10000, 60000);
+VAR(dbgdec, 0, 0, 1);
 
 struct decalrenderer
 {
@@ -318,6 +320,11 @@ struct decalrenderer
 
         ushort dstart = endvert;
         gendecaltris(worldroot, ivec(0, 0, 0), hdr.worldsize>>1);
+        if(dbgdec)
+        {
+            int nverts = endvert < dstart ? endvert + maxverts - dstart : endvert - dstart;
+            conoutf("tris = %d, verts = %d, total tris = %d", nverts/3, nverts, (maxverts - 3 - availverts)/3);
+        }
         if(endvert==dstart) return;
 
         decalinfo &d = newdecal();
@@ -327,99 +334,128 @@ struct decalrenderer
         d.endvert = endvert;
     }
 
-    void gendecaltris(cube *cu, const ivec &o, int size)
+    void gendecaltris(cube &cu, int orient, vec *v, bool solid)
+    {
+        int f[4], faces = 0;
+        loopk(4) f[k] = solid ? fv[orient][k] : faceverts(cu, orient, k);
+        vec p(v[f[0]]), surfaces[2];
+        if(solid)
+        {
+            surfaces[0] = vec(0, 0, 0);
+            surfaces[0][dimension(orient)] = 2*dimcoord(orient) - 1;
+            faces = 1 | 4;
+        }
+        else
+        {
+            vec e(v[f[2]]);
+            e.sub(p);
+            surfaces[0].cross(vec(v[f[1]]).sub(p), e);
+            float mag1 = surfaces[0].squaredlen();
+            if(mag1) { surfaces[0].div(sqrtf(mag1)); faces |= 1; }
+            surfaces[1].cross(e, vec(v[f[3]]).sub(p));
+            float mag2 = surfaces[1].squaredlen();
+            if(mag2)
+            {
+                surfaces[1].div(sqrtf(mag2));
+                faces |= (!faces || faceconvexity(cu, orient) ? 2 : 4);
+            }
+        }
+        p.sub(decalcenter);
+        loopl(2) if(faces&(1<<l))
+        {
+            const vec &n = surfaces[l];
+            float facing = n.dot(decalnormal);
+            if(facing<=0) continue;
+#if 0
+            // intersect ray along decal normal with plane
+            float dist = n.dot(p) / facing;
+            if(fabs(dist) > decalradius) continue;
+            vec pcenter = vec(decalnormal).mul(dist).add(decalcenter);
+#else
+            // travel back along plane normal from the decal center
+            float dist = n.dot(p);
+            if(fabs(dist) > decalradius) continue;
+            vec pcenter = vec(n).mul(dist).add(decalcenter);
+#endif
+            vec ft, fb;
+            ft.orthogonal(n);
+            ft.normalize();
+            fb.cross(ft, n);
+            vec pt = vec(ft).mul(ft.dot(decaltangent)).add(vec(fb).mul(fb.dot(decaltangent))).normalize(),
+                pb = vec(ft).mul(ft.dot(decalbitangent)).add(vec(fb).mul(fb.dot(decalbitangent))).normalize();
+            // orthonormalize projected bitangent to prevent streaking
+            pb.sub(vec(pt).mul(pt.dot(pb))).normalize();
+            vec v1[8] = { v[f[0]], v[f[l+1]], v[f[l+2]] }, v2[8];
+            int numv = 3;
+            if(faces&4) { v1[3] = v[f[3]]; numv = 4; }
+            float ptc = pt.dot(pcenter), pbc = pb.dot(pcenter);
+            numv = decalclip(v1, numv, plane(pt, decalradius - ptc), v2);
+            if(numv<3) continue;
+            numv = decalclip(v2, numv, plane(vec(pt).neg(), decalradius + ptc), v1);
+            if(numv<3) continue;
+            numv = decalclip(v1, numv, plane(pb, decalradius - pbc), v2);
+            if(numv<3) continue;
+            numv = decalclip(v2, numv, plane(vec(pb).neg(), decalradius + pbc), v1);
+            if(numv<3) continue;
+            float tsz = flags&DF_RND4 ? 0.5f : 1.0f, scale = tsz*0.5f/decalradius,
+                  tu = decalu + tsz*0.5f - ptc*scale, tv = decalv + tsz*0.5f - pbc*scale;
+            pt.mul(scale); pb.mul(scale);
+            decalvert dv1 = { v1[0], pt.dot(v1[0]) + tu, pb.dot(v1[0]) + tv, decalcolor, 1.0f },
+                      dv2 = { v1[1], pt.dot(v1[1]) + tu, pb.dot(v1[1]) + tv, decalcolor, 1.0f };
+            int totalverts = 3*(numv-2);
+            if(totalverts > maxverts-3) return;
+            while(availverts < totalverts) freedecal();
+            availverts -= totalverts;
+            loopk(numv-2)
+            {
+                verts[endvert++] = dv1;
+                verts[endvert++] = dv2;
+                dv2.pos = v1[k+2];
+                dv2.u = pt.dot(v1[k+2]) + tu;
+                dv2.v = pb.dot(v1[k+2]) + tv;
+                verts[endvert++] = dv2;
+                if(endvert>=maxverts) endvert = 0;
+            }
+        }
+    }
+
+    void gendecaltris(cube *cu, const ivec &o, int size, uchar *vismasks = NULL, uchar avoid = 0)
     {
         loopoctabox(o, size, bborigin, bbsize)
         {
             ivec co(i, o.x, o.y, o.z, size);
-            bool solid;
-            if(cu[i].children) gendecaltris(cu[i].children, co, size>>1);
-            else if((solid = cu[i].ext && isclipped(cu[i].ext->material) && cu[i].ext->material!=MAT_CLIP) || !isempty(cu[i]))
+            if(cu[i].children) 
             {
-                bool usefaces[6];
-                int vertused = 0;
-                if(!solid) 
+                uchar visclip = cu[i].vismask & cu[i].clipmask & ~avoid;    
+                if(visclip)
                 {
-                    loopj(6) if(usefaces[j] = visibleface(cu[i], j, co.x, co.y, co.z, size))
-                    {
-                        loopk(4) vertused |= 1<<faceverts(cu[i], j, k);
-                    }
+                    uchar vertused = fvmasks[visclip];
+                    vec v[8];
+                    loopj(8) if(vertused&(1<<j)) calcvert(cu[i], co.x, co.y, co.z, size, v[j], j, true);
+                    loopj(6) if(visclip&(1<<j)) gendecaltris(cu[i], j, v, true);
                 }
-                else loopj(6) if(usefaces[j] = visiblematerial(cu[i], j, co.x, co.y, co.z, size)==MATSURF_VISIBLE || (!isempty(cu[i]) && visibleface(cu[i], j, co.x, co.y, co.z, size)))
-                {
-                    loopk(4) vertused |= 1<<faceverts(cu[i], j, k);
-                }
-                if(!vertused) continue;
+                if(cu[i].vismask & ~avoid) gendecaltris(cu[i].children, co, size>>1, cu[i].vismasks, avoid | visclip);
+            }
+            else if(vismasks)
+            {
+                uchar vismask = vismasks[i] & ~avoid;
+                if(!vismask) continue;
+                uchar vertused = fvmasks[vismask];
+                bool solid = cu[i].ext && isclipped(cu[i].ext->material) && cu[i].ext->material!=MAT_CLIP;
                 vec v[8];
-                loopj(8) if(vertused&(1<<j)) 
-                {
-                    calcvert(cu[i], co.x, co.y, co.z, size, v[j], j, solid);
-                }
-                loopj(6) if(usefaces[j])
-                {
-                    int fv[4];
-                    loopk(4) fv[k] = faceverts(cu[i], j, k);
-                    int faces = 0;
-                    vec p(v[fv[0]]), e(v[fv[2]]), surfaces[2];
-                    e.sub(p);
-                    surfaces[0].cross(vec(v[fv[1]]).sub(p), e);
-                    float mag1 = surfaces[0].squaredlen();
-                    if(mag1) { surfaces[0].div(sqrtf(mag1)); faces |= 1; }
-                    surfaces[1].cross(e, vec(v[fv[3]]).sub(p));
-                    float mag2 = surfaces[1].squaredlen();
-                    if(mag2)
-                    {
-                        surfaces[1].div(sqrtf(mag2));
-                        faces |= (!faces || faceconvexity(cu[i], j) ? 2 : 4);
-                    }
-                    p.sub(decalcenter);
-                    loopl(2) if(faces&(1<<l))
-                    {
-                        const vec &n = surfaces[l];
-                        float facing = n.dot(decalnormal);
-                        if(facing<=0) continue;
-#if 0
-                        // intersect ray along decal normal with plane
-                        vec pcenter = vec(decalnormal).mul(n.dot(p) / facing).add(decalcenter);
-#else
-                        // travel back along plane normal from the decal center
-                        vec pcenter = vec(n).mul(n.dot(p)).add(decalcenter); 
-#endif
-                        if(pcenter.dist(decalcenter) > decalradius) continue;
-                        vec ft, fb;
-                        ft.orthogonal(n);
-                        ft.normalize();
-                        fb.cross(ft, n);
-                        vec pt = vec(ft).mul(ft.dot(decaltangent)).add(vec(fb).mul(fb.dot(decaltangent))).normalize(),
-                            pb = vec(ft).mul(ft.dot(decalbitangent)).add(vec(fb).mul(fb.dot(decalbitangent))).normalize();
-                        pb.sub(vec(pt).mul(pt.dot(pb))).normalize();
-                        vec v1[8] = { v[fv[0]], v[fv[l+1]], v[fv[l+2]] }, v2[8];
-                        int numv = 3;
-                        if(faces&4) { v1[3] = v[fv[3]]; numv = 4; }
-                        numv = decalclip(v1, numv, plane(pt, decalradius - pt.dot(pcenter)), v2);
-                        numv = decalclip(v2, numv, plane(vec(pt).neg(), decalradius + pt.dot(pcenter)), v1);
-                        numv = decalclip(v1, numv, plane(pb, decalradius - pb.dot(pcenter)), v2);
-                        numv = decalclip(v2, numv, plane(vec(pb).neg(), decalradius + pb.dot(pcenter)), v1);
-                        if(numv<3) continue;
-                        float tsz = flags&DF_RND4 ? 0.5f : 1.0f;
-                        pt.mul(tsz/(2.0f*decalradius)); pb.mul(tsz/(2.0f*decalradius));
-                        float ptc = decalu + tsz*0.5f - pt.dot(pcenter), pbc = decalv + tsz*0.5f - pb.dot(pcenter);
-                        decalvert dv1 = { v1[0], pt.dot(v1[0]) + ptc, pb.dot(v1[0]) + pbc, decalcolor, 1.0f },
-                                  dv2 = { v1[1], pt.dot(v1[1]) + ptc, pb.dot(v1[1]) + pbc, decalcolor, 1.0f };
-                        while(availverts < 3*(numv-2)) freedecal();
-                        availverts -= 3*(numv-2);
-                        loopk(numv-2)
-                        {
-                            verts[endvert++] = dv1;
-                            verts[endvert++] = dv2;
-                            dv2.pos = v1[k+2];
-                            dv2.u = pt.dot(v1[k+2]) + ptc;
-                            dv2.v = pb.dot(v1[k+2]) + pbc;
-                            verts[endvert++] = dv2;
-                            if(endvert>=maxverts) endvert = 0;
-                        }
-                    }
-                }
+                loopj(8) if(vertused&(1<<j)) calcvert(cu[i], co.x, co.y, co.z, size, v[j], j, solid);
+                loopj(6) if(vismask&(1<<j)) gendecaltris(cu[i], j, v, solid || (flataxisface(cu[i], j) && faceedges(cu[i], j)==F_SOLID));
+            }
+            else
+            {
+                bool solid = cu[i].ext && isclipped(cu[i].ext->material) && cu[i].ext->material!=MAT_CLIP;
+                uchar vismask = 0;
+                loopj(6) if(!(avoid&(1<<j)) && (solid ? visiblematerial(cu[i], j, co.x, co.y, co.z, size)==MATSURF_VISIBLE : visibleface(cu[i], j, co.x, co.y, co.z, size))) vismask |= 1<<j;
+                if(!vismask) continue;
+                uchar vertused = fvmasks[vismask];
+                vec v[8];
+                loopj(8) if(vertused&(1<<j)) calcvert(cu[i], co.x, co.y, co.z, size, v[j], j, solid);
+                loopj(6) if(vismask&(1<<j)) gendecaltris(cu[i], j, v, solid || (flataxisface(cu[i], j) && faceedges(cu[i], j)==F_SOLID));
             }
         }
     }
@@ -431,8 +467,6 @@ decalrenderer decals[] =
     decalrenderer("textures/blood.png", DF_RND4|DF_ROTATE|DF_INVMOD),
     decalrenderer("<decal>textures/bullet.png", DF_OVERBRIGHT)
 };
-
-VARFP(maxdecaltris, 0, 1024, 16384, initdecals());
 
 void initdecals()
 {

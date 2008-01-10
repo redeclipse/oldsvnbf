@@ -750,7 +750,3 @@ bool intersect(physent *d, vec &from, vec &to)	// if lineseg hits entity boundin
 		&& p->z <= d->o.z+d->aboveeye
 		&& p->z >= d->o.z-d->height;
 }
-
-VARP(sensitivity,		0,			7,			1000);
-VARP(sensitivityscale,	1,			1,			100);
-VARP(invmouse,			0,			0,			1);

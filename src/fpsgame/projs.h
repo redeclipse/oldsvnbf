@@ -73,7 +73,8 @@ struct projectiles
 							break;
 						}
 					}
-					if (guntype[gun].fsound >= 0) schan = playsound(guntype[gun].fsound, &o, &vel);
+					if (guntype[gun].fsound >= 0)
+						schan = playsound(guntype[gun].fsound, &o);
 					break;
 				}
 				case PRJ_GIBS:
@@ -82,7 +83,6 @@ struct projectiles
 					elasticity = 0.25f;
 					relativity = 1.0f;
 					waterfric = 2.0f;
-					schan = playsound(S_WHIZZ, &o, &vel);
 					break;
 				}
 				case PRJ_DEBRIS:
@@ -92,7 +92,6 @@ struct projectiles
 					elasticity = 0.66f;
 					relativity = 1.0f;
 					waterfric = 1.75f;
-					schan = playsound(S_WHIZZ, &o, &vel);
 					break;
 				}
 			}
@@ -114,8 +113,14 @@ struct projectiles
 
 		void check(int time)
 		{
-			if (sndchans.inrange(schan) && !sndchans[schan].playing()) schan = -1;
-            if (bnctype == PRJ_SHOT) regular_particle_splash(5, 1, 500, o);
+            if (bnctype == PRJ_SHOT)
+            {
+				if (guntype[gun].fsound >= 0 && (!sounds.inrange(schan) || !sounds[schan].inuse))
+				{
+					schan = playsound(guntype[gun].fsound, &o);
+				}
+            	regular_particle_splash(5, 1, 500, o);
+            }
 			else if (bnctype == PRJ_GIBS) particle_splash(3, 1, 10000, o);
 		}
 
@@ -143,14 +148,7 @@ struct projectiles
 
 					if (gun == GUN_GL)
 					{
-						//conoutf("BNC %d [%.1f,%.1f,%.1f]", qtime, pos.x, pos.y, pos.z);
-						//conoutf("GREANDE %.1f,%.1f [%.1f,%.1f,%.1f] %.1f", yaw, pitch, vel.x, vel.y, vel.z, vel.magnitude());
-						if (hitplayer)
-						{
-							pos = vec(vec(o).sub(hitplayer->o)).normalize();
-							//conoutf("PLAYER %.1f,%.1f [%.1f,%.1f,%.1f] %.1f", hitplayer->yaw, hitplayer->pitch, hitplayer->vel.x, hitplayer->vel.y, hitplayer->vel.z, hitplayer->vel.magnitude());
-							//conoutf("OFFSET [%.1f,%.1f,%.1f]", pos.x, pos.y, pos.z);
-						}
+						if (hitplayer) pos = vec(vec(o).sub(hitplayer->o)).normalize();
 					}
 
 					if (vel.magnitude() > 1.f)
@@ -160,9 +158,9 @@ struct projectiles
 
 						if (millis-lasttime > 500)
 						{
-							if (bnctype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, &vel, vel.magnitude());
-							else if (bnctype == PRJ_GIBS) playsound(S_SPLAT, &o, &vel, vel.magnitude());
-							else if (bnctype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, &vel, vel.magnitude());
+							if (bnctype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, true);
+							else if (bnctype == PRJ_GIBS) playsound(S_SPLAT, &o, true);
+							else if (bnctype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, true);
 							lasttime = millis;
 						}
 					}
@@ -178,9 +176,7 @@ struct projectiles
 
 		void cleanup()
 		{
-			if (sndchans.inrange(schan) && sndchans[schan].playing())
-				sndchans[schan].stop();
-
+			if (sounds.inrange(schan) && sounds[schan].inuse) removesound(schan);
 			schan = -1;
 		}
 	};

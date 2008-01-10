@@ -8,7 +8,4 @@
 #define GAMEID		"bfa"
 
 #include "game.h"
-#include "gameserver.h"
-
-
-
+#include "fpsserver.h"

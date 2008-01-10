@@ -898,7 +898,7 @@ void resetmap()
 	texturereset();
 	mapmodelreset();
 	clearoverrides();
-	clearmapsounds();
+	clearsound();
 	cleanreflections();
 	resetlightmaps();
 	clearparticles();

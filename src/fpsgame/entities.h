@@ -88,7 +88,7 @@ struct entities : icliententities
         }
     }
 
-	void rumble(extentity &e) { playsound(S_RUMBLE, &e.o); }
+	void rumble(extentity &e) { playsound(S_RUMBLE, &e.o, true); }
 
 	void trigger(extentity &e)
 	{
@@ -112,7 +112,7 @@ struct entities : icliententities
 			if(!d) return;
 			guntypes &g = guntype[ents[n]->attr1];
 			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), g.name, 15);
-			playsound(S_ITEMAMMO, &ents[n]->o);
+			playsound(S_ITEMAMMO, &d->o);
 			if(d!=cl.player1) return;
 			d->pickup(cl.lastmillis, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
 		}
@@ -209,16 +209,24 @@ struct entities : icliententities
 
 	void putitems(ucharbuf &p)
 	{
-		loopv(ents) if (ents[i]->type == WEAPON)
+		loopv(ents)
 		{
-			putint(p, i);
-			putint(p, ents[i]->type);
-			putint(p, ents[i]->attr1);
-			putint(p, ents[i]->attr2);
-			putint(p, ents[i]->attr3);
-			putint(p, ents[i]->attr4);
-			putint(p, ents[i]->attr5);
-			ents[i]->spawned = true;
+			switch (ents[i]->type)
+			{
+				case WEAPON:
+				{
+					putint(p, i);
+					putint(p, ents[i]->type);
+					putint(p, ents[i]->attr1);
+					putint(p, ents[i]->attr2);
+					putint(p, ents[i]->attr3);
+					putint(p, ents[i]->attr4);
+					putint(p, ents[i]->attr5);
+					ents[i]->spawned = true;
+					break;
+				}
+				default: break;
+			}
 		}
 	}
 

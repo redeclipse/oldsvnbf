@@ -172,7 +172,7 @@ int visiblematerial(cube &c, int orient, int x, int y, int z, int size)
 	return MATSURF_NOT_VISIBLE;
 }
 
-void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurface> &matsurfs)
+void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurface> &matsurfs, uchar &vismask, uchar &clipmask)
 {
 	loopi(6)
 	{
@@ -187,6 +187,12 @@ void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurfa
 			if(dimcoord(i)) m.o[dimension(i)] += size;
 			matsurfs.add(m);
 		}
+        if(isclipped(c.ext->material) && c.ext->material != MAT_CLIP) 
+        {
+            clipmask |= 1<<i;
+            if(vis == MATSURF_VISIBLE) vismask |= 1<<i;
+            else vismask &= ~(1<<i);
+        }
 	}
 }
 

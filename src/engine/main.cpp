@@ -9,10 +9,10 @@ void cleanup()
 	cleanupserver();
 	SDL_ShowCursor(1);
 	freeocta(worldroot);
-	extern void clear_command(); clear_command();
-	extern void clear_console(); clear_console();
-	extern void clear_mdls();	clear_mdls();
-	extern void clear_sound();	clear_sound();
+	extern void clear_command();	clear_command();
+	extern void clear_console();	clear_console();
+	extern void clear_mdls();		clear_mdls();
+	stopsound();
 	SDL_Quit();
 }
 
@@ -87,11 +87,11 @@ void writeinitcfg()
 	fprintf(f, "stencilbits %d\n", stencilbits);
 	fprintf(f, "fsaa %d\n", fsaa);
 	fprintf(f, "vsync %d\n", vsync);
-	extern int useshaders, shaderprecision;
 	fprintf(f, "shaders %d\n", useshaders);
 	fprintf(f, "shaderprecision %d\n", shaderprecision);
-	extern int soundchans, soundfreq;
+	fprintf(f, "soundmono %d\n", soundmono);
 	fprintf(f, "soundchans %d\n", soundchans);
+	fprintf(f, "soundbufferlen %d\n", soundbufferlen);
 	fprintf(f, "soundfreq %d\n", soundfreq);
 	fclose(f);
 }

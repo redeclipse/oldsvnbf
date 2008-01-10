@@ -1,108 +1,50 @@
+#include "SDL_mixer.h"
+
 extern bool nosound;
 extern int soundvol;
 
-#define SNDMINDIST	16.0f
-#define SNDMAXDIST	10000.f
+#define SOUNDMINDIST		16.0f
+#define SOUNDMAXDIST		10000.f
 
 struct soundsample
 {
-	void *sound;
+	Mix_Chunk *sound;
 	char *name;
 
 	soundsample() : name(NULL) {}
 	~soundsample() { DELETEA(name); }
-
-	void load(const char *file, int loop = 0)
-	{
-		return;
-	}
 };
 
 struct soundslot
 {
 	soundsample *sample;
-	int vol, maxuses;
+	int vol;
+	
+	soundslot() : sample(NULL), vol(0) {}
+	~soundslot() {}
 };
 
 
-struct soundchan
+struct sound
 {
-	void *channel;
 	soundslot *slot;
-	vec *pos, _pos, *vel, _vel;
-	float mindist, maxdist;
+	vec *pos, posval;
 	bool inuse;
 	
-	soundchan() { reset(false); }
-	~soundchan() {}
-
-	void reset(bool i = false)
-	{
-		inuse = i;
-		pos = vel = NULL;
-	}
-
-	void init(void *c, soundslot *s, float m = SNDMINDIST, float n = SNDMAXDIST)
-	{
-		reset(true);
-		channel = c;
-		slot = s;
-		mindist = m;
-		maxdist = n;
-	}
-
-	void pause(bool t)
-	{
-		return;
-	}
-
-	void stop()
-	{
-		return;
-	}
-
-	bool playing()
-	{
-		return false;
-	}
-	
-	void update()
-	{
-		return;
-	}
-	
-	void position(vec *p, vec *v)
-	{
-		return;
-
-		if (playing())
-		{
-			pos = p;
-			vel = v;
-			update();
-		}
-	}
-	
-	void positionv(vec &p, vec &v)
-	{
-		return;
-
-		if (playing())
-		{
-			_pos = p;
-			_vel = v;
-			position(&_pos, &_vel);
-		}
-	}
+	sound() : slot(NULL), inuse(false) {}
+	~sound() {}
 };
 
-extern hashtable<const char *, soundsample> sndsamples;
+extern hashtable<const char *, soundsample> soundsamples;
 extern vector<soundslot> gamesounds, mapsounds;
-extern vector<soundchan> sndchans;
+extern vector<sound> sounds;
 
-extern void checksound();
-extern int addsound(const char *name, int vol, int maxuses, vector<soundslot> &sounds);
-extern int playsound(int n, vec *p = NULL, vec *v = NULL, float mindist = SNDMINDIST, float maxdist = SNDMAXDIST, vector<soundslot> &sounds = gamesounds);
-extern int playsoundv(int n, vec &p, vec &v, float mindist = SNDMINDIST, float maxdist = SNDMAXDIST, vector<soundslot> &sounds = gamesounds);
-extern void clearmapsounds();
 extern void initsound();
+extern void stopsound();
+extern void checksound();
+extern int addsound(const char *name, int vol, vector<soundslot> &sounds);
+extern void removesound(int c, bool clear = false);
+extern void clearsound();
+extern int playsound(int n, vec *pos = NULL, bool copy = false, bool mapsnd = false);
+
+extern int soundvol, musicvol, soundmono, soundchans, soundbufferlen, soundfreq, maxsoundsatonce, maxsounddistance;

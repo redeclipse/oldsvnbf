@@ -525,16 +525,22 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
 	}
 }
 
-void gencubeverts(cube &c, int x, int y, int z, int size, int csi)
+void gencubeverts(cube &c, int x, int y, int z, int size, int csi, uchar &vismask, uchar &clipmask)
 {
 	freeclipplanes(c);						  // physics planes based on rendering
 
     loopi(6) if(visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR))
 	{
+        vismask |= 1<<i;
+
 		cubeext &e = ext(c);
 
 		// this is necessary for physics to work, even if the face is merged
-		if(touchingface(c, i)) e.visible |= 1<<i;
+        if(touchingface(c, i)) 
+        {
+            e.visible |= 1<<i;
+            if(c.texture[i]!=DEFAULT_SKY && faceedges(c, i)==F_SOLID) clipmask |= 1<<i;
+        }
 
 		if(e.merged&(1<<i)) continue;
 
@@ -558,7 +564,11 @@ void gencubeverts(cube &c, int x, int y, int z, int size, int csi)
 			g.texture = c.texture[i];
 		}
 	}
-	else if(touchingface(c, i) && visibleface(c, i, x, y, z, size, MAT_AIR, MAT_NOCLIP)) ext(c).visible |= 1<<i;
+    else if(touchingface(c, i))
+    {
+        if(visibleface(c, i, x, y, z, size, MAT_AIR, MAT_NOCLIP)) ext(c).visible |= 1<<i;
+        if(faceedges(c, i)==F_SOLID) clipmask |= 1<<i;
+    }
 }
 
 bool skyoccluded(cube &c, int orient)
@@ -839,36 +849,52 @@ void addmergedverts(int level)
 	mfl.setsizenodelete(0);
 }
 
-void rendercube(cube &c, int cx, int cy, int cz, int size, int csi)  // creates vertices and indices ready to be put into a va
+static uchar unusedmask;
+
+void rendercube(cube &c, int cx, int cy, int cz, int size, int csi, uchar &vismask = unusedmask, uchar &clipmask = unusedmask)  // creates vertices and indices ready to be put into a va
 {
 	//if(size<=16) return;
-	if(c.ext && c.ext->va) return;							// don't re-render
+    if(c.ext && c.ext->va) 
+    {
+        vismask = c.children ? c.vismask : 0x3F;
+        clipmask = c.children ? c.clipmask : 0;
+        return;                            // don't re-render
+    }
 	cstats[csi].size = size;
 
 	if(c.children)
 	{
 		cstats[csi].nnode++;
 
+        uchar visparent = 0, clipparent = 0x3F;
+        uchar clipchild[8];
 		loopi(8)
 		{
 			ivec o(i, cx, cy, cz, size/2);
-			rendercube(c.children[i], o.x, o.y, o.z, size/2, csi-1);
+            rendercube(c.children[i], o.x, o.y, o.z, size/2, csi-1, c.vismasks[i], clipchild[i]);
+            uchar mask = (1<<octacoord(0, i)) | (4<<octacoord(1, i)) | (16<<octacoord(2, i));
+            visparent |= c.vismasks[i];
+            clipparent &= (clipchild[i]&mask) | ~mask;
+            clipparent &= ~(c.vismasks[i] & (mask^0x3F));
 		}
+        vismask = c.vismask = visparent;
+        clipmask = c.clipmask = clipparent;
 
 		if(csi < VVEC_INT && vamerges[csi].length()) addmergedverts(csi);
 
 		if(c.ext && c.ext->ents && c.ext->ents->mapmodels.length()) vamms.add(c.ext->ents);
 		return;
 	}
-	
     genskyfaces(c, ivec(cx, cy, cz), size);
 
-	if(!isempty(c)) gencubeverts(c, cx, cy, cz, size, csi);
+    vismask = clipmask = 0;
+
+    if(!isempty(c)) gencubeverts(c, cx, cy, cz, size, csi, vismask, clipmask);
 
 	if(c.ext)
 	{
 		if(c.ext->ents && c.ext->ents->mapmodels.length()) vamms.add(c.ext->ents);
-		if(c.ext->material != MAT_AIR) genmatsurfs(c, cx, cy, cz, size, vc.matsurfs);
+        if(c.ext->material != MAT_AIR) genmatsurfs(c, cx, cy, cz, size, vc.matsurfs, vismask, clipmask);
 		if(c.ext->merges) genmergedfaces(c, ivec(cx, cy, cz), size);
 		if(c.ext->merged & ~c.ext->mergeorigin) vahasmerges |= MERGE_PART;
 	}

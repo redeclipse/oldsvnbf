@@ -2,22 +2,71 @@ struct physics
 {
 	GAMECLIENT &cl;
 	
-	IVARW(gravity,		0,			25,			INT_MAX-1);	// gravity
-	IVARW(movespeed,	1,			45,			INT_MAX-1);	// speed
-	IVARW(crawlspeed,	1,			25,			INT_MAX-1);	// crawl speed
-	IVARW(jumpvel,		0,			60,			INT_MAX-1);	// extra velocity to add when jumping
-	IVARW(watervel,		0,			60,			1024);		// extra water velocity
+	IVARW(crawlspeed,		1,			25,			INT_MAX-1);	// crawl speed
+	IVARW(gravity,			0,			25,			INT_MAX-1);	// gravity
+	IVARW(jumpvel,			0,			60,			INT_MAX-1);	// extra velocity to add when jumping
+	IVARW(movespeed,		1,			45,			INT_MAX-1);	// speed
+	IVARW(watervel,			0,			60,			1024);		// extra water velocity
 
-	IVARP(floatspeed,	10,			100,		1000);
-	IVARP(minframetime,	5,			10,			20);
+	IVARP(floatspeed,		10,			100,		1000);
+	IVARP(minframetime,		5,			10,			20);
 
 	int spawncycle, fixspawn, physicsfraction, physicsrepeat;
 
 	physics(GAMECLIENT &_cl) : cl(_cl)
 	{
+		#define movedir(name, v, d, s, os) \
+			CCOMMAND(name, "D", (physics *self, int *down), { \
+				self->cl.player1->s = *down != 0; \
+				self->cl.player1->v = self->cl.player1->s ? d : (self->cl.player1->os ? -(d) : 0); \
+			});
+
+		movedir(backward,	move,	-1,		k_down,		k_up);
+		movedir(forward,	move,	1,		k_up,		k_down);
+		movedir(left,		strafe,	1,		k_left,		k_right);
+		movedir(right,		strafe,	-1,		k_right,	k_left);
+
+		CCOMMAND(crouch, "D", (physics *self, int *down), { self->docrouch(*down!=0); });
+		CCOMMAND(jump,   "D", (physics *self, int *down), { self->dojump(*down!=0); });
+		CCOMMAND(attack, "D", (physics *self, int *down), { self->doattack(*down!=0); });
+		CCOMMAND(reload, "D", (physics *self, int *down), { self->doreload(*down!=0); });
+		CCOMMAND(pickup, "D", (physics *self, int *down), { self->dopickup(*down!=0); });
+		CCOMMAND(lean, "D", (physics *self, int *down), { self->dolean(*down!=0); });
+        CCOMMAND(taunt, "", (physics *self), { self->taunt(); });
+
 		physicsfraction = physicsrepeat = 0;
 		spawncycle = -1;
 		fixspawn = 4;
+	}
+
+	// inputs
+	#define iput(x,y,z) \
+		void do##x(bool on) \
+		{ \
+			bool val = !cl.intermission ? on : false; \
+			cl.player1->y = cl.player1->state != CS_DEAD ? val : false; \
+			if (z && cl.player1->state == CS_DEAD && val) cl.respawn(); \
+		}
+
+	iput(crouch,	crouching,	false);
+	iput(jump,		jumping,	false);
+	iput(attack,	attacking,	true);
+	iput(reload,	reloading,	true);
+	iput(pickup,	pickingup,	true);
+	iput(lean,		leaning,	false);
+
+	void taunt()
+	{
+        if (cl.player1->state!=CS_ALIVE || cl.player1->physstate<PHYS_SLOPE) return;
+		if (cl.lastmillis-cl.player1->lasttaunt<1000) return;
+		cl.player1->lasttaunt = cl.lastmillis;
+		cl.cc.addmsg(SV_TAUNT, "r");
+	}
+
+
+	vec feetpos(physent *d)
+	{
+		return vec(d->o).sub(vec(0, 0, d->height));
 	}
 
 	float stairheight(physent *d)
@@ -106,11 +155,11 @@ struct physics
 			{
 				if (waterlevel < 0 && mat == MAT_WATER)
 				{
-					playsound(S_SPLASH1, &d->o, &d->vel);
+					playsound(S_SPLASH1, &d->o, true);
 				}
 				else if (waterlevel > 0 && mat == MAT_WATER)
 				{
-					playsound(S_SPLASH2, &d->o, &d->vel);
+					playsound(S_SPLASH2, &d->o, true);
 				}
 				else if (waterlevel < 0 && mat == MAT_LAVA)
 				{
@@ -127,11 +176,11 @@ struct physics
 			
 		if (floorlevel > 0)
 		{
-			playsound(S_JUMP, &d->o, &d->vel);
+			playsound(S_JUMP, &d->o);
 		}
 		else if (floorlevel < 0)
 		{
-			playsound(S_LAND, &d->o, &d->vel);
+			playsound(S_LAND, &d->o, true);
 		}
 	}
 	

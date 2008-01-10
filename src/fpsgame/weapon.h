@@ -127,8 +127,7 @@ struct weaponstate
 		float dist = middist(cl.player1, dir, o);
 		cl.camerawobble += int(float(guntype[gun].damage)/(dist/RL_DAMRAD/RL_DISTSCALE));
 
-		if (guntype[gun].esound >= 0)
-			playsoundv(guntype[gun].esound, o, dir, RL_DAMRAD);
+		if (guntype[gun].esound >= 0) playsound(guntype[gun].esound, &o, true);
 
 		particle_splash(0, 200, 300, o);
 		particle_fireball(o, RL_DAMRAD, gun == GUN_RL ? 22 : 23);
@@ -198,7 +197,9 @@ struct weaponstate
 
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
-		if (guntype[gun].sound >= 0 ) playsound(guntype[gun].sound, &d->o, &d->vel);
+		if (guntype[gun].sound >= 0)
+			playsound(guntype[gun].sound, &from, true);
+		
 		switch(gun)
 		{
 			case GUN_SG:
@@ -238,7 +239,7 @@ struct weaponstate
 			case GUN_RIFLE:
 				particle_splash(0, 200, 250, to);
 				particle_trail(21, 500, hudgunorigin(gun, from, to, d), to);
-                if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
+                if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
 				break;
 		}
 	}
