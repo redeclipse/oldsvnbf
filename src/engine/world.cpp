@@ -955,7 +955,7 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	hdr.version = MAPVERSION;
 	hdr.gamever = BFRONTIER;
 	hdr.headersize = sizeof(bfgz);
-	hdr.worldsize = 1 << (scale<10 ? 10 : (scale>20 ? 20 : scale));
+	hdr.worldsize = 1 << (scale<8 ? 8 : (scale>18 ? 18 : scale));
 	hdr.revision = 0;
 	hdr.lightmaps = 0;
 
