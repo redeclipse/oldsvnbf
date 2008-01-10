@@ -93,11 +93,10 @@ struct igameclient
 
 	virtual void mousemove(int dx, int dy)
 	{
-		extern int sensitivity, sensitivityscale, invmouse;
 		extern physent *camera1;
 		const float SENSF = 33.0f;	 // try match quake sens
-		camera1->yaw += (dx/SENSF)*(sensitivity/(float)sensitivityscale);
-		camera1->pitch -= (dy/SENSF)*(sensitivity/(float)sensitivityscale)*(invmouse ? -1 : 1);
+		camera1->yaw += (dx/SENSF);
+		camera1->pitch -= (dy/SENSF);
 		fixview();
 	}
 

@@ -401,7 +401,8 @@ void transplayer()
 	glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);
 }
 
-VARFP(fov, 1, 120, 360, cl->fixview());
+float curfov = 105;
+VARFP(fov, 1, 120, 360, { cl->fixview(); curfov = fov; });
 
 int xtraverts, xtravertsva;
 
@@ -878,8 +879,7 @@ void gl_drawframe(int w, int h)
 	cleardynlights();
 	cl->adddynlights();
 
-	float fovy = (float)fov*h/w;
-	float aspect = w/(float)h;
+    float fovy = float(curfov*h)/w, aspect = w/float(h);
     int fogmat = lookupmaterial(vec(camera1->o.x, camera1->o.y, camera1->o.z + camera1->aboveeye*0.5f));
 	if(fogmat!=MAT_WATER && fogmat!=MAT_LAVA) fogmat = MAT_AIR;
 
@@ -904,7 +904,7 @@ void gl_drawframe(int w, int h)
 
 	if(!hasFBO) drawreflections();
 
-	visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, fov);
+    visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, curfov);
 
 	extern GLuint shadowmapfb;
 	if(shadowmap && !shadowmapfb) rendershadowmap();

@@ -308,7 +308,7 @@ void save_config()
 	loopv(mapsounds)
 	{
 		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(mapsounds.length()), "saving mapsound slots...");
-		fprintf(h, "mapsound \"%s\" %d %d\n", mapsounds[i].sample->name, mapsounds[i].vol, mapsounds[i].maxuses);
+		fprintf(h, "mapsound \"%s\" %d\n", mapsounds[i].sample->name, mapsounds[i].vol);
 	}
 	if (mapsounds.length()) fprintf(h, "\n");
 	if (verbose >= 2) conoutf("saved %d mapsound slots", mapsounds.length());
@@ -486,10 +486,10 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 				gzread(f, vname, len+1);
 				int val = gzgetint(f);
 				ident *id = idents->access(vname);
-				if (id != NULL && id->type == ID_VAR && id->world && id->max >= id->min)
+				if (id != NULL && id->type == ID_VAR && id->world && id->maxval >= id->minval)
 				{
-					if (val > id->max) val = id->max;
-					else if (val < id->min) val = id->min;
+					if (val > id->maxval) val = id->maxval;
+					else if (val < id->minval) val = id->minval;
 					setvar(vname, val, true);
 					if (verbose >= 3) conoutf("%s set to %d", id->name, *id->storage.i);
 				}

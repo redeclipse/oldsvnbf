@@ -78,6 +78,7 @@ extern vector<vertex> verts;			// the vertex array for all world rendering
 extern int curtexnum;
 extern const ivec cubecoords[8];
 extern const ushort fv[6][4];
+extern const uchar fvmasks[64];
 extern const uchar faceedgesidx[6][4];
 extern bool inbetweenframes;
 
@@ -129,6 +130,11 @@ extern void genenvmaps();
 extern ushort closestenvmap(const vec &o);
 extern ushort closestenvmap(int orient, int x, int y, int z, int size);
 extern GLuint lookupenvmap(ushort emid);
+
+
+// shader
+
+extern int useshaders, shaderprecision;
 
 // shadowmap
 
@@ -188,6 +194,7 @@ extern int calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *
 extern uint faceedges(cube &c, int orient);
 extern bool collapsedface(uint cfe);
 extern bool touchingface(cube &c, int orient);
+extern bool flataxisface(cube &c, int orient);
 extern int genclipplane(cube &c, int i, vec *v, plane *clip);
 extern void genclipplanes(cube &c, int x, int y, int z, int size, clipplanes &p);
 extern bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat = MAT_AIR, uchar nmat = MAT_AIR);
@@ -228,7 +235,7 @@ extern void destroyva(vtxarray *va, bool reparent = true);
 // renderva
 extern GLuint fogtex;
 
-extern void visiblecubes(cube *c, int size, int cx, int cy, int cz, int w, int h, int fov);
+extern void visiblecubes(cube *c, int size, int cx, int cy, int cz, int w, int h, float fov);
 extern void reflectvfcP(float z);
 extern void restorevfcP();
 extern void createfogtex();
@@ -262,7 +269,7 @@ extern int showmat;
 extern sometype materials[], textypes[];
 extern const char *findmaterialname(int type);
 extern int findmaterial(const char *name, bool tryint = false);
-extern void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurface> &matsurfs);
+extern void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurface> &matsurfs, uchar &vismask, uchar &clipmask);
 extern void rendermatsurfs(materialsurface *matbuf, int matsurfs);
 extern void rendermatgrid(materialsurface *matbuf, int matsurfs);
 extern int optimizematsurfs(materialsurface *matbuf, int matsurfs);

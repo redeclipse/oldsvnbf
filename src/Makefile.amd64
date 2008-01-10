@@ -2,7 +2,7 @@ CXXOPTFLAGS= -O3 -fsigned-char -fomit-frame-pointer -ffast-math -fno-strict-alia
 INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
 CXXFLAGS= -Wall $(CXXOPTFLAGS) $(INCLUDES)
 
-CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lz -lGL -lGLU
+CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lz -lGL -lGLU
 CLIENT_OBJS= \
 	shared/tools.o \
 	shared/geom.o \

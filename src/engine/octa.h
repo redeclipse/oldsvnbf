@@ -183,7 +183,15 @@ struct cube
 							 // see documentation jpgs for more info.
 		uint faces[3];		// 4 edges of each dimension together representing 2 perpendicular faces
 	};
-	ushort texture[6];		// one for each face. same order as orient.
+    union
+    {
+		ushort texture[6];		// one for each face. same order as orient.
+        struct
+        {
+            uchar clipmask, vismask;
+            uchar vismasks[8];
+        };
+    };
 	cubeext *ext;			// extended info for the cube
 };
 

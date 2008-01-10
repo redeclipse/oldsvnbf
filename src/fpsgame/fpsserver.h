@@ -2122,8 +2122,8 @@ struct GAMESERVER : igameserver
 		gamelimit = timelimit*60000;
 		checkintermission();
 	}
-
 	*/
+
 	static int scrsort(const scr **a, const scr **b)
 	{
 		if((*a)->val > (*b)->val) return -1;
@@ -2146,7 +2146,7 @@ struct GAMESERVER : igameserver
 };
 
 #ifndef STANDALONE
-#include "gameclient.h"
+#include "fps.cpp"
 REGISTERGAME(GAMENAME, GAMEID, new GAMECLIENT(), new GAMESERVER());
 #else
 REGISTERGAME(GAMENAME, GAMEID, NULL, new GAMESERVER());

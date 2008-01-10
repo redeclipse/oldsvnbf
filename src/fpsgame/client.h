@@ -489,7 +489,7 @@ struct clientcom : iclientcom
 
 			case SV_SOUND:
 				if(!d) return;
-				playsound(getint(p), &d->o, &d->vel);
+				playsound(getint(p), &d->o);
 				break;
 
 			case SV_TEXT:
@@ -620,7 +620,7 @@ struct clientcom : iclientcom
 				d->lifesequence = ls;
 				d->gunselect = gunselect;
 				d->state = CS_SPAWNING;
-				playsound(S_RESPAWN, &d->o, &d->vel);
+				playsound(S_RESPAWN, &d->o, true);
 				break;
 			}
 
@@ -687,7 +687,7 @@ struct clientcom : iclientcom
 				int trg = getint(p), amt = getint(p), ms = getint(p);
 				fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
 				if (!target) break;
-				playsound(S_REGEN, &target->o, &target->vel);
+				playsound(S_REGEN, &target->o);
 				target->health = amt;
 				target->lastregen = ms;
 				break;
@@ -751,7 +751,7 @@ struct clientcom : iclientcom
 				int i = getint(p);
 				if(!cl.et.ents.inrange(i)) break;
 				cl.et.setspawn(i, true);
-				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o);
+				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o, true);
                 const char *name = cl.et.itemname(i);
 				if(name) particle_text(cl.et.ents[i]->o, name, 9);
 				break;
@@ -772,10 +772,10 @@ struct clientcom : iclientcom
 				int val = getint(p);
 				ident *id = idents->access(text);
 
-				if (id->type == ID_VAR && id->world && id->max >= id->min)
+				if (id->type == ID_VAR && id->world && id->maxval >= id->minval)
 				{
-					if (val > id->max) val = id->max;
-					else if (val < id->min) val = id->min;
+					if (val > id->maxval) val = id->maxval;
+					else if (val < id->minval) val = id->minval;
 					
 					setvar(text, val, true);
 					
@@ -852,11 +852,6 @@ struct clientcom : iclientcom
 				getstring(text, p);
                 conoutf("%s", text);
 				break;
-
-//			case SV_COMMAND:
-//				getstring(text, p);
-//				getservcmd(text);
-//				break;
 
 			case SV_SENDDEMOLIST:
 			{
@@ -1187,39 +1182,6 @@ struct clientcom : iclientcom
 
 	bool ready() { return connected; }
 	int otherclients() { return cl.players.length(); }
-
-	void getservcmd(char *text) // messages from the server to intercept, borrowed from executeret()
-	{
-		const int MAXWORDS = 25;
-		char *w[MAXWORDS], *p = text;
-		
-		int numargs = MAXWORDS;
-		loopi(MAXWORDS)
-		{
-			w[i] = (char *)"";
-			if(i>numargs) continue;
-			char *s = parseword(p);
-			if(s) w[i] = s;
-			else numargs = i;
-		}
-
-		p += strcspn(p, "\0");
-
-		int n;
-		bool msg = true;
-		string buf;
-		buf[0] = 0;
-
-		if (!strcmp(w[0], "something"))
-		{
-			if (*w[1] && (n = atoi(w[1])))
-			{
-				msg = n!=0;
-			}
-		}
-
-		if (buf[0]) toservcmd(buf, msg);
-	}
 
 	IVARP(serversplit, 3, 10, INT_MAX-1);
 

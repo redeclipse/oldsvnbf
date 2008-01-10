@@ -15,7 +15,9 @@ void drawvatris(vtxarray *va, GLsizei numindices, const GLvoid *indices, ushort 
 
 plane vfcP[5];  // perpindictular vectors to view frustrum bounding planes
 float vfcDfog;  // far plane culling distance (fog limit).
-int vfcw, vfch, vfcfov;
+float vfcDnear[5], vfcDfar[5];
+int vfcw, vfch;
+float vfcfov;
 
 vtxarray *visibleva;
 
@@ -40,9 +42,21 @@ int isvisiblesphere(float rad, const vec &cv)
 
 int isvisiblecube(const vec &o, int size)
 {
-	vec center(o);
-	center.add(size/2.0f);
-	return isvisiblesphere(size*SQRT3/2.0f, center);
+    int v = VFC_FULL_VISIBLE;
+    float dist;
+
+    loopi(5)
+    {
+        dist = vfcP[i].dist(o);
+        if(dist < -vfcDfar[i]*size) return VFC_NOT_VISIBLE;
+        if(dist < -vfcDnear[i]*size) v = VFC_PART_VISIBLE;
+    }
+
+    dist -= vfcDfog;
+    if(dist > -vfcDnear[4]*size) return VFC_FOGGED;
+    if(dist > -vfcDfar[4]*size) v = VFC_PART_VISIBLE;
+
+    return v;
 }
 
 float vadist(vtxarray *va, const vec &p)
@@ -90,6 +104,7 @@ void sortvisiblevas()
 	}
 }
 
+
 void findvisiblevas(vector<vtxarray *> &vas, bool resetocclude = false)
 {
 	loopv(vas)
@@ -110,6 +125,17 @@ void findvisiblevas(vector<vtxarray *> &vas, bool resetocclude = false)
 	}
 }
 
+void calcvfcD()
+{
+    loopi(5)
+    {
+        plane &p = vfcP[i];
+        vfcDnear[i] = vfcDfar[i] = 0;
+        loopk(3) if(p[k] > 0) vfcDfar[i] += p[k];
+        else vfcDnear[i] += p[k];
+    }
+} 
+
 void setvfcP(float yaw, float pitch, const vec &camera)
 {
 	float yawd = (90.0f - vfcfov/2.0f) * RAD;
@@ -123,6 +149,7 @@ void setvfcP(float yaw, float pitch, const vec &camera)
 	vfcP[4].toplane(vec(yaw, pitch), camera);		  // near/far planes
 	extern int fog;
 	vfcDfog = fog;
+    calcvfcD();
 }
 
 plane oldvfcP[5];
@@ -139,11 +166,12 @@ void reflectvfcP(float z)
 void restorevfcP()
 {
 	memcpy(vfcP, oldvfcP, sizeof(vfcP));
+    calcvfcD();
 }
 
 extern vector<vtxarray *> varoot;
 
-void visiblecubes(cube *c, int size, int cx, int cy, int cz, int w, int h, int fov)
+void visiblecubes(cube *c, int size, int cx, int cy, int cz, int w, int h, float fov)
 {
 	memset(vasort, 0, sizeof(vasort));
 

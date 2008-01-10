@@ -239,12 +239,12 @@ int getvar(const char *name)
 int getvarmin(const char *name) 
 {
 	GETVAR(id, name, 0);
-    return id->min;
+    return id->minval;
 }
 int getvarmax(const char *name) 
 {
 	GETVAR(id, name, 0);
-    return id->max;
+    return id->maxval;
 }
 bool identexists(const char *name) { return idents->access(name)!=NULL; }
 ident *getident(const char *name) { return idents->access(name); }
@@ -509,7 +509,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 
 				case ID_VAR:						// game defined variables
                     if(!w[1][0]) conoutf("%s = %d", c, *id->storage.i);      // var with no value just prints its current value
-                    else if(id->min>id->max) conoutf("variable %s is read-only", id->name);
+                    else if(id->minval>id->maxval) conoutf("variable %s is read-only", id->name);
 					else
 					{
 						#define WORLDVAR \
@@ -534,10 +534,10 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						WORLDVAR;
                         OVERRIDEVAR(id->overrideval.i = *id->storage.i, )
                         int i1 = parseint(w[1]);
-                        if(i1<id->min || i1>id->max)
+                        if(i1<id->minval || i1>id->maxval)
 						{
-                            i1 = i1<id->min ? id->min : id->max;                // clamp to valid range
-                            conoutf("valid range for %s is %d..%d", id->name, id->min, id->max);
+                            i1 = i1<id->minval ? id->minval : id->maxval;                // clamp to valid range
+                            conoutf("valid range for %s is %d..%d", id->name, id->minval, id->maxval);
 						}
                         *id->storage.i = i1;
                         id->changed();                                             // call trigger function if available

@@ -52,6 +52,7 @@
 					<Add library="SDLmain"/>
 					<Add library="SDL"/>
 					<Add library="SDL_image"/>
+					<Add library="SDL_mixer"/>
 					<Add library="z"/>
 					<Add library="opengl32"/>
 					<Add library="glu32"/>
@@ -89,6 +90,7 @@
 					<Add library="SDLmain"/>
 					<Add library="SDL"/>
 					<Add library="SDL_image"/>
+					<Add library="SDL_mixer"/>
 					<Add library="z"/>
 					<Add library="opengl32"/>
 					<Add library="glu32"/>
@@ -545,23 +547,31 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 		</Unit>
+		<Unit filename="fpsgame\fps.cpp">
+			<Option compilerVar="CPP"/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsrender.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
+		</Unit>
+		<Unit filename="fpsgame\fpsserver.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
+		</Unit>
 		<Unit filename="fpsgame\game.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-			<Option target="server"/>
-		</Unit>
-		<Unit filename="fpsgame\gameclient.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-			<Option target="server"/>
-		</Unit>
-		<Unit filename="fpsgame\gameserver.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>
@@ -578,14 +588,6 @@
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\projs.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-			<Option target="server"/>
-		</Unit>
-		<Unit filename="fpsgame\render.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

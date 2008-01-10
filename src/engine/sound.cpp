@@ -1,85 +1,242 @@
-// sound.cpp: uses fmod on windows and sdl_mixer on unix (both had problems on the other platform)
-
 #include "pch.h"
 #include "engine.h"
 
-hashtable<const char *, soundsample> sndsamples;
+hashtable<const char *, soundsample> soundsamples;
 vector<soundslot> gamesounds, mapsounds;
-vector<soundchan> sndchans;
+vector<sound> sounds;
 
 bool nosound = true;
+Mix_Music *music = NULL;
+char *musicdonecmd = NULL;
+int soundsatonce = 0, lastsoundmillis = 0;
+
+void setmusicvol(int musicvol)
+{
+	if (!nosound)
+	{
+		if (music) Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+	}
+}
+
 
 VARP(soundvol, 0, 255, 255);
-VARF(soundchans, 0, 1024, 4093, initwarning());
+VARFP(musicvol, 0, 255, 255, setmusicvol(musicvol));
+VARF(soundmono, 0, 0, 1, initwarning());
+VARF(soundchans, 0, 1024, INT_MAX-1, initwarning());
+VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning());
 VARF(soundfreq, 0, 44100, 48000, initwarning());
+VARP(maxsoundsatonce, 0, 20, INT_MAX-1);
+VARP(maxsounddistance, 0, 1024, INT_MAX-1);
 
 void initsound()
 {
-	return;
+	if (nosound)
+	{
+		if (Mix_OpenAudio(soundfreq, MIX_DEFAULT_FORMAT, soundmono ? 1 : 2, soundbufferlen) == -1)
+		{
+			conoutf("sound initialisation failed: %s", Mix_GetError());
+			return;
+		}
+		Mix_AllocateChannels(soundchans);
+		nosound = false;	
+	}
 }
+
+void musicdone(bool docmd)
+{
+	if (Mix_PlayingMusic()) Mix_HaltMusic();
+	
+	if (music)
+	{
+		Mix_FreeMusic(music);
+		music = NULL;
+	}
+
+	if (musicdonecmd != NULL)
+	{
+		char *cmd = musicdonecmd;
+		musicdonecmd = NULL;
+		if (docmd) execute(cmd);
+		delete[] cmd;
+	}
+}
+
+void stopsound()
+{
+	if (!nosound)
+	{
+		nosound = true;
+		musicdone(false);
+		clearsound();
+		soundsamples.clear();
+		gamesounds.setsizenodelete(0);
+		Mix_CloseAudio();
+	}
+}
+
+void removesound(int c, bool clear)
+{
+	if (Mix_Playing(c)) Mix_HaltChannel(c); 
+	if (sounds.inrange(c)) sounds[c].inuse = false;
+}
+
+void clearsound()
+{
+	loopv(sounds) removesound(i, true);
+	mapsounds.setsizenodelete(0);
+}
+
+void playmusic(char *name, char *cmd)
+{
+	if (!nosound)
+	{
+		musicdone(false);
+
+		if (soundvol && musicvol && *name)
+		{
+			if (cmd[0]) musicdonecmd = newstring(cmd);
+			s_sprintfd(sn)("%s", name);
+			const char *file = findfile(sn, "rb");
+
+			if ((music = Mix_LoadMUS(file)))
+			{
+				Mix_PlayMusic(music, cmd[0] ? 0 : -1);
+				Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+			}
+			else
+			{
+				conoutf("could not play music: %s", sn);
+			}
+		}
+	}
+}
+
+COMMANDN(music, playmusic, "ss");
 
 int findsound(const char *name, int vol, vector<soundslot> &sounds)
 {
 	loopv(sounds)
 	{
-		if(!strcmp(sounds[i].sample->name, name) && (!vol || sounds[i].vol==vol)) return i;
+		if (!strcmp(sounds[i].sample->name, name) && (!vol || sounds[i].vol == vol)) return i;
 	}
 	return -1;
 }
 
-int addsound(const char *name, int vol, int maxuses, vector<soundslot> &sounds)
+int addsound(const char *name, int vol, vector<soundslot> &sounds)
 {
-	soundsample *s = sndsamples.access(name);
-	if(!s)
+	soundsample *sample = soundsamples.access(name);
+	if (!sample)
 	{
 		char *n = newstring(name);
-		s = &sndsamples[n];
-		s->name = n;
-		s->sound = NULL;
+		sample = &soundsamples[n];
+		sample->name = n;
+		sample->sound = NULL;
+	}
+	if (!sample->sound)
+	{
+		const char *exts[] = { "", ".wav", ".ogg" };
+		string buf;
+		loopi(sizeof(exts)/sizeof(exts[0]))
+		{
+			s_sprintf(buf)("sounds/%s%s", sample->name, exts[i]);
+			const char *file = findfile(path(buf), "rb");
+			if ((sample->sound = Mix_LoadWAV(file)) != NULL) break;
+		}
+
+		if (!sample->sound) { conoutf("failed to load sample: %s", sample->name); return -1; }
 	}
 	soundslot &slot = sounds.add();
-	slot.sample = s;
-	slot.vol = vol ? vol : 255;
-	slot.maxuses = maxuses;
+	slot.sample = sample;
+	slot.vol = vol < 256 && vol > 0 ? vol : 255;
 	return sounds.length()-1;
 }
 
-ICOMMAND(registersound, "sii", (char *n, int *v, int *m), intret(addsound(n, *v, *m < 0 ? -1 : *m, gamesounds)));
-ICOMMAND(mapsound, "sii", (char *n, int *v, int *m), intret(addsound(n, *v, *m < 0 ? -1 : *m, mapsounds)));
+ICOMMAND(registersound, "si", (char *n, int *v), intret(addsound(n, *v, gamesounds)));
+ICOMMAND(mapsound, "si", (char *n, int *v), intret(addsound(n, *v, mapsounds)));
 
 void checksound()
 {
-	if(nosound) return;
-}
-
-int playsound(int n, vec *p, vec *v, float mindist, float maxdist, vector<soundslot> &sounds)
-{
-	return -1;
-}
-
-int playsoundv(int n, vec &p, vec &v, float mindist, float maxdist, vector<soundslot> &sounds)
-{
-	return -1;
-}
-
-ICOMMAND(sound, "i", (int *i), playsound(*i));
-
-void clearmapsounds()
-{
-	loopv(sndchans)
+	if (!nosound)
 	{
-		soundchan &s = sndchans[i];
-		if (s.playing()) s.stop();
+		loopv(sounds)
+		{
+			if (sounds[i].inuse)
+			{
+				if (!Mix_Playing(i)) sounds[i].inuse = false;
+				else
+				{
+					vec v;
+					float dist = camera1->o.dist(*sounds[i].pos, v);
+
+					if (dist < maxsounddistance)
+					{
+						int vol = soundvol, pan = 255/2;
+						
+						if ((vol -= (int)(dist*3/4*soundvol/255)) < 0) vol = 0;
+						if (!soundmono && (v.x != 0 || v.y != 0) && dist > 0)
+						{
+							float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
+							pan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
+						}
+						
+						vol = (MIX_MAX_VOLUME*vol*sounds[i].slot->vol)/255/255;
+						vol = min(vol, MIX_MAX_VOLUME);
+
+						Mix_Volume(i, vol);
+						Mix_SetPanning(i, 255-pan, pan);
+					}
+					else removesound(i);
+				}
+			}
+		}
+		if (music && !Mix_PlayingMusic()) musicdone(true);
 	}
-	mapsounds.setsizenodelete(0);
 }
 
-void clear_sound()
+int playsound(int n, vec *pos, bool copy, bool mapsnd)
 {
-	if(nosound) return;
+	if (!nosound && soundvol && camera1 != NULL)
+	{
+		vec *p = pos != NULL ? pos : &camera1->o;
 
-	gamesounds.setsizenodelete(0);
-	clearmapsounds();
-	sndsamples.clear();
-	nosound = true;
+		if (camera1->o.dist(*p) >= maxsounddistance) return -1;
+
+		if (!mapsnd)
+		{
+			if (totalmillis == lastsoundmillis) soundsatonce++;
+			else soundsatonce = 1;
+			lastsoundmillis = totalmillis;
+			if (maxsoundsatonce && soundsatonce > maxsoundsatonce) return -1;
+		}
+	
+		vector<soundslot> &soundset = mapsnd ? mapsounds : gamesounds;
+		
+		if (soundset.inrange(n) && soundset[n].sample->sound)
+		{
+			int chan = Mix_PlayChannel(-1, soundset[n].sample->sound, 0);
+			
+			if (chan >= 0)
+			{
+				while(chan >= sounds.length()) sounds.add().inuse = false;
+				sounds[chan].slot = &soundset[n];
+				sounds[chan].inuse = true;
+				
+				if (copy)
+				{
+					sounds[chan].posval = vec(*p);
+					sounds[chan].pos = &sounds[chan].posval;
+				}
+				else sounds[chan].pos = p;
+		
+				return chan;
+			}
+			else conoutf("cannot play sound %d (%s): %s", n, soundset[n].sample->name, Mix_GetError());
+		}
+		else conoutf("unregistered sound: %d", n);
+	}
+	return -1;
 }
+
+void sound(int *n) { intret(playsound(*n, NULL, false, false)); }
+COMMAND(sound, "i");
+

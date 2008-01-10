@@ -15,7 +15,7 @@ struct ident
 {
     int type;           // one of ID_* above
     const char *name;
-    int min, max; // ID_VAR
+    int minval, maxval; // ID_VAR
     int override; // either NO_OVERRIDE, OVERRIDDEN, or value
     union
     {
@@ -49,7 +49,7 @@ struct ident
     ident() {}
     // ID_VAR
     ident(int t, const char *n, int m, int c, int x, int *s, void *f = NULL, bool p = false, bool w = false)
-        : type(t), name(n), min(m), max(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w)
+        : type(t), name(n), minval(m), maxval(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w)
     { val.i = c; storage.i = s; }
     // ID_FVAR
     ident(int t, const char *n, float c, float *s, void *f = NULL, bool p = false, bool w = false)
@@ -147,8 +147,8 @@ extern identtable *idents;
 #define IVAR(n, m, c, x)  _IVAR(n, m, c, x, , false, false)
 #define IVARF(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, false, false)
 #define IVARP(n, m, c, x)  _IVAR(n, m, c, x, , true, false)
-#define IVARFP(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, false, true)
-#define IVARW(n, m, c, x)  _IVAR(n, m, c, x, , true, false)
+#define IVARFP(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, true, false)
+#define IVARW(n, m, c, x)  _IVAR(n, m, c, x, , false, true)
 #define IVARFW(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, false, true)
 //#define ICALL(n, a) { char *args[] = a; icom_##n.run(args); }
 //
