@@ -1130,7 +1130,7 @@ void gl_drawhud(int w, int h, int fogmat)
 	glEnable(GL_DEPTH_TEST);
 }
 
-VARP(hudblend, 0, 60, 100);
+VARP(hudblend, 0, 99, 100);
 VARP(showentdir, 0, 1, 1);
 
 #define rendernearfar(a,b,c,d,e) \
