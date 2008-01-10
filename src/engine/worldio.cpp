@@ -356,11 +356,11 @@ void save_world(const char *mname, bool nolms)
 	// world variables
 	int numvars = 0, vars = 0;
 	enumerate(*idents, ident, id, {
-		if (id.type == ID_VAR && id.world) numvars++;
+		if (id.type == ID_VAR && id.world && strlen(id.name)) numvars++;
 	});
 	gzputint(f, numvars);
 	enumerate(*idents, ident, id, {
-		if (id.type == ID_VAR && id.world)
+		if (id.type == ID_VAR && id.world && strlen(id.name))
 		{
 			vars++;
 			if (verbose >= 2) show_out_of_renderloop_progress(float(vars)/float(numvars), "saving world variables...");
@@ -473,33 +473,36 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 			return;
 		}
 
-		if (hdr.version >= 25 || (hdr.version == 24 && hdr.gamever >= 44))
+		if (hdr.version >= 24 && hdr.gamever >= 44)
 		{
-			int numvars = hdr.version >= 24 && hdr.gamever >= 50 ? gzgetint(f) : gzgetc(f), vars = 0;
+			int numvars = hdr.version >= 25 ? gzgetint(f) : gzgetc(f), vars = 0;
 			show_out_of_renderloop_progress(0, "loading variables...");
 			loopi (numvars)
 			{
 				vars++;
 				if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(vars), "loading variables...");
-				int len = hdr.version >= 24 && hdr.gamever >= 50 ? gzgetint(f) : gzgetc(f);
-				string vname;
-				gzread(f, vname, len+1);
-				int val = gzgetint(f);
-				ident *id = idents->access(vname);
-				if (id != NULL && id->type == ID_VAR && id->world && id->maxval >= id->minval)
+				int len = hdr.version >= 25 ? gzgetint(f) : gzgetc(f);
+				if (len)
 				{
-					if (val > id->maxval) val = id->maxval;
-					else if (val < id->minval) val = id->minval;
-					setvar(vname, val, true);
-					if (verbose >= 3) conoutf("%s set to %d", id->name, *id->storage.i);
+					string vname;
+					gzread(f, vname, len+1);
+					int val = gzgetint(f);
+					ident *id = idents->access(vname);
+					if (id != NULL && id->type == ID_VAR && id->world && id->maxval >= id->minval)
+					{
+						if (val > id->maxval) val = id->maxval;
+						else if (val < id->minval) val = id->minval;
+						setvar(vname, val, true);
+						if (verbose >= 3) conoutf("%s set to %d", id->name, *id->storage.i);
+					}
+					else if (verbose >= 2) conoutf("ignoring %s = %d", vname, val);
 				}
-				else conoutf("ignoring definition for %s = %d", vname, val);
 			}
 			if (verbose >= 2) conoutf("loaded %d variables", vars);
 		}
 
-		if (hdr.version <= 24)
-			s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
+		if (hdr.version <= 24) s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
+		if (verbose >= 2) conoutf("loading map from %s game", hdr.gameid);
 
 		if (!sv->canload(hdr.gameid))
 		{
@@ -529,6 +532,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		strncpy(hdr.head, "BFGZ", 4);
 		hdr.gamever = BFRONTIER;
 		hdr.worldsize = ohdr.worldsize;
+		if (hdr.worldsize > 1<<18) hdr.worldsize = 1<<18;
 		hdr.numents = ohdr.numents;
 		hdr.lightmaps = ohdr.lightmaps;
 		hdr.revision = 1;
