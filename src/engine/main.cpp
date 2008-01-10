@@ -550,12 +550,12 @@ int main(int argc, char **argv)
 	conoutf("init: runtime");
 	initruntime();
 
-	computescreen("loading...");
-	inbetweenframes = true;
-
-	conoutf("init: rehash");
+	conoutf("init: config");
 	rehash(false);
 	if(!setfont("default")) fatal("no default font specified");
+
+	computescreen("loading...");
+	inbetweenframes = true;
 
     conoutf("init: gl effects");
     loadshaders();
