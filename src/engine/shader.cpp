@@ -15,7 +15,9 @@ static int dirtyparams = 0;
 
 void loadshaders()
 {
+	persistidents = false;
     exec("stdshader.cfg");
+    persistidents = true;
     defaultshader = lookupshaderbyname("default");
     notextureshader = lookupshaderbyname("notexture");
     nocolorshader = lookupshaderbyname("nocolor");

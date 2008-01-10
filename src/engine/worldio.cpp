@@ -696,8 +696,10 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	console("%s", CON_CENTER|CON_NORMAL, hdr.maptitle);
 
 	overrideidents = worldidents = true;
+	persistidents = false;
 	if (!execfile(pcfname)) exec("package.cfg");
 	if (!execfile(mcfname)) exec("map.cfg");
+	persistidents = true;
 	overrideidents = worldidents = false;
 
 	loopv(ents)

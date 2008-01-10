@@ -379,8 +379,18 @@ void rehash(bool reload)
 		writecfg();
 	}
 
+	persistidents = false;
+
+	if (!execfile("stdlib.cfg"))
+		fatal("cannot find data files");
+	if (!execfile("font.cfg"))
+		fatal("cannot find font definitions");
+
 	exec("defaults.cfg");
 	execfile("servers.cfg");
+
+	persistidents = true;
+
 	execfile("config.cfg");
 	execfile("autoexec.cfg");
 }
@@ -541,8 +551,6 @@ int main(int argc, char **argv)
 	initruntime();
 
 	conoutf("init: config");
-	if(!execfile("stdlib.cfg")) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");	// this is the first file we load.
-	if(!execfile("font.cfg")) fatal("cannot find font definitions");
 	if(!setfont("default")) fatal("no default font specified");
 
 	computescreen("loading...");

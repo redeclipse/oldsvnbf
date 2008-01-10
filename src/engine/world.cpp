@@ -973,8 +973,10 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	allchanged();
 
 	overrideidents = worldidents = true;
+	persistidents = false;
 	if (!execfile(pcfname)) exec("package.cfg");
 	exec("map.cfg");
+	persistidents = true;
 	overrideidents = worldidents = false;
 
 	startmap("");
