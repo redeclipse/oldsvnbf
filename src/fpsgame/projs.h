@@ -19,11 +19,16 @@ struct projectiles
 		float elasticity, relativity, waterfric;
 		int gun, schan, id;
 
-		projent() : schan(-1), id(-1)
+		projent() : id(-1)
 		{
+			schan = -1;
 			reset();
 		}
-		~projent() {}
+		~projent()
+		{
+			if (sounds.inrange(schan) && sounds[schan].inuse) removesound(schan);
+			schan = -1;
+		}
 
 		void init(vec &_f, vec &_t, bool _b, fpsent *_o, int _n, int _i, int _s, int _g, int _l)
 		{
@@ -173,12 +178,6 @@ struct projectiles
 
 			return true;
 		}
-
-		void cleanup()
-		{
-			if (sounds.inrange(schan) && sounds[schan].inuse) removesound(schan);
-			schan = -1;
-		}
 	};
 
 	vector<projent *> projs;
@@ -216,7 +215,6 @@ struct projectiles
 
 			if (bnc.state == CS_DEAD)
 			{
-				bnc.cleanup();
 				delete &bnc;
 				projs.remove(i--);
 			}

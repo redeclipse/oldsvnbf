@@ -53,13 +53,21 @@ static struct enttypes
 
 struct fpsentity : extentity
 {
+	int schan;
 	vector<int> links;  // link list
 
 	fpsentity()
 	{
+		schan = -1;
 		links.setsize(0);
 	}
-	~fpsentity() {}
+	~fpsentity()
+	{
+#ifndef STANDALONE
+		if (sounds.inrange(schan) && sounds[schan].inuse) removesound(schan);
+		schan = -1;
+#endif
+	}
 };
 
 enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states

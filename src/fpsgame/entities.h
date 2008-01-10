@@ -56,6 +56,17 @@ struct entities : icliententities
 				entfocus(i, { renderentforce(e); });
 			}
 			renderprimitive(false);
+			
+			loopv(ents)
+			{
+				fpsentity &e = (fpsentity &)*ents[i];
+
+				if (e.type == MAPSOUND && mapsounds.inrange(e.attr1))
+				{
+					if (!sounds.inrange(e.schan) || !sounds[e.schan].inuse)
+						e.schan = playsound(e.attr1, &e.o, false, true);
+				}
+			}
 		}
 
 		loopv(ents)
@@ -63,7 +74,7 @@ struct entities : icliententities
 			extentity &e = *ents[i];
 
 			if (e.type == TRIGGER || e.type == CHECKPOINT || e.type == TELEPORT ||
-				(e.type==WEAPON && e.spawned))
+				(e.type == WEAPON && e.spawned))
 			{
 				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 
