@@ -3,7 +3,7 @@
 
 extern int outline;
 VARP(showcursorgrid, 0, 0, 1);
-VARP(showselgrid, 0, 1, 1);
+VARP(showselgrid, 0, 0, 1);
 
 void boxs(int orient, vec o, const vec &s)
 {
