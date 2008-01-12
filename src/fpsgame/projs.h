@@ -15,9 +15,10 @@ struct projectiles
 		float roll;
 		bool local;
 		fpsent *owner;
-		int bnctype;
+		int projtype;
 		float elasticity, relativity, waterfric;
 		int gun, schan, id;
+        entitylight light;
 
 		projent() : id(-1)
 		{
@@ -39,13 +40,13 @@ struct projectiles
 
 			local = _b;
 			owner = _o;
-			bnctype = _n;
+			projtype = _n;
 			lifetime = _i;
 			gun = _g;
 			maxspeed = _s;
 			id = lasttime = _l;
 
-			switch (bnctype)
+			switch (projtype)
 			{
 				case PRJ_SHOT:
 				{
@@ -118,7 +119,7 @@ struct projectiles
 
 		void check(int time)
 		{
-            if (bnctype == PRJ_SHOT)
+            if (projtype == PRJ_SHOT)
             {
 				if (guntype[gun].fsound >= 0 && (!sounds.inrange(schan) || !sounds[schan].inuse))
 				{
@@ -126,7 +127,7 @@ struct projectiles
 				}
             	regular_particle_splash(5, 1, 500, o);
             }
-			else if (bnctype == PRJ_GIBS) particle_splash(3, 1, 10000, o);
+			else if (projtype == PRJ_GIBS) particle_splash(3, 1, 10000, o);
 		}
 
 		bool update(int millis, int time, int qtime)
@@ -147,7 +148,7 @@ struct projectiles
 			{
 				o = old;
 
-				if (bnctype != PRJ_SHOT || gun == GUN_GL)
+				if (projtype != PRJ_SHOT || gun == GUN_GL)
 				{
 					vec pos(wall);
 
@@ -163,9 +164,9 @@ struct projectiles
 
 						if (millis-lasttime > 500)
 						{
-							if (bnctype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, true);
-							else if (bnctype == PRJ_GIBS) playsound(S_SPLAT, &o, true);
-							else if (bnctype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, true);
+							if (projtype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, true);
+							else if (projtype == PRJ_GIBS) playsound(S_SPLAT, &o, true);
+							else if (projtype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, true);
 							lasttime = millis;
 						}
 					}
@@ -174,7 +175,7 @@ struct projectiles
 				return false; // die on impact
 			}
 
-			if (bnctype == PRJ_SHOT && gun == GUN_GL) roll += int(vel.magnitude() / time) % 360;
+			if (projtype == PRJ_SHOT && gun == GUN_GL) roll += int(vel.magnitude() / time) % 360;
 
 			return true;
 		}
@@ -184,38 +185,38 @@ struct projectiles
 
 	void create(vec &from, vec &to, bool local, fpsent *owner, int type, int lifetime, int speed, int gun)
 	{
-		projent &bnc = *(new projent());
-		bnc.init(from, to, local, owner, type, lifetime, speed, gun, cl.lastmillis);
-		projs.add(&bnc);
+		projent &proj = *(new projent());
+		proj.init(from, to, local, owner, type, lifetime, speed, gun, cl.lastmillis);
+		projs.add(&proj);
 	}
 
 	void update(int time)
 	{
 		loopv(projs)
 		{
-			projent &bnc = *(projs[i]);
+			projent &proj = *(projs[i]);
 
-			bnc.check(time);
-			vec old(bnc.o);
+			proj.check(time);
+			vec old(proj.o);
 			int rtime = time;
 
 			while (rtime > 0)
 			{
-				int stime = bnc.bnctype == PRJ_SHOT ? 10 : 30, qtime = min(stime, rtime);
+				int stime = proj.projtype == PRJ_SHOT ? 10 : 30, qtime = min(stime, rtime);
 				rtime -= qtime;
 
-				if ((bnc.lifetime -= qtime) <= 0 || !bnc.update(cl.lastmillis, time, qtime))
+				if ((proj.lifetime -= qtime) <= 0 || !proj.update(cl.lastmillis, time, qtime))
 				{
-					if (bnc.bnctype == PRJ_SHOT && (bnc.gun == GUN_GL || bnc.gun == GUN_RL))
-						cl.ws.explode(bnc.owner, bnc.o, bnc.vel, bnc.id, bnc.gun, bnc.local);
-					bnc.state = CS_DEAD;
+					if (proj.projtype == PRJ_SHOT && (proj.gun == GUN_GL || proj.gun == GUN_RL))
+						cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.gun, proj.local);
+					proj.state = CS_DEAD;
 					break;
 				}
 			}
 
-			if (bnc.state == CS_DEAD)
+			if (proj.state == CS_DEAD)
 			{
-				delete &bnc;
+				delete &proj;
 				projs.remove(i--);
 			}
 		}
@@ -238,24 +239,21 @@ struct projectiles
 
 	void render()
 	{
-		vec color, dir;
 		loopv(projs)
 		{
-			projent &bnc = *(projs[i]);
-			float yaw = bnc.yaw, pitch = bnc.pitch;
+			projent &proj = *(projs[i]);
+			float yaw = proj.yaw, pitch = proj.pitch;
 			string mname;
-			int cull = MDL_CULL_VFC|MDL_DYNSHADOW;
+            int cull = MDL_CULL_VFC|MDL_CULL_DIST|MDL_DYNSHADOW|MDL_LIGHT;
 
-			lightreaching(vec(bnc.o).sub(bnc.vel), color, dir);
-
-            if (bnc.bnctype == PRJ_SHOT)
+            if (proj.projtype == PRJ_SHOT)
             {
-            	if (bnc.gun == GUN_GL)
+            	if (proj.gun == GUN_GL)
             	{
-            		yaw = pitch = bnc.roll;
+            		yaw = pitch = proj.roll;
             		s_sprintf(mname)("%s", "projectiles/grenade");
             	}
-            	else if (bnc.gun == GUN_RL)
+            	else if (proj.gun == GUN_RL)
             	{
 					s_sprintf(mname)("%s", "projectiles/rocket");
             	}
@@ -264,19 +262,19 @@ struct projectiles
 					s_sprintf(mname)("%s", "projectiles/frag");
             	}
 			}
-            else if (bnc.bnctype == PRJ_GIBS)
+            else if (proj.projtype == PRJ_GIBS)
             {
-				s_sprintf(mname)("%s", ((int)(size_t)&bnc)&0x40 ? "gibc" : "gibh");
+				s_sprintf(mname)("%s", ((int)(size_t)&proj)&0x40 ? "gibc" : "gibh");
 				cull |= MDL_CULL_DIST;
 			}
-			else if (bnc.bnctype == PRJ_DEBRIS)
+			else if (proj.projtype == PRJ_DEBRIS)
 			{
-				s_sprintf(mname)("debris/debris0%d", ((((int)(size_t)&bnc)&0xC0)>>6)+1);
+				s_sprintf(mname)("debris/debris0%d", ((((int)(size_t)&proj)&0xC0)>>6)+1);
 				cull |= MDL_CULL_DIST;
 			}
 			else continue;
 
-			rendermodel(color, dir, mname, ANIM_MAPMODEL|ANIM_LOOP, 0, 0, bnc.o, yaw+90, pitch, 0, 0, 0, NULL, cull);
+			rendermodel(&proj.light, mname, ANIM_MAPMODEL|ANIM_LOOP, 0, 0, proj.o, yaw+90, pitch, 0, 0, 0, NULL, cull);
 		}
 	}
 
@@ -284,12 +282,12 @@ struct projectiles
 	{
 		loopv(projs)
 		{
-			projent &bnc = *(projs[i]);
+			projent &proj = *(projs[i]);
 
-			switch (bnc.gun)
+			switch (proj.gun)
 			{
 				case GUN_RL:
-					adddynlight(bnc.o, RL_DAMRAD, vec(0.55f, 0.33f, 0.11f), 0, 0);
+					adddynlight(proj.o, RL_DAMRAD, vec(0.55f, 0.33f, 0.11f), 0, 0);
 					break;
 				default:
 					break;

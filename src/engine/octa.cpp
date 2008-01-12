@@ -205,20 +205,6 @@ int lookupmaterial(const vec &o)
     return c.ext ? c.ext->material : MAT_AIR;
 }
 
-uchar octantrectangleoverlap(const ivec &c, int size, const ivec &o, const ivec &s)
-{
-	uchar p = 0xFF; // bitmask of possible collisions with octants. 0 bit = 0 octant, etc
-	ivec v(c);
-	v.add(size);
-	if(v.z <= o.z)	 p &= 0xF0; // not in a -ve Z octant
-	if(v.z >= o.z+s.z) p &= 0x0F; // not in a +ve Z octant
-	if(v.y <= o.y)	 p &= 0xCC; // not in a -ve Y octant
-	if(v.y >= o.y+s.y) p &= 0x33; // etc..
-	if(v.x <= o.x)	 p &= 0xAA;
-	if(v.x >= o.x+s.x) p &= 0x55;
-	return p;
-}
-
 ////////// (re)mip //////////
 
 int getmippedtexture(cube &p, int orient)

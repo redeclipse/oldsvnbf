@@ -72,15 +72,14 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-
-			if (e.type == TRIGGER || e.type == CHECKPOINT || e.type == TELEPORT ||
-				(e.type == WEAPON && e.spawned))
+			bool showent = e.spawned || editmode;
+			if (e.type == CHECKPOINT || e.type == TELEPORT || (e.type == WEAPON && showent))
 			{
 				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 
 				if (mdlname)
 				{
-					rendermodel(e.color, e.dir, mdlname, ANIM_MAPMODEL|ANIM_LOOP,
+					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP,
 						0, 0, e.o, 0.f, 0.f, 0.f, 0.f, 0, NULL,
 						MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED);
 				}
@@ -100,16 +99,6 @@ struct entities : icliententities
     }
 
 	void rumble(extentity &e) { playsound(S_RUMBLE, &e.o, true); }
-
-	void trigger(extentity &e)
-	{
-		switch(e.attr3)
-		{
-			case 29:
-				if (m_sp(cl.gamemode)) cl.intermission = true;
-				break;
-		}
-	}
 
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
@@ -436,13 +425,13 @@ struct entities : icliententities
 		}
 	}
 
-	void readent(gzFile &g, int maptype, int id, int ver, entity &e)
+	void readent(gzFile &g, int maptype, int id, int ver, int gamever, entity &e)
 	{
 		if (maptype == MAP_BFGZ)
 		{
 			fpsentity &f = (fpsentity &)e;
 			
-			if (enttype[f.type].links && (ver >= 48 || f.type == WAYPOINT))
+			if (enttype[f.type].links && (gamever >= 48 || f.type == WAYPOINT))
 			{
 				int links = gzgetint(g);
 				f.links.setsize(0);
@@ -451,16 +440,13 @@ struct entities : icliententities
 		}
 		else if (maptype == MAP_OCTA)
 		{
-			if (ver <= 10)
-			{
-				if(e.type >= 7) e.type++;
-			}
-			if (ver <= 12)
-			{
-				if(e.type >= 8) e.type++;
-			}
+			if (ver <= 10) if (e.type >= 7) e.type++;
+			if (ver <= 12) if (e.type >= 8) e.type++;
 
-			if (e.type >= 8 && e.type <= 13)
+			// now translate into our format
+
+			if ((e.type >= 14 && e.type <= 18) || e.type >= 26) e.type = NOTUSED;
+			else if (e.type >= 8 && e.type <= 13)
 			{
 				int gun = e.type-8, gunmap[NUMGUNS] = {
 					GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL
@@ -469,7 +455,6 @@ struct entities : icliententities
 				e.attr1 = gunmap[gun];
 				e.attr2 = 0;
 			}
-			else if ((e.type >= 14 && e.type <= 18) || e.type >= 26) e.type = NOTUSED;
 			else if (e.type >= 19) e.type -= 10;
 		}
 	}
@@ -563,26 +548,22 @@ struct entities : icliententities
 		{
 			case BASE:
 			{
-				if (showentdir && showbaselinks())
-					renderlinked(e);
+				if (showentdir && showbaselinks()) renderlinked(e);
 				break;
 			}
 			case CHECKPOINT:
 			{
-				if (showentdir && showcheckpointlinks())
-					renderlinked(e);
+				if (showentdir && showcheckpointlinks()) renderlinked(e);
 				break;
 			}
 			case CAMERA:
 			{
-				if (showentdir && showcameralinks())
-					renderlinked(e);
+				if (showentdir && showcameralinks()) renderlinked(e);
 				break;
 			}
 			case WAYPOINT:
 			{
-				if (showentdir && showwaypointlinks())
-					renderlinked(e);
+				if (showentdir && showwaypointlinks()) renderlinked(e);
 				break;
 			}
 			default:
@@ -617,14 +598,12 @@ struct entities : icliententities
 			}
 			case BASE:
 			{
-				if (showentdir && !showbaselinks())
-					renderlinked(e);
+				if (showentdir && !showbaselinks()) renderlinked(e);
 				break;
 			}
 			case CHECKPOINT:
 			{
-				if (showentdir && !showcheckpointlinks())
-					renderlinked(e);
+				if (showentdir && !showcheckpointlinks()) renderlinked(e);
 				break;
 			}
 			case CAMERA:
@@ -639,8 +618,7 @@ struct entities : icliententities
 			}
 			case WAYPOINT:
 			{
-				if (showentdir && !showwaypointlinks())
-					renderlinked(e);
+				if (showentdir && !showwaypointlinks()) renderlinked(e);
 				break;
 			}
 			default:

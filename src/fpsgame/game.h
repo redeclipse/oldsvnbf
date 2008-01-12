@@ -53,13 +53,17 @@ static struct enttypes
 
 struct fpsentity : extentity
 {
-	int schan;
 	vector<int> links;  // link list
+#ifndef STANDALONE
+	int schan;
+#endif
 
 	fpsentity()
 	{
-		schan = -1;
 		links.setsize(0);
+#ifndef STANDALONE
+		schan = -1;
+#endif
 	}
 	~fpsentity()
 	{

@@ -621,7 +621,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		if(samegame)
 		{
 			if (maptype == MAP_OCTA) { loopj(eif) gzgetc(f); }
-			et->readent(f, maptype, i, hdr.version, e);
+			et->readent(f, maptype, i, hdr.version, hdr.gamever, e);
 		}
 		else
 		{
@@ -671,6 +671,9 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 	show_out_of_renderloop_progress(0, "validating...");
 	validatec(worldroot, hdr.worldsize>>1);
+
+    worldscale = 0;
+    while(1<<worldscale < hdr.worldsize) worldscale++;
 
 	if(hdr.version >= 7) loopi(hdr.lightmaps)
 	{

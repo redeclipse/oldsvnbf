@@ -654,7 +654,7 @@ static struct lightcacheentry
 
 #define LIGHTCACHEHASH(x, y) (((((x)^(y))<<5) + (((x)^(y))>>5)) & (LIGHTCACHESIZE - 1))
 
-VARF(lightcachesize, 6, 8, 12, clearlightcache());
+VARF(lightcachesize, 4, 6, 12, clearlightcache());
 
 void clearlightcache(int e)
 {
@@ -1141,8 +1141,8 @@ void clearlights()
 	loopv(ents)
 	{
 		extentity &e = *ents[i];
-		e.color = vec(1, 1, 1);
-		e.dir = vec(0, 0, 1);
+        e.light.color = vec(1, 1, 1);
+        e.light.dir = vec(0, 0, 1);
 	}
 	if(nolights) return;
 
@@ -1175,7 +1175,7 @@ void lightent(extentity &e, float height)
 	}
 	else if(e.type>=ET_GAMESPECIFIC) amb = 0.4f;
 	vec target(e.o.x, e.o.y, e.o.z + height);
-	lightreaching(target, e.color, e.dir, &e, amb);
+	lightreaching(target, e.light.color, e.light.dir, &e, amb);
 }
 
 void updateentlighting()

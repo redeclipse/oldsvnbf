@@ -146,13 +146,14 @@ struct vtxarray
 	int hasmerges;
 };
 
+struct cube;
+
 struct clipplanes
 {
 	vec o, r;
 	int size;
 	plane p[12];
-	clipplanes *next, *prev;
-	clipplanes **backptr;
+    cube *owner;
 };
 
 struct mergeinfo
@@ -245,6 +246,20 @@ const uint F_SOLID = 0x80808080;	// all edges in the range (0,8)
 #define octacoord(d, i)	 (((i)&octadim(d))>>(d))
 #define oppositeocta(d, i)  ((i)^octadim(D[d]))
 #define octaindex(d,x,y,z)  (octadim(D[d])*(z)+octadim(C[d])*(y)+octadim(R[d])*(x))
+
+static inline uchar octantrectangleoverlap(const ivec &c, int size, const ivec &o, const ivec &s)
+{
+    uchar p = 0xFF; // bitmask of possible collisions with octants. 0 bit = 0 octant, etc
+    ivec v(c);
+    v.add(size);
+    if(v.z <= o.z)     p &= 0xF0; // not in a -ve Z octant
+    if(v.z >= o.z+s.z) p &= 0x0F; // not in a +ve Z octant
+    if(v.y <= o.y)     p &= 0xCC; // not in a -ve Y octant
+    if(v.y >= o.y+s.y) p &= 0x33; // etc..
+    if(v.x <= o.x)     p &= 0xAA;
+    if(v.x >= o.x+s.x) p &= 0x55;
+    return p;
+}
 
 #define loopoctabox(c, size, o, s) uchar possible = octantrectangleoverlap(c, size, o, s); loopi(8) if(possible&(1<<i))
 

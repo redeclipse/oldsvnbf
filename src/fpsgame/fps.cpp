@@ -171,11 +171,6 @@ struct GAMECLIENT : igameclient
 	void resetgamestate()
 	{
 		pj.reset();
-
-		if (m_sp(gamemode))
-		{
-			resettriggers();
-		}
 	}
 
 	void otherplayers()
@@ -253,8 +248,6 @@ struct GAMECLIENT : igameclient
 				swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.maxspeed(player1)))));
 
 				et.checkitems(player1);
-				if (m_sp(gamemode)) checktriggers();
-
 				if (player1->attacking) ws.shoot(player1, pos);
 				if (player1->reloading || doautoreload()) ws.reload(player1);
 			}
@@ -562,11 +555,10 @@ struct GAMECLIENT : igameclient
 	void drawhudmodel(int anim, float speed = 0, int base = 0)
 	{
 		if (!isgun(player1->gunselect)) return;
-		vec sway, color, dir;
-		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
-		if(!hudgunsway()) sway = camera1->o;
-		else
+		vec sway;
+		if(hudgunsway())
 		{
+			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
 			float swayspeed = min(4.0f, player1->vel.magnitude());
 			sway.mul(swayspeed);
 			float swayxy = sinf(swaymillis/115.0f)/100.0f,
@@ -577,8 +569,7 @@ struct GAMECLIENT : igameclient
 			sway.z = -fabs(swayspeed*swayz);
 			sway.add(swaydir).add(camera1->o);
 		}
-		lightreaching(sway, color, dir);
-        dynlightreaching(sway, color, dir);
+		else sway = camera1->o;
 
 #if 0
 		if(player1->state!=CS_DEAD && player1->quadmillis)
@@ -589,7 +580,7 @@ struct GAMECLIENT : igameclient
 #endif
 
         s_sprintfd(gunname)("hudguns/%s", guntype[player1->gunselect].name);
-		rendermodel(color, dir, gunname, anim, 0, 0, sway, camera1->yaw+90, camera1->pitch, camera1->roll, speed, base, NULL, 0);
+		rendermodel(NULL, gunname, anim, 0, 0, sway, camera1->yaw+90, camera1->pitch, camera1->roll, speed, base, NULL, MDL_LIGHT);
 	}
 
 	void drawhudgun()
