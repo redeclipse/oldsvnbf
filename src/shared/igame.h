@@ -7,12 +7,12 @@ struct icliententities
     virtual void editent(int i) = 0;
     virtual const char *entnameinfo(entity &e) = 0;
     virtual const char *entname(int i) = 0;
-	virtual void readent(gzFile &g, int maptype, int id, int ver, int gamever, entity &e) { return; }
+	virtual void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e) { return; }
 	virtual void writeent(gzFile &g, int id, entity &e) { return; }
+	virtual void initents(gzFile &g, int mtype, int mver, char *gid, int gver) = 0;
     virtual float dropheight(entity &e) = 0;
     virtual void rumble(extentity &e) = 0;
     virtual void fixentity(extentity &e) = 0;
-    virtual void entradius(extentity &e, float &radius, float &angle, vec &dir) {}
     virtual bool mayattach(extentity &e) { return false; }
     virtual bool attachent(extentity &e, extentity &a) { return false; }
     virtual extentity *newentity() = 0;
@@ -155,10 +155,11 @@ struct igameserver
     virtual void sendservmsg(const char *s) = 0;
     virtual void changemap(const char *s, int mode = 0, int muts = 0) { return; }
     virtual const char *gameid() = 0;
+	virtual char *gamename(int mode, int muts) = 0;
+	virtual int gamever() = 0;
     virtual const char *defaultmap() = 0;
     virtual int defaultmode() = 0;
     virtual bool canload(char *type) = 0;
-	virtual char *gamename(int mode, int muts) = 0;
 };
 
 struct igame

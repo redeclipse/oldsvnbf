@@ -65,8 +65,8 @@ struct GAMECLIENT : igameclient
 		CCOMMAND(gotocamera, "i", (GAMECLIENT *self, int *a), self->setcamera(*a));
         CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1); });
 		CCOMMAND(mode, "ii", (GAMECLIENT *self, int *val, int *mut), { self->setmode(*val, *mut); });
-		CCOMMAND(getgamemode, "", (GAMECLIENT *self), intret(self->gamemode));
-		CCOMMAND(getmutators, "", (GAMECLIENT *self), intret(self->mutators));
+		CCOMMAND(gamemode, "", (GAMECLIENT *self), intret(self->gamemode));
+		CCOMMAND(mutators, "", (GAMECLIENT *self), intret(self->mutators));
 	}
 
 	iclientcom *getcom() { return &cc; }
@@ -451,7 +451,7 @@ struct GAMECLIENT : igameclient
         {
             const char *file = guntype[i].name;
             if(!file) continue;
-            s_sprintfd(mdl)("hudguns/%s", file);
+            s_sprintfd(mdl)("weap/%s", file);
             loadmodel(mdl, -1, true);
             //s_sprintf(mdl)("hudguns/%s/blue", file);
             //loadmodel(mdl, -1, true);
@@ -579,7 +579,7 @@ struct GAMECLIENT : igameclient
 		}
 #endif
 
-        s_sprintfd(gunname)("hudguns/%s", guntype[player1->gunselect].name);
+        s_sprintfd(gunname)("weap/%s", guntype[player1->gunselect].name);
 		rendermodel(NULL, gunname, anim, 0, 0, sway, camera1->yaw+90, camera1->pitch, camera1->roll, speed, base, NULL, MDL_LIGHT);
 	}
 
@@ -624,14 +624,14 @@ struct GAMECLIENT : igameclient
 					if (secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
 					else if (secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
 
-					char *maptitle = getmaptitle();
-					if (!*maptitle) maptitle = "Untitled by Unknown";
+					char *title = maptitle();
+					if (!*title) title = "Untitled by Unknown";
 
 					glColor4f(1.f, 1.f, 1.f, amt);
 
 					rendericon("textures/logo.jpg", ox+20-x, oy-75, 64, 64);
 
-					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, maptitle);
+					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, title);
 
 					glColor4f(1.f, 1.f, 1.f, fade);
 					rendericon("textures/overlay.png", ox+20-x, oy-260, 144, 144);

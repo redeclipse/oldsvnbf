@@ -1131,7 +1131,6 @@ void gl_drawhud(int w, int h, int fogmat)
 }
 
 VARP(hudblend, 0, 99, 100);
-VARP(showentdir, 0, 1, 1);
 
 #define rendernearfar(a,b,c,d,e) \
 	if (d) { \

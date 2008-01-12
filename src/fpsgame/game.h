@@ -5,51 +5,48 @@
 
 enum						// static entity types
 {
-	NOTUSED = ET_EMPTY,		// entity slot not in use in map
-	LIGHT = ET_LIGHT,		// lightsource, attr1 = radius, attr2 = intensity
-	MAPMODEL = ET_MAPMODEL,	// attr1 = angle, attr2 = idx
-	PLAYERSTART,			// attr1 = angle
-	ENVMAP = ET_ENVMAP,		// attr1 = radius
-	PARTICLES = ET_PARTICLES,
-	MAPSOUND = ET_SOUND,
-	SPOTLIGHT = ET_SPOTLIGHT,
-	WEAPON,					// attr1 = gun, attr2 = amt
-	TELEPORT,				// attr1 = idx
-	TELEDEST,				// attr1 = angle, attr2 = idx
-	MONSTER,				// attr1 = angle, attr2 = monstertype
-	TRIGGER,				// attr1 = tag, attr2 = type
-	JUMPPAD,				// attr1 = zpush, attr2 = ypush, attr3 = xpush
-	BASE,
-	CHECKPOINT,
-	CAMERA,					// attr1 = yaw, attr2 = pitch, attr3 = pan (+:horiz/-:vert), attr4 = idx
-	WAYPOINT,				// none?
-	MAXENTTYPES
+	NOTUSED = ET_EMPTY,			// 0, entity slot not in use in map
+	LIGHT = ET_LIGHT,			// 1, lightsource, attr1 = radius, attr2 = intensity
+	MAPMODEL = ET_MAPMODEL,		// 2, attr1 = angle, attr2 = idx
+	PLAYERSTART,				// 3, attr1 = angle
+	ENVMAP = ET_ENVMAP,			// 4, attr1 = radius
+	PARTICLES = ET_PARTICLES,	// 5
+	MAPSOUND = ET_SOUND,		// 6
+	SPOTLIGHT = ET_SPOTLIGHT,	// 7
+	WEAPON,						// 8, attr1 = gun, attr2 = amt
+	TELEPORT,					// 9, attr1 = angle
+	MONSTER,					// 10, attr1 = angle, attr2 = monstertype
+	TRIGGER,					// 11, attr1 = tag, attr2 = type
+	JUMPPAD,					// 12, attr1 = zpush, attr2 = ypush, attr3 = xpush
+	BASE,						// 13
+	CHECKPOINT,					// 14
+	CAMERA,						// 15, attr1 = yaw, attr2 = pitch, attr3 = pan (+:horiz/-:vert), attr4 = idx
+	WAYPOINT,					// 16, none?
+	MAXENTTYPES					// 17
 };
-#ifndef STANDALONE
+
 static struct enttypes
 {
-	int	type;	bool links;		const char *name;
+	int	type, 		links;	float radius,	height;		const char *name;
 } enttype[] = {
-	{ NOTUSED,		false,			"none" },
-	{ LIGHT,		false,			"light" },
-	{ MAPMODEL,		false,			"mapmodel" },
-	{ PLAYERSTART,	false,			"playerstart" },
-	{ ENVMAP,		false,			"envmap" },
-	{ PARTICLES,	false,			"particles" },
-	{ MAPSOUND,		false,			"sound" },
-	{ SPOTLIGHT,	false,			"spotlight" },
-	{ WEAPON,		false,			"weapon" },
-	{ TELEPORT,		false,			"teleport" },
-	{ TELEDEST,		false,			"teledest" },
-	{ MONSTER,		false,			"monster" },
-	{ TRIGGER,		false,			"trigger" },
-	{ JUMPPAD,		false,			"jumppad" },
-	{ BASE,			true,			"base" },
-	{ CHECKPOINT,	true,			"checkpoint" },
-	{ CAMERA,		true,			"camera" },
-	{ WAYPOINT,		true,			"waypoint" }
+	{ NOTUSED,		0,				0.f,	0.f,			"none" },
+	{ LIGHT,		0,				0.f,	0.f,			"light" },
+	{ MAPMODEL,		0,				0.f,	0.f,			"mapmodel" },
+	{ PLAYERSTART,	0,				0.f,	0.f,			"playerstart" },
+	{ ENVMAP,		0,				0.f,	0.f,			"envmap" },
+	{ PARTICLES,	0,				0.f,	0.f,			"particles" },
+	{ MAPSOUND,		0,				0.f,	0.f,			"sound" },
+	{ SPOTLIGHT,	0,				0.f,	0.f,			"spotlight" },
+	{ WEAPON,		0,				12.f,	12.f,			"weapon" },
+	{ TELEPORT,		50,				12.f,	12.f,			"teleport" },
+	{ MONSTER,		0,				0.f,	0.f,			"monster" },
+	{ TRIGGER,		0,				12.f,	12.f,			"trigger" },
+	{ JUMPPAD,		0,				12.f,	12.f,			"jumppad" },
+	{ BASE,			48,				64.f,	24.f,			"base" },
+	{ CHECKPOINT,	48,				12.f,	12.f,			"checkpoint" },
+	{ CAMERA,		48,				0.f,	0.f,			"camera" },
+	{ WAYPOINT,		1,				4.f,	4.f,			"waypoint" }
 };
-#endif
 
 struct fpsentity : extentity
 {
@@ -205,10 +202,10 @@ static char msgsizelookup(int msg)
 	return -1;
 }
 
-#define SERVER_PORT		28795
+#define SERVER_PORT			28795
 #define SERVINFO_PORT		28796
-#define PROTOCOL_VERSION			BFRONTIER
-#define DEMO_VERSION				1
+#define PROTOCOL_VERSION	50
+#define DEMO_VERSION		1
 #define DEMO_MAGIC "BFDZ"
 
 struct demoheader

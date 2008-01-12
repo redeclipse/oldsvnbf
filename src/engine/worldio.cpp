@@ -333,7 +333,7 @@ void save_world(const char *mname, bool nolms)
 	strncpy(hdr.head, "BFGZ", 4);
 	hdr.version = MAPVERSION;
 	hdr.headersize = sizeof(bfgz);
-	hdr.gamever = BFRONTIER;
+	hdr.gamever = sv->gamever();
 	hdr.numents = 0;
 	hdr.revision++;
 	strncpy(hdr.gameid, sv->gameid(), 4);
@@ -502,13 +502,13 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		}
 
 		if (hdr.version <= 24) s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
-		if (verbose >= 2) conoutf("loading map from %s game", hdr.gameid);
 
 		if (!sv->canload(hdr.gameid))
 		{
 			conoutf("WARNING: loading map from %s game type in %s, ignoring game specific data", hdr.gameid, sv->gameid());
 			samegame = false;
 		}
+		else if (verbose >= 2) conoutf("loading map from %s game v%d", hdr.gameid, hdr.gamever);
 
 		maptype = MAP_BFGZ;
 	}
@@ -529,8 +529,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		}
 		maptype = MAP_OCTA;
 
-		strncpy(hdr.head, "BFGZ", 4);
-		hdr.gamever = BFRONTIER;
+		strncpy(hdr.head, ohdr.head, 4);
+		hdr.gamever = 0; // sauer has no gamever
 		hdr.worldsize = ohdr.worldsize;
 		if (hdr.worldsize > 1<<18) hdr.worldsize = 1<<18;
 		hdr.numents = ohdr.numents;
@@ -565,12 +565,14 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 			int len = gzgetc(f);
 			gzread(f, gameid, len+1);
 		}
+		strncpy(hdr.head, gameid, 4);
 
-		if (!sv->canload(gameid))
+		if (!sv->canload(hdr.gameid))
 		{
 			conoutf("WARNING: loading map from %s sauerbraten game type in %s, ignoring game specific data", gameid, sv->gameid());
 			samegame = false;
 		}
+		else if (verbose >= 2) conoutf("loading map from %s game", hdr.gameid);
 
 		if(hdr.version>=16)
 		{
@@ -621,7 +623,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		if(samegame)
 		{
 			if (maptype == MAP_OCTA) { loopj(eif) gzgetc(f); }
-			et->readent(f, maptype, i, hdr.version, hdr.gamever, e);
+			et->readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
 		}
 		else
 		{
@@ -636,28 +638,26 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		if(hdr.version <= 21 && e.type >= ET_PARTICLES) e.type++;
 		if(hdr.version <= 22 && e.type >= ET_SOUND) e.type++;
 		if(hdr.version <= 23 && e.type >= ET_SPOTLIGHT) e.type++;
-		if(!samegame)
+		if(!samegame && (e.type>=ET_GAMESPECIFIC || hdr.version<=14))
 		{
-			if(e.type>=ET_GAMESPECIFIC || hdr.version<=14)
-			{
-				ents.pop();
-				continue;
-			}
+			ents.pop();
+			continue;
 		}
 		if(!insideworld(e.o))
 		{
 			if(e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
 			{
-				conoutf("warning: ent outside of world: enttype[%s] index %d (%f, %f, %f)", et->entname(e.type), i, e.o.x, e.o.y, e.o.z);
+				conoutf("WARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", et->entname(e.type), i, e.o.x, e.o.y, e.o.z);
 			}
 		}
 		if(hdr.version <= 14 && e.type == ET_MAPMODEL)
 		{
 			e.o.z += e.attr3;
-			if(e.attr4) conoutf("warning: mapmodel ent (index %d) uses texture slot %d", i, e.attr4);
+			if(e.attr4) conoutf("WARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attr4);
 			e.attr3 = e.attr4 = 0;
 		}
 	}
+	et->initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
 	if (verbose >= 2) conoutf("loaded %d entities", hdr.numents);
 
 	show_out_of_renderloop_progress(0, "loading octree...");
@@ -783,5 +783,5 @@ void writeobj(char *name)
 
 COMMAND(writeobj, "s");
 
-char *getmaptitle() { return hdr.maptitle; }
-ICOMMAND(getmaptitle, "", (void), result(getmaptitle()));
+char *maptitle() { return hdr.maptitle; }
+ICOMMAND(maptitle, "", (void), result(maptitle()));

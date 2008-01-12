@@ -195,7 +195,7 @@ mapmodelinfo &getmminfo(int i) { return mapmodels.inrange(i) ? mapmodels[i] : *(
 COMMAND(mmodel, "si");
 COMMANDN(mapmodel, mapmodelcompat, "iiiss");
 COMMAND(mapmodelreset, "");
-ICOMMAND(getmapmodel, "s", (char *a), {
+ICOMMAND(mapmodelindex, "s", (char *a), {
 	if (!*a) intret(mapmodels.length());
 	else
 	{

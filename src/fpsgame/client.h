@@ -36,7 +36,7 @@ struct clientcom : iclientcom
         CCOMMAND(recorddemo, "i", (clientcom *self, int *val), self->recorddemo(*val));
         CCOMMAND(stopdemo, "", (clientcom *self), self->stopdemo());
         CCOMMAND(cleardemos, "i", (clientcom *self, int *val), self->cleardemos(*val));
-		CCOMMAND(getready, "", (clientcom *self), intret(self->ready()));
+		CCOMMAND(ready, "", (clientcom *self), intret(self->ready()));
 
         extern void result(const char *s);
         CCOMMAND(getname, "", (clientcom *self), result(self->cl.player1->name));

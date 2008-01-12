@@ -692,13 +692,5 @@
 			<Option link="0"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="shared\ver.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-			<Option target="server"/>
-		</Unit>
 	</Project>
 </CodeBlocks_project_file>

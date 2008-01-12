@@ -1,5 +1,20 @@
 // the interface the game uses to access the engine
 
+#define ENGVERSION		50					// engine version, integer is divided by 100.f
+#define ENGNAME			"Blood Frontier"	// engine namn
+#define ENGRELEASE		"Alpha 2"			// engine release name
+
+#ifdef __GNUC__
+#define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
+#else
+#define _dbg_ fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
+#endif
+
+struct sometype
+{
+	const char *name; uchar id;
+};
+
 extern void lightent(extentity &e, float height = 8.0f);
 extern void lightreaching(const vec &target, vec &color, vec &dir, extentity *e = 0, float ambient = 0.4f);
 extern entity *brightestlight(const vec &target, const vec &dir);
@@ -271,17 +286,6 @@ extern void g3d_addgui(g3d_callback *cb);
 extern bool g3d_movecursor(int dx, int dy);
 extern void g3d_cursorpos(float &x, float &y);
 extern void g3d_resetcursor();
-
-struct sometype
-{
-	const char *name; uchar id;
-};
-
-#ifdef __GNUC__
-#define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
-#else
-#define _dbg_ fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
-#endif
 
 // client
 struct serverinfo
