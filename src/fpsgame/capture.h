@@ -2,8 +2,6 @@
 
 struct capturestate
 {
-	static const int CAPTURERADIUS = 64;
-	static const int CAPTUREHEIGHT = 24;
 	static const int OCCUPYPOINTS = 15;
 	static const int OCCUPYLIMIT = 100;
 	static const int CAPTURESCORE = 1;
@@ -165,7 +163,7 @@ struct capturestate
 	bool insidebase(const baseinfo &b, const vec &o)
 	{
 		float dx = (b.o.x-o.x), dy = (b.o.y-o.y), dz = (b.o.z-o.z+14);
-		return dx*dx + dy*dy <= CAPTURERADIUS*CAPTURERADIUS && fabs(dz) <= CAPTUREHEIGHT;
+		return dx*dx + dy*dy <= enttype[BASE].radius*enttype[BASE].radius && fabs(dz) <= enttype[BASE].height;
 	}
 };
 

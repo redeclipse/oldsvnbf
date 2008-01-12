@@ -348,8 +348,7 @@ void cursorupdate()
 			normalizelookupcube(w.x, w.y, w.z);
 			if(sdist == 0 || sdist > wdist) rayrectintersect(lu.tovec(), vec(gridsize), camera1->o, ray, t=0, orient); // just getting orient
 			cur = lu;
-			cor = w;
-			cor.mul(2).div(gridsize);
+            cor = vec(v).mul(2).div(gridsize);
 			od = dimension(orient);
 			d = dimension(sel.orient);
 

@@ -325,8 +325,11 @@ struct GAMESERVER : igameserver
 		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
 		smuts.setsize(0);
 #ifndef STANDALONE
-		CCOMMAND(getdefaultmap, "", (GAMESERVER *self), result(self->defaultmap()));
-		CCOMMAND(getdefaultmode, "", (GAMESERVER *self), intret(self->defaultmode()));
+		CCOMMAND(gameid, "", (GAMESERVER *self), result(self->gameid()));
+		CCOMMAND(gamever, "", (GAMESERVER *self), intret(self->gamever()));
+		CCOMMAND(gamename, "ii", (GAMESERVER *self, int *g, int *m), result(self->gamename(*g, *m)));
+		CCOMMAND(defaultmap, "", (GAMESERVER *self), result(self->defaultmap()));
+		CCOMMAND(defaultmode, "", (GAMESERVER *self), intret(self->defaultmode()));
 #endif
 	}
 
@@ -2021,6 +2024,7 @@ struct GAMESERVER : igameserver
 	}
 	
     const char *gameid() { return GAMEID; }
+    int gamever() { return GAMEVERSION; }
     char *gamename(int mode, int muts)
     {
     	static string gname;

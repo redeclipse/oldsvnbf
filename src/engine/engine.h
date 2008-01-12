@@ -416,7 +416,7 @@ extern int grabmouse, perflevel, colorpos;
 extern int getmatvec(vec v);
 
 // editing
-extern int efocus, enthover, entorient, showentdir, showentradius;
+extern int efocus, enthover, entorient;
 extern int fullbright, fullbrightlevel;
 extern vector<int> entgroup;
 
@@ -452,7 +452,7 @@ extern void rehash(bool reload = true);
 
 // command
 extern char *gettime(char *format);
-extern char *getmaptitle();
+extern char *maptitle();
 
 // rendergl
 #define RENDERPUSHX			8.0f

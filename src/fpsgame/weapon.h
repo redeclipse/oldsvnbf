@@ -9,19 +9,18 @@ struct weaponstate
 
 	weaponstate(GAMECLIENT &_cl) : cl(_cl)
 	{
-        CCOMMAND(weapon, "sss", (weaponstate *self, char *a, char *b),
+        CCOMMAND(weapon, "ss", (weaponstate *self, char *a, char *b),
 		{
             self->weaponswitch(a[0] ? atoi(a) : -1, b[0] ? atoi(b) : -1);
 
 		});
-		CCOMMAND(getgun, "", (weaponstate *self), intret(self->cl.player1->gunselect));
-		CCOMMAND(getammo, "s", (weaponstate *self, char *a),
+		CCOMMAND(gunselect, "", (weaponstate *self), intret(self->cl.player1->gunselect));
+		CCOMMAND(ammo, "s", (weaponstate *self, char *a),
 		{
 			int n = a[0] ? atoi(a) : self->cl.player1->gunselect;
 			if (n <= -1 || n >= NUMGUNS) return;
 			intret(self->cl.player1->ammo[n]);
 		});
-		CCOMMAND(getweapon, "", (weaponstate *self), intret(self->cl.player1->gunselect));
 	}
 
 	void weaponswitch(int a = -1, int b = -1)

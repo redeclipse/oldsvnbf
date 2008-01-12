@@ -4,6 +4,15 @@ struct entities : icliententities
 
 	vector<extentity *> ents;
 
+	IVARP(showentdir, 0, 1, 1);
+	IVARP(showentradius, 0, 1, 1);
+	
+	IVARP(showbaselinks, 0, 0, 1);
+	IVARP(showcheckpointlinks, 0, 0, 1);
+	IVARP(showcameralinks, 0, 0, 1);
+	IVARP(showteleportlinks, 0, 0, 1);
+	IVARP(showwaypointlinks, 0, 0, 1);
+
 	entities(GAMECLIENT &_cl) : cl(_cl)
 	{
 		CCOMMAND(entdelink, "i", (entities *self, int *val), self->entdelink(*val));
@@ -34,10 +43,13 @@ struct entities : icliententities
 			case WEAPON:
 				s_sprintf(emdl)("ammo/%s", guntype[attr1].name);
 				break;
+			case TELEPORT:
+				s_sprintf(emdl)("%s", enttype[type].name);
+				break;
 			default:
 				break;
 		}
-		return emdl;
+		return emdl[0] ? emdl : NULL;
 	}
 
 	void renderentities()
@@ -72,8 +84,7 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-			bool showent = e.spawned || editmode;
-			if (e.type == CHECKPOINT || e.type == TELEPORT || (e.type == WEAPON && showent))
+			if (e.type == TELEPORT || (e.type == WEAPON && (e.spawned || editmode)))
 			{
 				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 
@@ -123,23 +134,29 @@ struct entities : icliententities
 
 	void teleport(int n, fpsent *d)	 // also used by monsters
 	{
-		int e = -1, tag = ents[n]->attr1, beenhere = -1;
-		for(;;)
+		fpsentity &e = (fpsentity &)*ents[n];
+		
+		while (e.links.length())
 		{
-			e = findentity(TELEDEST, e+1);
-			if(e==beenhere || e<0) { conoutf("no teleport destination for tag %d", tag); return; }
-			if(beenhere<0) beenhere = e;
-			if(ents[e]->attr2==tag)
+			int link = rnd(e.links.length()), targ = e.links[link];
+			
+			if (ents.inrange(targ) && ents[targ]->type == TELEPORT)
 			{
-				d->o = ents[e]->o;
-				d->yaw = ents[e]->attr1;
+				d->o = ents[targ]->o;
+				d->yaw = ents[targ]->attr1;
 				d->pitch = 0;
-				d->vel = vec(0, 0, 0);//vec(cosf(RAD*(d->yaw-90)), sinf(RAD*(d->yaw-90)), 0);
+				float mag = max(48.f, d->vel.magnitude());
+				d->vel = vec(0, 0, 0);
+				vecfromyawpitch(d->yaw, 0, 1, 0, d->vel);
+				d->o.add(d->vel);
+				d->vel.mul(mag);
 				cl.ph.entinmap(d, false);
 				cl.playsoundc(S_TELEPORT, d);
-				break;
+				return;
 			}
+			else e.links.remove(link); // something wrong with it..
 		}
+		conoutf("unable to find a linking teleport for %d", n);
 	}
 
 	void trypickup(int n, fpsent *d)
@@ -160,7 +177,7 @@ struct entities : icliententities
 
 			case TELEPORT:
 			{
-				if(d->lastpickup==ents[n]->type && cl.lastmillis-d->lastpickupmillis<500) break;
+				if(d->lastpickup == ents[n]->type && cl.lastmillis-d->lastpickupmillis<500) break;
 				d->lastpickup = ents[n]->type;
 				d->lastpickupmillis = cl.lastmillis;
 				teleport(n, d);
@@ -177,15 +194,13 @@ struct entities : icliententities
 
 			case JUMPPAD:
 			{
-				if(d->lastpickup==ents[n]->type && cl.lastmillis-d->lastpickupmillis<300) break;
+				if(d->lastpickup==ents[n]->type && cl.lastmillis-d->lastpickupmillis<500) break;
 				d->lastpickup = ents[n]->type;
 				d->lastpickupmillis = cl.lastmillis;
 				vec v((int)(char)ents[n]->attr3*10.0f, (int)(char)ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
 				d->timeinair = 0;
 				d->gvel = vec(0, 0, 0);
 				d->vel = v;
-//				d->vel.z = 0;
-//				d->vel.add(v);
 				cl.playsoundc(S_JUMPPAD, d);
 				break;
 			}
@@ -249,34 +264,6 @@ struct entities : icliententities
 		}
 	}
 
-	void entradius(extentity &e, float &radius, float &angle, vec &dir)
-	{
-		switch(e.type)
-		{
-			case TELEPORT:
-				loopv(ents) if(ents[i]->type == TELEDEST && e.attr1==ents[i]->attr2)
-				{
-					radius = e.o.dist(ents[i]->o);
-					dir = vec(ents[i]->o).sub(e.o).normalize();
-					break;
-				}
-				break;
-
-			case JUMPPAD:
-				radius = 4;
-                dir = vec((int)(char)e.attr3*10.0f, (int)(char)e.attr2*10.0f, e.attr1*12.5f).normalize();
-				break;
-
-			case MONSTER:
-			case TELEDEST:
-			case MAPMODEL:
-			case CHECKPOINT:
-				radius = 4;
-				vecfromyawpitch(e.attr1, 0, 1, 0, dir);
-				break;
-		}
-	}
-
 	const char *entnameinfo(entity &e) { return ""; }
 	const char *entname(int i) { return i >= NOTUSED && i <= MAXENTTYPES ? enttype[i].name : ""; }
 
@@ -295,11 +282,6 @@ struct entities : icliententities
 		return 4.0f;
 	}
 
-	IVARP(showbaselinks, 0, 0, 1);
-	IVARP(showcheckpointlinks, 0, 0, 1);
-	IVARP(showcameralinks, 0, 0, 1);
-	IVARP(showwaypointlinks, 0, 0, 1);
-
 	void entdelink(int both)
 	{
 		if (entgroup.length() > 0)
@@ -310,29 +292,30 @@ struct entities : icliententities
 			{
 				int type = ents[index]->type, last = -1;
 
-				if (enttype[type].links) return;
-
-				loopv(entgroup)
+				if (enttype[type].links)
 				{
-					index = entgroup[i];
-
-					if (ents.inrange(index) && ents[index]->type == type)
+					loopv(entgroup)
 					{
-						if (ents.inrange(last))
+						index = entgroup[i];
+	
+						if (ents[index]->type == type)
 						{
-							int g;
-
-							fpsentity &e = (fpsentity &)*ents[index];
-							fpsentity &l = (fpsentity &)*ents[last];
-
-							if ((g = l.links.find(index)) >= 0)
-								l.links.remove(g);
-							if (both && ((g = e.links.find(last)) >= 0))
-								e.links.remove(g);
+							if (ents.inrange(last))
+							{
+								int g;
+	
+								fpsentity &e = (fpsentity &)*ents[index];
+								fpsentity &l = (fpsentity &)*ents[last];
+	
+								if ((g = l.links.find(index)) >= 0) l.links.remove(g);
+								if (both && ((g = e.links.find(last)) >= 0)) e.links.remove(g);
+							}
+							last = index;
 						}
-						last = index;
+						else conoutf("entity %s is not linkable to a %s", enttype[type].name, enttype[index].name);
 					}
 				}
+				else conoutf("entity %s is not linkable", enttype[type].name);
 			}
 		}
 	}
@@ -347,27 +330,28 @@ struct entities : icliententities
 			{
 				int type = ents[index]->type, last = -1;
 
-				if (enttype[type].links) return;
-
-				loopv(entgroup)
+				if (enttype[type].links)
 				{
-					index = entgroup[i];
-
-					if (ents.inrange(index) && ents[index]->type == type)
+					loopv(entgroup)
 					{
-						if (ents.inrange(last))
+						index = entgroup[i];
+	
+						if (ents[index]->type == type)
 						{
-							fpsentity &e = (fpsentity &)*ents[index];
-							fpsentity &l = (fpsentity &)*ents[last];
-
-							if (l.links.find(index) < 0)
-								l.links.add(index);
-							if (both && e.links.find(last) < 0)
-								e.links.add(last);
+							if (ents.inrange(last))
+							{
+								fpsentity &e = (fpsentity &)*ents[index];
+								fpsentity &l = (fpsentity &)*ents[last];
+	
+								if (l.links.find(index) < 0) l.links.add(index);
+								if (both && e.links.find(last) < 0) e.links.add(last);
+							}
+							last = index;
 						}
-						last = index;
+						else conoutf("entity %s is not linkable to a %s", enttype[type].name, enttype[index].name);
 					}
 				}
+				else conoutf("entity %s is not linkable", enttype[type].name);
 			}
 		}
 	}
@@ -425,65 +409,131 @@ struct entities : icliententities
 		}
 	}
 
-	void readent(gzFile &g, int maptype, int id, int ver, int gamever, entity &e)
+	void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e)
 	{
-		if (maptype == MAP_BFGZ)
+		fpsentity &f = (fpsentity &)e;
+		f.links.setsize(0);
+
+		if (mtype == MAP_BFGZ)
 		{
-			fpsentity &f = (fpsentity &)e;
+			int type = f.type; // translation, use absolute numbers!
+			if (gver <= 49 && type >= 10) type--; // translation for these is done later..
 			
-			if (enttype[f.type].links && (gamever >= 48 || f.type == WAYPOINT))
+			if (enttype[type].links && enttype[type].links <= gver)
 			{
 				int links = gzgetint(g);
-				f.links.setsize(0);
 				loopi(links) f.links.add(gzgetint(g));
+				if (verbose >= 2) conoutf("entity %d loaded %d link(s)", id, links);
 			}
 		}
-		else if (maptype == MAP_OCTA)
+		else if (mtype == MAP_OCTA)
 		{
-			if (ver <= 10) if (e.type >= 7) e.type++;
-			if (ver <= 12) if (e.type >= 8) e.type++;
+			// sauerbraten version increments
+			if (mver <= 10) if (f.type >= 7) f.type++;
+			if (mver <= 12) if (f.type >= 8) f.type++;
 
 			// now translate into our format
-
-			if ((e.type >= 14 && e.type <= 18) || e.type >= 26) e.type = NOTUSED;
-			else if (e.type >= 8 && e.type <= 13)
+			if ((f.type >= 14 && f.type <= 18) || f.type >= 26) f.type = NOTUSED;
+			else if (f.type >= 8 && f.type <= 13)
 			{
-				int gun = e.type-8, gunmap[NUMGUNS] = {
+				int gun = f.type-8, gunmap[NUMGUNS] = {
 					GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL
 				};
-				e.type = WEAPON;
-				e.attr1 = gunmap[gun];
-				e.attr2 = 0;
+				f.type -= gun;
+				f.attr1 = gunmap[gun];
+				f.attr2 = 0;
 			}
-			else if (e.type >= 19) e.type -= 10;
+			else if (f.type >= 19) f.type -= 10;
 		}
 	}
 
 	void writeent(gzFile &g, int id, entity &e)
 	{
-		fpsentity &f = (fpsentity &)e;
+		fpsentity &d = (fpsentity &)e;
 
-		if (enttype[f.type].links)
+		if (enttype[d.type].links)
 		{
 			vector<int> links;
 			int n = 0;
 
 			loopv(ents)
 			{
-				if (ents[i]->type != ET_EMPTY)
+				fpsentity &f = (fpsentity &)e;
+				
+				if (f.type != ET_EMPTY)
 				{
-					if (enttype[ents[i]->type].links)
-					{
-						if (f.links.find(i) >= 0) links.add(n); // align to indices
-					}
+					if (enttype[f.type].links)
+						if (d.links.find(i) >= 0) links.add(n); // align to indices
+
 					n++;
 				}
 			}
 
 			gzputint(g, links.length());
-			loopv(links)
+			loopv(links) gzputint(g, links[i]); // aligned index
+		}
+	}
+
+	void initents(gzFile &g, int mtype, int mver, char *gid, int gver)
+	{
+		if (gver <= 49)
+		{
+			vector<short> teleyaw;
+			loopv(ents) teleyaw.add(0);
+
+			loopv(ents)
 			{
-				gzputint(g, links[i]); // aligned index
+				fpsentity &e = (fpsentity &)*ents[i];
+			
+				if (e.type == 10) // translate teledest to teleport and link them appropriately
+				{
+					int dest = -1;
+					
+					loopvj(ents) // see if we're sitting on top of a teleport
+					{
+						fpsentity &f = (fpsentity &)*ents[j];
+						
+						if (f.type == 9 && e.o.dist(f.o) <= enttype[TELEPORT].radius*2.f &&
+							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)))
+								dest = j;
+					}
+
+					if (ents.inrange(dest))
+					{
+						e.type = NOTUSED; // get rid of this guy then
+						conoutf("WARNING: replaced teledest %d [%d] with closest teleport", dest, i);
+					}
+					else
+					{
+						dest = i;
+						e.type--; // no teleport nearby, make this guy one
+						conoutf("WARNING: modified teledest %d [%d] to a teleport", dest, i);
+					}
+
+					teleyaw[dest] = e.attr1; // store the yaw for later
+
+					loopvj(ents) // find linked teleport(s)
+					{
+						fpsentity &f = (fpsentity &)*ents[j];
+						
+						if (f.type == 9 && f.attr1 == e.attr2)
+						{
+							f.links.add(dest);
+							conoutf("WARNING: teleports %d and %d linked automatically", dest, j);
+						}
+					}
+				}
+			}
+			loopv(ents)
+			{
+				fpsentity &e = (fpsentity &)*ents[i];
+				if (e.type == 9)
+				{
+					e.attr1 = teleyaw[i];
+					e.attr2 = 0;
+				}
+				else if (e.type == 10) e.type = NOTUSED; // unused teledest?
+				else if (e.type >= 11) e.type--;
 			}
 		}
 	}
@@ -499,7 +549,8 @@ struct entities : icliententities
 			if (ents.inrange(index))
 			{
 				fpsentity &f = (fpsentity &)*ents[index];
-				bool both = false, hassel = editmode && (entgroup.find(efocus) >= 0 || efocus == enthover);
+				bool both = false,
+					hassel = editmode && (entgroup.find(efocus) >= 0 || efocus == enthover);
 
 				loopvj(f.links)
 				{
@@ -546,79 +597,79 @@ struct entities : icliententities
 	{
 		switch (e.type)
 		{
+			case TELEPORT:
+			{
+				if (showteleportlinks()) renderlinked(e);
+				break;
+			}
 			case BASE:
 			{
-				if (showentdir && showbaselinks()) renderlinked(e);
+				if (showbaselinks()) renderlinked(e);
 				break;
 			}
 			case CHECKPOINT:
 			{
-				if (showentdir && showcheckpointlinks()) renderlinked(e);
+				if (showcheckpointlinks()) renderlinked(e);
 				break;
 			}
 			case CAMERA:
 			{
-				if (showentdir && showcameralinks()) renderlinked(e);
+				if (showcameralinks()) renderlinked(e);
 				break;
 			}
 			case WAYPOINT:
 			{
-				if (showentdir && showwaypointlinks()) renderlinked(e);
+				if (showwaypointlinks()) renderlinked(e);
 				break;
 			}
 			default:
-			break;
+				break;
 		}
 	}
 
 	void renderentshow(extentity &e)
 	{
-		if (showentradius)
+		if (showentradius())
 		{
-			if (e.type <= MAXENTTYPES && e.type >= WEAPON &&
-					 e.type != TELEPORT && e.type != TELEDEST && e.type != MONSTER)
+			if (enttype[e.type].height > 0.f || enttype[e.type].radius > 0.f)
 			{
-				if (e.type == BASE)
-					renderentradius(e.o, cl.cpc.CAPTURERADIUS, cl.cpc.CAPTURERADIUS);
-				else
-					renderentradius(e.o, 12.f, 12.f);
+				renderentradius(e.o, enttype[e.type].height, enttype[e.type].radius);
 			}
 		}
 
 		switch (e.type)
 		{
-			case ET_PLAYERSTART:
-			case ET_MAPMODEL:
+			case PLAYERSTART:
+			case MAPMODEL:
 			{
-				if (showentdir)
-				{
-					renderentdir(e.o, e.attr1, 0);
-				}
+				if (showentdir()) renderentdir(e.o, e.attr1, 0);
+				break;
+			}
+			case TELEPORT:
+			{
+				if (!showteleportlinks()) renderlinked(e);
+				if (showentdir()) renderentdir(e.o, e.attr1, 0);
 				break;
 			}
 			case BASE:
 			{
-				if (showentdir && !showbaselinks()) renderlinked(e);
+				if (!showbaselinks()) renderlinked(e);
 				break;
 			}
 			case CHECKPOINT:
 			{
-				if (showentdir && !showcheckpointlinks()) renderlinked(e);
+				if (!showcheckpointlinks()) renderlinked(e);
 				break;
 			}
 			case CAMERA:
 			{
-				if (showentdir)
-				{
-					if (!showcameralinks()) renderlinked(e);
-					if (showentdir && e.attr1 >= 0.f && e.attr1 <= 360.f)
-						renderentdir(e.o, e.attr1, e.attr2);
-				}
+				if (!showcameralinks()) renderlinked(e);
+				if (showentdir()) renderentdir(e.o, e.attr1, e.attr2);
 				break;
 			}
 			case WAYPOINT:
 			{
-				if (showentdir && !showwaypointlinks()) renderlinked(e);
+				if (!showwaypointlinks()) renderlinked(e);
 				break;
 			}
 			default:
