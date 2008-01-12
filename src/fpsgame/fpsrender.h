@@ -51,10 +51,7 @@ struct fpsrender
 
 		startmodelbatches();
 
-        const char *mdlnames[3] = 
-        { 
-            "player", "player/blue", "player/red"
-        };
+        const char *mdlnames[3] = { "player", "player/blue", "player/red" };
 
 		fpsent *d;
         loopv(cl.players) if((d = cl.players[i]) && d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING)

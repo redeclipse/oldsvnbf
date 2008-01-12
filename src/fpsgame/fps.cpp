@@ -34,6 +34,10 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> shplayers;
 	vector<teamscore> teamscores;
 
+	fpsent *player1;				// our client
+	vector<fpsent *> players;		// other clients
+	fpsent lastplayerstate;
+
 	IVAR(cameracycle,		0,			0,			600);		// cycle camera every N secs
 	IVARP(crosshair,		0,			1,			1);			// show the crosshair
 	IVARP(invmouse,			0,			0,			1);
@@ -45,11 +49,7 @@ struct GAMECLIENT : igameclient
 	IVARP(rankhud,			0,			0,			1);			// show ranks on the hud
 	IVARP(ranktime,			0,			15000,		600000);	// display unchanged rank no earlier than every N ms
 
-	fpsent *player1;				// our client
-	vector<fpsent *> players;		// other clients
-	fpsent lastplayerstate;
-
-    IVARP(maxradarscale, 0, 1024, 10000);
+    IVARP(maxradarscale,	0,			1024,		10000);
 
 	GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this), asc(*this),

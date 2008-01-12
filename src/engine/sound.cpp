@@ -25,8 +25,7 @@ VARF(soundmono, 0, 0, 1, initwarning());
 VARF(soundchans, 0, 1024, INT_MAX-1, initwarning());
 VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning());
 VARF(soundfreq, 0, 44100, 48000, initwarning());
-VARP(maxsoundsatonce, 0, 20, INT_MAX-1);
-VARP(maxsounddist, 0, 1024, INT_MAX-1);
+VARP(maxsoundsatonce, 0, 24, INT_MAX-1);
 
 void initsound()
 {
@@ -164,25 +163,20 @@ void checksound()
 			{
 				vec v;
 				float dist = camera1->o.dist(*sounds[i].pos, v);
-
-				if (dist < maxsounddist)
+				int vol = soundvol, pan = 255/2;
+				
+				if ((vol -= (int)(dist*soundvol/255)) < 0) vol = 0;
+				if (!soundmono && (v.x != 0 || v.y != 0) && dist > 0)
 				{
-					int vol = soundvol, pan = 255/2;
-					
-					if ((vol -= (int)(dist*soundvol/255)) < 0) vol = 0;
-					if (!soundmono && (v.x != 0 || v.y != 0) && dist > 0)
-					{
-						float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
-						pan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
-					}
-					
-					vol = (MIX_MAX_VOLUME*vol*sounds[i].slot->vol)/255/255;
-					vol = min(vol, MIX_MAX_VOLUME);
-
-					Mix_Volume(i, vol);
-					Mix_SetPanning(i, 255-pan, pan);
+					float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
+					pan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
 				}
-				else removesound(i);
+
+				vol = (MIX_MAX_VOLUME*vol*sounds[i].slot->vol)/255/255;
+				vol = min(vol, MIX_MAX_VOLUME);
+
+				Mix_Volume(i, vol);
+				Mix_SetPanning(i, 255-pan, pan);
 			}
 		}
 	}
@@ -194,8 +188,6 @@ int playsound(int n, vec *pos, bool copy, bool mapsnd)
 	if (nosound || !soundvol || !camera1) return -1;
 
 	vec *p = pos != NULL ? pos : &camera1->o;
-
-	if (camera1->o.dist(*p) >= maxsounddist) return -1;
 
 	if (!mapsnd)
 	{

@@ -689,8 +689,6 @@ VARP(outlinemeters, 0, 0, 1);
 #define COLLIDERADIUS 8.0f
 #define COLLIDEERROR 1.0f
 
-//VARP(decalfade, 1, 10000, 60000);
-
 #define MAXLIGHTNINGSTEPS 64
 #define LIGHTNINGSTEP 8
 int lnjitterx[MAXLIGHTNINGSTEPS], lnjittery[MAXLIGHTNINGSTEPS];
