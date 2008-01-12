@@ -54,13 +54,14 @@ struct entities : icliententities
 
 	void renderentities()
 	{
-		if (rendernormally)
+		if (rendernormally) // important, don't render lines and stuff otherwise!
 		{
 			#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
 	
 			renderprimitive(true);
 			if (editmode)
-			{	loopv(entgroup) entfocus(entgroup[i], renderentshow(e));
+			{
+				loopv(entgroup) entfocus(entgroup[i], renderentshow(e));
 				if (enthover >= 0) entfocus(enthover, renderentshow(e));
 			}
 			loopv(ents)
@@ -69,7 +70,7 @@ struct entities : icliententities
 			}
 			renderprimitive(false);
 			
-			loopv(ents)
+			loopv(ents) // sounds are here so they only execute once per frame
 			{
 				fpsentity &e = (fpsentity &)*ents[i];
 
@@ -284,7 +285,7 @@ struct entities : icliententities
 
 	void entdelink(int both)
 	{
-		if (entgroup.length() > 0)
+		if (entgroup.length())
 		{
 			int index = entgroup[0];
 
@@ -322,7 +323,7 @@ struct entities : icliententities
 
 	void entlink(int both)
 	{
-		if (entgroup.length() > 0)
+		if (entgroup.length())
 		{
 			int index = entgroup[0];
 
@@ -416,8 +417,8 @@ struct entities : icliententities
 
 		if (mtype == MAP_BFGZ)
 		{
-			int type = f.type; // translation, use absolute numbers!
-			if (gver <= 49 && type >= 10) type--; // translation for these is done later..
+			int type = f.type;
+			if (gver <= 49 && type >= 10) type--; // translation for these are done later..
 			
 			if (enttype[type].links && enttype[type].links <= gver)
 			{
@@ -489,7 +490,7 @@ struct entities : icliententities
 				{
 					int dest = -1;
 					
-					loopvj(ents) // see if we're sitting on top of a teleport
+					loopvj(ents) // see if this guy is sitting on top of a teleport already
 					{
 						fpsentity &f = (fpsentity &)*ents[j];
 						
@@ -529,7 +530,7 @@ struct entities : icliententities
 				fpsentity &e = (fpsentity &)*ents[i];
 				if (e.type == 9)
 				{
-					e.attr1 = teleyaw[i];
+					e.attr1 = teleyaw[i]; // grab what we stored earlier
 					e.attr2 = 0;
 				}
 				else if (e.type == 10) e.type = NOTUSED; // unused teledest?
@@ -673,7 +674,7 @@ struct entities : icliententities
 				break;
 			}
 			default:
-			break;
+				break;
 		}
 	}
 } et;

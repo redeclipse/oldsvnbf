@@ -47,4 +47,4 @@ extern void removesound(int c, bool clear = false);
 extern void clearsound();
 extern int playsound(int n, vec *pos = NULL, bool copy = false, bool mapsnd = false);
 
-extern int soundvol, musicvol, soundmono, soundchans, soundbufferlen, soundfreq, maxsoundsatonce, maxsounddist;
+extern int soundvol, musicvol, soundmono, soundchans, soundbufferlen, soundfreq, maxsoundsatonce;

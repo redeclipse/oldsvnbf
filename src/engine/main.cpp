@@ -295,13 +295,14 @@ VAR(worstfps, 1, 0, -1);
 
 int lastperf = 0;
 
-VARP(perfadjust, 0, 0, 1);
-VARP(perfall, 0, 0, 1);
-VARP(perfmin, 0, 1, 100);
-VARP(perfmax, 0, 100, 100);
-VARFP(perffps, 0, 20, 100, perffps = min(perffps, maxfps-1));
-VARP(perfrate, 0, 500, 10000);
-VARFP(perflimit, 0, 10, 100, perflimit = min(perflimit, perffps-1));
+VARP(perfauto, 0, 1, 1);		// auto performance adjust
+VARP(perfmin, 0, 0, 100);		// lowest perf level to go to
+VARP(perfmax, 0, 100, 100);		// highest perf level to go to
+VARFP(perffps, 0, 25, 100,		// aim for this fps or higher
+	perffps = min(perffps, maxfps-1));
+VARP(perfrate, 0, 500, 10000);	// only adjust this often
+VARFP(perflimit, 0, 10, 100,	// going below this automatically scales to minimum
+	perflimit = min(perflimit, perffps-1));
 
 void perfset(int level)
 {
@@ -313,18 +314,6 @@ void perfset(int level)
 				setvar(#s, max(min(_##s, n0), n1), true); \
 			} \
 
-		if (perfall || !level || level < perfmin)
-		{
-			perfvarscl(shaderdetail,	100,	3,			0);
-			//perfvarscl(waterreflect,	2,		1,			0);
-			perfvarscl(waterrefract,	2,		1,			0);
-			perfvarscl(grass,			1,		1,			0);
-			perfvarscl(glassenv,		1,		1,			0);
-			perfvarscl(envmapmodels,	1,		1,			0);
-			perfvarscl(glowmodels,		1,		1,			0);
-			perfvarscl(shadowmap,		1,		1,			0);
-		}
-
 		perfvarscl(decalfade,			100,	60000,		1);
 		perfvarscl(dynlightdist,		100,	10000,		128);
 		perfvarscl(emitfps,				100,	60,			1);
@@ -334,15 +323,9 @@ void perfset(int level)
 		perfvarscl(grasslod,			100,	1000,		0);
 		perfvarscl(grasslodz,			100,	10000,		0);
 		perfvarscl(grasstaper,			100,	200,		0);
-		perfvarscl(loddistance,			100,	10000,		0);
 		perfvarscl(maxparticledistance,	100,	1024,		256);
 		perfvarscl(maxreflect,			100,	8,			1);
 		perfvarscl(reflectdist,			100,	10000,		128);
-
-		//perfvarscl(shadowmapradius,		100,	256,		64);
-		//perfvarscl(shadowmapdist,		100,	512,		128);
-		//perfvarscl(shadowmapfalloff,	100,	512,		0);
-		//perfvarscl(shadowmapbias,		100,	1024,		0);
 
 		lastperf = lastmillis;
 	}
@@ -360,7 +343,7 @@ void perfcheck()
 	setvar("bestfps", fps+bestdiff);
 	setvar("worstfps", fps-worstdiff);
 
-	if (perfadjust && (lastmillis-lastperf > perfrate || fps-worstdiff < perflimit))
+	if (perfauto && (lastmillis-lastperf > perfrate || fps-worstdiff < perflimit))
 	{
 		float amt = float(fps-worstdiff)/float(perffps);
 
