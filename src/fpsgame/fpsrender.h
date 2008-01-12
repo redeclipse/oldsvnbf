@@ -26,7 +26,7 @@ struct fpsrender
 			delay = 1000;
 		}
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
-		static const char *vweps[] = { "vwep/pistol", "vwep/shotgun", "vwep/chaingun", "vwep/grenades", "vwep/rockets", "vwep/rifle"};
+		static const char *vweps[] = { "weapons/pistol/vwep", "weapons/shotgun/vwep", "weapons/chaingun/vwep", "weapons/grenades/vwep", "weapons/rockets/vwep", "weapons/rifle/vwep"};
         int ai = 0;
         if (d->gunselect > -1 && d->gunselect < NUMGUNS)
 		{

@@ -451,11 +451,11 @@ struct GAMECLIENT : igameclient
         {
             const char *file = guntype[i].name;
             if(!file) continue;
-            s_sprintfd(mdl)("weap/%s", file);
+            s_sprintfd(mdl)("weapons/%s", file);
             loadmodel(mdl, -1, true);
             //s_sprintf(mdl)("hudguns/%s/blue", file);
             //loadmodel(mdl, -1, true);
-            s_sprintf(mdl)("vwep/%s", file);
+            s_sprintf(mdl)("weapons/%s/vwep", file);
             loadmodel(mdl, -1, true);
         }
     }
@@ -579,7 +579,7 @@ struct GAMECLIENT : igameclient
 		}
 #endif
 
-        s_sprintfd(gunname)("weap/%s", guntype[player1->gunselect].name);
+        s_sprintfd(gunname)("weapons/%s", guntype[player1->gunselect].name);
 		rendermodel(NULL, gunname, anim, 0, 0, sway, camera1->yaw+90, camera1->pitch, camera1->roll, speed, base, NULL, MDL_LIGHT);
 	}
 
