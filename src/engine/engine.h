@@ -472,8 +472,8 @@ extern void renderline(vec &fr, vec &to, float r = 255.f, float g = 255.f, float
 extern void rendertris(vec &fr, float yaw, float pitch, float size = 1.f, float r = 255.f, float g = 255.f, float b = 255.f, bool fill = true, bool nf = false);
 extern void renderlineloop(vec &o, float height, float xradius, float yradius, float z = 255.f, int type = 0, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);
 
-extern void renderentdir(vec &o, float yaw, float pitch, bool nf = true);
-extern void renderentradius(vec &o, float height, float radius, bool nf = true);
+extern void renderdir(vec &o, float yaw, float pitch, bool nf = true);
+extern void renderradius(vec &o, float height, float radius, bool nf = true);
 
 extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 120);
 

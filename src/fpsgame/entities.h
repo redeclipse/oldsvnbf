@@ -41,7 +41,7 @@ struct entities : icliententities
 		switch (type)
 		{
 			case WEAPON:
-				s_sprintf(emdl)("ammo/%s", guntype[attr1].name);
+				s_sprintf(emdl)("weapons/%s/item", guntype[attr1].name);
 				break;
 			case TELEPORT:
 				s_sprintf(emdl)("%s", enttype[type].name);
@@ -587,7 +587,7 @@ struct entities : icliententities
 					dr.mul(RENDERPUSHX);
 					dr.add(fr);
 
-					rendertris(dr, yaw, pitch, 2.f, col.x, col.y, col.z, true, hassel);
+					rendertris(dr, yaw, pitch, 2.f, col.x/2.f, col.y/2.f, col.z/2.f, true, hassel);
 				}
 			}
 		}
@@ -633,7 +633,7 @@ struct entities : icliententities
 		{
 			if (enttype[e.type].height > 0.f || enttype[e.type].radius > 0.f)
 			{
-				renderentradius(e.o, enttype[e.type].height, enttype[e.type].radius);
+				renderradius(e.o, enttype[e.type].height, enttype[e.type].radius);
 			}
 		}
 
@@ -642,13 +642,13 @@ struct entities : icliententities
 			case PLAYERSTART:
 			case MAPMODEL:
 			{
-				if (showentdir()) renderentdir(e.o, e.attr1, 0);
+				if (showentdir()) renderdir(e.o, e.attr1, 0);
 				break;
 			}
 			case TELEPORT:
 			{
 				if (!showteleportlinks()) renderlinked(e);
-				if (showentdir()) renderentdir(e.o, e.attr1, 0);
+				if (showentdir()) renderdir(e.o, e.attr1, 0);
 				break;
 			}
 			case BASE:
@@ -664,7 +664,7 @@ struct entities : icliententities
 			case CAMERA:
 			{
 				if (!showcameralinks()) renderlinked(e);
-				if (showentdir()) renderentdir(e.o, e.attr1, e.attr2);
+				if (showentdir()) renderdir(e.o, e.attr1, e.attr2);
 				break;
 			}
 			case WAYPOINT:

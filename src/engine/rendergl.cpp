@@ -1243,7 +1243,7 @@ void renderlineloop(vec &o, float height, float xradius, float yradius, float z,
 	});
 }
 
-void renderentdir(vec &o, float yaw, float pitch, bool nf)
+void renderdir(vec &o, float yaw, float pitch, bool nf)
 {
 	vec fr = o, to, dr;
 
@@ -1259,10 +1259,10 @@ void renderentdir(vec &o, float yaw, float pitch, bool nf)
 
 	dr.mul(0.5f);
 	to.add(dr);
-	rendertris(to, yaw, pitch, 2.f, 0.f, 0.f, 1.f, true, nf);
+	rendertris(to, yaw, pitch, 2.f, 0.f, 0.f, 0.5f, true, nf);
 }
 
-void renderentradius(vec &o, float height, float radius, bool nf)
+void renderradius(vec &o, float height, float radius, bool nf)
 {
 	renderlineloop(o, height, radius, radius, 0.f, 0, 0.f, 1.f, 1.f, nf);
 	renderlineloop(o, height, radius, radius, 0.f, 1, 0.f, 1.f, 1.f, nf);
