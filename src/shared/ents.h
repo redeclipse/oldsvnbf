@@ -11,28 +11,24 @@ struct entity                                   // persistent map entity
     short attr1, attr2, attr3, attr4, attr5;
     uchar type;                                 // type is one of the above
     uchar reserved;
- };
+};
 
-enum
+struct entitylight
 {
-    TRIGGER_RESET = 0,
-    TRIGGERING,
-    TRIGGERED,
-    TRIGGER_RESETTING,
-    TRIGGER_DISAPPEARED
+    vec color, dir;
+    int millis;
+
+    entitylight() : color(1, 1, 1), dir(0, 0, 1), millis(-1) {}
 };
 
 struct extentity : entity                       // part of the entity that doesn't get saved to disk
 {
-    uchar spawned, inoctanode, visible, triggerstate;        // the only dynamic state of a map entity
-    vec color, dir;
-    int lasttrigger;
+    uchar spawned, inoctanode, visible;        // the only dynamic state of a map entity
+    entitylight light;
     extentity *attached;
 
-    extentity() : visible(false), triggerstate(TRIGGER_RESET), lasttrigger(0), attached(NULL) {}
+    extentity() : visible(true), attached(NULL) {}
 };
-
-//extern vector<extentity *> ents;                // map entities
 
 enum
 {
@@ -144,6 +140,7 @@ struct dynent : physent                         // animated characters, or chara
     float lastyaw, lastpitch;                   // last yaw/pitch to interpolate from, MP only
     int orientmillis;                           // time last yaw/pitch was recorded
 
+    entitylight light;
     animstate prev[2], current[2];              // md2's need only [0], md3's need both for the lower&upper model
     int lastanimswitchtime[2];
     void *lastmodel[2];

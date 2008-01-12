@@ -256,7 +256,7 @@ void clear_mdls()
 bool modeloccluded(const vec &center, float radius)
 {
 	int br = int(radius*2)+1;
-	return bboccluded(ivec(int(center.x-radius), int(center.y-radius), int(center.z-radius)), ivec(br, br, br), worldroot, ivec(0, 0, 0), hdr.worldsize/2);
+    return bboccluded(ivec(int(center.x-radius), int(center.y-radius), int(center.z-radius)), ivec(br, br, br));
 }
 
 VAR(showboundingbox, 0, 0, 2);
@@ -605,7 +605,7 @@ void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
     glDepthMask(GL_TRUE);
 }
 
-void rendermodel(vec &color, vec &dir, const char *mdl, int anim, int varseed, int tex, const vec &o, float yaw, float pitch, float roll, float speed, int basetime, dynent *d, int cull, modelattach *a)
+void rendermodel(entitylight *light, const char *mdl, int anim, int varseed, int tex, const vec &o, float yaw, float pitch, float roll, float speed, int basetime, dynent *d, int cull, modelattach *a)
 {
     if(shadowmapping && !(cull&(MDL_SHADOW|MDL_DYNSHADOW))) return;
 	model *m = loadmodel(mdl);
@@ -613,7 +613,7 @@ void rendermodel(vec &color, vec &dir, const char *mdl, int anim, int varseed, i
 	vec center;
 	float radius = 0;
     bool shadow = (!shadowmap || renderpath==R_FIXEDFUNCTION) && (cull&(MDL_SHADOW|MDL_DYNSHADOW)) && dynshadow && hasstencil;
-	if(cull)
+    if(cull&(MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED|MDL_CULL_QUERY|MDL_SHADOW|MDL_DYNSHADOW))
 	{
         radius = m->boundsphere(0/*frame*/, center, a); // FIXME
 		center.add(o);
@@ -678,14 +678,39 @@ void rendermodel(vec &color, vec &dir, const char *mdl, int anim, int varseed, i
 		}
 	}
 
-    if(d && !shadowmapping)
-	{
-        if(!reflecting && !refracting) d->occluded = OCCLUDE_NOTHING;
-		lightreaching(d->o, color, dir);
-		cl->lighteffects(d, color, dir);
-	}
-	vec dyncolor(color), dyndir(dir);
-    if(!shadowmapping) dynlightreaching(o, dyncolor, dyndir);
+    vec lightcolor(1, 1, 1), lightdir(0, 0, 1);
+    if(!shadowmapping)
+    {
+        if(d) 
+		{
+        	if(!reflecting && !refracting) d->occluded = OCCLUDE_NOTHING;
+            if(!light) light = &d->light;
+            if(cull&MDL_LIGHT && light->millis!=lastmillis)
+            {
+                lightreaching(d->o, light->color, light->dir);
+                dynlightreaching(o, light->color, light->dir);
+                cl->lighteffects(d, light->color, light->dir);
+                light->millis = lastmillis;
+            }
+        }
+        else if(cull&MDL_LIGHT)
+        {
+            if(!light) 
+            {
+                lightreaching(o, lightcolor, lightdir);
+                dynlightreaching(o, lightcolor, lightdir);
+			}
+            else if(light->millis!=lastmillis)
+            {
+                lightreaching(o, light->color, light->dir);
+                dynlightreaching(o, light->color, light->dir);
+                light->millis = lastmillis;
+            }
+        }
+        if(light) { lightcolor = light->color; lightdir = light->dir; }
+        if(!(cull&MDL_LIGHT)) dynlightreaching(o, lightcolor, lightdir);
+    }
+
 	if(a) for(int i = 0; a[i].name; i++)
 	{
 		a[i].m = loadmodel(a[i].name);
@@ -698,8 +723,8 @@ void rendermodel(vec &color, vec &dir, const char *mdl, int anim, int varseed, i
 	{
 		batchedmodel &b = addbatchedmodel(m);
 		b.pos = o;
-		b.color = dyncolor;
-		b.dir = dyndir;
+        b.color = lightcolor;
+        b.dir = lightdir;
 		b.anim = anim;
 		b.varseed = varseed;
 		b.tex = tex;
@@ -720,7 +745,7 @@ void rendermodel(vec &color, vec &dir, const char *mdl, int anim, int varseed, i
 
 	if(shadow && (!reflecting || refracting))
 	{
-		rendershadow(dyndir, m, anim, varseed, o, center, radius, yaw, pitch, roll, speed, basetime, d, cull, a);
+		rendershadow(lightdir, m, anim, varseed, o, center, radius, yaw, pitch, roll, speed, basetime, d, cull, a);
 		if((cull&MDL_CULL_VFC) && refracting && center.z-radius>=refracting) { m->endrender(); return; }
 	}
 
@@ -734,7 +759,7 @@ void rendermodel(vec &color, vec &dir, const char *mdl, int anim, int varseed, i
     }
 
 	m->setskin(tex);
-	m->render(anim, varseed, speed, basetime, o, yaw, pitch, roll, d, a, dyncolor, dyndir);
+	m->render(anim, varseed, speed, basetime, o, yaw, pitch, roll, d, a, lightcolor, lightdir);
 
     if(doOQ && d->query) endquery(d->query);
 
@@ -891,12 +916,11 @@ void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attac
 		if(((anim&ANIM_INDEX)==ANIM_IDLE || (anim&ANIM_INDEX)==ANIM_CROUCH) && (anim>>ANIM_SECONDARY)&ANIM_INDEX) anim >>= ANIM_SECONDARY;
 	}
 	if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
-    int flags = MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
+    int flags = MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY | MDL_LIGHT;
 	if(d->type!=ENT_PLAYER) flags |= MDL_CULL_DIST;
 	if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
     if(d->state==CS_LAGGED) flags |= MDL_TRANSLUCENT;
-	vec color, dir;
-    rendermodel(color, dir, mdlname, anim, varseed, 0, o, testanims && local ? 0 : yaw+90, pitch, roll, 0, basetime, d, flags, attachments);
+    rendermodel(NULL, mdlname, anim, varseed, 0, o, testanims && local ? 0 : yaw+90, pitch, roll, 0, basetime, d, flags, attachments);
 }
 
 void setbbfrommodel(dynent *d, const char *mdl)

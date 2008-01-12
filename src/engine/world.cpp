@@ -4,6 +4,7 @@
 #include "engine.h"
 
 bfgz hdr;
+int worldscale;
 
 VAR(octaentsize, 0, 128, 1024);
 VAR(entselradius, 0, 2, 10);
@@ -461,7 +462,7 @@ void renderentradius(extentity &e)
 		case ET_MAPMODEL:
 		case ET_PLAYERSTART:
 			radius = 4;
-			if(e.type==ET_MAPMODEL && e.attr3) ring = checktriggertype(e.attr3, TRIG_COLLIDE) ? 20 : 12;
+			//if(e.type==ET_MAPMODEL && e.attr3) ring = checktriggertype(e.attr3, TRIG_COLLIDE) ? 20 : 12;
 			vecfromyawpitch(e.attr1, 0, 1, 0, dir);
 			break;
 
@@ -778,7 +779,8 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
 	e.reserved = 0;
 	e.spawned = false;
 	e.inoctanode = false;
-	e.color = vec(1, 1, 1);
+    e.light.color = vec(1, 1, 1);
+    e.light.dir = vec(0, 0, 1);
 	if(local)
 	{
 		switch(type)
@@ -955,7 +957,8 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	hdr.version = MAPVERSION;
 	hdr.gamever = BFRONTIER;
 	hdr.headersize = sizeof(bfgz);
-	hdr.worldsize = 1 << (scale<8 ? 8 : (scale>18 ? 18 : scale));
+    worldscale = scale<10 ? 10 : (scale>20 ? 20 : scale);
+    hdr.worldsize = 1<<worldscale;
 	hdr.revision = 0;
 	hdr.lightmaps = 0;
 
@@ -994,6 +997,7 @@ bool enlargemap(bool force)
 	}
 	if(hdr.worldsize >= 1<<20) return false;
 
+    worldscale++;
 	hdr.worldsize *= 2;
 	cube *c = newcubes(F_EMPTY);
 	c[0].children = worldroot;
@@ -1043,150 +1047,6 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
 
 int getworldsize() { return hdr.worldsize; }
 int getmapversion() { return hdr.version; }
-
-int triggertypes[NUMTRIGGERTYPES] =
-{
-	0,
-	TRIG_ONCE,
-	TRIG_RUMBLE,
-	TRIG_TOGGLE,
-	TRIG_TOGGLE | TRIG_RUMBLE,
-	TRIG_MANY,
-	TRIG_MANY | TRIG_RUMBLE,
-	TRIG_MANY | TRIG_TOGGLE,
-	TRIG_MANY | TRIG_TOGGLE | TRIG_RUMBLE,
-	TRIG_COLLIDE | TRIG_TOGGLE | TRIG_RUMBLE,
-	TRIG_COLLIDE | TRIG_TOGGLE | TRIG_AUTO_RESET | TRIG_RUMBLE,
-	TRIG_COLLIDE | TRIG_TOGGLE | TRIG_LOCKED | TRIG_RUMBLE,
-	TRIG_DISAPPEAR,
-	TRIG_DISAPPEAR | TRIG_RUMBLE,
-	TRIG_DISAPPEAR | TRIG_COLLIDE | TRIG_LOCKED,
-	0 /* reserved */
-};
-
-void resettriggers()
-{
-	const vector<extentity *> &ents = et->getents();
-	loopv(ents)
-	{
-		extentity &e = *ents[i];
-		if(e.type != ET_MAPMODEL || !e.attr3) continue;
-		e.triggerstate = TRIGGER_RESET;
-		e.lasttrigger = 0;
-	}
-}
-
-void unlocktriggers(int tag, int oldstate = TRIGGER_RESET, int newstate = TRIGGERING)
-{
-	const vector<extentity *> &ents = et->getents();
-	loopv(ents)
-	{
-		extentity &e = *ents[i];
-		if(e.type != ET_MAPMODEL || !e.attr3) continue;
-		if(e.attr4 == tag && e.triggerstate == oldstate && checktriggertype(e.attr3, TRIG_LOCKED))
-		{
-			if(newstate == TRIGGER_RESETTING && checktriggertype(e.attr3, TRIG_COLLIDE) && overlapsdynent(e.o, 20)) continue;
-			e.triggerstate = newstate;
-			e.lasttrigger = lastmillis;
-			if(checktriggertype(e.attr3, TRIG_RUMBLE)) et->rumble(e);
-		}
-	}
-}
-
-void trigger(int *tag, int *state)
-{
-	if(*state) unlocktriggers(*tag);
-	else unlocktriggers(*tag, TRIGGERED, TRIGGER_RESETTING);
-}
-
-COMMAND(trigger, "ii");
-
-VAR(triggerstate, -1, 0, 1);
-
-void doleveltrigger(int trigger, int state)
-{
-	s_sprintfd(aliasname)("level_trigger_%d", trigger);
-	if(identexists(aliasname))
-	{
-		triggerstate = state;
-		execute(aliasname);
-	}
-}
-
-void checktriggers()
-{
-	/* TODO: game modularise..
-	if(player->state != CS_ALIVE) return;
-	vec o(player->o);
-	o.z -= player->height;
-	const vector<extentity *> &ents = et->getents();
-	loopv(ents)
-	{
-		extentity &e = *ents[i];
-		if(e.type != ET_MAPMODEL || !e.attr3) continue;
-		switch(e.triggerstate)
-		{
-			case TRIGGERING:
-			case TRIGGER_RESETTING:
-				if(lastmillis-e.lasttrigger>=1000)
-				{
-					if(e.attr4)
-					{
-						if(e.triggerstate == TRIGGERING) unlocktriggers(e.attr4);
-						else unlocktriggers(e.attr4, TRIGGERED, TRIGGER_RESETTING);
-					}
-					if(checktriggertype(e.attr3, TRIG_DISAPPEAR)) e.triggerstate = TRIGGER_DISAPPEARED;
-					else if(e.triggerstate==TRIGGERING && checktriggertype(e.attr3, TRIG_TOGGLE)) e.triggerstate = TRIGGERED;
-					else e.triggerstate = TRIGGER_RESET;
-				}
-				break;
-			case TRIGGER_RESET:
-				if(e.lasttrigger)
-				{
-					if(checktriggertype(e.attr3, TRIG_AUTO_RESET|TRIG_MANY|TRIG_LOCKED) && e.o.dist(o)-player->radius>=(checktriggertype(e.attr3, TRIG_COLLIDE) ? 20 : 12))
-						e.lasttrigger = 0;
-					break;
-				}
-				else if(e.o.dist(o)-player->radius>=(checktriggertype(e.attr3, TRIG_COLLIDE) ? 20 : 12)) break;
-				else if(checktriggertype(e.attr3, TRIG_LOCKED))
-				{
-					if(!e.attr4) break;
-					doleveltrigger(e.attr4, -1);
-					e.lasttrigger = lastmillis;
-					break;
-				}
-				e.triggerstate = TRIGGERING;
-				e.lasttrigger = lastmillis;
-				if(checktriggertype(e.attr3, TRIG_RUMBLE)) et->rumble(e);
-				et->trigger(e);
-				if(e.attr4) doleveltrigger(e.attr4, 1);
-				break;
-			case TRIGGERED:
-				if(e.o.dist(o)-player->radius<(checktriggertype(e.attr3, TRIG_COLLIDE) ? 20 : 12))
-				{
-					if(e.lasttrigger) break;
-				}
-				else if(checktriggertype(e.attr3, TRIG_AUTO_RESET))
-				{
-					if(lastmillis-e.lasttrigger<6000) break;
-				}
-				else if(checktriggertype(e.attr3, TRIG_MANY))
-				{
-					e.lasttrigger = 0;
-					break;
-				}
-				else break;
-				if(checktriggertype(e.attr3, TRIG_COLLIDE) && overlapsdynent(e.o, 20)) break;
-				e.triggerstate = TRIGGER_RESETTING;
-				e.lasttrigger = lastmillis;
-				if(checktriggertype(e.attr3, TRIG_RUMBLE)) et->rumble(e);
-				et->trigger(e);
-				if(e.attr4) doleveltrigger(e.attr4, 0);
-				break;
-		}
-	}
-	*/
-}
 
 void newentity(vec &v, int type, int a1, int a2, int a3, int a4)
 {

@@ -72,6 +72,7 @@ extern PFNGLBLENDEQUATIONEXTPROC glBlendEquation_;
 extern physent *camera1;				// special ent that acts as camera, same object as player1 in FPS mode
 
 extern bfgz hdr;					  // current map header
+extern int worldscale;
 extern vector<ushort> texmru;
 extern int xtraverts, xtravertsva;
 extern vector<vertex> verts;			// the vertex array for all world rendering
@@ -247,7 +248,7 @@ extern void renderoutline();
 extern bool rendersky(bool explicitonly = false, float zreflect = 0);
 
 extern int isvisiblesphere(float rad, const vec &cv);
-extern bool bboccluded(const ivec &bo, const ivec &br, cube *c, const ivec &o, int size);
+extern bool bboccluded(const ivec &bo, const ivec &br);
 extern occludequery *newquery(void *owner);
 extern bool checkquery(occludequery *query, bool nowait = false);
 extern void resetqueries();
@@ -351,24 +352,6 @@ extern void rotatebb(vec &center, vec &radius, int yaw);
 extern float shadowray(const vec &o, const vec &ray, float radius, int mode, extentity *t = NULL);
 
 // world
-enum
-{
-	TRIG_COLLIDE	= 1<<0,
-	TRIG_TOGGLE	 = 1<<1,
-	TRIG_ONCE		= 0<<2,
-	TRIG_MANY		= 1<<2,
-	TRIG_DISAPPEAR  = 1<<3,
-	TRIG_AUTO_RESET = 1<<4,
-	TRIG_RUMBLE	 = 1<<5,
-	TRIG_LOCKED	 = 1<<6,
-};
-
-#define NUMTRIGGERTYPES 16
-
-extern int triggertypes[NUMTRIGGERTYPES];
-
-#define checktriggertype(type, flag) (triggertypes[(type) & (NUMTRIGGERTYPES-1)] & (flag))
-
 extern void entitiesinoctanodes();
 extern void attachentities();
 extern void freeoctaentities(cube &c);

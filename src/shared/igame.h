@@ -7,11 +7,10 @@ struct icliententities
     virtual void editent(int i) = 0;
     virtual const char *entnameinfo(entity &e) = 0;
     virtual const char *entname(int i) = 0;
-	virtual void readent(gzFile &g, int maptype, int id, int ver, entity &e) { return; }
+	virtual void readent(gzFile &g, int maptype, int id, int ver, int gamever, entity &e) { return; }
 	virtual void writeent(gzFile &g, int id, entity &e) { return; }
     virtual float dropheight(entity &e) = 0;
     virtual void rumble(extentity &e) = 0;
-    virtual void trigger(extentity &e) = 0;
     virtual void fixentity(extentity &e) = 0;
     virtual void entradius(extentity &e, float &radius, float &angle, vec &dir) {}
     virtual bool mayattach(extentity &e) { return false; }

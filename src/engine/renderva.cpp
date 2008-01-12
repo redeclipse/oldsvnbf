@@ -348,8 +348,7 @@ void findvisiblemms(const vector<extentity *> &ents)
 				loopv(oe->mapmodels)
 				{
 					extentity &e = *ents[oe->mapmodels[i]];
-					if(e.visible || (e.attr3 && e.triggerstate == TRIGGER_DISAPPEARED)) continue;
-					e.visible = true;
+					if(!e.visible) continue;
 					++visible;
 				}
 				if(!visible) continue;
@@ -378,15 +377,8 @@ extern bool getentboundingbox(extentity &e, ivec &o, ivec &r);
 void rendermapmodel(extentity &e)
 {
 	int anim = ANIM_MAPMODEL|ANIM_LOOP, basetime = 0;
-	if(e.attr3) switch(e.triggerstate)
-	{
-		case TRIGGER_RESET: anim = ANIM_TRIGGER|ANIM_START; break;
-		case TRIGGERING: anim = ANIM_TRIGGER; basetime = e.lasttrigger; break;
-		case TRIGGERED: anim = ANIM_TRIGGER|ANIM_END; break;
-		case TRIGGER_RESETTING: anim = ANIM_TRIGGER|ANIM_REVERSE; basetime = e.lasttrigger; break;
-	}
 	mapmodelinfo &mmi = getmminfo(e.attr2);
-	if(&mmi) rendermodel(e.color, e.dir, mmi.name, anim, 0, mmi.tex, e.o, (float)((e.attr1+7)-(e.attr1+7)%15), 0, 0, 0, basetime, NULL, MDL_CULL_VFC | MDL_CULL_DIST);
+	if(&mmi) rendermodel(&e.light, mmi.name, anim, 0, mmi.tex, e.o, (float)((e.attr1+7)-(e.attr1+7)%15), 0, 0, 0, basetime, NULL, MDL_CULL_VFC | MDL_CULL_DIST);
 }
 
 extern int reflectdist;
@@ -416,12 +408,6 @@ void renderreflectedmapmodels(float z, bool refract)
 		octaentities *oe = mms[i];
 		if(refract ? oe->o.z >= z : oe->o.z+oe->size <= z) continue;
 		if(reflected && isvisiblecube(oe->o.tovec(), oe->size) >= VFC_FOGGED) continue;
-		loopv(oe->mapmodels)
-		{
-			extentity &e = *ents[oe->mapmodels[i]];
-			if(e.visible || (e.attr3 && e.triggerstate == TRIGGER_DISAPPEARED)) continue;
-			e.visible = true;
-		}
 	}
 	if(mms.length())
 	{
@@ -434,7 +420,6 @@ void renderreflectedmapmodels(float z, bool refract)
 				extentity &e = *ents[oe->mapmodels[i]];
 				if(!e.visible) continue;
 				rendermapmodel(e);
-				e.visible = false;
 			}
 		}
 		endmodelbatches();
@@ -460,7 +445,7 @@ void rendermapmodels()
 		loopv(oe->mapmodels)
 		{
 			extentity &e = *ents[oe->mapmodels[i]];
-			if(!e.visible || (e.attr3 && e.triggerstate == TRIGGER_DISAPPEARED)) continue;
+			if(!e.visible) continue;
 			if(renderedmms.empty() || renderedmms.last()!=oe)
 			{
 				renderedmms.add(oe);
@@ -468,7 +453,6 @@ void rendermapmodels()
 				if(oe->query) startmodelquery(oe->query);
 			}
 			rendermapmodel(e);
-			e.visible = false;
 		}
 		if(renderedmms.length() && renderedmms.last()==oe && oe->query) endmodelquery();
 	}
@@ -497,7 +481,7 @@ void rendermapmodels()
 	}
 }
 
-bool bboccluded(const ivec &bo, const ivec &br, cube *c, const ivec &o, int size)
+static inline bool bboccluded(const ivec &bo, const ivec &br, cube *c, const ivec &o, int size)
 {
 	loopoctabox(o, size, bo, br)
 	{
@@ -511,6 +495,32 @@ bool bboccluded(const ivec &bo, const ivec &br, cube *c, const ivec &o, int size
 		return false;
 	}
 	return true;
+}
+
+bool bboccluded(const ivec &bo, const ivec &br)
+{
+    int diff = (bo.x^(bo.x+br.x)) | (bo.y^(bo.y+br.y)) | (bo.z^(bo.z+br.z)),
+        scale = worldscale-1;
+    if(diff&~((1<<scale)-1)) return false;
+    cube *c = &worldroot[(((bo.z>>scale)&1)<<2) | (((bo.y>>scale)&1)<<1) | ((bo.x>>scale)&1)];
+    if(c->ext && c->ext->va)
+    {
+        vtxarray *va = c->ext->va;
+        if(va->curvfc >= VFC_FOGGED || va->occluded >= OCCLUDE_BB) return true;
+    }
+    scale--;
+    while(c->children && !(diff&(1<<scale)))
+    {
+        c = &c->children[(((bo.z>>scale)&1)<<2) | (((bo.y>>scale)&1)<<1) | ((bo.x>>scale)&1)];
+        if(c->ext && c->ext->va)
+        {
+            vtxarray *va = c->ext->va;
+            if(va->curvfc >= VFC_FOGGED || va->occluded >= OCCLUDE_BB) return true;
+        }
+        scale--;
+    }
+    if(c->children) return bboccluded(bo, br, c->children, ivec(bo).mask(~((2<<scale)-1)), 1<<scale);
+    return false;
 }
 
 VAR(outline, 0, 0, 0xFFFFFF);
