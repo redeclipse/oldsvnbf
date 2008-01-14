@@ -12,7 +12,6 @@ struct GAMECLIENT : igameclient
 
 	int nextmode, nextmuts, gamemode, mutators;
 	bool intermission;
-	int lastmillis;
 	int maptime, minremain;
 	int respawnent;
 	int swaymillis;
@@ -53,7 +52,7 @@ struct GAMECLIENT : igameclient
 
 	GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this), asc(*this),
-			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false), lastmillis(0),
+			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
 			respawned(-1), suicided(-1),
@@ -173,31 +172,15 @@ struct GAMECLIENT : igameclient
 		pj.reset();
 	}
 
-	void otherplayers()
+	void updateworld()		// main game update loop
 	{
-		loopv(players) if(players[i])
-		{
-            const int lagtime = lastmillis-players[i]->lastupdate;
-			if(lagtime>1000 && players[i]->state==CS_ALIVE)
-			{
-				players[i]->state = CS_LAGGED;
-				continue;
-			}
-            if(lagtime && (players[i]->state==CS_ALIVE || (players[i]->state==CS_DEAD && lastmillis-players[i]->lastpain<2000)) && !intermission) ph.move(players[i], 2, false);
-		}
-	}
-
-	void updateworld(vec &pos, int curtime, int lm)		// main game update loop
-	{
-        if (!maptime) { maptime = lm + curtime; return; }
-		lastmillis = lm;
+        if (!maptime) { maptime = lastmillis + curtime; return; }
 		if (!curtime) return;
 
 		ph.update();
-		pj.update(curtime);
+		pj.update();
 
 		gets2c();
-		otherplayers();
 
 		if (cc.ready())
 		{
@@ -248,7 +231,7 @@ struct GAMECLIENT : igameclient
 				swaydir.add(vec(player1->vel).mul((1-k)/(15*max(player1->vel.magnitude(), ph.maxspeed(player1)))));
 
 				et.checkitems(player1);
-				if (player1->attacking) ws.shoot(player1, pos);
+				if (player1->attacking) ws.shoot(player1, worldpos);
 				if (player1->reloading || doautoreload()) ws.reload(player1);
 			}
 		}
@@ -335,7 +318,7 @@ struct GAMECLIENT : igameclient
 		{
 			sb.showscores(true);
 			lastplayerstate = *player1;
-			d->attacking = d->reloading = d->pickingup = d->leaning = false;
+			d->attacking = d->reloading = d->usestuff = d->leaning = false;
 			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
@@ -367,7 +350,7 @@ struct GAMECLIENT : igameclient
 		if(!timeremain)
 		{
 			intermission = true;
-			player1->attacking = player1->reloading = player1->pickingup = player1->leaning = false;
+			player1->attacking = player1->reloading = player1->usestuff = player1->leaning = false;
 			if (m_mp(gamemode))
 			{
 				calcranks();
@@ -935,7 +918,7 @@ struct GAMECLIENT : igameclient
 		vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
 
 		if(raycubepos(camera1->o, dir, worldpos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-			worldpos = dir.mul(10).add(camera1->o); //otherwise 3dgui won't work when outside of map
+			worldpos = dir.mul(2*hdr.worldsize).add(camera1->o); //otherwise 3dgui won't work when outside of map
 	}
 
 	void recomputecamera()
@@ -965,9 +948,8 @@ struct GAMECLIENT : igameclient
 			if (players.inrange(-cameranum) && players[-cameranum])
 			{
 				camera1->o = players[-cameranum]->o;
-				//camera1->yaw = players[-cameranum]->yaw;
-				//camera1->pitch = players[-cameranum]->pitch;
-				interpolateorientation(players[-cameranum], camera1->yaw, camera1->pitch);
+				camera1->yaw = players[-cameranum]->yaw;
+				camera1->pitch = players[-cameranum]->pitch;
 				cameratype = 1;
 			}
 			else if (player1->clientnum != -cameranum)

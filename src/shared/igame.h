@@ -48,7 +48,7 @@ struct igameclient
     virtual iclientcom *getcom() = 0;
 
     virtual bool clientoption(char *arg) { return false; }
-    virtual void updateworld(vec &pos, int curtime, int lm) = 0;
+    virtual void updateworld() = 0;
     virtual void initclient() = 0;
     virtual void editvariable(const char *name, int value) = 0;
     virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
@@ -148,7 +148,7 @@ struct igameserver
     virtual bool sendpackets() = 0;
     virtual int welcomepacket(ucharbuf &p, int n) = 0;
     virtual void serverinforeply(ucharbuf &p) = 0;
-    virtual void serverupdate(int lastmillis, int totalmillis) = 0;
+    virtual void serverupdate() = 0;
     virtual int serverinfoport() = 0;
     virtual int serverport() = 0;
     virtual const char *getdefaultmaster() = 0;

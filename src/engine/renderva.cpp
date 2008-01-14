@@ -502,7 +502,7 @@ bool bboccluded(const ivec &bo, const ivec &br)
     int diff = (bo.x^(bo.x+br.x)) | (bo.y^(bo.y+br.y)) | (bo.z^(bo.z+br.z)),
         scale = worldscale-1;
     if(diff&~((1<<scale)-1)) return false;
-    cube *c = &worldroot[(((bo.z>>scale)&1)<<2) | (((bo.y>>scale)&1)<<1) | ((bo.x>>scale)&1)];
+    cube *c = &worldroot[octastep(bo.x, bo.y, bo.z, scale)];
     if(c->ext && c->ext->va)
     {
         vtxarray *va = c->ext->va;
@@ -511,7 +511,7 @@ bool bboccluded(const ivec &bo, const ivec &br)
     scale--;
     while(c->children && !(diff&(1<<scale)))
     {
-        c = &c->children[(((bo.z>>scale)&1)<<2) | (((bo.y>>scale)&1)<<1) | ((bo.x>>scale)&1)];
+        c = &c->children[octastep(bo.x, bo.y, bo.z, scale)];
         if(c->ext && c->ext->va)
         {
             vtxarray *va = c->ext->va;

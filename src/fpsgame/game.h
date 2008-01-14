@@ -163,7 +163,7 @@ enum
 	SV_DIED, SV_DAMAGE, SV_SHOTFX,
 	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN, SV_FORCEDEATH, SV_ARENAWIN,
 	SV_GUNSELECT, SV_TAUNT,
-	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMPICKUP, SV_DENIED,
+	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMUSE, SV_DENIED,
 	SV_PING, SV_PONG, SV_CLIENTPING,
 	SV_TIMEUP, SV_MAPRELOAD, SV_ITEMACC,
 	SV_SERVMSG, SV_ITEMLIST, SV_RESUME,
@@ -185,7 +185,7 @@ static char msgsizelookup(int msg)
 		SV_DIED, 4, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 1, SV_SPAWNSTATE, 9, SV_SPAWN, 3, SV_FORCEDEATH, 2, SV_ARENAWIN, 2,
 		SV_GUNSELECT, 2, SV_TAUNT, 1,
-		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMPICKUP, 2, SV_DENIED, 2,
+		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 2, SV_DENIED, 2,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
 		SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_ITEMACC, 3,
 		SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
@@ -281,14 +281,14 @@ struct fpsstate
 		return isgun(gun) && (ammo[gun] < guntype[gun].max) && (millis-gunlast[gun] >= gunwait[gun]);
 	}
 
-	bool canpickup(int type, int attr1, int attr2, int millis)
+	bool canuse(int type, int attr1, int attr2, int millis)
 	{
 		switch (type)
 		{
 			case WEAPON:
 			{
 				return canammo(attr1, millis);
-				break; // difference is here, can't pickup when reloading or firing
+				break; // difference is here, can't use when reloading or firing
 			}
 			default:
 			{
@@ -298,7 +298,7 @@ struct fpsstate
 		}
 	}
 
-	void pickup(int millis, int type, int attr1, int attr2)
+	void useitem(int millis, int type, int attr1, int attr2)
 	{
 		switch (type)
 		{
@@ -393,17 +393,20 @@ struct fpsent : dynent, fpsstate
 	int weight;						 // affects the effectiveness of hitpush
 	int clientnum, privilege, lastupdate, plag, ping;
 	int lastattackgun;
-	bool attacking, reloading, pickingup, leaning;
+	bool attacking, reloading, usestuff, leaning;
 	int lasttaunt;
-	int lastpickup, lastpickupmillis;
+	int lastuse, lastusemillis;
 	int superdamage;
 	int frags, deaths, totaldamage, totalshots;
 	editinfo *edit;
+    vec deltapos, newpos;
+    float deltayaw, deltapitch, newyaw, newpitch;
+    int smoothmillis;
 	int spree, lastimpulse;
 
 	string name, team, info;
 
-	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), spree(0), lastimpulse(0)
+	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), spree(0), lastimpulse(0)
 	{
 		name[0] = team[0] = info[0] = 0;
 		respawn();
@@ -426,7 +429,7 @@ struct fpsent : dynent, fpsstate
 	void stopmoving()
 	{
 		dynent::stopmoving();
-		attacking = reloading = pickingup = leaning = false;
+		attacking = reloading = usestuff = leaning = false;
 	}
 
 	void respawn()
@@ -435,7 +438,7 @@ struct fpsent : dynent, fpsstate
 		dynent::reset();
 		fpsstate::respawn();
 		lastattackgun = gunselect;
-		lasttaunt = lastpickup = lastpickupmillis = superdamage = spree = lastimpulse = 0;
+		lasttaunt = lastuse = lastusemillis = superdamage = spree = lastimpulse = 0;
 	}
 };
 

@@ -36,7 +36,7 @@ struct weaponstate
 			while (s >= NUMGUNS) s -= NUMGUNS;
 			while (s <= -1) s += NUMGUNS;
 
-			if (!cl.player1->canweapon(s, cl.lastmillis))
+			if (!cl.player1->canweapon(s, lastmillis))
 			{
 				if (a >= 0)
 				{
@@ -148,7 +148,7 @@ struct weaponstate
 				radialeffect(d, o);
 			}
 
-			cl.cc.addmsg(SV_EXPLODE, "ri3iv", cl.lastmillis-cl.maptime, gun, id-cl.maptime,
+			cl.cc.addmsg(SV_EXPLODE, "ri3iv", lastmillis-cl.maptime, gun, id-cl.maptime,
 					hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 		}
 	}
@@ -305,21 +305,21 @@ struct weaponstate
 
 	void reload(fpsent *d)
 	{
-		if (d->canreload(d->gunselect, cl.lastmillis))
+		if (d->canreload(d->gunselect, lastmillis))
 		{
-			d->gunlast[d->gunselect] = cl.lastmillis;
+			d->gunlast[d->gunselect] = lastmillis;
 			d->gunwait[d->gunselect] = guntype[d->gunselect].rdelay;
-			cl.cc.addmsg(SV_RELOAD, "ri2", cl.lastmillis-cl.maptime, d->gunselect);
+			cl.cc.addmsg(SV_RELOAD, "ri2", lastmillis-cl.maptime, d->gunselect);
 			cl.playsoundc(S_RELOAD);
 		}
 	}
 
 	void shoot(fpsent *d, vec &targ)
 	{
-		if (!d->canshoot(d->gunselect, cl.lastmillis)) return;
+		if (!d->canshoot(d->gunselect, lastmillis)) return;
 
 		d->lastattackgun = d->gunselect;
-		d->gunlast[d->gunselect] = cl.lastmillis;
+		d->gunlast[d->gunselect] = lastmillis;
 		d->gunwait[d->gunselect] = guntype[d->gunselect].adelay;
 		d->ammo[d->gunselect]--;
 		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
@@ -352,7 +352,7 @@ struct weaponstate
 
 		if(d == cl.player1)
 		{
-            cl.cc.addmsg(SV_SHOOT, "ri2i6iv", cl.lastmillis-cl.maptime, d->gunselect,
+            cl.cc.addmsg(SV_SHOOT, "ri2i6iv", lastmillis-cl.maptime, d->gunselect,
 							(int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),
 							(int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
 							hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());

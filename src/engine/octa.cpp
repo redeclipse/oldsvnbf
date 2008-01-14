@@ -198,11 +198,18 @@ cube &neighbourcube(int x, int y, int z, int size, int rsize, int orient)
 	return lookupcube(x, y, z, rsize);
 }
 
-int lookupmaterial(const vec &o)
+int lookupmaterial(const vec &v)
 {
+    ivec o(v);
     if(!insideworld(o)) return MAT_AIR;
-    cube &c = lookupcube(int(o.x), int(o.y), int(o.z));
-    return c.ext ? c.ext->material : MAT_AIR;
+    int scale = worldscale-1;
+    cube *c = &worldroot[octastep(o.x, o.y, o.z, scale)];
+    while(c->children)
+    {
+        scale--;
+        c = &c->children[octastep(o.x, o.y, o.z, scale)];
+    }
+    return c->ext ? c->ext->material : MAT_AIR;
 }
 
 ////////// (re)mip //////////

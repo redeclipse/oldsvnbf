@@ -253,7 +253,7 @@ struct captureclient : capturestate
 
     int respawnwait()
     {
-        return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(cl.lastmillis-cl.player1->lastpain)/1000);
+        return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(lastmillis-cl.player1->lastpain)/1000);
     }
 
 	void drawhud(int w, int h)
@@ -266,7 +266,7 @@ struct captureclient : capturestate
 		glBegin(GL_QUADS);
 		drawradar(float(x), float(y), float(s));
 		glEnd();
-		bool showenemies = cl.lastmillis%1000 >= 500;
+		bool showenemies = lastmillis%1000 >= 500;
 		drawblips(x, y, s, 1, showenemies);
 		drawblips(x, y, s, 0, showenemies);
 		drawblips(x, y, s, -1, showenemies);
@@ -457,7 +457,7 @@ struct captureservmode : capturestate, servmode
 	{
 		if(sv.minremain<0) return;
 		endcheck();
-		int t = sv.gamemillis/1000 - (sv.gamemillis-sv.curtime)/1000;
+		int t = sv.gamemillis/1000 - (sv.gamemillis-curtime)/1000;
 		if(t<1) return;
 		loopv(bases)
 		{

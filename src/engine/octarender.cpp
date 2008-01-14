@@ -531,7 +531,7 @@ void gencubeverts(cube &c, int x, int y, int z, int size, int csi, uchar &vismas
 
     loopi(6) if(visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR))
 	{
-        vismask |= 1<<i;
+        if(c.texture[i]!=DEFAULT_SKY) vismask |= 1<<i;
 
 		cubeext &e = ext(c);
 

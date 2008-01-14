@@ -54,8 +54,6 @@ double getaccurateticks()
 
 SDL_Surface *screen = NULL;
 
-int curtime;
-
 static bool initing = false, restoredinits = false;
 bool initwarning()
 {
@@ -177,6 +175,60 @@ void keyrepeat(bool on)
 							 SDL_DEFAULT_REPEAT_INTERVAL);
 }
 
+int ignoremouse = 5;
+void checkinput()
+{
+	SDL_Event event;
+	int lasttype = 0, lastbut = 0;
+	while (SDL_PollEvent(&event))
+	{
+		switch (event.type)
+		{
+			case SDL_QUIT:
+				quit();
+				break;
+
+#if !defined(WIN32) && !defined(__APPLE__)
+			case SDL_VIDEORESIZE:
+				screenres(&event.resize.w, &event.resize.h);
+				break;
+#endif
+
+			case SDL_KEYDOWN:
+			case SDL_KEYUP:
+				keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
+				break;
+
+			case SDL_ACTIVEEVENT:
+				if(event.active.state & SDL_APPINPUTFOCUS)
+					setvar("grabmouse", event.active.gain ? 1 : 0, true);
+				break;
+
+			case SDL_MOUSEMOTION:
+				if (ignoremouse) { ignoremouse--; break; }
+				if ((screen->flags&SDL_FULLSCREEN) || grabmouse)
+				{
+#ifdef __APPLE__
+					if (event.motion.y == 0) break;  //let mac users drag windows via the title bar
+#endif
+					if (event.motion.x == screen->w/2 && event.motion.y == screen->h/2) break;
+					if(!g3d_movecursor(event.motion.xrel, event.motion.yrel))
+						cl->mousemove(event.motion.xrel, event.motion.yrel);
+					SDL_WarpMouse(screen->w/2, screen->h/2);
+				}
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+				if (lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
+				keypress(-event.button.button, event.button.state!=0, 0);
+				lasttype = event.type;
+				lastbut = event.button.button;
+				break;
+		}
+	}
+}
+ 
 VARF(gamespeed, 10, 100, 1000, if(multiplayer()) gamespeed = 100);
 
 VARF(paused, 0, 0, 1, if(multiplayer()) paused = 0);
@@ -411,11 +463,11 @@ int main(int argc, char **argv)
 			case 'r': execfile(argv[i][2] ? &argv[i][2] : (char *)"init.cfg"); restoredinits = true; break;
             case 'w': scr_w = atoi(&argv[i][2]); if(scr_w<320) scr_w = 320; if(!findarg(argc, argv, "-h")) scr_h = (scr_w*3)/4; break;
             case 'h': scr_h = atoi(&argv[i][2]); if(scr_h<200) scr_h = 200; if(!findarg(argc, argv, "-w")) scr_w = (scr_h*4)/3; break;
+			case 'z': depthbits = atoi(&argv[i][2]); break;
+			case 'b': colorbits = atoi(&argv[i][2]); break;
 			case 'a': fsaa = atoi(&argv[i][2]); break;
 			case 'v': vsync = atoi(&argv[i][2]); break;
 			case 't': fs = 0; break;
-			case 'z': depthbits = atoi(&argv[i][2]); break;
-			case 'b': colorbits = atoi(&argv[i][2]); break;
 			case 'e': stencilbits = atoi(&argv[i][2]); break;
 			case 'f':
 			{
@@ -565,7 +617,9 @@ int main(int argc, char **argv)
 		if (paused) curtime = 0;
 		else curtime = (elapsed*gamespeed)/100;
 
-		if (frames && lastmillis) cl->updateworld(worldpos, curtime, lastmillis);
+		checkinput();
+
+		if (frames && lastmillis) cl->updateworld();
 
 		menuprocess();
 		lastmillis += curtime;
@@ -587,8 +641,8 @@ int main(int argc, char **argv)
 				checksound();
 
 				inbetweenframes = false;
-				SDL_GL_SwapBuffers();
 				if(frames>2) gl_drawframe(screen->w, screen->h);
+				SDL_GL_SwapBuffers();
 				inbetweenframes = true;
 
 				s_sprintfd(cap)("%s - %s", cl->gametitle(), cl->gametext());
@@ -596,56 +650,6 @@ int main(int argc, char **argv)
 			}
 		}
 		frames++;
-
-		SDL_Event event;
-		int lasttype = 0, lastbut = 0;
-		while (SDL_PollEvent(&event))
-		{
-			switch (event.type)
-			{
-				case SDL_QUIT:
-					quit();
-					break;
-
-#if !defined(WIN32) && !defined(__APPLE__)
-				case SDL_VIDEORESIZE:
-					screenres(&event.resize.w, &event.resize.h);
-					break;
-#endif
-
-				case SDL_KEYDOWN:
-				case SDL_KEYUP:
-					keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
-					break;
-
-				case SDL_ACTIVEEVENT:
-					if(event.active.state & SDL_APPINPUTFOCUS)
-						setvar("grabmouse", event.active.gain ? 1 : 0, true);
-					break;
-
-				case SDL_MOUSEMOTION:
-					if (ignore) { ignore--; break; }
-					if ((screen->flags&SDL_FULLSCREEN) || grabmouse)
-					{
-#ifdef __APPLE__
-						if (event.motion.y == 0) break;  //let mac users drag windows via the title bar
-#endif
-						if (event.motion.x == screen->w/2 && event.motion.y == screen->h/2) break;
-						if(!g3d_movecursor(event.motion.xrel, event.motion.yrel))
-							cl->mousemove(event.motion.xrel, event.motion.yrel);
-						SDL_WarpMouse(screen->w/2, screen->h/2);
-					}
-					break;
-
-				case SDL_MOUSEBUTTONDOWN:
-				case SDL_MOUSEBUTTONUP:
-					if (lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
-					keypress(-event.button.button, event.button.state!=0, 0);
-					lasttype = event.type;
-					lastbut = event.button.button;
-					break;
-			}
-		}
 		colorpos = 0; // last but not least.
 	}
 

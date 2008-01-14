@@ -137,8 +137,6 @@ struct dynent : physent                         // animated characters, or chara
 {
     bool k_left, k_right, k_up, k_down;         // see input code
     float targetyaw, rotspeed;                  // AI rotation
-    float lastyaw, lastpitch;                   // last yaw/pitch to interpolate from, MP only
-    int orientmillis;                           // time last yaw/pitch was recorded
 
     entitylight light;
     animstate prev[2], current[2];              // md2's need only [0], md3's need both for the lower&upper model
@@ -147,7 +145,7 @@ struct dynent : physent                         // animated characters, or chara
     occludequery *query;
     int occluded, lastrendered;
 
-    dynent() : lastyaw(0), lastpitch(0), orientmillis(0), query(NULL), occluded(0), lastrendered(0)
+    dynent() : query(NULL), occluded(0), lastrendered(0)
     {
         reset();
         loopi(2) { lastanimswitchtime[i] = -1; lastmodel[i] = NULL; }

@@ -106,7 +106,6 @@ extern int findentity(int type, int index = 0);
 extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool local);
 extern int getworldsize();
 extern int getmapversion();
-extern bool insideworld(const vec &o);
 
 // main
 struct igame;
@@ -184,7 +183,7 @@ extern void cleardynentcache();
 extern int dynentsize, ambient, fov;
 
 // rendermodel
-enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_LIGHT = 1<<6, MDL_TRANSLUCENT = 1<<7 };
+enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_LIGHT = 1<<6, MDL_DYNLIGHT = 1<<7, MDL_TRANSLUCENT = 1<<8 };
 enum { MDL_ATTACH_VWEP = 0, MDL_ATTACH_SHIELD, MDL_ATTACH_POWERUP };
 
 struct model;
@@ -197,11 +196,10 @@ struct modelattach
 
 extern void startmodelbatches();
 extern void endmodelbatches();
-extern void rendermodel(entitylight *light, const char *mdl, int anim, int varseed, int tex, const vec &o, float yaw = 0, float pitch = 0, float roll = 0, float speed = 0, int basetime = 0, dynent *d = NULL, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, modelattach *a = NULL);
+extern void rendermodel(entitylight *light, const char *mdl, int anim, int varseed, int tex, const vec &o, float yaw = 0, float pitch = 0, float roll = 0, float speed = 0, int basetime = 0, dynent *d = NULL, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED | MDL_LIGHT, modelattach *a = NULL);
 extern void abovemodel(vec &o, const char *mdl);
 extern void rendershadow(dynent *d);
 extern void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, float sink = 0);
-extern void interpolateorientation(dynent *d, float &interpyaw, float &interppitch);
 extern void setbbfrommodel(dynent *d, const char *mdl);
 
 // server

@@ -30,7 +30,7 @@ struct physics
 		CCOMMAND(jump,   "D", (physics *self, int *down), { self->dojump(*down!=0); });
 		CCOMMAND(attack, "D", (physics *self, int *down), { self->doattack(*down!=0); });
 		CCOMMAND(reload, "D", (physics *self, int *down), { self->doreload(*down!=0); });
-		CCOMMAND(pickup, "D", (physics *self, int *down), { self->dopickup(*down!=0); });
+		CCOMMAND(use, "D", (physics *self, int *down), { self->douse(*down!=0); });
 		CCOMMAND(lean, "D", (physics *self, int *down), { self->dolean(*down!=0); });
         CCOMMAND(taunt, "", (physics *self), { self->taunt(); });
 
@@ -52,14 +52,14 @@ struct physics
 	iput(jump,		jumping,	false);
 	iput(attack,	attacking,	true);
 	iput(reload,	reloading,	true);
-	iput(pickup,	pickingup,	true);
+	iput(use,		usestuff,	true);
 	iput(lean,		leaning,	false);
 
 	void taunt()
 	{
         if (cl.player1->state!=CS_ALIVE || cl.player1->physstate<PHYS_SLOPE) return;
-		if (cl.lastmillis-cl.player1->lasttaunt<1000) return;
-		cl.player1->lasttaunt = cl.lastmillis;
+		if (lastmillis-cl.player1->lasttaunt<1000) return;
+		cl.player1->lasttaunt = lastmillis;
 		cl.cc.addmsg(SV_TAUNT, "r");
 	}
 
@@ -432,7 +432,7 @@ struct physics
 		return !collided;
 	}
 
-	void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime)
+	void modifyvelocity(physent *pl, bool local, bool water, bool floating, int millis)
 	{
 		if (floating)
 		{
@@ -466,7 +466,7 @@ struct physics
 		else
 		{
 			if (pl->crouching) pl->crouching = false;
-			pl->timeinair += curtime;
+			pl->timeinair += millis;
 		}
 	
 		vec m(0.0f, 0.0f, 0.0f);
@@ -475,7 +475,7 @@ struct physics
 			dynent *d = (dynent *)pl;
 			if(d->rotspeed && d->yaw!=d->targetyaw)
 			{
-				float oldyaw = d->yaw, diff = d->rotspeed*curtime/1000.0f, maxdiff = fabs(d->targetyaw-d->yaw);
+				float oldyaw = d->yaw, diff = d->rotspeed*millis/1000.0f, maxdiff = fabs(d->targetyaw-d->yaw);
 				if(diff >= maxdiff)
 				{
 					d->yaw = d->targetyaw;
@@ -515,7 +515,7 @@ struct physics
 		if(floating) { if (local) d.mul(floatspeed()/100.0f); }
 		else if(!water && cl.allowmove(pl)) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
 		float friction = water && !floating ? waterfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
-		float fpsfric = friction/curtime*20.0f;
+		float fpsfric = friction/millis*20.0f;
 	
 		pl->vel.mul(fpsfric-1);
 		pl->vel.add(d);
@@ -535,19 +535,19 @@ struct physics
 		else pl->gvel.add(g);
 	}
 	
-	// main physics routine, moves a player/monster for a curtime step
+	// main physics routine, moves a player/monster for a time step
 	// moveres indicated the physics precision (which is lower for monsters and multiplayer prediction)
 	// local is false for multiplayer prediction
 	
-	bool moveplayer(physent *pl, int moveres, bool local, int curtime)
+	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
 		int material = lookupmaterial(pl->o);
 		bool water = isliquid(material);
 		bool floating = (editmode && local) || pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
-		float secs = curtime/1000.f;
+		float secs = millis/1000.f;
 	
 		// apply any player generated changes in velocity
-		modifyvelocity(pl, local, water, floating, curtime);
+		modifyvelocity(pl, local, water, floating, millis);
 		// apply gravity
 		if(!floating && pl->type!=ENT_CAMERA) modifygravity(pl, water, secs);
 	
@@ -588,8 +588,8 @@ struct physics
 	
 		if(!pl->timeinair && pl->physstate >= PHYS_FLOOR && pl->vel.squaredlen() < 1e-4f && pl->gvel.iszero()) pl->moving = false;
 	
-		pl->lastmoveattempt = cl.lastmillis;
-		if (pl->o!=oldpos) pl->lastmove = cl.lastmillis;
+		pl->lastmoveattempt = lastmillis;
+		if (pl->o!=oldpos) pl->lastmove = lastmillis;
 	
 		if (pl->type!=ENT_CAMERA)
 		{
@@ -603,14 +603,14 @@ struct physics
 		return true;
 	}
 	
-	bool move(physent *d, int moveres = 20, bool local = true, int secs = 0, int repeat = 0)
+	bool move(physent *d, int moveres = 20, bool local = true, int millis = 0, int repeat = 0)
 	{
-		if (!secs) secs = curtime;
+		if (!millis) millis = curtime;
 		if (!repeat) repeat = physicsrepeat;
 		
 		loopi(repeat)
 		{
-			if (!moveplayer(d, moveres, local, min(secs, minframetime()))) return false;
+			if (!moveplayer(d, moveres, local, min(millis, minframetime()))) return false;
 			if (d->o.z < 0 && d->state == CS_ALIVE)
 			{
 				cl.suicide(d);
@@ -744,139 +744,46 @@ struct physics
 		}
 	}
 
-	struct platformcollision
+    IVARP(smoothmove, 0, 75, 100);
+    IVARP(smoothdist, 0, 32, 64);
+
+	void otherplayers()
 	{
-		physent *d;
-		int next;
-		float margin, border;
-	
-		platformcollision() {}
-		platformcollision(physent *d, int next) : d(d), next(next), margin(0.2f), border(10.0f) {}
-	};
-	
-	bool platformcollide(physent *d, physent *o, const vec &dir, float margin = 0)
-	{
-		if(d->collidetype!=COLLIDE_ELLIPSE || o->collidetype!=COLLIDE_ELLIPSE)
+		loopv(cl.players) if(cl.players[i])
 		{
-			if(rectcollide(d, dir, o->o,
-				o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius,
-				o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye,
-				o->height + margin))
-				return true;
-		}
-		else if(ellipsecollide(d, dir, o->o, o->yaw, o->xradius, o->yradius, o->aboveeye, o->height + margin))
-			return true;
-		return false;
-	}
-	
-	bool moveplatform(physent *p, const vec &dir)
-	{   
-		vec oldpos(p->o);
-		p->o.add(dir);
-		if(!collide(p, dir, 0, dir.z<=0))
-		{
-			p->o = oldpos; 
-			return false;
-		}
-		p->o = oldpos; 
-	
-		static vector<physent *> candidates;
-		candidates.setsizenodelete(0);
-		for(int x = int(max(p->o.x-p->radius-PLATFORMBORDER, 0.f))>>dynentsize, ex = int(min(p->o.x+p->radius+PLATFORMBORDER, hdr.worldsize-1.0f))>>dynentsize; x <= ex; x++)
-		for(int y = int(max(p->o.y-p->radius-PLATFORMBORDER, 0.f))>>dynentsize, ey = int(min(p->o.y+p->radius+PLATFORMBORDER, hdr.worldsize-1.0f))>>dynentsize; y <= ey; y++)
-		{
-			const vector<physent *> &dynents = checkdynentcache(x, y);
-			loopv(dynents)
+            fpsent *d = cl.players[i];
+            const int lagtime = lastmillis-d->lastupdate;
+            if(!lagtime || cl.intermission) continue;
+            else if(lagtime>1000 && d->state==CS_ALIVE)
 			{
-				physent *d = dynents[i];
-				if(p==d || d->o.z-d->height < p->o.z+p->aboveeye || p->o.reject(d->o, p->radius+PLATFORMBORDER+d->radius) || candidates.find(d) >= 0) continue;
-				candidates.add(d);
-				d->stacks = d->collisions = -1;
+                d->state = CS_LAGGED;
+				continue;
 			}
+            if(d->state==CS_ALIVE)
+            {
+                if(smoothmove() && d->smoothmillis>0)
+                {
+                    d->o = d->newpos;
+                    d->yaw = d->newyaw;
+                    d->pitch = d->newpitch;
+                    moveplayer(d, 2, false, curtime);
+                    d->newpos = d->o;
+                    float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove();
+                    if(k>0)
+                    {
+                        d->o.add(vec(d->deltapos).mul(k));
+                        d->yaw += d->deltayaw*k;
+                        if(d->yaw<0) d->yaw += 360;
+                        else if(d->yaw>=360) d->yaw -= 360;
+                        d->pitch += d->deltapitch*k;
+                    }
+                }
+                else moveplayer(d, 2, false, curtime);
+            }
+            else if(d->state==CS_DEAD && lastmillis-d->lastpain) moveplayer(d, 2, false, curtime);
 		}
-		static vector<physent *> passengers, colliders;
-		passengers.setsizenodelete(0);
-		colliders.setsizenodelete(0);
-		static vector<platformcollision> collisions;
-		collisions.setsizenodelete(0);
-		// build up collision DAG of colliders to be pushed off, and DAG of stacked passengers
-		loopv(candidates)
-		{
-			physent *d = candidates[i];
-			// check if the dynent is on top of the platform
-			if(!platformcollide(p, d, vec(0, 0, 1), PLATFORMMARGIN)) passengers.add(d);
-			vec doldpos(d->o);
-			d->o.add(dir);
-			if(!collide(d, dir, 0, false)) colliders.add(d);
-			d->o = doldpos;
-			loopvj(candidates)
-			{
-				physent *o = candidates[j];
-				if(!platformcollide(d, o, dir))
-				{
-					collisions.add(platformcollision(d, o->collisions));
-					o->collisions = collisions.length() - 1;
-				}
-				if(d->o.z < o->o.z && !platformcollide(d, o, vec(0, 0, 1), PLATFORMMARGIN))
-				{
-					collisions.add(platformcollision(o, d->stacks));
-					d->stacks = collisions.length() - 1;
-				}
-			}
-		}
-		loopv(colliders) // propagate collisions
-		{
-			physent *d = colliders[i];
-			for(int n = d->collisions; n>=0; n = collisions[n].next)
-			{
-				physent *o = collisions[n].d;
-				if(colliders.find(o)<0) colliders.add(o);
-			}
-		}
-		if(dir.z>0)
-		{
-			loopv(passengers) // if any stacked passengers collide, stop the platform
-			{
-				physent *d = passengers[i];
-				if(colliders.find(d)>=0) return false;
-				for(int n = d->stacks; n>=0; n = collisions[n].next)
-				{
-					physent *o = collisions[n].d;
-					if(passengers.find(o)<0) passengers.add(o);
-				}
-			}
-			loopv(passengers)
-			{
-				physent *d = passengers[i];
-				d->o.add(dir);
-				d->lastmove = cl.lastmillis;
-				if(dir.x || dir.y) updatedynentcache(d);
-			}
-		}
-		else loopv(passengers) // move any stacked passengers who aren't colliding with non-passengers
-		{
-			physent *d = passengers[i];
-			if(colliders.find(d)>=0) continue;
-	
-			d->o.add(dir);
-			d->lastmove = cl.lastmillis;
-			if(dir.x || dir.y) updatedynentcache(d);
-	
-			for(int n = d->stacks; n>=0; n = collisions[n].next)
-			{
-				physent *o = collisions[n].d;
-				if(passengers.find(o)<0) passengers.add(o);
-			}
-		}
-	
-		p->o.add(dir);
-		p->lastmove = cl.lastmillis;
-		if(dir.x || dir.y) updatedynentcache(p);
-	
-		return true;
 	}
 
-	
 	void update()		  // optimally schedule physics frames inside the graphics frames
 	{
 		if(curtime>=minframetime())
@@ -890,5 +797,6 @@ struct physics
 			physicsrepeat = curtime>0 ? 1 : 0;
 		}
 		cleardynentcache();
+		otherplayers();
 	}
 } ph;

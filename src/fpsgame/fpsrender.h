@@ -13,13 +13,13 @@ struct fpsrender
 
 		if(cl.intermission && d->state != CS_DEAD)
 		{
-			lastaction = cl.lastmillis;
+			lastaction = lastmillis;
 			attack = ANIM_LOSE|ANIM_LOOP;
 			delay = 1000;
 			if(m_team(cl.gamemode, cl.mutators)) loopv(bestteams) { if(!strcmp(bestteams[i], d->team)) { attack = ANIM_WIN|ANIM_LOOP; break; } }
 			else if(bestplayers.find(d)>=0) attack = ANIM_WIN|ANIM_LOOP;
 		}
-        else if (d->state == CS_ALIVE && d->lasttaunt && cl.lastmillis-d->lasttaunt<1000 && cl.lastmillis-lastaction>delay)
+        else if (d->state == CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-lastaction>delay)
 		{
 			lastaction = d->lasttaunt;
 			attack = ANIM_TAUNT;
