@@ -2,7 +2,7 @@
 #include "iengine.h"
 #include "igame.h"
 
-extern int lastmillis, verbose;
+extern int curtime, lastmillis, totalmillis;
 extern void fatal(const char *s, ...);
 extern void conoutf(const char *s, ...);
 extern void console(const char *s, int n, ...);

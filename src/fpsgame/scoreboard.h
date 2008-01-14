@@ -180,7 +180,7 @@ struct scoreboard : g3d_callback
 			{
 				int pen, score = 0;
 
-				pen = (cl.lastmillis-cl.maptime)/1000;
+				pen = (lastmillis-cl.maptime)/1000;
 				score += pen;
 				if(pen)
 					g.textf("time taken: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", pen);

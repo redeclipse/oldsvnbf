@@ -326,11 +326,11 @@ struct clientcom : iclientcom
 			i += 2 + len;
 		}
 		messages.remove(0, i);
-		if(!spectator && p.remaining()>=10 && cl.lastmillis-lastping>250)
+		if(!spectator && p.remaining()>=10 && lastmillis-lastping>250)
 		{
 			putint(p, SV_PING);
-			putint(p, cl.lastmillis);
-			lastping = cl.lastmillis;
+			putint(p, lastmillis);
+			lastping = lastmillis;
 		}
 		return 1;
 	}
@@ -352,11 +352,11 @@ struct clientcom : iclientcom
 			if(fx<fy) d->o.y += dy<0 ? r-fy : -(r-fy);  // push aside
 			else	  d->o.x += dx<0 ? r-fx : -(r-fx);
 		}
-		int lagtime = cl.lastmillis-d->lastupdate;
+		int lagtime = lastmillis-d->lastupdate;
 		if(lagtime)
 		{
             if(d->state!=CS_SPAWNING && d->lastupdate) d->plag = (d->plag*5+lagtime)/6;
-			d->lastupdate = cl.lastmillis;
+			d->lastupdate = lastmillis;
 		}
 	}
 
@@ -392,6 +392,7 @@ struct clientcom : iclientcom
 				f = getuint(p);
 				fpsent *d = cl.getclient(cn);
                 if(!d || seqcolor!=(d->lifesequence&1)) continue;
+                float oldyaw = d->yaw, oldpitch = d->pitch;
 				d->yaw = yaw;
 				d->pitch = pitch;
 				d->roll = roll;
@@ -408,6 +409,7 @@ struct clientcom : iclientcom
 				f >>= 3;
 				d->maxhealth = 100 + f*itemstats[I_BOOST-I_SHELLS].add;
 #endif
+                vec oldpos(d->o);
                 if(cl.allowmove(d))
                 {
                     d->o = o;
@@ -417,6 +419,22 @@ struct clientcom : iclientcom
                     cl.ph.updatephysstate(d);
                     updatepos(d);
                 }
+                if(cl.ph.smoothmove() && d->smoothmillis>=0 && oldpos.dist(d->o) < cl.ph.smoothdist())
+                {
+                    d->newpos = d->o;
+                    d->newyaw = d->yaw;
+                    d->newpitch = d->pitch;
+                    d->o = oldpos;
+                    d->yaw = oldyaw;
+                    d->pitch = oldpitch;
+                    (d->deltapos = oldpos).sub(d->newpos);
+                    d->deltayaw = oldyaw - d->newyaw;
+                    if(d->deltayaw > 180) d->deltayaw -= 360;
+                    else if(d->deltayaw < -180) d->deltayaw += 360;
+                    d->deltapitch = oldpitch - d->newpitch;
+                    d->smoothmillis = lastmillis;
+                }
+                else d->smoothmillis = 0;
                 if(d->state==CS_LAGGED || d->state==CS_SPAWNING) d->state = CS_ALIVE;
 				break;
 			}
@@ -649,7 +667,7 @@ struct clientcom : iclientcom
 				if(!s || gun < 0) break;
 				if(gun==GUN_SG) cl.ws.createrays(from, to);
 				s->gunwait[gun] = 0;
-				s->gunlast[gun] = cl.lastmillis;
+				s->gunlast[gun] = lastmillis;
 				s->lastattackgun = gun;
 				cl.ws.shootv(gun, from, to, s, false);
 				break;
@@ -722,7 +740,7 @@ struct clientcom : iclientcom
 			case SV_TAUNT:
 			{
 				if(!d) return;
-				d->lasttaunt = cl.lastmillis;
+				d->lasttaunt = lastmillis;
 				break;
 			}
 
@@ -761,7 +779,7 @@ struct clientcom : iclientcom
 			{
 				int i = getint(p), cn = getint(p);
 				fpsent *d = cn==cl.player1->clientnum ? cl.player1 : cl.getclient(cn);
-				cl.et.pickupeffects(i, d);
+				cl.et.useeffects(i, d);
 				break;
 			}
 
@@ -836,7 +854,7 @@ struct clientcom : iclientcom
 			}
 
 			case SV_PONG:
-				addmsg(SV_CLIENTPING, "i", cl.player1->ping = (cl.player1->ping*5+cl.lastmillis-getint(p))/6);
+				addmsg(SV_CLIENTPING, "i", cl.player1->ping = (cl.player1->ping*5+lastmillis-getint(p))/6);
 				break;
 
 			case SV_CLIENTPING:
@@ -1055,7 +1073,9 @@ struct clientcom : iclientcom
 
 	void changemap(const char *name) // request map change, server may ignore
 	{
-		if(!spectator || cl.player1->privilege) addmsg(SV_MAPVOTE, "rsii", name, cl.nextmode, cl.nextmuts);
+        if(spectator && !cl.player1->privilege) return;
+        if(!remote) stopdemo();
+        addmsg(SV_MAPVOTE, "rsii", name, cl.nextmode, cl.nextmuts);
 	}
 
 	void receivefile(uchar *data, int len)
@@ -1068,7 +1088,7 @@ struct clientcom : iclientcom
 		{
 			case SV_SENDDEMO:
 			{
-				s_sprintfd(fname)("%d.dmo", cl.lastmillis);
+				s_sprintfd(fname)("%d.dmo", lastmillis);
 				FILE *demo = openfile(fname, "wb");
 				if(!demo) return;
 				conoutf("received demo \"%s\"", fname);
@@ -1149,7 +1169,7 @@ struct clientcom : iclientcom
 	{
 		if(!m_edit(cl.gamemode) || (spectator && !cl.player1->privilege)) { conoutf("\"sendmap\" only works in coopedit mode"); return; }
 		conoutf("sending map...");
-		s_sprintfd(mname)("sendmap_%d", cl.lastmillis);
+		s_sprintfd(mname)("sendmap_%d", lastmillis);
 		save_world(mname, true);
 		s_sprintfd(fname)("maps/%s.ogz", mname);
 		const char *file = findfile(fname, "rb");

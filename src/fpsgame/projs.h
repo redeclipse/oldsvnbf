@@ -117,7 +117,7 @@ struct projectiles
 			roll = 0.f;
 		}
 
-		void check(int time)
+		void check()
 		{
             if (projtype == PRJ_SHOT)
             {
@@ -130,7 +130,7 @@ struct projectiles
 			else if (projtype == PRJ_GIBS) particle_splash(3, 1, 10000, o);
 		}
 
-		bool update(int millis, int time, int qtime)
+		bool update(int qtime)
 		{
 			cube &c = lookupcube(int(o.x), int(o.y), int(o.z));
 			bool water = c.ext && isliquid(c.ext->material);
@@ -162,12 +162,12 @@ struct projectiles
 						vel.apply(pos, elasticity);
 						if (hitplayer) vel.influence(pos, hitplayer->vel, elasticity);
 
-						if (millis-lasttime > 500)
+						if (lastmillis-lasttime > 500)
 						{
 							if (projtype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, true);
 							else if (projtype == PRJ_GIBS) playsound(S_SPLAT, &o, true);
 							else if (projtype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, true);
-							lasttime = millis;
+							lasttime = lastmillis;
 						}
 					}
 					return true; // stay alive until timeout
@@ -175,7 +175,7 @@ struct projectiles
 				return false; // die on impact
 			}
 
-			if (projtype == PRJ_SHOT && gun == GUN_GL) roll += int(vel.magnitude() / time) % 360;
+			if (projtype == PRJ_SHOT && gun == GUN_GL) roll += int(vel.magnitude() / curtime) % 360;
 
 			return true;
 		}
@@ -186,26 +186,26 @@ struct projectiles
 	void create(vec &from, vec &to, bool local, fpsent *owner, int type, int lifetime, int speed, int gun)
 	{
 		projent &proj = *(new projent());
-		proj.init(from, to, local, owner, type, lifetime, speed, gun, cl.lastmillis);
+		proj.init(from, to, local, owner, type, lifetime, speed, gun, lastmillis);
 		projs.add(&proj);
 	}
 
-	void update(int time)
+	void update()
 	{
 		loopv(projs)
 		{
 			projent &proj = *(projs[i]);
 
-			proj.check(time);
+			proj.check();
 			vec old(proj.o);
-			int rtime = time;
+			int rtime = curtime;
 
 			while (rtime > 0)
 			{
 				int stime = proj.projtype == PRJ_SHOT ? 10 : 30, qtime = min(stime, rtime);
 				rtime -= qtime;
 
-				if ((proj.lifetime -= qtime) <= 0 || !proj.update(cl.lastmillis, time, qtime))
+				if ((proj.lifetime -= qtime) <= 0 || !proj.update(qtime))
 				{
 					if (proj.projtype == PRJ_SHOT && (proj.gun == GUN_GL || proj.gun == GUN_RL))
 						cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.gun, proj.local);
@@ -244,7 +244,7 @@ struct projectiles
 			projent &proj = *(projs[i]);
 			float yaw = proj.yaw, pitch = proj.pitch;
 			string mname;
-            int cull = MDL_CULL_VFC|MDL_CULL_DIST|MDL_DYNSHADOW|MDL_LIGHT;
+            int cull = MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT;
 
             if (proj.projtype == PRJ_SHOT)
             {

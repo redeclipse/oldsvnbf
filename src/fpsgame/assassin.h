@@ -180,7 +180,7 @@ struct assassinclient
 
     int respawnwait()
     {
-        return max(0, RESPAWNSECS - (cl.lastmillis - cl.player1->lastpain)/1000);
+        return max(0, RESPAWNSECS - (lastmillis - cl.player1->lastpain)/1000);
     }
 
     void drawhud(int w, int h)

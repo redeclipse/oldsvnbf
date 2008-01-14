@@ -484,7 +484,7 @@ struct vertmodel : model
 
         inline bool comparevert(vvertbump &w, int j, tcvert &tc, vert &v)
         {
-            return tc.u==w.u && tc.v==w.v && v.pos==w.pos && v.norm==w.norm && bumpverts[j].tangent==w.tangent && bumpverts[j].bitangent==w.bitangent;
+            return tc.u==w.u && tc.v==w.v && v.pos==w.pos && v.norm==w.norm && (!bumpverts || (bumpverts[j].tangent==w.tangent && bumpverts[j].bitangent==w.bitangent));
         }
 
         static inline void assignvert(vvertff &vv, int j, tcvert &tc, vert &v)
@@ -508,9 +508,12 @@ struct vertmodel : model
             vv.norm = v.norm;
             vv.u = tc.u;
             vv.v = tc.v;
-            vv.tangent = bumpverts[j].tangent;
-            vv.bitangent = bumpverts[j].bitangent;
-        }
+            if(bumpverts)
+            {
+            	vv.tangent = bumpverts[j].tangent;
+            	vv.bitangent = bumpverts[j].bitangent;
+        	}
+       	}
 
         template<class T>
         int genvbo(vector<ushort> &idxs, int offset, vector<T> &vverts)

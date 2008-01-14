@@ -115,7 +115,7 @@ struct entities : icliententities
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
 
-	void pickupeffects(int n, fpsent *d)
+	void useeffects(int n, fpsent *d)
 	{
         if(!ents.inrange(n)) return;
 		if (ents[n]->type == WEAPON && ents[n]->attr1 > -1 && ents[n]->attr1 < NUMGUNS)
@@ -126,7 +126,7 @@ struct entities : icliententities
 			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), g.name, 15);
 			playsound(S_ITEMAMMO, &d->o);
 			if(d!=cl.player1) return;
-			d->pickup(cl.lastmillis, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+			d->useitem(lastmillis, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
 		}
 		else return;
 	}
@@ -160,17 +160,17 @@ struct entities : icliententities
 		conoutf("unable to find a linking teleport for %d", n);
 	}
 
-	void trypickup(int n, fpsent *d)
+	void tryuse(int n, fpsent *d)
 	{
 		switch(ents[n]->type)
 		{
 			default:
-				if (d->canpickup(ents[n]->type, ents[n]->attr1, ents[n]->attr2, cl.lastmillis))
+				if (d->canuse(ents[n]->type, ents[n]->attr1, ents[n]->attr2, lastmillis))
 				{
 					if (d == cl.player1)
 					{
-						if (!cl.player1->pickingup) return;
-						cl.cc.addmsg(SV_ITEMPICKUP, "ri", n);
+						if (!cl.player1->usestuff) return;
+						cl.cc.addmsg(SV_ITEMUSE, "ri", n);
 					}
 					ents[n]->spawned = false; // even if someone else gets it first
 				}
@@ -178,9 +178,9 @@ struct entities : icliententities
 
 			case TELEPORT:
 			{
-				if(d->lastpickup == ents[n]->type && cl.lastmillis-d->lastpickupmillis<500) break;
-				d->lastpickup = ents[n]->type;
-				d->lastpickupmillis = cl.lastmillis;
+				if(d->lastuse == ents[n]->type && lastmillis-d->lastusemillis<500) break;
+				d->lastuse = ents[n]->type;
+				d->lastusemillis = lastmillis;
 				teleport(n, d);
 				break;
 			}
@@ -195,9 +195,9 @@ struct entities : icliententities
 
 			case JUMPPAD:
 			{
-				if(d->lastpickup==ents[n]->type && cl.lastmillis-d->lastpickupmillis<500) break;
-				d->lastpickup = ents[n]->type;
-				d->lastpickupmillis = cl.lastmillis;
+				if(d->lastuse==ents[n]->type && lastmillis-d->lastusemillis<500) break;
+				d->lastuse = ents[n]->type;
+				d->lastusemillis = lastmillis;
 				vec v((int)(char)ents[n]->attr3*10.0f, (int)(char)ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
 				d->timeinair = 0;
 				d->gvel = vec(0, 0, 0);
@@ -219,7 +219,7 @@ struct entities : icliententities
 			if(e.type==NOTUSED) continue;
 			if(!e.spawned && e.type!=TELEPORT && e.type!=JUMPPAD && e.type!=CHECKPOINT) continue;
 			float dist = e.o.dist(o);
-			if(dist<(e.type==TELEPORT ? 16 : 12)) trypickup(i, d);
+			if(dist<(e.type==TELEPORT ? 16 : 12)) tryuse(i, d);
 		}
 	}
 

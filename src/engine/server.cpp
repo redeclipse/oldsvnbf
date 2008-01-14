@@ -21,7 +21,7 @@ void fatal(const char *s, ...)
 #define DEFAULTCLIENTS 6
 int servertype = 1; // 0: none, 1: private, 2: public, 3: dedicated
 bool pubserv = false;
-int totalmillis = 0, lastmillis = 0;
+int curtime = 0, totalmillis = 0, lastmillis = 0;
 int uprate = 0, maxclients = DEFAULTCLIENTS;
 const char *ip = "", *master = NULL;
 const char *game = "bfa", *load = NULL;
@@ -509,7 +509,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 #ifdef STANDALONE
 	lastmillis = totalmillis = (int)enet_time_get();
 #endif
-	sv->serverupdate(lastmillis, totalmillis);
+	sv->serverupdate();
 
 	sendpongs();
 

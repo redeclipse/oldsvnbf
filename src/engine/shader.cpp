@@ -1258,6 +1258,7 @@ void inittmus()
 		}
 		glActiveTexture_(GL_TEXTURE0_ARB);
 	}
+    else if(hasTE) { maxtmus = 1; resettmu(0); }
     if(renderpath==R_FIXEDFUNCTION)
     {
         if(maxtmus<4) caustics = 0;

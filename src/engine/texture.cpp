@@ -106,6 +106,7 @@ void texdup(SDL_Surface *s, int srcchan, int dstchan)
 
 SDL_Surface *texdecal(SDL_Surface *s)
 {
+    if(renderpath!=R_FIXEDFUNCTION || hasTE) return s;
     SDL_Surface *m = SDL_CreateRGBSurface(SDL_SWSURFACE, s->w, s->h, 16, 0, 0, 0, 0);
     if(!m) fatal("create surface");
     uchar *dst = (uchar *)m->pixels, *src = (uchar *)s->pixels;

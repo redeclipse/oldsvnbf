@@ -3,7 +3,6 @@
 
 VARP(oqdynent, 0, 1, 1);
 VARP(animationinterpolationtime, 0, 150, 1000);
-VARP(orientinterpolationtime, 0, 75, 1000);
 
 model *loadingmodel = NULL;
 
@@ -708,7 +707,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, int varseed, int
             }
         }
         if(light) { lightcolor = light->color; lightdir = light->dir; }
-        if(!(cull&MDL_LIGHT)) dynlightreaching(o, lightcolor, lightdir);
+        if(cull&MDL_DYNLIGHT) dynlightreaching(o, lightcolor, lightdir);
     }
 
 	if(a) for(int i = 0; a[i].name; i++)
@@ -845,27 +844,10 @@ void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&mas
 VAR(animoverride, 0, 0, NUMANIMS-1);
 VAR(testanims, 0, 0, 1);
 
-void interpolateorientation(dynent *d, float &interpyaw, float &interppitch)
-{
-    if(!orientinterpolationtime) { interpyaw = d->yaw; interppitch = d->pitch; return; }
-	if(d->orientmillis!=lastmillis)
-	{
-        float yaw = d->yaw, pitch = d->pitch;
-		if(yaw-d->lastyaw>=180) yaw -= 360;
-		else if(d->lastyaw-yaw>=180) yaw += 360;
-		d->lastyaw += (yaw-d->lastyaw)*min(orientinterpolationtime, lastmillis-d->orientmillis)/float(orientinterpolationtime);
-		d->lastpitch += (pitch-d->lastpitch)*min(orientinterpolationtime, lastmillis-d->orientmillis)/float(orientinterpolationtime);
-		d->orientmillis = lastmillis;
-	}
-    interpyaw = d->lastyaw;
-    interppitch = d->lastpitch;
-}
-
 void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, float sink)
 {
     int anim = (d->crouching ? ANIM_CROUCH : ANIM_IDLE)|ANIM_LOOP;
     float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
-    if(d->type==ENT_PLAYER && !local && orientinterpolationtime) interpolateorientation(d, yaw, pitch);
 	vec o(d->o);
 	o.z -= d->height + sink;
 	int varseed = (int)(size_t)d, basetime = 0;

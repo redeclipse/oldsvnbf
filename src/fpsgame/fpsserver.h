@@ -16,7 +16,7 @@ struct GAMESERVER : igameserver
 
     static const int DEATHMILLIS = 300;
 
-	enum { GE_NONE = 0, GE_SHOT, GE_RELOAD, GE_EXPLODE, GE_HIT, GE_SUICIDE, GE_PICKUP };
+	enum { GE_NONE = 0, GE_SHOT, GE_RELOAD, GE_EXPLODE, GE_HIT, GE_SUICIDE, GE_USE };
 
 	struct shotevent
 	{
@@ -58,7 +58,7 @@ struct GAMESERVER : igameserver
 		int type;
 	};
 
-	struct pickupevent
+	struct useevent
 	{
 		int type;
 		int ent;
@@ -72,7 +72,7 @@ struct GAMESERVER : igameserver
 		explodeevent explode;
 		hitevent hit;
 		suicideevent suicide;
-		pickupevent pickup;
+		useevent use;
 	};
 
     template <int N>
@@ -226,10 +226,10 @@ struct GAMESERVER : igameserver
 	bool notgotitems, notgotbases;		// true when map has changed and waiting for clients to send item
 	int gamemode, mutators;
 	int gamemillis, gamelimit;
+	int _lastmillis;
 
 	string serverdesc;
 	string smapname;
-	int lastmillis, totalmillis, curtime;
 	int interm, minremain;
 	bool mapreload;
 	enet_uint32 lastsend;
@@ -315,7 +315,7 @@ struct GAMESERVER : igameserver
 	string scresult, motd;
 	GAMESERVER()
 		: notgotitems(true), notgotbases(false),
-			gamemode(defaultmode()), mutators(0), interm(0), minremain(10),
+			gamemode(defaultmode()), mutators(0), _lastmillis(0), interm(0), minremain(10),
 			mapreload(false), lastsend(0),
 			mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
@@ -349,15 +349,15 @@ struct GAMESERVER : igameserver
 
 	int spawntime(int type) { return ((MAXCLIENTS+41)-nonspectators())*100; } // so, range is 4100..30000 ms
 
-	bool pickup(int i, int sender)		 // server side item pickup, acknowledge first client that gets it
+	bool use(int i, int sender)		 // server side item use, acknowledge first client that gets it
 	{
 		if(minremain<=0 || !sents.inrange(i) || !sents[i].spawned) return false;
 		clientinfo *ci = (clientinfo *)getinfo(sender);
-		if(!ci || (!ci->local && !ci->state.canpickup(sents[i].type, sents[i].attr1, sents[i].attr2, gamemillis))) return false;
+		if(!ci || (!ci->local && !ci->state.canuse(sents[i].type, sents[i].attr1, sents[i].attr2, gamemillis))) return false;
 		sents[i].spawned = false;
 		sents[i].spawntime = spawntime(sents[i].type);
 		sendf(-1, 1, "ri3", SV_ITEMACC, i, sender);
-		ci->state.pickup(gamemillis, sents[i].type, sents[i].attr1, sents[i].attr2);
+		ci->state.useitem(gamemillis, sents[i].type, sents[i].attr1, sents[i].attr2);
 		return true;
 	}
 
@@ -1166,12 +1166,12 @@ struct GAMESERVER : igameserver
 				break;
 			}
 
-			case SV_ITEMPICKUP:
+			case SV_ITEMUSE:
 			{
 				int n = getint(p);
-				gameevent &pickup = ci->addevent();
-				pickup.type = GE_PICKUP;
-				pickup.pickup.ent = n;
+				gameevent &use = ci->addevent();
+				use.type = GE_USE;
+				use.use.ent = n;
 				break;
 			}
 
@@ -1740,15 +1740,15 @@ struct GAMESERVER : igameserver
 	{
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canreload(e.gun, e.millis)) { return; }
-		gs.pickup(e.millis, WEAPON, e.gun, guntype[e.gun].add);
+		gs.useitem(e.millis, WEAPON, e.gun, guntype[e.gun].add);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
 
-	void processevent(clientinfo *ci, pickupevent &e)
+	void processevent(clientinfo *ci, useevent &e)
 	{
 		gamestate &gs = ci->state;
 		if(m_mp(gamemode) && !gs.isalive(gamemillis)) return;
-		pickup(e.ent, ci->clientnum);
+		use(e.ent, ci->clientnum);
 	}
 
 	void processevents()
@@ -1786,19 +1786,18 @@ struct GAMESERVER : igameserver
 					case GE_RELOAD: processevent(ci, e.reload); break;
 					// untimed events
 					case GE_SUICIDE: processevent(ci, e.suicide); break;
-					case GE_PICKUP: processevent(ci, e.pickup); break;
+					case GE_USE: processevent(ci, e.use); break;
 				}
 				clearevent(ci);
 			}
 		}
 	}
 
-	void serverupdate(int _lastmillis, int _totalmillis)
+	void serverupdate()
 	{
-		curtime = _lastmillis - lastmillis;
+		curtime = lastmillis - _lastmillis;
+		_lastmillis = lastmillis;
 		gamemillis += curtime;
-		lastmillis = _lastmillis;
-		totalmillis = _totalmillis;
 
 		if(m_demo(gamemode)) readdemo();
 		else if(minremain>0)
