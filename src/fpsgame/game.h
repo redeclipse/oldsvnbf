@@ -14,7 +14,7 @@ enum						// static entity types
 	MAPSOUND = ET_SOUND,		// 6
 	SPOTLIGHT = ET_SPOTLIGHT,	// 7
 	WEAPON,						// 8, attr1 = gun, attr2 = amt
-	TELEPORT,					// 9, attr1 = angle
+	TELEPORT,					// 9, attr1 = yaw, attr2 = pitch
 	MONSTER,					// 10, attr1 = angle, attr2 = monstertype
 	TRIGGER,					// 11, attr1 = tag, attr2 = type
 	JUMPPAD,					// 12, attr1 = zpush, attr2 = ypush, attr3 = xpush

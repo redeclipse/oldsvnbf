@@ -15,8 +15,7 @@ struct entities : icliententities
 
 	entities(GAMECLIENT &_cl) : cl(_cl)
 	{
-		CCOMMAND(entdelink, "i", (entities *self, int *val), self->entdelink(*val));
-		CCOMMAND(entlink, "i", (entities *self, int *val), self->entlink(*val));
+		CCOMMAND(entlink, "", (entities *self), self->entlink());
 	}
 
 	vector<extentity *> &getents() { return ents; }
@@ -50,53 +49,6 @@ struct entities : icliententities
 				break;
 		}
 		return emdl[0] ? emdl : NULL;
-	}
-
-	void renderentities()
-	{
-		if (rendernormally) // important, don't render lines and stuff otherwise!
-		{
-			#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
-	
-			renderprimitive(true);
-			if (editmode)
-			{
-				loopv(entgroup) entfocus(entgroup[i], renderentshow(e));
-				if (enthover >= 0) entfocus(enthover, renderentshow(e));
-			}
-			loopv(ents)
-			{
-				entfocus(i, { renderentforce(e); });
-			}
-			renderprimitive(false);
-			
-			loopv(ents) // sounds are here so they only execute once per frame
-			{
-				fpsentity &e = (fpsentity &)*ents[i];
-
-				if (e.type == MAPSOUND && mapsounds.inrange(e.attr1))
-				{
-					if (!sounds.inrange(e.schan) || !sounds[e.schan].inuse)
-						e.schan = playsound(e.attr1, &e.o, false, true);
-				}
-			}
-		}
-
-		loopv(ents)
-		{
-			extentity &e = *ents[i];
-			if (e.type == TELEPORT || (e.type == WEAPON && (e.spawned || editmode)))
-			{
-				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-
-				if (mdlname)
-				{
-					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP,
-						0, 0, e.o, 0.f, 0.f, 0.f, 0.f, 0, NULL,
-						MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED);
-				}
-			}
-		}
 	}
 
     void preloadentities()
@@ -144,8 +96,8 @@ struct entities : icliententities
 			if (ents.inrange(targ) && ents[targ]->type == TELEPORT)
 			{
 				d->o = ents[targ]->o;
-				d->yaw = ents[targ]->attr1;
-				d->pitch = 0;
+				d->yaw = max(0, ents[targ]->attr1%360);
+				d->pitch = max(0, ents[targ]->attr2%90);
 				float mag = max(48.f, d->vel.magnitude());
 				d->vel = vec(0, 0, 0);
 				vecfromyawpitch(d->yaw, 0, 1, 0, d->vel);
@@ -216,10 +168,10 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-			if(e.type==NOTUSED) continue;
-			if(!e.spawned && e.type!=TELEPORT && e.type!=JUMPPAD && e.type!=CHECKPOINT) continue;
+			if (e.type == NOTUSED) continue;
+			if (!e.spawned && e.type!=TELEPORT && e.type!=JUMPPAD && e.type!=CHECKPOINT) continue;
 			float dist = e.o.dist(o);
-			if(dist<(e.type==TELEPORT ? 16 : 12)) tryuse(i, d);
+			if(dist < enttype[e.type].radius) tryuse(i, d);
 		}
 	}
 
@@ -271,7 +223,7 @@ struct entities : icliententities
 	void editent(int i)
 	{
 		extentity &e = *ents[i];
-		if (e.type == ET_EMPTY) entlinks(i);
+		if (e.type == ET_EMPTY) cleanlinks(i);
 		fixentity(e);
 		if (multiplayer(false))
 			cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
@@ -283,7 +235,7 @@ struct entities : icliententities
 		return 4.0f;
 	}
 
-	void entdelink(int both)
+	void entlink()
 	{
 		if (entgroup.length())
 		{
@@ -308,8 +260,14 @@ struct entities : icliententities
 								fpsentity &e = (fpsentity &)*ents[index];
 								fpsentity &l = (fpsentity &)*ents[last];
 	
-								if ((g = l.links.find(index)) >= 0) l.links.remove(g);
-								if (both && ((g = e.links.find(last)) >= 0)) e.links.remove(g);
+								if ((g = l.links.find(index)) >= 0)
+								{
+									int h;
+									if ((h = e.links.find(last)) >= 0) l.links.remove(g);
+									else e.links.add(last);
+								}
+								else if ((g = e.links.find(last)) >= 0) e.links.remove(g);
+								else l.links.add(index);
 							}
 							last = index;
 						}
@@ -320,7 +278,7 @@ struct entities : icliententities
 			}
 		}
 	}
-
+	/*
 	void entlink(int both)
 	{
 		if (entgroup.length())
@@ -356,8 +314,8 @@ struct entities : icliententities
 			}
 		}
 	}
-
-	void entlinks(int n)
+	*/
+	void cleanlinks(int n)
 	{
 		loopv(ents) if (enttype[ents[i]->type].links)
 		{
@@ -594,43 +552,9 @@ struct entities : icliententities
 		}
 	}
 
-	void renderentforce(extentity &e)
+	void renderentshow(extentity &e, bool force)
 	{
-		switch (e.type)
-		{
-			case TELEPORT:
-			{
-				if (showteleportlinks()) renderlinked(e);
-				break;
-			}
-			case BASE:
-			{
-				if (showbaselinks()) renderlinked(e);
-				break;
-			}
-			case CHECKPOINT:
-			{
-				if (showcheckpointlinks()) renderlinked(e);
-				break;
-			}
-			case CAMERA:
-			{
-				if (showcameralinks()) renderlinked(e);
-				break;
-			}
-			case WAYPOINT:
-			{
-				if (showwaypointlinks()) renderlinked(e);
-				break;
-			}
-			default:
-				break;
-		}
-	}
-
-	void renderentshow(extentity &e)
-	{
-		if (showentradius())
+		if (!force && showentradius())
 		{
 			if (enttype[e.type].height > 0.f || enttype[e.type].radius > 0.f)
 			{
@@ -643,38 +567,88 @@ struct entities : icliententities
 			case PLAYERSTART:
 			case MAPMODEL:
 			{
-				if (showentdir()) renderdir(e.o, e.attr1, 0);
+				if (!force && showentdir()) renderdir(e.o, e.attr1, 0);
 				break;
 			}
 			case TELEPORT:
 			{
-				if (!showteleportlinks()) renderlinked(e);
-				if (showentdir()) renderdir(e.o, e.attr1, 0);
+				if (!force || showteleportlinks()) renderlinked(e);
+				if (!force && showentdir()) renderdir(e.o, e.attr1, 0);
 				break;
 			}
 			case BASE:
 			{
-				if (!showbaselinks()) renderlinked(e);
+				if (!force || showbaselinks()) renderlinked(e);
 				break;
 			}
 			case CHECKPOINT:
 			{
-				if (!showcheckpointlinks()) renderlinked(e);
+				if (!force || showcheckpointlinks()) renderlinked(e);
 				break;
 			}
 			case CAMERA:
 			{
-				if (!showcameralinks()) renderlinked(e);
-				if (showentdir()) renderdir(e.o, e.attr1, e.attr2);
+				if (!force || showcameralinks()) renderlinked(e);
+				if (!force && showentdir()) renderdir(e.o, e.attr1, e.attr2);
 				break;
 			}
 			case WAYPOINT:
 			{
-				if (!showwaypointlinks()) renderlinked(e);
+				if (!force || showwaypointlinks()) renderlinked(e);
 				break;
 			}
 			default:
 				break;
+		}
+	}
+
+	void renderentities()
+	{
+		if (rendernormally) // important, don't render lines and stuff otherwise!
+		{
+			#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
+	
+			if (editmode)
+			{
+				renderprimitive(true);
+				
+				loopv(entgroup) entfocus(entgroup[i], renderentshow(e, false));
+				if (enthover >= 0) entfocus(enthover, renderentshow(e, false));
+				
+				loopv(ents)
+				{
+					entfocus(i, { renderentshow(e, true); });
+				}
+				
+				renderprimitive(false);
+			}
+			
+			loopv(ents) // sounds are here so they only execute once per frame
+			{
+				fpsentity &e = (fpsentity &)*ents[i];
+
+				if (e.type == MAPSOUND && mapsounds.inrange(e.attr1))
+				{
+					if (!sounds.inrange(e.schan) || !sounds[e.schan].inuse)
+						e.schan = playsound(e.attr1, &e.o, false, true);
+				}
+			}
+		}
+
+		loopv(ents)
+		{
+			extentity &e = *ents[i];
+			if (e.type == TELEPORT || (e.type == WEAPON && (e.spawned || editmode)))
+			{
+				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+
+				if (mdlname)
+				{
+					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP,
+						0, 0, e.o, 0.f, 0.f, 0.f, 0.f, 0, NULL,
+						MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED);
+				}
+			}
 		}
 	}
 } et;
