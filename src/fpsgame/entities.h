@@ -96,8 +96,8 @@ struct entities : icliententities
 			if (ents.inrange(targ) && ents[targ]->type == TELEPORT)
 			{
 				d->o = ents[targ]->o;
-				d->yaw = max(0, ents[targ]->attr1%360);
-				d->pitch = max(0, ents[targ]->attr2%90);
+				d->yaw = min(359, max(0, (int)ents[targ]->attr1));
+				d->pitch = min(89, max(-89, (int)ents[targ]->attr2));
 				float mag = max(48.f, d->vel.magnitude());
 				d->vel = vec(0, 0, 0);
 				vecfromyawpitch(d->yaw, 0, 1, 0, d->vel);
@@ -530,7 +530,7 @@ struct entities : icliententities
 				fr.z += RENDERPUSHZ;
 				to.z += RENDERPUSHZ;
 
-				vec col(both ? 0.5f : 0.0f, 0, 0.5f);
+				vec col(0.5f, 0, both ? 0.5f : 0.0f);
 				renderline(fr, to, col.x, col.y, col.z, hassel);
 
 				if (hassel)
@@ -546,7 +546,7 @@ struct entities : icliententities
 					dr.mul(RENDERPUSHX);
 					dr.add(fr);
 
-					rendertris(dr, yaw, pitch, 2.f, col.x/2.f, col.y/2.f, col.z/2.f, true, hassel);
+					rendertris(dr, yaw, pitch, 2.f, col.x*2.f, 0.0f, col.z*2.f, true, hassel);
 				}
 			}
 		}
