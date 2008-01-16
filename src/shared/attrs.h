@@ -424,7 +424,7 @@ struct attr_ivec : attr
 		} \
 	} atr_##n;
 
-#define ACASE(o, _n, _b, _i, _f, _s, _v) \
+#define ACASE(o, _n, _b, _i, _f, _s, _v, _iv) \
 	switch (o->type) \
 	{ \
 		default: \
@@ -467,7 +467,7 @@ struct attr_ivec : attr
 		case ATTR_IVEC: \
 		{ \
 			attr_ivec *a = (attr_ivec *)o; \
-			_v; \
+			_iv; \
 			break; \
 		} \
 	}

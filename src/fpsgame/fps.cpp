@@ -200,7 +200,7 @@ struct GAMECLIENT : igameclient
 					player1->stopmoving();
 					ph.move(player1, 10, false);
 				}
-				else if (!respawnwait()) respawnself();
+				else if (!respawnwait() && m_assassin(gamemode)) respawnself();
 			}
 			else
 			{
@@ -222,8 +222,7 @@ struct GAMECLIENT : igameclient
 				ph.move(player1, 20, true);
 				ph.updatewater(player1, 0);
 
-				if (player1->physstate >= PHYS_SLOPE)
-					swaymillis += curtime;
+				if (player1->physstate >= PHYS_SLOPE) swaymillis += curtime;
 
 				float k = pow(0.7f, curtime/10.0f);
 				swaydir.mul(k);
@@ -935,6 +934,7 @@ struct GAMECLIENT : igameclient
 			camera1->reset();
 			camera1->type = ENT_CAMERA;
 			camera1->state = CS_ALIVE;
+			camera1->radius = player1->radius; // for sound interpolation mostly
 		}
 
 		if (player1->state == CS_SPECTATOR)

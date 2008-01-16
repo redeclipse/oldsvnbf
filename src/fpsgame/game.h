@@ -5,24 +5,24 @@
 
 enum						// static entity types
 {
-	NOTUSED = ET_EMPTY,			// 0, entity slot not in use in map
-	LIGHT = ET_LIGHT,			// 1, lightsource, attr1 = radius, attr2 = intensity
-	MAPMODEL = ET_MAPMODEL,		// 2, attr1 = angle, attr2 = idx
-	PLAYERSTART,				// 3, attr1 = angle
-	ENVMAP = ET_ENVMAP,			// 4, attr1 = radius
-	PARTICLES = ET_PARTICLES,	// 5
-	MAPSOUND = ET_SOUND,		// 6
-	SPOTLIGHT = ET_SPOTLIGHT,	// 7
-	WEAPON,						// 8, attr1 = gun, attr2 = amt
-	TELEPORT,					// 9, attr1 = yaw, attr2 = pitch
-	MONSTER,					// 10, attr1 = angle, attr2 = monstertype
-	TRIGGER,					// 11, attr1 = tag, attr2 = type
-	JUMPPAD,					// 12, attr1 = zpush, attr2 = ypush, attr3 = xpush
-	BASE,						// 13
-	CHECKPOINT,					// 14
-	CAMERA,						// 15, attr1 = yaw, attr2 = pitch, attr3 = pan (+:horiz/-:vert), attr4 = idx
-	WAYPOINT,					// 16, none?
-	MAXENTTYPES					// 17
+	NOTUSED = ET_EMPTY,				// 0, entity slot not in use in map
+	LIGHT = ET_LIGHT,				// 1, lightsource, attr1 = radius, attr2 = intensity
+	MAPMODEL = ET_MAPMODEL,			// 2, attr1 = angle, attr2 = idx
+	PLAYERSTART = ET_PLAYERSTART,	// 3, attr1 = angle
+	ENVMAP = ET_ENVMAP,				// 4, attr1 = radius
+	PARTICLES = ET_PARTICLES,		// 5
+	MAPSOUND = ET_SOUND,			// 6
+	SPOTLIGHT = ET_SPOTLIGHT,		// 7
+	WEAPON = ET_GAMESPECIFIC,		// 8, attr1 = gun, attr2 = amt
+	TELEPORT,						// 9, attr1 = yaw, attr2 = pitch, attr3 = push
+	MONSTER,						// 10, attr1 = angle, attr2 = monstertype
+	TRIGGER,						// 11, attr1 = tag, attr2 = type
+	JUMPPAD,						// 12, attr1 = zpush, attr2 = ypush, attr3 = xpush
+	BASE,							// 13
+	CHECKPOINT,						// 14
+	CAMERA,							// 15, attr1 = yaw, attr2 = pitch, attr3 = pan (+:horiz/-:vert), attr4 = idx
+	WAYPOINT,						// 16, none?
+	MAXENTTYPES						// 17
 };
 
 static struct enttypes
