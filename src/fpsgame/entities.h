@@ -100,7 +100,7 @@ struct entities : icliententities
 				d->pitch = clamp((int)ents[targ]->attr2, -89, 89);
 				float mag = max(48.f, (float)ents[targ]->attr3+d->vel.magnitude());
 				d->vel = vec(0, 0, 0);
-				vecfromyawpitch(d->yaw, 0, 1, 0, d->vel);
+				vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 				d->o.add(d->vel);
 				d->vel.mul(mag);
 				cl.ph.entinmap(d, false);
