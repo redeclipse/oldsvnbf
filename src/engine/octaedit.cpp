@@ -114,7 +114,7 @@ VARF(gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
 	if(dragging || !hdr.worldsize) return;
 	gridsize = 1<<gridpower;
 	if(gridsize >= hdr.worldsize) gridsize = hdr.worldsize/2;
-	if(gridsize <= 0) gridsize = 1;
+	if(gridsize <= 0) gridsize = 3-VVEC_FRAC;
 	cancelsel();
 });
 

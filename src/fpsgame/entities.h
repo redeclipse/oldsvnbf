@@ -96,9 +96,9 @@ struct entities : icliententities
 			if (ents.inrange(targ) && ents[targ]->type == TELEPORT)
 			{
 				d->o = ents[targ]->o;
-				d->yaw = min(359, max(0, (int)ents[targ]->attr1));
-				d->pitch = min(89, max(-89, (int)ents[targ]->attr2));
-				float mag = max(48.f, d->vel.magnitude());
+				d->yaw = clamp((int)ents[targ]->attr1, 0, 359);
+				d->pitch = clamp((int)ents[targ]->attr2, -89, 89);
+				float mag = max(48.f, (float)ents[targ]->attr3+d->vel.magnitude());
 				d->vel = vec(0, 0, 0);
 				vecfromyawpitch(d->yaw, 0, 1, 0, d->vel);
 				d->o.add(d->vel);
@@ -208,7 +208,7 @@ struct entities : icliententities
 		switch(e.type)
 		{
 			case WEAPON:
-				while (e.attr1 <= -1) e.attr1 += NUMGUNS;
+				while (e.attr1 < 0) e.attr1 += NUMGUNS;
 				while (e.attr1 >= NUMGUNS) e.attr1 -= NUMGUNS;
 				if (e.attr2 < 0) e.attr2 = 0;
 				break;
@@ -278,43 +278,7 @@ struct entities : icliententities
 			}
 		}
 	}
-	/*
-	void entlink(int both)
-	{
-		if (entgroup.length())
-		{
-			int index = entgroup[0];
 
-			if (ents.inrange(index))
-			{
-				int type = ents[index]->type, last = -1;
-
-				if (enttype[type].links)
-				{
-					loopv(entgroup)
-					{
-						index = entgroup[i];
-	
-						if (ents[index]->type == type)
-						{
-							if (ents.inrange(last))
-							{
-								fpsentity &e = (fpsentity &)*ents[index];
-								fpsentity &l = (fpsentity &)*ents[last];
-	
-								if (l.links.find(index) < 0) l.links.add(index);
-								if (both && e.links.find(last) < 0) e.links.add(last);
-							}
-							last = index;
-						}
-						else conoutf("entity %s is not linkable to a %s", enttype[type].name, enttype[index].name);
-					}
-				}
-				else conoutf("entity %s is not linkable", enttype[type].name);
-			}
-		}
-	}
-	*/
 	void cleanlinks(int n)
 	{
 		loopv(ents) if (enttype[ents[i]->type].links)
@@ -517,7 +481,7 @@ struct entities : icliententities
 					if (ents.inrange(g))
 					{
 						fpsentity &h = (fpsentity &)*ents[g];
-						if (&h == &e)
+						if (&h == &d)
 						{
 							both = true;
 							break;

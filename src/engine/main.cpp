@@ -363,7 +363,7 @@ void perfset(int level)
 		#define perfvarscl(s,v,n0,n1) \
 			{ \
 				int _##s = int((float(n0-n1)/float(v))*float(level))+n1; \
-				setvar(#s, max(min(_##s, n0), n1), true); \
+				setvar(#s, clamp(_##s, n1, n0), true); \
 			} \
 
 		perfvarscl(decalfade,			100,	60000,		1);

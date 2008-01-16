@@ -143,7 +143,7 @@ int addsound(const char *name, int vol, vector<soundslot> &sounds)
 	}
 	soundslot &slot = sounds.add();
 	slot.sample = sample;
-	slot.vol = vol < 256 && vol > 0 ? vol : 255;
+	slot.vol = vol > 0 ? min(vol, 255) : 255;
 	return sounds.length()-1;
 }
 
@@ -163,17 +163,20 @@ void checksound()
 			{
 				vec v;
 				float dist = camera1->o.dist(*sounds[i].pos, v);
-				int vol = soundvol, pan = 255/2;
+				int vol = soundvol, pan = 127;
 				
-				if ((vol -= (int)(dist*soundvol/255)) < 0) vol = 0;
-				if (!soundmono && (v.x != 0 || v.y != 0) && dist > 0)
+				if (dist > camera1->radius) // only if it is within our radius
 				{
-					float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
-					pan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
+					dist -= 4.f;
+					vol -= (int)(dist*soundvol/255);
+					
+					if (!soundmono && (v.x != 0 || v.y != 0))
+					{
+						float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
+						pan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
+					}
 				}
-
-				vol = (MIX_MAX_VOLUME*vol*sounds[i].slot->vol)/255/255;
-				vol = min(vol, MIX_MAX_VOLUME);
+				vol = clamp((MIX_MAX_VOLUME*vol*sounds[i].slot->vol)/255/255, 0, MIX_MAX_VOLUME);
 
 				Mix_Volume(i, vol);
 				Mix_SetPanning(i, 255-pan, pan);
@@ -185,7 +188,7 @@ void checksound()
 
 int playsound(int n, vec *pos, bool copy, bool mapsnd)
 {
-	if (nosound || !soundvol || !camera1) return -1;
+	if (nosound || !soundvol || !camera1 || !cc->ready()) return -1;
 
 	vec *p = pos != NULL ? pos : &camera1->o;
 

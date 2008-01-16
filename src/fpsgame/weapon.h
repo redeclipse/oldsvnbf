@@ -196,8 +196,7 @@ struct weaponstate
 
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
-		if (guntype[gun].sound >= 0)
-			playsound(guntype[gun].sound, &from, true);
+		if (guntype[gun].sound >= 0) playsound(guntype[gun].sound, &d->o);
 		
 		switch(gun)
 		{

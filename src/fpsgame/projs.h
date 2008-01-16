@@ -157,7 +157,7 @@ struct projectiles
 						if (hitplayer) pos = vec(vec(o).sub(hitplayer->o)).normalize();
 					}
 
-					if (vel.magnitude() > 1.f)
+					if (vel.magnitude() > 4.f)
 					{
 						vel.apply(pos, elasticity);
 						if (hitplayer) vel.influence(pos, hitplayer->vel, elasticity);
