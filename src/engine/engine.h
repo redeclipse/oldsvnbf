@@ -323,6 +323,7 @@ extern void serverslice(uint timeout);
 
 extern uchar *retrieveservers(uchar *buf, int buflen);
 extern void clienttoserver(int chan, ENetPacket *);
+extern void selfconnect();
 extern void lanconnect();
 extern bool serveroption(char *opt);
 

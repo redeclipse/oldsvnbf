@@ -197,7 +197,6 @@ struct projectiles
 			projent &proj = *(projs[i]);
 
 			proj.check();
-			vec old(proj.o);
 			int rtime = curtime;
 
 			while (rtime > 0)

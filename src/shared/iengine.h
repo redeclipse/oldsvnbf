@@ -356,5 +356,3 @@ extern int ambient, skylight, watercolour, lavacolour;
 
 extern string cgzname, pcfname, mcfname, picname, mapname;
 extern int verbose, savebak;
-
-extern bool otherclients(bool msg = true);

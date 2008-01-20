@@ -5,21 +5,14 @@
 
 ENetHost *clienthost = NULL;
 ENetPeer *curpeer = NULL, *connpeer = NULL;
-int connmillis = 0, connattempts = 0, discmillis = 0;
+int localattempt = 0, connmillis = 0, connattempts = 0, discmillis = 0;
 
-bool otherclients(bool msg)
+bool multiplayer(bool msg)
 {
 	// check if we're playing alone
 	int n = cc->otherclients();
 	if (n && msg) conoutf("operation not available with other clients");
 	return n > 0;
-}
-
-bool multiplayer(bool msg)
-{
-	// check not correct on listen server?
-	if(curpeer && msg) conoutf("operation not available in multiplayer");
-	return curpeer!=NULL;
 }
 
 void setrate(int rate)
@@ -53,6 +46,25 @@ void abortconnect()
 	clienthost = NULL;
 }
 
+void connectfail()
+{
+	if (localattempt)
+	{
+		if (localattempt > 1) fatal("unable to find any server on the local network");
+		else
+		{
+			conoutf("unable to find a local server, trying the local network");
+			lanconnect();
+		}
+	}
+	else
+	{
+		conoutf("\f3could not connect to server");
+		abortconnect();
+		lanconnect();
+	}
+}
+
 void connects(const char *servername)
 {
 	if(connpeer)
@@ -66,6 +78,7 @@ void connects(const char *servername)
 
 	if (servername != NULL)
 	{
+		localattempt = 0;
 		addserver(servername);
 		conoutf("attempting to connect to %s", servername);
 		if(!resolverwait(servername, &address))
@@ -76,8 +89,20 @@ void connects(const char *servername)
 	}
 	else
 	{
-		conoutf("attempting to connect to a local server");
-		address.host = ENET_HOST_BROADCAST;
+		if (!localattempt)
+		{
+			if (!resolverwait("localhost", &address))
+			{
+				conoutf("could not resolve localhost");
+				return;
+			}
+		}
+		else
+		{
+			conoutf("attempting to connect to a local server");
+			address.host = ENET_HOST_BROADCAST;
+		}
+		localattempt++;
 	}
 
 	if(!clienthost) clienthost = enet_host_create(NULL, 2, rate, rate);
@@ -91,8 +116,7 @@ void connects(const char *servername)
 		s_sprintfd(cs)("connecting to %s (esc to abort)", servername != NULL ? servername : "local server");
 		computescreen(cs);
 	}
-	else if (address.host == ENET_HOST_BROADCAST) fatal("unable to connect to a local server");
-	else conoutf("\f3could not connect to server");
+	else connectfail();
 }
 
 void disconnect(int onlyclean, int async)
@@ -201,12 +225,7 @@ void gets2c()			// get updates from the server
 		++connattempts;
 		if(connattempts > 3)
 		{
-			if (connpeer->address.host == ENET_HOST_BROADCAST) fatal("unable to connect to a local server");
-			else
-			{
-				conoutf("\f3could not connect to server");
-				abortconnect();
-			}
+			connectfail();
 			return;
 		}
 	}
@@ -232,15 +251,7 @@ void gets2c()			// get updates from the server
 		case ENET_EVENT_TYPE_DISCONNECT:
             extern const char *disc_reasons[];
 			if(event.data>=DISC_NUM) event.data = DISC_NONE;
-			if(event.peer==connpeer)
-			{
-				if (connpeer->address.host == ENET_HOST_BROADCAST) fatal("unable to connect to a local server");
-				else
-				{
-					conoutf("\f3could not connect to server");
-					abortconnect();
-				}
-			}
+			if(event.peer==connpeer) connectfail();
 			else
 			{
 				if(!discmillis || event.data) conoutf("\f3server network error, disconnecting (%s) ...", disc_reasons[event.data]);
