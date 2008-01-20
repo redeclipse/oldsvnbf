@@ -354,6 +354,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\engine\animmodel.h"
+				>
+			</File>
+			<File
 				RelativePath="..\engine\bih.cpp"
 				>
 			</File>
@@ -540,6 +544,10 @@
 			</File>
 			<File
 				RelativePath="..\engine\md3.h"
+				>
+			</File>
+			<File
+				RelativePath="..\engine\md5.h"
 				>
 			</File>
 			<File
@@ -938,6 +946,10 @@
 			</File>
 			<File
 				RelativePath="..\engine\shadowmap.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\engine\skelmodel.h"
 				>
 			</File>
 			<File
