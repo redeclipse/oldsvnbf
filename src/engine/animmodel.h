@@ -1126,7 +1126,7 @@ struct animmodel : model
     void calcbb(int frame, vec &center, vec &radius)
     {
         if(parts.empty()) return;
-        vec bbmin(1e16f, 1e16f, 1e16f), bbmax(-1e16f, -1e16f, -1e166f);
+        vec bbmin(1e16f, 1e16f, 1e16f), bbmax(-1e16f, -1e16f, -1e16f);
         parts[0]->calcbb(frame, bbmin, bbmax);
         radius = bbmax;
         radius.sub(bbmin);
