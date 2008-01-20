@@ -390,10 +390,6 @@ void rendershadow(vec &dir, model *m, int anim, const vec &o, vec center, float 
     }
     glColor4f(0, 0, 0, intensity);
 
-	static Shader *dynshadowshader = NULL;
-	if(!dynshadowshader) dynshadowshader = lookupshaderbyname("dynshadow");
-	dynshadowshader->set();
-
 	if(!hasFBO || !reflecting || hasDS)
 	{
 		glStencilFunc(GL_NOTEQUAL, bounddynshadows ? 0 : 1, 1);

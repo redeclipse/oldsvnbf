@@ -257,6 +257,12 @@ struct animmodel : model
                     else if(skeletal()) SETMODELSHADER(shadowmapskelcaster);
                     else SETMODELSHADER(shadowmapcaster);
                 }
+                else if(as->anim&ANIM_SHADOW)
+                {
+                    if(skeletalmat()) SETMODELSHADER(dynskelmatshadow);
+                    else if(skeletal()) SETMODELSHADER(dynskelshadow);
+                    else SETMODELSHADER(dynshadow);
+                }
                 return;
             }
             Texture *s = bumpmapped() && unlittex ? unlittex : tex, *m = masks, *n = bumpmapped() ? normalmap : NULL;
