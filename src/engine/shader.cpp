@@ -13,7 +13,7 @@ static vector<ShaderParam> curparams;
 static ShaderParamState vertexparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS], pixelparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS];
 static bool dirtyenvparams = false;
 
-VAR(reservevpparams, 1, 0, 0);
+VAR(reservevpparams, 1, 16, 0);
 VAR(maxvpenvparams, 1, 0, 0);
 VAR(maxvplocalparams, 1, 0, 0);
 VAR(maxfpenvparams, 1, 0, 0);
