@@ -196,7 +196,7 @@ struct modelattach
 
 extern void startmodelbatches();
 extern void endmodelbatches();
-extern void rendermodel(entitylight *light, const char *mdl, int anim, int varseed, int tex, const vec &o, float yaw = 0, float pitch = 0, float roll = 0, float speed = 0, int basetime = 0, dynent *d = NULL, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED | MDL_LIGHT, modelattach *a = NULL);
+extern void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw = 0, float pitch = 0, float roll = 0, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED | MDL_LIGHT, dynent *d = NULL, modelattach *a = NULL, int basetime = 0, float speed = 0);
 extern void abovemodel(vec &o, const char *mdl);
 extern void rendershadow(dynent *d);
 extern void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, float sink = 0);

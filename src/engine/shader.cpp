@@ -11,10 +11,29 @@ static hashtable<const char *, Shader> shaders;
 static Shader *curshader = NULL;
 static vector<ShaderParam> curparams;
 static ShaderParamState vertexparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS], pixelparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS];
-static int dirtyparams = 0;
+static bool dirtyenvparams = false;
+
+VAR(reservevpparams, 1, 0, 0);
+VAR(maxvpenvparams, 1, 0, 0);
+VAR(maxvplocalparams, 1, 0, 0);
+VAR(maxfpenvparams, 1, 0, 0);
+VAR(maxfplocalparams, 1, 0, 0);
 
 void loadshaders()
 {
+    if(renderpath!=R_FIXEDFUNCTION)
+    {
+        GLint val;
+        glGetProgramiv_(GL_VERTEX_PROGRAM_ARB, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, &val);
+        maxvpenvparams = val;
+        glGetProgramiv_(GL_VERTEX_PROGRAM_ARB, GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, &val);
+        maxvplocalparams = val;
+        glGetProgramiv_(GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, &val);
+        maxfpenvparams = val;
+        glGetProgramiv_(GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, &val);
+        maxfplocalparams = val;
+    }
+
 	persistidents = false;
     exec("stdshader.cfg");
     persistidents = true;
@@ -261,66 +280,103 @@ void Shader::allocenvparams(Slot *slot)
 		allocglsluniformparam(*this, SHPARAM_PIXEL, i);
 }
 
+static inline void flushparam(int type, int index)
+{
+    ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
+    if(Shader::lastshader && Shader::lastshader->type&SHADER_GLSLANG)
+    {
+        LocalShaderParamState *&ext = (type==SHPARAM_VERTEX ? Shader::lastshader->extvertparams[index] : Shader::lastshader->extpixparams[index]);
+        if(!ext) allocglsluniformparam(*Shader::lastshader, type, index, val.local);
+        if(!ext || ext == &unusedextparam) return;
+        if(!memcmp(ext->curval, val.val, sizeof(ext->curval))) return;
+        memcpy(ext->curval, val.val, sizeof(ext->curval));
+        glUniform4fv_(ext->loc, 1, ext->curval);
+    }
+    else if(val.dirty==ShaderParamState::DIRTY)
+    {
+        glProgramEnvParameter4fv_(type==SHPARAM_VERTEX ? GL_VERTEX_PROGRAM_ARB : GL_FRAGMENT_PROGRAM_ARB, index, val.val);
+        val.dirty = ShaderParamState::CLEAN;
+    }
+}
+
+static inline ShaderParamState &setparamf(const char *name, int type, int index, float x, float y, float z, float w)
+{
+    ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
+    val.name = name;
+    if(val.dirty==ShaderParamState::INVALID || val.val[0]!=x || val.val[1]!=y || val.val[2]!=z || val.val[3]!=w)
+    {
+        val.val[0] = x;
+        val.val[1] = y;
+        val.val[2] = z;
+        val.val[3] = w;
+        val.dirty = ShaderParamState::DIRTY;
+    }
+    return val;
+}
+
+static inline ShaderParamState &setparamfv(const char *name, int type, int index, const float *v)
+{
+    ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
+    val.name = name;
+    if(val.dirty==ShaderParamState::INVALID || memcmp(val.val, v, sizeof(val.val)))
+    {
+        memcpy(val.val, v, sizeof(val.val));
+        val.dirty = ShaderParamState::DIRTY;
+    }
+    return val;
+}
+
 void setenvparamf(const char *name, int type, int index, float x, float y, float z, float w)
 {
-	ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
-	val.name = name;
-	val.local = false;
-	if(val.val[0]!=x || val.val[1]!=y || val.val[2]!=z || val.val[3]!=w)
-	{
-		val.val[0] = x;
-		val.val[1] = y;
-		val.val[2] = z;
-		val.val[3] = w;
-		if(!val.dirty) dirtyparams++;
-		val.dirty = true;
-	}
+    ShaderParamState &val = setparamf(name, type, index, x, y, z, w);
+    val.local = false;
+    if(val.dirty==ShaderParamState::DIRTY) dirtyenvparams = true;
 }
 
 void setenvparamfv(const char *name, int type, int index, const float *v)
 {
-	ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
-	val.name = name;
-	val.local = false;
-	if(memcmp(val.val, v, sizeof(val.val)))
-	{
-		memcpy(val.val, v, sizeof(val.val));
-		if(!val.dirty) dirtyparams++;
-		val.dirty = true;
-	}
+    ShaderParamState &val = setparamfv(name, type, index, v);
+    val.local = false;
+    if(val.dirty==ShaderParamState::DIRTY) dirtyenvparams = true;
 }
 
-void flushenvparam(int type, int index, bool local)
+void flushenvparamf(const char *name, int type, int index, float x, float y, float z, float w)
 {
-	ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
-	val.local = local;
-	if(Shader::lastshader && Shader::lastshader->type&SHADER_GLSLANG)
-	{
-		LocalShaderParamState *&ext = (type==SHPARAM_VERTEX ? Shader::lastshader->extvertparams[index] : Shader::lastshader->extpixparams[index]);
-		if(!ext) allocglsluniformparam(*Shader::lastshader, type, index, local);
-		if(!ext || ext == &unusedextparam) return;
-		if(!memcmp(ext->curval, val.val, sizeof(ext->curval))) return;
-		memcpy(ext->curval, val.val, sizeof(ext->curval));
-		glUniform4fv_(ext->loc, 1, ext->curval);
-	}
-	else if(val.dirty)
-	{
-		glProgramEnvParameter4fv_(type==SHPARAM_VERTEX ? GL_VERTEX_PROGRAM_ARB : GL_FRAGMENT_PROGRAM_ARB, index, val.val);
-		dirtyparams--;
-		val.dirty = false;
-	}
+    ShaderParamState &val = setparamf(name, type, index, x, y, z, w);
+    val.local = false;
+    flushparam(type, index);
+}
+
+void flushenvparamfv(const char *name, int type, int index, const float *v)
+{
+    ShaderParamState &val = setparamfv(name, type, index, v);
+    val.local = false;
+    flushparam(type, index);
 }
 
 void setlocalparamf(const char *name, int type, int index, float x, float y, float z, float w)
 {
-	setenvparamf(name, type, index, x, y, z, w);
-	flushenvparam(type, index, true);
+    ShaderParamState &val = setparamf(name, type, index, x, y, z, w);
+    val.local = true;
+    flushparam(type, index);
 }
 
 void setlocalparamfv(const char *name, int type, int index, const float *v)
 {
-	setenvparamfv(name, type, index, v);
-	flushenvparam(type, index, true);
+    ShaderParamState &val = setparamfv(name, type, index, v);
+    val.local = true;
+    flushparam(type, index);
+}
+
+void invalidateenvparams(int type, int start, int count)
+{
+    ShaderParamState *paramstate = type==SHPARAM_VERTEX ? vertexparamstate : pixelparamstate;
+    int end = min(start + count, RESERVEDSHADERPARAMS + MAXSHADERPARAMS);
+    while(start < end)
+    {
+        paramstate[start].dirty = ShaderParamState::INVALID;
+        start++;
+    }
 }
 
 void Shader::flushenvparams(Slot *slot)
@@ -339,25 +395,24 @@ void Shader::flushenvparams(Slot *slot)
 			glUniform4fv_(ext.loc, 1, ext.curval);
 		}
 	}
-	else if(dirtyparams)
-	{
-		loopi(RESERVEDSHADERPARAMS)
-		{
-			ShaderParamState &val = vertexparamstate[i];
-			if(val.local || !val.dirty) continue;
-			glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, i, val.val);
-			val.dirty = false;
-			dirtyparams--;
-		}
-		loopi(RESERVEDSHADERPARAMS)
-		{
-			ShaderParamState &val = pixelparamstate[i];
-			if(val.local || !val.dirty) continue;
-			glProgramEnvParameter4fv_(GL_FRAGMENT_PROGRAM_ARB, i, val.val);
-			val.dirty = false;
-			dirtyparams--;
-		}
-	}
+    else if(dirtyenvparams)
+    {
+        loopi(RESERVEDSHADERPARAMS)
+        {
+            ShaderParamState &val = vertexparamstate[i];
+            if(val.local || val.dirty!=ShaderParamState::DIRTY) continue;
+            glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, i, val.val);
+            val.dirty = ShaderParamState::CLEAN;
+        }
+        loopi(RESERVEDSHADERPARAMS)
+        {
+            ShaderParamState &val = pixelparamstate[i];
+            if(val.local || val.dirty!=ShaderParamState::DIRTY) continue;
+            glProgramEnvParameter4fv_(GL_FRAGMENT_PROGRAM_ARB, i, val.val);
+            val.dirty = ShaderParamState::CLEAN;
+        }
+        dirtyenvparams = false;
+    }
 	used = true;
 }
 
@@ -381,37 +436,35 @@ void Shader::setslotparams(Slot &slot)
 			if(p.type==SHPARAM_VERTEX) vertmask |= 1<<p.index;
 			else pixmask |= 1<<p.index;
 			if(memcmp(val.val, p.val, sizeof(val.val))) memcpy(val.val, p.val, sizeof(val.val));
-			else if(!val.dirty) continue;
-			glProgramEnvParameter4fv_(p.type==SHPARAM_VERTEX ? GL_VERTEX_PROGRAM_ARB : GL_FRAGMENT_PROGRAM_ARB, RESERVEDSHADERPARAMS+p.index, val.val);
-			if(val.dirty) dirtyparams--;
-			val.local = true;
-			val.dirty = false;
-		}
-	}
-	loopv(defaultparams)
-	{
-		LocalShaderParamState &l = defaultparams[i];
-		if(type & SHADER_GLSLANG)
-		{
-			if(unimask&(1<<i)) continue;
-			if(!memcmp(l.curval, l.val, sizeof(l.curval))) continue;
-			memcpy(l.curval, l.val, sizeof(l.curval));
-			glUniform4fv_(l.loc, 1, l.curval);
-		}
-		else if(l.type!=SHPARAM_UNIFORM)
-		{
-			if(l.type==SHPARAM_VERTEX)
-			{
-				if(vertmask & (1<<l.index)) continue;
-			}
-			else if(pixmask & (1<<l.index)) continue;
-			ShaderParamState &val = (l.type==SHPARAM_VERTEX ? vertexparamstate[RESERVEDSHADERPARAMS+l.index] : pixelparamstate[RESERVEDSHADERPARAMS+l.index]);
-			if(memcmp(val.val, l.val, sizeof(val.val))) memcpy(val.val, l.val, sizeof(val.val));
-			else if(!val.dirty) continue;
-			glProgramEnvParameter4fv_(l.type==SHPARAM_VERTEX ? GL_VERTEX_PROGRAM_ARB : GL_FRAGMENT_PROGRAM_ARB, RESERVEDSHADERPARAMS+l.index, val.val);
-			if(val.dirty) dirtyparams--;
-			val.local = true;
-			val.dirty = false;
+            else if(val.dirty!=ShaderParamState::DIRTY) continue;
+            glProgramEnvParameter4fv_(p.type==SHPARAM_VERTEX ? GL_VERTEX_PROGRAM_ARB : GL_FRAGMENT_PROGRAM_ARB, RESERVEDSHADERPARAMS+p.index, val.val);
+            val.local = true;
+            val.dirty = ShaderParamState::CLEAN;
+        }
+    }
+    loopv(defaultparams)
+    {
+        LocalShaderParamState &l = defaultparams[i];
+        if(type & SHADER_GLSLANG)
+        {
+            if(unimask&(1<<i)) continue;
+            if(!memcmp(l.curval, l.val, sizeof(l.curval))) continue;
+            memcpy(l.curval, l.val, sizeof(l.curval));
+            glUniform4fv_(l.loc, 1, l.curval);
+        }
+        else if(l.type!=SHPARAM_UNIFORM)
+        {
+            if(l.type==SHPARAM_VERTEX)
+            {
+                if(vertmask & (1<<l.index)) continue;
+            }
+            else if(pixmask & (1<<l.index)) continue;
+            ShaderParamState &val = (l.type==SHPARAM_VERTEX ? vertexparamstate[RESERVEDSHADERPARAMS+l.index] : pixelparamstate[RESERVEDSHADERPARAMS+l.index]);
+            if(memcmp(val.val, l.val, sizeof(val.val))) memcpy(val.val, l.val, sizeof(val.val));
+            else if(val.dirty!=ShaderParamState::DIRTY) continue;
+            glProgramEnvParameter4fv_(l.type==SHPARAM_VERTEX ? GL_VERTEX_PROGRAM_ARB : GL_FRAGMENT_PROGRAM_ARB, RESERVEDSHADERPARAMS+l.index, val.val);
+            val.local = true;
+            val.dirty = ShaderParamState::CLEAN;
 		}
 	}
 }

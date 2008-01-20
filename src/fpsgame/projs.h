@@ -274,7 +274,7 @@ struct projectiles
 			}
 			else continue;
 
-			rendermodel(&proj.light, mname, ANIM_MAPMODEL|ANIM_LOOP, 0, 0, proj.o, yaw+90, pitch, 0, 0, 0, NULL, cull);
+			rendermodel(&proj.light, mname, ANIM_MAPMODEL|ANIM_LOOP, proj.o, yaw+90, pitch, 0, cull);
 		}
 	}
 

@@ -300,7 +300,7 @@ void save_config()
 	loopv(mapmodels)
 	{
 		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(mapmodels.length()), "saving mapmodel slots...");
-		fprintf(h, "mmodel \"%s\" %d\n", mapmodels[i].name, mapmodels[i].tex);
+		fprintf(h, "mmodel \"%s\"\n", mapmodels[i].name);
 	}
 	if (mapmodels.length()) fprintf(h, "\n");
 	if (verbose >= 2) conoutf("saved %d mapmodel slots", mapmodels.length());

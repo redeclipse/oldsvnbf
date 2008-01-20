@@ -37,7 +37,6 @@ struct BIH
     void build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, int depth = 1);
 
     bool traverse(const vec &o, const vec &ray, float maxdist, float &dist, int mode);
-    bool collide(const vec &o, const vec &radius, const vec &ray, float cutoff, vec &normal);
 };
 
 extern bool mmintersect(const extentity &e, const vec &o, const vec &ray, float maxdist, int mode, float &dist);

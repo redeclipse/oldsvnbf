@@ -304,7 +304,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 			// transform to tangent space
 			extern float orientation_tangent[3][4];
 			extern float orientation_binormal[3][4];
-			matrix m(vec((float *)&orientation_tangent[dimension(lmorient)]), vec((float *)&orientation_binormal[dimension(lmorient)]), normal);
+			matrix3x3 m(vec((float *)&orientation_tangent[dimension(lmorient)]), vec((float *)&orientation_binormal[dimension(lmorient)]), normal);
 			m.orthonormalize();
 			avgray.normalize();
 			m.transform(avgray);
