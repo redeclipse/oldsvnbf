@@ -378,7 +378,7 @@ void rendermapmodel(extentity &e)
 {
 	int anim = ANIM_MAPMODEL|ANIM_LOOP, basetime = 0;
 	mapmodelinfo &mmi = getmminfo(e.attr2);
-	if(&mmi) rendermodel(&e.light, mmi.name, anim, 0, mmi.tex, e.o, (float)((e.attr1+7)-(e.attr1+7)%15), 0, 0, 0, basetime, NULL, MDL_CULL_VFC | MDL_CULL_DIST);
+	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)((e.attr1+7)-(e.attr1+7)%15), 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_DYNLIGHT, NULL, NULL, basetime);
 }
 
 extern int reflectdist;
@@ -1415,6 +1415,8 @@ void setupTMUs(renderstate &cur, bool causticspass, bool fogpass)
 	}
     else
 	{
+        // need to invalidate vertex params in case they were used somewhere else for streaming params
+        invalidateenvparams(SHPARAM_VERTEX, 10, RESERVEDSHADERPARAMS + MAXSHADERPARAMS - 10);
 		glEnableClientState(GL_COLOR_ARRAY);
 		loopi(8-2) { glActiveTexture_(GL_TEXTURE2_ARB+i); glEnable(GL_TEXTURE_2D); }
 		glActiveTexture_(GL_TEXTURE0_ARB);

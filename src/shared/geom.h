@@ -8,8 +8,8 @@ struct vec
     };
 
     vec() {}
-    vec(int a) : x(a), y(a), z(a) {}
-    vec(float a) : x(a), y(a), z(a) {}
+    explicit vec(int a) : x(a), y(a), z(a) {} 
+    explicit vec(float a) : x(a), y(a), z(a) {} 
     vec(float a, float b, float c) : x(a), y(b), z(c) {}
     vec(int v[3]) : x(v[0]), y(v[1]), z(v[2]) {}
     vec(float *v) : x(v[0]), y(v[1]), z(v[2]) {}
@@ -18,7 +18,7 @@ struct vec
 
     float &operator[](int i)       { return v[i]; }
     float  operator[](int i) const { return v[i]; }
-
+    
     vec &set(int i, float f) { v[i] = f; return *this; }
 
     bool operator==(const vec &o) const { return x == o.x && y == o.y && z == o.z; }
@@ -27,11 +27,11 @@ struct vec
     bool iszero() const { return x==0 && y==0 && z==0; }
     float squaredlen() const { return x*x + y*y + z*z; }
     float dot(const vec &o) const { return x*o.x + y*o.y + z*o.z; }
-	vec &abs()               { x = fabs(x); y = fabs(y); z = fabs(z); return *this; }
-	vec &mul(const vec &o)   { x *= o.x; y *= o.y; z *= o.z; return *this; }
-	vec &mul(float f)        { x *= f; y *= f; z *= f; return *this; }
-	vec &div(const vec &o)   { x /= o.x; y /= o.y; z /= o.z; return *this; }
-	vec &div(float f)        { x /= f; y /= f; z /= f; return *this; }
+    vec &abs()               { x = fabs(x); y = fabs(y); z = fabs(z); return *this; }
+    vec &mul(const vec &o)   { x *= o.x; y *= o.y; z *= o.z; return *this; }
+    vec &mul(float f)        { x *= f; y *= f; z *= f; return *this; }
+    vec &div(const vec &o)   { x /= o.x; y /= o.y; z /= o.z; return *this; }
+    vec &div(float f)        { x /= f; y /= f; z /= f; return *this; }
     vec &add(const vec &o)   { x += o.x; y += o.y; z += o.z; return *this; }
     vec &add(float f)        { x += f; y += f; z += f; return *this; }
     vec &sub(const vec &o)   { x -= o.x; y -= o.y; z -= o.z; return *this; }
@@ -44,20 +44,21 @@ struct vec
     float dist(const vec &e, vec &t) const { t = *this; t.sub(e); return t.magnitude(); }
     bool reject(const vec &o, float max) { return x>o.x+max || x<o.x-max || y>o.y+max || y<o.y-max; }
     vec &cross(const vec &a, const vec &b) { x = a.y*b.z-a.z*b.y; y = a.z*b.x-a.x*b.z; z = a.x*b.y-a.y*b.x; return *this; }
-	vec &apply(const vec &o, float elasticity = 1.0f)
-	{
-		x = ((o.x > 0.f && x < 0.f) || (o.x < 0.f && x > 0.f) ? fabs(x) * o.x : x) * elasticity;
-		y = ((o.y > 0.f && y < 0.f) || (o.y < 0.f && y > 0.f) ? fabs(y) * o.y : y) * elasticity;
-		z = ((o.z > 0.f && z < 0.f) || (o.z < 0.f && z > 0.f) ? fabs(z) * o.z : z) * elasticity;
-		return *this;
-	}
-	vec &influence(const vec &o, const vec &p, float elasticity = 1.0f)
-	{
-		if ((o.x >= 0.f && p.x > 0.f) || (o.x <= 0.f && p.x < 0.f)) x += p.x * elasticity;
-		if ((o.y >= 0.f && p.y > 0.f) || (o.y <= 0.f && p.y < 0.f)) y += p.y * elasticity;
-		if ((o.z >= 0.f && p.z > 0.f) || (o.z <= 0.f && p.z < 0.f)) z += p.z * elasticity;
-		return *this;
-	}
+    void lerp(const vec &a, const vec &b, float t) { x = a.x*(1-t)+b.x*t; y = a.y*(1-t)+b.y*t; z = a.z*(1-t)+b.z*t; }
+    vec &apply(const vec &o, float elasticity = 1.0f)
+    {
+        x = ((o.x > 0.f && x < 0.f) || (o.x < 0.f && x > 0.f) ? fabs(x) * o.x : x) * elasticity;
+        y = ((o.y > 0.f && y < 0.f) || (o.y < 0.f && y > 0.f) ? fabs(y) * o.y : y) * elasticity;
+        z = ((o.z > 0.f && z < 0.f) || (o.z < 0.f && z > 0.f) ? fabs(z) * o.z : z) * elasticity;
+        return *this;
+    }
+    vec &influence(const vec &o, const vec &p, float elasticity = 1.0f)
+    {
+        if ((o.x >= 0.f && p.x > 0.f) || (o.x <= 0.f && p.x < 0.f)) x += p.x * elasticity;
+        if ((o.y >= 0.f && p.y > 0.f) || (o.y <= 0.f && p.y < 0.f)) y += p.y * elasticity;
+        if ((o.z >= 0.f && p.z > 0.f) || (o.z <= 0.f && p.z < 0.f)) z += p.z * elasticity;
+        return *this;
+    }
 
     void rotate_around_z(float angle) { *this = vec(cosf(angle)*x-sinf(angle)*y, cosf(angle)*y+sinf(angle)*x, z); }
     void rotate_around_x(float angle) { *this = vec(x, cosf(angle)*y-sinf(angle)*z, cosf(angle)*z+sinf(angle)*y); }
@@ -78,7 +79,7 @@ struct vec
 
     void orthogonal(const vec &d)
     {
-        int i = fabs(d.x) > fabs(d.y) ? (fabs(d.x) > fabs(d.z) ? 0 : 2) : (fabs(d.y) > fabs(d.z) ? 1 : 2);
+        int i = fabs(d.x) > fabs(d.y) ? (fabs(d.x) > fabs(d.z) ? 0 : 2) : (fabs(d.y) > fabs(d.z) ? 1 : 2); 
         v[i] = d[(i+1)%3];
         v[(i+1)%3] = -d[i];
         v[(i+2)%3] = 0;
@@ -104,16 +105,311 @@ struct vec
 struct vec4 : vec
 {
     float w;
-    vec4() : w(0) {}
-    vec4(vec &_v, float _w = 0) : w(_w) { *(vec *)this = _v; }
+
+    vec4() {}
+    vec4(const vec &p, float w = 0) : vec(p), w(w) {}
+    vec4(float x, float y, float z, float w) : vec(x, y, z), w(w) {}
+
+    float dot(const vec4 &o) const { return vec::dot(o)+w*o.w; }
+    float dot(const vec &o) const  { return vec::dot(o)+w; }
+    float squaredlen() const { return dot(*this); }
+    float magnitude() const  { return sqrtf(squaredlen()); }
+    vec4 &normalize() { mul(1/magnitude()); return *this; }
+
+    void lerp(const vec4 &a, const vec4 &b, float t) { vec::lerp(a, b, t); w = a.w*(1-t)+b.w*t; }
+
+    vec4 &mul(float f)       { vec::mul(f); w *= f;   return *this; }
+    vec4 &add(const vec4 &o) { vec::add(o); w += o.w; return *this; }
+    vec4 &neg()              { vec::neg();  w = -w;   return *this; }
+
 };
 
-struct matrix
+struct quat : vec4
+{
+    quat() {}
+    quat(float x, float y, float z, float w) : vec4(x, y, z, w) {}
+    quat(const vec &axis, float angle)
+    {
+        w = cosf(angle/2);
+        float s = sinf(angle/2);
+        x = s*axis.x;
+        y = s*axis.y;
+        z = s*axis.z;
+    }
+ 
+    void restorew() { w = 1.0f-x*x-y*y-z*z; w = w<0 ? 0 : -sqrtf(w); }
+
+    void add(const vec4 &o) { vec4::add(o); }
+    void mul(float k) { vec4::mul(k); }
+
+    void mul(const quat &p, const quat &o)
+    {
+        x = p.w*o.x + p.x*o.w + p.y*o.z - p.z*o.y;
+        y = p.w*o.y - p.x*o.z + p.y*o.w + p.z*o.x;
+        z = p.w*o.z + p.x*o.y - p.y*o.x + p.z*o.w;
+        w = p.w*o.w - p.x*o.x - p.y*o.y - p.z*o.z;
+    }
+    void mul(const quat &o) { mul(quat(*this), o); }
+
+    void mul(const quat &p, const vec &o)
+    {
+        x =  p.w*o.x + p.y*o.z - p.z*o.y;
+        y =  p.w*o.y - p.x*o.z + p.z*o.x;
+        z =  p.w*o.z + p.x*o.y - p.y*o.x;
+        w = -p.x*o.x - p.y*o.y - p.z*o.z;
+    }
+    void mul(const vec &o) { mul(quat(*this), o); }
+
+    quat &invert() { vec::neg(); return *this; }
+
+    void slerp(const quat &from, const quat &to, float t)
+    {
+        float cosomega = from.dot(to), fromk, tok = 1;
+        if(cosomega<0) { cosomega = -cosomega; tok = -1; }
+
+        if(cosomega > 1 - 1e-6) { fromk = 1-t; tok *= t; }
+        else
+        {
+            float omega = acosf(cosomega), recipsinomega = 1/sinf(omega);
+            fromk = sinf((1-t)*omega)*recipsinomega;
+            tok *= sinf(t*omega)*recipsinomega;
+        }
+
+        loopi(4) v[i] = from[i]*fromk + to[i]*tok;
+    }
+
+    vec rotate(const vec &v) const
+    {
+        vec t1, t2;
+        t1.cross(*this, v);
+        t2.cross(*this, t1);
+        t1.mul(w).add(t2).mul(2).add(v);
+        return t1;
+#if 0
+        quat inv(*this);
+        inv.invert();
+        inv.normalize();
+        quat tmp;
+        tmp.mul(*this, v);
+        tmp.mul(inv);
+        return vec(tmp.x, tmp.y, tmp.z);
+#endif
+    }
+};
+
+struct dualquat
+{
+    quat real, dual;
+
+    dualquat() {}
+    dualquat(const quat &q, const vec &p) : real(q)
+    {
+        dual.x =  0.5f*( p.x*q.w + p.y*q.z - p.z*q.y);
+        dual.y =  0.5f*(-p.x*q.z + p.y*q.w + p.z*q.x);
+        dual.z =  0.5f*( p.x*q.y - p.y*q.x + p.z*q.w);
+        dual.w = -0.5f*( p.x*q.x + p.y*q.y + p.z*q.z);
+    }
+    explicit dualquat(const quat &q) : real(q), dual(0, 0, 0, 0) {}
+    
+    dualquat &mul(float k) { real.mul(k); dual.mul(k); return *this; }
+    dualquat &add(const dualquat &d) { real.add(d.real); dual.add(d.dual); return *this; }
+
+    void lerp(const dualquat &from, const dualquat &to, float t)
+    {
+        float a = 1-t, b = from.real.dot(to.real)<0 ? -t : t;
+        loopi(4)
+        {
+            real[i] = from.real[i]*a + to.real[i]*b;
+            dual[i] = from.dual[i]*a + to.dual[i]*b;
+        }
+    }
+
+    dualquat &invert()
+    {
+        float rr = real.squaredlen();
+        if(rr > 0)
+        {
+            float invrr = 1/rr,
+                  invrd = -2*real.dot(dual)*invrr*invrr;
+
+            dual.vec::mul(-invrr);
+            dual.w *= invrr;
+            quat tmp(real);
+            tmp.vec::mul(-invrd);
+            tmp.w *= invrd;
+            dual.add(tmp);
+
+            real.vec::mul(-invrr);
+            real.w *= invrr;
+        }
+        else { real = dual = quat(0, 0, 0, 0); }
+        return *this;
+    }
+    
+    void mul(const dualquat &p, const dualquat &o)
+    {
+        real.mul(p.real, o.real);
+        dual.mul(p.real, o.dual);
+        quat tmp;
+        tmp.mul(p.dual, o.real);
+        dual.add(tmp);
+    }       
+    void mul(const dualquat &o) { mul(dualquat(*this), o); }    
+    
+    void normalize()
+    {
+        float invlen = 1/real.magnitude();
+        real.mul(invlen);
+        dual.mul(invlen);
+    }
+
+    void translate(const vec &p)
+    {
+        dual.x +=  0.5f*( p.x*real.w + p.y*real.z - p.z*real.y);
+        dual.y +=  0.5f*(-p.x*real.z + p.y*real.w + p.z*real.x);
+        dual.z +=  0.5f*( p.x*real.y - p.y*real.x + p.z*real.w);
+        dual.w += -0.5f*( p.x*real.x + p.y*real.y + p.z*real.z);
+    }
+
+    void scale(float k)
+    {
+        dual.mul(k);
+    }
+
+    void accumulate(const dualquat &d, float k)
+    {
+        if(real.dot(d.real) < 0) k = -k;
+        real.add(vec4(d.real).mul(k));
+        dual.add(vec4(d.dual).mul(k));
+    }
+
+    vec transform(const vec &v) const
+    {
+        vec t1, t2;
+        t1.cross(real, v);
+        t1.add(vec(v).mul(real.w));
+        t2.cross(real, t1);
+
+        vec t3;
+        t3.cross(real, dual);
+        t3.add(vec(dual).mul(real.w));
+        t3.sub(vec(real).mul(dual.w));
+
+        t2.add(t3).mul(2).add(v);
+
+        return t2;
+    }
+};
+
+struct matrix3x4
+{
+    vec4 X, Y, Z;
+    
+    matrix3x4() {}
+    matrix3x4(const vec4 &x, const vec4 &y, const vec4 &z) : X(x), Y(y), Z(z) {}
+    matrix3x4(const dualquat &d)
+    {
+        float x = d.real.x, y = d.real.y, z = d.real.z, w = d.real.w, 
+              ww = w*w, xx = x*x, yy = y*y, zz = z*z,
+              xy = x*y, xz = x*z, yz = y*z,
+              wx = w*x, wy = w*y, wz = w*z;
+        X = vec4(ww + xx - yy - zz, 2*(xy - wz), 2*(xz + wy),
+            -2*(d.dual.w*x - d.dual.x*w + d.dual.y*z - d.dual.z*y));
+        Y = vec4(2*(xy + wz), ww + yy - xx - zz, 2*(yz - wx),
+            -2*(d.dual.w*y - d.dual.x*z - d.dual.y*w + d.dual.z*x));
+        Z = vec4(2*(xz - wy), 2*(yz + wx), ww + zz - xx - yy,
+            -2*(d.dual.w*z + d.dual.x*y - d.dual.y*x - d.dual.z*w));
+
+        float invrr = 1/d.real.dot(d.real);
+        X.mul(invrr);
+        Y.mul(invrr);
+        Z.mul(invrr);
+    }
+
+    void scale(float k)
+    {
+        X.mul(k);
+        Y.mul(k);
+        Z.mul(k);
+    }
+
+    void translate(const vec &p)
+    {
+        X.w += p.x;
+        Y.w += p.y;
+        Z.w += p.z;
+    }
+
+    void accumulate(const matrix3x4 &m, float k)
+    {
+        X.add(vec4(m.X).mul(k));
+        Y.add(vec4(m.Y).mul(k));
+        Z.add(vec4(m.Z).mul(k));
+    }
+
+    void lerp(const matrix3x4 &from, const matrix3x4 &to, float t)
+    {
+        loopi(4)
+        {
+            X[i] += to.X[i]*t + from.X[i]*(1-t);
+            Y[i] += to.Y[i]*t + from.Y[i]*(1-t);
+            Z[i] += to.Z[i]*t + from.Z[i]*(1-t);
+        }
+    }
+
+    void identity()
+    {
+        X = vec4(1, 0, 0, 0);
+        Y = vec4(0, 1, 0, 0);
+        Z = vec4(0, 0, 1, 0);
+    }
+
+    void mul(const matrix3x4 &m, const matrix3x4 &n)
+    {
+        X = vec4(vec(n.X.x, n.Y.x, n.Z.x).dot(m.X),
+                 vec(n.X.y, n.Y.y, n.Z.y).dot(m.X),  
+                 vec(n.X.z, n.Y.z, n.Z.z).dot(m.X),
+                 m.X.dot(vec(n.X.w, n.Y.w, n.Z.w)));
+        Y = vec4(vec(n.X.x, n.Y.x, n.Z.x).dot(m.Y),
+                 vec(n.X.y, n.Y.y, n.Z.y).dot(m.Y),
+                 vec(n.X.z, n.Y.z, n.Z.z).dot(m.Y),
+                 m.Y.dot(vec(n.X.w, n.Y.w, n.Z.w)));
+        Z = vec4(vec(n.X.x, n.Y.x, n.Z.x).dot(m.Z),
+                 vec(n.X.y, n.Y.y, n.Z.y).dot(m.Z),
+                 vec(n.X.z, n.Y.z, n.Z.z).dot(m.Z),
+                 m.Z.dot(vec(n.X.w, n.Y.w, n.Z.w)));
+    }
+    void mul(const matrix3x4 &n) { mul(matrix3x4(*this), n); }
+
+    void rotate(float angle, const vec &d)
+    {
+        float c = cosf(angle), s = sinf(angle);
+        rotate(c, s, d);
+    }
+
+    void rotate(float c, float s, const vec &d)
+    {
+        X = vec4(d.x*d.x*(1-c)+c, d.x*d.y*(1-c)-d.z*s, d.x*d.z*(1-c)+d.y*s, 0);
+        Y = vec4(d.y*d.x*(1-c)+d.z*s, d.y*d.y*(1-c)+c, d.y*d.z*(1-c)-d.x*s, 0);
+        Z = vec4(d.x*d.z*(1-c)-d.y*s, d.y*d.z*(1-c)+d.x*s, d.z*d.z*(1-c)+c, 0);
+    }
+
+    vec transform(const vec &o) const { return vec(X.dot(o), Y.dot(o), Z.dot(o)); }
+    vec transformnormal(const vec &o) const { return vec(X.vec::dot(o), Y.vec::dot(o), Z.vec::dot(o)); }
+    vec transposedtransformnormal(const vec &o) const
+    {
+        return vec(X.x*o.x + Y.x*o.y + Z.x*o.z,
+                   X.y*o.x + Y.y*o.y + Z.y*o.z,
+                   X.z*o.x + Y.z*o.y + Z.z*o.z);
+    }
+};
+
+struct matrix3x3
 {
     vec X, Y, Z;
 
-    matrix() {}
-    matrix(const vec &x, const vec &y, const vec &z) : X(x), Y(y), Z(z) {}
+    matrix3x3() {}
+    matrix3x3(const vec &x, const vec &y, const vec &z) : X(x), Y(y), Z(z) {}
 
     void transform(vec &o) { o = vec(o.dot(X), o.dot(Y), o.dot(Z)); }
 
@@ -142,7 +438,7 @@ struct matrix
         d = vec(X.x*d.x + Y.x*d.y + Z.x*d.z,
                 X.y*d.x + Y.y*d.y + Z.y*d.z,
                 X.z*d.x + Y.z*d.y + Z.z*d.z);
-    }
+    } 
 };
 
 struct plane : vec
@@ -154,7 +450,7 @@ struct plane : vec
     bool operator!=(const plane &p) const { return x!=p.x || y!=p.y || z!=p.z || offset!=p.offset; }
 
     plane() {}
-    plane(vec &c, float off) : vec(c), offset(off) {}
+    plane(vec &c, float off) : vec(c), offset(off) {} 
     plane(int d, float off)
     {
         x = y = z = 0.0f;
@@ -223,8 +519,8 @@ ie: d=z => x=x, y=y, z=z
 **/
 
 // DIM: X=0 Y=1 Z=2.
-const int R[3] = {1, 2, 0}; // row
-const int C[3] = {2, 0, 1}; // col
+const int R[3]  = {1, 2, 0}; // row
+const int C[3]  = {2, 0, 1}; // col
 const int D[3]  = {0, 1, 2}; // depth
 
 struct ivec
@@ -281,12 +577,12 @@ struct ivec
 static inline bool htcmp(const ivec &x, const ivec &y)
 {
     return x == y;
-}
+}  
 
 static inline uint hthash(const ivec &k)
 {
     return k.x^k.y^k.z;
-}
+}  
 
 struct svec
 {

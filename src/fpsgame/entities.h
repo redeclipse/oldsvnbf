@@ -609,7 +609,7 @@ struct entities : icliententities
 				if (mdlname)
 				{
 					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP,
-						0, 0, e.o, 0.f, 0.f, 0.f, 0.f, 0, NULL,
+						e.o, 0.f, 0.f, 0.f,
 						MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED);
 				}
 			}

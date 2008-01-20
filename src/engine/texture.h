@@ -6,6 +6,19 @@ extern PFNGLPROGRAMSTRINGARBPROC		  glProgramString_;
 extern PFNGLGETPROGRAMIVARBPROC           glGetProgramiv_;
 extern PFNGLPROGRAMENVPARAMETER4FARBPROC  glProgramEnvParameter4f_;
 extern PFNGLPROGRAMENVPARAMETER4FVARBPROC glProgramEnvParameter4fv_;
+extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArray_;
+extern PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArray_;
+extern PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointer_;
+
+// GL_EXT_gpu_program_parameters
+#ifndef GL_EXT_gpu_program_parameters
+#define GL_EXT_gpu_program_parameters 1
+typedef void (APIENTRYP PFNGLPROGRAMENVPARAMETERS4FVEXTPROC) (GLenum target, GLuint index, GLsizei count, const GLfloat *params);
+typedef void (APIENTRYP PFNGLPROGRAMLOCALPARAMETERS4FVEXTPROC) (GLenum target, GLuint index, GLsizei count, const GLfloat *params);
+#endif
+
+extern PFNGLPROGRAMENVPARAMETERS4FVEXTPROC   glProgramEnvParameters4fv_;
+extern PFNGLPROGRAMLOCALPARAMETERS4FVEXTPROC glProgramLocalParameters4fv_;
 
 // GL_ARB_shading_language_100, GL_ARB_shader_objects, GL_ARB_fragment_shader, GL_ARB_vertex_shader
 extern PFNGLCREATEPROGRAMOBJECTARBPROC  glCreateProgramObject_;
@@ -54,15 +67,23 @@ struct LocalShaderParamState : ShaderParam
 
 struct ShaderParamState
 {
-    const char *name;
-	float val[4];
-	bool dirty, local;
+    enum
+    {
+        CLEAN = 0,
+        INVALID,
+        DIRTY
+    };
 
-	ShaderParamState()
-		: name(NULL), dirty(false), local(false)
-	{
-		memset(val, 0, sizeof(val));
-	}
+    const char *name;
+    float val[4];
+    bool local;
+    int dirty;
+
+    ShaderParamState()
+        : name(NULL), local(false), dirty(INVALID)
+    {
+        memset(val, 0, sizeof(val));
+    }
 };
 
 enum
@@ -205,26 +226,24 @@ struct cubemapside
 };
 
 extern cubemapside cubemapsides[6];
-
 extern Texture *notexture;
-
 extern Shader *defaultshader, *notextureshader, *nocolorshader, *foggedshader, *foggednotextureshader;
+extern int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams;
 
 extern Shader *lookupshaderbyname(const char *name);
-
 extern Texture *loadthumbnail(Slot &slot);
-
 extern void setslotshader(Slot &s);
-
 extern void setenvparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
 extern void setenvparamfv(const char *name, int type, int index, const float *v);
-extern void flushenvparam(int type, int index, bool local = false);
+extern void flushenvparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
+extern void flushenvparamfv(const char *name, int type, int index, const float *v);
 extern void setlocalparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
 extern void setlocalparamfv(const char *name, int type, int index, const float *v);
-
+extern void invalidateenvparams(int type, int start, int count);
 extern ShaderParam *findshaderparam(Slot &s, const char *name, int type, int index);
 
 extern int maxtmus, nolights, nowater, nomasks;
+
 extern void inittmus();
 extern void resettmu(int n);
 extern void scaletmu(int n, int rgbscale, int alphascale = 0);

@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "engine.h"
 
-bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3, hasstencil = false, hasAF = false;
+bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false;
 int renderpath;
 
 // GL_ARB_vertex_buffer_object
@@ -20,6 +20,7 @@ PFNGLACTIVETEXTUREARBPROC		glActiveTexture_		= NULL;
 PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTexture_ = NULL;
 PFNGLMULTITEXCOORD2FARBPROC	 glMultiTexCoord2f_	 = NULL;
 PFNGLMULTITEXCOORD3FARBPROC	 glMultiTexCoord3f_	 = NULL;
+PFNGLMULTITEXCOORD4FARBPROC  glMultiTexCoord4f_     = NULL;
 
 // GL_ARB_vertex_program, GL_ARB_fragment_program
 PFNGLGENPROGRAMSARBPROC			glGenPrograms_			= NULL;
@@ -30,6 +31,14 @@ PFNGLGETPROGRAMIVARBPROC           glGetProgramiv_           = NULL;
 
 PFNGLPROGRAMENVPARAMETER4FARBPROC  glProgramEnvParameter4f_  = NULL;
 PFNGLPROGRAMENVPARAMETER4FVARBPROC glProgramEnvParameter4fv_ = NULL;
+
+PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArray_  = NULL;
+PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArray_ = NULL;
+PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointer_      = NULL;
+
+// GL_EXT_gpu_program_parameters
+PFNGLPROGRAMENVPARAMETERS4FVEXTPROC   glProgramEnvParameters4fv_   = NULL;
+PFNGLPROGRAMLOCALPARAMETERS4FVEXTPROC glProgramLocalParameters4fv_ = NULL;
 
 // GL_ARB_occlusion_query
 PFNGLGENQUERIESARBPROC		glGenQueries_		= NULL;
@@ -90,6 +99,8 @@ VARP(intel_quadric_bug, 0, 0, 1);
 VARP(mesa_dre_bug, 0, 0, 1);
 VAR(minimizetcusage, 1, 0, 0);
 VAR(emulatefog, 1, 0, 0);
+VAR(usevp2, 1, 0, 0);
+VAR(usevp3, 1, 0, 0);
 
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
@@ -252,6 +263,9 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         glGetProgramiv_ =           (PFNGLGETPROGRAMIVARBPROC)          getprocaddress("glGetProgramivARB");
 		glProgramEnvParameter4f_ =  (PFNGLPROGRAMENVPARAMETER4FARBPROC) getprocaddress("glProgramEnvParameter4fARB");
 		glProgramEnvParameter4fv_ = (PFNGLPROGRAMENVPARAMETER4FVARBPROC)getprocaddress("glProgramEnvParameter4fvARB");
+        glEnableVertexAttribArray_ =  (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)  getprocaddress("glEnableVertexAttribArrayARB");
+        glDisableVertexAttribArray_ = (PFNGLDISABLEVERTEXATTRIBARRAYARBPROC) getprocaddress("glDisableVertexAttribArrayARB");
+        glVertexAttribPointer_ =      (PFNGLVERTEXATTRIBPOINTERARBPROC)      getprocaddress("glVertexAttribPointerARB");
 		renderpath = R_ASMSHADER;
 
 		if(strstr(exts, "GL_ARB_shading_language_100") && strstr(exts, "GL_ARB_shader_objects") && strstr(exts, "GL_ARB_vertex_shader") && strstr(exts, "GL_ARB_fragment_shader"))
@@ -283,16 +297,24 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 			}
 		}
 		if(renderpath==R_ASMSHADER) conoutf("Rendering using the OpenGL 1.5 assembly shader path.");
-	}
 
-	if(renderpath!=R_FIXEDFUNCTION)
-	{
-		if(strstr(exts, "GL_ARB_texture_rectangle"))
-		{
-			hasTR = true;
-			//conoutf("Using GL_ARB_texture_rectangle extension.");
-		}
-		else conoutf("WARNING: No texture rectangle support. (no full screen shaders)");
+        if(strstr(exts, "GL_NV_vertex_program2_option")) { usevp2 = 1; hasVP2 = true; }
+        if(strstr(exts, "GL_NV_vertex_program3")) { usevp3 = 1; hasVP3 = true; }
+
+        if(strstr(exts, "GL_EXT_gpu_program_parameters"))
+        {
+            glProgramEnvParameters4fv_   = (PFNGLPROGRAMENVPARAMETERS4FVEXTPROC)  getprocaddress("glProgramEnvParameters4fvEXT");
+            glProgramLocalParameters4fv_ = (PFNGLPROGRAMLOCALPARAMETERS4FVEXTPROC)getprocaddress("glProgramLocalParameters4fvEXT");
+            hasPP = true;
+        }
+
+        if(strstr(exts, "GL_ARB_texture_rectangle"))
+        {
+            hasTR = true;
+            //conoutf("Using GL_ARB_texture_rectangle extension.");
+        }
+        else conoutf("WARNING: No texture rectangle support. (no full screen shaders)");
+
 	}
 
 	if(strstr(exts, "GL_EXT_framebuffer_object"))
@@ -463,30 +485,38 @@ void setfogplane(const plane &p, bool flush)
 	static float fogselect[4] = {0, 0, 0, 0};
 	setenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
 	setenvparamfv("fogplane", SHPARAM_VERTEX, 9, p.v);
-	if(flush)
-	{
-		flushenvparam(SHPARAM_VERTEX, 8);
-		flushenvparam(SHPARAM_VERTEX, 9);
-	}
+    if(flush)
+    {
+        flushenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
+        flushenvparamfv("fogplane", SHPARAM_VERTEX, 9, p.v);
+    }
+    else
+    {
+        setenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
+        setenvparamfv("fogplane", SHPARAM_VERTEX, 9, p.v);
+    }
 }
 
 void setfogplane(float scale, float z, bool flush)
 {
-	float fogselect[4] = {1, 1, 1, 1}, fogplane[4] = {0, 0, 0, 0};
-	if(scale || z)
-	{
-		loopk(4) fogselect[k] = 0;
+    float fogselect[4] = {1, 1, 1, 1}, fogplane[4] = {0, 0, 0, 0};
+    if(scale || z)
+    {
+        loopk(4) fogselect[k] = 0;
 
-		fogplane[2] = scale;
-		fogplane[3] = -z;
-	}
-	setenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
-	setenvparamfv("fogplane", SHPARAM_VERTEX, 9, fogplane);
-	if(flush)
-	{
-		flushenvparam(SHPARAM_VERTEX, 8);
-		flushenvparam(SHPARAM_VERTEX, 9);
-	}
+        fogplane[2] = scale;
+        fogplane[3] = -z;
+    }
+    if(flush)
+    {
+        flushenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
+        flushenvparamfv("fogplane", SHPARAM_VERTEX, 9, fogplane);
+    }
+    else
+    {
+        setenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
+        setenvparamfv("fogplane", SHPARAM_VERTEX, 9, fogplane);
+    }
 }
 
 void drawreflection(float z, bool refract, bool clear)
