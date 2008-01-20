@@ -606,7 +606,7 @@ struct GAMECLIENT : igameclient
 					if (secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
 					else if (secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
 
-					char *title = maptitle();
+					const char *title = maptitle();
 					if (!*title) title = "Untitled by Unknown";
 
 					glColor4f(1.f, 1.f, 1.f, amt);
