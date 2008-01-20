@@ -627,7 +627,7 @@ void makeundo()						// stores state of selected cubes before editing
 {
 	if(lastsel==sel || sel.s==vec(0)) return;
 	lastsel=sel;
-    if(otherclients(false)) return;
+    if(multiplayer(false)) return;
 	undoblock u;
 	initundocube(u, sel);
 	addundo(u);
@@ -635,7 +635,7 @@ void makeundo()						// stores state of selected cubes before editing
 
 void swapundo(vector<undoblock> &a, vector<undoblock> &b, const char *s)
 {
-	if(noedit() || otherclients()) return;
+	if(noedit() || multiplayer()) return;
 	if(a.empty()) { conoutf("nothing more to %s", s); return; }
 	int ts = a.last().ts;
 	while(!a.empty() && ts==a.last().ts)
@@ -1076,7 +1076,7 @@ namespace hmap
 }
 
 void edithmap(int dir, int mode) {
-    if(otherclients() || !hmapsel || gridsize < 8) return;    
+    if(multiplayer() || !hmapsel || gridsize < 8) return;    
     hmap::run(dir, mode);
 }
 
