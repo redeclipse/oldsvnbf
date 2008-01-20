@@ -69,9 +69,9 @@ struct md5 : skelmodel
             {
                 md5vert &v = vertinfo[i];
                 vec pos(0, 0, 0);
-                loopj(v.count)
+                loopk(v.count)
                 {
-                    md5weight &w = weightinfo[v.start+j];
+                    md5weight &w = weightinfo[v.start+k];
                     md5joint &j = joints[w.joint];
                     pos.add(j.orient.rotate(w.pos).add(j.pos).mul(w.bias));
                 }
