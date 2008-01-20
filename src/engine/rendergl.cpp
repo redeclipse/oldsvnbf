@@ -241,6 +241,10 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
         if(!hasOQ) waterreflect = waterrefract = 0;
 	}
+    else if(strstr(vendor, "NVIDIA"))
+    {
+        reservevpparams = 10;
+    }
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
 	extern int useshaders;
