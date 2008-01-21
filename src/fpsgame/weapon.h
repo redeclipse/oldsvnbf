@@ -124,7 +124,7 @@ struct weaponstate
 	{
 		vec dir;
 		float dist = middist(cl.player1, dir, o);
-		cl.camerawobble += int(float(guntype[gun].damage)/(dist/RL_DAMRAD/RL_DISTSCALE));
+		cl.camerawobble += int(guntype[gun].damage*(1-dist/RL_DISTSCALE/RL_DAMRAD));
 
 		if (guntype[gun].esound >= 0) playsound(guntype[gun].esound, &o, true);
 

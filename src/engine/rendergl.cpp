@@ -1117,18 +1117,17 @@ void gl_drawhud(int w, int h, int fogmat)
 	glLoadIdentity();
 	glOrtho(0, w*3, h*3, 0, -1, 1);
 
-	int abovegameplayhud = h*3*1650/1800-FONTH*3/2; // hack
-	int hoff = abovegameplayhud - (editmode ? FONTH*4 : 0);
+	int hoff = h*3-h*3/4-FONTH;
 
 	char *command = getcurcommand();
-	if(command) rendercommand(FONTH/2, hoff); else hoff += FONTH;
+	if (command) rendercommand(FONTH/2, hoff);
+	hoff += FONTH;
 
 	drawcrosshair(w, h);
 
 	if(!hidehud)
 	{
-        /*int coff = */ renderconsole(w, h);
-		// can render stuff below console output here
+        renderconsole(w, h);
 
 		if(!hidestats)
 		{
@@ -1140,9 +1139,9 @@ void gl_drawhud(int w, int h, int fogmat)
 
 			if(editmode)
 			{
-				draw_textf("cube %s%d", FONTH/2, abovegameplayhud-FONTH*3, selchildcount<0 ? "1/" : "", abs(selchildcount));
-				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/2, abovegameplayhud-FONTH*2, wtris/1024, vtris*100/max(wtris, 1), wverts/1024, vverts*100/max(wverts, 1), xtraverts/1024, xtravertsva/1024);
-				draw_textf("ond:%d va:%d gl:%d oq:%d lm:%d, rp:%d", FONTH/2, abovegameplayhud-FONTH, allocnodes*8, allocva, glde, getnumqueries(), lightmaps.length(), rplanes);
+				draw_textf("ond:%d va:%d gl:%d oq:%d lm:%d, rp:%d", FONTH/2, hoff, allocnodes*8, allocva, glde, getnumqueries(), lightmaps.length(), rplanes); hoff += FONTH;
+				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/2, hoff, wtris/1024, vtris*100/max(wtris, 1), wverts/1024, vverts*100/max(wverts, 1), xtraverts/1024, xtravertsva/1024); hoff += FONTH;
+				draw_textf("cube %s%d", FONTH/2, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
 			}
 		}
 
@@ -1151,7 +1150,7 @@ void gl_drawhud(int w, int h, int fogmat)
 			char *editinfo = executeret("edithud");
 			if(editinfo)
 			{
-				draw_text(editinfo, FONTH/2, abovegameplayhud);
+				draw_text(editinfo, FONTH/2, hoff); hoff += FONTH;
 				DELETEA(editinfo);
 			}
 		}

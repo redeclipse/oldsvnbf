@@ -160,7 +160,9 @@ struct GAMECLIENT : igameclient
 
 	void setmode(int mode, int muts)
 	{
-		if(multiplayer(false) && !m_mp(mode)) { conoutf("mode %d not supported in multiplayer", mode); return; }
+		if (!m_game(mode)) { conoutf("mode %d is not a valid gameplay type", mode); return; }
+		if (m_sp(mode)) { conoutf("playing %s is not yet supported", gametype[mode]); return; }
+		if (multiplayer(false) && !m_mp(mode)) { conoutf("playing %s is not supported in multiplayer", gametype[mode]); return; }
 		nextmode = mode;
 		nextmuts = muts;
 	}
@@ -717,10 +719,10 @@ struct GAMECLIENT : igameclient
 							if (wait)
 							{
 								float c = float(wait)/1000.f;
-								draw_textx("Fragged! Down for %.1fs", oy/4+FONTH, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
+								draw_textx("Fragged! Down for %.1fs", oy/4, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
 							}
 							else
-								draw_textx("Fragged! Press attack to respawn", oy/4+FONTH, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+								draw_textx("Fragged! Press attack to respawn", oy/4, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 						}
 					}
 
@@ -1014,7 +1016,7 @@ struct GAMECLIENT : igameclient
 		if (camerawobble > 0)
 		{
 			float pc = float(min(camerawobble, 100))/100.f;
-			#define wobble (float(rnd(10)-5)*pc)
+			#define wobble (float(rnd(8)-4)*pc)
 			camera1->yaw += wobble;
 			camera1->pitch += wobble;
 			camera1->roll += wobble;

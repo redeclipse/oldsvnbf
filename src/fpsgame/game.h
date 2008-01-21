@@ -37,13 +37,13 @@ static struct enttypes
 	{ PARTICLES,	0,				0.f,	0.f,			"particles" },
 	{ MAPSOUND,		0,				0.f,	0.f,			"sound" },
 	{ SPOTLIGHT,	0,				0.f,	0.f,			"spotlight" },
-	{ WEAPON,		0,				12.f,	12.f,			"weapon" },
+	{ WEAPON,		0,				16.f,	16.f,			"weapon" },
 	{ TELEPORT,		50,				12.f,	12.f,			"teleport" },
 	{ MONSTER,		0,				0.f,	0.f,			"monster" },
-	{ TRIGGER,		0,				12.f,	12.f,			"trigger" },
+	{ TRIGGER,		0,				16.f,	16.f,			"trigger" },
 	{ JUMPPAD,		0,				12.f,	12.f,			"jumppad" },
 	{ BASE,			48,				64.f,	24.f,			"base" },
-	{ CHECKPOINT,	48,				12.f,	12.f,			"checkpoint" },
+	{ CHECKPOINT,	48,				16.f,	16.f,			"checkpoint" },
 	{ CAMERA,		48,				0.f,	0.f,			"camera" },
 	{ WAYPOINT,		1,				4.f,	4.f,			"waypoint" }
 };
@@ -99,12 +99,12 @@ enum
 #define G_M_TEAM			0x0001
 #define G_M_INSTA			0x0002
 #define G_M_DUEL			0x0004
-#define G_M_LINK			0x0008
+//#define G_M_LINK			0x0008
 
 #define G_M_NUM				4
 
 #define G_M_FRAG			G_M_TEAM|G_M_DUEL
-#define G_M_BASE			G_M_INSTA|G_M_LINK
+#define G_M_BASE			G_M_INSTA//|G_M_LINK
 
 static struct gametypes
 {
@@ -120,8 +120,10 @@ static struct gametypes
 	{ G_M_TEAM,			0,				0,					"Team" },
 	{ G_M_INSTA,		0,				0,					"Instagib" },
 	{ G_M_DUEL,			0,				0,					"Duel" },
-	{ G_M_LINK,			0,				0,					"Link" },
+//	{ G_M_LINK,			0,				0,					"Link" },
 };
+
+#define m_game(a)			(a > -1 && a < G_MAX)
 
 #define m_demo(a)			(a == G_DEMO)
 #define m_edit(a)			(a == G_EDITMODE)
@@ -220,14 +222,11 @@ struct demoheader
 #define MAXFOV			125
 #define MINFOV			(player1->gunselect == GUN_RIFLE ? 0 : 90)
 
-#define ILLUMINATE		48.f
-#define ENTPART			4.f
-
 #define SGRAYS			20
 #define SGSPREAD		3
 
-#define RL_DAMRAD		40
-#define RL_DISTSCALE	1.5f
+#define RL_DAMRAD		48
+#define RL_DISTSCALE	6
 
 #define PLATFORMBORDER	0.2f
 #define PLATFORMMARGIN	10.0f

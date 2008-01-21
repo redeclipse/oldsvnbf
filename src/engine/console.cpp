@@ -125,8 +125,8 @@ COMMAND(toggleconsole, "");
 void rendercommand(int x, int y)
 {
 	s_sprintfd(s)("> %s", commandbuf);
-	draw_text(s, x, y);
-	draw_text("_", x + text_width(s, commandpos>=0 ? commandpos+2 : -1), y);
+	draw_textx("%s", x, y, 255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_LEFT, s);
+	draw_textx("%s", x + text_width(s, commandpos>=0 ? commandpos+2 : -1), y, 255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_LEFT, "_");
 }
 
 void blendbox(int x1, int y1, int x2, int y2, bool border)
