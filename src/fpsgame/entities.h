@@ -171,7 +171,7 @@ struct entities : icliententities
 			if (e.type == NOTUSED) continue;
 			if (!e.spawned && e.type!=TELEPORT && e.type!=JUMPPAD && e.type!=CHECKPOINT) continue;
 			float dist = e.o.dist(o);
-			if(dist < enttype[e.type].radius) tryuse(i, d);
+			if(dist <= enttype[e.type].radius) tryuse(i, d);
 		}
 	}
 

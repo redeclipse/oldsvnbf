@@ -148,7 +148,7 @@ struct physics
 					
 				int wcol = (col[2] + (col[1] << 8) + (col[0] << 16));
 				
-				part_spawn(v, vec(d->xradius, d->yradius, ENTPART), 0, 19, 100, 200, wcol);
+				part_spawn(v, vec(d->xradius, d->yradius, 4.f), 0, 19, 100, 200, wcol);
 			}
 			
 			if (waterlevel || d->inwater)
@@ -163,7 +163,7 @@ struct physics
 				}
 				else if (waterlevel < 0 && mat == MAT_LAVA)
 				{
-					part_spawn(v, vec(d->xradius, d->yradius, ENTPART), 0, 5, 200, 500, COL_WHITE);
+					part_spawn(v, vec(d->xradius, d->yradius, 4.f), 0, 5, 200, 500, COL_WHITE);
 					if (d == cl.player1) cl.suicide(d);
 				}
 			}
