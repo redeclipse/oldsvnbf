@@ -418,9 +418,9 @@ struct animmodel : model
             loopv(meshes) meshes[i]->gentris(frame, skins[i].tex, tris, m);
         }
 
-        bool hasframe(int i) { return i>=0 && i<numframes; }
-        bool hasframes(int i, int n) { return i>=0 && i+n<=numframes; }
-        int clipframes(int i, int n) { return min(n, numframes - i); }
+        bool hasframe(int i) { return i>=0 && i<max(numframes, 1); }
+        bool hasframes(int i, int n) { return i>=0 && i+n<=max(numframes, 1); }
+        int clipframes(int i, int n) { return min(n, max(numframes, 1) - i); }
 
         virtual meshgroup *allocate() = 0;
         virtual meshgroup *copy()

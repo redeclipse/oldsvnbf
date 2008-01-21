@@ -255,9 +255,6 @@ struct md5 : skelmodel
         
             loopv(basejoints) bones[i].base = dualquat(basejoints[i].orient, basejoints[i].pos);
 
-            invbones = new dualquat[numbones];
-            loopi(numbones) invbones[i] = dualquat(bones[i].base).invert();
-
             loopv(meshes)
             {
                 md5mesh &m = *(md5mesh *)meshes[i];
@@ -482,7 +479,7 @@ struct md5 : skelmodel
             return false;
         }
         loadingmd5 = NULL;
-        loopv(parts) parts[i]->meshes = parts[i]->meshes->scaleverts(scale/4.0f, i ? vec(0, 0, 0) : vec(translate.x, -translate.y, translate.z));
+        loopv(parts) parts[i]->meshes = parts[i]->meshes->scaleverts(scale/4.0f, i ? vec(0, 0, 0) : vec(translate.x, translate.y, translate.z));
         return loaded = true;
     }
 };

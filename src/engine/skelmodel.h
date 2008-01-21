@@ -97,7 +97,8 @@ struct skelmodel : animmodel
 
         void scaleverts(const vec &transdiff, float scalediff)
         {
-            loopi(numverts) verts[i].pos.mul(scalediff);
+            if(group->numframes) loopi(numverts) verts[i].pos.mul(scalediff);
+            else loopi(numverts) verts[i].pos.add(transdiff).mul(scalediff);
         }
 
         void calctangents()
@@ -176,6 +177,50 @@ struct skelmodel : animmodel
                 t.tc[3] = bv.v;
                 t.tc[4] = cv.u;
                 t.tc[5] = cv.v;
+            }
+        }
+
+        static inline bool comparevert(vvert &w, int j, tcvert &tc, vert &v)
+        {
+            return tc.u==w.u && tc.v==w.v && v.pos==w.pos;
+        }
+
+        static inline bool comparevert(vvertn &w, int j, tcvert &tc, vert &v)
+        {
+            return tc.u==w.u && tc.v==w.v && v.pos==w.pos && v.norm==w.norm;
+        }
+
+        inline bool comparevert(vvertbump &w, int j, tcvert &tc, vert &v)
+        {
+            return tc.u==w.u && tc.v==w.v && v.pos==w.pos && v.norm==w.norm && (!bumpverts || (bumpverts[j].tangent==w.tangent
+ && bumpverts[j].bitangent==w.bitangent));
+        }
+
+        static inline void assignvert(vvert &vv, int j, tcvert &tc, vert &v)
+        {
+            vv.pos = v.pos;
+            vv.u = tc.u;
+            vv.v = tc.v;
+        }
+
+        static inline void assignvert(vvertn &vv, int j, tcvert &tc, vert &v)
+        {
+            vv.pos = v.pos;
+            vv.norm = v.norm;
+            vv.u = tc.u;
+            vv.v = tc.v;
+        }
+
+        inline void assignvert(vvertbump &vv, int j, tcvert &tc, vert &v)
+        {
+            vv.pos = v.pos;
+            vv.norm = v.norm;
+            vv.u = tc.u;
+            vv.v = tc.v;
+            if(bumpverts)
+            {
+                vv.tangent = bumpverts[j].tangent;
+                vv.bitangent = bumpverts[j].bitangent;
             }
         }
 
@@ -532,10 +577,11 @@ struct skelmodel : animmodel
             group.numbones = numbones;
             group.bones = new boneinfo[numbones];
             memcpy(group.bones, bones, numbones*sizeof(boneinfo));
-            group.invbones = new dualquat[numbones];
-            memcpy(group.invbones, invbones, numbones*sizeof(dualquat));
-            group.framebones = new dualquat[numframes*numbones];
-            memcpy(group.framebones, framebones, numframes*numbones*sizeof(dualquat));
+            if(numframes)
+            {
+                group.framebones = new dualquat[numframes*numbones];
+                memcpy(group.framebones, framebones, numframes*numbones*sizeof(dualquat));
+            }
             loopv(skelanims)
             {
                 skelanimspec &sa = addskelanim(skelanims[i].name);
@@ -587,7 +633,7 @@ struct skelmodel : animmodel
             }
         }
 
-        bool gpuaccelerate() { return renderpath!=R_FIXEDFUNCTION && gpuskel && 10+(matskel ? 3 : 2)*numbones<=maxvpenvparams-reservevpparams; }
+        bool gpuaccelerate() { return renderpath!=R_FIXEDFUNCTION && numframes && gpuskel && 10+(matskel ? 3 : 2)*numbones<=maxvpenvparams-reservevpparams; }
         bool skeletalmat() { return gpuaccelerate() && matskel; }
         bool skeletal() { return gpuaccelerate(); }
 
@@ -644,7 +690,7 @@ struct skelmodel : animmodel
             vaccel = gpuaccelerate();
             vmat = matskel!=0;
             vlen = 0;
-            if(!vaccel)
+            if(numframes && !vaccel)
             {
                 vertsize = tangents ? sizeof(vvertbump) : (norms ? sizeof(vvertn) : sizeof(vvert));
                 loopv(meshes) vlen += ((skelmesh *)meshes[i])->genvbo(idxs, vlen);
@@ -654,11 +700,11 @@ struct skelmodel : animmodel
             }
             else
             {
-                vertsize = tangents ? sizeof(vvertbumpw) : sizeof(vvertw);
                 if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
                 #define GENVBO(type) \
                     do \
                     { \
+                        vertsize = sizeof(type); \
                         vector<type> vverts; \
                         loopv(meshes) vlen += ((skelmesh *)meshes[i])->genvbo(idxs, vlen, vverts); \
                         if(hasVBO) glBufferData_(GL_ARRAY_BUFFER_ARB, vverts.length()*sizeof(type), vverts.getbuf(), GL_STATIC_DRAW_ARB); \
@@ -669,8 +715,14 @@ struct skelmodel : animmodel
                             memcpy(vc.vdata, vverts.getbuf(), vverts.length()*sizeof(type)); \
                         } \
                     } while(0)
-                if(tangents) GENVBO(vvertbumpw);
-                else GENVBO(vvertw);
+                if(numframes)
+                {
+                    if(tangents) GENVBO(vvertbumpw);
+                    else GENVBO(vvertw);
+                }
+                else if(tangents) GENVBO(vvertbump);
+                else if(norms) GENVBO(vvertn);
+                else GENVBO(vvert);
             }
 
             if(hasVBO)
@@ -688,7 +740,7 @@ struct skelmodel : animmodel
             #undef ALLOCVDATA
         }
 
-        void bindvbo(const animstate *as, skelcacheentry &sc, vbocacheentry &vc)
+        void bindvbo(const animstate *as, vbocacheentry &vc, skelcacheentry *sc = NULL)
         {
             vvertn *vverts = hasVBO ? 0 : (vvertn *)vc.vdata;
             if(hasVBO && lastebuf!=ebuf)
@@ -719,45 +771,48 @@ struct skelmodel : animmodel
                 lasttcbuf = lastvbuf;
                 enabletc = true;
             }
-            if(vaccel)
+            if(!sc || !vaccel) return;
+            if(!enablebones)
             {
-                if(!enablebones)
+                glEnableVertexAttribArray_(6);
+                glEnableVertexAttribArray_(7);
+                enablebones = true;
+            }
+            if(lastbbuf!=lastvbuf)
+            {
+                glVertexAttribPointer_(6, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertsize, &((vvertw *)vverts)->weights);
+                glVertexAttribPointer_(7, 4, GL_UNSIGNED_BYTE, GL_FALSE, vertsize, &((vvertw *)vverts)->bones);
+                lastbbuf = lastvbuf;
+            }
+            if(lastbdata!=(vmat ? (void *)sc->mdata : (void *)sc->bdata))
+            {
+                if(hasPP) 
                 {
-                    glEnableVertexAttribArray_(6);
-                    glEnableVertexAttribArray_(7);
-                    enablebones = true;
+                    if(vmat) glProgramEnvParameters4fv_(GL_VERTEX_PROGRAM_ARB, 10, 10 + 3*numbones, sc->mdata[0].X.v);
+                    else glProgramEnvParameters4fv_(GL_VERTEX_PROGRAM_ARB, 10, 10 + 2*numbones, sc->bdata[0].real.v);
                 }
-                if(lastbbuf!=lastvbuf)
+                else if(vmat) loopi(numbones)
                 {
-                    glVertexAttribPointer_(6, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertsize, &((vvertw *)vverts)->weights);
-                    glVertexAttribPointer_(7, 4, GL_UNSIGNED_BYTE, GL_FALSE, vertsize, &((vvertw *)vverts)->bones);
-                    lastbbuf = lastvbuf;
+                    glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 10 + 3*i, sc->mdata[i].X.v);
+                    glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 11 + 3*i, sc->mdata[i].Y.v);
+                    glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 12 + 3*i, sc->mdata[i].Z.v);
                 }
-                if(lastbdata!=(vmat ? (void *)sc.mdata : (void *)sc.bdata))
+                else loopi(numbones)
                 {
-                    if(hasPP) 
-                    {
-                        if(vmat) glProgramEnvParameters4fv_(GL_VERTEX_PROGRAM_ARB, 10, 10 + 3*numbones, sc.mdata[0].X.v);
-                        else glProgramEnvParameters4fv_(GL_VERTEX_PROGRAM_ARB, 10, 10 + 2*numbones, sc.bdata[0].real.v);
-                    }
-                    else if(vmat) loopi(numbones)
-                    {
-                        glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 10 + 3*i, sc.mdata[i].X.v);
-                        glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 11 + 3*i, sc.mdata[i].Y.v);
-                        glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 12 + 3*i, sc.mdata[i].Z.v);
-                    }
-                    else loopi(numbones)
-                    {
-                        glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 10 + 2*i, sc.bdata[i].real.v);
-                        glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 11 + 2*i, sc.bdata[i].dual.v);
-                    }
-                    lastbdata = vmat ? (void *)sc.mdata : (void *)sc.bdata;
+                    glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 10 + 2*i, sc->bdata[i].real.v);
+                    glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 11 + 2*i, sc->bdata[i].dual.v);
                 }
+                lastbdata = vmat ? (void *)sc->mdata : (void *)sc->bdata;
             }
         }
 
         void interpmatbones(const animstate *as, float pitch, const vec &axis, int numanimparts, uchar *partmask, skelcacheentry &sc)
         {
+            if(!invbones)
+            {
+                invbones = new dualquat[numbones];
+                loopi(numbones) invbones[i] = dualquat(bones[i].base).invert();
+            }
             if(!matframebones)
             {
                 matframebones = new matrix3x4[numframes*numbones];
@@ -812,6 +867,11 @@ struct skelmodel : animmodel
 
         void interpbones(const animstate *as, float pitch, const vec &axis, int numanimparts, uchar *partmask, skelcacheentry &sc)
         {
+            if(!invbones)
+            {
+                invbones = new dualquat[numbones];
+                loopi(numbones) invbones[i] = dualquat(bones[i].base).invert();
+            }
             if(!sc.bdata) sc.bdata = new dualquat[numbones];
             struct framedata
             {
@@ -862,8 +922,9 @@ struct skelmodel : animmodel
         void calctagmatrix(int bone, const matrix3x4 &m, linkedpart &l)
         {
             matrix3x4 t;
-            t.mul(m, bones[bone].base);
-            loopk(4) 
+            if(numframes) t.mul(m, bones[bone].base);
+            else t = m;
+            loopk(4)
             {
                 l.matrix[4*k] = t.X[k];
                 l.matrix[4*k+1] = t.Y[k];
@@ -871,7 +932,7 @@ struct skelmodel : animmodel
                 l.matrix[4*k+3] = k==3 ? 1 : 0;
             }
         }
-        
+
         void render(const animstate *as, float pitch, const vec &axis, part *p)
         {
             bool norms = false, tangents = false;
@@ -880,7 +941,7 @@ struct skelmodel : animmodel
                 if(p->skins[i].normals()) norms = true;
                 if(p->skins[i].tangents()) tangents = true;
             }
-            if(gpuaccelerate()!=vaccel || (matskel!=0)!=vmat || norms!=vnorms || tangents!=vtangents)
+            if(gpuaccelerate()!=vaccel || ((matskel!=0)!=vmat && numframes) || norms!=vnorms || tangents!=vtangents)
             {
                 loopv(skelcache) loopj(MAXANIMPARTS) skelcache[i].as[j].cur.fr1 = -1;
                 loopi(MAXVBOCACHE)
@@ -897,6 +958,20 @@ struct skelmodel : animmodel
                 lastebuf = 0;
                 lastbdata = NULL;
             }
+
+            if(!numframes)
+            {
+                if(hasVBO ? !vbocache->vbuf : !vbocache->vdata) genvbo(norms, tangents, *vbocache);
+                bindvbo(as, *vbocache);
+                loopv(meshes) ((skelmesh *)meshes[i])->render(as, p->skins[i], *vbocache);
+                loopv(p->links)
+                {
+                    int tagbone = tags[p->links[i].tag].bone;
+                    calctagmatrix(tagbone, bones[tagbone].base, p->links[i]);
+                }
+                return;
+            }
+
             skelcacheentry *sc = NULL;
             bool match = false;
             loopv(skelcache)
@@ -951,7 +1026,7 @@ struct skelmodel : animmodel
                 }
             }
 
-            bindvbo(as, *sc, *vc);
+            bindvbo(as, *vc, sc);
             loopv(meshes) ((skelmesh *)meshes[i])->render(as, p->skins[i], *vc);
 
             loopv(p->links)
