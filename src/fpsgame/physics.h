@@ -492,8 +492,9 @@ struct physics
 				}
 			}
 		}
-	
-		if(m.iszero() && cl.allowmove(pl) && (pl->move || pl->strafe))
+
+        bool wantsmove = cl.allowmove(pl) && (pl->move || pl->strafe);
+		if(m.iszero() && wantsmove)
 		{
 			vecfromyawpitch(pl->yaw, floating || water || movepitch(pl) ? pl->pitch : 0, pl->move, pl->strafe, m);
 	
@@ -513,7 +514,7 @@ struct physics
 		vec d(m);
 		d.mul(maxspeed(pl));
 		if(floating) { if (local) d.mul(floatspeed()/100.0f); }
-		else if(!water && cl.allowmove(pl)) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+		else if(!water) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
 		float friction = water && !floating ? waterfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
 		float fpsfric = friction/millis*20.0f;
 	
