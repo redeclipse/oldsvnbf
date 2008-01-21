@@ -216,7 +216,7 @@ struct vertmodel : animmodel
                     }
                     idxs.add(vverts.length());
                     assignvert(vverts.add(), j, tc, v);
-                    found:;
+                found:;
                 }
             }
             minvert = min(minvert, ushort(vverts.length()-1));
