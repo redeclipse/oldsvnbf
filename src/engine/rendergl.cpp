@@ -617,8 +617,8 @@ void drawreflection(float z, bool refract, bool clear)
 
 	setfogplane(1, z);
 	if(refract) rendergrass();
-	rendermaterials(z, refract);
     renderdecals(0);
+	rendermaterials(z, refract);
 	render_particles(0);
 
     if(refract && renderpath!=R_FIXEDFUNCTION) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -977,8 +977,8 @@ void gl_drawframe(int w, int h)
 	renderwater();
 	rendergrass();
 
-	rendermaterials();
     renderdecals(curtime);
+	rendermaterials();
 	render_particles(curtime);
 
 	if(!isthirdperson())
