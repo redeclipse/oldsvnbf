@@ -565,7 +565,14 @@ struct GAMECLIENT : igameclient
 #endif
 
         s_sprintfd(gunname)("weapons/%s", guntype[player1->gunselect].name);
-		rendermodel(NULL, gunname, anim, sway, camera1->yaw+90, camera1->pitch, camera1->roll, MDL_LIGHT, &guninterp, NULL, base, speed);
+        dynent *gi = NULL;
+        switch(player1->gunselect) // cleanup idle -> shoot transitions on some gun animations
+        {
+            case GUN_SG: 
+                gi = &guninterp; 
+                break;
+        }
+		rendermodel(NULL, gunname, anim, sway, camera1->yaw+90, camera1->pitch, camera1->roll, MDL_LIGHT, gi, NULL, base, speed);
 	}
 
 	void drawhudgun()
