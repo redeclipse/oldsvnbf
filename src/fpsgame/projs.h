@@ -10,9 +10,9 @@ struct projectiles
 
 	struct projent : physent
 	{
-		vec from, to, last;
-		int lifetime, lasttime;
-		float roll;
+		vec from, to;
+		int lifetime;
+		float movement, roll;
 		bool local;
 		fpsent *owner;
 		int projtype;
@@ -35,7 +35,7 @@ struct projectiles
 		{
 			state = CS_ALIVE;
 
-			o = from = last = _f;
+			o = from = _f;
 			to = _t;
 
 			local = _b;
@@ -44,7 +44,8 @@ struct projectiles
 			lifetime = _i;
 			gun = _g;
 			maxspeed = _s;
-			id = lasttime = _l;
+			id = _l;
+            movement = 0;
 
 			switch (projtype)
 			{
@@ -119,8 +120,6 @@ struct projectiles
 
 		void check()
 		{
-			last = o;
-
             if (projtype == PRJ_SHOT)
             {
 				if (guntype[gun].fsound >= 0 && (!sounds.inrange(schan) || !sounds[schan].inuse))
@@ -137,7 +136,8 @@ struct projectiles
 			cube &c = lookupcube(int(o.x), int(o.y), int(o.z));
 			bool water = c.ext && isliquid(c.ext->material);
 			float secs = float(qtime) / 1000.0f;
-			
+		    vec old(o);
+
 			if (elasticity > 0.f) vel.sub(vec(0, 0, float(getvar("gravity"))*secs));
 
 			vec dir(vel);
@@ -147,7 +147,7 @@ struct projectiles
 
 			if (!collide(this, dir) || inside || hitplayer)
 			{
-				o = last;
+				o = old;
 
 				if (projtype != PRJ_SHOT || gun == GUN_GL)
 				{
@@ -158,24 +158,26 @@ struct projectiles
 						if (hitplayer) pos = vec(vec(o).sub(hitplayer->o)).normalize();
 					}
 
-					if (vel.magnitude() > 1 && o.dist(last) > 1)
+					if (vel.magnitude() > 4.f)
 					{
 						vel.apply(pos, elasticity);
 						if (hitplayer) vel.influence(pos, hitplayer->vel, elasticity);
 
-						if (lastmillis-lasttime > 500)
+						if (movement > 4.f)
 						{
 							if (projtype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, true);
 							else if (projtype == PRJ_GIBS) playsound(S_SPLAT, &o, true);
 							else if (projtype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, true);
-							lasttime = lastmillis;
 						}
 					}
+                    movement = 0;
 					return true; // stay alive until timeout
 				}
+                movement = 0;
 				return false; // die on impact
 			}
 
+            movement += o.dist(old);
 			if (projtype == PRJ_SHOT && gun == GUN_GL) roll += int(vel.magnitude() / curtime) % 360;
 
 			return true;
