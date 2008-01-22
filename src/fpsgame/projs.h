@@ -163,7 +163,7 @@ struct projectiles
 						vel.apply(pos, elasticity);
 						if (hitplayer) vel.influence(pos, hitplayer->vel, elasticity);
 
-						if (movement > 2.0f)
+						if (movement > 8.0f)
 						{
 							if (projtype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, true);
 							else if (projtype == PRJ_GIBS) playsound(S_SPLAT, &o, true);
