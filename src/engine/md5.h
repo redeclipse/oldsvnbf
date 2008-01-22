@@ -158,20 +158,23 @@ struct md5 : skelmodel
                 }
                 else if(sscanf(buf, " numverts %d", &numverts)==1)
                 {
-                    numverts = max(numverts, 1);        
-                    vertinfo = new md5vert[numverts];
-                    verts = new vert[numverts];
-                    tcverts = new tcvert[numverts];
+                    numverts = max(numverts, 0);
+                    if(numverts)
+                    {
+                        vertinfo = new md5vert[numverts];
+                        verts = new vert[numverts];
+                        tcverts = new tcvert[numverts];
+                    }
                 }
                 else if(sscanf(buf, " numtris %d", &numtris)==1)
                 {
-                    numtris = max(numtris, 1);
-                    tris = new tri[numtris];
+                    numtris = max(numtris, 0);
+                    if(numtris) tris = new tri[numtris];
                 }
                 else if(sscanf(buf, " numweights %d", &numweights)==1)
                 {
-                    numweights = max(numweights, 1);
-                    weightinfo = new md5weight[numweights];
+                    numweights = max(numweights, 0);
+                    if(numweights) weightinfo = new md5weight[numweights];
                 }
                 else if(sscanf(buf, " vert %d ( %f %f ) %hu %hu", &index, &v.u, &v.v, &v.start, &v.count)==5)
                 {
@@ -250,6 +253,12 @@ struct md5 : skelmodel
                     m->group = this;
                     meshes.add(m);
                     m->load(f, buf, sizeof(buf));
+                    if(!m->numtris || !m->numverts)
+                    {
+                        conoutf("empty mesh in %s", filename);
+                        meshes.removeobj(m);
+                        delete m;
+                    }
                 }
             }
         
