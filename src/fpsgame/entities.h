@@ -6,7 +6,7 @@ struct entities : icliententities
 
 	IVARP(showentdir, 0, 1, 1);
 	IVARP(showentradius, 0, 1, 1);
-	
+
 	IVARP(showbaselinks, 0, 0, 1);
 	IVARP(showcheckpointlinks, 0, 0, 1);
 	IVARP(showcameralinks, 0, 0, 1);
@@ -62,7 +62,7 @@ struct entities : icliententities
         }
     }
 
-	void rumble(extentity &e) { playsound(S_RUMBLE, &e.o, true); }
+	void rumble(extentity &e) { playsound(S_RUMBLE, &e.o, 255, 0, true); }
 
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
@@ -88,11 +88,11 @@ struct entities : icliententities
 	void teleport(int n, fpsent *d)	 // also used by monsters
 	{
 		fpsentity &e = (fpsentity &)*ents[n];
-		
+
 		while (e.links.length())
 		{
 			int link = rnd(e.links.length()), targ = e.links[link];
-			
+
 			if (ents.inrange(targ) && ents[targ]->type == TELEPORT)
 			{
 				d->o = ents[targ]->o;
@@ -162,16 +162,19 @@ struct entities : icliententities
 
 	void checkitems(fpsent *d)
 	{
-		if(d==cl.player1 && (editmode || cl.cc.spectator)) return;
-		vec o = d->o;
-		o.z -= d->height;
+		if (d == cl.player1 && (editmode || cl.cc.spectator)) return;
+
+		float eye = d->height*0.5f;
+		vec m = d->o;
+		m.z -= eye;
+
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-			if (e.type == NOTUSED) continue;
-			if (!e.spawned && e.type!=TELEPORT && e.type!=JUMPPAD && e.type!=CHECKPOINT) continue;
-			float dist = e.o.dist(o);
-			if(dist <= enttype[e.type].radius) tryuse(i, d);
+			if (e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
+			if (!e.spawned && e.type != TELEPORT && e.type != JUMPPAD && e.type != CHECKPOINT) continue;
+			enttypes &t = enttype[e.type];
+			if (insidesphere(m, eye, d->radius, e.o, t.height, t.radius)) tryuse(i, d);
 		}
 	}
 
@@ -250,16 +253,16 @@ struct entities : icliententities
 					loopv(entgroup)
 					{
 						index = entgroup[i];
-	
+
 						if (ents[index]->type == type)
 						{
 							if (ents.inrange(last))
 							{
 								int g;
-	
+
 								fpsentity &e = (fpsentity &)*ents[index];
 								fpsentity &l = (fpsentity &)*ents[last];
-	
+
 								if ((g = l.links.find(index)) >= 0)
 								{
 									int h;
@@ -341,7 +344,7 @@ struct entities : icliententities
 		{
 			int type = f.type;
 			if (gver <= 49 && type >= 10) type--; // translation for these are done later..
-			
+
 			if (enttype[type].links && enttype[type].links <= gver)
 			{
 				int links = gzgetint(g);
@@ -382,7 +385,7 @@ struct entities : icliententities
 			loopv(ents)
 			{
 				fpsentity &f = (fpsentity &)e;
-				
+
 				if (f.type != ET_EMPTY)
 				{
 					if (enttype[f.type].links)
@@ -407,15 +410,15 @@ struct entities : icliententities
 			loopv(ents)
 			{
 				fpsentity &e = (fpsentity &)*ents[i];
-			
+
 				if (e.type == 10) // translate teledest to teleport and link them appropriately
 				{
 					int dest = -1;
-					
+
 					loopvj(ents) // see if this guy is sitting on top of a teleport already
 					{
 						fpsentity &f = (fpsentity &)*ents[j];
-						
+
 						if (f.type == 9 && e.o.dist(f.o) <= enttype[TELEPORT].radius*2.f &&
 							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)))
 								dest = j;
@@ -438,7 +441,7 @@ struct entities : icliententities
 					loopvj(ents) // find linked teleport(s)
 					{
 						fpsentity &f = (fpsentity &)*ents[j];
-						
+
 						if (f.type == 9 && f.attr1 == e.attr2)
 						{
 							f.links.add(dest);
@@ -457,6 +460,12 @@ struct entities : icliententities
 				}
 				else if (e.type == 10) e.type = NOTUSED; // unused teledest?
 				else if (e.type >= 11) e.type--;
+
+				if (e.type == MAPSOUND)
+				{
+					e.attr2 = 255;
+					e.attr3 = 0;
+				}
 			}
 		}
 	}
@@ -571,22 +580,22 @@ struct entities : icliententities
 		if (rendernormally) // important, don't render lines and stuff otherwise!
 		{
 			#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
-	
+
 			if (editmode)
 			{
 				renderprimitive(true);
-				
+
 				loopv(entgroup) entfocus(entgroup[i], renderentshow(e, false));
 				if (enthover >= 0) entfocus(enthover, renderentshow(e, false));
-				
+
 				loopv(ents)
 				{
 					entfocus(i, { renderentshow(e, true); });
 				}
-				
+
 				renderprimitive(false);
 			}
-			
+
 			loopv(ents) // sounds are here so they only execute once per frame
 			{
 				fpsentity &e = (fpsentity &)*ents[i];
@@ -594,7 +603,10 @@ struct entities : icliententities
 				if (e.type == MAPSOUND && mapsounds.inrange(e.attr1))
 				{
 					if (!sounds.inrange(e.schan) || !sounds[e.schan].inuse)
-						e.schan = playsound(e.attr1, &e.o, false, true);
+					{
+						int vol = e.attr2 >= 1 && e.attr2 <= 255 ? e.attr2 : 255;
+						e.schan = playsound(e.attr1, &e.o, vol, -1, true, true);
+					}
 				}
 			}
 		}

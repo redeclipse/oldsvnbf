@@ -126,7 +126,8 @@ struct weaponstate
 		float dist = middist(cl.player1, dir, o);
 		cl.camerawobble += int(guntype[gun].damage*(1-dist/RL_DISTSCALE/RL_DAMRAD));
 
-		if (guntype[gun].esound >= 0) playsound(guntype[gun].esound, &o, true);
+		if (guntype[gun].esound >= 0)
+			playsound(guntype[gun].esound, &o, 255, 0, true);
 
 		particle_splash(0, 200, 300, o);
 		particle_fireball(o, RL_DAMRAD, gun == GUN_RL ? 22 : 23);

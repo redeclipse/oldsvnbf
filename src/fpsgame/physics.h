@@ -1,7 +1,7 @@
 struct physics
 {
 	GAMECLIENT &cl;
-	
+
 	IVARW(crawlspeed,		1,			25,			INT_MAX-1);	// crawl speed
 	IVARW(gravity,			0,			25,			INT_MAX-1);	// gravity
 	IVARW(jumpvel,			0,			60,			INT_MAX-1);	// extra velocity to add when jumping
@@ -136,7 +136,7 @@ struct physics
 	{
 		vec v(d->o.x, d->o.y, d->o.z-d->height);
 		int mat = lookupmaterial(v);
-			
+
 		if (waterlevel || mat == MAT_WATER || mat == MAT_LAVA)
 		{
 			if (waterlevel)
@@ -145,21 +145,21 @@ struct physics
 
 				if (mat == MAT_WATER) getwatercolour(col);
 				else if (mat == MAT_LAVA) getlavacolour(col);
-					
+
 				int wcol = (col[2] + (col[1] << 8) + (col[0] << 16));
-				
+
 				part_spawn(v, vec(d->xradius, d->yradius, 4.f), 0, 19, 100, 200, wcol);
 			}
-			
+
 			if (waterlevel || d->inwater)
 			{
 				if (waterlevel < 0 && mat == MAT_WATER)
 				{
-					playsound(S_SPLASH1, &d->o, true);
+					playsound(S_SPLASH1, &d->o, 255, 0, true);
 				}
 				else if (waterlevel > 0 && mat == MAT_WATER)
 				{
-					playsound(S_SPLASH2, &d->o, true);
+					playsound(S_SPLASH2, &d->o, 255, 0, true);
 				}
 				else if (waterlevel < 0 && mat == MAT_LAVA)
 				{
@@ -169,21 +169,21 @@ struct physics
 			}
 		}
 	}
-	
+
 	void trigger(physent *d, bool local, int floorlevel, int waterlevel)
 	{
 		if (waterlevel) updatewater((fpsent *)d, waterlevel);
-			
+
 		if (floorlevel > 0)
 		{
 			playsound(S_JUMP, &d->o);
 		}
 		else if (floorlevel < 0)
 		{
-			playsound(S_LAND, &d->o, true);
+			playsound(S_LAND, &d->o, 255, 0, true);
 		}
 	}
-	
+
 	void slopegravity(float g, const vec &slope, vec &gvec)
 	{
 		float k = slope.z*g/(slope.x*slope.x + slope.y*slope.y);
@@ -191,7 +191,7 @@ struct physics
 		gvec.y = slope.y*k;
 		gvec.z = -g;
 	}
-	
+
 	void slideagainst(physent *d, vec &dir, const vec &obstacle)
 	{
 		vec wdir(obstacle), wvel(obstacle);
@@ -202,7 +202,7 @@ struct physics
 		dir.sub(wdir);
 		d->vel.sub(wvel);
 	}
-	
+
 	void switchfloor(physent *d, vec &dir, bool landing, const vec &floor)
 	{
 		if(d->physstate == PHYS_FALL || d->floor.z < floorz(d))
@@ -233,7 +233,7 @@ struct physics
 				}
 			}
 		}
-	
+
 		if(((d->physstate == PHYS_SLIDE || (d->physstate == PHYS_FALL && floor.z < 1.0f)) && landing) ||
 			(d->physstate >= PHYS_SLOPE && fabs(dir.dot(d->floor)/dir.magnitude()) < 0.01f))
 		{
@@ -242,14 +242,14 @@ struct physics
 			dir.z = dz;
 			float dfmag = dir.magnitude();
 			if(dfmag > 0) dir.mul(dmag/dfmag);
-	
+
 			float vmag = d->vel.magnitude(), vz = -(d->vel.x*floor.x + d->vel.y*floor.y)/floor.z;
 			d->vel.z = vz;
 			float vfmag = d->vel.magnitude();
 			if(vfmag > 0) d->vel.mul(vmag/vfmag);
 		}
 	}
-	
+
 	bool trystepup(physent *d, vec &dir, float maxstep)
 	{
 		vec old(d->o);
@@ -281,7 +281,7 @@ struct physics
 		d->o = old;
 		return false;
 	}
-	
+
 	#if 0
 	bool trystepdown(physent *d, vec &dir, float step, float a, float b)
 	{
@@ -299,7 +299,7 @@ struct physics
 		return false;
 	}
 	#endif
-	
+
 	void falling(physent *d, vec &dir, const vec &floor)
 	{
 	#if 0
@@ -326,7 +326,7 @@ struct physics
 		}
 		else d->physstate = PHYS_FALL;
 	}
-	
+
 	void landing(physent *d, vec &dir, const vec &floor)
 	{
 		if(d->physstate == PHYS_FALL)
@@ -339,7 +339,7 @@ struct physics
 		else d->physstate = PHYS_SLOPE;
 		d->floor = floor;
 	}
-	
+
 	bool findfloor(physent *d, bool collided, const vec &obstacle, bool &slide, vec &floor)
 	{
 		bool found = false;
@@ -380,7 +380,7 @@ struct physics
 		d->o = moved;
 		return found;
 	}
-	
+
 	bool move(physent *d, vec &dir)
 	{
 		vec old(d->o);
@@ -457,7 +457,7 @@ struct physics
 			if(pl->jumping)
 			{
 				pl->jumping = false;
-	
+
 				pl->vel.z = jumpvelocity(pl);
 				if(water) { pl->vel.x /= waterdampen(pl); pl->vel.y /= waterdampen(pl); }
 				trigger(pl, local, 1, 0);
@@ -468,7 +468,7 @@ struct physics
 			if (pl->crouching) pl->crouching = false;
 			pl->timeinair += millis;
 		}
-	
+
 		vec m(0.0f, 0.0f, 0.0f);
 		if(pl->type==ENT_AI)
 		{
@@ -497,7 +497,7 @@ struct physics
 		if(m.iszero() && wantsmove)
 		{
 			vecfromyawpitch(pl->yaw, floating || water || movepitch(pl) ? pl->pitch : 0, pl->move, pl->strafe, m);
-	
+
 			if(!floating && pl->physstate >= PHYS_SLIDE)
 			{
 				/* move up or down slopes in air
@@ -507,22 +507,22 @@ struct physics
 				if(water) m.z = max(m.z, dz);
 				else if(pl->floor.z >= wallz(pl)) m.z = dz;
 			}
-	
+
 			m.normalize();
 		}
-	
+
 		vec d(m);
 		d.mul(maxspeed(pl));
 		if(floating) { if (local) d.mul(floatspeed()/100.0f); }
 		else if(!water) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
 		float friction = water && !floating ? waterfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
 		float fpsfric = friction/millis*20.0f;
-	
+
 		pl->vel.mul(fpsfric-1);
 		pl->vel.add(d);
 		pl->vel.div(fpsfric);
 	}
-	
+
 	void modifygravity(physent *pl, bool water, float secs)
 	{
 		vec g(0, 0, 0);
@@ -535,32 +535,32 @@ struct physics
 		if(water) pl->gvel = g.mul(watergravscale(pl));
 		else pl->gvel.add(g);
 	}
-	
+
 	// main physics routine, moves a player/monster for a time step
 	// moveres indicated the physics precision (which is lower for monsters and multiplayer prediction)
 	// local is false for multiplayer prediction
-	
+
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
 		int material = lookupmaterial(pl->o);
 		bool water = isliquid(material);
 		bool floating = (editmode && local) || pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
 		float secs = millis/1000.f;
-	
+
 		// apply any player generated changes in velocity
 		modifyvelocity(pl, local, water, floating, millis);
 		// apply gravity
 		if(!floating && pl->type!=ENT_CAMERA) modifygravity(pl, water, secs);
-	
+
 		vec d(pl->vel), oldpos(pl->o);
 		if(!floating && pl->type!=ENT_CAMERA && water) d.mul(0.5f);
 		d.add(pl->gvel);
 		d.mul(secs);
-	
+
 		pl->blocked = false;
 		pl->moving = true;
 		pl->onplayer = NULL;
-	
+
 		if(floating)				// just apply velocity
 		{
 			if(pl->physstate != PHYS_FLOAT)
@@ -576,7 +576,7 @@ struct physics
 			const float f = 1.0f/moveres;
 			int collisions = 0;
 			vec vel(pl->vel);
-	
+
 			d.mul(f);
 			loopi(moveres) if(!move(pl, d)) { if(pl->type==ENT_CAMERA) return false; if(++collisions<5) i--; } // discrete steps collision detection & sliding
 			if(!pl->timeinair && vel.z <= -64) // if we land after long time must have been a high jump, make thud sound
@@ -584,14 +584,14 @@ struct physics
 				trigger(pl, local, -1, 0);
 			}
 		}
-	
+
 		if(pl->type!=ENT_CAMERA && pl->state==CS_ALIVE) updatedynentcache(pl);
-	
+
 		if(!pl->timeinair && pl->physstate >= PHYS_FLOOR && pl->vel.squaredlen() < 1e-4f && pl->gvel.iszero()) pl->moving = false;
-	
+
 		pl->lastmoveattempt = lastmillis;
 		if (pl->o!=oldpos) pl->lastmove = lastmillis;
-	
+
 		if (pl->type!=ENT_CAMERA)
 		{
 			int mat = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z+1));
@@ -600,15 +600,15 @@ struct physics
 			else if(pl->inwater && !inwater) trigger(pl, local, 0, 1);
 			pl->inwater = inwater;
 		}
-	
+
 		return true;
 	}
-	
+
 	bool move(physent *d, int moveres = 20, bool local = true, int millis = 0, int repeat = 0)
 	{
 		if (!millis) millis = curtime;
 		if (!repeat) repeat = physicsrepeat;
-		
+
 		loopi(repeat)
 		{
 			if (!moveplayer(d, moveres, local, min(millis, minframetime()))) return false;
@@ -634,9 +634,9 @@ struct physics
 		bbmax.y += rad;
 		bbmax.z += obstacle->aboveeye+d->height;
 		bbmax.add(space);
-	
+
 		loopi(3) if(d->o[i] <= bbmin[i] || d->o[i] >= bbmax[i]) return;
-	
+
 		float mindist = 1e16f;
 		loopi(3) if(dir[i] != 0)
 		{
@@ -669,13 +669,13 @@ struct physics
 						d->floor = wall;
 				}
 				break;
-	
+
 			case PHYS_STEP_UP:
 				d->o.z -= stairheight(d)+0.1f;
 				if(!collide(d, vec(0, 0, -1), slopez(d)))
 					d->floor = wall;
 				break;
-	
+
 			case PHYS_SLIDE:
 				d->o.z -= d->radius+0.1f;
 				if(!collide(d, vec(0, 0, -1)) && wall.z < slopez(d))
@@ -685,7 +685,7 @@ struct physics
 		if(d->physstate > PHYS_FALL && d->floor.z <= 0) d->floor = vec(0, 0, 1);
 		d->o = old;
 	}
-	
+
 	bool entinmap(dynent *d, bool avoidplayers)		// brute force but effective way to find a free spawn spot in the map
 	{
 		d->o.z += d->height;	 // pos specified is at feet

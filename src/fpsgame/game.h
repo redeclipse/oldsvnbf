@@ -5,23 +5,23 @@
 
 enum						// static entity types
 {
-	NOTUSED = ET_EMPTY,				// 0, entity slot not in use in map
-	LIGHT = ET_LIGHT,				// 1, lightsource, attr1 = radius, attr2 = intensity
-	MAPMODEL = ET_MAPMODEL,			// 2, attr1 = angle, attr2 = idx
-	PLAYERSTART = ET_PLAYERSTART,	// 3, attr1 = angle
-	ENVMAP = ET_ENVMAP,				// 4, attr1 = radius
-	PARTICLES = ET_PARTICLES,		// 5
-	MAPSOUND = ET_SOUND,			// 6
-	SPOTLIGHT = ET_SPOTLIGHT,		// 7
-	WEAPON = ET_GAMESPECIFIC,		// 8, attr1 = gun, attr2 = amt
-	TELEPORT,						// 9, attr1 = yaw, attr2 = pitch, attr3 = push
-	MONSTER,						// 10, attr1 = angle, attr2 = monstertype
-	TRIGGER,						// 11, attr1 = tag, attr2 = type
-	JUMPPAD,						// 12, attr1 = zpush, attr2 = ypush, attr3 = xpush
+	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
+	LIGHT = ET_LIGHT,				// 1  radius, intensity
+	MAPMODEL = ET_MAPMODEL,			// 2  angle, idx
+	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, [team]
+	ENVMAP = ET_ENVMAP,				// 4  radius
+	PARTICLES = ET_PARTICLES,		// 5  type, [others]
+	MAPSOUND = ET_SOUND,			// 6  idx, volume
+	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
+	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
+	TELEPORT,						// 9  yaw, pitch, roll, push
+	MONSTER,						// 10 [angle], [type]
+	TRIGGER,						// 11
+	JUMPPAD,						// 12 zpush, ypush, xpush
 	BASE,							// 13
-	CHECKPOINT,						// 14
-	CAMERA,							// 15, attr1 = yaw, attr2 = pitch, attr3 = pan (+:horiz/-:vert), attr4 = idx
-	WAYPOINT,						// 16, none?
+	CHECKPOINT,						// 14 idx
+	CAMERA,							// 15 yaw, pitch, pan (+:horiz/-:vert), idx
+	WAYPOINT,						// 16
 	MAXENTTYPES						// 17
 };
 
@@ -241,8 +241,8 @@ static struct guntypes
 	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		-10 ,	10,		"pistol" },
 	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	"shotgun" },
 	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		"chaingun" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	125,	3000,	-15,	10,		"grenades" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	150,	250,	10000,	-40,	20,		"rockets" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	10,		"grenades" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	150,	150,	10000,	-40,	20,		"rockets" },
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		"rifle" },
 };
 #define isgun(gun) (gun > -1 && gun < NUMGUNS)
@@ -304,9 +304,9 @@ struct fpsstate
 			case WEAPON:
 			{
 				guntypes &g = guntype[attr1];
-				
+
 				if (ammo[g.info] < 0) ammo[g.info] = 0;
-				
+
 				int carry = 0;
 				loopi(NUMGUNS) if (ammo[i] >= 0 && guntype[i].rdelay > 0) carry++;
 				if (carry > MAXCARRY)
@@ -322,9 +322,9 @@ struct fpsstate
 						break;
 					}
 				}
-				
+
 				ammo[g.info] = min(ammo[g.info] + (attr2 > 0 ? attr2 : g.add), g.max);
-				
+
 				lastshot = gunlast[g.info] = millis;
 				gunwait[g.info] = guntype[g.info].rdelay;
 				break;

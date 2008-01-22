@@ -94,7 +94,7 @@ bool shadowcubeintersect(const cube &c, const vec &o, const vec &ray, float &dis
     dist = enterdist;
     return true;
 }
- 
+
 vec hitsurface;
 
 bool raycubeintersect(const cube &c, const vec &o, const vec &ray, float &dist)
@@ -124,7 +124,7 @@ bool raycubeintersect(const cube &c, const vec &o, const vec &ray, float &dist)
     if(exitdist < 0) return false;
     dist = max(enterdist+0.1f, 0.0f);
     if(bbentry>=0) { hitsurface = vec(0, 0, 0); hitsurface[bbentry] = ray[bbentry]>0 ? -1 : 1; }
-    else hitsurface = p.p[entry]; 
+    else hitsurface = p.p[entry];
     return true;
 }
 
@@ -532,7 +532,7 @@ bool plcollide(physent *d, const vec &dir)	// collide with player or monster
 			physent *o = dynents[i];
 			if(o==d || d->o.reject(o->o, d->radius+o->radius)) continue;
             if(d->collidetype!=COLLIDE_ELLIPSE || o->collidetype!=COLLIDE_ELLIPSE)
-            { 
+            {
                 if(!rectcollide(d, dir, o->o, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye, o->height))
                 {
                     hitplayer = o;
@@ -581,7 +581,7 @@ void rotatebb(vec &center, vec &radius, int yaw)
 }
 
 bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // collide with a mapmodel
-{   
+{
     const vector<extentity *> &ents = et->getents();
     loopv(oc.mapmodels)
     {
@@ -803,4 +803,11 @@ bool intersect(physent *d, vec &from, vec &to)	// if lineseg hits entity boundin
 		&& p->y >= d->o.y-d->radius
 		&& p->z <= d->o.z+d->aboveeye
 		&& p->z >= d->o.z-d->height;
+}
+
+bool insidesphere(vec &d, float h1, float r1, vec &v, float h2, float r2)
+{
+	return d.x <= v.x+r2+r1 && d.x >= v.x-r2-r1 &&
+	d.y <= v.y+r2+r1 && d.y >= v.y-r2-r1 &&
+	d.z <= v.z+h2+h1 && d.z >= v.z-h2-h1;
 }

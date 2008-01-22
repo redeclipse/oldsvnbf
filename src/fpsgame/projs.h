@@ -80,8 +80,6 @@ struct projectiles
 							break;
 						}
 					}
-					if (guntype[gun].fsound >= 0)
-						schan = playsound(guntype[gun].fsound, &o);
 					break;
 				}
 				case PRJ_GIBS:
@@ -158,16 +156,18 @@ struct projectiles
 						if (hitplayer) pos = vec(vec(o).sub(hitplayer->o)).normalize();
 					}
 
-					if (vel.magnitude() > 0.5f)
-					{
-						vel.apply(pos, elasticity);
-						if (hitplayer) vel.influence(pos, hitplayer->vel, elasticity);
+					vel.apply(pos, elasticity);
+					if (hitplayer) vel.influence(pos, hitplayer->vel, elasticity);
 
-						if (movement > 8.0f)
+					if (movement > 4.0f)
+					{
+						int mag = int(vel.magnitude()), vol = clamp(mag*10, 1, 255);
+
+						if (vol)
 						{
-							if (projtype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, true);
-							else if (projtype == PRJ_GIBS) playsound(S_SPLAT, &o, true);
-							else if (projtype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, true);
+							if (projtype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, vol, 0, true);
+							else if (projtype == PRJ_GIBS) playsound(S_SPLAT, &o, vol, 0, true);
+							else if (projtype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, vol, 0, true);
 						}
 					}
                     movement = 0;
@@ -179,7 +179,7 @@ struct projectiles
 
             float diff = o.dist(old);
             movement += diff;
-			if (projtype == PRJ_SHOT && gun == GUN_GL) 
+			if (projtype == PRJ_SHOT && gun == GUN_GL)
             {
                 roll += diff / (4*RAD);
                 if(roll >= 360) roll = fmod(roll, 360.0f);

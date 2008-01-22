@@ -176,6 +176,7 @@ extern bool plcollide(physent *d, const vec &dir);
 extern void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m);
 extern void vectoyawpitch(const vec &v, float &yaw, float &pitch);
 extern bool intersect(physent *d, vec &from, vec &to);
+extern bool insidesphere(vec &d, float h1, float r1, vec &v, float h2, float r2);
 extern const vector<physent *> &checkdynentcache(int x, int y);
 extern void updatedynentcache(physent *d);
 extern void cleardynentcache();
