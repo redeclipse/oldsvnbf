@@ -862,7 +862,11 @@ struct skelmodel : animmodel
                 if(b.parent<0) sc.mdata[i] = m;
                 else sc.mdata[i].mul(sc.mdata[b.parent], m);
             }
-            loopi(numbones) sc.mdata[i].mul(matinvbones[i]);
+            loopi(numbones)
+            {
+                sc.mdata[i].normalize();
+                sc.mdata[i].mul(matinvbones[i]);
+            }
         }
 
         void interpbones(const animstate *as, float pitch, const vec &axis, int numanimparts, uchar *partmask, skelcacheentry &sc)
