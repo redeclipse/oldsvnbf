@@ -385,7 +385,7 @@ struct physics
 	{
 		vec old(d->o);
 	#if 0
-		if(d->physstate == PHYS_STEP_DOWN && dir.z <= 0.0f && cl.allowmove(pl) && (d->move || d->strafe))
+		if(d->physstate == PHYS_STEP_DOWN && dir.z <= 0.0f && cl.allowmove(d) && (d->move || d->strafe))
 		{
 			float step = dir.magnitude()*stepspeed(d);
 			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
@@ -574,12 +574,12 @@ struct physics
 		else						// apply velocity with collision
 		{
 			const float f = 1.0f/moveres;
-			const int timeinair = pl->timeinair;
 			int collisions = 0;
+			vec vel(pl->vel);
 	
 			d.mul(f);
 			loopi(moveres) if(!move(pl, d)) { if(pl->type==ENT_CAMERA) return false; if(++collisions<5) i--; } // discrete steps collision detection & sliding
-			if(timeinair > 800 && !pl->timeinair) // if we land after long time must have been a high jump, make thud sound
+			if(!pl->timeinair && vel.z <= -64) // if we land after long time must have been a high jump, make thud sound
 			{
 				trigger(pl, local, -1, 0);
 			}

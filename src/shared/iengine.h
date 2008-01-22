@@ -128,7 +128,7 @@ extern bool pushfont(const char *name);
 extern bool popfont(int num);
 extern void gettextres(int &w, int &h);
 extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true);
-extern void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool s, int align, ...);
+extern void draw_textx(const char *fstr, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int align = AL_LEFT, ...);
 extern void draw_textf(const char *fstr, int left, int top, ...);
 extern int char_width(int c, int x = 0);
 extern int text_width(const char *str, int limit = -1);

@@ -155,11 +155,11 @@ void draw_text(const char *str, int left, int top, int r, int g, int b, int a, b
 	if (a == 255) a = int(255.f*(hudblend*0.01f));
 
 	glBegin(GL_QUADS);
-	glColor4ub(r, g, b, a);
+
  	loopj(s ? 2 : 1)
  	{
 		if (!s || j) glColor4ub(r, g, b, a);
-		else  glColor4ub(0, 0, 0, a);
+		else glColor4ub(0, 0, 0, a);
 
 		int off = (j ? -2 : 2);
 		int x = left + off;

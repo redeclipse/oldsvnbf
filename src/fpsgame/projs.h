@@ -10,7 +10,7 @@ struct projectiles
 
 	struct projent : physent
 	{
-		vec from, to;
+		vec from, to, last;
 		int lifetime, lasttime;
 		float roll;
 		bool local;
@@ -35,7 +35,7 @@ struct projectiles
 		{
 			state = CS_ALIVE;
 
-			o = from = _f;
+			o = from = last = _f;
 			to = _t;
 
 			local = _b;
@@ -119,6 +119,8 @@ struct projectiles
 
 		void check()
 		{
+			last = o;
+
             if (projtype == PRJ_SHOT)
             {
 				if (guntype[gun].fsound >= 0 && (!sounds.inrange(schan) || !sounds[schan].inuse))
@@ -135,8 +137,7 @@ struct projectiles
 			cube &c = lookupcube(int(o.x), int(o.y), int(o.z));
 			bool water = c.ext && isliquid(c.ext->material);
 			float secs = float(qtime) / 1000.0f;
-			vec old(o);
-
+			
 			if (elasticity > 0.f) vel.sub(vec(0, 0, float(getvar("gravity"))*secs));
 
 			vec dir(vel);
@@ -146,7 +147,7 @@ struct projectiles
 
 			if (!collide(this, dir) || inside || hitplayer)
 			{
-				o = old;
+				o = last;
 
 				if (projtype != PRJ_SHOT || gun == GUN_GL)
 				{
@@ -157,7 +158,7 @@ struct projectiles
 						if (hitplayer) pos = vec(vec(o).sub(hitplayer->o)).normalize();
 					}
 
-					if (vel.magnitude() > 4.f)
+					if (vel.magnitude() > 1 && o.dist(last) > 1)
 					{
 						vel.apply(pos, elasticity);
 						if (hitplayer) vel.influence(pos, hitplayer->vel, elasticity);
