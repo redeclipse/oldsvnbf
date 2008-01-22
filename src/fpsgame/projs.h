@@ -177,8 +177,13 @@ struct projectiles
 				return false; // die on impact
 			}
 
-            movement += o.dist(old);
-			if (projtype == PRJ_SHOT && gun == GUN_GL) roll += int(vel.magnitude() / curtime) % 360;
+            float diff = o.dist(old);
+            movement += diff;
+			if (projtype == PRJ_SHOT && gun == GUN_GL) 
+            {
+                roll += diff / (4*RAD);
+                if(roll >= 360) roll = fmod(roll, 360.0f);
+            }
 
 			return true;
 		}
