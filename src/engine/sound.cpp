@@ -30,21 +30,21 @@ VARP(maxsoundsatonce, 0, 24, INT_MAX-1);
 void initsound()
 {
 	if (!nosound) return;
-	
+
 	if (Mix_OpenAudio(soundfreq, MIX_DEFAULT_FORMAT, soundmono ? 1 : 2, soundbufferlen) == -1)
 	{
 		conoutf("sound initialisation failed: %s", Mix_GetError());
 		return;
 	}
-	
+
 	Mix_AllocateChannels(soundchans);
-	nosound = false;	
+	nosound = false;
 }
 
 void musicdone(bool docmd)
 {
 	if (Mix_PlayingMusic()) Mix_HaltMusic();
-	
+
 	if (music)
 	{
 		Mix_FreeMusic(music);
@@ -71,15 +71,15 @@ void stopsound()
 	Mix_CloseAudio();
 }
 
-void removesound(int c, bool clear)
+void removesound(int c)
 {
-	if (Mix_Playing(c)) Mix_HaltChannel(c); 
+	if (Mix_Playing(c)) Mix_HaltChannel(c);
 	if (sounds.inrange(c)) sounds[c].inuse = false;
 }
 
 void clearsound()
 {
-	loopv(sounds) removesound(i, true);
+	loopv(sounds) removesound(i);
 	mapsounds.setsizenodelete(0);
 }
 
@@ -158,39 +158,38 @@ void checksound()
 	{
 		if (sounds[i].inuse)
 		{
-			if (!Mix_Playing(i)) sounds[i].inuse = false;
-			else
+			if (Mix_Playing(i))
 			{
 				vec v;
-				float dist = camera1->o.dist(*sounds[i].pos, v);
-				int vol = soundvol, pan = 127;
-				
-				if (dist > camera1->radius) // only if it is within our radius
+				sounds[i].curvol = soundvol*sounds[i].vol*sounds[i].slot->vol*MIX_MAX_VOLUME/255/255/255;
+				sounds[i].dist = camera1->o.dist(*sounds[i].pos, v);
+	
+				if (sounds[i].dist > 6.f) // only if it is within our radius
 				{
-					dist -= 4.f;
-					vol -= (int)(dist*soundvol/255);
-					
 					if (!soundmono && (v.x != 0 || v.y != 0))
 					{
 						float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
-						pan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
+						sounds[i].curpan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
 					}
+					
+					sounds[i].curvol -= (int)(sounds[i].dist*sounds[i].curvol/MIX_MAX_VOLUME);
 				}
-				vol = clamp((MIX_MAX_VOLUME*vol*sounds[i].slot->vol)/255/255, 0, MIX_MAX_VOLUME);
+				else sounds[i].curpan = 127;
+	
+				sounds[i].curvol = clamp(sounds[i].curvol, 0, MIX_MAX_VOLUME);
 
-				Mix_Volume(i, vol);
-				Mix_SetPanning(i, 255-pan, pan);
+				Mix_Volume(i, sounds[i].curvol);
+				Mix_SetPanning(i, 255-sounds[i].curpan, sounds[i].curpan);
 			}
+			else sounds[i].inuse = false;
 		}
 	}
 	if (music && !Mix_PlayingMusic()) musicdone(true);
 }
 
-int playsound(int n, vec *pos, bool copy, bool mapsnd)
+int playsound(int n, vec *pos, int vol, int loop, bool copy, bool mapsnd)
 {
 	if (nosound || !soundvol || !camera1 || !cc->ready()) return -1;
-
-	vec *p = pos != NULL ? pos : &camera1->o;
 
 	if (!mapsnd)
 	{
@@ -200,25 +199,29 @@ int playsound(int n, vec *pos, bool copy, bool mapsnd)
 		if (maxsoundsatonce && soundsatonce > maxsoundsatonce) return -1;
 	}
 
+	vec *p = pos != NULL ? pos : &camera1->o;
+
 	vector<soundslot> &soundset = mapsnd ? mapsounds : gamesounds;
-	
+
 	if (soundset.inrange(n) && soundset[n].sample->sound)
 	{
-		int chan = Mix_PlayChannel(-1, soundset[n].sample->sound, 0);
-		
+		int chan = Mix_PlayChannel(-1, soundset[n].sample->sound, loop);
+
 		if (chan >= 0)
 		{
 			while(chan >= sounds.length()) sounds.add().inuse = false;
 			sounds[chan].slot = &soundset[n];
+			sounds[chan].vol = vol >= 1 && vol <= 255 ? vol : 255;
 			sounds[chan].inuse = true;
-			
+			sounds[chan].map = mapsnd;
+
 			if (copy)
 			{
 				sounds[chan].posval = vec(*p);
 				sounds[chan].pos = &sounds[chan].posval;
 			}
 			else sounds[chan].pos = p;
-	
+
 			return chan;
 		}
 		else conoutf("cannot play sound %d (%s): %s", n, soundset[n].sample->name, Mix_GetError());

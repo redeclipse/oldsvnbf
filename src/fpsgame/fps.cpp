@@ -41,7 +41,10 @@ struct GAMECLIENT : igameclient
 	IVAR(cameracycle,		0,			0,			600);		// cycle camera every N secs
 	IVARP(crosshair,		0,			1,			1);			// show the crosshair
 	IVARP(invmouse,			0,			0,			1);
-	IVARP(sensitivity,		0,			7,			1000);
+
+	IVARP(yawsensitivity,	0,			10,			1000);
+	IVARP(pitchsensitivity,	0,			7,			1000);
+	IVARP(rollsensitivity,	0,			3,			1000);
 	IVARP(sensitivityscale,	1,			1,			100);
 
 	IVARP(autoreload,		0,			1,			1);			// auto reload when empty
@@ -67,6 +70,20 @@ struct GAMECLIENT : igameclient
 		CCOMMAND(mode, "ii", (GAMECLIENT *self, int *val, int *mut), { self->setmode(*val, *mut); });
 		CCOMMAND(gamemode, "", (GAMECLIENT *self), intret(self->gamemode));
 		CCOMMAND(mutators, "", (GAMECLIENT *self), intret(self->mutators));
+
+		CCOMMAND(sensitivity, "s", (GAMECLIENT *self, char *s), {
+				if (*s)
+				{
+					int x = atoi(s);
+					if (x)
+					{
+						setvar("yawsensitivity", x);
+						setvar("pitchsensitivity", x/2);
+						setvar("rollsensitivity", x/3);
+					}
+				}
+				intret(self->yawsensitivity());
+			});
 	}
 
 	iclientcom *getcom() { return &cc; }
@@ -75,7 +92,7 @@ struct GAMECLIENT : igameclient
 	fpsent *spawnstate(fpsent *d)			  // reset player state not persistent accross spawns
 	{
 		d->respawn();
-		playsound(S_RESPAWN, &d->o, true);
+		playsound(S_RESPAWN, &d->o, 255, 0, true);
 		d->spawnstate(gamemode, mutators);
 		return d;
 	}
@@ -269,7 +286,7 @@ struct GAMECLIENT : igameclient
 			d->hitpush(damage, dir, actor, gun);
 			d->damageroll(damage);
 		}
-		
+
 		if (d->type == ENT_PLAYER)
 		{
 			playsound(S_PAIN1+rnd(5), &d->o);
@@ -296,14 +313,14 @@ struct GAMECLIENT : igameclient
 		}
         else if(m_assassin(gamemode) && (d == player1 || actor == player1))
         {
-            if(d==player1) 
-            {   
+            if(d==player1)
+            {
                 console("\f2you got fragged by %s (%s)", cflags, aname, asc.hunters.find(actor)>=0 ? "assassin" : (asc.targets.find(actor)>=0 ? "target" : "friend"));
                 if(asc.hunters.find(actor)>=0) asc.hunters.removeobj(actor);
             }
-            else 
+            else
             {
-                console("\f2you fragged %s (%s)", cflags, dname, asc.targets.find(d)>=0 ? "target +1" : (asc.hunters.find(d)>=0 ? "assassin +0" : "friend -1")); 
+                console("\f2you fragged %s (%s)", cflags, dname, asc.targets.find(d)>=0 ? "target +1" : (asc.hunters.find(d)>=0 ? "assassin +0" : "friend -1"));
                 if(asc.targets.find(d)>=0) asc.targets.removeobj(d);
             }
         }
@@ -568,8 +585,8 @@ struct GAMECLIENT : igameclient
         dynent *gi = NULL;
         switch(player1->gunselect) // cleanup idle -> shoot transitions on some gun animations
         {
-            case GUN_SG: 
-                gi = &guninterp; 
+            case GUN_SG:
+                gi = &guninterp;
                 break;
         }
 		rendermodel(NULL, gunname, anim, sway, camera1->yaw+90, camera1->pitch, camera1->roll, MDL_LIGHT, gi, NULL, base, speed);
@@ -697,7 +714,7 @@ struct GAMECLIENT : igameclient
 						{
 							float hlt = player1->health/100.f;
 							settexture("textures/hud_health.png");
-		
+
 							if (hlt >= 0.5)
 							{
 								float vrt = (hlt-0.5f)*2.f;
@@ -883,7 +900,7 @@ struct GAMECLIENT : igameclient
 	void fixrange(physent *d)
 	{
 		const float MAXPITCH = 89.9f;
-		const float MAXROLL = 33.0f;
+		const float MAXROLL = 35.0f;
 
 		if (d->pitch > MAXPITCH) d->pitch = MAXPITCH;
 		if (d->pitch < -MAXPITCH) d->pitch = -MAXPITCH;
@@ -909,9 +926,9 @@ struct GAMECLIENT : igameclient
 		{
 			const float SENSF = 33.0f;	 // try match quake sens
 
-			if (player1->leaning) player1->roll += (dx/SENSF)*(sensitivity()/(float)sensitivityscale());
-			else player1->yaw += (dx/SENSF)*(sensitivity()/(float)sensitivityscale());
-			player1->pitch -= (dy/SENSF)*(sensitivity()/(float)sensitivityscale())*(invmouse() ? -1 : 1);
+			if (player1->leaning) player1->roll += (dx/SENSF)*(rollsensitivity()/(float)sensitivityscale());
+			else player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
+			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1 : 1);
 
 			fixrange(player1);
 		}

@@ -19,7 +19,7 @@ struct soundslot
 {
 	soundsample *sample;
 	int vol;
-	
+
 	soundslot() : sample(NULL), vol(0) {}
 	~soundslot() {}
 };
@@ -29,9 +29,11 @@ struct sound
 {
 	soundslot *slot;
 	vec *pos, posval;
-	bool inuse;
-	
-	sound() : slot(NULL), inuse(false) {}
+	int vol, curvol, curpan;
+	float dist;
+	bool inuse, map;
+
+	sound() : slot(NULL), vol(255), curvol(255), curpan(127), dist(0.f), inuse(false) {}
 	~sound() {}
 };
 
@@ -43,8 +45,8 @@ extern void initsound();
 extern void stopsound();
 extern void checksound();
 extern int addsound(const char *name, int vol, vector<soundslot> &sounds);
-extern void removesound(int c, bool clear = false);
+extern void removesound(int c);
 extern void clearsound();
-extern int playsound(int n, vec *pos = NULL, bool copy = false, bool mapsnd = false);
+extern int playsound(int n, vec *pos = NULL, int vol = 255, int loop = 0, bool copy = false, bool mapsnd = false);
 
 extern int soundvol, musicvol, soundmono, soundchans, soundbufferlen, soundfreq, maxsoundsatonce;

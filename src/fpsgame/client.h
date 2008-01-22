@@ -638,7 +638,7 @@ struct clientcom : iclientcom
 				d->lifesequence = ls;
 				d->gunselect = gunselect;
 				d->state = CS_SPAWNING;
-				playsound(S_RESPAWN, &d->o, true);
+				playsound(S_RESPAWN, &d->o, 255, 0, true);
 				break;
 			}
 
@@ -769,7 +769,7 @@ struct clientcom : iclientcom
 				int i = getint(p);
 				if(!cl.et.ents.inrange(i)) break;
 				cl.et.setspawn(i, true);
-				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o, true);
+				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o, 255, 0, true);
                 const char *name = cl.et.itemname(i);
 				if(name) particle_text(cl.et.ents[i]->o, name, 9);
 				break;
@@ -794,9 +794,9 @@ struct clientcom : iclientcom
 				{
 					if (val > id->maxval) val = id->maxval;
 					else if (val < id->minval) val = id->minval;
-					
+
 					setvar(text, val, true);
-					
+
 					conoutf("%s updated the value of %s to %d", d->name, id->name, *id->storage.i);
 				}
 				break;
@@ -996,7 +996,7 @@ struct clientcom : iclientcom
             case SV_ADDTARGET:
             {
                 int tcn = getint(p);
-                if(m_assassin(cl.gamemode)) 
+                if(m_assassin(cl.gamemode))
                 {
                     fpsent *t = cl.newclient(tcn);
                     if(cl.asc.targets.find(t)<0) cl.asc.targets.add(t);
@@ -1035,7 +1035,7 @@ struct clientcom : iclientcom
                     if(h) cl.asc.hunters.removeobj(h);
                 }
                 break;
-            }    
+            }
 
 			case SV_NEWMAP:
 			{

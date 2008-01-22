@@ -81,7 +81,7 @@ void clearoverrides()
             switch(i.type)
 			{
 				case ID_ALIAS:
-                    if(i.action[0]) i.action = exchangestr(i.action, ""); 
+                    if(i.action[0]) i.action = exchangestr(i.action, "");
 					break;
 				case ID_VAR:
                     *i.storage.i = i.overrideval.i;
@@ -213,12 +213,12 @@ char *svariable(const char *name, const char *cur, char **storage, void (*fun)()
 	ident *id = idents->access(name); \
     if(!id || id->type!=vartype) return retval;
 #define GETVAR(id, name, retval) _GETVAR(id, ID_VAR, name, retval)
-void setvar(const char *name, int i, bool dofunc) 
+void setvar(const char *name, int i, bool dofunc)
 {
 	GETVAR(id, name, );
-    *id->storage.i = i; 
+    *id->storage.i = i;
     if(dofunc) id->changed();
-} 
+}
 void setfvar(const char *name, float f, bool dofunc)
 {
     GETVAR(id, name, );
@@ -231,17 +231,17 @@ void setsvar(const char *name, const char *str, bool dofunc)
     *id->storage.s = exchangestr(*id->storage.s, str);
 	if(dofunc) id->changed();
 }
-int getvar(const char *name) 
+int getvar(const char *name)
 {
 	GETVAR(id, name, 0);
     return *id->storage.i;
 }
-int getvarmin(const char *name) 
+int getvarmin(const char *name)
 {
 	GETVAR(id, name, 0);
     return id->minval;
 }
-int getvarmax(const char *name) 
+int getvarmax(const char *name)
 {
 	GETVAR(id, name, 0);
     return id->maxval;
@@ -379,7 +379,7 @@ char *parseword(const char *&p)                       // parse single argument, 
 	{
         p += strspn(p, " \t\r");
 		if(p[0]!='/' || p[1]!='/') break;
-        p += strcspn(p, "\n\0");  
+        p += strcspn(p, "\n\0");
 	}
 	if(*p=='\"')
 	{
@@ -530,7 +530,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                                 if(id->override==NO_OVERRIDE) { saveval; id->override = OVERRIDDEN; } \
                             } \
                             else if(id->override!=NO_OVERRIDE) { resetval; id->override = NO_OVERRIDE; }
-						
+
 						WORLDVAR;
                         OVERRIDEVAR(id->overrideval.i = *id->storage.i, )
                         int i1 = parseint(w[1]);
@@ -543,7 +543,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         id->changed();                                             // call trigger function if available
 					}
                     break;
-                  
+
                 case ID_FVAR:
                     if(!w[1][0]) conoutf("%s = %f", c, *id->storage.f);
 					else
@@ -627,7 +627,7 @@ void writecfg()
 	if(!f) return;
 	fprintf(f, "// Automatically written by Blood Frontier\n");
 	cc->writeclientinfo(f);
-	fprintf(f, "if (= $version %d) [\n\n", ENGVERSION);
+	fprintf(f, "if (&& (= $version %d) (= $gamever %d)) [\n\n", ENGVERSION, sv->gamever());
 	enumerate(*idents, ident, id,
         if(!id.persist || id.world) continue;
         switch(id.type)
@@ -657,7 +657,7 @@ COMMAND(writecfg, "");
 void intret(int v) { s_sprintfd(b)("%d", v); commandret = newstring(b); }
 
 ICOMMAND(if, "sss", (char *cond, char *t, char *f), commandret = executeret(cond[0]!='0' ? t : f));
-ICOMMAND(loop, "sis", (char *var, int *n, char *body), 
+ICOMMAND(loop, "sis", (char *var, int *n, char *body),
 {
     if(*n<=0) return;
     ident *id = newident(var);
@@ -666,8 +666,8 @@ ICOMMAND(loop, "sis", (char *var, int *n, char *body),
     {
         if(i) sprintf(id->action, "%d", i);
         else pushident(*id, newstring("0", 16));
-        execute(body); 
-    } 
+        execute(body);
+    }
     popident(*id);
 });
 ICOMMAND(while, "ss", (char *cond, char *body), while(execute(cond)) execute(body));    // can't get any simpler than this :)
