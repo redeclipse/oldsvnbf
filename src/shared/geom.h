@@ -347,6 +347,13 @@ struct matrix3x4
         Z.add(vec4(m.Z).mul(k));
     }
 
+    void normalize()
+    {
+        X.vec::mul(1/X.vec::magnitude());
+        Y.vec::mul(1/Y.vec::magnitude());
+        Z.vec::mul(1/Z.vec::magnitude());
+    }
+
     void lerp(const matrix3x4 &from, const matrix3x4 &to, float t)
     {
         loopi(4)
