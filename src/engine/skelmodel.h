@@ -254,6 +254,7 @@ struct skelmodel : animmodel
         {
             voffset = offset;
             eoffset = idxs.length();
+            if(!group->numframes) minvert = 0xFFFF;
             loopi(numtris)
             {
                 tri &t = tris[i];
@@ -261,14 +262,28 @@ struct skelmodel : animmodel
                 {
                     tcvert &tc = tcverts[t.vert[j]];
                     vert &v = verts[t.vert[j]];
+                    if(!group->numframes) loopvk(vverts)
+                    {
+                        if(comparevert(vverts[k], j, tc, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
+                    }
                     idxs.add(vverts.length());
                     assignvert(vverts.add(), j, tc, v);
+                found:;
                 }
             }
-            minvert = voffset;
-            maxvert = voffset + numverts-1;
             elen = idxs.length()-eoffset;
-            return numverts;
+            if(group->numframes)
+            {
+                minvert = voffset;
+                maxvert = voffset + numverts-1;
+                return numverts;
+            }
+            else
+            {
+                minvert = min(minvert, ushort(vverts.length()-1));
+                maxvert = max(minvert, ushort(vverts.length()-1));
+                return vverts.length()-voffset;
+            }
         }
 
         int genvbo(vector<ushort> &idxs, int offset)
@@ -639,13 +654,13 @@ struct skelmodel : animmodel
 
         void scaletags(const vec &transdiff, float scalediff)
         {
-            if(matinvbones) DELETEA(matinvbones);
-            if(matframebones) DELETEA(matframebones);
+            DELETEA(invbones);
+            DELETEA(matinvbones);
+            DELETEA(matframebones);
             loopi(numbones)
             {
                 if(bones[i].parent<0) bones[i].base.translate(transdiff);
                 bones[i].base.scale(scalediff);
-                invbones[i] = dualquat(bones[i].base).invert();
             }
             loopi(numframes) 
             {
@@ -862,7 +877,7 @@ struct skelmodel : animmodel
                 if(b.parent<0) sc.mdata[i] = m;
                 else sc.mdata[i].mul(sc.mdata[b.parent], m);
             }
-            loopi(numbones)
+            loopi(numbones) 
             {
                 sc.mdata[i].normalize();
                 sc.mdata[i].mul(matinvbones[i]);
@@ -928,7 +943,7 @@ struct skelmodel : animmodel
             matrix3x4 t;
             if(numframes) t.mul(m, bones[bone].base);
             else t = m;
-            loopk(4)
+            loopk(4) 
             {
                 l.matrix[4*k] = t.X[k];
                 l.matrix[4*k+1] = t.Y[k];
@@ -936,7 +951,7 @@ struct skelmodel : animmodel
                 l.matrix[4*k+3] = k==3 ? 1 : 0;
             }
         }
-
+        
         void render(const animstate *as, float pitch, const vec &axis, part *p)
         {
             bool norms = false, tangents = false;
