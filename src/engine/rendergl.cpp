@@ -367,7 +367,9 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
 	if(strstr(exts, "GL_ARB_texture_cube_map"))
 	{
-        glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, (GLint *)&hwcubetexsize);
+        GLint val;
+        glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, &val);
+        hwcubetexsize = val;
 		hasCM = true;
 		//conoutf("Using GL_ARB_texture_cube_map extension.");
 	}
@@ -397,13 +399,17 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     if(strstr(exts, "GL_EXT_texture_filter_anisotropic"))
     {
        hasAF = true;
-       glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, (GLint *)&hwmaxaniso);
+       GLint val;
+       glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &val);
+       hwmaxaniso = val;
        //conoutf("Using GL_EXT_texture_filter_anisotropic extension.");
     }
 
 	if(fsaa) glEnable(GL_MULTISAMPLE);
 
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, (GLint *)&hwtexsize);
+    GLint val;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val);
+    hwtexsize = val;
 
 	inittmus();
 }
