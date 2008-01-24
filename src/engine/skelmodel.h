@@ -424,7 +424,7 @@ struct skelmodel : animmodel
 
             if(!(as->anim&ANIM_NOSKIN))
             {
-                if(s.multitextured() || s.tangents())
+                if(s.multitextured())
                 {
                     if(!enablemtc || lastmtcbuf!=lastvbuf)
                     {
@@ -432,16 +432,8 @@ struct skelmodel : animmodel
                         if(!enablemtc) glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                         if(lastmtcbuf!=lastvbuf)
                         {
-                            if(((skelmeshgroup *)group)->vertsize==sizeof(vvertbumpw))
-                            {
-                                vvertbumpw *vverts = hasVBO ? 0 : (vvertbumpw *)vc.vdata;
-                                glTexCoordPointer(4, GL_FLOAT, ((skelmeshgroup *)group)->vertsize, &vverts->tangent.x);
-                            }
-                            else
-                            {
-                                vvertbump *vverts = hasVBO ? 0 : (vvertbump *)vc.vdata;
-                                glTexCoordPointer(s.tangents() ? 4 : 2, GL_FLOAT, ((skelmeshgroup *)group)->vertsize, s.tangents() ? &vverts->tangent.x : &vverts->u);
-                            }
+                            vvert *vverts = hasVBO ? 0 : (vvert *)vc.vdata;
+                            glTexCoordPointer(2, GL_FLOAT, ((skelmeshgroup *)group)->vertsize, &vverts->u);
                         }
                         glClientActiveTexture_(GL_TEXTURE0_ARB);
                         lastmtcbuf = lastvbuf;
@@ -449,6 +441,30 @@ struct skelmodel : animmodel
                     }
                 }
                 else if(enablemtc) disablemtc();
+
+                if(s.tangents())
+                {
+                    if(!enabletangents || lastnbuf!=lastvbuf)
+                    {
+                        if(!enabletangents) glEnableVertexAttribArray_(1);
+                        if(lastnbuf!=lastvbuf)
+                        {
+                            if(((skelmeshgroup *)group)->vertsize==sizeof(vvertbumpw))
+                            {
+                                vvertbumpw *vverts = hasVBO ? 0 : (vvertbumpw *)vc.vdata;
+                                glVertexAttribPointer_(1, 4, GL_FLOAT, GL_FALSE, ((skelmeshgroup *)group)->vertsize, &vverts->tangent.x);
+                            }
+                            else
+                            {
+                                vvertbump *vverts = hasVBO ? 0 : (vvertbump *)vc.vdata;
+                                glVertexAttribPointer_(1, 4, GL_FLOAT, GL_FALSE, ((skelmeshgroup *)group)->vertsize, &vverts->tangent.x);
+                            }
+                        }
+                        lastnbuf = lastvbuf;
+                        enabletangents = true;
+                    }
+                }
+                else if(enabletangents) disabletangents();
 
                 if(renderpath==R_FIXEDFUNCTION && (s.scrollu || s.scrollv))
                 {

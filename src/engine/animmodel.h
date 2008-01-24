@@ -1141,21 +1141,21 @@ struct animmodel : model
         center.add(radius);
     }
 
-    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enablelighting, enablecullface, enablefog, enablebones;
+    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enablelighting, enablecullface, enablefog, enabletangents, enablebones;
     static vec lightcolor;
     static plane refractfogplane;
     static float lastalphatest;
-    static void *lastvbuf, *lasttcbuf, *lastmtcbuf, *lastbbuf, *lastbdata;
+    static void *lastvbuf, *lasttcbuf, *lastmtcbuf, *lastbbuf, *lastnbuf, *lastbdata;
     static GLuint lastebuf, lastenvmaptex, closestenvmaptex;
     static Texture *lasttex, *lastmasks, *lastnormalmap;
     static int envmaptmu, fogtmu;
 
     void startrender()
     {
-        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enablelighting = enablefog = enablebones = false;
+        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enablelighting = enablefog = enabletangents = enablebones = false;
         enablecullface = true;
         lastalphatest = -1;
-        lastvbuf = lasttcbuf = lastmtcbuf = lastbbuf = lastbdata = NULL;
+        lastvbuf = lasttcbuf = lastmtcbuf = lastnbuf = lastbbuf = lastbdata = NULL;
         lastebuf = lastenvmaptex = closestenvmaptex = 0;
         lasttex = lastmasks = lastnormalmap = NULL;
         envmaptmu = fogtmu = -1;
@@ -1178,6 +1178,12 @@ struct animmodel : model
         glDisableVertexAttribArray_(6);
         glDisableVertexAttribArray_(7);
         enablebones = false;
+    }
+
+    static void disabletangents()
+    {
+        glDisableVertexAttribArray_(1);
+        enabletangents = false;
     }
 
     static void disablemtc()
@@ -1205,6 +1211,7 @@ struct animmodel : model
         }
         glDisableClientState(GL_VERTEX_ARRAY);
         if(enabletc) disabletc();
+        if(enabletangents) disabletangents();
         if(enablebones) disablebones();
         lastvbuf = lasttcbuf = lastmtcbuf = lastbbuf = NULL;
         lastebuf = 0;
@@ -1265,11 +1272,11 @@ struct animmodel : model
 
 bool animmodel::enabletc = false, animmodel::enablemtc = false, animmodel::enablealphatest = false, animmodel::enablealphablend = false,
      animmodel::enableenvmap = false, animmodel::enableglow = false, animmodel::enablelighting = false, animmodel::enablecullface = true,
-     animmodel::enablefog = false, animmodel::enablebones = false;
+     animmodel::enablefog = false, animmodel::enabletangents = false, animmodel::enablebones = false;
 vec animmodel::lightcolor;
 plane animmodel::refractfogplane;
 float animmodel::lastalphatest = -1;
-void *animmodel::lastvbuf = NULL, *animmodel::lasttcbuf = NULL, *animmodel::lastmtcbuf = NULL, *animmodel::lastbbuf = NULL, *animmodel::lastbdata = NULL;
+void *animmodel::lastvbuf = NULL, *animmodel::lasttcbuf = NULL, *animmodel::lastmtcbuf = NULL, *animmodel::lastnbuf = NULL, *animmodel::lastbbuf = NULL, *animmodel::lastbdata = NULL;
 GLuint animmodel::lastebuf = 0, animmodel::lastenvmaptex = 0, animmodel::closestenvmaptex = 0;
 Texture *animmodel::lasttex = NULL, *animmodel::lastmasks = NULL, *animmodel::lastnormalmap = NULL;
 int animmodel::envmaptmu = -1, animmodel::fogtmu = -1;
