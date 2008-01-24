@@ -101,7 +101,7 @@ struct skelmodel : animmodel
             else loopi(numverts) verts[i].pos.add(transdiff).mul(scalediff);
         }
 
-        void calctangents()
+        void calctangents(bool areaweight = true)
         {
             if(bumpverts) return;
             vec *tangent = new vec[2*numverts], *bitangent = tangent+numverts;
@@ -128,6 +128,14 @@ struct skelmodel : animmodel
                 u.mul(v2).sub(vec(e2).mul(v1)).mul(scale);
                 v.mul(u1).sub(vec(e1).mul(u2)).mul(scale);
 
+                if(vec().cross(v, u).dot(vec().cross(e1, e2))) { u.neg(); v.neg(); }
+
+                if(!areaweight)
+                {
+                    u.normalize();
+                    v.normalize();
+                }
+
                 loopj(3)
                 {
                     tangent[t.vert[j]].add(u);
@@ -137,7 +145,7 @@ struct skelmodel : animmodel
             loopi(numverts)
             {
                 const vec &n = verts[i].norm,
-                          &t = tangent[i],
+                          &t = tangent[i], 
                           &bt = bitangent[i];
                 bumpvert &bv = bumpverts[i];
                 (bv.tangent = t).sub(vec(n).mul(n.dot(t))).normalize();
@@ -260,14 +268,15 @@ struct skelmodel : animmodel
                 tri &t = tris[i];
                 loopj(3)
                 {
-                    tcvert &tc = tcverts[t.vert[j]];
-                    vert &v = verts[t.vert[j]];
+                    int index = t.vert[j];
+                    tcvert &tc = tcverts[index];
+                    vert &v = verts[index];
                     if(!group->numframes) loopvk(vverts)
                     {
-                        if(comparevert(vverts[k], j, tc, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
+                        if(comparevert(vverts[k], index, tc, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
                     }
                     idxs.add(vverts.length());
-                    assignvert(vverts.add(), j, tc, v);
+                    assignvert(vverts.add(), index, tc, v);
                 found:;
                 }
             }
