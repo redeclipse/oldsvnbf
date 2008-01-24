@@ -158,7 +158,7 @@ struct md5 : skelmodel
                 }
                 else if(sscanf(buf, " numverts %d", &numverts)==1)
                 {
-                    numverts = max(numverts, 0);
+                    numverts = max(numverts, 0);        
                     if(numverts)
                     {
                         vertinfo = new md5vert[numverts];
@@ -180,12 +180,13 @@ struct md5 : skelmodel
                 {
                     if(index>=0 && index<numverts) vertinfo[index] = v;
                 }
-                else if(sscanf(buf, " tri %d %hu %hu %hu", &index, &t.vert[2], &t.vert[1], &t.vert[0])==4)
+                else if(sscanf(buf, " tri %d %hu %hu %hu", &index, &t.vert[0], &t.vert[1], &t.vert[2])==4)
                 {
                     if(index>=0 && index<numtris) tris[index] = t;
                 }
                 else if(sscanf(buf, " weight %d %d %f ( %f %f %f ) ", &index, &w.joint, &w.bias, &w.pos.x, &w.pos.y, &w.pos.z)==6)
                 {
+                    w.pos.y = -w.pos.y;
                     if(index>=0 && index<numweights) weightinfo[index] = w;
                 }
             }
@@ -234,6 +235,9 @@ struct md5 : skelmodel
                             name, &parent, &j.pos.x, &j.pos.y, &j.pos.z,
                             &j.orient.x, &j.orient.y, &j.orient.z)==8)
                         {
+                            j.pos.y = -j.pos.y;
+                            j.orient.x = -j.orient.x;
+                            j.orient.z = -j.orient.z;
                             char *start = strchr(name, '"'), *end = start ? strchr(start+1, '"') : NULL;
                             if(start && end) s_strncpy(md5joints.add().name, start+1, end-(start+1)+1);
                             else s_strcpy(md5joints.add().name, name);
@@ -340,6 +344,9 @@ struct md5 : skelmodel
                         md5joint j;
                         if(sscanf(buf, " ( %f %f %f ) ( %f %f %f )", &j.pos.x, &j.pos.y, &j.pos.z, &j.orient.x, &j.orient.y, &j.orient.z)==6)
                         {
+                            j.pos.y = -j.pos.y;
+                            j.orient.x = -j.orient.x;
+                            j.orient.z = -j.orient.z;
                             j.orient.restorew();
                             basejoints.add(j);
                         }
@@ -372,11 +379,11 @@ struct md5 : skelmodel
                         if(h.flags)
                         {
                             if(h.flags&1) j.pos.x = *jdata++;
-                            if(h.flags&2) j.pos.y = *jdata++;
+                            if(h.flags&2) j.pos.y = -*jdata++;
                             if(h.flags&4) j.pos.z = *jdata++;
-                            if(h.flags&8) j.orient.x = *jdata++;
+                            if(h.flags&8) j.orient.x = -*jdata++;
                             if(h.flags&16) j.orient.y = *jdata++;
-                            if(h.flags&32) j.orient.z = *jdata++;
+                            if(h.flags&32) j.orient.z = -*jdata++;
                             j.orient.restorew();
                             /*if(memcmp(&j, &basejoints[i], sizeof(j))) usedjoints[i] = 1; */
                         }
