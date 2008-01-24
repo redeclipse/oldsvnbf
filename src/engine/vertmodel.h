@@ -208,14 +208,15 @@ struct vertmodel : animmodel
                 tri &t = tris[i];
                 loopj(3) 
                 {
-                    tcvert &tc = tcverts[t.vert[j]];
-                    vert &v = verts[t.vert[j]];
+                    int index = t.vert[j];
+                    tcvert &tc = tcverts[index];
+                    vert &v = verts[index];
                     loopvk(vverts)
                     {
-                        if(comparevert(vverts[k], j, tc, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
+                        if(comparevert(vverts[k], index, tc, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
                     }
                     idxs.add(vverts.length());
-                    assignvert(vverts.add(), j, tc, v);
+                    assignvert(vverts.add(), index, tc, v);
                 found:;
                 }
             }
