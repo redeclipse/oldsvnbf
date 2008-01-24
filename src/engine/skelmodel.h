@@ -128,8 +128,6 @@ struct skelmodel : animmodel
                 u.mul(v2).sub(vec(e2).mul(v1)).mul(scale);
                 v.mul(u1).sub(vec(e1).mul(u2)).mul(scale);
 
-                if(vec().cross(v, u).dot(vec().cross(e1, e2))) { u.neg(); v.neg(); }
-
                 if(!areaweight)
                 {
                     u.normalize();
