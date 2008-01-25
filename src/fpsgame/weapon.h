@@ -325,6 +325,7 @@ struct weaponstate
 		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 
 		vec from = d->o;
+        if(d->crouching) from.z -= (d == cl.player1 ? cl.crouching : 1.0f)*(1-CROUCHHEIGHT)*d->height;
 		vec to = targ;
 
 		vec unitv;
