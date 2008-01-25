@@ -436,10 +436,9 @@ struct physics
 	{
 		if (floating)
 		{
-			if (pl->crouching) pl->crouching = false;
 			if (pl->jumping)
 			{
-				pl->jumping = false;
+				pl->jumping = pl->crouching = false;
 				pl->vel.z = jumpvelocity(pl);
 			}
 		}
@@ -456,7 +455,7 @@ struct physics
 			}
 			if(pl->jumping)
 			{
-				pl->jumping = false;
+				pl->jumping = pl->crouching = false;
 
 				pl->vel.z = jumpvelocity(pl);
 				if(water) { pl->vel.x /= waterdampen(pl); pl->vel.y /= waterdampen(pl); }
@@ -465,7 +464,6 @@ struct physics
 		}
 		else
 		{
-			if (pl->crouching) pl->crouching = false;
 			pl->timeinair += millis;
 		}
 

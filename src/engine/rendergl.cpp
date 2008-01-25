@@ -914,8 +914,6 @@ void gl_drawframe(int w, int h)
 {
 	defaultshader->set();
 
-	cl->recomputecamera();
-
 	cleardynlights();
 	cl->adddynlights();
 

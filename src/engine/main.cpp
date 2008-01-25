@@ -636,6 +636,7 @@ int main(int argc, char **argv)
 
 			if (cc->ready())
 			{
+                cl->recomputecamera();
 				cl->findorientation();
 				entity_particles();
 				checksound();

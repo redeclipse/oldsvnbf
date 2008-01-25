@@ -38,6 +38,8 @@ enum { ENT_PLAYER = 0, ENT_AI, ENT_INANIMATE, ENT_CAMERA, ENT_BOUNCE };
 
 enum { COLLIDE_AABB = 0, COLLIDE_ELLIPSE };
 
+#define CROUCHHEIGHT 0.6f
+
 struct physent                                  // base entity type, can be affected by physics
 {
 	vec o, vel, gvel;							// origin, velocity, accumulated gravity

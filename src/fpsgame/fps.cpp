@@ -21,6 +21,7 @@ struct GAMECLIENT : igameclient
 
 	string cptext;
 	int cameranum, cameracycled, camerawobble, damageresidue, myrankv, myranks;
+    float crouching;
 
 	struct sline { string s; };
 	struct teamscore
@@ -60,7 +61,7 @@ struct GAMECLIENT : igameclient
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
 			respawned(-1), suicided(-1),
-			cameranum(0), cameracycled(0), myrankv(0), myranks(0),
+			cameranum(0), cameracycled(0), myrankv(0), myranks(0), crouching(0),
 			player1(spawnstate(new fpsent()))
 	{
 		CCOMMAND(centerrank, "", (GAMECLIENT *self), self->setcrank());
@@ -142,6 +143,8 @@ struct GAMECLIENT : igameclient
 
 	void respawnself()
 	{
+        crouching = 0;
+
 		player1->stopmoving();
 
         if( m_mp(gamemode))
@@ -243,6 +246,12 @@ struct GAMECLIENT : igameclient
 				ph.updatewater(player1, 0);
 
 				if (player1->physstate >= PHYS_SLOPE) swaymillis += curtime;
+                
+                if (player1->crouching)
+                {
+                    crouching = min(1.0f, crouching + curtime/300.0f);
+                }
+                else crouching = max(0.0f, crouching - curtime/300.0f);
 
 				float k = pow(0.7f, curtime/10.0f);
 				swaydir.mul(k);
@@ -1005,11 +1014,14 @@ struct GAMECLIENT : igameclient
 		{
 			cameratype = 0;
 			camera1->o = player1->o;
+           
+            if(crouching>0) camera1->o.z -= crouching*(1-CROUCHHEIGHT)*player1->height; 
 
 			if (player1->state == CS_DEAD)
-				camera1->o.z -= (float(player1->height-1)/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
-			else
-				camera1->o.z -= player1->aboveeye;
+            {
+				camera1->o.z -= (player1->height/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
+                camera1->o.z = max(player1->o.z - player1->height + 1.0f, camera1->o.z);
+            }
 
 			camera1->yaw = player1->yaw;
 			camera1->pitch = player1->pitch;
