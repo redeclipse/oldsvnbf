@@ -312,7 +312,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
             hasPP = true;
         }
 
-        if(strstr(exts, "GL_ARB_texture_rectangle"))
+        if(strstr(exts, "GL_EXT_texture_rectangle") || strstr(exts, "GL_ARB_texture_rectangle"))
         {
             hasTR = true;
             //conoutf("Using GL_ARB_texture_rectangle extension.");
