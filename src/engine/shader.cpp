@@ -752,7 +752,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
         EMUFOGPS(emufogcoord && i+1==numlights, psdl, emufogtc, emufogcomp);
 
         s_sprintfd(name)("<dynlight %d>%s", i+1, sname);
-        Shader *variant = newshader(s.type, name, reusevp ? "" : vsdl.getbuf(), psdl.getbuf(), &s, row, reusevp);
+        Shader *variant = newshader(s.type, name, reusevp>=0 ? "" : vsdl.getbuf(), psdl.getbuf(), &s, row, reusevp);
         if(!variant) return;
 	}
 }
@@ -854,7 +854,7 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
     EMUFOGPS(emufogcoord, pssm, emufogtc, emufogcomp);
 
     s_sprintfd(name)("<shadowmap>%s", sname);
-    Shader *variant = newshader(s.type, name, reusevp ? "" : vssm.getbuf(), pssm.getbuf(), &s, row, reusevp);
+    Shader *variant = newshader(s.type, name, reusevp>=0 ? "" : vssm.getbuf(), pssm.getbuf(), &s, row, reusevp);
     if(!variant) return;
 
     if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vssm.getbuf(), pssm.getbuf(), row, reusevp);
