@@ -304,7 +304,7 @@ struct vertmodel : animmodel
 
         void render(const animstate *as, skin &s, vbocacheentry &vc)
         {
-            s.bind(as);
+            s.bind(this, as);
 
             if(!(as->anim&ANIM_NOSKIN))
             {

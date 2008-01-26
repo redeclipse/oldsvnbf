@@ -64,6 +64,7 @@ struct animmodel : model
 
     struct part;
     struct linkedpart;
+    struct mesh;
 
     struct skin
     {
@@ -80,8 +81,6 @@ struct animmodel : model
         bool bumpmapped() { return renderpath!=R_FIXEDFUNCTION && normalmap && bumpmodels; }
         bool normals() { return renderpath!=R_FIXEDFUNCTION || (lightmodels && !fullbright) || envmapped() || bumpmapped(); }
         bool tangents() { return bumpmapped(); }
-        bool skeletalmat() { return owner->meshes->skeletalmat(); }
-        bool skeletal() { return owner->meshes->skeletal(); }
 
         void setuptmus(const animstate *as, bool masked)
         {
@@ -178,7 +177,7 @@ struct animmodel : model
             }
         }
 
-        void setshaderparams(const animstate *as, bool masked)
+        void setshaderparams(mesh *m, const animstate *as, bool masked)
         {
             if(fullbright)
             {
@@ -197,51 +196,43 @@ struct animmodel : model
             setenvparamf("millis", SHPARAM_VERTEX, 5, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);
         }
 
-        void setshader(const animstate *as, bool masked)
+        void setshader(mesh *m, const animstate *as, bool masked)
         {
-            #define SETMODELSHADER(name) \
+            #define SETMODELSHADER(m, name) \
                 do \
                 { \
                     static Shader *name##shader = NULL; \
                     if(!name##shader) name##shader = lookupshaderbyname(#name); \
-                    name##shader->set(); \
+                    m->setshader(name##shader); \
                 } \
                 while(0)
-            #define SETMODELSHADERS(suffix) \
-                do \
-                { \
-                    if(bumpmapped()) \
-                    { \
-                        if(as->anim&ANIM_ENVMAP && envmapmax>0) \
-                        { \
-                            if(lightmodels && !fullbright && (masked || spec>=0.01f)) SETMODELSHADER(bumpenvmap##suffix); \
-                            else SETMODELSHADER(bumpenvmapnospec##suffix); \
-                            setlocalparamf("envmapscale", SHPARAM_PIXEL, 6, envmapmin-envmapmax, envmapmax); \
-                        } \
-                        else if(masked && lightmodels && !fullbright) SETMODELSHADER(bumpmasks##suffix); \
-                        else if(masked && glowmodels) SETMODELSHADER(bumpmasksnospec##suffix); \
-                        else if(spec>=0.01f && lightmodels && !fullbright) SETMODELSHADER(bump##suffix); \
-                        else SETMODELSHADER(bumpnospec##suffix); \
-                    } \
-                    else if(as->anim&ANIM_ENVMAP && envmapmax>0) \
-                    { \
-                        if(lightmodels && !fullbright && (masked || spec>=0.01f)) SETMODELSHADER(envmap##suffix); \
-                        else SETMODELSHADER(envmapnospec##suffix); \
-                        setlocalparamf("envmapscale", SHPARAM_VERTEX, 6, envmapmin-envmapmax, envmapmax); \
-                    } \
-                    else if(masked && lightmodels && !fullbright) SETMODELSHADER(masks##suffix); \
-                    else if(masked && glowmodels) SETMODELSHADER(masksnospec##suffix); \
-                    else if(spec>=0.01f && lightmodels && !fullbright) SETMODELSHADER(std##suffix); \
-                    else SETMODELSHADER(nospec##suffix); \
-                } \
-                while(0)
-            if(shader) shader->set();
-            else if(skeletalmat()) SETMODELSHADERS(skelmatmodel);
-            else if(skeletal()) SETMODELSHADERS(skelmodel);
-            else SETMODELSHADERS(model);
+            if(shader) m->setshader(shader);
+            else if(bumpmapped())
+            {
+                if(as->anim&ANIM_ENVMAP && envmapmax>0)
+                {
+                    if(lightmodels && !fullbright && (masked || spec>=0.01f)) SETMODELSHADER(m, bumpenvmapmodel);
+                    else SETMODELSHADER(m, bumpenvmapnospecmodel);
+                    setlocalparamf("envmapscale", SHPARAM_PIXEL, 6, envmapmin-envmapmax, envmapmax);
+                }
+                else if(masked && lightmodels && !fullbright) SETMODELSHADER(m, bumpmasksmodel);
+                else if(masked && glowmodels) SETMODELSHADER(m, bumpmasksnospecmodel);
+                else if(spec>=0.01f && lightmodels && !fullbright) SETMODELSHADER(m, bumpmodel);
+                else SETMODELSHADER(m, bumpnospecmodel);
+            }
+            else if(as->anim&ANIM_ENVMAP && envmapmax>0)
+            {
+                if(lightmodels && !fullbright && (masked || spec>=0.01f)) SETMODELSHADER(m, envmapmodel);
+                else SETMODELSHADER(m, envmapnospecmodel);
+                setlocalparamf("envmapscale", SHPARAM_VERTEX, 6, envmapmin-envmapmax, envmapmax);
+            }
+            else if(masked && lightmodels && !fullbright) SETMODELSHADER(m, masksmodel);
+            else if(masked && glowmodels) SETMODELSHADER(m, masksnospecmodel);
+            else if(spec>=0.01f && lightmodels && !fullbright) SETMODELSHADER(m, stdmodel);
+            else SETMODELSHADER(m, nospecmodel);
         }
 
-        void bind(const animstate *as)
+        void bind(mesh *b, const animstate *as)
         {
             if(as->anim&ANIM_NOSKIN)
             {
@@ -251,18 +242,8 @@ struct animmodel : model
                 if(enableenvmap) disableenvmap();
                 if(enablelighting) { glDisable(GL_LIGHTING); enablelighting = false; }
                 if(enablefog) disablefog(true);
-                if(shadowmapping)
-                {
-                    if(skeletalmat()) SETMODELSHADER(shadowmapskelmatcaster); 
-                    else if(skeletal()) SETMODELSHADER(shadowmapskelcaster);
-                    else SETMODELSHADER(shadowmapcaster);
-                }
-                else if(as->anim&ANIM_SHADOW)
-                {
-                    if(skeletalmat()) SETMODELSHADER(dynskelmatshadow);
-                    else if(skeletal()) SETMODELSHADER(dynskelshadow);
-                    else SETMODELSHADER(dynshadow);
-                }
+                if(shadowmapping) SETMODELSHADER(b, shadowmapcaster);
+                else if(as->anim&ANIM_SHADOW) SETMODELSHADER(b, dynshadow);
                 return;
             }
             Texture *s = bumpmapped() && unlittex ? unlittex : tex, *m = masks, *n = bumpmapped() ? normalmap : NULL;
@@ -273,8 +254,8 @@ struct animmodel : model
             if(renderpath==R_FIXEDFUNCTION) setuptmus(as, m!=notexture);
             else
             {
-                setshaderparams(as, m!=notexture);
-                setshader(as, m!=notexture);
+                setshaderparams(b, as, m!=notexture);
+                setshader(b, as, m!=notexture);
             }
             if(s!=lasttex)
             {
@@ -379,6 +360,11 @@ struct animmodel : model
         virtual void scaleverts(const vec &transdiff, float scalediff) {}        
         virtual void calcbb(int frame, vec &bbmin, vec &bbmax, const matrix3x4 &m) {}
         virtual void gentris(int frame, Texture *tex, vector<BIH::tri> &out, const matrix3x4 &m) {}
+
+        virtual void setshader(Shader *s)
+        {
+            s->set();
+        }
     };
 
     struct meshgroup
@@ -401,9 +387,6 @@ struct animmodel : model
             meshes.deletecontentsp();
             DELETEP(next);
         }            
-
-        virtual bool skeletal() { return false; }
-        virtual bool skeletalmat() { return false; }
 
         virtual int findtag(const char *name) { return -1; }
         virtual void concattagtransform(int frame, int i, const matrix3x4 &m, matrix3x4 &n) {}

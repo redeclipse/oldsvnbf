@@ -109,6 +109,8 @@ struct md5 : skelmodel
 
                 tcverts[i].u = v.u;
                 tcverts[i].v = v.v;
+
+                maxweights = max(maxweights, sorted);
             }
         }
 
