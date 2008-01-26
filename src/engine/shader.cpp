@@ -485,7 +485,7 @@ VARFN(shaders, useshaders, -1, -1, 1, initwarning());
 VARF(shaderprecision, 0, 0, 2, initwarning());
 VARP(shaderdetail, 0, MAXSHADERDETAIL, MAXSHADERDETAIL);
 
-Shader *newshader(int type, char *name, char *vs, char *ps, Shader *variant = NULL, int row = 0)
+Shader *newshader(int type, const char *name, const char *vs, const char *ps, Shader *variant = NULL, int row = 0, int reuserow = -1)
 {
 	char *rname = newstring(name);
 	Shader &s = shaders[rname];
@@ -498,12 +498,24 @@ Shader *newshader(int type, char *name, char *vs, char *ps, Shader *variant = NU
 	else loopv(curparams) s.defaultparams.add(curparams[i]);
 	if(renderpath!=R_FIXEDFUNCTION)
 	{
-        bool reusevs = variant && !vs[0], reuseps = variant && !ps[0];
+        Shader *reuseshader = variant;
+        bool reusevs = false, reuseps = false;
+        if(variant)
+        {
+            if(reuserow>=0)
+            {
+                int reusecol = variant->variants[row].length() - (reuserow ? 0 : 1);
+                if(variant->variants[reuserow].inrange(reusecol))
+                    reuseshader = variant->variants[reuserow][reusecol];                                        
+            }
+            reusevs = !vs[0];
+            reuseps = !ps[0];
+        }
         if(type & SHADER_GLSLANG)
         {
-            if(reusevs) s.vsobj = variant->vsobj;
+            if(reusevs) s.vsobj = reuseshader->vsobj;
             else compileglslshader(GL_VERTEX_SHADER_ARB,   s.vsobj, vs, "VS", name, !variant);
-            if(reuseps) s.psobj = variant->psobj;
+            if(reuseps) s.psobj = reuseshader->psobj;
             else compileglslshader(GL_FRAGMENT_SHADER_ARB, s.psobj, ps, "PS", name, !variant);
             linkglslprogram(s, !variant);
             if(!s.program)
@@ -514,10 +526,10 @@ Shader *newshader(int type, char *name, char *vs, char *ps, Shader *variant = NU
         }
         else
         {
-            if(reusevs) s.vs = variant->vs;
+            if(reusevs) s.vs = reuseshader->vs;
             else if(!compileasmshader(GL_VERTEX_PROGRAM_ARB, s.vs, vs, "VS", name, !variant, variant!=NULL))
                 s.native = false;
-            if(reuseps) s.ps = variant->ps;
+            if(reuseps) s.ps = reuseshader->ps;
             else if(!compileasmshader(GL_FRAGMENT_PROGRAM_ARB, s.ps, ps, "PS", name, !variant, variant!=NULL))
                 s.native = false;
             if(!s.vs || !s.ps || (variant && !s.native))
@@ -536,7 +548,7 @@ Shader *newshader(int type, char *name, char *vs, char *ps, Shader *variant = NU
 	return &s;
 }
 
-static uint findusedtexcoords(char *str)
+static uint findusedtexcoords(const char *str)
 {
 	uint used = 0;
 	for(;;)
@@ -544,14 +556,14 @@ static uint findusedtexcoords(char *str)
 		char *tc = strstr(str, "result.texcoord[");
 		if(!tc) break;
 		tc += strlen("result.texcoord[");
-		int n = strtol(tc, &str, 10);
+		int n = strtol(tc, (char **)&str, 10);
         if(n<0 || n>=16) continue;
 		used |= 1<<n;
 	}
 	return used;
 }
 
-static bool findunusedtexcoordcomponent(char *str, int &texcoord, int &component)
+static bool findunusedtexcoordcomponent(const char *str, int &texcoord, int &component)
 {
     uchar texcoords[16];
     memset(texcoords, 0, sizeof(texcoords));
@@ -560,7 +572,7 @@ static bool findunusedtexcoordcomponent(char *str, int &texcoord, int &component
         char *tc = strstr(str, "result.texcoord[");
         if(!tc) break;
         tc += strlen("result.texcoord[");
-        int n = strtol(tc, &str, 10);
+        int n = strtol(tc, (char **)&str, 10);
         if(n<0 || n>=(int)sizeof(texcoords)) continue;
         while(*str && *str!=']') str++;
         if(*str==']')
@@ -638,7 +650,7 @@ static bool findunusedtexcoordcomponent(char *str, int &texcoord, int &component
 VAR(reserveshadowmaptc, 1, 0, 0);
 VAR(reservedynlighttc, 1, 0, 0);
 
-static void gendynlightvariant(Shader &s, char *sname, char *vs, char *ps, int row = 0)
+static void gendynlightvariant(Shader &s, const char *sname, const char *vs, const char *ps, int row = 0, int reusevp = -1)
 {
 	int numlights = 0, lights[MAXDYNLIGHTS];
     int emufogtc = -1, emufogcomp = -1;
@@ -740,12 +752,12 @@ static void gendynlightvariant(Shader &s, char *sname, char *vs, char *ps, int r
         EMUFOGPS(emufogcoord && i+1==numlights, psdl, emufogtc, emufogcomp);
 
         s_sprintfd(name)("<dynlight %d>%s", i+1, sname);
-        Shader *variant = newshader(s.type, name, vsdl.getbuf(), psdl.getbuf(), &s, row);
-		if(!variant) return;
+        Shader *variant = newshader(s.type, name, reusevp ? "" : vsdl.getbuf(), psdl.getbuf(), &s, row, reusevp);
+        if(!variant) return;
 	}
 }
 
-static void genshadowmapvariant(Shader &s, char *sname, char *vs, char *ps, int row = 1)
+static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, const char *ps, int row = 1, int reusevp = -1)
 {
     int smtc = -1, emufogtc = -1, emufogcomp = -1;
     const char *emufogcoord = NULL;
@@ -842,13 +854,13 @@ static void genshadowmapvariant(Shader &s, char *sname, char *vs, char *ps, int 
     EMUFOGPS(emufogcoord, pssm, emufogtc, emufogcomp);
 
     s_sprintfd(name)("<shadowmap>%s", sname);
-    Shader *variant = newshader(s.type, name, vssm.getbuf(), pssm.getbuf(), &s, row);
+    Shader *variant = newshader(s.type, name, reusevp ? "" : vssm.getbuf(), pssm.getbuf(), &s, row, reusevp);
     if(!variant) return;
 
-    if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vssm.getbuf(), pssm.getbuf(), row);
+    if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vssm.getbuf(), pssm.getbuf(), row, reusevp);
 }
 
-static void genwatervariant(Shader &s, char *sname, char *vs, char *ps, int row = 2)
+static void genwatervariant(Shader &s, const char *sname, const char *vs, const char *ps, int row = 2)
 {
     char *pspragma = strstr(ps, "#pragma CUBE2_water");
     pspragma += strcspn(pspragma, "\n");
@@ -861,11 +873,11 @@ static void genwatervariant(Shader &s, char *sname, char *vs, char *ps, int row 
     psw.put(pspragma, strlen(pspragma)+1);
 
     s_sprintfd(name)("<water>%s", sname);
-    Shader *variant = newshader(s.type, name, vs, psw.getbuf(), &s, row);
+    Shader *variant = newshader(s.type, name, "", psw.getbuf(), &s, row);
     if(!variant) return;
 
-    if(strstr(vs, "#pragma CUBE2_shadowmap")) genshadowmapvariant(s, name, vs, psw.getbuf(), row+1);
-    if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vs, psw.getbuf(), row);
+    if(strstr(vs, "#pragma CUBE2_shadowmap")) genshadowmapvariant(s, name, vs, psw.getbuf(), row+1, 1);
+    if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vs, psw.getbuf(), row, 0);
 }
 
 void shader(int *type, char *name, char *vs, char *ps)
@@ -892,9 +904,9 @@ void shader(int *type, char *name, char *vs, char *ps)
 	if(s && renderpath!=R_FIXEDFUNCTION)
 	{
 		// '#' is a comment in vertex/fragment programs, while '#pragma' allows an escape for GLSL, so can handle both at once
-        if(strstr(ps, "#pragma CUBE2_water")) genwatervariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_shadowmap")) genshadowmapvariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(*s, s->name, vs, ps);
+        if(strstr(ps, "#pragma CUBE2_water")) genwatervariant(*s, s->name, vs, ps);
 	}
 	curparams.setsize(0);
 }
