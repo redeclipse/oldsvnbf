@@ -101,6 +101,12 @@ struct md5 : skelmodel
                     nextweight:;
                 }
                 loopj(4-sorted) { vv.weights[sorted+j] = 0; vv.bones[sorted+j] = 0; }
+
+                float total = 0;
+                loopj(sorted) total += vv.weights[j];
+                total = 1.0f/total;
+                loopj(sorted) vv.weights[j] *= total;
+
                 tcverts[i].u = v.u;
                 tcverts[i].v = v.v;
             }
