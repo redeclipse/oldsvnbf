@@ -56,12 +56,12 @@ struct skelmodel : animmodel
         tcvert *tcverts;
         bumpvert *bumpverts;
         tri *tris;
-        int numverts, numtris;
+        int numverts, numtris, maxweights;
 
         int voffset, eoffset, elen;
         ushort minvert, maxvert;
 
-        skelmesh() : verts(NULL), tcverts(NULL), bumpverts(NULL), tris(0), numverts(0), numtris(0)
+        skelmesh() : verts(NULL), tcverts(NULL), bumpverts(NULL), tris(0), numverts(0), numtris(0), maxweights(0)
         {
         }
 
@@ -86,6 +86,7 @@ struct skelmodel : animmodel
             m.numtris = numtris;
             m.tris = new tri[numtris];
             memcpy(m.tris, tris, numtris*sizeof(tri));
+            m.maxweights = maxweights;
             if(bumpverts)
             {
                 m.bumpverts = new bumpvert[numverts];
@@ -416,9 +417,16 @@ struct skelmodel : animmodel
             #undef IPLOOP
         }
 
+        void setshader(Shader *s)
+        {
+            if(!((skelmeshgroup *)group)->gpuaccelerate()) s->set();
+            else if(matskel) s->variant(maxweights-1, 0)->set();
+            else s->variant(maxweights-1, 1)->set();
+        }
+
         void render(const animstate *as, skin &s, vbocacheentry &vc)
         {
-            s.bind(as);
+            s.bind(this, as);
 
             if(!(as->anim&ANIM_NOSKIN))
             {
@@ -672,8 +680,6 @@ struct skelmodel : animmodel
         }
 
         bool gpuaccelerate() { return renderpath!=R_FIXEDFUNCTION && numframes && gpuskel && 10+(matskel ? 3 : 2)*numbones<=maxvpenvparams-reservevpparams; }
-        bool skeletalmat() { return gpuaccelerate() && matskel; }
-        bool skeletal() { return gpuaccelerate(); }
 
         void scaletags(const vec &transdiff, float scalediff)
         {
@@ -952,7 +958,11 @@ struct skelmodel : animmodel
                 if(b.parent<0) sc.bdata[i] = d;
                 else sc.bdata[i].mul(sc.bdata[b.parent], d);
             }
-            loopi(numbones) sc.bdata[i].mul(invbones[i]);
+            loopi(numbones)
+            {
+                sc.bdata[i].normalize();
+                sc.bdata[i].mul(invbones[i]);
+            }
         }
 
         void concattagtransform(int frame, int i, const matrix3x4 &m, matrix3x4 &n)
