@@ -671,12 +671,19 @@ struct dynlight
 	vec o;
 	float radius, dist;
 	vec color;
-	int fade, peak, expire;
+    int fade, peak, expire, flags;
 
-	float calcradius() const
-	{
-		return peak>0 && expire-lastmillis>fade ? (radius/peak)*(peak-(expire-lastmillis-fade)) : radius;
-	}
+    float calcradius() const
+    {
+        if(fade + peak)
+        {
+            int remaining = expire - lastmillis;
+            if(flags&DL_EXPAND) return radius * (1.0f - remaining/float(fade + peak));
+            if(remaining > fade) return radius * (1.0f - float(remaining - fade)/peak);
+            else if(flags&DL_SHRINK) return (radius*remaining)/fade;
+        }
+        return radius;
+    }
 
 	float intensity() const
 	{
