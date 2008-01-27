@@ -699,20 +699,21 @@ struct dynlight
 vector<dynlight> dynlights;
 vector<dynlight *> closedynlights, visibledynlights;
 
-void adddynlight(const vec &o, float radius, const vec &color, int fade, int peak)
+void adddynlight(const vec &o, float radius, const vec &color, int fade, int peak, int flags)
 {
-	if(o.dist(camera1->o) > dynlightdist) return;
+    if(o.dist(camera1->o) > dynlightdist) return;
 
-	int insert = 0, expire = fade + peak + lastmillis;
-	loopvrev(dynlights) if(expire>=dynlights[i].expire) { insert = i+1; break; }
-	dynlight d;
-	d.o = o;
-	d.radius = radius;
-	d.color = color;
-	d.fade = fade;
-	d.peak = peak;
-	d.expire = expire;
-	dynlights.insert(insert, d);
+    int insert = 0, expire = fade + peak + lastmillis;
+    loopvrev(dynlights) if(expire>=dynlights[i].expire) { insert = i+1; break; }
+    dynlight d;
+    d.o = o;
+    d.radius = radius;
+    d.color = color;
+    d.fade = fade;
+    d.peak = peak;
+    d.expire = expire;
+    d.flags = flags;
+    dynlights.insert(insert, d);
 }
 
 void cleardynlights()
