@@ -135,7 +135,13 @@ extern int text_width(const char *str, int limit = -1);
 extern int text_visible(const char *str, int max);
 
 // renderva
-extern void adddynlight(const vec &o, float radius, const vec &color, int fade = 0, int peak = 0);
+enum
+{
+    DL_SHRINK = 1<<0,
+    DL_EXPAND = 1<<1
+};
+
+extern void adddynlight(const vec &o, float radius, const vec &color, int fade = 0, int peak = 0, int flags = 0);
 extern void cleardynlights();
 extern void dynlightreaching(const vec &target, vec &color, vec &dir);
 
