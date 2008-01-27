@@ -1196,7 +1196,7 @@ struct animmodel : model
         if(enabletc) disabletc();
         if(enabletangents) disabletangents();
         if(enablebones) disablebones();
-        lastvbuf = lasttcbuf = lastmtcbuf = lastbbuf = NULL;
+        lastvbuf = lasttcbuf = lastmtcbuf = lastnbuf = lastbbuf = NULL;
         lastebuf = 0;
     }
 
