@@ -89,14 +89,14 @@ void *getprocaddress(const char *name)
 }
 
 VARP(ati_skybox_bug, 0, 0, 1);
-VARP(ati_texgen_bug, 0, 0, 1);
-VARP(ati_oq_bug, 0, 0, 1);
-VARP(nvidia_texgen_bug, 0, 0, 1);
-VARP(apple_glsldepth_bug, 0, 0, 1);
-VARP(apple_minmax_bug, 0, 0, 1);
-VARP(apple_ff_bug, 0, 0, 1);
-VARP(intel_quadric_bug, 0, 0, 1);
-VARP(mesa_dre_bug, 0, 0, 1);
+VAR(ati_texgen_bug, 0, 0, 1);
+VAR(ati_oq_bug, 0, 0, 1);
+VAR(ati_minmax_bug, 0, 0, 1);
+VAR(nvidia_texgen_bug, 0, 0, 1);
+VAR(apple_glsldepth_bug, 0, 0, 1);
+VAR(apple_ff_bug, 0, 0, 1);
+VAR(intel_quadric_bug, 0, 0, 1);
+VAR(mesa_dre_bug, 0, 0, 1);
 VAR(minimizetcusage, 1, 0, 0);
 VAR(emulatefog, 1, 0, 0);
 VAR(usevp2, 1, 0, 0);
@@ -349,12 +349,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     {
         glBlendEquation_ = (PFNGLBLENDEQUATIONEXTPROC) getprocaddress("glBlendEquationEXT");
         hasBE = true;
-#ifdef __APPLE__
-        if(osversion<0x1050) apple_minmax_bug = 1;
-#endif
-#ifndef WIN32
-        if(strstr(vendor, "ATI")) apple_minmax_bug = 1;
-#endif
+        if(strstr(vendor, "ATI")) ati_minmax_bug = 1;
         //conoutf("Using GL_EXT_blend_minmax extension.");
     }
 

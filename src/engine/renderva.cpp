@@ -605,8 +605,8 @@ void rendershadowmapreceivers()
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_GREATER);
 
-    extern int apple_minmax_bug;
-    if(!apple_minmax_bug) glColorMask(GL_FALSE, GL_FALSE, GL_TRUE, GL_FALSE);
+    extern int ati_minmax_bug;
+    if(!ati_minmax_bug) glColorMask(GL_FALSE, GL_FALSE, GL_TRUE, GL_FALSE);
 
     glEnable(GL_BLEND);
     glBlendEquation_(GL_MAX_EXT);
@@ -652,7 +652,7 @@ void rendershadowmapreceivers()
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);
 
-    if(!apple_minmax_bug) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    if(!ati_minmax_bug) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     if(hasVBO)
     {
