@@ -2,6 +2,7 @@ VARP(lightmodels, 0, 1, 1);
 VARP(envmapmodels, 0, 1, 1);
 VARP(glowmodels, 0, 1, 1);
 VARP(bumpmodels, 0, 1, 1);
+VARP(fullbrightmodels, 0, 0, 200);
 
 struct animmodel : model
 {
@@ -164,10 +165,12 @@ struct animmodel : model
             }
             if(lightmodels && !fullbright)
             {
-                float ambientk = min(ambient*0.75f, 1.0f),
-                      diffusek = 1-ambientk;
-                GLfloat ambientcol[4] = { lightcolor.x*ambientk, lightcolor.y*ambientk, lightcolor.z*ambientk, 1 },
-                        diffusecol[4] = { lightcolor.x*diffusek, lightcolor.y*diffusek, lightcolor.z*diffusek, 1 };
+                float mincolor = as->anim&ANIM_FULLBRIGHT ? fullbrightmodels/100.0f : 0,
+                      ambientk = min(max(ambient, mincolor)*0.75f, 1.0f),
+                      diffusek = 1-ambientk,
+                      r = max(lightcolor.x, mincolor), g = max(lightcolor.y, mincolor), b = max(lightcolor.z, mincolor);
+                GLfloat ambientcol[4] = { r*ambientk, g*ambientk, b*ambientk, 1 },
+                        diffusecol[4] = { r*diffusek, g*diffusek, b*diffusek, 1 };
                 float ambientmax = max(ambientcol[0], max(ambientcol[1], ambientcol[2])),
                       diffusemax = max(diffusecol[0], max(diffusecol[1], diffusecol[2]));
                 if(ambientmax>1e-3f) loopk(3) ambientcol[k] *= min(1.5f, 1.0f/ambientmax);
@@ -187,10 +190,15 @@ struct animmodel : model
             }
             else
             {
-                glColor4f(lightcolor.x, lightcolor.y, lightcolor.z, as->anim&ANIM_TRANSLUCENT ? translucency : 1);
+                float mincolor = as->anim&ANIM_FULLBRIGHT ? fullbrightmodels/100.0f : 0;
+                glColor4f(max(lightcolor.x, mincolor), 
+                          max(lightcolor.y, mincolor),
+                          max(lightcolor.z, mincolor),
+                          as->anim&ANIM_TRANSLUCENT ? translucency : 1);
                 setenvparamf("specscale", SHPARAM_PIXEL, 2, spec, spec, spec);
-                setenvparamf("ambient", SHPARAM_VERTEX, 3, ambient, ambient, ambient, 1);
-                setenvparamf("ambient", SHPARAM_PIXEL, 3, ambient, ambient, ambient, 1);
+                float minshade = max(ambient, mincolor);
+                setenvparamf("ambient", SHPARAM_VERTEX, 3, minshade, minshade, minshade, 1);
+                setenvparamf("ambient", SHPARAM_PIXEL, 3, minshade, minshade, minshade, 1);
             }
             setenvparamf("glowscale", SHPARAM_PIXEL, 4, glow, glow, glow);
             setenvparamf("millis", SHPARAM_VERTEX, 5, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);

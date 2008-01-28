@@ -471,7 +471,11 @@ void renderbatchedmodel(model *m, batchedmodel &b)
 
 	int anim = b.anim;
     if(shadowmapping) anim |= ANIM_NOSKIN;
-    else if(b.cull&MDL_TRANSLUCENT) anim |= ANIM_TRANSLUCENT;
+    else
+    {
+        if(b.cull&MDL_TRANSLUCENT) anim |= ANIM_TRANSLUCENT;
+        if(b.cull&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
+    }
 
 	m->render(anim, b.speed, b.basetime, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir);
 }
@@ -750,7 +754,11 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 	}
 
     if(shadowmapping) anim |= ANIM_NOSKIN;
-    else if(cull&MDL_TRANSLUCENT) anim |= ANIM_TRANSLUCENT;
+    else
+    {
+        if(cull&MDL_TRANSLUCENT) anim |= ANIM_TRANSLUCENT;
+        if(cull&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
+    }
 
     if(doOQ)
     {
@@ -896,7 +904,8 @@ void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attac
 	}
 	if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
     int flags = MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY | MDL_LIGHT;
-	if(d->type!=ENT_PLAYER) flags |= MDL_CULL_DIST;
+    if(d->type==ENT_PLAYER) flags |= MDL_FULLBRIGHT;
+	else flags |= MDL_CULL_DIST;
 	if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
     if(d->state==CS_LAGGED) flags |= MDL_TRANSLUCENT;
     rendermodel(NULL, mdlname, anim, o, testanims && local ? 0 : yaw+90, pitch, roll, flags, d, attachments, basetime);
