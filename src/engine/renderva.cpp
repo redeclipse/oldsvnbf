@@ -793,15 +793,17 @@ void setdynlights(vtxarray *va)
 		s_sprintf(pixelparams[i])("dynlight%dcolor", i);
 	}
 
-	loopv(visibledynlights)
-	{
-		dynlight &d = *visibledynlights[i];
-		setenvparamfv(vertexparams[i], SHPARAM_VERTEX, 10+i, vec4(d.o, 1).sub(ivec(va->x, va->y, va->z).mask(~VVEC_INT_MASK).tovec()).mul(1<<VVEC_FRAC).v);
-		vec color(d.color);
-		color.mul(2*d.intensity());
-		float radius = d.calcradius();
-		setenvparamf(pixelparams[i], SHPARAM_PIXEL, 10+i, color.x, color.y, color.z, -1.0f/(radius*radius*(1<<(2*VVEC_FRAC))));
-	}
+    loopv(visibledynlights)
+    {
+        dynlight &d = *visibledynlights[i];
+        float scale = 1.0f/d.calcradius();
+        vec origin(ivec(va->x, va->y, va->z).mask(~VVEC_INT_MASK).tovec());
+        origin.sub(d.o).mul(scale);
+        setenvparamf(vertexparams[i], SHPARAM_VERTEX, 10+i, origin.x, origin.y, origin.z, scale/(1<<VVEC_FRAC));
+        vec color(d.color);
+        color.mul(d.intensity());
+        setenvparamf(pixelparams[i], SHPARAM_PIXEL, 10+i, color.x, color.y, color.z);
+    }
 }
 
 float orientation_tangent [3][4] = { {  0,1, 0,0 }, { 1,0, 0,0 }, { 1,0,0,0 }};
