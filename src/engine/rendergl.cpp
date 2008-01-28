@@ -92,6 +92,7 @@ VARP(ati_skybox_bug, 0, 0, 1);
 VAR(ati_texgen_bug, 0, 0, 1);
 VAR(ati_oq_bug, 0, 0, 1);
 VAR(ati_minmax_bug, 0, 0, 1);
+VAR(ati_dph_bug, 0, 0, 1);
 VAR(nvidia_texgen_bug, 0, 0, 1);
 VAR(apple_glsldepth_bug, 0, 0, 1);
 VAR(apple_ff_bug, 0, 0, 1);
@@ -287,6 +288,8 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 			glGetUniformLocation_ =		 (PFNGLGETUNIFORMLOCATIONARBPROC)	  getprocaddress("glGetUniformLocationARB");
 			glUniform4fv_ =				 (PFNGLUNIFORM4FVARBPROC)			  getprocaddress("glUniform4fvARB");
 			glUniform1i_ =				  (PFNGLUNIFORM1IARBPROC)				getprocaddress("glUniform1iARB");
+
+            if(strstr(vendor, "ATI")) ati_dph_bug = 1;
 
 			extern bool checkglslsupport();
 			if(checkglslsupport())
