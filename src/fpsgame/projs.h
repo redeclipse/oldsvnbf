@@ -294,7 +294,7 @@ struct projectiles
 			switch (proj.gun)
 			{
 				case GUN_RL:
-					adddynlight(proj.o, RL_DAMRAD, vec(0.55f, 0.33f, 0.11f), 0, 0);
+					adddynlight(proj.o, RL_DAMRAD, vec(1.1f, 0.66f, 0.22f), 0, 0);
 					break;
 				default:
 					break;

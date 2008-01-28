@@ -132,7 +132,7 @@ struct weaponstate
 		particle_splash(0, 200, 300, o);
 		particle_fireball(o, RL_DAMRAD, gun == GUN_RL ? 22 : 23);
 
-        adddynlight(o, 1.15f*RL_DAMRAD, vec(1, 0.75f, 0.5f), 800, 400);
+        adddynlight(o, 1.15f*RL_DAMRAD, vec(2, 1.5f, 1), 800, 400);
         adddecal(DECAL_SCORCH, o, gun==GUN_RL ? vec(vel).neg().normalize() : vec(0, 0, 1), RL_DAMRAD/2);
 
 		loopi(rnd(20)+10)
