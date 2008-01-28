@@ -365,7 +365,7 @@ bool subdividecube(cube &c, bool fullcheck, bool brighten)
 		emptyfaces(ch[i]);
 		perfect=false;
 	}
-	loopi(8) if(!isempty(ch[i])) brightencube(ch[i]);
+	if(brighten) loopi(8) if(!isempty(ch[i])) brightencube(ch[i]);
 	return perfect;
 }
 
@@ -395,7 +395,12 @@ bool remip(cube &c, int x, int y, int z, int size)
 	}
 
 	cube *ch = c.children;
-	if(!ch) return true;
+    if(!ch)
+    {
+        if(size<<1 <= VVEC_INT_MASK+1) return true;
+        subdividecube(c);
+        ch = c.children;
+    }
 	bool perfect = true;
 	uchar mat = ch[0].ext ? ch[0].ext->material : MAT_AIR;
 
@@ -410,7 +415,7 @@ bool remip(cube &c, int x, int y, int z, int size)
 		c.texture[j] = getmippedtexture(c, j); // parents get child texs regardless
 
 	if(!perfect) return false;
-	if(size<<1 > VVEC_INT_MASK+1) return true;
+	if(size<<1 > VVEC_INT_MASK+1) return false;
 
 	cube n = c;
 	forcemip(n);
