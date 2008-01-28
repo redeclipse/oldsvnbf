@@ -553,7 +553,7 @@ static uint findusedtexcoords(const char *str)
 	uint used = 0;
 	for(;;)
 	{
-		char *tc = strstr(str, "result.texcoord[");
+		const char *tc = strstr(str, "result.texcoord[");
 		if(!tc) break;
 		tc += strlen("result.texcoord[");
 		int n = strtol(tc, (char **)&str, 10);
@@ -569,7 +569,7 @@ static bool findunusedtexcoordcomponent(const char *str, int &texcoord, int &com
     memset(texcoords, 0, sizeof(texcoords));
     for(;;)
     {
-        char *tc = strstr(str, "result.texcoord[");
+        const char *tc = strstr(str, "result.texcoord[");
         if(!tc) break;
         tc += strlen("result.texcoord[");
         int n = strtol(tc, (char **)&str, 10);
@@ -682,7 +682,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
 		if(!numlights) return;
 	}
 
-	char *vspragma = strstr(vs, "#pragma CUBE2_dynlight"), *pspragma = strstr(ps, "#pragma CUBE2_dynlight");
+	const char *vspragma = strstr(vs, "#pragma CUBE2_dynlight"), *pspragma = strstr(ps, "#pragma CUBE2_dynlight");
 	string pslight;
 	vspragma += strcspn(vspragma, "\n");
 	if(*vspragma) vspragma++;
@@ -736,8 +736,8 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
                 pslight, k, k, k);
             else s_sprintf(dl)(
                 "%s"
-                "DPH_SAT dynlight, -fragment.texcoord[%d], fragment.texcoord[%d];\n"
-                "MAD %s.rgb, program.env[%d], dynlight, %s;\n",
+                "DPH_SAT dynlight.x, -fragment.texcoord[%d], fragment.texcoord[%d];\n"
+                "MAD %s.rgb, program.env[%d], dynlight.x, %s;\n",
                 !k ? "TEMP dynlight;\n" : "",
                 lights[k], lights[k],
                 pslight, 10+k, pslight);
@@ -776,7 +776,7 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
         if(smtc<0) return;
     }
 
-    char *vspragma = strstr(vs, "#pragma CUBE2_shadowmap"), *pspragma = strstr(ps, "#pragma CUBE2_shadowmap");
+    const char *vspragma = strstr(vs, "#pragma CUBE2_shadowmap"), *pspragma = strstr(ps, "#pragma CUBE2_shadowmap");
     string pslight;
     vspragma += strcspn(vspragma, "\n");
     if(*vspragma) vspragma++;
@@ -860,7 +860,7 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
 
 static void genwatervariant(Shader &s, const char *sname, const char *vs, const char *ps, int row = 2)
 {
-    char *pspragma = strstr(ps, "#pragma CUBE2_water");
+    const char *pspragma = strstr(ps, "#pragma CUBE2_water");
     pspragma += strcspn(pspragma, "\n");
     if(*pspragma) pspragma++;
 
@@ -917,8 +917,8 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
     if(!s) return;
 
     s_sprintfd(varname)("<variant:%d,%d>%s", s->variants[*row].length(), *row, name);
-    s_sprintfd(info)("shader %s", varname);
-    show_out_of_renderloop_progress(0.0, info);
+    //s_sprintfd(info)("shader %s", varname);
+    //show_out_of_renderloop_progress(0.0, info);
     newshader(*type, varname, vs, ps, s, *row);
 }
 
