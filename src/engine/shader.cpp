@@ -726,8 +726,9 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
                 "dynlight%ddir = gl_Vertex.xyz*dynlight%dpos.w + dynlight%dpos.xyz;\n",
                 k, k, k);
             else s_sprintf(tc)(
-                "MAD result.texcoord[%d].xyz, vertex.position, program.env[%d].w, program.env[%d];\n",
-                lights[k], 10+k, 10+k);
+                "MAD result.texcoord[%d].xyz, vertex.position, program.env[%d].w, program.env[%d];\n"
+                "MOV result.texcoord[%d].w, 1;\n",
+                lights[k], 10+k, 10+k, lights[k]);
             vsdl.put(tc, strlen(tc));
 
             if(s.type & SHADER_GLSLANG) s_sprintf(dl)(
@@ -735,8 +736,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
                 pslight, k, k, k);
             else s_sprintf(dl)(
                 "%s"
-                "DP3_SAT dynlight, fragment.texcoord[%d], fragment.texcoord[%d];\n"
-                "SUB dynlight, 1, dynlight;\n"
+                "DPH_SAT dynlight, -fragment.texcoord[%d], fragment.texcoord[%d];\n"
                 "MAD %s.rgb, program.env[%d], dynlight, %s;\n",
                 !k ? "TEMP dynlight;\n" : "",
                 lights[k], lights[k],
