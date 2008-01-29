@@ -443,13 +443,14 @@ physent *camera1 = NULL;
 bool deathcam = false;
 bool isthirdperson() { return cl->gamethirdperson() || (reflecting && !refracting); }
 
-void project(float fovy, float aspect, int farplane, bool flipx, bool flipy)
+void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, bool swapxy)
 {
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	if(flipx || flipy) glScalef(flipx ? -1 : 1, flipy ? -1 : 1, 1);
-	gluPerspective(fovy, aspect, 0.54f, farplane);
-	glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    if(swapxy) glRotatef(90, 0, 0, 1);
+    if(flipx || flipy!=swapxy) glScalef(flipx ? -1 : 1, flipy!=swapxy ? -1 : 1, 1);
+    gluPerspective(fovy, aspect, 0.54f, farplane);
+    glMatrixMode(GL_MODELVIEW);
 }
 
 void genclipmatrix(float a, float b, float c, float d, GLfloat matrix[16])
@@ -674,7 +675,7 @@ static void setfog(int fogmat)
 
 bool envmapping = false;
 
-void drawcubemap(int size, const vec &o, float yaw, float pitch)
+void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapside &side)
 {
     envmapping = true;
 
@@ -700,7 +701,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch)
 
 	int farplane = max(max(fog*2, 384), hdr.worldsize*2);
 
-	project(90.0f, 1.0f, farplane, true, true);
+    project(90.0f, 1.0f, farplane, !side.flipx, !side.flipy, side.swapxy);
 
 	transplayer();
 
@@ -958,28 +959,29 @@ void gl_drawframe(int w, int h)
 
 	rendermapmodels();
 
-	if(!waterrefract)
-	{
-		defaultshader->set();
-		cl->rendergame();
-	}
+    if(!waterrefract || nowater)
+    {
+        defaultshader->set();
+        cl->rendergame();
+    }
 
-	defaultshader->set();
+    defaultshader->set();
 
-	if(!limitsky()) drawskybox(farplane, false);
+    if(!limitsky()) drawskybox(farplane, false);
 
-	if(hasFBO) drawreflections();
+    if(hasFBO) drawreflections();
 
-	if(waterrefract)
-	{
-		defaultshader->set();
-		cl->rendergame();
-	}
+    if(waterrefract && !nowater)
+    {
+        defaultshader->set();
+        cl->rendergame();
+    }
 
-	renderwater();
-	rendergrass();
+    if(!waterrefract || nowater) renderdecals(curtime);
+    renderwater();
+    rendergrass();
 
-    renderdecals(curtime);
+    if(waterrefract && !nowater) renderdecals(curtime);
 	rendermaterials();
 	render_particles(curtime);
 

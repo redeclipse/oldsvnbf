@@ -119,7 +119,7 @@ extern Texture *textureload(const char *name, int clamp = 0, bool mipit = true, 
 extern void loadalphamask(Texture *t);
 extern GLuint cubemapfromsky(int size);
 extern Texture *cubemapload(const char *name, bool mipit = true, bool msg = true);
-extern void drawcubemap(int size, const vec &o, float yaw, float pitch);
+extern void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapside &side);
 extern Slot	&lookuptexture(int tex, bool load = true);
 extern void loadshaders();
 extern Shader  *lookupshader(int slot);
@@ -484,7 +484,7 @@ extern char *maptitle();
 
 extern int fov, maxfps, hidehud, hidestats, hudblend, lastmillis, totalmillis;
 
-extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false);
+extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false, bool swapxy = false);
 extern void transplayer();
 extern void drawcrosshair(int w, int h);
 
