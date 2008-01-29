@@ -580,6 +580,7 @@ void renderwater()
 	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 	vec amb(max(sky[0], ambient), max(sky[1], ambient), max(sky[2], ambient));
     float offset = -WATER_OFFSET;
+    bool wasbelow = false;
 	loopi(MAXREFLECTIONS)
 	{
 		Reflection &ref = reflections[i];
@@ -592,11 +593,18 @@ void renderwater()
             setprojtexmatrix(ref);
         }
 
-        if(camera1->o.z < ref.height+offset) belowshader->set();
+        bool below = camera1->o.z < ref.height+offset;
+        if(below) belowshader->set();
         else aboveshader->set();
 
         if(waterrefract)
         {
+            if(hasFBO && renderpath!=R_FIXEDFUNCTION && waterfade)
+            {
+                if(below) { if(!wasbelow) { wasbelow = true; glDisable(GL_BLEND); } }
+                else if(wasbelow) { wasbelow = false; glEnable(GL_BLEND); }
+            }
+
             glActiveTexture_(GL_TEXTURE3_ARB);
             glBindTexture(GL_TEXTURE_2D, ref.refracttex);
             glActiveTexture_(GL_TEXTURE0_ARB);
@@ -627,7 +635,7 @@ void renderwater()
 			{
 				if(begin) { glEnd(); begin = false; }
 				float depth = !waterfog ? 1.0f : min(0.75f*m.depth/waterfog, 0.95f);
-                depth = max(depth, camera1->o.z>=ref.height+offset && (waterreflect || (waterenvmap && hasCM)) ? 0.3f : 0.6f);
+                depth = max(depth, !below && (waterreflect || (waterenvmap && hasCM)) ? 0.3f : 0.6f);
 				setlocalparamf("depth", SHPARAM_PIXEL, 5, depth, 1.0f-depth);
 				lastdepth = m.depth;
 			}
