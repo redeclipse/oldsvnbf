@@ -530,7 +530,7 @@ void drawglass(int orient, int x, int y, int z, int csize, int rsize, float offs
 		reflect.sub(camera1->o);
 		reflect[dim] = -reflect[dim];
 
-		glTexCoord3f(-reflect.y, reflect.z, reflect.x);
+        glTexCoord3f(reflect.x, reflect.y, reflect.z);
 		glVertex3fv(v.v);
 	}
 	xtraverts += 4;

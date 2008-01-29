@@ -941,12 +941,12 @@ struct animmodel : model
 
                 GLfloat mm[16], mmtrans[16];
                 glGetFloatv(GL_MODELVIEW_MATRIX, mm);
-                loopi(4) // transpose modelview (mmtrans[4*i+j] = mm[4*j+i]) and convert to (-y, z, x, w)
+                loopi(4) // transpose modelview (mmtrans[4*i+j] = mm[4*j+i])
                 {
                     GLfloat x = mm[i], y = mm[4+i], z = mm[8+i], w = mm[12+i];
-                    mmtrans[4*i] = -y;
-                    mmtrans[4*i+1] = z;
-                    mmtrans[4*i+2] = x;
+                    mmtrans[4*i] = x;
+                    mmtrans[4*i+1] = y;
+                    mmtrans[4*i+2] = z;
                     mmtrans[4*i+3] = w;
                 }
                 glLoadMatrixf(mmtrans);

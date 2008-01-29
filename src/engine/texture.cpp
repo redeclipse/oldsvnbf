@@ -3,31 +3,48 @@
 #include "pch.h"
 #include "engine.h"
 
-SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type)
+static inline void reorienttexture(uchar *src, int sw, int sh, int bpp, uchar *dst, bool flipx, bool flipy, bool swapxy, bool normals = false)
 {
-	// 1..3 rotate through 90..270 degrees, 4 flips X, 5 flips Y
-	if(numrots<1 || numrots>5) return s;
-	SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, (numrots&5)==1 ? s->h : s->w, (numrots&5)==1 ? s->w : s->h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
-	if(!d) fatal("create surface");
-	int depth = s->format->BytesPerPixel;
-	loop(y, s->h) loop(x, s->w)
-	{
-		uchar *src = (uchar *)s->pixels+(y*s->w+x)*depth;
-		int dx = x, dy = y;
-		if(numrots>=2 && numrots<=4) dx = (s->w-1)-x;
-		if(numrots<=2 || numrots==5) dy = (s->h-1)-y;
-        if((numrots&5)==1) swap(dx, dy);
-		uchar *dst = (uchar *)d->pixels+(dy*d->w+dx)*depth;
-		loopi(depth) dst[i]=src[i];
-		if(type==TEX_NORMAL)
-		{
-			if(numrots>=2 && numrots<=4) dst[0] = 255-dst[0];	  // flip X	on normal when 180/270 degrees
-			if(numrots<=2 || numrots==5) dst[1] = 255-dst[1];	  // flip Y	on normal when  90/180 degrees
-            if((numrots&5)==1) swap(dst[0], dst[1]);       // swap X/Y on normal when  90/270 degrees
-		}
-	}
-	SDL_FreeSurface(s);
-	return d;
+    int stridex = bpp, stridey = bpp;
+    if(swapxy) stridex *= sh; else stridey *= sw;
+    if(flipx) { dst += (sw-1)*stridex; stridex = -stridex; }
+    if(flipy) { dst += (sh-1)*stridey; stridey = -stridey; }
+    loopi(sh)
+    {
+        uchar *curdst = dst;
+        loopj(sw)
+        {
+            loopk(bpp) curdst[k] = *src++;
+            if(normals)
+            {
+                if(flipx) curdst[0] = 255-curdst[0];
+                if(flipy) curdst[1] = 255-curdst[1];
+                if(swapxy) swap(curdst[0], curdst[1]);
+            }
+            curdst += stridex;
+        }
+        dst += stridey;
+    }
+}
+
+SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, int type = TEX_DIFFUSE)
+{
+    SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, swapxy ? s->h : s->w, swapxy ? s->w : s->h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
+    if(!d) fatal("create surface");
+    reorienttexture((uchar *)s->pixels, s->w, s->h, s->format->BytesPerPixel, (uchar *)d->pixels, flipx, flipy, swapxy, type==TEX_NORMAL);
+    SDL_FreeSurface(s);
+    return d;
+}
+
+SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type = TEX_DIFFUSE)
+{
+    // 1..3 rotate through 90..270 degrees, 4 flips X, 5 flips Y 
+    if(numrots<1 || numrots>5) return s;
+    return texreorient(s,
+        numrots>=2 && numrots<=4, // flip X on 180/270 degrees
+        numrots<=2 || numrots==5, // flip Y on 90/180 degrees
+        (numrots&5)==1,           // swap X/Y on 90/270 degrees
+        type);
 }
 
 SDL_Surface *texoffset(SDL_Surface *s, int xoffset, int yoffset)
@@ -359,12 +376,17 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 	}
 	if(tname[0]=='<')
 	{
-		const char *cmd = &tname[1], *arg1 = strchr(cmd, ':'), *arg2 = arg1 ? strchr(arg1, ',') : NULL;
-		if(!arg1) arg1 = strchr(cmd, '>');
-		if(!strncmp(cmd, "mad", arg1-cmd)) texmad(s, parsevec(arg1+1), arg2 ? parsevec(arg2+1) : vec(0, 0, 0));
-		else if(!strncmp(cmd, "ffmask", arg1-cmd)) s = texffmask(s, atoi(arg1+1));
+        const char *cmd = &tname[1],
+                   *arg1 = strchr(cmd, ':'),
+                   *arg2 = arg1 ? strchr(arg1, ',') : NULL,
+                   *arg3 = arg2 ? strchr(arg2, ',') : NULL;
+        if(!arg1) arg1 = strchr(cmd, '>');
+        if(!strncmp(cmd, "mad", arg1-cmd)) texmad(s, parsevec(arg1+1), arg2 ? parsevec(arg2+1) : vec(0, 0, 0));
+        else if(!strncmp(cmd, "ffmask", arg1-cmd)) s = texffmask(s, atoi(arg1+1));
         else if(!strncmp(cmd, "dup", arg1-cmd)) texdup(s, atoi(arg1+1), atoi(arg2+1));
         else if(!strncmp(cmd, "decal", arg1-cmd)) s = texdecal(s);
+        else if(!strncmp(cmd, "rotate", arg1-cmd)) s = texrotate(s, atoi(arg1+1), tex ? tex->type : 0);
+        else if(!strncmp(cmd, "reorient", arg1-cmd)) s = texreorient(s, atoi(arg1+1)>0, atoi(arg2+1)>0, atoi(arg3+1)>0, tex ? tex->type : TEX_DIFFUSE);
 	}
 	return s;
 }
@@ -793,12 +815,12 @@ Texture *loadthumbnail(Slot &slot)
 
 cubemapside cubemapsides[6] =
 {
-	{ GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB, "ft" },
-	{ GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB, "bk" },
-	{ GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB, "lf" },
-	{ GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB, "rt" },
-	{ GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB, "dn" },
-	{ GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB, "up" },
+    { GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB, "lf", true,  true,  true  },
+    { GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB, "rt", false, false, true  },
+    { GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB, "ft", true,  false, false },
+    { GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB, "bk", false, true,  false },
+    { GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB, "dn", false, false, true  },
+    { GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB, "up", false, false, true  },
 };
 
 GLuint cubemapfromsky(int size)
@@ -820,16 +842,20 @@ GLuint cubemapfromsky(int size)
 
 	GLuint tex;
 	glGenTextures(1, &tex);
-    uchar *pixels = new uchar[3*max(cmw, tsize)*max(cmh, tsize)];
-	loopi(6)
-	{
-		glBindTexture(GL_TEXTURE_2D, sky[i]->gl);
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    int bufsize = 3*max(cmw, tsize)*max(cmh, tsize);
+    uchar *pixels = new uchar[2*bufsize],
+          *rpixels = &pixels[bufsize];
+    loopi(6)
+    {
+        glBindTexture(GL_TEXTURE_2D, sky[i]->gl);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
         if(tw[i]!=cmw || th[i]!=cmh) gluScaleImage(GL_RGB, tw[i], th[i], GL_UNSIGNED_BYTE, pixels, cmw, cmh, GL_UNSIGNED_BYTE, pixels);
-        createtexture(!i ? tex : 0, cmw, cmh, pixels, 3, true, GL_RGB5, cubemapsides[i].target);
-	}
-	delete[] pixels;
+        cubemapside &side = cubemapsides[i];
+        reorienttexture(pixels, cmw, cmh, 3, rpixels, side.flipx, side.flipy, side.swapxy);
+        createtexture(!i ? tex : 0, cmw, cmh, rpixels, 3, true, GL_RGB5, side.target);
+    }
+    delete[] pixels;
 	return tex;
 }
 
@@ -880,13 +906,14 @@ Texture *cubemaploadwildcard(const char *name, bool mipit, bool msg)
     uchar *pixels = NULL;
 	loopi(6)
 	{
-		SDL_Surface *s = surface[i];
+        cubemapside &side = cubemapsides[i];
+        SDL_Surface *s = texreorient(surface[i], side.flipx, side.flipy, side.swapxy);
 		if(s->w != w || s->h != h)
         {
             if(!pixels) pixels = new uchar[formatsize(format)*w*h];
             gluScaleImage(format, s->w, s->h, GL_UNSIGNED_BYTE, s->pixels, w, h, GL_UNSIGNED_BYTE, pixels);
         }
-        createtexture(!i ? t->gl : 0, w, h, s->w != w || s->h != h ? pixels : s->pixels, 3, mipit, format, cubemapsides[i].target);
+        createtexture(!i ? t->gl : 0, w, h, s->w != w || s->h != h ? pixels : s->pixels, 3, mipit, format, side.target);
 		SDL_FreeSurface(s);
 	}
     if(pixels) delete[] pixels;
@@ -957,24 +984,26 @@ GLuint genenvmap(const vec &o, int envmapsize)
 		const cubemapside &side = cubemapsides[i];
 		switch(side.target)
 		{
-			case GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB: // ft
-				yaw = 0; pitch = 0; break;
-			case GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB: // bk
-				yaw = 180; pitch = 0; break;
-			case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB: // lf
-				yaw = 270; pitch = 0; break;
-			case GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB: // rt
-				yaw = 90; pitch = 0; break;
-			case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB: // dn
-				yaw = 90; pitch = -90; break;
-			case GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB: // up
-				yaw = 90; pitch = 90; break;
-		}
-		drawcubemap(rendersize, o, yaw, pitch);
+            case GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB: // lf
+                yaw = 270; pitch = 0; break;
+            case GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB: // rt
+                yaw = 90; pitch = 0; break;
+            case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB: // ft
+                yaw = 0; pitch = 0; break;
+            case GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB: // bk
+                yaw = 180; pitch = 0; break;
+            case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB: // dn
+                yaw = 90; pitch = -90; break;
+            case GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB: // up
+                yaw = 90; pitch = 90; break;
+        }
+        glFrontFace((side.flipx==side.flipy)!=side.swapxy ? GL_CCW : GL_CW);
+        drawcubemap(rendersize, o, yaw, pitch, side);
 		glReadPixels(0, 0, rendersize, rendersize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 		if(texsize<rendersize) gluScaleImage(GL_RGB, rendersize, rendersize, GL_UNSIGNED_BYTE, pixels, texsize, texsize, GL_UNSIGNED_BYTE, pixels);
 		createtexture(tex, texsize, texsize, pixels, 3, true, GL_RGB5, side.target);
 	}
+    glFrontFace(GL_CCW);
     delete[] pixels;
 	glViewport(0, 0, screen->w, screen->h);
 	return tex;
