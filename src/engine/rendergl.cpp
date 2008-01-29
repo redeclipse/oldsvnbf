@@ -246,6 +246,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     {
         reservevpparams = 10;
     }
+    if(!hasOQ) waterreflect = 0;
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
 	extern int useshaders;
