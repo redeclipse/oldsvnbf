@@ -60,10 +60,10 @@ void addnormal(const ivec &origin, int orient, const vvec &offset, const vec &su
 	nkey key(origin, offset);
 	nval &val = normals[key];
 
-	uchar face = orient<<3;
+	uchar face = orient<<2;
 	int dim = dimension(orient), r = R[dim], c = C[dim], originr = origin[r]<<VVEC_FRAC, originc = origin[c]<<VVEC_FRAC;
-	if(originr >= int(offset[r])+(originr&(~VVEC_INT_MASK<<1))) face |= 1;
-	if(originc >= int(offset[c])+(originc&(~VVEC_INT_MASK<<1))) face |= 2;
+	if(originr >= int(offset[r])+(originr&(~VVEC_INT_MASK<<VVEC_FRAC))) face |= 1;
+	if(originc >= int(offset[c])+(originc&(~VVEC_INT_MASK<<VVEC_FRAC))) face |= 2;
 
 	loopv(val.normals) if(val.normals[i].face == face) return;
 
@@ -86,7 +86,7 @@ bool findnormal(const ivec &origin, int orient, const vvec &offset, vec &v, int 
 	nval *val = normals.access(key);
 	if(!val) return false;
 
-	uchar face = orient<<3;
+	uchar face = orient<<2;
 	int dim = dimension(orient), r = R[dim], c = C[dim];
 
 	if(index>=0)
@@ -98,8 +98,8 @@ bool findnormal(const ivec &origin, int orient, const vvec &offset, vec &v, int 
 	else
 	{
 		int originr = origin[r]<<VVEC_FRAC, originc = origin[c]<<VVEC_FRAC;
-		if(originr >= int(offset[r])+(originr&(~VVEC_INT_MASK<<1))) face |= 1;
-		if(originc >= int(offset[c])+(originc&(~VVEC_INT_MASK<<1))) face |= 2;
+		if(originr >= int(offset[r])+(originr&(~VVEC_INT_MASK<<VVEC_FRAC))) face |= 1;
+		if(originc >= int(offset[c])+(originc&(~VVEC_INT_MASK<<VVEC_FRAC))) face |= 2;
 	}
 
 	loopv(val->normals)
