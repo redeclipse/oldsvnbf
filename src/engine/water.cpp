@@ -743,18 +743,19 @@ void genwatertex(GLuint &tex, GLuint &fb, bool refract = false)
                         depthfmts[] = { GL_DEPTH_STENCIL_EXT, GL_DEPTH24_STENCIL8_EXT, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT32, GL_FALSE };
     const int stencilfmts = 2;
     static GLenum reflectfmt = GL_FALSE, refractfmt = GL_FALSE, depthfmt = GL_FALSE, stencilfmt = GL_FALSE;
-    static bool usealpha = false;
-    if(usealpha!=(waterfade && hasFBO && renderpath!=R_FIXEDFUNCTION))
+    static bool usingalpha = false;
+    bool needsalpha = refract && hasFBO && renderpath!=R_FIXEDFUNCTION && waterrefract && waterfade; 
+    if(refract && usingalpha!=needsalpha)
     {
-        usealpha = !usealpha;
-        reflectfmt = refractfmt = GL_FALSE;
+        usingalpha = needsalpha;
+        refractfmt = GL_FALSE;
     }
     int size = 1<<reflectsize;
     if(!hasFBO) while(size>screen->w || size>screen->h) size /= 2;
     while(size>hwtexsize) size /= 2;
 
     GLenum &colorfmt = refract ? refractfmt : reflectfmt;
-    int find = refract && hasFBO && renderpath!=R_FIXEDFUNCTION && waterrefract && waterfade ? 0 : 2;
+    int find = needsalpha ? 0 : 2;
     if(hasFBO)
     {
         if(!fb) glGenFramebuffers_(1, &fb);
