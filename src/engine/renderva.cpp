@@ -687,7 +687,7 @@ struct dynlight
 
 	float intensity() const
 	{
-		if(fade + peak)
+		if(!(flags&DL_FLASH) && fade + peak)
 		{
 			int remaining = expire - lastmillis;
 			return remaining > fade ? 1.0f - float(remaining - fade)/peak : float(remaining)/fade;
