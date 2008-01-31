@@ -835,7 +835,7 @@ GLuint cubemapfromsky(int size)
         glBindTexture(GL_TEXTURE_2D, sky[i]->gl);
         glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &tw[i]);
         glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &th[i]);
-        tsize = max(tsize, max(tw[i], th[i]));
+        tsize = max(tsize, (int)max(tw[i], th[i]));
     }
     cmw = cmh = min(tsize, size);
     resizetexture(cmw, cmh, true, GL_RGB5, GL_TEXTURE_CUBE_MAP_ARB);
