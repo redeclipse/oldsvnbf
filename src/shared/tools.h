@@ -565,6 +565,53 @@ struct unionfind
     }
 };
 
+template <class T, int SIZE> struct ringbuf
+{
+    int index, len;
+    T data[SIZE];
+
+    ringbuf() { clear(); }
+
+    void clear()
+    {
+        index = len = 0;
+    }
+
+    bool empty() const { return !len; }
+
+    const int length() const { return len; }
+
+    T &add(const T &e)
+    {
+        T &t = data[index];
+        t = e;
+        index++;
+        if(index>=SIZE) index = 0;
+        if(len<SIZE) len++;
+        return t;
+    }
+
+    T &add() { return add(T()); }
+
+    T &operator[](int i)
+    {
+        int start = index - len;
+        if(start < 0) start += SIZE;
+        i += start;
+        if(i >= SIZE) i -= SIZE;
+        return data[i];
+    }
+
+    const T &operator[](int i) const
+    {
+        int start = index - len;
+        if(start < 0) start += SIZE;
+        i += start;
+        if(i >= SIZE) i -= SIZE;
+        return data[i];
+    }
+};
+
 inline char *newstring(size_t l)                { return new char[l+1]; }
 inline char *newstring(const char *s, size_t l) { return s_strncpy(newstring(l), s, l+1); }
 inline char *newstring(const char *s)           { return newstring(s, strlen(s));          }
