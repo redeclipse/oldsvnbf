@@ -1146,7 +1146,7 @@ void gl_drawhud(int w, int h, int fogmat)
 
 			if(editmode)
 			{
-				draw_textf("ond:%d va:%d gl:%d oq:%d lm:%d, rp:%d", FONTH/2, hoff, allocnodes*8, allocva, glde, getnumqueries(), lightmaps.length(), rplanes); hoff += FONTH;
+				draw_textf("ond:%d va:%d gl:%d oq:%d lm:%d, rp:%d pvs: %d", FONTH/2, hoff, allocnodes*8, allocva, glde, getnumqueries(), lightmaps.length(), rplanes, getnumviewcells()); hoff += FONTH;
 				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/2, hoff, wtris/1024, vtris*100/max(wtris, 1), wverts/1024, vverts*100/max(wverts, 1), xtraverts/1024, xtravertsva/1024); hoff += FONTH;
 				draw_textf("cube %s%d", FONTH/2, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
 			}
