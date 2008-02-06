@@ -410,6 +410,8 @@ struct pvsworker
         if(s.inside(geom)) p.flags |= PVS_HIDE_GEOM;
     }
 
+    ringbuf<shaftbb, 32> prevblockers;
+
     void cullpvs(pvsnode &p, const ivec &co = ivec(0, 0, 0), int size = hdr.worldsize)
     {
         if(p.flags&(PVS_HIDE_BB | PVS_HIDE_GEOM) || genpvs_canceled) return;
@@ -576,9 +578,19 @@ struct pvsworker
                         if(ddir>0) bb.max[dim] = dval+1;
                         else bb.min[dim] = dval;
                     }
+                    //printf("(%d,%d,%d) x %d,%d,%d, side %d, ccenter = %d, origin = (%d,%d,%d), size = %d\n", bb.min.x, bb.min.y, bb.min.z, bb.max.x-bb.min.x, bb.max.y-bb.min.y, bb.max.z-bb.min.z, i, ccenter, co.x, co.y, co.z, size);
                 }
-                shaft s(viewcellbb, bb);
-                shaftcullpvs(s, pvsnodes[0]);
+                bool dup = false;
+                loopvj(prevblockers)
+                {
+                    if(prevblockers[j].contains(bb)) { dup = true; break; }
+                }
+                if(!dup)
+                {
+                    shaft s(viewcellbb, bb);
+                    shaftcullpvs(s, pvsnodes[0]);
+                    prevblockers.add(bb);
+                }
                 if(bb.contains(geom)) return;
                 ccenter = cmax[c] + 1;
             }
@@ -663,6 +675,7 @@ struct pvsworker
             viewcellbb.max[k] = co[k]+size;
         }
         memcpy(pvsnodes, origpvsnodes.getbuf(), origpvsnodes.length()*sizeof(pvsnode));
+        prevblockers.clear();
         cullpvs(pvsnodes[0]);
         compresspvs(pvsnodes[0], hdr.worldsize, pvsleafsize);
         outbuf.setsizenodelete(0);
