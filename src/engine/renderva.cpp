@@ -1194,7 +1194,7 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
 
             if(pass==RENDERPASS_LIGHTMAP && s && (lastshader!=s || shadowmapped!=(k!=0)))
             {
-                if(refracting && hasFBO && waterrefract && waterfade)
+                if(fading)
                 {
                     if(k) s->variant(min(s->variants[3].length()-1, visibledynlights.length()), 3)->set(&slot);
                     else s->variant(min(s->variants[2].length()-1, visibledynlights.length()), 2)->set(&slot);
