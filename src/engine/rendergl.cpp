@@ -615,10 +615,12 @@ void drawreflection(float z, bool refract, bool clear)
 
 	if(!refract /*&& !explicitsky*/)
 	{
-		if(reflectclip) undoclipmatrix();
-		defaultshader->set();
-		drawskybox(farplane, false, z);
-		if(reflectclip) setclipmatrix(clipmatrix);
+        if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        if(reflectclip) undoclipmatrix();
+        defaultshader->set();
+        drawskybox(farplane, false, z);
+        if(reflectclip) setclipmatrix(clipmatrix);
+        if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 	}
 
 	setfogplane(1, z);
