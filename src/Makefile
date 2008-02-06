@@ -22,6 +22,7 @@ CLIENT_OBJS= \
 	engine/octaedit.o \
 	engine/octarender.o \
 	engine/physics.o \
+	engine/pvs.o \
 	engine/rendergl.o \
 	engine/rendermodel.o \
 	engine/renderparticles.o \

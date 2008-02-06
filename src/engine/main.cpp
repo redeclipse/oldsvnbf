@@ -638,6 +638,7 @@ int main(int argc, char **argv)
 			{
                 cl->recomputecamera();
 				cl->findorientation();
+                setviewcell(camera1->o);
 				entity_particles();
 				checksound();
 

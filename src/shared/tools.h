@@ -308,9 +308,14 @@ template <class T> struct vector
         return databuf<T>(&buf[ulen], sz);
     }
 
+    void advance(int sz)
+    {
+        ulen += sz;
+    }
+
     void addbuf(const databuf<T> &p)
     {
-        ulen += p.length();
+        advance(p.length());
     }
 
     void put(const T *v, int n)

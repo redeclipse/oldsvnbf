@@ -972,7 +972,7 @@ struct animmodel : model
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
             nocolorshader->set();
             render(anim|ANIM_NOSKIN, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
-            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, refracting && renderpath!=R_FIXEDFUNCTION ? GL_FALSE : GL_TRUE);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, fading ? GL_FALSE : GL_TRUE);
 
             glDepthFunc(GL_LEQUAL);
         }

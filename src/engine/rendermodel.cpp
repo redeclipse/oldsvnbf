@@ -262,8 +262,9 @@ void clear_mdls()
 
 bool modeloccluded(const vec &center, float radius)
 {
-	int br = int(radius*2)+1;
-    return bboccluded(ivec(int(center.x-radius), int(center.y-radius), int(center.z-radius)), ivec(br, br, br));
+    int br = int(radius*2)+1;
+    return pvsoccluded(ivec(int(center.x-radius), int(center.y-radius), int(center.z-radius)), ivec(br, br, br)) ||
+           bboccluded(ivec(int(center.x-radius), int(center.y-radius), int(center.z-radius)), ivec(br, br, br));
 }
 
 VAR(showboundingbox, 0, 0, 2);
@@ -379,7 +380,7 @@ void rendershadow(vec &dir, model *m, int anim, const vec &o, vec center, float 
 		glEnd();
 		glPopMatrix();
 
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, refracting && renderpath!=R_FIXEDFUNCTION ? GL_FALSE : GL_TRUE);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, fading ? GL_FALSE : GL_TRUE);
 	}
 
     float intensity = dynshadow/100.0f;
@@ -607,7 +608,7 @@ void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
     int br = int(radius*2)+1;
     drawbb(ivec(int(center.x-radius), int(center.y-radius), int(center.z-radius)), ivec(br, br, br));
     endquery(d->query);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, refracting && renderpath!=R_FIXEDFUNCTION ? GL_FALSE : GL_TRUE);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, fading ? GL_FALSE : GL_TRUE);
     glDepthMask(GL_TRUE);
 }
 

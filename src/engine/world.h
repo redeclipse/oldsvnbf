@@ -8,8 +8,8 @@ enum							// hardcoded texture numbers
 	DEFAULT_CEIL
 };
 
-#define OCTAVERSION 24
-#define MAPVERSION 25			// bump if map format changes, see worldio.cpp
+#define OCTAVERSION 25
+#define MAPVERSION 26			// bump if map format changes, see worldio.cpp
 
 struct binary
 {
@@ -21,7 +21,7 @@ struct octa : binary
 {
 	int worldsize;
 	int numents;
-	int waterlevel;
+	int numpvs;
 	int lightmaps;
 	int mapprec, maple, mapllod;
     uchar ambient;
@@ -37,11 +37,11 @@ struct octa : binary
 
 struct bfgz : binary
 {
-	int worldsize, numents, lightmaps;
-	int gamever, revision;
-	char maptitle[128], gameid[4];
+    int worldsize, numents, numpvs, lightmaps;
+    int gamever, revision;
+    char maptitle[128], gameid[4];
 };
-
+ 
 #define WATER_AMPLITUDE 0.8f
 #define WATER_OFFSET 1.1f
 

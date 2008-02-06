@@ -104,7 +104,6 @@ void sortvisiblevas()
 	}
 }
 
-
 void findvisiblevas(vector<vtxarray *> &vas, bool resetocclude = false)
 {
 	loopv(vas)
@@ -114,13 +113,18 @@ void findvisiblevas(vector<vtxarray *> &vas, bool resetocclude = false)
 		v.curvfc = isvisiblecube(vec(v.x, v.y, v.z), v.size);
 		if(v.curvfc!=VFC_NOT_VISIBLE)
 		{
-			addvisibleva(&v);
-			if(v.children->length()) findvisiblevas(*v.children, prevvfc==VFC_NOT_VISIBLE);
-			if(prevvfc==VFC_NOT_VISIBLE)
-			{
-				v.occluded = OCCLUDE_NOTHING;
-				v.query = NULL;
-			}
+            if(pvsoccluded(ivec(v.x, v.y, v.z), v.size))
+            {
+                v.curvfc = VFC_NOT_VISIBLE;
+                continue;
+            }
+            addvisibleva(&v);
+            if(v.children->length()) findvisiblevas(*v.children, prevvfc==VFC_NOT_VISIBLE);
+            if(prevvfc==VFC_NOT_VISIBLE)
+            {
+                v.occluded = !v.texs || pvsoccluded(v.min, v.max) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
+                v.query = NULL;
+            }
 		}
 	}
 }
@@ -331,7 +335,7 @@ void findvisiblemms(const vector<extentity *> &ents)
 		loopv(*va->mapmodels)
 		{
 			octaentities *oe = (*va->mapmodels)[i];
-			if(isvisiblecube(oe->o.tovec(), oe->size) >= VFC_FOGGED) continue;
+            if(isvisiblecube(oe->o.tovec(), oe->size) >= VFC_FOGGED || pvsoccluded(oe->o, oe->size)) continue;
 
 			bool occluded = oe->query && oe->query->owner == oe && checkquery(oe->query);
 			if(occluded)
@@ -477,7 +481,7 @@ void rendermapmodels()
 	if(!colormask)
 	{
 		glDepthMask(GL_TRUE);
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, refracting && renderpath!=R_FIXEDFUNCTION ? GL_FALSE : GL_TRUE);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, fading ? GL_FALSE : GL_TRUE);
 	}
 }
 
@@ -499,9 +503,10 @@ static inline bool bboccluded(const ivec &bo, const ivec &br, cube *c, const ive
 
 bool bboccluded(const ivec &bo, const ivec &br)
 {
-    int diff = (bo.x^(bo.x+br.x)) | (bo.y^(bo.y+br.y)) | (bo.z^(bo.z+br.z)),
-        scale = worldscale-1;
-    if(diff&~((1<<scale)-1)) return false;
+    int diff = (bo.x^(bo.x+br.x)) | (bo.y^(bo.y+br.y)) | (bo.z^(bo.z+br.z));
+    if(diff&~((1<<worldscale)-1)) return false;
+    int scale = worldscale-1;
+    if(diff&(1<<scale)) return bboccluded(bo, br, worldroot, ivec(0, 0, 0), 1<<scale);
     cube *c = &worldroot[octastep(bo.x, bo.y, bo.z, scale)];
     if(c->ext && c->ext->va)
     {
@@ -733,7 +738,7 @@ int limitdynlights()
         float radius = d.calcradius();
         if(d.radius<=0) continue;
         d.dist = camera1->o.dist(d.o) - radius;
-		if(d.dist>dynlightdist || isvisiblesphere(d.radius, d.o) >= VFC_FOGGED) continue;
+        if(d.dist>dynlightdist || isvisiblesphere(d.radius, d.o) >= VFC_FOGGED || pvsoccluded(d.o, 2*int(radius+1))) continue;
 		int insert = 0;
 		loopvrev(closedynlights) if(d.dist >= closedynlights[i]->dist) { insert = i+1; break; }
 #if 0
@@ -946,15 +951,16 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
 		return;
 	}
 
-	if(refracting && renderpath!=R_FIXEDFUNCTION)
-	{
-		float fogplane = refracting - (va->z & ~VVEC_INT_MASK);
-		if(cur.fogplane!=fogplane)
-		{
-			cur.fogplane = fogplane;
-			setfogplane(1.0f/(1<<VVEC_FRAC), fogplane);
-		}
-	}
+    if(reflecting && renderpath!=R_FIXEDFUNCTION)
+    {
+        float fogplane = reflecting - (va->z & ~VVEC_INT_MASK);
+        if(cur.fogplane!=fogplane)
+        {
+            cur.fogplane = fogplane;
+            if(refracting) setfogplane(1.0f/(1<<VVEC_FRAC), fogplane, false, -0.25f/(1<<VVEC_FRAC), 0.5f + 0.25f*fogplane);
+            else setfogplane(0, 0, false, 0.25f/(1<<VVEC_FRAC), 0.5f - 0.25f*fogplane);
+        }
+    }
 	if(!cur.colormask) { cur.colormask = true; glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); }
 
     if((pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR) && (fogpass ? va->z+va->size<=refracting-waterfog : va->curvfc==VFC_FOGGED))
@@ -1598,8 +1604,11 @@ void rendergeom(bool causticspass, bool fogpass)
 		}
         else if(hasOQ && oqfrags && (zpass || va->distance > oqdist) && !insideva(va, camera1->o) && oqgeom)
 		{
-			if(!zpass && va->query && va->query->owner == va)
-                va->occluded = checkquery(va->query) ? min(va->occluded+1, int(OCCLUDE_BB)) : OCCLUDE_NOTHING;
+            if(!zpass && va->query && va->query->owner == va)
+            {
+                if(checkquery(va->query)) va->occluded = min(va->occluded+1, int(OCCLUDE_BB));
+                else va->occluded = pvsoccluded(va->min, va->max) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
+            }
 			if(zpass && va->parent &&
 				(va->parent->occluded == OCCLUDE_PARENT ||
 				(va->parent->occluded >= OCCLUDE_BB &&
@@ -1623,7 +1632,7 @@ void rendergeom(bool causticspass, bool fogpass)
 		else
 		{
 			va->query = NULL;
-			va->occluded = OCCLUDE_NOTHING;
+            va->occluded = pvsoccluded(va->min, va->max) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
 		}
 
 		if(!refracting)
@@ -1675,10 +1684,12 @@ void rendergeom(bool causticspass, bool fogpass)
 			}
 			else if(va->query)
 			{
-                va->occluded = checkquery(va->query) ? min(va->occluded+1, int(OCCLUDE_BB)) : OCCLUDE_NOTHING;
+                if(checkquery(va->query)) va->occluded = min(va->occluded+1, int(OCCLUDE_BB));
+                else va->occluded = pvsoccluded(va->min, va->max) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
 				if(va->occluded >= OCCLUDE_GEOM) continue;
 			}
-			else if(va->occluded == OCCLUDE_PARENT) va->occluded = OCCLUDE_NOTHING;
+            else if(va->occluded == OCCLUDE_PARENT)
+                va->occluded = pvsoccluded(va->min, va->max) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
 
             renderva(cur, va, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP, fogpass);
 				}
@@ -1734,9 +1745,9 @@ void rendergeom(bool causticspass, bool fogpass)
             setupcaustics(0);
             glBlendFunc(GL_ZERO, GL_SRC_COLOR);
             glFogfv(GL_FOG_COLOR, onefog);
-            if(renderpath!=R_FIXEDFUNCTION && refracting) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+            if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
             rendergeommultipass(cur, RENDERPASS_CAUSTICS, fogpass);
-            if(renderpath!=R_FIXEDFUNCTION && refracting) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
             loopi(2)
             {
                 glActiveTexture_(GL_TEXTURE0_ARB+i);
