@@ -754,6 +754,7 @@ void resetmap()
 	clearsound();
 	cleanreflections();
 	resetlightmaps();
+    clearpvs();
 	clearparticles();
     cleardecals();
 	clearsleep();
@@ -811,6 +812,7 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
     worldscale = scale<10 ? 10 : (scale>20 ? 20 : scale);
     hdr.worldsize = 1<<worldscale;
 	hdr.revision = 0;
+    hdr.numpvs = 0;
 	hdr.lightmaps = 0;
 
 	s_strncpy(hdr.maptitle, "Untitled Map by Unknown Author", 128);

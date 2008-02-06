@@ -151,6 +151,19 @@ extern void adjustshadowmatrix(const ivec &o, float scale);
 extern void rendershadowmapreceivers();
 extern void guessshadowdir();
 
+// pvs
+extern void clearpvs();
+extern bool pvsoccluded(const ivec &bborigin, const ivec &bbsize);
+extern void setviewcell(const vec &p);
+extern void savepvs(gzFile f);
+extern void loadpvs(gzFile f);
+extern int getnumviewcells();
+
+static inline bool pvsoccluded(const ivec &bborigin, int size)
+{
+    return pvsoccluded(bborigin, ivec(size, size, size));
+}
+
 // rendergl
 extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasstencil, hasAF, hasVP2, hasVP3, hasPP;
 
@@ -160,7 +173,7 @@ extern void gl_init(int w, int h, int bpp, int depth, int fsaa);
 extern void cleangl();
 extern void gl_drawframe(int w, int h);
 extern void setfogplane(const plane &p, bool flush = false);
-extern void setfogplane(float scale = 0, float z = 0, bool flush = false);
+extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
 extern void writecrosshairs(FILE *f);
 
 // renderextras
@@ -303,6 +316,7 @@ extern int visiblematerial(cube &c, int orient, int x, int y, int z, int size);
 
 // water
 extern float reflecting, refracting;
+extern bool fading;
 extern int reflectdist, vertwater, refractfog, waterrefract, waterreflect, waterfade, caustics, waterfog, lavafog;
 
 extern void invalidatereflections();

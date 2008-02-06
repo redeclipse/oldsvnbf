@@ -347,6 +347,7 @@ void save_world(const char *mname, bool nolms)
 		}
 	}
 
+    hdr.numpvs = nolms ? 0 : getnumviewcells();
 	hdr.lightmaps = nolms ? 0 : lightmaps.length();
 
 	bfgz tmp = hdr;
@@ -395,19 +396,28 @@ void save_world(const char *mname, bool nolms)
 	if (verbose >= 2) conoutf("saved %d entities", hdr.numents);
 
 	savec(worldroot, f, nolms);
-	if(!nolms) loopv(lightmaps)
-	{
-		LightMap &lm = lightmaps[i];
-		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(lightmaps.length()), "saving lightmaps...");
-		gzputc(f, lm.type | (lm.unlitx>=0 ? 0x80 : 0));
-		if(lm.unlitx>=0)
-		{
-			writeushort(f, ushort(lm.unlitx));
-			writeushort(f, ushort(lm.unlity));
-		}
-		gzwrite(f, lm.data, sizeof(lm.data));
-	}
-	if (verbose >= 2) conoutf("saved %d lightmaps", lightmaps.length());
+    if(!nolms)
+    {
+        loopv(lightmaps)
+        {
+            if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(lightmaps.length()), "saving lightmaps...");
+            LightMap &lm = lightmaps[i];
+            gzputc(f, lm.type | (lm.unlitx>=0 ? 0x80 : 0));
+            if(lm.unlitx>=0)
+            {
+                writeushort(f, ushort(lm.unlitx));
+                writeushort(f, ushort(lm.unlity));
+            }
+            gzwrite(f, lm.data, sizeof(lm.data));
+        }
+        if (verbose >= 2) conoutf("saved %d lightmaps", lightmaps.length());
+        if(getnumviewcells()>0) 
+        {
+            if (verbose >= 2) show_out_of_renderloop_progress(0, "saving PVS...");
+            savepvs(f);
+            if (verbose >= 2) conoutf("saved %d PVS view cells", getnumviewcells());
+        }
+    }
 
 	show_out_of_renderloop_progress(0, "saving world...");
 	cl->saveworld(f);
@@ -461,8 +471,30 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 	if(strncmp(newhdr.head, "BFGZ", 4) == 0)
 	{
-		gzread(f, &hdr.worldsize, hdr.headersize-sizeof(binary));
-		endianswap(&hdr.worldsize, sizeof(int), 5);
+        if (hdr.version < 26)
+        {
+            struct bfgzcompat : binary
+            {
+                int worldsize, numents, lightmaps;
+                int gamever, revision;
+                char maptitle[128], gameid[4];
+            } chdr;
+		    gzread(f, &chdr.worldsize, hdr.headersize-sizeof(binary));
+		    endianswap(&chdr.worldsize, sizeof(int), 5);
+            hdr.worldsize = chdr.worldsize;
+            hdr.numents = chdr.numents;
+            hdr.numpvs = 0;
+            hdr.lightmaps = chdr.lightmaps;
+            hdr.gamever = chdr.gamever;
+            hdr.revision = chdr.revision;
+            memcpy(hdr.maptitle, chdr.maptitle, sizeof(hdr.maptitle));
+            memcpy(hdr.gameid, chdr.gameid, sizeof(hdr.gameid));
+        }
+        else
+        {
+            gzread(f, &hdr.worldsize, hdr.headersize-sizeof(binary));
+            endianswap(&hdr.worldsize, sizeof(int), 6);
+        }
 
 		if(hdr.version > MAPVERSION)
 		{
@@ -534,6 +566,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		hdr.worldsize = ohdr.worldsize;
 		if (hdr.worldsize > 1<<18) hdr.worldsize = 1<<18;
 		hdr.numents = ohdr.numents;
+        hdr.numpvs = ohdr.numpvs;
 		hdr.lightmaps = ohdr.lightmaps;
 		hdr.revision = 1;
 		strncpy(hdr.maptitle, ohdr.maptitle, 128);
@@ -580,6 +613,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 			int extrasize = readushort(f);
 			loopj(extrasize) gzgetc(f);
 		}
+
+        if(hdr.version<25) hdr.numpvs = 0;
 	}
 	else
 	{
@@ -692,6 +727,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		gzread(f, lm.data, 3 * LM_PACKW * LM_PACKH);
 		lm.finalize();
 	}
+
+    if (hdr.numpvs > 0) loadpvs(f);
 
 	if (verbose >= 2) conoutf("loaded %d lightmaps", hdr.lightmaps);
 
