@@ -26,7 +26,7 @@ typedef unsigned int uint;
 #undef swap
 #endif
 template<class T>
-void swap(T &a, T &b)
+static inline void swap(T &a, T &b)
 {
     T t = a;
     a = b;
@@ -39,12 +39,12 @@ void swap(T &a, T &b)
 #undef min
 #endif
 template<class T>
-T max(T a, T b)
+static inline T max(T a, T b)
 {
     return a > b ? a : b;
 }
 template<class T>
-T min(T a, T b)
+static inline T min(T a, T b)
 {
     return a < b ? a : b;
 }
