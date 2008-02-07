@@ -668,14 +668,14 @@ void rendershadowmapreceivers()
     glEnable(GL_TEXTURE_2D);
 }
 
-VARP(maxdynlights, 0, MAXDYNLIGHTS, MAXDYNLIGHTS);
+VARP(maxdynlights, 0, min(3, MAXDYNLIGHTS), MAXDYNLIGHTS);
 VARP(dynlightdist, 0, 1024, 10000);
 
 struct dynlight
 {
-	vec o;
-	float radius, dist;
-	vec color;
+    vec o;
+    float radius, initradius, dist;
+    vec color, initcolor;
     int fade, peak, expire, flags;
 
     float calcradius() const
@@ -683,28 +683,37 @@ struct dynlight
         if(fade + peak)
         {
             int remaining = expire - lastmillis;
-            if(flags&DL_EXPAND) return radius * (1.0f - remaining/float(fade + peak));
-            if(remaining > fade) return radius * (1.0f - float(remaining - fade)/peak);
+            if(flags&DL_EXPAND) return initradius + (radius - initradius) * (1.0f - remaining/float(fade + peak));
+            if(remaining > fade) return initradius + (radius - initradius) * (1.0f - float(remaining - fade)/peak);
             else if(flags&DL_SHRINK) return (radius*remaining)/fade;
         }
         return radius;
     }
 
-	float intensity() const
-	{
-		if(!(flags&DL_FLASH) && fade + peak)
-		{
-			int remaining = expire - lastmillis;
-			return remaining > fade ? 1.0f - float(remaining - fade)/peak : float(remaining)/fade;
-		}
-		return 1.0f;
-	}
+    vec calccolor() const
+    {
+        if(flags&DL_FLASH || !peak) return color;
+        int peaking = expire - lastmillis - fade;
+        if(peaking <= 0) return color;
+        vec curcolor;
+        curcolor.lerp(initcolor, color, 1.0f - float(peaking)/peak);
+        return curcolor;
+    }
+
+
+    float intensity() const
+    {
+        if(flags&DL_FLASH || !fade) return 1.0f;
+        int fading = expire - lastmillis;
+        if(fading >= fade) return 1.0f;
+        return float(fading)/fade;
+    }
 };
 
 vector<dynlight> dynlights;
 vector<dynlight *> closedynlights, visibledynlights;
 
-void adddynlight(const vec &o, float radius, const vec &color, int fade, int peak, int flags)
+void adddynlight(const vec &o, float radius, const vec &color, int fade, int peak, int flags, float initradius, const vec &initcolor)
 {
     if(o.dist(camera1->o) > dynlightdist) return;
 
@@ -713,7 +722,9 @@ void adddynlight(const vec &o, float radius, const vec &color, int fade, int pea
     dynlight d;
     d.o = o;
     d.radius = radius;
+    d.initradius = initradius;
     d.color = color;
+    d.initcolor = initcolor;
     d.fade = fade;
     d.peak = peak;
     d.expire = expire;
@@ -763,8 +774,9 @@ void dynlightreaching(const vec &target, vec &color, vec &dir)
 		ray.sub(target);
 		float mag = ray.magnitude(), radius = d.calcradius();
 		if(radius<=0 || mag >= radius) continue;
-		float intensity = d.intensity()*(1 - mag/radius);
-		dyncolor.add(vec(d.color).mul(intensity));
+        vec color = d.calccolor();
+        color.mul(d.intensity()*(1 - mag/radius));
+        dyncolor.add(color);
 		//dyndir.add(ray.mul(intensity/mag));
 	}
 #if 0
@@ -808,7 +820,7 @@ void setdynlights(vtxarray *va)
         vec origin(ivec(va->x, va->y, va->z).mask(~VVEC_INT_MASK).tovec());
         origin.sub(d.o).mul(scale);
         setenvparamf(vertexparams[index], SHPARAM_VERTEX, 10+index, origin.x, origin.y, origin.z, scale/(1<<VVEC_FRAC));
-        vec color(d.color);
+        vec color = d.calccolor();
         color.mul(d.intensity());
         setenvparamf(pixelparams[index], SHPARAM_PIXEL, 10+index, color.x, color.y, color.z);
 
