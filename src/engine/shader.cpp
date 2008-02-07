@@ -919,7 +919,7 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
     s_sprintfd(name)("<shadowmap>%s", sname);
     Shader *variant = newshader(s.type, name, vssm.getbuf(), pssm.getbuf(), &s, row);
     if(!variant) return;
-    genwatervariant(s, name, vssm, pssm, row+2);
+    genwatervariant(s, name, vssm.getbuf(), pssm.getbuf(), row+2);
 
     if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vssm.getbuf(), pssm.getbuf(), row);
 }
