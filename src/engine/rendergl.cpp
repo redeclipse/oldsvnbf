@@ -209,17 +209,18 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         if(renderpath==R_FIXEDFUNCTION) zpass = 0;
     }
 
+    extern int reservedynlighttc, reserveshadowmaptc;
     bool avoidshaders = false;
+    reserveshadowmaptc = reservedynlighttc = 1; // just in case fogging uses a texture coordinate
+    emulatefog = 1;
 	if(strstr(vendor, "ATI"))
 	{
 		floatvtx = 1;
 		conoutf("WARNING: ATI cards may show garbage in skybox. (use \"/ati_skybox_bug 1\" to fix)");
 
-        extern int reservedynlighttc, reserveshadowmaptc;
         reservedynlighttc = 2;
         reserveshadowmaptc = 3;
 		minimizetcusage = 1;
-        emulatefog = 1;
 	}
 	else if(strstr(vendor, "Tungsten"))
 	{

@@ -723,8 +723,11 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
             emufogcoord = strstr(vs, "result.fogcoord");
             if(emufogcoord)
             {
-                emufogtc = maxtc-reservetc;
-                emufogcomp = 3;
+                if(!findunusedtexcoordcomponent(vs, emufogtc, emufogcomp))
+                {
+                    emufogtc = maxtc-reservetc;
+                    emufogcomp = 3;
+                }
                 lights[numlights++] = maxtc-reservetc;
             }
         }
@@ -775,7 +778,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
             if(s.type & SHADER_GLSLANG) s_sprintf(tc)(
                 "dynlight%ddir = gl_Vertex.xyz*dynlight%dpos.w + dynlight%dpos.xyz;\n",
                 k, k, k);
-            else if(ati_dph_bug) s_sprintf(tc)(
+            else if(ati_dph_bug || lights[k]==emufogtc) s_sprintf(tc)(
                 "MAD result.texcoord[%d].xyz, vertex.position, program.env[%d].w, program.env[%d];\n",
                 lights[k], 10+k, 10+k);
             else s_sprintf(tc)(
@@ -787,7 +790,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
             if(s.type & SHADER_GLSLANG) s_sprintf(dl)(
                 "%s.rgb += dynlight%dcolor.rgb * (1.0 - clamp(dot(dynlight%ddir, dynlight%ddir), 0.0, 1.0));\n",
                 pslight, k, k, k);
-            else if(ati_dph_bug) s_sprintf(dl)(
+            else if(ati_dph_bug || lights[k]==emufogtc) s_sprintf(dl)(
                 "%s"
                 "DP3_SAT dynlight.x, fragment.texcoord[%d], fragment.texcoord[%d];\n"
                 "SUB dynlight.x, 1, dynlight.x;\n"
