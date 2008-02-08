@@ -897,16 +897,16 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
         vssm.put(tc, strlen(tc));
 
         s_sprintfd(sm)(
-            "TEMP smvals, shadowed, smambient;\n"
+            "TEMP smvals, smtest, smambient;\n"
             "TEX smvals, fragment.texcoord[%d], texture[7], 2D;\n"
-            "MAD smvals.xz, fragment.texcoord[%d].z, smvals.y, smvals;\n",
+            "MUL smtest.z, fragment.texcoord[%d].z, smvals.y;\n"
+            "SLT smtest.xz, smtest.z, smvals;\n"
+            "MAD_SAT smvals.y, smvals.y, smtest.x, -smtest.z;\n",
             smtc, smtc);
         pssm.put(sm, strlen(sm));
         s_sprintf(sm)(
-            "CMP shadowed, -smvals.x, smvals.y, 0;\n"
-            "CMP shadowed, smvals.z, shadowed, 0;\n" 
-            "MIN smambient.rgb, program.env[7], %s;\n"
-            "LRP %s.rgb, shadowed, smambient, %s;\n",
+            "SUB_SAT smambient.rgb, %s, program.env[7];\n"
+            "MAD %s.rgb, smvals.y, -smambient, %s;\n",
             pslight, pslight, pslight);
         pssm.put(sm, strlen(sm));
     }
