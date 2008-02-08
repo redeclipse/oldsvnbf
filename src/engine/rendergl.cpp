@@ -363,6 +363,8 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         hasTF = true;
         //conoutf("Using GL_ARB_texture_float extension");
         shadowmap = 1;
+        extern int smoothshadowmappeel;
+        smoothshadowmappeel = 1;
     }
 
 	if(strstr(exts, "GL_ARB_texture_cube_map"))

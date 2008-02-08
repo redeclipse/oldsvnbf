@@ -504,9 +504,9 @@ Shader *newshader(int type, const char *name, const char *vs, const char *ps, Sh
         if(type & SHADER_GLSLANG)
         {
             if(reusevs) s.vsobj = variant->vsobj;
-            else compileglslshader(GL_VERTEX_SHADER_ARB,   s.vsobj, vs, "VS", name, !variant);
+            else compileglslshader(GL_VERTEX_SHADER_ARB,   s.vsobj, vs, "VS", name, dbgshader || !variant);
             if(reuseps) s.psobj = variant->psobj;
-            else compileglslshader(GL_FRAGMENT_SHADER_ARB, s.psobj, ps, "PS", name, !variant);
+            else compileglslshader(GL_FRAGMENT_SHADER_ARB, s.psobj, ps, "PS", name, dbgshader || !variant);
             linkglslprogram(s, !variant);
             if(!s.program)
             {
@@ -517,10 +517,10 @@ Shader *newshader(int type, const char *name, const char *vs, const char *ps, Sh
         else
         {
             if(reusevs) s.vs = variant->vs;
-            else if(!compileasmshader(GL_VERTEX_PROGRAM_ARB, s.vs, vs, "VS", name, !variant, variant!=NULL))
+            else if(!compileasmshader(GL_VERTEX_PROGRAM_ARB, s.vs, vs, "VS", name, dbgshader || !variant, variant!=NULL))
                 s.native = false;
             if(reuseps) s.ps = variant->ps;
-            else if(!compileasmshader(GL_FRAGMENT_PROGRAM_ARB, s.ps, ps, "PS", name, !variant, variant!=NULL))
+            else if(!compileasmshader(GL_FRAGMENT_PROGRAM_ARB, s.ps, ps, "PS", name, dbgshader || !variant, variant!=NULL))
                 s.native = false;
             if(!s.vs || !s.ps || (variant && !s.native))
             {
@@ -872,18 +872,24 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
     EMUFOGVS(emufogcoord && emufogcoord < vspragma, vssm, vs, vspragma, emufogcoord, emufogtc, emufogcomp);
     pssm.put(ps, pspragma-ps);
 
+    extern int smoothshadowmappeel;
     if(s.type & SHADER_GLSLANG)
     {
         const char *tc =
             "shadowmaptc = vec3(gl_TextureMatrix[2] * gl_Vertex);\n";
         vssm.put(tc, strlen(tc));
         const char *sm =
-            "vec3 smvals = texture2D(shadowmap, shadowmaptc.xy).xyz;\n"
-            "vec2 smdiff = shadowmaptc.zz*smvals.y + smvals.xz;\n"
-            "float shadowed = smdiff.x > 0.0 && smdiff.y < 0.0 ? smvals.y : 0.0;\n";
+            smoothshadowmappeel ?
+                "vec3 smvals = texture2D(shadowmap, shadowmaptc.xy).xyz;\n"
+                "vec2 smdiff = clamp(smvals.xz - shadowmaptc.zz*smvals.y, 0.0, 1.0);\n"
+                "float shadowed = clamp((smdiff.x > 0 ? smvals.y : 0.0) - 8*smdiff.y, 0.0, 1.0);\n" :
+
+                "vec3 smvals = texture2D(shadowmap, shadowmaptc.xy).xyz;\n"
+                "float smtest = shadowmaptc.z*smvals.y;\n"
+                "float shadowed = smtest < smvals.x && smtest > smvals.z ? smvals.y : 0.0;\n";
         pssm.put(sm, strlen(sm));
         s_sprintfd(smlight)(
-            "%s.rgb = mix(%s.rgb, min(%s.rgb, shadowmapambient.rgb), shadowed);\n",
+            "%s.rgb -= shadowed*clamp(%s.rgb - shadowmapambient.rgb, 0.0, 1.0);\n",
             pslight, pslight, pslight);
         pssm.put(smlight, strlen(smlight));
     }
@@ -897,11 +903,18 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
         vssm.put(tc, strlen(tc));
 
         s_sprintfd(sm)(
-            "TEMP smvals, smtest, smambient;\n"
-            "TEX smvals, fragment.texcoord[%d], texture[7], 2D;\n"
-            "MUL smtest.z, fragment.texcoord[%d].z, smvals.y;\n"
-            "SLT smtest.xz, smtest.z, smvals;\n"
-            "MAD_SAT smvals.y, smvals.y, smtest.x, -smtest.z;\n",
+            smoothshadowmappeel ?
+                "TEMP smvals, smdiff, smambient;\n"
+                "TEX smvals, fragment.texcoord[%d], texture[7], 2D;\n"
+                "MAD_SAT smdiff.xz, -fragment.texcoord[%d].z, smvals.y, smvals;\n"
+                "CMP smvals.y, -smdiff.x, smvals.y, 0;\n"
+                "MAD_SAT smvals.y, -8, smdiff.z, smvals.y;\n" :
+
+                "TEMP smvals, smtest, smambient;\n"
+                "TEX smvals, fragment.texcoord[%d], texture[7], 2D;\n"
+                "MUL smtest.z, fragment.texcoord[%d].z, smvals.y;\n"
+                "SLT smtest.xz, smtest.z, smvals;\n"
+                "MAD_SAT smvals.y, smvals.y, smtest.x, -smtest.z;\n",
             smtc, smtc);
         pssm.put(sm, strlen(sm));
         s_sprintf(sm)(
