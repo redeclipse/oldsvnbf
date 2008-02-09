@@ -190,9 +190,11 @@ void visiblecubes(cube *c, int size, int cx, int cy, int cz, int w, int h, float
 	sortvisiblevas();
 }
 
-bool insideva(const vtxarray *va, const vec &v)
+static inline bool insideva(const vtxarray *va, const vec &v, int margin = 1)
 {
-	return v.x>=va->x && v.y>=va->y && v.z>=va->z && v.x<=va->x+va->size && v.y<=va->y+va->size && v.z<=va->z+va->size;
+    int size = va->size + margin;
+    return v.x>=va->x-margin && v.y>=va->y-margin && v.z>=va->z-margin &&
+           v.x<=va->x+size && v.y<=va->y+size && v.z<=va->z+size;
 }
 
 static ivec vaorigin;
