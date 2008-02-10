@@ -282,9 +282,11 @@ struct decalrenderer
 
     decalinfo &newdecal()
     {
-        decalinfo &d = decals[enddecal++];
-        if(enddecal>=maxdecals) enddecal = 0;
-        if(enddecal==startdecal) freedecal();
+        decalinfo &d = decals[enddecal];
+        int next = enddecal + 1;
+        if(next>=maxdecals) next = 0;
+        if(next==startdecal) freedecal();
+        enddecal = next;
         return d;
     }
 
@@ -424,7 +426,10 @@ struct decalrenderer
                       dv2 = { v1[1], pt.dot(v1[1]) + tu, pb.dot(v1[1]) + tv, decalcolor, 255 };
             int totalverts = 3*(numv-2);
             if(totalverts > maxverts-3) return;
-            while(availverts < totalverts) freedecal();
+            while(availverts < totalverts) 
+            {
+                if(!freedecal()) return;
+            }
             availverts -= totalverts;
             loopk(numv-2)
             {
