@@ -79,6 +79,7 @@ struct physent                                  // base entity type, can be affe
         timeinair = strafe = move = 0;
         physstate = PHYS_FALL;
 		vel = gvel = vec(0, 0, 0);
+        floor = vec(0, 0, 1);
     }
 };
 
