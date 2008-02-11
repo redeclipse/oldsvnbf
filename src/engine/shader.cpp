@@ -639,6 +639,7 @@ static bool findunusedtexcoordcomponent(const char *str, int &texcoord, int &com
 
 VAR(reserveshadowmaptc, 1, 0, 0);
 VAR(reservedynlighttc, 1, 0, 0);
+VAR(minimizedynlighttcusage, 1, 0, 0);
 
 static bool genwatervariant(Shader &s, const char *sname, vector<char> &vs, vector<char> &ps, int row)
 {
@@ -704,21 +705,22 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
 	int numlights = 0, lights[MAXDYNLIGHTS];
     int emufogtc = -1, emufogcomp = -1;
     const char *emufogcoord = NULL;
-	if(s.type & SHADER_GLSLANG) numlights = MAXDYNLIGHTS;
-	else
-	{
-		uint usedtc = findusedtexcoords(vs);
-		GLint maxtc = 0;
-		glGetIntegerv(GL_MAX_TEXTURE_COORDS_ARB, &maxtc);
+    if(s.type & SHADER_GLSLANG) numlights = minimizedynlighttcusage ? 1 : MAXDYNLIGHTS;
+    else
+    {
+        uint usedtc = findusedtexcoords(vs);
+        GLint maxtc = 0;
+        glGetIntegerv(GL_MAX_TEXTURE_COORDS_ARB, &maxtc);
         int reservetc = row%2 ? reserveshadowmaptc : reservedynlighttc;
         if(maxtc-reservetc<0) return;
+        int limit = minimizedynlighttcusage ? 1 : MAXDYNLIGHTS;
         loopi(maxtc-reservetc) if(!(usedtc&(1<<i)))
-		{
-			lights[numlights++] = i;
-			if(numlights>=MAXDYNLIGHTS) break;
-		}
+        {
+            lights[numlights++] = i;
+            if(numlights>=limit) break;
+        }
         extern int emulatefog;
-        if(emulatefog && reservetc>0 && numlights+1<MAXDYNLIGHTS && !(usedtc&(1<<(maxtc-reservetc))) && strstr(ps, "OPTION ARB_fog_linear;"))
+        if(emulatefog && reservetc>0 && numlights+1<limit && !(usedtc&(1<<(maxtc-reservetc))) && strstr(ps, "OPTION ARB_fog_linear;"))
         {
             emufogcoord = strstr(vs, "result.fogcoord");
             if(emufogcoord)
@@ -745,28 +747,34 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
 	if(*pspragma) pspragma++;
 
 	vector<char> vsdl, psdl;
-	loopi(numlights)
+	loopi(MAXDYNLIGHTS)
 	{
 		vsdl.setsizenodelete(0);
 		psdl.setsizenodelete(0);
 
-		if(s.type & SHADER_GLSLANG)
-		{
-			loopk(i+1)
-			{
-				s_sprintfd(pos)("%sdynlight%dpos%s", !k ? "uniform vec4 " : " ", k, k==i ? ";\n" : ",");
-				vsdl.put(pos, strlen(pos));
-
-				s_sprintfd(color)("%sdynlight%dcolor%s", !k ? "uniform vec4 " : " ", k, k==i ? ";\n" : ",");
-				psdl.put(color, strlen(color));
-			}
-			loopk(i+1)
-			{
-				s_sprintfd(dir)("%sdynlight%ddir%s", !k ? "varying vec3 " : " ", k, k==i ? ";\n" : ",");
-				vsdl.put(dir, strlen(dir));
-				psdl.put(dir, strlen(dir));
-			}
-		}
+        if(s.type & SHADER_GLSLANG)
+        {
+            loopk(i+1)
+            {
+                s_sprintfd(pos)("%sdynlight%dpos%s",
+                    !k || k==numlights ? "uniform vec4 " : " ",
+                    k,
+                    k==i || k+1==numlights ? ";\n" : ",");
+                if(k<numlights) vsdl.put(pos, strlen(pos));
+                else psdl.put(pos, strlen(pos));
+            }
+            loopk(i+1)
+            {
+                s_sprintfd(color)("%sdynlight%dcolor%s", !k ? "uniform vec4 " : " ", k, k==i ? ";\n" : ",");
+                psdl.put(color, strlen(color));
+            }
+            loopk(min(i+1, numlights))
+            {
+                s_sprintfd(dir)("%sdynlight%ddir%s", !k ? "varying vec3 " : " ", k, k==i || k+1==numlights ? ";\n" : ",");
+                vsdl.put(dir, strlen(dir));
+                psdl.put(dir, strlen(dir));
+            }
+        }
 
         EMUFOGVS(emufogcoord && i+1==numlights && emufogcoord < vspragma, vsdl, vs, vspragma, emufogcoord, emufogtc, emufogcomp);
 		psdl.put(ps, pspragma-ps);
@@ -776,8 +784,15 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
             extern int ati_dph_bug;
             string tc, dl;
             if(s.type & SHADER_GLSLANG) s_sprintf(tc)(
-                "dynlight%ddir = gl_Vertex.xyz*dynlight%dpos.w + dynlight%dpos.xyz;\n",
+                k<numlights ?
+                    "dynlight%ddir = gl_Vertex.xyz*dynlight%dpos.w + dynlight%dpos.xyz;\n" :
+                    "vec3 dynlight%ddir = dynlight0dir*dynlight%dpos.w + dynlight%dpos.xyz;\n",
                 k, k, k);
+            else if(k>=numlights) s_sprintf(tc)(
+                "%s"
+                "MAD dynlightdir.xyz, fragment.texcoord[%d], program.env[%d].w, program.env[%d];\n",
+                k==numlights ? "TEMP dynlightdir;\n" : "",
+                lights[0], k-1, k-1);
             else if(ati_dph_bug || lights[k]==emufogtc) s_sprintf(tc)(
                 "MAD result.texcoord[%d].xyz, vertex.position, program.env[%d].w, program.env[%d];\n",
                 lights[k], 10+k, 10+k);
@@ -785,11 +800,17 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
                 "MAD result.texcoord[%d].xyz, vertex.position, program.env[%d].w, program.env[%d];\n"
                 "MOV result.texcoord[%d].w, 1;\n",
                 lights[k], 10+k, 10+k, lights[k]);
-            vsdl.put(tc, strlen(tc));
+            if(k < numlights) vsdl.put(tc, strlen(tc));
+            else psdl.put(tc, strlen(tc));
 
             if(s.type & SHADER_GLSLANG) s_sprintf(dl)(
                 "%s.rgb += dynlight%dcolor.rgb * (1.0 - clamp(dot(dynlight%ddir, dynlight%ddir), 0.0, 1.0));\n",
                 pslight, k, k, k);
+            else if(k>=numlights) s_sprintf(dl)(
+                "DP3_SAT dynlight.x, dynlightdir, dynlightdir;\n"
+                "SUB dynlight.x, 1, dynlight.x;\n"
+                "MAD %s.rgb, program.env[%d], dynlight.x, %s;\n",
+                pslight, 10+k, pslight);
             else if(ati_dph_bug || lights[k]==emufogtc) s_sprintf(dl)(
                 "%s"
                 "DP3_SAT dynlight.x, fragment.texcoord[%d], fragment.texcoord[%d];\n"
