@@ -801,14 +801,18 @@ void dynlightreaching(const vec &target, vec &color, vec &dir)
 
 void setdynlights(vtxarray *va)
 {
+    visibledynlights.setsizenodelete(0);
+    if(closedynlights.empty()) return;
+
     static string vertexparams[MAXDYNLIGHTS] = { "" }, pixelparams[MAXDYNLIGHTS] = { "" };
     if(!*vertexparams[0]) loopi(MAXDYNLIGHTS)
     {
         s_sprintf(vertexparams[i])("dynlight%dpos", i);
         s_sprintf(pixelparams[i])("dynlight%dcolor", i);
     }
-
-    visibledynlights.setsizenodelete(0);
+  
+    float scale0 = 1;
+    vec origin0(0, 0, 0);
     loopv(closedynlights)
     {
         dynlight &d = *closedynlights[i];
@@ -819,9 +823,18 @@ void setdynlights(vtxarray *va)
         visibledynlights.add(&d);
 
         float scale = 1.0f/radius;
-        vec origin(ivec(va->x, va->y, va->z).mask(~VVEC_INT_MASK).tovec());
+        vec origin = ivec(va->x, va->y, va->z).mask(~VVEC_INT_MASK).tovec();
         origin.sub(d.o).mul(scale);
         setenvparamf(vertexparams[index], SHPARAM_VERTEX, 10+index, origin.x, origin.y, origin.z, scale/(1<<VVEC_FRAC));
+
+        if(index<=0) { scale0 = scale; origin0 = origin; }
+        else
+        {
+            scale /= scale0;
+            origin.sub(vec(origin0).mul(scale));
+            setenvparamf(vertexparams[index], SHPARAM_PIXEL, index-1, origin.x, origin.y, origin.z, scale);
+        }
+
         vec color = d.calccolor();
         color.mul(d.intensity());
         setenvparamf(pixelparams[index], SHPARAM_PIXEL, 10+index, color.x, color.y, color.z);
