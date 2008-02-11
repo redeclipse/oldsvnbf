@@ -88,6 +88,8 @@ struct ShaderParamState
 
 enum
 {
+    SHADER_INVALID    = -1,
+
 	SHADER_DEFAULT	= 0,
 	SHADER_NORMALSLMS = 1<<0,
 	SHADER_ENVMAP	 = 1<<1,
@@ -105,22 +107,24 @@ struct Shader
 {
 	static Shader *lastshader;
 
-	char *name;
-	int type;
-	GLuint vs, ps;
-	GLhandleARB program, vsobj, psobj;
-	vector<LocalShaderParamState> defaultparams, extparams;
-	Shader *altshader, *fastshader[MAXSHADERDETAIL];
+    char *name, *vsstr, *psstr;
+    int type;
+    GLuint vs, ps;
+    GLhandleARB program, vsobj, psobj;
+    vector<LocalShaderParamState> defaultparams, extparams;
+    Shader *variantshader, *altshader, *fastshader[MAXSHADERDETAIL];
     vector<Shader *> variants[MAXVARIANTROWS];
-	LocalShaderParamState *extvertparams[RESERVEDSHADERPARAMS], *extpixparams[RESERVEDSHADERPARAMS];
-    bool used, native;
+    LocalShaderParamState *extvertparams[RESERVEDSHADERPARAMS], *extpixparams[RESERVEDSHADERPARAMS];
+    bool standard, used, native, reusevs, reuseps;
 
-    Shader() : name(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), altshader(NULL), used(false), native(true)
-	{}
+    Shader() : name(NULL), vsstr(NULL), psstr(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), variantshader(NULL), altshader(NULL), standard(false), used(false), native(true), reusevs(false), reuseps(false)
+    {}
 
 	~Shader()
 	{
 		DELETEA(name);
+        DELETEA(vsstr);
+        DELETEA(psstr);
 	}
 
 	void allocenvparams(Slot *slot = NULL);
@@ -146,6 +150,9 @@ struct Shader
 		lastshader->flushenvparams(slot);
 		if(slot) lastshader->setslotparams(*slot);
 	}
+
+    bool compile();
+    void cleanup();
 };
 
 // management of texture slots
@@ -154,12 +161,21 @@ struct Shader
 
 struct Texture
 {
-	char *name;
-	int xs, ys, bpp;
-	GLuint gl;
-	uchar *alphamask;
+    enum
+    {
+        STUB,
+        TRANSIENT,
+        IMAGE,
+        CUBEMAP
+    };
 
-	Texture() : alphamask(NULL) {}
+    char *name;
+    int type, w, h, xs, ys, bpp, clamp;
+    bool mipmap, canreduce;
+    GLuint id;
+    uchar *alphamask;
+
+    Texture() : alphamask(NULL) {}
 };
 
 enum
@@ -205,6 +221,19 @@ struct Slot
 	}
 
 	Slot() : autograss(NULL) { reset(); }
+
+    void cleanup()
+    {
+        loaded = false;
+        grasstex = NULL;
+        thumbnail = NULL;
+        loopv(sts)
+        {
+            Tex &t = sts[i];
+            t.t = NULL;
+            t.combined = -1;
+        }
+    }
 };
 
 extern vector<Slot> slots;

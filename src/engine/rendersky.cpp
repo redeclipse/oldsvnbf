@@ -53,33 +53,33 @@ void draw_envbox(int w, float zclip = 0.0f)
     draw_envbox_face(0.0f, 0.0f, -w, -w, -w,
                      1.0f, 0.0f, -w,  w, -w,
                      1.0f, vclip, -w,  w,  z,
-                     0.0f, vclip, -w, -w,  z, sky[0]->gl);
+                     0.0f, vclip, -w, -w,  z, sky[0]->id);
 
     draw_envbox_face(1.0f, vclip, +w, -w,  z,
                      0.0f, vclip, +w,  w,  z,
                      0.0f, 0.0f, +w,  w, -w,
-                     1.0f, 0.0f, +w, -w, -w, sky[1]->gl);
+                     1.0f, 0.0f, +w, -w, -w, sky[1]->id);
 
     draw_envbox_face(1.0f, vclip, -w, -w,  z,
                      0.0f, vclip,  w, -w,  z,
                      0.0f, 0.0f,  w, -w, -w,
-                     1.0f, 0.0f, -w, -w, -w, sky[2]->gl);
+                     1.0f, 0.0f, -w, -w, -w, sky[2]->id);
 
     draw_envbox_face(1.0f, vclip, +w,  w,  z,
                      0.0f, vclip, -w,  w,  z,
                      0.0f, 0.0f, -w,  w, -w,
-                     1.0f, 0.0f, +w,  w, -w, sky[3]->gl);
+                     1.0f, 0.0f, +w,  w, -w, sky[3]->id);
 
     if(!zclip)
         draw_envbox_face(0.0f, 1.0f, -w,  w,  w,
                          0.0f, 0.0f, +w,  w,  w,
                          1.0f, 0.0f, +w, -w,  w,
-                         1.0f, 1.0f, -w, -w,  w, sky[4]->gl);
+                         1.0f, 1.0f, -w, -w,  w, sky[4]->id);
 
     draw_envbox_face(0.0f, 1.0f, +w,  w, -w,
                      0.0f, 0.0f, -w,  w, -w,
                      1.0f, 0.0f, -w, -w, -w,
-                     1.0f, 1.0f, +w, -w, -w, sky[5]->gl);
+                     1.0f, 1.0f, +w, -w, -w, sky[5]->id);
 
 	glDepthMask(GL_TRUE);
 }

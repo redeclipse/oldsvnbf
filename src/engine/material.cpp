@@ -594,7 +594,7 @@ void rendermaterials(float zclip, bool refract)
 						textured = GL_TEXTURE_2D;
 					}
 					int tex = m.orient == O_TOP ? 0 : 1;
-					glBindTexture(GL_TEXTURE_2D, wslot.sts.length() > tex ? wslot.sts[tex].t->gl : notexture->gl);
+					glBindTexture(GL_TEXTURE_2D, wslot.sts.length() > tex ? wslot.sts[tex].t->id : notexture->id);
 					break;
 				}
 				case MAT_LAVA:
@@ -622,7 +622,7 @@ void rendermaterials(float zclip, bool refract)
 						textured = GL_TEXTURE_2D;
 					}
 					int tex = m.orient == O_TOP ? 0 : 1;
-					glBindTexture(GL_TEXTURE_2D, lslot.sts.length() > tex ? lslot.sts[tex].t->gl : notexture->gl);
+					glBindTexture(GL_TEXTURE_2D, lslot.sts.length() > tex ? lslot.sts[tex].t->id : notexture->id);
 					break;
 				}
 				case MAT_GLASS:

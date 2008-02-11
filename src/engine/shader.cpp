@@ -11,7 +11,7 @@ static hashtable<const char *, Shader> shaders;
 static Shader *curshader = NULL;
 static vector<ShaderParam> curparams;
 static ShaderParamState vertexparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS], pixelparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS];
-static bool dirtyenvparams = false;
+static bool dirtyenvparams = false, standardshader = false;
 
 VAR(reservevpparams, 1, 16, 0);
 VAR(maxvpenvparams, 1, 0, 0);
@@ -35,7 +35,9 @@ void loadshaders()
     }
 
 	persistidents = false;
+    standardshader = true;
     exec("stdshader.cfg");
+    standardshader = false;
     persistidents = true;
     defaultshader = lookupshaderbyname("default");
     notextureshader = lookupshaderbyname("notexture");
@@ -52,8 +54,9 @@ void loadshaders()
 
 Shader *lookupshaderbyname(const char *name)
 {
-	Shader *s = shaders.access(name);
-	return s && s->altshader ? s->altshader : s;
+    Shader *s = shaders.access(name);
+    if(!s || s->type==SHADER_INVALID) return NULL;
+    return s->altshader ? s->altshader : s;
 }
 
 static bool compileasmshader(GLenum type, GLuint &idx, const char *def, const char *tname, const char *name, bool msg = true, bool nativeonly = false)
@@ -431,7 +434,7 @@ void Shader::setslotparams(Slot &slot)
 			if(p.type==SHPARAM_VERTEX) vertmask |= 1<<p.index;
 			else pixmask |= 1<<p.index;
 			if(memcmp(val.val, p.val, sizeof(val.val))) memcpy(val.val, p.val, sizeof(val.val));
-            else if(val.dirty!=ShaderParamState::DIRTY) continue;
+            else if(val.dirty==ShaderParamState::CLEAN) continue;
             glProgramEnvParameter4fv_(p.type==SHPARAM_VERTEX ? GL_VERTEX_PROGRAM_ARB : GL_FRAGMENT_PROGRAM_ARB, RESERVEDSHADERPARAMS+p.index, val.val);
             val.local = true;
             val.dirty = ShaderParamState::CLEAN;
@@ -456,7 +459,7 @@ void Shader::setslotparams(Slot &slot)
             else if(pixmask & (1<<l.index)) continue;
             ShaderParamState &val = (l.type==SHPARAM_VERTEX ? vertexparamstate[RESERVEDSHADERPARAMS+l.index] : pixelparamstate[RESERVEDSHADERPARAMS+l.index]);
             if(memcmp(val.val, l.val, sizeof(val.val))) memcpy(val.val, l.val, sizeof(val.val));
-            else if(val.dirty!=ShaderParamState::DIRTY) continue;
+            else if(val.dirty==ShaderParamState::CLEAN) continue;
             glProgramEnvParameter4fv_(l.type==SHPARAM_VERTEX ? GL_VERTEX_PROGRAM_ARB : GL_FRAGMENT_PROGRAM_ARB, RESERVEDSHADERPARAMS+l.index, val.val);
             val.local = true;
             val.dirty = ShaderParamState::CLEAN;
@@ -487,55 +490,79 @@ VARP(shaderdetail, 0, MAXSHADERDETAIL, MAXSHADERDETAIL);
 
 VAR(dbgshader, 0, 0, 1);
 
+bool Shader::compile()
+{
+    if(type & SHADER_GLSLANG)
+    {
+        if(reusevs) vsobj = variantshader->vsobj;
+        else compileglslshader(GL_VERTEX_SHADER_ARB,   vsobj, vsstr, "VS", name, dbgshader || !variantshader);
+        if(reuseps) psobj = variantshader->psobj;
+        else compileglslshader(GL_FRAGMENT_SHADER_ARB, psobj, psstr, "PS", name, dbgshader || !variantshader);
+        linkglslprogram(*this, !variantshader);
+        return program!=0;
+    }
+    else
+    {
+        if(reusevs) vs = variantshader->vs;
+        else if(!compileasmshader(GL_VERTEX_PROGRAM_ARB, vs, vsstr, "VS", name, dbgshader || !variantshader, variantshader!=NULL))
+            native = false;
+        if(reuseps) ps = variantshader->ps;
+        else if(!compileasmshader(GL_FRAGMENT_PROGRAM_ARB, ps, psstr, "PS", name, dbgshader || !variantshader, variantshader!=NULL))
+            native = false;
+        return vs && ps && (!variantshader || native);
+    }
+}
+
+void Shader::cleanup()
+{
+    used = false;
+    native = true;
+    if(standard)
+    {
+        type = SHADER_INVALID;
+        loopi(MAXVARIANTROWS) variants[i].setsizenodelete(0);
+        DELETEA(vsstr);
+        DELETEA(psstr);
+        defaultparams.setsizenodelete(0);
+        altshader = NULL;
+    }
+    if(vs) { if(!reusevs) glDeletePrograms_(1, &vs); vs = 0; }
+    if(ps) { if(!reuseps) glDeletePrograms_(1, &ps); ps = 0; }
+    if(vsobj) { if(!reusevs) glDeleteObject_(vsobj); vsobj = 0; }
+    if(psobj) { if(!reuseps) glDeleteObject_(psobj); psobj = 0; }
+    if(program) { glDeleteObject_(program); program = 0; }
+    memset(extvertparams, 0, sizeof(extvertparams));
+    memset(extpixparams, 0, sizeof(extpixparams));
+    extparams.setsize(0);
+    loopv(defaultparams) memset(defaultparams[i].curval, 0, sizeof(defaultparams[i].curval));
+}
+
 Shader *newshader(int type, const char *name, const char *vs, const char *ps, Shader *variant = NULL, int row = 0)
 {
-	char *rname = newstring(name);
-	Shader &s = shaders[rname];
-	s.name = rname;
-	s.type = type;
-	loopi(MAXSHADERDETAIL) s.fastshader[i] = &s;
-	memset(s.extvertparams, 0, sizeof(s.extvertparams));
-	memset(s.extpixparams, 0, sizeof(s.extpixparams));
-	if(variant) loopv(variant->defaultparams) s.defaultparams.add(variant->defaultparams[i]);
-	else loopv(curparams) s.defaultparams.add(curparams[i]);
-	if(renderpath!=R_FIXEDFUNCTION)
-	{
-        bool reusevs = !vs[0], reuseps = !ps[0];
-        if(type & SHADER_GLSLANG)
-        {
-            if(reusevs) s.vsobj = variant->vsobj;
-            else compileglslshader(GL_VERTEX_SHADER_ARB,   s.vsobj, vs, "VS", name, dbgshader || !variant);
-            if(reuseps) s.psobj = variant->psobj;
-            else compileglslshader(GL_FRAGMENT_SHADER_ARB, s.psobj, ps, "PS", name, dbgshader || !variant);
-            linkglslprogram(s, !variant);
-            if(!s.program)
-            {
-                if(s.vsobj) { if(!reusevs) glDeleteObject_(s.vsobj); s.vsobj = 0; }
-                if(s.psobj) { if(!reuseps) glDeleteObject_(s.psobj); s.psobj = 0; }
-            }
-        }
-        else
-        {
-            if(reusevs) s.vs = variant->vs;
-            else if(!compileasmshader(GL_VERTEX_PROGRAM_ARB, s.vs, vs, "VS", name, dbgshader || !variant, variant!=NULL))
-                s.native = false;
-            if(reuseps) s.ps = variant->ps;
-            else if(!compileasmshader(GL_FRAGMENT_PROGRAM_ARB, s.ps, ps, "PS", name, dbgshader || !variant, variant!=NULL))
-                s.native = false;
-            if(!s.vs || !s.ps || (variant && !s.native))
-            {
-                if(s.vs) { if(!reusevs) glDeletePrograms_(1, &s.vs); s.vs = 0; }
-                if(s.ps) { if(!reuseps) glDeletePrograms_(1, &s.ps); s.ps = 0; }
-            }
-        }
-        if(!s.program && !s.vs && !s.ps)
-        {
-            shaders.remove(rname);
-            return NULL;
-        }
-	}
+    Shader *exists = shaders.access(name);
+    char *rname = exists ? exists->name : newstring(name);
+    Shader &s = shaders[rname];
+    s.name = rname;
+    s.vsstr = newstring(vs);
+    s.psstr = newstring(ps);
+    s.type = type;
+    s.variantshader = variant;
+    s.standard = standardshader;
+    s.reusevs = !vs[0];
+    s.reuseps = !ps[0];
+    loopi(MAXSHADERDETAIL) s.fastshader[i] = &s;
+    memset(s.extvertparams, 0, sizeof(s.extvertparams));
+    memset(s.extpixparams, 0, sizeof(s.extpixparams));
+    if(variant) loopv(variant->defaultparams) s.defaultparams.add(variant->defaultparams[i]);
+    else loopv(curparams) s.defaultparams.add(curparams[i]);
+    if(renderpath!=R_FIXEDFUNCTION && !s.compile())
+    {
+        s.cleanup();
+        shaders.remove(rname);
+        return NULL;
+    }
     if(variant) variant->variants[row].add(&s);
-	return &s;
+    return &s;
 }
 
 static uint findusedtexcoords(const char *str)
@@ -960,38 +987,39 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
 
 void shader(int *type, char *name, char *vs, char *ps)
 {
-	if(lookupshaderbyname(name)) return;
+    if(lookupshaderbyname(name)) return;
 
-	if(renderpath!=R_FIXEDFUNCTION)
-	{
-		if((renderpath!=R_GLSLANG && *type & SHADER_GLSLANG) ||
-			(!hasCM && strstr(ps, *type & SHADER_GLSLANG ? "textureCube" : "CUBE")) ||
-			(!hasTR && strstr(ps, *type & SHADER_GLSLANG ? "texture2DRect" : "RECT")))
-		{
-			loopv(curparams)
-			{
-				if(curparams[i].name) delete[] curparams[i].name;
-			}
-			curparams.setsize(0);
-			return;
-		}
+    if((renderpath!=R_GLSLANG && *type & SHADER_GLSLANG) ||
+       (!hasCM && strstr(ps, *type & SHADER_GLSLANG ? "textureCube" : "CUBE")) ||
+       (!hasTR && strstr(ps, *type & SHADER_GLSLANG ? "texture2DRect" : "RECT")))
+    {
+        loopv(curparams)
+        {
+            if(curparams[i].name) delete[] curparams[i].name;
+        }
+        curparams.setsize(0);
+        return;
+    }
+
+    if(renderpath!=R_FIXEDFUNCTION)
+    {
         s_sprintfd(info)("shader %s", name);
         show_out_of_renderloop_progress(0.0, info);
-	}
-	Shader *s = newshader(*type, name, vs, ps);
-	if(s && renderpath!=R_FIXEDFUNCTION)
-	{
-		// '#' is a comment in vertex/fragment programs, while '#pragma' allows an escape for GLSL, so can handle both at once
+    }
+    Shader *s = newshader(*type, name, vs, ps);
+    if(s && renderpath!=R_FIXEDFUNCTION)
+    {
+        // '#' is a comment in vertex/fragment programs, while '#pragma' allows an escape for GLSL, so can handle both at once
         if(strstr(vs, "#pragma CUBE2_water")) genwatervariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_shadowmap")) genshadowmapvariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(*s, s->name, vs, ps);
-	}
-	curparams.setsize(0);
+    }
+    curparams.setsize(0);
 }
 
 void variantshader(int *type, char *name, int *row, char *vs, char *ps)
 {
-    if(renderpath==R_FIXEDFUNCTION) return;
+    if(renderpath==R_FIXEDFUNCTION && standardshader) return;
 
     Shader *s = lookupshaderbyname(name);
     if(!s) return;
@@ -1059,8 +1087,9 @@ void altshader(char *origname, char *altname)
         if(nativeshaders && !orig->native) orig->altshader = alt;
         return;
     }
-    char *rname = newstring(origname);
-	Shader &s = shaders[rname];
+    Shader *exists = shaders.access(origname);
+    char *rname = exists ? exists->name : newstring(origname);
+    Shader &s = shaders[rname];
 	s.name = rname;
 	s.altshader = alt;
 }
@@ -1068,7 +1097,7 @@ void altshader(char *origname, char *altname)
 void fastshader(char *nice, char *fast, int *detail)
 {
 	Shader *ns = shaders.access(nice);
-	if(!ns || ns->altshader) return;
+    if(!ns || ns->type==SHADER_INVALID || ns->altshader) return;
 	Shader *fs = lookupshaderbyname(fast);
 	if(!fs) return;
 	loopi(min(*detail+1, MAXSHADERDETAIL)) ns->fastshader[i] = fs;
@@ -1433,5 +1462,51 @@ void inittmus()
             refractfog = 0;
         }
 	}
+}
+
+void cleanupshaders()
+{
+    if(fs_w || fs_h)
+    {
+        glDeleteTextures(NUMSCALE, rendertarget);
+        if(hasFBO) glDeleteFramebuffers_(NUMSCALE-1, fsfb);
+        fs_w = fs_h = 0;
+    }
+    fsshader = NULL;
+
+    defaultshader = notextureshader = nocolorshader = foggedshader = foggednotextureshader = NULL;
+    enumerate(shaders, Shader, s, s.cleanup());
+    Shader::lastshader = NULL;
+    if(renderpath!=R_FIXEDFUNCTION)
+    {
+        glBindProgram_(GL_VERTEX_PROGRAM_ARB, 0);
+        glBindProgram_(GL_FRAGMENT_PROGRAM_ARB, 0);
+        glDisable(GL_VERTEX_PROGRAM_ARB);
+        glDisable(GL_FRAGMENT_PROGRAM_ARB);
+        if(renderpath==R_GLSLANG) glUseProgramObject_(0);
+    }
+    loopi(RESERVEDSHADERPARAMS + MAXSHADERPARAMS)
+    {
+        vertexparamstate[i].dirty = ShaderParamState::INVALID;
+        pixelparamstate[i].dirty = ShaderParamState::INVALID;
+    }
+
+    tmu invalidtmu = INVALIDTMU;
+    loopi(MAXTMUS) tmus[i] = invalidtmu;
+}
+
+void reloadshaders()
+{
+    persistidents = false;
+    loadshaders();
+    persistidents = true;
+    if(renderpath!=R_FIXEDFUNCTION) enumerate(shaders, Shader, s,
+        if(!s.standard)
+        {
+            s_sprintfd(info)("shader %s", s.name);
+            show_out_of_renderloop_progress(0.0, info);
+            s.compile();
+        }
+    );
 }
 

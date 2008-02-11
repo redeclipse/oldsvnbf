@@ -284,7 +284,7 @@ void md3skin(char *meshname, char *tex, char *masks, float *envmapmax, float *en
         s.tex = textureload(spath, 0, true, false);
         if(*masks)
         {
-            s_sprintfd(mpath)("%s%s/%s", renderpath==R_FIXEDFUNCTION ? "<ffmask:25>" : "", md3dir, masks);
+            s_sprintfd(mpath)("<ffmask:25>%s/%s", md3dir, masks);
             s.masks = textureload(mpath, 0, true, false);
             s.envmapmax = *envmapmax;
             s.envmapmin = *envmapmin;
@@ -334,11 +334,10 @@ void md3envmap(char *meshname, char *envmap)
 
 void md3bumpmap(char *meshname, char *skin, char *normalmap)
 {
-    if(renderpath==R_FIXEDFUNCTION) return;
     Texture *skintex, *normalmaptex;
-    s_sprintfd(spath)("%s/%s", md3dir, skin);
+    s_sprintfd(spath)("<noff>%s/%s", md3dir, skin);
     skintex = textureload(spath, 0, true, false);
-    s_sprintf(spath)("%s/%s", md3dir, normalmap);
+    s_sprintf(spath)("<noff>%s/%s", md3dir, normalmap);
     normalmaptex = textureload(spath, 0, true, false);
     loopmd3skins(meshname, s, { s.unlittex = skintex; s.normalmap = normalmaptex; m.calctangents(); });
 }
@@ -360,7 +359,6 @@ void md3shader(char *meshname, char *shader)
 
 void md3scroll(char *meshname, float *scrollu, float *scrollv)
 {
-    if(renderpath!=R_FIXEDFUNCTION) return;
     loopmd3skins(meshname, s, { s.scrollu = *scrollu; s.scrollv = *scrollv; });
 }
 

@@ -519,10 +519,10 @@ void renderwater()
 
 	glActiveTexture_(GL_TEXTURE1_ARB);
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, s.sts.length() > 2 ? s.sts[2].t->gl : notexture->gl);
+	glBindTexture(GL_TEXTURE_2D, s.sts.length() > 2 ? s.sts[2].t->id : notexture->id);
 	glActiveTexture_(GL_TEXTURE2_ARB);
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, s.sts.length() > 3 ? s.sts[3].t->gl : notexture->gl);
+	glBindTexture(GL_TEXTURE_2D, s.sts.length() > 3 ? s.sts[3].t->id : notexture->id);
 
     if(waterrefract)
     {

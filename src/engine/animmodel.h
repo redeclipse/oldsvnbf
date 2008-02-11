@@ -254,7 +254,9 @@ struct animmodel : model
                 else if(as->anim&ANIM_SHADOW) SETMODELSHADER(b, dynshadow);
                 return;
             }
-            Texture *s = bumpmapped() && unlittex ? unlittex : tex, *m = masks, *n = bumpmapped() ? normalmap : NULL;
+            Texture *s = bumpmapped() && unlittex ? unlittex : tex,
+                    *m = masks->type==Texture::STUB ? notexture : masks,
+                    *n = bumpmapped() ? normalmap : NULL;
             if((renderpath==R_FIXEDFUNCTION || !lightmodels) &&
                (!glowmodels || (renderpath==R_FIXEDFUNCTION && refracting && refractfog && maxtmus<=2)) &&
                (!envmapmodels || !(as->anim&ANIM_ENVMAP) || envmapmax<=0))
@@ -268,14 +270,14 @@ struct animmodel : model
             if(s!=lasttex)
             {
                 if(enableglow) glActiveTexture_(GL_TEXTURE1_ARB);
-                glBindTexture(GL_TEXTURE_2D, s->gl);
+                glBindTexture(GL_TEXTURE_2D, s->id);
                 if(enableglow) glActiveTexture_(GL_TEXTURE0_ARB);
                 lasttex = s;
             }
             if(n && n!=lastnormalmap)
             {
                 glActiveTexture_(GL_TEXTURE3_ARB);
-                glBindTexture(GL_TEXTURE_2D, n->gl);
+                glBindTexture(GL_TEXTURE_2D, n->id);
                 glActiveTexture_(GL_TEXTURE0_ARB);
             }
             if(s->bpp==32)
@@ -309,13 +311,13 @@ struct animmodel : model
             if(m!=lastmasks && m!=notexture)
             {
                 if(!enableglow) glActiveTexture_(GL_TEXTURE1_ARB);
-                glBindTexture(GL_TEXTURE_2D, m->gl);
+                glBindTexture(GL_TEXTURE_2D, m->id);
                 if(!enableglow) glActiveTexture_(GL_TEXTURE0_ARB);
                 lastmasks = m;
             }
             if((renderpath!=R_FIXEDFUNCTION || m!=notexture) && as->anim&ANIM_ENVMAP && envmapmax>0)
             {
-                GLuint emtex = envmap ? envmap->gl : closestenvmaptex;
+                GLuint emtex = envmap ? envmap->id : closestenvmaptex;
                 if(!enableenvmap || lastenvmaptex!=emtex)
                 {
                     glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
@@ -447,6 +449,7 @@ struct animmodel : model
             return this;
         }
 
+        virtual void cleanup() {}
         virtual void render(const animstate *as, float pitch, const vec &axis, part *p) {}
     };
 
@@ -454,7 +457,7 @@ struct animmodel : model
 
     meshgroup *sharemeshes(char *name)
     {
-        static hashtable<char *, animmodel::meshgroup *> meshgroups;
+        static hashtable<char *, meshgroup *> meshgroups;
         if(!meshgroups.access(name))
         {
             meshgroup *group = loadmeshes(name);
@@ -491,6 +494,11 @@ struct animmodel : model
         virtual ~part()
         {
             loopk(MAXANIMPARTS) DELETEA(anims[k]);
+        }
+
+        virtual void cleanup()
+        {
+            if(meshes) meshes->cleanup();
         }
 
         void calcbb(int frame, vec &bbmin, vec &bbmax)
@@ -1019,6 +1027,12 @@ struct animmodel : model
 
     char *name() { return loadname; }
 
+    void cleanup()
+    {
+        loopv(parts) parts[i]->cleanup();
+        enablelight0 = false;
+    }
+
     void gentris(int frame, vector<BIH::tri> &tris)
     {
         if(parts.empty()) return;
@@ -1132,7 +1146,7 @@ struct animmodel : model
         center.add(radius);
     }
 
-    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enablelighting, enablecullface, enablefog, enabletangents, enablebones;
+    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enablelighting, enablelight0, enablecullface, enablefog, enabletangents, enablebones;
     static vec lightcolor;
     static plane refractfogplane;
     static float lastalphatest;
@@ -1151,8 +1165,7 @@ struct animmodel : model
         lasttex = lastmasks = lastnormalmap = NULL;
         envmaptmu = fogtmu = -1;
 
-        static bool initlights = false;
-        if(renderpath==R_FIXEDFUNCTION && lightmodels && !initlights)
+        if(renderpath==R_FIXEDFUNCTION && lightmodels && !enablelight0)
         {
             glEnable(GL_LIGHT0);
             static const GLfloat zero[4] = { 0, 0, 0, 0 };
@@ -1160,7 +1173,7 @@ struct animmodel : model
             glLightfv(GL_LIGHT0, GL_SPECULAR, zero);
             glMaterialfv(GL_FRONT, GL_SPECULAR, zero);
             glMaterialfv(GL_FRONT, GL_EMISSION, zero);
-            initlights = true;
+            enablelight0 = true;
         }
     }
 
@@ -1262,7 +1275,7 @@ struct animmodel : model
 };
 
 bool animmodel::enabletc = false, animmodel::enablemtc = false, animmodel::enablealphatest = false, animmodel::enablealphablend = false,
-     animmodel::enableenvmap = false, animmodel::enableglow = false, animmodel::enablelighting = false, animmodel::enablecullface = true,
+     animmodel::enableenvmap = false, animmodel::enableglow = false, animmodel::enablelighting = false, animmodel::enablelight0 = false, animmodel::enablecullface = true,
      animmodel::enablefog = false, animmodel::enabletangents = false, animmodel::enablebones = false;
 vec animmodel::lightcolor;
 plane animmodel::refractfogplane;

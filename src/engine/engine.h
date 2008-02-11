@@ -130,7 +130,8 @@ extern void genenvmaps();
 extern ushort closestenvmap(const vec &o);
 extern ushort closestenvmap(int orient, int x, int y, int z, int size);
 extern GLuint lookupenvmap(ushort emid);
-
+extern bool reloadtexture(Texture &tex);
+extern bool reloadtexture(const char *name);
 
 // shader
 
