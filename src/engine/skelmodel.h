@@ -984,7 +984,25 @@ struct skelmodel : animmodel
                 l.matrix[4*k+3] = k==3 ? 1 : 0;
             }
         }
-        
+       
+        void cleanup()
+        {
+            loopv(skelcache) loopj(MAXANIMPARTS) skelcache[i].as[j].cur.fr1 = -1;
+            loopi(MAXVBOCACHE)
+            {
+                vbocacheentry &c = vbocache[i];
+                if(c.vbuf) { glDeleteBuffers_(1, &c.vbuf); c.vbuf = 0; }
+                DELETEA(c.vdata);
+                if(c.owner>=0) skelcache[c.owner].vc = NULL;
+                c.owner = -1;
+            }
+            if(hasVBO) { if(ebuf) { glDeleteBuffers_(1, &ebuf); ebuf = 0; } }
+            else DELETEA(vdata);
+            lastvbuf = lasttcbuf = lastmtcbuf = lastbbuf = NULL;
+            lastebuf = 0;
+            lastbdata = NULL;
+        }
+ 
         void render(const animstate *as, float pitch, const vec &axis, part *p)
         {
             bool norms = false, tangents = false;
@@ -994,22 +1012,7 @@ struct skelmodel : animmodel
                 if(p->skins[i].tangents()) tangents = true;
             }
             if(gpuaccelerate()!=vaccel || ((matskel!=0)!=vmat && numframes) || norms!=vnorms || tangents!=vtangents)
-            {
-                loopv(skelcache) loopj(MAXANIMPARTS) skelcache[i].as[j].cur.fr1 = -1;
-                loopi(MAXVBOCACHE)
-                {
-                    vbocacheentry &c = vbocache[i];
-                    if(c.vbuf) { glDeleteBuffers_(1, &c.vbuf); c.vbuf = 0; }
-                    DELETEA(c.vdata);
-                    if(c.owner>=0) skelcache[c.owner].vc = NULL;
-                    c.owner = -1;
-                }
-                if(hasVBO) { if(ebuf) { glDeleteBuffers_(1, &ebuf); ebuf = 0; } }
-                else DELETEA(vdata);
-                lastvbuf = lasttcbuf = lastmtcbuf = lastbbuf = NULL;
-                lastebuf = 0;
-                lastbdata = NULL;
-            }
+                cleanup();
 
             if(!numframes)
             {

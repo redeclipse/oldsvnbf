@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "engine.h"
 
-bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false;
+bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false;
 int renderpath;
 
 // GL_ARB_vertex_buffer_object
@@ -206,7 +206,10 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     if(!hasOQ)
     {
         conoutf("WARNING: No occlusion query support! (large maps may be SLOW)");
-        if(renderpath==R_FIXEDFUNCTION) zpass = 0;
+        /*if(renderpath==R_FIXEDFUNCTION)*/ zpass = 0;
+        extern int vacubesize;
+        vacubesize = 64;
+        waterreflect = 0;
     }
 
     extern int reservedynlighttc, reserveshadowmaptc, maxtexsize;
@@ -227,7 +230,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 		floatvtx = 1;
         maxtexsize = 256;
 
-        if(!hasOQ) waterreflect = waterrefract = 0;
+        if(!hasOQ) waterreflect = 0;
         if(hasDRE) mesa_dre_bug = 1;
 	}
 	else if(strstr(vendor, "Intel"))
@@ -236,13 +239,12 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 		intel_quadric_bug = 1;
         maxtexsize = 256;
 
-        if(!hasOQ) waterreflect = waterrefract = 0;
+        if(!hasOQ) waterreflect = 0;
 	}
     else if(strstr(vendor, "NVIDIA"))
     {
         reservevpparams = 10;
     }
-    if(!hasOQ) waterreflect = 0;
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
 	extern int useshaders;
@@ -395,10 +397,10 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
     if(strstr(exts, "GL_EXT_texture_filter_anisotropic"))
     {
-       hasAF = true;
        GLint val;
        glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &val);
        hwmaxaniso = val;
+       hasAF = true;
        //conoutf("Using GL_EXT_texture_filter_anisotropic extension.");
     }
 
@@ -409,6 +411,16 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     hwtexsize = val;
 
 	inittmus();
+}
+
+void cleanupgl()
+{
+    if(glIsEnabled(GL_MULTISAMPLE)) glDisable(GL_MULTISAMPLE);
+
+    hasVBO = hasDRE = hasOQ = hasTR = hasFBO = hasDS = hasTF = hasBE = hasCM = hasNP2 = hasTC = hasTE = hasMT = hasD3 = hasstencil = hasAF = hasVP2 = hasVP3 = hasPP = false;
+
+    extern int nomasks, nolights, nowater;
+    nomasks = nolights = nowater = 0;
 }
 
 VAR(wireframe, 0, 0, 1);
@@ -781,7 +793,7 @@ void computescreen(const char *text, Texture *t)
 		if(t)
 		{
 			glDisable(GL_BLEND);
-			glBindTexture(GL_TEXTURE_2D, t->gl);
+			glBindTexture(GL_TEXTURE_2D, t->id);
 			int sz = 256, x = (w-sz)/2, y = min(384, h-256);
 			glBegin(GL_QUADS);
 			glTexCoord2f(0, 0); glVertex2i(x,	y);
@@ -1049,7 +1061,7 @@ void drawcrosshair(int w, int h)
 	if(windowhit) g3d_cursorpos(cx, cy);
 	float x = cx*w*3.0f - (windowhit ? 0 : chsize/2.0f);
 	float y = cy*h*3.0f - (windowhit ? 0 : chsize/2.0f);
-	glBindTexture(GL_TEXTURE_2D, (windowhit ? cursor : crosshair)->gl);
+	glBindTexture(GL_TEXTURE_2D, (windowhit ? cursor : crosshair)->id);
 	glBegin(GL_QUADS);
 	glTexCoord2d(0.0, 0.0); glVertex2f(x,		  y);
 	glTexCoord2d(1.0, 0.0); glVertex2f(x + chsize, y);
@@ -1313,7 +1325,7 @@ bool rendericon(const char *icon, int x, int y, int xs, int ys)
 
 	if ((t = textureload(icon, 0, true, false)) != notexture)
 	{
-		glBindTexture(GL_TEXTURE_2D, t->gl);
+		glBindTexture(GL_TEXTURE_2D, t->id);
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex2i(x,	y);
 		glTexCoord2f(1.0f, 0.0f); glVertex2i(x+xs, y);

@@ -88,7 +88,7 @@ static void renderflares(int time)
 
 	static Texture *flaretex = NULL;
 	if(!flaretex) flaretex = textureload("textures/lensflares.png");
-	glBindTexture(GL_TEXTURE_2D, flaretex->gl);
+	glBindTexture(GL_TEXTURE_2D, flaretex->id);
 	glBegin(GL_QUADS);
 	loopi(flarecnt)
 	{
@@ -575,6 +575,21 @@ void particleinit()
 	loopi(MAXPARTYPES) parlist[i] = NULL;
 }
 
+void cleanupparticles()
+{
+    loopi(2) if(expmodtex[i]) { glDeleteTextures(1, &expmodtex[i]); expmodtex[i] = 0; }
+    if(hemivbuf) { glDeleteBuffers_(1, &hemivbuf); hemivbuf = 0; }
+    if(hemiebuf) { glDeleteBuffers_(1, &hemiebuf); hemiebuf = 0; }
+    DELETEA(hemiverts);
+    DELETEA(hemiindices);
+    if(expvbuf) { glDeleteBuffers_(1, &expvbuf); expvbuf = 0; }
+    DELETEA(expverts);
+    if(spherevbuf) { glDeleteBuffers_(1, &spherevbuf); spherevbuf = 0; }
+    if(sphereebuf) { glDeleteBuffers_(1, &sphereebuf); sphereebuf = 0; }
+    DELETEA(sphereverts);
+    DELETEA(sphereindices);
+}
+
 enum
 {
 	PT_PART = 0,
@@ -726,7 +741,7 @@ void render_particles(int time)
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glFogfv(GL_FOG_COLOR, oldfogc);
 		}
-		if(pt.tex >= 0) glBindTexture(GL_TEXTURE_2D, parttexs[pt.tex]->gl);
+		if(pt.tex >= 0) glBindTexture(GL_TEXTURE_2D, parttexs[pt.tex]->id);
 
         bool quads = false;
         switch(type)

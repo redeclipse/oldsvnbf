@@ -268,12 +268,16 @@ void resetqueries()
 
 void clearqueries()
 {
-	loopi(2)
-	{
-		queryframe &qf = queryframes[i];
-		loopj(qf.max) glDeleteQueries_(1, &qf.queries[j].id);
-		qf.cur = qf.max = 0;
-	}
+    loopi(2)
+    {
+        queryframe &qf = queryframes[i];
+        loopj(qf.max)
+        {
+            glDeleteQueries_(1, &qf.queries[j].id);
+            qf.queries[j].owner = NULL;
+        }
+        qf.cur = qf.max = 0;
+    }
 }
 
 VAR(oqfrags, 0, 8, 64);
@@ -1111,11 +1115,17 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
 	{
         const elementset &es = va->eslist[i];
         Slot &slot = lookuptexture(es.texture);
-		Texture *tex = slot.sts.length() > 0 ? slot.sts[0].t : notexture;
-		Shader *s = slot.shader;
+        Texture *tex = slot.sts.empty() ? notexture : slot.sts[0].t;
+        Shader *s = slot.shader;
+        if(!s && renderpath!=R_FIXEDFUNCTION)
+        {
+            static Shader *stdworldshader = NULL;
+            if(!stdworldshader) stdworldshader = lookupshaderbyname("stdworld");
+            s = stdworldshader;
+        }
 
 		extern vector<GLuint> lmtexids;
-        int lmid = es.lmid, curlm = pass==RENDERPASS_LIGHTMAP ? (int)lmtexids[lmid] : -1;
+        int lmid = es.lmid, curlm = pass==RENDERPASS_LIGHTMAP ? (lmtexids.inrange(lmid) ? (int)lmtexids[lmid] : notexture->id) : -1;
 		if(s && renderpath!=R_FIXEDFUNCTION && pass==RENDERPASS_LIGHTMAP)
 		{
             int tmu = cur.lightmaptmu+1;
@@ -1143,7 +1153,7 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
 					if(envmap==EMID_CUSTOM) loopvj(slot.sts)
 					{
 						Slot::Tex &t = slot.sts[j];
-						if(t.type==TEX_ENVMAP && t.t) { emtex = t.t->gl; break; }
+						if(t.type==TEX_ENVMAP && t.t) { emtex = t.t->id; break; }
 					}
 					if(!emtex) emtex = lookupenvmap(envmap);
 					glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, emtex);
@@ -1162,7 +1172,7 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
 		}
 		if(&slot!=lastslot)
 		{
-			if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR) glBindTexture(GL_TEXTURE_2D, tex->gl);
+			if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR) glBindTexture(GL_TEXTURE_2D, tex->id);
 			if(renderpath==R_FIXEDFUNCTION)
 			{
 				bool noglow = true;
@@ -1176,7 +1186,7 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
                             glActiveTexture_(GL_TEXTURE0_ARB+cur.glowtmu);
 							if(!mtglow) { glEnable(GL_TEXTURE_2D); mtglow = true; }
 						}
-						glBindTexture(GL_TEXTURE_2D, t.t->gl);
+						glBindTexture(GL_TEXTURE_2D, t.t->id);
 						noglow = false;
 					}
 				}
@@ -1201,7 +1211,7 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
 					Slot::Tex &t = slot.sts[j];
 					if(t.type==TEX_DIFFUSE || t.type==TEX_ENVMAP || t.combined>=0) continue;
 					glActiveTexture_(GL_TEXTURE0_ARB+tmu++);
-					glBindTexture(GL_TEXTURE_2D, t.t->gl);
+					glBindTexture(GL_TEXTURE_2D, t.t->id);
 				}
                 glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
 
@@ -1210,7 +1220,7 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
 			lastslot = &slot;
 		}
 
-		float scale = slot.sts[0].scale;
+        float scale = slot.sts.empty() ? 1 : slot.sts[0].scale;
 		if(!scale) scale = 1;
         loopk(shadowmapreceiver ? 2 : 1) loopl(3)
 		{
@@ -1349,6 +1359,13 @@ void createfogtex()
     createtexture(fogtex, 2, 1, buf, 3, false, GL_LUMINANCE_ALPHA, GL_TEXTURE_1D);
 }
 
+void cleanupva()
+{
+    vaclearc(worldroot);
+    clearqueries();
+    if(fogtex) { glDeleteTextures(1, &fogtex); fogtex = 0; }
+}
+
 #define NUMCAUSTICS 32
 
 VAR(causticscale, 0, 100, 10000);
@@ -1386,7 +1403,7 @@ void setupcaustics(int tmu, GLfloat *color = NULL)
     {
         glActiveTexture_(GL_TEXTURE0_ARB+tmu+i);
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, caustictex[(tex+i)%NUMCAUSTICS]->gl);
+        glBindTexture(GL_TEXTURE_2D, caustictex[(tex+i)%NUMCAUSTICS]->id);
         if(renderpath==R_FIXEDFUNCTION || !i)
         {
             setuptexgen();

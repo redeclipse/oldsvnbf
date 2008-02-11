@@ -260,6 +260,11 @@ void clear_mdls()
 	enumerate(mdllookup, model *, m, delete m);
 }
 
+void cleanupmodels()
+{
+    enumerate(mdllookup, model *, m, m->cleanup());
+}
+
 bool modeloccluded(const vec &center, float radius)
 {
     int br = int(radius*2)+1;
@@ -844,8 +849,7 @@ void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&mas
 
     masks = notexture;
 	tryload(skin, skinpath, "", "skin");
-	if(renderpath!=R_FIXEDFUNCTION) { tryload(masks, maskspath, "", "masks"); }
-	else { tryload(masks, maskspath, "<ffmask:25>", "masks"); }
+	tryload(masks, maskspath, "<ffmask:25>", "masks");
 }
 
 // convenient function that covers the usual anims for players/monsters/npcs

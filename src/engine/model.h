@@ -32,6 +32,8 @@ struct model
     virtual void settranslucency(float translucency) {}
     virtual void setfullbright(float fullbright) {}
 
+    virtual void cleanup() {}
+
     virtual void startrender() {}
     virtual void endrender() {}
 

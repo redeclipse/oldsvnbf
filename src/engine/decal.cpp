@@ -261,7 +261,7 @@ struct decalrenderer
             foggedshader->set();
         }
 
-        glBindTexture(GL_TEXTURE_2D, tex->gl);
+        glBindTexture(GL_TEXTURE_2D, tex->id);
 
         glVertexPointer(3, GL_FLOAT, sizeof(decalvert), &verts->pos);
         glTexCoordPointer(2, GL_FLOAT, sizeof(decalvert), &verts->u);

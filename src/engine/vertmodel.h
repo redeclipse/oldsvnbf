@@ -583,6 +583,21 @@ struct vertmodel : animmodel
             }
         }
 
+        void cleanup()
+        {
+            loopi(MAXVBOCACHE)
+            {
+                vbocacheentry &c = vbocache[i];
+                if(c.vbuf) { glDeleteBuffers_(1, &c.vbuf); c.vbuf = 0; }
+                DELETEA(c.vdata);
+                c.as.cur.fr1 = -1;
+            }
+            if(hasVBO) { if(ebuf) { glDeleteBuffers_(1, &ebuf); ebuf = 0; } }
+            else DELETEA(vdata);
+            lastvbuf = lasttcbuf = lastmtcbuf = NULL;
+            lastebuf = 0;
+        }
+
         void render(const animstate *as, float pitch, const vec &axis, part *p)
         {
             bool norms = false, tangents = false;
@@ -591,20 +606,7 @@ struct vertmodel : animmodel
                 if(p->skins[i].normals()) norms = true;
                 if(p->skins[i].tangents()) tangents = true;
             }
-            if(norms!=vnorms || tangents!=vtangents)
-            {
-                loopi(MAXVBOCACHE) 
-                {
-                    vbocacheentry &c = vbocache[i];
-                    if(c.vbuf) { glDeleteBuffers_(1, &c.vbuf); c.vbuf = 0; }
-                    DELETEA(c.vdata);
-                    c.as.cur.fr1 = -1;
-                }
-                if(hasVBO) { if(ebuf) { glDeleteBuffers_(1, &ebuf); ebuf = 0; } }
-                else DELETEA(vdata);
-                lastvbuf = lasttcbuf = lastmtcbuf = NULL;
-                lastebuf = 0;
-            }
+            if(norms!=vnorms || tangents!=vtangents) cleanup();
             vbocacheentry *vc = NULL;
             if(numframes<=1) vc = vbocache;
             else
