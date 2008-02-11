@@ -491,10 +491,13 @@ const vector<physent *> &checkdynentcache(int x, int y)
 	return dec.dynents;
 }
 
+#define loopdynentcache(curx, cury, o, radius) \
+    for(int curx = max(int(o.x-radius), 0)>>dynentsize, endx = min(int(o.x+radius), hdr.worldsize-1)>>dynentsize; curx <= endx; curx++) \
+    for(int cury = max(int(o.y-radius), 0)>>dynentsize, endy = min(int(o.y+radius), hdr.worldsize-1)>>dynentsize; cury <= endy; cury++)
+
 void updatedynentcache(physent *d)
 {
-    for(int x = int(max(d->o.x-d->radius, 0.0f))>>dynentsize, ex = int(min(d->o.x+d->radius, hdr.worldsize-1.0f))>>dynentsize; x <= ex; x++)
-    for(int y = int(max(d->o.y-d->radius, 0.0f))>>dynentsize, ey = int(min(d->o.y+d->radius, hdr.worldsize-1.0f))>>dynentsize; y <= ey; y++)
+    loopdynentcache(x, y, d->o, d->radius)
 	{
 		dynentcacheentry &dec = dynentcache[DYNENTHASH(x, y)];
 		if(dec.x != x || dec.y != y || dec.frame != dynentframe || dec.dynents.find(d) >= 0) continue;
@@ -504,8 +507,7 @@ void updatedynentcache(physent *d)
 
 bool overlapsdynent(const vec &o, float radius)
 {
-    for(int x = int(max(o.x-radius, 0.0f))>>dynentsize, ex = int(min(o.x+radius, hdr.worldsize-1.0f))>>dynentsize; x <= ex; x++)
-    for(int y = int(max(o.y-radius, 0.0f))>>dynentsize, ey = int(min(o.y+radius, hdr.worldsize-1.0f))>>dynentsize; y <= ey; y++)
+    loopdynentcache(x, y, o, radius)
 	{
 		const vector<physent *> &dynents = checkdynentcache(x, y);
 		loopv(dynents)
@@ -520,8 +522,7 @@ bool overlapsdynent(const vec &o, float radius)
 bool plcollide(physent *d, const vec &dir)	// collide with player or monster
 {
 	if(d->type==ENT_CAMERA || d->state!=CS_ALIVE) return true;
-    for(int x = int(max(d->o.x-d->radius, 0.0f))>>dynentsize, ex = int(min(d->o.x+d->radius, hdr.worldsize-1.0f))>>dynentsize; x <= ex; x++)
-    for(int y = int(max(d->o.y-d->radius, 0.0f))>>dynentsize, ey = int(min(d->o.y+d->radius, hdr.worldsize-1.0f))>>dynentsize; y <= ey; y++)
+    loopdynentcache(x, y, d->o, d->radius)
 	{
 		const vector<physent *> &dynents = checkdynentcache(x, y);
 		loopv(dynents)
