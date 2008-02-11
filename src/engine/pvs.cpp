@@ -748,7 +748,7 @@ struct viewcellnode
     }
 };
 
-VAR(pvsthreads, 1, 1, 16);
+VARP(pvsthreads, 1, 1, 16);
 static vector<pvsworker *> pvsworkers;
 
 static volatile bool check_genpvs_progress = false;
