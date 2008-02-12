@@ -204,18 +204,20 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
         0x4, 0x2, 0x1, /* try disabling two at a time */
         0 /* try disabling everything */
     };
-    int config = 0;
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+    int config = 0, msaabufs = 0, msaasamples = 0;
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+    if(screen)
+    {
+        SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, &msaabufs);
+        SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &msaasamples);
+    }
     loopi(sizeof(configs)/sizeof(configs[0]))
     {
         config = configs[i];
         if(!depthbits && config&1) continue;
         if(!stencilbits && config&2) continue;
         if(!fsaa && config&4) continue;
-        if(depthbits) SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, config&1 ? depthbits : 0);
+        if(depthbits) SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, config&1 ? depthbits : 16);
         if(stencilbits)
         {
             SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, config&2 ? 1 : 0);
@@ -223,8 +225,8 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
         }
         if(fsaa)
         {
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, config&4 ? 1 : 0);
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, config&4 ? fsaa : 0);
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, config&4 ? 1 : msaabufs);
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, config&4 ? fsaa : msaasamples);
         }
         screen = SDL_SetVideoMode(scr_w, scr_h, hasbpp ? colorbits : 0, SDL_OPENGL|flags);
         if(screen) break;
@@ -241,7 +243,9 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
     scr_w = screen->w;
     scr_h = screen->h;
 
-    #ifndef WIN32
+    #ifdef WIN32
+    SDL_WM_GrabInput(SDL_GRAB_ON);
+    #else
     SDL_WM_GrabInput(fullscreen ? SDL_GRAB_ON : SDL_GRAB_OFF);
     #endif
 
