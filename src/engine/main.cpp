@@ -208,8 +208,8 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
     if(!fsaa)
     {
-        SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-        SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
     }
     loopi(sizeof(configs)/sizeof(configs[0]))
     {
