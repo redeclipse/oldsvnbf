@@ -69,7 +69,7 @@ VARF(scr_h, 200, 768, 10000, initwarning());
 VARF(colorbits, 0, 0, 32, initwarning());
 VARF(depthbits, 0, 0, 32, initwarning());
 VARF(stencilbits, 0, 1, 32, initwarning());
-VARF(fsaa, 0, 0, 16, initwarning());
+VARF(fsaa, -1, -1, 16, initwarning());
 VARF(vsync, -1, -1, 1, initwarning());
 
 void writeinitcfg()
@@ -204,29 +204,29 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
         0x4, 0x2, 0x1, /* try disabling two at a time */
         0 /* try disabling everything */
     };
-    int config = 0, msaabufs = 0, msaasamples = 0;
+    int config = 0;
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
-    if(screen)
+    if(!fsaa)
     {
-        SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, &msaabufs);
-        SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &msaasamples);
+        SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+        SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
     }
     loopi(sizeof(configs)/sizeof(configs[0]))
     {
         config = configs[i];
         if(!depthbits && config&1) continue;
         if(!stencilbits && config&2) continue;
-        if(!fsaa && config&4) continue;
+        if(fsaa<=0 && config&4) continue;
         if(depthbits) SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, config&1 ? depthbits : 16);
         if(stencilbits)
         {
             SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, config&2 ? 1 : 0);
             hasstencil = (config&2)!=0;
         }
-        if(fsaa)
+        if(fsaa>0)
         {
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, config&4 ? 1 : msaabufs);
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, config&4 ? fsaa : msaasamples);
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, config&4 ? 1 : 0);
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, config&4 ? fsaa : 0);
         }
         screen = SDL_SetVideoMode(scr_w, scr_h, hasbpp ? colorbits : 0, SDL_OPENGL|flags);
         if(screen) break;
@@ -237,7 +237,7 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
         if(!hasbpp) conoutf("%d bit color buffer not supported - disabling", colorbits);
         if(depthbits && (config&1)==0) conoutf("%d bit z-buffer not supported - disabling", depthbits);
         if(stencilbits && (config&2)==0) conoutf("Stencil buffer not supported - disabling");
-        if(fsaa && (config&4)==0) conoutf("%dx anti-aliasing not supported - disabling", fsaa);
+        if(fsaa>0 && (config&4)==0) conoutf("%dx anti-aliasing not supported - disabling", fsaa);
     }
 
     scr_w = screen->w;
