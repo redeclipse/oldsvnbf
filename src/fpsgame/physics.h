@@ -758,7 +758,7 @@ struct physics
                 d->state = CS_LAGGED;
 				continue;
 			}
-            if(d->state==CS_ALIVE)
+            if(d->state==CS_ALIVE || d->state==CS_EDITING)
             {
                 if(smoothmove() && d->smoothmillis>0)
                 {
