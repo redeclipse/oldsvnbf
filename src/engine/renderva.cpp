@@ -61,12 +61,9 @@ int isvisiblecube(const vec &o, int size)
 
 float vadist(vtxarray *va, const vec &p)
 {
-	if(va->min.x>va->max.x)
-	{
-		ivec o(va->x, va->y, va->z);
-		return p.dist_to_bb(o, ivec(o).add(va->size)); // box contains only sky/water
-	}
-	return p.dist_to_bb(va->min, va->max);
+    if(va->sortmin.x>va->sortmax.x)
+        return p.dist_to_bb(ivec(va->x, va->y, va->z), va->size); // box contains only sky/water
+    return p.dist_to_bb(va->sortmin, va->sortmax);
 }
 
 #define VASORTSIZE 64
@@ -1677,6 +1674,7 @@ void rendergeom(bool causticspass, bool fogpass)
 		{
 			va->query = NULL;
             va->occluded = pvsoccluded(va->min, va->max) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
+            if(va->occluded >= OCCLUDE_GEOM) continue;
 		}
 
 		if(!refracting)
@@ -1726,14 +1724,12 @@ void rendergeom(bool causticspass, bool fogpass)
 				va->occluded = OCCLUDE_BB;
 				continue;
 			}
-			else if(va->query)
-			{
-                if(checkquery(va->query)) va->occluded = min(va->occluded+1, int(OCCLUDE_BB));
+            else
+            {
+                if(va->query && checkquery(va->query)) va->occluded = min(va->occluded+1, int(OCCLUDE_BB));
                 else va->occluded = pvsoccluded(va->min, va->max) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
-				if(va->occluded >= OCCLUDE_GEOM) continue;
-			}
-            else if(va->occluded == OCCLUDE_PARENT)
-                va->occluded = pvsoccluded(va->min, va->max) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
+                if(va->occluded >= OCCLUDE_GEOM) continue;
+            }
 
             renderva(cur, va, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP, fogpass);
 				}
