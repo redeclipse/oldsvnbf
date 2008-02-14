@@ -942,8 +942,8 @@ void setva(cube &c, int cx, int cy, int cz, int size, int csi)
 
 	vtxarray *va = newva(cx, cy, cz, size);
 	ext(c).va = va;
-	va->min = bbmin;
-	va->max = bbmax;
+	va->sortmin = va->min = bbmin;
+	va->sortmax = va->max = bbmax;
     va->shadowmapmin = shadowmapmin.toivec(va->x, va->y, va->z);
     loopk(3) shadowmapmax[k] += (1<<VVEC_FRAC)-1;
     va->shadowmapmax = shadowmapmax.toivec(va->x, va->y, va->z);
@@ -996,6 +996,11 @@ int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
 					vtxarray *child = varoot.pop();
 					c[i].ext->va->children->add(child);
 					child->parent = c[i].ext->va;
+                    if(child->sortmin.x<=child->sortmax.x) loopk(3)
+                    {
+                        child->parent->sortmin[k] = min(child->parent->sortmin[k], child->sortmin[k]);
+                        child->parent->sortmax[k] = max(child->parent->sortmax[k], child->sortmax[k]);
+                    }
 				}
 				varoot.add(c[i].ext->va);
 				if(vamergemax > size)
