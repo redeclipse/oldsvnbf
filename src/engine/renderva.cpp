@@ -721,7 +721,7 @@ vector<dynlight *> closedynlights, visibledynlights;
 
 void adddynlight(const vec &o, float radius, const vec &color, int fade, int peak, int flags, float initradius, const vec &initcolor)
 {
-    if(o.dist(camera1->o) > dynlightdist) return;
+    if(renderpath==R_FIXEDFUNCTION || o.dist(camera1->o) > dynlightdist) return;
 
     int insert = 0, expire = fade + peak + lastmillis;
     loopvrev(dynlights) if(expire>=dynlights[i].expire) { insert = i+1; break; }
