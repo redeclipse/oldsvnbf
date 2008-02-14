@@ -208,7 +208,7 @@ struct physics
             wdir.mul(-npush.dot(dir));
             wdir.add(dir);
 
-            if(i==4)
+            if(obstacle.z<=0 || obstacle.z>=slopez(d) || i==4)
             {
                 dir = wdir;
                 push = npush;
@@ -216,7 +216,7 @@ struct physics
             }
 
             d->o.add(wdir);
-            bool collided = !collide(d, wdir) && wall!=obstacle && wall!=lastobstacle;
+            bool collided = !collide(d, wdir) && wall.z>0 && wall.z<slopez(d) && wall.dot(obstacle)<0 && wall!=lastobstacle;
             d->o = old;
 
             if(!collided)
@@ -257,9 +257,8 @@ struct physics
 						slopegravity(-d->gvel.z, floor, g);
 						if(d->physstate == PHYS_FALL || d->floor != floor)
 						{
-                            float c = floor.z>=SLOPEZ ? min(d->gravity.dot(floor)/gmag, 0.0f) : 0;
                             g.normalize();
-                            g.mul((1.0f+c)*gmag);
+                            g.mul(gmag);
 						}
 						d->gvel = g;
 					}
