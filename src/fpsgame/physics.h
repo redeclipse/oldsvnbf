@@ -194,13 +194,46 @@ struct physics
 
 	void slideagainst(physent *d, vec &dir, const vec &obstacle)
 	{
-		vec wdir(obstacle), wvel(obstacle);
-		wdir.z = wvel.z = d->physstate >= PHYS_SLOPE ? 0.0f : min(obstacle.z, 0.0f);
-	//	if(obstacle.z < 0.0f && dir.z > 0.0f) dir.z = d->vel.z = 0.0f;
-		wdir.mul(obstacle.dot(dir));
-		wvel.mul(obstacle.dot(d->vel));
-		dir.sub(wdir);
-		d->vel.sub(wvel);
+        vec old(d->o), push(obstacle), lastobstacle = obstacle;
+        loopi(5)
+        {
+            vec npush(push);
+            if(i)
+            {
+                float mag = npush.magnitude();
+                if(mag > 1e-3) npush.mul(1/mag);
+            }
+            vec wdir(npush);
+            wdir.z = d->physstate >= PHYS_SLOPE ? 0.0f : min(npush.z, 0.0f);
+            wdir.mul(-npush.dot(dir));
+            wdir.add(dir);
+
+            if(i==4)
+            {
+                dir = wdir;
+                push = npush;
+                break;
+            }
+
+            d->o.add(wdir);
+            bool collided = !collide(d, wdir) && wall!=obstacle && wall!=lastobstacle;
+            d->o = old;
+
+            if(!collided)
+            {
+                dir = wdir;
+                push = npush;
+                break;
+            }
+
+            push.add(wall);
+            lastobstacle = wall;
+        }
+
+        vec wvel(push);
+        wvel.z = d->physstate >= PHYS_SLOPE ? 0.0f : min(push.z, 0.0f);
+        wvel.mul(push.dot(d->vel));
+        d->vel.sub(wvel);
 	}
 
 	void switchfloor(physent *d, vec &dir, bool landing, const vec &floor)
@@ -224,9 +257,9 @@ struct physics
 						slopegravity(-d->gvel.z, floor, g);
 						if(d->physstate == PHYS_FALL || d->floor != floor)
 						{
-							float c = d->gvel.dot(floor)/gmag;
-							g.normalize();
-							g.mul(min(1.0f+c, 1.0f)*gmag);
+                            float c = floor.z>=SLOPEZ ? min(d->gravity.dot(floor)/gmag, 0.0f) : 0;
+                            g.normalize();
+                            g.mul((1.0f+c)*gmag);
 						}
 						d->gvel = g;
 					}
