@@ -401,9 +401,12 @@ struct physics
 		d->o.add(dir);
 		if(!collide(d, d->type!=ENT_CAMERA ? dir : vec(0, 0, 0)) || (d->type==ENT_AI && !collide(d)))
 		{
-			d->o = old;
-			if(d->type == ENT_CAMERA) return false;
-			obstacle = wall;
+            obstacle = wall;
+            /* check to see if there is an obstacle that would prevent this one from being used as a floor */
+            if(d->type==ENT_PLAYER && wall.z>=slopez(d) && dir.z<0 && (dir.x || dir.y) && !collide(d, vec(dir.x, dir.y, 0)))
+                obstacle = wall;
+            d->o = old;
+            if(d->type == ENT_CAMERA) return false;
 			d->o.z -= (d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f ? d->radius+0.1f : stairheight(d));
 			if((d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR) || (!collide(d, vec(0, 0, -1), slopez(d)) && (d->physstate == PHYS_STEP_UP || wall.z == 1.0f)))
 			{
