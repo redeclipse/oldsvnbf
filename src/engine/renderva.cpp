@@ -1656,7 +1656,7 @@ void rendergeom(bool causticspass, bool fogpass)
 				 va->parent->query && va->parent->query->owner == va->parent && va->parent->query->fragments < 0)))
 			{
 				va->query = NULL;
-				if(va->occluded >= OCCLUDE_GEOM)
+                if(va->occluded >= OCCLUDE_GEOM || pvsoccluded(va->min, va->max))
 				{
 					va->occluded = OCCLUDE_PARENT;
 					continue;
