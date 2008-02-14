@@ -194,45 +194,11 @@ struct physics
 
 	void slideagainst(physent *d, vec &dir, const vec &obstacle)
 	{
-        vec old(d->o), push(obstacle), lastobstacle = obstacle;
-        loopi(5)
-        {
-            vec npush(push);
-            if(i)
-            {
-                float mag = npush.magnitude();
-                if(mag > 1e-3) npush.mul(1/mag);
-            }
-            vec wdir(npush);
-            wdir.z = d->physstate >= PHYS_SLOPE ? 0.0f : min(npush.z, 0.0f);
-            wdir.mul(-npush.dot(dir));
-            wdir.add(dir);
-
-            if(obstacle.z<=0 || obstacle.z>=slopez(d) || i==4)
-            {
-                dir = wdir;
-                push = npush;
-                break;
-            }
-
-            d->o.add(wdir);
-            bool collided = !collide(d, wdir) && wall.z>0 && wall.z<slopez(d) && wall.dot(obstacle)<0 && wall!=lastobstacle;
-            d->o = old;
-
-            if(!collided)
-            {
-                dir = wdir;
-                push = npush;
-                break;
-            }
-
-            push.add(wall);
-            lastobstacle = wall;
-        }
-
-        vec wvel(push);
-        wvel.z = d->physstate >= PHYS_SLOPE ? 0.0f : min(push.z, 0.0f);
-        wvel.mul(push.dot(d->vel));
+        vec wdir(obstacle), wvel(obstacle);
+        wdir.z = wvel.z = d->physstate >= PHYS_SLOPE ? 0.0f : min(obstacle.z, 0.0f);
+        wdir.mul(obstacle.dot(dir));
+        wvel.mul(obstacle.dot(d->vel));
+        dir.sub(wdir);
         d->vel.sub(wvel);
 	}
 
