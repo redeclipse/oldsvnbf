@@ -220,7 +220,7 @@ struct vertmodel : animmodel
                 found:;
                 }
             }
-            minvert = min(minvert, ushort(vverts.length()-1));
+            minvert = min(minvert, ushort(voffset));
             maxvert = max(minvert, ushort(vverts.length()-1));
             elen = idxs.length()-eoffset;
             return vverts.length()-voffset;
@@ -357,8 +357,7 @@ struct vertmodel : animmodel
                 }
             }
 
-            extern int mesa_dre_bug;
-            if(hasDRE) glDrawRangeElements_(GL_TRIANGLES, mesa_dre_bug ? max(minvert-3, 0) : minvert, maxvert, elen, GL_UNSIGNED_SHORT, &((vertmeshgroup *)group)->edata[eoffset]);
+            if(hasDRE) glDrawRangeElements_(GL_TRIANGLES, minvert, maxvert, elen, GL_UNSIGNED_SHORT, &((vertmeshgroup *)group)->edata[eoffset]);
             else glDrawElements(GL_TRIANGLES, elen, GL_UNSIGNED_SHORT, &((vertmeshgroup *)group)->edata[eoffset]);
             glde++;
             xtravertsva += numverts;
