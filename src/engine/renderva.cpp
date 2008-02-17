@@ -1351,9 +1351,11 @@ GLuint fogtex = 0;
 
 void createfogtex()
 {
+    extern int bilinear;
+    uchar buf[2*256] = { 255, 0, 255, 255 };
+    if(!bilinear) loopi(256) { buf[2*i] = 255; buf[2*i+1] = i; }
     glGenTextures(1, &fogtex);
-    uchar buf[4] = { 255, 0, 255, 255 };
-    createtexture(fogtex, 2, 1, buf, 3, false, GL_LUMINANCE_ALPHA, GL_TEXTURE_1D);
+    createtexture(fogtex, bilinear ? 2 : 256, 1, buf, 3, false, GL_LUMINANCE_ALPHA, GL_TEXTURE_1D);
 }
 
 void cleanupva()
@@ -1401,7 +1403,7 @@ void setupcaustics(int tmu, GLfloat *color = NULL)
         glActiveTexture_(GL_TEXTURE0_ARB+tmu+i);
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, caustictex[(tex+i)%NUMCAUSTICS]->id);
-        if(renderpath==R_FIXEDFUNCTION || !i)
+        if(renderpath==R_FIXEDFUNCTION)
         {
             setuptexgen();
             setuptmu(tmu+i, !i ? "= T" : "T , P @ Ca");
@@ -1414,6 +1416,8 @@ void setupcaustics(int tmu, GLfloat *color = NULL)
         static Shader *causticshader = NULL;
         if(!causticshader) causticshader = lookupshaderbyname("caustic");
         causticshader->set();
+        setlocalparamfv("texgenS", SHPARAM_VERTEX, 0, s);
+        setlocalparamfv("texgenT", SHPARAM_VERTEX, 1, t);
         setlocalparamf("frameoffset", SHPARAM_PIXEL, 0, frac, frac, frac);
     }
 }
