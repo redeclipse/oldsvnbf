@@ -288,7 +288,7 @@ struct skelmodel : animmodel
             }
             else
             {
-                minvert = min(minvert, ushort(vverts.length()-1));
+                minvert = min(minvert, ushort(voffset));
                 maxvert = max(minvert, ushort(vverts.length()-1));
                 return vverts.length()-voffset;
             }
@@ -487,8 +487,7 @@ struct skelmodel : animmodel
                 }
             }
 
-            extern int mesa_dre_bug;
-            if(hasDRE) glDrawRangeElements_(GL_TRIANGLES, mesa_dre_bug ? max(minvert-3, 0) : minvert, maxvert, elen, GL_UNSIGNED_SHORT, &((skelmeshgroup *)group)->edata[eoffset]);
+            if(hasDRE) glDrawRangeElements_(GL_TRIANGLES, minvert, maxvert, elen, GL_UNSIGNED_SHORT, &((skelmeshgroup *)group)->edata[eoffset]);
             else glDrawElements(GL_TRIANGLES, elen, GL_UNSIGNED_SHORT, &((skelmeshgroup *)group)->edata[eoffset]);
             glde++;
             xtravertsva += numverts;
