@@ -98,6 +98,7 @@ VAR(apple_glsldepth_bug, 0, 0, 1);
 VAR(apple_ff_bug, 0, 0, 1);
 VAR(intel_quadric_bug, 0, 0, 1);
 VAR(mesa_dre_bug, 0, 0, 1);
+VAR(mesa_program_bug, 0, 0, 1);
 VAR(minimizetcusage, 1, 0, 0);
 VAR(emulatefog, 1, 0, 0);
 VAR(usevp2, 1, 0, 0);
@@ -290,8 +291,6 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 			glUniform4fv_ =				 (PFNGLUNIFORM4FVARBPROC)			  getprocaddress("glUniform4fvARB");
 			glUniform1i_ =				  (PFNGLUNIFORM1IARBPROC)				getprocaddress("glUniform1iARB");
 
-            if(strstr(vendor, "ATI")) ati_dph_bug = 1;
-
 			extern bool checkglslsupport();
 			if(checkglslsupport())
 			{
@@ -305,6 +304,9 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 			}
 		}
 		if(renderpath==R_ASMSHADER) conoutf("Rendering using the OpenGL 1.5 assembly shader path.");
+
+        if(strstr(vendor, "ATI")) ati_dph_bug = 1;
+        else if(strstr(vendor, "Tungsten")) mesa_program_bug = 1;
 
         if(strstr(exts, "GL_NV_vertex_program2_option")) { usevp2 = 1; hasVP2 = true; }
         if(strstr(exts, "GL_NV_vertex_program3")) { usevp3 = 1; hasVP3 = true; }

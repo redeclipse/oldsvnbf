@@ -1001,10 +1001,16 @@ void shader(int *type, char *name, char *vs, char *ps)
         return;
     }
 
+    extern int mesa_program_bug;
     if(renderpath!=R_FIXEDFUNCTION)
     {
         s_sprintfd(info)("shader %s", name);
         show_out_of_renderloop_progress(0.0, info);
+        if(mesa_program_bug && standardshader)
+        {
+            glEnable(GL_VERTEX_PROGRAM_ARB);
+            glEnable(GL_FRAGMENT_PROGRAM_ARB);
+        }
     }
     Shader *s = newshader(*type, name, vs, ps);
     if(s && renderpath!=R_FIXEDFUNCTION)
@@ -1013,6 +1019,11 @@ void shader(int *type, char *name, char *vs, char *ps)
         if(strstr(vs, "#pragma CUBE2_water")) genwatervariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_shadowmap")) genshadowmapvariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(*s, s->name, vs, ps);
+    }
+    if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && standardshader)
+    {
+        glDisable(GL_VERTEX_PROGRAM_ARB);
+        glDisable(GL_FRAGMENT_PROGRAM_ARB);
     }
     curparams.setsize(0);
 }
@@ -1027,7 +1038,18 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
     s_sprintfd(varname)("<variant:%d,%d>%s", s->variants[*row].length(), *row, name);
     //s_sprintfd(info)("shader %s", varname);
     //show_out_of_renderloop_progress(0.0, info);
+    extern int mesa_program_bug;
+    if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && standardshader)
+    {
+        glEnable(GL_VERTEX_PROGRAM_ARB);
+        glEnable(GL_FRAGMENT_PROGRAM_ARB);
+    }
     newshader(*type, varname, vs, ps, s, *row);
+    if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && standardshader)
+    {
+        glDisable(GL_VERTEX_PROGRAM_ARB);
+        glDisable(GL_FRAGMENT_PROGRAM_ARB);
+    }
 }
 
 void setshader(char *name)
