@@ -186,43 +186,31 @@ struct physics
 
     void slideagainst(physent *d, vec &dir, const vec &obstacle)
     {
-        if(obstacle.z < 0)
+        float dmag = dir.magnitude(),
+              vmag = d->vel.magnitude();
+        dir.project(obstacle);
+        d->vel.project(obstacle);
+        if(d->timesincecollide <= 3*minframetime())
         {
-            float dz = dir.z, vz = d->vel.z;
-            dir.reflect(obstacle);
-            if(dz > 0) dir.z = 0;
-            d->vel.reflect(obstacle);
-            if(vz > 0) d->vel.z = 0;
-            if(d->gvel.dot(obstacle) < 0)
-            {
-                float gz = d->gvel.z;
-                d->gvel.reflect(obstacle);
-                if(gz > 0) d->gravity.z = 0;
-            }
-        }
-        else
-        {
-            float dmag = dir.magnitude(),
-                  vmag = d->vel.magnitude();
-            dir.project(obstacle);
             dir.rescale(dmag);
-            d->vel.project(obstacle);
             d->vel.rescale(vmag);
-            if(d->gvel.dot(obstacle) < 0)
-            {
-                float gmag = d->gvel.magnitude();
-                d->gvel.project(obstacle);
-                d->gvel.rescale(gmag);
-            }
         }
+        if(d->gvel.dot(obstacle) < 0)
+        {
+            float gmag = d->gvel.magnitude();
+            d->gvel.project(obstacle);
+            if(d->timesincecollide <= 3*minframetime()) d->gvel.rescale(gmag);
+        }
+        d->timesincecollide = 0;
     }
 
     void switchfloor(physent *d, vec &dir, bool collided, bool landing, const vec &floor)
     {
         if(landing && (d->physstate == PHYS_FALL || (collided ? dir.z <= 0 : d->floor.z < floorz(d) && d->floor!=floor)))
         {
-            if(d->physstate == PHYS_FALL && d->timeinair >= 50)
+            if(d->timesincecollide >= 3*minframetime())
             {
+                d->timesincecollide = 0;
                 d->gvel.project(floor);
                 dir.project(floor);
                 d->vel.project(floor);
