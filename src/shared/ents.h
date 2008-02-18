@@ -45,7 +45,7 @@ struct physent                                  // base entity type, can be affe
 	vec o, vel, gvel;							// origin, velocity, accumulated gravity
     float yaw, pitch, roll;
     float maxspeed;                             // cubes per second, 100 for player
-    int timeinair;
+    int timeinair, timesincecollide;
     float radius, height, aboveeye;          // bounding box size
     float xradius, yradius;
     vec floor;                                  // the normal of floor the dynent is on
@@ -76,7 +76,7 @@ struct physent                                  // base entity type, can be affe
     void reset()
     {
     	inwater = jumping = crouching  = false;
-        timeinair = 0;
+        timesincecollide = timeinair = 0;
         strafe = move = 0;
         physstate = PHYS_FALL;
 		vel = gvel = vec(0, 0, 0);

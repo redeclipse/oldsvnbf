@@ -267,7 +267,7 @@ struct physics
 		{
 			if(d->physstate == PHYS_FALL)
 			{
-				d->timeinair = 0;
+				d->timesincecollide = d->timeinair = 0;
 				d->floor = vec(0, 0, 1);
 				switchfloor(d, dir, false, true, d->floor);
 			}
@@ -316,7 +316,7 @@ struct physics
         switchfloor(d, dir, collided, sliding, sliding ? floor : vec(0, 0, 1));
 		if(sliding)
 		{
-			d->timeinair = 0;
+			d->timesincecollide = d->timeinair = 0;
 			d->physstate = PHYS_SLIDE;
 			d->floor = floor;
 		}
@@ -333,7 +333,7 @@ struct physics
         }
     #endif
         switchfloor(d, dir, collided, true, floor);
-        d->timeinair = 0;
+        d->timesincecollide = d->timeinair = 0;
 
 		if(floor.z >= floorz(d)) d->physstate = PHYS_FLOOR;
 		else d->physstate = PHYS_SLOPE;
@@ -454,7 +454,7 @@ struct physics
 			if (water)
 			{
 				if (pl->crouching) pl->crouching = false;
-				if (pl->timeinair > 0) pl->timeinair = 0;
+				if (pl->timeinair > 0) pl->timesincecollide = pl->timeinair = 0;
 			}
 			if(pl->jumping)
 			{
@@ -465,7 +465,11 @@ struct physics
 				trigger(pl, local, 1, 0);
 			}
 		}
-        else if (pl->physstate == PHYS_FALL) pl->timeinair += curtime;
+        else if (pl->physstate == PHYS_FALL) 
+        {
+            pl->timeinair += curtime;
+            pl->timesincecollide += curtime;
+        }
 
 		vec m(0.0f, 0.0f, 0.0f);
 		if(pl->type==ENT_AI)
@@ -573,7 +577,7 @@ struct physics
 			if(pl->physstate != PHYS_FLOAT)
 			{
 				pl->physstate = PHYS_FLOAT;
-				pl->timeinair = 0;
+				pl->timesincecollide = pl->timeinair = 0;
 				pl->gvel = vec(0, 0, 0);
 			}
 			pl->o.add(d);
@@ -656,7 +660,7 @@ struct physics
 	void updatephysstate(physent *d)
 	{
 		if(d->physstate == PHYS_FALL) return;
-		d->timeinair = 0;
+		d->timesincecollide = d->timeinair = 0;
 		vec old(d->o);
 		/* Attempt to reconstruct the floor state.
 		 * May be inaccurate since movement collisions are not considered.
