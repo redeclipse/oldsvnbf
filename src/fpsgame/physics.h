@@ -186,15 +186,33 @@ struct physics
 
     void slideagainst(physent *d, vec &dir, const vec &obstacle)
     {
-        float dmag = dir.magnitude(),
-              vmag = d->vel.magnitude(),
-              gmag = d->gvel.magnitude();
-        dir.project(obstacle);
-        d->vel.project(obstacle);
-        d->gvel.project(obstacle);
-        dir.rescale(dmag);
-        d->vel.rescale(vmag);
-        d->gvel.rescale(gmag);
+        if(obstacle.z < 0)
+        {
+            if(dir.z > 0) dir.z = 0;
+            dir.reflect(obstacle);
+            if(d->vel.z > 0) d->vel.z = 0;
+            d->vel.reflect(obstacle);
+            if(d->gvel.dot(obstacle) < 0)
+            {
+                if(d->gvel.z > 0) d->gvel.z = 0;
+                d->gvel.reflect(obstacle);
+            }
+        }
+        else
+        {
+            float dmag = dir.magnitude(),
+                  vmag = d->vel.magnitude();
+            dir.project(obstacle);
+            dir.rescale(dmag);
+            d->vel.project(obstacle);
+            d->vel.rescale(vmag);
+            if(d->gvel.dot(obstacle) < 0)
+            {
+                float gmag = d->gvel.magnitude();
+                d->gvel.project(obstacle);
+                d->gvel.rescale(gmag);
+            }
+        }
     }
 
     void switchfloor(physent *d, vec &dir, bool collided, bool landing, const vec &floor)
