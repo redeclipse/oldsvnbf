@@ -208,7 +208,7 @@ struct physics
     {
         if(landing && (d->physstate == PHYS_FALL || (collided ? dir.z <= 0 : d->floor.z < floorz(d) && d->floor!=floor)))
         {
-            if(d->timesincecollide >= 3*minframetime())
+            if(d->timesincecollide > 3*minframetime())
             {
                 d->timesincecollide = 0;
                 d->gvel.project(floor);
@@ -218,7 +218,7 @@ struct physics
             }
 
             float oldmag = d->gvel.magnitude();
-            if(collided || floor.z >= wallz(d)) d->gvel.projectxy(floor); else d->gvel.project(floor);
+            d->gvel.project(floor);
             d->gvel.rescale(oldmag);
         }
 
