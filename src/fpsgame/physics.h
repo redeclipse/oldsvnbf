@@ -210,7 +210,7 @@ struct physics
             }
 
             float oldmag = d->gvel.magnitude();
-            if(collided) d->gvel.projectxy(floor); else d->gvel.project(floor);
+            if(collided || floor.z >= wallz(d)) d->gvel.projectxy(floor); else d->gvel.project(floor);
             d->gvel.rescale(oldmag);
         }
 
@@ -218,10 +218,10 @@ struct physics
             (d->physstate >= PHYS_SLOPE && (collided ? dir.z <= 0 : fabs(dir.dot(d->floor)/dir.magnitude()) < 0.01f)))
         {
             float dmag = dir.magnitude();
-            if(collided) dir.projectxy(floor); else dir.project(floor);
+            if(collided || floor.z >= wallz(d)) dir.projectxy(floor); else dir.project(floor);
             dir.rescale(dmag);
             float vmag = d->vel.magnitude();
-            if(collided) d->vel.projectxy(floor); else d->vel.project(floor);
+            if(collided || floor.z >= wallz(d)) d->vel.projectxy(floor); else d->vel.project(floor);
             d->vel.rescale(vmag);
         }
     }
