@@ -188,14 +188,16 @@ struct physics
     {
         if(obstacle.z < 0)
         {
-            if(dir.z > 0) dir.z = 0;
+            float dz = dir.z, vz = d->vel.z;
             dir.reflect(obstacle);
-            if(d->vel.z > 0) d->vel.z = 0;
+            if(dz > 0) dir.z = 0;
             d->vel.reflect(obstacle);
+            if(vz > 0) d->vel.z = 0;
             if(d->gvel.dot(obstacle) < 0)
             {
-                if(d->gvel.z > 0) d->gvel.z = 0;
+                float gz = d->gvel.z;
                 d->gvel.reflect(obstacle);
+                if(gz > 0) d->gravity.z = 0;
             }
         }
         else
