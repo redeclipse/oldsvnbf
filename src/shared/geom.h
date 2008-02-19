@@ -46,7 +46,14 @@ struct vec
     vec &cross(const vec &a, const vec &b) { x = a.y*b.z-a.z*b.y; y = a.z*b.x-a.x*b.z; z = a.x*b.y-a.y*b.x; return *this; }
     vec &reflect(const vec &n) { float k = 2*dot(n); x -= k*n.x; y -= k*n.y; z -= k*n.z; return *this; }
     vec &project(const vec &n) { float k = dot(n); x -= k*n.x; y -= k*n.y; z -= k*n.z; return *this; }
-    vec &projectxy(const vec &n) { if(n.z) z = -(x*n.x/n.z + y*n.y/n.z); return *this; }
+    vec &projectxydir(const vec &n) { if(n.z) z = -(x*n.x/n.z + y*n.y/n.z); return *this; }
+    vec &projectxy(const vec &n)
+    {
+        float m = squaredlen(), k = dot(n);
+        projectxydir(n);
+        rescale(sqrtf(m - k*k));
+        return *this;
+    }
     void lerp(const vec &a, const vec &b, float t) { x = a.x*(1-t)+b.x*t; y = a.y*(1-t)+b.y*t; z = a.z*(1-t)+b.z*t; }
 
     void rescale(float k)
