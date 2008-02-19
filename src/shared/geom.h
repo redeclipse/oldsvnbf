@@ -51,7 +51,7 @@ struct vec
     {
         float m = squaredlen(), k = min(dot(n), 0.0f);
         projectxydir(n);
-        rescale(sqrtf(m - k*k));
+        rescale(sqrtf(max(m - k*k, 0.0f)));
         return *this;
     }
     void lerp(const vec &a, const vec &b, float t) { x = a.x*(1-t)+b.x*t; y = a.y*(1-t)+b.y*t; z = a.z*(1-t)+b.z*t; }
