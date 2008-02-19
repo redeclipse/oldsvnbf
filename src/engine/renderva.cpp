@@ -1383,7 +1383,7 @@ void loadcaustics()
     }
 }
 
-void setupcaustics(int tmu, GLfloat *color = NULL)
+void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
 {
     if(!caustictex[0]) loadcaustics();
 
@@ -1418,11 +1418,11 @@ void setupcaustics(int tmu, GLfloat *color = NULL)
         causticshader->set();
         setlocalparamfv("texgenS", SHPARAM_VERTEX, 0, s);
         setlocalparamfv("texgenT", SHPARAM_VERTEX, 1, t);
-        setlocalparamf("frameoffset", SHPARAM_PIXEL, 0, frac, frac, frac);
+        setlocalparamf("frameoffset", SHPARAM_PIXEL, 0, blend*(1-frac), blend*frac, blend, 1-blend);
     }
 }
 
-void setupTMUs(renderstate &cur, bool causticspass, bool fogpass)
+void setupTMUs(renderstate &cur, float causticspass, bool fogpass)
 {
     extern GLuint shadowmapfb;
     if(!reflecting && !refracting && !envmapping && shadowmap && shadowmapfb)
@@ -1445,7 +1445,7 @@ void setupTMUs(renderstate &cur, bool causticspass, bool fogpass)
         if(nolights) cur.lightmaptmu = -1;
         else if(maxtmus>=3)
         {
-            if(maxtmus>=4 && causticspass)
+            if(maxtmus>=4 && causticspass>=1)
             {
                 cur.causticstmu = 0;
                 cur.diffusetmu = 2;
@@ -1456,7 +1456,7 @@ void setupTMUs(renderstate &cur, bool causticspass, bool fogpass)
                     else if(glowpass) cur.glowtmu = 4;
                 }
             }
-            else if(fogpass && !causticspass) cur.fogtmu = 2;
+            else if(fogpass && causticspass<1) cur.fogtmu = 2;
             else if(glowpass) cur.glowtmu = 2;
         }
         if(cur.glowtmu>=0)
@@ -1477,7 +1477,7 @@ void setupTMUs(renderstate &cur, bool causticspass, bool fogpass)
             getwatercolour(wcol);
             loopk(3) cur.color[k] = wcol[k]/255.0f;
         }
-        if(cur.causticstmu>=0) setupcaustics(cur.causticstmu, cur.color);
+        if(cur.causticstmu>=0) setupcaustics(cur.causticstmu, causticspass, cur.color);
 	}
     else
 	{
@@ -1598,11 +1598,11 @@ void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
 
 VAR(oqgeom, 0, 1, 1);
 
-void rendergeom(bool causticspass, bool fogpass)
+void rendergeom(float causticspass, bool fogpass)
 {
     renderstate cur;
 
-    if(causticspass && ((renderpath==R_FIXEDFUNCTION && maxtmus<2) || !causticscale || !causticmillis)) causticspass = false;
+    if(causticspass && ((renderpath==R_FIXEDFUNCTION && maxtmus<2) || !causticscale || !causticmillis)) causticspass = 0;
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -1744,7 +1744,7 @@ void rendergeom(bool causticspass, bool fogpass)
 
     cleanupTMUs(cur);
 
-    if((causticspass && cur.causticstmu<0) || (renderpath==R_FIXEDFUNCTION && ((glowpass && cur.glowtmu<0) || (fogpass && cur.fogtmu<0))))
+    if(renderpath==R_FIXEDFUNCTION ? (glowpass && cur.glowtmu<0) || (causticspass>=1 && cur.causticstmu<0) || (fogpass && cur.fogtmu<0) : causticspass)
     {
         glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
@@ -1784,9 +1784,9 @@ void rendergeom(bool causticspass, bool fogpass)
             }
         }
 
-        if(causticspass && cur.causticstmu<0)
+        if(renderpath==R_FIXEDFUNCTION ? causticspass>=1 && cur.causticstmu<0 : causticspass)
         {
-            setupcaustics(0);
+            setupcaustics(0, causticspass);
             glBlendFunc(GL_ZERO, GL_SRC_COLOR);
             glFogfv(GL_FOG_COLOR, onefog);
             if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
@@ -1879,10 +1879,10 @@ void renderreflectedgeom(float z, bool refract, bool causticspass, bool fogpass)
 		reflectvfcP(z);
 		reflectedva = NULL;
 		findreflectedvas(varoot, z, refract);
-        rendergeom(causticspass, fogpass);
+        rendergeom(causticspass ? 1 : 0, fogpass);
 		restorevfcP();
 	}
-    else rendergeom(causticspass, fogpass);
+    else rendergeom(causticspass ? 1 : 0, fogpass);
 }
 
 static GLuint skyvbufGL, skyebufGL;
