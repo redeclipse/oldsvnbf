@@ -131,8 +131,8 @@ struct projectiles
 
 		bool update(int qtime)
 		{
-			cube &c = lookupcube(int(o.x), int(o.y), int(o.z));
-			bool water = c.ext && isliquid(c.ext->material);
+            int mat = lookupmaterial(vec(o.x, o.y, o.z + (aboveeye - height)/2));
+            bool water = isliquid(mat);
 			float secs = float(qtime) / 1000.0f;
 		    vec old(o);
 

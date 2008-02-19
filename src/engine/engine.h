@@ -276,7 +276,7 @@ extern void visiblecubes(cube *c, int size, int cx, int cy, int cz, int w, int h
 extern void reflectvfcP(float z);
 extern void restorevfcP();
 extern void createfogtex();
-extern void rendergeom(bool causticspass = false, bool fogpass = false);
+extern void rendergeom(float causticspass = 0, bool fogpass = false);
 extern void rendermapmodels();
 extern void renderreflectedgeom(float z, bool refract, bool causticspass = false, bool fogpass = false);
 extern void renderreflectedmapmodels(float z, bool refract);

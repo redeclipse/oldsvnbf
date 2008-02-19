@@ -666,26 +666,90 @@ void drawreflection(float z, bool refract, bool clear)
 	reflecting = 0;
 }
 
-static void setfog(int fogmat)
+static float findsurface(int fogmat, const vec &v, int &abovemat)
 {
-	glFogi(GL_FOG_START, (fog+64)/8);
-	glFogi(GL_FOG_END, fog);
-	float fogc[4] = { (fogcolour>>16)/256.0f, ((fogcolour>>8)&255)/256.0f, (fogcolour&255)/256.0f, 1.0f };
-	glFogfv(GL_FOG_COLOR, fogc);
-	glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
+    ivec o(v);
+    do
+    {
+        cube &c = lookupcube(o.x, o.y, o.z);
+        if(!c.ext || c.ext->material != fogmat)
+        {
+            abovemat = c.ext && isliquid(c.ext->material) ? c.ext->material : MAT_AIR;
+            return o.z;
+        }
+        o.z = lu.z + lusize;
+    }
+    while(o.z < hdr.worldsize);
+    abovemat = MAT_AIR;
+    return hdr.worldsize;
+}
 
-	if(fogmat==MAT_WATER || fogmat==MAT_LAVA)
-	{
-		uchar col[3];
-		if(fogmat==MAT_WATER) getwatercolour(col);
-		else getlavacolour(col);
-		float fogwc[4] = { col[0]/256.0f, col[1]/256.0f, col[2]/256.0f, 1 };
-		glFogfv(GL_FOG_COLOR, fogwc);
-		glFogi(GL_FOG_START, 0);
-		glFogi(GL_FOG_END, min(fog, max((fogmat==MAT_WATER ? waterfog : lavafog)*4, 32)));//(fog+96)/8);
-	}
+static void blendfog(int fogmat, float blend, float logblend, float &start, float &end, float *fogc)
+{
+    uchar col[3];
+    switch(fogmat)
+    {
+        case MAT_WATER:
+            getwatercolour(col);
+            loopk(3) fogc[k] += blend*col[k]/255.0f;
+            end += logblend*min(fog, max(waterfog*4, 32));
+            break;
 
-	if(renderpath!=R_FIXEDFUNCTION) setfogplane();
+        case MAT_LAVA:
+            getlavacolour(col);
+            loopk(3) fogc[k] += blend*col[k]/255.0f;
+            end += logblend*min(fog, max(lavafog*4, 32));
+            break;
+
+        default:
+            fogc[0] += blend*(fogcolour>>16)/255.0f;
+            fogc[1] += blend*((fogcolour>>8)&255)/255.0f;
+            fogc[2] += blend*(fogcolour&255)/255.0f;
+            start += logblend*(fog+64)/8;
+            end += logblend*fog;
+            break;
+    }
+}
+
+static void setfog(int fogmat, float below = 1, int abovemat = MAT_AIR)
+{
+    float fogc[4] = { 0, 0, 0, 1 };
+    float start = 0, end = 0;
+    float logscale = 256, logblend = log(1 + (logscale - 1)*below) / log(logscale);
+
+    blendfog(fogmat, below, logblend, start, end, fogc);
+    if(below < 1) blendfog(abovemat, 1-below, 1-logblend, start, end, fogc);
+
+    glFogf(GL_FOG_START, start);
+    glFogf(GL_FOG_END, end);
+    glFogfv(GL_FOG_COLOR, fogc);
+    glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
+
+    if(renderpath!=R_FIXEDFUNCTION) setfogplane();
+}
+
+static void blendfogoverlay(int fogmat, float blend, float *overlay)
+{
+    uchar col[3];
+    float maxc;
+    switch(fogmat)
+    {
+        case MAT_WATER:
+            getwatercolour(col);
+            maxc = max(col[0], max(col[1], col[2]));
+            loopk(3) overlay[k] += blend*col[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f);
+            break;
+
+        case MAT_LAVA:
+            getlavacolour(col);
+            maxc = max(col[0], max(col[1], col[2]));
+            loopk(3) overlay[k] += blend*col[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f);
+            break;
+
+        default:
+            loopk(3) overlay[k] += blend;
+            break;
+    }
 }
 
 bool envmapping = false;
@@ -753,7 +817,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
 VAR(hudgunfov, 10, 65, 150);
 
-void gl_drawhud(int w, int h, int fogmat);
+void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat);
 
 void computescreen(const char *text, Texture *t)
 {
@@ -932,15 +996,25 @@ void gl_drawframe(int w, int h)
 	cl->adddynlights();
 
     float fovy = float(curfov*h)/w, aspect = w/float(h);
-    int fogmat = lookupmaterial(vec(camera1->o.x, camera1->o.y, camera1->o.z + camera1->aboveeye*0.5f));
-	if(fogmat!=MAT_WATER && fogmat!=MAT_LAVA) fogmat = MAT_AIR;
 
-	setfog(fogmat);
-	if(fogmat!=MAT_AIR)
-	{
-		fovy += (float)sin(lastmillis/1000.0)*2.0f;
-		aspect += (float)sin(lastmillis/1000.0+PI)*0.1f;
-	}
+    int fogmat = lookupmaterial(camera1->o), abovemat = MAT_AIR;
+    float fogblend = 1.0f, causticspass = 0.0f;
+    if(fogmat==MAT_WATER || fogmat==MAT_LAVA)
+    {
+        float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
+        if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
+        else fogmat = abovemat;
+        if(caustics && fogmat==MAT_WATER && camera1->o.z < z)
+            causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
+    }
+    else fogmat = MAT_AIR;
+    setfog(fogmat, fogblend, abovemat);
+    if(fogmat!=MAT_AIR)
+    {
+        float blend = abovemat==MAT_AIR ? fogblend : 1.0f;
+        fovy += blend*sinf(lastmillis/1000.0)*2.0f;
+        aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
+    }
 
 	int farplane = max(max(fog*2, 384), hdr.worldsize*2);
 
@@ -965,7 +1039,6 @@ void gl_drawframe(int w, int h)
 
 	if(limitsky()) drawskybox(farplane, true);
 
-    bool causticspass = caustics && fogmat==MAT_WATER && lookupmaterial(vec(camera1->o.x, camera1->o.y, camera1->o.z + camera1->aboveeye*1.25f));
 	rendergeom(causticspass);
 
 	queryreflections();
@@ -1015,7 +1088,7 @@ void gl_drawframe(int w, int h)
 	glDisable(GL_TEXTURE_2D);
 	notextureshader->set();
 
-	gl_drawhud(w, h, fogmat);
+    gl_drawhud(w, h, fogmat, fogblend, abovemat);
 
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_FOG);
@@ -1074,7 +1147,7 @@ void drawcrosshair(int w, int h)
 
 VARP(showfpsrange, 0, 0, 1);
 
-void gl_drawhud(int w, int h, int fogmat)
+void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 {
 	if(editmode && !hidehud)
 	{
@@ -1108,18 +1181,24 @@ void gl_drawhud(int w, int h, int fogmat)
     glEnable(GL_BLEND);
 
 	vec colour;
-	if (cl->gethudcolour(colour))
+    bool hashudcolour = cl->gethudcolour(colour);
+	if (hashudcolour || fogmat==MAT_WATER || fogmat==MAT_LAVA)
 	{
-		glDepthMask(GL_FALSE);
 		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-		glBegin(GL_QUADS);
-		glColor3f(colour.x, colour.y, colour.z);
+        if (hashudcolour) glColor3f(colour.x, colour.y, colour.z);
+        else
+        {
+            float overlay[3] = { 0, 0, 0 };
+            blendfogoverlay(fogmat, fogblend, overlay);
+            blendfogoverlay(abovemat, 1-fogblend, overlay);
+            glColor3fv(overlay);
+        }
+        glBegin(GL_QUADS);
 		glVertex2i(0, 0);
 		glVertex2i(w, 0);
 		glVertex2i(w, h);
 		glVertex2i(0, h);
 		glEnd();
-		glDepthMask(GL_TRUE);
 	}
 
 	glEnable(GL_TEXTURE_2D);

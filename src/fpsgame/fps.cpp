@@ -883,26 +883,6 @@ struct GAMECLIENT : igameclient
 			colour = vec(fade, fade, fade);
 			return true;
 		}
-		else
-		{
-			int fogmat = lookupmaterial(camera1->o);
-
-			if (fogmat == MAT_WATER || fogmat == MAT_LAVA)
-			{
-				uchar col[3];
-				if(fogmat == MAT_WATER) getwatercolour(col);
-				else getlavacolour(col);
-
-				float maxc = max(col[0], max(col[1], col[2]));
-				float blend[3];
-
-				loopi(3) blend[i] = col[i] / min(32 + maxc*7/8, 255.0f);
-
-				colour = vec(blend[0], blend[1], blend[2]);
-
-				return true;
-			}
-		}
 		return false;
 	}
 
