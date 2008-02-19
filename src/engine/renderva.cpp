@@ -1378,7 +1378,11 @@ void loadcaustics()
     if(caustictex[0]) return;
     loopi(NUMCAUSTICS)
     {
-        s_sprintfd(name)("<mad:0.6,0.4>caustics/caust%.2d.png", i);
+        s_sprintfd(name)(
+            renderpath==R_FIXEDFUNCTION ?
+                "<mad:0.6,0.4>caustics/caust%.2d.png" :
+                "<mad:-0.6,0.6>caustics/caust%.2d.png",
+            i);
         caustictex[i] = textureload(name);
     }
 }
@@ -1418,7 +1422,7 @@ void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
         causticshader->set();
         setlocalparamfv("texgenS", SHPARAM_VERTEX, 0, s);
         setlocalparamfv("texgenT", SHPARAM_VERTEX, 1, t);
-        setlocalparamf("frameoffset", SHPARAM_PIXEL, 0, blend*(1-frac), blend*frac, blend, 1-blend);
+        setlocalparamf("frameoffset", SHPARAM_PIXEL, 0, blend*(1-frac), blend*frac, blend);
     }
 }
 
@@ -1787,8 +1791,8 @@ void rendergeom(float causticspass, bool fogpass)
         if(renderpath==R_FIXEDFUNCTION ? causticspass>=1 && cur.causticstmu<0 : causticspass)
         {
             setupcaustics(0, causticspass);
-            glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-            glFogfv(GL_FOG_COLOR, onefog);
+            glBlendFunc(GL_ZERO, renderpath==R_FIXEDFUNCTION ? GL_SRC_COLOR : GL_ONE_MINUS_SRC_COLOR);
+            glFogfv(GL_FOG_COLOR, renderpath==R_FIXEDFUNCTION ? onefog : zerofog);
             if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
             rendergeommultipass(cur, RENDERPASS_CAUSTICS, fogpass);
             if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
