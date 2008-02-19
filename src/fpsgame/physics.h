@@ -218,7 +218,7 @@ struct physics
             }
 
             float oldmag = d->gvel.magnitude();
-            d->gvel.project(floor);
+            if(collided || (d->physstate >= PHYS_SLOPE && floor.z >= wallz(d))) d->gvel.projectxy(floor); else d->gvel.project(floor);
             d->gvel.rescale(oldmag);
         }
 
