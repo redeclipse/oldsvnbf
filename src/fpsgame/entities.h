@@ -151,7 +151,7 @@ struct entities : icliententities
 				d->lastuse = ents[n]->type;
 				d->lastusemillis = lastmillis;
 				vec v((int)(char)ents[n]->attr3*10.0f, (int)(char)ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
-				d->timesincecollide = d->timeinair = 0;
+				d->timeinair = 0;
 				d->gvel = vec(0, 0, 0);
 				d->vel = v;
 				cl.playsoundc(S_JUMPPAD, d);

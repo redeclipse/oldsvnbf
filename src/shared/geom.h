@@ -47,9 +47,9 @@ struct vec
     vec &reflect(const vec &n) { float k = 2*dot(n); x -= k*n.x; y -= k*n.y; z -= k*n.z; return *this; }
     vec &project(const vec &n) { float k = dot(n); x -= k*n.x; y -= k*n.y; z -= k*n.z; return *this; }
     vec &projectxydir(const vec &n) { if(n.z) z = -(x*n.x/n.z + y*n.y/n.z); return *this; }
-    vec &projectxy(const vec &n)
+    vec &projectxy(const vec &n, float threshold = 0)
     {
-        float m = squaredlen(), k = dot(n);
+        float m = squaredlen(), k = min(dot(n), 0.0f);
         projectxydir(n);
         rescale(sqrtf(m - k*k));
         return *this;
