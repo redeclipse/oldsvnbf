@@ -184,17 +184,17 @@ struct physics
 		}
 	}
 
-    void slideagainst(physent *d, vec &dir, const vec &obstacle)
+    void slideagainst(physent *d, vec &dir, const vec &obstacle, bool foundfloor)
     {
         vec wall(obstacle);
-        if(wall.z > 0)
+        if(foundfloor && wall.z)
         {
             wall.z = 0;
             if(!wall.iszero()) wall.normalize();
         }
         dir.project(wall);
         d->vel.project(wall);
-        if(d->gvel.dot(obstacle) < 0) d->gvel.project(wall);
+        if(d->gvel.dot(wall) < 0) d->gvel.project(wall); 
     }
 
     void switchfloor(physent *d, vec &dir, const vec &floor)
@@ -273,7 +273,7 @@ struct physics
 	#endif
         if(floor.z > 0.0f && floor.z < slopez(d))
         {
-            switchfloor(d, dir, floor);
+            if(floor.z >= wallz(d)) switchfloor(d, dir, floor);
             d->timeinair = 0;
             d->physstate = PHYS_SLIDE;
             d->floor = floor;
@@ -321,7 +321,7 @@ struct physics
 				if(!collide(d, vec(0, 0, -1)) && wall.z > 0.0f)
 				{
 					floor = wall;
-					if(floor.z > slopez(d)) found = true;
+					if(floor.z >= slopez(d)) found = true;
 				}
 			}
 			else
@@ -337,7 +337,7 @@ struct physics
         if(collided && (!found || obstacle.z > floor.z))
         {
             floor = obstacle;
-            slide = !found && (floor.z <= 0.0f || floor.z >= slopez(d));
+            slide = !found && (floor.z < wallz(d) || floor.z >= slopez(d));
         }
 		d->o = moved;
 		return found;
@@ -383,9 +383,9 @@ struct physics
 		vec floor(0, 0, 0);
 		bool slide = collided,
 			 found = findfloor(d, collided, obstacle, slide, floor);
-		if(slide)
-		{
-			slideagainst(d, dir, obstacle);
+        if(slide || (!collided && floor.z > 0 && floor.z < wallz(d)))
+        {
+            slideagainst(d, dir, slide ? obstacle : floor, found);
 			if(d->type == ENT_AI || d->type == ENT_INANIMATE) d->blocked = true;
 		}
 		if(found)
