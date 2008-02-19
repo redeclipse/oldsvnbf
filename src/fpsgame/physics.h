@@ -186,52 +186,23 @@ struct physics
 
     void slideagainst(physent *d, vec &dir, const vec &obstacle)
     {
-        float dmag = dir.magnitude(),
-              vmag = d->vel.magnitude();
-        dir.project(obstacle);
-        d->vel.project(obstacle);
-        if(d->timesincecollide <= 3*minframetime())
+        vec wall(obstacle);
+        if(wall.z > 0)
         {
-            dir.rescale(dmag);
-            d->vel.rescale(vmag);
+            wall.z = 0;
+            if(!wall.iszero()) wall.normalize();
         }
-        if(d->gvel.dot(obstacle) < 0)
-        {
-            float gmag = d->gvel.magnitude();
-            d->gvel.project(obstacle);
-            if(d->timesincecollide <= 3*minframetime()) d->gvel.rescale(gmag);
-        }
-        d->timesincecollide = 0;
+        dir.project(wall);
+        d->vel.project(wall);
+        if(d->gvel.dot(obstacle) < 0) d->gvel.project(wall);
     }
 
-    void switchfloor(physent *d, vec &dir, bool collided, bool landing, const vec &floor)
+    void switchfloor(physent *d, vec &dir, const vec &floor)
     {
-        if(landing && (d->physstate == PHYS_FALL || (collided ? dir.z <= 0 : d->floor.z < floorz(d) && d->floor!=floor)))
-        {
-            if(d->timesincecollide > 3*minframetime())
-            {
-                d->timesincecollide = 0;
-                d->gvel.projectxy(floor);
-                dir.projectxy(floor);
-                d->vel.projectxy(floor);
-                return;
-            }
-
-            float oldmag = d->gvel.magnitude();
-            if(collided || (d->physstate >= PHYS_SLOPE && floor.z >= wallz(d))) d->gvel.projectxydir(floor); else d->gvel.project(floor);
-            d->gvel.rescale(oldmag);
-        }
-
-        if(((d->physstate == PHYS_SLIDE || (d->physstate == PHYS_FALL && floor.z < 1.0f)) && landing) ||
-            (d->physstate >= PHYS_SLOPE && (collided ? dir.z <= 0 : fabs(dir.dot(d->floor)/dir.magnitude()) < 0.01f)))
-        {
-            float dmag = dir.magnitude();
-            if(collided || floor.z >= wallz(d)) dir.projectxydir(floor); else dir.project(floor);
-            dir.rescale(dmag);
-            float vmag = d->vel.magnitude();
-            if(collided || floor.z >= wallz(d)) d->vel.projectxydir(floor); else d->vel.project(floor);
-            d->vel.rescale(vmag);
-        }
+        if(d->gvel.dot(floor) < 0) d->gvel.projectxy(floor);
+        if(d->physstate >= PHYS_SLOPE && fabs(dir.dot(d->floor)/dir.magnitude()) > 0.01f) return;
+        dir.projectxy(floor);
+        d->vel.projectxy(floor);
     }
 
 	bool trystepup(physent *d, vec &dir, float maxstep)
@@ -255,9 +226,9 @@ struct physics
 		{
 			if(d->physstate == PHYS_FALL)
 			{
-				d->timesincecollide = d->timeinair = 0;
+				d->timeinair = 0;
 				d->floor = vec(0, 0, 1);
-				switchfloor(d, dir, false, true, d->floor);
+				switchfloor(d, dir, d->floor);
 			}
 			d->physstate = PHYS_STEP_UP;
 			return true;
@@ -284,7 +255,7 @@ struct physics
 	}
 	#endif
 
-    void falling(physent *d, vec &dir, bool collided, const vec &floor)
+    void falling(physent *d, vec &dir, const vec &floor)
 	{
 	#if 0
 		if(d->physstate >= PHYS_FLOOR && (floor.z == 0.0f || floor.z == 1.0f))
@@ -300,18 +271,17 @@ struct physics
 			else d->o = moved;
 		}
 	#endif
-		bool sliding = floor.z > 0.0f && floor.z < slopez(d);
-        switchfloor(d, dir, collided, sliding, sliding ? floor : vec(0, 0, 1));
-		if(sliding)
-		{
-			d->timesincecollide = d->timeinair = 0;
-			d->physstate = PHYS_SLIDE;
-			d->floor = floor;
-		}
+        if(floor.z > 0.0f && floor.z < slopez(d))
+        {
+            switchfloor(d, dir, floor);
+            d->timeinair = 0;
+            d->physstate = PHYS_SLIDE;
+            d->floor = floor;
+        }
 		else d->physstate = PHYS_FALL;
 	}
 
-    void landing(physent *d, vec &dir, bool collided, const vec &floor)
+    void landing(physent *d, vec &dir, const vec &floor)
 	{
     #if 0
         if(d->physstate == PHYS_FALL)
@@ -320,8 +290,8 @@ struct physics
             if(dir.z < 0.0f) dir.z = d->vel.z = 0.0f;
         }
     #endif
-        switchfloor(d, dir, collided, true, floor);
-        d->timesincecollide = d->timeinair = 0;
+        switchfloor(d, dir, floor);
+        d->timeinair = 0;
 
 		if(floor.z >= floorz(d)) d->physstate = PHYS_FLOOR;
 		else d->physstate = PHYS_SLOPE;
@@ -421,9 +391,9 @@ struct physics
 		if(found)
 		{
 			if(d->type == ENT_CAMERA) return false;
-			landing(d, dir, slide, floor);
+			landing(d, dir, floor);
 		}
-		else falling(d, dir, slide, floor);
+		else falling(d, dir, floor);
 		return !collided;
 	}
 
@@ -439,12 +409,8 @@ struct physics
 		}
 		else if (pl->physstate >= PHYS_SLOPE || water)
 		{
-			if (water)
-			{
-				if (pl->crouching) pl->crouching = false;
-				if (pl->timeinair > 0) pl->timesincecollide = pl->timeinair = 0;
-			}
-			if(pl->jumping)
+			if (water && pl->crouching) pl->crouching = false;
+			if (pl->jumping)
 			{
 				pl->jumping = pl->crouching = false;
 
@@ -453,11 +419,7 @@ struct physics
 				trigger(pl, local, 1, 0);
 			}
 		}
-        else if (pl->physstate == PHYS_FALL) 
-        {
-            pl->timeinair += curtime;
-            pl->timesincecollide += curtime;
-        }
+        if (pl->physstate == PHYS_FALL) pl->timeinair += curtime;
 
 		vec m(0.0f, 0.0f, 0.0f);
 		if(pl->type==ENT_AI)
@@ -541,7 +503,7 @@ struct physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-        int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (pl->aboveeye - pl->height)/2));
+        int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (2*pl->aboveeye - pl->height)/3));
 		bool water = isliquid(material);
 		bool floating = (editmode && local) || pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
 		float secs = millis/1000.f;
@@ -565,7 +527,7 @@ struct physics
 			if(pl->physstate != PHYS_FLOAT)
 			{
 				pl->physstate = PHYS_FLOAT;
-				pl->timesincecollide = pl->timeinair = 0;
+				pl->timeinair = 0;
 				pl->gvel = vec(0, 0, 0);
 			}
 			pl->o.add(d);
@@ -593,7 +555,7 @@ struct physics
 
 		if (pl->type!=ENT_CAMERA)
 		{
-            int mat = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (pl->aboveeye - 2*pl->height)/3));
+            int mat = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (pl->aboveeye - pl->height)/2));
 
 			bool inwater = isliquid(mat);
 			if(!pl->inwater && inwater) trigger(pl, local, 0, -1);
@@ -649,7 +611,7 @@ struct physics
 	void updatephysstate(physent *d)
 	{
 		if(d->physstate == PHYS_FALL) return;
-		d->timesincecollide = d->timeinair = 0;
+		d->timeinair = 0;
 		vec old(d->o);
 		/* Attempt to reconstruct the floor state.
 		 * May be inaccurate since movement collisions are not considered.
