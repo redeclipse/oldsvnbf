@@ -92,23 +92,6 @@ VARF(moving, 0, 0, 1,
 	if(moving) havesel = false; // tell cursorupdate to create handle
 );
 
-void forcenextundo() { lastsel.orient = -1; }
-
-void cubecancel()
-{
-	havesel = false;
-	moving = dragging = 0;
-	forcenextundo();
-}
-
-extern void entcancel();
-
-void cancelsel()
-{
-	cubecancel();
-	entcancel();
-}
-
 VARF(gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
 {
 	if(dragging || !hdr.worldsize) return;
@@ -122,6 +105,23 @@ VAR(passthroughsel, 0, 0, 1);
 VAR(editing, 1, 0, 0);
 VAR(selectcorners, 0, 0, 1);
 VARF(hmapedit, 0, 0, 1, horient = sel.orient);
+
+void forcenextundo() { lastsel.orient = -1; }
+
+void cubecancel()
+{
+    havesel = false;
+    moving = dragging = hmapedit = passthroughsel = 0;
+    forcenextundo();
+}
+
+extern void entcancel();
+
+void cancelsel()
+{
+    cubecancel();
+    entcancel();
+}
 
 void toggleedit()
 {
