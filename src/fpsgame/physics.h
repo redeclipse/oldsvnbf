@@ -511,7 +511,7 @@ struct physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-        int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (2*pl->aboveeye - pl->height)/3));
+        int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->height)/4));
 		bool water = isliquid(material);
 		bool floating = (editmode && local) || pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
 		float secs = millis/1000.f;
@@ -563,7 +563,7 @@ struct physics
 
 		if (pl->type!=ENT_CAMERA)
 		{
-            int mat = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (pl->aboveeye - pl->height)/2));
+            int mat = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (2*pl->aboveeye - pl->height)/3));
 
 			bool inwater = isliquid(mat);
 			if(!pl->inwater && inwater) trigger(pl, local, 0, -1);
