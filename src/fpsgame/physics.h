@@ -563,12 +563,14 @@ struct physics
 
 		if (pl->type!=ENT_CAMERA)
 		{
-            int mat = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (2*pl->aboveeye - pl->height)/3));
-
-			bool inwater = isliquid(mat);
-			if(!pl->inwater && inwater) trigger(pl, local, 0, -1);
-			else if(pl->inwater && !inwater) trigger(pl, local, 0, 1);
-			pl->inwater = inwater;
+            if (pl->inwater && !water)
+            {
+                material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (pl->aboveeye - pl->height)/2));
+                water = isliquid(material);
+            }
+            if(!pl->inwater && water) trigger(pl, local, 0, -1);
+            else if(pl->inwater && !water) trigger(pl, local, 0, 1);
+            pl->inwater = water;
 		}
 
 		return true;
