@@ -904,6 +904,8 @@ void queryreflections()
 			materialsurface &m = *ref.matsurfs[j];
             float offset = WATER_OFFSET + 
                 (vertwater ? WATER_AMPLITUDE*(camera1->pitch > 0 || m.depth < WATER_AMPLITUDE+0.5f ? -1 : 1) : 0);
+            if(abs(m.o.z-offset - camera1->o.z) < 0.5f && m.depth > WATER_AMPLITUDE+1.5f)
+                offset += camera1->pitch > 0 ? -1 : 1;
             drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, offset);
 		}
 		glEnd();
