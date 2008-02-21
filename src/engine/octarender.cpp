@@ -256,7 +256,7 @@ struct vacollect
 			sortkey &k = texs[i];
 			if(k.lmid>=LMID_RESERVED)
 			{
-				lastlmid = lightmaps[k.lmid-LMID_RESERVED].unlitx>=0 ? k.lmid : LMID_AMBIENT;
+                lastlmid = lightmaptexs[k.lmid].unlitx>=0 ? k.lmid : LMID_AMBIENT;
 				if(firstlit<0)
 				{
 					firstlit = i;
@@ -280,9 +280,9 @@ struct vacollect
 			sortkey &k = remap[i];
 			sortval &t = indices[k];
 			if(t.unlit<=0) continue;
-			LightMap &lm = lightmaps[t.unlit-LMID_RESERVED];
-			short u = short((lm.unlitx + 0.5f) * SHRT_MAX/LM_PACKW),
-				  v = short((lm.unlity + 0.5f) * SHRT_MAX/LM_PACKH);
+            LightMapTexture &lm = lightmaptexs[t.unlit];
+            short u = short((lm.unlitx + 0.5f) * SHRT_MAX/lm.w),
+                  v = short((lm.unlity + 0.5f) * SHRT_MAX/lm.h);
             loopl(6) loopvj(t.dims[l])
 			{
 				vertex &vtx = verts[t.dims[l][j]];
@@ -312,7 +312,7 @@ struct vacollect
 		enumeratekt(indices, sortkey, k, sortval, t,
             loopl(6) if(t.dims[l].length() && t.unlit<=0)
 			{
-				if(k.lmid>=LMID_RESERVED && lightmaps[k.lmid-LMID_RESERVED].unlitx>=0)
+                if(k.lmid>=LMID_RESERVED && lightmaptexs[k.lmid].unlitx>=0)
 				{
 					sortkey ukey(k.tex, LMID_AMBIENT, k.envmap);
 					sortval *uval = indices.access(ukey);
@@ -501,21 +501,34 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
 {
 	int index[4];
     int shadowmask = texture==DEFAULT_SKY || renderpath==R_FIXEDFUNCTION ? 0 : calcshadowmask(vv);
-	loopk(4)
-	{
-		short u, v;
-		if(!nolights && surface && surface->lmid >= LMID_RESERVED)
-		{
-			u = short((surface->x + (surface->texcoords[k*2] / 255.0f) * (surface->w - 1) + 0.5f) * SHRT_MAX/LM_PACKW);
-			v = short((surface->y + (surface->texcoords[k*2 + 1] / 255.0f) * (surface->h - 1) + 0.5f) * SHRT_MAX/LM_PACKH);
+    LightMap *lm = NULL;
+    LightMapTexture *lmtex = NULL;
+    if(!nolights && surface && lightmaps.inrange(surface->lmid-LMID_RESERVED))
+    {
+        lm = &lightmaps[surface->lmid-LMID_RESERVED];
+        lmtex = &lightmaptexs[lm->tex];
+    }
+    loopk(4)
+    {
+        short u, v;
+        if(lm)
+        {
+            u = short((lm->offsetx + surface->x + (surface->texcoords[k*2] / 255.0f) * (surface->w - 1) + 0.5f) * SHRT_MAX/lmtex->w);
+            v = short((lm->offsety + surface->y + (surface->texcoords[k*2 + 1] / 255.0f) * (surface->h - 1) + 0.5f) * SHRT_MAX/lmtex->h);
 		}
 		else u = v = 0;
         index[k] = vh.access(vv[k], u, v, renderpath!=R_FIXEDFUNCTION && normals ? normals->normals[k] : bvec(128, 128, 128));
 	}
 
-	extern vector<GLuint> lmtexids;
+    int lmid = LMID_AMBIENT;
+    if(surface)
+    {
+        if(surface->lmid < LMID_RESERVED) lmid = surface->lmid;
+        else if(lightmaps.inrange(surface->lmid-LMID_RESERVED)) lmid = lightmaps[surface->lmid-LMID_RESERVED].tex;
+    }
+
     int dim = dimension(orient);
-	sortkey key(texture, surface && lmtexids.inrange(surface->lmid) ? surface->lmid : LMID_AMBIENT, envmap);
+    sortkey key(texture, lmid, envmap);
     if(texture == DEFAULT_SKY) explicitsky += addtriindexes(vc.explicitskyindices, index);
     else
     {

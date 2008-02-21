@@ -32,14 +32,15 @@ enum { LM_DIFFUSE = 0, LM_BUMPMAP0, LM_BUMPMAP1 };
 
 struct LightMap
 {
-	uchar data[3 * LM_PACKW * LM_PACKH], *converted;
-	int type;
-	PackNode packroot;
-	uint lightmaps, lumels;
-	int unlitx, unlity; 
-	
-	LightMap()
-	 : converted(0), type(LM_DIFFUSE), lightmaps(0), lumels(0), unlitx(-1), unlity(-1)
+    int type, tex, offsetx, offsety;
+    PackNode packroot;
+    uint lightmaps, lumels;
+    int unlitx, unlity;
+    uchar data[3 * LM_PACKW * LM_PACKH];
+
+    LightMap()
+     : type(LM_DIFFUSE), tex(-1), offsetx(-1), offsety(-1),
+       lightmaps(0), lumels(0), unlitx(-1), unlity(-1)
 	{
 		memset(data, 0, sizeof(data));
 	}
@@ -54,6 +55,19 @@ struct LightMap
 };
 
 extern vector<LightMap> lightmaps;
+
+struct LightMapTexture
+{
+    int w, h, type;
+    GLuint id;
+    int unlitx, unlity;
+
+    LightMapTexture()
+     : w(0), h(0), type(LM_DIFFUSE), id(0), unlitx(-1), unlity(-1)
+    {}
+};
+
+extern vector<LightMapTexture> lightmaptexs;
 
 enum { LMID_AMBIENT = 0, LMID_AMBIENT1, LMID_BRIGHT, LMID_BRIGHT1, LMID_DARK, LMID_DARK1, LMID_RESERVED };
 
