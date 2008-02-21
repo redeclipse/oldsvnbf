@@ -1263,7 +1263,8 @@ void genlightmaptexs()
     }
 
     extern int maxtexsize;
-    int sizelimit = min(batchlightmaps, (maxtexsize ? min(maxtexsize, hwtexsize) : hwtexsize)/max(LM_PACKW, LM_PACKH));
+    int sizelimit = (maxtexsize ? min(maxtexsize, hwtexsize) : hwtexsize)/max(LM_PACKW, LM_PACKH);
+    sizelimit = min(batchlightmaps, sizelimit*sizelimit);
     while(remaining[LM_DIFFUSE] || remaining[LM_BUMPMAP0] || remaining[LM_BUMPMAP1])
     {
         int type = LM_DIFFUSE;
