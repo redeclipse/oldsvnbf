@@ -1241,7 +1241,7 @@ static void findunlit(int i)
 }
 
 VARF(roundlightmaptex, 0, 4, 16, { cleanuplightmaps(); initlights(); allchanged(); });
-VARF(batchlightmaps, 0, 64, 256, { cleanuplightmaps(); initlights(); allchanged(); });
+VARF(batchlightmaps, 0, 4, 256, { cleanuplightmaps(); initlights(); allchanged(); });
 
 void genlightmaptexs()
 {
