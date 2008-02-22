@@ -1095,6 +1095,7 @@ void patchlight(int quality)
 		return;
 	}
 	computescreen("patching lightmaps... (esc to abort)");
+    cleanuplightmaps();
 	progress = 0;
 	progresstexticks = 0;
 	int total = 0, lumels = 0;
