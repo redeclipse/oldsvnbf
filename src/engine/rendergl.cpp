@@ -454,7 +454,7 @@ VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
 physent *camera1 = NULL;
 bool deathcam = false;
-bool isthirdperson() { return cl->gamethirdperson() || (reflecting && !refracting); }
+bool isthirdperson() { return cl->gamethirdperson() || (reflecting && !refracting && camera1->o.z >= reflecting); }
 
 void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, bool swapxy)
 {
