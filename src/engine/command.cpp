@@ -216,7 +216,7 @@ char *svariable(const char *name, const char *cur, char **storage, void (*fun)()
 void setvar(const char *name, int i, bool dofunc)
 {
 	GETVAR(id, name, );
-    *id->storage.i = i;
+    *id->storage.i = clamp(i, id->minval, id->maxval);
     if(dofunc) id->changed();
 }
 void setfvar(const char *name, float f, bool dofunc)
