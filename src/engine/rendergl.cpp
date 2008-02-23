@@ -3,17 +3,18 @@
 #include "pch.h"
 #include "engine.h"
 
-bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false;
+bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false;
 int renderpath;
 
 // GL_ARB_vertex_buffer_object
-PFNGLGENBUFFERSARBPROC	glGenBuffers_	= NULL;
-PFNGLBINDBUFFERARBPROC	glBindBuffer_	= NULL;
-PFNGLMAPBUFFERARBPROC	 glMapBuffer_	 = NULL;
-PFNGLUNMAPBUFFERARBPROC	glUnmapBuffer_	= NULL;
-PFNGLBUFFERDATAARBPROC	glBufferData_	= NULL;
-PFNGLBUFFERSUBDATAARBPROC glBufferSubData_ = NULL;
-PFNGLDELETEBUFFERSARBPROC glDeleteBuffers_ = NULL;
+PFNGLGENBUFFERSARBPROC       glGenBuffers_       = NULL;
+PFNGLBINDBUFFERARBPROC       glBindBuffer_       = NULL;
+PFNGLMAPBUFFERARBPROC        glMapBuffer_        = NULL;
+PFNGLUNMAPBUFFERARBPROC      glUnmapBuffer_      = NULL;
+PFNGLBUFFERDATAARBPROC       glBufferData_       = NULL;
+PFNGLBUFFERSUBDATAARBPROC    glBufferSubData_    = NULL;
+PFNGLDELETEBUFFERSARBPROC    glDeleteBuffers_    = NULL;
+PFNGLGETBUFFERSUBDATAARBPROC glGetBufferSubData_ = NULL;
 
 // GL_ARB_multitexture
 PFNGLACTIVETEXTUREARBPROC		glActiveTexture_		= NULL;
@@ -82,6 +83,10 @@ PFNGLDRAWRANGEELEMENTSEXTPROC glDrawRangeElements_ = NULL;
 
 // GL_EXT_blend_minmax
 PFNGLBLENDEQUATIONEXTPROC glBlendEquation_ = NULL;
+
+// GL_EXT_multi_draw_arrays
+PFNGLMULTIDRAWARRAYSEXTPROC   glMultiDrawArrays_ = NULL;
+PFNGLMULTIDRAWELEMENTSEXTPROC glMultiDrawElements_ = NULL;
 
 void *getprocaddress(const char *name)
 {
@@ -164,13 +169,14 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
 	if(strstr(exts, "GL_ARB_vertex_buffer_object"))
 	{
-		glGenBuffers_	= (PFNGLGENBUFFERSARBPROC)	getprocaddress("glGenBuffersARB");
-		glBindBuffer_	= (PFNGLBINDBUFFERARBPROC)	getprocaddress("glBindBufferARB");
-		glMapBuffer_	 = (PFNGLMAPBUFFERARBPROC)	getprocaddress("glMapBufferARB");
-		glUnmapBuffer_	= (PFNGLUNMAPBUFFERARBPROC)  getprocaddress("glUnmapBufferARB");
-		glBufferData_	= (PFNGLBUFFERDATAARBPROC)	getprocaddress("glBufferDataARB");
-		glBufferSubData_ = (PFNGLBUFFERSUBDATAARBPROC)getprocaddress("glBufferSubDataARB");
-		glDeleteBuffers_ = (PFNGLDELETEBUFFERSARBPROC)getprocaddress("glDeleteBuffersARB");
+        glGenBuffers_       = (PFNGLGENBUFFERSARBPROC)      getprocaddress("glGenBuffersARB");
+        glBindBuffer_       = (PFNGLBINDBUFFERARBPROC)      getprocaddress("glBindBufferARB");
+        glMapBuffer_        = (PFNGLMAPBUFFERARBPROC)       getprocaddress("glMapBufferARB");
+        glUnmapBuffer_      = (PFNGLUNMAPBUFFERARBPROC)     getprocaddress("glUnmapBufferARB");
+        glBufferData_       = (PFNGLBUFFERDATAARBPROC)      getprocaddress("glBufferDataARB");
+        glBufferSubData_    = (PFNGLBUFFERSUBDATAARBPROC)   getprocaddress("glBufferSubDataARB");
+        glDeleteBuffers_    = (PFNGLDELETEBUFFERSARBPROC)   getprocaddress("glDeleteBuffersARB");
+        glGetBufferSubData_ = (PFNGLGETBUFFERSUBDATAARBPROC)getprocaddress("glGetBufferSubDataARB");
 		hasVBO = true;
 		//conoutf("Using GL_ARB_vertex_buffer_object extension.");
 	}
@@ -181,6 +187,13 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 		glDrawRangeElements_ = (PFNGLDRAWRANGEELEMENTSEXTPROC)getprocaddress("glDrawRangeElementsEXT");
 		hasDRE = true;
 	}
+
+    if(strstr(exts, "GL_EXT_multi_draw_arrays"))
+    {
+        glMultiDrawArrays_   = (PFNGLMULTIDRAWARRAYSEXTPROC)  getprocaddress("glMultiDrawArraysEXT");
+        glMultiDrawElements_ = (PFNGLMULTIDRAWELEMENTSEXTPROC)getprocaddress("glMultiDrawElementsEXT");
+        hasMDA = true;
+    }
 
     if(strstr(exts, "GL_ARB_occlusion_query"))
     {
@@ -992,8 +1005,7 @@ void gl_drawframe(int w, int h)
 {
 	defaultshader->set();
 
-	cleardynlights();
-	cl->adddynlights();
+    updatedynlights();
 
     float fovy = float(curfov*h)/w, aspect = w/float(h);
 

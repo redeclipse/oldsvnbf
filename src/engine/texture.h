@@ -206,6 +206,7 @@ struct Slot
 	Shader *shader;
 	vector<ShaderParam> params;
 	bool loaded;
+    uint texmask;
 	char *autograss;
 	Texture *grasstex, *thumbnail;
 
@@ -215,6 +216,7 @@ struct Slot
 		shader = NULL;
 		params.setsize(0);
 		loaded = false;
+        texmask = 0;
 		DELETEA(autograss);
 		grasstex = NULL;
 		thumbnail = NULL;
@@ -281,4 +283,6 @@ extern void colortmu(int n, float r = 0, float g = 0, float b = 0, float a = 0);
 extern void setuptmu(int n, const char *rgbfunc = NULL, const char *alphafunc = NULL);
 
 #define MAXDYNLIGHTS 5
+#define DYNLIGHTBITS 6
+#define DYNLIGHTMASK ((1<<DYNLIGHTBITS)-1)
 

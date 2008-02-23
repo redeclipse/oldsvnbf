@@ -308,13 +308,13 @@ bool isshadowmapreceiver(vtxarray *va)
 
 #if 0
     // cheaper inexact test
-    float dz = va->z + va->size/2 - shadowfocus.z;
+    float dz = va->o.z + va->size/2 - shadowfocus.z;
     float cx = shadowfocus.x - dz*shadowdir.x, cy = shadowfocus.y - dz*shadowdir.y;
     float skew = va->size/2*SHADOWSKEW;
     if(!shadowmap || !shadowmaptex ||
-       va->z + va->size <= shadowfocus.z - shadowmapdist || va->z >= shadowfocus.z ||
-       va->x + va->size <= cx - shadowmapradius-skew || va->x >= cx + shadowmapradius+skew ||
-       va->y + va->size <= cy - shadowmapradius-skew || va->y >= cy + shadowmapradius+skew)
+       va->o.z + va->size <= shadowfocus.z - shadowmapdist || va->o.z >= shadowfocus.z ||
+       va->o.x + va->size <= cx - shadowmapradius-skew || va->o.x >= cx + shadowmapradius+skew || 
+       va->o.y + va->size <= cy - shadowmapradius-skew || va->o.y >= cy + shadowmapradius+skew) 
         return false;
     return true;
 #endif

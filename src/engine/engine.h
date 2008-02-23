@@ -26,13 +26,14 @@ extern PFNGLMULTITEXCOORD3FARBPROC	 glMultiTexCoord3f_;
 extern PFNGLMULTITEXCOORD4FARBPROC   glMultiTexCoord4f_;
 
 // GL_ARB_vertex_buffer_object
-extern PFNGLGENBUFFERSARBPROC	glGenBuffers_;
-extern PFNGLBINDBUFFERARBPROC	glBindBuffer_;
-extern PFNGLMAPBUFFERARBPROC	 glMapBuffer_;
-extern PFNGLUNMAPBUFFERARBPROC	glUnmapBuffer_;
-extern PFNGLBUFFERDATAARBPROC	glBufferData_;
-extern PFNGLBUFFERSUBDATAARBPROC glBufferSubData_;
-extern PFNGLDELETEBUFFERSARBPROC glDeleteBuffers_;
+extern PFNGLGENBUFFERSARBPROC       glGenBuffers_;
+extern PFNGLBINDBUFFERARBPROC       glBindBuffer_;
+extern PFNGLMAPBUFFERARBPROC        glMapBuffer_;
+extern PFNGLUNMAPBUFFERARBPROC      glUnmapBuffer_;
+extern PFNGLBUFFERDATAARBPROC       glBufferData_;
+extern PFNGLBUFFERSUBDATAARBPROC    glBufferSubData_;
+extern PFNGLDELETEBUFFERSARBPROC    glDeleteBuffers_;
+extern PFNGLGETBUFFERSUBDATAARBPROC glGetBufferSubData_;
 
 // GL_ARB_occlusion_query
 extern PFNGLGENQUERIESARBPROC		glGenQueries_;
@@ -62,6 +63,10 @@ extern PFNGLDRAWRANGEELEMENTSEXTPROC glDrawRangeElements_;
 // GL_EXT_blend_minmax
 extern PFNGLBLENDEQUATIONEXTPROC glBlendEquation_;
 
+// GL_EXT_multi_draw_arrays
+extern PFNGLMULTIDRAWARRAYSEXTPROC   glMultiDrawArrays_;
+extern PFNGLMULTIDRAWELEMENTSEXTPROC glMultiDrawElements_;
+
 // GL_EXT_packed_depth_stencil
 #ifndef GL_DEPTH_STENCIL_EXT
 #define GL_DEPTH_STENCIL_EXT 0x84F9
@@ -76,7 +81,6 @@ extern bfgz hdr;					  // current map header
 extern int worldscale;
 extern vector<ushort> texmru;
 extern int xtraverts, xtravertsva;
-extern vector<vertex> verts;			// the vertex array for all world rendering
 extern int curtexnum;
 extern const ivec cubecoords[8];
 extern const ushort fv[6][4];
@@ -166,7 +170,7 @@ static inline bool pvsoccluded(const ivec &bborigin, int size)
 }
 
 // rendergl
-extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasstencil, hasAF, hasVP2, hasVP3, hasPP;
+extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasstencil, hasAF, hasVP2, hasVP3, hasPP, hasMDA;
 
 extern bool envmapping;
 
@@ -268,6 +272,7 @@ extern void allchanged(bool load = false);
 extern void vaclearc(cube *c);
 extern vtxarray *newva(int x, int y, int z, int size);
 extern void destroyva(vtxarray *va, bool reparent = true);
+extern bool readva(vtxarray *va, ushort *&edata, uchar *&vdata);
 
 // renderva
 extern GLuint fogtex;
@@ -298,6 +303,13 @@ extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->
 		extern int ati_oq_bug; \
 		if(ati_oq_bug) glFlush(); \
 	}
+
+// dynlight
+
+extern void updatedynlights();
+extern int finddynlights();
+extern void calcdynlightmask(vtxarray *va);
+extern int setdynlights(vtxarray *va);
 
 // material
 
@@ -422,6 +434,9 @@ extern void cleardecals();
 extern void renderdecals(int time);
 
 // rendersky
+extern int explicitsky;
+extern double skyarea;
+
 extern void drawskybox(int farplane, bool limited, float zreflect = 0);
 extern bool limitsky();
 

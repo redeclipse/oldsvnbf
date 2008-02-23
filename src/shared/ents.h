@@ -27,7 +27,7 @@ struct extentity : entity                       // part of the entity that doesn
     entitylight light;
     extentity *attached;
 
-    extentity() : visible(true), attached(NULL) {}
+    extentity() : visible(false), attached(NULL) {}
 };
 
 enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_LAGGED, CS_EDITING, CS_SPECTATOR };

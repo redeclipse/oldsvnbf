@@ -123,19 +123,19 @@ enum
 struct vtxarray
 {
 	vtxarray *parent;
-	vector<vtxarray *> *children;
+	vector<vtxarray *> children;
 	vtxarray *next, *rnext; // linked list of visible VOBs
-    vertex *vbuf;           // vertex buffer
+    vertex *vdata;           // vertex data
+    ushort voffset;          // offset into vertex data
+    ushort *edata, *skydata; // vertex indices
+    GLuint vbuf, ebuf, skybuf; // VBOs
     ushort minvert, maxvert; // DRE info
-    elementset *eslist;     // List of element indices sets (range) per texture
-    ushort *ebuf;           // packed element indices buffer
-    ushort *skybuf;         // skybox packed element indices buffer
+    elementset *eslist;      // List of element indices sets (range) per texture
     materialsurface *matbuf; // buffer of material surfaces
-	int allocsize;		  // size of allocated memory for this va
-    int verts, tris, texs, sky, explicitsky, matsurfs, distance;
-	double skyarea;
-    GLuint vbufGL, ebufGL, skybufGL; // VBO buffer ID
-	int x, y, z, size;	  // location and size of cube.
+    int verts, tris, texs, texmask, sky, explicitsky, matsurfs, distance;
+    double skyarea;
+    ivec o;
+    int size;      // location and size of cube.
 	ivec min, max;		  // BB
     ivec sortmin, sortmax; // BB including all children
     ivec shadowmapmin, shadowmapmax;      // BB of shadowmapped surfaces
@@ -145,6 +145,8 @@ struct vtxarray
 	vector<grasstri> *grasstris;
 	vector<grasssample> *grasssamples;
 	int hasmerges;
+    uint dynlightmask;
+    bool shadowed;
 };
 
 struct cube;
