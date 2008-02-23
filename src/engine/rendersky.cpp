@@ -159,10 +159,12 @@ void drawskybox(int farplane, bool limited, float zreflect)
     if(fog) glEnable(GL_FOG);
 }
 
+int explicitsky = 0;
+double skyarea = 0;
+
 bool limitsky()
 {
-	extern int ati_skybox_bug, explicitsky;
-	extern double skyarea;
-	return explicitsky || (!ati_skybox_bug && sparklyfix && skyarea / (double(hdr.worldsize)*double(hdr.worldsize)*6) < 0.9);
+    extern int ati_skybox_bug;
+    return explicitsky || (!ati_skybox_bug && sparklyfix && skyarea / (double(hdr.worldsize)*double(hdr.worldsize)*6) < 0.9);
 }
 

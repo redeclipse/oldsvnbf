@@ -466,7 +466,7 @@ void sortmaterials(vector<materialsurface *> &vismats, float zclip, bool refract
 	for(vtxarray *va = reflected ? reflectedva : visibleva; va; va = reflected ? va->rnext : va->next)
 	{
 		if(!va->matsurfs || va->occluded >= OCCLUDE_BB) continue;
-		if(zclip && (refract ? va->z >= zclip : va->z+va->size <= zclip)) continue;
+		if(zclip && (refract ? va->o.z >= zclip : va->o.z+va->size <= zclip)) continue;
 		loopi(va->matsurfs)
 		{
 			materialsurface &m = va->matbuf[i];

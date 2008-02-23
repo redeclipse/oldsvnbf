@@ -510,6 +510,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
 	if(tnum==TEX_DIFFUSE) setslotshader(s);
 	s.loaded = false;
+    s.texmask |= 1<<tnum;
 	if (s.sts.length() > TEX_ENVMAP)
 		conoutf("warning: too many textures, slot %d file '%s' (%d,%d)", curtexnum, name, matslot, curmatslot);
 	Slot::Tex &st = s.sts.add();
@@ -518,7 +519,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	st.rotation = max(*rot, 0);
 	st.xoffset = max(*xoffset, 0);
 	st.yoffset = max(*yoffset, 0);
-    st.scale = max(*scale, 0.0f);
+    st.scale = *scale <= 0 ? 1 : *scale;
 	st.t = NULL;
 	s_strcpy(st.lname, name);
 	s_strcpy(st.name, name);

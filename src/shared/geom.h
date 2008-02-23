@@ -603,6 +603,7 @@ struct ivec
     ivec &mask(int n) { x &= n; y &= n; z &= n; return *this; }
     ivec &cross(const ivec &a, const ivec &b) { x = a.y*b.z-a.z*b.y; y = a.z*b.x-a.x*b.z; z = a.x*b.y-a.y*b.x; return *this; }
     int dot(const ivec &o) const { return x*o.x + y*o.y + z*o.z; }
+    float dist(const plane &p) const { return x*p.x + y*p.y + z*p.z + p.offset; }
 };
 
 static inline bool htcmp(const ivec &x, const ivec &y)

@@ -1085,8 +1085,14 @@ ShaderParam *findshaderparam(Slot &s, const char *name, int type, int index)
 
 void setslotshader(Slot &s)
 {
-	s.shader = curshader ? curshader : defaultshader;
-	if(!s.shader) return;
+    s.shader = curshader;
+    if(!s.shader)
+    {
+        static Shader *stdworldshader = NULL;
+        if(!stdworldshader) stdworldshader = lookupshaderbyname("stdworld");
+        s.shader = stdworldshader;
+        return;
+    }
 	loopv(curparams)
 	{
 		ShaderParam &param = curparams[i], *defaultparam = findshaderparam(s, param.name, param.type, param.index);
