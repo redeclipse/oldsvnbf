@@ -43,14 +43,14 @@ bool getentboundingbox(extentity &e, ivec &o, ivec &r)
 	return true;
 }
 
-void modifyoctaentity(bool add, int id, cube *c, const ivec &cor, int size, const ivec &bo, const ivec &br, vtxarray *lastva = NULL)
+void modifyoctaentity(bool add, int id, cube *c, const ivec &cor, int size, const ivec &bo, const ivec &br, int leafsize, vtxarray *lastva = NULL)
 {
 	loopoctabox(cor, size, bo, br)
 	{
 		ivec o(i, cor.x, cor.y, cor.z, size);
 		vtxarray *va = c[i].ext && c[i].ext->va ? c[i].ext->va : lastva;
 		if(c[i].children != NULL && size > octaentsize)
-			modifyoctaentity(add, id, c[i].children, o, size>>1, bo, br, va);
+			modifyoctaentity(add, id, c[i].children, o, size>>1, bo, br, leafsize, va);
 		else if(add)
 		{
 			if(!c[i].ext || !c[i].ext->ents) ext(c[i]).ents = new octaentities(o, size);
@@ -132,8 +132,14 @@ static void modifyoctaent(bool add, int id)
 	ivec o, r;
 	extentity &e = *ents[id];
 	if((e.inoctanode!=0)==add || !getentboundingbox(e, o, r)) return;
-	e.inoctanode = add;
-	modifyoctaentity(add, id, worldroot, ivec(0, 0, 0), hdr.worldsize>>1, o, r);
+
+    int leafsize = octaentsize, limit = max(r.x, max(r.y, r.z));
+    while(leafsize < limit) leafsize *= 2;
+    int diff = ~(leafsize-1) & ((o.x^(o.x+r.x))|(o.y^(o.y+r.y))|(o.z^(o.z+r.z)));
+    if(diff && (limit > octaentsize/2 || diff < leafsize*2)) leafsize *= 2;
+
+    e.inoctanode = add;
+    modifyoctaentity(add, id, worldroot, ivec(0, 0, 0), hdr.worldsize>>1, o, r, leafsize);
 	if(e.type == ET_LIGHT) clearlightcache(id);
 	else if(add) lightent(e);
 }
