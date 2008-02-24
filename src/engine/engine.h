@@ -273,6 +273,8 @@ extern void vaclearc(cube *c);
 extern vtxarray *newva(int x, int y, int z, int size);
 extern void destroyva(vtxarray *va, bool reparent = true);
 extern bool readva(vtxarray *va, ushort *&edata, uchar *&vdata);
+extern void updatevabb(vtxarray *va, bool force = false);
+extern void updatevabbs(bool force = false);
 
 // renderva
 extern GLuint fogtex;

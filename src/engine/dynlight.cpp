@@ -152,7 +152,7 @@ void calcdynlightmask(vtxarray *va)
     loopv(closedynlights)
     {
         dynlight &d = *closedynlights[i];
-        if(d.o.dist_to_bb(va->min, va->max) >= d.curradius) continue;
+        if(d.o.dist_to_bb(va->geommin, va->geommax) >= d.curradius) continue;
 
         mask |= (i+1)<<offset;
         offset += DYNLIGHTBITS;

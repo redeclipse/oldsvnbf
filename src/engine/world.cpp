@@ -43,15 +43,21 @@ bool getentboundingbox(extentity &e, ivec &o, ivec &r)
 	return true;
 }
 
-void modifyoctaentity(bool add, int id, cube *c, const ivec &cor, int size, const ivec &bo, const ivec &br, int leafsize, vtxarray *lastva = NULL)
+enum
+{
+    MODOE_ADD      = 1<<0,
+    MODOE_UPDATEBB = 1<<1
+};
+
+void modifyoctaentity(int flags, int id, cube *c, const ivec &cor, int size, const ivec &bo, const ivec &br, int leafsize, vtxarray *lastva = NULL)
 {
 	loopoctabox(cor, size, bo, br)
 	{
 		ivec o(i, cor.x, cor.y, cor.z, size);
 		vtxarray *va = c[i].ext && c[i].ext->va ? c[i].ext->va : lastva;
-		if(c[i].children != NULL && size > octaentsize)
-			modifyoctaentity(add, id, c[i].children, o, size>>1, bo, br, leafsize, va);
-		else if(add)
+		if(c[i].children != NULL && size > leafsize)
+			modifyoctaentity(flags, id, c[i].children, o, size>>1, bo, br, leafsize, va);
+        else if(flags&MODOE_ADD)
 		{
 			if(!c[i].ext || !c[i].ext->ents) ext(c[i]).ents = new octaentities(o, size);
 			octaentities &oe = *c[i].ext->ents;
@@ -60,11 +66,15 @@ void modifyoctaentity(bool add, int id, cube *c, const ivec &cor, int size, cons
 				case ET_MAPMODEL:
 					if(loadmodel(NULL, et->getents()[id]->attr2))
 					{
-						if(va && oe.mapmodels.empty())
-						{
-							if(!va->mapmodels) va->mapmodels = new vector<octaentities *>;
-							va->mapmodels->add(&oe);
-						}
+                        if(va)
+                        {
+                            va->bbmin.x = -1;
+                            if(oe.mapmodels.empty())
+                            {
+                                if(!va->mapmodels) va->mapmodels = new vector<octaentities *>;
+                                va->mapmodels->add(&oe);
+                            }
+                        }
 						oe.mapmodels.add(id);
 						loopk(3)
 						{
@@ -89,11 +99,15 @@ void modifyoctaentity(bool add, int id, cube *c, const ivec &cor, int size, cons
 					if(loadmodel(NULL, et->getents()[id]->attr2))
 					{
 						oe.mapmodels.removeobj(id);
-						if(va && va->mapmodels && oe.mapmodels.empty())
-						{
-							va->mapmodels->removeobj(&oe);
-							if(va->mapmodels->empty()) DELETEP(va->mapmodels);
-						}
+                        if(va)
+                        {
+                            va->bbmin.x = -1;
+                            if(va->mapmodels && oe.mapmodels.empty())
+                            {
+                                va->mapmodels->removeobj(&oe);
+                                if(va->mapmodels->empty()) DELETEP(va->mapmodels);
+                            }
+                        }
 						oe.bbmin = oe.bbmax = oe.o;
 						oe.bbmin.add(oe.size);
 						loopvj(oe.mapmodels)
@@ -122,6 +136,14 @@ void modifyoctaentity(bool add, int id, cube *c, const ivec &cor, int size, cons
 				freeoctaentities(c[i]);
 		}
 		if(c[i].ext && c[i].ext->ents) c[i].ext->ents->query = NULL;
+        if(va && va!=lastva)
+        {
+            if(lastva)
+            {
+                if(va->bbmin.x < 0) lastva->bbmin.x = -1;
+            }
+            else if(flags&MODOE_UPDATEBB) updatevabb(va);
+        }
 	}
 }
 
@@ -144,8 +166,8 @@ static void modifyoctaent(bool add, int id)
 	else if(add) lightent(e);
 }
 
-static inline void addentity(int id)	{ modifyoctaent(true,  id); }
-static inline void removeentity(int id) { modifyoctaent(false, id); }
+static inline void addentity(int id)    { modifyoctaent(MODOE_ADD|MODOE_UPDATEBB, id); }
+static inline void removeentity(int id) { modifyoctaent(MODOE_UPDATEBB, id); }
 
 void freeoctaentities(cube &c)
 {
@@ -164,7 +186,7 @@ void freeoctaentities(cube &c)
 
 void entitiesinoctanodes()
 {
-	loopv(et->getents()) addentity(i);
+    loopv(et->getents()) modifyoctaent(MODOE_ADD, i);
 }
 
 char *entname(entity &e)

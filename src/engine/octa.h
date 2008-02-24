@@ -135,10 +135,10 @@ struct vtxarray
     int verts, tris, texs, texmask, sky, explicitsky, matsurfs, distance;
     double skyarea;
     ivec o;
-    int size;      // location and size of cube.
-	ivec min, max;		  // BB
-    ivec sortmin, sortmax; // BB including all children
-    ivec shadowmapmin, shadowmapmax;      // BB of shadowmapped surfaces
+    int size;                // location and size of cube.
+    ivec geommin, geommax;   // BB of geom
+    ivec shadowmapmin, shadowmapmax; // BB of shadowmapped surfaces
+    ivec bbmin, bbmax;       // BB of everything including children
 	uchar curvfc, occluded;
 	occludequery *query, *rquery;
 	vector<octaentities *> *mapmodels;

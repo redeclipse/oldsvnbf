@@ -797,9 +797,9 @@ static void calcpvsbounds()
         vtxarray *va = valist[i];
         loopk(3)
         {
-            if(va->min[k]>va->max[k]) continue;
-            pvsbounds.min[k] = min(pvsbounds.min[k], (ushort)va->min[k]);
-            pvsbounds.max[k] = max(pvsbounds.max[k], (ushort)va->max[k]);
+            if(va->geommin[k]>va->geommax[k]) continue;
+            pvsbounds.min[k] = min(pvsbounds.min[k], (ushort)va->geommin[k]);
+            pvsbounds.max[k] = max(pvsbounds.max[k], (ushort)va->geommax[k]);
         }
     }
 }
@@ -961,6 +961,12 @@ COMMAND(testpvs, "i");
 
 void genpvs(int *viewcellsize)
 {
+    if(hdr.worldsize > 1<<15)
+    {
+        conoutf("map is too large for PVS");
+        return;
+    }
+
     computescreen("generating PVS (esc to abort)");
     genpvs_canceled = false;
     Uint32 start = SDL_GetTicks();

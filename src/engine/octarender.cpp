@@ -782,6 +782,8 @@ vtxarray *newva(int x, int y, int z, int size)
     va->occluded = OCCLUDE_NOTHING;
     va->query = NULL;
     va->mapmodels = NULL;
+    va->bbmin = ivec(-1, -1, -1);
+    va->bbmax = ivec(-1, -1, -1);
     va->grasstris = NULL;
     va->grasssamples = NULL;
     va->hasmerges = 0;
@@ -835,6 +837,46 @@ void vaclearc(cube *c)
 		}
 		if(c[i].children) vaclearc(c[i].children);
 	}
+}
+
+void updatevabb(vtxarray *va, bool force)
+{
+    if(!force && va->bbmin.x >= 0) return;
+
+    if(va->matsurfs || va->sky || va->explicitsky)
+    {
+        va->bbmin = va->o;
+        va->bbmax = ivec(va->o).add(va->size);
+        loopv(va->children) updatevabb(va->children[i], force);
+        return;
+    }
+
+    va->bbmin = va->geommin;
+    va->bbmax = va->geommax;
+    loopv(va->children)
+    {
+        vtxarray *child = va->children[i];
+        updatevabb(child, force);
+        loopk(3)
+        {
+            va->bbmin[k] = min(va->bbmin[k], child->bbmin[k]);
+            va->bbmax[k] = max(va->bbmax[k], child->bbmax[k]);
+        }
+    }
+    if(va->mapmodels) loopv(*va->mapmodels)
+    {
+        octaentities *oe = (*va->mapmodels)[i];
+        loopk(3)
+        {
+            va->bbmin[k] = min(va->bbmin[k], oe->bbmin[k]);
+            va->bbmax[k] = max(va->bbmax[k], oe->bbmax[k]);
+        }
+    }
+}
+
+void updatevabbs(bool force)
+{
+    loopv(varoot) updatevabb(varoot[i], force);
 }
 
 struct mergedface
@@ -974,7 +1016,7 @@ void rendercube(cube &c, int cx, int cy, int cz, int size, int csi, uchar &visma
 	cstats[csi].nleaf++;
 }
 
-void calcvabb(int cx, int cy, int cz, int size, ivec &bbmin, ivec &bbmax)
+void calcgeombb(int cx, int cy, int cz, int size, ivec &bbmin, ivec &bbmax)
 {
 	vvec vmin(cx+size, cy+size, cz+size), vmax(cx, cy, cz);
 
@@ -1006,14 +1048,14 @@ void setva(cube &c, int cx, int cy, int cz, int size, int csi)
 
 	ivec bbmin, bbmax;
 
-	calcvabb(cx, cy, cz, size, bbmin, bbmax);
+	calcgeombb(cx, cy, cz, size, bbmin, bbmax);
 
 	addskyverts(ivec(cx, cy, cz), size);
 
 	vtxarray *va = newva(cx, cy, cz, size);
 	ext(c).va = va;
-	va->sortmin = va->min = bbmin;
-	va->sortmax = va->max = bbmax;
+    va->geommin = bbmin;
+    va->geommax = bbmax;
     va->shadowmapmin = shadowmapmin.toivec(va->o);
     loopk(3) shadowmapmax[k] += (1<<VVEC_FRAC)-1;
     va->shadowmapmax = shadowmapmax.toivec(va->o);
@@ -1061,11 +1103,6 @@ int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
 					vtxarray *child = varoot.pop();
                     c[i].ext->va->children.add(child);
 					child->parent = c[i].ext->va;
-                    if(child->sortmin.x<=child->sortmax.x) loopk(3)
-                    {
-                        child->parent->sortmin[k] = min(child->parent->sortmin[k], child->sortmin[k]);
-                        child->parent->sortmax[k] = max(child->parent->sortmax[k], child->sortmax[k]);
-                    }
 				}
 				varoot.add(c[i].ext->va);
 				if(vamergemax > size)
@@ -1126,6 +1163,7 @@ void allchanged(bool load)
 	setupmaterials();
 	invalidatereflections();
     entitiesinoctanodes();
+    updatevabbs(true);
 	if(load) genenvmaps();
 	printcstats();
 }

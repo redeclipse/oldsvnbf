@@ -524,6 +524,7 @@ void changed(const block3 &sel)
 	setupmaterials();
 	invalidatereflections();
 	entitiesinoctanodes();
+    updatevabbs();
 }
 
 //////////// copy and undo /////////////
