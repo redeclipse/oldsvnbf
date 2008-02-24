@@ -357,7 +357,7 @@ void copyundoents(undoblock &d, undoblock &s)
 		entadd(s.e[i].i);
 	initundoent(d);
 		loopi(s.n) if(s.e[i].e.type==ET_EMPTY)
-		entgroup.remove(s.e[i].i);
+		entgroup.removeobj(s.e[i].i);
 }
 
 void pasteundoents(undoblock &u)
