@@ -342,7 +342,7 @@ void findvisiblemms(const vector<extentity *> &ents)
 		loopv(*va->mapmodels)
 		{
 			octaentities *oe = (*va->mapmodels)[i];
-            if(isvisiblecube(oe->o, oe->size) >= VFC_FOGGED || pvsoccluded(oe->o, oe->size)) continue;
+            if(isvisiblecube(oe->o, oe->size) >= VFC_FOGGED || pvsoccluded(oe->bbmin, ivec(oe->bbmax).sub(oe->bbmin))) continue;
 
 			bool occluded = oe->query && oe->query->owner == oe && checkquery(oe->query);
 			if(occluded)
@@ -418,7 +418,7 @@ void renderreflectedmapmodels(float z, bool refract)
 	loopv(mms)
 	{
 		octaentities *oe = mms[i];
-		if(refract ? oe->o.z >= z : oe->o.z+oe->size <= z) continue;
+        if(refract ? oe->bbmin.z >= z : oe->bbmax.z <= z) continue;
         if(reflected && isvisiblecube(oe->o, oe->size) >= VFC_FOGGED) continue;
         loopv(oe->mapmodels)
         {
@@ -711,15 +711,24 @@ void renderquery(renderstate &cur, occludequery *query, vtxarray *va)
     if(reflecting && !refracting) camera.z = reflecting;
 
     ivec bbmin, bbmax;
-    if(va->children.length() || va->mapmodels || va->matsurfs || va->sky || va->explicitsky)
+    if(va->children.length() || va->matsurfs || va->sky || va->explicitsky)
     {
         bbmin = va->o;
         bbmax = ivec(va->size, va->size, va->size);
     }
     else
     {
-        bbmin = va->min;
-        bbmax = va->max;
+        bbmin = va->sortmin;
+        bbmax = va->sortmax;
+        if(va->mapmodels) loopv(*va->mapmodels)
+        {
+            octaentities *oe = (*va->mapmodels)[i];
+            loopk(3)
+            {
+                bbmin[k] = min(bbmin[k], oe->bbmin[k]);
+                bbmax[k] = max(bbmax[k], oe->bbmax[k]);
+            }
+        }
         bbmax.sub(bbmin);
     }
 
