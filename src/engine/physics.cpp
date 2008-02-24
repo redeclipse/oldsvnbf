@@ -442,8 +442,8 @@ bool rectcollide(physent *d, const vec &dir, const vec &o, float xr, float yr,  
     if(ax>ay && ax>az) TRYCOLLIDE(x, O_LEFT, O_RIGHT, ax > -dxr, ax > -dxr);
     if(ay>az) TRYCOLLIDE(y, O_BACK, O_FRONT, ay > -dyr, ay > -dyr);
 	TRYCOLLIDE(z, O_BOTTOM, O_TOP,
-		 az >= -(d->height+d->aboveeye)/4.0f,
-		 az >= -(d->height+d->aboveeye)/3.0f);
+         az >= d->zmargin-(d->eyeheight+d->aboveeye)/4.0f,
+         az >= d->zmargin-(d->eyeheight+d->aboveeye)/3.0f);
 	if(collideonly) inside = true;
 	return collideonly;
 }
@@ -645,14 +645,24 @@ bool cubecollide(physent *d, const vec &dir, float cutoff, cube &c, int x, int y
 			if(dist > 0) return true;
 			if(dist > m)
 			{
-				if(!dir.iszero())
-				{
-					if(f.dot(dir) >= -cutoff) continue;
-					if(d->type<ENT_CAMERA && dist < (dir.z*f.z < 0 ? -(d->height+d->aboveeye)/(dir.z < 0 ? 3.0f : 4.0f) : ((dir.x*f.x < 0 || dir.y*f.y < 0) ? -r : 0))) continue;
-				}
-                if(f.x && (f.x>0 ? o.x-p.o.x : p.o.x-o.x) + p.r.x - r < dist && f.dist(vec(p.o.x + (f.x>0 ? -p.r.x : p.r.x), o.y, o.z)) >= vec(0, f.y*r, f.z*zr).magnitude()) continue;
-                if(f.y && (f.y>0 ? o.y-p.o.y : p.o.y-o.y) + p.r.y - r < dist && f.dist(vec(o.x, p.o.y + (f.y>0 ? -p.r.y : p.r.y), o.z)) >= vec(f.x*r, 0, f.z*zr).magnitude()) continue;
-                if(f.z && (f.z>0 ? o.z-p.o.z : p.o.z-o.z) + p.r.z - zr < dist && f.dist(vec(o.x, o.y, p.o.z + (f.z>0 ? -p.r.z : p.r.z))) >= vec(f.x*r, f.y*r, 0).magnitude()) continue;
+                if(!dir.iszero())
+                {
+                    if(f.dot(dir) >= -cutoff*dir.magnitude()) continue;
+                    if(d->type<ENT_CAMERA &&
+                        dist < (dir.z*f.z < 0 ?
+                            d->zmargin-(d->eyeheight+d->aboveeye)/(dir.z < 0 ? 3.0f : 4.0f) :
+                            ((dir.x*f.x < 0 || dir.y*f.y < 0) ? -r : 0)))
+                        continue;
+                }
+                if(f.x && (f.x>0 ? o.x-p.o.x : p.o.x-o.x) + p.r.x - r < dist &&
+                    f.dist(vec(p.o.x + (f.x>0 ? -p.r.x : p.r.x), o.y, o.z)) >= vec(0, f.y*r, f.z*zr).magnitude())
+                    continue;
+                if(f.y && (f.y>0 ? o.y-p.o.y : p.o.y-o.y) + p.r.y - r < dist &&
+                    f.dist(vec(o.x, p.o.y + (f.y>0 ? -p.r.y : p.r.y), o.z)) >= vec(f.x*r, 0, f.z*zr).magnitude())
+                    continue;
+                if(f.z && (f.z>0 ? o.z-p.o.z : p.o.z-o.z) + p.r.z - zr < dist &&
+                    f.dist(vec(o.x, o.y, p.o.z + (f.z>0 ? -p.r.z : p.r.z))) >= vec(f.x*r, f.y*r, 0).magnitude())
+                    continue;
                 w = &f;
 				m = dist;
 			}
