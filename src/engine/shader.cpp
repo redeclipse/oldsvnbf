@@ -930,7 +930,7 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
             smoothshadowmappeel ?
                 "vec3 smvals = texture2D(shadowmap, shadowmaptc.xy).xyz;\n"
                 "vec2 smdiff = clamp(smvals.xz - shadowmaptc.zz*smvals.y, 0.0, 1.0);\n"
-                "float shadowed = clamp((smdiff.x > 0 ? smvals.y : 0.0) - 8*smdiff.y, 0.0, 1.0);\n" :
+                "float shadowed = clamp((smdiff.x > 0.0 ? smvals.y : 0.0) - 8*smdiff.y, 0.0, 1.0);\n" :
 
                 "vec3 smvals = texture2D(shadowmap, shadowmaptc.xy).xyz;\n"
                 "float smtest = shadowmaptc.z*smvals.y;\n"
