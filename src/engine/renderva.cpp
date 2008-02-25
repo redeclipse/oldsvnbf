@@ -782,7 +782,7 @@ static void mergetexs(vtxarray *va, elementset *texs = NULL, int numtexs = 0, us
     if(firstbatch < 0)
     {
         firstbatch = geombatches.length();
-        numbatches = va->texs;
+        numbatches = numtexs;
         loopi(numtexs-1)
         {
             geombatches.add(geombatch(texs[i], edata, va)).next = i+1;
