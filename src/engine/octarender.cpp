@@ -1018,7 +1018,8 @@ void rendercube(cube &c, int cx, int cy, int cz, int size, int csi, uchar &visma
 
 void calcgeombb(int cx, int cy, int cz, int size, ivec &bbmin, ivec &bbmax)
 {
-	vvec vmin(cx+size, cy+size, cz+size), vmax(cx, cy, cz);
+    vvec vmin(cx, cy, cz), vmax = vmin;
+    vmin.add(size);
 
     loopv(vc.verts)
     {
