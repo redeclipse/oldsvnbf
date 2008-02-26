@@ -502,7 +502,7 @@ void rendermapmodels()
 static inline bool bbinsideva(const ivec &bo, const ivec &br, vtxarray *va)
 {
     return bo.x >= va->bbmin.x && bo.y >= va->bbmin.y && va->o.z >= va->bbmin.z &&
-        bo.x + br.x <= va->bbmax.x && bo.y + br.z <= va->bbmax.y && bo.z + br.z <= va->bbmax.z;
+        bo.x + br.x <= va->bbmax.x && bo.y + br.y <= va->bbmax.y && bo.z + br.z <= va->bbmax.z;
 }
 
 static inline bool bboccluded(const ivec &bo, const ivec &br, cube *c, const ivec &o, int size)
