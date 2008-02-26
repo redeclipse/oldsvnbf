@@ -634,7 +634,9 @@ struct svec
     bool operator!=(const svec &v) const { return x!=v.x || y!=v.y || z!=v.z; }
 
     void add(const svec &o) { x += o.x; y += o.y; z += o.z; }
+    void add(int n) { x += n; y += n; z += n; }
     void sub(const svec &o) { x -= o.x; y -= o.y; z -= o.z; }
+    void sub(int n) { x -= n; y -= n; z -= n; }
     void mul(int f) { x *= f; y *= f; z *= f; }
     void div(int f) { x /= f; y /= f; z /= f; }
 
