@@ -147,23 +147,23 @@ void modifyoctaentity(int flags, int id, cube *c, const ivec &cor, int size, con
 	}
 }
 
-static void modifyoctaent(bool add, int id)
+static void modifyoctaent(int flags, int id)
 {
-	vector<extentity *> &ents = et->getents();
-	if(!ents.inrange(id)) return;
-	ivec o, r;
-	extentity &e = *ents[id];
-	if((e.inoctanode!=0)==add || !getentboundingbox(e, o, r)) return;
+    vector<extentity *> &ents = et->getents();
+    if(!ents.inrange(id)) return;
+    ivec o, r;
+    extentity &e = *ents[id];
+    if((e.inoctanode!=0)==flags || !getentboundingbox(e, o, r)) return;
 
     int leafsize = octaentsize, limit = max(r.x, max(r.y, r.z));
     while(leafsize < limit) leafsize *= 2;
     int diff = ~(leafsize-1) & ((o.x^(o.x+r.x))|(o.y^(o.y+r.y))|(o.z^(o.z+r.z)));
     if(diff && (limit > octaentsize/2 || diff < leafsize*2)) leafsize *= 2;
 
-    e.inoctanode = add;
-    modifyoctaentity(add, id, worldroot, ivec(0, 0, 0), hdr.worldsize>>1, o, r, leafsize);
-	if(e.type == ET_LIGHT) clearlightcache(id);
-	else if(add) lightent(e);
+    e.inoctanode = flags&MODOE_ADD ? 1 : 0;
+    modifyoctaentity(flags, id, worldroot, ivec(0, 0, 0), hdr.worldsize>>1, o, r, leafsize);
+    if(e.type == ET_LIGHT) clearlightcache(id);
+    else if(flags&MODOE_ADD) lightent(e);
 }
 
 static inline void addentity(int id)    { modifyoctaent(MODOE_ADD|MODOE_UPDATEBB, id); }
