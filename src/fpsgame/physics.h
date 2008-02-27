@@ -4,7 +4,7 @@ struct physics
 
 	IVARW(crawlspeed,		1,			25,			INT_MAX-1);	// crawl speed
 	IVARW(gravity,			0,			37,			INT_MAX-1);	// gravity
-    IVARW(watergravity,     0,          3,          INT_MAX-1); // water gravity
+    IVARW(watergravity,     0,          10,          INT_MAX-1); // water gravity
 	IVARW(jumpvel,			0,			60,			INT_MAX-1);	// extra velocity to add when jumping
 	IVARW(movespeed,		1,			45,			INT_MAX-1);	// speed
 	IVARW(watervel,			0,			45,			1024);		// extra water velocity
@@ -482,8 +482,7 @@ struct physics
 		vec d(m);
 		d.mul(maxspeed(pl));
 		if(floating) { if (local) d.mul(floatspeed()/100.0f); }
-        else if(pl->type != ENT_CAMERA && water) d.mul(0.5f);
-		else d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+		else if(!water) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
 		float friction = water && !floating ? waterfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
 		float fpsfric = friction/millis*20.0f;
 
@@ -514,7 +513,6 @@ struct physics
             g.z = -gravityforce(pl)*secs;
             g.project(pl->floor);
         }
-        if(water) g.div(16);
         pl->vel.add(g);
     }
 
@@ -535,6 +533,7 @@ struct physics
 		modifyvelocity(pl, local, water, floating, millis);
 
 		vec d(pl->vel), oldpos(pl->o);
+        if(!floating && pl->type!=ENT_CAMERA && water) d.mul(0.5f);
 		d.mul(secs);
 
 		pl->blocked = false;
