@@ -42,7 +42,7 @@ enum { COLLIDE_AABB = 0, COLLIDE_ELLIPSE };
 
 struct physent                                  // base entity type, can be affected by physics
 {
-	vec o, vel, gvel;							// origin, velocity, accumulated gravity
+	vec o, vel;     							// origin and velocity
     float yaw, pitch, roll;
     float maxspeed;                             // cubes per second, 100 for player
     int timeinair;
@@ -80,7 +80,7 @@ struct physent                                  // base entity type, can be affe
         timeinair = 0;
         strafe = move = 0;
         physstate = PHYS_FALL;
-		vel = gvel = vec(0, 0, 0);
+		vel = vec(0, 0, 0);
         floor = vec(0, 0, 1);
     }
 };
