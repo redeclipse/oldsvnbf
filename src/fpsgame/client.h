@@ -286,13 +286,7 @@ struct clientcom : iclientcom
 			putint(q, (int)(d->vel.x*DVELF));		  // quantize to itself, almost always 1 byte
 			putint(q, (int)(d->vel.y*DVELF));
 			putint(q, (int)(d->vel.z*DVELF));
-			putuint(q, d->physstate | (d->gvel.x || d->gvel.y ? 0x20 : 0) | (d->gvel.z ? 0x10 : 0) | ((((fpsent *)d)->lifesequence&1)<<6));
-			if(d->gvel.x || d->gvel.y)
-			{
-				putint(q, (int)(d->gvel.x*DVELF));	  // quantize to itself, almost always 1 byte
-				putint(q, (int)(d->gvel.y*DVELF));
-			}
-			if(d->gvel.z) putint(q, (int)(d->gvel.z*DVELF));
+			putuint(q, d->physstate | ((((fpsent *)d)->lifesequence&1)<<4));
 			// pack rest in almost always 1 byte: strafe:2, move:2, garmour: 1, yarmour: 1, quad: 1
 			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouching ? 1 : 0)<<3);
 			putuint(q, flags);
@@ -368,7 +362,7 @@ struct clientcom : iclientcom
 			case SV_POS:						// position of another client
 			{
 				int cn = getint(p);
-				vec o, vel, gvel;
+				vec o, vel;
 				float yaw, pitch, roll;
 				int physstate, f;
 				o.x = getuint(p)/DMF;
@@ -381,14 +375,7 @@ struct clientcom : iclientcom
 				vel.y = getint(p)/DVELF;
 				vel.z = getint(p)/DVELF;
 				physstate = getuint(p);
-				gvel = vec(0, 0, 0);
-				if(physstate&0x20)
-				{
-					gvel.x = getint(p)/DVELF;
-					gvel.y = getint(p)/DVELF;
-				}
-				if(physstate&0x10) gvel.z = getint(p)/DVELF;
-                int seqcolor = (physstate>>6)&1;
+                int seqcolor = (physstate>>4)&1;
 				f = getuint(p);
 				fpsent *d = cl.getclient(cn);
                 if(!d || seqcolor!=(d->lifesequence&1)) continue;
@@ -415,7 +402,6 @@ struct clientcom : iclientcom
                     d->o = o;
                     d->vel = vel;
                     d->physstate = physstate & 0x0F;
-					d->gvel = gvel;
                     cl.ph.updatephysstate(d);
                     updatepos(d);
                 }

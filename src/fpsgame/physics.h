@@ -3,10 +3,11 @@ struct physics
 	GAMECLIENT &cl;
 
 	IVARW(crawlspeed,		1,			25,			INT_MAX-1);	// crawl speed
-	IVARW(gravity,			0,			25,			INT_MAX-1);	// gravity
+	IVARW(gravity,			0,			37,			INT_MAX-1);	// gravity
+    IVARW(watergravity,     0,          3,          INT_MAX-1); // water gravity
 	IVARW(jumpvel,			0,			60,			INT_MAX-1);	// extra velocity to add when jumping
 	IVARW(movespeed,		1,			45,			INT_MAX-1);	// speed
-	IVARW(watervel,			0,			60,			1024);		// extra water velocity
+	IVARW(watervel,			0,			45,			1024);		// extra water velocity
 
 	IVARP(floatspeed,		10,			100,		1000);
 	IVARP(minframetime,		5,			10,			20);
@@ -91,7 +92,7 @@ struct physics
 	}
 	float gravityforce(physent *d)
 	{
-		return float(gravity());
+		return d->inwater ? float(watergravity()) : float(gravity());
 	}
 	float maxspeed(physent *d)
 	{
@@ -184,18 +185,6 @@ struct physics
 		}
 	}
 
-    void recalcdir(physent *d, const vec &oldvel, vec &dir)
-    {
-        float speed = oldvel.magnitude();
-        if(speed)
-        {
-            float step = dir.magnitude();
-            dir = d->vel;
-            dir.add(d->gvel);
-            dir.mul(step/speed);
-        }
-    }   
-
     void slideagainst(physent *d, vec &dir, const vec &obstacle, bool foundfloor)
     {
         vec wall(obstacle);
@@ -204,25 +193,23 @@ struct physics
             wall.z = 0;
             if(!wall.iszero()) wall.normalize();
         }
-        vec oldvel(d->vel);
-        oldvel.add(d->gvel);
+        dir.project(wall);
         d->vel.project(wall);
-        d->gvel.project(wall);
-        recalcdir(d, oldvel, dir);
     }
 
     void switchfloor(physent *d, vec &dir, const vec &floor)
     {
-        vec oldvel(d->vel);
-        oldvel.add(d->gvel);
         if(dir.dot(floor) >= 0)
         {
             if(d->physstate < PHYS_SLIDE || fabs(dir.dot(d->floor)) > 0.01f*dir.magnitude()) return;
+            dir.projectxy(floor, 0.0f);
             d->vel.projectxy(floor, 0.0f);
         }
-        else d->vel.projectxy(floor);
-        d->gvel.project(floor);
-        recalcdir(d, oldvel, dir);
+        else
+        {
+            dir.projectxy(floor);
+            d->vel.projectxy(floor);
+        }
     }
 
 	bool trystepup(physent *d, vec &dir, float maxstep)
@@ -491,13 +478,30 @@ struct physics
 		vec d(m);
 		d.mul(maxspeed(pl));
 		if(floating) { if (local) d.mul(floatspeed()/100.0f); }
-		else if(!water) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+        else if(pl->type != ENT_CAMERA && water)
+        {
+            d.mul(0.5f);
+            if(!pl->inwater && water && pl->vel.z < 0) pl->vel.div(waterdampen(pl));
+        }
+		else d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
 		float friction = water && !floating ? waterfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
 		float fpsfric = friction/millis*20.0f;
 
-		pl->vel.mul(fpsfric-1);
-		pl->vel.add(d);
-		pl->vel.div(fpsfric);
+        if(floating || pl->type == ENT_CAMERA || water || pl->physstate != PHYS_FALL)
+        {
+            pl->vel.mul(fpsfric-1);
+            pl->vel.add(d);
+            pl->vel.div(fpsfric);
+        }
+        else
+        {
+            pl->vel.x *= fpsfric-1;
+            pl->vel.y *= fpsfric-1;
+            pl->vel.add(d);
+            pl->vel.x /= fpsfric;
+            pl->vel.y /= fpsfric;
+        }
+
 	}
 
     void modifygravity(physent *pl, bool water, int curtime)
@@ -505,21 +509,13 @@ struct physics
         float secs = curtime/1000.0f;
         vec g(0, 0, 0);
         if(pl->physstate == PHYS_FALL) g.z -= gravityforce(pl)*secs;
-        else if(!pl->floor.iszero() && pl->floor.z < floorz(pl))
+        else if(pl->floor.z > 0 && pl->floor.z < floorz(pl))
         {
-            g.z = -1;
+            g.z = -gravityforce(pl)*secs;
             g.project(pl->floor);
-            g.normalize();
-            g.mul(gravityforce(pl)*secs);
         }
-        if(!water || !cl.allowmove(pl) || (!pl->move && !pl->strafe)) pl->gvel.add(g);
-
-        if(!water && pl->physstate < PHYS_SLOPE) return;
-
-        float friction = water ? sinkfric(pl) : floorfric(pl),
-              fpsfric = friction/curtime*20.0f,
-              c = water ? 1.0f : clamp((pl->floor.z - slopez(pl))/(floorz(pl)-slopez(pl)), 0.0f, 1.0f);
-        pl->gvel.mul(1 - c/fpsfric);
+        if(water) g.div(16);
+        pl->vel.add(g);
     }
 
 	// main physics routine, moves a player/monster for a time step
@@ -533,14 +529,12 @@ struct physics
 		bool floating = (editmode && local) || pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
 		float secs = millis/1000.f;
 
+        // apply gravity
+        if(!floating && pl->type!=ENT_CAMERA) modifygravity(pl, water, millis);
 		// apply any player generated changes in velocity
 		modifyvelocity(pl, local, water, floating, millis);
-		// apply gravity
-		if(!floating && pl->type!=ENT_CAMERA) modifygravity(pl, water, millis);
 
 		vec d(pl->vel), oldpos(pl->o);
-		if(!floating && pl->type!=ENT_CAMERA && water) d.mul(0.5f);
-		d.add(pl->gvel);
 		d.mul(secs);
 
 		pl->blocked = false;
@@ -553,7 +547,6 @@ struct physics
 			{
 				pl->physstate = PHYS_FLOAT;
 				pl->timeinair = 0;
-				pl->gvel = vec(0, 0, 0);
 			}
 			pl->o.add(d);
 		}
@@ -573,7 +566,7 @@ struct physics
 
 		if(pl->type!=ENT_CAMERA && pl->state==CS_ALIVE) updatedynentcache(pl);
 
-		if(!pl->timeinair && pl->physstate >= PHYS_FLOOR && pl->vel.squaredlen() < 1e-4f && pl->gvel.iszero()) pl->moving = false;
+		if(!pl->timeinair && pl->physstate >= PHYS_FLOOR && pl->vel.squaredlen() < 1e-4f) pl->moving = false;
 
 		pl->lastmoveattempt = lastmillis;
 		if (pl->o!=oldpos) pl->lastmove = lastmillis;
