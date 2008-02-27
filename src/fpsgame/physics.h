@@ -421,7 +421,11 @@ struct physics
 		}
 		else if (pl->physstate >= PHYS_SLOPE || water)
 		{
-			if (water && pl->crouching) pl->crouching = false;
+			if (water)
+            {
+                if (pl->crouching) pl->crouching = false;
+                if (pl->type != ENT_CAMERA && !pl->inwater) pl->vel.div(waterdampen(pl));
+            }
 			if (pl->jumping)
 			{
 				pl->jumping = pl->crouching = false;
@@ -478,11 +482,7 @@ struct physics
 		vec d(m);
 		d.mul(maxspeed(pl));
 		if(floating) { if (local) d.mul(floatspeed()/100.0f); }
-        else if(pl->type != ENT_CAMERA && water)
-        {
-            d.mul(0.5f);
-            if(!pl->inwater && water && pl->vel.z < 0) pl->vel.div(waterdampen(pl));
-        }
+        else if(pl->type != ENT_CAMERA && water) d.mul(0.5f);
 		else d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
 		float friction = water && !floating ? waterfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
 		float fpsfric = friction/millis*20.0f;
