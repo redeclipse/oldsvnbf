@@ -1009,7 +1009,9 @@ struct GAMESERVER : igameserver
 				loopi(3) ci->state.o[i] = getuint(p)/DMF;
 				getuint(p);
 				loopi(5) getint(p);
-				getuint(p);
+                int physstate = getuint(p);
+                if(physstate&0x20) loopi(2) getint(p);
+                if(physstate&0x10) getint(p);
                 if(!ci->local && (ci->state.state==CS_ALIVE || ci->state.state==CS_EDITING))
 				{
 					ci->position.setsizenodelete(0);
