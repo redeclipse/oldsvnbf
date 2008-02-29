@@ -546,8 +546,8 @@ struct physics
 		modifyvelocity(pl, local, water, floating, millis);
 
 		vec d(pl->vel), oldpos(pl->o);
-        d.add(pl->falling);
         if(!floating && pl->type!=ENT_CAMERA && water) d.mul(0.5f);
+        d.add(pl->falling);
 		d.mul(secs);
 
 		pl->blocked = false;
