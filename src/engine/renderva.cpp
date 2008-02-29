@@ -1395,13 +1395,6 @@ void createfogtex()
     createtexture(fogtex, bilinear ? 2 : 256, 1, buf, 3, false, GL_LUMINANCE_ALPHA, GL_TEXTURE_1D);
 }
 
-void cleanupva()
-{
-    vaclearc(worldroot);
-    clearqueries();
-    if(fogtex) { glDeleteTextures(1, &fogtex); fogtex = 0; }
-}
-
 #define NUMCAUSTICS 32
 
 VAR(causticscale, 0, 100, 10000);
@@ -1422,6 +1415,14 @@ void loadcaustics()
             i);
         caustictex[i] = textureload(name);
     }
+}
+
+void cleanupva()
+{
+    vaclearc(worldroot);
+    clearqueries();
+    if(fogtex) { glDeleteTextures(1, &fogtex); fogtex = 0; }
+    loopi(NUMCAUSTICS) caustictex[i] = NULL;
 }
 
 void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
