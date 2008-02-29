@@ -347,7 +347,7 @@ struct physics
         else if(d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f)
         {
             d->o.z -= d->radius;
-            if(!collide(d, vec(0, 0, -1), slopez(d)) || !collide(d, vec(0, 0, -1)))
+            if(!collide(d, vec(d->floor).neg(), 0.95f) || !collide(d, vec(0, 0, -1)))
             {
                 floor = wall;
                 if(floor.z >= slopez(d) && floor.z < 1.0f) found = true;
