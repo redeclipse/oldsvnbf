@@ -207,7 +207,7 @@ struct physics
         vec oldvel(d->vel);
         oldvel.add(d->falling);
         d->vel.project(wall);
-        if(wall.z > 0) d->falling.project(wall);
+        d->falling.project(wall);
         recalcdir(d, oldvel, dir);
     }
 
