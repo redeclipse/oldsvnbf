@@ -690,10 +690,11 @@ struct renderstate
     Slot *slot;
     int texgendim, texgenw, texgenh;
     float texgenscale;
+    bool mttexgen;
     int visibledynlights;
     uint dynlightmask;
 
-    renderstate() : colormask(true), depthmask(true), mtglow(false), vbuf(0), fogplane(-1), diffusetmu(0), lightmaptmu(1), glowtmu(-1), fogtmu(-1), causticstmu(-1), slot(NULL), texgendim(-1), texgenw(-1), texgenh(-1), texgenscale(-1), visibledynlights(0), dynlightmask(0)
+    renderstate() : colormask(true), depthmask(true), mtglow(false), vbuf(0), fogplane(-1), diffusetmu(0), lightmaptmu(1), glowtmu(-1), fogtmu(-1), causticstmu(-1), slot(NULL), texgendim(-1), texgenw(-1), texgenh(-1), texgenscale(-1), mttexgen(false), visibledynlights(0), dynlightmask(0)
     {
         loopk(4) color[k] = 1;
         loopk(8) textures[k] = 0;
@@ -1042,24 +1043,22 @@ static void changetexgen(renderstate &cur, Shader *s, Texture *tex, float scale,
     GLfloat tgen[] = { 0.0f, 0.0f, 0.0f, 0.0f };
     tgen[ti[dim]] = (dim <= 1 ? -8.0f : 8.0f)/scale/(tex->ys<<VVEC_FRAC);
 
-    cur.texgendim = dim;
-    cur.texgenw = tex->xs;
-    cur.texgenh = tex->ys;
-    cur.texgenscale = scale;
-
     if(renderpath==R_FIXEDFUNCTION)
     {
-        glTexGenfv(GL_S, GL_OBJECT_PLANE, sgen);
-        glTexGenfv(GL_T, GL_OBJECT_PLANE, tgen);
-        // KLUGE: workaround for buggy nvidia drivers
-        // object planes are somehow invalid unless texgen is toggled
-        extern int nvidia_texgen_bug;
-        if(nvidia_texgen_bug)
+        if(cur.texgendim!=dim || cur.texgenw!=tex->xs || cur.texgenh!=tex->ys || cur.texgenscale!=scale)
         {
-            glDisable(GL_TEXTURE_GEN_S);
-            glDisable(GL_TEXTURE_GEN_T);
-            glEnable(GL_TEXTURE_GEN_S);
-            glEnable(GL_TEXTURE_GEN_T);
+            glTexGenfv(GL_S, GL_OBJECT_PLANE, sgen);
+            glTexGenfv(GL_T, GL_OBJECT_PLANE, tgen);
+            // KLUGE: workaround for buggy nvidia drivers
+            // object planes are somehow invalid unless texgen is toggled
+            extern int nvidia_texgen_bug;
+            if(nvidia_texgen_bug)
+            {
+                glDisable(GL_TEXTURE_GEN_S);
+                glDisable(GL_TEXTURE_GEN_T);
+                glEnable(GL_TEXTURE_GEN_S);
+                glEnable(GL_TEXTURE_GEN_T);
+            }
         }
 
         if(cur.mtglow)
@@ -1079,6 +1078,12 @@ static void changetexgen(renderstate &cur, Shader *s, Texture *tex, float scale,
         setlocalparamfv("orientbinormal", SHPARAM_VERTEX, 3, orientation_binormal[dim]);
         if(s->type&SHADER_GLSLANG) cur.texgendim = -1;
     }
+
+    cur.texgendim = dim;
+    cur.texgenw = tex->xs;
+    cur.texgenh = tex->ys;
+    cur.texgenscale = scale;
+    cur.mttexgen = cur.mtglow;
 }
 
 struct batchdrawinfo
@@ -1138,7 +1143,7 @@ static void renderbatch(renderstate &cur, int pass, geombatch &b)
                 if(renderpath!=R_FIXEDFUNCTION) changeshader(cur, s, b.slot, shadowed!=0);
                 rendered = true;
             }
-            if(cur.texgendim!=dim || cur.texgenw!=tex->xs || cur.texgenh!=tex->ys || cur.texgenscale!=scale)
+            if(cur.texgendim!=dim || cur.texgenw!=tex->xs || cur.texgenh!=tex->ys || cur.texgenscale!=scale || cur.mtglow>cur.mttexgen)
                 changetexgen(cur, s, tex, scale, dim);
 
             loopv(draw)
