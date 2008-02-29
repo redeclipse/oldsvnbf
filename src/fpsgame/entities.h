@@ -150,8 +150,9 @@ struct entities : icliententities
 				if(d->lastuse==ents[n]->type && lastmillis-d->lastusemillis<500) break;
 				d->lastuse = ents[n]->type;
 				d->lastusemillis = lastmillis;
-				vec v((int)(char)ents[n]->attr3*10.0f, (int)(char)ents[n]->attr2*10.0f, ents[n]->attr1*9.0f);
+				vec v((int)(char)ents[n]->attr3*10.0f, (int)(char)ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
 				d->timeinair = 0;
+                d->falling = vec(0, 0, 0);
 				d->vel = v;
 				cl.playsoundc(S_JUMPPAD, d);
 				break;
