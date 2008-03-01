@@ -341,8 +341,8 @@ struct vacollect : verthash
             sortval &t = indices[k];
             if(t.unlit<=0) continue;
             LightMapTexture &lm = lightmaptexs[t.unlit];
-            short u = short((lm.unlitx + 0.5f) * SHRT_MAX/lm.w),
-                  v = short((lm.unlity + 0.5f) * SHRT_MAX/lm.h);
+            short u = short(ceilf((lm.unlitx + 0.5f) * SHRT_MAX/lm.w)),
+                  v = short(ceilf((lm.unlity + 0.5f) * SHRT_MAX/lm.h));
             loopl(6) loopvj(t.dims[l])
             {
                 vertex &vtx = verts[t.dims[l][j]];
@@ -603,8 +603,8 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
         short u, v;
         if(lmtex)
         {
-            u = short((lm->offsetx + surface->x + (surface->texcoords[k*2] / 255.0f) * (surface->w - 1) + 0.5f) * SHRT_MAX/lmtex->w);
-            v = short((lm->offsety + surface->y + (surface->texcoords[k*2 + 1] / 255.0f) * (surface->h - 1) + 0.5f) * SHRT_MAX/lmtex->h);
+            u = short(ceilf((lm->offsetx + surface->x + (surface->texcoords[k*2] / 255.0f) * (surface->w - 1) + 0.5f) * SHRT_MAX/lmtex->w));
+            v = short(ceilf((lm->offsety + surface->y + (surface->texcoords[k*2 + 1] / 255.0f) * (surface->h - 1) + 0.5f) * SHRT_MAX/lmtex->h));
         }
         else u = v = 0;
         index[k] = vc.addvert(vv[k], u, v, renderpath!=R_FIXEDFUNCTION && normals ? normals->normals[k] : bvec(128, 128, 128));
