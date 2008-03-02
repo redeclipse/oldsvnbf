@@ -234,6 +234,24 @@ extern void disconnect_client(int n, int reason);
 extern bool hasnonlocalclients();
 
 // client
+struct serverinfo
+{
+    enum { UNRESOLVED = 0, RESOLVING, RESOLVED };
+
+    string name;
+    string map;
+    string sdesc;
+    int numplayers, ping, resolved;
+    vector<int> attr;
+    ENetAddress address;
+
+    serverinfo()
+     : numplayers(0), ping(999), resolved(UNRESOLVED)
+    {
+        name[0] = map[0] = sdesc[0] = '\0';
+    }
+};
+
 extern void c2sinfo(dynent *d, int rate = 33);
 extern void sendpackettoserv(ENetPacket *packet, int chan);
 extern void disconnect(int onlyclean = 0, int async = 0);
@@ -293,16 +311,6 @@ extern void g3d_cursorpos(float &x, float &y);
 extern void g3d_resetcursor();
 
 // client
-struct serverinfo
-{
-	char *name; //NOTE if string then threading+sorting lead to overwriten values
-	string map;
-	string sdesc;
-	int numplayers, ping, resolved;
-	vector<int> attr;
-	ENetAddress address;
-};
-
 enum { ST_EMPTY, ST_TCPIP };
 
 struct client					// server side version of "dynent" type

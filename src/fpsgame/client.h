@@ -1354,7 +1354,7 @@ struct clientcom : iclientcom
 		return strcmp(a->name, b->name);
 	}
 
-	const char *serverinfogui(g3d_gui *cgui, vector<serverinfo> &servers)
+	const char *serverinfogui(g3d_gui *cgui, vector<serverinfo *> &servers)
 	{
 		const char *name = NULL;
 
@@ -1396,7 +1396,7 @@ struct clientcom : iclientcom
 
 			loopvj(servers)
 			{
-				serverinfo &si = servers[j];
+				serverinfo &si = *servers[j];
 #if 0
 				if (j > 0 && !(j%serversplit()))
 				{
