@@ -275,39 +275,73 @@ int lastinfo = 0;
 
 char *getservername(int n) { return servers[n].name; }
 
-void addserver(const char *servername)
+static serverinfo *newserver(const char *name, uint ip = ENET_HOST_ANY, uint port = sv->serverinfoport())
 {
-	loopv(servers) if(!strcmp(servers[i].name, servername)) return;
-	serverinfo &si = servers.add();
-	si.name = newstring(servername);
-	si.ping = 999;
-	si.map[0] = 0;
-	si.sdesc[0] = 0;
-	si.resolved = UNRESOLVED;
-	si.address.host = ENET_HOST_ANY;
-	si.address.port = sv->serverinfoport();
+    ENetAddress addr;
+    addr.host = ip;
+    addr.port = port;
+
+    char *sname;
+    if(name) sname = newstring(name);
+    else if(ip==ENET_HOST_ANY) return NULL;
+    else
+    {
+        string buf;
+        if(enet_address_get_host_ip(&addr, buf, sizeof(buf)) < 0) return NULL;
+        sname = newstring(buf);
+    }
+
+    serverinfo &si = servers.add();
+    si.name = sname;
+    si.ping = 999;
+    si.map[0] = 0;
+    si.sdesc[0] = 0;
+    si.resolved = ip==ENET_HOST_ANY ? UNRESOLVED : RESOLVED;
+    si.address = addr;
+    return &si;
 }
+
+void addserver(char *servername)
+{
+    loopv(servers) if(!strcmp(servers[i].name, servername)) return;
+    newserver(servername);
+}
+
+VAR(searchlan, 0, 0, 1);
 
 void pingservers()
 {
     if(pingsock == ENET_SOCKET_NULL)
     {
         pingsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, NULL);
-        if(pingsock != ENET_SOCKET_NULL) enet_socket_set_option(pingsock, ENET_SOCKOPT_NONBLOCK, 1);
+        if(pingsock != ENET_SOCKET_NULL)
+        {
+            enet_socket_set_option(pingsock, ENET_SOCKOPT_NONBLOCK, 1);
+            enet_socket_set_option(pingsock, ENET_SOCKOPT_BROADCAST, 1);
+        }
     }
-	ENetBuffer buf;
-	uchar ping[MAXTRANS];
-	loopv(servers)
-	{
-		serverinfo &si = servers[i];
-		if(si.address.host == ENET_HOST_ANY) continue;
-		ucharbuf p(ping, sizeof(ping));
-		putint(p, totalmillis);
-		buf.data = ping;
-		buf.dataLength = p.length();
-		enet_socket_send(pingsock, &si.address, &buf, 1);
-	}
-	lastinfo = totalmillis;
+    ENetBuffer buf;
+    uchar ping[MAXTRANS];
+    ucharbuf p(ping, sizeof(ping));
+    putint(p, totalmillis);
+    loopv(servers)
+    {
+        serverinfo &si = servers[i];
+        if(si.address.host == ENET_HOST_ANY) continue;
+        buf.data = ping;
+        buf.dataLength = p.length();
+        enet_socket_send(pingsock, &si.address, &buf, 1);
+    }
+    if(searchlan)
+    {
+        ENetAddress address;
+        address.host = ENET_HOST_BROADCAST;
+        address.port = sv->serverinfoport();
+        buf.data = ping;
+        buf.dataLength = p.length();
+        enet_socket_send(pingsock, &address, &buf, 1);
+    }
+    lastinfo = totalmillis;
 }
 
 void checkresolver()
@@ -355,26 +389,22 @@ void checkpings()
 	buf.dataLength = sizeof(ping);
 	while(enet_socket_wait(pingsock, &events, 0) >= 0 && events)
 	{
-		int len = enet_socket_receive(pingsock, &addr, &buf, 1);
-		if(len <= 0) return;
-		loopv(servers)
-		{
-			serverinfo &si = servers[i];
-			if(addr.host == si.address.host)
-			{
-				ucharbuf p(ping, len);
-				si.ping = totalmillis - getint(p);
-				si.numplayers = getint(p);
-				int numattr = getint(p);
-				si.attr.setsize(0);
-				loopj(numattr) si.attr.add(getint(p));
-				getstring(text, p);
-                filtertext(si.map, text);
-				getstring(text, p);
-                //filtertext(si.sdesc, text);
-				break;
-			}
-		}
+        int len = enet_socket_receive(pingsock, &addr, &buf, 1);
+        if(len <= 0) return;
+        serverinfo *si = NULL;
+        loopv(servers) if(addr.host == servers[i].address.host) { si = &servers[i]; break; }
+        if(!si && searchlan) si = newserver(NULL, addr.host);
+        if(!si) continue;
+        ucharbuf p(ping, len);
+        si->ping = totalmillis - getint(p);
+        si->numplayers = getint(p);
+        int numattr = getint(p);
+        si->attr.setsize(0);
+        loopj(numattr) si->attr.add(getint(p));
+        getstring(text, p);
+        filtertext(si->map, text);
+        getstring(text, p);
+        filtertext(si->sdesc, text);
 	}
 }
 
@@ -398,6 +428,13 @@ const char *showservers(g3d_gui *cgui)
 	return cc->serverinfogui(cgui, servers);
 }
 
+void clearservers()
+{
+    resolverclear();
+    loopv(servers) delete[] servers[i].name;
+    servers.setsize(0);
+}
+
 void updatefrommaster()
 {
 	uchar buf[32000];
@@ -405,15 +442,14 @@ void updatefrommaster()
 	if(!*reply || strstr((char *)reply, "<html>") || strstr((char *)reply, "<HTML>")) conoutf("master server not replying");
 	else
 	{
-		resolverclear();
-		loopv(servers) delete[] servers[i].name;
-		servers.setsize(0);
+        clearservers();
 		execute((char *)reply);
 	}
 	refreshservers();
 }
 
 COMMAND(addserver, "s");
+COMMAND(clearservers, "");
 COMMAND(updatefrommaster, "");
 
 void writeservercfg()
