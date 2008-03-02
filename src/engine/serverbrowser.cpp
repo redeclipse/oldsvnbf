@@ -46,7 +46,7 @@ int resolverloop(void * data)
 		enet_address_set_host(&address, rt->query);
 
 		SDL_LockMutex(resolvermutex);
-		if(thread == rt->thread)
+		if(rt->query && thread == rt->thread)
 		{
 			resolverresult &rr = resolverresults.add();
 			rr.query = rt->query;
@@ -267,43 +267,34 @@ int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &addre
 	return cd.result;
 }
 
-enum { UNRESOLVED = 0, RESOLVING, RESOLVED };
-
-vector<serverinfo> servers;
+vector<serverinfo *> servers;
 ENetSocket pingsock = ENET_SOCKET_NULL;
 int lastinfo = 0;
 
-char *getservername(int n) { return servers[n].name; }
+char *getservername(int n) { return servers[n]->name; }
 
 static serverinfo *newserver(const char *name, uint ip = ENET_HOST_ANY, uint port = sv->serverinfoport())
 {
-    ENetAddress addr;
-    addr.host = ip;
-    addr.port = port;
+    serverinfo *si = new serverinfo;
+    si->address.host = ip;
+    si->address.port = port;
+    if(ip!=ENET_HOST_ANY) si->resolved = serverinfo::RESOLVED;
 
-    char *sname;
-    if(name) sname = newstring(name);
-    else if(ip==ENET_HOST_ANY) return NULL;
-    else
+    if(name) s_strcpy(si->name, name);
+    else if(ip==ENET_HOST_ANY || enet_address_get_host_ip(&si->address, si->name, sizeof(si->name)) < 0)
     {
-        string buf;
-        if(enet_address_get_host_ip(&addr, buf, sizeof(buf)) < 0) return NULL;
-        sname = newstring(buf);
+        delete si;
+        return NULL;
     }
 
-    serverinfo &si = servers.add();
-    si.name = sname;
-    si.ping = 999;
-    si.map[0] = 0;
-    si.sdesc[0] = 0;
-    si.resolved = ip==ENET_HOST_ANY ? UNRESOLVED : RESOLVED;
-    si.address = addr;
-    return &si;
+    servers.add(si);
+
+    return si;
 }
 
-void addserver(char *servername)
+void addserver(const char *servername)
 {
-    loopv(servers) if(!strcmp(servers[i].name, servername)) return;
+    loopv(servers) if(!strcmp(servers[i]->name, servername)) return;
     newserver(servername);
 }
 
@@ -326,7 +317,7 @@ void pingservers()
     putint(p, totalmillis);
     loopv(servers)
     {
-        serverinfo &si = servers[i];
+        serverinfo &si = *servers[i];
         if(si.address.host == ENET_HOST_ANY) continue;
         buf.data = ping;
         buf.dataLength = p.length();
@@ -349,11 +340,11 @@ void checkresolver()
 	int resolving = 0;
 	loopv(servers)
 	{
-		serverinfo &si = servers[i];
-		if(si.resolved == RESOLVED) continue;
+		serverinfo &si = *servers[i];
+		if(si.resolved == serverinfo::RESOLVED) continue;
 		if(si.address.host == ENET_HOST_ANY)
 		{
-			if(si.resolved == UNRESOLVED) { si.resolved = RESOLVING; resolverquery(si.name); }
+			if(si.resolved == serverinfo::UNRESOLVED) { si.resolved = serverinfo::RESOLVING; resolverquery(si.name); }
 			resolving++;
 		}
 	}
@@ -365,10 +356,10 @@ void checkresolver()
 	{
 		loopv(servers)
 		{
-			serverinfo &si = servers[i];
+			serverinfo &si = *servers[i];
 			if(name == si.name)
 			{
-				si.resolved = RESOLVED;
+				si.resolved = serverinfo::RESOLVED;
 				si.address = addr;
 				addr.host = ENET_HOST_ANY;
 				break;
@@ -392,7 +383,7 @@ void checkpings()
         int len = enet_socket_receive(pingsock, &addr, &buf, 1);
         if(len <= 0) return;
         serverinfo *si = NULL;
-        loopv(servers) if(addr.host == servers[i].address.host) { si = &servers[i]; break; }
+        loopv(servers) if(addr.host == servers[i]->address.host) { si = servers[i]; break; }
         if(!si && searchlan) si = newserver(NULL, addr.host);
         if(!si) continue;
         ucharbuf p(ping, len);
@@ -408,7 +399,7 @@ void checkpings()
 	}
 }
 
-int sicompare(serverinfo *a, serverinfo *b) { return cc->servercompare(a, b); }
+int sicompare(serverinfo **a, serverinfo **b) { return cc->servercompare(*a, *b); }
 
 void refreshservers()
 {
@@ -431,8 +422,7 @@ const char *showservers(g3d_gui *cgui)
 void clearservers()
 {
     resolverclear();
-    loopv(servers) delete[] servers[i].name;
-    servers.setsize(0);
+    servers.deletecontentsp();
 }
 
 void updatefrommaster()
@@ -457,7 +447,7 @@ void writeservercfg()
 	FILE *f = openfile("servers.cfg", "w");
 	if(!f) return;
 	fprintf(f, "// servers connected to are added here automatically\n\n");
-	loopvrev(servers) fprintf(f, "addserver %s\n", servers[i].name);
+	loopvrev(servers) fprintf(f, "addserver %s\n", servers[i]->name);
 	fclose(f);
 }
 

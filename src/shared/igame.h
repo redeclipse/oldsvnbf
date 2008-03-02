@@ -37,7 +37,7 @@ struct iclientcom
 	virtual void toservcmd(char *text, bool msg) { return; }
     virtual int numchannels() { return 1; }
 	virtual int servercompare(serverinfo *a, serverinfo *b) { return strcmp(a->name, b->name); }
-    virtual const char *serverinfogui(g3d_gui *cgui, vector<serverinfo> &servers) { return NULL; }
+    virtual const char *serverinfogui(g3d_gui *cgui, vector<serverinfo *> &servers) { return NULL; }
 };
 
 struct igameclient
