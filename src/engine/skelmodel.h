@@ -796,8 +796,8 @@ struct skelmodel : animmodel
                 if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
                 if(!lastvbuf) glEnableClientState(GL_VERTEX_ARRAY);
                 glVertexPointer(3, GL_FLOAT, vertsize, &vverts->pos);
+                lastvbuf = hasVBO ? (void *)(size_t)vc.vbuf : vc.vdata;
             }
-            lastvbuf = hasVBO ? (void *)(size_t)vc.vbuf : vc.vdata;
             if(as->anim&ANIM_NOSKIN)
             {
                 if(enabletc) disabletc();
