@@ -840,7 +840,7 @@ void render_particles(int time)
                     float len = step.magnitude();
                     int numsteps = min(int(ceil(len/LIGHTNINGSTEP)), MAXLIGHTNINGSTEPS);
                     if(numsteps > 1) step.mul(LIGHTNINGSTEP/len);
-                    int jitteroffset = detrnd((size_t)p, MAXLIGHTNINGSTEPS);
+                    int jitteroffset = detrnd(int(o.x+o.y+o.z), MAXLIGHTNINGSTEPS);
                     vec cur(o), up, right;
                     up.orthogonal(step);
                     up.normalize();
@@ -1213,13 +1213,13 @@ void regular_particle_splash(int type, int num, int fade, const vec &p, int dela
 
 void particle_splash(int type, int num, int fade, const vec &p)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	splash(partmaps[type].type, partmaps[type].color, 150, num, fade, p);
 }
 
 void particle_trail(int type, int fade, const vec &s, const vec &e)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	vec v;
 	float d = e.dist(s, v);
 	v.div(d*2);
@@ -1238,7 +1238,7 @@ VARP(particletext, 0, 1, 1);
 
 void particle_text(const vec &s, const char *t, int type, int fade)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	if(!particletext || camera1->o.dist(s) > 128) return;
 	if(t[0]=='@') t = newstring(t);
 	newparticle(s, vec(0, 0, 1), fade, partmaps[type].type, partmaps[type].color)->text = t;
@@ -1246,19 +1246,19 @@ void particle_text(const vec &s, const char *t, int type, int fade)
 
 void particle_meter(const vec &s, float val, int type, int fade)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	newparticle(s, vec(0, 0, 1), fade, partmaps[type].type, partmaps[type].color)->val = val;
 }
 
 void particle_flare(const vec &p, const vec &dest, int fade, int type, physent *owner)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
     newparticle(p, dest, fade, partmaps[type].type, partmaps[type].color)->owner = owner;
 }
 
 void particle_fireball(const vec &dest, float max, int type)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	int maxsize = int(max) - 4;
 	newparticle(dest, vec(0, 0, 1), maxsize*25, partmaps[type].type, partmaps[type].color)->val = maxsize;
 }
@@ -1454,7 +1454,7 @@ void entity_particles()
 
 void part_textf(const vec &s, char *t, bool moving, int fade, int color, ...)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	s_sprintfdlv(str, color, t);
 	s_sprintfd(buf)("@%s", str);
 	part_text(s, buf, moving, fade, color);
@@ -1462,14 +1462,14 @@ void part_textf(const vec &s, char *t, bool moving, int fade, int color, ...)
 
 void part_text(const vec &s, char *t, bool moving, int fade, int color)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	if(!particletext || camera1->o.dist(s) > 128) return;
 	newparticle(s, vec(0, 0, 1), fade, moving ? 9 : 11, color)->text = newstring(t);
 }
 
 void part_splash(int type, int num, int fade, const vec &p, int color)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	if(camera1->o.dist(p) > maxparticledistance) return;
 	loopi(num)
 	{
@@ -1489,7 +1489,7 @@ void part_splash(int type, int num, int fade, const vec &p, int color)
 
 void part_trail(int type, int fade, const vec &s, const vec &e, int color)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	vec v;
 	float d = e.dist(s, v);
 	v.div(d*2);
@@ -1504,32 +1504,32 @@ void part_trail(int type, int fade, const vec &s, const vec &e, int color)
 
 void part_meter(const vec &s, float val, int type, int fade, int color)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	newparticle(s, vec(0, 0, 1), fade, type, color)->val = val;
 }
 
 void part_flare(const vec &p, const vec &dest, int fade, int type, int color, physent *owner)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
     newparticle(p, dest, fade, type, color)->owner = owner;
 }
 
 void part_fireball(const vec &dest, float max, int type, int color)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	int maxsize = int(max) - 4;
 	newparticle(dest, vec(0, 0, 1), maxsize*25, type, color)->val = maxsize;
 }
 
 void part_firerad(const vec &dest, float size, int type, int color)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	newparticle(dest, vec(0, 0, 1), int(size), type, color)->val = int(size)+100;
 }
 
 void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	loopi(amt)
 	{
 		vec w(rnd(int(v.x*2))-int(v.x), rnd(int(v.y*2))-int(v.y), rnd(int(v.z*2))-int(v.z)+z);
@@ -1540,7 +1540,7 @@ void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fa
 
 void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, physent *owner)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
 	loopi(amt)
 	{
 		vec from(rnd(int(v.x*2))-int(v.x), rnd(int(v.y*2))-int(v.y), rnd(int(v.z*2))-int(v.z)+z1);

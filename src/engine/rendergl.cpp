@@ -555,6 +555,14 @@ void setfogplane(float scale, float z, bool flush, float fadescale, float fadeof
     }
 }
 
+bool renderedgame = false;
+
+void rendergame()
+{
+    cl->rendergame();
+    if(!shadowmapping) renderedgame = true;
+}
+
 void drawreflection(float z, bool refract, bool clear)
 {
 	uchar wcol[3];
@@ -638,7 +646,7 @@ void drawreflection(float z, bool refract, bool clear)
     if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 
 	if(reflectmms) renderreflectedmapmodels(z, refract);
-	cl->rendergame();
+	rendergame();
 
 	if(!refract /*&& !explicitsky*/)
 	{
@@ -1064,7 +1072,7 @@ void gl_drawframe(int w, int h)
     if(!waterrefract || nowater)
     {
         defaultshader->set();
-        cl->rendergame();
+        rendergame();
     }
 
     defaultshader->set();
@@ -1076,7 +1084,7 @@ void gl_drawframe(int w, int h)
     if(waterrefract && !nowater)
     {
         defaultshader->set();
-        cl->rendergame();
+        rendergame();
     }
 
     if(!waterrefract || nowater) renderdecals(curtime);
@@ -1106,6 +1114,8 @@ void gl_drawframe(int w, int h)
 
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_FOG);
+
+    renderedgame = false;
 }
 
 VARP(crosshairsize, 0, 15, 1000);
