@@ -865,7 +865,7 @@ void queryreflections()
 
 	for(vtxarray *va = visibleva; va; va = va->next)
 	{
-		if(!va->matsurfs && va->occluded >= OCCLUDE_BB) continue;
+        if(!va->matsurfs || va->occluded >= OCCLUDE_BB || va->curvfc >= VFC_FOGGED) continue;
 		loopi(va->matsurfs)
 		{
 			materialsurface &m = va->matbuf[i];
