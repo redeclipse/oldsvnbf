@@ -1631,7 +1631,7 @@ void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
         if(!va->texs || va->occluded >= OCCLUDE_GEOM) continue;
         if(refracting || (reflecting && camera1->o.z < reflecting))
         {
-            if(va->curvfc == VFC_FOGGED || (refracting && camera1->o.z >= refracting ? va->geommin.z > refracting : va->geommax.z <= refracting)) continue;
+            if(refracting && camera1->o.z >= refracting ? va->geommin.z > refracting : va->geommax.z <= refracting) continue;
             if((!hasOQ || !oqfrags) && va->distance > reflectdist) break;
         }
         else if(reflecting)
@@ -1681,7 +1681,7 @@ void rendergeom(float causticspass, bool fogpass)
 		if(!va->texs) continue;
 		if(refracting || (reflecting && camera1->o.z < reflecting))
 		{
-			if(va->curvfc == VFC_FOGGED || (refracting && camera1->o.z >= refracting ? va->geommin.z > refracting : va->geommax.z <= reflecting) || va->occluded >= OCCLUDE_GEOM) continue;
+			if((refracting && camera1->o.z >= refracting ? va->geommin.z > refracting : va->geommax.z <= reflecting) || va->occluded >= OCCLUDE_GEOM) continue;
 			if((!hasOQ || !oqfrags) && va->distance > reflectdist) break;
 		}
 		else if(reflecting)
