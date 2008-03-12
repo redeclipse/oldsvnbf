@@ -1126,6 +1126,34 @@ int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
 	return ccount;
 }
 
+void buildclipmasks(cube &c, uchar &vismask = unusedmask, uchar &clipmask = unusedmask)
+{
+    if(c.ext && c.ext->va)
+    {
+        vismask = c.children ? c.vismask : 0x3F;
+        clipmask = c.children ? c.clipmask : 0;
+        return;
+    }
+    if(!c.children)
+    {
+        if(isempty(c)) c.vismask = c.clipmask = 0;
+        vismask = clipmask = 0;
+        return;
+    }
+    uchar visparent = 0, clipparent = 0x3F;
+    uchar clipchild[8];
+    loopi(8)
+    {
+        buildclipmasks(c.children[i], c.vismasks[i], clipchild[i]);
+        uchar mask = (1<<octacoord(0, i)) | (4<<octacoord(1, i)) | (16<<octacoord(2, i));
+        visparent |= c.vismasks[i];
+        clipparent &= (clipchild[i]&mask) | ~mask;
+        clipparent &= ~(c.vismasks[i] & (mask^0x3F));
+    }
+    vismask = c.vismask = visparent;
+    clipmask = c.clipmask = clipparent;
+}
+
 void octarender()								// creates va s for all leaf cubes that don't already have them
 {
 	recalcprogress = 0;
@@ -1137,6 +1165,8 @@ void octarender()								// creates va s for all leaf cubes that don't already h
 	varoot.setsizenodelete(0);
 	updateva(worldroot, 0, 0, 0, hdr.worldsize/2, csi-1);
 	flushvbo();
+
+    loopi(8) buildclipmasks(worldroot[i]);
 
 	explicitsky = 0;
 	skyarea = 0;
