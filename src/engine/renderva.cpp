@@ -198,12 +198,12 @@ static inline bool insideva(const vtxarray *va, const vec &v, int margin = 1)
 
 static ivec vaorigin;
 
-void resetorigin()
+static void resetorigin()
 {
 	vaorigin = ivec(-1, -1, -1);
 }
 
-void setorigin(vtxarray *va, bool shadowmatrix = false)
+static bool setorigin(vtxarray *va, bool shadowmatrix = false)
 {
     ivec o(va->o);
 	o.mask(~VVEC_INT_MASK);
@@ -217,7 +217,9 @@ void setorigin(vtxarray *va, bool shadowmatrix = false)
 		glScalef(scale, scale, scale);
 
         if(shadowmatrix) adjustshadowmatrix(o, scale);
+        return true;
 	}
+    return false;
 }
 
 ///////// occlusion queries /////////////
@@ -891,7 +893,11 @@ static void changefogplane(renderstate &cur, int pass, vtxarray *va)
 
 static void changevbuf(renderstate &cur, int pass, vtxarray *va)
 {
-    setorigin(va, pass==RENDERPASS_LIGHTMAP && !envmapping);
+    if(setorigin(va, pass==RENDERPASS_LIGHTMAP && !envmapping))
+    {
+        cur.visibledynlights = 0;
+        cur.dynlightmask = 0;
+    }
     if(hasVBO)
     {
         glBindBuffer_(GL_ARRAY_BUFFER_ARB, va->vbuf);
