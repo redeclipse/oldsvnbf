@@ -65,9 +65,11 @@ static bool compileasmshader(GLenum type, GLuint &idx, const char *def, const ch
 	glBindProgram_(type, idx);
 	def += strspn(def, " \t\r\n");
 	glProgramString_(type, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)strlen(def), def);
-    GLint err, native;
-	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &err);
-    glGetProgramiv_(type, GL_PROGRAM_UNDER_NATIVE_LIMITS_ARB, &native);
+    GLint err = -1, native = 1;
+    glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &err);
+    extern int apple_vp_bug;
+    if(type!=GL_VERTEX_PROGRAM_ARB || !apple_vp_bug)
+        glGetProgramiv_(type, GL_PROGRAM_UNDER_NATIVE_LIMITS_ARB, &native);
 	if(msg && err!=-1)
 	{
 		conoutf("COMPILE ERROR (%s:%s) - %s", tname, name, glGetString(GL_PROGRAM_ERROR_STRING_ARB));
