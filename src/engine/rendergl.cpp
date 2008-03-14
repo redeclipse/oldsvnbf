@@ -101,6 +101,7 @@ VAR(ati_dph_bug, 0, 0, 1);
 VAR(nvidia_texgen_bug, 0, 0, 1);
 VAR(apple_glsldepth_bug, 0, 0, 1);
 VAR(apple_ff_bug, 0, 0, 1);
+VAR(apple_vp_bug, 0, 0, 1);
 VAR(intel_quadric_bug, 0, 0, 1);
 VAR(mesa_program_bug, 0, 0, 1);
 VAR(minimizetcusage, 1, 0, 0);
@@ -256,6 +257,10 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         batchlightmaps = 0;
 
         if(!hasOQ) waterrefract = 0;
+
+#ifdef __APPLE__
+        apple_vp_bug = 1;
+#endif
 	}
     else if(strstr(vendor, "NVIDIA"))
     {
