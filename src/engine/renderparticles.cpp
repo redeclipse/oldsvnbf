@@ -712,6 +712,57 @@ int lastlnjitter = 0;
 VAR(lnjittermillis, 0, 100, 1000);
 VAR(lnjitterradius, 0, 2, 100);
 
+static void setuplightning()
+{
+    if(lastmillis-lastlnjitter > lnjittermillis)
+    {
+        lastlnjitter = lastmillis - (lastmillis%lnjittermillis);
+        loopi(MAXLIGHTNINGSTEPS)
+        {
+            lnjitterx[i] = -lnjitterradius + rnd(2*lnjitterradius + 1);
+            lnjittery[i] = -lnjitterradius + rnd(2*lnjitterradius + 1);
+        }
+    }
+}
+
+static void renderlightning(const vec &o, const vec &d, float sz, float tx, float ty, float tsz)
+{
+    vec step(d);
+    step.sub(o);
+    float len = step.magnitude();
+    int numsteps = min(int(ceil(len/LIGHTNINGSTEP)), MAXLIGHTNINGSTEPS);
+    if(numsteps > 1) step.mul(LIGHTNINGSTEP/len);
+    int jitteroffset = detrnd(int(o.x+o.y+o.z), MAXLIGHTNINGSTEPS);
+    vec cur(o), up, right;
+    up.orthogonal(step);
+    up.normalize();
+    right.cross(up, step);
+    right.normalize();
+    glBegin(GL_QUAD_STRIP);
+    loopj(numsteps)
+    {
+        vec next(cur);
+        next.add(step);
+        if(j+1==numsteps) next = d;
+        next.add(vec(right).mul(sz*lnjitterx[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
+        next.add(vec(up).mul(sz*lnjittery[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
+        vec dir1 = next, dir2 = next, across;
+        dir1.sub(cur);
+        dir2.sub(camera1->o);
+        across.cross(dir2, dir1).normalize().mul(sz);
+        float tx1 = j&1 ? tx : tx+tsz, tx2 = j&1 ? tx+tsz : tx;
+        glTexCoord2f(tx2, ty+tsz); glVertex3f(cur.x-across.x, cur.y-across.y, cur.z-across.z);
+        glTexCoord2f(tx2, ty);     glVertex3f(cur.x+across.x, cur.y+across.y, cur.z+across.z);
+        if(j+1==numsteps)
+        {
+            glTexCoord2f(tx1, ty+tsz); glVertex3f(next.x-across.x, next.y-across.y, next.z-across.z);
+            glTexCoord2f(tx1, ty);     glVertex3f(next.x+across.x, next.y+across.y, next.z+across.z);
+        }
+        cur = next;
+    }
+    glEnd();
+}
+
 void render_particles(int time)
 {
 	static float zerofog[4] = { 0, 0, 0, 1 };
@@ -755,16 +806,7 @@ void render_particles(int time)
                 break;
 
             case PT_LIGHTNING:
-                if(lastmillis-lastlnjitter > lnjittermillis)
-			{
-                    lastlnjitter = lastmillis - (lastmillis%lnjittermillis);
-                    loopi(MAXLIGHTNINGSTEPS)
-				{
-                        lnjitterx[i] = -lnjitterradius + rnd(2*lnjitterradius + 1);
-                        lnjittery[i] = -lnjitterradius + rnd(2*lnjitterradius + 1);
-                    }
-                }
-
+                setuplightning();
                 quads = true;
                 glDisable(GL_CULL_FACE);
                 break;
@@ -833,43 +875,7 @@ void render_particles(int time)
 					ty = 0.5f*((i>>1)&1);
 					tsz = 0.5f;
 				}
-                if(type==PT_LIGHTNING)
-				{
-                    vec step(d);
-                    step.sub(o);
-                    float len = step.magnitude();
-                    int numsteps = min(int(ceil(len/LIGHTNINGSTEP)), MAXLIGHTNINGSTEPS);
-                    if(numsteps > 1) step.mul(LIGHTNINGSTEP/len);
-                    int jitteroffset = detrnd(int(o.x+o.y+o.z), MAXLIGHTNINGSTEPS);
-                    vec cur(o), up, right;
-                    up.orthogonal(step);
-                    up.normalize();
-                    right.cross(up, step);
-                    right.normalize();
-                    glBegin(GL_QUAD_STRIP);
-                    loopj(numsteps)
-                    {
-                        vec next(cur);
-                        next.add(step);
-                        if(j+1==numsteps) next = d;
-                        next.add(vec(right).mul(sz*lnjitterx[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
-                        next.add(vec(up).mul(sz*lnjittery[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
-                        vec dir1 = next, dir2 = next, across;
-                        dir1.sub(cur);
-                        dir2.sub(camera1->o);
-                        across.cross(dir2, dir1).normalize().mul(sz);
-                        float tx1 = j&1 ? tx : tx+tsz, tx2 = j&1 ? tx+tsz : tx;
-                        glTexCoord2f(tx2, ty+tsz); glVertex3f(cur.x-across.x, cur.y-across.y, cur.z-across.z);
-                        glTexCoord2f(tx2, ty);     glVertex3f(cur.x+across.x, cur.y+across.y, cur.z+across.z);
-                        if(j+1==numsteps)
-                        {
-                            glTexCoord2f(tx1, ty+tsz); glVertex3f(next.x-across.x, next.y-across.y, next.z-across.z);
-                            glTexCoord2f(tx1, ty);     glVertex3f(next.x+across.x, next.y+across.y, next.z+across.z);
-                        }
-                        cur = next;
-                    }
-                    glEnd();
-                }
+                if(type==PT_LIGHTNING) renderlightning(o, d, sz, tx, ty, tsz);
                 else if(type==PT_FLARE || type==PT_TRAIL)
                 {
                     vec e = d;

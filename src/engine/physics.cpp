@@ -341,7 +341,7 @@ float shadowray(const vec &o, const vec &ray, float radius, int mode, extentity 
 	}
 }
 
-float rayent(const vec &o, vec &ray, vec &hitpos, float radius, int mode, int size, int &orient, int &ent)
+float rayent(const vec &o, const vec &ray, vec &hitpos, float radius, int mode, int size, int &orient, int &ent)
 {
 	hitent = -1;
 	float d = raycubepos(o, ray, hitpos, hitentdist = radius, mode, size);
@@ -350,7 +350,7 @@ float rayent(const vec &o, vec &ray, vec &hitpos, float radius, int mode, int si
 	return d;
 }
 
-float raycubepos(const vec &o, vec &ray, vec &hitpos, float radius, int mode, int size)
+float raycubepos(const vec &o, const vec &ray, vec &hitpos, float radius, int mode, int size)
 {
 	ray.normalize();
 	hitpos = ray;
@@ -360,11 +360,12 @@ float raycubepos(const vec &o, vec &ray, vec &hitpos, float radius, int mode, in
 	return dist;
 }
 
-bool raycubelos(vec &o, vec &dest, vec &hitpos)
+bool raycubelos(const vec &o, const vec &dest, vec &hitpos)
 {
 	vec ray(dest);
 	ray.sub(o);
 	float mag = ray.magnitude();
+    ray.mul(1/mag);
 	float distance = raycubepos(o, ray, hitpos, mag, RAY_CLIPMAT|RAY_POLY);
 	return distance >= mag;
 }

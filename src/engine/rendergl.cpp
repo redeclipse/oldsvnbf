@@ -447,7 +447,7 @@ void cleanupgl()
 
 VAR(wireframe, 0, 0, 1);
 
-vec worldpos, camright, camup;
+vec worldpos, camdir, camright, camup;
 
 void transplayer()
 {
