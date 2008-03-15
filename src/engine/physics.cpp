@@ -706,11 +706,10 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
 
 static inline bool octacollide(physent *d, const vec &dir, float cutoff, const ivec &bo, const ivec &bs)
 {
-    if(bo.x < 0 || bo.y < 0 || bo.z < 0 ||
-       bo.x+bs.x >= hdr.worldsize || bo.y+bs.y >= hdr.worldsize || bo.z+bs.z >= hdr.worldsize)
-       return octacollide(d, dir, cutoff, bo, bs, worldroot, ivec(0, 0, 0), hdr.worldsize>>1);
     int diff = (bo.x^(bo.x+bs.x)) | (bo.y^(bo.y+bs.y)) | (bo.z^(bo.z+bs.z)),
         scale = worldscale-1;
+    if(diff&~((1<<scale)-1) || uint(bo.x|bo.y|bo.z|bo.x+bs.x|bo.y+bs.y|bo.z+bs.z) >= uint(hdr.worldsize))
+       return octacollide(d, dir, cutoff, bo, bs, worldroot, ivec(0, 0, 0), hdr.worldsize>>1);
     cube *c = &worldroot[octastep(bo.x, bo.y, bo.z, scale)];
     if(c->ext && c->ext->ents && !mmcollide(d, dir, *c->ext->ents)) return false;
     scale--;
