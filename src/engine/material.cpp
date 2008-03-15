@@ -536,6 +536,8 @@ void drawglass(int orient, int x, int y, int z, int csize, int rsize, float offs
 	xtraverts += 4;
 }
 
+VARP(waterfallenv, 0, 1, 1);
+
 void rendermaterials(float zclip, bool refract)
 {
 	vector<materialsurface *> vismats;
@@ -548,9 +550,17 @@ void rendermaterials(float zclip, bool refract)
 	uchar wcol[4] = { watercolour>>16, (watercolour>>8)&0xFF, watercolour&0xFF, 192 };
 	int lastorient = -1, lastmat = -1;
 	GLenum textured = GL_TEXTURE_2D;
-	bool begin = false, depth = true, blended = false, overbright = false;
-	ushort envmapped = EMID_NONE;
-	vec normal(0, 0, 0);
+    bool begin = false, depth = true, blended = false, overbright = false, usedcamera = false, usedwaterfall = false;
+    ushort envmapped = EMID_NONE;
+    static const vec normals[6] =
+    {
+        vec(-1, 0, 0),
+        vec( 1, 0, 0),
+        vec(0, -1, 0),
+        vec(0,  1, 0),
+        vec(0, 0, -1),
+        vec(0, 0,  1)
+    };
 
 	static float zerofog[4] = { 0, 0, 0, 1 };
 	float oldfogc[4];
@@ -574,19 +584,54 @@ void rendermaterials(float zclip, bool refract)
 						if(depth) { glDepthMask(GL_FALSE); depth = false; }
 						if(!blended) { glEnable(GL_BLEND); blended = true; }
 						if(overbright) { resettmu(0); overbright = false; }
-						if(m.orient==O_TOP)
-						{
-							glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-							glColor4ubv(wcol);
-						}
-						else
-						{
-							glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-							glColor3f(wcol[0]/255.0f, wcol[1]/255.0f, wcol[2]/255.0f);
-						}
-						foggedshader->set();
-						fogtype = 0;
-					}
+                        if(m.orient==O_TOP)
+                        {
+                            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                            glColor4ubv(wcol);
+                            foggedshader->set();
+                            fogtype = 1;
+                        }
+                        else if(renderpath==R_FIXEDFUNCTION || !hasCM || !waterfallenv)
+                        {
+                            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+                            glColor3f(wcol[0]/255.0f, wcol[1]/255.0f, wcol[2]/255.0f);
+                            foggedshader->set();
+                            fogtype = 0;
+                        }
+                        else
+                        {
+                            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                            glColor3f(wcol[0]/255.0f, wcol[1]/255.0f, wcol[2]/255.0f);
+                            fogtype = 1;
+
+                            if(!usedcamera)
+                            {
+                                setenvparamf("camera", SHPARAM_VERTEX, 0, camera1->o.x, camera1->o.y, camera1->o.z);
+                                usedcamera = true;
+                            }
+
+                            static Shader *waterfallshader = NULL;
+                            if(!waterfallshader) waterfallshader = lookupshaderbyname("waterfall");
+                            waterfallshader->set();
+
+                            if(!usedwaterfall)
+                            {
+                                Texture *dudv = wslot.sts.inrange(5) ? wslot.sts[5].t : notexture;
+                                float scale = 8.0f/(dudv->ys*(wslot.sts[5].scale ? wslot.sts[5].scale : 1));
+                                setlocalparamf("dudvoffset", SHPARAM_PIXEL, 1, 0, scale*16*lastmillis/1000.0f);
+
+                                glActiveTexture_(GL_TEXTURE1_ARB);
+                                glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(4) ? wslot.sts[4].t->id : notexture->id);
+                                glActiveTexture_(GL_TEXTURE2_ARB);
+                                glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(5) ? wslot.sts[5].t->id : notexture->id);
+                                glActiveTexture_(GL_TEXTURE3_ARB);
+                                glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(EMID_SKY));
+                                glActiveTexture_(GL_TEXTURE0_ARB);
+
+                                usedwaterfall = true;
+                            }
+                        }
+                    }
 					if(textured!=GL_TEXTURE_2D)
 					{
 						if(textured) glDisable(textured);
@@ -626,10 +671,6 @@ void rendermaterials(float zclip, bool refract)
 					break;
 				}
 				case MAT_GLASS:
-					if(m.envmap!=EMID_NONE && glassenv && (lastmat!=MAT_GLASS || lastorient!=m.orient))
-						normal = vec(dimension(m.orient)==0 ? dimcoord(m.orient)*2-1 : 0,
-									 dimension(m.orient)==1 ? dimcoord(m.orient)*2-1 : 0,
-									 dimension(m.orient)==2 ? dimcoord(m.orient)*2-1 : 0);
 					if((m.envmap==EMID_NONE || !glassenv || (envmapped==m.envmap && textured==GL_TEXTURE_CUBE_MAP_ARB)) && lastmat==MAT_GLASS) break;
 					if(begin) { glEnd(); begin = false; }
 					if(m.envmap!=EMID_NONE && glassenv)
@@ -643,8 +684,11 @@ void rendermaterials(float zclip, bool refract)
 						if(envmapped!=m.envmap)
 						{
 							glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(m.envmap));
-							if(envmapped==EMID_NONE && renderpath!=R_FIXEDFUNCTION)
-								setenvparamf("camera", SHPARAM_VERTEX, 0, camera1->o.x, camera1->o.y, camera1->o.z);
+                            if(renderpath!=R_FIXEDFUNCTION && !usedcamera)
+                            {
+                                setenvparamf("camera", SHPARAM_VERTEX, 0, camera1->o.x, camera1->o.y, camera1->o.z);
+                                usedcamera = true;
+                            }
 							envmapped = m.envmap;
 						}
 					}
@@ -727,6 +771,7 @@ void rendermaterials(float zclip, bool refract)
 				if(m.orient!=O_TOP)
 				{
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
+                    if(renderpath!=R_FIXEDFUNCTION && hasCM && waterfallenv) glNormal3fv(normals[m.orient].v);
 					if (wslot.sts.length() > 1) renderwaterfall(m, wslot.sts[1].t, wslot.sts[1].scale ? wslot.sts[1].scale : 1, 0.1f, MAT_WATER);
 				}
 				break;
@@ -748,7 +793,7 @@ void rendermaterials(float zclip, bool refract)
 				if(!begin) { glBegin(GL_QUADS); begin = true; }
 				if(m.envmap!=EMID_NONE && glassenv)
 				{
-					if(renderpath!=R_FIXEDFUNCTION) glNormal3fv(normal.v);
+                    if(renderpath!=R_FIXEDFUNCTION) glNormal3fv(normals[m.orient].v);
 					drawglass(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, 0.1f);
 				}
 				else drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, 0.1f);
