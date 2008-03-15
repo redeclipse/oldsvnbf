@@ -323,7 +323,7 @@ void setuprefractTMUs()
     {
         glActiveTexture_(GL_TEXTURE1_ARB);
         glEnable(waterreflect ? GL_TEXTURE_2D : GL_TEXTURE_CUBE_MAP_ARB);
-        if(!waterreflect) glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(EMID_SKY));
+        if(!waterreflect) glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(lookuptexture(-MAT_WATER)));
 
         setuptmu(1, "P , T @ C~a");
 
@@ -343,7 +343,7 @@ void setupreflectTMUs()
     {
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_TEXTURE_CUBE_MAP_ARB);
-        glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(EMID_SKY));
+        glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(lookuptexture(-MAT_WATER)));
     }
 }
 
@@ -546,7 +546,7 @@ void renderwater()
     {
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_TEXTURE_CUBE_MAP_ARB);
-        glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(EMID_SKY));
+        glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(s));
     }
 
 	setenvparamf("camera", SHPARAM_VERTEX, 0, camera1->o.x, camera1->o.y, camera1->o.z);

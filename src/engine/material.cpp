@@ -625,7 +625,7 @@ void rendermaterials(float zclip, bool refract)
                                 glActiveTexture_(GL_TEXTURE2_ARB);
                                 glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(5) ? wslot.sts[5].t->id : notexture->id);
                                 glActiveTexture_(GL_TEXTURE3_ARB);
-                                glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(EMID_SKY));
+                                glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(wslot));
                                 glActiveTexture_(GL_TEXTURE0_ARB);
 
                                 usedwaterfall = true;

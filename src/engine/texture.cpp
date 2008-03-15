@@ -1094,6 +1094,12 @@ ushort closestenvmap(int orient, int x, int y, int z, int size)
 	return closestenvmap(loc);
 }
 
+GLuint lookupenvmap(Slot &slot)
+{
+    loopv(slot.sts) if(slot.sts[i].type==TEX_ENVMAP && slot.sts[i].t) return slot.sts[i].t->id;
+    return skyenvmap;
+}
+
 GLuint lookupenvmap(ushort emid)
 {
 	if(emid==EMID_SKY || emid==EMID_CUSTOM) return skyenvmap;
