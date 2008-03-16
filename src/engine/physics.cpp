@@ -158,7 +158,7 @@ static float disttoent(octaentities *oc, octaentities *last, const vec &o, const
 	}
 
 	entintersect(RAY_POLY, mapmodels,
-		if(!e.visible && (mode&RAY_ENTS)!=RAY_ENTS) continue;
+		if((mode&RAY_ENTS)!=RAY_ENTS) continue;
 		orient = 0; // FIXME, not set
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
 	);
@@ -186,7 +186,6 @@ static float shadowent(octaentities *oc, octaentities *last, const vec &o, const
 	{
 		extentity &e = *ents[oc->mapmodels[i]];
 		if(!e.inoctanode || &e==t) continue;
-		if(!e.visible) continue;
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
 		if(f>0 && f<dist) dist = f;
 	}
@@ -584,7 +583,6 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
     loopv(oc.mapmodels)
     {
         extentity &e = *ents[oc.mapmodels[i]];
-        if(!e.visible) continue;
         model *m = loadmodel(NULL, e.attr2);
         if(!m || !m->collide) continue;
         vec center, radius;
