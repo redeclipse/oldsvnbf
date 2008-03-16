@@ -617,7 +617,7 @@ void rendermaterials()
                                 name##shader->set(); \
                             } while(0)
 
-                            if(waterfallrefract && (!reflecting || !refracting))
+                            if(waterfallrefract && !reflecting && !refracting)
                             {
                                 if(hasCM && waterfallenv) SETWATERFALLSHADER(waterfallenvrefract);
                                 else SETWATERFALLSHADER(waterfallrefract);
