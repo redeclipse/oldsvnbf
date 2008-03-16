@@ -280,10 +280,18 @@ Reflection *findreflection(int height);
 VARP(reflectdist, 0, 2000, 10000);
 VARW(waterfog, 0, 150, 10000);
 VARW(watercolour, 0, 0x103060, 0xFFFFFF);
+VARW(waterfallcolour, 0, 0, 0xFFFFFF);
 void getwatercolour(uchar *wcol)
 {
 	uchar gcol[3] = { watercolour>>16, (watercolour>>8)&0xFF, watercolour&0xFF };
 	memcpy(wcol, gcol, 3);
+}
+void getwaterfallcolour(uchar *fcol)
+{
+    int colour = waterfallcolour;
+    if(!colour) colour = watercolour;
+    uchar gcol[3] = { colour>>16, (colour>>8)&0xFF, colour&0xFF };
+    memcpy(fcol, gcol, 3);
 }
 VARW(lavafog, 0, 50, 10000);
 VARW(lavacolour, 0, 0xFF4400, 0xFFFFFF);

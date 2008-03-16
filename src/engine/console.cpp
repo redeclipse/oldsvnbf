@@ -116,7 +116,7 @@ void conoutf(const char *s, ...)
 {
 	s_sprintfdv(sf, s);
 	console("%s", CON_NORMAL, sf);
-};
+}
 
 bool fullconsole = false;
 void toggleconsole() { fullconsole = !fullconsole; }
