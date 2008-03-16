@@ -451,28 +451,27 @@ static int vismatcmp(const materialsurface ** xm, const materialsurface ** ym)
 
 extern vtxarray *visibleva, *reflectedva;
 
-void sortmaterials(vector<materialsurface *> &vismats, float zclip, bool refract)
+void sortmaterials(vector<materialsurface *> &vismats)
 {
-	bool reflected = zclip && !refract && camera1->o.z >= zclip;
 	sortorigin = ivec(camera1->o);
-	if(reflected) sortorigin.z = int(zclip - (camera1->o.z - zclip));
+    if(reflecting) sortorigin.z = int(reflectz - (camera1->o.z - reflectz));
 	vec dir;
-	vecfromyawpitch(camera1->yaw, reflected ? -camera1->pitch : camera1->pitch, 1, 0, dir);
+    vecfromyawpitch(camera1->yaw, reflecting ? -camera1->pitch : camera1->pitch, 1, 0, dir);
 	loopi(3) { dir[i] = fabs(dir[i]); sortdim[i] = i; }
     if(dir[sortdim[2]] > dir[sortdim[1]]) swap(sortdim[2], sortdim[1]);
     if(dir[sortdim[1]] > dir[sortdim[0]]) swap(sortdim[1], sortdim[0]);
     if(dir[sortdim[2]] > dir[sortdim[1]]) swap(sortdim[2], sortdim[1]);
 
-	for(vtxarray *va = reflected ? reflectedva : visibleva; va; va = reflected ? va->rnext : va->next)
+	for(vtxarray *va = reflecting ? reflectedva : visibleva; va; va = reflecting ? va->rnext : va->next)
 	{
 		if(!va->matsurfs || va->occluded >= OCCLUDE_BB) continue;
-		if(zclip && (refract ? va->o.z >= zclip : va->o.z+va->size <= zclip)) continue;
+        if(reflecting || refracting>0 ? va->o.z+va->size <= reflectz : va->o.z >= reflectz) continue;
 		loopi(va->matsurfs)
 		{
 			materialsurface &m = va->matbuf[i];
 			if(!editmode || !showmat)
 			{
-				if(m.material==MAT_WATER && m.orient==O_TOP) continue;
+                if(m.material==MAT_WATER && (m.orient==O_TOP || (refracting<0 && reflectz>hdr.worldsize))) continue;
 				if(m.material>=MAT_EDIT) continue;
 			}
 			vismats.add(&m);
@@ -538,10 +537,10 @@ void drawglass(int orient, int x, int y, int z, int csize, int rsize, float offs
 
 VARP(waterfallenv, 0, 1, 1);
 
-void rendermaterials(float zclip, bool refract)
+void rendermaterials()
 {
 	vector<materialsurface *> vismats;
-	sortmaterials(vismats, zclip, refract);
+	sortmaterials(vismats);
 	if(vismats.empty()) return;
 
 	glDisable(GL_CULL_FACE);
@@ -581,8 +580,6 @@ void rendermaterials(float zclip, bool refract)
 					if(begin) { glEnd(); begin = false; }
 					if(lastmat!=MAT_WATER || (lastorient==O_TOP)!=(m.orient==O_TOP))
 					{
-						if(depth) { glDepthMask(GL_FALSE); depth = false; }
-						if(!blended) { glEnable(GL_BLEND); blended = true; }
 						if(overbright) { resettmu(0); overbright = false; }
                         if(m.orient==O_TOP)
                         {
@@ -590,17 +587,20 @@ void rendermaterials(float zclip, bool refract)
                             glColor4ubv(wcol);
                             foggedshader->set();
                             fogtype = 1;
+                            if(!blended) { glEnable(GL_BLEND); blended = true; }
+                            if(depth) { glDepthMask(GL_FALSE); depth = false; }
                         }
-                        else if(renderpath==R_FIXEDFUNCTION || !hasCM || !waterfallenv)
+                        else if(renderpath==R_FIXEDFUNCTION || ((!waterfallrefract || reflecting || refracting) && (!hasCM || !waterfallenv)))
                         {
                             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
                             glColor3f(wcol[0]/255.0f, wcol[1]/255.0f, wcol[2]/255.0f);
                             foggedshader->set();
                             fogtype = 0;
+                            if(!blended) { glEnable(GL_BLEND); blended = true; }
+                            if(depth) { glDepthMask(GL_FALSE); depth = false; }
                         }
                         else
                         {
-                            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                             glColor3f(wcol[0]/255.0f, wcol[1]/255.0f, wcol[2]/255.0f);
                             fogtype = 1;
 
@@ -610,9 +610,27 @@ void rendermaterials(float zclip, bool refract)
                                 usedcamera = true;
                             }
 
-                            static Shader *waterfallshader = NULL;
-                            if(!waterfallshader) waterfallshader = lookupshaderbyname("waterfall");
-                            waterfallshader->set();
+                            #define SETWATERFALLSHADER(name) \
+                            do { \
+                                static Shader *name##shader = NULL; \
+                                if(!name##shader) name##shader = lookupshaderbyname(#name); \
+                                name##shader->set(); \
+                            } while(0)
+
+                            if(waterfallrefract && (!reflecting || !refracting))
+                            {
+                                if(hasCM && waterfallenv) SETWATERFALLSHADER(waterfallenvrefract);
+                                else SETWATERFALLSHADER(waterfallrefract);
+                                if(blended) { glDisable(GL_BLEND); blended = false; }
+                                if(!depth) { glDepthMask(GL_TRUE); depth = true; }
+                            }
+                            else
+                            {
+                                SETWATERFALLSHADER(waterfallenv);
+                                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                                if(!blended) { glEnable(GL_BLEND); blended = true; }
+                                if(depth) { glDepthMask(GL_FALSE); depth = false; }
+                            }
 
                             if(!usedwaterfall)
                             {
@@ -624,9 +642,17 @@ void rendermaterials(float zclip, bool refract)
                                 glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(4) ? wslot.sts[4].t->id : notexture->id);
                                 glActiveTexture_(GL_TEXTURE2_ARB);
                                 glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(5) ? wslot.sts[5].t->id : notexture->id);
-                                glActiveTexture_(GL_TEXTURE3_ARB);
-                                glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(wslot));
-                                glActiveTexture_(GL_TEXTURE0_ARB);
+                                if(hasCM && waterfallenv)
+                                {
+                                    glActiveTexture_(GL_TEXTURE3_ARB);
+                                    glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(wslot));
+                                }
+                                if(waterfallrefract && (!reflecting || !refracting))
+                                {
+                                    extern void setupwaterfallrefract(GLenum tmu1, GLenum tmu2);
+                                    setupwaterfallrefract(GL_TEXTURE4_ARB, GL_TEXTURE0_ARB);
+                                }
+                                else glActiveTexture_(GL_TEXTURE0_ARB);
 
                                 usedwaterfall = true;
                             }

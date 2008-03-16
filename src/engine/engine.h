@@ -286,10 +286,10 @@ extern void restorevfcP();
 extern void createfogtex();
 extern void rendergeom(float causticspass = 0, bool fogpass = false);
 extern void rendermapmodels();
-extern void renderreflectedgeom(float z, bool refract, bool causticspass = false, bool fogpass = false);
-extern void renderreflectedmapmodels(float z, bool refract);
+extern void renderreflectedgeom(bool causticspass = false, bool fogpass = false);
+extern void renderreflectedmapmodels();
 extern void renderoutline();
-extern bool rendersky(bool explicitonly = false, float zreflect = 0);
+extern bool rendersky(bool explicitonly = false);
 
 extern int isvisiblesphere(float rad, const vec &cv);
 extern bool bboccluded(const ivec &bo, const ivec &br);
@@ -326,14 +326,15 @@ extern void rendermatsurfs(materialsurface *matbuf, int matsurfs);
 extern void rendermatgrid(materialsurface *matbuf, int matsurfs);
 extern int optimizematsurfs(materialsurface *matbuf, int matsurfs);
 extern void setupmaterials();
-extern void rendermaterials(float zclip = 0, bool refract = false);
+extern void rendermaterials();
 extern void drawmaterial(int orient, int x, int y, int z, int csize, int rsize, float offset);
 extern int visiblematerial(cube &c, int orient, int x, int y, int z, int size);
 
 // water
-extern float reflecting, refracting;
-extern bool fading;
-extern int reflectdist, vertwater, refractfog, waterrefract, waterreflect, waterfade, caustics, waterfog, lavafog;
+extern int refracting;
+extern bool reflecting, fading, fogging;
+extern float reflectz;
+extern int reflectdist, vertwater, refractfog, waterrefract, waterreflect, waterfade, caustics, waterfallrefract, waterfog, lavafog;
 
 extern void invalidatereflections();
 extern void cleanreflections();
@@ -440,7 +441,7 @@ extern void renderdecals(int time);
 extern int explicitsky;
 extern double skyarea;
 
-extern void drawskybox(int farplane, bool limited, float zreflect = 0);
+extern void drawskybox(int farplane, bool limited);
 extern bool limitsky();
 
 // 3dgui

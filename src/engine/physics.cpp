@@ -352,7 +352,6 @@ float rayent(const vec &o, const vec &ray, vec &hitpos, float radius, int mode, 
 
 float raycubepos(const vec &o, const vec &ray, vec &hitpos, float radius, int mode, int size)
 {
-	ray.normalize();
 	hitpos = ray;
 	float dist = raycube(o, ray, radius, mode, size);
 	hitpos.mul(dist);

@@ -78,7 +78,7 @@ struct animmodel : model
         skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), fullbright(0), envmapmin(0), envmapmax(0), translucency(0.5f), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true) {}
 
         bool multitextured() { return enableglow; }
-        bool envmapped() { return hasCM && envmapmax>0 && envmapmodels && (renderpath!=R_FIXEDFUNCTION || maxtmus >= (refracting && refractfog ? 4 : 3)); }
+        bool envmapped() { return hasCM && envmapmax>0 && envmapmodels && (renderpath!=R_FIXEDFUNCTION || maxtmus >= (fogging ? 4 : 3)); }
         bool bumpmapped() { return renderpath!=R_FIXEDFUNCTION && normalmap && bumpmodels; }
         bool normals() { return renderpath!=R_FIXEDFUNCTION || (lightmodels && !fullbright) || envmapped() || bumpmapped(); }
         bool tangents() { return bumpmapped(); }
@@ -91,7 +91,7 @@ struct animmodel : model
             }
             else if(lightmodels && !enablelighting) { glEnable(GL_LIGHTING); enablelighting = true; }
             int needsfog = -1;
-            if(refracting && refractfog)
+            if(fogging)
             {
                 needsfog = masked ? 2 : 1;
                 if(fogtmu!=needsfog && fogtmu>=0) disablefog(true);
@@ -258,7 +258,7 @@ struct animmodel : model
                     *m = masks->type==Texture::STUB ? notexture : masks,
                     *n = bumpmapped() ? normalmap : NULL;
             if((renderpath==R_FIXEDFUNCTION || !lightmodels) &&
-               (!glowmodels || (renderpath==R_FIXEDFUNCTION && refracting && refractfog && maxtmus<=2)) &&
+               (!glowmodels || (renderpath==R_FIXEDFUNCTION && fogging && maxtmus<=2)) &&
                (!envmapmodels || !(as->anim&ANIM_ENVMAP) || envmapmax<=0))
                 m = notexture;
             if(renderpath==R_FIXEDFUNCTION) setuptmus(as, m!=notexture);
@@ -782,13 +782,13 @@ struct animmodel : model
             {
                 if(renderpath!=R_FIXEDFUNCTION)
                 {
-                    if(refracting) setfogplane(rfogplane);
+                    if(fogging) setfogplane(rfogplane);
                     setenvparamf("direction", SHPARAM_VERTEX, 0, rdir.x, rdir.y, rdir.z);
                     setenvparamf("camera", SHPARAM_VERTEX, 1, rcampos.x, rcampos.y, rcampos.z, 1);
                 }
                 else
                 {
-                    if(refracting && refractfog) refractfogplane = rfogplane;
+                    if(fogging) refractfogplane = rfogplane;
                     if(lightmodels) loopv(skins) if(!skins[i].fullbright)
                     {
                         GLfloat pos[4] = { rdir.x*1000, rdir.y*1000, rdir.z*1000, 0 };
@@ -912,7 +912,7 @@ struct animmodel : model
 
         if(!(anim&ANIM_NOSKIN))
         {
-            fogplane = plane(0, 0, 1, o.z-refracting);
+            fogplane = plane(0, 0, 1, o.z-reflectz);
 
             lightcolor = color;
 
@@ -939,7 +939,7 @@ struct animmodel : model
             envmaptmu = 2;
             if(renderpath==R_FIXEDFUNCTION)
             {
-                if(refracting && refractfog) envmaptmu = 3;
+                if(fogging) envmaptmu = 3;
                 glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
             }
             glMatrixMode(GL_TEXTURE);
