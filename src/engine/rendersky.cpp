@@ -87,19 +87,19 @@ void draw_envbox(int w, float zclip = 0.0f)
 VARP(sparklyfix, 0, 1, 1);
 VAR(showsky, 0, 1, 1);
 
-bool drawskylimits(bool explicitonly, float zreflect)
+bool drawskylimits(bool explicitonly)
 {
-	nocolorshader->set();
+    nocolorshader->set();
 
-	glDisable(GL_TEXTURE_2D);
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-	bool rendered = rendersky(explicitonly, zreflect);
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	glEnable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_2D);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    bool rendered = rendersky(explicitonly);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glEnable(GL_TEXTURE_2D);
 
-	defaultshader->set();
+    defaultshader->set();
 
-	return rendered;
+    return rendered;
 }
 
 void drawskyoutline()
@@ -127,12 +127,12 @@ void drawskyoutline()
 	defaultshader->set();
 }
 
-void drawskybox(int farplane, bool limited, float zreflect)
+void drawskybox(int farplane, bool limited)
 {
-	if(limited && !zreflect)
-	{
-		if(!drawskylimits(false, 0) && !editmode && insideworld(camera1->o)) return;
-	}
+    if(limited && !reflecting && !refracting)
+    {
+        if(!drawskylimits(false) && !editmode && insideworld(camera1->o)) return;
+    }
 
     bool fog = glIsEnabled(GL_FOG)==GL_TRUE;
     if(fog) glDisable(GL_FOG);
@@ -143,18 +143,18 @@ void drawskybox(int farplane, bool limited, float zreflect)
 	glRotatef(camera1->pitch, -1, 0, 0);
 	glRotatef(camera1->yaw+spinsky*lastmillis/1000.0f, 0, 1, 0);
 	glRotatef(90, 1, 0, 0);
-	if(zreflect && camera1->o.z>=zreflect) glScalef(1, 1, -1);
-	glColor3f(1, 1, 1);
-	extern int ati_skybox_bug;
-	if(limited) glDepthFunc(editmode || !insideworld(camera1->o) || ati_skybox_bug || zreflect ? GL_ALWAYS : GL_GEQUAL);
-	draw_envbox(farplane/2, zreflect ? (zreflect+0.5f*(farplane-hdr.worldsize))/farplane : 0);
-	glPopMatrix();
+    if(reflecting) glScalef(1, 1, -1);
+    glColor3f(1, 1, 1);
+    extern int ati_skybox_bug;
+    if(limited) glDepthFunc(editmode || !insideworld(camera1->o) || ati_skybox_bug || reflecting || refracting ? GL_ALWAYS : GL_GEQUAL);
+    draw_envbox(farplane/2, reflectz<hdr.worldsize ? (reflectz+0.5f*(farplane-hdr.worldsize))/farplane : 0);
+    glPopMatrix();
 
-	if(limited)
-	{
-		glDepthFunc(GL_LESS);
-		if(!zreflect && editmode && showsky) drawskyoutline();
-	}
+    if(limited)
+    {
+        glDepthFunc(GL_LESS);
+        if(!reflecting && !refracting && editmode && showsky) drawskyoutline();
+    }
 
     if(fog) glEnable(GL_FOG);
 }

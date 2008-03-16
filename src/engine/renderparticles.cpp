@@ -450,29 +450,30 @@ static void drawexplosion(bool inside, uchar r, uchar g, uchar b, uchar a)
 		glBindTexture(GL_TEXTURE_2D, lastexpmodtex);
 		glActiveTexture_(GL_TEXTURE0_ARB);
 	}
-	if(renderpath!=R_FIXEDFUNCTION && !explosion2d)
-	{
-		if(inside) glScalef(1, 1, -1);
-		loopi(!reflecting && inside ? 2 : 1)
-		{
-			glColor4ub(r, g, b, i ? a/2 : a);
-			if(i) glDepthFunc(GL_GEQUAL);
-			drawexpverts(spherenumverts, spherenumindices, sphereindices);
-			if(i) glDepthFunc(GL_LESS);
-		}
-		return;
-	}
-	loopi(!reflecting && inside ? 2 : 1)
-	{
-		glColor4ub(r, g, b, i ? a/2 : a);
-		if(i)
-		{
-			glScalef(1, 1, -1);
-			glDepthFunc(GL_GEQUAL);
-		}
-		if(inside)
-		{
-			if(!reflecting)
+    int passes = !reflecting && !refracting && inside ? 2 : 1;
+    if(renderpath!=R_FIXEDFUNCTION && !explosion2d)
+    {
+        if(inside) glScalef(1, 1, -1);
+        loopi(passes)
+        {
+            glColor4ub(r, g, b, i ? a/2 : a);
+            if(i) glDepthFunc(GL_GEQUAL);
+            drawexpverts(spherenumverts, spherenumindices, sphereindices);
+            if(i) glDepthFunc(GL_LESS);
+        }
+        return;
+    }
+    loopi(passes)
+    {
+        glColor4ub(r, g, b, i ? a/2 : a);
+        if(i)
+        {
+            glScalef(1, 1, -1);
+            glDepthFunc(GL_GEQUAL);
+        }
+        if(inside)
+        {
+            if(passes >= 2)
 			{
 				glCullFace(GL_BACK);
 				drawexpverts(heminumverts, heminumindices, hemiindices);
@@ -511,7 +512,7 @@ static void cleanupexplosion()
 	{
 		if(explosion2d) glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-        if(refracting) setfogplane(1, refracting);
+        if(fogging) setfogplane(1, refracting);
 		foggedshader->set();
 	}
 
@@ -549,7 +550,7 @@ static bool emit = false;
 
 static bool emit_particles()
 {
-	if(reflecting) return false;
+	if(reflecting || refracting) return false;
 	if(emit) return emit;
 	int emitmillis = 1000/emitfps;
 	emit = (lastmillis-lastemitframe>emitmillis);
@@ -846,13 +847,13 @@ void render_particles(int time)
 					o.z -= t*t/(2.0f * 5000.0f * pt.gr);
 				}
 				blend = max(255 - (ts<<8)/p->fade, 0);
-				if(!refracting && !reflecting && ts >= p->fade) remove = true;
+				if(ts >= p->fade) remove = true;
 			}
 			else
 			{
 				blend = 255;
 				ts = p->fade;
-				if(!refracting && !reflecting) remove = true;
+				remove = true;
 			}
 
 			if(quads)
@@ -860,7 +861,7 @@ void render_particles(int time)
                 if(type!=PT_FLARE)
 				{
                     blend = min(blend<<2, 255);
-                    if(type!=PT_LIGHTNING && renderpath==R_FIXEDFUNCTION && refracting && refractfog) blend = (uchar)(blend * max(0.0f, min(1.0f, (refracting - o.z)/waterfog)));
+                    if(type!=PT_LIGHTNING && renderpath==R_FIXEDFUNCTION && fogging) blend = (uchar)(blend * max(0.0f, min(1.0f, (reflectz - o.z)/waterfog)));
                 }
                 if(pt.type&PT_MOD) //multiply alpha into color
 					glColor3ub((color[0]*blend)>>8, (color[1]*blend)>>8, (color[2]*blend)>>8);
@@ -928,21 +929,21 @@ void render_particles(int time)
 				glPushMatrix();
 				glTranslatef(o.x, o.y, o.z);
 
-                if(refracting)
+                if(fogging)
                 {
-                    if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, refracting - o.z, true);
-                    else if(refractfog) blend = (uchar)(blend * max(0.0f, min(1.0f, (refracting - o.z)/waterfog)));
+                    if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
+                    else blend = (uchar)(blend * max(0.0f, min(1.0f, (reflectz - o.z)/waterfog)));
                 }
 				if(type==PT_FIREBALL)
 				{
 					float pmax = p->val;
-					float size = float(ts)/p->fade;
+					float size = p->fade ? float(ts)/p->fade : 1;
 					float psize = pt.sz + pmax * size;
 
 					bool inside = o.dist(camera1->o) <= psize*1.25f; //1.25 is max wobble scale
 					vec oc(o);
 					oc.sub(camera1->o);
-					if(reflecting && !refracting) oc.z = o.z - reflecting;
+					if(reflecting) oc.z = o.z - reflectz;
 
 					float yaw = inside ? camera1->yaw - 180 : atan2(oc.y, oc.x)/RAD - 90,
 						  pitch = (inside ? camera1->pitch : asin(oc.z/oc.magnitude())/RAD) - 90;
@@ -1071,7 +1072,7 @@ void render_particles(int time)
 #endif
 			}
 
-			if(remove)
+			if(remove && !reflecting && !refracting)
 			{
 				*pp = p->next;
 				p->next = parempty;
@@ -1103,7 +1104,7 @@ void render_particles(int time)
             case PT_METERVS:
 				glEnable(GL_BLEND);
 				glEnable(GL_TEXTURE_2D);
-                if(refracting && renderpath!=R_FIXEDFUNCTION) setfogplane(1, refracting);
+                if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
 				foggedshader->set();
 				glFogfv(GL_FOG_COLOR, zerofog);
                 break;
@@ -1111,7 +1112,7 @@ void render_particles(int time)
             default:
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE);
                 glFogfv(GL_FOG_COLOR, zerofog);
-                if(refracting && renderpath!=R_FIXEDFUNCTION) setfogplane(1, refracting, true);
+                if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz, true);
                 break;
 		}
 

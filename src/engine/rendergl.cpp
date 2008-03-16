@@ -560,140 +560,6 @@ void setfogplane(float scale, float z, bool flush, float fadescale, float fadeof
     }
 }
 
-bool renderedgame = false;
-
-void rendergame()
-{
-    cl->rendergame();
-    if(!shadowmapping) renderedgame = true;
-}
-
-void drawreflection(float z, bool refract, bool clear)
-{
-	uchar wcol[3];
-	getwatercolour(wcol);
-	float fogc[4] = { wcol[0]/256.0f, wcol[1]/256.0f, wcol[2]/256.0f, 1.0f };
-
-	if(refract && !waterfog)
-	{
-		glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		return;
-	}
-
-	reflecting = z;
-	if(refract) refracting = z;
-    fading = renderpath!=R_FIXEDFUNCTION && waterrefract && waterfade && hasFBO;
-
-	float oldfogstart, oldfogend, oldfogcolor[4];
-    if(renderpath==R_FIXEDFUNCTION && refract && refractfog) glDisable(GL_FOG);
-    else if((renderpath!=R_FIXEDFUNCTION && refract) || camera1->o.z < z)
-	{
-		glGetFloatv(GL_FOG_START, &oldfogstart);
-		glGetFloatv(GL_FOG_END, &oldfogend);
-		glGetFloatv(GL_FOG_COLOR, oldfogcolor);
-
-		if(refract)
-		{
-			glFogi(GL_FOG_START, 0);
-			glFogi(GL_FOG_END, waterfog);
-			glFogfv(GL_FOG_COLOR, fogc);
-		}
-		else
-		{
-			glFogi(GL_FOG_START, (fog+64)/8);
-			glFogi(GL_FOG_END, fog);
-			float fogc[4] = { (fogcolour>>16)/256.0f, ((fogcolour>>8)&255)/256.0f, (fogcolour&255)/256.0f, 1.0f };
-			glFogfv(GL_FOG_COLOR, fogc);
-		}
-	}
-
-	if(clear)
-	{
-		glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-	}
-
-	if(!refract && camera1->o.z >= z)
-	{
-		glPushMatrix();
-		glTranslatef(0, 0, 2*z);
-		glScalef(1, 1, -1);
-
-		glCullFace(GL_BACK);
-	}
-
-	int farplane = max(max(fog*2, 384), hdr.worldsize*2);
-	//if(!refract && explicitsky) drawskybox(farplane, true, z);
-
-	GLfloat clipmatrix[16];
-	if(reflectclip)
-	{
-		float zoffset = reflectclip/4.0f, zclip;
-		if(refract)
-		{
-			zclip = z+zoffset;
-			if(camera1->o.z<=zclip) zclip = z;
-		}
-		else
-		{
-			zclip = z-zoffset;
-			if(camera1->o.z>=zclip && camera1->o.z<=z+4.0f) zclip = z;
-		}
-		genclipmatrix(0, 0, refract ? -1 : 1, refract ? zclip : -zclip, clipmatrix);
-		setclipmatrix(clipmatrix);
-	}
-
-	//if(!refract && explicitsky) drawskylimits(true, z);
-
-    renderreflectedgeom(z, refract, caustics && refract, (renderpath!=R_FIXEDFUNCTION || refractfog) && refract);
-
-    if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-
-	if(reflectmms) renderreflectedmapmodels(z, refract);
-	rendergame();
-
-	if(!refract /*&& !explicitsky*/)
-	{
-        if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        if(reflectclip) undoclipmatrix();
-        defaultshader->set();
-        drawskybox(farplane, false, z);
-        if(reflectclip) setclipmatrix(clipmatrix);
-        if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-	}
-
-	setfogplane(1, z);
-	if(refract) rendergrass();
-    renderdecals(0);
-	rendermaterials(z, refract);
-	render_particles(0);
-
-    if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-	setfogplane();
-
-	if(reflectclip) undoclipmatrix();
-
-	if(!refract && camera1->o.z >= z)
-	{
-		glPopMatrix();
-
-		glCullFace(GL_FRONT);
-	}
-
-    if(renderpath==R_FIXEDFUNCTION && refract && refractfog) glEnable(GL_FOG);
-    else if((renderpath!=R_FIXEDFUNCTION && refract) || camera1->o.z < z)
-	{
-		glFogf(GL_FOG_START, oldfogstart);
-		glFogf(GL_FOG_END, oldfogend);
-		glFogfv(GL_FOG_COLOR, oldfogcolor);
-	}
-
-	refracting = 0;
-	reflecting = 0;
-}
-
 static float findsurface(int fogmat, const vec &v, int &abovemat)
 {
     ivec o(v);
@@ -778,6 +644,141 @@ static void blendfogoverlay(int fogmat, float blend, float *overlay)
             loopk(3) overlay[k] += blend;
             break;
     }
+}
+
+bool renderedgame = false;
+
+void rendergame()
+{
+    cl->rendergame();
+    if(!shadowmapping) renderedgame = true;
+}
+
+void drawreflection(float z, bool refract, bool clear)
+{
+	uchar wcol[3];
+	getwatercolour(wcol);
+	float fogc[4] = { wcol[0]/256.0f, wcol[1]/256.0f, wcol[2]/256.0f, 1.0f };
+
+	if(refract && !waterfog)
+	{
+		glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		return;
+	}
+
+    reflectz = z < 0 ? 1e16f : z;
+    reflecting = !refract;
+    refracting = refract ? (z < 0 || camera1->o.z >= z ? -1 : 1) : 0;
+    fading = renderpath!=R_FIXEDFUNCTION && waterrefract && waterfade && hasFBO && z>=0;
+    fogging = refracting<0 && z>=0 && (renderpath!=R_FIXEDFUNCTION || refractfog);
+
+    float oldfogstart, oldfogend, oldfogcolor[4];
+    if(renderpath==R_FIXEDFUNCTION && fogging) glDisable(GL_FOG);
+    else
+    {
+        glGetFloatv(GL_FOG_START, &oldfogstart);
+        glGetFloatv(GL_FOG_END, &oldfogend);
+        glGetFloatv(GL_FOG_COLOR, oldfogcolor);
+
+        if(fogging)
+        {
+            glFogi(GL_FOG_START, 0);
+            glFogi(GL_FOG_END, waterfog);
+            glFogfv(GL_FOG_COLOR, fogc);
+        }
+        else
+        {
+            glFogi(GL_FOG_START, (fog+64)/8);
+            glFogi(GL_FOG_END, fog);
+            float fogc[4] = { (fogcolour>>16)/255.0f, ((fogcolour>>8)&255)/255.0f, (fogcolour&255)/255.0f, 1.0f };
+            glFogfv(GL_FOG_COLOR, fogc);
+        }
+    }
+
+	if(clear)
+	{
+		glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
+
+    if(reflecting)
+    {
+        glPushMatrix();
+        glTranslatef(0, 0, 2*z);
+        glScalef(1, 1, -1);
+
+        glCullFace(GL_BACK);
+    }
+
+    int farplane = max(max(fog*2, 384), hdr.worldsize*2);
+
+    GLfloat clipmatrix[16];
+    if(reflectclip && z>=0)
+    {
+        float zoffset = reflectclip/4.0f, zclip;
+        if(refracting<0)
+        {
+            zclip = z+zoffset;
+            if(camera1->o.z<=zclip) zclip = z;
+        }
+        else
+        {
+            zclip = z-zoffset;
+            if(camera1->o.z>=zclip && camera1->o.z<=z+4.0f) zclip = z;
+        }
+        genclipmatrix(0, 0, refracting<0 ? -1 : 1, refracting<0 ? zclip : -zclip, clipmatrix);
+        setclipmatrix(clipmatrix);
+    }
+
+
+    renderreflectedgeom(refracting<0 && z>=0 && caustics, fogging);
+
+    if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+
+    if(reflectmms) renderreflectedmapmodels();
+    rendergame();
+
+    if(reflecting || refracting>0 || z<0)
+    {
+        if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        if(reflectclip && z>=0) undoclipmatrix();
+        defaultshader->set();
+        drawskybox(farplane, false);
+        if(reflectclip && z>=0) setclipmatrix(clipmatrix);
+        if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+    }
+
+    if(fogging) setfogplane(1, z);
+    if(refracting) rendergrass();
+    renderdecals(0);
+    rendermaterials();
+    render_particles(0);
+
+    if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+    if(fogging) setfogplane();
+
+    if(reflectclip && z>=0) undoclipmatrix();
+
+    if(reflecting)
+    {
+        glPopMatrix();
+
+        glCullFace(GL_FRONT);
+    }
+
+    if(renderpath==R_FIXEDFUNCTION && fogging) glEnable(GL_FOG);
+    else
+	{
+		glFogf(GL_FOG_START, oldfogstart);
+		glFogf(GL_FOG_END, oldfogend);
+		glFogfv(GL_FOG_COLOR, oldfogcolor);
+	}
+
+    reflectz = 1e16f;
+    refracting = 0;
+    reflecting = fading = fogging = false;
 }
 
 bool envmapping = false;

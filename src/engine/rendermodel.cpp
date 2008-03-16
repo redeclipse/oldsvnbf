@@ -360,60 +360,63 @@ void rendershadow(vec &dir, model *m, int anim, const vec &o, vec center, float 
 	glDisable(GL_TEXTURE_2D);
 	glDepthMask(GL_FALSE);
 
-	if(!hasFBO || !reflecting || hasDS) glEnable(GL_STENCIL_TEST);
+    if(!hasFBO || !reflecting || !refracting || hasDS)
+    {
+        glEnable(GL_STENCIL_TEST);
 
-	if((!hasFBO || !reflecting || hasDS) && bounddynshadows)
-	{
-		nocolorshader->set();
-		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		glStencilFunc(GL_ALWAYS, 1, 1);
-		glStencilOp(GL_KEEP, GL_REPLACE, GL_ZERO);
+        if(bounddynshadows)
+        {
+            nocolorshader->set();
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+            glStencilFunc(GL_ALWAYS, 1, 1);
+            glStencilOp(GL_KEEP, GL_REPLACE, GL_ZERO);
 
-		vec below(center);
-		below.z -= 1.0f;
-		glPushMatrix();
-		setshadowmatrix(plane(floor, -floor.dot(below)), shaddir);
-		glBegin(GL_QUADS);
-		loopi(6) if((shaddir[dimension(i)]>0)==dimcoord(i)) loopj(4)
-		{
-			const ivec &cc = cubecoords[fv[i][j]];
-			glVertex3f(center.x + (cc.x ? 1.5f : -1.5f)*radius,
-						center.y + (cc.y ? 1.5f : -1.5f)*radius,
-						cc.z ? center.z + dist + radius : below.z);
-			xtraverts += 4;
-		}
-		glEnd();
-		glPopMatrix();
+            vec below(center);
+            below.z -= 1.0f;
+            glPushMatrix();
+            setshadowmatrix(plane(floor, -floor.dot(below)), shaddir);
+            glBegin(GL_QUADS);
+            loopi(6) if((shaddir[dimension(i)]>0)==dimcoord(i)) loopj(4)
+            {
+                const ivec &cc = cubecoords[fv[i][j]];
+                glVertex3f(center.x + (cc.x ? 1.5f : -1.5f)*radius,
+                           center.y + (cc.y ? 1.5f : -1.5f)*radius,
+                           cc.z ? center.z + dist + radius : below.z);
+                xtraverts += 4;
+            }
+            glEnd();
+            glPopMatrix();
 
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, fading ? GL_FALSE : GL_TRUE);
-	}
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, fading ? GL_FALSE : GL_TRUE);
+        }
+    }
 
     float intensity = dynshadow/100.0f;
-    if(refracting)
+    if(fogging)
     {
-        if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, max(0.1f, refracting-center.z));
-        else if(refractfog) intensity *= 1.0f - max(0.0f, min(1.0f, (refracting - center.z)/waterfog));
+        if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, max(0.1f, reflectz-center.z));
+        else intensity *= 1.0f - max(0.0f, min(1.0f, (reflectz - center.z)/waterfog));
     }
     glColor4f(0, 0, 0, intensity);
 
-	if(!hasFBO || !reflecting || hasDS)
-	{
-		glStencilFunc(GL_NOTEQUAL, bounddynshadows ? 0 : 1, 1);
-		glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
-	}
+    if(!hasFBO || !reflecting || !refracting || hasDS)
+    {
+        glStencilFunc(GL_NOTEQUAL, bounddynshadows ? 0 : 1, 1);
+        glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+    }
 
-	vec above(center);
-	above.z += 0.25f;
+    vec above(center);
+    above.z += 0.25f;
 
-	glPushMatrix();
-	setshadowmatrix(plane(floor, -floor.dot(above)), shaddir);
-	m->render(anim|ANIM_NOSKIN|ANIM_SHADOW, speed, basetime, o, yaw, pitch, roll, d, a);
-	glPopMatrix();
+    glPushMatrix();
+    setshadowmatrix(plane(floor, -floor.dot(above)), shaddir);
+    m->render(anim|ANIM_NOSKIN|ANIM_SHADOW, speed, basetime, o, yaw, pitch, roll, d, a);
+    glPopMatrix();
 
-	glEnable(GL_TEXTURE_2D);
-	glDepthMask(GL_TRUE);
+    glEnable(GL_TEXTURE_2D);
+    glDepthMask(GL_TRUE);
 
-	if(!hasFBO || !reflecting || hasDS) glDisable(GL_STENCIL_TEST);
+    if(!hasFBO || !reflecting || !refracting || hasDS) glDisable(GL_STENCIL_TEST);
 }
 
 struct batchedmodel
@@ -632,15 +635,19 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
         if(cull&MDL_CULL_DIST && center.dist(camera1->o)/radius>maxmodelradiusdistance) return;
 		if(cull&MDL_CULL_VFC)
 		{
-			if(reflecting)
-			{
-				if(refracting)
-				{
-					if(center.z+radius<refracting-waterfog || (!shadow && center.z-radius>=refracting)) return;
-				}
-				else if(center.z+radius<=reflecting) return;
-				if(center.dist(camera1->o)-radius>reflectdist) return;
-			}
+            if(reflecting || refracting)
+            {
+                if(reflecting || refracting>0)
+                {
+                    if(center.z+radius<=reflectz) return;
+                }
+                else
+                {
+                    if(fogging && center.z+radius<reflectz-waterfog) return;
+                    if(!shadow && center.z-radius>=reflectz) return;
+                }
+                if(center.dist(camera1->o)-radius>reflectdist) return;
+            }
 			if(isvisiblesphere(radius, center) >= VFC_FOGGED) return;
             if(shadowmapping && !isshadowmapcaster(center, radius)) return;
 		}
