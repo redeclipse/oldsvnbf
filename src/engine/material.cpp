@@ -546,7 +546,10 @@ void rendermaterials()
 	glDisable(GL_CULL_FACE);
 
 	Slot &wslot = lookuptexture(-MAT_WATER), &lslot = lookuptexture(-MAT_LAVA);
-	uchar wcol[4] = { watercolour>>16, (watercolour>>8)&0xFF, watercolour&0xFF, 192 };
+    uchar wcol[4], wfcol[4];
+    getwatercolour(wcol);
+    getwaterfallcolour(wfcol);
+    wcol[3] = wfcol[3] = 192;
 	int lastorient = -1, lastmat = -1;
 	GLenum textured = GL_TEXTURE_2D;
     bool begin = false, depth = true, blended = false, overbright = false, usedcamera = false, usedwaterfall = false;
@@ -593,7 +596,7 @@ void rendermaterials()
                         else if(renderpath==R_FIXEDFUNCTION || ((!waterfallrefract || reflecting || refracting) && (!hasCM || !waterfallenv)))
                         {
                             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-                            glColor3f(wcol[0]/255.0f, wcol[1]/255.0f, wcol[2]/255.0f);
+                            glColor3ubv(wfcol);
                             foggedshader->set();
                             fogtype = 0;
                             if(!blended) { glEnable(GL_BLEND); blended = true; }
@@ -601,7 +604,7 @@ void rendermaterials()
                         }
                         else
                         {
-                            glColor3f(wcol[0]/255.0f, wcol[1]/255.0f, wcol[2]/255.0f);
+                            glColor3ubv(wfcol);
                             fogtype = 1;
 
                             if(!usedcamera)
