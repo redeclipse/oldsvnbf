@@ -638,7 +638,7 @@ void rendermaterials()
                             if(!usedwaterfall)
                             {
                                 Texture *dudv = wslot.sts.inrange(5) ? wslot.sts[5].t : notexture;
-                                float scale = 8.0f/(dudv->ys*(wslot.sts[5].scale ? wslot.sts[5].scale : 1));
+                                float scale = 8.0f/(dudv->ys*(wslot.sts.inrange(5) && wslot.sts[5].scale ? wslot.sts[5].scale : 1));
                                 setlocalparamf("dudvoffset", SHPARAM_PIXEL, 1, 0, scale*16*lastmillis/1000.0f);
 
                                 glActiveTexture_(GL_TEXTURE1_ARB);
