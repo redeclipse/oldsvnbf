@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "engine.h"
 
-VARP(maxdynlights, 0, min(2, MAXDYNLIGHTS), MAXDYNLIGHTS);
+VARP(maxdynlights, 0, min(3, MAXDYNLIGHTS), MAXDYNLIGHTS);
 VARP(dynlightdist, 0, 1024, 10000);
 
 struct dynlight
@@ -44,6 +44,8 @@ struct dynlight
             if(fading < fade) intensity = float(fading)/fade;
         }
         curcolor.mul(intensity);
+        // KLUGE: this prevents nvidia drivers from trying to recompile dynlight fragment programs
+        loopk(3) if(fmod(curcolor[k], 1.0f/256) < 0.001f) curcolor[k] += 0.001f;
     }
 };
 
