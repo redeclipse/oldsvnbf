@@ -158,7 +158,6 @@ static float disttoent(octaentities *oc, octaentities *last, const vec &o, const
 	}
 
 	entintersect(RAY_POLY, mapmodels,
-		if((mode&RAY_ENTS)!=RAY_ENTS) continue;
 		orient = 0; // FIXME, not set
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
 	);
