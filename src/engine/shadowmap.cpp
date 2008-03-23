@@ -114,7 +114,7 @@ void setupblurkernel()
     if(blurshadowmap<=0 || (size_t)blurshadowmap>=sizeof(blurweights)/sizeof(blurweights[0])) return;
     memset(blurweights, 0, sizeof(blurweights));
     memset(bluroffsets, 0, sizeof(bluroffsets));
-    float sigma = 2*blurshadowmap*blursmsigma/100.0f, total = 1.0f/sigma;
+    float sigma = 2*blurshadowmap*blursmsigma/100.0f, total = 1.0f/sigma, lastoffset = 0;
     blurweights[0] = 1.0f/sigma;
     // rely on bilinear filtering to sample 2 pixels at once
     // transforms a*X + b*Y into (u+v)*[X*u/(u+v) + Y*(1 - u/(u+v))]
@@ -123,9 +123,10 @@ void setupblurkernel()
         float weight1 = exp(-((2*i)*(2*i)) / (2*sigma*sigma)) / sigma,
               weight2 = exp(-((2*i+1)*(2*i+1)) / (2*sigma*sigma)) / sigma,
               scale = weight1 + weight2,
-              offset = weight2 / scale;
+              offset = 2*i+1 + weight2 / scale;
         blurweights[i+1] = scale;
-        bluroffsets[i+1] = 2*i+1 + offset - bluroffsets[i];
+        bluroffsets[i+1] = offset - bluroffsets[i];
+        lastoffset = offset;
         total += 2*scale;
     }
     loopi(blurshadowmap+1) blurweights[i] /= total;
