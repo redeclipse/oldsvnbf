@@ -926,7 +926,8 @@ void queryreflections()
 {
 	rplanes = 0;
 
-	static int lastsize = 0, size = 1<<reflectsize;
+	static int lastsize = 0;
+    int size = 1<<reflectsize;
 	if(!hasFBO) while(size>screen->w || size>screen->h) size /= 2;
 	if(size!=lastsize) { if(lastsize) cleanreflections(); lastsize = size; }
 
