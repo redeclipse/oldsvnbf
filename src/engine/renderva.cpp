@@ -1027,7 +1027,18 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot)
 
 static void changeshader(renderstate &cur, Shader *s, Slot &slot, bool shadowed)
 {
-    if(fading)
+    if(glaring)
+    {
+        Shader *g = s->hasvariant(min(s->variants[4].length()-1, cur.visibledynlights), 4);
+        if(g) g->set(&slot);
+        else
+        {
+            static Shader *noglareshader = NULL;
+            if(!noglareshader) noglareshader = lookupshaderbyname("noglareworld");
+            noglareshader->set(&slot);
+        }
+    }
+    else if(fading)
     {
         if(shadowed) s->variant(min(s->variants[3].length()-1, cur.visibledynlights), 3)->set(&slot);
         else s->variant(min(s->variants[2].length()-1, cur.visibledynlights), 2)->set(&slot);
@@ -1476,8 +1487,7 @@ void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
 
 void setupTMUs(renderstate &cur, float causticspass, bool fogpass)
 {
-    extern GLuint shadowmapfb;
-    if(!reflecting && !refracting && !envmapping && shadowmap && shadowmapfb)
+    if(!reflecting && !refracting && !envmapping && shadowmap && hasFBO)
     {
         glDisableClientState(GL_VERTEX_ARRAY);
 

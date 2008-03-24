@@ -97,7 +97,7 @@ enum
 };
 
 #define MAXSHADERDETAIL 3
-#define MAXVARIANTROWS 4
+#define MAXVARIANTROWS 5
 
 extern int shaderdetail;
 
@@ -131,6 +131,13 @@ struct Shader
 	void flushenvparams(Slot *slot = NULL);
 	void setslotparams(Slot &slot);
 	void bindprograms();
+
+    Shader *hasvariant(int col, int row = 0)
+    {
+        if(!this || renderpath==R_FIXEDFUNCTION) return NULL;
+        Shader *s = shaderdetail < MAXSHADERDETAIL ? fastshader[shaderdetail] : this;
+        return row>=0 && row<MAXVARIANTROWS && s->variants[row].inrange(col) ? s->variants[row][col] : NULL;
+    }
 
     Shader *variant(int col, int row = 0)
 	{
@@ -285,4 +292,9 @@ extern void setuptmu(int n, const char *rgbfunc = NULL, const char *alphafunc = 
 #define MAXDYNLIGHTS 5
 #define DYNLIGHTBITS 6
 #define DYNLIGHTMASK ((1<<DYNLIGHTBITS)-1)
+
+#define MAXBLURRADIUS 7
+
+extern void setupblurkernel(int radius, float sigma, float *weights, float *offsets);
+extern void setblurshader(int pass, int size, int radius, float *weights, float *offsets);
 

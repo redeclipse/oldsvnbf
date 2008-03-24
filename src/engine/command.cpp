@@ -791,6 +791,31 @@ ICOMMAND(echo, "C", (char *s), conoutf("\fs\fw%s\fr", s));
 
 void strstra(char *a, char *b) { char *s = strstr(a, b); intret(s ? s-a : -1); } COMMANDN(strstr, strstra, "ss");
 
+char *strreplace(const char *s, const char *oldval, const char *newval)
+{
+    vector<char> buf;
+
+    int oldlen = strlen(oldval);
+    for(;;)
+    {
+        char *found = strstr(s, oldval);
+        if(found)
+        {
+            while(s < found) buf.add(*s++);
+            for(const char *n = newval; *n; n++) buf.add(*n);
+            s = found + oldlen;
+        }
+        else
+        {
+            while(*s) buf.add(*s++);
+            buf.add('\0');
+            return newstring(buf.getbuf(), buf.length());
+        }
+    }
+}
+
+void strreplacea(char *s, char *o, char *n) { commandret = strreplace(s, o, n); } COMMANDN(strreplace, strreplacea, "sss");
+
 struct sleepcmd
 {
 	int millis;

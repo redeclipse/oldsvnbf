@@ -301,10 +301,6 @@ void getlavacolour(uchar *lcol)
 	memcpy(lcol, gcol, 3);
 }
 
-Shader *watershader = NULL, *waterreflectshader = NULL, *waterrefractshader = NULL, *waterfadeshader = NULL,
-       *waterenvshader = NULL, *waterenvrefractshader = NULL, *waterenvfadeshader = NULL,
-       *underwatershader = NULL, *underwaterrefractshader = NULL, *underwaterfadeshader = NULL;
-
 void setprojtexmatrix(Reflection &ref, bool init = true)
 {
 	if(init && ref.lastupdate==totalmillis)
@@ -536,7 +532,13 @@ void renderwater()
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, s.sts.length() > 3 ? s.sts[3].t->id : notexture->id);
 
-    if(waterrefract)
+    if(glaring)
+    {
+        glDepthMask(GL_TRUE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+    }
+    else if(waterrefract)
     {
         glActiveTexture_(GL_TEXTURE3_ARB);
         glEnable(GL_TEXTURE_2D);
@@ -554,7 +556,7 @@ void renderwater()
     }
 	glActiveTexture_(GL_TEXTURE0_ARB);
 
-    if(waterenvmap && !waterreflect && hasCM)
+    if(!glaring && waterenvmap && !waterreflect && hasCM)
     {
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_TEXTURE_CUBE_MAP_ARB);
@@ -566,12 +568,14 @@ void renderwater()
 
     #define SETWATERSHADER(which, name) \
     do { \
+        static Shader *name##shader = NULL; \
         if(!name##shader) name##shader = lookupshaderbyname(#name); \
         which##shader = name##shader; \
     } while(0)
 
     Shader *aboveshader = NULL;
-    if(waterenvmap && !waterreflect && hasCM)
+    if(glaring) SETWATERSHADER(above, waterglare);
+    else if(waterenvmap && !waterreflect && hasCM)
     {
         if(waterrefract)
         {
@@ -589,14 +593,17 @@ void renderwater()
     else SETWATERSHADER(above, water);
 
     Shader *belowshader = NULL;
-    if(waterrefract)
+    if(!glaring)
     {
-        if(waterfade && hasFBO) SETWATERSHADER(below, underwaterfade);
-        else SETWATERSHADER(below, underwaterrefract);
-    }
-    else SETWATERSHADER(below, underwater);
+        if(waterrefract)
+        {
+            if(waterfade && hasFBO) SETWATERSHADER(below, underwaterfade);
+            else SETWATERSHADER(below, underwaterrefract);
+        }
+        else SETWATERSHADER(below, underwater);
 
-	if(waterreflect || waterrefract) glMatrixMode(GL_TEXTURE);
+        if(waterreflect || waterrefract) glMatrixMode(GL_TEXTURE);
+    }
 
 	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 	vec amb(max(sky[0], ambient), max(sky[1], ambient), max(sky[2], ambient));
@@ -605,27 +612,34 @@ void renderwater()
 	{
 		Reflection &ref = reflections[i];
 		if(ref.height<0 || ref.lastused<totalmillis || ref.matsurfs.empty()) continue;
-        if(hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref && checkquery(ref.query)) continue;
+        if(!glaring && hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref && checkquery(ref.query)) continue;
 
         bool below = camera1->o.z < ref.height+offset;
-        if(below) belowshader->set();
+        if(below)
+        {
+            if(!belowshader) continue;
+            belowshader->set();
+        }
         else aboveshader->set();
 
-        if(waterreflect || waterrefract)
+        if(!glaring)
         {
-            if(waterreflect || !waterenvmap || !hasCM) glBindTexture(GL_TEXTURE_2D, waterreflect ? ref.tex : ref.refracttex);
-            setprojtexmatrix(ref);
-        }
-
-        if(waterrefract)
-        {
-            glActiveTexture_(GL_TEXTURE3_ARB);
-            glBindTexture(GL_TEXTURE_2D, ref.refracttex);
-            glActiveTexture_(GL_TEXTURE0_ARB);
-            if(waterfade)
+            if(waterreflect || waterrefract)
             {
-                float fadeheight = ref.height+offset+(below ? -2 : 2);
-                setlocalparamf("waterheight", SHPARAM_VERTEX, 7, fadeheight, fadeheight, fadeheight);
+                if(waterreflect || !waterenvmap || !hasCM) glBindTexture(GL_TEXTURE_2D, waterreflect ? ref.tex : ref.refracttex);
+                setprojtexmatrix(ref);
+            }
+
+            if(waterrefract)
+            {
+                glActiveTexture_(GL_TEXTURE3_ARB);
+                glBindTexture(GL_TEXTURE_2D, ref.refracttex);
+                glActiveTexture_(GL_TEXTURE0_ARB);
+                if(waterfade)
+                {
+                    float fadeheight = ref.height+offset+(below ? -2 : 2);
+                    setlocalparamf("waterheight", SHPARAM_VERTEX, 7, fadeheight, fadeheight, fadeheight);
+                }
             }
         }
 
@@ -649,7 +663,7 @@ void renderwater()
 				lastlight = light;
 			}
 
-			if(!waterrefract && m.depth!=lastdepth)
+			if(!glaring && !waterrefract && m.depth!=lastdepth)
 			{
 				if(begin) { glEnd(); begin = false; }
 				float depth = !waterfog ? 1.0f : min(0.75f*m.depth/waterfog, 0.95f);
@@ -669,23 +683,23 @@ void renderwater()
 		if(begin) glEnd();
 	}
 
-	if(waterreflect || waterrefract)
-	{
-		glLoadIdentity();
-		glMatrixMode(GL_MODELVIEW);
-	}
+    if(glaring || (!waterreflect && !waterrefract))
+    {
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+    }
+    else
+    {
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
 
-	if(waterrefract)
-	{
-		glActiveTexture_(GL_TEXTURE3_ARB);
-		glDisable(GL_TEXTURE_2D);
-        if(hasFBO && renderpath!=R_FIXEDFUNCTION && waterfade) glDisable(GL_BLEND);
-	}
-	else
-	{
-		glDepthMask(GL_TRUE);
-		glDisable(GL_BLEND);
-	}
+        if(waterrefract)
+        {
+            glActiveTexture_(GL_TEXTURE3_ARB);
+            glDisable(GL_TEXTURE_2D);
+            if(hasFBO && renderpath!=R_FIXEDFUNCTION && waterfade) glDisable(GL_BLEND);
+        }
+    }
 
 	loopi(2)
 	{
@@ -694,7 +708,7 @@ void renderwater()
 	}
 	glActiveTexture_(GL_TEXTURE0_ARB);
 
-    if(waterenvmap && !waterreflect && hasCM)
+    if(!glaring && waterenvmap && !waterreflect && hasCM)
     {
         glDisable(GL_TEXTURE_CUBE_MAP_ARB);
         glEnable(GL_TEXTURE_2D);

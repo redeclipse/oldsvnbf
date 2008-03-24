@@ -1032,6 +1032,12 @@ void shader(int *type, char *name, char *vs, char *ps)
 
 void variantshader(int *type, char *name, int *row, char *vs, char *ps)
 {
+    if(*row < 0)
+    {
+        shader(type, name, vs, ps);
+        return;
+    }
+
     if(renderpath==R_FIXEDFUNCTION && standardshader) return;
 
     Shader *s = lookupshaderbyname(name);
@@ -1046,7 +1052,12 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
         glEnable(GL_VERTEX_PROGRAM_ARB);
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
     }
-    newshader(*type, varname, vs, ps, s, *row);
+    Shader *v = newshader(*type, varname, vs, ps, s, *row);
+    if(v && renderpath!=R_FIXEDFUNCTION)
+    {
+        // '#' is a comment in vertex/fragment programs, while '#pragma' allows an escape for GLSL, so can handle both at once
+        if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(*s, varname, vs, ps, *row);
+    }
     if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && standardshader)
     {
         glDisable(GL_VERTEX_PROGRAM_ARB);
@@ -1538,5 +1549,52 @@ void reloadshaders()
             s.compile();
         }
     );
+}
+
+void setupblurkernel(int radius, float sigma, float *weights, float *offsets)
+{
+    if(radius<1 || radius>MAXBLURRADIUS) return;
+    sigma *= 2*radius;
+    float total = 1.0f/sigma, lastoffset = 0;
+    weights[0] = 1.0f/sigma;
+    // rely on bilinear filtering to sample 2 pixels at once
+    // transforms a*X + b*Y into (u+v)*[X*u/(u+v) + Y*(1 - u/(u+v))]
+    loopi(radius)
+    {
+        float weight1 = exp(-((2*i)*(2*i)) / (2*sigma*sigma)) / sigma,
+              weight2 = exp(-((2*i+1)*(2*i+1)) / (2*sigma*sigma)) / sigma,
+              scale = weight1 + weight2,
+              offset = 2*i+1 + weight2 / scale;
+        weights[i+1] = scale;
+        offsets[i+1] = offset - lastoffset;
+        lastoffset = offset;
+        total += 2*scale;
+    }
+    loopi(radius+1) weights[i] /= total;
+    for(int i = radius+1; i <= MAXBLURRADIUS; i++) weights[i] = offsets[i] = 0;
+}
+
+void setblurshader(int pass, int size, int radius, float *weights, float *offsets)
+{
+    if(radius<1 || radius>MAXBLURRADIUS) return;
+    static Shader *blurshader[7][2] = { { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL } };
+    if(!blurshader[radius-1][pass])
+    {
+        s_sprintfd(name)("blur%c%d", 'x'+pass, radius);
+        blurshader[radius-1][pass] = lookupshaderbyname(name);
+    }
+    blurshader[radius-1][pass]->set();
+    setlocalparamfv("weights", SHPARAM_PIXEL, 0, weights);
+    setlocalparamfv("weights2", SHPARAM_PIXEL, 2, &weights[4]);
+    setlocalparamf("offsets", SHPARAM_PIXEL, 1,
+        pass==0 ? offsets[1]/size : offsets[0]/size,
+        pass==1 ? offsets[1]/size : offsets[0]/size,
+        offsets[2]/size,
+        offsets[3]/size);
+    setlocalparamf("offsets2", SHPARAM_PIXEL, 3,
+        offsets[4]/size,
+        offsets[5]/size,
+        offsets[6]/size,
+        offsets[7]/size);
 }
 

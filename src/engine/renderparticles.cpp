@@ -513,7 +513,6 @@ static void cleanupexplosion()
 		if(explosion2d) glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
         if(fogging) setfogplane(1, refracting);
-		foggedshader->set();
 	}
 
 	if(hasVBO)
@@ -523,7 +522,7 @@ static void cleanupexplosion()
 	}
 }
 
-#define MAXPARTYPES 23
+#define MAXPARTYPES 24
 
 struct particle
 {
@@ -609,6 +608,7 @@ enum
 	PT_RND4 = 1<<10,
     PT_LERP  = 1<<11, // Use very sparingly!
     PT_TRACK = 1<<12,
+    PT_GLARE = 1<<13
 };
 
 // @TODO reorder so as to draw meters & lerps first to reduce visual errors
@@ -616,27 +616,28 @@ static struct parttype { int type; int gr, tex; float sz; int collide; } parttyp
 {
 	{ PT_MOD|PT_RND4,  2,  8, 2.96f, 1 }, // 0 blood spats (note: rgb is inverted)
 	{ PT_MOD|PT_RND4|PT_DECAL, 0, 8, 5.92f, 0 }, // 1 blood stain
-	{ 0,				2,  6, 0.24f,  0 }, // 2 sparks
+	{ PT_GLARE, 		2,  6, 0.24f,  0 }, // 2 sparks
 	{ 0,			 -20,  2,  0.6f,  0 }, // 3 small slowly rising smoke
-	{ 0,			  20,  0, 0.32f,  0 }, // 4 edit mode entities
-	{ 0,			  20,  1,  4.8f,  0 }, // 5 fireball1
+	{ PT_GLARE,		  20,  0, 0.32f,  0 }, // 4 edit mode entities
+	{ PT_GLARE,		  20,  1,  4.8f,  0 }, // 5 fireball1
 	{ 0,			 -20,  2,  2.4f,  0 }, // 6 big  slowly rising smoke
-	{ 0,			  20,  3,  4.8f,  0 }, // 7 fireball2
-	{ 0,			  20,  4,  4.8f,  0 }, // 8 big fireball3
+	{ PT_GLARE,		  20,  3,  4.8f,  0 }, // 7 fireball2
+	{ PT_GLARE,		  20,  4,  4.8f,  0 }, // 8 big fireball3
 	{ PT_TEXTUP,	  -8, -1,  4.0f,  0 }, // 9 TEXT
-	{ PT_FLARE,		0,  5, 0.28f,  0 }, // 10 flare
+	{ PT_FLARE|PT_GLARE, 0,  5, 0.28f,  0 }, // 10 flare
 	{ PT_TEXT,		 0, -1,  2.0f,  0 }, // 11 TEXT, SMALL, NON-MOVING
-	{ 0,			  20,  4,  2.0f,  0 }, // 12 fireball3
+	{ PT_GLARE,			  20,  4,  2.0f,  0 }, // 12 fireball3
 	{ PT_METER,		0, -1,  2.0f,  0 }, // 13 METER, SMALL, NON-MOVING
 	{ PT_METERVS,	  0, -1,  2.0f,  0 }, // 14 METER vs., SMALL, NON-MOVING
 	{ 0,			  20,  2,  0.6f,  0 }, // 15 small  slowly sinking smoke trail
-	{ PT_FIREBALL,	 0,  7,  4.0f,  0 }, // 16 explosion fireball
+	{ PT_FIREBALL|PT_GLARE,	 0,  7,  4.0f,  0 }, // 16 explosion fireball
 	{ PT_ENT,		-20,  2,  2.4f,  0 }, // 17 big  slowly rising smoke, entity
 	{ 0,			 -15,  2,  2.4f,  0 }, // 18 big  fast rising smoke
 	{ PT_ENT|PT_TRAIL|PT_LERP, 2, 0, 0.60f, 0 }, // 19 water, entity
-	{ PT_ENT,		 20,  1,  4.8f,  0 }, // 20 fireball1, entity
-    { PT_LIGHTNING|PT_TRACK,    0,  9, 0.28f,  0 }, // 21 lightning
-	{ PT_LIGHTNING|PT_TRACK,    0,  10, 0.60f,  0 }, // 22 spark
+	{ PT_ENT|PT_GLARE,		 20,  1,  4.8f,  0 }, // 20 fireball1, entity
+    { PT_LIGHTNING|PT_TRACK|PT_GLARE,    0,  9, 0.28f,  0 }, // 21 lightning
+	{ PT_LIGHTNING|PT_TRACK|PT_GLARE,    0,  10, 0.60f,  0 }, // 22 spark
+    { PT_FIREBALL,      0,  7, 4.0f,  0 }, // 23 explosion fireball, no glare
 };
 
 static particle *newparticle(const vec &o, const vec &d, int fade, int type, int color)
@@ -764,12 +765,20 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
     glEnd();
 }
 
+VARP(particleglare, 0, 4, 100);
+
 void render_particles(int time)
 {
+    if(glaring && !particleglare) return;
+
+    static Shader *particleshader = NULL, *particlenotextureshader = NULL;
+    if(!particleshader) particleshader = lookupshaderbyname("particle");
+    if(!particlenotextureshader) particlenotextureshader = lookupshaderbyname("particlenotexture");
+
 	static float zerofog[4] = { 0, 0, 0, 1 };
 	float oldfogc[4];
 	bool rendered = false;
-	loopi(MAXPARTYPES) if(parlist[i])
+    loopi(MAXPARTYPES) if(parlist[i] && (!glaring || parttypes[i].type&PT_GLARE))
 	{
 		if(!rendered)
 		{
@@ -778,7 +787,10 @@ void render_particles(int time)
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-			foggedshader->set();
+            if(glaring) setenvparamf("colorscale", SHPARAM_VERTEX, 4, particleglare, particleglare, particleglare, 1);
+            else setenvparamf("colorscale", SHPARAM_VERTEX, 4, 1, 1, 1, 1);
+
+            particleshader->set();
 			glGetFloatv(GL_FOG_COLOR, oldfogc);
 			glFogfv(GL_FOG_COLOR, zerofog);
 		}
@@ -820,7 +832,7 @@ void render_particles(int time)
             case PT_METERVS:
 				glDisable(GL_BLEND);
 				glDisable(GL_TEXTURE_2D);
-				foggednotextureshader->set();
+				particlenotextureshader->set();
 				glFogfv(GL_FOG_COLOR, oldfogc);
                 break;
 
@@ -1098,6 +1110,7 @@ void render_particles(int time)
 
             case PT_FIREBALL:
                 cleanupexplosion();
+                particleshader->set();
                 break;
 
             case PT_METER:
@@ -1105,7 +1118,7 @@ void render_particles(int time)
 				glEnable(GL_BLEND);
 				glEnable(GL_TEXTURE_2D);
                 if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
-				foggedshader->set();
+				particleshader->set();
 				glFogfv(GL_FOG_COLOR, zerofog);
                 break;
 
