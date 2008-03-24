@@ -1,15 +1,15 @@
 #include "pch.h"
 #include "engine.h"
 
-VARP(shadowmap, 0, 1, 1);
+VARP(shadowmap, 0, 0, 1);
 
-GLuint shadowmaptex = 0, shadowmapfb = 0, shadowmapdb = 0;
-int shadowmaptexsize = 0;
+static GLuint shadowmaptex = 0, shadowmapfb = 0, shadowmapdb = 0;
+static int shadowmaptexsize = 0;
 
-GLuint blurtex = 0, blurfb = 0;
+static GLuint blurtex = 0, blurfb = 0;
 #define BLURTILES 32
 #define BLURTILEMASK (0xFFFFFFFFU>>(32-BLURTILES))
-uint blurtiles[BLURTILES+1];
+static uint blurtiles[BLURTILES+1];
 
 void cleanshadowmap()
 {
@@ -64,19 +64,19 @@ void createshadowmap()
     GLenum colorfmt = colorfmts[find];
     if(colorfmt)
     {
-    static GLenum depthfmts[] = { GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT32, GL_FALSE };
+        static GLenum depthfmts[] = { GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT32, GL_FALSE };
 
-    glGenRenderbuffers_(1, &shadowmapdb);
-    glBindRenderbuffer_(GL_RENDERBUFFER_EXT, shadowmapdb);
+        glGenRenderbuffers_(1, &shadowmapdb);
+        glBindRenderbuffer_(GL_RENDERBUFFER_EXT, shadowmapdb);
 
-    find = 0;
-    do
-    {
-        glRenderbufferStorage_(GL_RENDERBUFFER_EXT, depthfmts[find], shadowmaptexsize, shadowmaptexsize);
-        glFramebufferRenderbuffer_(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, shadowmapdb);
-        if(glCheckFramebufferStatus_(GL_FRAMEBUFFER_EXT)==GL_FRAMEBUFFER_COMPLETE_EXT)
-            break;
-    } while(depthfmts[++find]);
+        find = 0;
+        do
+        {
+            glRenderbufferStorage_(GL_RENDERBUFFER_EXT, depthfmts[find], shadowmaptexsize, shadowmaptexsize);
+            glFramebufferRenderbuffer_(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, shadowmapdb);
+            if(glCheckFramebufferStatus_(GL_FRAMEBUFFER_EXT)==GL_FRAMEBUFFER_COMPLETE_EXT)
+                break;
+        } while(depthfmts[++find]);
 
         if(depthfmts[find])
         {
@@ -87,7 +87,7 @@ void createshadowmap()
             glBindFramebuffer_(GL_FRAMEBUFFER_EXT, blurfb);
             glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, blurtex, 0);
             glFramebufferRenderbuffer_(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, shadowmapdb);
-
+ 
             glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
             return;
         }
@@ -101,40 +101,16 @@ void createshadowmap()
     createtexture(shadowmaptex, shadowmaptexsize, shadowmaptexsize, NULL, 3, false, GL_RGB);
 }
 
-void setupblurkernel();
+static float blurweights[MAXBLURRADIUS+1] = { 0 }, bluroffsets[MAXBLURRADIUS+1] = { 0 };
 
-VARFP(blurshadowmap, 0, 1, 3, setupblurkernel());
-VARFP(blursmsigma, 1, 100, 200, setupblurkernel());
+extern int blurshadowmap, blursmsigma;
+VARFP(blurshadowmap, 0, 1, 3, setupblurkernel(blurshadowmap, blursmsigma/100.0f, blurweights, bluroffsets));
+VARFP(blursmsigma, 1, 100, 200, setupblurkernel(blurshadowmap, blursmsigma/100.0f, blurweights, bluroffsets));
 VAR(blurtile, 0, 1, 1);
-
-float blurweights[4] = { 0, 0, 0, 0 }, bluroffsets[4] = { 0, 0, 0, 0 };
-
-void setupblurkernel()
-{
-    if(blurshadowmap<=0 || (size_t)blurshadowmap>=sizeof(blurweights)/sizeof(blurweights[0])) return;
-    memset(blurweights, 0, sizeof(blurweights));
-    memset(bluroffsets, 0, sizeof(bluroffsets));
-    float sigma = 2*blurshadowmap*blursmsigma/100.0f, total = 1.0f/sigma, lastoffset = 0;
-    blurweights[0] = 1.0f/sigma;
-    // rely on bilinear filtering to sample 2 pixels at once
-    // transforms a*X + b*Y into (u+v)*[X*u/(u+v) + Y*(1 - u/(u+v))]
-    loopi(blurshadowmap)
-    {
-        float weight1 = exp(-((2*i)*(2*i)) / (2*sigma*sigma)) / sigma,
-              weight2 = exp(-((2*i+1)*(2*i+1)) / (2*sigma*sigma)) / sigma,
-              scale = weight1 + weight2,
-              offset = 2*i+1 + weight2 / scale;
-        blurweights[i+1] = scale;
-        bluroffsets[i+1] = offset - bluroffsets[i];
-        lastoffset = offset;
-        total += 2*scale;
-    }
-    loopi(blurshadowmap+1) blurweights[i] /= total;
-}
 
 bool shadowmapping = false;
 
-GLdouble shadowmapprojection[16], shadowmapmodelview[16];
+static GLdouble shadowmapprojection[16], shadowmapmodelview[16];
 
 VARP(shadowmapbias, 0, 5, 1024);
 VARP(shadowmappeelbias, 0, 20, 1024);
@@ -162,17 +138,17 @@ void pushshadowmap()
     glClientActiveTexture_(GL_TEXTURE0_ARB);
 
     float r, g, b;
-	if(!shadowmapambient)
-	{
-		int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
-		if(sky[0] || sky[1] || sky[2])
-		{
-			r = max(25.0f, 0.4f*ambient + 0.6f*max(ambient, sky[0]));
-			g = max(25.0f, 0.4f*ambient + 0.6f*max(ambient, sky[1]));
-			b = max(25.0f, 0.4f*ambient + 0.6f*max(ambient, sky[2]));
-		}
-		else r = g = b = max(25.0f, 2.0f*ambient);
-	}
+    if(!shadowmapambient)
+    {
+        int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
+        if(sky[0] || sky[1] || sky[2])
+        {
+            r = max(25.0f, 0.4f*ambient + 0.6f*max(ambient, sky[0]));
+            g = max(25.0f, 0.4f*ambient + 0.6f*max(ambient, sky[1]));
+            b = max(25.0f, 0.4f*ambient + 0.6f*max(ambient, sky[2]));
+        }
+        else r = g = b = max(25.0f, 2.0f*ambient);
+    }
     else { r = shadowmapambient>>16; g = (shadowmapambient>>8)&0xFF; b = shadowmapambient&0xFF; }
     setenvparamf("shadowmapambient", SHPARAM_PIXEL, 7, r/255.0f, g/255.0f, b/255.0f);
 }
@@ -304,7 +280,7 @@ bool isshadowmapreceiver(vtxarray *va)
 
     uint mask = (BLURTILEMASK>>(BLURTILES - (tx2+1))) & (BLURTILEMASK<<tx1);
     for(int y = ty1; y <= ty2; y++) if(blurtiles[y] & mask) return true;
-
+    
     return false;
 
 #if 0
@@ -322,13 +298,9 @@ bool isshadowmapreceiver(vtxarray *va)
 }
 
 VAR(smscissor, 0, 1, 1);
-
+   
 void rendershadowmapcasters()
 {
-    static Shader *shadowmapshader = NULL;
-    if(!shadowmapshader) shadowmapshader = lookupshaderbyname("shadowmapcaster");
-    shadowmapshader->set();
-
     shadowmapcasters = 0;
     smx2 = smy2 = -1;
     smx1 = smy1 = 1;
@@ -336,11 +308,11 @@ void rendershadowmapcasters()
     memset(blurtiles, 0, sizeof(blurtiles));
 
     shadowmapping = true;
-    if(smscissor)
+    if(smscissor) 
     {
-        glScissor((shadowmapfb ? 0 : screen->w-shadowmaptexsize) + 2,
-                  (shadowmapfb ? 0 : screen->h-shadowmaptexsize) + 2,
-                  shadowmaptexsize - 2*2,
+        glScissor((shadowmapfb ? 0 : screen->w-shadowmaptexsize) + 2, 
+                  (shadowmapfb ? 0 : screen->h-shadowmaptexsize) + 2, 
+                  shadowmaptexsize - 2*2, 
                   shadowmaptexsize - 2*2);
         glEnable(GL_SCISSOR_TEST);
     }
@@ -407,10 +379,10 @@ void rendershadowmap()
     if(!shadowmapfb) while(smsize > min(screen->w, screen->h)) smsize /= 2;
     if(smsize!=shadowmaptexsize) cleanshadowmap();
 
-    if(!shadowmaptex) createshadowmap();
+    if(!shadowmaptex) createshadowmap(); 
     if(!shadowmaptex) return;
 
-    if(shadowmapfb)
+    if(shadowmapfb) 
     {
         if(blurfb)
         {
@@ -434,11 +406,11 @@ void rendershadowmap()
     glOrtho(-shadowmapradius, shadowmapradius, -shadowmapradius, shadowmapradius, -shadowmapdist, shadowmapdist);
 
     glMatrixMode(GL_MODELVIEW);
-
+    
     vec skewdir(shadowdir);
     skewdir.neg();
     skewdir.rotate_around_z(-camera1->yaw*RAD);
-
+ 
     vec dir;
     vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, dir);
     dir.z = 0;
@@ -452,7 +424,7 @@ void rendershadowmap()
 
     GLfloat skew[] =
     {
-        1, 0, 0, 0,
+        1, 0, 0, 0, 
         0, 1, 0, 0,
         skewdir.x, skewdir.y, 1, 0,
         0, 0, 0, 1
@@ -480,7 +452,7 @@ void rendershadowmap()
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
-    int smx = int(0.5f*(smx1 + 1)*shadowmaptexsize),
+    int smx = int(0.5f*(smx1 + 1)*shadowmaptexsize), 
         smy = int(0.5f*(smy1 + 1)*shadowmaptexsize),
         smw = int(0.5f*(smx2 - smx1)*shadowmaptexsize),
         smh = int(0.5f*(smy2 - smy1)*shadowmaptexsize);
@@ -492,7 +464,7 @@ void rendershadowmap()
 
     if(shadowmapcasters && blurshadowmap)
     {
-        if(!blurweights[0]) setupblurkernel();
+        if(!blurweights[0]) setupblurkernel(blurshadowmap, blursmsigma/100.0f, blurweights, bluroffsets);
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
@@ -503,7 +475,7 @@ void rendershadowmap()
             blurh = smh + 2*2*blurshadowmap;
         if(blurx < 2) { blurw -= 2 - blurx; blurx = 2; }
         if(blury < 2) { blurh -= 2 - blury; blury = 2; }
-        if(blurx + blurw > smsize - 2) blurw = (smsize - 2) - blurx;
+        if(blurx + blurw > smsize - 2) blurw = (smsize - 2) - blurx; 
         if(blury + blurh > smsize - 2) blurh = (smsize - 2) - blury;
         if(!shadowmapfb)
         {
@@ -519,26 +491,14 @@ void rendershadowmap()
 
         loopi(2)
         {
-            static Shader *blurshader[3][2] = { { NULL, NULL }, { NULL, NULL }, { NULL, NULL } };
-            if(!blurshader[blurshadowmap-1][i])
-            {
-                s_sprintfd(name)("blur%c%d", 'x'+i, blurshadowmap);
-                blurshader[blurshadowmap-1][i] = lookupshaderbyname(name);
-            }
-            blurshader[blurshadowmap-1][i]->set();
-            setlocalparamfv("blurweights", SHPARAM_PIXEL, 0, blurweights);
-            setlocalparamf("bluroffsets", SHPARAM_PIXEL, 1,
-                !i ? bluroffsets[1]/shadowmaptexsize : bluroffsets[0]/shadowmaptexsize,
-                i ? bluroffsets[1]/shadowmaptexsize : bluroffsets[0]/shadowmaptexsize,
-                bluroffsets[2]/shadowmaptexsize,
-                bluroffsets[3]/shadowmaptexsize);
+            setblurshader(i, shadowmaptexsize, blurshadowmap, blurweights, bluroffsets);
 
-            if(shadowmapfb)
+            if(shadowmapfb) 
             {
                 glBindFramebuffer_(GL_FRAMEBUFFER_EXT, i ? shadowmapfb : blurfb);
                 glBindTexture(GL_TEXTURE_2D, i ? blurtex : shadowmaptex);
             }
-
+ 
             glBegin(GL_QUADS);
             if(blurtile)
             {
@@ -559,30 +519,30 @@ void rendershadowmap()
                         uint strip = (BLURTILEMASK>>(BLURTILES - x)) & (BLURTILEMASK<<xstart);
                         int yend = y;
                         do { tiles[yend] &= ~strip; yend++; } while((tiles[yend] & strip) == strip);
-                            float tx = xstart*tsz,
+                        float tx = xstart*tsz,
                               ty = y*tsz,
-                                  tw = (x-xstart)*tsz,
+                              tw = (x-xstart)*tsz,
                               th = (yend-y)*tsz,
-                                  vx = 2*tx - 1, vy = 2*ty - 1, vw = tw*2, vh = th*2;
-                            glTexCoord2f(tx,    ty);    glVertex2f(vx,    vy);
-                            glTexCoord2f(tx+tw, ty);    glVertex2f(vx+vw, vy);
-                            glTexCoord2f(tx+tw, ty+th); glVertex2f(vx+vw, vy+vh);
-                            glTexCoord2f(tx,    ty+th); glVertex2f(vx,    vy+vh);
-                        }
+                              vx = 2*tx - 1, vy = 2*ty - 1, vw = tw*2, vh = th*2;
+                        glTexCoord2f(tx,    ty);    glVertex2f(vx,    vy);
+                        glTexCoord2f(tx+tw, ty);    glVertex2f(vx+vw, vy);
+                        glTexCoord2f(tx+tw, ty+th); glVertex2f(vx+vw, vy+vh);
+                        glTexCoord2f(tx,    ty+th); glVertex2f(vx,    vy+vh);
                     }
+                }
             }
             else
             {
-				glTexCoord2f(0, 0); glVertex2f(-1, -1);
-				glTexCoord2f(1, 0); glVertex2f(1, -1);
-				glTexCoord2f(1, 1); glVertex2f(1, 1);
-				glTexCoord2f(0, 1); glVertex2f(-1, 1);
+                glTexCoord2f(0, 0); glVertex2f(-1, -1);
+                glTexCoord2f(1, 0); glVertex2f(1, -1);
+                glTexCoord2f(1, 1); glVertex2f(1, 1);
+                glTexCoord2f(0, 1); glVertex2f(-1, 1);
             }
             glEnd();
 
             if(!shadowmapfb) glCopyTexSubImage2D(GL_TEXTURE_2D, 0, blurx-(screen->w-shadowmaptexsize), blury-(screen->h-shadowmaptexsize), blurx, blury, blurw, blurh);
         }
-
+       
         if(smscissor) glDisable(GL_SCISSOR_TEST);
 
         glEnable(GL_DEPTH_TEST);
@@ -634,7 +594,7 @@ void viewshadowmap()
         {
             uint mask = blurtiles[y];
             int x = 0;
-            while(mask)
+            while(mask) 
             {
                 while(!(mask&0xFF)) { mask >>= 8; x += 8; }
                 while(!(mask&1)) { mask >>= 1; x++; }
@@ -643,13 +603,13 @@ void viewshadowmap()
                 uint strip = (BLURTILEMASK>>(BLURTILES - x)) & (BLURTILEMASK<<xstart);
                 int yend = y;
                 do { blurtiles[yend] &= ~strip; yend++; } while((blurtiles[yend] & strip) == strip);
-                    float vx = xstart*vxsz,
+                float vx = xstart*vxsz,
                       vy = y*vysz,
-                          vw = (x-xstart)*vxsz,
+                      vw = (x-xstart)*vxsz,
                       vh = (yend-y)*vysz;
                 loopi(2)
                 {
-                    glColor3f(1, 1, i ? 1.0f : 0.5f);
+                    glColor3f(1, 1, i ? 1.0f : 0.5f); 
                     glBegin(i ? GL_LINE_LOOP : GL_QUADS);
                     glVertex2f(vx,    vy);
                     glVertex2f(vx+vw, vy);

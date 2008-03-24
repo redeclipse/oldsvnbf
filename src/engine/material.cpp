@@ -473,7 +473,9 @@ void sortmaterials(vector<materialsurface *> &vismats)
 			{
                 if(m.material==MAT_WATER && (m.orient==O_TOP || (refracting<0 && reflectz>hdr.worldsize))) continue;
 				if(m.material>=MAT_EDIT) continue;
-			}
+                if(glaring && m.material!=MAT_LAVA) continue;
+            }
+            else if(glaring) continue;
 			vismats.add(&m);
 		}
 	}
@@ -682,11 +684,15 @@ void rendermaterials()
 						if(renderpath==R_FIXEDFUNCTION && !overbright) { setuptmu(0, "C * T x 2"); overbright = true; }
 						float t = lastmillis/2000.0f;
 						t -= int(t);
-						t = 1.0f - fabs(t-0.5f);
-						glColor3f(t, t, t);
-						static Shader *lavashader = NULL;
-						if(!lavashader) lavashader = lookupshaderbyname("lava");
-						lavashader->set();
+                        t = 1.0f - 2*fabs(t-0.5f);
+                        extern int glare;
+                        if(renderpath!=R_FIXEDFUNCTION && glare) t = 0.625f + 0.075f*t;
+                        else t = 0.5f + 0.5f*t;
+                        glColor3f(t, t, t);
+                        static Shader *lavashader = NULL, *lavaglareshader = NULL;
+                        if(!lavashader) lavashader = lookupshaderbyname("lava");
+                        if(!lavaglareshader) lavaglareshader = lookupshaderbyname("lavaglare");
+                        (glaring ? lavaglareshader : lavashader)->set();
 						fogtype = 1;
 					}
 					if(textured!=GL_TEXTURE_2D)
