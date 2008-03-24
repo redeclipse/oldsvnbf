@@ -798,7 +798,7 @@ char *strreplace(const char *s, const char *oldval, const char *newval)
     int oldlen = strlen(oldval);
     for(;;)
     {
-        char *found = strstr(s, oldval);
+        const char *found = strstr(s, oldval);
         if(found)
         {
             while(s < found) buf.add(*s++);
