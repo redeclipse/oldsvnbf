@@ -91,7 +91,7 @@ void viewglaretex()
 static float blurweights[MAXBLURRADIUS+1] = { 0 }, bluroffsets[MAXBLURRADIUS+1] = { 0 };
 
 extern int blurglare, blurglaresigma;
-VARFP(blurglare, 0, 3, 7, setupblurkernel(blurglare, blurglaresigma/100.0f, blurweights, bluroffsets));
+VARFP(blurglare, 0, 4, 7, setupblurkernel(blurglare, blurglaresigma/100.0f, blurweights, bluroffsets));
 VARFP(blurglaresigma, 1, 50, 200, setupblurkernel(blurglare, blurglaresigma/100.0f, blurweights, bluroffsets));
 
 void blurglaretex(int size)
@@ -162,7 +162,7 @@ void drawglaretex()
     if(hasFBO) glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
 }
 
-FVARP(glarescale, 2);
+FVARP(glarescale, 1);
 
 void addglare()
 {
