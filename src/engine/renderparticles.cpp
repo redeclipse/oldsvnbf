@@ -373,10 +373,13 @@ static void setupexplosion()
 
 	if(renderpath!=R_FIXEDFUNCTION)
 	{
-		static Shader *expl2dshader = NULL, *expl3dshader = NULL;
-		if(!expl2dshader) expl2dshader = lookupshaderbyname("explosion2d");
-		if(!expl3dshader) expl3dshader = lookupshaderbyname("explosion3d");
-		(explosion2d ? expl2dshader : expl3dshader)->set();
+        static Shader *expl2dshader = NULL, *expl2dglareshader = NULL, *expl3dshader = NULL, *expl3dglareshader = NULL;
+        if(!expl2dshader) expl2dshader = lookupshaderbyname("explosion2d");
+        if(!expl2dglareshader) expl2dglareshader = lookupshaderbyname("explosion2dglare");
+        if(!expl3dshader) expl3dshader = lookupshaderbyname("explosion3d");
+        if(!expl3dglareshader) expl3dglareshader = lookupshaderbyname("explosion3dglare");
+        if(glaring) (explosion2d ? expl2dglareshader : expl3dglareshader)->set();
+        else (explosion2d ? expl2dshader : expl3dshader)->set();
 	}
 
 	if(renderpath==R_FIXEDFUNCTION || explosion2d)
