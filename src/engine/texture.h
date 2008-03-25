@@ -111,22 +111,28 @@ struct Shader
     int type;
     GLuint vs, ps;
     GLhandleARB program, vsobj, psobj;
-    vector<LocalShaderParamState> defaultparams, extparams;
+    vector<LocalShaderParamState> defaultparams;
     Shader *variantshader, *altshader, *fastshader[MAXSHADERDETAIL];
     vector<Shader *> variants[MAXVARIANTROWS];
-    LocalShaderParamState *extvertparams[RESERVEDSHADERPARAMS], *extpixparams[RESERVEDSHADERPARAMS];
     bool standard, used, native;
-    int reusevs, reuseps;
+    Shader *reusevs, *reuseps;
+    int numextparams;
+    LocalShaderParamState *extparams;
+    uchar *extvertparams, *extpixparams;
 
-    Shader() : name(NULL), vsstr(NULL), psstr(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), variantshader(NULL), altshader(NULL), standard(false), used(false), native(true), reusevs(-1), reuseps(-1)
+
+    Shader() : name(NULL), vsstr(NULL), psstr(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), variantshader(NULL), altshader(NULL), standard(false), used(false), native(true), reusevs(NULL), reuseps(NULL), numextparams(0), extparams(NULL), extvertparams(NULL), extpixparams(NULL)
     {}
 
-	~Shader()
-	{
-		DELETEA(name);
+    ~Shader()
+    {
+        DELETEA(name);
         DELETEA(vsstr);
         DELETEA(psstr);
-	}
+        DELETEA(extparams);
+        DELETEA(extvertparams);
+        extpixparams = NULL;
+    }   
 
 	void allocenvparams(Slot *slot = NULL);
 	void flushenvparams(Slot *slot = NULL);
@@ -160,7 +166,7 @@ struct Shader
 	}
 
     bool compile();
-    void cleanup();
+    void cleanup(bool invalid = false);
 };
 
 // management of texture slots
