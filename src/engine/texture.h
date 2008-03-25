@@ -115,9 +115,10 @@ struct Shader
     Shader *variantshader, *altshader, *fastshader[MAXSHADERDETAIL];
     vector<Shader *> variants[MAXVARIANTROWS];
     LocalShaderParamState *extvertparams[RESERVEDSHADERPARAMS], *extpixparams[RESERVEDSHADERPARAMS];
-    bool standard, used, native, reusevs, reuseps;
+    bool standard, used, native;
+    int reusevs, reuseps;
 
-    Shader() : name(NULL), vsstr(NULL), psstr(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), variantshader(NULL), altshader(NULL), standard(false), used(false), native(true), reusevs(false), reuseps(false)
+    Shader() : name(NULL), vsstr(NULL), psstr(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), variantshader(NULL), altshader(NULL), standard(false), used(false), native(true), reusevs(-1), reuseps(-1)
     {}
 
 	~Shader()
