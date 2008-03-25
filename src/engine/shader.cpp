@@ -121,9 +121,9 @@ static void compileglslshader(GLenum type, GLhandleARB &obj, const char *def, co
 
 static void linkglslprogram(Shader &s, bool msg = true)
 {
-	s.program = glCreateProgramObject_();
-	GLint success = 0;
-	if(s.program && s.vsobj && s.psobj)
+    s.program = s.vsobj && s.psobj ? glCreateProgramObject_() : 0;
+    GLint success = 0;
+    if(s.program)
 	{
 		glAttachObject_(s.program, s.vsobj);
 		glAttachObject_(s.program, s.psobj);
@@ -494,21 +494,31 @@ VAR(dbgshader, 0, 0, 1);
 
 bool Shader::compile()
 {
+    #define REUSESHADER(reuse, obj) \
+        if(reuse >= 0) \
+        { \
+            if(reuse == INT_MAX) obj = variantshader->obj; \
+            else \
+            { \
+                int row = reuse%MAXVARIANTROWS, col = reuse/MAXVARIANTROWS; \
+                obj = variantshader->variants[row].inrange(col) ? variantshader->variants[row][col]->obj : 0; \
+            } \
+        } 
     if(type & SHADER_GLSLANG)
     {
-        if(reusevs) vsobj = variantshader->vsobj;
+        REUSESHADER(reusevs, vsobj)
         else compileglslshader(GL_VERTEX_SHADER_ARB,   vsobj, vsstr, "VS", name, dbgshader || !variantshader);
-        if(reuseps) psobj = variantshader->psobj;
+        REUSESHADER(reuseps, psobj)
         else compileglslshader(GL_FRAGMENT_SHADER_ARB, psobj, psstr, "PS", name, dbgshader || !variantshader);
         linkglslprogram(*this, !variantshader);
         return program!=0;
     }
     else
     {
-        if(reusevs) vs = variantshader->vs;
+        REUSESHADER(reusevs, vs)
         else if(!compileasmshader(GL_VERTEX_PROGRAM_ARB, vs, vsstr, "VS", name, dbgshader || !variantshader, variantshader!=NULL))
             native = false;
-        if(reuseps) ps = variantshader->ps;
+        REUSESHADER(reuseps, ps)
         else if(!compileasmshader(GL_FRAGMENT_PROGRAM_ARB, ps, psstr, "PS", name, dbgshader || !variantshader, variantshader!=NULL))
             native = false;
         return vs && ps && (!variantshader || native);
@@ -528,10 +538,10 @@ void Shader::cleanup()
         defaultparams.setsizenodelete(0);
         altshader = NULL;
     }
-    if(vs) { if(!reusevs) glDeletePrograms_(1, &vs); vs = 0; }
-    if(ps) { if(!reuseps) glDeletePrograms_(1, &ps); ps = 0; }
-    if(vsobj) { if(!reusevs) glDeleteObject_(vsobj); vsobj = 0; }
-    if(psobj) { if(!reuseps) glDeleteObject_(psobj); psobj = 0; }
+    if(vs) { if(reusevs<0) glDeletePrograms_(1, &vs); vs = 0; }
+    if(ps) { if(reuseps<0) glDeletePrograms_(1, &ps); ps = 0; }
+    if(vsobj) { if(reusevs<0) glDeleteObject_(vsobj); vsobj = 0; }
+    if(psobj) { if(reuseps<0) glDeleteObject_(psobj); psobj = 0; }
     if(program) { glDeleteObject_(program); program = 0; }
     memset(extvertparams, 0, sizeof(extvertparams));
     memset(extpixparams, 0, sizeof(extpixparams));
@@ -550,8 +560,18 @@ Shader *newshader(int type, const char *name, const char *vs, const char *ps, Sh
     s.type = type;
     s.variantshader = variant;
     s.standard = standardshader;
-    s.reusevs = !vs[0];
-    s.reuseps = !ps[0];
+    s.reusevs = s.reuseps = -1;
+    if(variant)
+    {
+        int row = 0, col = 0;
+        if(!vs[0]) s.reusevs = INT_MAX;
+        else if(sscanf(vs, "%d , %d", &row, &col) >= 1) s.reusevs = col*MAXVARIANTROWS + row;
+        else s.reusevs = -1;
+        row = col = 0;
+        if(!ps[0]) s.reuseps = INT_MAX;
+        else if(sscanf(ps, "%d , %d", &row, &col) >= 1) s.reuseps = col*MAXVARIANTROWS + row;
+        else s.reuseps = -1;
+    }
     loopi(MAXSHADERDETAIL) s.fastshader[i] = &s;
     memset(s.extvertparams, 0, sizeof(s.extvertparams));
     memset(s.extpixparams, 0, sizeof(s.extpixparams));
