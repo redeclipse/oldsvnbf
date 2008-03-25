@@ -79,8 +79,8 @@ struct skelmodel : animmodel
         {
             skelmesh &m = *(skelmesh *)mesh::copy();
             m.numverts = numverts;
-            m.verts = new vert[numverts*group->numframes];
-            memcpy(m.verts, verts, numverts*group->numframes*sizeof(vert));
+            m.verts = new vert[numverts];
+            memcpy(m.verts, verts, numverts*sizeof(vert));
             m.tcverts = new tcvert[numverts];
             memcpy(m.tcverts, tcverts, numverts*sizeof(tcvert));
             m.numtris = numtris;
@@ -651,7 +651,7 @@ struct skelmodel : animmodel
             }
             loopv(skelanims)
             {
-                skelanimspec &sa = addskelanim(skelanims[i].name);
+                skelanimspec &sa = group.addskelanim(skelanims[i].name);
                 sa.frame = skelanims[i].frame;
                 sa.range = skelanims[i].range;
             }
