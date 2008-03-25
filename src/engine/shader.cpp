@@ -195,40 +195,52 @@ bool checkglslsupport()
 	return success!=0;
 }
 
-static LocalShaderParamState unusedextparam;
+#define ALLOCEXTPARAM 0xFF
+#define UNUSEDEXTPARAM 0xFE
 
 static void allocglsluniformparam(Shader &s, int type, int index, bool local = false)
 {
-	ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
-	int loc = val.name ? glGetUniformLocation_(s.program, val.name) : -1;
-	if(loc == -1)
-	{
-		s_sprintfd(altname)("%s%d", type==SHPARAM_VERTEX ? "v" : "p", index);
-		loc = glGetUniformLocation_(s.program, val.name);
-	}
-	else
-	{
-		LocalShaderParamState *alt = (type==SHPARAM_VERTEX ? s.extpixparams[index] : s.extvertparams[index]);
-		if(alt && alt != &unusedextparam && alt->loc == loc)
-		{
-			if(type==SHPARAM_VERTEX) s.extvertparams[index] = alt;
-			else s.extpixparams[index] = alt;
-			return;
-		}
-	}
-	if(loc == -1)
-	{
-		if(type==SHPARAM_VERTEX) s.extvertparams[index] = local ? &unusedextparam : NULL;
-		else s.extpixparams[index] = local ? &unusedextparam : NULL;
-		return;
-	}
-	LocalShaderParamState &ext = s.extparams.add();
-	ext.name = val.name;
-	ext.type = type;
-	ext.index = local ? -1 : index;
-	ext.loc = loc;
-	if(type==SHPARAM_VERTEX) s.extvertparams[index] = &ext;
-	else s.extpixparams[index] = &ext;
+    ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
+    int loc = val.name ? glGetUniformLocation_(s.program, val.name) : -1;
+    if(loc == -1)
+    {
+        s_sprintfd(altname)("%s%d", type==SHPARAM_VERTEX ? "v" : "p", index);
+        loc = glGetUniformLocation_(s.program, val.name);
+    }
+    else
+    {
+        uchar alt = (type==SHPARAM_VERTEX ? s.extpixparams[index] : s.extvertparams[index]);
+        if(alt < RESERVEDSHADERPARAMS && s.extparams[alt].loc == loc)
+        {
+            if(type==SHPARAM_VERTEX) s.extvertparams[index] = alt;
+            else s.extpixparams[index] = alt;
+            return;
+        }
+    }
+    if(loc == -1)
+    {
+        if(type==SHPARAM_VERTEX) s.extvertparams[index] = local ? UNUSEDEXTPARAM : ALLOCEXTPARAM;
+        else s.extpixparams[index] = local ? UNUSEDEXTPARAM : ALLOCEXTPARAM;
+        return;
+    }
+    if(!(s.numextparams%4))
+    {
+        LocalShaderParamState *extparams = new LocalShaderParamState[s.numextparams+4];
+        if(s.extparams)
+        {
+            memcpy(extparams, s.extparams, s.numextparams*sizeof(LocalShaderParamState));
+            delete[] s.extparams;
+        }
+        s.extparams = extparams;
+    }
+    LocalShaderParamState &ext = s.extparams[s.numextparams];
+    ext.name = val.name;
+    ext.type = type;
+    ext.index = local ? -1 : index;
+    ext.loc = loc;
+    if(type==SHPARAM_VERTEX) s.extvertparams[index] = s.numextparams;
+    else s.extpixparams[index] = s.numextparams;
+    s.numextparams++;
 }
 
 void Shader::allocenvparams(Slot *slot)
@@ -274,6 +286,12 @@ void Shader::allocenvparams(Slot *slot)
 			}
 		}
 	}
+    if(!extvertparams)
+    {
+        extvertparams = new uchar[2*RESERVEDSHADERPARAMS];
+        extpixparams = extvertparams + RESERVEDSHADERPARAMS;
+    }
+    memset(extvertparams, ALLOCEXTPARAM, 2*RESERVEDSHADERPARAMS);
 	loopi(RESERVEDSHADERPARAMS) if(vertexparamstate[i].name && !vertexparamstate[i].local)
 		allocglsluniformparam(*this, SHPARAM_VERTEX, i);
 	loopi(RESERVEDSHADERPARAMS) if(pixelparamstate[i].name && !pixelparamstate[i].local)
@@ -285,12 +303,13 @@ static inline void flushparam(int type, int index)
     ShaderParamState &val = (type==SHPARAM_VERTEX ? vertexparamstate[index] : pixelparamstate[index]);
     if(Shader::lastshader && Shader::lastshader->type&SHADER_GLSLANG)
     {
-        LocalShaderParamState *&ext = (type==SHPARAM_VERTEX ? Shader::lastshader->extvertparams[index] : Shader::lastshader->extpixparams[index]);
-        if(!ext) allocglsluniformparam(*Shader::lastshader, type, index, val.local);
-        if(!ext || ext == &unusedextparam) return;
-        if(!memcmp(ext->curval, val.val, sizeof(ext->curval))) return;
-        memcpy(ext->curval, val.val, sizeof(ext->curval));
-        glUniform4fv_(ext->loc, 1, ext->curval);
+        uchar &extindex = (type==SHPARAM_VERTEX ? Shader::lastshader->extvertparams[index] : Shader::lastshader->extpixparams[index]);
+        if(extindex == ALLOCEXTPARAM) allocglsluniformparam(*Shader::lastshader, type, index, val.local);
+        if(extindex >= RESERVEDSHADERPARAMS) return;
+        LocalShaderParamState &ext = Shader::lastshader->extparams[extindex];
+        if(!memcmp(ext.curval, val.val, sizeof(ext.curval))) return;
+        memcpy(ext.curval, val.val, sizeof(ext.curval));
+        glUniform4fv_(ext.loc, 1, ext.curval);
     }
     else if(val.dirty==ShaderParamState::DIRTY)
     {
@@ -385,7 +404,7 @@ void Shader::flushenvparams(Slot *slot)
 	{
 		if(!used) allocenvparams(slot);
 
-		loopv(extparams)
+		loopi(numextparams)
 		{
 			LocalShaderParamState &ext = extparams[i];
 			if(ext.index<0) continue;
@@ -494,42 +513,42 @@ VAR(dbgshader, 0, 0, 1);
 
 bool Shader::compile()
 {
-    #define REUSESHADER(reuse, obj) \
-        if(reuse >= 0) \
-        { \
-            if(reuse == INT_MAX) obj = variantshader->obj; \
-            else \
-            { \
-                int row = reuse%MAXVARIANTROWS, col = reuse/MAXVARIANTROWS; \
-                obj = variantshader->variants[row].inrange(col) ? variantshader->variants[row][col]->obj : 0; \
-            } \
-        } 
     if(type & SHADER_GLSLANG)
     {
-        REUSESHADER(reusevs, vsobj)
+        if(!vsstr) vsobj = reusevs && reusevs->type != SHADER_INVALID ? reusevs->vsobj : 0;
         else compileglslshader(GL_VERTEX_SHADER_ARB,   vsobj, vsstr, "VS", name, dbgshader || !variantshader);
-        REUSESHADER(reuseps, psobj)
+        if(!psstr) psobj = reuseps && reuseps->type != SHADER_INVALID ? reuseps->psobj : 0;
         else compileglslshader(GL_FRAGMENT_SHADER_ARB, psobj, psstr, "PS", name, dbgshader || !variantshader);
         linkglslprogram(*this, !variantshader);
         return program!=0;
     }
     else
     {
-        REUSESHADER(reusevs, vs)
+        if(!vsstr) vs = reusevs && reusevs->type != SHADER_INVALID ? reusevs->vs : 0;
         else if(!compileasmshader(GL_VERTEX_PROGRAM_ARB, vs, vsstr, "VS", name, dbgshader || !variantshader, variantshader!=NULL))
             native = false;
-        REUSESHADER(reuseps, ps)
+        if(!psstr) ps = reuseps && reuseps->type != SHADER_INVALID ? reuseps->ps : 0;
         else if(!compileasmshader(GL_FRAGMENT_PROGRAM_ARB, ps, psstr, "PS", name, dbgshader || !variantshader, variantshader!=NULL))
             native = false;
         return vs && ps && (!variantshader || native);
     }
 }
 
-void Shader::cleanup()
+void Shader::cleanup(bool invalid)
 {
     used = false;
     native = true;
-    if(standard)
+    if(vs) { if(reusevs) glDeletePrograms_(1, &vs); vs = 0; }
+    if(ps) { if(reuseps) glDeletePrograms_(1, &ps); ps = 0; }
+    if(vsobj) { if(reusevs) glDeleteObject_(vsobj); vsobj = 0; }
+    if(psobj) { if(reuseps) glDeleteObject_(psobj); psobj = 0; }
+    if(program) { glDeleteObject_(program); program = 0; }
+    numextparams = 0;
+    DELETEA(extparams);
+    DELETEA(extvertparams);
+    extpixparams = NULL;
+    loopv(defaultparams) memset(defaultparams[i].curval, 0, sizeof(defaultparams[i].curval));
+    if(standard || invalid)
     {
         type = SHADER_INVALID;
         loopi(MAXVARIANTROWS) variants[i].setsizenodelete(0);
@@ -537,16 +556,8 @@ void Shader::cleanup()
         DELETEA(psstr);
         defaultparams.setsizenodelete(0);
         altshader = NULL;
+        reusevs = reuseps = NULL;
     }
-    if(vs) { if(reusevs<0) glDeletePrograms_(1, &vs); vs = 0; }
-    if(ps) { if(reuseps<0) glDeletePrograms_(1, &ps); ps = 0; }
-    if(vsobj) { if(reusevs<0) glDeleteObject_(vsobj); vsobj = 0; }
-    if(psobj) { if(reuseps<0) glDeleteObject_(psobj); psobj = 0; }
-    if(program) { glDeleteObject_(program); program = 0; }
-    memset(extvertparams, 0, sizeof(extvertparams));
-    memset(extpixparams, 0, sizeof(extpixparams));
-    extparams.setsize(0);
-    loopv(defaultparams) memset(defaultparams[i].curval, 0, sizeof(defaultparams[i].curval));
 }
 
 Shader *newshader(int type, const char *name, const char *vs, const char *ps, Shader *variant = NULL, int row = 0)
@@ -560,27 +571,29 @@ Shader *newshader(int type, const char *name, const char *vs, const char *ps, Sh
     s.type = type;
     s.variantshader = variant;
     s.standard = standardshader;
-    s.reusevs = s.reuseps = -1;
+    s.reusevs = s.reuseps = NULL;
     if(variant)
     {
         int row = 0, col = 0;
-        if(!vs[0]) s.reusevs = INT_MAX;
-        else if(sscanf(vs, "%d , %d", &row, &col) >= 1) s.reusevs = col*MAXVARIANTROWS + row;
-        else s.reusevs = -1;
+        if(!vs[0] || sscanf(vs, "%d , %d", &row, &col) >= 1)
+        {
+            DELETEA(s.vsstr);
+            s.reusevs = !vs[0] ? variant : (variant->variants[row].inrange(col) ? variant->variants[row][col] : NULL);
+        }
         row = col = 0;
-        if(!ps[0]) s.reuseps = INT_MAX;
-        else if(sscanf(ps, "%d , %d", &row, &col) >= 1) s.reuseps = col*MAXVARIANTROWS + row;
-        else s.reuseps = -1;
+        if(!ps[0] || sscanf(ps, "%d , %d", &row, &col) >= 1)
+        {
+            DELETEA(s.psstr);
+            s.reuseps = !ps[0] ? variant : (variant->variants[row].inrange(col) ? variant->variants[row][col] : NULL);
+        }
     }
     loopi(MAXSHADERDETAIL) s.fastshader[i] = &s;
-    memset(s.extvertparams, 0, sizeof(s.extvertparams));
-    memset(s.extpixparams, 0, sizeof(s.extpixparams));
     if(variant) loopv(variant->defaultparams) s.defaultparams.add(variant->defaultparams[i]);
     else loopv(curparams) s.defaultparams.add(curparams[i]);
     if(renderpath!=R_FIXEDFUNCTION && !s.compile())
     {
-        s.cleanup();
-        shaders.remove(rname);
+        s.cleanup(!standardshader);
+        if(standardshader) shaders.remove(rname);
         return NULL;
     }
     if(variant) variant->variants[row].add(&s);
@@ -1562,11 +1575,19 @@ void reloadshaders()
     loadshaders();
     persistidents = true;
     if(renderpath!=R_FIXEDFUNCTION) enumerate(shaders, Shader, s,
-        if(!s.standard)
+        if(!s.standard && s.type!=SHADER_INVALID && !s.variantshader)
         {
             s_sprintfd(info)("shader %s", s.name);
             show_out_of_renderloop_progress(0.0, info);
-            s.compile();
+            if(!s.compile()) s.cleanup(true);
+            loopi(MAXVARIANTROWS) loopvj(s.variants[i])
+            {
+                Shader *v = s.variants[i][j];
+                if((v->reusevs && v->reusevs->type==SHADER_INVALID) ||
+                   (v->reuseps && v->reuseps->type==SHADER_INVALID) ||
+                   !v->compile())
+                    v->cleanup(true);
+            }
         }
     );
 }
