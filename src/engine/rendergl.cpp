@@ -655,6 +655,8 @@ void rendergame()
     if(!shadowmapping) renderedgame = true;
 }
 
+VARP(skyboxglare, 0, 1, 1);
+
 void drawglare()
 {
     glaring = true;
@@ -678,6 +680,8 @@ void drawglare()
     rendergeom();
     renderreflectedmapmodels();
     rendergame();
+
+    if(skyboxglare) drawskybox(farplane, false);
 
     renderwater();
     rendermaterials();
