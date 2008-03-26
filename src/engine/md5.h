@@ -77,40 +77,18 @@ struct md5 : skelmodel
                 }
                 vert &vv = verts[i];
                 vv.pos = pos;
+                vv.u = v.u;
+                vv.v = v.v;
+
+                blendcombo c;
                 int sorted = 0;
                 loopj(v.count)
                 {
                     md5weight &w = weightinfo[v.start+j];
-                    loopk(sorted) if(w.bias > vv.weights[k])
-                    {
-                        for(int l = min(sorted-1, 2); l >= k; l--)
-                        {
-                            vv.weights[l+1] = vv.weights[l];
-                            vv.bones[l+1] = vv.bones[l];     
-                        }
-                        vv.weights[k] = w.bias;
-                        vv.bones[k] = w.joint;
-                        if(sorted<4) sorted++;
-                        goto nextweight;
-                    }
-                    if(sorted<4)
-                    {
-                        vv.weights[sorted] = w.bias;
-                        vv.bones[sorted++] = w.joint;
-                    }
-                    nextweight:;
+                    sorted = c.addweight(sorted, w.bias, w.joint);
                 }
-                loopj(4-sorted) { vv.weights[sorted+j] = 0; vv.bones[sorted+j] = 0; }
-
-                float total = 0;
-                loopj(sorted) total += vv.weights[j];
-                total = 1.0f/total;
-                loopj(sorted) vv.weights[j] *= total;
-
-                tcverts[i].u = v.u;
-                tcverts[i].v = v.v;
-
-                maxweights = max(maxweights, sorted);
+                c.finalize(sorted);
+                vv.blend = addblendcombo(c);
             }
         }
 
@@ -171,7 +149,6 @@ struct md5 : skelmodel
                     {
                         vertinfo = new md5vert[numverts];
                         verts = new vert[numverts];
-                        tcverts = new tcvert[numverts];
                     }
                 }
                 else if(sscanf(buf, " numtris %d", &numtris)==1)
