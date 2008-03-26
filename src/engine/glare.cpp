@@ -14,7 +14,7 @@ void cleanupglare()
 
 void setupglare(int size)
 {
-    static const GLenum colorfmts[] = { GL_RGBA, GL_RGBA8, GL_RGB, GL_RGB8, GL_FALSE },
+    static const GLenum colorfmts[] = { GL_RGB, GL_RGB8, GL_FALSE },
                         depthfmts[] = { GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT32, GL_FALSE };
     static GLenum colorfmt = GL_FALSE, depthfmt = GL_FALSE;
 
