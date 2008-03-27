@@ -4,7 +4,8 @@
 #include "engine.h"
 
 bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false;
-int renderpath;
+
+VAR(renderpath, 1, 0, 0);
 
 // GL_ARB_vertex_buffer_object
 PFNGLGENBUFFERSARBPROC       glGenBuffers_       = NULL;
