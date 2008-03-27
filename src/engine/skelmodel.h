@@ -818,7 +818,7 @@ struct skelmodel : animmodel
             }
         }
 
-        int availgpubones() const { return (maxvpenvparams - reservevpparams - 10) / (matskel ? 3 : 2); }
+        int availgpubones() const { return (min(maxvpenvparams - reservevpparams, 256) - 10) / (matskel ? 3 : 2); }
         bool gpuaccelerate() { return renderpath!=R_FIXEDFUNCTION && numframes && gpuskel && numgpubones<=availgpubones(); }
 
         void scaletags(const vec &transdiff, float scalediff)
