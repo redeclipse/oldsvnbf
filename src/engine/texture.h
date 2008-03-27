@@ -220,7 +220,9 @@ struct Slot
 	Shader *shader;
 	vector<ShaderParam> params;
     float scrollS, scrollT;
-	bool loaded;
+    vec glowcolor, pulseglowcolor;
+    float pulseglowspeed;
+    bool mtglowed, loaded;
     uint texmask;
 	char *autograss;
 	Texture *grasstex, *thumbnail;
@@ -231,6 +233,9 @@ struct Slot
 		shader = NULL;
 		params.setsize(0);
         scrollS = scrollT = 0;
+        glowcolor = vec(1, 1, 1);
+        pulseglowcolor = vec(0, 0, 0);
+        pulseglowspeed = 0;
 		loaded = false;
         texmask = 0;
 		DELETEA(autograss);

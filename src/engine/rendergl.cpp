@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "engine.h"
 
-bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false;
+bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false;
 int renderpath;
 
 // GL_ARB_vertex_buffer_object
@@ -153,10 +153,14 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	// char *weakcards[] = { "GeForce FX", "Quadro FX", "6200", "9500", "9550", "9600", "9700", "9800", "X300", "X600", "FireGL", "Intel", "Chrome", NULL }
 	// if(shaderprecision==2) for(char **wc = weakcards; *wc; wc++) if(strstr(renderer, *wc)) shaderprecision = 1;
 
-	if(strstr(exts, "GL_EXT_texture_env_combine") || strstr(exts, "GL_ARB_texture_env_combine")) hasTE = true;
-	else conoutf("WARNING: No texture_env_combine extension! (your video card is WAY too old)");
-
-	if(strstr(exts, "GL_EXT_texture_env_dot3") || strstr(exts, "GL_ARB_texture_env_dot3")) hasD3 = true;
+    if(strstr(exts, "GL_EXT_texture_env_combine") || strstr(exts, "GL_ARB_texture_env_combine"))
+    {
+        hasTE = true;
+        if(strstr(exts, "GL_ATI_texture_env_combine3")) hasTE3 = true;
+        if(strstr(exts, "GL_NV_texture_env_combine4")) hasTE4 = true;
+        if(strstr(exts, "GL_EXT_texture_env_dot3") || strstr(exts, "GL_ARB_texture_env_dot3")) hasD3 = true;
+    }
+    else conoutf("WARNING: No texture_env_combine extension! (your video card is WAY too old)");
 
 	if(strstr(exts, "GL_ARB_multitexture"))
 	{
@@ -439,7 +443,7 @@ void cleanupgl()
 {
     if(glIsEnabled(GL_MULTISAMPLE)) glDisable(GL_MULTISAMPLE);
 
-    hasVBO = hasDRE = hasOQ = hasTR = hasFBO = hasDS = hasTF = hasBE = hasCM = hasNP2 = hasTC = hasTE = hasMT = hasD3 = hasstencil = hasAF = hasVP2 = hasVP3 = hasPP = false;
+    hasVBO = hasDRE = hasOQ = hasTR = hasFBO = hasDS = hasTF = hasBE = hasCM = hasNP2 = hasTC = hasTE = hasMT = hasD3 = hasstencil = hasAF = hasVP2 = hasVP3 = hasPP = hasMDA = hasTE3 = hasTE4 = false;
 
     extern int nomasks, nolights, nowater;
     nomasks = nolights = nowater = 0;
