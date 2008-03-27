@@ -682,11 +682,12 @@ float orientation_binormal[3][4] = { {  0,0,-1,0 }, { 0,0,-1,0 }, { 0,1,0,0 }};
 
 struct renderstate
 {
-    bool colormask, depthmask, mtglow;
+    bool colormask, depthmask, mtglow, skippedglow;
     GLuint vbuf;
     float fogplane;
     int diffusetmu, lightmaptmu, glowtmu, fogtmu, causticstmu;
     GLfloat color[4];
+    vec glowcolor;
     GLuint textures[8];
     Slot *slot;
     int texgendim, texgenw, texgenh;
@@ -695,7 +696,7 @@ struct renderstate
     int visibledynlights;
     uint dynlightmask;
 
-    renderstate() : colormask(true), depthmask(true), mtglow(false), vbuf(0), fogplane(-1), diffusetmu(0), lightmaptmu(1), glowtmu(-1), fogtmu(-1), causticstmu(-1), slot(NULL), texgendim(-1), texgenw(-1), texgenh(-1), texgenscale(-1), mttexgen(false), visibledynlights(0), dynlightmask(0)
+    renderstate() : colormask(true), depthmask(true), mtglow(false), vbuf(0), fogplane(-1), diffusetmu(0), lightmaptmu(1), glowtmu(-1), fogtmu(-1), causticstmu(-1), glowcolor(1, 1, 1), slot(NULL), texgendim(-1), texgenw(-1), texgenh(-1), texgenscale(-1), mttexgen(false), visibledynlights(0), dynlightmask(0)
     {
         loopk(4) color[k] = 1;
         loopk(8) textures[k] = 0;
@@ -842,7 +843,7 @@ static void mergetexs(vtxarray *va, elementset *texs = NULL, int numtexs = 0, us
     while(++curtex < numtexs);
 }
 
-static void mergetexmask(vtxarray *va, int texmask)
+static void mergeglowtexs(vtxarray *va)
 {
     int start = -1;
     ushort *edata = va->edata, *startdata = NULL;
@@ -850,7 +851,7 @@ static void mergetexmask(vtxarray *va, int texmask)
     {
         elementset &es = va->eslist[i];
         Slot &slot = lookuptexture(es.texture, false);
-        if(slot.texmask&texmask)
+        if(slot.texmask&(1<<TEX_GLOW) && !slot.mtglowed)
         {
             if(start<0) { start = i; startdata = edata; }
         }
@@ -958,6 +959,63 @@ static void changebatchtmus(renderstate &cur, int pass, geombatch &b)
     if(changed) glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
 }
 
+static void changeglow(renderstate &cur, int pass, Slot &slot)
+{
+    vec color = slot.glowcolor;
+    if(slot.pulseglowspeed)
+    {
+        float k = lastmillis*slot.pulseglowspeed;
+        k -= floor(k);
+        k = fabs(k*2 - 1);
+        color.lerp(color, slot.pulseglowcolor, k);
+    }
+    if(pass==RENDERPASS_GLOW)
+    {
+        if(cur.glowcolor!=color) glColor3fv(color.v);
+    }
+    else
+    {
+        if(cur.glowcolor!=color)
+        {
+            if(color==vec(1, 1, 1))
+            {
+                glActiveTexture_(GL_TEXTURE0_ARB+cur.glowtmu);
+                setuptmu(cur.glowtmu, "P + T");
+            }
+            else if(hasTE3 || hasTE4)
+            {
+                glActiveTexture_(GL_TEXTURE0_ARB+cur.glowtmu);
+                if(cur.glowcolor==vec(1, 1, 1))
+                {
+                    if(hasTE3) setuptmu(cur.glowtmu, "TPK3");
+                    else if(hasTE4) setuptmu(cur.glowtmu, "TKP14");
+                }
+                colortmu(cur.glowtmu, color.x, color.y, color.z);
+            }
+            else
+            {
+                slot.mtglowed = false;
+                cur.skippedglow = true;
+                return;
+            }
+        }
+        else glActiveTexture_(GL_TEXTURE0_ARB+cur.glowtmu);
+        if(!cur.mtglow) { glEnable(GL_TEXTURE_2D); cur.mtglow = true; }
+        slot.mtglowed = true;
+    }
+    loopvj(slot.sts)
+    {
+        Slot::Tex &t = slot.sts[j];
+        if(t.type==TEX_GLOW && t.combined<0)
+        {
+            if(cur.textures[cur.glowtmu]!=t.t->id)
+                glBindTexture(GL_TEXTURE_2D, cur.textures[cur.glowtmu] = t.t->id);
+            break;
+        }
+    }
+    cur.glowcolor = color;
+}
+
 static void changeslottmus(renderstate &cur, int pass, Slot &slot)
 {
     if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR)
@@ -969,23 +1027,18 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot)
 
     if(renderpath==R_FIXEDFUNCTION)
     {
-        if(pass==RENDERPASS_GLOW || cur.glowtmu>=0) if(slot.texmask&(1<<TEX_GLOW)) loopvj(slot.sts)
+        if(slot.texmask&(1<<TEX_GLOW))
         {
-            Slot::Tex &t = slot.sts[j];
-            if(t.type==TEX_GLOW && t.combined<0)
+            if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR)
             {
-                if(cur.glowtmu>=0)
-                {
-                    glActiveTexture_(GL_TEXTURE0_ARB+cur.glowtmu);
-                    if(!cur.mtglow) { glEnable(GL_TEXTURE_2D); cur.mtglow = true; }
-                }
-                if(cur.textures[cur.glowtmu]!=t.t->id)
-                    glBindTexture(GL_TEXTURE_2D, cur.textures[cur.glowtmu] = t.t->id);
+                if(cur.glowtmu<0) { slot.mtglowed = false; cur.skippedglow = true; }
+                else changeglow(cur, pass, slot);
             }
+            else if(pass==RENDERPASS_GLOW && !slot.mtglowed) changeglow(cur, pass, slot);
         }
         if(cur.mtglow)
         {
-            if(!(slot.texmask&(1<<TEX_GLOW)))
+            if(!(slot.texmask&(1<<TEX_GLOW)) || !slot.mtglowed)
             {
                 glActiveTexture_(GL_TEXTURE0_ARB+cur.glowtmu);
                 glDisable(GL_TEXTURE_2D);
@@ -1331,7 +1384,7 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
     {
         case RENDERPASS_GLOW:
             if(!(va->texmask&(1<<TEX_GLOW))) return;
-            mergetexmask(va, 1<<TEX_GLOW);
+            mergeglowtexs(va);
             if(!batchgeom && geombatches.length()) renderbatches(cur, pass);
             break;
 
@@ -1861,7 +1914,7 @@ void rendergeom(float causticspass, bool fogpass)
         if(doOQ) glDepthFunc(GL_LESS);
     }
 
-    if(renderpath==R_FIXEDFUNCTION ? (glowpass && cur.glowtmu<0) || (causticspass>=1 && cur.causticstmu<0) || (fogpass && cur.fogtmu<0) : causticspass)
+    if(renderpath==R_FIXEDFUNCTION ? (glowpass && cur.skippedglow) || (causticspass>=1 && cur.causticstmu<0) || (fogpass && cur.fogtmu<0) : causticspass)
     {
         glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
@@ -1870,24 +1923,24 @@ void rendergeom(float causticspass, bool fogpass)
         GLfloat oldfogc[4];
         glGetFloatv(GL_FOG_COLOR, oldfogc);
 
-        if(renderpath==R_FIXEDFUNCTION && glowpass && cur.glowtmu<0)
+        if(renderpath==R_FIXEDFUNCTION && glowpass && cur.skippedglow)
         {
             glBlendFunc(GL_ONE, GL_ONE);
-			glFogfv(GL_FOG_COLOR, zerofog);
+            glFogfv(GL_FOG_COLOR, zerofog);
             setuptexgen();
             if(cur.fogtmu>=0)
             {
-                setuptmu(0, "= T");
+                setuptmu(0, "C * T");
                 glActiveTexture_(GL_TEXTURE1_ARB);
                 glEnable(GL_TEXTURE_1D);
                 setuptexgen(1);
-                setuptmu(1, "C , P @ Ta");
+                setuptmu(1, "P * T~a");
                 if(!fogtex) createfogtex();
                 glBindTexture(GL_TEXTURE_1D, fogtex);
-                glColor3f(0, 0, 0);
                 glActiveTexture_(GL_TEXTURE0_ARB);
             }
-            else glColor3f(1, 1, 1);
+            cur.glowcolor = vec(-1, -1, -1);
+            cur.glowtmu = 0;
             rendergeommultipass(cur, RENDERPASS_GLOW, fogpass);
             disabletexgen();
             if(cur.fogtmu>=0)

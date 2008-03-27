@@ -683,7 +683,7 @@ void rendermaterials()
 						if(blended) { glDisable(GL_BLEND); blended = false; }
 						if(renderpath==R_FIXEDFUNCTION && !overbright) { setuptmu(0, "C * T x 2"); overbright = true; }
 						float t = lastmillis/2000.0f;
-						t -= int(t);
+						t -= floor(t);
                         t = 1.0f - 2*fabs(t-0.5f);
                         extern int glare;
                         if(renderpath!=R_FIXEDFUNCTION && glare) t = 0.625f + 0.075f*t;
