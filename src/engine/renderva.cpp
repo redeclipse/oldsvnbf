@@ -1022,6 +1022,9 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot)
         glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
     }
 
+    if(cur.slot && (cur.slot->scrollS != slot.scrollS || cur.slot->scrollT != slot.scrollT))
+        cur.texgendim = -1;
+
     cur.slot = &slot;
 }
 
@@ -1049,14 +1052,14 @@ static void changeshader(renderstate &cur, Shader *s, Slot &slot, bool shadowed)
     if(s->type&SHADER_GLSLANG) cur.texgendim = -1;
 }
 
-static void changetexgen(renderstate &cur, Shader *s, Texture *tex, float scale, int dim)
+static void changetexgen(renderstate &cur, Shader *s, Texture *tex, float scale, int dim, float scrollS, float scrollT)
 {
     static const int si[] = { 1, 0, 0 };
     static const int ti[] = { 2, 2, 1 };
 
-    GLfloat sgen[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    GLfloat sgen[] = { 0.0f, 0.0f, 0.0f, scrollS*lastmillis };
     sgen[si[dim]] = 8.0f/scale/(tex->xs<<VVEC_FRAC);
-    GLfloat tgen[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    GLfloat tgen[] = { 0.0f, 0.0f, 0.0f, scrollT*lastmillis };
     tgen[ti[dim]] = (dim <= 1 ? -8.0f : 8.0f)/scale/(tex->ys<<VVEC_FRAC);
 
     if(renderpath==R_FIXEDFUNCTION)
@@ -1160,7 +1163,7 @@ static void renderbatch(renderstate &cur, int pass, geombatch &b)
                 rendered = true;
             }
             if(cur.texgendim!=dim || cur.texgenw!=tex->xs || cur.texgenh!=tex->ys || cur.texgenscale!=scale || cur.mtglow>cur.mttexgen)
-                changetexgen(cur, s, tex, scale, dim);
+                changetexgen(cur, s, tex, scale, dim, b.slot.scrollS, b.slot.scrollT);
 
             loopv(draw)
             {
