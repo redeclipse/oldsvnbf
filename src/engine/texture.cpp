@@ -526,6 +526,16 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 }
 
 COMMAND(texture, "ssiiif");
+
+void texscroll(float *scrollS, float *scrollT)
+{
+    Slot &s = slots.last();
+    s.scrollS = *scrollS/1000.0f;
+    s.scrollT = *scrollT/1000.0f;
+}   
+
+COMMAND(texscroll, "ff");
+
 void texturedel(int i, bool local)
 {
 	if (curtexnum > 8)

@@ -219,6 +219,7 @@ struct Slot
 	vector<Tex> sts;
 	Shader *shader;
 	vector<ShaderParam> params;
+    float scrollS, scrollT;
 	bool loaded;
     uint texmask;
 	char *autograss;
@@ -229,6 +230,7 @@ struct Slot
 		sts.setsize(0);
 		shader = NULL;
 		params.setsize(0);
+        scrollS = scrollT = 0;
 		loaded = false;
         texmask = 0;
 		DELETEA(autograss);
