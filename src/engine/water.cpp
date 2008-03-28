@@ -534,7 +534,6 @@ void renderwater()
 
     if(glaring)
     {
-        glDepthMask(GL_TRUE);
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
     }
