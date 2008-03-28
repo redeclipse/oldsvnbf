@@ -683,21 +683,24 @@ void renderwater()
 		if(begin) glEnd();
 	}
 
-    if(glaring || (!waterreflect && !waterrefract))
-    {
-        glDepthMask(GL_TRUE);
-        glDisable(GL_BLEND);
-    }
+    if(glaring) glDisable(GL_BLEND);
     else
     {
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-
+        if(waterreflect || waterrefract)
+        {
+            glLoadIdentity();
+            glMatrixMode(GL_MODELVIEW);
+        }
         if(waterrefract)
         {
             glActiveTexture_(GL_TEXTURE3_ARB);
             glDisable(GL_TEXTURE_2D);
             if(hasFBO && renderpath!=R_FIXEDFUNCTION && waterfade) glDisable(GL_BLEND);
+        }
+        else
+        {
+            glDepthMask(GL_TRUE);
+            glDisable(GL_BLEND);
         }
     }
 
