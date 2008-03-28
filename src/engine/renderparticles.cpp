@@ -202,7 +202,7 @@ void cleanupdepthfx()
     depthfxtex.cleanup();
 }
 
-VARFP(depthfxsize, 6, 6, 10, cleanupdepthfx());
+VARFP(depthfxsize, 6, 7, 10, cleanupdepthfx());
 VARP(depthfx, 0, 0, 1);
 VARP(blurdepthfx, 0, 1, 7);
 VARP(blurdepthfxsigma, 1, 50, 200);
