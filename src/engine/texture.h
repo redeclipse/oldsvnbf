@@ -169,6 +169,13 @@ struct Shader
     void cleanup(bool invalid = false);
 };
 
+#define SETSHADER(name) \
+    do { \
+        static Shader *name##shader = NULL; \
+        if(!name##shader) name##shader = lookupshaderbyname(#name); \
+        name##shader->set(); \
+    } while(0)
+
 // management of texture slots
 // each texture slot can have multiple texture frames, of which currently only the first is used
 // additional frames can be used for various shaders

@@ -677,6 +677,55 @@ void rendershadowmapreceivers()
     glEnable(GL_TEXTURE_2D);
 }
 
+void renderdepthobstacles()
+{
+    static Shader *depthfxshader = NULL;
+    if(!depthfxshader) depthfxshader = lookupshaderbyname("depthfxworld");
+
+    depthfxshader->set();
+    extern int depthfxscale;
+    setlocalparamf("depthscale", SHPARAM_VERTEX, 0, 1.0f/depthfxscale);
+
+    glDisable(GL_TEXTURE_2D);
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    glPushMatrix();
+
+    resetorigin();
+    vtxarray *prev = NULL;
+    for(vtxarray *va = visibleva; va; va = va->next)
+    {
+        if(!va->texs || va->occluded >= OCCLUDE_GEOM) continue;
+
+        if(!prev || va->vbuf != prev->vbuf)
+        {
+            setorigin(va);
+            if(hasVBO)
+            {
+                glBindBuffer_(GL_ARRAY_BUFFER_ARB, va->vbuf);
+                glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, va->ebuf);
+            }
+            glVertexPointer(3, floatvtx ? GL_FLOAT : GL_SHORT, VTXSIZE, &va->vdata[0].x);
+        }
+
+        drawvatris(va, 3*va->tris, va->edata);
+        xtravertsva += va->verts;
+
+        prev = va;
+    }
+    glPopMatrix();
+
+    if(hasVBO)
+    {
+        glBindBuffer_(GL_ARRAY_BUFFER_ARB, 0);
+        glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+    }
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glEnable(GL_TEXTURE_2D);
+
+    defaultshader->set();
+}
+
 float orientation_tangent [3][4] = { {  0,1, 0,0 }, { 1,0, 0,0 }, { 1,0,0,0 }};
 float orientation_binormal[3][4] = { {  0,0,-1,0 }, { 0,0,-1,0 }, { 0,1,0,0 }};
 
