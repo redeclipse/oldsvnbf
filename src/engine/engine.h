@@ -177,6 +177,7 @@ extern bool envmapping, renderedgame;
 
 extern void gl_init(int w, int h, int bpp, int depth, int fsaa);
 extern void cleangl();
+extern void rendergame();
 extern void gl_drawframe(int w, int h);
 extern void setfogplane(const plane &p, bool flush = false);
 extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
@@ -351,6 +352,11 @@ extern bool glaring;
 
 extern void drawglaretex();
 extern void addglare();
+
+// depthfx
+extern bool depthfxing;
+
+extern void drawdepthfxtex();
 
 // server
 extern vector<char *> gameargs;

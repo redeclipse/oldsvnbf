@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "engine.h"
+#include "rendertarget.h"
 
 static struct flaretype {
 	int type;			 /* flaretex index, 0..5, -1 for 6+random shine */
@@ -163,6 +164,69 @@ static void makelightflares()
 		}
 		newflare(e.o, center, e.attr2, e.attr3, e.attr4, mod, size, sun, sun);
 	}
+}
+
+// eye space depth texture for soft particles, done at low res then blurred to prevent ugly jaggies
+VARP(depthfxscale, 1, 1<<12, 1<<16);
+VARP(depthfxblend, 1, 16, 64);
+VARP(fpdepthfx, 0, 1, 1);
+
+static struct depthfxtexture : rendertarget
+{
+    const GLenum *colorformats() const
+    {
+        static const GLenum colorfmts[] = { GL_RGB16F_ARB, GL_RGB16, GL_FALSE };
+        return &colorfmts[fpdepthfx ? 0 : 1];
+    }
+
+    bool dorender()
+    {
+        depthfxing = true;
+        refracting = -1;
+
+        glClearColor(1, 1, 1, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        extern void renderdepthobstacles();
+        renderdepthobstacles();
+
+        refracting = 0;
+        depthfxing = false;
+
+        return true;
+    }
+} depthfxtex;
+
+void cleanupdepthfx()
+{
+    depthfxtex.cleanup();
+}
+
+VARFP(depthfxsize, 6, 6, 10, cleanupdepthfx());
+VARP(depthfx, 0, 0, 1);
+VARP(blurdepthfx, 0, 1, 7);
+VARP(blurdepthfxsigma, 1, 50, 200);
+
+VAR(debugdepthfx, 0, 0, 1);
+
+void viewdepthfxtex()
+{
+    if(!depthfx) return;
+    depthfxtex.debug();
+}
+
+bool depthfxing = false;
+
+void drawdepthfxtex()
+{
+    #ifdef __APPLE__
+        // Apple bug, high precision formats cause driver to crash
+        return;
+    #endif
+
+    if(!depthfx || renderpath==R_FIXEDFUNCTION || !hasTF) return;
+
+    depthfxtex.render(1<<depthfxsize, blurdepthfx, blurdepthfxsigma/100.0f);
 }
 
 //cache our unit hemisphere
@@ -373,13 +437,19 @@ static void setupexplosion()
 
 	if(renderpath!=R_FIXEDFUNCTION)
 	{
-        static Shader *expl2dshader = NULL, *expl2dglareshader = NULL, *expl3dshader = NULL, *expl3dglareshader = NULL;
-        if(!expl2dshader) expl2dshader = lookupshaderbyname("explosion2d");
-        if(!expl2dglareshader) expl2dglareshader = lookupshaderbyname("explosion2dglare");
-        if(!expl3dshader) expl3dshader = lookupshaderbyname("explosion3d");
-        if(!expl3dglareshader) expl3dglareshader = lookupshaderbyname("explosion3dglare");
-        if(glaring) (explosion2d ? expl2dglareshader : expl3dglareshader)->set();
-        else (explosion2d ? expl2dshader : expl3dshader)->set();
+        if(glaring)
+        {
+            if(explosion2d) SETSHADER(explosion2dglare); else SETSHADER(explosion3dglare);
+        }
+        else if(depthfx && depthfxtex.rendertex)
+        {
+            if(explosion2d) SETSHADER(explosion2dsoft); else SETSHADER(explosion3dsoft);
+
+            glActiveTexture_(GL_TEXTURE2_ARB);
+            glBindTexture(GL_TEXTURE_2D, depthfxtex.rendertex);
+            glActiveTexture_(GL_TEXTURE0_ARB);
+        }
+        else if(explosion2d) SETSHADER(explosion2d); else SETSHADER(explosion3d);
 	}
 
 	if(renderpath==R_FIXEDFUNCTION || explosion2d)
@@ -989,6 +1059,8 @@ void render_particles(int time)
 					{
 						setlocalparamf("center", SHPARAM_VERTEX, 0, o.x, o.y, o.z);
 						setlocalparamf("animstate", SHPARAM_VERTEX, 1, size, psize, pmax, float(lastmillis));
+                        setlocalparamf("depthfxparams", SHPARAM_VERTEX, 4, float(depthfxscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/2 : 0);
+                        setlocalparamf("depthfxparams", SHPARAM_PIXEL, 4, float(depthfxscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/2 : 0);
 					}
 
 					glRotatef(lastmillis/7.0f, -rotdir.x, rotdir.y, -rotdir.z);
