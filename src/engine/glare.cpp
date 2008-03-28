@@ -134,7 +134,7 @@ void drawglaretex()
     if(!glare || renderpath==R_FIXEDFUNCTION) return;
 
     static int lastsize = 0;
-    int size = 1<<glaresize;
+    int size = min(1<<glaresize, hwtexsize);
     if(!hasFBO) while(size>screen->w || size>screen->h) size /= 2;
     if(size!=lastsize) { if(lastsize) cleanupglare(); lastsize = size; }
 
