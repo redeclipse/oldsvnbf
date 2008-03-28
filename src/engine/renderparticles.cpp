@@ -441,7 +441,7 @@ static void setupexplosion()
         {
             if(explosion2d) SETSHADER(explosion2dglare); else SETSHADER(explosion3dglare);
         }
-        else if(depthfx && depthfxtex.rendertex)
+        else if(!reflecting && !refracting && depthfx && depthfxtex.rendertex)
         {
             if(explosion2d) SETSHADER(explosion2dsoft); else SETSHADER(explosion3dsoft);
 
@@ -1059,8 +1059,11 @@ void render_particles(int time)
 					{
 						setlocalparamf("center", SHPARAM_VERTEX, 0, o.x, o.y, o.z);
 						setlocalparamf("animstate", SHPARAM_VERTEX, 1, size, psize, pmax, float(lastmillis));
-                        setlocalparamf("depthfxparams", SHPARAM_VERTEX, 4, float(depthfxscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/2 : 0);
-                        setlocalparamf("depthfxparams", SHPARAM_PIXEL, 4, float(depthfxscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/2 : 0);
+                        if(!glaring && !reflecting && !refracting && depthfx && depthfxtex.rendertex)
+                        {
+                            setlocalparamf("depthfxparams", SHPARAM_VERTEX, 5, float(depthfxscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/(2*255.0f) : 0);
+                            setlocalparamf("depthfxparams", SHPARAM_PIXEL, 5, float(depthfxscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/(2*255.0f) : 0);
+                        }
 					}
 
 					glRotatef(lastmillis/7.0f, -rotdir.x, rotdir.y, -rotdir.z);
