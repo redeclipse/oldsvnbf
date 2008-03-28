@@ -12,6 +12,8 @@ struct rendertarget
     {
     }
 
+    virtual ~rendertarget() {}
+
     virtual const GLenum *colorformats() const
     {
         static const GLenum colorfmts[] = { GL_RGB, GL_RGB8, GL_FALSE };
