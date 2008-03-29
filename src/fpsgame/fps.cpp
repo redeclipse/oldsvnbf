@@ -1050,7 +1050,7 @@ struct GAMECLIENT : igameclient
 
 	bool wantcrosshair()
 	{
-		return (crosshair() && !(hidehud || player1->state == CS_SPECTATOR)) || menuactive();
+		return (crosshair() && !(hidehud || player1->state == CS_SPECTATOR || player1->state == CS_DEAD)) || menuactive();
 	}
 
 	bool gamethirdperson()
