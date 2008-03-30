@@ -302,6 +302,7 @@ bool subdividecube(cube &c, bool fullcheck, bool brighten)
 		{
 			loopl(6) c.children[i].texture[l] = c.texture[l];
 			if(mat!=MAT_AIR) ext(c.children[i]).material = mat;
+            if(brighten && !isempty(c)) brightencube(c.children[i]);
 		}
 		return true;
 	}
@@ -454,6 +455,7 @@ bool remip(cube &c, int x, int y, int z, int size)
 	discardchildren(c);
 	loopi(3) c.faces[i] = n.faces[i];
 	if(mat!=MAT_AIR) ext(c).material = mat;
+    brightencube(c);
 	return true;
 }
 
