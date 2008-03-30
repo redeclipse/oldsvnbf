@@ -169,7 +169,9 @@ static void makelightflares()
 // eye space depth texture for soft particles, done at low res then blurred to prevent ugly jaggies
 VARP(depthfxscale, 1, 1<<12, 1<<16);
 VARP(depthfxblend, 1, 16, 64);
-VARP(fpdepthfx, 0, 1, 1);
+
+extern void cleanupdepthfx();
+VARFP(fpdepthfx, 0, 1, 1, cleanupdepthfx());
 
 static struct depthfxtexture : rendertarget
 {
