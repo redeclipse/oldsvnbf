@@ -338,7 +338,7 @@ void rendershadow(vec &dir, model *m, int anim, const vec &o, vec center, float 
 	float dist = rayfloor(center, floor, 0, center.z);
 	if(dist<=0 || dist>=center.z) return;
 	center.z -= dist;
-	if((cull&MDL_CULL_VFC) && refracting && center.z>=refracting) return;
+    if((cull&MDL_CULL_VFC) && refracting<0 && center.z>=reflectz) return;
 	if(vec(center).sub(camera1->o).dot(floor)>0) return;
 
     vec shaddir;
@@ -469,13 +469,13 @@ void renderbatchedmodel(model *m, batchedmodel &b)
 {
 	modelattach *a = NULL;
 	if(b.attached>=0) a = &modelattached[b.attached];
-    if((!shadowmap || renderpath==R_FIXEDFUNCTION) && (b.cull&(MDL_SHADOW|MDL_DYNSHADOW)) && dynshadow && hasstencil && (!reflecting || refracting))
+    if((!shadowmap || renderpath==R_FIXEDFUNCTION) && (b.cull&(MDL_SHADOW|MDL_DYNSHADOW)) && dynshadow && hasstencil && !reflecting && refracting<=0)
 	{
 		vec center;
         float radius = m->boundsphere(0/*frame*/, center, a); // FIXME
 		center.add(b.pos);
 		rendershadow(b.dir, m, b.anim, b.pos, center, radius, b.yaw, b.pitch, b.roll, b.speed, b.basetime, b.d, b.cull, a);
-		if((b.cull&MDL_CULL_VFC) && refracting && center.z-radius>=refracting) return;
+        if((b.cull&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
 	}
 
 	int anim = b.anim;
@@ -760,10 +760,10 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 
 	m->startrender();
 
-	if(shadow && (!reflecting || refracting))
+    if(shadow && !reflecting && refracting<=0)
 	{
 		rendershadow(lightdir, m, anim, o, center, radius, yaw, pitch, roll, speed, basetime, d, cull, a);
-		if((cull&MDL_CULL_VFC) && refracting && center.z-radius>=refracting) { m->endrender(); return; }
+        if((cull&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) { m->endrender(); return; }
 	}
 
     if(shadowmapping) anim |= ANIM_NOSKIN;
