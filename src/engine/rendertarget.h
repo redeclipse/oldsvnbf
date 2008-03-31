@@ -8,7 +8,7 @@ struct rendertarget
     int blursize;
     float blursigma;
     float blurweights[MAXBLURRADIUS+1], bluroffsets[MAXBLURRADIUS+1];
- 
+
     rendertarget() : texsize(0), colorfmt(GL_FALSE), depthfmt(GL_FALSE), rendertex(0), renderfb(0), renderdb(0), blurtex(0), blurfb(0), blurdb(0), blursize(0), blursigma(0)
     {
     }
@@ -176,13 +176,14 @@ struct rendertarget
     {
         size = min(size, hwtexsize);
         if(!hasFBO) while(size>screen->w || size>screen->h) size /= 2;
-        if(size!=texsize || (!rtsharefb) != (blurfb!=0)) cleanup();
+        if(size!=texsize || (hasFBO && (!rtsharefb) != (blurfb!=0))) cleanup();
 
         if(!rendertex) setup(size);
        
         if(hasFBO)
         {
-            if(swaptexs() && blursize && blurtex)
+            if(blursize && !blurtex) setupblur();
+            if(swaptexs() && blursize)
             {
                 swap(rendertex, blurtex);
                 if(!rtsharefb)

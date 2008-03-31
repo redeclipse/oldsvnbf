@@ -1068,6 +1068,13 @@ void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, 
 	SDL_GL_SwapBuffers();
 }
 
+bool dopostfx = false;
+
+void invalidatepostfx()
+{
+    dopostfx = false;
+}
+
 void gl_drawframe(int w, int h)
 {
 	defaultshader->set();
@@ -1108,11 +1115,15 @@ void gl_drawframe(int w, int h)
 
 	xtravertsva = xtraverts = glde = 0;
 
-	if(!hasFBO) 
+    if(!hasFBO)
     {
-        drawglaretex();
-        drawdepthfxtex();
-        drawreflections();
+        if(dopostfx)
+        {
+            drawglaretex();
+            drawdepthfxtex();
+            drawreflections();
+        }
+        else dopostfx = true;
     }
 
     visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, curfov);

@@ -769,13 +769,6 @@ void cleanreflections()
 
 VARFP(reflectsize, 6, 8, 10, cleanreflections());
 
-void invalidatereflections()
-{
-	if(hasFBO) return;
-	loopi(MAXREFLECTIONS) reflections[i].matsurfs.setsizenodelete(0);
-    waterfallrefraction.matsurfs.setsizenodelete(0);
-}
-
 void genwatertex(GLuint &tex, GLuint &fb, GLuint &db, bool refract = false)
 {
     static const GLenum colorfmts[] = { GL_RGBA, GL_RGBA8, GL_RGB, GL_RGB8, GL_FALSE },
