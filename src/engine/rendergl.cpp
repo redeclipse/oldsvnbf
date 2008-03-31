@@ -1110,9 +1110,9 @@ void gl_drawframe(int w, int h)
 
 	if(!hasFBO) 
     {
-        drawreflections();
         drawglaretex();
         drawdepthfxtex();
+        drawreflections();
     }
 
     visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, curfov);
@@ -1143,9 +1143,9 @@ void gl_drawframe(int w, int h)
 
     if(hasFBO) 
     {
-        drawreflections();
         drawglaretex();
         drawdepthfxtex();
+        drawreflections();
     }
 
     if(waterrefract && !nowater)
