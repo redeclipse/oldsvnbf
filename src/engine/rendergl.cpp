@@ -109,6 +109,7 @@ VAR(minimizetcusage, 1, 0, 0);
 VAR(emulatefog, 1, 0, 0);
 VAR(usevp2, 1, 0, 0);
 VAR(usevp3, 1, 0, 0);
+VAR(rtsharefb, 0, 1, 1);
 
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
@@ -272,6 +273,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     else if(strstr(vendor, "NVIDIA"))
     {
         reservevpparams = 10;
+        rtsharefb = 0;
     }
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
