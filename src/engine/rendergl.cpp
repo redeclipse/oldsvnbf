@@ -1131,11 +1131,8 @@ void gl_drawframe(int w, int h)
 
 	rendermapmodels();
 
-    if(!waterrefract || nowater)
-    {
-        defaultshader->set();
-        rendergame();
-    }
+    defaultshader->set();
+    rendergame();
 
     defaultshader->set();
 
@@ -1146,12 +1143,6 @@ void gl_drawframe(int w, int h)
         drawglaretex();
         drawdepthfxtex();
         drawreflections();
-    }
-
-    if(waterrefract && !nowater)
-    {
-        defaultshader->set();
-        rendergame();
     }
 
     if(!waterrefract || nowater) renderdecals(curtime);
