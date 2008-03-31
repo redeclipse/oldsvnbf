@@ -592,7 +592,7 @@ struct skelmodel : animmodel
         vector<skelanimspec> skelanims;
         vector<tag> tags;
 
-        static const int MAXVBOCACHE = 8;
+        static const int MAXVBOCACHE = 16;
         vbocacheentry vbocache[MAXVBOCACHE];
 
         vector<skelcacheentry> skelcache;

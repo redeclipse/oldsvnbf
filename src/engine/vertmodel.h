@@ -392,7 +392,7 @@ struct vertmodel : animmodel
         tag *tags;
         int numtags;
 
-        static const int MAXVBOCACHE = 8;
+        static const int MAXVBOCACHE = 16;
         vbocacheentry vbocache[MAXVBOCACHE];
 
         ushort *edata;
