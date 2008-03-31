@@ -226,7 +226,7 @@ void drawdepthfxtex()
         return;
     #endif
 
-    if(!depthfx || renderpath==R_FIXEDFUNCTION || !hasTF) return;
+    if(!depthfx || renderpath==R_FIXEDFUNCTION || !hasTF || !hasFBO) return;
 
     depthfxtex.render(1<<depthfxsize, blurdepthfx, blurdepthfxsigma/100.0f);
 }
