@@ -336,15 +336,18 @@ struct gui : g3d_gui
 			}
 			if(editing && windowhit==this)
 			{
-				if(fieldpos==-2)
-				{
-					result = fieldtext;
-					fieldpos = -1;
-					fieldname[0] = '\0';
-					editing = false;
-				}
-				else if(hit) fieldactive = true;
-				else fieldpos = -1; // mouse wandered out of focus
+                if(fieldpos==-2 || !hit) // commit field if user pressed enter or wandered out of focus 
+                {
+                    result = fieldtext;
+                    fieldpos = -1;
+                    fieldname[0] = '\0';
+                    editing = false;
+                }
+                else fieldactive = true;
+#if 0
+                else if(hit) fieldactive = true;
+                else fieldpos = -1; // mouse wandered out of focus
+#endif
 			}
 			if(editing && hit && (mousebuttons&G3D_PRESSED)) //mouse request position
 			{
