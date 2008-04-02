@@ -986,10 +986,10 @@ static void changebatchtmus(renderstate &cur, int pass, geombatch &b)
         int tmu = cur.lightmaptmu+1;
         if(b.slot.shader->type&SHADER_NORMALSLMS)
         {
-            if(cur.textures[tmu]!=lightmaptexs[b.es.lmid+1].id)
+            if(cur.textures[tmu]!=lightmaptexs[lmid+1].id)
             {
                 glActiveTexture_(GL_TEXTURE0_ARB+tmu);
-                glBindTexture(GL_TEXTURE_2D, cur.textures[tmu] = lightmaptexs[b.es.lmid+1].id);
+                glBindTexture(GL_TEXTURE_2D, cur.textures[tmu] = lightmaptexs[lmid+1].id);
                 changed = true;
             }
             tmu++;
