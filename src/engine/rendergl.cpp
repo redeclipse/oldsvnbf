@@ -245,6 +245,8 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         emulatefog = 1;
         extern int fpdepthfx;
         fpdepthfx = 0;
+        extern int filltjoints;
+        filltjoints = 1;
 	}
 	else if(strstr(vendor, "Tungsten"))
 	{
