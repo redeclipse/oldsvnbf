@@ -8,13 +8,12 @@ struct projectiles
 	{
 	}
 
-	struct projent : physent
+	struct projent : dynent, dynstate
 	{
 		vec from, to;
 		int lifetime;
 		float movement, roll;
 		bool local;
-		fpsent *owner;
 		int projtype;
 		float elasticity, relativity, waterfric;
 		int gun, schan, id;
@@ -39,13 +38,14 @@ struct projectiles
 			to = _t;
 
 			local = _b;
-			owner = _o;
 			projtype = _n;
 			lifetime = _i;
 			gun = _g;
 			maxspeed = _s;
 			id = _l;
             movement = 0;
+
+			dynset(_o->clientnum, DYN_PROJECTILE);
 
 			switch (projtype)
 			{
@@ -104,7 +104,7 @@ struct projectiles
 			vec dir(vec(vec(to).sub(from)).normalize());
 
 			vectoyawpitch(dir, yaw, pitch);
-			vel = vec(vec(dir).mul(maxspeed)).add(vec(owner->vel).mul(relativity));
+			vel = vec(vec(dir).mul(maxspeed)).add(vec(_o->vel).mul(relativity));
 
 			while (!collide(this, dir) && hitplayer) o.add(dir);
 		}
@@ -207,7 +207,10 @@ struct projectiles
 			proj.check();
 			int rtime = curtime;
 
-			while (rtime > 0)
+			fpsent *owner = proj.dynowner == cl.player1->clientnum ? cl.player1 : cl.getclient(proj.dynowner);
+			if (!owner) proj.state = CS_DEAD;
+
+			while (proj.state != CS_DEAD && rtime > 0)
 			{
 				int stime = proj.projtype == PRJ_SHOT ? 10 : 30, qtime = min(stime, rtime);
 				rtime -= qtime;
@@ -215,7 +218,7 @@ struct projectiles
 				if ((proj.lifetime -= qtime) <= 0 || !proj.update(qtime))
 				{
 					if (proj.projtype == PRJ_SHOT && (proj.gun == GUN_GL || proj.gun == GUN_RL))
-						cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.gun, proj.local);
+						cl.ws.explode(owner, proj.o, proj.vel, proj.id, proj.gun, proj.local);
 					proj.state = CS_DEAD;
 					break;
 				}
@@ -231,7 +234,7 @@ struct projectiles
 
 	void remove(fpsent *owner)
 	{
-		loopv(projs) if(projs[i]->owner==owner) { delete projs[i]; projs.remove(i--); }
+		loopv(projs) if(projs[i]->dynowner==owner->clientnum) { delete projs[i]; projs.remove(i--); }
 	}
 
 	void reset() { projs.deletecontentsp(); projs.setsize(0); }
