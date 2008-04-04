@@ -680,7 +680,7 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
         while(tj >= 0)
         {
             tjoint &t = tjoints[tj];
-            if(t.edge%4 != e1) break;
+            if(t.edge != orient*4 + e1) break;
             vvec vvt;
             loopk(3) vvt[k] = o[k] + t.offset*d[k];
             float k = (t.offset - offset1) * doffset;
