@@ -68,17 +68,6 @@ struct igameclient
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}
     virtual void adddynlights() {}
     virtual void particletrack(physent *owner, vec &o, vec &d) {}
-	virtual void findorientation()
-	{
-		extern physent *camera1;
-		vec dir;
-		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, dir);
-		vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
-		vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
-
-		if(raycubepos(camera1->o, dir, worldpos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-			worldpos = dir.mul(10).add(camera1->o); //otherwise 3dgui won't work when outside of map
-	}
 
 	virtual void fixview()
 	{

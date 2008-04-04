@@ -133,7 +133,7 @@ static struct gametypes
 #define m_assassin(a)		(a == G_ASSASSIN)
 
 #define m_mp(a)				(a > G_DEMO && a < G_MAX)
-#define m_frag(a)			(m_dm(a) || m_capture(a))
+#define m_frag(a)			(a >= G_DEATHMATCH)
 #define m_timed(a)			(m_frag(a))
 
 #define m_team(a,b)			((m_dm(a) && (b & G_M_TEAM)) || m_capture(a))
@@ -219,9 +219,6 @@ struct demoheader
 #define MAXNAMELEN 15
 #define MAXTEAMLEN 4
 
-#define MAXFOV			125
-#define MINFOV			(player1->gunselect == GUN_RIFLE ? 0 : 90)
-
 #define SGRAYS			20
 #define SGSPREAD		3
 
@@ -249,6 +246,29 @@ static struct guntypes
 
 enum { TEAM_BLUE = 0, TEAM_RED, TEAM_MAX };
 static const char *teamnames[TEAM_MAX] = { "blue", "red" };
+
+enum
+{
+	DYN_NONE = 0,
+	DYN_MAPMODEL,
+	DYN_PROJECTILE,
+	DYN_PLAYER,
+	DYN_MAX
+};
+
+struct dynstate
+{
+	int dynowner, dyntype;
+
+	dynstate() : dynowner(-1), dyntype(DYN_NONE) {}
+	~dynstate() {}
+
+	void dynset(int a, int b)
+	{
+		dynowner = a;
+		dyntype = (b > DYN_NONE && b < DYN_MAX ? b : DYN_NONE);
+	}
+};
 
 // inherited by fpsent and server clients
 struct fpsstate
@@ -387,7 +407,7 @@ enum
 	PRIV_MAX
 };
 
-struct fpsent : dynent, fpsstate
+struct fpsent : dynent, dynstate, fpsstate
 {
 	int weight;						 // affects the effectiveness of hitpush
 	int clientnum, privilege, lastupdate, plag, ping;
@@ -448,6 +468,19 @@ struct fpsent : dynent, fpsstate
 enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
 
 #ifndef STANDALONE
+
+#define MAXFOV			(gamethirdperson() ? 100 : 125)
+#define MINFOV			(player1->gunselect == GUN_RIFLE ? 0 : 90)
+
+enum
+{
+	CAMERA_NONE = 0,
+	CAMERA_PLAYER,
+	CAMERA_FOLLOW,
+	CAMERA_ENTITY,
+	CAMERA_MAX
+};
+
 enum
 {
 	SINFO_ICON = 0,

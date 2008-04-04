@@ -20,7 +20,7 @@ struct GAMECLIENT : igameclient
     int respawned, suicided;
 
 	string cptext;
-	int cameranum, cameracycled, camerawobble, damageresidue, myrankv, myranks;
+	int cameratype, cameranum, cameracycled, camerawobble, damageresidue, myrankv, myranks;
     float crouching;
 
 	struct sline { string s; };
@@ -39,9 +39,12 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> players;		// other clients
 	fpsent lastplayerstate;
 
-	IVAR(cameracycle,		0,			0,			600);		// cycle camera every N secs
-	IVARP(crosshair,		0,			1,			1);			// show the crosshair
-	IVARP(invmouse,			0,			0,			1);
+	IVAR(cameracycle,			0,			0,			600);		// cycle camera every N secs
+	IVARP(crosshair,			0,			1,			1);			// show the crosshair
+	IVARP(invmouse,				0,			0,			1);
+	IVARP(thirdperson,			0,			0,			1);
+	IVARP(thirdpersondist,		2,			16,			128);
+	IVARP(thirdpersonheight,	2,			12,			128);
 
 	IVARP(yawsensitivity,	0,			10,			1000);
 	IVARP(pitchsensitivity,	0,			7,			1000);
@@ -61,7 +64,7 @@ struct GAMECLIENT : igameclient
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
 			respawned(-1), suicided(-1),
-			cameranum(0), cameracycled(0), myrankv(0), myranks(0), crouching(0),
+			cameratype(CAMERA_NONE), cameranum(0), cameracycled(0), myrankv(0), myranks(0), crouching(0),
 			player1(spawnstate(new fpsent()))
 	{
 		CCOMMAND(centerrank, "", (GAMECLIENT *self), self->setcrank());
@@ -246,7 +249,7 @@ struct GAMECLIENT : igameclient
 				ph.updatewater(player1, 0);
 
 				if (player1->physstate >= PHYS_SLOPE) swaymillis += curtime;
-                
+
                 if (player1->crouching)
                 {
                     crouching = min(1.0f, crouching + curtime/300.0f);
@@ -605,7 +608,7 @@ struct GAMECLIENT : igameclient
 
 	void drawhudgun()
 	{
-		if(!hudgun() || editmode || player1->state != CS_ALIVE || !isgun(player1->gunselect)) return;
+		if(!hudgun() || thirdperson() || editmode || player1->state != CS_ALIVE || !isgun(player1->gunselect)) return;
 		int rtime = player1->gunwait[player1->gunselect],
 			wtime = player1->gunlast[player1->gunselect],
 			otime = lastmillis - wtime;
@@ -927,22 +930,22 @@ struct GAMECLIENT : igameclient
 
 	physent fpscamera;
 
-	void findorientation()
+	void findorientation(physent *d, vec &pos)
 	{
-		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
-		vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
-		vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
+		vec dir;
+		vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
+		vecfromyawpitch(d->yaw, 0, 0, -1, camright);
+		vecfromyawpitch(d->yaw, d->pitch+90, 1, 0, camup);
 
-		if(raycubepos(camera1->o, camdir, worldpos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-			worldpos = vec(camdir).mul(2*hdr.worldsize).add(camera1->o); //otherwise 3dgui won't work when outside of map
+		if(raycubepos(d->o, dir, pos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
+			pos = dir.mul(2*hdr.worldsize).add(d->o); //otherwise 3dgui won't work when outside of map
 	}
 
 	void recomputecamera()
 	{
-		int secs = time(NULL);
-		int cameratype = 0;
-
+		int secs = time(NULL), lastcam = cameratype;
 		camera1 = &fpscamera;
+		cameratype = CAMERA_NONE;
 
 		fixview();
 
@@ -964,10 +967,17 @@ struct GAMECLIENT : igameclient
 
 			if (players.inrange(-cameranum) && players[-cameranum])
 			{
+				cameratype = CAMERA_FOLLOW;
 				camera1->o = players[-cameranum]->o;
-				camera1->yaw = players[-cameranum]->yaw;
-				camera1->pitch = players[-cameranum]->pitch;
-				cameratype = 1;
+				camera1->yaw = players[-cameranum]->yaw + player1->yaw;
+				camera1->pitch = players[-cameranum]->pitch + player1->pitch;
+				camera1->roll = players[-cameranum]->roll;
+
+				if (!gamethirdperson())
+				{
+					if (players[-cameranum]->crouching > 0)
+						camera1->o.z -= crouching*(1-CROUCHHEIGHT)*players[-cameranum]->height;
+				}
 			}
 			else if (player1->clientnum != -cameranum)
 			{
@@ -979,10 +989,11 @@ struct GAMECLIENT : igameclient
 					{
 						if (cameras == cameranum)
 						{
+							cameratype = CAMERA_ENTITY;
 							camera1->o = et.ents[i]->o;
-							camera1->yaw = et.ents[i]->attr1;
-							camera1->pitch = et.ents[i]->attr2;
-							cameratype = 2;
+							camera1->yaw = et.ents[i]->attr1 + player1->yaw;
+							camera1->pitch = et.ents[i]->attr2 + player1->pitch;
+							camera1->roll = player1->roll;
 							break;
 						}
 						cameras++;
@@ -990,48 +1001,50 @@ struct GAMECLIENT : igameclient
 				}
 			}
 		}
-
-		if (cameratype <= 0)
+		if (cameratype <= CAMERA_NONE)
 		{
-			cameratype = 0;
+			cameratype = CAMERA_PLAYER;
 			camera1->o = player1->o;
-           
-            if(crouching>0) camera1->o.z -= crouching*(1-CROUCHHEIGHT)*player1->height; 
-
-			if (player1->state == CS_DEAD)
-            {
-				camera1->o.z -= (player1->height/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
-                camera1->o.z = max(player1->o.z - player1->height + 1.0f, camera1->o.z);
-            }
-
 			camera1->yaw = player1->yaw;
 			camera1->pitch = player1->pitch;
 			camera1->roll = player1->roll;
 
-			vec off;
-			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
-			camera1->o.add(off.mul(fabs(camera1->roll)/10.f));
-#if 0
-			off = worldpos;
-			off.sub(camera1->o);
-			off.normalize();
-			vectoyawpitch(off, camera1->yaw, camera1->pitch);
-#endif
+			if (!gamethirdperson())
+			{
+				if (player1->crouching > 0)
+					camera1->o.z -= crouching*(1-CROUCHHEIGHT)*player1->height;
+
+				if (player1->state == CS_DEAD)
+				{
+					camera1->o.z -= (player1->height/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
+					camera1->o.z = max(player1->o.z - player1->height + 1.0f, camera1->o.z);
+				}
+			}
+		}
+
+		if (gamethirdperson())
+		{
+			vec pos;
+
+			vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, pos);
+			camera1->o.x += pos.x*thirdpersondist();
+			camera1->o.y += pos.y*thirdpersondist();
+			camera1->o.z += (pos.z*thirdpersondist())+thirdpersonheight();
+
+			findorientation(player1, pos);
+			vec rot(pos);
+			rot.sub(camera1->o);
+			rot.normalize();
+			vectoyawpitch(rot, camera1->yaw, camera1->pitch);
 		}
 		else
 		{
-			camera1->pitch = player1->pitch;
-			camera1->roll = 0.f;
-		}
-		camera1->height = 0;
-
-		if (cameratype > 0)
-		{
-			player1->o = camera1->o;
-			player1->yaw = camera1->yaw;
+			vec off;
+			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
+			camera1->o.add(off.mul(fabs(camera1->roll)/8.f));
 		}
 
-		if (camerawobble > 0)
+		if (camerawobble > 0 && cameratype == lastcam)
 		{
 			float pc = float(min(camerawobble, 100))/100.f;
 			#define wobble (float(rnd(8)-4)*pc)
@@ -1039,8 +1052,10 @@ struct GAMECLIENT : igameclient
 			camera1->pitch += wobble;
 			camera1->roll += wobble;
 		}
+		else camerawobble = 0;
 
 		fixrange(camera1);
+		findorientation(camera1, worldpos);
 	}
 
 	void adddynlights()
@@ -1055,6 +1070,11 @@ struct GAMECLIENT : igameclient
 
 	bool gamethirdperson()
 	{
+		if (cameratype <= CAMERA_FOLLOW && thirdperson())
+		{
+			if (cameratype != CAMERA_PLAYER || player1->gunselect != GUN_RIFLE || fov >= 90)
+				return true;
+		}
 		return false;
 	}
 
