@@ -164,6 +164,13 @@ struct mergeinfo
 	short u1, u2, v1, v2;
 };
 
+struct tjoint
+{
+    int next;
+    ushort offset;
+    uchar edge;
+};
+
 struct cubeext
 {
 	uchar material;		  // empty-space material
@@ -176,6 +183,7 @@ struct cubeext
 	surfacenormals *normals; // per-vertex normals for each surface
 	octaentities *ents;	  // list of map entites totally inside cube
 	mergeinfo *merges;		// bounds of merged surfaces
+    int tjoints;             // linked list of t-joints
 };  
 
 struct cube
