@@ -20,6 +20,7 @@ cubeext *newcubeext(cube &c)
 	c.ext->normals = NULL;
 	c.ext->ents = NULL;
 	c.ext->merges = NULL;
+    c.ext->tjoints = -1;
 	return c.ext;
 }
 
@@ -68,6 +69,7 @@ void discardchildren(cube &c)
 		if(c.ext->va) destroyva(c.ext->va);
 		c.ext->va = NULL;
 		c.ext->merged = 0;
+        c.ext->tjoints = -1;
 		freesurfaces(c);
 		freenormals(c);
 		freeclipplanes(c);
