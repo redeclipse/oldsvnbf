@@ -70,4 +70,11 @@ struct fpsrender
 
 		endmodelbatches();
 	}
+
+    void preload()
+    {
+        loadmodel("player", -1, true);
+        loadmodel("player/blue", -1, true);
+        loadmodel("player/red", -1, true);
+    }
 } fr;

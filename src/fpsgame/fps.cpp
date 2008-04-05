@@ -453,33 +453,11 @@ struct GAMECLIENT : igameclient
 		else lanconnect();
 	}
 
-    void preloadcharacters()
-    {
-        loadmodel("player", -1, true);
-        loadmodel("player/blue", -1, true);
-        loadmodel("player/red", -1, true);
-    }
-
-    void preloadweapons()
-    {
-        loopi(NUMGUNS)
-        {
-            const char *file = guntype[i].name;
-            if(!file) continue;
-            s_sprintfd(mdl)("weapons/%s", file);
-            loadmodel(mdl, -1, true);
-            //s_sprintf(mdl)("hudguns/%s/blue", file);
-            //loadmodel(mdl, -1, true);
-            s_sprintf(mdl)("weapons/%s/vwep", file);
-            loadmodel(mdl, -1, true);
-        }
-    }
-
     void preload()
     {
-        preloadweapons();
-        preloadcharacters();
-        et.preloadentities();
+        wp.preload();
+        fr.preload();
+        et.preload();
     }
 
 	void startmap(const char *name)	// called just after a map load

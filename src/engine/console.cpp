@@ -444,12 +444,14 @@ void keypress(int code, bool isdown, int cooked)
 					if(commandpos>=0 && commandpos>=(int)strlen(commandbuf)) commandpos = -1;
 					break;
 
+				case SDLK_f:
+					if(SDL_GetModState()&MOD_KEYS) { cooked = '\f'; return; }
+
 				case SDLK_v:
 					if(SDL_GetModState()&MOD_KEYS) { pasteconsole(); return; }
 
 				default:
 					resetcomplete();
-					if (code == SDLK_f && (SDL_GetModState() & MOD_KEYS)) cooked = '\f';
 					if (cooked)
 					{
 						size_t len = (int)strlen(commandbuf);
