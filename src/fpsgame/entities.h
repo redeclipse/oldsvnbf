@@ -51,7 +51,7 @@ struct entities : icliententities
 		return emdl[0] ? emdl : NULL;
 	}
 
-    void preloadentities()
+    void preload()
     {
         loopv(ents)
         {

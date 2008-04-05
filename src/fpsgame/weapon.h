@@ -200,7 +200,7 @@ struct weaponstate
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
 		if (guntype[gun].sound >= 0) playsound(guntype[gun].sound, &d->o);
-		
+
 		switch(gun)
 		{
 			case GUN_SG:
@@ -297,14 +297,14 @@ struct weaponstate
 				if(hitrays) hitpush(o, from, to, hitrays);
 				if(!raysleft) break;
 			}
-            loopj(SGRAYS) if(!done[j]) adddecal(DECAL_BULLET, sg[j], vec(from).sub(sg[j]).normalize(), 2.0f); 
+            loopj(SGRAYS) if(!done[j]) adddecal(DECAL_BULLET, sg[j], vec(from).sub(sg[j]).normalize(), 2.0f);
 		}
 		else if((o = intersectclosest(from, to, d)))
 		{
 			hitpush(o, from, to);
 			shorten(from, o->o, to);
 		}
-        else adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f); 
+        else adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
 	}
 
 	void reload(fpsent *d)
@@ -363,4 +363,19 @@ struct weaponstate
 							hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 		}
 	}
+
+    void preload()
+    {
+        loopi(NUMGUNS)
+        {
+            const char *file = guntype[i].name;
+            if(!file) continue;
+            s_sprintfd(mdl)("weapons/%s", file);
+            loadmodel(mdl, -1, true);
+            //s_sprintf(mdl)("hudguns/%s/blue", file);
+            //loadmodel(mdl, -1, true);
+            s_sprintf(mdl)("weapons/%s/vwep", file);
+            loadmodel(mdl, -1, true);
+        }
+    }
 } ws;
