@@ -213,7 +213,7 @@ static struct shadowmaptexture : rendertarget
     const GLenum *colorformats() const
     {
         static const GLenum colorfmts[] = { GL_RGB16F_ARB, GL_RGB16, GL_RGB, GL_RGB8, GL_FALSE };
-        int offset = fpshadowmap && hasTF ? 0 : (shadowmapprecision ? 1 : 2);
+        int offset = fpshadowmap && hasTF && hasFBO ? 0 : (shadowmapprecision && hasFBO ? 1 : 2);
         return &colorfmts[offset];
     }
 
