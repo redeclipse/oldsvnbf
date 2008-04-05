@@ -431,13 +431,13 @@ void keypress(int code, bool isdown, int cooked)
 					if(commandpos>=0 && ++commandpos>=(int)strlen(commandbuf)) commandpos = -1;
 					break;
 
-				case SDLK_UP:
-					if(histpos) s_strcpy(commandbuf, vhistory[--histpos]);
-					break;
+                case SDLK_UP:
+                    if(histpos>0) s_strcpy(commandbuf, vhistory[--histpos]);
+                    break;
 
-				case SDLK_DOWN:
-					if(histpos<vhistory.length()) s_strcpy(commandbuf, vhistory[histpos++]);
-					break;
+                case SDLK_DOWN:
+                    if(histpos+1<vhistory.length()) s_strcpy(commandbuf, vhistory[++histpos]);
+                    break;
 
 				case SDLK_TAB:
 					complete(commandbuf);
@@ -449,7 +449,8 @@ void keypress(int code, bool isdown, int cooked)
 
 				case SDLK_v:
 					if(SDL_GetModState()&MOD_KEYS) { pasteconsole(); return; }
-
+                    // fall through
+                    
 				default:
 					resetcomplete();
 					if (cooked)
@@ -466,19 +467,18 @@ void keypress(int code, bool isdown, int cooked)
 							commandbuf[len+1] = '\0';
 						}
 					}
+                    break;
 			}
 		}
 		else
 		{
 			if(code==SDLK_RETURN || code==SDLK_KP_ENTER)
 			{
+                histpos = vhistory.length();
 				if(commandbuf[0])
 				{
 					if(vhistory.empty() || strcmp(vhistory.last(), commandbuf))
-					{
 						vhistory.add(newstring(commandbuf));  // cap this?
-					}
-					histpos = vhistory.length();
                     if(commandbuf[0]=='/') execute(commandbuf+1);
 					else cc->toserver(commandbuf);
 				}
@@ -486,6 +486,7 @@ void keypress(int code, bool isdown, int cooked)
 			}
 			else if(code==SDLK_ESCAPE)
 			{
+                histpos = vhistory.length();
 				saycommand(NULL);
 			}
 		}
