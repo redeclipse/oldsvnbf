@@ -214,10 +214,6 @@ static struct shadowmaptexture : rendertarget
     {
         static const GLenum colorfmts[] = { GL_RGB16F_ARB, GL_RGB16, GL_RGB, GL_RGB8, GL_FALSE };
         int offset = fpshadowmap && hasTF ? 0 : (shadowmapprecision ? 1 : 2);
-        #ifdef __APPLE__
-            // Apple bug, high precision formats cause driver to crash
-            offset = max(offset, 2);
-        #endif
         return &colorfmts[offset];
     }
 
@@ -486,7 +482,10 @@ void rendershadowmap()
 {
     if(!shadowmap || renderpath==R_FIXEDFUNCTION) return;
 
+    // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
+    glDisable(GL_FOG);
     shadowmaptex.render(1<<shadowmapsize, blurshadowmap, blursmsigma/100.0f);
+    glEnable(GL_FOG);
 }
 
 VAR(debugsm, 0, 0, 1);
