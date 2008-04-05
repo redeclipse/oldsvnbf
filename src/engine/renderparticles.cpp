@@ -221,14 +221,12 @@ bool depthfxing = false;
 
 void drawdepthfxtex()
 {
-    #ifdef __APPLE__
-        // Apple bug, high precision formats cause driver to crash
-        return;
-    #endif
-
     if(!depthfx || renderpath==R_FIXEDFUNCTION || !hasTF || !hasFBO) return;
 
+    // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
+    glDisable(GL_FOG);
     depthfxtex.render(1<<depthfxsize, blurdepthfx, blurdepthfxsigma/100.0f);
+    glEnable(GL_FOG);
 }
 
 //cache our unit hemisphere

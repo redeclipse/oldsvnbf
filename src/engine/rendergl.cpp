@@ -388,6 +388,10 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         //conoutf("Using GL_EXT_blend_minmax extension.");
     }
 
+#ifdef __APPLE__
+    // floating point FBOs not fully supported until 10.5
+    if(osversion>=0x1050)
+#endif
     if(strstr(exts, "GL_ARB_texture_float") || strstr(exts, "GL_ATI_texture_float"))
     {
         hasTF = true;
