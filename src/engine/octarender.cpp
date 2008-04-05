@@ -1170,7 +1170,7 @@ void addmergedverts(int level)
 	loopv(mfl)
 	{
 		mergedface &mf = mfl[i];
-		addcubeverts(mf.orient, 1<<level, mf.v, mf.tex, mf.surface, mf.normals, mf.envmap);
+        addcubeverts(mf.orient, 1<<level, mf.v, mf.tex, mf.surface, mf.normals, mf.tjoints, mf.envmap);
 		Slot &slot = lookuptexture(mf.tex, false);
 		if(slot.autograss && mf.orient!=O_BOTTOM)
 		{
