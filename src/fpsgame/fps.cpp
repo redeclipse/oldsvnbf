@@ -455,7 +455,7 @@ struct GAMECLIENT : igameclient
 
     void preload()
     {
-        wp.preload();
+        ws.preload();
         fr.preload();
         et.preload();
     }
