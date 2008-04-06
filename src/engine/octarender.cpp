@@ -1057,6 +1057,7 @@ void vaclearc(cube *c)
 		{
 			if(c[i].ext->va) destroyva(c[i].ext->va, false);
 			c[i].ext->va = NULL;
+            c[i].ext->tjoints = -1;
 		}
 		if(c[i].children) vaclearc(c[i].children);
 	}
@@ -1441,8 +1442,6 @@ void findtjoints(int cur, const edgegroup &g)
 
 void octarender()								// creates va s for all leaf cubes that don't already have them
 {
-	recalcprogress = 0;
-
 	int csi = 0;
 	while(1<<csi < hdr.worldsize) csi++;
 
