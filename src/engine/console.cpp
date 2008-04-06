@@ -539,7 +539,6 @@ void consolekey(int code, bool isdown, int cooked)
                     if(len+1<sizeof(commandbuf))
                     {
                         if(commandpos<0) commandbuf[len] = cooked;
-                        if(commandpos<0) commandbuf[len] = cooked;
                         else
                         {
                             memmove(&commandbuf[commandpos+1], &commandbuf[commandpos], len - commandpos);
