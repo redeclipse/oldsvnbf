@@ -637,6 +637,7 @@ int main(int argc, char **argv)
 	setvar("grabmouse", 1, true);
 
 	conoutf("init: gl");
+    gl_checkextensions();
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
     notexture = textureload("textures/notexture.png");
     if(!notexture) fatal("could not find core textures");
