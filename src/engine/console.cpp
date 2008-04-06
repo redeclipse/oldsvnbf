@@ -474,7 +474,6 @@ void keypress(int code, bool isdown, int cooked)
 		{
 			if(code==SDLK_RETURN || code==SDLK_KP_ENTER)
 			{
-                histpos = vhistory.length();
 				if(commandbuf[0])
 				{
 					if(vhistory.empty() || strcmp(vhistory.last(), commandbuf))
@@ -482,6 +481,7 @@ void keypress(int code, bool isdown, int cooked)
                     if(commandbuf[0]=='/') execute(commandbuf+1);
 					else cc->toserver(commandbuf);
 				}
+                histpos = vhistory.length();
 				saycommand(NULL);
 			}
 			else if(code==SDLK_ESCAPE)
