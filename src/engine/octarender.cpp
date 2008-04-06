@@ -3,19 +3,6 @@
 #include "pch.h"
 #include "engine.h"
 
-struct cstat { int size, nleaf, nnode, nface; } cstats[32];
-
-VAR(showcstats, 0, 0, 1);
-
-void printcstats()
-{
-	if(showcstats) loopi(32)
-	{
-		if(!cstats[i].size) continue;
-		conoutf("%d: %d faces, %d leafs, %d nodes", cstats[i].size, cstats[i].nface, cstats[i].nleaf, cstats[i].nnode);
-	}
-}
-
 VARF(floatvtx, 0, 0, 1, allchanged());
 
 #define GENVERTS(type, ptr, body) \
@@ -882,8 +869,6 @@ void gencubeverts(cube &c, int x, int y, int z, int size, int csi, uchar &vismas
 
 		if(e.merged&(1<<i)) continue;
 
-		cstats[csi].nface++;
-
 		vvec vv[4];
 		loopk(4) calcvert(c, x, y, z, size, vv[k], faceverts(c, i, k));
 		ushort envmap = EMID_NONE;
@@ -1195,7 +1180,6 @@ void addmergedverts(int level)
 			g.surface = mf.surface;
 			g.texture = mf.tex;
 		}
-		cstats[level].nface++;
 		vahasmerges |= MERGE_USE;
 	}
 	mfl.setsizenodelete(0);
@@ -1212,12 +1196,9 @@ void rendercube(cube &c, int cx, int cy, int cz, int size, int csi, uchar &visma
         clipmask = c.children ? c.clipmask : 0;
         return;                            // don't re-render
     }
-	cstats[csi].size = size;
 
 	if(c.children)
 	{
-		cstats[csi].nnode++;
-
         uchar visparent = 0, clipparent = 0x3F;
         uchar clipchild[8];
 		loopi(8)
@@ -1255,8 +1236,6 @@ void rendercube(cube &c, int cx, int cy, int cz, int size, int csi, uchar &visma
 	}
 
 	if(csi < VVEC_INT && vamerges[csi].length()) addmergedverts(csi);
-
-	cstats[csi].nleaf++;
 }
 
 void calcgeombb(int cx, int cy, int cz, int size, ivec &bbmin, ivec &bbmax)
@@ -1491,7 +1470,6 @@ void allchanged(bool load)
 {
 	show_out_of_renderloop_progress(0, "clearing VBOs...");
 	vaclearc(worldroot);
-	memset(cstats, 0, sizeof(cstat)*32);
 	resetqueries();
 	if(load) initenvmaps();
     guessshadowdir();
@@ -1511,7 +1489,6 @@ void allchanged(bool load)
     entitiesinoctanodes();
     updatevabbs(true);
 	if(load) genenvmaps();
-	printcstats();
 }
 
 void recalc()
