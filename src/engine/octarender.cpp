@@ -223,7 +223,6 @@ struct verthash
         uint h = 5381;
         loopl(sizeof(v)) h = ((h<<5)+h)^iv[l];
         h = h&(SIZE-1);
-        h = h&(SIZE-1);
         for(int i = table[h]; i>=0; i = chain[i])
         {
             const vertex &c = verts[i];
@@ -233,6 +232,7 @@ struct verthash
                  if(c.u==tu && c.v==tv) return i;
             }
         }
+        if(verts.length() >= USHRT_MAX) return -1;
         vertex &vtx = verts.add();
         ((vvec &)vtx) = v;
         vtx.u = tu;
@@ -436,7 +436,10 @@ struct vacollect : verthash
                 if(((va->o.x^loc->o.x)|(va->o.y^loc->o.y)|(va->o.z^loc->o.z))&~VVEC_INT_MASK)
                     flushvbo();
             }
-            if(vbosize[VBO_VBUF] + va->verts > maxvbosize) flushvbo();
+            if(vbosize[VBO_VBUF] + verts.length() > maxvbosize ||
+               vbosize[VBO_EBUF] + 3*curtris > USHRT_MAX ||
+               vbosize[VBO_SKYBUF] + skyindices.length() + explicitskyindices.length() > USHRT_MAX)
+                flushvbo();
 
             va->voffset = vbosize[VBO_VBUF];
             uchar *vdata = addvbo(va, VBO_VBUF, va->verts, VTXSIZE);
@@ -535,6 +538,7 @@ int addtriindexes(usvector &v, int index[4], int mask = 3)
 	int tris = 0;
     if(mask&1 && index[0]!=index[1] && index[0]!=index[2] && index[1]!=index[2])
 	{
+        if(v.length() + 3 > USHRT_MAX) return tris;
 		tris++;
 		v.add(index[0]);
 		v.add(index[1]);
@@ -542,6 +546,7 @@ int addtriindexes(usvector &v, int index[4], int mask = 3)
 	}
     if(mask&2 && index[0]!=index[2] && index[0]!=index[3] && index[2]!=index[3])
 	{
+        if(v.length() + 3 > USHRT_MAX) return tris;
 		tris++;
 		v.add(index[0]);
 		v.add(index[2]);
@@ -636,6 +641,7 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
         }
         else tc[k].u = tc[k].v = 0;
         index[k] = vc.addvert(vv[k], tc[k].u, tc[k].v, renderpath!=R_FIXEDFUNCTION && normals ? normals->normals[k] : bvec(128, 128, 128));
+        if(index[k] < 0) return;
     }
 
     int lmid = LMID_AMBIENT;
@@ -688,14 +694,17 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
                   vt = short(tc1.v + (tc2.v-tc1.v)*k);
             bvec nt;
             loopk(3) nt[k] = uchar(n1[k] + (n2[k] - n1[k])*k);
+            int nextindex = vc.addvert(vvt, ut, vt, nt);
+            if(nextindex < 0) return;
             usvector &idxs = texture==DEFAULT_SKY ? vc.explicitskyindices : vc.indices[key].dims[2*dim + (e1<=1 ? shadowmask&1 : shadowmask>>1)];
+            if(idxs.length() + 3 > USHRT_MAX) return;
             idxs.add(index[e2]);
             idxs.add(lastindex);
-            lastindex = vc.addvert(vvt, ut, vt, nt);
-            idxs.add(lastindex);
+            idxs.add(nextindex);
             if(texture==DEFAULT_SKY) explicitsky++;
             else vc.curtris++;
             tj = t.next;
+            lastindex = nextindex;
         }
     }
 }
@@ -977,8 +986,10 @@ void addskyverts(const ivec &o, int size)
 				vv[c] = coords[c] ? m.u2 : m.u1;
 				vv[r] = coords[r] ? m.v2 : m.v1;
                 index[k] = vc.addvert(vv, 0, 0, bvec(128, 128, 128));
-			}
-			addtriindexes(vc.skyindices, index);
+                if(index[k] < 0) goto nextskyface;
+            }
+            addtriindexes(vc.skyindices, index);
+        nextskyface:;
 		}
 		sf.setsizenodelete(0);
 	}
@@ -1294,7 +1305,7 @@ void setva(cube &c, int cx, int cy, int cz, int size, int csi)
     vc.clear();
 }
 
-VARF(vacubemax, 64, 2048, 256*256, allchanged());
+VARF(vacubemax, 64, 512, 256*256, allchanged());
 VARF(vacubesize, 32, 128, VVEC_INT_MASK+1, allchanged());
 VARF(vacubemin, 0, 128, 256*256, allchanged());
 
