@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "engine.h"
 
-bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false;
+bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false;
 
 VAR(renderpath, 1, 0, 0);
 
@@ -105,55 +105,31 @@ VAR(apple_ff_bug, 0, 0, 1);
 VAR(apple_vp_bug, 0, 0, 1);
 VAR(intel_quadric_bug, 0, 0, 1);
 VAR(mesa_program_bug, 0, 0, 1);
+VAR(avoidshaders, 1, 0, 0);
 VAR(minimizetcusage, 1, 0, 0);
 VAR(emulatefog, 1, 0, 0);
 VAR(usevp2, 1, 0, 0);
 VAR(usevp3, 1, 0, 0);
 VAR(rtsharefb, 0, 1, 1);
 
-void gl_init(int w, int h, int bpp, int depth, int fsaa)
+void gl_checkextensions()
 {
-	#define fogvalues 0.5f, 0.6f, 0.7f, 1.0f
-
-	glViewport(0, 0, w, h);
-	glClearColor(fogvalues);
-	glClearDepth(1);
-	glDepthFunc(GL_LESS);
-	glEnable(GL_DEPTH_TEST);
-	glShadeModel(GL_SMOOTH);
-
-
-	glEnable(GL_FOG);
-	glFogi(GL_FOG_MODE, GL_LINEAR);
-	glFogf(GL_FOG_DENSITY, 0.25f);
-	glHint(GL_FOG_HINT, GL_NICEST);
-	GLfloat fogcolor[4] = { fogvalues };
-	glFogfv(GL_FOG_COLOR, fogcolor);
-
-
-	glEnable(GL_LINE_SMOOTH);
-	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-	glPolygonOffset(-3.0f, -3.0f);
-
-	glCullFace(GL_FRONT);
-	glEnable(GL_CULL_FACE);
-
-	const char *vendor = (const char *)glGetString(GL_VENDOR);
-	const char *exts = (const char *)glGetString(GL_EXTENSIONS);
-	const char *renderer = (const char *)glGetString(GL_RENDERER);
-	const char *version = (const char *)glGetString(GL_VERSION);
-	conoutf("Renderer: %s (%s)", renderer, vendor);
-	conoutf("Driver: %s", version);
+    const char *vendor = (const char *)glGetString(GL_VENDOR);
+    const char *exts = (const char *)glGetString(GL_EXTENSIONS);
+    const char *renderer = (const char *)glGetString(GL_RENDERER);
+    const char *version = (const char *)glGetString(GL_VERSION);
+    conoutf("Renderer: %s (%s)", renderer, vendor);
+    conoutf("Driver: %s", version);
 
 #ifdef __APPLE__
     extern int mac_osversion();
     int osversion = mac_osversion();  /* 0x1050 = 10.5 (Leopard) */
 #endif
 
-	//extern int shaderprecision;
-	// default to low precision shaders on certain cards, can be overridden with -f3
-	// char *weakcards[] = { "GeForce FX", "Quadro FX", "6200", "9500", "9550", "9600", "9700", "9800", "X300", "X600", "FireGL", "Intel", "Chrome", NULL }
-	// if(shaderprecision==2) for(char **wc = weakcards; *wc; wc++) if(strstr(renderer, *wc)) shaderprecision = 1;
+    //extern int shaderprecision;
+    // default to low precision shaders on certain cards, can be overridden with -f3
+    // char *weakcards[] = { "GeForce FX", "Quadro FX", "6200", "9500", "9550", "9600", "9700", "9800", "X300", "X600", "FireGL", "Intel", "Chrome", NULL } 
+    // if(shaderprecision==2) for(char **wc = weakcards; *wc; wc++) if(strstr(renderer, *wc)) shaderprecision = 1;
 
     if(strstr(exts, "GL_EXT_texture_env_combine") || strstr(exts, "GL_ARB_texture_env_combine"))
     {
@@ -164,18 +140,19 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     }
     else conoutf("WARNING: No texture_env_combine extension! (your video card is WAY too old)");
 
-	if(strstr(exts, "GL_ARB_multitexture"))
-	{
-		glActiveTexture_		= (PFNGLACTIVETEXTUREARBPROC)	  getprocaddress("glActiveTextureARB");
-		glClientActiveTexture_ = (PFNGLCLIENTACTIVETEXTUREARBPROC)getprocaddress("glClientActiveTextureARB");
-		glMultiTexCoord2f_	 = (PFNGLMULTITEXCOORD2FARBPROC)	getprocaddress("glMultiTexCoord2fARB");
-		glMultiTexCoord3f_	 = (PFNGLMULTITEXCOORD3FARBPROC)	getprocaddress("glMultiTexCoord3fARB");
-		hasMT = true;
-	}
-	else conoutf("WARNING: No multitexture extension!");
+    if(strstr(exts, "GL_ARB_multitexture"))
+    {
+        glActiveTexture_       = (PFNGLACTIVETEXTUREARBPROC)      getprocaddress("glActiveTextureARB");
+        glClientActiveTexture_ = (PFNGLCLIENTACTIVETEXTUREARBPROC)getprocaddress("glClientActiveTextureARB");
+        glMultiTexCoord2f_     = (PFNGLMULTITEXCOORD2FARBPROC)    getprocaddress("glMultiTexCoord2fARB");
+        glMultiTexCoord3f_     = (PFNGLMULTITEXCOORD3FARBPROC)    getprocaddress("glMultiTexCoord3fARB");
+        glMultiTexCoord4f_     = (PFNGLMULTITEXCOORD4FARBPROC)    getprocaddress("glMultiTexCoord4fARB");
+        hasMT = true;
+    }
+    else conoutf("WARNING: No multitexture extension!");
 
-	if(strstr(exts, "GL_ARB_vertex_buffer_object"))
-	{
+    if(strstr(exts, "GL_ARB_vertex_buffer_object"))
+    {
         glGenBuffers_       = (PFNGLGENBUFFERSARBPROC)      getprocaddress("glGenBuffersARB");
         glBindBuffer_       = (PFNGLBINDBUFFERARBPROC)      getprocaddress("glBindBufferARB");
         glMapBuffer_        = (PFNGLMAPBUFFERARBPROC)       getprocaddress("glMapBufferARB");
@@ -184,16 +161,16 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         glBufferSubData_    = (PFNGLBUFFERSUBDATAARBPROC)   getprocaddress("glBufferSubDataARB");
         glDeleteBuffers_    = (PFNGLDELETEBUFFERSARBPROC)   getprocaddress("glDeleteBuffersARB");
         glGetBufferSubData_ = (PFNGLGETBUFFERSUBDATAARBPROC)getprocaddress("glGetBufferSubDataARB");
-		hasVBO = true;
-		//conoutf("Using GL_ARB_vertex_buffer_object extension.");
-	}
-	else conoutf("WARNING: No vertex_buffer_object extension! (geometry heavy maps will be SLOW)");
+        hasVBO = true;
+        //conoutf("Using GL_ARB_vertex_buffer_object extension.");
+    }
+    else conoutf("WARNING: No vertex_buffer_object extension! (geometry heavy maps will be SLOW)");
 
-	if(strstr(exts, "GL_EXT_draw_range_elements"))
-	{
-		glDrawRangeElements_ = (PFNGLDRAWRANGEELEMENTSEXTPROC)getprocaddress("glDrawRangeElementsEXT");
-		hasDRE = true;
-	}
+    if(strstr(exts, "GL_EXT_draw_range_elements"))
+    {
+        glDrawRangeElements_ = (PFNGLDRAWRANGEELEMENTSEXTPROC)getprocaddress("glDrawRangeElementsEXT");
+        hasDRE = true;
+    }
 
     if(strstr(exts, "GL_EXT_multi_draw_arrays"))
     {
@@ -226,42 +203,43 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     if(!hasOQ)
     {
         conoutf("WARNING: No occlusion query support! (large maps may be SLOW)");
-        /*if(renderpath==R_FIXEDFUNCTION)*/ zpass = 0;
+        zpass = 0;
         extern int vacubesize;
         vacubesize = 64;
         waterreflect = 0;
     }
 
     extern int reservedynlighttc, reserveshadowmaptc, maxtexsize, batchlightmaps;
-    bool avoidshaders = false;
-	if(strstr(vendor, "ATI"))
-	{
-		floatvtx = 1;
-		conoutf("WARNING: ATI cards may show garbage in skybox. (use \"/ati_skybox_bug 1\" to fix)");
+    if(strstr(vendor, "ATI"))
+    {
+        floatvtx = 1;
+        conoutf("WARNING: ATI cards may show garbage in skybox. (use \"/ati_skybox_bug 1\" to fix)");
 
         reservedynlighttc = 2;
         reserveshadowmaptc = 3;
-		minimizetcusage = 1;
+        minimizetcusage = 1;
         emulatefog = 1;
         extern int fpdepthfx;
         fpdepthfx = 0;
         extern int filltjoints;
         filltjoints = 1;
-	}
-	else if(strstr(vendor, "Tungsten"))
-	{
-        avoidshaders = true;
-		floatvtx = 1;
+
+        ati_texgen_bug = 1;
+    }
+    else if(strstr(vendor, "Tungsten"))
+    {
+        avoidshaders = 1;
+        floatvtx = 1;
         maxtexsize = 256;
         reservevpparams = 20;
         batchlightmaps = 0;
 
         if(!hasOQ) waterrefract = 0;
-	}
-	else if(strstr(vendor, "Intel"))
-	{
-        avoidshaders = true;
-		intel_quadric_bug = 1;
+    }
+    else if(strstr(vendor, "Intel"))
+    {
+        avoidshaders = 1;
+        intel_quadric_bug = 1;
         maxtexsize = 256;
         reservevpparams = 20;
         batchlightmaps = 0;
@@ -271,71 +249,68 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 #ifdef __APPLE__
         apple_vp_bug = 1;
 #endif
-	}
+    }
     else if(strstr(vendor, "NVIDIA"))
     {
         reservevpparams = 10;
         rtsharefb = 0;
+
+        nvidia_texgen_bug = 1;
     }
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
-	extern int useshaders;
-    if(!useshaders || (useshaders<0 && avoidshaders) || !hasMT || !strstr(exts, "GL_ARB_vertex_program") || !strstr(exts, "GL_ARB_fragment_program"))
-	{
-        if(!hasMT || !strstr(exts, "GL_ARB_vertex_program") || !strstr(exts, "GL_ARB_fragment_program")) conoutf("WARNING: No shader support! Using fixed function fallback. (no fancy visuals for you)");
-        else if(useshaders<0 && !hasTF) conoutf("WARNING: Disabling shaders for extra performance. (use \"/shaders 1\" to enable shaders if desired)");
-		renderpath = R_FIXEDFUNCTION;
-		if(strstr(vendor, "ATI") && !useshaders) ati_texgen_bug = 1;
-		else if(strstr(vendor, "NVIDIA")) nvidia_texgen_bug = 1;
-		if(ati_texgen_bug) conoutf("WARNING: Using ATI texgen bug workaround. (use \"/ati_texgen_bug 0\" to disable if unnecessary)");
-		if(nvidia_texgen_bug) conoutf("WARNING: Using NVIDIA texgen bug workaround. (use \"/nvidia_texgen_bug 0\" to disable if unnecessary)");
-	}
-	else
-	{
-		glGenPrograms_ =			(PFNGLGENPROGRAMSARBPROC)			getprocaddress("glGenProgramsARB");
-		glDeletePrograms_ =		 (PFNGLDELETEPROGRAMSARBPROC)		getprocaddress("glDeleteProgramsARB");
-		glBindProgram_ =			(PFNGLBINDPROGRAMARBPROC)			getprocaddress("glBindProgramARB");
-		glProgramString_ =		  (PFNGLPROGRAMSTRINGARBPROC)		 getprocaddress("glProgramStringARB");
-        glGetProgramiv_ =           (PFNGLGETPROGRAMIVARBPROC)          getprocaddress("glGetProgramivARB");
-		glProgramEnvParameter4f_ =  (PFNGLPROGRAMENVPARAMETER4FARBPROC) getprocaddress("glProgramEnvParameter4fARB");
-		glProgramEnvParameter4fv_ = (PFNGLPROGRAMENVPARAMETER4FVARBPROC)getprocaddress("glProgramEnvParameter4fvARB");
+    if(strstr(exts, "GL_ARB_vertex_program") && strstr(exts, "GL_ARB_fragment_program"))
+    {
+        hasVP = hasFP = true;
+        glGenPrograms_ =              (PFNGLGENPROGRAMSARBPROC)              getprocaddress("glGenProgramsARB");
+        glDeletePrograms_ =           (PFNGLDELETEPROGRAMSARBPROC)           getprocaddress("glDeleteProgramsARB");
+        glBindProgram_ =              (PFNGLBINDPROGRAMARBPROC)              getprocaddress("glBindProgramARB");
+        glProgramString_ =            (PFNGLPROGRAMSTRINGARBPROC)            getprocaddress("glProgramStringARB");
+        glGetProgramiv_ =             (PFNGLGETPROGRAMIVARBPROC)             getprocaddress("glGetProgramivARB");
+        glProgramEnvParameter4f_ =    (PFNGLPROGRAMENVPARAMETER4FARBPROC)    getprocaddress("glProgramEnvParameter4fARB");
+        glProgramEnvParameter4fv_ =   (PFNGLPROGRAMENVPARAMETER4FVARBPROC)   getprocaddress("glProgramEnvParameter4fvARB");
         glEnableVertexAttribArray_ =  (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)  getprocaddress("glEnableVertexAttribArrayARB");
         glDisableVertexAttribArray_ = (PFNGLDISABLEVERTEXATTRIBARRAYARBPROC) getprocaddress("glDisableVertexAttribArrayARB");
         glVertexAttribPointer_ =      (PFNGLVERTEXATTRIBPOINTERARBPROC)      getprocaddress("glVertexAttribPointerARB");
-		renderpath = R_ASMSHADER;
 
-		if(strstr(exts, "GL_ARB_shading_language_100") && strstr(exts, "GL_ARB_shader_objects") && strstr(exts, "GL_ARB_vertex_shader") && strstr(exts, "GL_ARB_fragment_shader"))
-		{
-			glCreateProgramObject_ =		(PFNGLCREATEPROGRAMOBJECTARBPROC)	 getprocaddress("glCreateProgramObjectARB");
-			glDeleteObject_ =				(PFNGLDELETEOBJECTARBPROC)			getprocaddress("glDeleteObjectARB");
-			glUseProgramObject_ =			(PFNGLUSEPROGRAMOBJECTARBPROC)		getprocaddress("glUseProgramObjectARB");
-			glCreateShaderObject_ =		 (PFNGLCREATESHADEROBJECTARBPROC)	  getprocaddress("glCreateShaderObjectARB");
-			glShaderSource_ =				(PFNGLSHADERSOURCEARBPROC)			getprocaddress("glShaderSourceARB");
-			glCompileShader_ =			  (PFNGLCOMPILESHADERARBPROC)			getprocaddress("glCompileShaderARB");
-			glGetObjectParameteriv_ =		(PFNGLGETOBJECTPARAMETERIVARBPROC)	getprocaddress("glGetObjectParameterivARB");
-			glAttachObject_ =				(PFNGLATTACHOBJECTARBPROC)			getprocaddress("glAttachObjectARB");
-			glGetInfoLog_ =				 (PFNGLGETINFOLOGARBPROC)			  getprocaddress("glGetInfoLogARB");
-			glLinkProgram_ =				(PFNGLLINKPROGRAMARBPROC)			 getprocaddress("glLinkProgramARB");
-			glGetUniformLocation_ =		 (PFNGLGETUNIFORMLOCATIONARBPROC)	  getprocaddress("glGetUniformLocationARB");
-			glUniform4fv_ =				 (PFNGLUNIFORM4FVARBPROC)			  getprocaddress("glUniform4fvARB");
-			glUniform1i_ =				  (PFNGLUNIFORM1IARBPROC)				getprocaddress("glUniform1iARB");
+        if(strstr(exts, "GL_ARB_shading_language_100") && strstr(exts, "GL_ARB_shader_objects") && strstr(exts, "GL_ARB_vertex_shader") && strstr(exts, "GL_ARB_fragment_shader"))
+        {
+            glCreateProgramObject_ =        (PFNGLCREATEPROGRAMOBJECTARBPROC)     getprocaddress("glCreateProgramObjectARB");
+            glDeleteObject_ =               (PFNGLDELETEOBJECTARBPROC)            getprocaddress("glDeleteObjectARB");
+            glUseProgramObject_ =           (PFNGLUSEPROGRAMOBJECTARBPROC)        getprocaddress("glUseProgramObjectARB");
+            glCreateShaderObject_ =         (PFNGLCREATESHADEROBJECTARBPROC)      getprocaddress("glCreateShaderObjectARB");
+            glShaderSource_ =               (PFNGLSHADERSOURCEARBPROC)            getprocaddress("glShaderSourceARB");
+            glCompileShader_ =              (PFNGLCOMPILESHADERARBPROC)           getprocaddress("glCompileShaderARB");
+            glGetObjectParameteriv_ =       (PFNGLGETOBJECTPARAMETERIVARBPROC)    getprocaddress("glGetObjectParameterivARB");
+            glAttachObject_ =               (PFNGLATTACHOBJECTARBPROC)            getprocaddress("glAttachObjectARB");
+            glGetInfoLog_ =                 (PFNGLGETINFOLOGARBPROC)              getprocaddress("glGetInfoLogARB");
+            glLinkProgram_ =                (PFNGLLINKPROGRAMARBPROC)             getprocaddress("glLinkProgramARB");
+            glGetUniformLocation_ =         (PFNGLGETUNIFORMLOCATIONARBPROC)      getprocaddress("glGetUniformLocationARB");
+            glUniform4fv_ =                 (PFNGLUNIFORM4FVARBPROC)              getprocaddress("glUniform4fvARB");
+            glUniform1i_ =                  (PFNGLUNIFORM1IARBPROC)               getprocaddress("glUniform1iARB");
 
-			extern bool checkglslsupport();
-			if(checkglslsupport())
-			{
-				renderpath = R_GLSLANG;
-				conoutf("Rendering using the OpenGL 1.5 GLSL shader path.");
+            extern bool checkglslsupport();
+            if(checkglslsupport())
+            {
+                hasGLSL = true;
 #ifdef __APPLE__
                 //if(osversion<0x1050) ??
-				apple_glsldepth_bug = 1;
+                apple_glsldepth_bug = 1;
 #endif
-				if(apple_glsldepth_bug) conoutf("WARNING: Using Apple GLSL depth bug workaround. (use \"/apple_glsldepth_bug 0\" to disable if unnecessary");
-			}
-		}
-		if(renderpath==R_ASMSHADER) conoutf("Rendering using the OpenGL 1.5 assembly shader path.");
+                if(apple_glsldepth_bug) conoutf("WARNING: Using Apple GLSL depth bug workaround. (use \"/apple_glsldepth_bug 0\" to disable if unnecessary");
+            }
+        }
 
         if(strstr(vendor, "ATI")) ati_dph_bug = 1;
         else if(strstr(vendor, "Tungsten")) mesa_program_bug = 1;
+
+#ifdef __APPLE__
+        if(osversion>=0x1050)
+        {
+            apple_ff_bug = 1;
+            conoutf("WARNING: Using Leopard ARB_position_invariant bug workaround. (use \"/apple_ff_bug 0\" to disable if unnecessary)");
+        }
+#endif
 
         if(strstr(exts, "GL_NV_vertex_program2_option")) { usevp2 = 1; hasVP2 = true; }
         if(strstr(exts, "GL_NV_vertex_program3")) { usevp3 = 1; hasVP3 = true; }
@@ -353,32 +328,31 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
             //conoutf("Using GL_ARB_texture_rectangle extension.");
         }
         else conoutf("WARNING: No texture rectangle support. (no full screen shaders)");
+    }
 
-	}
+    if(strstr(exts, "GL_EXT_framebuffer_object"))
+    {
+        glBindRenderbuffer_        = (PFNGLBINDRENDERBUFFEREXTPROC)       getprocaddress("glBindRenderbufferEXT");
+        glDeleteRenderbuffers_     = (PFNGLDELETERENDERBUFFERSEXTPROC)    getprocaddress("glDeleteRenderbuffersEXT");
+        glGenRenderbuffers_        = (PFNGLGENFRAMEBUFFERSEXTPROC)        getprocaddress("glGenRenderbuffersEXT");
+        glRenderbufferStorage_     = (PFNGLRENDERBUFFERSTORAGEEXTPROC)    getprocaddress("glRenderbufferStorageEXT");
+        glCheckFramebufferStatus_  = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC) getprocaddress("glCheckFramebufferStatusEXT");
+        glBindFramebuffer_         = (PFNGLBINDFRAMEBUFFEREXTPROC)        getprocaddress("glBindFramebufferEXT");
+        glDeleteFramebuffers_      = (PFNGLDELETEFRAMEBUFFERSEXTPROC)     getprocaddress("glDeleteFramebuffersEXT");
+        glGenFramebuffers_         = (PFNGLGENFRAMEBUFFERSEXTPROC)        getprocaddress("glGenFramebuffersEXT");
+        glFramebufferTexture2D_    = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)   getprocaddress("glFramebufferTexture2DEXT");
+        glFramebufferRenderbuffer_ = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)getprocaddress("glFramebufferRenderbufferEXT");
+        glGenerateMipmap_          = (PFNGLGENERATEMIPMAPEXTPROC)         getprocaddress("glGenerateMipmapEXT");
+        hasFBO = true;
+        //conoutf("Using GL_EXT_framebuffer_object extension.");
+    }
+    else conoutf("WARNING: No framebuffer object support. (reflective water may be slow)");
 
-	if(strstr(exts, "GL_EXT_framebuffer_object"))
-	{
-		glBindRenderbuffer_		= (PFNGLBINDRENDERBUFFEREXTPROC)		getprocaddress("glBindRenderbufferEXT");
-		glDeleteRenderbuffers_	 = (PFNGLDELETERENDERBUFFERSEXTPROC)	getprocaddress("glDeleteRenderbuffersEXT");
-		glGenRenderbuffers_		= (PFNGLGENFRAMEBUFFERSEXTPROC)		getprocaddress("glGenRenderbuffersEXT");
-		glRenderbufferStorage_	 = (PFNGLRENDERBUFFERSTORAGEEXTPROC)	getprocaddress("glRenderbufferStorageEXT");
-		glCheckFramebufferStatus_  = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC) getprocaddress("glCheckFramebufferStatusEXT");
-		glBindFramebuffer_		 = (PFNGLBINDFRAMEBUFFEREXTPROC)		getprocaddress("glBindFramebufferEXT");
-		glDeleteFramebuffers_	  = (PFNGLDELETEFRAMEBUFFERSEXTPROC)	 getprocaddress("glDeleteFramebuffersEXT");
-		glGenFramebuffers_		 = (PFNGLGENFRAMEBUFFERSEXTPROC)		getprocaddress("glGenFramebuffersEXT");
-		glFramebufferTexture2D_	= (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)	getprocaddress("glFramebufferTexture2DEXT");
-		glFramebufferRenderbuffer_ = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)getprocaddress("glFramebufferRenderbufferEXT");
-		glGenerateMipmap_		  = (PFNGLGENERATEMIPMAPEXTPROC)		 getprocaddress("glGenerateMipmapEXT");
-		hasFBO = true;
-		//conoutf("Using GL_EXT_framebuffer_object extension.");
-	}
-	else conoutf("WARNING: No framebuffer object support. (reflective water may be slow)");
-
-	if(strstr(exts, "GL_EXT_packed_depth_stencil") || strstr(exts, "GL_NV_packed_depth_stencil"))
-	{
-		hasDS = true;
-		//conoutf("Using GL_EXT_packed_depth_stencil extension.");
-	}
+    if(strstr(exts, "GL_EXT_packed_depth_stencil") || strstr(exts, "GL_NV_packed_depth_stencil"))
+    {
+        hasDS = true;
+        //conoutf("Using GL_EXT_packed_depth_stencil extension.");
+    }
 
     if(strstr(exts, "GL_EXT_blend_minmax"))
     {
@@ -401,36 +375,28 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         smoothshadowmappeel = 1;
     }
 
-	if(strstr(exts, "GL_ARB_texture_cube_map"))
-	{
+    if(strstr(exts, "GL_ARB_texture_cube_map"))
+    {
         GLint val;
         glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, &val);
         hwcubetexsize = val;
-		hasCM = true;
-		//conoutf("Using GL_ARB_texture_cube_map extension.");
-	}
-	else conoutf("WARNING: No cube map texture support. (no reflective glass)");
-
-	if(strstr(exts, "GL_ARB_texture_non_power_of_two"))
-	{
-		hasNP2 = true;
-		//conoutf("Using GL_ARB_texture_non_power_of_two extension.");
-	}
-	else conoutf("WARNING: Non-power-of-two textures not supported!");
-
-	if(strstr(exts, "GL_EXT_texture_compression_s3tc"))
-	{
-		hasTC = true;
-		//conoutf("Using GL_EXT_texture_compression_s3tc extension.");
-	}
-
-#ifdef __APPLE__
-     if((renderpath!=R_FIXEDFUNCTION) && (osversion>=0x1050))
-     {
-        apple_ff_bug = 1;
-        conoutf("WARNING: Using leopard OPTION ARB_position_invariant workaround (use \"/apple_ff_bug 0\" to disable if unnecessary)");
+        hasCM = true;
+        //conoutf("Using GL_ARB_texture_cube_map extension.");
     }
-#endif
+    else conoutf("WARNING: No cube map texture support. (no reflective glass)");
+
+    if(strstr(exts, "GL_ARB_texture_non_power_of_two"))
+    {
+        hasNP2 = true;
+        //conoutf("Using GL_ARB_texture_non_power_of_two extension.");
+    }
+    else conoutf("WARNING: Non-power-of-two textures not supported!");
+
+    if(strstr(exts, "GL_EXT_texture_compression_s3tc"))
+    {
+        hasTC = true;
+        //conoutf("Using GL_EXT_texture_compression_s3tc extension.");
+    }
 
     if(strstr(exts, "GL_EXT_texture_filter_anisotropic"))
     {
@@ -441,20 +407,63 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
        //conoutf("Using GL_EXT_texture_filter_anisotropic extension.");
     }
 
-	if(fsaa) glEnable(GL_MULTISAMPLE);
-
     GLint val;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val);
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val);
     hwtexsize = val;
+}
 
-	inittmus();
+void gl_init(int w, int h, int bpp, int depth, int fsaa)
+{
+	#define fogvalues 0.5f, 0.6f, 0.7f, 1.0f
+
+	glViewport(0, 0, w, h);
+	glClearColor(fogvalues);
+	glClearDepth(1);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_DEPTH_TEST);
+	glShadeModel(GL_SMOOTH);
+
+
+	glEnable(GL_FOG);
+	glFogi(GL_FOG_MODE, GL_LINEAR);
+	glFogf(GL_FOG_DENSITY, 0.25f);
+	glHint(GL_FOG_HINT, GL_NICEST);
+	GLfloat fogcolor[4] = { fogvalues };
+	glFogfv(GL_FOG_COLOR, fogcolor);
+
+
+	glEnable(GL_LINE_SMOOTH);
+	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+	glPolygonOffset(-3.0f, -3.0f);
+
+	glCullFace(GL_FRONT);
+	glEnable(GL_CULL_FACE);
+
+    extern int useshaders;
+    if(!useshaders || (useshaders<0 && avoidshaders) || !hasMT || !hasVP || !hasFP)
+    {
+        if(!hasMT || !hasVP || !hasFP) conoutf("WARNING: No shader support! Using fixed-function fallback. (no fancy visuals for you)");
+        else if(useshaders<0 && !hasTF) conoutf("WARNING: Disabling shaders for extra performance. (use \"/shaders 1\" to enable shaders if desired)");
+        renderpath = R_FIXEDFUNCTION;
+        conoutf("Rendering using the OpenGL 1.5 fixed-function path.");
+        if(ati_texgen_bug) conoutf("WARNING: Using ATI texgen bug workaround. (use \"/ati_texgen_bug 0\" to disable if unnecessary)");
+        if(nvidia_texgen_bug) conoutf("WARNING: Using NVIDIA texgen bug workaround. (use \"/nvidia_texgen_bug 0\" to disable if unnecessary)");
+    }
+    else
+    {
+        renderpath = hasGLSL ? R_GLSLANG : R_ASMSHADER;
+        if(renderpath==R_GLSLANG) conoutf("Rendering using the OpenGL 1.5 GLSL shader path.");
+        else conoutf("Rendering using the OpenGL 1.5 assembly shader path.");
+    }
+
+    if(fsaa) glEnable(GL_MULTISAMPLE);
+
+    inittmus();
 }
 
 void cleanupgl()
 {
     if(glIsEnabled(GL_MULTISAMPLE)) glDisable(GL_MULTISAMPLE);
-
-    hasVBO = hasDRE = hasOQ = hasTR = hasFBO = hasDS = hasTF = hasBE = hasCM = hasNP2 = hasTC = hasTE = hasMT = hasD3 = hasstencil = hasAF = hasVP2 = hasVP3 = hasPP = hasMDA = hasTE3 = hasTE4 = false;
 
     extern int nomasks, nolights, nowater;
     nomasks = nolights = nowater = 0;
