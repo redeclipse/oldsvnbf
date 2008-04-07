@@ -13,6 +13,7 @@ struct capturestate
 		vec o;
 		string owner, enemy;
 #ifndef CAPTURESERV
+        vec pos;
 		string name, info;
 		extentity *ent;
 #endif
@@ -171,30 +172,81 @@ struct capturestate
 
 struct captureclient : capturestate
 {
+    static const int FIREBALLRADIUS = 5;
+
 	GAMECLIENT &cl;
 	float radarscale;
+
+    IVARP(capturetether, 0, 1, 1);
 
 	captureclient(GAMECLIENT &cl) : cl(cl), radarscale(0)
 	{
 	}
 
+    void rendertether(fpsent *d)
+    {
+        int oldbase = d->lastbase;
+        d->lastbase = -1;
+        vec pos(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->height)/2);
+        if(d->state==CS_ALIVE) loopv(bases)
+        {
+            baseinfo &b = bases[i];
+            if(!insidebase(b, d->o) || (strcmp(b.owner, d->team) && strcmp(b.enemy, d->team))) continue;
+            particle_flare(b.pos, pos, 0, strcmp(d->team, cl.player1->team) ? 29 : 30);
+            if(oldbase < 0)
+            {
+                particle_fireball(pos, 4, strcmp(d->team, cl.player1->team) ? 31 : 32, 250);
+                particle_splash(0, 50, 250, pos);
+            }
+            d->lastbase = i;
+        }
+        if(d->lastbase < 0 && oldbase >= 0)
+        {
+            particle_fireball(pos, 4, strcmp(d->team, cl.player1->team) ? 31 : 32, 250);
+            particle_splash(0, 50, 250, pos);
+        }
+    }
+
+    void preload()
+    {
+        static const char *basemodels[3] = { "flags/neutral", "flags/red", "flags/blue" };
+        loopi(3) loadmodel(basemodels[i], -1, true);
+    }
+
 	void renderbases()
 	{
+        extern bool shadowmapping;
+        if(capturetether() && !shadowmapping)
+        {
+            loopv(cl.players)
+            {
+                fpsent *d = cl.players[i];
+                if(d) rendertether(d);
+            }
+            rendertether(cl.player1);
+        }
+
 		loopv(bases)
 		{
 			baseinfo &b = bases[i];
 			const char *flagname = b.owner[0] ? (strcmp(b.owner, cl.player1->team) ? "flags/red" : "flags/blue") : "flags/neutral";
             rendermodel(&b.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, 0, 0, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
+            particle_fireball(b.pos, 5, b.owner[0] ? (strcmp(b.owner, cl.player1->team) ? 31 : 32) : 33, 0);
 			int ttype = 11, mtype = -1;
 			if(b.owner[0])
 			{
 				bool isowner = !strcmp(b.owner, cl.player1->team);
+#if 0
 				if(b.enemy[0])
 				{
 					s_sprintf(b.info)("\f%d%s \f0vs. \f%d%s", isowner ? 3 : 1, b.enemy, isowner ? 1 : 3, b.owner);
 					mtype = isowner ? 19 : 20;
 				}
 				else { s_sprintf(b.info)("%s", b.owner); ttype = isowner ? 16 : 13; }
+#else
+                if(b.enemy[0]) mtype = isowner ? 19 : 20;
+                s_sprintf(b.info)("%s", b.owner); ttype = isowner ? 16 : 13;
+#endif
 			}
 			else if(b.enemy[0])
 			{
@@ -203,9 +255,9 @@ struct captureclient : capturestate
 				else { ttype = 16; mtype = 18; }
 			}
 			else b.info[0] = '\0';
-			vec above(b.o);
-			abovemodel(above, flagname);
-			above.z += 2.0f;
+
+            vec above(b.pos);
+            above.z += FIREBALLRADIUS+1.0f;
 			particle_text(above, b.info, ttype, 1);
 			if(mtype>=0)
 			{
@@ -283,6 +335,9 @@ struct captureclient : capturestate
 			if(e->type!=BASE) continue;
 			baseinfo &b = bases.add();
 			b.o = e->o;
+            b.pos = b.o;
+            abovemodel(b.pos, "base/neutral");
+            b.pos.z += FIREBALLRADIUS-2;
 			s_sprintfd(alias)("base_%d", e->attr1);
 			const char *name = getalias(alias);
 			if(name[0]) s_strcpy(b.name, name); else s_sprintf(b.name)("base %d", bases.length());
@@ -325,6 +380,7 @@ struct captureclient : capturestate
 			conoutf("\f2%s lost %s", b.owner, b.name);
 			if(!strcmp(b.owner, cl.player1->team)) playsound(S_V_BASELOST);
 		}
+        if(strcmp(b.owner, owner)) particle_splash(0, 200, 250, b.pos);
 		s_strcpy(b.owner, owner);
 		s_strcpy(b.enemy, enemy);
 		b.converted = converted;

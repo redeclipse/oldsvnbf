@@ -458,6 +458,7 @@ struct GAMECLIENT : igameclient
         ws.preload();
         fr.preload();
         et.preload();
+		if (m_capture(gamemode)) cpc.preload();
     }
 
 	void startmap(const char *name)	// called just after a map load

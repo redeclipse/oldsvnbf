@@ -206,7 +206,7 @@ static char msgsizelookup(int msg)
 
 #define SERVER_PORT			28795
 #define SERVINFO_PORT		28796
-#define PROTOCOL_VERSION	50
+#define PROTOCOL_VERSION	51
 #define DEMO_VERSION		1
 #define DEMO_MAGIC "BFDZ"
 
@@ -401,6 +401,13 @@ struct fpsstate
 
 enum
 {
+	SAY_NONE = 0x0,
+	SAY_ACTION = 0x1,
+	SAY_TEAM = 0x2,
+};
+
+enum
+{
 	PRIV_NONE = 0,
 	PRIV_MASTER,
 	PRIV_ADMIN,
@@ -414,7 +421,7 @@ struct fpsent : dynent, dynstate, fpsstate
 	int lastattackgun;
 	bool attacking, reloading, usestuff, leaning;
 	int lasttaunt;
-	int lastuse, lastusemillis;
+	int lastuse, lastusemillis, lastbase;
 	int superdamage;
 	int frags, deaths, totaldamage, totalshots;
 	editinfo *edit;
@@ -458,6 +465,7 @@ struct fpsent : dynent, dynstate, fpsstate
 		fpsstate::respawn();
 		lastattackgun = gunselect;
 		lasttaunt = lastuse = lastusemillis = superdamage = spree = lastimpulse = 0;
+		lastbase = -1;
 	}
 };
 
