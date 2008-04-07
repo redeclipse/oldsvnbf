@@ -75,7 +75,9 @@ struct md2 : vertmodel
     
     md2(const char *name) : vertmodel(name) {}
 
-    int type() { return MDL_MD2; }
+    int type() const { return MDL_MD2; }
+
+    int linktype(animmodel *m) const { return LINK_COOP; }
 
     struct md2meshgroup : vertmeshgroup
     {
@@ -223,27 +225,6 @@ struct md2 : vertmodel
         }
     };
 
-    void render(int anim, float speed, int basetime, float pitch, const vec &axis, dynent *d, modelattach *a, const vec &dir, const vec &campos, const plane &fogplane)
-    {
-        if(!loaded) return;
-
-        parts[0]->render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane);
-
-        if(a) 
-        {
-            int index = parts.last()->index + parts.last()->numanimparts;
-            for(int i = 0; a[i].name; i++)
-            {
-                animmodel *m = (animmodel *)a[i].m;
-                if(!m) continue;
-                part *p = m->parts[0];
-                p->index = index;
-                p->render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane);
-                index += p->numanimparts;
-            }
-        }
-    }
-
     void extendbb(int frame, vec &center, vec &radius, modelattach &a)
     {
         vec acenter, aradius;
@@ -260,9 +241,9 @@ struct md2 : vertmodel
         center.add(radius);
     }
 
-    meshgroup *loadmeshes(char *name)
+    meshgroup *loadmeshes(char *name, va_list args)
     {
-        md2meshgroup *group = new md2meshgroup();
+        md2meshgroup *group = new md2meshgroup;
         if(!group->load(name)) { delete group; return NULL; }
         return group;
     }

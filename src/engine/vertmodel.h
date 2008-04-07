@@ -47,8 +47,8 @@ struct vertmodel : animmodel
         {
             vertmesh &m = *(vertmesh *)mesh::copy();
             m.numverts = numverts;
-            m.verts = new vert[numverts*group->numframes];
-            memcpy(m.verts, verts, numverts*group->numframes*sizeof(vert));
+            m.verts = new vert[numverts*((vertmeshgroup *)group)->numframes];
+            memcpy(m.verts, verts, numverts*((vertmeshgroup *)group)->numframes*sizeof(vert));
             m.tcverts = new tcvert[numverts];
             memcpy(m.tcverts, tcverts, numverts*sizeof(tcvert));
             m.numtris = numtris;
@@ -65,7 +65,7 @@ struct vertmodel : animmodel
 
         void scaleverts(const vec &transdiff, float scalediff)
         {
-            loopi(group->numframes*numverts) verts[i].pos.add(transdiff).mul(scalediff);
+            loopi(((vertmeshgroup *)group)->numframes*numverts) verts[i].pos.add(transdiff).mul(scalediff);
         }
 
         void calctangents()
@@ -73,8 +73,8 @@ struct vertmodel : animmodel
             if(bumpverts) return;
             vec *tangent = new vec[2*numverts], *bitangent = tangent+numverts;
             memset(tangent, 0, 2*numverts*sizeof(vec));
-            bumpverts = new bumpvert[group->numframes*numverts];
-            loopk(group->numframes)
+            bumpverts = new bumpvert[((vertmeshgroup *)group)->numframes*numverts];
+            loopk(((vertmeshgroup *)group)->numframes)
             {
                 vert *fverts = &verts[k*numverts];
                 loopi(numtris)
@@ -389,6 +389,7 @@ struct vertmodel : animmodel
 
     struct vertmeshgroup : meshgroup
     {
+        int numframes;
         tag *tags;
         int numtags;
 
@@ -401,7 +402,7 @@ struct vertmodel : animmodel
         int vlen, vertsize;
         uchar *vdata;
 
-        vertmeshgroup() : tags(NULL), numtags(0), edata(NULL), ebuf(0), vdata(NULL) 
+        vertmeshgroup() : numframes(0), tags(NULL), numtags(0), edata(NULL), ebuf(0), vdata(NULL) 
         {
         }
 
@@ -428,13 +429,16 @@ struct vertmodel : animmodel
         meshgroup *copy()
         {
             vertmeshgroup &group = *(vertmeshgroup *)meshgroup::copy();
+            group.numframes = numframes;
             group.numtags = numtags;
             group.tags = new tag[numframes*numtags];
             memcpy(group.tags, tags, numframes*numtags*sizeof(tag));
             loopi(numframes*numtags) if(group.tags[i].name) group.tags[i].name = newstring(group.tags[i].name);
             return &group;
         }
-          
+        
+        int totalframes() const { return numframes; }
+
         void scaletags(const vec &transdiff, float scalediff)
         {
             loopi(numframes*numtags) 

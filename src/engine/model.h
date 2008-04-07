@@ -18,7 +18,7 @@ struct model
     virtual void render(int anim, float speed, int basetime, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a = NULL, const vec &color = vec(0, 0, 0), const vec &dir = vec(0, 0, 0)) = 0;
     virtual bool load() = 0;
     virtual char *name() = 0;
-    virtual int type() = 0;
+    virtual int type() const = 0;
     virtual BIH *setBIH() { return 0; }
     virtual bool envmapped() { return false; }
 

@@ -31,7 +31,7 @@ struct fpsrender
         if (d->gunselect > -1 && d->gunselect < NUMGUNS)
 		{
             a[ai].name = vweps[d->gunselect];
-            a[ai].type = MDL_ATTACH_VWEP;
+            a[ai].tag = "tag_weapon";
             a[ai].anim = ANIM_VWEP|ANIM_LOOP;
             a[ai].basetime = 0;
             ai++;
