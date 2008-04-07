@@ -191,7 +191,7 @@ struct GAMECLIENT : igameclient
 		nextmuts = muts;
 	}
 
-    void rendergame() { fr.rendergame(); }
+    void render() { fr.render(); }
 
 	void resetgamestate()
 	{

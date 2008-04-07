@@ -222,7 +222,7 @@ struct weaponstate
                 vec origin = hudgunorigin(gun, from, to, d);
                 particle_flare(origin, to, 600, 10);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
-                if(gun==GUN_CG) adddynlight(origin, 30, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
+                //if(gun==GUN_CG) adddynlight(origin, 30, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 				break;
 			}
 
@@ -245,6 +245,7 @@ struct weaponstate
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
 				break;
 		}
+		adddynlight(origin, 30, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 	}
 
 	fpsent *intersectclosest(vec &from, vec &to, fpsent *at)
