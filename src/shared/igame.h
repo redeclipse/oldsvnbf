@@ -62,7 +62,7 @@ struct igameclient
     virtual bool allowmove(physent *d) { return true; }
     virtual dynent *iterdynents(int i) = 0;
     virtual int numdynents() = 0;
-    virtual void rendergame() = 0;
+    virtual void render() = 0;
     virtual void g3d_gamemenus() = 0;
     virtual void crosshaircolor(float &r, float &g, float &b) {}
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}

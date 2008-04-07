@@ -953,7 +953,7 @@ struct GAMECLIENT : igameclient
 
 				if (!gamethirdperson())
 				{
-					if (players[-cameranum]->crouching > 0)
+					if (players[-cameranum]->crouching)
 						camera1->o.z -= crouching*(1-CROUCHHEIGHT)*players[-cameranum]->height;
 				}
 			}
@@ -989,7 +989,7 @@ struct GAMECLIENT : igameclient
 
 			if (!gamethirdperson())
 			{
-				if (player1->crouching > 0)
+				if (player1->crouching)
 					camera1->o.z -= crouching*(1-CROUCHHEIGHT)*player1->height;
 
 				if (player1->state == CS_DEAD)

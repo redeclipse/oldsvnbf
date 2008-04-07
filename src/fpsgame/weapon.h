@@ -199,7 +199,9 @@ struct weaponstate
 
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
+		vec origin = hudgunorigin(gun, from, to, d);
 		if (guntype[gun].sound >= 0) playsound(guntype[gun].sound, &d->o);
+		adddynlight(origin, 30, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 
 		switch(gun)
 		{
@@ -218,11 +220,8 @@ struct weaponstate
 			case GUN_PISTOL:
 			{
 				particle_splash(0, 200, 250, to);
-				//particle_trail(1, 10, from, to);
-                vec origin = hudgunorigin(gun, from, to, d);
                 particle_flare(origin, to, 600, 10);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
-                //if(gun==GUN_CG) adddynlight(origin, 30, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 				break;
 			}
 
@@ -245,7 +244,6 @@ struct weaponstate
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
 				break;
 		}
-		adddynlight(origin, 30, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 	}
 
 	fpsent *intersectclosest(vec &from, vec &to, fpsent *at)

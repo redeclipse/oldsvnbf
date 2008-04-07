@@ -128,7 +128,7 @@ void gl_checkextensions()
 
     //extern int shaderprecision;
     // default to low precision shaders on certain cards, can be overridden with -f3
-    // char *weakcards[] = { "GeForce FX", "Quadro FX", "6200", "9500", "9550", "9600", "9700", "9800", "X300", "X600", "FireGL", "Intel", "Chrome", NULL } 
+    // char *weakcards[] = { "GeForce FX", "Quadro FX", "6200", "9500", "9550", "9600", "9700", "9800", "X300", "X600", "FireGL", "Intel", "Chrome", NULL }
     // if(shaderprecision==2) for(char **wc = weakcards; *wc; wc++) if(strstr(renderer, *wc)) shaderprecision = 1;
 
     if(strstr(exts, "GL_EXT_texture_env_combine") || strstr(exts, "GL_ARB_texture_env_combine"))
@@ -676,7 +676,7 @@ bool renderedgame = false;
 
 void rendergame()
 {
-    cl->rendergame();
+    cl->render();
     if(!shadowmapping) renderedgame = true;
 }
 
@@ -1164,7 +1164,7 @@ void gl_drawframe(int w, int h)
 
     if(!limitsky()) drawskybox(farplane, false);
 
-    if(hasFBO) 
+    if(hasFBO)
     {
         drawglaretex();
         drawdepthfxtex();
