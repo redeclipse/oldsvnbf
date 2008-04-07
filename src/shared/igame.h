@@ -30,7 +30,7 @@ struct iclientcom
     virtual bool allowedittoggle(bool edit) = 0;
     virtual void edittoggled(bool edit) {}
     virtual void writeclientinfo(FILE *f) = 0;
-    virtual void toserver(char *text, bool action = false) = 0;
+    virtual void toserver(char *text, int flags = 0) = 0;
     virtual void changemap(const char *name) = 0;
 	virtual bool ready() { return true; }
 	virtual int otherclients() { return 0; }

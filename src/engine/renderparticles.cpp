@@ -1299,7 +1299,13 @@ static struct partmap { int type; int color; } partmaps[] =
 	{ 18, 0x897661}, // 25 greyish-brown:	big  fast rising smoke
 	{ 19, 0x3232FF}, // 26 water
     { 20, 0xFFC8C8}, // 27 yellow: fireball1
-    { 21, 0xFFFFFF}, // 28 lightning
+    { 21, 0xFFFFFF}, // 28 lightning: yellow
+    { 21, 0xFF2222}, // 29 lightning: red
+    { 21, 0x2222FF}, // 30 lightning: blue
+    { 23, 0x802020}, // 31 fireball: red
+    { 23, 0x2020FF}, // 32 fireball: blue
+    { 23, 0x208020}, // 33 fireball: green
+    {  9, 0x6496FF}, // 34 TEXT BLUE
 };
 
 void regular_particle_splash(int type, int num, int fade, const vec &p, int delay)
@@ -1354,11 +1360,12 @@ void particle_flare(const vec &p, const vec &dest, int fade, int type, physent *
     newparticle(p, dest, fade, partmaps[type].type, partmaps[type].color)->owner = owner;
 }
 
-void particle_fireball(const vec &dest, float max, int type)
+void particle_fireball(const vec &dest, float maxsize, int type, int fade)
 {
     if(shadowmapping || renderedgame) return;
-	int maxsize = int(max) - 4;
-	newparticle(dest, vec(0, 0, 1), maxsize*25, partmaps[type].type, partmaps[type].color)->val = maxsize;
+    float growth = maxsize - parttypes[partmaps[type].type].sz;
+    if(fade < 0) fade = int(growth*25);
+    newparticle(dest, vec(0, 0, 1), fade, partmaps[type].type, partmaps[type].color)->val = growth;
 }
 
 //dir = 0..6 where 0=up

@@ -16,8 +16,10 @@ struct clientcom : iclientcom
 
 	clientcom(GAMECLIENT &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false)
 	{
-        CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s, false));
-        CCOMMAND(me, "C", (clientcom *self, char *s), self->toserver(s, true));
+        CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s, SAY_NONE));
+        CCOMMAND(me, "C", (clientcom *self, char *s), self->toserver(s, SAY_ACTION));
+        CCOMMAND(sayteam, "C", (clientcom *self, char *s), self->toserver(s, SAY_TEAM));
+        CCOMMAND(meteam, "C", (clientcom *self, char *s), self->toserver(s, SAY_ACTION|SAY_TEAM));
         CCOMMAND(name, "s", (clientcom *self, char *s), self->switchname(s));
         CCOMMAND(team, "s", (clientcom *self, char *s), self->switchteam(s));
         CCOMMAND(map, "s", (clientcom *self, char *s), self->changemap(s));
@@ -54,9 +56,9 @@ struct clientcom : iclientcom
 		return false;
 	}
 
-	void switchname(char *name)
+	void switchname(const char *name)
 	{
-		if(*name)
+		if(name[0])
 		{
 			c2sinit = false;
 			s_strncpy(cl.player1->name, name, MAXNAMELEN);
@@ -65,9 +67,9 @@ struct clientcom : iclientcom
 		else conoutf("your name is: %s", cl.colorname(cl.player1));
 	}
 
-	void switchteam(char *team)
+	void switchteam(const char *team)
 	{
-		if(*team)
+		if(team[0])
 		{
 			c2sinit = false;
 			s_strncpy(cl.player1->team, team, MAXTEAMLEN);
@@ -248,19 +250,30 @@ struct clientcom : iclientcom
 		loopi(len) messages.add(buf[i]);
 	}
 
-	void saytext(fpsent *d, char *text, bool action)
+	void saytext(fpsent *d, char *text, int flags)
 	{
-		string s;
-		if (action) s_sprintf(s)("\fs\fr*\fS \fs\fr%s\fS \fs\fr%s\fS", cl.colorname(d), text);
-		else s_sprintf(s)("\fs\fr<\fS\fs\fw%s\fS\fs\fr>\fS \fs\fw%s\fS", cl.colorname(d), text);
+		if (!colourchat()) filtertext(text, text);
+
+		string s, t;
+		s_sprintf(t)("%s", flags&SAY_TEAM ? "\fb" : "\fr");
+
+		if (flags&SAY_ACTION) s_sprintf(s)("\fs%s*\fS \fs%s%s\fS \fs%s%s\fS", t, t, cl.colorname(d), t, text);
+		else s_sprintf(s)("\fs%s<\fS\fs\fw%s\fS\fs%s>\fS \fs\fw%s\fS", t, cl.colorname(d), t, text);
+
+		if(d->state != CS_DEAD && d->state != CS_SPECTATOR)
+		{
+			s_sprintfd(ds)("@%s", &s);
+			particle_text(d->abovehead(), ds, 9);
+		}
+
 		console("%s", (centerchat() ? CON_CENTER : 0)|CON_NORMAL, s);
 		playsound(S_CHAT);
 	}
 
-	void toserver(char *text, bool action)
+	void toserver(char *text, int flags)
 	{
-		saytext(cl.player1, text, action);
-		addmsg(SV_TEXT, "ris", action ? 1 : 0, text);
+		saytext(cl.player1, text, flags);
+		addmsg(SV_TEXT, "ris", flags, text);
 	}
 
 	void toservcmd(char *text, bool msg)
@@ -512,16 +525,12 @@ struct clientcom : iclientcom
 
 			case SV_TEXT:
 			{
-				if(!d) return;
-				int action = getint(p);
+                int tcn = getint(p);
+                fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
+				int flags = getint(p);
 				getstring(text, p);
-				if (!colourchat()) filtertext(text, text);
-				if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR)
-				{
-					s_sprintfd(ds)("@%s", &text);
-					particle_text(d->abovehead(), ds, 9);
-				}
-				saytext(d, text, action!=0);
+                if(!t) break;
+				saytext(d, text, flags);
 				break;
 			}
 

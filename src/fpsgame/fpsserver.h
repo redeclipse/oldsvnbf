@@ -1176,14 +1176,18 @@ struct GAMESERVER : igameserver
 			}
 
 			case SV_TEXT:
-			{
-				QUEUE_MSG;
-                int action = getint(p);
-                QUEUE_INT(action);
-				getstring(text, p); // filtering is chosen by the client
-                QUEUE_STR(text);
-				break;
-			}
+            {
+                int flags = getint(p);
+                getstring(text, p);
+                if (ci->state.state == CS_SPECTATOR || (flags&SAY_TEAM && !ci->team[0])) break;
+                loopv(clients)
+                {
+                    clientinfo *t = clients[i];
+                    if(t == ci || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && strcmp(ci->team, t->team))) continue;
+                    sendf(t->clientnum, 1, "riiis", SV_TEXT, ci->clientnum, flags, text);
+                }
+                break;
+            }
 
 			case SV_COMMAND:
 			{
@@ -2021,7 +2025,7 @@ struct GAMESERVER : igameserver
 		s_sprintf(cname)("%s \fs\f5(%d)\fS", name, ci->clientnum);
 		return cname;
 	}
-	
+
     const char *gameid() { return GAMEID; }
     int gamever() { return GAMEVERSION; }
     char *gamename(int mode, int muts)
