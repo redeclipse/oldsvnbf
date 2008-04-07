@@ -65,7 +65,7 @@ struct skelmodel : animmodel
             bones[sorted] = bone;
             return sorted+1;
         }
-
+        
         void finalize(int sorted)
         {
             loopj(4-sorted) { weights[sorted+j] = 0; bones[sorted+j] = 0; }
@@ -93,9 +93,26 @@ struct skelmodel : animmodel
         }
     };
 
-    struct skelcacheentry;
 
-    struct vbocacheentry
+    struct animcacheentry
+    {
+        animstate as[MAXANIMPARTS];
+        float pitch;
+        int millis;
+    
+        animcacheentry()
+        {
+            loopk(MAXANIMPARTS) as[k].cur.fr1 = as[k].prev.fr1 = -1;
+        }
+
+        bool operator==(const animcacheentry &c) const
+        {
+            loopi(MAXANIMPARTS) if(as[i]!=c.as[i]) return false;
+            return pitch==c.pitch;
+        }
+    };
+
+    struct vbocacheentry : animcacheentry
     {
         uchar *vdata;
         GLuint vbuf;
@@ -104,20 +121,22 @@ struct skelmodel : animmodel
         vbocacheentry() : vdata(NULL), vbuf(0), owner(-1) {}
     };
     
-    struct skelcacheentry
+    struct skelcacheentry : animcacheentry
     {
         dualquat *bdata;
         matrix3x4 *mdata;
-        vbocacheentry *vc;
-        animstate as[MAXANIMPARTS];
-        float pitch;
-        int millis;
 
-        skelcacheentry() : bdata(NULL), mdata(NULL), vc(NULL) 
-        { 
-            loopk(MAXANIMPARTS) as[k].cur.fr1 = as[k].prev.fr1 = -1; 
-        }
+        skelcacheentry() : bdata(NULL), mdata(NULL) {}
     };
+
+    struct blendcacheentry : skelcacheentry
+    {
+        int owner;
+
+        blendcacheentry() : owner(-1) {}
+    };
+
+    struct skelmeshgroup;
 
     struct skelmesh : mesh
     {
@@ -169,7 +188,7 @@ struct skelmodel : animmodel
 
         void scaleverts(const vec &transdiff, float scalediff)
         {
-            if(group->numframes) loopi(numverts) verts[i].pos.mul(scalediff);
+            if(((skelmeshgroup *)group)->skel->numframes) loopi(numverts) verts[i].pos.mul(scalediff);
             else loopi(numverts) verts[i].pos.add(transdiff).mul(scalediff);
         }
 
@@ -327,7 +346,7 @@ struct skelmodel : animmodel
         {
             voffset = offset;
             eoffset = idxs.length();
-            if(!group->numframes) minvert = 0xFFFF;
+            if(!((skelmeshgroup *)group)->skel->numframes) minvert = 0xFFFF;
             loopi(numtris)
             {
                 tri &t = tris[i];
@@ -335,7 +354,7 @@ struct skelmodel : animmodel
                 {
                     int index = t.vert[j];
                     vert &v = verts[index];
-                    if(!group->numframes) loopvk(vverts)
+                    if(!((skelmeshgroup *)group)->skel->numframes) loopvk(vverts)
                     {
                         if(comparevert(vverts[k], index, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
                     }
@@ -345,7 +364,7 @@ struct skelmodel : animmodel
                 }
             }
             elen = idxs.length()-eoffset;
-            if(group->numframes)
+            if(((skelmeshgroup *)group)->skel->numframes)
             {
                 minvert = voffset;
                 maxvert = voffset + numverts-1;
@@ -362,7 +381,7 @@ struct skelmodel : animmodel
         int genvbo(vector<ushort> &idxs, int offset)
         {
             loopi(numverts) verts[i].interpindex = ((skelmeshgroup *)group)->remapblend(verts[i].blend);
-
+            
             voffset = offset;
             eoffset = idxs.length();
             loopi(numtris)
@@ -382,7 +401,7 @@ struct skelmodel : animmodel
             loopi(numverts)
             {
                 ((float *)vdata)[0] = verts[i].u;
-                ((float *)vdata)[1] = verts[i].v;
+                ((float *)vdata)[1] = verts[i].v; 
                 vdata += stride;
             }
         }
@@ -457,12 +476,12 @@ struct skelmodel : animmodel
             skelmeshgroup *g = (skelmeshgroup *)group;
             if(glaring)
             {
-                if(!g->gpuaccelerate()) s->variant(0, 2)->set();
-                else if(matskel) s->variant(min(maxweights, g->vweights), 2)->set();
+                if(!g->skel->usegpuskel) s->variant(0, 2)->set();
+                else if(g->skel->usematskel) s->variant(min(maxweights, g->vweights), 2)->set();
                 else s->variant(maxweights-1, 3)->set();
             }
-            else if(!g->gpuaccelerate()) s->set();
-            else if(matskel) s->variant(min(maxweights, g->vweights)-1, 0)->set();
+            else if(!g->skel->usegpuskel) s->set();
+            else if(g->skel->usematskel) s->variant(min(maxweights, g->vweights)-1, 0)->set();
             else s->variant(maxweights-1, 1)->set();
         }
 
@@ -581,75 +600,43 @@ struct skelmodel : animmodel
         boneinfo() : parent(-1), children(-1), next(-1), interpindex(-1), interpparent(-1), pitchscale(0), pitchoffset(0), pitchmin(0), pitchmax(0) {}
     };
 
-    struct skelmeshgroup : meshgroup
+    struct skeleton
     {
+        char *name;
+        int shared;
+        vector<skelmeshgroup *> users;
         boneinfo *bones;
-        int numbones, numinterpbones, numgpubones, optimizedframes;
+        int numbones, numinterpbones, numgpubones, numframes, optimizedframes;
         dualquat *invbones, *framebones;
         matrix3x4 *matinvbones, *matframebones;
-        vector<blendcombo> blendcombos;
-        int numblends[4];
         vector<skelanimspec> skelanims;
         vector<tag> tags;
 
-        static const int MAXVBOCACHE = 16;
-        vbocacheentry vbocache[MAXVBOCACHE];
-
+        bool usegpuskel, usematskel;
         vector<skelcacheentry> skelcache;
 
-        ushort *edata;
-        GLuint ebuf;
-        bool vnorms, vtangents, vaccel, vmat;
-        int vlen, vertsize, vblends, vweights;
-        uchar *vdata;
-
-        skelmeshgroup() : bones(NULL), numbones(0), numinterpbones(0), numgpubones(0), optimizedframes(0), invbones(NULL), framebones(NULL), matinvbones(NULL), matframebones(NULL), edata(NULL), ebuf(0), vdata(NULL)
+        skeleton() : name(NULL), shared(0), bones(NULL), numbones(0), numinterpbones(0), numgpubones(0), numframes(0), optimizedframes(0), invbones(NULL), framebones(NULL), matinvbones(NULL), matframebones(NULL), usegpuskel(false), usematskel(false)
         {
-            memset(numblends, 0, sizeof(numblends));
         }
 
-        virtual ~skelmeshgroup()
+        ~skeleton()
         {
+            DELETEA(name);
             DELETEA(bones);
             DELETEA(invbones);
             DELETEA(framebones);
             DELETEA(matinvbones);
             DELETEA(matframebones);
-            if(ebuf) glDeleteBuffers_(1, &ebuf);
-            loopi(MAXVBOCACHE)
-            {
-                DELETEA(vbocache[i].vdata);
-                if(vbocache[i].vbuf) glDeleteBuffers_(1, &vbocache[i].vbuf);
-            }
-            loopv(skelcache) 
+            loopv(skelcache)
             {
                 DELETEA(skelcache[i].bdata);
                 DELETEA(skelcache[i].mdata);
             }
-            DELETEA(vdata);
-        }
-
-        int addblendcombo(const blendcombo &c)
-        {
-            loopv(blendcombos) if(blendcombos[i]==c)
-            {
-                blendcombos[i].uses += c.uses;
-                return i;
-            }
-            numblends[c.size()-1]++;
-            blendcombos.add(c);
-            return blendcombos.length()-1;
-        }
-
-        int remapblend(int blend)
-        {
-            const blendcombo &c = blendcombos[blend];
-            return c.weights[1] ? c.interpindex : c.bones[0];
         }
 
         skelanimspec *findskelanim(const char *name)
         {
-            loopv(skelanims) 
+            loopv(skelanims)
             {
                 if(skelanims[i].name && !strcmp(name, skelanims[i].name))
                     return &skelanims[i];
@@ -677,49 +664,52 @@ struct skelmodel : animmodel
             t.bone = bone;
         }
 
-        virtual meshgroup *allocate() { return new skelmeshgroup; }
-
-        meshgroup *copy()
+        skeleton *copy()
         {
-            skelmeshgroup &group = *(skelmeshgroup *)meshgroup::copy();
-            group.numbones = numbones;
-            group.numinterpbones = numinterpbones;
-            group.numgpubones = numgpubones;
-            group.optimizedframes = optimizedframes;
-            group.bones = new boneinfo[numbones];
-            memcpy(group.bones, bones, numbones*sizeof(boneinfo));
+            skeleton &s = *new skeleton;
+            s.numbones = numbones;
+            s.numinterpbones = numinterpbones;
+            s.numgpubones = numgpubones;
+            s.numframes = numframes;
+            s.optimizedframes = optimizedframes;
+            s.bones = new boneinfo[numbones];
+            memcpy(s.bones, bones, numbones*sizeof(boneinfo));
             if(numframes)
             {
-                group.framebones = new dualquat[numframes*numbones];
-                memcpy(group.framebones, framebones, numframes*numbones*sizeof(dualquat));
+                s.framebones = new dualquat[numframes*numbones];
+                memcpy(s.framebones, framebones, numframes*numbones*sizeof(dualquat));
             }
-            loopv(blendcombos) group.blendcombos.add(blendcombos[i]);
-            memcpy(group.numblends, numblends, sizeof(numblends));
             loopv(skelanims)
             {
-                skelanimspec &sa = group.addskelanim(skelanims[i].name);
+                skelanimspec &sa = s.addskelanim(skelanims[i].name);
                 sa.frame = skelanims[i].frame;
                 sa.range = skelanims[i].range;
             }
             loopv(tags)
             {
-                tag &t = group.tags.add();
+                tag &t = s.tags.add();
                 t.name = newstring(tags[i].name);
                 t.bone = tags[i].bone;
             }
-            return &group;
+            return &s;
         }
 
         void remapbones()
         {
-            loopv(blendcombos)
+            loopi(numbones) bones[i].interpindex = -1;
+            numgpubones = 0;
+            loopv(users)
             {
-                blendcombo &c = blendcombos[i];
-                loopk(4) if(c.weights[k])
+                skelmeshgroup *group = users[i];
+                loopvj(group->blendcombos)
                 {
-                    boneinfo &info = bones[c.bones[k]];
-                    if(info.interpindex<0) info.interpindex = numgpubones++;
-                    c.bones[k] = info.interpindex;
+                    blendcombo &c = group->blendcombos[j];
+                    loopk(4) if(c.weights[k])
+                    {
+                        boneinfo &info = bones[c.bones[k]];
+                        if(info.interpindex<0) info.interpindex = numgpubones++;
+                        c.bones[k] = info.interpindex;
+                    }
                 }
             }
             numinterpbones = numgpubones;
@@ -774,11 +764,9 @@ struct skelmodel : animmodel
 
         void optimize()
         {
-            if(!numinterpbones)
-            {
-                remapbones();
-                compactbones();
-            }
+            cleanup();
+            remapbones();
+            compactbones();
             optimizeframes();
         }
 
@@ -819,19 +807,20 @@ struct skelmodel : animmodel
         }
 
         int availgpubones() const { return (min(maxvpenvparams - reservevpparams, 256) - 10) / (matskel ? 3 : 2); }
-        bool gpuaccelerate() { return renderpath!=R_FIXEDFUNCTION && numframes && gpuskel && numgpubones<=availgpubones(); }
+        bool gpuaccelerate() const { return renderpath!=R_FIXEDFUNCTION && numframes && gpuskel && numgpubones<=availgpubones(); }
 
         void scaletags(const vec &transdiff, float scalediff)
         {
             DELETEA(invbones);
             DELETEA(matinvbones);
             DELETEA(matframebones);
+            if(shared > 1) return;
             loopi(numbones)
             {
                 if(bones[i].parent < 0) bones[i].base.translate(transdiff);
                 bones[i].base.scale(scalediff);
             }
-            loopi(numframes) 
+            loopi(numframes)
             {
                 dualquat *frame = &framebones[i*numbones];
                 loopj(numbones) if(bones[j].interpindex >= 0)
@@ -839,180 +828,6 @@ struct skelmodel : animmodel
                     if(bones[j].interpparent < 0) frame[j].translate(transdiff);
                     frame[j].scale(scalediff);
                 }
-            }
-        }
- 
-        void genvbo(bool norms, bool tangents, vbocacheentry &vc)
-        {
-            if(hasVBO)
-            {
-                if(!vc.vbuf) glGenBuffers_(1, &vc.vbuf);
-                if(ebuf) return;
-            }
-            else if(edata)
-            {
-                #define ALLOCVDATA(vdata) \
-                    do \
-                    { \
-                        DELETEA(vdata); \
-                        vdata = new uchar[vlen*vertsize]; \
-                        loopv(meshes) \
-                        { \
-                            skelmesh &m = *(skelmesh *)meshes[i]; \
-                            m.filltc(vdata, vertsize); \
-                            if(tangents) m.fillbump(vdata, vertsize); \
-                        } \
-                    } while(0)
-                if(!vc.vdata) ALLOCVDATA(vc.vdata);
-                return;
-            }
-
-            vector<ushort> idxs;
-
-            vnorms = norms;
-            vtangents = tangents;
-            vaccel = gpuaccelerate();
-            vmat = matskel!=0;
-            vlen = 0;
-            vblends = 0;
-            if(numframes && !vaccel)
-            {
-                vweights = 1;
-                loopv(blendcombos)
-                {
-                    blendcombo &c = blendcombos[i];
-                    c.interpindex = c.weights[1] ? numinterpbones + vblends++ : -1;
-                }
-
-                vertsize = tangents ? sizeof(vvertbump) : (norms ? sizeof(vvertn) : sizeof(vvert));
-                loopv(meshes) vlen += ((skelmesh *)meshes[i])->genvbo(idxs, vlen);
-                DELETEA(vdata);
-                if(hasVBO) ALLOCVDATA(vdata);
-                else ALLOCVDATA(vc.vdata);
-            }
-            else
-            {
-                if(numframes)
-                {
-                    vweights = 4;
-                    int availbones = availgpubones() - numinterpbones;
-                    while(vweights > 1 && availbones >= numblends[vweights-1]) availbones -= numblends[--vweights];
-                    loopv(blendcombos)
-                    {
-                        blendcombo &c = blendcombos[i];
-                        c.interpindex = c.size() > vweights ? numinterpbones + vblends++ : -1;
-                    }
-                }
-                else
-                {
-                    vweights = 0;
-                    loopv(blendcombos) blendcombos[i].interpindex = -1;
-                }
-
-                if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
-                #define GENVBO(type) \
-                    do \
-                    { \
-                        vertsize = sizeof(type); \
-                        vector<type> vverts; \
-                        loopv(meshes) vlen += ((skelmesh *)meshes[i])->genvbo(idxs, vlen, vverts); \
-                        if(hasVBO) glBufferData_(GL_ARRAY_BUFFER_ARB, vverts.length()*sizeof(type), vverts.getbuf(), GL_STATIC_DRAW_ARB); \
-                        else \
-                        { \
-                            DELETEA(vc.vdata); \
-                            vc.vdata = new uchar[vverts.length()*sizeof(type)]; \
-                            memcpy(vc.vdata, vverts.getbuf(), vverts.length()*sizeof(type)); \
-                        } \
-                    } while(0)
-                if(numframes)
-                {
-                    if(tangents) GENVBO(vvertbumpw);
-                    else GENVBO(vvertw);
-                }
-                else if(tangents) GENVBO(vvertbump);
-                else if(norms) GENVBO(vvertn);
-                else GENVBO(vvert);
-            }
-
-            if(hasVBO)
-            {
-                glGenBuffers_(1, &ebuf);
-                glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, ebuf);
-                glBufferData_(GL_ELEMENT_ARRAY_BUFFER_ARB, idxs.length()*sizeof(ushort), idxs.getbuf(), GL_STATIC_DRAW_ARB);
-            }
-            else
-            {
-                edata = new ushort[idxs.length()];
-                memcpy(edata, idxs.getbuf(), idxs.length()*sizeof(ushort));
-            }
-            #undef GENVBO
-            #undef ALLOCVDATA
-        }
-
-        void bindvbo(const animstate *as, vbocacheentry &vc, skelcacheentry *sc = NULL)
-        {
-            vvertn *vverts = hasVBO ? 0 : (vvertn *)vc.vdata;
-            if(hasVBO && lastebuf!=ebuf)
-            {
-                glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, ebuf);
-                lastebuf = ebuf;
-            }
-            if(lastvbuf != (hasVBO ? (void *)(size_t)vc.vbuf : vc.vdata))
-            {
-                if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
-                if(!lastvbuf) glEnableClientState(GL_VERTEX_ARRAY);
-                glVertexPointer(3, GL_FLOAT, vertsize, &vverts->pos);
-                lastvbuf = hasVBO ? (void *)(size_t)vc.vbuf : vc.vdata;
-            }
-            if(as->anim&ANIM_NOSKIN)
-            {
-                if(enabletc) disabletc();
-            }
-            else if(!enabletc || lasttcbuf!=lastvbuf)
-            {
-                if(vnorms || vtangents)
-                {
-                    if(!enabletc) glEnableClientState(GL_NORMAL_ARRAY);
-                    if(lasttcbuf!=lastvbuf) glNormalPointer(GL_FLOAT, vertsize, &vverts->norm);
-                }
-                if(!enabletc) glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                if(lasttcbuf!=lastvbuf) glTexCoordPointer(2, GL_FLOAT, vertsize, &vverts->u);
-                lasttcbuf = lastvbuf;
-                enabletc = true;
-            }
-            if(!sc || !vaccel) return;
-            if(!enablebones)
-            {
-                glEnableVertexAttribArray_(6);
-                glEnableVertexAttribArray_(7);
-                enablebones = true;
-            }
-            if(lastbbuf!=lastvbuf)
-            {
-                glVertexAttribPointer_(6, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertsize, &((vvertw *)vverts)->weights);
-                glVertexAttribPointer_(7, 4, GL_UNSIGNED_BYTE, GL_FALSE, vertsize, &((vvertw *)vverts)->bones);
-                lastbbuf = lastvbuf;
-            }
-            if(lastbdata!=(vmat ? (void *)sc->mdata : (void *)sc->bdata))
-            {
-                int parambones = numgpubones+vblends;
-                if(hasPP)
-                {
-                    if(vmat) glProgramEnvParameters4fv_(GL_VERTEX_PROGRAM_ARB, 10, 10 + 3*parambones, sc->mdata[0].X.v);
-                    else glProgramEnvParameters4fv_(GL_VERTEX_PROGRAM_ARB, 10, 10 + 2*parambones, sc->bdata[0].real.v);
-                }
-                else if(vmat) loopi(parambones)
-                {
-                    glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 10 + 3*i, sc->mdata[i].X.v);
-                    glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 11 + 3*i, sc->mdata[i].Y.v);
-                    glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 12 + 3*i, sc->mdata[i].Z.v);
-                }
-                else loopi(parambones)
-                {
-                    glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 10 + 2*i, sc->bdata[i].real.v);
-                    glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 11 + 2*i, sc->bdata[i].dual.v);
-                }
-                lastbdata = vmat ? (void *)sc->mdata : (void *)sc->bdata;
             }
         }
 
@@ -1041,7 +856,7 @@ struct skelmodel : animmodel
                 matinvbones = new matrix3x4[numinterpbones];
                 loopi(numinterpbones) matinvbones[i] = invbones[i];
             }
-            if(!sc.mdata) sc.mdata = new matrix3x4[numinterpbones+vblends];
+            if(!sc.mdata) sc.mdata = new matrix3x4[numinterpbones];
             struct framedata
             {
                 matrix3x4 *fr1, *fr2, *pfr1, *pfr2;
@@ -1085,32 +900,12 @@ struct skelmodel : animmodel
                 sc.mdata[i].normalize();
                 sc.mdata[i].mul(matinvbones[i]);
             }
-
-            blendmatbones(sc);
-        }
-
-        void blendmatbones(skelcacheentry &sc)
-        {
-            loopv(blendcombos)
-            {
-                const blendcombo &c = blendcombos[i];
-                if(c.interpindex<0) continue;
-                matrix3x4 &m = sc.mdata[c.interpindex];
-                m = sc.mdata[c.bones[0]];
-                m.scale(c.weights[0]);
-                m.accumulate(sc.mdata[c.bones[1]], c.weights[1]);
-                if(c.weights[2])
-                {
-                    m.accumulate(sc.mdata[c.bones[2]], c.weights[2]);
-                    if(c.weights[3]) m.accumulate(sc.mdata[c.bones[3]], c.weights[3]);
-                }
-            }
         }
 
         void interpbones(const animstate *as, float pitch, const vec &axis, int numanimparts, uchar *partmask, skelcacheentry &sc)
         {
             if(!invbones) geninvbones();
-            if(!sc.bdata) sc.bdata = new dualquat[numinterpbones+vblends];
+            if(!sc.bdata) sc.bdata = new dualquat[numinterpbones];
             struct framedata
             {
                 dualquat *fr1, *fr2, *pfr1, *pfr2;
@@ -1153,26 +948,6 @@ struct skelmodel : animmodel
                 sc.bdata[i].normalize();
                 sc.bdata[i].mul(invbones[i]);
             }
-
-            blendbones(sc);
-        }
-
-        void blendbones(skelcacheentry &sc)
-        {
-            loopv(blendcombos)
-            {
-                const blendcombo &c = blendcombos[i];
-                if(c.interpindex<0) continue;
-                dualquat &d = sc.bdata[c.interpindex];
-                d = sc.bdata[c.bones[0]];
-                d.mul(c.weights[0]);
-                d.accumulate(sc.bdata[c.bones[1]], c.weights[1]);
-                if(c.weights[2])
-                {
-                    d.accumulate(sc.bdata[c.bones[2]], c.weights[2]);
-                    if(c.weights[3]) d.accumulate(sc.bdata[c.bones[3]], c.weights[3]);
-                }
-            }
         }
 
         void concattagtransform(int frame, int i, const matrix3x4 &m, matrix3x4 &n)
@@ -1186,7 +961,7 @@ struct skelmodel : animmodel
             matrix3x4 t;
             if(numframes) t.mul(m, bones[bone].base);
             else t = m;
-            loopk(4) 
+            loopk(4)
             {
                 l.matrix[4*k] = t.X[k];
                 l.matrix[4*k+1] = t.Y[k];
@@ -1194,31 +969,465 @@ struct skelmodel : animmodel
                 l.matrix[4*k+3] = k==3 ? 1 : 0;
             }
         }
-       
+
+        void calctags(skelcacheentry &sc, part *p)
+        {
+            loopv(p->links)
+            {
+                int tagbone = tags[p->links[i].tag].bone, interpindex = bones[tagbone].interpindex;
+                calctagmatrix(tagbone, usematskel ? sc.mdata[interpindex] : sc.bdata[interpindex], p->links[i]);
+            }
+        }
+
+        void calctags(part *p)
+        {
+            loopv(p->links)
+            {
+               int tagbone = tags[p->links[i].tag].bone;
+               calctagmatrix(tagbone, bones[tagbone].base, p->links[i]);
+            }
+        }
+
         void cleanup()
         {
-            loopv(skelcache) loopj(MAXANIMPARTS)
+            loopv(skelcache)
             {
                 skelcacheentry &sc = skelcache[i];
-                sc.as[j].cur.fr1 = -1;
+                loopj(MAXANIMPARTS) sc.as[j].cur.fr1 = -1;
                 DELETEA(sc.bdata);
                 DELETEA(sc.mdata);
+            }
+            skelcache.setsizenodelete(0);
+            lastsdata = lastbdata = NULL;
+            loopv(users) users[i]->cleanup();
+        }
+
+        skelcacheentry &checkskelcache(const animstate *as, float pitch, const vec &axis, part *p)
+        {
+            if(skelcache.empty()) 
+            {
+                usegpuskel = gpuaccelerate();
+                usematskel = matskel!=0;
+            }
+
+            skelcacheentry *sc = NULL;
+            bool match = false;
+            loopv(skelcache)
+            {
+                skelcacheentry &c = skelcache[i];
+                loopj(p->numanimparts) if(c.as[j]!=as[j]) goto mismatch;
+                if(c.pitch != pitch) goto mismatch;
+                match = true;
+                sc = &c;
+                break;
+            mismatch:
+                if(c.millis < lastmillis) { sc = &c; break; }
+            }
+            if(!sc) sc = &skelcache.add();
+            if(!match)
+            {
+                loopi(p->numanimparts) sc->as[i] = as[i];
+                sc->pitch = pitch;
+                if(matskel) interpmatbones(as, pitch, axis, p->numanimparts, ((skelpart *)p)->partmask, *sc);
+                else interpbones(as, pitch, axis, p->numanimparts, ((skelpart *)p)->partmask, *sc);
+            }
+            sc->millis = lastmillis;
+            return *sc;
+        }
+
+        void setgpubones(skelcacheentry &sc, int count = 0)
+        {
+            if((count ? lastbdata : lastsdata) == (usematskel ? (void *)sc.mdata : (void *)sc.bdata)) return;
+            int offset = count ? numgpubones : 0;
+            if(!offset) count = numgpubones;
+            if(hasPP)
+            {
+                if(usematskel) glProgramEnvParameters4fv_(GL_VERTEX_PROGRAM_ARB, 10 + 3*offset, 3*count, sc.mdata[0].X.v);
+                else glProgramEnvParameters4fv_(GL_VERTEX_PROGRAM_ARB, 10 + 2*offset, 2*count, sc.bdata[0].real.v);
+            }
+            else if(usematskel) loopi(count)
+            {
+                glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 10 + 3*(offset+i), sc.mdata[i].X.v);
+                glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 11 + 3*(offset+i), sc.mdata[i].Y.v);
+                glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 12 + 3*(offset+i), sc.mdata[i].Z.v);
+            }
+            else loopi(count)
+            {
+                glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 10 + 2*(offset+i), sc.bdata[i].real.v);
+                glProgramEnvParameter4fv_(GL_VERTEX_PROGRAM_ARB, 11 + 2*(offset+i), sc.bdata[i].dual.v);
+            }
+            if(offset) lastbdata = usematskel ? (void *)sc.mdata : (void *)sc.bdata;
+            else lastsdata = usematskel ? (void *)sc.mdata : (void *)sc.bdata;
+        }
+
+        bool shouldcleanup() const
+        {
+            return skelcache.empty() || gpuaccelerate()!=usegpuskel || ((matskel!=0)!=usematskel && numframes);
+        }
+    };
+
+    struct skelmeshgroup : meshgroup
+    {
+        skeleton *skel;
+
+        vector<blendcombo> blendcombos;
+        int numblends[4];
+
+        static const int MAXBLENDCACHE = 16;
+        blendcacheentry blendcache[MAXBLENDCACHE];
+
+        static const int MAXVBOCACHE = 16;
+        vbocacheentry vbocache[MAXVBOCACHE];
+ 
+        ushort *edata;
+        GLuint ebuf;
+        bool vnorms, vtangents;
+        int vlen, vertsize, vblends, vweights;
+        uchar *vdata;
+
+        skelmeshgroup() : skel(NULL), edata(NULL), ebuf(0), vdata(NULL)
+        {
+            memset(numblends, 0, sizeof(numblends));
+        }
+
+        virtual ~skelmeshgroup()
+        {
+            if(skel)
+            {
+                if(skel->shared) skel->users.removeobj(this);
+                else DELETEP(skel);
+            }
+            if(ebuf) glDeleteBuffers_(1, &ebuf);
+            loopi(MAXBLENDCACHE)
+            {
+                DELETEA(blendcache[i].bdata);
+                DELETEA(blendcache[i].mdata);
+            }
+            loopi(MAXVBOCACHE)
+            {
+                DELETEA(vbocache[i].vdata);
+                if(vbocache[i].vbuf) glDeleteBuffers_(1, &vbocache[i].vbuf);
+            }
+            DELETEA(vdata);
+        }
+
+        void shareskeleton(char *name)
+        {
+            if(!name)
+            {
+                skel = new skeleton;
+                skel->users.add(this);
+                return;
+            }
+
+            static hashtable<char *, skeleton *> skeletons;
+            if(skeletons.access(name)) skel = skeletons[name];
+            else
+            {
+                skel = new skeleton;
+                skel->name = newstring(name);
+                skeletons[skel->name] = skel;
+            }
+            skel->users.add(this);
+            skel->shared++;
+        }
+
+        int findtag(const char *name)
+        {
+            return skel->findtag(name);
+        }
+
+        virtual meshgroup *allocate() { return new skelmeshgroup; }
+
+        meshgroup *copy()
+        {
+            skelmeshgroup &group = *(skelmeshgroup *)meshgroup::copy();
+            group.skel = skel->shared ? skel : skel->copy();
+            group.skel->users.add(&group);
+            if(skel->shared) skel->shared++;
+            loopv(blendcombos) group.blendcombos.add(blendcombos[i]);
+            memcpy(group.numblends, numblends, sizeof(numblends));
+            return &group;
+        }
+
+        int totalframes() const { return max(skel->numframes, 1); }
+
+        void scaletags(const vec &transdiff, float scalediff)
+        {
+            skel->scaletags(transdiff, scalediff);
+        }
+ 
+        void genvbo(bool norms, bool tangents, vbocacheentry &vc)
+        {
+            if(hasVBO)
+            {
+                if(!vc.vbuf) glGenBuffers_(1, &vc.vbuf);
+                if(ebuf) return;
+            }
+            else if(edata)
+            {
+                #define ALLOCVDATA(vdata) \
+                    do \
+                    { \
+                        DELETEA(vdata); \
+                        vdata = new uchar[vlen*vertsize]; \
+                        loopv(meshes) \
+                        { \
+                            skelmesh &m = *(skelmesh *)meshes[i]; \
+                            m.filltc(vdata, vertsize); \
+                            if(tangents) m.fillbump(vdata, vertsize); \
+                        } \
+                    } while(0)
+                if(!vc.vdata) ALLOCVDATA(vc.vdata);
+                return;
+            }
+
+            vector<ushort> idxs;
+
+            vnorms = norms;
+            vtangents = tangents;
+            vlen = 0;
+            vblends = 0;
+            if(skel->numframes && !skel->usegpuskel)
+            {
+                vweights = 1;
+                loopv(blendcombos)
+                {
+                    blendcombo &c = blendcombos[i];
+                    c.interpindex = c.weights[1] ? skel->numinterpbones + vblends++ : -1;
+                }
+
+                vertsize = tangents ? sizeof(vvertbump) : (norms ? sizeof(vvertn) : sizeof(vvert));
+                loopv(meshes) vlen += ((skelmesh *)meshes[i])->genvbo(idxs, vlen);
+                DELETEA(vdata);
+                if(hasVBO) ALLOCVDATA(vdata);
+                else ALLOCVDATA(vc.vdata);
+            }
+            else
+            {
+                if(skel->numframes)
+                {
+                    vweights = 4;
+                    int availbones = skel->availgpubones() - skel->numgpubones;
+                    while(vweights > 1 && availbones >= numblends[vweights-1]) availbones -= numblends[--vweights];
+                    loopv(blendcombos)
+                    {
+                        blendcombo &c = blendcombos[i];
+                        c.interpindex = c.size() > vweights ? skel->numgpubones + vblends++ : -1;
+                    }
+                }
+                else
+                {
+                    vweights = 0;
+                    loopv(blendcombos) blendcombos[i].interpindex = -1;
+                }
+
+                if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
+                #define GENVBO(type) \
+                    do \
+                    { \
+                        vertsize = sizeof(type); \
+                        vector<type> vverts; \
+                        loopv(meshes) vlen += ((skelmesh *)meshes[i])->genvbo(idxs, vlen, vverts); \
+                        if(hasVBO) glBufferData_(GL_ARRAY_BUFFER_ARB, vverts.length()*sizeof(type), vverts.getbuf(), GL_STATIC_DRAW_ARB); \
+                        else \
+                        { \
+                            DELETEA(vc.vdata); \
+                            vc.vdata = new uchar[vverts.length()*sizeof(type)]; \
+                            memcpy(vc.vdata, vverts.getbuf(), vverts.length()*sizeof(type)); \
+                        } \
+                    } while(0)
+                if(skel->numframes)
+                {
+                    if(tangents) GENVBO(vvertbumpw);
+                    else GENVBO(vvertw);
+                }
+                else if(tangents) GENVBO(vvertbump);
+                else if(norms) GENVBO(vvertn);
+                else GENVBO(vvert);
+            }
+
+            if(hasVBO)
+            {
+                glGenBuffers_(1, &ebuf);
+                glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, ebuf);
+                glBufferData_(GL_ELEMENT_ARRAY_BUFFER_ARB, idxs.length()*sizeof(ushort), idxs.getbuf(), GL_STATIC_DRAW_ARB);
+            }
+            else
+            {
+                edata = new ushort[idxs.length()];
+                memcpy(edata, idxs.getbuf(), idxs.length()*sizeof(ushort));
+            }
+            #undef GENVBO
+            #undef ALLOCVDATA
+        }
+
+        void bindvbo(const animstate *as, vbocacheentry &vc, skelcacheentry *sc = NULL, blendcacheentry *bc = NULL)
+        {
+            vvertn *vverts = hasVBO ? 0 : (vvertn *)vc.vdata;
+            if(hasVBO && lastebuf!=ebuf)
+            {
+                glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, ebuf);
+                lastebuf = ebuf;
+            }
+            if(lastvbuf != (hasVBO ? (void *)(size_t)vc.vbuf : vc.vdata))
+            {
+                if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
+                if(!lastvbuf) glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(3, GL_FLOAT, vertsize, &vverts->pos);
+                lastvbuf = hasVBO ? (void *)(size_t)vc.vbuf : vc.vdata;
+            }
+            if(as->anim&ANIM_NOSKIN)
+            {
+                if(enabletc) disabletc();
+            }
+            else if(!enabletc || lasttcbuf!=lastvbuf)
+            {
+                if(vnorms || vtangents)
+                {
+                    if(!enabletc) glEnableClientState(GL_NORMAL_ARRAY);
+                    if(lasttcbuf!=lastvbuf) glNormalPointer(GL_FLOAT, vertsize, &vverts->norm);
+                }
+                if(!enabletc) glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                if(lasttcbuf!=lastvbuf) glTexCoordPointer(2, GL_FLOAT, vertsize, &vverts->u);
+                lasttcbuf = lastvbuf;
+                enabletc = true;
+            }
+            if(!sc || !skel->usegpuskel) return;
+            if(!enablebones)
+            {
+                glEnableVertexAttribArray_(6);
+                glEnableVertexAttribArray_(7);
+                enablebones = true;
+            }
+            if(lastbbuf!=lastvbuf)
+            {
+                glVertexAttribPointer_(6, 4, GL_UNSIGNED_BYTE, GL_TRUE, vertsize, &((vvertw *)vverts)->weights);
+                glVertexAttribPointer_(7, 4, GL_UNSIGNED_BYTE, GL_FALSE, vertsize, &((vvertw *)vverts)->bones);
+                lastbbuf = lastvbuf;
+            }
+            skel->setgpubones(*sc);
+            if(bc && vblends) skel->setgpubones(*bc, vblends);
+        }
+
+        void concattagtransform(int frame, int i, const matrix3x4 &m, matrix3x4 &n)
+        {
+            skel->concattagtransform(frame, i, m, n);
+        }
+
+        int addblendcombo(const blendcombo &c)
+        {
+            loopv(blendcombos) if(blendcombos[i]==c)
+            {
+                blendcombos[i].uses += c.uses;
+                return i;
+            }
+            numblends[c.size()-1]++;
+            blendcombos.add(c);
+            return blendcombos.length()-1;
+        }
+
+        int remapblend(int blend)
+        {
+            const blendcombo &c = blendcombos[blend];
+            return c.weights[1] ? c.interpindex : c.bones[0];
+        }
+
+        void blendmatbones(skelcacheentry &sc, blendcacheentry &bc)
+        {
+            if(!bc.mdata) bc.mdata = new matrix3x4[skel->usegpuskel ? vblends : skel->numinterpbones+vblends];
+            matrix3x4 *dst = bc.mdata;
+            if(skel->usegpuskel) dst -= skel->numgpubones;
+            else memcpy(dst, sc.mdata, skel->numinterpbones*sizeof(matrix3x4));
+            loopv(blendcombos)
+            {
+                const blendcombo &c = blendcombos[i];
+                if(c.interpindex<0) continue;
+                matrix3x4 &m = dst[c.interpindex];
+                m = sc.mdata[c.bones[0]];
+                m.scale(c.weights[0]);
+                m.accumulate(sc.mdata[c.bones[1]], c.weights[1]);
+                if(c.weights[2])
+                {
+                    m.accumulate(sc.mdata[c.bones[2]], c.weights[2]);
+                    if(c.weights[3]) m.accumulate(sc.mdata[c.bones[3]], c.weights[3]);
+                }
+            }
+        }
+
+        void blendbones(skelcacheentry &sc, blendcacheentry &bc)
+        {
+            if(!bc.bdata) bc.bdata = new dualquat[skel->usegpuskel ? vblends : skel->numinterpbones+vblends];
+            dualquat *dst = bc.bdata;
+            if(skel->usegpuskel) dst -= skel->numgpubones;
+            else memcpy(dst, sc.bdata, skel->numinterpbones*sizeof(dualquat));
+            loopv(blendcombos)
+            {
+                const blendcombo &c = blendcombos[i];
+                if(c.interpindex<0) continue;
+                dualquat &d = dst[c.interpindex];
+                d = sc.bdata[c.bones[0]];
+                d.mul(c.weights[0]);
+                d.accumulate(sc.bdata[c.bones[1]], c.weights[1]);
+                if(c.weights[2])
+                {
+                    d.accumulate(sc.bdata[c.bones[2]], c.weights[2]);
+                    if(c.weights[3]) d.accumulate(sc.bdata[c.bones[3]], c.weights[3]);
+                }
+            }
+        }
+
+        void cleanup()
+        {
+            loopi(MAXBLENDCACHE)
+            {
+                blendcacheentry &c = blendcache[i];
+                DELETEA(c.bdata);
+                DELETEA(c.mdata);
+                c.owner = -1;
             }
             loopi(MAXVBOCACHE)
             {
                 vbocacheentry &c = vbocache[i];
                 if(c.vbuf) { glDeleteBuffers_(1, &c.vbuf); c.vbuf = 0; }
                 DELETEA(c.vdata);
-                if(c.owner>=0) skelcache[c.owner].vc = NULL;
                 c.owner = -1;
             }
             if(hasVBO) { if(ebuf) { glDeleteBuffers_(1, &ebuf); ebuf = 0; } }
             else DELETEA(vdata);
-            lastvbuf = lasttcbuf = lastmtcbuf = lastbbuf = NULL;
+            lastvbuf = lasttcbuf = lastmtcbuf = lastbbuf = lastbdata = NULL;
             lastebuf = 0;
-            lastbdata = NULL;
         }
- 
+
+        #define SEARCHCACHE(cachesize, cacheentry, cache, reusecheck) \
+            loopi(cachesize) \
+            { \
+                cacheentry &c = cache[i]; \
+                if(c.owner==owner) \
+                { \
+                     if(c==sc) return c; \
+                     else c.owner = -1; \
+                     break; \
+                } \
+            } \
+            loopi(cachesize-1) \
+            { \
+                cacheentry &c = cache[i]; \
+                if(reusecheck c.owner < 0 || c.millis < lastmillis) \
+                    return c; \
+            } \
+            return cache[cachesize-1];
+
+        vbocacheentry &checkvbocache(skelcacheentry &sc, int owner)
+        {
+            SEARCHCACHE(MAXVBOCACHE, vbocacheentry, vbocache, (hasVBO ? !c.vbuf : !c.vdata) || );
+        }
+
+        blendcacheentry &checkblendcache(skelcacheentry &sc, int owner)
+        {
+            SEARCHCACHE(MAXBLENDCACHE, blendcacheentry, blendcache, )
+        }
+
         void render(const animstate *as, float pitch, const vec &axis, part *p)
         {
             bool norms = false, tangents = false;
@@ -1227,87 +1436,57 @@ struct skelmodel : animmodel
                 if(p->skins[i].normals()) norms = true;
                 if(p->skins[i].tangents()) tangents = true;
             }
-            if(gpuaccelerate()!=vaccel || ((matskel!=0)!=vmat && numframes) || norms!=vnorms || tangents!=vtangents)
-                cleanup();
+            if(skel->shouldcleanup()) skel->cleanup();
+            else if(norms!=vnorms || tangents!=vtangents) cleanup();
 
-            if(!numframes)
+            if(!skel->numframes)
             {
                 if(hasVBO ? !vbocache->vbuf : !vbocache->vdata) genvbo(norms, tangents, *vbocache);
                 bindvbo(as, *vbocache);
                 loopv(meshes) ((skelmesh *)meshes[i])->render(as, p->skins[i], *vbocache);
-                loopv(p->links)
-                {
-                    int tagbone = tags[p->links[i].tag].bone;
-                    calctagmatrix(tagbone, bones[tagbone].base, p->links[i]);
-                }
+                skel->calctags(p);
                 return;
             }
 
-            skelcacheentry *sc = NULL;
-            bool match = false;
-            loopv(skelcache)
+            skelcacheentry &sc = skel->checkskelcache(as, pitch, axis, p);
+            int owner = &sc-&skel->skelcache[0];
+            vbocacheentry &vc = skel->usegpuskel ? *vbocache : checkvbocache(sc, owner);
+            vc.millis = lastmillis;
+            if(hasVBO ? !vc.vbuf : !vc.vdata) genvbo(norms, tangents, vc);
+            blendcacheentry *bc = NULL;
+            if(vblends)
             {
-                skelcacheentry &c = skelcache[i];
-                loopj(p->numanimparts) if(c.as[j]!=as[j])
+                bc = &checkblendcache(sc, owner);
+                bc->millis = lastmillis;
+                if(bc->owner!=owner)
                 {
-                    if(c.millis < lastmillis) goto useentry; else goto nextentry;
+                    bc->owner = owner;
+                    *(animcacheentry *)bc = sc;
+                    if(skel->usematskel) blendmatbones(sc, *bc);
+                    else blendbones(sc, *bc);
                 }
-                if(c.pitch!=pitch) { if(c.millis<lastmillis) goto useentry; else goto nextentry; }
-                match = true;
-            useentry:
-                sc = &c; 
-                break;
-            nextentry:;
             }
-            if(!sc) sc = &skelcache.add();
-            if(!match)
-            {
-                loopi(p->numanimparts) sc->as[i] = as[i];
-                sc->pitch = pitch;
-                if(sc->vc) { sc->vc->owner = -1; sc->vc = NULL; }
-            }
-            sc->millis = lastmillis;
-            vbocacheentry *vc = gpuaccelerate() ? vbocache : sc->vc;
-            if(!vc) 
-            {
-                loopi(MAXVBOCACHE) 
-                {
-                    vc = &vbocache[i];
-                    if((hasVBO ? !vc->vbuf : !vc->vdata) || vc->owner<0 || skelcache[vc->owner].millis < lastmillis) break;
-                }
-                sc->vc = vc;
-            }
-            if(hasVBO ? !vc->vbuf : !vc->vdata) genvbo(norms, tangents, *vc);
-            if(!match)
-            {
-                if(matskel) interpmatbones(as, pitch, axis, p->numanimparts, ((skelpart *)p)->partmask, *sc);
-                else interpbones(as, pitch, axis, p->numanimparts, ((skelpart *)p)->partmask, *sc);
-            }
-            if(!vaccel && vc->owner!=sc-&skelcache[0]) 
+            if(!skel->usegpuskel && vc.owner!=owner)
             { 
-                if(vc->owner>=0) skelcache[vc->owner].vc = NULL; 
-                vc->owner = sc-&skelcache[0];
+                vc.owner = owner;
+                (animcacheentry &)vc = sc;
                 loopv(meshes)
                 {
                     skelmesh &m = *(skelmesh *)meshes[i];
-                    if(vmat) m.interpmatverts(sc->mdata, norms, tangents, (hasVBO ? vdata : vc->vdata) + m.voffset*vertsize, p->skins[i]);
-                    else m.interpverts(sc->bdata, norms, tangents, (hasVBO ? vdata : vc->vdata) + m.voffset*vertsize, p->skins[i]);
+                    if(skel->usematskel) m.interpmatverts(bc ? bc->mdata : sc.mdata, norms, tangents, (hasVBO ? vdata : vc.vdata) + m.voffset*vertsize, p->skins[i]);
+                    else m.interpverts(bc ? bc->bdata : sc.bdata, norms, tangents, (hasVBO ? vdata : vc.vdata) + m.voffset*vertsize, p->skins[i]);
                 }
                 if(hasVBO)
                 {
-                    glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc->vbuf);
+                    glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
                     glBufferData_(GL_ARRAY_BUFFER_ARB, vlen*vertsize, vdata, GL_STREAM_DRAW_ARB);
                 }
             }
 
-            bindvbo(as, *vc, sc);
-            loopv(meshes) ((skelmesh *)meshes[i])->render(as, p->skins[i], *vc);
+            bindvbo(as, vc, &sc, bc);
+            loopv(meshes) ((skelmesh *)meshes[i])->render(as, p->skins[i], vc);
 
-            loopv(p->links)
-            {
-                int tagbone = tags[p->links[i].tag].bone, interpindex = bones[tagbone].interpindex;
-                calctagmatrix(tagbone, vmat ? sc->mdata[interpindex] : sc->bdata[interpindex], p->links[i]);
-            }
+            skel->calctags(sc, p);
         }
     };
 
@@ -1326,7 +1505,7 @@ struct skelmodel : animmodel
 
         void initanimparts()
         {
-            int numbones = ((skelmeshgroup *)meshes)->numbones;
+            int numbones = ((skelmeshgroup *)meshes)->skel->numbones;
             partmask = new uchar[numbones];
             memset(partmask, 0, numbones);
         }
@@ -1334,7 +1513,7 @@ struct skelmodel : animmodel
         bool addanimpart(ushort *bonemask)
         {
             if(numanimparts>=MAXANIMPARTS) return false;
-            ((skelmeshgroup *)meshes)->applybonemask(bonemask, partmask, numanimparts);
+            ((skelmeshgroup *)meshes)->skel->applybonemask(bonemask, partmask, numanimparts);
             numanimparts++;
             return true;
         }
@@ -1342,6 +1521,14 @@ struct skelmodel : animmodel
 
     skelmodel(const char *name) : animmodel(name)
     {
+    }
+
+    int linktype(animmodel *m) const
+    {
+        return type()==m->type() &&
+            ((skelmeshgroup *)parts[0]->meshes)->skel == ((skelmeshgroup *)m->parts[0]->meshes)->skel ? 
+                LINK_REUSE : 
+                LINK_TAG;
     }
 };
 

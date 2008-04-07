@@ -52,7 +52,7 @@ struct md3 : vertmodel
 {
     md3(const char *name) : vertmodel(name) {}
 
-    int type() { return MDL_MD3; }
+    int type() const { return MDL_MD3; }
 
     struct md3meshgroup : vertmeshgroup
     {
@@ -179,9 +179,9 @@ struct md3 : vertmodel
         radius.y += margin;
     }   
 
-    meshgroup *loadmeshes(char *name)
+    meshgroup *loadmeshes(char *name, va_list args)
     {
-        md3meshgroup *group = new md3meshgroup();
+        md3meshgroup *group = new md3meshgroup;
         if(!group->load(name)) { delete group; return NULL; }
         return group;
     }

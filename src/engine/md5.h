@@ -40,7 +40,7 @@ struct md5 : skelmodel
 {
     md5(const char *name) : skelmodel(name) {}
 
-    int type() { return MDL_MD5; }
+    int type() const { return MDL_MD5; }
 
     struct md5mesh : skelmesh
     {
@@ -85,7 +85,7 @@ struct md5 : skelmodel
                 loopj(v.count)
                 {
                     md5weight &w = weightinfo[v.start+j];
-                    sorted = c.addweight(sorted, w.bias, w.joint);
+                    sorted = c.addweight(sorted, w.bias, w.joint); 
                 }
                 c.finalize(sorted);
                 vv.blend = addblendcombo(c);
@@ -202,11 +202,17 @@ struct md5 : skelmodel
                 {
                     if(tmp!=10) { fclose(f); return false; }
                 }
-                else if(sscanf(buf, " numJoints %d", &numbones)==1)
+                else if(sscanf(buf, " numJoints %d", &tmp)==1)
                 {
-                    bones = new boneinfo[numbones];
+                    if(tmp<1) { fclose(f); return false; }
+                    if(skel->numbones>0) continue;
+                    skel->numbones = tmp;
+                    skel->bones = new boneinfo[skel->numbones];
                 }
-                else if(sscanf(buf, " numMeshes %d", &tmp)==1);
+                else if(sscanf(buf, " numMeshes %d", &tmp)==1)
+                {
+                    if(tmp<1) { fclose(f); return false; }
+                }
                 else if(strstr(buf, "joints {"))
                 {
                     string name;
@@ -227,14 +233,14 @@ struct md5 : skelmodel
                             if(start && end) s_strncpy(md5joints.add().name, start+1, end-(start+1)+1);
                             else s_strcpy(md5joints.add().name, name);
 
-                            if(basejoints.length()<numbones) bones[basejoints.length()].parent = parent;
+                            if(basejoints.length()<skel->numbones) skel->bones[basejoints.length()].parent = parent;
 
                             j.orient.restorew();
                             basejoints.add(j);
                         }
                     }
-                    if(basejoints.length()!=numbones) { fclose(f); return false; }
-                    linkchildren();
+                    if(basejoints.length()!=skel->numbones) { fclose(f); return false; }
+                    skel->linkchildren();
                 }
                 else if(strstr(buf, "mesh {"))
                 {
@@ -251,7 +257,7 @@ struct md5 : skelmodel
                 }
             }
         
-            loopv(basejoints) bones[i].base = dualquat(basejoints[i].orient, basejoints[i].pos);
+            loopv(basejoints) skel->bones[i].base = dualquat(basejoints[i].orient, basejoints[i].pos);
 
             loopv(meshes)
             {
@@ -267,7 +273,7 @@ struct md5 : skelmodel
 
         skelanimspec *loadmd5anim(const char *filename)
         {
-            skelanimspec *sa = findskelanim(filename);
+            skelanimspec *sa = skel->findskelanim(filename);
             if(sa) return sa;
 
             FILE *f = openfile(filename, "r");
@@ -290,7 +296,7 @@ struct md5 : skelmodel
                 }
                 else if(sscanf(buf, " numJoints %d", &tmp)==1)
                 {
-                    if(tmp!=numbones) { fclose(f); return NULL; }
+                    if(tmp!=skel->numbones) { fclose(f); return NULL; }
                 }
                 else if(sscanf(buf, " numFrames %d", &animframes)==1)
                 {
@@ -299,6 +305,7 @@ struct md5 : skelmodel
                 else if(sscanf(buf, " frameRate %d", &tmp)==1);
                 else if(sscanf(buf, " numAnimatedComponents %d", &animdatalen)==1)
                 {
+                    if(animdatalen<1) { fclose(f); return NULL; }
                     animdata = new float[animdatalen];
                 }
                 else if(strstr(buf, "bounds {"))
@@ -336,26 +343,26 @@ struct md5 : skelmodel
                             basejoints.add(j);
                         }
                     }
-                    if(basejoints.length()!=numbones) { fclose(f); return NULL; }
-                    animbones = new dualquat[(numframes+animframes)*numbones];
-                    if(bones)
+                    if(basejoints.length()!=skel->numbones) { fclose(f); return NULL; }
+                    animbones = new dualquat[(skel->numframes+animframes)*skel->numbones];
+                    if(skel->bones)
                     {
-                        memcpy(animbones, framebones, numframes*numbones*sizeof(dualquat));
-                        delete[] framebones;
+                        memcpy(animbones, skel->framebones, skel->numframes*skel->numbones*sizeof(dualquat));
+                        delete[] skel->framebones;
                     }
-                    framebones = animbones;
-                    animbones += numframes*numbones;
+                    skel->framebones = animbones;
+                    animbones += skel->numframes*skel->numbones;
 
-                    sa = &addskelanim(filename);
-                    sa->frame = numframes;
+                    sa = &skel->addskelanim(filename);
+                    sa->frame = skel->numframes;
                     sa->range = animframes;
 
-                    numframes += animframes;
+                    skel->numframes += animframes;
                 }
                 else if(sscanf(buf, " frame %d", &tmp)==1)
                 {
                     loopi(animdatalen) fscanf(f, "%f", &animdata[i]);
-                    dualquat *frame = &animbones[tmp*numbones];
+                    dualquat *frame = &animbones[tmp*skel->numbones];
                     loopv(basejoints)
                     {
                         md5hierarchy &h = hierarchy[i];
@@ -435,9 +442,10 @@ struct md5 : skelmodel
         radius.y += margin;
     }
 
-    meshgroup *loadmeshes(char *name)
+    meshgroup *loadmeshes(char *name, va_list args)
     {
-        md5meshgroup *group = new md5meshgroup();
+        md5meshgroup *group = new md5meshgroup;
+        group->shareskeleton(va_arg(args, char *));
         if(!group->load(name)) { delete group; return NULL; }
         return group;
     }
@@ -480,17 +488,17 @@ struct md5 : skelmodel
             return false;
         }
         loadingmd5 = NULL;
-        loopv(parts)
+        loopv(parts) 
         {
             skelmeshgroup *g = (skelmeshgroup *)parts[i]->meshes;
-            g->optimize();
+            g->skel->optimize();
             parts[i]->meshes = g->scaleverts(scale/4.0f, i ? vec(0, 0, 0) : vec(translate.x, translate.y, translate.z));
         }
         return loaded = true;
     }
 };
 
-void md5load(char *meshfile)
+void md5load(char *meshfile, char *skelname)
 {
     if(!loadingmd5) { conoutf("not loading an md5"); return; }
     s_sprintfd(filename)("%s/%s", md5dir, meshfile);
@@ -499,7 +507,7 @@ void md5load(char *meshfile)
     mdl.model = loadingmd5;
     mdl.index = loadingmd5->parts.length()-1;
     mdl.pitchscale = mdl.pitchoffset = mdl.pitchmin = mdl.pitchmax = 0;
-    mdl.meshes = loadingmd5->sharemeshes(path(filename));
+    mdl.meshes = loadingmd5->sharemeshes(path(filename), skelname[0] ? skelname : NULL);
     if(!mdl.meshes) conoutf("could not load %s", filename); // ignore failure
     else 
     {
@@ -521,7 +529,7 @@ void md5tag(char *name, char *tagname)
     int i = findmd5joint(name);
     if(mdl.meshes && i>=0)
     {
-        ((md5::skelmeshgroup *)mdl.meshes)->addtag(tagname, i);
+        ((md5::skelmeshgroup *)mdl.meshes)->skel->addtag(tagname, i);
         return;
     }
     conoutf("could not find bone %s for tag %s", name, tagname);
@@ -537,7 +545,7 @@ void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin
         int i = findmd5joint(name);
         if(mdl.meshes && i>=0)
         {
-            md5::boneinfo &b = ((md5::skelmeshgroup *)mdl.meshes)->bones[i];
+            md5::boneinfo &b = ((md5::skelmeshgroup *)mdl.meshes)->skel->bones[i];
             b.pitchscale = *pitchscale;
             b.pitchoffset = *pitchoffset;
             if(*pitchmin || *pitchmax)

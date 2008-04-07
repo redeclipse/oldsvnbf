@@ -59,8 +59,8 @@ struct animmodel : model
         animpos cur, prev;
         float interp;
 
-        bool operator==(const animstate &a) const { return cur==a.cur && (interp ? interp==a.interp && prev==a.prev : !a.interp); }
-        bool operator!=(const animstate &a) const { return cur!=a.cur || (interp ? interp!=a.interp || prev!=a.prev : a.interp); }
+        bool operator==(const animstate &a) const { return cur==a.cur && (interp<1 ? interp==a.interp && prev==a.prev : a.interp>=1); }
+        bool operator!=(const animstate &a) const { return cur!=a.cur || (interp<1 ? interp!=a.interp || prev!=a.prev : a.interp<1); }
     };
 
     struct part;
@@ -254,8 +254,8 @@ struct animmodel : model
                 else if(as->anim&ANIM_SHADOW) SETMODELSHADER(b, dynshadow);
                 return;
             }
-            Texture *s = bumpmapped() && unlittex ? unlittex : tex,
-                    *m = masks->type==Texture::STUB ? notexture : masks,
+            Texture *s = bumpmapped() && unlittex ? unlittex : tex, 
+                    *m = masks->type==Texture::STUB ? notexture : masks, 
                     *n = bumpmapped() ? normalmap : NULL;
             if((renderpath==R_FIXEDFUNCTION || !lightmodels) &&
                (!glowmodels || (renderpath==R_FIXEDFUNCTION && fogging && maxtmus<=2)) &&
@@ -371,8 +371,8 @@ struct animmodel : model
         virtual void calcbb(int frame, vec &bbmin, vec &bbmax, const matrix3x4 &m) {}
         virtual void gentris(int frame, Texture *tex, vector<BIH::tri> &out, const matrix3x4 &m) {}
 
-        virtual void setshader(Shader *s)
-        {
+        virtual void setshader(Shader *s) 
+        { 
             if(glaring) s->variant(0, 2)->set();
             else s->set(); 
         }
@@ -383,12 +383,11 @@ struct animmodel : model
         meshgroup *next;
         int shared;
         char *name;
-        int numframes;
         vector<mesh *> meshes;
         float scale;
         vec translate;
 
-        meshgroup() : next(NULL), shared(0), name(NULL), numframes(0), scale(1), translate(0, 0, 0)
+        meshgroup() : next(NULL), shared(0), name(NULL), scale(1), translate(0, 0, 0)
         {
         }
 
@@ -412,9 +411,10 @@ struct animmodel : model
             loopv(meshes) meshes[i]->gentris(frame, skins[i].tex, tris, m);
         }
 
-        bool hasframe(int i) { return i>=0 && i<max(numframes, 1); }
-        bool hasframes(int i, int n) { return i>=0 && i+n<=max(numframes, 1); }
-        int clipframes(int i, int n) { return min(n, max(numframes, 1) - i); }
+        virtual int totalframes() const { return 1; }
+        bool hasframe(int i) const { return i>=0 && i<totalframes(); }
+        bool hasframes(int i, int n) const { return i>=0 && i+n<=totalframes(); }
+        int clipframes(int i, int n) const { return min(n, totalframes() - i); }
 
         virtual meshgroup *allocate() = 0;
         virtual meshgroup *copy()
@@ -422,7 +422,6 @@ struct animmodel : model
             meshgroup &group = *allocate();
             group.name = newstring(name);
             loopv(meshes) group.meshes.add(meshes[i]->copy())->group = &group;
-            group.numframes = numframes;
             group.scale = scale;
             group.translate = translate;
             return &group;
@@ -454,14 +453,17 @@ struct animmodel : model
         virtual void render(const animstate *as, float pitch, const vec &axis, part *p) {}
     };
 
-    virtual meshgroup *loadmeshes(char *name) { return NULL; }
+    virtual meshgroup *loadmeshes(char *name, va_list args) { return NULL; }
 
-    meshgroup *sharemeshes(char *name)
+    meshgroup *sharemeshes(char *name, ...)
     {
         static hashtable<char *, meshgroup *> meshgroups;
         if(!meshgroups.access(name))
         {
-            meshgroup *group = loadmeshes(name);
+            va_list args;
+            va_start(args, name);
+            meshgroup *group = loadmeshes(name, args);
+            va_end(args);
             if(!group) return NULL;
             meshgroups[group->name] = group;
         }
@@ -605,7 +607,7 @@ struct animmodel : model
             if((anim&ANIM_INDEX)==ANIM_ALL)
             {
                 info.frame = 0;
-                info.range = meshes->numframes;
+                info.range = meshes->totalframes();
             }
             else 
             {
@@ -658,7 +660,7 @@ struct animmodel : model
                 info.range = meshes->clipframes(info.frame, info.range);
             }
 
-            if(d && interp>=0)
+            if(d && interp>=0 && !(anim&ANIM_REUSE))
             {
                 animinterpinfo &ai = d->animinterp[interp];
                 if(ai.lastmodel!=this || ai.lastswitch<0 || lastmillis-d->lastrendered>animationinterpolationtime)
@@ -869,7 +871,16 @@ struct animmodel : model
         }
     };
 
-    virtual void render(int anim, float speed, int basetime, float pitch, const vec &axis, dynent *d, modelattach *a, const vec &dir, const vec &campos, const plane &fogplane)
+    enum
+    {
+        LINK_TAG = 0,
+        LINK_COOP,
+        LINK_REUSE
+    };
+
+    virtual int linktype(animmodel *m) const { return LINK_TAG; }
+
+    void render(int anim, float speed, int basetime, float pitch, const vec &axis, dynent *d, modelattach *a, const vec &dir, const vec &campos, const plane &fogplane)
     {
         if(!loaded) return;
 
@@ -879,13 +890,20 @@ struct animmodel : model
             for(int i = 0; a[i].name; i++)
             {
                 animmodel *m = (animmodel *)a[i].m;
-                if(!m) continue;
+                if(!m || !m->loaded) continue;
                 part *p = m->parts[0];
-                switch(a[i].type)
+                switch(linktype(m))
                 {
-                    case MDL_ATTACH_VWEP: if(link(p, "tag_weapon", a[i].anim, a[i].basetime)) p->index = index; break;
-                    case MDL_ATTACH_SHIELD: if(link(p, "tag_shield", a[i].anim, a[i].basetime)) p->index = index; break;
-                    case MDL_ATTACH_POWERUP: if(link(p, "tag_powerup", a[i].anim, a[i].basetime)) p->index = index; break;
+                    case LINK_TAG:
+                        p->index = link(p, a[i].tag, a[i].anim, a[i].basetime) ? index : -1;
+                        break;
+
+                    case LINK_COOP:
+                        p->index = index;
+                        break;
+
+                    default:
+                        continue;
                 }
                 index += p->numanimparts;
             }
@@ -896,9 +914,24 @@ struct animmodel : model
         if(a) for(int i = 0; a[i].name; i++)
         {
             animmodel *m = (animmodel *)a[i].m;
-            if(!m) continue;
+            if(!m || !m->loaded) continue;
             part *p = m->parts[0];
-            unlink(p);
+            switch(linktype(m))
+            {
+                case LINK_TAG:    
+                    if(p->index >= 0) unlink(p);
+                    p->index = 0;
+                    break;
+
+                case LINK_COOP:
+                    p->render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane);
+                    p->index = 0;
+                    break;
+
+                case LINK_REUSE:
+                    p->render(anim | ANIM_REUSE, speed, basetime, pitch, axis, d, dir, campos, fogplane); 
+                    break;
+            }
         }
     }
 
@@ -1151,7 +1184,7 @@ struct animmodel : model
     static vec lightcolor;
     static plane refractfogplane;
     static float lastalphatest;
-    static void *lastvbuf, *lasttcbuf, *lastmtcbuf, *lastbbuf, *lastnbuf, *lastbdata;
+    static void *lastvbuf, *lasttcbuf, *lastmtcbuf, *lastnbuf, *lastbbuf, *lastsdata, *lastbdata;
     static GLuint lastebuf, lastenvmaptex, closestenvmaptex;
     static Texture *lasttex, *lastmasks, *lastnormalmap;
     static int envmaptmu, fogtmu;
@@ -1161,7 +1194,7 @@ struct animmodel : model
         enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enablelighting = enablefog = enabletangents = enablebones = false;
         enablecullface = true;
         lastalphatest = -1;
-        lastvbuf = lasttcbuf = lastmtcbuf = lastnbuf = lastbbuf = lastbdata = NULL;
+        lastvbuf = lasttcbuf = lastmtcbuf = lastnbuf = lastbbuf = lastsdata = lastbdata = NULL;
         lastebuf = lastenvmaptex = closestenvmaptex = 0;
         lasttex = lastmasks = lastnormalmap = NULL;
         envmaptmu = fogtmu = -1;
@@ -1281,7 +1314,7 @@ bool animmodel::enabletc = false, animmodel::enablemtc = false, animmodel::enabl
 vec animmodel::lightcolor;
 plane animmodel::refractfogplane;
 float animmodel::lastalphatest = -1;
-void *animmodel::lastvbuf = NULL, *animmodel::lasttcbuf = NULL, *animmodel::lastmtcbuf = NULL, *animmodel::lastnbuf = NULL, *animmodel::lastbbuf = NULL, *animmodel::lastbdata = NULL;
+void *animmodel::lastvbuf = NULL, *animmodel::lasttcbuf = NULL, *animmodel::lastmtcbuf = NULL, *animmodel::lastnbuf = NULL, *animmodel::lastbbuf = NULL, *animmodel::lastsdata = NULL, *animmodel::lastbdata = NULL;
 GLuint animmodel::lastebuf = 0, animmodel::lastenvmaptex = 0, animmodel::closestenvmaptex = 0;
 Texture *animmodel::lasttex = NULL, *animmodel::lastmasks = NULL, *animmodel::lastnormalmap = NULL;
 int animmodel::envmaptmu = -1, animmodel::fogtmu = -1;
