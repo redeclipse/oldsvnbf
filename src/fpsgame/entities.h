@@ -575,7 +575,7 @@ struct entities : icliententities
 		}
 	}
 
-	void renderentities()
+	void render()
 	{
 		if (rendernormally) // important, don't render lines and stuff otherwise!
 		{

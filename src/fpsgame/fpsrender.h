@@ -41,7 +41,7 @@ struct fpsrender
 
 	IVARP(teamskins, 0, 0, 1);
 
-	void rendergame()
+	void render()
 	{
 		if(cl.intermission)
 		{
@@ -64,7 +64,7 @@ struct fpsrender
 		}
 		if(isthirdperson() && (cl.player1->state != CS_SPECTATOR || cl.player1->clientnum == -cl.cameranum)) renderplayer(cl.player1, true, teamskins() || m_team(cl.gamemode, cl.mutators) ? mdlnames[1] : mdlnames[0]);
 
-		cl.et.renderentities();
+		cl.et.render();
 		cl.pj.render();
 		if(m_capture(cl.gamemode)) cl.cpc.renderbases();
 
