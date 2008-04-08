@@ -20,14 +20,14 @@ struct attr
 	attr(const char *n = NULL, int t = ATTR_NONE) :
 		name(n), type(t), valstr(NULL), minstr(NULL), maxstr(NULL) {}
 	virtual ~attr() {}
-	
+
 	void destroy()
 	{
 		if (valstr) DELETEA(valstr);
 		if (minstr) DELETEA(minstr);
 		if (maxstr) DELETEA(maxstr);
 	}
-	
+
 	virtual void getval() = 0;
 	virtual void setval(const char *v, bool msg = false) = 0;
 };
@@ -38,17 +38,19 @@ extern void printattrrange(attr *a);
 struct attr_bool : attr
 {
 	bool value, minval, maxval;
-	
+
 	attr_bool(const char *n = NULL) :
 		attr(n, ATTR_BOOL), value(false) {}
 	~attr_bool() {}
-	
+
 	bool conval(const char *v)
 	{
 		bool retval = false;
 		if (isnumeric(*v)) retval = atoi(v) ? true : false;
 		else if (!strcasecmp("false", v)) retval = false;
 		else if (!strcasecmp("true", v)) retval = true;
+		else if (!strcasecmp("off", v)) retval = false;
+		else if (!strcasecmp("on", v)) retval = true;
 		return retval;
 	}
 
@@ -89,11 +91,11 @@ struct attr_bool : attr
 struct attr_int : attr
 {
 	int value, minval, maxval;
-	
+
 	attr_int(const char *n = NULL) :
 		attr(n, ATTR_INT), value(0), minval(0), maxval(0) {}
 	~attr_int() {}
-	
+
 	int conval(const char *v)
 	{
 		int retval = atoi(v);
@@ -145,11 +147,11 @@ struct attr_int : attr
 struct attr_float : attr
 {
 	float value, minval, maxval;
-	
+
 	attr_float(const char *n = NULL) :
 		attr(n, ATTR_FLOAT), value(0.f), minval(0.f), maxval(0.f) {}
 	~attr_float() {}
-	
+
 	float conval(const char *v)
 	{
 		float retval = atof(v);
@@ -202,11 +204,11 @@ struct attr_string : attr
 {
 	char *value, *retval;
 	size_t minval, maxval;
-	
+
 	attr_string(const char *n = NULL) :
 		attr(n, ATTR_STRING), value(NULL), retval(NULL), minval(0), maxval(1) {}
 	~attr_string() {}
-	
+
 	char *conval(const char *v)
 	{
 		if (retval) DELETEA(retval);
@@ -258,17 +260,17 @@ struct attr_string : attr
 struct attr_vec : attr
 {
 	vec value, minval, maxval;
-	
+
 	attr_vec(const char *n = NULL) :
 		attr(n, ATTR_VEC), value(0, 0, 0), minval(0, 0, 0), maxval(0, 0, 0) {}
 	~attr_vec() {}
-	
+
 	vec conval(const char *v)
 	{
 		vec retval = vec(0, 0, 0);
 		v += strspn(v, ",");
 		int q = 0;
-		
+
 		while (*v)
 		{
 			float i = atof(v);
@@ -330,17 +332,17 @@ struct attr_vec : attr
 struct attr_ivec : attr
 {
 	ivec value, minval, maxval;
-	
+
 	attr_ivec(const char *n = NULL) :
 		attr(n, ATTR_IVEC), value(0, 0, 0), minval(0, 0, 0), maxval(0, 0, 0) {}
 	~attr_ivec() {}
-	
+
 	ivec conval(const char *v)
 	{
 		ivec retval = ivec(0, 0, 0);
 		v += strspn(v, ",");
 		int q = 0;
-		
+
 		while (*v)
 		{
 			int i = atoi(v);
@@ -471,7 +473,7 @@ struct attr_ivec : attr
 			break; \
 		} \
 	}
-	
+
 
 // object types
 
