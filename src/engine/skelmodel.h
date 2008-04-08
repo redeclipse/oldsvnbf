@@ -47,6 +47,20 @@ struct skelmodel : animmodel
             return i;
         }
 
+        static int sortcmp(const blendcombo *x, const blendcombo *y)
+        {
+            loopi(4)
+            {
+                if(x->weights[i])
+                {
+                    if(!y->weights[i]) return -1;
+                }
+                else if(y->weights[i]) return 1;
+                else break;
+            }
+            return 0;
+        }
+
         int addweight(int sorted, float weight, int bone)
         {
             loopk(sorted) if(weight > weights[k])
@@ -1329,8 +1343,25 @@ struct skelmodel : animmodel
                 return i;
             }
             numblends[c.size()-1]++;
-            blendcombos.add(c);
-            return blendcombos.length()-1;
+            blendcombo &a = blendcombos.add(c);
+            return a.interpindex = blendcombos.length()-1;
+        }
+
+        void sortblendcombos()
+        {
+            blendcombos.sort(blendcombo::sortcmp);
+            int *remap = new int[blendcombos.length()];
+            loopv(blendcombos) remap[blendcombos[i].interpindex] = i;
+            loopv(meshes)
+            {
+                skelmesh *m = (skelmesh *)meshes[i];
+                loopj(m->numverts)
+                {
+                    vert &v = m->verts[j];
+                    v.blend = remap[v.blend];
+                }
+            }
+            delete[] remap;
         }
 
         int remapblend(int blend)
@@ -1346,7 +1377,7 @@ struct skelmodel : animmodel
             loopv(blendcombos)
             {
                 const blendcombo &c = blendcombos[i];
-                if(c.interpindex<0) continue;
+                if(c.interpindex<0) break;
                 matrix3x4 &m = dst[c.interpindex];
                 m = sc.mdata[c.bones[0]];
                 m.scale(c.weights[0]);
@@ -1366,7 +1397,7 @@ struct skelmodel : animmodel
             loopv(blendcombos)
             {
                 const blendcombo &c = blendcombos[i];
-                if(c.interpindex<0) continue;
+                if(c.interpindex<0) break;
                 dualquat &d = dst[c.interpindex];
                 d = sc.bdata[c.bones[0]];
                 d.mul(c.weights[0]);

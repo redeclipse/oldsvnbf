@@ -256,7 +256,8 @@ struct md5 : skelmodel
                     }
                 }
             }
-        
+            fclose(f);
+
             loopv(basejoints) skel->bones[i].base = dualquat(basejoints[i].orient, basejoints[i].pos);
 
             loopv(meshes)
@@ -267,7 +268,8 @@ struct md5 : skelmodel
                 m.cleanup();
             }
 
-            fclose(f);
+            sortblendcombos();
+
             return true;
         }
 
