@@ -389,6 +389,8 @@ int visibleorient(cube &c, int orient)
 
 VAR(mipvis, 0, 0, 1);
 
+static int remipprogress = 0, remiptotal = 0;
+
 bool remip(cube &c, int x, int y, int z, int size)
 {
 	if(c.ext)
@@ -404,6 +406,8 @@ bool remip(cube &c, int x, int y, int z, int size)
         subdividecube(c);
         ch = c.children;
     }
+    else if((remipprogress++&0x7FF)==1) show_out_of_renderloop_progress(float(remipprogress)/remiptotal, "remipping...");
+
 	bool perfect = true;
 	uchar mat = ch[0].ext ? ch[0].ext->material : MAT_AIR;
 
@@ -465,6 +469,8 @@ void mpremip(bool local)
 {
     extern selinfo sel;
     if(local) cl->edittrigger(sel, EDIT_REMIP);
+    remipprogress = 1;
+    remiptotal = allocnodes;
 	loopi(8)
 	{
 		ivec o(i, 0, 0, 0, hdr.worldsize>>1);
