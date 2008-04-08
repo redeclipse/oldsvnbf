@@ -670,7 +670,7 @@ void rendermaterials()
 						textured = GL_TEXTURE_2D;
 					}
 					int tex = m.orient == O_TOP ? 0 : 1;
-					glBindTexture(GL_TEXTURE_2D, wslot.sts.length() > tex ? wslot.sts[tex].t->id : notexture->id);
+					glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(tex) ? wslot.sts[tex].t->id : notexture->id);
 					break;
 				}
 				case MAT_LAVA:
@@ -702,7 +702,7 @@ void rendermaterials()
 						textured = GL_TEXTURE_2D;
 					}
 					int tex = m.orient == O_TOP ? 0 : 1;
-					glBindTexture(GL_TEXTURE_2D, lslot.sts.length() > tex ? lslot.sts[tex].t->id : notexture->id);
+					glBindTexture(GL_TEXTURE_2D, lslot.sts.inrange(tex) ? lslot.sts[tex].t->id : notexture->id);
 					break;
 				}
 				case MAT_GLASS:
@@ -807,7 +807,8 @@ void rendermaterials()
 				{
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
                     if(renderpath!=R_FIXEDFUNCTION && hasCM && waterfallenv) glNormal3fv(normals[m.orient].v);
-					if (wslot.sts.length() > 1) renderwaterfall(m, wslot.sts[1].t, wslot.sts[1].scale ? wslot.sts[1].scale : 1, 0.1f, MAT_WATER);
+					if (wslot.sts.inrange(1))
+						renderwaterfall(m, wslot.sts[1].t, wslot.sts[1].scale ? wslot.sts[1].scale : 1, 0.1f, MAT_WATER);
 				}
 				break;
 
@@ -815,12 +816,14 @@ void rendermaterials()
 				if(m.orient==O_TOP)
 				{
 					if(!vertwater && !begin) { glBegin(GL_QUADS); begin = true; }
-					if (lslot.sts.length() > 0) renderlava(m, lslot.sts[0].t, lslot.sts[0].scale ? lslot.sts[0].scale : 1);
+					if (lslot.sts.inrange(0))
+						renderlava(m, lslot.sts[0].t, lslot.sts[0].scale ? lslot.sts[0].scale : 1);
 				}
 				else
 				{
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
-					if (lslot.sts.length() > 1) renderwaterfall(m, lslot.sts[1].t, lslot.sts[1].scale ? lslot.sts[1].scale : 1, 0.1f, MAT_LAVA);
+					if (lslot.sts.inrange(1))
+						renderwaterfall(m, lslot.sts[1].t, lslot.sts[1].scale ? lslot.sts[1].scale : 1, 0.1f, MAT_LAVA);
 				}
 				break;
 
