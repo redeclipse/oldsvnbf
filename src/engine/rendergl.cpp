@@ -987,7 +987,7 @@ void computescreen(const char *text, Texture *t)
 static void bar(float bar, int w, int o, float r, float g, float b)
 {
 	int side = 2*FONTH;
-	float x1 = side, x2 = bar*(w*3-2*side)+side;
+	float x1 = side, x2 = min(bar, 1.0f)*(w*3-2*side)+side;
 	float y1 = o*FONTH;
 	glColor3f(r, g, b);
 	glBegin(GL_TRIANGLE_STRIP);
