@@ -456,7 +456,7 @@ void execbind(keym &k, bool isdown)
 void consolekey(int code, bool isdown, int cooked)
 {
     #ifdef __APPLE__
-        #define MOD_KEYS (KMOD_LMETA|KMOD_RMETA) 
+        #define MOD_KEYS (KMOD_LMETA|KMOD_RMETA)
     #else
         #define MOD_KEYS (KMOD_LCTRL|KMOD_RCTRL)
     #endif
@@ -580,7 +580,7 @@ void keypress(int code, bool isdown, int cooked)
     keym *haskey = NULL;
     loopv(keyms) if(keyms[i].code==code) { haskey = &keyms[i]; break; }
     if(haskey && haskey->pressed) execbind(*haskey, isdown); // allow pressed keys to release
-    else if(!menukey(code, isdown, cooked)) // 3D GUI mouse button intercept   
+    else if(!menukey(code, isdown, cooked)) // 3D GUI mouse button intercept
     {
         if(saycommandon) consolekey(code, isdown, cooked);
         else if(haskey) execbind(*haskey, isdown);
@@ -741,7 +741,7 @@ void complete(char *s)
 	else // complete using command names
 	{
 		enumerate(*idents, ident, id,
-            if(strncmp(id.name, s+1, completesize)==0 &&
+            if(id.complete && strncmp(id.name, s+1, completesize)==0 &&
                strcmp(id.name, lastcomplete) > 0 && (!nextcomplete || strcmp(id.name, nextcomplete) < 0))
                 nextcomplete = id.name;
 		);
@@ -754,6 +754,23 @@ void complete(char *s)
 	}
 	else lastcomplete[0] = '\0';
 }
+
+void setcompletion(char *s, bool on)
+{
+	enumerate(*idents, ident, id,
+		if(!strcmp(id.name, s)) id.complete = on;
+	);
+}
+
+ICOMMAND(setcomplete, "ss", (char *s, char *t), {
+	bool on = false;
+	if (isnumeric(*t)) on = atoi(t) ? true : false;
+	else if (!strcasecmp("false", t)) on = false;
+	else if (!strcasecmp("true", t)) on = true;
+	else if (!strcasecmp("on", t)) on = true;
+	else if (!strcasecmp("off", t)) on = false;
+	setcompletion(s, on);
+});
 
 void writecompletions(FILE *f)
 {

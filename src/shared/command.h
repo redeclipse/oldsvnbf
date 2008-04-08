@@ -27,7 +27,7 @@ struct ident
         int i;      // ID_VAR
         float f;    // ID_FVAR
         char *s;    // ID_SVAR
-    } val, overrideval;    
+    } val, overrideval;
     union
     {
         int *i;   // ID_VAR
@@ -41,30 +41,31 @@ struct ident
     };
     union
     {
-        void *self;        // ID_COMMAND, ID_CCOMMAND 
+        void *self;        // ID_COMMAND, ID_CCOMMAND
         char *isexecuting; // ID_ALIAS
     };
     bool persist, world;       // ID_VAR, ID_ALIAS
+    bool complete;
 
     ident() {}
     // ID_VAR
     ident(int t, const char *n, int m, int c, int x, int *s, void *f = NULL, bool p = false, bool w = false)
-        : type(t), name(n), minval(m), maxval(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w)
+        : type(t), name(n), minval(m), maxval(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w), complete(true)
     { val.i = c; storage.i = s; }
     // ID_FVAR
     ident(int t, const char *n, float c, float *s, void *f = NULL, bool p = false, bool w = false)
-        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w)
+        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w), complete(true)
     { val.f = c; storage.f = s; }
     // ID_SVAR
     ident(int t, const char *n, char *c, char **s, void *f = NULL, bool p = false, bool w = false)
-        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w)
+        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w), complete(true)
     { val.s = c; storage.s = s; }
     // ID_ALIAS
     ident(int t, const char *n, char *a, bool p, bool w = false)
-        : type(t), name(n), override(NO_OVERRIDE), stack(NULL), action(a), persist(p), world(w) {}
+        : type(t), name(n), override(NO_OVERRIDE), stack(NULL), action(a), persist(p), world(w), complete(true) {}
     // ID_COMMAND, ID_CCOMMAND
     ident(int t, const char *n, const char *narg, void *f = NULL, void *s = NULL)
-        : type(t), name(n), fun((void (__cdecl *)(void))f), narg(narg), self(s) {}
+        : type(t), name(n), fun((void (__cdecl *)(void))f), narg(narg), self(s), complete(true) {}
 
     virtual ~ident() {}
 
