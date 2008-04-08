@@ -365,7 +365,7 @@ struct physics
 	bool move(physent *d, vec &dir)
 	{
 		vec old(d->o);
-	#if 0
+		#if 0
 		if(d->physstate == PHYS_STEP_DOWN && dir.z <= 0.0f && cl.allowmove(d) && (d->move || d->strafe))
 		{
 			float step = dir.magnitude()*stepspeed(d);
@@ -376,7 +376,7 @@ struct physics
 			if(collide(d, vec(0, 0, -1))) return true;
 			d->o = old;
 		}
-	#endif
+		#endif
 		bool collided = false;
 		vec obstacle;
 		d->o.add(dir);

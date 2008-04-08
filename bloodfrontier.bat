@@ -1,6 +1,6 @@
 @ECHO OFF
 
-set SDL_VIDEO_WINDOW_POS=0,0
+rem set SDL_VIDEO_WINDOW_POS=0,0
 set BF_DIR=.
 set BF_HOME=home
 set BF_OPTIONS=-q%BF_HOME% -rbfa\init.cfg

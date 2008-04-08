@@ -1044,17 +1044,16 @@ struct GAMECLIENT : igameclient
 
 	bool wantcrosshair()
 	{
-		return (crosshair() && !(hidehud || player1->state == CS_SPECTATOR || player1->state == CS_DEAD)) || menuactive();
+		return (crosshair() &&
+			!(hidehud || player1->state == CS_SPECTATOR || player1->state == CS_DEAD)) ||
+			menuactive();
 	}
 
 	bool gamethirdperson()
 	{
-		if (cameratype <= CAMERA_FOLLOW && thirdperson())
-		{
-			if (cameratype != CAMERA_PLAYER || player1->gunselect != GUN_RIFLE || fov >= 90)
-				return true;
-		}
-		return false;
+		return cameratype <= CAMERA_FOLLOW && thirdperson() &&
+			player1->state != CS_EDITING && player1->state != CS_SPECTATOR &&
+			(cameratype != CAMERA_PLAYER || player1->gunselect != GUN_RIFLE || fov >= 90);
 	}
 
 	void menuevent(int event)
