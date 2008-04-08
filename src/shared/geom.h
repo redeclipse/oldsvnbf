@@ -109,6 +109,13 @@ struct vec
         v[(i+2)%3] = 0;
     }
 
+    void orthonormalize(vec &s, vec &t) const
+    {
+        s.sub(vec(*this).mul(dot(s)));
+        t.sub(vec(*this).mul(dot(t)))
+         .sub(vec(s).mul(s.dot(t)));
+    }
+
     template<class T> float dist_to_bb(const T &min, const T &max) const
     {
         float sqrdist = 0;
@@ -433,43 +440,6 @@ struct matrix3x4
                    X.y*o.x + Y.y*o.y + Z.y*o.z,
                    X.z*o.x + Y.z*o.y + Z.z*o.z);
     }
-};
-
-struct matrix3x3
-{
-    vec X, Y, Z;
-
-    matrix3x3() {}
-    matrix3x3(const vec &x, const vec &y, const vec &z) : X(x), Y(y), Z(z) {}
-
-    void transform(vec &o) { o = vec(o.dot(X), o.dot(Y), o.dot(Z)); }
-
-    void orthonormalize()
-    {
-        X.sub(vec(Z).mul(Z.dot(X)));
-        Y.sub(vec(Z).mul(Z.dot(Y)))
-         .sub(vec(X).mul(X.dot(Y)));
-    }
-
-    void rotate(float angle, const vec &d)
-    {
-        float c = cosf(angle), s = sinf(angle);
-        rotate(c, s, d);
-    }
-
-    void rotate(float c, float s, const vec &d)
-    {
-        X = vec(d.x*d.x*(1-c)+c, d.x*d.y*(1-c)-d.z*s, d.x*d.z*(1-c)+d.y*s);
-        Y = vec(d.y*d.x*(1-c)+d.z*s, d.y*d.y*(1-c)+c, d.y*d.z*(1-c)-d.x*s);
-        Z = vec(d.x*d.z*(1-c)-d.y*s, d.y*d.z*(1-c)+d.x*s, d.z*d.z*(1-c)+c);
-    }
-
-    void transposedtransform(vec &d)
-    {
-        d = vec(X.x*d.x + Y.x*d.y + Z.x*d.z,
-                X.y*d.x + Y.y*d.y + Z.y*d.z,
-                X.z*d.x + Y.z*d.y + Z.z*d.z);
-    } 
 };
 
 struct plane : vec
