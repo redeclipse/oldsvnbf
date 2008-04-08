@@ -894,7 +894,7 @@ void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attac
 			anim = ANIM_PAIN;
 			basetime = lastpain;
 		}
-		else if(attack<0 || (d->type!=ENT_AI && lastmillis-lastaction<attackdelay))
+        else if(lastpain < lastaction && (attack<0 || (d->type!=ENT_AI && lastmillis-lastaction<attackdelay)))
 		{
 			anim = attack<0 ? -attack : attack;
 			basetime = lastaction;
