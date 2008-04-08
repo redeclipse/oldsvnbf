@@ -660,7 +660,7 @@ struct animmodel : model
                 info.range = meshes->clipframes(info.frame, info.range);
             }
 
-            if(d && interp>=0 && !(anim&ANIM_REUSE))
+            if(d && interp>=0)
             {
                 animinterpinfo &ai = d->animinterp[interp];
                 if(ai.lastmodel!=this || ai.lastswitch<0 || lastmillis-d->lastrendered>animationinterpolationtime)
@@ -742,7 +742,12 @@ struct animmodel : model
         void render(int anim, float speed, int basetime, float pitch, const vec &axis, dynent *d, const vec &dir, const vec &campos, const plane &fogplane)
         {
             animstate as[MAXANIMPARTS];
-            loopi(numanimparts)
+            render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane, as);
+        }
+
+        void render(int anim, float speed, int basetime, float pitch, const vec &axis, dynent *d, const vec &dir, const vec &campos, const plane &fogplane, animstate *as)
+        {
+            if(!(anim&ANIM_REUSE)) loopi(numanimparts)
             {
                 animinfo info;
                 int interp = d && index+numanimparts<=MAXANIMPARTS ? index+i : -1;
@@ -803,7 +808,7 @@ struct animmodel : model
 
             meshes->render(as, pitch, axis, this);
 
-            loopv(links)
+            if(!(anim&ANIM_REUSE)) loopv(links)
             {
                 linkedpart &link = links[i];
 
@@ -909,7 +914,8 @@ struct animmodel : model
             }
         }
 
-        parts[0]->render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane);
+        animstate as[MAXANIMPARTS];
+        parts[0]->render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane, as);
 
         if(a) for(int i = 0; a[i].name; i++)
         {
@@ -918,7 +924,7 @@ struct animmodel : model
             part *p = m->parts[0];
             switch(linktype(m))
             {
-                case LINK_TAG:    
+                case LINK_TAG:
                     if(p->index >= 0) unlink(p);
                     p->index = 0;
                     break;
@@ -929,7 +935,7 @@ struct animmodel : model
                     break;
 
                 case LINK_REUSE:
-                    p->render(anim | ANIM_REUSE, speed, basetime, pitch, axis, d, dir, campos, fogplane); 
+                    p->render(anim | ANIM_REUSE, speed, basetime, pitch, axis, d, dir, campos, fogplane, as);
                     break;
             }
         }
