@@ -551,8 +551,9 @@ VARP(reflectmms, 0, 1, 1);
 void setfogplane(const plane &p, bool flush)
 {
 	static float fogselect[4] = {0, 0, 0, 0};
-	setenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
-	setenvparamfv("fogplane", SHPARAM_VERTEX, 9, p.v);
+	// not in sauerbraten anymore?
+	//setenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
+	//setenvparamfv("fogplane", SHPARAM_VERTEX, 9, p.v);
     if(flush)
     {
         flushenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
@@ -697,7 +698,7 @@ void drawglare()
     glFogfv(GL_FOG_COLOR, zerofog);
 
     glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear((skyboxglare ? 0 : GL_COLOR_BUFFER_BIT) | GL_DEPTH_BUFFER_BIT);
 
     rendergeom();
     renderreflectedmapmodels();

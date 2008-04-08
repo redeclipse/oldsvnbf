@@ -397,22 +397,26 @@ bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float x
 	float dist = sqrtf(x*x + y*y) - sqrtf(dx*dx + dy*dy) - sqrtf(ex*ex + ey*ey);
 	if(dist < 0)
 	{
-        if(dir.iszero() || ((d->type>=ENT_INANIMATE || below >= -(d->height+d->aboveeye)/4.0f) && dir.z > 0))
+        if(dist > (d->o.z < o.z ? below : above) && (dir.iszero() || x*dir.x + y*dir.y > 0))
 		{
-			wall = vec(0, 0, -1);
+            wall = vec(-x, -y, 0);
+            wall.normalize();
 			return false;
 		}
-        if(dir.iszero() || ((d->type>=ENT_INANIMATE || above >= -(d->height+d->aboveeye)/3.0f) && dir.z < 0))
+        if(d->o.z < o.z)
 		{
-			wall = vec(0, 0, 1);
+            if(dir.iszero() || (dir.z > 0 && (d->type>=ENT_INANIMATE || below >= d->zmargin-(d->height+d->aboveeye)/4.0f)))
+            {
+                wall = vec(0, 0, -1);
+				return false;
+			}
+        }
+        else if(dir.iszero() || (dir.z < 0 && (d->type>=ENT_INANIMATE || above >= d->zmargin-(d->height+d->aboveeye)/3.0f)))
+		{
+            wall = vec(0, 0, 1);
 			return false;
 		}
-		if(dir.iszero() || -x*dir.x + -y*dir.y < 0)
-		{
-			wall = vec(-x, -y, 0);
-			wall.normalize();
-			return false;
-		}
+        inside = true;
 	}
 	return true;
 }

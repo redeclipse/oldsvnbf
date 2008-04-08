@@ -28,7 +28,8 @@ vec menuinfrontofplayer()
 
 int cleargui(int n)
 {
-	int m = guistack.length(), clear = n > 0 ? min(m, n) : m;
+    int clear = guistack.length();
+    if(n>0) clear = min(clear, n);
 	loopi(clear) delete[] guistack.pop();
 	if (!guistack.empty()) showgui(guistack.last());
 	if (clear) cl->menuevent(MN_BACK);
