@@ -417,15 +417,18 @@ struct skelmodel : animmodel
             }
         }
 
-        void interpmatverts(const matrix3x4 *mdata, bool norms, bool tangents, void *vdata, skin &s)
+        void interpmatverts(skelcacheentry &sc, blendcacheentry *bc, bool norms, bool tangents, void *vdata, skin &s)
         {
+            const int blendoffset = ((skelmeshgroup *)group)->skel->numinterpbones;
+            const matrix3x4 *mdata1 = sc.mdata, *mdata2 = bc ? bc->mdata - blendoffset : NULL;
+
             #define IPLOOPMAT(type, dosetup, dotransform) \
                 loopi(numverts) \
                 { \
                     const vert &src = verts[i]; \
                     type &dst = ((type *)vdata)[i]; \
                     dosetup; \
-                    const matrix3x4 &m = mdata[src.interpindex]; \
+                    const matrix3x4 &m = (src.interpindex < blendoffset ? mdata1 : mdata2)[src.interpindex]; \
                     dst.pos = m.transform(src.pos); \
                     dotransform; \
                 }
@@ -444,15 +447,18 @@ struct skelmodel : animmodel
             #undef IPLOOPMAT
         }
 
-        void interpverts(const dualquat *bdata, bool norms, bool tangents, void *vdata, skin &s)
+        void interpverts(skelcacheentry &sc, blendcacheentry *bc, bool norms, bool tangents, void *vdata, skin &s)
         {
+            const int blendoffset = ((skelmeshgroup *)group)->skel->numinterpbones;
+            const dualquat * const bdata1 = sc.bdata, * const bdata2 = bc ? bc->bdata - blendoffset : NULL;
+
             #define IPLOOP(type, dosetup, dotransform) \
                 loopi(numverts) \
                 { \
                     const vert &src = verts[i]; \
                     type &dst = ((type *)vdata)[i]; \
                     dosetup; \
-                    const dualquat &d = bdata[src.interpindex]; \
+                    const dualquat &d = (src.interpindex < blendoffset ? bdata1 : bdata2)[src.interpindex]; \
                     dst.pos = d.transform(src.pos); \
                     dotransform; \
                 }
@@ -1333,12 +1339,10 @@ struct skelmodel : animmodel
             return c.weights[1] ? c.interpindex : c.bones[0];
         }
 
-        void blendmatbones(skelcacheentry &sc, blendcacheentry &bc)
+        void blendmatbones(const skelcacheentry &sc, blendcacheentry &bc)
         {
-            if(!bc.mdata) bc.mdata = new matrix3x4[skel->usegpuskel ? vblends : skel->numinterpbones+vblends];
-            matrix3x4 *dst = bc.mdata;
-            if(skel->usegpuskel) dst -= skel->numgpubones;
-            else memcpy(dst, sc.mdata, skel->numinterpbones*sizeof(matrix3x4));
+            if(!bc.mdata) bc.mdata = new matrix3x4[vblends];
+            matrix3x4 *dst = bc.mdata - (skel->usegpuskel ? skel->numgpubones : skel->numinterpbones);
             loopv(blendcombos)
             {
                 const blendcombo &c = blendcombos[i];
@@ -1355,12 +1359,10 @@ struct skelmodel : animmodel
             }
         }
 
-        void blendbones(skelcacheentry &sc, blendcacheentry &bc)
+        void blendbones(const skelcacheentry &sc, blendcacheentry &bc)
         {
-            if(!bc.bdata) bc.bdata = new dualquat[skel->usegpuskel ? vblends : skel->numinterpbones+vblends];
-            dualquat *dst = bc.bdata;
-            if(skel->usegpuskel) dst -= skel->numgpubones;
-            else memcpy(dst, sc.bdata, skel->numinterpbones*sizeof(dualquat));
+            if(!bc.bdata) bc.bdata = new dualquat[vblends];
+            dualquat *dst = bc.bdata - (skel->usegpuskel ? skel->numgpubones : skel->numinterpbones);
             loopv(blendcombos)
             {
                 const blendcombo &c = blendcombos[i];
@@ -1473,8 +1475,8 @@ struct skelmodel : animmodel
                 loopv(meshes)
                 {
                     skelmesh &m = *(skelmesh *)meshes[i];
-                    if(skel->usematskel) m.interpmatverts(bc ? bc->mdata : sc.mdata, norms, tangents, (hasVBO ? vdata : vc.vdata) + m.voffset*vertsize, p->skins[i]);
-                    else m.interpverts(bc ? bc->bdata : sc.bdata, norms, tangents, (hasVBO ? vdata : vc.vdata) + m.voffset*vertsize, p->skins[i]);
+                    if(skel->usematskel) m.interpmatverts(sc, bc, norms, tangents, (hasVBO ? vdata : vc.vdata) + m.voffset*vertsize, p->skins[i]);
+                    else m.interpverts(sc, bc, norms, tangents, (hasVBO ? vdata : vc.vdata) + m.voffset*vertsize, p->skins[i]);
                 }
                 if(hasVBO)
                 {
