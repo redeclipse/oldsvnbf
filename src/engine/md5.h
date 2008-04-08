@@ -492,9 +492,9 @@ struct md5 : skelmodel
         loadingmd5 = NULL;
         loopv(parts) 
         {
-            skelmeshgroup *g = (skelmeshgroup *)parts[i]->meshes;
-            g->skel->optimize();
-            parts[i]->meshes = g->scaleverts(scale/4.0f, i ? vec(0, 0, 0) : vec(translate.x, translate.y, translate.z));
+            skelpart *p = (skelpart *)parts[i];
+            p->endanimparts();
+            p->meshes = p->meshes->scaleverts(scale/4.0f, i ? vec(0, 0, 0) : vec(translate.x, translate.y, translate.z));
         }
         return loaded = true;
     }

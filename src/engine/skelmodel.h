@@ -113,6 +113,7 @@ struct skelmodel : animmodel
         animstate as[MAXANIMPARTS];
         float pitch;
         int millis;
+        uchar *partmask;
     
         animcacheentry()
         {
@@ -122,7 +123,7 @@ struct skelmodel : animmodel
         bool operator==(const animcacheentry &c) const
         {
             loopi(MAXANIMPARTS) if(as[i]!=c.as[i]) return false;
-            return pitch==c.pitch;
+            return pitch==c.pitch && partmask==c.partmask;
         }
     };
 
@@ -1030,13 +1031,14 @@ struct skelmodel : animmodel
                 usematskel = matskel!=0;
             }
 
+            uchar *partmask = ((skelpart *)p)->partmask;
             skelcacheentry *sc = NULL;
             bool match = false;
             loopv(skelcache)
             {
                 skelcacheentry &c = skelcache[i];
                 loopj(p->numanimparts) if(c.as[j]!=as[j]) goto mismatch;
-                if(c.pitch != pitch) goto mismatch;
+                if(c.pitch != pitch || c.partmask != partmask) goto mismatch;
                 match = true;
                 sc = &c;
                 break;
@@ -1048,8 +1050,9 @@ struct skelmodel : animmodel
             {
                 loopi(p->numanimparts) sc->as[i] = as[i];
                 sc->pitch = pitch;
-                if(matskel) interpmatbones(as, pitch, axis, p->numanimparts, ((skelpart *)p)->partmask, *sc);
-                else interpbones(as, pitch, axis, p->numanimparts, ((skelpart *)p)->partmask, *sc);
+                sc->partmask = partmask;
+                if(matskel) interpmatbones(as, pitch, axis, p->numanimparts, partmask, *sc);
+                else interpbones(as, pitch, axis, p->numanimparts, partmask, *sc);
             }
             sc->millis = lastmillis;
             return *sc;
@@ -1523,32 +1526,74 @@ struct skelmodel : animmodel
         }
     };
 
+    struct animpartmask
+    {
+        animpartmask *next;
+        int numbones;
+        uchar bones[1];
+    };
+
     struct skelpart : part
     {
+        static animpartmask *buildingpartmask;
+
         uchar *partmask;
-        
+
         skelpart() : partmask(NULL)
         {
         }
 
         virtual ~skelpart()
         {
-            DELETEA(partmask);
+            DELETEA(buildingpartmask);
+        }
+
+        uchar *sharepartmask(animpartmask *o)
+        {
+            static animpartmask *partmasks = NULL;
+            animpartmask *p = partmasks;
+            for(; p; p = p->next) if(p->numbones==o->numbones && !memcmp(p->bones, o->bones, p->numbones))
+            {
+                delete[] (uchar *)o;
+                return p->bones;
+            }
+
+            o->next = p;
+            partmasks = o;
+            return o->bones;
+        }
+
+        animpartmask *newpartmask()
+        {
+            animpartmask *p = (animpartmask *)new uchar[sizeof(animpartmask) + ((skelmeshgroup *)meshes)->skel->numbones-1];
+            p->numbones = ((skelmeshgroup *)meshes)->skel->numbones;
+            memset(p->bones, 0, p->numbones);
+            return p;
         }
 
         void initanimparts()
         {
-            int numbones = ((skelmeshgroup *)meshes)->skel->numbones;
-            partmask = new uchar[numbones];
-            memset(partmask, 0, numbones);
+            DELETEA(buildingpartmask);
+            buildingpartmask = newpartmask();
         }
 
         bool addanimpart(ushort *bonemask)
         {
-            if(numanimparts>=MAXANIMPARTS) return false;
-            ((skelmeshgroup *)meshes)->skel->applybonemask(bonemask, partmask, numanimparts);
+            if(!buildingpartmask || numanimparts>=MAXANIMPARTS) return false;
+            ((skelmeshgroup *)meshes)->skel->applybonemask(bonemask, buildingpartmask->bones, numanimparts);
             numanimparts++;
             return true;
+        }
+
+        void endanimparts()
+        {
+            if(buildingpartmask)
+            {
+                partmask = sharepartmask(buildingpartmask);
+                buildingpartmask = NULL;
+            }
+
+            ((skelmeshgroup *)meshes)->skel->optimize();
         }
     };
 
@@ -1564,4 +1609,6 @@ struct skelmodel : animmodel
                 LINK_TAG;
     }
 };
+
+skelmodel::animpartmask *skelmodel::skelpart::buildingpartmask = NULL;
 
