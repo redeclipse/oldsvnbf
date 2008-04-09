@@ -267,12 +267,14 @@ struct vacollect : verthash
     vector<materialsurface> matsurfs;
     vector<octaentities *> mapmodels;
     usvector skyindices, explicitskyindices;
-    int curtris;
+    int curtris, skyfaces, skyclip;
 
     void clear()
     {
         clearverts();
         curtris = 0;
+        skyfaces = 0;
+        skyclip = INT_MAX;
         indices.clear();
         skyindices.setsizenodelete(0);
         explicitskyindices.setsizenodelete(0);
@@ -645,7 +647,12 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
 
     int dim = dimension(orient);
     sortkey key(texture, lmid, envmap);
-    if(texture == DEFAULT_SKY) explicitsky += addtriindexes(vc.explicitskyindices, index);
+    if(texture == DEFAULT_SKY)
+    {
+        explicitsky += addtriindexes(vc.explicitskyindices, index);
+        loopk(4) vc.skyclip = min(vc.skyclip, int(vv[k].z>>VVEC_FRAC));
+        vc.skyfaces |= 0x3F&~(1<<opposite(orient));
+    }
     else
     {
         sortval &val = vc.indices[key];
@@ -962,6 +969,7 @@ void addskyverts(const ivec &o, int size)
 		int dim = dimension(i), c = C[dim], r = R[dim];
 		vector<cubeface> &sf = skyfaces[i];
 		if(sf.empty()) continue;
+        vc.skyfaces |= 1<<i;
 		sf.setsizenodelete(mergefaces(i, sf.getbuf(), sf.length()));
 		loopvj(sf)
 		{
@@ -977,6 +985,7 @@ void addskyverts(const ivec &o, int size)
 				vv[r] = coords[r] ? m.v2 : m.v1;
                 index[k] = vc.addvert(vv, 0, 0, bvec(128, 128, 128));
                 if(index[k] < 0) goto nextskyface;
+                vc.skyclip = min(vc.skyclip, int(vv.z>>VVEC_FRAC));
             }
             addtriindexes(vc.skyindices, index);
         nextskyface:;
@@ -1001,6 +1010,8 @@ vtxarray *newva(int x, int y, int z, int size)
     va->size = size;
     va->explicitsky = explicitsky;
     va->skyarea = skyarea;
+    va->skyfaces = vc.skyfaces;
+    va->skyclip = vc.skyclip < INT_MAX ? vc.skyclip + (z&~VVEC_INT_MASK) : INT_MAX;
     va->curvfc = VFC_NOT_VISIBLE;
     va->occluded = OCCLUDE_NOTHING;
     va->query = NULL;

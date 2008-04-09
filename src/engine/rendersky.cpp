@@ -41,51 +41,55 @@ void draw_envbox_face(float s0, float t0, int x0, int y0, int z0,
 	xtraverts += 4;
 }
 
-void draw_envbox(int w, float zclip = 0.0f)
+void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F)
 {
-	if(!sky[0]) fatal("no skybox");
+    float vclip = 1-zclip;
+    int z = int(ceil(2*w*(vclip-0.5f)));
 
-	float vclip = 1-zclip;
-	int z = int(ceil(2*w*(vclip-0.5f)));
+    glDepthMask(GL_FALSE);
 
-	glDepthMask(GL_FALSE);
+    if(faces&0x01)
+        draw_envbox_face(0.0f, 0.0f, -w, -w, -w,
+                         1.0f, 0.0f, -w,  w, -w,
+                         1.0f, vclip, -w,  w,  z,
+                         0.0f, vclip, -w, -w,  z, sky[0]->id ? sky[0]->id : notexture->id);
 
-    draw_envbox_face(0.0f, 0.0f, -w, -w, -w,
-                     1.0f, 0.0f, -w,  w, -w,
-                     1.0f, vclip, -w,  w,  z,
-                     0.0f, vclip, -w, -w,  z, sky[0]->id);
+    if(faces&0x02)
+        draw_envbox_face(1.0f, vclip, +w, -w,  z,
+                         0.0f, vclip, +w,  w,  z,
+                         0.0f, 0.0f, +w,  w, -w,
+                         1.0f, 0.0f, +w, -w, -w, sky[1]->id ? sky[1]->id : notexture->id);
 
-    draw_envbox_face(1.0f, vclip, +w, -w,  z,
-                     0.0f, vclip, +w,  w,  z,
-                     0.0f, 0.0f, +w,  w, -w,
-                     1.0f, 0.0f, +w, -w, -w, sky[1]->id);
+    if(faces&0x04)
+        draw_envbox_face(1.0f, vclip, -w, -w,  z,
+                         0.0f, vclip,  w, -w,  z,
+                         0.0f, 0.0f,  w, -w, -w,
+                         1.0f, 0.0f, -w, -w, -w, sky[2]->id ? sky[2]->id : notexture->id);
 
-    draw_envbox_face(1.0f, vclip, -w, -w,  z,
-                     0.0f, vclip,  w, -w,  z,
-                     0.0f, 0.0f,  w, -w, -w,
-                     1.0f, 0.0f, -w, -w, -w, sky[2]->id);
+    if(faces&0x08)
+        draw_envbox_face(1.0f, vclip, +w,  w,  z,
+                         0.0f, vclip, -w,  w,  z,
+                         0.0f, 0.0f, -w,  w, -w,
+                         1.0f, 0.0f, +w,  w, -w, sky[3]->id ? sky[3]->id : notexture->id);
 
-    draw_envbox_face(1.0f, vclip, +w,  w,  z,
-                     0.0f, vclip, -w,  w,  z,
-                     0.0f, 0.0f, -w,  w, -w,
-                     1.0f, 0.0f, +w,  w, -w, sky[3]->id);
-
-    if(!zclip)
+    if(!zclip && faces&0x10)
         draw_envbox_face(0.0f, 1.0f, -w,  w,  w,
                          0.0f, 0.0f, +w,  w,  w,
                          1.0f, 0.0f, +w, -w,  w,
-                         1.0f, 1.0f, -w, -w,  w, sky[4]->id);
+                         1.0f, 1.0f, -w, -w,  w, sky[4]->id ? sky[4]->id : notexture->id);
 
-    draw_envbox_face(0.0f, 1.0f, +w,  w, -w,
-                     0.0f, 0.0f, -w,  w, -w,
-                     1.0f, 0.0f, -w, -w, -w,
-                     1.0f, 1.0f, +w, -w, -w, sky[5]->id);
+    if(faces&0x20)
+        draw_envbox_face(0.0f, 1.0f, +w,  w, -w,
+                         0.0f, 0.0f, -w,  w, -w,
+                         1.0f, 0.0f, -w, -w, -w,
+                         1.0f, 1.0f, +w, -w, -w, sky[5]->id ? sky[5]->id : notexture->id);
 
-	glDepthMask(GL_TRUE);
+    glDepthMask(GL_TRUE);
 }
 
-VARP(sparklyfix, 0, 1, 1);
+VARP(sparklyfix, 0, 0, 1);
 VAR(showsky, 0, 1, 1);
+VAR(clipsky, 0, 1, 1);
 
 bool drawskylimits(bool explicitonly)
 {
@@ -129,10 +133,39 @@ void drawskyoutline()
 
 void drawskybox(int farplane, bool limited)
 {
-    if(limited && !reflecting && !refracting)
+    extern int renderedskyfaces, renderedskyclip; // , renderedsky, renderedexplicitsky;
+    bool alwaysrender = editmode || !insideworld(camera1->o) || reflecting,
+         explicitonly = false;
+    if(limited)
     {
-        if(!drawskylimits(false) && !editmode && insideworld(camera1->o)) return;
+        explicitonly = alwaysrender || !sparklyfix || refracting;
+        if(!drawskylimits(explicitonly) && !alwaysrender) return;
+        extern int ati_skybox_bug;
+        if(!alwaysrender && !renderedskyfaces && !ati_skybox_bug) explicitonly = false;
     }
+    else if(!alwaysrender)
+    {
+        extern vtxarray *visibleva;
+        renderedskyfaces = 0;
+        renderedskyclip = INT_MAX;
+        for(vtxarray *va = visibleva; va; va = va->next)
+        {
+            if(va->occluded < OCCLUDE_BB)
+            {
+                renderedskyfaces |= va->skyfaces;
+                if(!(va->skyfaces&0x1F) || camera1->o.z < va->skyclip) renderedskyclip = min(renderedskyclip, va->skyclip);
+                else renderedskyclip = 0;
+            }
+        }
+        if(!renderedskyfaces) return;
+    }
+
+    if(alwaysrender)
+    {
+        renderedskyfaces = 0x3F;
+        renderedskyclip = 0;
+    }
+    else if(spinsky && renderedskyfaces&0x0F) renderedskyfaces |= 0x0F;
 
     if(glaring)
     {
@@ -144,23 +177,29 @@ void drawskybox(int farplane, bool limited)
     bool fog = glIsEnabled(GL_FOG)==GL_TRUE;
     if(fog) glDisable(GL_FOG);
 
-	glPushMatrix();
-	glLoadIdentity();
-	glRotatef(camera1->roll, 0, 0, 1);
-	glRotatef(camera1->pitch, -1, 0, 0);
-	glRotatef(camera1->yaw+spinsky*lastmillis/1000.0f, 0, 1, 0);
-	glRotatef(90, 1, 0, 0);
+    glPushMatrix();
+    glLoadIdentity();
+    glRotatef(camera1->roll, 0, 0, 1);
+    glRotatef(camera1->pitch, -1, 0, 0);
+    glRotatef(camera1->yaw+spinsky*lastmillis/1000.0f, 0, 1, 0);
+    glRotatef(90, 1, 0, 0);
     if(reflecting) glScalef(1, 1, -1);
     glColor3f(1, 1, 1);
-    extern int ati_skybox_bug;
-    if(limited) glDepthFunc(editmode || !insideworld(camera1->o) || ati_skybox_bug || reflecting || refracting ? GL_ALWAYS : GL_GEQUAL);
-    draw_envbox(farplane/2, reflectz<hdr.worldsize ? (reflectz+0.5f*(farplane-hdr.worldsize))/farplane : 0);
+    if(limited)
+    {
+        if(explicitonly) glDisable(GL_DEPTH_TEST);
+        else glDepthFunc(GL_GEQUAL);
+    }
+    float skyclip = clipsky ? max(renderedskyclip-1, 0) : 0;
+    if(reflectz<hdr.worldsize && reflectz>skyclip) skyclip = reflectz;
+    draw_envbox(farplane/2, skyclip ? (skyclip+0.5f*(farplane-hdr.worldsize))/farplane : 0, renderedskyfaces);
     glPopMatrix();
 
     if(limited)
     {
-        glDepthFunc(GL_LESS);
-        if(!reflecting && !refracting && editmode && showsky) drawskyoutline();
+        if(explicitonly) glEnable(GL_DEPTH_TEST);
+        else glDepthFunc(GL_LESS);
+        if(!reflecting && !refracting && !envmapping && editmode && showsky) drawskyoutline();
     }
 
     if(fog) glEnable(GL_FOG);
@@ -171,7 +210,6 @@ double skyarea = 0;
 
 bool limitsky()
 {
-    extern int ati_skybox_bug;
-    return explicitsky || (!ati_skybox_bug && sparklyfix && skyarea / (double(hdr.worldsize)*double(hdr.worldsize)*6) < 0.9);
+    return explicitsky || (sparklyfix && skyarea / (double(hdr.worldsize)*double(hdr.worldsize)*6) < 0.9);
 }
 
