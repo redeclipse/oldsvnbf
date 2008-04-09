@@ -177,6 +177,7 @@ struct weaponstate
 
 	vec hudgunorigin(int gun, const vec &from, const vec &to, fpsent *d)
 	{
+#if 0
 		vec offset(from);
         if(d!=cl.player1 || cl.gamethirdperson())
         {
@@ -195,13 +196,25 @@ struct weaponstate
 			offset.add(vec(camright).mul(0.8f));
 		}
 		return offset;
+#else
+		vec pos(to);
+
+		pos.sub(from);
+		pos.normalize();
+		pos.mul(d->radius);
+		pos.add(from);
+
+        if(d->crouching)
+			pos.z -= (d == cl.player1 ? cl.crouching : 1.0f)*(1-CROUCHHEIGHT)*d->height;
+
+		return pos;
+#endif
 	}
 
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
-		vec origin = hudgunorigin(gun, from, to, d);
 		if (guntype[gun].sound >= 0) playsound(guntype[gun].sound, &d->o);
-		adddynlight(origin, 30, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
+		adddynlight(from, 30, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 
 		switch(gun)
 		{
@@ -210,7 +223,7 @@ struct weaponstate
 				loopi(SGRAYS)
 				{
 					particle_splash(0, 20, 250, sg[i]);
-                    particle_flare(hudgunorigin(gun, from, sg[i], d), sg[i], 300, 10);
+                    particle_flare(from, sg[i], 300, 10);
                     if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
 				break;
@@ -220,7 +233,7 @@ struct weaponstate
 			case GUN_PISTOL:
 			{
 				particle_splash(0, 200, 250, to);
-                particle_flare(origin, to, 600, 10);
+                particle_flare(from, to, 600, 10);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
 				break;
 			}
@@ -240,7 +253,7 @@ struct weaponstate
 
 			case GUN_RIFLE:
 				particle_splash(0, 200, 250, to);
-				particle_trail(21, 500, hudgunorigin(gun, from, to, d), to);
+				particle_trail(21, 500, from, to);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
 				break;
 		}
@@ -327,9 +340,7 @@ struct weaponstate
 		d->ammo[d->gunselect]--;
 		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 
-		vec from = d->o;
-        if(d->crouching) from.z -= (d == cl.player1 ? cl.crouching : 1.0f)*(1-CROUCHHEIGHT)*d->height;
-		vec to = targ;
+		vec to = targ, from = hudgunorigin(d->gunselect, d->o, to, d);
 
 		vec unitv;
 		float dist = to.dist(from, unitv);
