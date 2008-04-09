@@ -473,6 +473,7 @@ VAR(curfps, 1, 0, -1);
 VAR(bestfps, 1, 0, -1);
 VAR(worstfps, 1, 0, -1);
 
+#if 0
 int lastperf = 0;
 
 VARP(perfauto, 0, 1, 1);		// auto performance adjust
@@ -532,6 +533,7 @@ void perfcheck()
 		else if (amt > 1.f) setvar("perflevel", min(perflevel+int(amt), perfmax), true);
 	}
 }
+#endif
 
 void rehash(bool reload)
 {
@@ -650,6 +652,8 @@ int main(int argc, char **argv)
 
 	conoutf("init: runtime");
 	initruntime();
+	camera1 = cl->iterdynents(0);
+	emptymap(0, true);
 
 	conoutf("init: config");
 	rehash(false);
@@ -664,8 +668,6 @@ int main(int argc, char **argv)
     initdecals();
 
 	conoutf("init: client");
-	camera1 = cl->iterdynents(0);
-	emptymap(0, true);
 	cl->initclient();
 
 	conoutf("init: mainloop");
@@ -699,7 +701,7 @@ int main(int argc, char **argv)
 		if (frames)
 		{
 			updatefpshistory(elapsed);
-			perfcheck();
+			//perfcheck();
 
 			if (cc->ready())
 			{

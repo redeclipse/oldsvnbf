@@ -214,7 +214,7 @@ struct weaponstate
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
 		if (guntype[gun].sound >= 0) playsound(guntype[gun].sound, &d->o);
-		adddynlight(from, 30, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
+		adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 
 		switch(gun)
 		{
@@ -340,9 +340,7 @@ struct weaponstate
 		d->ammo[d->gunselect]--;
 		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 
-		vec to = targ, from = hudgunorigin(d->gunselect, d->o, to, d);
-
-		vec unitv;
+		vec to = targ, from = hudgunorigin(d->gunselect, d->o, to, d), unitv;
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		vec kickback(unitv);
