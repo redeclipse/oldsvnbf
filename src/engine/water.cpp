@@ -1105,7 +1105,7 @@ void drawreflections()
         ref.lastupdate = totalmillis;
 
         if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.refracttex, 0);
-        maskreflection(ref, -0.1, false);
+        maskreflection(ref, -0.1f, false);
         drawreflection(-1, true, false);
         if(!hasFBO)
         {
