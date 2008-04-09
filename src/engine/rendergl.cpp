@@ -1355,8 +1355,13 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
 			int fps, bestdiff, worstdiff;
 			getfps(fps, bestdiff, worstdiff);
+#if 0
 			if(showfpsrange) draw_textx("%d+%d-%d:%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, bestdiff, worstdiff, perflevel);
 			else draw_textx("%d:%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, perflevel);
+#else
+			if(showfpsrange) draw_textx("%d+%d-%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, bestdiff, worstdiff);
+			else draw_textx("%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, fps);
+#endif
 
 			if(editmode)
 			{
