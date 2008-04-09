@@ -54,14 +54,14 @@ struct projectiles
 					switch (gun)
 					{
 						case GUN_GL:
-							aboveeye = height = radius = 0.5f;
+							aboveeye = height = radius = 2.0f;
 							elasticity = 0.33f;
 							relativity = 0.5f;
 							waterfric = 2.0f;
 							break;
 						case GUN_RL:
 						{
-							aboveeye = height = radius = 1.0f;
+							aboveeye = height = radius = 4.0f;
 							elasticity = 0.0f;
 							relativity = 0.25f;
 							waterfric = 1.5f;
@@ -73,7 +73,7 @@ struct projectiles
 						case GUN_RIFLE:
 						default:
 						{
-							aboveeye = height = radius = 0.25f;
+							aboveeye = height = radius = 1.0f;
 							elasticity = 0.5f;
 							relativity = 0.25f;
 							waterfric = 1.25f;
@@ -84,7 +84,7 @@ struct projectiles
 				}
 				case PRJ_GIBS:
 				{
-					aboveeye = height = radius = 0.66f;
+					aboveeye = height = radius = 1.0f;
 					elasticity = 0.25f;
 					relativity = 1.0f;
 					waterfric = 2.0f;
@@ -93,7 +93,7 @@ struct projectiles
 				case PRJ_DEBRIS:
 				default:
 				{
-					aboveeye = height = radius = 1.25f;
+					aboveeye = height = radius = 1.0f;
 					elasticity = 0.66f;
 					relativity = 1.0f;
 					waterfric = 1.75f;
@@ -102,11 +102,9 @@ struct projectiles
 			}
 
 			vec dir(vec(vec(to).sub(from)).normalize());
-
 			vectoyawpitch(dir, yaw, pitch);
 			vel = vec(vec(dir).mul(maxspeed)).add(vec(_o->vel).mul(relativity));
-
-			while (!collide(this, dir) && hitplayer) o.add(dir);
+			o.add(vec(dir).mul(radius*2.f)); // a push to get out of the way
 		}
 
 		void reset()
@@ -285,6 +283,9 @@ struct projectiles
 			else continue;
 
 			rendermodel(&proj.light, mname, ANIM_MAPMODEL|ANIM_LOOP, proj.o, yaw+90, pitch, 0, cull);
+
+			if (rendernormally)
+				renderline(proj.from, proj.to, 1.0f, 1.0f, 1.0f, true);
 		}
 	}
 
