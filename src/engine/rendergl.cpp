@@ -213,7 +213,7 @@ void gl_checkextensions()
     if(strstr(vendor, "ATI"))
     {
         floatvtx = 1;
-        conoutf("WARNING: ATI cards may show garbage in skybox. (use \"/ati_skybox_bug 1\" to fix)");
+        //conoutf("WARNING: ATI cards may show garbage in skybox. (use \"/ati_skybox_bug 1\" to fix)");
 
         reservedynlighttc = 2;
         reserveshadowmaptc = 3;
