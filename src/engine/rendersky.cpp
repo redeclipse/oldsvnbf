@@ -150,12 +150,10 @@ void drawskybox(int farplane, bool limited)
         renderedskyclip = INT_MAX;
         for(vtxarray *va = visibleva; va; va = va->next)
         {
-            if(va->occluded < OCCLUDE_BB)
-            {
-                renderedskyfaces |= va->skyfaces;
-                if(!(va->skyfaces&0x1F) || camera1->o.z < va->skyclip) renderedskyclip = min(renderedskyclip, va->skyclip);
-                else renderedskyclip = 0;
-            }
+            if(va->occluded >= OCCLUDE_BB && va->skyfaces&0x80) continue;
+            renderedskyfaces |= va->skyfaces&0x3F;
+            if(!(va->skyfaces&0x1F) || camera1->o.z < va->skyclip) renderedskyclip = min(renderedskyclip, va->skyclip);
+            else renderedskyclip = 0;
         }
         if(!renderedskyfaces) return;
     }

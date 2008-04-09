@@ -138,6 +138,7 @@ struct vtxarray
     int size;                // location and size of cube.
     ivec geommin, geommax;   // BB of geom
     ivec shadowmapmin, shadowmapmax; // BB of shadowmapped surfaces
+    ivec matmin, matmax;     // BB of any materials
     ivec bbmin, bbmax;       // BB of everything including children
 	uchar curvfc, occluded;
 	occludequery *query, *rquery;
@@ -280,6 +281,9 @@ enum
 	VFC_FULL_VISIBLE = 0,
 	VFC_PART_VISIBLE,
 	VFC_FOGGED,
-	VFC_NOT_VISIBLE
+	VFC_NOT_VISIBLE,
+    PVS_FULL_VISIBLE,
+    PVS_PART_VISIBLE,
+    PVS_FOGGED
 };
 
