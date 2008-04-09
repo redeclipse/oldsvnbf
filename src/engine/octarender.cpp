@@ -1078,16 +1078,13 @@ void updatevabb(vtxarray *va, bool force)
 {
     if(!force && va->bbmin.x >= 0) return;
 
-    if(va->matsurfs || va->sky || va->explicitsky)
-    {
-        va->bbmin = va->o;
-        va->bbmax = ivec(va->o).add(va->size);
-        loopv(va->children) updatevabb(va->children[i], force);
-        return;
-    }
-
     va->bbmin = va->geommin;
     va->bbmax = va->geommax;
+    loopk(3)
+    {
+        va->bbmin[k] = min(va->bbmin[k], va->matmin[k]);
+        va->bbmax[k] = max(va->bbmax[k], va->matmax[k]);
+    }
     loopv(va->children)
     {
         vtxarray *child = va->children[i];
@@ -1105,6 +1102,23 @@ void updatevabb(vtxarray *va, bool force)
         {
             va->bbmin[k] = min(va->bbmin[k], oe->bbmin[k]);
             va->bbmax[k] = max(va->bbmax[k], oe->bbmax[k]);
+        }
+    }
+
+    if(va->skyfaces)
+    {
+        va->skyfaces |= 0x80;
+        if(va->sky) loop(dim, 3) if(va->skyfaces&(3<<(2*dim)))
+        {
+            int r = R[dim], c = C[dim];
+            if((va->skyfaces&(1<<(2*dim)) && va->o[dim] < va->bbmin[dim]) ||
+               (va->skyfaces&(2<<(2*dim)) && va->o[dim]+va->size > va->bbmax[dim]) ||
+               va->o[r] < va->bbmin[r] || va->o[r]+va->size > va->bbmax[r] ||
+               va->o[c] < va->bbmin[c] || va->o[c]+va->size > va->bbmax[c])
+            {
+                va->skyfaces &= ~0x80;
+                break;
+            }
         }
     }
 }
@@ -1270,6 +1284,38 @@ void calcgeombb(int cx, int cy, int cz, int size, ivec &bbmin, ivec &bbmax)
 	bbmax = vmax.toivec(cx, cy, cz);
 }
 
+void calcmatbb(int cx, int cy, int cz, int size, ivec &bbmin, ivec &bbmax)
+{
+    bbmax = ivec(cx, cy, cz);
+    (bbmin = bbmax).add(size);
+    loopv(vc.matsurfs)
+    {
+        materialsurface &m = vc.matsurfs[i];
+        switch(m.material)
+        {
+            case MAT_WATER:
+            case MAT_GLASS:
+            case MAT_LAVA:
+                break;
+
+            default:
+                continue;
+        }
+
+        int dim = dimension(m.orient),
+            r = R[dim],
+            c = C[dim];
+        bbmin[dim] = min(bbmin[dim], m.o[dim]);
+        bbmax[dim] = max(bbmax[dim], m.o[dim]);
+
+        bbmin[r] = min(bbmin[r], m.o[r]);
+        bbmax[r] = max(bbmax[r], m.o[r] + m.rsize);
+
+        bbmin[c] = min(bbmin[c], m.o[c]);
+        bbmax[c] = max(bbmax[c], m.o[c] + m.csize);
+    }
+}
+
 void setva(cube &c, int cx, int cy, int cz, int size, int csi)
 {
 	ASSERT(size <= VVEC_INT_MASK+1);
@@ -1293,6 +1339,7 @@ void setva(cube &c, int cx, int cy, int cz, int size, int csi)
         ext(c).va = va;
         va->geommin = bbmin;
         va->geommax = bbmax;
+        calcmatbb(cx, cy, cz, size, va->matmin, va->matmax);
         va->shadowmapmin = shadowmapmin.toivec(va->o);
         loopk(3) shadowmapmax[k] += (1<<VVEC_FRAC)-1;
         va->shadowmapmax = shadowmapmax.toivec(va->o);

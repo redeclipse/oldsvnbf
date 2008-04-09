@@ -114,12 +114,12 @@ void findvisiblevas(vector<vtxarray *> &vas, bool resetocclude = false)
         {
             if(pvsoccluded(v.o, v.size))
             {
-                v.curvfc = VFC_NOT_VISIBLE;
+                v.curvfc += PVS_FULL_VISIBLE - VFC_FULL_VISIBLE;
                 continue;
             }
             addvisibleva(&v);
-            if(v.children.length()) findvisiblevas(v.children, prevvfc==VFC_NOT_VISIBLE);
-            if(prevvfc==VFC_NOT_VISIBLE)
+            if(v.children.length()) findvisiblevas(v.children, prevvfc>=VFC_NOT_VISIBLE);
+            if(prevvfc>=VFC_NOT_VISIBLE)
             {
                 v.occluded = !v.texs || pvsoccluded(v.geommin, v.geommax) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
                 v.query = NULL;
@@ -1810,7 +1810,7 @@ void rendergeom(float causticspass, bool fogpass)
 			{
 				va->rquery = newquery(&va->rquery);
 				if(!va->rquery) continue;
-				if(va->occluded >= OCCLUDE_BB || va->curvfc == VFC_NOT_VISIBLE)
+                if(va->occluded >= OCCLUDE_BB || va->curvfc >= VFC_NOT_VISIBLE)
 				{
 					renderquery(cur, va->rquery, va);
 					continue;
@@ -1832,10 +1832,15 @@ void rendergeom(float causticspass, bool fogpass)
                     va->occluded = OCCLUDE_PARENT;
                     continue;
                 }
+                bool succeeded = false;
                 if(va->query && va->query->owner == va && checkquery(va->query))
+                {
                     va->occluded = min(va->occluded+1, int(OCCLUDE_BB));
-                else va->occluded = pvsoccluded(va->geommin, va->geommax) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
+                    succeeded = true;
+                }
                 va->query = newquery(va);
+                if(!va->query || !succeeded)
+                    va->occluded = pvsoccluded(va->geommin, va->geommax) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
                 if(va->occluded >= OCCLUDE_GEOM)
                 {
                     if(va->query) renderquery(cur, va->query, va);
@@ -1896,22 +1901,13 @@ void rendergeom(float causticspass, bool fogpass)
 				if(va->geommax.z <= reflectz) continue;
 				if(va->rquery && checkquery(va->rquery))
 				{
-					if(va->occluded >= OCCLUDE_BB || va->curvfc == VFC_NOT_VISIBLE) *prevva = va->rnext;
+                    if(va->occluded >= OCCLUDE_BB || va->curvfc >= VFC_NOT_VISIBLE) *prevva = va->rnext;
 					continue;
 				}
 			}
             else if(oqbatch)
             {
-                if(va->query && va->occluded >= OCCLUDE_GEOM) continue;
-                else if(va->occluded >= OCCLUDE_PARENT)
-                {
-                    if(va->parent->occluded<=OCCLUDE_BB && !va->parent->query)
-                    {
-                        va->occluded = pvsoccluded(va->geommin, va->geommax) ? OCCLUDE_GEOM : OCCLUDE_NOTHING;
-                        if(va->occluded >= OCCLUDE_GEOM) continue;
-                    }
-                    else continue;
-                }
+                if(va->occluded >= OCCLUDE_GEOM) continue;
             }
 			else if(va->parent && va->parent->occluded >= OCCLUDE_BB && (!va->parent->query || va->parent->query->fragments >= 0))
 			{
@@ -1931,11 +1927,10 @@ void rendergeom(float causticspass, bool fogpass)
         if(geombatches.length()) renderbatches(cur, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
         if(oqbatch && !reflecting) for(vtxarray **prevva = &FIRSTVA, *va = FIRSTVA; va; prevva = &NEXTVA, va = NEXTVA)
         {
-            if(!va->texs) continue;
-            if(va->occluded < OCCLUDE_GEOM) continue;
+            if(!va->texs || va->occluded < OCCLUDE_GEOM) continue;
             else if(va->query && checkquery(va->query)) continue;
-            else if(va->parent && va->parent->occluded >= OCCLUDE_GEOM &&
-                    va->parent->query && va->parent->query->owner && checkquery(va->parent->query))
+            else if(va->parent && (va->parent->occluded >= OCCLUDE_BB ||
+                    (va->parent->occluded >= OCCLUDE_GEOM && va->parent->query && checkquery(va->parent->query))))
             {
                 va->occluded = OCCLUDE_BB;
                 continue;
@@ -2058,35 +2053,36 @@ void rendergeom(float causticspass, bool fogpass)
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-void findreflectedvas(vector<vtxarray *> &vas, bool vfc = true)
+void findreflectedvas(vector<vtxarray *> &vas, int prevvfc = VFC_PART_VISIBLE)
 {
-	bool doOQ = hasOQ && oqfrags && oqreflect;
-	loopv(vas)
-	{
-		vtxarray *va = vas[i];
-		if(!vfc) va->curvfc = VFC_NOT_VISIBLE;
-        if(va->curvfc == VFC_FOGGED || va->o.z+va->size <= reflectz || isvisiblecube(va->o, va->size) >= VFC_FOGGED) continue;
-		bool render = true;
-		if(va->curvfc == VFC_FULL_VISIBLE)
-		{
-			if(va->occluded >= OCCLUDE_BB) continue;
-			if(va->occluded >= OCCLUDE_GEOM) render = false;
-		}
-		if(render)
-		{
-			if(va->curvfc == VFC_NOT_VISIBLE) va->distance = (int)vadist(va, camera1->o);
-			if(!doOQ && va->distance > reflectdist) continue;
-			va->rquery = NULL;
-			vtxarray **vprev = &reflectedva, *vcur = reflectedva;
-			while(vcur && va->distance > vcur->distance)
-			{
-				vprev = &vcur->rnext;
-				vcur = vcur->rnext;
-			}
-			va->rnext = *vprev;
-			*vprev = va;
-		}
-        if(va->children.length()) findreflectedvas(va->children, va->curvfc != VFC_NOT_VISIBLE);
+    bool doOQ = hasOQ && oqfrags && oqreflect;
+    loopv(vas)
+    {
+        vtxarray *va = vas[i];
+        if(prevvfc >= VFC_NOT_VISIBLE) va->curvfc = prevvfc;
+        if(va->curvfc == VFC_FOGGED || va->curvfc == PVS_FOGGED || va->o.z+va->size <= reflectz || isvisiblecube(va->o, va->size) >= VFC_FOGGED) continue;
+        bool render = true;
+        if(va->curvfc == VFC_FULL_VISIBLE)
+        {
+            if(va->occluded >= OCCLUDE_BB) continue;
+            if(va->occluded >= OCCLUDE_GEOM) render = false;
+        }
+        else if(va->curvfc == PVS_FULL_VISIBLE) continue;
+        if(render)
+        {
+            if(va->curvfc >= VFC_NOT_VISIBLE) va->distance = (int)vadist(va, camera1->o);
+            if(!doOQ && va->distance > reflectdist) continue;
+            va->rquery = NULL;
+            vtxarray **vprev = &reflectedva, *vcur = reflectedva;
+            while(vcur && va->distance > vcur->distance)
+            {
+                vprev = &vcur->rnext;
+                vcur = vcur->rnext;
+            }
+            va->rnext = *vprev;
+            *vprev = va;
+        }
+        if(va->children.length()) findreflectedvas(va->children, va->curvfc);
     }
 }
 
@@ -2139,24 +2135,25 @@ static inline void updateskystats(vtxarray *va)
 {
     renderedsky += va->sky;
     renderedexplicitsky += va->explicitsky;
-    renderedskyfaces |= va->skyfaces;
+    renderedskyfaces |= va->skyfaces&0x3F;
     if(!(va->skyfaces&0x1F) || camera1->o.z < va->skyclip) renderedskyclip = min(renderedskyclip, va->skyclip);
     else renderedskyclip = 0;
 }
 
-void renderreflectedskyvas(vector<vtxarray *> &vas, bool vfc = true)
+void renderreflectedskyvas(vector<vtxarray *> &vas, int prevvfc = VFC_PART_VISIBLE)
 {
     loopv(vas)
     {
         vtxarray *va = vas[i];
-        if((vfc && va->curvfc == VFC_FULL_VISIBLE) && va->occluded >= OCCLUDE_BB) continue;
+        if(prevvfc >= VFC_NOT_VISIBLE) va->curvfc = prevvfc;
+        if((va->curvfc == VFC_FULL_VISIBLE && va->occluded >= OCCLUDE_BB) || va->curvfc==PVS_FULL_VISIBLE) continue;
         if(va->o.z+va->size <= reflectz || isvisiblecube(va->o, va->size) == VFC_NOT_VISIBLE) continue;
         if(va->sky+va->explicitsky)
         {
             updateskystats(va);
             renderskyva(va);
         }
-        if(va->children.length()) renderreflectedskyvas(va->children, vfc && va->curvfc != VFC_NOT_VISIBLE);
+        if(va->children.length()) renderreflectedskyvas(va->children, va->curvfc);
     }
 }
 
@@ -2174,7 +2171,7 @@ bool rendersky(bool explicitonly)
     }
     else for(vtxarray *va = visibleva; va; va = va->next)
     {
-        if(va->occluded >= OCCLUDE_BB || !(va->sky+va->explicitsky)) continue;
+        if((va->occluded >= OCCLUDE_BB && va->skyfaces&0x80) || !(va->sky+va->explicitsky)) continue;
 
         // count possibly visible sky even if not actually rendered
         updateskystats(va);
