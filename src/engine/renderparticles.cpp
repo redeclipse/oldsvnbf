@@ -180,7 +180,7 @@ VARFP(depthfxsize, 6, 7, 10, cleanupdepthfx());
 VARP(depthfx, 0, 0, 1);
 VARP(blurdepthfx, 0, 1, 7);
 VARP(blurdepthfxsigma, 1, 50, 200);
-VAR(depthfxscissor, 0, 0, 1);
+VAR(depthfxscissor, 0, 1, 1);
 
 #define MAXDFXRANGES 4
 
