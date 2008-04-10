@@ -882,7 +882,7 @@ int finddepthfxranges(void **owners, float *ranges, int maxranges, float &maxdis
         float pmax = p->val,
               size = p->fade ? float(ts)/p->fade : 1,
               psize = parttypes[16].sz + pmax * size;
-        if(2*pmax < depthfxblend || isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
+        if(2*(parttypes[16].sz + pmax) < depthfxblend || isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
 
         e.o = p->o;
         e.radius = e.height = e.aboveeye = psize;
