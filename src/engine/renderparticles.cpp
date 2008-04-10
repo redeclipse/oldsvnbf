@@ -890,13 +890,14 @@ int finddepthfxranges(void **owners, float *ranges, int maxranges, float &maxdis
 
         vec dir = camera1->o;
         dir.sub(p->o);
-        dir.normalize().mul(psize).add(p->o);
-        float dist = max(-(dir.x*mm[2] + dir.y*mm[6] + dir.z*mm[10] + mm[14]) - depthfxmargin, 0.0f);
+        float dist = dir.magnitude();
+        dir.mul(psize/dist).add(p->o);
+        float depth = max(-(dir.x*mm[2] + dir.y*mm[6] + dir.z*mm[10] + mm[14]) - depthfxmargin, 0.0f);
 
         maxdist = max(maxdist, dist + psize);
 
         int pos = numranges;
-        loopi(numranges) if(dist < ranges[i]) { pos = i; break; }
+        loopi(numranges) if(depth < ranges[i]) { pos = i; break; }
         if(pos >= maxranges) continue;
 
         if(numranges > pos)
@@ -907,7 +908,7 @@ int finddepthfxranges(void **owners, float *ranges, int maxranges, float &maxdis
         }
         if(numranges < maxranges) numranges++;
 
-        ranges[pos] = dist;
+        ranges[pos] = depth;
         owners[pos] = p;
     }
 
