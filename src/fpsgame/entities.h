@@ -402,7 +402,7 @@ struct entities : icliententities
 
 	void initents(gzFile &g, int mtype, int mver, char *gid, int gver)
 	{
-		if (gver <= 49)
+		if (gver <= 49 || mtype == MAP_OCTA)
 		{
 			vector<short> teleyaw;
 			loopv(ents) teleyaw.add(0);
@@ -466,6 +466,9 @@ struct entities : icliententities
 					e.attr2 = 255;
 					e.attr3 = 0;
 				}
+
+				if (mtype == MAP_OCTA && e.type >= MAXENTTYPES)
+					e.type = NOTUSED; // sanity check
 			}
 		}
 	}
