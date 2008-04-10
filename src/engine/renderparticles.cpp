@@ -465,7 +465,7 @@ static void setupexplosion()
         {
             if(explosion2d) SETSHADER(explosion2dglare); else SETSHADER(explosion3dglare);
         }
-        else if(!reflecting && !refracting && depthfx && depthfxtex.rendertex)
+        else if(!reflecting && !refracting && depthfx && depthfxtex.rendertex && numdepthfxranges>0)
         {
             if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
             {
@@ -1132,7 +1132,7 @@ void render_particles(int time)
 					{
 						setlocalparamf("center", SHPARAM_VERTEX, 0, o.x, o.y, o.z);
 						setlocalparamf("animstate", SHPARAM_VERTEX, 1, size, psize, pmax, float(lastmillis));
-                        if(!glaring && !reflecting && !refracting && depthfx && depthfxtex.rendertex)
+                        if(!glaring && !reflecting && !refracting && depthfx && depthfxtex.rendertex && numdepthfxranges>0)
                         {
                             if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
                             {
