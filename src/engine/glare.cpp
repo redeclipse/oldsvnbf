@@ -14,7 +14,7 @@ static struct glaretexture : rendertarget
 
 void cleanupglare()
 {
-    glaretex.cleanup();
+    glaretex.cleanup(true);
 }
 
 VARFP(glaresize, 6, 8, 10, cleanupglare());

@@ -409,7 +409,7 @@ static struct shadowmaptexture : rendertarget
 
 void cleanshadowmap()
 {
-    shadowmaptex.cleanup();
+    shadowmaptex.cleanup(true);
 }
 
 void pushshadowmap()

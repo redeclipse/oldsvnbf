@@ -27,13 +27,15 @@ struct rendertarget
         return depthfmts;
     }
 
-    void cleanup()
+    void cleanup(bool fullclean = false)
     {
         if(renderfb) { glDeleteFramebuffers_(1, &renderfb); renderfb = 0; }
         if(renderdb) { glDeleteRenderbuffers_(1, &renderdb); renderdb = 0; }
         if(rendertex) { glDeleteTextures(1, &rendertex); rendertex = 0; }
         texsize = 0;
         cleanupblur();
+
+        if(fullclean) colorfmt = depthfmt = GL_FALSE;
     }
 
     void cleanupblur()
