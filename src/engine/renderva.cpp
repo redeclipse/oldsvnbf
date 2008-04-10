@@ -677,7 +677,7 @@ void rendershadowmapreceivers()
     glEnable(GL_TEXTURE_2D);
 }
 
-void renderdepthobstacles(float scale, float *ranges, int numranges)
+void renderdepthobstacles(float maxdist, float scale, float *ranges, int numranges)
 {
     static Shader *depthfxshader = NULL;
     if(!depthfxshader) depthfxshader = lookupshaderbyname("depthfxworld");
@@ -703,7 +703,7 @@ void renderdepthobstacles(float scale, float *ranges, int numranges)
     vtxarray *prev = NULL;
     for(vtxarray *va = visibleva; va; va = va->next)
     {
-        if(!va->texs || va->occluded >= OCCLUDE_GEOM) continue;
+        if(!va->texs || va->occluded >= OCCLUDE_GEOM || va->distance >= maxdist) continue;
 
         if(!prev || va->vbuf != prev->vbuf)
         {
