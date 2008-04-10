@@ -858,7 +858,6 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 
 	overrideidents = worldidents = true;
 	persistidents = false;
-	if (!execfile(pcfname)) exec("package.cfg");
 	exec("map.cfg");
 	persistidents = true;
 	overrideidents = worldidents = false;
@@ -895,7 +894,7 @@ bool enlargemap(bool force)
 ICOMMAND(newmap, "is", (int *i), if(emptymap(*i, false)) cl->newmap(::max(*i, 0)));
 ICOMMAND(mapenlarge, "", (), if(enlargemap(false)) cl->newmap(-1));
 ICOMMAND(mapname, "", (void), result(mapname));
-ICOMMAND(mapsize, "", (void), 
+ICOMMAND(mapsize, "", (void),
 {
     int size = 0;
     while(1<<size < hdr.worldsize) size++;
