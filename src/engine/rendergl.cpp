@@ -1022,6 +1022,13 @@ void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, 
 
 	clientkeepalive();
 
+	if (verbose >= 4)
+	{
+		if (text2) conoutf("%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+		else if (text1) conoutf("%s [%.2f%%]", text1, bar1*100.f);
+		else conoutf("progressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+	}
+
 	int w = screen->w, h = screen->h;
 	gettextres(w, h);
 

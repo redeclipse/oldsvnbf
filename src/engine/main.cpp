@@ -457,7 +457,7 @@ VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
 VARFP(clockfix, 0, 0, 1, clockreset());
 
 VAR(version, 1, ENGVERSION, -1); // for scripts
-VARP(verbose, 0, 0, 3); // be more or less expressive to console
+VARP(verbose, 0, 0, 4); // be more or less expressive to console
 
 void _grabmouse(int n)
 {
