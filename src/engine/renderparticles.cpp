@@ -182,6 +182,7 @@ VARFP(depthfxprecision, 0, 1, 1, cleanupdepthfx());
 void *depthfxowners[MAXDFXRANGES];
 float depthfxranges[MAXDFXRANGES];
 int numdepthfxranges = 0;
+float maxdepthfxdist = 0;
 
 static struct depthfxtexture : rendertarget
 {
@@ -199,7 +200,7 @@ static struct depthfxtexture : rendertarget
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        extern void renderdepthobstacles(float scale, float *ranges, int numranges);
+        extern void renderdepthobstacles(float maxdist, float scale, float *ranges, int numranges);
         float scale = depthfxscale;
         float *ranges = depthfxranges;
         int numranges = numdepthfxranges;
@@ -209,7 +210,7 @@ static struct depthfxtexture : rendertarget
             ranges = NULL;
             numranges = 0;
         }
-        renderdepthobstacles(scale, ranges, numranges);
+        renderdepthobstacles(maxdepthfxdist + depthfxmargin, scale, ranges, numranges);
 
         refracting = 0;
         depthfxing = false;
@@ -242,9 +243,9 @@ void drawdepthfxtex()
 {
     if(!depthfx || renderpath==R_FIXEDFUNCTION) return;
 
-    extern int finddepthfxranges(void **owners, float *ranges, int maxranges)
-;
-    numdepthfxranges = finddepthfxranges(depthfxowners, depthfxranges, MAXDFXRANGES);
+    extern int finddepthfxranges(void **owners, float *ranges, int numranges, float &maxdist);
+    maxdepthfxdist = 0;
+    numdepthfxranges = finddepthfxranges(depthfxowners, depthfxranges, MAXDFXRANGES, maxdepthfxdist);
     if(!numdepthfxranges && !debugdepthfx) return;
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
@@ -866,7 +867,7 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
     glEnd();
 }
 
-int finddepthfxranges(void **owners, float *ranges, int maxranges)
+int finddepthfxranges(void **owners, float *ranges, int maxranges, float &maxdist)
 {
     GLfloat mm[16];
     glGetFloatv(GL_MODELVIEW_MATRIX, mm);
@@ -891,6 +892,8 @@ int finddepthfxranges(void **owners, float *ranges, int maxranges)
         dir.sub(p->o);
         dir.normalize().mul(psize).add(p->o);
         float dist = max(-(dir.x*mm[2] + dir.y*mm[6] + dir.z*mm[10] + mm[14]) - depthfxmargin, 0.0f);
+
+        maxdist = max(maxdist, dist + psize);
 
         int pos = numranges;
         loopi(numranges) if(dist < ranges[i]) { pos = i; break; }
