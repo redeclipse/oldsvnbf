@@ -7,7 +7,7 @@ sometype mapexts[] = {
 	{ ".bgz", MAP_BFGZ },
 	{ ".ogz", MAP_OCTA },
 };
-string bgzname[MAP_MAX], pcfname, mcfname, picname, mapname;
+string bgzname[MAP_MAX], mcfname, picname, mapname;
 
 void setnames(const char *fname, const char *cname)
 {
@@ -38,7 +38,6 @@ void setnames(const char *fname, const char *cname)
 
 	loopi(MAP_MAX) s_sprintf(bgzname[i])("%s%s", mapname, mapexts[i]);
 
-	s_sprintf(pcfname)("%s/package.cfg", pakname);
 	s_sprintf(mcfname)("%s/%s.cfg", pakname, cfgname);
 	s_sprintf(picname)("%s.jpg", mapname);
 }
@@ -740,7 +739,6 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 	overrideidents = worldidents = true;
 	persistidents = false;
-	if (!execfile(pcfname)) exec("package.cfg");
 	if (!execfile(mcfname)) exec("map.cfg");
 	persistidents = true;
 	overrideidents = worldidents = false;
