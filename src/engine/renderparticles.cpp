@@ -170,7 +170,7 @@ static void makelightflares()
 VARP(depthfxfpscale, 1, 1<<12, 1<<16);
 VARP(depthfxscale, 1, 1<<6, 1<<8);
 VARP(depthfxblend, 1, 16, 64);
-VAR(depthfxmargin, 0, 2, 64);
+VAR(depthfxmargin, 0, 1, 64);
 VAR(depthfxbias, 0, 4, 64);
 
 extern void cleanupdepthfx();
@@ -873,6 +873,8 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
     glEnd();
 }
 
+static const float WOBBLE = 1.25f;
+
 int finddepthfxranges(void **owners, float *ranges, int maxranges, vec &bbmin, vec &bbmax)
 {
     GLfloat mm[16];
@@ -887,8 +889,8 @@ int finddepthfxranges(void **owners, float *ranges, int maxranges, vec &bbmin, v
         int ts = p->fade <= 5 ? p->fade : lastmillis-p->millis;
         float pmax = p->val,
               size = p->fade ? float(ts)/p->fade : 1,
-              psize = parttypes[16].sz + pmax * size;
-        if(2*(parttypes[16].sz + pmax) < depthfxblend || isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
+              psize = (parttypes[16].sz + pmax * size)*WOBBLE;
+        if(2*(parttypes[16].sz + pmax)*WOBBLE < depthfxblend || isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
 
         e.o = p->o;
         e.radius = e.height = e.aboveeye = psize;
@@ -1112,7 +1114,7 @@ void render_particles(int time)
 					float size = p->fade ? float(ts)/p->fade : 1;
 					float psize = pt.sz + pmax * size;
 
-					bool inside = o.dist(camera1->o) <= psize*1.25f; //1.25 is max wobble scale
+					bool inside = o.dist(camera1->o) <= psize*WOBBLE;
 					vec oc(o);
 					oc.sub(camera1->o);
 					if(reflecting) oc.z = o.z - reflectz;
