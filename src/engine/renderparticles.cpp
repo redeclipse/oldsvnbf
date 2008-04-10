@@ -167,18 +167,28 @@ static void makelightflares()
 }
 
 // eye space depth texture for soft particles, done at low res then blurred to prevent ugly jaggies
-VARP(depthfxscale, 1, 1<<12, 1<<16);
+VARP(depthfxfpscale, 1, 1<<12, 1<<16);
+VARP(depthfxscale, 1, 1<<6, 1<<8);
 VARP(depthfxblend, 1, 16, 64);
+VAR(depthfxmargin, 0, 2, 64);
+VAR(depthfxbias, 0, 4, 64);
 
 extern void cleanupdepthfx();
 VARFP(fpdepthfx, 0, 1, 1, cleanupdepthfx());
+VARFP(depthfxprecision, 0, 1, 1, cleanupdepthfx());
+
+#define MAXDFXRANGES 4
+
+void *depthfxowners[MAXDFXRANGES];
+float depthfxranges[MAXDFXRANGES];
+int numdepthfxranges = 0;
 
 static struct depthfxtexture : rendertarget
 {
     const GLenum *colorformats() const
     {
-        static const GLenum colorfmts[] = { GL_RGB16F_ARB, GL_RGB16, GL_FALSE };
-        return &colorfmts[fpdepthfx ? 0 : 1];
+        static const GLenum colorfmts[] = { GL_RGB16F_ARB, GL_RGB16, GL_RGBA, GL_RGBA8, GL_RGB, GL_RGB8, GL_FALSE };
+        return &colorfmts[hasTF && hasFBO ? (fpdepthfx ? 0 : (depthfxprecision ? 1 : 2)) : 2];
     }
 
     bool dorender()
@@ -189,8 +199,17 @@ static struct depthfxtexture : rendertarget
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        extern void renderdepthobstacles();
-        renderdepthobstacles();
+        extern void renderdepthobstacles(float scale, float *ranges, int numranges);
+        float scale = depthfxscale;
+        float *ranges = depthfxranges;
+        int numranges = numdepthfxranges;
+        if(colorfmt==GL_RGB16F_ARB || colorfmt==GL_RGB16)
+        {
+            scale = depthfxfpscale;
+            ranges = NULL;
+            numranges = 0;
+        }
+        renderdepthobstacles(scale, ranges, numranges);
 
         refracting = 0;
         depthfxing = false;
@@ -221,7 +240,12 @@ bool depthfxing = false;
 
 void drawdepthfxtex()
 {
-    if(!depthfx || renderpath==R_FIXEDFUNCTION || !hasTF || !hasFBO) return;
+    if(!depthfx || renderpath==R_FIXEDFUNCTION) return;
+
+    extern int finddepthfxranges(void **owners, float *ranges, int maxranges)
+;
+    numdepthfxranges = finddepthfxranges(depthfxowners, depthfxranges, MAXDFXRANGES);
+    if(!numdepthfxranges && !debugdepthfx) return;
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
     glDisable(GL_FOG);
@@ -443,7 +467,11 @@ static void setupexplosion()
         }
         else if(!reflecting && !refracting && depthfx && depthfxtex.rendertex)
         {
-            if(explosion2d) SETSHADER(explosion2dsoft); else SETSHADER(explosion3dsoft);
+            if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
+            {
+                if(explosion2d) SETSHADER(explosion2dsoft8); else SETSHADER(explosion3dsoft8);
+            }
+            else if(explosion2d) SETSHADER(explosion2dsoft); else SETSHADER(explosion3dsoft);
 
             glActiveTexture_(GL_TEXTURE2_ARB);
             glBindTexture(GL_TEXTURE_2D, depthfxtex.rendertex);
@@ -838,6 +866,51 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
     glEnd();
 }
 
+int finddepthfxranges(void **owners, float *ranges, int maxranges)
+{
+    GLfloat mm[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, mm);
+
+    physent e;
+    e.type = ENT_CAMERA;
+
+    int numranges = 0;
+    for(particle *p = parlist[16]; p; p = p->next)
+    {
+        int ts = p->fade <= 5 ? p->fade : lastmillis-p->millis;
+        float pmax = p->val,
+              size = p->fade ? float(ts)/p->fade : 1,
+              psize = parttypes[16].sz + pmax * size;
+        if(isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
+
+        e.o = p->o;
+        e.radius = e.height = e.aboveeye = psize;
+        if(::collide(&e, vec(0, 0, 0), 0, false)) continue;
+
+        vec dir = camera1->o;
+        dir.sub(p->o);
+        dir.normalize().mul(psize).add(p->o);
+        float dist = max(-(dir.x*mm[2] + dir.y*mm[6] + dir.z*mm[10] + mm[14]) - depthfxmargin, 0.0f);
+
+        int pos = numranges;
+        loopi(numranges) if(dist < ranges[i]) { pos = i; break; }
+        if(pos >= maxranges) continue;
+
+        if(numranges > pos)
+        {
+            int moved = min(numranges-pos, maxranges-(pos+1));
+            memmove(&ranges[pos+1], &ranges[pos], moved*sizeof(float));
+            memmove(&owners[pos+1], &owners[pos], moved*sizeof(void *));
+        }
+        if(numranges < maxranges) numranges++;
+
+        ranges[pos] = dist;
+        owners[pos] = p;
+    }
+
+    return numranges;
+}
+
 VARP(particleglare, 0, 4, 100);
 
 void render_particles(int time)
@@ -1061,8 +1134,24 @@ void render_particles(int time)
 						setlocalparamf("animstate", SHPARAM_VERTEX, 1, size, psize, pmax, float(lastmillis));
                         if(!glaring && !reflecting && !refracting && depthfx && depthfxtex.rendertex)
                         {
-                            setlocalparamf("depthfxparams", SHPARAM_VERTEX, 5, float(depthfxscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/(2*255.0f) : 0);
-                            setlocalparamf("depthfxparams", SHPARAM_PIXEL, 5, float(depthfxscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/(2*255.0f) : 0);
+                            if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
+                            {
+                                float select[4] = { 0, 0, 0, 0 }, offset = 2*hdr.worldsize;
+                                loopi(numdepthfxranges) if(depthfxowners[i]==p)
+                                {
+                                    select[i] = float(depthfxscale)/depthfxblend;
+                                    offset = depthfxranges[i] - depthfxbias;
+                                    break;
+                                }
+                                setlocalparamf("depthfxrange", SHPARAM_VERTEX, 5, 1.0f/depthfxblend, -offset/depthfxblend, inside ? blend/(2*255.0f) : 0);
+                                setlocalparamf("depthfxrange", SHPARAM_PIXEL, 5, 1.0f/depthfxblend, -offset/depthfxblend, inside ? blend/(2*255.0f) : 0);
+                                setlocalparamfv("depthfxselect", SHPARAM_PIXEL, 6, select);
+                            }
+                            else
+                            {
+                                setlocalparamf("depthfxparams", SHPARAM_VERTEX, 5, float(depthfxfpscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/(2*255.0f) : 0);
+                                setlocalparamf("depthfxparams", SHPARAM_PIXEL, 5, float(depthfxfpscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/(2*255.0f) : 0);
+                            }
                         }
 					}
 
