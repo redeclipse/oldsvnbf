@@ -170,8 +170,8 @@ static void makelightflares()
 VARP(depthfxfpscale, 1, 1<<12, 1<<16);
 VARP(depthfxscale, 1, 1<<6, 1<<8);
 VARP(depthfxblend, 1, 16, 64);
-VAR(depthfxmargin, 0, 1, 64);
-VAR(depthfxbias, 0, 4, 64);
+VAR(depthfxmargin, 0, 16, 64);
+VAR(depthfxbias, 0, 1, 64);
 
 extern void cleanupdepthfx();
 VARFP(fpdepthfx, 0, 1, 1, cleanupdepthfx());
@@ -900,7 +900,7 @@ int finddepthfxranges(void **owners, float *ranges, int maxranges, vec &bbmin, v
         dir.sub(p->o);
         float dist = dir.magnitude();
         dir.mul(psize/dist).add(p->o);
-        float depth = max(-(dir.x*mm[2] + dir.y*mm[6] + dir.z*mm[10] + mm[14]) - depthfxmargin, 0.0f);
+        float depth = max(-(dir.x*mm[2] + dir.y*mm[6] + dir.z*mm[10] + mm[14]) - depthfxbias, 0.0f);
 
         loopk(3)
         {
