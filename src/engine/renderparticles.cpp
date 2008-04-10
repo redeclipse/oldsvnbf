@@ -220,7 +220,7 @@ static struct depthfxtexture : rendertarget
 
 void cleanupdepthfx()
 {
-    depthfxtex.cleanup();
+    depthfxtex.cleanup(true);
 }
 
 VARFP(depthfxsize, 6, 7, 10, cleanupdepthfx());
