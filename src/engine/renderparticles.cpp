@@ -176,6 +176,11 @@ VAR(depthfxbias, 0, 1, 64);
 extern void cleanupdepthfx();
 VARFP(fpdepthfx, 0, 1, 1, cleanupdepthfx());
 VARFP(depthfxprecision, 0, 1, 1, cleanupdepthfx());
+VARFP(depthfxsize, 6, 7, 10, cleanupdepthfx());
+VARP(depthfx, 0, 0, 1);
+VARP(blurdepthfx, 0, 1, 7);
+VARP(blurdepthfxsigma, 1, 50, 200);
+VAR(depthfxscissor, 0, 0, 1);
 
 #define MAXDFXRANGES 4
 
@@ -186,19 +191,70 @@ vec depthfxmin(1e16f, 1e16f, 1e16f), depthfxmax(1e16f, 1e16f, 1e16f);
 
 static struct depthfxtexture : rendertarget
 {
+    int scissorx, scissory, scissorw, scissorh;
+
     const GLenum *colorformats() const
     {
         static const GLenum colorfmts[] = { GL_RGB16F_ARB, GL_RGB16, GL_RGBA, GL_RGBA8, GL_RGB, GL_RGB8, GL_FALSE };
         return &colorfmts[hasTF && hasFBO ? (fpdepthfx ? 0 : (depthfxprecision ? 1 : 2)) : 2];
     }
 
+    void calcscissorbox()
+    {
+        GLfloat mm[16], pm[16], mvp[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, mm);
+        glGetFloatv(GL_PROJECTION_MATRIX, pm);
+        loopi(4) loopj(4)
+        {
+            float c = 0;
+            loopk(4) c += pm[k*4 + j] * mm[i*4 + k];
+            mvp[i*4 + j] = c;
+        }
+
+        float sx1 = 1, sy1 = 1, sx2 = -1, sy2 = -1;
+        loopi(8)
+        {
+            vec v(i&1 ? depthfxmax.x : depthfxmin.x, i&2 ? depthfxmax.y : depthfxmin.y, i&4 ? depthfxmax.z : depthfxmin.z);
+            float w = v.x*mvp[3] + v.y*mvp[7] + v.z*mvp[11] + mvp[15],
+                  x = (v.x*mvp[0] + v.y*mvp[4] + v.z*mvp[8] + mvp[12]) / w,
+                  y = (v.x*mvp[1] + v.y*mvp[5] + v.z*mvp[9] + mvp[13]) / w;
+            sx1 = min(sx1, x);
+            sy1 = min(sy1, y);
+            sx2 = max(sx2, x);
+            sy2 = max(sy2, y);
+        }
+        scissorx = max(int(floor((sx1+1)/2*texsize)), 0);
+        scissory = max(int(floor((sy1+1)/2*texsize)), 0);
+        scissorw = min(int(ceil((sx2+1)/2*texsize)), texsize) - scissorx;
+        scissorh = min(int(ceil((sy2+1)/2*texsize)), texsize) - scissory;
+    }
+
+    void doblur(int blursize, float blursigma)
+    {
+        blur(blursize, blursigma, scissorx, scissory, scissorw, scissorh, depthfxscissor!=0 && (scissorw < texsize || scissorh < texsize));
+    }
+
     bool dorender()
     {
+        calcscissorbox();
+
         depthfxing = true;
         refracting = -1;
 
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        bool scissor = false;
+        if(depthfxscissor && (scissorw + 2*2*blurdepthfx < texsize || scissorh + 2*2*blurdepthfx < texsize))
+        {
+            scissor = true;
+            int sx = max(scissorx - 2*blurdepthfx, 0),
+                sy = max(scissory - 2*blurdepthfx, 0),
+                sw = min(scissorx + scissorw + 2*2*blurdepthfx, texsize) - sx,
+                sh = min(scissory + scissorh + 2*2*blurdepthfx, texsize) - sy;
+            glScissor(sx, sy, sw, sh);
+            glEnable(GL_SCISSOR_TEST);
+        }
 
         extern void renderdepthobstacles(const vec &bbmin, const vec &bbmax, float scale, float *ranges, int numranges);
         float scale = depthfxscale;
@@ -212,10 +268,31 @@ static struct depthfxtexture : rendertarget
         }
         renderdepthobstacles(depthfxmin, depthfxmax, scale, ranges, numranges);
 
+        if(scissor) glDisable(GL_SCISSOR_TEST);
+
         refracting = 0;
         depthfxing = false;
 
         return true;
+    }
+
+    void dodebug(int w, int h)
+    {
+        if(depthfxscissor && numdepthfxranges)
+        {
+            glColor3f(0, 1, 0);
+            int smx = int(float(scissorx*w)/texsize),
+                smy = int(float(scissory*h)/texsize),
+                smw = int(float(scissorw*w)/texsize),
+                smh = int(float(scissorh*h)/texsize);
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(smx,       h - smy);
+            glVertex2i(smx + smw, h - smy);
+            glVertex2i(smx + smw, h - smy - smh);
+            glVertex2i(smx,       h - smy - smh);
+            glEnd();
+            glColor3f(1, 1, 1);
+        }
     }
 } depthfxtex;
 
@@ -223,11 +300,6 @@ void cleanupdepthfx()
 {
     depthfxtex.cleanup(true);
 }
-
-VARFP(depthfxsize, 6, 7, 10, cleanupdepthfx());
-VARP(depthfx, 0, 0, 1);
-VARP(blurdepthfx, 0, 1, 7);
-VARP(blurdepthfxsigma, 1, 50, 200);
 
 VAR(debugdepthfx, 0, 0, 1);
 
