@@ -455,7 +455,7 @@ void cursorupdate()
 		boxs(sel.orient, co, cs);
         if(hmapedit==1)         // 3D selection box
             glColor3ub(0,120,0);
-        else 
+        else
             glColor3ub(0,0,120);
 		boxs3D(sel.o.tovec(), sel.s.tovec(), sel.grid);
 
@@ -767,7 +767,7 @@ vector<int> htextures;
 COMMAND(clearbrush, "");
 COMMAND(brushvert, "iii");
 ICOMMAND(hmapcancel, "", (), htextures.setsizenodelete(0); );
-ICOMMAND(hmapselect, "", (), 
+ICOMMAND(hmapselect, "", (),
     int t = lookupcube(cur.x, cur.y, cur.z).texture[orient];
     int i = htextures.find(t);
     if(i<0)
@@ -815,7 +815,7 @@ namespace hmap
         if(t[d] > nz || t[d] < mz) return NULL;
         cube *c = &lookupcube(t.x, t.y, t.z, gridsize);
         if(c->children) forcemip(*c);
-        discardchildren(*c);    
+        discardchildren(*c);
         if(!isheightmap(sel.orient, d, true, c)) return NULL;
         if     (t.x < changes.o.x) changes.o.x = t.x;
         else if(t.x > changes.s.x) changes.s.x = t.x;
@@ -997,7 +997,7 @@ namespace hmap
     void smooth()
     {
         int sum, div;
-        loopbrush(-2)        
+        loopbrush(-2)
         {
             sum = 0;
             div = 9;
@@ -1052,7 +1052,7 @@ namespace hmap
             bmx = max(mx, brushminx);
         	bmy = max(my, brushminy);
         	bnx = min(nx, brushmaxx-1);
-        	bny = min(ny, brushmaxy-1);   
+        	bny = min(ny, brushmaxy-1);
         }
         nz = hdr.worldsize-gridsize;
         mz = 0;
@@ -1078,7 +1078,7 @@ namespace hmap
 }
 
 void edithmap(int dir, int mode) {
-    if(multiplayer() || !hmapsel || gridsize < 8) return;    
+    if(multiplayer() || !hmapsel || gridsize < 8) return;
     hmap::run(dir, mode);
 }
 
@@ -1328,7 +1328,7 @@ COMMAND(gettex, "");
 
 void replacetexcube(cube &c, int oldtex, int newtex)
 {
-	loopi(6) if(c.texture[i] == oldtex) c.texture[i] = newtex;
+	loopi(6) if(oldtex < 0 || c.texture[i] == oldtex) c.texture[i] = newtex;
 	if(c.children) loopi(8) replacetexcube(c.children[i], oldtex, newtex);
 }
 
@@ -1339,14 +1339,17 @@ void mpreplacetex(int oldtex, int newtex, selinfo &sel, bool local)
 	allchanged();
 }
 
-void replace()
+void replacetex(int texnum = -1)
 {
 	if(noedit()) return;
-	if(reptex < 0) { conoutf("can only replace after a texture edit"); return; }
-	mpreplacetex(reptex, lasttex, sel, true);
+	mpreplacetex(texnum, lasttex, sel, true);
 }
 
-COMMAND(replace, "");
+ICOMMAND(replace, "", (void), {
+	if(reptex < 0) { conoutf("can only replace after a texture edit"); return; }
+	replacetex(reptex);
+});
+ICOMMAND(replaceall, "", (void), replacetex(););
 
 ////////// flip and rotate ///////////////
 uint dflip(uint face) { return face==F_EMPTY ? face : 0x88888888 - (((face&0xF0F0F0F0)>>4)+ ((face&0x0F0F0F0F)<<4)); }
@@ -1546,10 +1549,10 @@ void g3d_texturemenu()
 	gui.show();
 }
 
-void showtexgui(int *n) 
-{ 
+void showtexgui(int *n)
+{
     if(!editmode) { conoutf("operation only allowed in edit mode"); return; }
-    gui.showtextures(*n==0 ? !gui.menuon : *n==1); 
+    gui.showtextures(*n==0 ? !gui.menuon : *n==1);
 }
 
 // 0/noargs = toggle, 1 = on, other = off - will autoclose if too far away or exit editmode
