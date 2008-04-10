@@ -18,7 +18,7 @@ enum						// static entity types
 	MONSTER,						// 10 [angle], [type]
 	TRIGGER,						// 11
 	JUMPPAD,						// 12 zpush, ypush, xpush
-	BASE,							// 13
+	BASE,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
 	CAMERA,							// 15 yaw, pitch, pan (+:horiz/-:vert), idx
 	WAYPOINT,						// 16
@@ -244,8 +244,8 @@ static struct guntypes
 };
 #define isgun(gun) (gun > -1 && gun < NUMGUNS)
 
-enum { TEAM_BLUE = 0, TEAM_RED, TEAM_MAX };
-static const char *teamnames[TEAM_MAX] = { "blue", "red" };
+enum { TEAM_NONE = 0, TEAM_BLUE, TEAM_RED, TEAM_MAX };
+static const char *teamnames[TEAM_MAX] = { "none", "blue", "red" };
 
 enum
 {

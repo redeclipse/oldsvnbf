@@ -38,7 +38,7 @@ SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, in
 
 SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type = TEX_DIFFUSE)
 {
-    // 1..3 rotate through 90..270 degrees, 4 flips X, 5 flips Y 
+    // 1..3 rotate through 90..270 degrees, 4 flips X, 5 flips Y
     if(numrots<1 || numrots>5) return s;
     return texreorient(s,
         numrots>=2 && numrots<=4, // flip X on 180/270 degrees
@@ -505,7 +505,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 		if(matslot>=0) curmatslot = matslot;
 		else { curmatslot = -1; curtexnum++; }
 	}
-	else if(curmatslot>=0) matslot=curmatslot;
+	else if(curmatslot>=0) matslot = curmatslot;
 	else if(!curtexnum) return;
 	Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
 	if(tnum==TEX_DIFFUSE) setslotshader(s);
@@ -526,15 +526,6 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 }
 
 COMMAND(texture, "ssiiif");
-
-void texscroll(float *scrollS, float *scrollT)
-{
-    Slot &s = slots.last();
-    s.scrollS = *scrollS/1000.0f;
-    s.scrollT = *scrollT/1000.0f;
-}   
-
-COMMAND(texscroll, "ff");
 
 void texturedel(int i, bool local)
 {
@@ -573,6 +564,15 @@ void autograss(char *name)
 }
 
 COMMAND(autograss, "s");
+
+void texscroll(float *scrollS, float *scrollT)
+{
+    Slot &s = slots.last();
+    s.scrollS = *scrollS/1000.0f;
+    s.scrollT = *scrollT/1000.0f;
+}
+
+COMMAND(texscroll, "ff");
 
 static int findtextype(Slot &s, int type, int last = -1)
 {
@@ -1172,12 +1172,12 @@ bool reloadtexture(Texture &tex)
         case Texture::IMAGE:
         {
             SDL_Surface *s = texturedata(tex.name, NULL, true);
-            if(!s || !newtexture(&tex, NULL, s, tex.clamp, tex.mipmap)) { puts(tex.name); return false; }
+            if(!s || !newtexture(&tex, NULL, s, tex.clamp, tex.mipmap)) return false;
             break;
         }
 
         case Texture::CUBEMAP:
-            if(!cubemaploadwildcard(&tex, NULL, tex.mipmap, true)) { puts(tex.name); return false; }
+            if(!cubemaploadwildcard(&tex, NULL, tex.mipmap, true)) return false;
             break;
     }
     return true;

@@ -272,10 +272,9 @@ void save_config()
 		} \
 		if (b) \
 		{ \
-			if (s.autograss) \
-			{ \
-				fprintf(h, "autograss \"%s\"\n", s.autograss); \
-			} \
+			if (s.scrollS != 0.f || s.scrollT != 0.f) \
+				fprintf(h, "texscroll %.f %.f", s.scrollS, s.scrollT); \
+			if (s.autograss) fprintf(h, "autograss \"%s\"\n", s.autograss); \
 		} \
 		fprintf(h, "\n");
 
@@ -411,7 +410,7 @@ void save_world(const char *mname, bool nolms)
             gzwrite(f, lm.data, sizeof(lm.data));
         }
         if (verbose >= 2) conoutf("saved %d lightmaps", lightmaps.length());
-        if(getnumviewcells()>0) 
+        if(getnumviewcells()>0)
         {
             if (verbose >= 2) show_out_of_renderloop_progress(0, "saving PVS...");
             savepvs(f);
