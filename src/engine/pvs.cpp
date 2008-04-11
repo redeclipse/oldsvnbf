@@ -47,7 +47,7 @@ static bool mergepvsnodes(pvsnode &p, pvsnode *children)
         else if(lo.row!=hi.row || lo.col!=hi.col || (lo.coord&0xF0)!=0x80 || (hi.coord&0xF)!=0) return false; \
         else \
         { \
-            res.coord = (lo.coord&~0xF1)>>1 | ((hi.coord&~0x1F)>>1) + 0x40; \
+            res.coord = ((lo.coord&~0xF1)>>1) | (((hi.coord&~0x1F)>>1) + 0x40); \
             res.row = lo.row; \
             res.col = lo.col; \
         }

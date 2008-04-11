@@ -976,7 +976,11 @@ static void changevbuf(renderstate &cur, int pass, vtxarray *va)
         if(renderpath!=R_FIXEDFUNCTION)
         {
             glColorPointer(3, GL_UNSIGNED_BYTE, VTXSIZE, floatvtx ? &((fvertex *)va->vdata)[0].n : &va->vdata[0].n);
-            setenvparamfv("camera", SHPARAM_VERTEX, 4, vec4(camera1->o, 1).sub(ivec(va->o).mask(~VVEC_INT_MASK).tovec()).mul(1<<VVEC_FRAC).v);
+            setenvparamf("camera", SHPARAM_VERTEX, 4,
+                (camera1->o.x - (va->o.x&~VVEC_INT_MASK))*(1<<VVEC_FRAC),
+                (camera1->o.y - (va->o.y&~VVEC_INT_MASK))*(1<<VVEC_FRAC),
+                (camera1->o.z - (va->o.z&~VVEC_INT_MASK))*(1<<VVEC_FRAC),
+                1);
         }
     }
 }

@@ -1220,7 +1220,7 @@ static inline void modifyblend(const vec &o, int &blend)
 }
 
 template<>
-static inline void modifyblend<PT_TAPE>(const vec &o, int &blend)
+inline void modifyblend<PT_TAPE>(const vec &o, int &blend)
 {
 }
 
@@ -1236,7 +1236,7 @@ static inline void genpos(const vec &o, const vec &d, float size, int grav, int 
 }
 
 template<>
-static inline void genpos<PT_TAPE>(const vec &o, const vec &d, float size, int ts, int grav, partvert *vs)
+inline void genpos<PT_TAPE>(const vec &o, const vec &d, float size, int ts, int grav, partvert *vs)
 {
     vec dir1 = d, dir2 = d, c;
     dir1.sub(o);
@@ -1249,7 +1249,7 @@ static inline void genpos<PT_TAPE>(const vec &o, const vec &d, float size, int t
 }
 
 template<>
-static inline void genpos<PT_TRAIL>(const vec &o, const vec &d, float size, int ts, int grav, partvert *vs)
+inline void genpos<PT_TRAIL>(const vec &o, const vec &d, float size, int ts, int grav, partvert *vs)
 {
     vec e = d;
     if(grav) e.z -= float(ts)/grav;

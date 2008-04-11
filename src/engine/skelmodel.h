@@ -369,9 +369,12 @@ struct skelmodel : animmodel
                 {
                     int index = t.vert[j];
                     vert &v = verts[index];
-                    if(!((skelmeshgroup *)group)->skel->numframes) loopvk(vverts)
+                    if(!((skelmeshgroup *)group)->skel->numframes) 
                     {
-                        if(comparevert(vverts[k], index, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
+                        loopvk(vverts)
+                        {
+                            if(comparevert(vverts[k], index, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
+                        }
                     }
                     idxs.add(vverts.length());
                     assignvert(vverts.add(), index, v, ((skelmeshgroup *)group)->blendcombos[v.blend]);
@@ -987,8 +990,9 @@ struct skelmodel : animmodel
                 l.matrix[4*k] = t.X[k];
                 l.matrix[4*k+1] = t.Y[k];
                 l.matrix[4*k+2] = t.Z[k];
-                l.matrix[4*k+3] = k==3 ? 1 : 0;
             }
+            l.matrix[3] = l.matrix[7] = l.matrix[11] = 0.0f;
+            l.matrix[15] = 1.0f;
         }
 
         void calctags(skelcacheentry &sc, part *p)

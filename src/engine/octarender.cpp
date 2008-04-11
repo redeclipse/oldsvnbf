@@ -1095,13 +1095,16 @@ void updatevabb(vtxarray *va, bool force)
             va->bbmax[k] = max(va->bbmax[k], child->bbmax[k]);
         }
     }
-    if(va->mapmodels) loopv(*va->mapmodels)
+    if(va->mapmodels) 
     {
-        octaentities *oe = (*va->mapmodels)[i];
-        loopk(3)
+        loopv(*va->mapmodels)
         {
-            va->bbmin[k] = min(va->bbmin[k], oe->bbmin[k]);
-            va->bbmax[k] = max(va->bbmax[k], oe->bbmax[k]);
+            octaentities *oe = (*va->mapmodels)[i];
+            loopk(3)
+            {
+                va->bbmin[k] = min(va->bbmin[k], oe->bbmin[k]);
+                va->bbmax[k] = max(va->bbmax[k], oe->bbmax[k]);
+            }
         }
     }
 
