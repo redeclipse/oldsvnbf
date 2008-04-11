@@ -221,7 +221,7 @@ struct entities : icliententities
 	}
 
 	const char *entnameinfo(entity &e) { return ""; }
-	const char *entname(int i) { return i >= NOTUSED && i <= MAXENTTYPES ? enttype[i].name : ""; }
+	const char *entname(int i) { return i >= NOTUSED && i < MAXENTTYPES ? enttype[i].name : ""; }
 
 	void editent(int i)
 	{
