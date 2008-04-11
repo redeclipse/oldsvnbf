@@ -54,14 +54,14 @@ struct projectiles
 					switch (gun)
 					{
 						case GUN_GL:
-							aboveeye = height = radius = 2.0f;
+							aboveeye = height = radius = 1.0f;
 							elasticity = 0.33f;
 							relativity = 0.5f;
 							waterfric = 2.0f;
 							break;
 						case GUN_RL:
 						{
-							aboveeye = height = radius = 4.0f;
+							aboveeye = height = radius = 2.0f;
 							elasticity = 0.0f;
 							relativity = 0.25f;
 							waterfric = 1.5f;
@@ -283,9 +283,6 @@ struct projectiles
 			else continue;
 
 			rendermodel(&proj.light, mname, ANIM_MAPMODEL|ANIM_LOOP, proj.o, yaw+90, pitch, 0, cull);
-
-			if (rendernormally)
-				renderline(proj.from, proj.to, 1.0f, 1.0f, 1.0f, true);
 		}
 	}
 
