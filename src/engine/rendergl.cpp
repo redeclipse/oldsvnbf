@@ -110,7 +110,8 @@ VAR(minimizetcusage, 1, 0, 0);
 VAR(emulatefog, 1, 0, 0);
 VAR(usevp2, 1, 0, 0);
 VAR(usevp3, 1, 0, 0);
-VAR(rtsharefb, 0, 1, 1);
+VAR(rtscissor, 0, 1, 1);
+VAR(blurtile, 0, 1, 1);
 
 void gl_checkextensions()
 {
@@ -253,7 +254,6 @@ void gl_checkextensions()
     else if(strstr(vendor, "NVIDIA"))
     {
         reservevpparams = 10;
-        rtsharefb = 0;
 
         nvidia_texgen_bug = 1;
     }
