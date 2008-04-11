@@ -180,7 +180,8 @@ VARFP(depthfxsize, 6, 7, 10, cleanupdepthfx());
 VARP(depthfx, 0, 0, 1);
 VARP(blurdepthfx, 0, 1, 7);
 VARP(blurdepthfxsigma, 1, 50, 200);
-VAR(depthfxscissor, 0, 1, 1);
+VAR(depthfxscissor, 0, 2, 2);
+VAR(debugdepthfx, 0, 0, 1);
 
 #define MAXDFXRANGES 4
 
@@ -191,7 +192,7 @@ vec depthfxmin(1e16f, 1e16f, 1e16f), depthfxmax(1e16f, 1e16f, 1e16f);
 
 static struct depthfxtexture : rendertarget
 {
-    int scissorx, scissory, scissorw, scissorh;
+    GLfloat mvpmatrix[16];
 
     const GLenum *colorformats() const
     {
@@ -199,62 +200,67 @@ static struct depthfxtexture : rendertarget
         return &colorfmts[hasTF && hasFBO ? (fpdepthfx ? 0 : (depthfxprecision ? 1 : 2)) : 2];
     }
 
-    void calcscissorbox()
+    void getmvpmatrix()
     {
-        GLfloat mm[16], pm[16], mvp[16];
+        GLfloat mm[16], pm[16];
         glGetFloatv(GL_MODELVIEW_MATRIX, mm);
         glGetFloatv(GL_PROJECTION_MATRIX, pm);
         loopi(4) loopj(4)
         {
             float c = 0;
             loopk(4) c += pm[k*4 + j] * mm[i*4 + k];
-            mvp[i*4 + j] = c;
+            mvpmatrix[i*4 + j] = c;
         }
+    }
 
+    void addscissorvert(const vec &v, float &sx1, float &sy1, float &sx2, float &sy2)
+    {
+        float w = v.x*mvpmatrix[3] + v.y*mvpmatrix[7] + v.z*mvpmatrix[11] + mvpmatrix[15],
+              x = (v.x*mvpmatrix[0] + v.y*mvpmatrix[4] + v.z*mvpmatrix[8] + mvpmatrix[12]) / w,
+              y = (v.x*mvpmatrix[1] + v.y*mvpmatrix[5] + v.z*mvpmatrix[9] + mvpmatrix[13]) / w;
+        sx1 = min(sx1, x);
+        sy1 = min(sy1, y);
+        sx2 = max(sx2, x);
+        sy2 = max(sy2, y);
+    }
+
+    bool addscissorbox(const vec &center, float size)
+    {
+        float sx1 = 1, sy1 = 1, sx2 = -1, sy2 = -1;
+        loopi(4)
+        {
+            vec v(center);
+            v.add(vec(i < 2 ? camright : camup).mul(i&1 ? size : -size));
+            addscissorvert(v, sx1, sy1, sx2, sy2);
+        }
+        return addblurtiles(sx1, sy1, sx2, sy2);
+    }
+
+    bool addscissorbox(const vec &bbmin, const vec &bbmax)
+    {
         float sx1 = 1, sy1 = 1, sx2 = -1, sy2 = -1;
         loopi(8)
         {
-            vec v(i&1 ? depthfxmax.x : depthfxmin.x, i&2 ? depthfxmax.y : depthfxmin.y, i&4 ? depthfxmax.z : depthfxmin.z);
-            float w = v.x*mvp[3] + v.y*mvp[7] + v.z*mvp[11] + mvp[15],
-                  x = (v.x*mvp[0] + v.y*mvp[4] + v.z*mvp[8] + mvp[12]) / w,
-                  y = (v.x*mvp[1] + v.y*mvp[5] + v.z*mvp[9] + mvp[13]) / w;
-            sx1 = min(sx1, x);
-            sy1 = min(sy1, y);
-            sx2 = max(sx2, x);
-            sy2 = max(sy2, y);
+            vec v(i&1 ? bbmax.x : bbmin.x, i&2 ? bbmax.y : bbmin.y, i&4 ? bbmax.z : bbmin.z);
+            addscissorvert(v, sx1, sy1, sx2, sy2);
         }
-        scissorx = max(int(floor((sx1+1)/2*texsize)), 0);
-        scissory = max(int(floor((sy1+1)/2*texsize)), 0);
-        scissorw = min(int(ceil((sx2+1)/2*texsize)), texsize) - scissorx;
-        scissorh = min(int(ceil((sy2+1)/2*texsize)), texsize) - scissory;
+        return addblurtiles(sx1, sy1, sx2, sy2);
     }
 
-    void doblur(int blursize, float blursigma)
+    bool shouldrender()
     {
-        blur(blursize, blursigma, scissorx, scissory, scissorw, scissorh, depthfxscissor!=0 && (scissorw < texsize || scissorh < texsize));
+        extern void finddepthfxranges();
+        finddepthfxranges();
+        return (numdepthfxranges && scissorx1 < scissorx2 && scissory1 < scissory2) || debugdepthfx;
     }
 
     bool dorender()
     {
-        calcscissorbox();
-
-        depthfxing = true;
-        refracting = -1;
-
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        bool scissor = false;
-        if(depthfxscissor && (scissorw + 2*2*blurdepthfx < texsize || scissorh + 2*2*blurdepthfx < texsize))
-        {
-            scissor = true;
-            int sx = max(scissorx - 2*blurdepthfx, 0),
-                sy = max(scissory - 2*blurdepthfx, 0),
-                sw = min(scissorx + scissorw + 2*2*blurdepthfx, texsize) - sx,
-                sh = min(scissory + scissorh + 2*2*blurdepthfx, texsize) - sy;
-            glScissor(sx, sy, sw, sh);
-            glEnable(GL_SCISSOR_TEST);
-        }
+        depthfxing = true;
+        refracting = -1;
 
         extern void renderdepthobstacles(const vec &bbmin, const vec &bbmax, float scale, float *ranges, int numranges);
         float scale = depthfxscale;
@@ -268,29 +274,20 @@ static struct depthfxtexture : rendertarget
         }
         renderdepthobstacles(depthfxmin, depthfxmax, scale, ranges, numranges);
 
-        if(scissor) glDisable(GL_SCISSOR_TEST);
-
         refracting = 0;
         depthfxing = false;
 
-        return true;
+        return numdepthfxranges > 0;
     }
 
     void dodebug(int w, int h)
     {
-        if(depthfxscissor && numdepthfxranges)
+        if(numdepthfxranges > 0)
         {
             glColor3f(0, 1, 0);
-            int smx = int(float(scissorx*w)/texsize),
-                smy = int(float(scissory*h)/texsize),
-                smw = int(float(scissorw*w)/texsize),
-                smh = int(float(scissorh*h)/texsize);
-            glBegin(GL_LINE_LOOP);
-            glVertex2i(smx,       h - smy);
-            glVertex2i(smx + smw, h - smy);
-            glVertex2i(smx + smw, h - smy - smh);
-            glVertex2i(smx,       h - smy - smh);
-            glEnd();
+            debugscissor(w, h, true);
+            glColor3f(0, 0, 1);
+            debugblurtiles(w, h, true);
             glColor3f(1, 1, 1);
         }
     }
@@ -300,8 +297,6 @@ void cleanupdepthfx()
 {
     depthfxtex.cleanup(true);
 }
-
-VAR(debugdepthfx, 0, 0, 1);
 
 void viewdepthfxtex()
 {
@@ -314,17 +309,6 @@ bool depthfxing = false;
 void drawdepthfxtex()
 {
     if(!depthfx || renderpath==R_FIXEDFUNCTION) return;
-
-    extern int finddepthfxranges(void **owners, float *ranges, int numranges, vec &bbmin, vec &bbmax);
-    depthfxmin = vec(1e16f, 1e16f, 1e16f);
-    depthfxmax = vec(0, 0, 0);
-    numdepthfxranges = finddepthfxranges(depthfxowners, depthfxranges, MAXDFXRANGES, depthfxmin, depthfxmax);
-    loopk(3)
-    {
-        depthfxmin[k] -= depthfxmargin;
-        depthfxmax[k] += depthfxmargin;
-    }
-    if(!numdepthfxranges && !debugdepthfx) return;
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
     glDisable(GL_FOG);
@@ -968,6 +952,8 @@ int finddepthfxranges(void **owners, float *ranges, int maxranges, vec &bbmin, v
         e.radius = e.height = e.aboveeye = psize;
         if(::collide(&e, vec(0, 0, 0), 0, false)) continue;
 
+        if(depthfxscissor==2 && !depthfxtex.addscissorbox(p->o, psize)) continue;
+
         vec dir = camera1->o;
         dir.sub(p->o);
         float dist = dir.magnitude();
@@ -997,6 +983,22 @@ int finddepthfxranges(void **owners, float *ranges, int maxranges, vec &bbmin, v
     }
 
     return numranges;
+}
+
+void finddepthfxranges()
+{
+    depthfxtex.getmvpmatrix();
+
+    depthfxmin = vec(1e16f, 1e16f, 1e16f);
+    depthfxmax = vec(0, 0, 0);
+    numdepthfxranges = finddepthfxranges(depthfxowners, depthfxranges, MAXDFXRANGES, depthfxmin, depthfxmax);
+    loopk(3)
+    {
+        depthfxmin[k] -= depthfxmargin;
+        depthfxmax[k] += depthfxmargin;
+    }
+
+    if(depthfxscissor<2 && numdepthfxranges>0) depthfxtex.addscissorbox(depthfxmin, depthfxmax);
 }
 
 VARP(particleglare, 0, 4, 100);

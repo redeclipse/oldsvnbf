@@ -1,15 +1,20 @@
-extern int rtsharefb;
+extern int rtscissor, blurtile;
 
 struct rendertarget
 {
     int texsize;
     GLenum colorfmt, depthfmt;
-    GLuint rendertex, renderfb, renderdb, blurtex, blurfb, blurdb;
+    GLuint rendertex, renderfb, renderdb, blurtex;
     int blursize;
     float blursigma;
     float blurweights[MAXBLURRADIUS+1], bluroffsets[MAXBLURRADIUS+1];
 
-    rendertarget() : texsize(0), colorfmt(GL_FALSE), depthfmt(GL_FALSE), rendertex(0), renderfb(0), renderdb(0), blurtex(0), blurfb(0), blurdb(0), blursize(0), blursigma(0)
+    float scissorx1, scissory1, scissorx2, scissory2;
+#define BLURTILES 32
+#define BLURTILEMASK (0xFFFFFFFFU>>(32-BLURTILES))
+    uint blurtiles[BLURTILES+1];
+
+    rendertarget() : texsize(0), colorfmt(GL_FALSE), depthfmt(GL_FALSE), rendertex(0), renderfb(0), renderdb(0), blurtex(0), blursize(0), blursigma(0)
     {
     }
 
@@ -40,9 +45,7 @@ struct rendertarget
 
     void cleanupblur()
     {
-        if(blurfb) { glDeleteFramebuffers_(1, &blurfb); blurfb = 0; }
         if(blurtex) { glDeleteTextures(1, &blurtex); blurtex = 0; }
-        if(blurdb) { glDeleteRenderbuffers_(1, &blurdb); blurdb = 0; }
         blursize = 0;
         blursigma = 0.0f;
     }
@@ -52,17 +55,6 @@ struct rendertarget
         if(!hasFBO) return;
         if(!blurtex) glGenTextures(1, &blurtex);
         createtexture(blurtex, texsize, texsize, NULL, 3, false, colorfmt);
-
-        if(rtsharefb) return;
-        if(!blurfb) glGenFramebuffers_(1, &blurfb);
-        glBindFramebuffer_(GL_FRAMEBUFFER_EXT, blurfb);
-        glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, blurtex, 0);
-        if(!blurdb) glGenRenderbuffers_(1, &blurdb);
-        glGenRenderbuffers_(1, &blurdb);
-        glBindRenderbuffer_(GL_RENDERBUFFER_EXT, blurdb);
-        glRenderbufferStorage_(GL_RENDERBUFFER_EXT, depthfmt, texsize, texsize);
-        glFramebufferRenderbuffer_(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, blurdb);
-        glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
     }
 
     void setup(int size)
@@ -108,14 +100,88 @@ struct rendertarget
         }
         texsize = size;
     }
- 
+
+    bool addblurtiles(float x1, float y1, float x2, float y2, float blurmargin = 0)
+    {
+        if(x1 >= 1 || y1 >= 1 || x2 <= -1 || y2 <= -1) return false;
+
+        scissorx1 = min(scissorx1, max(x1, -1.0f));
+        scissory1 = min(scissory1, max(y1, -1.0f));
+        scissorx2 = max(scissorx2, min(x2, 1.0f));
+        scissory2 = max(scissory2, min(y2, 1.0f));
+
+        float blurerror = 2.0f*float(2*blursize + blurmargin) / texsize;
+        int tx1 = max(0, min(BLURTILES - 1, int((x1-blurerror + 1)/2 * BLURTILES))),
+            ty1 = max(0, min(BLURTILES - 1, int((y1-blurerror + 1)/2 * BLURTILES))),
+            tx2 = max(0, min(BLURTILES - 1, int((x2+blurerror + 1)/2 * BLURTILES))),
+            ty2 = max(0, min(BLURTILES - 1, int((y2+blurerror + 1)/2 * BLURTILES)));
+
+        uint mask = (BLURTILEMASK>>(BLURTILES - (tx2+1))) & (BLURTILEMASK<<tx1);
+        for(int y = ty1; y <= ty2; y++) blurtiles[y] |= mask;
+        return true;
+    }
+
+    bool checkblurtiles(float x1, float y1, float x2, float y2, float blurmargin = 0)
+    {
+        float blurerror = 2.0f*float(2*blursize + blurmargin) / texsize;
+        if(x2+blurerror < scissorx1 || y2+blurerror < scissory1 || 
+           x1-blurerror > scissorx2 || y1-blurerror > scissory2) 
+            return false;
+
+        if(!blurtile) return true;
+
+        int tx1 = max(0, min(BLURTILES - 1, int((x1 + 1)/2 * BLURTILES))),
+            ty1 = max(0, min(BLURTILES - 1, int((y1 + 1)/2 * BLURTILES))),
+            tx2 = max(0, min(BLURTILES - 1, int((x2 + 1)/2 * BLURTILES))),
+            ty2 = max(0, min(BLURTILES - 1, int((y2 + 1)/2 * BLURTILES)));
+
+        uint mask = (BLURTILEMASK>>(BLURTILES - (tx2+1))) & (BLURTILEMASK<<tx1);
+        for(int y = ty1; y <= ty2; y++) if(blurtiles[y] & mask) return true;
+
+        return false;
+    }
+
     virtual void rendertiles()
     {
         glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex2f(-1, -1);
-        glTexCoord2f(1, 0); glVertex2f(1, -1);
-        glTexCoord2f(1, 1); glVertex2f(1, 1);
-        glTexCoord2f(0, 1); glVertex2f(-1, 1);
+        if(blurtile && scissorx1 < scissorx2 && scissory1 < scissory2)
+        {
+            uint tiles[sizeof(blurtiles)/sizeof(uint)];
+            memcpy(tiles, blurtiles, sizeof(blurtiles));
+
+            float tsz = 1.0f/BLURTILES;
+            loop(y, BLURTILES+1)
+            {
+                uint mask = tiles[y];
+                int x = 0;
+                while(mask)
+                {
+                    while(!(mask&0xFF)) { mask >>= 8; x += 8; }
+                    while(!(mask&1)) { mask >>= 1; x++; }
+                    int xstart = x;
+                    do { mask >>= 1; x++; } while(mask&1);
+                    uint strip = (BLURTILEMASK>>(BLURTILES - x)) & (BLURTILEMASK<<xstart);
+                    int yend = y;
+                    do { tiles[yend] &= ~strip; yend++; } while((tiles[yend] & strip) == strip);
+                    float tx = xstart*tsz,
+                          ty = y*tsz,
+                          tw = (x-xstart)*tsz,
+                          th = (yend-y)*tsz,
+                          vx = 2*tx - 1, vy = 2*ty - 1, vw = tw*2, vh = th*2;
+                    glTexCoord2f(tx,    ty);    glVertex2f(vx,    vy);
+                    glTexCoord2f(tx+tw, ty);    glVertex2f(vx+vw, vy);
+                    glTexCoord2f(tx+tw, ty+th); glVertex2f(vx+vw, vy+vh);
+                    glTexCoord2f(tx,    ty+th); glVertex2f(vx,    vy+vh);
+                }
+            }
+        }
+        else
+        {
+            glTexCoord2f(0, 0); glVertex2f(-1, -1);
+            glTexCoord2f(1, 0); glVertex2f(1, -1);
+            glTexCoord2f(1, 1); glVertex2f(1, 1);
+            glTexCoord2f(0, 1); glVertex2f(-1, 1);
+        }
         glEnd();
     }
 
@@ -149,8 +215,7 @@ struct rendertarget
 
             if(hasFBO)
             {
-                if(rtsharefb) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, i ? rendertex : blurtex, 0);
-                else glBindFramebuffer_(GL_FRAMEBUFFER_EXT, i ? renderfb : blurfb);
+                glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, i ? rendertex : blurtex, 0);
                 glBindTexture(GL_TEXTURE_2D, i ? blurtex : rendertex);
             }
 
@@ -169,39 +234,77 @@ struct rendertarget
 
     virtual bool dorender() { return true; }
 
+    virtual bool shouldrender() { return true; }
+
     virtual void doblur(int blursize, float blursigma) 
     { 
-        blur(blursize, blursigma, 0, 0, texsize, texsize, false);
+        int sx, sy, sw, sh;
+        bool scissoring = rtscissor && scissorblur(sx, sy, sw, sh) && sw > 0 && sh > 0;
+        if(!scissoring) { sx = sy = 0; sw = sh = texsize; }
+        blur(blursize, blursigma, sx, sy, sw, sh, scissoring);
     }
+
+    virtual bool scissorrender(int &x, int &y, int &w, int &h)
+    {
+        if(scissorx1 >= scissorx2 || scissory1 >= scissory2) return false;
+        x = max(int(floor((scissorx1+1)/2*texsize)), 0);
+        y = max(int(floor((scissory1+1)/2*texsize)), 0);
+        w = min(int(ceil((scissorx2+1)/2*texsize)), texsize) - x;
+        h = min(int(ceil((scissory2+1)/2*texsize)), texsize) - y;
+        return true;
+    }
+
+    virtual bool scissorblur(int &x, int &y, int &w, int &h)
+    {
+        if(scissorx1 >= scissorx2 || scissory1 >= scissory2) return false;
+        x = max(int(floor((scissorx1+1)/2*texsize)) - 2*blursize, 0);
+        y = max(int(floor((scissory1+1)/2*texsize)) - 2*blursize, 0);
+        w = min(int(ceil((scissorx2+1)/2*texsize)) + 2*blursize, texsize) - x;
+        h = min(int(ceil((scissory2+1)/2*texsize)) + 2*blursize, texsize) - y;
+        return true;
+    }
+
+    virtual void doclear() {}
 
     void render(int size, int blursize, float blursigma)
     {
         size = min(size, hwtexsize);
         if(!hasFBO) while(size>screen->w || size>screen->h) size /= 2;
-        if(size!=texsize || (hasFBO && (!rtsharefb) != (blurfb!=0))) cleanup();
-
+        if(size!=texsize) cleanup();
+            
         if(!rendertex) setup(size);
-       
+    
+        scissorx2 = scissory2 = -1;
+        scissorx1 = scissory1 = 1;
+        memset(blurtiles, 0, sizeof(blurtiles));
+ 
+        if(!shouldrender()) return;
+
         if(hasFBO)
         {
             if(blursize && !blurtex) setupblur();
-            if(swaptexs() && blursize)
-            {
-                swap(rendertex, blurtex);
-                if(!rtsharefb)
-                {
-                    swap(renderfb, blurfb);
-                    swap(renderdb, blurdb);
-                }
-            }
+            if(swaptexs() && blursize) swap(rendertex, blurtex);
             glBindFramebuffer_(GL_FRAMEBUFFER_EXT, renderfb);
-            if(swaptexs() && blursize && rtsharefb)
+            if(swaptexs() && blursize)
                 glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, rendertex, 0);
             glViewport(0, 0, texsize, texsize);
         }
         else glViewport(screen->w-texsize, screen->h-texsize, texsize, texsize);
-        
+
+        doclear();
+
+        int sx, sy, sw, sh;
+        bool scissoring = rtscissor && scissorrender(sx, sy, sw, sh) && sw > 0 && sh > 0;
+        if(scissoring)
+        {
+            glScissor((hasFBO ? 0 : screen->w-texsize) + sx, (hasFBO ? 0 : screen->h-texsize) + sy, sw, sh);
+            glEnable(GL_SCISSOR_TEST);
+        }
+
         bool succeeded = dorender(); 
+
+        if(scissoring) glDisable(GL_SCISSOR_TEST);
+
         if(succeeded)
         {
             if(!hasFBO)
@@ -219,6 +322,58 @@ struct rendertarget
 
     virtual void dodebug(int w, int h) {}
     virtual bool flipdebug() const { return true; }
+
+    void debugscissor(int w, int h, bool lines = false)
+    {
+        if(!rtscissor || scissorx1 >= scissorx2 || scissory1 >= scissory2) return;
+        int sx = int(0.5f*(scissorx1 + 1)*w),
+            sy = int(0.5f*(scissory1 + 1)*h),
+            sw = int(0.5f*(scissorx2 - scissorx1)*w),
+            sh = int(0.5f*(scissory2 - scissory1)*h);
+        if(flipdebug()) { sy = h - sy; sh = -sh; }
+        glBegin(lines ? GL_LINE_LOOP : GL_QUADS);
+        glVertex2i(sx,      sy);
+        glVertex2i(sx + sw, sy);
+        glVertex2i(sx + sw, sy + sh);
+        glVertex2i(sx,      sy + sh);
+        glEnd();
+    }
+
+    void debugblurtiles(int w, int h, bool lines = false)
+    {
+        if(!blurtile) return;
+        float vxsz = float(w)/BLURTILES, vysz = float(h)/BLURTILES;
+        loop(y, BLURTILES+1)
+        {
+            uint mask = blurtiles[y];
+            int x = 0;
+            while(mask)
+            {
+                while(!(mask&0xFF)) { mask >>= 8; x += 8; }
+                while(!(mask&1)) { mask >>= 1; x++; }
+                    int xstart = x;
+                do { mask >>= 1; x++; } while(mask&1);
+                uint strip = (BLURTILEMASK>>(BLURTILES - x)) & (BLURTILEMASK<<xstart);
+                int yend = y;
+                do { blurtiles[yend] &= ~strip; yend++; } while((blurtiles[yend] & strip) == strip);
+                float vx = xstart*vxsz,
+                      vy = y*vysz,
+                      vw = (x-xstart)*vxsz,
+                      vh = (yend-y)*vysz;
+                if(flipdebug()) { vy = h - vy; vh = -vh; }
+                loopi(lines ? 1 : 2)
+                {
+                    if(!lines) glColor3f(1, 1, i ? 1.0f : 0.5f);
+                    glBegin(lines || i ? GL_LINE_LOOP : GL_QUADS);
+                    glVertex2f(vx,    vy);
+                    glVertex2f(vx+vw, vy);
+                    glVertex2f(vx+vw, vy+vh);
+                    glVertex2f(vx,    vy+vh);
+                    glEnd();
+                }
+            }
+        }
+    }
 
     void debug()
     {
