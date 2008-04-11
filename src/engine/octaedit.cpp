@@ -329,7 +329,7 @@ void cursorupdate()
 				}
 			}
 
-		if(hovering = hoveringonent(ent, entorient))
+		if((hovering = hoveringonent(ent, entorient)))
 		{
 			if(!havesel) {
 				selchildcount = 0;
@@ -352,7 +352,7 @@ void cursorupdate()
 			od = dimension(orient);
 			d = dimension(sel.orient);
 
-            if(hmapedit==1 && dimcoord(horient) == ray[dimension(horient)]<0)
+            if(hmapedit==1 && dimcoord(horient) == (ray[dimension(horient)]<0))
             {
                 hmapsel = isheightmap(horient, dimension(horient), false, c);
                 if(hmapsel)
@@ -1133,7 +1133,7 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
 	if(mode==1)
 	{
 		int h = sel.o[d]+dc*sel.grid;
-		if((dir>0 == dc && h<=0) || (dir<0 == dc && h>=hdr.worldsize)) return;
+		if(((dir>0) == dc && h<=0) || ((dir<0) == dc && h>=hdr.worldsize)) return;
 		if(dir<0) sel.o[d] += sel.grid * seldir;
 	}
 

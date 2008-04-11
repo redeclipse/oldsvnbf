@@ -926,7 +926,7 @@ void calcvert(cube &c, int x, int y, int z, int size, vec &v, int i, bool solid)
 int calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *usefaces)
 {
     int vertused = 0;
-    loopi(6) if(usefaces[i] = visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR)) vertused |= fvmasks[1<<i];
+    loopi(6) if((usefaces[i] = visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR))) vertused |= fvmasks[1<<i];
     //loopk(4) vertused |= 1<<faceverts(c,i,k);
     loopi(8) if(vertused&(1<<i)) calcvert(c, x, y, z, size, verts[i], i);
     return vertused;

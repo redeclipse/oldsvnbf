@@ -19,7 +19,7 @@ bool rayrectintersect(const vec &b, const vec &s, const vec &o, const vec &ray, 
     loopi(6)
     {
         int d = i>>1, dc = i&1; orient = i;
-        if(dc == ray[d]>0) continue;
+        if(dc == (ray[d]>0)) continue;
         float t = 0;
         plane pl(d, b[D[d]]+s[D[d]]*dc);
         if(pl.rayintersect(o, ray, t))

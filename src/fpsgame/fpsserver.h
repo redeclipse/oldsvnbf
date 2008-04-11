@@ -770,18 +770,21 @@ struct GAMESERVER : igameserver
 	{
 		uint ip = getclientip(ci->clientnum);
 		if(!ip) return *(savedscore *)0;
-		if(!insert) loopv(clients)
-		{
-			clientinfo *oi = clients[i];
-			if(oi->clientnum != ci->clientnum && getclientip(oi->clientnum) == ip && !strcmp(oi->name, ci->name))
-			{
-				oi->state.timeplayed += lastmillis - oi->state.lasttimeplayed;
-				oi->state.lasttimeplayed = lastmillis;
-				static savedscore curscore;
-				curscore.save(oi->state);
-				return curscore;
-			}
-		}
+		if(!insert) 
+        {
+            loopv(clients)
+		    {
+			    clientinfo *oi = clients[i];
+			    if(oi->clientnum != ci->clientnum && getclientip(oi->clientnum) == ip && !strcmp(oi->name, ci->name))
+			    {
+				    oi->state.timeplayed += lastmillis - oi->state.lasttimeplayed;
+				    oi->state.lasttimeplayed = lastmillis;
+				    static savedscore curscore;
+				    curscore.save(oi->state);
+				    return curscore;
+			    }
+		    }
+        }
 		loopv(scores)
 		{
 			savedscore &sc = scores[i];
@@ -1807,15 +1810,18 @@ struct GAMESERVER : igameserver
 		else if(minremain>0)
 		{
 			processevents();
-			if(curtime) loopv(sents) if(sents[i].spawntime && sents[i].type == WEAPON)
-			{
-				sents[i].spawntime -= curtime;
-				if(sents[i].spawntime<=0)
-				{
-					sents[i].spawntime = 0;
-					sents[i].spawned = true;
-					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
-				}
+			if(curtime) 
+            {
+                loopv(sents) if(sents[i].spawntime && sents[i].type == WEAPON)
+			    {
+				    sents[i].spawntime -= curtime;
+				    if(sents[i].spawntime<=0)
+				    {
+					    sents[i].spawntime = 0;
+					    sents[i].spawned = true;
+					    sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+				    }
+                }
 			}
 			if(smode) smode->update();
 			mutate(mut->update());

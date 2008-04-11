@@ -1,3 +1,4 @@
+struct vec4;
 
 struct vec
 {
@@ -13,6 +14,7 @@ struct vec
     vec(float a, float b, float c) : x(a), y(b), z(c) {}
     vec(int v[3]) : x(v[0]), y(v[1]), z(v[2]) {}
     vec(float *v) : x(v[0]), y(v[1]), z(v[2]) {}
+    explicit vec(const vec4 &v);
 
     vec(float yaw, float pitch) : x(sinf(yaw)*cosf(pitch)), y(-cosf(yaw)*cosf(pitch)), z(sinf(pitch)) {}
 
@@ -133,27 +135,46 @@ struct vec
     }
 };
 
-struct vec4 : vec
+struct vec4
 {
-    float w;
+    union
+    {
+        struct { float x, y, z, w; };
+        float v[4];
+    };
 
     vec4() {}
-    vec4(const vec &p, float w = 0) : vec(p), w(w) {}
-    vec4(float x, float y, float z, float w) : vec(x, y, z), w(w) {}
+    explicit vec4(const vec &p, float w = 0) : x(p.x), y(p.y), z(p.z), w(w) {}
+    vec4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
 
-    float dot(const vec4 &o) const { return vec::dot(o)+w*o.w; }
-    float dot(const vec &o) const  { return vec::dot(o)+w; }
+    float &operator[](int i)       { return v[i]; }
+    float  operator[](int i) const { return v[i]; }
+
+    float dot3(const vec4 &o) const { return x*o.x + y*o.y + z*o.z; }
+    float dot3(const vec &o) const { return x*o.x + y*o.y + z*o.z; }
+    float dot(const vec4 &o) const { return dot3(o) + w*o.w; }
+    float dot(const vec &o) const  { return x*o.x + y*o.y + z*o.z + w; }
     float squaredlen() const { return dot(*this); }
     float magnitude() const  { return sqrtf(squaredlen()); }
+    float magnitude3() const { return sqrtf(dot3(*this)); }
     vec4 &normalize() { mul(1/magnitude()); return *this; }
 
-    void lerp(const vec4 &a, const vec4 &b, float t) { vec::lerp(a, b, t); w = a.w*(1-t)+b.w*t; }
+    void lerp(const vec4 &a, const vec4 &b, float t)
+    {
+        x = a.x*(1-t)+b.x*t;
+        y = a.y*(1-t)+b.y*t;
+        z = a.z*(1-t)+b.z*t;
+        w = a.w*(1-t)+b.w*t;
+    }
 
-    vec4 &mul(float f)       { vec::mul(f); w *= f;   return *this; }
-    vec4 &add(const vec4 &o) { vec::add(o); w += o.w; return *this; }
-    vec4 &neg()              { vec::neg();  w = -w;   return *this; }
-
+    vec4 &mul3(float f)       { x *= f; y *= f; z *= f; return *this; }
+    vec4 &mul(float f)       { mul3(f); w *= f; return *this; }
+    vec4 &add(const vec4 &o) { x += o.x; y += o.y; z += o.z; w += o.w; return *this; }
+    vec4 &neg3()             { x = -x; y = -y; z = -z; return *this; }
+    vec4 &neg()              { neg3(); w = -w; return *this; }
 };
+
+inline vec::vec(const vec4 &v) : x(v.x), y(v.y), z(v.z) {}
 
 struct quat : vec4
 {
@@ -167,7 +188,7 @@ struct quat : vec4
         y = s*axis.y;
         z = s*axis.z;
     }
- 
+
     void restorew() { w = 1.0f-x*x-y*y-z*z; w = w<0 ? 0 : -sqrtf(w); }
 
     void add(const vec4 &o) { vec4::add(o); }
@@ -191,7 +212,7 @@ struct quat : vec4
     }
     void mul(const vec &o) { mul(quat(*this), o); }
 
-    quat &invert() { vec::neg(); return *this; }
+    quat &invert() { neg3(); return *this; }
 
     void slerp(const quat &from, const quat &to, float t)
     {
@@ -212,8 +233,8 @@ struct quat : vec4
     vec rotate(const vec &v) const
     {
         vec t1, t2;
-        t1.cross(*this, v);
-        t2.cross(*this, t1);
+        t1.cross(vec(*this), v);
+        t2.cross(vec(*this), t1);
         t1.mul(w).add(t2).mul(2).add(v);
         return t1;
 #if 0
@@ -263,20 +284,20 @@ struct dualquat
             float invrr = 1/rr,
                   invrd = -2*real.dot(dual)*invrr*invrr;
 
-            dual.vec::mul(-invrr);
+            dual.mul3(-invrr);
             dual.w *= invrr;
             quat tmp(real);
-            tmp.vec::mul(-invrd);
+            tmp.mul3(-invrd);
             tmp.w *= invrd;
             dual.add(tmp);
 
-            real.vec::mul(-invrr);
+            real.mul3(-invrr);
             real.w *= invrr;
         }
         else { real = dual = quat(0, 0, 0, 0); }
         return *this;
     }
-    
+   
     void mul(const dualquat &p, const dualquat &o)
     {
         real.mul(p.real, o.real);
@@ -317,12 +338,12 @@ struct dualquat
     vec transform(const vec &v) const
     {
         vec t1, t2;
-        t1.cross(real, v);
+        t1.cross(vec(real), v);
         t1.add(vec(v).mul(real.w));
-        t2.cross(real, t1);
+        t2.cross(vec(real), t1);
 
         vec t3;
-        t3.cross(real, dual);
+        t3.cross(vec(real), vec(dual));
         t3.add(vec(dual).mul(real.w));
         t3.sub(vec(real).mul(dual.w));
 
@@ -380,9 +401,9 @@ struct matrix3x4
 
     void normalize()
     {
-        X.vec::mul(1/X.vec::magnitude());
-        Y.vec::mul(1/Y.vec::magnitude());
-        Z.vec::mul(1/Z.vec::magnitude());
+        X.mul3(1/X.magnitude3());
+        Y.mul3(1/Y.magnitude3());
+        Z.mul3(1/Z.magnitude3());
     }
 
     void lerp(const matrix3x4 &from, const matrix3x4 &to, float t)
@@ -404,17 +425,17 @@ struct matrix3x4
 
     void mul(const matrix3x4 &m, const matrix3x4 &n)
     {
-        X = vec4(vec(n.X.x, n.Y.x, n.Z.x).dot(m.X),
-                 vec(n.X.y, n.Y.y, n.Z.y).dot(m.X),  
-                 vec(n.X.z, n.Y.z, n.Z.z).dot(m.X),
+        X = vec4(m.X.dot3(vec(n.X.x, n.Y.x, n.Z.x)),
+                 m.X.dot3(vec(n.X.y, n.Y.y, n.Z.y)),
+                 m.X.dot3(vec(n.X.z, n.Y.z, n.Z.z)),
                  m.X.dot(vec(n.X.w, n.Y.w, n.Z.w)));
-        Y = vec4(vec(n.X.x, n.Y.x, n.Z.x).dot(m.Y),
-                 vec(n.X.y, n.Y.y, n.Z.y).dot(m.Y),
-                 vec(n.X.z, n.Y.z, n.Z.z).dot(m.Y),
+        Y = vec4(m.Y.dot3(vec(n.X.x, n.Y.x, n.Z.x)),
+                 m.Y.dot3(vec(n.X.y, n.Y.y, n.Z.y)),
+                 m.Y.dot3(vec(n.X.z, n.Y.z, n.Z.z)),
                  m.Y.dot(vec(n.X.w, n.Y.w, n.Z.w)));
-        Z = vec4(vec(n.X.x, n.Y.x, n.Z.x).dot(m.Z),
-                 vec(n.X.y, n.Y.y, n.Z.y).dot(m.Z),
-                 vec(n.X.z, n.Y.z, n.Z.z).dot(m.Z),
+        Z = vec4(m.Z.dot3(vec(n.X.x, n.Y.x, n.Z.x)),
+                 m.Z.dot3(vec(n.X.y, n.Y.y, n.Z.y)),
+                 m.Z.dot3(vec(n.X.z, n.Y.z, n.Z.z)),
                  m.Z.dot(vec(n.X.w, n.Y.w, n.Z.w)));
     }
     void mul(const matrix3x4 &n) { mul(matrix3x4(*this), n); }
@@ -433,7 +454,7 @@ struct matrix3x4
     }
 
     vec transform(const vec &o) const { return vec(X.dot(o), Y.dot(o), Z.dot(o)); }
-    vec transformnormal(const vec &o) const { return vec(X.vec::dot(o), Y.vec::dot(o), Z.vec::dot(o)); }
+    vec transformnormal(const vec &o) const { return vec(X.dot3(o), Y.dot3(o), Z.dot3(o)); }
     vec transposedtransformnormal(const vec &o) const
     {
         return vec(X.x*o.x + Y.x*o.y + Z.x*o.z,

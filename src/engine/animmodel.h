@@ -797,54 +797,60 @@ struct animmodel : model
                 else
                 {
                     if(fogging) refractfogplane = rfogplane;
-                    if(lightmodels) loopv(skins) if(!skins[i].fullbright)
+                    if(lightmodels) 
                     {
-                        GLfloat pos[4] = { rdir.x*1000, rdir.y*1000, rdir.z*1000, 0 };
-                        glLightfv(GL_LIGHT0, GL_POSITION, pos);
-                        break;
+                        loopv(skins) if(!skins[i].fullbright)
+                        {
+                            GLfloat pos[4] = { rdir.x*1000, rdir.y*1000, rdir.z*1000, 0 };
+                            glLightfv(GL_LIGHT0, GL_POSITION, pos);
+                            break;
+                        }
                     }
                 }
             }
 
             meshes->render(as, pitch, axis, this);
 
-            if(!(anim&ANIM_REUSE)) loopv(links)
+            if(!(anim&ANIM_REUSE)) 
             {
-                linkedpart &link = links[i];
-
-                vec naxis(raxis), ndir(rdir), ncampos(rcampos);
-                plane nfogplane(rfogplane);
-                calcnormal(link.matrix, naxis);
-                if(!(anim&ANIM_NOSKIN))
+                loopv(links)
                 {
-                    calcnormal(link.matrix, ndir);
-                    calcvertex(link.matrix, ncampos);
-                    calcplane(link.matrix, nfogplane);
-                }
+                    linkedpart &link = links[i];
 
-                glPushMatrix();
-                glMultMatrixf(link.matrix);
-                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
-                {
-                    glMatrixMode(GL_TEXTURE);
+                    vec naxis(raxis), ndir(rdir), ncampos(rcampos);
+                    plane nfogplane(rfogplane);
+                    calcnormal(link.matrix, naxis);
+                    if(!(anim&ANIM_NOSKIN))
+                    {
+                        calcnormal(link.matrix, ndir);
+                        calcvertex(link.matrix, ncampos);
+                        calcplane(link.matrix, nfogplane);
+                    }
+
                     glPushMatrix();
                     glMultMatrixf(link.matrix);
-                    glMatrixMode(GL_MODELVIEW);
-                }
-                int nanim = anim, nbasetime = basetime;
-                if(link.anim>=0)
-                {
-                    nanim = link.anim | (anim&ANIM_FLAGS);
-                    nbasetime = link.basetime;
-                }
-                link.p->render(nanim, speed, nbasetime, pitch, naxis, d, ndir, ncampos, nfogplane);
-                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
-                {
-                    glMatrixMode(GL_TEXTURE);
+                    if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                    {
+                        glMatrixMode(GL_TEXTURE);
+                        glPushMatrix();
+                        glMultMatrixf(link.matrix);
+                        glMatrixMode(GL_MODELVIEW);
+                    }
+                    int nanim = anim, nbasetime = basetime;
+                    if(link.anim>=0)
+                    {
+                        nanim = link.anim | (anim&ANIM_FLAGS);
+                        nbasetime = link.basetime;
+                    }
+                    link.p->render(nanim, speed, nbasetime, pitch, naxis, d, ndir, ncampos, nfogplane);
+                    if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                    {
+                        glMatrixMode(GL_TEXTURE);
+                        glPopMatrix();
+                        glMatrixMode(GL_MODELVIEW);
+                    }
                     glPopMatrix();
-                    glMatrixMode(GL_MODELVIEW);
                 }
-                glPopMatrix();
             }
 
             if(pitchamount)
