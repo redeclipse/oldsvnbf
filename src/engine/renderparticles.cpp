@@ -1397,7 +1397,7 @@ struct varenderer : partrenderer
                 *p = parts[numparts];
                 genverts(p, vs, true);
             }
-            else genverts(p, vs, p->flags&0x80);
+            else genverts(p, vs, (p->flags&0x80)!=0);
         }
     }
     
@@ -1669,7 +1669,7 @@ void render_particles(int time)
         loopi(n) 
         {
             int type = parts[i]->type;
-            char *title = parts[i]->texname ? strrchr(parts[i]->texname, '/')+1 : NULL;
+            const char *title = parts[i]->texname ? strrchr(parts[i]->texname, '/')+1 : NULL;
             string info = "";
             if(type&PT_GLARE) s_strcat(info, "g,");
             if(type&PT_LERP) s_strcat(info, "l,");
