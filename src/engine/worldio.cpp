@@ -448,7 +448,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	Texture *mapshot = textureload(picname, 0, true, false);
 	bool samegame = true;
 	int maptype = -1, eif = 0;
-    computescreen(mname, mapshot!=notexture ? mapshot : NULL);
+    computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mname);
 
 	gzFile f;
 	loopi(MAP_MAX) if ((f = opengzfile(bgzname[i], "rb9"))) break;
@@ -764,7 +764,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	}
 	allchanged(true);
 
-    computescreen(mname, mapshot!=notexture ? mapshot : NULL);
+    computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mname);
 	attachentities();
 
 	show_out_of_renderloop_progress(0, "starting world...");

@@ -562,7 +562,7 @@ ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
 
 void setcaption(const char *text)
 {
-	s_sprintfd(caption)("%s [v%.2f] %s: %s", ENGNAME, float(ENGVERSION)/100.f, ENGRELEASE, text);
+	s_sprintfd(caption)("%s [v%.2f] %s%s%s", ENGNAME, float(ENGVERSION)/100.f, ENGRELEASE, text ? ": " : "", text ? text : "");
 	SDL_WM_SetCaption(caption, NULL);
 }
 
@@ -653,7 +653,7 @@ int main(int argc, char **argv)
 	conoutf("init: runtime");
 	initruntime();
 	camera1 = cl->iterdynents(0);
-	emptymap(0, true);
+	emptymap(0, true, NULL, true);
 
 	conoutf("init: config");
 	rehash(false);
