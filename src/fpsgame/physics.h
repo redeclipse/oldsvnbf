@@ -705,42 +705,6 @@ struct physics
 		return false;
 	}
 
-	void findplayerspawn(dynent *d, int forceent)	// place at random spawn. also used by monsters!
-	{
-		int pick = forceent;
-		if(pick<0)
-		{
-			int r = fixspawn-->0 ? 7 : rnd(10)+1;
-			loopi(r) spawncycle = findentity(ET_PLAYERSTART, spawncycle+1);
-			pick = spawncycle;
-		}
-		if(pick!=-1)
-		{
-			d->pitch = 0;
-			d->roll = 0;
-			for(int attempt = pick;;)
-			{
-				d->o = cl.et.ents[attempt]->o;
-				d->yaw = cl.et.ents[attempt]->attr1;
-				if(entinmap(d, true)) break;
-				attempt = findentity(ET_PLAYERSTART, attempt+1);
-				if(attempt<0 || attempt==pick)
-				{
-					d->o = cl.et.ents[attempt]->o;
-					d->yaw = cl.et.ents[attempt]->attr1;
-					entinmap(d, false);
-					break;
-				}
-			}
-		}
-		else
-		{
-			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
-			d->o.z += d->height;
-			entinmap(d, false);
-		}
-	}
-
     IVARP(smoothmove, 0, 75, 100);
     IVARP(smoothdist, 0, 32, 64);
 
@@ -779,6 +743,27 @@ struct physics
             }
             else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) moveplayer(d, 2, false, curtime);
 		}
+	}
+
+	bool droptofloor(vec &o, float radius, float height)
+	{
+		if(!insideworld(o)) return false;
+		vec v(0.0001f, 0.0001f, -1);
+		v.normalize();
+		if(raycube(o, v, hdr.worldsize) >= hdr.worldsize) return false;
+		physent d;
+		d.type = ENT_CAMERA;
+		d.o = o;
+		d.vel = vec(0, 0, -1);
+		d.radius = radius;
+		d.height = height;
+		d.aboveeye = radius;
+		loopi(hdr.worldsize) if(!move(&d, v))
+		{
+			o = d.o;
+			return true;
+		}
+		return false;
 	}
 
 	void update()		  // optimally schedule physics frames inside the graphics frames

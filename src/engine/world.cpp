@@ -754,12 +754,22 @@ ICOMMAND(entget,    "",  (), entfocus(efocus, s_sprintfd(s)("%s %d %d %d %d", et
 COMMAND(entset, "siiii");
 
 
-int findentity(int type, int index)
+int findentity(int type, int index, int attr1, int attr2)
 {
-	const vector<extentity *> &ents = et->getents();
-	for(int i = index; i<ents.length(); i++) if(ents[i]->type==type) return i;
-	loopj(min(index, ents.length())) if(ents[j]->type==type) return j;
-	return -1;
+    const vector<extentity *> &ents = et->getents();
+    for(int i = index; i<ents.length(); i++)
+    {
+        extentity &e = *ents[i];
+        if(e.type==type && (attr1<0 || e.attr1==attr1) && (attr2<0 || e.attr2==attr2))
+            return i;
+    }
+    loopj(min(index, ents.length()))
+    {
+        extentity &e = *ents[j];
+        if(e.type==type && (attr1<0 || e.attr1==attr1) && (attr2<0 || e.attr2==attr2))
+            return j;
+    }
+    return -1;
 }
 
 void splitocta(cube *c, int size)

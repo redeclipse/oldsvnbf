@@ -319,6 +319,7 @@ struct clientcom : iclientcom
 			cl.et.putitems(p);
 			putint(p, -1);
 			if(m_capture(cl.gamemode)) cl.cpc.sendbases(p);
+            else if(m_ctf(cl.gamemode)) cl.ctf.sendflags(p);
 			senditemstoserver = false;
 		}
 		if(!c2sinit)	// tell other clients who I am
@@ -592,7 +593,7 @@ struct clientcom : iclientcom
 
 			case SV_MAPRELOAD:		  // server requests next map
 			{
-				s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture(cl.gamemode) ? "capture_" : "", mapname);
+                s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture(cl.gamemode) ? "capture_" : (m_ctf(cl.gamemode) ? "ctf_" : ""), mapname);
 				const char *map = getalias(nextmapalias);	 // look up map in the cycle
 				addmsg(SV_MAPCHANGE, "rsii", *map ? map : sv->defaultmap(), cl.nextmode, cl.nextmuts);
 				break;
@@ -660,8 +661,9 @@ struct clientcom : iclientcom
 				cl.player1->gunselect = getint(p);
 				loopi(NUMGUNS) cl.player1->ammo[i] = getint(p);
 				cl.player1->state = CS_ALIVE;
-				cl.ph.findplayerspawn(cl.player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(cl.player1->team) : -1);
+				cl.et.findplayerspawn(cl.player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(cl.player1->team) : -1, m_ctf(cl.gamemode) ? ctfteamflag(cl.player1->team)+1 : 0);
 				cl.sb.showscores(false);
+                cl.lasthit = 0;
 				addmsg(SV_SPAWN, "rii", cl.player1->lifesequence, cl.player1->gunselect);
 				break;
 			}
@@ -727,7 +729,7 @@ struct clientcom : iclientcom
 						*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
 				if(!actor) break;
 				actor->frags = frags;
-				if(actor!=cl.player1)
+				if(actor!=cl.player1 && !m_capture(cl.gamemode) && !m_ctf(cl.gamemode))
 				{
 					s_sprintfd(ds)("@%d", actor->frags);
 					particle_text(actor->abovehead(), ds, 9);
@@ -994,6 +996,53 @@ struct clientcom : iclientcom
 				break;
 			}
 
+            case SV_INITFLAGS:
+            {
+                cl.ctf.parseflags(p, m_ctf(cl.gamemode));
+                break;
+            }
+
+            case SV_DROPFLAG:
+            {
+                int ocn = getint(p), flag = getint(p);
+                vec droploc;
+                loopk(3) droploc[k] = getint(p)/DMF;
+                fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+                if(m_ctf(cl.gamemode)) cl.ctf.dropflag(o, flag, droploc);
+                break;
+            }
+
+            case SV_SCOREFLAG:
+            {
+                int ocn = getint(p), relayflag = getint(p), goalflag = getint(p), score = getint(p);
+                fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+                if(m_ctf(cl.gamemode)) cl.ctf.scoreflag(o, relayflag, goalflag, score);
+                break;
+            }
+
+            case SV_RETURNFLAG:
+            {
+                int ocn = getint(p), flag = getint(p);
+                fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+                if(m_ctf(cl.gamemode)) cl.ctf.returnflag(o, flag);
+                break;
+            }
+
+            case SV_TAKEFLAG:
+            {
+                int ocn = getint(p), flag = getint(p);
+                fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+                if(m_ctf(cl.gamemode)) cl.ctf.takeflag(o, flag);
+                break;
+            }
+
+            case SV_RESETFLAG:
+            {
+                int flag = getint(p);
+                if(m_ctf(cl.gamemode)) cl.ctf.resetflag(flag);
+                break;
+            }
+
             case SV_CLEARTARGETS:
                 if(m_assassin(cl.gamemode)) cl.asc.targets.setsize(0);
                 break;
@@ -1073,10 +1122,11 @@ struct clientcom : iclientcom
 		cl.nextmuts = cl.mutators = mutators;
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
-		if(m_demo(cl.gamemode)) return;
+		if(m_demo(gamemode)) return;
 		load_world(name);
-		if(m_capture(cl.gamemode)) cl.cpc.setupbases();
-        else if(m_assassin(cl.gamemode)) cl.asc.reset();
+		if(m_capture(gamemode)) cl.cpc.setupbases();
+        else if(m_assassin(gamemode)) cl.asc.reset();
+        else if(m_ctf(gamemode)) cl.ctf.setupflags();
 		if(editmode) edittoggled(editmode);
 	}
 

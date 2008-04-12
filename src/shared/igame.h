@@ -64,7 +64,8 @@ struct igameclient
     virtual int numdynents() = 0;
     virtual void render() = 0;
     virtual void g3d_gamemenus() = 0;
-    virtual void crosshaircolor(float &r, float &g, float &b) {}
+	virtual const char *defaultcrosshair(int index) { return NULL; }
+    virtual int selectcrosshair(float &r, float &g, float &b) = 0;
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}
     virtual void adddynlights() {}
     virtual void particletrack(physent *owner, vec &o, vec &d) {}

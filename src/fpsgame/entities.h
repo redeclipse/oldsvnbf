@@ -162,19 +162,92 @@ struct entities : icliententities
 
 	void checkitems(fpsent *d)
 	{
-		if (d == cl.player1 && (editmode || cl.cc.spectator)) return;
-
-		float eye = d->height*0.5f;
-		vec m = d->o;
-		m.z -= eye;
-
-		loopv(ents)
+		if (d->state != CS_EDITING && d->state != CS_SPECTATOR)
 		{
-			extentity &e = *ents[i];
-			if (e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-			if (!e.spawned && e.type != TELEPORT && e.type != JUMPPAD && e.type != CHECKPOINT) continue;
-			enttypes &t = enttype[e.type];
-			if (insidesphere(m, eye, d->radius, e.o, t.height, t.radius)) tryuse(i, d);
+			float eye = d->height*0.5f;
+			vec m = d->o;
+			m.z -= eye;
+
+			loopv(ents)
+			{
+				extentity &e = *ents[i];
+				if (e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
+				if (!e.spawned && e.type != TELEPORT && e.type != JUMPPAD && e.type != CHECKPOINT) continue;
+				enttypes &t = enttype[e.type];
+				if (insidesphere(m, eye, d->radius, e.o, t.height, t.radius)) tryuse(i, d);
+			}
+		}
+		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
+	}
+
+	void findplayerspawn(dynent *d, int forceent = -1, int tag = -1)   // place at random spawn. also used by monsters!
+	{
+		int pick = forceent;
+		if(pick<0)
+		{
+			int r = cl.ph.fixspawn-->0 ? 7 : rnd(10)+1;
+			loopi(r) cl.ph.spawncycle = findentity(ET_PLAYERSTART, cl.ph.spawncycle+1, -1, tag);
+			pick = cl.ph.spawncycle;
+		}
+		if(pick!=-1)
+		{
+			d->pitch = 0;
+			d->roll = 0;
+			for(int attempt = pick;;)
+			{
+				d->o = ents[attempt]->o;
+				d->yaw = ents[attempt]->attr1;
+				if(cl.ph.entinmap(d, true)) break;
+				attempt = findentity(ET_PLAYERSTART, attempt+1, -1, tag);
+				if(attempt<0 || attempt==pick)
+				{
+					d->o = ents[attempt]->o;
+					d->yaw = ents[attempt]->attr1;
+					cl.ph.entinmap(d, false);
+					break;
+				}
+			}
+		}
+		else
+		{
+			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
+			cl.ph.entinmap(d, false);
+		}
+	}
+
+	void gotocamera(int n, fpsent *d, int &delta)
+	{
+		int e = -1, tag = n, beenhere = -1;
+		for (;;)
+		{
+			e = findentity(CAMERA, e + 1);
+			if (e == beenhere || e < 0)
+			{
+				conoutf("no camera destination for tag %d", tag);
+				return ;
+			};
+			if (beenhere < 0)
+				beenhere = e;
+			if (ents[e]->attr4 == tag)
+			{
+				d->o = ents[e]->o;
+				d->yaw = ents[e]->attr1;
+				d->pitch = ents[e]->attr2;
+				delta = ents[e]->attr3;
+				if (cl.player1->state == CS_EDITING)
+				{
+					vec dirv;
+					vecfromyawpitch(d->yaw, d->pitch, 1, 0, dirv);
+					vec tinyv = dirv.normalize().mul(10.0f);
+					d->vel = tinyv;
+				}
+				else
+				{
+					d->vel = vec(0, 0, 0);
+				}
+				s_sprintfd(camnamalias)("camera_name_%d", ents[e]->attr4);
+				break;
+			}
 		}
 	}
 
@@ -299,42 +372,6 @@ struct entities : icliententities
 		}
 	}
 
-	void gotocamera(int n, fpsent *d, int &delta)
-	{
-		int e = -1, tag = n, beenhere = -1;
-		for (;;)
-		{
-			e = findentity(CAMERA, e + 1);
-			if (e == beenhere || e < 0)
-			{
-				conoutf("no camera destination for tag %d", tag);
-				return ;
-			};
-			if (beenhere < 0)
-				beenhere = e;
-			if (ents[e]->attr4 == tag)
-			{
-				d->o = ents[e]->o;
-				d->yaw = ents[e]->attr1;
-				d->pitch = ents[e]->attr2;
-				delta = ents[e]->attr3;
-				if (cl.player1->state == CS_EDITING)
-				{
-					vec dirv;
-					vecfromyawpitch(d->yaw, d->pitch, 1, 0, dirv);
-					vec tinyv = dirv.normalize().mul(10.0f);
-					d->vel = tinyv;
-				}
-				else
-				{
-					d->vel = vec(0, 0, 0);
-				}
-				s_sprintfd(camnamalias)("camera_name_%d", ents[e]->attr4);
-				break;
-			}
-		}
-	}
-
 	void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e)
 	{
 		fpsentity &f = (fpsentity &)e;
@@ -450,6 +487,9 @@ struct entities : icliententities
 					}
 				}
 			}
+
+			int fcnt = 0;
+
 			loopv(ents)
 			{
 				fpsentity &e = (fpsentity &)*ents[i];
@@ -467,8 +507,11 @@ struct entities : icliententities
 					e.attr3 = 0;
 				}
 
-				if (mtype == MAP_OCTA && e.type >= MAXENTTYPES)
-					e.type = NOTUSED; // sanity check
+				if (mtype == MAP_OCTA)
+				{
+					if (e.type == 20) e.attr1 = ++fcnt; // number them instead
+					else if (e.type >= MAXENTTYPES) e.type = NOTUSED; // sanity check
+				}
 			}
 		}
 	}

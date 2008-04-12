@@ -188,7 +188,7 @@ struct captureclient : capturestate
         int oldbase = d->lastbase;
         d->lastbase = -1;
         vec pos(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->height)/2);
-        if(d->state==CS_ALIVE) 
+        if(d->state==CS_ALIVE)
         {
             loopv(bases)
             {
@@ -212,11 +212,11 @@ struct captureclient : capturestate
 
     void preload()
     {
-        static const char *basemodels[3] = { "flags/neutral", "flags/red", "flags/blue" };
+        static const char *basemodels[3] = { "bases/neutral", "bases/red", "bases/blue" };
         loopi(3) loadmodel(basemodels[i], -1, true);
     }
 
-	void renderbases()
+	void render()
 	{
         extern bool shadowmapping;
         if(capturetether() && !shadowmapping)
@@ -232,7 +232,7 @@ struct captureclient : capturestate
 		loopv(bases)
 		{
 			baseinfo &b = bases[i];
-			const char *flagname = b.owner[0] ? (strcmp(b.owner, cl.player1->team) ? "flags/red" : "flags/blue") : "flags/neutral";
+			const char *flagname = b.owner[0] ? (strcmp(b.owner, cl.player1->team) ? "bases/red" : "bases/blue") : "bases/neutral";
             rendermodel(&b.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, 0, 0, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
             particle_fireball(b.pos, 5, b.owner[0] ? (strcmp(b.owner, cl.player1->team) ? 31 : 32) : 33, 0);
 			int ttype = 11, mtype = -1;
@@ -339,7 +339,7 @@ struct captureclient : capturestate
 			baseinfo &b = bases.add();
 			b.o = e->o;
             b.pos = b.o;
-            abovemodel(b.pos, "base/neutral");
+            abovemodel(b.pos, "bases/neutral");
             b.pos.z += FIREBALLRADIUS-2;
 			s_sprintfd(alias)("base_%d", e->attr1);
 			const char *name = getalias(alias);
@@ -554,7 +554,7 @@ struct captureservmode : capturestate, servmode
 
 	void initclient(clientinfo *ci, ucharbuf &p, bool connecting)
 	{
-		if(connecting) 
+		if(connecting)
         {
             loopv(scores)
 		    {

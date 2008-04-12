@@ -35,7 +35,7 @@ struct scoreboard : g3d_callback
         const char *team;
 		int score;
 		teamscore() {}
-		teamscore(char *s, int n) : team(s), score(n) {}
+		teamscore(const char *s, int n) : team(s), score(n) {}
 	};
 
 	static int teamscorecmp(const teamscore *x, const teamscore *y)
@@ -75,6 +75,18 @@ struct scoreboard : g3d_callback
 		{
 			loopv(cl.cpc.scores) teamscores.add(teamscore(cl.cpc.scores[i].team, cl.cpc.scores[i].total));
 		}
+        else if(m_ctf(cl.gamemode))
+        {
+        	loopk(2)
+        	{
+        		int s = 0;
+        		loopv(cl.ctf.flags)
+				{
+					if(cl.ctf.flags[i].team == k) s += cl.ctf.flags[i].score;
+				}
+				teamscores.add(teamscore(ctfflagteam(k), s));
+        	}
+        }
 		loopi(cl.numdynents())
 		{
 			fpsent *o = (fpsent *)cl.iterdynents(i);
@@ -82,8 +94,8 @@ struct scoreboard : g3d_callback
 			{
 				teamscore *ts = NULL;
 				loopv(teamscores) if(!strcmp(teamscores[i].team, o->team)) { ts = &teamscores[i]; break; }
-				if(!ts) teamscores.add(teamscore(o->team, m_capture(cl.gamemode) ? 0 : o->frags));
-				else if(!m_capture(cl.gamemode)) ts->score += o->frags;
+				if(!ts) teamscores.add(teamscore(o->team, m_capture(cl.gamemode) || m_ctf(cl.gamemode) ? 0 : o->frags));
+				else if(!m_capture(cl.gamemode) && !m_ctf(cl.gamemode)) ts->score += o->frags;
 			}
 		}
 		teamscores.sort(teamscorecmp);
@@ -133,7 +145,7 @@ struct scoreboard : g3d_callback
             {
                 scoregroup &g = *groups[j];
                 if(team!=g.team && (!team || !g.team || !isteam(team, g.team))) continue;
-                if(team && !m_capture(cl.gamemode)) g.score += o->frags;
+                if(team && !m_capture(cl.gamemode) && !m_ctf(cl.gamemode)) g.score += o->frags;
                 g.players.add(o);
                 found = true;
             }
@@ -141,7 +153,11 @@ struct scoreboard : g3d_callback
             if(numgroups>=groups.length()) groups.add(new scoregroup);
             scoregroup &g = *groups[numgroups++];
             g.team = team;
-            g.score = team ? (m_capture(cl.gamemode) ? cl.cpc.findscore(o->team).total : o->frags) : 0;
+            if(!team) g.score = 0;
+            else if(m_capture(cl.gamemode)) g.score = cl.cpc.findscore(o->team).total;
+            else if(m_ctf(cl.gamemode)) g.score = cl.ctf.findscore(o->team);
+            else g.score = o->frags;
+
             g.players.setsize(0);
             g.players.add(o);
         }
@@ -264,8 +280,8 @@ struct scoreboard : g3d_callback
 
                 g.pushlist(); // horizontal
             }
-            
-            if(!m_capture(cl.gamemode))
+
+            if(!m_capture(cl.gamemode) && !m_ctf(cl.gamemode))
             {
                 g.pushlist();
                 g.strut(7);

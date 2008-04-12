@@ -9,6 +9,7 @@ struct GAMECLIENT : igameclient
 	#include "client.h"
 	#include "capture.h"
     #include "assassin.h"
+    #include "ctf.h"
 
 	int nextmode, nextmuts, gamemode, mutators;
 	bool intermission;
@@ -18,6 +19,7 @@ struct GAMECLIENT : igameclient
 	vec swaydir;
     dynent guninterp;
     int respawned, suicided;
+    int lasthit;
 
 	string cptext;
 	int cameratype, cameranum, cameracycled, camerawobble, damageresidue, myrankv, myranks;
@@ -26,10 +28,10 @@ struct GAMECLIENT : igameclient
 	struct sline { string s; };
 	struct teamscore
 	{
-		char *team;
+		const char *team;
 		int score;
 		teamscore() {}
-		teamscore(char *s, int n) : team(s), score(n) {}
+		teamscore(const char *s, int n) : team(s), score(n) {}
 	};
 
 	vector<fpsent *> shplayers;
@@ -40,7 +42,7 @@ struct GAMECLIENT : igameclient
 	fpsent lastplayerstate;
 
 	IVAR(cameracycle,			0,			0,			600);		// cycle camera every N secs
-	IVARP(crosshair,			0,			1,			1);			// show the crosshair
+
 	IVARP(invmouse,				0,			0,			1);
 	IVARP(thirdperson,			0,			0,			1);
 	IVARP(thirdpersondist,		2,			16,			128);
@@ -53,13 +55,17 @@ struct GAMECLIENT : igameclient
 
 	IVARP(autoreload,		0,			1,			1);			// auto reload when empty
 
+	IVARP(crosshair,			0,			1,			1);			// show the crosshair
+    IVARP(teamcrosshair, 0, 1, 1);
+    IVARP(hitcrosshair, 0, 425, 1000);
+
 	IVARP(rankhud,			0,			0,			1);			// show ranks on the hud
 	IVARP(ranktime,			0,			15000,		600000);	// display unchanged rank no earlier than every N ms
 
     IVARP(maxradarscale,	0,			1024,		10000);
 
 	GAMECLIENT()
-		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this), asc(*this),
+		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this), asc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
@@ -103,7 +109,7 @@ struct GAMECLIENT : igameclient
 
 	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
 	{
-		ph.findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1));
+		et.findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1), m_ctf(gamemode) ? ctfteamflag(player1->team)+1 : 0);
 		spawnstate(d);
 		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
 	}
@@ -113,6 +119,7 @@ struct GAMECLIENT : igameclient
 		int wait = 0;
 		if (m_capture(gamemode)) wait = cpc.respawnwait();
 		else if (m_assassin(gamemode)) wait = asc.respawnwait();
+		if (m_ctf(gamemode)) wait = ctf.respawnwait();
 		return wait;
 	}
 
@@ -162,6 +169,7 @@ struct GAMECLIENT : igameclient
         {
             spawnplayer(player1);
             sb.showscores(false);
+            lasthit = 0;
         }
 	}
 
@@ -290,6 +298,7 @@ struct GAMECLIENT : igameclient
 			else if (damage > 50) snd = 5;
 			else snd = 6;
 			playsound(S_DAMAGE1+snd);
+			lasthit = lastmillis;
 		}
 
 		if (d == player1)
@@ -459,12 +468,14 @@ struct GAMECLIENT : igameclient
         fr.preload();
         et.preload();
 		if (m_capture(gamemode)) cpc.preload();
+        else if(m_ctf(gamemode)) ctf.preload();
     }
 
 	void startmap(const char *name)	// called just after a map load
 	{
         respawned = suicided = 0;
 		respawnent = -1;
+        lasthit = 0;
 		cc.mapstart();
 		pj.reset();
 
@@ -481,7 +492,7 @@ struct GAMECLIENT : igameclient
 			players[i]->totalshots = 0;
 		}
 
-		ph.findplayerspawn(player1, -1);
+		et.findplayerspawn(player1, -1, -1);
 		et.resetspawns();
 		sb.showscores(false);
 		intermission = false;
@@ -747,6 +758,7 @@ struct GAMECLIENT : igameclient
 					glDisable(GL_BLEND);
 					if(m_capture(gamemode)) cpc.drawhud(w, h);
 					else if(m_assassin(gamemode)) asc.drawhud(w, h);
+					if(m_ctf(gamemode)) ctf.drawhud(w, h);
 					glEnable(GL_BLEND);
 				}
 				glDisable(GL_BLEND);
@@ -771,18 +783,41 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
-	void crosshaircolor(float &r, float &g, float &b)
-	{
-		if (player1->state != CS_ALIVE) return;
+    const char *defaultcrosshair(int index)
+    {
+        switch(index)
+        {
+            case 1: return "textures/crosshair_team.png";
+            case 2: return "textures/crosshair_hit.png";
+            case 3: return "textures/crosshair_zoom.png";
+            default: return "textures/crosshair.png";
+        }
+    }
+    int selectcrosshair(float &r, float &g, float &b)
+    {
+        if(player1->state!=CS_ALIVE) return 0;
 
-		if (player1->gunselect >= 0 && lastmillis-player1->gunlast[player1->gunselect] < player1->gunwait[player1->gunselect])
-			r = g = b = 0.5f;
-		else if (!editmode && !m_insta(gamemode, mutators))
-		{
-			if( player1->health<=25) { r = 1.0f; g = b = 0; }
-			else if (player1->health<=50) { r = 1.0f; g = 0.5f; b = 0; }
-		}
-	}
+        int crosshair = 0;
+        if(fov < 90) crosshair = 3;
+        else if(lastmillis - lasthit < hitcrosshair()) crosshair = 2;
+        else if(teamcrosshair())
+        {
+            dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
+            if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team))
+            {
+                crosshair = 1;
+                r = g = 0;
+            }
+        }
+
+        if(player1->gunwait) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
+        else if(!crosshair && r && g && b && !editmode && !m_insta(gamemode, mutators))
+        {
+            if(player1->health<=25) { r = 1.0f; g = b = 0; }
+            else if(player1->health<=50) { r = 1.0f; g = 0.5f; b = 0; }
+        }
+        return crosshair;
+    }
 
 	void lighteffects(dynent *e, vec &color, vec &dir)
 	{
