@@ -46,7 +46,7 @@ static struct depthfxtexture : rendertarget
 
     float eyedepth(const vec &p) const
     {
-        return max(-p.x*mvmatrix[2] + p.y*mvmatrix[6] + p.z*mvmatrix[10] + mvmatrix[14], 0.0f);
+        return max(-(p.x*mvmatrix[2] + p.y*mvmatrix[6] + p.z*mvmatrix[10] + mvmatrix[14]), 0.0f);
     }
 
     void addscissorvert(const vec &v, float &sx1, float &sy1, float &sx2, float &sy2)
