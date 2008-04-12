@@ -377,7 +377,7 @@ struct physics
 			d->o = old;
 		}
 		#endif
-		bool collided = false;
+		bool collided = false, slidecollide = false;
 		vec obstacle;
 		d->o.add(dir);
 		if(!collide(d, d->type!=ENT_CAMERA ? dir : vec(0, 0, 0)) || (d->type==ENT_AI && !collide(d)))
