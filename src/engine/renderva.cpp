@@ -638,7 +638,7 @@ void rendershadowmapreceivers()
     vtxarray *prev = NULL;
     for(vtxarray *va = visibleva; va; va = va->next)
     {
-        if(va->curvfc >= VFC_FOGGED || !isshadowmapreceiver(va)) continue;
+        if(!va->texs || va->curvfc >= VFC_FOGGED || !isshadowmapreceiver(va)) continue;
 
         if(!prev || va->vbuf != prev->vbuf)
         {
