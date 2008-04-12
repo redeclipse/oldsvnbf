@@ -997,7 +997,7 @@ void addskyverts(const ivec &o, int size)
 ////////// Vertex Arrays //////////////
 
 int allocva = 0;
-int wtris = 0, wverts = 0, vtris = 0, vverts = 0, glde = 0;
+int wtris = 0, wverts = 0, vtris = 0, vverts = 0, glde = 0, gbatches = 0;
 vector<vtxarray *> valist, varoot;
 
 vtxarray *newva(int x, int y, int z, int size)
