@@ -30,7 +30,7 @@ vec depthfxmin(1e16f, 1e16f, 1e16f), depthfxmax(1e16f, 1e16f, 1e16f);
 
 static struct depthfxtexture : rendertarget
 {    
-    GLfloat mvpmatrix[16];
+    GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16];
 
     const GLenum *colorformats() const
     {
@@ -40,15 +40,19 @@ static struct depthfxtexture : rendertarget
 
     void getmvpmatrix()
     {
-        GLfloat mm[16], pm[16];
-        glGetFloatv(GL_MODELVIEW_MATRIX, mm);
-        glGetFloatv(GL_PROJECTION_MATRIX, pm);
+        glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix);
+        glGetFloatv(GL_PROJECTION_MATRIX, projmatrix);
         loopi(4) loopj(4)
         {
             float c = 0;
-            loopk(4) c += pm[k*4 + j] * mm[i*4 + k];
+            loopk(4) c += projmatrix[k*4 + j] * mvmatrix[i*4 + k];
             mvpmatrix[i*4 + j] = c;
         }
+    }
+
+    float eyedepth(const vec &p) const
+    {
+        return max(-p.x*mvmatrix[2] + p.y*mvmatrix[6] + p.z*mvmatrix[10] + mvmatrix[14], 0.0f);
     }
 
     void addscissorvert(const vec &v, float &sx1, float &sy1, float &sx2, float &sy2)
@@ -64,14 +68,40 @@ static struct depthfxtexture : rendertarget
 
     bool addscissorbox(const vec &center, float size)
     {
-        float sx1 = 1, sy1 = 1, sx2 = -1, sy2 = -1;
-        loopi(4)
+        extern float fovy, aspect;
+        vec e(center.x*mvmatrix[0] + center.y*mvmatrix[4] + center.z*mvmatrix[8] + mvmatrix[12],
+              center.x*mvmatrix[1] + center.y*mvmatrix[5] + center.z*mvmatrix[9] + mvmatrix[13],
+              center.x*mvmatrix[2] + center.y*mvmatrix[6] + center.z*mvmatrix[10] + mvmatrix[14]);
+        float zz = e.z*e.z, xx = e.x*e.x, yy = e.y*e.y, rr = size*size,
+              dx = zz*(xx + zz) - rr*zz, dy = zz*(yy + zz) - rr*zz,
+              focaldist = 1.0f/tan(fovy*0.5f*RAD),
+              left = -1, right = 1, bottom = -1, top = 1;
+        #define CHECKPLANE(c, dir, focaldist, low, high) \
+        do { \
+            float nc = (size*e.c dir drt)/(c##c + zz), \
+                  nz = (size - nc*e.c)/e.z, \
+                  pz = (c##c + zz - rr)/(e.z - nz/nc*e.c); \
+            if(pz < 0) \
+            { \
+                float c = nz*(focaldist)/nc, \
+                      pc = -pz*nz/nc; \
+                if(pc < e.c) low = c; \
+                else if(pc > e.c) high = c; \
+            } \
+        } while(0)
+        if(dx > 0)
         {
-            vec v(center);
-            v.add(vec(i < 2 ? camright : camup).mul(i&1 ? size : -size));
-            addscissorvert(v, sx1, sy1, sx2, sy2);
+            float drt = sqrt(dx);
+            CHECKPLANE(x, -, focaldist/aspect, left, right);
+            CHECKPLANE(x, +, focaldist/aspect, left, right);
         }
-        return addblurtiles(sx1, sy1, sx2, sy2);
+        if(dy > 0)
+        {
+            float drt = sqrt(dy);
+            CHECKPLANE(y, -, focaldist, bottom, top);
+            CHECKPLANE(y, +, focaldist, bottom, top);
+        }
+        return addblurtiles(left, bottom, right, top);
     }
 
     bool addscissorbox(const vec &bbmin, const vec &bbmax)
@@ -1013,9 +1043,6 @@ struct fireballrenderer : listrenderer
 
     int finddepthfxranges(void **owners, float *ranges, int maxranges, vec &bbmin, vec &bbmax)
     {
-        GLfloat mm[16];
-        glGetFloatv(GL_MODELVIEW_MATRIX, mm);
-
         physent e;
         e.type = ENT_CAMERA;
 
@@ -1026,7 +1053,9 @@ struct fireballrenderer : listrenderer
             float pmax = p->val, 
                   size = p->fade ? float(ts)/p->fade : 1,
                   psize = (p->size + pmax * size)*WOBBLE;
-            if(2*(p->size + pmax)*WOBBLE < depthfxblend || isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
+            if(2*(p->size + pmax)*WOBBLE < depthfxblend ||
+               (depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16 && psize > depthfxscale - depthfxbias) ||
+               isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
 
             e.o = p->o;
             e.radius = e.height = e.aboveeye = psize;
@@ -1038,7 +1067,7 @@ struct fireballrenderer : listrenderer
             dir.sub(p->o);
             float dist = dir.magnitude();
             dir.mul(psize/dist).add(p->o);
-            float depth = max(-(dir.x*mm[2] + dir.y*mm[6] + dir.z*mm[10] + mm[14]) - depthfxbias, 0.0f);
+            float depth = depthfxtex.eyedepth(dir);
 
             loopk(3)
             {
