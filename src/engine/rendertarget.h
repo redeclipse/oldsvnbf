@@ -247,20 +247,20 @@ struct rendertarget
     virtual bool scissorrender(int &x, int &y, int &w, int &h)
     {
         if(scissorx1 >= scissorx2 || scissory1 >= scissory2) return false;
-        x = max(int(floor((scissorx1+1)/2*texsize)), 0);
-        y = max(int(floor((scissory1+1)/2*texsize)), 0);
-        w = min(int(ceil((scissorx2+1)/2*texsize)), texsize) - x;
-        h = min(int(ceil((scissory2+1)/2*texsize)), texsize) - y;
+        x = max(int(floor((scissorx1+1)/2*texsize)) - 2*blursize, 0);
+        y = max(int(floor((scissory1+1)/2*texsize)) - 2*blursize, 0);
+        w = min(int(ceil((scissorx2+1)/2*texsize)) + 2*blursize, texsize) - x;
+        h = min(int(ceil((scissory2+1)/2*texsize)) + 2*blursize, texsize) - y;
         return true;
     }
 
     virtual bool scissorblur(int &x, int &y, int &w, int &h)
     {
         if(scissorx1 >= scissorx2 || scissory1 >= scissory2) return false;
-        x = max(int(floor((scissorx1+1)/2*texsize)) - 2*blursize, 0);
-        y = max(int(floor((scissory1+1)/2*texsize)) - 2*blursize, 0);
-        w = min(int(ceil((scissorx2+1)/2*texsize)) + 2*blursize, texsize) - x;
-        h = min(int(ceil((scissory2+1)/2*texsize)) + 2*blursize, texsize) - y;
+        x = max(int(floor((scissorx1+1)/2*texsize)), 0);
+        y = max(int(floor((scissory1+1)/2*texsize)), 0);
+        w = min(int(ceil((scissorx2+1)/2*texsize)), texsize) - x;
+        h = min(int(ceil((scissory2+1)/2*texsize)), texsize) - y;
         return true;
     }
 
@@ -378,7 +378,7 @@ struct rendertarget
     void debug()
     {
         if(!rendertex) return;
-        int w = min(screen->w, screen->h)/2, h = w;
+        int w = min(screen->w, screen->h)/2, h = (w*screen->h)/screen->w;
         defaultshader->set();
         glColor3f(1, 1, 1);
         glEnable(GL_TEXTURE_2D);
