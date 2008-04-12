@@ -220,8 +220,9 @@ void gl_checkextensions()
         reserveshadowmaptc = 3;
         minimizetcusage = 1;
         emulatefog = 1;
-        extern int fpdepthfx;
+        extern int fpdepthfx, depthfxprecision;
         fpdepthfx = 0;
+        depthfxprecision = 1;
         extern int filltjoints;
         filltjoints = 1;
 
