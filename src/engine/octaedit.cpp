@@ -473,6 +473,8 @@ void cursorupdate()
 
 //////////// ready changes to vertex arrays ////////////
 
+static bool invalidatedmerges = false;
+
 void readychanges(block3 &b, cube *c, const ivec &cor, int size)
 {
 	loopoctabox(cor, size, b.o, b.s)
@@ -485,7 +487,15 @@ void readychanges(block3 &b, cube *c, const ivec &cor, int size)
 				int hasmerges = c[i].ext->va->hasmerges;
 				destroyva(c[i].ext->va);
 				c[i].ext->va = NULL;
-				if(hasmerges) invalidatemerges(c[i]);
+                if(hasmerges)
+                {
+                    if(!invalidatedmerges)
+                    {
+                        show_out_of_renderloop_progress(0, "invalidating merged surfaces...");
+                        invalidatedmerges = true;
+                    }
+                    invalidatemerges(c[i]);
+                }
 			}
 			freeoctaentities(c[i]);
             c[i].ext->tjoints = -1;
@@ -510,6 +520,7 @@ void changed(const block3 &sel)
 	block3 b = sel;
 	loopi(3) b.s[i] *= b.grid;
 	b.grid = 1;
+    invalidatedmerges = false;
 	loopi(3)					// the changed blocks are the selected cubes
 	{
 		b.o[i] -= 1;
