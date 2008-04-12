@@ -1282,6 +1282,7 @@ static void renderbatch(renderstate &cur, int pass, geombatch &b)
             if(cur.texgendim!=dim || cur.texgenw!=tex->xs || cur.texgenh!=tex->ys || cur.texgenscale!=scale || cur.mtglow>cur.mttexgen)
                 changetexgen(cur, s, tex, scale, dim, b.slot.scrollS, b.slot.scrollT);
 
+            gbatches++;
             loopv(draw)
             {
                 batchdrawinfo &info = draw[i];

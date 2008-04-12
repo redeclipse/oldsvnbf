@@ -236,7 +236,7 @@ struct undoblock { int ts; int *g, n; block3 *b; undoent *e; undoblock() : g(NUL
 extern cube *worldroot;			 // the world data. only a ptr to 8 cubes (ie: like cube.children above)
 extern ivec lu;
 extern int lusize;
-extern int wtris, wverts, vtris, vverts, glde, rplanes;
+extern int wtris, wverts, vtris, vverts, glde, gbatches, rplanes;
 extern int allocnodes, allocva, selchildcount;
 
 const uint F_EMPTY = 0;			 // all edges in the range (0,0)
