@@ -42,7 +42,7 @@ static struct enttypes
 	{ MONSTER,		0,				0.f,	0.f,			"monster" },
 	{ TRIGGER,		0,				16.f,	16.f,			"trigger" },
 	{ JUMPPAD,		0,				12.f,	12.f,			"jumppad" },
-	{ BASE,			48,				64.f,	24.f,			"base" },
+	{ BASE,			48,				32.f,	16.f,			"base" },
 	{ CHECKPOINT,	48,				16.f,	16.f,			"checkpoint" },
 	{ CAMERA,		48,				0.f,	0.f,			"camera" },
 	{ WAYPOINT,		1,				4.f,	4.f,			"waypoint" }
@@ -93,6 +93,7 @@ enum
 	G_DEATHMATCH,
 	G_CAPTURE,
 	G_ASSASSIN,
+	G_CTF,
 	G_MAX
 };
 
@@ -116,6 +117,7 @@ static struct gametypes
 	{ G_DEATHMATCH,		G_M_FRAG,		0,					"Deathmatch" },
 	{ G_CAPTURE,		G_M_BASE,		G_M_TEAM,			"Base Capture" },
 	{ G_ASSASSIN,		G_M_INSTA,		0,					"Assassin" },
+	{ G_CTF,			G_M_INSTA,		G_M_TEAM,			"Capture the Flag" },
 }, mutstype[] = {
 	{ G_M_TEAM,			0,				0,					"Team" },
 	{ G_M_INSTA,		0,				0,					"Instagib" },
@@ -131,12 +133,13 @@ static struct gametypes
 #define m_dm(a)				(a == G_DEATHMATCH)
 #define m_capture(a)		(a == G_CAPTURE)
 #define m_assassin(a)		(a == G_ASSASSIN)
+#define m_ctf(a)			(a == G_CTF)
 
 #define m_mp(a)				(a > G_DEMO && a < G_MAX)
 #define m_frag(a)			(a >= G_DEATHMATCH)
 #define m_timed(a)			(m_frag(a))
 
-#define m_team(a,b)			((m_dm(a) && (b & G_M_TEAM)) || m_capture(a))
+#define m_team(a,b)			((m_dm(a) && (b & G_M_TEAM)) || m_capture(a) || m_ctf(a))
 #define m_insta(a,b)		(m_frag(a) && (b & G_M_INSTA))
 #define m_duel(a,b)			(m_frag(a) && (b & G_M_DUEL))
 
@@ -150,8 +153,9 @@ enum
 	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
 	S_GLFIRE, S_GLEXPL, S_GLHIT, S_RLFIRE, S_RLEXPL, S_RLFLY, S_RIFLE,
 	S_ITEMAMMO, S_ITEMSPAWN,
-	S_V_BASECAP, S_V_BASELOST, S_V_FIGHT, S_V_CHECKPOINT,
-	S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED,
+	S_V_BASECAP, S_V_BASELOST,
+    S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET,
+	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED,
 	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_MENUPRESS, S_MENUBACK
@@ -171,7 +175,9 @@ enum
 	SV_SERVMSG, SV_ITEMLIST, SV_RESUME,
     SV_EDITMODE, SV_EDITENT, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP,
 	SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_SETMASTER, SV_SETTEAM, SV_APPROVEMASTER,
-	SV_BASES, SV_BASEINFO, SV_TEAMSCORE, SV_FORCEINTERMISSION,
+	SV_BASES, SV_BASEINFO,
+    SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS,
+	SV_TEAMSCORE, SV_FORCEINTERMISSION,
     SV_CLEARTARGETS, SV_CLEARHUNTERS, SV_ADDTARGET, SV_REMOVETARGET, SV_ADDHUNTER, SV_REMOVEHUNTER,
 	SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
@@ -193,7 +199,9 @@ static char msgsizelookup(int msg)
 		SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
         SV_EDITMODE, 2, SV_EDITENT, 10, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0, SV_APPROVEMASTER, 2,
-		SV_BASES, 0, SV_BASEINFO, 0, SV_TEAMSCORE, 0, SV_FORCEINTERMISSION, 1,
+		SV_BASES, 0, SV_BASEINFO, 0,
+        SV_DROPFLAG, 6, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 2, SV_RESETFLAG, 2, SV_INITFLAGS, 0,
+		SV_TEAMSCORE, 0, SV_FORCEINTERMISSION, 1,
         SV_CLEARTARGETS, 1, SV_CLEARHUNTERS, 1, SV_ADDTARGET, 2, SV_REMOVETARGET, 2, SV_ADDHUNTER, 2, SV_REMOVEHUNTER, 2,
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 2, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
@@ -206,7 +214,7 @@ static char msgsizelookup(int msg)
 
 #define SERVER_PORT			28795
 #define SERVINFO_PORT		28796
-#define PROTOCOL_VERSION	51
+#define PROTOCOL_VERSION	52
 #define DEMO_VERSION		1
 #define DEMO_MAGIC "BFDZ"
 
@@ -216,8 +224,9 @@ struct demoheader
 	int version, protocol;
 };
 
-#define MAXNAMELEN 15
-#define MAXTEAMLEN 4
+#define MAXNAMELEN 16
+#define MAXTEAMLEN 8
+static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
 
 #define SGRAYS			20
 #define SGSPREAD		3
@@ -243,9 +252,6 @@ static struct guntypes
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		"rifle" },
 };
 #define isgun(gun) (gun > -1 && gun < NUMGUNS)
-
-enum { TEAM_NONE = 0, TEAM_BLUE, TEAM_RED, TEAM_MAX };
-static const char *teamnames[TEAM_MAX] = { "none", "blue", "red" };
 
 enum
 {

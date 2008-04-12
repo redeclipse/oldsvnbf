@@ -297,6 +297,10 @@ struct GAMESERVER : igameserver
     #include "assassin.h"
     #undef ASSASSINSERV
 
+    #define CTFSERV 1
+    #include "ctf.h"
+    #undef CTFSERV
+
 	#include "duel.h"
 
 	#define mutate(b) loopvk(smuts) { servmode *mut = smuts[k]; { b; } }
@@ -320,7 +324,7 @@ struct GAMESERVER : igameserver
 			mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
 			demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
-			smode(NULL), capturemode(*this), assassinmode(*this), duelmutator(*this)
+			smode(NULL), capturemode(*this), assassinmode(*this), ctfmode(*this), duelmutator(*this)
 	{
 		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
 		smuts.setsize(0);
@@ -364,17 +368,17 @@ struct GAMESERVER : igameserver
 	void vote(char *map, int reqmode, int reqmuts, int sender)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
-        if(!ci || (ci->state.state==CS_SPECTATOR && !ci->privilege)) return;
+        if(!ci || (ci->state.state==CS_SPECTATOR && !ci->privilege) || !m_game(reqmode)) return;
 		s_strcpy(ci->mapvote, map);
 		ci->modevote = reqmode;
-		ci->mutsvote = reqmuts;
+		ci->mutsvote = reqmuts|(reqmuts&gametype[reqmode].implied?gametype[reqmode].implied:0);
 		if(!ci->mapvote[0]) return;
 		if(ci->local || mapreload || (ci->privilege && mastermode>=MM_VETO))
 		{
 			if(demorecord) enddemorecord();
 			if(!ci->local && !mapreload)
 			{
-				s_sprintfd(msg)("%s forced %s on map %s", privname(ci->privilege), gamename(reqmode, reqmuts), map);
+				s_sprintfd(msg)("%s forced %s on map %s", privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
 				sendservmsg(msg);
 			}
 			sendf(-1, 1, "risi2", SV_MAPCHANGE, ci->mapvote, ci->modevote, ci->mutsvote);
@@ -382,7 +386,7 @@ struct GAMESERVER : igameserver
 		}
 		else
 		{
-			s_sprintfd(msg)("%s suggests %s on map %s (select map to vote)", colorname(ci), gamename(reqmode, reqmuts), map);
+			s_sprintfd(msg)("%s suggests %s on map %s (select map to vote)", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
 			sendservmsg(msg);
 			checkvotes();
 		}
@@ -414,7 +418,7 @@ struct GAMESERVER : igameserver
 				float rank;
 				clientinfo *ci = choosebestclient(rank);
 				if(!ci) break;
-				if(m_capture(gamemode)) rank = 1;
+				if(m_capture(gamemode) || m_ctf(gamemode)) rank = 1;
 				else if(selected && rank<=0) break;
 				ci->state.timeplayed = -1;
 				team[first].add(ci);
@@ -469,7 +473,7 @@ struct GAMESERVER : igameserver
 		loopi(numteams-1)
 		{
 			teamscore &ts = teamscores[i];
-			if(m_capture(gamemode))
+			if(m_capture(gamemode) || m_ctf(gamemode))
 			{
 				if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.rank < worst->rank)) worst = &ts;
 			}
@@ -740,6 +744,7 @@ struct GAMESERVER : igameserver
 		// server modes
 		if (m_capture(gamemode)) smode = &capturemode;
         else if(m_assassin(gamemode)) smode = &assassinmode;
+        else if(m_ctf(gamemode)) smode = &ctfmode;
 		else smode = NULL;
 		if(smode) smode->reset(false);
 
@@ -770,7 +775,7 @@ struct GAMESERVER : igameserver
 	{
 		uint ip = getclientip(ci->clientnum);
 		if(!ip) return *(savedscore *)0;
-		if(!insert) 
+		if(!insert)
         {
             loopv(clients)
 		    {
@@ -872,7 +877,7 @@ struct GAMESERVER : igameserver
 		// only allow edit messages in coop-edit mode
 		if(type>=SV_EDITENT && type<=SV_GETMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_CLIENT };
+		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_CLEARTARGETS, SV_CLEARHUNTERS, SV_ADDTARGET, SV_REMOVETARGET, SV_ADDHUNTER, SV_REMOVEHUNTER, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_DROPFLAG, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -1284,6 +1289,17 @@ struct GAMESERVER : igameserver
 			case SV_BASES:
                 if(ci->state.state!=CS_SPECTATOR && smode==&capturemode) capturemode.parsebases(p);
 				break;
+
+            case SV_TAKEFLAG:
+            {
+                int flag = getint(p);
+                if(ci->state.state!=CS_SPECTATOR && smode==&ctfmode) ctfmode.takeflag(ci, flag);
+                break;
+            }
+
+            case SV_INITFLAGS:
+                if(ci->state.state!=CS_SPECTATOR && smode==&ctfmode) ctfmode.parseflags(p);
+                break;
 
 			case SV_PING:
 				sendf(sender, 1, "i2", SV_PONG, getint(p));
@@ -1810,7 +1826,7 @@ struct GAMESERVER : igameserver
 		else if(minremain>0)
 		{
 			processevents();
-			if(curtime) 
+			if(curtime)
             {
                 loopv(sents) if(sents[i].spawntime && sents[i].type == WEAPON)
 			    {

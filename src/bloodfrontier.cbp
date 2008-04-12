@@ -323,6 +323,13 @@
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
+		<Unit filename="engine\explosion.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
 		<Unit filename="engine\glare.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
@@ -342,6 +349,13 @@
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
+		<Unit filename="engine\lensflare.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
 		<Unit filename="engine\lightmap.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
@@ -353,6 +367,13 @@
 			<Option compile="0"/>
 			<Option link="0"/>
 			<Option target="data"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
+		<Unit filename="engine\lightning.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
@@ -615,6 +636,14 @@
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\client.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
+		</Unit>
+		<Unit filename="fpsgame\ctf.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

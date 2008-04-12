@@ -60,7 +60,7 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
 struct lightningrenderer : listrenderer
 {
     lightningrenderer()
-        : listrenderer("textures/lightning.jpg", PT_LIGHTNING|PT_TRACK|PT_GLARE, 0, 0)
+        : listrenderer("textures/lightning.png", PT_LIGHTNING|PT_TRACK|PT_GLARE, 0, 0)
     {}
 
     void startrender()
