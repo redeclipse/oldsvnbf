@@ -385,7 +385,11 @@ struct physics
             obstacle = wall;
             /* check to see if there is an obstacle that would prevent this one from being used as a floor */
             if(d->type==ENT_PLAYER && ((wall.z>=slopez(d) && dir.z<0) || (wall.z<=-slopez(d) && dir.z>0)) && (dir.x || dir.y) && !collide(d, vec(dir.x, dir.y, 0)))
+            {
+                if(wall.dot(dir) >= 0) slidecollide = true;
                 obstacle = wall;
+            }
+
             d->o = old;
             if(d->type == ENT_CAMERA) return false;
             float stepdist = (d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f ? d->radius+0.1f : stairheight(d));
@@ -412,7 +416,7 @@ struct physics
 			 found = findfloor(d, collided, obstacle, slide, floor);
         if(slide || (!collided && floor.z > 0 && floor.z < wallz(d)))
         {
-            slideagainst(d, dir, slide ? obstacle : floor, found);
+            slideagainst(d, dir, slide ? obstacle : floor, found || slidecollide);
 			if(d->type == ENT_AI || d->type == ENT_INANIMATE) d->blocked = true;
 		}
 		if(found)
