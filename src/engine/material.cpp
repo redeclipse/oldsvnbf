@@ -316,13 +316,13 @@ struct waterinfo
 	double depth, area;
 };
 
-void setupmaterials()
+void setupmaterials(int start, int len)
 {
     int hasmat = 0;
-	vector<waterinfo> water;
-	hashtable<ivec, int> watersets;
-	unionfind uf;
-	loopv(valist)
+    vector<waterinfo> water;
+    unionfind uf;
+    if(!len) len = valist.length();
+    for(int i = start; i < len; i++)
 	{
 		vtxarray *va = valist[i];
 		loopj(va->matsurfs)

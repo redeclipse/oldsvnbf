@@ -519,10 +519,12 @@ void changed(const block3 &sel)
 		b.s[i] -= 2;
 	}
 
-	inbetweenframes = false;
-	octarender();
-	inbetweenframes = true;
-	setupmaterials();
+    extern vector<vtxarray *> valist;
+    int oldlen = valist.length();
+    inbetweenframes = false;
+    octarender();
+    inbetweenframes = true;
+    setupmaterials(oldlen);
 	invalidatepostfx();
 	entitiesinoctanodes();
     updatevabbs();
