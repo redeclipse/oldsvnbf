@@ -604,7 +604,7 @@ struct fireballrenderer : listrenderer
                isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
 
             e.o = p->o;
-            e.radius = e.eyeheight = e.aboveeye = psize;
+            e.radius = e.height = e.aboveeye = psize;
             if(::collide(&e, vec(0, 0, 0), 0, false)) continue;
 
             if(depthfxscissor==2 && !depthfxtex.addscissorbox(p->o, psize)) continue;
