@@ -831,7 +831,7 @@ void startmap(const char *name)
 	cl->startmap(name);
 }
 
-bool emptymap(int scale, bool force, char *mname)	// main empty world creation routine
+bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty world creation routine
 {
 	if(!force && !editmode)
 	{
@@ -866,11 +866,14 @@ bool emptymap(int scale, bool force, char *mname)	// main empty world creation r
 	clearlights();
 	allchanged();
 
-	overrideidents = worldidents = true;
-	persistidents = false;
-	exec("map.cfg");
-	persistidents = true;
-	overrideidents = worldidents = false;
+    if(!nocfg)
+    {
+	    overrideidents = worldidents = true;
+	    persistidents = false;
+	    exec("map.cfg");
+	    persistidents = true;
+	    overrideidents = worldidents = false;
+    }
 
 	startmap("");
 	camera1->o.z += camera1->height+1;
