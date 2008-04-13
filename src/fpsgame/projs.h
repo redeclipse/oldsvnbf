@@ -8,7 +8,7 @@ struct projectiles
 	{
 	}
 
-	struct projent : dynent, dynstate
+	struct projent : dynent
 	{
 		vec from, to;
 		int lifetime;
@@ -18,6 +18,7 @@ struct projectiles
 		float elasticity, relativity, waterfric;
 		int gun, schan, id;
         entitylight light;
+        fpsent *owner;
 
 		projent() : id(-1)
 		{
@@ -44,8 +45,7 @@ struct projectiles
 			maxspeed = _s;
 			id = _l;
             movement = 0;
-
-			dynset(_o->clientnum, DYN_PROJECTILE);
+            owner = _o;
 
 			switch (projtype)
 			{
@@ -205,8 +205,7 @@ struct projectiles
 			proj.check();
 			int rtime = curtime;
 
-			fpsent *owner = proj.dynowner == cl.player1->clientnum ? cl.player1 : cl.getclient(proj.dynowner);
-			if (!owner) proj.state = CS_DEAD;
+			if (!proj.owner) proj.state = CS_DEAD;
 
 			while (proj.state != CS_DEAD && rtime > 0)
 			{
@@ -216,7 +215,7 @@ struct projectiles
 				if ((proj.lifetime -= qtime) <= 0 || !proj.update(qtime))
 				{
 					if (proj.projtype == PRJ_SHOT && (proj.gun == GUN_GL || proj.gun == GUN_RL))
-						cl.ws.explode(owner, proj.o, proj.vel, proj.id, proj.gun, proj.local);
+						cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.gun, proj.local);
 					proj.state = CS_DEAD;
 					break;
 				}
@@ -232,7 +231,7 @@ struct projectiles
 
 	void remove(fpsent *owner)
 	{
-		loopv(projs) if(projs[i]->dynowner==owner->clientnum) { delete projs[i]; projs.remove(i--); }
+		loopv(projs) if(projs[i]->owner==owner) { delete projs[i]; projs.remove(i--); }
 	}
 
 	void reset() { projs.deletecontentsp(); projs.setsize(0); }

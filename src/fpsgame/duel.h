@@ -14,7 +14,7 @@ struct duelservmode : servmode
 			ci->state.state = CS_DEAD;
 			sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
 		}
-		
+
 		if (ci->state.state == CS_DEAD)
 		{
 			int n = duelqueue.find(ci->clientnum)+1;
@@ -23,16 +23,15 @@ struct duelservmode : servmode
 				n = duelqueue.length()+1;
 				duelqueue.add(ci->clientnum);
 			}
-			
+
 			if (msg)
 			{
 				const char *r = NULL;
-				if (!(n%9) || !(n%8) || !(n%7) || !(n%6) || !(n%5) || !(n%4) || !(n%10) ||
-					n == 11 || n == 12 || n == 13) r = "th";
-				else if (!(n%3)) r = "rd";
-				else if (!(n%2)) r = "nd";
-				else if (!(n%1)) r = "st";
-				
+				if (!(n%3) && n != 13) r = "rd";
+				else if (!(n%2) && n != 12) r = "nd";
+				else if (!(n%1) && n != 11) r = "st";
+				else r = "th";
+
 				sv.servsend(ci->clientnum, "you are %d%s in the duel queue", n, r ? r : "");
 			}
 		}
@@ -47,7 +46,7 @@ struct duelservmode : servmode
 	{
 		queue(ci, true, true);
 	}
-	
+
 	void leavegame(clientinfo *ci)
 	{
 		int n = duelqueue.find(ci->clientnum);
@@ -83,12 +82,12 @@ struct duelservmode : servmode
 	{
 		queue(ci, true, true);
 	}
-	
+
 	void update()
 	{
 		if(sv.interm || sv.gamemillis < dueltime || sv.nonspectators() < 2) return;
 		vector<clientinfo *> alive;
-		
+
 		alive.setsize(0);
 		#define alivecheck(c,d,e) \
 			if (c->name[0] && alive.find(c) < 0 && \
@@ -127,11 +126,11 @@ struct duelservmode : servmode
 			if (alive.length() > 1)
 			{
 				string pl[2];
-	
+
 				loopv(alive)
 				{
 					int n = duelqueue.find(alive[i]->clientnum);
-					
+
 					if (i < 2)
 					{
 						alive[i]->state.state = CS_ALIVE;
@@ -141,7 +140,7 @@ struct duelservmode : servmode
 						if (n >= 0) duelqueue.remove(n);
 					}
 				}
-	
+
 				sv.servsend(-1, "duel #%d, %s vs %s", ++duelround, pl[0], pl[1]);
 
 				if (!m_insta(sv.gamemode, sv.mutators))
@@ -181,7 +180,7 @@ struct duelservmode : servmode
 		duelround = 0;
 		dueltime = sv.gamemillis + DUELMILLIS;
 		duelqueue.setsize(0);
-		
+
 		loopv(sv.clients)
 		{
 			clientinfo *ci = sv.clients[i];

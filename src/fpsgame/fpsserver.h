@@ -392,44 +392,21 @@ struct GAMESERVER : igameserver
 		}
 	}
 
-	clientinfo *choosebestclient(float &bestrank)
+	void autoteam()
 	{
-		clientinfo *best = NULL;
-		bestrank = -1;
+		vector<clientinfo *> team[TEAM_MAX];
+		float teamrank[TEAM_MAX] = { 0, 0, 0, 0 };
+		int numteams = (m_team(gamemode, mutators) && m_ttwo(gamemode, mutators) ? TEAM_MAX : TEAM_MAX/2);
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->state.timeplayed<0) continue;
-			float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
-			if(!best || rank > bestrank) { best = ci; bestrank = rank; }
+			int worstteam = -1;
+			float worstrank = 1e16f;
+			loopj(numteams) if (teamrank[i] < worstrank) { worstrank = teamrank[j]; worstteam = j; }
+			team[worstteam].add(ci);
+			teamrank[worstteam] += (!m_capture(gamemode) && !m_ctf(gamemode) ? ci->state.effectiveness/max(ci->state.timeplayed, 1) : 1);
 		}
-		return best;
-	}
-
-	void autoteam()
-	{
-		vector<clientinfo *> team[2];
-		float teamrank[2] = {0, 0};
-		for(int round = 0, remaining = clients.length(); remaining>=0; round++)
-		{
-			int first = round&1, second = (round+1)&1, selected = 0;
-			while(teamrank[first] <= teamrank[second])
-			{
-				float rank;
-				clientinfo *ci = choosebestclient(rank);
-				if(!ci) break;
-				if(m_capture(gamemode) || m_ctf(gamemode)) rank = 1;
-				else if(selected && rank<=0) break;
-				ci->state.timeplayed = -1;
-				team[first].add(ci);
-				teamrank[first] += rank;
-				selected++;
-				if(rank<=0) break;
-			}
-			if(!selected) break;
-			remaining -= selected;
-		}
-		loopi(sizeof(team)/sizeof(team[0]))
+		loopi(numteams)
 		{
 			loopvj(team[i])
 			{
@@ -452,8 +429,8 @@ struct GAMESERVER : igameserver
 
 	const char *chooseworstteam(const char *suggest)
 	{
-		teamscore teamscores[2] = { teamscore("blue"), teamscore("red") };
-		const int numteams = sizeof(teamscores)/sizeof(teamscores[0]);
+		teamscore teamscores[TEAM_MAX] = { teamscore(teamnames[0]), teamscore(teamnames[1]), teamscore(teamnames[2]), teamscore(teamnames[3]) };
+		int numteams = (m_team(gamemode, mutators) && m_ttwo(gamemode, mutators) ? TEAM_MAX : TEAM_MAX/2);
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
