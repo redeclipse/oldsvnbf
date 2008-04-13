@@ -560,17 +560,41 @@ void autograss(char *name)
 	s_sprintfd(pname)("%s", name);
 	s.autograss = newstring(name[0] ? pname : "textures/grass.png");
 }
-
 COMMAND(autograss, "s");
 
 void texscroll(float *scrollS, float *scrollT)
 {
+    if(slots.empty()) return;
     Slot &s = slots.last();
     s.scrollS = *scrollS/1000.0f;
     s.scrollT = *scrollT/1000.0f;
 }
-
 COMMAND(texscroll, "ff");
+
+void texoffset_(int *xoffset, int *yoffset)
+{
+    if(slots.empty()) return;
+    Slot &s = slots.last();
+    s.xoffset = max(*xoffset, 0);
+    s.yoffset = max(*yoffset, 0);
+}
+COMMANDN(texoffset, texoffset_, "ii");
+
+void texrotate_(int *rot)
+{
+    if(slots.empty()) return;
+    Slot &s = slots.last();
+    s.rotation = clamp(*rot, 0, 5);
+}
+COMMANDN(texrotate, texrotate_, "i");
+
+void texscale(float *scale)
+{
+    if(slots.empty()) return;
+    Slot &s = slots.last();
+    s.scale = *scale <= 0 ? 1 : *scale;
+}
+COMMAND(texscale, "f");
 
 static int findtextype(Slot &s, int type, int last = -1)
 {
