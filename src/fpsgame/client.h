@@ -7,14 +7,14 @@ struct clientcom : iclientcom
 	bool senditemstoserver;	 // after a map change, since server doesn't have map data
 	int lastping;
 
-    bool connected, remote, demoplayback;
+    bool isready, remote, demoplayback;
 
 	bool spectator;
 
 	IVARP(centerchat, 0, 1, 1);
 	IVARP(colourchat, 0, 1, 1);
 
-	clientcom(GAMECLIENT &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), connected(false), remote(false), demoplayback(false), spectator(false)
+	clientcom(GAMECLIENT &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), isready(false), remote(false), demoplayback(false), spectator(false)
 	{
         CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s, SAY_NONE));
         CCOMMAND(me, "C", (clientcom *self, char *s), self->toserver(s, SAY_ACTION));
@@ -95,7 +95,7 @@ struct clientcom : iclientcom
 
 	void gamedisconnect(int clean)
 	{
-		remote = connected = c2sinit = spectator = false;
+		remote = isready = c2sinit = spectator = false;
 		cl.player1->clientnum = -1;
 		cl.player1->lifesequence = 0;
 		cl.player1->privilege = PRIV_NONE;
@@ -107,7 +107,7 @@ struct clientcom : iclientcom
 
 	bool allowedittoggle(bool edit)
 	{
-		bool allow = !connected || m_edit(cl.gamemode) ||
+		bool allow = !isready || m_edit(cl.gamemode) ||
 			(cl.player1->state != CS_SPECTATOR && cl.player1->state != CS_ALIVE && cl.player1->state != CS_EDITING);
 		if (!allow) conoutf("you must be both alive and in coopedit to enter editmode");
 		return allow;
@@ -494,8 +494,7 @@ struct clientcom : iclientcom
 					disconnect();
 					return;
 				}
-				connected = true;
-				cl.player1->clientnum = mycn;	  // we are now fully connected
+				cl.player1->clientnum = mycn;	  // we are now fully ready
 				switch (hasmap)
 				{
 					case 0:
@@ -508,6 +507,7 @@ struct clientcom : iclientcom
 					default:
 						break;
 				}
+				isready = true;
 				break;
 			}
 
@@ -661,7 +661,7 @@ struct clientcom : iclientcom
 				cl.player1->gunselect = getint(p);
 				loopi(NUMGUNS) cl.player1->ammo[i] = getint(p);
 				cl.player1->state = CS_ALIVE;
-				cl.et.findplayerspawn(cl.player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(cl.player1->team) : -1, m_ctf(cl.gamemode) ? ctfteamflag(cl.player1->team)+1 : 0);
+				cl.et.findplayerspawn(cl.player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(cl.player1->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators))+1 : 0);
 				cl.sb.showscores(false);
                 cl.lasthit = 0;
 				addmsg(SV_SPAWN, "rii", cl.player1->lifesequence, cl.player1->gunselect);
@@ -1123,10 +1123,12 @@ struct clientcom : iclientcom
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
+		isready = false;
 		load_world(name);
 		if(m_capture(gamemode)) cl.cpc.setupbases();
         else if(m_assassin(gamemode)) cl.asc.reset();
         else if(m_ctf(gamemode)) cl.ctf.setupflags();
+		isready = true;
 		if(editmode) edittoggled(editmode);
 	}
 
@@ -1260,7 +1262,7 @@ struct clientcom : iclientcom
 		}
 	}
 
-	bool ready() { return connected; }
+	bool ready() { return isready; }
 	int otherclients() { return cl.players.length(); }
 
 	IVARP(serversplit, 3, 10, INT_MAX-1);

@@ -4,49 +4,6 @@
 #include "pch.h"
 #include "engine.h"
 
-vector<attr *> attrs;
-ABOOL(attrs, attrbool, "true");
-AINT(attrs, attrint, 1, -512, 512);
-AFLOAT(attrs, attrfloat, 0.0, -512.0, 512.0);
-ASTRING(attrs, attrstring, "hello, world!", 0, 512);
-AVEC(attrs, attrvec, "0.0,0.0,0.0", "-512.0,-512.0,-512.0", "512.0,512.0,512.0");
-AVEC(attrs, attrivec, "0,0,0", "-512,-512,-512", "512,512,512");
-
-void printattrval(attr *a)
-{
-	if (a) conoutf("%s = %s", a->name, a->valstr);
-}
-
-void printattrrange(attr *a)
-{
-	if (a) conoutf("valid range for %s is %s .. %s", a->name, a->minstr, a->maxstr);
-}
-
-ICOMMAND(attrprint, "", (void),
-{
-	loopv (attrs)
-	{
-		printattrval(attrs[i]);
-	}
-});
-
-ICOMMAND(attrset, "ss",(char *n, char *v),
-{
-	if (*n)
-	{
-		loopv (attrs)
-		{
-			if (!strcasecmp(attrs[i]->name, n))
-			{
-				attrs[i]->setval(v, true);
-				return;
-			}
-		}
-		conoutf("attribute %s does not exist", n);
-	}
-	else conoutf("no attribute specified");
-});
-
 void itoa(char *s, int i) { s_sprintf(s)("%d", i); }
 char *exchangestr(char *o, const char *n) { delete[] o; return newstring(n); }
 

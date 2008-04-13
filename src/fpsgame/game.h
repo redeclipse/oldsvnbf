@@ -97,15 +97,16 @@ enum
 	G_MAX
 };
 
-#define G_M_TEAM			0x0001
-#define G_M_INSTA			0x0002
-#define G_M_DUEL			0x0004
-//#define G_M_LINK			0x0008
+#define G_M_TEAM			0x0001	// team
+#define G_M_INSTA			0x0002	// instagib
+#define G_M_DUEL			0x0004	// duel
+#define G_M_PROG			0x0008	// progressive
+#define G_M_TTWO			0x0010	// mutli team
 
-#define G_M_NUM				4
+#define G_M_NUM				3
 
-#define G_M_FRAG			G_M_TEAM|G_M_DUEL
-#define G_M_BASE			G_M_INSTA//|G_M_LINK
+#define G_M_FRAG			G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_TTWO
+#define G_M_BASE			G_M_INSTA|G_M_PROG|G_M_TTWO
 
 static struct gametypes
 {
@@ -117,12 +118,13 @@ static struct gametypes
 	{ G_DEATHMATCH,		G_M_FRAG,		0,					"Deathmatch" },
 	{ G_CAPTURE,		G_M_BASE,		G_M_TEAM,			"Base Capture" },
 	{ G_ASSASSIN,		G_M_INSTA,		0,					"Assassin" },
-	{ G_CTF,			G_M_INSTA,		G_M_TEAM,			"Capture the Flag" },
+	{ G_CTF,			G_M_BASE,		G_M_TEAM,			"Capture the Flag" },
 }, mutstype[] = {
 	{ G_M_TEAM,			0,				0,					"Team" },
 	{ G_M_INSTA,		0,				0,					"Instagib" },
 	{ G_M_DUEL,			0,				0,					"Duel" },
-//	{ G_M_LINK,			0,				0,					"Link" },
+	{ G_M_PROG,			0,				0,					"Progressive" },
+	{ G_M_TTWO,			0,				0,					"Times Two" },
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)
@@ -137,11 +139,14 @@ static struct gametypes
 
 #define m_mp(a)				(a > G_DEMO && a < G_MAX)
 #define m_frag(a)			(a >= G_DEATHMATCH)
+#define m_base(a)			(m_capture(a) || m_ctf(a))
 #define m_timed(a)			(m_frag(a))
 
-#define m_team(a,b)			((m_dm(a) && (b & G_M_TEAM)) || m_capture(a) || m_ctf(a))
+#define m_team(a,b)			((m_dm(a) && (b & G_M_TEAM)) || m_base(a))
 #define m_insta(a,b)		(m_frag(a) && (b & G_M_INSTA))
 #define m_duel(a,b)			(m_frag(a) && (b & G_M_DUEL))
+#define m_prog(a,b)			(m_base(a) && (b & G_M_PROG))
+#define m_ttwo(a,b)			(m_team(a, b) && (b & G_M_TTWO))
 
 #define isteam(a,b)			(!strcmp(a,b))
 
@@ -226,6 +231,7 @@ struct demoheader
 
 #define MAXNAMELEN 16
 #define MAXTEAMLEN 8
+enum { TEAM_ALPHA = 0, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_MAX };
 static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
 
 #define SGRAYS			20
@@ -252,29 +258,6 @@ static struct guntypes
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		"rifle" },
 };
 #define isgun(gun) (gun > -1 && gun < NUMGUNS)
-
-enum
-{
-	DYN_NONE = 0,
-	DYN_MAPMODEL,
-	DYN_PROJECTILE,
-	DYN_PLAYER,
-	DYN_MAX
-};
-
-struct dynstate
-{
-	int dynowner, dyntype;
-
-	dynstate() : dynowner(-1), dyntype(DYN_NONE) {}
-	~dynstate() {}
-
-	void dynset(int a, int b)
-	{
-		dynowner = a;
-		dyntype = (b > DYN_NONE && b < DYN_MAX ? b : DYN_NONE);
-	}
-};
 
 // inherited by fpsent and server clients
 struct fpsstate
@@ -420,7 +403,7 @@ enum
 	PRIV_MAX
 };
 
-struct fpsent : dynent, dynstate, fpsstate
+struct fpsent : dynent, fpsstate
 {
 	int weight;						 // affects the effectiveness of hitpush
 	int clientnum, privilege, lastupdate, plag, ping;

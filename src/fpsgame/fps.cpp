@@ -109,7 +109,7 @@ struct GAMECLIENT : igameclient
 
 	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
 	{
-		et.findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1), m_ctf(gamemode) ? ctfteamflag(player1->team)+1 : 0);
+		et.findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1), m_ctf(gamemode) ? ctf.teamflag(player1->team, m_ttwo(gamemode, mutators))+1 : 0);
 		spawnstate(d);
 		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
 	}
@@ -616,9 +616,9 @@ struct GAMECLIENT : igameclient
 
 	void drawhud(int w, int h)
 	{
-		if (!hidehud && !editmode)
+		if (maptime || !cc.ready())
 		{
-			if (cc.ready() && maptime)
+			if (!hidehud && !editmode)
 			{
 				int ox = w*900/h, oy = 900;
 
@@ -763,23 +763,23 @@ struct GAMECLIENT : igameclient
 				}
 				glDisable(GL_BLEND);
 			}
-			else
-			{
-				glLoadIdentity();
-				glOrtho(0, w, h, 0, -1, 1);
-				glColor3f(1, 1, 1);
+		}
+		else
+		{
+			glLoadIdentity();
+			glOrtho(0, w, h, 0, -1, 1);
+			glColor3f(1, 1, 1);
 
-				settexture("textures/loadback.jpg");
+			settexture("textures/loadback.jpg");
 
-				glBegin(GL_QUADS);
+			glBegin(GL_QUADS);
 
-				glTexCoord2f(0, 0); glVertex2i(0, 0);
-				glTexCoord2f(1, 0); glVertex2i(w, 0);
-				glTexCoord2f(1, 1); glVertex2i(w, h);
-				glTexCoord2f(0, 1); glVertex2i(0, h);
+			glTexCoord2f(0, 0); glVertex2i(0, 0);
+			glTexCoord2f(1, 0); glVertex2i(w, 0);
+			glTexCoord2f(1, 1); glVertex2i(w, h);
+			glTexCoord2f(0, 1); glVertex2i(0, h);
 
-				glEnd();
-			}
+			glEnd();
 		}
 	}
 
