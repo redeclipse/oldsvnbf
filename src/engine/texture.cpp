@@ -397,11 +397,6 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 	if(!s) { if(msg) conoutf("could not load texture %s", tname); return NULL; }
 	int bpp = s->format->BitsPerPixel;
     if(!texformat(bpp)) { SDL_FreeSurface(s); conoutf("texture must be 8, 16, 24, or 32 bpp: %s", tname); return NULL; }
-	if(tex)
-	{
-		if(tex->rotation) s = texrotate(s, tex->rotation, tex->type);
-		if(tex->xoffset || tex->yoffset) s = texoffset(s, tex->xoffset, tex->yoffset);
-	}
 	if(tname[0]=='<')
 	{
         if(!strncmp(cmd, "mad", arg1-cmd)) texmad(s, parsevec(arg1+1), arg2 ? parsevec(arg2+1) : vec(0, 0, 0));
@@ -508,7 +503,14 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	else if(curmatslot>=0) matslot = curmatslot;
 	else if(!curtexnum) return;
 	Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
-	if(tnum==TEX_DIFFUSE) setslotshader(s);
+    if(tnum==TEX_DIFFUSE)
+    {
+        setslotshader(s);
+        s.rotation = clamp(*rot, 0, 5);
+        s.xoffset = max(*xoffset, 0);
+        s.yoffset = max(*yoffset, 0);
+        s.scale = *scale <= 0 ? 1 : *scale;
+    }
 	s.loaded = false;
     s.texmask |= 1<<tnum;
 	if (s.sts.length() > TEX_ENVMAP)
@@ -516,10 +518,6 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	Slot::Tex &st = s.sts.add();
 	st.type = tnum;
 	st.combined = -1;
-	st.rotation = max(*rot, 0);
-	st.xoffset = max(*xoffset, 0);
-	st.yoffset = max(*yoffset, 0);
-    st.scale = *scale <= 0 ? 1 : *scale;
 	st.t = NULL;
 	s_strcpy(st.lname, name);
 	s_strcpy(st.name, name);
@@ -630,16 +628,6 @@ static void addname(vector<char> &key, Slot &slot, Slot::Tex &t)
 	if(t.combined>=0) key.add('&');
 	s_sprintfd(tname)("%s", t.name);
 	for(const char *s = tname; *s; key.add(*s++));
-	if(t.rotation)
-	{
-		s_sprintfd(rnum)("#%d", t.rotation);
-		for(const char *s = rnum; *s; key.add(*s++));
-	}
-	if(t.xoffset || t.yoffset)
-	{
-		s_sprintfd(toffset)("+%d,%d", t.xoffset, t.yoffset);
-		for(const char *s = toffset; *s; key.add(*s++));
-	}
 }
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN

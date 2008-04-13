@@ -266,8 +266,9 @@ void save_config()
 			else if (!j) fprintf(h, " %s", findmaterialname(i)); \
 			else fprintf(h, " 1"); \
 			fprintf(h, " \"%s\"", s.sts[j].lname); \
-			fprintf(h, " %d %d %d %.f\n", \
-				s.sts[j].rotation, s.sts[j].xoffset, s.sts[j].yoffset, s.sts[j].scale); \
+			if(!j) fprintf(h, " %d %d %d %.f\n", \
+				s.rotation, s.xoffset, s.yoffset, s.scale); \
+            else fprintf(h, "\n"); \
 		} \
 		if (b) \
 		{ \

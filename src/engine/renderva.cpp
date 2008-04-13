@@ -737,8 +737,23 @@ void renderdepthobstacles(const vec &bbmin, const vec &bbmax, float scale, float
     defaultshader->set();
 }
 
-float orientation_tangent [3][4] = { {  0,1, 0,0 }, { 1,0, 0,0 }, { 1,0,0,0 }};
-float orientation_binormal[3][4] = { {  0,0,-1,0 }, { 0,0,-1,0 }, { 0,1,0,0 }};
+// [rotation][dimension] = vec4
+float orientation_tangent [5][3][4] =
+{
+    { { 0,  1,  0, 0 }, {  1, 0,  0, 0 }, {  1,  0, 0, 0 } },
+    { { 0,  0, -1, 0 }, {  0, 0, -1, 0 }, {  0,  1, 0, 0 } },
+    { { 0, -1,  0, 0 }, { -1, 0,  0, 0 }, { -1,  0, 0, 0 } },
+    { { 0,  0,  1, 0 }, {  0, 0,  1, 0 }, {  0, -1, 0, 0 } },
+    { { 0,  1,  0, 0 }, {  1, 0,  0, 0 }, {  1,  0, 0, 0 } }
+};
+float orientation_binormal[5][3][4] =
+{
+    { { 0,  0, -1, 0 }, {  0, 0, -1, 0 }, {  0,  1, 0, 0 } },
+    { { 0, -1,  0, 0 }, { -1, 0,  0, 0 }, { -1,  0, 0, 0 } },
+    { { 0,  0,  1, 0 }, {  0, 0,  1, 0 }, {  0, -1, 0, 0 } },
+    { { 0,  1,  0, 0 }, {  1, 0,  0, 0 }, {  1,  0, 0, 0 } },
+    { { 0,  0, -1, 0 }, {  0, 0, -1, 0 }, {  0,  1, 0, 0 } }
+};
 
 struct renderstate
 {
@@ -750,13 +765,13 @@ struct renderstate
     vec glowcolor;
     GLuint textures[8];
     Slot *slot;
-    int texgendim, texgenw, texgenh;
-    float texgenscale;
+    float texgenSk, texgenSoff, texgenTk, texgenToff;
+    int texgendim;
     bool mttexgen;
     int visibledynlights;
     uint dynlightmask;
 
-    renderstate() : colormask(true), depthmask(true), mtglow(false), skippedglow(false), vbuf(0), fogplane(-1), diffusetmu(0), lightmaptmu(1), glowtmu(-1), fogtmu(-1), causticstmu(-1), glowcolor(1, 1, 1), slot(NULL), texgendim(-1), texgenw(-1), texgenh(-1), texgenscale(-1), mttexgen(false), visibledynlights(0), dynlightmask(0)
+    renderstate() : colormask(true), depthmask(true), mtglow(false), skippedglow(false), vbuf(0), fogplane(-1), diffusetmu(0), lightmaptmu(1), glowtmu(-1), fogtmu(-1), causticstmu(-1), glowcolor(1, 1, 1), slot(NULL), texgendim(-1), mttexgen(false), visibledynlights(0), dynlightmask(0)
     {
         loopk(4) color[k] = 1;
         loopk(8) textures[k] = 0;
@@ -1139,8 +1154,29 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot)
         glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
     }
 
-    if(cur.slot && (cur.slot->scrollS != slot.scrollS || cur.slot->scrollT != slot.scrollT))
+    Texture *curtex = !cur.slot || cur.slot->sts.empty() ? notexture : cur.slot->sts[0].t,
+            *tex = slot.sts.empty() ? notexture : slot.sts[0].t;
+    if(!cur.slot || slot.sts.empty() ||
+        (curtex->xs != tex->xs || curtex->ys != tex->ys || 
+         cur.slot->rotation != slot.rotation || cur.slot->scale != slot.scale || 
+         cur.slot->xoffset != slot.xoffset || cur.slot->yoffset != slot.yoffset ||
+         cur.slot->scrollS != slot.scrollS || cur.slot->scrollT != slot.scrollT))
+    {
+        float k = 8.0f/slot.scale/(1<<VVEC_FRAC),
+              xs = slot.rotation>=2 && slot.rotation<=4 ? -tex->xs : tex->xs,
+              ys = (slot.rotation>=1 && slot.rotation<=2) || slot.rotation==5 ? -tex->ys : tex->ys;
+        if((slot.rotation&5)==1)
+        {
+            cur.texgenSk = k/xs; cur.texgenSoff = (slot.scrollT*lastmillis*tex->xs - slot.yoffset)/xs;
+            cur.texgenTk = k/ys; cur.texgenToff = (slot.scrollS*lastmillis*tex->ys - slot.xoffset)/ys;
+        }
+        else
+        {
+            cur.texgenSk = k/xs; cur.texgenSoff = (slot.scrollS*lastmillis*tex->xs - slot.xoffset)/xs;
+            cur.texgenTk = k/ys; cur.texgenToff = (slot.scrollT*lastmillis*tex->ys - slot.yoffset)/ys;
+        }
         cur.texgendim = -1;
+    }
 
     cur.slot = &slot;
 }
@@ -1169,19 +1205,27 @@ static void changeshader(renderstate &cur, Shader *s, Slot &slot, bool shadowed)
     if(s->type&SHADER_GLSLANG) cur.texgendim = -1;
 }
 
-static void changetexgen(renderstate &cur, Shader *s, Texture *tex, float scale, int dim, float scrollS, float scrollT)
+static void changetexgen(renderstate &cur, Slot &slot, int dim)
 {
     static const int si[] = { 1, 0, 0 };
     static const int ti[] = { 2, 2, 1 };
 
-    GLfloat sgen[] = { 0.0f, 0.0f, 0.0f, scrollS*lastmillis };
-    sgen[si[dim]] = 8.0f/scale/(tex->xs<<VVEC_FRAC);
-    GLfloat tgen[] = { 0.0f, 0.0f, 0.0f, scrollT*lastmillis };
-    tgen[ti[dim]] = (dim <= 1 ? -8.0f : 8.0f)/scale/(tex->ys<<VVEC_FRAC);
+    GLfloat sgen[4] = { 0.0f, 0.0f, 0.0f, cur.texgenSoff },
+            tgen[4] = { 0.0f, 0.0f, 0.0f, cur.texgenToff };
+    if((slot.rotation&5)==1)
+    {
+        sgen[ti[dim]] = (dim <= 1 ? -cur.texgenSk : cur.texgenSk);
+        tgen[si[dim]] = cur.texgenTk;
+    }
+    else
+    {
+        sgen[si[dim]] = cur.texgenSk;
+        tgen[ti[dim]] = (dim <= 1 ? -cur.texgenTk : cur.texgenTk);
+    }
 
     if(renderpath==R_FIXEDFUNCTION)
     {
-        if(cur.texgendim!=dim || cur.texgenw!=tex->xs || cur.texgenh!=tex->ys || cur.texgenscale!=scale)
+        if(cur.texgendim!=dim)
         {
             glTexGenfv(GL_S, GL_OBJECT_PLANE, sgen);
             glTexGenfv(GL_T, GL_OBJECT_PLANE, tgen);
@@ -1203,6 +1247,7 @@ static void changetexgen(renderstate &cur, Shader *s, Texture *tex, float scale,
             glTexGenfv(GL_S, GL_OBJECT_PLANE, sgen);
             glTexGenfv(GL_T, GL_OBJECT_PLANE, tgen);
             glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
+            cur.mttexgen = cur.mtglow;
         }
     }
     else
@@ -1210,16 +1255,11 @@ static void changetexgen(renderstate &cur, Shader *s, Texture *tex, float scale,
         // have to pass in env, otherwise same problem as fixed function
         setlocalparamfv("texgenS", SHPARAM_VERTEX, 0, sgen);
         setlocalparamfv("texgenT", SHPARAM_VERTEX, 1, tgen);
-        setlocalparamfv("orienttangent", SHPARAM_VERTEX, 2, orientation_tangent[dim]);
-        setlocalparamfv("orientbinormal", SHPARAM_VERTEX, 3, orientation_binormal[dim]);
-        if(s->type&SHADER_GLSLANG) cur.texgendim = -1;
+        setlocalparamfv("orienttangent", SHPARAM_VERTEX, 2, orientation_tangent[slot.rotation][dim]);
+        setlocalparamfv("orientbinormal", SHPARAM_VERTEX, 3, orientation_binormal[slot.rotation][dim]);
     }
 
     cur.texgendim = dim;
-    cur.texgenw = tex->xs;
-    cur.texgenh = tex->ys;
-    cur.texgenscale = scale;
-    cur.mttexgen = cur.mtglow;
 }
 
 struct batchdrawinfo
@@ -1258,14 +1298,6 @@ static void renderbatch(renderstate &cur, int pass, geombatch &b)
         }
         if(curbatch->batch < 0) break;
     }
-    Shader *s = b.slot.shader;
-    Texture *tex = notexture;
-    float scale = 1;
-    if(b.slot.sts.length())
-    {
-        tex = b.slot.sts[0].t;
-        scale = b.slot.sts[0].scale;
-    }
     loop(shadowed, 2)
     {
         bool rendered = false;
@@ -1276,11 +1308,11 @@ static void renderbatch(renderstate &cur, int pass, geombatch &b)
 
             if(!rendered)
             {
-                if(renderpath!=R_FIXEDFUNCTION) changeshader(cur, s, b.slot, shadowed!=0);
+                if(renderpath!=R_FIXEDFUNCTION) changeshader(cur, b.slot.shader, b.slot, shadowed!=0);
                 rendered = true;
             }
-            if(cur.texgendim!=dim || cur.texgenw!=tex->xs || cur.texgenh!=tex->ys || cur.texgenscale!=scale || cur.mtglow>cur.mttexgen)
-                changetexgen(cur, s, tex, scale, dim, b.slot.scrollS, b.slot.scrollT);
+            if(cur.texgendim!=dim || cur.mtglow>cur.mttexgen) 
+                changetexgen(cur, b.slot, dim);
 
             gbatches++;
             loopv(draw)

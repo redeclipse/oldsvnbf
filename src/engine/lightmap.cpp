@@ -16,7 +16,7 @@ VARW(mmshadows, 0, 1, 1);
 // quality parameters, set by the calclight arg
 int aalights = 3;
 
-static int lmtype, lmorient;
+static int lmtype, lmorient, lmrotate;
 static uchar lm[3*LM_MAXW*LM_MAXH];
 static vec lm_ray[LM_MAXW*LM_MAXH];
 static int lm_w, lm_h;
@@ -305,10 +305,10 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 		case LM_BUMPMAP0:
 			if(avgray.iszero()) break;
 			// transform to tangent space
-			extern float orientation_tangent[3][4];
-			extern float orientation_binormal[3][4];
-            vec S(orientation_tangent[dimension(lmorient)]),           
-                T(orientation_binormal[dimension(lmorient)]);
+            extern float orientation_tangent[5][3][4];
+            extern float orientation_binormal[5][3][4];
+            vec S(orientation_tangent[4-lmrotate][dimension(lmorient)]),
+                T(orientation_binormal[4-lmrotate][dimension(lmorient)]);
             normal.orthonormalize(S, T);
             avgray.normalize();
             lm_ray[y*lm_w+x].add(vec(S.dot(avgray), T.dot(avgray), normal.dot(avgray)));
@@ -919,7 +919,8 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
 		vec v[4], n[4], n2[3];
 		int numplanes;
 
-		Shader *shader = lookupshader(c.texture[i]);
+        Slot &slot = lookuptexture(c.texture[i], false);
+        Shader *shader = slot.shader ? slot.shader : defaultshader;
 		if(c.ext && c.ext->merged&(1<<i))
 		{
 			if(!(c.ext->mergeorigin&(1<<i))) continue;
@@ -965,6 +966,7 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
 		}
 		lmtype = LM_DIFFUSE;
 		lmorient = i;
+        lmrotate = slot.rotation;
         if(shader->type&(SHADER_NORMALSLMS | SHADER_ENVMAP))
 		{
 			if(shader->type&SHADER_NORMALSLMS) lmtype = LM_BUMPMAP0;
@@ -1139,8 +1141,6 @@ void patchlight(int quality)
 
 ICOMMAND(patchlight, "s", (char *s), int n = *s ? atoi(s) : 3; patchlight(n));
 
-vector<LightMapTexture> lightmaptexs;
-
 void setfullbrightlevel(int fullbrightlevel)
 {
     if(lightmaptexs.length() > LMID_BRIGHT)
@@ -1153,6 +1153,8 @@ void setfullbrightlevel(int fullbrightlevel)
 
 VARFW(fullbright, 0, 0, 1, initlights());
 VARFW(fullbrightlevel, 0, 128, 255, setfullbrightlevel(fullbrightlevel));
+
+vector<LightMapTexture> lightmaptexs;
 
 static void convertlightmap(LightMap &lmc, LightMap &lmlv, uchar *dst, size_t stride)
 {
