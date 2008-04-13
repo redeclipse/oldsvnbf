@@ -640,7 +640,7 @@ void rendermaterials()
                             if(!usedwaterfall)
                             {
                                 Texture *dudv = wslot.sts.inrange(5) ? wslot.sts[5].t : notexture;
-                                float scale = 8.0f/(dudv->ys*(wslot.sts.inrange(5) && wslot.sts[5].scale ? wslot.sts[5].scale : 1));
+                                float scale = 8.0f/(dudv->ys*wslot.scale);
                                 setlocalparamf("dudvoffset", SHPARAM_PIXEL, 1, 0, scale*16*lastmillis/1000.0f);
 
                                 glActiveTexture_(GL_TEXTURE1_ARB);
@@ -808,7 +808,7 @@ void rendermaterials()
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
                     if(renderpath!=R_FIXEDFUNCTION && hasCM && waterfallenv) glNormal3fv(normals[m.orient].v);
 					if (wslot.sts.inrange(1))
-						renderwaterfall(m, wslot.sts[1].t, wslot.sts[1].scale ? wslot.sts[1].scale : 1, 0.1f, MAT_WATER);
+						renderwaterfall(m, wslot.sts[1].t, wslot.scale, 0.1f, MAT_WATER);
 				}
 				break;
 
@@ -817,13 +817,13 @@ void rendermaterials()
 				{
 					if(!vertwater && !begin) { glBegin(GL_QUADS); begin = true; }
 					if (lslot.sts.inrange(0))
-						renderlava(m, lslot.sts[0].t, lslot.sts[0].scale ? lslot.sts[0].scale : 1);
+						renderlava(m, lslot.sts[0].t, lslot.scale);
 				}
 				else
 				{
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
 					if (lslot.sts.inrange(1))
-						renderwaterfall(m, lslot.sts[1].t, lslot.sts[1].scale ? lslot.sts[1].scale : 1, 0.1f, MAT_LAVA);
+						renderwaterfall(m, lslot.sts[1].t, lslot.scale, 0.1f, MAT_LAVA);
 				}
 				break;
 

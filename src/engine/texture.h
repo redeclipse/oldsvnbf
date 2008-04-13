@@ -218,14 +218,14 @@ struct Slot
 		int type;
 		Texture *t;
 		string lname, name;
-		int rotation, xoffset, yoffset;
-		float scale;
 		int combined;
 	};
 
 	vector<Tex> sts;
 	Shader *shader;
 	vector<ShaderParam> params;
+    float scale;
+    int rotation, xoffset, yoffset;
     float scrollS, scrollT;
     vec glowcolor, pulseglowcolor;
     float pulseglowspeed;
@@ -239,6 +239,8 @@ struct Slot
 		sts.setsize(0);
 		shader = NULL;
 		params.setsize(0);
+        scale = 1;
+        rotation = xoffset = yoffset = 0;
         scrollS = scrollT = 0;
         glowcolor = vec(1, 1, 1);
         pulseglowcolor = vec(0, 0, 0);
