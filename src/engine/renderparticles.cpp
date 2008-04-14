@@ -385,7 +385,7 @@ struct textrenderer : listrenderer
         if(fogging)
         {
             if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
-            else blend = (uchar)(blend * max(0.0f, min(1.0f, (reflectz - o.z)/waterfog)));
+            else blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - o.z)/waterfog)));
         }
 
         glRotatef(camera1->yaw-180, 0, 0, 1);
@@ -411,7 +411,7 @@ template<int T>
 static inline void modifyblend(const vec &o, int &blend)
 {
     blend = min(blend<<2, 255);
-    if(renderpath==R_FIXEDFUNCTION && fogging) blend = (uchar)(blend * max(0.0f, min(1.0f, (reflectz - o.z)/waterfog)));
+    if(renderpath==R_FIXEDFUNCTION && fogging) blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - o.z)/waterfog)));
 }
 
 template<>
