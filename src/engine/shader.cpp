@@ -1175,7 +1175,7 @@ void setslotshader(Slot &s)
         ShaderParam *cparam = findshaderparam(s, "colorscale", SHPARAM_PIXEL, 0);
         if(cparam && (cparam->val[0]!=1 || cparam->val[1]!=1 || cparam->val[2]!=1) && s.sts.length()>=1)
         {
-            s_sprintfd(colorname)("<mad:%f/%f/%f>%s", cparam->val[0], cparam->val[1], cparam->val[2], s.sts[0].name);
+            s_sprintfd(colorname)("<ffcolor:%f/%f/%f>%s", cparam->val[0], cparam->val[1], cparam->val[2], s.sts[0].name);
             s_strcpy(s.sts[0].name, colorname);
         }
     }
