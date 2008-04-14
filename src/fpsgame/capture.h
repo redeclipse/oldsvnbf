@@ -194,7 +194,7 @@ struct captureclient : capturestate
             {
                 baseinfo &b = bases[i];
                 if(!insidebase(b, d->o) || (strcmp(b.owner, d->team) && strcmp(b.enemy, d->team))) continue;
-                particle_flare(b.pos, pos, 0, strcmp(d->team, cl.player1->team) ? 29 : 30);
+                particle_flare(b.pos, pos, 0, strcmp(d->team, cl.player1->team) ? 29 : 30, d);
                 if(oldbase < 0)
                 {
                     particle_fireball(pos, 4, strcmp(d->team, cl.player1->team) ? 31 : 32, 250);
