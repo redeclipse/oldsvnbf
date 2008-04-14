@@ -372,6 +372,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
     {
         if(!tex) return NULL;
         tname = tex->name;
+        file = tex->name;
     }
     if(tname[0]=='<')
     {
