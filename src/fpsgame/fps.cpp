@@ -738,7 +738,7 @@ struct GAMECLIENT : igameclient
 							}
 							glEnd();
 
-							if (d->gunselect >= 0 || d->ammo[d->gunselect] >= 0)
+							if (d->gunselect >= 0 && d->ammo[d->gunselect] >= 0)
 								draw_textx("\fs\fy%d\fS", oy/8, oy-(oy/8)-(FONTH/2), 255, 255, 255, int(255.f*fade), false, AL_CENTER, d->ammo[d->gunselect]);
 						}
 						else if (d->state == CS_DEAD)
