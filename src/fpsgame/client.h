@@ -716,9 +716,10 @@ struct clientcom : iclientcom
 				int trg = getint(p), amt = getint(p), ms = getint(p);
 				fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
 				if (!target) break;
-				playsound(S_REGEN, &target->o);
 				target->health = amt;
 				target->lastregen = ms;
+				particle_splash(3, min(100-target->health, 10), 10000, p);
+				playsound(S_REGEN, &target->o);
 				break;
 			}
 
