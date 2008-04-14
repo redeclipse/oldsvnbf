@@ -512,14 +512,6 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	else if(curmatslot>=0) matslot = curmatslot;
 	else if(!curtexnum) return;
 	Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
-    if(tnum==TEX_DIFFUSE)
-    {
-        setslotshader(s);
-        s.rotation = clamp(*rot, 0, 5);
-        s.xoffset = max(*xoffset, 0);
-        s.yoffset = max(*yoffset, 0);
-        s.scale = *scale <= 0 ? 1 : *scale;
-    }
 	s.loaded = false;
     s.texmask |= 1<<tnum;
 	if (s.sts.length() > TEX_ENVMAP)
@@ -530,6 +522,14 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	st.t = NULL;
 	s_strcpy(st.lname, name);
 	s_strcpy(st.name, name);
+    if(tnum==TEX_DIFFUSE)
+    {
+        setslotshader(s);
+        s.rotation = clamp(*rot, 0, 5);
+        s.xoffset = max(*xoffset, 0);
+        s.yoffset = max(*yoffset, 0);
+        s.scale = *scale <= 0 ? 1 : *scale;
+    }
 }
 
 COMMAND(texture, "ssiiif");
