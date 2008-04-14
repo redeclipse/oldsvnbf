@@ -223,8 +223,6 @@ void gl_checkextensions()
         extern int fpdepthfx, depthfxprecision;
         fpdepthfx = 0;
         depthfxprecision = 1;
-        extern int filltjoints;
-        filltjoints = 1;
 
         ati_texgen_bug = 1;
     }
@@ -255,6 +253,8 @@ void gl_checkextensions()
     else if(strstr(vendor, "NVIDIA"))
     {
         reservevpparams = 10;
+        extern int filltjoints;
+        filltjoints = 0;
 
         nvidia_texgen_bug = 1;
     }
