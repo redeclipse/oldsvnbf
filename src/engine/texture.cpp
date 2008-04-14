@@ -355,8 +355,11 @@ static vec parsevec(const char *arg)
 {
 	vec v(0, 0, 0);
 	int i = 0;
-	for(; arg[0] && arg[0]!='>' && i<3; arg += strcspn(i ? arg+1 : arg, "/>"), i++)
-		v[i] = atof(i ? arg+1 : arg);
+    for(; arg[0] && (!i || arg[0]=='/') && i<3; arg += strcspn(arg, "/,><"), i++)
+    {
+        if(i) arg++;
+        v[i] = atof(arg);
+    }
 	if(i==1) v.y = v.z = v.x;
 	return v;
 }
