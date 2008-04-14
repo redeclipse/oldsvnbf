@@ -1238,7 +1238,7 @@ struct GAMESERVER : igameserver
 
 			case SV_ITEMLIST:
 			{
-                bool commit = ci->state.state!=CS_SPECTATOR && !notgotitems;
+                bool commit = ci->state.state!=CS_SPECTATOR && notgotitems;
 				int n;
 				while((n = getint(p))!=-1)
 				{
