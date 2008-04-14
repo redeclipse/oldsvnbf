@@ -439,7 +439,6 @@ struct ctfclient : ctfstate
             }
             if(commit)
             {
-                f.reset();
 				f.team = team;
                 f.score = score;
                 f.owner = owner>=0 ? (owner==cl.player1->clientnum ? cl.player1 : cl.newclient(owner)) : NULL;
