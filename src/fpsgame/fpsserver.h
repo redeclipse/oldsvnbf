@@ -371,7 +371,7 @@ struct GAMESERVER : igameserver
         if(!ci || (ci->state.state==CS_SPECTATOR && !ci->privilege) || !m_game(reqmode)) return;
 		s_strcpy(ci->mapvote, map);
 		ci->modevote = reqmode;
-		ci->mutsvote = reqmuts|(reqmuts&gametype[reqmode].implied?gametype[reqmode].implied:0);
+		ci->mutsvote = reqmuts|gametype[reqmode].implied;
 		if(!ci->mapvote[0]) return;
 		if(ci->local || mapreload || (ci->privilege && mastermode>=MM_VETO))
 		{
@@ -404,7 +404,9 @@ struct GAMESERVER : igameserver
 			float worstrank = 1e16f;
 			loopj(numteams) if (teamrank[i] < worstrank) { worstrank = teamrank[j]; worstteam = j; }
 			team[worstteam].add(ci);
-			teamrank[worstteam] += (!m_capture(gamemode) && !m_ctf(gamemode) ? ci->state.effectiveness/max(ci->state.timeplayed, 1) : 1);
+			float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
+			teamrank[worstteam] += (!m_capture(gamemode) && !m_ctf(gamemode) && rank != 0 ? rank : 1);
+			ci->state.lasttimeplayed = -1;
 		}
 		loopi(numteams)
 		{
@@ -441,7 +443,8 @@ struct GAMESERVER : igameserver
 			loopj(numteams) if(isteam(ci->team, teamscores[j].name))
 			{
 				teamscore &ts = teamscores[j];
-				ts.rank += ci->state.effectiveness/max(ci->state.timeplayed, 1);
+				float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
+				ts.rank += rank != 0 ? rank : 1;
 				ts.clients++;
 				break;
 			}
@@ -1235,17 +1238,20 @@ struct GAMESERVER : igameserver
 
 			case SV_ITEMLIST:
 			{
-                if(ci->state.state==CS_SPECTATOR || !notgotitems) { while(getint(p)!=-1) getint(p); break; }
+                bool commit = ci->state.state!=CS_SPECTATOR && !notgotitems;
 				int n;
 				while((n = getint(p))!=-1)
 				{
 					server_entity se = { getint(p), getint(p), getint(p), getint(p), getint(p), getint(p), false, 0 },
 						sn = { 0, 0, 0, 0, 0, 0, false, 0 };
-					while(sents.length()<n) sents.add(sn);
-					sents.add(se);
-					sents[n].spawned = true;
+
+					if (commit)
+					{
+						while(sents.length()<n) sents.add(sn);
+						sents.add(se);
+						sents[n].spawned = true;
+					}
 				}
-				notgotitems = false;
 				break;
 			}
 
@@ -1573,11 +1579,11 @@ struct GAMESERVER : igameserver
 		//s_sprintfd(ver)("version %d", BFRONTIER);
 		//sendstring(ver, p);
 
-		if (motd[0])
-		{
-			putint(p, SV_SERVMSG);
-			sendstring(motd, p);
-		}
+		//if (motd[0])
+		//{
+		//	putint(p, SV_SERVMSG);
+		//	sendstring(motd, p);
+		//}
 		return 1;
 	}
 

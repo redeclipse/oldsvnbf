@@ -45,7 +45,7 @@ struct ctfstate
 
     void addflag(int i, int t, const vec &o)
     {
-        while(!flags.inrange(i)) flags.add();
+    	while(!flags.inrange(i)) flags.add();
 		flag &f = flags[i];
 		f.reset();
 		f.spawnloc = o;
