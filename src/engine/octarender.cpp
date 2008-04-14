@@ -586,7 +586,7 @@ int calcshadowmask(vvec *vv)
     return mask;
 }
 
-VARFP(filltjoints, 0, 0, 1, allchanged());
+VARFP(filltjoints, 0, 1, 1, allchanged());
 
 void reduceslope(ivec &n)
 {
