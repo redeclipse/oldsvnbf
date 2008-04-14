@@ -718,8 +718,10 @@ struct clientcom : iclientcom
 				if (!target) break;
 				target->health = amt;
 				target->lastregen = ms;
-				particle_splash(3, min(100-target->health, 10), 10000, p);
 				playsound(S_REGEN, &target->o);
+				vec pos = target->o;
+				pos.z += 0.6f*(target->height + target->aboveeye) - target->height;
+				particle_splash(3, min(100-target->health, 10), 10000, target->o);
 				break;
 			}
 
