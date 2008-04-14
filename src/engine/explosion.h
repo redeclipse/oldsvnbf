@@ -653,7 +653,7 @@ struct fireballrenderer : listrenderer
         if(fogging)
         {
             if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
-            else blend = (uchar)(blend * max(0.0f, min(1.0f, (reflectz - o.z)/waterfog)));
+            else blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - o.z)/waterfog)));
         }
 
         bool inside = o.dist(camera1->o) <= psize*WOBBLE;
