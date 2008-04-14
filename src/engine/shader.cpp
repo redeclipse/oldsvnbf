@@ -1148,28 +1148,37 @@ void setslotshader(Slot &s)
 		if(s.shader->type&SHADER_GLSLANG) override.index = (LocalShaderParamState *)defaultparam - &s.shader->defaultparams[0];
 	}
 
-   if(strstr(s.shader->name, "glowworld"))
-   {
-       ShaderParam *cparam = findshaderparam(s, "glowscale", SHPARAM_PIXEL, 0);
-       if(!cparam) cparam = findshaderparam(s, "glowscale", SHPARAM_VERTEX, 0);
-       if(cparam) loopk(3) s.glowcolor[k] = cparam->val[k];
-       if(strstr(s.shader->name, "pulse"))
-       {
-           ShaderParam *pulseparam, *speedparam;
-           if(strstr(s.shader->name, "bump"))
-           {
-               pulseparam = findshaderparam(s, "pulseglowscale", SHPARAM_PIXEL, 5);
-               speedparam = findshaderparam(s, "pulseglowspeed", SHPARAM_VERTEX, 4);
-           }
-           else
-           {
-               pulseparam = findshaderparam(s, "pulseglowscale", SHPARAM_VERTEX, 2);
-               speedparam = findshaderparam(s, "pulseglowspeed", SHPARAM_VERTEX, 1);
-           }
-           if(pulseparam) loopk(3) s.pulseglowcolor[k] = pulseparam->val[k];
-           if(speedparam) s.pulseglowspeed = speedparam->val[0]/1000.0f;
-       }
-   }
+    if(strstr(s.shader->name, "glowworld"))
+    {
+        ShaderParam *cparam = findshaderparam(s, "glowscale", SHPARAM_PIXEL, 0);
+        if(!cparam) cparam = findshaderparam(s, "glowscale", SHPARAM_VERTEX, 0);
+        if(cparam) loopk(3) s.glowcolor[k] = cparam->val[k];
+        if(strstr(s.shader->name, "pulse"))
+        {
+            ShaderParam *pulseparam, *speedparam;
+            if(strstr(s.shader->name, "bump"))
+            {
+                pulseparam = findshaderparam(s, "pulseglowscale", SHPARAM_PIXEL, 5);
+                speedparam = findshaderparam(s, "pulseglowspeed", SHPARAM_VERTEX, 4);
+            }
+            else
+            {
+                pulseparam = findshaderparam(s, "pulseglowscale", SHPARAM_VERTEX, 2);
+                speedparam = findshaderparam(s, "pulseglowspeed", SHPARAM_VERTEX, 1);
+            }
+            if(pulseparam) loopk(3) s.pulseglowcolor[k] = pulseparam->val[k];
+            if(speedparam) s.pulseglowspeed = speedparam->val[0]/1000.0f;
+        }
+    }
+    else if(!strcmp(s.shader->name, "colorworld"))
+    {
+        ShaderParam *cparam = findshaderparam(s, "colorscale", SHPARAM_PIXEL, 0);
+        if(cparam && (cparam->val[0]!=1 || cparam->val[1]!=1 || cparam->val[2]!=1) && s.sts.length()>=1)
+        {
+            s_sprintfd(colorname)("<mad:%f/%f/%f>%s", cparam->val[0], cparam->val[1], cparam->val[2], s.sts[0].name);
+            s_strcpy(s.sts[0].name, colorname);
+        }
+    }
 }
 
 VAR(nativeshaders, 0, 1, 1);
