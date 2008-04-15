@@ -598,7 +598,7 @@ struct GAMECLIENT : igameclient
 
 	void drawhudgun()
 	{
-#if 0
+//#if 0
 		if(!hudgun() || thirdperson() || editmode || player1->state != CS_ALIVE || !isgun(player1->gunselect)) return;
 		int rtime = player1->gunwait[player1->gunselect],
 			wtime = player1->gunlast[player1->gunselect],
@@ -613,7 +613,7 @@ struct GAMECLIENT : igameclient
 		{
 			drawhudmodel(ANIM_GUNIDLE|ANIM_LOOP);
 		}
-#endif
+//#endif
 	}
 
 	void drawhud(int w, int h)
@@ -1060,6 +1060,7 @@ struct GAMECLIENT : igameclient
 		}
 		else
 		{
+#if 0
 			vec yoff, poff, roff;
 			vecfromyawpitch(camera1->yaw, 0, 1, 0, yoff);
 			yoff.z = 0;
@@ -1076,8 +1077,10 @@ struct GAMECLIENT : igameclient
 				camera1->yaw = camera1->yaw >= 180.f ? camera1->yaw-180.f : camera1->yaw+180.f;
 				camera1->pitch = 0.f-camera1->pitch;
 			}
-			//vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
-			//camera1->o.add(off.mul(fabs(camera1->roll)/8.f));
+#else
+			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
+			camera1->o.add(off.mul(fabs(camera1->roll)/8.f));
+#endif
 		}
 
 		if (camerawobble > 0 && cameratype == lastcam)
