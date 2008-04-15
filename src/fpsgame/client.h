@@ -531,7 +531,7 @@ struct clientcom : iclientcom
 				int flags = getint(p);
 				getstring(text, p);
                 if(!t) break;
-				saytext(d, text, flags);
+				saytext(t, text, flags);
 				break;
 			}
 
