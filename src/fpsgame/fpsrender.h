@@ -62,11 +62,11 @@ struct fpsrender
 			s_strcpy(d->info, cl.colorname(d, NULL, "@"));
 			if(d->state!=CS_DEAD) particle_text(d->abovehead(), d->info, m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? 16 : 13) : 11, 1);
 		}
-#if 0
+//#if 0
 		if(isthirdperson() && (cl.player1->state != CS_SPECTATOR || cl.player1->clientnum == -cl.cameranum)) renderplayer(cl.player1, true, teamskins() || m_team(cl.gamemode, cl.mutators) ? mdlnames[1] : mdlnames[0]);
-#else
-		if(cl.player1->state != CS_SPECTATOR || cl.player1->clientnum == -cl.cameranum) renderplayer(cl.player1, true, teamskins() || m_team(cl.gamemode, cl.mutators) ? mdlnames[1] : mdlnames[0]);
-#endif
+//#else
+//		if(cl.player1->state != CS_SPECTATOR || cl.player1->clientnum == -cl.cameranum) renderplayer(cl.player1, true, teamskins() || m_team(cl.gamemode, cl.mutators) ? mdlnames[1] : mdlnames[0]);
+//#endif
 
 		cl.et.render();
 		cl.pj.render();
