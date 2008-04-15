@@ -313,9 +313,7 @@ struct captureclient : capturestate
 
 	void drawhud(int w, int h)
 	{
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		int x = 1800*w/h*1/80, y = 1800*(hidehud || hidestats ? 28 : 27)/40, s = 1800*w/h*5/40;
+		int x = 900*w/h*1/80, y = 900*(hidehud || hidestats ? 28 : 27)/40, s = 900*w/h*5/40;
 		glColor4f(1, 1, 1, hudblend*0.01f);
 		settexture("textures/radar.png");
 		glBegin(GL_QUADS);
@@ -326,7 +324,6 @@ struct captureclient : capturestate
 		drawblips(x, y, s, 0, showenemies);
 		drawblips(x, y, s, -1, showenemies);
 		if(showenemies) drawblips(x, y, s, -2);
-        glDisable(GL_BLEND);
 	}
 
 	void setupbases()

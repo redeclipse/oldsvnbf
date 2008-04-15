@@ -1767,10 +1767,10 @@ struct GAMESERVER : igameserver
 				int lastpain = gamemillis-ci->state.lastpain,
 					lastregen = gamemillis-ci->state.lastregen;
 
-				if (!m_insta(gamemode, mutators) && ci->state.health < 100 && lastpain >= 5000 && lastregen >= 2500)
+				if (!m_insta(gamemode, mutators) && ci->state.health < MAXHEALTH && lastpain >= REGENWAIT && lastregen >= REGENTIME)
 				{
-					int health = ci->state.health - (ci->state.health % 10);
-					ci->state.health = min(health + 10, 100);
+					int health = ci->state.health - (ci->state.health % REGENHEAL);
+					ci->state.health = min(health + REGENHEAL, MAXHEALTH);
 					ci->state.lastregen = gamemillis;
 					sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, ci->state.lastregen);
 				}

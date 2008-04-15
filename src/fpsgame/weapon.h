@@ -177,38 +177,16 @@ struct weaponstate
 
 	vec hudgunorigin(int gun, const vec &from, const vec &to, fpsent *d)
 	{
-#if 0
 		vec offset(from);
-        if(d!=cl.player1 || cl.gamethirdperson())
-        {
-            vec front, right;
-            vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
-            offset.add(front.mul(d->radius));
-			offset.z += (d->aboveeye + d->height)*0.75f - d->height;
-			vecfromyawpitch(d->yaw, 0, 0, -1, right);
-			offset.add(right.mul(0.5f*d->radius));
-            return offset;
-        }
-        offset.add(vec(to).sub(from).normalize().mul(2));
-		if(cl.hudgun())
-		{
-            offset.sub(vec(camup).mul(1.0f));
-			offset.add(vec(camright).mul(0.8f));
-		}
+		vec front, right;
+		vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
+		offset.add(front.mul(d->radius+1.f));
+		offset.z += (d->aboveeye + d->height)*0.75f - d->height;
+		vecfromyawpitch(d->yaw, 0, 0, -1, right);
+		offset.add(right.mul(0.3f*d->radius));
+		if(d->crouching)
+			offset.z -= (d == cl.player1 ? cl.crouching : 1.0f)*(1-CROUCHHEIGHT)*d->height;
 		return offset;
-#else
-		vec pos(to);
-
-		pos.sub(from);
-		pos.normalize();
-		pos.mul(d->radius);
-		pos.add(from);
-
-        if(d->crouching)
-			pos.z -= (d == cl.player1 ? cl.crouching : 1.0f)*(1-CROUCHHEIGHT)*d->height;
-
-		return pos;
-#endif
 	}
 
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot

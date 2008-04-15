@@ -1242,7 +1242,7 @@ void gl_drawframe(int w, int h)
     renderedgame = false;
 }
 
-VARP(crosshairsize, 0, 15, 1000);
+VARP(crosshairsize, 0, 25, 1000);
 VARP(crosshairfx, 0, 1, 1);
 
 VARP(cursorsize, 0, 30, 1000);
@@ -1257,7 +1257,7 @@ void loadcrosshair(const char *name, int *i)
 {
     if(*i < 0 || *i >= MAXCROSSHAIRS) return;
     crosshairs[*i] = textureload(name, 3, true);
-    if(crosshairs[*i] == notexture) 
+    if(crosshairs[*i] == notexture)
     {
         name = cl->defaultcrosshair(*i);
         if(!name) name = "textures/crosshair.png";
@@ -1290,10 +1290,10 @@ void drawcrosshair(int w, int h)
         g3d_cursorpos(cx, cy);
     }
     else
-    { 
+    {
         int index = crosshairfx ? cl->selectcrosshair(r, g, b) : 0;
         crosshair = crosshairs[index];
-        if(!crosshair) 
+        if(!crosshair)
         {
             loadcrosshair(cl->defaultcrosshair(index), &index);
             crosshair = crosshairs[index];
