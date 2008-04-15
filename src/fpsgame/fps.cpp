@@ -1078,6 +1078,7 @@ struct GAMECLIENT : igameclient
 				camera1->pitch = 0.f-camera1->pitch;
 			}
 #else
+			vec off;
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
 			camera1->o.add(off.mul(fabs(camera1->roll)/8.f));
 #endif
