@@ -19,7 +19,7 @@ struct assassinservmode : servmode
     clientinfo *choosetarget(clientinfo *exclude1, clientinfo *exclude2 = NULL)
     {
         if(targets.length() <= (exclude1 ? 1 : 0)) return NULL;
-        if(exclude2 && targets.length() < 3) exclude2 = NULL; 
+        if(exclude2 && targets.length() < 3) exclude2 = NULL;
         clientinfo *target = NULL;
         do target = targets[rnd(targets.length())];
         while(target==exclude1 || target==exclude2);
@@ -55,7 +55,7 @@ struct assassinservmode : servmode
             if(hunter->targets.empty()) sendnewtarget(hunter);
         }
         if(!disconnecting) sendf(ci->clientnum, 1, "ri2", SV_CLEARTARGETS, SV_CLEARHUNTERS);
-        
+
     }
 
     void checkneedstarget(clientinfo *ci, clientinfo *exclude = NULL)
@@ -108,7 +108,7 @@ struct assassinservmode : servmode
             victim->targets.add(actor);
             sendf(victim->clientnum, 1, "ri2", SV_ADDTARGET, actor->clientnum);
             sendf(actor->clientnum, 1, "ri2", SV_ADDHUNTER, victim->clientnum);
-        } 
+        }
     }
 } assassinmode;
 
@@ -185,9 +185,7 @@ struct assassinclient
 
     void drawhud(int w, int h)
     {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		int x = 1800*w/h*1/80, y = 1800*(hidehud || hidestats ? 28 : 27)/40, s = 1800*w/h*5/40;
+		int x = 900*w/h*1/80, y = 900*(hidehud || hidestats ? 28 : 27)/40, s = 900*w/h*5/40;
 		glColor4f(1, 1, 1, hudblend*0.01f);
 		settexture("textures/radar.png");
         glBegin(GL_QUADS);
@@ -204,7 +202,6 @@ struct assassinclient
             settexture("textures/blip_red.png");
             drawblips(targets, x, y, s, scale);
         }
-        glDisable(GL_BLEND);
     }
 } asc;
 #endif

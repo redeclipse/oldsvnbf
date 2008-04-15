@@ -104,7 +104,8 @@ struct projectiles
 			vec dir(vec(vec(to).sub(from)).normalize());
 			vectoyawpitch(dir, yaw, pitch);
 			vel = vec(vec(dir).mul(maxspeed)).add(vec(_o->vel).mul(relativity));
-			o.add(vec(dir).mul(radius*2.f)); // a push to get out of the way
+			dir.mul(2);
+			o.add(vec(dir).mul(radius)); // a push to get out of the way
 		}
 
 		void reset()

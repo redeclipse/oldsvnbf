@@ -31,7 +31,7 @@ struct ctfstate
             interpangle = 0;
             interptime = 0;
 #endif
-            team = 0;
+            team = -1;
             score = 0;
             droptime = 0;
         }
@@ -314,9 +314,7 @@ struct ctfclient : ctfstate
         }
 #endif
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        int x = 1800*w/h*34/40, y = 1800*1/40, s = 1800*w/h*5/40;
+        int x = 900*w/h*34/40, y = 900*1/40, s = 900*w/h*5/40;
         glColor3f(1, 1, 1);
         settexture("textures/radar.png");
         glBegin(GL_QUADS);
@@ -347,7 +345,6 @@ struct ctfclient : ctfstate
                 glPopMatrix();
             }
         }
-        glDisable(GL_BLEND);
     }
 
     vec interpflagpos(flag &f, float &angle)

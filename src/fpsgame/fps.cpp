@@ -109,7 +109,7 @@ struct GAMECLIENT : igameclient
 
 	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
 	{
-		et.findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1), m_ctf(gamemode) ? ctf.teamflag(player1->team, m_ttwo(gamemode, mutators))+1 : 0);
+		et.findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1), m_ctf(gamemode) ? ctf.teamflag(player1->team, m_ttwo(gamemode, mutators))+1 : -1);
 		spawnstate(d);
 		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
 	}
@@ -598,6 +598,7 @@ struct GAMECLIENT : igameclient
 
 	void drawhudgun()
 	{
+#if 0
 		if(!hudgun() || thirdperson() || editmode || player1->state != CS_ALIVE || !isgun(player1->gunselect)) return;
 		int rtime = player1->gunwait[player1->gunselect],
 			wtime = player1->gunlast[player1->gunselect],
@@ -612,6 +613,7 @@ struct GAMECLIENT : igameclient
 		{
 			drawhudmodel(ANIM_GUNIDLE|ANIM_LOOP);
 		}
+#endif
 	}
 
 	void drawhud(int w, int h)
@@ -755,11 +757,9 @@ struct GAMECLIENT : igameclient
 						}
 					}
 
-					glDisable(GL_BLEND);
 					if(m_capture(gamemode)) cpc.drawhud(w, h);
 					else if(m_assassin(gamemode)) asc.drawhud(w, h);
-					if(m_ctf(gamemode)) ctf.drawhud(w, h);
-					glEnable(GL_BLEND);
+					else if(m_ctf(gamemode)) ctf.drawhud(w, h);
 				}
 				glDisable(GL_BLEND);
 			}
@@ -955,6 +955,8 @@ struct GAMECLIENT : igameclient
 			pos = dir.mul(2*hdr.worldsize).add(d->o); //otherwise 3dgui won't work when outside of map
 	}
 
+	IVAR(invertcamera, 0, 0, 1);
+
 	void recomputecamera()
 	{
 		int secs = time(NULL), lastcam = cameratype;
@@ -968,7 +970,6 @@ struct GAMECLIENT : igameclient
 			camera1->reset();
 			camera1->type = ENT_CAMERA;
 			camera1->state = CS_ALIVE;
-			camera1->radius = player1->radius; // for sound interpolation mostly
 		}
 
 		if (player1->state == CS_SPECTATOR)
@@ -986,6 +987,8 @@ struct GAMECLIENT : igameclient
 				camera1->yaw = players[-cameranum]->yaw + player1->yaw;
 				camera1->pitch = players[-cameranum]->pitch + player1->pitch;
 				camera1->roll = players[-cameranum]->roll;
+				camera1->radius = players[-cameranum]->radius;
+				camera1->height = players[-cameranum]->height;
 
 				if (!gamethirdperson())
 				{
@@ -1008,6 +1011,8 @@ struct GAMECLIENT : igameclient
 							camera1->yaw = et.ents[i]->attr1 + player1->yaw;
 							camera1->pitch = et.ents[i]->attr2 + player1->pitch;
 							camera1->roll = player1->roll;
+							camera1->radius = player1->radius;
+							camera1->height = player1->height;
 							break;
 						}
 						cameras++;
@@ -1022,6 +1027,8 @@ struct GAMECLIENT : igameclient
 			camera1->yaw = player1->yaw;
 			camera1->pitch = player1->pitch;
 			camera1->roll = player1->roll;
+			camera1->radius = player1->radius;
+			camera1->height = player1->height;
 
 			if (!gamethirdperson())
 			{
@@ -1053,9 +1060,24 @@ struct GAMECLIENT : igameclient
 		}
 		else
 		{
-			vec off;
-			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
-			camera1->o.add(off.mul(fabs(camera1->roll)/8.f));
+			vec yoff, poff, roff;
+			vecfromyawpitch(camera1->yaw, 0, 1, 0, yoff);
+			yoff.z = 0;
+			yoff.mul(camera1->radius);
+			vecfromyawpitch(0, camera1->pitch, 1, 0, poff);
+			poff.x = poff.y = 0;
+			poff.mul((camera1->height*0.5f)*(float(fabs(camera1->pitch))/90.f));
+			vecfromyawpitch(camera1->yaw, 0, 0, -1, roff);
+			roff.z = 0;
+			roff.mul(camera1->radius*0.1f);
+			camera1->o.add(vec(vec(yoff).add(poff)).add(roff));
+			if (invertcamera())
+			{
+				camera1->yaw = camera1->yaw >= 180.f ? camera1->yaw-180.f : camera1->yaw+180.f;
+				camera1->pitch = 0.f-camera1->pitch;
+			}
+			//vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
+			//camera1->o.add(off.mul(fabs(camera1->roll)/8.f));
 		}
 
 		if (camerawobble > 0 && cameratype == lastcam)

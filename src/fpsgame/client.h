@@ -661,7 +661,7 @@ struct clientcom : iclientcom
 				cl.player1->gunselect = getint(p);
 				loopi(NUMGUNS) cl.player1->ammo[i] = getint(p);
 				cl.player1->state = CS_ALIVE;
-				cl.et.findplayerspawn(cl.player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(cl.player1->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators))+1 : 0);
+				cl.et.findplayerspawn(cl.player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(cl.player1->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators))+1 : -1);
 				cl.sb.showscores(false);
                 cl.lasthit = 0;
 				addmsg(SV_SPAWN, "rii", cl.player1->lifesequence, cl.player1->gunselect);
@@ -721,7 +721,7 @@ struct clientcom : iclientcom
 				playsound(S_REGEN, &target->o);
 				vec pos = target->o;
 				pos.z += 0.6f*(target->height + target->aboveeye) - target->height;
-				particle_splash(3, min(100-target->health, 10), 10000, target->o);
+				particle_splash(3, max((MAXHEALTH-target->health)/REGENHEAL, 1), 10000, target->o);
 				break;
 			}
 

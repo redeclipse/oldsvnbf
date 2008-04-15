@@ -243,7 +243,12 @@ static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
 #define PLATFORMBORDER	0.2f
 #define PLATFORMMARGIN	10.0f
 
+#define MAXHEALTH		100
 #define MAXCARRY		2
+
+#define REGENWAIT		3000
+#define REGENTIME		1000
+#define REGENHEAL		5
 
 static struct guntypes
 {
@@ -347,7 +352,7 @@ struct fpsstate
 
 	void respawn()
 	{
-		health = 100;
+		health = MAXHEALTH;
 		lastdeath = lastshot = lastspawn = lastpain = lastregen = 0;
 		loopi(NUMGUNS)
 		{
@@ -370,7 +375,7 @@ struct fpsstate
 		}
 		else
 		{
-			health = 100;
+			health = MAXHEALTH;
 			gunselect = GUN_PISTOL;
 			loopi(NUMGUNS)
 			{
