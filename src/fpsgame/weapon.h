@@ -181,7 +181,7 @@ struct weaponstate
 		loopi(rnd(d->superdamage)+1) cl.pj.spawn(from, vel, d, PRJ_GIBS);
 	}
 
-	vec hudgunorigin(int gun, const vec &from, const vec &to, fpsent *d)
+	vec gunorigin(int gun, const vec &from, const vec &to, fpsent *d)
 	{
 		vec offset(from);
 		vec front, right;
@@ -326,7 +326,7 @@ struct weaponstate
 		d->ammo[d->gunselect]--;
 		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 
-		vec to = targ, from = hudgunorigin(d->gunselect, d->o, to, d), unitv;
+		vec to = targ, from = gunorigin(d->gunselect, d->o, to, d), unitv;
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		vec kickback(unitv);
@@ -366,8 +366,6 @@ struct weaponstate
             if(!file) continue;
             s_sprintfd(mdl)("weapons/%s", file);
             loadmodel(mdl, -1, true);
-            //s_sprintf(mdl)("hudguns/%s/blue", file);
-            //loadmodel(mdl, -1, true);
             s_sprintf(mdl)("weapons/%s/vwep", file);
             loadmodel(mdl, -1, true);
         }

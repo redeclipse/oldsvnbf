@@ -492,7 +492,6 @@ void transplayer()
 float curfov = 105, fovy, aspect;
 int farplane;
 VARFP(fov, 1, 120, 360, { cl->fixview(); curfov = fov; });
-VAR(hudgunfov, 10, 65, 150);
 
 int xtraverts, xtravertsva;
 
@@ -710,13 +709,6 @@ void drawglare()
     renderwater();
     rendermaterials();
     render_particles(0);
-
-    if(!isthirdperson())
-    {
-        project(hudgunfov, aspect, farplane);
-        cl->drawhudgun();
-        project(fovy, aspect, farplane);
-    }
 
     glFogf(GL_FOG_START, oldfogstart);
     glFogf(GL_FOG_END, oldfogend);
@@ -1217,13 +1209,6 @@ void gl_drawframe(int w, int h)
 
 	rendermaterials();
 	render_particles(curtime);
-
-	if(!isthirdperson())
-	{
-		project(hudgunfov, aspect, farplane);
-		cl->drawhudgun();
-		project(fovy, aspect, farplane);
-	}
 
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);
