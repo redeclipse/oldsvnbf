@@ -1148,6 +1148,7 @@ struct GAMESERVER : igameserver
 				{
 					gameevent &hit = ci->addevent();
 					hit.type = GE_HIT;
+					hit.hit.flags = getint(p);
 					hit.hit.target = getint(p);
 					hit.hit.lifesequence = getint(p);
 					hit.hit.dist = getint(p)/DMF;
