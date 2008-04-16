@@ -211,7 +211,7 @@ struct scoreboard : g3d_callback
 				if(pen)
 					g.textf("penalty for missed shots: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", pen);
 
-				s_sprintfd(aname)("bestscore_%s", mapname);
+				s_sprintfd(aname)("bestscore_%s", getmapname());
 				const char *bestsc = getalias(aname);
 				int bestscore = *bestsc ? atoi(bestsc) : score;
 				if(score<bestscore) bestscore = score;

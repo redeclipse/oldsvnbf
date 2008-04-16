@@ -98,7 +98,7 @@ void screenshot(char *filename)
 		dst += image->pitch;
 	}
 	delete[] tmp;
-	const char *name = makefile(*filename ? filename : mapname, ".bmp", true, true);
+	const char *name = makefile(*filename ? filename : getmapname(), ".bmp", true, true);
 	const char *fname = findfile(name, "wb");
 	SDL_SaveBMP(image, fname);
 	SDL_FreeSurface(image);

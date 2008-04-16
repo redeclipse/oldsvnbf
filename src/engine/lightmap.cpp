@@ -62,7 +62,7 @@ void show_calclight_progress()
 		createtexture(progresstex, LM_PACKW, LM_PACKH, NULL, 3, false, GL_RGB);
 	}
 	// only update once a sec (4 * 250 ms ticks) to not kill performance
-	if(progresstex && !calclight_canceled) 
+	if(progresstex && !calclight_canceled)
     {
         loopvrev(lightmaps) if(lightmaps[i].type==LM_DIFFUSE || lightmaps[i].type==LM_BUMPMAP0)
 	    {
@@ -1546,7 +1546,7 @@ void dumplms()
 				uchar *dest = (uchar *)temp->pixels+temp->pitch*idx;
 				memcpy(dest, lightmaps[i].data+3*LM_PACKW*(LM_PACKH-1-idx), 3*LM_PACKW);
 			}
-			s_sprintfd(fname)("%s_lm%d", mapname, i);
+			s_sprintfd(fname)("%s_lm%d", getmapname(), i);
 			const char *name = makefile(fname, ".bmp", false, false);
 			setnames(name);
 			SDL_SaveBMP(temp, findfile(fname, "wb"));

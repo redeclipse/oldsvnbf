@@ -817,5 +817,12 @@ void writeobj(char *name)
 
 COMMAND(writeobj, "s");
 
-char *maptitle() { return hdr.maptitle; }
-ICOMMAND(maptitle, "", (void), result(maptitle()));
+int getworldsize() { return hdr.worldsize; }
+char *getmapname() { return mapname; }
+ICOMMAND(mapname, "", (void), result(getmapname()));
+int getmapversion() { return hdr.version; }
+ICOMMAND(mapversion, "", (void), intret(getmapversion()));
+int getmaprevision() { return hdr.revision; }
+ICOMMAND(maprevision, "", (void), intret(getmaprevision()));
+char *getmaptitle() { return hdr.maptitle; }
+ICOMMAND(maptitle, "", (void), result(getmaptitle()));

@@ -498,7 +498,7 @@ struct clientcom : iclientcom
 				switch (hasmap)
 				{
 					case 0:
-						changemap(mapname);
+						changemap(getmapname());
 						break;
 					case 2:
 						senditemstoserver = true;
@@ -593,7 +593,7 @@ struct clientcom : iclientcom
 
 			case SV_MAPRELOAD:		  // server requests next map
 			{
-                s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture(cl.gamemode) ? "capture_" : (m_ctf(cl.gamemode) ? "ctf_" : ""), mapname);
+                s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture(cl.gamemode) ? "capture_" : (m_ctf(cl.gamemode) ? "ctf_" : ""), getmapname());
 				const char *map = getalias(nextmapalias);	 // look up map in the cycle
 				addmsg(SV_MAPCHANGE, "rsii", *map ? map : sv->defaultmap(), cl.nextmode, cl.nextmuts);
 				break;
@@ -1168,9 +1168,8 @@ struct clientcom : iclientcom
 			{
 				if(!m_edit(cl.gamemode)) return;
 				string oldname;
-				s_strcpy(oldname, mapname);
-				const char *aname = makefile(mapname, ".bgz", false, true);
-				s_sprintfd(mname)("%s", aname);
+				s_strcpy(oldname, getmapname());
+				s_sprintfd(mname)("%s", getmapname());
 				s_sprintfd(fname)("%s.bgz", mname);
 				const char *file = findfile(fname, "wb");
 				FILE *map = fopen(file, "wb");
@@ -1236,9 +1235,9 @@ struct clientcom : iclientcom
 	{
 		if(!m_edit(cl.gamemode) || (spectator && !cl.player1->privilege)) { conoutf("\"sendmap\" only works in coopedit mode"); return; }
 		conoutf("sending map...");
-		s_sprintfd(mname)("sendmap_%d", lastmillis);
+		s_sprintfd(mname)("%s", getmapname());
 		save_world(mname, true);
-		s_sprintfd(fname)("maps/%s.ogz", mname);
+		s_sprintfd(fname)("%s.bgz", mname);
 		const char *file = findfile(fname, "rb");
 		FILE *map = fopen(file, "rb");
 		if(map)

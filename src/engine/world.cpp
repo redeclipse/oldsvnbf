@@ -906,7 +906,6 @@ bool enlargemap(bool force)
 
 ICOMMAND(newmap, "is", (int *i), if(emptymap(*i, false)) cl->newmap(::max(*i, 0)));
 ICOMMAND(mapenlarge, "", (), if(enlargemap(false)) cl->newmap(-1));
-ICOMMAND(mapname, "", (void), result(mapname));
 ICOMMAND(mapsize, "", (void),
 {
     int size = 0;
@@ -937,9 +936,6 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
 		if(oldtype!=type) attachentity(e);
 	}
 }
-
-int getworldsize() { return hdr.worldsize; }
-int getmapversion() { return hdr.version; }
 
 void newentity(vec &v, int type, int a1, int a2, int a3, int a4)
 {
