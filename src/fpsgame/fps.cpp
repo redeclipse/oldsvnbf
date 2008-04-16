@@ -278,7 +278,7 @@ struct GAMECLIENT : igameclient
 		if (player1->clientnum >= 0) c2sinfo(player1);
 	}
 
-	void damaged(int gun, int damage, fpsent *d, fpsent *actor, int millis, vec &dir)
+	void damaged(int gun, int flags, int damage, fpsent *d, fpsent *actor, int millis, vec &dir)
 	{
 		if(d->state != CS_ALIVE || intermission) return;
 
@@ -316,41 +316,37 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
-	void killed(fpsent *d, fpsent *actor)
+	void killed(int gun, int flags, int damage, fpsent *d, fpsent *actor)
 	{
 		if(d->state!=CS_ALIVE || intermission) return;
 
-		string dname, aname;
+		static const char *obitnames[NUMGUNS] = {
+			"ate a bullet from", "got filled with buckshot by", "was gunned down by",
+			"was blown to pieces by", "rode the wrong end of a rocket from",
+			"was sniped by"
+		};
+		string dname, aname, oname;
 		s_strcpy(dname, d==player1 ? "you" : colorname(d));
 		s_strcpy(aname, actor==player1 ? "you" : (actor->type!=ENT_INANIMATE ? colorname(actor) : ""));
+		s_strcpy(oname, flags&HIT_HEAD ? "was shot in the head by" : (gun >= 0 && gun < NUMGUNS ? obitnames[gun] : "was killed by"));
 		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
-		if(actor->type==ENT_AI)
-			console("\f2%s got killed by %s!", cflags, dname, aname);
-        else if(d==actor || actor->type==ENT_INANIMATE)
-			console("\f2%s suicided%s", cflags, dname, d==player1 ? "!" : "");
-		else if(isteam(d->team, actor->team))
-		{
-			if(d==player1) console("\f2you got fragged by a teammate (%s)", cflags, aname);
-			else console("\f2%s fragged a teammate (%s)", cflags, aname, dname);
-		}
+		if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, aname, oname, dname);
+        else if(d==actor || actor->type==ENT_INANIMATE) console("\f2%s %s themself", cflags, dname, oname);
+		else if(isteam(d->team, actor->team)) console("\f2%s %s teammate %s", cflags, dname, oname, aname);
         else if(m_assassin(gamemode) && (d == player1 || actor == player1))
         {
             if(d==player1)
             {
-                console("\f2you got fragged by %s (%s)", cflags, aname, asc.hunters.find(actor)>=0 ? "assassin" : (asc.targets.find(actor)>=0 ? "target" : "friend"));
+                console("\f2%s %s %s (%s)", cflags, dname, oname, aname, asc.hunters.find(actor)>=0 ? "assassin" : (asc.targets.find(actor)>=0 ? "target" : "friend"));
                 if(asc.hunters.find(actor)>=0) asc.hunters.removeobj(actor);
             }
             else
             {
-                console("\f2you fragged %s (%s)", cflags, dname, asc.targets.find(d)>=0 ? "target +1" : (asc.hunters.find(d)>=0 ? "assassin +0" : "friend -1"));
+                console("\f2%s %s %s (%s)", cflags, dname, oname, aname, asc.targets.find(d)>=0 ? "target +1" : (asc.hunters.find(d)>=0 ? "assassin +0" : "friend -1"));
                 if(asc.targets.find(d)>=0) asc.targets.removeobj(d);
             }
         }
-		else
-		{
-			if(d==player1) console("\f2you got fragged by %s", cflags, aname);
-			else console("\f2%s fragged %s", cflags, aname, dname);
-		}
+		else console("\f2%s %s %s", cflags, dname, oname, aname);
 
 		d->state = CS_DEAD;
         d->superdamage = max(-d->health, 0);
@@ -373,15 +369,22 @@ struct GAMECLIENT : igameclient
 		playsound(S_DIE1+rnd(2), &d->o);
 		ws.superdamageeffect(d->vel, d);
 
-		actor->spree++;
-
-		switch (actor->spree)
+		if (d != actor)
 		{
-			case 5:  playsound(S_V_SPREE1, &actor->o); break;
-			case 10: playsound(S_V_SPREE2, &actor->o); break;
-			case 25: playsound(S_V_SPREE3, &actor->o); break;
-			case 50: playsound(S_V_SPREE4, &actor->o); break;
-			default: if (actor == player1 && d != player1) playsound(S_DAMAGE8); break;
+			actor->spree++;
+			switch (actor->spree)
+			{
+				case 5:  playsound(S_V_SPREE1, &actor->o); break;
+				case 10: playsound(S_V_SPREE2, &actor->o); break;
+				case 25: playsound(S_V_SPREE3, &actor->o); break;
+				case 50: playsound(S_V_SPREE4, &actor->o); break;
+				default:
+				{
+					if (flags&HIT_HEAD) playsound(S_V_HEADSHOT, &actor->o);
+					else playsound(S_DAMAGE8, &actor->o);
+					break;
+				}
+			}
 		}
 	}
 
