@@ -1097,6 +1097,7 @@ struct GAMECLIENT : igameclient
 		}
 		else camerawobble = 0;
 
+		fixview();
 		fixrange(camera1);
 		findorientation(camera1, worldpos);
 	}

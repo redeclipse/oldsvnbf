@@ -113,7 +113,7 @@ static struct gametypes
 	{ G_M_INSTA,		0,				0,					"Instagib" },
 	{ G_M_DUEL,			0,				0,					"Duel" },
 	{ G_M_PROG,			0,				0,					"Progressive" },
-	{ G_M_TTWO,			0,				0,					"Times Two" },
+	{ G_M_TTWO,			0,				G_M_TEAM,			"Times Two" },
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)
