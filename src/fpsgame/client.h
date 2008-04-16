@@ -609,7 +609,6 @@ struct clientcom : iclientcom
 					break;
 				}
 				getstring(text, p);
-				//filtertext(text, text, false, MAXNAMELEN);
 				if(!text[0]) s_strcpy(text, "unnamed");
 				if(d->name[0])		  // already connected
 				{
@@ -630,9 +629,9 @@ struct clientcom : iclientcom
 					extern editinfo *localedit;
 					freeeditinfo(localedit);
 				}
-				s_strncpy(d->name, text, MAXNAMELEN+1);
+				s_strncpy(d->name, text, MAXNAMELEN);
 				getstring(text, p);
-				//filtertext(d->team, text, false, MAXTEAMLEN);
+				s_strncpy(d->team, text, MAXTEAMLEN);
 				cl.calcranks();
 				break;
 			}
@@ -1111,6 +1110,30 @@ struct clientcom : iclientcom
 					while(1<<newsize < getworldsize()) newsize++;
 					conoutf(size>=0 ? "%s started a new map of size %d" : "%s enlarged the map to size %d", cl.colorname(d), newsize);
 				}
+				break;
+			}
+
+			case SV_ADDBOT:
+			{
+				int on = getint(p), bn = getint(p);
+				conoutf("request to add new bot (%d, %d)", on, bn);
+				fpsent *b = cl.newclient(bn);
+				if(!b)
+				{
+					getstring(text, p);
+					getstring(text, p);
+					break;
+				}
+
+				b->ownernum = on;
+				getstring(text, p);
+				s_strncpy(b->name, text, MAXNAMELEN);
+				getstring(text, p);
+				s_strncpy(b->team, text, MAXTEAMLEN);
+
+				conoutf("created %s (%s)", b->name, b->team);
+				fpsent *o = b->ownernum==cl.player1->clientnum ? cl.player1 : cl.getclient(b->ownernum);
+				conoutf("%s introduced %s (%s)", o->name, cl.colorname(b), b->team);
 				break;
 			}
 

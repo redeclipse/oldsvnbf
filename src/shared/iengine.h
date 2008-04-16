@@ -310,7 +310,7 @@ extern void g3d_cursorpos(float &x, float &y);
 extern void g3d_resetcursor();
 
 // client
-enum { ST_EMPTY, ST_TCPIP };
+enum { ST_EMPTY, ST_TCPIP, ST_REMOTE };
 
 struct client					// server side version of "dynent" type
 {
@@ -325,7 +325,8 @@ extern int nonlocalclients;
 
 extern void process(ENetPacket *packet, int sender, int chan);
 extern void send_welcome(int n);
-extern client &addclient();
+extern void delclient(int n);
+extern int addclient(int type = ST_EMPTY);
 
 #ifndef STANDALONE
 extern ENetHost *clienthost;

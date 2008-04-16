@@ -7,6 +7,7 @@ struct GAMECLIENT : igameclient
 	#include "fpsrender.h"
 	#include "entities.h"
 	#include "client.h"
+	#include "bot.h"
 	#include "capture.h"
     #include "assassin.h"
     #include "ctf.h"
@@ -65,7 +66,7 @@ struct GAMECLIENT : igameclient
     IVARP(maxradarscale,	0,			1024,		10000);
 
 	GAMECLIENT()
-		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), cpc(*this), asc(*this), ctf(*this),
+		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), asc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),

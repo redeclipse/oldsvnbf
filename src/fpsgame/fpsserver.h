@@ -1483,6 +1483,46 @@ struct GAMESERVER : igameserver
                 break;
             }
 
+			case SV_ADDBOT:
+			{
+                if(ci->state.state==CS_SPECTATOR && !ci->privilege) break;
+
+				int bn = addclient(ST_REMOTE);
+				clientinfo *bt = (clientinfo *)getinfo(bn);
+				bt->clientnum = bn;
+				bt->state.ownernum = sender;
+				clients.add(bt);
+				bt->state.lasttimeplayed = lastmillis;
+				s_strncpy(bt->name, "bot", MAXNAMELEN);
+				//savedscore &sc = findscore(ci, false);
+				//if(&sc)
+				//{
+				//	sc.restore(ci->state);
+				//	sendf(-1, 1, "ri7", SV_RESUME, sender, ci->state.state, ci->state.lifesequence, ci->state.gunselect, sc.frags, -1);
+				//}
+				const char *worst = chooseworstteam(text);
+				if(worst) s_strncpy(bt->team, worst, MAXTEAMLEN);
+				else s_strncpy(bt->team, teamnames[0], MAXTEAMLEN);
+				sendf(-1, 1, "ri3ss", SV_ADDBOT, ci->clientnum, bt->clientnum, bt->name, bt->team);
+				break;
+			}
+
+			case SV_DELBOT:
+			{
+				int bn = getint(p);
+				clientinfo *bt = (clientinfo *)getinfo(bn);
+				if (bt && bt->state.ownernum >= 0 && bt->state.ownernum == ci->clientnum)
+				{
+					int cn = bt->clientnum;
+					bt->state.timeplayed += lastmillis - bt->state.lasttimeplayed;
+					savescore(bt);
+					clients.removeobj(bt);
+					delclient(cn);
+					sendf(-1, 1, "ri2", SV_CDIS, cn);
+				}
+				break;
+			}
+
 			default:
 			{
 				int size = msgsizelookup(type);
