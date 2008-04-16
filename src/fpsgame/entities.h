@@ -42,9 +42,6 @@ struct entities : icliententities
 			case WEAPON:
 				s_sprintf(emdl)("weapons/%s/item", guntype[attr1].name);
 				break;
-			case TELEPORT:
-				s_sprintf(emdl)("%s", enttype[type].name);
-				break;
 			default:
 				break;
 		}
