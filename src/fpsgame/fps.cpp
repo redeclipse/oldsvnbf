@@ -9,7 +9,6 @@ struct GAMECLIENT : igameclient
 	#include "client.h"
 	#include "bot.h"
 	#include "capture.h"
-    #include "assassin.h"
     #include "ctf.h"
 
 	int nextmode, nextmuts, gamemode, mutators;
@@ -66,7 +65,7 @@ struct GAMECLIENT : igameclient
     IVARP(maxradarscale,	0,			1024,		10000);
 
 	GAMECLIENT()
-		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), asc(*this), ctf(*this),
+		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
@@ -119,7 +118,6 @@ struct GAMECLIENT : igameclient
 	{
 		int wait = 0;
 		if (m_capture(gamemode)) wait = cpc.respawnwait();
-		else if (m_assassin(gamemode)) wait = asc.respawnwait();
 		if (m_ctf(gamemode)) wait = ctf.respawnwait();
 		return wait;
 	}
@@ -235,7 +233,6 @@ struct GAMECLIENT : igameclient
 					player1->stopmoving();
 					ph.move(player1, 10, false);
 				}
-				else if (!respawnwait() && m_assassin(gamemode)) respawnself();
 			}
 			else
 			{
@@ -334,19 +331,6 @@ struct GAMECLIENT : igameclient
         if(d==actor || actor->type==ENT_INANIMATE) console("\f2%s killed themself", cflags, dname);
 		else if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, aname, oname, dname);
 		else if(isteam(d->team, actor->team)) console("\f2%s %s teammate %s", cflags, dname, oname, aname);
-        else if(m_assassin(gamemode) && (d == player1 || actor == player1))
-        {
-            if(d==player1)
-            {
-                console("\f2%s %s %s (%s)", cflags, dname, oname, aname, asc.hunters.find(actor)>=0 ? "assassin" : (asc.targets.find(actor)>=0 ? "target" : "friend"));
-                if(asc.hunters.find(actor)>=0) asc.hunters.removeobj(actor);
-            }
-            else
-            {
-                console("\f2%s %s %s (%s)", cflags, dname, oname, aname, asc.targets.find(d)>=0 ? "target +1" : (asc.hunters.find(d)>=0 ? "assassin +0" : "friend -1"));
-                if(asc.targets.find(d)>=0) asc.targets.removeobj(d);
-            }
-        }
 		else console("\f2%s %s %s", cflags, dname, oname, aname);
 
 		d->state = CS_DEAD;
@@ -455,7 +439,6 @@ struct GAMECLIENT : igameclient
 		if(d->name[0]) conoutf("player %s disconnected", colorname(d));
 		pj.remove(d);
         removetrackedparticles(d);
-        if(m_assassin(gamemode)) asc.removeplayer(d);
 		DELETEP(players[cn]);
 		cleardynentcache();
 	}
@@ -699,7 +682,6 @@ struct GAMECLIENT : igameclient
 					}
 
 					if(m_capture(gamemode)) cpc.drawhud(w, h);
-					else if(m_assassin(gamemode)) asc.drawhud(w, h);
 					else if(m_ctf(gamemode)) ctf.drawhud(w, h);
 				}
 				glDisable(GL_BLEND);
