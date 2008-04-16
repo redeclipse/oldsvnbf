@@ -502,7 +502,7 @@ struct GAMECLIENT : igameclient
         maptime = 0;
 		if(m_sp(gamemode))
 		{
-			s_sprintfd(aname)("bestscore_%s", mapname);
+			s_sprintfd(aname)("bestscore_%s", getmapname());
 			const char *best = getalias(aname);
 			if(*best) conoutf("\f2try to beat your best score so far: %s", best);
 		}
@@ -642,7 +642,7 @@ struct GAMECLIENT : igameclient
 					if (secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
 					else if (secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
 
-					const char *title = maptitle();
+					const char *title = getmaptitle();
 					if (!*title) title = "Untitled by Unknown";
 
 					glColor4f(1.f, 1.f, 1.f, amt);
@@ -1341,6 +1341,6 @@ struct GAMECLIENT : igameclient
 
 	char *gametext()
 	{
-		return mapname;
+		return getmapname();
 	}
 };

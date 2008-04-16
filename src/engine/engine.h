@@ -521,7 +521,10 @@ extern void rehash(bool reload = true);
 
 // command
 extern char *gettime(char *format);
-extern char *maptitle();
+extern char *getmapname();
+extern int getmapversion();
+extern int getmaprevision();
+extern char *getmaptitle();
 
 // rendergl
 #define RENDERPUSHX			8.0f
