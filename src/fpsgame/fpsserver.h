@@ -294,10 +294,6 @@ struct GAMESERVER : igameserver
 	#include "capture.h"
 	#undef CAPTURESERV
 
-    #define ASSASSINSERV 1
-    #include "assassin.h"
-    #undef ASSASSINSERV
-
     #define CTFSERV 1
     #include "ctf.h"
     #undef CTFSERV
@@ -325,7 +321,7 @@ struct GAMESERVER : igameserver
 			mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
 			demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
-			smode(NULL), capturemode(*this), assassinmode(*this), ctfmode(*this), duelmutator(*this)
+			smode(NULL), capturemode(*this), ctfmode(*this), duelmutator(*this)
 	{
 		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
 		smuts.setsize(0);
@@ -724,7 +720,6 @@ struct GAMESERVER : igameserver
 
 		// server modes
 		if (m_capture(gamemode)) smode = &capturemode;
-        else if(m_assassin(gamemode)) smode = &assassinmode;
         else if(m_ctf(gamemode)) smode = &ctfmode;
 		else smode = NULL;
 		if(smode) smode->reset(false);
@@ -858,7 +853,7 @@ struct GAMESERVER : igameserver
 		// only allow edit messages in coop-edit mode
 		if(type>=SV_EDITENT && type<=SV_GETMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_CLEARTARGETS, SV_CLEARHUNTERS, SV_ADDTARGET, SV_REMOVETARGET, SV_ADDHUNTER, SV_REMOVEHUNTER, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_DROPFLAG, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
+		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_DROPFLAG, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}

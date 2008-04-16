@@ -260,12 +260,6 @@ struct scoreboard : g3d_callback
                     g.background(0x808080, numgroups>1 ? 3 : 5);
                 }
                 const char *oicon = icon;
-				if (m_assassin(cl.gamemode))
-				{
-                    if(cl.asc.targets.find(o)>=0) oicon = "player_red";
-                    else if(cl.asc.hunters.find(o)>=0) oicon = "player";
-                    else oicon = "player_blue";
-				}
                 g.text("", 0, oicon);
                 if(o==cl.player1 && highlightscore() && cl.cc.demoplayback) g.poplist();
             });

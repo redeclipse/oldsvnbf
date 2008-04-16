@@ -81,7 +81,6 @@ enum
 	G_SINGLEPLAYER,
 	G_DEATHMATCH,
 	G_CAPTURE,
-	G_ASSASSIN,
 	G_CTF,
 	G_MAX
 };
@@ -92,7 +91,7 @@ enum
 #define G_M_PROG			0x0008	// progressive
 #define G_M_TTWO			0x0010	// mutli team
 
-#define G_M_NUM				3
+#define G_M_NUM				5
 
 #define G_M_FRAG			G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_TTWO
 #define G_M_BASE			G_M_INSTA|G_M_PROG|G_M_TTWO
@@ -106,7 +105,6 @@ static struct gametypes
 	{ G_SINGLEPLAYER,	0,				0,					"Singleplayer" },
 	{ G_DEATHMATCH,		G_M_FRAG,		0,					"Deathmatch" },
 	{ G_CAPTURE,		G_M_BASE,		G_M_TEAM,			"Base Capture" },
-	{ G_ASSASSIN,		G_M_INSTA,		0,					"Assassin" },
 	{ G_CTF,			G_M_BASE,		G_M_TEAM,			"Capture the Flag" },
 }, mutstype[] = {
 	{ G_M_TEAM,			0,				0,					"Team" },
@@ -123,7 +121,6 @@ static struct gametypes
 #define m_sp(a)				(a == G_SINGLEPLAYER)
 #define m_dm(a)				(a == G_DEATHMATCH)
 #define m_capture(a)		(a == G_CAPTURE)
-#define m_assassin(a)		(a == G_ASSASSIN)
 #define m_ctf(a)			(a == G_CTF)
 
 #define m_mp(a)				(a > G_DEMO && a < G_MAX)
@@ -172,7 +169,6 @@ enum
 	SV_BASES, SV_BASEINFO,
     SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS,
 	SV_TEAMSCORE, SV_FORCEINTERMISSION,
-    SV_CLEARTARGETS, SV_CLEARHUNTERS, SV_ADDTARGET, SV_REMOVETARGET, SV_ADDHUNTER, SV_REMOVEHUNTER,
 	SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
 	SV_CLIENT, SV_COMMAND, SV_RELOAD, SV_REGEN,
@@ -197,7 +193,6 @@ static char msgsizelookup(int msg)
 		SV_BASES, 0, SV_BASEINFO, 0,
         SV_DROPFLAG, 6, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 2, SV_RESETFLAG, 2, SV_INITFLAGS, 0,
 		SV_TEAMSCORE, 0, SV_FORCEINTERMISSION, 1,
-        SV_CLEARTARGETS, 1, SV_CLEARHUNTERS, 1, SV_ADDTARGET, 2, SV_REMOVETARGET, 2, SV_ADDHUNTER, 2, SV_REMOVEHUNTER, 2,
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 2, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
 		SV_CLIENT, 0, SV_COMMAND, 0, SV_RELOAD, 0, SV_REGEN, 0,
@@ -210,7 +205,7 @@ static char msgsizelookup(int msg)
 
 #define SERVER_PORT			28795
 #define SERVINFO_PORT		28796
-#define PROTOCOL_VERSION	53
+#define PROTOCOL_VERSION	54
 #define DEMO_VERSION		1
 #define DEMO_MAGIC "BFDZ"
 
