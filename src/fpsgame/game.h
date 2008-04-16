@@ -176,6 +176,7 @@ enum
 	SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
 	SV_CLIENT, SV_COMMAND, SV_RELOAD, SV_REGEN,
+	SV_ADDBOT, SV_DELBOT
 };
 
 static char msgsizelookup(int msg)
@@ -200,6 +201,7 @@ static char msgsizelookup(int msg)
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 2, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
 		SV_CLIENT, 0, SV_COMMAND, 0, SV_RELOAD, 0, SV_REGEN, 0,
+		SV_ADDBOT, 0, SV_DELBOT, 0,
 		-1
 	};
 	for(char *p = msgsizesl; *p>=0; p += 2) if(*p==msg) return p[1];
@@ -275,8 +277,9 @@ struct fpsstate
 	int health, ammo[NUMGUNS];
 	int gunselect, gunwait[NUMGUNS], gunlast[NUMGUNS];
 	int lastdeath, lifesequence, lastshot, lastspawn, lastpain, lastregen;
+	int ownernum;
 
-	fpsstate() : lifesequence(0) {}
+	fpsstate() : lifesequence(0), ownernum(-1) {}
 	~fpsstate() {}
 
 	bool canweapon(int gun, int millis)

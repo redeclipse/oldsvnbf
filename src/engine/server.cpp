@@ -8,13 +8,13 @@
 void conoutf(const char *s, ...) { s_sprintfdlv(str, s, s); printf("%s\n", str); }
 void console(const char *s, int n, ...) { s_sprintfdlv(str, n, s); printf("%s\n", str); }
 void servertoclient(int chan, uchar *buf, int len) {}
-void fatal(const char *s, ...) 
-{ 
-    void cleanupserver(); 
-    cleanupserver(); 
+void fatal(const char *s, ...)
+{
+    void cleanupserver();
+    cleanupserver();
     s_sprintfdlv(msg,s,s);
-    printf("servererror: %s\n", msg); 
-    exit(EXIT_FAILURE); 
+    printf("servererror: %s\n", msg);
+    exit(EXIT_FAILURE);
 }
 #endif
 
@@ -330,18 +330,34 @@ void clienttoserver(int chan, ENetPacket *packet)
 	if(packet->referenceCount==0) enet_packet_destroy(packet);
 }
 
-client &addclient()
+void delclient(int n)
 {
+	if (clients.inrange(n))
+	{
+		clients[n]->type = ST_EMPTY;
+		clients[n]->peer->data = NULL;
+		sv->deleteinfo(clients[n]->info);
+		clients[n]->info = NULL;
+	}
+}
+
+int addclient(int type)
+{
+	int n = -1;
 	loopv(clients) if(clients[i]->type==ST_EMPTY)
 	{
-		clients[i]->info = sv->newinfo();
-		return *clients[i];
+		n = i;
+		break;
 	}
-	client *c = new client;
-	c->num = clients.length();
-	c->info = sv->newinfo();
-	clients.add(c);
-	return *c;
+	if (!clients.inrange(n))
+	{
+		client *c = new client;
+		n = c->num = clients.length();
+		clients.add(c);
+	}
+	clients[n]->info = sv->newinfo();
+	clients[n]->type = type;
+	return n;
 }
 
 int nonlocalclients = 0;
@@ -547,8 +563,8 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 		{
 			case ENET_EVENT_TYPE_CONNECT:
 			{
-				client &c = addclient();
-				c.type = ST_TCPIP;
+				int cn = addclient(ST_TCPIP);
+				client &c = *clients[cn];
 				c.peer = event.peer;
 				c.peer->data = &c;
 				char hn[1024];
