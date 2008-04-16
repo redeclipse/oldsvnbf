@@ -326,12 +326,12 @@ struct GAMECLIENT : igameclient
 			"was sniped by"
 		};
 		string dname, aname, oname;
-		s_strcpy(dname, d==player1 ? "you" : colorname(d));
-		s_strcpy(aname, actor==player1 ? "you" : (actor->type!=ENT_INANIMATE ? colorname(actor) : ""));
+		s_strcpy(dname, colorname(d));
+		s_strcpy(aname, actor->type!=ENT_INANIMATE ? colorname(actor) : "");
 		s_strcpy(oname, flags&HIT_HEAD ? "was shot in the head by" : (gun >= 0 && gun < NUMGUNS ? obitnames[gun] : "was killed by"));
 		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
-		if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, aname, oname, dname);
-        else if(d==actor || actor->type==ENT_INANIMATE) console("\f2%s %s themself", cflags, dname, oname);
+        if(d==actor || actor->type==ENT_INANIMATE) console("\f2%s killed themself", cflags, dname);
+		else if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, aname, oname, dname);
 		else if(isteam(d->team, actor->team)) console("\f2%s %s teammate %s", cflags, dname, oname, aname);
         else if(m_assassin(gamemode) && (d == player1 || actor == player1))
         {
@@ -556,69 +556,6 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
-	IVARP(hudgun, 0, 1, 1);
-	IVARP(hudgunsway, 0, 1, 1);
-    IVARP(teamhudguns, 0, 1, 1);
-
-	void drawhudmodel(int anim, float speed = 0, int base = 0)
-	{
-		if (!isgun(player1->gunselect)) return;
-		vec sway;
-		if(hudgunsway())
-		{
-			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
-            float swayspeed = sqrtf(player1->vel.x*player1->vel.x + player1->vel.y*player1->vel.y);
-            swayspeed = min(4.0f, swayspeed);
-			sway.mul(swayspeed);
-			float swayxy = sinf(swaymillis/115.0f)/100.0f,
-				  swayz = cosf(swaymillis/115.0f)/100.0f;
-			swap(sway.x, sway.y);
-			sway.x *= -swayxy;
-			sway.y *= swayxy;
-			sway.z = -fabs(swayspeed*swayz);
-			sway.add(swaydir).add(camera1->o);
-		}
-		else sway = camera1->o;
-
-#if 0
-		if(player1->state!=CS_DEAD && player1->quadmillis)
-		{
-			float t = 0.5f + 0.5f*sinf(2*M_PI*lastmillis/1000.0f);
-			color.y = color.y*(1-t) + t;
-		}
-#endif
-
-        s_sprintfd(gunname)("weapons/%s", guntype[player1->gunselect].name);
-        dynent *gi = NULL;
-        switch(player1->gunselect) // cleanup idle -> shoot transitions on some gun animations
-        {
-            case GUN_SG:
-                gi = &guninterp;
-                break;
-        }
-		rendermodel(NULL, gunname, anim, sway, camera1->yaw+90, camera1->pitch, camera1->roll, MDL_LIGHT, gi, NULL, base, speed);
-	}
-
-	void drawhudgun()
-	{
-//#if 0
-		if(!hudgun() || thirdperson() || editmode || player1->state != CS_ALIVE || !isgun(player1->gunselect)) return;
-		int rtime = player1->gunwait[player1->gunselect],
-			wtime = player1->gunlast[player1->gunselect],
-			otime = lastmillis - wtime;
-
-		if (otime < rtime)
-		{
-			int anim = (guntype[player1->gunselect].rdelay && rtime == guntype[player1->gunselect].rdelay) ? ANIM_GUNRELOAD : ANIM_GUNSHOOT;
-			drawhudmodel(anim, rtime/17.0f, player1->gunlast[player1->gunselect]);
-		}
-		else
-		{
-			drawhudmodel(ANIM_GUNIDLE|ANIM_LOOP);
-		}
-//#endif
-	}
-
 	void drawhud(int w, int h)
 	{
 		if (maptime || !cc.ready())
@@ -833,7 +770,7 @@ struct GAMECLIENT : igameclient
         vecfromyawpitch(owner->yaw, owner->pitch, 1, 0, d);
         float newdist = raycube(owner->o, d, dist, RAY_CLIPMAT|RAY_POLY);
         d.mul(min(newdist, dist)).add(owner->o);
-        o = ws.hudgunorigin(GUN_PISTOL, owner->o, d, (fpsent *)owner);
+        o = ws.gunorigin(GUN_PISTOL, owner->o, d, (fpsent *)owner);
     }
 
 	void newmap(int size)
@@ -958,8 +895,6 @@ struct GAMECLIENT : igameclient
 			pos = dir.mul(2*hdr.worldsize).add(d->o); //otherwise 3dgui won't work when outside of map
 	}
 
-	IVAR(invertcamera, 0, 0, 1);
-
 	void recomputecamera()
 	{
 		int secs = time(NULL), lastcam = cameratype;
@@ -1063,28 +998,27 @@ struct GAMECLIENT : igameclient
 		}
 		else
 		{
-#if 0
-			vec yoff, poff, roff;
-			vecfromyawpitch(camera1->yaw, 0, 1, 0, yoff);
-			yoff.z = 0;
-			yoff.mul(camera1->radius);
-			vecfromyawpitch(0, camera1->pitch, 1, 0, poff);
-			poff.x = poff.y = 0;
-			poff.mul((camera1->height*0.5f)*(float(fabs(camera1->pitch))/90.f));
-			vecfromyawpitch(camera1->yaw, 0, 0, -1, roff);
-			roff.z = 0;
-			roff.mul(camera1->radius*0.1f);
-			camera1->o.add(vec(vec(yoff).add(poff)).add(roff));
-			if (invertcamera())
-			{
-				camera1->yaw = camera1->yaw >= 180.f ? camera1->yaw-180.f : camera1->yaw+180.f;
-				camera1->pitch = 0.f-camera1->pitch;
-			}
-#else
 			vec off;
-			vecfromyawpitch(camera1->yaw, camera1->pitch, 0, camera1->roll < 0 ? 1 : -1, off);
-			camera1->o.add(off.mul(fabs(camera1->roll)/8.f));
-#endif
+			vecfromyawpitch(camera1->yaw, min(camera1->pitch,80.f)+60.f, 1, 0, off);
+			off.x *= camera1->radius+1.f;
+			off.y *= camera1->radius+1.f;
+			off.z = max(off.z, 0.f);
+			off.z *= camera1->height*0.5f;
+			off.sub(vec(0, 0, camera1->height*0.5f));
+			camera1->o.add(off);
+
+			vec sway;
+			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
+            float swayspeed = sqrtf(player1->vel.x*player1->vel.x + player1->vel.y*player1->vel.y);
+            swayspeed = min(4.0f, swayspeed);
+			sway.mul(swayspeed);
+			float swayxy = sinf(swaymillis/115.0f)/100.0f, swayz = cosf(swaymillis/115.0f)/100.0f;
+			swap(sway.x, sway.y);
+			sway.x *= -swayxy;
+			sway.y *= swayxy;
+			sway.z = -fabs(swayspeed*swayz);
+			sway.add(swaydir);
+			camera1->o.add(sway);
 		}
 
 		if (camerawobble > 0 && cameratype == lastcam)
