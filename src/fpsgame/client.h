@@ -689,6 +689,7 @@ struct clientcom : iclientcom
 				int tcn = getint(p),
 					acn = getint(p),
 					gun = getint(p),
+					flags = getint(p),
 					damage = getint(p),
 					health = getint(p),
 					millis = getint(p);
@@ -697,7 +698,7 @@ struct clientcom : iclientcom
 				fpsent *target = tcn==cl.player1->clientnum ? cl.player1 : cl.getclient(tcn),
 						*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
 				if(!target || !actor) break;
-				cl.damaged(gun, damage, target, actor, millis, dir);
+				cl.damaged(gun, flags, damage, target, actor, millis, dir);
 				target->health = health; // just in case
 				break;
 			}
@@ -721,13 +722,14 @@ struct clientcom : iclientcom
 				playsound(S_REGEN, &target->o);
 				vec pos = target->o;
 				pos.z += 0.6f*(target->height + target->aboveeye) - target->height;
-				particle_splash(3, max((MAXHEALTH-target->health)/REGENHEAL, 1), 10000, target->o);
+				particle_splash(3, max((MAXHEALTH-target->health)/10, 1), 10000, target->o);
 				break;
 			}
 
 			case SV_DIED:
 			{
-				int vcn = getint(p), acn = getint(p), frags = getint(p);
+				int vcn = getint(p), acn = getint(p), frags = getint(p),
+					gun = getint(p), flags = getint(p), damage = getint(p);
 				fpsent *victim = vcn==cl.player1->clientnum ? cl.player1 : cl.getclient(vcn),
 						*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
 				if(!actor) break;
@@ -738,7 +740,7 @@ struct clientcom : iclientcom
 					particle_text(actor->abovehead(), ds, 9);
 				}
 				if(!victim) break;
-				cl.killed(victim, actor);
+				cl.killed(gun, flags, damage, victim, actor);
 				cl.calcranks();
 				break;
 			}

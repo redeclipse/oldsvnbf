@@ -57,7 +57,7 @@ struct duelservmode : servmode
 	//{
 	//}
 
-	bool damage(clientinfo *target, clientinfo *actor, int damage, int gun, const vec &hitpush = vec(0, 0, 0))
+	bool damage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
 	{
 		if (dueltime) return false;
 		return true;

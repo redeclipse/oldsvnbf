@@ -43,6 +43,7 @@ struct GAMESERVER : igameserver
 	struct hitevent
 	{
 		int type;
+		int flags;
 		int target;
 		int lifesequence;
 		union
@@ -283,7 +284,7 @@ struct GAMESERVER : igameserver
 		virtual void update() {}
 		virtual void reset(bool empty) {}
 		virtual void intermission() {}
-		virtual bool damage(clientinfo *target, clientinfo *actor, int damage, int gun, const vec &hitpush = vec(0, 0, 0)) { return true; }
+		virtual bool damage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0)) { return true; }
 	};
 
 	servmode *smode;
@@ -1117,6 +1118,7 @@ struct GAMESERVER : igameserver
 				{
 					gameevent &hit = ci->addevent();
 					hit.type = GE_HIT;
+					hit.hit.flags = getint(p);
 					hit.hit.target = getint(p);
 					hit.hit.lifesequence = getint(p);
 					hit.hit.rays = getint(p);
@@ -1633,15 +1635,17 @@ struct GAMESERVER : igameserver
 		gs.lastspawn = gamemillis;
 	}
 
-	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, const vec &hitpush = vec(0, 0, 0))
+	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
 	{
 		gamestate &ts = target->state;
-		if (smode && !smode->damage(target, actor, damage, gun, hitpush)) { return; }
-		mutate(if (!mut->damage(target, actor, damage, gun, hitpush)) { return; });
+		if(flags&HIT_LEGS) damage = damage/2;
+		else if (flags&HIT_HEAD) damage = damage*2;
+		if (smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { return; }
+		mutate(if (!mut->damage(target, actor, damage, gun, flags, hitpush)) { return; });
 		//if (!teamdamage && m_team(gamemode, mutators) && isteam(target->team, actor->team)) return;
 		//damage *= damagescale/100;
 		ts.dodamage(damage, gamemillis);
-		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, damage, ts.health, ts.lastpain, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
+		sendf(-1, 1, "ri8i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, damage, ts.health, ts.lastpain, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
 		if(ts.health<=0)
 		{
             int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || isteam(target->team, actor->team) ? -1 : 1);
@@ -1653,7 +1657,7 @@ struct GAMESERVER : igameserver
 				else { friends = 1; enemies = clients.length()-1; }
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
 			}
-			sendf(-1, 1, "ri4", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags);
+			sendf(-1, 1, "ri7", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, gun, flags, damage);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
 			mutate(mut->died(target, actor));
@@ -1669,7 +1673,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(gs.state!=CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
-		sendf(-1, 1, "ri4", SV_DIED, ci->clientnum, ci->clientnum, gs.frags);
+		sendf(-1, 1, "ri4", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, 0, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(mut->died(ci, NULL));
@@ -1704,7 +1708,7 @@ struct GAMESERVER : igameserver
 			if(j<i) continue;
 
 			int damage = int(guntype[e.gun].damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
-			dodamage(target, ci, damage, e.gun, h.dir);
+			dodamage(target, ci, damage, e.gun, h.flags, h.dir);
 		}
 	}
 
@@ -1735,7 +1739,7 @@ struct GAMESERVER : igameserver
 					totalrays += h.rays;
 					if(totalrays>maxrays) continue;
 					int damage = h.rays*guntype[e.gun].damage;
-					dodamage(target, ci, damage, e.gun, h.dir);
+					dodamage(target, ci, damage, e.gun, h.flags, h.dir);
 				}
 				break;
 			}

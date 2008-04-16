@@ -81,14 +81,15 @@ struct weaponstate
 
 	struct hitmsg
 	{
-		int target, lifesequence, info;
+		int flags, target, lifesequence, info;
 		ivec dir;
 	};
 	vector<hitmsg> hits;
 
-	void hit(fpsent *d, vec &vel, int info = 1)
+	void hit(fpsent *d, vec &vel, int flags = 0, int info = 1)
 	{
 		hitmsg &h = hits.add();
+		h.flags = flags;
 		h.target = d->clientnum;
 		h.lifesequence = d->lifesequence;
 		h.info = info;
@@ -97,10 +98,15 @@ struct weaponstate
 
 	void hitpush(fpsent *d, vec &from, vec &to, int rays = 1)
 	{
-		vec v(to);
+		vec v(to), s(to);
 		v.sub(from);
 		v.normalize();
-		hit(d, v, rays);
+		shorten(from, d->o, s);
+		int hits = 0;
+		if (s.z < d->o.z-d->height*0.5f && s.z >= d->o.z-d->height) hits |= HIT_LEGS;
+		else if (s.z < d->o.z-d->height*0.2f && s.z >= d->o.z-d->height*0.5f) hits |= HIT_TORSO;
+		else if (s.z <= d->o.z+d->aboveeye && s.z >= d->o.z-d->height*0.2f) hits |= HIT_HEAD;
+		hit(d, v, hits, rays);
 	}
 
 
@@ -118,7 +124,7 @@ struct weaponstate
 	{
 		vec dir;
 		float dist = middist(d, dir, o);
-		if(dist < RL_DAMRAD) hit(d, dir, int(dist*DMF));
+		if(dist < RL_DAMRAD) hit(d, dir, HIT_TORSO, int(dist*DMF));
 	}
 
 	void explode(fpsent *d, vec &o, vec &vel, int id, int gun, bool local)
@@ -183,9 +189,9 @@ struct weaponstate
 		front.mul(2);
 		front.mul(d->radius);
 		offset.add(front);
-		offset.z += (d->aboveeye + d->height)*0.75f - d->height;
+		offset.z += (d->aboveeye + d->height)*0.8f - d->height;
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
-		right.mul(0.3f*d->radius);
+		right.mul(0.35f*d->radius);
 		offset.add(right);
 		if(d->crouching) offset.z -= (d == cl.player1 ? cl.crouching : 1.0f)*(1-CROUCHHEIGHT)*d->height;
 		return offset;
