@@ -255,7 +255,7 @@ struct clientcom : iclientcom
 		if (!colourchat()) filtertext(text, text);
 
 		string s, t;
-		s_sprintf(t)("%s", m_team(cl.gamemode, cl.mutators) || flags&SAY_TEAM ? (isteam(cl.player1->team, d->team) "\fb" : "\fr") : "\fg");
+		s_sprintf(t)("%s", m_team(cl.gamemode, cl.mutators) || flags&SAY_TEAM ? (isteam(cl.player1->team, d->team) ? "\fb" : "\fr") : "\fg");
 
 		if (flags&SAY_ACTION) s_sprintf(s)("\fs%s*\fS \fs%s%s\fS \fs%s%s\fS", t, t, cl.colorname(d), t, text);
 		else s_sprintf(s)("\fs%s<\fS\fs\fw%s\fS\fs%s>\fS \fs\fw%s\fS", t, cl.colorname(d), t, text);
