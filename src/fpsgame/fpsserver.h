@@ -1066,7 +1066,6 @@ struct GAMESERVER : igameserver
 			{
 				int lcn = getint(p), ls = getint(p), gunselect = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				conoutf("spawn %d", lcn);
 				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 				if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD) || ls!=cp->state.lifesequence || cp->state.lastspawn<0) break;
 				cp->state.lastspawn = -1;

@@ -574,7 +574,6 @@ struct clientcom : iclientcom
 					cl.sb.showscores(true);
 				}
 				f->state = CS_DEAD;
-				conoutf("%s was forced dead", f->name);
 				cl.calcranks();
 				break;
 			}
@@ -649,7 +648,6 @@ struct clientcom : iclientcom
 				f->gunselect = gunselect;
 				f->state = CS_SPAWNING;
 				playsound(S_RESPAWN, &f->o, 255, 0, true);
-				conoutf("%s spawned", f->name);
 				break;
 			}
 
@@ -675,7 +673,6 @@ struct clientcom : iclientcom
 					}
 					addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
 				}
-				conoutf("%s is spawning (%s)", f->name, local ? "local" : "remote");
 				break;
 			}
 
