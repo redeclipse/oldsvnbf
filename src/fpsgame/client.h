@@ -62,7 +62,6 @@ struct clientcom : iclientcom
 		{
 			c2sinit = false;
 			s_strncpy(cl.player1->name, name, MAXNAMELEN);
-			//filtertext(cl.player1->name, name, false, MAXNAMELEN);
 		}
 		else conoutf("your name is: %s", cl.colorname(cl.player1));
 	}
@@ -73,7 +72,6 @@ struct clientcom : iclientcom
 		{
 			c2sinit = false;
 			s_strncpy(cl.player1->team, team, MAXTEAMLEN);
-			//filtertext(cl.player1->team, team, false, MAXTEAMLEN);
 		}
 		else conoutf("your team is: %s", cl.player1->team);
 	}
@@ -281,7 +279,7 @@ struct clientcom : iclientcom
 		addmsg(SV_COMMAND, "rs", text);
 	}
 
-	int sendpacketclient(ucharbuf &p, bool &reliable, dynent *d)
+	void updateposition(fpsent *d)
 	{
         if(d->state==CS_ALIVE || d->state==CS_EDITING)
 		{
@@ -289,7 +287,7 @@ struct clientcom : iclientcom
 			ENetPacket *packet = enet_packet_create(NULL, 100, 0);
 			ucharbuf q(packet->data, packet->dataLength);
 			putint(q, SV_POS);
-			putint(q, cl.player1->clientnum);
+			putint(q, d->clientnum);
 			putuint(q, (int)(d->o.x*DMF));			  // quantize coordinates to 1/4th of a cube, between 1 and 3 bytes
 			putuint(q, (int)(d->o.y*DMF));
 			putuint(q, (int)(d->o.z*DMF));
@@ -312,6 +310,15 @@ struct clientcom : iclientcom
 			enet_packet_resize(packet, q.length());
 			sendpackettoserv(packet, 0);
 		}
+	}
+
+	int sendpacketclient(ucharbuf &p, bool &reliable)
+	{
+		updateposition(cl.player1);
+		loopv(cl.players)
+			if (cl.players[i] && cl.players[i]->ownernum >= 0 && cl.players[i]->ownernum == cl.player1->clientnum)
+				updateposition(cl.players[i]);
+
 		if(senditemstoserver)
 		{
 			reliable = true;
@@ -381,7 +388,7 @@ struct clientcom : iclientcom
 		{
 			case SV_POS:						// position of another client
 			{
-				int cn = getint(p);
+				int lcn = getint(p);
 				vec o, vel, falling;
 				float yaw, pitch, roll;
 				int physstate, f;
@@ -404,7 +411,7 @@ struct clientcom : iclientcom
                 if(physstate&0x10) falling.z = getint(p)/DVELF;
                 int seqcolor = (physstate>>6)&1;
 				f = getuint(p);
-				fpsent *d = cl.getclient(cn);
+				fpsent *d = cl.getclient(lcn);
                 if(!d || seqcolor!=(d->lifesequence&1)) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch;
 				d->yaw = yaw;
@@ -415,14 +422,6 @@ struct clientcom : iclientcom
 				d->move = (f&3)==3 ? -1 : f&3;
 				f >>= 2;
 				d->crouching = f&1 ? true : false;
-#if 0
-				if(f&1) { d->armourtype = A_GREEN; d->armour = 1; }
-				else if(f&2) { d->armourtype = A_YELLOW; d->armour = 1; }
-				else { d->armourtype = A_BLUE; d->armour = 0; }
-				d->quadmillis = f&4 ? 1 : 0;
-				f >>= 3;
-				d->maxhealth = 100 + f*itemstats[I_BOOST-I_SHELLS].add;
-#endif
                 vec oldpos(d->o);
                 if(cl.allowmove(d))
                 {
@@ -513,9 +512,9 @@ struct clientcom : iclientcom
 
 			case SV_CLIENT:
 			{
-				int cn = getint(p), len = getuint(p);
+				int lcn = getint(p), len = getuint(p);
 				ucharbuf q = p.subbuf(len);
-				parsemessages(cn, cl.getclient(cn), q);
+				parsemessages(lcn, cl.getclient(lcn), q);
 				break;
 			}
 
@@ -566,15 +565,16 @@ struct clientcom : iclientcom
 
 			case SV_FORCEDEATH:
 			{
-				int cn = getint(p);
-				fpsent *d = cn==cl.player1->clientnum ? cl.player1 : cl.newclient(cn);
-				if(!d) break;
-				if(d==cl.player1)
+				int lcn = getint(p);
+				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.newclient(lcn);
+				if(!f) break;
+				if(f==cl.player1)
 				{
 					if(editmode) toggleedit();
 					cl.sb.showscores(true);
 				}
-				d->state = CS_DEAD;
+				f->state = CS_DEAD;
+				conoutf("%s was forced dead", f->name);
 				cl.calcranks();
 				break;
 			}
@@ -642,28 +642,40 @@ struct clientcom : iclientcom
 
 			case SV_SPAWN:
 			{
-				int ls = getint(p), gunselect = getint(p);
-				if(!d) break;
-				d->lifesequence = ls;
-				d->gunselect = gunselect;
-				d->state = CS_SPAWNING;
-				playsound(S_RESPAWN, &d->o, 255, 0, true);
+				int lcn = getint(p), ls = getint(p), gunselect = getint(p);
+				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+				if(!f) break;
+				f->lifesequence = ls;
+				f->gunselect = gunselect;
+				f->state = CS_SPAWNING;
+				playsound(S_RESPAWN, &f->o, 255, 0, true);
+				conoutf("%s spawned", f->name);
 				break;
 			}
 
 			case SV_SPAWNSTATE:
 			{
-				if(editmode) toggleedit();
-				cl.player1->respawn();
-				cl.player1->lifesequence = getint(p);
-				cl.player1->health = getint(p);
-				cl.player1->gunselect = getint(p);
-				loopi(NUMGUNS) cl.player1->ammo[i] = getint(p);
-				cl.player1->state = CS_ALIVE;
-				cl.et.findplayerspawn(cl.player1, m_capture(cl.gamemode) ? cl.cpc.pickspawn(cl.player1->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators))+1 : -1);
-				cl.sb.showscores(false);
-                cl.lasthit = 0;
-				addmsg(SV_SPAWN, "rii", cl.player1->lifesequence, cl.player1->gunselect);
+				int lcn = getint(p);
+				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+				bool local = (f->clientnum==cl.player1->clientnum || f->ownernum==cl.player1->clientnum);
+				if(f==cl.player1 && editmode) toggleedit();
+				f->respawn();
+				f->lifesequence = getint(p);
+				f->health = getint(p);
+				f->gunselect = getint(p);
+				loopi(NUMGUNS) f->ammo[i] = getint(p);
+				f->state = CS_ALIVE;
+				if(local)
+				{
+					cl.et.findplayerspawn(f, m_capture(cl.gamemode) ? cl.cpc.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_ttwo(cl.gamemode, cl.mutators))+1 : -1);
+					if(f==cl.player1)
+					{
+						cl.sb.showscores(false);
+						cl.lasthit = 0;
+					}
+					addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
+				}
+				conoutf("%s is spawning (%s)", f->name, local ? "local" : "remote");
 				break;
 			}
 
@@ -763,10 +775,10 @@ struct clientcom : iclientcom
 			{
 				for(;;)
 				{
-					int cn = getint(p);
-					if(cn<0) break;
+					int lcn = getint(p);
+					if(lcn<0) break;
 					int state = getint(p), lifesequence = getint(p), gunselect = getint(p), frags = getint(p);
-					fpsent *d = (cn == cl.player1->clientnum ? cl.player1 : cl.newclient(cn));
+					fpsent *d = (lcn == cl.player1->clientnum ? cl.player1 : cl.newclient(lcn));
 					if(!d) continue;
 					if(d!=cl.player1)
 					{
@@ -792,8 +804,8 @@ struct clientcom : iclientcom
 
 			case SV_ITEMACC:			// server acknowledges that I picked up this item
 			{
-				int i = getint(p), cn = getint(p);
-				fpsent *d = cn==cl.player1->clientnum ? cl.player1 : cl.getclient(cn);
+				int i = getint(p), lcn = getint(p);
+				fpsent *d = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
 				cl.et.useeffects(i, d);
 				break;
 			}
@@ -959,7 +971,7 @@ struct clientcom : iclientcom
 				getstring(text, p);
 				fpsent *w = wn==cl.player1->clientnum ? cl.player1 : cl.getclient(wn);
 				if(!w) return;
-				//filtertext(w->team, text, false, MAXTEAMLEN);
+				s_strncpy(w->team, text, MAXTEAMLEN);
 				cl.calcranks();
 				break;
 			}
@@ -1064,7 +1076,6 @@ struct clientcom : iclientcom
 			case SV_ADDBOT:
 			{
 				int on = getint(p), bn = getint(p);
-				conoutf("request to add new bot (%d, %d)", on, bn);
 				fpsent *b = cl.newclient(bn);
 				if(!b)
 				{
@@ -1074,14 +1085,14 @@ struct clientcom : iclientcom
 				}
 
 				b->ownernum = on;
+				b->state = CS_DEAD;
 				getstring(text, p);
 				s_strncpy(b->name, text, MAXNAMELEN);
 				getstring(text, p);
 				s_strncpy(b->team, text, MAXTEAMLEN);
 
-				conoutf("created %s (%s)", b->name, b->team);
 				fpsent *o = b->ownernum==cl.player1->clientnum ? cl.player1 : cl.getclient(b->ownernum);
-				conoutf("%s introduced %s (%s)", o->name, cl.colorname(b), b->team);
+				conoutf("bot added by %s: %s (%s)", o->name, cl.colorname(b), b->team);
 				break;
 			}
 

@@ -177,14 +177,14 @@ void sendpackettoserv(ENetPacket *packet, int chan)
 	else clienttoserver(chan, packet);
 }
 
-void c2sinfo(dynent *d, int rate)					 // send update to the server
+void c2sinfo(int rate)					 // send update to the server
 {
 	if(totalmillis-lastupdate<rate) return;	// don't update faster than 30fps
 	lastupdate = totalmillis;
 	ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, 0);
 	ucharbuf p(packet->data, packet->dataLength);
 	bool reliable = false;
-	int chan = cc->sendpacketclient(p, reliable, d);
+	int chan = cc->sendpacketclient(p, reliable);
 	if(!p.length()) { enet_packet_destroy(packet); return; }
 	if(reliable) packet->flags = ENET_PACKET_FLAG_RELIABLE;
 	enet_packet_resize(packet, p.length());

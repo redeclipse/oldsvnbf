@@ -251,7 +251,7 @@ struct serverinfo
     }
 };
 
-extern void c2sinfo(dynent *d, int rate = 33);
+extern void c2sinfo(int rate = 33);
 extern void sendpackettoserv(ENetPacket *packet, int chan);
 extern void disconnect(int onlyclean = 0, int async = 0);
 extern bool isconnected();

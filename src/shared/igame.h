@@ -25,7 +25,7 @@ struct iclientcom
 
     virtual void gamedisconnect(int clean) = 0;
     virtual void parsepacketclient(int chan, ucharbuf &p) = 0;
-    virtual int sendpacketclient(ucharbuf &p, bool &reliable, dynent *d) = 0;
+    virtual int sendpacketclient(ucharbuf &p, bool &reliable) = 0;
     virtual void gameconnect(bool _remote) = 0;
     virtual bool allowedittoggle(bool edit) = 0;
     virtual void edittoggled(bool edit) {}

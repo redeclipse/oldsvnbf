@@ -14,7 +14,7 @@ struct botclient
 
 	void delbot()
 	{
-		loopv(cl.players)
+		loopvrev(cl.players)
 		{
 			fpsent *d = cl.players[i];
 			if (d && d->ownernum >= 0 && d->ownernum == cl.player1->clientnum)
@@ -23,5 +23,21 @@ struct botclient
 				break;
 			}
 		}
+	}
+
+	void update()
+	{
+		loopv(cl.players)
+		{
+			fpsent *d = cl.players[i];
+			if (d && d->ownernum >= 0 && d->ownernum == cl.player1->clientnum) think(d);
+		}
+	}
+
+	void think(fpsent *d)
+	{
+		d->move = d->strafe = 0;
+		d->lastupdate = lastmillis;
+		cl.ph.smoothplayer(d, 10);
 	}
 } bot;

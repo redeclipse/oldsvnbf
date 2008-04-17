@@ -334,8 +334,8 @@ void delclient(int n)
 {
 	if (clients.inrange(n))
 	{
+		if(clients[n]->type==ST_TCPIP) clients[n]->peer->data = NULL;
 		clients[n]->type = ST_EMPTY;
-		clients[n]->peer->data = NULL;
 		sv->deleteinfo(clients[n]->info);
 		clients[n]->info = NULL;
 	}
