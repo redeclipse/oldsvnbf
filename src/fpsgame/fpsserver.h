@@ -972,7 +972,7 @@ struct GAMESERVER : igameserver
 		}
 		if(reliable) reliablemessages = true;
 		char text[MAXTRANS];
-		int cn = -1, type;
+		int type;
 		clientinfo *ci = sender>=0 ? (clientinfo *)getinfo(sender) : NULL;
 		#define QUEUE_MSG { if(!ci->local) while(curmsg<p.length()) ci->messages.add(p.buf[curmsg++]); }
 		#define QUEUE_INT(n) { if(!ci->local) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(5); putint(buf, n); ci->messages.addbuf(buf); } }
@@ -983,41 +983,36 @@ struct GAMESERVER : igameserver
 		{
 			case SV_POS:
 			{
-				cn = getint(p);
-				if(cn<0 || cn>=getnumclients() || cn!=sender)
+				int lcn = getint(p);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if(!cp || (cp->clientnum != sender && cp->state.ownernum != sender))
 				{
 					disconnect_client(sender, DISC_CN);
 					return;
 				}
-				vec oldpos(ci->state.o);
-				loopi(3) ci->state.o[i] = getuint(p)/DMF;
+				vec oldpos(cp->state.o);
+				loopi(3) cp->state.o[i] = getuint(p)/DMF;
 				getuint(p);
 				loopi(5) getint(p);
                 int physstate = getuint(p);
                 if(physstate&0x20) loopi(2) getint(p);
                 if(physstate&0x10) getint(p);
-                if(!ci->local && (ci->state.state==CS_ALIVE || ci->state.state==CS_EDITING))
+                if(!cp->local && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
 				{
-					ci->position.setsizenodelete(0);
-					while(curmsg<p.length()) ci->position.add(p.buf[curmsg++]);
+					cp->position.setsizenodelete(0);
+					while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
 				}
 				uint f = getuint(p);
-                if(!ci->local && (ci->state.state==CS_ALIVE || ci->state.state==CS_EDITING))
+                if(!cp->local && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
 				{
 					f &= 0xF;
-#if 0
-					if(ci->state.armourtype==A_GREEN && ci->state.armour>0) f |= 1<<4;
-					if(ci->state.armourtype==A_YELLOW && ci->state.armour>0) f |= 1<<5;
-					if(ci->state.quadmillis) f |= 1<<6;
-					if(ci->state.maxhealth>100) f |= ((ci->state.maxhealth-100)/itemstats[I_BOOST-I_SHELLS].add)<<7;
-#endif
 					curmsg = p.length();
-					ucharbuf buf = ci->position.reserve(4);
+					ucharbuf buf = cp->position.reserve(4);
 					putuint(buf, f);
-					ci->position.addbuf(buf);
+					cp->position.addbuf(buf);
 				}
-				if(smode && ci->state.state==CS_ALIVE) smode->moved(ci, oldpos, ci->state.o);
-				mutate(mut->moved(ci, oldpos, ci->state.o));
+				if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, oldpos, cp->state.o);
+				mutate(mut->moved(cp, oldpos, cp->state.o));
 				break;
 			}
 
@@ -1050,9 +1045,7 @@ struct GAMESERVER : igameserver
                 {
 					int nospawn = 0;
 					if (smode && !smode->canspawn(ci, false, true)) { nospawn++; }
-					mutate({
-						if (!mut->canspawn(ci, false, true)) { nospawn++; }
-					});
+					mutate(if (!mut->canspawn(ci, false, true)) { nospawn++; });
 					if (nospawn) break;
                 }
 
@@ -1071,13 +1064,16 @@ struct GAMESERVER : igameserver
 
 			case SV_SPAWN:
 			{
-				int ls = getint(p), gunselect = getint(p);
-				if((ci->state.state!=CS_ALIVE && ci->state.state!=CS_DEAD) || ls!=ci->state.lifesequence || ci->state.lastspawn<0) break;
-				ci->state.lastspawn = -1;
-				ci->state.state = CS_ALIVE;
-				ci->state.gunselect = gunselect;
-				if(smode) smode->spawned(ci);
-				mutate(mut->spawned(ci));
+				int lcn = getint(p), ls = getint(p), gunselect = getint(p);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				conoutf("spawn %d", lcn);
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+				if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD) || ls!=cp->state.lifesequence || cp->state.lastspawn<0) break;
+				cp->state.lastspawn = -1;
+				cp->state.state = CS_ALIVE;
+				cp->state.gunselect = gunselect;
+				if(smode) smode->spawned(cp);
+				mutate(mut->spawned(cp));
 				QUEUE_MSG;
 				break;
 			}
@@ -1188,7 +1184,6 @@ struct GAMESERVER : igameserver
 				QUEUE_MSG;
 				bool connected = !ci->name[0];
 				getstring(text, p);
-				//filtertext(text, text, false, MAXNAMELEN);
 				if(!text[0]) s_strcpy(text, "unnamed");
 				QUEUE_STR(text);
 				s_strncpy(ci->name, text, MAXNAMELEN+1);
@@ -1202,7 +1197,6 @@ struct GAMESERVER : igameserver
 					}
 				}
 				getstring(text, p);
-				//filtertext(text, text, false, MAXTEAMLEN);
 				if(!ci->local && connected && m_team(gamemode, mutators))
 				{
 					const char *worst = chooseworstteam(text);
@@ -1367,7 +1361,6 @@ struct GAMESERVER : igameserver
 			{
 				int who = getint(p);
 				getstring(text, p);
-				//filtertext(text, text, false, MAXTEAMLEN);
 				if(!ci->privilege || who<0 || who>=getnumclients()) break;
 				clientinfo *wi = (clientinfo *)getinfo(who);
 				if(!wi) break;
@@ -1482,38 +1475,59 @@ struct GAMESERVER : igameserver
 			{
                 if(ci->state.state==CS_SPECTATOR && !ci->privilege) break;
 
-				int bn = addclient(ST_REMOTE);
-				clientinfo *bt = (clientinfo *)getinfo(bn);
-				bt->clientnum = bn;
-				bt->state.ownernum = sender;
-				clients.add(bt);
-				bt->state.lasttimeplayed = lastmillis;
-				s_strncpy(bt->name, "bot", MAXNAMELEN);
-				//savedscore &sc = findscore(ci, false);
-				//if(&sc)
-				//{
-				//	sc.restore(ci->state);
-				//	sendf(-1, 1, "ri7", SV_RESUME, sender, ci->state.state, ci->state.lifesequence, ci->state.gunselect, sc.frags, -1);
-				//}
+				int lcn = addclient(ST_REMOTE);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				cp->clientnum = lcn;
+				cp->state.ownernum = sender;
+				cp->state.state = CS_DEAD;
+				clients.add(cp);
+				cp->state.lasttimeplayed = lastmillis;
+				s_strncpy(cp->name, "bot", MAXNAMELEN);
+
+				//if(smode) smode->initclient(cp, p, true);
+				//mutate(mut->initclient(cp, p, true));
+
 				const char *worst = chooseworstteam(text);
-				if(worst) s_strncpy(bt->team, worst, MAXTEAMLEN);
-				else s_strncpy(bt->team, teamnames[0], MAXTEAMLEN);
-				sendf(-1, 1, "ri3ss", SV_ADDBOT, ci->clientnum, bt->clientnum, bt->name, bt->team);
+				if(worst) s_strncpy(text, worst, MAXTEAMLEN);
+				else s_strncpy(text, teamnames[0], MAXTEAMLEN);
+				if(smode && cp->state.state==CS_ALIVE && strcmp(cp->team, text)) smode->changeteam(cp, cp->team, text);
+				mutate(mut->changeteam(cp, cp->team, text));
+				s_strncpy(cp->team, text, MAXTEAMLEN);
+				sendf(-1, 1, "ri3ss", SV_ADDBOT, ci->clientnum, cp->clientnum, cp->name, cp->team);
+
+				if(m_demo(gamemode) || m_mp(gamemode))
+				{
+					int nospawn = 0;
+					if(smode && !smode->canspawn(cp, true)) { nospawn++; }
+					mutate(if (!mut->canspawn(cp, true)) { nospawn++; });
+
+					if (nospawn)
+					{
+						cp->state.state = CS_DEAD;
+						sendf(-1, 1, "ri2", SV_FORCEDEATH, cp->clientnum);
+					}
+					else
+					{
+						sendspawn(cp);
+					}
+				}
 				break;
 			}
 
 			case SV_DELBOT:
 			{
-				int bn = getint(p);
-				clientinfo *bt = (clientinfo *)getinfo(bn);
-				if (bt && bt->state.ownernum >= 0 && bt->state.ownernum == ci->clientnum)
+				int lcn = getint(p);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if (cp && cp->state.ownernum >= 0 && cp->state.ownernum == ci->clientnum)
 				{
-					int cn = bt->clientnum;
-					bt->state.timeplayed += lastmillis - bt->state.lasttimeplayed;
-					savescore(bt);
-					clients.removeobj(bt);
-					delclient(cn);
-					sendf(-1, 1, "ri2", SV_CDIS, cn);
+					int lcn = cp->clientnum;
+					if(smode) smode->leavegame(cp, true);
+					mutate(mut->leavegame(cp));
+					cp->state.timeplayed += lastmillis - cp->state.lasttimeplayed;
+					savescore(cp);
+					clients.removeobj(cp);
+					delclient(lcn);
+					sendf(-1, 1, "ri2", SV_CDIS, lcn);
 				}
 				break;
 			}
@@ -1581,6 +1595,7 @@ struct GAMESERVER : igameserver
 				gamestate &gs = ci->state;
 				spawnstate(ci);
 				putint(p, SV_SPAWNSTATE);
+				putint(p, ci->clientnum);
 				putint(p, gs.lifesequence);
 				putint(p, gs.health);
 				putint(p, gs.gunselect);
@@ -1667,7 +1682,8 @@ struct GAMESERVER : igameserver
 	{
 		gamestate &gs = ci->state;
 		spawnstate(ci);
-		sendf(ci->clientnum, 1, "ri4v", SV_SPAWNSTATE, gs.lifesequence, gs.health, gs.gunselect, NUMGUNS, &gs.ammo[0]);
+		int own = ci->state.ownernum >= 0 ? ci->state.ownernum : ci->clientnum;
+		sendf(own, 1, "ri5v", SV_SPAWNSTATE, ci->clientnum, gs.lifesequence, gs.health, gs.gunselect, NUMGUNS, &gs.ammo[0]);
 		gs.lastspawn = gamemillis;
 	}
 

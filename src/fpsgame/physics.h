@@ -712,9 +712,35 @@ struct physics
     IVARP(smoothmove, 0, 75, 100);
     IVARP(smoothdist, 0, 32, 64);
 
+	void smoothplayer(fpsent *d, int res)
+	{
+		if(d->state==CS_ALIVE || d->state==CS_EDITING)
+		{
+			if(smoothmove() && d->smoothmillis>0)
+			{
+				d->o = d->newpos;
+				d->yaw = d->newyaw;
+				d->pitch = d->newpitch;
+				moveplayer(d, res, false, curtime);
+				d->newpos = d->o;
+				float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove();
+				if(k>0)
+				{
+					d->o.add(vec(d->deltapos).mul(k));
+					d->yaw += d->deltayaw*k;
+					if(d->yaw<0) d->yaw += 360;
+					else if(d->yaw>=360) d->yaw -= 360;
+					d->pitch += d->deltapitch*k;
+				}
+			}
+			else moveplayer(d, res, false, curtime);
+		}
+		else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) moveplayer(d, res, false, curtime);
+	}
+
 	void otherplayers()
 	{
-		loopv(cl.players) if(cl.players[i])
+		loopv(cl.players) if(cl.players[i] && cl.players[i]->ownernum<0)
 		{
             fpsent *d = cl.players[i];
             const int lagtime = lastmillis-d->lastupdate;
@@ -724,28 +750,7 @@ struct physics
                 d->state = CS_LAGGED;
 				continue;
 			}
-            if(d->state==CS_ALIVE || d->state==CS_EDITING)
-            {
-                if(smoothmove() && d->smoothmillis>0)
-                {
-                    d->o = d->newpos;
-                    d->yaw = d->newyaw;
-                    d->pitch = d->newpitch;
-                    moveplayer(d, 2, false, curtime);
-                    d->newpos = d->o;
-                    float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove();
-                    if(k>0)
-                    {
-                        d->o.add(vec(d->deltapos).mul(k));
-                        d->yaw += d->deltayaw*k;
-                        if(d->yaw<0) d->yaw += 360;
-                        else if(d->yaw>=360) d->yaw -= 360;
-                        d->pitch += d->deltapitch*k;
-                    }
-                }
-                else moveplayer(d, 2, false, curtime);
-            }
-            else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) moveplayer(d, 2, false, curtime);
+			smoothplayer(d, 2);
 		}
 	}
 

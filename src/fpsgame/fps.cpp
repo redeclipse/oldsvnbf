@@ -205,14 +205,19 @@ struct GAMECLIENT : igameclient
 		pj.reset();
 	}
 
+	void update()
+	{
+		bot.update();
+		ph.update();
+		pj.update();
+	}
+
 	void updateworld()		// main game update loop
 	{
         if (!maptime) { maptime = lastmillis + curtime; return; }
 		if (!curtime) return;
 
-		ph.update();
-		pj.update();
-
+		update();
 		gets2c();
 
 		if (cc.ready())
@@ -273,7 +278,7 @@ struct GAMECLIENT : igameclient
 				if (player1->reloading || doautoreload()) ws.reload(player1);
 			}
 		}
-		if (player1->clientnum >= 0) c2sinfo(player1);
+		if (player1->clientnum >= 0) c2sinfo();
 	}
 
 	void damaged(int gun, int flags, int damage, fpsent *d, fpsent *actor, int millis, vec &dir)
