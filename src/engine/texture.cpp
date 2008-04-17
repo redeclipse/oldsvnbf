@@ -390,9 +390,9 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
     if(msg) show_out_of_renderloop_progress(0, file);
 
     SDL_Surface *s = IMG_Load(findfile(file, "rb"));
-    if(!s) { if(msg) conoutf("could not load texture %s", tname); return NULL; }
+    if(!s) { if(msg) conoutf("could not load texture %s", file); return NULL; }
     int bpp = s->format->BitsPerPixel;
-    if(!texformat(bpp)) { SDL_FreeSurface(s); conoutf("texture must be 8, 16, 24, or 32 bpp: %s", tname); return NULL; }
+    if(!texformat(bpp)) { SDL_FreeSurface(s); conoutf("texture must be 8, 16, 24, or 32 bpp: %s", file); return NULL; }
 
     while(cmds)
     {
