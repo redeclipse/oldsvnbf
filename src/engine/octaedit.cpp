@@ -473,7 +473,7 @@ void cursorupdate()
 
 //////////// ready changes to vertex arrays ////////////
 
-static bool invalidatedmerges = false;
+static bool invalidatedmerges = false, haschanged = false;
 
 void readychanges(block3 &b, cube *c, const ivec &cor, int size)
 {
@@ -514,13 +514,29 @@ void readychanges(block3 &b, cube *c, const ivec &cor, int size)
 	}
 }
 
-void changed(const block3 &sel)
+void commitchanges()
+{
+    if(!haschanged) return;
+    haschanged = false;
+    invalidatedmerges = false;
+
+    extern vector<vtxarray *> valist;
+    int oldlen = valist.length();
+    inbetweenframes = false;
+    octarender();
+    inbetweenframes = true;
+    setupmaterials(oldlen);
+    invalidatepostfx();
+    entitiesinoctanodes();
+    updatevabbs();
+}
+
+void changed(const block3 &sel, bool commit = true)
 {
 	if(sel.s.iszero()) return;
 	block3 b = sel;
 	loopi(3) b.s[i] *= b.grid;
 	b.grid = 1;
-    invalidatedmerges = false;
 	loopi(3)					// the changed blocks are the selected cubes
 	{
 		b.o[i] -= 1;
@@ -529,16 +545,9 @@ void changed(const block3 &sel)
 		b.o[i] += 1;
 		b.s[i] -= 2;
 	}
+    haschanged = true;
 
-    extern vector<vtxarray *> valist;
-    int oldlen = valist.length();
-    inbetweenframes = false;
-    octarender();
-    inbetweenframes = true;
-    setupmaterials(oldlen);
-	invalidatepostfx();
-	entitiesinoctanodes();
-    updatevabbs();
+    if(commit) commitchanges();
 }
 
 //////////// copy and undo /////////////
@@ -626,10 +635,10 @@ void pruneundos(int maxremain)						  // bound memory
 	while(!redos.empty()) { freeundo(redos.pop()); }
 }
 
-void initundocube(undoblock &u, selinfo &sel)
+void initundocube(undoblock &u, selinfo &s)
 {
-	u.g = selgridmap(sel);
-	u.b = blockcopy(sel, -sel.grid);
+    u.g = selgridmap(s);
+    u.b = blockcopy(s, -s.grid);
 }
 
 void addundo(undoblock &u)
@@ -638,41 +647,51 @@ void addundo(undoblock &u)
 	pruneundos(undomegs<<20);
 }
 
-void makeundo()						// stores state of selected cubes before editing
+void makeundoex(selinfo &s)
 {
-	if(lastsel==sel || sel.s.iszero()) return;
-	lastsel=sel;
     if(multiplayer(false)) return;
-	undoblock u;
-	initundocube(u, sel);
-	addundo(u);
+    undoblock u;
+    initundocube(u, s);
+    addundo(u);
+}
+
+void makeundo()                        // stores state of selected cubes before editing
+{
+    if(lastsel==sel || sel.s.iszero()) return;
+    lastsel=sel;
+    makeundoex(sel);
 }
 
 void swapundo(vector<undoblock> &a, vector<undoblock> &b, const char *s)
 {
-	if(noedit() || multiplayer()) return;
-	if(a.empty()) { conoutf("nothing more to %s", s); return; }
-	int ts = a.last().ts;
-	while(!a.empty() && ts==a.last().ts)
-	{
-		undoblock u = a.pop();
-		if(u.b)
-		{
-			sel.o = u.b->o;
-			sel.s = u.b->s;
-			sel.grid = u.b->grid;
-			sel.orient = u.b->orient;
-		}
-		undoblock r;
-		if(u.g) initundocube(r, sel);
-		if(u.n) copyundoents(r, u);
-		b.add(r);
-		pasteundo(u);
-		if(u.b) changed(sel);
-		freeundo(u);
-	}
-	reorient();
-	forcenextundo();
+    if(noedit() || multiplayer()) return;
+    if(a.empty()) { conoutf("nothing more to %s", s); return; }
+    int ts = a.last().ts;
+    selinfo l;
+    while(!a.empty() && ts==a.last().ts)
+    {
+        undoblock u = a.pop();
+        if(u.b)
+        {
+            l.o = u.b->o;
+            l.s = u.b->s;
+            l.grid = u.b->grid;
+            l.orient = u.b->orient;
+        }
+        undoblock r;
+        if(u.g) initundocube(r, l);
+        if(u.n) copyundoents(r, u);
+        b.add(r);
+        pasteundo(u);
+        if(u.b) changed(l, false);
+        freeundo(u);
+    }
+    commitchanges();
+    if (!hmapsel) {
+        sel = l;
+        reorient();
+    }
+    forcenextundo();
 }
 
 void editundo() { swapundo(undos, redos, "undo"); }
@@ -821,6 +840,7 @@ namespace hmap
     int d, dc, dr, dcr, biasup, br, hws, fg;
     int gx, gy, gz, mx, my, mz, nx, ny, nz, bmx, bmy, bnx, bny;
     uint fs;
+    selinfo hundo;
 
     cube *getcube(ivec t, int f)
     {
@@ -864,6 +884,11 @@ namespace hmap
         if((NOTHMAP & flags[x][y]) || (PAINTED & flags[x][y])) return;
         ivec t(d, x+gx, y+gy, dc ? z : hws-z);
         t.shl(gridpower);
+
+        // selections may damage; must makeundo before
+        hundo.o = t;
+        hundo.o[D[d]] -= dcr*gridsize*2;
+        makeundoex(hundo);
 
         cube **c = cmap[x][y];
         loopk(4) c[k] = NULL;
@@ -1069,6 +1094,10 @@ namespace hmap
         }
         nz = hdr.worldsize-gridsize;
         mz = 0;
+        hundo.s = ivec(d,1,1,5);
+        hundo.orient = sel.orient;
+        hundo.grid = gridsize;
+        forcenextundo();
 
         changes.grid = gridsize;
         changes.s = changes.o = cur;
@@ -1365,10 +1394,10 @@ ICOMMAND(replace, "", (void), {
 ICOMMAND(replaceall, "", (void), replacetex(););
 
 ////////// flip and rotate ///////////////
-uint dflip(uint face) { return face==F_EMPTY ? face : 0x88888888 - (((face&0xF0F0F0F0)>>4)+ ((face&0x0F0F0F0F)<<4)); }
-uint cflip(uint face) { return ((face&0xFF00FF00)>>8) + ((face&0x00FF00FF)<<8); }
-uint rflip(uint face) { return ((face&0xFFFF0000)>>16)+ ((face&0x0000FFFF)<<16); }
-uint mflip(uint face) { return (face&0xFF0000FF) + ((face&0x00FF0000)>>8) + ((face&0x0000FF00)<<8); }
+uint dflip(uint face) { return face==F_EMPTY ? face : 0x88888888 - (((face&0xF0F0F0F0)>>4) | ((face&0x0F0F0F0F)<<4)); }
+uint cflip(uint face) { return ((face&0xFF00FF00)>>8) | ((face&0x00FF00FF)<<8); }
+uint rflip(uint face) { return ((face&0xFFFF0000)>>16)| ((face&0x0000FFFF)<<16); }
+uint mflip(uint face) { return (face&0xFF0000FF) | ((face&0x00FF0000)>>8) | ((face&0x0000FF00)<<8); }
 
 void flipcube(cube &c, int d)
 {
