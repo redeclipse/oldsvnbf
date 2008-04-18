@@ -1,10 +1,10 @@
-extern int rtscissor, blurtile;
+extern int rtsharefb, rtscissor, blurtile;
 
 struct rendertarget
 {
     int texsize;
     GLenum colorfmt, depthfmt;
-    GLuint rendertex, renderfb, renderdb, blurtex;
+    GLuint rendertex, renderfb, renderdb, blurtex, blurfb, blurdb;
     int blursize;
     float blursigma;
     float blurweights[MAXBLURRADIUS+1], bluroffsets[MAXBLURRADIUS+1];
@@ -14,7 +14,7 @@ struct rendertarget
 #define BLURTILEMASK (0xFFFFFFFFU>>(32-BLURTILES))
     uint blurtiles[BLURTILES+1];
 
-    rendertarget() : texsize(0), colorfmt(GL_FALSE), depthfmt(GL_FALSE), rendertex(0), renderfb(0), renderdb(0), blurtex(0), blursize(0), blursigma(0)
+    rendertarget() : texsize(0), colorfmt(GL_FALSE), depthfmt(GL_FALSE), rendertex(0), renderfb(0), renderdb(0), blurtex(0), blurfb(0), blurdb(0), blursize(0), blursigma(0)
     {
     }
 
@@ -45,7 +45,9 @@ struct rendertarget
 
     void cleanupblur()
     {
+        if(blurfb) { glDeleteFramebuffers_(1, &blurfb); blurfb = 0; }
         if(blurtex) { glDeleteTextures(1, &blurtex); blurtex = 0; }
+        if(blurdb) { glDeleteRenderbuffers_(1, &blurdb); blurdb = 0; }
         blursize = 0;
         blursigma = 0.0f;
     }
@@ -55,6 +57,17 @@ struct rendertarget
         if(!hasFBO) return;
         if(!blurtex) glGenTextures(1, &blurtex);
         createtexture(blurtex, texsize, texsize, NULL, 3, false, colorfmt);
+
+        if(!swaptexs() || rtsharefb) return;
+        if(!blurfb) glGenFramebuffers_(1, &blurfb);
+        glBindFramebuffer_(GL_FRAMEBUFFER_EXT, blurfb);
+        glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, blurtex, 0);
+        if(!blurdb) glGenRenderbuffers_(1, &blurdb);
+        glGenRenderbuffers_(1, &blurdb);
+        glBindRenderbuffer_(GL_RENDERBUFFER_EXT, blurdb);
+        glRenderbufferStorage_(GL_RENDERBUFFER_EXT, depthfmt, texsize, texsize);
+        glFramebufferRenderbuffer_(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, blurdb);
+        glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
     }
 
     void setup(int size)
@@ -215,7 +228,8 @@ struct rendertarget
 
             if(hasFBO)
             {
-                glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, i ? rendertex : blurtex, 0);
+                if(!swaptexs() || rtsharefb) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, i ? rendertex : blurtex, 0);
+                else glBindFramebuffer_(GL_FRAMEBUFFER_EXT, i ? renderfb : blurfb);
                 glBindTexture(GL_TEXTURE_2D, i ? blurtex : rendertex);
             }
 
@@ -270,7 +284,7 @@ struct rendertarget
     {
         size = min(size, hwtexsize);
         if(!hasFBO) while(size>screen->w || size>screen->h) size /= 2;
-        if(size!=texsize) cleanup();
+        if(size!=texsize || (hasFBO && (swaptexs() && !rtsharefb ? !blurfb : blurfb))) cleanup();
             
         if(!rendertex) setup(size);
     
@@ -283,9 +297,17 @@ struct rendertarget
         if(hasFBO)
         {
             if(blursize && !blurtex) setupblur();
-            if(swaptexs() && blursize) swap(rendertex, blurtex);
-            glBindFramebuffer_(GL_FRAMEBUFFER_EXT, renderfb);
             if(swaptexs() && blursize)
+            {
+                swap(rendertex, blurtex);
+                if(!rtsharefb)
+                {
+                    swap(renderfb, blurfb);
+                    swap(renderdb, blurdb);
+                }
+            }
+            glBindFramebuffer_(GL_FRAMEBUFFER_EXT, renderfb);
+            if(swaptexs() && blursize && rtsharefb)
                 glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, rendertex, 0);
             glViewport(0, 0, texsize, texsize);
         }
