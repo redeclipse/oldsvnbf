@@ -15,7 +15,7 @@ struct icliententities
     virtual void fixentity(extentity &e) = 0;
     virtual bool mayattach(extentity &e) { return false; }
     virtual bool attachent(extentity &e, extentity &a) { return false; }
-    virtual extentity *newentity() = 0;
+    virtual extentity *newent() = 0;
     virtual vector<extentity *> &getents() = 0;
 };
 

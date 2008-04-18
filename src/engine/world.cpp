@@ -647,7 +647,7 @@ COMMAND(attachent, "");
 
 extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3, int v4)
 {
-	extentity &e = *et->newentity();
+	extentity &e = *et->newent();
 	e.o = o;
 	e.attr1 = v1;
 	e.attr2 = v2;
@@ -917,7 +917,7 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
 {
 	if(et->getents().length()<=i)
 	{
-		while(et->getents().length()<i) et->getents().add(et->newentity())->type = ET_EMPTY;
+		while(et->getents().length()<i) et->getents().add(et->newent())->type = ET_EMPTY;
 		extentity *e = newentity(local, o, type, attr1, attr2, attr3, attr4);
 		et->getents().add(e);
 		addentity(i);

@@ -27,25 +27,25 @@ enum						// static entity types
 
 static struct enttypes
 {
-	int	type, 		links;	float radius,	height;		const char *name;
+	int	type, 		links;	int radius,	height;		const char *name;
 } enttype[] = {
-	{ NOTUSED,		0,				0.f,	0.f,			"none" },
-	{ LIGHT,		0,				0.f,	0.f,			"light" },
-	{ MAPMODEL,		0,				0.f,	0.f,			"mapmodel" },
-	{ PLAYERSTART,	0,				0.f,	0.f,			"playerstart" },
-	{ ENVMAP,		0,				0.f,	0.f,			"envmap" },
-	{ PARTICLES,	0,				0.f,	0.f,			"particles" },
-	{ MAPSOUND,		0,				0.f,	0.f,			"sound" },
-	{ SPOTLIGHT,	0,				0.f,	0.f,			"spotlight" },
-	{ WEAPON,		0,				16.f,	16.f,			"weapon" },
-	{ TELEPORT,		50,				12.f,	12.f,			"teleport" },
-	{ MONSTER,		0,				0.f,	0.f,			"monster" },
-	{ TRIGGER,		0,				16.f,	16.f,			"trigger" },
-	{ JUMPPAD,		0,				12.f,	12.f,			"jumppad" },
-	{ BASE,			48,				32.f,	16.f,			"base" },
-	{ CHECKPOINT,	48,				16.f,	16.f,			"checkpoint" },
-	{ CAMERA,		48,				0.f,	0.f,			"camera" },
-	{ WAYPOINT,		1,				4.f,	4.f,			"waypoint" }
+	{ NOTUSED,		0,			0,		0,			"none" },
+	{ LIGHT,		0,			0,		0,			"light" },
+	{ MAPMODEL,		0,			0,		0,			"mapmodel" },
+	{ PLAYERSTART,	0,			0,		0,			"playerstart" },
+	{ ENVMAP,		0,			0,		0,			"envmap" },
+	{ PARTICLES,	0,			0,		0,			"particles" },
+	{ MAPSOUND,		0,			0,		0,			"sound" },
+	{ SPOTLIGHT,	0,			0,		0,			"spotlight" },
+	{ WEAPON,		0,			16,		16,			"weapon" },
+	{ TELEPORT,		50,			12,		12,			"teleport" },
+	{ MONSTER,		0,			0,		0,			"monster" },
+	{ TRIGGER,		0,			16,		16,			"trigger" },
+	{ JUMPPAD,		0,			12,		12,			"jumppad" },
+	{ BASE,			48,			32,		16,			"base" },
+	{ CHECKPOINT,	48,			16,		16,			"checkpoint" },
+	{ CAMERA,		48,			0,		0,			"camera" },
+	{ WAYPOINT,		1,			12,		12,			"waypoint" }
 };
 
 struct fpsentity : extentity
@@ -264,7 +264,9 @@ static struct guntypes
 	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	150,	150,	10000,	-40,	20,		"rockets" },
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		"rifle" },
 };
-#define isgun(gun) (gun > -1 && gun < NUMGUNS)
+#define isgun(gun)	(gun > -1 && gun < NUMGUNS)
+
+#define isbot(p)	(p->type == ENT_PLAYER && p->ownernum >= 0)
 
 // inherited by fpsent and server clients
 struct fpsstate
@@ -425,7 +427,7 @@ struct fpsent : dynent, fpsstate
     vec deltapos, newpos;
     float deltayaw, deltapitch, newyaw, newpitch;
     int smoothmillis;
-	int spree, lastimpulse;
+	int spree, lastimpulse, lastnode;
 
 	string name, team, info;
 

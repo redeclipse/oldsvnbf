@@ -647,7 +647,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	loopi(hdr.numents)
 	{
 		if (verbose >= 2) show_out_of_renderloop_progress(float(i)/float(hdr.numents), "loading entities...");
-		extentity &e = *et->newentity();
+		extentity &e = *et->newent();
 		ents.add(&e);
 		gzread(f, &e, sizeof(entity));
 		endianswap(&e.o, sizeof(int), 3);
