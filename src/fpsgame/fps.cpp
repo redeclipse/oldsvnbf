@@ -205,19 +205,15 @@ struct GAMECLIENT : igameclient
 		pj.reset();
 	}
 
-	void update()
-	{
-		bot.update();
-		ph.update();
-		pj.update();
-	}
-
 	void updateworld()		// main game update loop
 	{
         if (!maptime) { maptime = lastmillis + curtime; return; }
 		if (!curtime) return;
 
-		update();
+		ph.update();
+		pj.update();
+		et.update();
+		bot.update();
 		gets2c();
 
 		if (cc.ready())

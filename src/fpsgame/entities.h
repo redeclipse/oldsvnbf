@@ -13,6 +13,8 @@ struct entities : icliententities
 	IVARP(showteleportlinks, 0, 0, 1);
 	IVARP(showwaypointlinks, 0, 0, 1);
 
+	IVAR(dropwaypoints, 0, 0, 1); // drop waypointpoints during play
+
 	entities(GAMECLIENT &_cl) : cl(_cl)
 	{
 		CCOMMAND(entlink, "", (entities *self), self->entlink());
@@ -26,7 +28,7 @@ struct entities : icliententities
 		if(t == WEAPON)
 		{
 			int gun = ents[i]->attr1;
-			if (gun <= -1 || gun >= NUMGUNS) gun = 0;
+			if(gun <= -1 || gun >= NUMGUNS) gun = 0;
 			return guntype[gun].name;
 		}
 		return NULL;
@@ -67,7 +69,7 @@ struct entities : icliententities
 	void useeffects(int n, fpsent *d)
 	{
         if(!ents.inrange(n)) return;
-		if (ents[n]->type == WEAPON && ents[n]->attr1 > -1 && ents[n]->attr1 < NUMGUNS)
+		if(ents[n]->type == WEAPON && ents[n]->attr1 > -1 && ents[n]->attr1 < NUMGUNS)
 		{
 			ents[n]->spawned = false;
 			if(!d) return;
@@ -90,7 +92,7 @@ struct entities : icliententities
 		{
 			int link = rnd(e.links.length()), targ = e.links[link];
 
-			if (ents.inrange(targ) && ents[targ]->type == TELEPORT)
+			if(ents.inrange(targ) && ents[targ]->type == TELEPORT)
 			{
 				d->o = ents[targ]->o;
 				d->yaw = clamp((int)ents[targ]->attr1, 0, 359);
@@ -114,11 +116,11 @@ struct entities : icliententities
 		switch(ents[n]->type)
 		{
 			default:
-				if (d->canuse(ents[n]->type, ents[n]->attr1, ents[n]->attr2, lastmillis))
+				if(d->canuse(ents[n]->type, ents[n]->attr1, ents[n]->attr2, lastmillis))
 				{
-					if (d == cl.player1)
+					if(d == cl.player1)
 					{
-						if (!cl.player1->usestuff) return;
+						if(!cl.player1->usestuff) return;
 						cl.cc.addmsg(SV_ITEMUSE, "ri", n);
 					}
 					ents[n]->spawned = false; // even if someone else gets it first
@@ -159,7 +161,7 @@ struct entities : icliententities
 
 	void checkitems(fpsent *d)
 	{
-		if (d->state != CS_EDITING && d->state != CS_SPECTATOR)
+		if(d->state != CS_EDITING && d->state != CS_SPECTATOR)
 		{
 			float eye = d->height*0.5f;
 			vec m = d->o;
@@ -168,10 +170,10 @@ struct entities : icliententities
 			loopv(ents)
 			{
 				extentity &e = *ents[i];
-				if (e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-				if (!e.spawned && e.type != TELEPORT && e.type != JUMPPAD && e.type != CHECKPOINT) continue;
+				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
+				if(!e.spawned && e.type != TELEPORT && e.type != JUMPPAD && e.type != CHECKPOINT) continue;
 				enttypes &t = enttype[e.type];
-				if (insidesphere(m, eye, d->radius, e.o, t.height, t.radius)) tryuse(i, d);
+				if(insidesphere(m, eye, d->radius, e.o, t.height, t.radius)) tryuse(i, d);
 			}
 		}
 		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
@@ -218,20 +220,20 @@ struct entities : icliententities
 		for (;;)
 		{
 			e = findentity(CAMERA, e + 1);
-			if (e == beenhere || e < 0)
+			if(e == beenhere || e < 0)
 			{
 				conoutf("no camera destination for tag %d", tag);
 				return ;
 			};
-			if (beenhere < 0)
+			if(beenhere < 0)
 				beenhere = e;
-			if (ents[e]->attr4 == tag)
+			if(ents[e]->attr4 == tag)
 			{
 				d->o = ents[e]->o;
 				d->yaw = ents[e]->attr1;
 				d->pitch = ents[e]->attr2;
 				delta = ents[e]->attr3;
-				if (cl.player1->state == CS_EDITING)
+				if(cl.player1->state == CS_EDITING)
 				{
 					vec dirv;
 					vecfromyawpitch(d->yaw, d->pitch, 1, 0, dirv);
@@ -274,7 +276,7 @@ struct entities : icliententities
 	void resetspawns() { loopv(ents) ents[i]->spawned = false; }
 	void setspawn(int i, bool on) { if(ents.inrange(i)) ents[i]->spawned = on; }
 
-	extentity *newentity() { return new fpsentity(); }
+	extentity *newent() { return new fpsentity(); }
 
 	void fixentity(extentity &e)
 	{
@@ -283,7 +285,7 @@ struct entities : icliententities
 			case WEAPON:
 				while (e.attr1 < 0) e.attr1 += NUMGUNS;
 				while (e.attr1 >= NUMGUNS) e.attr1 -= NUMGUNS;
-				if (e.attr2 < 0) e.attr2 = 0;
+				if(e.attr2 < 0) e.attr2 = 0;
 				break;
 			default:
 				break;
@@ -296,9 +298,9 @@ struct entities : icliententities
 	void editent(int i)
 	{
 		extentity &e = *ents[i];
-		if (e.type == ET_EMPTY) cleanlinks(i);
+		if(e.type == ET_EMPTY) cleanlinks(i);
 		fixentity(e);
-		if (multiplayer(false))
+		if(multiplayer(false))
 			cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
 	}
 
@@ -310,36 +312,36 @@ struct entities : icliententities
 
 	void entlink()
 	{
-		if (entgroup.length())
+		if(entgroup.length())
 		{
 			int index = entgroup[0];
 
-			if (ents.inrange(index))
+			if(ents.inrange(index))
 			{
 				int type = ents[index]->type, last = -1;
 
-				if (enttype[type].links)
+				if(enttype[type].links)
 				{
 					loopv(entgroup)
 					{
 						index = entgroup[i];
 
-						if (ents[index]->type == type)
+						if(ents[index]->type == type)
 						{
-							if (ents.inrange(last))
+							if(ents.inrange(last))
 							{
 								int g;
 
 								fpsentity &e = (fpsentity &)*ents[index];
 								fpsentity &l = (fpsentity &)*ents[last];
 
-								if ((g = l.links.find(index)) >= 0)
+								if((g = l.links.find(index)) >= 0)
 								{
 									int h;
-									if ((h = e.links.find(last)) >= 0) l.links.remove(g);
+									if((h = e.links.find(last)) >= 0) l.links.remove(g);
 									else e.links.add(last);
 								}
-								else if ((g = e.links.find(last)) >= 0) e.links.remove(g);
+								else if((g = e.links.find(last)) >= 0) e.links.remove(g);
 								else l.links.add(index);
 							}
 							last = index;
@@ -354,13 +356,13 @@ struct entities : icliententities
 
 	void cleanlinks(int n)
 	{
-		loopv(ents) if (enttype[ents[i]->type].links)
+		loopv(ents) if(enttype[ents[i]->type].links)
 		{
 			fpsentity &e = (fpsentity &)*ents[i];
 
 			loopvj(e.links)
 			{
-				if (e.links[j] == n)
+				if(e.links[j] == n)
 				{
 					e.links.remove(j);
 					break;
@@ -374,27 +376,27 @@ struct entities : icliententities
 		fpsentity &f = (fpsentity &)e;
 		f.links.setsize(0);
 
-		if (mtype == MAP_BFGZ)
+		if(mtype == MAP_BFGZ)
 		{
 			int type = f.type;
-			if (gver <= 49 && type >= 10) type--; // translation for these are done later..
+			if(gver <= 49 && type >= 10) type--; // translation for these are done later..
 
-			if (enttype[type].links && enttype[type].links <= gver)
+			if(enttype[type].links && enttype[type].links <= gver)
 			{
 				int links = gzgetint(g);
 				loopi(links) f.links.add(gzgetint(g));
-				if (verbose >= 2) conoutf("entity %d loaded %d link(s)", id, links);
+				if(verbose >= 2) conoutf("entity %d loaded %d link(s)", id, links);
 			}
 		}
-		else if (mtype == MAP_OCTA)
+		else if(mtype == MAP_OCTA)
 		{
 			// sauerbraten version increments
-			if (mver <= 10) if (f.type >= 7) f.type++;
-			if (mver <= 12) if (f.type >= 8) f.type++;
+			if(mver <= 10) if(f.type >= 7) f.type++;
+			if(mver <= 12) if(f.type >= 8) f.type++;
 
 			// now translate into our format
-			if ((f.type >= 14 && f.type <= 18) || f.type >= 26) f.type = NOTUSED;
-			else if (f.type >= 8 && f.type <= 13)
+			if((f.type >= 14 && f.type <= 18) || f.type >= 26) f.type = NOTUSED;
+			else if(f.type >= 8 && f.type <= 13)
 			{
 				int gun = f.type-8, gunmap[NUMGUNS] = {
 					GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL
@@ -403,7 +405,7 @@ struct entities : icliententities
 				f.attr1 = gunmap[gun];
 				f.attr2 = 0;
 			}
-			else if (f.type >= 19) f.type -= 10;
+			else if(f.type >= 19) f.type -= 10;
 		}
 	}
 
@@ -411,7 +413,7 @@ struct entities : icliententities
 	{
 		fpsentity &d = (fpsentity &)e;
 
-		if (enttype[d.type].links)
+		if(enttype[d.type].links)
 		{
 			vector<int> links;
 			int n = 0;
@@ -420,10 +422,10 @@ struct entities : icliententities
 			{
 				fpsentity &f = (fpsentity &)e;
 
-				if (f.type != ET_EMPTY)
+				if(f.type != ET_EMPTY)
 				{
-					if (enttype[f.type].links)
-						if (d.links.find(i) >= 0) links.add(n); // align to indices
+					if(enttype[f.type].links)
+						if(d.links.find(i) >= 0) links.add(n); // align to indices
 
 					n++;
 				}
@@ -436,7 +438,7 @@ struct entities : icliententities
 
 	void initents(gzFile &g, int mtype, int mver, char *gid, int gver)
 	{
-		if (gver <= 49 || mtype == MAP_OCTA)
+		if(gver <= 49 || mtype == MAP_OCTA)
 		{
 			vector<short> teleyaw;
 			loopv(ents) teleyaw.add(0);
@@ -445,7 +447,7 @@ struct entities : icliententities
 			{
 				fpsentity &e = (fpsentity &)*ents[i];
 
-				if (e.type == 10) // translate teledest to teleport and link them appropriately
+				if(e.type == 10) // translate teledest to teleport and link them appropriately
 				{
 					int dest = -1;
 
@@ -453,12 +455,12 @@ struct entities : icliententities
 					{
 						fpsentity &f = (fpsentity &)*ents[j];
 
-						if (f.type == 9 && e.o.dist(f.o) <= enttype[TELEPORT].radius*2.f &&
+						if(f.type == 9 && e.o.dist(f.o) <= enttype[TELEPORT].radius*2.f &&
 							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)))
 								dest = j;
 					}
 
-					if (ents.inrange(dest))
+					if(ents.inrange(dest))
 					{
 						e.type = NOTUSED; // get rid of this guy then
 						conoutf("WARNING: replaced teledest %d [%d] with closest teleport", dest, i);
@@ -476,7 +478,7 @@ struct entities : icliententities
 					{
 						fpsentity &f = (fpsentity &)*ents[j];
 
-						if (f.type == 9 && f.attr1 == e.attr2)
+						if(f.type == 9 && f.attr1 == e.attr2)
 						{
 							f.links.add(dest);
 							conoutf("WARNING: teleports %d and %d linked automatically", dest, j);
@@ -490,27 +492,97 @@ struct entities : icliententities
 			loopv(ents)
 			{
 				fpsentity &e = (fpsentity &)*ents[i];
-				if (e.type == 9)
+				if(e.type == 9)
 				{
 					e.attr1 = teleyaw[i]; // grab what we stored earlier
 					e.attr2 = 0;
 				}
-				else if (e.type == 10) e.type = NOTUSED; // unused teledest?
-				else if (e.type >= 11) e.type--;
+				else if(e.type == 10) e.type = NOTUSED; // unused teledest?
+				else if(e.type >= 11) e.type--;
 
-				if (e.type == MAPSOUND)
+				if(e.type == MAPSOUND)
 				{
 					e.attr2 = 255;
 					e.attr3 = 0;
 				}
 
-				if (mtype == MAP_OCTA)
+				if(e.type == WAYPOINT) e.attr1 = enttype[WAYPOINT].radius;
+
+				if(mtype == MAP_OCTA)
 				{
-					if (e.type == 20) e.attr1 = ++fcnt; // number them instead
-					else if (e.type >= MAXENTTYPES) e.type = NOTUSED; // sanity check
+					if(e.type == 20) e.attr1 = ++fcnt; // number them instead
+					else if(e.type >= MAXENTTYPES) e.type = NOTUSED; // sanity check
 				}
 			}
 		}
+	}
+
+	int waypointnode(vec &v, int n = -1)
+	{
+		int w = -1;
+
+		loopv(ents)
+		{
+			if(ents[i]->type == WAYPOINT &&
+				(!ents.inrange(n) || i != n || ents[i]->o.dist(v) <= ents[i]->attr1) &&
+					(!ents.inrange(w) || ents[i]->o.dist(v) < ents[w]->o.dist(v)))
+			{
+				w = i;
+			}
+		}
+		return w;
+	}
+
+	void waypointlink(int n, int m)
+	{
+		if(n != m && ents.inrange(n) && ents.inrange(m) && ents[n]->type == WAYPOINT && ents[m]->type == WAYPOINT)
+		{
+			fpsentity &e = (fpsentity &)*ents[n];
+			if(e.links.find(m) < 0) e.links.add(m);
+		}
+	}
+
+	void waypointcheck(fpsent *d)
+	{
+		if(d->state == CS_ALIVE)
+		{
+			if(dropwaypoints() && !isbot(d))
+			{
+				int oldnode = d->lastnode;
+				vec v(vec(d->o).sub(vec(0, 0, d->height)));
+
+				loopv(ents)
+				{
+					if(ents[i]->type == WAYPOINT && ents[i]->o.dist(v) <= ents[i]->attr1 &&
+						(!ents.inrange(d->lastnode) ||
+							ents[i]->o.dist(v) < ents[d->lastnode]->o.dist(v)))
+					{
+						d->lastnode = i;
+					}
+				}
+
+				if(!ents.inrange(d->lastnode) ||
+					ents[d->lastnode]->o.dist(v) >= ents[d->lastnode]->attr1+enttype[WAYPOINT].radius)
+				{
+					d->lastnode = ents.length();
+					newentity(v, WAYPOINT, enttype[WAYPOINT].radius, 0, 0, 0);
+				}
+
+				if(d->lastnode != oldnode && ents.inrange(oldnode) && ents.inrange(d->lastnode))
+				{
+					waypointlink(oldnode, d->lastnode);
+					if(!d->timeinair) waypointlink(d->lastnode, oldnode);
+				}
+			}
+			else
+				d->lastnode = waypointnode(vec(d->o).sub(vec(0, 0, d->height)));
+		}
+	}
+
+	void update()
+	{
+		waypointcheck(cl.player1);
+		loopv(cl.players) if(cl.players[i]) waypointcheck(cl.players[i]);
 	}
 
 	void renderlinked(extentity &e)
@@ -521,7 +593,7 @@ struct entities : icliententities
 		{
 			int index = d.links[i];
 
-			if (ents.inrange(index))
+			if(ents.inrange(index))
 			{
 				fpsentity &f = (fpsentity &)*ents[index];
 				bool both = false,
@@ -530,10 +602,10 @@ struct entities : icliententities
 				loopvj(f.links)
 				{
 					int g = f.links[j];
-					if (ents.inrange(g))
+					if(ents.inrange(g))
 					{
 						fpsentity &h = (fpsentity &)*ents[g];
-						if (&h == &d)
+						if(&h == &d)
 						{
 							both = true;
 							break;
@@ -549,7 +621,7 @@ struct entities : icliententities
 				vec col(0.5f, 0, both ? 0.5f : 0.0f);
 				renderline(fr, to, col.x, col.y, col.z, hassel);
 
-				if (hassel)
+				if(hassel)
 				{
 					vec dr = to;
 					float yaw, pitch;
@@ -570,47 +642,53 @@ struct entities : icliententities
 
 	void renderentshow(extentity &e, bool force)
 	{
-		if (!force && showentradius())
+		if(!force && showentradius())
 		{
-			if (enttype[e.type].height > 0.f || enttype[e.type].radius > 0.f)
+			int h = enttype[e.type].height, r = enttype[e.type].radius;
+			switch(e.type)
 			{
-				renderradius(e.o, enttype[e.type].height, enttype[e.type].radius);
+				case WAYPOINT:
+					h = r = e.attr1;
+					break;
+				default:
+					break;
 			}
+			if(h > 0.f || r > 0.f) renderradius(e.o, h, r);
 		}
 
-		switch (e.type)
+		switch(e.type)
 		{
 			case PLAYERSTART:
 			case MAPMODEL:
 			{
-				if (!force && showentdir()) renderdir(e.o, e.attr1, 0);
+				if(!force && showentdir()) renderdir(e.o, e.attr1, 0);
 				break;
 			}
 			case TELEPORT:
 			{
-				if (!force || showteleportlinks()) renderlinked(e);
-				if (!force && showentdir()) renderdir(e.o, e.attr1, 0);
+				if(!force || showteleportlinks()) renderlinked(e);
+				if(!force && showentdir()) renderdir(e.o, e.attr1, 0);
 				break;
 			}
 			case BASE:
 			{
-				if (!force || showbaselinks()) renderlinked(e);
+				if(!force || showbaselinks()) renderlinked(e);
 				break;
 			}
 			case CHECKPOINT:
 			{
-				if (!force || showcheckpointlinks()) renderlinked(e);
+				if(!force || showcheckpointlinks()) renderlinked(e);
 				break;
 			}
 			case CAMERA:
 			{
-				if (!force || showcameralinks()) renderlinked(e);
-				if (!force && showentdir()) renderdir(e.o, e.attr1, e.attr2);
+				if(!force || showcameralinks()) renderlinked(e);
+				if(!force && showentdir()) renderdir(e.o, e.attr1, e.attr2);
 				break;
 			}
 			case WAYPOINT:
 			{
-				if (!force || showwaypointlinks()) renderlinked(e);
+				if(!force || showwaypointlinks()) renderlinked(e);
 				break;
 			}
 			default:
@@ -620,16 +698,16 @@ struct entities : icliententities
 
 	void render()
 	{
-		if (rendernormally) // important, don't render lines and stuff otherwise!
+		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
 			#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
 
-			if (editmode)
+			if(editmode)
 			{
 				renderprimitive(true);
 
 				loopv(entgroup) entfocus(entgroup[i], renderentshow(e, false));
-				if (enthover >= 0) entfocus(enthover, renderentshow(e, false));
+				if(enthover >= 0) entfocus(enthover, renderentshow(e, false));
 
 				loopv(ents)
 				{
@@ -643,9 +721,9 @@ struct entities : icliententities
 			{
 				fpsentity &e = (fpsentity &)*ents[i];
 
-				if (e.type == MAPSOUND && mapsounds.inrange(e.attr1))
+				if(e.type == MAPSOUND && mapsounds.inrange(e.attr1))
 				{
-					if (!sounds.inrange(e.schan) || !sounds[e.schan].inuse)
+					if(!sounds.inrange(e.schan) || !sounds[e.schan].inuse)
 					{
 						int vol = e.attr2 >= 1 && e.attr2 <= 255 ? e.attr2 : 255;
 						e.schan = playsound(e.attr1, &e.o, vol, -1, true, true);
@@ -657,11 +735,11 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-			if (e.type == TELEPORT || (e.type == WEAPON && (e.spawned || editmode)))
+			if(e.type == TELEPORT || (e.type == WEAPON && (e.spawned || editmode)))
 			{
 				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 
-				if (mdlname)
+				if(mdlname)
 				{
 					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP,
 						e.o, 0.f, 0.f, 0.f,

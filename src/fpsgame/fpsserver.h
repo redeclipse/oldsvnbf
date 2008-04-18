@@ -1473,43 +1473,7 @@ struct GAMESERVER : igameserver
 			case SV_ADDBOT:
 			{
                 if(ci->state.state==CS_SPECTATOR && !ci->privilege) break;
-
-				int lcn = addclient(ST_REMOTE);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				cp->clientnum = lcn;
-				cp->state.ownernum = sender;
-				cp->state.state = CS_DEAD;
-				clients.add(cp);
-				cp->state.lasttimeplayed = lastmillis;
-				s_strncpy(cp->name, "bot", MAXNAMELEN);
-
-				//if(smode) smode->initclient(cp, p, true);
-				//mutate(mut->initclient(cp, p, true));
-
-				const char *worst = chooseworstteam(text);
-				if(worst) s_strncpy(text, worst, MAXTEAMLEN);
-				else s_strncpy(text, teamnames[0], MAXTEAMLEN);
-				if(smode && cp->state.state==CS_ALIVE && strcmp(cp->team, text)) smode->changeteam(cp, cp->team, text);
-				mutate(mut->changeteam(cp, cp->team, text));
-				s_strncpy(cp->team, text, MAXTEAMLEN);
-				sendf(-1, 1, "ri3ss", SV_ADDBOT, ci->clientnum, cp->clientnum, cp->name, cp->team);
-
-				if(m_demo(gamemode) || m_mp(gamemode))
-				{
-					int nospawn = 0;
-					if(smode && !smode->canspawn(cp, true)) { nospawn++; }
-					mutate(if (!mut->canspawn(cp, true)) { nospawn++; });
-
-					if (nospawn)
-					{
-						cp->state.state = CS_DEAD;
-						sendf(-1, 1, "ri2", SV_FORCEDEATH, cp->clientnum);
-					}
-					else
-					{
-						sendspawn(cp);
-					}
-				}
+				addbot(ci);
 				break;
 			}
 
@@ -1518,16 +1482,7 @@ struct GAMESERVER : igameserver
 				int lcn = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
 				if (cp && cp->state.ownernum >= 0 && cp->state.ownernum == ci->clientnum)
-				{
-					int lcn = cp->clientnum;
-					if(smode) smode->leavegame(cp, true);
-					mutate(mut->leavegame(cp));
-					cp->state.timeplayed += lastmillis - cp->state.lasttimeplayed;
-					savescore(cp);
-					clients.removeobj(cp);
-					delclient(lcn);
-					sendf(-1, 1, "ri2", SV_CDIS, lcn);
-				}
+					deletebot(cp);
 				break;
 			}
 
@@ -1540,6 +1495,58 @@ struct GAMESERVER : igameserver
 				break;
 			}
         }
+	}
+
+	void addbot(clientinfo *ci)
+	{
+		int lcn = addclient(ST_REMOTE);
+		clientinfo *cp = (clientinfo *)getinfo(lcn);
+		cp->clientnum = lcn;
+		cp->state.ownernum = ci->clientnum;
+		cp->state.state = CS_DEAD;
+		clients.add(cp);
+		cp->state.lasttimeplayed = lastmillis;
+		s_strncpy(cp->name, "bot", MAXNAMELEN);
+
+		//if(smode) smode->initclient(cp, p, true);
+		//mutate(mut->initclient(cp, p, true));
+		string text;
+		const char *worst = chooseworstteam(text);
+		if(worst) s_strncpy(text, worst, MAXTEAMLEN);
+		else s_strncpy(text, teamnames[0], MAXTEAMLEN);
+		if(smode && cp->state.state==CS_ALIVE && strcmp(cp->team, text)) smode->changeteam(cp, cp->team, text);
+		mutate(mut->changeteam(cp, cp->team, text));
+		s_strncpy(cp->team, text, MAXTEAMLEN);
+		sendf(-1, 1, "ri3ss", SV_ADDBOT, ci->clientnum, cp->clientnum, cp->name, cp->team);
+
+		if(m_demo(gamemode) || m_mp(gamemode))
+		{
+			int nospawn = 0;
+			if(smode && !smode->canspawn(cp, true)) { nospawn++; }
+			mutate(if (!mut->canspawn(cp, true)) { nospawn++; });
+
+			if (nospawn)
+			{
+				cp->state.state = CS_DEAD;
+				sendf(-1, 1, "ri2", SV_FORCEDEATH, cp->clientnum);
+			}
+			else
+			{
+				sendspawn(cp);
+			}
+		}
+	}
+
+	void deletebot(clientinfo *ci)
+	{
+		int lcn = ci->clientnum;
+		if(smode) smode->leavegame(ci, true);
+		mutate(mut->leavegame(ci));
+		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
+		savescore(ci);
+		clients.removeobj(ci);
+		delclient(lcn);
+		sendf(-1, 1, "ri2", SV_CDIS, lcn);
 	}
 
 	int welcomepacket(ucharbuf &p, int n)
@@ -2014,6 +2021,9 @@ struct GAMESERVER : igameserver
 	void clientdisconnect(int n)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
+		loopvrev(clients)
+			if(clients[i]!=ci && clients[i]->state.ownernum==ci->clientnum)
+				deletebot(clients[i]);
 		if(ci->privilege) setmaster(ci, false);
 		if(smode) smode->leavegame(ci, true);
 		mutate(mut->leavegame(ci));
