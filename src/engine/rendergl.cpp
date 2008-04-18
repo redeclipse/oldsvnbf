@@ -112,6 +112,7 @@ VAR(usevp2, 1, 0, 0);
 VAR(usevp3, 1, 0, 0);
 VAR(rtscissor, 0, 1, 1);
 VAR(blurtile, 0, 1, 1);
+VAR(rtsharefb, 0, 1, 1);
 
 void gl_checkextensions()
 {
@@ -253,6 +254,7 @@ void gl_checkextensions()
     else if(strstr(vendor, "NVIDIA"))
     {
         reservevpparams = 10;
+        rtsharefb = 0;
         extern int filltjoints;
         filltjoints = 0;
 
