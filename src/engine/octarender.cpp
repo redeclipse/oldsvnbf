@@ -1378,7 +1378,7 @@ int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
 		else if(c[i].children) count += updateva(c[i].children, o.x, o.y, o.z, size/2, csi-1);
 		else if(!isempty(c[i]) || hasskyfaces(c[i], o.x, o.y, o.z, size, faces)) count++;
 		int tcount = count + (csi < VVEC_INT ? vamerges[csi].length() : 0);
-        if(tcount > vacubemax || (tcount >= vacubemin && size >= vacubesize) || (tcount && size == min(VVEC_INT_MASK+1, hdr.worldsize/2))) 
+        if(tcount > vacubemax || (tcount >= vacubemin && size >= vacubesize) || size == min(VVEC_INT_MASK+1, hdr.worldsize/2)) 
 		{
 			setva(c[i], o.x, o.y, o.z, size, csi);
 			if(c[i].ext && c[i].ext->va)
