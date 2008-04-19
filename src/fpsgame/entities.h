@@ -13,7 +13,7 @@ struct entities : icliententities
 	IVARP(showteleportlinks, 0, 0, 1);
 	IVARP(showwaypointlinks, 0, 0, 1);
 
-	IVAR(dropwaypoints, 0, 0, 1); // drop waypointpoints during play
+	IVAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 
 	entities(GAMECLIENT &_cl) : cl(_cl)
 	{
@@ -24,8 +24,7 @@ struct entities : icliententities
 
     const char *itemname(int i)
 	{
-		int t = ents[i]->type;
-		if(t == WEAPON)
+		if(ents[i]->type == WEAPON)
 		{
 			int gun = ents[i]->attr1;
 			if(gun <= -1 || gun >= NUMGUNS) gun = 0;
