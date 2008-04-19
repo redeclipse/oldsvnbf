@@ -596,7 +596,7 @@ struct GAMECLIENT : igameclient
 							d = players[-cameranum];
 					}
 
-					if (fov < 90)
+					if (fov < 90 && d->gunselect == GUN_RIFLE && d->state == CS_ALIVE)
 					{
 						settexture("textures/overlay_zoom.png");
 
@@ -612,9 +612,10 @@ struct GAMECLIENT : igameclient
 						glEnd();
 					}
 
-					if (damageresidue > 0)
+					if (damageresidue > 0 || d->state == S_DEAD)
 					{
-						float pc = float(min(damageresidue, 100))/100.f;
+						int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
+						float pc = float(dam)/100.f;
 						settexture("textures/overlay_damage.png");
 
 						glColor4f(1.f, 1.f, 1.f, pc);
@@ -643,7 +644,10 @@ struct GAMECLIENT : igameclient
 					{
 						if (d->state == CS_ALIVE)
 						{
-							float hlt = player1->health/100.f;
+							float hlt = player1->health/float(MAXHEALTH);
+							float glow = 1.f;
+							if (lastmillis < d->lastregen+500) glow = (lastmillis-d->lastregen)/500.f
+							glColor4f(glow, glow, glow, fade);
 							settexture("textures/hud_health.png");
 
 							if (hlt >= 0.5)
@@ -665,8 +669,10 @@ struct GAMECLIENT : igameclient
 							}
 							glEnd();
 
+							glColor4f(1.f, 1.f, 1.f, fade);
+
 							if (d->gunselect >= 0 && d->ammo[d->gunselect] >= 0)
-								draw_textx("\fs\fy%d\fS", oy/8, oy-(oy/8)-(FONTH/2), 255, 255, 255, int(255.f*fade), false, AL_CENTER, d->ammo[d->gunselect]);
+								draw_textx("\fs\fy%d\fS", oy/4, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->ammo[d->gunselect]);
 						}
 						else if (d->state == CS_DEAD)
 						{
