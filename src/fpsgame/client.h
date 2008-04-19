@@ -877,6 +877,13 @@ struct clientcom : iclientcom
 				break;
 			}
 
+			case SV_ENTLINK:
+			{
+				if(!d) return;
+				int b = getint(p), index = getint(p), node = getint(p);
+				cl.et.entitylink(index, node, b!=0, false);
+			}
+
 			case SV_PONG:
 				addmsg(SV_CLIENTPING, "i", cl.player1->ping = (cl.player1->ping*5+lastmillis-getint(p))/6);
 				break;
@@ -1088,8 +1095,7 @@ struct clientcom : iclientcom
 				getstring(text, p);
 				s_strncpy(b->team, text, MAXTEAMLEN);
 
-				fpsent *o = b->ownernum==cl.player1->clientnum ? cl.player1 : cl.getclient(b->ownernum);
-				conoutf("bot added by %s: %s (%s)", o->name, cl.colorname(b), b->team);
+				conoutf("bot added: %s (%s) [%d]", cl.colorname(b), b->team, b->ownernum);
 				break;
 			}
 

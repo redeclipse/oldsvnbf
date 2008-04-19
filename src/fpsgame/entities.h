@@ -310,6 +310,51 @@ struct entities : icliententities
 		return 4.0f;
 	}
 
+	bool entitylink(int index, int node, bool add, bool local)
+	{
+		if (ents.inrange(index) && ents.inrange(node) && ents[index]->type == ents[node]->type)
+		{
+			int g;
+			fpsentity &e = (fpsentity &)*ents[index];
+			fpsentity &l = (fpsentity &)*ents[node];
+
+			if((g = l.links.find(index)) >= 0 && (local || !add))
+			{
+				int h;
+				if((h = e.links.find(node)) >= 0 && (local || !add))
+				{
+					l.links.remove(g);
+					if (local && multiplayer(false))
+						cl.cc.addmsg(SV_ENTLINK, "ri3", 0, node, index);
+					return true;
+				}
+				else if(local || add)
+				{
+					e.links.add(node);
+					if (local && multiplayer(false))
+						cl.cc.addmsg(SV_ENTLINK, "ri3", 1, index, node);
+					return true;
+				}
+			}
+			else if((g = e.links.find(node)) >= 0 && (local || add))
+			{
+				e.links.remove(g);
+				if (local && multiplayer(false))
+					cl.cc.addmsg(SV_ENTLINK, "ri3", 0, index, node);
+				return true;
+			}
+			else if(local || !add)
+			{
+				l.links.add(index);
+				if (local && multiplayer(false))
+					cl.cc.addmsg(SV_ENTLINK, "ri3", 1, node, index);
+
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void entlink()
 	{
 		if(entgroup.length())
@@ -328,22 +373,7 @@ struct entities : icliententities
 
 						if(ents[index]->type == type)
 						{
-							if(ents.inrange(last))
-							{
-								int g;
-
-								fpsentity &e = (fpsentity &)*ents[index];
-								fpsentity &l = (fpsentity &)*ents[last];
-
-								if((g = l.links.find(index)) >= 0)
-								{
-									int h;
-									if((h = e.links.find(last)) >= 0) l.links.remove(g);
-									else e.links.add(last);
-								}
-								else if((g = e.links.find(last)) >= 0) e.links.remove(g);
-								else l.links.add(index);
-							}
+							if(ents.inrange(last)) entitylink(index, last, false, false);
 							last = index;
 						}
 						else conoutf("entity %s is not linkable to a %s", enttype[type].name, enttype[index].name);
@@ -538,7 +568,7 @@ struct entities : icliententities
 		if(n != m && ents.inrange(n) && ents.inrange(m) && ents[n]->type == WAYPOINT && ents[m]->type == WAYPOINT)
 		{
 			fpsentity &e = (fpsentity &)*ents[n];
-			if(e.links.find(m) < 0) e.links.add(m);
+			if(e.links.find(m) < 0) entitylink(n, m, true, false);
 		}
 	}
 
@@ -546,7 +576,7 @@ struct entities : icliententities
 	{
 		if(d->state == CS_ALIVE)
 		{
-			if(dropwaypoints() && !isbot(d))
+			if(dropwaypoints() && d==cl.player1)
 			{
 				int oldnode = d->lastnode;
 				vec v(vec(d->o).sub(vec(0, 0, d->height)));

@@ -38,6 +38,6 @@ struct botclient
 	{
 		d->move = d->strafe = 0;
 		d->lastupdate = lastmillis;
-		cl.ph.smoothplayer(d, 10);
+		cl.ph.smoothplayer(d, 10, true);
 	}
 } bot;

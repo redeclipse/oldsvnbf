@@ -984,26 +984,36 @@ struct GAMESERVER : igameserver
 			case SV_POS:
 			{
 				int lcn = getint(p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum != sender && cp->state.ownernum != sender))
+				if(lcn<0)
 				{
 					disconnect_client(sender, DISC_CN);
 					return;
 				}
-				vec oldpos(cp->state.o);
-				loopi(3) cp->state.o[i] = getuint(p)/DMF;
+
+				bool havecn = true;
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if(!cp || (cp->clientnum != sender && cp->state.ownernum != sender))
+					havecn = false;
+
+				vec oldpos, pos;
+				loopi(3) pos[i] = getuint(p)/DMF;
+				if(havecn)
+				{
+					oldpos = cp->state.o;
+					cp->state.o = pos;
+				}
 				getuint(p);
 				loopi(5) getint(p);
                 int physstate = getuint(p);
                 if(physstate&0x20) loopi(2) getint(p);
                 if(physstate&0x10) getint(p);
-                if(!cp->local && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
+                if(havecn && !cp->local && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
 				{
 					cp->position.setsizenodelete(0);
 					while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
 				}
 				uint f = getuint(p);
-                if(!cp->local && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
+                if(havecn && !cp->local && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
 				{
 					f &= 0xF;
 					curmsg = p.length();
@@ -1011,8 +1021,11 @@ struct GAMESERVER : igameserver
 					putuint(buf, f);
 					cp->position.addbuf(buf);
 				}
-				if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, oldpos, cp->state.o);
-				mutate(mut->moved(cp, oldpos, cp->state.o));
+				if(havecn)
+				{
+					if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, oldpos, cp->state.o);
+					mutate(mut->moved(cp, oldpos, cp->state.o));
+				}
 				break;
 			}
 
