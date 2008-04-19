@@ -712,7 +712,7 @@ struct physics
     IVARP(smoothmove, 0, 75, 100);
     IVARP(smoothdist, 0, 32, 64);
 
-	void smoothplayer(fpsent *d, int res)
+	void smoothplayer(fpsent *d, int res, bool local)
 	{
 		if(d->state==CS_ALIVE || d->state==CS_EDITING)
 		{
@@ -721,7 +721,7 @@ struct physics
 				d->o = d->newpos;
 				d->yaw = d->newyaw;
 				d->pitch = d->newpitch;
-				moveplayer(d, res, false, curtime);
+				moveplayer(d, res, local, curtime);
 				d->newpos = d->o;
 				float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove();
 				if(k>0)
@@ -733,9 +733,9 @@ struct physics
 					d->pitch += d->deltapitch*k;
 				}
 			}
-			else moveplayer(d, res, false, curtime);
+			else moveplayer(d, res, local, curtime);
 		}
-		else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) moveplayer(d, res, false, curtime);
+		else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) moveplayer(d, res, local, curtime);
 	}
 
 	void otherplayers()
@@ -750,7 +750,7 @@ struct physics
                 d->state = CS_LAGGED;
 				continue;
 			}
-			smoothplayer(d, 2);
+			smoothplayer(d, 2, false);
 		}
 	}
 

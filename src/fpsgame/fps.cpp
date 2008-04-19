@@ -331,7 +331,7 @@ struct GAMECLIENT : igameclient
 		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
         if(d==actor || actor->type==ENT_INANIMATE) console("\f2%s killed themself", cflags, dname);
 		else if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, aname, oname, dname);
-		else if(isteam(d->team, actor->team)) console("\f2%s %s teammate %s", cflags, dname, oname, aname);
+		else if(m_team(gamemode, mutators) && isteam(d->team, actor->team)) console("\f2%s %s teammate %s", cflags, dname, oname, aname);
 		else console("\f2%s %s %s", cflags, dname, oname, aname);
 
 		d->state = CS_DEAD;
@@ -724,7 +724,7 @@ struct GAMECLIENT : igameclient
         int crosshair = 0;
         if(fov < 90) crosshair = 3;
         else if(lastmillis - lasthit < hitcrosshair()) crosshair = 2;
-        else if(teamcrosshair())
+        else if(m_team(gamemode, mutators) && teamcrosshair())
         {
             dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
             if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team))
