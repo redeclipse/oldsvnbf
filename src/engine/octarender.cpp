@@ -1046,7 +1046,7 @@ void destroyva(vtxarray *va, bool reparent)
         {
             vtxarray *child = va->children[i];
             child->parent = va->parent;
-            if(child->parent) child->parent->children.add(va);
+            if(child->parent) child->parent->children.add(child);
         }
     }
     if(va->vbuf) destroyvbo(va->vbuf);
