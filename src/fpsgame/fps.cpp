@@ -612,7 +612,7 @@ struct GAMECLIENT : igameclient
 						glEnd();
 					}
 
-					if (damageresidue > 0 || d->state == S_DEAD)
+					if (damageresidue > 0 || d->state == CS_DEAD)
 					{
 						int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
 						float pc = float(dam)/100.f;
@@ -646,7 +646,7 @@ struct GAMECLIENT : igameclient
 						{
 							float hlt = player1->health/float(MAXHEALTH);
 							float glow = 1.f;
-							if (lastmillis < d->lastregen+500) glow = (lastmillis-d->lastregen)/500.f
+							if (lastmillis < d->lastregen+500) glow = (lastmillis-d->lastregen)/500.f;
 							glColor4f(glow, glow, glow, fade);
 							settexture("textures/hud_health.png");
 
