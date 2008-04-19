@@ -1517,7 +1517,7 @@ struct GAMESERVER : igameserver
 		if(smode && cp->state.state==CS_ALIVE && strcmp(cp->team, text)) smode->changeteam(cp, cp->team, text);
 		mutate(mut->changeteam(cp, cp->team, text));
 		s_strncpy(cp->team, text, MAXTEAMLEN);
-		sendf(-1, 1, "ri3ss", SV_ADDBOT, ci->clientnum, cp->clientnum, cp->name, cp->team);
+		sendf(-1, 1, "ri3ss", SV_INITBOT, cp->state.ownernum, cp->clientnum, cp->name, cp->team);
 
 		if(m_demo(gamemode) || m_mp(gamemode))
 		{
@@ -1544,9 +1544,9 @@ struct GAMESERVER : igameserver
 		mutate(mut->leavegame(ci));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
+		sendf(-1, 1, "ri2", SV_CDIS, lcn);
 		clients.removeobj(ci);
 		delclient(lcn);
-		sendf(-1, 1, "ri2", SV_CDIS, lcn);
 	}
 
 	int welcomepacket(ucharbuf &p, int n)
@@ -1618,6 +1618,19 @@ struct GAMESERVER : igameserver
 		}
 		if(clients.length()>1)
 		{
+			loopv(clients)
+			{
+				clientinfo *cp = clients[i];
+				if (cp && cp->state.ownernum >= 0)
+				{
+					putint(p, SV_INITBOT);
+					putint(p, cp->state.ownernum);
+					putint(p, cp->clientnum);
+					sendstring(cp->name, p);
+					sendstring(cp->team, p);
+				}
+			}
+
 			putint(p, SV_RESUME);
 			loopv(clients)
 			{
@@ -1634,15 +1647,11 @@ struct GAMESERVER : igameserver
 		if(smode) smode->initclient(ci, p, true);
 		mutate(mut->initclient(ci, p, true));
 
-		//putint(p, SV_COMMAND);
-		//s_sprintfd(ver)("version %d", BFRONTIER);
-		//sendstring(ver, p);
-
-		//if (motd[0])
-		//{
-		//	putint(p, SV_SERVMSG);
-		//	sendstring(motd, p);
-		//}
+		if (motd[0])
+		{
+			putint(p, SV_SERVMSG);
+			sendstring(motd, p);
+		}
 		return 1;
 	}
 

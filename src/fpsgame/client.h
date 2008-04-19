@@ -1070,7 +1070,7 @@ struct clientcom : iclientcom
 				break;
 			}
 
-			case SV_ADDBOT:
+			case SV_INITBOT:
 			{
 				int on = getint(p), bn = getint(p);
 				fpsent *b = cl.newclient(bn);
