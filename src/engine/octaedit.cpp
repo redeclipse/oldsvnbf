@@ -667,7 +667,7 @@ void swapundo(vector<undoblock> &a, vector<undoblock> &b, const char *s)
     if(noedit() || multiplayer()) return;
     if(a.empty()) { conoutf("nothing more to %s", s); return; }
     int ts = a.last().ts;
-    selinfo l;
+    selinfo l = sel;
     while(!a.empty() && ts==a.last().ts)
     {
         undoblock u = a.pop();
