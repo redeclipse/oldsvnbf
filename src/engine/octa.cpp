@@ -885,22 +885,26 @@ bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat, 
 	cube &o = neighbourcube(x, y, z, size, -size, orient);
 	if(&o==&c) return false;
 
-	if(lusize > size || (lusize == size && !o.children))
-	{
-		if(nmat != MAT_AIR && o.ext && o.ext->material == nmat) return true;
-		if(isentirelysolid(o)) return false;
-        if(mat != MAT_AIR && o.ext && (o.ext->material == mat || (o.ext->material == MAT_GLASS && isliquid(mat)))) return false;
-		if(isempty(o) || !touchingface(o, opposite(orient))) return true;
-		if(faceedges(o, opposite(orient)) == F_SOLID) return false;
-		facevec cf[4], of[4];
-		genfacevecs(c, orient, ivec(x, y, z), size, mat != MAT_AIR, cf);
-		genfacevecs(o, opposite(orient), lu, lusize, false, of);
-		return !insideface(cf, 4, of);
-	}
+    ivec vo(x, y, z);
+    vo.mask(VVEC_INT_MASK);
+    lu.mask(VVEC_INT_MASK);
 
-	facevec cf[4];
-	genfacevecs(c, orient, ivec(x, y, z), size, mat != MAT_AIR, cf);
-	return !occludesface(o, opposite(orient), lu, lusize, ivec(x, y, z), size, mat, nmat, cf);
+    if(lusize > size || (lusize == size && !o.children))
+    {
+        if(nmat != MAT_AIR && o.ext && o.ext->material == nmat) return true;
+        if(isentirelysolid(o)) return false;
+        if(mat != MAT_AIR && o.ext && (o.ext->material == mat || (o.ext->material == MAT_GLASS && isliquid(mat)))) return false;
+        if(isempty(o) || !touchingface(o, opposite(orient))) return true;
+        if(faceedges(o, opposite(orient)) == F_SOLID) return false;
+        facevec cf[4], of[4];
+        genfacevecs(c, orient, vo, size, mat != MAT_AIR, cf);
+        genfacevecs(o, opposite(orient), lu, lusize, false, of);
+        return !insideface(cf, 4, of);
+    }
+
+    facevec cf[4];
+    genfacevecs(c, orient, vo, size, mat != MAT_AIR, cf);
+    return !occludesface(o, opposite(orient), lu, lusize, vo, size, mat, nmat, cf);
 }
 
 void calcvert(cube &c, int x, int y, int z, int size, vvec &v, int i, bool solid)
