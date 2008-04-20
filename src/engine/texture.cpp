@@ -778,9 +778,10 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
     t.t = newtexture(NULL, key.getbuf(), ts, 0, true, true, true);
 }
 
+Slot dummyslot;
+
 Slot &lookuptexture(int slot, bool load)
 {
-	static Slot dummyslot;
 	Slot &s = slot<0 && slot>-MAT_EDIT ? materialslots[-slot] : (slots.inrange(slot) ? slots[slot] : (slots.empty() ? dummyslot : slots[0]));
 	if(s.loaded || !load) return s;
 	loopv(s.sts)
