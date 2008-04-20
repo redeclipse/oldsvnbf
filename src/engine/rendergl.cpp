@@ -1231,7 +1231,7 @@ void gl_drawframe(int w, int h)
 
 VARP(crosshairsize, 0, 25, 1000);
 VARP(crosshairfx, 0, 1, 1);
-
+VARP(crosshairblend, 0, 50, 100);
 VARP(cursorsize, 0, 30, 1000);
 
 VARP(hidestats, 0, 0, 1);
@@ -1290,7 +1290,7 @@ void drawcrosshair(int w, int h)
     if(crosshair->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	else glBlendFunc(GL_ONE, GL_ONE);
-	glColor3f(r, g, b);
+	glColor4f(r, g, b, crosshairblend/100.f);
 	float x = cx*w*3.0f - (windowhit ? 0 : chsize/2.0f);
 	float y = cy*h*3.0f - (windowhit ? 0 : chsize/2.0f);
     glBindTexture(GL_TEXTURE_2D, crosshair->id);

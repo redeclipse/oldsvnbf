@@ -175,11 +175,10 @@ struct captureclient : capturestate
     static const int FIREBALLRADIUS = 5;
 
 	GAMECLIENT &cl;
-	float radarscale;
 
     IVARP(capturetether, 0, 1, 1);
 
-	captureclient(GAMECLIENT &cl) : cl(cl), radarscale(0)
+	captureclient(GAMECLIENT &cl) : cl(cl)
 	{
 	}
 
@@ -270,20 +269,11 @@ struct captureclient : capturestate
 		}
 	}
 
-	void drawradar(float x, float y, float s)
-	{
-		glTexCoord2f(0.0f, 0.0f); glVertex2f(x,	y);
-		glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
-		glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
-		glTexCoord2f(0.0f, 1.0f); glVertex2f(x,	y+s);
-	}
-
 	void drawblips(int x, int y, int s, int type, bool skipenemy = false)
 	{
 		const char *textures[3] = {"textures/blip_red.png", "textures/blip_grey.png", "textures/blip_blue.png"};
 		settexture(textures[max(type+1, 0)]);
 		glBegin(GL_QUADS);
-        float scale = radarscale<=0 || radarscale>cl.maxradarscale() ? cl.maxradarscale() : radarscale;
 		loopv(bases)
 		{
 			baseinfo &b = bases[i];
@@ -295,13 +285,14 @@ struct captureclient : capturestate
 				case -1: if(!b.owner[0] || !strcmp(b.owner, cl.player1->team)) continue; break;
 				case -2: if(!b.enemy[0] || !strcmp(b.enemy, cl.player1->team)) continue; break;
 			}
+			physent *d = cl.player1->state == CS_SPECTATOR || cl.player1->state == CS_EDITING ? camera1 : cl.player1;
 			vec dir(b.o);
-			dir.sub(cl.player1->o);
+			dir.sub(d->o);
 			dir.z = 0.0f;
 			float dist = dir.magnitude();
-			if(dist >= scale) dir.mul(scale/dist);
-			dir.rotate_around_z(-cl.player1->yaw*RAD);
-			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/scale), y + s*0.5f*0.95f*(1.0f+dir.y/scale), 0.05f*s);
+			if(dist >= MAXRADAR) dir.mul(MAXRADAR/dist);
+			dir.rotate_around_z(-d->yaw*RAD);
+			cl.drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.05f*s);
 		}
 		glEnd();
 	}
@@ -313,12 +304,7 @@ struct captureclient : capturestate
 
 	void drawhud(int w, int h)
 	{
-		int x = 900*w/h*1/80, y = 900*(hidehud || hidestats ? 28 : 27)/40, s = 900*w/h*5/40;
-		glColor4f(1, 1, 1, hudblend*0.01f);
-		settexture("textures/radar.png");
-		glBegin(GL_QUADS);
-		drawradar(float(x), float(y), float(s));
-		glEnd();
+		int x = 4, s = h/5, y = h-s-4;
 		bool showenemies = lastmillis%1000 >= 500;
 		drawblips(x, y, s, 1, showenemies);
 		drawblips(x, y, s, 0, showenemies);
@@ -346,8 +332,6 @@ struct captureclient : capturestate
 		vec center(0, 0, 0);
 		loopv(bases) center.add(bases[i].o);
 		center.div(bases.length());
-		radarscale = 0;
-		loopv(bases) radarscale = max(radarscale, 2*center.dist(bases[i].o));
 	}
 
 	void sendbases(ucharbuf &p)
