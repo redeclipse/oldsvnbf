@@ -969,7 +969,7 @@ void addskyverts(const ivec &o, int size)
 		int dim = dimension(i), c = C[dim], r = R[dim];
 		vector<cubeface> &sf = skyfaces[i];
 		if(sf.empty()) continue;
-        vc.skyfaces |= 1<<i;
+        vc.skyfaces |= 0x3F&~(1<<opposite(i));
 		sf.setsizenodelete(mergefaces(i, sf.getbuf(), sf.length()));
 		loopvj(sf)
 		{
