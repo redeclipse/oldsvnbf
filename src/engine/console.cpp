@@ -387,7 +387,7 @@ struct hline
             execute(action);
         }
         else if(buf[0]=='/') execute(buf+1);
-        else cc->toserver(buf);
+        else cc->toserver(0, buf);
     }
 };
 vector<hline *> history;

@@ -853,7 +853,7 @@ struct GAMESERVER : igameserver
 		// only allow edit messages in coop-edit mode
 		if(type>=SV_EDITENT && type<=SV_GETMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ARENAWIN, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_DROPFLAG, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
+		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_DROPFLAG, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -1054,23 +1054,28 @@ struct GAMESERVER : igameserver
 			}
 
 			case SV_TRYSPAWN:
-                if (ci->state.state!=CS_DEAD || ci->state.lastspawn>=0)
+				int lcn = getint(p);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+                if (cp->state.state!=CS_DEAD || cp->state.lastspawn>=0)
                 {
 					int nospawn = 0;
-					if (smode && !smode->canspawn(ci, false, true)) { nospawn++; }
-					mutate(if (!mut->canspawn(ci, false, true)) { nospawn++; });
+					if (smode && !smode->canspawn(cp, false, true)) { nospawn++; }
+					mutate(if (!mut->canspawn(cp, false, true)) { nospawn++; });
 					if (nospawn) break;
                 }
 
-				if(ci->state.lastdeath) ci->state.respawn();
-				sendspawn(ci);
+				if(cp->state.lastdeath) cp->state.respawn();
+				sendspawn(cp);
 				break;
 
 			case SV_GUNSELECT:
 			{
-				int gunselect = getint(p);
-                if(ci->state.state!=CS_ALIVE) break;
-				ci->state.gunselect = gunselect;
+				int lcn = getint(p), gunselect = getint(p);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+                if(cp->state.state!=CS_ALIVE) break;
+				cp->state.gunselect = gunselect;
 				QUEUE_MSG;
 				break;
 			}
@@ -1092,34 +1097,46 @@ struct GAMESERVER : igameserver
 
 			case SV_SUICIDE:
 			{
-				gameevent &suicide = ci->addevent();
+                int lcn = getint(p);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+				gameevent &suicide = cp->addevent();
 				suicide.type = GE_SUICIDE;
 				break;
 			}
 
 			case SV_SHOOT:
 			{
-				gameevent &shot = ci->addevent();
+                int lcn = getint(p);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum))
+				{
+					loopk(8) getint(p);
+					int hits = getint(p);
+					loopk(hits) loopj(7) getint(p);
+					break;
+				}
+				gameevent &shot = cp->addevent();
 				shot.type = GE_SHOT;
-                #define seteventmillis(event) \
+                #define seteventmillis(event, eventid) \
                 { \
-                    event.id = getint(p); \
-                    if(!ci->timesync || (ci->events.length()==1 && ci->state.waitexpired(gamemillis))) \
+                    event.id = eventid; \
+                    if(!cp->timesync || (cp->events.length()==1 && cp->state.waitexpired(gamemillis))) \
                     { \
-                        ci->timesync = true; \
-                        ci->gameoffset = gamemillis - event.id; \
+                        cp->timesync = true; \
+                        cp->gameoffset = gamemillis - event.id; \
                         event.millis = gamemillis; \
                     } \
-                    else event.millis = ci->gameoffset + event.id; \
+                    else event.millis = cp->gameoffset + event.id; \
 				}
-                seteventmillis(shot.shot);
+                seteventmillis(shot.shot, getint(p));
 				shot.shot.gun = getint(p);
 				loopk(3) shot.shot.from[k] = getint(p)/DMF;
 				loopk(3) shot.shot.to[k] = getint(p)/DMF;
 				int hits = getint(p);
 				loopk(hits)
 				{
-					gameevent &hit = ci->addevent();
+					gameevent &hit = cp->addevent();
 					hit.type = GE_HIT;
 					hit.hit.flags = getint(p);
 					hit.hit.target = getint(p);
@@ -1132,24 +1149,36 @@ struct GAMESERVER : igameserver
 
 			case SV_RELOAD:
 			{
-				gameevent &reload = ci->addevent();
+                int lcn = getint(p), id = getint(p), gun = getint(p);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+				gameevent &reload = cp->addevent();
 				reload.type = GE_RELOAD;
-                seteventmillis(reload.reload);
-				reload.reload.gun = getint(p);
+                seteventmillis(reload.reload, id);
+				reload.reload.gun = gun;
                 break;
 			}
 
 			case SV_EXPLODE:
 			{
-				gameevent &exp = ci->addevent();
+                int lcn = getint(p);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum))
+				{
+					loopk(3) getint(p);
+					int hits = getint(p);
+					loopk(hits) loopj(7) getint(p);
+					break;
+				}
+				gameevent &exp = cp->addevent();
 				exp.type = GE_EXPLODE;
-                seteventmillis(exp.explode);
+                seteventmillis(exp.explode, getint(p));
 				exp.explode.gun = getint(p);
                 exp.explode.id = getint(p);
 				int hits = getint(p);
 				loopk(hits)
 				{
-					gameevent &hit = ci->addevent();
+					gameevent &hit = cp->addevent();
 					hit.type = GE_HIT;
 					hit.hit.flags = getint(p);
 					hit.hit.target = getint(p);
@@ -1162,23 +1191,27 @@ struct GAMESERVER : igameserver
 
 			case SV_ITEMUSE:
 			{
-				int n = getint(p);
-				gameevent &use = ci->addevent();
+                int lcn = getint(p), ent = getint(p);
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+				gameevent &use = cp->addevent();
 				use.type = GE_USE;
-				use.use.ent = n;
+				use.use.ent = ent;
 				break;
 			}
 
 			case SV_TEXT:
             {
-                int flags = getint(p);
+                int lcn = getint(p), flags = getint(p);
                 getstring(text, p);
-                if (ci->state.state == CS_SPECTATOR || (flags&SAY_TEAM && !ci->team[0])) break;
+				clientinfo *cp = (clientinfo *)getinfo(lcn);
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+                if (cp->state.state == CS_SPECTATOR || (flags&SAY_TEAM && !cp->team[0])) break;
                 loopv(clients)
                 {
                     clientinfo *t = clients[i];
-                    if(t == ci || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && strcmp(ci->team, t->team))) continue;
-                    sendf(t->clientnum, 1, "riiis", SV_TEXT, ci->clientnum, flags, text);
+                    if(t == cp || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && strcmp(cp->team, t->team))) continue;
+                    sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
                 }
                 break;
             }
@@ -1753,7 +1786,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(gs.state!=CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
-		sendf(-1, 1, "ri4", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, 0, ci->state.health);
+		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, 0, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(mut->died(ci, NULL));

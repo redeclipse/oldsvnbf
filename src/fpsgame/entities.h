@@ -75,7 +75,7 @@ struct entities : icliententities
 			guntypes &g = guntype[ents[n]->attr1];
 			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), g.name, 15);
 			playsound(S_ITEMAMMO, &d->o);
-			if(d!=cl.player1) return;
+			if(d!=cl.player1 && d->ownernum!=cl.player1->clientnum) return;
 			d->useitem(lastmillis, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
 		}
 		else return;
@@ -117,10 +117,10 @@ struct entities : icliententities
 			default:
 				if(d->canuse(ents[n]->type, ents[n]->attr1, ents[n]->attr2, lastmillis))
 				{
-					if(d == cl.player1)
+					if(d == cl.player1 || d->ownernum == cl.player1->clientnum)
 					{
-						if(!cl.player1->usestuff) return;
-						cl.cc.addmsg(SV_ITEMUSE, "ri", n);
+						if(d == cl.player1 && !cl.player1->usestuff) return;
+						cl.cc.addmsg(SV_ITEMUSE, "ri2", d->clientnum, n);
 					}
 					ents[n]->spawned = false; // even if someone else gets it first
 				}
@@ -569,6 +569,172 @@ struct entities : icliententities
 			fpsentity &e = (fpsentity &)*ents[n];
 			if(e.links.find(m) < 0) entitylink(n, m, true, false);
 		}
+	}
+
+	struct waypointq
+	{
+		float weight, goal;
+		bool dead;
+		vector<int> nodes;
+
+		waypointq() : weight(0.f), goal(0.f), dead(false) {}
+		~waypointq() {}
+	};
+
+	bool waypointroute(int node, vec &target, vector<int> &route, vector<int> &avoid, int flags = 0)
+	{
+		bool result = false;
+
+		route.setsize(0);
+
+		if (cl.et.ents.inrange(node) && cl.et.ents[node]->type == WAYPOINT)
+		{
+			int goal = waypointnode(target);
+			struct fpsentity &f = (fpsentity &) *cl.et.ents[node];
+
+			if (cl.et.ents.inrange(goal) && cl.et.ents[goal]->type == WAYPOINT)
+			{
+				struct fpsentity &g = (fpsentity &) *cl.et.ents[goal];
+
+				vector<waypointq *> queue;
+				int q = 0;
+
+				queue.add(new waypointq());
+				queue[q]->nodes.add(node);
+				queue[q]->goal = f.o.dist(g.o);
+
+				while (queue.inrange(q) && queue[q]->nodes.last() != goal)
+				{
+					struct fpsentity &e = (fpsentity &) *cl.et.ents[queue[q]->nodes.last()];
+
+					float w = queue[q]->weight;
+					vector<int> s = queue[q]->nodes;
+					int a = 0;
+
+					loopvj(e.links)
+					{
+						int v = e.links[j];
+
+						if (cl.et.ents.inrange(v) && cl.et.ents[v]->type == WAYPOINT)
+						{
+							bool skip = false;
+
+							loopvk(queue)
+							{
+								if (queue[k]->nodes.find(v) >= 0 ||
+										((flags & PATH_AVOID) && v != goal && avoid.find(v) >= 0) ||
+										((flags & PATH_GTONE) && v == goal && queue.length() == 1))
+								{
+									skip = true;
+									break;
+								}
+							} // don't revisit shorter noded paths
+							if (!skip)
+							{
+								struct fpsentity &h = (fpsentity &) *cl.et.ents[v];
+
+								int r = q; // continue this line for the first one
+
+								if (a)
+								{
+									r = queue.length();
+									queue.add(new waypointq());
+									queue[r]->nodes = s;
+									queue[r]->weight = w;
+								}
+								queue[r]->nodes.add(v);
+								queue[r]->weight += e.o.dist(h.o);
+								queue[r]->goal = h.o.dist(g.o);
+								a++;
+							}
+						}
+					}
+					if (!a)
+					{
+						queue[q]->dead = true;
+					} // this one ain't going anywhere..
+
+					q = -1; // get shortest path
+					loopvj(queue)
+					{
+						if (!queue[j]->dead && (!queue.inrange(q) || queue[j]->weight + queue[j]->goal < queue[q]->weight + queue[q]->goal))
+							q = j;
+					}
+				}
+
+				if (!queue.inrange(q) && !(flags & PATH_ABS)) // didn't get there, resort to failsafe proximity match
+				{
+					q = -1;
+
+					loopvj(queue)
+					{
+						int u = -1;
+
+						loopvrev(queue[j]->nodes) // find the closest node in this branch
+						{
+							if (!queue[j]->nodes.inrange(u) || cl.et.ents[queue[j]->nodes[i]]->o.dist(g.o) < cl.et.ents[queue[j]->nodes[u]]->o.dist(g.o))
+								u = i;
+						}
+
+						if (queue[j]->nodes.inrange(u))
+						{
+							loopvrev(queue[j]->nodes) // trim the node list to the end at the shortest
+							{
+								if (i <= u)
+									break;
+								queue[j]->nodes.remove(i);
+							}
+
+							if (!queue.inrange(q) || cl.et.ents[queue[j]->nodes[u]]->o.dist(g.o) < cl.et.ents[queue[q]->nodes.last()]->o.dist(g.o))
+								q = j;
+						}
+					}
+				}
+
+				if (queue.inrange(q))
+				{
+					route = queue[q]->nodes;
+					result = true;
+				}
+
+				loopv(queue) DELETEP(queue[i]); // purge
+			}
+
+			if (!result && !(flags & PATH_ABS)) // random search
+			{
+				for (int c = node; cl.et.ents.inrange(c) && cl.et.ents[c]->type == WAYPOINT; )
+				{
+					fpsentity &e = (fpsentity &) *cl.et.ents[c];
+					int bwp = -1;
+
+					loopv(e.links)
+					{
+						int node = e.links[i];
+
+						if (route.find(node) < 0 && (!(flags & PATH_AVOID) || avoid.find(node) >= 0))
+							if (!cl.et.ents.inrange(bwp) ||
+									(cl.et.ents.inrange(node) && cl.et.ents[node]->o.dist(target) < cl.et.ents[bwp]->o.dist(target)))
+								bwp = node;
+					}
+					if (cl.et.ents.inrange(bwp))
+					{
+						route.add(bwp);
+					}
+					c = bwp;
+				}
+				if (route.length())
+					result = true;
+			}
+		}
+		if (!result && flags)
+		{
+			if (flags & PATH_AVOID)
+			{
+				flags &= ~PATH_AVOID;
+				return waypointroute(node, target, route, avoid, flags);
+			}
+		}
+		return result;
 	}
 
 	void waypointcheck(fpsent *d)

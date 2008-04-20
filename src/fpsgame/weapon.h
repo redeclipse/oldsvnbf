@@ -11,7 +11,7 @@ struct weaponstate
 	{
         CCOMMAND(weapon, "ss", (weaponstate *self, char *a, char *b),
 		{
-            self->weaponswitch(a[0] ? atoi(a) : -1, b[0] ? atoi(b) : -1);
+            self->weaponswitch(self->cl.player1, a[0] ? atoi(a) : -1, b[0] ? atoi(b) : -1);
 
 		});
 		CCOMMAND(gunselect, "", (weaponstate *self), intret(self->cl.player1->gunselect));
@@ -23,10 +23,10 @@ struct weaponstate
 		});
 	}
 
-	void weaponswitch(int a = -1, int b = -1)
+	void weaponswitch(fpsent *d, int a = -1, int b = -1)
 	{
-		if (cl.player1->state != CS_ALIVE || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
-		int s = cl.player1->gunselect;
+		if (d->state != CS_ALIVE || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
+		int s = d->gunselect;
 
 		loopi(NUMGUNS) // only loop the amount of times we have guns for
 		{
@@ -36,7 +36,7 @@ struct weaponstate
 			while (s >= NUMGUNS) s -= NUMGUNS;
 			while (s <= -1) s += NUMGUNS;
 
-			if (!cl.player1->canweapon(s, lastmillis))
+			if (!d->canweapon(s, lastmillis))
 			{
 				if (a >= 0)
 				{
@@ -46,12 +46,12 @@ struct weaponstate
 			else break;
 		}
 
-		if(s != cl.player1->gunselect)
+		if(s != d->gunselect)
 		{
-			cl.cc.addmsg(SV_GUNSELECT, "ri", s);
-			cl.playsoundc(S_SWITCH);
+			cl.cc.addmsg(SV_GUNSELECT, "ri2", d->clientnum, s);
+			cl.playsoundc(S_SWITCH, d);
 		}
-		cl.player1->gunselect = s;
+		d->gunselect = s;
 	}
 
 	void offsetray(vec &from, vec &to, int spread, vec &dest)
@@ -110,7 +110,7 @@ struct weaponstate
 	}
 
 
-	float middist(fpsent *o, vec &dir, vec &v)
+	float middist(physent *o, vec &dir, vec &v)
 	{
 		vec middle = o->o;
 		middle.z += (o->aboveeye-o->height)/2;
@@ -123,14 +123,14 @@ struct weaponstate
 	void radialeffect(fpsent *d, vec &o)
 	{
 		vec dir;
-		float dist = middist(d, dir, o);
+		float dist = middist((physent *)d, dir, o);
 		if(dist < RL_DAMRAD) hit(d, dir, HIT_TORSO, int(dist*DMF));
 	}
 
 	void explode(fpsent *d, vec &o, vec &vel, int id, int gun, bool local)
 	{
 		vec dir;
-		float dist = middist(cl.player1, dir, o);
+		float dist = middist(camera1, dir, o);
 		cl.camerawobble += int(guntype[gun].damage*(1-dist/RL_DISTSCALE/RL_DAMRAD));
 
 		if (guntype[gun].esound >= 0)
@@ -152,12 +152,12 @@ struct weaponstate
 
 			loopi(cl.numdynents())
 			{
-				fpsent *d = (fpsent *)cl.iterdynents(i);
-				if (!d || d->state != CS_ALIVE) continue;
-				radialeffect(d, o);
+				fpsent *f = (fpsent *)cl.iterdynents(i);
+				if (!f || f->state != CS_ALIVE) continue;
+				radialeffect(f, o);
 			}
 
-			cl.cc.addmsg(SV_EXPLODE, "ri3iv", lastmillis-cl.maptime, gun, id-cl.maptime,
+			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id-cl.maptime,
 					hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 		}
 	}
@@ -311,14 +311,14 @@ struct weaponstate
 		{
 			d->gunlast[d->gunselect] = lastmillis;
 			d->gunwait[d->gunselect] = guntype[d->gunselect].rdelay;
-			cl.cc.addmsg(SV_RELOAD, "ri2", lastmillis-cl.maptime, d->gunselect);
+			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			cl.playsoundc(S_RELOAD);
 		}
 	}
 
 	void shoot(fpsent *d, vec &targ)
 	{
-		if (!d->canshoot(d->gunselect, lastmillis)) return;
+		if((d != cl.player1 && d->ownernum != cl.player1->clientnum) || !d->canshoot(d->gunselect, lastmillis)) return;
 
 		d->lastattackgun = d->gunselect;
 		d->gunlast[d->gunselect] = lastmillis;
@@ -349,13 +349,10 @@ struct weaponstate
 
 		shootv(d->gunselect, from, to, d, true);
 
-		if(d == cl.player1)
-		{
-            cl.cc.addmsg(SV_SHOOT, "ri2i6iv", lastmillis-cl.maptime, d->gunselect,
-							(int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),
-							(int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
-							hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
-		}
+		cl.cc.addmsg(SV_SHOOT, "ri3i6iv", d->clientnum, lastmillis-cl.maptime, d->gunselect,
+						(int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),
+						(int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
+						hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 	}
 
     void preload()
