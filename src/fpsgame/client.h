@@ -16,10 +16,10 @@ struct clientcom : iclientcom
 
 	clientcom(GAMECLIENT &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), isready(false), remote(false), demoplayback(false), spectator(false)
 	{
-        CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(s, SAY_NONE));
-        CCOMMAND(me, "C", (clientcom *self, char *s), self->toserver(s, SAY_ACTION));
-        CCOMMAND(sayteam, "C", (clientcom *self, char *s), self->toserver(s, SAY_TEAM));
-        CCOMMAND(meteam, "C", (clientcom *self, char *s), self->toserver(s, SAY_ACTION|SAY_TEAM));
+        CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(SAY_NONE, s));
+        CCOMMAND(me, "C", (clientcom *self, char *s), self->toserver(SAY_ACTION, s));
+        CCOMMAND(sayteam, "C", (clientcom *self, char *s), self->toserver(SAY_TEAM, s));
+        CCOMMAND(meteam, "C", (clientcom *self, char *s), self->toserver(SAY_ACTION|SAY_TEAM, s));
         CCOMMAND(name, "s", (clientcom *self, char *s), self->switchname(s));
         CCOMMAND(team, "s", (clientcom *self, char *s), self->switchteam(s));
         CCOMMAND(map, "s", (clientcom *self, char *s), self->changemap(s));
@@ -248,7 +248,7 @@ struct clientcom : iclientcom
 		loopi(len) messages.add(buf[i]);
 	}
 
-	void saytext(fpsent *d, char *text, int flags)
+	void saytext(fpsent *d, int flags, char *text)
 	{
 		if (!colourchat()) filtertext(text, text);
 
@@ -268,10 +268,10 @@ struct clientcom : iclientcom
 		playsound(S_CHAT);
 	}
 
-	void toserver(char *text, int flags)
+	void toserver(int flags, char *text)
 	{
-		saytext(cl.player1, text, flags);
-		addmsg(SV_TEXT, "ris", flags, text);
+		saytext(cl.player1, flags, text);
+		addmsg(SV_TEXT, "ri2s", cl.player1->clientnum, flags, text);
 	}
 
 	void toservcmd(char *text, bool msg)
@@ -519,8 +519,10 @@ struct clientcom : iclientcom
 			}
 
 			case SV_SOUND:
-				if(!d) return;
-				playsound(getint(p), &d->o);
+                int tcn = getint(p), snd = getint(p);
+                fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
+				if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum)) break;
+				playsound(snd, &t->o);
 				break;
 
 			case SV_TEXT:
@@ -529,8 +531,8 @@ struct clientcom : iclientcom
                 fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
 				int flags = getint(p);
 				getstring(text, p);
-                if(!t) break;
-				saytext(t, text, flags);
+				if(!t) break;
+				saytext(t, flags, text);
 				break;
 			}
 
@@ -540,26 +542,6 @@ struct clientcom : iclientcom
 				int mode = getint(p), muts = getint(p);
 				changemapserv(text, mode, muts);
 				mapchanged = true;
-				break;
-			}
-
-			case SV_ARENAWIN:
-			{
-				int acn = getint(p);
-				fpsent *alive = acn<0 ? NULL : (acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn));
-				console("arena round is over! next round in 5 seconds...", CON_NORMAL|CON_CENTER);
-				if(!alive) console("everyone died!", CON_NORMAL|CON_CENTER);
-				else if(m_team(cl.gamemode, cl.mutators)) console("team %s has won the round", CON_NORMAL|CON_CENTER, alive->team);
-				else if(alive==cl.player1) console("you are the last man standing!", CON_NORMAL|CON_CENTER);
-				else console("%s is the last man standing", CON_NORMAL|CON_CENTER, cl.colorname(alive));
-
-				bool win = false;
-				if(alive)
-				{
-					if(m_team(cl.gamemode, cl.mutators) && isteam(cl.player1->team, alive->team)) win = true;
-					else if(alive == cl.player1) win = true;
-				}
-				playsound(win ? S_V_YOUWIN : S_V_YOULOSE);
 				break;
 			}
 
@@ -755,16 +737,19 @@ struct clientcom : iclientcom
 
 			case SV_GUNSELECT:
 			{
-				if(!d) return;
-				int gun = getint(p);
-				d->gunselect = gun;
+				int lcn = getint(p), gun = getint(p);
+				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+				if(!f) break;
+				f->gunselect = gun;
 				break;
 			}
 
 			case SV_TAUNT:
 			{
-				if(!d) return;
-				d->lasttaunt = lastmillis;
+				int lcn = getint(p);
+				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+				if(!f) break;
+				f->lasttaunt = lastmillis;
 				break;
 			}
 

@@ -158,9 +158,9 @@ enum
 	SV_INITS2C = 0, SV_INITC2S, SV_POS, SV_TEXT, SV_SOUND, SV_CDIS,
 	SV_SHOOT, SV_EXPLODE, SV_SUICIDE,
 	SV_DIED, SV_DAMAGE, SV_SHOTFX,
-	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN, SV_FORCEDEATH, SV_ARENAWIN,
+	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN, SV_FORCEDEATH,
 	SV_GUNSELECT, SV_TAUNT,
-	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMUSE, SV_DENIED,
+	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMUSE,
 	SV_PING, SV_PONG, SV_CLIENTPING,
 	SV_TIMEUP, SV_MAPRELOAD, SV_ITEMACC,
 	SV_SERVMSG, SV_ITEMLIST, SV_RESUME,
@@ -179,12 +179,12 @@ static char msgsizelookup(int msg)
 {
 	static char msgsizesl[] =				// size inclusive message token, 0 for variable or not-checked sizes
 	{
-		SV_INITS2C, 4, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_SOUND, 2, SV_CDIS, 2,
-		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 1,
+		SV_INITS2C, 4, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_SOUND, 3, SV_CDIS, 2,
+		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 2,
 		SV_DIED, 7, SV_DAMAGE, 11, SV_SHOTFX, 9,
-		SV_TRYSPAWN, 1, SV_SPAWNSTATE, 10, SV_SPAWN, 4, SV_FORCEDEATH, 2, SV_ARENAWIN, 2,
-		SV_GUNSELECT, 2, SV_TAUNT, 1,
-		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 2, SV_DENIED, 2,
+		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 10, SV_SPAWN, 4, SV_FORCEDEATH, 2,
+		SV_GUNSELECT, 3, SV_TAUNT, 2,
+		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
 		SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_ITEMACC, 3,
 		SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
@@ -205,7 +205,7 @@ static char msgsizelookup(int msg)
 
 #define SERVER_PORT			28795
 #define SERVINFO_PORT		28796
-#define PROTOCOL_VERSION	55
+#define PROTOCOL_VERSION	56
 #define DEMO_VERSION		1
 #define DEMO_MAGIC "BFDZ"
 
@@ -241,6 +241,10 @@ static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
 #define HIT_TORSO		0x02
 #define HIT_HEAD		0x04
 #define HIT_BURN		0x08
+
+#define PATH_ABS		0x0001
+#define PATH_AVOID		0x0002
+#define PATH_GTONE		0x0004
 
 enum
 {
@@ -429,6 +433,7 @@ struct fpsent : dynent, fpsstate
     float deltayaw, deltapitch, newyaw, newpitch;
     int smoothmillis;
 	int spree, lastimpulse, lastnode;
+	int respawned, suicided;
 
 	string name, team, info;
 
@@ -465,7 +470,7 @@ struct fpsent : dynent, fpsstate
 		fpsstate::respawn();
 		lastattackgun = gunselect;
 		lasttaunt = lastuse = lastusemillis = superdamage = spree = lastimpulse = 0;
-		lastbase = -1;
+		lastbase = respawned = suicided = -1;
 	}
 };
 

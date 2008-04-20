@@ -18,7 +18,6 @@ struct GAMECLIENT : igameclient
 	int swaymillis;
 	vec swaydir;
     dynent guninterp;
-    int respawned, suicided;
     int lasthit;
 
 	string cptext;
@@ -67,7 +66,6 @@ struct GAMECLIENT : igameclient
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			respawned(-1), suicided(-1),
 			cameratype(CAMERA_NONE), cameranum(0), cameracycled(0), myrankv(0), myranks(0), crouching(0),
 			player1(spawnstate(new fpsent()))
 	{
@@ -132,7 +130,7 @@ struct GAMECLIENT : igameclient
 				return;
 			}
 
-			respawnself();
+			respawnself(player1);
 		}
 	}
 
@@ -148,25 +146,28 @@ struct GAMECLIENT : igameclient
         return !intermission && lastmillis-e->lasttaunt >= 1000;
     }
 
-	void respawnself()
+	void respawnself(fpsent *d)
 	{
-        crouching = 0;
+        if (d==player1) crouching = 0;
 
-		player1->stopmoving();
+		d->stopmoving();
 
-        if( m_mp(gamemode))
+        if(m_mp(gamemode))
         {
-            if (respawned != player1->lifesequence)
+            if (d->respawned != d->lifesequence)
             {
-                cc.addmsg(SV_TRYSPAWN, "r");
-                respawned = player1->lifesequence;
+                cc.addmsg(SV_TRYSPAWN, "ri", d->clientnum);
+                d->respawned = d->lifesequence;
             }
         }
         else
         {
-            spawnplayer(player1);
-            sb.showscores(false);
-            lasthit = 0;
+            spawnplayer(d);
+            if (d==player1)
+            {
+            	sb.showscores(false);
+				lasthit = 0;
+            }
         }
 	}
 
@@ -459,7 +460,7 @@ struct GAMECLIENT : igameclient
 
 	void startmap(const char *name)	// called just after a map load
 	{
-        respawned = suicided = 0;
+        player1->respawned = player1->suicided = 0;
 		respawnent = -1;
         lasthit = 0;
 		cc.mapstart();
@@ -495,7 +496,8 @@ struct GAMECLIENT : igameclient
 	void playsoundc(int n, fpsent *d = NULL)
 	{
 		fpsent *c = d ? d : player1;
-		if (c == player1) cc.addmsg(SV_SOUND, "i", n);
+		if (c == player1 || c->ownernum == player1->clientnum)
+			cc.addmsg(SV_SOUND, "i2", c->clientnum, n);
 		playsound(n, &c->o);
 	}
 
@@ -526,15 +528,15 @@ struct GAMECLIENT : igameclient
 		return cname;
 	}
 
-	void suicide(physent *d)
+	void suicide(fpsent *d)
 	{
-		if(d==player1)
+		if(d==player1 || d->ownernum==player1->clientnum)
 		{
 			if(d->state!=CS_ALIVE) return;
-			if(suicided!=player1->lifesequence)
+			if(d->suicided!=d->lifesequence)
 			{
-				cc.addmsg(SV_SUICIDE, "r");
-				suicided = player1->lifesequence;
+				cc.addmsg(SV_SUICIDE, "ri", d->clientnum);
+				d->suicided = d->lifesequence;
 			}
 		}
 	}

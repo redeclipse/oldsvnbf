@@ -32,7 +32,7 @@ struct physics
 		CCOMMAND(reload, "D", (physics *self, int *down), { self->doreload(*down!=0); });
 		CCOMMAND(use, "D", (physics *self, int *down), { self->douse(*down!=0); });
 		CCOMMAND(lean, "D", (physics *self, int *down), { self->dolean(*down!=0); });
-        CCOMMAND(taunt, "", (physics *self), { self->taunt(); });
+        CCOMMAND(taunt, "", (physics *self), { self->taunt(self->cl.player1); });
 
 		physicsfraction = physicsrepeat = 0;
 		spawncycle = -1;
@@ -55,12 +55,12 @@ struct physics
 	iput(use,		usestuff,	true);
 	iput(lean,		leaning,	false);
 
-	void taunt()
+	void taunt(fpsent *d)
 	{
-        if (cl.player1->state!=CS_ALIVE || cl.player1->physstate<PHYS_SLOPE) return;
-		if (lastmillis-cl.player1->lasttaunt<1000) return;
-		cl.player1->lasttaunt = lastmillis;
-		cl.cc.addmsg(SV_TAUNT, "r");
+        if (d->state!=CS_ALIVE || d->physstate<PHYS_SLOPE) return;
+		if (lastmillis-d->lasttaunt<1000) return;
+		d->lasttaunt = lastmillis;
+		cl.cc.addmsg(SV_TAUNT, "ri", d->clientnum);
 	}
 
 
@@ -614,7 +614,7 @@ struct physics
 			if (!moveplayer(d, moveres, local, min(millis, minframetime()))) return false;
 			if (d->o.z < 0 && d->state == CS_ALIVE)
 			{
-				cl.suicide(d);
+				cl.suicide((fpsent *)d);
 				return false;
 			}
 		}
