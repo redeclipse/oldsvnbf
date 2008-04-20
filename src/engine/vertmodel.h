@@ -597,7 +597,7 @@ struct vertmodel : animmodel
             }
             if(hasVBO) { if(ebuf) { glDeleteBuffers_(1, &ebuf); ebuf = 0; } }
             else DELETEA(vdata);
-            lastvbuf = lasttcbuf = lastmtcbuf = NULL;
+            lastvbuf = lasttcbuf = lastmtcbuf = lastnbuf = NULL;
             lastebuf = 0;
         }
 
