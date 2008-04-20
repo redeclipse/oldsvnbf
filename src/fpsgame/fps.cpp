@@ -41,30 +41,28 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> players;		// other clients
 	fpsent lastplayerstate;
 
-	IVAR(cameracycle,			0,			0,			600);		// cycle camera every N secs
+	IVAR(cameracycle, 0, 0, 600);// cycle camera every N secs
 
-	IVARP(invmouse,				0,			0,			1);
-	IVARP(thirdperson,			0,			0,			1);
-	IVARP(thirdpersondist,		2,			16,			128);
-	IVARP(thirdpersonheight,	2,			12,			128);
+	IVARP(invmouse, 0, 0, 1);
+	IVARP(thirdperson, 0, 0, 1);
+	IVARP(thirdpersondist, 2, 16, 128);
+	IVARP(thirdpersonheight, 2, 12, 128);
 
-	IVARP(yawsensitivity,	0,			10,			1000);
-	IVARP(pitchsensitivity,	0,			7,			1000);
-	IVARP(rollsensitivity,	0,			3,			1000);
-	IVARP(sensitivityscale,	1,			1,			100);
+	IVARP(yawsensitivity, 0, 10, 1000);
+	IVARP(pitchsensitivity, 0, 7, 1000);
+	IVARP(rollsensitivity, 0, 3, 1000);
+	IVARP(sensitivityscale, 1, 1, 100);
 
-	IVARP(autoreload,		0,			1,			1);			// auto reload when empty
+	IVARP(autoreload, 0, 1, 1);// auto reload when empty
 
-	IVARP(crosshair,			0,			1,			1);			// show the crosshair
-    IVARP(teamcrosshair, 0, 1, 1);
-    IVARP(hitcrosshair, 0, 425, 1000);
+	IVARP(crosshair, 0, 1, 1);// show the crosshair
+	IVARP(teamcrosshair, 0, 1, 1);
+	IVARP(hitcrosshair, 0, 425, 1000);
 
-	IVARP(rankhud,			0,			0,			1);			// show ranks on the hud
-	IVARP(ranktime,			0,			15000,		600000);	// display unchanged rank no earlier than every N ms
+	IVARP(rankhud, 0, 0, 1);// show ranks on the hud
+	IVARP(ranktime, 0, 15000, 600000);// display unchanged rank no earlier than every N ms
 
-    IVARP(maxradarscale,	0,			1024,		10000);
-
-	GAMECLIENT()
+    GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
@@ -541,6 +539,34 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
+	void drawradar(float x, float y, float s)
+	{
+		glTexCoord2f(0.0f, 0.0f); glVertex2f(x,	y);
+		glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
+		glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
+		glTexCoord2f(0.0f, 1.0f); glVertex2f(x,	y+s);
+	}
+
+
+	void drawblips(int x, int y, int s)
+	{
+		loopv(players) if (players[i] && players[i]->state == CS_ALIVE)
+		{
+			physent *d = player1->state == CS_SPECTATOR || player1->state == CS_EDITING ? camera1 : player1;
+			fpsent *f = players[i];
+			vec dir(f->o);
+			dir.sub(d->o);
+			dir.z = 0.0f;
+			float dist = dir.magnitude();
+			if(dist >= MAXRADAR) continue;
+			dir.rotate_around_z(-d->yaw*RAD);
+			settexture(m_team(gamemode, mutators) && isteam(player1->team, f->team) ? "textures/blip_blue.png" : "textures/blip_red.png");
+			glBegin(GL_QUADS);
+			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.025f*s);
+			glEnd();
+		}
+	}
+
 	void drawhud(int w, int h)
 	{
 		if (maptime || !cc.ready())
@@ -630,49 +656,23 @@ struct GAMECLIENT : igameclient
 						glEnd();
 					}
 
-					glColor4f(1.f, 1.f, 1.f, fade);
-
-					settexture("textures/hud_status.png");
-					glBegin(GL_QUADS);
-					glTexCoord2f(0, 0); glVertex2i(0, oy-(oy/4));
-					glTexCoord2f(1, 0); glVertex2i(oy/4, oy-(oy/4));
-					glTexCoord2f(1, 1); glVertex2i(oy/4, oy);
-					glTexCoord2f(0, 1); glVertex2i(0, oy);
-					glEnd();
-
 					if (d != NULL)
 					{
 						if (d->state == CS_ALIVE)
 						{
-							float hlt = player1->health/float(MAXHEALTH);
+							float hlt = d->health/float(MAXHEALTH);
 							float glow = 1.f;
 							if (lastmillis < d->lastregen+500) glow = (lastmillis-d->lastregen)/500.f;
-							glColor4f(glow, glow, glow, fade);
-							settexture("textures/hud_health.png");
+							glColor4f(glow, 0.f, 0.f, fade);
 
-							if (hlt >= 0.5)
-							{
-								float vrt = (hlt-0.5f)*2.f;
-								glBegin(GL_QUADS);
-								glTexCoord2f(0, 1); glVertex2i(0, oy);
-								glTexCoord2f(0, 0); glVertex2i(0, oy-(oy/4));
-								glTexCoord2f(1, 0); glVertex2i(oy/4, oy-(oy/4));
-								glTexCoord2f(1, vrt); glVertex2i(oy/4, oy-int(float(oy/4)*(1.0f-vrt)));
-							}
-							else
-							{
-								float vrt = hlt*2.f;
-								glBegin(GL_TRIANGLES);
-								glTexCoord2f(0, 1); glVertex2i(0, oy);
-								glTexCoord2f(0, 0); glVertex2i(0, oy-(oy/4));
-								glTexCoord2f(vrt, 0); glVertex2i(int(float(oy/4)*vrt), oy-(oy/4));
-							}
+							int rw = oy/5/4, rx = oy/5+8, rh = oy/5, ry = oy-rh-4, ro = int(oy/5*hlt);
+							settexture("textures/barv.png");
+							glBegin(GL_QUADS);
+							glTexCoord2f(0, 0); glVertex2i(rx, ry+(rh-ro));
+							glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+(rh-ro));
+							glTexCoord2f(1, 1); glVertex2i(rx+rw, ry+rh);
+							glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
 							glEnd();
-
-							glColor4f(1.f, 1.f, 1.f, fade);
-
-							if (d->gunselect >= 0 && d->ammo[d->gunselect] >= 0)
-								draw_textx("\fs\fy%d\fS", oy/4, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->ammo[d->gunselect]);
 						}
 						else if (d->state == CS_DEAD)
 						{
@@ -681,15 +681,23 @@ struct GAMECLIENT : igameclient
 							if (wait)
 							{
 								float c = float(wait)/1000.f;
-								draw_textx("Fragged! Down for %.1fs", oy/4, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
+								draw_textx("Fragged! Down for %.1fs", oy/5+8, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
 							}
 							else
-								draw_textx("Fragged! Press attack to respawn", oy/4, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+								draw_textx("Fragged! Press attack to respawn", oy/5+8, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 						}
 					}
 
-					if(m_capture(gamemode)) cpc.drawhud(w, h);
-					else if(m_ctf(gamemode)) ctf.drawhud(w, h);
+					glColor4f(1.f, 1.f, 1.f, fade);
+
+					int rx = 4, rs = oy/5, ry = oy-rs-4;
+					settexture("textures/radar.png");
+					glBegin(GL_QUADS);
+					drawradar(float(rx), float(ry), float(rs));
+					glEnd();
+					drawblips(rx, ry, rs);
+					if(m_capture(gamemode)) cpc.drawhud(ox, oy);
+					else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
 				}
 				glDisable(GL_BLEND);
 			}
@@ -912,6 +920,7 @@ struct GAMECLIENT : igameclient
 			{
 				cameratype = CAMERA_FOLLOW;
 				camera1->o = players[-cameranum]->o;
+				camera1->vel = players[-cameranum]->vel;
 				camera1->yaw = players[-cameranum]->yaw + player1->yaw;
 				camera1->pitch = players[-cameranum]->pitch + player1->pitch;
 				camera1->roll = players[-cameranum]->roll;
@@ -936,6 +945,7 @@ struct GAMECLIENT : igameclient
 						{
 							cameratype = CAMERA_ENTITY;
 							camera1->o = et.ents[i]->o;
+							camera1->vel = vec(0, 0, 0);
 							camera1->yaw = et.ents[i]->attr1 + player1->yaw;
 							camera1->pitch = et.ents[i]->attr2 + player1->pitch;
 							camera1->roll = player1->roll;
@@ -952,6 +962,7 @@ struct GAMECLIENT : igameclient
 		{
 			cameratype = CAMERA_PLAYER;
 			camera1->o = player1->o;
+			camera1->vel = player1->vel;
 			camera1->yaw = player1->yaw;
 			camera1->pitch = player1->pitch;
 			camera1->roll = player1->roll;

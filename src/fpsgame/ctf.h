@@ -258,9 +258,8 @@ struct ctfclient : ctfstate
     static const int RESPAWNSECS = 5;
 
     GAMECLIENT &cl;
-    float radarscale;
 
-    ctfclient(GAMECLIENT &cl) : cl(cl), radarscale(0)
+    ctfclient(GAMECLIENT &cl) : cl(cl)
     {
     }
 
@@ -270,34 +269,25 @@ struct ctfclient : ctfstate
         loopi(2) loadmodel(flagmodels[i], -1, true);
     }
 
-    void drawradar(float x, float y, float s)
-    {
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(x,   y);
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(x,   y+s);
-    }
-
     void drawblips(int x, int y, int s, int i, bool flagblip)
     {
 		flag &f = flags[i];
         settexture(f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ?
-                    (flagblip ? "textures/blip_blue_flag.png" : "textures/blip_blue.png") :
-                    (flagblip ? "textures/blip_red_flag.png" : "textures/blip_red.png"));
-		float scale = radarscale<=0 || radarscale>cl.maxradarscale() ? cl.maxradarscale() : radarscale;
-        vec dir;
+                    "textures/blip_blue.png" : "textures/blip_red.png");
+		physent *d = cl.player1->state == CS_SPECTATOR || cl.player1->state == CS_EDITING ? camera1 : cl.player1;
+		vec dir;
         if(flagblip) dir = f.owner ? f.owner->o : (f.droptime ? f.droploc : f.spawnloc);
         else dir = f.spawnloc;
-		dir.sub(cl.player1->o);
+		dir.sub(d->o);
 		dir.z = 0.0f;
         float size = flagblip ? 0.1f : 0.05f,
               xoffset = flagblip ? -2*(3/32.0f)*size : -size,
               yoffset = flagblip ? -2*(1 - 3/32.0f)*size : -size,
               dist = dir.magnitude();
-        if(dist >= scale*(1 - 0.05f)) dir.mul(scale*(1 - 0.05f)/dist);
-		dir.rotate_around_z(-cl.player1->yaw*RAD);
+        if(dist >= MAXRADAR*(1 - 0.05f)) dir.mul(MAXRADAR*(1 - 0.05f)/dist);
+		dir.rotate_around_z(-d->yaw*RAD);
 		glBegin(GL_QUADS);
-        drawradar(x + s*0.5f*(1.0f + dir.x/scale + xoffset), y + s*0.5f*(1.0f + dir.y/scale + yoffset), size*s);
+        cl.drawradar(x + s*0.5f*(1.0f + dir.x/MAXRADAR + xoffset), y + s*0.5f*(1.0f + dir.y/MAXRADAR + yoffset), size*s);
 		glEnd();
     }
 
@@ -314,12 +304,7 @@ struct ctfclient : ctfstate
         }
 #endif
 
-        int x = 900*w/h*34/40, y = 900*1/40, s = 900*w/h*5/40;
-        glColor3f(1, 1, 1);
-        settexture("textures/radar.png");
-        glBegin(GL_QUADS);
-        drawradar(float(x), float(y), float(s));
-        glEnd();
+		int x = 4, s = h/5, y = h-s-4;
         loopv(flags)
         {
             flag &f = flags[i];
@@ -332,18 +317,6 @@ struct ctfclient : ctfstate
             }
             else if(f.droptime && lastmillis%300 >= 150) continue;
             drawblips(x, y, s, i, true);
-        }
-        if(cl.player1->state == CS_DEAD)
-        {
-            int wait = respawnwait();
-            if(wait>=0)
-            {
-                glPushMatrix();
-                glLoadIdentity();
-                glOrtho(0, w*900/h, 900, 0, -1, 1);
-                draw_textf("%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, wait);
-                glPopMatrix();
-            }
         }
     }
 
@@ -398,8 +371,6 @@ struct ctfclient : ctfstate
         vec center(0, 0, 0);
         loopv(flags) center.add(flags[i].spawnloc);
         center.div(flags.length());
-        radarscale = 0;
-        loopv(flags) radarscale = max(radarscale, 2*center.dist(flags[i].spawnloc));
     }
 
     void sendflags(ucharbuf &p)

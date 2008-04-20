@@ -229,6 +229,7 @@ static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
 #define PLATFORMBORDER	0.2f
 #define PLATFORMMARGIN	10.0f
 
+#define MAXRADAR		256.f
 #define MAXHEALTH		100
 #define MAXCARRY		2
 
