@@ -519,11 +519,13 @@ struct clientcom : iclientcom
 			}
 
 			case SV_SOUND:
+            {
                 int tcn = getint(p), snd = getint(p);
                 fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
 				if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum)) break;
 				playsound(snd, &t->o);
 				break;
+            }
 
 			case SV_TEXT:
 			{

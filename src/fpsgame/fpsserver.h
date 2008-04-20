@@ -1054,6 +1054,7 @@ struct GAMESERVER : igameserver
 			}
 
 			case SV_TRYSPAWN:
+            {
 				int lcn = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
 				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
@@ -1068,6 +1069,7 @@ struct GAMESERVER : igameserver
 				if(cp->state.lastdeath) cp->state.respawn();
 				sendspawn(cp);
 				break;
+            }
 
 			case SV_GUNSELECT:
 			{
