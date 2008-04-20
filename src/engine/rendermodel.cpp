@@ -291,7 +291,6 @@ void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradi
 	c.sub(vec(xradius, yradius, tofloor));
 	float xsz = xradius*2, ysz = yradius*2;
 	float h = tofloor+toceil;
-	notextureshader->set();
 	glColor3f(1, 1, 1);
 	render2dbox(c, xsz, 0, h);
 	render2dbox(c, 0, ysz, h);
@@ -303,7 +302,6 @@ void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradi
 
 void renderellipse(vec &o, float xradius, float yradius, float yaw)
 {
-	notextureshader->set();
 	glColor3f(0.5f, 0.5f, 0.5f);
 	glBegin(GL_LINE_LOOP);
 	loopi(16)
@@ -684,6 +682,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
     }
     if(showboundingbox && !shadowmapping)
 	{
+		renderprimitive(true);
 		if(d && showboundingbox==1)
 		{
 			render3dbox(d->o, d->height, d->aboveeye, d->radius);
@@ -698,12 +697,13 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 			center.add(o);
 			render3dbox(center, radius.z, radius.z, radius.x, radius.y);
 		}
+		renderprimitive(false);
 	}
 
     vec lightcolor(1, 1, 1), lightdir(0, 0, 1);
     if(!shadowmapping)
     {
-        if(d) 
+        if(d)
 		{
         	if(!reflecting && !refracting) d->occluded = OCCLUDE_NOTHING;
             if(!light) light = &d->light;
@@ -717,7 +717,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
         }
         else if(cull&MDL_LIGHT)
         {
-            if(!light) 
+            if(!light)
             {
                 lightreaching(o, lightcolor, lightdir);
                 dynlightreaching(o, lightcolor, lightdir);
@@ -902,7 +902,7 @@ void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attac
 
         if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((cl->allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
 		else if(d->timeinair>100) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
-        else if(cl->allowmove(d)) 
+        else if(cl->allowmove(d))
         {
 			if(d->crouching)
 			{
