@@ -660,16 +660,15 @@ struct GAMECLIENT : igameclient
 					{
 						if (d->state == CS_ALIVE)
 						{
-							float hlt = d->health/float(MAXHEALTH);
-							float glow = 1.f;
-							if (lastmillis < d->lastregen+500) glow = (lastmillis-d->lastregen)/500.f;
-							glColor4f(glow, 0.f, 0.f, fade);
+							float hlt = d->health/float(MAXHEALTH), glow = max(hlt, 0.25f);
+							if (lastmillis < d->lastregen+500) glow *= (lastmillis-d->lastregen)/500.f;
+							glColor4f(glow, 0.05f, 0.05f, fade);
 
-							int rw = oy/5/4, rx = oy/5+8, rh = oy/5, ry = oy-rh-4, ro = int(oy/5*hlt);
+							int rw = oy/5/4, rx = oy/5+8, rh = oy/5, ry = oy-rh-4, ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
 							settexture("textures/barv.png");
 							glBegin(GL_QUADS);
-							glTexCoord2f(0, 0); glVertex2i(rx, ry+(rh-ro));
-							glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+(rh-ro));
+							glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
+							glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
 							glTexCoord2f(1, 1); glVertex2i(rx+rw, ry+rh);
 							glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
 							glEnd();
