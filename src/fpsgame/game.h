@@ -25,27 +25,29 @@ enum						// static entity types
 	MAXENTTYPES						// 17
 };
 
+enum { ETU_NONE = 0, ETU_ITEM, ETU_AUTO, ETU_MAX };
+
 static struct enttypes
 {
-	int	type, 		links;	int radius,	height;		const char *name;
+	int	type, 		links,	radius,	height, usetype;		const char *name;
 } enttype[] = {
-	{ NOTUSED,		0,			0,		0,			"none" },
-	{ LIGHT,		0,			0,		0,			"light" },
-	{ MAPMODEL,		0,			0,		0,			"mapmodel" },
-	{ PLAYERSTART,	0,			0,		0,			"playerstart" },
-	{ ENVMAP,		0,			0,		0,			"envmap" },
-	{ PARTICLES,	0,			0,		0,			"particles" },
-	{ MAPSOUND,		0,			0,		0,			"sound" },
-	{ SPOTLIGHT,	0,			0,		0,			"spotlight" },
-	{ WEAPON,		0,			16,		16,			"weapon" },
-	{ TELEPORT,		50,			12,		12,			"teleport" },
-	{ MONSTER,		0,			0,		0,			"monster" },
-	{ TRIGGER,		0,			16,		16,			"trigger" },
-	{ JUMPPAD,		0,			12,		12,			"jumppad" },
-	{ BASE,			48,			32,		16,			"base" },
-	{ CHECKPOINT,	48,			16,		16,			"checkpoint" },
-	{ CAMERA,		48,			0,		0,			"camera" },
-	{ WAYPOINT,		1,			12,		12,			"waypoint" }
+	{ NOTUSED,		0,		0,		0,		ETU_NONE,		"none" },
+	{ LIGHT,		0,		0,		0,		ETU_NONE,		"light" },
+	{ MAPMODEL,		0,		0,		0,		ETU_NONE,		"mapmodel" },
+	{ PLAYERSTART,	0,		0,		0,		ETU_NONE,		"playerstart" },
+	{ ENVMAP,		0,		0,		0,		ETU_NONE,		"envmap" },
+	{ PARTICLES,	0,		0,		0,		ETU_NONE,		"particles" },
+	{ MAPSOUND,		0,		0,		0,		ETU_NONE,		"sound" },
+	{ SPOTLIGHT,	0,		0,		0,		ETU_NONE,		"spotlight" },
+	{ WEAPON,		0,		16,		16,		ETU_ITEM,		"weapon" },
+	{ TELEPORT,		50,		12,		12,		ETU_AUTO,		"teleport" },
+	{ MONSTER,		0,		0,		0,		ETU_NONE,		"monster" },
+	{ TRIGGER,		0,		16,		16,		ETU_NONE,		"trigger" }, // FIXME
+	{ JUMPPAD,		0,		12,		12,		ETU_AUTO,		"jumppad" },
+	{ BASE,			48,		32,		16,		ETU_NONE,		"base" },
+	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" },
+	{ CAMERA,		48,		0,		0,		ETU_NONE,		"camera" },
+	{ WAYPOINT,		1,		12,		12,		ETU_NONE,		"waypoint" }
 };
 
 struct fpsentity : extentity
@@ -184,9 +186,9 @@ static char msgsizelookup(int msg)
 		SV_DIED, 7, SV_DAMAGE, 11, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 10, SV_SPAWN, 4, SV_FORCEDEATH, 2,
 		SV_GUNSELECT, 3, SV_TAUNT, 2,
-		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 3,
+		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 4,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
-		SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_ITEMACC, 3,
+		SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_ITEMACC, 4,
 		SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
         SV_EDITMODE, 2, SV_EDITENT, 10, SV_ENTLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0, SV_APPROVEMASTER, 2,
@@ -205,7 +207,7 @@ static char msgsizelookup(int msg)
 
 #define SERVER_PORT			28795
 #define SERVINFO_PORT		28796
-#define PROTOCOL_VERSION	56
+#define PROTOCOL_VERSION	57
 #define DEMO_VERSION		1
 #define DEMO_MAGIC "BFDZ"
 
@@ -219,12 +221,6 @@ struct demoheader
 #define MAXTEAMLEN 8
 enum { TEAM_ALPHA = 0, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_MAX };
 static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
-
-#define SGRAYS			20
-#define SGSPREAD		3
-
-#define RL_DAMRAD		48
-#define RL_DISTSCALE	6
 
 #define PLATFORMBORDER	0.2f
 #define PLATFORMMARGIN	10.0f
@@ -245,6 +241,12 @@ static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
 #define ROUTE_ABS		0x0001
 #define ROUTE_AVOID		0x0002
 #define ROUTE_GTONE		0x0004
+
+#define SGRAYS			20
+#define SGSPREAD		3
+
+#define RL_DAMRAD		48
+#define RL_DISTSCALE	6
 
 enum
 {
@@ -286,22 +288,23 @@ struct fpsstate
 
 	bool canweapon(int gun, int millis)
 	{
-		return isgun(gun) && (gunselect != gun) && (ammo[gun] >= 0 || guntype[gun].rdelay <= 0);
+		if (isgun(gun) && (gunselect != gun) && (ammo[gun] >= 0 || guntype[gun].rdelay <= 0))
+			return true;
+		return false;
 	}
 
 	bool canshoot(int gun, int millis)
 	{
-		return isgun(gun) && (ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]);
+		if (isgun(gun) && (ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]))
+			return true;
+		return false;
 	}
 
 	bool canreload(int gun, int millis)
 	{
-		return isgun(gun) && (ammo[gun] < guntype[gun].max && ammo[gun] >= 0) && (guntype[gun].rdelay > 0) && (millis-gunlast[gun] >= gunwait[gun]);
-	}
-
-	bool canammo(int gun, int millis)
-	{
-		return isgun(gun) && (ammo[gun] < guntype[gun].max) && (millis-gunlast[gun] >= gunwait[gun]);
+		if (isgun(gun) && (ammo[gun] < guntype[gun].max && ammo[gun] >= 0) && (guntype[gun].rdelay > 0) && (millis-gunlast[gun] >= gunwait[gun]))
+			return true;
+		return false;
 	}
 
 	bool canuse(int type, int attr1, int attr2, int millis)
@@ -309,16 +312,14 @@ struct fpsstate
 		switch (type)
 		{
 			case WEAPON:
-			{
-				return canammo(attr1, millis);
-				break; // difference is here, can't use when reloading or firing
-			}
-			default:
-			{
-				return false;
+			{ // can't use when reloading or firing
+				if (isgun(attr1) && (ammo[attr1] < guntype[attr1].max) && (millis-gunlast[attr1] >= gunwait[attr1]))
+					return true;
 				break;
 			}
+			default: break;
 		}
+		return false;
 	}
 
 	void useitem(int millis, int type, int attr1, int attr2)
@@ -423,7 +424,7 @@ struct fpsent : dynent, fpsstate
 	int weight;						 // affects the effectiveness of hitpush
 	int clientnum, privilege, lastupdate, plag, ping;
 	int lastattackgun;
-	bool attacking, reloading, usestuff, leaning;
+	bool attacking, reloading, useaction, leaning;
 	int lasttaunt;
 	int lastuse, lastusemillis, lastbase;
 	int superdamage;
@@ -460,7 +461,7 @@ struct fpsent : dynent, fpsstate
 	void stopmoving()
 	{
 		dynent::stopmoving();
-		attacking = reloading = usestuff = leaning = false;
+		attacking = reloading = useaction = leaning = false;
 	}
 
 	void respawn()

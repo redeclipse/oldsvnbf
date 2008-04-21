@@ -255,7 +255,7 @@ struct ctfservmode : ctfstate, servmode
 #else
 struct ctfclient : ctfstate
 {
-    static const int RESPAWNSECS = 5;
+    static const int RESPAWNSECS = 3;
 
     GAMECLIENT &cl;
 
@@ -536,9 +536,9 @@ struct ctfclient : ctfstate
        }
     }
 
-    int respawnwait()
+    int respawnwait(fpsent *d)
     {
-        return max(0, RESPAWNSECS-(lastmillis-cl.player1->lastpain)/1000);
+        return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(lastmillis-d->lastpain)/1000);
     }
 } ctf;
 #endif

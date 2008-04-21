@@ -6,7 +6,7 @@ struct capturestate
 	static const int OCCUPYLIMIT = 100;
 	static const int CAPTURESCORE = 1;
 	static const int SCORESECS = 10;
-	static const int RESPAWNSECS = 10;
+	static const int RESPAWNSECS = 3;
 
 	struct baseinfo
 	{
@@ -297,9 +297,9 @@ struct captureclient : capturestate
 		glEnd();
 	}
 
-    int respawnwait()
+    int respawnwait(fpsent *d)
     {
-        return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(lastmillis-cl.player1->lastpain)/1000);
+        return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(lastmillis-d->lastpain)/1000);
     }
 
 	void drawhud(int w, int h)

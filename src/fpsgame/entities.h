@@ -71,91 +71,20 @@ struct entities : icliententities
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
 
-	void useeffects(int n, fpsent *d)
+	void useeffects(fpsent *d, int m, int n)
 	{
-        if(!ents.inrange(n)) return;
-		if(ents[n]->type == WEAPON && ents[n]->attr1 > -1 && ents[n]->attr1 < NUMGUNS)
+        if(ents.inrange(n) && d->canuse(ents[n]->type, ents[n]->attr1, ents[n]->attr2, m))
 		{
-			ents[n]->spawned = false;
-			if(!d) return;
 			guntypes &g = guntype[ents[n]->attr1];
-			if(d!=cl.player1 || isthirdperson()) particle_text(d->abovehead(), g.name, 15);
+			particle_text(d->abovehead(), g.name, 15);
 			playsound(S_ITEMAMMO, &d->o);
-			if(d!=cl.player1 && d->ownernum!=cl.player1->clientnum) return;
-			d->useitem(lastmillis, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+			if(d==cl.player1 || d->ownernum==cl.player1->clientnum)
+				d->useitem(m, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+			ents[n]->spawned = false;
 		}
-		else return;
 	}
 
 	// these functions are called when the client touches the item
-
-	void tryuse(int n, fpsent *d)
-	{
-		switch(ents[n]->type)
-		{
-			default:
-				if(d->canuse(ents[n]->type, ents[n]->attr1, ents[n]->attr2, lastmillis))
-				{
-					if(d == cl.player1 || d->ownernum == cl.player1->clientnum)
-					{
-						if(d == cl.player1 && !cl.player1->usestuff) return;
-						cl.cc.addmsg(SV_ITEMUSE, "ri2", d->clientnum, n);
-					}
-					ents[n]->spawned = false; // even if someone else gets it first
-				}
-				break;
-
-			case TELEPORT:
-			{
-				if(d->lastuse == ents[n]->type && lastmillis-d->lastusemillis<500) break;
-				d->lastuse = ents[n]->type;
-				d->lastusemillis = lastmillis;
-				teleport(n, d);
-				break;
-			}
-
-			case CHECKPOINT:
-				if(d!=cl.player1) break;
-				if(n==cl.respawnent) break;
-				cl.respawnent = n;
-				conoutf("\f2respawn point set!");
-				playsound(S_V_CHECKPOINT);
-				break;
-
-			case JUMPPAD:
-			{
-				if(d->lastuse==ents[n]->type && lastmillis-d->lastusemillis<500) break;
-				d->lastuse = ents[n]->type;
-				d->lastusemillis = lastmillis;
-				vec v((int)(char)ents[n]->attr3*10.0f, (int)(char)ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
-				d->timeinair = 0;
-                d->falling = vec(0, 0, 0);
-				d->vel = v;
-				cl.playsoundc(S_JUMPPAD, d);
-				break;
-			}
-		}
-	}
-
-	void checkitems(fpsent *d)
-	{
-		if(d->state != CS_EDITING && d->state != CS_SPECTATOR)
-		{
-			float eye = d->height*0.5f;
-			vec m = d->o;
-			m.z -= eye;
-
-			loopv(ents)
-			{
-				extentity &e = *ents[i];
-				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-				if(!e.spawned && e.type != TELEPORT && e.type != JUMPPAD && e.type != CHECKPOINT) continue;
-				enttypes &t = enttype[e.type];
-				if(insidesphere(m, eye, d->radius, e.o, t.height, t.radius)) tryuse(i, d);
-			}
-		}
-		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
-	}
 
 	void teleport(int n, fpsent *d)	 // also used by monsters
 	{
@@ -252,6 +181,75 @@ struct entities : icliententities
 				s_sprintfd(camnamalias)("camera_name_%d", ents[e]->attr4);
 				break;
 			}
+		}
+	}
+
+	void reaction(int n, fpsent *d)
+	{
+		switch(ents[n]->type)
+		{
+			case TELEPORT:
+			{
+				if(d->lastuse == ents[n]->type && lastmillis-d->lastusemillis<500) break;
+				d->lastuse = ents[n]->type;
+				d->lastusemillis = lastmillis;
+				teleport(n, d);
+				break;
+			}
+
+			case JUMPPAD:
+			{
+				if(d->lastuse==ents[n]->type && lastmillis-d->lastusemillis<500) break;
+				d->lastuse = ents[n]->type;
+				d->lastusemillis = lastmillis;
+				vec v((int)(char)ents[n]->attr3*10.0f, (int)(char)ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
+				d->timeinair = 0;
+                d->falling = vec(0, 0, 0);
+				d->vel = v;
+				cl.playsoundc(S_JUMPPAD, d);
+				break;
+			}
+		}
+	}
+
+	void checkitems(fpsent *d)
+	{
+		if(d->state != CS_EDITING && d->state != CS_SPECTATOR)
+		{
+			float eye = d->height*0.5f;
+			vec m = d->o;
+			m.z -= eye;
+
+			loopv(ents)
+			{
+				extentity &e = *ents[i];
+				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
+				enttypes &t = enttype[e.type];
+				if(e.spawned && t.usetype == ETU_AUTO
+					&& insidesphere(m, eye, d->radius, e.o, t.height, t.radius)) reaction(i, d);
+			}
+
+			if(d->useaction)
+			{ // difference here is the client requests it and gets the closest one
+				int n = -1;
+				loopv(ents)
+				{
+					extentity &e = *ents[i];
+					if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
+					enttypes &t = enttype[e.type];
+					if(e.spawned && t.usetype == ETU_ITEM
+						&& insidesphere(m, eye, d->radius, e.o, t.height, t.radius)
+						&& d->canuse(e.type, e.attr1, e.attr2, lastmillis)
+						&& (!ents.inrange(n) || e.o.dist(m) < ents[n]->o.dist(m))) n = i;
+				}
+				if (ents.inrange(n))
+				{
+					ents[n]->spawned = false; // even if someone else gets it first
+					cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, n);
+					d->useaction = false;
+				}
+			}
+			if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
 		}
 	}
 
@@ -563,14 +561,14 @@ struct entities : icliententities
 		}
 	}
 
-	int waypointnode(vec &v, int n = -1)
+	int waypointnode(vec &v, bool rad = true, int n = -1)
 	{
 		int w = -1;
 
 		loopv(ents)
 		{
 			if(ents[i]->type == WAYPOINT &&
-				(!ents.inrange(n) || i != n || ents[i]->o.dist(v) <= ents[i]->attr1) &&
+				i != n && (!rad || ents[i]->o.dist(v) <= ents[i]->attr1) &&
 					(!ents.inrange(w) || ents[i]->o.dist(v) < ents[w]->o.dist(v)))
 			{
 				w = i;

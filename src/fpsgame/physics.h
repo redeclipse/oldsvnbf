@@ -30,7 +30,7 @@ struct physics
 		CCOMMAND(jump,   "D", (physics *self, int *down), { self->dojump(*down!=0); });
 		CCOMMAND(attack, "D", (physics *self, int *down), { self->doattack(*down!=0); });
 		CCOMMAND(reload, "D", (physics *self, int *down), { self->doreload(*down!=0); });
-		CCOMMAND(use, "D", (physics *self, int *down), { self->douse(*down!=0); });
+		CCOMMAND(action, "D", (physics *self, int *down), { self->doaction(*down!=0); });
 		CCOMMAND(lean, "D", (physics *self, int *down), { self->dolean(*down!=0); });
         CCOMMAND(taunt, "", (physics *self), { self->taunt(self->cl.player1); });
 
@@ -45,14 +45,14 @@ struct physics
 		{ \
 			bool val = !cl.intermission ? on : false; \
 			cl.player1->y = cl.player1->state != CS_DEAD ? val : false; \
-			if (z && cl.player1->state == CS_DEAD && val) cl.respawn(); \
+			if (z && cl.player1->state == CS_DEAD && val) cl.respawn(cl.player1); \
 		}
 
 	iput(crouch,	crouching,	false);
 	iput(jump,		jumping,	false);
 	iput(attack,	attacking,	true);
 	iput(reload,	reloading,	true);
-	iput(use,		usestuff,	true);
+	iput(action,	useaction,	true);
 	iput(lean,		leaning,	false);
 
 	void taunt(fpsent *d)

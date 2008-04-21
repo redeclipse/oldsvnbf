@@ -788,9 +788,9 @@ struct clientcom : iclientcom
 
 			case SV_ITEMACC:			// server acknowledges that I picked up this item
 			{
-				int i = getint(p), lcn = getint(p);
+				int lcn = getint(p), m = getint(p), i = getint(p);
 				fpsent *d = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
-				cl.et.useeffects(i, d);
+				cl.et.useeffects(d, m, i);
 				break;
 			}
 
