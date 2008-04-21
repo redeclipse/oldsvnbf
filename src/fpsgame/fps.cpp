@@ -110,27 +110,27 @@ struct GAMECLIENT : igameclient
 		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
 	}
 
-	int respawnwait()
+	int respawnwait(fpsent *d)
 	{
 		int wait = 0;
-		if (m_capture(gamemode)) wait = cpc.respawnwait();
-		if (m_ctf(gamemode)) wait = ctf.respawnwait();
+		if (m_capture(gamemode)) wait = cpc.respawnwait(d);
+		else if (m_ctf(gamemode)) wait = ctf.respawnwait(d);
 		return wait;
 	}
 
-	void respawn()
+	void respawn(fpsent *d)
 	{
-		if(player1->state == CS_DEAD)
+		if(d->state == CS_DEAD)
 		{
-			int wait = respawnwait();
+			int wait = respawnwait(d);
 
 			if (wait)
 			{
-				console("\f2you must wait %d second%s before respawn!", CON_NORMAL|CON_CENTER, wait, wait!=1 ? "s" : "");
+				if(d==player1) console("\f2you must wait %d second%s before respawn!", CON_NORMAL|CON_CENTER, wait, wait!=1 ? "s" : "");
 				return;
 			}
 
-			respawnself(player1);
+			respawnself(d);
 		}
 	}
 
@@ -340,7 +340,7 @@ struct GAMECLIENT : igameclient
 		{
 			sb.showscores(true);
 			lastplayerstate = *player1;
-			d->attacking = d->reloading = d->usestuff = d->leaning = false;
+			d->attacking = d->reloading = d->useaction = d->leaning = false;
 			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
@@ -379,7 +379,7 @@ struct GAMECLIENT : igameclient
 		if(!timeremain)
 		{
 			intermission = true;
-			player1->attacking = player1->reloading = player1->usestuff = player1->leaning = false;
+			player1->attacking = player1->reloading = player1->useaction = player1->leaning = false;
 			if (m_mp(gamemode))
 			{
 				calcranks();
@@ -662,9 +662,9 @@ struct GAMECLIENT : igameclient
 					{
 						if (d->state == CS_ALIVE)
 						{
-							float hlt = d->health/float(MAXHEALTH), glow = max(hlt, 0.25f);
-							if (lastmillis < d->lastregen+500) glow *= (lastmillis-d->lastregen)/500.f;
-							glColor4f(glow, 0.05f, 0.05f, fade);
+							float hlt = d->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
+							if (lastmillis < d->lastregen+500) pulse *= (lastmillis-d->lastregen)/500.f;
+							glColor4f(glow, 0.f, 0.f, pulse);
 
 							int rw = oy/5/4, rx = oy/5+8, rh = oy/5, ry = oy-rh-4, ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
 							settexture("textures/barv.png");
@@ -674,18 +674,27 @@ struct GAMECLIENT : igameclient
 							glTexCoord2f(1, 1); glVertex2i(rx+rw, ry+rh);
 							glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
 							glEnd();
+
+							if(isgun(d->gunselect) && d->ammo[d->gunselect] >= 0)
+							{
+								draw_textx("%d", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->ammo[d->gunselect]);
+							}
+							else
+							{
+								draw_textx("Out of ammo", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+							}
 						}
 						else if (d->state == CS_DEAD)
 						{
-							int wait = respawnwait();
+							int wait = respawnwait(d);
 
 							if (wait)
 							{
 								float c = float(wait)/1000.f;
-								draw_textx("Fragged! Down for %.1fs", oy/5+8, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
+								draw_textx("Fragged! Down for %.1fs", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
 							}
 							else
-								draw_textx("Fragged! Press attack to respawn", oy/5+8, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+								draw_textx("Fragged! Press attack to respawn", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 						}
 					}
 

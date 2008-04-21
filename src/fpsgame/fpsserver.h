@@ -62,7 +62,7 @@ struct GAMESERVER : igameserver
 	struct useevent
 	{
 		int type;
-		int ent;
+		int ent, millis;
 	};
 
 	union gameevent
@@ -349,18 +349,6 @@ struct GAMESERVER : igameserver
 	}
 
 	int spawntime(int type) { return ((MAXCLIENTS+41)-nonspectators())*100; } // so, range is 4100..30000 ms
-
-	bool use(int i, int sender)		 // server side item use, acknowledge first client that gets it
-	{
-		if(minremain<=0 || !sents.inrange(i) || !sents[i].spawned) return false;
-		clientinfo *ci = (clientinfo *)getinfo(sender);
-		if(!ci || (!ci->local && !ci->state.canuse(sents[i].type, sents[i].attr1, sents[i].attr2, gamemillis))) return false;
-		sents[i].spawned = false;
-		sents[i].spawntime = spawntime(sents[i].type);
-		sendf(-1, 1, "ri3", SV_ITEMACC, i, sender);
-		ci->state.useitem(gamemillis, sents[i].type, sents[i].attr1, sents[i].attr2);
-		return true;
-	}
 
 	void vote(char *map, int reqmode, int reqmuts, int sender)
 	{
@@ -1193,12 +1181,13 @@ struct GAMESERVER : igameserver
 
 			case SV_ITEMUSE:
 			{
-                int lcn = getint(p), ent = getint(p);
+                int lcn = getint(p), millis = getint(p), ent = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
 				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 				gameevent &use = cp->addevent();
 				use.type = GE_USE;
 				use.use.ent = ent;
+				use.use.millis = millis;
 				break;
 			}
 
@@ -1872,8 +1861,11 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, useevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(m_mp(gamemode) && !gs.isalive(gamemillis)) return;
-		use(e.ent, ci->clientnum);
+		if(minremain<=0 || !gs.isalive(gamemillis) || !sents.inrange(e.ent) || !sents[e.ent].spawned || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis)) return;
+		sents[e.ent].spawned = false;
+		sents[e.ent].spawntime = spawntime(sents[e.ent].type);
+		sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.millis, e.ent);
+		ci->state.useitem(e.millis, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
 	}
 
 	void processevents()
