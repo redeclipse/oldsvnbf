@@ -771,17 +771,7 @@ static void show_genpvs_progress(int unique = pvs.length(), int processed = numv
 
     show_out_of_renderloop_progress(bar1, text1, bar2, text2);
 
-    SDL_Event event;
-    while(SDL_PollEvent(&event))
-    {
-        switch(event.type)
-        {
-        case SDL_KEYDOWN:
-            if(event.key.keysym.sym == SDLK_ESCAPE)
-                genpvs_canceled = true;
-            break;
-        }
-    }
+    if(interceptkey(SDLK_ESCAPE)) genpvs_canceled = true;
     check_genpvs_progress = false;
 }
 

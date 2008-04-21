@@ -30,17 +30,7 @@ volatile bool check_calclight_progress = false;
 
 void check_calclight_canceled()
 {
-	SDL_Event event;
-	while(SDL_PollEvent(&event))
-	{
-		switch(event.type)
-		{
-		case SDL_KEYDOWN:
-			if(event.key.keysym.sym == SDLK_ESCAPE)
-				calclight_canceled = true;
-			break;
-		}
-	}
+    if(interceptkey(SDLK_ESCAPE)) calclight_canceled = true;
 	if(!calclight_canceled) check_calclight_progress = false;
 }
 

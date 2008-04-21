@@ -303,12 +303,41 @@ void keyrepeat(bool on)
 }
 
 int ignoremouse = 5;
+
+vector<SDL_Event> events;
+
+void pushevent(const SDL_Event &e)
+{
+    events.add(e); 
+}
+
+bool interceptkey(int sym)
+{
+    SDL_Event event;
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+        case SDL_KEYDOWN:
+            if(event.key.keysym.sym == SDLK_ESCAPE)
+                return true;
+
+        default:
+            pushevent(event);
+            break;
+        }
+    }
+    return false;
+}
+
 void checkinput()
 {
 	SDL_Event event;
 	int lasttype = 0, lastbut = 0;
-	while (SDL_PollEvent(&event))
-	{
+    while(events.length() || SDL_PollEvent(&event))
+    {
+        if(events.length()) event = events.remove(0);
+
 		switch (event.type)
 		{
 			case SDL_QUIT:

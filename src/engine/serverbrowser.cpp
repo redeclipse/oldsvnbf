@@ -168,11 +168,7 @@ bool resolverwait(const char *name, ENetAddress *address)
 
 		timeout = SDL_GetTicks() - starttime;
         show_out_of_renderloop_progress(min(float(timeout)/RESOLVERLIMIT, 1.0f), text);
-		SDL_Event event;
-		while(SDL_PollEvent(&event))
-		{
-			if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) timeout = RESOLVERLIMIT + 1;
-		}
+        if(interceptkey(SDLK_ESCAPE)) timeout = RESOLVERLIMIT + 1;
 		if(timeout > RESOLVERLIMIT) break;
 	}
 	if(!resolved && timeout > RESOLVERLIMIT)
@@ -250,11 +246,7 @@ int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &addre
 		}
 		timeout = SDL_GetTicks() - starttime;
         show_out_of_renderloop_progress(min(float(timeout)/CONNLIMIT, 1.0f), text);
-		SDL_Event event;
-		while(SDL_PollEvent(&event))
-		{
-			if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) timeout = CONNLIMIT + 1;
-		}
+        if(interceptkey(SDLK_ESCAPE)) timeout = CONNLIMIT + 1;
 		if(timeout > CONNLIMIT) break;
 	}
 
