@@ -498,11 +498,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 	{
 		timeout = SDL_GetTicks() - starttime;
         show_out_of_renderloop_progress(min(float(timeout)/RETRIEVELIMIT, 1.0f), text);
-		SDL_Event event;
-		while(SDL_PollEvent(&event))
-		{
-			if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) timeout = RETRIEVELIMIT + 1;
-		}
+        if(interceptkey(SDLK_ESCAPE)) timeout = RETRIEVELIMIT + 1;
 		if(timeout > RETRIEVELIMIT)
 		{
 			buf[0] = '\0';
