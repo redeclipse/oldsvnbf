@@ -242,9 +242,9 @@ static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
 #define HIT_HEAD		0x04
 #define HIT_BURN		0x08
 
-#define PATH_ABS		0x0001
-#define PATH_AVOID		0x0002
-#define PATH_GTONE		0x0004
+#define ROUTE_ABS		0x0001
+#define ROUTE_AVOID		0x0002
+#define ROUTE_GTONE		0x0004
 
 enum
 {
