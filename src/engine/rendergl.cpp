@@ -1240,19 +1240,24 @@ VARP(hidehud, 0, 0, 1);
 #define MAXCROSSHAIRS 4
 static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL };
 
-void loadcrosshair(const char *name, int *i)
+void loadcrosshair(const char *name, int i)
 {
-    if(*i < 0 || *i >= MAXCROSSHAIRS) return;
-    crosshairs[*i] = textureload(name, 3, true);
-    if(crosshairs[*i] == notexture)
+    if(i < 0 || i >= MAXCROSSHAIRS) return;
+    crosshairs[i] = name ? textureload(name, 3, true) : notexture;
+    if(crosshairs[i] == notexture)
     {
-        name = cl->defaultcrosshair(*i);
+        name = cl->defaultcrosshair(i);
         if(!name) name = "textures/crosshair.png";
-        crosshairs[*i] = textureload(name, 3, true);
+        crosshairs[i] = textureload(name, 3, true);
     }
 }
 
-COMMAND(loadcrosshair, "si");
+void loadcrosshair_(const char *name, int *i)
+{
+    loadcrosshair(name, *i);
+}
+
+COMMANDN(loadcrosshair, loadcrosshair_, "si");
 
 void writecrosshairs(FILE *f)
 {
@@ -1271,7 +1276,7 @@ void drawcrosshair(int w, int h)
     if(windowhit)
     {
         static Texture *cursor = NULL;
-        if(!cursor) cursor = textureload("data/guicursor.png", 3, true);
+        if(!cursor) cursor = textureload("textures/guicursor.png", 3, true);
         crosshair = cursor;
         chsize = cursorsize*w/300.0f;
         g3d_cursorpos(cx, cy);
@@ -1282,7 +1287,7 @@ void drawcrosshair(int w, int h)
         crosshair = crosshairs[index];
         if(!crosshair)
         {
-            loadcrosshair(cl->defaultcrosshair(index), &index);
+            loadcrosshair(NULL, index);
             crosshair = crosshairs[index];
         }
         chsize = crosshairsize*w/300.0f;
