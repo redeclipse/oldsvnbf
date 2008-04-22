@@ -280,7 +280,7 @@ struct ctfclient : ctfstate
         else dir = f.spawnloc;
 		dir.sub(d->o);
 		dir.z = 0.0f;
-        float size = flagblip ? 0.1f : 0.05f,
+        float size = flagblip ? 0.2f : 0.1f,
               xoffset = flagblip ? -2*(3/32.0f)*size : -size,
               yoffset = flagblip ? -2*(1 - 3/32.0f)*size : -size,
               dist = dir.magnitude();

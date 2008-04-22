@@ -169,7 +169,7 @@ struct GAMESERVER : igameserver
 		string name, team, mapvote;
 		int modevote, mutsvote;
 		int privilege;
-        bool spectator, local, timesync, wantsmaster;
+        bool spectator, timesync, wantsmaster;
         int gameoffset, lastevent;
 		gamestate state;
 		vector<gameevent> events;
@@ -199,7 +199,7 @@ struct GAMESERVER : igameserver
 		{
 			name[0] = team[0] = 0;
 			privilege = PRIV_NONE;
-            spectator = local = wantsmaster = false;
+            spectator = wantsmaster = false;
 			position.setsizenodelete(0);
 			messages.setsizenodelete(0);
 			mapchange();
@@ -296,8 +296,8 @@ struct GAMESERVER : igameserver
 
 	#define mutate(b) loopvk(smuts) { servmode *mut = smuts[k]; { b; } }
 
-	#define Q_INT(c,n) { if(!c->local) { ucharbuf buf = c->messages.reserve(5); putint(buf, n); c->messages.addbuf(buf); } }
-	#define Q_STR(c,text) { if(!c->local) { ucharbuf buf = c->messages.reserve(2*strlen(text)+1); sendstring(text, buf); c->messages.addbuf(buf); } }
+	#define Q_INT(c,n) { ucharbuf buf = c->messages.reserve(5); putint(buf, n); c->messages.addbuf(buf); }
+	#define Q_STR(c,text) { ucharbuf buf = c->messages.reserve(2*strlen(text)+1); sendstring(text, buf); c->messages.addbuf(buf); }
 
 	struct scr
 	{
@@ -312,7 +312,7 @@ struct GAMESERVER : igameserver
 		: notgotitems(true), notgotbases(false),
 			gamemode(defaultmode()), mutators(0), _lastmillis(0), interm(0), minremain(10),
 			mapreload(false), lastsend(0),
-			mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
+			mastermode(MM_VETO), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
 			demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
 			smode(NULL), capturemode(*this), ctfmode(*this), duelmutator(*this)
@@ -352,10 +352,10 @@ struct GAMESERVER : igameserver
 		ci->modevote = reqmode;
 		ci->mutsvote = reqmuts|gametype[reqmode].implied;
 		if(!ci->mapvote[0]) return;
-		if(ci->local || mapreload || (ci->privilege && mastermode>=MM_VETO))
+		if(mapreload || (ci->privilege && mastermode>=MM_VETO))
 		{
 			if(demorecord) enddemorecord();
-			if(!ci->local && !mapreload)
+			if(!mapreload)
 			{
 				s_sprintfd(msg)("%s forced %s on map %s", privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
 				sendservmsg(msg);
@@ -821,7 +821,6 @@ struct GAMESERVER : igameserver
 
 	int checktype(int type, clientinfo *ci)
 	{
-		if(ci && ci->local) return type;
 #if 0
         // other message types can get sent by accident if a master forces spectator on someone, so disabling this case for now and checking for spectator state in message handlers
         // spectators can only connect and talk
@@ -956,10 +955,10 @@ struct GAMESERVER : igameserver
 		char text[MAXTRANS];
 		int type;
 		clientinfo *ci = sender>=0 ? (clientinfo *)getinfo(sender) : NULL;
-		#define QUEUE_MSG { if(!ci->local) while(curmsg<p.length()) ci->messages.add(p.buf[curmsg++]); }
-		#define QUEUE_INT(n) { if(!ci->local) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(5); putint(buf, n); ci->messages.addbuf(buf); } }
-		#define QUEUE_UINT(n) { if(!ci->local) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(4); putuint(buf, n); ci->messages.addbuf(buf); } }
-		#define QUEUE_STR(text) { if(!ci->local) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(2*strlen(text)+1); sendstring(text, buf); ci->messages.addbuf(buf); } }
+		#define QUEUE_MSG { while(curmsg<p.length()) ci->messages.add(p.buf[curmsg++]); }
+		#define QUEUE_INT(n) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(5); putint(buf, n); ci->messages.addbuf(buf); }
+		#define QUEUE_UINT(n) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(4); putuint(buf, n); ci->messages.addbuf(buf); }
+		#define QUEUE_STR(text) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(2*strlen(text)+1); sendstring(text, buf); ci->messages.addbuf(buf); }
 		int curmsg;
         while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci))
 		{
@@ -989,13 +988,13 @@ struct GAMESERVER : igameserver
                 int physstate = getuint(p);
                 if(physstate&0x20) loopi(2) getint(p);
                 if(physstate&0x10) getint(p);
-                if(havecn && !cp->local && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
+                if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
 				{
 					cp->position.setsizenodelete(0);
 					while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
 				}
 				uint f = getuint(p);
-                if(havecn && !cp->local && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
+                if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
 				{
 					f &= 0xF;
 					curmsg = p.length();
@@ -1014,7 +1013,7 @@ struct GAMESERVER : igameserver
 			case SV_EDITMODE:
 			{
 				int val = getint(p);
-				if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || (!ci->local && gamemode!=1)) break;
+				if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || (gamemode!=1)) break;
 				if(smode)
 				{
 					if(val) smode->leavegame(ci);
@@ -1220,7 +1219,7 @@ struct GAMESERVER : igameserver
 				if(!text[0]) s_strcpy(text, "unnamed");
 				QUEUE_STR(text);
 				s_strncpy(ci->name, text, MAXNAMELEN+1);
-				if(!ci->local && connected)
+				if(connected)
 				{
 					savedscore &sc = findscore(ci, false);
 					if(&sc)
@@ -1230,7 +1229,7 @@ struct GAMESERVER : igameserver
 					}
 				}
 				getstring(text, p);
-				if(!ci->local && connected && m_team(gamemode, mutators))
+				if(connected && m_team(gamemode, mutators))
 				{
 					const char *worst = chooseworstteam(text);
 					if(worst)
@@ -1256,7 +1255,7 @@ struct GAMESERVER : igameserver
 				filtertext(text, text);
 				int reqmode = getint(p), reqmuts = getint(p);
 				if(type!=SV_MAPVOTE && !mapreload) break;
-				if(!ci->local && !m_mp(reqmode)) reqmode = G_DEATHMATCH;
+				if(!m_mp(reqmode)) reqmode = G_DEATHMATCH;
 				vote(text, reqmode, reqmuts, sender);
 				break;
 			}
@@ -1426,7 +1425,7 @@ struct GAMESERVER : igameserver
 
 			case SV_STOPDEMO:
 			{
-				if(!ci->local && ci->privilege<PRIV_ADMIN) break;
+				if(ci->privilege<PRIV_ADMIN) break;
 				if(m_demo(gamemode)) enddemoplayback();
 				else enddemorecord();
 				break;
