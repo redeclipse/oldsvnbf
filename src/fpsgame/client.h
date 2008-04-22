@@ -412,7 +412,7 @@ struct clientcom : iclientcom
                 int seqcolor = (physstate>>6)&1;
 				f = getuint(p);
 				fpsent *d = cl.getclient(lcn);
-                if(!d || seqcolor!=(d->lifesequence&1)) continue;
+                if(!d || seqcolor!=(d->lifesequence&1) || d==cl.player1 || d->bot) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch;
 				d->yaw = yaw;
 				d->pitch = pitch;
@@ -639,7 +639,7 @@ struct clientcom : iclientcom
 			{
 				int lcn = getint(p);
 				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
-				bool local = (f->clientnum==cl.player1->clientnum || f->ownernum==cl.player1->clientnum);
+				bool local = (f->clientnum==cl.player1->clientnum || f->bot);
 				if(f==cl.player1 && editmode) toggleedit();
 				f->respawn();
 				f->lifesequence = getint(p);

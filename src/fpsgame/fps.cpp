@@ -241,7 +241,7 @@ struct GAMECLIENT : igameclient
 					if (player1->jumping && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
 					{
 						vec dir;
-						vecfromyawpitch(player1->yaw, player1->pitch, 1, player1->strafe, dir);
+						vecfromyawpitch(player1->yaw, player1->move || player1->strafe ? player1->pitch : 90.f, player1->move || player1->strafe ? player1->move : 1, player1->strafe, dir);
 						dir.normalize();
 						dir.mul(ph.jumpvelocity(player1));
 						player1->vel.add(dir);
