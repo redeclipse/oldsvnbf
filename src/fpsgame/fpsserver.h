@@ -62,7 +62,8 @@ struct GAMESERVER : igameserver
 	struct useevent
 	{
 		int type;
-		int ent, millis;
+		int millis, id;
+		int ent;
 	};
 
 	union gameevent
@@ -118,13 +119,6 @@ struct GAMESERVER : igameserver
 		{
 			return state==CS_ALIVE || (state==CS_DEAD && gamemillis - lastdeath <= DEATHMILLIS);
 		}
-
-        bool waitexpired(int gamemillis)
-        {
-			int lasttime = gamemillis - lastshot;
-			loopi (NUMGUNS) if (lasttime < gunwait[i]) return false;
-			return true;
-        }
 
 		void reset()
 		{
@@ -1108,10 +1102,9 @@ struct GAMESERVER : igameserver
 				}
 				gameevent &shot = cp->addevent();
 				shot.type = GE_SHOT;
-                #define seteventmillis(event, eventid) \
+                #define seteventmillis(event, eventcond) \
                 { \
-                    event.id = eventid; \
-                    if(!cp->timesync || (cp->events.length()==1 && cp->state.waitexpired(gamemillis))) \
+                    if(!cp->timesync || (cp->events.length()==1 && eventcond)) \
                     { \
                         cp->timesync = true; \
                         cp->gameoffset = gamemillis - event.id; \
@@ -1119,8 +1112,9 @@ struct GAMESERVER : igameserver
                     } \
                     else event.millis = cp->gameoffset + event.id; \
 				}
-                seteventmillis(shot.shot, getint(p));
+				shot.shot.id = getint(p);
 				shot.shot.gun = getint(p);
+                seteventmillis(shot.shot, ci->state.canshoot(shot.shot.gun, gamemillis));
 				loopk(3) shot.shot.from[k] = getint(p)/DMF;
 				loopk(3) shot.shot.to[k] = getint(p)/DMF;
 				int hits = getint(p);
@@ -1144,8 +1138,9 @@ struct GAMESERVER : igameserver
 				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 				gameevent &reload = cp->addevent();
 				reload.type = GE_RELOAD;
-                seteventmillis(reload.reload, id);
+				reload.reload.id = id;
 				reload.reload.gun = gun;
+                seteventmillis(reload.reload, ci->state.canreload(reload.reload.gun, gamemillis));
                 break;
 			}
 
@@ -1162,7 +1157,8 @@ struct GAMESERVER : igameserver
 				}
 				gameevent &exp = cp->addevent();
 				exp.type = GE_EXPLODE;
-                seteventmillis(exp.explode, getint(p));
+				exp.explode.id = getint(p);
+                seteventmillis(exp.explode, true);
 				exp.explode.gun = getint(p);
                 exp.explode.id = getint(p);
 				int hits = getint(p);
@@ -1181,13 +1177,14 @@ struct GAMESERVER : igameserver
 
 			case SV_ITEMUSE:
 			{
-                int lcn = getint(p), millis = getint(p), ent = getint(p);
+                int lcn = getint(p), id = getint(p), ent = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
 				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 				gameevent &use = cp->addevent();
 				use.type = GE_USE;
 				use.use.ent = ent;
-				use.use.millis = millis;
+				use.use.id = id;
+                seteventmillis(use.use, sents.inrange(ent) ? ci->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false);
 				break;
 			}
 
@@ -1861,7 +1858,19 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, useevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(minremain<=0 || !gs.isalive(gamemillis) || !sents.inrange(e.ent) || !sents[e.ent].spawned || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis)) return;
+		if(minremain<=0 || !gs.isalive(gamemillis) || !sents.inrange(e.ent) || !sents[e.ent].spawned || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
+		{
+#if 0
+			const char *msg = (minremain<=0 ? "time up" :
+				(!gs.isalive(gamemillis) ? "not alive" :
+				(!sents.inrange(e.ent) ? "entity not in range" :
+				(!sents[e.ent].spawned ? "entity not spawned" :
+				(!gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis) ? "cannot use entity" :
+					"unknown reason")))));
+			servsend(ci->clientnum, "cannot pickup %d (%d): %s", e.ent, e.millis, msg);
+#endif
+			return;
+		}
 		sents[e.ent].spawned = false;
 		sents[e.ent].spawntime = spawntime(sents[e.ent].type);
 		sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.millis, e.ent);

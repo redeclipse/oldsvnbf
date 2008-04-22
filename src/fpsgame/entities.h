@@ -4,20 +4,20 @@ struct entities : icliententities
 
 	vector<extentity *> ents;
 
-	IVARP(showentdir, 0, 1, 1);
-	IVARP(showentradius, 0, 1, 1);
+	IVARP(showentdir, 0, 1, 2);
+	IVARP(showentradius, 0, 1, 2);
 
-	IVARP(showbaselinks, 0, 0, 1);
-	IVARP(showcheckpointlinks, 0, 0, 1);
-	IVARP(showcameralinks, 0, 0, 1);
-	IVARP(showteleportlinks, 0, 0, 1);
-	IVARP(showwaypointlinks, 0, 0, 1);
+	IVARP(showbaselinks, 0, 0, 2);
+	IVARP(showcheckpointlinks, 0, 0, 2);
+	IVARP(showcameralinks, 0, 0, 2);
+	IVARP(showteleportlinks, 0, 0, 2);
+	IVARP(showwaypointlinks, 0, 0, 2);
 
 	IVAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 
 	entities(GAMECLIENT &_cl) : cl(_cl)
 	{
-		CCOMMAND(entlink, "", (entities *self), self->entlink());
+		CCOMMAND(entlink, "", (entities *self), self->linkent());
 	}
 
 	vector<extentity *> &getents() { return ents; }
@@ -73,15 +73,14 @@ struct entities : icliententities
 
 	void useeffects(fpsent *d, int m, int n)
 	{
-        if(ents.inrange(n) && d->canuse(ents[n]->type, ents[n]->attr1, ents[n]->attr2, m))
+        if(d && ents.inrange(n))
 		{
-			guntypes &g = guntype[ents[n]->attr1];
-			particle_text(d->abovehead(), g.name, 15);
-			playsound(S_ITEMAMMO, &d->o);
+			particle_text(d->abovehead(), itemname(n), 15);
+			playsound(S_ITEMPICKUP, &d->o);
 			if(d==cl.player1 || d->ownernum==cl.player1->clientnum)
 				d->useitem(m, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
-			ents[n]->spawned = false;
 		}
+		ents[n]->spawned = false; // if the server sent this, then the ent is gone
 	}
 
 	// these functions are called when the client touches the item
@@ -225,8 +224,8 @@ struct entities : icliententities
 				extentity &e = *ents[i];
 				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
 				enttypes &t = enttype[e.type];
-				if(e.spawned && t.usetype == ETU_AUTO
-					&& insidesphere(m, eye, d->radius, e.o, t.height, t.radius)) reaction(i, d);
+				if(t.usetype == ETU_AUTO && insidesphere(m, eye, d->radius, e.o, t.height, t.radius))
+					reaction(i, d);
 			}
 
 			if(d->useaction)
@@ -240,14 +239,12 @@ struct entities : icliententities
 					if(e.spawned && t.usetype == ETU_ITEM
 						&& insidesphere(m, eye, d->radius, e.o, t.height, t.radius)
 						&& d->canuse(e.type, e.attr1, e.attr2, lastmillis)
-						&& (!ents.inrange(n) || e.o.dist(m) < ents[n]->o.dist(m))) n = i;
+						&& (!ents.inrange(n) || e.o.dist(m) < ents[n]->o.dist(m)))
+							n = i;
 				}
-				if (ents.inrange(n))
-				{
-					ents[n]->spawned = false; // even if someone else gets it first
-					cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, n);
-					d->useaction = false;
-				}
+				if(ents.inrange(n)) cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, n);
+				else playsound(S_DENIED);
+				d->useaction = false;
 			}
 			if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
 		}
@@ -303,7 +300,7 @@ struct entities : icliententities
 		extentity &e = *ents[i];
 		if(e.type == ET_EMPTY) linkclear(i);
 		fixentity(e);
-		if(multiplayer(false))
+		if(multiplayer(false) && m_edit(cl.gamemode))
 			cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
 	}
 
@@ -317,45 +314,78 @@ struct entities : icliententities
 	{
 		if (ents.inrange(index) && ents.inrange(node) && ents[index]->type == ents[node]->type && enttype[ents[index]->type].links)
 		{
-			int g;
 			fpsentity &e = (fpsentity &)*ents[index];
-			fpsentity &l = (fpsentity &)*ents[node];
+			fpsentity &f = (fpsentity &)*ents[node];
+			int g;
 
-			if((g = l.links.find(index)) >= 0 && (local || !add))
+			// works differently for the local client, using toggles instead of absolute values
+
+			if((g = e.links.find(node)) >= 0 && (local || !add))
 			{
 				int h;
-				if((h = e.links.find(node)) >= 0 && (local || !add))
+				if((h = f.links.find(index)) >= 0 && (local || !add))
 				{
-					l.links.remove(g);
-					if (local && multiplayer(false))
-						cl.cc.addmsg(SV_ENTLINK, "ri3", 0, node, index);
+					e.links.remove(g);
+					if (local && multiplayer(false) && m_edit(cl.gamemode))
+						cl.cc.addmsg(SV_EDITLINK, "ri3", 0, index, node);
 					return true;
 				}
-				else if(local || add)
+				else if(local)
 				{
-					e.links.add(node);
-					if (local && multiplayer(false))
-						cl.cc.addmsg(SV_ENTLINK, "ri3", 1, index, node);
+					f.links.add(index);
+					if (local && multiplayer(false) && m_edit(cl.gamemode))
+						cl.cc.addmsg(SV_EDITLINK, "ri3", 1, node, index);
 					return true;
 				}
 			}
-			else if((g = e.links.find(node)) >= 0 && (local || add))
+			else if((g = f.links.find(index)) >= 0 && local)
 			{
-				e.links.remove(g);
-				if (local && multiplayer(false))
-					cl.cc.addmsg(SV_ENTLINK, "ri3", 0, index, node);
+				f.links.remove(g);
+				if (local && multiplayer(false) && m_edit(cl.gamemode))
+					cl.cc.addmsg(SV_EDITLINK, "ri3", 0, node, index);
 				return true;
 			}
-			else if(local || !add)
+			else if(local || add)
 			{
-				l.links.add(index);
-				if (local && multiplayer(false))
-					cl.cc.addmsg(SV_ENTLINK, "ri3", 1, node, index);
+				e.links.add(node);
+				if (local && multiplayer(false) && m_edit(cl.gamemode))
+					cl.cc.addmsg(SV_EDITLINK, "ri3", 1, index, node);
 
 				return true;
 			}
 		}
 		return false;
+	}
+
+	void linkent()
+	{
+		if(entgroup.length())
+		{
+			int index = entgroup[0];
+
+			if(ents.inrange(index))
+			{
+				int type = ents[index]->type;
+
+				if(enttype[type].links)
+				{
+					int last = -1;
+
+					loopv(entgroup)
+					{
+						index = entgroup[i];
+
+						if(ents[index]->type == type)
+						{
+							if(ents.inrange(last)) linkents(last, index, false, true);
+							last = index;
+						}
+						else conoutf("entity %s is not linkable to a %s", enttype[type].name, enttype[index].name);
+					}
+				}
+				else conoutf("entity %s is not linkable", enttype[type].name);
+			}
+		}
 	}
 
 	void linkclear(int n)
@@ -522,105 +552,52 @@ struct entities : icliententities
 				if (route.length())
 					result = true;
 			}
-
-			if (!result && flags && flags & ROUTE_AVOID)
-			{
-				flags &= ~ROUTE_AVOID;
-				return linkroute(node, goal, route, avoid, flags);
-			}
 		}
 		return result;
 	}
 
-	void entlink()
-	{
-		if(entgroup.length())
-		{
-			int index = entgroup[0];
-
-			if(ents.inrange(index))
-			{
-				int type = ents[index]->type, last = -1;
-
-				if(enttype[type].links)
-				{
-					loopv(entgroup)
-					{
-						index = entgroup[i];
-
-						if(ents[index]->type == type)
-						{
-							if(ents.inrange(last)) linkents(index, last, false, false);
-							last = index;
-						}
-						else conoutf("entity %s is not linkable to a %s", enttype[type].name, enttype[index].name);
-					}
-				}
-				else conoutf("entity %s is not linkable", enttype[type].name);
-			}
-		}
-	}
-
-	int waypointnode(vec &v, bool rad = true, int n = -1)
+	int waypointnode(vec &v, bool restrict = true, float d = 0.f, int n = -1)
 	{
 		int w = -1;
-
-		loopv(ents)
+		loopv(ents) if(ents[i]->type == WAYPOINT && i != n)
 		{
-			if(ents[i]->type == WAYPOINT &&
-				i != n && (!rad || ents[i]->o.dist(v) <= ents[i]->attr1) &&
-					(!ents.inrange(w) || ents[i]->o.dist(v) < ents[w]->o.dist(v)))
-			{
+			if ((!restrict || ents[i]->o.dist(v) <= ents[i]->attr1+d) && (!ents.inrange(w) || ents[i]->o.dist(v) < ents[w]->o.dist(v)))
 				w = i;
-			}
 		}
 		return w;
-	}
-
-	void waypointlink(int n, int m)
-	{
-		if(n != m && ents.inrange(n) && ents.inrange(m) && ents[n]->type == WAYPOINT && ents[m]->type == WAYPOINT)
-		{
-			fpsentity &e = (fpsentity &)*ents[n];
-			if(e.links.find(m) < 0) linkents(n, m, true, false);
-		}
 	}
 
 	void waypointcheck(fpsent *d)
 	{
 		if(d->state == CS_ALIVE)
 		{
-			if(dropwaypoints() && d==cl.player1)
+			vec v(vec(d->o).sub(vec(0, 0, d->height-1)));
+
+			if(dropwaypoints() && d == cl.player1)
 			{
 				int oldnode = d->lastnode;
-				vec v(vec(d->o).sub(vec(0, 0, d->height)));
-
-				loopv(ents)
+				d->lastnode = waypointnode(v);
+				if(!ents.inrange(d->lastnode)) d->lastnode = waypointnode(v, true, enttype[WAYPOINT].radius);
+				if(!ents.inrange(d->lastnode))
 				{
-					if(ents[i]->type == WAYPOINT && ents[i]->o.dist(v) <= ents[i]->attr1 &&
-						(!ents.inrange(d->lastnode) ||
-							ents[i]->o.dist(v) < ents[d->lastnode]->o.dist(v)))
-					{
-						d->lastnode = i;
-					}
-				}
-
-				if(!ents.inrange(d->lastnode) ||
-					ents[d->lastnode]->o.dist(v) >= ents[d->lastnode]->attr1+enttype[WAYPOINT].radius)
-				{
+					conoutf("dropping waypoint.. (%.1f, %.1f, %1f)", v.x, v.y, v.z);
 					d->lastnode = ents.length();
 					newentity(v, WAYPOINT, enttype[WAYPOINT].radius, 0, 0, 0);
 				}
 
 				if(d->lastnode != oldnode && ents.inrange(oldnode) && ents.inrange(d->lastnode))
 				{
-					waypointlink(oldnode, d->lastnode);
-					if(!d->timeinair) waypointlink(d->lastnode, oldnode);
+					conoutf("linking waypoints %d and %d..", oldnode, d->lastnode);
+					fpsentity &e = (fpsentity &)*ents[oldnode], &f = (fpsentity &)*ents[d->lastnode];
+					if(e.links.find(d->lastnode) < 0)
+						linkents(oldnode, d->lastnode, true, false);
+					if(!d->timeinair && f.links.find(oldnode) < 0)
+						linkents(d->lastnode, oldnode, true, false);
 				}
 			}
-			else
-				d->lastnode = waypointnode(vec(d->o).sub(vec(0, 0, d->height)));
+			else d->lastnode = waypointnode(v, false);
 		}
+		else d->lastnode = -1;
 	}
 
 	void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e)
@@ -802,7 +779,7 @@ struct entities : icliententities
 				fr.z += RENDERPUSHZ;
 				to.z += RENDERPUSHZ;
 
-				vec col(0.5f, 0, both ? 0.5f : 0.0f);
+				vec col(0.5f, both ? 0.25f : 0.0f, 0.f);
 				renderline(fr, to, col.x, col.y, col.z, hassel);
 
 				if(hassel)
@@ -818,15 +795,15 @@ struct entities : icliententities
 					dr.mul(RENDERPUSHX);
 					dr.add(fr);
 
-					rendertris(dr, yaw, pitch, 2.f, col.x*2.f, 0.0f, col.z*2.f, true, hassel);
+					rendertris(dr, yaw, pitch, 2.f, col.x*2.f, col.y*2.f, col.z*2.f, true, hassel);
 				}
 			}
 		}
 	}
 
-	void renderentshow(extentity &e, bool force)
+	void renderentshow(extentity &e, int level)
 	{
-		if(!force && showentradius())
+		if(!level && showentradius() >= level)
 		{
 			int h = enttype[e.type].height, r = enttype[e.type].radius;
 			switch(e.type)
@@ -845,34 +822,34 @@ struct entities : icliententities
 			case PLAYERSTART:
 			case MAPMODEL:
 			{
-				if(!force && showentdir()) renderdir(e.o, e.attr1, 0);
+				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, 0);
 				break;
 			}
 			case TELEPORT:
 			{
-				if(!force || showteleportlinks()) renderlinked(e);
-				if(!force && showentdir()) renderdir(e.o, e.attr1, 0);
+				if(!level || showteleportlinks() >= level) renderlinked(e);
+				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, 0);
 				break;
 			}
 			case BASE:
 			{
-				if(!force || showbaselinks()) renderlinked(e);
+				if(!level || showbaselinks() >= level) renderlinked(e);
 				break;
 			}
 			case CHECKPOINT:
 			{
-				if(!force || showcheckpointlinks()) renderlinked(e);
+				if(!level || showcheckpointlinks() >= level) renderlinked(e);
 				break;
 			}
 			case CAMERA:
 			{
-				if(!force || showcameralinks()) renderlinked(e);
-				if(!force && showentdir()) renderdir(e.o, e.attr1, e.attr2);
+				if(!level || showcameralinks() >= level) renderlinked(e);
+				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, e.attr2);
 				break;
 			}
 			case WAYPOINT:
 			{
-				if(!force || showwaypointlinks()) renderlinked(e);
+				if(!level || showwaypointlinks() >= level || dropwaypoints()) renderlinked(e);
 				break;
 			}
 			default:
@@ -885,17 +862,20 @@ struct entities : icliententities
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
 			#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
-
-			if(editmode)
+			int level = (editmode ? 1 : ((showentdir()==2 || showentradius()==2 || showbaselinks()==2 || showcheckpointlinks()==2 || showcameralinks()==2 || showteleportlinks()==2 || showwaypointlinks()==2 || dropwaypoints()) ? 2 : 0));
+			if(level)
 			{
 				renderprimitive(true);
 
-				loopv(entgroup) entfocus(entgroup[i], renderentshow(e, false));
-				if(enthover >= 0) entfocus(enthover, renderentshow(e, false));
+				if(editmode)
+				{
+					loopv(entgroup) entfocus(entgroup[i], renderentshow(e, 0));
+					if(enthover >= 0) entfocus(enthover, renderentshow(e, 0));
+				}
 
 				loopv(ents)
 				{
-					entfocus(i, { renderentshow(e, true); });
+					entfocus(i, { renderentshow(e, level); });
 				}
 
 				renderprimitive(false);

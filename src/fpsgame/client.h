@@ -864,7 +864,7 @@ struct clientcom : iclientcom
 				break;
 			}
 
-			case SV_ENTLINK:
+			case SV_EDITLINK:
 			{
 				if(!d) return;
 				int b = getint(p), index = getint(p), node = getint(p);
@@ -1083,6 +1083,7 @@ struct clientcom : iclientcom
 				s_strncpy(b->team, text, MAXTEAMLEN);
 
 				conoutf("bot added: %s (%s) [%d]", cl.colorname(b), b->team, b->ownernum);
+				if(b->ownernum==cl.player1->clientnum) b->bot = new botinfo();
 				break;
 			}
 
