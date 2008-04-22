@@ -39,8 +39,6 @@ struct fpsrender
         renderclient(d, local, mdlname, a[0].name ? a : NULL, attack, delay, lastaction, cl.intermission ? 0 : d->lastpain);
 	}
 
-	IVARP(teamskins, 0, 0, 1);
-
 	void render()
 	{
 		if(cl.intermission)
@@ -57,17 +55,23 @@ struct fpsrender
         loopv(cl.players) if((d = cl.players[i]) && d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING)
 		{
 			if (cl.player1->state == CS_SPECTATOR && cl.players[i]->clientnum == -cl.cameranum && !isthirdperson()) continue;
-            int mdl = teamskins() || m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? 1 : 2) : 0;
+            int mdl = m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? 1 : 2) : 0;
 			if(d->state!=CS_DEAD || d->superdamage<50) renderplayer(d, false, mdlnames[mdl]);
-			s_strcpy(d->info, cl.colorname(d, NULL, "@"));
-			if(d->state!=CS_DEAD) particle_text(d->abovehead(), d->info, m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? 16 : 13) : 11, 1);
+			if(d->state!=CS_DEAD)
+			{
+				if (m_team(cl.gamemode, cl.mutators)) s_sprintf(d->info)("%s (%s)", cl.colorname(d, NULL, "@"), d->team);
+				else s_sprintf(d->info)("%s", cl.colorname(d, NULL, "@"));
+				particle_text(d->abovehead(), d->info, m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? 16 : 13) : 11, 1);
+			}
 		}
-		if(cl.player1->state != CS_EDITING && (cl.player1->state != CS_SPECTATOR || cl.player1->clientnum == -cl.cameranum)) renderplayer(cl.player1, true, teamskins() || m_team(cl.gamemode, cl.mutators) ? mdlnames[1] : mdlnames[0]);
+		if(cl.player1->state != CS_EDITING && (cl.player1->state != CS_SPECTATOR || cl.player1->clientnum == -cl.cameranum)) renderplayer(cl.player1, true, m_team(cl.gamemode, cl.mutators) ? mdlnames[1] : mdlnames[0]);
 
 		cl.et.render();
 		cl.pj.render();
 		if(m_capture(cl.gamemode)) cl.cpc.render();
         else if(m_ctf(cl.gamemode)) cl.ctf.render();
+
+        cl.bot.render();
 
 		endmodelbatches();
 	}

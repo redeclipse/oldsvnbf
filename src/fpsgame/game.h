@@ -3,7 +3,24 @@
 #define DNF 100.0f			// for normalized vectors
 #define DVELF 1.0f			// for playerspeed based velocity vectors
 
-enum						// static entity types
+// hardcoded sounds, defined in sounds.cfg
+enum
+{
+	S_JUMP = 0, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
+	S_SPLASH1, S_SPLASH2, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR, S_RUMBLE, S_TELEPORT, S_JUMPPAD,
+	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
+	S_GLFIRE, S_GLEXPL, S_GLHIT, S_RLFIRE, S_RLEXPL, S_RLFLY, S_RIFLE,
+	S_ITEMPICKUP, S_ITEMSPAWN,
+	S_V_BASECAP, S_V_BASELOST,
+    S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET,
+	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED, S_V_HEADSHOT,
+	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4,
+	S_REGEN, S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
+	S_RESPAWN, S_CHAT, S_DENIED, S_MENUPRESS, S_MENUBACK
+};
+
+
+enum								// static entity types
 {
 	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
 	LIGHT = ET_LIGHT,				// 1  radius, intensity
@@ -45,9 +62,9 @@ static struct enttypes
 	{ TRIGGER,		0,		16,		16,		ETU_NONE,		"trigger" }, // FIXME
 	{ JUMPPAD,		0,		12,		12,		ETU_AUTO,		"jumppad" },
 	{ BASE,			48,		32,		16,		ETU_NONE,		"base" },
-	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" },
+	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" }, // FIXME
 	{ CAMERA,		48,		0,		0,		ETU_NONE,		"camera" },
-	{ WAYPOINT,		1,		12,		12,		ETU_NONE,		"waypoint" }
+	{ WAYPOINT,		1,		8,		8,		ETU_NONE,		"waypoint" }
 };
 
 struct fpsentity : extentity
@@ -73,8 +90,41 @@ struct fpsentity : extentity
 	}
 };
 
-enum { M_NONE = 0, M_SEARCH, M_HOME, M_ATTACKING, M_PAIN, M_SLEEP, M_AIMING };  // monster states
-enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
+#define SGRAYS			20
+#define SGSPREAD		3
+
+#define RL_DAMRAD		48
+#define RL_DISTSCALE	6
+
+enum
+{
+	GUN_PISTOL = 0,
+	GUN_SG,
+	GUN_CG,
+	GUN_GL,
+	GUN_RL,
+	GUN_RIFLE,
+	NUMGUNS
+};
+
+static struct guntypes
+{
+	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	const char *name;
+} guntype[NUMGUNS] =
+{
+	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		-10 ,	10,		"pistol" },
+	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	"shotgun" },
+	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		"chaingun" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	10,		"grenades" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	150,	150,	10000,	-40,	20,		"rockets" },
+	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		"rifle" },
+};
+#define isgun(gun)	(gun > -1 && gun < NUMGUNS)
+
+#define HIT_LEGS		0x01
+#define HIT_TORSO		0x02
+#define HIT_HEAD		0x04
+#define HIT_BURN		0x08
 
 enum
 {
@@ -138,22 +188,6 @@ static struct gametypes
 
 #define isteam(a,b)			(!strcmp(a,b))
 
-// hardcoded sounds, defined in sounds.cfg
-enum
-{
-	S_JUMP = 0, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
-	S_SPLASH1, S_SPLASH2, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR, S_RUMBLE, S_TELEPORT, S_JUMPPAD,
-	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
-	S_GLFIRE, S_GLEXPL, S_GLHIT, S_RLFIRE, S_RLEXPL, S_RLFLY, S_RIFLE,
-	S_ITEMAMMO, S_ITEMSPAWN,
-	S_V_BASECAP, S_V_BASELOST,
-    S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET,
-	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED, S_V_HEADSHOT,
-	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4,
-	S_REGEN, S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
-	S_RESPAWN, S_CHAT, S_MENUPRESS, S_MENUBACK
-};
-
 // network messages codes, c2s, c2c, s2c
 enum
 {
@@ -166,7 +200,7 @@ enum
 	SV_PING, SV_PONG, SV_CLIENTPING,
 	SV_TIMEUP, SV_MAPRELOAD, SV_ITEMACC,
 	SV_SERVMSG, SV_ITEMLIST, SV_RESUME,
-    SV_EDITMODE, SV_EDITENT, SV_ENTLINK, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP,
+    SV_EDITMODE, SV_EDITENT, SV_EDITLINK, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP,
 	SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_SETMASTER, SV_SETTEAM, SV_APPROVEMASTER,
 	SV_BASES, SV_BASEINFO,
     SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS,
@@ -190,7 +224,7 @@ static char msgsizelookup(int msg)
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
 		SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_ITEMACC, 4,
 		SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
-        SV_EDITMODE, 2, SV_EDITENT, 10, SV_ENTLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
+        SV_EDITMODE, 2, SV_EDITENT, 10, SV_EDITLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0, SV_APPROVEMASTER, 2,
 		SV_BASES, 0, SV_BASEINFO, 0,
         SV_DROPFLAG, 6, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 2, SV_RESETFLAG, 2, SV_INITFLAGS, 0,
@@ -222,6 +256,8 @@ struct demoheader
 enum { TEAM_ALPHA = 0, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_MAX };
 static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
 
+enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
+
 #define PLATFORMBORDER	0.2f
 #define PLATFORMMARGIN	10.0f
 
@@ -233,47 +269,90 @@ static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
 #define REGENTIME		1000
 #define REGENHEAL		5
 
-#define HIT_LEGS		0x01
-#define HIT_TORSO		0x02
-#define HIT_HEAD		0x04
-#define HIT_BURN		0x08
-
 #define ROUTE_ABS		0x0001
 #define ROUTE_AVOID		0x0002
 #define ROUTE_GTONE		0x0004
 
-#define SGRAYS			20
-#define SGSPREAD		3
-
-#define RL_DAMRAD		48
-#define RL_DISTSCALE	6
+enum
+{
+	SAY_NONE = 0x0,
+	SAY_ACTION = 0x1,
+	SAY_TEAM = 0x2,
+};
 
 enum
 {
-	GUN_PISTOL = 0,
-	GUN_SG,
-	GUN_CG,
-	GUN_GL,
-	GUN_RL,
-	GUN_RIFLE,
-	NUMGUNS
+	PRIV_NONE = 0,
+	PRIV_MASTER,
+	PRIV_ADMIN,
+	PRIV_MAX
 };
 
-static struct guntypes
-{
-	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	const char *name;
-} guntype[NUMGUNS] =
-{
-	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		-10 ,	10,		"pistol" },
-	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	"shotgun" },
-	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		"chaingun" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	10,		"grenades" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	150,	150,	10000,	-40,	20,		"rockets" },
-	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		"rifle" },
-};
-#define isgun(gun)	(gun > -1 && gun < NUMGUNS)
+#define MM_MODE 0xF
+#define MM_AUTOAPPROVE 0x1000
+#define MM_DEFAULT (MM_MODE | MM_AUTOAPPROVE)
 
-#define isbot(p)	(p->type == ENT_PLAYER && p->ownernum >= 0)
+enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
+
+#ifndef STANDALONE
+
+#define MAXFOV			(gamethirdperson() ? 100 : 125)
+#define MINFOV			(player1->gunselect == GUN_RIFLE ? 0 : 90)
+
+enum
+{
+	CAMERA_NONE = 0,
+	CAMERA_PLAYER,
+	CAMERA_FOLLOW,
+	CAMERA_ENTITY,
+	CAMERA_MAX
+};
+
+enum
+{
+	SINFO_ICON = 0,
+	SINFO_STATUS,
+	SINFO_HOST,
+	SINFO_DESC,
+	SINFO_PING,
+	SINFO_PLAYERS,
+	SINFO_MAXCLIENTS,
+	SINFO_GAME,
+	SINFO_MAP,
+	SINFO_TIME,
+	SINFO_MAX
+};
+
+enum
+{
+	SSTAT_OPEN = 0,
+	SSTAT_LOCKED,
+	SSTAT_PRIVATE,
+	SSTAT_FULL,
+	SSTAT_UNKNOWN,
+	SSTAT_MAX
+};
+
+static const char *serverinfotypes[] = {
+	"",
+	"status",
+	"host",
+	"desc",
+	"ping",
+	"pl",
+	"max",
+	"game",
+	"map",
+	"time"
+};
+
+static const char *serverstatustypes[] = {
+	"\fs\fgopen\fS",
+	"\fs\fblocked\fS",
+	"\fs\fmprivate\fS",
+	"\fs\frfull\fS",
+	"\fs\fb?\fS"
+};
 
 // inherited by fpsent and server clients
 struct fpsstate
@@ -351,13 +430,10 @@ struct fpsstate
 				ammo[g.info] = min(ammo[g.info] + (attr2 > 0 ? attr2 : g.add), g.max);
 
 				lastshot = gunlast[g.info] = millis;
-				gunwait[g.info] = guntype[g.info].rdelay;
+				gunwait[g.info] = (guntype[g.info].rdelay ? guntype[g.info].rdelay : guntype[g.info].adelay);
 				break;
 			}
-			default:
-			{
-				break;
-			}
+			default: break;
 		}
 	}
 
@@ -404,24 +480,57 @@ struct fpsstate
 	}
 };
 
-enum
+enum { BS_NONE = 0, BS_WAIT, BS_SEARCH, BS_MOVE, BS_DEFEND, BS_ATTACK, BS_PROTECT, BS_MAX };
+
+struct botstate
 {
-	SAY_NONE = 0x0,
-	SAY_ACTION = 0x1,
-	SAY_TEAM = 0x2,
+	int type, goal, millis, interval;
+
+	botstate(int _type, int _goal = -1, int _millis = 0, int _interval = 0) :
+		type(_type), goal(_goal), millis(_millis), interval(_interval) {}
+	~botstate() {}
 };
 
-enum
+struct botinfo
 {
-	PRIV_NONE = 0,
-	PRIV_MASTER,
-	PRIV_ADMIN,
-	PRIV_MAX
+	vector<botstate> state;
+	vector<int> route;
+	vec target;
+
+	botinfo()
+	{
+		reset();
+	}
+	~botinfo()
+	{
+		state.setsize(0);
+		route.setsize(0);
+	}
+
+	void reset()
+	{
+		state.setsize(0);
+		route.setsize(0);
+		addstate(BS_NONE, 0, 0, 0);
+	}
+
+	void addstate(int type, int goal = -1, int millis = 0, int interval = 0)
+	{
+		botstate bs(type, goal, millis, interval);
+		state.add(bs);
+	}
+
+	void removestate(int index = -1)
+	{
+		if(index < 0) state.pop();
+		else if(state.inrange(index)) state.remove(index);
+		if(!state.length()) reset();
+	}
 };
 
 struct fpsent : dynent, fpsstate
 {
-	int weight;						 // affects the effectiveness of hitpush
+	int weight;
 	int clientnum, privilege, lastupdate, plag, ping;
 	int lastattackgun;
 	bool attacking, reloading, useaction, leaning;
@@ -435,15 +544,20 @@ struct fpsent : dynent, fpsstate
     int smoothmillis;
 	int spree, lastimpulse, lastnode;
 	int respawned, suicided;
+	botinfo *bot;
 
 	string name, team, info;
 
-	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), spree(0), lastimpulse(0)
+	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), spree(0), lastimpulse(0), bot(NULL)
 	{
 		name[0] = team[0] = info[0] = 0;
 		respawn();
 	}
-	~fpsent() { freeeditinfo(edit); }
+	~fpsent()
+	{
+		freeeditinfo(edit);
+		if(bot) delete bot;
+	}
 
 	void damageroll(float damage)
 	{
@@ -473,71 +587,5 @@ struct fpsent : dynent, fpsstate
 		lasttaunt = lastuse = lastusemillis = superdamage = spree = lastimpulse = 0;
 		lastbase = respawned = suicided = -1;
 	}
-};
-
-#define MM_MODE 0xF
-#define MM_AUTOAPPROVE 0x1000
-#define MM_DEFAULT (MM_MODE | MM_AUTOAPPROVE)
-
-enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
-
-#ifndef STANDALONE
-
-#define MAXFOV			(gamethirdperson() ? 100 : 125)
-#define MINFOV			(player1->gunselect == GUN_RIFLE ? 0 : 90)
-
-enum
-{
-	CAMERA_NONE = 0,
-	CAMERA_PLAYER,
-	CAMERA_FOLLOW,
-	CAMERA_ENTITY,
-	CAMERA_MAX
-};
-
-enum
-{
-	SINFO_ICON = 0,
-	SINFO_STATUS,
-	SINFO_HOST,
-	SINFO_DESC,
-	SINFO_PING,
-	SINFO_PLAYERS,
-	SINFO_MAXCLIENTS,
-	SINFO_GAME,
-	SINFO_MAP,
-	SINFO_TIME,
-	SINFO_MAX
-};
-
-static const char *serverinfotypes[] = {
-	"",
-	"status",
-	"host",
-	"desc",
-	"ping",
-	"pl",
-	"max",
-	"game",
-	"map",
-	"time"
-};
-
-enum
-{
-	SSTAT_OPEN = 0,
-	SSTAT_LOCKED,
-	SSTAT_PRIVATE,
-	SSTAT_FULL,
-	SSTAT_UNKNOWN,
-	SSTAT_MAX
-};
-
-static const char *serverstatustypes[] = {
-	"\fs\fgopen\fS",
-	"\fs\fblocked\fS",
-	"\fs\fmprivate\fS",
-	"\fs\frfull\fS",
-	"\fs\fb?\fS"
 };
 #endif

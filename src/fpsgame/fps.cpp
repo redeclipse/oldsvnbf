@@ -530,7 +530,7 @@ struct GAMECLIENT : igameclient
 
 	void suicide(fpsent *d)
 	{
-		if(d==player1 || d->ownernum==player1->clientnum)
+		if(d == player1 || d->ownernum == player1->clientnum)
 		{
 			if(d->state!=CS_ALIVE) return;
 			if(d->suicided!=d->lifesequence)
@@ -675,7 +675,7 @@ struct GAMECLIENT : igameclient
 							glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
 							glEnd();
 
-							if(isgun(d->gunselect) && d->ammo[d->gunselect] >= 0)
+							if(isgun(d->gunselect) && d->ammo[d->gunselect] > 0)
 							{
 								draw_textx("%d", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->ammo[d->gunselect]);
 							}
