@@ -167,14 +167,21 @@ const char *findfile(const char *filename, const char *mode)
             return s;
         }
     }
-    if(mode[0]=='w' || mode[0]=='a') return filename;
+    if(mode[0]=='w' || mode[0]=='a')
+    {
+        s_strcpy(s, filename);
+        path(s);
+        return s;
+    }
     loopv(packagedirs)
     {
         s_sprintf(s)("%s%s", packagedirs[i], filename);
 		path(s);
         if(fileexists(s, mode)) return s;
     }
-    return filename;
+    s_strcpy(s, filename);
+    path(s);
+    return s;
 }
 
 FILE *openfile(const char *filename, const char *mode)
