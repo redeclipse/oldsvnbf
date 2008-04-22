@@ -107,7 +107,7 @@ struct botclient
 							{
 								vec dir(d->bot->target);
 								dir.sub(d->o);
-								if(dir.z > 4.f && !d->jumping && !d->timeinair)
+								if(dir.z > 6.f && !d->jumping && !d->timeinair)
 									d->jumping = true;
 								dir.normalize();
 								vectoyawpitch(dir, d->yaw, d->pitch);
