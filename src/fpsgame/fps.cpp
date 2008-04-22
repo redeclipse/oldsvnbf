@@ -552,9 +552,10 @@ struct GAMECLIENT : igameclient
 
 	void drawblips(int x, int y, int s)
 	{
+		physent *d = player1->state == CS_SPECTATOR || player1->state == CS_EDITING ? camera1 : player1;
+
 		loopv(players) if (players[i] && players[i]->state == CS_ALIVE)
 		{
-			physent *d = player1->state == CS_SPECTATOR || player1->state == CS_EDITING ? camera1 : player1;
 			fpsent *f = players[i];
 			vec dir(f->o);
 			dir.sub(d->o);
@@ -564,8 +565,27 @@ struct GAMECLIENT : igameclient
 			dir.rotate_around_z(-d->yaw*RAD);
 			settexture(m_team(gamemode, mutators) && isteam(player1->team, f->team) ? "textures/blip_blue.png" : "textures/blip_red.png");
 			glBegin(GL_QUADS);
-			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.025f*s);
+			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.05f*s);
 			glEnd();
+		}
+		loopv(et.ents)
+		{
+			extentity &e = *et.ents[i];
+			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
+			enttypes &t = enttype[e.type];
+			if((t.usetype == ETU_ITEM && e.spawned) || player1->state == CS_EDITING)
+			{
+				vec dir(e.o);
+				dir.sub(d->o);
+				dir.z = 0.0f;
+				float dist = dir.magnitude();
+				if(dist >= MAXRADAR) continue;
+				dir.rotate_around_z(-d->yaw*RAD);
+				settexture("textures/blip_green.png");
+				glBegin(GL_QUADS);
+				drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.03f*s);
+				glEnd();
+			}
 		}
 	}
 
@@ -706,6 +726,7 @@ struct GAMECLIENT : igameclient
 					drawradar(float(rx), float(ry), float(rs));
 					glEnd();
 					drawblips(rx, ry, rs);
+
 					if(m_capture(gamemode)) cpc.drawhud(ox, oy);
 					else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
 				}

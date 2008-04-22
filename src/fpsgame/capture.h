@@ -292,7 +292,7 @@ struct captureclient : capturestate
 			float dist = dir.magnitude();
 			if(dist >= MAXRADAR) dir.mul(MAXRADAR/dist);
 			dir.rotate_around_z(-d->yaw*RAD);
-			cl.drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.05f*s);
+			cl.drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.1f*s);
 		}
 		glEnd();
 	}

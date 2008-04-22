@@ -43,6 +43,40 @@ struct botclient
 			d->bot->addstate(type, goal, lastmillis, interval);
 	}
 
+	bool search(fpsent *d)
+	{
+		int node = cl.player1->lastnode;
+		if(cl.et.ents.inrange(node))
+		{
+			vector<int> avoid;
+			avoid.setsize(0);
+			cl.et.linkroute(d->lastnode, node, d->bot->route, avoid);
+			if(d->bot->route.inrange(1))
+			{
+				nextstate(d, BS_MOVE, d->bot->route[1]);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool move(fpsent *d, int goal)
+	{
+		if(cl.et.ents.inrange(goal))
+		{
+			d->move = 1;
+			d->bot->target = vec(cl.et.ents[goal]->o).add(vec(0, 0, d->height-1));
+			vec dir(d->bot->target);
+			dir.sub(d->o);
+			if(dir.z > 6.f && !d->jumping && !d->timeinair) d->jumping = true;
+			dir.normalize();
+			vectoyawpitch(dir, d->yaw, d->pitch);
+			nextstate(d, BS_SEARCH); // move and search bounce between each other alot
+			return true;
+		}
+		return false;
+	}
+
 	void think(fpsent *d)
 	{
 		botstate &bs = d->bot->state.last();
@@ -64,64 +98,14 @@ struct botclient
 				}
 				case BS_SEARCH:
 				{
-					if(d->state == CS_ALIVE)
-					{
-						int node = cl.player1->lastnode;
-						if(cl.et.ents.inrange(node))
-						{
-							vector<int> avoid;
-							avoid.setsize(0);
-							cl.et.linkroute(d->lastnode, node, d->bot->route, avoid);
-
-							vec v(vec(d->o).sub(vec(0, 0, d->height-1)));
-							int goal = -1;
-							loopv(d->bot->route)
-							{
-								if (!d->bot->route.inrange(goal) ||
-									(v.dist(cl.et.ents[d->bot->route[i]]->o) < v.dist(cl.et.ents[d->bot->route[goal]]->o)))
-										goal = i;
-							}
-							if(d->bot->route.inrange(goal) && v.dist(cl.et.ents[d->bot->route[goal]]->o) <= cl.et.ents[d->bot->route[goal]]->attr1)
-								goal++; // we want the next one then, don't we?
-							if(d->bot->route.inrange(goal))
-							{
-								nextstate(d, BS_MOVE, d->bot->route[goal]);
-								break;
-							}
-						}
-					}
+					if(d->state == CS_ALIVE && search(d)) break;
 					d->stopmoving();
 					nextstate(d, BS_WAIT, 0, 100);
 					break;
 				}
 				case BS_MOVE:
 				{
-					if(d->state == CS_ALIVE)
-					{
-						if(cl.et.ents.inrange(bs.goal))
-						{
-							fpsentity &e = (fpsentity &) *cl.et.ents[bs.goal];
-							d->bot->target = vec(e.o).add(vec(0, 0, d->height-1));
-
-							if(d->o.dist(d->bot->target) > e.attr1)
-							{
-								vec dir(d->bot->target);
-								dir.sub(d->o);
-								if(dir.z > 6.f && !d->jumping && !d->timeinair)
-									d->jumping = true;
-								dir.normalize();
-								vectoyawpitch(dir, d->yaw, d->pitch);
-							}
-							else
-							{
-								nextstate(d, BS_SEARCH);
-							}
-
-							d->move = 1;
-
-							break;
-						}
-					}
+					if(d->state == CS_ALIVE && move(d, bs.goal)) break;
 					d->stopmoving();
 					nextstate(d, BS_WAIT, 0, 100);
 					break;
@@ -139,7 +123,7 @@ struct botclient
 		cl.ph.updatewater(d, 0);
 	}
 
-	IVAR(debugbot, 0, 1, 1);
+	IVAR(debugbot, 0, 0, 1);
 
 	void render()
 	{
