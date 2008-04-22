@@ -294,8 +294,6 @@ enum
 
 enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
 
-#ifndef STANDALONE
-
 #define MAXFOV			(gamethirdperson() ? 100 : 125)
 #define MINFOV			(player1->gunselect == GUN_RIFLE ? 0 : 90)
 
@@ -333,6 +331,7 @@ enum
 	SSTAT_MAX
 };
 
+#ifndef STANDALONE
 static const char *serverinfotypes[] = {
 	"",
 	"status",
@@ -353,6 +352,7 @@ static const char *serverstatustypes[] = {
 	"\fs\frfull\fS",
 	"\fs\fb?\fS"
 };
+#endif
 
 // inherited by fpsent and server clients
 struct fpsstate
@@ -588,4 +588,3 @@ struct fpsent : dynent, fpsstate
 		lastbase = respawned = suicided = -1;
 	}
 };
-#endif
