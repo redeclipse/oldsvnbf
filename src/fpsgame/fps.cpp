@@ -565,7 +565,7 @@ struct GAMECLIENT : igameclient
 			dir.rotate_around_z(-d->yaw*RAD);
 			settexture(m_team(gamemode, mutators) && isteam(player1->team, f->team) ? "textures/blip_blue.png" : "textures/blip_red.png");
 			glBegin(GL_QUADS);
-			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.05f*s);
+			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), (f->crouching ? 0.05f : 0.025f)*s);
 			glEnd();
 		}
 		loopv(et.ents)
@@ -583,7 +583,7 @@ struct GAMECLIENT : igameclient
 				dir.rotate_around_z(-d->yaw*RAD);
 				settexture("textures/blip_green.png");
 				glBegin(GL_QUADS);
-				drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.03f*s);
+				drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.025f*s);
 				glEnd();
 			}
 		}

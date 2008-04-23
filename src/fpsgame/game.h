@@ -480,7 +480,18 @@ struct fpsstate
 	}
 };
 
-enum { BS_NONE = 0, BS_WAIT, BS_SEARCH, BS_MOVE, BS_DEFEND, BS_ATTACK, BS_PROTECT, BS_MAX };
+// bot state information for the owner client
+enum
+{
+	BS_WAIT = 0,	// waiting for next command
+	BS_UPDATE,		// update current objective
+	BS_MOVE,		// move toward goal waypoint
+	BS_DEFEND,		// defend goal target
+	BS_PURSUE,		// pursue goal target
+	BS_ATTACK,		// attack goal target
+	BS_INTEREST,	// game specific interest in goal entity
+	BS_MAX
+};
 
 struct botstate
 {
@@ -493,25 +504,24 @@ struct botstate
 
 struct botinfo
 {
-	vector<botstate> state;
-	vector<int> route;
-	vec target;
+	vector<botstate> state;	// stack of states
+	vector<int> route;		// current route planned
+	vec targpos;			// current targets
 
 	botinfo()
 	{
 		reset();
+		setstate();
 	}
 	~botinfo()
 	{
-		state.setsize(0);
-		route.setsize(0);
+		reset();
 	}
 
 	void reset()
 	{
 		state.setsize(0);
 		route.setsize(0);
-		addstate(BS_NONE, 0, 0, 0);
 	}
 
 	void addstate(int type, int goal = -1, int millis = 0, int interval = 0)
@@ -524,7 +534,26 @@ struct botinfo
 	{
 		if(index < 0) state.pop();
 		else if(state.inrange(index)) state.remove(index);
-		if(!state.length()) reset();
+		if(!state.length()) setstate();
+	}
+
+	void setstate(int type = BS_WAIT, int goal = -1, int interval = 0, bool pop = true)
+	{
+		bool popstate = pop && state.length() > 1;
+		if(popstate) removestate();
+		addstate(type, goal, lastmillis, interval);
+	}
+
+	botstate &getstate(int index)
+	{
+		if(state.inrange(index)) return state[index];
+		return state.last();
+	}
+
+	botstate &curstate()
+	{
+		if(!state.length()) setstate();
+		return state.last();
 	}
 };
 
