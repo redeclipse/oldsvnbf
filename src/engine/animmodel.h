@@ -363,7 +363,7 @@ struct animmodel : model
         virtual mesh *copy()
         {
             mesh &m = *allocate();
-            m.name = newstring(name);
+            if(name) m.name = newstring(name);
             return &m;
         }
             
