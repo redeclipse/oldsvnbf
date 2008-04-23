@@ -781,7 +781,7 @@ struct GAMESERVER : igameserver
 		loopv(clients)
 		{
 			clientinfo *oi = clients[i];
-			if(oi->state.state==CS_SPECTATOR && !oi->privilege) continue;
+			if((oi->state.state==CS_SPECTATOR && !oi->privilege) || oi->state.ownernum >= 0) continue;
 			maxvotes++;
 			if(!oi->mapvote[0]) continue;
 			votecount *vc = NULL;
@@ -2111,7 +2111,9 @@ struct GAMESERVER : igameserver
 
 	void serverinforeply(ucharbuf &p)
 	{
-		putint(p, clients.length());
+		int numplayers = 0;
+		loopv(clients) if(clients[i] && clients[i]->state.ownernum < 0) numplayers++;
+		putint(p, numplayers);
 		putint(p, 6);					// number of attrs following
 		putint(p, PROTOCOL_VERSION);	// 1 // generic attributes, passed back below
 		putint(p, gamemode);			// 2
