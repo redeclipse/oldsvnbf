@@ -27,7 +27,7 @@ struct skelmodel : animmodel
     {
         int uses, interpindex;
         float weights[4];
-        uchar bones[4];
+        uchar bones[4], interpbones[4];
 
         blendcombo() : uses(1)
         {
@@ -102,7 +102,7 @@ struct skelmodel : animmodel
             else
             {
                 loopk(4) v.weights[k] = uchar(weights[k]*255);
-                loopk(4) v.bones[k] = (matskel ? 3 : 2)*bones[k];
+                loopk(4) v.bones[k] = (matskel ? 3 : 2)*interpbones[k];
             }
         }
     };
@@ -681,11 +681,13 @@ struct skelmodel : animmodel
             return -1;
         }
 
-        void addtag(const char *name, int bone)
+        bool addtag(const char *name, int bone)
         {
+            if(findtag(name) >= 0) return false;
             tag &t = tags.add();
             t.name = newstring(name);
             t.bone = bone;
+            return true;
         }
 
         skeleton *copy()
@@ -732,7 +734,7 @@ struct skelmodel : animmodel
                     {
                         boneinfo &info = bones[c.bones[k]];
                         if(info.interpindex<0) info.interpindex = numgpubones++;
-                        c.bones[k] = info.interpindex;
+                        c.interpbones[k] = info.interpindex;
                     }
                 }
             }
@@ -1374,7 +1376,7 @@ struct skelmodel : animmodel
         int remapblend(int blend)
         {
             const blendcombo &c = blendcombos[blend];
-            return c.weights[1] ? c.interpindex : c.bones[0];
+            return c.weights[1] ? c.interpindex : c.interpbones[0];
         }
 
         void blendmatbones(const skelcacheentry &sc, blendcacheentry &bc)
@@ -1386,13 +1388,13 @@ struct skelmodel : animmodel
                 const blendcombo &c = blendcombos[i];
                 if(c.interpindex<0) break;
                 matrix3x4 &m = dst[c.interpindex];
-                m = sc.mdata[c.bones[0]];
+                m = sc.mdata[c.interpbones[0]];
                 m.scale(c.weights[0]);
-                m.accumulate(sc.mdata[c.bones[1]], c.weights[1]);
+                m.accumulate(sc.mdata[c.interpbones[1]], c.weights[1]);
                 if(c.weights[2])
                 {
-                    m.accumulate(sc.mdata[c.bones[2]], c.weights[2]);
-                    if(c.weights[3]) m.accumulate(sc.mdata[c.bones[3]], c.weights[3]);
+                    m.accumulate(sc.mdata[c.interpbones[2]], c.weights[2]);
+                    if(c.weights[3]) m.accumulate(sc.mdata[c.interpbones[3]], c.weights[3]);
                 }
             }
         }
@@ -1406,13 +1408,13 @@ struct skelmodel : animmodel
                 const blendcombo &c = blendcombos[i];
                 if(c.interpindex<0) break;
                 dualquat &d = dst[c.interpindex];
-                d = sc.bdata[c.bones[0]];
+                d = sc.bdata[c.interpbones[0]];
                 d.mul(c.weights[0]);
-                d.accumulate(sc.bdata[c.bones[1]], c.weights[1]);
+                d.accumulate(sc.bdata[c.interpbones[1]], c.weights[1]);
                 if(c.weights[2])
                 {
-                    d.accumulate(sc.bdata[c.bones[2]], c.weights[2]);
-                    if(c.weights[3]) d.accumulate(sc.bdata[c.bones[3]], c.weights[3]);
+                    d.accumulate(sc.bdata[c.interpbones[2]], c.weights[2]);
+                    if(c.weights[3]) d.accumulate(sc.bdata[c.interpbones[3]], c.weights[3]);
                 }
             }
         }
