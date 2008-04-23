@@ -37,6 +37,14 @@ struct entities : icliententities
 	{
 		waypointcheck(cl.player1);
 		loopv(cl.players) if(cl.players[i]) waypointcheck(cl.players[i]);
+		loopv(ents)
+		{
+			fpsentity &e = (fpsentity &)*ents[i];
+			if(e.type == MAPSOUND && mapsounds.inrange(e.attr1) && (!sounds.inrange(e.schan) || !sounds[e.schan].inuse))
+			{
+				e.schan = playsound(e.attr1, &e.o, e.attr4, e.attr2, e.attr3, SND_MAP);
+			}
+		}
 	}
 
    const char *itemname(int i)
@@ -66,7 +74,7 @@ struct entities : icliententities
 		return emdl[0] ? emdl : NULL;
 	}
 
-	void rumble(extentity &e) { playsound(S_RUMBLE, &e.o, 255, 0, true); }
+	void rumble(extentity &e) { playsound(S_RUMBLE, &e.o); }
 
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
@@ -729,19 +737,13 @@ struct entities : icliententities
 				else if(e.type == 10) e.type = NOTUSED; // unused teledest?
 				else if(e.type >= 11) e.type--;
 
-				if(e.type == MAPSOUND)
-				{
-					e.attr2 = 255;
-					e.attr3 = 0;
-				}
-
-				if(e.type == WAYPOINT) e.attr1 = enttype[WAYPOINT].radius;
-
 				if(mtype == MAP_OCTA)
 				{
 					if(e.type == 20) e.attr1 = ++fcnt; // number them instead
 					else if(e.type >= MAXENTTYPES) e.type = NOTUSED; // sanity check
 				}
+				else if(e.type == WAYPOINT) e.attr1 = enttype[WAYPOINT].radius;
+
 			}
 		}
 	}
@@ -805,16 +807,20 @@ struct entities : icliententities
 	{
 		if(!level && showentradius() >= level)
 		{
-			int h = enttype[e.type].height, r = enttype[e.type].radius;
 			switch(e.type)
 			{
+				case MAPSOUND:
+					renderradius(e.o, e.attr2, e.attr2);
+					renderradius(e.o, e.attr3, e.attr3);
+					break;
 				case WAYPOINT:
-					h = r = e.attr1;
+					renderradius(e.o, e.attr1, e.attr1);
 					break;
 				default:
+					if (enttype[e.type].height || enttype[e.type].radius)
+						renderradius(e.o, enttype[e.type].height, enttype[e.type].radius);
 					break;
 			}
-			if(h > 0.f || r > 0.f) renderradius(e.o, h, r);
 		}
 
 		switch(e.type)
@@ -866,7 +872,6 @@ struct entities : icliententities
 			if(level)
 			{
 				renderprimitive(true);
-
 				if(editmode)
 				{
 					loopv(entgroup) entfocus(entgroup[i], renderentshow(e, 0));
@@ -877,29 +882,16 @@ struct entities : icliententities
 				{
 					entfocus(i, { renderentshow(e, level); });
 				}
-
 				renderprimitive(false);
-			}
-
-			loopv(ents) // sounds are here so they only execute once per frame
-			{
-				fpsentity &e = (fpsentity &)*ents[i];
-
-				if(e.type == MAPSOUND && mapsounds.inrange(e.attr1))
-				{
-					if(!sounds.inrange(e.schan) || !sounds[e.schan].inuse)
-					{
-						int vol = e.attr2 >= 1 && e.attr2 <= 255 ? e.attr2 : 255;
-						e.schan = playsound(e.attr1, &e.o, vol, -1, true, true);
-					}
-				}
 			}
 		}
 
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-			if(e.type == TELEPORT || (e.type == WEAPON && (e.spawned || editmode)))
+			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
+			enttypes &t = enttype[e.type];
+			if(t.usetype == ETU_ITEM && (e.spawned || editmode))
 			{
 				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 

@@ -98,7 +98,7 @@ struct GAMECLIENT : igameclient
 	fpsent *spawnstate(fpsent *d)			  // reset player state not persistent accross spawns
 	{
 		d->respawn();
-		playsound(S_RESPAWN, &d->o, 255, 0, true);
+		playsound(S_RESPAWN, &d->o);
 		d->spawnstate(gamemode, mutators);
 		return d;
 	}
@@ -553,20 +553,18 @@ struct GAMECLIENT : igameclient
 	void drawblips(int x, int y, int s)
 	{
 		physent *d = player1->state == CS_SPECTATOR || player1->state == CS_EDITING ? camera1 : player1;
-
+		settexture("textures/blip.png");
+		glBegin(GL_QUADS);
 		loopv(players) if (players[i] && players[i]->state == CS_ALIVE)
 		{
 			fpsent *f = players[i];
 			vec dir(f->o);
 			dir.sub(d->o);
-			dir.z = 0.0f;
 			float dist = dir.magnitude();
 			if(dist >= MAXRADAR) continue;
 			dir.rotate_around_z(-d->yaw*RAD);
-			settexture(m_team(gamemode, mutators) && isteam(player1->team, f->team) ? "textures/blip_blue.png" : "textures/blip_red.png");
-			glBegin(GL_QUADS);
+			glColor4f(0.f, 1.f, 0.f, 1.f-(dist/MAXRADAR));
 			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), (f->crouching ? 0.05f : 0.025f)*s);
-			glEnd();
 		}
 		loopv(et.ents)
 		{
@@ -577,16 +575,15 @@ struct GAMECLIENT : igameclient
 			{
 				vec dir(e.o);
 				dir.sub(d->o);
-				dir.z = 0.0f;
 				float dist = dir.magnitude();
 				if(dist >= MAXRADAR) continue;
 				dir.rotate_around_z(-d->yaw*RAD);
-				settexture("textures/blip_green.png");
-				glBegin(GL_QUADS);
+				settexture("textures/blip.png");
+				glColor4f(1.f, 1.f, 0.f, 1.f-(dist/MAXRADAR));
 				drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.025f*s);
-				glEnd();
 			}
 		}
+		glEnd();
 	}
 
 	void drawhud(int w, int h)
@@ -647,16 +644,13 @@ struct GAMECLIENT : igameclient
 					if (fov < 90 && d->gunselect == GUN_RIFLE && d->state == CS_ALIVE)
 					{
 						settexture("textures/overlay_zoom.png");
-
 						glColor4f(1.f, 1.f, 1.f, 1.f);
 
 						glBegin(GL_QUADS);
-
 						glTexCoord2f(0, 0); glVertex2i(0, 0);
 						glTexCoord2f(1, 0); glVertex2i(ox, 0);
 						glTexCoord2f(1, 1); glVertex2i(ox, oy);
 						glTexCoord2f(0, 1); glVertex2i(0, oy);
-
 						glEnd();
 					}
 
@@ -669,12 +663,10 @@ struct GAMECLIENT : igameclient
 						glColor4f(1.f, 1.f, 1.f, pc);
 
 						glBegin(GL_QUADS);
-
 						glTexCoord2f(0, 0); glVertex2i(0, 0);
 						glTexCoord2f(1, 0); glVertex2i(ox, 0);
 						glTexCoord2f(1, 1); glVertex2i(ox, oy);
 						glTexCoord2f(0, 1); glVertex2i(0, oy);
-
 						glEnd();
 					}
 
@@ -684,10 +676,10 @@ struct GAMECLIENT : igameclient
 						{
 							float hlt = d->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
 							if (lastmillis < d->lastregen+500) pulse *= (lastmillis-d->lastregen)/500.f;
+							settexture("textures/barv.png");
 							glColor4f(glow, 0.f, 0.f, pulse);
 
 							int rw = oy/5/4, rx = oy/5+8, rh = oy/5, ry = oy-rh-4, ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
-							settexture("textures/barv.png");
 							glBegin(GL_QUADS);
 							glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
 							glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
@@ -718,17 +710,18 @@ struct GAMECLIENT : igameclient
 						}
 					}
 
-					glColor4f(1.f, 1.f, 1.f, fade);
-
 					int rx = 4, rs = oy/5, ry = oy-rs-4;
 					settexture("textures/radar.png");
+					if(m_team(gamemode, mutators)) glColor4f(0.f, 0.f, 1.f, fade);
+					else glColor4f(0.f, 1.0f, 0.f, fade);
+
 					glBegin(GL_QUADS);
 					drawradar(float(rx), float(ry), float(rs));
 					glEnd();
-					drawblips(rx, ry, rs);
 
 					if(m_capture(gamemode)) cpc.drawhud(ox, oy);
 					else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
+					drawblips(rx, ry, rs);
 				}
 				glDisable(GL_BLEND);
 			}

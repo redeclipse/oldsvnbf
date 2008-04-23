@@ -520,10 +520,11 @@ struct clientcom : iclientcom
 
 			case SV_SOUND:
             {
-                int tcn = getint(p), snd = getint(p);
+                int tcn = getint(p), snd = getint(p), vol = getint(p);
                 fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
-				if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum)) break;
-				playsound(snd, &t->o);
+				if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum))
+					playsound(snd, &cl.player1->o, vol);
+				else playsound(snd, &t->o, vol);
 				break;
             }
 
@@ -631,7 +632,7 @@ struct clientcom : iclientcom
 				f->lifesequence = ls;
 				f->gunselect = gunselect;
 				f->state = CS_SPAWNING;
-				playsound(S_RESPAWN, &f->o, 255, 0, true);
+				playsound(S_RESPAWN, &f->o);
 				break;
 			}
 
@@ -711,10 +712,10 @@ struct clientcom : iclientcom
 				if (!target) break;
 				target->health = amt;
 				target->lastregen = ms;
-				playsound(S_REGEN, &target->o);
 				vec pos = target->o;
 				pos.z += 0.6f*(target->height + target->aboveeye) - target->height;
 				particle_splash(3, max((MAXHEALTH-target->health)/10, 1), 10000, target->o);
+				playsound(S_REGEN, &target->o, ((MAXHEALTH-target->health)*255)/MAXHEALTH);
 				break;
 			}
 
@@ -780,7 +781,7 @@ struct clientcom : iclientcom
 				int i = getint(p);
 				if(!cl.et.ents.inrange(i)) break;
 				cl.et.setspawn(i, true);
-				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o, 255, 0, true);
+				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o);
                 const char *name = cl.et.itemname(i);
 				if(name) particle_text(cl.et.ents[i]->o, name, 9);
 				break;

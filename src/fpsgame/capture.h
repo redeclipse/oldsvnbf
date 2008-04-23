@@ -271,8 +271,14 @@ struct captureclient : capturestate
 
 	void drawblips(int x, int y, int s, int type, bool skipenemy = false)
 	{
-		const char *textures[3] = {"textures/blip_red.png", "textures/blip_grey.png", "textures/blip_blue.png"};
-		settexture(textures[max(type+1, 0)]);
+		settexture("textures/blip.png");
+		switch(max(type+1, 0))
+		{
+			case 2: glColor4f(0.f, 0.f, 1.f, 1.f); break;
+			case 1: glColor4f(1.f, 1.f, 1.f, 1.f); break;
+			case 0:
+			default: glColor4f(1.f, 0.f, 0.f, 1.f); break;
+		}
 		glBegin(GL_QUADS);
 		loopv(bases)
 		{
