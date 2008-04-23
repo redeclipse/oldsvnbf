@@ -1,6 +1,19 @@
 struct botclient
 {
 	GAMECLIENT &cl;
+
+	static const int BOTISNEAR		= 8;			// is near
+	static const int BOTISFAR		= 96;			// too far
+	static const int BOTJUMPHEIGHT	= 6;			// decides to jump
+	static const int BOTJUMPIMPULSE	= 24;			// impulse to jump
+	static const int BOTJUMPMAX		= 32;			// too high
+	static const int BOTLOSRANGE	= 514;			// line of sight range
+	static const int BOTFOVRANGE	= 128;			// field of view range
+
+	#define BOTLOSDIST(x)			(BOTLOSRANGE-(x*2.0f))
+	#define BOTFOVX(x)				(BOTFOVRANGE-(x*0.5f))
+	#define BOTFOVY(x)				((BOTFOVRANGE*3/4)-(x*0.5f))
+
 	botclient(GAMECLIENT &_cl) : cl(_cl)
 	{
 		CCOMMAND(addbot, "", (botclient *self), self->addbot());
@@ -35,15 +48,7 @@ struct botclient
 		}
 	}
 
-	void nextstate(fpsent *d, int type = BS_WAIT, int goal = -1, int interval = 0, bool pop = true)
-	{
-		bool popstate = pop && d->bot->state.length() > 1;
-		if(popstate) d->bot->removestate();
-		if(!popstate || (d->bot->state.last()).type == BS_NONE)
-			d->bot->addstate(type, goal, lastmillis, interval);
-	}
-
-	bool search(fpsent *d)
+	bool updatestate(fpsent *d)
 	{
 		int node = cl.player1->lastnode;
 		if(cl.et.ents.inrange(node))
@@ -53,25 +58,25 @@ struct botclient
 			cl.et.linkroute(d->lastnode, node, d->bot->route, avoid);
 			if(d->bot->route.inrange(1))
 			{
-				nextstate(d, BS_MOVE, d->bot->route[1]);
+				d->bot->setstate(BS_MOVE, d->bot->route[1]);
 				return true;
 			}
 		}
 		return false;
 	}
 
-	bool move(fpsent *d, int goal)
+	bool movestate(fpsent *d, int goal)
 	{
 		if(cl.et.ents.inrange(goal))
 		{
 			d->move = 1;
-			d->bot->target = vec(cl.et.ents[goal]->o).add(vec(0, 0, d->height-1));
-			vec dir(d->bot->target);
+			d->bot->targpos = vec(cl.et.ents[goal]->o).add(vec(0, 0, d->height-1));
+			vec dir(d->bot->targpos);
 			dir.sub(d->o);
-			if(dir.z > 6.f && !d->jumping && !d->timeinair) d->jumping = true;
+			if(dir.z > BOTJUMPHEIGHT && !d->jumping && !d->timeinair) d->jumping = true;
 			dir.normalize();
 			vectoyawpitch(dir, d->yaw, d->pitch);
-			nextstate(d, BS_SEARCH); // move and search bounce between each other alot
+			d->bot->setstate(BS_UPDATE); // move and update bounce between each other alot
 			return true;
 		}
 		return false;
@@ -79,13 +84,18 @@ struct botclient
 
 	void think(fpsent *d)
 	{
-		botstate &bs = d->bot->state.last();
+		botstate &bs = d->bot->curstate();
+
+		// the state stack works like a chain of commands, certain commands
+		// simply replace each other, others spawn new commands to the stack
+		// the ai reads the top command from the stack and executes it or
+		// pops the stack and goes back along the history until it finds a
+		// suitable command to execute
 
 		if(lastmillis >= bs.millis+bs.interval)
 		{
 			switch(bs.type)
 			{
-				case BS_NONE: // wake up
 				case BS_WAIT:
 				{
 					d->stopmoving();
@@ -93,26 +103,27 @@ struct botclient
 					{
 						if(d->respawned != d->lifesequence && !cl.respawnwait(d)) cl.respawnself(d);
 					}
-					else if(d->state == CS_ALIVE) nextstate(d, BS_SEARCH);
+					else if(d->state == CS_ALIVE) d->bot->setstate(BS_UPDATE);
 					break;
 				}
-				case BS_SEARCH:
+				case BS_UPDATE:
 				{
-					if(d->state == CS_ALIVE && search(d)) break;
+					if(d->state == CS_ALIVE && updatestate(d)) break;
 					d->stopmoving();
-					nextstate(d, BS_WAIT, 0, 100);
+					d->bot->setstate(BS_WAIT, 0, 100);
 					break;
 				}
 				case BS_MOVE:
 				{
-					if(d->state == CS_ALIVE && move(d, bs.goal)) break;
+					if(d->state == CS_ALIVE && movestate(d, bs.goal)) break;
 					d->stopmoving();
-					nextstate(d, BS_WAIT, 0, 100);
+					d->bot->setstate(BS_WAIT, 0, 100);
 					break;
 				}
 				case BS_DEFEND:
+				case BS_PURSUE:
 				case BS_ATTACK:
-				case BS_PROTECT:
+				case BS_INTEREST:
 				case BS_MAX:
 				default: break;
 			}
@@ -136,7 +147,7 @@ struct botclient
 				{
 					botstate &bs = d->bot->state.last();
 					const char *bnames[BS_MAX] = {
-						"none", "wait", "search", "move", "defend", "attack", "protect"
+						"wait", "update", "move", "defend", "pursue", "attack", "interest"
 					};
 					s_sprintfd(s)("@%s [%d] (%.2f)", bnames[bs.type], bs.goal, max((bs.millis+bs.interval-lastmillis)/1000.f, 0.f));
 					particle_text(vec(d->abovehead()).add(vec(0, 0, 2)), s, 14, 1);
@@ -159,7 +170,7 @@ struct botclient
 							}
 							last = i;
 						}
-						renderline(d->o, d->bot->target, 64.f, 128.f, 64.f, false);
+						renderline(d->o, d->bot->targpos, 64.f, 128.f, 64.f, false);
 						renderprimitive(false);
 					}
 				}
