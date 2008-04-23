@@ -27,10 +27,10 @@ struct botclient
 
 	void delbot()
 	{
-		loopvrev(cl.players)
+		loopvrev(cl.players) if(cl.players[i])
 		{
 			fpsent *d = cl.players[i];
-			if (d && d->ownernum >= 0 && d->ownernum == cl.player1->clientnum)
+			if (d->ownernum >= 0 && d->ownernum == cl.player1->clientnum)
 			{
 				cl.cc.addmsg(SV_DELBOT, "ri", d->clientnum);
 				break;
@@ -40,10 +40,10 @@ struct botclient
 
 	void update()
 	{
-		loopv(cl.players)
+		loopv(cl.players) if(cl.players[i])
 		{
 			fpsent *d = cl.players[i];
-			if (d && d->ownernum >= 0 && d->ownernum == cl.player1->clientnum && d->bot)
+			if(d->ownernum >= 0 && d->ownernum == cl.player1->clientnum && d->bot)
 				think(d);
 		}
 	}
@@ -140,10 +140,10 @@ struct botclient
 	{
 		if(debugbot())
 		{
-			loopv(cl.players)
+			loopv(cl.players) if(cl.players[i] && cl.players[i]->state == CS_ALIVE)
 			{
 				fpsent *d = cl.players[i];
-				if (d && d->state == CS_ALIVE && d->ownernum >= 0 && d->ownernum == cl.player1->clientnum && d->bot)
+				if (d->ownernum >= 0 && d->ownernum == cl.player1->clientnum && d->bot)
 				{
 					botstate &bs = d->bot->state.last();
 					const char *bnames[BS_MAX] = {

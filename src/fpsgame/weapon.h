@@ -134,7 +134,7 @@ struct weaponstate
 		cl.camerawobble += int(guntype[gun].damage*(1-dist/RL_DISTSCALE/RL_DAMRAD));
 
 		if (guntype[gun].esound >= 0)
-			playsound(guntype[gun].esound, &o, 255, 0, true);
+			playsound(guntype[gun].esound, &o, 255, 0, 0, SND_COPY);
 
 		particle_splash(0, 200, 300, o);
 		particle_fireball(o, RL_DAMRAD, gun == GUN_RL ? 22 : 23);
@@ -199,7 +199,7 @@ struct weaponstate
 
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
-		if (guntype[gun].sound >= 0) playsound(guntype[gun].sound, &d->o);
+		if (guntype[gun].sound >= 0) playsound(guntype[gun].sound, &d->o, 255, 0, 0, SND_COPY);
 		adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 
 		switch(gun)

@@ -155,11 +155,11 @@ struct physics
 			{
 				if (waterlevel < 0 && mat == MAT_WATER)
 				{
-					playsound(S_SPLASH1, &d->o, 255, 0, true);
+					playsound(S_SPLASH1, &d->o, 255, 0, 0, SND_COPY);
 				}
 				else if (waterlevel > 0 && mat == MAT_WATER)
 				{
-					playsound(S_SPLASH2, &d->o, 255, 0, true);
+					playsound(S_SPLASH2, &d->o, 255, 0, 0, SND_COPY);
 				}
 				else if (waterlevel < 0 && mat == MAT_LAVA)
 				{
@@ -180,7 +180,7 @@ struct physics
 		}
 		else if (floorlevel < 0)
 		{
-			playsound(S_LAND, &d->o, 255, 0, true);
+			playsound(S_LAND, &d->o);
 		}
 	}
 

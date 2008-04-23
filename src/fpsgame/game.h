@@ -28,7 +28,7 @@ enum								// static entity types
 	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, [team]
 	ENVMAP = ET_ENVMAP,				// 4  radius
 	PARTICLES = ET_PARTICLES,		// 5  type, [others]
-	MAPSOUND = ET_SOUND,			// 6  idx, volume
+	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume
 	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
 	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
 	TELEPORT,						// 9  yaw, pitch, roll, push
@@ -38,7 +38,7 @@ enum								// static entity types
 	BASE,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
 	CAMERA,							// 15 yaw, pitch, pan (+:horiz/-:vert), idx
-	WAYPOINT,						// 16
+	WAYPOINT,						// 16 radius, weight
 	MAXENTTYPES						// 17
 };
 

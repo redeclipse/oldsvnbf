@@ -272,15 +272,16 @@ struct ctfclient : ctfstate
     void drawblips(int x, int y, int s, int i, bool flagblip)
     {
 		flag &f = flags[i];
-        settexture(f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ?
-                    "textures/blip_blue.png" : "textures/blip_red.png");
+        settexture("textures/blip.png");
+        if(f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators))) glColor4f(0.f, 0.f, 1.f, 1.f);
+        else glColor4f(1.f, 0.f, 0.f, 1.f);
 		physent *d = cl.player1->state == CS_SPECTATOR || cl.player1->state == CS_EDITING ? camera1 : cl.player1;
 		vec dir;
         if(flagblip) dir = f.owner ? f.owner->o : (f.droptime ? f.droploc : f.spawnloc);
         else dir = f.spawnloc;
 		dir.sub(d->o);
 		dir.z = 0.0f;
-        float size = flagblip ? 0.2f : 0.1f,
+        float size = flagblip ? 0.1f : 0.075f,
               xoffset = flagblip ? -2*(3/32.0f)*size : -size,
               yoffset = flagblip ? -2*(1 - 3/32.0f)*size : -size,
               dist = dir.magnitude();
