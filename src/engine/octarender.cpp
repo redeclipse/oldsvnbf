@@ -1144,7 +1144,7 @@ struct mergedface
 static int vahasmerges = 0, vamergemax = 0;
 static vector<mergedface> vamerges[VVEC_INT];
 
-void genmergedfaces(cube &c, const ivec &co, int size, int minlevel = 0)
+void genmergedfaces(cube &c, const ivec &co, int size, int minlevel = -1)
 {
     if(!c.ext || !c.ext->merges || isempty(c)) return;
     int index = 0, tj = c.ext->tjoints;
