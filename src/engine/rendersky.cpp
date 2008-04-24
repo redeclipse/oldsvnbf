@@ -52,37 +52,37 @@ void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F)
         draw_envbox_face(0.0f, 0.0f, -w, -w, -w,
                          1.0f, 0.0f, -w,  w, -w,
                          1.0f, vclip, -w,  w,  z,
-                         0.0f, vclip, -w, -w,  z, sky[0]->id ? sky[0]->id : notexture->id);
+                         0.0f, vclip, -w, -w,  z, sky[0] ? sky[0]->id : notexture->id);
 
     if(faces&0x02)
         draw_envbox_face(1.0f, vclip, +w, -w,  z,
                          0.0f, vclip, +w,  w,  z,
                          0.0f, 0.0f, +w,  w, -w,
-                         1.0f, 0.0f, +w, -w, -w, sky[1]->id ? sky[1]->id : notexture->id);
+                         1.0f, 0.0f, +w, -w, -w, sky[1] ? sky[1]->id : notexture->id);
 
     if(faces&0x04)
         draw_envbox_face(1.0f, vclip, -w, -w,  z,
                          0.0f, vclip,  w, -w,  z,
                          0.0f, 0.0f,  w, -w, -w,
-                         1.0f, 0.0f, -w, -w, -w, sky[2]->id ? sky[2]->id : notexture->id);
+                         1.0f, 0.0f, -w, -w, -w, sky[2] ? sky[2]->id : notexture->id);
 
     if(faces&0x08)
         draw_envbox_face(1.0f, vclip, +w,  w,  z,
                          0.0f, vclip, -w,  w,  z,
                          0.0f, 0.0f, -w,  w, -w,
-                         1.0f, 0.0f, +w,  w, -w, sky[3]->id ? sky[3]->id : notexture->id);
+                         1.0f, 0.0f, +w,  w, -w, sky[3] ? sky[3]->id : notexture->id);
 
     if(!zclip && faces&0x10)
         draw_envbox_face(0.0f, 1.0f, -w,  w,  w,
                          0.0f, 0.0f, +w,  w,  w,
                          1.0f, 0.0f, +w, -w,  w,
-                         1.0f, 1.0f, -w, -w,  w, sky[4]->id ? sky[4]->id : notexture->id);
+                         1.0f, 1.0f, -w, -w,  w, sky[4] ? sky[4]->id : notexture->id);
 
     if(faces&0x20)
         draw_envbox_face(0.0f, 1.0f, +w,  w, -w,
                          0.0f, 0.0f, -w,  w, -w,
                          1.0f, 0.0f, -w, -w, -w,
-                         1.0f, 1.0f, +w, -w, -w, sky[5]->id ? sky[5]->id : notexture->id);
+                         1.0f, 1.0f, +w, -w, -w, sky[5] ? sky[5]->id : notexture->id);
 
     glDepthMask(GL_TRUE);
 }
