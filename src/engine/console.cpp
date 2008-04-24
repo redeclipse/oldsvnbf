@@ -776,7 +776,9 @@ ICOMMAND(setcomplete, "ss", (char *s, char *t), {
 void writecompletions(FILE *f)
 {
 	enumeratekt(completions, char *, k, filesval *, v,
-        if(v) fprintf(f, "%scomplete \"%s\" \"%s\" \"%s\"\n", v->type==FILES_LIST ? "list" : "", k, v->dir, v->type==FILES_LIST ? "" : (v->ext ? v->ext : "*"));
+        if(!v) continue;
+        if(v->type==FILES_LIST) fprintf(f, "listcomplete \"%s\" [%s]\n", k, v->dir);
+        else fprintf(f, "complete \"%s\" \"%s\" \"%s\"\n", k, v->dir, v->ext ? v->ext : "*");
 	);
 }
 
