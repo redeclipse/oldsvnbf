@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "engine.h"
 
-bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false;
+bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false;
 
 VAR(renderpath, 1, 0, 0);
 
@@ -408,6 +408,12 @@ void gl_checkextensions()
        hwmaxaniso = val;
        hasAF = true;
        //conoutf("Using GL_EXT_texture_filter_anisotropic extension.");
+    }
+
+    if(strstr(exts, "GL_SGIS_generate_mipmap"))
+    {
+        hasGM = true;
+        //conoutf("Using GL_SGIS_generate_mipmap extension.");
     }
 
     GLint val;
