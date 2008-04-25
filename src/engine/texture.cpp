@@ -181,6 +181,8 @@ int formatsize(GLenum format)
 	}
 }
 
+VAR(hwmipmap, 0, 0, 1);
+
 void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, GLenum component, GLenum subtarget)
 {
 	GLenum target = subtarget;
@@ -209,6 +211,8 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 					(bilinear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR) :
 					(bilinear ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_NEAREST)) :
 				(bilinear ? GL_LINEAR : GL_NEAREST));
+        if(hasGM && mipit && pixels)
+            glTexParameteri(target, GL_GENERATE_MIPMAP_SGIS, hwmipmap ? GL_TRUE : GL_FALSE);
 	}
 	GLenum format = component, type = GL_UNSIGNED_BYTE;
 	switch(component)
@@ -256,12 +260,14 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 		GLenum compressed = compressedformat(component, w, h);
         if(target==GL_TEXTURE_1D)
         {
-            if(gluBuild1DMipmaps(subtarget, compressed, w, format, type, pixels))
+            if(hasGM && hwmipmap) glTexImage1D(subtarget, 0, compressed, w, 0, format, type, pixels);
+            else if(gluBuild1DMipmaps(subtarget, compressed, w, format, type, pixels))
             {
                 if(compressed==component || gluBuild1DMipmaps(subtarget, component, w, format, type, pixels)) conoutf("could not build mipmaps");
             }
         }
-		else if(gluBuild2DMipmaps(subtarget, compressed, w, h, format, type, pixels))
+        else if(hasGM && hwmipmap) glTexImage2D(subtarget, 0, compressed, w, h, 0, format, type, pixels);
+        else if(gluBuild2DMipmaps(subtarget, compressed, w, h, format, type, pixels))
 		{
 			if(compressed==component || gluBuild2DMipmaps(subtarget, component, w, h, format, type, pixels)) conoutf("could not build mipmaps");
 		}
