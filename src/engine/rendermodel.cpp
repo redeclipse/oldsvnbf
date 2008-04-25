@@ -481,7 +481,7 @@ void renderbatchedmodel(model *m, batchedmodel &b)
     if(shadowmapping) 
     {
         anim |= ANIM_NOSKIN;
-        setenvparamf("shadowintensity", SHPARAM_VERTEX, 0,
+        setenvparamf("shadowintensity", SHPARAM_VERTEX, 1,
             (anim&ANIM_INDEX)==ANIM_DYING ? max(1.0f - (lastmillis - b.basetime)/1000.0f, 0.0f) : 1.0f);
     }
     else
@@ -778,7 +778,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
     if(shadowmapping)
     {
         anim |= ANIM_NOSKIN;
-        setenvparamf("shadowintensity", SHPARAM_VERTEX, 0,
+        setenvparamf("shadowintensity", SHPARAM_VERTEX, 1,
             (anim&ANIM_INDEX)==ANIM_DYING ? max(1.0f - (lastmillis - basetime)/1000.0f, 0.0f) : 1.0f);
     }
     else
