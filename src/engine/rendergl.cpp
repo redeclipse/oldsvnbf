@@ -1130,6 +1130,20 @@ void invalidatepostfx()
     dopostfx = false;
 }
 
+GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16];
+
+void getmvpmatrix()
+{
+    glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix);
+    glGetFloatv(GL_PROJECTION_MATRIX, projmatrix);
+    loopi(4) loopj(4)
+    {
+        float c = 0;
+        loopk(4) c += projmatrix[k*4 + j] * mvmatrix[i*4 + k];
+        mvpmatrix[i*4 + j] = c;
+    }
+}
+
 void gl_drawframe(int w, int h)
 {
 	defaultshader->set();
@@ -1161,8 +1175,8 @@ void gl_drawframe(int w, int h)
 	farplane = max(max(fog*2, 384), hdr.worldsize*2);
 
 	project(fovy, aspect, farplane);
-
 	transplayer();
+    getmvpmatrix();
 
 	glEnable(GL_TEXTURE_2D);
 

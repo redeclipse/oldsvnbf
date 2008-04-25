@@ -266,12 +266,12 @@ void renderlava(materialsurface &m, Texture *tex, float scale)
 struct Reflection
 {
 	GLuint tex, refracttex;
-	int height, lastupdate, lastused;
+	int height, depth, lastupdate, lastused;
 	GLfloat tm[16];
 	occludequery *query;
 	vector<materialsurface *> matsurfs;
 
-	Reflection() : tex(0), refracttex(0), height(-1), lastused(0), query(NULL)
+	Reflection() : tex(0), refracttex(0), height(-1), depth(0), lastused(0), query(NULL)
 	{}
 };
 Reflection *findreflection(int height);
@@ -872,6 +872,7 @@ void addreflection(materialsurface &m)
 		else if(r.height==height)
 		{
 			r.matsurfs.add(&m);
+            r.depth = max(r.depth, int(m.depth));
 			if(r.lastused==totalmillis) return;
 			ref = &r;
 			break;
@@ -888,6 +889,7 @@ void addreflection(materialsurface &m)
 	ref->lastused = totalmillis;
 	ref->matsurfs.setsizenodelete(0);
 	ref->matsurfs.add(&m);
+    ref->depth = m.depth;
 	if(nowater) return;
 
     if(waterreflect && !ref->tex) genwatertex(ref->tex, reflectionfb, reflectiondb);
@@ -1030,6 +1032,76 @@ void maskreflection(Reflection &ref, float offset, bool reflect)
 	glDepthRange(0, 1);
 }
 
+VAR(reflectscissor, 0, 1, 1);
+
+static bool calcscissorbox(Reflection &ref, int size, int &sx, int &sy, int &sw, int &sh)
+{
+    materialsurface &m0 = *ref.matsurfs[0];
+    int dim = dimension(m0.orient), r = R[dim], c = C[dim];
+    ivec bbmin = m0.o, bbmax = bbmin;
+    bbmax[r] += m0.rsize;
+    bbmax[c] += m0.csize;
+    loopvj(ref.matsurfs)
+    {
+        materialsurface &m = *ref.matsurfs[j];
+        bbmin[r] = min(bbmin[r], m.o[r]);
+        bbmin[c] = min(bbmin[c], m.o[c]);
+        bbmax[r] = max(bbmax[r], m.o[r] + m.rsize);
+        bbmax[c] = max(bbmax[c], m.o[c] + m.csize);
+        bbmin[dim] = min(bbmin[dim], m.o[dim]);
+        bbmax[dim] = max(bbmax[dim], m.o[dim]);
+    }
+
+    vec4 v[8];
+    float sx1 = 1, sy1 = 1, sx2 = -1, sy2 = -1;
+    loopi(8)
+    {
+        ivec p(i&1 ? bbmax.x : bbmin.x, i&2 ? bbmax.y : bbmin.y, i&4 ? bbmax.z : bbmin.z);
+        float w = p.x*mvpmatrix[3] + p.y*mvpmatrix[7] + p.z*mvpmatrix[11] + mvpmatrix[15],
+              x = (p.x*mvpmatrix[0] + p.y*mvpmatrix[4] + p.z*mvpmatrix[8] + mvpmatrix[12]),
+              y = (p.x*mvpmatrix[1] + p.y*mvpmatrix[5] + p.z*mvpmatrix[9] + mvpmatrix[13]),
+              z = (p.x*mvpmatrix[2] + p.y*mvpmatrix[6] + p.z*mvpmatrix[10] + mvpmatrix[14]);
+        v[i] = vec4(x, y, z, w);
+        if(z >= 0)
+        {
+            x /= w;
+            y /= w;
+            sx1 = min(sx1, x);
+            sy1 = min(sy1, y);
+            sx2 = max(sx2, x);
+            sy2 = max(sy2, y);
+        }
+    }
+    if(sx1 >= sx2 || sy1 >= sy2) return false;
+    loopi(8)
+    {
+        const vec4 &p = v[i];
+        if(p.z >= 0) continue;
+        loopj(3)
+        {
+            const vec4 &o = v[i^(1<<j)];
+            if(o.z <= 0) continue;
+            float t = p.z/(p.z - o.z),
+                  w = p.w + t*(o.w - p.w),
+                  x = (p.x + t*(o.x - p.x))/w,
+                  y = (p.y + t*(o.y - p.y))/w;
+            sx1 = min(sx1, x);
+            sy1 = min(sy1, y);
+            sx2 = max(sx2, x);
+            sy2 = max(sy2, y);
+        }
+    }
+    sx1 = max(sx1, -1.0f);
+    sy1 = max(sy1, -1.0f);
+    sx2 = min(sx2, 1.0f);
+    sy2 = min(sy2, 1.0f);
+    sx = int(floor((hasFBO ? 0 : screen->w-size) + (sx1+1)*0.5f*size));
+    sy = int(floor((hasFBO ? 0 : screen->h-size) + (sy1+1)*0.5f*size));
+    sw = max(int(ceil((hasFBO ? 0 : screen->w-size) + (sx2+1)*0.5f*size)) - sx, 0);
+    sh = max(int(ceil((hasFBO ? 0 : screen->h-size) + (sy2+1)*0.5f*size)) - sy, 0);
+    return sx1 > -1 || sy1 > -1 || sx2 < 1 || sy2 < 1;
+}
+
 void drawreflections()
 {
 	if(editmode && showmat) return;
@@ -1046,13 +1118,6 @@ void drawreflections()
 		if(ref.height<0 || ref.lastused<lastquery || ref.matsurfs.empty()) continue;
 		if(hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref && checkquery(ref.query)) continue;
 
-		bool hasbottom = true;
-		loopvj(ref.matsurfs)
-		{
-			materialsurface &m = *ref.matsurfs[j];
-			if(m.depth>=10000) hasbottom = false;
-		}
-
         if(!refs)
         {
             glViewport(hasFBO ? 0 : screen->w-size, hasFBO ? 0 : screen->h-size, size, size);
@@ -1061,6 +1126,18 @@ void drawreflections()
         refs++;
         ref.lastupdate = totalmillis;
         lastdrawn = n;
+
+        bool scissor = false;
+        if(reflectscissor)
+        {
+            int sx, sy, sw, sh;
+            if(calcscissorbox(ref, size, sx, sy, sw, sh))
+            {
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(sx, sy, sw, sh);
+                scissor = true;
+            }
+        }
 
         if(waterreflect && ref.tex && camera1->o.z >= ref.height+offset)
         {
@@ -1078,13 +1155,15 @@ void drawreflections()
         {
             if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.refracttex, 0);
             maskreflection(ref, offset, false);
-            drawreflection(ref.height+offset, true, !hasbottom);
+            drawreflection(ref.height+offset, true, ref.depth>=10000);
             if(!hasFBO)
             {
                 glBindTexture(GL_TEXTURE_2D, ref.refracttex);
                 glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, screen->w-size, screen->h-size, size, size);
             }
         }
+
+        if(scissor) glDisable(GL_SCISSOR_TEST);
 
 		if(refs>=maxreflect) break;
 	}
@@ -1104,6 +1183,18 @@ void drawreflections()
         refs++;
         ref.lastupdate = totalmillis;
 
+        bool scissor = false;
+        if(reflectscissor)
+        {
+            int sx, sy, sw, sh;
+            if(calcscissorbox(ref, size, sx, sy, sw, sh))
+            {
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(sx, sy, sw, sh);
+                scissor = true;
+            }
+        }
+
         if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.refracttex, 0);
         maskreflection(ref, -0.1f, false);
         drawreflection(-1, true, false);
@@ -1112,6 +1203,8 @@ void drawreflections()
             glBindTexture(GL_TEXTURE_2D, ref.refracttex);
             glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, screen->w-size, screen->h-size, size, size);
         }
+
+        if(scissor) glDisable(GL_SCISSOR_TEST);
     }
 nowaterfall:
 

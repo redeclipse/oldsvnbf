@@ -24,24 +24,10 @@ vec depthfxmin(1e16f, 1e16f, 1e16f), depthfxmax(1e16f, 1e16f, 1e16f);
 
 static struct depthfxtexture : rendertarget
 {
-    GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16];
-
     const GLenum *colorformats() const
     {
         static const GLenum colorfmts[] = { GL_RGB16F_ARB, GL_RGB16, GL_RGBA, GL_RGBA8, GL_RGB, GL_RGB8, GL_FALSE };
         return &colorfmts[hasTF && hasFBO ? (fpdepthfx ? 0 : (depthfxprecision ? 1 : 2)) : 2];
-    }
-
-    void getmvpmatrix()
-    {
-        glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix);
-        glGetFloatv(GL_PROJECTION_MATRIX, projmatrix);
-        loopi(4) loopj(4)
-        {
-            float c = 0;
-            loopk(4) c += projmatrix[k*4 + j] * mvmatrix[i*4 + k];
-            mvpmatrix[i*4 + j] = c;
-        }
     }
 
     float eyedepth(const vec &p) const
@@ -724,8 +710,6 @@ static fireballrenderer fireballs(PT_FIREBALL|PT_GLARE), noglarefireballs(PT_FIR
 
 void finddepthfxranges()
 {
-    depthfxtex.getmvpmatrix();
-
     depthfxmin = vec(1e16f, 1e16f, 1e16f);
     depthfxmax = vec(0, 0, 0);
     numdepthfxranges = fireballs.finddepthfxranges(depthfxowners, depthfxranges, MAXDFXRANGES, depthfxmin, depthfxmax);
