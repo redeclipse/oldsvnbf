@@ -316,6 +316,11 @@ void md3glow(char *meshname, int *percent)
     loopmd3skins(meshname, s, s.glow = glow);
 }
 
+void md3glare(char *meshname, float *specglare, float *glowglare)
+{
+    loopmd3skins(meshname, s, { s.specglare = *specglare; s.glowglare = *glowglare; });
+}
+
 void md3alphatest(char *meshname, float *cutoff)
 {
     loopmd3skins(meshname, s, s.alphatest = max(0.0f, min(1.0f, *cutoff)));
@@ -387,6 +392,7 @@ COMMAND(md3skin, "sssff");
 COMMAND(md3spec, "si");
 COMMAND(md3ambient, "si");
 COMMAND(md3glow, "si");
+COMMAND(md3glare, "sff");
 COMMAND(md3alphatest, "sf");
 COMMAND(md3alphablend, "si");
 COMMAND(md3envmap, "ss");

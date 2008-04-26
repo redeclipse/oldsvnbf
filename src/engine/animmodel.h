@@ -72,10 +72,10 @@ struct animmodel : model
         part *owner;
         Texture *tex, *masks, *envmap, *unlittex, *normalmap;
         Shader *shader;
-        float spec, ambient, glow, fullbright, envmapmin, envmapmax, translucency, scrollu, scrollv, alphatest;
+        float spec, ambient, glow, specglare, glowglare, fullbright, envmapmin, envmapmax, translucency, scrollu, scrollv, alphatest;
         bool alphablend;
 
-        skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), fullbright(0), envmapmin(0), envmapmax(0), translucency(0.5f), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true) {}
+        skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), specglare(1), glowglare(1), fullbright(0), envmapmin(0), envmapmax(0), translucency(0.5f), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true) {}
 
         bool multitextured() { return enableglow; }
         bool envmapped() { return hasCM && envmapmax>0 && envmapmodels && (renderpath!=R_FIXEDFUNCTION || maxtmus >= (fogging ? 4 : 3)); }
@@ -202,6 +202,7 @@ struct animmodel : model
             }
             setenvparamf("glowscale", SHPARAM_PIXEL, 4, glow, glow, glow);
             setenvparamf("millis", SHPARAM_VERTEX, 5, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);
+            if(glaring) setenvparamf("glarescale", SHPARAM_PIXEL, 6, 16*specglare, 4*glowglare);
         }
 
         void setshader(mesh *m, const animstate *as, bool masked)
@@ -1154,6 +1155,17 @@ struct animmodel : model
     {
         if(parts.empty()) loaddefaultparts();
         loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].glow = glow;
+    }
+
+    void setglare(float specglare, float glowglare)
+    {
+        if(parts.empty()) loaddefaultparts();
+        loopv(parts) loopvj(parts[i]->skins)
+        {
+            skin &s = parts[i]->skins[j];
+            s.specglare = specglare;
+            s.glowglare = glowglare;
+        }
     }
 
     void setalphatest(float alphatest)

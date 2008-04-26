@@ -27,6 +27,7 @@ struct model
     virtual void setspec(float spec) {}
     virtual void setambient(float ambient) {}
     virtual void setglow(float glow) {}
+    virtual void setglare(float specglare, float glowglare) {}
     virtual void setalphatest(float alpha) {}
     virtual void setalphablend(bool blend) {}
     virtual void settranslucency(float translucency) {}
