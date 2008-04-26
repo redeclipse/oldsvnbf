@@ -633,6 +633,11 @@ void md5glow(char *meshname, int *percent)
     loopmd5skins(meshname, s, s.glow = glow);
 }
 
+void md5glare(char *meshname, float *specglare, float *glowglare)
+{
+    loopmd5skins(meshname, s, { s.specglare = *specglare; s.glowglare = *glowglare; });
+}
+
 void md5alphatest(char *meshname, float *cutoff)
 {
     loopmd5skins(meshname, s, s.alphatest = max(0.0f, min(1.0f, *cutoff)));
@@ -735,6 +740,7 @@ COMMAND(md5skin, "sssff");
 COMMAND(md5spec, "si");
 COMMAND(md5ambient, "si");
 COMMAND(md5glow, "si");
+COMMAND(md5glare, "sff");
 COMMAND(md5alphatest, "sf");
 COMMAND(md5alphablend, "si");
 COMMAND(md5envmap, "ss");
