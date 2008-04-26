@@ -88,13 +88,13 @@ void mdlglow(int *percent)
 
 COMMAND(mdlglow, "i");
 
-void mdlenvmap(int *envmapmax, int *envmapmin, char *envmap)
+void mdlenvmap(float *envmapmax, float *envmapmin, char *envmap)
 {
 	checkmdl;
 	loadingmodel->setenvmap(*envmapmin, *envmapmax, envmap[0] ? cubemapload(envmap) : NULL);
 }
 
-COMMAND(mdlenvmap, "iis");
+COMMAND(mdlenvmap, "ffs");
 
 void mdltranslucent(float *translucency)
 {
