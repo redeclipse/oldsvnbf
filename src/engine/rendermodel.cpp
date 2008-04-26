@@ -619,6 +619,13 @@ VARP(maxmodelradiusdistance, 10, 100, 1000);
 
 void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
 {
+    if(fabs(camera1->o.x-center.x) < radius+1 &&
+       fabs(camera1->o.y-center.y) < radius+1 &&
+       fabs(camera1->o.z-center.z) < radius+1)
+    {
+        d->query = NULL;
+        return;
+    }
     d->query = newquery(d);
     if(!d->query) return;
     nocolorshader->set();
