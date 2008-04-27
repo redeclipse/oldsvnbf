@@ -1013,6 +1013,14 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
         pssm.put(sm, strlen(sm));
     }
 
+    if(!hasFBO) for(char *s = pssm.getbuf();;)
+    {
+        s = strstr(s, "smvals.w");
+        if(!s) break;
+        s[7] = 'y';
+        s += 8;
+    }
+
     EMUFOGVS(emufogcoord && emufogcoord >= vspragma, vssm, vspragma, vspragma+strlen(vspragma)+1, emufogcoord, emufogtc, emufogcomp);
     pssm.put(pspragma, strlen(pspragma)+1);
 
