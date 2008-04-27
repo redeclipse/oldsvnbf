@@ -1031,8 +1031,8 @@ void shader(int *type, char *name, char *vs, char *ps)
     if(lookupshaderbyname(name)) return;
 
     if((renderpath!=R_GLSLANG && *type & SHADER_GLSLANG) ||
-       (!hasCM && strstr(ps, *type & SHADER_GLSLANG ? "textureCube" : "CUBE")) ||
-       (!hasTR && strstr(ps, *type & SHADER_GLSLANG ? "texture2DRect" : "RECT")))
+       (!hasCM && strstr(ps, *type & SHADER_GLSLANG ? "textureCube" : "CUBE;")) ||
+       (!hasTR && strstr(ps, *type & SHADER_GLSLANG ? "texture2DRect" : "RECT;")))
     {
         loopv(curparams)
         {
