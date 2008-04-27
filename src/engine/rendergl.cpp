@@ -100,6 +100,7 @@ VAR(ati_oq_bug, 0, 0, 1);
 VAR(ati_minmax_bug, 0, 0, 1);
 VAR(ati_dph_bug, 0, 0, 1);
 VAR(nvidia_texgen_bug, 0, 0, 1);
+VAR(nvidia_scissor_bug, 0, 0, 1);
 VAR(apple_glsldepth_bug, 0, 0, 1);
 VAR(apple_ff_bug, 0, 0, 1);
 VAR(apple_vp_bug, 0, 0, 1);
@@ -181,6 +182,37 @@ void gl_checkextensions()
         hasMDA = true;
     }
 
+#ifdef __APPLE__
+    // floating point FBOs not fully supported until 10.5
+    if(osversion>=0x1050)
+#endif
+    if(strstr(exts, "GL_ARB_texture_float") || strstr(exts, "GL_ATI_texture_float"))
+    {
+        hasTF = true;
+        //conoutf("Using GL_ARB_texture_float extension");
+        shadowmap = 1;
+        extern int smoothshadowmappeel;
+        smoothshadowmappeel = 1;
+    }
+
+    if(strstr(exts, "GL_EXT_framebuffer_object"))
+    {
+        glBindRenderbuffer_        = (PFNGLBINDRENDERBUFFEREXTPROC)       getprocaddress("glBindRenderbufferEXT");
+        glDeleteRenderbuffers_     = (PFNGLDELETERENDERBUFFERSEXTPROC)    getprocaddress("glDeleteRenderbuffersEXT");
+        glGenRenderbuffers_        = (PFNGLGENFRAMEBUFFERSEXTPROC)        getprocaddress("glGenRenderbuffersEXT");
+        glRenderbufferStorage_     = (PFNGLRENDERBUFFERSTORAGEEXTPROC)    getprocaddress("glRenderbufferStorageEXT");
+        glCheckFramebufferStatus_  = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC) getprocaddress("glCheckFramebufferStatusEXT");
+        glBindFramebuffer_         = (PFNGLBINDFRAMEBUFFEREXTPROC)        getprocaddress("glBindFramebufferEXT");
+        glDeleteFramebuffers_      = (PFNGLDELETEFRAMEBUFFERSEXTPROC)     getprocaddress("glDeleteFramebuffersEXT");
+        glGenFramebuffers_         = (PFNGLGENFRAMEBUFFERSEXTPROC)        getprocaddress("glGenFramebuffersEXT");
+        glFramebufferTexture2D_    = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)   getprocaddress("glFramebufferTexture2DEXT");
+        glFramebufferRenderbuffer_ = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)getprocaddress("glFramebufferRenderbufferEXT");
+        glGenerateMipmap_          = (PFNGLGENERATEMIPMAPEXTPROC)         getprocaddress("glGenerateMipmapEXT");
+        hasFBO = true;
+        //conoutf("Using GL_EXT_framebuffer_object extension.");
+    }
+    else conoutf("WARNING: No framebuffer object support. (reflective water may be slow)");
+
     if(strstr(exts, "GL_ARB_occlusion_query"))
     {
         GLint bits;
@@ -259,6 +291,7 @@ void gl_checkextensions()
         filltjoints = 0;
 
         nvidia_texgen_bug = 1;
+        if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too 
     }
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
@@ -333,24 +366,6 @@ void gl_checkextensions()
         else conoutf("WARNING: No texture rectangle support. (no full screen shaders)");
     }
 
-    if(strstr(exts, "GL_EXT_framebuffer_object"))
-    {
-        glBindRenderbuffer_        = (PFNGLBINDRENDERBUFFEREXTPROC)       getprocaddress("glBindRenderbufferEXT");
-        glDeleteRenderbuffers_     = (PFNGLDELETERENDERBUFFERSEXTPROC)    getprocaddress("glDeleteRenderbuffersEXT");
-        glGenRenderbuffers_        = (PFNGLGENFRAMEBUFFERSEXTPROC)        getprocaddress("glGenRenderbuffersEXT");
-        glRenderbufferStorage_     = (PFNGLRENDERBUFFERSTORAGEEXTPROC)    getprocaddress("glRenderbufferStorageEXT");
-        glCheckFramebufferStatus_  = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC) getprocaddress("glCheckFramebufferStatusEXT");
-        glBindFramebuffer_         = (PFNGLBINDFRAMEBUFFEREXTPROC)        getprocaddress("glBindFramebufferEXT");
-        glDeleteFramebuffers_      = (PFNGLDELETEFRAMEBUFFERSEXTPROC)     getprocaddress("glDeleteFramebuffersEXT");
-        glGenFramebuffers_         = (PFNGLGENFRAMEBUFFERSEXTPROC)        getprocaddress("glGenFramebuffersEXT");
-        glFramebufferTexture2D_    = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)   getprocaddress("glFramebufferTexture2DEXT");
-        glFramebufferRenderbuffer_ = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)getprocaddress("glFramebufferRenderbufferEXT");
-        glGenerateMipmap_          = (PFNGLGENERATEMIPMAPEXTPROC)         getprocaddress("glGenerateMipmapEXT");
-        hasFBO = true;
-        //conoutf("Using GL_EXT_framebuffer_object extension.");
-    }
-    else conoutf("WARNING: No framebuffer object support. (reflective water may be slow)");
-
     if(strstr(exts, "GL_EXT_packed_depth_stencil") || strstr(exts, "GL_NV_packed_depth_stencil"))
     {
         hasDS = true;
@@ -363,19 +378,6 @@ void gl_checkextensions()
         hasBE = true;
         if(strstr(vendor, "ATI")) ati_minmax_bug = 1;
         //conoutf("Using GL_EXT_blend_minmax extension.");
-    }
-
-#ifdef __APPLE__
-    // floating point FBOs not fully supported until 10.5
-    if(osversion>=0x1050)
-#endif
-    if(strstr(exts, "GL_ARB_texture_float") || strstr(exts, "GL_ATI_texture_float"))
-    {
-        hasTF = true;
-        //conoutf("Using GL_ARB_texture_float extension");
-        shadowmap = 1;
-        extern int smoothshadowmappeel;
-        smoothshadowmappeel = 1;
     }
 
     if(strstr(exts, "GL_ARB_texture_cube_map"))
