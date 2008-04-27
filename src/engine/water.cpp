@@ -1107,6 +1107,8 @@ void drawreflections()
 	if(editmode && showmat) return;
 	if(nowater || (!waterreflect && !waterrefract)) return;
 
+    extern int nvidia_scissor_bug;
+
 	static int lastdrawn = 0;
 	int refs = 0, n = lastdrawn;
     float offset = -WATER_OFFSET;
@@ -1127,43 +1129,45 @@ void drawreflections()
         ref.lastupdate = totalmillis;
         lastdrawn = n;
 
-        bool scissor = false;
-        if(reflectscissor)
+        int sx, sy, sw, sh;
+        bool scissor = reflectscissor && calcscissorbox(ref, size, sx, sy, sw, sh);
+        if(scissor) glScissor(sx, sy, sw, sh);
+        else
         {
-            int sx, sy, sw, sh;
-            if(calcscissorbox(ref, size, sx, sy, sw, sh))
-            {
-                glEnable(GL_SCISSOR_TEST);
-                glScissor(sx, sy, sw, sh);
-                scissor = true;
-            }
+            sx = hasFBO ? 0 : screen->w-size;
+            sy = hasFBO ? 0 : screen->h-size;
+            sw = sh = size;
         }
 
         if(waterreflect && ref.tex && camera1->o.z >= ref.height+offset)
         {
             if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.tex, 0);
+            if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
             maskreflection(ref, offset, true);
+            if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
             drawreflection(ref.height+offset, false, false);
+            if(scissor) glDisable(GL_SCISSOR_TEST);
             if(!hasFBO)
             {
                 glBindTexture(GL_TEXTURE_2D, ref.tex);
-                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, screen->w-size, screen->h-size, size, size);
+                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sx, sy, sw, sh);
             }
         }
 
         if(waterrefract && ref.refracttex)
         {
             if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.refracttex, 0);
+            if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
             maskreflection(ref, offset, false);
+            if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
             drawreflection(ref.height+offset, true, ref.depth>=10000);
+            if(scissor) glDisable(GL_SCISSOR_TEST);
             if(!hasFBO)
             {
                 glBindTexture(GL_TEXTURE_2D, ref.refracttex);
-                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, screen->w-size, screen->h-size, size, size);
+                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sx, sy, sw, sh);
             }
         }
-
-        if(scissor) glDisable(GL_SCISSOR_TEST);
 
 		if(refs>=maxreflect) break;
 	}
@@ -1183,28 +1187,27 @@ void drawreflections()
         refs++;
         ref.lastupdate = totalmillis;
 
-        bool scissor = false;
-        if(reflectscissor)
+        int sx, sy, sw, sh;
+        bool scissor = reflectscissor && calcscissorbox(ref, size, sx, sy, sw, sh);
+        if(scissor) glScissor(sx, sy, sw, sh);
+        else
         {
-            int sx, sy, sw, sh;
-            if(calcscissorbox(ref, size, sx, sy, sw, sh))
-            {
-                glEnable(GL_SCISSOR_TEST);
-                glScissor(sx, sy, sw, sh);
-                scissor = true;
-            }
+            sx = hasFBO ? 0 : screen->w-size;
+            sy = hasFBO ? 0 : screen->h-size;
+            sw = sh = size;
         }
 
         if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.refracttex, 0);
+        if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
         maskreflection(ref, -0.1f, false);
+        if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
         drawreflection(-1, true, false);
+        if(scissor) glDisable(GL_SCISSOR_TEST);
         if(!hasFBO)
         {
             glBindTexture(GL_TEXTURE_2D, ref.refracttex);
-            glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, screen->w-size, screen->h-size, size, size);
+            glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sx, sy, sw, sh);
         }
-
-        if(scissor) glDisable(GL_SCISSOR_TEST);
     }
 nowaterfall:
 
