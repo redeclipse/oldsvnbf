@@ -169,7 +169,15 @@ static struct shadowmaptexture : rendertarget
         {
             int sx, sy, sw, sh;
             bool scissoring = rtscissor && scissorblur(sx, sy, sw, sh) && sw > 0 && sh > 0;
-            if(scissoring) glScissor(sx, sy, sw, sh);
+            if(scissoring)
+            {
+                if(!hasFBO)
+                {
+                    sx += screen->w-texsize;
+                    sy += screen->h-texsize;
+                }
+                glScissor(sx, sy, sw, sh);
+            }
             if(!rtscissor || scissoring) rendershadowmapreceivers();
         }
 
