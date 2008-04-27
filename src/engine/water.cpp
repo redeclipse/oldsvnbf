@@ -1150,7 +1150,7 @@ void drawreflections()
             if(!hasFBO)
             {
                 glBindTexture(GL_TEXTURE_2D, ref.tex);
-                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sx, sy, sw, sh);
+                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, sx-(screen->w-size), sy-(screen->h-size), sx, sy, sw, sh);
             }
         }
 
@@ -1165,7 +1165,7 @@ void drawreflections()
             if(!hasFBO)
             {
                 glBindTexture(GL_TEXTURE_2D, ref.refracttex);
-                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sx, sy, sw, sh);
+                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, sx-(screen->w-size), sy-(screen->h-size), sx, sy, sw, sh);
             }
         }
 
@@ -1206,7 +1206,7 @@ void drawreflections()
         if(!hasFBO)
         {
             glBindTexture(GL_TEXTURE_2D, ref.refracttex);
-            glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sx, sy, sw, sh);
+            glCopyTexSubImage2D(GL_TEXTURE_2D, 0, sx-(screen->w-size), sy-(screen->h-size), sx, sy, sw, sh);
         }
     }
 nowaterfall:
