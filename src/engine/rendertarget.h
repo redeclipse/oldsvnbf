@@ -319,11 +319,22 @@ struct rendertarget
         bool scissoring = rtscissor && scissorrender(sx, sy, sw, sh) && sw > 0 && sh > 0;
         if(scissoring)
         {
-            glScissor((hasFBO ? 0 : screen->w-texsize) + sx, (hasFBO ? 0 : screen->h-texsize) + sy, sw, sh);
+            if(!hasFBO)
+            {
+                sx += screen->w-texsize;
+                sy += screen->h-texsize;
+            }
+            glScissor(sx, sy, sw, sh);
             glEnable(GL_SCISSOR_TEST);
         }
+        else
+        {
+            sx = hasFBO ? 0 : screen->w-texsize;
+            sy = hasFBO ? 0 : screen->h-texsize;
+            sw = sh = texsize;
+        }
 
-        bool succeeded = dorender(); 
+        bool succeeded = dorender();
 
         if(scissoring) glDisable(GL_SCISSOR_TEST);
 
@@ -332,7 +343,7 @@ struct rendertarget
             if(!hasFBO)
             {
                 glBindTexture(GL_TEXTURE_2D, rendertex);
-                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, screen->w-texsize, screen->h-texsize, texsize, texsize);
+                glCopyTexSubImage2D(GL_TEXTURE_2D, 0, sx-(screen->w-texsize), sy-(screen->h-texsize), sx, sy, sw, sh);
             }
 
             if(blursize) doblur(blursize, blursigma);
