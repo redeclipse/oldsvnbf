@@ -668,13 +668,13 @@ static void blendfogoverlay(int fogmat, float blend, float *overlay)
         case MAT_WATER:
             getwatercolour(col);
             maxc = max(col[0], max(col[1], col[2]));
-            loopk(3) overlay[k] += blend*col[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f);
+            loopk(3) overlay[k] += blend*max(0.4f, col[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f));
             break;
 
         case MAT_LAVA:
             getlavacolour(col);
             maxc = max(col[0], max(col[1], col[2]));
-            loopk(3) overlay[k] += blend*col[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f);
+            loopk(3) overlay[k] += blend*max(0.4f, col[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f));
             break;
 
         default:
