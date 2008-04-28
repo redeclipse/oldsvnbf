@@ -123,7 +123,7 @@ struct weaponstate
 	void radialeffect(fpsent *d, vec &o)
 	{
 		vec dir;
-		float dist = middist((physent *)d, dir, o);
+		float dist = middist(d, dir, o);
 		if(dist < RL_DAMRAD) hit(d, dir, HIT_TORSO, int(dist*DMF));
 	}
 

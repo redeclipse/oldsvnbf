@@ -291,7 +291,7 @@ struct captureclient : capturestate
 				case -1: if(!b.owner[0] || !strcmp(b.owner, cl.player1->team)) continue; break;
 				case -2: if(!b.enemy[0] || !strcmp(b.enemy, cl.player1->team)) continue; break;
 			}
-			physent *d = cl.player1->state == CS_SPECTATOR || cl.player1->state == CS_EDITING ? camera1 : cl.player1;
+			physent *d = cl.cc.spectator || editmode ? camera1 : cl.player1;
 			vec dir(b.o);
 			dir.sub(d->o);
 			dir.z = 0.0f;

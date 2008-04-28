@@ -34,7 +34,7 @@ enum								// static entity types
 	TELEPORT,						// 9  yaw, pitch, roll, push
 	MONSTER,						// 10 [angle], [type]
 	TRIGGER,						// 11
-	JUMPPAD,						// 12 zpush, ypush, xpush
+	PUSH,							// 12 zpush, ypush, xpush
 	BASE,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
 	CAMERA,							// 15 yaw, pitch, pan (+:horiz/-:vert), idx
@@ -49,18 +49,18 @@ static struct enttypes
 	int	type, 		links,	radius,	height, usetype;		const char *name;
 } enttype[] = {
 	{ NOTUSED,		0,		0,		0,		ETU_NONE,		"none" },
-	{ LIGHT,		0,		0,		0,		ETU_NONE,		"light" },
+	{ LIGHT,		59,		0,		0,		ETU_NONE,		"light" },
 	{ MAPMODEL,		58,		0,		0,		ETU_NONE,		"mapmodel" },
-	{ PLAYERSTART,	0,		0,		0,		ETU_NONE,		"playerstart" },
+	{ PLAYERSTART,	59,		0,		0,		ETU_NONE,		"playerstart" },
 	{ ENVMAP,		0,		0,		0,		ETU_NONE,		"envmap" },
-	{ PARTICLES,	0,		0,		0,		ETU_NONE,		"particles" },
+	{ PARTICLES,	59,		0,		0,		ETU_NONE,		"particles" },
 	{ MAPSOUND,		58,		0,		0,		ETU_NONE,		"sound" },
-	{ SPOTLIGHT,	0,		0,		0,		ETU_NONE,		"spotlight" },
-	{ WEAPON,		0,		16,		16,		ETU_ITEM,		"weapon" },
+	{ SPOTLIGHT,	59,		0,		0,		ETU_NONE,		"spotlight" },
+	{ WEAPON,		59,		16,		16,		ETU_ITEM,		"weapon" },
 	{ TELEPORT,		50,		12,		12,		ETU_AUTO,		"teleport" },
-	{ MONSTER,		0,		0,		0,		ETU_NONE,		"monster" },
+	{ MONSTER,		59,		0,		0,		ETU_NONE,		"monster" },
 	{ TRIGGER,		58,		16,		16,		ETU_NONE,		"trigger" }, // FIXME
-	{ JUMPPAD,		58,		12,		12,		ETU_AUTO,		"jumppad" },
+	{ PUSH,			58,		12,		12,		ETU_AUTO,		"push" },
 	{ BASE,			48,		32,		16,		ETU_NONE,		"base" },
 	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" }, // FIXME
 	{ CAMERA,		48,		0,		0,		ETU_NONE,		"camera" },

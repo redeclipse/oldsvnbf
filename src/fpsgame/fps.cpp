@@ -249,7 +249,6 @@ struct GAMECLIENT : igameclient
 				else player1->lastimpulse = 0;
 
 				ph.move(player1, 20, true);
-				ph.checkmat(player1, 0);
 
 				if(player1->physstate >= PHYS_SLOPE) swaymillis += curtime;
 
@@ -549,7 +548,7 @@ struct GAMECLIENT : igameclient
 	float radarrange()
 	{
 		float dist = float(radardist());
-		if(player1->state == CS_EDITING) dist = float(editradardist());
+		if(editmode) dist = float(editradardist());
 		return dist;
 
 	}
@@ -565,7 +564,7 @@ struct GAMECLIENT : igameclient
 
 	void drawblips(int x, int y, int s)
 	{
-		physent *d = player1->state == CS_SPECTATOR || player1->state == CS_EDITING ? camera1 : player1;
+		physent *d = cc.spectator || editmode ? camera1 : player1;
 		settexture("textures/blip.png");
 		glBegin(GL_QUADS);
 		loopv(players) if(players[i] && players[i]->state == CS_ALIVE)
@@ -584,9 +583,9 @@ struct GAMECLIENT : igameclient
 			extentity &e = *et.ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
 			enttypes &t = enttype[e.type];
-			if((t.usetype == ETU_ITEM && e.spawned) || player1->state == CS_EDITING)
+			if((t.usetype == ETU_ITEM && e.spawned) || editmode)
 			{
-				bool insel = (player1->state == CS_EDITING && (enthover == i || entgroup.find(i) >= 0));
+				bool insel = (editmode && (enthover == i || entgroup.find(i) >= 0));
 				vec dir(e.o);
 				dir.sub(d->o);
 				float dist = dir.magnitude();
@@ -661,7 +660,7 @@ struct GAMECLIENT : igameclient
 			}
 		}
 
-		if(player1->state == CS_EDITING)
+		if(editmode)
 		{
 			char *editinfo = executeret("edithud");
 			if(editinfo)
@@ -721,7 +720,7 @@ struct GAMECLIENT : igameclient
 						fade = amt*(float(lastmillis-maptime-CARDTIME-CARDFADE)/float(CARDFADE));
 					else fade *= amt;
 
-					if(player1->state == CS_SPECTATOR)
+					if(cc.spectator)
 					{
 						if(player1->clientnum == -cameranum)
 							d = player1;
@@ -759,7 +758,7 @@ struct GAMECLIENT : igameclient
 							glEnd();
 						}
 					}
-					//else if(player1->state == CS_EDITING)
+					//else if(editmode)
 					//{
 					//}
 
@@ -1034,7 +1033,7 @@ struct GAMECLIENT : igameclient
 
 		fixview();
 
-		if(player1->state == CS_SPECTATOR)
+		if(cc.spectator)
 		{
 			if(cameracycle() > 0 && secs-cameracycled > cameracycle())
 			{
@@ -1180,12 +1179,13 @@ struct GAMECLIENT : igameclient
 	void adddynlights()
 	{
 		pj.adddynlights();
+		et.adddynlights();
 	}
 
 	bool wantcrosshair()
 	{
 		return (crosshair() &&
-			!(hidehud || player1->state == CS_SPECTATOR || player1->state == CS_DEAD)) ||
+			!(hidehud || cc.spectator || player1->state == CS_DEAD)) ||
 			menuactive();
 	}
 
@@ -1242,7 +1242,7 @@ struct GAMECLIENT : igameclient
 	{
 		if(idx>=0)
 		{
-			if((player1->state == CS_SPECTATOR) || (player1->state == CS_EDITING))
+			if((cc.spectator) || (editmode))
 			{
 				int foo_delta; // we will ignore the delta attribute (it's for AwayCAM (still to come))
 				et.gotocamera(idx, player1, foo_delta);
@@ -1340,7 +1340,7 @@ struct GAMECLIENT : igameclient
 						}
 						int df = shplayers[0]->frags - shplayers[i]->frags;
 						string cmbN;
-						if(player1->state == CS_SPECTATOR)
+						if(cc.spectator)
 						{
 							df = shplayers[0]->frags - shplayers[i==1?2:1]->frags;
 							string dfs;
@@ -1363,7 +1363,7 @@ struct GAMECLIENT : igameclient
 				}
 				else if(myranks)
 				{
-					if(player1->state == CS_SPECTATOR)
+					if(cc.spectator)
 					{
 						if(lastmillis > myranks + ranktime())
 						{

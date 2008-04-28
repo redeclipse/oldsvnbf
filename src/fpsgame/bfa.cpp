@@ -4,7 +4,7 @@
 #define BFAGAME
 
 #define GAMEID				"bfa"
-#define GAMEVERSION			58
+#define GAMEVERSION			59
 
 #define GAMENAME			bfagame
 #define GAMECLIENT			bfaclient

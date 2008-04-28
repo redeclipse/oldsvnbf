@@ -6,7 +6,7 @@ struct physics
 	IVARW(gravity,			0,			25,			INT_MAX-1);	// gravity
 	IVARW(jumpvel,			0,			60,			INT_MAX-1);	// extra velocity to add when jumping
 	IVARW(movespeed,		1,			45,			INT_MAX-1);	// speed
-	IVARW(watervel,			0,			45,			1024);		// extra water velocity
+	IVARW(liquidvel,		0,			45,			1024);		// extra liquid velocity
 
 	IVARP(floatspeed,		10,			100,		1000);
 	IVARP(minframetime,		5,			10,			20);
@@ -88,7 +88,7 @@ struct physics
 	}
 	float jumpvelocity(physent *d)
 	{
-		return d->inmat ? float(watervel()) : float(jumpvel());
+		return d->inliquid ? float(liquidvel()) : float(jumpvel());
 	}
 	float gravityforce(physent *d)
 	{
@@ -106,11 +106,11 @@ struct physics
 	{
 		return 1.0f;
 	}
-	float waterdampen(physent *d)
+	float liquiddampen(physent *d)
 	{
 		return 8.f;
 	}
-	float waterfric(physent *d)
+	float liquidfric(physent *d)
 	{
 		return 20.f;
 	}
@@ -132,62 +132,6 @@ struct physics
 		return d->type == ENT_CAMERA || d->state == CS_SPECTATOR || d->state == CS_EDITING;
 	}
 
-
-	void checkmat(fpsent *d, int matlevel)
-	{
-		vec v(d->o.x, d->o.y, d->o.z-d->height);
-		int mat = lookupmaterial(v);
-
-		if (mat == MAT_WATER || mat == MAT_LAVA || mat == MAT_DEATH)
-		{
-			if (matlevel)
-			{
-				uchar col[3] = { 255, 255, 255 };
-
-				if (mat == MAT_WATER) getwatercolour(col);
-				else if (mat == MAT_LAVA) getlavacolour(col);
-
-				int wcol = (col[2] + (col[1] << 8) + (col[0] << 16));
-
-				part_spawn(v, vec(d->xradius, d->yradius, 4.f), 0, 17, 100, 200, wcol, 0.60f);
-			}
-
-			if (matlevel)
-			{
-				if (matlevel < 0 && mat == MAT_WATER)
-				{
-					playsound(S_SPLASH1, &d->o, 255, 0, 0, SND_COPY);
-				}
-				else if (matlevel > 0 && mat == MAT_WATER)
-				{
-					playsound(S_SPLASH2, &d->o, 255, 0, 0, SND_COPY);
-				}
-				else if (matlevel < 0 && mat == MAT_LAVA)
-				{
-					part_spawn(v, vec(d->xradius, d->yradius, 4.f), 0, 4, 200, 500, COL_WHITE, 4.8f);
-					if (d == cl.player1 || d->bot) cl.suicide(d);
-				}
-				else if (matlevel < 0 && mat == MAT_LAVA)
-				{
-					if (d == cl.player1 || d->bot) cl.suicide(d);
-				}
-			}
-		}
-	}
-
-	void trigger(physent *d, bool local, int floorlevel, int matlevel)
-	{
-		if (matlevel) checkmat((fpsent *)d, matlevel);
-
-		if (floorlevel > 0)
-		{
-			playsound(S_JUMP, &d->o);
-		}
-		else if (floorlevel < 0)
-		{
-			playsound(S_LAND, &d->o);
-		}
-	}
 
     void recalcdir(physent *d, const vec &oldvel, vec &dir)
     {
@@ -433,7 +377,7 @@ struct physics
 		return !collided;
 	}
 
-	void modifyvelocity(physent *pl, bool local, bool water, bool floating, int millis)
+	void modifyvelocity(physent *pl, bool local, bool liquid, bool floating, int millis)
 	{
 		if (floating)
 		{
@@ -443,20 +387,20 @@ struct physics
 				pl->vel.z = jumpvelocity(pl);
 			}
 		}
-		else if (pl->physstate >= PHYS_SLOPE || water)
+		else if (pl->physstate >= PHYS_SLOPE || liquid)
 		{
-			if (water)
+			if (liquid)
             {
                 if (pl->crouching) pl->crouching = false;
-                if (pl->type != ENT_CAMERA && !pl->inmat) pl->vel.div(waterdampen(pl));
+                if (pl->type != ENT_CAMERA && !pl->inliquid) pl->vel.div(liquiddampen(pl));
             }
 			if (pl->jumping)
 			{
 				pl->jumping = pl->crouching = false;
 
 				pl->vel.z = jumpvelocity(pl);
-				if(water) { pl->vel.x /= waterdampen(pl); pl->vel.y /= waterdampen(pl); }
-				trigger(pl, local, 1, 0);
+				if(liquid) { pl->vel.x /= liquiddampen(pl); pl->vel.y /= liquiddampen(pl); }
+				playsound(S_JUMP, &pl->o);
 			}
 		}
         if (pl->physstate == PHYS_FALL) pl->timeinair += curtime;
@@ -488,15 +432,15 @@ struct physics
         bool wantsmove = cl.allowmove(pl) && (pl->move || pl->strafe);
 		if(m.iszero() && wantsmove)
 		{
-			vecfromyawpitch(pl->yaw, floating || water || movepitch(pl) ? pl->pitch : 0, pl->move, pl->strafe, m);
+			vecfromyawpitch(pl->yaw, floating || liquid || movepitch(pl) ? pl->pitch : 0, pl->move, pl->strafe, m);
 
 			if(!floating && pl->physstate >= PHYS_SLIDE)
 			{
 				/* move up or down slopes in air
-				 * but only move up slopes in water
+				 * but only move up slopes in liquid
 				 */
 				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
-				if(water) m.z = max(m.z, dz);
+				if(liquid) m.z = max(m.z, dz);
 				else if(pl->floor.z >= wallz(pl)) m.z = dz;
 			}
 
@@ -506,8 +450,8 @@ struct physics
 		vec d(m);
 		d.mul(maxspeed(pl));
 		if(floating) { if (local) d.mul(floatspeed()/100.0f); }
-		else if(!water) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
-		float friction = water && !floating ? waterfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
+		else if(!liquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+		float friction = liquid && !floating ? liquidfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
 		float fpsfric = friction/millis*20.0f;
 
         pl->vel.mul(fpsfric-1);
@@ -515,7 +459,7 @@ struct physics
         pl->vel.div(fpsfric);
 	}
 
-    void modifygravity(physent *pl, bool water, int curtime)
+    void modifygravity(physent *pl, bool liquid, int curtime)
     {
         float secs = curtime/1000.0f;
         vec g(0, 0, 0);
@@ -527,13 +471,13 @@ struct physics
             g.normalize();
             g.mul(gravityforce(pl)*secs);
         }
-        if(!water || (!pl->move && !pl->strafe)) pl->falling.add(g);
+        if(!liquid || (!pl->move && !pl->strafe)) pl->falling.add(g);
 
-        if(water || pl->physstate >= PHYS_SLOPE)
+        if(liquid || pl->physstate >= PHYS_SLOPE)
         {
-            float friction = water ? sinkfric(pl) : floorfric(pl),
+            float friction = liquid ? sinkfric(pl) : floorfric(pl),
                   fpsfric = friction/curtime*20.0f,
-                  c = water ? 1.0f : clamp((pl->floor.z - slopez(pl))/(floorz(pl)-slopez(pl)), 0.0f, 1.0f);
+                  c = liquid ? 1.0f : clamp((pl->floor.z - slopez(pl))/(floorz(pl)-slopez(pl)), 0.0f, 1.0f);
             pl->falling.mul(1 - c/fpsfric);
         }
     }
@@ -542,20 +486,20 @@ struct physics
 	// moveres indicated the physics precision (which is lower for monsters and multiplayer prediction)
 	// local is false for multiplayer prediction
 
-	bool moveplayer(physent *pl, int moveres, bool local, int millis)
+	bool moveplayer(fpsent *pl, int moveres, bool local, int millis)
 	{
         int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->height)/4));
-		bool water = isliquid(material);
+		bool liquid = isliquid(material);
 		bool floating = (editmode && local) || pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
 		float secs = millis/1000.f;
 
         // apply gravity
-        if(!floating && pl->type!=ENT_CAMERA) modifygravity(pl, water, millis);
+        if(!floating && pl->type!=ENT_CAMERA) modifygravity(pl, liquid, millis);
 		// apply any player generated changes in velocity
-		modifyvelocity(pl, local, water, floating, millis);
+		modifyvelocity(pl, local, liquid, floating, millis);
 
 		vec d(pl->vel), oldpos(pl->o);
-        if(!floating && pl->type!=ENT_CAMERA && water) d.mul(0.5f);
+        if(!floating && pl->type!=ENT_CAMERA && liquid) d.mul(0.5f);
         d.add(pl->falling);
 		d.mul(secs);
 
@@ -583,7 +527,7 @@ struct physics
 			loopi(moveres) if(!move(pl, d)) { if(pl->type==ENT_CAMERA) return false; if(++collisions<5) i--; } // discrete steps collision detection & sliding
 			if(!pl->timeinair && vel.z <= -64) // if we land after long time must have been a high jump, make thud sound
 			{
-				trigger(pl, local, -1, 0);
+				playsound(S_LAND, &pl->o);
 			}
 		}
 
@@ -596,19 +540,29 @@ struct physics
 
 		if (pl->type!=ENT_CAMERA)
 		{
-            if (pl->inmat && !water)
-            {
-                material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (pl->aboveeye - pl->height)/2));
-                water = isliquid(material);
-            }
-            if(!pl->inmat && water) trigger(pl, local, 0, -1);
-            else if(pl->inmat && !water) trigger(pl, local, 0, 1);
-            pl->inmat = water;
+			vec v(feetpos(pl));
+			int material = lookupmaterial(v);
+			if(material != pl->inmaterial && (material == MAT_WATER || material == MAT_LAVA || pl->inmaterial == MAT_WATER || pl->inmaterial == MAT_LAVA))
+			{
+				uchar col[3] = { 255, 255, 255 };
+
+				if (material == MAT_WATER) getwatercolour(col);
+				else if (material == MAT_LAVA) getlavacolour(col);
+
+				int wcol = (col[2] + (col[1] << 8) + (col[0] << 16));
+				part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, 17, 100, 200, wcol, 0.60f);
+				if(material == MAT_WATER || pl->inmaterial == MAT_WATER)
+					playsound(material != MAT_WATER ? S_SPLASH1 : S_SPLASH2, &pl->o, 255, 0, 0, SND_COPY);
+			}
+			if ((material == MAT_LAVA || material == MAT_DEATH) && (pl == cl.player1 || pl->bot))
+				cl.suicide(pl);
+            pl->inliquid = liquid;
+            pl->inmaterial = material;
 		}
 		return true;
 	}
 
-	bool move(physent *d, int moveres = 20, bool local = true, int millis = 0, int repeat = 0)
+	bool move(fpsent *d, int moveres = 20, bool local = true, int millis = 0, int repeat = 0)
 	{
 		if (!millis) millis = curtime;
 		if (!repeat) repeat = physicsrepeat;
@@ -795,3 +749,4 @@ struct physics
 		otherplayers();
 	}
 } ph;
+

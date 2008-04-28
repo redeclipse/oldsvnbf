@@ -261,7 +261,6 @@ static inline bool insideworld(const ivec &o)
 }
 
 // ents
-extern char *entname(entity &e);
 extern bool haveselent();
 extern void copyundoents(undoblock &d, undoblock &s);
 extern void pasteundoents(undoblock &u);
@@ -447,6 +446,7 @@ extern void endmodelquery();
 // renderparticles
 extern void particleinit();
 extern void clearparticles();
+extern void makeparticles(entity &e);
 extern void entity_particles();
 
 // decal
@@ -486,7 +486,6 @@ extern int grabmouse, perflevel, colorpos;
 extern int getmatvec(vec v);
 
 // editing
-extern int efocus, enthover, entorient;
 extern int fullbright, fullbrightlevel;
 extern vector<int> entgroup;
 

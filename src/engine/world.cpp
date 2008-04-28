@@ -189,20 +189,6 @@ void entitiesinoctanodes()
     loopv(et->getents()) modifyoctaent(MODOE_ADD, i);
 }
 
-char *entname(entity &e)
-{
-	static string fullentname;
-	s_strcpy(fullentname, "@");
-	s_strcat(fullentname, et->entname(e.type));
-	const char *einfo = et->entnameinfo(e);
-	if(*einfo)
-	{
-		s_strcat(fullentname, ": ");
-		s_strcat(fullentname, einfo);
-	}
-	return fullentname;
-}
-
 extern selinfo sel;
 extern bool havesel, selectcorners;
 int entlooplevel = 0;
@@ -332,7 +318,6 @@ void attachentities()
 // e		 entity, currently edited ent
 // n		 int,	index to currently edited ent
 #define addimplicit(f)  { if(entgroup.empty() && enthover>=0) { entadd(enthover); undonext = (enthover != oldhover); f; entgroup.drop(); } else f; }
-#define entfocus(i, f)  { int n = efocus = (i); if(n>=0) { extentity &e = *et->getents()[n]; f; } }
 #define entedit(i, f) \
 { \
 	entfocus(i, \
@@ -558,13 +543,6 @@ void delent()
 	entcancel();
 }
 
-int findtype(char *what)
-{
-	for(int i = 0; *et->entname(i); i++) if(strcmp(what, et->entname(i))==0) return i;
-	conoutf("unknown entity type \"%s\"", what);
-	return ET_EMPTY;
-}
-
 VAR(entdrop, 0, 2, 3);
 
 void dropenttofloor(entity *e)
@@ -692,8 +670,8 @@ void newentity(int type, int a1, int a2, int a3, int a4)
 void newent(char *what, int *a1, int *a2, int *a3, int *a4)
 {
 	if(noentedit()) return;
-	int type = findtype(what);
-	if(type != ET_EMPTY)
+	int type = et->findtype(what);
+	if(type > ET_EMPTY)
 		newentity(type, *a1, *a2, *a3, *a4);
 }
 
@@ -738,8 +716,8 @@ COMMAND(entpaste, "");
 void entset(char *what, int *a1, int *a2, int *a3, int *a4)
 {
 	if(noentedit()) return;
-	int type = findtype(what);
-	groupedit(e.type=type;
+	int type = et->findtype(what);
+	if(type > ET_EMPTY) groupedit(e.type=type;
 			  e.attr1=*a1;
 			  e.attr2=*a2;
 			  e.attr3=*a3;
@@ -750,7 +728,7 @@ ICOMMAND(enthavesel,"",  (), addimplicit(intret(entgroup.length())));
 ICOMMAND(entselect, "s", (char *body), if(!noentedit()) addgroup(e.type != ET_EMPTY && entgroup.find(n)<0 && execute(body)>0));
 ICOMMAND(entloop,   "s", (char *body), if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(body)))));
 ICOMMAND(insel,     "",  (), entfocus(efocus, intret(pointinsel(sel, e.o))));
-ICOMMAND(entget,    "",  (), entfocus(efocus, s_sprintfd(s)("%s %d %d %d %d", et->entname(e.type), e.attr1, e.attr2, e.attr3, e.attr4);  result(s)));
+ICOMMAND(entget,    "",  (), entfocus(efocus, s_sprintfd(s)("%s %d %d %d %d", et->findname(e.type), e.attr1, e.attr2, e.attr3, e.attr4);  result(s)));
 COMMAND(entset, "siiii");
 
 

@@ -30,6 +30,9 @@ struct extentity : entity                       // part of the entity that doesn
     extentity() : visible(false), attached(NULL) {}
 };
 
+extern int efocus, enthover, entorient;
+#define entfocus(i, f)  { int n = efocus = (i); if(n>=0) { extentity &e = *et->getents()[n]; f; } }
+
 enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_LAGGED, CS_EDITING, CS_SPECTATOR };
 
 enum { PHYS_FLOAT = 0, PHYS_FALL, PHYS_SLIDE, PHYS_SLOPE, PHYS_FLOOR, PHYS_STEP_UP, PHYS_STEP_DOWN, PHYS_BOUNCE };
@@ -50,7 +53,8 @@ struct physent                                  // base entity type, can be affe
     float xradius, yradius, zmargin;
     vec floor;                                  // the normal of floor the dynent is on
 
-    bool inmat;
+	int inmaterial;
+    bool inliquid;
     bool jumping, crouching;
     int jumptime, crouchtime;
     bool blocked, moving;                       // used by physics to signal ai
@@ -77,7 +81,8 @@ struct physent                                  // base entity type, can be affe
 
     void reset()
     {
-    	inmat = jumping = crouching  = false;
+    	inmaterial = 0;
+    	inliquid = jumping = crouching  = false;
         jumptime = crouchtime = timeinair = 0;
         strafe = move = 0;
         physstate = PHYS_FALL;

@@ -7,6 +7,7 @@ struct entities : icliententities
 	IVARP(showentdir, 0, 0, 2);
 	IVARP(showentradius, 0, 0, 2);
 	IVARP(showentlinks, 0, 0, 2);
+	IVARP(showlighting, 0, 1, 1);
 
 	IVAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 
@@ -105,10 +106,17 @@ struct entities : icliententities
 					{
 						case MAPSOUND:
 						{
-							if((e.type == TRIGGER || e.type == TELEPORT || e.type == JUMPPAD) && mapsounds.inrange(f.attr1) && (!sounds.inrange(f.schan) || !sounds[f.schan].inuse))
+							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSH) && mapsounds.inrange(f.attr1) && (!sounds.inrange(f.schan) || !sounds[f.schan].inuse))
 								playsound(f.attr1, &f.o, f.attr4, f.attr2, f.attr3, SND_MAP);
 							break;
 						}
+						case PARTICLES:
+						{
+							if(e.type == TRIGGER || e.type == TELEPORT || e.type == PUSH)
+								makeparticles((entity &)f);
+							break;
+						}
+
 						default: break;
 					}
 				}
@@ -151,7 +159,7 @@ struct entities : icliententities
 		if(pick<0)
 		{
 			int r = cl.ph.fixspawn-->0 ? 7 : rnd(10)+1;
-			loopi(r) cl.ph.spawncycle = findentity(ET_PLAYERSTART, cl.ph.spawncycle+1, -1, tag);
+			loopi(r) cl.ph.spawncycle = findentity(PLAYERSTART, cl.ph.spawncycle+1, -1, tag);
 			pick = cl.ph.spawncycle;
 		}
 		if(pick!=-1)
@@ -163,7 +171,7 @@ struct entities : icliententities
 				d->o = ents[attempt]->o;
 				d->yaw = ents[attempt]->attr1;
 				if(cl.ph.entinmap(d, true)) break;
-				attempt = findentity(ET_PLAYERSTART, attempt+1, -1, tag);
+				attempt = findentity(PLAYERSTART, attempt+1, -1, tag);
 				if(attempt<0 || attempt==pick)
 				{
 					d->o = ents[attempt]->o;
@@ -199,7 +207,7 @@ struct entities : icliententities
 				d->yaw = ents[e]->attr1;
 				d->pitch = ents[e]->attr2;
 				delta = ents[e]->attr3;
-				if(cl.player1->state == CS_EDITING)
+				if(editmode)
 				{
 					vec dirv;
 					vecfromyawpitch(d->yaw, d->pitch, 1, 0, dirv);
@@ -229,7 +237,7 @@ struct entities : icliententities
 				break;
 			}
 
-			case JUMPPAD:
+			case PUSH:
 			{
 				if(d->lastuse==ents[n]->type && lastmillis-d->lastusemillis<500) break;
 				d->lastuse = ents[n]->type;
@@ -239,7 +247,6 @@ struct entities : icliententities
                 d->falling = vec(0, 0, 0);
 				d->vel = v;
 				execlink(d, n, true);
-				//cl.playsoundc(S_JUMPPAD, d);
 				break;
 			}
 		}
@@ -326,17 +333,29 @@ struct entities : icliententities
 		}
 	}
 
-	const char *entnameinfo(entity &e) { return ""; }
-	const char *entname(int i) { return i >= NOTUSED && i < MAXENTTYPES ? enttype[i].name : ""; }
+	const char *findname(int type)
+	{
+		if(type >= NOTUSED && type < MAXENTTYPES) return enttype[type].name;
+		return "";
+	}
+
+	int findtype(char *type)
+	{
+		loopi(MAXENTTYPES) if(!strcmp(type, enttype[i].name)) return i;
+		return -1;
+	}
 
 	void editent(int i)
 	{
 		extentity &e = *ents[i];
-		if(e.type == ET_EMPTY) linkclear(i);
+		if(e.type == NOTUSED) linkclear(i);
 		fixentity(e);
 		if(multiplayer(false) && m_edit(cl.gamemode))
 			cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
 	}
+
+	bool mayattach(extentity &e) { return false; }
+	bool attachent(extentity &e, extentity &a) { return false; }
 
 	float dropheight(entity &e)
 	{
@@ -354,7 +373,8 @@ struct entities : icliententities
 					if(ents[node]->type == TRIGGER) return true;
 					break;
 				case MAPSOUND:
-					if(ents[node]->type == TELEPORT || ents[node]->type == TRIGGER || ents[node]->type == JUMPPAD) return true;
+				case PARTICLES:
+					if(ents[node]->type == TELEPORT || ents[node]->type == TRIGGER || ents[node]->type == PUSH) return true;
 					break;
 				case TELEPORT:
 					if(ents[node]->type == TELEPORT) return true;
@@ -697,7 +717,7 @@ struct entities : icliententities
 			{
 				fpsentity &f = (fpsentity &)e;
 
-				if(f.type != ET_EMPTY)
+				if(f.type != NOTUSED)
 				{
 					if(enttype[f.type].links)
 						if(d.links.find(i) >= 0) links.add(n); // align to indices
@@ -786,6 +806,8 @@ struct entities : icliententities
 		}
 	}
 
+	#define renderfocus(i,f) { extentity &e = *ents[i]; f; }
+
 	void renderlinked(extentity &e)
 	{
 		fpsentity &d = (fpsentity &)e;
@@ -797,8 +819,7 @@ struct entities : icliententities
 			if(ents.inrange(index))
 			{
 				fpsentity &f = (fpsentity &)*ents[index];
-				bool both = false,
-					hassel = editmode && (entgroup.find(efocus) >= 0 || efocus == enthover);
+				bool both = false;
 
 				loopvj(f.links)
 				{
@@ -820,23 +841,20 @@ struct entities : icliententities
 				to.z += RENDERPUSHZ;
 
 				vec col(0.5f, both ? 0.25f : 0.0f, 0.f);
-				renderline(fr, to, col.x, col.y, col.z, hassel);
+				renderline(fr, to, col.x, col.y, col.z, true);
 
-				if(hassel)
-				{
-					vec dr = to;
-					float yaw, pitch;
+				vec dr = to;
+				float yaw, pitch;
 
-					dr.sub(fr);
-					dr.normalize();
+				dr.sub(fr);
+				dr.normalize();
 
-					vectoyawpitch(dr, yaw, pitch);
+				vectoyawpitch(dr, yaw, pitch);
 
-					dr.mul(RENDERPUSHX);
-					dr.add(fr);
+				dr.mul(RENDERPUSHX);
+				dr.add(fr);
 
-					rendertris(dr, yaw, pitch, 2.f, col.x*2.f, col.y*2.f, col.z*2.f, true, hassel);
-				}
+				rendertris(dr, yaw, pitch, 2.f, col.x*2.f, col.y*2.f, col.z*2.f, true, true);
 			}
 		}
 	}
@@ -851,8 +869,11 @@ struct entities : icliententities
 					renderradius(e.o, e.attr2, e.attr2);
 					renderradius(e.o, e.attr3, e.attr3);
 					break;
+				case LIGHT:
+					renderradius(e.o, e.attr1 ? e.attr1 : hdr.worldsize, e.attr1 ? e.attr1 : hdr.worldsize);
+					break;
 				case WAYPOINT:
-					renderradius(e.o, e.attr1, e.attr1);
+					if(e.attr1 > 0) renderradius(e.o, e.attr1, e.attr1);
 					break;
 				default:
 					if(enttype[e.type].height || enttype[e.type].radius)
@@ -888,24 +909,39 @@ struct entities : icliententities
 				renderlinked(e);
 	}
 
+	void renderentlight(extentity &e)
+	{
+		vec color(e.attr2, e.attr3, e.attr4);
+		color.div(255.f);
+		adddynlight(vec(e.o), float(e.attr1 ? e.attr1 : hdr.worldsize), color);
+	}
+
+	void adddynlights()
+	{
+		if(editmode && showlighting())
+		{
+			loopv(ents)
+			{
+				if((entgroup.find(i) >= 0 || enthover == i) &&
+					ents[i]->type == LIGHT && ents[i]->attr1 > 0)
+				{
+					renderfocus(i, renderentlight(e));
+				}
+			}
+		}
+	}
+
 	void render()
 	{
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
-			#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
 			int level = (editmode ? 1 : ((showentdir()==2 || showentradius()==2 || showentlinks()==2 || dropwaypoints()) ? 2 : 0));
 			if(level)
 			{
 				renderprimitive(true);
-				if(editmode)
-				{
-					loopv(entgroup) entfocus(entgroup[i], renderentshow(e, 0));
-					if(enthover >= 0) entfocus(enthover, renderentshow(e, 0));
-				}
-
 				loopv(ents)
 				{
-					entfocus(i, { renderentshow(e, level); });
+					renderfocus(i, renderentshow(e, entgroup.find(i) >= 0 || enthover == i ? 0 : level));
 				}
 				renderprimitive(false);
 			}
@@ -926,6 +962,24 @@ struct entities : icliententities
 						e.o, 0.f, 0.f, 0.f,
 						MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED);
 				}
+			}
+		}
+	}
+
+	void drawparticles()
+	{
+		loopv(ents)
+		{
+			fpsentity &e = (fpsentity &)*ents[i];
+			if (e.type == NOTUSED) continue;
+
+			if (e.type == PARTICLES && !e.links.length() && e.o.dist(camera1->o) <= maxparticledistance)
+				makeparticles((entity &)e);
+
+			if (editmode)
+			{
+				particle_text(e.o, findname(e.type), entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
+				if (e.type != PARTICLES) regular_particle_splash(2, 2, 40, e.o);
 			}
 		}
 	}
