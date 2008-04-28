@@ -541,6 +541,17 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
+	IVARP(radardist, 0, 256, 256);
+	IVARP(editradardist, 0, 64, 1024);
+
+	float radarrange()
+	{
+		float dist = float(radardist());
+		if(player1->state == CS_EDITING) dist = float(editradardist());
+		return dist;
+
+	}
+
 	void drawradar(float x, float y, float s)
 	{
 		glTexCoord2f(0.0f, 0.0f); glVertex2f(x,	y);
@@ -561,10 +572,10 @@ struct GAMECLIENT : igameclient
 			vec dir(f->o);
 			dir.sub(d->o);
 			float dist = dir.magnitude();
-			if(dist >= MAXRADAR) continue;
+			if(dist >= radarrange()) continue;
 			dir.rotate_around_z(-d->yaw*RAD);
-			glColor4f(0.f, 1.f, 0.f, 1.f-(dist/MAXRADAR));
-			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), (f->crouching ? 0.05f : 0.025f)*s);
+			glColor4f(0.f, 1.f, 0.f, 1.f-(dist/radarrange()));
+			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (f->crouching ? 0.05f : 0.025f)*s);
 		}
 		loopv(et.ents)
 		{
@@ -573,24 +584,99 @@ struct GAMECLIENT : igameclient
 			enttypes &t = enttype[e.type];
 			if((t.usetype == ETU_ITEM && e.spawned) || player1->state == CS_EDITING)
 			{
+				bool insel = (player1->state == CS_EDITING && (enthover == i || entgroup.find(i) >= 0));
 				vec dir(e.o);
 				dir.sub(d->o);
 				float dist = dir.magnitude();
-				if(dist >= MAXRADAR) continue;
+				if(!insel && dist >= radarrange()) continue;
+				if(dist >= radarrange()*(1 - 0.05f)) dir.mul(radarrange()*(1 - 0.05f)/dist);
 				dir.rotate_around_z(-d->yaw*RAD);
 				settexture("textures/blip.png");
-				glColor4f(1.f, 1.f, 0.f, 1.f-(dist/MAXRADAR));
-				drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/MAXRADAR), y + s*0.5f*0.95f*(1.0f+dir.y/MAXRADAR), 0.025f*s);
+				glColor4f(1.f, 1.f, insel ? 1.0f : 0.f, insel ? 1.f : 1.f-(dist/radarrange()));
+				drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (insel ? 0.075f : 0.025f)*s);
 			}
 		}
 		glEnd();
+	}
+
+	IVARP(hidestats, 0, 0, 1);
+	IVARP(showfpsrange, 0, 0, 1);
+	IVAR(showeditstats, 0, 0, 1);
+	IVAR(statrate, 0, 200, 1000);
+
+	void drawhudelements(int w, int h)
+	{
+		glLoadIdentity();
+		glOrtho(0, w*3, h*3, 0, -1, 1);
+		int hoff = h*3-h*3/4;
+
+		char *command = getcurcommand();
+		if (command) rendercommand(FONTH/2, hoff);
+		hoff += FONTH;
+
+		drawcrosshair(w, h);
+
+		renderconsole(w, h);
+
+		if(!hidestats())
+		{
+			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
+			int fps, bestdiff, worstdiff;
+			getfps(fps, bestdiff, worstdiff);
+			#if 0
+			if(showfpsrange()) draw_textx("%d+%d-%d:%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, bestdiff, worstdiff, perflevel);
+			else draw_textx("%d:%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, perflevel);
+			#else
+			if(showfpsrange()) draw_textx("%d+%d-%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, bestdiff, worstdiff);
+			else draw_textx("%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, fps);
+			#endif
+
+			if(editmode || showeditstats())
+			{
+				static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
+				if(lastmillis - laststats >= statrate())
+				{
+					memcpy(prevstats, curstats, sizeof(prevstats));
+					laststats = lastmillis - (lastmillis%statrate());
+				}
+				int nextstats[8] =
+				{
+					vtris*100/max(wtris, 1),
+					vverts*100/max(wverts, 1),
+					xtraverts/1024,
+					xtravertsva/1024,
+					glde,
+					gbatches,
+					getnumqueries(),
+					rplanes
+				};
+
+				loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
+
+				draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", h*3/5+8, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
+				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", h*3/5+8, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
+				draw_textf("cube %s%d", h*3/5+8, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
+			}
+		}
+
+		if(player1->state == CS_EDITING)
+		{
+			char *editinfo = executeret("edithud");
+			if(editinfo)
+			{
+				draw_text(editinfo, h*3/5+8, hoff); hoff += FONTH;
+				DELETEA(editinfo);
+			}
+		}
+
+		render_texture_panel(w, h);
 	}
 
 	void drawhud(int w, int h)
 	{
 		if (maptime || !cc.ready())
 		{
-			if (!hidehud && !editmode)
+			if (!hidehud)
 			{
 				int ox = w*900/h, oy = 900;
 
@@ -640,74 +726,76 @@ struct GAMECLIENT : igameclient
 						else if (players.inrange(-cameranum) && players[-cameranum])
 							d = players[-cameranum];
 					}
-
-					if (fov < 90 && d->gunselect == GUN_RIFLE && d->state == CS_ALIVE)
+					else if (player1->state == CS_ALIVE)
 					{
-						settexture("textures/overlay_zoom.png");
-						glColor4f(1.f, 1.f, 1.f, 1.f);
-
-						glBegin(GL_QUADS);
-						glTexCoord2f(0, 0); glVertex2i(0, 0);
-						glTexCoord2f(1, 0); glVertex2i(ox, 0);
-						glTexCoord2f(1, 1); glVertex2i(ox, oy);
-						glTexCoord2f(0, 1); glVertex2i(0, oy);
-						glEnd();
-					}
-
-					if (damageresidue > 0 || d->state == CS_DEAD)
-					{
-						int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
-						float pc = float(dam)/100.f;
-						settexture("textures/overlay_damage.png");
-
-						glColor4f(1.f, 1.f, 1.f, pc);
-
-						glBegin(GL_QUADS);
-						glTexCoord2f(0, 0); glVertex2i(0, 0);
-						glTexCoord2f(1, 0); glVertex2i(ox, 0);
-						glTexCoord2f(1, 1); glVertex2i(ox, oy);
-						glTexCoord2f(0, 1); glVertex2i(0, oy);
-						glEnd();
-					}
-
-					if (d != NULL)
-					{
-						if (d->state == CS_ALIVE)
+						if (fov < 90 && d->gunselect == GUN_RIFLE)
 						{
-							float hlt = d->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
-							if (lastmillis < d->lastregen+500) pulse *= (lastmillis-d->lastregen)/500.f;
-							settexture("textures/barv.png");
-							glColor4f(glow, 0.f, 0.f, pulse);
+							settexture("textures/overlay_zoom.png");
+							glColor4f(1.f, 1.f, 1.f, 1.f);
 
-							int rw = oy/5/4, rx = oy/5+8, rh = oy/5, ry = oy-rh-4, ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
 							glBegin(GL_QUADS);
-							glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
-							glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
-							glTexCoord2f(1, 1); glVertex2i(rx+rw, ry+rh);
-							glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
+							glTexCoord2f(0, 0); glVertex2i(0, 0);
+							glTexCoord2f(1, 0); glVertex2i(ox, 0);
+							glTexCoord2f(1, 1); glVertex2i(ox, oy);
+							glTexCoord2f(0, 1); glVertex2i(0, oy);
 							glEnd();
-
-							if(isgun(d->gunselect) && d->ammo[d->gunselect] > 0)
-							{
-								draw_textx("%d", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->ammo[d->gunselect]);
-							}
-							else
-							{
-								draw_textx("Out of ammo", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
-							}
 						}
-						else if (d->state == CS_DEAD)
+
+						if (damageresidue > 0 || d->state == CS_DEAD)
 						{
-							int wait = respawnwait(d);
+							int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
+							float pc = float(dam)/100.f;
+							settexture("textures/overlay_damage.png");
 
-							if (wait)
-							{
-								float c = float(wait)/1000.f;
-								draw_textx("Fragged! Down for %.1fs", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
-							}
-							else
-								draw_textx("Fragged! Press attack to respawn", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+							glColor4f(1.f, 1.f, 1.f, pc);
+
+							glBegin(GL_QUADS);
+							glTexCoord2f(0, 0); glVertex2i(0, 0);
+							glTexCoord2f(1, 0); glVertex2i(ox, 0);
+							glTexCoord2f(1, 1); glVertex2i(ox, oy);
+							glTexCoord2f(0, 1); glVertex2i(0, oy);
+							glEnd();
 						}
+					}
+					//else if (player1->state == CS_EDITING)
+					//{
+					//}
+
+					if (d->state == CS_ALIVE)
+					{
+						float hlt = d->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
+						if (lastmillis < d->lastregen+500) pulse *= (lastmillis-d->lastregen)/500.f;
+						settexture("textures/barv.png");
+						glColor4f(glow, 0.f, 0.f, pulse);
+
+						int rw = oy/5/4, rx = oy/5+8, rh = oy/5, ry = oy-rh-4, ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
+						glBegin(GL_QUADS);
+						glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
+						glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
+						glTexCoord2f(1, 1); glVertex2i(rx+rw, ry+rh);
+						glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
+						glEnd();
+
+						if(isgun(d->gunselect) && d->ammo[d->gunselect] > 0)
+						{
+							draw_textx("%d", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->ammo[d->gunselect]);
+						}
+						else
+						{
+							draw_textx("Out of ammo", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+						}
+					}
+					else if (d->state == CS_DEAD)
+					{
+						int wait = respawnwait(d);
+
+						if (wait)
+						{
+							float c = float(wait)/1000.f;
+							draw_textx("Fragged! Down for %.1fs", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
+						}
+						else
+							draw_textx("Fragged! Press attack to respawn", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 					}
 
 					int rx = 4, rs = oy/5, ry = oy-rs-4;
@@ -722,6 +810,8 @@ struct GAMECLIENT : igameclient
 					if(m_capture(gamemode)) cpc.drawhud(ox, oy);
 					else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
 					drawblips(rx, ry, rs);
+
+					drawhudelements(w, h);
 				}
 				glDisable(GL_BLEND);
 			}

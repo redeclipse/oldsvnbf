@@ -4,8 +4,8 @@ struct entities : icliententities
 
 	vector<extentity *> ents;
 
-	IVARP(showentdir, 0, 1, 2);
-	IVARP(showentradius, 0, 1, 2);
+	IVARP(showentdir, 0, 0, 2);
+	IVARP(showentradius, 0, 0, 2);
 	IVARP(showentlinks, 0, 0, 2);
 
 	IVAR(dropwaypoints, 0, 0, 1); // drop waypoints during play

@@ -17,7 +17,7 @@ void loadsky(char *basename)
 	}
 }
 
-SVARFW(skybox, "", { if(skybox[0]) loadsky(skybox); });
+SVARFW(skybox, "skyboxes/black", { if(skybox[0]) loadsky(skybox); });
 VARW(spinsky, -10000, 0, 10000);
 VARW(yawsky, 0, 0, 360);
 

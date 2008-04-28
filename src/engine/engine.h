@@ -534,7 +534,7 @@ extern char *getmaptitle();
 #define CARDTIME			3000	// title card duration
 #define CARDFADE			1500	// title card fade in/out
 
-extern int fov, maxfps, hidehud, hidestats, hudblend, lastmillis, totalmillis;
+extern int fov, maxfps, hidehud, hudblend, lastmillis, totalmillis;
 
 extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false, bool swapxy = false);
 extern void transplayer();
