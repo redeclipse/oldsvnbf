@@ -162,25 +162,6 @@ struct weaponstate
 		}
 	}
 
-	void damageeffect(int damage, fpsent *d)
-	{
-		vec p = d->o;
-		p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-		particle_splash(3, min(damage/4, 20), 10000, p);
-		if(d!=cl.player1)
-		{
-			s_sprintfd(ds)("@%d", damage);
-			particle_text(d->abovehead(), ds, 8);
-		}
-	}
-
-	void superdamageeffect(vec &vel, fpsent *d)
-	{
-		if(!d->superdamage) return;
-		vec from = d->abovehead();
-		loopi(rnd(d->superdamage)+1) cl.pj.spawn(from, vel, d, PRJ_GIBS);
-	}
-
 	vec gunorigin(int gun, const vec &from, const vec &to, fpsent *d)
 	{
 		vec offset(from);
@@ -193,13 +174,13 @@ struct weaponstate
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
 		right.mul(0.35f*d->radius);
 		offset.add(right);
-		if(d->crouching) offset.z -= (d == cl.player1 ? cl.crouching : 1.0f)*(1-CROUCHHEIGHT)*d->height;
+		if(d->crouching) offset.z -= (d == cl.player1 ? min(1.0f, (lastmillis-d->crouchtime)/200.f) : 1.0f)*(1-CROUCHHEIGHT)*d->height;
 		return offset;
 	}
 
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
-		if (guntype[gun].sound >= 0) playsound(guntype[gun].sound, &d->o, 255, 0, 0, SND_COPY);
+		if (guntype[gun].sound >= 0) playsound(guntype[gun].sound, &from, 255, 0, 0, SND_COPY);
 		adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 
 		switch(gun)

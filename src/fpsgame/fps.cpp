@@ -22,7 +22,6 @@ struct GAMECLIENT : igameclient
 
 	string cptext;
 	int cameratype, cameranum, cameracycled, camerawobble, damageresidue, myrankv, myranks;
-    float crouching;
 
 	struct sline { string s; };
 	struct teamscore
@@ -66,7 +65,7 @@ struct GAMECLIENT : igameclient
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			cameratype(CAMERA_NONE), cameranum(0), cameracycled(0), myrankv(0), myranks(0), crouching(0),
+			cameratype(CAMERA_NONE), cameranum(0), cameracycled(0), myrankv(0), myranks(0),
 			player1(spawnstate(new fpsent()))
 	{
 		CCOMMAND(centerrank, "", (GAMECLIENT *self), self->setcrank());
@@ -78,10 +77,10 @@ struct GAMECLIENT : igameclient
 		CCOMMAND(mutators, "", (GAMECLIENT *self), intret(self->mutators));
 
 		CCOMMAND(sensitivity, "s", (GAMECLIENT *self, char *s), {
-				if (*s)
+				if(*s)
 				{
 					int x = atoi(s);
-					if (x)
+					if(x)
 					{
 						setvar("yawsensitivity", x);
 						setvar("pitchsensitivity", x/2);
@@ -113,8 +112,8 @@ struct GAMECLIENT : igameclient
 	int respawnwait(fpsent *d)
 	{
 		int wait = 0;
-		if (m_capture(gamemode)) wait = cpc.respawnwait(d);
-		else if (m_ctf(gamemode)) wait = ctf.respawnwait(d);
+		if(m_capture(gamemode)) wait = cpc.respawnwait(d);
+		else if(m_ctf(gamemode)) wait = ctf.respawnwait(d);
 		return wait;
 	}
 
@@ -124,7 +123,7 @@ struct GAMECLIENT : igameclient
 		{
 			int wait = respawnwait(d);
 
-			if (wait)
+			if(wait)
 			{
 				if(d==player1) console("\f2you must wait %d second%s before respawn!", CON_NORMAL|CON_CENTER, wait, wait!=1 ? "s" : "");
 				return;
@@ -141,20 +140,18 @@ struct GAMECLIENT : igameclient
 
     bool allowmove(physent *d)
     {
-        if (d->type != ENT_PLAYER) return true;
+        if(d->type != ENT_PLAYER) return true;
         fpsent *e = (fpsent *)d;
         return !intermission && lastmillis-e->lasttaunt >= 1000;
     }
 
 	void respawnself(fpsent *d)
 	{
-        if (d==player1) crouching = 0;
-
 		d->stopmoving();
 
         if(m_mp(gamemode))
         {
-            if (d->respawned != d->lifesequence)
+            if(d->respawned != d->lifesequence)
             {
                 cc.addmsg(SV_TRYSPAWN, "ri", d->clientnum);
                 d->respawned = d->lifesequence;
@@ -163,7 +160,7 @@ struct GAMECLIENT : igameclient
         else
         {
             spawnplayer(d);
-            if (d==player1)
+            if(d==player1)
             {
             	sb.showscores(false);
 				lasthit = 0;
@@ -190,9 +187,9 @@ struct GAMECLIENT : igameclient
 
 	void setmode(int mode, int muts)
 	{
-		if (!m_game(mode)) { conoutf("mode %d is not a valid gameplay type", mode); return; }
-		if (m_sp(mode)) { conoutf("playing %s is not yet supported", gametype[mode]); return; }
-		if (multiplayer(false) && !m_mp(mode)) { conoutf("playing %s is not supported in multiplayer", gametype[mode]); return; }
+		if(!m_game(mode)) { conoutf("mode %d is not a valid gameplay type", mode); return; }
+		if(m_sp(mode)) { conoutf("playing %s is not yet supported", gametype[mode]); return; }
+		if(multiplayer(false) && !m_mp(mode)) { conoutf("playing %s is not supported in multiplayer", gametype[mode]); return; }
 		nextmode = mode;
 		nextmuts = muts;
 	}
@@ -206,8 +203,8 @@ struct GAMECLIENT : igameclient
 
 	void updateworld()		// main game update loop
 	{
-        if (!maptime) { maptime = lastmillis + curtime; return; }
-		if (!curtime) return;
+        if(!maptime) { maptime = lastmillis + curtime; return; }
+		if(!curtime) return;
 
 		ph.update();
 		pj.update();
@@ -215,20 +212,20 @@ struct GAMECLIENT : igameclient
 		bot.update();
 		gets2c();
 
-		if (cc.ready())
+		if(cc.ready())
 		{
-			if (!allowmove(player1) || saycommandon) player1->stopmoving();
+			if(!allowmove(player1) || saycommandon) player1->stopmoving();
 
 			#define adjust(t,n,m) \
-				if (n != 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/float(m))); }
+				if(n != 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/float(m))); }
 
 			adjust(int, camerawobble, 100);
 			adjust(int, damageresidue, 200);
-			if (!player1->leaning) adjust(float, player1->roll, 50);
+			if(!player1->leaning) adjust(float, player1->roll, 50);
 
-			if (player1->state == CS_DEAD)
+			if(player1->state == CS_DEAD)
 			{
-				if (lastmillis-player1->lastpain < 2000)
+				if(lastmillis-player1->lastpain < 2000)
 				{
 					player1->stopmoving();
 					ph.move(player1, 10, false);
@@ -236,9 +233,9 @@ struct GAMECLIENT : igameclient
 			}
 			else
 			{
-				if (player1->timeinair)
+				if(player1->timeinair)
 				{
-					if (player1->jumping && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
+					if(player1->jumping && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
 					{
 						vec dir;
 						vecfromyawpitch(player1->yaw, player1->move || player1->strafe ? player1->pitch : 90.f, player1->move || player1->strafe ? player1->move : 1, player1->strafe, dir);
@@ -254,13 +251,7 @@ struct GAMECLIENT : igameclient
 				ph.move(player1, 20, true);
 				ph.checkmat(player1, 0);
 
-				if (player1->physstate >= PHYS_SLOPE) swaymillis += curtime;
-
-                if (player1->crouching)
-                {
-                    crouching = min(1.0f, crouching + curtime/300.0f);
-                }
-                else crouching = max(0.0f, crouching - curtime/300.0f);
+				if(player1->physstate >= PHYS_SLOPE) swaymillis += curtime;
 
 				float k = pow(0.7f, curtime/10.0f);
 				swaydir.mul(k);
@@ -269,11 +260,11 @@ struct GAMECLIENT : igameclient
                 swaydir.add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), ph.maxspeed(player1)))));
 
 				et.checkitems(player1);
-				if (player1->attacking) ws.shoot(player1, worldpos);
-				if (player1->reloading || doautoreload()) ws.reload(player1);
+				if(player1->attacking) ws.shoot(player1, worldpos);
+				if(player1->reloading || doautoreload()) ws.reload(player1);
 			}
 		}
-		if (player1->clientnum >= 0) c2sinfo();
+		if(player1->clientnum >= 0) c2sinfo();
 	}
 
 	void damaged(int gun, int flags, int damage, fpsent *d, fpsent *actor, int millis, vec &dir)
@@ -283,23 +274,23 @@ struct GAMECLIENT : igameclient
 		d->dodamage(damage, millis);
 		d->superdamage = 0;
 
-		if (actor->type == ENT_PLAYER) actor->totaldamage += damage;
+		if(actor->type == ENT_PLAYER) actor->totaldamage += damage;
 
-		if (actor == player1)
+		if(actor == player1)
 		{
 			int snd;
-			if (damage > 200) snd = 0;
-			else if (damage > 175) snd = 1;
-			else if (damage > 150) snd = 2;
-			else if (damage > 125) snd = 3;
-			else if (damage > 100) snd = 4;
-			else if (damage > 50) snd = 5;
+			if(damage > 200) snd = 0;
+			else if(damage > 175) snd = 1;
+			else if(damage > 150) snd = 2;
+			else if(damage > 125) snd = 3;
+			else if(damage > 100) snd = 4;
+			else if(damage > 50) snd = 5;
 			else snd = 6;
 			playsound(S_DAMAGE1+snd);
 			lasthit = lastmillis;
 		}
 
-		if (d == player1)
+		if(d == player1)
 		{
 			camerawobble += damage;
 			damageresidue += damage;
@@ -307,10 +298,17 @@ struct GAMECLIENT : igameclient
 			d->damageroll(damage);
 		}
 
-		if (d->type == ENT_PLAYER)
+		if(d->type == ENT_PLAYER)
 		{
+			vec p = d->o;
+			p.z += 0.6f*(d->height + d->aboveeye) - d->height;
+			particle_splash(3, min(damage/4, 20), 10000, p);
+			if(d!=player1)
+			{
+				s_sprintfd(ds)("@%d", damage);
+				particle_text(d->abovehead(), ds, 8);
+			}
 			playsound(S_PAIN1+rnd(5), &d->o);
-			ws.damageeffect(damage, d);
 		}
 	}
 
@@ -336,7 +334,7 @@ struct GAMECLIENT : igameclient
 		d->state = CS_DEAD;
         d->superdamage = max(-d->health, 0);
 
-		if (d == player1)
+		if(d == player1)
 		{
 			sb.showscores(true);
 			lastplayerstate = *player1;
@@ -351,10 +349,14 @@ struct GAMECLIENT : igameclient
             d->move = d->strafe = 0;
 		}
 
+		if(d->superdamage)
+		{
+			vec from = d->abovehead();
+			loopi(rnd(d->superdamage)+1) pj.spawn(from, d->vel, d, PRJ_GIBS);
+		}
 		playsound(S_DIE1+rnd(2), &d->o);
-		ws.superdamageeffect(d->vel, d);
 
-		if (d != actor)
+		if(d != actor)
 		{
 			actor->spree++;
 			switch (actor->spree)
@@ -365,7 +367,7 @@ struct GAMECLIENT : igameclient
 				case 50: playsound(S_V_SPREE4, &actor->o); break;
 				default:
 				{
-					if (flags&HIT_HEAD) playsound(S_V_HEADSHOT, &actor->o);
+					if(flags&HIT_HEAD) playsound(S_V_HEADSHOT, &actor->o);
 					else playsound(S_DAMAGE8, &actor->o);
 					break;
 				}
@@ -380,11 +382,11 @@ struct GAMECLIENT : igameclient
 		{
 			intermission = true;
 			player1->attacking = player1->reloading = player1->useaction = player1->leaning = false;
-			if (m_mp(gamemode))
+			if(m_mp(gamemode))
 			{
 				calcranks();
 
-				if ((m_team(gamemode, mutators) && isteam(player1->team, teamscores[0].team)) ||
+				if((m_team(gamemode, mutators) && isteam(player1->team, teamscores[0].team)) ||
 					(!m_team(gamemode, mutators) && shplayers.length() && shplayers[0] == player1))
 				{
 					conoutf("\f2intermission: you win!");
@@ -433,7 +435,7 @@ struct GAMECLIENT : igameclient
 	void clientdisconnected(int cn)
 	{
 		if(!players.inrange(cn)) return;
-		if (cameranum == -cn) cameradir(1, true);
+		if(cameranum == -cn) cameradir(1, true);
 		fpsent *d = players[cn];
 		if(!d) return;
 		if(d->name[0]) conoutf("player %s disconnected", colorname(d));
@@ -445,7 +447,7 @@ struct GAMECLIENT : igameclient
 
 	void initclient()
 	{
-		if (serverhost) connects("localhost");
+		if(serverhost) connects("localhost");
 		else lanconnect();
 	}
 
@@ -454,7 +456,7 @@ struct GAMECLIENT : igameclient
         ws.preload();
         fr.preload();
         et.preload();
-		if (m_capture(gamemode)) cpc.preload();
+		if(m_capture(gamemode)) cpc.preload();
         else if(m_ctf(gamemode)) ctf.preload();
     }
 
@@ -496,7 +498,7 @@ struct GAMECLIENT : igameclient
 	void playsoundc(int n, fpsent *d = NULL)
 	{
 		fpsent *c = d ? d : player1;
-		if (c == player1 || c->ownernum == player1->clientnum)
+		if(c == player1 || c->ownernum == player1->clientnum)
 			cc.addmsg(SV_SOUND, "i2", c->clientnum, n);
 		playsound(n, &c->o);
 	}
@@ -566,7 +568,7 @@ struct GAMECLIENT : igameclient
 		physent *d = player1->state == CS_SPECTATOR || player1->state == CS_EDITING ? camera1 : player1;
 		settexture("textures/blip.png");
 		glBegin(GL_QUADS);
-		loopv(players) if (players[i] && players[i]->state == CS_ALIVE)
+		loopv(players) if(players[i] && players[i]->state == CS_ALIVE)
 		{
 			fpsent *f = players[i];
 			vec dir(f->o);
@@ -611,7 +613,7 @@ struct GAMECLIENT : igameclient
 		int hoff = h*3-h*3/4;
 
 		char *command = getcurcommand();
-		if (command) rendercommand(FONTH/2, hoff);
+		if(command) rendercommand(FONTH/2, hoff);
 		hoff += FONTH;
 
 		drawcrosshair(w, h);
@@ -674,9 +676,9 @@ struct GAMECLIENT : igameclient
 
 	void drawhud(int w, int h)
 	{
-		if (maptime || !cc.ready())
+		if(maptime || !cc.ready())
 		{
-			if (!hidehud)
+			if(!hidehud)
 			{
 				int ox = w*900/h, oy = 900;
 
@@ -688,15 +690,15 @@ struct GAMECLIENT : igameclient
 				int secs = lastmillis-maptime;
 				float fade = 1.f, amt = hudblend*0.01f;
 
-				if (secs <= CARDTIME+CARDFADE)
+				if(secs <= CARDTIME+CARDFADE)
 				{
 					int x = ox;
 
-					if (secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
-					else if (secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
+					if(secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
+					else if(secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
 
 					const char *title = getmaptitle();
-					if (!*title) title = "Untitled by Unknown";
+					if(!*title) title = "Untitled by Unknown";
 
 					glColor4f(1.f, 1.f, 1.f, amt);
 
@@ -715,20 +717,20 @@ struct GAMECLIENT : igameclient
 				{
 					fpsent *d = player1;
 
-					if (lastmillis-maptime <= CARDTIME+CARDFADE+CARDFADE)
+					if(lastmillis-maptime <= CARDTIME+CARDFADE+CARDFADE)
 						fade = amt*(float(lastmillis-maptime-CARDTIME-CARDFADE)/float(CARDFADE));
 					else fade *= amt;
 
-					if (player1->state == CS_SPECTATOR)
+					if(player1->state == CS_SPECTATOR)
 					{
-						if (player1->clientnum == -cameranum)
+						if(player1->clientnum == -cameranum)
 							d = player1;
-						else if (players.inrange(-cameranum) && players[-cameranum])
+						else if(players.inrange(-cameranum) && players[-cameranum])
 							d = players[-cameranum];
 					}
-					else if (player1->state == CS_ALIVE)
+					else if(player1->state == CS_ALIVE)
 					{
-						if (fov < 90 && d->gunselect == GUN_RIFLE)
+						if(fov < 90 && d->gunselect == GUN_RIFLE)
 						{
 							settexture("textures/overlay_zoom.png");
 							glColor4f(1.f, 1.f, 1.f, 1.f);
@@ -741,7 +743,7 @@ struct GAMECLIENT : igameclient
 							glEnd();
 						}
 
-						if (damageresidue > 0 || d->state == CS_DEAD)
+						if(damageresidue > 0 || d->state == CS_DEAD)
 						{
 							int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
 							float pc = float(dam)/100.f;
@@ -757,14 +759,14 @@ struct GAMECLIENT : igameclient
 							glEnd();
 						}
 					}
-					//else if (player1->state == CS_EDITING)
+					//else if(player1->state == CS_EDITING)
 					//{
 					//}
 
-					if (d->state == CS_ALIVE)
+					if(d->state == CS_ALIVE)
 					{
 						float hlt = d->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
-						if (lastmillis < d->lastregen+500) pulse *= (lastmillis-d->lastregen)/500.f;
+						if(lastmillis < d->lastregen+500) pulse *= (lastmillis-d->lastregen)/500.f;
 						settexture("textures/barv.png");
 						glColor4f(glow, 0.f, 0.f, pulse);
 
@@ -785,11 +787,11 @@ struct GAMECLIENT : igameclient
 							draw_textx("Out of ammo", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 						}
 					}
-					else if (d->state == CS_DEAD)
+					else if(d->state == CS_DEAD)
 					{
 						int wait = respawnwait(d);
 
-						if (wait)
+						if(wait)
 						{
 							float c = float(wait)/1000.f;
 							draw_textx("Fragged! Down for %.1fs", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
@@ -958,7 +960,7 @@ struct GAMECLIENT : igameclient
 
 	bool gethudcolour(vec &colour)
 	{
-		if (!maptime && lastmillis-maptime <= CARDTIME)
+		if(!maptime && lastmillis-maptime <= CARDTIME)
 		{
 			float fade = maptime ? float(lastmillis-maptime)/float(CARDTIME) : 0.f;
 			colour = vec(fade, fade, fade);
@@ -972,11 +974,11 @@ struct GAMECLIENT : igameclient
 		const float MAXPITCH = 89.9f;
 		const float MAXROLL = 35.0f;
 
-		if (d->pitch > MAXPITCH) d->pitch = MAXPITCH;
-		if (d->pitch < -MAXPITCH) d->pitch = -MAXPITCH;
+		if(d->pitch > MAXPITCH) d->pitch = MAXPITCH;
+		if(d->pitch < -MAXPITCH) d->pitch = -MAXPITCH;
 
-		if (d->roll > MAXROLL) d->roll = MAXROLL;
-		if (d->roll < -MAXROLL) d->roll = -MAXROLL;
+		if(d->roll > MAXROLL) d->roll = MAXROLL;
+		if(d->roll < -MAXROLL) d->roll = -MAXROLL;
 
 		while (d->yaw < 0.0f) d->yaw += 360.0f;
 		while (d->yaw > 360.0f) d->yaw -= 360.0f;
@@ -984,19 +986,19 @@ struct GAMECLIENT : igameclient
 
 	void fixview()
 	{
-		if (fov > MAXFOV) fov = MAXFOV;
-		if (fov < MINFOV) fov = MINFOV;
+		if(fov > MAXFOV) fov = MAXFOV;
+		if(fov < MINFOV) fov = MINFOV;
 
 		fixrange(player1);
 	}
 
 	void mousemove(int dx, int dy)
 	{
-		if (player1->state != CS_DEAD)
+		if(player1->state != CS_DEAD)
 		{
 			const float SENSF = 33.0f;	 // try match quake sens
 
-			if (player1->leaning) player1->roll += (dx/SENSF)*(rollsensitivity()/(float)sensitivityscale());
+			if(player1->leaning) player1->roll += (dx/SENSF)*(rollsensitivity()/(float)sensitivityscale());
 			else player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
 			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1 : 1);
 
@@ -1019,30 +1021,31 @@ struct GAMECLIENT : igameclient
 
 	void recomputecamera()
 	{
-		int secs = time(NULL), lastcam = cameratype;
+		int secs = time(NULL), lastcam = cameratype, camstate = CS_ALIVE;
+
 		camera1 = &fpscamera;
 		cameratype = CAMERA_NONE;
-
-		fixview();
-
-		if (camera1->type != ENT_CAMERA)
+		if(camera1->type != ENT_CAMERA)
 		{
 			camera1->reset();
 			camera1->type = ENT_CAMERA;
 			camera1->state = CS_ALIVE;
 		}
 
-		if (player1->state == CS_SPECTATOR)
+		fixview();
+
+		if(player1->state == CS_SPECTATOR)
 		{
-			if (cameracycle() > 0 && secs-cameracycled > cameracycle())
+			if(cameracycle() > 0 && secs-cameracycled > cameracycle())
 			{
 				cameradir(1, true);
 				cameracycled = secs;
 			}
 
-			if (players.inrange(-cameranum) && players[-cameranum])
+			if(players.inrange(-cameranum) && players[-cameranum])
 			{
 				cameratype = CAMERA_FOLLOW;
+				camstate = players[-cameranum]->state;
 				camera1->o = players[-cameranum]->o;
 				camera1->vel = players[-cameranum]->vel;
 				camera1->yaw = players[-cameranum]->yaw + player1->yaw;
@@ -1050,24 +1053,22 @@ struct GAMECLIENT : igameclient
 				camera1->roll = players[-cameranum]->roll;
 				camera1->radius = players[-cameranum]->radius;
 				camera1->height = players[-cameranum]->height;
-
-				if (!gamethirdperson())
-				{
-					if (players[-cameranum]->crouching)
-						camera1->o.z -= crouching*(1-CROUCHHEIGHT)*players[-cameranum]->height;
-				}
+				camera1->timeinair = players[-cameranum]->timeinair;
+				camera1->crouching = players[-cameranum]->crouching;
+				camera1->crouchtime = players[-cameranum]->crouchtime;
 			}
-			else if (player1->clientnum != -cameranum)
+			else if(player1->clientnum != -cameranum)
 			{
 				int cameras = 1;
 
 				loopv (et.ents)
 				{
-					if (et.ents[i]->type == CAMERA)
+					if(et.ents[i]->type == CAMERA)
 					{
-						if (cameras == cameranum)
+						if(cameras == cameranum)
 						{
 							cameratype = CAMERA_ENTITY;
+							camstate = CS_ALIVE;
 							camera1->o = et.ents[i]->o;
 							camera1->vel = vec(0, 0, 0);
 							camera1->yaw = et.ents[i]->attr1 + player1->yaw;
@@ -1075,6 +1076,9 @@ struct GAMECLIENT : igameclient
 							camera1->roll = player1->roll;
 							camera1->radius = player1->radius;
 							camera1->height = player1->height;
+							camera1->timeinair = 0;
+							camera1->crouching = false;
+							camera1->crouchtime = 0;
 							break;
 						}
 						cameras++;
@@ -1082,9 +1086,10 @@ struct GAMECLIENT : igameclient
 				}
 			}
 		}
-		if (cameratype <= CAMERA_NONE)
+		if(cameratype <= CAMERA_NONE)
 		{
 			cameratype = CAMERA_PLAYER;
+			camstate = player1->state;
 			camera1->o = player1->o;
 			camera1->vel = player1->vel;
 			camera1->yaw = player1->yaw;
@@ -1092,21 +1097,12 @@ struct GAMECLIENT : igameclient
 			camera1->roll = player1->roll;
 			camera1->radius = player1->radius;
 			camera1->height = player1->height;
-
-			if (!gamethirdperson())
-			{
-				if (player1->crouching)
-					camera1->o.z -= crouching*(1-CROUCHHEIGHT)*player1->height;
-
-				if (player1->state == CS_DEAD)
-				{
-					camera1->o.z -= (player1->height/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
-					camera1->o.z = max(player1->o.z - player1->height + 1.0f, camera1->o.z);
-				}
-			}
+			camera1->timeinair = player1->timeinair;
+			camera1->crouching = player1->crouching;
+			camera1->crouchtime = player1->crouchtime;
 		}
 
-		if (gamethirdperson())
+		if(gamethirdperson())
 		{
 			vec pos;
 
@@ -1123,30 +1119,50 @@ struct GAMECLIENT : igameclient
 		}
 		else
 		{
-			vec off;
-			vecfromyawpitch(camera1->yaw, min(camera1->pitch,80.f)+60.f, 1, 0, off);
-			off.x *= camera1->radius+1.f;
-			off.y *= camera1->radius+1.f;
-			off.z = max(off.z, 0.f);
-			off.z *= camera1->height*0.5f;
-			off.sub(vec(0, 0, camera1->height*0.5f));
-			camera1->o.add(off);
+			if(camstate == CS_DEAD)
+			{
+				camera1->o.z -= (player1->height/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
+				camera1->o.z = max(player1->o.z - player1->height + 1.0f, camera1->o.z);
+			}
+			else if(camstate == CS_ALIVE)
+			{
+				if(camera1->crouchtime)
+				{
+					float crouching = 0.f;
 
-			vec sway;
-			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
-            float swayspeed = sqrtf(player1->vel.x*player1->vel.x + player1->vel.y*player1->vel.y);
-            swayspeed = min(4.0f, swayspeed);
-			sway.mul(swayspeed);
-			float swayxy = sinf(swaymillis/115.0f)/100.0f, swayz = cosf(swaymillis/115.0f)/100.0f;
-			swap(sway.x, sway.y);
-			sway.x *= -swayxy;
-			sway.y *= swayxy;
-			sway.z = -fabs(swayspeed*swayz);
-			sway.add(swaydir);
-			camera1->o.add(sway);
+					if(camera1->crouching) crouching = min(1.0f, (lastmillis-camera1->crouchtime)/200.f);
+					else crouching = max(0.0f, 1.f-((lastmillis-camera1->crouchtime)/200.f));
+
+					camera1->o.z -= camera1->height;
+					camera1->height -= crouching*(1-CROUCHHEIGHT)*camera1->height;
+					camera1->o.z += camera1->height;
+				}
+
+				vec off;
+				vecfromyawpitch(camera1->yaw, min(camera1->pitch,80.f)+60.f, 1, 0, off);
+				off.x *= camera1->radius+1.f;
+				off.y *= camera1->radius+1.f;
+				off.z = max(off.z, 0.f);
+				off.z *= camera1->height*0.5f;
+				off.sub(vec(0, 0, camera1->height*0.5f));
+				camera1->o.add(off);
+
+				vec sway;
+				vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
+				float swayspeed = sqrtf(player1->vel.x*player1->vel.x + player1->vel.y*player1->vel.y);
+				swayspeed = min(4.0f, swayspeed);
+				sway.mul(swayspeed);
+				float swayxy = sinf(swaymillis/115.0f)/100.0f, swayz = cosf(swaymillis/115.0f)/100.0f;
+				swap(sway.x, sway.y);
+				sway.x *= -swayxy;
+				sway.y *= swayxy;
+				sway.z = -fabs(swayspeed*swayz);
+				sway.add(swaydir);
+				camera1->o.add(sway);
+			}
 		}
 
-		if (camerawobble > 0 && cameratype == lastcam)
+		if(camerawobble > 0 && cameratype == lastcam)
 		{
 			float pc = float(min(camerawobble, 100))/100.f;
 			#define wobble (float(rnd(8)-4)*pc)
@@ -1189,7 +1205,7 @@ struct GAMECLIENT : igameclient
 			case MN_INPUT: s = S_MENUPRESS; break;
 			default: break;
 		}
-		if (s >= 0) playsound(s);
+		if(s >= 0) playsound(s);
 	}
 
 	void cameradir(int dir, bool quiet = false)
@@ -1198,9 +1214,9 @@ struct GAMECLIENT : igameclient
 
 		cam_lo = players.length();
 
-		loopv(et.ents) if (et.ents[i]->type == CAMERA) cam_hi++;
+		loopv(et.ents) if(et.ents[i]->type == CAMERA) cam_hi++;
 
-		if ((cams = cam_lo + cam_hi) > 1)
+		if((cams = cam_lo + cam_hi) > 1)
 		{
 			while (true)
 			{
@@ -1209,24 +1225,24 @@ struct GAMECLIENT : igameclient
 				while (cameranum < -cam_lo) cameranum += cams;
 				while (cameranum > cam_hi) cameranum -= cams;
 
-				if (cameranum > 0 || player1->clientnum == -cameranum ||
+				if(cameranum > 0 || player1->clientnum == -cameranum ||
 					(players.inrange(-cameranum) && players[-cameranum])) break;
 			}
-			if (!quiet)
+			if(!quiet)
 			{
-				if (cameranum > 0) console("camera %d selected", CON_NORMAL|CON_CENTER, cameranum);
-				else if (player1->clientnum == -cameranum) console("spectator camera selected", CON_NORMAL|CON_CENTER);
+				if(cameranum > 0) console("camera %d selected", CON_NORMAL|CON_CENTER, cameranum);
+				else if(player1->clientnum == -cameranum) console("spectator camera selected", CON_NORMAL|CON_CENTER);
 				else console("chasecam %s selected", CON_NORMAL|CON_CENTER, players[-cameranum]->name);
 			}
 		}
-		else if (!quiet) console("no other cameras available", CON_NORMAL|CON_CENTER);
+		else if(!quiet) console("no other cameras available", CON_NORMAL|CON_CENTER);
 	}
 
 	void setcamera(int idx)
 	{
-		if (idx>=0)
+		if(idx>=0)
 		{
-			if ((player1->state == CS_SPECTATOR) || (player1->state == CS_EDITING))
+			if((player1->state == CS_SPECTATOR) || (player1->state == CS_EDITING))
 			{
 				int foo_delta; // we will ignore the delta attribute (it's for AwayCAM (still to come))
 				et.gotocamera(idx, player1, foo_delta);
@@ -1303,13 +1319,13 @@ struct GAMECLIENT : igameclient
 
 		loopv(shplayers)
 		{
-			if (shplayers[i]->clientnum == player1->clientnum)
+			if(shplayers[i]->clientnum == player1->clientnum)
 			{
-				if (i != myrankv)
+				if(i != myrankv)
 				{
-					if (i==0)
+					if(i==0)
 					{
-						if (player1->state != CS_SPECTATOR)
+						if(player1->state != CS_SPECTATOR)
 						{
 							hold = true;
 							s_sprintf(rinfo)("You've taken %s", myrankv!=-1?"\fythe lead":"\frfirst blood");
@@ -1317,18 +1333,18 @@ struct GAMECLIENT : igameclient
 					}
 					else
 					{
-						if (myrankv==0)
+						if(myrankv==0)
 						{
 							hold = true;
 							s_sprintf(rinfo)("\f2%s \fftakes \f2the lead", colorname(shplayers[0]));
 						}
 						int df = shplayers[0]->frags - shplayers[i]->frags;
 						string cmbN;
-						if (player1->state == CS_SPECTATOR)
+						if(player1->state == CS_SPECTATOR)
 						{
 							df = shplayers[0]->frags - shplayers[i==1?2:1]->frags;
 							string dfs;
-							if (df)
+							if(df)
 								s_sprintf(dfs)("+%d frags", df);
 							else
 								s_sprintf(dfs)("%s","tied for the lead");
@@ -1345,17 +1361,17 @@ struct GAMECLIENT : igameclient
 					}
 					myrankv = i;
 				}
-				else if (myranks)
+				else if(myranks)
 				{
-					if (player1->state == CS_SPECTATOR)
+					if(player1->state == CS_SPECTATOR)
 					{
-						if (lastmillis > myranks + ranktime())
+						if(lastmillis > myranks + ranktime())
 						{
-							if (shplayers.length()>2)
+							if(shplayers.length()>2)
 							{
 								int df = shplayers[0]->frags - shplayers[i==1?2:1]->frags;
 								string dfs;
-								if (df)
+								if(df)
 									s_sprintf(dfs)("+%d frags", df);
 								else
 									s_sprintf(dfs)("%s","tied for the lead");
@@ -1365,10 +1381,10 @@ struct GAMECLIENT : igameclient
 					}
 					else
 					{
-						if (lastmillis > myranks + ranktime())
+						if(lastmillis > myranks + ranktime())
 						{
 							int df;
-							if (shplayers.length()>1)
+							if(shplayers.length()>1)
 							{
 								if(i)
 									df= shplayers[0]->frags - shplayers[i]->frags;
@@ -1386,7 +1402,7 @@ struct GAMECLIENT : igameclient
 				myranks = lastmillis;
 			}
 		}
-		if (rankhud() && rinfo[0]) { console("%s", CON_CENTER, rinfo); }
+		if(rankhud() && rinfo[0]) { console("%s", CON_CENTER, rinfo); }
 	}
 
 	void setcrank()

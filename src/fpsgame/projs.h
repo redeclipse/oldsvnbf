@@ -121,7 +121,7 @@ struct projectiles
             {
 				if (guntype[gun].fsound >= 0 && (!sounds.inrange(schan) || !sounds[schan].inuse))
 				{
-					schan = playsound(guntype[gun].fsound, &o, 255, 0, 0, SND_COPY);
+					schan = playsound(guntype[gun].fsound, &o);
 				}
             	regular_particle_splash(5, 1, 500, o);
             }
@@ -164,9 +164,9 @@ struct projectiles
 
 						if (vol)
 						{
-							if (projtype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, vol, 0, 0, SND_COPY);
-							else if (projtype == PRJ_GIBS) playsound(S_SPLAT, &o, vol, 0, 0, SND_COPY);
-							else if (projtype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, vol, 0, 0, SND_COPY);
+							if (projtype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, vol);
+							else if (projtype == PRJ_GIBS) playsound(S_SPLAT, &o, vol);
+							else if (projtype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, vol);
 						}
 					}
                     movement = 0;

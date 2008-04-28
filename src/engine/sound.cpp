@@ -25,7 +25,8 @@ VARF(soundmono, 0, 0, 1, initwarning());
 VARF(soundchans, 0, 1024, INT_MAX-1, initwarning());
 VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning());
 VARF(soundfreq, 0, 44100, 48000, initwarning());
-VARP(maxsoundsatonce, 0, 24, INT_MAX-1);
+VARP(soundmaxatonce, 0, 24, INT_MAX-1);
+VARP(soundmaxdist, 0, 512, INT_MAX-1);
 
 void initsound()
 {
@@ -158,32 +159,22 @@ void checksound()
 	{
 		if(Mix_Playing(i))
 		{
+			int vol = clamp(((soundvol*sounds[i].vol*sounds[i].slot->vol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
 			vec v;
 			sounds[i].dist = camera1->o.dist(*sounds[i].pos, v);
-			float maxrad = float(sounds[i].maxrad ? sounds[i].maxrad : hdr.worldsize);
+			float maxrad = float(sounds[i].maxrad > 0 && sounds[i].maxrad < soundmaxdist ? sounds[i].maxrad : soundmaxdist);
 
-			if(sounds[i].dist <= maxrad)
+			if(vol && sounds[i].dist <= maxrad)
 			{
-				float minrad = float(sounds[i].minrad >= 0 ? sounds[i].minrad : 0);
-				if(minrad > maxrad) minrad = maxrad;
+				float minrad = float(sounds[i].minrad < maxrad ? sounds[i].minrad : maxrad);
 
 				if(sounds[i].dist > minrad)
 				{
-					int vol = clamp(((soundvol*sounds[i].vol*sounds[i].slot->vol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
-
-					if(vol)
+					sounds[i].curvol = int(float(vol)*((maxrad-minrad-sounds[i].dist)/(maxrad-minrad)));
+					if(!soundmono && (v.x != 0 || v.y != 0))
 					{
-						sounds[i].curvol = int(vol*((maxrad-minrad-sounds[i].dist)/(maxrad-minrad)));
-						if(!soundmono && (v.x != 0 || v.y != 0))
-						{
-							float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
-							sounds[i].curpan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
-						}
-					}
-					else
-					{
-						sounds[i].curvol = 0;
-						sounds[i].curpan = 127;
+						float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
+						sounds[i].curpan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
 					}
 				}
 				else if(sounds[i].dist <= camera1->radius)
@@ -200,6 +191,11 @@ void checksound()
 
 			Mix_Volume(i, sounds[i].curvol);
 			Mix_SetPanning(i, 255-sounds[i].curpan, sounds[i].curpan);
+#if 0
+			conoutf("sound %d (%.1f %.1f %.1f [%.1f]) %d %d", i,
+				sounds[i].pos->x, sounds[i].pos->y, sounds[i].pos->z,
+				sounds[i].dist, sounds[i].curvol, sounds[i].curpan);
+#endif
 		}
 		else sounds[i].inuse = false;
 	}
@@ -215,7 +211,7 @@ int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 		if(totalmillis == lastsoundmillis) soundsatonce++;
 		else soundsatonce = 1;
 		lastsoundmillis = totalmillis;
-		if(maxsoundsatonce && soundsatonce > maxsoundsatonce) return -1;
+		if(soundmaxatonce && soundsatonce > soundmaxatonce) return -1;
 	}
 
 	vec *p = pos != NULL ? pos : &camera1->o;
@@ -230,9 +226,9 @@ int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 		{
 			while(chan >= sounds.length()) sounds.add().inuse = false;
 			sounds[chan].slot = &soundset[n];
-			sounds[chan].vol = vol >= 1 && vol <= 255 ? vol : 255;
-			sounds[chan].maxrad = maxrad;
-			sounds[chan].minrad = minrad;
+			sounds[chan].vol = vol > 0 && vol < 255 ? vol : 255;
+			sounds[chan].maxrad = maxrad > 0 ? maxrad : 128;
+			sounds[chan].minrad = minrad > 0 ? minrad : 2;
 			sounds[chan].inuse = true;
 			sounds[chan].flags = flags;
 
