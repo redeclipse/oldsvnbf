@@ -5,17 +5,18 @@ struct icliententities
     virtual ~icliententities() {}
 
     virtual void editent(int i) = 0;
-    virtual const char *entnameinfo(entity &e) = 0;
-    virtual const char *entname(int i) = 0;
 	virtual void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e) { return; }
 	virtual void writeent(gzFile &g, int id, entity &e) { return; }
 	virtual void initents(gzFile &g, int mtype, int mver, char *gid, int gver) = 0;
     virtual float dropheight(entity &e) = 0;
     virtual void fixentity(extentity &e) = 0;
-    virtual bool mayattach(extentity &e) { return false; }
-    virtual bool attachent(extentity &e, extentity &a) { return false; }
+    virtual const char *findname(int type) = 0;
+	virtual int findtype(char *type) = 0;
+    virtual bool mayattach(extentity &e) = 0;
+    virtual bool attachent(extentity &e, extentity &a) = 0;
     virtual extentity *newent() = 0;
     virtual vector<extentity *> &getents() = 0;
+    virtual void drawparticles() = 0;
 };
 
 struct iclientcom

@@ -275,7 +275,7 @@ struct ctfclient : ctfstate
         settexture("textures/blip.png");
         if(f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators))) glColor4f(0.f, 0.f, 1.f, 1.f);
         else glColor4f(1.f, 0.f, 0.f, 1.f);
-		physent *d = cl.player1->state == CS_SPECTATOR || cl.player1->state == CS_EDITING ? camera1 : cl.player1;
+		physent *d = cl.cc.spectator || editmode ? camera1 : cl.player1;
 		vec dir;
         if(flagblip) dir = f.owner ? f.owner->o : (f.droptime ? f.droploc : f.spawnloc);
         else dir = f.spawnloc;

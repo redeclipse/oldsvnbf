@@ -54,7 +54,7 @@ struct fpsrender
 		fpsent *d;
         loopv(cl.players) if((d = cl.players[i]) && d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING)
 		{
-			if (cl.player1->state == CS_SPECTATOR && cl.players[i]->clientnum == -cl.cameranum && !isthirdperson()) continue;
+			if (cl.cc.spectator && cl.players[i]->clientnum == -cl.cameranum && !isthirdperson()) continue;
             int mdl = m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? 1 : 2) : 0;
 			if(d->state!=CS_DEAD || d->superdamage<50) renderplayer(d, false, mdlnames[mdl]);
 			if(d->state!=CS_DEAD)

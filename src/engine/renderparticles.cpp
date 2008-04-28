@@ -1087,7 +1087,7 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
     }
 }
 
-static void makeparticles(entity &e)
+void makeparticles(entity &e)
 {
     switch(e.attr1)
     {
@@ -1149,29 +1149,6 @@ void entity_particles()
     }
 
     flares.makelightflares();
-
-    const vector<extentity *> &ents = et->getents();
-    if (editmode)
-    {
-        loopv(entgroup)
-        {
-            entity &e = *ents[entgroup[i]];
-            particle_text(e.o, entname(e), 13, 1);
-        }
-    }
-    loopv(ents)
-    {
-        entity &e = *ents[i];
-        if (e.type == ET_EMPTY) continue;
-
-        if (e.type == ET_PARTICLES && e.o.dist(camera1->o) <= maxparticledistance)
-            makeparticles(e);
-
-        if (editmode)
-        {
-            particle_text(e.o, entname(e), 11, 1);
-            if (e.type != ET_PARTICLES) regular_particle_splash(2, 2, 40, e.o);
-        }
-    }
+	et->drawparticles();
 }
 

@@ -258,14 +258,14 @@ void save_config()
 			if(s.shader) \
 			{ \
 				fprintf(h, "setshader %s\n", s.shader->name); \
-				loopvj(s.params) \
-				{ \
-					fprintf(h, "set%sparam", s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")); \
-					if(s.params[j].type == SHPARAM_UNIFORM) fprintf(h, " \"%s\"", s.params[j].name); \
-					else fprintf(h, " %d", s.params[j].index);\
-					loopk(4) fprintf(h, " %f", s.params[j].val[k]); \
-					fprintf(h, "\n"); \
-				} \
+			} \
+			loopvj(s.params) \
+			{ \
+				fprintf(h, "set%sparam", s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")); \
+				if(s.params[j].type == SHPARAM_UNIFORM) fprintf(h, " \"%s\"", s.params[j].name); \
+				else fprintf(h, " %d", s.params[j].index);\
+				loopk(4) fprintf(h, " %f", s.params[j].val[k]); \
+				fprintf(h, "\n"); \
 			} \
 		} \
 		loopvj(s.sts) \
@@ -375,6 +375,7 @@ void save_world(const char *mname, bool nolms)
 			if(verbose >= 2) show_out_of_renderloop_progress(float(vars)/float(numvars), "saving world variables...");
 			gzputint(f, (int)strlen(id.name));
 			gzwrite(f, id.name, (int)strlen(id.name)+1);
+			gzputint(f, id.type);
 			switch(id.type)
 			{
 				case ID_VAR:
@@ -539,7 +540,8 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 					string vname;
 					gzread(f, vname, len+1);
 					ident *id = idents->access(vname);
-					switch(id->type)
+					int type = hdr.version <= 27 ? (id ? id->type : ID_VAR) : gzgetint(f);
+					switch(type)
 					{
 						case ID_VAR:
 						{
@@ -715,7 +717,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		{
 			if(e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
 			{
-				conoutf("WARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", et->entname(e.type), i, e.o.x, e.o.y, e.o.z);
+				conoutf("WARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", et->findname(e.type), i, e.o.x, e.o.y, e.o.z);
 			}
 		}
 		if(hdr.version <= 14 && e.type == ET_MAPMODEL)
