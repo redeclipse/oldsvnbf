@@ -291,7 +291,7 @@ void gl_checkextensions()
         filltjoints = 0;
 
         nvidia_texgen_bug = 1;
-        if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too 
+        if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too
     }
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
@@ -1151,7 +1151,7 @@ void gl_drawframe(int w, int h)
 	defaultshader->set();
 
     cl->recomputecamera();
-   
+
     updatedynlights();
 
     fovy = float(curfov*h)/w;
@@ -1258,7 +1258,6 @@ VARP(crosshairfx, 0, 1, 1);
 VARP(crosshairblend, 0, 50, 100);
 VARP(cursorsize, 0, 30, 1000);
 
-VARP(hidestats, 0, 0, 1);
 VARP(hidehud, 0, 0, 1);
 
 #define MAXCROSSHAIRS 4
@@ -1330,10 +1329,6 @@ void drawcrosshair(int w, int h)
 	glTexCoord2d(0.0, 1.0); glVertex2f(x,		  y + chsize);
 	glEnd();
 }
-
-VARP(showfpsrange, 0, 0, 1);
-VAR(showeditstats, 0, 0, 1);
-VAR(statrate, 0, 200, 1000);
 
 void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 {
@@ -1409,79 +1404,6 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 	glDisable(GL_BLEND);
 	cl->drawhud(w, h); // can make more dramatic changes this way without getting in the way
 	g3d_render();
-
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-	glEnable(GL_BLEND);
-
-	glLoadIdentity();
-	glOrtho(0, w*3, h*3, 0, -1, 1);
-
-	int hoff = h*3-h*3/4-FONTH;
-
-	char *command = getcurcommand();
-	if (command) rendercommand(FONTH/2, hoff);
-	hoff += FONTH;
-
-	drawcrosshair(w, h);
-
-	if(!hidehud)
-	{
-        renderconsole(w, h);
-
-		if(!hidestats)
-		{
-			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
-			int fps, bestdiff, worstdiff;
-			getfps(fps, bestdiff, worstdiff);
-#if 0
-			if(showfpsrange) draw_textx("%d+%d-%d:%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, bestdiff, worstdiff, perflevel);
-			else draw_textx("%d:%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, perflevel);
-#else
-			if(showfpsrange) draw_textx("%d+%d-%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, bestdiff, worstdiff);
-			else draw_textx("%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, fps);
-#endif
-
-            if(editmode || showeditstats)
-            {
-                static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
-                if(lastmillis - laststats >= statrate)
-                {
-                    memcpy(prevstats, curstats, sizeof(prevstats));
-                    laststats = lastmillis - (lastmillis%statrate);
-                }
-                int nextstats[8] =
-                {
-                    vtris*100/max(wtris, 1),
-                    vverts*100/max(wverts, 1),
-                    xtraverts/1024,
-                    xtravertsva/1024,
-                    glde,
-                    gbatches,
-                    getnumqueries(),
-                    rplanes
-                };
-
-                loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
-
-                draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", FONTH/2, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
-                draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/2, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
-				draw_textf("cube %s%d", FONTH/2, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
-			}
-		}
-
-		if(editmode)
-		{
-			char *editinfo = executeret("edithud");
-			if(editinfo)
-			{
-				draw_text(editinfo, FONTH/2, hoff); hoff += FONTH;
-				DELETEA(editinfo);
-			}
-		}
-
-		render_texture_panel(w, h);
-	}
 
 	glDisable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);

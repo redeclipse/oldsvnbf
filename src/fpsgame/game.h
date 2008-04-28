@@ -257,7 +257,6 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
 #define PLATFORMBORDER	0.2f
 #define PLATFORMMARGIN	10.0f
 
-#define MAXRADAR		256.f
 #define MAXHEALTH		100
 #define MAXCARRY		2
 

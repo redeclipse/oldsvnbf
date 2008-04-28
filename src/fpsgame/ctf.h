@@ -285,10 +285,10 @@ struct ctfclient : ctfstate
               xoffset = flagblip ? -2*(3/32.0f)*size : -size,
               yoffset = flagblip ? -2*(1 - 3/32.0f)*size : -size,
               dist = dir.magnitude();
-        if(dist >= MAXRADAR*(1 - 0.05f)) dir.mul(MAXRADAR*(1 - 0.05f)/dist);
+        if(dist >= cl.radarrange()*(1 - 0.05f)) dir.mul(cl.radarrange()*(1 - 0.05f)/dist);
 		dir.rotate_around_z(-d->yaw*RAD);
 		glBegin(GL_QUADS);
-        cl.drawradar(x + s*0.5f*(1.0f + dir.x/MAXRADAR + xoffset), y + s*0.5f*(1.0f + dir.y/MAXRADAR + yoffset), size*s);
+        cl.drawradar(x + s*0.5f*(1.0f + dir.x/cl.radarrange() + xoffset), y + s*0.5f*(1.0f + dir.y/cl.radarrange() + yoffset), size*s);
 		glEnd();
     }
 

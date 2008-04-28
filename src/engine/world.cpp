@@ -810,11 +810,10 @@ void resetmap()
 			switch (id.type)
 			{
 				case ID_VAR:
-					*id.storage.i = id.val.i;
+					setvar(id.name, id.val.i, true);
 					break;
 				case ID_SVAR:
-					delete[] id.storage.s;
-					*id.storage.s = newstring(id.val.s);
+					setsvar(id.name, id.val.s, true);
 					break;
 				default:
 				break;
