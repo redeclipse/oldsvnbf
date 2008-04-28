@@ -39,7 +39,7 @@ void drawglaretex()
     glaretex.render(1<<glaresize, blurglare, blurglaresigma/100.0f);
 }
 
-FVARP(glarescale, 1);
+VARP(glarescale, 0, 100, 100);
 
 void addglare()
 {
@@ -56,7 +56,7 @@ void addglare()
 
     glBindTexture(GL_TEXTURE_2D, glaretex.rendertex);
 
-    setlocalparamf("glarescale", SHPARAM_PIXEL, 0, glarescale, glarescale, glarescale);
+    setlocalparamf("glarescale", SHPARAM_PIXEL, 0, glarescale/100.f, glarescale/100.f, glarescale/100.f);
 
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);

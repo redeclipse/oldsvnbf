@@ -234,6 +234,8 @@ struct Slot
 	char *autograss;
 	Texture *grasstex, *thumbnail;
 
+    Slot() : autograss(NULL) { reset(); }
+    
 	void reset()
 	{
 		sts.setsize(0);
@@ -251,8 +253,6 @@ struct Slot
 		grasstex = NULL;
 		thumbnail = NULL;
 	}
-
-	Slot() : autograss(NULL) { reset(); }
 
     void cleanup()
     {

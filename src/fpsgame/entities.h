@@ -6,18 +6,13 @@ struct entities : icliententities
 
 	IVARP(showentdir, 0, 1, 2);
 	IVARP(showentradius, 0, 1, 2);
-
-	IVARP(showbaselinks, 0, 0, 2);
-	IVARP(showcheckpointlinks, 0, 0, 2);
-	IVARP(showcameralinks, 0, 0, 2);
-	IVARP(showteleportlinks, 0, 0, 2);
-	IVARP(showwaypointlinks, 0, 0, 2);
+	IVARP(showentlinks, 0, 0, 2);
 
 	IVAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 
 	entities(GAMECLIENT &_cl) : cl(_cl)
 	{
-		CCOMMAND(entlink, "", (entities *self), self->linkent());
+		CCOMMAND(linkent, "", (entities *self), self->linkent());
 	}
 
 	vector<extentity *> &getents() { return ents; }
@@ -40,7 +35,7 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			fpsentity &e = (fpsentity &)*ents[i];
-			if(e.type == MAPSOUND && mapsounds.inrange(e.attr1) && (!sounds.inrange(e.schan) || !sounds[e.schan].inuse))
+			if(e.type == MAPSOUND && !e.links.length() && mapsounds.inrange(e.attr1) && (!sounds.inrange(e.schan) || !sounds[e.schan].inuse))
 			{
 				e.schan = playsound(e.attr1, &e.o, e.attr4, e.attr2, e.attr3, SND_MAP);
 			}
@@ -74,8 +69,6 @@ struct entities : icliententities
 		return emdl[0] ? emdl : NULL;
 	}
 
-	void rumble(extentity &e) { playsound(S_RUMBLE, &e.o); }
-
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
 
@@ -92,6 +85,37 @@ struct entities : icliententities
 	}
 
 	// these functions are called when the client touches the item
+	void execlink(fpsent *d, int index, bool local)
+	{
+		if(d && ents.inrange(index) && enttype[ents[index]->type].links)
+		{
+			if(local)
+			{
+				cl.cc.addmsg(SV_EXECLINK, "ri2", d->clientnum, index);
+				if(d->bot) return;
+			}
+
+			fpsentity &e = (fpsentity &)*ents[index];
+			loopv(ents)
+			{
+				fpsentity &f = (fpsentity &)*ents[i];
+				if(f.links.find(index) >= 0)
+				{
+					switch(f.type)
+					{
+						case MAPSOUND:
+						{
+							if ((e.type == TRIGGER || e.type == TELEPORT || e.type == JUMPPAD) && mapsounds.inrange(f.attr1) && (!sounds.inrange(f.schan) || !sounds[f.schan].inuse))
+								playsound(f.attr1, &f.o, f.attr4, f.attr2, f.attr3, SND_MAP);
+							break;
+						}
+						default: break;
+					}
+				}
+			}
+		}
+	}
+
 
 	void teleport(int n, fpsent *d)	 // also used by monsters
 	{
@@ -112,7 +136,8 @@ struct entities : icliententities
 				d->o.add(d->vel);
 				d->vel.mul(mag);
 				cl.ph.entinmap(d, false);
-				cl.playsoundc(S_TELEPORT, d);
+				execlink(d, n, true);
+				execlink(d, targ, true);
 				return;
 			}
 			else e.links.remove(link); // something wrong with it..
@@ -213,7 +238,8 @@ struct entities : icliententities
 				d->timeinair = 0;
                 d->falling = vec(0, 0, 0);
 				d->vel = v;
-				cl.playsoundc(S_JUMPPAD, d);
+				execlink(d, n, true);
+				//cl.playsoundc(S_JUMPPAD, d);
 				break;
 			}
 		}
@@ -318,9 +344,42 @@ struct entities : icliententities
 		return 4.0f;
 	}
 
+	bool canlink(int index, int node)
+	{
+		if (ents.inrange(index) && ents.inrange(node) && enttype[ents[index]->type].links && enttype[ents[node]->type].links)
+		{
+			switch(ents[index]->type)
+			{
+				case MAPMODEL:
+					if(ents[node]->type == TRIGGER) return true;
+					break;
+				case MAPSOUND:
+					if(ents[node]->type == TELEPORT || ents[node]->type == TRIGGER || ents[node]->type == JUMPPAD) return true;
+					break;
+				case TELEPORT:
+					if(ents[node]->type == TELEPORT) return true;
+					break;
+				case BASE:
+					if(ents[node]->type == BASE) return true;
+					break;
+				case CHECKPOINT:
+					if(ents[node]->type == CHECKPOINT) return true;
+					break;
+				case CAMERA:
+					if(ents[node]->type == CAMERA) return true;
+					break;
+				case WAYPOINT:
+					if(ents[node]->type == WAYPOINT) return true;
+					break;
+				default: break;
+			}
+		}
+		return false;
+	}
+
 	bool linkents(int index, int node, bool add, bool local)
 	{
-		if (ents.inrange(index) && ents.inrange(node) && ents[index]->type == ents[node]->type && enttype[ents[index]->type].links)
+		if (ents.inrange(index) && ents.inrange(node) && canlink(index, node))
 		{
 			fpsentity &e = (fpsentity &)*ents[index];
 			fpsentity &f = (fpsentity &)*ents[node];
@@ -367,32 +426,16 @@ struct entities : icliententities
 
 	void linkent()
 	{
-		if(entgroup.length())
+		int index = -1;
+		loopv(entgroup)
 		{
-			int index = entgroup[0];
-
+			int node = entgroup[i];
 			if(ents.inrange(index))
 			{
-				int type = ents[index]->type;
-
-				if(enttype[type].links)
-				{
-					int last = -1;
-
-					loopv(entgroup)
-					{
-						index = entgroup[i];
-
-						if(ents[index]->type == type)
-						{
-							if(ents.inrange(last)) linkents(last, index, false, true);
-							last = index;
-						}
-						else conoutf("entity %s is not linkable to a %s", enttype[type].name, enttype[index].name);
-					}
-				}
-				else conoutf("entity %s is not linkable", enttype[type].name);
+				if (canlink(index, node)) linkents(index, node, false, true);
+				else conoutf("entity %d [%s] and %d [%s] are not linkable", index, enttype[index].name, node, enttype[node].name);
 			}
+			index = node;
 		}
 	}
 
@@ -402,13 +445,10 @@ struct entities : icliententities
 		{
 			fpsentity &e = (fpsentity &)*ents[i];
 
-			loopvj(e.links)
+			loopvj(e.links) if(e.links[j] == n)
 			{
-				if(e.links[j] == n)
-				{
-					e.links.remove(j);
-					break;
-				}
+				e.links.remove(j);
+				break;
 			}
 		}
 	}
@@ -588,18 +628,16 @@ struct entities : icliententities
 				if(!ents.inrange(d->lastnode)) d->lastnode = waypointnode(v, true, enttype[WAYPOINT].radius);
 				if(!ents.inrange(d->lastnode))
 				{
-					conoutf("dropping waypoint.. (%.1f, %.1f, %1f)", v.x, v.y, v.z);
 					d->lastnode = ents.length();
 					newentity(v, WAYPOINT, enttype[WAYPOINT].radius, 0, 0, 0);
 				}
 
 				if(d->lastnode != oldnode && ents.inrange(oldnode) && ents.inrange(d->lastnode))
 				{
-					conoutf("linking waypoints %d and %d..", oldnode, d->lastnode);
 					fpsentity &e = (fpsentity &)*ents[oldnode], &f = (fpsentity &)*ents[d->lastnode];
 					if(e.links.find(d->lastnode) < 0)
 						linkents(oldnode, d->lastnode, true, false);
-					if(!d->timeinair && f.links.find(oldnode) < 0)
+					if(f.links.find(oldnode) < 0)
 						linkents(d->lastnode, oldnode, true, false);
 				}
 			}
@@ -833,34 +871,21 @@ struct entities : icliententities
 			}
 			case TELEPORT:
 			{
-				if(!level || showteleportlinks() >= level) renderlinked(e);
-				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, 0);
-				break;
-			}
-			case BASE:
-			{
-				if(!level || showbaselinks() >= level) renderlinked(e);
-				break;
-			}
-			case CHECKPOINT:
-			{
-				if(!level || showcheckpointlinks() >= level) renderlinked(e);
+				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, e.attr2);
 				break;
 			}
 			case CAMERA:
 			{
-				if(!level || showcameralinks() >= level) renderlinked(e);
 				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, e.attr2);
-				break;
-			}
-			case WAYPOINT:
-			{
-				if(!level || showwaypointlinks() >= level || dropwaypoints()) renderlinked(e);
 				break;
 			}
 			default:
 				break;
 		}
+
+		if(enttype[e.type].links)
+			if (!level || showentlinks() >= level || (e.type == WAYPOINT && dropwaypoints()))
+				renderlinked(e);
 	}
 
 	void render()
@@ -868,7 +893,7 @@ struct entities : icliententities
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
 			#define entfocus(i, f) { int n = efocus = (i); if(n >= 0) { extentity &e = *ents[n]; f; } }
-			int level = (editmode ? 1 : ((showentdir()==2 || showentradius()==2 || showbaselinks()==2 || showcheckpointlinks()==2 || showcameralinks()==2 || showteleportlinks()==2 || showwaypointlinks()==2 || dropwaypoints()) ? 2 : 0));
+			int level = (editmode ? 1 : ((showentdir()==2 || showentradius()==2 || showentlinks()==2 || dropwaypoints()) ? 2 : 0));
 			if(level)
 			{
 				renderprimitive(true);

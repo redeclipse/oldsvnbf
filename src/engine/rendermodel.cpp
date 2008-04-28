@@ -486,7 +486,7 @@ void renderbatchedmodel(model *m, batchedmodel &b)
 	}
 
 	int anim = b.anim;
-    if(shadowmapping) 
+    if(shadowmapping)
     {
         anim |= ANIM_NOSKIN;
         setenvparamf("shadowintensity", SHPARAM_VERTEX, 1,
@@ -851,8 +851,8 @@ void findanims(const char *pattern, vector<int> &anims)
 {
 	static const char *names[] =
 	{
-		"dead", "dying",
-		"idle", "forward", "backward", "left", "right",
+		"dead", "dying", "idle",
+		"forward", "backward", "left", "right",
 		"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
 		"punch", "shoot", "pain",
 		"jump", "sink", "swim",
@@ -926,7 +926,7 @@ void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attac
 			basetime = lastaction;
 		}
 
-        if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((cl->allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
+        if(d->inmat && d->physstate<=PHYS_FALL) anim |= (((cl->allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
 		else if(d->timeinair>100) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
         else if(cl->allowmove(d))
         {
@@ -947,8 +947,8 @@ void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attac
     int flags = MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY | MDL_LIGHT;
     if(d->type==ENT_PLAYER) flags |= MDL_FULLBRIGHT;
 	else flags |= MDL_CULL_DIST;
-	if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
     if(d->state==CS_LAGGED) flags |= MDL_TRANSLUCENT;
+    else if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
     rendermodel(NULL, mdlname, anim, o, testanims && local ? 0 : yaw+90, pitch, roll, flags, d, attachments, basetime);
 }
 

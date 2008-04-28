@@ -82,7 +82,7 @@ int char_width(int c, int x)
 	return x;
 }
 
-int text_width(const char *str, int limit)
+int text_width(const char *str, int limit) //@TODO deprecate in favour of text_bounds(..)
 {
 	int x = 0;
 	for(int i = 0; str[i] && (limit<0 ||i<limit); i++)
@@ -138,6 +138,53 @@ void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a,
 			break;
 	}
 	draw_text(str, x, y, r, g, b, a, s);
+}
+
+void text_bounds(const char *str, int &width, int &height, int maxwidth)
+{
+    width = 0;
+    height = FONTH;
+    int x = 0;
+    for(int i = 0; str[i]; i++)
+    {
+        int c = str[i];
+        if(c=='\t') x = ((x+PIXELTAB)/PIXELTAB)*PIXELTAB;
+        else if(c==' ') x += curfont->defaultw;
+        else if(c=='\n') 
+        {
+            if(x > width) width = x;
+            x = 0; height += FONTH; 
+        }
+        else if(c=='\f') 
+        {
+            if(str[i+1]) i++;
+        }
+        else if(curfont->chars.inrange(c-33)) 
+        {
+            int w = curfont->chars[c-33].w;
+            if(maxwidth != -1) 
+            {
+                int j = i;
+                for(; str[i+1]; i++) //determine word length for good breakage
+                {
+                    int c = str[i+1];
+                    if(c=='\f') { if(str[i+2]) i++; continue; }
+                    if(i-j > 16) break;
+                    if(!curfont->chars.inrange(c-33)) break;
+                    int cw = curfont->chars[c-33].w + 1;
+                    if(w + cw >= maxwidth) break;
+                    w += cw;
+                }
+                if(x + w >= maxwidth && j!=0) 
+                {
+                    if(x > width) width = x;
+                    x = 0; height += FONTH;
+                }
+            }
+            x += w + 1;
+        }
+    }
+    if(x > width) width = x;
 }
 
 static bvec colorstack[256];

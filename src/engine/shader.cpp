@@ -34,11 +34,9 @@ void loadshaders()
         maxfplocalparams = val;
     }
 
-	persistidents = false;
     standardshader = true;
     exec("stdshader.cfg");
     standardshader = false;
-    persistidents = true;
     defaultshader = lookupshaderbyname("default");
     stdworldshader = lookupshaderbyname("stdworld");
     if(!defaultshader || !stdworldshader) fatal("cannot find shader definitions");
@@ -905,7 +903,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
         s_sprintfd(name)("<dynlight %d>%s", i+1, sname);
         Shader *variant = newshader(s.type, name, vsdl.getbuf(), psdl.getbuf(), &s, row);
         if(!variant) return;
-        genwatervariant(s, name, vsdl, psdl, row+2);
+        if(row < 4) genwatervariant(s, name, vsdl, psdl, row+2);
 	}
 }
 

@@ -44,10 +44,6 @@ void clearoverrides()
                     *i.storage.i = i.overrideval.i;
                     i.changed();
                     break;
-                case ID_FVAR:
-                    *i.storage.f = i.overrideval.f;
-                    i.changed();
-                    break;
                 case ID_SVAR:
                     delete[] *i.storage.s;
                     *i.storage.s = i.overrideval.s;
@@ -140,6 +136,16 @@ void alias(const char *name, const char *action) { aliasa(name, newstring(action
 
 COMMAND(alias, "ss");
 
+void worldalias(const char *name, const char *action)
+{
+	overrideidents = worldidents = true;
+	persistidents = false;
+	alias(name, action);
+	persistidents = true;
+	overrideidents = worldidents = false;
+}
+COMMAND(worldalias, "ss");
+
 // variable's and commands are registered through globals, see cube.h
 
 int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool world)
@@ -148,14 +154,6 @@ int variable(const char *name, int min, int cur, int max, int *storage, void (*f
     ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, persist, world);
     idents->access(name, &v);
     return cur;
-}
-
-float fvariable(const char *name, float cur, float *storage, void (*fun)(), bool persist, bool world)
-{
-	if(!idents) idents = new identtable;
-    ident v(ID_FVAR, name, cur, storage, (void *)fun, persist, world);
-	idents->access(name, &v);
-	return cur;
 }
 
 char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), bool persist, bool world)
@@ -174,12 +172,6 @@ void setvar(const char *name, int i, bool dofunc)
 {
 	GETVAR(id, name, );
     *id->storage.i = clamp(i, id->minval, id->maxval);
-    if(dofunc) id->changed();
-}
-void setfvar(const char *name, float f, bool dofunc)
-{
-    GETVAR(id, name, );
-    *id->storage.f = f;
     if(dofunc) id->changed();
 }
 void setsvar(const char *name, const char *str, bool dofunc)
@@ -322,7 +314,6 @@ char *lookup(char *n)							// find value of ident referenced with $ in exp
     if(id) switch(id->type)
 	{
         case ID_VAR: { s_sprintfd(t)("%d", *id->storage.i); return exchangestr(n, t); }
-        case ID_FVAR: { s_sprintfd(t)("%f", *id->storage.f); return exchangestr(n, t); }
         case ID_SVAR: return exchangestr(n, *id->storage.s);
         case ID_ALIAS: return exchangestr(n, id->action);
 	}
@@ -499,18 +490,9 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						}
                         *id->storage.i = i1;
                         id->changed();                                             // call trigger function if available
+                        if(editmode && id->world) cl->editvar(id->name, *id->storage.i);
 					}
                     break;
-
-                case ID_FVAR:
-                    if(!w[1][0]) conoutf("%s = %f", c, *id->storage.f);
-					else
-					{
-                        OVERRIDEVAR(id->overrideval.f = *id->storage.f, );
-                        *id->storage.f = atof(w[1]);
-                        id->changed();
-                    }
-					break;
 
                 case ID_SVAR:
                     if(!w[1][0]) conoutf(strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", c, *id->storage.s);
@@ -520,6 +502,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s);
                         *id->storage.s = newstring(w[1]);
                         id->changed();
+                        if(editmode && id->world) cl->editsvar(id->name, *id->storage.s);
 					}
 					break;
 
@@ -591,7 +574,6 @@ void writecfg()
         switch(id.type)
 		{
             case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
-            case ID_FVAR: fprintf(f, "%s %f\n", id.name, *id.storage.f); break;
             case ID_SVAR: fprintf(f, "%s [%s]\n", id.name, *id.storage.s); break;
 		}
 	);

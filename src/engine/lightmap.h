@@ -87,7 +87,7 @@ struct lerpvert
 	bool operator==(const lerpvert &l) const { return u == l.u && v == l.v; }
 	bool operator!=(const lerpvert &l) const { return u != l.u || v != l.v; }
 };
-	
+
 struct lerpbounds
 {
 	const lerpvert *min;
@@ -121,4 +121,4 @@ extern bool calclight_canceled;
 extern volatile bool check_calclight_progress;
 
 extern void check_calclight_canceled();
-
+extern void fixlightmapnormals();

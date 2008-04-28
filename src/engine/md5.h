@@ -256,7 +256,6 @@ struct md5 : skelmodel
                     }
                 }
             }
-            fclose(f);
 
             loopv(basejoints) skel->bones[i].base = dualquat(basejoints[i].orient, basejoints[i].pos);
 
@@ -270,6 +269,7 @@ struct md5 : skelmodel
 
             sortblendcombos();
 
+            fclose(f);
             return true;
         }
 

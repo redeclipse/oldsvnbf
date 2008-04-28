@@ -67,10 +67,8 @@ extern void mpremip(bool local);
 
 // command
 extern int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool world);
-extern float fvariable(const char *name, float cur, float *storage, void (*fun)(), bool persist, bool world);
 extern char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), bool persist, bool world);
 extern void setvar(const char *name, int i, bool dofunc = false);
-extern void setfvar(const char *name, float f, bool dofunc = false);
 extern void setsvar(const char *name, const char *str, bool dofunc = false);
 extern int getvar(const char *name);
 extern int getvarmin(const char *name);
@@ -83,6 +81,7 @@ extern char *executeret(const char *p);
 extern void exec(const char *cfgfile);
 extern bool execfile(const char *cfgfile);
 extern void alias(const char *name, const char *action);
+extern void worldalias(const char *name, const char *action);
 extern const char *getalias(const char *name);
 
 // console
@@ -132,6 +131,7 @@ extern void draw_textx(const char *fstr, int left, int top, int r = 255, int g =
 extern void draw_textf(const char *fstr, int left, int top, ...);
 extern int char_width(int c, int x = 0);
 extern int text_width(const char *str, int limit = -1);
+extern void text_bounds(const char *str, int &width, int &height, int maxwidth = -1);
 extern int text_visible(const char *str, int max);
 
 // renderva
@@ -358,12 +358,13 @@ enum
 enum							// cube empty-space materials
 {
 	MAT_AIR = 0,				// the default, fill the empty space with air
-	MAT_WATER,				  // fill with water, showing waves at the surface
+	MAT_WATER,				  	// fill with water, showing waves at the surface
 	MAT_CLIP,					// collisions always treat cube as solid
-	MAT_GLASS,				  // behaves like clip but is blended blueish
-	MAT_NOCLIP,				 // collisions always treat cube as empty
+	MAT_GLASS,				  	// behaves like clip but is blended blueish
+	MAT_NOCLIP,					// collisions always treat cube as empty
 	MAT_LAVA,					// fill with lava
     MAT_AICLIP,                 // clip ai only
+    MAT_DEATH,                  // force player suicide
 	MAT_EDIT					// basis for the edit volumes of the above materials
 };
 

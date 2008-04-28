@@ -486,10 +486,10 @@ struct clientcom : iclientcom
 		{
 			case SV_INITS2C:					// welcome messsage from the server
 			{
-				int mycn = getint(p), prot = getint(p), hasmap = getint(p);
-				if(prot!=PROTOCOL_VERSION)
+				int mycn = getint(p), gver = getint(p), hasmap = getint(p);
+				if(gver!=GAMEVERSION)
 				{
-					conoutf("you are using a different game protocol (you: %d, server: %d)", PROTOCOL_VERSION, prot);
+					conoutf("you are using a different game version (you: %d, server: %d)", GAMEVERSION, gver);
 					disconnect();
 					return;
 				}
@@ -538,6 +538,15 @@ struct clientcom : iclientcom
 				saytext(t, flags, text);
 				break;
 			}
+
+			case SV_EXECLINK:
+            {
+                int tcn = getint(p), index = getint(p);
+                fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
+				if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum)) break;
+				cl.et.execlink(t, index, false);
+				break;
+            }
 
 			case SV_MAPCHANGE:
 			{
@@ -813,6 +822,35 @@ struct clientcom : iclientcom
 				}
 				break;
 			}
+
+			case SV_EDITSVAR:
+			{
+				if (!d) return;
+				getstring(text, p);
+				string val;
+				getstring(val, p);
+				ident *id = idents->access(text);
+
+				if (id->type == ID_SVAR && id->world)
+				{
+					setsvar(text, val, true);
+
+					conoutf("%s updated the value of %s to %s", d->name, id->name, *id->storage.s);
+				}
+				break;
+			}
+
+			case SV_EDITALIAS:
+			{
+				if (!d) return;
+				getstring(text, p);
+				string val;
+				getstring(val, p);
+				worldalias(text, val);
+				conoutf("%s updated the value of %s to %s", d->name, text, val);
+				break;
+			}
+
 			case SV_EDITF:			  // coop editing messages
 			case SV_EDITT:
 			case SV_EDITM:
@@ -1279,10 +1317,10 @@ struct clientcom : iclientcom
 		int ac = 0, bc = 0;
 
 		if (a->address.host != ENET_HOST_ANY && a->ping < 999 &&
-			a->attr.length() && a->attr[0] == PROTOCOL_VERSION) ac = 1;
+			a->attr.length() && a->attr[0] == GAMEVERSION) ac = 1;
 
 		if (b->address.host != ENET_HOST_ANY && b->ping < 999 &&
-			b->attr.length() && b->attr[0] == PROTOCOL_VERSION) bc = 1;
+			b->attr.length() && b->attr[0] == GAMEVERSION) bc = 1;
 
 		if(ac > bc) return -1;
 		if(ac < bc) return 1;

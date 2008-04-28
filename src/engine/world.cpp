@@ -812,9 +812,6 @@ void resetmap()
 				case ID_VAR:
 					*id.storage.i = id.val.i;
 					break;
-				case ID_FVAR:
-					*id.storage.f = id.val.f;
-					break;
 				case ID_SVAR:
 					delete[] id.storage.s;
 					*id.storage.s = newstring(id.val.s);

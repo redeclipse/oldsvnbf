@@ -478,9 +478,7 @@ extern int cleargui(int n = 0);
 extern void replacetexcube(cube &c, int oldtex, int newtex);
 
 // skybox
-extern float spinsky;
-extern string lastsky;
-extern void loadsky(char *basename, float *spin);
+extern void loadsky(char *basename);
 
 // main
 extern void setcaption(const char *text);

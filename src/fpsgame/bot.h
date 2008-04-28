@@ -131,7 +131,7 @@ struct botclient
 		d->lastupdate = lastmillis;
 
 		cl.ph.move(d, 10, true);
-		cl.ph.updatewater(d, 0);
+		cl.ph.checkmat(d, 0);
 	}
 
 	IVAR(debugbot, 0, 0, 1);

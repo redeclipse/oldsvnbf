@@ -937,7 +937,11 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
 		{
 			numplanes = genclipplane(c, i, verts, planes);
 			if(!numplanes) continue;
-			if(!find_lights(cx, cy, cz, size, planes, numplanes) || !(shader->type&(SHADER_NORMALSLMS | SHADER_ENVMAP))) continue;
+            if(!find_lights(cx, cy, cz, size, planes, numplanes))
+            {
+                if(!(shader->type&(SHADER_NORMALSLMS | SHADER_ENVMAP))) continue;
+            }
+
 			loopj(4) n[j] = planes[0];
 			if(numplanes >= 2) loopj(3) n2[j] = planes[1];
 			loopj(4)
@@ -1145,6 +1149,54 @@ VARFW(fullbright, 0, 0, 1, initlights());
 VARFW(fullbrightlevel, 0, 128, 255, setfullbrightlevel(fullbrightlevel));
 
 vector<LightMapTexture> lightmaptexs;
+
+static void rotatenormals(LightMap &lmlv, int x, int y, int w, int h, int rotate)
+{
+    bool flipx = rotate>=2 && rotate<=4,
+         flipy = (rotate>=1 && rotate<=2) || rotate==5,
+         swapxy = (rotate&5)==1;
+    uchar *lv = lmlv.data + 3*(y*LM_PACKW + x);
+    int stride = 3*(LM_PACKW-w);
+    loopi(h)
+    {
+        loopj(w)
+        {
+            if(flipx) lv[0] = 255 - lv[0];
+            if(flipy) lv[1] = 255 - lv[1];
+            if(swapxy) swap(lv[0], lv[1]);
+            lv += 3;
+        }
+        lv += stride;
+    }
+}
+
+static void rotatenormals(cube *c)
+{
+    loopi(8)
+    {
+        cube &ch = c[i];
+        if(ch.children)
+        {
+            rotatenormals(ch.children);
+            continue;
+        }
+        else if(!ch.ext || !ch.ext->surfaces) continue;
+        loopj(6) if(lightmaps.inrange(ch.ext->surfaces[j].lmid+1-LMID_RESERVED))
+        {
+            Slot &slot = lookuptexture(ch.texture[j], false);
+            if(!slot.rotation || !slot.shader || !(slot.shader->type&SHADER_NORMALSLMS))
+                continue;
+            surfaceinfo &surface = ch.ext->surfaces[j];
+            LightMap &lmlv = lightmaps[surface.lmid+1-LMID_RESERVED];
+            rotatenormals(lmlv, surface.x, surface.y, surface.w, surface.h, 4-slot.rotation);
+        }
+    }
+}
+
+void fixlightmapnormals()
+{
+    rotatenormals(worldroot);
+}
 
 static void convertlightmap(LightMap &lmc, LightMap &lmlv, uchar *dst, size_t stride)
 {

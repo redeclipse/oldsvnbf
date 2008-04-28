@@ -861,7 +861,7 @@ void gencubeverts(cube &c, int x, int y, int z, int size, int csi, uchar &vismas
 	freeclipplanes(c);						  // physics planes based on rendering
 
     int tj = c.ext ? c.ext->tjoints : -1;
-    loopi(6) if(visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR))
+    loopi(6) if(visibleface(c, i, x, y, z, size))
 	{
         if(c.texture[i]!=DEFAULT_SKY) vismask |= 1<<i;
 
