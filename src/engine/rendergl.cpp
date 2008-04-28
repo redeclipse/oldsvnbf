@@ -1150,6 +1150,8 @@ void gl_drawframe(int w, int h)
 {
 	defaultshader->set();
 
+    cl->recomputecamera();
+   
     updatedynlights();
 
     fovy = float(curfov*h)/w;
@@ -1408,8 +1410,8 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 	cl->drawhud(w, h); // can make more dramatic changes this way without getting in the way
 	g3d_render();
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
 	glEnable(GL_BLEND);
 
 	glLoadIdentity();

@@ -87,7 +87,7 @@ struct physics
 	}
 	float jumpvelocity(physent *d)
 	{
-		return d->inwater ? float(watervel()) : float(jumpvel());
+		return d->inmat ? float(watervel()) : float(jumpvel());
 	}
 	float gravityforce(physent *d)
 	{
@@ -132,14 +132,14 @@ struct physics
 	}
 
 
-	void updatewater(fpsent *d, int waterlevel)
+	void checkmat(fpsent *d, int matlevel)
 	{
 		vec v(d->o.x, d->o.y, d->o.z-d->height);
 		int mat = lookupmaterial(v);
 
-		if (waterlevel || mat == MAT_WATER || mat == MAT_LAVA)
+		if (mat == MAT_WATER || mat == MAT_LAVA || mat == MAT_DEATH)
 		{
-			if (waterlevel)
+			if (matlevel)
 			{
 				uchar col[3] = { 255, 255, 255 };
 
@@ -151,28 +151,32 @@ struct physics
 				part_spawn(v, vec(d->xradius, d->yradius, 4.f), 0, 17, 100, 200, wcol, 0.60f);
 			}
 
-			if (waterlevel || d->inwater)
+			if (matlevel)
 			{
-				if (waterlevel < 0 && mat == MAT_WATER)
+				if (matlevel < 0 && mat == MAT_WATER)
 				{
 					playsound(S_SPLASH1, &d->o, 255, 0, 0, SND_COPY);
 				}
-				else if (waterlevel > 0 && mat == MAT_WATER)
+				else if (matlevel > 0 && mat == MAT_WATER)
 				{
 					playsound(S_SPLASH2, &d->o, 255, 0, 0, SND_COPY);
 				}
-				else if (waterlevel < 0 && mat == MAT_LAVA)
+				else if (matlevel < 0 && mat == MAT_LAVA)
 				{
 					part_spawn(v, vec(d->xradius, d->yradius, 4.f), 0, 4, 200, 500, COL_WHITE, 4.8f);
-					if (d == cl.player1) cl.suicide(d);
+					if (d == cl.player1 || d->bot) cl.suicide(d);
+				}
+				else if (matlevel < 0 && mat == MAT_LAVA)
+				{
+					if (d == cl.player1 || d->bot) cl.suicide(d);
 				}
 			}
 		}
 	}
 
-	void trigger(physent *d, bool local, int floorlevel, int waterlevel)
+	void trigger(physent *d, bool local, int floorlevel, int matlevel)
 	{
-		if (waterlevel) updatewater((fpsent *)d, waterlevel);
+		if (matlevel) checkmat((fpsent *)d, matlevel);
 
 		if (floorlevel > 0)
 		{
@@ -443,7 +447,7 @@ struct physics
 			if (water)
             {
                 if (pl->crouching) pl->crouching = false;
-                if (pl->type != ENT_CAMERA && !pl->inwater) pl->vel.div(waterdampen(pl));
+                if (pl->type != ENT_CAMERA && !pl->inmat) pl->vel.div(waterdampen(pl));
             }
 			if (pl->jumping)
 			{
@@ -591,16 +595,15 @@ struct physics
 
 		if (pl->type!=ENT_CAMERA)
 		{
-            if (pl->inwater && !water)
+            if (pl->inmat && !water)
             {
                 material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (pl->aboveeye - pl->height)/2));
                 water = isliquid(material);
             }
-            if(!pl->inwater && water) trigger(pl, local, 0, -1);
-            else if(pl->inwater && !water) trigger(pl, local, 0, 1);
-            pl->inwater = water;
+            if(!pl->inmat && water) trigger(pl, local, 0, -1);
+            else if(pl->inmat && !water) trigger(pl, local, 0, 1);
+            pl->inmat = water;
 		}
-
 		return true;
 	}
 

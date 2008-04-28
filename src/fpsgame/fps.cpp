@@ -252,7 +252,7 @@ struct GAMECLIENT : igameclient
 				else player1->lastimpulse = 0;
 
 				ph.move(player1, 20, true);
-				ph.updatewater(player1, 0);
+				ph.checkmat(player1, 0);
 
 				if (player1->physstate >= PHYS_SLOPE) swaymillis += curtime;
 
@@ -800,9 +800,19 @@ struct GAMECLIENT : igameclient
 		cc.addmsg(SV_NEWMAP, "ri", size);
 	}
 
-	void editvariable(const char *name, int value)
+	void editvar(const char *name, int value)
 	{
         if(m_edit(gamemode)) cc.addmsg(SV_EDITVAR, "rsi", name, value);
+	}
+
+	void editsvar(const char *name, char *value)
+	{
+        if(m_edit(gamemode)) cc.addmsg(SV_EDITSVAR, "rss", name, value);
+	}
+
+	void editalias(const char *name, char *value)
+	{
+        if(m_edit(gamemode)) cc.addmsg(SV_EDITALIAS, "rss", name, value);
 	}
 
 	void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)

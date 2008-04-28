@@ -319,12 +319,26 @@ struct gui : g3d_gui
 
     char *field(const char *name, int color, int length, const char *initval)
 	{
-		length = min(length, (int)sizeof(string)-1);
-        int w = char_width('%')*length + FONTW;
+        int w, h;
+        int maxwidth;
+        if(length < 0)
+        {
+            maxwidth = -length*FONTW;
+            length = (int)sizeof(string)-1;
+            text_bounds((strcmp(fieldname, name) == 0)?fieldtext:initval, w, h, maxwidth);
+            w = maxwidth + FONTW;
+        }
+        else
+        {
+            maxwidth = -1;
+			length = min(length, (int)sizeof(string)-1);
+            h = FONTH;
+            w = FONTW*(length + 1);
+        }
 		char *result = NULL;
         if(visible() && !layoutpass)
 		{
-			bool hit = ishit(w, FONTH), editing = !strcmp(fieldname, name);
+            bool hit = ishit(w, h), editing = !strcmp(fieldname, name);
 			if(hit && (mousebuttons&G3D_DOWN) && !editing) //mouse request focus
 			{
 				s_strcpy(fieldname, name);
@@ -336,7 +350,7 @@ struct gui : g3d_gui
 			}
 			if(editing)
 			{
-                if(fieldpos==-2 || !hit) // commit field if user pressed enter or wandered out of focus 
+                if(fieldpos==-2 || !hit) // commit field if user pressed enter or wandered out of focus
                 {
                     result = fieldtext;
                     fieldpos = -1;
@@ -346,44 +360,22 @@ struct gui : g3d_gui
                 else fieldactive = true;
 			}
 			if(editing && hit && (mousebuttons&G3D_PRESSED)) //mouse request position
-			{
-                int x = curx+FONTW/2;
-				fieldpos = 0;
-				while(fieldtext[fieldpos] && fieldpos < length)
-				{
-					int nx = char_width(fieldtext[fieldpos], x);
-					if(nx > hitx) break;
-					x = nx;
-					fieldpos++;
-				}
-			}
+                fieldpos = text_visible(fieldtext, int(floor(hitx-(curx+FONTW/2)))); /* @TODO fix for multiple lines */
 
 			notextureshader->set();
 			glDisable(GL_TEXTURE_2D);
 			if(editing) glColor3f(1, 0, 0);
 			else glColor3ub(color>>16, (color>>8)&0xFF, color&0xFF);
 			glBegin(GL_LINE_LOOP);
-			rect_(curx, cury, w, FONTH);
+            rect_(curx, cury, w, h);
 			glEnd();
 			glEnable(GL_TEXTURE_2D);
 			defaultshader->set();
 
-            draw_text(editing ? fieldtext : (result ? result : initval), curx+FONTW/2, cury, color>>16, (color>>8)&0xFF, color&0xFF);
-
-			if(editing && hit && fieldpos>=0 && (totalmillis/250)&1)
-			{
-                int fx = curx+FONTW/2 + text_width(fieldtext, fieldpos);
-				glColor3f(1, 0, 0);
-				notextureshader->set();
-				glDisable(GL_TEXTURE_2D);
-				glBegin(GL_QUADS);
-				rect_(fx-2, cury, 4, FONTH);
-				glEnd();
-				glEnable(GL_TEXTURE_2D);
-				defaultshader->set();
-			}
+            draw_text(editing ? fieldtext : (result ? result : initval), curx+FONTW/2, cury);
+            //draw_text(editing ? fieldtext : (result ? result : initval), curx+FONTW/2, cury, color>>16, (color>>8)&0xFF, color&0xFF, 0xFF, (editing && hit)?fieldpos:-1, maxwidth);
 		}
-		layout(w, FONTH);
+    	layout(w, h);
 		return result;
 	}
 
@@ -655,10 +647,10 @@ struct gui : g3d_gui
 	void start(int starttime, float initscale, int *tab, bool allowinput)
 	{
 		initscale *= 0.025f;
+		if(allowinput) hascursor = true;
 		basescale = initscale;
 		if(layoutpass) scale.x = scale.y = scale.z = basescale*min((totalmillis-starttime)/300.0f, 1.0f);
 		passthrough = scale.x<basescale || !allowinput;
-		if(allowinput) hascursor = true;
 		curdepth = -1;
 		curlist = -1;
 		tpos = 0;

@@ -1,7 +1,7 @@
 // script binding functionality
 
 
-enum { ID_VAR, ID_FVAR, ID_SVAR, ID_COMMAND, ID_CCOMMAND, ID_ALIAS };
+enum { ID_VAR, ID_SVAR, ID_COMMAND, ID_CCOMMAND, ID_ALIAS };
 
 enum { NO_OVERRIDE = INT_MAX, OVERRIDDEN = 0 };
 
@@ -25,13 +25,11 @@ struct ident
     union
     {
         int i;      // ID_VAR
-        float f;    // ID_FVAR
         char *s;    // ID_SVAR
     } val, overrideval;
     union
     {
         int *i;   // ID_VAR
-        float *f; // ID_FVAR
         char **s; // ID_SVAR
     } storage;
     union
@@ -52,10 +50,6 @@ struct ident
     ident(int t, const char *n, int m, int c, int x, int *s, void *f = NULL, bool p = false, bool w = false)
         : type(t), name(n), minval(m), maxval(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w), complete(true)
     { val.i = c; storage.i = s; }
-    // ID_FVAR
-    ident(int t, const char *n, float c, float *s, void *f = NULL, bool p = false, bool w = false)
-        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w), complete(true)
-    { val.f = c; storage.f = s; }
     // ID_SVAR
     ident(int t, const char *n, char *c, char **s, void *f = NULL, bool p = false, bool w = false)
         : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), persist(p), world(w), complete(true)
@@ -97,18 +91,6 @@ extern identtable *idents;
 #define VARF(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, false, false)
 #define VARFP(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, true, false)
 #define VARFW(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, false, true)
-
-#define _FVAR(name, global, cur, persist, world) float global = fvariable(#name, cur, &global, NULL, persist, world)
-#define FVARN(name, global, cur) _FVAR(name, global, cur, false, false)
-#define FVARNP(name, global, cur) _FVAR(name, global, cur, true, false)
-#define FVAR(name, cur) _FVAR(name, name, cur, false, false)
-#define FVARP(name, cur) _FVAR(name, name, cur, true, false)
-#define FVARW(name, cur) _FVAR(name, name, cur, false, true)
-#define _FVARF(name, global, cur, body, persist, world) void var_##name(); float global = fvariable(#name, cur, &global, var_##name, persist, world); void var_##name() { body; }
-#define FVARFN(name, global, cur, body) _FVARF(name, global, cur, body, false, false)
-#define FVARF(name, cur, body) _FVARF(name, name, cur, body, false, false)
-#define FVARFP(name, cur, body) _FVARF(name, name, cur, body, true, false)
-#define FVARFW(name, cur, body) _FVARF(name, name, cur, body, false, true)
 
 #define _SVAR(name, global, cur, persist, world) char *global = svariable(#name, cur, &global, NULL, persist, world)
 #define SVARN(name, global, cur) _SVAR(name, global, cur, false, false)

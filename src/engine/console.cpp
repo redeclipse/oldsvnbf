@@ -147,7 +147,7 @@ void blendbox(int x1, int y1, int x2, int y2, bool border)
 	glEnd();
 	glDisable(GL_BLEND);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glBegin(GL_POLYGON);
+    glBegin(GL_QUADS);
 	glColor3d(0.2, 0.7, 0.4);
 	glVertex2i(x1, y1);
 	glVertex2i(x2, y1);

@@ -317,7 +317,7 @@ struct GAMESERVER : igameserver
 			demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
 			smode(NULL), capturemode(*this), ctfmode(*this), duelmutator(*this)
 	{
-		motd[0] = '\0'; serverdesc[0] = '\0'; masterpass[0] = '\0';
+		motd[0] = serverdesc[0] = masterpass[0] = '\0';
 		smuts.setsize(0);
 #ifndef STANDALONE
 		CCOMMAND(gameid, "", (GAMESERVER *self), result(self->gameid()));
@@ -517,9 +517,9 @@ struct GAMESERVER : igameserver
 		demoheader hdr;
 		memcpy(hdr.magic, DEMO_MAGIC, sizeof(hdr.magic));
 		hdr.version = DEMO_VERSION;
-		hdr.protocol = PROTOCOL_VERSION;
+		hdr.gamever = GAMEVERSION;
 		endianswap(&hdr.version, sizeof(int), 1);
-		endianswap(&hdr.protocol, sizeof(int), 1);
+		endianswap(&hdr.gamever, sizeof(int), 1);
 		gzwrite(demorecord, &hdr, sizeof(demoheader));
 
 		uchar buf[MAXTRANS];
@@ -598,9 +598,9 @@ struct GAMESERVER : igameserver
 		else
 		{
 			endianswap(&hdr.version, sizeof(int), 1);
-			endianswap(&hdr.protocol, sizeof(int), 1);
+			endianswap(&hdr.gamever, sizeof(int), 1);
 			if(hdr.version!=DEMO_VERSION) s_sprintf(msg)("demo \"%s\" requires an %s version of Blood Frontier", file, hdr.version<DEMO_VERSION ? "older" : "newer");
-			else if(hdr.protocol!=PROTOCOL_VERSION) s_sprintf(msg)("demo \"%s\" requires an %s version of Blood Frontier", file, hdr.protocol<PROTOCOL_VERSION ? "older" : "newer");
+			else if(hdr.gamever!=GAMEVERSION) s_sprintf(msg)("demo \"%s\" requires an %s version of Blood Frontier", file, hdr.gamever<GAMEVERSION ? "older" : "newer");
 		}
 		if(msg[0])
 		{
@@ -1588,7 +1588,7 @@ struct GAMESERVER : igameserver
 		int hasmap = smapname[0] ? (sents.length() ? 1 : 2) : 0;
 		putint(p, SV_INITS2C);
 		putint(p, n);
-		putint(p, PROTOCOL_VERSION);
+		putint(p, GAMEVERSION);
 		putint(p, hasmap);
 		if(hasmap)
 		{
@@ -2115,7 +2115,7 @@ struct GAMESERVER : igameserver
 		loopv(clients) if(clients[i] && clients[i]->state.ownernum < 0) numplayers++;
 		putint(p, numplayers);
 		putint(p, 6);					// number of attrs following
-		putint(p, PROTOCOL_VERSION);	// 1 // generic attributes, passed back below
+		putint(p, GAMEVERSION);	// 1 // generic attributes, passed back below
 		putint(p, gamemode);			// 2
 		putint(p, mutators);			// 3
 		putint(p, minremain);			// 4
@@ -2191,74 +2191,6 @@ struct GAMESERVER : igameserver
 		s_sprintfdlv(str, s, s);
 		sendf(cn, 1, "ris", SV_SERVMSG, str);
 	}
-
-	/*
-	void servcmd(clientinfo *ci, char *text, bool say)
-	{
-		if (say) *text++;
-
-		cmdcontext = ci;
-
-		scresult[0] = 0;
-		char *ret = executeret(text, true);
-		if (ret) // our reply is the result()
-		{
-			servsend(ci->clientnum, "%s", ret);
-			delete[] ret;
-		}
-
-		cmdcontext = NULL;
-	}
-
-	bool hasmode(clientinfo *ci, int m)
-	{
-		if (ci != NULL)
-		{
-			switch (m)
-			{
-				case PRIV_HOST:
-				case PRIV_ADMIN:
-				case PRIV_MASTER:
-				{
-					if (ci->privilege >= m) return true;
-					else if (m == PRIV_HOST) return false;
-					loopv(clients) if (clients[i]->privilege > ci->privilege) return false;
-					break;
-				}
-				case PRIV_NONE:
-				default:
-					break;
-			}
-			return true;
-		}
-		return false;
-	}
-
-	void servvar(clientinfo *ci, const char *name, int *var, int m, int x, char *val)
-	{
-		if (*val)
-		{
-			int a = atoi(val);
-			if (a < m || a > x)
-			{
-				s_sprintf(scresult)("valid range for %s is %d..%d", name, m, x);
-			}
-			else
-			{
-				*var = a;
-				servsend(-1, "%s set %s = %d", colorname(ci), name, *var);
-			}
-		}
-		else
-			s_sprintf(scresult)("%s = %d", name, *var);
-	}
-
-	void settime()
-	{
-		gamelimit = timelimit*60000;
-		checkintermission();
-	}
-	*/
 
 	static int scrsort(const scr **a, const scr **b)
 	{

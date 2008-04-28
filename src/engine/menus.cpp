@@ -103,7 +103,7 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
 
 void guitext(char *name, char *icon)
 {
-	if(cgui) cgui->text(name, *icon ? GUI_BUTTON_COLOR : GUI_TEXT_COLOR, *icon ? icon : NULL);
+	if(cgui) cgui->text(name, icon[0] ? GUI_BUTTON_COLOR : GUI_TEXT_COLOR, icon[0] ? icon : NULL);
 }
 
 void guititle(char *name)
@@ -129,11 +129,10 @@ static void updateval(char *var, int val, char *onchange)
     switch(id->type)
     {
         case ID_VAR:
-        case ID_FVAR:
         case ID_SVAR:
             s_sprintf(assign)("%s %d", var, val);
             break;
-        case ID_ALIAS: 
+        case ID_ALIAS:
             s_sprintf(assign)("%s = %d", var, val);
             break;
         default:
@@ -150,7 +149,6 @@ static int getval(char *var)
     switch(id->type)
     {
         case ID_VAR: return *id->storage.i;
-        case ID_FVAR: return int(*id->storage.f);
         case ID_SVAR: return atoi(*id->storage.s);
         case ID_ALIAS: return atoi(id->action);
         default: return 0;
@@ -202,17 +200,15 @@ void guiradio(char *name, char *var, int *n, char *onchange)
 	}
 }
 
+//-ve length indicates a wrapped text field of any (approx 260 chars) length, |length| is the field width
 void guifield(char *var, int *maxlength, char *onchange, char *updateval)
 {
 	if(!cgui) return;
     const char *initval = "";
-	if(!cguifirstpass && strcmp(g3d_fieldname(), var))
-	{
-		if(updateval[0]) execute(updateval);
-		ident *id = getident(var);
-        if(id && id->type==ID_ALIAS) initval = id->action;
-	}
-	char *result = cgui->field(var, GUI_BUTTON_COLOR, *maxlength>0 ? *maxlength : 12, initval);
+    if(!cguifirstpass && strcmp(g3d_fieldname(), var) && updateval[0]) execute(updateval);
+	ident *id = getident(var);
+    if(id && id->type==ID_ALIAS) initval = id->action;
+	char *result = cgui->field(var, GUI_BUTTON_COLOR, (*maxlength!=0) ? *maxlength : 12, initval);
 	if(result)
 	{
 		alias(var, result);

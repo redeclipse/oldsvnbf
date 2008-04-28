@@ -164,7 +164,7 @@ void checksound()
 
 			if(sounds[i].dist <= maxrad)
 			{
-				float minrad = float(sounds[i].minrad ? sounds[i].minrad : 0);
+				float minrad = float(sounds[i].minrad >= 0 ? sounds[i].minrad : 0);
 				if(minrad > maxrad) minrad = maxrad;
 
 				if(sounds[i].dist > minrad)

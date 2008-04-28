@@ -181,7 +181,7 @@ int formatsize(GLenum format)
 	}
 }
 
-VAR(hwmipmap, 0, 0, 1);
+VARP(hwmipmap, 0, 0, 1);
 
 void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, GLenum component, GLenum subtarget)
 {

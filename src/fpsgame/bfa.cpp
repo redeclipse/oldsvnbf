@@ -3,12 +3,16 @@
 
 #define BFAGAME
 
-#define GAMEID			"bfa"
-#define GAMEVERSION		50
+#define GAMEID				"bfa"
+#define GAMEVERSION			58
 
-#define GAMENAME		bfagame
-#define GAMECLIENT		bfaclient
-#define GAMESERVER		bfaserver
+#define GAMENAME			bfagame
+#define GAMECLIENT			bfaclient
+#define GAMESERVER			bfaserver
+
+#define SERVER_PORT			28795
+#define SERVINFO_PORT		28796
+#define DEMO_VERSION		1
 
 #include "game.h"
 #include "fpsserver.h"

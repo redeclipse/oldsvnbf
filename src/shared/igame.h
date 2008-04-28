@@ -11,7 +11,6 @@ struct icliententities
 	virtual void writeent(gzFile &g, int id, entity &e) { return; }
 	virtual void initents(gzFile &g, int mtype, int mver, char *gid, int gver) = 0;
     virtual float dropheight(entity &e) = 0;
-    virtual void rumble(extentity &e) = 0;
     virtual void fixentity(extentity &e) = 0;
     virtual bool mayattach(extentity &e) { return false; }
     virtual bool attachent(extentity &e, extentity &a) { return false; }
@@ -50,7 +49,9 @@ struct igameclient
     virtual bool clientoption(char *arg) { return false; }
     virtual void updateworld() = 0;
     virtual void initclient() = 0;
-    virtual void editvariable(const char *name, int value) = 0;
+    virtual void editvar(const char *name, int value) = 0;
+    virtual void editsvar(const char *name, char *value) = 0;
+    virtual void editalias(const char *name, char *value) = 0;
     virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
     virtual void resetgamestate() = 0;
     virtual void newmap(int size) = 0;

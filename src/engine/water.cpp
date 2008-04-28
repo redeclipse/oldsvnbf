@@ -526,10 +526,10 @@ void renderwater()
 
 	glActiveTexture_(GL_TEXTURE1_ARB);
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, s.sts.length() > 2 ? s.sts[2].t->id : notexture->id);
+    glBindTexture(GL_TEXTURE_2D, s.sts.inrange(2) ? s.sts[2].t->id : notexture->id);
 	glActiveTexture_(GL_TEXTURE2_ARB);
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, s.sts.length() > 3 ? s.sts[3].t->id : notexture->id);
+    glBindTexture(GL_TEXTURE_2D, s.sts.inrange(3) ? s.sts[3].t->id : notexture->id);
 
     if(!glaring)
     {
@@ -1104,8 +1104,7 @@ static bool calcscissorbox(Reflection &ref, int size, int &sx, int &sy, int &sw,
 
 void drawreflections()
 {
-	if(editmode && showmat) return;
-	if(nowater || (!waterreflect && !waterrefract)) return;
+    if((editmode && showmat) || nowater) return;
 
     extern int nvidia_scissor_bug;
 
@@ -1114,7 +1113,8 @@ void drawreflections()
     float offset = -WATER_OFFSET;
     int size = 1<<reflectsize;
     if(!hasFBO) while(size>screen->w || size>screen->h) size /= 2;
-	loopi(MAXREFLECTIONS)
+
+    if(waterreflect || waterrefract) loopi(MAXREFLECTIONS)
 	{
 		Reflection &ref = reflections[++n%MAXREFLECTIONS];
 		if(ref.height<0 || ref.lastused<lastquery || ref.matsurfs.empty()) continue;
