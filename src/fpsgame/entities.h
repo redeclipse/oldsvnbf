@@ -105,7 +105,7 @@ struct entities : icliententities
 					{
 						case MAPSOUND:
 						{
-							if ((e.type == TRIGGER || e.type == TELEPORT || e.type == JUMPPAD) && mapsounds.inrange(f.attr1) && (!sounds.inrange(f.schan) || !sounds[f.schan].inuse))
+							if((e.type == TRIGGER || e.type == TELEPORT || e.type == JUMPPAD) && mapsounds.inrange(f.attr1) && (!sounds.inrange(f.schan) || !sounds[f.schan].inuse))
 								playsound(f.attr1, &f.o, f.attr4, f.attr2, f.attr3, SND_MAP);
 							break;
 						}
@@ -346,7 +346,7 @@ struct entities : icliententities
 
 	bool canlink(int index, int node)
 	{
-		if (ents.inrange(index) && ents.inrange(node) && enttype[ents[index]->type].links && enttype[ents[node]->type].links)
+		if(ents.inrange(index) && ents.inrange(node) && enttype[ents[index]->type].links && enttype[ents[node]->type].links)
 		{
 			switch(ents[index]->type)
 			{
@@ -379,7 +379,7 @@ struct entities : icliententities
 
 	bool linkents(int index, int node, bool add, bool local)
 	{
-		if (ents.inrange(index) && ents.inrange(node) && canlink(index, node))
+		if(ents.inrange(index) && ents.inrange(node) && canlink(index, node))
 		{
 			fpsentity &e = (fpsentity &)*ents[index];
 			fpsentity &f = (fpsentity &)*ents[node];
@@ -393,14 +393,14 @@ struct entities : icliententities
 				if((h = f.links.find(index)) >= 0 && (local || !add))
 				{
 					e.links.remove(g);
-					if (local && multiplayer(false) && m_edit(cl.gamemode))
+					if(local && multiplayer(false) && m_edit(cl.gamemode))
 						cl.cc.addmsg(SV_EDITLINK, "ri3", 0, index, node);
 					return true;
 				}
 				else if(local)
 				{
 					f.links.add(index);
-					if (local && multiplayer(false) && m_edit(cl.gamemode))
+					if(local && multiplayer(false) && m_edit(cl.gamemode))
 						cl.cc.addmsg(SV_EDITLINK, "ri3", 1, node, index);
 					return true;
 				}
@@ -408,14 +408,14 @@ struct entities : icliententities
 			else if((g = f.links.find(index)) >= 0 && local)
 			{
 				f.links.remove(g);
-				if (local && multiplayer(false) && m_edit(cl.gamemode))
+				if(local && multiplayer(false) && m_edit(cl.gamemode))
 					cl.cc.addmsg(SV_EDITLINK, "ri3", 0, node, index);
 				return true;
 			}
 			else if(local || add)
 			{
 				e.links.add(node);
-				if (local && multiplayer(false) && m_edit(cl.gamemode))
+				if(local && multiplayer(false) && m_edit(cl.gamemode))
 					cl.cc.addmsg(SV_EDITLINK, "ri3", 1, index, node);
 
 				return true;
@@ -432,7 +432,7 @@ struct entities : icliententities
 			int node = entgroup[i];
 			if(ents.inrange(index))
 			{
-				if (canlink(index, node)) linkents(index, node, false, true);
+				if(canlink(index, node)) linkents(index, node, false, true);
 				else conoutf("entity %d [%s] and %d [%s] are not linkable", index, enttype[index].name, node, enttype[node].name);
 			}
 			index = node;
@@ -469,7 +469,7 @@ struct entities : icliententities
 
 		route.setsize(0);
 
-		if (ents.inrange(node) && ents.inrange(goal) && ents[goal]->type == ents[node]->type && enttype[ents[node]->type].links)
+		if(ents.inrange(node) && ents.inrange(goal) && ents[goal]->type == ents[node]->type && enttype[ents[node]->type].links)
 		{
 			struct fpsentity &f = (fpsentity &) *ents[node], &g = (fpsentity &) *ents[goal];
 			vector<linkq *> queue;
@@ -491,13 +491,13 @@ struct entities : icliententities
 				{
 					int v = e.links[j];
 
-					if (ents.inrange(v) && ents[v]->type == f.type)
+					if(ents.inrange(v) && ents[v]->type == f.type)
 					{
 						bool skip = false;
 
 						loopvk(queue)
 						{
-							if (queue[k]->nodes.find(v) >= 0 ||
+							if(queue[k]->nodes.find(v) >= 0 ||
 									((flags & ROUTE_AVOID) && v != goal && avoid.find(v) >= 0) ||
 									((flags & ROUTE_GTONE) && v == goal && queue.length() == 1))
 							{
@@ -505,13 +505,13 @@ struct entities : icliententities
 								break;
 							}
 						} // don't revisit shorter noded paths
-						if (!skip)
+						if(!skip)
 						{
 							struct fpsentity &h = (fpsentity &) *ents[v];
 
 							int r = q; // continue this line for the first one
 
-							if (a)
+							if(a)
 							{
 								r = queue.length();
 								queue.add(new linkq());
@@ -525,7 +525,7 @@ struct entities : icliententities
 						}
 					}
 				}
-				if (!a)
+				if(!a)
 				{
 					queue[q]->dead = true;
 				} // this one ain't going anywhere..
@@ -533,12 +533,12 @@ struct entities : icliententities
 				q = -1; // get shortest path
 				loopvj(queue)
 				{
-					if (!queue[j]->dead && (!queue.inrange(q) || queue[j]->weight + queue[j]->goal < queue[q]->weight + queue[q]->goal))
+					if(!queue[j]->dead && (!queue.inrange(q) || queue[j]->weight + queue[j]->goal < queue[q]->weight + queue[q]->goal))
 						q = j;
 				}
 			}
 
-			if (!queue.inrange(q) && !(flags & ROUTE_ABS)) // didn't get there, resort to failsafe proximity match
+			if(!queue.inrange(q) && !(flags & ROUTE_ABS)) // didn't get there, resort to failsafe proximity match
 			{
 				q = -1;
 
@@ -548,26 +548,26 @@ struct entities : icliententities
 
 					loopvrev(queue[j]->nodes) // find the closest node in this branch
 					{
-						if (!queue[j]->nodes.inrange(u) || ents[queue[j]->nodes[i]]->o.dist(g.o) < ents[queue[j]->nodes[u]]->o.dist(g.o))
+						if(!queue[j]->nodes.inrange(u) || ents[queue[j]->nodes[i]]->o.dist(g.o) < ents[queue[j]->nodes[u]]->o.dist(g.o))
 							u = i;
 					}
 
-					if (queue[j]->nodes.inrange(u))
+					if(queue[j]->nodes.inrange(u))
 					{
 						loopvrev(queue[j]->nodes) // trim the node list to the end at the shortest
 						{
-							if (i <= u)
+							if(i <= u)
 								break;
 							queue[j]->nodes.remove(i);
 						}
 
-						if (!queue.inrange(q) || ents[queue[j]->nodes[u]]->o.dist(g.o) < ents[queue[q]->nodes.last()]->o.dist(g.o))
+						if(!queue.inrange(q) || ents[queue[j]->nodes[u]]->o.dist(g.o) < ents[queue[q]->nodes.last()]->o.dist(g.o))
 							q = j;
 					}
 				}
 			}
 
-			if (queue.inrange(q))
+			if(queue.inrange(q))
 			{
 				route = queue[q]->nodes;
 				result = true;
@@ -575,7 +575,7 @@ struct entities : icliententities
 
 			loopv(queue) DELETEP(queue[i]); // purge
 
-			if (!result && !(flags & ROUTE_ABS)) // random search
+			if(!result && !(flags & ROUTE_ABS)) // random search
 			{
 				for (int c = node; ents.inrange(c) && ents[c]->type == f.type; )
 				{
@@ -586,18 +586,18 @@ struct entities : icliententities
 					{
 						int n = e.links[i];
 
-						if (route.find(n) < 0 && (!(flags & ROUTE_AVOID) || avoid.find(n) >= 0))
-							if (!ents.inrange(b) ||
+						if(route.find(n) < 0 && (!(flags & ROUTE_AVOID) || avoid.find(n) >= 0))
+							if(!ents.inrange(b) ||
 									(ents.inrange(n) && ents[n]->o.dist(g.o) < ents[b]->o.dist(g.o)))
 								b = n;
 					}
-					if (ents.inrange(b))
+					if(ents.inrange(b))
 					{
 						route.add(b);
 					}
 					c = b;
 				}
-				if (route.length())
+				if(route.length())
 					result = true;
 			}
 		}
@@ -609,7 +609,7 @@ struct entities : icliententities
 		int w = -1;
 		loopv(ents) if(ents[i]->type == WAYPOINT && i != n)
 		{
-			if ((!restrict || ents[i]->o.dist(v) <= ents[i]->attr1+d) && (!ents.inrange(w) || ents[i]->o.dist(v) < ents[w]->o.dist(v)))
+			if((!restrict || ents[i]->o.dist(v) <= ents[i]->attr1+d) && (!ents.inrange(w) || ents[i]->o.dist(v) < ents[w]->o.dist(v)))
 				w = i;
 		}
 		return w;
@@ -636,9 +636,9 @@ struct entities : icliententities
 				{
 					fpsentity &e = (fpsentity &)*ents[oldnode], &f = (fpsentity &)*ents[d->lastnode];
 					if(e.links.find(d->lastnode) < 0)
-						linkents(oldnode, d->lastnode, true, false);
+						linkents(oldnode, d->lastnode, true, true);
 					if(f.links.find(oldnode) < 0)
-						linkents(d->lastnode, oldnode, true, false);
+						linkents(d->lastnode, oldnode, true, true);
 				}
 			}
 			else d->lastnode = waypointnode(v, false);
@@ -855,7 +855,7 @@ struct entities : icliententities
 					renderradius(e.o, e.attr1, e.attr1);
 					break;
 				default:
-					if (enttype[e.type].height || enttype[e.type].radius)
+					if(enttype[e.type].height || enttype[e.type].radius)
 						renderradius(e.o, enttype[e.type].height, enttype[e.type].radius);
 					break;
 			}
@@ -884,7 +884,7 @@ struct entities : icliententities
 		}
 
 		if(enttype[e.type].links)
-			if (!level || showentlinks() >= level || (e.type == WAYPOINT && dropwaypoints()))
+			if(!level || showentlinks() >= level || (e.type == WAYPOINT && dropwaypoints()))
 				renderlinked(e);
 	}
 

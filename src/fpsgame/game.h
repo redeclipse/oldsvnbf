@@ -558,6 +558,7 @@ struct fpsent : dynent, fpsstate
 	int clientnum, privilege, lastupdate, plag, ping;
 	int lastattackgun;
 	bool attacking, reloading, useaction, leaning;
+	int attacktime, reloadtime, usetime, leantime;
 	int lasttaunt;
 	int lastuse, lastusemillis, lastbase;
 	int superdamage;
@@ -600,6 +601,7 @@ struct fpsent : dynent, fpsstate
 	{
 		dynent::stopmoving();
 		attacking = reloading = useaction = leaning = false;
+		attacktime = reloadtime = usetime = leantime = 0;
 	}
 
 	void respawn()

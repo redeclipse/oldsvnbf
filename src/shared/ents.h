@@ -38,7 +38,7 @@ enum { ENT_PLAYER = 0, ENT_AI, ENT_INANIMATE, ENT_CAMERA, ENT_BOUNCE };
 
 enum { COLLIDE_AABB = 0, COLLIDE_ELLIPSE };
 
-#define CROUCHHEIGHT 0.6f
+#define CROUCHHEIGHT 0.65f
 
 struct physent                                  // base entity type, can be affected by physics
 {
@@ -52,6 +52,7 @@ struct physent                                  // base entity type, can be affe
 
     bool inmat;
     bool jumping, crouching;
+    int jumptime, crouchtime;
     bool blocked, moving;                       // used by physics to signal ai
     physent *onplayer;
     int lastmove, lastmoveattempt, collisions, stacks;
@@ -77,7 +78,7 @@ struct physent                                  // base entity type, can be affe
     void reset()
     {
     	inmat = jumping = crouching  = false;
-        timeinair = 0;
+        jumptime = crouchtime = timeinair = 0;
         strafe = move = 0;
         physstate = PHYS_FALL;
 		vel = falling = vec(0, 0, 0);

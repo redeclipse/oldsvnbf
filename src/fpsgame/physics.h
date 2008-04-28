@@ -40,20 +40,21 @@ struct physics
 	}
 
 	// inputs
-	#define iput(x,y,z) \
+	#define iput(x,y,t,z) \
 		void do##x(bool on) \
 		{ \
 			bool val = !cl.intermission ? on : false; \
 			cl.player1->y = cl.player1->state != CS_DEAD ? val : false; \
+			cl.player1->t = lastmillis; \
 			if (z && cl.player1->state == CS_DEAD && val) cl.respawn(cl.player1); \
 		}
 
-	iput(crouch,	crouching,	false);
-	iput(jump,		jumping,	false);
-	iput(attack,	attacking,	true);
-	iput(reload,	reloading,	true);
-	iput(action,	useaction,	true);
-	iput(lean,		leaning,	false);
+	iput(crouch,	crouching,	crouchtime,	false);
+	iput(jump,		jumping,	jumptime,	false);
+	iput(attack,	attacking,	attacktime,	true);
+	iput(reload,	reloading,	reloadtime,	true);
+	iput(action,	useaction,	usetime,	true);
+	iput(lean,		leaning,	leantime,	false);
 
 	void taunt(fpsent *d)
 	{
