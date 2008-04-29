@@ -150,7 +150,7 @@ VARP(trilinear, 0, 1, 1);
 VARP(bilinear, 0, 1, 1);
 VARP(aniso, 0, 0, 16);
 
-GLenum compressedformat(GLenum format, int w, int h)
+GLenum compressedformat(GLenum format, int w, int h, bool force = false)
 {
 #ifdef __APPLE__
 #undef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
@@ -158,14 +158,14 @@ GLenum compressedformat(GLenum format, int w, int h)
 #define GL_COMPRESSED_RGB_S3TC_DXT1_EXT GL_COMPRESSED_RGB_ARB
 #define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT GL_COMPRESSED_RGBA_ARB
 #endif
-	if(hasTC && texcompress && max(w, h) >= texcompress) switch(format)
-	{
-		case GL_RGB5:
-		case GL_RGB8:
-		case GL_RGB: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-		case GL_RGBA: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-	}
-	return format;
+    if(hasTC && texcompress && (force || max(w, h) >= texcompress)) switch(format)
+    {
+        case GL_RGB5:
+        case GL_RGB8:
+        case GL_RGB: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+        case GL_RGBA: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+    }
+    return format;
 }
 
 int formatsize(GLenum format)
@@ -183,7 +183,7 @@ int formatsize(GLenum format)
 
 VARP(hwmipmap, 0, 0, 1);
 
-void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, GLenum component, GLenum subtarget)
+void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, GLenum component, GLenum subtarget, bool compress)
 {
 	GLenum target = subtarget;
 	switch(subtarget)
@@ -257,7 +257,7 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 	}
 	if(mipit && pixels)
 	{
-		GLenum compressed = compressedformat(component, w, h);
+        GLenum compressed = compressedformat(component, w, h, compress);
         if(target==GL_TEXTURE_1D)
         {
             if(hasGM && hwmipmap) glTexImage1D(subtarget, 0, compressed, w, 0, format, type, pixels);
@@ -316,7 +316,7 @@ static void resizetexture(int &w, int &h, bool mipit = true, GLenum format = GL_
 	h = h2;
 }
 
-static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false)
+static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false, bool compress = false)
 {
     if(!t)
     {
@@ -351,7 +351,7 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int cl
         if(t->w*t->h > t->xs*t->ys) pixels = new uchar[formatsize(format)*t->w*t->h];
         gluScaleImage(format, t->xs, t->ys, GL_UNSIGNED_BYTE, s->pixels, t->w, t->h, GL_UNSIGNED_BYTE, pixels);
     }
-    createtexture(t->id, t->w, t->h, pixels, clamp, mipit, format);
+    createtexture(t->id, t->w, t->h, pixels, clamp, mipit, format, GL_TEXTURE_2D, compress);
     if(pixels!=s->pixels) delete[] pixels;
     SDL_FreeSurface(s);
     return t;
@@ -370,7 +370,7 @@ static vec parsevec(const char *arg)
 	return v;
 }
 
-static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true)
+static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL)
 {
     const char *cmds = NULL, *file = tname;
 
@@ -427,6 +427,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
         else if(!strncmp(cmd, "offset", len)) s = texoffset(s, atoi(arg[0]), atoi(arg[1]));
         else if(!strncmp(cmd, "rotate", len)) s = texrotate(s, atoi(arg[0]), tex ? tex->type : 0);
         else if(!strncmp(cmd, "reorient", len)) s = texreorient(s, atoi(arg[0])>0, atoi(arg[1])>0, atoi(arg[2])>0, tex ? tex->type : TEX_DIFFUSE);
+        else if(!strncmp(cmd, "compress", len)) { if(compress) *compress = true; }
     }
 
     return s;
@@ -461,8 +462,9 @@ Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
 	s_strcpy(tname, name);
 	Texture *t = textures.access(tname);
 	if(t) return t;
-	SDL_Surface *s = texturedata(tname, NULL, msg);
-    return s ? newtexture(NULL, tname, s, clamp, mipit) : notexture;
+    bool compress = false;
+    SDL_Surface *s = texturedata(tname, NULL, msg, &compress);
+    return s ? newtexture(NULL, tname, s, clamp, mipit, false, false, compress) : notexture;
 }
 
 void settexture(const char *name, bool clamp)
@@ -738,7 +740,8 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 	key.add('\0');
 	t.t = textures.access(key.getbuf());
 	if(t.t) return;
-	SDL_Surface *ts = texturedata(NULL, &t);
+    bool compress = false;
+    SDL_Surface *ts = texturedata(NULL, &t, true, &compress);
     if(!ts) { t.t = notexture; return; }
 	switch(t.type)
 	{
@@ -781,7 +784,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 			}
 			break;
 	}
-    t.t = newtexture(NULL, key.getbuf(), ts, 0, true, true, true);
+    t.t = newtexture(NULL, key.getbuf(), ts, 0, true, true, true, compress);
 }
 
 Slot dummyslot;
@@ -901,6 +904,7 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg)
 	if(!wildcard) s_strcpy(sname, tname);
     GLenum format = 0;
     int tsize = 0;
+    bool compress = false;
 	loopi(6)
 	{
 		if(wildcard)
@@ -909,7 +913,7 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg)
 			s_strcat(sname, cubemapsides[i].name);
 			s_strcat(sname, wildcard+1);
 		}
-		surface[i] = texturedata(sname, NULL, msg);
+        surface[i] = texturedata(sname, NULL, msg, &compress);
         if(!surface[i])
 		{
 			loopj(i) SDL_FreeSurface(surface[j]);
@@ -948,7 +952,7 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg)
             if(!pixels) pixels = new uchar[formatsize(format)*t->w*t->h];
             gluScaleImage(format, s->w, s->h, GL_UNSIGNED_BYTE, s->pixels, t->w, t->h, GL_UNSIGNED_BYTE, pixels);
         }
-        createtexture(!i ? t->id : 0, t->w, t->h, s->w != t->w || s->h != t->h ? pixels : s->pixels, 3, mipit, format, side.target);
+        createtexture(!i ? t->id : 0, t->w, t->h, s->w != t->w || s->h != t->h ? pixels : s->pixels, 3, mipit, format, side.target, compress);
         SDL_FreeSurface(s);
     }
     if(pixels) delete[] pixels;
@@ -958,20 +962,19 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg)
 Texture *cubemapload(const char *name, bool mipit, bool msg)
 {
 	if(!hasCM) return NULL;
-	s_sprintfd(pname)("%s", name);
 	Texture *t = NULL;
-	if(!strchr(pname, '*'))
+	if(!strchr(name, '*'))
 	{
-		s_sprintfd(jpgname)("%s_*.jpg", pname);
+		s_sprintfd(jpgname)("%s_*.jpg", name);
 		t = cubemaploadwildcard(NULL, jpgname, mipit, false);
 		if(!t)
 		{
-			s_sprintfd(pngname)("%s_*.png", pname);
+			s_sprintfd(pngname)("%s_*.png", name);
 			t = cubemaploadwildcard(NULL, pngname, mipit, false);
 			if(!t && msg) conoutf("could not load envmap %s", name);
 		}
 	}
-	else t = cubemaploadwildcard(NULL, pname, mipit, msg);
+	else t = cubemaploadwildcard(NULL, name, mipit, msg);
 	return t;
 }
 
@@ -1207,8 +1210,9 @@ bool reloadtexture(Texture &tex)
         case Texture::STUB:
         case Texture::IMAGE:
         {
-            SDL_Surface *s = texturedata(tex.name, NULL, true);
-            if(!s || !newtexture(&tex, NULL, s, tex.clamp, tex.mipmap)) return false;
+            bool compress = false;
+            SDL_Surface *s = texturedata(tex.name, NULL, true, &compress);
+            if(!s || !newtexture(&tex, NULL, s, tex.clamp, tex.mipmap, false, false, compress)) return false;
             break;
         }
 

@@ -280,12 +280,10 @@ void md3pitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pit
 void md3skin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin)
 {    
     loopmd3skins(meshname, s,
-        s_sprintfd(spath)("%s/%s", md3dir, tex);
-        s.tex = textureload(spath, 0, true, false);
+        s.tex = textureload(makerelpath(md3dir, tex), 0, true, false);
         if(*masks)
         {
-            s_sprintfd(mpath)("<ffmask:25>%s/%s", md3dir, masks);
-            s.masks = textureload(mpath, 0, true, false);
+            s.masks = textureload(makerelpath(md3dir, masks, "<ffmask:25>"), 0, true, false);
             s.envmapmax = *envmapmax;
             s.envmapmin = *envmapmin;
         }
@@ -337,13 +335,11 @@ void md3envmap(char *meshname, char *envmap)
     loopmd3skins(meshname, s, s.envmap = tex);
 }
 
-void md3bumpmap(char *meshname, char *skin, char *normalmap)
+void md3bumpmap(char *meshname, char *normalmap, char *skin)
 {
-    Texture *skintex, *normalmaptex;
-    s_sprintfd(spath)("<noff>%s/%s", md3dir, skin);
-    skintex = textureload(spath, 0, true, false);
-    s_sprintf(spath)("<noff>%s/%s", md3dir, normalmap);
-    normalmaptex = textureload(spath, 0, true, false);
+    Texture *normalmaptex = NULL, *skintex = NULL;
+    normalmaptex = textureload(makerelpath(md3dir, normalmap, "<noff>"), 0, true, false);
+    if(skin[0]) skintex = textureload(makerelpath(md3dir, skin, "<noff>"), 0, true, false);
     loopmd3skins(meshname, s, { s.unlittex = skintex; s.normalmap = normalmaptex; m.calctangents(); });
 }
 
