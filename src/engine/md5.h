@@ -137,8 +137,7 @@ struct md5 : skelmodel
                         part *p = loadingmd5->parts.last();
                         p->initskins(notexture, notexture, group->meshes.length());
                         skin &s = p->skins.last();
-                        s_sprintfd(spath)("%s/%s", md5dir, texname);
-                        s.tex = textureload(spath, 0, true, false);
+                        s.tex = textureload(makerelpath(md5dir, texname), 0, true, false);
                         delete[] texname;
                     }
                 }
@@ -597,12 +596,10 @@ void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin
 void md5skin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin)
 {
     loopmd5skins(meshname, s,
-        s_sprintfd(spath)("%s/%s", md5dir, tex);
-        s.tex = textureload(spath, 0, true, false);
+        s.tex = textureload(makerelpath(md5dir, tex), 0, true, false);
         if(*masks)
         {
-            s_sprintfd(mpath)("<ffmask:25>%s/%s", md5dir, masks);
-            s.masks = textureload(mpath, 0, true, false);
+            s.masks = textureload(makerelpath(md5dir, masks, "<ffmask:25>"), 0, true, false);
             s.envmapmax = *envmapmax;
             s.envmapmin = *envmapmin;
         }
@@ -654,13 +651,11 @@ void md5envmap(char *meshname, char *envmap)
     loopmd5skins(meshname, s, s.envmap = tex);
 }
 
-void md5bumpmap(char *meshname, char *skin, char *normalmap)
+void md5bumpmap(char *meshname, char *normalmap, char *skin)
 {
-    Texture *skintex, *normalmaptex;
-    s_sprintfd(spath)("<noff>%s/%s", md5dir, skin);
-    skintex = textureload(spath, 0, true, false);
-    s_sprintf(spath)("<noff>%s/%s", md5dir, normalmap);
-    normalmaptex = textureload(spath, 0, true, false);
+    Texture *normalmaptex = NULL, *skintex = NULL;
+    normalmaptex = textureload(makerelpath(md5dir, normalmap, "<noff>"), 0, true, false);
+    if(skin[0]) skintex = textureload(makerelpath(md5dir, skin, "<noff>"), 0, true, false);
     loopmd5skins(meshname, s, { s.unlittex = skintex; s.normalmap = normalmaptex; m.calctangents(); });
 }
 
