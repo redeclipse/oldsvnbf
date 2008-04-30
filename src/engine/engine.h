@@ -411,7 +411,12 @@ enum
     INIT_LOAD,
     INIT_RESET
 };
-extern bool initwarning(const char *desc, int level = INIT_RESET);
+enum
+{
+    CHANGE_GFX   = 1<<0,
+    CHANGE_SOUND = 1<<1
+};
+extern bool initwarning(const char *desc, int level = INIT_RESET, int type = CHANGE_GFX);
 
 extern void pushevent(const SDL_Event &e);
 extern bool interceptkey(int sym);
@@ -420,7 +425,7 @@ extern void show_out_of_renderloop_progress(float bar1, const char *text1, float
 
 // menu
 extern void menuprocess();
-extern void addchange(const char *desc);
+extern void addchange(const char *desc, int type);
 
 // physics
 extern bool pointincube(const clipplanes &p, const vec &v);

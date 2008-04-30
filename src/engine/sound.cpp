@@ -7,7 +7,7 @@ vector<sound> sounds;
 
 bool nosound = true;
 Mix_Music *music = NULL;
-char *musicdonecmd = NULL;
+char *musicfile = NULL, *musicdonecmd = NULL;
 int soundsatonce = 0, lastsoundmillis = 0;
 
 void setmusicvol(int musicvol)
@@ -21,10 +21,10 @@ void setmusicvol(int musicvol)
 
 VARP(soundvol, 0, 255, 255);
 VARFP(musicvol, 0, 255, 255, setmusicvol(musicvol));
-VARF(soundmono, 0, 0, 1, initwarning("sound configuration"));
-VARF(soundchans, 0, 1024, INT_MAX-1, initwarning("sound configuration"));
-VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration"));
-VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration"));
+VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(soundchans, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARP(soundmaxatonce, 0, 24, INT_MAX-1);
 VARP(soundmaxdist, 0, 512, INT_MAX-1);
 
@@ -51,6 +51,8 @@ void musicdone(bool docmd)
 		Mix_FreeMusic(music);
 		music = NULL;
 	}
+
+    DELETEA(musicfile);
 
 	if(musicdonecmd != NULL)
 	{
@@ -98,6 +100,7 @@ void playmusic(char *name, char *cmd)
 
 		if((music = Mix_LoadMUS(file)))
 		{
+            musicfile = newstring(file);
 			Mix_PlayMusic(music, cmd[0] ? 0 : -1);
 			Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
 		}
@@ -250,4 +253,43 @@ int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 
 void sound(int *n, int *vol) { intret(playsound(*n, NULL, *vol ? *vol : 255)); }
 COMMAND(sound, "ii");
+
+void resetsound()
+{
+    const SDL_version *v = Mix_Linked_Version();
+    if(SDL_VERSIONNUM(v->major, v->minor, v->patch) <= SDL_VERSIONNUM(1, 2, 8))
+    {
+        conoutf("Sound reset not available in-game due to SDL_mixer-1.2.8 bug. Please restart for changes to take effect.");
+        return;
+    }
+    if(!nosound)
+    {
+        loopv(sounds) removesound(i);
+        enumerate(soundsamples, soundsample, s, { Mix_FreeChunk(s.sound); s.sound = NULL; });
+        if(music)
+        {
+            Mix_HaltMusic();
+            Mix_FreeMusic(music);
+        }
+        Mix_CloseAudio();
+    }
+    initsound();
+    if(nosound)
+    {
+        DELETEA(musicfile);
+        DELETEA(musicdonecmd);
+        music = NULL;
+        gamesounds.setsizenodelete(0);
+        mapsounds.setsizenodelete(0);
+        soundsamples.clear();
+        return;
+    }
+    if(music && (music = Mix_LoadMUS(musicfile)))
+    {
+        Mix_PlayMusic(music, musicdonecmd[0] ? 0 : -1);
+        Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+    }
+}
+
+COMMAND(resetsound, "");
 

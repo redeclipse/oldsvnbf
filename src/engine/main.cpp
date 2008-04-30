@@ -43,11 +43,11 @@ SDL_Surface *screen = NULL;
 
 static int initing = NOT_INITING;
 
-bool initwarning(const char *desc, int level)
+bool initwarning(const char *desc, int level, int type)
 {
     if(initing < level)
     {
-        addchange(desc);
+        addchange(desc, type);
         return true;
     }
     return false;
