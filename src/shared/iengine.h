@@ -95,7 +95,7 @@ extern void complete(char *s);
 
 // menus
 extern vec menuinfrontofplayer();
-extern void newgui(char *name, char *contents);
+extern void newgui(char *name, char *contents, char *header = NULL);
 extern void showgui(const char *name);
 
 // world
