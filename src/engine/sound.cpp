@@ -21,10 +21,10 @@ void setmusicvol(int musicvol)
 
 VARP(soundvol, 0, 255, 255);
 VARFP(musicvol, 0, 255, 255, setmusicvol(musicvol));
-VARF(soundmono, 0, 0, 1, initwarning());
-VARF(soundchans, 0, 1024, INT_MAX-1, initwarning());
-VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning());
-VARF(soundfreq, 0, 44100, 48000, initwarning());
+VARF(soundmono, 0, 0, 1, initwarning("sound configuration"));
+VARF(soundchans, 0, 1024, INT_MAX-1, initwarning("sound configuration"));
+VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration"));
+VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration"));
 VARP(soundmaxatonce, 0, 24, INT_MAX-1);
 VARP(soundmaxdist, 0, 512, INT_MAX-1);
 
