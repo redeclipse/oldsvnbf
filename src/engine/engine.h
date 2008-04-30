@@ -405,7 +405,13 @@ extern const char *addreleaseaction(const char *s);
 extern bool saycommandon;
 
 // main
-extern bool initwarning();
+enum
+{
+    NOT_INITING = 0,
+    INIT_LOAD,
+    INIT_RESET
+};
+extern bool initwarning(const char *desc, int level = INIT_RESET);
 
 extern void pushevent(const SDL_Event &e);
 extern bool interceptkey(int sym);
@@ -414,6 +420,7 @@ extern void show_out_of_renderloop_progress(float bar1, const char *text1, float
 
 // menu
 extern void menuprocess();
+extern void addchange(const char *desc);
 
 // physics
 extern bool pointincube(const clipplanes &p, const vec &v);

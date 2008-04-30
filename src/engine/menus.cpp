@@ -322,12 +322,60 @@ void menuprocess()
 	}
 }
 
+VARP(applydialog, 0, 1, 1);
+
+static vector<const char *> needsapply;
+
+void addchange(const char *desc)
+{
+    if(!applydialog) return;
+    loopv(needsapply) if(!strcmp(needsapply[i], desc)) return;
+    needsapply.add(desc);
+}
+
+static vec applypos;
+static int applystart = 0;
+
+static struct applychangescallback : g3d_callback
+{
+    void gui(g3d_gui &g, bool firstpass)
+    {
+        g.start(applystart, 0.03f);
+        g.text("the following settings have changed:", GUI_TEXT_COLOR, "info");
+        loopv(needsapply) g.text(needsapply[i], GUI_TEXT_COLOR, "info");
+        g.separator();
+        g.text("apply changes now?", GUI_TEXT_COLOR, "info");
+        if(g.button("yes", GUI_BUTTON_COLOR, "action")&G3D_UP)
+        {
+            applystart = 0;
+            needsapply.setsize(0);
+            executelater.add(newstring("resetgl"));
+        }
+        if(g.button("no", GUI_BUTTON_COLOR, "action")&G3D_UP)
+        {
+            applystart = 0;
+            needsapply.setsize(0);
+        }
+        g.end();
+    }
+} accb;
+
 void g3d_mainmenu()
 {
 	if(!guistack.empty())
 	{
 		g3d_addgui(&mmcb);
 	}
+    else if(needsapply.length())
+    {
+        if(!applystart)
+        {
+            applystart = totalmillis;
+            applypos = menuinfrontofplayer();
+            g3d_resetcursor();
+        }
+        g3d_addgui(&accb);
+    }
 }
 
 bool menuactive() { return !guistack.empty(); };

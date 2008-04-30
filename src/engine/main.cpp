@@ -41,24 +41,25 @@ void fatal(const char *s, ...)    // failure exit
 
 SDL_Surface *screen = NULL;
 
-static bool initing = false, restoredinits = false;
-bool initwarning()
+static int initing = NOT_INITING;
+
+bool initwarning(const char *desc, int level)
 {
-	if(!initing)
-	{
-		if(restoredinits) conoutf("You must restart for this setting to take effect.");
-		else conoutf("You must restart with the -r command-line option for this setting to take effect.");
-	}
-	return !initing;
+    if(initing < level)
+    {
+        addchange(desc);
+        return true;
+    }
+    return false;
 }
 
-VARF(scr_w, 320, 1024, 10000, initwarning());
-VARF(scr_h, 200, 768, 10000, initwarning());
-VARF(colorbits, 0, 0, 32, initwarning());
-VARF(depthbits, 0, 0, 32, initwarning());
-VARF(stencilbits, 0, 1, 32, initwarning());
-VARF(fsaa, -1, -1, 16, initwarning());
-VARF(vsync, -1, -1, 1, initwarning());
+VARF(scr_w, 320, 1024, 10000, initwarning("screen resolution"));
+VARF(scr_h, 200, 768, 10000, initwarning("screen resolution"));
+VARF(colorbits, 0, 0, 32, initwarning("color depth"));
+VARF(depthbits, 0, 0, 32, initwarning("depth-buffer precision"));
+VARF(stencilbits, 0, 1, 32, initwarning("stencil-buffer precision"));
+VARF(fsaa, -1, -1, 16, initwarning("anti-aliasing"));
+VARF(vsync, -1, -1, 1, initwarning("vertical sync"));
 
 void writeinitcfg()
 {
@@ -111,7 +112,7 @@ void setfullscreen(bool enable)
 {
     if(!screen) return;
 #if defined(WIN32) || defined(__APPLE__)
-    initwarning();
+    initwarning(enable ? "fullscreen" : "windowed");
 #else
     if(enable == !(screen->flags&SDL_FULLSCREEN))
     {
@@ -136,7 +137,7 @@ void screenres(int *w, int *h)
 		scr_w = *w;
 		scr_h = *h;
 #if defined(WIN32) || defined(__APPLE__)
-		initwarning();
+		initwarning("screen resolution");
 #else
 		return;
 	}
@@ -584,8 +585,10 @@ void rehash(bool reload)
 
 	persistidents = true;
 
+    initing = INIT_LOAD;
 	execfile("config.cfg");
 	execfile("autoexec.cfg");
+    initing = NOT_INITING;
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
 
@@ -610,7 +613,7 @@ int main(int argc, char **argv)
 
 	char *initscript = NULL;
 
-	initing = true;
+	initing = INIT_RESET;
 	addpackagedir("data");
 	for(int i = 1; i<argc; i++)
 	{
@@ -618,7 +621,7 @@ int main(int argc, char **argv)
 		{
             case 'q': printf("Using home directory: %s\n", &argv[i][2]); sethomedir(&argv[i][2]); break;
             case 'k': printf("Adding package directory: %s\n", &argv[i][2]); addpackagedir(&argv[i][2]); break;
-			case 'r': execfile(argv[i][2] ? &argv[i][2] : (char *)"init.cfg"); restoredinits = true; break;
+			case 'r': execfile(argv[i][2] ? &argv[i][2] : "init.cfg"); break;
             case 'w': scr_w = atoi(&argv[i][2]); if(scr_w<320) scr_w = 320; if(!findarg(argc, argv, "-h")) scr_h = (scr_w*3)/4; break;
             case 'h': scr_h = atoi(&argv[i][2]); if(scr_h<200) scr_h = 200; if(!findarg(argc, argv, "-w")) scr_w = (scr_h*4)/3; break;
 			case 'z': depthbits = atoi(&argv[i][2]); break;
@@ -640,7 +643,7 @@ int main(int argc, char **argv)
 		}
 		else gameargs.add(argv[i]);
 	}
-	initing = false;
+	initing = NOT_INITING;
 
 	conoutf("init: sdl");
 
