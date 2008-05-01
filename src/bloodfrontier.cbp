@@ -17,6 +17,7 @@
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
+				<Option use_console_runner="0"/>
 				<Option includeInTargetAll="0"/>
 				<Option projectResourceIncludeDirsRelation="1"/>
 			</Target>
@@ -27,7 +28,8 @@
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
-				<Option parameters="-t -w640 -h480 -rbfa\init.cfg -qhome"/>
+				<Option use_console_runner="0"/>
+				<Option parameters="-f -t -w640 -h480 -rbfa\init.cfg -qhome"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
 				<Option projectResourceIncludeDirsRelation="1"/>
@@ -69,7 +71,8 @@
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
-				<Option parameters="-t -w640 -h480 -rbfa\init.cfg -qhome"/>
+				<Option use_console_runner="0"/>
+				<Option parameters="-f -t -w640 -h480 -rbfa\init.cfg -qhome"/>
 				<Option includeInTargetAll="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
@@ -107,6 +110,7 @@
 				<Option deps_output=".deps"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
+				<Option use_console_runner="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
 				<Option projectResourceIncludeDirsRelation="1"/>

@@ -423,9 +423,9 @@ void gl_checkextensions()
     hwtexsize = val;
 }
 
-extern float polygonoffsetfactor, polygonoffsetunits;
-FVARF(polygonoffsetfactor, -3.0f, glPolygonOffset(polygonoffsetfactor, polygonoffsetunits));
-FVARF(polygonoffsetunits, -3.0f, glPolygonOffset(polygonoffsetfactor, polygonoffsetunits));
+extern int polygonoffsetfactor, polygonoffsetunits;
+VARF(polygonoffsetfactor, 1-INT_MAX, -300, INT_MAX-1, glPolygonOffset(polygonoffsetfactor/100.f, polygonoffsetunits/100.f));
+VARF(polygonoffsetunits, 1-INT_MAX, -300, INT_MAX-1, glPolygonOffset(polygonoffsetfactor/100.f, polygonoffsetunits/100.f));
 
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
@@ -449,7 +449,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glPolygonOffset(polygonoffsetfactor, polygonoffsetunits);
+    glPolygonOffset(polygonoffsetfactor/100.f, polygonoffsetunits/100.f);
 
 	glCullFace(GL_FRONT);
 	glEnable(GL_CULL_FACE);
