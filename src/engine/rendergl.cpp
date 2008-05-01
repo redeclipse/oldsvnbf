@@ -423,6 +423,10 @@ void gl_checkextensions()
     hwtexsize = val;
 }
 
+extern float polygonoffsetfactor, polygonoffsetunits;
+FVARF(polygonoffsetfactor, -3.0f, glPolygonOffset(polygonoffsetfactor, polygonoffsetunits));
+FVARF(polygonoffsetunits, -3.0f, glPolygonOffset(polygonoffsetfactor, polygonoffsetunits));
+
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
 	#define fogvalues 0.5f, 0.6f, 0.7f, 1.0f
@@ -445,7 +449,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-	glPolygonOffset(-3.0f, -3.0f);
+    glPolygonOffset(polygonoffsetfactor, polygonoffsetunits);
 
 	glCullFace(GL_FRONT);
 	glEnable(GL_CULL_FACE);
