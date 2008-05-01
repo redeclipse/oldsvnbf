@@ -269,12 +269,14 @@ struct md2 : vertmodel
         mdl.initskins(tex, masks);
         if(tex==notexture) conoutf("could not load model skin for %s", name1);
         loadingmd2 = this;
+        persistidents = false;
         s_sprintfd(name3)("models/%s/md2.cfg", loadname);
         if(!execfile(name3))
         {
             s_sprintf(name3)("models/%s/md2.cfg", pname);
             execfile(name3);
         }
+        persistidents = true;
         loadingmd2 = 0;
         loopv(parts) parts[i]->meshes = parts[i]->meshes->scaleverts(scale/4.0f, i ? vec(0, 0, 0) : vec(translate.x, -translate.y, translate.z));
         return loaded = true;

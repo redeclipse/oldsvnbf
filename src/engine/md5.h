@@ -478,13 +478,16 @@ struct md5 : skelmodel
         s_sprintfd(cfgname)("models/%s/md5.cfg", loadname);
 
         loadingmd5 = this;
+        persistidents = false;
         if(execfile(cfgname) && parts.length()) // configured md5, will call the md5* commands below
         {
+            persistidents = true;
             loadingmd5 = NULL;
             loopv(parts) if(!parts[i]->meshes) return false;
         }
         else if(!loaddefaultparts()) // md5 without configuration, try default tris and skin
         {
+            persistidents = true;
             loadingmd5 = NULL;
             return false;
         }
