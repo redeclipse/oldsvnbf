@@ -522,12 +522,12 @@ void commitchanges()
 
     extern vector<vtxarray *> valist;
     int oldlen = valist.length();
+    entitiesinoctanodes();
     inbetweenframes = false;
     octarender();
     inbetweenframes = true;
     setupmaterials(oldlen);
     invalidatepostfx();
-    entitiesinoctanodes();
     updatevabbs();
 }
 
