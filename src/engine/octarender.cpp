@@ -1537,6 +1537,7 @@ void allchanged(bool load)
 	resetqueries();
 	if(load) initenvmaps();
     guessshadowdir();
+    entitiesinoctanodes();
     tjoints.setsizenodelete(0);
     if(filltjoints)
     {
@@ -1550,7 +1551,6 @@ void allchanged(bool load)
 	if(load) precacheall();
 	setupmaterials();
 	invalidatepostfx();
-    entitiesinoctanodes();
     updatevabbs(true);
 	if(load) genenvmaps();
 }
