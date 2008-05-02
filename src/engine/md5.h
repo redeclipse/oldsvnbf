@@ -239,7 +239,6 @@ struct md5 : skelmodel
                         }
                     }
                     if(basejoints.length()!=skel->numbones) { fclose(f); return false; }
-                    skel->linkchildren();
                 }
                 else if(strstr(buf, "mesh {"))
                 {
@@ -256,7 +255,11 @@ struct md5 : skelmodel
                 }
             }
 
-            loopv(basejoints) skel->bones[i].base = dualquat(basejoints[i].orient, basejoints[i].pos);
+            if(skel->shared <= 1)
+            {
+                skel->linkchildren();
+                loopv(basejoints) skel->bones[i].base = dualquat(basejoints[i].orient, basejoints[i].pos);
+            }
 
             loopv(meshes)
             {
