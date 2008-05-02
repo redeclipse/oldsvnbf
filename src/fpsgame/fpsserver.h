@@ -1459,6 +1459,14 @@ struct GAMESERVER : igameserver
 				break;
 			}
 
+			case SV_EDITSVAR:
+			case SV_EDITALIAS:
+			{
+				getstring(text, p);
+				getstring(text, p);
+				break;
+			}
+
 			case SV_GETMAP:
 				if(mapdata)
 				{

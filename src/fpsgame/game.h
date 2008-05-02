@@ -71,7 +71,7 @@ struct fpsentity : extentity
 {
 	vector<int> links;
 #ifndef STANDALONE
-	int schan;
+	int schan, lastemit;
 #endif
 
 	fpsentity()
@@ -79,6 +79,7 @@ struct fpsentity : extentity
 		links.setsize(0);
 #ifndef STANDALONE
 		schan = -1;
+		lastemit = 0;
 #endif
 	}
 	~fpsentity()

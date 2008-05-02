@@ -383,7 +383,7 @@ void save_world(const char *mname, bool nolms)
 					break;
 				case ID_SVAR:
 					gzputint(f, (int)strlen(*id.storage.s));
-					gzwrite(f, id.name, (int)strlen(*id.storage.s)+1);
+					gzwrite(f, *id.storage.s, (int)strlen(*id.storage.s)+1);
 					break;
 				default: break;
 			}
