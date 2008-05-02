@@ -113,7 +113,7 @@ struct entities : icliententities
 						case PARTICLES:
 						{
 							if(e.type == TRIGGER || e.type == TELEPORT || e.type == PUSH)
-								makeparticles((entity &)f);
+								f.lastemit = lastmillis;
 							break;
 						}
 
@@ -342,7 +342,7 @@ struct entities : icliententities
 	int findtype(char *type)
 	{
 		loopi(MAXENTTYPES) if(!strcmp(type, enttype[i].name)) return i;
-		return -1;
+		return NOTUSED;
 	}
 
 	void editent(int i)
@@ -363,43 +363,49 @@ struct entities : icliententities
 		return 4.0f;
 	}
 
-	bool canlink(int index, int node)
+	bool canlink(int index, int node, bool msg = false)
 	{
-		if(ents.inrange(index) && ents.inrange(node) && enttype[ents[index]->type].links && enttype[ents[node]->type].links)
+		if(ents.inrange(index) && ents.inrange(node))
 		{
-			switch(ents[index]->type)
+			if (enttype[ents[index]->type].links && enttype[ents[node]->type].links)
 			{
-				case MAPMODEL:
-					if(ents[node]->type == TRIGGER) return true;
-					break;
-				case MAPSOUND:
-				case PARTICLES:
-					if(ents[node]->type == TELEPORT || ents[node]->type == TRIGGER || ents[node]->type == PUSH) return true;
-					break;
-				case TELEPORT:
-					if(ents[node]->type == TELEPORT) return true;
-					break;
-				case BASE:
-					if(ents[node]->type == BASE) return true;
-					break;
-				case CHECKPOINT:
-					if(ents[node]->type == CHECKPOINT) return true;
-					break;
-				case CAMERA:
-					if(ents[node]->type == CAMERA) return true;
-					break;
-				case WAYPOINT:
-					if(ents[node]->type == WAYPOINT) return true;
-					break;
-				default: break;
+				switch(ents[index]->type)
+				{
+					case MAPMODEL:
+						if(ents[node]->type == TRIGGER) return true;
+						break;
+					case MAPSOUND:
+					case PARTICLES:
+						if(ents[node]->type == TELEPORT || ents[node]->type == TRIGGER || ents[node]->type == PUSH) return true;
+						break;
+					case TELEPORT:
+						if(ents[node]->type == TELEPORT) return true;
+						break;
+					case BASE:
+						if(ents[node]->type == BASE) return true;
+						break;
+					case CHECKPOINT:
+						if(ents[node]->type == CHECKPOINT) return true;
+						break;
+					case CAMERA:
+						if(ents[node]->type == CAMERA) return true;
+						break;
+					case WAYPOINT:
+						if(ents[node]->type == WAYPOINT) return true;
+						break;
+					default: break;
+				}
 			}
+			if(msg) conoutf("entity %d [%s] and %d [%s] are not linkable", index, enttype[ents[index]->type].name, node, enttype[ents[node]->type].name);
+			return false;
 		}
+		if(msg) conoutf("entity %d and %d are unable to be linked as one does not seem to exist");
 		return false;
 	}
 
 	bool linkents(int index, int node, bool add, bool local)
 	{
-		if(ents.inrange(index) && ents.inrange(node) && canlink(index, node))
+		if(ents.inrange(index) && ents.inrange(node) && canlink(index, node, local))
 		{
 			fpsentity &e = (fpsentity &)*ents[index];
 			fpsentity &f = (fpsentity &)*ents[node];
@@ -450,11 +456,7 @@ struct entities : icliententities
 		loopv(entgroup)
 		{
 			int node = entgroup[i];
-			if(ents.inrange(index))
-			{
-				if(canlink(index, node)) linkents(index, node, false, true);
-				else conoutf("entity %d [%s] and %d [%s] are not linkable", index, enttype[index].name, node, enttype[node].name);
-			}
+			if(ents.inrange(index)) linkents(index, node, false, true);
 			index = node;
 		}
 	}
@@ -679,7 +681,11 @@ struct entities : icliententities
 			if(enttype[type].links && enttype[type].links <= gver)
 			{
 				int links = gzgetint(g);
-				loopi(links) f.links.add(gzgetint(g));
+				loopi(links)
+				{
+					int ln = gzgetint(g);
+					if(canlink(id, ln, true)) f.links.add(ln);
+				}
 				if(verbose >= 2) conoutf("entity %d loaded %d link(s)", id, links);
 			}
 		}
@@ -720,7 +726,8 @@ struct entities : icliententities
 				if(f.type != NOTUSED)
 				{
 					if(enttype[f.type].links)
-						if(d.links.find(i) >= 0) links.add(n); // align to indices
+						if(d.links.find(i) >= 0)
+							links.add(n); // align to indices
 
 					n++;
 				}
@@ -973,7 +980,7 @@ struct entities : icliententities
 			fpsentity &e = (fpsentity &)*ents[i];
 			if (e.type == NOTUSED) continue;
 
-			if (e.type == PARTICLES && !e.links.length() && e.o.dist(camera1->o) <= maxparticledistance)
+			if (e.type == PARTICLES && (!e.links.length() || lastmillis-e.lastemit < 1000) && e.o.dist(camera1->o) <= maxparticledistance)
 				makeparticles((entity &)e);
 
 			if (editmode)

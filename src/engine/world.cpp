@@ -671,7 +671,7 @@ void newent(char *what, int *a1, int *a2, int *a3, int *a4)
 {
 	if(noentedit()) return;
 	int type = et->findtype(what);
-	if(type > ET_EMPTY)
+	if(type != ET_EMPTY)
 		newentity(type, *a1, *a2, *a3, *a4);
 }
 
@@ -717,7 +717,7 @@ void entset(char *what, int *a1, int *a2, int *a3, int *a4)
 {
 	if(noentedit()) return;
 	int type = et->findtype(what);
-	if(type > ET_EMPTY) groupedit(e.type=type;
+	groupedit(e.type=type;
 			  e.attr1=*a1;
 			  e.attr2=*a2;
 			  e.attr3=*a3;
