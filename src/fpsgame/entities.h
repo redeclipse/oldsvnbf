@@ -321,8 +321,13 @@ struct entities : icliententities
 
 	void fixentity(extentity &e)
 	{
+		fpsentity &f = (fpsentity &)e;
+
 		switch(e.type)
 		{
+			case MAPSOUND:
+				if(sounds.inrange(f.schan)) removesound(f.schan);
+				break;
 			case WEAPON:
 				while (e.attr1 < 0) e.attr1 += NUMGUNS;
 				while (e.attr1 >= NUMGUNS) e.attr1 -= NUMGUNS;
