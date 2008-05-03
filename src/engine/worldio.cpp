@@ -526,21 +526,21 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 		if(hdr.version <= 24) s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
 
-		if(hdr.version >= 24)
+		if(hdr.version >= 25)
 		{
-			int numvars = hdr.version >= 25 ? gzgetint(f) : gzgetc(f), vars = 0;
+			int numvars = hdr.version >= 26 ? gzgetint(f) : gzgetc(f), vars = 0;
 			show_out_of_renderloop_progress(0, "loading variables...");
 			loopi (numvars)
 			{
 				vars++;
 				if(verbose >= 2) show_out_of_renderloop_progress(float(i)/float(vars), "loading variables...");
-				int len = hdr.version >= 25 ? gzgetint(f) : gzgetc(f);
+				int len = hdr.version >= 26 ? gzgetint(f) : gzgetc(f);
 				if(len)
 				{
 					string vname;
 					gzread(f, vname, len+1);
 					ident *id = idents->access(vname);
-					int type = hdr.version <= 27 ? (id ? id->type : ID_VAR) : gzgetint(f);
+					int type = hdr.version >= 28 ? gzgetint(f) : (id ? id->type : ID_VAR);
 					switch(type)
 					{
 						case ID_VAR:

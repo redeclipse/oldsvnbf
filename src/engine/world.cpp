@@ -793,8 +793,7 @@ void resetmap()
 				case ID_SVAR:
 					setsvar(id.name, id.val.s, true);
 					break;
-				default:
-				break;
+				default: break;
 			}
 		}
 	});

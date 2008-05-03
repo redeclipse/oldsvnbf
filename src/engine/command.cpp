@@ -164,35 +164,34 @@ char *svariable(const char *name, const char *cur, char **storage, void (*fun)()
     return v.val.s;
 }
 
-#define _GETVAR(id, vartype, name, retval) \
+#define GETVAR(id, vartype, name, retval) \
 	ident *id = idents->access(name); \
     if(!id || id->type!=vartype) return retval;
-#define GETVAR(id, name, retval) _GETVAR(id, ID_VAR, name, retval)
 void setvar(const char *name, int i, bool dofunc)
 {
-	GETVAR(id, name, );
+	GETVAR(id, ID_VAR, name, );
     *id->storage.i = clamp(i, id->minval, id->maxval);
     if(dofunc) id->changed();
 }
 void setsvar(const char *name, const char *str, bool dofunc)
 {
-    GETVAR(id, name, );
+    GETVAR(id, ID_SVAR, name, );
     *id->storage.s = exchangestr(*id->storage.s, str);
 	if(dofunc) id->changed();
 }
 int getvar(const char *name)
 {
-	GETVAR(id, name, 0);
+	GETVAR(id, ID_VAR, name, 0);
     return *id->storage.i;
 }
 int getvarmin(const char *name)
 {
-	GETVAR(id, name, 0);
+	GETVAR(id, ID_VAR, name, 0);
     return id->minval;
 }
 int getvarmax(const char *name)
 {
-	GETVAR(id, name, 0);
+	GETVAR(id, ID_VAR, name, 0);
     return id->maxval;
 }
 bool identexists(const char *name) { return idents->access(name)!=NULL; }

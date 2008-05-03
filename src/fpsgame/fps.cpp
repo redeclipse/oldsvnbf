@@ -1141,8 +1141,8 @@ struct GAMECLIENT : igameclient
 
 					vec off;
 					vecfromyawpitch(camera1->yaw, min(camera1->pitch,80.f)+60.f, 1, 0, off);
-					off.x *= camera1->radius;
-					off.y *= camera1->radius;
+					off.x *= camera1->radius-0.5f;
+					off.y *= camera1->radius-0.5f;
 					off.z = max(off.z, 0.f);
 					off.z *= camera1->height*0.5f;
 					off.sub(vec(0, 0, camera1->height*0.5f));
