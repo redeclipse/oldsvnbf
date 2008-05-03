@@ -1029,7 +1029,7 @@ struct skelmodel : animmodel
             loopv(users) users[i]->cleanup();
         }
 
-        skelcacheentry &checkskelcache(const animstate *as, float pitch, const vec &axis, part *p)
+        skelcacheentry &checkskelcache(const animstate *as, float pitch, const vec &axis)
         {
             if(skelcache.empty())
             {
@@ -1491,7 +1491,7 @@ struct skelmodel : animmodel
                 return;
             }
 
-            skelcacheentry &sc = skel->checkskelcache(as, pitch, axis, p);
+            skelcacheentry &sc = skel->checkskelcache(as, pitch, axis);
             int owner = &sc-&skel->skelcache[0];
             vbocacheentry &vc = skel->usegpuskel ? *vbocache : checkvbocache(sc, owner);
             vc.millis = lastmillis;
