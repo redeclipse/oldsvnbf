@@ -4,9 +4,9 @@ struct entities : icliententities
 
 	vector<extentity *> ents;
 
-	IVARP(showentdir, 0, 0, 2);
-	IVARP(showentradius, 0, 0, 2);
-	IVARP(showentlinks, 0, 0, 2);
+	IVARP(showentdir, 0, 1, 3);
+	IVARP(showentradius, 0, 1, 3);
+	IVARP(showentlinks, 0, 1, 3);
 	IVARP(showlighting, 0, 1, 1);
 
 	IVAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
@@ -323,11 +323,10 @@ struct entities : icliententities
 	{
 		fpsentity &f = (fpsentity &)e;
 
+		if(sounds.inrange(f.schan)) removesound(f.schan);
+
 		switch(e.type)
 		{
-			case MAPSOUND:
-				if(sounds.inrange(f.schan)) removesound(f.schan);
-				break;
 			case WEAPON:
 				while (e.attr1 < 0) e.attr1 += NUMGUNS;
 				while (e.attr1 >= NUMGUNS) e.attr1 -= NUMGUNS;
@@ -952,13 +951,13 @@ struct entities : icliententities
 	{
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
-			int level = (editmode ? 1 : ((showentdir()==2 || showentradius()==2 || showentlinks()==2 || dropwaypoints()) ? 2 : 0));
+			int level = (editmode ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || dropwaypoints()) ? 3 : 1));
 			if(level)
 			{
 				renderprimitive(true);
 				loopv(ents)
 				{
-					renderfocus(i, renderentshow(e, entgroup.find(i) >= 0 || enthover == i ? 0 : level));
+					renderfocus(i, renderentshow(e, entgroup.find(i) >= 0 || enthover == i ? 1 : level));
 				}
 				renderprimitive(false);
 			}
