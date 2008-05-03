@@ -785,7 +785,7 @@ void g3d_addgui(g3d_callback *cb)
 {
 	gui &g = guis.add();
 	g.cb = cb;
-	g.origin = camera1->o.add(vec(vec(camera1->vel).normalize()).mul(2.f));
+	g.origin = camera1->o;//.add(vec(vec(camera1->vel).normalize()).mul(2.f));
 	g.dist = camera1->o.dist(g.origin);
 }
 

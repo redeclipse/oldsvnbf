@@ -1101,79 +1101,87 @@ struct GAMECLIENT : igameclient
 			camera1->crouchtime = player1->crouchtime;
 		}
 
-		if(gamethirdperson())
+		if (!editmode)
 		{
-			vec pos;
-
-			vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, pos);
-			camera1->o.x += pos.x*thirdpersondist();
-			camera1->o.y += pos.y*thirdpersondist();
-			camera1->o.z += (pos.z*thirdpersondist())+thirdpersonheight();
-
-			findorientation(player1, pos);
-			vec rot(pos);
-			rot.sub(camera1->o);
-			rot.normalize();
-			vectoyawpitch(rot, camera1->yaw, camera1->pitch);
-		}
-		else
-		{
-			if(camstate == CS_DEAD)
+			if(gamethirdperson())
 			{
-				camera1->o.z -= (player1->height/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
-				camera1->o.z = max(player1->o.z - player1->height + 1.0f, camera1->o.z);
+				vec pos;
+
+				vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, pos);
+				camera1->o.x += pos.x*thirdpersondist();
+				camera1->o.y += pos.y*thirdpersondist();
+				camera1->o.z += (pos.z*thirdpersondist())+thirdpersonheight();
+
+				findorientation(player1, pos);
+				vec rot(pos);
+				rot.sub(camera1->o);
+				rot.normalize();
+				vectoyawpitch(rot, camera1->yaw, camera1->pitch);
 			}
-			else if(camstate == CS_ALIVE)
+			else
 			{
-				if(camera1->crouchtime)
+				if(camstate == CS_DEAD)
 				{
-					float crouching = 0.f;
-
-					if(camera1->crouching) crouching = min(1.0f, (lastmillis-camera1->crouchtime)/200.f);
-					else crouching = max(0.0f, 1.f-((lastmillis-camera1->crouchtime)/200.f));
-
-					camera1->o.z -= camera1->height;
-					camera1->height -= crouching*(1-CROUCHHEIGHT)*camera1->height;
-					camera1->o.z += camera1->height;
+					camera1->o.z -= (player1->height/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
+					camera1->o.z = max(player1->o.z - player1->height + 1.0f, camera1->o.z);
 				}
+				else if(camstate == CS_ALIVE)
+				{
+					if(camera1->crouchtime)
+					{
+						float crouching = 0.f;
 
-				vec off;
-				vecfromyawpitch(camera1->yaw, min(camera1->pitch,80.f)+60.f, 1, 0, off);
-				off.x *= camera1->radius+1.f;
-				off.y *= camera1->radius+1.f;
-				off.z = max(off.z, 0.f);
-				off.z *= camera1->height*0.5f;
-				off.sub(vec(0, 0, camera1->height*0.5f));
-				camera1->o.add(off);
+						if(camera1->crouching) crouching = min(1.0f, (lastmillis-camera1->crouchtime)/200.f);
+						else crouching = max(0.0f, 1.f-((lastmillis-camera1->crouchtime)/200.f));
 
-				vec sway;
-				vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
-				float swayspeed = sqrtf(player1->vel.x*player1->vel.x + player1->vel.y*player1->vel.y);
-				swayspeed = min(4.0f, swayspeed);
-				sway.mul(swayspeed);
-				float swayxy = sinf(swaymillis/115.0f)/100.0f, swayz = cosf(swaymillis/115.0f)/100.0f;
-				swap(sway.x, sway.y);
-				sway.x *= -swayxy;
-				sway.y *= swayxy;
-				sway.z = -fabs(swayspeed*swayz);
-				sway.add(swaydir);
-				camera1->o.add(sway);
+						camera1->o.z -= camera1->height;
+						camera1->height -= crouching*(1-CROUCHHEIGHT)*camera1->height;
+						camera1->o.z += camera1->height;
+					}
+
+					vec off;
+					vecfromyawpitch(camera1->yaw, min(camera1->pitch,80.f)+60.f, 1, 0, off);
+					off.x *= camera1->radius;
+					off.y *= camera1->radius;
+					off.z = max(off.z, 0.f);
+					off.z *= camera1->height*0.5f;
+					off.sub(vec(0, 0, camera1->height*0.5f));
+					camera1->o.add(off);
+
+					vec sway;
+					vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
+					float swayspeed = sqrtf(player1->vel.x*player1->vel.x + player1->vel.y*player1->vel.y);
+					swayspeed = min(4.0f, swayspeed);
+					sway.mul(swayspeed);
+					float swayxy = sinf(swaymillis/115.0f)/100.0f, swayz = cosf(swaymillis/115.0f)/100.0f;
+					swap(sway.x, sway.y);
+					sway.x *= -swayxy;
+					sway.y *= swayxy;
+					sway.z = -fabs(swayspeed*swayz);
+					sway.add(swaydir);
+					camera1->o.add(sway);
+				}
 			}
-		}
 
-		if(camerawobble > 0 && cameratype == lastcam)
-		{
-			float pc = float(min(camerawobble, 100))/100.f;
-			#define wobble (float(rnd(8)-4)*pc)
-			camera1->yaw += wobble;
-			camera1->pitch += wobble;
-			camera1->roll += wobble;
+			if(camerawobble > 0 && cameratype == lastcam)
+			{
+				float pc = float(min(camerawobble, 100))/100.f;
+				#define wobble (float(rnd(8)-4)*pc)
+				camera1->yaw += wobble;
+				camera1->pitch += wobble;
+				camera1->roll += wobble;
+			}
+			else camerawobble = 0;
 		}
-		else camerawobble = 0;
 
 		fixview();
 		fixrange(camera1);
 		findorientation(camera1, worldpos);
+	}
+
+	void setposition(vec &v)
+	{
+		if(player1->state != CS_DEAD) player1->o = v;
 	}
 
 	void adddynlights()

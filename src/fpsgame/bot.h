@@ -48,7 +48,14 @@ struct botclient
 		}
 	}
 
-	bool updatestate(fpsent *d)
+	bool doreset(fpsent *d)
+	{
+		d->stopmoving();
+		d->bot->setstate(BS_WAIT, 0, 100);
+		return true;
+	}
+
+	bool doupdate(fpsent *d)
 	{
 		int node = cl.player1->lastnode;
 		if(cl.et.ents.inrange(node))
@@ -65,7 +72,7 @@ struct botclient
 		return false;
 	}
 
-	bool movestate(fpsent *d, int goal)
+	bool domove(fpsent *d, int goal)
 	{
 		if(cl.et.ents.inrange(goal))
 		{
@@ -108,16 +115,14 @@ struct botclient
 				}
 				case BS_UPDATE:
 				{
-					if(d->state == CS_ALIVE && updatestate(d)) break;
-					d->stopmoving();
-					d->bot->setstate(BS_WAIT, 0, 100);
+					if(d->state == CS_ALIVE && doupdate(d)) break;
+					doreset(d);
 					break;
 				}
 				case BS_MOVE:
 				{
-					if(d->state == CS_ALIVE && movestate(d, bs.goal)) break;
-					d->stopmoving();
-					d->bot->setstate(BS_WAIT, 0, 100);
+					if(d->state == CS_ALIVE && domove(d, bs.goal)) break;
+					doreset(d);
 					break;
 				}
 				case BS_DEFEND:
@@ -137,41 +142,39 @@ struct botclient
 
 	void render()
 	{
-		if(debugbot())
+		if(!debugbot()) return;
+		loopv(cl.players) if(cl.players[i] && cl.players[i]->state == CS_ALIVE)
 		{
-			loopv(cl.players) if(cl.players[i] && cl.players[i]->state == CS_ALIVE)
+			fpsent *d = cl.players[i];
+			if (d->ownernum >= 0 && d->ownernum == cl.player1->clientnum && d->bot)
 			{
-				fpsent *d = cl.players[i];
-				if (d->ownernum >= 0 && d->ownernum == cl.player1->clientnum && d->bot)
+				botstate &bs = d->bot->state.last();
+				const char *bnames[BS_MAX] = {
+					"wait", "update", "move", "defend", "pursue", "attack", "interest"
+				};
+				s_sprintfd(s)("@%s [%d] (%.2f)", bnames[bs.type], bs.goal, max((bs.millis+bs.interval-lastmillis)/1000.f, 0.f));
+				particle_text(vec(d->abovehead()).add(vec(0, 0, 2)), s, 14, 1);
+
+				if(rendernormally)
 				{
-					botstate &bs = d->bot->state.last();
-					const char *bnames[BS_MAX] = {
-						"wait", "update", "move", "defend", "pursue", "attack", "interest"
-					};
-					s_sprintfd(s)("@%s [%d] (%.2f)", bnames[bs.type], bs.goal, max((bs.millis+bs.interval-lastmillis)/1000.f, 0.f));
-					particle_text(vec(d->abovehead()).add(vec(0, 0, 2)), s, 14, 1);
-
-					if(rendernormally)
+					renderprimitive(true);
+					int last = -1;
+					loopv(d->bot->route)
 					{
-						renderprimitive(true);
-						int last = -1;
-						loopv(d->bot->route)
+						if (d->bot->route.inrange(last))
 						{
-							if (d->bot->route.inrange(last))
-							{
-								int index = d->bot->route[i], prev = d->bot->route[last];
+							int index = d->bot->route[i], prev = d->bot->route[last];
 
-								if (cl.et.ents.inrange(index) && cl.et.ents.inrange(prev))
-								{
-									fpsentity &e = (fpsentity &) *cl.et.ents[index], &f = (fpsentity &) *cl.et.ents[prev];
-									renderline(vec(f.o).add(vec(0, 0, 1)), vec(e.o).add(vec(0, 0, 1)), 128.f, 64.f, 64.f, false);
-								}
+							if (cl.et.ents.inrange(index) && cl.et.ents.inrange(prev))
+							{
+								fpsentity &e = (fpsentity &) *cl.et.ents[index], &f = (fpsentity &) *cl.et.ents[prev];
+								renderline(vec(f.o).add(vec(0, 0, 1)), vec(e.o).add(vec(0, 0, 1)), 128.f, 64.f, 64.f, false);
 							}
-							last = i;
 						}
-						renderline(d->o, d->bot->targpos, 64.f, 128.f, 64.f, false);
-						renderprimitive(false);
+						last = i;
 					}
+					renderline(d->o, d->bot->targpos, 64.f, 128.f, 64.f, false);
+					renderprimitive(false);
 				}
 			}
 		}

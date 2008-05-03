@@ -17,7 +17,7 @@ Please note that Blood Frontier is in early alpha stages, and as such, is not
 If you are interested in development, or require technical support please visit
 	the Blood Frontier discussion group at:
 	
-		http://groups.google.com/bloodfrontier
+		http://groups.google.com/group/bloodfrontier
 
 The source code, license, and related documentation can be found in the 'src'
 	subdirectory of this archive.
