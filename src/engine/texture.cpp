@@ -834,6 +834,7 @@ Texture *loadthumbnail(Slot &slot)
             t = newtexture(NULL, name.getbuf(), s, 0, false, false, true);
 			t->xs = xs;
 			t->ys = ys;
+            slot.thumbnail = t;
 		}
 	}
 	return t;
