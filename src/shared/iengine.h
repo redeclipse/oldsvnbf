@@ -226,6 +226,8 @@ extern void putint(ucharbuf &p, int n);
 extern int getint(ucharbuf &p);
 extern void putuint(ucharbuf &p, int n);
 extern int getuint(ucharbuf &p);
+extern void putfloat(ucharbuf &p, float f);
+extern float getfloat(ucharbuf &p);
 extern void sendstring(const char *t, ucharbuf &p);
 extern void getstring(char *t, ucharbuf &p, int len = MAXTRANS);
 extern void filtertext(char *dst, const char *src, bool whitespace = true, int len = sizeof(string)-1);

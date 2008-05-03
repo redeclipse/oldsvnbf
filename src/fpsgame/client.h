@@ -228,7 +228,6 @@ struct clientcom : iclientcom
 					numi += n;
 					break;
 				}
-
 				case 'i':
 				{
 					int n = isdigit(*fmt) ? *fmt++-'0' : 1;
@@ -236,6 +235,13 @@ struct clientcom : iclientcom
 					numi += n;
 					break;
 				}
+                case 'f':
+                {
+                    int n = isdigit(*fmt) ? *fmt++-'0' : 1;
+                    loopi(n) putfloat(p, (float)va_arg(args, double));
+                    numi += n;
+                    break;
+                }
 				case 's': sendstring(va_arg(args, const char *), p); nums++; break;
 			}
 			va_end(args);
