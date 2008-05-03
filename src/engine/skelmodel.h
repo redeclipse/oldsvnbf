@@ -1031,19 +1031,20 @@ struct skelmodel : animmodel
 
         skelcacheentry &checkskelcache(const animstate *as, float pitch, const vec &axis, part *p)
         {
-            if(skelcache.empty()) 
+            if(skelcache.empty())
             {
                 usegpuskel = gpuaccelerate();
                 usematskel = matskel!=0;
             }
 
-            uchar *partmask = ((skelpart *)p)->partmask;
+            int numanimparts = ((skelpart *)as->owner)->numanimparts;
+            uchar *partmask = ((skelpart *)as->owner)->partmask;
             skelcacheentry *sc = NULL;
             bool match = false;
             loopv(skelcache)
             {
                 skelcacheentry &c = skelcache[i];
-                loopj(p->numanimparts) if(c.as[j]!=as[j]) goto mismatch;
+                loopj(numanimparts) if(c.as[j]!=as[j]) goto mismatch;
                 if(c.pitch != pitch || c.partmask != partmask) goto mismatch;
                 match = true;
                 sc = &c;
@@ -1054,11 +1055,11 @@ struct skelmodel : animmodel
             if(!sc) sc = &skelcache.add();
             if(!match)
             {
-                loopi(p->numanimparts) sc->as[i] = as[i];
+                loopi(numanimparts) sc->as[i] = as[i];
                 sc->pitch = pitch;
                 sc->partmask = partmask;
-                if(matskel) interpmatbones(as, pitch, axis, p->numanimparts, partmask, *sc);
-                else interpbones(as, pitch, axis, p->numanimparts, partmask, *sc);
+                if(matskel) interpmatbones(as, pitch, axis, numanimparts, partmask, *sc);
+                else interpbones(as, pitch, axis, numanimparts, partmask, *sc);
             }
             sc->millis = lastmillis;
             return *sc;

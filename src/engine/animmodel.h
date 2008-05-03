@@ -53,8 +53,11 @@ struct animmodel : model
         bool operator!=(const animpos &a) const { return fr1!=a.fr1 || fr2!=a.fr2 || (fr1!=fr2 && t!=a.t); }
     };
 
+    struct part;
+
     struct animstate
     {
+        part *owner;
         int anim;
         animpos cur, prev;
         float interp;
@@ -63,7 +66,6 @@ struct animmodel : model
         bool operator!=(const animstate &a) const { return cur!=a.cur || (interp<1 ? interp!=a.interp || prev!=a.prev : a.interp<1); }
     };
 
-    struct part;
     struct linkedpart;
     struct mesh;
 
@@ -754,6 +756,7 @@ struct animmodel : model
                 int interp = d && index+numanimparts<=MAXANIMPARTS ? index+i : -1;
                 if(!calcanim(i, anim, speed, basetime, d, interp, info)) return;
                 animstate &p = as[i];
+                p.owner = this;
                 p.anim = info.anim;
                 p.cur.setframes(info);
                 p.interp = 1;
