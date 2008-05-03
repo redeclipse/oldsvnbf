@@ -70,36 +70,12 @@ struct igameclient
     virtual void adddynlights() {}
     virtual void particletrack(physent *owner, vec &o, vec &d) {}
 
-	virtual void fixview()
-	{
-		extern physent *camera1;
-		const float MAXPITCH = 90.0f;
-		if(camera1->pitch>MAXPITCH) camera1->pitch = MAXPITCH;
-		if(camera1->pitch<-MAXPITCH) camera1->pitch = -MAXPITCH;
-		while(camera1->yaw<0.0f) camera1->yaw += 360.0f;
-		while(camera1->yaw>=360.0f) camera1->yaw -= 360.0f;
-	}
+	virtual void fixview() = 0;
+	virtual void mousemove(int dx, int dy) = 0;
+	virtual void recomputecamera() = 0;
+	virtual void setposition(vec &v) = 0;
 
-	virtual void mousemove(int dx, int dy)
-	{
-		extern physent *camera1;
-		const float SENSF = 33.0f;	 // try match quake sens
-		camera1->yaw += (dx/SENSF);
-		camera1->pitch -= (dy/SENSF);
-		fixview();
-	}
-
-	virtual void recomputecamera()
-	{
-		fixview();
-	}
-
-	virtual bool wantcrosshair()
-	{
-		extern int hidehud;
-		extern bool menuactive();
-		return !hidehud && !menuactive();
-	}
+	virtual bool wantcrosshair() = 0;
 
 	virtual bool gamethirdperson() { return false; } ;
 	virtual bool gethudcolour(vec &colour) { return false; }

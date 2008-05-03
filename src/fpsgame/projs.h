@@ -121,7 +121,7 @@ struct projectiles
             {
 				if (guntype[gun].fsound >= 0 && (!sounds.inrange(schan) || !sounds[schan].inuse))
 				{
-					schan = playsound(guntype[gun].fsound, &o);
+					schan = playsound(guntype[gun].fsound, &o, 255, 0, 0, SND_LOOP);
 				}
             	regular_particle_splash(5, 1, 500, o);
             }
@@ -158,7 +158,7 @@ struct projectiles
 					vel.apply(pos, elasticity);
 					if (hitplayer) vel.influence(pos, hitplayer->vel, elasticity);
 
-					if (movement > 4.0f)
+					if (movement > 8.0f)
 					{
 						int mag = int(vel.magnitude()), vol = clamp(mag*10, 1, 255);
 

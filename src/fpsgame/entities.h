@@ -38,7 +38,7 @@ struct entities : icliententities
 			fpsentity &e = (fpsentity &)*ents[i];
 			if(e.type == MAPSOUND && !e.links.length() && mapsounds.inrange(e.attr1) && (!sounds.inrange(e.schan) || !sounds[e.schan].inuse))
 			{
-				e.schan = playsound(e.attr1, &e.o, e.attr4, e.attr2, e.attr3, SND_MAP);
+				e.schan = playsound(e.attr1, &e.o, e.attr4, e.attr2, e.attr3, SND_MAP|SND_LOOP);
 			}
 		}
 	}
@@ -399,7 +399,7 @@ struct entities : icliententities
 			if(msg) conoutf("entity %d [%s] and %d [%s] are not linkable", index, enttype[ents[index]->type].name, node, enttype[ents[node]->type].name);
 			return false;
 		}
-		if(msg) conoutf("entity %d and %d are unable to be linked as one does not seem to exist");
+		if(msg) conoutf("entity %d and %d are unable to be linked as one does not seem to exist", index, node);
 		return false;
 	}
 
@@ -463,13 +463,13 @@ struct entities : icliententities
 
 	void linkclear(int n)
 	{
-		loopv(ents) if(enttype[ents[i]->type].links)
+		loopvj(ents) if(enttype[ents[j]->type].links)
 		{
-			fpsentity &e = (fpsentity &)*ents[i];
+			fpsentity &e = (fpsentity &)*ents[j];
 
-			loopvj(e.links) if(e.links[j] == n)
+			loopvrev(e.links) if(e.links[i] == n)
 			{
-				e.links.remove(j);
+				e.links.remove(i);
 				break;
 			}
 		}
@@ -684,7 +684,7 @@ struct entities : icliententities
 				loopi(links)
 				{
 					int ln = gzgetint(g);
-					if(canlink(id, ln, true)) f.links.add(ln);
+					f.links.add(ln);
 				}
 				if(verbose >= 2) conoutf("entity %d loaded %d link(s)", id, links);
 			}
@@ -721,12 +721,11 @@ struct entities : icliententities
 
 			loopv(ents)
 			{
-				fpsentity &f = (fpsentity &)e;
+				fpsentity &f = (fpsentity &)*ents[i];
 
 				if(f.type != NOTUSED)
 				{
-					if(enttype[f.type].links)
-						if(d.links.find(i) >= 0)
+					if(enttype[f.type].links && d.links.find(i) >= 0)
 							links.add(n); // align to indices
 
 					n++;
@@ -810,6 +809,12 @@ struct entities : icliententities
 				else if(e.type == WAYPOINT) e.attr1 = enttype[WAYPOINT].radius;
 
 			}
+		}
+
+		loopvj(ents)
+		{
+			fpsentity &e = (fpsentity &)*ents[j];
+			loopvrev(e.links) if (!canlink(j, e.links[i], true)) e.links.remove(i);
 		}
 	}
 
@@ -980,7 +985,7 @@ struct entities : icliententities
 			fpsentity &e = (fpsentity &)*ents[i];
 			if (e.type == NOTUSED) continue;
 
-			if (e.type == PARTICLES && (!e.links.length() || lastmillis-e.lastemit < 1000) && e.o.dist(camera1->o) <= maxparticledistance)
+			if (e.type == PARTICLES && (!e.links.length() || lastmillis-e.lastemit < 500) && e.o.dist(camera1->o) <= maxparticledistance)
 				makeparticles((entity &)e);
 
 			if (editmode)

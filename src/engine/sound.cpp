@@ -230,7 +230,7 @@ int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 			while(chan >= sounds.length()) sounds.add().inuse = false;
 			sounds[chan].slot = &soundset[n];
 			sounds[chan].vol = vol > 0 && vol < 255 ? vol : 255;
-			sounds[chan].maxrad = maxrad > 0 ? maxrad : 128;
+			sounds[chan].maxrad = maxrad > 0 ? maxrad : 1024;
 			sounds[chan].minrad = minrad > 0 ? minrad : 2;
 			sounds[chan].inuse = true;
 			sounds[chan].flags = flags;

@@ -52,6 +52,6 @@ extern void checksound();
 extern int addsound(const char *name, int vol, vector<soundslot> &sounds);
 extern void removesound(int c);
 extern void clearsound();
-extern int playsound(int n, vec *pos = NULL, int vol = 255, int maxrad = 128, int minrad = 2, int flags = 0);
+extern int playsound(int n, vec *pos = NULL, int vol = 255, int maxrad = 1024, int minrad = 2, int flags = 0);
 
 extern int soundvol, musicvol, soundmono, soundchans, soundbufferlen, soundfreq, maxsoundsatonce;
