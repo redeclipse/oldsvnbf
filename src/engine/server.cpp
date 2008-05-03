@@ -123,6 +123,22 @@ int getuint(ucharbuf &p)
 	return n;
 }
 
+void putfloat(ucharbuf &p, float f)
+{
+    uchar *c = (uchar *)&f;
+    endianswap(c, sizeof(float), 1);
+    loopi(sizeof(float)) p.put(c[i]);
+}
+
+float getfloat(ucharbuf &p)
+{
+    float f;
+    uchar *c = (uchar *)&f;
+    loopi(sizeof(float)) c[i] = p.get();
+    endianswap(c, sizeof(float), 1);
+    return f;
+}
+
 void sendstring(const char *t, ucharbuf &p)
 {
 	while(*t) putint(p, *t++);
@@ -274,7 +290,16 @@ void sendf(int cn, int chan, const char *format, ...)
 			loopi(n) putint(p, va_arg(args, int));
 			break;
 		}
+
+        case 'f':
+        {
+            int n = isdigit(*format) ? *format++-'0' : 1;
+            loopi(n) putfloat(p, (float)va_arg(args, double));
+            break;
+        }
+
 		case 's': sendstring(va_arg(args, const char *), p); break;
+
 		case 'm':
 		{
 			int n = va_arg(args, int);
