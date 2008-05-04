@@ -546,19 +546,21 @@ struct GAMECLIENT : igameclient
     {
         switch(index)
         {
-            case 1: return "textures/crosshair_team.png";
-            case 2: return "textures/crosshair_hit.png";
-            case 3: return "textures/crosshair_zoom.png";
-            default: return "textures/crosshair.png";
+            case 0: return "textures/guicursor.png";
+            case 1: return "textures/crosshair.png";
+            case 2: return "textures/crosshair_team.png";
+            case 3: return "textures/crosshair_hit.png";
+            case 4: return "textures/crosshair_zoom.png";
+            default: return "";
         }
     }
 
     int selectcrosshair(float &r, float &g, float &b)
     {
-        if(player1->state!=CS_ALIVE) return 0;
-
-        int c = 0;
-        if(fov < 90) c = 3;
+        int c = 1;
+        if(menuactive()) c = 0;
+        else if(!crosshair() || hidehud || player1->state == CS_DEAD) c = -1;
+        else if(fov < 90) c = 3;
         else if(lastmillis - lasthit < hitcrosshair())
         {
         	c = 2;
@@ -574,13 +576,15 @@ struct GAMECLIENT : igameclient
                 r = g = 0;
             }
         }
-
-        if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
-        else if(!c && r && g && b && !editmode && !m_insta(gamemode, mutators))
-        {
-            if(player1->health<=25) { r = 1; g = b = 0; }
-            else if(player1->health<=50) { r = 1; g = 0.5f; b = 0; }
-        }
+		if(c > 0)
+		{
+			if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
+			else if(!c && r && g && b && !editmode && !m_insta(gamemode, mutators))
+			{
+				if(player1->health<=25) { r = 1; g = b = 0; }
+				else if(player1->health<=50) { r = 1; g = 0.5f; b = 0; }
+			}
+		}
         return c;
     }
 
@@ -651,7 +655,7 @@ struct GAMECLIENT : igameclient
 	{
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
-		int hoff = h*3-h*3/4;
+		int hoff = h*3-h*3/4-FONTH/2;
 
 		char *command = getcurcommand();
 		if(command) rendercommand(FONTH/2, hoff, h*3-FONTH);
@@ -667,14 +671,14 @@ struct GAMECLIENT : igameclient
 			int fps, bestdiff, worstdiff;
 			getfps(fps, bestdiff, worstdiff);
 			#if 0
-			if(showfpsrange()) draw_textx("%d+%d-%d:%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff, perflevel);
-			else draw_textx("%d:%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, perflevel);
+			if(showfpsrange()) draw_textx("%d+%d-%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff, perflevel);
+			else draw_textx("%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, perflevel);
 			#else
-			if(showfpsrange()) draw_textx("%d+%d-%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff);
-			else draw_textx("%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps);
+			if(showfpsrange()) draw_textx("%d+%d-%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff);
+			else draw_textx("%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps);
 			#endif
 
-			if(editmode || showeditstats())
+			if((editmode || showeditstats()) && lastmillis-maptime > CARDTIME+CARDFADE)
 			{
 				static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
 				if(lastmillis - laststats >= statrate())
@@ -811,7 +815,7 @@ struct GAMECLIENT : igameclient
 						settexture("textures/barv.png");
 						glColor4f(glow, 0.f, 0.f, pulse);
 
-						int rw = oy/5/4, rx = oy/5+FONTH/2, rh = oy/5, ry = oy-rh-4, ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
+						int rw = oy/5/4, rx = oy/5+FONTH/2, rh = oy/5, ry = oy-rh-(FONTH/4), ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
 						glBegin(GL_QUADS);
 						glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
 						glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
@@ -854,9 +858,9 @@ struct GAMECLIENT : igameclient
 					if(m_capture(gamemode)) cpc.drawhud(ox, oy);
 					else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
 					drawblips(rx, ry, rs);
-
-					drawhudelements(w, h);
 				}
+
+				drawhudelements(w, h);
 				glDisable(GL_BLEND);
 			}
 		}
@@ -1200,13 +1204,6 @@ struct GAMECLIENT : igameclient
 	{
 		pj.adddynlights();
 		et.adddynlights();
-	}
-
-	bool wantcrosshair()
-	{
-		return (crosshair() &&
-			!(hidehud || cc.spectator || player1->state == CS_DEAD)) ||
-			menuactive();
 	}
 
 	bool gamethirdperson()
