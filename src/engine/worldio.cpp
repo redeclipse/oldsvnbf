@@ -365,11 +365,11 @@ void save_world(const char *mname, bool nolms)
 	// world variables
 	int numvars = 0, vars = 0;
 	enumerate(*idents, ident, id, {
-		if((id.type == ID_VAR || id.type == ID_SVAR) && id.world && strlen(id.name)) numvars++;
+		if((id.type == ID_VAR || id.type == ID_FVAR || id.type == ID_SVAR) && id.world && strlen(id.name)) numvars++;
 	});
 	gzputint(f, numvars);
 	enumerate(*idents, ident, id, {
-		if((id.type == ID_VAR || id.type == ID_SVAR) && id.world && strlen(id.name))
+		if((id.type == ID_VAR || id.type == ID_FVAR || id.type == ID_SVAR) && id.world && strlen(id.name))
 		{
 			vars++;
 			if(verbose >= 2) show_out_of_renderloop_progress(float(vars)/float(numvars), "saving world variables...");
@@ -380,6 +380,9 @@ void save_world(const char *mname, bool nolms)
 			{
 				case ID_VAR:
 					gzputint(f, *id.storage.i);
+					break;
+				case ID_FVAR:
+					gzputfloat(f, *id.storage.f);
 					break;
 				case ID_SVAR:
 					gzputint(f, (int)strlen(*id.storage.s));
@@ -526,31 +529,49 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 		if(hdr.version <= 24) s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
 
-		if(hdr.version >= 25)
+		if(verbose >= 2) conoutf("loading v%d map from %s game v%d", hdr.version, hdr.gameid, hdr.gamever);
+
+		if(hdr.version >= 25 || (hdr.version == 24 && hdr.gamever >= 44))
 		{
-			int numvars = hdr.version >= 26 ? gzgetint(f) : gzgetc(f), vars = 0;
+			int numvars = hdr.version >= 25 ? gzgetint(f) : gzgetc(f), vars = 0;
 			show_out_of_renderloop_progress(0, "loading variables...");
 			loopi (numvars)
 			{
 				vars++;
 				if(verbose >= 2) show_out_of_renderloop_progress(float(i)/float(vars), "loading variables...");
-				int len = hdr.version >= 26 ? gzgetint(f) : gzgetc(f);
+				int len = hdr.version >= 25 ? gzgetint(f) : gzgetc(f);
 				if(len)
 				{
 					string vname;
 					gzread(f, vname, len+1);
 					ident *id = idents->access(vname);
-					int type = hdr.version >= 28 ? gzgetint(f) : (id ? id->type : ID_VAR);
+					bool proceed = true;
+					int type = hdr.version >= 28 ? gzgetint(f)+(hdr.version >= 29 ? 0 : 1) : (id ? id->type : ID_VAR);
+					if(type != id->type)
+					{
+						if(hdr.version <= 28 && id->type == ID_FVAR && type == ID_VAR)
+							type = ID_FVAR;
+						else proceed = false;
+					}
+					if(!id || !id->world) proceed = false;
+
 					switch(type)
 					{
 						case ID_VAR:
 						{
-							int val = gzgetint(f);
-							if(!id || !id->world || id->maxval < id->minval) break;
-							if(val > id->maxval) val = id->maxval;
-							else if(val < id->minval) val = id->minval;
-							setvar(vname, val, true);
-							if(verbose >= 3) conoutf("%s set to %d", vname, val);
+							int val = hdr.version >= 25 ? gzgetint(f) : gzgetc(f);
+							if(proceed)
+							{
+								if(val > id->maxval) val = id->maxval;
+								else if(val < id->minval) val = id->minval;
+								setvar(vname, val, true);
+							}
+							break;
+						}
+						case ID_FVAR:
+						{
+							float val = hdr.version >= 29 ? gzgetfloat(f) : float(gzgetint(f))/100.f;
+							if(proceed) setfvar(vname, val, true);
 							break;
 						}
 						case ID_SVAR:
@@ -558,13 +579,21 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 							int slen = gzgetint(f);
 							string val;
 							gzread(f, val, slen+1);
-							if(!id || !id->world) break;
-							setsvar(vname, val, true);
-							if(verbose >= 3) conoutf("%s set to %s", vname, val);
+							if(proceed) setsvar(vname, val, true);
 							break;
 						}
-						default: break;
+						default:
+						{
+							if(hdr.version <= 27)
+							{
+								if(hdr.version >= 25) gzgetint(f);
+								else gzgetc(f);
+							}
+							proceed = false;
+							break;
+						}
 					}
+					if(!proceed) conoutf("WARNING: ignoring variable %s stored in map", vname);
 				}
 			}
 			if(verbose >= 2) conoutf("loaded %d variables", vars);
@@ -575,7 +604,6 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 			conoutf("WARNING: loading map from %s game type in %s, ignoring game specific data", hdr.gameid, sv->gameid());
 			samegame = false;
 		}
-		else if(verbose >= 2) conoutf("loading map from %s game v%d", hdr.gameid, hdr.gamever);
 
 		maptype = MAP_BFGZ;
 	}

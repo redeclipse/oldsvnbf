@@ -831,6 +831,22 @@ struct clientcom : iclientcom
 				break;
 			}
 
+			case SV_EDITFVAR:
+			{
+				if (!d) return;
+				getstring(text, p);
+				float val = getfloat(p);
+				ident *id = idents->access(text);
+
+				if (id->type == ID_FVAR && id->world)
+				{
+					setfvar(text, val, true);
+
+					conoutf("%s updated the value of %s to %f", d->name, id->name, *id->storage.f);
+				}
+				break;
+			}
+
 			case SV_EDITSVAR:
 			{
 				if (!d) return;

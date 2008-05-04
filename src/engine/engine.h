@@ -92,8 +92,6 @@ extern int curtime, lastmillis, totalmillis;
 extern SDL_Surface *screen;
 extern int zpass, glowpass;
 
-extern vector<int> entgroup;
-
 // rendertext
 struct font
 {
@@ -495,6 +493,7 @@ extern void loadsky(char *basename);
 // main
 extern void setcaption(const char *text);
 extern int grabmouse, perflevel, colorpos;
+extern char colorstack[10];
 extern int getmatvec(vec v);
 
 // editing

@@ -12,7 +12,7 @@ static struct gui *windowhit = NULL;
 
 //text field state - only one ever active/focused
 static string fieldname, fieldtext;  //copy of while focused
-static int fieldpos = -1, fieldlen = 0; //-1=no focus, -2=wanting to commit
+static int fieldpos = -1, fieldlen = 0, fieldwidth; //fieldpos: -1=no focus, -2=wanting to commit
 static bool fieldactive;
 
 bool menukey(int code, bool isdown, int cooked)
@@ -31,6 +31,8 @@ bool menukey(int code, bool isdown, int cooked)
 		case SDLK_END:
 		case SDLK_DELETE:
 		case SDLK_BACKSPACE:
+        case SDLK_UP:
+        case SDLK_DOWN:
 		case SDLK_LEFT:
 		case SDLK_RIGHT:
 		case SDLK_TAB:
@@ -49,6 +51,24 @@ bool menukey(int code, bool isdown, int cooked)
 		case SDLK_END:
 			fieldpos = len;
 			break;
+        case SDLK_UP:
+            if(fieldwidth != -1)
+            {
+                int cx, cy; 
+                text_pos(fieldtext+1, fieldpos, cx, cy, fieldwidth);
+                cy -= FONTH;
+                fieldpos = text_visible(fieldtext, cx, cy, fieldwidth);
+            } 
+            break;
+        case SDLK_DOWN:
+            if(fieldwidth != -1)
+            {
+                int cx, cy; 
+                text_pos(fieldtext+1, fieldpos, cx, cy, fieldwidth);
+                cy += FONTH;
+                fieldpos = text_visible(fieldtext, cx, cy, fieldwidth);
+            }
+            break;
 		case SDLK_LEFT:
 			if(fieldpos > 0) fieldpos--;
 			break;
@@ -350,6 +370,7 @@ struct gui : g3d_gui
 			}
 			if(editing)
 			{
+                fieldwidth = maxwidth;
                 if(fieldpos==-2 || !hit) // commit field if user pressed enter or wandered out of focus
                 {
                     result = fieldtext;
@@ -360,7 +381,7 @@ struct gui : g3d_gui
                 else fieldactive = true;
 			}
 			if(editing && hit && (mousebuttons&G3D_PRESSED)) //mouse request position
-                fieldpos = text_visible(fieldtext, int(floor(hitx-(curx+FONTW/2)))); /* @TODO fix for multiple lines */
+                fieldpos = text_visible(fieldtext, int(floor(hitx-(curx+FONTW/2))), int(floor(hity-cury)), maxwidth); 
 
 			notextureshader->set();
 			glDisable(GL_TEXTURE_2D);
@@ -372,8 +393,7 @@ struct gui : g3d_gui
 			glEnable(GL_TEXTURE_2D);
 			defaultshader->set();
 
-            draw_text(editing ? fieldtext : (result ? result : initval), curx+FONTW/2, cury);
-            //draw_text(editing ? fieldtext : (result ? result : initval), curx+FONTW/2, cury, color>>16, (color>>8)&0xFF, color&0xFF, 0xFF, (editing && hit)?fieldpos:-1, maxwidth);
+            draw_text(editing ? fieldtext : (result ? result : initval), curx+FONTW/2, cury, color>>16, (color>>8)&0xFF, color&0xFF, 0xFF, true, (editing && hit)?fieldpos:-1, maxwidth);
 		}
     	layout(w, h);
 		return result;

@@ -423,9 +423,9 @@ void gl_checkextensions()
     hwtexsize = val;
 }
 
-extern int polygonoffsetfactor, polygonoffsetunits;
-VARF(polygonoffsetfactor, 1-INT_MAX, -300, INT_MAX-1, glPolygonOffset(polygonoffsetfactor/100.f, polygonoffsetunits/100.f));
-VARF(polygonoffsetunits, 1-INT_MAX, -300, INT_MAX-1, glPolygonOffset(polygonoffsetfactor/100.f, polygonoffsetunits/100.f));
+extern float polygonoffsetfactor, polygonoffsetunits;
+FVARF(polygonoffsetfactor, -3.0f, glPolygonOffset(polygonoffsetfactor, polygonoffsetunits));
+FVARF(polygonoffsetunits, -3.0f, glPolygonOffset(polygonoffsetfactor, polygonoffsetunits));
 
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
@@ -449,7 +449,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glPolygonOffset(polygonoffsetfactor/100.f, polygonoffsetunits/100.f);
+    glPolygonOffset(polygonoffsetfactor, polygonoffsetunits);
 
 	glCullFace(GL_FRONT);
 	glEnable(GL_CULL_FACE);
@@ -1406,8 +1406,8 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 	defaultshader->set();
 
 	glDisable(GL_BLEND);
-	cl->drawhud(w, h); // can make more dramatic changes this way without getting in the way
 	g3d_render();
+	cl->drawhud(w, h); // can make more dramatic changes this way without getting in the way
 
 	glDisable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);

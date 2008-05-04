@@ -309,7 +309,7 @@ vector<SDL_Event> events;
 
 void pushevent(const SDL_Event &e)
 {
-    events.add(e); 
+    events.add(e);
 }
 
 bool interceptkey(int sym)
@@ -612,6 +612,8 @@ int main(int argc, char **argv)
 	#endif
 
 	char *initscript = NULL;
+	colorpos = 0; // last but not least.
+	colorstack[0] = 'c'; //indicate user color
 
 	initing = INIT_RESET;
 	addpackagedir("data");
@@ -753,6 +755,7 @@ int main(int argc, char **argv)
 		}
 		frames++;
 		colorpos = 0; // last but not least.
+		colorstack[0] = 'c'; //indicate user color
 	}
 
 	ASSERT(0);

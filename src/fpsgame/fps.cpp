@@ -612,7 +612,7 @@ struct GAMECLIENT : igameclient
 		int hoff = h*3-h*3/4;
 
 		char *command = getcurcommand();
-		if(command) rendercommand(FONTH/2, hoff);
+		if(command) rendercommand(FONTH/2, hoff, h*3-FONTH);
 		hoff += FONTH;
 
 		drawcrosshair(w, h);
@@ -625,11 +625,11 @@ struct GAMECLIENT : igameclient
 			int fps, bestdiff, worstdiff;
 			getfps(fps, bestdiff, worstdiff);
 			#if 0
-			if(showfpsrange()) draw_textx("%d+%d-%d:%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, bestdiff, worstdiff, perflevel);
-			else draw_textx("%d:%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, perflevel);
+			if(showfpsrange()) draw_textx("%d+%d-%d:%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff, perflevel);
+			else draw_textx("%d:%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, perflevel);
 			#else
-			if(showfpsrange()) draw_textx("%d+%d-%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, fps, bestdiff, worstdiff);
-			else draw_textx("%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, fps);
+			if(showfpsrange()) draw_textx("%d+%d-%d", w*3-4, 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff);
+			else draw_textx("%d", w*3-6, 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps);
 			#endif
 
 			if(editmode || showeditstats())
@@ -654,9 +654,9 @@ struct GAMECLIENT : igameclient
 
 				loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
 
-				draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", h*3/5+8, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
-				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", h*3/5+8, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
-				draw_textf("cube %s%d", h*3/5+8, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
+				draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", h*3/5+FONTH/2, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
+				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", h*3/5+FONTH/2, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
+				draw_textf("cube %s%d", h*3/5+FONTH/2, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
 			}
 		}
 
@@ -665,7 +665,7 @@ struct GAMECLIENT : igameclient
 			char *editinfo = executeret("edithud");
 			if(editinfo)
 			{
-				draw_text(editinfo, h*3/5+8, hoff); hoff += FONTH;
+				draw_text(editinfo, h*3/5+FONTH/2, hoff); hoff += FONTH;
 				DELETEA(editinfo);
 			}
 		}
@@ -703,14 +703,14 @@ struct GAMECLIENT : igameclient
 
 					rendericon("textures/logo.jpg", ox+20-x, oy-75, 64, 64);
 
-					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, title);
+					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, title);
 
 					glColor4f(1.f, 1.f, 1.f, fade);
 					rendericon("textures/overlay.png", ox+20-x, oy-260, 144, 144);
 					if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
 						rendericon("textures/logo.jpg", ox+20-x, oy-260, 144, 144);
 
-					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, sv->gamename(gamemode, mutators));
+					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, sv->gamename(gamemode, mutators));
 				}
 				else
 				{
@@ -769,7 +769,7 @@ struct GAMECLIENT : igameclient
 						settexture("textures/barv.png");
 						glColor4f(glow, 0.f, 0.f, pulse);
 
-						int rw = oy/5/4, rx = oy/5+8, rh = oy/5, ry = oy-rh-4, ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
+						int rw = oy/5/4, rx = oy/5+FONTH/2, rh = oy/5, ry = oy-rh-4, ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
 						glBegin(GL_QUADS);
 						glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
 						glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
@@ -779,7 +779,7 @@ struct GAMECLIENT : igameclient
 
 						if(isgun(d->gunselect) && d->ammo[d->gunselect] > 0)
 						{
-							draw_textx("%d", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, d->ammo[d->gunselect]);
+							draw_textx("%d", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect]);
 						}
 						else
 						{
@@ -793,7 +793,7 @@ struct GAMECLIENT : igameclient
 						if(wait)
 						{
 							float c = float(wait)/1000.f;
-							draw_textx("Fragged! Down for %.1fs", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, c);
+							draw_textx("Fragged! Down for %.1fs", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, c);
 						}
 						else
 							draw_textx("Fragged! Press attack to respawn", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
@@ -894,6 +894,11 @@ struct GAMECLIENT : igameclient
 	void editvar(const char *name, int value)
 	{
         if(m_edit(gamemode)) cc.addmsg(SV_EDITVAR, "rsi", name, value);
+	}
+
+	void editfvar(const char *name, float value)
+	{
+        if(m_edit(gamemode)) cc.addmsg(SV_EDITVAR, "rsf", name, value);
 	}
 
 	void editsvar(const char *name, char *value)

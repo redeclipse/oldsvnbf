@@ -958,6 +958,7 @@ struct GAMESERVER : igameserver
 		#define QUEUE_MSG { while(curmsg<p.length()) ci->messages.add(p.buf[curmsg++]); }
 		#define QUEUE_INT(n) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(5); putint(buf, n); ci->messages.addbuf(buf); }
 		#define QUEUE_UINT(n) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(4); putuint(buf, n); ci->messages.addbuf(buf); }
+		#define QUEUE_FLT(n) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(4); putfloat(buf, n); ci->messages.addbuf(buf); }
 		#define QUEUE_STR(text) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(2*strlen(text)+1); sendstring(text, buf); ci->messages.addbuf(buf); }
 		int curmsg;
         while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci))
@@ -1454,16 +1455,30 @@ struct GAMESERVER : igameserver
 
 			case SV_EDITVAR:
 			{
+				QUEUE_INT(SV_EDITVAR);
 				getstring(text, p);
-				getint(p);
+				QUEUE_STR(text);
+				QUEUE_INT(getint(p));
+				break;
+			}
+
+			case SV_EDITFVAR:
+			{
+				QUEUE_INT(SV_EDITFVAR);
+				getstring(text, p);
+				QUEUE_STR(text);
+				QUEUE_FLT(getfloat(p));
 				break;
 			}
 
 			case SV_EDITSVAR:
 			case SV_EDITALIAS:
 			{
+				QUEUE_INT(type);
 				getstring(text, p);
+				QUEUE_STR(text);
 				getstring(text, p);
+				QUEUE_STR(text);
 				break;
 			}
 

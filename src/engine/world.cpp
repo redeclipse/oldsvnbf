@@ -510,7 +510,11 @@ void entpush(int *dir)
 	else
 		groupedit(e.o[d] += float(s*sel.grid));
 	if(entitysurf==1)
-		camera1->o[d] += float(s*sel.grid);
+	{
+		vec v(camera1->o);
+		v[d] += s*sel.grid;
+		cl->setposition(v);
+	}
 }
 
 VAR(entautoviewdist, 0, 25, 100);
@@ -527,7 +531,7 @@ void entautoview(int *dir)
 	if(t<0 && s>0) s = entgroup.length() - s;
 	entfocus(entgroup[s],
 		v.add(e.o);
-		camera1->o = v;
+		cl->setposition(v);
 	);
 }
 
@@ -788,11 +792,23 @@ void resetmap()
 			switch (id.type)
 			{
 				case ID_VAR:
-					setvar(id.name, id.val.i, true);
+				{
+					int val = id.val.i;
+					setvar(id.name, val, true);
 					break;
+				}
+				case ID_FVAR:
+				{
+					float val = id.val.f;
+					setfvar(id.name, val, true);
+					break;
+				}
 				case ID_SVAR:
-					setsvar(id.name, id.val.s, true);
+				{
+					s_sprintfd(val)("%s", id.val.s);
+					setsvar(id.name, val, true);
 					break;
+				}
 				default: break;
 			}
 		}
@@ -849,7 +865,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
     }
 
 	startmap("");
-	camera1->o.z += camera1->height+1;
+	//camera1->o.z += camera1->height+1;
 
 	return true;
 }

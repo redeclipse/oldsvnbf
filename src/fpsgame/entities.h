@@ -877,7 +877,7 @@ struct entities : icliententities
 
 	void renderentshow(extentity &e, int level)
 	{
-		if(!level && showentradius() >= level)
+		if(!level || showentradius() >= level)
 		{
 			switch(e.type)
 			{
@@ -938,8 +938,7 @@ struct entities : icliententities
 		{
 			loopv(ents)
 			{
-				if((entgroup.find(i) >= 0 || enthover == i) &&
-					ents[i]->type == LIGHT && ents[i]->attr1 > 0)
+				if((entgroup.find(i) >= 0 || enthover == i) && ents[i]->type == LIGHT && ents[i]->attr1 > 0)
 				{
 					renderfocus(i, renderentlight(e));
 				}
@@ -951,7 +950,7 @@ struct entities : icliententities
 	{
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
-			int level = (editmode ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || dropwaypoints()) ? 3 : 1));
+			int level = (editmode ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || dropwaypoints()) ? 3 : 0));
 			if(level)
 			{
 				renderprimitive(true);

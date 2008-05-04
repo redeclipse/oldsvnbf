@@ -18,7 +18,7 @@ void loadsky(char *basename)
 }
 
 SVARFW(skybox, "skyboxes/black", { if(skybox[0]) loadsky(skybox); });
-VARW(spinsky, -10000, 0, 10000);
+FVARW(spinsky, 0);
 VARW(yawsky, 0, 0, 360);
 
 void draw_envbox_face(float s0, float t0, int x0, int y0, int z0,
@@ -175,7 +175,7 @@ void drawskybox(int farplane, bool limited)
     glLoadIdentity();
     glRotatef(camera1->roll, 0, 0, 1);
     glRotatef(camera1->pitch, -1, 0, 0);
-    glRotatef(camera1->yaw+spinsky*lastmillis/100000.0f+yawsky, 0, 1, 0);
+    glRotatef(camera1->yaw+spinsky*lastmillis/1000.0f+yawsky, 0, 1, 0);
     glRotatef(90, 1, 0, 0);
     if(reflecting) glScalef(1, 1, -1);
     glColor3f(1, 1, 1);
