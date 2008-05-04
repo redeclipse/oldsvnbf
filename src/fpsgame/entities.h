@@ -36,9 +36,10 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			fpsentity &e = (fpsentity &)*ents[i];
-			if(e.type == MAPSOUND && !e.links.length() && mapsounds.inrange(e.attr1) && (!sounds.inrange(e.schan) || !sounds[e.schan].inuse))
+			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1) && (!sounds.inrange(e.schan) || !sounds[e.schan].inuse))
 			{
 				e.schan = playsound(e.attr1, &e.o, e.attr4, e.attr2, e.attr3, SND_MAP|SND_LOOP);
+				e.lastemit = lastmillis; // prevent clipping when moving around
 			}
 		}
 	}
@@ -106,13 +107,16 @@ struct entities : icliententities
 					{
 						case MAPSOUND:
 						{
-							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSH) && mapsounds.inrange(f.attr1) && (!sounds.inrange(f.schan) || !sounds[f.schan].inuse))
+							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && mapsounds.inrange(f.attr1) && (!sounds.inrange(f.schan) || !sounds[f.schan].inuse))
+							{
 								playsound(f.attr1, &f.o, f.attr4, f.attr2, f.attr3, SND_MAP);
+								f.lastemit = lastmillis;
+							}
 							break;
 						}
 						case PARTICLES:
 						{
-							if(e.type == TRIGGER || e.type == TELEPORT || e.type == PUSH)
+							if(e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER)
 								f.lastemit = lastmillis;
 							break;
 						}
@@ -237,7 +241,7 @@ struct entities : icliententities
 				break;
 			}
 
-			case PUSH:
+			case PUSHER:
 			{
 				if(d->lastuse==ents[n]->type && lastmillis-d->lastusemillis<500) break;
 				d->lastuse = ents[n]->type;
@@ -327,6 +331,8 @@ struct entities : icliententities
 		{
 			removesound(f.schan);
 			f.schan = -1;
+			if(f.type == MAPSOUND)
+				f.lastemit = lastmillis; // prevent clipping when moving around
 		}
 
 		switch(e.type)
@@ -384,7 +390,7 @@ struct entities : icliententities
 						break;
 					case MAPSOUND:
 					case PARTICLES:
-						if(ents[node]->type == TELEPORT || ents[node]->type == TRIGGER || ents[node]->type == PUSH) return true;
+						if(ents[node]->type == TELEPORT || ents[node]->type == TRIGGER || ents[node]->type == PUSHER) return true;
 						break;
 					case TELEPORT:
 						if(ents[node]->type == TELEPORT) return true;

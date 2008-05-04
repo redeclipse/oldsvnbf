@@ -76,8 +76,6 @@ struct igameclient
 	virtual void recomputecamera() = 0;
 	virtual void setposition(vec &v) = 0;
 
-	virtual bool wantcrosshair() = 0;
-
 	virtual bool gamethirdperson() { return false; } ;
 	virtual bool gethudcolour(vec &colour) { return false; }
 

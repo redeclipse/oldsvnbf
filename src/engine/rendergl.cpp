@@ -1258,14 +1258,13 @@ void gl_drawframe(int w, int h)
 }
 
 VARP(crosshairsize, 0, 25, 1000);
-VARP(crosshairfx, 0, 1, 1);
 VARP(crosshairblend, 0, 50, 100);
 VARP(cursorsize, 0, 30, 1000);
 
 VARP(hidehud, 0, 0, 1);
 
-#define MAXCROSSHAIRS 4
-static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL };
+#define MAXCROSSHAIRS 5
+static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL, NULL };
 
 void loadcrosshair(const char *name, int i)
 {
@@ -1295,43 +1294,32 @@ void writecrosshairs(FILE *f)
 
 void drawcrosshair(int w, int h)
 {
-	bool windowhit = g3d_windowhit(0, true, false);
-	if(!windowhit && !cl->wantcrosshair()) return;
+    float r = 1, g = 1, b = 1;
+	int index = cl->selectcrosshair(r, g, b);
+	if(index > -1 && index < MAXCROSSHAIRS)
+	{
+		Texture *crosshair = crosshairs[index];
+		if(!crosshair)
+		{
+			loadcrosshair(NULL, index);
+			crosshair = crosshairs[index];
+		}
+		float cx = 0.5f, cy = 0.5f, chsize = crosshairsize*w/300.0f;
 
-    float r = 1, g = 1, b = 1, cx = 0.5f, cy = 0.5f, chsize;
-    Texture *crosshair;
-    if(windowhit)
-    {
-        static Texture *cursor = NULL;
-        if(!cursor) cursor = textureload("textures/guicursor.png", 3, true);
-        crosshair = cursor;
-        chsize = cursorsize*w/300.0f;
-        g3d_cursorpos(cx, cy);
-    }
-    else
-    {
-        int index = crosshairfx ? cl->selectcrosshair(r, g, b) : 0;
-        crosshair = crosshairs[index];
-        if(!crosshair)
-        {
-            loadcrosshair(NULL, index);
-            crosshair = crosshairs[index];
-        }
-        chsize = crosshairsize*w/300.0f;
-    }
-    if(crosshair->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		if(crosshair->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		else glBlendFunc(GL_ONE, GL_ONE);
 
-	else glBlendFunc(GL_ONE, GL_ONE);
-	glColor4f(r, g, b, crosshairblend/100.f);
-	float x = cx*w*3.0f - (windowhit ? 0 : chsize/2.0f);
-	float y = cy*h*3.0f - (windowhit ? 0 : chsize/2.0f);
-    glBindTexture(GL_TEXTURE_2D, crosshair->id);
-	glBegin(GL_QUADS);
-	glTexCoord2d(0.0, 0.0); glVertex2f(x,		  y);
-	glTexCoord2d(1.0, 0.0); glVertex2f(x + chsize, y);
-	glTexCoord2d(1.0, 1.0); glVertex2f(x + chsize, y + chsize);
-	glTexCoord2d(0.0, 1.0); glVertex2f(x,		  y + chsize);
-	glEnd();
+		glColor4f(r, g, b, crosshairblend/100.f);
+		float x = cx*w*3.0f - (index > 0 ? 0 : chsize/2.0f);
+		float y = cy*h*3.0f - (index > 0 ? 0 : chsize/2.0f);
+		glBindTexture(GL_TEXTURE_2D, crosshair->id);
+		glBegin(GL_QUADS);
+		glTexCoord2d(0.0, 0.0); glVertex2f(x, y);
+		glTexCoord2d(1.0, 0.0); glVertex2f(x + chsize, y);
+		glTexCoord2d(1.0, 1.0); glVertex2f(x + chsize, y + chsize);
+		glTexCoord2d(0.0, 1.0); glVertex2f(x, y + chsize);
+		glEnd();
+	}
 }
 
 void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)

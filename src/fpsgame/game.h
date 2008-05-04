@@ -34,7 +34,7 @@ enum								// static entity types
 	TELEPORT,						// 9  yaw, pitch, roll, push
 	MONSTER,						// 10 [angle], [type]
 	TRIGGER,						// 11
-	PUSH,							// 12 zpush, ypush, xpush
+	PUSHER,							// 12 zpush, ypush, xpush
 	BASE,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
 	CAMERA,							// 15 yaw, pitch, pan (+:horiz/-:vert), idx
@@ -60,7 +60,7 @@ static struct enttypes
 	{ TELEPORT,		50,		12,		12,		ETU_AUTO,		"teleport" },
 	{ MONSTER,		59,		0,		0,		ETU_NONE,		"monster" },
 	{ TRIGGER,		58,		16,		16,		ETU_NONE,		"trigger" }, // FIXME
-	{ PUSH,			58,		12,		12,		ETU_AUTO,		"push" },
+	{ PUSHER,		58,		12,		12,		ETU_AUTO,		"pusher" },
 	{ BASE,			48,		32,		16,		ETU_NONE,		"base" },
 	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" }, // FIXME
 	{ CAMERA,		48,		0,		0,		ETU_NONE,		"camera" },
