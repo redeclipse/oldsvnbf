@@ -542,6 +542,48 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
+    const char *defaultcrosshair(int index)
+    {
+        switch(index)
+        {
+            case 1: return "textures/crosshair_team.png";
+            case 2: return "textures/crosshair_hit.png";
+            case 3: return "textures/crosshair_zoom.png";
+            default: return "textures/crosshair.png";
+        }
+    }
+
+    int selectcrosshair(float &r, float &g, float &b)
+    {
+        if(player1->state!=CS_ALIVE) return 0;
+
+        int c = 0;
+        if(fov < 90) c = 3;
+        else if(lastmillis - lasthit < hitcrosshair())
+        {
+        	c = 2;
+        	r = 1;
+        	g = b = 0;
+        }
+        else if(m_team(gamemode, mutators) && teamcrosshair())
+        {
+            dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
+            if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team))
+            {
+                c = 1;
+                r = g = 0;
+            }
+        }
+
+        if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
+        else if(!c && r && g && b && !editmode && !m_insta(gamemode, mutators))
+        {
+            if(player1->health<=25) { r = 1; g = b = 0; }
+            else if(player1->health<=50) { r = 1; g = 0.5f; b = 0; }
+        }
+        return c;
+    }
+
 	IVARP(radardist, 0, 256, 256);
 	IVARP(editradardist, 0, 64, 1024);
 
@@ -779,11 +821,12 @@ struct GAMECLIENT : igameclient
 
 						if(isgun(d->gunselect) && d->ammo[d->gunselect] > 0)
 						{
-							draw_textx("%d", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect]);
+							bool canshoot = d->canshoot(d->gunselect, lastmillis);
+							draw_textx("%d", oy/5+rw+(FONTH/4*3), oy-75, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect]);
 						}
 						else
 						{
-							draw_textx("Out of ammo", oy/5+rw+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+							draw_textx("Out of ammo", oy/5+rw+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 						}
 					}
 					else if(d->state == CS_DEAD)
@@ -793,13 +836,13 @@ struct GAMECLIENT : igameclient
 						if(wait)
 						{
 							float c = float(wait)/1000.f;
-							draw_textx("Fragged! Down for %.1fs", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, c);
+							draw_textx("Fragged! Down for %.1fs", oy/5+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, c);
 						}
 						else
-							draw_textx("Fragged! Press attack to respawn", oy/5+16, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+							draw_textx("Fragged! Press attack to respawn", oy/5+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 					}
 
-					int rx = 4, rs = oy/5, ry = oy-rs-4;
+					int rx = FONTH/4, rs = oy/5, ry = oy-rs-(FONTH/4);
 					settexture("textures/radar.png");
 					if(m_team(gamemode, mutators)) glColor4f(0.f, 0.f, 1.f, fade);
 					else glColor4f(0.f, 1.0f, 0.f, fade);
@@ -835,42 +878,6 @@ struct GAMECLIENT : igameclient
 			glEnd();
 		}
 	}
-
-    const char *defaultcrosshair(int index)
-    {
-        switch(index)
-        {
-            case 1: return "textures/crosshair_team.png";
-            case 2: return "textures/crosshair_hit.png";
-            case 3: return "textures/crosshair_zoom.png";
-            default: return "textures/crosshair.png";
-        }
-    }
-    int selectcrosshair(float &r, float &g, float &b)
-    {
-        if(player1->state!=CS_ALIVE) return 0;
-
-        int crosshair = 0;
-        if(fov < 90) crosshair = 3;
-        else if(lastmillis - lasthit < hitcrosshair()) crosshair = 2;
-        else if(m_team(gamemode, mutators) && teamcrosshair())
-        {
-            dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
-            if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team))
-            {
-                crosshair = 1;
-                r = g = 0;
-            }
-        }
-
-        if(player1->gunwait) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
-        else if(!crosshair && r && g && b && !editmode && !m_insta(gamemode, mutators))
-        {
-            if(player1->health<=25) { r = 1.0f; g = b = 0; }
-            else if(player1->health<=50) { r = 1.0f; g = 0.5f; b = 0; }
-        }
-        return crosshair;
-    }
 
 	void lighteffects(dynent *e, vec &color, vec &dir)
 	{

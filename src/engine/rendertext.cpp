@@ -287,7 +287,7 @@ void reloadfonts()
 
 void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool s, int align, int cursor, int maxwidth, ...)
 {
-	s_sprintfdlv(str, align, fstr);
+	s_sprintfdlv(str, maxwidth, fstr);
 
 	int x = left, y = top, width = text_width(str);
 

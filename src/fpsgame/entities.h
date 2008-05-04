@@ -323,7 +323,11 @@ struct entities : icliententities
 	{
 		fpsentity &f = (fpsentity &)e;
 
-		if(sounds.inrange(f.schan)) removesound(f.schan);
+		if(sounds.inrange(f.schan))
+		{
+			removesound(f.schan);
+			f.schan = -1;
+		}
 
 		switch(e.type)
 		{
