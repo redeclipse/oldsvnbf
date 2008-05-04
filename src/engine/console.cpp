@@ -101,7 +101,7 @@ void console(const char *s, int type, ...)
 	fflush(stdout);
 
 	s = sf;
-	int n = 0, cx, cy, visible;
+	int n = 0, cx = 0, cy = 0, visible;
 	while((visible = curfont ? text_visible(s, cx, cy, (3*w - 2*CONSPAD - 2*FONTH/3 + FONTW*n)) : strlen(s))) // cut strings to fit on screen
 	{
 		const char *newline = (const char *)memchr(s, '\n', visible);
