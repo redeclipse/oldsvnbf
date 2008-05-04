@@ -67,8 +67,10 @@ extern void mpremip(bool local);
 
 // command
 extern int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool world);
+extern float fvariable(const char *name, float cur, float *storage, void (*fun)(), bool persist, bool world);
 extern char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), bool persist, bool world);
 extern void setvar(const char *name, int i, bool dofunc = false);
+extern void setfvar(const char *name, float f, bool dofunc = false);
 extern void setsvar(const char *name, const char *str, bool dofunc = false);
 extern int getvar(const char *name);
 extern int getvarmin(const char *name);
@@ -86,7 +88,7 @@ extern const char *getalias(const char *name);
 
 // console
 extern void keypress(int code, bool isdown, int cooked);
-extern void rendercommand(int x, int y);
+extern int rendercommand(int x, int y, int w);
 extern int renderconsole(int w, int h);
 extern void conoutf(const char *s, ...);
 extern char *getcurcommand();
@@ -126,13 +128,13 @@ extern bool setfont(const char *name);
 extern bool pushfont(const char *name);
 extern bool popfont(int num);
 extern void gettextres(int &w, int &h);
-extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true);
-extern void draw_textx(const char *fstr, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int align = AL_LEFT, ...);
+extern void draw_text(const char *str, int rleft, int rtop, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int cursor = -1, int maxwidth = -1);
+extern void draw_textx(const char *fstr, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int align = AL_LEFT, int cursor = -1, int maxwidth = -1, ...);
 extern void draw_textf(const char *fstr, int left, int top, ...);
-extern int char_width(int c, int x = 0);
-extern int text_width(const char *str, int limit = -1);
+extern int text_width(const char *str);
 extern void text_bounds(const char *str, int &width, int &height, int maxwidth = -1);
-extern int text_visible(const char *str, int max);
+extern int text_visible(const char *str, int hitx, int hity, int maxwidth = -1);
+extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth);
 
 // renderva
 enum

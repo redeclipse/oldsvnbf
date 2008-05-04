@@ -187,6 +187,7 @@ static void updateval(char *var, int val, char *onchange)
     switch(id->type)
     {
         case ID_VAR:
+        case ID_FVAR:
         case ID_SVAR:
             s_sprintf(assign)("%s %d", var, val);
             break;
@@ -207,6 +208,7 @@ static int getval(char *var)
     switch(id->type)
     {
         case ID_VAR: return *id->storage.i;
+        case ID_FVAR: return int(*id->storage.f);
         case ID_SVAR: return atoi(*id->storage.s);
         case ID_ALIAS: return atoi(id->action);
         default: return 0;

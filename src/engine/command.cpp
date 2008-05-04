@@ -44,6 +44,10 @@ void clearoverrides()
                     *i.storage.i = i.overrideval.i;
                     i.changed();
                     break;
+                case ID_FVAR:
+                    *i.storage.f = i.overrideval.f;
+                    i.changed();
+                    break;
                 case ID_SVAR:
                     delete[] *i.storage.s;
                     *i.storage.s = i.overrideval.s;
@@ -156,6 +160,14 @@ int variable(const char *name, int min, int cur, int max, int *storage, void (*f
     return cur;
 }
 
+float fvariable(const char *name, float cur, float *storage, void (*fun)(), bool persist, bool world)
+{
+    if(!idents) idents = new identtable;
+    ident v(ID_FVAR, name, cur, storage, (void *)fun, persist, world);
+    idents->access(name, &v);
+    return cur;
+}
+
 char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), bool persist, bool world)
 {
     if(!idents) idents = new identtable;
@@ -172,12 +184,21 @@ void setvar(const char *name, int i, bool dofunc)
 	GETVAR(id, ID_VAR, name, );
     *id->storage.i = clamp(i, id->minval, id->maxval);
     if(dofunc) id->changed();
+	if(verbose >= 3) conoutf("%s set to %d", id->name, *id->storage.i);
+}
+void setfvar(const char *name, float f, bool dofunc)
+{
+    GETVAR(id, ID_FVAR, name, );
+    *id->storage.f = f;
+    if(dofunc) id->changed();
+	if(verbose >= 3) conoutf("%s set to %f", id->name, *id->storage.f);
 }
 void setsvar(const char *name, const char *str, bool dofunc)
 {
     GETVAR(id, ID_SVAR, name, );
     *id->storage.s = exchangestr(*id->storage.s, str);
 	if(dofunc) id->changed();
+	if(verbose >= 3) conoutf("%s set to %s", id->name, *id->storage.s);
 }
 int getvar(const char *name)
 {
@@ -313,6 +334,7 @@ char *lookup(char *n)							// find value of ident referenced with $ in exp
     if(id) switch(id->type)
 	{
         case ID_VAR: { s_sprintfd(t)("%d", *id->storage.i); return exchangestr(n, t); }
+        case ID_FVAR: { s_sprintfd(t)("%f", *id->storage.f); return exchangestr(n, t); }
         case ID_SVAR: return exchangestr(n, *id->storage.s);
         case ID_ALIAS: return exchangestr(n, id->action);
 	}
@@ -493,6 +515,18 @@ char *executeret(const char *p)               // all evaluation happens here, re
 					}
                     break;
 
+                case ID_FVAR:
+                    if(!w[1][0]) conoutf("%s = %f", c, *id->storage.f);
+                    else
+                    {
+						WORLDVAR;
+                        OVERRIDEVAR(id->overrideval.f = *id->storage.f, );
+                        *id->storage.f = atof(w[1]);
+                        id->changed();
+                        if(editmode && id->world) cl->editfvar(id->name, *id->storage.f);
+                    }
+                    break;
+
                 case ID_SVAR:
                     if(!w[1][0]) conoutf(strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", c, *id->storage.s);
                     else
@@ -573,6 +607,7 @@ void writecfg()
         switch(id.type)
 		{
             case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
+            case ID_FVAR: fprintf(f, "%s %f\n", id.name, *id.storage.f); break;
             case ID_SVAR: fprintf(f, "%s [%s]\n", id.name, *id.storage.s); break;
 		}
 	);

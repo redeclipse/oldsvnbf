@@ -51,6 +51,7 @@ struct igameclient
     virtual void updateworld() = 0;
     virtual void initclient() = 0;
     virtual void editvar(const char *name, int value) = 0;
+    virtual void editfvar(const char *name, float value) = 0;
     virtual void editsvar(const char *name, char *value) = 0;
     virtual void editalias(const char *name, char *value) = 0;
     virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;

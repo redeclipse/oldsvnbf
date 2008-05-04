@@ -98,10 +98,11 @@ void console(const char *s, int type, ...)
 	filtertext(osf, sf);
 	s_sprintf(psf)("%s [%02x] %s", gettime(fmt), type, osf);
 	printf("%s\n", osf);
+	fflush(stdout);
 
 	s = sf;
-	int n = 0, visible;
-	while((visible = curfont ? text_visible(s, (3*w - 2*CONSPAD - 2*FONTH/3 + FONTW*n)) : strlen(s))) // cut strings to fit on screen
+	int n = 0, cx, cy, visible;
+	while((visible = curfont ? text_visible(s, cx, cy, (3*w - 2*CONSPAD - 2*FONTH/3 + FONTW*n)) : strlen(s))) // cut strings to fit on screen
 	{
 		const char *newline = (const char *)memchr(s, '\n', visible);
 		if(newline) visible = newline+1-s;
@@ -123,11 +124,16 @@ bool fullconsole = false;
 void toggleconsole() { fullconsole = !fullconsole; }
 COMMAND(toggleconsole, "");
 
-void rendercommand(int x, int y)
+int rendercommand(int x, int y, int w)
 {
-	s_sprintfd(s)("> %s", commandbuf);
-	draw_textx("%s", x, y, 255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_LEFT, s);
-	draw_textx("%s", x + text_width(s, commandpos>=0 ? commandpos+2 : -1), y, 255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_LEFT, "_");
+    if(!saycommandon) return 0;
+
+    s_sprintfd(s)("%s %s", commandprompt ? commandprompt : ">", commandbuf);
+    int width, height;
+    text_bounds(s, width, height, w);
+    y-= height-FONTH;
+    draw_text(s, x, y, 0xFF, 0xFF, 0xFF, 0xFF, (commandpos>=0) ? (commandpos+1+(commandprompt?strlen(commandprompt):1)) : strlen(s), w);
+    return height;
 }
 
 void blendbox(int x1, int y1, int x2, int y2, bool border)
@@ -180,7 +186,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 		}
 		loopvj(refs)
 		{
-			draw_textx("%s", (w*3)/2, (((h*3)/4)*3)+(FONTH*j)-FONTH, 255, 255, 255, int(255.f*(centerblend*0.01f)), false, AL_CENTER, refs[j]);
+			draw_textx("%s", (w*3)/2, (((h*3)/4)*3)+(FONTH*j)-FONTH, 255, 255, 255, int(255.f*(centerblend*0.01f)), false, AL_CENTER, -1, -1, refs[j]);
 		}
 	}
 
@@ -207,7 +213,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 
 	loopvrev(refs)
 	{
-		draw_textx("%s", (CONSPAD+FONTH/3), (CONSPAD+FONTH*(refs.length()-i-1)+FONTH/3), 255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_LEFT, refs[i]);
+		draw_textx("%s", (CONSPAD+FONTH/3), (CONSPAD+FONTH*(refs.length()-i-1)+FONTH/3), 255, 255, 255, int(255.f*(conblend*0.01f)), false, AL_LEFT, -1, -1, refs[i]);
 	}
 	if (refs.length() > len) len = refs.length();
 
