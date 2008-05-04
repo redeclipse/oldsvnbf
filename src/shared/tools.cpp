@@ -58,8 +58,8 @@ char *makerelpath(const char *dir, const char *file, const char *prefix)
         const char *end = strrchr(file, '>');
         if(end)
         {
-            int len = strlen(tmp);
-            s_strncpy(&tmp[len], file, min((int)sizeof(tmp)-len, end+2-file));
+            size_t len = strlen(tmp);
+            s_strncpy(&tmp[len], file, min(sizeof(tmp)-len, size_t(end+2-file)));
             file = end+1;
         }
     }
