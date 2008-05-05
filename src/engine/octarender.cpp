@@ -651,7 +651,7 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
     {
         explicitsky += addtriindexes(vc.explicitskyindices, index);
         loopk(4) vc.skyclip = min(vc.skyclip, int(vv[k].z>>VVEC_FRAC));
-        vc.skyfaces |= 0x3F&~(1<<opposite(orient));
+        vc.skyfaces |= 0x3F&~(1<<orient);
     }
     else
     {
