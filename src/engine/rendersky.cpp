@@ -199,11 +199,13 @@ void drawskybox(int farplane, bool limited)
     if(fog) glEnable(GL_FOG);
 }
 
+VARN(skytexture, useskytexture, 0, 1, 1);
+
 int explicitsky = 0;
 double skyarea = 0;
 
 bool limitsky()
 {
-    return explicitsky || (sparklyfix && skyarea / (double(hdr.worldsize)*double(hdr.worldsize)*6) < 0.9);
+    return (explicitsky && (useskytexture || editmode)) || (sparklyfix && skyarea / (double(hdr.worldsize)*double(hdr.worldsize)*6) < 0.9);
 }
 
