@@ -384,7 +384,7 @@ extern void abortconnect();
 extern void clientkeepalive();
 
 // command
-extern bool overrideidents, persistidents, worldidents;
+extern bool overrideidents, persistidents, worldidents, interactive;
 
 extern char *parseword(char *&p);
 extern void explodelist(const char *s, vector<char *> &elems);

@@ -1263,8 +1263,8 @@ VARP(cursorsize, 0, 30, 1000);
 
 VARP(hidehud, 0, 0, 1);
 
-#define MAXCROSSHAIRS 5
-static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL, NULL };
+#define MAXCROSSHAIRS 6
+static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL, NULL, NULL };
 
 void loadcrosshair(const char *name, int i)
 {

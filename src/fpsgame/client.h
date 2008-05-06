@@ -815,63 +815,61 @@ struct clientcom : iclientcom
 			case SV_EDITVAR:
 			{
 				if (!d) return;
+				int t = getint(p);
+				bool commit = true;
 				getstring(text, p);
-				int val = getint(p);
 				ident *id = idents->access(text);
-
-				if (id->type == ID_VAR && id->world && id->maxval >= id->minval)
+				if(!id || !id->world || id->type != t) commit = false;
+				switch(type)
 				{
-					if (val > id->maxval) val = id->maxval;
-					else if (val < id->minval) val = id->minval;
+					case ID_VAR:
+					{
+						int val = getint(p);
+						if(id->maxval >= id->minval || val < id->minval || val > id->maxval)
+							commit = false;
 
-					setvar(text, val, true);
+						if(commit)
+						{
+							setvar(text, val, true);
+							conoutf("%s updated the value of %s to %d", d->name, id->name, *id->storage.i);
+						}
+						break;
+					}
+					case ID_FVAR:
+					{
+						float val = getfloat(p);
 
-					conoutf("%s updated the value of %s to %d", d->name, id->name, *id->storage.i);
+						if(commit)
+						{
+							setfvar(text, val, true);
+							conoutf("%s updated the value of %s to %f", d->name, id->name, *id->storage.f);
+						}
+						break;
+					}
+					case ID_SVAR:
+					{
+						string val;
+						getstring(val, p);
+						if(commit)
+						{
+							setsvar(text, val, true);
+							conoutf("%s updated the value of %s to %s", d->name, id->name, *id->storage.s);
+						}
+						break;
+					}
+					case ID_ALIAS:
+					{
+						string val;
+						getstring(val, p);
+						if(commit)
+						{
+							worldalias(text, val);
+							conoutf("%s updated the value of %s to %s", d->name, text, val);
+						}
+						break;
+					}
+					default: break;
 				}
-				break;
-			}
-
-			case SV_EDITFVAR:
-			{
-				if (!d) return;
-				getstring(text, p);
-				float val = getfloat(p);
-				ident *id = idents->access(text);
-
-				if (id->type == ID_FVAR && id->world)
-				{
-					setfvar(text, val, true);
-
-					conoutf("%s updated the value of %s to %f", d->name, id->name, *id->storage.f);
-				}
-				break;
-			}
-
-			case SV_EDITSVAR:
-			{
-				if (!d) return;
-				getstring(text, p);
-				string val;
-				getstring(val, p);
-				ident *id = idents->access(text);
-
-				if (id->type == ID_SVAR && id->world)
-				{
-					setsvar(text, val, true);
-
-					conoutf("%s updated the value of %s to %s", d->name, id->name, *id->storage.s);
-				}
-				break;
-			}
-
-			case SV_EDITALIAS:
-			{
-				if (!d) return;
-				getstring(text, p);
-				string val;
-				getstring(val, p);
-				worldalias(text, val);
-				conoutf("%s updated the value of %s to %s", d->name, text, val);
 				break;
 			}
 

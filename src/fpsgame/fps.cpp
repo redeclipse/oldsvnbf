@@ -547,23 +547,25 @@ struct GAMECLIENT : igameclient
         switch(index)
         {
             case 0: return "textures/guicursor.png";
-            case 1: return "textures/crosshair.png";
-            case 2: return "textures/crosshair_team.png";
-            case 3: return "textures/crosshair_hit.png";
-            case 4: return "textures/crosshair_zoom.png";
+            case 1: return "textures/editcursor.png";
+            case 2: return "textures/crosshair.png";
+            case 3: return "textures/crosshair_team.png";
+            case 4: return "textures/crosshair_hit.png";
+            case 5: return "textures/crosshair_zoom.png";
             default: return "";
         }
     }
 
     int selectcrosshair(float &r, float &g, float &b)
     {
-        int c = 1;
+        int c = 2;
         if(menuactive()) c = 0;
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) c = -1;
-        else if(fov < 90) c = 3;
+        else if(editmode) c = 1;
+        else if(fov < 90) c = 4;
         else if(lastmillis - lasthit < hitcrosshair())
         {
-        	c = 2;
+        	c = 3;
         	r = 1;
         	g = b = 0;
         }
@@ -572,11 +574,11 @@ struct GAMECLIENT : igameclient
             dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
             if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team))
             {
-                c = 1;
+                c = 2;
                 r = g = 0;
             }
         }
-		if(c > 0)
+		if(c > 1)
 		{
 			if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
 			else if(!c && r && g && b && !editmode && !m_insta(gamemode, mutators))
@@ -902,24 +904,27 @@ struct GAMECLIENT : igameclient
 		cc.addmsg(SV_NEWMAP, "ri", size);
 	}
 
-	void editvar(const char *name, int value)
+	void editvar(ident *id, bool local)
 	{
-        if(m_edit(gamemode)) cc.addmsg(SV_EDITVAR, "rsi", name, value);
-	}
-
-	void editfvar(const char *name, float value)
-	{
-        if(m_edit(gamemode)) cc.addmsg(SV_EDITVAR, "rsf", name, value);
-	}
-
-	void editsvar(const char *name, char *value)
-	{
-        if(m_edit(gamemode)) cc.addmsg(SV_EDITSVAR, "rss", name, value);
-	}
-
-	void editalias(const char *name, char *value)
-	{
-        if(m_edit(gamemode)) cc.addmsg(SV_EDITALIAS, "rss", name, value);
+        if(id && id->world && local && m_edit(gamemode))
+        {
+        	switch(id->type)
+        	{
+        		case ID_VAR:
+					cc.addmsg(SV_EDITVAR, "risi", id->type, id->name, *id->storage.i);
+					break;
+        		case ID_FVAR:
+					cc.addmsg(SV_EDITVAR, "risf", id->type, id->name, *id->storage.f);
+					break;
+        		case ID_SVAR:
+					cc.addmsg(SV_EDITVAR, "riss", id->type, id->name, *id->storage.s);
+					break;
+        		case ID_ALIAS:
+					cc.addmsg(SV_EDITVAR, "riss", id->type, id->name, id->action);
+					break;
+				default: break;
+        	}
+        }
 	}
 
 	void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)

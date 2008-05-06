@@ -1456,29 +1456,31 @@ struct GAMESERVER : igameserver
 			case SV_EDITVAR:
 			{
 				QUEUE_INT(SV_EDITVAR);
+				int t = getint(p);
+				QUEUE_INT(t);
 				getstring(text, p);
 				QUEUE_STR(text);
-				QUEUE_INT(getint(p));
-				break;
-			}
-
-			case SV_EDITFVAR:
-			{
-				QUEUE_INT(SV_EDITFVAR);
-				getstring(text, p);
-				QUEUE_STR(text);
-				QUEUE_FLT(getfloat(p));
-				break;
-			}
-
-			case SV_EDITSVAR:
-			case SV_EDITALIAS:
-			{
-				QUEUE_INT(type);
-				getstring(text, p);
-				QUEUE_STR(text);
-				getstring(text, p);
-				QUEUE_STR(text);
+				switch(t)
+				{
+					case ID_VAR:
+					{
+						QUEUE_INT(getint(p));
+						break;
+					}
+					case ID_FVAR:
+					{
+						QUEUE_FLT(getfloat(p));
+						break;
+					}
+					case ID_SVAR:
+					case ID_ALIAS:
+					{
+						getstring(text, p);
+						QUEUE_STR(text);
+						break;
+					}
+					default: break;
+				}
 				break;
 			}
 

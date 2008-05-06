@@ -805,8 +805,7 @@ void resetmap()
 				}
 				case ID_SVAR:
 				{
-					s_sprintfd(val)("%s", id.val.s);
-					setsvar(id.name, val, true);
+					setsvar(id.name, "", true);
 					break;
 				}
 				default: break;
