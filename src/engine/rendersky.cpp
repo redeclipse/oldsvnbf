@@ -186,7 +186,7 @@ void drawskybox(int farplane, bool limited)
     }
     float skyclip = clipsky ? max(renderedskyclip-1, 0) : 0;
     if(reflectz<hdr.worldsize && reflectz>skyclip) skyclip = reflectz;
-    draw_envbox(farplane/2, skyclip ? 0.5f + (skyclip-camera1->o.z)/float(hdr.worldsize) : 0, renderedskyfaces);
+    draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : 0, renderedskyfaces);
     glPopMatrix();
 
     if(limited)
