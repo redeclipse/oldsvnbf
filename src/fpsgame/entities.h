@@ -466,12 +466,16 @@ struct entities : icliententities
 
 	void linkent()
 	{
-		int index = -1;
-		loopv(entgroup)
+		if(!entgroup.inrange(2))
 		{
-			int node = entgroup[i];
+			conoutf("ERROR: more than one entity must be selected to link");
+			return;
+		}
+		int index = entgroup[0];
+		loopi(entgroup.length()-1)
+		{
+			int node = entgroup[i+1];
 			if(ents.inrange(index)) linkents(index, node, false, true);
-			index = node;
 		}
 	}
 
