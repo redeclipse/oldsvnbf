@@ -570,7 +570,12 @@ void consolekey(int code, bool isdown, int cooked)
             }
             histpos = history.length();
             saycommand(NULL);
-            if(h) h->run();
+            if(h)
+            {
+            	interactive = true;
+            	h->run();
+            	interactive = false;
+            }
         }
         else if(code==SDLK_ESCAPE)
         {

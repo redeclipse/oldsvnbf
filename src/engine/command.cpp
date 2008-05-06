@@ -9,7 +9,7 @@ char *exchangestr(char *o, const char *n) { delete[] o; return newstring(n); }
 
 identtable *idents = NULL;		// contains ALL vars/commands/aliases
 
-bool overrideidents = false, persistidents = true, worldidents = false;
+bool overrideidents = false, persistidents = true, worldidents = false, interactive = false;
 
 void clearstack(ident &id)
 {
@@ -113,9 +113,9 @@ void aliasa(const char *name, char *action)
 	ident *b = idents->access(name);
 	if(!b)
 	{
-        ident b(ID_ALIAS, newstring(name), action, persistidents, worldidents);
-        if(overrideidents) b.override = OVERRIDDEN;
-        idents->access(b.name, &b);
+        ident a(ID_ALIAS, newstring(name), action, persistidents, worldidents);
+        if(overrideidents) a.override = OVERRIDDEN;
+        b = idents->access(a.name, &a);
 	}
     else if(b->type != ID_ALIAS)
 	{
@@ -134,6 +134,7 @@ void aliasa(const char *name, char *action)
             if(b->world != worldidents && worldidents) b->world = worldidents;
 		}
 	}
+	if(b) cl->editvar(b, interactive);
 }
 
 void alias(const char *name, const char *action) { aliasa(name, newstring(action)); }
@@ -511,7 +512,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						}
                         *id->storage.i = i1;
                         id->changed();                                             // call trigger function if available
-                        if(editmode && id->world) cl->editvar(id->name, *id->storage.i);
+						cl->editvar(id, interactive);
 					}
                     break;
 
@@ -523,7 +524,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         OVERRIDEVAR(id->overrideval.f = *id->storage.f, );
                         *id->storage.f = atof(w[1]);
                         id->changed();
-                        if(editmode && id->world) cl->editfvar(id->name, *id->storage.f);
+						cl->editvar(id, interactive);
                     }
                     break;
 
@@ -535,7 +536,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s);
                         *id->storage.s = newstring(w[1]);
                         id->changed();
-                        if(editmode && id->world) cl->editsvar(id->name, *id->storage.s);
+						cl->editvar(id, interactive);
 					}
 					break;
 
