@@ -305,11 +305,11 @@ void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a,
 	draw_text(str, x, y, r, g, b, a, s, cursor, maxwidth);
 }
 
-static vector<font> fontstack;
+static vector<font *> fontstack;
 
 bool pushfont(const char *name)
 {
-	if (curfont) fontstack.add(*curfont);
+	if (curfont) fontstack.add(curfont);
 	return setfont(name);
 }
 
