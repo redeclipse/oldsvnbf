@@ -402,7 +402,7 @@ bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float x
         if(dist > (d->o.z < o.z ? below : above) && (dir.iszero() || x*dir.x + y*dir.y > 0))
 		{
             wall = vec(-x, -y, 0);
-            wall.normalize();
+            if(!wall.iszero()) wall.normalize();
 			return false;
 		}
         if(d->o.z < o.z)
