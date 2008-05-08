@@ -98,7 +98,7 @@ struct lerpbounds
 
 extern void calcnormals();
 extern void clearnormals();
-extern bool findnormal(const ivec &origin, int orient, const vvec &offset, vec &v, int index = -1);
+extern bool findnormal(const ivec &origin, int orient, int index, const vvec &offset, vec &v);
 extern void calclerpverts(const vec &origin, const vec *p, const vec *n, const vec &ustep, const vec &vstep, lerpvert *lv, int &numv);
 extern void initlerpbounds(const lerpvert *lv, int numv, lerpbounds &start, lerpbounds &end);
 extern void lerpnormal(float v, const lerpvert *lv, int numv, lerpbounds &start, lerpbounds &end, vec &normal, vec &nstep);
