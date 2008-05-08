@@ -704,48 +704,83 @@ const vector<int> &checklightcache(int x, int y)
 	return lce.lights;
 }
 
-static inline void addlight(const extentity &light, int cx, int cy, int cz, int size, plane planes[2], int numplanes)
+static inline void addlight(const extentity &light, int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2)
 {
-	int radius = light.attr1;
-	if(radius > 0)
-	{
-		if(light.o.x + radius < cx || light.o.x - radius > cx + size ||
-			light.o.y + radius < cy || light.o.y - radius > cy + size ||
-			light.o.z + radius < cz || light.o.z - radius > cz + size)
-			return;
-	}
+    int radius = light.attr1;
+    if(radius > 0)
+    {
+        if(light.o.x + radius < cx || light.o.x - radius > cx + size ||
+           light.o.y + radius < cy || light.o.y - radius > cy + size ||
+           light.o.z + radius < cz || light.o.z - radius > cz + size)
+            return;
+    }
 
-	float dist = planes[0].dist(light.o);
-	if(dist >= 0.0 && (!radius || dist < float(radius)))
-		lights1.add(&light);
-	if(numplanes > 1)
-	{
-		dist = planes[1].dist(light.o);
-		if(dist >= 0.0 && (!radius || dist < float(radius)))
-			lights2.add(&light);
-	}
+    if(!n2)
+    {
+        loopi(4)
+        {
+            vec p(light.o);
+            p.sub(v[i]);
+            float dist = p.dot(n[i]);
+            if(dist >= 0 && (!radius || dist < radius))
+            {
+                lights1.add(&light);
+                return;
+            }
+        }
+        return;
+    }
+
+    bool plane1 = false, plane2 = false;
+    loopi(4)
+    {
+        vec p(light.o);
+        p.sub(v[i]);
+        if(i != 3)
+        {
+            float dist = p.dot(n[i]);
+            if(dist >= 0 && (!radius || dist < radius))
+            {
+                plane1 = true;
+                if(plane2) break;
+            }
+        }
+        if(i != 1)
+        {
+            float dist = p.dot(n2[i > 0 ? i-1 : 0]);
+            if(dist >= 0 && (!radius || dist < radius))
+            {
+                plane2 = true;
+                if(plane1) break;
+            }
+        }
+    }
+
+    if(plane1) lights1.add(&light);
+    if(plane2) lights2.add(&light);
 }
 
-bool find_lights(int cx, int cy, int cz, int size, plane planes[2], int numplanes)
+bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2)
 {
-	lights1.setsize(0);
-	lights2.setsize(0);
-	const vector<extentity *> &ents = et->getents();
-	if(size <= 1<<lightcachesize)
-	{
-		const vector<int> &lights = checklightcache(cx, cy);
-		loopv(lights)
-		{
-			const extentity &light = *ents[lights[i]];
-			addlight(light, cx, cy, cz, size, planes, numplanes);
-		}
-	}
-	else loopv(ents)
-	{
-		const extentity &light = *ents[i];
-		if(light.type != ET_LIGHT) continue;
-		addlight(light, cx, cy, cz, size, planes, numplanes);
-	}
+    lights1.setsize(0);
+    lights2.setsize(0);
+    const vector<extentity *> &ents = et->getents();
+    if(size <= 1<<lightcachesize)
+    {
+        const vector<int> &lights = checklightcache(cx, cy);
+        loopv(lights)
+        {
+            const extentity &light = *ents[lights[i]];
+            addlight(light, cx, cy, cz, size, v, n, n2);
+        }
+    }
+    else loopv(ents)
+    {
+        const extentity &light = *ents[i];
+        if(light.type != ET_LIGHT) continue;
+        addlight(light, cx, cy, cz, size, v, n, n2);
+    }
+
 	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 	return lights1.length() || lights2.length() || sky[0]>ambient || sky[1]>ambient || sky[2]>ambient;
 }
@@ -922,25 +957,22 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
 			numplanes = 1;
 			int msz = calcmergedsize(i, mo, size, m, mv);
 			mo.mask(~((1<<msz)-1));
-			if(!find_lights(mo.x, mo.y, mo.z, 1<<msz, planes, numplanes))
-			{
-				if(!(shader->type&SHADER_ENVMAP)) continue;
-			}
 
 			loopj(4)
 			{
 				v[j] = mv[j].tovec(mo);
 				if(!findnormal(mo, i, mv[j], n[j], j)) n[j] = planes[0];
 			}
+
+            if(!find_lights(mo.x, mo.y, mo.z, 1<<msz, v, n, NULL))
+            {
+                if(!(shader->type&(SHADER_NORMALSLMS | SHADER_ENVMAP))) continue;
+            }
 		}
 		else
 		{
 			numplanes = genclipplane(c, i, verts, planes);
 			if(!numplanes) continue;
-            if(!find_lights(cx, cy, cz, size, planes, numplanes))
-            {
-                if(!(shader->type&(SHADER_NORMALSLMS | SHADER_ENVMAP))) continue;
-            }
 
 			loopj(4) n[j] = planes[0];
 			if(numplanes >= 2) loopj(3) n2[j] = planes[1];
@@ -957,6 +989,11 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
 					else if(j == 2) n[2] = n2[1];
 				}
 			}
+
+            if(!find_lights(cx, cy, cz, size, v, n, numplanes > 1 ? n2 : NULL))
+            {
+                if(!(shader->type&(SHADER_NORMALSLMS | SHADER_ENVMAP))) continue;
+            }
 		}
 		lmtype = LM_DIFFUSE;
 		lmorient = i;
