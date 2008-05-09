@@ -298,8 +298,8 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 			// transform to tangent space
             extern float orientation_tangent[5][3][4];
             extern float orientation_binormal[5][3][4];
-            vec S(orientation_tangent[4-lmrotate][dimension(lmorient)]),
-                T(orientation_binormal[4-lmrotate][dimension(lmorient)]);
+            vec S(orientation_tangent[lmrotate][dimension(lmorient)]),
+                T(orientation_binormal[lmrotate][dimension(lmorient)]);
             normal.orthonormalize(S, T);
             avgray.normalize();
             lm_ray[y*lm_w+x].add(vec(S.dot(avgray), T.dot(avgray), normal.dot(avgray)));
@@ -1226,7 +1226,7 @@ static void rotatenormals(cube *c)
                 continue;
             surfaceinfo &surface = ch.ext->surfaces[j];
             LightMap &lmlv = lightmaps[surface.lmid+1-LMID_RESERVED];
-            rotatenormals(lmlv, surface.x, surface.y, surface.w, surface.h, 4-slot.rotation);
+            rotatenormals(lmlv, surface.x, surface.y, surface.w, surface.h, slot.rotation < 4 ? 4-slot.rotation : slot.rotation);
         }
     }
 }
