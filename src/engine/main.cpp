@@ -131,7 +131,7 @@ VARF(fullscreen, 0, 1, 1, setfullscreen(fullscreen!=0));
 void screenres(int *w, int *h)
 {
 #if !defined(WIN32) && !defined(__APPLE__)
-	if(initing)
+    if(initing >= INIT_RESET)
 	{
 #endif
 		scr_w = *w;
