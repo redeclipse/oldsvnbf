@@ -134,7 +134,7 @@ void aliasa(const char *name, char *action)
             if(b->world != worldidents && worldidents) b->world = worldidents;
 		}
 	}
-	if(b) cl->editvar(b, interactive);
+	if(b && cl) cl->editvar(b, interactive);
 }
 
 void alias(const char *name, const char *action) { aliasa(name, newstring(action)); }
@@ -512,7 +512,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						}
                         *id->storage.i = i1;
                         id->changed();                                             // call trigger function if available
-						cl->editvar(id, interactive);
+						if(cl) cl->editvar(id, interactive);
 					}
                     break;
 
@@ -524,7 +524,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         OVERRIDEVAR(id->overrideval.f = *id->storage.f, );
                         *id->storage.f = atof(w[1]);
                         id->changed();
-						cl->editvar(id, interactive);
+						if(cl) cl->editvar(id, interactive);
                     }
                     break;
 
@@ -536,7 +536,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s);
                         *id->storage.s = newstring(w[1]);
                         id->changed();
-						cl->editvar(id, interactive);
+						if(cl) cl->editvar(id, interactive);
 					}
 					break;
 
