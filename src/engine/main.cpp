@@ -42,6 +42,7 @@ void fatal(const char *s, ...)    // failure exit
 SDL_Surface *screen = NULL;
 
 static int initing = NOT_INITING;
+static bool restoredinits = false;
 
 bool initwarning(const char *desc, int level, int type)
 {
@@ -63,6 +64,7 @@ VARF(vsync, -1, -1, 1, initwarning("vertical sync"));
 
 void writeinitcfg()
 {
+    if(!restoredinits) return;
 	FILE *f = openfile("init.cfg", "w");
 	if(!f) return;
 	fprintf(f, "// automatically written on exit, DO NOT MODIFY\n// modify settings in game\n");
@@ -623,7 +625,7 @@ int main(int argc, char **argv)
 		{
             case 'q': printf("Using home directory: %s\n", &argv[i][2]); sethomedir(&argv[i][2]); break;
             case 'k': printf("Adding package directory: %s\n", &argv[i][2]); addpackagedir(&argv[i][2]); break;
-			case 'r': execfile(argv[i][2] ? &argv[i][2] : "init.cfg"); break;
+			case 'r': execfile(argv[i][2] ? &argv[i][2] : "init.cfg"); restoredinits = true; break;
             case 'w': scr_w = atoi(&argv[i][2]); if(scr_w<320) scr_w = 320; if(!findarg(argc, argv, "-h")) scr_h = (scr_w*3)/4; break;
             case 'h': scr_h = atoi(&argv[i][2]); if(scr_h<200) scr_h = 200; if(!findarg(argc, argv, "-w")) scr_w = (scr_h*4)/3; break;
 			case 'z': depthbits = atoi(&argv[i][2]); break;
