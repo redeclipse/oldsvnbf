@@ -456,6 +456,7 @@ extern void endmodelquery();
 // renderparticles
 extern void particleinit();
 extern void clearparticles();
+extern void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4);
 extern void makeparticles(entity &e);
 extern void entity_particles();
 

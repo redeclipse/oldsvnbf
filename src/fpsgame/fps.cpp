@@ -1128,13 +1128,14 @@ struct GAMECLIENT : igameclient
 
 		if (!editmode)
 		{
-			if(thirdperson())
-			{
+//			if(thirdperson())
+//			{
 				vec pos;
 				vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, pos);
 				camera1->o.x += pos.x*thirdpersondist();
 				camera1->o.y += pos.y*thirdpersondist();
 				camera1->o.z += (pos.z*thirdpersondist())+thirdpersonheight();
+/*
 			}
 			else
 			{
@@ -1161,9 +1162,9 @@ struct GAMECLIENT : igameclient
 
 					vec off;
 					vecfromyawpitch(camera1->yaw, camera1->pitch, -1, -1, off);
-					off.x *= camera1->radius;
-					off.y *= camera1->radius;
-					off.z *= camera1->height;
+					off.x *= camera1->radius+1.f;
+					off.y *= camera1->radius+1.f;
+					off.z *= camera1->height+1.f;
 					camera1->o.add(off);
 #if 0
 					vec sway;
@@ -1181,7 +1182,7 @@ struct GAMECLIENT : igameclient
 #endif
 				}
 			}
-
+*/
 			if(camerawobble > 0 && cameratype == lastcam)
 			{
 				float pc = float(min(camerawobble, 100))/100.f;
@@ -1199,7 +1200,6 @@ struct GAMECLIENT : igameclient
 			vectoyawpitch(rot, camera1->yaw, camera1->pitch);
 		}
 
-		fixview();
 		fixrange(camera1);
 	}
 
