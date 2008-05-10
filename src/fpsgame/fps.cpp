@@ -1041,6 +1041,8 @@ struct GAMECLIENT : igameclient
 	void recomputecamera()
 	{
 		int secs = time(NULL), lastcam = cameratype, camstate = CS_ALIVE;
+		int timeinair, crouchtime, lastpain;
+		bool crouches;
 
 		camera1 = &fpscamera;
 		cameratype = CAMERA_NONE;
@@ -1072,9 +1074,10 @@ struct GAMECLIENT : igameclient
 				camera1->roll = players[-cameranum]->roll;
 				camera1->radius = players[-cameranum]->radius;
 				camera1->height = players[-cameranum]->height;
-				camera1->timeinair = players[-cameranum]->timeinair;
-				camera1->crouching = players[-cameranum]->crouching;
-				camera1->crouchtime = players[-cameranum]->crouchtime;
+				timeinair = players[-cameranum]->timeinair;
+				crouches = players[-cameranum]->crouching;
+				lastpain = players[-cameranum]->lastpain;
+				crouchtime = players[-cameranum]->crouchtime;
 			}
 			else if(player1->clientnum != -cameranum)
 			{
@@ -1095,9 +1098,8 @@ struct GAMECLIENT : igameclient
 							camera1->roll = player1->roll;
 							camera1->radius = player1->radius;
 							camera1->height = player1->height;
-							camera1->timeinair = 0;
-							camera1->crouching = false;
-							camera1->crouchtime = 0;
+							timeinair = crouchtime = lastpain = 0;
+							crouches = false;
 							break;
 						}
 						cameras++;
@@ -1116,43 +1118,41 @@ struct GAMECLIENT : igameclient
 			camera1->roll = player1->roll;
 			camera1->radius = player1->radius;
 			camera1->height = player1->height;
-			camera1->timeinair = player1->timeinair;
-			camera1->crouching = player1->crouching;
-			camera1->crouchtime = player1->crouchtime;
+			timeinair = player1->timeinair;
+			crouches = player1->crouchtime;
+			lastpain = player1->lastpain;
+			crouches = player1->crouching;
 		}
+
+		findorientation(camera1, worldpos);
 
 		if (!editmode)
 		{
-			if(gamethirdperson())
+			if(thirdperson())
 			{
 				vec pos;
-
 				vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, pos);
 				camera1->o.x += pos.x*thirdpersondist();
 				camera1->o.y += pos.y*thirdpersondist();
 				camera1->o.z += (pos.z*thirdpersondist())+thirdpersonheight();
-
-				findorientation(player1, pos);
-				vec rot(pos);
-				rot.sub(camera1->o);
-				rot.normalize();
-				vectoyawpitch(rot, camera1->yaw, camera1->pitch);
 			}
 			else
 			{
 				if(camstate == CS_DEAD)
 				{
-					camera1->o.z -= (player1->height/2000.f)*float(min(lastmillis-player1->lastpain, 2000));
-					camera1->o.z = max(player1->o.z - player1->height + 1.0f, camera1->o.z);
+					camera1->o.z -= camera1->height;
+					camera1->height -= (camera1->height/2000.f)*float(min(lastmillis-lastpain, 2000));
+					camera1->height = max(camera1->height, 1.f);
+					camera1->o.z += camera1->height;
 				}
 				else if(camstate == CS_ALIVE)
 				{
-					if(camera1->crouchtime)
+					if(crouchtime)
 					{
 						float crouching = 0.f;
 
-						if(camera1->crouching) crouching = min(1.0f, (lastmillis-camera1->crouchtime)/200.f);
-						else crouching = max(0.0f, 1.f-((lastmillis-camera1->crouchtime)/200.f));
+						if(crouches) crouching = min(1.0f, (lastmillis-crouchtime)/200.f);
+						else crouching = max(0.0f, 1.f-((lastmillis-crouchtime)/200.f));
 
 						camera1->o.z -= camera1->height;
 						camera1->height -= crouching*(1-CROUCHHEIGHT)*camera1->height;
@@ -1160,14 +1160,12 @@ struct GAMECLIENT : igameclient
 					}
 
 					vec off;
-					vecfromyawpitch(camera1->yaw, min(camera1->pitch,80.f)+60.f, 1, 0, off);
-					off.x *= camera1->radius-0.5f;
-					off.y *= camera1->radius-0.5f;
-					off.z = max(off.z, 0.f);
-					off.z *= camera1->height*0.5f;
-					off.sub(vec(0, 0, camera1->height*0.5f));
+					vecfromyawpitch(camera1->yaw, camera1->pitch, -1, -1, off);
+					off.x *= camera1->radius;
+					off.y *= camera1->radius;
+					off.z *= camera1->height;
 					camera1->o.add(off);
-
+#if 0
 					vec sway;
 					vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
 					float swayspeed = sqrtf(player1->vel.x*player1->vel.x + player1->vel.y*player1->vel.y);
@@ -1180,23 +1178,29 @@ struct GAMECLIENT : igameclient
 					sway.z = -fabs(swayspeed*swayz);
 					sway.add(swaydir);
 					camera1->o.add(sway);
+#endif
 				}
 			}
 
 			if(camerawobble > 0 && cameratype == lastcam)
 			{
 				float pc = float(min(camerawobble, 100))/100.f;
-				#define wobble (float(rnd(8)-4)*pc)
+				#define wobble (float(rnd(16)-8)*pc)
 				camera1->yaw += wobble;
 				camera1->pitch += wobble;
 				camera1->roll += wobble;
 			}
 			else camerawobble = 0;
+
+			// correct camera position
+			vec rot(worldpos);
+			rot.sub(camera1->o);
+			rot.normalize();
+			vectoyawpitch(rot, camera1->yaw, camera1->pitch);
 		}
 
 		fixview();
 		fixrange(camera1);
-		findorientation(camera1, worldpos);
 	}
 
 	void setposition(vec &v)
@@ -1212,9 +1216,13 @@ struct GAMECLIENT : igameclient
 
 	bool gamethirdperson()
 	{
+#if 0
 		return cameratype <= CAMERA_FOLLOW && thirdperson() &&
 			player1->state != CS_EDITING && player1->state != CS_SPECTATOR &&
 			(cameratype != CAMERA_PLAYER || player1->gunselect != GUN_RIFLE || fov >= 90);
+#else
+		return true;
+#endif
 	}
 
 	void menuevent(int event)
