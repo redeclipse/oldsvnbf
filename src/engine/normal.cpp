@@ -1,25 +1,10 @@
 #include "pch.h"
 #include "engine.h"
 
-#define NORMAL_BITS 11
-
-struct nvec : svec
-{
-	nvec(const vec &v) : svec(short(v.x*(1<<NORMAL_BITS)), short(v.y*(1<<NORMAL_BITS)), short(v.z*(1<<NORMAL_BITS))) {}
-
-	float dot(const vec &o) const
-	{
-		return x*o.x + y*o.y + z*o.z;
-	}
-
-	vec tovec() const { return vec(x, y, z).normalize(); }
-};
-
 struct normal
 {
-	uchar corner;
-	nvec surface;
-	nvec average;
+    int next;
+	vec surface;
 };
 
 struct nkey
@@ -36,7 +21,9 @@ struct nkey
 
 struct nval
 {
-	vector<normal> normals;
+    int normals;
+
+    nval() : normals(-1) {}
 };
 
 static inline bool htcmp(const nkey &x, const nkey &y)
@@ -49,52 +36,43 @@ static inline uint hthash(const nkey &k)
 	return k.v.x^k.v.y^k.v.z;
 }
 
-hashtable<nkey, nval> normals;
+hashtable<nkey, nval> normalgroups(1<<16);
+vector<normal> normals;
 
 VARW(lerpangle, 0, 44, 180);
 
 static float lerpthreshold = 0;
 
-void addnormal(const ivec &origin, int orient, int index, const vvec &offset, const vec &surface)
+void addnormal(const ivec &origin, const vvec &offset, const vec &surface)
 {
     nkey key(origin, offset);
-    nval &val = normals[key];
-
-    uchar corner = (orient<<4) | index;
-
-    loopv(val.normals) if(val.normals[i].corner == corner) return;
-
-    normal n = {corner, surface, surface};
-    loopv(val.normals)
-    {
-        normal &o = val.normals[i];
-        if(o.corner != n.corner && o.surface.dot(surface) > lerpthreshold)
-        {
-            o.average.add(n.surface);
-            n.average.add(o.surface);
-        }
-    }
-    val.normals.add(n);
+    nval &val = normalgroups[key];
+    normal &n = normals.add();
+    n.next = val.normals;
+    n.surface = surface;
+    val.normals = normals.length()-1;
 }
 
-bool findnormal(const ivec &origin, int orient, int index, const vvec &offset, vec &v)
+void findnormal(const ivec &origin, const vvec &offset, const vec &surface, vec &v)
 {
     nkey key(origin, offset);
-    nval *val = normals.access(key);
-    if(!val) return false;
+    nval *val = normalgroups.access(key);
+    if(!val) { v = surface; return; }
 
-    uchar corner = (orient<<4) | index;
-
-    loopv(val->normals)
+    v = vec(0, 0, 0);
+    int total = 0;
+    for(int cur = val->normals; cur >= 0;)
     {
-        normal &n = val->normals[i];
-        if(n.corner == corner)
+        normal &o = normals[cur];
+        if(o.surface.dot(surface) >= lerpthreshold)
         {
-            v = n.average.tovec();
-            return true;
+            v.add(o.surface);
+            total++;
         }
+        cur = o.next;
     }
-    return false;
+    if(total > 1) v.normalize();
+    else if(!total) v = surface;
 }
 
 VARW(lerpsubdiv, 0, 2, 4);
@@ -149,16 +127,16 @@ void addnormals(cube &c, const ivec &o, int size)
 			avg.add(planes[1]);
 			avg.normalize();
 		}
-		int index = faceverts(c, i, 0);
-		loopj(4)
-		{
-            const vvec &v = vvecs[index];
+        int idxs[4];
+        loopj(4) idxs[j] = faceverts(c, i, j);
+        loopj(4)
+        {
+            const vvec &v = vvecs[idxs[j]], &vn = vvecs[idxs[(j+1)%4]];
+            if(v==vn) continue;
             const vec &cur = numplanes < 2 || j == 1 ? planes[0] : (j == 3 ? planes[1] : avg);
-            addnormal(o, i, index, v, cur);
-            index = faceverts(c, i, (j+1)%4);
+            addnormal(o, v, cur);
             if(subdiv < 2) continue;
-            const vvec &v2 = vvecs[index];
-            vvec dv(v2);
+            vvec dv(vn);
             dv.sub(v);
             dv.div(subdiv);
             vvec vs(v);
@@ -166,7 +144,7 @@ void addnormals(cube &c, const ivec &o, int size)
             if(numplanes < 2) loopk(subdiv - 1)
             {
                 vs.add(dv);
-                addnormal(o, i, index, vs, planes[0]);
+                addnormal(o, vs, planes[0]);
             }
             else
             {
@@ -178,24 +156,25 @@ void addnormals(cube &c, const ivec &o, int size)
                 {
                     vs.add(dv);
                     n.add(dn);
-                    addnormal(o, i, index, vs, vec(dn).normalize());
+                    addnormal(o, vs, vec(dn).normalize());
                 }
             }
-		}
+        }
 	}
 }
 
 void calcnormals()
 {
-	if(!lerpangle) return;
-	lerpthreshold = (1<<NORMAL_BITS)*cos(lerpangle*RAD);
-	progress = 1;
-	loopi(8) addnormals(worldroot[i], ivec(i, 0, 0, 0, hdr.worldsize/2), hdr.worldsize/2);
+    if(!lerpangle) return;
+    lerpthreshold = cos(lerpangle*RAD) - 1e-5f;
+    progress = 1;
+    loopi(8) addnormals(worldroot[i], ivec(i, 0, 0, 0, hdr.worldsize/2), hdr.worldsize/2);
 }
 
 void clearnormals()
 {
-	normals.clear();
+    normalgroups.clear();
+    normals.setsizenodelete(0);
 }
 
 void calclerpverts(const vec &origin, const vec *p, const vec *n, const vec &ustep, const vec &vstep, lerpvert *lv, int &numv)

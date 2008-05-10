@@ -418,7 +418,7 @@ template <class K, class T> struct hashtable
     typedef T value;
     typedef const T const_value;
 
-    enum { CHUNKSIZE = 16 };
+    enum { CHUNKSIZE = 64 };
 
     struct chain      { T data; K key; chain *next; };
     struct chainchunk { chain chains[CHUNKSIZE]; chainchunk *next; };
