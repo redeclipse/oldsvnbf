@@ -687,6 +687,7 @@ struct clientcom : iclientcom
 				fpsent *s = cl.getclient(scn);
 				if(!s || gun < 0) break;
 				if(gun==GUN_SG) cl.ws.createrays(from, to);
+				s->gunstate[gun] = GUNSTATE_SHOOT;
 				s->gunwait[gun] = 0;
 				s->gunlast[gun] = lastmillis;
 				s->lastattackgun = gun;

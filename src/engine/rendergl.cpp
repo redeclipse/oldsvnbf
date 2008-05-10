@@ -1246,6 +1246,9 @@ void gl_drawframe(int w, int h)
     addglare();
 	renderfullscreenshader(w, h);
 
+    defaultshader->set();
+    g3d_render();
+
 	glDisable(GL_TEXTURE_2D);
 	notextureshader->set();
 
@@ -1305,6 +1308,12 @@ void drawcrosshair(int w, int h)
 			crosshair = crosshairs[index];
 		}
 		float cx = 0.5f, cy = 0.5f, chsize = crosshairsize*w/300.0f;
+
+		if(index == 0)
+		{
+			chsize = cursorsize*w/300.0f;
+			g3d_cursorpos(cx, cy);
+		}
 
 		if(crosshair->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
@@ -1394,7 +1403,6 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 	defaultshader->set();
 
 	glDisable(GL_BLEND);
-	g3d_render();
 	cl->drawhud(w, h); // can make more dramatic changes this way without getting in the way
 
 	glDisable(GL_BLEND);

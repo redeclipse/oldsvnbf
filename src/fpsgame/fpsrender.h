@@ -25,6 +25,11 @@ struct fpsrender
 			attack = ANIM_TAUNT;
 			delay = 1000;
 		}
+		else if (isgun(d->gunselect) && lastmillis-d->gunlast[d->gunselect] < d->gunwait[d->gunselect])
+		{
+			if(d->gunstate[d->gunselect] == GUNSTATE_RELOAD)
+				attack = ANIM_RELOAD;
+		}
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
 		static const char *vweps[] = { "weapons/pistol/vwep", "weapons/shotgun/vwep", "weapons/chaingun/vwep", "weapons/grenades/vwep", "weapons/rockets/vwep", "weapons/rifle/vwep"};
         int ai = 0;

@@ -29,7 +29,7 @@
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
-				<Option parameters="-f -t -w640 -h480 -rbfa\init.cfg -qhome"/>
+				<Option parameters="-f -t -w640 -h480 -qhome -rbfa\init.cfg"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
 				<Option projectResourceIncludeDirsRelation="1"/>
@@ -72,7 +72,7 @@
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
-				<Option parameters="-f -t -w640 -h480 -rbfa\init.cfg -qhome"/>
+				<Option parameters="-f -t -w640 -h480 -qhome -rbfa\init.cfg"/>
 				<Option includeInTargetAll="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>

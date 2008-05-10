@@ -1842,6 +1842,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canshoot(e.gun, e.millis)) { return; }
 		if (guntype[e.gun].max) gs.ammo[e.gun]--;
+		gs.gunstate[e.gun] = GUNSTATE_SHOOT;
 		gs.lastshot = gs.gunlast[e.gun] = e.millis;
 		gs.gunwait[e.gun] = guntype[e.gun].adelay;
 		sendf(-1, 1, "ri9x", SV_SHOTFX, ci->clientnum, e.gun,

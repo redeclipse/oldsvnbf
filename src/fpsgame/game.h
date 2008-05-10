@@ -108,6 +108,14 @@ enum
 	NUMGUNS
 };
 
+enum
+{
+	GUNSTATE_NONE = 0,
+	GUNSTATE_SHOOT,
+	GUNSTATE_RELOAD,
+	GUNSTATE_MAX
+};
+
 static struct guntypes
 {
 	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	const char *name;
@@ -354,11 +362,18 @@ static const char *serverstatustypes[] = {
 struct fpsstate
 {
 	int health, ammo[NUMGUNS];
-	int gunselect, gunwait[NUMGUNS], gunlast[NUMGUNS];
+	int gunselect, gunstate[NUMGUNS], gunwait[NUMGUNS], gunlast[NUMGUNS];
 	int lastdeath, lifesequence, lastshot, lastspawn, lastpain, lastregen;
 	int ownernum;
 
-	fpsstate() : lifesequence(0), ownernum(-1) {}
+	fpsstate() : lifesequence(0), ownernum(-1)
+	{
+		loopi(NUMGUNS)
+		{
+			gunstate[i] = GUNSTATE_NONE;
+			gunwait[i] = gunlast[i] = 0;
+		}
+	}
 	~fpsstate() {}
 
 	bool canweapon(int gun, int millis)
@@ -425,8 +440,9 @@ struct fpsstate
 
 				ammo[g.info] = min(ammo[g.info] + (attr2 > 0 ? attr2 : g.add), g.max);
 
-				lastshot = gunlast[g.info] = millis;
+				gunstate[g.info] = GUNSTATE_RELOAD;
 				gunwait[g.info] = (guntype[g.info].rdelay ? guntype[g.info].rdelay : guntype[g.info].adelay);
+				gunlast[g.info] = lastshot = millis;
 				break;
 			}
 			default: break;
@@ -439,10 +455,11 @@ struct fpsstate
 		lastdeath = lastshot = lastspawn = lastpain = lastregen = 0;
 		loopi(NUMGUNS)
 		{
+			gunstate[i] = GUNSTATE_NONE;
 			gunwait[i] = gunlast[i] = 0;
+			ammo[i] = -1;
 		}
 		gunselect = -1;
-		loopi(NUMGUNS) ammo[i] = -1;
 	}
 
 	void spawnstate(int gamemode, int mutators)

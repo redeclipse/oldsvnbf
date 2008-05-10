@@ -664,7 +664,6 @@ struct GAMECLIENT : igameclient
 		hoff += FONTH;
 
 		drawcrosshair(w, h);
-
 		renderconsole(w, h);
 
 		if(!hidestats())
