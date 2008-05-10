@@ -103,8 +103,9 @@ struct animmodel : model
                   r = max(lightcolor.x, mincolor), g = max(lightcolor.y, mincolor), b = max(lightcolor.z, mincolor);
             if(masked)
             {
+                if(enableoverbright) disableoverbright();
                 if(!enableglow) setuptmu(0, "K , C @ T", as->anim&ANIM_ENVMAP && envmapmax>0 ? "Ca * Ta" : NULL);
-                int glowscale = glow>2 ? 4 : (glow > 1 ? 2 : 1);
+                int glowscale = glow>2 ? 4 : (glow>1 || mincolor>1 ? 2 : 1);
                 float envmap = as->anim&ANIM_ENVMAP && envmapmax>0 ? 0.2f*envmapmax + 0.8f*envmapmin : 1;
                 colortmu(0, glow/glowscale, glow/glowscale, glow/glowscale);
                 if(fullbright) glColor4f(fullbright/glowscale, fullbright/glowscale, fullbright/glowscale, envmap);
@@ -137,13 +138,20 @@ struct animmodel : model
             else
             {
                 if(enableglow) disableglow();
-                if(fullbright) glColor4f(fullbright, fullbright, fullbright, as->anim&ANIM_TRANSLUCENT ? translucency : 1);
+                int colorscale = 1;
+                if(mincolor>1 && maxtmus>=1)
+                {
+                    colorscale = 2;
+                    if(!enableoverbright) { setuptmu(0, "C * T x 2"); enableoverbright = true; }
+                }
+                else if(enableoverbright) disableoverbright();
+                if(fullbright) glColor4f(fullbright/colorscale, fullbright/colorscale, fullbright, as->anim&ANIM_TRANSLUCENT ? translucency : 1);
                 else if(lightmodels)
                 {
-                    GLfloat material[4] = { 1, 1, 1, as->anim&ANIM_TRANSLUCENT ? translucency : 1 };
+                    GLfloat material[4] = { 1.0f/colorscale, 1.0f/colorscale, 1.0f/colorscale, as->anim&ANIM_TRANSLUCENT ? translucency : 1 };
                     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, material);
                 }
-                else glColor4f(r, g, b, as->anim&ANIM_TRANSLUCENT ? translucency : 1);
+                else glColor4f(r/colorscale, g/colorscale, b/colorscale, as->anim&ANIM_TRANSLUCENT ? translucency : 1);
             }
             if(needsfog>=0)
             {
@@ -1207,7 +1215,7 @@ struct animmodel : model
         center.add(radius);
     }
 
-    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enablelighting, enablelight0, enablecullface, enablefog, enabletangents, enablebones;
+    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enableoverbright, enablelighting, enablelight0, enablecullface, enablefog, enabletangents, enablebones;
     static vec lightcolor;
     static plane refractfogplane;
     static float lastalphatest;
@@ -1218,7 +1226,7 @@ struct animmodel : model
 
     void startrender()
     {
-        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enablelighting = enablefog = enabletangents = enablebones = false;
+        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enableoverbright = enablelighting = enablefog = enabletangents = enablebones = false;
         enablecullface = true;
         lastalphatest = -1;
         lastvbuf = lasttcbuf = lastmtcbuf = lastnbuf = lastbbuf = lastsdata = lastbdata = NULL;
@@ -1282,6 +1290,12 @@ struct animmodel : model
         lastebuf = 0;
     }
 
+    static void disableoverbright()
+    {
+        resettmu(0);
+        enableoverbright = false;
+    }
+
     static void disableglow()
     {
         resettmu(0);
@@ -1336,7 +1350,7 @@ struct animmodel : model
 };
 
 bool animmodel::enabletc = false, animmodel::enablemtc = false, animmodel::enablealphatest = false, animmodel::enablealphablend = false,
-     animmodel::enableenvmap = false, animmodel::enableglow = false, animmodel::enablelighting = false, animmodel::enablelight0 = false, animmodel::enablecullface = true,
+     animmodel::enableenvmap = false, animmodel::enableglow = false, animmodel::enableoverbright = false, animmodel::enablelighting = false, animmodel::enablelight0 = false, animmodel::enablecullface = true,
      animmodel::enablefog = false, animmodel::enabletangents = false, animmodel::enablebones = false;
 vec animmodel::lightcolor;
 plane animmodel::refractfogplane;
