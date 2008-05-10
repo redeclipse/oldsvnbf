@@ -290,6 +290,7 @@ struct weaponstate
 	{
 		if (d->canreload(d->gunselect, lastmillis))
 		{
+			d->gunstate[d->gunselect] = GUNSTATE_RELOAD;
 			d->gunlast[d->gunselect] = lastmillis;
 			d->gunwait[d->gunselect] = guntype[d->gunselect].rdelay;
 			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
@@ -302,6 +303,7 @@ struct weaponstate
 		if((d != cl.player1 && d->ownernum != cl.player1->clientnum) || !d->canshoot(d->gunselect, lastmillis)) return;
 
 		d->lastattackgun = d->gunselect;
+		d->gunstate[d->gunselect] = GUNSTATE_SHOOT;
 		d->gunlast[d->gunselect] = lastmillis;
 		d->gunwait[d->gunselect] = guntype[d->gunselect].adelay;
 		d->ammo[d->gunselect]--;

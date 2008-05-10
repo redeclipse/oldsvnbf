@@ -681,7 +681,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
                 if(doOQ && d->occluded+1>=OCCLUDE_BB && d->query && d->query->owner==d && checkquery(d->query)) return;
             }
             if(!addshadowmapcaster(center, radius, radius)) return;
-	}
+		}
         else if(cull&MDL_CULL_OCCLUDED && modeloccluded(center, radius))
         {
             if(!reflecting && !refracting && d)
@@ -854,7 +854,7 @@ void findanims(const char *pattern, vector<int> &anims)
 		"dead", "dying", "idle",
 		"forward", "backward", "left", "right",
 		"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
-		"punch", "shoot", "pain",
+		"punch", "shoot", "reload", "pain",
 		"jump", "sink", "swim",
 		"edit", "lag", "taunt", "win", "lose",
 		"gun shoot", "gun idle", "gun reload", "gun zoom",
