@@ -6,7 +6,7 @@ VAR(depthfxmargin, 0, 16, 64);
 VAR(depthfxbias, 0, 1, 64);
 
 extern void cleanupdepthfx();
-VARFP(fpdepthfx, 0, 1, 1, cleanupdepthfx());
+VARFP(fpdepthfx, 0, 0, 1, cleanupdepthfx());
 VARFP(depthfxprecision, 0, 0, 1, cleanupdepthfx());
 VARFP(depthfxsize, 6, 7, 10, cleanupdepthfx());
 VARP(depthfx, 0, 1, 1);

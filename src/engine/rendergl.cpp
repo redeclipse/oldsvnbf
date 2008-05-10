@@ -253,9 +253,8 @@ void gl_checkextensions()
         reserveshadowmaptc = 3;
         minimizetcusage = 1;
         emulatefog = 1;
-        extern int fpdepthfx, depthfxprecision;
-        fpdepthfx = 0;
-        depthfxprecision = 1;
+        extern int depthfxprecision;
+        if(hasTF) depthfxprecision = 1;
 
         ati_texgen_bug = 1;
     }
@@ -292,6 +291,8 @@ void gl_checkextensions()
 
         nvidia_texgen_bug = 1;
         if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too
+        extern int fpdepthfx;
+        if(hasTF && !strstr(renderer, "6200")) fpdepthfx = 1; // FP blending causes software fallback on 6200?
     }
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
