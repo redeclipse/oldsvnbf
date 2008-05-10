@@ -100,6 +100,8 @@ void console(const char *s, int type, ...)
 	printf("%s\n", osf);
 	fflush(stdout);
 
+	conline(sf, 0, type);
+#if 0
 	s = sf;
 	int n = 0, cx = 0, cy = 0, visible;
 	while((visible = curfont ? text_visible(s, cx, cy, (3*w - 2*CONSPAD - 2*FONTH/3 + FONTW*n)) : strlen(s))) // cut strings to fit on screen
@@ -112,6 +114,7 @@ void console(const char *s, int type, ...)
 		s += visible;
 		n++;
 	}
+#endif
 }
 
 void conoutf(const char *s, ...)
@@ -132,7 +135,7 @@ int rendercommand(int x, int y, int w)
     int width, height;
     text_bounds(s, width, height, w);
     y-= height-FONTH;
-    draw_text(s, x, y, 0xFF, 0xFF, 0xFF, 0xFF, (commandpos>=0) ? (commandpos+1+(commandprompt?strlen(commandprompt):1)) : strlen(s), w);
+    draw_text(s, x, y, 0xFF, 0xFF, 0xFF, 0xFF, true, (commandpos>=0) ? (commandpos+1+(commandprompt?strlen(commandprompt):1)) : strlen(s), w);
     return height;
 }
 

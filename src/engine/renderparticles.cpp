@@ -1087,27 +1087,27 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
     }
 }
 
-void makeparticles(entity &e)
+void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4)
 {
-    switch(e.attr1)
+    switch(attr1)
     {
         case 0: //fire
-            regularsplash(4, 0xFFC8C8, 150, 1, 40, e.o, 4.8);
-            regularsplash(5, 0x897661, 50, 1, 200,  vec(e.o.x, e.o.y, e.o.z+3.0), 2.4, 3);
+            regularsplash(4, 0xFFC8C8, 150, 1, 40, o, 4.8);
+            regularsplash(5, 0x897661, 50, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4, 3);
             break;
         case 1: //smoke vent - <dir>
-            regularsplash(5, 0x897661, 50, 1, 200,  offsetvec(e.o, e.attr2, rnd(10)), 2.4);
+            regularsplash(5, 0x897661, 50, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4);
             break;
         case 2: //water fountain - <dir>
         {
             uchar col[3];
             getwatercolour(col);
             int color = (col[0]<<16) | (col[1]<<8) | col[2];
-            regularsplash(17, color, 150, 4, 200, offsetvec(e.o, e.attr2, rnd(10)), 0.6);
+            regularsplash(17, color, 150, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6);
             break;
         }
         case 3: //fire ball - <size> <rgb>
-            newparticle(e.o, vec(0, 0, 1), 1, 14, colorfromattr(e.attr3), 4.0)->val = 1+e.attr2;
+            newparticle(o, vec(0, 0, 1), 1, 14, colorfromattr(attr3), 4.0)->val = 1+attr2;
             break;
         case 4:  //tape - <dir> <length> <rgb>
         case 7:  //lightning
@@ -1117,26 +1117,31 @@ void makeparticles(entity &e)
         {
             const int typemap[]   = {    9,  -1,  -1,   15,   4,   5,   17 };
             const float sizemap[] = { 0.28, 0.0, 0.0, 0.28, 4.8, 2.4, 0.60 };
-            int type = typemap[e.attr1-4];
-            float size = sizemap[e.attr1-4];
-            if(e.attr2 >= 256) regularshape(type, 1+e.attr3, colorfromattr(e.attr4), e.attr2-256, 5, 200, e.o, size);
-            else newparticle(e.o, offsetvec(e.o, e.attr2, 1+e.attr3), 1, type, colorfromattr(e.attr4), size);
+            int type = typemap[attr1-4];
+            float size = sizemap[attr1-4];
+            if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, 200, o, size);
+            else newparticle(o, offsetvec(o, attr2, 1+attr3), 1, type, colorfromattr(attr4), size);
             break;
         }
         case 5: //meter, metervs - <percent> <rgb>
         case 6:
-            newparticle(e.o, vec(0, 0, 1), 1, (e.attr1==5)?11:12, colorfromattr(e.attr3), 2.0)->val = min(1.0f, float(e.attr2)/100);
+            newparticle(o, vec(0, 0, 1), 1, (attr1==5)?11:12, colorfromattr(attr3), 2.0)->val = min(1.0f, float(attr2)/100);
             break;
         case 32: //lens flares - plain/sparkle/sun/sparklesun <red> <green> <blue>
         case 33:
         case 34:
         case 35:
-            flares.addflare(e.o, e.attr2, e.attr3, e.attr4, (e.attr1&0x02)!=0, (e.attr1&0x01)!=0);
+            flares.addflare(o, attr2, attr3, attr4, (attr1&0x02)!=0, (attr1&0x01)!=0);
             break;
         default:
-            s_sprintfd(ds)("@particles %d?", e.attr1);
-            particle_text(e.o, ds, 16, 1);
+            s_sprintfd(ds)("@particles %d?", attr1);
+            particle_text(o, ds, 16, 1);
     }
+}
+
+void makeparticles(entity &e)
+{
+	makeparticle(e.o, e.attr1, e.attr2, e.attr3, e.attr4);
 }
 
 void entity_particles()

@@ -18,32 +18,6 @@ struct entities : icliententities
 
 	vector<extentity *> &getents() { return ents; }
 
-    void preload()
-    {
-        loopv(ents)
-        {
-        	extentity &e = *ents[i];
-			const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-            if(!mdlname) continue;
-            loadmodel(mdlname, -1, true);
-        }
-    }
-
- 	void update()
-	{
-		waypointcheck(cl.player1);
-		loopv(cl.players) if(cl.players[i]) waypointcheck(cl.players[i]);
-		loopv(ents)
-		{
-			fpsentity &e = (fpsentity &)*ents[i];
-			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1) && (!sounds.inrange(e.schan) || !sounds[e.schan].inuse))
-			{
-				e.schan = playsound(e.attr1, &e.o, e.attr4, e.attr2, e.attr3, SND_MAP|SND_LOOP);
-				e.lastemit = lastmillis; // prevent clipping when moving around
-			}
-		}
-	}
-
    const char *itemname(int i)
 	{
 		if(ents[i]->type == WEAPON)
@@ -103,21 +77,27 @@ struct entities : icliententities
 				fpsentity &f = (fpsentity &)*ents[i];
 				if(f.links.find(index) >= 0)
 				{
+					bool both = e.links.find(i) >= 0;
+
 					switch(f.type)
 					{
 						case MAPSOUND:
 						{
 							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && mapsounds.inrange(f.attr1) && (!sounds.inrange(f.schan) || !sounds[f.schan].inuse))
 							{
-								playsound(f.attr1, &f.o, f.attr4, f.attr2, f.attr3, SND_MAP);
+								playsound(f.attr1, both ? &f.o : &e.o, f.attr4, f.attr2, f.attr3, SND_MAP);
 								f.lastemit = lastmillis;
+								if(both) e.lastemit = lastmillis;
 							}
 							break;
 						}
 						case PARTICLES:
 						{
 							if(e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER)
+							{
 								f.lastemit = lastmillis;
+								if(both) e.lastemit = lastmillis;
+							}
 							break;
 						}
 
@@ -132,27 +112,33 @@ struct entities : icliententities
 	void teleport(int n, fpsent *d)	 // also used by monsters
 	{
 		fpsentity &e = (fpsentity &)*ents[n];
-
-		while (e.links.length())
+		for (int off = 0; off < e.links.length(); off++)
 		{
-			int link = rnd(e.links.length()), targ = e.links[link];
-
-			if(ents.inrange(targ) && ents[targ]->type == TELEPORT)
+			loopi(off+1)
 			{
-				d->o = ents[targ]->o;
-				d->yaw = clamp((int)ents[targ]->attr1, 0, 359);
-				d->pitch = clamp((int)ents[targ]->attr2, -89, 89);
-				float mag = max(48.f, (float)ents[targ]->attr3+d->vel.magnitude());
-				d->vel = vec(0, 0, 0);
-				vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
-				d->o.add(d->vel);
-				d->vel.mul(mag);
-				cl.ph.entinmap(d, false);
-				execlink(d, n, true);
-				execlink(d, targ, true);
-				return;
+				int link = rnd(e.links.length()-off)+i;
+
+				if(e.links.inrange(link))
+				{
+					int targ = e.links[link];
+
+					if(ents.inrange(targ) && ents[targ]->type == TELEPORT)
+					{
+						d->o = ents[targ]->o;
+						d->yaw = clamp((int)ents[targ]->attr1, 0, 359);
+						d->pitch = clamp((int)ents[targ]->attr2, -89, 89);
+						float mag = max((float)ents[targ]->attr3+d->vel.magnitude(), 64.f);
+						d->vel = vec(0, 0, 0);
+						vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
+						d->o.add(d->vel);
+						d->vel.mul(mag);
+						cl.ph.entinmap(d, false);
+						execlink(d, n, true);
+						execlink(d, targ, true);
+						return;
+					}
+				}
 			}
-			else e.links.remove(link); // something wrong with it..
 		}
 		conoutf("unable to find a linking teleport for %d", n);
 	}
@@ -234,7 +220,7 @@ struct entities : icliententities
 		{
 			case TELEPORT:
 			{
-				if(d->lastuse == ents[n]->type && lastmillis-d->lastusemillis<500) break;
+				if(d->lastuse == ents[n]->type && lastmillis-d->lastusemillis<1000) break;
 				d->lastuse = ents[n]->type;
 				d->lastusemillis = lastmillis;
 				teleport(n, d);
@@ -243,7 +229,7 @@ struct entities : icliententities
 
 			case PUSHER:
 			{
-				if(d->lastuse==ents[n]->type && lastmillis-d->lastusemillis<500) break;
+				if(d->lastuse==ents[n]->type && lastmillis-d->lastusemillis<1000) break;
 				d->lastuse = ents[n]->type;
 				d->lastusemillis = lastmillis;
 				vec v((int)(char)ents[n]->attr3*10.0f, (int)(char)ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
@@ -381,18 +367,23 @@ struct entities : icliententities
 	{
 		if(ents.inrange(index) && ents.inrange(node))
 		{
-			if (enttype[ents[index]->type].links && enttype[ents[node]->type].links)
+			if(enttype[ents[index]->type].links && enttype[ents[node]->type].links)
 			{
 				switch(ents[index]->type)
 				{
 					case MAPMODEL:
 						if(ents[node]->type == TRIGGER) return true;
 						break;
+					case TRIGGER:
+					case PUSHER:
+						if(ents[node]->type == MAPSOUND || ents[node]->type == PARTICLES) return true;
+						break;
 					case MAPSOUND:
 					case PARTICLES:
 						if(ents[node]->type == TELEPORT || ents[node]->type == TRIGGER || ents[node]->type == PUSHER) return true;
 						break;
 					case TELEPORT:
+						if(ents[node]->type == MAPSOUND || ents[node]->type == PARTICLES) return true;
 						if(ents[node]->type == TELEPORT) return true;
 						break;
 					case BASE:
@@ -466,7 +457,7 @@ struct entities : icliententities
 
 	void linkent()
 	{
-		if(!entgroup.inrange(2))
+		if(entgroup.length() < 2)
 		{
 			conoutf("ERROR: more than one entity must be selected to link");
 			return;
@@ -475,7 +466,12 @@ struct entities : icliententities
 		loopi(entgroup.length()-1)
 		{
 			int node = entgroup[i+1];
-			if(ents.inrange(index)) linkents(index, node, false, true);
+			if(ents.inrange(index))
+			{
+				if(!canlink(index, node, false) && canlink(node, index, false))
+					linkents(node, index, false, true); // swapsies
+				else linkents(index, node, false, true);
+			}
 		}
 	}
 
@@ -832,7 +828,7 @@ struct entities : icliententities
 		loopvj(ents)
 		{
 			fpsentity &e = (fpsentity &)*ents[j];
-			loopvrev(e.links) if (!canlink(j, e.links[i], true)) e.links.remove(i);
+			loopvrev(e.links) if(!canlink(j, e.links[i], true)) e.links.remove(i);
 		}
 	}
 
@@ -960,6 +956,32 @@ struct entities : icliententities
 		}
 	}
 
+    void preload()
+    {
+        loopv(ents)
+        {
+        	extentity &e = *ents[i];
+			const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+            if(!mdlname) continue;
+            loadmodel(mdlname, -1, true);
+        }
+    }
+
+ 	void update()
+	{
+		waypointcheck(cl.player1);
+		loopv(cl.players) if(cl.players[i]) waypointcheck(cl.players[i]);
+		loopv(ents)
+		{
+			fpsentity &e = (fpsentity &)*ents[i];
+			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1) && (!sounds.inrange(e.schan) || !sounds[e.schan].inuse))
+			{
+				e.schan = playsound(e.attr1, &e.o, e.attr4, e.attr2, e.attr3, SND_MAP|SND_LOOP);
+				e.lastemit = lastmillis; // prevent clipping when moving around
+			}
+		}
+	}
+
 	void render()
 	{
 		if(rendernormally) // important, don't render lines and stuff otherwise!
@@ -1000,15 +1022,34 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			fpsentity &e = (fpsentity &)*ents[i];
-			if (e.type == NOTUSED) continue;
+			if(e.type == NOTUSED) continue;
 
-			if (e.type == PARTICLES && (!e.links.length() || lastmillis-e.lastemit < 500) && e.o.dist(camera1->o) <= maxparticledistance)
-				makeparticles((entity &)e);
+			if(e.type == PARTICLES && e.o.dist(camera1->o) <= maxparticledistance)
+			{
+				if(!e.links.length()) makeparticles((entity &)e);
+				else if(lastmillis-e.lastemit < 500)
+				{
+					bool both = false;
 
-			if (editmode)
+					loopvk(e.links) if(ents.inrange(e.links[k]))
+					{
+						fpsentity &f = (fpsentity &)*ents[e.links[k]];
+						if(f.links.find(i) >= 0 && lastmillis-f.lastemit < 500)
+						{
+							makeparticle(f.o, e.attr1, e.attr2, e.attr3, e.attr4);
+							both = true;
+						}
+					}
+
+					if(!both) // hasn't got an active reciprocal link (fallback)
+						makeparticle(e.o, e.attr1, e.attr2, e.attr3, e.attr4);
+				}
+			}
+
+			if(editmode)
 			{
 				particle_text(e.o, findname(e.type), entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
-				if (e.type != PARTICLES) regular_particle_splash(2, 2, 40, e.o);
+				if(e.type != PARTICLES) regular_particle_splash(2, 2, 40, e.o);
 			}
 		}
 	}
