@@ -773,8 +773,13 @@ void complete(char *s)
 void setcompletion(char *s, bool on)
 {
 	enumerate(*idents, ident, id,
-		if(!strcmp(id.name, s)) id.complete = on;
+		if(!strcmp(id.name, s))
+		{
+			id.complete = on;
+		}
+		return;
 	);
+	conoutf("completion of %s failed as it does not exist", s);
 }
 
 ICOMMAND(setcomplete, "ss", (char *s, char *t), {

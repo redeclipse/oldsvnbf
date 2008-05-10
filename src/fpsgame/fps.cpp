@@ -753,7 +753,7 @@ struct GAMECLIENT : igameclient
 					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, title);
 
 					glColor4f(1.f, 1.f, 1.f, fade);
-					rendericon("textures/overlay.png", ox+20-x, oy-260, 144, 144);
+					rendericon("textures/guioverlay.png", ox+20-x, oy-260, 144, 144);
 					if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
 						rendericon("textures/logo.jpg", ox+20-x, oy-260, 144, 144);
 
@@ -1124,6 +1124,7 @@ struct GAMECLIENT : igameclient
 			crouches = player1->crouching;
 		}
 
+		fixrange(camera1);
 		findorientation(camera1, worldpos);
 
 		if (!editmode)
@@ -1199,8 +1200,6 @@ struct GAMECLIENT : igameclient
 			rot.normalize();
 			vectoyawpitch(rot, camera1->yaw, camera1->pitch);
 		}
-
-		fixrange(camera1);
 	}
 
 	void setposition(vec &v)
