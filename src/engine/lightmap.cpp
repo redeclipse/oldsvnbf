@@ -962,7 +962,7 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
 			loopj(4)
 			{
 				v[j] = mv[j].tovec(mo);
-                if(!findnormal(mo, i, fv[i][j], mv[j], n[j])) n[j] = planes[0];
+                findnormal(mo, mv[j], planes[0], n[j]);
 			}
 
             if(!find_lights(mo.x, mo.y, mo.z, 1<<msz, v, n, NULL))
@@ -975,21 +975,28 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
 			numplanes = genclipplane(c, i, verts, planes);
 			if(!numplanes) continue;
 
-			loopj(4) n[j] = planes[0];
-			if(numplanes >= 2) loopj(3) n2[j] = planes[1];
-			loopj(4)
-			{
-				int index = faceverts(c, i, j);
-				const vvec &vv = vvecs[index];
-				v[j] = verts[index];
-                if(numplanes < 2 || j == 1) findnormal(ivec(cx, cy, cz), i, index, vv, n[j]);
+            vec avg;
+            if(numplanes >= 2)
+            {
+                avg = planes[0];
+                avg.add(planes[1]);
+                avg.normalize();
+            }
+
+            loopj(4)
+            {
+                int index = faceverts(c, i, j);
+                const vvec &vv = vvecs[index];
+                v[j] = verts[index];
+                if(numplanes < 2 || j == 1) findnormal(ivec(cx, cy, cz), vv, planes[0], n[j]);
+                else if(j==3) findnormal(ivec(cx, cy, cz), vv, planes[1], n2[2]);
                 else
                 {
-                    findnormal(ivec(cx, cy, cz), i, index, vv, n2[j >= 2 ? j-1 : j]);
-                    if(j == 0) n[0] = n2[0];
-                    else if(j == 2) n[2] = n2[1];
+                    findnormal(ivec(cx, cy, cz), vv, avg, n[j]);
+                    if(j) n2[j-1] = n[j];
+                    else n2[0] = n[0];
                 }
-			}
+            }
 
             if(!find_lights(cx, cy, cz, size, v, n, numplanes > 1 ? n2 : NULL))
             {
