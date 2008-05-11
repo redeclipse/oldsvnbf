@@ -29,14 +29,25 @@ void quit()					 // normal exit
 
 void fatal(const char *s, ...)    // failure exit
 {
-    SDL_ShowCursor(1);
-    s_sprintfdlv(msg,s,s);
-    puts(msg);
-#ifdef WIN32
-	MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
-#endif
-    SDL_Quit();
-	exit(EXIT_FAILURE);
+    static int errors = 0;
+    errors++;
+
+    if(errors <= 2) // print up to one extra recursive error
+    {
+        s_sprintfdlv(msg,s,s);
+        puts(msg);
+
+        if(errors <= 1) // avoid recursion
+        {   
+            SDL_ShowCursor(1);
+            #ifdef WIN32
+                MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
+            #endif
+            SDL_Quit();
+        }
+    }
+
+    exit(EXIT_FAILURE);
 }
 
 SDL_Surface *screen = NULL;
