@@ -164,7 +164,7 @@ struct decalrenderer
         }
         if(enddecal < startdecal)
         {
-            d = &decals[maxverts];
+            d = &decals[maxdecals];
             end = &decals[startdecal];
             while(d > end)
             {
