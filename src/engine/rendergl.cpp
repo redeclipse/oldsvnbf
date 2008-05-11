@@ -115,6 +115,15 @@ VAR(rtscissor, 0, 1, 1);
 VAR(blurtile, 0, 1, 1);
 VAR(rtsharefb, 0, 1, 1);
 
+static bool checkseries(const char *s, int low, int high)
+{
+    while(*s && !isdigit(*s)) ++s;
+    if(!*s) return false;
+    int n = 0;
+    while(isdigit(*s)) n = n*10 + (*s++ - '0');
+    return n >= low && n < high;
+}
+
 void gl_checkextensions()
 {
     const char *vendor = (const char *)glGetString(GL_VENDOR);
@@ -292,7 +301,8 @@ void gl_checkextensions()
         nvidia_texgen_bug = 1;
         if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too
         extern int fpdepthfx;
-        if(hasTF && !strstr(renderer, "6200")) fpdepthfx = 1; // FP blending causes software fallback on 6200?
+        if(hasTF && (!strstr(renderer, "GeForce") || !checkseries(renderer, 6000, 6600)))
+            fpdepthfx = 1; // FP filtering causes software fallback on 6200?
     }
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
