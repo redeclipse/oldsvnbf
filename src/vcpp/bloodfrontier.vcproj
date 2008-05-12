@@ -444,7 +444,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\engine\dynlight.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\engine\engine.h"
+				>
+			</File>
+			<File
+				RelativePath="..\engine\glare.cpp"
 				>
 			</File>
 			<File
@@ -724,6 +732,10 @@
 						PrecompiledHeaderThrough="pch.h"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\engine\pvs.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\engine\rendergl.cpp"
