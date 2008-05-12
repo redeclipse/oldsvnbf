@@ -2,7 +2,7 @@ MD5Version 10
 commandline ""
 
 numFrames 9
-numJoints 28
+numJoints 29
 frameRate 30
 numAnimatedComponents 139
 
@@ -27,14 +27,15 @@ hierarchy {
 	"R_Finger2"	16 61 84	// R_Finger1 ( Tx Tz Qx Qy Qz )
 	"R_Thumb1"	15 63 89	// R_Hand ( Tx Ty Tz Qx Qy Qz )
 	"R_Thumb2"	18 63 95	// R_Thumb1 ( Tx Ty Tz Qx Qy Qz )
+	"Weapon"	15 0 0	// R_Hand
 	"R_Hip"	0 56 101	// waist ( Qx Qy Qz )
-	"R_Upperleg"	20 59 104	// R_Hip ( Tx Ty Qx Qy Qz )
-	"R_Lowerleg"	21 63 109	// R_Upperleg ( Tx Ty Tz Qx Qy Qz )
-	"R_Foot"	22 63 115	// R_Lowerleg ( Tx Ty Tz Qx Qy Qz )
+	"R_Upperleg"	21 59 104	// R_Hip ( Tx Ty Qx Qy Qz )
+	"R_Lowerleg"	22 63 109	// R_Upperleg ( Tx Ty Tz Qx Qy Qz )
+	"R_Foot"	23 63 115	// R_Lowerleg ( Tx Ty Tz Qx Qy Qz )
 	"L_Hip"	0 56 121	// waist ( Qx Qy Qz )
-	"L_Upperleg"	24 59 124	// L_Hip ( Tx Ty Qx Qy Qz )
-	"L_Lowerleg"	25 61 129	// L_Upperleg ( Tx Tz Qx Qy Qz )
-	"L_Foot"	26 61 134	// L_Lowerleg ( Tx Tz Qx Qy Qz )
+	"L_Upperleg"	25 59 124	// L_Hip ( Tx Ty Qx Qy Qz )
+	"L_Lowerleg"	26 61 129	// L_Upperleg ( Tx Tz Qx Qy Qz )
+	"L_Foot"	27 61 134	// L_Lowerleg ( Tx Tz Qx Qy Qz )
 }
 
 bounds {
@@ -70,6 +71,7 @@ baseframe {
 	( 13.6867 -0.000114441 0.0 ) ( -0.0110196 -0.707021 0.0110196 )
 	( 0.000152588 0.000157356 0.0 ) ( 0.303987 -0.52743 -0.560566 )
 	( 15.9532 0.0 0.0 ) ( -0.000244686 0.000268508 0.528933 )
+	( 25.7413 8.72638 -7.17807 ) ( 0.00204675 -0.00215922 -0.0613488 )
 	( 68.3251 0.0 0.0 ) ( 0.23929 -0.665387 0.23929 )
 	( 33.0481 -0.000457764 0.000286102 ) ( 0.000207057 -0.000715709 -0.277907 )
 	( 80.3152 0.0 -0.000342369 ) ( 0.000950414 0.000190732 0.00498292 )
