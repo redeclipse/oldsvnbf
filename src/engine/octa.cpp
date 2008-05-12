@@ -848,7 +848,7 @@ bool occludesface(cube &c, int orient, const ivec &o, int size, const ivec &vo, 
 			return clipfacevecs(vf, o[C[dim]], o[R[dim]], size, nf) < 3;
 		 }
 		 if(isentirelysolid(c)) return true;
-		 if(vmat != MAT_AIR && c.ext && c.ext->material == vmat) return true;
+         if(vmat != MAT_AIR && c.ext && (c.ext->material == vmat || (c.ext->material == MAT_GLASS && isliquid(vmat)))) return true;
 		 if(touchingface(c, orient) && faceedges(c, orient) == F_SOLID) return true;
 		 facevec cf[8];
 		 int numc = clipfacevecs(vf, o[C[dim]], o[R[dim]], size, cf);
