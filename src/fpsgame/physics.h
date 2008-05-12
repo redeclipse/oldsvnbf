@@ -31,7 +31,6 @@ struct physics
 		CCOMMAND(attack, "D", (physics *self, int *down), { self->doattack(*down!=0); });
 		CCOMMAND(reload, "D", (physics *self, int *down), { self->doreload(*down!=0); });
 		CCOMMAND(action, "D", (physics *self, int *down), { self->doaction(*down!=0); });
-		CCOMMAND(lean, "D", (physics *self, int *down), { self->dolean(*down!=0); });
         CCOMMAND(taunt, "", (physics *self), { self->taunt(self->cl.player1); });
 
 		physicsfraction = physicsrepeat = 0;
@@ -54,7 +53,6 @@ struct physics
 	iput(attack,	attacking,	attacktime,	true);
 	iput(reload,	reloading,	reloadtime,	true);
 	iput(action,	useaction,	usetime,	true);
-	iput(lean,		leaning,	leantime,	false);
 
 	void taunt(fpsent *d)
 	{

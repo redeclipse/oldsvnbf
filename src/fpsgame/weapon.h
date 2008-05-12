@@ -131,7 +131,7 @@ struct weaponstate
 	{
 		vec dir;
 		float dist = middist(camera1, dir, o);
-		cl.camerawobble += int(guntype[gun].damage*(1-dist/RL_DISTSCALE/RL_DAMRAD));
+		cl.quakewobble += int(guntype[gun].damage*(1-dist/RL_DISTSCALE/RL_DAMRAD));
 
 		if (guntype[gun].esound >= 0)
 			playsound(guntype[gun].esound, &o, 255, 0, 0, SND_COPY);
@@ -315,7 +315,7 @@ struct weaponstate
 		vec kickback(unitv);
 		kickback.mul(guntype[d->gunselect].kick);
 		d->vel.add(kickback);
-		if (d == cl.player1) cl.camerawobble += guntype[d->gunselect].wobble;
+		if (d == cl.player1) cl.quakewobble += guntype[d->gunselect].wobble;
 		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
 		if(barrier < dist)
 		{

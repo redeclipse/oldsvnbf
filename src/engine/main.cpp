@@ -38,7 +38,7 @@ void fatal(const char *s, ...)    // failure exit
         puts(msg);
 
         if(errors <= 1) // avoid recursion
-        {   
+        {
             SDL_ShowCursor(1);
             #ifdef WIN32
                 MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
@@ -382,8 +382,7 @@ void checkinput()
 					if (event.motion.y == 0) break;  //let mac users drag windows via the title bar
 #endif
 					if (event.motion.x == screen->w/2 && event.motion.y == screen->h/2) break;
-					if(!g3d_movecursor(event.motion.xrel, event.motion.yrel))
-						cl->mousemove(event.motion.xrel, event.motion.yrel);
+					cl->mousemove(event.motion.xrel, event.motion.yrel);
 					SDL_WarpMouse(screen->w/2, screen->h/2);
 				}
 				break;
@@ -752,7 +751,7 @@ int main(int argc, char **argv)
 
 			if (cc->ready())
 			{
-                cl->recomputecamera();
+                cl->recomputecamera(screen->w, screen->h);
                 setviewcell(camera1->o);
 				entity_particles();
 				checksound();

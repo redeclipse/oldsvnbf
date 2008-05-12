@@ -21,7 +21,7 @@ struct GAMECLIENT : igameclient
     int lasthit;
 
 	string cptext;
-	int cameratype, cameranum, cameracycled, camerawobble, damageresidue, myrankv, myranks;
+	int quakewobble, damageresidue, myrankv, myranks;
 
 	struct sline { string s; };
 	struct teamscore
@@ -65,12 +65,10 @@ struct GAMECLIENT : igameclient
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			cameratype(CAMERA_NONE), cameranum(0), cameracycled(0), myrankv(0), myranks(0),
+			myrankv(0), myranks(0),
 			player1(spawnstate(new fpsent()))
 	{
 		CCOMMAND(centerrank, "", (GAMECLIENT *self), self->setcrank());
-		CCOMMAND(cameradir, "ii", (GAMECLIENT *self, int *a, int *b), self->cameradir(*a, *b!=0));
-		CCOMMAND(gotocamera, "i", (GAMECLIENT *self, int *a), self->setcamera(*a));
         CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1); });
 		CCOMMAND(mode, "ii", (GAMECLIENT *self, int *val, int *mut), { self->setmode(*val, *mut); });
 		CCOMMAND(gamemode, "", (GAMECLIENT *self), intret(self->gamemode));
@@ -219,9 +217,9 @@ struct GAMECLIENT : igameclient
 			#define adjust(t,n,m) \
 				if(n != 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/float(m))); }
 
-			adjust(int, camerawobble, 100);
+			adjust(float, player1->roll, 100);
+			adjust(int, quakewobble, 100);
 			adjust(int, damageresidue, 200);
-			if(!player1->leaning) adjust(float, player1->roll, 50);
 
 			if(player1->state == CS_DEAD)
 			{
@@ -291,7 +289,7 @@ struct GAMECLIENT : igameclient
 
 		if(d == player1)
 		{
-			camerawobble += damage;
+			quakewobble += damage;
 			damageresidue += damage;
 			d->hitpush(damage, dir, actor, gun);
 			d->damageroll(damage);
@@ -337,7 +335,7 @@ struct GAMECLIENT : igameclient
 		{
 			sb.showscores(true);
 			lastplayerstate = *player1;
-			d->attacking = d->reloading = d->useaction = d->leaning = false;
+			d->attacking = d->reloading = d->useaction = false;
 			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
@@ -380,7 +378,7 @@ struct GAMECLIENT : igameclient
 		if(!timeremain)
 		{
 			intermission = true;
-			player1->attacking = player1->reloading = player1->useaction = player1->leaning = false;
+			player1->attacking = player1->reloading = player1->useaction = false;
 			if(m_mp(gamemode))
 			{
 				calcranks();
@@ -434,7 +432,6 @@ struct GAMECLIENT : igameclient
 	void clientdisconnected(int cn)
 	{
 		if(!players.inrange(cn)) return;
-		if(cameranum == -cn) cameradir(1, true);
 		fpsent *d = players[cn];
 		if(!d) return;
 		if(d->name[0]) conoutf("player %s disconnected", colorname(d));
@@ -491,7 +488,6 @@ struct GAMECLIENT : igameclient
 			const char *best = getalias(aname);
 			if(*best) conoutf("\f2try to beat your best score so far: %s", best);
 		}
-		cameranum = 0;
 	}
 
 	void playsoundc(int n, fpsent *d = NULL)
@@ -551,7 +547,6 @@ struct GAMECLIENT : igameclient
             case 2: return "textures/crosshair.png";
             case 3: return "textures/crosshair_team.png";
             case 4: return "textures/crosshair_hit.png";
-            case 5: return "textures/crosshair_zoom.png";
             default: return "";
         }
     }
@@ -562,7 +557,6 @@ struct GAMECLIENT : igameclient
         if(menuactive()) c = 0;
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) c = -1;
         else if(editmode) c = 1;
-        else if(fov < 90) c = 4;
         else if(lastmillis - lasthit < hitcrosshair())
         {
         	c = 3;
@@ -767,28 +761,8 @@ struct GAMECLIENT : igameclient
 						fade = amt*(float(lastmillis-maptime-CARDTIME-CARDFADE)/float(CARDFADE));
 					else fade *= amt;
 
-					if(cc.spectator)
+					if(player1->state == CS_ALIVE)
 					{
-						if(player1->clientnum == -cameranum)
-							d = player1;
-						else if(players.inrange(-cameranum) && players[-cameranum])
-							d = players[-cameranum];
-					}
-					else if(player1->state == CS_ALIVE)
-					{
-						if(fov < 90 && d->gunselect == GUN_RIFLE)
-						{
-							settexture("textures/overlay_zoom.png");
-							glColor4f(1.f, 1.f, 1.f, 1.f);
-
-							glBegin(GL_QUADS);
-							glTexCoord2f(0, 0); glVertex2i(0, 0);
-							glTexCoord2f(1, 0); glVertex2i(ox, 0);
-							glTexCoord2f(1, 1); glVertex2i(ox, oy);
-							glTexCoord2f(0, 1); glVertex2i(0, oy);
-							glEnd();
-						}
-
 						if(damageresidue > 0 || d->state == CS_DEAD)
 						{
 							int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
@@ -988,223 +962,127 @@ struct GAMECLIENT : igameclient
 		return false;
 	}
 
-	void fixrange(physent *d)
+	void fixrange(float &yaw, float &pitch)
 	{
 		const float MAXPITCH = 89.9f;
-		const float MAXROLL = 35.0f;
 
-		if(d->pitch > MAXPITCH) d->pitch = MAXPITCH;
-		if(d->pitch < -MAXPITCH) d->pitch = -MAXPITCH;
-
-		if(d->roll > MAXROLL) d->roll = MAXROLL;
-		if(d->roll < -MAXROLL) d->roll = -MAXROLL;
-
-		while (d->yaw < 0.0f) d->yaw += 360.0f;
-		while (d->yaw > 360.0f) d->yaw -= 360.0f;
+		if(pitch > MAXPITCH) pitch = MAXPITCH;
+		if(pitch < -MAXPITCH) pitch = -MAXPITCH;
+		while(yaw < 0.0f) yaw += 360.0f;
+		while(yaw > 360.0f) yaw -= 360.0f;
 	}
 
-	void fixview()
+	void fixview(int w, int h)
 	{
 		if(fov > MAXFOV) fov = MAXFOV;
 		if(fov < MINFOV) fov = MINFOV;
-
-		fixrange(player1);
+		curfov = float(fov);
+		fovy = float(curfov*h)/w;
+		aspect = w/float(h);
 	}
 
 	void mousemove(int dx, int dy)
 	{
-		if(player1->state != CS_DEAD)
+		if(!menuactive() && (player1->state != CS_ALIVE && player1->state != CS_DEAD))
 		{
-			const float SENSF = 33.0f;	 // try match quake sens
-
-			if(player1->leaning) player1->roll += (dx/SENSF)*(rollsensitivity()/(float)sensitivityscale());
-			else player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
+			cursorx = cursory = 0.5f;
+			player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
 			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1 : 1);
-
-			fixrange(player1);
+			fixrange(player1->yaw, player1->pitch);
+			return;
 		}
+		cursorx = max(0.0f, min(1.0f, cursorx+dx/CURSORSCALE));
+		cursory = max(0.0f, min(1.0f, cursory+dy/CURSORSCALE));
 	}
 
-	physent fpscamera;
-
-	void findorientation(physent *d, vec &pos)
+	void findorientation(vec &o, float yaw, float pitch, vec &pos)
 	{
 		vec dir;
-		vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
-		vecfromyawpitch(d->yaw, 0, 0, -1, camright);
-		vecfromyawpitch(d->yaw, d->pitch+90, 1, 0, camup);
+		vecfromyawpitch(yaw, pitch, 1, 0, dir);
+		vecfromyawpitch(yaw, 0, 0, -1, camright);
+		vecfromyawpitch(yaw, pitch+90, 1, 0, camup);
 
-		if(raycubepos(d->o, dir, pos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-			pos = dir.mul(2*hdr.worldsize).add(d->o); //otherwise 3dgui won't work when outside of map
+		if(raycubepos(o, dir, pos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
+			pos = dir.mul(2*hdr.worldsize).add(o); //otherwise 3dgui won't work when outside of map
 	}
 
-	void recomputecamera()
+	int lastcamera;
+	physent gamecamera;
+
+	void recomputecamera(int w, int h)
 	{
-		int secs = time(NULL), lastcam = cameratype, camstate = CS_ALIVE;
-		int timeinair, crouchtime, lastpain;
-		bool crouches;
+		fixview(w, h);
 
-		camera1 = &fpscamera;
-		cameratype = CAMERA_NONE;
-		if(camera1->type != ENT_CAMERA)
+		if(!menuactive())
 		{
-			camera1->reset();
-			camera1->type = ENT_CAMERA;
-			camera1->state = CS_ALIVE;
-		}
-
-		fixview();
-
-		if(cc.spectator)
-		{
-			if(cameracycle() > 0 && secs-cameracycled > cameracycle())
+			if(player1->state != CS_ALIVE && player1->state != CS_DEAD)
 			{
-				cameradir(1, true);
-				cameracycled = secs;
-			}
-
-			if(players.inrange(-cameranum) && players[-cameranum])
-			{
-				cameratype = CAMERA_FOLLOW;
-				camstate = players[-cameranum]->state;
-				camera1->o = players[-cameranum]->o;
-				camera1->vel = players[-cameranum]->vel;
-				camera1->yaw = players[-cameranum]->yaw + player1->yaw;
-				camera1->pitch = players[-cameranum]->pitch + player1->pitch;
-				camera1->roll = players[-cameranum]->roll;
-				camera1->radius = players[-cameranum]->radius;
-				camera1->height = players[-cameranum]->height;
-				timeinair = players[-cameranum]->timeinair;
-				crouches = players[-cameranum]->crouching;
-				lastpain = players[-cameranum]->lastpain;
-				crouchtime = players[-cameranum]->crouchtime;
-			}
-			else if(player1->clientnum != -cameranum)
-			{
-				int cameras = 1;
-
-				loopv (et.ents)
-				{
-					if(et.ents[i]->type == CAMERA)
-					{
-						if(cameras == cameranum)
-						{
-							cameratype = CAMERA_ENTITY;
-							camstate = CS_ALIVE;
-							camera1->o = et.ents[i]->o;
-							camera1->vel = vec(0, 0, 0);
-							camera1->yaw = et.ents[i]->attr1 + player1->yaw;
-							camera1->pitch = et.ents[i]->attr2 + player1->pitch;
-							camera1->roll = player1->roll;
-							camera1->radius = player1->radius;
-							camera1->height = player1->height;
-							timeinair = crouchtime = lastpain = 0;
-							crouches = false;
-							break;
-						}
-						cameras++;
-					}
-				}
-			}
-		}
-		if(cameratype <= CAMERA_NONE)
-		{
-			cameratype = CAMERA_PLAYER;
-			camstate = player1->state;
-			camera1->o = player1->o;
-			camera1->vel = player1->vel;
-			camera1->yaw = player1->yaw;
-			camera1->pitch = player1->pitch;
-			camera1->roll = player1->roll;
-			camera1->radius = player1->radius;
-			camera1->height = player1->height;
-			timeinair = player1->timeinair;
-			crouches = player1->crouchtime;
-			lastpain = player1->lastpain;
-			crouches = player1->crouching;
-		}
-
-		fixrange(camera1);
-		findorientation(camera1, worldpos);
-
-		if (!editmode)
-		{
-//			if(thirdperson())
-//			{
-				vec pos;
-				vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, pos);
-				camera1->o.x += pos.x*thirdpersondist();
-				camera1->o.y += pos.y*thirdpersondist();
-				camera1->o.z += (pos.z*thirdpersondist())+thirdpersonheight();
-/*
+				camera1 = player1;
+				fixrange(camera1->yaw, camera1->pitch);
+				findorientation(camera1->o, camera1->yaw, camera1->pitch, worldpos);
+				lastcamera = 0;
 			}
 			else
 			{
-				if(camstate == CS_DEAD)
+				camera1 = &gamecamera;
+
+				if(!lastcamera)
 				{
-					camera1->o.z -= camera1->height;
-					camera1->height -= (camera1->height/2000.f)*float(min(lastmillis-lastpain, 2000));
-					camera1->height = max(camera1->height, 1.f);
-					camera1->o.z += camera1->height;
+					camera1->reset();
+					camera1->type = ENT_CAMERA;
+					camera1->state = CS_ALIVE;
+					camera1->o = vec(player1->o).add(vec(0, 0, player1->height));
+					camera1->roll = 0.f;
+
+					cursorx = cursory = 0.5f;
+
+					fixrange(player1->yaw, player1->pitch);
+					findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
+
+					vec v(worldpos);
+					v.sub(camera1->o);
+					v.normalize();
+					vectoyawpitch(v, camera1->yaw, camera1->pitch);
 				}
-				else if(camstate == CS_ALIVE)
+				else
 				{
-					if(crouchtime)
-					{
-						float crouching = 0.f;
+					int frame = lastcamera-lastmillis;
+					float cx = (cursorx-0.5f), cy = (0.5f-cursory);
+					camera1->o = vec(player1->o).add(vec(0, 0, 2));
 
-						if(crouches) crouching = min(1.0f, (lastmillis-crouchtime)/200.f);
-						else crouching = max(0.0f, 1.f-((lastmillis-crouchtime)/200.f));
+					if(cx > 0.1f || cx < -0.1f) camera1->yaw -= cx*(frame/5.f);
+					if(cy > 0.1f || cy < -0.1f) camera1->pitch -= cy*(frame/5.f);
+					camera1->roll = 0.f;
+					fixrange(camera1->yaw, camera1->pitch);
 
-						camera1->o.z -= camera1->height;
-						camera1->height -= crouching*(1-CROUCHHEIGHT)*camera1->height;
-						camera1->o.z += camera1->height;
-					}
+					vec dir;
+					vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, dir);
+					dir.mul(5);
+					camera1->o.add(dir);
 
-					vec off;
-					vecfromyawpitch(camera1->yaw, camera1->pitch, -1, -1, off);
-					off.x *= camera1->radius+1.f;
-					off.y *= camera1->radius+1.f;
-					off.z *= camera1->height+1.f;
-					camera1->o.add(off);
-#if 0
-					vec sway;
-					vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, sway);
-					float swayspeed = sqrtf(player1->vel.x*player1->vel.x + player1->vel.y*player1->vel.y);
-					swayspeed = min(4.0f, swayspeed);
-					sway.mul(swayspeed);
-					float swayxy = sinf(swaymillis/115.0f)/100.0f, swayz = cosf(swaymillis/115.0f)/100.0f;
-					swap(sway.x, sway.y);
-					sway.x *= -swayxy;
-					sway.y *= swayxy;
-					sway.z = -fabs(swayspeed*swayz);
-					sway.add(swaydir);
-					camera1->o.add(sway);
-#endif
+					float fx = camera1->yaw+(cx*curfov), fy = camera1->pitch+(cy*fovy);
+					while(fx < 0.0f) fx += 360.0f;
+					while(fx > 360.0f) fx -= 360.0f;
+					findorientation(camera1->o, fx, fy, worldpos);
+
+					vec v(worldpos);
+					v.sub(player1->o);
+					v.normalize();
+					vectoyawpitch(v, player1->yaw, player1->pitch);
+					fixrange(player1->yaw, player1->pitch);
 				}
-			}
-*/
-			if(camerawobble > 0 && cameratype == lastcam)
-			{
-				float pc = float(min(camerawobble, 100))/100.f;
-				#define wobble (float(rnd(16)-8)*pc)
-				camera1->yaw += wobble;
-				camera1->pitch += wobble;
-				camera1->roll += wobble;
-			}
-			else camerawobble = 0;
 
-			// correct camera position
-			vec rot(worldpos);
-			rot.sub(camera1->o);
-			rot.normalize();
-			vectoyawpitch(rot, camera1->yaw, camera1->pitch);
+				if(lastcamera && quakewobble > 0)
+				{
+					float pc = float(min(quakewobble, 100))/100.f;
+					#define wobble (float(rnd(24)-12)*pc)
+					camera1->roll = wobble;
+				}
+				else quakewobble = 0;
+
+				lastcamera = lastmillis;
+			}
 		}
-	}
-
-	void setposition(vec &v)
-	{
-		if(player1->state != CS_DEAD) player1->o = v;
 	}
 
 	void adddynlights()
@@ -1215,13 +1093,7 @@ struct GAMECLIENT : igameclient
 
 	bool gamethirdperson()
 	{
-#if 0
-		return cameratype <= CAMERA_FOLLOW && thirdperson() &&
-			player1->state != CS_EDITING && player1->state != CS_SPECTATOR &&
-			(cameratype != CAMERA_PLAYER || player1->gunselect != GUN_RIFLE || fov >= 90);
-#else
 		return true;
-#endif
 	}
 
 	void menuevent(int event)
@@ -1234,52 +1106,6 @@ struct GAMECLIENT : igameclient
 			default: break;
 		}
 		if(s >= 0) playsound(s);
-	}
-
-	void cameradir(int dir, bool quiet = false)
-	{
-		int cams = 0, cam_lo = 0, cam_hi = 0;
-
-		cam_lo = players.length();
-
-		loopv(et.ents) if(et.ents[i]->type == CAMERA) cam_hi++;
-
-		if((cams = cam_lo + cam_hi) > 1)
-		{
-			while (true)
-			{
-				cameranum += dir;
-
-				while (cameranum < -cam_lo) cameranum += cams;
-				while (cameranum > cam_hi) cameranum -= cams;
-
-				if(cameranum > 0 || player1->clientnum == -cameranum ||
-					(players.inrange(-cameranum) && players[-cameranum])) break;
-			}
-			if(!quiet)
-			{
-				if(cameranum > 0) console("camera %d selected", CON_NORMAL|CON_CENTER, cameranum);
-				else if(player1->clientnum == -cameranum) console("spectator camera selected", CON_NORMAL|CON_CENTER);
-				else console("chasecam %s selected", CON_NORMAL|CON_CENTER, players[-cameranum]->name);
-			}
-		}
-		else if(!quiet) console("no other cameras available", CON_NORMAL|CON_CENTER);
-	}
-
-	void setcamera(int idx)
-	{
-		if(idx>=0)
-		{
-			if((cc.spectator) || (editmode))
-			{
-				int foo_delta; // we will ignore the delta attribute (it's for AwayCAM (still to come))
-				et.gotocamera(idx, player1, foo_delta);
-			}
-			else
-			{
-				conoutf ("need to be editing or spectator");
-			}
-		}
 	}
 
 	static int mteamscorecmp(const teamscore *x, const teamscore *y)

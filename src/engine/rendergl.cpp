@@ -516,7 +516,7 @@ void transplayer()
 
 float curfov = 105, fovy, aspect;
 int farplane;
-VARFP(fov, 1, 120, 360, { cl->fixview(); curfov = fov; });
+VARP(fov, 1, 120, 360);
 
 int xtraverts, xtravertsva;
 
@@ -1165,12 +1165,7 @@ void gl_drawframe(int w, int h)
 {
 	defaultshader->set();
 
-    cl->recomputecamera();
-
     updatedynlights();
-
-    fovy = float(curfov*h)/w;
-    aspect = w/float(h);
 
     int fogmat = lookupmaterial(camera1->o), abovemat = MAT_AIR;
     float fogblend = 1.0f, causticspass = 0.0f;
@@ -1277,6 +1272,8 @@ VARP(cursorsize, 0, 30, 1000);
 
 VARP(hidehud, 0, 0, 1);
 
+bool hascursor;
+float cursorx = 0.5f, cursory = 0.5f;
 #define MAXCROSSHAIRS 6
 static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL, NULL, NULL };
 
@@ -1318,20 +1315,14 @@ void drawcrosshair(int w, int h)
 			loadcrosshair(NULL, index);
 			crosshair = crosshairs[index];
 		}
-		float cx = 0.5f, cy = 0.5f, chsize = crosshairsize*w/300.0f;
-
-		if(index == 0)
-		{
-			chsize = cursorsize*w/300.0f;
-			g3d_cursorpos(cx, cy);
-		}
+		float cx = cursorx, cy = cursory, chsize = index ? crosshairsize*w/300.0f : cursorsize*w/300.0f;
 
 		if(crosshair->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 
 		glColor4f(r, g, b, crosshairblend/100.f);
-		float x = cx*w*3.0f - (index > 0 ? 0 : chsize/2.0f);
-		float y = cy*h*3.0f - (index > 0 ? 0 : chsize/2.0f);
+		float x = cx*w*3.0f - (index ? chsize/2.0f : 0);
+		float y = cy*h*3.0f - (index ? chsize/2.0f : 0);
 		glBindTexture(GL_TEXTURE_2D, crosshair->id);
 		glBegin(GL_QUADS);
 		glTexCoord2d(0.0, 0.0); glVertex2f(x, y);

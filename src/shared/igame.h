@@ -12,8 +12,9 @@ struct icliententities
     virtual void fixentity(extentity &e) = 0;
     virtual const char *findname(int type) = 0;
 	virtual int findtype(char *type) = 0;
-    virtual bool mayattach(extentity &e) = 0;
-    virtual bool attachent(extentity &e, extentity &a) = 0;
+	virtual bool maylink(int index, int ver = 0) = 0;
+	virtual bool canlink(int index, int node, bool msg = false) = 0;
+	virtual bool linkents(int index, int node, bool add, bool local) = 0;
     virtual extentity *newent() = 0;
     virtual vector<extentity *> &getents() = 0;
     virtual void drawparticles() = 0;
@@ -68,10 +69,8 @@ struct igameclient
     virtual void adddynlights() {}
     virtual void particletrack(physent *owner, vec &o, vec &d) {}
 
-	virtual void fixview() = 0;
 	virtual void mousemove(int dx, int dy) = 0;
-	virtual void recomputecamera() = 0;
-	virtual void setposition(vec &v) = 0;
+	virtual void recomputecamera(int w, int h) = 0;
 
 	virtual bool gamethirdperson() { return false; } ;
 	virtual bool gethudcolour(vec &colour) { return false; }
