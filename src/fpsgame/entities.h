@@ -13,7 +13,6 @@ struct entities : icliententities
 
 	entities(GAMECLIENT &_cl) : cl(_cl)
 	{
-		CCOMMAND(linkent, "", (entities *self), self->linkent());
 	}
 
 	vector<extentity *> &getents() { return ents; }
@@ -63,7 +62,7 @@ struct entities : icliententities
 	// these functions are called when the client touches the item
 	void execlink(fpsent *d, int index, bool local)
 	{
-		if(d && ents.inrange(index) && enttype[ents[index]->type].links)
+		if(d && ents.inrange(index) && maylink(index))
 		{
 			if(local)
 			{
@@ -175,42 +174,6 @@ struct entities : icliententities
 		{
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
 			cl.ph.entinmap(d, false);
-		}
-	}
-
-	void gotocamera(int n, fpsent *d, int &delta)
-	{
-		int e = -1, tag = n, beenhere = -1;
-		for (;;)
-		{
-			e = findentity(CAMERA, e + 1);
-			if(e == beenhere || e < 0)
-			{
-				conoutf("no camera destination for tag %d", tag);
-				return ;
-			};
-			if(beenhere < 0)
-				beenhere = e;
-			if(ents[e]->attr4 == tag)
-			{
-				d->o = ents[e]->o;
-				d->yaw = ents[e]->attr1;
-				d->pitch = ents[e]->attr2;
-				delta = ents[e]->attr3;
-				if(editmode)
-				{
-					vec dirv;
-					vecfromyawpitch(d->yaw, d->pitch, 1, 0, dirv);
-					vec tinyv = dirv.normalize().mul(10.0f);
-					d->vel = tinyv;
-				}
-				else
-				{
-					d->vel = vec(0, 0, 0);
-				}
-				s_sprintfd(camnamalias)("camera_name_%d", ents[e]->attr4);
-				break;
-			}
 		}
 	}
 
@@ -354,23 +317,31 @@ struct entities : icliententities
 			cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
 	}
 
-	bool mayattach(extentity &e) { return false; }
-	bool attachent(extentity &e, extentity &a) { return false; }
-
 	float dropheight(entity &e)
 	{
 		if(e.type==MAPMODEL || e.type==BASE) return 0.0f;
 		return 4.0f;
 	}
 
+	bool maylink(int index, int ver = 0)
+	{
+		if(ents.inrange(index) && enttype[ents[index]->type].links &&
+			enttype[ents[index]->type].links <= (ver ? ver : GAMEVERSION))
+				return true;
+		return false;
+	}
+
 	bool canlink(int index, int node, bool msg = false)
 	{
 		if(ents.inrange(index) && ents.inrange(node))
 		{
-			if(enttype[ents[index]->type].links && enttype[ents[node]->type].links)
+			if(maylink(index) && maylink(node))
 			{
 				switch(ents[index]->type)
 				{
+					case LIGHT:
+						if(ents[node]->type == SPOTLIGHT) return true;
+						break;
 					case MAPMODEL:
 						if(ents[node]->type == TRIGGER) return true;
 						break;
@@ -455,29 +426,9 @@ struct entities : icliententities
 		return false;
 	}
 
-	void linkent()
-	{
-		if(entgroup.length() < 2)
-		{
-			conoutf("ERROR: more than one entity must be selected to link");
-			return;
-		}
-		int index = entgroup[0];
-		loopi(entgroup.length()-1)
-		{
-			int node = entgroup[i+1];
-			if(ents.inrange(index))
-			{
-				if(!canlink(index, node, false) && canlink(node, index, false))
-					linkents(node, index, false, true); // swapsies
-				else linkents(index, node, false, true);
-			}
-		}
-	}
-
 	void linkclear(int n)
 	{
-		loopvj(ents) if(enttype[ents[j]->type].links)
+		loopvj(ents) if(maylink(j))
 		{
 			fpsentity &e = (fpsentity &)*ents[j];
 
@@ -505,7 +456,7 @@ struct entities : icliententities
 
 		route.setsize(0);
 
-		if(ents.inrange(node) && ents.inrange(goal) && ents[goal]->type == ents[node]->type && enttype[ents[node]->type].links)
+		if(ents.inrange(node) && ents.inrange(goal) && ents[goal]->type == ents[node]->type && maylink(node))
 		{
 			struct fpsentity &f = (fpsentity &) *ents[node], &g = (fpsentity &) *ents[goal];
 			vector<linkq *> queue;
@@ -685,23 +636,11 @@ struct entities : icliententities
 	void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e)
 	{
 		fpsentity &f = (fpsentity &)e;
-		f.links.setsize(0);
 
 		if(mtype == MAP_BFGZ)
 		{
 			int type = f.type;
 			if(gver <= 49 && type >= 10) type--; // translation for these are done later..
-
-			if(enttype[type].links && enttype[type].links <= gver)
-			{
-				int links = gzgetint(g);
-				loopi(links)
-				{
-					int ln = gzgetint(g);
-					f.links.add(ln);
-				}
-				if(verbose >= 2) conoutf("entity %d loaded %d link(s)", id, links);
-			}
 		}
 		else if(mtype == MAP_OCTA)
 		{
@@ -726,29 +665,6 @@ struct entities : icliententities
 
 	void writeent(gzFile &g, int id, entity &e)
 	{
-		fpsentity &d = (fpsentity &)e;
-
-		if(enttype[d.type].links)
-		{
-			vector<int> links;
-			int n = 0;
-
-			loopv(ents)
-			{
-				fpsentity &f = (fpsentity &)*ents[i];
-
-				if(f.type != NOTUSED)
-				{
-					if(enttype[f.type].links && d.links.find(i) >= 0)
-							links.add(n); // align to indices
-
-					n++;
-				}
-			}
-
-			gzputint(g, links.length());
-			loopv(links) gzputint(g, links[i]); // aligned index
-		}
 	}
 
 	void initents(gzFile &g, int mtype, int mver, char *gid, int gver)

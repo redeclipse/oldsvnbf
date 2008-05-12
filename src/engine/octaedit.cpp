@@ -1260,9 +1260,7 @@ void pushsel(int *dir)
 	sel.o[d] += s*sel.grid;
 	if(selectionsurf==1)
 	{
-		vec v(camera1->o);
-		v[d] += s*sel.grid;
-		cl->setposition(v);
+		camera1->o[d] += s*sel.grid;
 	}
 }
 

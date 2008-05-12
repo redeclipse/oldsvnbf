@@ -412,6 +412,28 @@ void save_world(const char *mname, bool nolms)
 			endianswap(&tmp.attr1, sizeof(short), 5);
 			gzwrite(f, &tmp, sizeof(entity));
 			et->writeent(f, i, *ents[i]);
+			extentity &e = (extentity &)*ents[i];
+			if(et->maylink(e.type))
+			{
+				vector<int> links;
+				int n = 0;
+
+				loopvk(ents)
+				{
+					extentity &f = (extentity &)*ents[k];
+
+					if(f.type != ET_EMPTY)
+					{
+						if(et->maylink(f.type) && e.links.find(i) >= 0)
+								links.add(n); // align to indices
+
+						n++;
+					}
+				}
+
+				gzputint(f, links.length());
+				loopv(links) gzputint(f, links[i]); // aligned index
+			}
 			count++;
 		}
 	}
@@ -716,16 +738,20 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		gzread(f, &e, sizeof(entity));
 		endianswap(&e.o, sizeof(int), 3);
 		endianswap(&e.attr1, sizeof(short), 5);
+		e.links.setsize(0);
 		e.spawned = false;
 		e.inoctanode = false;
-		if(samegame)
+		if(maptype == MAP_OCTA) { loopj(eif) gzgetc(f); }
+		et->readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
+		if(maptype == MAP_BFGZ && et->maylink(i, hdr.gamever))
 		{
-			if(maptype == MAP_OCTA) { loopj(eif) gzgetc(f); }
-			et->readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
-		}
-		else
-		{
-			loopj(eif) gzgetc(f);
+			int links = gzgetint(f);
+			loopk(links)
+			{
+				int ln = gzgetint(f);
+				e.links.add(ln);
+			}
+			if(verbose >= 2) conoutf("entity %d loaded %d link(s)", i, links);
 		}
 		if(hdr.version <= 14 && e.type >= ET_MAPMODEL && e.type <= 16)
 		{
@@ -832,7 +858,31 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 	allchanged(true);
 
     computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mname);
-	attachentities();
+	if(maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 29))
+	{
+		loopv(ents) if(ents[i]->type == ET_SPOTLIGHT)
+		{
+			int closest = -1;
+			float closedist = 1e10f;
+			extentity &e = *ents[i];
+			loopvk(ents) if(ents[k]->type == ET_LIGHT)
+			{
+				extentity &a = *ents[k];
+				float dist = e.o.dist(a.o);
+				if(dist < closedist)
+				{
+					closest = i;
+					closedist = dist;
+				}
+			}
+			if(ents.inrange(closest) && closedist <= 100)
+			{
+				extentity &a = *ents[closest];
+				a.links.add(i);
+				conoutf("WARNING: auto import linked spotlight %d to light %d", i, closest);
+			}
+		}
+	}
 
 	show_out_of_renderloop_progress(0, "starting world...");
 	startmap(cname ? cname : mname);

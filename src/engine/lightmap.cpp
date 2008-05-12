@@ -263,13 +263,27 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
         ray.mul(1.0f / mag);
         float angle = -ray.dot(normal);
         if(angle <= 0) continue;
-		if(light.attached && light.attached->type==ET_SPOTLIGHT)
+		if(light.links.length())
 		{
-			vec spot(vec(light.attached->o).sub(light.o).normalize());
-            float maxatten = 1-cosf(max(1, min(90, int(light.attached->attr1)))*RAD);
-			float spotatten = 1-(1-ray.dot(spot))/maxatten;
-			if(spotatten <= 0) continue;
-			attenuation *= spotatten;
+			int slight = -1;
+			const vector<extentity *> &ents = et->getents();
+			loopvk(light.links)
+			{
+				if(ents.inrange(light.links[k]) && ents[light.links[k]]->type == ET_SPOTLIGHT)
+				{
+					slight = light.links[k];
+					break;
+				}
+			}
+			if(ents.inrange(slight))
+			{
+				const extentity &spotlight = *ents[slight];
+				vec spot(vec(spotlight.o).sub(light.o).normalize());
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr1)))*RAD);
+				float spotatten = 1-(1-ray.dot(spot))/maxatten;
+				if(spotatten <= 0) continue;
+				attenuation *= spotatten;
+			}
 		}
 		if(lmshadows && mag)
 		{
@@ -1507,13 +1521,28 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 		float intensity = 1;
 		if(e.attr1)
 			intensity -= mag / float(e.attr1);
-		if(e.attached && e.attached->type==ET_SPOTLIGHT)
+
+		if(e.links.length())
 		{
-			vec spot(vec(e.attached->o).sub(e.o).normalize());
-            float maxatten = 1-cosf(max(1, min(90, int(e.attached->attr1)))*RAD);
-			float spotatten = 1-(1-ray.dot(spot))/maxatten;
-			if(spotatten<=0) continue;
-			intensity *= spotatten;
+			int slight = -1;
+			const vector<extentity *> &ents = et->getents();
+			loopvk(e.links)
+			{
+				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_SPOTLIGHT)
+				{
+					slight = e.links[k];
+					break;
+				}
+			}
+			if(ents.inrange(slight))
+			{
+				const extentity &spotlight = *ents[slight];
+				vec spot(vec(spotlight.o).sub(e.o).normalize());
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr1)))*RAD);
+				float spotatten = 1-(1-ray.dot(spot))/maxatten;
+				if(spotatten <= 0) continue;
+				intensity *= spotatten;
+			}
 		}
 
 		color.add(vec(e.attr2, e.attr3, e.attr4).div(255).mul(intensity));
@@ -1564,13 +1593,28 @@ entity *brightestlight(const vec &target, const vec &dir)
 		float intensity = 1;
 		if(e.attr1)
 			intensity -= mag / float(e.attr1);
-		if(e.attached && e.attached->type==ET_SPOTLIGHT)
+
+		if(e.links.length())
 		{
-			vec spot(vec(e.attached->o).sub(e.o).normalize());
-            float maxatten = 1-cosf(max(1, min(90, int(e.attached->attr1)))*RAD);
-			float spotatten = 1-(1-ray.dot(spot))/maxatten;
-			if(spotatten<=0) continue;
-			intensity *= spotatten;
+			int slight = -1;
+			const vector<extentity *> &ents = et->getents();
+			loopvk(e.links)
+			{
+				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_SPOTLIGHT)
+				{
+					slight = e.links[k];
+					break;
+				}
+			}
+			if(ents.inrange(slight))
+			{
+				const extentity &spotlight = *ents[slight];
+				vec spot(vec(spotlight.o).sub(e.o).normalize());
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr1)))*RAD);
+				float spotatten = 1-(1-ray.dot(spot))/maxatten;
+				if(spotatten <= 0) continue;
+				intensity *= spotatten;
+			}
 		}
 
 		if(!brightest || intensity > bintensity)

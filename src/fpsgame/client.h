@@ -187,7 +187,6 @@ struct clientcom : iclientcom
 
     void togglespectator(int val, const char *who)
 	{
-		if (!who[0]) cl.cameranum = -cl.player1->clientnum;
         int i = who[0] ? parseplayer(who) : cl.player1->clientnum;
 		if(i>=0) addmsg(SV_SPECTATOR, "rii", i, val);
 	}

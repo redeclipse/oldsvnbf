@@ -1,6 +1,6 @@
 // the interface the game uses to access the engine
 
-#define ENGVERSION		60					// engine version, integer is divided by 100.f
+#define ENGVERSION		61					// engine version, integer is divided by 100.f
 #define ENGNAME			"Blood Frontier"	// engine namn
 #define ENGRELEASE		"Alpha 2"			// engine release name
 
@@ -309,9 +309,6 @@ struct g3d_callback
 };
 
 extern void g3d_addgui(g3d_callback *cb);
-extern bool g3d_movecursor(int dx, int dy);
-extern void g3d_cursorpos(float &x, float &y);
-extern void g3d_resetcursor();
 
 // client
 enum { ST_EMPTY, ST_TCPIP, ST_REMOTE };

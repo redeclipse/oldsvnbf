@@ -174,6 +174,12 @@ extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasCM, ha
 extern bool envmapping, renderedgame;
 extern GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16];
 
+extern bool hascursor;
+extern float cursorx, cursory;
+
+#define SENSF 33.f
+#define CURSORSCALE 500.0f
+
 extern void gl_checkextensions();
 extern void gl_init(int w, int h, int bpp, int depth, int fsaa);
 extern void cleangl();
@@ -546,6 +552,7 @@ extern char *getmaptitle();
 #define CARDFADE			1500	// title card fade in/out
 
 extern int fov, maxfps, hidehud, hudblend, lastmillis, totalmillis;
+extern float curfov, fovy, aspect;
 
 extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false, bool swapxy = false);
 extern void transplayer();

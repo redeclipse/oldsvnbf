@@ -54,16 +54,16 @@ bool menukey(int code, bool isdown, int cooked)
         case SDLK_UP:
             if(fieldwidth != -1)
             {
-                int cx, cy; 
+                int cx, cy;
                 text_pos(fieldtext+1, fieldpos, cx, cy, fieldwidth);
                 cy -= FONTH;
                 fieldpos = text_visible(fieldtext, cx, cy, fieldwidth);
-            } 
+            }
             break;
         case SDLK_DOWN:
             if(fieldwidth != -1)
             {
-                int cx, cy; 
+                int cx, cy;
                 text_pos(fieldtext+1, fieldpos, cx, cy, fieldwidth);
                 cy += FONTH;
                 fieldpos = text_visible(fieldtext, cx, cy, fieldwidth);
@@ -102,9 +102,6 @@ bool menukey(int code, bool isdown, int cooked)
 	}
 	return true;
 }
-
-static bool hascursor;
-static float cursorx = 0.5f, cursory = 0.5f;
 
 #define SHADOW 4
 #define ICON_SIZE (FONTH-SHADOW)
@@ -381,7 +378,7 @@ struct gui : g3d_gui
                 else fieldactive = true;
 			}
 			if(editing && hit && (mousebuttons&G3D_PRESSED)) //mouse request position
-                fieldpos = text_visible(fieldtext, int(floor(hitx-(curx+FONTW/2))), int(floor(hity-cury)), maxwidth); 
+                fieldpos = text_visible(fieldtext, int(floor(hitx-(curx+FONTW/2))), int(floor(hity-cury)), maxwidth);
 
 			notextureshader->set();
 			glDisable(GL_TEXTURE_2D);
@@ -781,25 +778,6 @@ vec gui::light;
 int gui::curdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
 int gui::ty, gui::tx, gui::tpos, *gui::tcurrent, gui::tcolor;
 static vector<gui> guis;
-void g3d_cursorpos(float &x, float &y)
-{
-	x = cursorx;
-	y = cursory;
-}
-
-void g3d_resetcursor()
-{
-	cursorx = cursory = 0.5f;
-}
-
-bool g3d_movecursor(int dx, int dy)
-{
-	if(!hascursor) return false;
-	const float CURSORSCALE = 500.0f;
-    cursorx = max(0.0f, min(1.0f, cursorx+dx/CURSORSCALE));
-    cursory = max(0.0f, min(1.0f, cursory+dy/CURSORSCALE));
-	return true;
-}
 
 void g3d_addgui(g3d_callback *cb)
 {

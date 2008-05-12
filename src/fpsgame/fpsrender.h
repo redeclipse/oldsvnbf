@@ -59,7 +59,6 @@ struct fpsrender
 		fpsent *d;
         loopv(cl.players) if((d = cl.players[i]) && d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING)
 		{
-			if (cl.cc.spectator && cl.players[i]->clientnum == -cl.cameranum && !isthirdperson()) continue;
             int mdl = m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? 1 : 2) : 0;
 			if(d->state!=CS_DEAD || d->superdamage<50) renderplayer(d, false, mdlnames[mdl]);
 			if(d->state!=CS_DEAD)
@@ -69,7 +68,8 @@ struct fpsrender
 				particle_text(d->abovehead(), d->info, m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, d->team) ? 16 : 13) : 11, 1);
 			}
 		}
-		if(cl.player1->state != CS_EDITING && (cl.player1->state != CS_SPECTATOR || cl.player1->clientnum == -cl.cameranum)) renderplayer(cl.player1, true, m_team(cl.gamemode, cl.mutators) ? mdlnames[1] : mdlnames[0]);
+		if(cl.player1->state == CS_ALIVE || cl.player1->state == CS_DEAD)
+			renderplayer(cl.player1, true, m_team(cl.gamemode, cl.mutators) ? mdlnames[1] : mdlnames[0]);
 
 		cl.et.render();
 		cl.pj.render();
@@ -79,6 +79,14 @@ struct fpsrender
         cl.bot.render();
 
 		endmodelbatches();
+
+		if(rendernormally)
+		{
+			renderprimitive(true);
+			vec v = cl.ws.gunorigin(cl.player1->gunselect, cl.player1->o, worldpos, cl.player1);
+			renderline(v, worldpos, 0.2f, 0.0f, 0.0f, false);
+			renderprimitive(false);
+		}
 	}
 
     void preload()

@@ -67,29 +67,23 @@ static struct enttypes
 	{ WAYPOINT,		1,		8,		8,		ETU_NONE,		"waypoint" }
 };
 
+#ifndef STANDALONE
 struct fpsentity : extentity
 {
-	vector<int> links;
-#ifndef STANDALONE
 	int schan, lastemit;
-#endif
 
 	fpsentity()
 	{
-		links.setsize(0);
-#ifndef STANDALONE
 		schan = -1;
 		lastemit = 0;
-#endif
 	}
 	~fpsentity()
 	{
-#ifndef STANDALONE
 		if (sounds.inrange(schan) && sounds[schan].inuse) removesound(schan);
 		schan = -1;
-#endif
 	}
 };
+#endif
 
 #define SGRAYS			20
 #define SGSPREAD		3
@@ -298,8 +292,8 @@ enum
 
 enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
 
-#define MAXFOV			(gamethirdperson() ? 100 : 125)
-#define MINFOV			(player1->gunselect == GUN_RIFLE ? 0 : 90)
+#define MAXFOV			125
+#define MINFOV			90
 
 enum
 {
@@ -575,8 +569,8 @@ struct fpsent : dynent, fpsstate
 	int weight;
 	int clientnum, privilege, lastupdate, plag, ping;
 	int lastattackgun;
-	bool attacking, reloading, useaction, leaning;
-	int attacktime, reloadtime, usetime, leantime;
+	bool attacking, reloading, useaction;
+	int attacktime, reloadtime, usetime;
 	int lasttaunt;
 	int lastuse, lastusemillis, lastbase;
 	int superdamage;
@@ -618,8 +612,8 @@ struct fpsent : dynent, fpsstate
 	void stopmoving()
 	{
 		dynent::stopmoving();
-		attacking = reloading = useaction = leaning = false;
-		attacktime = reloadtime = usetime = leantime = 0;
+		attacking = reloading = useaction = false;
+		attacktime = reloadtime = usetime = 0;
 	}
 
 	void respawn()

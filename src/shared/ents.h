@@ -25,9 +25,12 @@ struct extentity : entity                       // part of the entity that doesn
 {
     uchar spawned, inoctanode, visible;        // the only dynamic state of a map entity
     entitylight light;
-    extentity *attached;
+	vector<int> links;
 
-    extentity() : visible(false), attached(NULL) {}
+    extentity() : visible(false)
+    {
+    	links.setsize(0);
+	}
 };
 
 extern int efocus, enthover, entorient;
@@ -99,7 +102,7 @@ enum
     ANIM_PUNCH, ANIM_SHOOT, ANIM_RELOAD, ANIM_PAIN,
     ANIM_JUMP, ANIM_SINK, ANIM_SWIM,
     ANIM_EDIT, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
-    ANIM_GUNSHOOT, ANIM_GUNIDLE, ANIM_GUNRELOAD, ANIM_GUNZOOM,
+    ANIM_GUNSHOOT, ANIM_GUNIDLE, ANIM_GUNRELOAD,
     ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
     ANIM_MAPMODEL, ANIM_TRIGGER,
     NUMANIMS

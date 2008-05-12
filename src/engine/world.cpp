@@ -256,64 +256,6 @@ void makeundoent()
 	if(u.n) addundo(u);
 }
 
-void detachentity(extentity &e)
-{
-	if(!e.attached) return;
-	e.attached->attached = NULL;
-	e.attached = NULL;
-}
-
-VAR(attachradius, 1, 100, 1000);
-
-void attachentity(extentity &e)
-{
-	switch(e.type)
-	{
-		case ET_SPOTLIGHT:
-			break;
-
-		default:
-			if(e.type<ET_GAMESPECIFIC || !et->mayattach(e)) return;
-			break;
-	}
-
-	detachentity(e);
-
-	vector<extentity *> &ents = et->getents();
-	int closest = -1;
-	float closedist = 1e10f;
-	loopv(ents)
-	{
-		extentity *a = ents[i];
-		if(a->attached) continue;
-		switch(e.type)
-		{
-			case ET_SPOTLIGHT:
-				if(a->type!=ET_LIGHT) continue;
-				break;
-
-			default:
-				if(e.type<ET_GAMESPECIFIC || !et->attachent(e, *a)) continue;
-				break;
-		}
-		float dist = e.o.dist(a->o);
-		if(dist < closedist)
-		{
-			closest = i;
-			closedist = dist;
-		}
-	}
-	if(closedist>attachradius) return;
-	e.attached = ents[closest];
-	ents[closest]->attached = &e;
-}
-
-void attachentities()
-{
-	vector<extentity *> &ents = et->getents();
-	loopv(ents) attachentity(*ents[i]);
-}
-
 // convenience macros implicitly define:
 // e		 entity, currently edited ent
 // n		 int,	index to currently edited ent
@@ -321,11 +263,9 @@ void attachentities()
 #define entedit(i, f) \
 { \
 	entfocus(i, \
-	int oldtype = e.type; \
 	removeentity(n);  \
 	f; \
-	if(oldtype!=e.type) detachentity(e); \
-	if(e.type!=ET_EMPTY) { addentity(n); if(oldtype!=e.type) attachentity(e); } \
+	if(e.type!=ET_EMPTY) { addentity(n); } \
 	et->editent(n)); \
 }
 #define addgroup(exp)	{ loopv(et->getents()) entfocus(i, if(exp) entadd(n)); }
@@ -511,9 +451,7 @@ void entpush(int *dir)
 		groupedit(e.o[d] += float(s*sel.grid));
 	if(entitysurf==1)
 	{
-		vec v(camera1->o);
-		v[d] += s*sel.grid;
-		cl->setposition(v);
+		camera1->o[d] += s*sel.grid;
 	}
 }
 
@@ -531,7 +469,7 @@ void entautoview(int *dir)
 	if(t<0 && s>0) s = entgroup.length() - s;
 	entfocus(entgroup[s],
 		v.add(e.o);
-		cl->setposition(v);
+		camera1->o = v;
 	);
 }
 
@@ -618,14 +556,6 @@ void dropent()
 	if(noentedit()) return;
 	groupedit(dropentity(e));
 }
-
-void attachent()
-{
-	if(noentedit()) return;
-	groupedit(attachentity(e));
-}
-
-COMMAND(attachent, "");
 
 extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3, int v4)
 {
@@ -716,6 +646,33 @@ COMMAND(delent, "");
 COMMAND(dropent, "");
 COMMAND(entcopy, "");
 COMMAND(entpaste, "");
+
+void entlink()
+{
+	if(entgroup.length() >= 2)
+	{
+		const vector<extentity *> &ents = et->getents();
+		int index = entgroup[0];
+		if(ents.inrange(index))
+		{
+			loopi(entgroup.length()-1)
+			{
+				int node = entgroup[i+1];
+				if(ents.inrange(node))
+				{
+					if(!et->canlink(index, node, false) && et->canlink(node, index, false)) // swapsies
+						et->linkents(node, index, false, true);
+					else
+						et->linkents(index, node, false, true);
+				}
+			}
+			return;
+		}
+	}
+	conoutf("ERROR: more than one valid entity must be selected to link");
+}
+COMMAND(entlink, "");
+
 
 void entset(char *what, int *a1, int *a2, int *a3, int *a4)
 {
@@ -909,19 +866,15 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
 		extentity *e = newentity(local, o, type, attr1, attr2, attr3, attr4);
 		et->getents().add(e);
 		addentity(i);
-		attachentity(*e);
 	}
 	else
 	{
 		extentity &e = *et->getents()[i];
 		removeentity(i);
-		int oldtype = e.type;
-		if(oldtype!=type) detachentity(e);
 		e.type = type;
 		e.o = o;
 		e.attr1 = attr1; e.attr2 = attr2; e.attr3 = attr3; e.attr4 = attr4;
 		addentity(i);
-		if(oldtype!=type) attachentity(e);
 	}
 }
 
