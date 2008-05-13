@@ -678,24 +678,27 @@ struct fireballrenderer : listrenderer
             setlocalparamf("animstate", SHPARAM_VERTEX, 1, size, psize, pmax, float(lastmillis));
             if(!glaring && !reflecting && !refracting && depthfx && depthfxtex.rendertex && numdepthfxranges>0)
             {
+                float scale = 0, offset = -1, texscale = 0;
                 if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
                 {
-                    float select[4] = { 0, 0, 0, 0 }, offset = 2*hdr.worldsize;
+                    float select[4] = { 0, 0, 0, 0 };
                     loopi(numdepthfxranges) if(depthfxowners[i]==p)
                     {
                         select[i] = float(depthfxscale)/depthfxblend;
-                        offset = depthfxranges[i] - depthfxbias;
+                        scale = 1.0f/depthfxblend;
+                        offset = -float(depthfxranges[i] - depthfxbias)/depthfxblend;
                         break;
                     }
-                    setlocalparamf("depthfxrange", SHPARAM_VERTEX, 5, 1.0f/depthfxblend, -offset/depthfxblend, inside ? blend/(2*255.0f) : 0);
-                    setlocalparamf("depthfxrange", SHPARAM_PIXEL, 5, 1.0f/depthfxblend, -offset/depthfxblend, inside ? blend/(2*255.0f) : 0);
                     setlocalparamfv("depthfxselect", SHPARAM_PIXEL, 6, select);
                 }
-                else
+                else if(2*(p->size + pmax)*WOBBLE >= depthfxblend)
                 {
-                    setlocalparamf("depthfxparams", SHPARAM_VERTEX, 5, float(depthfxfpscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/(2*255.0f) : 0);
-                    setlocalparamf("depthfxparams", SHPARAM_PIXEL, 5, float(depthfxfpscale)/depthfxblend, 1.0f/depthfxblend, inside ? blend/(2*255.0f) : 0);
+                    scale = 1.0f/depthfxblend;
+                    offset = 0;
+                    texscale = float(depthfxfpscale)/depthfxblend;
                 }
+                setlocalparamf("depthfxparams", SHPARAM_VERTEX, 5, scale, offset, texscale, inside ? blend/(2*255.0f) : 0);
+                setlocalparamf("depthfxparams", SHPARAM_PIXEL, 5, scale, offset, texscale, inside ? blend/(2*255.0f) : 0);
             }
         }
 
