@@ -294,9 +294,9 @@ void gl_checkextensions()
     else if(strstr(vendor, "NVIDIA"))
     {
         reservevpparams = 10;
-        rtsharefb = 0;
+        rtsharefb = 0; // work-around for strange driver stalls involving when using many FBOs
         extern int filltjoints;
-        filltjoints = 0;
+        if(!strstr(exts, "GL_EXT_gpu_shader4")) filltjoints = 0; // DX9 or less NV cards seem to not cause many sparklies
 
         nvidia_texgen_bug = 1;
         if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too
