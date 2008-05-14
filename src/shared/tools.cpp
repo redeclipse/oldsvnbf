@@ -70,29 +70,40 @@ char *makerelpath(const char *dir, const char *file, const char *prefix)
 
 char *path(char *s)
 {
-    if(s[0]=='<')
+    for(char *curpart = s;;)
     {
-        char *file = strrchr(s, '>');
-        if(!file) return s;
-        s = file+1;
-    }
-    for(char *t = s; (t = strpbrk(t, "/\\")); *t++ = PATHDIV);
-    for(char *prevdir = NULL, *curdir = s;;)
-    {
-        prevdir = curdir[0]==PATHDIV ? curdir+1 : curdir;
-        curdir = strchr(prevdir, PATHDIV);
-        if(!curdir) break;
-        if(prevdir+1==curdir && prevdir[0]=='.')
+        char *endpart = strchr(curpart, '&');
+        if(endpart) *endpart = '\0';
+        if(curpart[0]=='<')
         {
-            memmove(prevdir, curdir+1, strlen(curdir+1)+1);
-            curdir = prevdir;
+            char *file = strrchr(curpart, '>');
+            if(!file) return s;
+            curpart = file+1;
         }
-        else if(curdir[1]=='.' && curdir[2]=='.' && curdir[3]==PATHDIV)
+        for(char *t = curpart; (t = strpbrk(t, "/\\")); *t++ = PATHDIV);
+        for(char *prevdir = NULL, *curdir = s;;)
         {
-            if(prevdir+2==curdir && prevdir[0]=='.' && prevdir[1]=='.') continue;
-            memmove(prevdir, curdir+4, strlen(curdir+4)+1);
-            curdir = prevdir;
+            prevdir = curdir[0]==PATHDIV ? curdir+1 : curdir;
+            curdir = strchr(prevdir, PATHDIV);
+            if(!curdir) break;
+            if(prevdir+1==curdir && prevdir[0]=='.')
+            {
+                memmove(prevdir, curdir+1, strlen(curdir+1)+1);
+                curdir = prevdir;
+            }
+            else if(curdir[1]=='.' && curdir[2]=='.' && curdir[3]==PATHDIV)
+            {
+                if(prevdir+2==curdir && prevdir[0]=='.' && prevdir[1]=='.') continue;
+                memmove(prevdir, curdir+4, strlen(curdir+4)+1);
+                curdir = prevdir;
+            }
         }
+        if(endpart)
+        {
+            *endpart = '&';
+            curpart = endpart+1;
+        }
+        else break;
     }
     return s;
 }

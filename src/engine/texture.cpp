@@ -826,8 +826,7 @@ Texture *loadthumbnail(Slot &slot)
 {
     if(slot.thumbnail) return slot.thumbnail;
     vector<char> name;
-    for(const char *s = "<thumbnail>"; *s; name.add(*s++));
-    addname(name, slot, slot.sts[0]);
+    addname(name, slot, slot.sts[0], false, "<thumbnail>");
     int glow = -1;
     if(slot.texmask&(1<<TEX_GLOW))
     {
