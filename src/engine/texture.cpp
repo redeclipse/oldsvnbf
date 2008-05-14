@@ -647,6 +647,14 @@ static void addbump(SDL_Surface *c, SDL_Surface *n)
 	);
 }
 
+static void addglow(SDL_Surface *c, SDL_Surface *g, const vec &glowcolor)
+{
+    writetex(c,
+        sourcetex(g);
+        loopk(3) dst[k] = clamp(int(dst[k]) + int(src[k]*glowcolor[k]), 0, 255);
+    );
+}
+
 static void blenddecal(SDL_Surface *c, SDL_Surface *d)
 {
 	writetex(c,
@@ -672,11 +680,11 @@ static void mergedepth(SDL_Surface *c, SDL_Surface *z)
 	);
 }
 
-static void addname(vector<char> &key, Slot &slot, Slot::Tex &t)
+static void addname(vector<char> &key, Slot &slot, Slot::Tex &t, bool combined = false, const char *prefix = NULL)
 {
-	if(t.combined>=0) key.add('&');
-	s_sprintfd(tname)("%s", t.name);
-	for(const char *s = tname; *s; key.add(*s++));
+    if(combined) key.add('&');
+    if(prefix) { while(*prefix) key.add(*prefix++); }
+    s_sprintfd(tname)("%s", t.name);
 }
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -722,7 +730,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
                 for(int i = -1; (i = findtextype(s, (1<<TEX_DECAL)|(1<<TEX_NORMAL), i))>=0;)
 				{
 					s.sts[i].combined = index;
-					addname(key, s, s.sts[i]);
+					addname(key, s, s.sts[i], true);
 				}
 				break;
 			} // fall through to shader case
@@ -733,7 +741,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 			int i = findtextype(s, t.type==TEX_DIFFUSE ? (1<<TEX_SPEC) : (1<<TEX_DEPTH));
 			if(i<0) break;
 			s.sts[i].combined = index;
-			addname(key, s, s.sts[i]);
+			addname(key, s, s.sts[i], true);
 			break;
 		}
 	}
@@ -816,28 +824,44 @@ Shader *lookupshader(int slot) { return slot<0 && slot>-MAT_EDIT ? materialslots
 
 Texture *loadthumbnail(Slot &slot)
 {
-	if(slot.thumbnail) return slot.thumbnail;
-	vector<char> name;
-	for(const char *s = "<thumbnail>"; *s; name.add(*s++));
-	addname(name, slot, slot.sts[0]);
-	name.add('\0');
-	Texture *t = textures.access(name.getbuf());
-	if(t) slot.thumbnail = t;
-	else
-	{
-		SDL_Surface *s = texturedata(NULL, &slot.sts[0], false);
+    if(slot.thumbnail) return slot.thumbnail;
+    vector<char> name;
+    for(const char *s = "<thumbnail>"; *s; name.add(*s++));
+    addname(name, slot, slot.sts[0]);
+    int glow = -1;
+    if(slot.texmask&(1<<TEX_GLOW))
+    {
+        loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glow = j; break; }
+        if(glow >= 0)
+        {
+            s_sprintfd(prefix)("<mad:%.2f/%.2f/%.2f>", slot.glowcolor.x, slot.glowcolor.y, slot.glowcolor.z);
+            addname(name, slot, slot.sts[glow], true, prefix);
+        }
+    }
+    name.add('\0');
+    Texture *t = textures.access(path(name.getbuf()));
+    if(t) slot.thumbnail = t;
+    else
+    {
+        SDL_Surface *s = texturedata(NULL, &slot.sts[0], false), *g = glow >= 0 ? texturedata(NULL, &slot.sts[glow], false) : NULL;
         if(!s) slot.thumbnail = notexture;
-		else
-		{
-			int xs = s->w, ys = s->h;
-			if(s->w > 64 || s->h > 64) s = scalesurface(s, min(s->w, 64), min(s->h, 64));
+        else
+        {
+            int xs = s->w, ys = s->h;
+            if(s->w > 64 || s->h > 64) s = scalesurface(s, min(s->w, 64), min(s->h, 64));
+            if(g)
+            {
+                if(g->w != s->w || g->h != s->h) g = scalesurface(g, s->w, s->h);
+                addglow(s, g, slot.glowcolor);
+            }
             t = newtexture(NULL, name.getbuf(), s, 0, false, false, true);
-			t->xs = xs;
-			t->ys = ys;
+            t->xs = xs;
+            t->ys = ys;
             slot.thumbnail = t;
-		}
-	}
-	return t;
+        }
+        if(g) SDL_FreeSurface(g);
+    }
+    return t;
 }
 
 // environment mapped reflections
