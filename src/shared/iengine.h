@@ -290,7 +290,7 @@ struct g3d_gui
 	virtual void tab(const char *name, int color) = 0;
     virtual int title(const char *text, int color, const char *icon = NULL) = 0;
     virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
-    virtual int texture(Texture *t, float scale) = 0;
+    virtual int texture(Texture *t, float scale, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1)) = 0;
     virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL) = 0;
     virtual void separator() = 0;
 	virtual void progress(float percent) = 0;

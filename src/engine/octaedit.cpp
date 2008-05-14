@@ -1556,14 +1556,18 @@ struct texturegui : g3d_callback
 					int ti = (i*TEXTURE_HEIGHT+j)*TEXTURE_WIDTH+k;
 					if(ti<curtexnum)
 					{
-                        Texture *tex = notexture;
-						Slot &slot = lookuptexture(texmru[ti], false);
-						if(slot.sts.empty()) continue;
-						else if(slot.loaded && slot.sts.inrange(0)) tex = slot.sts[0].t;
-						else if(slot.thumbnail) tex = slot.thumbnail;
-						else if(lastmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = lastmillis; }
-                        if(g.texture(tex, 1.0)&G3D_UP && (slot.loaded || tex!=notexture))
-							edittex(ti);
+                        Texture *tex = notexture, *glowtex = NULL;
+                        Slot &slot = lookuptexture(texmru[ti], false);
+                        if(slot.sts.empty()) continue;
+                        else if(slot.loaded)
+                        {
+                            tex = slot.sts[0].t;
+                            if(slot.texmask&(1<<TEX_GLOW)) { loopv(slot.sts) if(slot.sts[i].type==TEX_GLOW) { glowtex = slot.sts[i].t; break; } }
+                        }
+                        else if(slot.thumbnail) tex = slot.thumbnail;
+                        else if(lastmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = lastmillis; }
+                        if(g.texture(tex, 1.0, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor)&G3D_UP && (slot.loaded || tex!=notexture))
+                            edittex(ti);
 					}
 					else
                         g.texture(notexture, 1.0); //create an empty space
@@ -1625,26 +1629,48 @@ void render_texture_panel(int w, int h)
 			int s = (i == 3 ? 285 : 220), ti = curtexindex+i-3;
 			if(ti>=0 && ti<curtexnum)
 			{
-				Slot &st = lookuptexture(texmru[ti]);
-				Texture *tex = st.sts.inrange(0) ? st.sts[0].t : notexture;
-				float sx = min(1.0f, tex->xs/(float)tex->ys), sy = min(1.0f, tex->ys/(float)tex->xs);
-				glBindTexture(GL_TEXTURE_2D, tex->id);
-				glColor4f(0, 0, 0, texpaneltimer/1000.0f);
-				int x = width-s-50, r = s;
-				loopj(2)
-				{
-					glBegin(GL_QUADS);
-					glTexCoord2f(0.0,	0.0);	glVertex2f(x,	y);
-					glTexCoord2f(1.0/sx, 0.0);	glVertex2f(x+r, y);
-					glTexCoord2f(1.0/sx, 1.0/sy); glVertex2f(x+r, y+r);
-					glTexCoord2f(0.0,	1.0/sy); glVertex2f(x,	y+r);
-					glEnd();
-					xtraverts += 4;
-					glColor4f(1.0, 1.0, 1.0, texpaneltimer/1000.0f);
-					r -= 10;
-					x += 5;
-					y += 5;
-				}
+                Slot &slot = lookuptexture(texmru[ti]);
+                Texture *tex = slot.sts[0].t, *glowtex = NULL;
+                if(slot.texmask&(1<<TEX_GLOW))
+                {
+                    loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; }
+                }
+                float sx = min(1.0f, tex->xs/(float)tex->ys), sy = min(1.0f, tex->ys/(float)tex->xs);
+                int x = width-s-50, r = s;
+                float tc[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
+                float xoff = slot.xoffset, yoff = slot.yoffset;
+                if(slot.rotation)
+                {
+                    if((slot.rotation&5) == 1) { swap(xoff, yoff); loopk(4) swap(tc[k][0], tc[k][1]); }
+                    if(slot.rotation >= 2 && slot.rotation <= 4) { xoff *= -1; loopk(4) tc[k][0] *= -1; }
+                    if(slot.rotation <= 2 || slot.rotation == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
+                }
+                loopk(4) { tc[k][0] = tc[k][0]/sx - xoff/tex->xs; tc[k][1] = tc[k][1]/sy - yoff/tex->ys; }
+                glBindTexture(GL_TEXTURE_2D, tex->id);
+                loopj(glowtex ? 3 : 2)
+                {
+                    if(j < 2) glColor4f(j, j, j, texpaneltimer/1000.0f);
+                    else
+                    {
+                        glBindTexture(GL_TEXTURE_2D, glowtex->id);
+                        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+                        glColor4f(slot.glowcolor.x, slot.glowcolor.y, slot.glowcolor.z, texpaneltimer/1000.0f);
+                    }
+                    glBegin(GL_QUADS);
+                    glTexCoord2fv(tc[0]); glVertex2f(x,   y);
+                    glTexCoord2fv(tc[1]); glVertex2f(x+r, y);
+                    glTexCoord2fv(tc[2]); glVertex2f(x+r, y+r);
+                    glTexCoord2fv(tc[3]); glVertex2f(x,   y+r);
+                    glEnd();
+                    xtraverts += 4;
+                    if(!j)
+                    {
+                        r -= 10;
+                        x += 5;
+                        y += 5;
+                    }
+                    else if(j == 2) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                }
 			}
 			y += s+gap;
 		}

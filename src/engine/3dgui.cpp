@@ -281,14 +281,14 @@ struct gui : g3d_gui
 		return layout(size+SHADOW, size+SHADOW);
 	}
 
-	int texture(Texture *t, float scale)
-	{
-		autotab();
-		if(scale==0) scale = 1;
-		int size = (int)(scale*2*FONTH)-SHADOW;
-        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+SHADOW, size+SHADOW));
-		return layout(size+SHADOW, size+SHADOW);
-	}
+    int texture(Texture *t, float scale, int rotate, int xoff, int yoff, Texture *glowtex, const vec &glowcolor)
+    {
+        autotab();
+        if(scale==0) scale = 1;
+        int size = (int)(scale*2*FONTH)-SHADOW;
+        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+SHADOW, size+SHADOW), rotate, xoff, yoff, glowtex, glowcolor);
+        return layout(size+SHADOW, size+SHADOW);
+    }
 
 	void slider(int &val, int vmin, int vmax, int color, char *label)
 	{
@@ -450,7 +450,7 @@ struct gui : g3d_gui
         defaultshader->set();
     }
 
-	void icon_(Texture *t, bool overlaid, bool tiled, int x, int y, int size, bool hit)
+    void icon_(Texture *t, bool overlaid, bool tiled, int x, int y, int size, bool hit, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1))
 	{
 		float xs, ys, xt, yt;
 		if(tiled)
@@ -487,16 +487,37 @@ struct gui : g3d_gui
 			if(!rgbonlyshader) rgbonlyshader = lookupshaderbyname("rgbonly");
 			rgbonlyshader->set();
 		}
-		if(hit) glColor3f(1, 0.5f, 0.5f);
-		else if(overlaid) glColor3f(1, 1, 1);
-		else glColor3fv(light.v);
-		glBindTexture(GL_TEXTURE_2D, t->id);
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.0f,	0.0f);	glVertex2f(x,	y);
-		glTexCoord2f(1.0f/xt, 0.0f);	glVertex2f(x+xs, y);
-		glTexCoord2f(1.0f/xt, 1.0f/yt); glVertex2f(x+xs, y+ys);
-		glTexCoord2f(0.0f,	1.0f/yt); glVertex2f(x,	y+ys);
-		glEnd();
+        float tc[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
+        if(rotate)
+        {
+            if((rotate&5) == 1) { swap(xoff, yoff); loopk(4) swap(tc[k][0], tc[k][1]); }
+            if(rotate >= 2 && rotate <= 4) { xoff *= -1; loopk(4) tc[k][0] *= -1; }
+            if(rotate <= 2 || rotate == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
+        }
+        loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/t->xs; tc[k][1] = tc[k][1]/yt - float(yoff)/t->ys; }
+        vec color = hit ? vec(1, 0.5f, 0.5f) : (overlaid ? vec(1, 1, 1) : light);
+        glColor3fv(color.v);
+        glBindTexture(GL_TEXTURE_2D, t->id);
+        glBegin(GL_QUADS);
+        glTexCoord2fv(tc[0]); glVertex2f(x,    y);
+        glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
+        glTexCoord2fv(tc[2]); glVertex2f(x+xs, y+ys);
+        glTexCoord2fv(tc[3]); glVertex2f(x,    y+ys);
+        glEnd();
+        if(glowtex)
+        {
+            if(hit || overlaid) { loopk(3) color[k] *= glowcolor[k]; glColor3fv(color.v); }
+            else glColor3fv(glowcolor.v);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            glBindTexture(GL_TEXTURE_2D, glowtex->id);
+            glBegin(GL_QUADS);
+            glTexCoord2fv(tc[0]); glVertex2f(x,    y);
+            glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
+            glTexCoord2fv(tc[2]); glVertex2f(x+xs, y+ys);
+            glTexCoord2fv(tc[3]); glVertex2f(x,    y+ys);
+            glEnd();
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }
 		if(tiled) defaultshader->set();
 		if(overlaid)
 		{
