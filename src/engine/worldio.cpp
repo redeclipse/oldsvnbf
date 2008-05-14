@@ -569,13 +569,13 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 					ident *id = idents->access(vname);
 					bool proceed = true;
 					int type = hdr.version >= 28 ? gzgetint(f)+(hdr.version >= 29 ? 0 : 1) : (id ? id->type : ID_VAR);
-					if(type != id->type)
+					if(!id || !id->world) proceed = false;
+					else if(type != id->type)
 					{
 						if(hdr.version <= 28 && id->type == ID_FVAR && type == ID_VAR)
 							type = ID_FVAR;
 						else proceed = false;
 					}
-					if(!id || !id->world) proceed = false;
 
 					switch(type)
 					{
