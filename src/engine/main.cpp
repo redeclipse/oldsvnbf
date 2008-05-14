@@ -295,7 +295,7 @@ void resetgl()
     extern void reloadtextures();
     extern void reloadshaders();
     inbetweenframes = false;
-    if(!reloadtexture(*notexture) ||
+    if(!reloadtexture("textures/notexture.png") ||
        !reloadtexture("textures/logo.png") ||
        !reloadtexture("textures/loadback.jpg"))
         fatal("failed to reload core texture");
