@@ -965,6 +965,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
     glOrtho(0, w, h, 0, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    defaultshader->set();
 	loopi(2)
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
