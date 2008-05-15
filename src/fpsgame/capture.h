@@ -271,7 +271,7 @@ struct captureclient : capturestate
 
 	void drawblips(int x, int y, int s, int type, bool skipenemy = false)
 	{
-		settexture("textures/blip.png");
+		settexture("textures/blip");
 		switch(max(type+1, 0))
 		{
 			case 2: glColor4f(0.f, 0.f, 1.f, 1.f); break;

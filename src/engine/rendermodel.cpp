@@ -866,24 +866,13 @@ void findanims(const char *pattern, vector<int> &anims)
 
 void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&masks) // model skin sharing
 {
-#define ifnoload(tex, path) if((tex = textureload(path, 0, true, false))==notexture)
-#define tryload(tex, prefix, name) \
-    ifnoload(tex, makerelpath(mdir, name ".jpg", prefix)) \
-    { \
-        ifnoload(tex, makerelpath(mdir, name ".png", prefix)) \
-        { \
-            ifnoload(tex, makerelpath(maltdir, name ".jpg", prefix)) \
-            { \
-                ifnoload(tex, makerelpath(maltdir, name ".png", prefix)) return; \
-            } \
-        } \
-    }
+	#define tryload(tex, path) tex = textureload(path, 0, true, false)
 
     s_sprintfd(mdir)("models/%s", dir);
     s_sprintfd(maltdir)("models/%s", altdir);
     masks = notexture;
-    tryload(skin, NULL, "skin");
-    tryload(masks, "<ffmask:25>", "masks");
+    tryload(skin, "skin");
+    tryload(masks, "<ffmask:25>masks");
 }
 
 // convenient function that covers the usual anims for players/monsters/npcs

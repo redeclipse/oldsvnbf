@@ -77,7 +77,7 @@ struct projectiles
 							waterfric = 1.5f;
 							vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
 							if(v.magnitude()>50) v.div(50);
-							v.mul(to.dist(from)*0.01f);
+							v.mul(to.dist(from)*0.005f);
 							v.z /= 2;
 							dir = to;
 							dir.add(v);

@@ -370,6 +370,19 @@ static vec parsevec(const char *arg)
 	return v;
 }
 
+SDL_Surface *textureloadname(const char *name)
+{
+	SDL_Surface *s = NULL;
+	const char *exts[] = { "", ".png", ".tga", ".jpg" };
+	string buf;
+	loopi(sizeof(exts)/sizeof(exts[0]))
+	{
+		s_sprintf(buf)("%s%s", name, exts[i]);
+		if((s = IMG_Load(findfile(path(buf), "rb"))) != NULL) break;
+	}
+	return s;
+}
+
 static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL)
 {
     const char *cmds = NULL, *file = tname;
@@ -395,7 +408,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 
     if(msg) show_out_of_renderloop_progress(0, file);
 
-    SDL_Surface *s = IMG_Load(findfile(file, "rb"));
+    SDL_Surface *s = textureloadname(file);
     if(!s) { if(msg) conoutf("could not load texture %s", file); return NULL; }
     int bpp = s->format->BitsPerPixel;
     if(!texformat(bpp)) { SDL_FreeSurface(s); conoutf("texture must be 8, 16, 24, or 32 bpp: %s", file); return NULL; }
@@ -436,7 +449,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 void loadalphamask(Texture *t)
 {
 	if(t->alphamask || t->bpp!=32) return;
-	SDL_Surface *s = IMG_Load(findfile(t->name, "rb"));
+	SDL_Surface *s = textureloadname(t->name);
 	if(!s || !s->format->Amask) { if(s) SDL_FreeSurface(s); return; }
 	uint alpha = s->format->Amask;
 	t->alphamask = new uchar[s->h * ((s->w+7)/8)];
@@ -583,7 +596,7 @@ void autograss(char *name)
 	Slot &s = slots.last();
 	DELETEA(s.autograss);
 	s_sprintfd(pname)("%s", name);
-	s.autograss = newstring(name[0] ? pname : "textures/grass.png");
+	s.autograss = newstring(name[0] ? pname : "textures/grass");
 }
 COMMAND(autograss, "s");
 
@@ -994,7 +1007,7 @@ Texture *cubemapload(const char *name, bool mipit, bool msg)
 		t = cubemaploadwildcard(NULL, jpgname, mipit, false);
 		if(!t)
 		{
-			s_sprintfd(pngname)("%s_*.png", name);
+			s_sprintfd(pngname)("%s_*", name);
 			t = cubemaploadwildcard(NULL, pngname, mipit, false);
 			if(!t && msg) conoutf("could not load envmap %s", name);
 		}
@@ -1155,7 +1168,7 @@ void writetgaheader(FILE *f, SDL_Surface *s, int bits)
 
 void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png) -> BGR (tga)
 {
-    SDL_Surface *ns = IMG_Load(findfile(normalfile, "rb"));
+    SDL_Surface *ns = textureloadname(normalfile);
     if(!ns) return;
     FILE *f = openfile(destfile, "wb");
     if(f)
@@ -1175,8 +1188,8 @@ void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png)
 
 void mergenormalmaps(char *heightfile, char *normalfile)    // BGR (tga) -> BGR (tga) (SDL loads TGA as BGR!)
 {
-    SDL_Surface *hs = IMG_Load(findfile(heightfile, "rb"));
-    SDL_Surface *ns = IMG_Load(findfile(normalfile, "rb"));
+    SDL_Surface *hs = textureloadname(heightfile);
+    SDL_Surface *ns = textureloadname(normalfile);
     if(hs && ns)
     {
         uchar def_n[] = { 255, 128, 128 };

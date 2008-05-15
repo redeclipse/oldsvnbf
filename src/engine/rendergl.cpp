@@ -1000,7 +1000,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 	loopi(2)
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
-		settexture("textures/loadback.jpg");
+		settexture("textures/loadback");
 
 		glColor3f(1, 1, 1);
 		glBegin(GL_QUADS);
@@ -1048,7 +1048,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
         }
 
 		int x = (w-512)/2, y = 128;
-		settexture("textures/logo.png");
+		settexture("textures/logo");
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); glVertex2i(x,	 y);
 		glTexCoord2f(1, 0); glVertex2i(x+512, y);
@@ -1318,7 +1318,7 @@ void loadcrosshair(const char *name, int i)
     if(crosshairs[i] == notexture)
     {
         name = cl->defaultcrosshair(i);
-        if(!name) name = "textures/crosshair.png";
+        if(!name) name = "textures/crosshair";
         crosshairs[i] = textureload(name, 3, true);
     }
 }

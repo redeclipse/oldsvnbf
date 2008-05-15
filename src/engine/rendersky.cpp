@@ -8,7 +8,7 @@ void loadsky(char *basename)
 	loopi(6)
 	{
         const char *side = cubemapsides[i].name;
-		s_sprintfd(name)("%s_%s.jpg", basename, side);
+		s_sprintfd(name)("%s_%s", basename, side);
         if((sky[i] = textureload(name, 3, true, false))==notexture)
 		{
 			strcpy(name+strlen(name)-3, "png");

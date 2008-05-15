@@ -137,7 +137,7 @@ void calcvfcD()
         loopk(3) if(p[k] > 0) vfcDfar[i] += p[k];
         else vfcDnear[i] += p[k];
     }
-} 
+}
 
 void setvfcP(float yaw, float pitch, const vec &camera)
 {
@@ -1162,8 +1162,8 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot)
     Texture *curtex = !cur.slot || cur.slot->sts.empty() ? notexture : cur.slot->sts[0].t,
             *tex = slot.sts.empty() ? notexture : slot.sts[0].t;
     if(!cur.slot || slot.sts.empty() ||
-        (curtex->xs != tex->xs || curtex->ys != tex->ys || 
-         cur.slot->rotation != slot.rotation || cur.slot->scale != slot.scale || 
+        (curtex->xs != tex->xs || curtex->ys != tex->ys ||
+         cur.slot->rotation != slot.rotation || cur.slot->scale != slot.scale ||
          cur.slot->xoffset != slot.xoffset || cur.slot->yoffset != slot.yoffset ||
          cur.slot->scrollS != slot.scrollS || cur.slot->scrollT != slot.scrollT))
     {
@@ -1316,7 +1316,7 @@ static void renderbatch(renderstate &cur, int pass, geombatch &b)
                 if(renderpath!=R_FIXEDFUNCTION) changeshader(cur, b.slot.shader, b.slot, shadowed!=0);
                 rendered = true;
             }
-            if(cur.texgendim!=dim || cur.mtglow>cur.mttexgen) 
+            if(cur.texgendim!=dim || cur.mtglow>cur.mttexgen)
                 changetexgen(cur, b.slot, dim);
 
             gbatches++;
@@ -1589,8 +1589,8 @@ void loadcaustics()
     {
         s_sprintfd(name)(
             renderpath==R_FIXEDFUNCTION ?
-                "<mad:0.6,0.4>caustics/caust%.2d.png" :
-                "<mad:-0.6,0.6>caustics/caust%.2d.png",
+                "<mad:0.6,0.4>caustics/caust%.2d" :
+                "<mad:-0.6,0.6>caustics/caust%.2d",
             i);
         caustictex[i] = textureload(name);
     }

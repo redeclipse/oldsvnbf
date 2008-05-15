@@ -295,9 +295,9 @@ void resetgl()
     extern void reloadtextures();
     extern void reloadshaders();
     inbetweenframes = false;
-    if(!reloadtexture("textures/notexture.png") ||
-       !reloadtexture("textures/logo.png") ||
-       !reloadtexture("textures/loadback.jpg"))
+    if(!reloadtexture("textures/notexture") ||
+       !reloadtexture("textures/logo") ||
+       !reloadtexture("textures/loadback"))
         fatal("failed to reload core texture");
     reloadfonts();
     inbetweenframes = true;
@@ -696,7 +696,7 @@ int main(int argc, char **argv)
 	conoutf("init: gl");
     gl_checkextensions();
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
-    notexture = textureload("textures/notexture.png");
+    notexture = textureload("textures/notexture");
     if(!notexture) fatal("could not find core textures");
 
 	conoutf("init: sound");
