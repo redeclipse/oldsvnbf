@@ -341,7 +341,7 @@ bool lumel_sample(const vec &sample, int aasample, int stride)
 
 VARW(mmskylight, 0, 1, 1);
 
-void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *slight, int mmshadows = 1)
+void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *slight, int mmshadows = 1, extentity *t = NULL)
 {
 	static const vec rays[17] =
 	{
@@ -371,7 +371,7 @@ void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 	int hit = 0;
 	loopi(17) if(normal.dot(rays[i])>=0)
 	{
-		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)))>1e15f) hit++;
+		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t)>1e15f) hit++;
 	}
 
 	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
@@ -1557,7 +1557,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 	if(t && (sky[0]>ambient || sky[1]>ambient || sky[2]>ambient))
 	{
 		uchar slight[3];
-		calcskylight(target, vec(0, 0, 0), 0.5f, slight);
+		calcskylight(target, vec(0, 0, 0), 0.5f, slight, 1, t);
 		loopk(3) color[k] = min(1.5f, max(max(slight[k]/255.0f, ambient), color[k]));
 	}
 	else loopk(3)
