@@ -685,6 +685,7 @@ static void addname(vector<char> &key, Slot &slot, Slot::Tex &t, bool combined =
     if(combined) key.add('&');
     if(prefix) { while(*prefix) key.add(*prefix++); }
     s_sprintfd(tname)("%s", t.name);
+	for(const char *s = tname; *s; key.add(*s++));
 }
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
