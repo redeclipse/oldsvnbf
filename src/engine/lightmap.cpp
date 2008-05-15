@@ -1071,6 +1071,7 @@ void cleanuplightmaps()
     }
     loopv(lightmaptexs) glDeleteTextures(1, &lightmaptexs[i].id);
     lightmaptexs.setsize(0);
+    if(progresstex) { glDeleteTextures(1, &progresstex); progresstex = 0; }
 }
 
 void resetlightmaps()
