@@ -31,7 +31,7 @@ struct fpsrender
 				attack = ANIM_RELOAD;
 		}
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
-		static const char *vweps[] = { "weapons/pistol/vwep", "weapons/shotgun/vwep", "weapons/chaingun/vwep", "weapons/grenades/vwep", "weapons/rockets/vwep", "weapons/rifle/vwep"};
+		static const char *vweps[] = { "weapons/pistol/vwep", "weapons/shotgun/vwep", "weapons/chaingun/vwep", "weapons/grenades/vwep", "weapons/flamer/vwep", "weapons/rifle/vwep", "weapons/rockets/vwep"};
         int ai = 0;
         if (d->gunselect > -1 && d->gunselect < NUMGUNS)
 		{

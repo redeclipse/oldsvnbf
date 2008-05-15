@@ -77,27 +77,24 @@ struct GAMESERVER : igameserver
 		useevent use;
 	};
 
-    template <int N>
     struct projectilestate
     {
-        int projs[N];
-        int numprojs;
+        vector<int> projs;
 
-        projectilestate() : numprojs(0) {}
+        projectilestate() { reset(); }
 
-        void reset() { numprojs = 0; }
+        void reset() { projs.setsize(0); }
 
         void add(int val)
         {
-            if(numprojs>=N) numprojs = 0;
-            projs[numprojs++] = val;
+			projs.add(val);
         }
 
         bool remove(int val)
         {
-            loopi(numprojs) if(projs[i]==val)
+            loopv(projs) if(projs[i]==val)
             {
-                projs[i] = projs[--numprojs];
+                projs.remove(i);
                 return true;
             }
             return false;
@@ -108,7 +105,7 @@ struct GAMESERVER : igameserver
 	{
 		vec o;
 		int state;
-        projectilestate<8> rockets, grenades;
+        projectilestate rockets, grenades, flames;
 		int frags;
 		int lasttimeplayed, timeplayed;
 		float effectiveness;
@@ -117,7 +114,7 @@ struct GAMESERVER : igameserver
 
 		bool isalive(int gamemillis)
 		{
-			return state==CS_ALIVE || (state==CS_DEAD && gamemillis - lastdeath <= DEATHMILLIS);
+			return state==CS_ALIVE || (state==CS_DEAD && gamemillis-lastdeath <= DEATHMILLIS);
 		}
 
 		void reset()
@@ -126,6 +123,7 @@ struct GAMESERVER : igameserver
 			lifesequence = 0;
             rockets.reset();
             grenades.reset();
+            flames.reset();
 
 			timeplayed = 0;
 			effectiveness = 0;
@@ -1030,6 +1028,7 @@ struct GAMESERVER : igameserver
 					ci->events.setsizenodelete(0);
                     ci->state.rockets.reset();
                     ci->state.grenades.reset();
+                    ci->state.flames.reset();
 				}
 				QUEUE_MSG;
 				break;
@@ -1819,6 +1818,10 @@ struct GAMESERVER : igameserver
                 if(!gs.grenades.remove(e.id)) return;
 				break;
 
+			case GUN_FLAMER:
+                if(!gs.flames.remove(e.id)) return;
+				break;
+
 			default:
 				return;
 		}
@@ -1826,13 +1829,13 @@ struct GAMESERVER : igameserver
 		{
 			hitevent &h = ci->events[i].hit;
 			clientinfo *target = (clientinfo *)getinfo(h.target);
-            if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.dist<0 || h.dist>RL_DAMRAD) continue;
+            if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.dist<0 || h.dist>guntype[e.gun].radius) continue;
 
 			int j = 1;
 			for(j = 1; j<i; j++) if(ci->events[j].hit.target==h.target) break;
 			if(j<i) continue;
 
-			int damage = int(guntype[e.gun].damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
+			int damage = int(guntype[e.gun].damage*(1-h.dist/guntype[e.gun].scale/guntype[e.gun].radius));
 			dodamage(target, ci, damage, e.gun, h.flags, h.dir);
 		}
 	}
@@ -1853,6 +1856,7 @@ struct GAMESERVER : igameserver
 		{
             case GUN_RL: gs.rockets.add(e.id); break;
             case GUN_GL: gs.grenades.add(e.id); break;
+            case GUN_FLAMER: gs.flames.add(e.id); break;
 			default:
 			{
 				int totalrays = 0, maxrays = e.gun==GUN_SG ? SGRAYS : 1;

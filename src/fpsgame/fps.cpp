@@ -21,7 +21,7 @@ struct GAMECLIENT : igameclient
     int lasthit;
 
 	string cptext;
-	int quakewobble, damageresidue, myrankv, myranks;
+	int quakewobble, damageresidue;
 
 	struct sline { string s; };
 	struct teamscore
@@ -46,6 +46,10 @@ struct GAMECLIENT : igameclient
 	IVARP(thirdpersondist, 2, 16, 128);
 	IVARP(thirdpersonheight, 2, 12, 128);
 
+	IVARP(mousedeadzone, 0, 10, 100);
+	IVARP(mousepanspeed, 0, 30, INT_MAX-1);
+	IVARP(mousesensitivity, 0, 2, INT_MAX-1);
+
 	IVARP(yawsensitivity, 0, 10, 1000);
 	IVARP(pitchsensitivity, 0, 7, 1000);
 	IVARP(rollsensitivity, 0, 3, 1000);
@@ -57,18 +61,13 @@ struct GAMECLIENT : igameclient
 	IVARP(teamcrosshair, 0, 1, 1);
 	IVARP(hitcrosshair, 0, 425, 1000);
 
-	IVARP(rankhud, 0, 0, 1);// show ranks on the hud
-	IVARP(ranktime, 0, 15000, 600000);// display unchanged rank no earlier than every N ms
-
     GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			myrankv(0), myranks(0),
 			player1(spawnstate(new fpsent()))
 	{
-		CCOMMAND(centerrank, "", (GAMECLIENT *self), self->setcrank());
         CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1); });
 		CCOMMAND(mode, "ii", (GAMECLIENT *self, int *val, int *mut), { self->setmode(*val, *mut); });
 		CCOMMAND(gamemode, "", (GAMECLIENT *self), intret(self->gamemode));
@@ -381,8 +380,6 @@ struct GAMECLIENT : igameclient
 			player1->attacking = player1->reloading = player1->useaction = false;
 			if(m_mp(gamemode))
 			{
-				calcranks();
-
 				if((m_team(gamemode, mutators) && isteam(player1->team, teamscores[0].team)) ||
 					(!m_team(gamemode, mutators) && shplayers.length() && shplayers[0] == player1))
 				{
@@ -991,8 +988,8 @@ struct GAMECLIENT : igameclient
 			fixrange(player1->yaw, player1->pitch);
 			return;
 		}
-		cursorx = max(0.0f, min(1.0f, cursorx+dx/CURSORSCALE));
-		cursory = max(0.0f, min(1.0f, cursory+dy/CURSORSCALE));
+		cursorx = max(0.0f, min(1.0f, cursorx+(dx*(mousesensitivity()/1000.f))));
+		cursory = max(0.0f, min(1.0f, cursory+(dy*(mousesensitivity()/1000.f))));
 	}
 
 	void findorientation(vec &o, float yaw, float pitch, vec &pos)
@@ -1047,11 +1044,12 @@ struct GAMECLIENT : igameclient
 				else
 				{
 					int frame = lastcamera-lastmillis;
+					float deadzone = (mousedeadzone()/100.f);
 					float cx = (cursorx-0.5f), cy = (0.5f-cursory);
 					camera1->o = vec(player1->o).add(vec(0, 0, 2));
 
-					if(cx > 0.1f || cx < -0.1f) camera1->yaw -= cx*(frame/5.f);
-					if(cy > 0.1f || cy < -0.1f) camera1->pitch -= cy*(frame/5.f);
+					if(cx > deadzone || cx < -deadzone) camera1->yaw -= (cx*frame)*(mousepanspeed()/100.f);
+					if(cy > deadzone || cy < -deadzone) camera1->pitch -= (cy*frame)*(mousepanspeed()/100.f);
 					camera1->roll = 0.f;
 					fixrange(camera1->yaw, camera1->pitch);
 
@@ -1106,162 +1104,6 @@ struct GAMECLIENT : igameclient
 			default: break;
 		}
 		if(s >= 0) playsound(s);
-	}
-
-	static int mteamscorecmp(const teamscore *x, const teamscore *y)
-	{
-		if(x->score > y->score)
-			return -1;
-		if(x->score < y->score)
-			return 1;
-		return 0;
-	}
-
-	static int mplayersort(const fpsent **a, const fpsent **b)
-	{
-		return (int)((*a)->frags<(*b)->frags)*2-1;
-	}
-
-	void calcranks()
-	{
-		bool hold = false;
-
-		shplayers.setsize(0);
-
-		loopi(numdynents())
-		{
-			fpsent *o = (fpsent *)iterdynents(i);
-			if(o && (o->type != ENT_AI))
-				shplayers.add(o);
-		}
-
-		shplayers.sort(mplayersort);
-
-		if(teamscores.length())
-			teamscores.setsize(0);
-
-		if(m_team(gamemode, mutators))
-		{
-			if(m_capture(gamemode))
-			{
-				loopv(cpc.scores) if(cpc.scores[i].total)
-					teamscores.add(teamscore(cpc.scores[i].team, cpc.scores[i].total));
-			}
-			else
-				loopi(numdynents())
-			{
-				fpsent *o = (fpsent *)iterdynents(i);
-				if(o && o->type!=ENT_AI && o->frags)
-				{
-					teamscore *ts = NULL;
-					loopv(teamscores) if(!strcmp(teamscores[i].team, o->team))
-					{
-						ts = &teamscores[i];
-						break;
-					}
-					if(!ts)
-						teamscores.add(teamscore(o->team, o->frags));
-					else
-						ts->score += o->frags;
-				}
-			}
-			teamscores.sort(mteamscorecmp);
-		}
-
-		string rinfo;
-		rinfo[0] = 0;
-
-		loopv(shplayers)
-		{
-			if(shplayers[i]->clientnum == player1->clientnum)
-			{
-				if(i != myrankv)
-				{
-					if(i==0)
-					{
-						if(player1->state != CS_SPECTATOR)
-						{
-							hold = true;
-							s_sprintf(rinfo)("You've taken %s", myrankv!=-1?"\fythe lead":"\frfirst blood");
-						}
-					}
-					else
-					{
-						if(myrankv==0)
-						{
-							hold = true;
-							s_sprintf(rinfo)("\f2%s \fftakes \f2the lead", colorname(shplayers[0]));
-						}
-						int df = shplayers[0]->frags - shplayers[i]->frags;
-						string cmbN;
-						if(cc.spectator)
-						{
-							df = shplayers[0]->frags - shplayers[i==1?2:1]->frags;
-							string dfs;
-							if(df)
-								s_sprintf(dfs)("+%d frags", df);
-							else
-								s_sprintf(dfs)("%s","tied for the lead");
-							s_sprintf(cmbN)("%s%s%s \f3VS\ff %s\n%s", rinfo[0]?rinfo:"", rinfo[0]?"\n":"", colorname(shplayers[0]), colorname(shplayers[i==1?2:1]), dfs);
-						}
-						else
-						{
-							if(df)
-								s_sprintf(cmbN)("%s%s\f%d%d\ff %s", rinfo[0]?rinfo:"", rinfo[0]?"\n":"", df>0?3:1, abs(df), colorname(shplayers[0]));
-							else
-								s_sprintf(cmbN)("%s%s%s \f3VS\ff %s", rinfo[0]?rinfo:"", rinfo[0]?"\n":"", colorname(shplayers[i]), colorname(shplayers[i?0:1]));
-						}
-						s_sprintf(rinfo)("%s", cmbN);
-					}
-					myrankv = i;
-				}
-				else if(myranks)
-				{
-					if(cc.spectator)
-					{
-						if(lastmillis > myranks + ranktime())
-						{
-							if(shplayers.length()>2)
-							{
-								int df = shplayers[0]->frags - shplayers[i==1?2:1]->frags;
-								string dfs;
-								if(df)
-									s_sprintf(dfs)("+%d frags", df);
-								else
-									s_sprintf(dfs)("%s","tied for the lead");
-								s_sprintf(rinfo)("%s \f3VS\ff %s\n%s", colorname(shplayers[0]), colorname(shplayers[i==1?2:1]), dfs);
-							}
-						}
-					}
-					else
-					{
-						if(lastmillis > myranks + ranktime())
-						{
-							int df;
-							if(shplayers.length()>1)
-							{
-								if(i)
-									df= shplayers[0]->frags - shplayers[i]->frags;
-								else
-									df = shplayers[1]->frags - shplayers[0]->frags;
-								if(df)
-									s_sprintf(rinfo)("\f%d%d\ff %s", df>0?3:1, abs(df), colorname(shplayers[df>0?0:1]));
-								else
-									s_sprintf(rinfo)("%s \f3VS\ff %s", colorname(shplayers[i]), colorname(shplayers[i?0:1]));
-							}
-						}
-					}
-
-				}
-				myranks = lastmillis;
-			}
-		}
-		if(rankhud() && rinfo[0]) { console("%s", CON_CENTER, rinfo); }
-	}
-
-	void setcrank()
-	{
-		console("\f2%d%s place", CON_NORMAL|CON_CENTER, myrankv+1, myrankv ? myrankv == 1 ? "nd" : myrankv == 2 ? "rd" : "th" : "st");
 	}
 
 	char *gametitle()
