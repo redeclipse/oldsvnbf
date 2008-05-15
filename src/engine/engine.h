@@ -176,13 +176,15 @@ extern GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16];
 
 extern bool hascursor;
 extern float cursorx, cursory;
-
+extern vec cursordir;
 #define SENSF 33.f
-#define CURSORSCALE 500.0f
 
 extern void gl_checkextensions();
 extern void gl_init(int w, int h, int bpp, int depth, int fsaa);
 extern void cleangl();
+
+extern void projectcursor(float x, float y, vec &dir);
+extern void findorientation(vec &o, float yaw, float pitch, vec &pos, bool camera = false);
 extern void rendergame();
 extern void invalidatepostfx();
 extern void gl_drawframe(int w, int h);

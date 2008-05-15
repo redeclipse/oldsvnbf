@@ -220,6 +220,13 @@ struct GAMECLIENT : igameclient
 			adjust(int, quakewobble, 100);
 			adjust(int, damageresidue, 200);
 
+			if(player1->state == CS_ALIVE || player1->state == CS_DEAD)
+			{
+				float fx, fy;
+				vectoyawpitch(cursordir, fx, fy);
+				findorientation(camera1->o, fx, fy, worldpos, true);
+			}
+
 			if(player1->state == CS_DEAD)
 			{
 				if(lastmillis-player1->lastpain < 2000)
@@ -228,8 +235,14 @@ struct GAMECLIENT : igameclient
 					ph.move(player1, 10, false);
 				}
 			}
-			else
+			else if(player1->state == CS_ALIVE)
 			{
+				vec v(worldpos);
+				v.sub(player1->o);
+				v.normalize();
+				vectoyawpitch(v, player1->yaw, player1->pitch);
+				//fixrange(player1->yaw, player1->pitch);
+
 				if(player1->timeinair)
 				{
 					if(player1->jumping && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
@@ -251,14 +264,15 @@ struct GAMECLIENT : igameclient
 
 				float k = pow(0.7f, curtime/10.0f);
 				swaydir.mul(k);
-                vec vel(player1->vel);
-                vel.add(player1->falling);
-                swaydir.add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), ph.maxspeed(player1)))));
+				vec vel(player1->vel);
+				vel.add(player1->falling);
+				swaydir.add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), ph.maxspeed(player1)))));
 
 				et.checkitems(player1);
 				if(player1->attacking) ws.shoot(player1, worldpos);
 				if(player1->reloading || doautoreload()) ws.reload(player1);
 			}
+			else ph.move(player1, 20, true);
 		}
 		if(player1->clientnum >= 0) c2sinfo();
 	}
@@ -776,9 +790,6 @@ struct GAMECLIENT : igameclient
 							glEnd();
 						}
 					}
-					//else if(editmode)
-					//{
-					//}
 
 					if(d->state == CS_ALIVE)
 					{
@@ -992,17 +1003,6 @@ struct GAMECLIENT : igameclient
 		cursory = max(0.0f, min(1.0f, cursory+(dy*(mousesensitivity()/1000.f))));
 	}
 
-	void findorientation(vec &o, float yaw, float pitch, vec &pos)
-	{
-		vec dir;
-		vecfromyawpitch(yaw, pitch, 1, 0, dir);
-		vecfromyawpitch(yaw, 0, 0, -1, camright);
-		vecfromyawpitch(yaw, pitch+90, 1, 0, camup);
-
-		if(raycubepos(o, dir, pos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-			pos = dir.mul(2*hdr.worldsize).add(o); //otherwise 3dgui won't work when outside of map
-	}
-
 	int lastcamera;
 	physent gamecamera;
 
@@ -1016,7 +1016,7 @@ struct GAMECLIENT : igameclient
 			{
 				camera1 = player1;
 				fixrange(camera1->yaw, camera1->pitch);
-				findorientation(camera1->o, camera1->yaw, camera1->pitch, worldpos);
+				findorientation(camera1->o, camera1->yaw, camera1->pitch, worldpos, true);
 				lastcamera = 0;
 			}
 			else
@@ -1034,7 +1034,7 @@ struct GAMECLIENT : igameclient
 					cursorx = cursory = 0.5f;
 
 					fixrange(player1->yaw, player1->pitch);
-					findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
+					findorientation(player1->o, player1->yaw, player1->pitch, worldpos, true);
 
 					vec v(worldpos);
 					v.sub(camera1->o);
@@ -1055,19 +1055,7 @@ struct GAMECLIENT : igameclient
 
 					vec dir;
 					vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, dir);
-					dir.mul(5);
-					camera1->o.add(dir);
-
-					float fx = camera1->yaw+(cx*curfov), fy = camera1->pitch+(cy*fovy);
-					while(fx < 0.0f) fx += 360.0f;
-					while(fx > 360.0f) fx -= 360.0f;
-					findorientation(camera1->o, fx, fy, worldpos);
-
-					vec v(worldpos);
-					v.sub(player1->o);
-					v.normalize();
-					vectoyawpitch(v, player1->yaw, player1->pitch);
-					fixrange(player1->yaw, player1->pitch);
+					camera1->o.add(vec(dir).mul(5));
 				}
 
 				if(lastcamera && quakewobble > 0)

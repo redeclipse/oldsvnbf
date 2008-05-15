@@ -499,6 +499,20 @@ VAR(wireframe, 0, 0, 1);
 
 vec worldpos, camdir, camright, camup;
 
+void findorientation(vec &o, float yaw, float pitch, vec &pos, bool camera)
+{
+	vec dir;
+	vecfromyawpitch(yaw, pitch, 1, 0, dir);
+	if(camera)
+	{
+		vecfromyawpitch(yaw, 0, 0, -1, camright);
+		vecfromyawpitch(yaw, pitch+90, 1, 0, camup);
+	}
+
+	if(raycubepos(o, dir, pos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
+		pos = dir.mul(2*hdr.worldsize).add(o); //otherwise 3dgui won't work when outside of map
+}
+
 void transplayer()
 {
 	glLoadIdentity();
@@ -526,6 +540,23 @@ VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 physent *camera1 = NULL;
 bool deathcam = false;
 bool isthirdperson() { return cl->gamethirdperson() || reflecting; }
+
+void projectcursor(float x, float y, vec &dir)
+{
+	GLdouble cmvm[16], cpjm[16];
+	GLint view[4];
+	GLdouble dx, dy, dz;
+
+	glGetDoublev(GL_MODELVIEW_MATRIX, cmvm);
+	glGetDoublev(GL_PROJECTION_MATRIX, cpjm);
+	glGetIntegerv(GL_VIEWPORT, view);
+
+	gluUnProject(x*float(view[2]), y*float(view[3]), 1.0f, cmvm, cpjm, view, &dx, &dy, &dz);
+	dir = vec((float)dx, (float)dy, (float)dz);
+	gluUnProject(x*float(view[2]), y*float(view[3]), 0.0f, cmvm, cpjm, view, &dx, &dy, &dz);
+	dir.sub(vec((float)dx, (float)dy, (float)dz));
+	dir.normalize();
+}
 
 void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, bool swapxy)
 {
@@ -1192,6 +1223,7 @@ void gl_drawframe(int w, int h)
 	project(fovy, aspect, farplane);
 	transplayer();
     getmvpmatrix();
+	projectcursor(cursorx, 1.f-cursory, cursordir);
 
 	glEnable(GL_TEXTURE_2D);
 
@@ -1275,6 +1307,7 @@ VARP(hidehud, 0, 0, 1);
 
 bool hascursor;
 float cursorx = 0.5f, cursory = 0.5f;
+vec cursordir(0, 0, 0);
 #define MAXCROSSHAIRS 6
 static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL, NULL, NULL };
 
