@@ -62,7 +62,7 @@ struct entities : icliententities
 	// these functions are called when the client touches the item
 	void execlink(fpsent *d, int index, bool local)
 	{
-		if(d && ents.inrange(index) && maylink(index))
+		if(d && ents.inrange(index) && maylink(ents[index]->type))
 		{
 			if(local)
 			{
@@ -323,10 +323,9 @@ struct entities : icliententities
 		return 4.0f;
 	}
 
-	bool maylink(int index, int ver = 0)
+	bool maylink(int type, int ver = 0)
 	{
-		if(ents.inrange(index) && enttype[ents[index]->type].links &&
-			enttype[ents[index]->type].links <= (ver ? ver : GAMEVERSION))
+		if(enttype[type].links && enttype[type].links <= (ver ? ver : GAMEVERSION))
 				return true;
 		return false;
 	}
@@ -335,7 +334,7 @@ struct entities : icliententities
 	{
 		if(ents.inrange(index) && ents.inrange(node))
 		{
-			if(maylink(index) && maylink(node))
+			if(maylink(ents[index]->type) && maylink(ents[node]->type))
 			{
 				switch(ents[index]->type)
 				{
@@ -372,7 +371,7 @@ struct entities : icliententities
 					default: break;
 				}
 			}
-			if(msg) conoutf("entity %d [%s] and %d [%s] are not linkable", index, enttype[ents[index]->type].name, node, enttype[ents[node]->type].name);
+			if(msg) conoutf("entity %s (%d) and %s (%d) are not linkable", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 			return false;
 		}
 		if(msg) conoutf("entity %d and %d are unable to be linked as one does not seem to exist", index, node);
@@ -428,7 +427,7 @@ struct entities : icliententities
 
 	void linkclear(int n)
 	{
-		loopvj(ents) if(maylink(j))
+		loopvj(ents) if(maylink(ents[j]->type))
 		{
 			fpsentity &e = (fpsentity &)*ents[j];
 
@@ -456,7 +455,7 @@ struct entities : icliententities
 
 		route.setsize(0);
 
-		if(ents.inrange(node) && ents.inrange(goal) && ents[goal]->type == ents[node]->type && maylink(node))
+		if(ents.inrange(node) && ents.inrange(goal) && ents[goal]->type == ents[node]->type && maylink(ents[node]->type))
 		{
 			struct fpsentity &f = (fpsentity &) *ents[node], &g = (fpsentity &) *ents[goal];
 			vector<linkq *> queue;
@@ -637,12 +636,7 @@ struct entities : icliententities
 	{
 		fpsentity &f = (fpsentity &)e;
 
-		if(mtype == MAP_BFGZ)
-		{
-			int type = f.type;
-			if(gver <= 49 && type >= 10) type--; // translation for these are done later..
-		}
-		else if(mtype == MAP_OCTA)
+		if(mtype == MAP_OCTA)
 		{
 			// sauerbraten version increments
 			if(mver <= 10) if(f.type >= 7) f.type++;
