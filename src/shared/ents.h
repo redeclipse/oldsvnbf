@@ -71,8 +71,7 @@ struct physent                                  // base entity type, can be affe
     uchar type;                                 // one of ENT_* above
     uchar collidetype;                          // one of COLLIDE_* above
 
-    physent() : o(0, 0, 0), yaw(270), pitch(0), roll(0), maxspeed(100),
-		radius(5.0f), height(14), aboveeye(1),
+    physent() : maxspeed(100), radius(5.0f), height(14), aboveeye(1),
         xradius(5.0f), yradius(5.0f), zmargin(0),
 		blocked(false), moving(true),
 		onplayer(NULL), lastmove(0), lastmoveattempt(0), collisions(0), stacks(0),
@@ -89,7 +88,8 @@ struct physent                                  // base entity type, can be affe
         jumptime = crouchtime = timeinair = 0;
         strafe = move = 0;
         physstate = PHYS_FALL;
-		vel = falling = vec(0, 0, 0);
+		o = vel = falling = vec(0, 0, 0);
+    	yaw = pitch = roll = 0.f;
         floor = vec(0, 0, 1);
     }
 };

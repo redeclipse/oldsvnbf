@@ -485,6 +485,15 @@ void getfps(int &fps, int &bestdiff, int &worstdiff)
 	worstdiff = fps-1000/worst;
 }
 
+void getfps_()
+{
+    int fps, bestdiff, worstdiff;
+    getfps(fps, bestdiff, worstdiff);
+    intret(fps);
+}
+
+COMMANDN(getfps, getfps_, "");
+
 bool inbetweenframes = false;
 
 static bool findarg(int argc, char **argv, const char *str)
