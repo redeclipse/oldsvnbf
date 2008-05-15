@@ -12,7 +12,7 @@ struct icliententities
     virtual void fixentity(extentity &e) = 0;
     virtual const char *findname(int type) = 0;
 	virtual int findtype(char *type) = 0;
-	virtual bool maylink(int index, int ver = 0) = 0;
+	virtual bool maylink(int type, int ver = 0) = 0;
 	virtual bool canlink(int index, int node, bool msg = false) = 0;
 	virtual bool linkents(int index, int node, bool add, bool local) = 0;
     virtual extentity *newent() = 0;

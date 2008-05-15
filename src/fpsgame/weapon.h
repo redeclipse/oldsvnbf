@@ -183,7 +183,15 @@ struct weaponstate
 
 	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
-		if (guntype[gun].sound >= 0) playsound(guntype[gun].sound, &from, 255, 0, 0, SND_COPY);
+		if (guntype[gun].sound >= 0)
+		{
+			if (gun == GUN_FLAMER)
+			{
+				if (!sounds.inrange(d->wschan) || !sounds[d->wschan].inuse)
+					d->wschan = playsound(guntype[gun].sound, &from, 255, 0, 0, SND_COPY);
+			}
+			else playsound(guntype[gun].sound, &from, 255, 0, 0, SND_COPY);
+		}
 		adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 
 		switch(gun)

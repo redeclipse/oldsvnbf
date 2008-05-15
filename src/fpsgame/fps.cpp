@@ -47,8 +47,8 @@ struct GAMECLIENT : igameclient
 	IVARP(thirdpersonheight, 2, 12, 128);
 
 	IVARP(mousedeadzone, 0, 10, 100);
-	IVARP(mousepanspeed, 0, 30, INT_MAX-1);
-	IVARP(mousesensitivity, 0, 2, INT_MAX-1);
+	IVARP(mousepanspeed, 0, 30, 1000);
+	IVARP(mousesensitivity, 0, 10, 100);
 
 	IVARP(yawsensitivity, 0, 10, 1000);
 	IVARP(pitchsensitivity, 0, 7, 1000);
@@ -305,7 +305,6 @@ struct GAMECLIENT : igameclient
 			quakewobble += damage;
 			damageresidue += damage;
 			d->hitpush(damage, dir, actor, gun);
-			d->damageroll(damage);
 		}
 
 		if(d->type == ENT_PLAYER)
@@ -729,7 +728,7 @@ struct GAMECLIENT : igameclient
 	{
 		if(maptime || !cc.ready())
 		{
-			if(!hidehud)
+			if(!hidehud && !menuactive())
 			{
 				int ox = w*900/h, oy = 900;
 
@@ -993,14 +992,14 @@ struct GAMECLIENT : igameclient
 	{
 		if(!menuactive() && (player1->state != CS_ALIVE && player1->state != CS_DEAD))
 		{
-			cursorx = cursory = 0.5f;
 			player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
 			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1 : 1);
 			fixrange(player1->yaw, player1->pitch);
+			cursorx = cursory = 0.5f;
 			return;
 		}
-		cursorx = max(0.0f, min(1.0f, cursorx+(dx*(mousesensitivity()/1000.f))));
-		cursory = max(0.0f, min(1.0f, cursory+(dy*(mousesensitivity()/1000.f))));
+		cursorx = max(0.0f, min(1.0f, cursorx+(float(dx*mousesensitivity())/10000.f)));
+		cursory = max(0.0f, min(1.0f, cursory+(float(dy*mousesensitivity())/10000.f)));
 	}
 
 	int lastcamera;
@@ -1048,8 +1047,11 @@ struct GAMECLIENT : igameclient
 					float cx = (cursorx-0.5f), cy = (0.5f-cursory);
 					camera1->o = vec(player1->o).add(vec(0, 0, 2));
 
-					if(cx > deadzone || cx < -deadzone) camera1->yaw -= (cx*frame)*(mousepanspeed()/100.f);
-					if(cy > deadzone || cy < -deadzone) camera1->pitch -= (cy*frame)*(mousepanspeed()/100.f);
+					if(cx > deadzone || cx < -deadzone)
+						camera1->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+
+					if(cy > deadzone || cy < -deadzone)
+						camera1->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
 					camera1->roll = 0.f;
 					fixrange(camera1->yaw, camera1->pitch);
 

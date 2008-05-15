@@ -433,11 +433,12 @@ void save_world(const char *mname, bool nolms)
 
 				gzputint(f, links.length());
 				loopv(links) gzputint(f, links[i]); // aligned index
+				if(verbose >= 2) conoutf("entity %s (%d) saved %d links", et->findname(e.type), i, links.length());
 			}
 			count++;
 		}
 	}
-	if(verbose >= 2) conoutf("saved %d entities", hdr.numents);
+	if(verbose >= 2) conoutf("saved %d entities", count);
 
 	savec(worldroot, f, nolms);
     if(!nolms)
@@ -743,7 +744,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 		e.inoctanode = false;
 		if(maptype == MAP_OCTA) { loopj(eif) gzgetc(f); }
 		et->readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
-		if(maptype == MAP_BFGZ && et->maylink(i, hdr.gamever))
+		if(maptype == MAP_BFGZ && et->maylink(hdr.gamever <= 49 && e.type >= 10 ? e.type-1 : e.type, hdr.gamever))
 		{
 			int links = gzgetint(f);
 			loopk(links)
@@ -751,7 +752,7 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 				int ln = gzgetint(f);
 				e.links.add(ln);
 			}
-			if(verbose >= 2) conoutf("entity %d loaded %d link(s)", i, links);
+			if(verbose >= 2) conoutf("entity %s (%d) loaded %d link(s)", et->findname(e.type), i, links);
 		}
 		if(hdr.version <= 14 && e.type >= ET_MAPMODEL && e.type <= 16)
 		{

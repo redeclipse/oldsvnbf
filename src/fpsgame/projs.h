@@ -144,14 +144,10 @@ struct projectiles
 				regular_particle_splash(5, 1, 500, o);
 				if(gun == GUN_FLAMER)
 				{
-					loopi(rnd(10)+1)
-					{
-						vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50), w(o);
-						v.normalize();
-						v.mul(((guntype[gun].time-lifetime)/float(guntype[gun].time))*4.8f);
-						w.add(v);
-						part_splash(4, 1, 1, w, 0xFF8822, 2.4f);
-					}
+					float life = (guntype[gun].time-lifetime)/float(guntype[gun].time);
+					int col = int(0xFF0000*max(1.f-life, 0.5f))+int(0x00AA00*max(1.f-life, 0.1f)),
+						fade = int(500*life)+1;
+					part_splash(4, rnd(5)+1, fade, o, col, 6.4f);
 				}
             }
 			else if (projtype == PRJ_GIBS) particle_splash(3, 1, 10000, o);

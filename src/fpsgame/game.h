@@ -72,11 +72,7 @@ struct fpsentity : extentity
 {
 	int schan, lastemit;
 
-	fpsentity()
-	{
-		schan = -1;
-		lastemit = 0;
-	}
+	fpsentity() : schan(-1), lastemit(0) {}
 	~fpsentity()
 	{
 		if (sounds.inrange(schan) && sounds[schan].inuse) removesound(schan);
@@ -117,7 +113,7 @@ static struct guntypes
 	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	0,		0,		"shotgun" },
 	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		0,		0,		"chaingun" },
 	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	10,		8,		48,		"grenades" },
-	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	S_FLBURN,	100,	100,	50,		3000,	25,		100,	3000,	-1,		1,		8,		8,		"flamer" },
+	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	50,		3000,	25,		50,		3000,	-1,		1,		8,		8,		"flamer" },
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		0,		0,		"rifle" },
 	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		1000,	100,	10000,	-50,	50,		1,		128,	"rockets" },
 };
@@ -580,11 +576,12 @@ struct fpsent : dynent, fpsstate
     int smoothmillis;
 	int spree, lastimpulse, lastnode;
 	int respawned, suicided;
+	int wschan;
 	botinfo *bot;
 
 	string name, team, info;
 
-	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), spree(0), lastimpulse(0), bot(NULL)
+	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), spree(0), lastimpulse(0), wschan(-1), bot(NULL)
 	{
 		name[0] = team[0] = info[0] = 0;
 		respawn();
@@ -593,12 +590,6 @@ struct fpsent : dynent, fpsstate
 	{
 		freeeditinfo(edit);
 		if(bot) delete bot;
-	}
-
-	void damageroll(float damage)
-	{
-		float damroll = 2.0f*damage;
-		roll += roll>0 ? damroll : (roll<0 ? -damroll : (rnd(2) ? damroll : -damroll)); // give player a kick
 	}
 
 	void hitpush(int damage, const vec &dir, fpsent *actor, int gun)
