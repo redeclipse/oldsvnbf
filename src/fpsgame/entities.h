@@ -653,7 +653,7 @@ struct entities : icliententities
 			else if(f.type >= 8 && f.type <= 13)
 			{
 				int gun = f.type-8, gunmap[NUMGUNS] = {
-					GUN_SG, GUN_CG, GUN_RL, GUN_RIFLE, GUN_GL, GUN_PISTOL
+					GUN_SG, GUN_CG, GUN_FLAMER, GUN_RIFLE, GUN_GL, GUN_PISTOL
 				};
 				f.type -= gun;
 				f.attr1 = gunmap[gun];

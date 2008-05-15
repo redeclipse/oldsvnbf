@@ -9,7 +9,7 @@ enum
 	S_JUMP = 0, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR,
 	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
-	S_GLFIRE, S_GLEXPL, S_GLHIT, S_RLFIRE, S_RLEXPL, S_RLFLY, S_RIFLE,
+	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURN, S_RLFIRE, S_RLEXPL, S_RLFLY, S_RIFLE,
 	S_ITEMPICKUP, S_ITEMSPAWN,
 	S_V_BASECAP, S_V_BASELOST,
     S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET,
@@ -88,17 +88,15 @@ struct fpsentity : extentity
 #define SGRAYS			20
 #define SGSPREAD		3
 
-#define RL_DAMRAD		48
-#define RL_DISTSCALE	6
-
 enum
 {
 	GUN_PISTOL = 0,
 	GUN_SG,
 	GUN_CG,
 	GUN_GL,
-	GUN_RL,
+	GUN_FLAMER,
 	GUN_RIFLE,
+	GUN_RL,
 	NUMGUNS
 };
 
@@ -112,15 +110,16 @@ enum
 
 static struct guntypes
 {
-	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble;	const char *name;
+	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble,	scale,	radius;	const char *name;
 } guntype[NUMGUNS] =
 {
-	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		-10 ,	10,		"pistol" },
-	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	"shotgun" },
-	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		"chaingun" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	10,		"grenades" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	5000,	150,	150,	10000,	-40,	20,		"rockets" },
-	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		"rifle" },
+	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		-10 ,	10,		0,		0,		"pistol" },
+	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	0,		0,		"shotgun" },
+	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		0,		0,		"chaingun" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	10,		8,		48,		"grenades" },
+	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	S_FLBURN,	100,	100,	50,		3000,	25,		100,	3000,	-1,		1,		8,		8,		"flamer" },
+	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		0,		0,		"rifle" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		1000,	100,	10000,	-50,	50,		1,		128,	"rockets" },
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
 

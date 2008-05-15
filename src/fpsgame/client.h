@@ -575,7 +575,6 @@ struct clientcom : iclientcom
 					cl.sb.showscores(true);
 				}
 				f->state = CS_DEAD;
-				cl.calcranks();
 				break;
 			}
 
@@ -632,7 +631,6 @@ struct clientcom : iclientcom
 				s_strncpy(d->name, text, MAXNAMELEN);
 				getstring(text, p);
 				s_strncpy(d->team, text, MAXTEAMLEN);
-				cl.calcranks();
 				break;
 			}
 
@@ -751,7 +749,6 @@ struct clientcom : iclientcom
 				}
 				if(!victim) break;
 				cl.killed(gun, flags, damage, victim, actor);
-				cl.calcranks();
 				break;
 			}
 
@@ -1024,7 +1021,6 @@ struct clientcom : iclientcom
 				fpsent *w = wn==cl.player1->clientnum ? cl.player1 : cl.getclient(wn);
 				if(!w) return;
 				s_strncpy(w->team, text, MAXTEAMLEN);
-				cl.calcranks();
 				break;
 			}
 

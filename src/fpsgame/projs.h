@@ -47,6 +47,8 @@ struct projectiles
             movement = 0;
             owner = _o;
 
+			vec dir(vec(vec(to).sub(from)).normalize());
+
 			switch (projtype)
 			{
 				case PRJ_SHOT:
@@ -65,6 +67,22 @@ struct projectiles
 							elasticity = 0.0f;
 							relativity = 0.25f;
 							waterfric = 1.5f;
+							break;
+						}
+						case GUN_FLAMER:
+						{
+							aboveeye = height = radius = 2.0f;
+							elasticity = 0.01f;
+							relativity = 0.25f;
+							waterfric = 1.5f;
+							vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
+							if(v.magnitude()>50) v.div(50);
+							v.mul(to.dist(from)*0.01f);
+							v.z /= 2;
+							dir = to;
+							dir.add(v);
+							dir.sub(from);
+							dir.normalize();
 							break;
 						}
 						case GUN_PISTOL:
@@ -101,7 +119,6 @@ struct projectiles
 				}
 			}
 
-			vec dir(vec(vec(to).sub(from)).normalize());
 			vectoyawpitch(dir, yaw, pitch);
 			vel = vec(vec(dir).mul(maxspeed)).add(vec(_o->vel).mul(relativity));
 			dir.mul(2);
@@ -123,7 +140,19 @@ struct projectiles
 				{
 					schan = playsound(guntype[gun].fsound, &o, 255, 0, 0, SND_LOOP);
 				}
-            	regular_particle_splash(5, 1, 500, o);
+
+				regular_particle_splash(5, 1, 500, o);
+				if(gun == GUN_FLAMER)
+				{
+					loopi(rnd(10)+1)
+					{
+						vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50), w(o);
+						v.normalize();
+						v.mul(((guntype[gun].time-lifetime)/float(guntype[gun].time))*4.8f);
+						w.add(v);
+						part_splash(4, 1, 1, w, 0xFF8822, 2.4f);
+					}
+				}
             }
 			else if (projtype == PRJ_GIBS) particle_splash(3, 1, 10000, o);
 		}
@@ -138,7 +167,15 @@ struct projectiles
 			if (elasticity > 0.f) vel.sub(vec(0, 0, float(getvar("gravity"))*secs));
 
 			vec dir(vel);
-			if (water) dir.div(waterfric);
+			if (water)
+			{
+				if(gun == GUN_FLAMER)
+				{
+					movement = 0;
+					return false; // gets "put out"
+				}
+				dir.div(waterfric);
+			}
 			dir.mul(secs);
 			o.add(dir);
 
@@ -215,7 +252,7 @@ struct projectiles
 
 				if ((proj.lifetime -= qtime) <= 0 || !proj.update(qtime))
 				{
-					if (proj.projtype == PRJ_SHOT && (proj.gun == GUN_GL || proj.gun == GUN_RL))
+					if (proj.projtype == PRJ_SHOT && guntype[proj.gun].radius)
 						cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.gun, proj.local);
 					proj.state = CS_DEAD;
 					break;
@@ -265,10 +302,7 @@ struct projectiles
             	{
 					s_sprintf(mname)("%s", "projectiles/rocket");
             	}
-            	else
-            	{
-					s_sprintf(mname)("%s", "projectiles/frag");
-            	}
+            	else continue;
 			}
             else if (proj.projtype == PRJ_GIBS)
             {
@@ -295,7 +329,10 @@ struct projectiles
 			switch (proj.gun)
 			{
 				case GUN_RL:
-					adddynlight(proj.o, 0.66f*RL_DAMRAD, vec(1.1f, 0.66f, 0.22f));
+					adddynlight(proj.o, 0.66f*guntype[proj.gun].radius, vec(1.1f, 0.66f, 0.22f));
+					break;
+				case GUN_FLAMER:
+					adddynlight(proj.o, 0.66f*guntype[proj.gun].radius, vec(1.1f, 0.22f, 0.02f));
 					break;
 				default:
 					break;

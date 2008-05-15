@@ -120,31 +120,34 @@ struct weaponstate
 		return dist;
 	}
 
-	void radialeffect(fpsent *d, vec &o)
+	void radialeffect(fpsent *d, vec &o, int radius)
 	{
 		vec dir;
 		float dist = middist(d, dir, o);
-		if(dist < RL_DAMRAD) hit(d, dir, HIT_TORSO, int(dist*DMF));
+		if(dist < radius) hit(d, dir, HIT_TORSO, int(dist*DMF));
 	}
 
 	void explode(fpsent *d, vec &o, vec &vel, int id, int gun, bool local)
 	{
 		vec dir;
 		float dist = middist(camera1, dir, o);
-		cl.quakewobble += int(guntype[gun].damage*(1-dist/RL_DISTSCALE/RL_DAMRAD));
 
 		if (guntype[gun].esound >= 0)
 			playsound(guntype[gun].esound, &o, 255, 0, 0, SND_COPY);
 
-		particle_splash(0, 200, 300, o);
-		particle_fireball(o, RL_DAMRAD, gun == GUN_RL ? 22 : 23);
+		if(gun != GUN_FLAMER)
+		{
+			cl.quakewobble += int(guntype[gun].damage*(1-dist/guntype[gun].scale/guntype[gun].radius));
 
-        if(gun==GUN_RL) adddynlight(o, 1.15f*RL_DAMRAD, vec(2, 1.5f, 1), 1100, 100, 0, 0.66f*RL_DAMRAD, vec(1.1f, 0.66f, 0.22f));
-        else adddynlight(o, 1.15f*RL_DAMRAD, vec(2, 1.5f, 1), 1100, 100);
-        adddecal(DECAL_SCORCH, o, gun==GUN_RL ? vec(vel).neg().normalize() : vec(0, 0, 1), RL_DAMRAD/2);
+			particle_splash(0, 200, 300, o);
+			particle_fireball(o, guntype[gun].radius, gun == GUN_GL ? 23 : 22);
+			if(gun==GUN_RL) adddynlight(o, 1.15f*guntype[gun].radius, vec(2, 1.5f, 1), 1100, 100, 0, 0.66f*guntype[gun].radius, vec(1.1f, 0.66f, 0.22f));
+			else adddynlight(o, 1.15f*guntype[gun].radius, vec(2, 1.5f, 1), 1100, 100);
 
-		loopi(rnd(20)+10)
-			cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
+			loopi(rnd(20)+10)
+				cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
+		}
+        adddecal(DECAL_SCORCH, o, gun==GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].radius/2);
 
 		if (local)
 		{
@@ -154,7 +157,7 @@ struct weaponstate
 			{
 				fpsent *f = (fpsent *)cl.iterdynents(i);
 				if (!f || f->state != CS_ALIVE) continue;
-				radialeffect(f, o);
+				radialeffect(f, o, guntype[gun].radius);
 			}
 
 			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id-cl.maptime,
@@ -207,6 +210,7 @@ struct weaponstate
 
 			case GUN_RL:
 			case GUN_GL:
+			case GUN_FLAMER:
 			{
 				vec up = to;
 				if (gun == GUN_GL)
