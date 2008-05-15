@@ -65,7 +65,7 @@ struct decalrenderer
         maxdecals = tris;
         tex = textureload(texname);
         maxverts = tris*3 + 3;
-        availverts = maxverts - 3; 
+        availverts = maxverts - 3;
         verts = new decalvert[maxverts];
     }
 
@@ -88,7 +88,7 @@ struct decalrenderer
         decalinfo &d = decals[startdecal];
         startdecal++;
         if(startdecal >= maxdecals) startdecal = 0;
-        
+
         int removed = d.endvert < d.startvert ? maxverts - (d.startvert - d.endvert) : d.endvert - d.startvert;
         startvert = d.endvert;
         if(startvert==endvert) startvert = endvert = 0;
@@ -112,7 +112,7 @@ struct decalrenderer
         }
 
         decalvert *vert = &verts[d.startvert],
-                  *end = &verts[d.endvert < d.startvert ? maxverts : d.endvert]; 
+                  *end = &verts[d.endvert < d.startvert ? maxverts : d.endvert];
         while(vert < end)
         {
             vert->color = color;
@@ -149,7 +149,7 @@ struct decalrenderer
         else startvert = endvert = 0;
         availverts = endvert < startvert ? startvert - endvert - 3 : maxverts - 3 - (endvert - startvert);
     }
- 
+
     void fadeindecals()
     {
         if(!fadeintime) return;
@@ -201,7 +201,7 @@ struct decalrenderer
             }
         }
     }
-         
+
     static void setuprenderstate()
     {
         glEnable(GL_POLYGON_OFFSET_FILL);
@@ -237,12 +237,12 @@ struct decalrenderer
             static float zerofog[4] = { 0, 0, 0, 1 }, grayfog[4] = { 0.5f, 0.5f, 0.5f, 1 };
             glFogfv(GL_FOG_COLOR, flags&DF_OVERBRIGHT && (renderpath!=R_FIXEDFUNCTION || hasTE) ? grayfog : zerofog);
         }
-        
-        if(flags&DF_OVERBRIGHT) 
+
+        if(flags&DF_OVERBRIGHT)
         {
             if(renderpath!=R_FIXEDFUNCTION)
             {
-                glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR); 
+                glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
                 static Shader *overbrightdecalshader = NULL;
                 if(!overbrightdecalshader) overbrightdecalshader = lookupshaderbyname("overbrightdecal");
                 overbrightdecalshader->set();
@@ -254,7 +254,7 @@ struct decalrenderer
             }
             else glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
         }
-        else 
+        else
         {
             if(flags&DF_INVMOD) glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
             else if(flags&DF_ADD) glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
@@ -270,7 +270,7 @@ struct decalrenderer
 
         int count = endvert < startvert ? maxverts - startvert : endvert - startvert;
         glDrawArrays(GL_TRIANGLES, startvert, count);
-        if(endvert < startvert) 
+        if(endvert < startvert)
         {
             count += endvert;
             glDrawArrays(GL_TRIANGLES, 0, endvert);
@@ -310,7 +310,7 @@ struct decalrenderer
             (out[numout++] = *in).sub(*n).mul(ndist / (ndist - idist)).add(*n);
         return numout;
     }
-        
+
     ivec bborigin, bbsize;
     vec decalcenter, decalnormal, decaltangent, decalbitangent;
     float decalradius, decalu, decalv;
@@ -427,7 +427,7 @@ struct decalrenderer
                       dv2 = { v1[1], pt.dot(v1[1]) + tu, pb.dot(v1[1]) + tv, decalcolor, 255 };
             int totalverts = 3*(numv-2);
             if(totalverts > maxverts-3) return;
-            while(availverts < totalverts) 
+            while(availverts < totalverts)
             {
                 if(!freedecal()) return;
             }
@@ -450,9 +450,9 @@ struct decalrenderer
         loopoctabox(o, size, bborigin, bbsize)
         {
             ivec co(i, o.x, o.y, o.z, size);
-            if(cu[i].children) 
+            if(cu[i].children)
             {
-                uchar visclip = cu[i].vismask & cu[i].clipmask & ~avoid;    
+                uchar visclip = cu[i].vismask & cu[i].clipmask & ~avoid;
                 if(visclip)
                 {
                     uchar vertused = fvmasks[visclip];
@@ -489,9 +489,9 @@ struct decalrenderer
 
 decalrenderer decals[] =
 {
-    decalrenderer("textures/scorch.png", DF_ROTATE, 500),
-    decalrenderer("textures/blood.png", DF_RND4|DF_ROTATE|DF_INVMOD),
-    decalrenderer("<decal>textures/bullet.png", DF_OVERBRIGHT)
+    decalrenderer("textures/scorch", DF_ROTATE, 500),
+    decalrenderer("textures/blood", DF_RND4|DF_ROTATE|DF_INVMOD),
+    decalrenderer("<decal>textures/bullet", DF_OVERBRIGHT)
 };
 
 void initdecals()
@@ -538,4 +538,4 @@ void adddecal(int type, const vec &center, const vec &surface, float radius, con
     decalrenderer &d = decals[type];
     d.adddecal(center, surface, radius, color, info);
 }
- 
+

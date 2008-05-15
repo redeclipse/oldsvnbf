@@ -555,11 +555,11 @@ struct GAMECLIENT : igameclient
     {
         switch(index)
         {
-            case 0: return "textures/guicursor.png";
-            case 1: return "textures/editcursor.png";
-            case 2: return "textures/crosshair.png";
-            case 3: return "textures/crosshair_team.png";
-            case 4: return "textures/crosshair_hit.png";
+            case 0: return "textures/guicursor";
+            case 1: return "textures/editcursor";
+            case 2: return "textures/crosshair";
+            case 3: return "textures/crosshair_team";
+            case 4: return "textures/crosshair_hit";
             default: return "";
         }
     }
@@ -620,7 +620,7 @@ struct GAMECLIENT : igameclient
 	void drawblips(int x, int y, int s)
 	{
 		physent *d = cc.spectator || editmode ? camera1 : player1;
-		settexture("textures/blip.png");
+		settexture("textures/blip");
 		glBegin(GL_QUADS);
 		loopv(players) if(players[i] && players[i]->state == CS_ALIVE)
 		{
@@ -647,7 +647,7 @@ struct GAMECLIENT : igameclient
 				if(!insel && dist >= radarrange()) continue;
 				if(dist >= radarrange()*(1 - 0.05f)) dir.mul(radarrange()*(1 - 0.05f)/dist);
 				dir.rotate_around_z(-d->yaw*RAD);
-				settexture("textures/blip.png");
+				settexture("textures/blip");
 				glColor4f(1.f, 1.f, insel ? 1.0f : 0.f, insel ? 1.f : 1.f-(dist/radarrange()));
 				drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (insel ? 0.075f : 0.025f)*s);
 			}
@@ -755,14 +755,14 @@ struct GAMECLIENT : igameclient
 
 					glColor4f(1.f, 1.f, 1.f, amt);
 
-					rendericon("textures/logo.jpg", ox+20-x, oy-75, 64, 64);
+					rendericon("textures/emblem", ox+20-x, oy-75, 64, 64);
 
 					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, title);
 
 					glColor4f(1.f, 1.f, 1.f, fade);
-					rendericon("textures/guioverlay.png", ox+20-x, oy-260, 144, 144);
+					rendericon("textures/guioverlay", ox+20-x, oy-260, 144, 144);
 					if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
-						rendericon("textures/logo.jpg", ox+20-x, oy-260, 144, 144);
+						rendericon("textures/emblem", ox+20-x, oy-260, 144, 144);
 
 					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, sv->gamename(gamemode, mutators));
 				}
@@ -780,7 +780,7 @@ struct GAMECLIENT : igameclient
 						{
 							int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
 							float pc = float(dam)/100.f;
-							settexture("textures/overlay_damage.png");
+							settexture("textures/overlay_damage");
 
 							glColor4f(1.f, 1.f, 1.f, pc);
 
@@ -797,7 +797,7 @@ struct GAMECLIENT : igameclient
 					{
 						float hlt = d->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
 						if(lastmillis < d->lastregen+500) pulse *= (lastmillis-d->lastregen)/500.f;
-						settexture("textures/barv.png");
+						settexture("textures/barv");
 						glColor4f(glow, 0.f, 0.f, pulse);
 
 						int rw = oy/5/4, rx = oy/5+FONTH/2, rh = oy/5, ry = oy-rh-(FONTH/4), ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
@@ -832,7 +832,7 @@ struct GAMECLIENT : igameclient
 					}
 
 					int rx = FONTH/4, rs = oy/5, ry = oy-rs-(FONTH/4);
-					settexture("textures/radar.png");
+					settexture("textures/radar");
 					if(m_team(gamemode, mutators)) glColor4f(0.f, 0.f, 1.f, fade);
 					else glColor4f(0.f, 1.0f, 0.f, fade);
 
@@ -855,7 +855,7 @@ struct GAMECLIENT : igameclient
 			glOrtho(0, w, h, 0, -1, 1);
 			glColor3f(1, 1, 1);
 
-			settexture("textures/loadback.jpg");
+			settexture("textures/loadback");
 
 			glBegin(GL_QUADS);
 

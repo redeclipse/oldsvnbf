@@ -616,24 +616,24 @@ typedef varenderer<PT_TRAIL> trailrenderer;
 
 static partrenderer *parts[] =
 {
-    new quadrenderer("textures/blood.png", PT_PART|PT_MOD|PT_RND4, 2, 1), // 0 blood spats (note: rgb is inverted)
-    new quadrenderer("textures/spark.png", PT_PART|PT_GLARE,   2, 0),     // 1 sparks
-    new quadrenderer("textures/smoke.png", PT_PART,          -20, 0),     // 2 small slowly rising smoke
-    new quadrenderer("textures/base.png",  PT_PART|PT_GLARE,  20, 0),     // 3 edit mode entities
-    new quadrenderer("textures/ball1.png", PT_PART|PT_GLARE,  20, 0),     // 4 fireball1
-    new quadrenderer("textures/smoke.png", PT_PART,          -20, 0),     // 5 big  slowly rising smoke
-    new quadrenderer("textures/ball2.png", PT_PART|PT_GLARE,  20, 0),     // 6 fireball2
-    new quadrenderer("textures/ball3.png", PT_PART|PT_GLARE,  20, 0),     // 7 big fireball3
+    new quadrenderer("textures/blood", PT_PART|PT_MOD|PT_RND4, 2, 1), // 0 blood spats (note: rgb is inverted)
+    new quadrenderer("textures/spark", PT_PART|PT_GLARE,   2, 0),     // 1 sparks
+    new quadrenderer("textures/smoke", PT_PART,          -20, 0),     // 2 small slowly rising smoke
+    new quadrenderer("textures/base",  PT_PART|PT_GLARE,  20, 0),     // 3 edit mode entities
+    new quadrenderer("textures/ball1", PT_PART|PT_GLARE,  20, 0),     // 4 fireball1
+    new quadrenderer("textures/smoke", PT_PART,          -20, 0),     // 5 big  slowly rising smoke
+    new quadrenderer("textures/ball2", PT_PART|PT_GLARE,  20, 0),     // 6 fireball2
+    new quadrenderer("textures/ball3", PT_PART|PT_GLARE,  20, 0),     // 7 big fireball3
     &textups,                                                             // 8 TEXT, floats up
-    new taperenderer("textures/flare.png", PT_TAPE|PT_GLARE,   0, 0),     // 9 streak
+    new taperenderer("textures/flare", PT_TAPE|PT_GLARE,   0, 0),     // 9 streak
     &texts,                                                               // 10 TEXT, SMALL, NON-MOVING
     &meters,                                                              // 11 METER, SMALL, NON-MOVING
     &metervs,                                                             // 12 METER vs., SMALL, NON-MOVING
-    new quadrenderer("textures/smoke.png", PT_PART,           20, 0),     // 13 small  slowly sinking smoke trail
+    new quadrenderer("textures/smoke", PT_PART,           20, 0),     // 13 small  slowly sinking smoke trail
     &fireballs,                                                           // 14 explosion fireball
     &lightnings,                                                          // 15 lightning
-    new quadrenderer("textures/smoke.png", PT_PART,          -15, 0),     // 16 big  fast rising smoke
-    new trailrenderer("textures/base.png", PT_TRAIL|PT_LERP,   2, 0),     // 17 water, entity
+    new quadrenderer("textures/smoke", PT_PART,          -15, 0),     // 16 big  fast rising smoke
+    new trailrenderer("textures/base", PT_TRAIL|PT_LERP,   2, 0),     // 17 water, entity
     &noglarefireballs,                                                    // 18 explosion fireball no glare
     &flares // must be done last
 };

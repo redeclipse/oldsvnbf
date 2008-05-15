@@ -521,7 +521,7 @@ struct gui : g3d_gui
 		if(tiled) defaultshader->set();
 		if(overlaid)
 		{
-			if(!overlaytex) overlaytex = textureload("textures/guioverlay.png");
+			if(!overlaytex) overlaytex = textureload("textures/guioverlay");
 			glColor3fv(light.v);
 			glBindTexture(GL_TEXTURE_2D, overlaytex->id);
 			glBegin(GL_QUADS);
@@ -534,7 +534,7 @@ struct gui : g3d_gui
 	{
 		if(visible())
 		{
-			if(!slidertex) slidertex = textureload("textures/guislider.png");
+			if(!slidertex) slidertex = textureload("textures/guislider");
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, slidertex->id);
 			glBegin(GL_QUADS);
@@ -573,7 +573,7 @@ struct gui : g3d_gui
 
 			if(icon)
 			{
-				s_sprintfd(tname)("textures/%s.jpg", icon);
+				s_sprintfd(tname)("textures/%s", icon);
 				icon_(textureload(tname), false, false, x, cury, ICON_SIZE, clickable && hit);
 				x += ICON_SIZE;
 			}
@@ -589,7 +589,7 @@ struct gui : g3d_gui
 
 	void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n)
 	{
-		if(!skintex) skintex = textureload("textures/guiskin.png");
+		if(!skintex) skintex = textureload("textures/guiskin");
 		glBindTexture(GL_TEXTURE_2D, skintex->id);
 		int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
 		float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);

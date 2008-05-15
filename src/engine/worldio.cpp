@@ -39,7 +39,7 @@ void setnames(const char *fname, const char *cname)
 	loopi(MAP_MAX) s_sprintf(bgzname[i])("%s%s", mapname, mapexts[i]);
 
 	s_sprintf(mcfname)("%s/%s.cfg", pakname, cfgname);
-	s_sprintf(picname)("%s.jpg", mapname);
+	s_sprintf(picname)("%s", mapname);
 }
 
 ushort readushort(gzFile f)
