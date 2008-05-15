@@ -784,17 +784,22 @@ void renderquery(renderstate &cur, occludequery *query, vtxarray *va)
     if(cur.colormask) { cur.colormask = false; glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); }
     if(cur.depthmask) { cur.depthmask = false; glDepthMask(GL_FALSE); }
 
-    startquery(query);
-
-    if(vaorigin==ivec(-1, -1, -1)) setorigin(va);
-    ivec origin = vaorigin;
+    ivec origin(vaorigin);
+    int scale = 1<<VVEC_FRAC;
+    if(vaorigin.x < 0)
+    {
+        origin = vec(0, 0, 0);
+        scale = 1;
+    }
 
     vec camera(camera1->o);
     if(reflecting) camera.z = reflectz;
 
-    drawbb(ivec(va->bbmin).sub(origin).mul(1<<VVEC_FRAC),
-           ivec(va->bbmax).sub(va->bbmin).mul(1<<VVEC_FRAC),
-           vec(camera).sub(origin.tovec()).mul(1<<VVEC_FRAC));
+    startquery(query);
+
+    drawbb(ivec(va->bbmin).sub(origin).mul(scale),
+           ivec(va->bbmax).sub(va->bbmin).mul(scale),
+           vec(camera).sub(origin.tovec()).mul(scale));
 
     endquery(query);
 }
@@ -1935,6 +1940,8 @@ void rendergeom(float causticspass, bool fogpass)
         setupTMUs(cur, causticspass, fogpass);
         if(shadowmap)
         {
+            glPopMatrix();
+            glPushMatrix();
             pushshadowmap();
             resetorigin();
         }
