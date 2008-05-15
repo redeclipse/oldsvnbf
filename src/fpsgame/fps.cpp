@@ -220,7 +220,7 @@ struct GAMECLIENT : igameclient
 			adjust(int, quakewobble, 100);
 			adjust(int, damageresidue, 200);
 
-			if(player1->state == CS_ALIVE || player1->state == CS_DEAD)
+			if(lastcamera && player1->state == CS_ALIVE || player1->state == CS_DEAD)
 			{
 				float fx, fy;
 				vectoyawpitch(cursordir, fx, fy);
@@ -237,11 +237,14 @@ struct GAMECLIENT : igameclient
 			}
 			else if(player1->state == CS_ALIVE)
 			{
-				vec v(worldpos);
-				v.sub(player1->o);
-				v.normalize();
-				vectoyawpitch(v, player1->yaw, player1->pitch);
-				//fixrange(player1->yaw, player1->pitch);
+				if(lastcamera)
+				{
+					vec v(worldpos);
+					v.sub(player1->o);
+					v.normalize();
+					vectoyawpitch(v, player1->yaw, player1->pitch);
+					//fixrange(player1->yaw, player1->pitch);
+				}
 
 				if(player1->timeinair)
 				{
@@ -1011,34 +1014,28 @@ struct GAMECLIENT : igameclient
 
 		if(!menuactive())
 		{
-			if(player1->state != CS_ALIVE && player1->state != CS_DEAD)
-			{
-				camera1 = player1;
-				fixrange(camera1->yaw, camera1->pitch);
-				findorientation(camera1->o, camera1->yaw, camera1->pitch, worldpos, true);
-				lastcamera = 0;
-			}
-			else
-			{
-				camera1 = &gamecamera;
+			camera1 = &gamecamera;
 
-				if(!lastcamera)
+			if(camera1->type != ENT_CAMERA)
+			{
+				camera1->reset();
+				camera1->type = ENT_CAMERA;
+				camera1->state = CS_ALIVE;
+			}
+
+			if(player1->state == CS_ALIVE || player1->state == CS_DEAD || player1->state == CS_SPAWNING)
+			{
+				if(!lastcamera || player1->state == CS_SPAWNING)
 				{
-					camera1->reset();
-					camera1->type = ENT_CAMERA;
-					camera1->state = CS_ALIVE;
-					camera1->o = vec(player1->o).add(vec(0, 0, player1->height));
+					camera1->o = vec(player1->o).add(vec(0, 0, 2));
+					camera1->yaw = player1->yaw;
+					camera1->pitch = player1->pitch;
 					camera1->roll = 0.f;
 
 					cursorx = cursory = 0.5f;
 
-					fixrange(player1->yaw, player1->pitch);
-					findorientation(player1->o, player1->yaw, player1->pitch, worldpos, true);
-
-					vec v(worldpos);
-					v.sub(camera1->o);
-					v.normalize();
-					vectoyawpitch(v, camera1->yaw, camera1->pitch);
+					fixrange(camera1->yaw, camera1->pitch);
+					findorientation(camera1->o, camera1->yaw, camera1->pitch, worldpos, true);
 				}
 				else
 				{
@@ -1069,6 +1066,13 @@ struct GAMECLIENT : igameclient
 				else quakewobble = 0;
 
 				lastcamera = lastmillis;
+			}
+			else
+			{
+				camera1 = player1;
+				fixrange(camera1->yaw, camera1->pitch);
+				findorientation(camera1->o, camera1->yaw, camera1->pitch, worldpos, true);
+				lastcamera = 0;
 			}
 		}
 	}

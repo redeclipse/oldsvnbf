@@ -124,6 +124,7 @@ struct clientcom : iclientcom
 			cl.player1->state = CS_EDITING;
 		}
 		cl.ph.entinmap(cl.player1, false); // find spawn closest to current floating pos
+		cl.lastcamera = 0;
 		addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 	}
 
@@ -662,6 +663,7 @@ struct clientcom : iclientcom
 				f->gunselect = getint(p);
 				loopi(NUMGUNS) f->ammo[i] = getint(p);
 				f->state = CS_ALIVE;
+				if(f==cl.player1) cl.lastcamera = 0;
 				if(local)
 				{
 					cl.et.findplayerspawn(f, m_capture(cl.gamemode) ? cl.cpc.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_ttwo(cl.gamemode, cl.mutators))+1 : -1);
