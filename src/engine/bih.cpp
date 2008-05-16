@@ -1,34 +1,33 @@
 #include "pch.h"
 #include "engine.h"
 
-bool BIH::triintersect(tri &tri, const vec &o, const vec &ray, float maxdist, float &dist, int mode, tri *noclip)
+bool BIH::triintersect(tri &t, const vec &o, const vec &ray, float maxdist, float &dist, int mode, tri *noclip)
 {
     vec p;
-    p.cross(ray, tri.c);
-    float det = tri.b.dot(p);
+    p.cross(ray, t.c);
+    float det = t.b.dot(p);
     if(det == 0) return false;
-    vec r(o); 
-    r.sub(tri.a);
-    float u = r.dot(p) / det; 
+    vec r(o);
+    r.sub(t.a);
+    float u = r.dot(p) / det;
     if(u < 0 || u > 1) return false;
-    vec q; 
-    q.cross(r, tri.b);
+    vec q;
+    q.cross(r, t.b);
     float v = ray.dot(q) / det;
     if(v < 0 || u + v > 1) return false;
-    float f = tri.c.dot(q) / det;
+    float f = t.c.dot(q) / det;
     if(f < 0 || f > maxdist) return false;
-    if(!(mode&RAY_SHADOW) && &tri >= noclip) return false;
-    if(tri.tex && (mode&RAY_ALPHAPOLY)==RAY_ALPHAPOLY)
+    if(!(mode&RAY_SHADOW) && &t >= noclip) return false;
+    if(t.tex && (mode&RAY_ALPHAPOLY)==RAY_ALPHAPOLY)
     {
-        if(!tri.tex->alphamask)
+        if(!t.tex->alphamask)
         {
-            loadalphamask(tri.tex); 
-            if(!tri.tex->alphamask) { dist = f; return true; }
+            loadalphamask(t.tex);
+            if(!t.tex->alphamask) { dist = f; return true; }
         }
-        float s = tri.tc[0] + u*(tri.tc[2] - tri.tc[0]) + v*(tri.tc[4] - tri.tc[0]),
-              t = tri.tc[1] + u*(tri.tc[3] - tri.tc[1]) + v*(tri.tc[5] - tri.tc[1]);
-        int si = int(s*tri.tex->xs), ti = int(t*tri.tex->ys);
-        if(!(tri.tex->alphamask[ti*((tri.tex->xs+7)/8) + si/8] & (1<<(si%8)))) return false;
+        int si = int(t.tex->xs * (t.tc[0] + u*(t.tc[2] - t.tc[0]) + v*(t.tc[4] - t.tc[0]))),
+            ti = int(t.tex->ys * (t.tc[1] + u*(t.tc[3] - t.tc[1]) + v*(t.tc[5] - t.tc[1])));
+        if(!(t.tex->alphamask[ti*((t.tex->xs+7)/8) + si/8] & (1<<(si%8)))) return false;
     }
     dist = f;
     return true;
