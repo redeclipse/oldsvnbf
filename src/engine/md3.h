@@ -266,7 +266,7 @@ void md3pitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pit
     }
 }
 
-#define loopmd3skins(meshname, s, body) \
+#define loopmd3meshes(meshname, m, body) \
     if(!loadingmd3 || loadingmd3->parts.empty()) { conoutf("not loading an md3"); return; } \
     md3::part &mdl = *loadingmd3->parts.last(); \
     if(!mdl.meshes) return; \
@@ -275,10 +275,11 @@ void md3pitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pit
         md3::vertmesh &m = *(md3::vertmesh *)mdl.meshes->meshes[i]; \
         if(!strcmp(meshname, "*") || !strcmp(m.name, meshname)) \
         { \
-            md3::skin &s = mdl.skins[i]; \
             body; \
         } \
     }
+
+#define loopmd3skins(meshname, s, body) loopmd3meshes(meshname, m, { md3::skin &s = mdl.skins[i]; body; })
 
 void md3skin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin)
 {    
@@ -385,6 +386,11 @@ void md3link(int *parent, int *child, char *tagname)
     if(!loadingmd3->parts[*parent]->link(loadingmd3->parts[*child], tagname)) conoutf("could not link model %s", loadingmd3->loadname);
 }
 
+void md3noclip(char *meshname, int *noclip)
+{
+    loopmd3meshes(meshname, m, m.noclip = *noclip!=0);
+}
+
 COMMAND(md3load, "s");
 COMMAND(md3pitch, "ffff");
 COMMAND(md3skin, "sssff");
@@ -402,4 +408,5 @@ COMMAND(md3shader, "ss");
 COMMAND(md3scroll, "sff");
 COMMAND(md3anim, "siifi");
 COMMAND(md3link, "iis");
-            
+COMMAND(md3noclip, "si");
+
