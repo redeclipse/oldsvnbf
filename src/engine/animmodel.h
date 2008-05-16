@@ -376,6 +376,7 @@ struct animmodel : model
         {
             mesh &m = *allocate();
             if(name) m.name = newstring(name);
+            m.noclip = noclip;
             return &m;
         }
             
