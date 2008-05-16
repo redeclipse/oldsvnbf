@@ -113,7 +113,7 @@ static struct guntypes
 	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	0,		0,		"shotgun" },
 	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		0,		0,		"chaingun" },
 	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	10,		8,		48,		"grenades" },
-	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	50,		3000,	25,		50,		3000,	-1,		1,		8,		8,		"flamer" },
+	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	50,		3000,	10,		50,		3000,	-1,		1,		8,		24,		"flamer" },
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		0,		0,		"rifle" },
 	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		1000,	100,	10000,	-50,	50,		1,		128,	"rockets" },
 };
