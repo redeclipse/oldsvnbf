@@ -585,7 +585,7 @@ void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin
     }
 }
 
-#define loopmd5skins(meshname, s, body) \
+#define loopmd5meshes(meshname, m, body) \
     if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("not loading an md5"); return; } \
     md5::part &mdl = *loadingmd5->parts.last(); \
     if(!mdl.meshes) return; \
@@ -594,10 +594,11 @@ void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin
         md5::skelmesh &m = *(md5::skelmesh *)mdl.meshes->meshes[i]; \
         if(!strcmp(meshname, "*") || (m.name && !strcmp(m.name, meshname))) \
         { \
-            md5::skin &s = mdl.skins[i]; \
             body; \
         } \
     }
+
+#define loopmd5skins(meshname, s, body) loopmd5meshes(meshname, m, { md5::skin &s = mdl.skins[i]; body; })
 
 void md5skin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin)
 {
@@ -734,6 +735,11 @@ void md5link(int *parent, int *child, char *tagname)
     if(!loadingmd5->parts[*parent]->link(loadingmd5->parts[*child], tagname)) conoutf("could not link model %s", loadingmd5->loadname);
 }
 
+void md5noclip(char *meshname, int *noclip)
+{
+    loopmd5meshes(meshname, m, m.noclip = *noclip!=0);
+}
+
 COMMAND(md5load, "ss");
 COMMAND(md5tag, "ss");
 COMMAND(md5pitch, "sffff");
@@ -753,4 +759,5 @@ COMMAND(md5scroll, "sff");
 COMMAND(md5animpart, "s");
 COMMAND(md5anim, "ssfi");
 COMMAND(md5link, "iis");
-            
+COMMAND(md5noclip, "si");            
+

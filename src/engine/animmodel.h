@@ -360,8 +360,9 @@ struct animmodel : model
     {
         meshgroup *group;
         char *name;
- 
-        mesh() : group(NULL), name(NULL)
+        bool noclip;
+
+        mesh() : group(NULL), name(NULL), noclip(false)
         {
         }
 
@@ -380,7 +381,7 @@ struct animmodel : model
             
         virtual void scaleverts(const vec &transdiff, float scalediff) {}        
         virtual void calcbb(int frame, vec &bbmin, vec &bbmax, const matrix3x4 &m) {}
-        virtual void gentris(int frame, Texture *tex, vector<BIH::tri> &out, const matrix3x4 &m) {}
+        virtual void gentris(int frame, Texture *tex, vector<BIH::tri> *out, const matrix3x4 &m) {}
 
         virtual void setshader(Shader *s) 
         { 
@@ -417,7 +418,7 @@ struct animmodel : model
             loopv(meshes) meshes[i]->calcbb(frame, bbmin, bbmax, m);
         }
 
-        void gentris(int frame, vector<skin> &skins, vector<BIH::tri> &tris, const matrix3x4 &m)
+        void gentris(int frame, vector<skin> &skins, vector<BIH::tri> *tris, const matrix3x4 &m)
         {
             loopv(meshes) meshes[i]->gentris(frame, skins[i].tex, tris, m);
         }
@@ -533,14 +534,14 @@ struct animmodel : model
             }
         }
 
-        void gentris(int frame, vector<BIH::tri> &tris)
+        void gentris(int frame, vector<BIH::tri> *tris)
         {
             matrix3x4 m;
             m.identity();
             gentris(frame, tris, m);
         }
 
-        void gentris(int frame, vector<BIH::tri> &tris, const matrix3x4 &m)
+        void gentris(int frame, vector<BIH::tri> *tris, const matrix3x4 &m)
         {
             meshes->gentris(frame, skins, tris, m);
             loopv(links)
@@ -1091,7 +1092,7 @@ struct animmodel : model
         enablelight0 = false;
     }
 
-    void gentris(int frame, vector<BIH::tri> &tris)
+    void gentris(int frame, vector<BIH::tri> *tris)
     {
         if(parts.empty()) return;
         parts[0]->gentris(frame, tris);
@@ -1100,9 +1101,9 @@ struct animmodel : model
     BIH *setBIH()
     {
         if(bih) return bih;
-        vector<BIH::tri> tris;
+        vector<BIH::tri> tris[2];
         gentris(0, tris);
-        bih = new BIH(tris.length(), tris.getbuf());
+        bih = new BIH(tris);
         return bih;
     }
 

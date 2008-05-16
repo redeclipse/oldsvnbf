@@ -132,12 +132,12 @@ struct vertmodel : animmodel
             }
         }
 
-        void gentris(int frame, Texture *tex, vector<BIH::tri> &out, const matrix3x4 &m)
+        void gentris(int frame, Texture *tex, vector<BIH::tri> *out, const matrix3x4 &m)
         {
             vert *fverts = &verts[frame*numverts];
             loopj(numtris)
             {
-                BIH::tri &t = out.add();
+                BIH::tri &t = out[noclip ? 1 : 0].add();
                 t.tex = tex->bpp==32 ? tex : NULL;
                 t.a = m.transform(fverts[tris[j].vert[0]].pos);
                 t.b = m.transform(fverts[tris[j].vert[1]].pos);

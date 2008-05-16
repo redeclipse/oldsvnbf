@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "engine.h"
 
-bool BIH::triintersect(tri &tri, const vec &o, const vec &ray, float maxdist, float &dist, int mode)
+bool BIH::triintersect(tri &tri, const vec &o, const vec &ray, float maxdist, float &dist, int mode, tri *noclip)
 {
     vec p;
     p.cross(ray, tri.c);
@@ -17,6 +17,7 @@ bool BIH::triintersect(tri &tri, const vec &o, const vec &ray, float maxdist, fl
     if(v < 0 || u + v > 1) return false;
     float f = tri.c.dot(q) / det;
     if(f < 0 || f > maxdist) return false;
+    if(!(mode&RAY_SHADOW) && &tri >= noclip) return false;
     if(tri.tex && (mode&RAY_ALPHAPOLY)==RAY_ALPHAPOLY)
     {
         if(!tri.tex->alphamask)
@@ -79,12 +80,12 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
                     tmin = max(tmin, farsplit);
                     continue;
                 }
-                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, dist, mode)) return true;
+                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, dist, mode, noclip)) return true;
             }
         }
         else if(curnode->isleaf(nearidx))
         {
-            if(triintersect(tris[curnode->childindex(nearidx)], o, ray, maxdist, dist, mode)) return true;
+            if(triintersect(tris[curnode->childindex(nearidx)], o, ray, maxdist, dist, mode, noclip)) return true;
             if(farsplit < tmax)
             {
                 if(!curnode->isleaf(faridx))
@@ -93,7 +94,7 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
                     tmin = max(tmin, farsplit);
                     continue;
                 }
-                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, dist, mode)) return true;
+                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, dist, mode, noclip)) return true;
             }
         }
         else
@@ -107,7 +108,7 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
                     save.tmin = max(tmin, farsplit);
                     save.tmax = tmax;
                 }
-                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, dist, mode)) return true;
+                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, dist, mode, noclip)) return true;
             }
             curnode = &nodes[curnode->childindex(nearidx)];
             tmax = min(tmax, nearsplit);
@@ -226,10 +227,10 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, in
     }
 }
  
-BIH::BIH(int _numtris, tri *_tris)
+BIH::BIH(vector<tri> *t)
 {
-    numtris = _numtris;
-    if(!numtris) 
+    numtris = t[0].length() + t[1].length();
+    if(!numtris)
     {
         tris = NULL;
         numnodes = 0;
@@ -238,8 +239,10 @@ BIH::BIH(int _numtris, tri *_tris)
         return;
     }
 
-    tris = new tri[numtris];
-    memcpy(tris, _tris, numtris*sizeof(tri));
+    tris = new tri[numtris]; 
+    noclip = &tris[t[0].length()];
+    memcpy(tris, t[0].getbuf(), t[0].length()*sizeof(tri));
+    memcpy(noclip, t[1].getbuf(), t[1].length()*sizeof(tri));
 
     vector<BIHNode> buildnodes;
     ushort *indices = new ushort[numtris];
