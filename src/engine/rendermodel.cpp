@@ -156,6 +156,30 @@ void mdltrans(float *x, float *y, float *z)
 
 COMMAND(mdltrans, "fff");
 
+void mdlyaw(float *angle)
+{
+    checkmdl;
+    loadingmodel->offsetyaw = *angle;
+}
+
+COMMAND(mdlyaw, "f");
+
+void mdlpitch(float *angle)
+{
+    checkmdl;
+    loadingmodel->offsetpitch = *angle;
+}
+
+COMMAND(mdlpitch, "f");
+
+void mdlroll(float *angle)
+{
+    checkmdl;
+    loadingmodel->offsetroll = *angle;
+}
+
+COMMAND(mdlroll, "f");
+
 void mdlshadow(int *shadow)
 {
 	checkmdl;
