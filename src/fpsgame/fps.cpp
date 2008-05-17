@@ -1005,7 +1005,7 @@ struct GAMECLIENT : igameclient
 			return;
 		}
 		cursorx = max(0.0f, min(1.0f, cursorx+(float(dx*mousesensitivity())/10000.f)));
-		cursory = max(0.0f, min(1.0f, cursory+(float(dy*mousesensitivity())/10000.f)));
+		cursory = max(0.0f, min(1.0f, cursory+(float(dy*mousesensitivity())/10000.f)))*(!menuactive() && invmouse() ? -1 : 1);
 	}
 
 	void recomputecamera(int w, int h)
