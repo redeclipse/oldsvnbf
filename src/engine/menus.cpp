@@ -56,6 +56,16 @@ void popgui()
     m->clear();
 }
 
+void removegui(menu *m)
+{
+    loopv(guistack) if(guistack[i]==m)
+    {
+        guistack.remove(i);
+        m->clear();
+        return;
+    }
+}
+
 void pushgui(menu *m, int pos = -1)
 {
     if(guistack.empty())
@@ -336,8 +346,15 @@ COMMAND(guicheckbox, "ssiis");
 COMMAND(guitab, "s");
 COMMAND(guifield, "siss");
 
-static vector<const char *> needsapply;
-static int changetypes = 0;
+struct change
+{
+    int type;
+    const char *desc;
+
+    change() {}
+    change(int type, const char *desc) : type(type), desc(desc) {}
+};
+static vector<change> needsapply;
 
 static struct applymenu : menu
 {
@@ -346,11 +363,13 @@ static struct applymenu : menu
         if(guistack.empty()) return;
         g.start(menustart, 0.03f);
         g.text("the following settings have changed:", GUI_TEXT_COLOR, "info");
-        loopv(needsapply) g.text(needsapply[i], GUI_TEXT_COLOR, "info");
+        loopv(needsapply) g.text(needsapply[i].desc, GUI_TEXT_COLOR, "info");
         g.separator();
         g.text("apply changes now?", GUI_TEXT_COLOR, "info");
         if(g.button("yes", GUI_BUTTON_COLOR, "action")&G3D_UP)
         {
+            int changetypes = 0;
+            loopv(needsapply) changetypes |= needsapply[i].type;
             if(changetypes&CHANGE_GFX) executelater.add(newstring("resetgl"));
             if(changetypes&CHANGE_SOUND) executelater.add(newstring("resetsound"));
             clearlater = true;
@@ -363,7 +382,6 @@ static struct applymenu : menu
     void clear()
     {
         needsapply.setsize(0);
-        changetypes = 0;
     }
 } applymenu;
 
@@ -372,11 +390,23 @@ VARP(applydialog, 0, 1, 1);
 void addchange(const char *desc, int type)
 {
     if(!applydialog) return;
-    loopv(needsapply) if(!strcmp(needsapply[i], desc)) return;
-    needsapply.add(desc);
-    changetypes |= type;
+    loopv(needsapply) if(!strcmp(needsapply[i].desc, desc)) return;
+    needsapply.add(change(type, desc));
     if(needsapply.length() && guistack.find(&applymenu) < 0)
         pushgui(&applymenu, 0);
+}
+
+void clearchanges(int type)
+{
+    loopv(needsapply)
+    {
+        if(needsapply[i].type&type)
+        {
+            needsapply[i].type &= ~type;
+            if(!needsapply[i].type) needsapply.remove(i--);
+        }
+    }
+    if(needsapply.empty()) removegui(&applymenu);
 }
 
 void menuprocess()
