@@ -18,7 +18,7 @@ struct obj : vertmodel
             while(isalpha(*s)) s++;
             loopi(3)
             {
-                v[i] = strtof(s, &s);
+                v[i] = strtod(s, &s);
                 while(isspace(*s)) s++;
                 if(!*s) break;
             }
