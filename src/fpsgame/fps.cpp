@@ -220,7 +220,7 @@ struct GAMECLIENT : igameclient
 			adjust(int, quakewobble, 100);
 			adjust(int, damageresidue, 200);
 
-			if(lastcamera && player1->state == CS_ALIVE || player1->state == CS_DEAD)
+			if((lastcamera && player1->state == CS_ALIVE) || player1->state == CS_DEAD)
 			{
 				float fx, fy;
 				vectoyawpitch(cursordir, fx, fy);
