@@ -262,6 +262,7 @@ void resetsound()
         conoutf("Sound reset not available in-game due to SDL_mixer-1.2.8 bug. Please restart for changes to take effect.");
         return;
     }
+    clearchanges(CHANGE_SOUND);
     if(!nosound)
     {
         loopv(sounds) removesound(i);
