@@ -64,6 +64,14 @@ struct GAMECLIENT : igameclient
 	IVARP(teamcrosshair, 0, 1, 1);
 	IVARP(hitcrosshair, 0, 425, 1000);
 
+	IVARP(radardist, 0, 256, 256);
+	IVARP(editradardist, 0, 64, 1024);
+
+	IVARP(hidestats, 0, 0, 1);
+	IVARP(showfpsrange, 0, 0, 1);
+	IVARP(showeditstats, 0, 1, 1);
+	IVARP(statrate, 0, 200, 1000);
+
     GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
@@ -294,14 +302,13 @@ struct GAMECLIENT : igameclient
 
 		if(actor == player1)
 		{
-			int snd;
-			if(damage > 200) snd = 0;
-			else if(damage > 175) snd = 1;
-			else if(damage > 150) snd = 2;
+			int snd = 0;
+			if(damage > 200) snd = 6;
+			else if(damage > 175) snd = 5;
+			else if(damage > 150) snd = 4;
 			else if(damage > 125) snd = 3;
-			else if(damage > 100) snd = 4;
-			else if(damage > 50) snd = 5;
-			else snd = 6;
+			else if(damage > 100) snd = 2;
+			else if(damage > 50) snd = 1;
 			playsound(S_DAMAGE1+snd);
 			lasthit = lastmillis;
 		}
@@ -332,15 +339,19 @@ struct GAMECLIENT : igameclient
 		if(d->state!=CS_ALIVE || intermission) return;
 
 		static const char *obitnames[NUMGUNS] = {
-			"ate a bullet from", "got filled with buckshot by", "was gunned down by",
-			"was blown to pieces by", "rode the wrong end of a rocket from",
-			"was sniped by"
+			"ate a bullet from",
+			"was filled with buckshot by",
+			"was riddled with holes by",
+			"was blown to pieces by",
+			"was char-grilled by",
+			"was pierced by",
+			"rode the wrong end of a rocket from"
 		};
 		string dname, aname, oname;
+		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
 		s_strcpy(dname, colorname(d));
 		s_strcpy(aname, actor->type!=ENT_INANIMATE ? colorname(actor) : "");
 		s_strcpy(oname, flags&HIT_HEAD ? "was shot in the head by" : (gun >= 0 && gun < NUMGUNS ? obitnames[gun] : "was killed by"));
-		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
         if(d==actor || actor->type==ENT_INANIMATE) console("\f2%s killed themself", cflags, dname);
 		else if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, aname, oname, dname);
 		else if(m_team(gamemode, mutators) && isteam(d->team, actor->team)) console("\f2%s %s teammate %s", cflags, dname, oname, aname);
@@ -573,20 +584,11 @@ struct GAMECLIENT : igameclient
         if(menuactive()) c = 0;
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) c = -1;
         else if(editmode) c = 1;
-        else if(lastmillis - lasthit < hitcrosshair())
-        {
-        	c = 3;
-        	r = 1;
-        	g = b = 0;
-        }
+        else if(lastmillis-lasthit < hitcrosshair()) c = 3;
         else if(m_team(gamemode, mutators) && teamcrosshair())
         {
             dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
-            if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team))
-            {
-                c = 2;
-                r = g = 0;
-            }
+            if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team)) c = 2;
         }
 		if(c > 1)
 		{
@@ -599,9 +601,6 @@ struct GAMECLIENT : igameclient
 		}
         return c;
     }
-
-	IVARP(radardist, 0, 256, 256);
-	IVARP(editradardist, 0, 64, 1024);
 
 	float radarrange()
 	{
@@ -658,11 +657,6 @@ struct GAMECLIENT : igameclient
 		glEnd();
 	}
 
-	IVARP(hidestats, 0, 0, 1);
-	IVARP(showfpsrange, 0, 0, 1);
-	IVAR(showeditstats, 0, 0, 1);
-	IVAR(statrate, 0, 200, 1000);
-
 	void drawhudelements(int w, int h)
 	{
 		glLoadIdentity();
@@ -689,10 +683,10 @@ struct GAMECLIENT : igameclient
 			else draw_textx("%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps);
 			#endif
 
-			if((editmode || showeditstats()) && lastmillis-maptime > CARDTIME+CARDFADE)
+			if(editmode && showeditstats() && lastmillis-maptime > CARDTIME+CARDFADE)
 			{
 				static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
-				if(lastmillis - laststats >= statrate())
+				if(lastmillis-laststats >= statrate())
 				{
 					memcpy(prevstats, curstats, sizeof(prevstats));
 					laststats = lastmillis - (lastmillis%statrate());
