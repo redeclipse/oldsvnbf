@@ -231,7 +231,7 @@ struct GAMECLIENT : igameclient
 			adjust(int, quakewobble, 100);
 			adjust(int, damageresidue, 200);
 
-			if(lastcamera && (player1->state == CS_ALIVE || player1->state == CS_DEAD))
+			if(!menuactive() && lastcamera && (player1->state == CS_ALIVE || player1->state == CS_DEAD))
 			{
 				float fx, fy;
 				vectoyawpitch(cursordir, fx, fy);
@@ -248,7 +248,7 @@ struct GAMECLIENT : igameclient
 			}
 			else if(player1->state == CS_ALIVE)
 			{
-				if(lastcamera)
+				if(!menuactive() && lastcamera)
 				{
 					vec v(worldpos);
 					v.sub(player1->o);
@@ -580,7 +580,7 @@ struct GAMECLIENT : igameclient
 
     int selectcrosshair(float &r, float &g, float &b)
     {
-        int c = 2;
+        int c = -1;
         if(menuactive()) c = 0;
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) c = -1;
         else if(editmode) c = 1;
@@ -590,6 +590,8 @@ struct GAMECLIENT : igameclient
             dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
             if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team)) c = 2;
         }
+        else c = 2;
+
 		if(c > 1)
 		{
 			if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
@@ -657,191 +659,198 @@ struct GAMECLIENT : igameclient
 		glEnd();
 	}
 
+	void drawgamehud(int w, int h)
+	{
+		int ox = w*900/h, oy = 900;
+
+		glLoadIdentity();
+		glOrtho(0, ox, oy, 0, -1, 1);
+
+		int secs = lastmillis-maptime;
+		float fade = 1.f, amt = hudblend*0.01f;
+
+		if(secs <= CARDTIME+CARDFADE)
+		{
+			int x = ox;
+
+			if(secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
+			else if(secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
+
+			const char *title = getmaptitle();
+			if(!*title) title = "Untitled by Unknown";
+
+			glColor4f(1.f, 1.f, 1.f, amt);
+
+			rendericon("textures/emblem", ox+20-x, oy-75, 64, 64);
+
+			draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, title);
+
+			glColor4f(1.f, 1.f, 1.f, fade);
+			rendericon("textures/guioverlay", ox+20-x, oy-260, 144, 144);
+			if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
+				rendericon("textures/emblem", ox+20-x, oy-260, 144, 144);
+
+			draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, sv->gamename(gamemode, mutators));
+		}
+		else
+		{
+			fpsent *d = player1;
+
+			if(lastmillis-maptime <= CARDTIME+CARDFADE+CARDFADE)
+				fade = amt*(float(lastmillis-maptime-CARDTIME-CARDFADE)/float(CARDFADE));
+			else fade *= amt;
+
+			if(player1->state == CS_ALIVE)
+			{
+				if(damageresidue > 0 || d->state == CS_DEAD)
+				{
+					int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
+					float pc = float(dam)/100.f;
+					settexture("textures/overlay_damage");
+
+					glColor4f(1.f, 1.f, 1.f, pc);
+
+					glBegin(GL_QUADS);
+					glTexCoord2f(0, 0); glVertex2i(0, 0);
+					glTexCoord2f(1, 0); glVertex2i(ox, 0);
+					glTexCoord2f(1, 1); glVertex2i(ox, oy);
+					glTexCoord2f(0, 1); glVertex2i(0, oy);
+					glEnd();
+				}
+			}
+
+			if(d->state == CS_ALIVE)
+			{
+				float hlt = d->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
+				if(lastmillis < d->lastregen+500) pulse *= (lastmillis-d->lastregen)/500.f;
+				settexture("textures/barv");
+				glColor4f(glow, 0.f, 0.f, pulse);
+
+				int rw = oy/5/4, rx = oy/5+FONTH/2, rh = oy/5, ry = oy-rh-(FONTH/4), ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
+				glBegin(GL_QUADS);
+				glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
+				glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
+				glTexCoord2f(1, 1); glVertex2i(rx+rw, ry+rh);
+				glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
+				glEnd();
+
+				if(isgun(d->gunselect) && d->ammo[d->gunselect] > 0)
+				{
+					bool canshoot = d->canshoot(d->gunselect, lastmillis);
+					draw_textx("%d", oy/5+rw+(FONTH/4*3), oy-75, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect]);
+				}
+				else
+				{
+					draw_textx("Out of ammo", oy/5+rw+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+				}
+			}
+			else if(d->state == CS_DEAD)
+			{
+				int wait = respawnwait(d);
+
+				if(wait)
+				{
+					float c = float(wait)/1000.f;
+					draw_textx("Fragged! Down for %.1fs", oy/5+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, c);
+				}
+				else
+					draw_textx("Fragged! Press attack to respawn", oy/5+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+			}
+
+			int rx = FONTH/4, rs = oy/5, ry = oy-rs-(FONTH/4);
+			settexture("textures/radar");
+			if(m_team(gamemode, mutators)) glColor4f(0.f, 0.f, 1.f, fade);
+			else glColor4f(0.f, 1.0f, 0.f, fade);
+
+			glBegin(GL_QUADS);
+			drawradar(float(rx), float(ry), float(rs));
+			glEnd();
+
+			if(m_capture(gamemode)) cpc.drawhud(ox, oy);
+			else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
+			drawblips(rx, ry, rs);
+		}
+	}
+
 	void drawhudelements(int w, int h)
 	{
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
-		int hoff = h*3-h*3/4-FONTH/2;
 
-		char *command = getcurcommand();
-		if(command) rendercommand(FONTH/2, hoff, h*3-FONTH);
-		hoff += FONTH;
-
-		drawcrosshair(w, h);
-		renderconsole(w, h);
-
-		if(!hidestats())
+		if(!menuactive())
 		{
-			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
-			int fps, bestdiff, worstdiff;
-			getfps(fps, bestdiff, worstdiff);
-			#if 0
-			if(showfpsrange()) draw_textx("%d+%d-%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff, perflevel);
-			else draw_textx("%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, perflevel);
-			#else
-			if(showfpsrange()) draw_textx("%d+%d-%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff);
-			else draw_textx("%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps);
-			#endif
+			int hoff = h*3-h*3/4-FONTH/2;
+			char *command = getcurcommand();
+			if(command) rendercommand(FONTH/2, hoff, h*3-FONTH);
+			hoff += FONTH;
 
-			if(editmode && showeditstats() && lastmillis-maptime > CARDTIME+CARDFADE)
+			renderconsole(w, h);
+
+			if(!hidestats())
 			{
-				static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
-				if(lastmillis-laststats >= statrate())
+				extern void getfps(int &fps, int &bestdiff, int &worstdiff);
+				int fps, bestdiff, worstdiff;
+				getfps(fps, bestdiff, worstdiff);
+				#if 0
+				if(showfpsrange()) draw_textx("%d+%d-%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff, perflevel);
+				else draw_textx("%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, perflevel);
+				#else
+				if(showfpsrange()) draw_textx("%d+%d-%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff);
+				else draw_textx("%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps);
+				#endif
+
+				if(editmode && showeditstats() && lastmillis-maptime > CARDTIME+CARDFADE)
 				{
-					memcpy(prevstats, curstats, sizeof(prevstats));
-					laststats = lastmillis - (lastmillis%statrate());
+					static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
+					if(lastmillis-laststats >= statrate())
+					{
+						memcpy(prevstats, curstats, sizeof(prevstats));
+						laststats = lastmillis - (lastmillis%statrate());
+					}
+					int nextstats[8] =
+					{
+						vtris*100/max(wtris, 1),
+						vverts*100/max(wverts, 1),
+						xtraverts/1024,
+						xtravertsva/1024,
+						glde,
+						gbatches,
+						getnumqueries(),
+						rplanes
+					};
+
+					loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
+
+					draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", h*3/5+FONTH/2, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
+					draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", h*3/5+FONTH/2, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
+					draw_textf("cube %s%d", h*3/5+FONTH/2, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
 				}
-				int nextstats[8] =
-				{
-					vtris*100/max(wtris, 1),
-					vverts*100/max(wverts, 1),
-					xtraverts/1024,
-					xtravertsva/1024,
-					glde,
-					gbatches,
-					getnumqueries(),
-					rplanes
-				};
-
-				loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
-
-				draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", h*3/5+FONTH/2, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
-				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", h*3/5+FONTH/2, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
-				draw_textf("cube %s%d", h*3/5+FONTH/2, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
 			}
-		}
 
-		if(editmode)
-		{
-			char *editinfo = executeret("edithud");
-			if(editinfo)
+			if(editmode)
 			{
-				draw_text(editinfo, h*3/5+FONTH/2, hoff); hoff += FONTH;
-				DELETEA(editinfo);
+				char *editinfo = executeret("edithud");
+				if(editinfo)
+				{
+					draw_text(editinfo, h*3/5+FONTH/2, hoff); hoff += FONTH;
+					DELETEA(editinfo);
+				}
 			}
-		}
 
-		render_texture_panel(w, h);
+			render_texture_panel(w, h);
+		}
+		drawcrosshair(w, h);
 	}
 
 	void drawhud(int w, int h)
 	{
 		if(maptime || !cc.ready())
 		{
-			if(!hidehud && !menuactive())
+			if(!hidehud)
 			{
-				int ox = w*900/h, oy = 900;
-
-				glLoadIdentity();
-				glOrtho(0, ox, oy, 0, -1, 1);
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-				int secs = lastmillis-maptime;
-				float fade = 1.f, amt = hudblend*0.01f;
-
-				if(secs <= CARDTIME+CARDFADE)
-				{
-					int x = ox;
-
-					if(secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
-					else if(secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
-
-					const char *title = getmaptitle();
-					if(!*title) title = "Untitled by Unknown";
-
-					glColor4f(1.f, 1.f, 1.f, amt);
-
-					rendericon("textures/emblem", ox+20-x, oy-75, 64, 64);
-
-					draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, title);
-
-					glColor4f(1.f, 1.f, 1.f, fade);
-					rendericon("textures/guioverlay", ox+20-x, oy-260, 144, 144);
-					if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
-						rendericon("textures/emblem", ox+20-x, oy-260, 144, 144);
-
-					draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, sv->gamename(gamemode, mutators));
-				}
-				else
-				{
-					fpsent *d = player1;
-
-					if(lastmillis-maptime <= CARDTIME+CARDFADE+CARDFADE)
-						fade = amt*(float(lastmillis-maptime-CARDTIME-CARDFADE)/float(CARDFADE));
-					else fade *= amt;
-
-					if(player1->state == CS_ALIVE)
-					{
-						if(damageresidue > 0 || d->state == CS_DEAD)
-						{
-							int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
-							float pc = float(dam)/100.f;
-							settexture("textures/overlay_damage");
-
-							glColor4f(1.f, 1.f, 1.f, pc);
-
-							glBegin(GL_QUADS);
-							glTexCoord2f(0, 0); glVertex2i(0, 0);
-							glTexCoord2f(1, 0); glVertex2i(ox, 0);
-							glTexCoord2f(1, 1); glVertex2i(ox, oy);
-							glTexCoord2f(0, 1); glVertex2i(0, oy);
-							glEnd();
-						}
-					}
-
-					if(d->state == CS_ALIVE)
-					{
-						float hlt = d->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
-						if(lastmillis < d->lastregen+500) pulse *= (lastmillis-d->lastregen)/500.f;
-						settexture("textures/barv");
-						glColor4f(glow, 0.f, 0.f, pulse);
-
-						int rw = oy/5/4, rx = oy/5+FONTH/2, rh = oy/5, ry = oy-rh-(FONTH/4), ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
-						glBegin(GL_QUADS);
-						glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
-						glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
-						glTexCoord2f(1, 1); glVertex2i(rx+rw, ry+rh);
-						glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
-						glEnd();
-
-						if(isgun(d->gunselect) && d->ammo[d->gunselect] > 0)
-						{
-							bool canshoot = d->canshoot(d->gunselect, lastmillis);
-							draw_textx("%d", oy/5+rw+(FONTH/4*3), oy-75, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect]);
-						}
-						else
-						{
-							draw_textx("Out of ammo", oy/5+rw+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
-						}
-					}
-					else if(d->state == CS_DEAD)
-					{
-						int wait = respawnwait(d);
-
-						if(wait)
-						{
-							float c = float(wait)/1000.f;
-							draw_textx("Fragged! Down for %.1fs", oy/5+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, c);
-						}
-						else
-							draw_textx("Fragged! Press attack to respawn", oy/5+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
-					}
-
-					int rx = FONTH/4, rs = oy/5, ry = oy-rs-(FONTH/4);
-					settexture("textures/radar");
-					if(m_team(gamemode, mutators)) glColor4f(0.f, 0.f, 1.f, fade);
-					else glColor4f(0.f, 1.0f, 0.f, fade);
-
-					glBegin(GL_QUADS);
-					drawradar(float(rx), float(ry), float(rs));
-					glEnd();
-
-					if(m_capture(gamemode)) cpc.drawhud(ox, oy);
-					else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
-					drawblips(rx, ry, rs);
-				}
-
+				if(!menuactive()) drawgamehud(w, h);
 				drawhudelements(w, h);
 				glDisable(GL_BLEND);
 			}
