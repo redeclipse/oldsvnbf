@@ -611,7 +611,7 @@ void rehash(bool reload)
 	execfile("autoexec.cfg");
     initing = NOT_INITING;
 }
-ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ?  false : true));
+ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
 
 void setcaption(const char *text)
 {

@@ -32,6 +32,9 @@ struct GAMECLIENT : igameclient
 		teamscore(const char *s, int n) : team(s), score(n) {}
 	};
 
+	physent gamecamera;
+	int lastcamera;
+
 	vector<fpsent *> shplayers;
 	vector<teamscore> teamscores;
 
@@ -65,7 +68,7 @@ struct GAMECLIENT : igameclient
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
-			swaymillis(0), swaydir(0, 0, 0),
+			swaymillis(0), swaydir(0, 0, 0), lastcamera(0),
 			player1(spawnstate(new fpsent()))
 	{
         CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1); });
@@ -220,7 +223,7 @@ struct GAMECLIENT : igameclient
 			adjust(int, quakewobble, 100);
 			adjust(int, damageresidue, 200);
 
-			if((lastcamera && player1->state == CS_ALIVE) || player1->state == CS_DEAD)
+			if(lastcamera && (player1->state == CS_ALIVE || player1->state == CS_DEAD))
 			{
 				float fx, fy;
 				vectoyawpitch(cursordir, fx, fy);
@@ -1004,9 +1007,6 @@ struct GAMECLIENT : igameclient
 		cursorx = max(0.0f, min(1.0f, cursorx+(float(dx*mousesensitivity())/10000.f)));
 		cursory = max(0.0f, min(1.0f, cursory+(float(dy*mousesensitivity())/10000.f)));
 	}
-
-	int lastcamera;
-	physent gamecamera;
 
 	void recomputecamera(int w, int h)
 	{
