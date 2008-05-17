@@ -1002,13 +1002,13 @@ struct GAMECLIENT : igameclient
 		if(!menuactive() && (player1->state != CS_ALIVE && player1->state != CS_DEAD))
 		{
 			player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
-			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1 : 1);
+			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1.f : 1.f);
 			fixrange(player1->yaw, player1->pitch);
 			cursorx = cursory = 0.5f;
 			return;
 		}
 		cursorx = max(0.0f, min(1.0f, cursorx+(float(dx*mousesensitivity())/10000.f)));
-		cursory = max(0.0f, min(1.0f, cursory+(float(dy*mousesensitivity())/10000.f)))*(!menuactive() && invmouse() ? -1 : 1);
+		cursory = max(0.0f, min(1.0f, cursory+(float(dy*(!menuactive() && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f)));
 	}
 
 	void recomputecamera(int w, int h)
