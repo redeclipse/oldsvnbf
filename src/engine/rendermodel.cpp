@@ -12,6 +12,7 @@ model *loadingmodel = NULL;
 #include "md2.h"
 #include "md3.h"
 #include "md5.h"
+#include "obj.h"
 
 #define checkmdl if(!loadingmodel) { conoutf("not loading a model"); return; }
 
@@ -251,8 +252,14 @@ model *loadmodel(const char *name, int i, bool msg)
                 if(!m->load())
                 {
                     delete m;
-                    loadingmodel = NULL;
-                    return NULL;
+                    m = new obj(name);
+                    loadingmodel = m;
+                    if(!m->load())
+                    {
+                        delete m;
+                        loadingmodel = NULL;
+                        return NULL;
+                    }
                 }
 			}
 		}
