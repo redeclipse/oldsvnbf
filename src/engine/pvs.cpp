@@ -290,6 +290,15 @@ static int numviewcells = 0;
 VAR(maxpvsblocker, 1, 512, 1<<16);
 VAR(pvsleafsize, 1, 64, 1024);
 
+#define MAXWATERPVS 32
+
+static struct watersurfaceinfo
+{
+    int height;
+    vector<materialsurface *> matsurfs;
+} watersurfs[MAXWATERPVS-1], waterfallsurfs;
+int usedwatersurfs = 0;
+
 struct pvsworker
 {
     pvsworker() : thread(NULL), pvsnodes(new pvsnode[origpvsnodes.length()])
@@ -667,6 +676,38 @@ struct pvsworker
         return true;
     }
 
+    bool materialoccluded(pvsnode &p, const ivec &co, int size, const ivec &bborigin, const ivec &bbsize)
+    {
+        pvsnode *children = &pvsnodes[p.children];
+        loopoctabox(co, size, bborigin, bbsize)
+        {
+            ivec o(i, co.x, co.y, co.z, size);
+            if(children[i].flags & PVS_HIDE_BB) continue;
+            if(!children[i].children || !materialoccluded(children[i], o, size/2, bborigin, bbsize)) return false;
+        }
+        return true;
+    }
+
+    bool materialoccluded(vector<materialsurface *> &matsurfs)
+    {
+        if(pvsnodes[0].flags & PVS_HIDE_BB) return true;
+        if(!pvsnodes[0].children) return false;
+        loopv(matsurfs)
+        {
+            materialsurface &m = *matsurfs[i];
+            ivec bborigin(m.o), bbsize(0, 0, 0);
+            int dim = dimension(m.orient);
+            bbsize[C[dim]] = m.csize;
+            bbsize[R[dim]] = m.rsize;
+            bborigin[dim] -= 2;
+            bbsize[dim] = 2;
+            if(!materialoccluded(pvsnodes[0], vec(0, 0, 0), hdr.worldsize/2, bborigin, bbsize)) return false;
+        }
+        return true;
+    }
+
+    int wateroccluded, waterbytes;
+
     void calcpvs(const ivec &co, int size)
     {
         loopk(3)
@@ -677,17 +718,31 @@ struct pvsworker
         memcpy(pvsnodes, origpvsnodes.getbuf(), origpvsnodes.length()*sizeof(pvsnode));
         prevblockers.clear();
         cullpvs(pvsnodes[0]);
+
+        wateroccluded = 0;
+        loopi(usedwatersurfs)
+        {
+            if(watersurfs[i].height < 0)
+            {
+                if(waterfallsurfs.matsurfs.length() && materialoccluded(waterfallsurfs.matsurfs)) wateroccluded |= 1<<i;
+            }
+            else if(watersurfs[i].matsurfs.length() && materialoccluded(watersurfs[i].matsurfs)) wateroccluded |= 1<<i;
+        }
+        waterbytes = 0;
+        loopi(4) if(wateroccluded&(0xFF<<(i*8))) waterbytes = i+1;
+
         compresspvs(pvsnodes[0], hdr.worldsize, pvsleafsize);
         outbuf.setsizenodelete(0);
         serializepvs(pvsnodes[0]);
     }
 
-    uchar *testviewcell(const ivec &co, int size, int *len = NULL)
+    uchar *testviewcell(const ivec &co, int size, int *waterpvs = NULL, int *len = NULL)
     {
         calcpvs(co, size);
 
         uchar *buf = new uchar[outbuf.length()];
         memcpy(buf, outbuf.getbuf(), outbuf.length());
+        if(waterpvs) *waterpvs = wateroccluded;
         if(len) *len = outbuf.length();
         return buf;
     }
@@ -698,7 +753,8 @@ struct pvsworker
 
         if(pvsmutex) SDL_LockMutex(pvsmutex);
         numviewcells++;
-        pvsdata key(pvsbuf.length(), outbuf.length());
+        pvsdata key(pvsbuf.length(), waterbytes + outbuf.length());
+        loopi(waterbytes) pvsbuf.add((wateroccluded>>(i*8))&0xFF);
         pvsbuf.put(outbuf.getbuf(), outbuf.length());
         int *val = pvscompress.access(key);
         if(val) pvsbuf.setsizenodelete(key.offset);
@@ -865,7 +921,9 @@ static void genviewcells(viewcellnode &p, cube *c, const ivec &co, int size, int
 }
 
 static viewcellnode *viewcells = NULL;
+static int waterplanes[MAXWATERPVS], lockedwaterplanes[MAXWATERPVS];
 static uchar *curpvs = NULL, *lockedpvs = NULL;
+static int curwaterpvs = 0, lockedwaterpvs = 0;
 
 static inline pvsdata *lookupviewcell(const vec &p)
 {
@@ -890,24 +948,39 @@ static void lockpvs_(bool lock)
     if(!lock) return;
     pvsdata *d = lookupviewcell(camera1->o);
     if(!d) return;
-    lockedpvs = new uchar[d->len];
-    memcpy(lockedpvs, &pvsbuf[d->offset], d->len);
+    int wbytes = d->len%9, len = d->len - wbytes;
+    lockedpvs = new uchar[len];
+    memcpy(lockedpvs, &pvsbuf[d->offset + wbytes], len);
+    lockedwaterpvs = 0;
+    loopi(wbytes) lockedwaterpvs |= pvsbuf[d->offset + i] << (i*8);
+    memcpy(lockedwaterplanes, waterplanes, sizeof(waterplanes));
     conoutf("locked view cell at %.1f, %.1f, %.1f", camera1->o.x, camera1->o.y, camera1->o.z);
 }
 
 VARF(lockpvs, 0, 0, 1, lockpvs_(lockpvs!=0));
 
 VARN(pvs, usepvs, 0, 1, 1);
+VARN(waterpvs, usewaterpvs, 0, 1, 1);
 
 void setviewcell(const vec &p)
 {
     if(!usepvs) curpvs = NULL;
-    else if(lockedpvs) curpvs = lockedpvs;
+    else if(lockedpvs) 
+    {
+        curpvs = lockedpvs;
+        curwaterpvs = lockedwaterpvs;
+    }
     else
     {
         pvsdata *d = lookupviewcell(p);
         curpvs = d ? &pvsbuf[d->offset] : NULL;
+        curwaterpvs = 0;
+        if(d)
+        {
+            loopi(d->len%9) curwaterpvs |= *curpvs++ << (i*8);
+        }
     }
+    if(!usepvs || !usewaterpvs) curwaterpvs = 0;
 }
 
 void clearpvs()
@@ -922,9 +995,49 @@ void clearpvs()
 
 COMMAND(clearpvs, "");
 
+static void findwatersurfs()
+{
+    extern vector<vtxarray *> valist;
+    loopi(MAXWATERPVS)
+    {
+        watersurfs[i].height = -1;
+        watersurfs[i].matsurfs.setsizenodelete(0);
+    }
+    usedwatersurfs = 0;
+    loopv(valist)
+    {
+        vtxarray *va = valist[i];
+        loopj(va->matsurfs)
+        {
+            materialsurface &m = va->matbuf[j];
+            if(m.material!=MAT_WATER || m.orient==O_BOTTOM) continue;
+            if(m.orient!=O_TOP)
+            {
+                waterfallsurfs.matsurfs.add(&m);
+                continue;
+            }
+            loopk(usedwatersurfs) if(watersurfs[k].height == m.o.z)
+            {
+                watersurfs[k].matsurfs.add(&m);
+                goto nextmatsurf;
+            }
+            if(usedwatersurfs < MAXWATERPVS)
+            {
+                watersurfs[usedwatersurfs].height = m.o.z;
+                watersurfs[usedwatersurfs].matsurfs.add(&m);
+                usedwatersurfs++;
+            }
+        nextmatsurf:;
+        }
+    }
+    if(waterfallsurfs.matsurfs.length() > 0 && usedwatersurfs < MAXWATERPVS) usedwatersurfs++;
+}
+
 void testpvs(int *vcsize)
 {
     lockpvs_(false);
+
+    findwatersurfs();
 
     pvsnode &root = origpvsnodes.add();
     memset(root.edges.v, 0xFF, 3);
@@ -940,7 +1053,8 @@ void testpvs(int *vcsize)
     o.mask(~(size-1));
     pvsworker w;
     int len;
-    lockedpvs = w.testviewcell(o, size, &len);
+    lockedpvs = w.testviewcell(o, size, &lockedwaterpvs, &len);
+    loopi(MAXWATERPVS) lockedwaterplanes[i] = watersurfs[i].height;
     lockpvs = 1;
     conoutf("generated test view cell of size %d at %.1f, %.1f, %.1f (%d B)", size, camera1->o.x, camera1->o.y, camera1->o.z, len);
 
@@ -963,6 +1077,7 @@ void genpvs(int *viewcellsize)
 
     show_out_of_renderloop_progress(0, "finding view cells");
 
+    findwatersurfs(); 
     clearpvs();
     calcpvsbounds();
 
@@ -1080,6 +1195,14 @@ bool pvsoccluded(const ivec &bborigin, const ivec &bbsize)
     return curpvs!=NULL && pvsoccluded(curpvs, bborigin, bbsize);
 }
 
+bool waterpvsoccluded(int height)
+{
+    if(!curwaterpvs) return false;
+    int *planes = lockedpvs ? lockedwaterplanes : waterplanes;
+    loopi(MAXWATERPVS) if(planes[i]==height) return (curwaterpvs&(1<<i))!=0;
+    return false;
+}
+
 void saveviewcells(gzFile f, viewcellnode &p)
 {
     gzputc(f, p.leafmask);
@@ -1100,6 +1223,16 @@ void savepvs(gzFile f)
     uint totallen = pvsbuf.length();
     endianswap(&totallen, sizeof(uint), 1);
     gzwrite(f, &totallen, sizeof(uint));
+    if(pvsbuf.length()%9)
+    {
+        loopi(MAXWATERPVS)
+        {
+            int height = waterplanes[i];
+            endianswap(&height, sizeof(int), 1);
+            gzwrite(f, &height, sizeof(int));
+            if(waterplanes[i] < 0) break;
+        }
+    }
     loopv(pvs)
     {
         ushort len = pvs[i].len;
@@ -1131,6 +1264,15 @@ void loadpvs(gzFile f)
     uint totallen = pvsbuf.length();
     gzread(f, &totallen, sizeof(uint));
     endianswap(&totallen, sizeof(uint), 1);
+    if(totallen%9)
+    {
+        loopi(MAXWATERPVS)
+        {
+            gzread(f, &waterplanes[i], sizeof(int));
+            endianswap(&waterplanes[i], sizeof(int), 1);
+            if(waterplanes[i] < 0) break;
+        }
+    }
     int offset = 0;
     loopi(hdr.numpvs)
     {

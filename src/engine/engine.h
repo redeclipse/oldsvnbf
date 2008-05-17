@@ -158,6 +158,7 @@ extern void guessshadowdir();
 // pvs
 extern void clearpvs();
 extern bool pvsoccluded(const ivec &bborigin, const ivec &bbsize);
+extern bool waterpvsoccluded(int height);
 extern void setviewcell(const vec &p);
 extern void savepvs(gzFile f);
 extern void loadpvs(gzFile f);
