@@ -517,13 +517,6 @@ struct animmodel : model
             if(meshes) meshes->cleanup();
         }
 
-        void calcbb(int frame, vec &bbmin, vec &bbmax)
-        {
-            matrix3x4 m;
-            m.identity();
-            calcbb(frame, bbmin, bbmax, m);
-        }
-
         void calcbb(int frame, vec &bbmin, vec &bbmax, const matrix3x4 &m)
         {
             meshes->calcbb(frame, bbmin, bbmax, m);
@@ -533,13 +526,6 @@ struct animmodel : model
                 meshes->concattagtransform(frame, links[i].tag, m, n);
                 links[i].p->calcbb(frame, bbmin, bbmax, n);
             }
-        }
-
-        void gentris(int frame, vector<BIH::tri> *tris)
-        {
-            matrix3x4 m;
-            m.identity();
-            gentris(frame, tris, m);
         }
 
         void gentris(int frame, vector<BIH::tri> *tris, const matrix3x4 &m)
@@ -968,7 +954,9 @@ struct animmodel : model
         vec rdir, campos;
         plane fogplane;
 
-        yaw += spin*lastmillis/1000.0f;
+        yaw += offsetyaw + spin*lastmillis/1000.0f;
+        pitch += offsetpitch;
+        roll += offsetroll;
 
         if(!(anim&ANIM_NOSKIN))
         {
@@ -1093,10 +1081,44 @@ struct animmodel : model
         enablelight0 = false;
     }
 
+    void initmatrix(matrix3x4 &m)
+    {
+        if(offsetyaw)
+        {
+            m.rotate(offsetyaw*RAD, vec(0, 0, 1));
+            if(offsetroll)
+            {
+                matrix3x4 n;
+                n.rotate(offsetroll*RAD, vec(-1, 0, 0));
+                m.mul(n);
+            }
+            if(offsetpitch)
+            {
+                matrix3x4 n;
+                n.rotate(offsetpitch*RAD, vec(0, -1, 0));
+                m.mul(n);
+            }
+        }
+        else if(offsetpitch) 
+        {
+            m.rotate(offsetpitch*RAD, vec(0, -1, 0));
+            if(offsetroll)
+            {
+                matrix3x4 n;
+                n.rotate(offsetroll*RAD, vec(-1, 0, 0));
+                m.mul(n);
+            }
+        }
+        else if(offsetroll) m.rotate(offsetroll*RAD, vec(-1, 0, 0));
+        else m.identity();
+    }
+
     void gentris(int frame, vector<BIH::tri> *tris)
     {
         if(parts.empty()) return;
-        parts[0]->gentris(frame, tris);
+        matrix3x4 m;
+        initmatrix(m);
+        parts[0]->gentris(frame, tris, m);
     }
 
     BIH *setBIH()
@@ -1209,7 +1231,9 @@ struct animmodel : model
     {
         if(parts.empty()) return;
         vec bbmin(1e16f, 1e16f, 1e16f), bbmax(-1e16f, -1e16f, -1e16f);
-        parts[0]->calcbb(frame, bbmin, bbmax);
+        matrix3x4 m;
+        initmatrix(m);
+        parts[0]->calcbb(frame, bbmin, bbmax, m);
         radius = bbmax;
         radius.sub(bbmin);
         radius.mul(0.5f);
