@@ -955,6 +955,23 @@ void queryreflections()
         }
     }
 
+    loopi(MAXREFLECTIONS)
+    {
+        Reflection &ref = reflections[i];
+        if(ref.height>=0 && ref.lastused>=totalmillis && ref.matsurfs.length())
+        {
+            if(waterpvsoccluded(ref.height)) ref.matsurfs.setsizenodelete(0);
+        }
+    }
+    if(renderpath!=R_FIXEDFUNCTION && waterfallrefract)
+    {
+        Reflection &ref = waterfallrefraction;
+        if(ref.height>=0 && ref.lastused>=totalmillis && ref.matsurfs.length())
+        {
+            if(waterpvsoccluded(-1)) ref.matsurfs.setsizenodelete(0);
+        }
+    }
+
 	lastquery = totalmillis;
 
     if((editmode && showmat) || !hasOQ || !oqfrags || !oqwater || nowater) return;
