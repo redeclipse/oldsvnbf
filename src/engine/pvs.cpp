@@ -1048,7 +1048,9 @@ void testpvs(int *vcsize)
     genpvs_canceled = false;
     check_genpvs_progress = false;
 
-    int size = 1<<(*vcsize > 0 ? *vcsize : 5);
+    int size = *vcsize>0 ? *vcsize : 32;
+    for(int mask = 1; mask < size; mask <<= 1) size &= ~mask;
+
     ivec o = camera1->o;
     o.mask(~(size-1));
     pvsworker w;
