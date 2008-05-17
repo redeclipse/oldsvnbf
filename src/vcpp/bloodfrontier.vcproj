@@ -606,6 +606,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\engine\obj.h"
+				>
+			</File>
+			<File
 				RelativePath="..\engine\octa.cpp"
 				>
 				<FileConfiguration
