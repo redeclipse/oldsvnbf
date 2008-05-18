@@ -457,7 +457,7 @@ struct fpsstate
 			gunselect = GUN_RIFLE;
 			loopi(NUMGUNS)
 			{
-				ammo[i] = i == GUN_RIFLE ? guntype[i].add : -1;
+				ammo[i] = (i == GUN_RIFLE ? guntype[i].add : -1);
 			}
 		}
 		else
@@ -466,7 +466,7 @@ struct fpsstate
 			gunselect = GUN_PISTOL;
 			loopi(NUMGUNS)
 			{
-				ammo[i] = i == GUN_PISTOL || i == GUN_GL ? guntype[i].add : -1;
+				ammo[i] = (i == GUN_PISTOL || i == GUN_GL ? guntype[i].add : -1);
 			}
 		}
 	}

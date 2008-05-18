@@ -1964,7 +1964,7 @@ struct GAMESERVER : igameserver
 		else if(minremain>0)
 		{
 			processevents();
-			if(curtime)
+			if(curtime && !m_insta(gamemode, mutators))
             {
                 loopv(sents) if(sents[i].spawntime && sents[i].type == WEAPON)
 			    {
