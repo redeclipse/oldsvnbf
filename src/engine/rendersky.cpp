@@ -97,8 +97,6 @@ bool drawskylimits(bool explicitonly)
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glEnable(GL_TEXTURE_2D);
 
-    if(!glaring) defaultshader->set();
-
     return rendered;
 }
 
@@ -167,6 +165,7 @@ void drawskybox(int farplane, bool limited)
         if(!skyboxglareshader) skyboxglareshader = lookupshaderbyname("skyboxglare");
         skyboxglareshader->set();
     }
+    else defaultshader->set();
 
     bool fog = glIsEnabled(GL_FOG)==GL_TRUE;
     if(fog) glDisable(GL_FOG);

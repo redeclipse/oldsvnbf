@@ -757,10 +757,11 @@ void drawglare()
     glClear((skyboxglare ? 0 : GL_COLOR_BUFFER_BIT) | GL_DEPTH_BUFFER_BIT);
 
     rendergeom();
-    renderreflectedmapmodels();
-    rendergame();
 
     if(skyboxglare) drawskybox(farplane, false);
+
+    renderreflectedmapmodels();
+    rendergame();
 
     renderwater();
     rendermaterials();
@@ -852,20 +853,18 @@ void drawreflection(float z, bool refract, bool clear)
 
     renderreflectedgeom(refracting<0 && z>=0 && caustics, fogging);
 
-    if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-
-    if(reflectmms) renderreflectedmapmodels();
-    rendergame();
-
     if(reflecting || refracting>0 || z<0)
     {
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         if(reflectclip && z>=0) undoclipmatrix();
-        defaultshader->set();
         drawskybox(farplane, false);
         if(reflectclip && z>=0) setclipmatrix(clipmatrix);
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
     }
+    else if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+
+    if(reflectmms) renderreflectedmapmodels();
+    rendergame();
 
     if(fogging) setfogplane(1, z);
     if(refracting) rendergrass();
@@ -943,13 +942,11 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
 	rendergeom();
 
+    if(!limitsky()) drawskybox(farplane, false);
+
 //	queryreflections();
 
 	rendermapmodels();
-
-	defaultshader->set();
-
-	if(!limitsky()) drawskybox(farplane, false);
 
 //	drawreflections();
 
@@ -1256,14 +1253,10 @@ void gl_drawframe(int w, int h)
 
 	if(!wireframe) renderoutline();
 
-	rendermapmodels();
-
-    defaultshader->set();
-    rendergame();
-
-    defaultshader->set();
-
     if(!limitsky()) drawskybox(farplane, false);
+
+	rendermapmodels();
+    rendergame();
 
     if(hasFBO)
     {
