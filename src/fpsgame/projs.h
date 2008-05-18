@@ -237,13 +237,25 @@ struct projectiles
 			projent &proj = *(projs[i]);
 
 			proj.check();
-			int rtime = curtime;
 
 			if (!proj.owner) proj.state = CS_DEAD;
 
-			while (proj.state != CS_DEAD && rtime > 0)
+            if(proj.projtype == PRJ_SHOT && proj.state != CS_DEAD)
+            {
+                loopj(cl.ph.physicsrepeat)
+                {
+                    if((proj.lifetime -= cl.ph.physframetime()) <= 0 || !proj.update(cl.ph.physframetime()))
+                    {
+                        if(guntype[proj.gun].radius) 
+                            cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.gun, proj.local);
+                        proj.state = CS_DEAD;
+                        break;
+                    }
+                }
+            }
+            else for(int rtime = curtime; proj.state != CS_DEAD && rtime > 0;)
 			{
-				int stime = proj.projtype == PRJ_SHOT ? 10 : 30, qtime = min(stime, rtime);
+				int qtime = min(rtime, 30);
 				rtime -= qtime;
 
 				if ((proj.lifetime -= qtime) <= 0 || !proj.update(qtime))

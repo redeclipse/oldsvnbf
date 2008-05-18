@@ -9,7 +9,7 @@ struct physics
 	IVARW(liquidvel,		0,			45,			1024);		// extra liquid velocity
 
 	IVARP(floatspeed,		10,			100,		1000);
-	IVARP(minframetime,		5,			10,			20);
+	IVARP(physframetime,	5,			5,			20);
 
 	int spawncycle, fixspawn, physicsfraction, physicsrepeat;
 
@@ -560,15 +560,15 @@ struct physics
 		return true;
 	}
 
-	bool move(fpsent *d, int moveres = 20, bool local = true, int millis = 0, int repeat = 0)
+	bool move(fpsent *d, int moveres = 10, bool local = true, int millis = 0, int repeat = 0)
 	{
-		if (!millis) millis = curtime;
+		if (!millis) millis = physframetime();
 		if (!repeat) repeat = physicsrepeat;
 
 		loopi(repeat)
 		{
-			if (!moveplayer(d, moveres, local, min(millis, minframetime()))) return false;
-			if (d->o.z < 0 && d->state == CS_ALIVE)
+			if (!moveplayer(d, moveres, local, millis)) return false;
+			if (local && d->o.z < 0 && d->state == CS_ALIVE)
 			{
 				cl.suicide((fpsent *)d);
 				return false;
@@ -677,7 +677,7 @@ struct physics
 				d->o = d->newpos;
 				d->yaw = d->newyaw;
 				d->pitch = d->newpitch;
-				moveplayer(d, res, local, curtime);
+				move(d, res, local);
 				d->newpos = d->o;
 				float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove();
 				if(k>0)
@@ -689,9 +689,9 @@ struct physics
 					d->pitch += d->deltapitch*k;
 				}
 			}
-			else moveplayer(d, res, local, curtime);
+			else move(d, res, local);
 		}
-		else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) moveplayer(d, res, local, curtime);
+		else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) move(d, res, local);
 	}
 
 	void otherplayers()
@@ -706,7 +706,7 @@ struct physics
                 d->state = CS_LAGGED;
 				continue;
 			}
-			smoothplayer(d, 2, false);
+			smoothplayer(d, 1, false);
 		}
 	}
 
@@ -733,16 +733,9 @@ struct physics
 
 	void update()		  // optimally schedule physics frames inside the graphics frames
 	{
-		if(curtime>=minframetime())
-		{
-			int faketime = curtime+physicsfraction;
-			physicsrepeat = faketime/minframetime();
-			physicsfraction = faketime%minframetime();
-		}
-		else
-		{
-			physicsrepeat = curtime>0 ? 1 : 0;
-		}
+	    int faketime = curtime+physicsfraction;
+		physicsrepeat = faketime/physframetime();
+		physicsfraction = faketime%physframetime();
 		cleardynentcache();
 		otherplayers();
 	}
