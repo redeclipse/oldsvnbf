@@ -92,12 +92,11 @@ VARF(moving, 0, 0, 1,
 	if(moving) havesel = false; // tell cursorupdate to create handle
 );
 
-VARF(gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
+VARF(gridpower, 3-VVEC_FRAC, 4, VVEC_INT-1,
 {
 	if(dragging || !hdr.worldsize) return;
-	gridsize = 1<<gridpower;
-	if(gridsize >= hdr.worldsize) gridsize = hdr.worldsize/2;
-	if(gridsize <= 0) gridsize = 3-VVEC_FRAC;
+    gridsize = 1<<gridpower;
+    if(gridsize>=hdr.worldsize) gridsize = hdr.worldsize/2;
 	cancelsel();
 });
 
