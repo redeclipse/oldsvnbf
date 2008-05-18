@@ -45,10 +45,8 @@ struct GAMECLIENT : igameclient
 	IVAR(cameracycle, 0, 0, 600);// cycle camera every N secs
 
 	IVARP(invmouse, 0, 0, 1);
-	IVARP(thirdperson, 0, 0, 1);
-	IVARP(thirdpersondist, 2, 16, 128);
-	IVARP(thirdpersonheight, 2, 12, 128);
 
+	IVARP(mouselock, 0, 1, 1);
 	IVARP(mousedeadzone, 0, 10, 100);
 	IVARP(mousepanspeed, 0, 30, 1000);
 	IVARP(mousesensitivity, 0, 10, 100);
@@ -231,7 +229,11 @@ struct GAMECLIENT : igameclient
 			adjustscaled(int, quakewobble, 100.f);
 			adjustscaled(int, damageresidue, 100.f);
 
-			if(!menuactive() && lastcamera && (player1->state == CS_ALIVE || player1->state == CS_DEAD))
+			if(mouselock())
+			{
+				findorientation(camera1->o, camera1->yaw, camera1->pitch, worldpos, true);
+			}
+			else if(!menuactive() && lastcamera && (player1->state == CS_ALIVE || player1->state == CS_DEAD))
 			{
 				float fx, fy;
 				vectoyawpitch(cursordir, fx, fy);
@@ -999,11 +1001,11 @@ struct GAMECLIENT : igameclient
 
 	void mousemove(int dx, int dy)
 	{
-		if(!menuactive() && (player1->state != CS_ALIVE && player1->state != CS_DEAD))
+		if(!menuactive() && (mouselock() || (player1->state != CS_ALIVE && player1->state != CS_DEAD)))
 		{
-			player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
-			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1.f : 1.f);
-			fixrange(player1->yaw, player1->pitch);
+			camera1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
+			camera1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1.f : 1.f);
+			fixrange(camera1->yaw, camera1->pitch);
 			cursorx = cursory = 0.5f;
 			return;
 		}
@@ -1030,7 +1032,7 @@ struct GAMECLIENT : igameclient
 			{
 				if(!lastcamera || player1->state == CS_SPAWNING)
 				{
-					camera1->o = vec(player1->o).add(vec(0, 0, 2));
+					camera1->o = vec(player1->o).add(vec(0, 0, 4));
 					camera1->yaw = player1->yaw;
 					camera1->pitch = player1->pitch;
 					camera1->roll = 0.f;
@@ -1042,22 +1044,27 @@ struct GAMECLIENT : igameclient
 				}
 				else
 				{
-					int frame = lastcamera-lastmillis;
-					float deadzone = (mousedeadzone()/100.f);
-					float cx = (cursorx-0.5f), cy = (0.5f-cursory);
-					camera1->o = vec(player1->o).add(vec(0, 0, 2));
+					camera1->o = vec(player1->o).add(vec(0, 0, 4));
 
-					if(cx > deadzone || cx < -deadzone)
-						camera1->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+					if(!mouselock())
+					{
+						int frame = lastcamera-lastmillis;
+						float deadzone = (mousedeadzone()/100.f);
+						float cx = (cursorx-0.5f), cy = (0.5f-cursory);
 
-					if(cy > deadzone || cy < -deadzone)
-						camera1->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
-					camera1->roll = 0.f;
+						if(cx > deadzone || cx < -deadzone)
+							camera1->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+
+						if(cy > deadzone || cy < -deadzone)
+							camera1->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+						camera1->roll = 0.f;
+					}
+
 					fixrange(camera1->yaw, camera1->pitch);
 
 					vec dir;
-					vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, dir);
-					camera1->o.add(vec(dir).mul(5));
+					vecfromyawpitch(camera1->yaw, camera1->pitch, -1, -1, dir);
+					camera1->o.add(vec(dir).mul(6));
 				}
 
 				if(lastcamera && quakewobble > 0)
@@ -1078,6 +1085,7 @@ struct GAMECLIENT : igameclient
 				lastcamera = 0;
 			}
 		}
+		else lastcamera = 0;
 	}
 
 	void adddynlights()
