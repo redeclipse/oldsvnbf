@@ -556,8 +556,9 @@ bool plcollide(physent *d, const vec &dir)	// collide with player or monster
 void rotatebb(vec &center, vec &radius, int yaw)
 {
     yaw = (yaw+7)-(yaw+7)%15;
-    yaw = 180-yaw;
-    if(yaw<0) yaw += 360;
+    yaw += 180;
+    if(yaw < 0) yaw = 360 + yaw%360;
+    else if(yaw >= 360) yaw %= 360;
     switch(yaw)
     {
         case 0: break;
