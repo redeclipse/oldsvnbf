@@ -2,6 +2,8 @@ struct fpsrender
 {
 	GAMECLIENT &cl;
 
+	IVARP(targetlaser, 0, 0, 1);
+
 	fpsrender(GAMECLIENT &_cl) : cl(_cl) {}
 
 	vector<fpsent *> bestplayers;
@@ -80,7 +82,7 @@ struct fpsrender
 
 		endmodelbatches();
 
-		if(rendernormally)
+		if(targetlaser() && rendernormally)
 		{
 			renderprimitive(true);
 			vec v = cl.ws.gunorigin(cl.player1->gunselect, cl.player1->o, worldpos, cl.player1);
