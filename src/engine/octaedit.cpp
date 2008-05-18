@@ -1258,10 +1258,7 @@ void pushsel(int *dir)
 	int d = dimension(orient);
 	int s = dimcoord(orient) ? -*dir : *dir;
 	sel.o[d] += s*sel.grid;
-	if(selectionsurf==1)
-	{
-		camera1->o[d] += s*sel.grid;
-	}
+	if(selectionsurf==1) camera1->o[d] += s*sel.grid;
 }
 
 void mpdelcube(selinfo &sel, bool local)

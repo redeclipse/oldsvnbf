@@ -38,10 +38,7 @@ struct weaponstate
 
 			if (!d->canweapon(s, lastmillis))
 			{
-				if (a >= 0)
-				{
-					return;
-				}
+				if (a >= 0) return;
 			}
 			else break;
 		}

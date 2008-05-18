@@ -17,35 +17,36 @@ vector<char *> packagedirs;
 
 char *makefile(char *s, const char *e, bool ext, bool copy, int start)
 {
+	char *o = s;
     if(copy)
     {
         static string tmp;
         s_strcpy(tmp, s);
-        s = tmp;
+        o = tmp;
     }
 
 	int d = start;
 	string m, f;
-	s_strcpy(m, s);
+	s_strcpy(m, o);
 
 	char *t = strpbrk(m, ".");
 	if (t) // try to detect extension and revision
 	{
-		s_strncpy(s, m, t-m+1);
+		s_strncpy(o, m, t-m+1);
 		char *q = t+1;
 		if (isnumeric(*q)) d = min(atoi(q), 1);
 	}
-	else { s_strcpy(s, m); }
-	s_strcpy(m, s);
+	else { s_strcpy(o, m); }
+	s_strcpy(m, o);
 
 	while (true)
 	{
-		s_sprintf(f)("%s%s", s, *e ? e : "");
-		if (fileexists(findfile(f, "r"), "r")) { s_sprintf(s)("%s.%.4d", m, d++); }
+		s_sprintf(f)("%s%s", o, *e ? e : "");
+		if (fileexists(findfile(f, "r"), "r")) { s_sprintf(o)("%s.%.4d", m, d++); }
 		else break;
 	}
 	if (ext) s_strcpy(s, f);
-	return s;
+	return o;
 }
 
 char *makerelpath(const char *dir, const char *file, const char *prefix)

@@ -543,8 +543,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
 	s.loaded = false;
     s.texmask |= 1<<tnum;
-	if (s.sts.length() > TEX_ENVMAP)
-		conoutf("warning: too many textures, slot %d file '%s' (%d,%d)", curtexnum, name, matslot, curmatslot);
+	if (s.sts.length() >= TEX_MAX) conoutf("warning: too many textures, slot %d file '%s' (%d,%d)", curtexnum, name, matslot, curmatslot);
 	Slot::Tex &st = s.sts.add();
 	st.type = tnum;
 	st.combined = -1;
@@ -1003,14 +1002,9 @@ Texture *cubemapload(const char *name, bool mipit, bool msg)
 	Texture *t = NULL;
 	if(!strchr(name, '*'))
 	{
-		s_sprintfd(jpgname)("%s_*.jpg", name);
-		t = cubemaploadwildcard(NULL, jpgname, mipit, false);
-		if(!t)
-		{
-			s_sprintfd(pngname)("%s_*", name);
-			t = cubemaploadwildcard(NULL, pngname, mipit, false);
-			if(!t && msg) conoutf("could not load envmap %s", name);
-		}
+		s_sprintfd(pname)("%s_*", name);
+		t = cubemaploadwildcard(NULL, pname, mipit, false);
+		if(!t && msg) conoutf("could not load envmap %s", name);
 	}
 	else t = cubemaploadwildcard(NULL, name, mipit, msg);
 	return t;

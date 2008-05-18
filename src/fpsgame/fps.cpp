@@ -225,11 +225,11 @@ struct GAMECLIENT : igameclient
 			if(!allowmove(player1) || saycommandon) player1->stopmoving();
 
 			#define adjustscaled(t,n,m) \
-				if(n) { n = (t)(n/(1.f+sqrtf((float)curtime)/(float)m)); }
+				if(n) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); }
 
-			adjustscaled(float, player1->roll, 100);
-			adjustscaled(int, quakewobble, 100);
-			adjustscaled(int, damageresidue, 200);
+			adjustscaled(float, player1->roll, 100.f);
+			adjustscaled(int, quakewobble, 100.f);
+			adjustscaled(int, damageresidue, 100.f);
 
 			if(!menuactive() && lastcamera && (player1->state == CS_ALIVE || player1->state == CS_DEAD))
 			{
