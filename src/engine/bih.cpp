@@ -25,8 +25,8 @@ bool BIH::triintersect(tri &t, const vec &o, const vec &ray, float maxdist, floa
             loadalphamask(t.tex);
             if(!t.tex->alphamask) { dist = f; return true; }
         }
-        int si = int(t.tex->xs * (t.tc[0] + u*(t.tc[2] - t.tc[0]) + v*(t.tc[4] - t.tc[0]))),
-            ti = int(t.tex->ys * (t.tc[1] + u*(t.tc[3] - t.tc[1]) + v*(t.tc[5] - t.tc[1])));
+        int si = clamp(int(t.tex->xs * (t.tc[0] + u*(t.tc[2] - t.tc[0]) + v*(t.tc[4] - t.tc[0]))), 0, t.tex->xs-1),
+            ti = clamp(int(t.tex->ys * (t.tc[1] + u*(t.tc[3] - t.tc[1]) + v*(t.tc[5] - t.tc[1]))), 0, t.tex->ys-1);
         if(!(t.tex->alphamask[ti*((t.tex->xs+7)/8) + si/8] & (1<<(si%8)))) return false;
     }
     dist = f;
