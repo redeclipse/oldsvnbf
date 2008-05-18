@@ -252,7 +252,7 @@ void gl_checkextensions()
         waterreflect = 0;
     }
 
-    extern int reservedynlighttc, reserveshadowmaptc, maxtexsize, batchlightmaps;
+    extern int reservedynlighttc, reserveshadowmaptc, maxtexsize, batchlightmaps, grass;
     if(strstr(vendor, "ATI"))
     {
         floatvtx = 1;
@@ -264,6 +264,7 @@ void gl_checkextensions()
         emulatefog = 1;
         extern int depthfxprecision;
         if(hasTF) depthfxprecision = 1;
+        if(hasTF) grass = 1;
 
         ati_texgen_bug = 1;
     }
@@ -303,6 +304,7 @@ void gl_checkextensions()
         extern int fpdepthfx;
         if(hasTF && (!strstr(renderer, "GeForce") || !checkseries(renderer, 6000, 6600)))
             fpdepthfx = 1; // FP filtering causes software fallback on 6200?
+        if(hasTF) grass = 1;
     }
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
