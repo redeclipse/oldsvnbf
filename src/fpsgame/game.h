@@ -301,7 +301,6 @@ enum
 
 enum
 {
-	SINFO_ICON = 0,
 	SINFO_STATUS,
 	SINFO_HOST,
 	SINFO_DESC,
@@ -327,7 +326,6 @@ enum
 #ifndef STANDALONE
 static const char *serverinfotypes[] = {
 	"",
-	"status",
 	"host",
 	"desc",
 	"ping",
@@ -338,12 +336,12 @@ static const char *serverinfotypes[] = {
 	"time"
 };
 
-static const char *serverstatustypes[] = {
-	"\fs\fgopen\fS",
-	"\fs\fblocked\fS",
-	"\fs\fmprivate\fS",
-	"\fs\frfull\fS",
-	"\fs\fb?\fS"
+static int serverstatuscolours[] = {
+	0x00FF00,
+	0x00FFFF,
+	0xFFFF00,
+	0xFF0000,
+	0x0000FF
 };
 #endif
 
@@ -367,7 +365,7 @@ struct fpsstate
 
 	bool canweapon(int gun, int millis)
 	{
-		if (isgun(gun) && (gunselect != gun) && (ammo[gun] >= 0 || guntype[gun].rdelay <= 0))
+		if (isgun(gun) && (gunselect != gun) && ammo[gun] >= 0 && (guntype[gun].rdelay > 0 || ammo[gun] > 0))
 			return true;
 		return false;
 	}

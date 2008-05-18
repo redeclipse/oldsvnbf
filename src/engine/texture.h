@@ -132,7 +132,7 @@ struct Shader
         DELETEA(extparams);
         DELETEA(extvertparams);
         extpixparams = NULL;
-    }   
+    }
 
 	void allocenvparams(Slot *slot = NULL);
 	void flushenvparams(Slot *slot = NULL);
@@ -208,7 +208,8 @@ enum
 	TEX_GLOW,
 	TEX_SPEC,
 	TEX_DEPTH,
-	TEX_ENVMAP
+	TEX_ENVMAP,
+	TEX_MAX
 };
 
 struct Slot
@@ -235,7 +236,7 @@ struct Slot
 	Texture *grasstex, *thumbnail;
 
     Slot() : autograss(NULL) { reset(); }
-    
+
 	void reset()
 	{
 		sts.setsize(0);

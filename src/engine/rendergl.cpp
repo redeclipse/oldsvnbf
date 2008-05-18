@@ -1302,6 +1302,7 @@ void gl_drawframe(int w, int h)
 VARP(crosshairsize, 0, 25, 1000);
 VARP(crosshairblend, 0, 50, 100);
 VARP(cursorsize, 0, 30, 1000);
+VARP(cursorblend, 0, 0, 100);
 
 VARP(hidehud, 0, 0, 1);
 
@@ -1349,12 +1350,14 @@ void drawcrosshair(int w, int h)
 			loadcrosshair(NULL, index);
 			crosshair = crosshairs[index];
 		}
-		float cx = cursorx, cy = cursory, chsize = index ? crosshairsize*w/300.0f : cursorsize*w/300.0f;
+		float cx = cursorx, cy = cursory,
+			chsize = index ? crosshairsize*w/300.0f : cursorsize*w/300.0f,
+			chblend = index ? crosshairblend/100.f : cursorblend/100.f;
 
 		if(crosshair->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 
-		glColor4f(r, g, b, crosshairblend/100.f);
+		glColor4f(r, g, b, chblend);
 		float x = cx*w*3.0f - (index ? chsize/2.0f : 0);
 		float y = cy*h*3.0f - (index ? chsize/2.0f : 0);
 		glBindTexture(GL_TEXTURE_2D, crosshair->id);

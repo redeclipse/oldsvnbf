@@ -954,10 +954,16 @@ struct GAMESERVER : igameserver
 		int type;
 		clientinfo *ci = sender>=0 ? (clientinfo *)getinfo(sender) : NULL;
 		#define QUEUE_MSG { while(curmsg<p.length()) ci->messages.add(p.buf[curmsg++]); }
-		#define QUEUE_INT(n) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(5); putint(buf, n); ci->messages.addbuf(buf); }
-		#define QUEUE_UINT(n) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(4); putuint(buf, n); ci->messages.addbuf(buf); }
-		#define QUEUE_FLT(n) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(4); putfloat(buf, n); ci->messages.addbuf(buf); }
-		#define QUEUE_STR(text) { curmsg = p.length(); ucharbuf buf = ci->messages.reserve(2*strlen(text)+1); sendstring(text, buf); ci->messages.addbuf(buf); }
+        #define QUEUE_BUF(size, body) { \
+            curmsg = p.length(); \
+            ucharbuf buf = ci->messages.reserve(size); \
+            { body; } \
+            ci->messages.addbuf(buf); \
+        }
+        #define QUEUE_INT(n) QUEUE_BUF(5, putint(buf, n))
+        #define QUEUE_UINT(n) QUEUE_BUF(4, putuint(buf, n))
+        #define QUEUE_FLT(n) QUEUE_BUF(4, putfloat(buf, n))
+        #define QUEUE_STR(text) QUEUE_BUF(2*strlen(text)+1, sendstring(text, buf))
 		int curmsg;
         while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci))
 		{

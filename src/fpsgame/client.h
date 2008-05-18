@@ -47,8 +47,8 @@ struct clientcom : iclientcom
 
 	bool haspriv(int flag, bool quiet = false)
 	{
-		if (cl.player1->privilege>=flag) return true;
-		else if (!quiet)
+		if(cl.player1->privilege>=flag) return true;
+		else if(!quiet)
 		{
 			const char *_privs[] = { "none", "master", "admin" };
 			conoutf("access denied, you need %s", _privs[flag]);
@@ -88,7 +88,7 @@ struct clientcom : iclientcom
 	void gameconnect(bool _remote)
 	{
 		remote = _remote;
-		if (editmode) toggleedit();
+		if(editmode) toggleedit();
 	}
 
 	void gamedisconnect(int clean)
@@ -100,20 +100,20 @@ struct clientcom : iclientcom
         removetrackedparticles();
 		loopv(cl.players) DELETEP(cl.players[i]);
 		cleardynentcache();
-		if (!clean) lanconnect();
+		if(!clean) lanconnect();
 	}
 
 	bool allowedittoggle(bool edit)
 	{
 		bool allow = !isready || m_edit(cl.gamemode) ||
 			(cl.player1->state != CS_SPECTATOR && cl.player1->state != CS_ALIVE && cl.player1->state != CS_EDITING);
-		if (!allow) conoutf("you must be both alive and in coopedit to enter editmode");
+		if(!allow) conoutf("you must be both alive and in coopedit to enter editmode");
 		return allow;
 	}
 
 	void edittoggled(bool edit)
 	{
-		if (!edit)
+		if(!edit)
 		{
 			cl.player1->state = CS_ALIVE;
 			cl.player1->o.z -= cl.player1->height; // entinmap wants feet pos
@@ -256,12 +256,12 @@ struct clientcom : iclientcom
 
 	void saytext(fpsent *d, int flags, char *text)
 	{
-		if (!colourchat()) filtertext(text, text);
+		if(!colourchat()) filtertext(text, text);
 
 		string s, t;
 		s_sprintf(t)("%s", m_team(cl.gamemode, cl.mutators) || flags&SAY_TEAM ? (isteam(cl.player1->team, d->team) ? "\fb" : "\fr") : "\fg");
 
-		if (flags&SAY_ACTION) s_sprintf(s)("\fs%s*\fS \fs%s%s\fS \fs%s%s\fS", t, t, cl.colorname(d), t, text);
+		if(flags&SAY_ACTION) s_sprintf(s)("\fs%s*\fS \fs%s%s\fS \fs%s%s\fS", t, t, cl.colorname(d), t, text);
 		else s_sprintf(s)("\fs%s<\fS\fs\fw%s\fS\fs%s>\fS \fs\fw%s\fS", t, cl.colorname(d), t, text);
 
 		if(d->state != CS_DEAD && d->state != CS_SPECTATOR)
@@ -322,7 +322,7 @@ struct clientcom : iclientcom
 	{
 		updateposition(cl.player1);
 		loopv(cl.players)
-			if (cl.players[i] && cl.players[i]->ownernum >= 0 && cl.players[i]->ownernum == cl.player1->clientnum)
+			if(cl.players[i] && cl.players[i]->ownernum >= 0 && cl.players[i]->ownernum == cl.player1->clientnum)
 				updateposition(cl.players[i]);
 
 		if(senditemstoserver)
@@ -717,7 +717,7 @@ struct clientcom : iclientcom
 			{
 				int trg = getint(p), gun = getint(p), amt = getint(p);
 				fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
-				if (!target || gun <= -1 || gun >= NUMGUNS) break;
+				if(!target || gun <= -1 || gun >= NUMGUNS) break;
 				target->ammo[gun] = amt;
 				break;
 			}
@@ -726,7 +726,7 @@ struct clientcom : iclientcom
 			{
 				int trg = getint(p), amt = getint(p), ms = getint(p);
 				fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
-				if (!target) break;
+				if(!target) break;
 				target->health = amt;
 				target->lastregen = ms;
 				vec pos = target->o;
@@ -813,7 +813,7 @@ struct clientcom : iclientcom
 
 			case SV_EDITVAR:
 			{
-				if (!d) return;
+				if(!d) return;
 				int t = getint(p);
 				bool commit = true;
 				getstring(text, p);
@@ -882,7 +882,7 @@ struct clientcom : iclientcom
 			case SV_REPLACE:
 			case SV_DELCUBE:
 			{
-				if (!d) return;
+				if(!d) return;
 				selinfo sel;
 				sel.o.x = getint(p); sel.o.y = getint(p); sel.o.z = getint(p);
 				sel.s.x = getint(p); sel.s.y = getint(p); sel.s.z = getint(p);
@@ -1154,7 +1154,7 @@ struct clientcom : iclientcom
 
 	void changemapserv(char *name, int gamemode, int mutators)
 	{
-		if (remote && !m_mp(gamemode)) gamemode = G_DEATHMATCH;
+		if(remote && !m_mp(gamemode)) gamemode = G_DEATHMATCH;
 		cl.nextmode = cl.gamemode = gamemode;
 		cl.nextmuts = cl.mutators = mutators;
 		cl.minremain = -1;
@@ -1300,11 +1300,9 @@ struct clientcom : iclientcom
 	bool ready() { return isready; }
 	int otherclients() { return cl.players.length(); }
 
-	IVARP(serversplit, 3, 10, INT_MAX-1);
-
 	int serverstat(serverinfo *a)
 	{
-		if (a->attr.length() > 4 && a->numplayers >= a->attr[4])
+		if(a->attr.length() > 4 && a->numplayers >= a->attr[4])
 		{
 			return SSTAT_FULL;
 		}
@@ -1336,24 +1334,24 @@ struct clientcom : iclientcom
 	{
 		int ac = 0, bc = 0;
 
-		if (a->address.host != ENET_HOST_ANY && a->ping < 999 &&
+		if(a->address.host != ENET_HOST_ANY && a->ping < 999 &&
 			a->attr.length() && a->attr[0] == GAMEVERSION) ac = 1;
 
-		if (b->address.host != ENET_HOST_ANY && b->ping < 999 &&
+		if(b->address.host != ENET_HOST_ANY && b->ping < 999 &&
 			b->attr.length() && b->attr[0] == GAMEVERSION) bc = 1;
 
 		if(ac > bc) return -1;
 		if(ac < bc) return 1;
 
-		#define retcp(c) if (c) { return c; }
+		#define retcp(c) if(c) { return c; }
 		#define retsw(c,d,e) \
-			if (c != d) \
+			if(c != d) \
 			{ \
-				if (e) { return c > d ? 1 : -1; } \
+				if(e) { return c > d ? 1 : -1; } \
 				else { return c < d ? 1 : -1; } \
 			}
 
-		if (!identexists("serversort")) { serversortreset(); }
+		if(!identexists("serversort")) { serversortreset(); }
 		int len = atoi(executeret("listlen $serversort"));
 
 		loopi(len)
@@ -1363,7 +1361,7 @@ struct clientcom : iclientcom
 			int style = atoi(executeret(s));
 			serverinfo *aa = a, *ab = b;
 
-			if (style < 0)
+			if(style < 0)
 			{
 				style = 0-style;
 				aa = b;
@@ -1399,10 +1397,10 @@ struct clientcom : iclientcom
 				}
 				case SINFO_MAXCLIENTS:
 				{
-					if (aa->attr.length() > 4) ac = aa->attr[4];
+					if(aa->attr.length() > 4) ac = aa->attr[4];
 					else ac = 0;
 
-					if (ab->attr.length() > 4) bc = ab->attr[4];
+					if(ab->attr.length() > 4) bc = ab->attr[4];
 					else bc = 0;
 
 					retsw(ac, bc, false);
@@ -1410,18 +1408,18 @@ struct clientcom : iclientcom
 				}
 				case SINFO_GAME:
 				{
-					if (aa->attr.length() > 1) ac = aa->attr[1];
+					if(aa->attr.length() > 1) ac = aa->attr[1];
 					else ac = 0;
 
-					if (ab->attr.length() > 1) bc = ab->attr[1];
+					if(ab->attr.length() > 1) bc = ab->attr[1];
 					else bc = 0;
 
 					retsw(ac, bc, true);
 
-					if (aa->attr.length() > 2) ac = aa->attr[2];
+					if(aa->attr.length() > 2) ac = aa->attr[2];
 					else ac = 0;
 
-					if (ab->attr.length() > 2) bc = ab->attr[2];
+					if(ab->attr.length() > 2) bc = ab->attr[2];
 					else bc = 0;
 
 					retsw(ac, bc, true);
@@ -1434,10 +1432,10 @@ struct clientcom : iclientcom
 				}
 				case SINFO_TIME:
 				{
-					if (aa->attr.length() > 3) ac = aa->attr[3];
+					if(aa->attr.length() > 3) ac = aa->attr[3];
 					else ac = 0;
 
-					if (ab->attr.length() > 3) bc = ab->attr[3];
+					if(ab->attr.length() > 3) bc = ab->attr[3];
 					else bc = 0;
 
 					retsw(ac, bc, false);
@@ -1450,137 +1448,140 @@ struct clientcom : iclientcom
 		return strcmp(a->name, b->name);
 	}
 
-	const char *serverinfogui(g3d_gui *cgui, vector<serverinfo *> &servers)
-	{
-		const char *name = NULL;
+    bool serverinfostartcolumn(g3d_gui *g, int i)
+    {
+    	if(i > -1 && i < SINFO_MAX)
+    	{
+			g->pushlist();
 
-		cgui->pushlist(); // h
-
-		loopi(SINFO_MAX)
-		{
-			cgui->pushlist(); // v
-			cgui->pushlist(); // h
-
-			if (i == SINFO_ICON && cgui->button("", 0xFFFFDD, "info") & G3D_UP)
-			{
-				serversortreset();
-			}
-			else if (cgui->button(serverinfotypes[i], 0xA0A0A0, NULL) & G3D_UP)
+			if(g->buttonf("%s ", 0xA0A0A0, i == SINFO_STATUS ? "server" : NULL, serverinfotypes[i]) & G3D_UP)
 			{
 				string st; st[0] = 0;
 				bool invert = false;
-				if (!identexists("serversort")) { serversortreset(); }
+				if(!identexists("serversort")) { serversortreset(); }
 				int len = atoi(executeret("listlen $serversort"));
 				loopk(len)
 				{
 					s_sprintfd(s)("at $serversort %d", k);
 
 					int n = atoi(executeret(s));
-					if (abs(n) != i)
+					if(abs(n) != i)
 					{
 						s_sprintfd(t)("%s%d", st[0] ? " " : "", n);
 						s_sprintf(st)("%s%s", st[0] ? st : "", t);
 					}
-					else if (!k) invert = true;
+					else if(!k) invert = true;
 				}
 				s_sprintfd(u)("serversort = \"%d%s%s\"",
 					invert ? 0-i : i, st[0] ? " " : "", st[0] ? st : "");
 				executeret(u);
 			}
 
-			cgui->poplist(); // v
+			g->mergehits(true);
+			return true;
+    	}
+        return false;
+    }
 
-			loopvj(servers)
+    void serverinfoendcolumn(g3d_gui *g, int i)
+    {
+        g->mergehits(false);
+        g->poplist();
+    }
+
+    bool serverinfoentry(g3d_gui *g, int i, serverinfo &si)
+    {
+		string text;
+		text[0] = 0;
+		switch (i)
+		{
+			case SINFO_STATUS:
 			{
-				serverinfo &si = *servers[j];
-#if 0
-				if (j > 0 && !(j%serversplit()))
-				{
-					cgui->poplist(); // h
-					cgui->pushlist(); // v
-				}
-#endif
-				if (si.address.host != ENET_HOST_ANY && si.ping != 999)
-				{
-					string text;
-					cgui->pushlist(); // h
-					switch (i)
-					{
-						case SINFO_ICON:
-						{
-							cgui->text("", 0xFFFFDD, "server");
-							break;
-						}
-						case SINFO_STATUS:
-						{
-							s_sprintf(text)("%s", serverstatustypes[serverstat(&si)]);
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_HOST:
-						{
-							if (cgui->button(si.name, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_DESC:
-						{
-							s_strncpy(text, si.sdesc, 18);
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_PING:
-						{
-							s_sprintf(text)("%d", si.ping);
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_PLAYERS:
-						{
-							s_sprintf(text)("%d", si.numplayers);
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_MAXCLIENTS:
-						{
-							if (si.attr.length() > 4 && si.attr[4] >= 0)
-								s_sprintf(text)("%d", si.attr[4]);
-							else text[0] = 0;
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_GAME:
-						{
-							if (si.attr.length() > 2)
-								s_sprintf(text)("%s", sv->gamename(si.attr[1], si.attr[2]));
-							else text[0] = 0;
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_MAP:
-						{
-							s_strncpy(text, si.map, 18);
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						case SINFO_TIME:
-						{
-							if (si.attr.length() > 3 && si.attr[3] >= 0)
-								s_sprintf(text)("%d %s", si.attr[3], si.attr[3] == 1 ? "min" : "mins");
-							else text[0] = 0;
-							if (cgui->button(text, 0xFFFFDD, NULL) & G3D_UP) name = si.name;
-							break;
-						}
-						default:
-							break;
-					}
-					cgui->text(" ", 0xFFFFDD, NULL);
-					cgui->poplist(); // v
-				}
+				if(g->buttonf("%s ", serverstatuscolours[serverstat(&si)], "server", ">") & G3D_UP)
+					return true;
+				break;
 			}
-			cgui->poplist(); // h
+			case SINFO_HOST:
+			{
+				if(g->buttonf("%s ", 0xFFFFDD, NULL, si.name) & G3D_UP) return true;
+				break;
+			}
+			case SINFO_DESC:
+			{
+				s_strncpy(text, si.sdesc, 18);
+				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				break;
+			}
+			case SINFO_PING:
+			{
+				s_sprintf(text)("%d", si.ping);
+				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				break;
+			}
+			case SINFO_PLAYERS:
+			{
+				s_sprintf(text)("%d", si.numplayers);
+				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				break;
+			}
+			case SINFO_MAXCLIENTS:
+			{
+				if(si.attr.length() > 4 && si.attr[4] >= 0)
+					s_sprintf(text)("%d", si.attr[4]);
+				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				break;
+			}
+			case SINFO_GAME:
+			{
+				if(si.attr.length() > 2)
+					s_sprintf(text)("%s", sv->gamename(si.attr[1], si.attr[2]));
+				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				break;
+			}
+			case SINFO_MAP:
+			{
+				s_strncpy(text, si.map, 18);
+				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				break;
+			}
+			case SINFO_TIME:
+			{
+				if(si.attr.length() > 3 && si.attr[3] >= 0)
+					s_sprintf(text)("%d %s", si.attr[3], si.attr[3] == 1 ? "min" : "mins");
+				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				break;
+			}
+			default:
+				break;
 		}
+		return false;
+    }
 
-		cgui->poplist(); // v
+	const char *serverinfogui(g3d_gui *g, vector<serverinfo *> &servers)
+	{
+		const char *name = NULL;
+		for(int start = 0; start < servers.length();)
+		{
+			if(start > 0) g->tab();
+			int end = servers.length();
+			g->pushlist();
+			loopi(SINFO_MAX)
+			{
+				if(!serverinfostartcolumn(g, i)) break;
+				for(int j = start; j < end; j++)
+				{
+					if(!i && g->shouldtab()) { end = j; break; }
+					serverinfo &si = *servers[j];
+					if(si.ping >= 0 && si.attr.length() && si.attr[0]==GAMEVERSION)
+					{
+						if(serverinfoentry(g, i, si)) name = si.name;
+					}
+				}
+				serverinfoendcolumn(g, i);
+			}
+			g->poplist();
+			start = end;
+		}
 		return name;
 	}
 } cc;

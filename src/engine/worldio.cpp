@@ -7,6 +7,7 @@ sometype mapexts[] = {
 	{ ".bgz", MAP_BFGZ },
 	{ ".ogz", MAP_OCTA },
 };
+
 string bgzname[MAP_MAX], mcfname, picname, mapname;
 
 void setnames(const char *fname, const char *cname)
@@ -36,7 +37,7 @@ void setnames(const char *fname, const char *cname)
 	if(strpbrk(fn, "/\\")) s_strcpy(mapname, fn);
 	else s_sprintf(mapname)("maps/%s", fn);
 
-	loopi(MAP_MAX) s_sprintf(bgzname[i])("%s%s", mapname, mapexts[i]);
+	loopi(MAP_MAX) s_sprintf(bgzname[i])("%s%s", mapname, mapexts[i].name);
 
 	s_sprintf(mcfname)("%s/%s.cfg", pakname, cfgname);
 	s_sprintf(picname)("%s", mapname);
@@ -233,6 +234,16 @@ cube *loadchildren(gzFile f)
 
 void save_config()
 {
+	#if 0
+	const char *targname = findfile(mcfname, "r");
+	if(fileexists(targname, "r"))
+	{
+		const char *newname = findfile(makefile(mapname, ".cfg", true, false), "w");
+		rename(targname, newname);
+		if(verbose) conoutf("made backup of %s to %s", targname, newname);
+	}
+	#endif
+
 	FILE *h = openfile(mcfname, "w");
 	if(!h) { conoutf("could not write config to %s", mcfname); return; }
 
@@ -334,6 +345,16 @@ void save_world(const char *mname, bool nolms)
 	else s_sprintf(fname)("maps/%s", mname);
 
 	setnames(fname);
+
+	#if 0
+	const char *targname = findfile(bgzname[MAP_BFGZ], "r");
+	if(fileexists(targname, "r"))
+	{
+		const char *newname = findfile(makefile(mapname, mapexts[MAP_BFGZ].name, true, false), "w");
+		rename(targname, newname);
+		if(verbose) conoutf("made backup of %s to %s", targname, newname);
+	}
+	#endif
 
 	gzFile f = opengzfile(bgzname[MAP_BFGZ], "wb9");
 	if(!f) { conoutf("error saving '%s' to '%s': file error", mapname, bgzname[MAP_BFGZ]); return; }

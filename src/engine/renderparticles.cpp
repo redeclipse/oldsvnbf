@@ -789,7 +789,7 @@ static inline particle *newparticle(const vec &o, const vec &d, int fade, int ty
     return parts[type]->addpart(o, d, fade, color, size);
 }
 
-VARP(maxparticledistance, 256, 512, 4096);
+VARP(maxparticledistance, 256, 1024, 4096);
 
 static void splash(int type, int color, int radius, int num, int fade, const vec &p, float size)
 {
