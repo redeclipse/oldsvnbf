@@ -267,15 +267,18 @@ void gl_checkextensions()
 
         ati_texgen_bug = 1;
     }
-    else if(strstr(vendor, "Tungsten") || strstr(vendor, "Mesa") || strstr(vendor, "Microsoft") || strstr(vendor, "S3 Graphics"))
+    else if(strstr(vendor, "NVIDIA"))
     {
-        avoidshaders = 1;
-        floatvtx = 1;
-        maxtexsize = 256;
-        reservevpparams = 20;
-        batchlightmaps = 0;
+        reservevpparams = 10;
+        rtsharefb = 0; // work-around for strange driver stalls involving when using many FBOs
+        extern int filltjoints;
+        if(!strstr(exts, "GL_EXT_gpu_shader4")) filltjoints = 0; // DX9 or less NV cards seem to not cause many sparklies
 
-        if(!hasOQ) waterrefract = 0;
+        nvidia_texgen_bug = 1;
+        if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too
+        extern int fpdepthfx;
+        if(hasTF && (!strstr(renderer, "GeForce") || !checkseries(renderer, 6000, 6600)))
+            fpdepthfx = 1; // FP filtering causes software fallback on 6200?
     }
     else if(strstr(vendor, "Intel"))
     {
@@ -291,18 +294,15 @@ void gl_checkextensions()
         apple_vp_bug = 1;
 #endif
     }
-    else if(strstr(vendor, "NVIDIA"))
+    else if(strstr(vendor, "Tungsten") || strstr(vendor, "Mesa") || strstr(vendor, "Microsoft") || strstr(vendor, "S3 Graphics"))
     {
-        reservevpparams = 10;
-        rtsharefb = 0; // work-around for strange driver stalls involving when using many FBOs
-        extern int filltjoints;
-        if(!strstr(exts, "GL_EXT_gpu_shader4")) filltjoints = 0; // DX9 or less NV cards seem to not cause many sparklies
+        avoidshaders = 1;
+        floatvtx = 1;
+        maxtexsize = 256;
+        reservevpparams = 20;
+        batchlightmaps = 0;
 
-        nvidia_texgen_bug = 1;
-        if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too
-        extern int fpdepthfx;
-        if(hasTF && (!strstr(renderer, "GeForce") || !checkseries(renderer, 6000, 6600)))
-            fpdepthfx = 1; // FP filtering causes software fallback on 6200?
+        if(!hasOQ) waterrefract = 0;
     }
     //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
