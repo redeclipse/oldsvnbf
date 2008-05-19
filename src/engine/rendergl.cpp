@@ -267,7 +267,7 @@ void gl_checkextensions()
 
         ati_texgen_bug = 1;
     }
-    else if(strstr(vendor, "Tungsten"))
+    else if(strstr(vendor, "Tungsten") || strstr(vendor, "Mesa"))
     {
         avoidshaders = 1;
         floatvtx = 1;
