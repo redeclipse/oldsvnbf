@@ -646,7 +646,7 @@ void endmodelquery()
 	modelattached.setsizenodelete(minattached);
 }
 
-VARP(maxmodelradiusdistance, 10, 100, 1000);
+VARP(maxmodelradiusdistance, 10, 200, 1000);
 
 void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
 {
