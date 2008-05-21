@@ -518,25 +518,28 @@ struct physics
 		{
 			vec v(feetpos(pl));
 			int material = lookupmaterial(v);
-			if(material != pl->inmaterial && (material == MAT_WATER || material == MAT_LAVA || pl->inmaterial == MAT_WATER || pl->inmaterial == MAT_LAVA))
+			if(pl->state == CS_ALIVE)
 			{
-				uchar col[3] = { 255, 255, 255 };
-				#define mattrig(f,z,w) \
-				{ \
-					f; \
-					int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
-					part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, z, 100, 200, icol, 0.60f); \
-					if(w>=0) playsound(w, &pl->o, 255, 0, 0, SND_COPY); \
+				if(material != pl->inmaterial && (material == MAT_WATER || material == MAT_LAVA || pl->inmaterial == MAT_WATER || pl->inmaterial == MAT_LAVA))
+				{
+					uchar col[3] = { 255, 255, 255 };
+					#define mattrig(f,z,w) \
+					{ \
+						f; \
+						int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
+						part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, z, 100, 200, icol, 0.60f); \
+						if(w>=0) playsound(w, &pl->o, 255, 0, 0, SND_COPY); \
+					}
+
+					if(material == MAT_WATER || pl->inmaterial == MAT_WATER)
+						mattrig(getwatercolour(col), 17, material != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+
+					if(material == MAT_LAVA || pl->inmaterial == MAT_LAVA)
+						mattrig(getlavacolour(col), 4, material != MAT_LAVA ? -1 : S_FLBURN);
 				}
-
-				if(material == MAT_WATER || pl->inmaterial == MAT_WATER)
-					mattrig(getwatercolour(col), 17, material != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-
-				if(material == MAT_LAVA || pl->inmaterial == MAT_LAVA)
-					mattrig(getlavacolour(col), 4, material != MAT_LAVA ? -1 : S_FLBURN);
+				if(local && pl->type == ENT_PLAYER && (material == MAT_LAVA || material == MAT_DEATH))
+					cl.suicide((fpsent *)pl);
 			}
-			if(local && pl->type == ENT_PLAYER && (material == MAT_LAVA || material == MAT_DEATH))
-				cl.suicide((fpsent *)pl);
 
             pl->inliquid = liquid;
             pl->inmaterial = material;
