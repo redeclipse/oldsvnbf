@@ -977,7 +977,14 @@ void addskyverts(const ivec &o, int size)
                 if(index[k] < 0) goto nextskyface;
                 vc.skyclip = min(vc.skyclip, int(vv.z>>VVEC_FRAC));
             }
-            addtriindexes(vc.skyindices, index);
+            if(vc.skyindices.length() + 6 > USHRT_MAX) break;
+            vc.skyindices.add(index[0]);
+            vc.skyindices.add(index[1]);
+            vc.skyindices.add(index[2]);
+
+            vc.skyindices.add(index[0]);
+            vc.skyindices.add(index[2]);
+            vc.skyindices.add(index[3]);
         nextskyface:;
 		}
 		sf.setsizenodelete(0);
