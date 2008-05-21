@@ -602,7 +602,7 @@ void writecfg()
 	if(!f) return;
 	fprintf(f, "// Automatically written by Blood Frontier\n");
 	cc->writeclientinfo(f);
-	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n\n", ENGVERSION, sv->gamever());
+	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n\n", ENG_VERSION, sv->gamever());
 	enumerate(*idents, ident, id,
         if(!id.persist || id.world) continue;
         switch(id.type)

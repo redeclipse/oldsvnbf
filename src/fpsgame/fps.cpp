@@ -1,3 +1,10 @@
+#include "pch.h"
+#include "engine.h"
+#include "bfa.h"
+#include "game.h"
+#include "fpsserver.h"
+
+#ifndef STANDALONE
 struct GAMECLIENT : igameclient
 {
 	#include "physics.h"
@@ -1169,3 +1176,7 @@ struct GAMECLIENT : igameclient
 		return getmapname();
 	}
 };
+REGISTERGAME(GAMENAME, GAMEID, new GAMECLIENT(), new GAMESERVER());
+#else
+REGISTERGAME(GAMENAME, GAMEID, NULL, new GAMESERVER());
+#endif

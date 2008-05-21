@@ -423,7 +423,7 @@ int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &remot
 }
 #endif
 
-ENetSocket httpgetsend(ENetAddress &remoteaddress, const char *hostname, const char *req, const char *ref, const char *agent, ENetAddress *localaddress = NULL)
+ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const char *req, ENetAddress *localaddress = NULL)
 {
 	if(remoteaddress.host==ENET_HOST_ANY)
 	{
@@ -437,15 +437,15 @@ ENetSocket httpgetsend(ENetAddress &remoteaddress, const char *hostname, const c
 		return ENET_SOCKET_NULL;
 	}
 	ENetBuffer buf;
-	s_sprintfd(httpget)("GET %s HTTP/1.0\nHost: %s\nReferer: %s\nUser-Agent: %s\n\n", req, hostname, ref, agent);
-	buf.data = httpget;
+	s_sprintfd(mget)("%s", req);
+	buf.data = mget;
 	buf.dataLength = strlen((char *)buf.data);
 	conoutf("sending request to %s...", hostname);
 	enet_socket_send(sock, NULL, &buf, 1);
 	return sock;
 }
 
-bool httpgetreceive(ENetSocket sock, ENetBuffer &buf, int timeout = 0)
+bool masterreceive(ENetSocket sock, ENetBuffer &buf, int timeout = 0)
 {
 	if(sock==ENET_SOCKET_NULL) return false;
 	enet_uint32 events = ENET_SOCKET_WAIT_RECEIVE;
@@ -464,27 +464,18 @@ bool httpgetreceive(ENetSocket sock, ENetBuffer &buf, int timeout = 0)
 	return true;
 }
 
-uchar *stripheader(uchar *b)
-{
-	char *s = strstr((char *)b, "\n\r\n");
-	if(!s) s = strstr((char *)b, "\n\n");
-	return s ? (uchar *)s : b;
-}
-
 ENetSocket mssock = ENET_SOCKET_NULL;
 ENetAddress msaddress = { ENET_HOST_ANY, ENET_PORT_ANY };
-ENetAddress masterserver = { ENET_HOST_ANY, 80 };
+ENetAddress masterserver = { ENET_HOST_ANY, MASTER_PORT };
 int lastupdatemaster = 0;
-string masterbase;
-string masterpath;
+string masterserv;
 uchar masterrep[MAXTRANS];
 ENetBuffer masterb;
 
 void updatemasterserver()
 {
-    s_sprintfd(path)("%sregister.do?action=add", masterpath);
 	if(mssock!=ENET_SOCKET_NULL) enet_socket_destroy(mssock);
-	mssock = httpgetsend(masterserver, masterbase, path, sv->servername(), sv->servername(), &msaddress);
+	mssock = mastersend(masterserver, masterserv, "add", &msaddress);
 	masterrep[0] = 0;
 	masterb.data = masterrep;
 	masterb.dataLength = MAXTRANS-1;
@@ -492,10 +483,10 @@ void updatemasterserver()
 
 void checkmasterreply()
 {
-	if(mssock!=ENET_SOCKET_NULL && !httpgetreceive(mssock, masterb))
+	if(mssock!=ENET_SOCKET_NULL && !masterreceive(mssock, masterb))
 	{
 		mssock = ENET_SOCKET_NULL;
-		conoutf("masterserver reply: %s", stripheader(masterrep));
+		conoutf("masterserver reply: %s", masterrep);
 	}
 }
 
@@ -504,14 +495,13 @@ void checkmasterreply()
 uchar *retrieveservers(uchar *buf, int buflen)
 {
 	buf[0] = '\0';
-    s_sprintfd(path)("%sretrieve.do?item=list", masterpath);
 	ENetAddress address = masterserver;
-	ENetSocket sock = httpgetsend(address, masterbase, path, sv->servername(), sv->servername());
+	ENetSocket sock = mastersend(address, masterserv, "list");
 	if(sock==ENET_SOCKET_NULL) return buf;
 	/* only cache this if connection succeeds */
 	masterserver = address;
 
-	s_sprintfd(text)("retrieving servers from %s... (esc to abort)", masterbase);
+	s_sprintfd(text)("retrieving servers from %s... (esc to abort)", masterserv);
 	show_out_of_renderloop_progress(0, text);
 
 	ENetBuffer eb;
@@ -519,7 +509,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 	eb.dataLength = buflen-1;
 
 	int starttime = SDL_GetTicks(), timeout = 0;
-	while(httpgetreceive(sock, eb, 250))
+	while(masterreceive(sock, eb, 250))
 	{
 		timeout = SDL_GetTicks() - starttime;
         show_out_of_renderloop_progress(min(float(timeout)/RETRIEVELIMIT, 1.0f), text);
@@ -532,7 +522,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 		}
 	}
 
-	return stripheader(buf);
+	return buf;
 }
 #endif
 
@@ -555,9 +545,9 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 
 	if (pubserv)
 	{
-		if (*masterpath) checkmasterreply();
+		if (*masterserv) checkmasterreply();
 
-		if (totalmillis-lastupdatemaster > 60*60*1000 && *masterpath)		// send alive signal to masterserver every hour of uptime
+		if (totalmillis-lastupdatemaster > 60*60*1000 && *masterserv)		// send alive signal to masterserver every hour of uptime
 		{
 			updatemasterserver();
 			lastupdatemaster = totalmillis;
@@ -647,10 +637,7 @@ void initruntime()
 		conoutf("init: server");
 		pubserv = servertype >= 2 ? true : false;
 		if (!master) master = sv->getdefaultmaster();
-  		const char *mid = strstr(master, "/");
-		if(!mid) mid = master;
-		s_strcpy(masterpath, mid);
-		s_strncpy(masterbase, master, mid-master+1);
+		s_strcpy(masterserv, master);
 
 		ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
 		if (*ip)
@@ -699,13 +686,13 @@ void initruntime()
 			atexit(enet_deinitialize);
 			atexit(cleanupserver);
 			enet_time_set(0);
-			if(pubserv && *masterpath) updatemasterserver();
+			if(pubserv && *masterserv) updatemasterserver();
 			for(;;) serverslice(5);
 			return;
 		}
 		else
 		{
-			if (pubserv && *masterpath)
+			if (pubserv && *masterserv)
 			{
 				updatemasterserver();
 			}

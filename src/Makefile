@@ -40,16 +40,23 @@ CLIENT_OBJS= \
 	engine/water.o \
 	engine/world.o \
 	engine/worldio.o \
-	fpsgame/bfa.o 
+	fpsgame/fps.o 
 
 SINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Iinclude
-SCXXFLAGS= -Wall $(CXXOPTFLAGS) $(SINCLUDES)
+SCXXFLAGS= -Wall -DSTANDALONE $(CXXOPTFLAGS) $(SINCLUDES)
 
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
 	shared/tools-standalone.o \
 	engine/server-standalone.o \
-	fpsgame/bfa-standalone.o \
+	fpsgame/fps-standalone.o \
+
+DINCLUDES= -Ishared -Ienet/include -Iinclude
+DCXXFLAGS= -Wall -fsigned-char -DDAEMON $(CXXOPTFLAGS) $(INCLUDES)
+
+DAEMON_LIBS=-Lenet -lenet
+DAEMON_OBJS= \
+	daemon/daemon.o
 
 default: all
 
@@ -60,17 +67,17 @@ libenet: enet/Makefile
 	$(MAKE)	-C enet/ all
 
 clean: enet/Makefile
-	@rm -fv $(SERVER_OBJS) $(CLIENT_OBJS) bloodfrontier_server bloodfrontier_client
+	@rm -fv $(SERVER_OBJS) $(CLIENT_OBJS) $(DAEMON_OBJS) bloodfrontier_server bloodfrontier_client bloodfrontier_daemon
 	$(MAKE)	-C enet/ clean
 
 shared/tools-standalone.o:
-	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o shared/tools-standalone.o shared/tools.cpp
+	$(CXX) $(SCXXFLAGS) -c -o shared/tools-standalone.o shared/tools.cpp
 
 engine/server-standalone.o:
-	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o engine/server-standalone.o engine/server.cpp
+	$(CXX) $(SCXXFLAGS) -c -o engine/server-standalone.o engine/server.cpp
 
-fpsgame/bfa-standalone.o:
-	$(CXX) $(SCXXFLAGS) -DSTANDALONE	-c -o fpsgame/bfa-standalone.o fpsgame/bfa.cpp
+fpsgame/fps-standalone.o:
+	$(CXX) $(SCXXFLAGS) -c -o fpsgame/fps-standalone.o fpsgame/fps.cpp
 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)
@@ -80,6 +87,10 @@ server:	libenet $(SERVER_OBJS)
 	$(CXX) $(SCXXFLAGS) -o bloodfrontier_server $(SERVER_OBJS) $(SERVER_LIBS)
 	strip bloodfrontier_server
 
+daemon:	libenet $(DAEMON_OBJS)
+	$(CXX) $(SCXXFLAGS) -o bloodfrontier_daemon $(DAEMON_OBJS) $(DAEMON_LIBS)
+	strip bloodfrontier_daemon
+
 install-client: client
 	cp -v bloodfrontier_client ../bin/bloodfrontier_client
 	chmod +x ../bin/bloodfrontier_client ../bloodfrontier.sh
@@ -87,6 +98,10 @@ install-client: client
 install-server: server
 	cp -v bloodfrontier_server ../bin/bloodfrontier_server
 	chmod +x ../bin/bloodfrontier_server
+
+install-daemon: daemon
+	cp -v bloodfrontier_daemon ../bin/bloodfrontier_daemon
+	chmod +x ../bin/bloodfrontier_daemon
 
 install: install-client install-server
 

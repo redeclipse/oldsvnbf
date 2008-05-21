@@ -7,7 +7,7 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
-		<Option active_target="2"/>
+		<Option active_target="4"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -42,6 +42,7 @@
 					<Add option="-fomit-frame-pointer"/>
 					<Add option="-ffast-math"/>
 					<Add option="-fno-strict-aliasing"/>
+					<Add option="-DBFAGAME"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
 					<Add directory="fpsgame"/>
@@ -82,6 +83,7 @@
 					<Add option="-Wall"/>
 					<Add option="-g"/>
 					<Add option="-fsigned-char"/>
+					<Add option="-DBFAGAME"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
 					<Add directory="fpsgame"/>
@@ -136,13 +138,51 @@
 					<Add directory="lib\mingw"/>
 				</Linker>
 			</Target>
+			<Target title="daemon">
+				<Option output="..\bin\bloodfrontier_daemon.exe"/>
+				<Option working_dir="..\"/>
+				<Option object_output=".objs\daemon"/>
+				<Option deps_output=".deps"/>
+				<Option type="1"/>
+				<Option compiler="0"/>
+				<Option includeInTargetAll="0"/>
+				<Option projectLinkerOptionsRelation="1"/>
+				<Option projectIncludeDirsRelation="1"/>
+				<Option projectResourceIncludeDirsRelation="1"/>
+				<Option projectLibDirsRelation="1"/>
+				<Compiler>
+					<Add option="-O3"/>
+					<Add option="-Wall"/>
+					<Add option="-fsigned-char"/>
+					<Add option="-fomit-frame-pointer"/>
+					<Add option="-fno-strict-aliasing"/>
+					<Add option="-DDAEMON"/>
+					<Add directory="shared"/>
+					<Add directory="engine"/>
+					<Add directory="include"/>
+					<Add directory="enet\include"/>
+					<Add directory="daemon"/>
+					<Add directory="fpsgame"/>
+				</Compiler>
+				<Linker>
+					<Add option="-s"/>
+					<Add library="ws2_32"/>
+					<Add library="winmm"/>
+					<Add directory="lib\mingw"/>
+				</Linker>
+			</Target>
 		</Build>
+		<Unit filename="daemon\daemon.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="daemon"/>
+		</Unit>
 		<Unit filename="enet\callbacks.c">
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="server"/>
 			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="enet\host.c">
 			<Option compilerVar="CC"/>
@@ -150,6 +190,7 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="enet\include\enet\callbacks.h">
 			<Option compilerVar=""/>
@@ -228,6 +269,7 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="enet\packet.c">
 			<Option compilerVar="CC"/>
@@ -235,6 +277,7 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="enet\peer.c">
 			<Option compilerVar="CC"/>
@@ -242,6 +285,7 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="enet\protocol.c">
 			<Option compilerVar="CC"/>
@@ -249,6 +293,7 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="enet\unix.c">
 			<Option compilerVar="CC"/>
@@ -256,6 +301,7 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="enet\win32.c">
 			<Option compilerVar="CC"/>
@@ -263,6 +309,7 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="engine\3dgui.cpp">
 			<Option compilerVar="CPP"/>
@@ -616,12 +663,13 @@
 			<Option target="debug"/>
 			<Option target="data"/>
 		</Unit>
-		<Unit filename="fpsgame\bfa.cpp">
-			<Option compilerVar="CPP"/>
+		<Unit filename="fpsgame\bfa.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
 			<Option target="client"/>
-			<Option target="debug"/>
 			<Option target="server"/>
-			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="fpsgame\bot.h">
 			<Option compilerVar=""/>
@@ -672,8 +720,6 @@
 		</Unit>
 		<Unit filename="fpsgame\fps.cpp">
 			<Option compilerVar="CPP"/>
-			<Option compile="0"/>
-			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="server"/>

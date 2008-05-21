@@ -1,9 +1,5 @@
 // the interface the game uses to access the engine
 
-#define ENGVERSION		62					// engine version, integer is divided by 100.f
-#define ENGNAME			"Blood Frontier"	// engine namn
-#define ENGRELEASE		"Alpha 2"			// engine release name
-
 #ifdef __GNUC__
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
 #else
