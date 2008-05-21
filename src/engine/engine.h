@@ -1,15 +1,17 @@
-#ifdef STANDALONE
-#include "minimal.h"
-#else // STANDALONE
 #include "cube.h"
 #include "iengine.h"
 #include "igame.h"
 
-extern igameclient	 *cl;
-extern igameserver	 *sv;
-extern iclientcom	  *cc;
+extern igameclient *cl;
+extern igameserver *sv;
+extern iclientcom *cc;
 extern icliententities *et;
-
+#ifdef STANDALONE
+extern int curtime, lastmillis, totalmillis;
+extern void fatal(const char *s, ...);
+extern void conoutf(const char *s, ...);
+extern void console(const char *s, int n, ...);
+#else // STANDALONE
 #include "world.h"
 #include "octa.h"
 #include "lightmap.h"
