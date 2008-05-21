@@ -68,7 +68,7 @@ struct igameclient
     virtual void adddynlights() {}
     virtual void particletrack(physent *owner, vec &o, vec &d) {}
 
-	virtual void mousemove(int dx, int dy) = 0;
+	virtual bool mousemove(int dx, int dy, int x, int y, int w, int h) = 0;
 	virtual void recomputecamera(int w, int h) = 0;
 
 	virtual bool gamethirdperson() { return false; } ;

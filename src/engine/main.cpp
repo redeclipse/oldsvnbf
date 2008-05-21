@@ -319,6 +319,7 @@ void keyrepeat(bool on)
 }
 
 int ignoremouse = 5;
+bool activewindow = true;
 
 vector<SDL_Event> events;
 
@@ -373,19 +374,25 @@ void checkinput()
 
 			case SDL_ACTIVEEVENT:
 				if(event.active.state & SDL_APPINPUTFOCUS)
+				{
 					setvar("grabmouse", event.active.gain ? 1 : 0, true);
+					activewindow = event.active.gain ? true : false;
+				}
 				break;
 
 			case SDL_MOUSEMOTION:
 				if (ignoremouse) { ignoremouse--; break; }
-				if ((screen->flags&SDL_FULLSCREEN) || grabmouse)
+				if ((screen->flags&SDL_FULLSCREEN) || grabmouse || activewindow)
 				{
 #ifdef __APPLE__
-					if (event.motion.y == 0) break;  //let mac users drag windows via the title bar
+					if(event.motion.y == 0) break;  //let mac users drag windows via the title bar
 #endif
-					if (event.motion.x == screen->w/2 && event.motion.y == screen->h/2) break;
-					cl->mousemove(event.motion.xrel, event.motion.yrel);
-					SDL_WarpMouse(screen->w/2, screen->h/2);
+					if(cl->mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h)
+						&& ((screen->flags&SDL_FULLSCREEN) || grabmouse))
+					{
+						SDL_WarpMouse(screen->w/2, screen->h/2);
+						ignoremouse++;
+					}
 				}
 				break;
 
@@ -514,7 +521,7 @@ VARP(verbose, 0, 0, 4); // be more or less expressive to console
 
 void _grabmouse(int n)
 {
-	if (screen->flags&SDL_FULLSCREEN)
+	if(!(screen->flags&SDL_FULLSCREEN))
 		SDL_WM_GrabInput(n ? SDL_GRAB_ON : SDL_GRAB_OFF);
 
 	keyrepeat(n ? false : true);
