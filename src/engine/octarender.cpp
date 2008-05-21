@@ -527,28 +527,6 @@ int recalcprogress = 0;
 
 vector<tjoint> tjoints;
 
-int addtriindexes(usvector &v, int index[4], int mask = 3)
-{
-	int tris = 0;
-    if(mask&1 && index[0]!=index[1] && index[0]!=index[2] && index[1]!=index[2])
-	{
-        if(v.length() + 3 > USHRT_MAX) return tris;
-		tris++;
-		v.add(index[0]);
-		v.add(index[1]);
-		v.add(index[2]);
-	}
-    if(mask&2 && index[0]!=index[2] && index[0]!=index[3] && index[2]!=index[3])
-	{
-        if(v.length() + 3 > USHRT_MAX) return tris;
-		tris++;
-		v.add(index[0]);
-		v.add(index[2]);
-		v.add(index[3]);
-	}
-	return tris;
-}
-
 vvec shadowmapmin, shadowmapmax;
 
 int calcshadowmask(vvec *vv)
@@ -638,6 +616,12 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
         if(index[k] < 0) return;
     }
 
+    if(texture == DEFAULT_SKY)
+    {
+        loopk(4) vc.skyclip = min(vc.skyclip, int(vv[k].z>>VVEC_FRAC));
+        vc.skyfaces |= 0x3F&~(1<<orient);
+    }
+
     int lmid = LMID_AMBIENT;
     if(surface)
     {
@@ -647,64 +631,70 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
 
     int dim = dimension(orient);
     sortkey key(texture, lmid, envmap);
-    if(texture == DEFAULT_SKY)
+    loopi(2) if(index[0]!=index[i+1] && index[i+1]!=index[i+2] && index[i+2]!=index[0])
     {
-        explicitsky += addtriindexes(vc.explicitskyindices, index);
-        loopk(4) vc.skyclip = min(vc.skyclip, int(vv[k].z>>VVEC_FRAC));
-        vc.skyfaces |= 0x3F&~(1<<orient);
-    }
-    else
-    {
-        sortval &val = vc.indices[key];
-        vc.curtris += addtriindexes(val.dims[2*dim], index, shadowmask^3);
-        if(shadowmask) vc.curtris += addtriindexes(val.dims[2*dim+1], index, shadowmask);
-    }
+        usvector &idxs = texture==DEFAULT_SKY ? vc.explicitskyindices : vc.indices[key].dims[2*dim + ((shadowmask>>i)&1)];
+        int left = index[2*i], mid = index[2*i + 1], right = index[(2*i + 2)%4];
+        loopj(2)
+        {
+            int e1 = 2*i + j, edge = orient*4 + e1;
+            if(tj < 0 || tjoints[tj].edge > edge) continue;
+            int e2 = (e1 + 1)%4;
+            texcoords &tc1 = tc[e1], &tc2 = tc[e2];
+            bvec n1, n2;
+            if(renderpath!=R_FIXEDFUNCTION && normals)
+            {
+                n1 = normals->normals[e1];
+                n2 = normals->normals[e2];
+            }
+            else n1 = n2 = bvec(128, 128, 128);
+            const vvec &vv1 = vv[e1], &vv2 = vv[e2];
+            ivec d;
+            loopk(3) d[k] = vv1[k] - vv2[k];
+            int axis = abs(d.x) > abs(d.y) ? (abs(d.x) > abs(d.z) ? 0 : 2) : (abs(d.y) > abs(d.z) ? 1 : 2);
+            if(d[axis] < 0) d.neg();
+            reduceslope(d);
+            ivec o;
+            int offset1 = vv1[axis] / d[axis], offset2 = vv2[axis] / d[axis];
+            loopk(3) o[k] = vv1[k] - offset1*d[k];
+            float doffset = 1.0f / (offset2 - offset1);
 
-    while(tj >= 0 && tjoints[tj].edge/4 == orient)
-    {
-        int e1 = tjoints[tj].edge%4, e2 = (e1+1)%4;
-        texcoords &tc1 = tc[e1], &tc2 = tc[e2];
-        bvec n1, n2;
-        if(renderpath!=R_FIXEDFUNCTION && normals)
-        {
-            n1 = normals->normals[e1];
-            n2 = normals->normals[e2];
+            if(j)
+            {
+                int tmp = right;
+                right = left;
+                left = mid;
+                mid = tmp;
+            }
+
+            while(tj >= 0)
+            {
+                tjoint &t = tjoints[tj];
+                if(t.edge != edge) break;
+                vvec vvt;
+                loopk(3) vvt[k] = o[k] + t.offset*d[k];
+                float k = (t.offset - offset1) * doffset;
+                short ut = short(tc1.u + (tc2.u-tc1.u)*k),
+                      vt = short(tc1.v + (tc2.v-tc1.v)*k);
+                bvec nt;
+                loopk(3) nt[k] = uchar(n1[k] + (n2[k] - n1[k])*k);
+                int nextindex = vc.addvert(vvt, ut, vt, nt);
+                if(nextindex < 0) return;
+                if(idxs.length() + 3 > USHRT_MAX) return;
+                idxs.add(right);
+                idxs.add(left);
+                idxs.add(nextindex);
+                if(texture==DEFAULT_SKY) explicitsky++; else vc.curtris++;
+                tj = t.next;
+                left = nextindex;
+            }
         }
-        else n1 = n2 = bvec(128, 128, 128);
-        const vvec &vv1 = vv[e1], &vv2 = vv[e2];
-        ivec d;
-        loopk(3) d[k] = vv1[k] - vv2[k];
-        int axis = abs(d.x) > abs(d.y) ? (abs(d.x) > abs(d.z) ? 0 : 2) : (abs(d.y) > abs(d.z) ? 1 : 2);
-        if(d[axis] < 0) d.neg();
-        reduceslope(d);
-        ivec o;
-        int offset1 = vv1[axis] / d[axis], offset2 = vv2[axis] / d[axis];
-        loopk(3) o[k] = vv1[k] - offset1*d[k];
-        int lastindex = index[e1];
-        float doffset = 1.0f / (offset2 - offset1);
-        while(tj >= 0)
-        {
-            tjoint &t = tjoints[tj];
-            if(t.edge != orient*4 + e1) break;
-            vvec vvt;
-            loopk(3) vvt[k] = o[k] + t.offset*d[k];
-            float k = (t.offset - offset1) * doffset;
-            short ut = short(tc1.u + (tc2.u-tc1.u)*k),
-                  vt = short(tc1.v + (tc2.v-tc1.v)*k);
-            bvec nt;
-            loopk(3) nt[k] = uchar(n1[k] + (n2[k] - n1[k])*k);
-            int nextindex = vc.addvert(vvt, ut, vt, nt);
-            if(nextindex < 0) return;
-            usvector &idxs = texture==DEFAULT_SKY ? vc.explicitskyindices : vc.indices[key].dims[2*dim + (e1<=1 ? shadowmask&1 : shadowmask>>1)];
-            if(idxs.length() + 3 > USHRT_MAX) return;
-            idxs.add(index[e2]);
-            idxs.add(lastindex);
-            idxs.add(nextindex);
-            if(texture==DEFAULT_SKY) explicitsky++;
-            else vc.curtris++;
-            tj = t.next;
-            lastindex = nextindex;
-        }
+
+        if(idxs.length() + 3 > USHRT_MAX) return;
+        idxs.add(right);
+        idxs.add(left);
+        idxs.add(mid);
+        if(texture==DEFAULT_SKY) explicitsky++; else vc.curtris++;
     }
 }
 
