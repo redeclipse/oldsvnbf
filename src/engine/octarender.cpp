@@ -731,7 +731,7 @@ struct cubeedge
 };
 
 vector<cubeedge> cubeedges;
-hashtable<edgegroup, int> edgegroups;
+hashtable<edgegroup, int> edgegroups(1<<13);
 
 void gencubeedges(cube &c, int x, int y, int z, int size)
 {
