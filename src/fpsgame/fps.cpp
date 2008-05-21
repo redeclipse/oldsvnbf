@@ -33,7 +33,7 @@ struct GAMECLIENT : igameclient
 	};
 
 	physent gamecamera;
-	int lastgesture;
+	int lastmouse;
 
 	vector<fpsent *> shplayers;
 	vector<teamscore> teamscores;
@@ -47,9 +47,9 @@ struct GAMECLIENT : igameclient
 	IVARP(camerashift, 0, 8, 100);
 	IVARP(cameraheight, 0, 20, 90);
 
-	IVARP(gestures, 0, 0, 1);
-	IVARP(gesturedeadzone, 0, 10, 100);
-	IVARP(gesturepanspeed, 0, 30, 1000);
+	IVARP(mousetype, 0, 0, 2);
+	IVARP(mousedeadzone, 0, 10, 100);
+	IVARP(mousepanspeed, 0, 30, 1000);
 
 	IVARP(mousesensitivity, 0, 10, 100);
 	IVARP(yawsensitivity, 0, 10, 1000);
@@ -75,7 +75,7 @@ struct GAMECLIENT : igameclient
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
-			swaymillis(0), swaydir(0, 0, 0), lastgesture(0),
+			swaymillis(0), swaydir(0, 0, 0), lastmouse(0),
 			player1(spawnstate(new fpsent()))
 	{
         CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1); });
@@ -208,32 +208,32 @@ struct GAMECLIENT : igameclient
 		pj.reset();
 	}
 
-	void updategesture()
+	void updatemouse()
 	{
-		if(gestures() && player1->state != CS_DEAD)
+		if(mousetype() && player1->state != CS_DEAD)
 		{
-			if(lastgesture)
+			if(lastmouse)
 			{
-				int frame = lastgesture-lastmillis;
-				float deadzone = (gesturedeadzone()/100.f);
+				int frame = lastmouse-lastmillis;
+				float deadzone = (mousedeadzone()/100.f);
 				float cx = (cursorx-0.5f), cy = (0.5f-cursory);
 
 				if(cx > deadzone || cx < -deadzone)
-					player1->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*gesturepanspeed()/100.f;
+					player1->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
 
 				if(cy > deadzone || cy < -deadzone)
-					player1->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*gesturepanspeed()/100.f;
+					player1->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
 
 				fixrange(player1->yaw, player1->pitch);
 			}
 			else cursorx = cursory = 0.5f;
 
-			lastgesture = lastmillis;
+			lastmouse = lastmillis;
 		}
 		else
 		{
 			cursorx = cursory = 0.5f;
-			lastgesture = 0;
+			lastmouse = 0;
 		}
 	}
 
@@ -259,7 +259,7 @@ struct GAMECLIENT : igameclient
 			adjustscaled(int, quakewobble, 100.f);
 			adjustscaled(int, damageresidue, 100.f);
 
-			updategesture();
+			updatemouse();
 
 			if(player1->state == CS_DEAD)
 			{
@@ -756,7 +756,7 @@ struct GAMECLIENT : igameclient
             case 2: return "textures/crosshair";
             case 3: return "textures/crosshair_team";
             case 4: return "textures/crosshair_hit";
-            case 5: return "textures/gesturedot";
+            case 5: return "textures/relativecursor";
             default: return "";
         }
     }
@@ -790,7 +790,7 @@ struct GAMECLIENT : igameclient
 		if(index >= 0)
 			drawcrosshair(w, h, index, !index ? cursorx : 0.5f, !index ? cursory : 0.5f, r, g, b);
 
-		if(index >= 1 && gestures())
+		if(index >= 1 && mousetype())
 			drawcrosshair(w, h, 5, cursorx, cursory);
 	}
 
@@ -1020,18 +1020,32 @@ struct GAMECLIENT : igameclient
 		aspect = w/float(h);
 	}
 
-	void mousemove(int dx, int dy)
+	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
-		if(!menuactive() && (!gestures() || (player1->state != CS_ALIVE && player1->state != CS_DEAD)))
+		if(menuactive() || mousetype())
+		{
+			if(mousetype() < 2)
+			{
+				cursorx = max(0.0f, min(1.0f, cursorx+(float(dx*mousesensitivity())/10000.f)));
+				cursory = max(0.0f, min(1.0f, cursory+(float(dy*(!menuactive() && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f)));
+				return true;
+			}
+			else
+			{
+				cursorx = max(0.0f, min(1.0f, float(x)/float(w)));
+				cursory = max(0.0f, min(1.0f, float(y)/float(h)));
+				return false;
+			}
+		}
+		else
 		{
 			player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
 			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1.f : 1.f);
 			fixrange(player1->yaw, player1->pitch);
 			cursorx = cursory = 0.5f;
-			return;
+			return true;
 		}
-		cursorx = max(0.0f, min(1.0f, cursorx+(float(dx*mousesensitivity())/10000.f)));
-		cursory = max(0.0f, min(1.0f, cursory+(float(dy*(!menuactive() && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f)));
+		return false;
 	}
 
 	void recomputecamera(int w, int h)
