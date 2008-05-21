@@ -106,10 +106,7 @@ void setupserver(int port, const char *ip = NULL)
 
     enet_time_set(0);
 
-    time_t t = time(NULL);
-    char *ct = ctime(&t);
-    if(strchr(ct, '\n')) *strchr(ct, '\n') = '\0';
-    printf("*** Starting masterserver on %s %d at %s ***\n", ip ? ip : "localhost", port, ct);
+    printf("starting masterserver on %s %d\n", ip ? ip : "localhost", port);
 }
 
 void genserverlist()
@@ -131,7 +128,7 @@ void genserverlist()
     updateserverlist = false;
 }
 
-serverresponse registerresponse("registered server\n\n"), renewresponse("renewed server registration\n\n");
+serverresponse registerresponse("registered server\n"), renewresponse("renewed server registration\n");
 
 void addgameserver(client &c)
 {
@@ -196,7 +193,7 @@ bool checkclientinput(client &c)
     else if(strstr(c.input, "add"))
     {
         addgameserver(c);
-        return false;
+        return true;
     }
     else if(strstr(c.input, "list"))
     {
