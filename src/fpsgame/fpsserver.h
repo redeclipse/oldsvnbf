@@ -2141,7 +2141,7 @@ struct GAMESERVER : igameserver
 	}
 	const char *getdefaultmaster()
 	{
-		return "bloodfrontier.com/";
+		return "bloodfrontier.com";
 	}
 
 	void serverinforeply(ucharbuf &p)

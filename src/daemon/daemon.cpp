@@ -131,7 +131,7 @@ void genserverlist()
     updateserverlist = false;
 }
 
-serverresponse registerresponse("registered server\n"), renewresponse("renewed server registration\n");
+serverresponse registerresponse("registered server\n\n"), renewresponse("renewed server registration\n\n");
 
 void addgameserver(client &c)
 {
