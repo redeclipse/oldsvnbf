@@ -14,7 +14,7 @@ struct icliententities
 	virtual int findtype(char *type) = 0;
 	virtual bool maylink(int type, int ver = 0) = 0;
 	virtual bool canlink(int index, int node, bool msg = false) = 0;
-	virtual bool linkents(int index, int node, bool add, bool local) = 0;
+	virtual bool linkents(int index, int node, bool add, bool local, bool toggle) = 0;
     virtual extentity *newent() = 0;
     virtual vector<extentity *> &getents() = 0;
     virtual void drawparticles() = 0;

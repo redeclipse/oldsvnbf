@@ -51,23 +51,21 @@ struct botclient
 	bool doreset(fpsent *d)
 	{
 		d->stopmoving();
-		d->bot->setstate(BS_WAIT, 0, 100);
+		d->bot->removestate();
 		return true;
 	}
 
 	bool doupdate(fpsent *d)
 	{
-		int node = cl.player1->lastnode;
-		if(cl.et.ents.inrange(node))
+		fpsent *closest = cl.player1->state == CS_ALIVE ? cl.player1 : NULL;
+		loopv(cl.players)
+			if(cl.players[i]->state == CS_ALIVE &&
+				(!closest || cl.players[i]->o.dist(d->o) < closest->o.dist(d->o)))
+					closest = cl.players[i];
+		if(closest)
 		{
-			vector<int> avoid;
-			avoid.setsize(0);
-			cl.et.linkroute(d->lastnode, node, d->bot->route, avoid);
-			if(d->bot->route.inrange(1))
-			{
-				d->bot->setstate(BS_MOVE, d->bot->route[1]);
-				return true;
-			}
+			d->bot->setstate(BS_PURSUE, closest->clientnum);
+			return true;
 		}
 		return false;
 	}
@@ -85,8 +83,30 @@ struct botclient
 			vectoyawpitch(dir, d->yaw, d->pitch);
 			d->aimyaw = d->yaw;
 			d->aimpitch = d->pitch;
-			d->bot->setstate(BS_UPDATE); // move and update bounce between each other alot
+			d->bot->removestate(); // bounce back to the parent
 			return true;
+		}
+		return false;
+	}
+
+	bool dopursue(fpsent *d, int goal)
+	{
+		fpsent *enemy = goal == cl.player1->clientnum ? cl.player1 : cl.getclient(goal);
+
+		if(enemy && enemy->state == CS_ALIVE)
+		{
+			int node = enemy->lastnode;
+			if(cl.et.ents.inrange(node))
+			{
+				vector<int> avoid;
+				avoid.setsize(0);
+				cl.et.linkroute(d->lastnode, node, d->bot->route, avoid);
+				if(d->bot->route.inrange(1))
+				{
+					d->bot->setstate(BS_MOVE, d->bot->route[1]);
+					return true;
+				}
+			}
 		}
 		return false;
 	}
@@ -129,6 +149,9 @@ struct botclient
 				}
 				case BS_DEFEND:
 				case BS_PURSUE:
+					if(d->state == CS_ALIVE && dopursue(d, bs.goal)) break;
+					doreset(d);
+					break;
 				case BS_ATTACK:
 				case BS_INTEREST:
 				case BS_MAX:
