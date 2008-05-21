@@ -550,7 +550,7 @@ bool bboccluded(const ivec &bo, const ivec &br)
 }
 
 VAR(outline, 0, 0, 0xFFFFFF);
-VAR(dtoutline, 0, 0, 1);
+VAR(dtoutline, 0, 1, 1);
 
 void renderoutline()
 {
@@ -563,11 +563,18 @@ void renderoutline()
 
 	glPushMatrix();
 
+    extern int filltjoints;
+    if(filltjoints) 
+    {
+        glPolygonOffset(0, polygonoffsetunits);
+        glLineWidth(3);
+    }
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glEnable(GL_POLYGON_OFFSET_LINE);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glColor3ub((outline>>16)&0xFF, (outline>>8)&0xFF, outline&0xFF);
 
-	if(dtoutline) glDisable(GL_DEPTH_TEST);
+	if(!dtoutline) glDisable(GL_DEPTH_TEST);
 
 	resetorigin();
     vtxarray *prev = NULL;
@@ -592,10 +599,16 @@ void renderoutline()
         prev = va;
     }
 
-	if(dtoutline) glEnable(GL_DEPTH_TEST);
+	if(!dtoutline) glEnable(GL_DEPTH_TEST);
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_POLYGON_OFFSET_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    if(filltjoints)
+    {
+        glPolygonOffset(polygonoffsetfactor, polygonoffsetunits);
+        glLineWidth(1);
+    }
 
 	glPopMatrix();
 
