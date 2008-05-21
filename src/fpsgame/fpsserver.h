@@ -1777,7 +1777,7 @@ struct GAMESERVER : igameserver
 		sendf(-1, 1, "ri8i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, damage, ts.health, ts.lastpain, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
 		if(ts.health<=0)
 		{
-            int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || isteam(target->team, actor->team) ? -1 : 1);
+            int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && isteam(target->team, actor->team)) ? -1 : 1);
             actor->state.frags += fragvalue;
             if(fragvalue > 0)
 			{

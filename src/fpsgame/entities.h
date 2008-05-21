@@ -380,7 +380,7 @@ struct entities : icliententities
 		return false;
 	}
 
-	bool linkents(int index, int node, bool add, bool local)
+	bool linkents(int index, int node, bool add, bool local, bool toggle)
 	{
 		if(ents.inrange(index) && ents.inrange(node) && canlink(index, node, local))
 		{
@@ -388,42 +388,53 @@ struct entities : icliententities
 			fpsentity &f = (fpsentity &)*ents[node];
 			int g;
 
-			// works differently for the local client, using toggles instead of absolute values
-
-			if((g = e.links.find(node)) >= 0 && (local || !add))
+			if((toggle || !add) && (g = e.links.find(node)) >= 0)
 			{
 				int h;
-				if((h = f.links.find(index)) >= 0 && (local || !add))
+				if(!add || (toggle && (!canlink(node, index) || (h = f.links.find(index)) >= 0)))
 				{
 					e.links.remove(g);
-					if(local && multiplayer(false) && m_edit(cl.gamemode))
+					if(local && m_edit(cl.gamemode))
 						cl.cc.addmsg(SV_EDITLINK, "ri3", 0, index, node);
+
+					if(verbose >= 3)
+						conoutf("entity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 					return true;
 				}
-				else if(local)
+				else if(toggle && canlink(node, index))
 				{
 					f.links.add(index);
-					if(local && multiplayer(false) && m_edit(cl.gamemode))
+					if(local && m_edit(cl.gamemode))
 						cl.cc.addmsg(SV_EDITLINK, "ri3", 1, node, index);
+
+					if(verbose >= 3)
+						conoutf("entity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 					return true;
 				}
 			}
-			else if((g = f.links.find(index)) >= 0 && local)
+			else if(toggle && canlink(node, index) && (g = f.links.find(index)) >= 0)
 			{
 				f.links.remove(g);
-				if(local && multiplayer(false) && m_edit(cl.gamemode))
+				if(local && m_edit(cl.gamemode))
 					cl.cc.addmsg(SV_EDITLINK, "ri3", 0, node, index);
+
+				if(verbose >= 3)
+					conoutf("entity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 				return true;
 			}
-			else if(local || add)
+			else if(toggle || add)
 			{
 				e.links.add(node);
-				if(local && multiplayer(false) && m_edit(cl.gamemode))
+				if(local && m_edit(cl.gamemode))
 					cl.cc.addmsg(SV_EDITLINK, "ri3", 1, index, node);
 
+				if(verbose >= 3)
+					conoutf("entity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 				return true;
 			}
 		}
+		if(verbose >= 3)
+			conoutf("entity %s (%d) and %s (%d) failed linking", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 		return false;
 	}
 
@@ -619,14 +630,15 @@ struct entities : icliententities
 					d->lastnode = ents.length();
 					newentity(v, WAYPOINT, enttype[WAYPOINT].radius, 0, 0, 0);
 				}
+				if(!ents.inrange(d->lastnode)) d->lastnode = oldnode; // last resort?
 
 				if(d->lastnode != oldnode && ents.inrange(oldnode) && ents.inrange(d->lastnode))
 				{
 					fpsentity &e = (fpsentity &)*ents[oldnode], &f = (fpsentity &)*ents[d->lastnode];
 					if(e.links.find(d->lastnode) < 0)
-						linkents(oldnode, d->lastnode, true, true);
-					if(f.links.find(oldnode) < 0)
-						linkents(d->lastnode, oldnode, true, true);
+						linkents(oldnode, d->lastnode, true, true, false);
+					if(!d->timeinair && f.links.find(oldnode) < 0)
+						linkents(d->lastnode, oldnode, true, true, false);
 				}
 			}
 			else d->lastnode = waypointnode(v, false);

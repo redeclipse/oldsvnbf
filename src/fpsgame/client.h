@@ -932,7 +932,7 @@ struct clientcom : iclientcom
 			{
 				if(!d) return;
 				int b = getint(p), index = getint(p), node = getint(p);
-				cl.et.linkents(index, node, b!=0, false);
+				cl.et.linkents(index, node, b!=0, false, false);
 			}
 
 			case SV_PONG:

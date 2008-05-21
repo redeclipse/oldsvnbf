@@ -649,7 +649,7 @@ COMMAND(entpaste, "");
 
 void entlink()
 {
-	if(entgroup.length() >= 2)
+	if(entgroup.length() > 1)
 	{
 		const vector<extentity *> &ents = et->getents();
 		int index = entgroup[0];
@@ -658,18 +658,19 @@ void entlink()
 			loopi(entgroup.length()-1)
 			{
 				int node = entgroup[i+1];
+
+				if(verbose >= 3) conoutf("attempting to link %d and %d (%d)", index, node, i+1);
 				if(ents.inrange(node))
 				{
-					if(!et->canlink(index, node, false) && et->canlink(node, index, false)) // swapsies
-						et->linkents(node, index, false, true);
-					else
-						et->linkents(index, node, false, true);
+					if(!et->linkents(index, node, true, true, true) && !et->linkents(node, index, true, true, true))
+						conoutf("ERROR: failed linking %d and %d (%d)", index, node, i+1);
 				}
+				else conoutf("ERROR: %d (%d) is not in range", node, i+1);
 			}
-			return;
 		}
+		else conoutf("ERROR: %d (%d) is not in range", index, 0);
 	}
-	conoutf("ERROR: more than one valid entity must be selected to link");
+	else conoutf("ERROR: more than one entity must be selected to link");
 }
 COMMAND(entlink, "");
 
