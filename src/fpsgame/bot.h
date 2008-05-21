@@ -59,7 +59,7 @@ struct botclient
 	{
 		fpsent *closest = cl.player1->state == CS_ALIVE ? cl.player1 : NULL;
 		loopv(cl.players)
-			if(cl.players[i]->state == CS_ALIVE &&
+			if(cl.players[i] && cl.players[i]->state == CS_ALIVE &&
 				(!closest || cl.players[i]->o.dist(d->o) < closest->o.dist(d->o)))
 					closest = cl.players[i];
 		if(closest)
