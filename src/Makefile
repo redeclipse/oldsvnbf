@@ -51,8 +51,8 @@ SERVER_OBJS= \
 	engine/server-standalone.o \
 	fpsgame/fps-standalone.o \
 
-DINCLUDES= -Ishared -Ienet/include -Iinclude
-DCXXFLAGS= -Wall -fsigned-char -DDAEMON $(CXXOPTFLAGS) $(INCLUDES)
+DINCLUDES= -Ishared -Idaemon -Ienet/include -Iinclude -Iengine -Ifpsgame
+DCXXFLAGS= -Wall -fsigned-char -DDAEMON $(CXXOPTFLAGS) $(DINCLUDES)
 
 DAEMON_LIBS=-Lenet -lenet
 DAEMON_OBJS= \
@@ -88,7 +88,7 @@ server:	libenet $(SERVER_OBJS)
 	strip bloodfrontier_server
 
 daemon:	libenet $(DAEMON_OBJS)
-	$(CXX) $(SCXXFLAGS) -o bloodfrontier_daemon $(DAEMON_OBJS) $(DAEMON_LIBS)
+	$(CXX) $(DCXXFLAGS) -o bloodfrontier_daemon $(DAEMON_OBJS) $(DAEMON_LIBS)
 	strip bloodfrontier_daemon
 
 install-client: client
