@@ -2141,7 +2141,7 @@ struct GAMESERVER : igameserver
 	}
 	const char *getdefaultmaster()
 	{
-		return "acord.woop.us/";
+		return "bloodfrontier.com/";
 	}
 
 	void serverinforeply(ucharbuf &p)
@@ -2215,9 +2215,7 @@ struct GAMESERVER : igameserver
 	bool canload(char *type)
 	{
 		if (strcmp(type, GAMEID) == 0) return true;
-#ifdef BFAGAME
 		if (strcmp(type, "fps") == 0 || strcmp(type, "bfg") == 0) return true;
-#endif
 		return false;
 	}
 
@@ -2247,10 +2245,3 @@ struct GAMESERVER : igameserver
 		dest.add(new scr(name, amt));
 	}
 };
-
-#ifndef STANDALONE
-#include "fps.cpp"
-REGISTERGAME(GAMENAME, GAMEID, new GAMECLIENT(), new GAMESERVER());
-#else
-REGISTERGAME(GAMENAME, GAMEID, NULL, new GAMESERVER());
-#endif

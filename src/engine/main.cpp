@@ -516,7 +516,7 @@ static void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = total
 VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
 VARFP(clockfix, 0, 0, 1, clockreset());
 
-VAR(version, 1, ENGVERSION, -1); // for scripts
+VAR(version, 1, ENG_VERSION, -1); // for scripts
 VARP(verbose, 0, 0, 4); // be more or less expressive to console
 
 void _grabmouse(int n)
@@ -624,7 +624,7 @@ ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
 
 void setcaption(const char *text)
 {
-	s_sprintfd(caption)("%s [v%.2f] %s%s%s", ENGNAME, float(ENGVERSION)/100.f, ENGRELEASE, text ? ": " : "", text ? text : "");
+	s_sprintfd(caption)("%s [v%.2f] %s%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "");
 	SDL_WM_SetCaption(caption, NULL);
 }
 
