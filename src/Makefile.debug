@@ -66,9 +66,16 @@ enet/Makefile:
 libenet: enet/Makefile
 	$(MAKE)	-C enet/ all
 
-clean: enet/Makefile
-	@rm -fv $(SERVER_OBJS) $(CLIENT_OBJS) $(DAEMON_OBJS) bloodfrontier_server bloodfrontier_client bloodfrontier_daemon
-	$(MAKE)	-C enet/ clean
+clean: clean-client clean-server enet/Makefile
+
+clean-client:
+	@rm -fv $(CLIENT_OBJS) bloodfrontier_client
+
+clean-server:
+	@rm -fv $(SERVER_OBJS) bloodfrontier_server
+
+clean-daemon:
+	@rm -fv $(DAEMON_OBJS) bloodfrontier_daemon
 
 shared/tools-standalone.o:
 	$(CXX) $(SCXXFLAGS) -c -o shared/tools-standalone.o shared/tools.cpp
@@ -79,14 +86,20 @@ engine/server-standalone.o:
 fpsgame/fps-standalone.o:
 	$(CXX) $(SCXXFLAGS) -c -o fpsgame/fps-standalone.o fpsgame/fps.cpp
 
+daemon/daemon.o:
+	$(CXX) $(DCXXFLAGS) -c -o daemon/daemon.o daemon/daemon.cpp
+
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)
+	strip bloodfrontier_client
 
 server:	libenet $(SERVER_OBJS)
 	$(CXX) $(SCXXFLAGS) -o bloodfrontier_server $(SERVER_OBJS) $(SERVER_LIBS)
+	strip bloodfrontier_server
 
 daemon:	libenet $(DAEMON_OBJS)
 	$(CXX) $(DCXXFLAGS) -o bloodfrontier_daemon $(DAEMON_OBJS) $(DAEMON_LIBS)
+	strip bloodfrontier_daemon
 
 install-client: client
 	cp -v bloodfrontier_client ../bin/bloodfrontier_client
