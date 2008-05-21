@@ -33,7 +33,7 @@ struct GAMECLIENT : igameclient
 	};
 
 	physent gamecamera;
-	int lastmouse;
+	int lastcamera, lastmouse;
 
 	vector<fpsent *> shplayers;
 	vector<teamscore> teamscores;
@@ -75,7 +75,7 @@ struct GAMECLIENT : igameclient
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
-			swaymillis(0), swaydir(0, 0, 0), lastmouse(0),
+			swaymillis(0), swaydir(0, 0, 0), lastcamera(0), lastmouse(0),
 			player1(spawnstate(new fpsent()))
 	{
         CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1); });
@@ -1054,7 +1054,9 @@ struct GAMECLIENT : igameclient
 		fixview(w, h);
 
 		if(mousetype() < 3)
+		{
 			findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
+		}
 
 		camera1 = &gamecamera;
 
@@ -1064,6 +1066,12 @@ struct GAMECLIENT : igameclient
 			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
 			camera1->type = ENT_CAMERA;
 			camera1->state = CS_ALIVE;
+		}
+
+		if(mousetype() > 2 && !lastcamera)
+		{
+			camera1->yaw = player1->aimyaw = player1->yaw;
+			camera1->pitch = player1->aimpitch = player1->pitch;
 		}
 
 		if(player1->state == CS_ALIVE || player1->state == CS_DEAD || player1->state == CS_SPAWNING)
@@ -1124,6 +1132,8 @@ struct GAMECLIENT : igameclient
 		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
 		vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
 		vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
+
+		lastcamera = lastmillis;
 	}
 
 	void adddynlights()
