@@ -499,16 +499,10 @@ VAR(wireframe, 0, 0, 1);
 
 vec worldpos, camdir, camright, camup;
 
-void findorientation(vec &o, float yaw, float pitch, vec &pos, bool camera)
+void findorientation(vec &o, float yaw, float pitch, vec &pos)
 {
 	vec dir;
 	vecfromyawpitch(yaw, pitch, 1, 0, dir);
-	if(camera)
-	{
-		vecfromyawpitch(yaw, 0, 0, -1, camright);
-		vecfromyawpitch(yaw, pitch+90, 1, 0, camup);
-	}
-
 	if(raycubepos(o, dir, pos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
 		pos = dir.mul(2*hdr.worldsize).add(o); //otherwise 3dgui won't work when outside of map
 }
@@ -1346,10 +1340,8 @@ void writecrosshairs(FILE *f)
     fprintf(f, "\n");
 }
 
-void drawcrosshair(int w, int h)
+void drawcrosshair(int w, int h, int index, float cx, float cy, float r, float g, float b)
 {
-    float r = 1, g = 1, b = 1;
-	int index = cl->selectcrosshair(r, g, b);
 	if(index > -1 && index < MAXCROSSHAIRS)
 	{
 		Texture *crosshair = crosshairs[index];
@@ -1358,8 +1350,7 @@ void drawcrosshair(int w, int h)
 			loadcrosshair(NULL, index);
 			crosshair = crosshairs[index];
 		}
-		float cx = cursorx, cy = cursory,
-			chsize = index ? crosshairsize*w/300.0f : cursorsize*w/300.0f,
+		float chsize = index ? crosshairsize*w/300.0f : cursorsize*w/300.0f,
 			chblend = index ? crosshairblend/100.f : cursorblend/100.f;
 
 		if(crosshair->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

@@ -185,7 +185,7 @@ extern void gl_init(int w, int h, int bpp, int depth, int fsaa);
 extern void cleangl();
 
 extern void projectcursor(float x, float y, vec &dir);
-extern void findorientation(vec &o, float yaw, float pitch, vec &pos, bool camera = false);
+extern void findorientation(vec &o, float yaw, float pitch, vec &pos);
 extern void rendergame();
 extern void invalidatepostfx();
 extern void gl_drawframe(int w, int h);
@@ -560,7 +560,7 @@ extern float curfov, fovy, aspect;
 
 extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false, bool swapxy = false);
 extern void transplayer();
-extern void drawcrosshair(int w, int h);
+extern void drawcrosshair(int w, int h, int index = 0, float cx = 0.5f, float cy = 0.5f, float r = 1.0f, float g = 1.0f, float b = 1.0f);
 
 extern void renderprimitive(bool on);
 extern void renderline(vec &fr, vec &to, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);
