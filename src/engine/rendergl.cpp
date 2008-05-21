@@ -571,9 +571,8 @@ void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, boo
 void genclipmatrix(float a, float b, float c, float d, GLfloat matrix[16])
 {
 	// transform the clip plane into camera space
-	GLdouble clip[4] = {a, b, c, d};
-	glClipPlane(GL_CLIP_PLANE0, clip);
-	glGetClipPlane(GL_CLIP_PLANE0, clip);
+    float clip[4];
+    loopi(4) clip[i] = a*invmvmatrix[i*4 + 0] + b*invmvmatrix[i*4 + 1] + c*invmvmatrix[i*4 + 2] + d*invmvmatrix[i*4 + 3];
 
     memcpy(matrix, projmatrix, 16*sizeof(GLfloat));
 
@@ -846,8 +845,9 @@ void drawreflection(float z, bool refract, bool clear)
         {
             zclip = z-zoffset;
             if(camera1->o.z>=zclip && camera1->o.z<=z+4.0f) zclip = z;
+            if(reflecting) zclip = 2*z - zclip;
         }
-        genclipmatrix(0, 0, refracting<0 ? -1 : 1, refracting<0 ? zclip : -zclip, clipmatrix);
+        genclipmatrix(0, 0, refracting>0 ? 1 : -1, refracting>0 ? -zclip : zclip, clipmatrix);
         setclipmatrix(clipmatrix);
     }
 
@@ -1177,18 +1177,32 @@ void invalidatepostfx()
     dopostfx = false;
 }
 
-GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16];
+GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16], invmvmatrix[16];
 
-void getmvpmatrix()
+void readmatrices()
 {
     glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix);
     glGetFloatv(GL_PROJECTION_MATRIX, projmatrix);
+
     loopi(4) loopj(4)
     {
         float c = 0;
         loopk(4) c += projmatrix[k*4 + j] * mvmatrix[i*4 + k];
         mvpmatrix[i*4 + j] = c;
     }
+
+    loopi(3)
+    {
+        loopj(3) invmvmatrix[i*4 + j] = mvmatrix[i + j*4];
+        invmvmatrix[i*4 + 3] = 0;
+    }
+    loopi(3)
+    {
+        float c = 0;
+        loopj(3) c -= mvmatrix[i*4 + j] * mvmatrix[12 + j];
+        invmvmatrix[12 + i] = c;
+    }
+    invmvmatrix[15] = 1;
 }
 
 void gl_drawframe(int w, int h)
@@ -1220,7 +1234,7 @@ void gl_drawframe(int w, int h)
 
 	project(fovy, aspect, farplane);
 	transplayer();
-    getmvpmatrix();
+    readmatrices();
 	projectcursor(cursorx, 1.f-cursory, cursordir);
 
 	glEnable(GL_TEXTURE_2D);
