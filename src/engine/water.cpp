@@ -302,21 +302,13 @@ void getlavacolour(uchar *lcol)
 
 void setprojtexmatrix(Reflection &ref, bool init = true)
 {
-	if(init && ref.lastupdate==totalmillis)
-	{
-		GLfloat pm[16], mm[16];
-		glGetFloatv(GL_PROJECTION_MATRIX, pm);
-		glGetFloatv(GL_MODELVIEW_MATRIX, mm);
-
-		glLoadIdentity();
-        glTranslatef(0.5f, 0.5f, 0);
-        glScalef(0.5f, 0.5f, 1);
-		glMultMatrixf(pm);
-		glMultMatrixf(mm);
-
-		glGetFloatv(GL_TEXTURE_MATRIX, ref.tm);
-	}
-	else glLoadMatrixf(ref.tm);
+    if(init && ref.lastupdate==totalmillis)
+    {
+        memcpy(ref.tm, mvpmatrix, 16*sizeof(GLfloat));
+        loopi(2) loopj(4) ref.tm[i + j*4] = 0.5f*(ref.tm[i + j*4] + ref.tm[3 + j*4]);
+    }
+    
+    glLoadMatrixf(ref.tm);
 }
 
 void setuprefractTMUs()

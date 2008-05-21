@@ -575,7 +575,8 @@ void genclipmatrix(float a, float b, float c, float d, GLfloat matrix[16])
 	glClipPlane(GL_CLIP_PLANE0, clip);
 	glGetClipPlane(GL_CLIP_PLANE0, clip);
 
-	glGetFloatv(GL_PROJECTION_MATRIX, matrix);
+    memcpy(matrix, projmatrix, 16*sizeof(GLfloat));
+
 	float x = ((clip[0]<0 ? -1 : (clip[0]>0 ? 1 : 0)) + matrix[8]) / matrix[0],
 		  y = ((clip[1]<0 ? -1 : (clip[1]>0 ? 1 : 0)) + matrix[9]) / matrix[5],
 		  w = (1 + matrix[10]) / matrix[14],
