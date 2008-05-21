@@ -170,9 +170,9 @@ struct weaponstate
 		front.mul(2);
 		front.mul(d->radius);
 		offset.add(front);
-		offset.z += (d->aboveeye + d->height)*0.8f - d->height;
+		offset.z += (d->aboveeye + d->height)*0.875f - d->height;
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
-		right.mul(0.35f*d->radius);
+		right.mul(0.36f*d->radius);
 		offset.add(right);
 		if(d->crouching) offset.z -= (d == cl.player1 ? min(1.0f, (lastmillis-d->crouchtime)/200.f) : 1.0f)*(1-CROUCHHEIGHT)*d->height;
 		return offset;

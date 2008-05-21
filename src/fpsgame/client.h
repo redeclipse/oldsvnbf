@@ -124,7 +124,6 @@ struct clientcom : iclientcom
 			cl.player1->state = CS_EDITING;
 		}
 		cl.ph.entinmap(cl.player1, false); // find spawn closest to current floating pos
-		cl.lastcamera = 0;
 		addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 	}
 
@@ -297,9 +296,11 @@ struct clientcom : iclientcom
 			putuint(q, (int)(d->o.x*DMF));			  // quantize coordinates to 1/4th of a cube, between 1 and 3 bytes
 			putuint(q, (int)(d->o.y*DMF));
 			putuint(q, (int)(d->o.z*DMF));
-			putuint(q, (int)d->yaw);
+			putint(q, (int)d->yaw);
 			putint(q, (int)d->pitch);
 			putint(q, (int)d->roll);
+			putint(q, (int)d->aimyaw);
+			putint(q, (int)d->aimpitch);
 			putint(q, (int)(d->vel.x*DVELF));		  // quantize to itself, almost always 1 byte
 			putint(q, (int)(d->vel.y*DVELF));
 			putint(q, (int)(d->vel.z*DVELF));
@@ -396,14 +397,16 @@ struct clientcom : iclientcom
 			{
 				int lcn = getint(p);
 				vec o, vel, falling;
-				float yaw, pitch, roll;
+				float yaw, pitch, roll, aimyaw, aimpitch;
 				int physstate, f;
 				o.x = getuint(p)/DMF;
 				o.y = getuint(p)/DMF;
 				o.z = getuint(p)/DMF;
-				yaw = (float)getuint(p);
+				yaw = (float)getint(p);
 				pitch = (float)getint(p);
 				roll = (float)getint(p);
+				aimyaw = (float)getint(p);
+				aimpitch = (float)getint(p);
 				vel.x = getint(p)/DVELF;
 				vel.y = getint(p)/DVELF;
 				vel.z = getint(p)/DVELF;
@@ -423,6 +426,8 @@ struct clientcom : iclientcom
 				d->yaw = yaw;
 				d->pitch = pitch;
 				d->roll = roll;
+				d->aimyaw = aimyaw;
+				d->aimpitch = aimpitch;
 				d->strafe = (f&3)==3 ? -1 : f&3;
 				f >>= 2;
 				d->move = (f&3)==3 ? -1 : f&3;
@@ -663,7 +668,6 @@ struct clientcom : iclientcom
 				f->gunselect = getint(p);
 				loopi(NUMGUNS) f->ammo[i] = getint(p);
 				f->state = CS_ALIVE;
-				if(f==cl.player1) cl.lastcamera = 0;
 				if(local)
 				{
 					cl.et.findplayerspawn(f, m_capture(cl.gamemode) ? cl.cpc.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_ttwo(cl.gamemode, cl.mutators))+1 : -1);

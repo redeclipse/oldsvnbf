@@ -134,7 +134,7 @@ struct entities : icliententities
 						cl.ph.entinmap(d, false);
 						execlink(d, n, true);
 						execlink(d, targ, true);
-						if(d == cl.player1) cl.lastcamera = 0;
+						if(d == cl.player1) cl.lastgesture = 0;
 						return;
 					}
 				}
@@ -176,7 +176,7 @@ struct entities : icliententities
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
 			cl.ph.entinmap(d, false);
 		}
-		if(d == cl.player1) cl.lastcamera = 0;
+		if(d == cl.player1) cl.lastgesture = 0;
 	}
 
 	void reaction(int n, fpsent *d)
@@ -609,7 +609,7 @@ struct entities : icliententities
 		{
 			vec v(vec(d->o).sub(vec(0, 0, d->height-1)));
 
-			if(dropwaypoints() && d == cl.player1)
+			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)
 			{
 				int oldnode = d->lastnode;
 				d->lastnode = waypointnode(v);

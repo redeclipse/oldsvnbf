@@ -33,7 +33,7 @@ struct GAMECLIENT : igameclient
 	};
 
 	physent gamecamera;
-	int lastcamera;
+	int lastgesture;
 
 	vector<fpsent *> shplayers;
 	vector<teamscore> teamscores;
@@ -42,15 +42,16 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> players;		// other clients
 	fpsent lastplayerstate;
 
-	IVAR(cameracycle, 0, 0, 600);// cycle camera every N secs
-
 	IVARP(invmouse, 0, 0, 1);
+	IVARP(cameradist, 0, 8, 100);
+	IVARP(camerashift, 0, 8, 100);
+	IVARP(cameraheight, 0, 20, 90);
 
-	IVARP(mouselock, 0, 1, 1);
-	IVARP(mousedeadzone, 0, 10, 100);
-	IVARP(mousepanspeed, 0, 30, 1000);
+	IVARP(gestures, 0, 0, 1);
+	IVARP(gesturedeadzone, 0, 10, 100);
+	IVARP(gesturepanspeed, 0, 30, 1000);
+
 	IVARP(mousesensitivity, 0, 10, 100);
-
 	IVARP(yawsensitivity, 0, 10, 1000);
 	IVARP(pitchsensitivity, 0, 7, 1000);
 	IVARP(rollsensitivity, 0, 3, 1000);
@@ -74,7 +75,7 @@ struct GAMECLIENT : igameclient
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
-			swaymillis(0), swaydir(0, 0, 0), lastcamera(0),
+			swaymillis(0), swaydir(0, 0, 0), lastgesture(0),
 			player1(spawnstate(new fpsent()))
 	{
         CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1); });
@@ -207,6 +208,35 @@ struct GAMECLIENT : igameclient
 		pj.reset();
 	}
 
+	void updategesture()
+	{
+		if(gestures() && player1->state != CS_DEAD)
+		{
+			if(lastgesture)
+			{
+				int frame = lastgesture-lastmillis;
+				float deadzone = (gesturedeadzone()/100.f);
+				float cx = (cursorx-0.5f), cy = (0.5f-cursory);
+
+				if(cx > deadzone || cx < -deadzone)
+					player1->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*gesturepanspeed()/100.f;
+
+				if(cy > deadzone || cy < -deadzone)
+					player1->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*gesturepanspeed()/100.f;
+
+				fixrange(player1->yaw, player1->pitch);
+			}
+			else cursorx = cursory = 0.5f;
+
+			lastgesture = lastmillis;
+		}
+		else
+		{
+			cursorx = cursory = 0.5f;
+			lastgesture = 0;
+		}
+	}
+
 	void updateworld()		// main game update loop
 	{
         if(!maptime) { maptime = lastmillis + curtime; return; }
@@ -229,16 +259,7 @@ struct GAMECLIENT : igameclient
 			adjustscaled(int, quakewobble, 100.f);
 			adjustscaled(int, damageresidue, 100.f);
 
-			if(mouselock())
-			{
-				findorientation(camera1->o, camera1->yaw, camera1->pitch, worldpos, true);
-			}
-			else if(!menuactive() && lastcamera && (player1->state == CS_ALIVE || player1->state == CS_DEAD))
-			{
-				float fx, fy;
-				vectoyawpitch(cursordir, fx, fy);
-				findorientation(camera1->o, fx, fy, worldpos, true);
-			}
+			updategesture();
 
 			if(player1->state == CS_DEAD)
 			{
@@ -250,15 +271,6 @@ struct GAMECLIENT : igameclient
 			}
 			else if(player1->state == CS_ALIVE)
 			{
-				if(!menuactive() && lastcamera)
-				{
-					vec v(worldpos);
-					v.sub(player1->o);
-					v.normalize();
-					vectoyawpitch(v, player1->yaw, player1->pitch);
-					//fixrange(player1->yaw, player1->pitch);
-				}
-
 				if(player1->timeinair)
 				{
 					if(player1->jumping && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
@@ -567,45 +579,6 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
-    const char *defaultcrosshair(int index)
-    {
-        switch(index)
-        {
-            case 0: return "textures/guicursor";
-            case 1: return "textures/editcursor";
-            case 2: return "textures/crosshair";
-            case 3: return "textures/crosshair_team";
-            case 4: return "textures/crosshair_hit";
-            default: return "";
-        }
-    }
-
-    int selectcrosshair(float &r, float &g, float &b)
-    {
-        int c = -1;
-        if(menuactive()) c = 0;
-        else if(!crosshair() || hidehud || player1->state == CS_DEAD) c = -1;
-        else if(editmode) c = 1;
-        else if(lastmillis-lasthit < hitcrosshair()) c = 3;
-        else if(m_team(gamemode, mutators) && teamcrosshair())
-        {
-            dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
-            if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team)) c = 2;
-        }
-        else c = 2;
-
-		if(c > 1)
-		{
-			if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
-			else if(!c && r && g && b && !editmode && !m_insta(gamemode, mutators))
-			{
-				if(player1->health<=25) { r = 1; g = b = 0; }
-				else if(player1->health<=50) { r = 1; g = 0.5f; b = 0; }
-			}
-		}
-        return c;
-    }
-
 	float radarrange()
 	{
 		float dist = float(radardist());
@@ -774,6 +747,53 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
+    const char *defaultcrosshair(int index)
+    {
+        switch(index)
+        {
+            case 0: return "textures/guicursor";
+            case 1: return "textures/editcursor";
+            case 2: return "textures/crosshair";
+            case 3: return "textures/crosshair_team";
+            case 4: return "textures/crosshair_hit";
+            case 5: return "textures/gesturedot";
+            default: return "";
+        }
+    }
+
+	void drawpointers(int w, int h)
+	{
+		float r = 1.f, g = 1.f, b = 1.f;
+        int index = -1;
+
+		if(menuactive()) index = 0;
+        else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = -1;
+        else if(editmode) index = 1;
+        else if(lastmillis-lasthit < hitcrosshair()) index = 3;
+        else if(m_team(gamemode, mutators) && teamcrosshair())
+        {
+            dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
+            if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team)) index = 2;
+        }
+        else index = 2;
+
+		if(index >= 2)
+		{
+			if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
+			else if(!index && r && g && b && !editmode && !m_insta(gamemode, mutators))
+			{
+				if(player1->health<=25) { r = 1; g = b = 0; }
+				else if(player1->health<=50) { r = 1; g = 0.5f; b = 0; }
+			}
+		}
+
+		if(index >= 0)
+			drawcrosshair(w, h, index, !index ? cursorx : 0.5f, !index ? cursory : 0.5f, r, g, b);
+
+		if(index >= 1 && gestures())
+			drawcrosshair(w, h, 5, cursorx, cursory);
+	}
+
 	void drawhudelements(int w, int h)
 	{
 		glLoadIdentity();
@@ -841,7 +861,8 @@ struct GAMECLIENT : igameclient
 
 			render_texture_panel(w, h);
 		}
-		drawcrosshair(w, h);
+
+		drawpointers(w, h);
 	}
 
 	void drawhud(int w, int h)
@@ -987,7 +1008,7 @@ struct GAMECLIENT : igameclient
 		if(pitch > MAXPITCH) pitch = MAXPITCH;
 		if(pitch < -MAXPITCH) pitch = -MAXPITCH;
 		while(yaw < 0.0f) yaw += 360.0f;
-		while(yaw > 360.0f) yaw -= 360.0f;
+		while(yaw >= 360.0f) yaw -= 360.0f;
 	}
 
 	void fixview(int w, int h)
@@ -1001,11 +1022,11 @@ struct GAMECLIENT : igameclient
 
 	void mousemove(int dx, int dy)
 	{
-		if(!menuactive() && (mouselock() || (player1->state != CS_ALIVE && player1->state != CS_DEAD)))
+		if(!menuactive() && (!gestures() || (player1->state != CS_ALIVE && player1->state != CS_DEAD)))
 		{
-			camera1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
-			camera1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1.f : 1.f);
-			fixrange(camera1->yaw, camera1->pitch);
+			player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
+			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1.f : 1.f);
+			fixrange(player1->yaw, player1->pitch);
 			cursorx = cursory = 0.5f;
 			return;
 		}
@@ -1017,75 +1038,62 @@ struct GAMECLIENT : igameclient
 	{
 		fixview(w, h);
 
-		if(!menuactive())
+		findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
+
+		if(player1->state == CS_ALIVE || player1->state == CS_DEAD || player1->state == CS_SPAWNING)
 		{
 			camera1 = &gamecamera;
 
 			if(camera1->type != ENT_CAMERA)
 			{
 				camera1->reset();
+				camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
 				camera1->type = ENT_CAMERA;
 				camera1->state = CS_ALIVE;
 			}
 
-			if(player1->state == CS_ALIVE || player1->state == CS_DEAD || player1->state == CS_SPAWNING)
+			camera1->o = player1->o;
+			camera1->aimyaw = player1->yaw;
+			camera1->aimpitch = 0-cameraheight();
+
+			camera1->move = -1;
+			camera1->strafe = 0;
+			loopi(10) if(!ph.moveplayer(camera1, 10, true, cameradist())) break;
+
+			camera1->move = 0;
+			camera1->strafe = -1;
+			loopi(10) if(!ph.moveplayer(camera1, 10, true, camerashift())) break;
+
+			vec dir(worldpos);
+			dir.sub(camera1->o);
+			dir.normalize();
+			vectoyawpitch(dir, camera1->yaw, camera1->pitch);
+
+			player1->aimyaw = camera1->yaw;
+			player1->aimpitch = camera1->pitch;
+
+			if(quakewobble > 0)
 			{
-				if(!lastcamera || player1->state == CS_SPAWNING)
-				{
-					camera1->o = vec(player1->o).add(vec(0, 0, 4));
-					camera1->yaw = player1->yaw;
-					camera1->pitch = player1->pitch;
-					camera1->roll = 0.f;
-
-					cursorx = cursory = 0.5f;
-
-					fixrange(camera1->yaw, camera1->pitch);
-					findorientation(camera1->o, camera1->yaw, camera1->pitch, worldpos, true);
-				}
-				else
-				{
-					camera1->o = vec(player1->o).add(vec(0, 0, 4));
-
-					if(!mouselock())
-					{
-						int frame = lastcamera-lastmillis;
-						float deadzone = (mousedeadzone()/100.f);
-						float cx = (cursorx-0.5f), cy = (0.5f-cursory);
-
-						if(cx > deadzone || cx < -deadzone)
-							camera1->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
-
-						if(cy > deadzone || cy < -deadzone)
-							camera1->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
-						camera1->roll = 0.f;
-					}
-
-					fixrange(camera1->yaw, camera1->pitch);
-
-					vec dir;
-					vecfromyawpitch(camera1->yaw, camera1->pitch, -1, -1, dir);
-					camera1->o.add(vec(dir).mul(6));
-				}
-
-				if(lastcamera && quakewobble > 0)
-				{
-					float pc = float(min(quakewobble, 100))/100.f;
-					#define wobble (float(rnd(24)-12)*pc)
-					camera1->roll = wobble;
-				}
-				else quakewobble = 0;
-
-				lastcamera = lastmillis;
+				float pc = float(min(quakewobble, 100))/100.f;
+				#define wobble (float(rnd(24)-12)*pc)
+				camera1->roll = wobble;
 			}
 			else
 			{
-				camera1 = player1;
-				fixrange(camera1->yaw, camera1->pitch);
-				findorientation(camera1->o, camera1->yaw, camera1->pitch, worldpos, true);
-				lastcamera = 0;
+				quakewobble = 0;
+				camera1->roll = 0;
 			}
 		}
-		else lastcamera = 0;
+		else
+		{
+			camera1 = player1;
+			player1->aimyaw = player1->yaw;
+			player1->aimpitch = player1->pitch;
+		}
+
+		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
+		vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
+		vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
 	}
 
 	void adddynlights()

@@ -404,33 +404,10 @@ struct physics
         if (pl->physstate == PHYS_FALL) pl->timeinair += curtime;
 
 		vec m(0.0f, 0.0f, 0.0f);
-		if(pl->type==ENT_AI)
-		{
-			dynent *d = (dynent *)pl;
-			if(d->rotspeed && d->yaw!=d->targetyaw)
-			{
-				float oldyaw = d->yaw, diff = d->rotspeed*millis/1000.0f, maxdiff = fabs(d->targetyaw-d->yaw);
-				if(diff >= maxdiff)
-				{
-					d->yaw = d->targetyaw;
-					d->rotspeed = 0;
-				}
-				else d->yaw += (d->targetyaw>d->yaw ? 1 : -1) * min(diff, maxdiff);
-				d->normalize_yaw(d->targetyaw);
-				if(!plcollide(d, vec(0, 0, 0)))
-				{
-					d->yaw = oldyaw;
-					m.x = d->o.x - hitplayer->o.x;
-					m.y = d->o.y - hitplayer->o.y;
-					if(!m.iszero()) m.normalize();
-				}
-			}
-		}
-
         bool wantsmove = cl.allowmove(pl) && (pl->move || pl->strafe);
 		if(m.iszero() && wantsmove)
 		{
-			vecfromyawpitch(pl->yaw, floating || liquid || movepitch(pl) ? pl->pitch : 0, pl->move, pl->strafe, m);
+			vecfromyawpitch(pl->aimyaw, floating || liquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
 
 			if(!floating && pl->physstate >= PHYS_SLIDE)
 			{
@@ -484,7 +461,7 @@ struct physics
 	// moveres indicated the physics precision (which is lower for monsters and multiplayer prediction)
 	// local is false for multiplayer prediction
 
-	bool moveplayer(fpsent *pl, int moveres, bool local, int millis)
+	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
         int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->height)/4));
 		bool liquid = isliquid(material);
@@ -531,7 +508,8 @@ struct physics
 
 		if(pl->type!=ENT_CAMERA && pl->state==CS_ALIVE) updatedynentcache(pl);
 
-		if(!pl->timeinair && pl->physstate >= PHYS_FLOOR && pl->vel.squaredlen() < 1e-4f) pl->moving = false;
+		if(!pl->timeinair && pl->physstate >= PHYS_FLOOR && pl->vel.squaredlen() < 1e-4f)
+			pl->moving = false;
 
 		pl->lastmoveattempt = lastmillis;
 		if (pl->o!=oldpos) pl->lastmove = lastmillis;
@@ -543,24 +521,30 @@ struct physics
 			if(material != pl->inmaterial && (material == MAT_WATER || material == MAT_LAVA || pl->inmaterial == MAT_WATER || pl->inmaterial == MAT_LAVA))
 			{
 				uchar col[3] = { 255, 255, 255 };
+				#define mattrig(f,z,w) \
+				{ \
+					f; \
+					int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
+					part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, z, 100, 200, icol, 0.60f); \
+					if(w>=0) playsound(w, &pl->o, 255, 0, 0, SND_COPY); \
+				}
 
-				if (material == MAT_WATER) getwatercolour(col);
-				else if (material == MAT_LAVA) getlavacolour(col);
-
-				int wcol = (col[2] + (col[1] << 8) + (col[0] << 16));
-				part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, 17, 100, 200, wcol, 0.60f);
 				if(material == MAT_WATER || pl->inmaterial == MAT_WATER)
-					playsound(material != MAT_WATER ? S_SPLASH1 : S_SPLASH2, &pl->o, 255, 0, 0, SND_COPY);
+					mattrig(getwatercolour(col), 17, material != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+
+				if(material == MAT_LAVA || pl->inmaterial == MAT_LAVA)
+					mattrig(getlavacolour(col), 4, material != MAT_LAVA ? -1 : S_FLBURN);
 			}
-			if ((material == MAT_LAVA || material == MAT_DEATH) && (pl == cl.player1 || pl->bot))
-				cl.suicide(pl);
+			if(local && pl->type == ENT_PLAYER && (material == MAT_LAVA || material == MAT_DEATH))
+				cl.suicide((fpsent *)pl);
+
             pl->inliquid = liquid;
             pl->inmaterial = material;
 		}
 		return true;
 	}
 
-	bool move(fpsent *d, int moveres = 10, bool local = true, int millis = 0, int repeat = 0)
+	bool move(physent *d, int moveres = 10, bool local = true, int millis = 0, int repeat = 0)
 	{
 		if (!millis) millis = physframetime();
 		if (!repeat) repeat = physicsrepeat;
@@ -675,18 +659,18 @@ struct physics
 			if(smoothmove() && d->smoothmillis>0)
 			{
 				d->o = d->newpos;
-				d->yaw = d->newyaw;
-				d->pitch = d->newpitch;
+				d->aimyaw = d->newyaw;
+				d->aimpitch = d->newpitch;
 				move(d, res, local);
 				d->newpos = d->o;
 				float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove();
 				if(k>0)
 				{
 					d->o.add(vec(d->deltapos).mul(k));
-					d->yaw += d->deltayaw*k;
-					if(d->yaw<0) d->yaw += 360;
-					else if(d->yaw>=360) d->yaw -= 360;
-					d->pitch += d->deltapitch*k;
+					d->aimyaw += d->deltayaw*k;
+					if(d->aimyaw<0) d->aimyaw += 360;
+					else if(d->aimyaw>=360) d->aimyaw -= 360;
+					d->aimpitch += d->deltapitch*k;
 				}
 			}
 			else move(d, res, local);

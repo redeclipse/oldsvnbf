@@ -988,8 +988,7 @@ struct GAMESERVER : igameserver
 					oldpos = cp->state.o;
 					cp->state.o = pos;
 				}
-				getuint(p);
-				loopi(5) getint(p);
+				loopi(8) getint(p);
                 int physstate = getuint(p);
                 if(physstate&0x20) loopi(2) getint(p);
                 if(physstate&0x10) getint(p);

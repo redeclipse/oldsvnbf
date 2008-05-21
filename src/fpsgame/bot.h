@@ -83,6 +83,8 @@ struct botclient
 			if(dir.z > BOTJUMPHEIGHT && !d->jumping && !d->timeinair) d->jumping = true;
 			dir.normalize();
 			vectoyawpitch(dir, d->yaw, d->pitch);
+			d->aimyaw = d->yaw;
+			d->aimpitch = d->pitch;
 			d->bot->setstate(BS_UPDATE); // move and update bounce between each other alot
 			return true;
 		}

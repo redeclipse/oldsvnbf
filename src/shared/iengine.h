@@ -1,6 +1,6 @@
 // the interface the game uses to access the engine
 
-#define ENGVERSION		61					// engine version, integer is divided by 100.f
+#define ENGVERSION		62					// engine version, integer is divided by 100.f
 #define ENGNAME			"Blood Frontier"	// engine namn
 #define ENGRELEASE		"Alpha 2"			// engine release name
 
