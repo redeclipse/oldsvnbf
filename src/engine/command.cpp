@@ -134,7 +134,9 @@ void aliasa(const char *name, char *action)
             if(b->world != worldidents && worldidents) b->world = worldidents;
 		}
 	}
+#if !defined(STANDALONE) && !defined(DAEMON)
 	if(b && cl) cl->editvar(b, interactive);
+#endif
 }
 
 void alias(const char *name, const char *action) { aliasa(name, newstring(action)); }
@@ -454,7 +456,9 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						case 's':								 v[n] = w[++wn];	 n++; break;
 						case 'i': nstor[n].i = parseint(w[++wn]); v[n] = &nstor[n].i; n++; break;
 						case 'f': nstor[n].f = atof(w[++wn]);	 v[n] = &nstor[n].f; n++; break;
+#if !defined(STANDALONE) && !defined(DAEMON)
 						case 'D': nstor[n].i = addreleaseaction(id->name) ? 1 : 0; v[n] = &nstor[n].i; n++; break;
+#endif
 						case 'V': v[n++] = w+1; nstor[n].i = numargs-1; v[n] = &nstor[n].i; n++; break;
                         case 'C': if(!cargs) cargs = conc(w+1, numargs-1, true); v[n++] = cargs; break;
 						default: fatal("builtin declared with illegal type");
@@ -483,12 +487,14 @@ char *executeret(const char *p)               // all evaluation happens here, re
                     else if(id->minval>id->maxval) conoutf("variable %s is read-only", id->name);
 					else
 					{
+#if !defined(STANDALONE) && !defined(DAEMON)
 						#define WORLDVAR \
 							if (!worldidents && !editmode && id->world) \
 							{ \
 								conoutf("cannot set world variable %s outside editmode", id->name); \
 								break; \
 							}
+#endif
 
                         #define OVERRIDEVAR(saveval, resetval) \
                             if(overrideidents) \
@@ -502,7 +508,9 @@ char *executeret(const char *p)               // all evaluation happens here, re
                             } \
                             else if(id->override!=NO_OVERRIDE) { resetval; id->override = NO_OVERRIDE; }
 
+#if !defined(STANDALONE) && !defined(DAEMON)
 						WORLDVAR;
+#endif
                         OVERRIDEVAR(id->overrideval.i = *id->storage.i, )
                         int i1 = parseint(w[1]);
                         if(i1<id->minval || i1>id->maxval)
@@ -512,7 +520,9 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						}
                         *id->storage.i = i1;
                         id->changed();                                             // call trigger function if available
+#if !defined(STANDALONE) && !defined(DAEMON)
 						if(cl) cl->editvar(id, interactive);
+#endif
 					}
                     break;
 
@@ -520,11 +530,15 @@ char *executeret(const char *p)               // all evaluation happens here, re
                     if(!w[1][0]) conoutf("%s = %f", c, *id->storage.f);
                     else
                     {
+#if !defined(STANDALONE) && !defined(DAEMON)
 						WORLDVAR;
+#endif
                         OVERRIDEVAR(id->overrideval.f = *id->storage.f, );
                         *id->storage.f = atof(w[1]);
                         id->changed();
+#if !defined(STANDALONE) && !defined(DAEMON)
 						if(cl) cl->editvar(id, interactive);
+#endif
                     }
                     break;
 
@@ -532,11 +546,15 @@ char *executeret(const char *p)               // all evaluation happens here, re
                     if(!w[1][0]) conoutf(strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", c, *id->storage.s);
                     else
 					{
+#if !defined(STANDALONE) && !defined(DAEMON)
 						WORLDVAR;
+#endif
                         OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s);
                         *id->storage.s = newstring(w[1]);
                         id->changed();
+#if !defined(STANDALONE) && !defined(DAEMON)
 						if(cl) cl->editvar(id, interactive);
+#endif
 					}
 					break;
 
@@ -596,6 +614,7 @@ void exec(const char *cfgfile)
 	if(!execfile(cfgfile)) conoutf("could not read \"%s\"", cfgfile);
 }
 
+#if !defined(STANDALONE) && !defined(DAEMON)
 void writecfg()
 {
 	FILE *f = openfile("config.cfg", "w");
@@ -625,6 +644,7 @@ void writecfg()
 }
 
 COMMAND(writecfg, "");
+#endif
 
 // below the commands that implement a small imperative language. thanks to the semantics of
 // () and [] expressions, any control construct can be defined trivially.
