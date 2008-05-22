@@ -521,7 +521,6 @@ void _grabinput(int n)
 {
 	SDL_WM_GrabInput(n ? SDL_GRAB_ON : SDL_GRAB_OFF);
 	keyrepeat(n ? false : true);
-	SDL_ShowCursor(n ? 0 : 1);
 }
 VARF(grabinput, 0, 0, 1, _grabinput(grabinput););
 
@@ -703,6 +702,8 @@ int main(int argc, char **argv)
     notexture = textureload("textures/notexture");
     blanktexture = textureload("textures/blank");
     if(!notexture) fatal("could not find core textures");
+
+	SDL_ShowCursor(0);
 
 	conoutf("init: sound");
 	initsound();
