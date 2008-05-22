@@ -399,18 +399,6 @@ extern void connects(const char *servername = NULL);
 extern void abortconnect();
 extern void clientkeepalive();
 
-// command
-extern bool overrideidents, persistidents, worldidents, interactive;
-
-extern char *parseword(char *&p);
-extern void explodelist(const char *s, vector<char *> &elems);
-
-extern void clearoverrides();
-extern void writecfg();
-
-extern void checksleep(int millis);
-extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
-
 // console
 extern void writebinds(FILE *f);
 extern void writecompletions(FILE *f);

@@ -614,14 +614,14 @@ void exec(const char *cfgfile)
 	if(!execfile(cfgfile)) conoutf("could not read \"%s\"", cfgfile);
 }
 
-#if !defined(STANDALONE) && !defined(DAEMON)
 void writecfg()
 {
 	FILE *f = openfile("config.cfg", "w");
 	if(!f) return;
-	fprintf(f, "// Automatically written by Blood Frontier\n");
+#if !defined(STANDALONE) && !defined(DAEMON)
 	cc->writeclientinfo(f);
 	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n\n", ENG_VERSION, sv->gamever());
+#endif
 	enumerate(*idents, ident, id,
         if(!id.persist || id.world) continue;
         switch(id.type)
@@ -629,22 +629,23 @@ void writecfg()
             case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
             case ID_FVAR: fprintf(f, "%s %f\n", id.name, *id.storage.f); break;
             case ID_SVAR: fprintf(f, "%s [%s]\n", id.name, *id.storage.s); break;
+			case ID_ALIAS:
+			{
+				if(id.override==NO_OVERRIDE && !strstr(id.name, "nextmap_") && id.action[0])
+					fprintf(f, "\"%s\" = [%s]\n", id.name, id.action);
+				break;
+			}
 		}
 	);
+#if !defined(STANDALONE) && !defined(DAEMON)
 	writebinds(f);
-	enumerate(*idents, ident, id,
-        if(id.type==ID_ALIAS && id.persist && !id.world && id.override==NO_OVERRIDE && !strstr(id.name, "nextmap_") && id.action[0])
-		{
-            fprintf(f, "\"%s\" = [%s]\n", id.name, id.action);
-		}
-	);
 	writecompletions(f);
 	fprintf(f, "] [ echo \"WARNING: config from different version ignored\" ]\n");
+#endif
 	fclose(f);
 }
 
 COMMAND(writecfg, "");
-#endif
 
 // below the commands that implement a small imperative language. thanks to the semantics of
 // () and [] expressions, any control construct can be defined trivially.
