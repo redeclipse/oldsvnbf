@@ -693,6 +693,8 @@ struct physics
                 d->state = CS_LAGGED;
 				continue;
 			}
+			if(d->gunstate[d->gunselect] != GUNSTATE_NONE && lastmillis-d->gunlast[d->gunselect] >= d->gunwait[d->gunselect])
+				d->gunstate[d->gunselect] = GUNSTATE_NONE;
 			smoothplayer(d, 1, false);
 		}
 	}

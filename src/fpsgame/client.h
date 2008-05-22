@@ -651,6 +651,7 @@ struct clientcom : iclientcom
 				if(!f) break;
 				f->lifesequence = ls;
 				f->gunselect = gunselect;
+				f->gunstate[gunselect] = GUNSTATE_NONE;
 				f->state = CS_SPAWNING;
 				playsound(S_RESPAWN, &f->o);
 				break;
@@ -666,7 +667,11 @@ struct clientcom : iclientcom
 				f->lifesequence = getint(p);
 				f->health = getint(p);
 				f->gunselect = getint(p);
-				loopi(NUMGUNS) f->ammo[i] = getint(p);
+				loopi(NUMGUNS)
+				{
+					f->gunstate[i] = GUNSTATE_NONE;
+					f->ammo[i] = getint(p);
+				}
 				f->state = CS_ALIVE;
 				if(local)
 				{
@@ -691,7 +696,7 @@ struct clientcom : iclientcom
 				if(!s || gun < 0) break;
 				if(gun==GUN_SG) cl.ws.createrays(from, to);
 				s->gunstate[gun] = GUNSTATE_SHOOT;
-				s->gunwait[gun] = 0;
+				s->gunwait[gun] = guntype[gun].adelay;
 				s->gunlast[gun] = lastmillis;
 				s->lastattackgun = gun;
 				cl.ws.shootv(gun, from, to, s, false);

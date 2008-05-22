@@ -275,18 +275,17 @@ struct ctfclient : ctfstate
         settexture("textures/blip");
         if(f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators))) glColor4f(0.f, 0.f, 1.f, 1.f);
         else glColor4f(1.f, 0.f, 0.f, 1.f);
-		physent *d = cl.cc.spectator || editmode ? camera1 : cl.player1;
 		vec dir;
         if(flagblip) dir = f.owner ? f.owner->o : (f.droptime ? f.droploc : f.spawnloc);
         else dir = f.spawnloc;
-		dir.sub(d->o);
+		dir.sub(camera1->o);
 		dir.z = 0.0f;
         float size = flagblip ? 0.1f : 0.075f,
               xoffset = flagblip ? -2*(3/32.0f)*size : -size,
               yoffset = flagblip ? -2*(1 - 3/32.0f)*size : -size,
               dist = dir.magnitude();
         if(dist >= cl.radarrange()*(1 - 0.05f)) dir.mul(cl.radarrange()*(1 - 0.05f)/dist);
-		dir.rotate_around_z(-d->yaw*RAD);
+		dir.rotate_around_z(-camera1->yaw*RAD);
 		glBegin(GL_QUADS);
         cl.drawradar(x + s*0.5f*(1.0f + dir.x/cl.radarrange() + xoffset), y + s*0.5f*(1.0f + dir.y/cl.radarrange() + yoffset), size*s);
 		glEnd();

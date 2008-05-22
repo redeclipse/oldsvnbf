@@ -50,9 +50,9 @@ struct GAMECLIENT : igameclient
 	fpsent lastplayerstate;
 
 	IVARP(invmouse, 0, 0, 1);
-	IVARP(cameradist, 0, 8, 100);
-	IVARP(camerashift, 0, 8, 100);
-	IVARP(cameraheight, 0, 20, 90);
+	IVARP(cameradist, -100, 8, 100);
+	IVARP(camerashift, -100, 4, 100);
+	IVARP(cameraheight, 0, 35, 360);
 
 	IVARP(mousetype, 0, 0, 4);
 	IVARP(mousedeadzone, 0, 10, 100);
@@ -259,6 +259,9 @@ struct GAMECLIENT : igameclient
 		if(cc.ready())
 		{
 			if(!allowmove(player1) || saycommandon) player1->stopmoving();
+
+			if(player1->gunstate[player1->gunselect] != GUNSTATE_NONE && lastmillis-player1->gunlast[player1->gunselect] >= player1->gunwait[player1->gunselect])
+				player1->gunstate[player1->gunselect] = GUNSTATE_NONE;
 
 			#define adjustscaled(t,n,m) \
 				if(n) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); }
@@ -606,17 +609,16 @@ struct GAMECLIENT : igameclient
 
 	void drawblips(int x, int y, int s)
 	{
-		physent *d = cc.spectator || editmode ? camera1 : player1;
 		settexture("textures/blip");
 		glBegin(GL_QUADS);
 		loopv(players) if(players[i] && players[i]->state == CS_ALIVE)
 		{
 			fpsent *f = players[i];
 			vec dir(f->o);
-			dir.sub(d->o);
+			dir.sub(camera1->o);
 			float dist = dir.magnitude();
 			if(dist >= radarrange()) continue;
-			dir.rotate_around_z(-d->yaw*RAD);
+			dir.rotate_around_z(-camera1->yaw*RAD);
 			glColor4f(0.f, 1.f, 0.f, 1.f-(dist/radarrange()));
 			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (f->crouching ? 0.05f : 0.025f)*s);
 		}
@@ -629,11 +631,11 @@ struct GAMECLIENT : igameclient
 			{
 				bool insel = (editmode && (enthover == i || entgroup.find(i) >= 0));
 				vec dir(e.o);
-				dir.sub(d->o);
+				dir.sub(camera1->o);
 				float dist = dir.magnitude();
 				if(!insel && dist >= radarrange()) continue;
 				if(dist >= radarrange()*(1 - 0.05f)) dir.mul(radarrange()*(1 - 0.05f)/dist);
-				dir.rotate_around_z(-d->yaw*RAD);
+				dir.rotate_around_z(-camera1->yaw*RAD);
 				settexture("textures/blip");
 				glColor4f(1.f, 1.f, insel ? 1.0f : 0.f, insel ? 1.f : 1.f-(dist/radarrange()));
 				drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (insel ? 0.075f : 0.025f)*s);
@@ -1087,13 +1089,15 @@ struct GAMECLIENT : igameclient
 			camera1->aimyaw = mousetype() < 3 ? player1->yaw : player1->aimyaw;
 			camera1->aimpitch = 0-cameraheight();
 
-			camera1->move = -1;
-			camera1->strafe = 0;
-			loopi(10) if(!ph.moveplayer(camera1, 10, true, cameradist())) break;
-
-			camera1->move = 0;
-			camera1->strafe = -1;
-			loopi(10) if(!ph.moveplayer(camera1, 10, true, camerashift())) break;
+			#define cameramove(d,s) \
+				if(d) \
+				{ \
+					camera1->move = !s ? (d > 0 ? -1 : 1) : 0; \
+					camera1->strafe = s ? (d > 0 ? -1 : 1) : 0; \
+					loopi(10) if(!ph.moveplayer(camera1, 10, true, abs(d))) break; \
+				}
+			cameramove(cameradist(), false);
+			cameramove(camerashift(), true);
 
 			if(quakewobble > 0)
 			{

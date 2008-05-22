@@ -291,13 +291,12 @@ struct captureclient : capturestate
 				case -1: if(!b.owner[0] || !strcmp(b.owner, cl.player1->team)) continue; break;
 				case -2: if(!b.enemy[0] || !strcmp(b.enemy, cl.player1->team)) continue; break;
 			}
-			physent *d = cl.cc.spectator || editmode ? camera1 : cl.player1;
 			vec dir(b.o);
-			dir.sub(d->o);
+			dir.sub(camera1->o);
 			dir.z = 0.0f;
 			float dist = dir.magnitude();
 			if(dist >= cl.radarrange()) dir.mul(cl.radarrange()/dist);
-			dir.rotate_around_z(-d->yaw*RAD);
+			dir.rotate_around_z(-camera1->yaw*RAD);
 			cl.drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/cl.radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/cl.radarrange()), 0.1f*s);
 		}
 		glEnd();
