@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "engine.h"
 
-extern int outline;
+extern int outline, blankgeom;
 VARP(showcursorgrid, 0, 0, 1);
 VARP(showselgrid, 0, 0, 1);
 
@@ -10,7 +10,7 @@ void boxs(int orient, vec o, const vec &s)
 	int	d = dimension(orient),
 		  dc= dimcoord(orient);
 
-	float f = !outline ? 0 : (dc>0 ? 0.2f : -0.2f);
+	float f = !outline && !(fullbright && blankgeom) ? 0 : (dc>0 ? 0.2f : -0.2f);
 	o[D[d]] += float(dc) * s[D[d]] + f,
 
 	glBegin(GL_POLYGON);
@@ -39,7 +39,7 @@ void boxsgrid(int orient, vec o, vec s, int g)
 		  oy = o[C[d]],
 		  xs = s[R[d]],
 		  ys = s[C[d]],
-		  f = !outline ? 0 : (dc>0 ? 0.2f : -0.2f);
+		  f = !outline && !(fullbright && blankgeom) ? 0 : (dc>0 ? 0.2f : -0.2f);
 
 	o[D[d]] += dc * s[D[d]]*g + f;
 

@@ -1257,8 +1257,8 @@ void gl_drawframe(int w, int h)
 
 	rendergeom(causticspass);
 
-    extern int outline;
-    if(!wireframe && editmode && outline) renderoutline();
+    extern int outline, blankgeom;
+    if(!wireframe && editmode && (outline || (fullbright && blankgeom))) renderoutline();
 
 	queryreflections();
 
