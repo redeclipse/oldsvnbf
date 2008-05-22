@@ -506,7 +506,7 @@ extern void loadsky(char *basename);
 
 // main
 extern void setcaption(const char *text);
-extern int grabmouse, perflevel, colorpos;
+extern int grabinput, perflevel, colorpos;
 extern char colorstack[10];
 extern int getmatvec(vec v);
 

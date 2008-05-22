@@ -65,7 +65,7 @@ struct physics
 
 	vec feetpos(physent *d)
 	{
-		return vec(d->o).sub(vec(0, 0, d->height));
+		return vec(d->o).sub(vec(0, 0, d->height-1.f));
 	}
 
 	float stairheight(physent *d)

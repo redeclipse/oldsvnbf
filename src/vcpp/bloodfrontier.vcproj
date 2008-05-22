@@ -1413,7 +1413,7 @@
 			Name="fpsgame"
 			>
 			<File
-				RelativePath="..\fpsgame\bfa.cpp"
+				RelativePath="..\fpsgame\fps.cpp"
 				>
 			</File>
 			<File
