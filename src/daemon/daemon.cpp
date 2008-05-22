@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     {
 		int _lastmillis = lastmillis;
 		lastmillis = totalmillis = (int)enet_time_get();
-		lastmillis = lastmillis-_lastmillis;
+		curtime = lastmillis-_lastmillis;
 
         checkmaster();
     }
