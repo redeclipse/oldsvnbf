@@ -375,19 +375,16 @@ void checkinput()
 #ifdef __APPLE__
 					if(event.motion.y == 0) break;  //let mac users drag windows via the title bar
 #endif
-					conoutf("mouse %d %d %d %d %d %d (%s, %s, %s)", event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h, warpmouse ? "warp" : "move", grabinput ? "grab" : "free", activewindow ? "active" : "inactive");
 					if(warpmouse && event.motion.x == screen->w/2 && event.motion.y == screen->h/2)
 					{
-						conoutf("mouse warped");
 						warpmouse = false;
-						if(grabinput) break;
+						break;
 					}
 
 					if(cl->mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h))
 					{
 						if(grabinput)
 						{
-							conoutf("mouse warping");
 							SDL_WarpMouse(screen->w/2, screen->h/2);
 							warpmouse = true;
 						}

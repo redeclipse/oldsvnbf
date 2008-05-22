@@ -1100,11 +1100,13 @@ static void changeglow(renderstate &cur, int pass, Slot &slot)
     cur.glowcolor = color;
 }
 
+VAR(geomnotexture, 0, 0, 1);
+
 static void changeslottmus(renderstate &cur, int pass, Slot &slot)
 {
     if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR)
     {
-        GLuint diffusetex = slot.sts.empty() ? notexture->id : slot.sts[0].t->id;
+        GLuint diffusetex = geomnotexture || slot.sts.empty() ? notexture->id : slot.sts[0].t->id;
         if(cur.textures[cur.diffusetmu]!=diffusetex)
             glBindTexture(GL_TEXTURE_2D, cur.textures[cur.diffusetmu] = diffusetex);
     }
@@ -1139,28 +1141,30 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot)
         loopvj(slot.sts)
         {
             Slot::Tex &t = slot.sts[j];
+            Texture *u = slot.sts[j].t;
             if(t.type==TEX_DIFFUSE || t.combined>=0) continue;
+            if(t.type==TEX_DIFFUSE && geomnotexture) u = notexture;
             if(t.type==TEX_ENVMAP)
             {
-                if(envmaptmu>=0 && cur.textures[envmaptmu]!=t.t->id)
+                if(envmaptmu>=0 && cur.textures[envmaptmu]!=u->id)
                 {
                     glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cur.textures[envmaptmu] = t.t->id);
+                    glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cur.textures[envmaptmu] = u->id);
                 }
                 continue;
             }
-            else if(cur.textures[tmu]!=t.t->id)
+            else if(cur.textures[tmu]!=u->id)
             {
                 glActiveTexture_(GL_TEXTURE0_ARB+tmu);
-                glBindTexture(GL_TEXTURE_2D, cur.textures[tmu] = t.t->id);
+                glBindTexture(GL_TEXTURE_2D, cur.textures[tmu] = u->id);
             }
             tmu++;
         }
         glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
     }
 
-    Texture *curtex = !cur.slot || cur.slot->sts.empty() ? notexture : cur.slot->sts[0].t,
-            *tex = slot.sts.empty() ? notexture : slot.sts[0].t;
+    Texture *curtex = geomnotexture || !cur.slot || cur.slot->sts.empty() ? notexture : cur.slot->sts[0].t,
+            *tex = geomnotexture || slot.sts.empty() ? notexture : slot.sts[0].t;
     if(!cur.slot || slot.sts.empty() ||
         (curtex->xs != tex->xs || curtex->ys != tex->ys ||
          cur.slot->rotation != slot.rotation || cur.slot->scale != slot.scale ||
