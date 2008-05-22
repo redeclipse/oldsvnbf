@@ -1100,13 +1100,13 @@ static void changeglow(renderstate &cur, int pass, Slot &slot)
     cur.glowcolor = color;
 }
 
-VAR(geomnotexture, 0, 0, 1);
+VAR(blankgeom, 0, 0, 1);
 
 static void changeslottmus(renderstate &cur, int pass, Slot &slot)
 {
     if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR)
     {
-        GLuint diffusetex = geomnotexture || slot.sts.empty() ? notexture->id : slot.sts[0].t->id;
+        GLuint diffusetex = blankgeom ? blanktexture->id : (slot.sts.empty() ? notexture->id : slot.sts[0].t->id);
         if(cur.textures[cur.diffusetmu]!=diffusetex)
             glBindTexture(GL_TEXTURE_2D, cur.textures[cur.diffusetmu] = diffusetex);
     }
@@ -1143,7 +1143,7 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot)
             Slot::Tex &t = slot.sts[j];
             Texture *u = slot.sts[j].t;
             if(t.type==TEX_DIFFUSE || t.combined>=0) continue;
-            if(t.type==TEX_DIFFUSE && geomnotexture) u = notexture;
+            if(t.type==TEX_DIFFUSE && blankgeom) u = blanktexture;
             if(t.type==TEX_ENVMAP)
             {
                 if(envmaptmu>=0 && cur.textures[envmaptmu]!=u->id)
@@ -1163,8 +1163,9 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot)
         glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
     }
 
-    Texture *curtex = geomnotexture || !cur.slot || cur.slot->sts.empty() ? notexture : cur.slot->sts[0].t,
-            *tex = geomnotexture || slot.sts.empty() ? notexture : slot.sts[0].t;
+    Texture *curtex = blankgeom ? blanktexture :
+		(!cur.slot || cur.slot->sts.empty() ? notexture : cur.slot->sts[0].t),
+            *tex = blankgeom ? blanktexture : (slot.sts.empty() ? notexture : slot.sts[0].t);
     if(!cur.slot || slot.sts.empty() ||
         (curtex->xs != tex->xs || curtex->ys != tex->ys ||
          cur.slot->rotation != slot.rotation || cur.slot->scale != slot.scale ||

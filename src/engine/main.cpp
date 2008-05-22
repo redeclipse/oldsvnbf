@@ -701,6 +701,7 @@ int main(int argc, char **argv)
     gl_checkextensions();
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
     notexture = textureload("textures/notexture");
+    blanktexture = textureload("textures/blank");
     if(!notexture) fatal("could not find core textures");
 
 	conoutf("init: sound");

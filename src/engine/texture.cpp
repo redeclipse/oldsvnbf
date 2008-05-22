@@ -279,7 +279,7 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 
 hashtable<char *, Texture> textures;
 
-Texture *notexture = NULL; // used as default, ensured to be loaded
+Texture *notexture = NULL, *blanktexture = NULL; // used as default, ensured to be loaded
 
 static GLenum texformat(int bpp)
 {
