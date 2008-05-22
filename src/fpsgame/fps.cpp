@@ -1016,7 +1016,7 @@ struct GAMECLIENT : igameclient
 		if(pitch > MAXPITCH) pitch = MAXPITCH;
 		if(pitch < -MAXPITCH) pitch = -MAXPITCH;
 		while(yaw < 0.0f) yaw += 360.0f;
-		while(yaw >= 360.0f) yaw -= 360.0f;
+		while(yaw > 360.0f) yaw -= 360.0f;
 	}
 
 	void fixview(int w, int h)
