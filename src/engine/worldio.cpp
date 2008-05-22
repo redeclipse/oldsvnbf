@@ -234,15 +234,13 @@ cube *loadchildren(gzFile f)
 
 void save_config()
 {
-	#if 0
-	const char *targname = findfile(mcfname, "r");
+	s_sprintfd(targname)("%s", findfile(mcfname, "w"));
 	if(fileexists(targname, "r"))
 	{
-		const char *newname = findfile(makefile(mapname, ".cfg", true, false), "w");
+		const char *newname = findfile(makefile(mapname, ".cfg"), "w");
 		rename(targname, newname);
 		if(verbose) conoutf("made backup of %s to %s", targname, newname);
 	}
-	#endif
 
 	FILE *h = openfile(mcfname, "w");
 	if(!h) { conoutf("could not write config to %s", mcfname); return; }
@@ -346,15 +344,13 @@ void save_world(const char *mname, bool nolms)
 
 	setnames(fname);
 
-	#if 0
-	const char *targname = findfile(bgzname[MAP_BFGZ], "r");
+	s_sprintfd(targname)("%s", findfile(bgzname[MAP_BFGZ], "w"));
 	if(fileexists(targname, "r"))
 	{
-		const char *newname = findfile(makefile(mapname, mapexts[MAP_BFGZ].name, true, false), "w");
+		const char *newname = findfile(makefile(mapname, mapexts[MAP_BFGZ].name), "w");
 		rename(targname, newname);
 		if(verbose) conoutf("made backup of %s to %s", targname, newname);
 	}
-	#endif
 
 	gzFile f = opengzfile(bgzname[MAP_BFGZ], "wb9");
 	if(!f) { conoutf("error saving '%s' to '%s': file error", mapname, bgzname[MAP_BFGZ]); return; }

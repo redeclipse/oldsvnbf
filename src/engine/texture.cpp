@@ -373,7 +373,7 @@ static vec parsevec(const char *arg)
 SDL_Surface *textureloadname(const char *name)
 {
 	SDL_Surface *s = NULL;
-	const char *exts[] = { "", ".png", ".tga", ".jpg" };
+	const char *exts[] = { "", ".png", ".tga", ".jpg", ".bmp" }; // bmp is a last resort!
 	string buf;
 	loopi(sizeof(exts)/sizeof(exts[0]))
 	{
