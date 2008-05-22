@@ -127,19 +127,11 @@ void setfullscreen(bool enable)
 #if defined(WIN32) || defined(__APPLE__)
     initwarning(enable ? "fullscreen" : "windowed");
 #else
-    if(enable == !(screen->flags&SDL_FULLSCREEN))
-    {
-        SDL_WM_ToggleFullScreen(screen);
-        SDL_WM_GrabInput((screen->flags&SDL_FULLSCREEN) ? SDL_GRAB_ON : SDL_GRAB_OFF);
-    }
+    if(enable == !(screen->flags&SDL_FULLSCREEN)) SDL_WM_ToggleFullScreen(screen);
 #endif
 }
 
-#ifdef _DEBUG
 VARF(fullscreen, 0, 0, 1, setfullscreen(fullscreen!=0));
-#else
-VARF(fullscreen, 0, 1, 1, setfullscreen(fullscreen!=0));
-#endif
 
 void screenres(int *w, int *h)
 {
@@ -247,12 +239,6 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
     scr_w = screen->w;
     scr_h = screen->h;
 
-    #ifdef WIN32
-    SDL_WM_GrabInput(SDL_GRAB_ON);
-    #else
-    SDL_WM_GrabInput(fullscreen ? SDL_GRAB_ON : SDL_GRAB_OFF);
-    #endif
-
     usedcolorbits = hasbpp ? colorbits : 0;
     useddepthbits = config&1 ? depthbits : 0;
     usedfsaa = config&4 ? fsaa : 0;
@@ -319,7 +305,7 @@ void keyrepeat(bool on)
 }
 
 int ignoremouse = 5;
-bool activewindow = true;
+bool activewindow = true, warpmouse = false;
 
 vector<SDL_Event> events;
 
@@ -373,42 +359,56 @@ void checkinput()
 				break;
 
 			case SDL_ACTIVEEVENT:
+			{
 				if(event.active.state & SDL_APPINPUTFOCUS)
 				{
-					setvar("grabmouse", event.active.gain ? 1 : 0, true);
+					setvar("grabinput", event.active.gain ? 1 : 0, true);
 					activewindow = event.active.gain ? true : false;
 				}
 				break;
-
+			}
 			case SDL_MOUSEMOTION:
-				if (ignoremouse) { ignoremouse--; break; }
-				if ((screen->flags&SDL_FULLSCREEN) || grabmouse || activewindow)
+			{
+				if(ignoremouse) { ignoremouse--; break; }
+				if(grabinput || activewindow)
 				{
 #ifdef __APPLE__
 					if(event.motion.y == 0) break;  //let mac users drag windows via the title bar
 #endif
-					if(cl->mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h)
-						&& ((screen->flags&SDL_FULLSCREEN) || grabmouse))
+					conoutf("mouse %d %d %d %d %d %d (%s, %s, %s)", event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h, warpmouse ? "warp" : "move", grabinput ? "grab" : "free", activewindow ? "active" : "inactive");
+					if(warpmouse && event.motion.x == screen->w/2 && event.motion.y == screen->h/2)
 					{
-						SDL_WarpMouse(screen->w/2, screen->h/2);
-						ignoremouse++;
+						conoutf("mouse warped");
+						warpmouse = false;
+						if(grabinput) break;
+					}
+
+					if(cl->mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h))
+					{
+						if(grabinput)
+						{
+							conoutf("mouse warping");
+							SDL_WarpMouse(screen->w/2, screen->h/2);
+							warpmouse = true;
+						}
 					}
 				}
 				break;
-
+			}
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
+			{
 				if (lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
 				keypress(-event.button.button, event.button.state!=0, 0);
 				lasttype = event.type;
 				lastbut = event.button.button;
 				break;
+			}
 		}
 	}
 }
 
 VARF(gamespeed, 10, 100, 1000, if(multiplayer()) gamespeed = 100);
-
 VARF(paused, 0, 0, 1, if(multiplayer()) paused = 0);
 
 VARP(maxfps, 0, 200, 500);
@@ -519,15 +519,13 @@ VARFP(clockfix, 0, 0, 1, clockreset());
 VAR(version, 1, ENG_VERSION, -1); // for scripts
 VARP(verbose, 0, 0, 4); // be more or less expressive to console
 
-void _grabmouse(int n)
+void _grabinput(int n)
 {
-	if(!(screen->flags&SDL_FULLSCREEN))
-		SDL_WM_GrabInput(n ? SDL_GRAB_ON : SDL_GRAB_OFF);
-
+	SDL_WM_GrabInput(n ? SDL_GRAB_ON : SDL_GRAB_OFF);
 	keyrepeat(n ? false : true);
 	SDL_ShowCursor(n ? 0 : 1);
 }
-VARF(grabmouse, 0, 1, 1, _grabmouse(grabmouse););
+VARF(grabinput, 0, 1, 1, _grabinput(grabinput););
 
 VAR(curfps, 1, 0, -1);
 VAR(bestfps, 1, 0, -1);
@@ -700,7 +698,7 @@ int main(int argc, char **argv)
 
 	conoutf("init: video: misc");
 	setcaption("loading..");
-	setvar("grabmouse", 1, true);
+	setvar("grabinput", 1, true);
 
 	conoutf("init: gl");
     gl_checkextensions();
