@@ -1,24 +1,5 @@
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-
 #include "pch.h"
-#include "cube.h"
-
-#include <enet/time.h>
-
-#ifdef WIN32
-#include <winerror.h>
-#ifndef ENOTCONN
-#define ENOTCONN WSAENOTCONN
-#endif
-#endif
-
-#define KEEPALIVE_TIME (65*60*1000)
-#define CLIENT_TIME (3*60*1000)
-#define CLIENT_LIMIT 1024
-#define SERVER_LIMIT (10*1024)
+#include "engine.h"
 
 struct gameserver
 {
@@ -76,13 +57,18 @@ vector<client *> clients;
 
 ENetSocket serversocket = ENET_SOCKET_NULL;
 
-enet_uint32 curtime = 0;
+int curtime = 0, lastmillis = 0, totalmillis = 0;
 
-void fatal(const char *fmt, ...)
+VARP(verbose, 0, 1, 3);
+
+void conoutf(const char *s, ...) { s_sprintfdlv(str, s, s); printf("%s\n", str); }
+void console(const char *s, int n, ...) { s_sprintfdlv(str, n, s); printf("%s\n", str); }
+void servertoclient(int chan, uchar *buf, int len) {}
+void fatal(const char *s, ...)
 {
     va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
+    va_start(args, s);
+    vprintf(s, args);
     va_end(args);
     exit(EXIT_FAILURE);
 }
@@ -138,7 +124,7 @@ void addgameserver(client &c)
         gameserver &s = gameservers[i];
         if(s.address.host==c.address.host)
         {
-            s.registertime = curtime;
+            s.registertime = lastmillis;
             c.output = &renewresponse;
             c.outputpos = 0;
             return;
@@ -146,7 +132,7 @@ void addgameserver(client &c)
     }
     gameserver &s = gameservers.add();
     s.address = c.address;
-    s.registertime = curtime;
+    s.registertime = lastmillis;
     c.output = &registerresponse;
     c.outputpos = 0;
     string name;
@@ -160,7 +146,7 @@ void checkgameservers()
     loopv(gameservers)
     {
         gameserver &s = gameservers[i];
-        if(ENET_TIME_DIFFERENCE(curtime, s.registertime) > KEEPALIVE_TIME)
+        if(ENET_TIME_DIFFERENCE(lastmillis, s.registertime) > KEEPALIVE_TIME)
         {
             gameservers.remove(i--);
             updateserverlist = true;
@@ -227,7 +213,6 @@ void checkclients()
     tv.tv_usec = 0;
     if(select(nfds+1, &readset, &writeset, NULL, &tv)<=0) return;
 
-    curtime = enet_time_get();
     if(FD_ISSET(serversocket, &readset))
     {
         ENetAddress address;
@@ -238,7 +223,7 @@ void checkclients()
             client *c = new client;
             c->address = address;
             c->socket = clientsocket;
-            c->connecttime = curtime;
+            c->connecttime = lastmillis;
             clients.add(c);
         }
     }
@@ -273,10 +258,9 @@ void checkclients()
             }
             else if(errno==ENOTCONN) { purgeclient(i--); continue; }
         }
-        if(ENET_TIME_DIFFERENCE(curtime, c.connecttime) >= CLIENT_TIME) { purgeclient(i--); continue; }
+        if(ENET_TIME_DIFFERENCE(lastmillis, c.connecttime) >= CLIENT_TIME) { purgeclient(i--); continue; }
     }
 }
-
 
 int main(int argc, char **argv)
 {
@@ -290,6 +274,10 @@ int main(int argc, char **argv)
     setupserver(port, ip);
     for(;;)
     {
+		int _lastmillis = lastmillis;
+		lastmillis = totalmillis = (int)enet_time_get();
+		lastmillis = lastmillis-_lastmillis;
+
         checkgameservers();
         checkclients();
     }

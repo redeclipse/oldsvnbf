@@ -5,9 +5,9 @@
 #define MASTER_PORT		28800
 
 #include "tools.h"
+#include "command.h"
 #ifndef DAEMON
 #include "geom.h"
 #include "attrs.h"
-#include "command.h"
 #include "ents.h"
 #endif

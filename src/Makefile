@@ -54,8 +54,10 @@ SERVER_OBJS= \
 DINCLUDES= -Ishared -Idaemon -Ienet/include -Iinclude -Iengine -Ifpsgame
 DCXXFLAGS= -Wall -fsigned-char -DDAEMON $(CXXOPTFLAGS) $(DINCLUDES)
 
-DAEMON_LIBS=-Lenet -lenet
+DAEMON_LIBS=-Lenet -lenet -lz
 DAEMON_OBJS= \
+	shared/tools-daemon.o \
+	shared/command-daemon.o \
 	daemon/daemon.o
 
 default: all
@@ -85,6 +87,12 @@ engine/server-standalone.o:
 
 fpsgame/fps-standalone.o:
 	$(CXX) $(SCXXFLAGS) -c -o fpsgame/fps-standalone.o fpsgame/fps.cpp
+
+shared/tools-daemon.o:
+	$(CXX) $(DCXXFLAGS) -c -o shared/tools-daemon.o shared/tools.cpp
+
+shared/command-daemon.o:
+	$(CXX) $(DCXXFLAGS) -c -o shared/command-daemon.o shared/tools.cpp
 
 daemon/daemon.o:
 	$(CXX) $(DCXXFLAGS) -c -o daemon/daemon.o daemon/daemon.cpp

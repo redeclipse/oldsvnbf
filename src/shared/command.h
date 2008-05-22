@@ -81,6 +81,26 @@ extern void result(const char *s);
 typedef hashtable<const char *, ident> identtable;
 extern identtable *idents;
 
+extern int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool world);
+extern float fvariable(const char *name, float cur, float *storage, void (*fun)(), bool persist, bool world);
+extern char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), bool persist, bool world);
+extern void setvar(const char *name, int i, bool dofunc = false);
+extern void setfvar(const char *name, float f, bool dofunc = false);
+extern void setsvar(const char *name, const char *str, bool dofunc = false);
+extern int getvar(const char *name);
+extern int getvarmin(const char *name);
+extern int getvarmax(const char *name);
+extern bool identexists(const char *name);
+extern ident *getident(const char *name);
+extern bool addcommand(const char *name, void (*fun)(), const char *narg);
+extern int execute(const char *p);
+extern char *executeret(const char *p);
+extern void exec(const char *cfgfile);
+extern bool execfile(const char *cfgfile);
+extern void alias(const char *name, const char *action);
+extern void worldalias(const char *name, const char *action);
+extern const char *getalias(const char *name);
+
 // nasty macros for registering script functions, abuses globals to avoid excessive infrastructure
 #define COMMANDN(name, fun, nargs) static bool __dummy_##fun = addcommand(#name, (void (*)())fun, nargs)
 #define COMMAND(name, nargs) COMMANDN(name, name, nargs)
