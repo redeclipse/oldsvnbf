@@ -53,10 +53,9 @@ struct entities : icliententities
 		{
 			particle_text(d->abovehead(), itemname(n), 15);
 			playsound(S_ITEMPICKUP, &d->o);
-			if(d==cl.player1 || d->bot)
-				d->useitem(m, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+			d->useitem(m, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+			ents[n]->spawned = false;
 		}
-		ents[n]->spawned = false; // if the server sent this, then the ent is gone
 	}
 
 	// these functions are called when the client touches the item

@@ -36,7 +36,7 @@ struct weaponstate
 			while (s >= NUMGUNS) s -= NUMGUNS;
 			while (s <= -1) s += NUMGUNS;
 
-			if (!d->canweapon(s, lastmillis))
+			if (!d->canswitch(s, lastmillis))
 			{
 				if (a >= 0) return;
 			}
@@ -45,10 +45,10 @@ struct weaponstate
 
 		if(s != d->gunselect)
 		{
-			cl.cc.addmsg(SV_GUNSELECT, "ri2", d->clientnum, s);
+			d->gunswitch(s, lastmillis);
+			cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			cl.playsoundc(S_SWITCH, d);
 		}
-		d->gunselect = s;
 	}
 
 	void offsetray(vec &from, vec &to, int spread, vec &dest)
@@ -299,9 +299,7 @@ struct weaponstate
 	{
 		if (d->canreload(d->gunselect, lastmillis))
 		{
-			d->gunstate[d->gunselect] = GUNSTATE_RELOAD;
-			d->gunlast[d->gunselect] = lastmillis;
-			d->gunwait[d->gunselect] = guntype[d->gunselect].rdelay;
+			d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
 			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			cl.playsoundc(S_RELOAD);
 		}
