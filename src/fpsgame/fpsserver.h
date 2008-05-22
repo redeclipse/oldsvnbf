@@ -16,7 +16,7 @@ struct GAMESERVER : igameserver
 
     static const int DEATHMILLIS = 300;
 
-	enum { GE_NONE = 0, GE_SHOT, GE_RELOAD, GE_EXPLODE, GE_HIT, GE_SUICIDE, GE_USE };
+	enum { GE_NONE = 0, GE_SHOT, GE_SWITCH, GE_RELOAD, GE_EXPLODE, GE_HIT, GE_SUICIDE, GE_USE };
 
 	struct shotevent
 	{
@@ -24,6 +24,13 @@ struct GAMESERVER : igameserver
         int millis, id;
 		int gun;
 		float from[3], to[3];
+	};
+
+	struct switchevent
+	{
+		int type;
+		int millis, id;
+		int gun;
 	};
 
 	struct reloadevent
@@ -70,6 +77,7 @@ struct GAMESERVER : igameserver
 	{
 		int type;
 		shotevent shot;
+		switchevent gunsel;
 		reloadevent reload;
 		explodeevent explode;
 		hitevent hit;
@@ -964,6 +972,18 @@ struct GAMESERVER : igameserver
         #define QUEUE_UINT(n) QUEUE_BUF(4, putuint(buf, n))
         #define QUEUE_FLT(n) QUEUE_BUF(4, putfloat(buf, n))
         #define QUEUE_STR(text) QUEUE_BUF(2*strlen(text)+1, sendstring(text, buf))
+
+		#define seteventmillis(event, eventcond) \
+		{ \
+			if(!cp->timesync || (cp->events.length()==1 && eventcond)) \
+			{ \
+				cp->timesync = true; \
+				cp->gameoffset = gamemillis - event.id; \
+				event.millis = gamemillis; \
+			} \
+			else event.millis = cp->gameoffset + event.id; \
+		}
+
 		int curmsg;
         while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci))
 		{
@@ -1059,13 +1079,15 @@ struct GAMESERVER : igameserver
 
 			case SV_GUNSELECT:
 			{
-				int lcn = getint(p), gunselect = getint(p);
+                int lcn = getint(p), id = getint(p), gun = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
 				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-                if(cp->state.state!=CS_ALIVE) break;
-				cp->state.gunselect = gunselect;
-				QUEUE_MSG;
-				break;
+				gameevent &gunsel = cp->addevent();
+				gunsel.type = GE_SWITCH;
+				gunsel.gunsel.id = id;
+				gunsel.gunsel.gun = gun;
+                seteventmillis(gunsel.gunsel, ci->state.canswitch(gunsel.gunsel.gun, gamemillis));
+                break;
 			}
 
 			case SV_SPAWN:
@@ -1106,16 +1128,6 @@ struct GAMESERVER : igameserver
 				}
 				gameevent &shot = cp->addevent();
 				shot.type = GE_SHOT;
-                #define seteventmillis(event, eventcond) \
-                { \
-                    if(!cp->timesync || (cp->events.length()==1 && eventcond)) \
-                    { \
-                        cp->timesync = true; \
-                        cp->gameoffset = gamemillis - event.id; \
-                        event.millis = gamemillis; \
-                    } \
-                    else event.millis = cp->gameoffset + event.id; \
-				}
 				shot.shot.id = getint(p);
 				shot.shot.gun = getint(p);
                 seteventmillis(shot.shot, ci->state.canshoot(shot.shot.gun, gamemillis));
@@ -1881,12 +1893,20 @@ struct GAMESERVER : igameserver
 		}
 	}
 
+	void processevent(clientinfo *ci, switchevent &e)
+	{
+		gamestate &gs = ci->state;
+		if(!gs.isalive(gamemillis) || !gs.canswitch(e.gun, e.millis)) { return; }
+		gs.gunswitch(e.gun, e.millis);
+		sendf(-1, 1, "ri4", SV_GUNSELECT, ci->clientnum, e.gun, e.millis);
+	}
+
 	void processevent(clientinfo *ci, reloadevent &e)
 	{
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canreload(e.gun, e.millis)) { return; }
 		gs.useitem(e.millis, WEAPON, e.gun, guntype[e.gun].add);
-		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
+		sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, e.gun, e.millis, gs.ammo[e.gun]);
 	}
 
 	void processevent(clientinfo *ci, useevent &e)
@@ -1907,8 +1927,8 @@ struct GAMESERVER : igameserver
 		}
 		sents[e.ent].spawned = false;
 		sents[e.ent].spawntime = spawntime(sents[e.ent].type);
-		sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.millis, e.ent);
 		ci->state.useitem(e.millis, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
+		sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.millis, e.ent);
 	}
 
 	void processevents()
@@ -1943,6 +1963,7 @@ struct GAMESERVER : igameserver
 				{
 					case GE_SHOT: processevent(ci, e.shot); break;
 					case GE_EXPLODE: processevent(ci, e.explode); break;
+					case GE_SWITCH: processevent(ci, e.gunsel); break;
 					case GE_RELOAD: processevent(ci, e.reload); break;
 					// untimed events
 					case GE_SUICIDE: processevent(ci, e.suicide); break;

@@ -719,10 +719,10 @@ struct clientcom : iclientcom
 
 			case SV_RELOAD:
 			{
-				int trg = getint(p), gun = getint(p), amt = getint(p);
+				int trg = getint(p), gun = getint(p), m = getint(p), amt = getint(p);
 				fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
 				if(!target || gun <= -1 || gun >= NUMGUNS) break;
-				target->ammo[gun] = amt;
+				target->gunreload(gun, amt, m);
 				break;
 			}
 
@@ -760,10 +760,10 @@ struct clientcom : iclientcom
 
 			case SV_GUNSELECT:
 			{
-				int lcn = getint(p), gun = getint(p);
-				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
-				if(!f) break;
-				f->gunselect = gun;
+				int trg = getint(p), gun = getint(p), m = getint(p);
+				fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
+				if(!target || gun <= -1 || gun >= NUMGUNS) break;
+				target->gunswitch(gun, m);
 				break;
 			}
 

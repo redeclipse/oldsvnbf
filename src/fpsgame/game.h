@@ -83,6 +83,7 @@ struct fpsentity : extentity
 
 #define SGRAYS			20
 #define SGSPREAD		3
+#define GUNSWITCHDELAY	1000
 
 enum
 {
@@ -99,6 +100,7 @@ enum
 enum
 {
 	GUNSTATE_NONE = 0,
+	GUNSTATE_SWITCH,
 	GUNSTATE_SHOOT,
 	GUNSTATE_RELOAD,
 	GUNSTATE_MAX
@@ -217,7 +219,7 @@ static char msgsizelookup(int msg)
 		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 2,
 		SV_DIED, 7, SV_DAMAGE, 11, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 10, SV_SPAWN, 4, SV_FORCEDEATH, 2,
-		SV_GUNSELECT, 3, SV_TAUNT, 2,
+		SV_GUNSELECT, 0, SV_TAUNT, 2,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 4, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
 		SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_ITEMACC, 4,
@@ -363,9 +365,9 @@ struct fpsstate
 	}
 	~fpsstate() {}
 
-	bool canweapon(int gun, int millis)
+	bool canswitch(int gun, int millis)
 	{
-		if (isgun(gun) && (gunselect != gun) && ammo[gun] >= 0 && (guntype[gun].rdelay > 0 || ammo[gun] > 0))
+		if (isgun(gun) && (gunselect != gun) && ammo[gun] >= 0 && (guntype[gun].rdelay > 0 || ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]) && (millis-gunlast[gunselect] >= gunwait[gunselect]))
 			return true;
 		return false;
 	}
@@ -399,37 +401,52 @@ struct fpsstate
 		return false;
 	}
 
+	void gunswitch(int gun, int millis)
+	{
+		gunselect = gun;
+		gunstate[gun] = GUNSTATE_SWITCH;
+		gunwait[gun] = GUNSWITCHDELAY;
+		gunlast[gun] = lastshot = millis;
+	}
+
+	void gunreload(int gun, int amt, int millis)
+	{
+		gunstate[gun] = GUNSTATE_RELOAD;
+		gunlast[gun] = millis;
+		gunwait[gun] = guntype[gun].rdelay;
+		ammo[gun] = amt;
+	}
+
 	void useitem(int millis, int type, int attr1, int attr2)
 	{
 		switch (type)
 		{
 			case WEAPON:
 			{
-				guntypes &g = guntype[attr1];
-
-				if (ammo[g.info] < 0) ammo[g.info] = 0;
+				if (ammo[attr1] < 0) ammo[attr1] = 0;
 
 				int carry = 0;
 				loopi(NUMGUNS) if (ammo[i] >= 0 && guntype[i].rdelay > 0) carry++;
 				if (carry > MAXCARRY)
 				{
-					if (gunselect != g.info && guntype[gunselect].rdelay > 0)
+					if (gunselect != attr1 && guntype[gunselect].rdelay > 0)
 					{
 						ammo[gunselect] = -1;
-						gunselect = g.info;
+						gunselect = attr1;
 					}
-					else loopi(NUMGUNS) if (ammo[i] >= 0 && i != g.info && guntype[i].rdelay > 0)
+					else loopi(NUMGUNS) if (ammo[i] >= 0 && i != attr1 && guntype[i].rdelay > 0)
 					{
 						ammo[i] = -1;
 						break;
 					}
 				}
 
-				ammo[g.info] = min(ammo[g.info] + (attr2 > 0 ? attr2 : g.add), g.max);
+				guntypes &g = guntype[attr1];
+				ammo[attr1] = min(ammo[attr1] + (attr2 > 0 ? attr2 : g.add), g.max);
 
-				gunstate[g.info] = GUNSTATE_RELOAD;
-				gunwait[g.info] = (guntype[g.info].rdelay ? guntype[g.info].rdelay : guntype[g.info].adelay);
-				gunlast[g.info] = lastshot = millis;
+				gunstate[attr1] = GUNSTATE_RELOAD;
+				gunwait[attr1] = (guntype[attr1].rdelay ? guntype[attr1].rdelay : guntype[attr1].adelay);
+				gunlast[attr1] = lastshot = millis;
 				break;
 			}
 			default: break;
