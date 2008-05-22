@@ -289,7 +289,7 @@ struct cubemapside
 };
 
 extern cubemapside cubemapsides[6];
-extern Texture *notexture;
+extern Texture *notexture, *blanktexture;
 extern Shader *defaultshader, *notextureshader, *nocolorshader, *foggedshader, *foggednotextureshader, *stdworldshader;
 extern int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams;
 

@@ -1680,7 +1680,7 @@ void dumplms()
 			}
 			s_sprintfd(fname)("lightmap_%s_%d", getmapname(), i);
 			const char *name = makefile(fname, ".bmp", false, false);
-			SDL_SaveBMP(temp, findfile(fname, "wb"));
+			SDL_SaveBMP(temp, findfile(name, "wb"));
 		}
 		SDL_FreeSurface(temp);
 	}
