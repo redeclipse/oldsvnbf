@@ -311,8 +311,8 @@ struct weaponstate
 
 		d->lastattackgun = d->gunselect;
 		d->gunstate[d->gunselect] = GUNSTATE_SHOOT;
-		d->gunlast[d->gunselect] = lastmillis;
 		d->gunwait[d->gunselect] = guntype[d->gunselect].adelay;
+		d->gunlast[d->gunselect] = lastmillis;
 		d->ammo[d->gunselect]--;
 		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 

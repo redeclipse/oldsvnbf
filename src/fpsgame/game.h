@@ -403,10 +403,13 @@ struct fpsstate
 
 	void gunswitch(int gun, int millis)
 	{
+		gunstate[gunselect] = GUNSTATE_SWITCH;
+		gunwait[gunselect] = GUNSWITCHDELAY;
+		gunlast[gunselect] = millis;
 		gunselect = gun;
-		gunstate[gun] = GUNSTATE_SWITCH;
-		gunwait[gun] = GUNSWITCHDELAY;
-		gunlast[gun] = lastshot = millis;
+		gunstate[gunselect] = GUNSTATE_SWITCH;
+		gunwait[gunselect] = GUNSWITCHDELAY;
+		gunlast[gunselect] = millis;
 	}
 
 	void gunreload(int gun, int amt, int millis)
@@ -474,6 +477,7 @@ struct fpsstate
 			gunselect = GUN_RIFLE;
 			loopi(NUMGUNS)
 			{
+				gunstate[i] = GUNSTATE_NONE;
 				ammo[i] = (i == GUN_RIFLE ? guntype[i].add : -1);
 			}
 		}
@@ -483,6 +487,7 @@ struct fpsstate
 			gunselect = GUN_PISTOL;
 			loopi(NUMGUNS)
 			{
+				gunstate[i] = GUNSTATE_NONE;
 				ammo[i] = (i == GUN_PISTOL || i == GUN_GL ? guntype[i].add : -1);
 			}
 		}
