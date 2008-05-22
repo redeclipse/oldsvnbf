@@ -48,6 +48,16 @@ struct botclient
 		}
 	}
 
+	fpsent *getclosestplayer(fpsent *d)
+	{
+		fpsent *closest = cl.player1->state == CS_ALIVE ? cl.player1 : NULL;
+		loopv(cl.players)
+			if(cl.players[i] && cl.players[i]->state == CS_ALIVE &&
+				(!closest || cl.players[i]->o.dist(d->o) < closest->o.dist(d->o)))
+					closest = cl.players[i];
+		return closest;
+	}
+
 	bool doreset(fpsent *d)
 	{
 		d->stopmoving();
@@ -57,11 +67,7 @@ struct botclient
 
 	bool doupdate(fpsent *d)
 	{
-		fpsent *closest = cl.player1->state == CS_ALIVE ? cl.player1 : NULL;
-		loopv(cl.players)
-			if(cl.players[i] && cl.players[i]->state == CS_ALIVE &&
-				(!closest || cl.players[i]->o.dist(d->o) < closest->o.dist(d->o)))
-					closest = cl.players[i];
+		fpsent *closest = getclosestplayer(d);
 		if(closest)
 		{
 			d->bot->setstate(BS_PURSUE, closest->clientnum);
@@ -93,7 +99,7 @@ struct botclient
 	{
 		fpsent *enemy = goal == cl.player1->clientnum ? cl.player1 : cl.getclient(goal);
 
-		if(enemy && enemy->state == CS_ALIVE)
+		if(enemy && enemy->state == CS_ALIVE && getclosestplayer(d) == enemy)
 		{
 			int node = enemy->lastnode;
 			if(cl.et.ents.inrange(node))
