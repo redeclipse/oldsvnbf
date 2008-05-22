@@ -101,6 +101,17 @@ extern void alias(const char *name, const char *action);
 extern void worldalias(const char *name, const char *action);
 extern const char *getalias(const char *name);
 
+extern bool overrideidents, persistidents, worldidents, interactive;
+
+extern char *parseword(char *&p);
+extern void explodelist(const char *s, vector<char *> &elems);
+
+extern void clearoverrides();
+extern void writecfg();
+
+extern void checksleep(int millis);
+extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
+
 // nasty macros for registering script functions, abuses globals to avoid excessive infrastructure
 #define COMMANDN(name, fun, nargs) static bool __dummy_##fun = addcommand(#name, (void (*)())fun, nargs)
 #define COMMAND(name, nargs) COMMANDN(name, name, nargs)
