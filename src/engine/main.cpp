@@ -332,6 +332,8 @@ bool interceptkey(int sym)
     return false;
 }
 
+VARP(autograbinput, 0, 1, 1);
+
 void checkinput()
 {
 	SDL_Event event;
@@ -359,7 +361,7 @@ void checkinput()
 
 			case SDL_ACTIVEEVENT:
 			{
-				if(event.active.state & SDL_APPINPUTFOCUS)
+				if(autograbinput && event.active.state & SDL_APPINPUTFOCUS)
 				{
 					setvar("grabinput", event.active.gain ? 1 : 0, true);
 					activewindow = event.active.gain ? true : false;
@@ -521,7 +523,7 @@ void _grabinput(int n)
 	keyrepeat(n ? false : true);
 	SDL_ShowCursor(n ? 0 : 1);
 }
-VARF(grabinput, 0, 1, 1, _grabinput(grabinput););
+VARF(grabinput, 0, 0, 1, _grabinput(grabinput););
 
 VAR(curfps, 1, 0, -1);
 VAR(bestfps, 1, 0, -1);
@@ -694,7 +696,6 @@ int main(int argc, char **argv)
 
 	conoutf("init: video: misc");
 	setcaption("loading..");
-	setvar("grabinput", 1, true);
 
 	conoutf("init: gl");
     gl_checkextensions();
@@ -731,6 +732,8 @@ int main(int argc, char **argv)
 
 	conoutf("init: mainloop");
 	if (initscript) execute(initscript);
+
+	if(autograbinput) setvar("grabinput", 1, true);
 
 	resetfpshistory();
 	for(;;)
