@@ -58,7 +58,8 @@ DAEMON_LIBS=-Lenet -lenet -lz
 DAEMON_OBJS= \
 	shared/tools-daemon.o \
 	shared/command-daemon.o \
-	daemon/daemon.o
+	daemon/daemon.o \
+	daemon/master.o
 
 default: all
 
@@ -93,9 +94,6 @@ shared/tools-daemon.o:
 
 shared/command-daemon.o:
 	$(CXX) $(DCXXFLAGS) -c -o shared/command-daemon.o shared/tools.cpp
-
-daemon/daemon.o:
-	$(CXX) $(DCXXFLAGS) -c -o daemon/daemon.o daemon/daemon.cpp
 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)
