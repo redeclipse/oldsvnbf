@@ -791,7 +791,7 @@ struct entities : icliententities
 				to.z += RENDERPUSHZ;
 
 				vec col(0.5f, both ? 0.25f : 0.0f, 0.f);
-				renderline(fr, to, col.x, col.y, col.z, true);
+				renderline(fr, to, col.x, col.y, col.z, false);
 
 				vec dr = to;
 				float yaw, pitch;
@@ -804,7 +804,7 @@ struct entities : icliententities
 				dr.mul(RENDERPUSHX);
 				dr.add(fr);
 
-				rendertris(dr, yaw, pitch, 2.f, col.x*2.f, col.y*2.f, col.z*2.f, true, true);
+				rendertris(dr, yaw, pitch, 2.f, col.x*2.f, col.y*2.f, col.z*2.f, true, false);
 			}
 		}
 	}
@@ -816,18 +816,18 @@ struct entities : icliententities
 			switch(e.type)
 			{
 				case MAPSOUND:
-					renderradius(e.o, e.attr2, e.attr2);
-					renderradius(e.o, e.attr3, e.attr3);
+					renderradius(e.o, e.attr2, e.attr2, false);
+					renderradius(e.o, e.attr3, e.attr3, false);
 					break;
 				case LIGHT:
-					renderradius(e.o, e.attr1 ? e.attr1 : hdr.worldsize, e.attr1 ? e.attr1 : hdr.worldsize);
+					renderradius(e.o, e.attr1 ? e.attr1 : hdr.worldsize, e.attr1 ? e.attr1 : hdr.worldsize, false);
 					break;
 				case WAYPOINT:
-					if(e.attr1 > 0) renderradius(e.o, e.attr1, e.attr1);
+					if(e.attr1 > 0) renderradius(e.o, e.attr1, e.attr1, false);
 					break;
 				default:
 					if(enttype[e.type].height || enttype[e.type].radius)
-						renderradius(e.o, enttype[e.type].height, enttype[e.type].radius);
+						renderradius(e.o, enttype[e.type].height, enttype[e.type].radius, false);
 					break;
 			}
 		}
@@ -837,17 +837,17 @@ struct entities : icliententities
 			case PLAYERSTART:
 			case MAPMODEL:
 			{
-				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, 0);
+				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, 0, false);
 				break;
 			}
 			case TELEPORT:
 			{
-				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, e.attr2);
+				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, e.attr2, false);
 				break;
 			}
 			case CAMERA:
 			{
-				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, e.attr2);
+				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, e.attr2, false);
 				break;
 			}
 			default:

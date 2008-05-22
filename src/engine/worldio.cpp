@@ -445,8 +445,8 @@ void save_world(const char *mname, bool nolms)
 
 					if(f.type != ET_EMPTY)
 					{
-						if(et->maylink(f.type) && e.links.find(i) >= 0)
-								links.add(n); // align to indices
+						if(et->maylink(f.type) && e.links.find(k) >= 0)
+							links.add(n); // align to indices
 
 						n++;
 					}
