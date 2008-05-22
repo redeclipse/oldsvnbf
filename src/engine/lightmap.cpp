@@ -1679,8 +1679,8 @@ void dumplms()
 				memcpy(dest, lightmaps[i].data+3*LM_PACKW*(LM_PACKH-1-idx), 3*LM_PACKW);
 			}
 			s_sprintfd(fname)("lightmap_%s_%d", getmapname(), i);
-			const char *name = makefile(fname, ".bmp", false, false);
-			SDL_SaveBMP(temp, findfile(name, "wb"));
+			const char *name = findfile(makefile(fname, ".bmp"), "wb");
+			SDL_SaveBMP(temp, name);
 		}
 		SDL_FreeSurface(temp);
 	}

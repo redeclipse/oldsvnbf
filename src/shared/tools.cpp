@@ -20,9 +20,9 @@ char *makefile(char *s, const char *e, bool ext, bool copy, int start)
 	char *o = s;
     if(copy)
     {
-        static string tmp;
-        s_strcpy(tmp, s);
-        o = tmp;
+        static string makefiletmp;
+        s_strcpy(makefiletmp, s);
+        o = makefiletmp;
     }
 
 	int d = start;
@@ -45,7 +45,12 @@ char *makefile(char *s, const char *e, bool ext, bool copy, int start)
 		if (fileexists(findfile(f, "r"), "r")) { s_sprintf(o)("%s.%.4d", m, d++); }
 		else break;
 	}
-	if (ext) s_strcpy(s, f);
+	if (ext)
+	{
+		s_strcpy(s, f);
+		return s;
+	}
+	s_strcpy(o, f);
 	return o;
 }
 
