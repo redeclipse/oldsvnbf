@@ -569,90 +569,133 @@ void pastecube(cube &src, cube &dest)
 	dest = copycube(src);
 }
 
+void blockcopy(const block3 &s, int rgrid, block3 *b)
+{
+    *b = s;
+    cube *q = b->c();
+    loopxyz(s, rgrid, *q++ = copycube(c));
+}
+
 block3 *blockcopy(const block3 &s, int rgrid)
 {
-	block3 *b = (block3 *)new uchar[sizeof(block3)+sizeof(cube)*s.size()];
-	*b = s;
-	cube *q = b->c();
-	loopxyz(s, rgrid, *q++ = copycube(c));
-	return b;
+    block3 *b = (block3 *)new uchar[sizeof(block3)+sizeof(cube)*s.size()];
+    blockcopy(s, rgrid, b);
+    return b;
 }
 
-void freeblock(block3 *b)
+void freeblock(block3 *b, bool alloced = true)
 {
-	cube *q = b->c();
-	loopi(b->size()) discardchildren(*q++);
-	delete[] b;
+    cube *q = b->c();
+    loopi(b->size()) discardchildren(*q++);
+    if(alloced) delete[] b;
 }
 
-int *selgridmap(selinfo &sel)							// generates a map of the cube sizes at each grid point
+void selgridmap(selinfo &sel, int *g)                           // generates a map of the cube sizes at each grid point
 {
-	int *g = new int[sel.size()];
-	loopxyz(sel, -sel.grid, (*g++ = lusize, c));
-	return g-sel.size();
+    loopxyz(sel, -sel.grid, (*g++ = lusize, c));
 }
 
-vector<undoblock> undos;								// unlimited undo
-vector<undoblock> redos;
-VARP(undomegs, 0, 5, 100);							  // bounded by n megs
-int totalundos = 0;
-
-void freeundo(undoblock u)
+void freeundo(undoblock *u)
 {
-	if(u.g) delete[] u.g;
-	if(u.b) freeblock(u.b);
-	if(u.e) delete[] u.e;
+    if(!u->numents) freeblock(u->block(), false);
+    delete[] (uchar *)u;
 }
 
-void pasteundo(undoblock &u)
+void pasteundo(undoblock *u)
 {
-	if(u.g)
-	{
-		int *g = u.g;
-		cube *s = u.b->c();
-		loopxyz(*u.b, *g++, pastecube(*s++, c));
-	}
-	pasteundoents(u);
-}
-
-static inline int undosize(undoblock &u)
-{
-    int t = u.n*sizeof(undoent);
-    if(u.b)
+    if(u->numents) pasteundoents(u);
+    else
     {
-        cube *q = u.b->c();
-        t += u.b->size()*sizeof(int);
-        loopj(u.b->size())
-            t += familysize(*q++)*sizeof(cube);
+        block3 *b = u->block();
+        cube *s = b->c();
+        int *g = u->gridmap();
+        loopxyz(*b, *g++, pastecube(*s++, c));
     }
-    return t;
 }
+
+static inline int undosize(undoblock *u)
+{
+    if(u->numents) return u->numents*sizeof(undoent);
+    else
+    {
+        block3 *b = u->block();
+        cube *q = b->c();
+        int size = b->size(), total = size*sizeof(int);
+        loopj(size) total += familysize(*q++)*sizeof(cube);
+        return total;
+    }
+}
+
+struct undolist
+{
+    undoblock *first, *last;
+
+    undolist() : first(NULL), last(NULL) {}
+
+    bool empty() { return !first; }
+
+    void add(undoblock *u)
+    {
+        u->next = NULL;
+        u->prev = last;
+        if(!first) first = last = u;
+        else
+        {
+            last->next = u;
+            last = u;
+        }
+    }
+
+    undoblock *popfirst()
+    {
+        undoblock *u = first;
+        first = first->next;
+        if(!first) last = NULL;
+        return u;
+    }
+
+    undoblock *poplast()
+    {
+        undoblock *u = last;
+        last = last->prev;
+        if(!last) first = NULL;
+        return u;
+    }
+};
+
+undolist undos, redos;
+VARP(undomegs, 0, 5, 100);                              // bounded by n megs
+int totalundos = 0;
 
 void pruneundos(int maxremain)                          // bound memory
 {
-    int removed = 0;
-    loopv(undos)
+    while(totalundos > maxremain && !undos.empty())
     {
-        if(totalundos <= maxremain) break;
-
-        undoblock &u = undos[i];
+        undoblock *u = undos.popfirst();
         totalundos -= undosize(u);
         freeundo(u);
-        removed = i+1;
     }
-    if(removed > 0) undos.remove(0, removed);
     //conoutf("undo: %d of %d(%%%d)", totalundos, undomegs<<20, totalundos*100/(undomegs<<20));
-    while(!redos.empty()) { freeundo(redos.pop()); }
+    while(!redos.empty()) freeundo(redos.poplast());
 }
 
-void initundocube(undoblock &u, selinfo &sel)
+undoblock *newundocube(selinfo &s)
 {
-    u.g = selgridmap(sel);
-    u.b = blockcopy(sel, -sel.grid);
+    int ssize = s.size(),
+        selgridsize = ssize*sizeof(int),
+        blocksize = sizeof(block3)+ssize*sizeof(cube);
+    undoblock *u = (undoblock *)new uchar[sizeof(undoblock) + blocksize + selgridsize];
+    u->numents = 0;
+    block3 *b = (block3 *)(u + 1);
+    blockcopy(s, -s.grid, b);
+    int *g = (int *)((uchar *)b + blocksize);
+    selgridmap(s, g);
+    return u;
 }
 
-void addundo(undoblock &u)
+void addundo(undoblock *u)
 {
+    u->timestamp = totalmillis;
     undos.add(u);
     totalundos += undosize(u);
     pruneundos(undomegs<<20);
@@ -661,8 +704,7 @@ void addundo(undoblock &u)
 void makeundoex(selinfo &s)
 {
     if(multiplayer(false)) return;
-    undoblock u;
-    initundocube(u, s);
+    undoblock *u = newundocube(s);
     addundo(u);
 }
 
@@ -673,32 +715,34 @@ void makeundo()                        // stores state of selected cubes before 
     makeundoex(sel);
 }
 
-void swapundo(vector<undoblock> &a, vector<undoblock> &b, const char *s)
+void swapundo(undolist &a, undolist &b, const char *s)
 {
     if(noedit() || multiplayer()) return;
     if(a.empty()) { conoutf("nothing more to %s", s); return; }
-    int ts = a.last().ts;
+    int ts = a.last->timestamp;
     selinfo l = sel;
-    while(!a.empty() && ts==a.last().ts)
+    while(!a.empty() && ts==a.last->timestamp)
     {
-        undoblock u = a.pop();
-        if(u.b)
+        undoblock *u = a.poplast(), *r;
+        if(u->numents) r = copyundoents(u);
+        else
         {
-            l.o = u.b->o;
-            l.s = u.b->s;
-            l.grid = u.b->grid;
-            l.orient = u.b->orient;
+            block3 *ub = u->block();
+            l.o = ub->o;
+            l.s = ub->s;
+            l.grid = ub->grid;
+            l.orient = ub->orient;
+            r = newundocube(l);
         }
-        undoblock r;
-        if(u.g) initundocube(r, l);
-        if(u.n) copyundoents(r, u);
+        r->timestamp = totalmillis;
         b.add(r);
         pasteundo(u);
-        if(u.b) changed(l, false);
+        if(!u->numents) changed(l, false);
         freeundo(u);
     }
     commitchanges();
-    if (!hmapsel) {
+    if(!hmapsel)
+    {
         sel = l;
         reorient();
     }
@@ -719,7 +763,7 @@ void freeeditinfo(editinfo *&e)
 }
 
 // guard against subdivision
-#define protectsel(f) { undoblock _u; initundocube(_u, sel); f; pasteundo(_u); freeundo(_u); }
+#define protectsel(f) { undoblock *_u = newundocube(sel); f; pasteundo(_u); freeundo(_u); }
 
 void mpcopy(editinfo *&e, selinfo &sel, bool local)
 {
