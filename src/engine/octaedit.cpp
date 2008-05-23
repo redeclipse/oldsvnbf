@@ -595,6 +595,7 @@ int *selgridmap(selinfo &sel)							// generates a map of the cube sizes at each
 vector<undoblock> undos;								// unlimited undo
 vector<undoblock> redos;
 VARP(undomegs, 0, 5, 100);							  // bounded by n megs
+int totalundos = 0;
 
 void freeundo(undoblock u)
 {
@@ -614,36 +615,47 @@ void pasteundo(undoblock &u)
 	pasteundoents(u);
 }
 
-void pruneundos(int maxremain)						  // bound memory
+static inline int undosize(undoblock &u)
 {
-	int t = 0, p = 0;
-	loopvrev(undos)
-	{
-		undoblock &u = undos[i];
-		if(u.b)
-		{
-			cube *q = u.b->c();
-			t += u.b->size()*sizeof(int);
-			loopj(u.b->size())
-				t += familysize(*q++)*sizeof(cube);
-		}
-		t += u.n*sizeof(undoent);
-		if(t>maxremain) freeundo(undos.remove(i)); else p = t;
-	}
-	//conoutf("undo: %d of %d(%%%d)", p, undomegs<<20, p*100/(undomegs<<20));
-	while(!redos.empty()) { freeundo(redos.pop()); }
+    int t = u.n*sizeof(undoent);
+    if(u.b)
+    {
+        cube *q = u.b->c();
+        t += u.b->size()*sizeof(int);
+        loopj(u.b->size())
+            t += familysize(*q++)*sizeof(cube);
+    }
+    return t;
 }
 
-void initundocube(undoblock &u, selinfo &s)
+void pruneundos(int maxremain)                          // bound memory
 {
-    u.g = selgridmap(s);
-    u.b = blockcopy(s, -s.grid);
+    int removed = 0;
+    loopv(undos)
+    {
+        if(totalundos <= maxremain) break;
+
+        undoblock &u = undos[i];
+        totalundos -= undosize(u);
+        freeundo(u);
+        removed = i;
+    }
+    if(removed > 0) undos.remove(0, removed);
+    //conoutf("undo: %d of %d(%%%d)", totalundos, undomegs<<20, totalundos*100/(undomegs<<20));
+    while(!redos.empty()) { freeundo(redos.pop()); }
+}
+
+void initundocube(undoblock &u, selinfo &sel)
+{
+    u.g = selgridmap(sel);
+    u.b = blockcopy(sel, -sel.grid);
 }
 
 void addundo(undoblock &u)
 {
-	undos.add(u);
-	pruneundos(undomegs<<20);
+    undos.add(u);
+    totalundos += undosize(u);
+    pruneundos(undomegs<<20);
 }
 
 void makeundoex(selinfo &s)
