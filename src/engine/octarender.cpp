@@ -190,7 +190,7 @@ uchar *addvbo(vtxarray *va, int type, int numelems, int elemsize)
 
 struct verthash
 {
-    static const int SIZE = 1<<16;
+    static const int SIZE = 1<<13;
     int table[SIZE];
     vector<vertex> verts;
     vector<int> chain;
@@ -199,7 +199,7 @@ struct verthash
 
     void clearverts()
     {
-        loopi(SIZE) table[i] = -1;
+        memset(table, -1, sizeof(table));
         chain.setsizenodelete(0);
         verts.setsizenodelete(0);
     }
