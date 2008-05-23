@@ -523,12 +523,12 @@ struct physics
 				if(isliquid(material) || isliquid(pl->inmaterial))
 				{
 					uchar col[3] = { 255, 255, 255 };
-					#define mattrig(f,z,w) \
+					#define mattrig(mf,mz,mw) \
 					{ \
-						f; \
+						mf; \
 						int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
-						part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, z, 100, 200, icol, 0.6f); \
-						if(w>=0) playsound(w, &pl->o, 255, 0, 0, SND_COPY); \
+						part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, mz, 100, 200, icol, 0.6f); \
+						if(mw>=0) playsound(mw, &pl->o, 255, 0, 0, SND_COPY); \
 					}
 
 					if(material == MAT_WATER || pl->inmaterial == MAT_WATER)
