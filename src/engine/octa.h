@@ -231,7 +231,19 @@ struct editinfo
 };
 
 struct undoent	{ int i; entity e; };
-struct undoblock { int ts; int *g, n; block3 *b; undoent *e; undoblock() : g(NULL), n(0), b(NULL), e(NULL) { extern int totalmillis; ts = totalmillis; } };
+struct undoblock // undo header, all data sits in payload
+{
+    undoblock *prev, *next;
+    int timestamp, numents; // if numents is 0, is a cube undo record, otherwise an entity undo record
+
+    block3 *block() { return (block3 *)(this + 1); }
+    int *gridmap()                                                    
+    {
+        block3 *ub = block();
+        return (int *)(ub->c() + ub->size());
+    }
+    undoent *ents() { return (undoent *)(this + 1); }
+};
 
 extern cube *worldroot;			 // the world data. only a ptr to 8 cubes (ie: like cube.children above)
 extern ivec lu;

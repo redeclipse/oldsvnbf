@@ -276,13 +276,13 @@ static inline bool insideworld(const ivec &o)
 
 // ents
 extern bool haveselent();
-extern void copyundoents(undoblock &d, undoblock &s);
-extern void pasteundoents(undoblock &u);
+extern undoblock *copyundoents(undoblock *u);
+extern void pasteundoents(undoblock *u);
 
 // octaedit
 extern void cancelsel();
 extern void render_texture_panel(int w, int h);
-extern void addundo(undoblock &u);
+extern void addundo(undoblock *u);
 
 // octarender
 extern void octarender();
