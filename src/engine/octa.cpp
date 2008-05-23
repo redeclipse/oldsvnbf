@@ -1375,6 +1375,7 @@ void invalidatemerges(cube &c)
 			c.ext->merged = 0;
 			if(c.ext->merges) freemergeinfo(c);
 		}
+        if(c.ext->tjoints >= 0) c.ext->tjoints = -1;
 	}
 	if(c.children) loopi(8) invalidatemerges(c.children[i]);
 }
