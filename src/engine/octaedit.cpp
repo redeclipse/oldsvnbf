@@ -638,7 +638,7 @@ void pruneundos(int maxremain)                          // bound memory
         undoblock &u = undos[i];
         totalundos -= undosize(u);
         freeundo(u);
-        removed = i;
+        removed = i+1;
     }
     if(removed > 0) undos.remove(0, removed);
     //conoutf("undo: %d of %d(%%%d)", totalundos, undomegs<<20, totalundos*100/(undomegs<<20));
