@@ -58,7 +58,7 @@ enum
 
 // VVEC_FRAC must be between 0..3
 #define VVEC_FRAC 3
-#define VVEC_INT (15-VVEC_FRAC)
+#define VVEC_INT (16-VVEC_FRAC)
 #define VVEC_BITS (VVEC_INT + VVEC_FRAC)
 
 #define VVEC_INT_MASK	 ((1<<(VVEC_INT-1))-1)
@@ -67,7 +67,7 @@ enum
 struct vvec : svec
 {
 	vvec() {}
-	vvec(short x, short y, short z) : svec(x, y, z) {}
+	vvec(ushort x, ushort y, ushort z) : svec(x, y, z) {}
 	vvec(int x, int y, int z) : svec(VVEC_INT_COORD(x), VVEC_INT_COORD(y), VVEC_INT_COORD(z)) {}
 	vvec(const int *i) : svec(VVEC_INT_COORD(i[0]), VVEC_INT_COORD(i[1]), VVEC_INT_COORD(i[2])) {}
 

@@ -310,8 +310,8 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 		case LM_BUMPMAP0:
 			if(avgray.iszero()) break;
 			// transform to tangent space
-            extern float orientation_tangent[5][3][4];
-            extern float orientation_binormal[5][3][4];
+            extern float orientation_tangent[6][3][4];
+            extern float orientation_binormal[6][3][4];
             vec S(orientation_tangent[lmrotate][dimension(lmorient)]),
                 T(orientation_binormal[lmrotate][dimension(lmorient)]);
             normal.orthonormalize(S, T);

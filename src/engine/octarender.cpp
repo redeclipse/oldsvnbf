@@ -5,34 +5,35 @@
 
 VARF(floatvtx, 0, 0, 1, allchanged());
 
-#define GENVERTS(type, ptr, body) \
-	{ \
-		type *f = (type *)ptr; \
-		loopv(verts) \
-		{ \
-			const vertex &v = verts[i]; \
-			f->x = v.x; \
-			f->y = v.y; \
-			f->z = v.z; \
-			body; \
-			f++; \
-		} \
-	}
-#define GENVERTSUV(type, ptr, body) GENVERTS(type, ptr, { f->u = v.u; f->v = v.v; body; })
+#define GENVERTS(type, ptr, offset, body) \
+    { \
+        type *f = (type *)ptr; \
+        loopv(verts) \
+        { \
+            const vertex &v = verts[i]; \
+            f->x = v.x offset; \
+            f->y = v.y offset; \
+            f->z = v.z offset; \
+            body; \
+            f++; \
+        } \
+    }
+#define GENVERTSUV(type, ptr, offset, body) GENVERTS(type, ptr, offset, { f->u = v.u; f->v = v.v; body; })
 
-void genverts(vector<vertex> &verts, void *buf)
+void genverts(vector<vertex> &verts, void *buf, const vec &origin)
 {
     if(renderpath==R_FIXEDFUNCTION)
     {
         if(nolights)
         {
-            if(floatvtx) { GENVERTS(fvertexffc, buf, {}); }
-            else { GENVERTS(vertexffc, buf, {}); }
+            if(floatvtx) { GENVERTS(fvertexffc, buf, , { f->add(origin); }); }
+            else { GENVERTS(vertexffc, buf, - 0x8000, {}); }
         }
-        else if(floatvtx) { GENVERTSUV(fvertexff, buf, {}); }
-        else { GENVERTSUV(vertexff, buf, {}); }
+        else if(floatvtx) { GENVERTSUV(fvertexff, buf, , { f->add(origin); }); }
+        else { GENVERTSUV(vertexff, buf, - 0x8000, {}); }
     }
-    else if(floatvtx) { GENVERTSUV(fvertex, buf, { f->n = v.n; }); }
+    else if(floatvtx) { GENVERTSUV(fvertex, buf, , { f->add(origin); f->n = v.n; }); }
+    else { GENVERTSUV(vertex, buf, - 0x8000, { f->n = v.n; }); }
 }
 
 struct vboinfo
@@ -432,8 +433,7 @@ struct vacollect : verthash
 
             va->voffset = vbosize[VBO_VBUF];
             uchar *vdata = addvbo(va, VBO_VBUF, va->verts, VTXSIZE);
-            if(VTXSIZE!=sizeof(vertex)) genverts(verts, vdata);
-            else memcpy(vdata, verts.getbuf(), va->verts*VTXSIZE);
+            genverts(verts, vdata, ivec(va->o).mask(~VVEC_INT_MASK).shl(VVEC_FRAC).tovec());
             va->minvert += va->voffset;
             va->maxvert += va->voffset;
         }
