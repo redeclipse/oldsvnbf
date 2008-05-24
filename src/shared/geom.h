@@ -627,8 +627,10 @@ struct svec
     bool operator!=(const svec &v) const { return x!=v.x || y!=v.y || z!=v.z; }
 
     svec &add(const svec &o) { x += o.x; y += o.y; z += o.z; return *this; }
+    svec &add(const ivec &o) { x += o.x; y += o.y; z += o.z; return *this; }
     svec &add(int n) { x += n; y += n; z += n; return *this; }
     svec &sub(const svec &o) { x -= o.x; y -= o.y; z -= o.z; return *this; }
+    svec &sub(const ivec &o) { x -= o.x; y -= o.y; z -= o.z; return *this; }
     svec &sub(int n) { x -= n; y -= n; z -= n; return *this; }
     svec &mul(int f) { x *= f; y *= f; z *= f; return *this; }
     svec &div(int f) { x /= f; y /= f; z /= f; return *this; }
