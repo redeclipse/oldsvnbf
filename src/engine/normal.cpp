@@ -136,11 +136,10 @@ void addnormals(cube &c, const ivec &o, int size)
             const vec &cur = numplanes < 2 || j == 1 ? planes[0] : (j == 3 ? planes[1] : avg);
             addnormal(o, v, cur);
             if(subdiv < 2) continue;
-            vvec dv(vn);
-            dv.sub(v);
-            dv.div(subdiv);
-            vvec vs(v);
+            ivec dv;
+            loopk(3) dv[k] = (int(vn[k]) - int(v[k])) / subdiv;
             if(dv.iszero()) continue;
+            vvec vs(v);
             if(numplanes < 2) loopk(subdiv - 1)
             {
                 vs.add(dv);

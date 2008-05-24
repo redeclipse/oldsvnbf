@@ -534,23 +534,18 @@ int calcshadowmask(vvec *vv)
     extern vec shadowdir;
     int mask = 0, used = 0;
     if(vv[0]==vv[2]) return 0;
+    vec v0 = vv[0].tovec(), v2 = vv[2].tovec().sub(v0);
     if(vv[0]!=vv[1] && vv[1]!=vv[2])
     {
-        vvec e1(vv[1]), e2(vv[2]);
-        e1.sub(vv[0]);
-        e2.sub(vv[0]);
-        vec v;
-        v.cross(e1.tovec(), e2.tovec());
-        if(v.dot(shadowdir)>0) { mask |= 1; used |= 0x7; }
+        vec v1 = vv[1].tovec().sub(v0), n;
+        n.cross(v1, v2);
+        if(n.dot(shadowdir)>0) { mask |= 1; used |= 0x7; }
     }
     if(vv[0]!=vv[3] && vv[2]!=vv[3])
     {
-        vvec e1(vv[2]), e2(vv[3]);
-        e1.sub(vv[0]);
-        e2.sub(vv[0]);
-        vec v;
-        v.cross(e1.tovec(), e2.tovec());
-        if(v.dot(shadowdir)>0) { mask |= 2; used |= 0xD; }
+        vec v3 = vv[3].tovec().sub(v0), n;
+        n.cross(v2, v3);
+        if(n.dot(shadowdir)>0) { mask |= 2; used |= 0xD; }
     }
     if(used) loopi(4) if(used&(1<<i))
     {
@@ -650,13 +645,13 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
             else n1 = n2 = bvec(128, 128, 128);
             const vvec &vv1 = vv[e1], &vv2 = vv[e2];
             ivec d;
-            loopk(3) d[k] = vv1[k] - vv2[k];
+            loopk(3) d[k] = int(vv1[k]) - int(vv2[k]);
             int axis = abs(d.x) > abs(d.y) ? (abs(d.x) > abs(d.z) ? 0 : 2) : (abs(d.y) > abs(d.z) ? 1 : 2);
             if(d[axis] < 0) d.neg();
             reduceslope(d);
-            ivec o;
             int offset1 = vv1[axis] / d[axis], offset2 = vv2[axis] / d[axis];
-            loopk(3) o[k] = vv1[k] - offset1*d[k];
+            ivec o;
+            loopk(3) o[k] = int(vv1[k]) - offset1*d[k];
             float doffset = 1.0f / (offset2 - offset1);
 
             if(j)
@@ -672,7 +667,7 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
                 tjoint &t = tjoints[tj];
                 if(t.edge != edge) break;
                 vvec vvt;
-                loopk(3) vvt[k] = o[k] + t.offset*d[k];
+                loopk(3) vvt[k] = ushort(o[k] + t.offset*d[k]);
                 float k = (t.offset - offset1) * doffset;
                 short ut = short(tc1.u + (tc2.u-tc1.u)*k),
                       vt = short(tc1.v + (tc2.v-tc1.v)*k);
