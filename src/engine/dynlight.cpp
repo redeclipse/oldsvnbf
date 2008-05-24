@@ -170,7 +170,7 @@ void calcdynlightmask(vtxarray *va)
     va->dynlightmask = mask;
 }
 
-int setdynlights(vtxarray *va)
+int setdynlights(vtxarray *va, const ivec &vaorigin)
 {
     if(closedynlights.empty() || !va->dynlightmask) return 0;
 
@@ -189,8 +189,7 @@ int setdynlights(vtxarray *va)
         dynlight &d = *closedynlights[(mask&DYNLIGHTMASK)-1];
 
         float scale = 1.0f/d.curradius;
-        vec origin = ivec(va->o).mask(~VVEC_INT_MASK).tovec();
-        origin.sub(d.o).mul(scale);
+        vec origin = vaorigin.tovec().sub(d.o).mul(scale);
         setenvparamf(vertexparams[index], SHPARAM_VERTEX, 10+index, origin.x, origin.y, origin.z, scale/(1<<VVEC_FRAC));
 
         if(index<=0) { scale0 = scale; origin0 = origin; }

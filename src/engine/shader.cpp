@@ -740,7 +740,7 @@ static bool genwatervariant(Shader &s, const char *sname, vector<char> &vs, vect
         }
         if(fadetc>=0)
         {
-            s_sprintfd(fadedef)("MAD result.texcoord[%d].%c, opos.z, program.env[8].y, program.env[8].z;\n",
+            s_sprintfd(fadedef)("MAD result.texcoord[%d].%c, vertex.position.z, program.env[8].y, program.env[8].z;\n",
                                 fadetc, fadecomp==3 ? 'w' : 'x'+fadecomp);
             vs.insert(vspragma-vs.getbuf(), fadedef, strlen(fadedef));
             s_sprintfd(fadeuse)("MOV result.color.a, fragment.texcoord[%d].%c;\n",

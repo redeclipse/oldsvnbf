@@ -314,7 +314,7 @@ extern occludequery *newquery(void *owner);
 extern bool checkquery(occludequery *query, bool nowait = false);
 extern void resetqueries();
 extern int getnumqueries();
-extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->o);
+extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->o, int scale = 0, const ivec &origin = ivec(0, 0, 0));
 
 #define startquery(query) { glBeginQuery_(GL_SAMPLES_PASSED_ARB, ((occludequery *)(query))->id); }
 #define endquery(query) \
@@ -329,7 +329,7 @@ extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->
 extern void updatedynlights();
 extern int finddynlights();
 extern void calcdynlightmask(vtxarray *va);
-extern int setdynlights(vtxarray *va);
+extern int setdynlights(vtxarray *va, const ivec &vaorigin);
 
 // material
 

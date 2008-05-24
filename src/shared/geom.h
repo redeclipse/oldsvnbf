@@ -613,25 +613,25 @@ struct svec
 {
     union
     {
-        struct { short x, y, z; };
-        short v[3];
+        struct { ushort x, y, z; };
+        ushort v[3];
     };
 
     svec() {}
-    svec(short x, short y, short z) : x(x), y(y), z(z) {}
+    svec(ushort x, ushort y, ushort z) : x(x), y(y), z(z) {}
 
-    short &operator[](int i)       { return v[i]; }
-    short  operator[](int i) const { return v[i]; }
+    ushort &operator[](int i)       { return v[i]; }
+    ushort  operator[](int i) const { return v[i]; }
 
     bool operator==(const svec &v) const { return x==v.x && y==v.y && z==v.z; }
     bool operator!=(const svec &v) const { return x!=v.x || y!=v.y || z!=v.z; }
 
-    void add(const svec &o) { x += o.x; y += o.y; z += o.z; }
-    void add(int n) { x += n; y += n; z += n; }
-    void sub(const svec &o) { x -= o.x; y -= o.y; z -= o.z; }
-    void sub(int n) { x -= n; y -= n; z -= n; }
-    void mul(int f) { x *= f; y *= f; z *= f; }
-    void div(int f) { x /= f; y /= f; z /= f; }
+    svec &add(const svec &o) { x += o.x; y += o.y; z += o.z; return *this; }
+    svec &add(int n) { x += n; y += n; z += n; return *this; }
+    svec &sub(const svec &o) { x -= o.x; y -= o.y; z -= o.z; return *this; }
+    svec &sub(int n) { x -= n; y -= n; z -= n; return *this; }
+    svec &mul(int f) { x *= f; y *= f; z *= f; return *this; }
+    svec &div(int f) { x /= f; y /= f; z /= f; return *this; }
 
     bool iszero() const { return x==0 && y==0 && z==0; }
 };

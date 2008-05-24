@@ -1076,50 +1076,50 @@ static hashtable<cfkey, cfval> cfaces;
 
 void mincubeface(cube &cu, int orient, const ivec &o, int size, const mergeinfo &orig, mergeinfo &cf)
 {
-	int dim = dimension(orient);
-	if(cu.children)
-	{
-		size >>= 1;
-		int coord = dimcoord(orient);
-		loopi(8) if(octacoord(dim, i) == coord)
-			mincubeface(cu.children[i], orient, ivec(i, o.x, o.y, o.z, size), size, orig, cf);
-		return;
-	}
-	int c = C[dim], r = R[dim];
-	short uco = short((o[c]&VVEC_INT_MASK)<<VVEC_FRAC), vco = short((o[r]&VVEC_INT_MASK)<<VVEC_FRAC);
-	short uc1 = uco, vc1 = vco, uc2 = short(size<<VVEC_FRAC)+uco, vc2 = short(size<<VVEC_FRAC)+vco;
-	uc1 = max(uc1, orig.u1);
-	uc2 = min(uc2, orig.u2);
-	vc1 = max(vc1, orig.v1);
-	vc2 = min(vc2, orig.v2);
-	if(!isempty(cu) && touchingface(cu, orient))
-	{
-		uchar r1 = cu.edges[faceedgesrcidx[orient][0]], r2 = cu.edges[faceedgesrcidx[orient][1]],
-			  c1 = cu.edges[faceedgesrcidx[orient][2]], c2 = cu.edges[faceedgesrcidx[orient][3]];
-		short scale = short(size/(8>>VVEC_FRAC)),
-			  u1 = max(c1&0xF, c2&0xF)*scale+uco, u2 = min(c1>>4, c2>>4)*scale+uco,
-			  v1 = max(r1&0xF, r2&0xF)*scale+vco, v2 = min(r1>>4, r2>>4)*scale+vco;
-		u1 = max(u1, orig.u1);
-		u2 = min(u2, orig.u2);
-		v1 = max(v1, orig.v1);
-		v2 = min(v2, orig.v2);
-		if(v2-v1==vc2-vc1)
-		{
-			if(u2-u1==uc2-uc1) return;
-			if(u1==uc1) uc1 = u2;
-			if(u2==uc2) uc2 = u1;
-		}
-		else if(u2-u1==uc2-uc1)
-		{
-			if(v1==vc1) vc1 = v2;
-			if(v2==vc2) vc2 = v1;
-		}	
-	}
-	if(uc1==uc2 || vc1==vc2) return;
-	cf.u1 = min(cf.u1, uc1);
-	cf.u2 = max(cf.u2, uc2);
-	cf.v1 = min(cf.v1, vc1);
-	cf.v2 = max(cf.v2, vc2);
+    int dim = dimension(orient);
+    if(cu.children)
+    {
+        size >>= 1;
+        int coord = dimcoord(orient);
+        loopi(8) if(octacoord(dim, i) == coord)
+            mincubeface(cu.children[i], orient, ivec(i, o.x, o.y, o.z, size), size, orig, cf);
+        return;
+    }
+    int c = C[dim], r = R[dim];
+    ushort uco = ushort((o[c]&VVEC_INT_MASK)<<VVEC_FRAC), vco = ushort((o[r]&VVEC_INT_MASK)<<VVEC_FRAC);
+    ushort uc1 = uco, vc1 = vco, uc2 = ushort(size<<VVEC_FRAC)+uco, vc2 = ushort(size<<VVEC_FRAC)+vco;
+    uc1 = max(uc1, orig.u1);
+    uc2 = min(uc2, orig.u2);
+    vc1 = max(vc1, orig.v1);
+    vc2 = min(vc2, orig.v2);
+    if(!isempty(cu) && touchingface(cu, orient))
+    {
+        uchar r1 = cu.edges[faceedgesrcidx[orient][0]], r2 = cu.edges[faceedgesrcidx[orient][1]],
+              c1 = cu.edges[faceedgesrcidx[orient][2]], c2 = cu.edges[faceedgesrcidx[orient][3]];
+        ushort scale = ushort(size/(8>>VVEC_FRAC)),
+              u1 = max(c1&0xF, c2&0xF)*scale+uco, u2 = min(c1>>4, c2>>4)*scale+uco,
+              v1 = max(r1&0xF, r2&0xF)*scale+vco, v2 = min(r1>>4, r2>>4)*scale+vco;
+        u1 = max(u1, orig.u1);
+        u2 = min(u2, orig.u2);
+        v1 = max(v1, orig.v1);
+        v2 = min(v2, orig.v2);
+        if(v2-v1==vc2-vc1)
+        {
+            if(u2-u1==uc2-uc1) return;
+            if(u1==uc1) uc1 = u2;
+            if(u2==uc2) uc2 = u1;
+        }
+        else if(u2-u1==uc2-uc1)
+        {
+            if(v1==vc1) vc1 = v2;
+            if(v2==vc2) vc2 = v1;
+        }
+    }
+    if(uc1==uc2 || vc1==vc2) return;
+    cf.u1 = min(cf.u1, uc1);
+    cf.u2 = max(cf.u2, uc2);
+    cf.v1 = min(cf.v1, vc1);
+    cf.v2 = max(cf.v2, vc2);
 }
 
 bool mincubeface(cube &cu, int orient, const ivec &co, int size, mergeinfo &orig)
@@ -1156,12 +1156,12 @@ bool gencubeface(cube &cu, int orient, const ivec &co, int size, ivec &n, int &o
 	int scale = size/(8>>VVEC_FRAC);
 	v[3].mul(scale);
 	int dim = dimension(orient), c = C[dim], r = R[dim];
-	cf.u1 = cf.u2 = short(v[3][c]);
-	cf.v1 = cf.v2 = short(v[3][r]);
+	cf.u1 = cf.u2 = ushort(v[3][c]);
+	cf.v1 = cf.v2 = ushort(v[3][r]);
 
 	loopi(3)
 	{
-		short uc = short(v[i][c]*scale), vc = short(v[i][r]*scale);
+		ushort uc = ushort(v[i][c]*scale), vc = ushort(v[i][r]*scale);
 		cf.u1 = min(cf.u1, uc);
 		cf.u2 = max(cf.u2, uc);
 		cf.v1 = min(cf.v1, vc);
@@ -1172,7 +1172,7 @@ bool gencubeface(cube &cu, int orient, const ivec &co, int size, ivec &n, int &o
 	vo.mask(VVEC_INT_MASK);
 	vo.mul(1<<VVEC_FRAC);
 
-	short uco = short(vo[c]), vco = short(vo[r]);
+	ushort uco = ushort(vo[c]), vco = ushort(vo[r]);
 	cf.u1 += uco;
 	cf.u2 += uco;
 	cf.v1 += vco;
@@ -1316,9 +1316,9 @@ void genmergedverts(cube &cu, int orient, const ivec &co, int size, const mergei
 		int cc = coords[c] ? m.u2 : m.u1,
 			rc = coords[r] ? m.v2 : m.v1,
 			dc = -(offset + n[c]*cc + n[r]*rc)/n[dim];
-		vv[i][c] = short(cc);
-		vv[i][r] = short(rc);
-		vv[i][dim] = short(dc);
+		vv[i][c] = ushort(cc);
+		vv[i][r] = ushort(rc);
+		vv[i][dim] = ushort(dc);
 	}
 
 	if(p) 
@@ -1335,7 +1335,7 @@ void genmergedverts(cube &cu, int orient, const ivec &co, int size, const mergei
 int calcmergedsize(int orient, const ivec &co, int size, const mergeinfo &m, const vvec *vv)
 {
 	int dim = dimension(orient), c = C[dim], r = R[dim];
-    short d1 = vv[3][dim], d2 = d1;
+    ushort d1 = vv[3][dim], d2 = d1;
 	loopi(3)
 	{
 		d1 = min(d1, vv[i][dim]);

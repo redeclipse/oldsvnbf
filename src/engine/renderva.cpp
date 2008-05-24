@@ -205,20 +205,19 @@ static void resetorigin()
 
 static bool setorigin(vtxarray *va, bool shadowmatrix = false)
 {
-    ivec o(va->o);
-	o.mask(~VVEC_INT_MASK);
-	if(o != vaorigin)
-	{
-		vaorigin = o;
-		glPopMatrix();
-		glPushMatrix();
-		glTranslatef(o.x, o.y, o.z);
-		static const float scale = 1.0f/(1<<VVEC_FRAC);
-		glScalef(scale, scale, scale);
+    ivec o = floatvtx ? ivec(0, 0, 0) : ivec(va->o).mask(~VVEC_INT_MASK).add(0x8000>>VVEC_FRAC);
+    if(o != vaorigin)
+    {
+        vaorigin = o;
+        glPopMatrix();
+        glPushMatrix();
+        glTranslatef(o.x, o.y, o.z);
+        static const float scale = 1.0f / (1<<VVEC_FRAC);
+        glScalef(scale, scale, scale);
 
         if(shadowmatrix) adjustshadowmatrix(o, scale);
         return true;
-	}
+    }
     return false;
 }
 
@@ -302,32 +301,32 @@ bool checkquery(occludequery *query, bool nowait)
 	return fragments < (uint)(reflecting || refracting ? oqreflect : oqfrags);
 }
 
-void drawbb(const ivec &bo, const ivec &br, const vec &camera)
+void drawbb(const ivec &bo, const ivec &br, const vec &camera, int scale, const ivec &origin)
 {
-	glBegin(GL_QUADS);
+    glBegin(GL_QUADS);
 
-	loopi(6)
-	{
-		int dim = dimension(i), coord = dimcoord(i);
+    loopi(6)
+    {
+        int dim = dimension(i), coord = dimcoord(i);
 
-		if(coord)
-		{
-			if(camera[dim] < bo[dim] + br[dim]) continue;
-		}
-		else if(camera[dim] > bo[dim]) continue;
+        if(coord)
+        {
+            if(camera[dim] < bo[dim] + br[dim]) continue;
+        }
+        else if(camera[dim] > bo[dim]) continue;
 
-		loopj(4)
-		{
-			const ivec &cc = cubecoords[fv[i][j]];
-			glVertex3i(cc.x ? bo.x+br.x : bo.x,
-						cc.y ? bo.y+br.y : bo.y,
-						cc.z ? bo.z+br.z : bo.z);
-		}
+        loopj(4)
+        {
+            const ivec &cc = cubecoords[fv[i][j]];
+            glVertex3i(((cc.x ? bo.x+br.x : bo.x) - origin.x) << scale,
+                       ((cc.y ? bo.y+br.y : bo.y) - origin.y) << scale,
+                       ((cc.z ? bo.z+br.z : bo.z) - origin.z) << scale);
+        }
 
-		xtraverts += 4;
-	}
+        xtraverts += 4;
+    }
 
-	glEnd();
+    glEnd();
 }
 
 extern int octaentsize;
@@ -738,21 +737,23 @@ void renderdepthobstacles(const vec &bbmin, const vec &bbmax, float scale, float
 }
 
 // [rotation][dimension] = vec4
-float orientation_tangent [5][3][4] =
+float orientation_tangent [6][3][4] =
 {
     { { 0,  1,  0, 0 }, {  1, 0,  0, 0 }, {  1,  0, 0, 0 } },
     { { 0,  0, -1, 0 }, {  0, 0, -1, 0 }, {  0,  1, 0, 0 } },
     { { 0, -1,  0, 0 }, { -1, 0,  0, 0 }, { -1,  0, 0, 0 } },
     { { 0,  0,  1, 0 }, {  0, 0,  1, 0 }, {  0, -1, 0, 0 } },
-    { { 0,  1,  0, 0 }, {  1, 0,  0, 0 }, {  1,  0, 0, 0 } }
+    { { 0, -1,  0, 0 }, { -1, 0,  0, 0 }, { -1,  0, 0, 0 } },
+    { { 0,  1,  0, 0 }, {  1, 0,  0, 0 }, {  1,  0, 0, 0 } },
 };
-float orientation_binormal[5][3][4] =
+float orientation_binormal[6][3][4] =
 {
     { { 0,  0, -1, 0 }, {  0, 0, -1, 0 }, {  0,  1, 0, 0 } },
     { { 0, -1,  0, 0 }, { -1, 0,  0, 0 }, { -1,  0, 0, 0 } },
     { { 0,  0,  1, 0 }, {  0, 0,  1, 0 }, {  0, -1, 0, 0 } },
     { { 0,  1,  0, 0 }, {  1, 0,  0, 0 }, {  1,  0, 0, 0 } },
-    { { 0,  0, -1, 0 }, {  0, 0, -1, 0 }, {  0,  1, 0, 0 } }
+    { { 0,  0, -1, 0 }, {  0, 0, -1, 0 }, {  0,  1, 0, 0 } },
+    { { 0,  0,  1, 0 }, {  0, 0,  1, 0 }, {  0, -1, 0, 0 } },
 };
 
 struct renderstate
@@ -784,22 +785,12 @@ void renderquery(renderstate &cur, occludequery *query, vtxarray *va)
     if(cur.colormask) { cur.colormask = false; glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); }
     if(cur.depthmask) { cur.depthmask = false; glDepthMask(GL_FALSE); }
 
-    ivec origin(vaorigin);
-    int scale = 1<<VVEC_FRAC;
-    if(vaorigin.x < 0)
-    {
-        origin = vec(0, 0, 0);
-        scale = 1;
-    }
-
     vec camera(camera1->o);
     if(reflecting) camera.z = reflectz;
 
     startquery(query);
 
-    drawbb(ivec(va->bbmin).sub(origin).mul(scale),
-           ivec(va->bbmax).sub(va->bbmin).mul(scale),
-           vec(camera).sub(origin.tovec()).mul(scale));
+    drawbb(va->bbmin, ivec(va->bbmax).sub(va->bbmin), camera, vaorigin.x >= 0 ? VVEC_FRAC : 0, vaorigin.x >= 0 ? vaorigin : ivec(0, 0, 0));
 
     endquery(query);
 }
@@ -951,7 +942,7 @@ static void changefogplane(renderstate &cur, int pass, vtxarray *va)
     {
         if(fading || fogging)
         {
-            float fogplane = reflectz - (va->o.z & ~VVEC_INT_MASK);
+            float fogplane = reflectz - vaorigin.z;
             if(cur.fogplane!=fogplane)
             {
                 cur.fogplane = fogplane;
@@ -964,7 +955,7 @@ static void changefogplane(renderstate &cur, int pass, vtxarray *va)
     {
         if(pass==RENDERPASS_LIGHTMAP) glActiveTexture_(GL_TEXTURE0_ARB+cur.fogtmu);
         else if(pass==RENDERPASS_GLOW) glActiveTexture_(GL_TEXTURE1_ARB);
-        GLfloat s[4] = { 0, 0, -1.0f/(waterfog<<VVEC_FRAC), (reflectz - (va->o.z & ~VVEC_INT_MASK))/waterfog };
+        GLfloat s[4] = { 0, 0, -1.0f/(waterfog<<VVEC_FRAC), (reflectz - vaorigin.z)/waterfog };
         glTexGenfv(GL_S, GL_OBJECT_PLANE, s);
         if(pass==RENDERPASS_LIGHTMAP) glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
         else if(pass==RENDERPASS_GLOW) glActiveTexture_(GL_TEXTURE0_ARB);
@@ -997,9 +988,9 @@ static void changevbuf(renderstate &cur, int pass, vtxarray *va)
         {
             glColorPointer(3, GL_UNSIGNED_BYTE, VTXSIZE, floatvtx ? &((fvertex *)va->vdata)[0].n : &va->vdata[0].n);
             setenvparamf("camera", SHPARAM_VERTEX, 4,
-                (camera1->o.x - (va->o.x&~VVEC_INT_MASK))*(1<<VVEC_FRAC),
-                (camera1->o.y - (va->o.y&~VVEC_INT_MASK))*(1<<VVEC_FRAC),
-                (camera1->o.z - (va->o.z&~VVEC_INT_MASK))*(1<<VVEC_FRAC),
+                (camera1->o.x - vaorigin.x)*(1<<VVEC_FRAC),
+                (camera1->o.y - vaorigin.y)*(1<<VVEC_FRAC),
+                (camera1->o.z - vaorigin.z)*(1<<VVEC_FRAC),
                 1);
         }
     }
@@ -1222,15 +1213,20 @@ static void changetexgen(renderstate &cur, Slot &slot, int dim)
 
     GLfloat sgen[4] = { 0.0f, 0.0f, 0.0f, cur.texgenSoff },
             tgen[4] = { 0.0f, 0.0f, 0.0f, cur.texgenToff };
+    int sdim = si[dim], tdim = ti[dim];
     if((slot.rotation&5)==1)
     {
-        sgen[ti[dim]] = (dim <= 1 ? -cur.texgenSk : cur.texgenSk);
-        tgen[si[dim]] = cur.texgenTk;
+        sgen[tdim] = (dim <= 1 ? -cur.texgenSk : cur.texgenSk);
+        sgen[3] += (vaorigin[tdim]<<VVEC_FRAC)*sgen[tdim];
+        tgen[sdim] = cur.texgenTk;
+        tgen[3] += (vaorigin[sdim]<<VVEC_FRAC)*tgen[sdim];
     }
     else
     {
-        sgen[si[dim]] = cur.texgenSk;
-        tgen[ti[dim]] = (dim <= 1 ? -cur.texgenTk : cur.texgenTk);
+        sgen[sdim] = cur.texgenSk;
+        sgen[3] += (vaorigin[sdim]<<VVEC_FRAC)*sgen[sdim];
+        tgen[tdim] = (dim <= 1 ? -cur.texgenTk : cur.texgenTk);
+        tgen[3] += (vaorigin[tdim]<<VVEC_FRAC)*tgen[tdim];
     }
 
     if(renderpath==R_FIXEDFUNCTION)
@@ -1367,7 +1363,7 @@ static void renderbatches(renderstate &cur, int pass)
             changebatchtmus(cur, pass, b);
             if(cur.dynlightmask != b.va->dynlightmask)
             {
-                cur.visibledynlights = setdynlights(b.va);
+                cur.visibledynlights = setdynlights(b.va, vaorigin);
                 cur.dynlightmask = b.va->dynlightmask;
             }
         }
