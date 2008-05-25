@@ -227,7 +227,6 @@ struct GAMESERVER : igameserver
 	bool notgotitems, notgotbases;		// true when map has changed and waiting for clients to send item
 	int gamemode, mutators;
 	int gamemillis, gamelimit;
-	int _lastmillis;
 
 	string serverdesc;
 	string smapname;
@@ -316,7 +315,7 @@ struct GAMESERVER : igameserver
 	string scresult, motd;
 	GAMESERVER()
 		: notgotitems(true), notgotbases(false),
-			gamemode(defaultmode()), mutators(0), _lastmillis(0), interm(0), minremain(10),
+			gamemode(defaultmode()), mutators(0), interm(0), minremain(10),
 			mapreload(false), lastsend(0),
 			mastermode(MM_VETO), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
@@ -1976,8 +1975,7 @@ struct GAMESERVER : igameserver
 
 	void serverupdate()
 	{
-		curtime = lastmillis - _lastmillis;
-		_lastmillis = lastmillis;
+		if(!curtime) return;
 		gamemillis += curtime;
 
 		if(m_demo(gamemode)) readdemo();
