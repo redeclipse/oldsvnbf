@@ -25,10 +25,9 @@ struct GAMECLIENT : igameclient
 	int swaymillis;
 	vec swaydir;
     dynent guninterp;
-    int lasthit;
-
-	string cptext;
+    int lasthit, lastcamera, lastmouse;
 	int quakewobble, damageresidue;
+    int liquidchan;
 
 	struct sline { string s; };
 	struct teamscore
@@ -40,7 +39,6 @@ struct GAMECLIENT : igameclient
 	};
 
 	physent gamecamera;
-	int lastcamera, lastmouse;
 
 	vector<fpsent *> shplayers;
 	vector<teamscore> teamscores;
@@ -81,7 +79,10 @@ struct GAMECLIENT : igameclient
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
-			swaymillis(0), swaydir(0, 0, 0), lastcamera(0), lastmouse(0),
+			swaymillis(0), swaydir(0, 0, 0),
+			lasthit(0), lastcamera(0), lastmouse(0),
+			quakewobble(0), damageresidue(0),
+			liquidchan(-1),
 			player1(spawnstate(new fpsent()))
 	{
         CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1); });
@@ -1105,6 +1106,23 @@ struct GAMECLIENT : igameclient
 		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
 		vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
 		vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
+
+		int mat = lookupmaterial(camera1->o);
+		switch(mat)
+		{
+			case MAT_WATER:
+			{
+				if(!issound(liquidchan))
+					liquidchan = playsound(S_UNDERWATER, &camera1->o, 255, 0, 0, SND_LOOP|SND_NOATTEN|SND_NODELAY);
+				break;
+			}
+			default:
+			{
+				if(issound(liquidchan)) removesound(liquidchan);
+				liquidchan = -1;
+				break;
+			}
+		}
 
 		lastcamera = lastmillis;
 	}

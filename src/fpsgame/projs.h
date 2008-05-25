@@ -27,7 +27,7 @@ struct projectiles
 		}
 		~projent()
 		{
-			if (sounds.inrange(schan) && sounds[schan].inuse) removesound(schan);
+			if (issound(schan)) removesound(schan);
 			schan = -1;
 		}
 
@@ -136,7 +136,7 @@ struct projectiles
 		{
             if (projtype == PRJ_SHOT)
             {
-				if (guntype[gun].fsound >= 0 && (!sounds.inrange(schan) || !sounds[schan].inuse))
+				if (guntype[gun].fsound >= 0 && !issound(schan))
 				{
 					schan = playsound(guntype[gun].fsound, &o, 255, 0, 0, SND_LOOP);
 				}
@@ -246,7 +246,7 @@ struct projectiles
                 {
                     if((proj.lifetime -= cl.ph.physframetime()) <= 0 || !proj.update(cl.ph.physframetime()))
                     {
-                        if(guntype[proj.gun].radius) 
+                        if(guntype[proj.gun].radius)
                             cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.gun, proj.local);
                         proj.state = CS_DEAD;
                         break;

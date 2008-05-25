@@ -742,7 +742,6 @@ int main(int argc, char **argv)
 
 	if(autoconnect) connects();
 	else showgui("main");
-
 	resetfpshistory();
 	for(;;)
 	{
