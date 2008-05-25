@@ -156,7 +156,9 @@ ICOMMAND(mapsound, "si", (char *n, int *v), intret(addsound(n, *v, mapsounds)));
 
 void updatesound(int chan)
 {
+	bool liquid = isliquid(lookupmaterial(*sounds[chan].pos)) || isliquid(lookupmaterial(camera1->o));
 	int vol = clamp(((soundvol*sounds[chan].vol*sounds[chan].slot->vol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
+
 	vec v;
 	sounds[chan].dist = camera1->o.dist(*sounds[chan].pos, v);
 
@@ -170,6 +172,8 @@ void updatesound(int chan)
 
 	if(!(sounds[chan].flags&SND_NOATTEN))
 	{
+		if(liquid) vol = int(vol*0.5f);
+
 		float maxrad = float(sounds[chan].maxrad > 0 && sounds[chan].maxrad < soundmaxdist ? sounds[chan].maxrad : soundmaxdist);
 
 		if(vol && sounds[chan].dist <= maxrad)
@@ -190,7 +194,7 @@ void updatesound(int chan)
 
 	if(!(sounds[chan].flags&SND_NODELAY) && Mix_Paused(chan))
 	{
-		if(totalmillis >= sounds[chan].millis+int(sounds[chan].dist/0.686f))
+		if(totalmillis >= sounds[chan].millis+int((sounds[chan].dist/8.f)*(liquid ? 1.497f : 0.343f)))
 			Mix_Resume(chan);
 	}
 #if 0
