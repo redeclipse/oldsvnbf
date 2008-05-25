@@ -611,7 +611,7 @@ void enablepolygonoffset(GLenum type)
 
     GLfloat offsetmatrix[16];
     memcpy(offsetmatrix, clipped ? clipmatrix : projmatrix, 16*sizeof(GLfloat));
-    offsetmatrix[14] += depthoffset * offsetmatrix[10];
+    offsetmatrix[14] += depthoffset * projmatrix[10];
 
     glMatrixMode(GL_PROJECTION);
     if(!clipped) glPushMatrix();
