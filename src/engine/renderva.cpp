@@ -563,7 +563,7 @@ void renderoutline()
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glColor3ub((outline>>16)&0xFF, (outline>>8)&0xFF, outline&0xFF);
 
-    glEnable(GL_POLYGON_OFFSET_LINE);
+    enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 
 	if(!dtoutline) glDisable(GL_DEPTH_TEST);
 
@@ -592,7 +592,7 @@ void renderoutline()
 
 	if(!dtoutline) glEnable(GL_DEPTH_TEST);
 
-    glDisable(GL_POLYGON_OFFSET_LINE);
+    disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 

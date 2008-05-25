@@ -181,7 +181,6 @@ extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasCM, ha
 
 extern bool envmapping, renderedgame;
 extern GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16], invmvmatrix[16];
-extern float polygonoffsetfactor, polygonoffsetunits;
 
 extern bool hascursor;
 extern float cursorx, cursory;
@@ -197,6 +196,8 @@ extern void findorientation(vec &o, float yaw, float pitch, vec &pos);
 extern void rendergame();
 extern void invalidatepostfx();
 extern void gl_drawframe(int w, int h);
+extern void enablepolygonoffset(GLenum type);
+extern void disablepolygonoffset(GLenum type);
 extern void setfogplane(const plane &p, bool flush = false);
 extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
 extern void writecrosshairs(FILE *f);

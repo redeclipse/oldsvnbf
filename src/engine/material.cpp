@@ -485,7 +485,7 @@ void sortmaterials(vector<materialsurface *> &vismats)
 
 void rendermatgrid(vector<materialsurface *> &vismats)
 {
-    glEnable(GL_POLYGON_OFFSET_LINE);
+    enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	static uchar cols[MAT_EDIT][3] =
 	{
@@ -513,7 +513,7 @@ void rendermatgrid(vector<materialsurface *> &vismats)
 	}
 	glEnd();
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_POLYGON_OFFSET_LINE);
+    disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 }
 
 VARP(glassenv, 0, 1, 1);

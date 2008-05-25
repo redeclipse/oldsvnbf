@@ -106,7 +106,7 @@ void drawskyoutline()
 	extern int wireframe;
     if(!wireframe)
     {
-        glEnable(GL_POLYGON_OFFSET_LINE);
+        enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
 	glColor3f(0.5f, 0.0f, 0.5f);
@@ -114,7 +114,7 @@ void drawskyoutline()
     if(!wireframe)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glDisable(GL_POLYGON_OFFSET_LINE);
+        disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
     }
 	glDepthMask(GL_TRUE);
 	glEnable(GL_TEXTURE_2D);

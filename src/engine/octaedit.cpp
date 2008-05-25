@@ -410,7 +410,7 @@ void cursorupdate()
 
 	renderentselection(camera1->o, ray, entmoving!=0);
 
-    glEnable(GL_POLYGON_OFFSET_LINE);
+    enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 
 	#define planargrid(q,r,s) \
 		for (float v = 0.f; v < (hdr.worldsize-s); v += s) \
@@ -465,7 +465,7 @@ void cursorupdate()
 		}
 	}
 
-    glDisable(GL_POLYGON_OFFSET_LINE);
+    disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 
 	glDisable(GL_BLEND);
 }
