@@ -125,7 +125,7 @@ int findsound(const char *name, int vol, vector<soundslot> &sounds)
 	return -1;
 }
 
-int addsound(const char *name, int vol, vector<soundslot> &sounds)
+int addsound(const char *name, int vol, int material, vector<soundslot> &sounds)
 {
 	soundsample *sample = soundsamples.access(name);
 	if(!sample)
@@ -150,16 +150,30 @@ int addsound(const char *name, int vol, vector<soundslot> &sounds)
 	}
 	soundslot &slot = sounds.add();
 	slot.sample = sample;
-	slot.vol = vol > 0 ? min(vol, 255) : 255;
+	slot.vol = vol >= 0 ? min(vol, 255) : 255;
+	switch(material)
+	{
+		case MAT_AIR:
+		case MAT_CLIP:
+		case MAT_NOCLIP:
+		case MAT_WATER:
+		case MAT_LAVA:
+			slot.material = material;
+			break;
+		default:
+			slot.material = MAT_NOCLIP;
+			break;
+	}
 	return sounds.length()-1;
 }
 
-ICOMMAND(registersound, "si", (char *n, int *v), intret(addsound(n, *v, gamesounds)));
-ICOMMAND(mapsound, "si", (char *n, int *v), intret(addsound(n, *v, mapsounds)));
+ICOMMAND(registersound, "sis", (char *n, int *v, char *m), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_NOCLIP, gamesounds)));
+ICOMMAND(mapsound, "sis", (char *n, int *v, char *m), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_NOCLIP, mapsounds)));
 
 void updatesound(int chan)
 {
-	bool liquid = isliquid(lookupmaterial(*sounds[chan].pos)) || isliquid(lookupmaterial(camera1->o));
+	bool posliquid = isliquid(lookupmaterial(*sounds[chan].pos)),
+			camliquid = isliquid(lookupmaterial(camera1->o)), liquid = posliquid || camliquid;
 	int vol = clamp(((soundvol*sounds[chan].vol*sounds[chan].slot->vol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
 
 	vec v;
@@ -174,7 +188,12 @@ void updatesound(int chan)
 		}
 		else sounds[chan].curpan = 127;
 
-		if(liquid) vol = int(vol*0.5f);
+		if(liquid)
+		{
+			if(camliquid && sounds[chan].slot->material == MAT_AIR)
+				vol = 0;
+			else vol = int(vol*0.5f);
+		}
 
 		float maxrad = float(sounds[chan].maxrad > 0 && sounds[chan].maxrad < soundmaxdist ? sounds[chan].maxrad : soundmaxdist);
 
