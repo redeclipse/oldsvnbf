@@ -25,6 +25,11 @@
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <io.h>
+#else
+#include <unistd.h>
+#define _dup	dup
+#define _fileno fileno
 #endif
 
 #ifndef STANDALONE

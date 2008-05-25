@@ -3,6 +3,7 @@
 
 #include "pch.h"
 #include "engine.h"
+#include <sys/time.h>
 
 VAR(version, 1, ENG_VERSION, -1); // for scripts
 
