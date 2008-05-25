@@ -162,7 +162,7 @@ void checkmasterclients()
         nfds = max(nfds, (int)c.socket);
     }
     timeval tv;
-    tv.tv_sec = 1;
+    tv.tv_sec = 0;
     tv.tv_usec = 0;
     if(select(nfds+1, &readset, &writeset, NULL, &tv)<=0) return;
 
