@@ -50,6 +50,8 @@ extern hashtable<const char *, soundsample> soundsamples;
 extern vector<soundslot> gamesounds, mapsounds;
 extern vector<sound> sounds;
 
+#define issound(c) (sounds.inrange(c) && sounds[c].inuse)
+
 extern void initsound();
 extern void stopsound();
 extern void checksound();
@@ -57,5 +59,9 @@ extern int addsound(const char *name, int vol, vector<soundslot> &sounds);
 extern void removesound(int c);
 extern void clearsound();
 extern int playsound(int n, vec *pos = NULL, int vol = 255, int maxrad = 1024, int minrad = 2, int flags = 0);
+
+extern void initmumble();
+extern void closemumble();
+extern void updatemumble();
 
 extern int soundvol, musicvol, soundmono, soundchans, soundbufferlen, soundfreq, maxsoundsatonce;

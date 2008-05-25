@@ -184,10 +184,14 @@ struct weaponstate
 		{
 			if (gun == GUN_FLAMER)
 			{
-				if (!sounds.inrange(d->wschan) || !sounds[d->wschan].inuse)
+				if (!issound(d->wschan))
 					d->wschan = playsound(guntype[gun].sound, &from, 255, 0, 0, SND_COPY);
 			}
-			else playsound(guntype[gun].sound, &from, 255, 0, 0, SND_COPY);
+			else
+			{
+				playsound(guntype[gun].sound, &from, 255, 0, 0, SND_COPY);
+				d->wschan = -1;
+			}
 		}
 		adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 

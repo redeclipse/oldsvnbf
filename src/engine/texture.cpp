@@ -378,7 +378,7 @@ SDL_Surface *textureloadname(const char *name)
 	loopi(sizeof(exts)/sizeof(exts[0]))
 	{
 		s_sprintf(buf)("%s%s", name, exts[i]);
-		if((s = IMG_Load(findfile(path(buf), "rb"))) != NULL) break;
+		if((s = IMG_Load(findfile(buf, "rb"))) != NULL) break;
 	}
 	return s;
 }

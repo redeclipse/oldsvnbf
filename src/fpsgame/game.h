@@ -7,7 +7,7 @@
 enum
 {
 	S_JUMP = 0, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
-	S_SPLASH1, S_SPLASH2, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR,
+	S_SPLASH1, S_SPLASH2, S_UNDERWATER, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR,
 	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
 	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURN, S_RLFIRE, S_RLEXPL, S_RLFLY, S_RIFLE,
 	S_ITEMPICKUP, S_ITEMSPAWN,
@@ -78,7 +78,7 @@ struct fpsentity : extentity
 	fpsentity() : schan(-1), lastemit(0) {}
 	~fpsentity()
 	{
-		if (sounds.inrange(schan) && sounds[schan].inuse) removesound(schan);
+		if (issound(schan)) removesound(schan);
 		schan = -1;
 	}
 };

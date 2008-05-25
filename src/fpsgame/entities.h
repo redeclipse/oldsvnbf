@@ -151,7 +151,7 @@ struct entities : icliententities
 					{
 						case MAPSOUND:
 						{
-							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && mapsounds.inrange(f.attr1) && (!sounds.inrange(f.schan) || !sounds[f.schan].inuse))
+							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && mapsounds.inrange(f.attr1) && !issound(f.schan))
 							{
 								playsound(f.attr1, both ? &f.o : &e.o, f.attr4, f.attr2, f.attr3, SND_MAP);
 								f.lastemit = lastmillis;
@@ -347,7 +347,7 @@ struct entities : icliententities
 	{
 		fpsentity &f = (fpsentity &)e;
 
-		if(sounds.inrange(f.schan))
+		if(issound(f.schan))
 		{
 			removesound(f.schan);
 			f.schan = -1;
@@ -971,7 +971,7 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			fpsentity &e = (fpsentity &)*ents[i];
-			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1) && (!sounds.inrange(e.schan) || !sounds[e.schan].inuse))
+			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1) && !issound(e.schan))
 			{
 				e.schan = playsound(e.attr1, &e.o, e.attr4, e.attr2, e.attr3, SND_MAP|SND_LOOP);
 				e.lastemit = lastmillis; // prevent clipping when moving around
