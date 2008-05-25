@@ -45,7 +45,7 @@ void setupmaster()
 
     enet_time_set(0);
 
-    conoutf("master server started on %s port %d\n", *masterip ? masterip : "localhost", masterport);
+    conoutf("master server started on %s port %d", *masterip ? masterip : "localhost", masterport);
 }
 
 void genmasterlist()
@@ -67,7 +67,7 @@ void genmasterlist()
     updatemasterlist = false;
 }
 
-masterout registermasterout("registered server\n"), renewmasterout("renewed server registration\n");
+masterout registermasterout("registered server"), renewmasterout("renewed server registration");
 
 void addmasterentry(masterclient &c)
 {
@@ -90,7 +90,7 @@ void addmasterentry(masterclient &c)
     c.outputpos = 0;
     string name;
     if(enet_address_get_host_ip(&c.address, name, sizeof(name))<0) s_strcpy(name, "<<unknown host>>");
-    conoutf("master server received registration from %s\n", name);
+    conoutf("master server received registration from %s", name);
     updatemasterlist = true;
 }
 
