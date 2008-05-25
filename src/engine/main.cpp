@@ -333,6 +333,8 @@ bool interceptkey(int sym)
 }
 
 VARP(autograbinput, 0, 1, 1);
+VARP(automainmenu, 0, 1, 1);
+VARP(autoconnect, 0, 1, 1);
 
 void checkinput()
 {
@@ -727,13 +729,12 @@ int main(int argc, char **argv)
 	camera1 = cl->iterdynents(0);
 	emptymap(0, true, NULL, true);
 
-	conoutf("init: client");
-	cl->initclient();
-
 	conoutf("init: mainloop");
 	if(initscript) execute(initscript);
 
 	if(autograbinput) setvar("grabinput", 1, true);
+	if(automainmenu) showgui("main");
+	if(autoconnect) connects();
 
 	resetfpshistory();
 	for(;;)

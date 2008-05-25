@@ -46,28 +46,31 @@ void abortconnect()
 	clienthost = NULL;
 }
 
-void connectfail()
+void connectfail(bool reset = false)
 {
+	bool tryagain = reset;
+	if (reset) disconnect();
+
 	if (localattempt)
 	{
 		if (localattempt > 1)
 		{
 			conoutf("unable to find any server on the local network");
-			disconnect(1);
-			showgui("main");
+			if(!menuactive()) showgui("main");
 		}
 		else
 		{
 			conoutf("unable to find a local server, trying the local network");
-			lanconnect();
+			tryagain = true;
 		}
 	}
 	else
 	{
 		conoutf("\f3could not connect to server");
-		abortconnect();
-		lanconnect();
+		tryagain = true;
 	}
+
+	if(tryagain) connects();
 }
 
 void connects(const char *servername)
@@ -121,7 +124,7 @@ void connects(const char *servername)
 		s_sprintfd(cs)("connecting to %s (esc to abort)", servername != NULL ? servername : "local server");
 		computescreen(cs);
 	}
-	else connectfail();
+	else connectfail(false);
 }
 
 void disconnect(int onlyclean, int async)
@@ -222,15 +225,12 @@ void gets2c()			// get updates from the server
 	if(!clienthost) return;
 	if(connpeer && totalmillis/3000 > connmillis/3000)
 	{
-		s_sprintfd(sp)("attempt #%d", connattempts+1);
-		show_out_of_renderloop_progress(float(connattempts)/float(3), sp);
-
-		conoutf("attempting to connect...");
+		conoutf("connection attempt %d", connattempts+1);
 		connmillis = totalmillis;
 		++connattempts;
 		if(connattempts > 3)
 		{
-			connectfail();
+			connectfail(false);
 			return;
 		}
 	}
@@ -256,12 +256,10 @@ void gets2c()			// get updates from the server
 		case ENET_EVENT_TYPE_DISCONNECT:
             extern const char *disc_reasons[];
 			if(event.data>=DISC_NUM) event.data = DISC_NONE;
-			if(event.peer==connpeer) connectfail();
-			else
-			{
-				if(!discmillis || event.data) conoutf("\f3server network error, disconnecting (%s) ...", disc_reasons[event.data]);
-				disconnect();
-			}
+			if(event.peer!=connpeer && (!discmillis || event.data))
+				conoutf("\f3server network error, disconnecting (%s) ...", disc_reasons[event.data]);
+
+			connectfail(event.peer!=connpeer);
 			return;
 
 		default:

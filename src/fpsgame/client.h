@@ -100,7 +100,7 @@ struct clientcom : iclientcom
         removetrackedparticles();
 		loopv(cl.players) DELETEP(cl.players[i]);
 		cleardynentcache();
-		if(!clean) lanconnect();
+		emptymap(0, true, NULL, true);
 	}
 
 	bool allowedittoggle(bool edit)

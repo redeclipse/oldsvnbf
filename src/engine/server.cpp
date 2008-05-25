@@ -471,16 +471,16 @@ bool masterreceive(ENetSocket sock, ENetBuffer &buf, int timeout = 0)
 
 ENetSocket mssock = ENET_SOCKET_NULL;
 ENetAddress msaddress = { ENET_HOST_ANY, ENET_PORT_ANY };
-ENetAddress masterserver = { ENET_HOST_ANY, MASTER_PORT };
+ENetAddress masteradr = { ENET_HOST_ANY, MASTER_PORT };
 int lastupdatemaster = 0;
 string masterserv;
 uchar masterrep[MAXTRANS];
 ENetBuffer masterb;
 
-void updatemasterserver()
+void updatemaster()
 {
 	if(mssock!=ENET_SOCKET_NULL) enet_socket_destroy(mssock);
-	mssock = mastersend(masterserver, masterserv, "add", &msaddress);
+	mssock = mastersend(masteradr, masterserv, "add", &msaddress);
 	masterrep[0] = 0;
 	masterb.data = masterrep;
 	masterb.dataLength = MAXTRANS-1;
@@ -491,7 +491,7 @@ void checkmasterreply()
 	if(mssock!=ENET_SOCKET_NULL && !masterreceive(mssock, masterb))
 	{
 		mssock = ENET_SOCKET_NULL;
-		conoutf("masterserver reply: %s", masterrep);
+		conoutf("master reply: %s", masterrep);
 	}
 }
 
@@ -500,11 +500,11 @@ void checkmasterreply()
 uchar *retrieveservers(uchar *buf, int buflen)
 {
 	buf[0] = '\0';
-	ENetAddress address = masterserver;
+	ENetAddress address = masteradr;
 	ENetSocket sock = mastersend(address, masterserv, "list");
 	if(sock==ENET_SOCKET_NULL) return buf;
 	/* only cache this if connection succeeds */
-	masterserver = address;
+	masteradr = address;
 
 	s_sprintfd(text)("retrieving servers from %s... (esc to abort)", masterserv);
 	show_out_of_renderloop_progress(0, text);
@@ -550,9 +550,9 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 	{
 		if (*masterserv) checkmasterreply();
 
-		if (totalmillis-lastupdatemaster > 60*60*1000 && *masterserv)		// send alive signal to masterserver every hour of uptime
+		if (totalmillis-lastupdatemaster > 60*60*1000 && *masterserv)		// send alive signal to master every hour of uptime
 		{
-			updatemasterserver();
+			updatemaster();
 			lastupdatemaster = totalmillis;
 		}
 
@@ -623,9 +623,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 
 void lanconnect()
 {
-#ifndef STANDALONE
-	if (sv->serverport()) connects();
-#endif
+	connects();
 }
 
 void serverloop()
@@ -694,7 +692,7 @@ void setupserver()
 
 	if (pubserv && *masterserv)
 	{
-		updatemasterserver();
+		updatemaster();
 	}
 	conoutf("game server for %s started", game);
 

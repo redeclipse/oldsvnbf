@@ -50,7 +50,6 @@ struct igameclient
 
     virtual bool clientoption(char *arg) { return false; }
     virtual void updateworld() = 0;
-    virtual void initclient() = 0;
     virtual void editvar(ident *id, bool local) = 0;
     virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
     virtual void resetgamestate() = 0;

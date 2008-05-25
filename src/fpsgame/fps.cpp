@@ -494,12 +494,6 @@ struct GAMECLIENT : igameclient
 		cleardynentcache();
 	}
 
-	void initclient()
-	{
-		if(serverhost) connects("localhost");
-		else lanconnect();
-	}
-
     void preload()
     {
         ws.preload();
@@ -798,6 +792,9 @@ struct GAMECLIENT : igameclient
 			}
 		}
 
+		glLoadIdentity();
+		glOrtho(0, w*3, h*3, 0, -1, 1);
+
 		if(index >= 0)
 			drawcrosshair(w, h, index, !index || mousetype() > 2 ? cursorx : 0.5f, !index || mousetype() > 2 ? cursory : 0.5f, r, g, b);
 
@@ -810,101 +807,80 @@ struct GAMECLIENT : igameclient
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
 
-		if(!menuactive())
+		int hoff = h*3-h*3/4-FONTH/2;
+		char *command = getcurcommand();
+		if(command) rendercommand(FONTH/2, hoff, h*3-FONTH);
+		hoff += FONTH;
+
+		renderconsole(w, h);
+
+		if(!hidestats())
 		{
-			int hoff = h*3-h*3/4-FONTH/2;
-			char *command = getcurcommand();
-			if(command) rendercommand(FONTH/2, hoff, h*3-FONTH);
-			hoff += FONTH;
+			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
+			int fps, bestdiff, worstdiff;
+			getfps(fps, bestdiff, worstdiff);
+			#if 0
+			if(showfpsrange()) draw_textx("%d+%d-%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff, perflevel);
+			else draw_textx("%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, perflevel);
+			#else
+			if(showfpsrange()) draw_textx("%d+%d-%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff);
+			else draw_textx("%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps);
+			#endif
 
-			renderconsole(w, h);
-
-			if(!hidestats())
+			if(editmode && showeditstats() && lastmillis-maptime > CARDTIME+CARDFADE)
 			{
-				extern void getfps(int &fps, int &bestdiff, int &worstdiff);
-				int fps, bestdiff, worstdiff;
-				getfps(fps, bestdiff, worstdiff);
-				#if 0
-				if(showfpsrange()) draw_textx("%d+%d-%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff, perflevel);
-				else draw_textx("%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, perflevel);
-				#else
-				if(showfpsrange()) draw_textx("%d+%d-%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff);
-				else draw_textx("%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps);
-				#endif
-
-				if(editmode && showeditstats() && lastmillis-maptime > CARDTIME+CARDFADE)
+				static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
+				if(lastmillis-laststats >= statrate())
 				{
-					static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
-					if(lastmillis-laststats >= statrate())
-					{
-						memcpy(prevstats, curstats, sizeof(prevstats));
-						laststats = lastmillis - (lastmillis%statrate());
-					}
-					int nextstats[8] =
-					{
-						vtris*100/max(wtris, 1),
-						vverts*100/max(wverts, 1),
-						xtraverts/1024,
-						xtravertsva/1024,
-						glde,
-						gbatches,
-						getnumqueries(),
-						rplanes
-					};
-
-					loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
-
-					draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", h*3/5+FONTH/2, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
-					draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", h*3/5+FONTH/2, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
-					draw_textf("cube %s%d", h*3/5+FONTH/2, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
+					memcpy(prevstats, curstats, sizeof(prevstats));
+					laststats = lastmillis - (lastmillis%statrate());
 				}
-			}
-
-			if(editmode)
-			{
-				char *editinfo = executeret("edithud");
-				if(editinfo)
+				int nextstats[8] =
 				{
-					draw_text(editinfo, h*3/5+FONTH/2, hoff); hoff += FONTH;
-					DELETEA(editinfo);
-				}
-			}
+					vtris*100/max(wtris, 1),
+					vverts*100/max(wverts, 1),
+					xtraverts/1024,
+					xtravertsva/1024,
+					glde,
+					gbatches,
+					getnumqueries(),
+					rplanes
+				};
 
-			render_texture_panel(w, h);
+				loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
+
+				draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", h*3/5+FONTH/2, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
+				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", h*3/5+FONTH/2, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
+				draw_textf("cube %s%d", h*3/5+FONTH/2, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
+			}
 		}
 
-		drawpointers(w, h);
+		if(editmode)
+		{
+			char *editinfo = executeret("edithud");
+			if(editinfo)
+			{
+				draw_text(editinfo, h*3/5+FONTH/2, hoff); hoff += FONTH;
+				DELETEA(editinfo);
+			}
+		}
+
+		render_texture_panel(w, h);
 	}
 
 	void drawhud(int w, int h)
 	{
-		if(cc.ready() && maptime)
+		if(!hidehud)
 		{
-			if(!hidehud)
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			if(!menuactive())
 			{
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				if(!menuactive()) drawgamehud(w, h);
+				if(cc.ready()) drawgamehud(w, h);
 				drawhudelements(w, h);
-				glDisable(GL_BLEND);
 			}
-		}
-		else
-		{
-			glLoadIdentity();
-			glOrtho(0, w, h, 0, -1, 1);
-			glColor3f(1, 1, 1);
-
-			settexture("textures/loadback");
-
-			glBegin(GL_QUADS);
-
-			glTexCoord2f(0, 0); glVertex2i(0, 0);
-			glTexCoord2f(1, 0); glVertex2i(w, 0);
-			glTexCoord2f(1, 1); glVertex2i(w, h);
-			glTexCoord2f(0, 1); glVertex2i(0, h);
-
-			glEnd();
+			drawpointers(w, h);
+			glDisable(GL_BLEND);
 		}
 	}
 
