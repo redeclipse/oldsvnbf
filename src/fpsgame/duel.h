@@ -26,13 +26,17 @@ struct duelservmode : servmode
 
 			if (msg)
 			{
-				const char *r = NULL;
-				if (!(n%3) && n != 13) r = "rd";
-				else if (!(n%2) && n != 12) r = "nd";
-				else if (!(n%1) && n != 11) r = "st";
-				else r = "th";
-
-				sv.servsend(ci->clientnum, "you are %d%s in the duel queue", n, r ? r : "");
+				if(m_dlms(sv.gamemode, sv.mutators))
+					sv.servsend(ci->clientnum, "waiting for next round..");
+				else
+				{
+					const char *r = NULL;
+					if (!(n%3) && n != 13) r = "rd";
+					else if (!(n%2) && n != 12) r = "nd";
+					else if (!(n%1) && n != 11) r = "st";
+					else r = "th";
+					sv.servsend(ci->clientnum, "you are %d%s in the duel queue", n, r ? r : "");
+				}
 			}
 		}
 	}
@@ -93,8 +97,10 @@ struct duelservmode : servmode
 			if (c->name[0] && alive.find(c) < 0 && \
 				(c->state.state == CS_ALIVE || c->state.state == CS_DEAD)) \
 			{ \
-				if (alive.length() < 2 && (e || c->state.state == CS_ALIVE) && \
-					(!alive.length() || !m_team(sv.gamemode, sv.mutators) || !isteam(c->team, alive[0]->team))) \
+				if ((m_dlms(sv.gamemode, sv.mutators) || alive.length() <= 1) && \
+					(e || c->state.state == CS_ALIVE) && \
+					(!alive.length() || !m_team(sv.gamemode, sv.mutators) || \
+						!isteam(c->team, alive[0]->team))) \
 				{ \
 					alive.add(c); \
 				} \
@@ -123,7 +129,7 @@ struct duelservmode : servmode
 				}
 			}
 
-			if (alive.length() > 1)
+			if (alive.length() >= 2)
 			{
 				string pl[2];
 
@@ -131,17 +137,22 @@ struct duelservmode : servmode
 				{
 					int n = duelqueue.find(alive[i]->clientnum);
 
-					if (i < 2)
+					if (m_dlms(sv.gamemode, sv.mutators) || i <= 1)
 					{
 						alive[i]->state.state = CS_ALIVE;
 						alive[i]->state.respawn();
 						sv.sendspawn(alive[i]);
-						s_strcpy(pl[i], sv.colorname(alive[i]));
-						if (n >= 0) duelqueue.remove(n);
+						if(i <= 1) s_strcpy(pl[i], sv.colorname(alive[i]));
+						if(n >= 0) duelqueue.remove(n);
 					}
 				}
 
-				sv.servsend(-1, "duel #%d, %s vs %s", ++duelround, pl[0], pl[1]);
+				duelround++;
+
+				if(m_dlms(sv.gamemode, sv.mutators))
+					sv.servsend(-1, "everyone, fight!", duelround);
+				else
+					sv.servsend(-1, "duel #%d, %s vs %s", duelround, pl[0], pl[1]);
 
 				if (!m_insta(sv.gamemode, sv.mutators))
 				{
@@ -158,7 +169,7 @@ struct duelservmode : servmode
 				dueltime = 0;
 			}
 		}
-		else if (alive.length() < 2)
+		else if (alive.length() <= 1)
 		{
 			if (alive.length())
 			{
@@ -169,7 +180,7 @@ struct duelservmode : servmode
 			}
 			else
 			{
-				sv.servsend(-1, "both duellers died!");
+				sv.servsend(-1, "everyone died!");
 			}
 			dueltime = sv.gamemillis + DUELMILLIS;
 		}
