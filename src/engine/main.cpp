@@ -711,9 +711,6 @@ int main(int argc, char **argv)
 	conoutf("init: sound");
 	initsound();
 
-	camera1 = cl->iterdynents(0);
-	emptymap(0, true, NULL, true);
-
 	conoutf("init: config");
 	rehash(false);
 	if(!setfont("default")) fatal("no default font specified");
@@ -726,11 +723,15 @@ int main(int argc, char **argv)
 	particleinit();
     initdecals();
 
+	conoutf("init: world");
+	camera1 = cl->iterdynents(0);
+	emptymap(0, true, NULL, true);
+
 	conoutf("init: client");
 	cl->initclient();
 
 	conoutf("init: mainloop");
-	if (initscript) execute(initscript);
+	if(initscript) execute(initscript);
 
 	if(autograbinput) setvar("grabinput", 1, true);
 
