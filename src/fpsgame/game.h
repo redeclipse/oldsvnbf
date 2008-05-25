@@ -13,8 +13,9 @@ enum
 	S_ITEMPICKUP, S_ITEMSPAWN,
 	S_V_BASECAP, S_V_BASELOST,
     S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET,
-	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_YOUWIN, S_V_YOULOSE, S_V_FRAGGED, S_V_OWNED, S_V_HEADSHOT,
+	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_HEADSHOT,
 	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4,
+	S_YOUWIN, S_YOULOSE, S_FRAGGED, S_OWNED,
 	S_REGEN, S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED, S_MENUPRESS, S_MENUBACK
 };
@@ -39,7 +40,8 @@ enum								// static entity types
 	CHECKPOINT,						// 14 idx
 	CAMERA,							// 15 yaw, pitch, pan (+:horiz/-:vert), idx
 	WAYPOINT,						// 16 radius, weight
-	MAXENTTYPES						// 17
+	ANNOUNCER,						// 17 maxrad, minrad, volume
+	MAXENTTYPES						// 18
 };
 
 enum { ETU_NONE = 0, ETU_ITEM, ETU_AUTO, ETU_MAX };
@@ -64,7 +66,8 @@ static struct enttypes
 	{ BASE,			48,		32,		16,		ETU_NONE,		"base" },
 	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" }, // FIXME
 	{ CAMERA,		48,		0,		0,		ETU_NONE,		"camera" },
-	{ WAYPOINT,		1,		8,		8,		ETU_NONE,		"waypoint" }
+	{ WAYPOINT,		1,		8,		8,		ETU_NONE,		"waypoint" },
+	{ ANNOUNCER,	64,		0,		0,		ETU_NONE,		"announcer" }
 };
 
 #ifndef STANDALONE
@@ -194,7 +197,7 @@ static struct gametypes
 // network messages codes, c2s, c2c, s2c
 enum
 {
-	SV_INITS2C = 0, SV_INITC2S, SV_POS, SV_TEXT, SV_SOUND, SV_CDIS,
+	SV_INITS2C = 0, SV_INITC2S, SV_POS, SV_TEXT, SV_ANNOUNCE, SV_SOUND, SV_CDIS,
 	SV_SHOOT, SV_EXPLODE, SV_SUICIDE,
 	SV_DIED, SV_DAMAGE, SV_SHOTFX,
 	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN, SV_FORCEDEATH,
@@ -218,7 +221,7 @@ static char msgsizelookup(int msg)
 {
 	static char msgsizesl[] =				// size inclusive message token, 0 for variable or not-checked sizes
 	{
-		SV_INITS2C, 4, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_SOUND, 3, SV_CDIS, 2,
+		SV_INITS2C, 4, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_ANNOUNCE, 0, SV_SOUND, 3, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 2,
 		SV_DIED, 7, SV_DAMAGE, 11, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 10, SV_SPAWN, 4, SV_FORCEDEATH, 2,
@@ -356,9 +359,9 @@ struct fpsstate
 	int health, ammo[NUMGUNS];
 	int gunselect, gunstate[NUMGUNS], gunwait[NUMGUNS], gunlast[NUMGUNS];
 	int lastdeath, lifesequence, lastshot, lastspawn, lastpain, lastregen;
-	int ownernum;
+	int ownernum, spree;
 
-	fpsstate() : lifesequence(0), ownernum(-1)
+	fpsstate() : lifesequence(0), ownernum(-1), spree(0)
 	{
 		loopi(NUMGUNS)
 		{
@@ -462,7 +465,7 @@ struct fpsstate
 	void respawn()
 	{
 		health = MAXHEALTH;
-		lastdeath = lastshot = lastspawn = lastpain = lastregen = 0;
+		lastdeath = lastshot = lastspawn = lastpain = lastregen = spree = 0;
 		loopi(NUMGUNS)
 		{
 			gunstate[i] = GUNSTATE_NONE;
@@ -597,14 +600,14 @@ struct fpsent : dynent, fpsstate
     vec deltapos, newpos;
     float deltayaw, deltapitch, newyaw, newpitch;
     int smoothmillis;
-	int spree, lastimpulse, lastnode;
+	int lastimpulse, lastnode;
 	int respawned, suicided;
 	int wschan;
 	botinfo *bot;
 
 	string name, team, info;
 
-	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), spree(0), lastimpulse(0), wschan(-1), bot(NULL)
+	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL)
 	{
 		name[0] = team[0] = info[0] = 0;
 		respawn();
@@ -635,7 +638,7 @@ struct fpsent : dynent, fpsstate
 		dynent::reset();
 		fpsstate::respawn();
 		lastattackgun = gunselect;
-		lasttaunt = lastuse = lastusemillis = superdamage = spree = lastimpulse = 0;
+		lasttaunt = lastuse = lastusemillis = superdamage = lastimpulse = 0;
 		lastbase = respawned = suicided = -1;
 	}
 };

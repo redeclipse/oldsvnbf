@@ -1805,6 +1805,46 @@ struct GAMESERVER : igameserver
 			ts.lastdeath = gamemillis;
 			// don't issue respawn yet until DEATHMILLIS has elapsed
 			// ts.respawn();
+			if(fragvalue > 0)
+			{
+				actor->state.spree++;
+				switch (actor->state.spree)
+				{
+					case 5:
+					{
+						s_sprintfd(spr)("%s is wreaking carnage!", actor->name);
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE1, spr);
+						break;
+					}
+					case 10:
+					{
+						s_sprintfd(spr)("%s is slaughtering the opposition!", actor->name);
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE2, spr);
+						break;
+					}
+					case 25:
+					{
+						s_sprintfd(spr)("%s is on a massacre!", actor->name);
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE3, spr);
+						break;
+					}
+					case 50:
+					{
+						s_sprintfd(spr)("%s is creating a bloodbath!", actor->name);
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE4, spr);
+						break;
+					}
+					default:
+					{
+						if(flags&HIT_HEAD)
+						{
+							s_sprintfd(spr)("%s scored a headshot!", actor->name);
+							sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_HEADSHOT, spr);
+						}
+						break;
+					}
+				}
+			}
 		}
 	}
 

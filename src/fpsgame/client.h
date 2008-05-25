@@ -531,6 +531,14 @@ struct clientcom : iclientcom
 				break;
 			}
 
+			case SV_ANNOUNCE:
+            {
+            	int snd = getint(p);
+				getstring(text, p);
+                cl.et.announce(snd, text);
+				break;
+            }
+
 			case SV_SOUND:
             {
                 int tcn = getint(p), snd = getint(p), vol = getint(p);

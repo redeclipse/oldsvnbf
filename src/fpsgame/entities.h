@@ -44,6 +44,26 @@ struct entities : icliententities
 		return emdl[0] ? emdl : NULL;
 	}
 
+	void announce(int idx, const char *msg = "")
+	{
+		bool announcer = false;
+		loopv(ents)
+		{
+			fpsentity &e = (fpsentity &)*ents[i];
+			if(e.type == ANNOUNCER)
+			{
+				playsound(idx, &e.o, e.attr3, e.attr1, e.attr2, SND_COPY);
+				announcer = true;
+			}
+		}
+		if(!announcer)
+		{
+			vec v(0.5f*getworldsize(), 0.5f*getworldsize(), 0.5f*getworldsize());
+			playsound(idx, &v, 255, int(0.5f*getworldsize()), 0, SND_COPY);
+		}
+		if(*msg) conoutf("\fr%s", msg);
+	}
+
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
 
