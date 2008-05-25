@@ -631,84 +631,78 @@ void lanconnect()
 #endif
 }
 
+void serverloop()
+{
+	#ifdef WIN32
+	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+	#endif
+	conoutf("dedicated server started, waiting for clients... [Ctrl-C to exit]");
+	for(;;)
+	{
+		int _lastmillis = lastmillis;
+		lastmillis = totalmillis = (int)enet_time_get();
+		curtime = lastmillis-_lastmillis;
+#ifdef MASTERSERVER
+		checkmaster();
+#endif
+		if(servertype) serverslice(5);
+	}
+}
+
 void setupserver()
 {
-	if (servertype)
+	conoutf("init: server");
+	pubserv = servertype >= 2 ? true : false;
+	if (!master) master = sv->getdefaultmaster();
+	s_strcpy(masterserv, master);
+
+	ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
+	if (*ip)
 	{
-		conoutf("init: server");
-		pubserv = servertype >= 2 ? true : false;
-		if (!master) master = sv->getdefaultmaster();
-		s_strcpy(masterserv, master);
-
-		ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
-		if (*ip)
-		{
-			if (enet_address_set_host(&address, ip) < 0) conoutf("WARNING: server ip not resolved");
-			else msaddress.host = address.host;
-		}
-		serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
-		if (!serverhost) { conoutf("could not create server socket"); return; }
-		loopi (maxclients) serverhost->peers[i].data = NULL;
-
-		address.port = sv->serverinfoport();
-		pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
-		if (pongsock == ENET_SOCKET_NULL)
-		{
-			conoutf("could not create server info socket, publicity disabled");
-			pubserv = false;
-		}
-		else
-		{
-			enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
-		}
-
-		sv->serverinit();
-
-		int d = sv->defaultmode();
-		string s, m;
-		s_strcpy(m, load ? load : sv->defaultmap());
-
-		char *t = strpbrk(m, ":");
-		if (t)
-		{
-			s_strncpy(s, m, t-m+1);
-			d = min(atoi(t+1), 1);
-		}
-		else { s_strcpy(s, m); }
-
-		sv->changemap(s, d, 0x00);
-
-		if (servertype >= 3)
-		{
-			#ifdef WIN32
-			SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-			#endif
-			conoutf("dedicated server started, waiting for clients... [Ctrl-C to exit]");
-			atexit(enet_deinitialize);
-			atexit(cleanupserver);
-			enet_time_set(0);
-			if(pubserv && *masterserv) updatemasterserver();
-			for(;;)
-			{
-				int _lastmillis = lastmillis;
-				lastmillis = totalmillis = (int)enet_time_get();
-				curtime = lastmillis-_lastmillis;
-#ifdef MASTERSERVER
-				checkmaster();
-#endif
-				serverslice(5);
-			}
-			return;
-		}
-		else
-		{
-			if (pubserv && *masterserv)
-			{
-				updatemasterserver();
-			}
-			conoutf("local server started");
-		}
+		if (enet_address_set_host(&address, ip) < 0) conoutf("WARNING: server ip not resolved");
+		else msaddress.host = address.host;
 	}
+	serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
+	if (!serverhost) { conoutf("could not create server socket"); return; }
+	loopi (maxclients) serverhost->peers[i].data = NULL;
+
+	address.port = sv->serverinfoport();
+	pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
+	if (pongsock == ENET_SOCKET_NULL)
+	{
+		conoutf("could not create server info socket, publicity disabled");
+		pubserv = false;
+	}
+	else
+	{
+		enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
+	}
+
+	sv->serverinit();
+
+	int d = sv->defaultmode();
+	string s, m;
+	s_strcpy(m, load ? load : sv->defaultmap());
+
+	char *t = strpbrk(m, ":");
+	if (t)
+	{
+		s_strncpy(s, m, t-m+1);
+		d = min(atoi(t+1), 1);
+	}
+	else { s_strcpy(s, m); }
+
+	sv->changemap(s, d, 0x00);
+
+	if (pubserv && *masterserv)
+	{
+		updatemasterserver();
+	}
+	conoutf("game server for %s started", game);
+
+#ifndef STANDALONE
+	if(servertype >= 3) serverloop();
+#endif
 }
 
 void initruntime()
@@ -767,7 +761,11 @@ int main(int argc, char* argv[])
 	execfile("server.cfg");
 	for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
+	atexit(enet_deinitialize);
+	atexit(cleanupserver);
+	enet_time_set(0);
 	initruntime();
+	serverloop();
 	return 0;
 }
 #endif
