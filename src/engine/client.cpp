@@ -17,7 +17,7 @@ bool multiplayer(bool msg)
 
 void setrate(int rate)
 {
-	if(!curpeer) return;
+	if(!curpeer || !clienthost) return;
 	enet_host_bandwidth_limit(clienthost, rate, rate);
 }
 
@@ -41,7 +41,7 @@ void abortconnect()
 	if(!connpeer) return;
 	if(connpeer->state!=ENET_PEER_STATE_DISCONNECTED) enet_peer_reset(connpeer);
 	connpeer = NULL;
-	if(curpeer) return;
+	if(curpeer || !clienthost) return;
 	enet_host_destroy(clienthost);
 	clienthost = NULL;
 }
@@ -50,7 +50,12 @@ void connectfail()
 {
 	if (localattempt)
 	{
-		if (localattempt > 1) fatal("unable to find any server on the local network");
+		if (localattempt > 1)
+		{
+			conoutf("unable to find any server on the local network");
+			disconnect(1);
+			showgui("main");
+		}
 		else
 		{
 			conoutf("unable to find a local server, trying the local network");
@@ -127,7 +132,7 @@ void disconnect(int onlyclean, int async)
 		if(!discmillis)
 		{
 			enet_peer_disconnect(curpeer, DISC_NONE);
-			enet_host_flush(clienthost);
+			if(clienthost) enet_host_flush(clienthost);
 			discmillis = totalmillis;
 		}
 		if(curpeer->state!=ENET_PEER_STATE_DISCONNECTED)

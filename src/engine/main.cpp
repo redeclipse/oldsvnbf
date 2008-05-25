@@ -765,21 +765,18 @@ int main(int argc, char **argv)
 			updatefpshistory(elapsed);
 			//perfcheck();
 
-			if (cc->ready())
-			{
-                cl->recomputecamera(screen->w, screen->h);
-                setviewcell(camera1->o);
-				entity_particles();
-				checksound();
+			cl->recomputecamera(screen->w, screen->h);
+			setviewcell(camera1->o);
+			entity_particles();
+			checksound();
 
-				inbetweenframes = false;
-				if(frames>2) gl_drawframe(screen->w, screen->h);
-				SDL_GL_SwapBuffers();
-				inbetweenframes = true;
+			inbetweenframes = false;
+			if(frames>2) gl_drawframe(screen->w, screen->h);
+			SDL_GL_SwapBuffers();
+			inbetweenframes = true;
 
-				s_sprintfd(cap)("%s - %s", cl->gametitle(), cl->gametext());
-				setcaption(cap);
-			}
+			s_sprintfd(cap)("%s - %s", cl->gametitle(), cl->gametext());
+			setcaption(cap);
 		}
 		frames++;
 		colorpos = 0; // last but not least.

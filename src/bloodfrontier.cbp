@@ -7,6 +7,7 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
+		<Option active_target="1"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -119,9 +120,6 @@
 				<Compiler>
 					<Add option="-O3"/>
 					<Add option="-Wall"/>
-					<Add option="-fsigned-char"/>
-					<Add option="-fomit-frame-pointer"/>
-					<Add option="-fno-strict-aliasing"/>
 					<Add option="-DSTANDALONE"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
@@ -149,12 +147,10 @@
 				<Option projectResourceIncludeDirsRelation="1"/>
 				<Option projectLibDirsRelation="1"/>
 				<Compiler>
-					<Add option="-O3"/>
 					<Add option="-Wall"/>
-					<Add option="-fsigned-char"/>
-					<Add option="-fomit-frame-pointer"/>
-					<Add option="-fno-strict-aliasing"/>
-					<Add option="-DDAEMON"/>
+					<Add option="-g"/>
+					<Add option="-DSTANDALONE"/>
+					<Add option="-DMASTERSERVER"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
 					<Add directory="include"/>
@@ -163,17 +159,13 @@
 					<Add directory="fpsgame"/>
 				</Compiler>
 				<Linker>
-					<Add option="-s"/>
 					<Add library="ws2_32"/>
 					<Add library="winmm"/>
+					<Add library="z"/>
 					<Add directory="lib\mingw"/>
 				</Linker>
 			</Target>
 		</Build>
-		<Unit filename="daemon\daemon.cpp">
-			<Option compilerVar="CPP"/>
-			<Option target="daemon"/>
-		</Unit>
 		<Unit filename="enet\callbacks.c">
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
@@ -346,7 +338,8 @@
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
-			<Option target="data"/>
+			<Option target="server"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="engine\console.cpp">
 			<Option compilerVar="CPP"/>
@@ -431,6 +424,16 @@
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="data"/>
+		</Unit>
+		<Unit filename="engine\master.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="daemon"/>
+		</Unit>
+		<Unit filename="engine\master.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="engine\material.cpp">
 			<Option compilerVar="CPP"/>
@@ -563,10 +566,11 @@
 		</Unit>
 		<Unit filename="engine\server.cpp">
 			<Option compilerVar="CPP"/>
+			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="server"/>
-			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="engine\serverbrowser.cpp">
 			<Option compilerVar="CPP"/>
@@ -721,6 +725,7 @@
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="server"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="fpsgame\fpsrender.h">
 			<Option compilerVar=""/>
@@ -1146,7 +1151,7 @@
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="server"/>
-			<Option target="data"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="shared\tools.h">
 			<Option compilerVar="CPP"/>

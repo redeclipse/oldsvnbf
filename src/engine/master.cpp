@@ -13,6 +13,7 @@
 #include <errno.h>
 #endif
 
+VARP(masterserver, 0, 1, 1);
 SVARP(masterip, "");
 VARP(masterport, 1025, MASTER_PORT, INT_MAX-1);
 
