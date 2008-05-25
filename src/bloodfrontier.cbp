@@ -7,7 +7,6 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
-		<Option active_target="1"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -29,7 +28,7 @@
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
-				<Option parameters="-qhome -rbfa\init.cfg -f0 -t0 -w640 -h480"/>
+				<Option parameters="-qhome -rbfa\init.cfg -du0 -df0 -dw640 -dh480"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
 				<Option projectResourceIncludeDirsRelation="1"/>
@@ -73,7 +72,7 @@
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
-				<Option parameters="-qhome -rbfa\init.cfg -f0 -t0 -w640 -h480"/>
+				<Option parameters="-qhome -rbfa\init.cfg -du0 -df0 -dw640 -dh480"/>
 				<Option includeInTargetAll="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>

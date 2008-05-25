@@ -647,20 +647,28 @@ int main(int argc, char **argv)
 		if(argv[i][0]=='-') switch(argv[i][1])
 		{
 			case 'r': execfile(argv[i][2] ? &argv[i][2] : "init.cfg"); restoredinits = true; break;
-            case 'w': scr_w = atoi(&argv[i][2]); if(scr_w<320) scr_w = 320; if(!findarg(argc, argv, "-h")) scr_h = (scr_w*3)/4; break;
-            case 'h': scr_h = atoi(&argv[i][2]); if(scr_h<200) scr_h = 200; if(!findarg(argc, argv, "-w")) scr_w = (scr_h*4)/3; break;
-			case 'z': depthbits = atoi(&argv[i][2]); break;
-			case 'b': colorbits = atoi(&argv[i][2]); break;
-			case 'a': fsaa = atoi(&argv[i][2]); break;
-			case 'v': vsync = atoi(&argv[i][2]); break;
-            case 't': fullscreen = atoi(&argv[i][2]); break;
-			case 'e': stencilbits = atoi(&argv[i][2]); break;
-			case 'f':
+			case 'd':
 			{
-				extern int useshaders, shaderprecision;
-				int n = atoi(&argv[i][2]);
-				useshaders = n ? 1 : 0;
-				shaderprecision = min(max(n - 1, 0), 3);
+				switch(argv[i][2])
+				{
+					case 'w': scr_w = atoi(&argv[i][3]); if(scr_w<320) scr_w = 320; if(!findarg(argc, argv, "-h")) scr_h = (scr_w*3)/4; break;
+					case 'h': scr_h = atoi(&argv[i][3]); if(scr_h<200) scr_h = 200; if(!findarg(argc, argv, "-w")) scr_w = (scr_h*4)/3; break;
+					case 'd': depthbits = atoi(&argv[i][3]); break;
+					case 'c': colorbits = atoi(&argv[i][3]); break;
+					case 'a': fsaa = atoi(&argv[i][3]); break;
+					case 'v': vsync = atoi(&argv[i][3]); break;
+					case 'f': fullscreen = atoi(&argv[i][3]); break;
+					case 's': stencilbits = atoi(&argv[i][3]); break;
+					case 'u':
+					{
+						extern int useshaders, shaderprecision;
+						int n = atoi(&argv[i][3]);
+						useshaders = n ? 1 : 0;
+						shaderprecision = min(max(n - 1, 0), 3);
+						break;
+					}
+					default: conoutf("unknown display option %c", argv[i][2]); break;
+				}
 				break;
 			}
 			case 'x': initscript = &argv[i][2]; break;
