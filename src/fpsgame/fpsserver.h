@@ -1065,7 +1065,7 @@ struct GAMESERVER : igameserver
             {
 				int lcn = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
                 if (cp->state.state!=CS_DEAD || cp->state.lastspawn>=0)
                 {
 					int nospawn = 0;
@@ -1083,7 +1083,7 @@ struct GAMESERVER : igameserver
 			{
                 int lcn = getint(p), id = getint(p), gun = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
 				gameevent &gunsel = cp->addevent();
 				gunsel.type = GE_SWITCH;
 				gunsel.gunsel.id = id;
@@ -1096,7 +1096,7 @@ struct GAMESERVER : igameserver
 			{
 				int lcn = getint(p), ls = getint(p), gunselect = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
 				if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD) || ls!=cp->state.lifesequence || cp->state.lastspawn<0) break;
 				cp->state.lastspawn = -1;
 				cp->state.state = CS_ALIVE;
@@ -1111,7 +1111,7 @@ struct GAMESERVER : igameserver
 			{
                 int lcn = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
 				gameevent &suicide = cp->addevent();
 				suicide.type = GE_SUICIDE;
 				break;
@@ -1121,13 +1121,7 @@ struct GAMESERVER : igameserver
 			{
                 int lcn = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum))
-				{
-					loopk(8) getint(p);
-					int hits = getint(p);
-					loopk(hits) loopj(7) getint(p);
-					break;
-				}
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
 				gameevent &shot = cp->addevent();
 				shot.type = GE_SHOT;
 				shot.shot.id = getint(p);
@@ -1153,7 +1147,7 @@ struct GAMESERVER : igameserver
 			{
                 int lcn = getint(p), id = getint(p), gun = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
 				gameevent &reload = cp->addevent();
 				reload.type = GE_RELOAD;
 				reload.reload.id = id;
@@ -1166,13 +1160,7 @@ struct GAMESERVER : igameserver
 			{
                 int lcn = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum))
-				{
-					loopk(3) getint(p);
-					int hits = getint(p);
-					loopk(hits) loopj(7) getint(p);
-					break;
-				}
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
 				gameevent &exp = cp->addevent();
 				exp.type = GE_EXPLODE;
 				exp.explode.id = getint(p);
@@ -1197,7 +1185,7 @@ struct GAMESERVER : igameserver
 			{
                 int lcn = getint(p), id = getint(p), ent = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
 				gameevent &use = cp->addevent();
 				use.type = GE_USE;
 				use.use.ent = ent;
@@ -1211,8 +1199,8 @@ struct GAMESERVER : igameserver
                 int lcn = getint(p), flags = getint(p);
                 getstring(text, p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-                if (cp->state.state == CS_SPECTATOR || (flags&SAY_TEAM && !cp->team[0])) break;
+				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
+                if(cp->state.state == CS_SPECTATOR || (flags&SAY_TEAM && !cp->team[0])) break;
                 loopv(clients)
                 {
                     clientinfo *t = clients[i];
