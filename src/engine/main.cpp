@@ -94,6 +94,7 @@ void writeinitcfg()
 	fprintf(f, "soundchans %d\n", soundchans);
 	fprintf(f, "soundbufferlen %d\n", soundbufferlen);
 	fprintf(f, "soundfreq %d\n", soundfreq);
+	fprintf(f, "verbose %d\n", verbose);
 	fclose(f);
 }
 
@@ -283,9 +284,10 @@ void resetgl()
     extern void reloadshaders();
     inbetweenframes = false;
     if(!reloadtexture("textures/notexture") ||
-       !reloadtexture("textures/logo") ||
-       !reloadtexture("textures/loadback"))
-        fatal("failed to reload core texture");
+		!reloadtexture("textures/blank") ||
+		!reloadtexture("textures/logo") ||
+		!reloadtexture("textures/loadback"))
+			fatal("failed to reload core texture");
     reloadfonts();
     inbetweenframes = true;
     computescreen("initializing...");
@@ -515,9 +517,6 @@ static void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = total
 VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
 VARFP(clockfix, 0, 0, 1, clockreset());
 
-VAR(version, 1, ENG_VERSION, -1); // for scripts
-VARP(verbose, 0, 0, 4); // be more or less expressive to console
-
 void _grabinput(int n)
 {
 	SDL_WM_GrabInput(n ? SDL_GRAB_ON : SDL_GRAB_OFF);
@@ -703,9 +702,9 @@ int main(int argc, char **argv)
 	conoutf("init: gl");
     gl_checkextensions();
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
-    notexture = textureload("textures/notexture");
-    blanktexture = textureload("textures/blank");
-    if(!notexture) fatal("could not find core textures");
+    if(!(notexture = textureload("textures/notexture")) ||
+		!(blanktexture = textureload("textures/blank")))
+		fatal("could not find core textures");
 
 	SDL_ShowCursor(0);
 
