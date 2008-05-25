@@ -11,26 +11,34 @@ struct fpsrender
 
 	void renderplayer(fpsent *d, bool local, const char *mdlname)
 	{
-        int lastaction = !isgun(d->gunselect) ? 0 : d->gunlast[d->gunselect], attack = ANIM_SHOOT, delay = !isgun(d->gunselect) ? 0 : d->gunwait[d->gunselect] + 50;
+        int lastaction = 0, animflags = 0, animdelay = 0;
 
 		if(cl.intermission && d->state != CS_DEAD)
 		{
 			lastaction = lastmillis;
-			attack = ANIM_LOSE|ANIM_LOOP;
-			delay = 1000;
-			if(m_team(cl.gamemode, cl.mutators)) loopv(bestteams) { if(!strcmp(bestteams[i], d->team)) { attack = ANIM_WIN|ANIM_LOOP; break; } }
-			else if(bestplayers.find(d)>=0) attack = ANIM_WIN|ANIM_LOOP;
+			animflags = ANIM_LOSE|ANIM_LOOP;
+			animdelay = 1000;
+			if(m_team(cl.gamemode, cl.mutators)) loopv(bestteams) { if(!strcmp(bestteams[i], d->team)) { animflags = ANIM_WIN|ANIM_LOOP; break; } }
+			else if(bestplayers.find(d)>=0) animflags = ANIM_WIN|ANIM_LOOP;
 		}
-        else if (d->state == CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-lastaction>delay)
+        else if (d->state == CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-lastaction>animdelay)
 		{
 			lastaction = d->lasttaunt;
-			attack = ANIM_TAUNT;
-			delay = 1000;
+			animflags = ANIM_TAUNT;
+			animdelay = 1000;
 		}
 		else if (isgun(d->gunselect) && lastmillis-d->gunlast[d->gunselect] < d->gunwait[d->gunselect])
 		{
-			if(d->gunstate[d->gunselect] == GUNSTATE_RELOAD)
-				attack = ANIM_RELOAD;
+			switch(d->gunstate[d->gunselect])
+			{
+				case GUNSTATE_SWITCH: animflags = ANIM_SWITCH; break;
+				case GUNSTATE_SHOOT: animflags = d->gunselect != GUN_GL ? ANIM_SHOOT : ANIM_THROW; break;
+				case GUNSTATE_RELOAD: animflags = d->gunselect != GUN_GL ? ANIM_RELOAD : ANIM_HOLD; break;
+				case GUNSTATE_NONE:
+				default: break;
+			}
+			lastaction = d->gunlast[d->gunselect];
+			animdelay = d->gunwait[d->gunselect] + 50;
 		}
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
 		static const char *vweps[] = { "weapons/pistol/vwep", "weapons/shotgun/vwep", "weapons/chaingun/vwep", "weapons/grenades/vwep", "weapons/flamer/vwep", "weapons/rifle/vwep", "weapons/rockets/vwep"};
@@ -43,7 +51,7 @@ struct fpsrender
             a[ai].basetime = 0;
             ai++;
 		}
-        renderclient(d, local, mdlname, a[0].name ? a : NULL, attack, delay, lastaction, cl.intermission ? 0 : d->lastpain);
+        renderclient(d, local, mdlname, a[0].name ? a : NULL, animflags, animdelay, lastaction, cl.intermission ? 0 : d->lastpain);
 	}
 
 	void render()

@@ -885,7 +885,7 @@ void findanims(const char *pattern, vector<int> &anims)
 		"dead", "dying", "idle",
 		"forward", "backward", "left", "right",
 		"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
-		"punch", "shoot", "reload", "pain",
+		"punch", "hold", "throw", "shoot", "reload", "switch", "pain",
 		"jump", "sink", "swim",
 		"edit", "lag", "taunt", "win", "lose",
 		"gun shoot", "gun idle", "gun reload",
@@ -911,7 +911,7 @@ void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&mas
 VAR(animoverride, -1, 0, NUMANIMS-1);
 VAR(testanims, 0, 0, 1);
 
-void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, float sink)
+void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attachments, int animflags, int animdelay, int lastaction, int lastpain, float sink)
 {
     int anim = (d->crouching ? ANIM_CROUCH : ANIM_IDLE)|ANIM_LOOP;
     float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
@@ -938,9 +938,9 @@ void renderclient(dynent *d, bool local, const char *mdlname, modelattach *attac
 			anim = ANIM_PAIN;
 			basetime = lastpain;
 		}
-        else if(lastpain < lastaction && (attack<0 || (d->type!=ENT_AI && lastmillis-lastaction<attackdelay)))
+        else if(lastpain < lastaction && (animflags<0 || (d->type!=ENT_AI && lastmillis-lastaction<animdelay)))
 		{
-			anim = attack<0 ? -attack : attack;
+			anim = animflags<0 ? -animflags : animflags;
 			basetime = lastaction;
 		}
 
