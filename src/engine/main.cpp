@@ -766,7 +766,7 @@ int main(int argc, char **argv)
 
 		checksleep(lastmillis);
 
-		serverslice(0);
+		serverslice();
 
 		if (frames)
 		{

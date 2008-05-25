@@ -301,18 +301,7 @@ struct GAMESERVER : igameserver
 
 	#define mutate(b) loopvk(smuts) { servmode *mut = smuts[k]; { b; } }
 
-	#define Q_INT(c,n) { ucharbuf buf = c->messages.reserve(5); putint(buf, n); c->messages.addbuf(buf); }
-	#define Q_STR(c,text) { ucharbuf buf = c->messages.reserve(2*strlen(text)+1); sendstring(text, buf); c->messages.addbuf(buf); }
-
-	struct scr
-	{
-		char *name;
-		int val;
-		scr(char *_n, int _v) : name(_n), val(_v) {}
-		~scr() {}
-	};
-	clientinfo *cmdcontext;
-	string scresult, motd;
+	string  motd;
 	GAMESERVER()
 		: notgotitems(true), notgotbases(false),
 			gamemode(defaultmode()), mutators(0), interm(0), minremain(10),
@@ -527,11 +516,13 @@ struct GAMESERVER : igameserver
 		endianswap(&hdr.gamever, sizeof(int), 1);
 		gzwrite(demorecord, &hdr, sizeof(demoheader));
 
-		uchar buf[MAXTRANS];
-		ucharbuf p(buf, sizeof(buf));
-		welcomepacket(p, -1);
-		writedemo(1, buf, p.len);
+        ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, 0);
+        ucharbuf p(packet->data, packet->dataLength);
+        welcomepacket(p, -1, packet);
+        writedemo(1, p.buf, p.len);
+        enet_packet_destroy(packet);
 
+		uchar buf[MAXTRANS];
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
@@ -641,7 +632,7 @@ struct GAMESERVER : igameserver
 		{
 			ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
 			ucharbuf p(packet->data, packet->dataLength);
-			welcomepacket(p, clients[i]->clientnum);
+            welcomepacket(p, clients[i]->clientnum, packet);
 			enet_packet_resize(packet, p.length());
 			sendpacket(clients[i]->clientnum, 1, packet);
 			if(!packet->referenceCount) enet_packet_destroy(packet);
@@ -702,7 +693,6 @@ struct GAMESERVER : igameserver
 			clientinfo *ci = clients[i];
 			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		}
-
 		if (m_team(gamemode, mutators)) autoteam();
 
 		// server modes
@@ -842,7 +832,7 @@ struct GAMESERVER : igameserver
 		// only allow edit messages in coop-edit mode
 		if(type>=SV_EDITENT && type<=SV_GETMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_DROPFLAG, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
+		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_DROPFLAG, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -1103,7 +1093,7 @@ struct GAMESERVER : igameserver
 				cp->state.gunselect = gunselect;
 				if(smode) smode->spawned(cp);
 				mutate(mut->spawned(cp));
-				QUEUE_MSG;
+                QUEUE_MSG;
 				break;
 			}
 
@@ -1236,7 +1226,7 @@ struct GAMESERVER : igameserver
 					}
 				}
 				getstring(text, p);
-				if(!connected && m_team(gamemode, mutators))
+				if(connected && m_team(gamemode, mutators))
 				{
 					const char *worst = chooseworstteam(text);
 					if(worst)
@@ -1252,7 +1242,7 @@ struct GAMESERVER : igameserver
 				mutate(mut->changeteam(ci, ci->team, text));
 				s_strncpy(ci->team, text, MAXTEAMLEN+1);
 				QUEUE_MSG;
-				if(!connected && !m_duel(gamemode, mutators))
+				if(connected && !m_duel(gamemode, mutators))
 					sendf(sender, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, "fight!");
 				break;
 			}
@@ -1615,7 +1605,7 @@ struct GAMESERVER : igameserver
 		delclient(lcn);
 	}
 
-	int welcomepacket(ucharbuf &p, int n)
+	int welcomepacket(ucharbuf &p, int n, ENetPacket *packet)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
 		int hasmap = smapname[0] ? (sents.length() ? 1 : 2) : 0;
@@ -2031,34 +2021,6 @@ struct GAMESERVER : igameserver
 			}
 			if(smode) smode->update();
 			mutate(mut->update());
-
-			/*
-			if (!m_capture(gamemode) && fraglimit > 0 && minremain > 0)
-			{
-				vector<scr *> scrs;
-
-				loopv(clients)
-				{
-					clientinfo *ci = clients[i];
-					if (m_team(gamemode, mutators))
-					{
-						scradd(scrs, ci->team, ci->state.frags);
-					}
-					else
-					{
-						scradd(scrs, ci->name, ci->state.frags);
-					}
-				}
-
-				if (scrs.length() > 0)
-				{
-					scrs.sort(scrsort);
-					if (scrs[0]->val >= fraglimit)
-						startintermission();
-				}
-				loopv(scrs) DELETEP(scrs[i]);
-			}
-			*/
 		}
 
 		while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000) bannedips.remove(0);
@@ -2222,7 +2184,7 @@ struct GAMESERVER : igameserver
 		if(mapdata) { fclose(mapdata); mapdata = NULL; }
 		if(!len) return;
 		mapdata = tmpfile();
-		if(!mapdata) return;
+        if(!mapdata) { sendf(sender, 1, "ris", SV_SERVMSG, "failed to open temporary file for map"); return; }
 		fwrite(data, 1, len, mapdata);
 		s_sprintfd(msg)("[%s uploaded map to server, \"/getmap\" to receive it]", colorname(ci));
 		sendservmsg(msg);
@@ -2277,25 +2239,5 @@ struct GAMESERVER : igameserver
 	{
 		s_sprintfdlv(str, s, s);
 		sendf(cn, 1, "ris", SV_SERVMSG, str);
-	}
-
-	static int scrsort(const scr **a, const scr **b)
-	{
-		if((*a)->val > (*b)->val) return -1;
-		if((*a)->val < (*b)->val) return 1;
-		return strcmp((*a)->name, (*b)->name);
-	}
-
-	void scradd(vector<scr *> &dest, char *name, int amt)
-	{
-		loopvk(dest)
-		{
-			if (!strcmp(dest[k]->name, name))
-			{
-				dest[k]->val += amt;
-				return;
-			}
-		}
-		dest.add(new scr(name, amt));
 	}
 };

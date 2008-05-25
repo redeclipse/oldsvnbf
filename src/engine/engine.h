@@ -380,7 +380,7 @@ extern vector<char *> gameargs;
 
 extern void initruntime();
 extern void cleanupserver();
-extern void serverslice(uint timeout);
+extern void serverslice();
 
 extern uchar *retrieveservers(uchar *buf, int buflen);
 extern void clienttoserver(int chan, ENetPacket *);
@@ -481,8 +481,8 @@ extern bool limitsky();
 
 // 3dgui
 extern void g3d_render();
-extern bool g3d_windowhit(int code, bool on, bool act);
-extern char *g3d_fieldname();
+extern bool g3d_windowhit(bool on, bool act);
+extern const char *g3d_fieldname();
 
 extern void g3d_mainmenu();
 
