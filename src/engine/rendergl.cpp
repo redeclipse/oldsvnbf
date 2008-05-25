@@ -955,6 +955,22 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
 void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat);
 
+void loadbackground(int w, int h)
+{
+	glColor3f(1, 1, 1);
+
+	settexture("textures/loadback");
+
+	glBegin(GL_QUADS);
+
+	glTexCoord2f(0, 0); glVertex2i(0, 0);
+	glTexCoord2f(1, 0); glVertex2i(w, 0);
+	glTexCoord2f(1, 1); glVertex2i(w, h);
+	glTexCoord2f(0, 1); glVertex2i(0, h);
+
+	glEnd();
+}
+
 static void getcomputescreenres(int &w, int &h)
 {
     float wk = 1, hk = 1;
@@ -991,17 +1007,8 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 	loopi(2)
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
-		settexture("textures/loadback");
 
-		glColor3f(1, 1, 1);
-		glBegin(GL_QUADS);
-
-		glTexCoord2f(0, 0); glVertex2i(0, 0);
-		glTexCoord2f(1, 0); glVertex2i(w, 0);
-		glTexCoord2f(1, 1); glVertex2i(w, h);
-		glTexCoord2f(0, 1); glVertex2i(0, h);
-
-		glEnd();
+		loadbackground(w, h);
 
         if(text)
         {
@@ -1287,12 +1294,6 @@ void gl_drawframe(int w, int h)
     addglare();
 	renderfullscreenshader(w, h);
 
-    defaultshader->set();
-    g3d_render();
-
-	glDisable(GL_TEXTURE_2D);
-	notextureshader->set();
-
     gl_drawhud(w, h, fogmat, fogblend, abovemat);
 
 	glEnable(GL_CULL_FACE);
@@ -1371,6 +1372,36 @@ void drawcrosshair(int w, int h, int index, float cx, float cy, float r, float g
 
 void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 {
+    defaultshader->set();
+
+	if(!cc->ready())
+	{
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(0, w, h, 0, -1, 1);
+
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+
+        glDisable(GL_DEPTH_TEST);
+
+		loadbackground(w, h);
+
+        glEnable(GL_DEPTH_TEST);
+
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+	}
+
+    g3d_render();
+
+	glDisable(GL_TEXTURE_2D);
+	notextureshader->set();
+
 	if(editmode && !hidehud)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
