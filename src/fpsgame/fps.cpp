@@ -424,18 +424,16 @@ struct GAMECLIENT : igameclient
 				if((m_team(gamemode, mutators) && isteam(player1->team, teamscores[0].team)) ||
 					(!m_team(gamemode, mutators) && shplayers.length() && shplayers[0] == player1))
 				{
-					conoutf("\f2intermission: you win!");
-					playsound(S_YOUWIN);
+					et.announce(S_V_YOUWIN, "intermission: you win!");
 				}
 				else
 				{
-					conoutf("\f2intermission: you lose!");
-					playsound(S_YOULOSE);
+					et.announce(S_V_YOULOSE, "intermission: you win!");
 				}
 			}
 			else
 			{
-				conoutf("\f2intermission: the game has ended!");
+				et.announce(S_V_MCOMPLETE, "intermission: mission complete!");
 			}
 			sb.showscores(true);
 		}
