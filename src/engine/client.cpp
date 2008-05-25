@@ -174,8 +174,13 @@ void trydisconnect()
 }
 
 COMMANDN(connect, connects, "s");
-COMMAND(lanconnect, "");
 COMMANDN(disconnect, trydisconnect, "");
+
+void lanconnect()
+{
+	connects();
+}
+COMMAND(lanconnect, "");
 
 int lastupdate = -1000;
 
