@@ -1107,8 +1107,9 @@ struct GAMECLIENT : igameclient
 		vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
 		vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
 
-		int mat = lookupmaterial(camera1->o);
-		switch(mat)
+		ph.updatematerial(camera1, true, true);
+
+		switch(camera1->inmaterial)
 		{
 			case MAT_WATER:
 			{
