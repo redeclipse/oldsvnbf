@@ -154,52 +154,59 @@ int addsound(const char *name, int vol, vector<soundslot> &sounds)
 ICOMMAND(registersound, "si", (char *n, int *v), intret(addsound(n, *v, gamesounds)));
 ICOMMAND(mapsound, "si", (char *n, int *v), intret(addsound(n, *v, mapsounds)));
 
+void updatesound(int chan)
+{
+	int vol = clamp(((soundvol*sounds[chan].vol*sounds[chan].slot->vol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
+	vec v;
+	sounds[chan].dist = camera1->o.dist(*sounds[chan].pos, v);
+
+	if(!soundmono && (v.x != 0 || v.y != 0))
+	{
+		float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
+		sounds[chan].curpan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
+	}
+	else sounds[chan].curpan = 127;
+
+
+	if(!(sounds[chan].flags&SND_NOATTEN))
+	{
+		float maxrad = float(sounds[chan].maxrad > 0 && sounds[chan].maxrad < soundmaxdist ? sounds[chan].maxrad : soundmaxdist);
+
+		if(vol && sounds[chan].dist <= maxrad)
+		{
+			float minrad = float(sounds[chan].minrad < maxrad ? sounds[chan].minrad : maxrad);
+
+			if(sounds[chan].dist > minrad)
+				sounds[chan].curvol = int(float(vol)*((maxrad-minrad-sounds[chan].dist)/(maxrad-minrad)));
+			else if(sounds[chan].dist <= camera1->radius)
+				sounds[chan].curvol = vol;
+		}
+		else sounds[chan].curvol = 0;
+	}
+	else sounds[chan].curvol = vol;
+
+	Mix_Volume(chan, sounds[chan].curvol);
+	Mix_SetPanning(chan, 255-sounds[chan].curpan, sounds[chan].curpan);
+
+	if(!(sounds[chan].flags&SND_NODELAY) && Mix_Paused(chan))
+	{
+		if(totalmillis >= sounds[chan].millis+int(sounds[chan].dist/0.686f))
+			Mix_Resume(chan);
+	}
+#if 0
+	conoutf("sound %d (%.1f %.1f %.1f [%.1f]) %d %d", i,
+		sounds[i].pos->x, sounds[i].pos->y, sounds[i].pos->z,
+		sounds[i].dist, sounds[i].curvol, sounds[i].curpan);
+#endif
+}
+
 void checksound()
 {
 	if(nosound) return;
 
 	loopv(sounds) if(sounds[i].inuse)
 	{
-		if(Mix_Playing(i))
-		{
-			int vol = clamp(((soundvol*sounds[i].vol*sounds[i].slot->vol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
-			vec v;
-			sounds[i].dist = camera1->o.dist(*sounds[i].pos, v);
-			float maxrad = float(sounds[i].maxrad > 0 && sounds[i].maxrad < soundmaxdist ? sounds[i].maxrad : soundmaxdist);
-
-			if(vol && sounds[i].dist <= maxrad)
-			{
-				float minrad = float(sounds[i].minrad < maxrad ? sounds[i].minrad : maxrad);
-
-				if(sounds[i].dist > minrad)
-				{
-					sounds[i].curvol = int(float(vol)*((maxrad-minrad-sounds[i].dist)/(maxrad-minrad)));
-					if(!soundmono && (v.x != 0 || v.y != 0))
-					{
-						float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
-						sounds[i].curpan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
-					}
-				}
-				else if(sounds[i].dist <= camera1->radius)
-				{
-					sounds[i].curvol = MIX_MAX_VOLUME;
-					sounds[i].curpan = 127;
-				}
-			}
-			else
-			{
-				sounds[i].curvol = 0;
-				sounds[i].curpan = 127;
-			}
-
-			Mix_Volume(i, sounds[i].curvol);
-			Mix_SetPanning(i, 255-sounds[i].curpan, sounds[i].curpan);
-#if 0
-			conoutf("sound %d (%.1f %.1f %.1f [%.1f]) %d %d", i,
-				sounds[i].pos->x, sounds[i].pos->y, sounds[i].pos->z,
-				sounds[i].dist, sounds[i].curvol, sounds[i].curpan);
-#endif
-		}
+		if(Mix_Playing(i)) updatesound(i);
 		else sounds[i].inuse = false;
 	}
 	if(music && !Mix_PlayingMusic()) musicdone(true);
@@ -227,13 +234,17 @@ int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 
 		if(chan >= 0)
 		{
+			if(!(flags&SND_NODELAY)) Mix_Pause(chan);
+
 			while(chan >= sounds.length()) sounds.add().inuse = false;
+
 			sounds[chan].slot = &soundset[n];
 			sounds[chan].vol = vol > 0 && vol < 255 ? vol : 255;
-			sounds[chan].maxrad = maxrad > 0 ? maxrad : 1024;
-			sounds[chan].minrad = minrad > 0 ? minrad : 2;
+			sounds[chan].maxrad = maxrad > 0 ? maxrad : getworldsize()/2;
+			sounds[chan].minrad = minrad > 0 ? minrad : 0;
 			sounds[chan].inuse = true;
 			sounds[chan].flags = flags;
+			sounds[chan].millis = totalmillis;
 
 			if(flags&SND_COPY)
 			{
@@ -242,6 +253,7 @@ int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 			}
 			else sounds[chan].pos = p;
 
+			updatesound(chan);
 			return chan;
 		}
 		else conoutf("cannot play sound %d (%s): %s", n, soundset[n].sample->name, Mix_GetError());

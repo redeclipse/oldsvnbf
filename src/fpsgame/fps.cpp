@@ -326,19 +326,6 @@ struct GAMECLIENT : igameclient
 
 		if(actor->type == ENT_PLAYER) actor->totaldamage += damage;
 
-		if(actor == player1)
-		{
-			int snd = 0;
-			if(damage > 200) snd = 6;
-			else if(damage > 175) snd = 5;
-			else if(damage > 150) snd = 4;
-			else if(damage > 125) snd = 3;
-			else if(damage > 100) snd = 2;
-			else if(damage > 50) snd = 1;
-			playsound(S_DAMAGE1+snd);
-			lasthit = lastmillis;
-		}
-
 		if(d == player1)
 		{
 			quakewobble += damage;
@@ -357,6 +344,24 @@ struct GAMECLIENT : igameclient
 				particle_text(d->abovehead(), ds, 8);
 			}
 			playsound(S_PAIN1+rnd(5), &d->o);
+		}
+
+		if(d != actor)
+		{
+			if(d->health > 0) // else wait for killed
+			{
+				int snd = 0;
+				if(damage > 200) snd = 6;
+				else if(damage > 175) snd = 5;
+				else if(damage > 150) snd = 4;
+				else if(damage > 125) snd = 3;
+				else if(damage > 100) snd = 2;
+				else if(damage > 50) snd = 1;
+				playsound(S_DAMAGE1+snd, &actor->o);
+			}
+
+			if(actor == player1)
+				lasthit = lastmillis;
 		}
 	}
 
@@ -394,7 +399,7 @@ struct GAMECLIENT : igameclient
 			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
-			playsound(lastmillis-d->lastspawn < 10000 ? S_V_OWNED : S_V_FRAGGED);
+			et.announce(lastmillis-d->lastspawn < 10000 ? S_V_OWNED : S_V_FRAGGED);
 		}
 		else
 		{
@@ -408,8 +413,7 @@ struct GAMECLIENT : igameclient
 		}
 		playsound(S_DIE1+rnd(2), &d->o);
 
-		if(d != actor)
-			playsound(S_DAMAGE8, &actor->o);
+		if(d != actor) playsound(S_DAMAGE8, &actor->o);
 	}
 
 	void timeupdate(int timeremain)

@@ -13,6 +13,7 @@ struct entities : icliententities
 
 	entities(GAMECLIENT &_cl) : cl(_cl)
 	{
+        CCOMMAND(announce, "i", (entities *self, int *idx), self->announce(*idx));
 	}
 
 	vector<extentity *> &getents() { return ents; }
@@ -59,7 +60,7 @@ struct entities : icliententities
 		if(!announcer)
 		{
 			vec v(0.5f*getworldsize(), 0.5f*getworldsize(), 0.5f*getworldsize());
-			playsound(idx, &v, 255, int(0.5f*getworldsize()), 0, SND_COPY);
+			playsound(idx, &v, 255, getworldsize()/2, 0, SND_COPY);
 		}
 		if(*msg) conoutf("\fr%s", msg);
 	}

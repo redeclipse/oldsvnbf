@@ -33,14 +33,18 @@ struct sound
 	int flags, maxrad, minrad;
 	float dist;
 	bool inuse, map;
+	int millis;
 
-	sound() : slot(NULL), vol(255), curvol(255), curpan(127), flags(0), maxrad(0), minrad(0), dist(0.f), inuse(false) {}
+	sound() : slot(NULL), vol(255), curvol(255), curpan(127), flags(0), maxrad(0), minrad(0), dist(0.f), inuse(false), millis(0) {}
 	~sound() {}
 };
 
 #define SND_COPY	0x0001
 #define SND_LOOP	0x0002
 #define SND_MAP		0x0004
+
+#define SND_NOATTEN	0x0010	// disable attenuation
+#define SND_NODELAY	0x0020	// disable delay
 
 extern hashtable<const char *, soundsample> soundsamples;
 extern vector<soundslot> gamesounds, mapsounds;
