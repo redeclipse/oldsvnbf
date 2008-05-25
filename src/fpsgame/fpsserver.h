@@ -944,10 +944,10 @@ struct GAMESERVER : igameserver
 	bool sendpackets()
 	{
 		if(clients.empty()) return false;
-		enet_uint32 curtime = enet_time_get()-lastsend;
-		if(curtime<33) return false;
+		enet_uint32 millis = enet_time_get()-lastsend;
+		if(millis<33) return false;
 		bool flush = buildworldstate();
-		lastsend += curtime - (curtime%33);
+		lastsend += millis - (millis%33);
 		return flush;
 	}
 
@@ -2010,7 +2010,6 @@ struct GAMESERVER : igameserver
 
 	void serverupdate()
 	{
-		if(!curtime) return;
 		gamemillis += curtime;
 
 		if(m_demo(gamemode)) readdemo();
