@@ -394,7 +394,7 @@ struct GAMECLIENT : igameclient
 			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
-			playsound(lastmillis-d->lastspawn < 10000 ? S_V_OWNED : S_V_FRAGGED);
+			playsound(lastmillis-d->lastspawn < 10000 ? S_OWNED : S_FRAGGED);
 		}
 		else
 		{
@@ -409,22 +409,7 @@ struct GAMECLIENT : igameclient
 		playsound(S_DIE1+rnd(2), &d->o);
 
 		if(d != actor)
-		{
-			actor->spree++;
-			switch (actor->spree)
-			{
-				case 5:  playsound(S_V_SPREE1, &actor->o); break;
-				case 10: playsound(S_V_SPREE2, &actor->o); break;
-				case 25: playsound(S_V_SPREE3, &actor->o); break;
-				case 50: playsound(S_V_SPREE4, &actor->o); break;
-				default:
-				{
-					if(flags&HIT_HEAD) playsound(S_V_HEADSHOT, &actor->o);
-					else playsound(S_DAMAGE8, &actor->o);
-					break;
-				}
-			}
-		}
+			playsound(S_DAMAGE8, &actor->o);
 	}
 
 	void timeupdate(int timeremain)
@@ -440,12 +425,12 @@ struct GAMECLIENT : igameclient
 					(!m_team(gamemode, mutators) && shplayers.length() && shplayers[0] == player1))
 				{
 					conoutf("\f2intermission: you win!");
-					playsound(S_V_YOUWIN);
+					playsound(S_YOUWIN);
 				}
 				else
 				{
 					conoutf("\f2intermission: you lose!");
-					playsound(S_V_YOULOSE);
+					playsound(S_YOULOSE);
 				}
 			}
 			else

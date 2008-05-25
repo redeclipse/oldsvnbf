@@ -361,13 +361,15 @@ struct captureclient : capturestate
 			if(strcmp(b.owner, owner))
 			{
 				conoutf("\f2%s captured %s", owner, b.name);
-				if(!strcmp(owner, cl.player1->team)) playsound(S_V_BASECAP);
+				if(!strcmp(owner, cl.player1->team))
+					cl.et.announce(S_V_BASECAP);
 			}
 		}
 		else if(b.owner[0])
 		{
 			conoutf("\f2%s lost %s", b.owner, b.name);
-			if(!strcmp(b.owner, cl.player1->team)) playsound(S_V_BASELOST);
+			if(!strcmp(b.owner, cl.player1->team))
+				cl.et.announce(S_V_BASELOST);
 		}
         if(strcmp(b.owner, owner)) particle_splash(0, 200, 250, b.pos);
 		s_strcpy(b.owner, owner);
