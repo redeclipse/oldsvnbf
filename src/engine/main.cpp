@@ -670,8 +670,13 @@ int main(int argc, char **argv)
 	}
 	initing = NOT_INITING;
 
-	conoutf("init: sdl");
+	conoutf("init: enet");
+	if(enet_initialize()<0) fatal("Unable to initialise network module");
 
+	conoutf("init: runtime");
+	initruntime();
+
+	conoutf("init: sdl");
     int par = 0;
 	#ifdef _DEBUG
 	par = SDL_INIT_NOPARACHUTE;
@@ -706,11 +711,6 @@ int main(int argc, char **argv)
 	conoutf("init: sound");
 	initsound();
 
-	conoutf("init: enet");
-	if(enet_initialize()<0) fatal("Unable to initialise network module");
-
-	conoutf("init: runtime");
-	initruntime();
 	camera1 = cl->iterdynents(0);
 	emptymap(0, true, NULL, true);
 

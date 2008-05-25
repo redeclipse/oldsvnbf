@@ -647,6 +647,7 @@ void serverloop()
 #endif
 		if(servertype) serverslice(5);
 	}
+	exit(EXIT_SUCCESS);
 }
 
 void setupserver()
