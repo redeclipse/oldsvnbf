@@ -48,7 +48,7 @@ SCXXFLAGS= -Wall -DSTANDALONE $(CXXOPTFLAGS) $(SINCLUDES)
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
 	shared/tools-standalone.o \
-	shared/command-standalone.o \
+	engine/command-standalone.o \
 	engine/server-standalone.o \
 	fpsgame/fps-standalone.o
 
@@ -58,7 +58,7 @@ DCXXFLAGS= -Wall -DSTANDALONE -DMASTERSERVER $(CXXOPTFLAGS) $(DINCLUDES)
 DAEMON_LIBS=-Lenet -lenet -lz
 DAEMON_OBJS= \
 	shared/tools-daemon.o \
-	shared/command-daemon.o \
+	engine/command-daemon.o \
 	engine/master-daemon.o \
 	engine/server-daemon.o \
 	fpsgame/fps-daemon.o
