@@ -1048,14 +1048,11 @@ struct GAMESERVER : igameserver
 				int lcn = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
 				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-                if (cp->state.state!=CS_DEAD || cp->state.lastspawn>=0)
-                {
-					int nospawn = 0;
-					if (smode && !smode->canspawn(cp, false, true)) { nospawn++; }
-					mutate(if (!mut->canspawn(cp, false, true)) { nospawn++; });
-					if (nospawn) break;
-                }
-
+				int nospawn = 0;
+				if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
+				mutate(if (!mut->canspawn(cp, false, true)) { nospawn++; });
+                if(cp->state.state!=CS_DEAD || cp->state.lastspawn>=0 || nospawn)
+                	break;
 				if(cp->state.lastdeath) cp->state.respawn();
 				sendspawn(cp);
 				break;
@@ -1070,7 +1067,7 @@ struct GAMESERVER : igameserver
 				gunsel.type = GE_SWITCH;
 				gunsel.gunsel.id = id;
 				gunsel.gunsel.gun = gun;
-                seteventmillis(gunsel.gunsel, ci->state.canswitch(gunsel.gunsel.gun, gamemillis));
+                seteventmillis(gunsel.gunsel, cp->state.canswitch(gunsel.gunsel.gun, gamemillis));
                 break;
 			}
 
@@ -1079,13 +1076,18 @@ struct GAMESERVER : igameserver
 				int lcn = getint(p), ls = getint(p), gunselect = getint(p);
 				clientinfo *cp = (clientinfo *)getinfo(lcn);
 				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-				if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD) || ls!=cp->state.lifesequence || cp->state.lastspawn<0) break;
-				cp->state.lastspawn = -1;
-				cp->state.state = CS_ALIVE;
-				cp->state.gunselect = gunselect;
-				if(smode) smode->spawned(cp);
-				mutate(mut->spawned(cp));
-                QUEUE_MSG;
+				if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD) || ls!=cp->state.lifesequence || cp->state.lastspawn<0)
+					break;
+                cp->state.lastspawn = -1;
+                cp->state.state = CS_ALIVE;
+                cp->state.gunselect = gunselect;
+                if(smode) smode->spawned(cp);
+				mutate(mut->spawned(cp););
+                QUEUE_BUF(100,
+                {
+                    putint(buf, SV_SPAWN);
+                    sendstate(cp, buf);
+                });
 				break;
 			}
 
@@ -1108,7 +1110,7 @@ struct GAMESERVER : igameserver
 				shot.type = GE_SHOT;
 				shot.shot.id = getint(p);
 				shot.shot.gun = getint(p);
-                seteventmillis(shot.shot, ci->state.canshoot(shot.shot.gun, gamemillis));
+                seteventmillis(shot.shot, cp->state.canshoot(shot.shot.gun, gamemillis));
 				loopk(3) shot.shot.from[k] = getint(p)/DMF;
 				loopk(3) shot.shot.to[k] = getint(p)/DMF;
 				int hits = getint(p);
@@ -1134,7 +1136,7 @@ struct GAMESERVER : igameserver
 				reload.type = GE_RELOAD;
 				reload.reload.id = id;
 				reload.reload.gun = gun;
-                seteventmillis(reload.reload, ci->state.canreload(reload.reload.gun, gamemillis));
+                seteventmillis(reload.reload, cp->state.canreload(reload.reload.gun, gamemillis));
                 break;
 			}
 
@@ -1172,7 +1174,7 @@ struct GAMESERVER : igameserver
 				use.type = GE_USE;
 				use.use.ent = ent;
 				use.use.id = id;
-                seteventmillis(use.use, sents.inrange(ent) ? ci->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false);
+                seteventmillis(use.use, sents.inrange(ent) ? cp->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false);
 				break;
 			}
 
@@ -1210,12 +1212,16 @@ struct GAMESERVER : igameserver
 				s_strncpy(ci->name, text, MAXNAMELEN+1);
 				if(connected)
 				{
-					savedscore &sc = findscore(ci, false);
-					if(&sc)
-					{
-						sc.restore(ci->state);
-						sendf(-1, 1, "ri7", SV_RESUME, sender, ci->state.state, ci->state.lifesequence, ci->state.gunselect, sc.frags, -1);
-					}
+                    savedscore &sc = findscore(ci, false);
+                    if(&sc)
+                    {
+                        sc.restore(ci->state);
+                        gamestate &gs = ci->state;
+                        sendf(-1, 1, "ri7vi", SV_RESUME, sender,
+                            gs.state, gs.frags,
+                            gs.lifesequence, gs.health,
+                            gs.gunselect, GUN_PISTOL-GUN_SG+1, &gs.ammo[GUN_SG], -1);
+                    }
 				}
 				getstring(text, p);
 				if(connected && m_team(gamemode, mutators))
@@ -1646,15 +1652,10 @@ struct GAMESERVER : igameserver
 			}
 			else
 			{
-				gamestate &gs = ci->state;
-				spawnstate(ci);
-				putint(p, SV_SPAWNSTATE);
-				putint(p, ci->clientnum);
-				putint(p, gs.lifesequence);
-				putint(p, gs.health);
-				putint(p, gs.gunselect);
-				loopi(NUMGUNS) putint(p, gs.ammo[i]);
-				gs.lastspawn = gamemillis;
+                spawnstate(ci);
+                putint(p, SV_SPAWNSTATE);
+                sendstate(ci, p);
+                ci->state.lastspawn = gamemillis;
 			}
 		}
 		if(ci && ci->state.state==CS_SPECTATOR)
@@ -1684,22 +1685,28 @@ struct GAMESERVER : igameserver
 			{
 				clientinfo *oi = clients[i];
 				if(oi->clientnum==n) continue;
-				putint(p, oi->clientnum);
-				putint(p, oi->state.state);
-				putint(p, oi->state.lifesequence);
-				putint(p, oi->state.gunselect);
-				putint(p, oi->state.frags);
+                if(p.remaining() < 256)
+                {
+                    enet_packet_resize(packet, packet->dataLength + MAXTRANS);
+                    p.buf = packet->data;
+                }
+				sendstate(oi, p);
 			}
 			putint(p, -1);
 		}
-		if(smode) smode->initclient(ci, p, true);
-		mutate(mut->initclient(ci, p, true));
 
 		if (motd[0])
 		{
 			putint(p, SV_SERVMSG);
 			sendstring(motd, p);
 		}
+
+		enet_packet_resize(packet, packet->dataLength + MAXTRANS);
+		p.buf = packet->data;
+
+		if(smode) smode->initclient(ci, p, true);
+		mutate(mut->initclient(ci, p, true));
+
 		return 1;
 	}
 
@@ -1748,9 +1755,21 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		spawnstate(ci);
 		int own = ci->state.ownernum >= 0 ? ci->state.ownernum : ci->clientnum;
-		sendf(own, 1, "ri5v", SV_SPAWNSTATE, ci->clientnum, gs.lifesequence, gs.health, gs.gunselect, NUMGUNS, &gs.ammo[0]);
+		sendf(own, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, NUMGUNS, &gs.ammo[0]);
 		gs.lastspawn = gamemillis;
 	}
+
+    void sendstate(clientinfo *ci, ucharbuf &p)
+    {
+		gamestate &gs = ci->state;
+        putint(p, ci->clientnum);
+        putint(p, gs.state);
+        putint(p, gs.frags);
+        putint(p, gs.lifesequence);
+        putint(p, gs.health);
+        putint(p, gs.gunselect);
+        loopi(NUMGUNS) putint(p, gs.ammo[i]);
+    }
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
 	{

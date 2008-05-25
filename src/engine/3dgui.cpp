@@ -712,7 +712,7 @@ struct gui : g3d_gui
 			if(tcurrent) *tcurrent = max(1, min(*tcurrent, tpos));
 			adjustscale();
 
-			if(!windowhit)
+			if(!windowhit && !passthrough)
 			{
 				int intersects = INTERSECT_MIDDLE;
 
@@ -804,7 +804,6 @@ int g3d_sort(gui *a, gui *b) { return (int)(a->dist>b->dist)*2-1; }
 
 bool g3d_windowhit(bool on, bool act)
 {
-    extern int cleargui(int n);
 	if (act)
 	{
         if(on) { firstx = gui::hitx; firsty = gui::hity; }

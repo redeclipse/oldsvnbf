@@ -363,6 +363,26 @@ struct clientcom : iclientcom
 		return 1;
 	}
 
+    void parsestate(fpsent *d, ucharbuf &p, bool resume = false)
+    {
+        if(!d) { static fpsent dummy; d = &dummy; }
+		if(d==cl.player1) getint(p);
+		else d->state = getint(p);
+		d->frags = getint(p);
+        d->lifesequence = getint(p);
+        d->health = getint(p);
+        if(resume && d==cl.player1)
+        {
+            getint(p);
+            loopi(NUMGUNS) getint(p);
+        }
+        else
+        {
+            d->gunselect = getint(p);
+            loopi(NUMGUNS) d->ammo[i] = getint(p);
+        }
+    }
+
 	void updatepos(fpsent *d)
 	{
 		// update the position of other clients in the game in our world
@@ -652,37 +672,27 @@ struct clientcom : iclientcom
 				cl.clientdisconnected(getint(p));
 				break;
 
-			case SV_SPAWN:
-			{
-				int lcn = getint(p), ls = getint(p), gunselect = getint(p);
-				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
-				if(!f) break;
-				f->lifesequence = ls;
-				f->gunselect = gunselect;
-				f->gunstate[gunselect] = GUNSTATE_NONE;
-				f->state = CS_SPAWNING;
-				playsound(S_RESPAWN, &f->o);
-				break;
-			}
-
-			case SV_SPAWNSTATE:
-			{
+            case SV_SPAWN:
+            {
 				int lcn = getint(p);
-				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.newclient(lcn);
+                parsestate(f, p);
+                f->state = CS_SPAWNING;
+				playsound(S_RESPAWN, &f->o);
+                break;
+            }
+
+            case SV_SPAWNSTATE:
+            {
+				int lcn = getint(p);
+				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.newclient(lcn);
 				bool local = (f->clientnum==cl.player1->clientnum || f->bot);
 				if(f==cl.player1 && editmode) toggleedit();
-				f->respawn();
-				f->lifesequence = getint(p);
-				f->health = getint(p);
-				f->gunselect = getint(p);
-				loopi(NUMGUNS)
-				{
-					f->gunstate[i] = GUNSTATE_NONE;
-					f->ammo[i] = getint(p);
-				}
-				f->state = CS_ALIVE;
-				if(local)
-				{
+                f->respawn();
+                parsestate(f, p);
+                f->state = CS_ALIVE;
+                if(local)
+                {
 					cl.et.findplayerspawn(f, m_capture(cl.gamemode) ? cl.cpc.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_ttwo(cl.gamemode, cl.mutators))+1 : -1);
 					if(f==cl.player1)
 					{
@@ -690,9 +700,9 @@ struct clientcom : iclientcom
 						cl.lasthit = 0;
 					}
 					addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
-				}
-				break;
-			}
+                }
+                break;
+            }
 
 			case SV_SHOTFX:
 			{
@@ -789,25 +799,17 @@ struct clientcom : iclientcom
 				break;
 			}
 
-			case SV_RESUME:
-			{
-				for(;;)
-				{
-					int lcn = getint(p);
-					if(lcn<0) break;
-					int state = getint(p), lifesequence = getint(p), gunselect = getint(p), frags = getint(p);
-					fpsent *d = (lcn == cl.player1->clientnum ? cl.player1 : cl.newclient(lcn));
-					if(!d) continue;
-					if(d!=cl.player1)
-					{
-						d->state = state;
-						d->gunselect = gunselect;
-					}
-					d->lifesequence = lifesequence;
-					d->frags = frags;
-				}
-				break;
-			}
+            case SV_RESUME:
+            {
+                for(;;)
+                {
+                    int lcn = getint(p);
+                    if(p.overread() || cn<0) break;
+                    fpsent *f = (lcn == cl.player1->clientnum ? cl.player1 : cl.newclient(lcn));
+                    parsestate(f, p, true);
+                }
+                break;
+            }
 
 			case SV_ITEMSPAWN:
 			{
