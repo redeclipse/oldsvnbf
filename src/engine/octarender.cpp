@@ -668,11 +668,11 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
                 if(t.edge != edge) break;
                 vvec vvt;
                 loopk(3) vvt[k] = ushort(o[k] + t.offset*d[k]);
-                float k = (t.offset - offset1) * doffset;
-                short ut = short(tc1.u + (tc2.u-tc1.u)*k),
-                      vt = short(tc1.v + (tc2.v-tc1.v)*k);
+                float offset = (t.offset - offset1) * doffset;
+                short ut = short(tc1.u + (tc2.u-tc1.u)*offset),
+                      vt = short(tc1.v + (tc2.v-tc1.v)*offset);
                 bvec nt;
-                loopk(3) nt[k] = uchar(n1[k] + (n2[k] - n1[k])*k);
+                loopk(3) nt[k] = uchar(n1[k] + (n2[k] - n1[k])*offset);
                 int nextindex = vc.addvert(vvt, ut, vt, nt);
                 if(nextindex < 0) return;
                 if(idxs.length() + 3 > USHRT_MAX) return;
