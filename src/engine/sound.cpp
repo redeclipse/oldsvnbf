@@ -207,7 +207,7 @@ void checksound()
 
 int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 {
-	if(nosound || !soundvol || !camera1 || !cc->ready()) return -1;
+	if(nosound || !soundvol || !camera1) return -1;
 
 	if(!(flags&SND_MAP))
 	{

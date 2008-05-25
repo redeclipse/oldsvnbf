@@ -250,14 +250,15 @@ struct GAMECLIENT : igameclient
         if(!maptime) { maptime = lastmillis + curtime; return; }
 		if(!curtime) return;
 
-		ph.update();
-		pj.update();
-		et.update();
-		bot.update();
 		gets2c();
 
 		if(cc.ready())
 		{
+			ph.update();
+			pj.update();
+			et.update();
+			bot.update();
+
 			if(!allowmove(player1) || saycommandon) player1->stopmoving();
 
 			if(player1->gunstate[player1->gunselect] != GUNSTATE_NONE && lastmillis-player1->gunlast[player1->gunselect] >= player1->gunwait[player1->gunselect])
@@ -877,7 +878,7 @@ struct GAMECLIENT : igameclient
 
 	void drawhud(int w, int h)
 	{
-		if(maptime || !cc.ready())
+		if(cc.ready() && maptime)
 		{
 			if(!hidehud)
 			{

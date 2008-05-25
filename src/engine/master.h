@@ -52,6 +52,9 @@ extern void setupmaster();
 extern void checkmaster();
 extern void cleanupmaster();
 
+extern int masterserver, masterport;
+extern char *masterip;
+
 #define KEEPALIVE_TIME (65*60*1000)
 #define MASTER_TIME (3*60*1000)
 #define MASTER_LIMIT 1024

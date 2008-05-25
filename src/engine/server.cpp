@@ -196,9 +196,6 @@ void cleanupserver()
 
 void sendfile(int cn, int chan, FILE *file, const char *format, ...)
 {
-#ifndef STANDALONE
-	extern ENetHost *clienthost;
-#endif
 	if(cn < 0)
 	{
 #ifndef STANDALONE
@@ -716,7 +713,7 @@ void initruntime()
 #ifdef MASTERSERVER
     setupmaster();
 #endif
-	setupserver();
+	if(servertype) setupserver();
 }
 
 bool serveroption(char *opt)
@@ -743,6 +740,7 @@ bool serveroption(char *opt)
 		{
 			switch(opt[2])
 			{
+				case 's': setvar("masterserver", atoi(opt+3)); return true;
 				case 'i': setsvar("masterip", opt+3); return true;
 				case 'p': setvar("masterport", atoi(opt+3)); return true;
 				default: return false;
