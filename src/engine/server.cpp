@@ -638,7 +638,7 @@ void serverloop()
 #ifdef MASTERSERVER
 		checkmaster();
 #endif
-		if(servertype) serverslice(5);
+		if(servertype) serverslice(0);
 	}
 	exit(EXIT_SUCCESS);
 }
