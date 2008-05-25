@@ -621,11 +621,6 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 	if(sv->sendpackets()) enet_host_flush(serverhost);
 }
 
-void lanconnect()
-{
-	connects();
-}
-
 void serverloop()
 {
 	#ifdef WIN32
