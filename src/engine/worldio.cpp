@@ -325,7 +325,7 @@ void save_config()
 	loopv(mapsounds)
 	{
 		if(verbose >= 2) show_out_of_renderloop_progress(float(i)/float(mapsounds.length()), "saving mapsound slots...");
-		fprintf(h, "mapsound \"%s\" %d\n", mapsounds[i].sample->name, mapsounds[i].vol);
+		fprintf(h, "mapsound \"%s\" %d \"%s\"\n", mapsounds[i].sample->name, mapsounds[i].vol, findmaterialname(mapsounds[i].material));
 	}
 	if(mapsounds.length()) fprintf(h, "\n");
 	if(verbose >= 2) conoutf("saved %d mapsound slots", mapsounds.length());
