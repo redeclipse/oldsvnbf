@@ -48,18 +48,20 @@ SCXXFLAGS= -Wall -DSTANDALONE $(CXXOPTFLAGS) $(SINCLUDES)
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
 	shared/tools-standalone.o \
+	shared/command-standalone.o \
 	engine/server-standalone.o \
-	fpsgame/fps-standalone.o \
+	fpsgame/fps-standalone.o
 
-DINCLUDES= -Ishared -Idaemon -Ienet/include -Iinclude -Iengine -Ifpsgame
-DCXXFLAGS= -Wall -fsigned-char -DDAEMON $(CXXOPTFLAGS) $(DINCLUDES)
+DINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Iinclude
+DCXXFLAGS= -Wall -DSTANDALONE -DMASTERSERVER $(CXXOPTFLAGS) $(DINCLUDES)
 
 DAEMON_LIBS=-Lenet -lenet -lz
 DAEMON_OBJS= \
 	shared/tools-daemon.o \
 	shared/command-daemon.o \
-	daemon/daemon.o \
-	daemon/master.o
+	engine/master-daemon.o \
+	engine/server-daemon.o \
+	fpsgame/fps-daemon.o
 
 default: all
 
@@ -80,20 +82,11 @@ clean-server:
 clean-daemon:
 	@rm -fv $(DAEMON_OBJS) bloodfrontier_daemon
 
-shared/tools-standalone.o:
-	$(CXX) $(SCXXFLAGS) -c -o shared/tools-standalone.o shared/tools.cpp
+%-standalone.o:
+	$(CXX) $(SCXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
 
-engine/server-standalone.o:
-	$(CXX) $(SCXXFLAGS) -c -o engine/server-standalone.o engine/server.cpp
-
-fpsgame/fps-standalone.o:
-	$(CXX) $(SCXXFLAGS) -c -o fpsgame/fps-standalone.o fpsgame/fps.cpp
-
-shared/tools-daemon.o:
-	$(CXX) $(DCXXFLAGS) -c -o shared/tools-daemon.o shared/tools.cpp
-
-shared/command-daemon.o:
-	$(CXX) $(DCXXFLAGS) -c -o shared/command-daemon.o shared/tools.cpp
+%-daemon.o:
+	$(CXX) $(DCXXFLAGS) -c -o $@ $(subst -daemon.o,.cpp,$@)
 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)

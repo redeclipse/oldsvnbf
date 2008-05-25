@@ -5,6 +5,8 @@
 #include "engine.h"
 
 #ifdef STANDALONE
+VARP(verbose, 0, 0, 4);
+
 void conoutf(const char *s, ...) { s_sprintfdlv(str, s, s); printf("%s\n", str); }
 void console(const char *s, int n, ...) { s_sprintfdlv(str, n, s); printf("%s\n", str); }
 void servertoclient(int chan, uchar *buf, int len) {}
@@ -13,7 +15,7 @@ void fatal(const char *s, ...)
     void cleanupserver();
     cleanupserver();
     s_sprintfdlv(msg,s,s);
-    printf("servererror: %s\n", msg);
+    printf("ERROR: %s\n", msg);
     exit(EXIT_FAILURE);
 }
 #endif
@@ -184,6 +186,12 @@ ENetSocket pongsock = ENET_SOCKET_NULL;
 void cleanupserver()
 {
 	if(serverhost) enet_host_destroy(serverhost);
+#ifdef MASTERSERVER
+	cleanupmaster();
+#endif
+#ifdef STANDALONE
+	writecfg();
+#endif
 }
 
 void sendfile(int cn, int chan, FILE *file, const char *format, ...)
@@ -536,9 +544,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
 	{
 		case ST_TCPIP: nonlocalclients++; break;
 	}
-#ifdef STANDALONE
-	lastmillis = totalmillis = (int)enet_time_get();
-#endif
+
 	sv->serverupdate();
 
 	sendpongs();
@@ -625,13 +631,8 @@ void lanconnect()
 #endif
 }
 
-void initruntime()
+void setupserver()
 {
-	initgame(game);
-
-	appendhomedir(sv->gameid());
-	addpackagedir(sv->gameid());
-
 	if (servertype)
 	{
 		conoutf("init: server");
@@ -687,7 +688,16 @@ void initruntime()
 			atexit(cleanupserver);
 			enet_time_set(0);
 			if(pubserv && *masterserv) updatemasterserver();
-			for(;;) serverslice(5);
+			for(;;)
+			{
+				int _lastmillis = lastmillis;
+				lastmillis = totalmillis = (int)enet_time_get();
+				curtime = lastmillis-_lastmillis;
+#ifdef MASTERSERVER
+				checkmaster();
+#endif
+				serverslice(5);
+			}
 			return;
 		}
 		else
@@ -701,10 +711,25 @@ void initruntime()
 	}
 }
 
+void initruntime()
+{
+	initgame(game);
+
+	appendhomedir(sv->gameid());
+	addpackagedir(sv->gameid());
+
+#ifdef MASTERSERVER
+    setupmaster();
+#endif
+	setupserver();
+}
+
 bool serveroption(char *opt)
 {
 	switch(opt[1])
 	{
+		case 'q': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); break;
+		case 'k': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); break;
 		case 'u': uprate = atoi(opt+2); return true;
 		case 'c':
 		{
@@ -718,14 +743,28 @@ bool serveroption(char *opt)
 		case 'g': game = opt+2; return true;
 		case 'l': load = opt+2; return true;
 		case 's': servertype = atoi(opt+2); return true;
+#ifdef MASTERSERVER
+		case 'M':
+		{
+			switch(opt[2])
+			{
+				case 'i': setsvar("masterip", opt+3); return true;
+				case 'p': setvar("masterport", atoi(opt+3)); return true;
+				default: return false;
+			}
+			return false;
+		}
+#endif
 		default: return false;
 	}
+	return false;
 }
 
 #ifdef STANDALONE
 int main(int argc, char* argv[])
 {
 	servertype = 3;
+	execfile("server.cfg");
 	for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 	initruntime();

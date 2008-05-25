@@ -134,7 +134,7 @@ void aliasa(const char *name, char *action)
             if(b->world != worldidents && worldidents) b->world = worldidents;
 		}
 	}
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 	if(b && cl) cl->editvar(b, interactive);
 #endif
 }
@@ -456,7 +456,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						case 's':								 v[n] = w[++wn];	 n++; break;
 						case 'i': nstor[n].i = parseint(w[++wn]); v[n] = &nstor[n].i; n++; break;
 						case 'f': nstor[n].f = atof(w[++wn]);	 v[n] = &nstor[n].f; n++; break;
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 						case 'D': nstor[n].i = addreleaseaction(id->name) ? 1 : 0; v[n] = &nstor[n].i; n++; break;
 #endif
 						case 'V': v[n++] = w+1; nstor[n].i = numargs-1; v[n] = &nstor[n].i; n++; break;
@@ -487,7 +487,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                     else if(id->minval>id->maxval) conoutf("variable %s is read-only", id->name);
 					else
 					{
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 						#define WORLDVAR \
 							if (!worldidents && !editmode && id->world) \
 							{ \
@@ -508,7 +508,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                             } \
                             else if(id->override!=NO_OVERRIDE) { resetval; id->override = NO_OVERRIDE; }
 
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 						WORLDVAR;
 #endif
                         OVERRIDEVAR(id->overrideval.i = *id->storage.i, )
@@ -520,7 +520,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						}
                         *id->storage.i = i1;
                         id->changed();                                             // call trigger function if available
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 						if(cl) cl->editvar(id, interactive);
 #endif
 					}
@@ -530,13 +530,13 @@ char *executeret(const char *p)               // all evaluation happens here, re
                     if(!w[1][0]) conoutf("%s = %f", c, *id->storage.f);
                     else
                     {
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 						WORLDVAR;
 #endif
                         OVERRIDEVAR(id->overrideval.f = *id->storage.f, );
                         *id->storage.f = atof(w[1]);
                         id->changed();
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 						if(cl) cl->editvar(id, interactive);
 #endif
                     }
@@ -546,13 +546,13 @@ char *executeret(const char *p)               // all evaluation happens here, re
                     if(!w[1][0]) conoutf(strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", c, *id->storage.s);
                     else
 					{
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 						WORLDVAR;
 #endif
                         OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s);
                         *id->storage.s = newstring(w[1]);
                         id->changed();
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 						if(cl) cl->editvar(id, interactive);
 #endif
 					}
@@ -616,11 +616,14 @@ void exec(const char *cfgfile)
 
 void writecfg()
 {
+#ifndef STANDALONE
 	FILE *f = openfile("config.cfg", "w");
 	if(!f) return;
-#if !defined(STANDALONE) && !defined(DAEMON)
 	cc->writeclientinfo(f);
 	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n\n", ENG_VERSION, sv->gamever());
+#else
+	FILE *f = openfile("server.cfg", "w");
+	if(!f) return;
 #endif
 	enumerate(*idents, ident, id,
         if(!id.persist || id.world) continue;
@@ -637,7 +640,7 @@ void writecfg()
 			}
 		}
 	);
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 	writebinds(f);
 	writecompletions(f);
 	fprintf(f, "] [ echo \"WARNING: config from different version ignored\" ]\n");
