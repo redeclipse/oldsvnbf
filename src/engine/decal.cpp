@@ -204,7 +204,7 @@ struct decalrenderer
 
     static void setuprenderstate()
     {
-        glEnable(GL_POLYGON_OFFSET_FILL);
+        enablepolygonoffset(GL_POLYGON_OFFSET_FILL);
 
         glDepthMask(GL_FALSE);
         glEnable(GL_BLEND);
@@ -223,7 +223,7 @@ struct decalrenderer
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
 
-        glDisable(GL_POLYGON_OFFSET_FILL);
+        disablepolygonoffset(GL_POLYGON_OFFSET_FILL);
     }
 
     void render()

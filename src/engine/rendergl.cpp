@@ -434,9 +434,6 @@ void gl_checkextensions()
     hwtexsize = val;
 }
 
-FVARF(polygonoffsetfactor, -3.0f, glPolygonOffset(polygonoffsetfactor, polygonoffsetunits));
-FVARF(polygonoffsetunits, -3.0f, glPolygonOffset(polygonoffsetfactor, polygonoffsetunits));
-
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
 	#define fogvalues 0.5f, 0.6f, 0.7f, 1.0f
@@ -459,7 +456,6 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
 	glEnable(GL_LINE_SMOOTH);
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glPolygonOffset(polygonoffsetfactor, polygonoffsetunits);
 
 	glCullFace(GL_FRONT);
 	glEnable(GL_CULL_FACE);
@@ -561,6 +557,10 @@ void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, boo
     glMatrixMode(GL_MODELVIEW);
 }
 
+VAR(reflectclip, 0, 6, 64);
+
+GLfloat clipmatrix[16];
+
 void genclipmatrix(float a, float b, float c, float d, GLfloat matrix[16])
 {
 	// transform the clip plane into camera space
@@ -594,8 +594,46 @@ void undoclipmatrix()
 	glMatrixMode(GL_MODELVIEW);
 }
 
-VAR(reflectclip, 0, 6, 64);
-VARP(reflectmms, 0, 1, 1);
+FVAR(polygonoffsetfactor, -3.0f);
+FVAR(polygonoffsetunits, -3.0f);
+FVAR(depthoffset, 0.01f);
+
+void enablepolygonoffset(GLenum type)
+{
+    if(!depthoffset)
+    {
+        glPolygonOffset(polygonoffsetfactor, polygonoffsetunits);
+        glEnable(type);
+        return;
+    }
+
+    bool clipped = reflectz < 1e15f && reflectclip;
+
+    GLfloat offsetmatrix[16];
+    memcpy(offsetmatrix, clipped ? clipmatrix : projmatrix, 16*sizeof(GLfloat));
+    offsetmatrix[14] += depthoffset * offsetmatrix[10];
+
+    glMatrixMode(GL_PROJECTION);
+    if(!clipped) glPushMatrix();
+    glLoadMatrixf(offsetmatrix);
+    glMatrixMode(GL_MODELVIEW);
+}
+
+void disablepolygonoffset(GLenum type)
+{
+    if(!depthoffset)
+    {
+        glDisable(type);
+        return;
+    }
+
+    bool clipped = reflectz < 1e15f && reflectclip;
+
+    glMatrixMode(GL_PROJECTION);
+    if(clipped) glLoadMatrixf(clipmatrix);
+    else glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
 
 void setfogplane(const plane &p, bool flush)
 {
@@ -767,6 +805,8 @@ void drawglare()
     refracting = 0;
     glaring = false;
 }
+
+VARP(reflectmms, 0, 1, 1);
 
 void drawreflection(float z, bool refract, bool clear)
 {
