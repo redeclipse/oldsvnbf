@@ -224,7 +224,7 @@ static char msgsizelookup(int msg)
 		SV_INITS2C, 4, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_ANNOUNCE, 0, SV_SOUND, 3, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 2,
 		SV_DIED, 7, SV_DAMAGE, 11, SV_SHOTFX, 9,
-		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 10, SV_SPAWN, 4, SV_FORCEDEATH, 2,
+		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 13, SV_SPAWN, 4, SV_FORCEDEATH, 2,
 		SV_GUNSELECT, 0, SV_TAUNT, 2,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 4, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
@@ -465,7 +465,8 @@ struct fpsstate
 	void respawn()
 	{
 		health = MAXHEALTH;
-		lastdeath = lastshot = lastspawn = lastpain = lastregen = spree = 0;
+		lastdeath = lastshot = lastpain = lastregen = spree = 0;
+		lastspawn = -1;
 		loopi(NUMGUNS)
 		{
 			gunstate[i] = GUNSTATE_NONE;
