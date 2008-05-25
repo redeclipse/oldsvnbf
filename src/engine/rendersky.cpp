@@ -9,11 +9,8 @@ void loadsky(char *basename)
 	{
         const char *side = cubemapsides[i].name;
 		s_sprintfd(name)("%s_%s", basename, side);
-        if((sky[i] = textureload(name, 3, true, false))==notexture)
-		{
-			strcpy(name+strlen(name)-3, "png");
-            if((sky[i] = textureload(name, 3, true, false))==notexture) conoutf("could not load sky texture %s_%s", basename, side);
-		}
+		if((sky[i] = textureload(name, 3, true, false))==notexture)
+			conoutf("could not load sky texture %s_%s", basename, side);
 	}
 }
 
