@@ -375,7 +375,7 @@ struct physics
 		return !collided;
 	}
 
-	void modifyvelocity(physent *pl, bool local, bool liquid, bool floating, int millis)
+	void modifyvelocity(physent *pl, bool local, bool floating, int millis)
 	{
 		if (floating)
 		{
@@ -385,19 +385,14 @@ struct physics
 				pl->vel.z = jumpvelocity(pl);
 			}
 		}
-		else if (pl->physstate >= PHYS_SLOPE || liquid)
+		else if (pl->physstate >= PHYS_SLOPE || pl->inliquid)
 		{
-			if (liquid)
-            {
-                if (pl->crouching) pl->crouching = false;
-                if (pl->type != ENT_CAMERA && !pl->inliquid) pl->vel.div(liquiddampen(pl));
-            }
 			if (pl->jumping)
 			{
 				pl->jumping = pl->crouching = false;
 
 				pl->vel.z = jumpvelocity(pl);
-				if(liquid) { pl->vel.x /= liquiddampen(pl); pl->vel.y /= liquiddampen(pl); }
+				if(pl->inliquid) { pl->vel.x /= liquiddampen(pl); pl->vel.y /= liquiddampen(pl); }
 				playsound(S_JUMP, &pl->o);
 			}
 		}
@@ -407,7 +402,7 @@ struct physics
         bool wantsmove = cl.allowmove(pl) && (pl->move || pl->strafe);
 		if(m.iszero() && wantsmove)
 		{
-			vecfromyawpitch(pl->aimyaw, floating || liquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
+			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
 
 			if(!floating && pl->physstate >= PHYS_SLIDE)
 			{
@@ -415,7 +410,7 @@ struct physics
 				 * but only move up slopes in liquid
 				 */
 				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
-				if(liquid) m.z = max(m.z, dz);
+				if(pl->inliquid) m.z = max(m.z, dz);
 				else if(pl->floor.z >= wallz(pl)) m.z = dz;
 			}
 
@@ -425,8 +420,8 @@ struct physics
 		vec d(m);
 		d.mul(maxspeed(pl));
 		if(floating) { if (local) d.mul(floatspeed()/100.0f); }
-		else if(!liquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
-		float friction = liquid && !floating ? liquidfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
+		else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+		float friction = pl->inliquid && !floating ? liquidfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
 		float fpsfric = friction/millis*20.0f;
 
         pl->vel.mul(fpsfric-1);
@@ -434,7 +429,7 @@ struct physics
         pl->vel.div(fpsfric);
 	}
 
-    void modifygravity(physent *pl, bool liquid, int curtime)
+    void modifygravity(physent *pl, int curtime)
     {
         float secs = curtime/1000.0f;
         vec g(0, 0, 0);
@@ -446,15 +441,56 @@ struct physics
             g.normalize();
             g.mul(gravityforce(pl)*secs);
         }
-        if(!liquid || (!pl->move && !pl->strafe)) pl->falling.add(g);
+        if(!pl->inliquid || (!pl->move && !pl->strafe)) pl->falling.add(g);
 
-        if(liquid || pl->physstate >= PHYS_SLOPE)
+        if(pl->inliquid || pl->physstate >= PHYS_SLOPE)
         {
-            float friction = liquid ? sinkfric(pl) : floorfric(pl),
+            float friction = pl->inliquid ? sinkfric(pl) : floorfric(pl),
                   fpsfric = friction/curtime*20.0f,
-                  c = liquid ? 1.0f : clamp((pl->floor.z - slopez(pl))/(floorz(pl)-slopez(pl)), 0.0f, 1.0f);
+                  c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez(pl))/(floorz(pl)-slopez(pl)), 0.0f, 1.0f);
             pl->falling.mul(1 - c/fpsfric);
         }
+    }
+
+    void updatematerial(physent *pl, bool local, bool floating)
+    {
+		vec v(pl->type != ENT_PLAYER ? pl->o : feetpos(pl));
+		int material = lookupmaterial(v);
+		if(pl->state == CS_ALIVE && material != pl->inmaterial)
+		{
+			if(isliquid(material) || isliquid(pl->inmaterial))
+			{
+				uchar col[3] = { 255, 255, 255 };
+				#define mattrig(mf,mz,mw) \
+				{ \
+					mf; \
+					int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
+					part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, mz, 100, 200, icol, 0.6f); \
+					if(mw>=0) playsound(mw, &pl->o, 255, 0, 0, SND_COPY); \
+				}
+
+				if(material == MAT_WATER || pl->inmaterial == MAT_WATER)
+				{
+					mattrig(getwatercolour(col), 17, material != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+				}
+
+				if(material == MAT_LAVA || pl->inmaterial == MAT_LAVA)
+				{
+					mattrig(getlavacolour(col), 4, material != MAT_LAVA ? -1 : S_FLBURN);
+				}
+			}
+
+			if(local && pl->type == ENT_PLAYER && (material == MAT_LAVA || material == MAT_DEATH))
+				cl.suicide((fpsent *)pl);
+		}
+
+		pl->inmaterial = material;
+
+		v = vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->height)/4);
+		bool liquid = pl->inliquid;
+		pl->inliquid = !floating && isliquid(lookupmaterial(v));
+		if (!floating && liquid != pl->inliquid)
+			pl->vel.div(liquiddampen(pl));
     }
 
 	// main physics routine, moves a player/monster for a time step
@@ -463,18 +499,18 @@ struct physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-        int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->height)/4));
-		bool liquid = isliquid(material);
 		bool floating = (editmode && local) || pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
 		float secs = millis/1000.f;
 
+		if (pl->type!=ENT_CAMERA) updatematerial(pl, local, floating);
+
         // apply gravity
-        if(!floating && pl->type!=ENT_CAMERA) modifygravity(pl, liquid, millis);
+        if(!floating && pl->type!=ENT_CAMERA) modifygravity(pl, millis);
 		// apply any player generated changes in velocity
-		modifyvelocity(pl, local, liquid, floating, millis);
+		modifyvelocity(pl, local, floating, millis);
 
 		vec d(pl->vel), oldpos(pl->o);
-        if(!floating && pl->type!=ENT_CAMERA && liquid) d.mul(0.5f);
+        if(!floating && pl->type!=ENT_CAMERA && pl->inliquid) d.mul(0.5f);
         d.add(pl->falling);
 		d.mul(secs);
 
@@ -513,42 +549,6 @@ struct physics
 
 		pl->lastmoveattempt = lastmillis;
 		if (pl->o!=oldpos) pl->lastmove = lastmillis;
-
-		if (pl->type!=ENT_CAMERA)
-		{
-			vec v(feetpos(pl));
-			int material = lookupmaterial(v);
-			if(pl->state == CS_ALIVE && material != pl->inmaterial)
-			{
-				if(isliquid(material) || isliquid(pl->inmaterial))
-				{
-					uchar col[3] = { 255, 255, 255 };
-					#define mattrig(mf,mz,mw) \
-					{ \
-						mf; \
-						int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
-						part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, mz, 100, 200, icol, 0.6f); \
-						if(mw>=0) playsound(mw, &pl->o, 255, 0, 0, SND_COPY); \
-					}
-
-					if(material == MAT_WATER || pl->inmaterial == MAT_WATER)
-					{
-						mattrig(getwatercolour(col), 17, material != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-					}
-
-					if(material == MAT_LAVA || pl->inmaterial == MAT_LAVA)
-					{
-						mattrig(getlavacolour(col), 4, material != MAT_LAVA ? -1 : S_FLBURN);
-					}
-				}
-
-				if(local && pl->type == ENT_PLAYER && (material == MAT_LAVA || material == MAT_DEATH))
-					cl.suicide((fpsent *)pl);
-			}
-
-            pl->inliquid = liquid;
-            pl->inmaterial = material;
-		}
 		return true;
 	}
 
