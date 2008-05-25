@@ -20,7 +20,7 @@ static bool fieldsactive = false;
 
 bool menukey(int code, bool isdown, int cooked)
 {
-    if((code==-1 || code == -2) && g3d_windowhit(isdown, true)) return true;  
+    if((code==-1 || code == -2) && g3d_windowhit(isdown, true)) return true;
     else if(code==-3 && g3d_windowhit(isdown, false)) return true;
 
     editor *e = currentfocus();
@@ -95,7 +95,7 @@ struct gui : g3d_gui
 		if(tcurrent)
 		{
 			if(layoutpass && !tpos) tcurrent = NULL; //disable tabs because you didn't start with one
-            if(shouldautotab && !curdepth && (layoutpass ? 0 : cury) + ysize > guiautotab*FONTH) tab(NULL, tcolor); 
+            if(shouldautotab && !curdepth && (layoutpass ? 0 : cury) + ysize > guiautotab*FONTH) tab(NULL, tcolor);
 		}
 	}
 
@@ -345,14 +345,14 @@ struct gui : g3d_gui
         if(visible() && !layoutpass)
 		{
             bool hit = ishit(w, h);
-            if(hit) 
+            if(hit)
             {
                 if(mousebuttons&G3D_DOWN) //mouse request focus
 				{
                     useeditor(name, false, true);
                     e->mark(false);
                     fieldmode = FIELDEDIT;
-                } 
+                }
                 else if(mousebuttons&G3D_PRESSED) e->hit(int(floor(hitx-(curx+FONTW/2))), int(floor(hity-cury)), (mousebuttons&G3D_DRAGGED)!=0); //mouse request position
 			}
             bool editing = (fieldmode != FIELDSHOW) && (e==currentfocus());
@@ -672,10 +672,9 @@ struct gui : g3d_gui
 	void start(int starttime, float initscale, int *tab, bool allowinput)
 	{
 		initscale *= 0.025f;
-		if(allowinput) hascursor = true;
 		basescale = initscale;
 		if(layoutpass) scale.x = scale.y = scale.z = basescale*min((totalmillis-starttime)/300.0f, 1.0f);
-		passthrough = scale.x<basescale || !allowinput;
+		passthrough = !allowinput;
 		curdepth = -1;
 		curlist = -1;
 		tpos = 0;
@@ -809,7 +808,7 @@ bool g3d_windowhit(bool on, bool act)
         if(on) { firstx = gui::hitx; firsty = gui::hity; }
         mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
     } else if(!on && windowhit) cleargui(1);
-    return (guis.length() && hascursor) || windowhit;
+    return (guis.length() && !gui::passthrough) || windowhit;
 }
 
 const char *g3d_fieldname()
@@ -837,8 +836,6 @@ void g3d_render()
     readyeditors();
     bool wasfocused = (fieldmode!=FIELDSHOW);
     fieldsactive = false;
-
-	hascursor = false;
 
 	layoutpass = true;
 	loopv(guis) guis[i].cb->gui(guis[i], true);
