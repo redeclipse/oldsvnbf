@@ -333,7 +333,6 @@ bool interceptkey(int sym)
 }
 
 VARP(autograbinput, 0, 1, 1);
-VARP(automainmenu, 0, 1, 1);
 VARP(autoconnect, 0, 1, 1);
 
 void checkinput()
@@ -733,8 +732,9 @@ int main(int argc, char **argv)
 	if(initscript) execute(initscript);
 
 	if(autograbinput) setvar("grabinput", 1, true);
-	if(automainmenu) showgui("main");
+
 	if(autoconnect) connects();
+	else showgui("main");
 
 	resetfpshistory();
 	for(;;)
