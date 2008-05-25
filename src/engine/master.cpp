@@ -1,10 +1,16 @@
 #include "pch.h"
 #include "engine.h"
 
+#include <sys/types.h>
 #include <enet/time.h>
-#if defined(WIN32) && !defined(ENOTCONN)
+
+#ifdef WIN32
 #include <winerror.h>
-#define ENOTCONN WSAENOTCONN
+#ifndef ENOTCONN
+	#define ENOTCONN WSAENOTCONN
+#endif
+#else
+#include <errno.h>
 #endif
 
 SVARP(masterip, "");
