@@ -68,7 +68,7 @@ bool menukey(int code, bool isdown, int cooked)
         case SDLK_DOWN:
             if(fieldwidth != -1)
             {
-                int cx, cy, width, height; 
+                int cx, cy, width, height;
                 text_pos(fieldtext, fieldpos, cx, cy, fieldwidth);
                 text_bounds(fieldtext, width, height, fieldwidth);
                 cy += FONTH;
@@ -561,7 +561,8 @@ struct gui : g3d_gui
 		if(tiled) defaultshader->set();
 		if(overlaid)
 		{
-			if(!overlaytex) overlaytex = textureload("textures/guioverlay");
+			extern char *guioverlaytex;
+			if(!overlaytex) overlaytex = textureload(guioverlaytex);
 			glColor3fv(light.v);
 			glBindTexture(GL_TEXTURE_2D, overlaytex->id);
 			glBegin(GL_QUADS);
@@ -574,7 +575,8 @@ struct gui : g3d_gui
 	{
 		if(visible())
 		{
-			if(!slidertex) slidertex = textureload("textures/guislider");
+			extern char *guislidertex;
+			if(!slidertex) slidertex = textureload(guislidertex);
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, slidertex->id);
 			glBegin(GL_QUADS);
@@ -629,7 +631,8 @@ struct gui : g3d_gui
 
 	void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n)
 	{
-		if(!skintex) skintex = textureload("textures/guiskin");
+		extern char *guiskintex;
+		if(!skintex) skintex = textureload(guiskintex);
 		glBindTexture(GL_TEXTURE_2D, skintex->id);
 		int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
 		float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);
@@ -789,6 +792,10 @@ struct gui : g3d_gui
 };
 
 Texture *gui::skintex = NULL, *gui::overlaytex = NULL, *gui::slidertex = NULL;
+
+SVARFP(guiskintex, "textures/guiskin", gui::skintex = textureload(guiskintex));
+SVARFP(guioverlaytex, "textures/guioverlay", gui::overlaytex = textureload(guioverlaytex));
+SVARFP(guislidertex, "textures/guislider", gui::slidertex = textureload(guislidertex));
 
 //chop skin into a grid
 const int gui::skiny[] = {0, 7, 21, 34, 48, 56, 104, 111, 116, 128},
