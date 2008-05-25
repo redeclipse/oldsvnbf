@@ -394,7 +394,7 @@ struct GAMECLIENT : igameclient
 			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
-			playsound(lastmillis-d->lastspawn < 10000 ? S_OWNED : S_FRAGGED);
+			playsound(lastmillis-d->lastspawn < 10000 ? S_v_OWNED : S_v_FRAGGED);
 		}
 		else
 		{
