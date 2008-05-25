@@ -5,9 +5,6 @@ extern void fatal(const char *s, ...);
 extern void conoutf(const char *s, ...);
 extern void console(const char *s, int n, ...);
 
-#ifdef DAEMON
-#include "daemon.h"
-#else
 #include "iengine.h"
 #include "igame.h"
 
@@ -15,6 +12,10 @@ extern igameclient *cl;
 extern igameserver *sv;
 extern iclientcom *cc;
 extern icliententities *et;
+
+#ifdef MASTERSERVER
+#include "master.h"
+#endif
 #ifndef STANDALONE
 #include "world.h"
 #include "octa.h"
@@ -611,4 +612,3 @@ extern void part_fireball(const vec &dest, float max, int type, int color, float
 extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color, float size);
 extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, float size, physent *owner = NULL);
 #endif // STANDALONE
-#endif // DAEMON

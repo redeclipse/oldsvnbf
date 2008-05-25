@@ -6,8 +6,6 @@
 
 #include "tools.h"
 #include "command.h"
-#ifndef DAEMON
 #include "geom.h"
 #include "attrs.h"
 #include "ents.h"
-#endif

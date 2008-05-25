@@ -27,7 +27,7 @@
 #include <windows.h>
 #endif
 
-#if !defined(STANDALONE) && !defined(DAEMON)
+#ifndef STANDALONE
 #include <SDL.h>
 #include <SDL_image.h>
 
