@@ -1,11 +1,3 @@
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#define _dup	dup
-#define _fileno fileno
-#endif
-
 struct GAMESERVER : igameserver
 {
 	struct server_entity			// server side version of "entity" type
