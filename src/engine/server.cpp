@@ -716,24 +716,30 @@ bool serveroption(char *opt)
 {
 	switch(opt[1])
 	{
-		case 'q': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); break;
-		case 'k': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); break;
-		case 'V': setvar("verbose", atoi(opt+2)); return true;
-		case 'u': uprate = atoi(opt+2); return true;
-		case 'c':
-		{
-			int clients = atoi(opt+2);
-			if(clients > 0) maxclients = min(clients, MAXCLIENTS);
-			else maxclients = DEFAULTCLIENTS;
-			return true;
-		}
-		case 'i': ip = opt+2; return true;
-		case 'm': master = opt+2; return true;
 		case 'g': game = opt+2; return true;
-		case 'l': load = opt+2; return true;
-		case 's': servertype = atoi(opt+2); return true;
+		case 'h': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); break;
+		case 'p': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); break;
+		case 'v': setvar("verbose", atoi(opt+2)); return true;
+		case 's':
+		{
+			switch(opt[2])
+			{
+				case 'u': uprate = atoi(opt+3); return true;
+				case 'c':
+				{
+					int clients = atoi(opt+3);
+					if(clients > 0) maxclients = min(clients, MAXCLIENTS);
+					else maxclients = DEFAULTCLIENTS;
+					return true;
+				}
+				case 'i': ip = opt+3; return true;
+				case 'm': master = opt+3; return true;
+				case 'l': load = opt+3; return true;
+				case 's': servertype = atoi(opt+3); return true;
+			}
+		}
 #ifdef MASTERSERVER
-		case 'M':
+		case 'm':
 		{
 			switch(opt[2])
 			{
