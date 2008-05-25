@@ -4,9 +4,9 @@
 #include "pch.h"
 #include "engine.h"
 
-#ifdef STANDALONE
-VARP(verbose, 0, 0, 4);
+VAR(version, 1, ENG_VERSION, -1); // for scripts
 
+#ifdef STANDALONE
 void conoutf(const char *s, ...) { s_sprintfdlv(str, s, s); printf("%s\n", str); }
 void console(const char *s, int n, ...) { s_sprintfdlv(str, n, s); printf("%s\n", str); }
 void servertoclient(int chan, uchar *buf, int len) {}
@@ -18,6 +18,9 @@ void fatal(const char *s, ...)
     printf("ERROR: %s\n", msg);
     exit(EXIT_FAILURE);
 }
+VAR(verbose, 0, 0, 4);
+#else
+VARP(verbose, 0, 0, 4);
 #endif
 
 #define DEFAULTCLIENTS 6
@@ -689,7 +692,7 @@ void setupserver()
 	{
 		updatemaster();
 	}
-	conoutf("game server for %s started", game);
+	if(verbose) conoutf("game server for %s started", game);
 
 #ifndef STANDALONE
 	if(servertype >= 3) serverloop();
@@ -715,6 +718,7 @@ bool serveroption(char *opt)
 	{
 		case 'q': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); break;
 		case 'k': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); break;
+		case 'V': setvar("verbose", atoi(opt+2)); return true;
 		case 'u': uprate = atoi(opt+2); return true;
 		case 'c':
 		{

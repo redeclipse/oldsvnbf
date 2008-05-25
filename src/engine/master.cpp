@@ -90,7 +90,7 @@ void addmasterentry(masterclient &c)
     c.outputpos = 0;
     string name;
     if(enet_address_get_host_ip(&c.address, name, sizeof(name))<0) s_strcpy(name, "<<unknown host>>");
-    conoutf("master server received registration from %s", name);
+    if(verbose) conoutf("master server received registration from %s", name);
     updatemasterlist = true;
 }
 
