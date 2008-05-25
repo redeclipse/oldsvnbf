@@ -162,16 +162,15 @@ void updatesound(int chan)
 	vec v;
 	sounds[chan].dist = camera1->o.dist(*sounds[chan].pos, v);
 
-	if(!soundmono && (v.x != 0 || v.y != 0))
-	{
-		float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
-		sounds[chan].curpan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
-	}
-	else sounds[chan].curpan = 127;
-
-
 	if(!(sounds[chan].flags&SND_NOATTEN))
 	{
+		if(!soundmono && (v.x != 0 || v.y != 0))
+		{
+			float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
+			sounds[chan].curpan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
+		}
+		else sounds[chan].curpan = 127;
+
 		if(liquid) vol = int(vol*0.5f);
 
 		float maxrad = float(sounds[chan].maxrad > 0 && sounds[chan].maxrad < soundmaxdist ? sounds[chan].maxrad : soundmaxdist);
@@ -187,7 +186,11 @@ void updatesound(int chan)
 		}
 		else sounds[chan].curvol = 0;
 	}
-	else sounds[chan].curvol = vol;
+	else
+	{
+		sounds[chan].curvol = vol;
+		sounds[chan].curpan = 127;
+	}
 
 	Mix_Volume(chan, sounds[chan].curvol);
 	Mix_SetPanning(chan, 255-sounds[chan].curpan, sounds[chan].curpan);
@@ -197,11 +200,6 @@ void updatesound(int chan)
 		if(totalmillis >= sounds[chan].millis+int((sounds[chan].dist/8.f)*(liquid ? 1.497f : 0.343f)))
 			Mix_Resume(chan);
 	}
-#if 0
-	conoutf("sound %d (%.1f %.1f %.1f [%.1f]) %d %d", i,
-		sounds[i].pos->x, sounds[i].pos->y, sounds[i].pos->z,
-		sounds[i].dist, sounds[i].curvol, sounds[i].curpan);
-#endif
 }
 
 void checksound()
