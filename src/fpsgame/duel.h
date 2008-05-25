@@ -149,10 +149,13 @@ struct duelservmode : servmode
 
 				duelround++;
 
+				string fight;
 				if(m_dlms(sv.gamemode, sv.mutators))
-					sv.servsend(-1, "everyone, fight!", duelround);
+					s_sprintf(fight)("round %d .. fight!", duelround);
 				else
-					sv.servsend(-1, "duel #%d, %s vs %s", duelround, pl[0], pl[1]);
+					s_sprintf(fight)("round %d .. %s vs %s .. fight!", duelround, pl[0], pl[1]);
+
+				sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
 
 				if (!m_insta(sv.gamemode, sv.mutators))
 				{

@@ -428,7 +428,7 @@ struct ctfclient : ctfstate
 			f.interptime = 0;
 		}
 		conoutf("%s dropped %s flag", d==cl.player1 ? "you" : cl.colorname(d), f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
-		playsound(S_FLAGDROP);
+		cl.et.announce(S_V_FLAGDROP);
     }
 
     void flagexplosion(int i, const vec &loc)
@@ -468,7 +468,7 @@ struct ctfclient : ctfstate
 		f.interptime = 0;
 		ctfstate::returnflag(i);
 		conoutf("%s returned %s flag", d==cl.player1 ? "you" : cl.colorname(d), f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
-		playsound(S_FLAGRETURN);
+		cl.et.announce(S_V_FLAGRETURN);
     }
 
     void resetflag(int i)
@@ -478,7 +478,7 @@ struct ctfclient : ctfstate
 		f.interptime = 0;
 		ctfstate::returnflag(i);
 		conoutf("%s flag reset", f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
-		playsound(S_FLAGRESET);
+		cl.et.announce(S_V_FLAGRESET);
     }
 
 	int findscore(const char *team)
@@ -505,7 +505,7 @@ struct ctfclient : ctfstate
 			particle_text(d->abovehead(), ds, 9);
 		}
 		conoutf("%s scored for %s team", d==cl.player1 ? "you" : cl.colorname(d), f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
-		playsound(S_FLAGSCORE);
+		cl.et.announce(S_V_FLAGSCORE);
     }
 
     void takeflag(fpsent *d, int i)
@@ -515,7 +515,7 @@ struct ctfclient : ctfstate
 		f.interptime = lastmillis;
 		conoutf("%s %s %s flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
 		ctfstate::takeflag(i, d);
-		playsound(S_FLAGPICKUP);
+		cl.et.announce(S_V_FLAGPICKUP);
     }
 
     void checkflags(fpsent *d)

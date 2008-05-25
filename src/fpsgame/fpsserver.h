@@ -732,6 +732,9 @@ struct GAMESERVER : igameserver
 			demonextmatch = false;
 			setupdemorecord();
 		}
+
+		if(!m_duel(gamemode, mutators))
+			sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, "fight!");
 	}
 
 	savedscore &findscore(clientinfo *ci, bool insert)
@@ -1245,7 +1248,7 @@ struct GAMESERVER : igameserver
 					}
 				}
 				getstring(text, p);
-				if(connected && m_team(gamemode, mutators))
+				if(!connected && m_team(gamemode, mutators))
 				{
 					const char *worst = chooseworstteam(text);
 					if(worst)
@@ -1261,6 +1264,8 @@ struct GAMESERVER : igameserver
 				mutate(mut->changeteam(ci, ci->team, text));
 				s_strncpy(ci->team, text, MAXTEAMLEN+1);
 				QUEUE_MSG;
+				if(!connected && !m_duel(gamemode, mutators))
+					sendf(sender, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, "fight!");
 				break;
 			}
 
@@ -1741,6 +1746,8 @@ struct GAMESERVER : igameserver
 					if (smode) smode->intermission();
 					mutate(mut->intermission());
 				}
+				else if(minremain == 1)
+					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, "only one minute left of play!");
 			}
 			if (!interm && minremain <= 0) interm = gamemillis+10000;
 		}
