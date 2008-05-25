@@ -844,6 +844,10 @@ struct entities : icliententities
 				case WAYPOINT:
 					if(e.attr1 > 0) renderradius(e.o, e.attr1, e.attr1, false);
 					break;
+				case ANNOUNCER:
+					renderradius(e.o, e.attr1, e.attr1, false);
+					renderradius(e.o, e.attr2, e.attr2, false);
+					break;
 				default:
 					if(enttype[e.type].height || enttype[e.type].radius)
 						renderradius(e.o, enttype[e.type].height, enttype[e.type].radius, false);
