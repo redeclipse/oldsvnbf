@@ -11,7 +11,6 @@ static vec menupos;
 static int menustart = 0;
 static int menutab = 1;
 static g3d_gui *cgui = NULL;
-static bool cguifirstpass;
 
 struct menu : g3d_callback
 {
@@ -22,7 +21,6 @@ struct menu : g3d_callback
     void gui(g3d_gui &g, bool firstpass)
     {
         cgui = &g;
-        cguifirstpass = firstpass;
         cgui->start(menustart, 0.03f, &menutab);
         cgui->tab(header ? header : name, GUI_TITLE_COLOR);
         execute(contents);
@@ -284,17 +282,29 @@ void guibitfield(char *name, char *var, int *mask, char *onchange)
 void guifield(char *var, int *maxlength, char *onchange, char *updateval)
 {
 	if(!cgui) return;
+    if(updateval[0] && strcmp(g3d_fieldname(), var)) execute(updateval);
     const char *initval = "";
-    if(!cguifirstpass && strcmp(g3d_fieldname(), var) && updateval[0]) execute(updateval);
 	ident *id = getident(var);
     if(id && id->type==ID_ALIAS) initval = id->action;
-	char *result = cgui->field(var, GUI_BUTTON_COLOR, (*maxlength!=0) ? *maxlength : 12, initval);
+	char *result = cgui->field(var, GUI_BUTTON_COLOR, (*maxlength!=0) ? *maxlength : 12, 0, initval);
 	if(result)
 	{
 		alias(var, result);
 		if(onchange[0]) execute(onchange);
 	}
 }
+
+//-ve maxlength indicates a wrapped text field of any (approx 260 chars) length, |maxlength| is the field width
+void guieditor(char *name, int *maxlength, int *height)
+{
+    if(!cgui) return;
+    cgui->field(name, GUI_BUTTON_COLOR, (*maxlength!=0) ? *maxlength : 12, *height);
+    //returns a non-NULL pointer (the currentline) when the user commits, could then manipulate via text* commands
+}
+
+COMMAND(guieditor, "sii");
+//use text<action> to do more...
+
 
 void guilist(char *contents)
 {

@@ -351,7 +351,7 @@ void send_welcome(int n)
 {
 	ENetPacket *packet = enet_packet_create (NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
 	ucharbuf p(packet->data, packet->dataLength);
-	int chan = sv->welcomepacket(p, n);
+	int chan = sv->welcomepacket(p, n, packet);
 	enet_packet_resize(packet, p.length());
 	sendpacket(n, chan, packet);
 	if(packet->referenceCount==0) enet_packet_destroy(packet);
@@ -534,7 +534,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 }
 #endif
 
-void serverslice(uint timeout)	// main server update, called from main loop in sp, or from below in dedicated server
+void serverslice()	// main server update, called from main loop in sp, or from below in dedicated server
 {
 	if (!serverhost) return;
 
@@ -573,7 +573,7 @@ void serverslice(uint timeout)	// main server update, called from main loop in s
     {
         if(enet_host_check_events(serverhost, &event) <= 0)
         {
-            if(enet_host_service(serverhost, &event, timeout) <= 0) break;
+            if(enet_host_service(serverhost, &event, 0) <= 0) break;
             serviced = true;
         }
 		switch(event.type)
@@ -635,10 +635,20 @@ void serverloop()
 		int _lastmillis = lastmillis;
 		lastmillis = totalmillis = (int)enet_time_get();
 		curtime = lastmillis-_lastmillis;
-#ifdef MASTERSERVER
+
+		#ifdef MASTERSERVER
 		checkmaster();
-#endif
-		if(servertype) serverslice(0);
+		#endif
+		if(servertype) serverslice();
+
+		if((int)enet_time_get()-lastmillis <= 0)
+		{
+			#ifdef WIN32
+			Sleep(1);
+			#else
+			usleep(1000);
+			#endif
+		}
 	}
 	exit(EXIT_SUCCESS);
 }

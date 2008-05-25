@@ -105,7 +105,7 @@ struct igameserver
     virtual void recordpacket(int chan, void *data, int len) {}
     virtual void parsepacket(int sender, int chan, bool reliable, ucharbuf &p) = 0;
     virtual bool sendpackets() = 0;
-    virtual int welcomepacket(ucharbuf &p, int n) = 0;
+    virtual int welcomepacket(ucharbuf &p, int n, ENetPacket *packet) = 0;
     virtual void serverinforeply(ucharbuf &p) = 0;
     virtual void serverupdate() = 0;
     virtual int serverinfoport() = 0;
