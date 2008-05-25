@@ -1349,7 +1349,6 @@ VARP(cursorblend, 0, 0, 100);
 
 VARP(hidehud, 0, 0, 1);
 
-bool hascursor;
 float cursorx = 0.5f, cursory = 0.5f;
 vec cursordir(0, 0, 0);
 #define MAXCROSSHAIRS 6
