@@ -8,8 +8,10 @@ VAR(depthfxbias, 0, 1, 64);
 extern void cleanupdepthfx();
 VARFP(fpdepthfx, 0, 0, 1, cleanupdepthfx());
 VARFP(depthfxprecision, 0, 0, 1, cleanupdepthfx());
-VARFP(depthfxsize, 6, 7, 11, cleanupdepthfx());
+VARFP(depthfxsize, 6, 7, 12, cleanupdepthfx());
 VARP(depthfx, 0, 1, 1);
+VARP(depthfxrect, 0, 0, 1);
+VARP(depthfxfilter, 0, 1, 1);
 VARP(blurdepthfx, 0, 1, 7);
 VARP(blurdepthfxsigma, 1, 50, 200);
 VAR(depthfxscissor, 0, 2, 2);
@@ -95,6 +97,10 @@ static struct depthfxtexture : rendertarget
         return addblurtiles(sx1, sy1, sx2, sy2);
     }
 
+    bool screenview() { return depthfxrect!=0; }
+    bool texrect() { return depthfxrect && hasTR; }
+    bool filter() { return depthfxfilter!=0; }
+
     bool shouldrender()
     {
         extern void finddepthfxranges();
@@ -160,7 +166,7 @@ void drawdepthfxtex()
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
     glDisable(GL_FOG);
-    depthfxtex.render(1<<depthfxsize, blurdepthfx, blurdepthfxsigma/100.0f);
+    depthfxtex.render(1<<depthfxsize, 1<<depthfxsize, blurdepthfx, blurdepthfxsigma/100.0f);
     glEnable(GL_FOG);
 }
 
@@ -378,14 +384,29 @@ static void setupexplosion()
         }
         else if(!reflecting && !refracting && depthfx && depthfxtex.rendertex && numdepthfxranges>0)
         {
-            if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
+            if(depthfxtex.target==GL_TEXTURE_RECTANGLE_ARB)
             {
-                if(explosion2d) SETSHADER(explosion2dsoft8); else SETSHADER(explosion3dsoft8);
+                if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
+                {
+                    if(explosion2d) SETSHADER(explosion2dsoft8rect); else SETSHADER(explosion3dsoft8rect);
+                }
+                else if(explosion2d) SETSHADER(explosion2dsoftrect); else SETSHADER(explosion3dsoftrect);
+
+                setlocalparamf("depthfxview", SHPARAM_VERTEX, 6, 0.5f*depthfxtex.vieww, 0.5f*depthfxtex.viewh);
             }
-            else if(explosion2d) SETSHADER(explosion2dsoft); else SETSHADER(explosion3dsoft);
+            else
+            {
+                if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
+                {
+                    if(explosion2d) SETSHADER(explosion2dsoft8); else SETSHADER(explosion3dsoft8);
+                }
+                else if(explosion2d) SETSHADER(explosion2dsoft); else SETSHADER(explosion3dsoft);
+
+                setlocalparamf("depthfxview", SHPARAM_VERTEX, 6, 0.5f*float(depthfxtex.vieww)/depthfxtex.texw, 0.5f*float(depthfxtex.viewh)/depthfxtex.texh);
+            }
 
             glActiveTexture_(GL_TEXTURE2_ARB);
-            glBindTexture(GL_TEXTURE_2D, depthfxtex.rendertex);
+            glBindTexture(depthfxtex.target, depthfxtex.rendertex);
             glActiveTexture_(GL_TEXTURE0_ARB);
         }
         else if(explosion2d) SETSHADER(explosion2d); else SETSHADER(explosion3d);

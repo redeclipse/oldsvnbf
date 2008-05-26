@@ -91,17 +91,18 @@ static struct shadowmaptexture : rendertarget
 
     bool scissorblur(int &x, int &y, int &w, int &h)
     {
-        x = max(int(floor((scissorx1+1)/2*texsize)) - 2*blursize, 2);
-        y = max(int(floor((scissory1+1)/2*texsize)) - 2*blursize, 2);
-        w = min(int(ceil((scissorx2+1)/2*texsize)) + 2*blursize, texsize-2) - x;
-        h = min(int(ceil((scissory2+1)/2*texsize)) + 2*blursize, texsize-2) - y;
+        x = max(int(floor((scissorx1+1)/2*vieww)) - 2*blursize, 2);
+        y = max(int(floor((scissory1+1)/2*viewh)) - 2*blursize, 2);
+        w = min(int(ceil((scissorx2+1)/2*vieww)) + 2*blursize, vieww-2) - x;
+        h = min(int(ceil((scissory2+1)/2*viewh)) + 2*blursize, viewh-2) - y;
         return true;
     }
 
     bool scissorrender(int &x, int &y, int &w, int &h)
     {
         x = y = 2;
-        w = h = texsize - 2*2;
+        w = vieww - 2*2;
+        h = viewh - 2*2;
         return true;
     }
 
@@ -135,8 +136,8 @@ static struct shadowmaptexture : rendertarget
         vec dirx, diry;
         vecfromyawpitch(camera1->yaw, 0, 0, 1, dirx);
         vecfromyawpitch(camera1->yaw, 0, 1, 0, diry);
-        shadowoffset.x = -fmod(dirx.dot(camera1->o) - skewdir.x*camera1->o.z, 2.0f*shadowmapradius/texsize);
-        shadowoffset.y = -fmod(diry.dot(camera1->o) - skewdir.y*camera1->o.z, 2.0f*shadowmapradius/texsize);
+        shadowoffset.x = -fmod(dirx.dot(camera1->o) - skewdir.x*camera1->o.z, 2.0f*shadowmapradius/vieww);
+        shadowoffset.y = -fmod(diry.dot(camera1->o) - skewdir.y*camera1->o.z, 2.0f*shadowmapradius/viewh);
 
         GLfloat skew[] =
         {
@@ -173,8 +174,8 @@ static struct shadowmaptexture : rendertarget
             {
                 if(!hasFBO)
                 {
-                    sx += screen->w-texsize;
-                    sy += screen->h-texsize;
+                    sx += screen->w-vieww;
+                    sy += screen->h-viewh;
                 }
                 glScissor(sx, sy, sw, sh);
             }
@@ -364,7 +365,7 @@ void rendershadowmap()
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
     glDisable(GL_FOG); 
-    shadowmaptex.render(1<<shadowmapsize, blurshadowmap, blursmsigma/100.0f);
+    shadowmaptex.render(1<<shadowmapsize, 1<<shadowmapsize, blurshadowmap, blursmsigma/100.0f);
     glEnable(GL_FOG);
 }
 

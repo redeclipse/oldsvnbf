@@ -5,7 +5,7 @@
 
 Shader *Shader::lastshader = NULL;
 
-Shader *defaultshader = NULL, *notextureshader = NULL, *nocolorshader = NULL, *foggedshader = NULL, *foggednotextureshader = NULL, *stdworldshader = NULL;
+Shader *defaultshader = NULL, *rectshader = NULL, *notextureshader = NULL, *nocolorshader = NULL, *foggedshader = NULL, *foggednotextureshader = NULL, *stdworldshader = NULL;
 
 static hashtable<const char *, Shader> shaders;
 static Shader *curshader = NULL;
@@ -44,6 +44,7 @@ void loadshaders()
     extern Slot dummyslot;
     dummyslot.shader = stdworldshader;
 
+    rectshader = lookupshaderbyname("rect");
     notextureshader = lookupshaderbyname("notexture");
     nocolorshader = lookupshaderbyname("nocolor");
     foggedshader = lookupshaderbyname("fogged");
@@ -1675,16 +1676,18 @@ void setupblurkernel(int radius, float sigma, float *weights, float *offsets)
     for(int i = radius+1; i <= MAXBLURRADIUS; i++) weights[i] = offsets[i] = 0;
 }
 
-void setblurshader(int pass, int size, int radius, float *weights, float *offsets)
+void setblurshader(int pass, int size, int radius, float *weights, float *offsets, GLenum target)
 {
     if(radius<1 || radius>MAXBLURRADIUS) return;
-    static Shader *blurshader[7][2] = { { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL } };
-    if(!blurshader[radius-1][pass])
+    static Shader *blurshader[7][2] = { { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL } },
+                  *blurrectshader[7][2] = { { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL }, { NULL, NULL } };
+    Shader *&s = (target == GL_TEXTURE_RECTANGLE_ARB ? blurrectshader : blurshader)[radius-1][pass];
+    if(!s)
     {
-        s_sprintfd(name)("blur%c%d", 'x'+pass, radius);
-        blurshader[radius-1][pass] = lookupshaderbyname(name);
+        s_sprintfd(name)("blur%c%d%s", 'x'+pass, radius, target == GL_TEXTURE_RECTANGLE_ARB ? "rect" : "");
+        s = lookupshaderbyname(name);
     }
-    blurshader[radius-1][pass]->set();
+    s->set();
     setlocalparamfv("weights", SHPARAM_PIXEL, 0, weights);
     setlocalparamfv("weights2", SHPARAM_PIXEL, 2, &weights[4]);
     setlocalparamf("offsets", SHPARAM_PIXEL, 1,
