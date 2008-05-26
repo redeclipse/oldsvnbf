@@ -165,6 +165,14 @@
 				</Linker>
 			</Target>
 		</Build>
+		<Unit filename="bloodfrontier.rc">
+			<Option compilerVar="WINDRES"/>
+			<Option objectName="bloodfrontier.res"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
+			<Option target="daemon"/>
+		</Unit>
 		<Unit filename="enet\callbacks.c">
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
@@ -602,6 +610,13 @@
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\sound.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+		</Unit>
+		<Unit filename="engine\textedit.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
 			<Option link="0"/>

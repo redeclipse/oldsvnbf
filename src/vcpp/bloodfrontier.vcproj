@@ -1458,7 +1458,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\bloodfrontier.rc"
+			RelativePath="..\bloodfrontier.rc"
 			>
 		</File>
 	</Files>
