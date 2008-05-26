@@ -1270,7 +1270,7 @@ struct GAMESERVER : igameserver
 					{
 						while(sents.length()<n) sents.add(sn);
 						sents.add(se);
-						sents[n].spawned = true;
+						sents[n].spawned = m_insta(gamemode, mutators) ? false : true;
 					}
 				}
 				break;
