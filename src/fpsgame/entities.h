@@ -330,7 +330,7 @@ struct entities : icliententities
 					putint(p, ents[i]->attr3);
 					putint(p, ents[i]->attr4);
 					putint(p, ents[i]->attr5);
-					ents[i]->spawned = true;
+					ents[i]->spawned = m_insta(cl.gamemode, cl.mutators) ? false : true;
 					break;
 				}
 				default: break;
