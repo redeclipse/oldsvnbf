@@ -489,7 +489,7 @@ struct physics
 		v = vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->height)/4);
 		bool liquid = pl->inliquid;
 		pl->inliquid = !floating && isliquid(lookupmaterial(v));
-		if (!floating && liquid != pl->inliquid)
+		if (!floating && pl->inliquid && liquid != pl->inliquid)
 			pl->vel.div(liquiddampen(pl));
     }
 
