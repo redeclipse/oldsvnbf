@@ -40,6 +40,8 @@ FVARW(cloudclip, 0.5f);
 SVARFW(cloudlayer, "", { if(cloudlayer[0]) cloudoverlay = loadskyoverlay(cloudlayer); });
 FVARW(cloudscrollx, 0);
 FVARW(cloudscrolly, 0);
+FVARW(spincloudlayer, 0);
+FVARW(yawcloudlayer, 0);
 FVARW(cloudheight, 0.65f);
 FVARW(cloudfade, 0.2f);
 VARW(cloudsubdiv, 4, 16, 64);
@@ -269,7 +271,7 @@ void drawskybox(int farplane, bool limited)
         glLoadIdentity();
         glRotatef(camera1->roll, 0, 0, 1);
         glRotatef(camera1->pitch, -1, 0, 0);
-        glRotatef(camera1->yaw+spinsky*lastmillis/1000.0f+yawsky, 0, 1, 0);
+        glRotatef(camera1->yaw+spincloudlayer*lastmillis/1000.0f+yawcloudlayer, 0, 1, 0);
         glRotatef(90, 1, 0, 0);
         if(reflecting) glScalef(1, 1, -1);
         draw_env_overlay(farplane/2, cloudoverlay, cloudscrollx * lastmillis/1000.0f, cloudscrolly * lastmillis/1000.0f);
