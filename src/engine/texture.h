@@ -290,7 +290,7 @@ struct cubemapside
 
 extern cubemapside cubemapsides[6];
 extern Texture *notexture, *blanktexture;
-extern Shader *defaultshader, *notextureshader, *nocolorshader, *foggedshader, *foggednotextureshader, *stdworldshader;
+extern Shader *defaultshader, *rectshader, *notextureshader, *nocolorshader, *foggedshader, *foggednotextureshader, *stdworldshader;
 extern int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams;
 
 extern Shader *lookupshaderbyname(const char *name);
@@ -320,5 +320,5 @@ extern void setuptmu(int n, const char *rgbfunc = NULL, const char *alphafunc = 
 #define MAXBLURRADIUS 7
 
 extern void setupblurkernel(int radius, float sigma, float *weights, float *offsets);
-extern void setblurshader(int pass, int size, int radius, float *weights, float *offsets);
+extern void setblurshader(int pass, int size, int radius, float *weights, float *offsets, GLenum target = GL_TEXTURE_2D);
 
