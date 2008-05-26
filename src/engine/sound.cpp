@@ -393,7 +393,7 @@ void initmumble()
         if(mumblelink >= 0)
         {
             mumbleinfo = (MumbleInfo *)mmap(NULL, sizeof(MumbleInfo), PROT_READ|PROT_WRITE, MAP_SHARED, mumblelink, 0);
-            if(mumbleinfo != (MumbleInfo *)-1) wcsncpy(mumbleinfo->name, L"Sauerbraten", 256);
+            if(mumbleinfo != (MumbleInfo *)-1) wcsncpy(mumbleinfo->name, L"BloodFrontier", 256);
         }
     #endif
     if(!VALID_MUMBLELINK) closemumble();
