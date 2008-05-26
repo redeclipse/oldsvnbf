@@ -111,6 +111,7 @@ VAR(minimizetcusage, 1, 0, 0);
 VAR(emulatefog, 1, 0, 0);
 VAR(usevp2, 1, 0, 0);
 VAR(usevp3, 1, 0, 0);
+VAR(usetexrect, 1, 0, 0);
 VAR(rtscissor, 0, 1, 1);
 VAR(blurtile, 0, 1, 1);
 VAR(rtsharefb, 0, 1, 1);
@@ -358,24 +359,25 @@ void gl_checkextensions()
             conoutf("WARNING: Using Leopard ARB_position_invariant bug workaround. (use \"/apple_ff_bug 0\" to disable if unnecessary)");
         }
 #endif
-
-        if(strstr(exts, "GL_NV_vertex_program2_option")) { usevp2 = 1; hasVP2 = true; }
-        if(strstr(exts, "GL_NV_vertex_program3")) { usevp3 = 1; hasVP3 = true; }
-
-        if(strstr(exts, "GL_EXT_gpu_program_parameters"))
-        {
-            glProgramEnvParameters4fv_   = (PFNGLPROGRAMENVPARAMETERS4FVEXTPROC)  getprocaddress("glProgramEnvParameters4fvEXT");
-            glProgramLocalParameters4fv_ = (PFNGLPROGRAMLOCALPARAMETERS4FVEXTPROC)getprocaddress("glProgramLocalParameters4fvEXT");
-            hasPP = true;
-        }
-
-        if(strstr(exts, "GL_EXT_texture_rectangle") || strstr(exts, "GL_ARB_texture_rectangle"))
-        {
-            hasTR = true;
-            //conoutf("Using GL_ARB_texture_rectangle extension.");
-        }
-        else conoutf("WARNING: No texture rectangle support. (no full screen shaders)");
     }
+
+    if(strstr(exts, "GL_NV_vertex_program2_option")) { usevp2 = 1; hasVP2 = true; }
+    if(strstr(exts, "GL_NV_vertex_program3")) { usevp3 = 1; hasVP3 = true; }
+
+    if(strstr(exts, "GL_EXT_gpu_program_parameters"))
+    {
+        glProgramEnvParameters4fv_   = (PFNGLPROGRAMENVPARAMETERS4FVEXTPROC)  getprocaddress("glProgramEnvParameters4fvEXT");
+        glProgramLocalParameters4fv_ = (PFNGLPROGRAMLOCALPARAMETERS4FVEXTPROC)getprocaddress("glProgramLocalParameters4fvEXT");
+        hasPP = true;
+    }
+
+    if(strstr(exts, "GL_EXT_texture_rectangle") || strstr(exts, "GL_ARB_texture_rectangle"))
+    {
+        usetexrect = 1;
+        hasTR = true;
+        //conoutf("Using GL_ARB_texture_rectangle extension.");
+    }
+    else if(hasMT && hasVP && hasFP) conoutf("WARNING: No texture rectangle support. (no full screen shaders)");
 
     if(strstr(exts, "GL_EXT_packed_depth_stencil") || strstr(exts, "GL_NV_packed_depth_stencil"))
     {
