@@ -38,6 +38,7 @@ FVARW(spinclouds, 0);
 VARW(yawclouds, 0, 0, 360);
 FVARW(cloudclip, 0.5f);
 SVARFW(cloudlayer, "", { if(cloudlayer[0]) cloudoverlay = loadskyoverlay(cloudlayer); });
+FVARW(cloudscale, 1);
 FVARW(cloudscrollx, 0);
 FVARW(cloudscrolly, 0);
 FVARW(spincloudlayer, 0);
@@ -106,7 +107,7 @@ void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F, Texture **sky = NU
 
 void draw_env_overlay(int w, Texture *overlay = NULL, float tx = 0, float ty = 0)
 {
-    float z = w - 2*w*cloudheight, tsz = 0.5f*(1-cloudfade), psz = w*(1-cloudfade);;
+    float z = w - 2*w*cloudheight, tsz = 0.5f*(1-cloudfade)/cloudscale, psz = w*(1-cloudfade);
     glBindTexture(GL_TEXTURE_2D, overlay ? overlay->id : notexture->id);
     glColor3f(1, 1, 1);
     glBegin(GL_POLYGON);
@@ -117,6 +118,7 @@ void draw_env_overlay(int w, Texture *overlay = NULL, float tx = 0, float ty = 0
         glTexCoord2f(tx + p.x*tsz, ty + p.y*tsz); glVertex3f(p.x*psz, p.y*psz, z);
     }
     glEnd();
+    float tsz2 = 0.5f/cloudscale;
     glBegin(GL_QUAD_STRIP);
     loopi(cloudsubdiv+1)
     {
@@ -125,9 +127,9 @@ void draw_env_overlay(int w, Texture *overlay = NULL, float tx = 0, float ty = 0
         glColor4f(1, 1, 1, 1);
         glTexCoord2f(tx + p.x*tsz, ty + p.y*tsz); glVertex3f(p.x*psz, p.y*psz, z);
         glColor4f(1, 1, 1, 0);
-        glTexCoord2f(tx + p.x*0.5f, ty + p.y*0.5f); glVertex3f(p.x*w, p.y*w, z);
+        glTexCoord2f(tx + p.x*tsz2, ty + p.y*tsz2); glVertex3f(p.x*w, p.y*w, z);
     }
-    glEnd();    
+    glEnd();
 }
 
 VARP(sparklyfix, 0, 0, 1);
