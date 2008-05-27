@@ -43,7 +43,7 @@ FVARW(cloudscrollx, 0);
 FVARW(cloudscrolly, 0);
 FVARW(spincloudlayer, 0);
 FVARW(yawcloudlayer, 0);
-FVARW(cloudheight, 0.65f);
+FVARW(cloudheight, 0.2f);
 FVARW(cloudfade, 0.2f);
 VARW(cloudsubdiv, 4, 16, 64);
 
@@ -107,7 +107,7 @@ void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F, Texture **sky = NU
 
 void draw_env_overlay(int w, Texture *overlay = NULL, float tx = 0, float ty = 0)
 {
-    float z = w - 2*w*cloudheight, tsz = 0.5f*(1-cloudfade)/cloudscale, psz = w*(1-cloudfade);
+    float z = -w*cloudheight, tsz = 0.5f*(1-cloudfade)/cloudscale, psz = w*(1-cloudfade);
     glBindTexture(GL_TEXTURE_2D, overlay ? overlay->id : notexture->id);
     glColor3f(1, 1, 1);
     glBegin(GL_POLYGON);
@@ -174,6 +174,8 @@ void drawskyoutline()
     if(!glaring) defaultshader->set();
 }
 
+VAR(clampsky, 0, 1, 1);
+
 void drawskybox(int farplane, bool limited)
 {
     extern int renderedskyfaces, renderedskyclip; // , renderedsky, renderedexplicitsky;
@@ -207,6 +209,9 @@ void drawskybox(int farplane, bool limited)
         renderedskyclip = 0;
     }
 
+    float skyclip = clipsky ? max(renderedskyclip-1, 0) : 0;
+    if(reflectz<hdr.worldsize && reflectz>skyclip) skyclip = reflectz;
+
     if(glaring)
     {
         static Shader *skyboxglareshader = NULL;
@@ -223,10 +228,11 @@ void drawskybox(int farplane, bool limited)
         if(explicitonly) glDisable(GL_DEPTH_TEST);
         else glDepthFunc(GL_GEQUAL);
     }
-    float skyclip = clipsky ? max(renderedskyclip-1, 0) : 0;
-    if(reflectz<hdr.worldsize && reflectz>skyclip) skyclip = reflectz;
+    else glDepthFunc(GL_LEQUAL);
 
     glDepthMask(GL_FALSE);
+
+    if(clampsky) glDepthRange(1, 1);
 
     glColor3f(1, 1, 1);
 
@@ -282,6 +288,8 @@ void drawskybox(int farplane, bool limited)
         glDisable(GL_BLEND);
     }
 
+    if(clampsky) glDepthRange(0, 1);
+
     glDepthMask(GL_TRUE);
 
     if(limited)
@@ -290,6 +298,7 @@ void drawskybox(int farplane, bool limited)
         else glDepthFunc(GL_LESS);
         if(!reflecting && !refracting && !envmapping && editmode && showsky) drawskyoutline();
     }
+    else glDepthFunc(GL_LESS);
 
     if(fog) glEnable(GL_FOG);
 }
