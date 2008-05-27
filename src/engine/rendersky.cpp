@@ -268,9 +268,11 @@ void drawskybox(int farplane, bool limited)
         glDisable(GL_BLEND);
     }
 
-    if(!glaring && cloudlayer[0] && renderedskyfaces&0x2F)
+    if(!glaring && cloudlayer[0] && cloudheight && renderedskyfaces&(cloudheight < 0 ? 0x1F : 0x2F))
     {
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+
+        glDisable(GL_CULL_FACE);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -286,6 +288,8 @@ void drawskybox(int farplane, bool limited)
         glPopMatrix();
 
         glDisable(GL_BLEND);
+
+        glEnable(GL_CULL_FACE);
     }
 
     if(clampsky) glDepthRange(0, 1);
