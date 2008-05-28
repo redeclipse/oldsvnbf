@@ -415,14 +415,16 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 
     while(cmds)
     {
-        const char *cmd = NULL, *arg[3] = { NULL, NULL, NULL };
+        const char *cmd = NULL, *end = NULL, *arg[3] = { NULL, NULL, NULL };
         cmd = &cmds[1];
+        end = strchr(cmd, '>');
+        if(!end) break;
         cmds = strchr(cmd, '<');
         size_t len = strcspn(cmd, ":,><");
         loopi(3)
         {
             arg[i] = strchr(i ? arg[i-1] : cmd, i ? ',' : ':');
-            if(!arg[i] || arg[i] >= file || (cmds && arg[i] >= cmds)) arg[i] = "";
+            if(!arg[i] || arg[i] >= end) arg[i] = "";
             else arg[i]++;
         }
         if(!strncmp(cmd, "mad", len)) texmad(s, parsevec(arg[0]), parsevec(arg[1]));
