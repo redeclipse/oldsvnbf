@@ -1685,11 +1685,6 @@ struct GAMESERVER : igameserver
 			{
 				clientinfo *oi = clients[i];
 				if(oi->clientnum==n) continue;
-                if(p.remaining() < 256)
-                {
-                    enet_packet_resize(packet, packet->dataLength + MAXTRANS);
-                    p.buf = packet->data;
-                }
 				sendstate(oi, p);
 			}
 			putint(p, -1);
