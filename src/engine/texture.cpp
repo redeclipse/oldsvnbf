@@ -422,12 +422,8 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
         loopi(3)
         {
             arg[i] = strchr(i ? arg[i-1] : cmd, i ? ',' : ':');
-            if(arg[i])
-            {
-                if(cmds && arg[i]>=cmds) cmds = strchr(arg[i], '<');
-                arg[i]++;
-            }
-            else arg[i] = "";
+            if(!arg[i] || arg[i] >= file || (cmds && arg[i] >= cmds)) arg[i] = "";
+            else arg[i]++;
         }
         if(!strncmp(cmd, "mad", len)) texmad(s, parsevec(arg[0]), parsevec(arg[1]));
         else if(!strncmp(cmd, "ffcolor", len))
