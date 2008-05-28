@@ -600,11 +600,6 @@ void rehash(bool reload)
 
 	persistidents = false;
 
-	if (!execfile("stdlib.cfg"))
-		fatal("cannot find data files");
-	if (!execfile("font.cfg"))
-		fatal("cannot find font definitions");
-
 	exec("defaults.cfg");
 	execfile("servers.cfg");
 
@@ -719,14 +714,20 @@ int main(int argc, char **argv)
 	conoutf("init: sound");
 	initsound();
 
-	conoutf("init: config");
-	rehash(false);
+	conoutf("init: defaults");
+
+	persistidents = false;
+
+	if (!execfile("stdlib.cfg"))
+		fatal("cannot find data files");
+	if (!execfile("font.cfg"))
+		fatal("cannot find font definitions");
+
 	if(!setfont("default")) fatal("no default font specified");
 
+    conoutf("init: gl effects");
 	computescreen("loading...");
 	inbetweenframes = true;
-
-    conoutf("init: gl effects");
     loadshaders();
 	particleinit();
     initdecals();
@@ -734,6 +735,9 @@ int main(int argc, char **argv)
 	conoutf("init: world");
 	camera1 = cl->iterdynents(0);
 	emptymap(0, true, NULL, true);
+
+	conoutf("init: config");
+	rehash(false);
 
 	conoutf("init: mainloop");
 	if(initscript) execute(initscript);
