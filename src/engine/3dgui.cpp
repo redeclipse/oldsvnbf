@@ -17,44 +17,6 @@ static float firstx, firsty;
 static enum {FIELDCOMMIT, FIELDABORT, FIELDEDIT, FIELDSHOW} fieldmode = FIELDSHOW;
 static bool fieldsactive = false;
 
-
-bool menukey(int code, bool isdown, int cooked)
-{
-    if((code==-1 || code == -2) && g3d_windowhit(isdown, true)) return true;
-    else if(code==-3 && g3d_windowhit(isdown, false)) return true;
-
-    editor *e = currentfocus();
-    if((fieldmode == FIELDSHOW) || !e) return false;
-	switch(code)
-	{
-        case SDLK_ESCAPE: //cancel editing without commit
-            fieldmode = FIELDABORT;
-            return true;
-		case SDLK_RETURN:
-        case SDLK_TAB:
-            if(cooked && (e->allowsnewline() || e->maxy != 1)) break;
-		case SDLK_KP_ENTER:
-            fieldmode = FIELDCOMMIT; //signal field commit (handled when drawing field)
-			return false;
-		case SDLK_HOME:
-		case SDLK_END:
-        case SDLK_PAGEUP:
-        case SDLK_PAGEDOWN:
-		case SDLK_DELETE:
-		case SDLK_BACKSPACE:
-        case SDLK_UP:
-        case SDLK_DOWN:
-		case SDLK_LEFT:
-		case SDLK_RIGHT:
-			break;
-		default:
-            if(!cooked || (code<32)) return false;
-	}
-	if(!isdown) return true;
-    e->key(code, cooked);
-	return true;
-}
-
 #define SHADOW 4
 #define ICON_SIZE (FONTH-SHADOW)
 #define SKIN_W 256
@@ -331,12 +293,21 @@ struct gui : g3d_gui
         editor *e = useeditor(name, false, false, initval); // generate a new editor if necessary
         if(layoutpass)
         {
+            if(initval && e->mode==EDITORFOCUSED && (e!=currentfocus() || fieldmode == FIELDSHOW))
+            {
+                if(strcmp(e->lines[0].text, initval)) e->clear(initval);
+            }
             e->linewrap = (length<0);
             e->maxx = (e->linewrap) ? -1 : length;
             e->maxy = (height<=0)?1:-1;
             e->pixelwidth = abs(length)*FONTW;
-            int temp;
-            if(e->allowsnewline()) e->bounds(temp, e->pixelheight); else e->pixelheight = FONTH*max(height, 1); //only single line editors can have variable height
+            if(e->linewrap && e->maxy==1)
+            {
+	            int temp;
+                text_bounds(e->lines[0].text, temp, e->pixelheight, e->pixelwidth); //only single line editors can have variable height
+            }
+            else
+                e->pixelheight = FONTH*max(height, 1);
         }
         int h = e->pixelheight;
         int w = e->pixelwidth + FONTW;
@@ -648,7 +619,7 @@ struct gui : g3d_gui
 		if(quads) glEnd();
 	}
 
-	vec origin, scale;
+    vec origin, scale, *savedorigin;
 	float dist;
 	g3d_callback *cb;
 
@@ -790,6 +761,80 @@ vec gui::light;
 int gui::curdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
 int gui::ty, gui::tx, gui::tpos, *gui::tcurrent, gui::tcolor;
 static vector<gui> guis;
+VARP(guipushdist, 1, 4, 64);
+
+bool menukey(int code, bool isdown, int cooked)
+{
+    if((code==-1 || code == -2) && g3d_windowhit(isdown, true)) return true;
+    else if(code==-3 && g3d_windowhit(isdown, false)) return true;
+
+    editor *e = currentfocus();
+    if((fieldmode == FIELDSHOW) || !e)
+    {
+        if(windowhit) switch(code)
+        {
+            case -4: // window "management"
+                if(isdown)
+                {
+					vec origin = *guis.last().savedorigin;
+					int i = windowhit - &guis[0];
+					for(int j = guis.length()-1; j > i; j--) *guis[j].savedorigin = *guis[j-1].savedorigin;
+					*windowhit->savedorigin = origin;
+					if(guis.length() > 1)
+					{
+						if(camera1->o.dist(*windowhit->savedorigin) <= camera1->o.dist(*guis.last().savedorigin))
+							windowhit->savedorigin->add(camdir);
+					}
+                }
+                return true;
+            case -5:
+                if(isdown)
+                {
+					vec origin = *guis[0].savedorigin;
+					loopj(guis.length()-1) *guis[j].savedorigin = *guis[j + 1].savedorigin;
+					*guis.last().savedorigin = origin;
+					if(guis.length() > 1)
+					{
+						if(camera1->o.dist(*guis.last().savedorigin) >= camera1->o.dist(*guis[0].savedorigin))
+							guis.last().savedorigin->sub(camdir);
+					}
+                }
+                return true;
+        }
+
+        return false;
+    }
+    switch(code)
+    {
+        case SDLK_ESCAPE: //cancel editing without commit
+            fieldmode = FIELDABORT;
+            return true;
+        case SDLK_RETURN:
+        case SDLK_TAB:
+            if(cooked && (e->maxy != 1)) break;
+        case SDLK_KP_ENTER:
+            fieldmode = FIELDCOMMIT; //signal field commit (handled when drawing field)
+            return false;
+        case SDLK_HOME:
+        case SDLK_END:
+        case SDLK_PAGEUP:
+        case SDLK_PAGEDOWN:
+        case SDLK_DELETE:
+        case SDLK_BACKSPACE:
+        case SDLK_UP:
+        case SDLK_DOWN:
+        case SDLK_LEFT:
+        case SDLK_RIGHT:
+        case -4:
+        case -5:
+            break;
+        default:
+            if(!cooked || (code<32)) return false;
+    }
+    if(!isdown) return true;
+    e->key(code, cooked);
+    return true;
+}
 
 void g3d_addgui(g3d_callback *cb)
 {
@@ -809,13 +854,6 @@ bool g3d_windowhit(bool on, bool act)
         mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
     } else if(!on && windowhit) cleargui(1);
     return (guis.length() && !gui::passthrough) || windowhit;
-}
-
-const char *g3d_fieldname()
-{
-    editor *top = currentfocus();
-    if(!layoutpass || (fieldmode==FIELDSHOW) || !top) return "";
-    return top->name;
 }
 
 void g3d_render()

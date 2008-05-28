@@ -203,7 +203,7 @@ struct rendertarget
         }
         else
         {
-            glTexCoord2f(0,      0);      glVertex2f(-1, -1);
+            glTexCoord2f(0, 0); glVertex2f(-1, -1);
             glTexCoord2f(wscale, 0);      glVertex2f( 1, -1);
             glTexCoord2f(wscale, hscale); glVertex2f( 1,  1);
             glTexCoord2f(0,      hscale); glVertex2f(-1,  1);
@@ -348,13 +348,13 @@ struct rendertarget
         if(w!=texw || h!=texh || (texrect() ? target!=GL_TEXTURE_RECTANGLE_ARB : target!=GL_TEXTURE_2D) || (hasFBO && (swaptexs() && !rtsharefb ? !blurfb : blurfb))) cleanup();
         
         if(!filter())
-        {
+		{
             if(blurtex) cleanupblur();
             blursize = 0;
         }
             
         if(!rendertex) setup(w, h);
-   
+    
         scissorx2 = scissory2 = -1;
         scissorx1 = scissory1 = 1;
         memset(blurtiles, 0, sizeof(blurtiles));

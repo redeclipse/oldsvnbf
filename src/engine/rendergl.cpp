@@ -30,10 +30,8 @@ PFNGLDELETEPROGRAMSARBPROC		 glDeletePrograms_		 = NULL;
 PFNGLBINDPROGRAMARBPROC			glBindProgram_			= NULL;
 PFNGLPROGRAMSTRINGARBPROC		  glProgramString_		  = NULL;
 PFNGLGETPROGRAMIVARBPROC           glGetProgramiv_           = NULL;
-
 PFNGLPROGRAMENVPARAMETER4FARBPROC  glProgramEnvParameter4f_  = NULL;
 PFNGLPROGRAMENVPARAMETER4FVARBPROC glProgramEnvParameter4fv_ = NULL;
-
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArray_  = NULL;
 PFNGLDISABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArray_ = NULL;
 PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointer_      = NULL;
@@ -436,6 +434,13 @@ void gl_checkextensions()
     hwtexsize = val;
 }
 
+void glext(char *ext)
+{
+    const char *exts = (const char *)glGetString(GL_EXTENSIONS);
+    intret(strstr(exts, ext) ? 1 : 0);
+}
+COMMAND(glext, "s");
+
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
 	#define fogvalues 0.5f, 0.6f, 0.7f, 1.0f
@@ -519,7 +524,7 @@ void transplayer()
 	glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);
 }
 
-float curfov = 105, fovy, aspect;
+float curfov = 100, fovy, aspect;
 int farplane;
 VARP(fov, 1, 120, 360);
 
@@ -640,9 +645,6 @@ void disablepolygonoffset(GLenum type)
 void setfogplane(const plane &p, bool flush)
 {
 	static float fogselect[4] = {0, 0, 0, 0};
-	// not in sauerbraten anymore?
-	//setenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
-	//setenvparamfv("fogplane", SHPARAM_VERTEX, 9, p.v);
     if(flush)
     {
         flushenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
@@ -867,7 +869,6 @@ void drawreflection(float z, bool refract, bool clear)
         glCullFace(GL_BACK);
     }
 
-    GLfloat clipmatrix[16];
     if(reflectclip && z>=0)
     {
         float zoffset = reflectclip/4.0f, zclip;

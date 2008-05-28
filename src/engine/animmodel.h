@@ -1367,6 +1367,7 @@ struct animmodel : model
         if(enablealphatest) glDisable(GL_ALPHA_TEST);
         if(enablealphablend) glDisable(GL_BLEND);
         if(enableglow) disableglow();
+        if(enableoverbright) disableoverbright();
         if(enablelighting) glDisable(GL_LIGHTING);
         if(lastenvmaptex) disableenvmap(true);
         if(!enablecullface) glEnable(GL_CULL_FACE);

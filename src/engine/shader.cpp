@@ -49,11 +49,13 @@ void loadshaders()
     nocolorshader = lookupshaderbyname("nocolor");
     foggedshader = lookupshaderbyname("fogged");
     foggednotextureshader = lookupshaderbyname("foggednotexture");
+
     if(renderpath!=R_FIXEDFUNCTION)
     {
         glEnable(GL_VERTEX_PROGRAM_ARB);
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
     }
+    
     defaultshader->set();
 }
 
