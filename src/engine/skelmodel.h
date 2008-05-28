@@ -617,11 +617,16 @@ struct skelmodel : animmodel
 
     struct boneinfo
     {
+        const char *name;
         int parent, children, next, interpindex, interpparent;
         float pitchscale, pitchoffset, pitchmin, pitchmax;
         dualquat base;
 
-        boneinfo() : parent(-1), children(-1), next(-1), interpindex(-1), interpparent(-1), pitchscale(0), pitchoffset(0), pitchmin(0), pitchmax(0) {}
+        boneinfo() : name(NULL), parent(-1), children(-1), next(-1), interpindex(-1), interpparent(-1), pitchscale(0), pitchoffset(0), pitchmin(0), pitchmax(0) {}
+        ~boneinfo()
+        {
+            DELETEA(name);
+        }
     };
 
     struct skeleton
@@ -675,6 +680,12 @@ struct skelmodel : animmodel
             return sa;
         }
 
+        int findbone(const char *name)
+        {
+            loopi(numbones) if(bones[i].name && !strcmp(bones[i].name, name)) return i;
+            return -1;
+        }
+
         int findtag(const char *name)
         {
             loopv(tags) if(!strcmp(tags[i].name, name)) return i;
@@ -700,6 +711,7 @@ struct skelmodel : animmodel
             s.optimizedframes = optimizedframes;
             s.bones = new boneinfo[numbones];
             memcpy(s.bones, bones, numbones*sizeof(boneinfo));
+            loopi(numbones) if(bones[i].name) s.bones[i].name = newstring(bones[i].name);
             if(numframes)
             {
                 s.framebones = new dualquat[numframes*numbones];
