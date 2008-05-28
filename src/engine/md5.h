@@ -4,13 +4,6 @@ md5 *loadingmd5 = NULL;
 
 string md5dir;
 
-struct md5jointinfo
-{
-    string name;
-};
-
-vector<md5jointinfo> md5joints;
-
 struct md5joint
 {
     vec pos;
@@ -188,8 +181,6 @@ struct md5 : skelmodel
             FILE *f = openfile(filename, "r");
             if(!f) return false;
 
-            md5joints.setsize(0);
-
             char buf[512];
             vector<md5joint> basejoints;
             for(;;)
@@ -228,12 +219,15 @@ struct md5 : skelmodel
                             j.pos.y = -j.pos.y;
                             j.orient.x = -j.orient.x;
                             j.orient.z = -j.orient.z;
-                            char *start = strchr(name, '"'), *end = start ? strchr(start+1, '"') : NULL;
-                            if(start && end) s_strncpy(md5joints.add().name, start+1, end-(start+1)+1);
-                            else s_strcpy(md5joints.add().name, name);
-
-                            if(basejoints.length()<skel->numbones) skel->bones[basejoints.length()].parent = parent;
-
+                            if(basejoints.length()<skel->numbones)
+                            {
+                                if(!skel->bones[basejoints.length()].name)
+                                {
+                                    char *start = strchr(name, '"'), *end = start ? strchr(start+1, '"') : NULL;
+                                    skel->bones[basejoints.length()].name = start && end ? newstring(start+1, end-(start+1)) : newstring(name);
+                                }
+                                skel->bones[basejoints.length()].parent = parent;
+                            }
                             j.orient.restorew();
                             basejoints.add(j);
                         }
@@ -523,18 +517,12 @@ void md5load(char *meshfile, char *skelname)
     }
 }
 
-static int findmd5joint(const char *name)
-{
-    loopv(md5joints) if(!strcmp(name, md5joints[i].name)) return i;
-    return -1;
-}
-
 void md5tag(char *name, char *tagname)
 {
     if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("not loading an md5"); return; }
     md5::part &mdl = *loadingmd5->parts.last();
-    int i = findmd5joint(name);
-    if(mdl.meshes && i>=0)
+    int i = mdl.meshes ? ((md5::skelmeshgroup *)mdl.meshes)->skel->findbone(name) : -1;
+    if(i >= 0)
     {
         ((md5::skelmeshgroup *)mdl.meshes)->skel->addtag(tagname, i);
         return;
@@ -549,8 +537,8 @@ void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin
 
     if(name[0])
     {
-        int i = findmd5joint(name);
-        if(mdl.meshes && i>=0)
+        int i = mdl.meshes ? ((md5::skelmeshgroup *)mdl.meshes)->skel->findbone(name) : -1;
+        if(i>=0)
         {
             md5::boneinfo &b = ((md5::skelmeshgroup *)mdl.meshes)->skel->bones[i];
             b.pitchscale = *pitchscale;
@@ -710,13 +698,15 @@ void md5animpart(char *maskstr)
 {
     if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("not loading an md5"); return; }
 
+    md5::skelpart *p = (md5::skelpart *)loadingmd5->parts.last();
+
     vector<char *> bonestrs;
     explodelist(maskstr, bonestrs);
     vector<ushort> bonemask;
     loopv(bonestrs)
     {
         char *bonestr = bonestrs[i];
-        int bone = findmd5joint(bonestr[0]=='!' ? bonestr+1 : bonestr);
+        int bone = p->meshes ? ((md5::skelmeshgroup *)p->meshes)->skel->findbone(bonestr[0]=='!' ? bonestr+1 : bonestr) : -1;
         if(bone<0) { conoutf("could not find bone %s for anim part mask [%s]", bonestr, maskstr); bonestrs.deletecontentsa(); return; }
         bonemask.add(bone | (bonestr[0]=='!' ? BONEMASK_NOT : 0));
     }
@@ -724,7 +714,6 @@ void md5animpart(char *maskstr)
     bonemask.sort(bonemaskcmp);
     if(bonemask.length()) bonemask.add(BONEMASK_END);
 
-    md5::skelpart *p = (md5::skelpart *)loadingmd5->parts.last();
     if(!p->addanimpart(bonemask.getbuf())) conoutf("too many animation parts");
 }
 
