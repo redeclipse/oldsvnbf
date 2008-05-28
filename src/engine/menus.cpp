@@ -119,6 +119,14 @@ void guistayopen(char *contents)
     shouldclearmenu = oldclearmenu;
 }
 
+void guinoautotab(char *contents)
+{
+    if(!cgui) return;
+    cgui->allowautotab(false);
+    execute(contents);
+    cgui->allowautotab(true);
+}
+
 //@DOC name and icon are optional
 void guibutton(char *name, char *action, char *icon, char *altact)
 {
@@ -279,10 +287,9 @@ void guibitfield(char *name, char *var, int *mask, char *onchange)
 }
 
 //-ve length indicates a wrapped text field of any (approx 260 chars) length, |length| is the field width
-void guifield(char *var, int *maxlength, char *onchange, char *updateval)
+void guifield(char *var, int *maxlength, char *onchange)
 {
 	if(!cgui) return;
-    if(updateval[0] && strcmp(g3d_fieldname(), var)) execute(updateval);
     const char *initval = "";
 	ident *id = getident(var);
     if(id && id->type==ID_ALIAS) initval = id->action;
@@ -354,6 +361,7 @@ COMMAND(guiservers, "s");
 COMMANDN(cleargui, cleargui_, "i");
 COMMAND(showgui, "s");
 COMMAND(guistayopen, "s");
+COMMAND(guinoautotab, "s");
 
 COMMAND(guilist, "s");
 COMMAND(guititle, "s");
@@ -365,7 +373,7 @@ COMMAND(guiradio,"ssis");
 COMMAND(guibitfield, "ssis");
 COMMAND(guicheckbox, "ssiis");
 COMMAND(guitab, "s");
-COMMAND(guifield, "siss");
+COMMAND(guifield, "sis");
 
 struct change
 {

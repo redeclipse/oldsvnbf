@@ -22,15 +22,18 @@ struct editline
         len = maxlen = 0;
     }
 
-    bool grow(int total, const char *fmt = NULL, ...)
+    bool grow(int total, const char *fmt = "", ...)
     {
         if(total + 1 <= maxlen) return false;
         maxlen = (total + CHUNKSIZE) - total%CHUNKSIZE;
         char *newtext = new char[maxlen];
-        va_list args;
-        va_start(args, fmt);
-        _vsnprintf(newtext, maxlen, fmt, args);
-        va_end(args);
+        if(fmt)
+        {
+        	va_list args;
+        	va_start(args, fmt);
+        	_vsnprintf(newtext, maxlen, fmt, args);
+        	va_end(args);
+        }
         DELETEA(text);
         text = newtext;
         return true;
@@ -123,34 +126,12 @@ struct editline
         len += count;
     }
 
-    void splitlines(vector<editline> &dest, int start = 0, int count = -1)
-    {
-        if(count < 0) count = len - start;
-        loopv(dest) dest[i].clear();
-        dest.setsize(0);
-        char *cur = &text[start];
-        for(;;)
-        {
-            char *end = strchr(cur, '\n');
-            if(end > &text[start+count] || !end)
-            {
-                dest.add().set(cur, &text[start+count] - cur);
-                break;
-            }
-            else
-            {
-                dest.add().set(cur, end - cur);
-                cur = end + 1;
-            }
-        }
-        if(dest.empty()) dest.add().set("");
-    }
-
     void combinelines(vector<editline> &src)
     {
         if(src.empty()) set("");
         else loopv(src)
         {
+            if(i) append("\n");
             if(!i) set(src[i].text, src[i].len);
             else insert(src[i].text, len, src[i].len);
         }
@@ -191,8 +172,6 @@ struct editor
         DELETEA(filename);
         clear(NULL);
     }
-
-    bool allowsnewline() { return linewrap && (maxy == 1); } // a single line(wrap) field can contain '\n's, whilst a multi-line does not
 
     void clear(const char *init = "")
     {
@@ -282,32 +261,25 @@ struct editor
 
     void copyselectionto(editor *b)
     {
-        assert(!b->allowsnewline()); // only support #pastebuffer case
+        if(b==this) return;
 
         b->clear(NULL);
-
         int sx, sy, ex, ey;
         region(sx, sy, ex, ey);
-        if(allowsnewline()) // create a vector from single line split via '\n'
+        loopi(1+ey-sy)
         {
-            lines[0].splitlines(b->lines, sx, ex - sx);
-        }
-        else
-        {
-            loopi(1+ey-sy)
+            if(b->maxy != -1 && b->lines.length() >= b->maxy) break;
+            int y = sy+i;
+            char *line = lines[y].text;
+            int len = lines[y].len;
+            if(y == sy && y == ey)
             {
-                int y = sy+i;
-                char *line = lines[y].text;
-                int len = lines[y].len;
-                if(y == sy && y == ey)
-                {
-                    line += sx;
-                    len = ex - sx;
-                }
-                else if(y == sy) line += sx;
-                else if(y == ey) len = ex;
-                b->lines.add().set(line, len);
+                line += sx;
+                len = ex - sx;
             }
+            else if(y == sy) line += sx;
+            else if(y == ey) len = ex;
+            b->lines.add().set(line, len);
         }
         if(b->lines.empty()) b->lines.add().set("");
     }
@@ -343,7 +315,7 @@ struct editor
     {
         del();
         editline &current = currentline();
-        if(ch == '\n' && !allowsnewline())
+        if(ch == '\n') 
         {
             if(maxy == -1 || cy < maxy-1)
             {
@@ -365,19 +337,16 @@ struct editor
 
     void insertallfrom(editor *b)
     {
+        if(b==this) return;
+
         del();
 
-        vector<editline> temp; //transform b into correct format for this editor to use
-        if(allowsnewline() && !b->allowsnewline()) temp.add().combinelines(b->lines);
-        else if(!allowsnewline() && b->allowsnewline()) b->lines[0].splitlines(temp);
-        else loopv(b->lines) temp.add().set(b->lines[i].text, b->lines[i].len);
-
-        if(temp.length() == 1 || maxy == 1)
+        if(b->lines.length() == 1 || maxy == 1) 
         {
             editline &current = currentline();
-            char *str = temp[0].text;
-            int slen = temp[0].len;
-            if(maxx >= 0 && temp[0].len + cx > maxx) slen = maxx-cx;
+            char *str = b->lines[0].text;            
+            int slen = b->lines[0].len;
+            if(maxx >= 0 && b->lines[0].len + cx > maxx) slen = maxx-cx;
             if(slen > 0)
             {
                 int len = current.len;
@@ -385,25 +354,21 @@ struct editor
                 current.insert(str, cx, slen);
                 cx += slen;
             }
-            loopv(temp) temp[i].clear();
         }
         else
         {
-            loopv(temp)
+            loopv(b->lines) 
             {
                 if(!i)
                 {
-                    lines[cy++].append(temp[i].text);
-                    temp[i].clear();
+                    lines[cy++].append(b->lines[i].text);
                 }
                 else if(i >= b->lines.length())
                 {
-                    cx = temp[i].len;
-                    lines[cy].prepend(temp[i].text);
-                    temp[i].clear();
+                    cx = b->lines[i].len;
+                    lines[cy].prepend(b->lines[i].text);
                 }
-                else if(maxy >= 0 && lines.length() < maxy) lines.insert(cy++, temp[i]);
-                else temp[i].clear();
+                else if(maxy >= 0 && lines.length() < maxy) lines.insert(cy++, b->lines[i]);
             }
         }
     }
@@ -432,6 +397,12 @@ struct editor
                     y += FONTH;
                     if(y < height) { cx = text_visible(str, x, y, pixelwidth); break; }
                 }
+                cy++;
+                break;
+            case -4:
+                cy--;
+                break;
+            case -5:
                 cy++;
                 break;
             case SDLK_PAGEUP:
@@ -488,6 +459,12 @@ struct editor
 
     void hit(int hitx, int hity, bool dragged)
     {
+        int slines = lines.length()-pixelheight/FONTH;
+        if(maxy != 1 && slines > 0 && hitx > pixelwidth) // scroll region
+        {
+            cy = scrolly = ((hity-FONTH/2)*slines)/(pixelheight-FONTH);
+            return;
+        }
         int maxwidth = linewrap?pixelwidth:-1;
         int h = 0;
         for(int i = scrolly; i < lines.length(); i++)
@@ -517,6 +494,7 @@ struct editor
         if(cy < scrolly) scrolly = cy;
         else
         {
+            if(scrolly < 0) scrolly = 0;
             int h = 0;
             for(int i = cy; i >= scrolly; i--)
             {
@@ -546,14 +524,15 @@ struct editor
             }
             maxy--;
 
-            if(ey >= scrolly && sy <= maxy) {
+            if(ey >= scrolly && sy <= maxy) 
+            {
                 // crop top/bottom within window
                 if(sy < scrolly) { sy = scrolly; psy = 0; psx = 0; }
-                if(ey > maxy) { ey = maxy; pey = pixelheight; pex = pixelwidth; }
+                if(ey > maxy) { ey = maxy; pey = pixelheight - FONTH; pex = pixelwidth; }
 
                 notextureshader->set();
                 glDisable(GL_TEXTURE_2D);
-                glColor3f(0.98, 0.77, 0.65);
+                glColor3ub(0xA0, 0x80, 0x80);
                 glBegin(GL_QUADS);
                 if(psy == pey)
                 {
@@ -593,11 +572,11 @@ struct editor
             if(h + height > pixelheight) break;
 
             draw_text(lines[i].text, x, y+h, color>>16, (color>>8)&0xFF, color&0xFF, 0xFF, false, hit&&(cy==i)?cx:-1, maxwidth);
-            if(linewrap && height > FONTH) // lines are wrapping
+            if(linewrap && height > FONTH) // line wrap indicator
             {
                 notextureshader->set();
                 glDisable(GL_TEXTURE_2D);
-                glColor3ub((color>>16)/2, ((color>>8)&0xFF)/2, (color&0xFF)/2);
+                glColor3ub(0x80, 0xA0, 0x80);
                 glBegin(GL_QUADS);
                 glVertex2f(x,         y+h+FONTH);
                 glVertex2f(x,         y+h+height);
@@ -609,22 +588,24 @@ struct editor
             }
             h+=height;
         }
-    }
 
-    // only used when allownewline(), thus scrolly and pixelheight arent relevant
-    void bounds(int &w, int &h)
-    {
-        int maxwidth = linewrap?pixelwidth:-1;
-        w = h = 0;
-        loopv(lines)
-        {
-            int width, height;
-            text_bounds(lines[i].text, width, height, maxwidth);
-            if(width > w) w = width;
-            h += height;
+        int slines = lines.length()-pixelheight/FONTH;
+        if(maxy != 1 && slines > 0) // scroll indicator
+    	{
+            float s = (pixelheight-FONTH)*min(1.0f, scrolly/float(slines));
+            notextureshader->set();
+            glDisable(GL_TEXTURE_2D);
+            glColor3ub(0x80, 0x80, 0xA0);
+            glBegin(GL_QUADS);
+            glVertex2f(x+pixelwidth,         y+s+FONTH);
+            glVertex2f(x+pixelwidth,         y+s);
+            glVertex2f(x+pixelwidth+FONTW/2, y+s);
+            glVertex2f(x+pixelwidth+FONTW/2, y+s+FONTH);
+            glEnd();
+            glEnable(GL_TEXTURE_2D);
+            defaultshader->set();
         }
     }
-
 };
 
 // a 'stack' where the last is the current focused editor

@@ -5,32 +5,26 @@ Texture *sky[6] = { 0, 0, 0, 0, 0, 0 }, *clouds[6] = { 0, 0, 0, 0, 0, 0 };
 
 void loadsky(const char *basename, Texture *texs[6])
 {
-    loopi(6)
-    {
+	loopi(6)
+	{
         const char *side = cubemapsides[i].name;
-        s_sprintfd(name)("%s_%s.jpg", basename, side);
-        if((texs[i] = textureload(name, 3, true, false))==notexture)
-        {
-            strcpy(name+strlen(name)-3, "png");
-            if((texs[i] = textureload(name, 3, true, false))==notexture) conoutf("could not load sky texture %s_%s", basename, side);
-        }
-    }
+		s_sprintfd(name)("%s_%s", basename, side);
+		if((texs[i] = textureload(name, 3, true, false))==notexture)
+			conoutf("could not load sky texture %s_%s", basename, side);
+	}
 }
 
 Texture *cloudoverlay = NULL;
 
 Texture *loadskyoverlay(const char *basename)
 {
-    s_sprintfd(name)("%s.jpg", basename);
-    Texture *t = textureload(name, 0, true, false);
-    if(t!=notexture) return t;
-    strcpy(name+strlen(name)-3, "png");
-    t = textureload(name, 0, true, false);
-    if(t==notexture) conoutf("could not load sky overlay texture %s", basename);
+	Texture *t = textureload(basename, 0, true, false);
+    if(t==notexture)
+		conoutf("could not load sky overlay texture %s", basename);
     return t;
 }
 
-SVARFW(skybox, "skyboxes/black", { if(skybox[0]) loadsky(skybox, sky); }); 
+SVARFW(skybox, "skyboxes/black", { if(skybox[0]) loadsky(skybox, sky); });
 FVARW(spinsky, 0);
 VARW(yawsky, 0, 0, 360);
 SVARFW(cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
@@ -38,9 +32,9 @@ FVARW(spinclouds, 0);
 VARW(yawclouds, 0, 0, 360);
 FVARW(cloudclip, 0.5f);
 SVARFW(cloudlayer, "", { if(cloudlayer[0]) cloudoverlay = loadskyoverlay(cloudlayer); });
-FVARW(cloudscale, 1);
 FVARW(cloudscrollx, 0);
 FVARW(cloudscrolly, 0);
+FVARW(cloudscale, 1);
 FVARW(spincloudlayer, 0);
 FVARW(yawcloudlayer, 0);
 FVARW(cloudheight, 0.2f);
@@ -48,19 +42,19 @@ FVARW(cloudfade, 0.2f);
 VARW(cloudsubdiv, 4, 16, 64);
 
 void draw_envbox_face(float s0, float t0, int x0, int y0, int z0,
-                      float s1, float t1, int x1, int y1, int z1,
-                      float s2, float t2, int x2, int y2, int z2,
-                      float s3, float t3, int x3, int y3, int z3,
-                      GLuint texture)
+					  float s1, float t1, int x1, int y1, int z1,
+					  float s2, float t2, int x2, int y2, int z2,
+					  float s3, float t3, int x3, int y3, int z3,
+					  GLuint texture)
 {
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glBegin(GL_QUADS);
-    glTexCoord2f(s3, t3); glVertex3i(x3, y3, z3);
-    glTexCoord2f(s2, t2); glVertex3i(x2, y2, z2);
-    glTexCoord2f(s1, t1); glVertex3i(x1, y1, z1);
-    glTexCoord2f(s0, t0); glVertex3i(x0, y0, z0);
-    glEnd();
-    xtraverts += 4;
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glBegin(GL_QUADS);
+	glTexCoord2f(s3, t3); glVertex3i(x3, y3, z3);
+	glTexCoord2f(s2, t2); glVertex3i(x2, y2, z2);
+	glTexCoord2f(s1, t1); glVertex3i(x1, y1, z1);
+	glTexCoord2f(s0, t0); glVertex3i(x0, y0, z0);
+	glEnd();
+	xtraverts += 4;
 }
 
 void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F, Texture **sky = NULL)
@@ -133,7 +127,7 @@ void draw_env_overlay(int w, Texture *overlay = NULL, float tx = 0, float ty = 0
 }
 
 VARP(sparklyfix, 0, 0, 1);
-VAR(showsky, 0, 1, 1); 
+VAR(showsky, 0, 1, 1);
 VAR(clipsky, 0, 1, 1);
 
 bool drawskylimits(bool explicitonly)
@@ -151,27 +145,27 @@ bool drawskylimits(bool explicitonly)
 
 void drawskyoutline()
 {
-    notextureshader->set();
+	notextureshader->set();
 
-    glDisable(GL_TEXTURE_2D);
-    glDepthMask(GL_FALSE);
-    extern int wireframe;
+	glDisable(GL_TEXTURE_2D);
+	glDepthMask(GL_FALSE);
+	extern int wireframe;
     if(!wireframe)
     {
         enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
-    glColor3f(0.5f, 0.0f, 0.5f);
-    rendersky(true);
-    if(!wireframe) 
+	glColor3f(0.5f, 0.0f, 0.5f);
+	rendersky(true);
+    if(!wireframe)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
     }
-    glDepthMask(GL_TRUE);
-    glEnable(GL_TEXTURE_2D);
+	glDepthMask(GL_TRUE);
+	glEnable(GL_TEXTURE_2D);
 
-    if(!glaring) defaultshader->set();
+	if(!glaring) defaultshader->set();
 }
 
 VAR(clampsky, 0, 1, 1);
@@ -183,7 +177,7 @@ void drawskybox(int farplane, bool limited)
          explicitonly = false;
     if(limited)
     {
-        explicitonly = alwaysrender || !sparklyfix || refracting; 
+        explicitonly = alwaysrender || !sparklyfix || refracting;
         if(!drawskylimits(explicitonly) && !alwaysrender) return;
         extern int ati_skybox_bug;
         if(!alwaysrender && !renderedskyfaces && !ati_skybox_bug) explicitonly = false;
@@ -202,7 +196,7 @@ void drawskybox(int farplane, bool limited)
         }
         if(!renderedskyfaces) return;
     }
-    
+
     if(alwaysrender)
     {
         renderedskyfaces = 0x3F;
@@ -223,7 +217,7 @@ void drawskybox(int farplane, bool limited)
     bool fog = glIsEnabled(GL_FOG)==GL_TRUE;
     if(fog) glDisable(GL_FOG);
 
-    if(limited) 
+    if(limited)
     {
         if(explicitonly) glDisable(GL_DEPTH_TEST);
         else glDepthFunc(GL_GEQUAL);
@@ -285,7 +279,7 @@ void drawskybox(int farplane, bool limited)
         glRotatef(90, 1, 0, 0);
         if(reflecting) glScalef(1, 1, -1);
         draw_env_overlay(farplane/2, cloudoverlay, cloudscrollx * lastmillis/1000.0f, cloudscrolly * lastmillis/1000.0f);
-        glPopMatrix();
+    	glPopMatrix();
 
         glDisable(GL_BLEND);
 

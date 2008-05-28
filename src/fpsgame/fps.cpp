@@ -216,31 +216,34 @@ struct GAMECLIENT : igameclient
 
 	void updatemouse()
 	{
-		if(!menuactive() && mousetype() && player1->state != CS_DEAD)
+		if(!menuactive())
 		{
-			if(!lastmouse) cursorx = cursory = 0.5f;
+			if(mousetype() && player1->state != CS_DEAD)
+			{
+				if(!lastmouse) cursorx = cursory = 0.5f;
+				else
+				{
+					physent *d = mousetype() <= 2 ? player1 : camera1;
+					int frame = lastmouse-lastmillis;
+					float deadzone = (mousedeadzone()/100.f);
+					float cx = (cursorx-0.5f), cy = (0.5f-cursory);
+
+					if(cx > deadzone || cx < -deadzone)
+						d->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+
+					if(cy > deadzone || cy < -deadzone)
+						d->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+
+					fixrange(d->yaw, d->pitch);
+				}
+
+				lastmouse = lastmillis;
+			}
 			else
 			{
-				physent *d = mousetype() <= 2 ? player1 : camera1;
-				int frame = lastmouse-lastmillis;
-				float deadzone = (mousedeadzone()/100.f);
-				float cx = (cursorx-0.5f), cy = (0.5f-cursory);
-
-				if(cx > deadzone || cx < -deadzone)
-					d->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
-
-				if(cy > deadzone || cy < -deadzone)
-					d->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
-
-				fixrange(d->yaw, d->pitch);
+				cursorx = cursory = 0.5f;
+				lastmouse = 0;
 			}
-
-			lastmouse = lastmillis;
-		}
-		else
-		{
-			cursorx = cursory = 0.5f;
-			lastmouse = 0;
 		}
 	}
 
@@ -997,17 +1000,17 @@ struct GAMECLIENT : igameclient
 	{
 		if(menuactive() || mousetype())
 		{
-			if(mousetype() == 1 || mousetype() == 3)
-			{
-				cursorx = max(0.0f, min(1.0f, cursorx+(float(dx*mousesensitivity())/10000.f)));
-				cursory = max(0.0f, min(1.0f, cursory+(float(dy*(!menuactive() && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f)));
-				return true;
-			}
-			else
+			if(mousetype() == 2 || mousetype() == 4)
 			{
 				cursorx = max(0.0f, min(1.0f, float(x)/float(w)));
 				cursory = max(0.0f, min(1.0f, float(y)/float(h)));
 				return false;
+			}
+			else
+			{
+				cursorx = max(0.0f, min(1.0f, cursorx+(float(dx*mousesensitivity())/10000.f)));
+				cursory = max(0.0f, min(1.0f, cursory+(float(dy*(!menuactive() && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f)));
+				return true;
 			}
 		}
 		else

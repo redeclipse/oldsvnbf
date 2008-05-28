@@ -215,6 +215,19 @@ void loadc(gzFile f, cube &c)
 						{
 							gzread(f, &c.ext->merges[i], sizeof(mergeinfo));
 							endianswap(&c.ext->merges[i], sizeof(ushort), 4);
+#if 0 // FIXME from Sauer
+                            mergeinfo *m = &c.ext->merges[i];
+                            gzread(f, m, sizeof(mergeinfo));
+                            endianswap(m, sizeof(ushort), 4);
+                            if(hdr.version <= 25)
+                            {
+                                int uorigin = m->u1 & 0xE000, vorigin = m->v1 & 0xE000;
+                                m->u1 = (m->u1 - uorigin) << 2;
+                                m->u2 = (m->u2 - uorigin) << 2;
+                                m->v1 = (m->v1 - vorigin) << 2;
+                                m->v2 = (m->v2 - vorigin) << 2;
+                            }
+#endif
 						}
 					}
 				}

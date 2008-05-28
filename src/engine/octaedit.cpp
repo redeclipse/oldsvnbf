@@ -283,7 +283,7 @@ void cursorupdate()
 		od  = dimension(orient),
 		odc = dimcoord(orient);
 
-	bool hovering = false;
+    bool hidecursor = g3d_windowhit(true, false), hovering = false;
     hmapsel = false;
 
 	if(moving)
@@ -328,9 +328,10 @@ void cursorupdate()
 				}
 			}
 
-		if((hovering = hoveringonent(ent, entorient)))
-		{
-			if(!havesel) {
+        if((hovering = hoveringonent(hidecursor ? -1 : ent, entorient)))
+        {
+			if(!havesel) 
+			{
 				selchildcount = 0;
 				sel.s = ivec(0, 0, 0);
 			}
@@ -421,7 +422,7 @@ void cursorupdate()
 			a = q; a.z = v; boxs3D(a, r, s); \
 		}
 
-	if(!moving && !hovering)
+    if(!moving && !hovering && !hidecursor)
 	{
         if(hmapedit==1)
             glColor3ub(0, hmapsel ? 255 : 40, 0);
