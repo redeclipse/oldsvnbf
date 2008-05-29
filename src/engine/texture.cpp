@@ -1219,6 +1219,7 @@ void cleanuptextures()
     loopi(MAT_EDIT) materialslots[i].cleanup();
     vector<Texture *> transient;
     enumerate(textures, Texture, tex,
+        DELETEA(tex.alphamask);
         if(tex.id) { glDeleteTextures(1, &tex.id); tex.id = 0; }
         if(tex.type==Texture::TRANSIENT) transient.add(&tex);
     );
