@@ -313,9 +313,9 @@ struct rendertarget
 
     virtual void doclear() {}
 
-    virtual bool screenview() { return false; }
-    virtual bool texrect() { return false; }
-    virtual bool filter() { return true; }
+    virtual bool screenview() const { return false; }
+    virtual bool texrect() const { return false; }
+    virtual bool filter() const { return true; }
 
     void render(int w, int h, int blursize, float blursigma)
     {

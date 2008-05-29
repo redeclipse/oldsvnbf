@@ -28,8 +28,8 @@ static struct depthfxtexture : rendertarget
 {
     const GLenum *colorformats() const
     {
-        static const GLenum colorfmts[] = { GL_RGB16F_ARB, GL_RGB16, GL_RGBA, GL_RGBA8, GL_RGB, GL_RGB8, GL_FALSE };
-        return &colorfmts[hasTF && hasFBO ? (fpdepthfx ? 0 : (depthfxprecision ? 1 : 2)) : 2];
+        static const GLenum colorfmts[] = { GL_FLOAT_RG16_NV, GL_RGB16F_ARB, GL_RGB16, GL_RGBA, GL_RGBA8, GL_RGB, GL_RGB8, GL_FALSE };
+        return &colorfmts[hasTF && hasFBO ? (fpdepthfx ? (hasNVFB && texrect() && !filter() ? 0 : 1) : (depthfxprecision ? 2 : 3)) : 3];
     }
 
     float eyedepth(const vec &p) const
@@ -97,9 +97,9 @@ static struct depthfxtexture : rendertarget
         return addblurtiles(sx1, sy1, sx2, sy2);
     }
 
-    bool screenview() { return depthfxrect!=0; }
-    bool texrect() { return depthfxrect && hasTR; }
-    bool filter() { return depthfxfilter!=0; }
+    bool screenview() const { return depthfxrect!=0; }
+    bool texrect() const { return depthfxrect && hasTR; }
+    bool filter() const { return depthfxfilter!=0; }
 
     bool shouldrender()
     {
@@ -120,7 +120,7 @@ static struct depthfxtexture : rendertarget
         float scale = depthfxscale;
         float *ranges = depthfxranges;
         int numranges = numdepthfxranges;
-        if(colorfmt==GL_RGB16F_ARB || colorfmt==GL_RGB16)
+        if(colorfmt==GL_FLOAT_RG16_NV || colorfmt==GL_RGB16F_ARB || colorfmt==GL_RGB16)
         {
             scale = depthfxfpscale;
             ranges = NULL;
@@ -386,7 +386,7 @@ static void setupexplosion()
         {
             if(depthfxtex.target==GL_TEXTURE_RECTANGLE_ARB)
             {
-                if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
+                if(depthfxtex.colorfmt!=GL_FLOAT_RG16_NV && depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
                 {
                     if(explosion2d) SETSHADER(explosion2dsoft8rect); else SETSHADER(explosion3dsoft8rect);
                 }
@@ -607,7 +607,7 @@ struct fireballrenderer : listrenderer
                   size = p->fade ? float(ts)/p->fade : 1,
                   psize = (p->size + pmax * size)*WOBBLE;
             if(2*(p->size + pmax)*WOBBLE < depthfxblend ||
-               (depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16 && psize > depthfxscale - depthfxbias) ||
+               (depthfxtex.colorfmt!=GL_FLOAT_RG16_NV && depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16 && psize > depthfxscale - depthfxbias) ||
                isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
 
             e.o = p->o;
@@ -700,7 +700,7 @@ struct fireballrenderer : listrenderer
             if(!glaring && !reflecting && !refracting && depthfx && depthfxtex.rendertex && numdepthfxranges>0)
             {
                 float scale = 0, offset = -1, texscale = 0;
-                if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
+                if(depthfxtex.colorfmt!=GL_FLOAT_RG16_NV && depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
                 {
                     float select[4] = { 0, 0, 0, 0 };
                     loopi(numdepthfxranges) if(depthfxowners[i]==p)
