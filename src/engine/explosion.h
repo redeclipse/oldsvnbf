@@ -8,6 +8,7 @@ VAR(depthfxbias, 0, 1, 64);
 extern void cleanupdepthfx();
 VARFP(fpdepthfx, 0, 0, 1, cleanupdepthfx());
 VARFP(depthfxprecision, 0, 0, 1, cleanupdepthfx());
+VARP(depthfxemuprecision, 0, 1, 1);
 VARFP(depthfxsize, 6, 7, 12, cleanupdepthfx());
 VARP(depthfx, 0, 1, 1);
 VARFP(depthfxrect, 0, 0, 1, cleanupdepthfx());
@@ -100,6 +101,8 @@ static struct depthfxtexture : rendertarget
     bool screenview() const { return depthfxrect!=0; }
     bool texrect() const { return depthfxrect && hasTR; }
     bool filter() const { return depthfxfilter!=0; }
+    bool highprecision() const { return colorfmt==GL_FLOAT_RG16_NV || colorfmt==GL_RGB16F_ARB || colorfmt==GL_RGB16; }
+    bool emulatehighprecision() const { return depthfxemuprecision && !depthfxfilter; }
 
     bool shouldrender()
     {
@@ -120,11 +123,17 @@ static struct depthfxtexture : rendertarget
         float scale = depthfxscale;
         float *ranges = depthfxranges;
         int numranges = numdepthfxranges;
-        if(colorfmt==GL_FLOAT_RG16_NV || colorfmt==GL_RGB16F_ARB || colorfmt==GL_RGB16)
+        if(highprecision())
         {
             scale = depthfxfpscale;
             ranges = NULL;
             numranges = 0;
+        }
+        else if(emulatehighprecision())
+        {
+            scale = depthfxfpscale;
+            ranges = NULL;
+            numranges = -3;
         }
         renderdepthobstacles(depthfxmin, depthfxmax, scale, ranges, numranges);
 
@@ -386,7 +395,7 @@ static void setupexplosion()
         {
             if(depthfxtex.target==GL_TEXTURE_RECTANGLE_ARB)
             {
-                if(depthfxtex.colorfmt!=GL_FLOAT_RG16_NV && depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
+                if(!depthfxtex.highprecision())
                 {
                     if(explosion2d) SETSHADER(explosion2dsoft8rect); else SETSHADER(explosion3dsoft8rect);
                 }
@@ -396,7 +405,7 @@ static void setupexplosion()
             }
             else
             {
-                if(depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
+                if(!depthfxtex.highprecision())
                 {
                     if(explosion2d) SETSHADER(explosion2dsoft8); else SETSHADER(explosion3dsoft8);
                 }
@@ -607,7 +616,7 @@ struct fireballrenderer : listrenderer
                   size = p->fade ? float(ts)/p->fade : 1,
                   psize = (p->size + pmax * size)*WOBBLE;
             if(2*(p->size + pmax)*WOBBLE < depthfxblend ||
-               (depthfxtex.colorfmt!=GL_FLOAT_RG16_NV && depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16 && psize > depthfxscale - depthfxbias) ||
+               (!depthfxtex.highprecision() && !depthfxtex.emulatehighprecision() && psize > depthfxscale - depthfxbias) ||
                isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
 
             e.o = p->o;
@@ -700,15 +709,26 @@ struct fireballrenderer : listrenderer
             if(!glaring && !reflecting && !refracting && depthfx && depthfxtex.rendertex && numdepthfxranges>0)
             {
                 float scale = 0, offset = -1, texscale = 0;
-                if(depthfxtex.colorfmt!=GL_FLOAT_RG16_NV && depthfxtex.colorfmt!=GL_RGB16F_ARB && depthfxtex.colorfmt!=GL_RGB16)
+                if(!depthfxtex.highprecision())
                 {
                     float select[4] = { 0, 0, 0, 0 };
-                    loopi(numdepthfxranges) if(depthfxowners[i]==p)
+                    if(!depthfxtex.emulatehighprecision())
                     {
-                        select[i] = float(depthfxscale)/depthfxblend;
+                        loopi(numdepthfxranges) if(depthfxowners[i]==p)
+                        {
+                            select[i] = float(depthfxscale)/depthfxblend;
+                            scale = 1.0f/depthfxblend;
+                            offset = -float(depthfxranges[i] - depthfxbias)/depthfxblend;
+                            break;
+                        }
+                    }
+                    else if(2*(p->size + pmax)*WOBBLE >= depthfxblend)
+                    {
+                        select[0] = float(depthfxfpscale)/depthfxblend;
+                        select[1] = select[0]/256;
+                        select[2] = select[1]/256;
                         scale = 1.0f/depthfxblend;
-                        offset = -float(depthfxranges[i] - depthfxbias)/depthfxblend;
-                        break;
+                        offset = 0;
                     }
                     setlocalparamfv("depthfxselect", SHPARAM_PIXEL, 6, select);
                 }

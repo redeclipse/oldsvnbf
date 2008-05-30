@@ -678,17 +678,27 @@ void rendershadowmapreceivers()
 
 void renderdepthobstacles(const vec &bbmin, const vec &bbmax, float scale, float *ranges, int numranges)
 {
-    static Shader *depthfxshader = NULL;
-    if(!depthfxshader) depthfxshader = lookupshaderbyname("depthfxworld");
-
-    depthfxshader->set();
-
     float scales[4] = { 0, 0, 0, 0 }, offsets[4] = { 0, 0, 0, 0 };
-    if(!numranges) loopi(4) scales[i] = 1.0f/scale;
-    else loopi(numranges)
+    if(numranges < 0)
     {
-        scales[i] = 1.0f/scale;
-        offsets[i] = -ranges[i]/scale;
+        SETSHADER(depthfxsplitworld);
+
+        loopi(-numranges)
+        {
+            if(!i) scales[i] = 1.0f/scale;
+            else scales[i] = scales[i-1]*256;
+        }
+    }
+    else
+    {
+        SETSHADER(depthfxworld);
+
+        if(!numranges) loopi(4) scales[i] = 1.0f/scale;
+        else loopi(numranges)
+        {
+            scales[i] = 1.0f/scale;
+            offsets[i] = -ranges[i]/scale;
+        }
     }
     setlocalparamfv("depthscale", SHPARAM_VERTEX, 0, scales);
     setlocalparamfv("depthoffsets", SHPARAM_VERTEX, 1, offsets);
