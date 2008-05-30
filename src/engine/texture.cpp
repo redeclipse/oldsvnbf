@@ -359,6 +359,36 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int cl
     return t;
 }
 
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#define RMASK 0xff000000
+#define GMASK 0x00ff0000
+#define BMASK 0x0000ff00
+#define AMASK 0x000000ff
+#else
+#define RMASK 0x000000ff
+#define GMASK 0x0000ff00
+#define BMASK 0x00ff0000
+#define AMASK 0xff000000
+#endif
+
+SDL_Surface *creatergbasurface(SDL_Surface *os)
+{
+    SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 32, RMASK, GMASK, BMASK, AMASK);
+    if(!ns) fatal("creatergbsurface");
+    SDL_BlitSurface(os, NULL, ns, NULL);
+    SDL_FreeSurface(os);
+    return ns;
+}
+
+SDL_Surface *scalesurface(SDL_Surface *os, int w, int h)
+{
+    SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, os->format->BitsPerPixel, os->format->Rmask, os->format->Gmask, os->format->Bmask, os->format->Amask);
+    if(!ns) fatal("scalesurface");
+    gluScaleImage(texformat(os->format->BitsPerPixel), os->w, os->h, GL_UNSIGNED_BYTE, os->pixels, w, h, GL_UNSIGNED_BYTE, ns->pixels);
+    SDL_FreeSurface(os);
+    return ns;
+}
+
 static vec parsevec(const char *arg)
 {
 	vec v(0, 0, 0);
@@ -440,7 +470,15 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
         else if(!strncmp(cmd, "offset", len)) s = texoffset(s, atoi(arg[0]), atoi(arg[1]));
         else if(!strncmp(cmd, "rotate", len)) s = texrotate(s, atoi(arg[0]), tex ? tex->type : 0);
         else if(!strncmp(cmd, "reorient", len)) s = texreorient(s, atoi(arg[0])>0, atoi(arg[1])>0, atoi(arg[2])>0, tex ? tex->type : TEX_DIFFUSE);
-        else if(!strncmp(cmd, "compress", len)) { if(compress) *compress = true; }
+        else if(!strncmp(cmd, "compress", len))
+        {
+            if(compress) *compress = true;
+            if(!hasTC)
+            {
+                int scale = atoi(arg[0]);
+                if(scale > 1) s = scalesurface(s, s->w/scale, s->h/scale);
+            }
+        }
     }
 
     return s;
@@ -698,36 +736,6 @@ static void addname(vector<char> &key, Slot &slot, Slot::Tex &t, bool combined =
     if(prefix) { while(*prefix) key.add(*prefix++); }
     s_sprintfd(tname)("%s", t.name);
 	for(const char *s = tname; *s; key.add(*s++));
-}
-
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#define RMASK 0xff000000
-#define GMASK 0x00ff0000
-#define BMASK 0x0000ff00
-#define AMASK 0x000000ff
-#else
-#define RMASK 0x000000ff
-#define GMASK 0x0000ff00
-#define BMASK 0x00ff0000
-#define AMASK 0xff000000
-#endif
-
-SDL_Surface *creatergbasurface(SDL_Surface *os)
-{
-	SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 32, RMASK, GMASK, BMASK, AMASK);
-	if(!ns) fatal("creatergbsurface");
-	SDL_BlitSurface(os, NULL, ns, NULL);
-	SDL_FreeSurface(os);
-	return ns;
-}
-
-SDL_Surface *scalesurface(SDL_Surface *os, int w, int h)
-{
-	SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, os->format->BitsPerPixel, os->format->Rmask, os->format->Gmask, os->format->Bmask, os->format->Amask);
-	if(!ns) fatal("scalesurface");
-	gluScaleImage(texformat(os->format->BitsPerPixel), os->w, os->h, GL_UNSIGNED_BYTE, os->pixels, w, h, GL_UNSIGNED_BYTE, ns->pixels);
-	SDL_FreeSurface(os);
-	return ns;
 }
 
 static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
