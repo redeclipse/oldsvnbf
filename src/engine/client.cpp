@@ -73,60 +73,6 @@ void connectfail(bool reset = false)
 	if(tryagain) connects();
 }
 
-void connects(const char *servername)
-{
-	if(connpeer)
-	{
-		conoutf("aborting connection attempt");
-		abortconnect();
-	}
-
-	ENetAddress address;
-	address.port = sv->serverport();
-
-	if (servername != NULL)
-	{
-		localattempt = 0;
-		addserver(servername);
-		conoutf("attempting to connect to %s", servername);
-		if(!resolverwait(servername, &address))
-		{
-			conoutf("could not resolve server %s", servername);
-			return;
-		}
-	}
-	else
-	{
-		if (!localattempt)
-		{
-			if (!resolverwait("localhost", &address))
-			{
-				conoutf("could not resolve localhost");
-				return;
-			}
-		}
-		else
-		{
-			conoutf("attempting to connect to a local server");
-			address.host = ENET_HOST_BROADCAST;
-		}
-		localattempt++;
-	}
-
-	if(!clienthost) clienthost = enet_host_create(NULL, 2, rate, rate);
-
-	if(clienthost)
-	{
-		connpeer = enet_host_connect(clienthost, &address, cc->numchannels());
-		enet_host_flush(clienthost);
-		connmillis = totalmillis;
-		connattempts = 0;
-		s_sprintfd(cs)("connecting to %s (esc to abort)", servername != NULL ? servername : "local server");
-		computescreen(cs);
-	}
-	else connectfail(false);
-}
-
 void disconnect(int onlyclean, int async)
 {
 	bool cleanup = onlyclean!=0;
@@ -175,6 +121,56 @@ void trydisconnect()
 
 COMMANDN(connect, connects, "s");
 COMMANDN(disconnect, trydisconnect, "");
+
+void connects(const char *servername)
+{
+	trydisconnect();
+
+	ENetAddress address;
+	address.port = sv->serverport();
+
+	if (servername != NULL)
+	{
+		localattempt = 0;
+		addserver(servername);
+		conoutf("attempting to connect to %s", servername);
+		if(!resolverwait(servername, &address))
+		{
+			conoutf("could not resolve server %s", servername);
+			return;
+		}
+	}
+	else
+	{
+		if (!localattempt)
+		{
+			if (!resolverwait("localhost", &address))
+			{
+				conoutf("could not resolve localhost");
+				return;
+			}
+		}
+		else
+		{
+			conoutf("attempting to connect to a local server");
+			address.host = ENET_HOST_BROADCAST;
+		}
+		localattempt++;
+	}
+
+	if(!clienthost) clienthost = enet_host_create(NULL, 2, rate, rate);
+
+	if(clienthost)
+	{
+		connpeer = enet_host_connect(clienthost, &address, cc->numchannels());
+		enet_host_flush(clienthost);
+		connmillis = totalmillis;
+		connattempts = 0;
+		s_sprintfd(cs)("connecting to %s (esc to abort)", servername != NULL ? servername : "local server");
+		computescreen(cs);
+	}
+	else connectfail(false);
+}
 
 void lanconnect()
 {
