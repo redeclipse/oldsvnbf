@@ -807,7 +807,7 @@ struct clientcom : iclientcom
 					for(;;)
 					{
 						int lcn = getint(p);
-						if(p.overread()) break;
+						if(p.overread() || lcn < 0) break;
 						fpsent *f = (lcn == cl.player1->clientnum ? cl.player1 : cl.getclient(lcn));
 						parsestate(f, p, true);
 					}
