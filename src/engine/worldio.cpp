@@ -861,7 +861,15 @@ void load_world(const char *mname, const char *cname)		// still supports all map
 
 	overrideidents = worldidents = true;
 	persistidents = false;
-	if(!execfile(mcfname)) exec("map.cfg");
+	if(maptype == MAP_OCTA)
+	{
+		exec("data/default_map_settings.cfg"); // for use with -pSAUER_DIR
+		exec(mcfname);
+	}
+	else
+	{
+		if(!execfile(mcfname)) exec("map.cfg");
+	}
 	persistidents = true;
 	overrideidents = worldidents = false;
 

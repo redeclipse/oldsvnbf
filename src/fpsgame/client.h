@@ -512,662 +512,669 @@ struct clientcom : iclientcom
 	void parsemessages(int cn, fpsent *d, ucharbuf &p)
 	{
 		static char text[MAXTRANS];
-		int type;
+		int type = -1, prevtype = -1;
 		bool mapchanged = false;
 
-        while(p.remaining()) switch(type = getint(p))
+		while(p.remaining())
 		{
-			case SV_INITS2C:					// welcome messsage from the server
+			prevtype = type;
+			switch(type = getint(p))
 			{
-				int mycn = getint(p), gver = getint(p), hasmap = getint(p);
-				if(gver!=GAMEVERSION)
+				case SV_INITS2C:					// welcome messsage from the server
 				{
-					conoutf("you are using a different game version (you: %d, server: %d)", GAMEVERSION, gver);
-					disconnect();
-					return;
-				}
-				cl.player1->clientnum = mycn;	  // we are now fully ready
-				switch (hasmap)
-				{
-					case 0:
-						changemap(getmapname());
-						break;
-					case 2:
-						senditemstoserver = true;
-						break;
-					case 1:
-					default:
-						break;
-				}
-				isready = true;
-				break;
-			}
-
-			case SV_CLIENT:
-			{
-				int lcn = getint(p), len = getuint(p);
-				ucharbuf q = p.subbuf(len);
-				parsemessages(lcn, cl.getclient(lcn), q);
-				break;
-			}
-
-			case SV_ANNOUNCE:
-            {
-            	int snd = getint(p);
-				getstring(text, p);
-                cl.et.announce(snd, text);
-				break;
-            }
-
-			case SV_SOUND:
-            {
-                int tcn = getint(p), snd = getint(p), vol = getint(p);
-                fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
-				if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum))
-					playsound(snd, &cl.player1->o, vol);
-				else playsound(snd, &t->o, vol);
-				break;
-            }
-
-			case SV_TEXT:
-			{
-                int tcn = getint(p);
-                fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
-				int flags = getint(p);
-				getstring(text, p);
-				if(!t) break;
-				saytext(t, flags, text);
-				break;
-			}
-
-			case SV_EXECLINK:
-            {
-                int tcn = getint(p), index = getint(p);
-                fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
-				if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum)) break;
-				cl.et.execlink(t, index, false);
-				break;
-            }
-
-			case SV_MAPCHANGE:
-			{
-				getstring(text, p);
-				int mode = getint(p), muts = getint(p);
-				changemapserv(text, mode, muts);
-				mapchanged = true;
-				break;
-			}
-
-			case SV_FORCEDEATH:
-			{
-				int lcn = getint(p);
-				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.newclient(lcn);
-				if(!f) break;
-				if(f==cl.player1)
-				{
-					if(editmode) toggleedit();
-					cl.sb.showscores(true);
-				}
-				f->state = CS_DEAD;
-				break;
-			}
-
-			case SV_ITEMLIST:
-			{
-				int n;
-				while((n = getint(p))!=-1)
-				{
-					if(mapchanged) cl.et.setspawn(n, true);
-					getint(p); // type
-					loopi(5) getint(p); // attr
-				}
-				break;
-			}
-
-			case SV_MAPRELOAD:		  // server requests next map
-			{
-                s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture(cl.gamemode) ? "capture_" : (m_ctf(cl.gamemode) ? "ctf_" : ""), getmapname());
-				const char *map = getalias(nextmapalias);	 // look up map in the cycle
-				addmsg(SV_MAPCHANGE, "rsii", *map ? map : sv->defaultmap(), cl.nextmode, cl.nextmuts);
-				break;
-			}
-
-			case SV_INITC2S:			// another client either connected or changed name/team
-			{
-				d = cl.newclient(cn);
-				if(!d)
-				{
-					getstring(text, p);
-					getstring(text, p);
+					int mycn = getint(p), gver = getint(p), hasmap = getint(p);
+					if(gver!=GAMEVERSION)
+					{
+						conoutf("you are using a different game version (you: %d, server: %d)", GAMEVERSION, gver);
+						disconnect();
+						return;
+					}
+					cl.player1->clientnum = mycn;	  // we are now fully ready
+					switch (hasmap)
+					{
+						case 0:
+							changemap(getmapname());
+							break;
+						case 2:
+							senditemstoserver = true;
+							break;
+						case 1:
+						default:
+							break;
+					}
+					isready = true;
 					break;
 				}
-				getstring(text, p);
-				if(!text[0]) s_strcpy(text, "unnamed");
-				if(d->name[0])		  // already connected
+
+				case SV_CLIENT:
 				{
-					if(strcmp(d->name, text))
-					{
-						string oldname, newname;
-						s_strcpy(oldname, cl.colorname(d));
-						s_strcpy(newname, cl.colorname(d, text));
-						conoutf("%s is now known as %s", oldname, newname);
-					}
+					int lcn = getint(p), len = getuint(p);
+					ucharbuf q = p.subbuf(len);
+					parsemessages(lcn, cl.getclient(lcn), q);
+					break;
 				}
-				else					// new client
+
+				case SV_ANNOUNCE:
 				{
-					c2sinit = false;	// send new players my info again
-					conoutf("connected: %s", cl.colorname(d, text));
-					loopv(cl.players)	// clear copies since new player doesn't have them
-						if(cl.players[i]) freeeditinfo(cl.players[i]->edit);
-					extern editinfo *localedit;
-					freeeditinfo(localedit);
+					int snd = getint(p);
+					getstring(text, p);
+					cl.et.announce(snd, text);
+					break;
 				}
-				s_strncpy(d->name, text, MAXNAMELEN);
-				getstring(text, p);
-				s_strncpy(d->team, text, MAXTEAMLEN);
-				break;
-			}
 
-			case SV_CDIS:
-				cl.clientdisconnected(getint(p));
-				break;
-
-            case SV_SPAWN:
-            {
-				int lcn = getint(p);
-				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.newclient(lcn);
-                parsestate(f, p);
-                f->state = CS_SPAWNING;
-				playsound(S_RESPAWN, &f->o);
-                break;
-            }
-
-            case SV_SPAWNSTATE:
-            {
-				int lcn = getint(p);
-				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.newclient(lcn);
-				bool local = (f->clientnum==cl.player1->clientnum || f->bot);
-				if(f==cl.player1 && editmode) toggleedit();
-                f->respawn();
-                parsestate(f, p);
-                f->state = CS_ALIVE;
-                if(local)
-                {
-					cl.et.findplayerspawn(f, m_capture(cl.gamemode) ? cl.cpc.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_ttwo(cl.gamemode, cl.mutators))+1 : -1);
-					if(f==cl.player1)
-					{
-						cl.sb.showscores(false);
-						cl.lasthit = 0;
-					}
-					addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
-                }
-                break;
-            }
-
-			case SV_SHOTFX:
-			{
-				int scn = getint(p), gun = getint(p);
-				vec from, to;
-				loopk(3) from[k] = getint(p)/DMF;
-				loopk(3) to[k] = getint(p)/DMF;
-				fpsent *s = cl.getclient(scn);
-				if(!s || gun < 0) break;
-				if(gun==GUN_SG) cl.ws.createrays(from, to);
-				s->gunstate[gun] = GUNSTATE_SHOOT;
-				s->gunwait[gun] = guntype[gun].adelay;
-				s->gunlast[gun] = lastmillis;
-				s->lastattackgun = gun;
-				cl.ws.shootv(gun, from, to, s, false);
-				break;
-			}
-
-			case SV_DAMAGE:
-			{
-				int tcn = getint(p),
-					acn = getint(p),
-					gun = getint(p),
-					flags = getint(p),
-					damage = getint(p),
-					health = getint(p),
-					millis = getint(p);
-				vec dir;
-				loopk(3) dir[k] = getint(p)/DNF;
-				fpsent *target = tcn==cl.player1->clientnum ? cl.player1 : cl.getclient(tcn),
-						*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
-				if(!target || !actor) break;
-				cl.damaged(gun, flags, damage, target, actor, millis, dir);
-				target->health = health; // just in case
-				break;
-			}
-
-			case SV_RELOAD:
-			{
-				int trg = getint(p), gun = getint(p), m = getint(p), amt = getint(p);
-				fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
-				if(!target || gun <= -1 || gun >= NUMGUNS) break;
-				target->gunreload(gun, amt, m);
-				break;
-			}
-
-			case SV_REGEN:
-			{
-				int trg = getint(p), amt = getint(p), ms = getint(p);
-				fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
-				if(!target) break;
-				target->health = amt;
-				target->lastregen = ms;
-				vec pos = target->o;
-				pos.z += 0.6f*(target->height + target->aboveeye) - target->height;
-				particle_splash(3, max((MAXHEALTH-target->health)/10, 1), 10000, target->o);
-				playsound(S_REGEN, &target->o, ((MAXHEALTH-target->health)*255)/MAXHEALTH);
-				break;
-			}
-
-			case SV_DIED:
-			{
-				int vcn = getint(p), acn = getint(p), frags = getint(p),
-					gun = getint(p), flags = getint(p), damage = getint(p);
-				fpsent *victim = vcn==cl.player1->clientnum ? cl.player1 : cl.getclient(vcn),
-						*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
-				if(!actor) break;
-				actor->frags = frags;
-				if(actor!=cl.player1 && !m_capture(cl.gamemode) && !m_ctf(cl.gamemode))
+				case SV_SOUND:
 				{
-					s_sprintfd(ds)("@%d", actor->frags);
-					particle_text(actor->abovehead(), ds, 9);
+					int tcn = getint(p), snd = getint(p), vol = getint(p);
+					fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
+					if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum))
+						playsound(snd, &cl.player1->o, vol);
+					else playsound(snd, &t->o, vol);
+					break;
 				}
-				if(!victim) break;
-				cl.killed(gun, flags, damage, victim, actor);
-				break;
-			}
 
-			case SV_GUNSELECT:
-			{
-				int trg = getint(p), gun = getint(p), m = getint(p);
-				fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
-				if(!target || gun <= -1 || gun >= NUMGUNS) break;
-				target->gunswitch(gun, m);
-				break;
-			}
-
-			case SV_TAUNT:
-			{
-				int lcn = getint(p);
-				fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
-				if(!f) break;
-				f->lasttaunt = lastmillis;
-				break;
-			}
-
-            case SV_RESUME:
-            {
-                for(;;)
-                {
-                    int lcn = getint(p);
-                    if(p.overread() || cn<0) break;
-                    fpsent *f = (lcn == cl.player1->clientnum ? cl.player1 : cl.newclient(lcn));
-                    parsestate(f, p, true);
-                }
-                break;
-            }
-
-			case SV_ITEMSPAWN:
-			{
-				int i = getint(p);
-				if(!cl.et.ents.inrange(i)) break;
-				cl.et.setspawn(i, true);
-				playsound(S_ITEMSPAWN, &cl.et.ents[i]->o);
-                const char *name = cl.et.itemname(i);
-				if(name) particle_text(cl.et.ents[i]->o, name, 9);
-				break;
-			}
-
-			case SV_ITEMACC:			// server acknowledges that I picked up this item
-			{
-				int lcn = getint(p), m = getint(p), i = getint(p);
-				fpsent *d = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
-				cl.et.useeffects(d, m, i);
-				break;
-			}
-
-			case SV_EDITVAR:
-			{
-				if(!d) return;
-				int t = getint(p);
-				bool commit = true;
-				getstring(text, p);
-				ident *id = idents->access(text);
-				if(!id || !id->world || id->type != t) commit = false;
-				switch(type)
+				case SV_TEXT:
 				{
-					case ID_VAR:
-					{
-						int val = getint(p);
-						if(id->maxval >= id->minval || val < id->minval || val > id->maxval)
-							commit = false;
-
-						if(commit)
-						{
-							setvar(text, val, true);
-							conoutf("%s updated the value of %s to %d", d->name, id->name, *id->storage.i);
-						}
-						break;
-					}
-					case ID_FVAR:
-					{
-						float val = getfloat(p);
-
-						if(commit)
-						{
-							setfvar(text, val, true);
-							conoutf("%s updated the value of %s to %f", d->name, id->name, *id->storage.f);
-						}
-						break;
-					}
-					case ID_SVAR:
-					{
-						string val;
-						getstring(val, p);
-						if(commit)
-						{
-							setsvar(text, val, true);
-							conoutf("%s updated the value of %s to %s", d->name, id->name, *id->storage.s);
-						}
-						break;
-					}
-					case ID_ALIAS:
-					{
-						string val;
-						getstring(val, p);
-						if(commit)
-						{
-							worldalias(text, val);
-							conoutf("%s updated the value of %s to %s", d->name, text, val);
-						}
-						break;
-					}
-					default: break;
+					int tcn = getint(p);
+					fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
+					int flags = getint(p);
+					getstring(text, p);
+					if(!t) break;
+					saytext(t, flags, text);
+					break;
 				}
-				break;
-			}
 
-			case SV_EDITF:			  // coop editing messages
-			case SV_EDITT:
-			case SV_EDITM:
-			case SV_FLIP:
-			case SV_COPY:
-			case SV_PASTE:
-			case SV_ROTATE:
-			case SV_REPLACE:
-			case SV_DELCUBE:
-			{
-				if(!d) return;
-				selinfo sel;
-				sel.o.x = getint(p); sel.o.y = getint(p); sel.o.z = getint(p);
-				sel.s.x = getint(p); sel.s.y = getint(p); sel.s.z = getint(p);
-				sel.grid = getint(p); sel.orient = getint(p);
-				sel.cx = getint(p); sel.cxs = getint(p); sel.cy = getint(p), sel.cys = getint(p);
-				sel.corner = getint(p);
-				int dir, mode, tex, newtex, mat, allfaces;
-				ivec moveo;
-				switch(type)
+				case SV_EXECLINK:
 				{
-					case SV_EDITF: dir = getint(p); mode = getint(p); mpeditface(dir, mode, sel, false); break;
-					case SV_EDITT: tex = getint(p); allfaces = getint(p); mpedittex(tex, allfaces, sel, false); break;
-					case SV_EDITM: mat = getint(p); mpeditmat(mat, sel, false); break;
-					case SV_FLIP: mpflip(sel, false); break;
-					case SV_COPY: if(d) mpcopy(d->edit, sel, false); break;
-					case SV_PASTE: if(d) mppaste(d->edit, sel, false); break;
-					case SV_ROTATE: dir = getint(p); mprotate(dir, sel, false); break;
-					case SV_REPLACE: tex = getint(p); newtex = getint(p); mpreplacetex(tex, newtex, sel, false); break;
-					case SV_DELCUBE: mpdelcube(sel, false); break;
+					int tcn = getint(p), index = getint(p);
+					fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
+					if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum)) break;
+					cl.et.execlink(t, index, false);
+					break;
 				}
-				break;
-			}
-            case SV_REMIP:
-            {
-                if(!d) return;
-                conoutf("%s remipped", cl.colorname(d));
-                mpremip(false);
-                break;
-            }
-			case SV_EDITENT:			// coop edit of ent
-			{
-				if(!d) return;
-				int i = getint(p);
-				float x = getint(p)/DMF, y = getint(p)/DMF, z = getint(p)/DMF;
-				int type = getint(p);
-				int attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p);
 
-				mpeditent(i, vec(x, y, z), type, attr1, attr2, attr3, attr4, false);
-				break;
-			}
-
-			case SV_EDITLINK:
-			{
-				if(!d) return;
-				int b = getint(p), index = getint(p), node = getint(p);
-				cl.et.linkents(index, node, b!=0, false, false);
-			}
-
-			case SV_PONG:
-				addmsg(SV_CLIENTPING, "i", cl.player1->ping = (cl.player1->ping*5+lastmillis-getint(p))/6);
-				break;
-
-			case SV_CLIENTPING:
-				if(!d) return;
-				d->ping = getint(p);
-				break;
-
-			case SV_TIMEUP:
-				cl.timeupdate(getint(p));
-				break;
-
-			case SV_SERVMSG:
-				getstring(text, p);
-                conoutf("%s", text);
-				break;
-
-			case SV_SENDDEMOLIST:
-			{
-				int demos = getint(p);
-				if(!demos) conoutf("no demos available");
-				else loopi(demos)
+				case SV_MAPCHANGE:
 				{
 					getstring(text, p);
-					conoutf("%d. %s", i+1, text);
+					int mode = getint(p), muts = getint(p);
+					changemapserv(text, mode, muts);
+					mapchanged = true;
+					break;
 				}
-				break;
-			}
 
-			case SV_DEMOPLAYBACK:
-			{
-				int on = getint(p);
-				if(on) cl.player1->state = CS_SPECTATOR;
-				else stopdemo();
-                demoplayback = on!=0;
-				break;
-			}
-
-			case SV_CURRENTMASTER:
-			{
-				int mn = getint(p), priv = getint(p);
-				cl.player1->privilege = PRIV_NONE;
-				loopv(cl.players) if(cl.players[i]) cl.players[i]->privilege = PRIV_NONE;
-				if(mn>=0)
+				case SV_FORCEDEATH:
 				{
-					fpsent *m = mn==cl.player1->clientnum ? cl.player1 : cl.newclient(mn);
-					m->privilege = priv;
+					int lcn = getint(p);
+					fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.newclient(lcn);
+					if(!f) break;
+					if(f==cl.player1)
+					{
+						if(editmode) toggleedit();
+						cl.sb.showscores(true);
+					}
+					f->state = CS_DEAD;
+					break;
 				}
-				break;
-			}
 
-			case SV_EDITMODE:
-			{
-				int val = getint(p);
-				if(!d) break;
-				if(val) d->state = CS_EDITING;
-				else d->state = CS_ALIVE;
-				break;
-			}
-
-			case SV_SPECTATOR:
-			{
-				int sn = getint(p), val = getint(p);
-				fpsent *s;
-				if(sn==cl.player1->clientnum)
+				case SV_ITEMLIST:
 				{
-					spectator = val!=0;
-					s = cl.player1;
+					int n;
+					while((n = getint(p))!=-1)
+					{
+						if(mapchanged) cl.et.setspawn(n, true);
+						getint(p); // type
+						loopi(5) getint(p); // attr
+					}
+					break;
 				}
-				else s = cl.newclient(sn);
-				if(!s) return;
-				if(val)
+
+				case SV_MAPRELOAD:		  // server requests next map
 				{
-					if(s==cl.player1 && editmode) toggleedit();
-					s->state = CS_SPECTATOR;
+					s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture(cl.gamemode) ? "capture_" : (m_ctf(cl.gamemode) ? "ctf_" : ""), getmapname());
+					const char *map = getalias(nextmapalias);	 // look up map in the cycle
+					addmsg(SV_MAPCHANGE, "rsii", *map ? map : sv->defaultmap(), cl.nextmode, cl.nextmuts);
+					break;
 				}
-				else if(s->state==CS_SPECTATOR)
+
+				case SV_INITC2S:			// another client either connected or changed name/team
 				{
-					s->state = CS_DEAD;
-					if(s==cl.player1) cl.sb.showscores(true);
+					d = cl.newclient(cn);
+					if(!d)
+					{
+						getstring(text, p);
+						getstring(text, p);
+						break;
+					}
+					getstring(text, p);
+					if(!text[0]) s_strcpy(text, "unnamed");
+					if(d->name[0])		  // already connected
+					{
+						if(strcmp(d->name, text))
+						{
+							string oldname, newname;
+							s_strcpy(oldname, cl.colorname(d));
+							s_strcpy(newname, cl.colorname(d, text));
+							conoutf("%s is now known as %s", oldname, newname);
+						}
+					}
+					else					// new client
+					{
+						c2sinit = false;	// send new players my info again
+						conoutf("connected: %s", cl.colorname(d, text));
+						loopv(cl.players)	// clear copies since new player doesn't have them
+							if(cl.players[i]) freeeditinfo(cl.players[i]->edit);
+						extern editinfo *localedit;
+						freeeditinfo(localedit);
+					}
+					s_strncpy(d->name, text, MAXNAMELEN);
+					getstring(text, p);
+					s_strncpy(d->team, text, MAXTEAMLEN);
+					break;
 				}
-				break;
-			}
 
-			case SV_SETTEAM:
-			{
-				int wn = getint(p);
-				getstring(text, p);
-				fpsent *w = wn==cl.player1->clientnum ? cl.player1 : cl.getclient(wn);
-				if(!w) return;
-				s_strncpy(w->team, text, MAXTEAMLEN);
-				break;
-			}
+				case SV_CDIS:
+					cl.clientdisconnected(getint(p));
+					break;
 
-			case SV_BASEINFO:
-			{
-				int base = getint(p);
-				string owner, enemy;
-				int converted = getint(p);
-				getstring(text, p);
-				s_strcpy(owner, text);
-				getstring(text, p);
-				s_strcpy(enemy, text);
-				if(m_capture(cl.gamemode)) cl.cpc.updatebase(base, owner, enemy, converted);
-				break;
-			}
-
-			case SV_BASES:
-			{
-				int base = 0, converted;
-				while((converted = getint(p))>=0)
+				case SV_SPAWN:
 				{
+					int lcn = getint(p);
+					fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+					parsestate(f, p);
+					f->state = CS_SPAWNING;
+					playsound(S_RESPAWN, &f->o);
+					break;
+				}
+
+				case SV_SPAWNSTATE:
+				{
+					int lcn = getint(p);
+					fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+					bool local = (f->clientnum==cl.player1->clientnum || f->bot);
+					if(f==cl.player1 && editmode) toggleedit();
+					f->respawn();
+					parsestate(f, p);
+					f->state = CS_ALIVE;
+					if(local)
+					{
+						cl.et.findplayerspawn(f, m_capture(cl.gamemode) ? cl.cpc.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_ttwo(cl.gamemode, cl.mutators))+1 : -1);
+						if(f==cl.player1)
+						{
+							cl.sb.showscores(false);
+							cl.lasthit = 0;
+						}
+						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
+					}
+					break;
+				}
+
+				case SV_SHOTFX:
+				{
+					int scn = getint(p), gun = getint(p);
+					vec from, to;
+					loopk(3) from[k] = getint(p)/DMF;
+					loopk(3) to[k] = getint(p)/DMF;
+					fpsent *s = cl.getclient(scn);
+					if(!s || gun < 0) break;
+					if(gun==GUN_SG) cl.ws.createrays(from, to);
+					s->gunstate[gun] = GUNSTATE_SHOOT;
+					s->gunwait[gun] = guntype[gun].adelay;
+					s->gunlast[gun] = lastmillis;
+					s->lastattackgun = gun;
+					cl.ws.shootv(gun, from, to, s, false);
+					break;
+				}
+
+				case SV_DAMAGE:
+				{
+					int tcn = getint(p),
+						acn = getint(p),
+						gun = getint(p),
+						flags = getint(p),
+						damage = getint(p),
+						health = getint(p),
+						millis = getint(p);
+					vec dir;
+					loopk(3) dir[k] = getint(p)/DNF;
+					fpsent *target = tcn==cl.player1->clientnum ? cl.player1 : cl.getclient(tcn),
+							*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
+					if(!target || !actor) break;
+					cl.damaged(gun, flags, damage, target, actor, millis, dir);
+					target->health = health; // just in case
+					break;
+				}
+
+				case SV_RELOAD:
+				{
+					int trg = getint(p), gun = getint(p), m = getint(p), amt = getint(p);
+					fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
+					if(!target || gun <= -1 || gun >= NUMGUNS) break;
+					target->gunreload(gun, amt, m);
+					break;
+				}
+
+				case SV_REGEN:
+				{
+					int trg = getint(p), amt = getint(p), ms = getint(p);
+					fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
+					if(!target) break;
+					target->health = amt;
+					target->lastregen = ms;
+					vec pos = target->o;
+					pos.z += 0.6f*(target->height + target->aboveeye) - target->height;
+					particle_splash(3, max((MAXHEALTH-target->health)/10, 1), 10000, target->o);
+					playsound(S_REGEN, &target->o, ((MAXHEALTH-target->health)*255)/MAXHEALTH);
+					break;
+				}
+
+				case SV_DIED:
+				{
+					int vcn = getint(p), acn = getint(p), frags = getint(p),
+						gun = getint(p), flags = getint(p), damage = getint(p);
+					fpsent *victim = vcn==cl.player1->clientnum ? cl.player1 : cl.getclient(vcn),
+							*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
+					if(!actor) break;
+					actor->frags = frags;
+					if(actor!=cl.player1 && !m_capture(cl.gamemode) && !m_ctf(cl.gamemode))
+					{
+						s_sprintfd(ds)("@%d", actor->frags);
+						particle_text(actor->abovehead(), ds, 9);
+					}
+					if(!victim) break;
+					cl.killed(gun, flags, damage, victim, actor);
+					break;
+				}
+
+				case SV_GUNSELECT:
+				{
+					int trg = getint(p), gun = getint(p), m = getint(p);
+					fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
+					if(!target || gun <= -1 || gun >= NUMGUNS) break;
+					target->gunswitch(gun, m);
+					break;
+				}
+
+				case SV_TAUNT:
+				{
+					int lcn = getint(p);
+					fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+					if(!f) break;
+					f->lasttaunt = lastmillis;
+					break;
+				}
+
+				case SV_RESUME:
+				{
+					for(;;)
+					{
+						int lcn = getint(p);
+						if(p.overread()) break;
+						fpsent *f = (lcn == cl.player1->clientnum ? cl.player1 : cl.getclient(lcn));
+						parsestate(f, p, true);
+					}
+					break;
+				}
+
+				case SV_ITEMSPAWN:
+				{
+					int i = getint(p);
+					if(!cl.et.ents.inrange(i)) break;
+					cl.et.setspawn(i, true);
+					playsound(S_ITEMSPAWN, &cl.et.ents[i]->o);
+					const char *name = cl.et.itemname(i);
+					if(name) particle_text(cl.et.ents[i]->o, name, 9);
+					break;
+				}
+
+				case SV_ITEMACC:			// server acknowledges that I picked up this item
+				{
+					int lcn = getint(p), m = getint(p), i = getint(p);
+					fpsent *d = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+					cl.et.useeffects(d, m, i);
+					break;
+				}
+
+				case SV_EDITVAR:
+				{
+					if(!d) return;
+					int t = getint(p);
+					bool commit = true;
+					getstring(text, p);
+					ident *id = idents->access(text);
+					if(!id || !id->world || id->type != t) commit = false;
+					switch(type)
+					{
+						case ID_VAR:
+						{
+							int val = getint(p);
+							if(id->maxval >= id->minval || val < id->minval || val > id->maxval)
+								commit = false;
+
+							if(commit)
+							{
+								setvar(text, val, true);
+								conoutf("%s updated the value of %s to %d", d->name, id->name, *id->storage.i);
+							}
+							break;
+						}
+						case ID_FVAR:
+						{
+							float val = getfloat(p);
+
+							if(commit)
+							{
+								setfvar(text, val, true);
+								conoutf("%s updated the value of %s to %f", d->name, id->name, *id->storage.f);
+							}
+							break;
+						}
+						case ID_SVAR:
+						{
+							string val;
+							getstring(val, p);
+							if(commit)
+							{
+								setsvar(text, val, true);
+								conoutf("%s updated the value of %s to %s", d->name, id->name, *id->storage.s);
+							}
+							break;
+						}
+						case ID_ALIAS:
+						{
+							string val;
+							getstring(val, p);
+							if(commit)
+							{
+								worldalias(text, val);
+								conoutf("%s updated the value of %s to %s", d->name, text, val);
+							}
+							break;
+						}
+						default: break;
+					}
+					break;
+				}
+
+				case SV_EDITF:			  // coop editing messages
+				case SV_EDITT:
+				case SV_EDITM:
+				case SV_FLIP:
+				case SV_COPY:
+				case SV_PASTE:
+				case SV_ROTATE:
+				case SV_REPLACE:
+				case SV_DELCUBE:
+				{
+					if(!d) return;
+					selinfo sel;
+					sel.o.x = getint(p); sel.o.y = getint(p); sel.o.z = getint(p);
+					sel.s.x = getint(p); sel.s.y = getint(p); sel.s.z = getint(p);
+					sel.grid = getint(p); sel.orient = getint(p);
+					sel.cx = getint(p); sel.cxs = getint(p); sel.cy = getint(p), sel.cys = getint(p);
+					sel.corner = getint(p);
+					int dir, mode, tex, newtex, mat, allfaces;
+					ivec moveo;
+					switch(type)
+					{
+						case SV_EDITF: dir = getint(p); mode = getint(p); mpeditface(dir, mode, sel, false); break;
+						case SV_EDITT: tex = getint(p); allfaces = getint(p); mpedittex(tex, allfaces, sel, false); break;
+						case SV_EDITM: mat = getint(p); mpeditmat(mat, sel, false); break;
+						case SV_FLIP: mpflip(sel, false); break;
+						case SV_COPY: if(d) mpcopy(d->edit, sel, false); break;
+						case SV_PASTE: if(d) mppaste(d->edit, sel, false); break;
+						case SV_ROTATE: dir = getint(p); mprotate(dir, sel, false); break;
+						case SV_REPLACE: tex = getint(p); newtex = getint(p); mpreplacetex(tex, newtex, sel, false); break;
+						case SV_DELCUBE: mpdelcube(sel, false); break;
+					}
+					break;
+				}
+				case SV_REMIP:
+				{
+					if(!d) return;
+					conoutf("%s remipped", cl.colorname(d));
+					mpremip(false);
+					break;
+				}
+				case SV_EDITENT:			// coop edit of ent
+				{
+					if(!d) return;
+					int i = getint(p);
+					float x = getint(p)/DMF, y = getint(p)/DMF, z = getint(p)/DMF;
+					int type = getint(p);
+					int attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p);
+
+					mpeditent(i, vec(x, y, z), type, attr1, attr2, attr3, attr4, false);
+					break;
+				}
+
+				case SV_EDITLINK:
+				{
+					if(!d) return;
+					int b = getint(p), index = getint(p), node = getint(p);
+					cl.et.linkents(index, node, b!=0, false, false);
+				}
+
+				case SV_PONG:
+					addmsg(SV_CLIENTPING, "i", cl.player1->ping = (cl.player1->ping*5+lastmillis-getint(p))/6);
+					break;
+
+				case SV_CLIENTPING:
+					if(!d) return;
+					d->ping = getint(p);
+					break;
+
+				case SV_TIMEUP:
+					cl.timeupdate(getint(p));
+					break;
+
+				case SV_SERVMSG:
+					getstring(text, p);
+					conoutf("%s", text);
+					break;
+
+				case SV_SENDDEMOLIST:
+				{
+					int demos = getint(p);
+					if(!demos) conoutf("no demos available");
+					else loopi(demos)
+					{
+						getstring(text, p);
+						conoutf("%d. %s", i+1, text);
+					}
+					break;
+				}
+
+				case SV_DEMOPLAYBACK:
+				{
+					int on = getint(p);
+					if(on) cl.player1->state = CS_SPECTATOR;
+					else stopdemo();
+					demoplayback = on!=0;
+					break;
+				}
+
+				case SV_CURRENTMASTER:
+				{
+					int mn = getint(p), priv = getint(p);
+					cl.player1->privilege = PRIV_NONE;
+					loopv(cl.players) if(cl.players[i]) cl.players[i]->privilege = PRIV_NONE;
+					if(mn>=0)
+					{
+						fpsent *m = mn==cl.player1->clientnum ? cl.player1 : cl.newclient(mn);
+						m->privilege = priv;
+					}
+					break;
+				}
+
+				case SV_EDITMODE:
+				{
+					int val = getint(p);
+					if(!d) break;
+					if(val) d->state = CS_EDITING;
+					else d->state = CS_ALIVE;
+					break;
+				}
+
+				case SV_SPECTATOR:
+				{
+					int sn = getint(p), val = getint(p);
+					fpsent *s;
+					if(sn==cl.player1->clientnum)
+					{
+						spectator = val!=0;
+						s = cl.player1;
+					}
+					else s = cl.newclient(sn);
+					if(!s) return;
+					if(val)
+					{
+						if(s==cl.player1 && editmode) toggleedit();
+						s->state = CS_SPECTATOR;
+					}
+					else if(s->state==CS_SPECTATOR)
+					{
+						s->state = CS_DEAD;
+						if(s==cl.player1) cl.sb.showscores(true);
+					}
+					break;
+				}
+
+				case SV_SETTEAM:
+				{
+					int wn = getint(p);
+					getstring(text, p);
+					fpsent *w = wn==cl.player1->clientnum ? cl.player1 : cl.getclient(wn);
+					if(!w) return;
+					s_strncpy(w->team, text, MAXTEAMLEN);
+					break;
+				}
+
+				case SV_BASEINFO:
+				{
+					int base = getint(p);
 					string owner, enemy;
+					int converted = getint(p);
 					getstring(text, p);
 					s_strcpy(owner, text);
 					getstring(text, p);
 					s_strcpy(enemy, text);
-					cl.cpc.initbase(base++, owner, enemy, converted);
-				}
-				break;
-			}
-
-			case SV_TEAMSCORE:
-			{
-				getstring(text, p);
-				int total = getint(p);
-				if(m_capture(cl.gamemode)) cl.cpc.setscore(text, total);
-				break;
-			}
-
-            case SV_INITFLAGS:
-            {
-                cl.ctf.parseflags(p, m_ctf(cl.gamemode));
-                break;
-            }
-
-            case SV_DROPFLAG:
-            {
-                int ocn = getint(p), flag = getint(p);
-                vec droploc;
-                loopk(3) droploc[k] = getint(p)/DMF;
-                fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
-                if(m_ctf(cl.gamemode)) cl.ctf.dropflag(o, flag, droploc);
-                break;
-            }
-
-            case SV_SCOREFLAG:
-            {
-                int ocn = getint(p), relayflag = getint(p), goalflag = getint(p), score = getint(p);
-                fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
-                if(m_ctf(cl.gamemode)) cl.ctf.scoreflag(o, relayflag, goalflag, score);
-                break;
-            }
-
-            case SV_RETURNFLAG:
-            {
-                int ocn = getint(p), flag = getint(p);
-                fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
-                if(m_ctf(cl.gamemode)) cl.ctf.returnflag(o, flag);
-                break;
-            }
-
-            case SV_TAKEFLAG:
-            {
-                int ocn = getint(p), flag = getint(p);
-                fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
-                if(m_ctf(cl.gamemode)) cl.ctf.takeflag(o, flag);
-                break;
-            }
-
-            case SV_RESETFLAG:
-            {
-                int flag = getint(p);
-                if(m_ctf(cl.gamemode)) cl.ctf.resetflag(flag);
-                break;
-            }
-
-			case SV_NEWMAP:
-			{
-				int size = getint(p);
-				if(size>=0) emptymap(size, true);
-				else enlargemap(true);
-				if(d && d!=cl.player1)
-				{
-					int newsize = 0;
-					while(1<<newsize < getworldsize()) newsize++;
-					conoutf(size>=0 ? "%s started a new map of size %d" : "%s enlarged the map to size %d", cl.colorname(d), newsize);
-				}
-				break;
-			}
-
-			case SV_INITBOT:
-			{
-				int on = getint(p), bn = getint(p);
-				fpsent *b = cl.newclient(bn);
-				if(!b)
-				{
-					getstring(text, p);
-					getstring(text, p);
+					if(m_capture(cl.gamemode)) cl.cpc.updatebase(base, owner, enemy, converted);
 					break;
 				}
 
-				b->ownernum = on;
-				b->state = CS_DEAD;
-				getstring(text, p);
-				s_strncpy(b->name, text, MAXNAMELEN);
-				getstring(text, p);
-				s_strncpy(b->team, text, MAXTEAMLEN);
+				case SV_BASES:
+				{
+					int base = 0, converted;
+					while((converted = getint(p))>=0)
+					{
+						string owner, enemy;
+						getstring(text, p);
+						s_strcpy(owner, text);
+						getstring(text, p);
+						s_strcpy(enemy, text);
+						cl.cpc.initbase(base++, owner, enemy, converted);
+					}
+					break;
+				}
 
-				conoutf("bot added: %s (%s) [%d]", cl.colorname(b), b->team, b->ownernum);
-				if(b->ownernum==cl.player1->clientnum) b->bot = new botinfo();
-				break;
+				case SV_TEAMSCORE:
+				{
+					getstring(text, p);
+					int total = getint(p);
+					if(m_capture(cl.gamemode)) cl.cpc.setscore(text, total);
+					break;
+				}
+
+				case SV_INITFLAGS:
+				{
+					cl.ctf.parseflags(p, m_ctf(cl.gamemode));
+					break;
+				}
+
+				case SV_DROPFLAG:
+				{
+					int ocn = getint(p), flag = getint(p);
+					vec droploc;
+					loopk(3) droploc[k] = getint(p)/DMF;
+					fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+					if(m_ctf(cl.gamemode)) cl.ctf.dropflag(o, flag, droploc);
+					break;
+				}
+
+				case SV_SCOREFLAG:
+				{
+					int ocn = getint(p), relayflag = getint(p), goalflag = getint(p), score = getint(p);
+					fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+					if(m_ctf(cl.gamemode)) cl.ctf.scoreflag(o, relayflag, goalflag, score);
+					break;
+				}
+
+				case SV_RETURNFLAG:
+				{
+					int ocn = getint(p), flag = getint(p);
+					fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+					if(m_ctf(cl.gamemode)) cl.ctf.returnflag(o, flag);
+					break;
+				}
+
+				case SV_TAKEFLAG:
+				{
+					int ocn = getint(p), flag = getint(p);
+					fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+					if(m_ctf(cl.gamemode)) cl.ctf.takeflag(o, flag);
+					break;
+				}
+
+				case SV_RESETFLAG:
+				{
+					int flag = getint(p);
+					if(m_ctf(cl.gamemode)) cl.ctf.resetflag(flag);
+					break;
+				}
+
+				case SV_NEWMAP:
+				{
+					int size = getint(p);
+					if(size>=0) emptymap(size, true);
+					else enlargemap(true);
+					if(d && d!=cl.player1)
+					{
+						int newsize = 0;
+						while(1<<newsize < getworldsize()) newsize++;
+						conoutf(size>=0 ? "%s started a new map of size %d" : "%s enlarged the map to size %d", cl.colorname(d), newsize);
+					}
+					break;
+				}
+
+				case SV_INITBOT:
+				{
+					int on = getint(p), bn = getint(p);
+					fpsent *b = cl.newclient(bn);
+					if(!b)
+					{
+						getstring(text, p);
+						getstring(text, p);
+						break;
+					}
+
+					b->ownernum = on;
+					b->state = CS_DEAD;
+					getstring(text, p);
+					s_strncpy(b->name, text, MAXNAMELEN);
+					getstring(text, p);
+					s_strncpy(b->team, text, MAXTEAMLEN);
+
+					conoutf("bot added: %s (%s) [%d]", cl.colorname(b), b->team, b->ownernum);
+					if(b->ownernum==cl.player1->clientnum) b->bot = new botinfo();
+					break;
+				}
+
+				default:
+				{
+					neterr("type");
+					return;
+				}
 			}
-
-			default:
-				neterr("type");
-				return;
+			//conoutf("[client] msg: %d, prev: %d", type, prevtype);
 		}
 	}
 

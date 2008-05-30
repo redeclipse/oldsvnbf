@@ -943,7 +943,7 @@ struct GAMESERVER : igameserver
 		}
 		if(reliable) reliablemessages = true;
 		char text[MAXTRANS];
-		int type;
+		int type = -1, prevtype = -1;
 		clientinfo *ci = sender>=0 ? (clientinfo *)getinfo(sender) : NULL;
 		#define QUEUE_MSG { while(curmsg<p.length()) ci->messages.add(p.buf[curmsg++]); }
         #define QUEUE_BUF(size, body) { \
@@ -969,586 +969,591 @@ struct GAMESERVER : igameserver
 		}
 
 		int curmsg;
-        while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci))
+        while((curmsg = p.length()) < p.maxlen)
 		{
-			case SV_POS:
+			prevtype = type;
+			switch(type = checktype(getint(p), ci))
 			{
-				int lcn = getint(p);
-				if(lcn<0)
+				case SV_POS:
 				{
-					disconnect_client(sender, DISC_CN);
-					return;
-				}
-
-				bool havecn = true;
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum != sender && cp->state.ownernum != sender))
-					havecn = false;
-
-				vec oldpos, pos;
-				loopi(3) pos[i] = getuint(p)/DMF;
-				if(havecn)
-				{
-					oldpos = cp->state.o;
-					cp->state.o = pos;
-				}
-				loopi(8) getint(p);
-                int physstate = getuint(p);
-                if(physstate&0x20) loopi(2) getint(p);
-                if(physstate&0x10) getint(p);
-                if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
-				{
-					cp->position.setsizenodelete(0);
-					while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
-				}
-				uint f = getuint(p);
-                if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
-				{
-					f &= 0xF;
-					curmsg = p.length();
-					ucharbuf buf = cp->position.reserve(4);
-					putuint(buf, f);
-					cp->position.addbuf(buf);
-				}
-				if(havecn)
-				{
-					if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, oldpos, cp->state.o);
-					mutate(mut->moved(cp, oldpos, cp->state.o));
-				}
-				break;
-			}
-
-			case SV_EDITMODE:
-			{
-				int val = getint(p);
-				if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || (gamemode!=1)) break;
-				if(smode)
-				{
-					if(val) smode->leavegame(ci);
-					else smode->entergame(ci);
-				}
-				mutate({
-					if (val) mut->leavegame(ci);
-					else mut->entergame(ci);
-				});
-				ci->state.state = val ? CS_EDITING : CS_ALIVE;
-				if(val)
-				{
-					ci->events.setsizenodelete(0);
-                    ci->state.rockets.reset();
-                    ci->state.grenades.reset();
-                    ci->state.flames.reset();
-				}
-				QUEUE_MSG;
-				break;
-			}
-
-			case SV_TRYSPAWN:
-            {
-				int lcn = getint(p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-				int nospawn = 0;
-				if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
-				mutate(if (!mut->canspawn(cp, false, true)) { nospawn++; });
-                if(cp->state.state!=CS_DEAD || cp->state.lastspawn>=0 || nospawn)
-                	break;
-				if(cp->state.lastdeath) cp->state.respawn();
-				sendspawn(cp);
-				break;
-            }
-
-			case SV_GUNSELECT:
-			{
-                int lcn = getint(p), id = getint(p), gun = getint(p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-				gameevent &gunsel = cp->addevent();
-				gunsel.type = GE_SWITCH;
-				gunsel.gunsel.id = id;
-				gunsel.gunsel.gun = gun;
-                seteventmillis(gunsel.gunsel, cp->state.canswitch(gunsel.gunsel.gun, gamemillis));
-                break;
-			}
-
-			case SV_SPAWN:
-			{
-				int lcn = getint(p), ls = getint(p), gunselect = getint(p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-				if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD) || ls!=cp->state.lifesequence || cp->state.lastspawn<0)
-					break;
-                cp->state.lastspawn = -1;
-                cp->state.state = CS_ALIVE;
-                cp->state.gunselect = gunselect;
-                if(smode) smode->spawned(cp);
-				mutate(mut->spawned(cp););
-                QUEUE_BUF(100,
-                {
-                    putint(buf, SV_SPAWN);
-                    sendstate(cp, buf);
-                });
-				break;
-			}
-
-			case SV_SUICIDE:
-			{
-                int lcn = getint(p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-				gameevent &suicide = cp->addevent();
-				suicide.type = GE_SUICIDE;
-				break;
-			}
-
-			case SV_SHOOT:
-			{
-                int lcn = getint(p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-				gameevent &shot = cp->addevent();
-				shot.type = GE_SHOT;
-				shot.shot.id = getint(p);
-				shot.shot.gun = getint(p);
-                seteventmillis(shot.shot, cp->state.canshoot(shot.shot.gun, gamemillis));
-				loopk(3) shot.shot.from[k] = getint(p)/DMF;
-				loopk(3) shot.shot.to[k] = getint(p)/DMF;
-				int hits = getint(p);
-				loopk(hits)
-				{
-					gameevent &hit = cp->addevent();
-					hit.type = GE_HIT;
-					hit.hit.flags = getint(p);
-					hit.hit.target = getint(p);
-					hit.hit.lifesequence = getint(p);
-					hit.hit.rays = getint(p);
-					loopk(3) hit.hit.dir[k] = getint(p)/DNF;
-				}
-				break;
-			}
-
-			case SV_RELOAD:
-			{
-                int lcn = getint(p), id = getint(p), gun = getint(p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-				gameevent &reload = cp->addevent();
-				reload.type = GE_RELOAD;
-				reload.reload.id = id;
-				reload.reload.gun = gun;
-                seteventmillis(reload.reload, cp->state.canreload(reload.reload.gun, gamemillis));
-                break;
-			}
-
-			case SV_EXPLODE:
-			{
-                int lcn = getint(p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-				gameevent &exp = cp->addevent();
-				exp.type = GE_EXPLODE;
-				exp.explode.id = getint(p);
-                seteventmillis(exp.explode, true);
-				exp.explode.gun = getint(p);
-                exp.explode.id = getint(p);
-				int hits = getint(p);
-				loopk(hits)
-				{
-					gameevent &hit = cp->addevent();
-					hit.type = GE_HIT;
-					hit.hit.flags = getint(p);
-					hit.hit.target = getint(p);
-					hit.hit.lifesequence = getint(p);
-					hit.hit.dist = getint(p)/DMF;
-					loopk(3) hit.hit.dir[k] = getint(p)/DNF;
-				}
-				break;
-			}
-
-			case SV_ITEMUSE:
-			{
-                int lcn = getint(p), id = getint(p), ent = getint(p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-				gameevent &use = cp->addevent();
-				use.type = GE_USE;
-				use.use.ent = ent;
-				use.use.id = id;
-                seteventmillis(use.use, sents.inrange(ent) ? cp->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false);
-				break;
-			}
-
-			case SV_TEXT:
-            {
-                int lcn = getint(p), flags = getint(p);
-                getstring(text, p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-                if(cp->state.state == CS_SPECTATOR || (flags&SAY_TEAM && !cp->team[0])) break;
-                loopv(clients)
-                {
-                    clientinfo *t = clients[i];
-                    if(t == cp || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && strcmp(cp->team, t->team))) continue;
-                    sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
-                }
-                break;
-            }
-
-			case SV_COMMAND:
-			{
-				getstring(text, p);
-				filtertext(text, text);
-				//servcmd(ci, text, false);
-				break;
-			}
-
-			case SV_INITC2S:
-			{
-				QUEUE_MSG;
-				bool connected = !ci->name[0];
-				getstring(text, p);
-				if(!text[0]) s_strcpy(text, "unnamed");
-				QUEUE_STR(text);
-				s_strncpy(ci->name, text, MAXNAMELEN+1);
-				if(connected)
-				{
-                    savedscore &sc = findscore(ci, false);
-                    if(&sc)
-                    {
-                        sc.restore(ci->state);
-                        gamestate &gs = ci->state;
-                        sendf(-1, 1, "ri7vi", SV_RESUME, sender,
-                            gs.state, gs.frags,
-                            gs.lifesequence, gs.health,
-                            gs.gunselect, GUN_PISTOL-GUN_SG+1, &gs.ammo[GUN_SG], -1);
-                    }
-				}
-				getstring(text, p);
-				if(connected && m_team(gamemode, mutators))
-				{
-					const char *worst = chooseworstteam(text);
-					if(worst)
+					int lcn = getint(p);
+					if(lcn<0)
 					{
-						s_strcpy(text, worst);
-						sendf(sender, 1, "riis", SV_SETTEAM, sender, worst);
-						QUEUE_STR(worst);
+						disconnect_client(sender, DISC_CN);
+						return;
+					}
+
+					bool havecn = true;
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum != sender && cp->state.ownernum != sender))
+						havecn = false;
+
+					vec oldpos, pos;
+					loopi(3) pos[i] = getuint(p)/DMF;
+					if(havecn)
+					{
+						oldpos = cp->state.o;
+						cp->state.o = pos;
+					}
+					loopi(8) getint(p);
+					int physstate = getuint(p);
+					if(physstate&0x20) loopi(2) getint(p);
+					if(physstate&0x10) getint(p);
+					if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
+					{
+						cp->position.setsizenodelete(0);
+						while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
+					}
+					uint f = getuint(p);
+					if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
+					{
+						f &= 0xF;
+						curmsg = p.length();
+						ucharbuf buf = cp->position.reserve(4);
+						putuint(buf, f);
+						cp->position.addbuf(buf);
+					}
+					if(havecn)
+					{
+						if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, oldpos, cp->state.o);
+						mutate(mut->moved(cp, oldpos, cp->state.o));
+					}
+					break;
+				}
+
+				case SV_EDITMODE:
+				{
+					int val = getint(p);
+					if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || (gamemode!=1)) break;
+					if(smode)
+					{
+						if(val) smode->leavegame(ci);
+						else smode->entergame(ci);
+					}
+					mutate({
+						if (val) mut->leavegame(ci);
+						else mut->entergame(ci);
+					});
+					ci->state.state = val ? CS_EDITING : CS_ALIVE;
+					if(val)
+					{
+						ci->events.setsizenodelete(0);
+						ci->state.rockets.reset();
+						ci->state.grenades.reset();
+						ci->state.flames.reset();
+					}
+					QUEUE_MSG;
+					break;
+				}
+
+				case SV_TRYSPAWN:
+				{
+					int lcn = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
+					int nospawn = 0;
+					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
+					mutate(if (!mut->canspawn(cp, false, true)) { nospawn++; });
+					if(cp->state.state!=CS_DEAD || cp->state.lastspawn>=0 || nospawn)
+						break;
+					if(cp->state.lastdeath) cp->state.respawn();
+					sendspawn(cp);
+					break;
+				}
+
+				case SV_GUNSELECT:
+				{
+					int lcn = getint(p), id = getint(p), gun = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
+					gameevent &gunsel = cp->addevent();
+					gunsel.type = GE_SWITCH;
+					gunsel.gunsel.id = id;
+					gunsel.gunsel.gun = gun;
+					seteventmillis(gunsel.gunsel, cp->state.canswitch(gunsel.gunsel.gun, gamemillis));
+					break;
+				}
+
+				case SV_SPAWN:
+				{
+					int lcn = getint(p), ls = getint(p), gunselect = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
+					if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD) || ls!=cp->state.lifesequence || cp->state.lastspawn<0)
+						break;
+					cp->state.lastspawn = -1;
+					cp->state.state = CS_ALIVE;
+					cp->state.gunselect = gunselect;
+					if(smode) smode->spawned(cp);
+					mutate(mut->spawned(cp););
+					QUEUE_BUF(100,
+					{
+						putint(buf, SV_SPAWN);
+						sendstate(cp, buf);
+					});
+					break;
+				}
+
+				case SV_SUICIDE:
+				{
+					int lcn = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
+					gameevent &suicide = cp->addevent();
+					suicide.type = GE_SUICIDE;
+					break;
+				}
+
+				case SV_SHOOT:
+				{
+					int lcn = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
+					gameevent &shot = cp->addevent();
+					shot.type = GE_SHOT;
+					shot.shot.id = getint(p);
+					shot.shot.gun = getint(p);
+					seteventmillis(shot.shot, cp->state.canshoot(shot.shot.gun, gamemillis));
+					loopk(3) shot.shot.from[k] = getint(p)/DMF;
+					loopk(3) shot.shot.to[k] = getint(p)/DMF;
+					int hits = getint(p);
+					loopk(hits)
+					{
+						gameevent &hit = cp->addevent();
+						hit.type = GE_HIT;
+						hit.hit.flags = getint(p);
+						hit.hit.target = getint(p);
+						hit.hit.lifesequence = getint(p);
+						hit.hit.rays = getint(p);
+						loopk(3) hit.hit.dir[k] = getint(p)/DNF;
+					}
+					break;
+				}
+
+				case SV_RELOAD:
+				{
+					int lcn = getint(p), id = getint(p), gun = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
+					gameevent &reload = cp->addevent();
+					reload.type = GE_RELOAD;
+					reload.reload.id = id;
+					reload.reload.gun = gun;
+					seteventmillis(reload.reload, cp->state.canreload(reload.reload.gun, gamemillis));
+					break;
+				}
+
+				case SV_EXPLODE:
+				{
+					int lcn = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
+					gameevent &exp = cp->addevent();
+					exp.type = GE_EXPLODE;
+					exp.explode.id = getint(p);
+					seteventmillis(exp.explode, true);
+					exp.explode.gun = getint(p);
+					exp.explode.id = getint(p);
+					int hits = getint(p);
+					loopk(hits)
+					{
+						gameevent &hit = cp->addevent();
+						hit.type = GE_HIT;
+						hit.hit.flags = getint(p);
+						hit.hit.target = getint(p);
+						hit.hit.lifesequence = getint(p);
+						hit.hit.dist = getint(p)/DMF;
+						loopk(3) hit.hit.dir[k] = getint(p)/DNF;
+					}
+					break;
+				}
+
+				case SV_ITEMUSE:
+				{
+					int lcn = getint(p), id = getint(p), ent = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
+					gameevent &use = cp->addevent();
+					use.type = GE_USE;
+					use.use.ent = ent;
+					use.use.id = id;
+					seteventmillis(use.use, sents.inrange(ent) ? cp->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false);
+					break;
+				}
+
+				case SV_TEXT:
+				{
+					int lcn = getint(p), flags = getint(p);
+					getstring(text, p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
+					if(cp->state.state == CS_SPECTATOR || (flags&SAY_TEAM && !cp->team[0])) break;
+					loopv(clients)
+					{
+						clientinfo *t = clients[i];
+						if(t == cp || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && strcmp(cp->team, t->team))) continue;
+						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
+					}
+					break;
+				}
+
+				case SV_COMMAND:
+				{
+					getstring(text, p);
+					filtertext(text, text);
+					//servcmd(ci, text, false);
+					break;
+				}
+
+				case SV_INITC2S:
+				{
+					QUEUE_MSG;
+					bool connected = !ci->name[0];
+					getstring(text, p);
+					if(!text[0]) s_strcpy(text, "unnamed");
+					QUEUE_STR(text);
+					s_strncpy(ci->name, text, MAXNAMELEN+1);
+					if(connected)
+					{
+						savedscore &sc = findscore(ci, false);
+						if(&sc)
+						{
+							sc.restore(ci->state);
+							gamestate &gs = ci->state;
+							sendf(-1, 1, "ri7vi", SV_RESUME, sender,
+								gs.state, gs.frags,
+								gs.lifesequence, gs.health,
+								gs.gunselect, NUMGUNS, &gs.ammo[0], -1);
+						}
+					}
+					getstring(text, p);
+					if(connected && m_team(gamemode, mutators))
+					{
+						const char *worst = chooseworstteam(text);
+						if(worst)
+						{
+							s_strcpy(text, worst);
+							sendf(sender, 1, "riis", SV_SETTEAM, sender, worst);
+							QUEUE_STR(worst);
+						}
+						else QUEUE_STR(text);
 					}
 					else QUEUE_STR(text);
+					if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, text)) smode->changeteam(ci, ci->team, text);
+					mutate(mut->changeteam(ci, ci->team, text));
+					s_strncpy(ci->team, text, MAXTEAMLEN+1);
+					QUEUE_MSG;
+					if(connected && !m_duel(gamemode, mutators))
+						sendf(sender, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, "fight!");
+					break;
 				}
-				else QUEUE_STR(text);
-				if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, text)) smode->changeteam(ci, ci->team, text);
-				mutate(mut->changeteam(ci, ci->team, text));
-				s_strncpy(ci->team, text, MAXTEAMLEN+1);
-				QUEUE_MSG;
-				if(connected && !m_duel(gamemode, mutators))
-					sendf(sender, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, "fight!");
-				break;
-			}
 
-			case SV_MAPVOTE:
-			case SV_MAPCHANGE:
-			{
-				getstring(text, p);
-				filtertext(text, text);
-				int reqmode = getint(p), reqmuts = getint(p);
-				if(type!=SV_MAPVOTE && !mapreload) break;
-				if(!m_mp(reqmode)) reqmode = G_DEATHMATCH;
-				vote(text, reqmode, reqmuts, sender);
-				break;
-			}
-
-			case SV_ITEMLIST:
-			{
-                bool commit = ci->state.state!=CS_SPECTATOR && notgotitems;
-				int n;
-				while((n = getint(p))!=-1)
+				case SV_MAPVOTE:
+				case SV_MAPCHANGE:
 				{
-					server_entity se = { getint(p), getint(p), getint(p), getint(p), getint(p), getint(p), false, 0 },
-						sn = { 0, 0, 0, 0, 0, 0, false, 0 };
+					getstring(text, p);
+					filtertext(text, text);
+					int reqmode = getint(p), reqmuts = getint(p);
+					if(type!=SV_MAPVOTE && !mapreload) break;
+					if(!m_mp(reqmode)) reqmode = G_DEATHMATCH;
+					vote(text, reqmode, reqmuts, sender);
+					break;
+				}
 
-					if (commit)
+				case SV_ITEMLIST:
+				{
+					bool commit = ci->state.state!=CS_SPECTATOR && notgotitems;
+					int n;
+					while((n = getint(p))!=-1)
 					{
-						while(sents.length()<n) sents.add(sn);
-						sents.add(se);
-						sents[n].spawned = m_insta(gamemode, mutators) ? false : true;
+						server_entity se = { getint(p), getint(p), getint(p), getint(p), getint(p), getint(p), false, 0 },
+							sn = { 0, 0, 0, 0, 0, 0, false, 0 };
+
+						if (commit)
+						{
+							while(sents.length()<n) sents.add(sn);
+							sents.add(se);
+							sents[n].spawned = m_insta(gamemode, mutators) ? false : true;
+						}
 					}
+					break;
 				}
-				break;
-			}
 
-			case SV_TEAMSCORE:
-				getstring(text, p);
-				getint(p);
-				QUEUE_MSG;
-				break;
+				case SV_TEAMSCORE:
+					getstring(text, p);
+					getint(p);
+					QUEUE_MSG;
+					break;
 
-			case SV_BASEINFO:
-				getint(p);
-				getint(p);
-				getstring(text, p);
-				getstring(text, p);
-				QUEUE_MSG;
-				break;
+				case SV_BASEINFO:
+					getint(p);
+					getint(p);
+					getstring(text, p);
+					getstring(text, p);
+					QUEUE_MSG;
+					break;
 
-			case SV_BASES:
-                if(ci->state.state!=CS_SPECTATOR && smode==&capturemode) capturemode.parsebases(p);
-				break;
+				case SV_BASES:
+					if(ci->state.state!=CS_SPECTATOR && smode==&capturemode) capturemode.parsebases(p);
+					break;
 
-            case SV_TAKEFLAG:
-            {
-                int flag = getint(p);
-                if(ci->state.state!=CS_SPECTATOR && smode==&ctfmode) ctfmode.takeflag(ci, flag);
-                break;
-            }
-
-            case SV_INITFLAGS:
-                if(ci->state.state!=CS_SPECTATOR && smode==&ctfmode) ctfmode.parseflags(p);
-                break;
-
-			case SV_PING:
-				sendf(sender, 1, "i2", SV_PONG, getint(p));
-				break;
-
-            case SV_CLIENTPING:
-                getint(p);
-                QUEUE_MSG;
-                break;
-
-			case SV_MASTERMODE:
-			{
-				int mm = getint(p);
-				if(ci->privilege && mm>=MM_OPEN && mm<=MM_PRIVATE)
+				case SV_TAKEFLAG:
 				{
-					if(ci->privilege>=PRIV_ADMIN || (mastermask&(1<<mm)))
+					int flag = getint(p);
+					if(ci->state.state!=CS_SPECTATOR && smode==&ctfmode) ctfmode.takeflag(ci, flag);
+					break;
+				}
+
+				case SV_INITFLAGS:
+					if(ci->state.state!=CS_SPECTATOR && smode==&ctfmode) ctfmode.parseflags(p);
+					break;
+
+				case SV_PING:
+					sendf(sender, 1, "i2", SV_PONG, getint(p));
+					break;
+
+				case SV_CLIENTPING:
+					getint(p);
+					QUEUE_MSG;
+					break;
+
+				case SV_MASTERMODE:
+				{
+					int mm = getint(p);
+					if(ci->privilege && mm>=MM_OPEN && mm<=MM_PRIVATE)
 					{
-						mastermode = mm;
-						s_sprintfd(s)("mastermode is now %d", mastermode);
-						sendservmsg(s);
+						if(ci->privilege>=PRIV_ADMIN || (mastermask&(1<<mm)))
+						{
+							mastermode = mm;
+							s_sprintfd(s)("mastermode is now %d", mastermode);
+							sendservmsg(s);
+						}
+						else
+						{
+							s_sprintfd(s)("mastermode %d is disabled on this server", mm);
+							sendf(sender, 1, "ris", SV_SERVMSG, s);
+						}
 					}
-					else
+					break;
+				}
+
+				case SV_CLEARBANS:
+				{
+					if(ci->privilege)
 					{
-						s_sprintfd(s)("mastermode %d is disabled on this server", mm);
-						sendf(sender, 1, "ris", SV_SERVMSG, s);
+						bannedips.setsize(0);
+						sendservmsg("cleared all bans");
 					}
+					break;
 				}
-				break;
-			}
 
-			case SV_CLEARBANS:
-			{
-                if(ci->privilege)
-                {
-					bannedips.setsize(0);
-					sendservmsg("cleared all bans");
-                }
-				break;
-			}
-
-			case SV_KICK:
-			{
-				int victim = getint(p);
-				if(ci->privilege && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getinfo(victim))
+				case SV_KICK:
 				{
-					ban &b = bannedips.add();
-					b.time = totalmillis;
-					b.ip = getclientip(victim);
-					disconnect_client(victim, DISC_KICK);
-				}
-				break;
-			}
-
-			case SV_SPECTATOR:
-			{
-				int spectator = getint(p), val = getint(p);
-                if(!ci->privilege && (ci->state.state==CS_SPECTATOR || spectator!=sender)) break;
-				clientinfo *spinfo = (clientinfo *)getinfo(spectator);
-				if(!spinfo) break;
-
-				sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
-
-				if(spinfo->state.state!=CS_SPECTATOR && val)
-				{
-                    if(smode) smode->leavegame(spinfo);
-					mutate(mut->leavegame(spinfo));
-					spinfo->state.state = CS_SPECTATOR;
-				}
-				else if(spinfo->state.state==CS_SPECTATOR && !val)
-				{
-					spinfo->state.state = CS_DEAD;
-					spinfo->state.respawn();
-					int nospawn = 0;
-					if (smode && !smode->canspawn(spinfo)) { nospawn++; }
-					mutate({
-						if (!mut->canspawn(spinfo)) { nospawn++; }
-					});
-					if (!nospawn) sendspawn(spinfo);
-				}
-				break;
-			}
-
-			case SV_SETTEAM:
-			{
-				int who = getint(p);
-				getstring(text, p);
-				if(!ci->privilege || who<0 || who>=getnumclients()) break;
-				clientinfo *wi = (clientinfo *)getinfo(who);
-				if(!wi) break;
-				if (wi->state.state == CS_ALIVE && strcmp(wi->team, text))
-				{
-					if (smode) smode->changeteam(wi, wi->team, text);
-					mutate(mut->changeteam(wi, wi->team, text));
-				}
-				s_strncpy(wi->team, text, MAXTEAMLEN+1);
-				sendf(sender, 1, "riis", SV_SETTEAM, who, text);
-				QUEUE_INT(SV_SETTEAM);
-				QUEUE_INT(who);
-				QUEUE_STR(text);
-				break;
-			}
-
-			case SV_FORCEINTERMISSION:
-				if(m_sp(gamemode)) startintermission();
-				break;
-
-			case SV_RECORDDEMO:
-			{
-                int val = getint(p);
-				if(ci->privilege<PRIV_ADMIN) break;
-                demonextmatch = val!=0;
-				s_sprintfd(msg)("demo recording is %s for next match", demonextmatch ? "enabled" : "disabled");
-				sendservmsg(msg);
-				break;
-			}
-
-			case SV_STOPDEMO:
-			{
-				if(ci->privilege<PRIV_ADMIN) break;
-				if(m_demo(gamemode)) enddemoplayback();
-				else enddemorecord();
-				break;
-			}
-
-			case SV_CLEARDEMOS:
-			{
-				int demo = getint(p);
-				if(ci->privilege<PRIV_ADMIN) break;
-				cleardemos(demo);
-				break;
-			}
-
-			case SV_LISTDEMOS:
-                if(ci->state.state==CS_SPECTATOR) break;
-				listdemos(sender);
-				break;
-
-			case SV_GETDEMO:
-            {
-                int n = getint(p);
-                if(ci->state.state==CS_SPECTATOR) break;
-                senddemo(sender, n);
-                break;
-            }
-
-			case SV_EDITVAR:
-			{
-				QUEUE_INT(SV_EDITVAR);
-				int t = getint(p);
-				QUEUE_INT(t);
-				getstring(text, p);
-				QUEUE_STR(text);
-				switch(t)
-				{
-					case ID_VAR:
+					int victim = getint(p);
+					if(ci->privilege && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getinfo(victim))
 					{
-						QUEUE_INT(getint(p));
-						break;
+						ban &b = bannedips.add();
+						b.time = totalmillis;
+						b.ip = getclientip(victim);
+						disconnect_client(victim, DISC_KICK);
 					}
-					case ID_FVAR:
-					{
-						QUEUE_FLT(getfloat(p));
-						break;
-					}
-					case ID_SVAR:
-					case ID_ALIAS:
-					{
-						getstring(text, p);
-						QUEUE_STR(text);
-						break;
-					}
-					default: break;
+					break;
 				}
-				break;
-			}
 
-			case SV_GETMAP:
-				if(mapdata)
+				case SV_SPECTATOR:
 				{
-					sendf(sender, 1, "ris", SV_SERVMSG, "server sending map...");
-					sendfile(sender, 2, mapdata, "ri", SV_SENDMAP);
-				}
-				else sendf(sender, 1, "ris", SV_SERVMSG, "no map to send");
-				break;
+					int spectator = getint(p), val = getint(p);
+					if(!ci->privilege && (ci->state.state==CS_SPECTATOR || spectator!=sender)) break;
+					clientinfo *spinfo = (clientinfo *)getinfo(spectator);
+					if(!spinfo) break;
 
-			case SV_NEWMAP:
-			{
-				int size = getint(p);
-                if(ci->state.state==CS_SPECTATOR) break;
-				if(size>=0)
+					sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
+
+					if(spinfo->state.state!=CS_SPECTATOR && val)
+					{
+						if(smode) smode->leavegame(spinfo);
+						mutate(mut->leavegame(spinfo));
+						spinfo->state.state = CS_SPECTATOR;
+					}
+					else if(spinfo->state.state==CS_SPECTATOR && !val)
+					{
+						spinfo->state.state = CS_DEAD;
+						spinfo->state.respawn();
+						int nospawn = 0;
+						if (smode && !smode->canspawn(spinfo)) { nospawn++; }
+						mutate({
+							if (!mut->canspawn(spinfo)) { nospawn++; }
+						});
+						if (!nospawn) sendspawn(spinfo);
+					}
+					break;
+				}
+
+				case SV_SETTEAM:
 				{
-					smapname[0] = '\0';
-					resetitems();
-					notgotitems = false;
-					if(smode) smode->reset(true);
-					mutate(mut->reset(true));
+					int who = getint(p);
+					getstring(text, p);
+					if(!ci->privilege || who<0 || who>=getnumclients()) break;
+					clientinfo *wi = (clientinfo *)getinfo(who);
+					if(!wi) break;
+					if (wi->state.state == CS_ALIVE && strcmp(wi->team, text))
+					{
+						if (smode) smode->changeteam(wi, wi->team, text);
+						mutate(mut->changeteam(wi, wi->team, text));
+					}
+					s_strncpy(wi->team, text, MAXTEAMLEN+1);
+					sendf(sender, 1, "riis", SV_SETTEAM, who, text);
+					QUEUE_INT(SV_SETTEAM);
+					QUEUE_INT(who);
+					QUEUE_STR(text);
+					break;
 				}
-				QUEUE_MSG;
-				break;
-			}
 
-			case SV_SETMASTER:
-			{
-				int val = getint(p);
-				getstring(text, p);
-				setmaster(ci, val!=0, text);
-				// don't broadcast the master password
-				break;
-			}
+				case SV_FORCEINTERMISSION:
+					if(m_sp(gamemode)) startintermission();
+					break;
 
-            case SV_APPROVEMASTER:
-            {
-                int mn = getint(p);
-                if(mastermask&MM_AUTOAPPROVE || ci->state.state==CS_SPECTATOR) break;
-                clientinfo *candidate = (clientinfo *)getinfo(mn);
-                if(!candidate || !candidate->wantsmaster || mn==sender || getclientip(mn)==getclientip(sender)) break;
-                setmaster(candidate, true, "", true);
-                break;
-            }
+				case SV_RECORDDEMO:
+				{
+					int val = getint(p);
+					if(ci->privilege<PRIV_ADMIN) break;
+					demonextmatch = val!=0;
+					s_sprintfd(msg)("demo recording is %s for next match", demonextmatch ? "enabled" : "disabled");
+					sendservmsg(msg);
+					break;
+				}
 
-			case SV_ADDBOT:
-			{
-                if(ci->state.state==CS_SPECTATOR && !ci->privilege) break;
-				addbot(ci);
-				break;
-			}
+				case SV_STOPDEMO:
+				{
+					if(ci->privilege<PRIV_ADMIN) break;
+					if(m_demo(gamemode)) enddemoplayback();
+					else enddemorecord();
+					break;
+				}
 
-			case SV_DELBOT:
-			{
-				int lcn = getint(p);
-				clientinfo *cp = (clientinfo *)getinfo(lcn);
-				if (cp && cp->state.ownernum >= 0 && cp->state.ownernum == ci->clientnum)
-					deletebot(cp);
-				break;
-			}
+				case SV_CLEARDEMOS:
+				{
+					int demo = getint(p);
+					if(ci->privilege<PRIV_ADMIN) break;
+					cleardemos(demo);
+					break;
+				}
 
-			default:
-			{
-				int size = msgsizelookup(type);
-				if(size==-1) { disconnect_client(sender, DISC_TAGT); return; }
-				if(size>0) loopi(size-1) getint(p);
-                if(ci && ci->state.state!=CS_SPECTATOR) QUEUE_MSG;
-				break;
+				case SV_LISTDEMOS:
+					if(ci->state.state==CS_SPECTATOR) break;
+					listdemos(sender);
+					break;
+
+				case SV_GETDEMO:
+				{
+					int n = getint(p);
+					if(ci->state.state==CS_SPECTATOR) break;
+					senddemo(sender, n);
+					break;
+				}
+
+				case SV_EDITVAR:
+				{
+					QUEUE_INT(SV_EDITVAR);
+					int t = getint(p);
+					QUEUE_INT(t);
+					getstring(text, p);
+					QUEUE_STR(text);
+					switch(t)
+					{
+						case ID_VAR:
+						{
+							QUEUE_INT(getint(p));
+							break;
+						}
+						case ID_FVAR:
+						{
+							QUEUE_FLT(getfloat(p));
+							break;
+						}
+						case ID_SVAR:
+						case ID_ALIAS:
+						{
+							getstring(text, p);
+							QUEUE_STR(text);
+							break;
+						}
+						default: break;
+					}
+					break;
+				}
+
+				case SV_GETMAP:
+					if(mapdata)
+					{
+						sendf(sender, 1, "ris", SV_SERVMSG, "server sending map...");
+						sendfile(sender, 2, mapdata, "ri", SV_SENDMAP);
+					}
+					else sendf(sender, 1, "ris", SV_SERVMSG, "no map to send");
+					break;
+
+				case SV_NEWMAP:
+				{
+					int size = getint(p);
+					if(ci->state.state==CS_SPECTATOR) break;
+					if(size>=0)
+					{
+						smapname[0] = '\0';
+						resetitems();
+						notgotitems = false;
+						if(smode) smode->reset(true);
+						mutate(mut->reset(true));
+					}
+					QUEUE_MSG;
+					break;
+				}
+
+				case SV_SETMASTER:
+				{
+					int val = getint(p);
+					getstring(text, p);
+					setmaster(ci, val!=0, text);
+					// don't broadcast the master password
+					break;
+				}
+
+				case SV_APPROVEMASTER:
+				{
+					int mn = getint(p);
+					if(mastermask&MM_AUTOAPPROVE || ci->state.state==CS_SPECTATOR) break;
+					clientinfo *candidate = (clientinfo *)getinfo(mn);
+					if(!candidate || !candidate->wantsmaster || mn==sender || getclientip(mn)==getclientip(sender)) break;
+					setmaster(candidate, true, "", true);
+					break;
+				}
+
+				case SV_ADDBOT:
+				{
+					if(ci->state.state==CS_SPECTATOR && !ci->privilege) break;
+					addbot(ci);
+					break;
+				}
+
+				case SV_DELBOT:
+				{
+					int lcn = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if (cp && cp->state.ownernum >= 0 && cp->state.ownernum == ci->clientnum)
+						deletebot(cp);
+					break;
+				}
+
+				default:
+				{
+					int size = msgsizelookup(type);
+					if(size==-1) { disconnect_client(sender, DISC_TAGT); return; }
+					if(size>0) loopi(size-1) getint(p);
+					if(ci && ci->state.state!=CS_SPECTATOR) QUEUE_MSG;
+					break;
+				}
 			}
-        }
+			//conoutf("[server] msg: %d, prev: %d", type, prevtype);
+		}
 	}
 
 	void addbot(clientinfo *ci)
