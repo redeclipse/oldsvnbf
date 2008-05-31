@@ -696,7 +696,7 @@ struct clientcom : iclientcom
 					f->state = CS_ALIVE;
 					if(local)
 					{
-						cl.et.findplayerspawn(f, m_capture(cl.gamemode) ? cl.cpc.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_ttwo(cl.gamemode, cl.mutators))+1 : -1);
+						cl.et.findplayerspawn(f, m_capture(cl.gamemode) ? cl.cpc.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_multi(cl.gamemode, cl.mutators))+1 : -1);
 						if(f==cl.player1)
 						{
 							cl.sb.showscores(false);

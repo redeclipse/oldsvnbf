@@ -149,7 +149,7 @@ struct ctfservmode : ctfstate, servmode
 
     bool canchangeteam(clientinfo *ci, const char *oldteam, const char *newteam)
     {
-    	loopi(m_ttwo(sv.gamemode, sv.mutators) ? TEAM_MAX : TEAM_MAX/2)
+    	loopi(m_multi(sv.gamemode, sv.mutators) ? TEAM_MAX : TEAM_MAX/2)
     	{
 			if (!strcmp(newteam, teamnames[i])) return true;
     	}
@@ -174,7 +174,7 @@ struct ctfservmode : ctfstate, servmode
             {
 				flag &goal = flags[k];
 
-				if(relay.owner==ci->clientnum && goal.team==teamflag(ci->team, m_ttwo(sv.gamemode, sv.mutators)) && goal.owner<0 && !goal.droptime && o.dist(goal.spawnloc) < FLAGRADIUS)
+				if(relay.owner==ci->clientnum && goal.team==teamflag(ci->team, m_multi(sv.gamemode, sv.mutators)) && goal.owner<0 && !goal.droptime && o.dist(goal.spawnloc) < FLAGRADIUS)
 				{
 					returnflag(i);
 					goal.score++;
@@ -188,7 +188,7 @@ struct ctfservmode : ctfstate, servmode
     {
         if(notgotflags || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team[0]) return;
 		flag &f = flags[i];
-		if(f.team == teamflag(ci->team, m_ttwo(sv.gamemode, sv.mutators)))
+		if(f.team == teamflag(ci->team, m_multi(sv.gamemode, sv.mutators)))
 		{
 			if(!f.droptime || f.owner>=0) return;
 			ctfstate::returnflag(i);
@@ -273,7 +273,7 @@ struct ctfclient : ctfstate
     {
 		flag &f = flags[i];
         settexture("textures/blip");
-        if(f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators))) glColor4f(0.f, 0.f, 1.f, 1.f);
+        if(f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators))) glColor4f(0.f, 0.f, 1.f, 1.f);
         else glColor4f(1.f, 0.f, 0.f, 1.f);
 		vec dir;
         if(flagblip) dir = f.owner ? f.owner->o : (f.droptime ? f.droploc : f.spawnloc);
@@ -308,7 +308,7 @@ struct ctfclient : ctfstate
         loopv(flags)
         {
             flag &f = flags[i];
-            if(!flagteam(f.team, m_ttwo(cl.gamemode, cl.mutators))) continue;
+            if(!flagteam(f.team, m_multi(cl.gamemode, cl.mutators))) continue;
             drawblips(x, y, s, i, false);
             if(!f.ent) continue;
             if(f.owner)
@@ -342,7 +342,7 @@ struct ctfclient : ctfstate
         {
             flag &f = flags[i];
             if(!f.ent || (!f.owner && f.droptime && f.droploc.x < 0)) continue;
-            const char *flagname = f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "flags/blue" : "flags/red";
+            const char *flagname = f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators)) ? "flags/blue" : "flags/red";
             float angle;
             vec pos = interpflagpos(f, angle);
             rendermodel(!f.droptime && !f.owner ? &f.ent->light : NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP,
@@ -351,8 +351,8 @@ struct ctfclient : ctfstate
 
             vec above(pos);
             above.z += enttype[BASE].height;
-            s_sprintfd(info)("@%s flag", flagteam(f.team, m_ttwo(cl.gamemode, cl.mutators)));
-			particle_text(above, info, f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? 16 : 13, 1);
+            s_sprintfd(info)("@%s flag", flagteam(f.team, m_multi(cl.gamemode, cl.mutators)));
+			particle_text(above, info, f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators)) ? 16 : 13, 1);
         }
     }
 
@@ -363,7 +363,7 @@ struct ctfclient : ctfstate
         loopv(cl.et.ents)
         {
             extentity *e = cl.et.ents[i];
-            if(e->type!=BASE || e->attr2<1 || e->attr2>numteams(m_ttwo(cl.gamemode, cl.mutators))) continue;
+            if(e->type!=BASE || e->attr2<1 || e->attr2>numteams(m_multi(cl.gamemode, cl.mutators))) continue;
             addflag(x, e->o, e->attr2-1);
             flags[e->attr2-1].ent = e;
             x++;
@@ -427,7 +427,7 @@ struct ctfclient : ctfstate
 			f.droploc = vec(-1, -1, -1);
 			f.interptime = 0;
 		}
-		conoutf("%s dropped %s flag", d==cl.player1 ? "you" : cl.colorname(d), f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
+		conoutf("%s dropped %s flag", d==cl.player1 ? "you" : cl.colorname(d), f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
 		cl.et.announce(S_V_FLAGDROP);
     }
 
@@ -436,7 +436,7 @@ struct ctfclient : ctfstate
 		flag &f = flags[i];
 		int ftype;
 		vec color;
-		if(f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators))) { ftype = 36; color = vec(0.25f, 0.25f, 1); }
+		if(f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators))) { ftype = 36; color = vec(0.25f, 0.25f, 1); }
 		else { ftype = 35; color = vec(1, 0.25f, 0.25f); }
 		particle_fireball(loc, 30, ftype);
 		adddynlight(loc, 35, color, 900, 100);
@@ -458,7 +458,7 @@ struct ctfclient : ctfstate
 			flagexplosion(i, toexp);
 		}
 		if(from.x >= 0 && to.x >= 0)
-			particle_flare(fromexp, toexp, 600, f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? 30 : 29);
+			particle_flare(fromexp, toexp, 600, f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators)) ? 30 : 29);
     }
 
     void returnflag(fpsent *d, int i)
@@ -467,7 +467,7 @@ struct ctfclient : ctfstate
 		flageffect(i, interpflagpos(f), f.spawnloc);
 		f.interptime = 0;
 		ctfstate::returnflag(i);
-		conoutf("%s returned %s flag", d==cl.player1 ? "you" : cl.colorname(d), f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
+		conoutf("%s returned %s flag", d==cl.player1 ? "you" : cl.colorname(d), f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
 		cl.et.announce(S_V_FLAGRETURN);
     }
 
@@ -477,13 +477,13 @@ struct ctfclient : ctfstate
 		flageffect(i, interpflagpos(f), f.spawnloc);
 		f.interptime = 0;
 		ctfstate::returnflag(i);
-		conoutf("%s flag reset", f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
+		conoutf("%s flag reset", f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
 		cl.et.announce(S_V_FLAGRESET);
     }
 
 	int findscore(const char *team)
 	{
-		int s = 0, t = teamflag(team, m_ttwo(cl.gamemode, cl.mutators));
+		int s = 0, t = teamflag(team, m_multi(cl.gamemode, cl.mutators));
 		loopv(flags)
 		{
 			flag &f = flags[i];
@@ -504,7 +504,7 @@ struct ctfclient : ctfstate
 			s_sprintfd(ds)("@%d", score);
 			particle_text(d->abovehead(), ds, 9);
 		}
-		conoutf("%s scored for %s team", d==cl.player1 ? "you" : cl.colorname(d), f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
+		conoutf("%s scored for %s team", d==cl.player1 ? "you" : cl.colorname(d), f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
 		cl.et.announce(S_V_FLAGSCORE);
     }
 
@@ -513,7 +513,7 @@ struct ctfclient : ctfstate
 		flag &f = flags[i];
 		f.interploc = interpflagpos(f, f.interpangle);
 		f.interptime = lastmillis;
-		conoutf("%s %s %s flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", f.team==teamflag(cl.player1->team, m_ttwo(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
+		conoutf("%s %s %s flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators)) ? "your" : "the enemy");
 		ctfstate::takeflag(i, d);
 		cl.et.announce(S_V_FLAGPICKUP);
     }
@@ -525,7 +525,7 @@ struct ctfclient : ctfstate
         loopv(flags)
         {
             flag &f = flags[i];
-            if(!f.ent || f.owner || (f.droptime ? f.droploc.x<0 : f.team==teamflag(d->team, m_ttwo(cl.gamemode, cl.mutators)))) continue;
+            if(!f.ent || f.owner || (f.droptime ? f.droploc.x<0 : f.team==teamflag(d->team, m_multi(cl.gamemode, cl.mutators)))) continue;
             if(o.dist(f.droptime ? f.droploc : f.spawnloc) < FLAGRADIUS)
             {
                 if(f.pickup) continue;

@@ -106,7 +106,7 @@ struct GAMESERVER : igameserver
 		vec o;
 		int state;
         projectilestate rockets, grenades, flames;
-		int frags;
+		int frags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed;
 		float effectiveness;
 
@@ -127,7 +127,7 @@ struct GAMESERVER : igameserver
 
 			timeplayed = 0;
 			effectiveness = 0;
-			frags = 0;
+            frags = deaths = teamkills = shotdamage = damage = 0;
 
 			respawn();
 		}
@@ -143,12 +143,16 @@ struct GAMESERVER : igameserver
 	{
 		uint ip;
 		string name;
-		int frags, timeplayed;
+		int frags, timeplayed, deaths, teamkills, shotdamage, damage;
 		float effectiveness;
 
 		void save(gamestate &gs)
 		{
 			frags = gs.frags;
+            deaths = gs.deaths;
+            teamkills = gs.teamkills;
+            shotdamage = gs.shotdamage;
+            damage = gs.damage;
 			timeplayed = gs.timeplayed;
 			effectiveness = gs.effectiveness;
 		}
@@ -156,6 +160,10 @@ struct GAMESERVER : igameserver
 		void restore(gamestate &gs)
 		{
 			gs.frags = frags;
+            gs.deaths = deaths;
+            gs.teamkills = teamkills;
+            gs.shotdamage = shotdamage;
+            gs.damage = damage;
 			gs.timeplayed = timeplayed;
 			gs.effectiveness = effectiveness;
 		}
@@ -361,7 +369,7 @@ struct GAMESERVER : igameserver
 	{
 		vector<clientinfo *> team[TEAM_MAX];
 		float teamrank[TEAM_MAX] = { 0, 0, 0, 0 };
-		int numteams = (m_team(gamemode, mutators) && m_ttwo(gamemode, mutators) ? TEAM_MAX : TEAM_MAX/2);
+		int numteams = (m_team(gamemode, mutators) && m_multi(gamemode, mutators) ? TEAM_MAX : TEAM_MAX/2);
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
@@ -388,16 +396,24 @@ struct GAMESERVER : igameserver
 	struct teamscore
 	{
 		const char *name;
-		float rank;
+		union
+		{
+			int score;
+			float rank;
+		};
 		int clients;
 
-		teamscore(const char *name) : name(name), rank(0), clients(0) {}
+		teamscore(const char *n) : name(n), rank(0.f), clients(0) {}
+		teamscore(const char *n, float r) : name(n), rank(r), clients(0) {}
+		teamscore(const char *n, int s) : name(n), score(s), clients(0) {}
+
+		~teamscore() {}
 	};
 
 	const char *chooseworstteam(const char *suggest)
 	{
 		teamscore teamscores[TEAM_MAX] = { teamscore(teamnames[0]), teamscore(teamnames[1]), teamscore(teamnames[2]), teamscore(teamnames[3]) };
-		int numteams = (m_team(gamemode, mutators) && m_ttwo(gamemode, mutators) ? TEAM_MAX : TEAM_MAX/2);
+		int numteams = (m_team(gamemode, mutators) && m_multi(gamemode, mutators) ? TEAM_MAX : TEAM_MAX/2);
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
@@ -1778,12 +1794,13 @@ struct GAMESERVER : igameserver
 		else if (flags&HIT_HEAD) damage = damage*2;
 		if (smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { return; }
 		mutate(if (!mut->damage(target, actor, damage, gun, flags, hitpush)) { return; });
-		//if (!teamdamage && m_team(gamemode, mutators) && isteam(target->team, actor->team)) return;
-		//damage *= damagescale/100;
 		ts.dodamage(damage, gamemillis);
+        actor->state.damage += damage;
 		sendf(-1, 1, "ri8i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, damage, ts.health, ts.lastpain, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
 		if(ts.health<=0)
 		{
+            target->state.deaths++;
+            if(actor!=target && m_team(gamemode, mutators) && isteam(actor->team, target->team)) actor->state.teamkills++;
             int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && isteam(target->team, actor->team)) ? -1 : 1);
             actor->state.frags += fragvalue;
             if(fragvalue > 0)
@@ -1849,6 +1866,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(gs.state!=CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
+        ci->state.deaths++;
 		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, 0, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
@@ -1904,6 +1922,7 @@ struct GAMESERVER : igameserver
 				int(e.from[0]*DMF), int(e.from[1]*DMF), int(e.from[2]*DMF),
 				int(e.to[0]*DMF), int(e.to[1]*DMF), int(e.to[2]*DMF),
 				ci->clientnum);
+        gs.shotdamage += guntype[e.gun].damage*(e.gun==GUN_SG ? SGRAYS : 1);
 		switch(e.gun)
 		{
             case GUN_RL: gs.rockets.add(e.id); break;
@@ -2157,6 +2176,8 @@ struct GAMESERVER : igameserver
 		else checkvotes();
 	}
 
+	#include "extinfo.h"
+
 	const char *servername() { return "bloodfrontierserver"; }
 	int serverinfoport()
 	{
@@ -2171,8 +2192,14 @@ struct GAMESERVER : igameserver
 		return "bloodfrontier.com";
 	}
 
-	void serverinforeply(ucharbuf &p)
+    void serverinforeply(ucharbuf &req, ucharbuf &p)
 	{
+        if(!getint(req))
+        {
+            extserverinforeply(req, p);
+            return;
+        }
+
 		int numplayers = 0;
 		loopv(clients) if(clients[i] && clients[i]->state.ownernum < 0) numplayers++;
 		putint(p, numplayers);

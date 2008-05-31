@@ -395,15 +395,18 @@ void checkpings()
 
 int sicompare(serverinfo **a, serverinfo **b) { return cc->servercompare(*a, *b); }
 
+VARP(serverupdateinterval, 0, 5, 60);
+
 void refreshservers()
 {
 	static int lastrefresh = 0;
-	if(lastrefresh==totalmillis) return;
+	if(lastrefresh == totalmillis) return;
 	lastrefresh = totalmillis;
 
 	checkresolver();
 	checkpings();
-	if(totalmillis - lastinfo >= 5000) pingservers();
+	if(serverupdateinterval && totalmillis-lastinfo >= serverupdateinterval*1000)
+		pingservers();
 }
 
 const char *showservers(g3d_gui *cgui)
