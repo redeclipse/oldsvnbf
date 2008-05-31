@@ -77,14 +77,14 @@ struct scoreboard : g3d_callback
 		}
         else if(m_ctf(cl.gamemode))
         {
-        	loopk(cl.ctf.numteams(m_ttwo(cl.gamemode, cl.mutators)))
+        	loopk(cl.ctf.numteams(m_multi(cl.gamemode, cl.mutators)))
         	{
         		int s = 0;
         		loopv(cl.ctf.flags)
 				{
 					if(cl.ctf.flags[i].team == k) s += cl.ctf.flags[i].score;
 				}
-				teamscores.add(teamscore(cl.ctf.flagteam(k, m_ttwo(cl.gamemode, cl.mutators)), s));
+				teamscores.add(teamscore(cl.ctf.flagteam(k, m_multi(cl.gamemode, cl.mutators)), s));
         	}
         }
 		loopi(cl.numdynents())

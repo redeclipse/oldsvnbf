@@ -103,8 +103,8 @@ struct editline
     {
         if(!text) return;
         if(start < 0) { count += start; start = 0; }
-        if(count <= 0 || start + 1 >= maxlen) return;
-        if(start + count + 1 > maxlen) count = maxlen - start - 1;
+        if(count <= 0 || start >= len) return;
+        if(start + count > len) count = len - start - 1;
         memmove(&text[start], &text[start+count], len + 1 - (start + count));
         len -= count;
     }
@@ -368,7 +368,7 @@ struct editor
                     cx = b->lines[i].len;
                     lines[cy].prepend(b->lines[i].text);
                 }
-                else if(maxy >= 0 && lines.length() < maxy) lines.insert(cy++, b->lines[i]);
+                else if(maxy < 0 || lines.length() < maxy) lines.insert(cy++, editline(b->lines[i].text));
             }
         }
     }
@@ -459,12 +459,6 @@ struct editor
 
     void hit(int hitx, int hity, bool dragged)
     {
-        int slines = lines.length()-pixelheight/FONTH;
-        if(maxy != 1 && slines > 0 && hitx > pixelwidth) // scroll region
-        {
-            cy = scrolly = ((hity-FONTH/2)*slines)/(pixelheight-FONTH);
-            return;
-        }
         int maxwidth = linewrap?pixelwidth:-1;
         int h = 0;
         for(int i = scrolly; i < lines.length(); i++)
@@ -587,23 +581,6 @@ struct editor
                 defaultshader->set();
             }
             h+=height;
-        }
-
-        int slines = lines.length()-pixelheight/FONTH;
-        if(maxy != 1 && slines > 0) // scroll indicator
-    	{
-            float s = (pixelheight-FONTH)*min(1.0f, scrolly/float(slines));
-            notextureshader->set();
-            glDisable(GL_TEXTURE_2D);
-            glColor3ub(0x80, 0x80, 0xA0);
-            glBegin(GL_QUADS);
-            glVertex2f(x+pixelwidth,         y+s+FONTH);
-            glVertex2f(x+pixelwidth,         y+s);
-            glVertex2f(x+pixelwidth+FONTW/2, y+s);
-            glVertex2f(x+pixelwidth+FONTW/2, y+s+FONTH);
-            glEnd();
-            glEnable(GL_TEXTURE_2D);
-            defaultshader->set();
         }
     }
 };

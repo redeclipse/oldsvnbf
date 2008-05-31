@@ -210,6 +210,7 @@ extern void getstring(char *t, ucharbuf &p, int len = MAXTRANS);
 extern void filtertext(char *dst, const char *src, bool whitespace = true, int len = sizeof(string)-1);
 extern void disconnect_client(int n, int reason);
 extern bool hasnonlocalclients();
+extern void sendserverinforeply(ucharbuf &p);
 
 // client
 struct serverinfo

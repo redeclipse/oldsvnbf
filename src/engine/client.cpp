@@ -57,6 +57,7 @@ void connectfail(bool reset = false)
 		{
 			conoutf("unable to find any server on the local network");
 			if(!menuactive()) showgui("main");
+			localattempt = 0;
 		}
 		else
 		{
@@ -242,6 +243,7 @@ void gets2c()			// get updates from the server
 			disconnect(1);
 			curpeer = connpeer;
 			connpeer = NULL;
+			localattempts = 0;
 			conoutf("connected to server");
 			throttle();
 			if(rate) setrate(rate);

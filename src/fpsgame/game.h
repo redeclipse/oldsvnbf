@@ -145,13 +145,13 @@ enum
 #define G_M_DUEL			0x0004	// duel
 #define G_M_PROG			0x0008	// progressive
 
-#define G_M_TTWO			0x0010	// mutli team
+#define G_M_MULTI			0x0010	// mutli team
 #define G_M_DLMS			0x0020	// last man standing
 
 #define G_M_NUM				5
 
-#define G_M_FRAG			G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_TTWO
-#define G_M_BASE			G_M_INSTA|G_M_PROG|G_M_TTWO
+#define G_M_FRAG			G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI
+#define G_M_BASE			G_M_INSTA|G_M_PROG|G_M_MULTI
 
 static struct gametypes
 {
@@ -168,7 +168,7 @@ static struct gametypes
 	{ G_M_INSTA,		0,				0,					"Instagib" },
 	{ G_M_DUEL,			0,				0,					"Duel" },
 	{ G_M_PROG,			0,				0,					"Progressive" },
-	{ G_M_TTWO,			0,				G_M_TEAM,			"Times Two" },
+	{ G_M_MULTI,		0,				G_M_TEAM,			"Multi Sided" },
 	{ G_M_DLMS,			0,				G_M_DUEL,			"Last Man Standing" },
 };
 
@@ -190,7 +190,7 @@ static struct gametypes
 #define m_insta(a,b)		(m_frag(a) && (b & G_M_INSTA))
 #define m_duel(a,b)			(m_frag(a) && (b & G_M_DUEL))
 #define m_prog(a,b)			(m_base(a) && (b & G_M_PROG))
-#define m_ttwo(a,b)			(m_team(a, b) && (b & G_M_TTWO))
+#define m_multi(a,b)		(m_team(a, b) && (b & G_M_MULTI))
 #define m_dlms(a,b)			(m_duel(a, b) && (b & G_M_DLMS))
 #define isteam(a,b)			(!strcmp(a,b))
 
