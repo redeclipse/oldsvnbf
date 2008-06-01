@@ -1665,8 +1665,6 @@ void render_texture_panel(int w, int h)
 	if((texpaneltimer -= curtime)>0 && editmode)
 	{
 		glDepthMask(GL_FALSE);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glLoadIdentity();
 		int width = w*1800/h;
 		glOrtho(0, width, 1800, 0, -1, 1);
@@ -1727,7 +1725,6 @@ void render_texture_panel(int w, int h)
 			}
 			y += s+gap;
 		}
-		glDisable(GL_BLEND);
 		glDepthMask(GL_TRUE);
 	}
 }

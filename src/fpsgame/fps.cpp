@@ -796,7 +796,7 @@ struct GAMECLIENT : igameclient
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
 
-		int hoff = h*3-h*3/4-FONTH/2;
+		int hoff = h*3-h*3/4;
 		char *command = getcurcommand();
 		if(command) rendercommand(FONTH/2, hoff, h*3-FONTH);
 		hoff += FONTH;

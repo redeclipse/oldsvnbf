@@ -447,14 +447,14 @@ struct SurfaceCache
 
 hashtable<char *, SurfaceCache> surfacecache;
 
-SDL_Surface *textureloadname(const char *name)
+SDL_Surface *texturesurface(const char *name)
 {
 	const char *exts[] = { "", ".png", ".tga", ".jpg", ".bmp" }; // bmp is a last resort!
 	loopi(sizeof(exts)/sizeof(exts[0]))
 	{
 		s_sprintfd(buf)("%s%s", name, exts[i]);
 		SurfaceCache *c = surfacecache.access(buf);
-		if(!c)
+		if(!c || !c->s)
 		{
 			SDL_Surface *s = IMG_Load(findfile(buf, "rb"));
 			if(s)
@@ -469,7 +469,7 @@ SDL_Surface *textureloadname(const char *name)
 			}
 			else continue;
 		}
-		if(c && c->s) return texcopy(c->s);
+		return texcopy(c->s);
 	}
 	return NULL;
 }
@@ -499,7 +499,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 
     if(msg && !*frame) show_out_of_renderloop_progress(0, file);
 
-    SDL_Surface *s = textureloadname(file);
+    SDL_Surface *s = texturesurface(file);
     if(!s) { if(msg) conoutf("could not load texture %s", file); return NULL; }
     int bpp = s->format->BitsPerPixel;
     if(!texformat(bpp)) { SDL_FreeSurface(s); conoutf("texture must be 8, 16, 24, or 32 bpp: %s", file); return NULL; }
@@ -545,18 +545,16 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 			if(!sw) sw = s->h;
 			if(!sh) sh = s->h;
 			int sf = 0, sv = s->w/sw, su = s->h/sh, ss = sv*su;
-
 			if(frame)
 			{
 				if(!*frame)
 				{
 					sf = 0;
 					*frame = ss;
-					if(delay && *delay <= 0) *delay = sd;
+					if(delay && !*delay) *delay = sd;
 				}
 				else sf = *frame;
 			}
-
 			if(sf <= ss)
 			{
 				if(msg) show_out_of_renderloop_progress(float(sf)/float(ss), file);
@@ -565,7 +563,6 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 			}
         }
     }
-
     return s;
 }
 
@@ -1287,7 +1284,7 @@ void writetgaheader(FILE *f, SDL_Surface *s, int bits)
 
 void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png) -> BGR (tga)
 {
-    SDL_Surface *ns = textureloadname(normalfile);
+    SDL_Surface *ns = texturesurface(normalfile);
     if(!ns) return;
     FILE *f = openfile(destfile, "wb");
     if(f)
@@ -1307,8 +1304,8 @@ void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png)
 
 void mergenormalmaps(char *heightfile, char *normalfile)    // BGR (tga) -> BGR (tga) (SDL loads TGA as BGR!)
 {
-    SDL_Surface *hs = textureloadname(heightfile);
-    SDL_Surface *ns = textureloadname(normalfile);
+    SDL_Surface *hs = texturesurface(heightfile);
+    SDL_Surface *ns = texturesurface(normalfile);
     if(hs && ns)
     {
         uchar def_n[] = { 255, 128, 128 };

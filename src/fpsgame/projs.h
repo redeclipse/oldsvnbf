@@ -145,9 +145,9 @@ struct projectiles
 				if(gun == GUN_FLAMER)
 				{
 					float life = (guntype[gun].time-lifetime)/float(guntype[gun].time);
-					int col = int(0xFF0000*max(1.f-life, 0.5f))+int(0x00AA00*max(1.f-life, 0.1f)),
+					int col = (int(255*max(1.f-life,0.f))<<16)|(int(127*max(1.f-life,0.f))<<8),
 						fade = int(500*life)+1;
-					part_splash(4, rnd(5)+1, fade, o, col, 6.4f);
+					part_splash(4, rnd(2)+1, fade, o, col, 8.0f);
 				}
             }
 			else if (projtype == PRJ_GIBS) particle_splash(3, 1, 10000, o);

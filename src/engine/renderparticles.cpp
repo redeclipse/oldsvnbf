@@ -620,7 +620,7 @@ static partrenderer *parts[] =
     new quadrenderer("textures/spark", PT_PART|PT_GLARE,   2, 0),     // 1 sparks
     new quadrenderer("textures/smoke", PT_PART,          -20, 0),     // 2 small slowly rising smoke
     new quadrenderer("textures/base",  PT_PART|PT_GLARE,  20, 0),     // 3 edit mode entities
-    new quadrenderer("textures/ball1", PT_PART|PT_GLARE,  20, 0),     // 4 fireball1
+    new quadrenderer("<anim:50>textures/fireball", PT_PART|PT_GLARE,  20, 0),     // 4 fireball1
     new quadrenderer("textures/smoke", PT_PART,          -20, 0),     // 5 big  slowly rising smoke
     new quadrenderer("textures/ball2", PT_PART|PT_GLARE,  20, 0),     // 6 fireball2
     new quadrenderer("textures/ball3", PT_PART|PT_GLARE,  20, 0),     // 7 big fireball3
