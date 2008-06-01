@@ -272,7 +272,7 @@ struct ctfclient : ctfstate
     void drawblips(int x, int y, int s, int i, bool flagblip)
     {
 		flag &f = flags[i];
-        settexture("textures/blip");
+        settexture(cl.bliptex());
         if(f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators))) glColor4f(0.f, 0.f, 1.f, 1.f);
         else glColor4f(1.f, 0.f, 0.f, 1.f);
 		vec dir;

@@ -75,6 +75,9 @@ struct GAMECLIENT : igameclient
 	IVARP(showeditstats, 0, 1, 1);
 	IVARP(statrate, 0, 200, 1000);
 
+	ISVARP(bliptex, "textures/blip");
+	ISVARP(radartex, "<anim:75>textures/radarping");
+
     GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
@@ -593,7 +596,7 @@ struct GAMECLIENT : igameclient
 
 	void drawblips(int x, int y, int s)
 	{
-		settexture("textures/blip");
+		settexture(bliptex());
 		glBegin(GL_QUADS);
 		loopv(players) if(players[i] && players[i]->state == CS_ALIVE)
 		{
@@ -620,7 +623,7 @@ struct GAMECLIENT : igameclient
 				if(!insel && dist >= radarrange()) continue;
 				if(dist >= radarrange()*(1 - 0.05f)) dir.mul(radarrange()*(1 - 0.05f)/dist);
 				dir.rotate_around_z(-camera1->yaw*RAD);
-				settexture("textures/blip");
+				settexture(bliptex());
 				glColor4f(1.f, 1.f, insel ? 1.0f : 0.f, insel ? 1.f : 1.f-(dist/radarrange()));
 				drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (insel ? 0.075f : 0.025f)*s);
 			}
@@ -727,9 +730,10 @@ struct GAMECLIENT : igameclient
 			}
 
 			int rx = FONTH/4, rs = oy/5, ry = oy-rs-(FONTH/4);
-			settexture("textures/radar");
-			if(m_team(gamemode, mutators)) glColor4f(0.f, 0.f, 1.f, fade);
-			else glColor4f(0.f, 1.0f, 0.f, fade);
+			settexture(radartex());
+			//if(m_team(gamemode, mutators)) glColor4f(0.f, 0.f, 1.f, fade);
+			//else glColor4f(0.f, 1.0f, 0.f, fade);
+			glColor4f(1.f, 1.f, 1.f, fade);
 
 			glBegin(GL_QUADS);
 			drawradar(float(rx), float(ry), float(rs));
