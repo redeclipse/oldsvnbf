@@ -243,7 +243,7 @@ void gets2c()			// get updates from the server
 			disconnect(1);
 			curpeer = connpeer;
 			connpeer = NULL;
-			localattempts = 0;
+			localattempt = 0;
 			conoutf("connected to server");
 			throttle();
 			if(rate) setrate(rate);
