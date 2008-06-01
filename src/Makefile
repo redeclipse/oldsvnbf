@@ -3,6 +3,9 @@ INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -I/usr/X11R6/include `sdl-c
 CXXFLAGS= -Wall $(CXXOPTFLAGS) $(INCLUDES)
 
 CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lz -lGL -lGLU
+ifeq ($(shell uname -s),Linux)
+CLIENT_LIBS+= -lrt
+endif
 CLIENT_OBJS= \
 	shared/tools.o \
 	shared/geom.o \
