@@ -183,5 +183,38 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define IVARFP(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, true, false)
 #define IVARW(n, m, c, x)  _IVAR(n, m, c, x, , false, true)
 #define IVARFW(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, false, true)
-//#define ICALL(n, a) { char *args[] = a; icom_##n.run(args); }
-//
+
+#define _IFVAR(n, c, b, p, w) \
+	struct var_##n : ident \
+	{ \
+        var_##n() : ident(ID_FVAR, #n, c, &val.f, NULL, p, w) \
+		{ \
+            addident(name, this); \
+		} \
+        float operator()() { return val.f; } \
+        b \
+    } n
+#define IFVAR(n, c)  _IFVAR(n, c, , false, false)
+#define IFVARF(n, c, b) _IFVAR(n, c, void changed() { b; }, false, false)
+#define IFVARP(n, c)  _IFVAR(n, c, , true, false)
+#define IFVARFP(n, c, b) _IFVAR(n, c, void changed() { b; }, true, false)
+#define IFVARW(n, c)  _IFVAR(n, c, , false, true)
+#define IFVARFW(n, c, b) _IFVAR(n, c, void changed() { b; }, false, true)
+
+#define _ISVAR(n, c, b, p, w) \
+	struct var_##n : ident \
+	{ \
+        var_##n() : ident(ID_SVAR, #n, c, &val.s, NULL, p, w) \
+		{ \
+            addident(name, this); \
+		} \
+        char *operator()() { return val.s; } \
+        b \
+    } n
+#define ISVAR(n, c)  _ISVAR(n, c, , false, false)
+#define ISVARF(n, c, b) _ISVAR(n, c, void changed() { b; }, false, false)
+#define ISVARP(n, c)  _ISVAR(n, c, , true, false)
+#define ISVARFP(n, c, b) _ISVAR(n, c, void changed() { b; }, true, false)
+#define ISVARW(n, c)  _ISVAR(n, c, , false, true)
+#define ISVARFW(n, c, b) _ISVAR(n, c, void changed() { b; }, false, true)
+
