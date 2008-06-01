@@ -240,7 +240,7 @@ struct listrenderer : partrenderer
         if(texname)
         {
             if(!tex) tex = textureload(texname);
-            glBindTexture(GL_TEXTURE_2D, tex->id);
+            glBindTexture(GL_TEXTURE_2D, tex->id());
         }
 
         bool lastpass = !reflecting && !refracting;
@@ -599,7 +599,7 @@ struct varenderer : partrenderer
     void render()
     {
         if(!tex) tex = textureload(texname);
-        glBindTexture(GL_TEXTURE_2D, tex->id);
+        glBindTexture(GL_TEXTURE_2D, tex->id());
         glVertexPointer(3, GL_FLOAT, sizeof(partvert), &verts->pos);
         glTexCoordPointer(2, GL_FLOAT, sizeof(partvert), &verts->u);
         glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(partvert), &verts->color);

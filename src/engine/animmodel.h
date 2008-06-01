@@ -20,7 +20,7 @@ struct animmodel : model
 
         void setframes(const animinfo &info)
         {
-            if(info.range<=1) 
+            if(info.range<=1)
             {
                 fr1 = 0;
                 t = 0;
@@ -201,7 +201,7 @@ struct animmodel : model
             else
             {
                 float mincolor = as->anim&ANIM_FULLBRIGHT ? fullbrightmodels/100.0f : 0;
-                glColor4f(max(lightcolor.x, mincolor), 
+                glColor4f(max(lightcolor.x, mincolor),
                           max(lightcolor.y, mincolor),
                           max(lightcolor.z, mincolor),
                           as->anim&ANIM_TRANSLUCENT ? translucency : 1);
@@ -265,8 +265,8 @@ struct animmodel : model
                 else /*if(as->anim&ANIM_SHADOW)*/ SETMODELSHADER(b, dynshadow); // this shader also gets used with color mask disabled
                 return;
             }
-            Texture *s = bumpmapped() && unlittex ? unlittex : tex, 
-                    *m = masks->type==Texture::STUB ? notexture : masks, 
+            Texture *s = bumpmapped() && unlittex ? unlittex : tex,
+                    *m = masks->type==Texture::STUB ? notexture : masks,
                     *n = bumpmapped() ? normalmap : NULL;
             if((renderpath==R_FIXEDFUNCTION || !lightmodels) &&
                (!glowmodels || (renderpath==R_FIXEDFUNCTION && fogging && maxtmus<=2)) &&
@@ -281,14 +281,14 @@ struct animmodel : model
             if(s!=lasttex)
             {
                 if(enableglow) glActiveTexture_(GL_TEXTURE1_ARB);
-                glBindTexture(GL_TEXTURE_2D, s->id);
+                glBindTexture(GL_TEXTURE_2D, s->id());
                 if(enableglow) glActiveTexture_(GL_TEXTURE0_ARB);
                 lasttex = s;
             }
             if(n && n!=lastnormalmap)
             {
                 glActiveTexture_(GL_TEXTURE3_ARB);
-                glBindTexture(GL_TEXTURE_2D, n->id);
+                glBindTexture(GL_TEXTURE_2D, n->id());
                 glActiveTexture_(GL_TEXTURE0_ARB);
             }
             if(s->bpp==32)
@@ -322,13 +322,13 @@ struct animmodel : model
             if(m!=lastmasks && m!=notexture)
             {
                 if(!enableglow) glActiveTexture_(GL_TEXTURE1_ARB);
-                glBindTexture(GL_TEXTURE_2D, m->id);
+                glBindTexture(GL_TEXTURE_2D, m->id());
                 if(!enableglow) glActiveTexture_(GL_TEXTURE0_ARB);
                 lastmasks = m;
             }
             if((renderpath!=R_FIXEDFUNCTION || m!=notexture) && as->anim&ANIM_ENVMAP && envmapmax>0)
             {
-                GLuint emtex = envmap ? envmap->id : closestenvmaptex;
+                GLuint emtex = envmap ? envmap->id() : closestenvmaptex;
                 if(!enableenvmap || lastenvmaptex!=emtex)
                 {
                     glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
@@ -379,15 +379,15 @@ struct animmodel : model
             m.noclip = noclip;
             return &m;
         }
-            
-        virtual void scaleverts(const vec &transdiff, float scalediff) {}        
+
+        virtual void scaleverts(const vec &transdiff, float scalediff) {}
         virtual void calcbb(int frame, vec &bbmin, vec &bbmax, const matrix3x4 &m) {}
         virtual void gentris(int frame, Texture *tex, vector<BIH::tri> *out, const matrix3x4 &m) {}
 
-        virtual void setshader(Shader *s) 
-        { 
+        virtual void setshader(Shader *s)
+        {
             if(glaring) s->variant(0, 2)->set();
-            else s->set(); 
+            else s->set();
         }
     };
 
@@ -409,7 +409,7 @@ struct animmodel : model
             DELETEA(name);
             meshes.deletecontentsp();
             DELETEP(next);
-        }            
+        }
 
         virtual int findtag(const char *name) { return -1; }
         virtual void concattagtransform(int frame, int i, const matrix3x4 &m, matrix3x4 &n) {}
@@ -439,9 +439,9 @@ struct animmodel : model
             group.translate = translate;
             return &group;
         }
-       
+
         virtual void scaletags(const vec &transdiff, float scalediff) {}
- 
+
         meshgroup *scaleverts(float nscale, const vec &ntranslate)
         {
             if(nscale==scale && ntranslate==translate) { shared++; return this; }
@@ -503,7 +503,7 @@ struct animmodel : model
         int numanimparts;
         float pitchscale, pitchoffset, pitchmin, pitchmax;
 
-        part() : meshes(NULL), numanimparts(1), pitchscale(1), pitchoffset(0), pitchmin(0), pitchmax(0) 
+        part() : meshes(NULL), numanimparts(1), pitchscale(1), pitchoffset(0), pitchmin(0), pitchmax(0)
         {
             loopk(MAXANIMPARTS) anims[k] = NULL;
         }
@@ -608,7 +608,7 @@ struct animmodel : model
                 info.frame = 0;
                 info.range = meshes->totalframes();
             }
-            else 
+            else
             {
                 animspec *spec = NULL;
                 if(anims[animpart])
@@ -702,7 +702,7 @@ struct animmodel : model
             p.z -= m[14];
 
 #if 0
-            // This is probably overkill, since just about any transformations this encounters will be orthogonal matrices 
+            // This is probably overkill, since just about any transformations this encounters will be orthogonal matrices
             // where their inverse is simply the transpose.
             int a = fabs(m[0])>fabs(m[1]) && fabs(m[0])>fabs(m[2]) ? 0 : (fabs(m[1])>fabs(m[2]) ? 1 : 2), b = (a+1)%3, c = (a+2)%3;
             float a1 = m[a], a2 = m[a+4], a3 = m[a+8],
@@ -797,7 +797,7 @@ struct animmodel : model
                 else
                 {
                     if(fogging) refractfogplane = rfogplane;
-                    if(lightmodels) 
+                    if(lightmodels)
                     {
                         loopv(skins) if(!skins[i].fullbright)
                         {
@@ -811,7 +811,7 @@ struct animmodel : model
 
             meshes->render(as, pitch, axis, this);
 
-            if(!(anim&ANIM_REUSE)) 
+            if(!(anim&ANIM_REUSE))
             {
                 loopv(links)
                 {
@@ -1098,7 +1098,7 @@ struct animmodel : model
                 m.mul(n);
             }
         }
-        else if(offsetpitch) 
+        else if(offsetpitch)
         {
             m.rotate(offsetpitch*RAD, vec(0, -1, 0));
             if(offsetroll)

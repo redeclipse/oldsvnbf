@@ -243,7 +243,7 @@ void draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a,
     bvec color(r, g, b);
     int cx = INT_MIN, cy = 0, left = rleft, top = rtop;
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBindTexture(GL_TEXTURE_2D, curfont->tex->id);
+    glBindTexture(GL_TEXTURE_2D, curfont->tex->id());
     glBegin(GL_QUADS);
 	loopk(s ? 2 : 1)
 	{

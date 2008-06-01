@@ -778,6 +778,7 @@ int main(int argc, char **argv)
 
 			cl->recomputecamera(screen->w, screen->h);
 			setviewcell(camera1->o);
+			updatetextures();
 			entity_particles();
 			checksound();
 
