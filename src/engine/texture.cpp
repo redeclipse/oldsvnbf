@@ -83,6 +83,20 @@ SDL_Surface *texcrop(SDL_Surface *s, int x, int y, int w, int h)
 	return d;
 }
 
+SDL_Surface *texcopy(SDL_Surface *s, bool free = false)
+{
+	SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, s->w, s->h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
+	if(!d) fatal("create surface");
+	loopi(s->h)
+	{
+		uchar *dst = (uchar *)d->pixels+(i*d->pitch),
+			*src = (uchar *)s->pixels+(i*s->pitch);
+		memcpy(dst, src, s->w*s->format->BytesPerPixel);
+	}
+	if(free) SDL_FreeSurface(s);
+	return d;
+}
+
 void texmad(SDL_Surface *s, const vec &mul, const vec &add)
 {
     int maxk = min(int(s->format->BytesPerPixel), 3);
@@ -425,17 +439,47 @@ static vec parsevec(const char *arg)
 	return v;
 }
 
+struct MediaCache
+{
+	enum
+	{
+		SDL_SURFACE,
+	};
+	char *name;
+	int type;
+	union
+	{
+		SDL_Surface *s;
+	};
+};
+
+hashtable<char *, MediaCache> mediacache;
+
 SDL_Surface *textureloadname(const char *name)
 {
-	SDL_Surface *s = NULL;
 	const char *exts[] = { "", ".png", ".tga", ".jpg", ".bmp" }; // bmp is a last resort!
-	string buf;
 	loopi(sizeof(exts)/sizeof(exts[0]))
 	{
-		s_sprintf(buf)("%s%s", name, exts[i]);
-		if((s = IMG_Load(findfile(buf, "rb"))) != NULL) break;
+		s_sprintfd(buf)("%s%s", name, exts[i]);
+		MediaCache *c = mediacache.access(buf);
+		if(!c || c->type != MediaCache::SDL_SURFACE)
+		{
+			SDL_Surface *s = IMG_Load(findfile(buf, "rb"));
+			if(s)
+			{
+				if(!c)
+				{
+					char *key = newstring(buf);
+					c = &mediacache[key];
+				}
+				c->type = MediaCache::SDL_SURFACE;
+				c->s = s;
+			}
+			else continue;
+		}
+		if(c && c->s) return texcopy(c->s);
 	}
-	return s;
+	return NULL;
 }
 
 static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL, int *frame = NULL, int *delay = NULL)
@@ -505,7 +549,9 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
         }
         else if(!strncmp(cmd, "anim", len))
         {
-			int sf = 0, ss = s->w/s->h;
+			int sd = atoi(arg[0]), sw = atoi(arg[1]);
+			if(!sw) sw = s->h;
+			int sf = 0, ss = s->w/sw;
 
 			if(frame)
 			{
@@ -513,7 +559,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 				{
 					sf = 0;
 					*frame = ss;
-					if(delay && *delay <= 0) *delay = atoi(arg[0]);
+					if(delay && *delay <= 0) *delay = sd;
 				}
 				else sf = *frame;
 			}
@@ -521,7 +567,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 			if(sf <= ss)
 			{
 				if(msg) show_out_of_renderloop_progress(float(sf)/float(ss), file);
-				s = texcrop(s, sf*s->h, 0, s->h, s->h);
+				s = texcrop(s, sf*sw, 0, sw, s->h);
 			}
         }
     }

@@ -1205,8 +1205,8 @@ void setfullbrightlevel(int fullbrightlevel)
     initlights();
 }
 
-VARFW(fullbright, 0, 0, 1, initlights());
-VARFW(fullbrightlevel, 0, 128, 255, setfullbrightlevel(fullbrightlevel));
+VARF(fullbright, 0, 0, 1, initlights());
+VARFP(fullbrightlevel, 0, 128, 255, setfullbrightlevel(fullbrightlevel));
 
 vector<LightMapTexture> lightmaptexs;
 

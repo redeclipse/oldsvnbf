@@ -42,7 +42,7 @@ CLIENT_OBJS= \
 	engine/worldio.o \
 	fpsgame/fps.o 
 
-SINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Iinclude
+SINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include
 SCXXFLAGS= -Wall -DSTANDALONE $(CXXOPTFLAGS) $(SINCLUDES)
 
 SERVER_LIBS=-Lenet -lenet -lz
@@ -52,7 +52,7 @@ SERVER_OBJS= \
 	engine/server-standalone.o \
 	fpsgame/fps-standalone.o
 
-DINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Iinclude
+DINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include
 DCXXFLAGS= -Wall -DSTANDALONE -DMASTERSERVER $(CXXOPTFLAGS) $(DINCLUDES)
 
 DAEMON_LIBS=-Lenet -lenet -lz

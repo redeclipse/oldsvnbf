@@ -7,6 +7,7 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
+		<Option active_target="2"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -733,6 +734,15 @@
 			<Option target="client"/>
 			<Option target="debug"/>
 			<Option target="server"/>
+		</Unit>
+		<Unit filename="fpsgame\extinfo.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
+			<Option target="daemon"/>
 		</Unit>
 		<Unit filename="fpsgame\fps.cpp">
 			<Option compilerVar="CPP"/>
