@@ -439,21 +439,13 @@ static vec parsevec(const char *arg)
 	return v;
 }
 
-struct MediaCache
+struct SurfaceCache
 {
-	enum
-	{
-		SDL_SURFACE,
-	};
 	char *name;
-	int type;
-	union
-	{
-		SDL_Surface *s;
-	};
+	SDL_Surface *s;
 };
 
-hashtable<char *, MediaCache> mediacache;
+hashtable<char *, SurfaceCache> surfacecache;
 
 SDL_Surface *textureloadname(const char *name)
 {
@@ -461,8 +453,8 @@ SDL_Surface *textureloadname(const char *name)
 	loopi(sizeof(exts)/sizeof(exts[0]))
 	{
 		s_sprintfd(buf)("%s%s", name, exts[i]);
-		MediaCache *c = mediacache.access(buf);
-		if(!c || c->type != MediaCache::SDL_SURFACE)
+		SurfaceCache *c = surfacecache.access(buf);
+		if(!c)
 		{
 			SDL_Surface *s = IMG_Load(findfile(buf, "rb"));
 			if(s)
@@ -470,9 +462,9 @@ SDL_Surface *textureloadname(const char *name)
 				if(!c)
 				{
 					char *key = newstring(buf);
-					c = &mediacache[key];
+					c = &surfacecache[key];
+					c->name = key;
 				}
-				c->type = MediaCache::SDL_SURFACE;
 				c->s = s;
 			}
 			else continue;
@@ -1347,8 +1339,17 @@ void mergenormalmaps(char *heightfile, char *normalfile)    // BGR (tga) -> BGR 
 COMMAND(flipnormalmapy, "ss");
 COMMAND(mergenormalmaps, "sss");
 
+void clearcache()
+{
+    enumerate(surfacecache, SurfaceCache, sc, {
+		if(sc.s) SDL_FreeSurface(sc.s);
+	});
+	surfacecache.clear();
+}
+
 void cleanuptextures()
 {
+	clearcache();
     clearenvmaps();
     loopv(slots) slots[i].cleanup();
     loopi(MAT_EDIT) materialslots[i].cleanup();
@@ -1411,5 +1412,6 @@ void updatetexture(Texture &tex)
 
 void updatetextures()
 {
+	clearcache();
     enumerate(textures, Texture, tex, updatetexture(tex));
 }
