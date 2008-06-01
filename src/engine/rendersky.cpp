@@ -27,6 +27,8 @@ Texture *loadskyoverlay(const char *basename)
 SVARFW(skybox, "skyboxes/black", { if(skybox[0]) loadsky(skybox, sky); });
 FVARW(spinsky, 0);
 VARW(yawsky, 0, 0, 360);
+VARW(fogsky, 0, 1, 1);
+
 SVARFW(cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
 FVARW(spinclouds, 0);
 VARW(yawclouds, 0, 0, 360);
@@ -215,7 +217,7 @@ void drawskybox(int farplane, bool limited)
     else defaultshader->set();
 
     bool fog = glIsEnabled(GL_FOG)==GL_TRUE;
-    if(fog) glDisable(GL_FOG);
+    if(!fogsky && fog) glDisable(GL_FOG);
 
     if(limited)
     {
@@ -298,7 +300,7 @@ void drawskybox(int farplane, bool limited)
     }
     else glDepthFunc(GL_LESS);
 
-    if(fog) glEnable(GL_FOG);
+    if(!fogsky && fog) glEnable(GL_FOG);
 }
 
 VARN(skytexture, useskytexture, 0, 1, 1);
