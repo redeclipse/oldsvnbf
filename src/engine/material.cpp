@@ -188,7 +188,7 @@ void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurfa
 			if(dimcoord(i)) m.o[dimension(i)] += size;
 			matsurfs.add(m);
 		}
-        if(isclipped(c.ext->material) && c.ext->material != MAT_CLIP) 
+        if(isclipped(c.ext->material) && c.ext->material != MAT_CLIP)
         {
             clipmask |= 1<<i;
             if(vis == MATSURF_VISIBLE) vismask |= 1<<i;
@@ -646,9 +646,9 @@ void rendermaterials()
                                 setlocalparamf("dudvoffset", SHPARAM_PIXEL, 1, 0, scale*16*lastmillis/1000.0f);
 
                                 glActiveTexture_(GL_TEXTURE1_ARB);
-                                glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(4) ? wslot.sts[4].t->id : notexture->id);
+                                glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(4) ? wslot.sts[4].t->id() : notexture->id());
                                 glActiveTexture_(GL_TEXTURE2_ARB);
-                                glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(5) ? wslot.sts[5].t->id : notexture->id);
+                                glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(5) ? wslot.sts[5].t->id() : notexture->id());
                                 if(hasCM && waterfallenv)
                                 {
                                     glActiveTexture_(GL_TEXTURE3_ARB);
@@ -672,7 +672,7 @@ void rendermaterials()
 						textured = GL_TEXTURE_2D;
 					}
 					int tex = m.orient == O_TOP ? 0 : 1;
-					glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(tex) ? wslot.sts[tex].t->id : notexture->id);
+					glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(tex) ? wslot.sts[tex].t->id() : notexture->id());
 					break;
 				}
 				case MAT_LAVA:
@@ -704,7 +704,7 @@ void rendermaterials()
 						textured = GL_TEXTURE_2D;
 					}
 					int tex = m.orient == O_TOP ? 0 : 1;
-					glBindTexture(GL_TEXTURE_2D, lslot.sts.inrange(tex) ? lslot.sts[tex].t->id : notexture->id);
+					glBindTexture(GL_TEXTURE_2D, lslot.sts.inrange(tex) ? lslot.sts[tex].t->id() : notexture->id());
 					break;
 				}
 				case MAT_GLASS:

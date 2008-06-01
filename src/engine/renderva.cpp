@@ -1093,8 +1093,8 @@ static void changeglow(renderstate &cur, int pass, Slot &slot)
         Slot::Tex &t = slot.sts[j];
         if(t.type==TEX_GLOW && t.combined<0)
         {
-            if(cur.textures[cur.glowtmu]!=t.t->id)
-                glBindTexture(GL_TEXTURE_2D, cur.textures[cur.glowtmu] = t.t->id);
+            if(cur.textures[cur.glowtmu]!=t.t->id())
+                glBindTexture(GL_TEXTURE_2D, cur.textures[cur.glowtmu] = t.t->id());
             break;
         }
     }
@@ -1107,7 +1107,7 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot)
 {
     if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR)
     {
-        GLuint diffusetex = blankgeom ? blanktexture->id : (slot.sts.empty() ? notexture->id : slot.sts[0].t->id);
+        GLuint diffusetex = blankgeom ? blanktexture->id() : (slot.sts.empty() ? notexture->id() : slot.sts[0].t->id());
         if(cur.textures[cur.diffusetmu]!=diffusetex)
             glBindTexture(GL_TEXTURE_2D, cur.textures[cur.diffusetmu] = diffusetex);
     }
@@ -1147,17 +1147,17 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot)
             if(t.type==TEX_DIFFUSE && blankgeom) u = blanktexture;
             if(t.type==TEX_ENVMAP)
             {
-                if(envmaptmu>=0 && cur.textures[envmaptmu]!=u->id)
+                if(envmaptmu>=0 && cur.textures[envmaptmu]!=u->id())
                 {
                     glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
-                    glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cur.textures[envmaptmu] = u->id);
+                    glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, cur.textures[envmaptmu] = u->id());
                 }
                 continue;
             }
-            else if(cur.textures[tmu]!=u->id)
+            else if(cur.textures[tmu]!=u->id())
             {
                 glActiveTexture_(GL_TEXTURE0_ARB+tmu);
-                glBindTexture(GL_TEXTURE_2D, cur.textures[tmu] = u->id);
+                glBindTexture(GL_TEXTURE_2D, cur.textures[tmu] = u->id());
             }
             tmu++;
         }
@@ -1634,7 +1634,7 @@ void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
     {
         glActiveTexture_(GL_TEXTURE0_ARB+tmu+i);
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, caustictex[(tex+i)%NUMCAUSTICS]->id);
+        glBindTexture(GL_TEXTURE_2D, caustictex[(tex+i)%NUMCAUSTICS]->id());
         if(renderpath==R_FIXEDFUNCTION)
         {
             setuptexgen();

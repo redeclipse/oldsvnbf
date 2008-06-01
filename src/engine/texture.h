@@ -191,12 +191,20 @@ struct Texture
     };
 
     char *name;
-    int type, w, h, xs, ys, bpp, clamp;
+    int type, w, h, xs, ys, bpp, clamp, frame, delay, last;
     bool mipmap, canreduce;
-    GLuint id;
+    vector<GLuint> frames;
     uchar *alphamask;
 
-    Texture() : alphamask(NULL) {}
+
+    Texture() : frame(0), delay(0), last(0), alphamask(NULL) {}
+
+    GLuint id()
+    {
+    	if(frames.inrange(frame)) return frames[frame];
+    	else if(frames.length()) return frames[0];
+    	else return (GLuint)0;
+    }
 };
 
 enum
@@ -280,6 +288,7 @@ extern void setshaderparam(char *name, int type, int n, float x, float y, float 
 extern int findtexturetype(char *name, bool tryint = false);
 extern const char *findtexturename(int type);
 extern void texture(char *type, char *name, int *rot, int *xoffet, int *yoffset, float *scale);
+extern void updatetextures();
 
 struct cubemapside
 {
