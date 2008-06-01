@@ -549,9 +549,10 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
         }
         else if(!strncmp(cmd, "anim", len))
         {
-			int sd = atoi(arg[0]), sw = atoi(arg[1]);
+			int sd = atoi(arg[0]), sw = atoi(arg[1]), sh = atoi(arg[2]);
 			if(!sw) sw = s->h;
-			int sf = 0, ss = s->w/sw;
+			if(!sh) sh = s->h;
+			int sf = 0, sv = s->w/sw, su = s->h/sh, ss = sv*su;
 
 			if(frame)
 			{
@@ -567,7 +568,8 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 			if(sf <= ss)
 			{
 				if(msg) show_out_of_renderloop_progress(float(sf)/float(ss), file);
-				s = texcrop(s, sf*sw, 0, sw, s->h);
+				int sx = (sf%sv)*sw, sy = (((sf-(sf%sv))/sv)%su)*sh;
+				s = texcrop(s, sx, sy, sw, sh);
 			}
         }
     }
