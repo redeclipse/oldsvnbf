@@ -203,11 +203,8 @@ struct GAMECLIENT : igameclient
 
 	void setmode(int mode, int muts)
 	{
-		if(!m_game(mode)) { conoutf("mode %d is not a valid gameplay type", mode); return; }
-		if(m_sp(mode)) { conoutf("playing %s is not yet supported", gametype[mode]); return; }
-		if(multiplayer(false) && !m_mp(mode)) { conoutf("playing %s is not supported in multiplayer", gametype[mode]); return; }
-		nextmode = mode;
-		nextmuts = muts;
+		nextmode = mode; nextmuts = muts;
+		sv->modecheck(&nextmode, &nextmuts);
 	}
 
     void render() { fr.render(); }

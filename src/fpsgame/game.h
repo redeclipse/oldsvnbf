@@ -148,8 +148,9 @@ enum
 #define G_M_MULTI			0x0010	// mutli team
 #define G_M_DLMS			0x0020	// last man standing
 
-#define G_M_NUM				5
+#define G_M_NUM				6
 
+#define G_M_ALL				G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_PROG|G_M_MULTI
 #define G_M_FRAG			G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI
 #define G_M_BASE			G_M_INSTA|G_M_PROG|G_M_MULTI
 
@@ -164,12 +165,12 @@ static struct gametypes
 	{ G_CAPTURE,		G_M_BASE,		G_M_TEAM,			"Base Capture" },
 	{ G_CTF,			G_M_BASE,		G_M_TEAM,			"Capture the Flag" },
 }, mutstype[] = {
-	{ G_M_TEAM,			0,				0,					"Team" },
-	{ G_M_INSTA,		0,				0,					"Instagib" },
-	{ G_M_DUEL,			0,				0,					"Duel" },
-	{ G_M_PROG,			0,				0,					"Progressive" },
-	{ G_M_MULTI,		0,				G_M_TEAM,			"Multi Sided" },
-	{ G_M_DLMS,			0,				G_M_DUEL,			"Last Man Standing" },
+	{ G_M_TEAM,			G_M_ALL,		0,					"Team" },
+	{ G_M_INSTA,		G_M_ALL,		0,					"Instagib" },
+	{ G_M_DUEL,			G_M_ALL,		0,					"Duel" },
+	{ G_M_PROG,			G_M_ALL,		0,					"Progressive" },
+	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,			"Multi Sided" },
+	{ G_M_DLMS,			G_M_ALL,		G_M_DUEL,			"Last Man Standing" },
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)

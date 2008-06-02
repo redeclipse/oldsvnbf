@@ -115,6 +115,7 @@ struct igameserver
     virtual void changemap(const char *s, int mode = 0, int muts = 0) { return; }
     virtual const char *gameid() = 0;
 	virtual char *gamename(int mode, int muts) = 0;
+	virtual void modecheck(int *mode, int *muts) = 0;
 	virtual int gamever() = 0;
     virtual const char *defaultmap() = 0;
     virtual int defaultmode() = 0;
