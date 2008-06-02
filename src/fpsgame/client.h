@@ -1181,8 +1181,9 @@ struct clientcom : iclientcom
 	void changemapserv(char *name, int gamemode, int mutators)
 	{
 		if(remote && !m_mp(gamemode)) gamemode = G_DEATHMATCH;
-		cl.nextmode = cl.gamemode = gamemode;
-		cl.nextmuts = cl.mutators = mutators;
+		cl.gamemode = gamemode; cl.mutators = mutators;
+		sv->modecheck(&cl.gamemode, &cl.mutators);
+		cl.nextmode = cl.gamemode; cl.nextmuts = cl.mutators;
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;

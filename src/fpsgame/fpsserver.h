@@ -342,10 +342,13 @@ struct GAMESERVER : igameserver
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
         if(!ci || (ci->state.state==CS_SPECTATOR && !ci->privilege) || !m_game(reqmode)) return;
+
 		s_strcpy(ci->mapvote, map);
-		ci->modevote = reqmode;
-		ci->mutsvote = reqmuts|gametype[reqmode].implied;
 		if(!ci->mapvote[0]) return;
+
+		ci->modevote = reqmode; ci->mutsvote = reqmuts;
+		modecheck(&ci->modevote, &ci->mutsvote);
+
 		if(mapreload || (ci->privilege && mastermode>=MM_VETO))
 		{
 			if(demorecord) enddemorecord();
@@ -685,8 +688,8 @@ struct GAMESERVER : igameserver
 		else enddemorecord();
 
 		mapreload = false;
-		gamemode = mode;
-		mutators = muts;
+		gamemode = mode; mutators = muts;
+		modecheck(&gamemode, &mutators);
 		gamemillis = 0;
 		minremain = 10; // FIXME
 		gamelimit = minremain*60000;
@@ -2250,19 +2253,59 @@ struct GAMESERVER : igameserver
     {
     	static string gname;
     	gname[0] = 0;
-    	int gmode = mode >= 0 && mode < G_MAX ? mode : G_DEATHMATCH;
-		loopi(G_M_NUM)
-		{
-			if ((gametype[gmode].mutators & mutstype[i].type) && (muts & mutstype[i].type))
+    	if(gametype[mode].mutators && muts)
+    	{
+			loopi(G_M_NUM)
 			{
-				s_sprintfd(name)("%s%s%s", *gname ? gname : "", *gname ? "-" : "", mutstype[i].name);
-				s_strcpy(gname, name);
+				if ((gametype[mode].mutators & mutstype[i].type) && (muts & mutstype[i].type))
+				{
+					s_sprintfd(name)("%s%s%s", *gname ? gname : "", *gname ? "-" : "", mutstype[i].name);
+					s_strcpy(gname, name);
+				}
 			}
-		}
-		s_sprintfd(mname)("%s%s%s", *gname ? gname : "", *gname ? " " : "", gametype[gmode].name);
+    	}
+		s_sprintfd(mname)("%s%s%s", *gname ? gname : "", *gname ? " " : "", gametype[mode].name);
 		s_strcpy(gname, mname);
 		return gname;
     }
+
+    void modecheck(int *mode, int *muts)
+    {
+		if(!m_game(*mode) || m_sp(*mode) || (multiplayer(false) && !m_mp(*mode)))
+		{
+			*mode = G_DEATHMATCH;
+			*muts = gametype[*mode].implied;
+		}
+
+		if(gametype[*mode].mutators && *muts)
+		{
+			loopi(G_M_NUM)
+			{
+				if(!(gametype[*mode].mutators & mutstype[i].type) && (*muts & mutstype[i].type))
+					*muts &= ~mutstype[i].type;
+
+				if(gametype[*mode].implied && (gametype[*mode].implied & mutstype[i].type) && !(*muts & mutstype[i].type))
+					*muts |= mutstype[i].type;
+
+				if(*muts & mutstype[i].type)
+				{
+					loopj(G_M_NUM)
+					{
+						if(mutstype[i].mutators && !(mutstype[i].mutators & mutstype[j].type) && (*muts & mutstype[j].type))
+							*muts &= ~mutstype[j].type;
+
+						if(mutstype[i].implied && (mutstype[i].implied & mutstype[j].type) && !(*muts & mutstype[j].type))
+							*muts |= mutstype[j].type;
+
+						if((mutstype[i].implied & mutstype[j].type) && !(*muts & mutstype[j].type))
+							*muts |= mutstype[j].type;
+					}
+				}
+			}
+		}
+		else *muts = 0;
+    }
+
 	const char *defaultmap() { return "usm01"; }
 	int defaultmode() { return G_DEATHMATCH; }
 
