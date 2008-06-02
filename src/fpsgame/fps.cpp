@@ -47,11 +47,11 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> players;		// other clients
 	fpsent lastplayerstate;
 
-	IVARP(invmouse, 0, 0, 1);
 	IVARP(cameradist, -100, 8, 100);
 	IVARP(camerashift, -100, 4, 100);
 	IVARP(cameraheight, 0, 35, 360);
 
+	IVARP(invmouse, 0, 0, 1);
 	IVARP(mousetype, 0, 0, 4);
 	IVARP(mousedeadzone, 0, 10, 100);
 	IVARP(mousepanspeed, 1, 30, 1000);
@@ -61,22 +61,35 @@ struct GAMECLIENT : igameclient
 	IVARP(pitchsensitivity, 1, 7, 1000);
 	IVARP(sensitivityscale, 1, 1, 100);
 
-	IVARP(autoreload, 0, 1, 1);// auto reload when empty
-
-	IVARP(crosshair, 0, 1, 1);// show the crosshair
+	IVARP(crosshair, 0, 1, 1);
 	IVARP(teamcrosshair, 0, 1, 1);
 	IVARP(hitcrosshair, 0, 425, 1000);
 
+	IVARP(crosshairsize, 0, 25, 1000);
+	IVARP(crosshairblend, 0, 50, 100);
+	IVARP(cursorsize, 0, 30, 1000);
+	IVARP(cursorblend, 0, 0, 100);
+
+	ITVAR(relativecursortex, "textures/relativecursor");
+	ITVAR(guicursortex, "textures/guicursor");
+	ITVAR(editcursortex, "textures/editcursor");
+	ITVAR(crosshairtex, "textures/crosshair");
+	ITVAR(teamcrosshairtex, "textures/teamcrosshair");
+	ITVAR(hitcrosshairtex, "textures/hitcrosshair");
+
 	IVARP(radardist, 0, 256, 256);
 	IVARP(editradardist, 0, 64, 1024);
+
+	ITVAR(bliptex, "textures/blip");
+	ITVAR(radartex, "textures/radar");
+	ITVAR(radarpingtex, "<anim:100>textures/radarping");
+
+	IVARP(autoreload, 0, 1, 1);// auto reload when empty
 
 	IVARP(hidestats, 0, 0, 1);
 	IVARP(showfpsrange, 0, 0, 1);
 	IVARP(showeditstats, 0, 1, 1);
 	IVARP(statrate, 0, 200, 1000);
-
-	ISVARFP(bliptex, "textures/blip", if(*storage.s[0]) textureload(*storage.s););
-	ISVARFP(radartex, "<anim:75>textures/radarping", if(*storage.s[0]) textureload(*storage.s););
 
     GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
@@ -486,6 +499,7 @@ struct GAMECLIENT : igameclient
     void preload()
     {
     	textureload(radartex());
+    	textureload(radarpingtex());
     	textureload(bliptex());
 
         ws.preload();
@@ -731,55 +745,93 @@ struct GAMECLIENT : igameclient
 			}
 
 			int rx = FONTH/4, rs = oy/5, ry = oy-rs-(FONTH/4);
-			settexture(radartex());
-			//if(m_team(gamemode, mutators)) glColor4f(0.f, 0.f, 1.f, fade);
-			//else glColor4f(0.f, 1.0f, 0.f, fade);
-			glColor4f(1.f, 1.f, 1.f, fade);
 
+			settexture(radartex());
+			glColor4f(1.f, 1.f, 1.f, fade);
 			glBegin(GL_QUADS);
 			drawradar(float(rx), float(ry), float(rs));
 			glEnd();
+			drawblips(rx, ry, rs);
 
 			if(m_capture(gamemode)) cpc.drawhud(ox, oy);
 			else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
-			drawblips(rx, ry, rs);
+
+			settexture(radarpingtex());
+			glColor4f(1.f, 1.f, 1.f, 0.25f*fade);
+			glBegin(GL_QUADS);
+			drawradar(float(rx), float(ry), float(rs));
+			glEnd();
 		}
 	}
 
-    const char *defaultcrosshair(int index)
+	enum
+	{
+		POINTER_NONE = 0,
+		POINTER_RELATIVE,
+		POINTER_GUI,
+		POINTER_EDIT,
+		POINTER_HAIR,
+		POINTER_TEAM,
+		POINTER_HIT,
+		POINTER_MAX
+	};
+
+    const char *getpointer(int index)
     {
         switch(index)
         {
-            case 0: return "textures/guicursor";
-            case 1: return "textures/editcursor";
-            case 2: return "textures/crosshair";
-            case 3: return "textures/crosshair_team";
-            case 4: return "textures/crosshair_hit";
-            case 5: return "textures/relativecursor";
+            case POINTER_RELATIVE: return relativecursortex();
+            case POINTER_GUI: return guicursortex();
+            case POINTER_EDIT: return editcursortex();
+            case POINTER_HAIR: return crosshairtex();
+            case POINTER_TEAM: return teamcrosshairtex();
+            case POINTER_HIT: return hitcrosshairtex();
             default: return "";
         }
     }
 
+	void drawpointer(int w, int h, int index, float cx, float cy, float r, float g, float b)
+	{
+		Texture *pointer = textureload(getpointer(index));
+		float chsize = index ? crosshairsize()*w/300.0f : cursorsize()*w/300.0f,
+			chblend = index ? crosshairblend()/100.f : cursorblend()/100.f;
+
+		if(pointer->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		else glBlendFunc(GL_ONE, GL_ONE);
+
+		glColor4f(r, g, b, chblend);
+		float x = cx*w*3.0f - (index ? chsize/2.0f : 0);
+		float y = cy*h*3.0f - (index ? chsize/2.0f : 0);
+		glBindTexture(GL_TEXTURE_2D, pointer->id());
+		glBegin(GL_QUADS);
+		glTexCoord2d(0.0, 0.0); glVertex2f(x, y);
+		glTexCoord2d(1.0, 0.0); glVertex2f(x + chsize, y);
+		glTexCoord2d(1.0, 1.0); glVertex2f(x + chsize, y + chsize);
+		glTexCoord2d(0.0, 1.0); glVertex2f(x, y + chsize);
+		glEnd();
+	}
+
 	void drawpointers(int w, int h)
 	{
 		float r = 1.f, g = 1.f, b = 1.f;
-        int index = -1;
+        int index = POINTER_NONE;
 
-		if(menuactive()) index = 0;
-        else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = -1;
-        else if(editmode) index = 1;
-        else if(lastmillis-lasthit < hitcrosshair()) index = 3;
+		if(menuactive()) index = POINTER_GUI;
+        else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
+        else if(editmode) index = POINTER_EDIT;
+        else if(lastmillis-lasthit < hitcrosshair()) index = POINTER_HIT;
         else if(m_team(gamemode, mutators) && teamcrosshair())
         {
             dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
-            if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team)) index = 2;
+            if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team))
+				index = POINTER_TEAM;
         }
-        else index = 2;
+        else index = POINTER_HAIR;
 
-		if(index >= 2)
+		if(index >= POINTER_HAIR)
 		{
 			if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
-			else if(!index && r && g && b && !editmode && !m_insta(gamemode, mutators))
+			else if(r && g && b && !editmode && !m_insta(gamemode, mutators))
 			{
 				if(player1->health<=25) { r = 1; g = b = 0; }
 				else if(player1->health<=50) { r = 1; g = 0.5f; b = 0; }
@@ -789,11 +841,11 @@ struct GAMECLIENT : igameclient
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
 
-		if(index >= 0)
-			drawcrosshair(w, h, index, !index || mousetype() >= 3 ? cursorx : 0.5f, !index || mousetype() >= 3 ? cursory : 0.5f, r, g, b);
+		if(index > POINTER_NONE)
+			drawpointer(w, h, index, index < POINTER_EDIT || mousetype() >= 3 ? cursorx : 0.5f, index < POINTER_EDIT || mousetype() >= 3 ? cursory : 0.5f, r, g, b);
 
-		if(index >= 1 && mousetype())
-			drawcrosshair(w, h, 5, mousetype() <= 2 ? cursorx : 0.5f, mousetype() <= 2 ? cursory : 0.5f);
+		if(index > POINTER_GUI && mousetype())
+			drawpointer(w, h, POINTER_RELATIVE, mousetype() <= 2 ? cursorx : 0.5f, mousetype() <= 2 ? cursory : 0.5f, r, g, b);
 	}
 
 	void drawhudelements(int w, int h)

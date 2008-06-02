@@ -1351,72 +1351,10 @@ void gl_drawframe(int w, int h)
     renderedgame = false;
 }
 
-VARP(crosshairsize, 0, 25, 1000);
-VARP(crosshairblend, 0, 50, 100);
-VARP(cursorsize, 0, 30, 1000);
-VARP(cursorblend, 0, 0, 100);
-
 VARP(hidehud, 0, 0, 1);
 
 float cursorx = 0.5f, cursory = 0.5f;
 vec cursordir(0, 0, 0);
-#define MAXCROSSHAIRS 6
-static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL, NULL, NULL };
-
-void loadcrosshair(const char *name, int i)
-{
-    if(i < 0 || i >= MAXCROSSHAIRS) return;
-    crosshairs[i] = name ? textureload(name, 3, true) : notexture;
-    if(crosshairs[i] == notexture)
-    {
-        name = cl->defaultcrosshair(i);
-        if(!name) name = "textures/crosshair";
-        crosshairs[i] = textureload(name, 3, true);
-    }
-}
-
-void loadcrosshair_(const char *name, int *i)
-{
-    loadcrosshair(name, *i);
-}
-
-COMMANDN(loadcrosshair, loadcrosshair_, "si");
-
-void writecrosshairs(FILE *f)
-{
-    loopi(MAXCROSSHAIRS) if(crosshairs[i] && crosshairs[i]!=notexture)
-        fprintf(f, "loadcrosshair \"%s\" %d\n", crosshairs[i]->name, i);
-    fprintf(f, "\n");
-}
-
-void drawcrosshair(int w, int h, int index, float cx, float cy, float r, float g, float b)
-{
-	if(index > -1 && index < MAXCROSSHAIRS)
-	{
-		Texture *crosshair = crosshairs[index];
-		if(!crosshair)
-		{
-			loadcrosshair(NULL, index);
-			crosshair = crosshairs[index];
-		}
-		float chsize = index ? crosshairsize*w/300.0f : cursorsize*w/300.0f,
-			chblend = index ? crosshairblend/100.f : cursorblend/100.f;
-
-		if(crosshair->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		else glBlendFunc(GL_ONE, GL_ONE);
-
-		glColor4f(r, g, b, chblend);
-		float x = cx*w*3.0f - (index ? chsize/2.0f : 0);
-		float y = cy*h*3.0f - (index ? chsize/2.0f : 0);
-		glBindTexture(GL_TEXTURE_2D, crosshair->id());
-		glBegin(GL_QUADS);
-		glTexCoord2d(0.0, 0.0); glVertex2f(x, y);
-		glTexCoord2d(1.0, 0.0); glVertex2f(x + chsize, y);
-		glTexCoord2d(1.0, 1.0); glVertex2f(x + chsize, y + chsize);
-		glTexCoord2d(0.0, 1.0); glVertex2f(x, y + chsize);
-		glEnd();
-	}
-}
 
 void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 {

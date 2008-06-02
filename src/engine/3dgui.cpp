@@ -724,9 +724,9 @@ struct gui : g3d_gui
 
 Texture *gui::skintex = NULL, *gui::overlaytex = NULL, *gui::slidertex = NULL;
 
-SVARFP(guiskintex, "textures/guiskin", if(guiskintex[0]) gui::skintex = textureload(guiskintex));
-SVARFP(guioverlaytex, "textures/guioverlay", if(guioverlaytex[0]) gui::overlaytex = textureload(guioverlaytex));
-SVARFP(guislidertex, "textures/guislider", if(guislidertex[0]) gui::slidertex = textureload(guislidertex));
+TVARN(guiskintex, "textures/guiskin", gui::skintex);
+TVARN(guioverlaytex, "textures/guioverlay", gui::overlaytex);
+TVARN(guislidertex, "textures/guislider", gui::slidertex);
 
 //chop skin into a grid
 const int gui::skiny[] = {0, 7, 21, 34, 48, 56, 104, 111, 116, 128},
