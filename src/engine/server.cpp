@@ -518,7 +518,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 	masteradr = address;
 
 	s_sprintfd(text)("retrieving servers from %s... (esc to abort)", masterserv);
-	show_out_of_renderloop_progress(0, text);
+	renderprogress(0, text);
 
 	ENetBuffer eb;
 	eb.data = buf;
@@ -528,7 +528,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 	while(masterreceive(sock, eb, 250))
 	{
 		timeout = SDL_GetTicks() - starttime;
-        show_out_of_renderloop_progress(min(float(timeout)/RETRIEVELIMIT, 1.0f), text);
+        renderprogress(min(float(timeout)/RETRIEVELIMIT, 1.0f), text);
         if(interceptkey(SDLK_ESCAPE)) timeout = RETRIEVELIMIT + 1;
 		if(timeout > RETRIEVELIMIT)
 		{

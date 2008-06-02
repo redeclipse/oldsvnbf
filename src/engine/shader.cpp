@@ -55,7 +55,7 @@ void loadshaders()
         glEnable(GL_VERTEX_PROGRAM_ARB);
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
     }
-    
+
     defaultshader->set();
 }
 
@@ -110,7 +110,7 @@ static void showglslinfo(GLhandleARB obj, const char *tname, const char *name)
 	}
 }
 
-static void compileglslshader(GLenum type, GLhandleARB &obj, const char *def, const char *tname, const char *name, bool msg = true) 
+static void compileglslshader(GLenum type, GLhandleARB &obj, const char *def, const char *tname, const char *name, bool msg = true)
 {
 	const GLcharARB *source = (const GLcharARB*)(def + strspn(def, " \t\r\n"));
 	obj = glCreateShaderObject_(type);
@@ -1055,7 +1055,7 @@ void shader(int *type, char *name, char *vs, char *ps)
     if(renderpath!=R_FIXEDFUNCTION)
     {
         s_sprintfd(info)("shader %s", name);
-        show_out_of_renderloop_progress(0.0, info);
+        renderprogress(0.0, info);
         if(mesa_program_bug && standardshader)
         {
             glEnable(GL_VERTEX_PROGRAM_ARB);
@@ -1093,7 +1093,7 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
 
     s_sprintfd(varname)("<variant:%d,%d>%s", s->variants[*row].length(), *row, name);
     //s_sprintfd(info)("shader %s", varname);
-    //show_out_of_renderloop_progress(0.0, info);
+    //renderprogress(0.0, info);
     extern int mesa_program_bug;
     if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && standardshader)
     {
@@ -1641,7 +1641,7 @@ void reloadshaders()
         if(!s.standard && s.type!=SHADER_INVALID && !s.variantshader)
         {
             s_sprintfd(info)("shader %s", s.name);
-            show_out_of_renderloop_progress(0.0, info);
+            renderprogress(0.0, info);
             if(!s.compile()) s.cleanup(true);
             loopi(MAXVARIANTROWS) loopvj(s.variants[i])
             {

@@ -491,7 +491,7 @@ void readychanges(block3 &b, cube *c, const ivec &cor, int size)
                 {
                     if(!invalidatedmerges)
                     {
-                        show_out_of_renderloop_progress(0, "invalidating merged surfaces...");
+                        renderprogress(0, "invalidating merged surfaces...");
                         invalidatedmerges = true;
                     }
                     invalidatemerges(c[i]);

@@ -62,7 +62,7 @@ void show_calclight_progress()
 		    break;
 	    }
     }
-	show_out_of_renderloop_progress(bar1, text1, bar2, text2, progresstexticks ? progresstex : 0);
+	renderprogress(bar1, text1, bar2, text2, progresstexticks ? progresstex : 0);
 }
 
 #define CHECK_PROGRESS(exit) CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_progress)
@@ -1167,7 +1167,7 @@ void patchlight(int quality)
 	calclight_canceled = false;
 	check_calclight_progress = false;
 	SDL_TimerID timer = SDL_AddTimer(250, calclight_timer, NULL);
-	if(patchnormals) show_out_of_renderloop_progress(0, "computing normals...");
+	if(patchnormals) renderprogress(0, "computing normals...");
 	Uint32 start = SDL_GetTicks();
 	if(patchnormals) calcnormals();
 	show_calclight_progress();

@@ -523,7 +523,7 @@ struct vacollect : verthash
 } vc;
 
 int recalcprogress = 0;
-#define progress(s)     if((recalcprogress++&0x7FF)==0) show_out_of_renderloop_progress(recalcprogress/(float)allocnodes, s);
+#define progress(s)     if((recalcprogress++&0x7FF)==0) renderprogress(recalcprogress/(float)allocnodes, s);
 
 vector<tjoint> tjoints;
 
@@ -853,7 +853,7 @@ void gencubeverts(cube &c, int x, int y, int z, int size, int csi, uchar &vismas
 		cubeext &e = ext(c);
 
 		// this is necessary for physics to work, even if the face is merged
-        if(touchingface(c, i)) 
+        if(touchingface(c, i))
         {
             e.visible |= 1<<i;
             if(c.texture[i]!=DEFAULT_SKY && faceedges(c, i)==F_SOLID) clipmask |= 1<<i;
@@ -1087,7 +1087,7 @@ void updatevabb(vtxarray *va, bool force)
             va->bbmax[k] = max(va->bbmax[k], child->bbmax[k]);
         }
     }
-    if(va->mapmodels) 
+    if(va->mapmodels)
     {
         loopv(*va->mapmodels)
         {
@@ -1211,7 +1211,7 @@ static uchar unusedmask;
 void rendercube(cube &c, int cx, int cy, int cz, int size, int csi, uchar &vismask = unusedmask, uchar &clipmask = unusedmask)  // creates vertices and indices ready to be put into a va
 {
 	//if(size<=16) return;
-    if(c.ext && c.ext->va) 
+    if(c.ext && c.ext->va)
     {
         vismask = c.children ? c.vismask : 0x3F;
         clipmask = c.children ? c.clipmask : 0;
@@ -1465,7 +1465,7 @@ void findtjoints(int cur, const edgegroup &g)
         while(curactive >= 0)
         {
             cubeedge &a = cubeedges[curactive];
-            if(a.offset+a.size <= e.offset) 
+            if(a.offset+a.size <= e.offset)
             {
                 if(prevactive >= 0) cubeedges[prevactive].next = a.next;
                 else active = a.next;
@@ -1524,7 +1524,7 @@ void precacheall() { loopv(valist) precachetextures(valist[i]); }
 
 void allchanged(bool load)
 {
-	show_out_of_renderloop_progress(0, "clearing VBOs...");
+	renderprogress(0, "clearing VBOs...");
 	vaclearc(worldroot);
 	resetqueries();
 	if(load) initenvmaps();

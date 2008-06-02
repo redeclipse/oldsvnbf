@@ -259,7 +259,7 @@ model *loadmodel(const char *name, int i, bool msg)
 		if(msg)
 		{
 			s_sprintfd(filename)("models/%s", name);
-			show_out_of_renderloop_progress(0, filename);
+			renderprogress(0, filename);
 		}
 		m = new md2(name);
 		loadingmodel = m;
