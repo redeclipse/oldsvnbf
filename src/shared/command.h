@@ -204,7 +204,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define _ISVAR(n, c, b, p, w) \
 	struct var_##n : ident \
 	{ \
-        var_##n() : ident(ID_SVAR, #n, c, &val.s, NULL, p, w) \
+        var_##n() : ident(ID_SVAR, #n, newstring(c), &val.s, NULL, p, w) \
 		{ \
             addident(name, this); \
 		} \
