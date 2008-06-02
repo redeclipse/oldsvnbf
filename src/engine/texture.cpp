@@ -529,8 +529,8 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 				anim->delay = atoi(arg[0]);
 				anim->w = atoi(arg[1]);
 				anim->h = atoi(arg[2]);
-				if(!anim->w) anim->w = s->h;
-				if(!anim->h) anim->h = s->h;
+				if(!anim->w) anim->w = s->h <= s->w ? s->h : s->w;
+				if(!anim->h) anim->h = s->h <= s->w ? s->h : s->w;
 				anim->x = s->w/anim->w;
 				anim->y = s->h/anim->h;
 				anim->count = anim->x*anim->y;
