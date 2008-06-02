@@ -727,7 +727,7 @@ void splitocta(cube *c, int size)
 
 void resetmap()
 {
-	show_out_of_renderloop_progress(0, "resetting map...");
+	renderprogress(0, "resetting map...");
 	materialreset();
 	texturereset();
 	mapmodelreset();

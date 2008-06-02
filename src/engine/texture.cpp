@@ -27,12 +27,12 @@ static inline void reorienttexture(uchar *src, int sw, int sh, int bpp, uchar *d
     }
 }
 
-SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, int type = TEX_DIFFUSE)
+SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, int type = TEX_DIFFUSE, bool clear = true)
 {
     SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, swapxy ? s->h : s->w, swapxy ? s->w : s->h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
     if(!d) fatal("create surface");
     reorienttexture((uchar *)s->pixels, s->w, s->h, s->format->BytesPerPixel, (uchar *)d->pixels, flipx, flipy, swapxy, type==TEX_NORMAL);
-    SDL_FreeSurface(s);
+    if(clear) SDL_FreeSurface(s);
     return d;
 }
 
@@ -47,7 +47,7 @@ SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type = TEX_DIFFUSE)
         type);
 }
 
-SDL_Surface *texoffset(SDL_Surface *s, int xoffset, int yoffset)
+SDL_Surface *texoffset(SDL_Surface *s, int xoffset, int yoffset, bool clear = true)
 {
 	xoffset = max(xoffset, 0);
 	xoffset %= s->w;
@@ -65,11 +65,11 @@ SDL_Surface *texoffset(SDL_Surface *s, int xoffset, int yoffset)
 		memcpy(dst, src+(s->w-xoffset)*depth, xoffset*depth);
 		src += s->pitch;
 	}
-	SDL_FreeSurface(s);
+	if(clear) SDL_FreeSurface(s);
 	return d;
 }
 
-SDL_Surface *texcrop(SDL_Surface *s, int x, int y, int w, int h)
+SDL_Surface *texcrop(SDL_Surface *s, int x, int y, int w, int h, bool clear = true)
 {
 	SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
 	if(!d) fatal("create surface");
@@ -79,11 +79,11 @@ SDL_Surface *texcrop(SDL_Surface *s, int x, int y, int w, int h)
 			*src = (uchar *)s->pixels+(((i+y)*s->pitch)+(x*s->format->BytesPerPixel));
 		memcpy(dst, src, w*s->format->BytesPerPixel);
 	}
-	SDL_FreeSurface(s);
+	if(clear) SDL_FreeSurface(s);
 	return d;
 }
 
-SDL_Surface *texcopy(SDL_Surface *s, bool free = false)
+SDL_Surface *texcopy(SDL_Surface *s, bool clear = true)
 {
 	SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, s->w, s->h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
 	if(!d) fatal("create surface");
@@ -93,7 +93,7 @@ SDL_Surface *texcopy(SDL_Surface *s, bool free = false)
 			*src = (uchar *)s->pixels+(i*s->pitch);
 		memcpy(dst, src, s->w*s->format->BytesPerPixel);
 	}
-	if(free) SDL_FreeSurface(s);
+	if(clear) SDL_FreeSurface(s);
 	return d;
 }
 
@@ -114,7 +114,7 @@ void texmad(SDL_Surface *s, const vec &mul, const vec &add)
 
 static SDL_Surface stubsurface;
 
-SDL_Surface *texffmask(SDL_Surface *s, int minval)
+SDL_Surface *texffmask(SDL_Surface *s, int minval, bool clear = true)
 {
     if(renderpath!=R_FIXEDFUNCTION) return s;
     if(nomasks || s->format->BytesPerPixel<3) { SDL_FreeSurface(s); return &stubsurface; }
@@ -137,7 +137,7 @@ SDL_Surface *texffmask(SDL_Surface *s, int minval)
         if(envmap) *dst++ = src[2];
         src += s->format->BytesPerPixel;
     }
-    SDL_FreeSurface(s);
+    if(clear) SDL_FreeSurface(s);
     return m;
 }
 
@@ -152,7 +152,7 @@ void texdup(SDL_Surface *s, int srcchan, int dstchan)
     }
 }
 
-SDL_Surface *texdecal(SDL_Surface *s)
+SDL_Surface *texdecal(SDL_Surface *s, bool clear = true)
 {
     if(renderpath!=R_FIXEDFUNCTION || hasTE) return s;
     SDL_Surface *m = SDL_CreateRGBSurface(SDL_SWSURFACE, s->w, s->h, 16, 0, 0, 0, 0);
@@ -164,7 +164,7 @@ SDL_Surface *texdecal(SDL_Surface *s)
         *dst++ = 255 - *src;
         src += s->format->BytesPerPixel;
     }
-    SDL_FreeSurface(s);
+    if(clear) SDL_FreeSurface(s);
     return m;
 }
 
@@ -346,7 +346,14 @@ static void resizetexture(int &w, int &h, bool mipit = true, GLenum format = GL_
 	h = h2;
 }
 
-static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int frame = 0, int delay = 0, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false, bool compress = false)
+struct TextureAnim
+{
+	int frames, delay, x, y, w, h;
+
+	TextureAnim() : frames(0), delay(0) {}
+};
+
+static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false, bool compress = false, bool clear = true, int frame = 0, TextureAnim *anim = NULL)
 {
     if(!t)
     {
@@ -367,7 +374,7 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int fr
 		t->clamp = clamp;
 		t->mipmap = mipit;
 		t->bpp = s->format->BitsPerPixel;
-		t->delay = delay;
+		t->delay = anim ? anim->delay : 0;
 		t->frame = 0;
 
 		t->w = t->xs = s->w;
@@ -392,7 +399,7 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int fr
     }
     createtexture(t->frames[frame], t->w, t->h, pixels, clamp, mipit, format, GL_TEXTURE_2D, compress);
     if(pixels!=s->pixels) delete[] pixels;
-    SDL_FreeSurface(s);
+    if(clear) SDL_FreeSurface(s);
     return t;
 }
 
@@ -408,21 +415,21 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int fr
 #define AMASK 0xff000000
 #endif
 
-SDL_Surface *creatergbasurface(SDL_Surface *os)
+SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear = true)
 {
     SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 32, RMASK, GMASK, BMASK, AMASK);
     if(!ns) fatal("creatergbsurface");
     SDL_BlitSurface(os, NULL, ns, NULL);
-    SDL_FreeSurface(os);
+    if(clear) SDL_FreeSurface(os);
     return ns;
 }
 
-SDL_Surface *scalesurface(SDL_Surface *os, int w, int h)
+SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear = true)
 {
     SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, os->format->BitsPerPixel, os->format->Rmask, os->format->Gmask, os->format->Bmask, os->format->Amask);
     if(!ns) fatal("scalesurface");
     gluScaleImage(texformat(os->format->BitsPerPixel), os->w, os->h, GL_UNSIGNED_BYTE, os->pixels, w, h, GL_UNSIGNED_BYTE, ns->pixels);
-    SDL_FreeSurface(os);
+    if(clear) SDL_FreeSurface(os);
     return ns;
 }
 
@@ -439,42 +446,19 @@ static vec parsevec(const char *arg)
 	return v;
 }
 
-struct SurfaceCache
-{
-	char *name;
-	SDL_Surface *s;
-};
-
-hashtable<char *, SurfaceCache> surfacecache;
-
 SDL_Surface *texturesurface(const char *name)
 {
 	const char *exts[] = { "", ".png", ".tga", ".jpg", ".bmp" }; // bmp is a last resort!
 	loopi(sizeof(exts)/sizeof(exts[0]))
 	{
 		s_sprintfd(buf)("%s%s", name, exts[i]);
-		SurfaceCache *c = surfacecache.access(buf);
-		if(!c || !c->s)
-		{
-			SDL_Surface *s = IMG_Load(findfile(buf, "rb"));
-			if(s)
-			{
-				if(!c)
-				{
-					char *key = newstring(buf);
-					c = &surfacecache[key];
-					c->name = key;
-				}
-				c->s = s;
-			}
-			else continue;
-		}
-		return texcopy(c->s);
+		SDL_Surface *s = IMG_Load(findfile(buf, "rb"));
+		if(s) return s;
 	}
 	return NULL;
 }
 
-static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL, int *frame = NULL, int *delay = NULL)
+static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL, TextureAnim *anim = NULL)
 {
     const char *cmds = NULL, *file = tname;
 
@@ -497,7 +481,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
         if(renderpath==R_FIXEDFUNCTION && !strncmp(cmds, "<noff>", 6)) return &stubsurface;
     }
 
-    if(msg && !*frame) show_out_of_renderloop_progress(0, file);
+    if(msg) renderprogress(0, file);
 
     SDL_Surface *s = texturesurface(file);
     if(!s) { if(msg) conoutf("could not load texture %s", file); return NULL; }
@@ -541,26 +525,17 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
         }
         else if(!strncmp(cmd, "anim", len))
         {
-			int sd = atoi(arg[0]), sw = atoi(arg[1]), sh = atoi(arg[2]);
-			if(!sw) sw = s->h;
-			if(!sh) sh = s->h;
-			int sf = 0, sv = s->w/sw, su = s->h/sh, ss = sv*su;
-			if(frame)
-			{
-				if(!*frame)
-				{
-					sf = 0;
-					*frame = ss;
-					if(delay && !*delay) *delay = sd;
-				}
-				else sf = *frame;
-			}
-			if(sf <= ss)
-			{
-				if(msg) show_out_of_renderloop_progress(float(sf)/float(ss), file);
-				int sx = (sf%sv)*sw, sy = (((sf-(sf%sv))/sv)%su)*sh;
-				s = texcrop(s, sx, sy, sw, sh);
-			}
+        	if(anim)
+        	{
+				anim->delay = atoi(arg[0]);
+				anim->w = atoi(arg[1]);
+				anim->h = atoi(arg[2]);
+				if(!anim->w) anim->w = s->h;
+				if(!anim->h) anim->h = s->h;
+				anim->x = s->w/anim->w;
+				anim->y = s->h/anim->h;
+				anim->frames = anim->x*anim->y;
+        	}
         }
     }
     return s;
@@ -589,6 +564,21 @@ void loadalphamask(Texture *t)
 	SDL_FreeSurface(s);
 }
 
+Texture *textureanim(const char *name, SDL_Surface *s, int clamp, bool mipit, bool canreduce, bool transient, bool compress, bool msg, TextureAnim *anim, bool clear = true)
+{
+	Texture *t = NULL;
+	loopi(anim->frames)
+	{
+		if(msg) renderprogress(float(i)/float(anim->frames), name);
+		int x = (i%anim->x)*anim->w, y = (((i-(i%anim->x))/anim->x)%anim->y)*anim->h;
+		SDL_Surface *u = texcrop(s, x, y, anim->w, anim->h, false);
+		if(u)
+			t = newtexture(t ? t : NULL, name, u, clamp, mipit, canreduce, transient, compress, false, i, anim);
+	}
+	if(clear) SDL_FreeSurface(s);
+	return t;
+}
+
 Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
 {
 	string tname;
@@ -596,17 +586,13 @@ Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
 	Texture *t = textures.access(tname);
 	if(!t)
 	{
+		SDL_Surface *s;
+		TextureAnim anim;
 		bool compress = false;
-		int frames = 0, delay = 0;
-		SDL_Surface *s = texturedata(tname, NULL, msg, &compress, &frames, &delay);
-		if(s)
+		if((s = texturedata(tname, NULL, msg, &compress, &anim)) != NULL)
 		{
-			t = newtexture(NULL, tname, s, 0, frames ? delay : 0, clamp, mipit, false, false, compress);
-			for (int frame = 1; frame < frames; frame++)
-			{
-				s = texturedata(tname, NULL, msg, &compress, &frame, &delay);
-				if(s) newtexture(t, tname, s, frame, delay, clamp, mipit, false, false, compress);
-			}
+			if(anim.frames) t = textureanim(tname, s, clamp, mipit, false, false, compress, msg, &anim);
+			else t = newtexture(NULL, tname, s, clamp, mipit, false, false, compress);
 		}
 		else t = notexture;
 	}
@@ -865,66 +851,53 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 	t.t = textures.access(key.getbuf());
 	if(t.t) return;
 
+	TextureAnim anim;
 	bool compress = false;
-	int frames = 0, delay = 0;
-	SDL_Surface *ts = texturedata(NULL, &t, true, &compress, &frames, &delay);
+	SDL_Surface *ts = texturedata(NULL, &t, true, &compress, &anim);
     if(!ts) { t.t = notexture; return; }
-	#define texapplycombine(_f,_d) \
-	if(_f >= 0) \
-	{ \
-		int tf = _f, td = _d; \
-		switch(t.type) \
-		{ \
-			case TEX_DIFFUSE: \
-				if(renderpath==R_FIXEDFUNCTION) \
-				{ \
-					loopv(s.sts) \
-					{ \
-						Slot::Tex &b = s.sts[i]; \
-						if(b.combined!=index) continue; \
-						SDL_Surface *bs = texturedata(NULL, &b, true, NULL, &tf, &td); \
-						if(!bs) continue; \
-						if(bs->w!=ts->w || bs->h!=ts->h) bs = scalesurface(bs, ts->w, ts->h); \
-						switch(b.type) \
-						{ \
-							case TEX_DECAL: if(bs->format->BitsPerPixel==32) blenddecal(ts, bs); break; \
-							case TEX_NORMAL: addbump(ts, bs); break; \
-						} \
-						SDL_FreeSurface(bs); \
-					} \
-					break; \
-				} \
-			case TEX_NORMAL: \
-				loopv(s.sts) \
-				{ \
-					Slot::Tex &a = s.sts[i]; \
-					if(a.combined!=index) continue; \
-					SDL_Surface *as = texturedata(NULL, &a, true, NULL, &tf, &td); \
-					if(!as) break; \
-					if(ts->format->BitsPerPixel!=32) ts = creatergbasurface(ts); \
-					if(as->w!=ts->w || as->h!=ts->h) as = scalesurface(as, ts->w, ts->h); \
-					switch(a.type) \
-					{ \
-						case TEX_SPEC: mergespec(ts, as); break; \
-						case TEX_DEPTH: mergedepth(ts, as); break; \
-					} \
-					SDL_FreeSurface(as); \
-					break; \
-				} \
-				break; \
-		} \
-	}
-	texapplycombine(0, frames ? delay : 0);
-	t.t = newtexture(NULL, key.getbuf(), ts, 0, frames ? delay : 0, 0, true, true, true, compress);
-	for (int frame = 1; frame < frames; frame++)
+	switch(t.type)
 	{
-		ts = texturedata(NULL, &t, true, &compress, &frame, &delay);
-		if(ts)
-		{
-			texapplycombine(frame, delay);
-			newtexture(t.t, key.getbuf(), ts, frame, delay, 0, true, true, true, compress);
-		}
+		case TEX_DIFFUSE:
+			if(renderpath==R_FIXEDFUNCTION)
+			{
+				loopv(s.sts)
+				{
+					Slot::Tex &b = s.sts[i];
+					if(b.combined!=index) continue;
+					SDL_Surface *bs = texturedata(NULL, &b, true, NULL);
+					if(!bs) continue;
+					if(bs->w!=ts->w || bs->h!=ts->h) bs = scalesurface(bs, ts->w, ts->h);
+					switch(b.type)
+					{
+						case TEX_DECAL: if(bs->format->BitsPerPixel==32) blenddecal(ts, bs); break;
+						case TEX_NORMAL: addbump(ts, bs); break;
+					}
+					SDL_FreeSurface(bs);
+				}
+				break;
+			}
+		case TEX_NORMAL:
+			loopv(s.sts)
+			{
+				Slot::Tex &a = s.sts[i];
+				if(a.combined!=index) continue;
+				SDL_Surface *as = texturedata(NULL, &a, true, NULL);
+				if(!as) break;
+				if(ts->format->BitsPerPixel!=32) ts = creatergbasurface(ts);
+				if(as->w!=ts->w || as->h!=ts->h) as = scalesurface(as, ts->w, ts->h);
+				switch(a.type)
+				{
+					case TEX_SPEC: mergespec(ts, as); break;
+					case TEX_DEPTH: mergedepth(ts, as); break;
+				}
+				SDL_FreeSurface(as);
+				break;
+			}
+			break;
 	}
+
+	if(anim.frames) t.t = textureanim(key.getbuf(), ts, 0, true, true, true, compress, true, &anim);
+	else t.t = newtexture(NULL, key.getbuf(), ts, 0, true, true, true, compress);
 }
 
 Slot dummyslot;
@@ -985,7 +958,7 @@ Texture *loadthumbnail(Slot &slot)
                 if(g->w != s->w || g->h != s->h) g = scalesurface(g, s->w, s->h);
                 addglow(s, g, slot.glowcolor);
             }
-            t = newtexture(NULL, name.getbuf(), s, 0, 0, 0, false, false, true);
+            t = newtexture(NULL, name.getbuf(), s, 0, false, false, true);
             t->xs = xs;
             t->ys = ys;
             slot.thumbnail = t;
@@ -1222,11 +1195,11 @@ void initenvmaps()
 void genenvmaps()
 {
 	if(envmaps.empty()) return;
-	show_out_of_renderloop_progress(0, "generating environment maps...");
+	renderprogress(0, "generating environment maps...");
 	loopv(envmaps)
 	{
 		envmap &em = envmaps[i];
-		show_out_of_renderloop_progress(float(i)/float(envmaps.length()), "generating environment maps...");
+		renderprogress(float(i)/float(envmaps.length()), "generating environment maps...");
 		em.tex = genenvmap(em.o, em.size ? em.size : envmapsize);
 	}
 }
@@ -1336,17 +1309,8 @@ void mergenormalmaps(char *heightfile, char *normalfile)    // BGR (tga) -> BGR 
 COMMAND(flipnormalmapy, "ss");
 COMMAND(mergenormalmaps, "sss");
 
-void clearcache()
-{
-    enumerate(surfacecache, SurfaceCache, sc, {
-		if(sc.s) SDL_FreeSurface(sc.s);
-	});
-	surfacecache.clear();
-}
-
 void cleanuptextures()
 {
-	clearcache();
     clearenvmaps();
     loopv(slots) slots[i].cleanup();
     loopi(MAT_EDIT) materialslots[i].cleanup();
@@ -1369,7 +1333,7 @@ bool reloadtexture(const char *name)
 
 bool reloadtexture(Texture &tex)
 {
-    if(tex.id()) return true;
+    if(tex.id() || tex.frames.length() >= 2) return true;
     switch(tex.type)
     {
         case Texture::STUB:
@@ -1377,7 +1341,7 @@ bool reloadtexture(Texture &tex)
         {
             bool compress = false;
             SDL_Surface *s = texturedata(tex.name, NULL, true, &compress);
-            if(!s || !newtexture(&tex, NULL, s, 0, 0, tex.clamp, tex.mipmap, false, false, compress)) return false;
+            if(!s || !newtexture(&tex, NULL, s, tex.clamp, tex.mipmap, false, false, compress)) return false;
             break;
         }
 
@@ -1409,6 +1373,5 @@ void updatetexture(Texture &tex)
 
 void updatetextures()
 {
-	clearcache();
     enumerate(textures, Texture, tex, updatetexture(tex));
 }
