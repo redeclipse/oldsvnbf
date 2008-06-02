@@ -97,6 +97,12 @@ struct partrenderer
     virtual bool usesvertexarray() { return false; }
     virtual void cleanup() {}
 
+	bool preload()
+	{
+		if(texname && (tex || (tex = textureload(texname)))) return true;
+		return false;
+	}
+
     //blend = 0 => remove it
     void calc(particle *p, int &blend, int &ts, vec &o, vec &d, bool lastpass = true)
     {
@@ -236,12 +242,9 @@ struct listrenderer : partrenderer
 
     void render()
     {
+		if(!preload()) return;
         startrender();
-        if(texname)
-        {
-            if(!tex) tex = textureload(texname);
-            glBindTexture(GL_TEXTURE_2D, tex->id());
-        }
+		glBindTexture(GL_TEXTURE_2D, tex->id());
 
         bool lastpass = !reflecting && !refracting;
 
@@ -598,8 +601,8 @@ struct varenderer : partrenderer
 
     void render()
     {
-        if(!tex) tex = textureload(texname);
-        glBindTexture(GL_TEXTURE_2D, tex->id());
+        if(!preload()) return;
+		glBindTexture(GL_TEXTURE_2D, tex->id());
         glVertexPointer(3, GL_FLOAT, sizeof(partvert), &verts->pos);
         glTexCoordPointer(2, GL_FLOAT, sizeof(partvert), &verts->u);
         glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(partvert), &verts->color);
@@ -644,7 +647,11 @@ void particleinit()
 {
     if(!particleshader) particleshader = lookupshaderbyname("particle");
     if(!particlenotextureshader) particlenotextureshader = lookupshaderbyname("particlenotexture");
-    loopi(sizeof(parts)/sizeof(parts[0])) parts[i]->init(maxparticles);
+    loopi(sizeof(parts)/sizeof(parts[0]))
+    {
+    	parts[i]->init(maxparticles);
+    	parts[i]->preload();
+    }
 }
 
 void clearparticles()

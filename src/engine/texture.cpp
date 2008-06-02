@@ -348,9 +348,9 @@ static void resizetexture(int &w, int &h, bool mipit = true, GLenum format = GL_
 
 struct TextureAnim
 {
-	int frames, delay, x, y, w, h;
+	int count, delay, x, y, w, h;
 
-	TextureAnim() : frames(0), delay(0) {}
+	TextureAnim() : count(0), delay(0) {}
 };
 
 static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false, bool compress = false, bool clear = true, int frame = 0, TextureAnim *anim = NULL)
@@ -386,7 +386,7 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int cl
 		}
     }
 
-	while(!t->frames.inrange(frame)) t->frames.add((GLuint)0);
+	while(!t->frames.inrange(frame)) t->frames.add(0);
 
     glGenTextures(1, &t->frames[frame]);
     GLenum format = texformat(t->bpp);
@@ -534,7 +534,7 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 				if(!anim->h) anim->h = s->h;
 				anim->x = s->w/anim->w;
 				anim->y = s->h/anim->h;
-				anim->frames = anim->x*anim->y;
+				anim->count = anim->x*anim->y;
         	}
         }
     }
@@ -567,9 +567,9 @@ void loadalphamask(Texture *t)
 Texture *textureanim(const char *name, SDL_Surface *s, int clamp, bool mipit, bool canreduce, bool transient, bool compress, bool msg, TextureAnim *anim, bool clear = true)
 {
 	Texture *t = NULL;
-	loopi(anim->frames)
+	loopi(anim->count)
 	{
-		if(msg) renderprogress(float(i)/float(anim->frames), name);
+		if(msg) renderprogress(float(i)/float(anim->count), name);
 		int x = (i%anim->x)*anim->w, y = (((i-(i%anim->x))/anim->x)%anim->y)*anim->h;
 		SDL_Surface *u = texcrop(s, x, y, anim->w, anim->h, false);
 		if(u)
@@ -591,7 +591,7 @@ Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
 		bool compress = false;
 		if((s = texturedata(tname, NULL, msg, &compress, &anim)) != NULL)
 		{
-			if(anim.frames) t = textureanim(tname, s, clamp, mipit, false, false, compress, msg, &anim);
+			if(anim.count) t = textureanim(tname, s, clamp, mipit, false, false, compress, msg, &anim);
 			else t = newtexture(NULL, tname, s, clamp, mipit, false, false, compress);
 		}
 		else t = notexture;
@@ -896,7 +896,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 			break;
 	}
 
-	if(anim.frames) t.t = textureanim(key.getbuf(), ts, 0, true, true, true, compress, true, &anim);
+	if(anim.count) t.t = textureanim(key.getbuf(), ts, 0, true, true, true, compress, true, &anim);
 	else t.t = newtexture(NULL, key.getbuf(), ts, 0, true, true, true, compress);
 }
 
@@ -1069,8 +1069,8 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg)
     t->type = Texture::CUBEMAP;
     t->w = t->xs = tsize;
     t->h = t->ys = tsize;
-    if(!t->frames.length()) t->frames.add((GLuint)0);
-    t->frame = 0;
+    if(!t->frames.inrange(0)) t->frames.add(0);
+    t->frame = t->delay = 0;
 
     resizetexture(t->w, t->h, mipit, format, GL_TEXTURE_CUBE_MAP_ARB);
     glGenTextures(1, &t->frames[0]);
@@ -1317,7 +1317,14 @@ void cleanuptextures()
     vector<Texture *> transient;
     enumerate(textures, Texture, tex,
         DELETEA(tex.alphamask);
-        loopvk(tex.frames) if(tex.frames[k]) { glDeleteTextures(1, &tex.frames[k]); tex.frames[k] = 0; }
+        loopvk(tex.frames)
+        {
+        	if(tex.frames[k])
+        	{
+        		glDeleteTextures(1, &tex.frames[k]);
+        		tex.frames[k] = 0;
+			}
+        }
         tex.frames.setsize(0);
         if(tex.type==Texture::TRANSIENT) transient.add(&tex);
     );

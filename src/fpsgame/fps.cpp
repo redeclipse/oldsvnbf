@@ -75,8 +75,8 @@ struct GAMECLIENT : igameclient
 	IVARP(showeditstats, 0, 1, 1);
 	IVARP(statrate, 0, 200, 1000);
 
-	ISVARP(bliptex, "textures/blip");
-	ISVARP(radartex, "<anim:75>textures/radarping");
+	ISVARFP(bliptex, "textures/blip", if(val.s[0]) textureload(val.s););
+	ISVARFP(radartex, "<anim:75>textures/radarping", if(val.s[0]) textureload(val.s););
 
     GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
@@ -488,9 +488,13 @@ struct GAMECLIENT : igameclient
 
     void preload()
     {
+    	textureload(radartex());
+    	textureload(bliptex());
+
         ws.preload();
         fr.preload();
         et.preload();
+
 		if(m_capture(gamemode)) cpc.preload();
         else if(m_ctf(gamemode)) ctf.preload();
     }

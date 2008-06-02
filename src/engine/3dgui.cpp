@@ -26,6 +26,8 @@ static bool fieldsactive = false;
 
 VARP(guiautotab, 6, 16, 40);
 
+extern char *guiskintex, *guioverlaytex, *guislidertex;
+
 struct gui : g3d_gui
 {
 	struct list
@@ -493,7 +495,6 @@ struct gui : g3d_gui
 		if(tiled) defaultshader->set();
 		if(overlaid)
 		{
-			extern char *guioverlaytex;
 			if(!overlaytex) overlaytex = textureload(guioverlaytex);
 			glColor3fv(light.v);
 			glBindTexture(GL_TEXTURE_2D, overlaytex->id());
@@ -507,7 +508,6 @@ struct gui : g3d_gui
 	{
 		if(visible())
 		{
-			extern char *guislidertex;
 			if(!slidertex) slidertex = textureload(guislidertex);
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, slidertex->id());
@@ -563,7 +563,6 @@ struct gui : g3d_gui
 
 	void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n)
 	{
-		extern char *guiskintex;
 		if(!skintex) skintex = textureload(guiskintex);
 		glBindTexture(GL_TEXTURE_2D, skintex->id());
 		int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
@@ -725,9 +724,9 @@ struct gui : g3d_gui
 
 Texture *gui::skintex = NULL, *gui::overlaytex = NULL, *gui::slidertex = NULL;
 
-SVARFP(guiskintex, "textures/guiskin", gui::skintex = textureload(guiskintex));
-SVARFP(guioverlaytex, "textures/guioverlay", gui::overlaytex = textureload(guioverlaytex));
-SVARFP(guislidertex, "textures/guislider", gui::slidertex = textureload(guislidertex));
+SVARFP(guiskintex, "textures/guiskin", if(guiskintex[0]) gui::skintex = textureload(guiskintex));
+SVARFP(guioverlaytex, "textures/guioverlay", if(guioverlaytex[0]) gui::overlaytex = textureload(guioverlaytex));
+SVARFP(guislidertex, "textures/guislider", if(guislidertex[0]) gui::slidertex = textureload(guislidertex));
 
 //chop skin into a grid
 const int gui::skiny[] = {0, 7, 21, 34, 48, 56, 104, 111, 116, 128},

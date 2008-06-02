@@ -197,13 +197,20 @@ struct Texture
     uchar *alphamask;
 
 
-    Texture() : frame(0), delay(0), last(0), alphamask(NULL) {}
+    Texture() : frame(0), delay(0), last(0), alphamask(NULL)
+    {
+    	frames.setsize(0);
+	}
 
     GLuint id()
     {
-    	if(frames.inrange(frame)) return frames[frame];
-    	else if(frames.length()) return frames[0];
-    	else return (GLuint)0;
+    	GLuint f = frames.length() ? (frames.inrange(frame) ? frames[frame] : frames[0]) : 0;
+    	if(f <= 0)
+    	{
+    		extern Texture *notexture;
+    		f = notexture && this != notexture ? notexture->id() : 0;
+    	}
+    	return f;
     }
 };
 
