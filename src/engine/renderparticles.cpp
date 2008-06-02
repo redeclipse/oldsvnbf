@@ -728,7 +728,7 @@ void render_particles(int time)
     {
         partrenderer *p = parts[i];
         if(glaring && !(p->type&PT_GLARE)) continue;
-        //if(!p->haswork()) continue;
+        if(!p->haswork() && (!p->tex || !p->tex->delay)) continue;
 
         if(!rendered)
         {
