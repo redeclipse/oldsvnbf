@@ -446,6 +446,17 @@ static vec parsevec(const char *arg)
 	return v;
 }
 
+#define textureparse(n, f) \
+	const char *cmds = NULL, *file = n; \
+    if(!n) file = n = f; \
+    if(n[0]=='<') \
+    { \
+    	cmds = n; \
+        file = strrchr(n, '>'); \
+        if(!file) file = f; \
+        else file++; \
+    }
+
 SDL_Surface *texturesurface(const char *name)
 {
 	const char *exts[] = { "", ".png", ".tga", ".jpg", ".bmp" }; // bmp is a last resort!
@@ -460,21 +471,9 @@ SDL_Surface *texturesurface(const char *name)
 
 static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL, TextureAnim *anim = NULL)
 {
-    const char *cmds = NULL, *file = tname;
+	textureparse(tname, tex ? tex->name : NULL);
 
-    if(!tname)
-    {
-        if(!tex) return NULL;
-        tname = tex->name;
-        file = tex->name;
-    }
-    if(tname[0]=='<')
-    {
-        cmds = tname;
-        file = strrchr(tname, '>');
-        if(!file) { if(msg) conoutf("could not load texture %s", tname); return NULL; }
-        file++;
-    }
+	if(!file) { if(msg) conoutf("could not load texture %s", tname); return NULL; }
 
     if(cmds)
     {
@@ -566,10 +565,12 @@ void loadalphamask(Texture *t)
 
 Texture *textureanim(const char *name, SDL_Surface *s, int clamp, bool mipit, bool canreduce, bool transient, bool compress, bool msg, TextureAnim *anim, bool clear = true)
 {
+    textureparse(name, "<animation>");
+
 	Texture *t = NULL;
 	loopi(anim->count)
 	{
-		if(msg) renderprogress(float(i)/float(anim->count), name);
+		if(msg) renderprogress(float(i)/float(anim->count), file);
 		int x = (i%anim->x)*anim->w, y = (((i-(i%anim->x))/anim->x)%anim->y)*anim->h;
 		SDL_Surface *u = texcrop(s, x, y, anim->w, anim->h, false);
 		if(u)
