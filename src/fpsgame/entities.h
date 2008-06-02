@@ -1019,6 +1019,7 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			fpsentity &e = (fpsentity &)*ents[i];
+
 			if(e.type == NOTUSED) continue;
 
 			if(e.type == PARTICLES && e.o.dist(camera1->o) <= maxparticledistance)

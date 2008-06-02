@@ -97,10 +97,10 @@ struct partrenderer
     virtual bool usesvertexarray() { return false; }
     virtual void cleanup() {}
 
-	bool preload()
+	void preload()
 	{
-		if(texname && (tex || (tex = textureload(texname)))) return true;
-		return false;
+		if(texname && (!tex || tex == notexture))
+			tex = textureload(texname);
 	}
 
     //blend = 0 => remove it
@@ -242,9 +242,9 @@ struct listrenderer : partrenderer
 
     void render()
     {
-		if(!preload()) return;
+		preload();
         startrender();
-		glBindTexture(GL_TEXTURE_2D, tex->id());
+		if(tex) glBindTexture(GL_TEXTURE_2D, tex->id());
 
         bool lastpass = !reflecting && !refracting;
 
@@ -601,8 +601,8 @@ struct varenderer : partrenderer
 
     void render()
     {
-        if(!preload()) return;
-		glBindTexture(GL_TEXTURE_2D, tex->id());
+        preload();
+		if(tex) glBindTexture(GL_TEXTURE_2D, tex->id());
         glVertexPointer(3, GL_FLOAT, sizeof(partvert), &verts->pos);
         glTexCoordPointer(2, GL_FLOAT, sizeof(partvert), &verts->u);
         glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(partvert), &verts->color);
@@ -728,7 +728,7 @@ void render_particles(int time)
     {
         partrenderer *p = parts[i];
         if(glaring && !(p->type&PT_GLARE)) continue;
-        if(!p->haswork()) continue;
+        //if(!p->haswork()) continue;
 
         if(!rendered)
         {
@@ -1141,8 +1141,9 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4)
             flares.addflare(o, attr2, attr3, attr4, (attr1&0x02)!=0, (attr1&0x01)!=0);
             break;
         default:
-            s_sprintfd(ds)("@particles %d?", attr1);
+            s_sprintfd(ds)("@%d?", attr1);
             particle_text(o, ds, 16, 1);
+            break;
     }
 }
 
