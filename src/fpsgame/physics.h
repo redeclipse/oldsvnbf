@@ -434,7 +434,7 @@ struct physics
         float secs = curtime/1000.0f;
         vec g(0, 0, 0);
         if(pl->physstate == PHYS_FALL) g.z -= gravityforce(pl)*secs;
-        else if(!pl->floor.iszero() && pl->floor.z < floorz(pl))
+        else if(pl->floor.z > 0 && pl->floor.z < floorz(pl))
         {
             g.z = -1;
             g.project(pl->floor);
