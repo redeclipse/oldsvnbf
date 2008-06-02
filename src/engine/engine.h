@@ -199,7 +199,6 @@ extern void enablepolygonoffset(GLenum type);
 extern void disablepolygonoffset(GLenum type);
 extern void setfogplane(const plane &p, bool flush = false);
 extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
-extern void writecrosshairs(FILE *f);
 
 // renderextras
 extern void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradius = 0);
@@ -554,7 +553,6 @@ extern float curfov, fovy, aspect;
 
 extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false, bool swapxy = false);
 extern void transplayer();
-extern void drawcrosshair(int w, int h, int index = 0, float cx = 0.5f, float cy = 0.5f, float r = 1.0f, float g = 1.0f, float b = 1.0f);
 
 extern void renderprimitive(bool on);
 extern void renderline(vec &fr, vec &to, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);

@@ -338,3 +338,8 @@ extern void setuptmu(int n, const char *rgbfunc = NULL, const char *alphafunc = 
 extern void setupblurkernel(int radius, float sigma, float *weights, float *offsets);
 extern void setblurshader(int pass, int size, int radius, float *weights, float *offsets, GLenum target = GL_TEXTURE_2D);
 
+#define TVAR(n, c) _SVARF(n, n, c, if(n[0]) textureload(n);, true, false)
+#define TVARN(n, c, t) _SVARF(n, n, c, if(n[0]) t = textureload(n);, true, false)
+
+#define ITVAR(n, c) _ISVAR(n, c, void changed() { if(*storage.s[0]) textureload(*storage.s); }, true, false)
+#define ITVARN(n, c, t) _ISVAR(n, c, void changed() { if(*storage.s[0]) t = textureload(*storage.s); }, true, false)
