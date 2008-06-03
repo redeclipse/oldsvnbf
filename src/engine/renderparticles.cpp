@@ -1099,22 +1099,22 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4)
     switch(attr1)
     {
         case 0: //fire
-            regularsplash(4, 0xFFC8C8, 150, 1, 40, o, 4.8);
-            regularsplash(5, 0x897661, 50, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4, 3);
+            regularsplash(4, 0xFFC8C8, 150, 1, 40, o, 4.8f);
+            regularsplash(5, 0x897661, 50, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, 3);
             break;
         case 1: //smoke vent - <dir>
-            regularsplash(5, 0x897661, 50, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4);
+            regularsplash(5, 0x897661, 50, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4f);
             break;
         case 2: //water fountain - <dir>
         {
             uchar col[3];
             getwatercolour(col);
             int color = (col[0]<<16) | (col[1]<<8) | col[2];
-            regularsplash(17, color, 150, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6);
+            regularsplash(17, color, 150, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6f);
             break;
         }
         case 3: //fire ball - <size> <rgb>
-            newparticle(o, vec(0, 0, 1), 1, 14, colorfromattr(attr3), 4.0)->val = 1+attr2;
+            newparticle(o, vec(0, 0, 1), 1, 14, colorfromattr(attr3), 4.0f)->val = 1+attr2;
             break;
         case 4:  //tape - <dir> <length> <rgb>
         case 7:  //lightning
@@ -1123,7 +1123,7 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4)
         case 10: //water
         {
             const int typemap[]   = {    9,  -1,  -1,   15,   4,   5,   17 };
-            const float sizemap[] = { 0.28, 0.0, 0.0, 0.28, 4.8, 2.4, 0.60 };
+            const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f };
             int type = typemap[attr1-4];
             float size = sizemap[attr1-4];
             if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, 200, o, size);
