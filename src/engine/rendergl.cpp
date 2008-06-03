@@ -1069,7 +1069,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 		if(t)
 		{
 			glDisable(GL_BLEND);
-			glBindTexture(GL_TEXTURE_2D, t->id());
+			glBindTexture(GL_TEXTURE_2D, t->id);
 			int sz = 256, x = (w-sz)/2, y = min(384, h-256);
 			glBegin(GL_QUADS);
 			glTexCoord2f(0, 0); glVertex2i(x,	y);
@@ -1610,7 +1610,7 @@ bool rendericon(const char *icon, int x, int y, int xs, int ys)
 
 	if ((t = textureload(icon, 0, true, false)) != notexture)
 	{
-		glBindTexture(GL_TEXTURE_2D, t->id());
+		glBindTexture(GL_TEXTURE_2D, t->id);
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex2i(x,	y);
 		glTexCoord2f(1.0f, 0.0f); glVertex2i(x+xs, y);

@@ -471,7 +471,7 @@ struct gui : g3d_gui
         loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/t->xs; tc[k][1] = tc[k][1]/yt - float(yoff)/t->ys; }
         vec color = hit ? vec(1, 0.5f, 0.5f) : (overlaid ? vec(1, 1, 1) : light);
         glColor3fv(color.v);
-        glBindTexture(GL_TEXTURE_2D, t->id());
+        glBindTexture(GL_TEXTURE_2D, t->id);
         glBegin(GL_QUADS);
         glTexCoord2fv(tc[0]); glVertex2f(x,    y);
         glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
@@ -483,7 +483,7 @@ struct gui : g3d_gui
             if(hit || overlaid) { loopk(3) color[k] *= glowcolor[k]; glColor3fv(color.v); }
             else glColor3fv(glowcolor.v);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            glBindTexture(GL_TEXTURE_2D, glowtex->id());
+            glBindTexture(GL_TEXTURE_2D, glowtex->id);
             glBegin(GL_QUADS);
             glTexCoord2fv(tc[0]); glVertex2f(x,    y);
             glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
@@ -497,7 +497,7 @@ struct gui : g3d_gui
 		{
 			if(!overlaytex) overlaytex = textureload(guioverlaytex);
 			glColor3fv(light.v);
-			glBindTexture(GL_TEXTURE_2D, overlaytex->id());
+			glBindTexture(GL_TEXTURE_2D, overlaytex->id);
 			glBegin(GL_QUADS);
 			rect_(x, y, xs, ys, 0);
 			glEnd();
@@ -510,7 +510,7 @@ struct gui : g3d_gui
 		{
 			if(!slidertex) slidertex = textureload(guislidertex);
 			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, slidertex->id());
+			glBindTexture(GL_TEXTURE_2D, slidertex->id);
 			glBegin(GL_QUADS);
 			if(percent < 0.99f)
 			{
@@ -564,7 +564,7 @@ struct gui : g3d_gui
 	void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n)
 	{
 		if(!skintex) skintex = textureload(guiskintex);
-		glBindTexture(GL_TEXTURE_2D, skintex->id());
+		glBindTexture(GL_TEXTURE_2D, skintex->id);
 		int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
 		float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);
 

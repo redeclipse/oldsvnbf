@@ -142,7 +142,7 @@ struct flarerenderer : partrenderer
         defaultshader->set();
         glDisable(GL_DEPTH_TEST);
         if(!tex) tex = textureload(texname);
-        glBindTexture(GL_TEXTURE_2D, tex->id());
+        glBindTexture(GL_TEXTURE_2D, tex->id);
         glBegin(GL_QUADS);
         loopi(numflares)
         {

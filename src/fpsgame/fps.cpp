@@ -802,7 +802,7 @@ struct GAMECLIENT : igameclient
 		glColor4f(r, g, b, chblend);
 		float x = cx*w*3.0f - (index ? chsize/2.0f : 0);
 		float y = cy*h*3.0f - (index ? chsize/2.0f : 0);
-		glBindTexture(GL_TEXTURE_2D, pointer->id());
+		glBindTexture(GL_TEXTURE_2D, pointer->id);
 		glBegin(GL_QUADS);
 		glTexCoord2d(0.0, 0.0); glVertex2f(x, y);
 		glTexCoord2d(1.0, 0.0); glVertex2f(x + chsize, y);
