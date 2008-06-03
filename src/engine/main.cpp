@@ -305,13 +305,16 @@ void keyrepeat(bool on)
 							 SDL_DEFAULT_REPEAT_INTERVAL);
 }
 
-VARF(grabinput, 0, 0, 1, {
+void inputgrab(bool on)
+{
 #ifndef WIN32
 	if(screen->flags & SDL_FULLSCREEN)
 #endif
-		SDL_WM_GrabInput(grabinput ? SDL_GRAB_ON : SDL_GRAB_OFF);
-	keyrepeat(grabinput ? false : true);
-});
+		SDL_WM_GrabInput(on ? SDL_GRAB_ON : SDL_GRAB_OFF);
+	keyrepeat(on);
+}
+
+VARF(grabinput, 0, 0, 1, inputgrab(grabinput ? false : true));
 VARP(autograbinput, 0, 1, 1);
 
 int ignoremouse = 5;
