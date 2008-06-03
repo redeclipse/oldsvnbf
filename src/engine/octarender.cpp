@@ -27,13 +27,13 @@ void genverts(vector<vertex> &verts, void *buf, const vec &origin)
         if(nolights)
         {
             if(floatvtx) { GENVERTS(fvertexffc, buf, , { f->add(origin); }); }
-            else { GENVERTS(vertexffc, buf, - 0x8000, {}); }
+            else { GENVERTS(vertexffc, buf, - 0x8000, { f->reserved = 0; }); }
         }
         else if(floatvtx) { GENVERTSUV(fvertexff, buf, , { f->add(origin); }); }
-        else { GENVERTSUV(vertexff, buf, - 0x8000, {}); }
+        else { GENVERTSUV(vertexff, buf, - 0x8000, { f->reserved = 0; }); }
     }
     else if(floatvtx) { GENVERTSUV(fvertex, buf, , { f->add(origin); f->n = v.n; }); }
-    else { GENVERTSUV(vertex, buf, - 0x8000, { f->n = v.n; }); }
+    else { GENVERTSUV(vertex, buf, - 0x8000, { f->reserved = 0; f->n = v.n; }); }
 }
 
 struct vboinfo

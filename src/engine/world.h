@@ -82,7 +82,7 @@ struct vvec : svec
 	vec tovec(const ivec &o) const		{ return tovec(o.x, o.y, o.z); }
 };
 
-struct vertexffc : vvec {};
+struct vertexffc : vvec { short reserved; };
 struct fvertexffc : vec {};
 struct vertexff : vertexffc { short u, v; };
 struct fvertexff : fvertexffc { short u, v; };

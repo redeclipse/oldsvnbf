@@ -280,10 +280,6 @@ void gl_checkextensions()
         extern int fpdepthfx;
         if(hasTF && (!strstr(renderer, "GeForce") || !checkseries(renderer, 6000, 6600)))
             fpdepthfx = 1; // FP filtering causes software fallback on 6200?
-
-#ifdef __APPLE__
-        floatvtx = 1; // workaround for strange reported slowdown involving short vertex coords on 8800 under OS X 10.5.3 + 8800
-#endif
     }
     else if(strstr(vendor, "Intel"))
     {
