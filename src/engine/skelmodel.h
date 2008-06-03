@@ -1416,6 +1416,7 @@ struct skelmodel : animmodel
         {
             if(!bc.bdata) bc.bdata = new dualquat[vblends];
             dualquat *dst = bc.bdata - (skel->usegpuskel ? skel->numgpubones : skel->numinterpbones);
+            bool normalize = !skel->usegpuskel || vweights<=1;
             loopv(blendcombos)
             {
                 const blendcombo &c = blendcombos[i];
@@ -1429,6 +1430,7 @@ struct skelmodel : animmodel
                     d.accumulate(sc.bdata[c.interpbones[2]], c.weights[2]);
                     if(c.weights[3]) d.accumulate(sc.bdata[c.interpbones[3]], c.weights[3]);
                 }
+                if(normalize) d.normalize();
             }
         }
 
