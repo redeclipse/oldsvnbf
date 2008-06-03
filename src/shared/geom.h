@@ -68,7 +68,7 @@ struct vec
     void rescale(float k)
     {
         float mag = magnitude();
-        if(mag > 0) mul(k / mag);
+        if(mag > 1e-6f) mul(k / mag);
     }
 
     vec &apply(const vec &o, float elasticity = 1.0f)
