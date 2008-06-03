@@ -134,7 +134,7 @@ struct physics
     void recalcdir(physent *d, const vec &oldvel, vec &dir)
     {
         float speed = oldvel.magnitude();
-        if(speed)
+        if(speed > 1e-6f)
         {
             float step = dir.magnitude();
             dir = d->vel;
