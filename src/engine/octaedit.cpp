@@ -129,7 +129,7 @@ void toggleedit()
 	editing = entediting = (editmode ? 1 : 0);
 	cc->edittoggled(editmode);
 	cancelsel();
-	keyrepeat(editmode);
+	//keyrepeat(editmode);
 }
 
 bool noedit(bool view)

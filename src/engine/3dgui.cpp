@@ -928,7 +928,8 @@ void g3d_render()
     if((fieldmode!=FIELDSHOW) != wasfocused)
     {
         SDL_EnableUNICODE(fieldmode!=FIELDSHOW);
-        keyrepeat(fieldmode!=FIELDSHOW || editmode);
+        //keyrepeat(fieldmode!=FIELDSHOW || editmode);
+        keyrepeat(fieldmode!=FIELDSHOW);
     }
 
 	mousebuttons = 0;
