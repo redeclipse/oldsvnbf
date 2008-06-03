@@ -1592,10 +1592,10 @@ void inittmus()
     {
         if(maxtmus<4) caustics = 0;
         if(maxtmus<2)
-	{
-		nolights = nowater = nomasks = 1;
-		extern int lightmodels;
-		lightmodels = 0;
+		{
+			nolights = nowater = nomasks = 1;
+			extern int lightmodels;
+			lightmodels = 0;
             refractfog = 0;
         }
 	}

@@ -228,7 +228,7 @@ struct scoreboard : g3d_callback
             if((k%2)==0) g.pushlist(); // horizontal
 
             scoregroup &sg = *groups[k];
-            const char *icon = sg.team && m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, sg.team) ? "player_blue" : "player_red") : "player";
+            const char *icon = sg.team && m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, sg.team) ? "teamblue" : "teamred") : "player";
             int bgcolor = sg.team && m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, sg.team) ? 0x3030C0 : 0xC03030) : 0,
                 fgcolor = 0xFFFF80;
 

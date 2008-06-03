@@ -693,7 +693,7 @@ struct GAMECLIENT : igameclient
 				{
 					int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
 					float pc = float(dam)/100.f;
-					settexture("textures/overlay_damage");
+					settexture("textures/damage");
 
 					glColor4f(1.f, 1.f, 1.f, pc);
 

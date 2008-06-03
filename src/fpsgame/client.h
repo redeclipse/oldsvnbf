@@ -1481,7 +1481,7 @@ struct clientcom : iclientcom
     	{
 			g->pushlist();
 
-			if(g->buttonf("%s ", 0xA0A0A0, i == SINFO_STATUS ? "server" : NULL, serverinfotypes[i]) & G3D_UP)
+			if(g->buttonf("%s ", 0xA0A0A0, i == SINFO_STATUS ? "info" : NULL, serverinfotypes[i]) & G3D_UP)
 			{
 				string st; st[0] = 0;
 				bool invert = false;
@@ -1518,64 +1518,64 @@ struct clientcom : iclientcom
 
     bool serverinfoentry(g3d_gui *g, int i, serverinfo &si)
     {
-		string text;
-		text[0] = 0;
+		string text; text[0] = 0;
+		int colour = serverstatus[serverstat(&si)].colour;
 		switch (i)
 		{
 			case SINFO_STATUS:
 			{
-				if(g->buttonf("%s ", serverstatuscolours[serverstat(&si)], "server", ">") & G3D_UP)
+				if(g->button("", colour, serverstatus[serverstat(&si)].icon) & G3D_UP)
 					return true;
 				break;
 			}
 			case SINFO_HOST:
 			{
-				if(g->buttonf("%s ", 0xFFFFDD, NULL, si.name) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, si.name) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_DESC:
 			{
 				s_strncpy(text, si.sdesc, 18);
-				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_PING:
 			{
 				s_sprintf(text)("%d", si.ping);
-				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_PLAYERS:
 			{
 				s_sprintf(text)("%d", si.numplayers);
-				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_MAXCLIENTS:
 			{
 				if(si.attr.length() > 4 && si.attr[4] >= 0)
 					s_sprintf(text)("%d", si.attr[4]);
-				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_GAME:
 			{
 				if(si.attr.length() > 2)
 					s_sprintf(text)("%s", sv->gamename(si.attr[1], si.attr[2]));
-				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_MAP:
 			{
 				s_strncpy(text, si.map, 18);
-				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_TIME:
 			{
 				if(si.attr.length() > 3 && si.attr[3] >= 0)
 					s_sprintf(text)("%d %s", si.attr[3], si.attr[3] == 1 ? "min" : "mins");
-				if(g->buttonf("%s ", 0xFFFFDD, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			default:

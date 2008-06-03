@@ -345,12 +345,15 @@ static const char *serverinfotypes[] = {
 	"time"
 };
 
-static int serverstatuscolours[] = {
-	0x00FF00,
-	0x00FFFF,
-	0xFFFF00,
-	0xFF0000,
-	0x0000FF
+static struct serverstatuses
+{
+	int type,				colour;		const char *icon;
+} serverstatus[] = {
+	{ SSTAT_OPEN,			0xFFFFFF,	"server" },
+	{ SSTAT_LOCKED,			0xFF8800,	"serverlock" },
+	{ SSTAT_PRIVATE,		0x8888FF,	"serverpriv" },
+	{ SSTAT_FULL,			0xFF8888,	"serverfull" },
+	{ SSTAT_UNKNOWN,		0x888888,	"serverunk" }
 };
 #endif
 

@@ -1753,11 +1753,11 @@ void cleanupTMUs(renderstate &cur)
         glClientActiveTexture_(GL_TEXTURE0_ARB+cur.lightmaptmu);
 
         resettmu(cur.lightmaptmu);
-	glDisable(GL_TEXTURE_2D);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glMatrixMode(GL_TEXTURE);
-	glLoadIdentity();
-	glMatrixMode(GL_MODELVIEW);
+		glDisable(GL_TEXTURE_2D);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glMatrixMode(GL_TEXTURE);
+		glLoadIdentity();
+		glMatrixMode(GL_MODELVIEW);
     }
     if(cur.glowtmu>=0)
     {
@@ -1797,8 +1797,8 @@ void cleanupTMUs(renderstate &cur)
 
     if(cur.lightmaptmu>=0)
     {
-	glActiveTexture_(GL_TEXTURE0_ARB);
-	glClientActiveTexture_(GL_TEXTURE0_ARB);
+		glActiveTexture_(GL_TEXTURE0_ARB);
+		glClientActiveTexture_(GL_TEXTURE0_ARB);
         glEnable(GL_TEXTURE_2D);
     }
 }

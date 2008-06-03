@@ -261,7 +261,7 @@ void guilistslider(char *var, char *list, char *onchange)
 void guicheckbox(char *name, char *var, int *on, int *off, char *onchange)
 {
 	bool enabled = getval(var)!=*off;
-	if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "checkbox_on" : "checkbox_off")&G3D_UP)
+	if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "checkboxon" : "checkbox")&G3D_UP)
 	{
 		updateval(var, enabled ? *off : (*on || *off ? *on : 1), onchange);
 	}
@@ -270,7 +270,7 @@ void guicheckbox(char *name, char *var, int *on, int *off, char *onchange)
 void guiradio(char *name, char *var, int *n, char *onchange)
 {
 	bool enabled = getval(var)==*n;
-	if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "radio_on" : "radio_off")&G3D_UP)
+	if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "radioboxon" : "radiobox")&G3D_UP)
 	{
 		if(!enabled) updateval(var, *n, onchange);
 	}
@@ -280,7 +280,7 @@ void guibitfield(char *name, char *var, int *mask, char *onchange)
 {
     int val = getval(var);
     bool enabled = (val & *mask) != 0;
-    if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "checkbox_on" : "checkbox_off")&G3D_UP)
+    if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "checkboxon" : "checkbox")&G3D_UP)
     {
         updateval(var, enabled ? val & ~*mask : val | *mask, onchange);
     }
