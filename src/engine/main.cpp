@@ -305,6 +305,15 @@ void keyrepeat(bool on)
 							 SDL_DEFAULT_REPEAT_INTERVAL);
 }
 
+VARF(grabinput, 0, 0, 1, {
+#ifndef WIN32
+	if(screen->flags & SDL_FULLSCREEN)
+#endif
+		SDL_WM_GrabInput(grabinput ? SDL_GRAB_ON : SDL_GRAB_OFF);
+	keyrepeat(grabinput ? false : true);
+});
+VARP(autograbinput, 0, 1, 1);
+
 int ignoremouse = 5;
 bool activewindow = true, warpmouse = false;
 
@@ -334,7 +343,6 @@ bool interceptkey(int sym)
     return false;
 }
 
-VARP(autograbinput, 0, 1, 1);
 VARP(autoconnect, 0, 1, 1);
 
 void checkinput()
@@ -364,10 +372,12 @@ void checkinput()
 
 			case SDL_ACTIVEEVENT:
 			{
-				if(autograbinput && event.active.state & SDL_APPINPUTFOCUS)
+				if(event.active.state & SDL_APPINPUTFOCUS)
 				{
-					setvar("grabinput", event.active.gain ? 1 : 0, true);
 					activewindow = event.active.gain ? true : false;
+
+					if(autograbinput)
+						setvar("grabinput", event.active.gain ? 1 : 0, true);
 				}
 				break;
 			}
@@ -387,11 +397,8 @@ void checkinput()
 
 					if(cl->mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h))
 					{
-						if(grabinput)
-						{
-							SDL_WarpMouse(screen->w/2, screen->h/2);
-							warpmouse = true;
-						}
+						SDL_WarpMouse(screen->w/2, screen->h/2);
+						warpmouse = true;
 					}
 				}
 				break;
@@ -516,13 +523,6 @@ static int clockrealbase = 0, clockvirtbase = 0;
 static void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = totalmillis; }
 VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
 VARFP(clockfix, 0, 0, 1, clockreset());
-
-void _grabinput(int n)
-{
-	SDL_WM_GrabInput(n ? SDL_GRAB_ON : SDL_GRAB_OFF);
-	keyrepeat(n ? false : true);
-}
-VARF(grabinput, 0, 0, 1, _grabinput(grabinput););
 
 VAR(curfps, 1, 0, -1);
 VAR(bestfps, 1, 0, -1);

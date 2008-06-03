@@ -2207,7 +2207,7 @@ struct GAMESERVER : igameserver
 		loopv(clients) if(clients[i] && clients[i]->state.ownernum < 0) numplayers++;
 		putint(p, numplayers);
 		putint(p, 6);					// number of attrs following
-		putint(p, GAMEVERSION);	// 1 // generic attributes, passed back below
+		putint(p, GAMEVERSION);			// 1
 		putint(p, gamemode);			// 2
 		putint(p, mutators);			// 3
 		putint(p, minremain);			// 4
@@ -2215,6 +2215,7 @@ struct GAMESERVER : igameserver
 		putint(p, mastermode);			// 6
 		sendstring(smapname, p);
 		sendstring(serverdesc, p);
+		sendserverinforeply(p);
 	}
 
 	void receivefile(int sender, uchar *data, int len)
@@ -2271,7 +2272,7 @@ struct GAMESERVER : igameserver
 
     void modecheck(int *mode, int *muts)
     {
-		if(!m_game(*mode) || m_sp(*mode) || (multiplayer(false) && !m_mp(*mode)))
+		if(!m_game(*mode) || m_sp(*mode) || !m_mp(*mode))
 		{
 			*mode = G_DEATHMATCH;
 			*muts = gametype[*mode].implied;

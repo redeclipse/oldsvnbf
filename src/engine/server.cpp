@@ -665,7 +665,7 @@ void setupserver()
 {
 	conoutf("init: server");
 	pubserv = servertype >= 2 ? true : false;
-	if (!master) master = sv->getdefaultmaster();
+	if(!master) master = sv->getdefaultmaster();
 	s_strcpy(masterserv, master);
 
 	ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
@@ -694,10 +694,10 @@ void setupserver()
 
 	int d = sv->defaultmode();
 	string s, m;
-	s_strcpy(m, load ? load : sv->defaultmap());
+	s_strcpy(m, load && *load ? load : sv->defaultmap());
 
 	char *t = strpbrk(m, ":");
-	if (t)
+	if(t && *t)
 	{
 		s_strncpy(s, m, t-m+1);
 		d = min(atoi(t+1), 1);

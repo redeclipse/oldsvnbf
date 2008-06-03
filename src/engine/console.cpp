@@ -291,7 +291,8 @@ COMMAND(geteditbind, "s");
 void saycommand(char *init)						 // turns input to the command line on or off
 {
 	SDL_EnableUNICODE(saycommandon = (init!=NULL));
-	if(!editmode) keyrepeat(saycommandon);
+	//if(!editmode)
+	keyrepeat(saycommandon);
     s_strcpy(commandbuf, init ? init : "");
     DELETEA(commandaction);
     DELETEA(commandprompt);
