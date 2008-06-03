@@ -194,6 +194,7 @@ struct Texture
     int type, w, h, xs, ys, bpp, clamp, frame, delay, last;
     bool mipmap, canreduce;
     vector<GLuint> frames;
+    GLuint id;
     uchar *alphamask;
 
 
@@ -201,17 +202,6 @@ struct Texture
     {
     	frames.setsize(0);
 	}
-
-    GLuint id()
-    {
-    	GLuint f = frames.length() ? (frames.inrange(frame) ? frames[frame] : frames[0]) : 0;
-    	if(f <= 0)
-    	{
-    		extern Texture *notexture;
-    		f = notexture && this != notexture ? notexture->id() : 0;
-    	}
-    	return f;
-    }
 };
 
 enum

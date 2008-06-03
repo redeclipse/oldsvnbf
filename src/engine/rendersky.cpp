@@ -68,43 +68,43 @@ void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F, Texture **sky = NU
         draw_envbox_face(0.0f, 0.0f, -w, -w, -w,
                          1.0f, 0.0f, -w,  w, -w,
                          1.0f, vclip, -w,  w,  z,
-                         0.0f, vclip, -w, -w,  z, sky[0] ? sky[0]->id() : notexture->id());
+                         0.0f, vclip, -w, -w,  z, sky[0] ? sky[0]->id : notexture->id);
 
     if(faces&0x02)
         draw_envbox_face(1.0f, vclip, +w, -w,  z,
                          0.0f, vclip, +w,  w,  z,
                          0.0f, 0.0f, +w,  w, -w,
-                         1.0f, 0.0f, +w, -w, -w, sky[1] ? sky[1]->id() : notexture->id());
+                         1.0f, 0.0f, +w, -w, -w, sky[1] ? sky[1]->id : notexture->id);
 
     if(faces&0x04)
         draw_envbox_face(1.0f, vclip, -w, -w,  z,
                          0.0f, vclip,  w, -w,  z,
                          0.0f, 0.0f,  w, -w, -w,
-                         1.0f, 0.0f, -w, -w, -w, sky[2] ? sky[2]->id() : notexture->id());
+                         1.0f, 0.0f, -w, -w, -w, sky[2] ? sky[2]->id : notexture->id);
 
     if(faces&0x08)
         draw_envbox_face(1.0f, vclip, +w,  w,  z,
                          0.0f, vclip, -w,  w,  z,
                          0.0f, 0.0f, -w,  w, -w,
-                         1.0f, 0.0f, +w,  w, -w, sky[3] ? sky[3]->id() : notexture->id());
+                         1.0f, 0.0f, +w,  w, -w, sky[3] ? sky[3]->id : notexture->id);
 
     if(!zclip && faces&0x10)
         draw_envbox_face(0.0f, 1.0f, -w,  w,  w,
                          0.0f, 0.0f, +w,  w,  w,
                          1.0f, 0.0f, +w, -w,  w,
-                         1.0f, 1.0f, -w, -w,  w, sky[4] ? sky[4]->id() : notexture->id());
+                         1.0f, 1.0f, -w, -w,  w, sky[4] ? sky[4]->id : notexture->id);
 
     if(faces&0x20)
         draw_envbox_face(0.0f, 1.0f, +w,  w, -w,
                          0.0f, 0.0f, -w,  w, -w,
                          1.0f, 0.0f, -w, -w, -w,
-                         1.0f, 1.0f, +w, -w, -w, sky[5] ? sky[5]->id() : notexture->id());
+                         1.0f, 1.0f, +w, -w, -w, sky[5] ? sky[5]->id : notexture->id);
 }
 
 void draw_env_overlay(int w, Texture *overlay = NULL, float tx = 0, float ty = 0)
 {
     float z = -w*cloudheight, tsz = 0.5f*(1-cloudfade)/cloudscale, psz = w*(1-cloudfade);
-    glBindTexture(GL_TEXTURE_2D, overlay ? overlay->id() : notexture->id());
+    glBindTexture(GL_TEXTURE_2D, overlay ? overlay->id : notexture->id);
     glColor3f(1, 1, 1);
     glBegin(GL_POLYGON);
     loopi(cloudsubdiv)

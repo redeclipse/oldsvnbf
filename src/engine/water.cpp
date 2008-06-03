@@ -371,7 +371,7 @@ Reflection reflections[MAXREFLECTIONS];
 Reflection waterfallrefraction;
 GLuint reflectionfb = 0, reflectiondb = 0;
 
-GLuint getwaterfalltex() { return waterfallrefraction.refracttex ? waterfallrefraction.refracttex : notexture->id(); }
+GLuint getwaterfalltex() { return waterfallrefraction.refracttex ? waterfallrefraction.refracttex : notexture->id; }
 
 VAR(oqwater, 0, 1, 1);
 
@@ -518,10 +518,10 @@ void renderwater()
 
 	glActiveTexture_(GL_TEXTURE1_ARB);
 	glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, s.sts.inrange(2) ? s.sts[2].t->id() : notexture->id());
+    glBindTexture(GL_TEXTURE_2D, s.sts.inrange(2) ? s.sts[2].t->id : notexture->id);
 	glActiveTexture_(GL_TEXTURE2_ARB);
 	glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, s.sts.inrange(3) ? s.sts[3].t->id() : notexture->id());
+    glBindTexture(GL_TEXTURE_2D, s.sts.inrange(3) ? s.sts[3].t->id : notexture->id);
 
     if(!glaring)
     {
@@ -710,7 +710,7 @@ void renderwater()
 void setupwaterfallrefract(GLenum tmu1, GLenum tmu2)
 {
     glActiveTexture_(tmu1);
-    glBindTexture(GL_TEXTURE_2D, waterfallrefraction.refracttex ? waterfallrefraction.refracttex : notexture->id());
+    glBindTexture(GL_TEXTURE_2D, waterfallrefraction.refracttex ? waterfallrefraction.refracttex : notexture->id);
     glActiveTexture_(tmu2);
     glMatrixMode(GL_TEXTURE);
     setprojtexmatrix(waterfallrefraction);

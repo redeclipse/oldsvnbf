@@ -347,7 +347,7 @@ void rendergrasssamples(vtxarray *va, const vec &dir)
 				{
 					glEnd();
 					if(!s.grasstex) s.grasstex = textureload(s.autograss, 2);
-					glBindTexture(GL_TEXTURE_2D, s.grasstex->id());
+					glBindTexture(GL_TEXTURE_2D, s.grasstex->id);
 					glBegin(GL_QUADS);
 					grasstex = s.grasstex;
 				}

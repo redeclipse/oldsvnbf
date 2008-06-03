@@ -281,14 +281,14 @@ struct animmodel : model
             if(s!=lasttex)
             {
                 if(enableglow) glActiveTexture_(GL_TEXTURE1_ARB);
-                glBindTexture(GL_TEXTURE_2D, s->id());
+                glBindTexture(GL_TEXTURE_2D, s->id);
                 if(enableglow) glActiveTexture_(GL_TEXTURE0_ARB);
                 lasttex = s;
             }
             if(n && n!=lastnormalmap)
             {
                 glActiveTexture_(GL_TEXTURE3_ARB);
-                glBindTexture(GL_TEXTURE_2D, n->id());
+                glBindTexture(GL_TEXTURE_2D, n->id);
                 glActiveTexture_(GL_TEXTURE0_ARB);
             }
             if(s->bpp==32)
@@ -322,13 +322,13 @@ struct animmodel : model
             if(m!=lastmasks && m!=notexture)
             {
                 if(!enableglow) glActiveTexture_(GL_TEXTURE1_ARB);
-                glBindTexture(GL_TEXTURE_2D, m->id());
+                glBindTexture(GL_TEXTURE_2D, m->id);
                 if(!enableglow) glActiveTexture_(GL_TEXTURE0_ARB);
                 lastmasks = m;
             }
             if((renderpath!=R_FIXEDFUNCTION || m!=notexture) && as->anim&ANIM_ENVMAP && envmapmax>0)
             {
-                GLuint emtex = envmap ? envmap->id() : closestenvmaptex;
+                GLuint emtex = envmap ? envmap->id : closestenvmaptex;
                 if(!enableenvmap || lastenvmaptex!=emtex)
                 {
                     glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);

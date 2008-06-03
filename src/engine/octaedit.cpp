@@ -1697,13 +1697,13 @@ void render_texture_panel(int w, int h)
                     if(slot.rotation <= 2 || slot.rotation == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
                 }
                 loopk(4) { tc[k][0] = tc[k][0]/sx - xoff/tex->xs; tc[k][1] = tc[k][1]/sy - yoff/tex->ys; }
-                glBindTexture(GL_TEXTURE_2D, tex->id());
+                glBindTexture(GL_TEXTURE_2D, tex->id);
                 loopj(glowtex ? 3 : 2)
                 {
                     if(j < 2) glColor4f(j, j, j, texpaneltimer/1000.0f);
                     else
                     {
-                        glBindTexture(GL_TEXTURE_2D, glowtex->id());
+                        glBindTexture(GL_TEXTURE_2D, glowtex->id);
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
                         glColor4f(slot.glowcolor.x, slot.glowcolor.y, slot.glowcolor.z, texpaneltimer/1000.0f);
                     }
