@@ -651,7 +651,8 @@ struct undolist
     {
         undoblock *u = first;
         first = first->next;
-        if(!first) last = NULL;
+        if(first) first->prev = NULL;
+        else last = NULL;
         return u;
     }
 
@@ -659,7 +660,8 @@ struct undolist
     {
         undoblock *u = last;
         last = last->prev;
-        if(!last) first = NULL;
+        if(last) last->next = NULL;
+        else first = NULL;
         return u;
     }
 };
@@ -673,12 +675,21 @@ void pruneundos(int maxremain)                          // bound memory
     while(totalundos > maxremain && !undos.empty())
     {
         undoblock *u = undos.popfirst();
-        totalundos -= undosize(u);
+        totalundos -= u->size;
         freeundo(u);
     }
     //conoutf("undo: %d of %d(%%%d)", totalundos, undomegs<<20, totalundos*100/(undomegs<<20));
-    while(!redos.empty()) freeundo(redos.poplast());
+    while(!redos.empty())
+    {
+        undoblock *u = redos.popfirst();
+        totalundos -= u->size;
+        freeundo(u);
+    }
 }
+
+void clearundos() { pruneundos(0); }
+
+COMMAND(clearundos, "");
 
 undoblock *newundocube(selinfo &s)
 {
@@ -696,9 +707,10 @@ undoblock *newundocube(selinfo &s)
 
 void addundo(undoblock *u)
 {
+    u->size = undosize(u);
     u->timestamp = totalmillis;
     undos.add(u);
-    totalundos += undosize(u);
+    totalundos += u->size;
     pruneundos(undomegs<<20);
 }
 
@@ -735,6 +747,7 @@ void swapundo(undolist &a, undolist &b, const char *s)
             l.orient = ub->orient;
             r = newundocube(l);
         }
+        r->size = u->size;
         r->timestamp = totalmillis;
         b.add(r);
         pasteundo(u);

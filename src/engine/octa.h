@@ -234,7 +234,7 @@ struct undoent	{ int i; entity e; };
 struct undoblock // undo header, all data sits in payload
 {
     undoblock *prev, *next;
-    int timestamp, numents; // if numents is 0, is a cube undo record, otherwise an entity undo record
+    int size, timestamp, numents; // if numents is 0, is a cube undo record, otherwise an entity undo record
 
     block3 *block() { return (block3 *)(this + 1); }
     int *gridmap()                                                    
