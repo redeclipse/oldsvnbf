@@ -2,19 +2,18 @@ struct clientcom : iclientcom
 {
 	GAMECLIENT &cl;
 
-	bool c2sinit;		// whether we need to tell the other clients our stats
-
-	bool senditemstoserver;	 // after a map change, since server doesn't have map data
+	bool c2sinit, senditemstoserver, isready, remote, demoplayback, spectator;
 	int lastping;
-
-    bool isready, remote, demoplayback;
-
-	bool spectator;
 
 	IVARP(centerchat, 0, 1, 1);
 	IVARP(colourchat, 0, 1, 1);
 
-	clientcom(GAMECLIENT &_cl) : cl(_cl), c2sinit(false), senditemstoserver(false), lastping(0), isready(false), remote(false), demoplayback(false), spectator(false)
+	ISVARP(serversort, "");
+
+	clientcom(GAMECLIENT &_cl) : cl(_cl),
+		c2sinit(false), senditemstoserver(false),
+		isready(false), remote(false), demoplayback(false), spectator(false),
+		lastping(0)
 	{
         CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(SAY_NONE, s));
         CCOMMAND(me, "C", (clientcom *self, char *s), self->toserver(SAY_ACTION, s));
@@ -43,6 +42,9 @@ struct clientcom : iclientcom
         extern void result(const char *s);
         CCOMMAND(getname, "", (clientcom *self), result(self->cl.player1->name));
         CCOMMAND(getteam, "", (clientcom *self), result(self->cl.player1->team));
+
+		CCOMMAND(serversortreset, "", (clientcom *self), self->resetserversort());
+        if(!*serversort()) resetserversort();
 	}
 
 	bool haspriv(int flag, bool quiet = false)
@@ -1351,10 +1353,10 @@ struct clientcom : iclientcom
 		return SSTAT_UNKNOWN;
 	}
 
-	void serversortreset()
+	void resetserversort()
 	{
 		s_sprintfd(u)("serversort = \"%d %d %d\"", SINFO_STATUS, SINFO_PLAYERS, SINFO_PING);
-		executeret(u);
+		execute(u);
 	}
 
 	int servercompare(serverinfo *a, serverinfo *b)
@@ -1378,14 +1380,13 @@ struct clientcom : iclientcom
 				else { return c < d ? 1 : -1; } \
 			}
 
-		if(!identexists("serversort")) { serversortreset(); }
-		int len = atoi(executeret("listlen $serversort"));
+		int len = execute("listlen $serversort");
 
 		loopi(len)
 		{
 			s_sprintfd(s)("at $serversort %d", i);
 
-			int style = atoi(executeret(s));
+			int style = execute(s);
 			serverinfo *aa = a, *ab = b;
 
 			if(style < 0)
@@ -1481,17 +1482,16 @@ struct clientcom : iclientcom
     	{
 			g->pushlist();
 
-			if(g->buttonf("%s ", 0xA0A0A0, i == SINFO_STATUS ? "info" : NULL, serverinfotypes[i]) & G3D_UP)
+			if(g->buttonf("%s ", 0xA0A0A0, NULL, serverinfotypes[i]) & G3D_UP)
 			{
 				string st; st[0] = 0;
 				bool invert = false;
-				if(!identexists("serversort")) { serversortreset(); }
-				int len = atoi(executeret("listlen $serversort"));
+				int len = execute("listlen $serversort");
 				loopk(len)
 				{
 					s_sprintfd(s)("at $serversort %d", k);
 
-					int n = atoi(executeret(s));
+					int n = execute(s);
 					if(abs(n) != i)
 					{
 						s_sprintfd(t)("%s%d", st[0] ? " " : "", n);
@@ -1501,7 +1501,7 @@ struct clientcom : iclientcom
 				}
 				s_sprintfd(u)("serversort = \"%d%s%s\"",
 					invert ? 0-i : i, st[0] ? " " : "", st[0] ? st : "");
-				executeret(u);
+				execute(u);
 			}
 
 			g->mergehits(true);
@@ -1520,7 +1520,7 @@ struct clientcom : iclientcom
     {
 		string text; text[0] = 0;
 		int colour = serverstatus[serverstat(&si)].colour;
-		switch (i)
+		switch(i)
 		{
 			case SINFO_STATUS:
 			{

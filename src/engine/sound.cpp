@@ -173,7 +173,7 @@ ICOMMAND(mapsound, "sis", (char *n, int *v, char *m), intret(addsound(n, *v, *m 
 void updatesound(int chan)
 {
 	bool posliquid = isliquid(lookupmaterial(*sounds[chan].pos)),
-			camliquid = isliquid(lookupmaterial(camera1->o)), liquid = posliquid || camliquid;
+			camliquid = isliquid(lookupmaterial(camera1->o));
 	int vol = clamp(((soundvol*sounds[chan].vol*sounds[chan].slot->vol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
 
 	vec v;
@@ -188,12 +188,8 @@ void updatesound(int chan)
 		}
 		else sounds[chan].curpan = 127;
 
-		if(liquid)
-		{
-			if(camliquid && sounds[chan].slot->material == MAT_AIR)
-				vol = 0;
-			else vol = int(vol*0.5f);
-		}
+		if(camliquid && sounds[chan].slot->material == MAT_AIR) vol = int(vol*0.1f);
+		else if(posliquid || camliquid) vol = int(vol*0.25f);
 
 		float maxrad = float(sounds[chan].maxrad > 0 && sounds[chan].maxrad < soundmaxdist ? sounds[chan].maxrad : soundmaxdist);
 
@@ -218,9 +214,9 @@ void updatesound(int chan)
 	Mix_SetPanning(chan, 255-sounds[chan].curpan, sounds[chan].curpan);
 
 	if(!(sounds[chan].flags&SND_NODELAY) && Mix_Paused(chan))
-	{
-		if(totalmillis >= sounds[chan].millis+int((sounds[chan].dist/8.f)*(liquid ? 1.497f : 0.343f)))
-			Mix_Resume(chan);
+	{ // delay the sound based on average physical constants
+		int delay = int((sounds[chan].dist/8.f)*(posliquid || camliquid ? 1.497f : 0.343f));
+		if(totalmillis >= sounds[chan].millis+delay) Mix_Resume(chan);
 	}
 }
 
