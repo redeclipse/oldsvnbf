@@ -832,7 +832,7 @@ COMMANDN(redo, editredo, "");
 
 ///////////// height maps ////////////////
 
-#define MAXBRUSH    512
+#define MAXBRUSH    64
 #define MAXBRUSHC   63
 #define MAXBRUSH2   32
 int brush[MAXBRUSH][MAXBRUSH];
@@ -869,7 +869,7 @@ void brushimport(char *name)
 	if((s = texturesurface(name)) != NULL)
 	{
 		if(s->w > MAXBRUSH || s->h > MAXBRUSH) // only use max size
-			s = texcrop(0, 0, MAXBRUSH, MAXBRUSH, true);
+			s = scalesurface(s, MAXBRUSH, MAXBRUSH, true);
 
 		uchar *pixel = (uchar *)s->pixels;
 		int value, x, y;
