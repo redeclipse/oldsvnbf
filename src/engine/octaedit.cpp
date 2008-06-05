@@ -832,7 +832,7 @@ COMMANDN(redo, editredo, "");
 
 ///////////// height maps ////////////////
 
-#define MAXBRUSH    64
+#define MAXBRUSH    512
 #define MAXBRUSHC   63
 #define MAXBRUSH2   32
 int brush[MAXBRUSH][MAXBRUSH];
@@ -862,6 +862,47 @@ void brushvert(int *x, int *y, int *v)
     brushminx = max(0,          min(brushminx, *x-1));
     brushminy = max(0,          min(brushminy, *y-1));
 }
+
+void brushimport(char *name)
+{
+	SDL_Surface *s;
+	if((s = texturesurface(name)) != NULL)
+	{
+		if(s->w > MAXBRUSH || s->h > MAXBRUSH) // only use max size
+			s = texcrop(0, 0, MAXBRUSH, MAXBRUSH, true);
+
+		uchar *pixel = (uchar *)s->pixels;
+		int value, x, y;
+
+		clearbrush();
+		brushx = brushy = MAXBRUSH2; // set real coords to 0,0
+
+		loopi(s->w)
+		{
+			x = i;
+			loopj(s->h)
+			{
+				y = j;
+				value = 0;
+
+				loopk(s->format->BytesPerPixel) // add the entire pixel together
+				{
+					value += pixel[0];
+					pixel++;
+				}
+
+				value /= s->format->BytesPerPixel; // average the entire pixel
+				value /= 32; // scale to cube shapes (256 / 8)
+				brushvert(&x, &y, &value);
+			}
+		}
+
+		SDL_FreeSurface(s);
+	}
+	else conoutf("could not load: %s", name);
+}
+
+COMMAND(brushimport, "s");
 
 vector<int> htextures;
 
@@ -935,6 +976,7 @@ namespace hmap
 
     void pushside(cube &c, int d, int x, int y, int z)
 	{
+    	if(d < 0 || d > 2) return;
         ivec a;
         getcubevector(c, d, x, y, z, a);
         a[R[d]] = 8 - a[R[d]];
@@ -1070,7 +1112,7 @@ namespace hmap
                     edgeset(cubeedge(*c[k], d, i, j), dc, dc ? f : 8-f);
         		}
             }
-	        else
+	        else if(c[k])
                 emptyfaces(*c[k]);
 		}
 
