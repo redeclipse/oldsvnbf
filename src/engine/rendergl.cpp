@@ -1454,10 +1454,7 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 
 	glDisable(GL_BLEND);
 	cl->drawhud(w, h); // can make more dramatic changes this way without getting in the way
-
 	glDisable(GL_BLEND);
-
-    g3d_render();
 
 	glDisable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
