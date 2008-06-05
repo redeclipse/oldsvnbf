@@ -27,7 +27,7 @@ static inline void reorienttexture(uchar *src, int sw, int sh, int bpp, uchar *d
     }
 }
 
-SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, int type = TEX_DIFFUSE, bool clear = true)
+SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, int type, bool clear)
 {
     SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, swapxy ? s->h : s->w, swapxy ? s->w : s->h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
     if(!d) fatal("create surface");
@@ -36,7 +36,7 @@ SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, in
     return d;
 }
 
-SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type = TEX_DIFFUSE)
+SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type)
 {
     // 1..3 rotate through 90..270 degrees, 4 flips X, 5 flips Y
     if(numrots<1 || numrots>5) return s;
@@ -47,7 +47,7 @@ SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type = TEX_DIFFUSE)
         type);
 }
 
-SDL_Surface *texoffset(SDL_Surface *s, int xoffset, int yoffset, bool clear = true)
+SDL_Surface *texoffset(SDL_Surface *s, int xoffset, int yoffset, bool clear)
 {
 	xoffset = max(xoffset, 0);
 	xoffset %= s->w;
@@ -69,7 +69,7 @@ SDL_Surface *texoffset(SDL_Surface *s, int xoffset, int yoffset, bool clear = tr
 	return d;
 }
 
-SDL_Surface *texcrop(SDL_Surface *s, int x, int y, int w, int h, bool clear = true)
+SDL_Surface *texcrop(SDL_Surface *s, int x, int y, int w, int h, bool clear)
 {
 	SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
 	if(!d) fatal("create surface");
@@ -83,7 +83,7 @@ SDL_Surface *texcrop(SDL_Surface *s, int x, int y, int w, int h, bool clear = tr
 	return d;
 }
 
-SDL_Surface *texcopy(SDL_Surface *s, bool clear = true)
+SDL_Surface *texcopy(SDL_Surface *s, bool clear)
 {
 	SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, s->w, s->h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
 	if(!d) fatal("create surface");
@@ -114,7 +114,7 @@ void texmad(SDL_Surface *s, const vec &mul, const vec &add)
 
 static SDL_Surface stubsurface;
 
-SDL_Surface *texffmask(SDL_Surface *s, int minval, bool clear = true)
+SDL_Surface *texffmask(SDL_Surface *s, int minval, bool clear)
 {
     if(renderpath!=R_FIXEDFUNCTION) return s;
     if(nomasks || s->format->BytesPerPixel<3) { SDL_FreeSurface(s); return &stubsurface; }
@@ -152,7 +152,7 @@ void texdup(SDL_Surface *s, int srcchan, int dstchan)
     }
 }
 
-SDL_Surface *texdecal(SDL_Surface *s, bool clear = true)
+SDL_Surface *texdecal(SDL_Surface *s, bool clear)
 {
     if(renderpath!=R_FIXEDFUNCTION || hasTE) return s;
     SDL_Surface *m = SDL_CreateRGBSurface(SDL_SWSURFACE, s->w, s->h, 16, 0, 0, 0, 0);
@@ -437,7 +437,7 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int cl
 #define AMASK 0xff000000
 #endif
 
-SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear = true)
+SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear)
 {
     SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 32, RMASK, GMASK, BMASK, AMASK);
     if(!ns) fatal("creatergbsurface");
@@ -446,7 +446,7 @@ SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear = true)
     return ns;
 }
 
-SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear = true)
+SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear)
 {
     SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, os->format->BitsPerPixel, os->format->Rmask, os->format->Gmask, os->format->Bmask, os->format->Amask);
     if(!ns) fatal("scalesurface");

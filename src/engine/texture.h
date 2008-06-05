@@ -277,6 +277,17 @@ struct Slot
 extern vector<Slot> slots;
 extern Slot materialslots[MAT_EDIT];
 
+extern SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, int type = TEX_DIFFUSE, bool clear = true);
+extern SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type = TEX_DIFFUSE);
+extern SDL_Surface *texoffset(SDL_Surface *s, int xoffset, int yoffset, bool clear = true);
+extern SDL_Surface *texcrop(SDL_Surface *s, int x, int y, int w, int h, bool clear = true);
+extern SDL_Surface *texcopy(SDL_Surface *s, bool clear = true);
+extern SDL_Surface *texffmask(SDL_Surface *s, int minval, bool clear = true);
+extern SDL_Surface *texdecal(SDL_Surface *s, bool clear = true);
+extern SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear = true);
+extern SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear = true);
+extern SDL_Surface *texturesurface(const char *name);
+
 extern void materialreset();
 extern void texturereset();
 extern void autograss(char *name);
