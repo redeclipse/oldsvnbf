@@ -69,7 +69,7 @@ void pushgui(menu *m, int pos = -1)
     if(guistack.empty())
     {
         menupos = menuinfrontofplayer();
-        cursorx = cursory = 0.5f;
+        resetcursor();
     }
     if(pos < 0) guistack.add(m);
     else guistack.insert(pos, m);

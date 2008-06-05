@@ -38,8 +38,6 @@ struct GAMECLIENT : igameclient
 		teamscore(const char *s, int n) : team(s), score(n) {}
 	};
 
-	physent gamecamera;
-
 	vector<fpsent *> shplayers;
 	vector<teamscore> teamscores;
 
@@ -229,41 +227,41 @@ struct GAMECLIENT : igameclient
 
 	void updatemouse()
 	{
-		if(!menuactive())
+		if(mousetype())
 		{
-			if(mousetype() && player1->state != CS_DEAD)
+			if(!lastmouse) resetcursor();
+			else if(player1->state != CS_DEAD)
 			{
-				if(!lastmouse) cursorx = cursory = 0.5f;
-				else
-				{
-					physent *d = mousetype() <= 2 ? player1 : camera1;
-					int frame = lastmouse-lastmillis;
-					float deadzone = (mousedeadzone()/100.f);
-					float cx = (cursorx-0.5f), cy = (0.5f-cursory);
+				physent *d = mousetype() <= 2 ? player1 : camera1;
+				int frame = lastmouse-lastmillis;
+				float deadzone = (mousedeadzone()/100.f);
+				float cx = (cursorx-0.5f), cy = (0.5f-cursory);
 
-					if(cx > deadzone || cx < -deadzone)
-						d->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+				if(cx > deadzone || cx < -deadzone)
+					d->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
 
-					if(cy > deadzone || cy < -deadzone)
-						d->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+				if(cy > deadzone || cy < -deadzone)
+					d->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
 
-					fixrange(d->yaw, d->pitch);
-				}
-
-				lastmouse = lastmillis;
+				fixrange(d->yaw, d->pitch);
 			}
-			else
-			{
-				cursorx = cursory = 0.5f;
-				lastmouse = 0;
-			}
+			lastmouse = lastmillis;
+		}
+		else
+		{
+			resetcursor();
+			lastmouse = 0;
 		}
 	}
 
 	void updateworld()		// main game update loop
 	{
-        if(!maptime) { maptime = lastmillis + curtime; return; }
 		if(!curtime) return;
+        if(!maptime)
+        {
+        	maptime = lastmillis + curtime;
+        	return;
+		}
 
 		gets2c();
 
@@ -286,7 +284,7 @@ struct GAMECLIENT : igameclient
 			adjustscaled(int, quakewobble, 100.f);
 			adjustscaled(int, damageresidue, 100.f);
 
-			updatemouse();
+			if(!menuactive()) updatemouse();
 
 			if(player1->state == CS_DEAD)
 			{
@@ -1059,23 +1057,23 @@ struct GAMECLIENT : igameclient
 		{
 			if(mousetype() == 2 || mousetype() == 4)
 			{
-				cursorx = max(0.0f, min(1.0f, float(x)/float(w)));
-				cursory = max(0.0f, min(1.0f, float(y)/float(h)));
+				cursorx = clamp(float(x)/float(w), 0.f, 1.f);
+				cursory = clamp(float(y)/float(h), 0.f, 1.f);
 				return false;
 			}
 			else
 			{
-				cursorx = max(0.0f, min(1.0f, cursorx+(float(dx*mousesensitivity())/10000.f)));
-				cursory = max(0.0f, min(1.0f, cursory+(float(dy*(!menuactive() && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f)));
+				cursorx = clamp(cursorx+(float(dx*mousesensitivity())/10000.f), 0.f, 1.f);
+				cursory = clamp(cursory+(float(dy*(!menuactive() && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f), 0.f, 1.f);;
 				return true;
 			}
 		}
 		else
 		{
+			cursorx = cursory = 0.5f;
 			player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
 			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1.f : 1.f);
 			fixrange(player1->yaw, player1->pitch);
-			cursorx = cursory = 0.5f;
 			return true;
 		}
 		return false;
@@ -1090,14 +1088,14 @@ struct GAMECLIENT : igameclient
 			findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
 		}
 
-		camera1 = &gamecamera;
+		camera1 = &camera;
 
 		if(camera1->type != ENT_CAMERA)
 		{
 			camera1->reset();
-			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
 			camera1->type = ENT_CAMERA;
 			camera1->state = CS_ALIVE;
+			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
 		}
 
 		if(mousetype() >= 3 && !lastcamera)
@@ -1186,6 +1184,14 @@ struct GAMECLIENT : igameclient
 		}
 
 		lastcamera = lastmillis;
+#if 0
+		conoutf("%.2f %.2f %.2f [%.2f %.2f %.2f] %.2f %.2f %.2f [%.2f %.2f %.2f]",
+			camera1->o.x, camera1->o.y, camera1->o.z,
+			camera1->yaw, camera1->pitch, camera1->roll,
+			player1->o.x, player1->o.y, player1->o.z,
+			player1->yaw, player1->pitch, player1->roll
+		);
+#endif
 	}
 
 	void adddynlights()

@@ -54,7 +54,7 @@ extern vector<sound> sounds;
 
 extern void initsound();
 extern void stopsound();
-extern void checksound();
+extern void updatesounds();
 extern int addsound(const char *name, int vol, int material, vector<soundslot> &sounds);
 extern void removesound(int c);
 extern void clearsound();

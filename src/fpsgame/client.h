@@ -1355,7 +1355,7 @@ struct clientcom : iclientcom
 
 	void resetserversort()
 	{
-		s_sprintfd(u)("serversort = \"%d %d %d\"", SINFO_STATUS, SINFO_PLAYERS, SINFO_PING);
+		s_sprintfd(u)("serversort [%d %d %d]", SINFO_STATUS, SINFO_PLAYERS, SINFO_PING);
 		execute(u);
 	}
 

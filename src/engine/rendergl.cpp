@@ -501,6 +501,7 @@ void cleanupgl()
 
 VAR(wireframe, 0, 0, 1);
 
+physent camera, *camera1 = &camera;
 vec worldpos, camdir, camright, camup;
 
 void findorientation(vec &o, float yaw, float pitch, vec &pos)
@@ -535,8 +536,6 @@ int xtraverts, xtravertsva;
 VARW(fog, 16, 4000, INT_MAX-1);
 VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
-physent *camera1 = NULL;
-bool deathcam = false;
 bool isthirdperson() { return cl->gamethirdperson() || reflecting; }
 
 void projectcursor(float x, float y, vec &dir)
@@ -1457,6 +1456,9 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 	cl->drawhud(w, h); // can make more dramatic changes this way without getting in the way
 
 	glDisable(GL_BLEND);
+
+    g3d_render();
+
 	glDisable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
 }
