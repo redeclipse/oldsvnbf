@@ -64,9 +64,9 @@ struct GAMECLIENT : igameclient
 	IVARP(hitcrosshair, 0, 425, 1000);
 
 	IVARP(crosshairsize, 0, 25, 1000);
-	IVARP(crosshairblend, 0, 50, 100);
+	IVARP(crosshairblend, 0, 75, 100);
 	IVARP(cursorsize, 0, 30, 1000);
-	IVARP(cursorblend, 0, 0, 100);
+	IVARP(cursorblend, 0, 100, 100);
 
 	ITVAR(relativecursortex, "textures/relativecursor");
 	ITVAR(guicursortex, "textures/guicursor");
@@ -652,7 +652,7 @@ struct GAMECLIENT : igameclient
 		glOrtho(0, ox, oy, 0, -1, 1);
 
 		int secs = lastmillis-maptime;
-		float fade = 1.f, amt = hudblend*0.01f;
+		float fade = 1.f, amt = hudblend/100.f;
 
 		if(secs <= CARDTIME+CARDFADE)
 		{
@@ -788,25 +788,28 @@ struct GAMECLIENT : igameclient
         }
     }
 
-	void drawpointer(int w, int h, int index, float cx, float cy, float r, float g, float b)
+	void drawpointer(int w, int h, int index, float x, float y, float r, float g, float b)
 	{
 		Texture *pointer = textureload(getpointer(index));
-		float chsize = index ? crosshairsize()*w/300.0f : cursorsize()*w/300.0f,
-			chblend = index ? crosshairblend()/100.f : cursorblend()/100.f;
+		float chsize = index != POINTER_GUI ? crosshairsize()*w/300.0f : cursorsize()*w/300.0f,
+			chblend = index != POINTER_GUI ? crosshairblend()/100.f : cursorblend()/100.f;
 
+		glEnable(GL_BLEND);
 		if(pointer->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
-
 		glColor4f(r, g, b, chblend);
-		float x = cx*w*3.0f - (index ? chsize/2.0f : 0);
-		float y = cy*h*3.0f - (index ? chsize/2.0f : 0);
+
+		float cx = x*w*3.0f - (index != POINTER_GUI ? chsize/2.0f : 0);
+		float cy = y*h*3.0f - (index != POINTER_GUI ? chsize/2.0f : 0);
 		glBindTexture(GL_TEXTURE_2D, pointer->id);
 		glBegin(GL_QUADS);
-		glTexCoord2d(0.0, 0.0); glVertex2f(x, y);
-		glTexCoord2d(1.0, 0.0); glVertex2f(x + chsize, y);
-		glTexCoord2d(1.0, 1.0); glVertex2f(x + chsize, y + chsize);
-		glTexCoord2d(0.0, 1.0); glVertex2f(x, y + chsize);
+		glTexCoord2d(0.0, 0.0); glVertex2f(cx, cy);
+		glTexCoord2d(1.0, 0.0); glVertex2f(cx + chsize, cy);
+		glTexCoord2d(1.0, 1.0); glVertex2f(cx + chsize, cy + chsize);
+		glTexCoord2d(0.0, 1.0); glVertex2f(cx, cy + chsize);
 		glEnd();
+
+		glDisable(GL_BLEND);
 	}
 
 	void drawpointers(int w, int h)
@@ -923,8 +926,9 @@ struct GAMECLIENT : igameclient
 				if(cc.ready()) drawgamehud(w, h);
 				drawhudelements(w, h);
 			}
-			drawpointers(w, h);
 			glDisable(GL_BLEND);
+
+			drawpointers(w, h);
 		}
 	}
 

@@ -41,6 +41,9 @@ obey this license, for further information see:
 LICENSE
 =======
 
+This software is Open Source Initiative approved Open Source Software.
+Open Source Initiative Approved is a trademark of the Open Source Initiative.
+
 Blood Frontier, Copyright (C) 2006-2008
 	Tony "acord" Cord, Quinton "quin" Reeves
 
