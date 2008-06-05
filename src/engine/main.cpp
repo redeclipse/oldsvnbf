@@ -314,10 +314,9 @@ void inputgrab(bool on)
 	keyrepeat(on);
 }
 
-VARF(grabinput, 0, 0, 1, inputgrab(grabinput ? false : true));
+VARF(grabinput, 0, 0, 1, inputgrab(grabinput ? true : false));
 VARP(autograbinput, 0, 1, 1);
 
-int ignoremouse = 5;
 bool activewindow = true, warpmouse = false;
 
 vector<SDL_Event> events;
@@ -346,7 +345,15 @@ bool interceptkey(int sym)
     return false;
 }
 
-VARP(autoconnect, 0, 1, 1);
+void resetcursor(bool warp, bool reset)
+{
+	if(warp && (grabinput || activewindow))
+	{
+		SDL_WarpMouse(screen->w/2, screen->h/2);
+		warpmouse = true;
+	}
+	if(reset) cursorx = cursory = 0.5f;
+}
 
 void checkinput()
 {
@@ -386,22 +393,22 @@ void checkinput()
 			}
 			case SDL_MOUSEMOTION:
 			{
-				if(ignoremouse) { ignoremouse--; break; }
 				if(grabinput || activewindow)
 				{
 #ifdef __APPLE__
 					if(event.motion.y == 0) break;  //let mac users drag windows via the title bar
 #endif
-					if(warpmouse && event.motion.x == screen->w/2 && event.motion.y == screen->h/2)
+					if(warpmouse &&
+						event.motion.x == screen->w/2 && event.motion.y == screen->h/2)
 					{
 						warpmouse = false;
 						break;
 					}
 
-					if(cl->mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h))
+					if(cl->mousemove(event.motion.xrel, event.motion.yrel,
+							event.motion.x, event.motion.y, screen->w, screen->h))
 					{
-						SDL_WarpMouse(screen->w/2, screen->h/2);
-						warpmouse = true;
+						resetcursor(true, false); // game controls engine cursor
 					}
 				}
 				break;
@@ -419,8 +426,6 @@ void checkinput()
 	}
 }
 
-VARF(gamespeed, 10, 100, 1000, if(multiplayer()) gamespeed = 100);
-VARF(paused, 0, 0, 1, if(multiplayer()) paused = 0);
 
 VARP(maxfps, 0, 200, 500);
 
@@ -621,7 +626,8 @@ void setcaption(const char *text)
 	SDL_WM_SetCaption(caption, NULL);
 }
 
-int frames = 0, ignore = 5;
+int frameloops = 0;
+VARP(autoconnect, 0, 1, 1);
 
 int main(int argc, char **argv)
 {
@@ -736,7 +742,6 @@ int main(int argc, char **argv)
     initdecals();
 
 	conoutf("init: world");
-	camera1 = cl->iterdynents(0);
 	emptymap(0, true, NULL, true);
 
 	conoutf("init: config");
@@ -745,55 +750,54 @@ int main(int argc, char **argv)
 	conoutf("init: mainloop");
 	if(initscript) execute(initscript);
 
-	if(autograbinput) setvar("grabinput", 1, true);
+	//if(autograbinput && SDL_GetAppState() == SDL_APPMOUSEFOCUS)
+	//	setvar("grabinput", 1, true);
 
 	if(autoconnect) connects();
 	else showgui("main");
+
 	resetfpshistory();
-	for(;;)
+
+	for(frameloops = 0; ; frameloops++)
 	{
 		int millis = SDL_GetTicks() - clockrealbase;
-		if (clockfix) millis = int(millis*(double(clockerror)/1000000));
+		if(clockfix) millis = int(millis*(double(clockerror)/1000000));
         millis += clockvirtbase;
         if(millis<totalmillis) millis = totalmillis;
+
         limitfps(millis, totalmillis);
-		int elapsed = millis-totalmillis;
 
-		if (paused) curtime = 0;
-		else curtime = (elapsed*gamespeed)/100;
+		curtime = millis-totalmillis;
 
-		checkinput();
-
-		if (frames && lastmillis) cl->updateworld();
-
-		menuprocess();
-		lastmillis += curtime;
-		totalmillis = millis;
-
-		checksleep(lastmillis);
-
-		serverslice();
-
-		if (frames)
+		if(frameloops)
 		{
-			updatefpshistory(elapsed);
+			updatefpshistory(curtime);
 			//perfcheck();
+
+			checkinput();
+			menuprocess();
+			checksleep(lastmillis);
+
+			cl->updateworld();
+			serverslice();
 
 			cl->recomputecamera(screen->w, screen->h);
 			setviewcell(camera1->o);
 			updatetextures();
-			entity_particles();
-			checksound();
+			updateparticles();
+			updatesounds();
 
 			inbetweenframes = false;
-			if(frames>2) gl_drawframe(screen->w, screen->h);
+			if(frameloops>2) gl_drawframe(screen->w, screen->h);
 			SDL_GL_SwapBuffers();
 			inbetweenframes = true;
 
 			s_sprintfd(cap)("%s - %s", cl->gametitle(), cl->gametext());
 			setcaption(cap);
 		}
-		frames++;
+
+		lastmillis += curtime;
+		totalmillis = millis;
 		colorpos = 0; // last but not least.
 		colorstack[0] = 'c'; //indicate user color
 	}

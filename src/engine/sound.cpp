@@ -220,7 +220,7 @@ void updatesound(int chan)
 	}
 }
 
-void checksound()
+void updatesounds()
 {
     updatemumble();
 	if(nosound) return;

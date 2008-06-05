@@ -82,9 +82,8 @@ extern PFNGLMULTIDRAWELEMENTSEXTPROC glMultiDrawElements_;
 #define GL_DEPTH24_STENCIL8_EXT 0x88F0
 #endif
 
-extern physent *camera1;				// special ent that acts as camera, same object as player1 in FPS mode
-
-extern bfgz hdr;					  // current map header
+extern physent *camera1, camera;
+extern bfgz hdr;
 extern int worldscale;
 extern vector<ushort> texmru;
 extern int xtraverts, xtravertsva;
@@ -420,6 +419,8 @@ enum
 };
 extern bool initwarning(const char *desc, int level = INIT_RESET, int type = CHANGE_GFX);
 
+extern void resetcursor(bool warp = true, bool reset = true);
+
 extern void pushevent(const SDL_Event &e);
 extern bool interceptkey(int sym);
 extern void computescreen(const char *text = NULL, Texture *t = NULL, const char *overlaytext = NULL);
@@ -463,7 +464,7 @@ extern void particleinit();
 extern void clearparticles();
 extern void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4);
 extern void makeparticles(entity &e);
-extern void entity_particles();
+extern void updateparticles();
 
 // decal
 extern void initdecals();

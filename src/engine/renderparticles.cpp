@@ -1152,7 +1152,7 @@ void makeparticles(entity &e)
 	makeparticle(e.o, e.attr1, e.attr2, e.attr3, e.attr4);
 }
 
-void entity_particles()
+void updateparticles()
 {
     if(emit)
     {

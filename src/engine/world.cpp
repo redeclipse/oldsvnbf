@@ -742,9 +742,6 @@ void resetmap()
 	cancelsel();
 	pruneundos();
 
-	setvar("gamespeed", 100);
-	setvar("paused", 0);
-
 	et->getents().deletecontentsp();
 
 	enumerate(*idents, ident, id, {
