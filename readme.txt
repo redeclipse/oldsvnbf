@@ -29,6 +29,25 @@ Regards,
 	Anthony "acord" Cord
 	Quinton "quin" Reeves
 
+
+CREDITS
+=======
+
+    *  Anthony "Acord" Cord - Lead Art Director
+          o Original Blood Frontier concept, most art assets and content 
+
+    * Quinton "quin" Reeves - Lead Developer
+          o Engine and gameplay code/design 
+
+    * Lee "eihrul" Salzman
+          o Cube Engine 2 backports and support 
+
+    * "Hirato Kirata"
+          o Testing and development assistance 
+
+    * Joshua L. "verbalshadow" Blocher
+          o GUI artwork 
+
 ADDENDUM
 ========
 
@@ -67,8 +86,8 @@ freely, subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 
 
-LICENSE NOTES
-=============
+NOTES
+=====
 The license covers the source code found in this directory of the
 archive, the included enet network library is covered by an MIT-style license,
 which is however compatible with the above license for all practical purposes.
