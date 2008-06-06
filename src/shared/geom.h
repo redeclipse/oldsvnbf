@@ -328,9 +328,17 @@ struct dualquat
         dual.mul(k);
     }
 
+    void fixantipodal(const dualquat &d)
+    {
+        if(real.dot(d.real) < 0)
+        {
+            real.neg();
+            dual.neg();
+        }
+    }
+    
     void accumulate(const dualquat &d, float k)
     {
-        if(real.dot(d.real) < 0) k = -k;
         real.add(vec4(d.real).mul(k));
         dual.add(vec4(d.dual).mul(k));
     }
