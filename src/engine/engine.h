@@ -1,3 +1,10 @@
+// engine defs
+#define ENG_VERSION		65					// engine version, integer is divided by 100.f
+#define ENG_NAME		"Blood Frontier"	// engine name
+#define ENG_RELEASE		"SVN"				// engine release name
+
+#define MASTER_PORT		28800
+
 #include "cube.h"
 
 extern int curtime, lastmillis, totalmillis;
