@@ -785,7 +785,11 @@ struct skelmodel : animmodel
                 loopi(numbones)
                 {
                     boneinfo &info = bones[i];
-                    if(info.interpindex < 0 || info.parent < 0 || bones[info.parent].interpindex >= 0) continue;
+                    if(info.interpindex < 0 || info.parent < 0 || bones[info.parent].interpindex >= 0)
+                    {
+                        frame[i].fixantipodal(framebones[i]);
+                        continue;
+                    }
                     dualquat d = frame[i];
                     int parent = info.parent;
                     while(parent >= 0 && bones[parent].interpindex < 0)
@@ -794,6 +798,7 @@ struct skelmodel : animmodel
                         parent = bones[parent].parent;
                     }
                     d.normalize();
+                    d.fixantipodal(framebones[i]);
                     frame[i] = d;
                 }
                 optimizedframes++;
@@ -983,8 +988,10 @@ struct skelmodel : animmodel
             }
             loopi(numinterpbones)
             {
-                sc.bdata[i].normalize();
-                sc.bdata[i].mul(invbones[i]);
+                dualquat &d = sc.bdata[i];
+                d.normalize();
+                d.mul(invbones[i]);
+                d.fixantipodal(sc.bdata[0]);
             }
         }
 
