@@ -72,7 +72,7 @@ TCXXFLAGS= -Wall -DTTF2FONT $(CXXOPTFLAGS) $(TINCLUDES)
 TTF_LIBS= -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_ttf -lpng -lz
 TTF_OBJS= \
 	shared/tools-ttf.o \
-	ttf2font/ttf2font-ttf.o
+	shared/ttf2font-ttf.o
 
 default: all
 

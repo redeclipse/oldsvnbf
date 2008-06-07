@@ -1,4 +1,4 @@
 #include "afxres.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-IDI_ICON1 ICON "ttf2font/ttf2font.ico"
+IDI_ICON1 ICON "ttf2font.ico"
