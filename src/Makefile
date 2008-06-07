@@ -66,6 +66,14 @@ DAEMON_OBJS= \
 	engine/server-daemon.o \
 	fpsgame/fps-daemon.o
 
+TINCLUDES= -Ishared
+TCXXFLAGS= -Wall -DTTF2FONT $(CXXOPTFLAGS) $(TINCLUDES)
+
+TTF_LIBS=`sdl-config --libs` -lSDL_image -lSDL_ttf -png -lz
+TTF_OBJS= \
+	shared/tools-ttf.o \
+	ttf2font/ttf2font-ttf.o
+
 default: all
 
 enet/Makefile:
@@ -85,11 +93,17 @@ clean-server:
 clean-daemon:
 	@rm -fv $(DAEMON_OBJS) bloodfrontier_daemon
 
+clean-ttf:
+	@rm -fv $(TTF_OBJS) ttf2font
+
 %-standalone.o:
 	$(CXX) $(SCXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
 
 %-daemon.o:
 	$(CXX) $(DCXXFLAGS) -c -o $@ $(subst -daemon.o,.cpp,$@)
+
+%-ttf.o:
+	$(CXX) $(DCXXFLAGS) -c -o $@ $(subst -ttf.o,.cpp,$@)
 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)
@@ -103,6 +117,10 @@ daemon:	libenet $(DAEMON_OBJS)
 	$(CXX) $(DCXXFLAGS) -o bloodfrontier_daemon $(DAEMON_OBJS) $(DAEMON_LIBS)
 	strip bloodfrontier_daemon
 
+ttf2font: $(TTF_OBJS)
+	$(CXX) $(TCXXFLAGS) -o ttf2font $(TTF_OBJS) $(TTF_LIBS)
+	strip ttf2font
+
 install-client: client
 	cp -v bloodfrontier_client ../bin/bloodfrontier_client
 	chmod +x ../bin/bloodfrontier_client ../bloodfrontier.sh
@@ -114,6 +132,10 @@ install-server: server
 install-daemon: daemon
 	cp -v bloodfrontier_daemon ../bin/bloodfrontier_daemon
 	chmod +x ../bin/bloodfrontier_daemon
+
+install-ttf: ttf2font
+	cp -v ttf2font ../bin/ttf2font
+	chmod +x ../bin/ttf2font
 
 install: install-client install-server
 
