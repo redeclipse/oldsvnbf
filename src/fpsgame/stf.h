@@ -11,7 +11,7 @@ struct stfstate
 	struct flaginfo
 	{
 		vec o;
-		string owner, enemy;
+		int owner, enemy;
 #ifndef STFSERV
         vec pos;
 		string name, info;
@@ -23,7 +23,7 @@ struct stfstate
 
 		void noenemy()
 		{
-			enemy[0] = '\0';
+			enemy = TEAM_NEUTRAL;
 			enemies = 0;
 			converted = 0;
 		}
@@ -31,62 +31,62 @@ struct stfstate
 		void reset()
 		{
 			noenemy();
-			owner[0] = '\0';
+			owner = TEAM_NEUTRAL;
 			securetime = -1;
             owners = 0;
 		}
 
-		bool enter(const char *team)
+		bool enter(int team)
 		{
-            if(!strcmp(owner, team))
+            if(owner == team)
 			{
                 owners++;
                 return false;
             }
             if(!enemies)
             {
-                if(strcmp(enemy, team))
+                if(enemy != team)
                 {
                     converted = 0;
-					s_strcpy(enemy, team);
+					enemy = team;
                 }
 				enemies++;
 				return true;
 			}
-			else if(strcmp(enemy, team)) return false;
+			else if(enemy != team) return false;
 			else enemies++;
 			return false;
 		}
 
-		bool steal(const char *team)
+		bool steal(int team)
 		{
-            return !enemies && strcmp(owner, team);
+            return !enemies && owner != team;
 		}
 
-		bool leave(const char *team)
+		bool leave(int team)
 		{
-            if(!strcmp(owner, team))
+            if(owner == team)
             {
                 owners--;
                 return false;
             }
-			if(strcmp(enemy, team)) return false;
+			if(enemy != team) return false;
 			enemies--;
 			return !enemies;
 		}
 
-		int occupy(const char *team, int units)
+		int occupy(int team, int units)
 		{
-			if(strcmp(enemy, team)) return -1;
+			if(enemy != team) return -1;
 			converted += units;
             if(units<0)
             {
                 if(converted<=0) noenemy();
                 return -1;
             }
-            else if(converted<(owner[0] ? 2 : 1)*OCCUPYLIMIT) return -1;
-			if(owner[0]) { owner[0] = '\0'; converted = 0; s_strcpy(enemy, team); return 0; }
-            else { s_strcpy(owner, team); securetime = 0; owners = enemies; noenemy(); return 1; }
+            else if(converted<(owner ? 2 : 1)*OCCUPYLIMIT) return -1;
+			if(owner) { owner = TEAM_NEUTRAL; converted = 0; enemy = team; return 0; }
+            else { owner = team; securetime = 0; owners = enemies; noenemy(); return 1; }
         }
 	};
 
@@ -94,8 +94,7 @@ struct stfstate
 
 	struct score
 	{
-		string team;
-		int total;
+		int team, total;
 	};
 
 	vector<score> scores;
@@ -111,15 +110,15 @@ struct stfstate
 		secured = 0;
 	}
 
-	score &findscore(const char *team)
+	score &findscore(int team)
 	{
 		loopv(scores)
 		{
 			score &cs = scores[i];
-			if(!strcmp(cs.team, team)) return cs;
+			if(cs.team == team) return cs;
 		}
 		score &cs = scores.add();
-		s_strcpy(cs.team, team);
+		cs.team = team;
 		cs.total = 0;
 		return cs;
 	}
@@ -130,21 +129,21 @@ struct stfstate
 		b.o = o;
 	}
 
-	void initflag(int i, const char *owner, const char *enemy, int converted)
+	void initflag(int i, int owner, int enemy, int converted)
 	{
 		if(!flags.inrange(i)) return;
 		flaginfo &b = flags[i];
-		s_strcpy(b.owner, owner);
-		s_strcpy(b.enemy, enemy);
+		b.owner = owner;
+		b.enemy = enemy;
 		b.converted = converted;
 	}
 
-	bool hasflags(const char *team)
+	bool hasflags(int team)
 	{
 		loopv(flags)
 		{
 			flaginfo &b = flags[i];
-			if(b.owner[0] && !strcmp(b.owner, team)) return true;
+			if(b.owner && b.owner == team) return true;
 		}
 		return false;
 	}
@@ -155,7 +154,7 @@ struct stfstate
 		loopv(flags)
 		{
 			flaginfo &e = flags[i];
-			if(e.owner[0] && strcmp(b.owner, e.owner))
+			if(e.owner && b.owner != e.owner)
 				dist = min(dist, b.o.dist(e.o));
 		}
 		return dist;
@@ -192,27 +191,20 @@ struct stfclient : stfstate
             loopv(flags)
             {
                 flaginfo &b = flags[i];
-                if(!insideflag(b, d->o) || (strcmp(b.owner, d->team) && strcmp(b.enemy, d->team))) continue;
-                particle_flare(pos, b.pos, 0, strcmp(d->team, cl.player1->team) ? 29 : 30, d);
+                if(!insideflag(b, d->o) || (b.owner != d->team && b.enemy != d->team)) continue;
+                part_flare(pos, b.pos, 1, 15, teamtype[d->team].colour, 0.28f, d);
                 if(oldflag < 0)
-                {
-                    particle_fireball(pos, 4, strcmp(d->team, cl.player1->team) ? 31 : 32, 250);
-                    particle_splash(0, 50, 250, pos);
-                }
+					regularshape(4, 16, teamtype[d->team].colour, 256, 5, 1000, pos, 4.8f);
                 d->lastflag = i;
             }
         }
         if(d->lastflag < 0 && oldflag >= 0)
-        {
-            particle_fireball(pos, 4, strcmp(d->team, cl.player1->team) ? 31 : 32, 250);
-            particle_splash(0, 50, 250, pos);
-        }
+			regularshape(4, 16, teamtype[d->team].colour, 256, 5, 1000, pos, 4.8f);
     }
 
     void preload()
     {
-        static const char *flagmodels[3] = { "flags/neutral", "flags/red", "flags/blue" };
-        loopi(3) loadmodel(flagmodels[i], -1, true);
+        loopi(TEAM_MAX) loadmodel(teamtype[i].flag, -1, true);
     }
 
 	void render()
@@ -231,40 +223,21 @@ struct stfclient : stfstate
 		loopv(flags)
 		{
 			flaginfo &b = flags[i];
-			const char *flagname = b.owner[0] ? (strcmp(b.owner, cl.player1->team) ? "flags/red" : "flags/blue") : "flags/neutral";
+			const char *flagname = teamtype[b.owner].flag;
             rendermodel(&b.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, 0, 0, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
-            particle_fireball(b.pos, 5, b.owner[0] ? (strcmp(b.owner, cl.player1->team) ? 31 : 32) : 33, 0);
-			int ttype = 11, mtype = -1;
-			if(b.owner[0])
-			{
-				bool isowner = !strcmp(b.owner, cl.player1->team);
-#if 0
-				if(b.enemy[0])
-				{
-					s_sprintf(b.info)("\f%d%s \f0vs. \f%d%s", isowner ? 3 : 1, b.enemy, isowner ? 1 : 3, b.owner);
-					mtype = isowner ? 19 : 20;
-				}
-				else { s_sprintf(b.info)("%s", b.owner); ttype = isowner ? 16 : 13; }
-#else
-                if(b.enemy[0]) mtype = isowner ? 19 : 20;
-                s_sprintf(b.info)("%s", b.owner); ttype = isowner ? 16 : 13;
-#endif
-			}
-			else if(b.enemy[0])
-			{
-				s_sprintf(b.info)("%s", b.enemy);
-				if(strcmp(b.enemy, cl.player1->team)) { ttype = 13; mtype = 17; }
-				else { ttype = 16; mtype = 18; }
-			}
+			int attack = b.enemy ? b.enemy : b.owner;
+			if(b.enemy && b.owner)
+				s_sprintf(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].colour, teamtype[b.owner].name, teamtype[b.enemy].colour, teamtype[b.enemy].name);
+			else if(attack) s_sprintf(b.info)("%s", teamtype[attack].name);
 			else b.info[0] = '\0';
 
             vec above(b.pos);
             above.z += FIREBALLRADIUS+1.0f;
-			particle_text(above, b.info, ttype, 1);
-			if(mtype>=0)
+			part_text(above, b.info, 10, 1, 0xFFFFDD);
+			if(attack)
 			{
-				above.z += 3.0f;
-				particle_meter(above, b.converted/float((b.owner[0] ? 2 : 1) * OCCUPYLIMIT), mtype, 1);
+				above.z += 6.0f;
+				part_meter(above, b.converted/float((b.owner ? 2 : 1) * OCCUPYLIMIT), 11, 1, teamtype[attack].colour);
 			}
 		}
 	}
@@ -283,13 +256,13 @@ struct stfclient : stfstate
 		loopv(flags)
 		{
 			flaginfo &b = flags[i];
-			if(skipenemy && b.enemy[0]) continue;
+			if(skipenemy && b.enemy) continue;
 			switch(type)
 			{
-				case 1: if(!b.owner[0] || strcmp(b.owner, cl.player1->team)) continue; break;
-				case 0: if(b.owner[0]) continue; break;
-				case -1: if(!b.owner[0] || !strcmp(b.owner, cl.player1->team)) continue; break;
-				case -2: if(!b.enemy[0] || !strcmp(b.enemy, cl.player1->team)) continue; break;
+				case 1: if(!b.owner || b.owner != cl.player1->team) continue; break;
+				case 0: if(b.owner) continue; break;
+				case -1: if(!b.owner || b.owner == cl.player1->team) continue; break;
+				case -2: if(!b.enemy || b.enemy == cl.player1->team) continue; break;
 			}
 			vec dir(b.o);
 			dir.sub(camera1->o);
@@ -327,11 +300,12 @@ struct stfclient : stfstate
 			flaginfo &b = flags.add();
 			b.o = e->o;
             b.pos = b.o;
-            abovemodel(b.pos, "flags/neutral");
+            abovemodel(b.pos, teamtype[TEAM_NEUTRAL].flag);
             b.pos.z += FIREBALLRADIUS-2;
 			s_sprintfd(alias)("flag_%d", e->attr1);
 			const char *name = getalias(alias);
-			if(name[0]) s_strcpy(b.name, name); else s_sprintf(b.name)("flag %d", flags.length());
+			if(name[0]) s_strcpy(b.name, name);
+			else s_sprintf(b.name)("flag %d", flags.length());
 			b.ent = e;
 		}
 		vec center(0, 0, 0);
@@ -352,38 +326,36 @@ struct stfclient : stfstate
 		putint(p, -1);
 	}
 
-	void updateflag(int i, const char *owner, const char *enemy, int converted)
+	void updateflag(int i, int owner, int enemy, int converted)
 	{
 		if(!flags.inrange(i)) return;
 		flaginfo &b = flags[i];
-		if(owner[0])
+		if(owner)
 		{
-			if(strcmp(b.owner, owner))
+			if(b.owner != owner)
 			{
-				conoutf("\f2%s secured %s", owner, b.name);
-				if(!strcmp(owner, cl.player1->team))
-					cl.et.announce(S_V_FLAGSECURED);
+				conoutf("\f2%s secured %s", teamtype[owner].name, b.name);
+				if(owner == cl.player1->team) cl.et.announce(S_V_FLAGSECURED);
 			}
 		}
-		else if(b.owner[0])
+		else if(b.owner)
 		{
-			conoutf("\f2%s overthrew %s", b.name, b.owner);
-			if(!strcmp(b.owner, cl.player1->team))
-				cl.et.announce(S_V_FLAGOVERTHROWN);
+			conoutf("\f2%s overthrew %s", teamtype[b.owner].name, b.name);
+			if(b.owner == cl.player1->team) cl.et.announce(S_V_FLAGOVERTHROWN);
 		}
-        if(strcmp(b.owner, owner)) particle_splash(0, 200, 250, b.pos);
-		s_strcpy(b.owner, owner);
-		s_strcpy(b.enemy, enemy);
+        if(b.owner != owner) particle_splash(0, 200, 250, b.pos);
+		b.owner = owner;
+		b.enemy = enemy;
 		b.converted = converted;
 	}
 
-	void setscore(const char *team, int total)
+	void setscore(int team, int total)
 	{
 		findscore(team).total = total;
-		if(total>=10000) conoutf("team %s secured all flags", team);
+		if(total>=10000) conoutf("team %s secured all flags", teamtype[team].name);
 	}
 
-    int closesttoenemy(const char *team, bool noattacked = false, bool farthest = false)
+    int closesttoenemy(int team, bool noattacked = false, bool farthest = false)
 	{
         float bestdist = farthest ? -1e10f : 1e10f;
 		int best = -1;
@@ -391,15 +363,15 @@ struct stfclient : stfstate
 		loopv(flags)
 		{
 			flaginfo &b = flags[i];
-			if(!b.owner[0] || strcmp(b.owner, team)) continue;
-			if(noattacked && b.enemy[0]) continue;
+			if(!b.owner || b.owner != team) continue;
+			if(noattacked && b.enemy) continue;
 			float dist = disttoenemy(b);
             if(farthest ? dist > bestdist : dist < bestdist)
 			{
 				best = i;
 				bestdist = dist;
 			}
-			else if(b.enemy[0] && b.enemies < attackers)
+			else if(b.enemy && b.enemies < attackers)
 			{
 				attacked = i;
 				attackers = b.enemies;
@@ -409,7 +381,7 @@ struct stfclient : stfstate
 		return best;
 	}
 
-	int pickspawn(const char *team)
+	int pickspawn(int team)
 	{
 		int closest = closesttoenemy(team, true);
 		if(closest < 0) closest = closesttoenemy(team, false);
@@ -456,21 +428,21 @@ struct stfservmode : stfstate, servmode
 		notgotflags = !empty;
 	}
 
-	void stealflag(int n, const char *team)
+	void stealflag(int n, int team)
 	{
 		flaginfo &b = flags[n];
 		loopv(sv.clients)
 		{
 			GAMESERVER::clientinfo *ci = sv.clients[i];
-			if(!ci->spectator && ci->state.state==CS_ALIVE && ci->team[0] && !strcmp(ci->team, team) && insideflag(b, ci->state.o))
+			if(!ci->spectator && ci->state.state==CS_ALIVE && ci->team && ci->team == team && insideflag(b, ci->state.o))
 				b.enter(ci->team);
 		}
 		sendflaginfo(n);
 	}
 
-	void moveflags(const char *team, const vec &oldpos, const vec &newpos)
+	void moveflags(int team, const vec &oldpos, const vec &newpos)
 	{
-		if(!team[0] || sv.minremain<0) return;
+		if(!team || sv.minremain<0) return;
 		loopv(flags)
 		{
 			flaginfo &b = flags[i];
@@ -482,22 +454,22 @@ struct stfservmode : stfstate, servmode
 		}
 	}
 
-	void leaveflags(const char *team, const vec &o)
+	void leaveflags(int team, const vec &o)
 	{
 		moveflags(team, o, vec(-1e10f, -1e10f, -1e10f));
 	}
 
-	void enterflags(const char *team, const vec &o)
+	void enterflags(int team, const vec &o)
 	{
 		moveflags(team, vec(-1e10f, -1e10f, -1e10f), o);
 	}
 
-	void addscore(const char *team, int n)
+	void addscore(int team, int n)
 	{
 		if(!n) return;
 		score &cs = findscore(team);
 		cs.total += n;
-		sendf(-1, 1, "risi", SV_TEAMSCORE, team, cs.total);
+		sendf(-1, 1, "ri3", SV_TEAMSCORE, team, cs.total);
 	}
 
 	void update()
@@ -509,12 +481,12 @@ struct stfservmode : stfstate, servmode
 		loopv(flags)
 		{
 			flaginfo &b = flags[i];
-			if(b.enemy[0])
+			if(b.enemy)
 			{
                 if((!b.owners || !b.enemies) && b.occupy(b.enemy, (m_insta(sv.gamemode, sv.mutators) ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*(b.enemies ? b.enemies : -(1+b.owners))*t)==1) addscore(b.owner, SECURESCORE);
 				sendflaginfo(i);
 			}
-			else if(b.owner[0])
+			else if(b.owner)
 			{
 				b.securetime += t;
 				int score = b.securetime/SCORESECS - (b.securetime-t)/SCORESECS;
@@ -527,7 +499,7 @@ struct stfservmode : stfstate, servmode
 	void sendflaginfo(int i)
 	{
 		flaginfo &b = flags[i];
-		sendf(-1, 1, "riiiss", SV_FLAGINFO, i, b.enemy[0] ? b.converted : 0, b.owner, b.enemy);
+		sendf(-1, 1, "ri5", SV_FLAGINFO, i, b.enemy ? b.converted : 0, b.owner, b.enemy);
 	}
 
 	void sendflags()
@@ -548,7 +520,7 @@ struct stfservmode : stfstate, servmode
 		    {
 			    score &cs = scores[i];
 			    putint(p, SV_TEAMSCORE);
-			    sendstring(cs.team, p);
+			    putint(p, cs.team);
 			    putint(p, cs.total);
 		    }
         }
@@ -557,38 +529,38 @@ struct stfservmode : stfstate, servmode
 		{
 			flaginfo &b = flags[i];
 			putint(p, b.converted);
-			sendstring(b.owner, p);
-			sendstring(b.enemy, p);
+			putint(p, b.owner);
+			putint(p, b.enemy);
 		}
 		putint(p, -1);
 	}
 
 	void endcheck()
 	{
-		const char *lastteam = NULL;
+		int lastteam = NULL;
 
 		loopv(flags)
 		{
 			flaginfo &b = flags[i];
-			if(b.owner[0])
+			if(b.owner)
 			{
 				if(!lastteam) lastteam = b.owner;
-				else if(strcmp(lastteam, b.owner))
+				else if(lastteam != b.owner)
 				{
-					lastteam = false;
+					lastteam = TEAM_NEUTRAL;
 					break;
 				}
 			}
 			else
 			{
-				lastteam = false;
+				lastteam = TEAM_NEUTRAL;
 				break;
 			}
 		}
 
 		if(!lastteam) return;
 		findscore(lastteam).total = 10000;
-		sendf(-1, 1, "risi", SV_TEAMSCORE, lastteam, 10000);
+		sendf(-1, 1, "ri3", SV_TEAMSCORE, lastteam, 10000);
 		sv.startintermission();
 	}
 
@@ -622,7 +594,7 @@ struct stfservmode : stfstate, servmode
 		moveflags(ci->team, oldpos, newpos);
 	}
 
-	void changeteam(clientinfo *ci, const char *oldteam, const char *newteam)
+	void changeteam(clientinfo *ci, int oldteam, int newteam)
 	{
 		if(notgotflags) return;
 		leaveflags(oldteam, ci->state.o);

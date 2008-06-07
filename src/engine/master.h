@@ -1,3 +1,5 @@
+#define MASTER_PORT		28800
+
 struct mastermsg
 {
     virtual ~mastermsg() {}

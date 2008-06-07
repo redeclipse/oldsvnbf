@@ -171,8 +171,8 @@ struct GAMESERVER : igameserver
 
 	struct clientinfo
 	{
-		int clientnum;
-		string name, team, mapvote;
+		int clientnum, team;
+		string name, mapvote;
 		int modevote, mutsvote;
 		int privilege;
         bool spectator, timesync, wantsmaster;
@@ -203,7 +203,8 @@ struct GAMESERVER : igameserver
 
 		void reset()
 		{
-			name[0] = team[0] = 0;
+			team = TEAM_NEUTRAL;
+			name[0] = 0;
 			privilege = PRIV_NONE;
             spectator = wantsmaster = false;
 			position.setsizenodelete(0);
@@ -274,11 +275,11 @@ struct GAMESERVER : igameserver
 		virtual void spawned(clientinfo *ci) {}
         virtual int fragvalue(clientinfo *victim, clientinfo *actor)
         {
-            if(victim==actor || isteam(victim->team, actor->team)) return -1;
+            if(victim==actor || victim->team == actor->team) return -1;
             return 1;
         }
 		virtual void died(clientinfo *victim, clientinfo *actor) {}
-		virtual void changeteam(clientinfo *ci, const char *oldteam, const char *newteam) {}
+		virtual void changeteam(clientinfo *ci, int oldteam, int newteam) {}
 		virtual void initclient(clientinfo *ci, ucharbuf &p, bool connecting) {}
 		virtual void update() {}
 		virtual void reset(bool empty) {}
@@ -370,35 +371,33 @@ struct GAMESERVER : igameserver
 
 	void autoteam()
 	{
-		vector<clientinfo *> team[TEAM_MAX];
-		float teamrank[TEAM_MAX] = { 0, 0, 0, 0 };
-		int numteams = (m_team(gamemode, mutators) && m_multi(gamemode, mutators) ? TEAM_MAX : TEAM_MAX/2);
+		vector<clientinfo *> team[MAXTEAMS];
+		float teamrank[MAXTEAMS] = { 0, 0, 0, 0 };
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
 			int worstteam = -1;
 			float worstrank = 1e16f;
-			loopj(numteams) if (teamrank[i] < worstrank) { worstrank = teamrank[j]; worstteam = j; }
+			loopj(numteams(gamemode, mutators)+TEAM_ALPHA) if (teamrank[i] < worstrank) { worstrank = teamrank[j]; worstteam = j; }
 			team[worstteam].add(ci);
 			float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
 			teamrank[worstteam] += (!m_stf(gamemode) && !m_ctf(gamemode) && rank != 0 ? rank : 1);
 			ci->state.lasttimeplayed = -1;
 		}
-		loopi(numteams)
+		loopi(numteams(gamemode, mutators)+TEAM_ALPHA)
 		{
 			loopvj(team[i])
 			{
 				clientinfo *ci = team[i][j];
-				if(isteam(ci->team, teamnames[i])) continue;
-				s_strncpy(ci->team, teamnames[i], MAXTEAMLEN+1);
-				sendf(-1, 1, "riis", SV_SETTEAM, ci->clientnum, teamnames[i]);
+				if(ci->team == i+TEAM_ALPHA) continue;
+				sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, i+TEAM_ALPHA);
 			}
 		}
 	}
 
 	struct teamscore
 	{
-		const char *name;
+		int team;
 		union
 		{
 			int score;
@@ -406,25 +405,24 @@ struct GAMESERVER : igameserver
 		};
 		int clients;
 
-		teamscore(const char *n) : name(n), rank(0.f), clients(0) {}
-		teamscore(const char *n, float r) : name(n), rank(r), clients(0) {}
-		teamscore(const char *n, int s) : name(n), score(s), clients(0) {}
+		teamscore(int n) : team(n), rank(0.f), clients(0) {}
+		teamscore(int n, float r) : team(n), rank(r), clients(0) {}
+		teamscore(int n, int s) : team(n), score(s), clients(0) {}
 
 		~teamscore() {}
 	};
 
-	const char *chooseworstteam(const char *suggest)
+	int chooseworstteam(int suggest)
 	{
-		teamscore teamscores[TEAM_MAX] = { teamscore(teamnames[0]), teamscore(teamnames[1]), teamscore(teamnames[2]), teamscore(teamnames[3]) };
-		int numteams = (m_team(gamemode, mutators) && m_multi(gamemode, mutators) ? TEAM_MAX : TEAM_MAX/2);
+		teamscore teamscores[MAXTEAMS] = { teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_DELTA), teamscore(TEAM_GAMMA) };
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(!ci->team[0]) continue;
+			if(!ci->team) continue;
 			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 			ci->state.lasttimeplayed = lastmillis;
 
-			loopj(numteams) if(isteam(ci->team, teamscores[j].name))
+			loopj(numteams(gamemode, mutators)+TEAM_ALPHA) if(ci->team == teamscores[j].team)
 			{
 				teamscore &ts = teamscores[j];
 				float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
@@ -433,8 +431,8 @@ struct GAMESERVER : igameserver
 				break;
 			}
 		}
-		teamscore *worst = &teamscores[numteams-1];
-		loopi(numteams-1)
+		teamscore *worst = &teamscores[numteams(gamemode, mutators)];
+		loopi(numteams(gamemode, mutators))
 		{
 			teamscore &ts = teamscores[i];
 			if(m_stf(gamemode) || m_ctf(gamemode))
@@ -443,7 +441,7 @@ struct GAMESERVER : igameserver
 			}
 			else if(ts.rank < worst->rank || (ts.rank == worst->rank && ts.clients < worst->clients)) worst = &ts;
 		}
-		return worst->name;
+		return worst->team;
 	}
 
 	void writedemo(int chan, void *data, int len)
@@ -496,7 +494,7 @@ struct GAMESERVER : igameserver
 
 	void setupdemorecord()
 	{
-		if(!m_mp(gamemode) || m_edit(gamemode)) return;
+		if(m_demo(gamemode) || m_edit(gamemode)) return;
 
 #ifdef WIN32
         gzFile f = gzopen("demorecord", "wb9");
@@ -541,7 +539,7 @@ struct GAMESERVER : igameserver
 			ucharbuf q(&buf[sizeof(header)], sizeof(buf)-sizeof(header));
 			putint(q, SV_INITC2S);
 			sendstring(ci->name, q);
-			sendstring(ci->team, q);
+			putint(q, ci->team);
 
 			ucharbuf h(header, sizeof(header));
 			putint(h, SV_CLIENT);
@@ -724,7 +722,7 @@ struct GAMESERVER : igameserver
 			clientinfo *ci = clients[i];
 			ci->mapchange();
 			ci->state.lasttimeplayed = lastmillis;
-            if(m_mp(gamemode) && ci->state.state!=CS_SPECTATOR) sendspawn(ci);
+            if(ci->state.state!=CS_SPECTATOR) sendspawn(ci);
 		}
 
 		if(m_demo(gamemode)) setupdemoplayback();
@@ -1206,11 +1204,11 @@ struct GAMESERVER : igameserver
 					getstring(text, p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) cp = ci;
-					if(cp->state.state == CS_SPECTATOR || (flags&SAY_TEAM && !cp->team[0])) break;
+					if(cp->state.state == CS_SPECTATOR || (flags&SAY_TEAM && !cp->team)) break;
 					loopv(clients)
 					{
 						clientinfo *t = clients[i];
-						if(t == cp || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && strcmp(cp->team, t->team))) continue;
+						if(t == cp || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && cp->team != t->team)) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
 					break;
@@ -1245,24 +1243,24 @@ struct GAMESERVER : igameserver
 								gs.gunselect, NUMGUNS, &gs.ammo[0], -1);
 						}
 					}
-					getstring(text, p);
+					int team = getint(p);
+					if(team < TEAM_ALPHA || team > MAXTEAMS) team = TEAM_ALPHA;
 					if(connected && m_team(gamemode, mutators))
 					{
-						const char *worst = chooseworstteam(text);
+						int worst = chooseworstteam(team);
 						if(worst)
 						{
-							s_strcpy(text, worst);
-							sendf(sender, 1, "riis", SV_SETTEAM, sender, worst);
-							QUEUE_STR(worst);
+							team = worst;
+							sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
 						}
-						else QUEUE_STR(text);
+						QUEUE_INT(team);
 					}
-					else QUEUE_STR(text);
-					if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, text)) smode->changeteam(ci, ci->team, text);
-					mutate(mut->changeteam(ci, ci->team, text));
-					s_strncpy(ci->team, text, MAXTEAMLEN+1);
+					else QUEUE_INT(team);
+					if(smode && ci->state.state==CS_ALIVE && ci->team != team) smode->changeteam(ci, ci->team, team);
+					mutate(mut->changeteam(ci, ci->team, team));
+					ci->team = team;
 					QUEUE_MSG;
-					if(connected && !m_duel(gamemode, mutators))
+					if(connected && m_fight(gamemode) && !m_duel(gamemode, mutators))
 						sendf(sender, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, "fight!");
 					break;
 				}
@@ -1274,7 +1272,6 @@ struct GAMESERVER : igameserver
 					filtertext(text, text);
 					int reqmode = getint(p), reqmuts = getint(p);
 					if(type!=SV_MAPVOTE && !mapreload) break;
-					if(!m_mp(reqmode)) reqmode = G_DEATHMATCH;
 					vote(text, reqmode, reqmuts, sender);
 					break;
 				}
@@ -1299,7 +1296,7 @@ struct GAMESERVER : igameserver
 				}
 
 				case SV_TEAMSCORE:
-					getstring(text, p);
+					getint(p);
 					getint(p);
 					QUEUE_MSG;
 					break;
@@ -1307,8 +1304,8 @@ struct GAMESERVER : igameserver
 				case SV_FLAGINFO:
 					getint(p);
 					getint(p);
-					getstring(text, p);
-					getstring(text, p);
+					getint(p);
+					getint(p);
 					QUEUE_MSG;
 					break;
 
@@ -1410,21 +1407,20 @@ struct GAMESERVER : igameserver
 
 				case SV_SETTEAM:
 				{
-					int who = getint(p);
-					getstring(text, p);
+					int who = getint(p), team = getint(p);
 					if(!ci->privilege || who<0 || who>=getnumclients()) break;
 					clientinfo *wi = (clientinfo *)getinfo(who);
 					if(!wi) break;
-					if (wi->state.state == CS_ALIVE && strcmp(wi->team, text))
+					if (wi->state.state == CS_ALIVE && wi->team != team)
 					{
-						if (smode) smode->changeteam(wi, wi->team, text);
-						mutate(mut->changeteam(wi, wi->team, text));
+						if (smode) smode->changeteam(wi, wi->team, team);
+						mutate(mut->changeteam(wi, wi->team, team));
 					}
-					s_strncpy(wi->team, text, MAXTEAMLEN+1);
-					sendf(sender, 1, "riis", SV_SETTEAM, who, text);
+					wi->team = team;
+					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
 					QUEUE_INT(SV_SETTEAM);
 					QUEUE_INT(who);
-					QUEUE_STR(text);
+					QUEUE_INT(team);
 					break;
 				}
 
@@ -1588,16 +1584,14 @@ struct GAMESERVER : igameserver
 
 		//if(smode) smode->initclient(cp, p, true);
 		//mutate(mut->initclient(cp, p, true));
-		string text;
-		const char *worst = chooseworstteam(text);
-		if(worst) s_strncpy(text, worst, MAXTEAMLEN);
-		else s_strncpy(text, teamnames[0], MAXTEAMLEN);
-		if(smode && cp->state.state==CS_ALIVE && strcmp(cp->team, text)) smode->changeteam(cp, cp->team, text);
-		mutate(mut->changeteam(cp, cp->team, text));
-		s_strncpy(cp->team, text, MAXTEAMLEN);
-		sendf(-1, 1, "ri3ss", SV_INITBOT, cp->state.ownernum, cp->clientnum, cp->name, cp->team);
+		int worst = chooseworstteam(TEAM_ALPHA);
+		if(!worst) worst = TEAM_ALPHA;
+		if(smode && cp->state.state==CS_ALIVE && cp->team != worst) smode->changeteam(cp, cp->team, worst);
+		mutate(mut->changeteam(cp, cp->team, worst));
+		cp->team = worst;
+		sendf(-1, 1, "ri3si", SV_INITBOT, cp->state.ownernum, cp->clientnum, cp->name, cp->team);
 
-		if(m_demo(gamemode) || m_mp(gamemode))
+		if(cp && cp->state.state!=CS_SPECTATOR)
 		{
 			int nospawn = 0;
 			if(smode && !smode->canspawn(cp, true)) { nospawn++; }
@@ -1659,7 +1653,7 @@ struct GAMESERVER : igameserver
 			}
 			putint(p, -1);
 		}
-		if(ci && (m_demo(gamemode) || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)
+		if(ci && ci->state.state!=CS_SPECTATOR)
 		{
 			int nospawn = 0;
             if(smode && !smode->canspawn(ci, true)) { nospawn++; }
@@ -1700,7 +1694,7 @@ struct GAMESERVER : igameserver
 					putint(p, cp->state.ownernum);
 					putint(p, cp->clientnum);
 					sendstring(cp->name, p);
-					sendstring(cp->team, p);
+					putint(p, cp->team);
 				}
 			}
 
@@ -1803,13 +1797,13 @@ struct GAMESERVER : igameserver
 		if(ts.health<=0)
 		{
             target->state.deaths++;
-            if(actor!=target && m_team(gamemode, mutators) && isteam(actor->team, target->team)) actor->state.teamkills++;
-            int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && isteam(target->team, actor->team)) ? -1 : 1);
+            if(actor!=target && m_team(gamemode, mutators) && actor->team == target->team) actor->state.teamkills++;
+            int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1);
             actor->state.frags += fragvalue;
             if(fragvalue > 0)
 			{
 				int friends = 0, enemies = 0; // note: friends also includes the fragger
-				if(m_team(gamemode, mutators)) loopv(clients) if(!isteam(clients[i]->team, actor->team)) enemies++; else friends++;
+				if(m_team(gamemode, mutators)) loopv(clients) if(clients[i]->team != actor->team) enemies++; else friends++;
 				else { friends = 1; enemies = clients.length()-1; }
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
 			}
@@ -2273,7 +2267,7 @@ struct GAMESERVER : igameserver
 
     void modecheck(int *mode, int *muts)
     {
-		if(!m_game(*mode) || !m_mp(*mode))
+		if(!m_game(*mode))
 		{
 			*mode = G_DEATHMATCH;
 			*muts = gametype[*mode].implied;

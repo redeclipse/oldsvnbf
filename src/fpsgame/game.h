@@ -182,7 +182,6 @@ static struct gametypes
 #define m_stf(a)			(a == G_STF)
 #define m_ctf(a)			(a == G_CTF)
 
-#define m_mp(a)				(a > G_MISSION && a < G_MAX)
 #define m_fight(a)			(a >= G_DEATHMATCH)
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
 #define m_timed(a)			(m_fight(a))
@@ -193,7 +192,6 @@ static struct gametypes
 #define m_prog(a,b)			(m_flag(a) && (b & G_M_PROG))
 #define m_multi(a,b)		(m_team(a, b) && (b & G_M_MULTI))
 #define m_dlms(a,b)			(m_duel(a, b) && (b & G_M_DLMS))
-#define isteam(a,b)			(!strcmp(a,b))
 
 // network messages codes, c2s, c2c, s2c
 enum
@@ -254,18 +252,28 @@ struct demoheader
 	int version, gamever;
 };
 
-#define MAXNAMELEN 16
-#define MAXTEAMLEN 8
-enum { TEAM_ALPHA = 0, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_MAX };
-static const char *teamnames[] = { "alpha", "beta", "delta", "gamma" };
+enum { TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_MAX };
+static struct teamtypes
+{
+	int	type,		colour;	const char *name,	*mdl,			*flag,			*icon,		*chat;
+} teamtype[] = {
+	{ TEAM_NEUTRAL,	0x303030,	"Neutral",		"player",		"flag",			"team",		"\fG" },
+	{ TEAM_ALPHA,	0x3030C0,	"Alpha",		"player/alpha",	"flag/alpha",	"teamalpha","\fb" },
+	{ TEAM_BETA,	0xC03030,	"Beta",			"player/beta",	"flag/beta",	"teambeta",	"\fr" },
+	{ TEAM_DELTA,	0xC0C030,	"Delta",		"player/delta",	"flag/delta",	"teamdelta","\fy" },
+	{ TEAM_GAMMA,	0x30C030,	"Gamma",		"player/gamma",	"flag/gamma",	"teamgamma","\fg" }
+};
 
 enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
 
 #define PLATFORMBORDER	0.2f
 #define PLATFORMMARGIN	10.0f
 
+#define MAXNAMELEN		16
 #define MAXHEALTH		100
 #define MAXCARRY		2
+#define MAXTEAMS		(TEAM_MAX-TEAM_ALPHA) // don't count neutral
+#define numteams(a,b)	(m_multi(a, b) ? MAXTEAMS : MAXTEAMS/2)
 
 #define REGENWAIT		3000
 #define REGENTIME		1000
@@ -610,11 +618,13 @@ struct fpsent : dynent, fpsstate
 	int wschan;
 	botinfo *bot;
 
-	string name, team, info;
+	string name, info;
+	int team;
 
 	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL)
 	{
-		name[0] = team[0] = info[0] = 0;
+		name[0] = info[0] = 0;
+		team = TEAM_NEUTRAL;
 		respawn();
 	}
 	~fpsent()

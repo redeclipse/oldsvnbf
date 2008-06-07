@@ -32,10 +32,9 @@ struct GAMECLIENT : igameclient
 	struct sline { string s; };
 	struct teamscore
 	{
-		const char *team;
-		int score;
+		int team, score;
 		teamscore() {}
-		teamscore(const char *s, int n) : team(s), score(n) {}
+		teamscore(int s, int n) : team(s), score(n) {}
 	};
 
 	vector<fpsent *> shplayers;
@@ -131,7 +130,7 @@ struct GAMECLIENT : igameclient
 
 	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
 	{
-		et.findplayerspawn(d, m_stf(gamemode) ? stf.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1), m_ctf(gamemode) ? ctf.teamflag(player1->team, m_multi(gamemode, mutators))+1 : -1);
+		et.findplayerspawn(d, m_stf(gamemode) ? stf.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1), m_team(gamemode, mutators) ? player1->team : -1);
 		spawnstate(d);
 		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
 	}
@@ -176,23 +175,11 @@ struct GAMECLIENT : igameclient
 	{
 		d->stopmoving();
 
-        if(m_mp(gamemode))
-        {
-            if(d->respawned != d->lifesequence)
-            {
-                cc.addmsg(SV_TRYSPAWN, "ri", d->clientnum);
-                d->respawned = d->lifesequence;
-            }
-        }
-        else
-        {
-            spawnplayer(d);
-            if(d==player1)
-            {
-            	sb.showscores(false);
-				lasthit = 0;
-            }
-        }
+		if(d->respawned != d->lifesequence)
+		{
+			cc.addmsg(SV_TRYSPAWN, "ri", d->clientnum);
+			d->respawned = d->lifesequence;
+		}
 	}
 
 	bool doautoreload()
@@ -398,7 +385,7 @@ struct GAMECLIENT : igameclient
 		s_strcpy(oname, flags&HIT_HEAD ? "was shot in the head by" : (gun >= 0 && gun < NUMGUNS ? obitnames[gun] : "was killed by"));
         if(d==actor || actor->type==ENT_INANIMATE) console("\f2%s killed themself", cflags, dname);
 		else if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, aname, oname, dname);
-		else if(m_team(gamemode, mutators) && isteam(d->team, actor->team)) console("\f2%s %s teammate %s", cflags, dname, oname, aname);
+		else if(m_team(gamemode, mutators) && d->team == actor->team) console("\f2%s %s teammate %s", cflags, dname, oname, aname);
 		else console("\f2%s %s %s", cflags, dname, oname, aname);
 
 		d->state = CS_DEAD;
@@ -436,9 +423,16 @@ struct GAMECLIENT : igameclient
 		{
 			intermission = true;
 			player1->attacking = player1->reloading = player1->useaction = false;
-			if(m_mp(gamemode))
+
+			sb.showscores(true);
+
+			if(m_mission(gamemode))
 			{
-				if((m_team(gamemode, mutators) && isteam(player1->team, teamscores[0].team)) ||
+				et.announce(S_V_MCOMPLETE, "intermission: mission complete!");
+			}
+			else
+			{
+				if((m_team(gamemode, mutators) && teamscores.length() && player1->team == teamscores[0].team) ||
 					(!m_team(gamemode, mutators) && shplayers.length() && shplayers[0] == player1))
 				{
 					et.announce(S_V_YOUWIN, "intermission: you win!");
@@ -448,11 +442,6 @@ struct GAMECLIENT : igameclient
 					et.announce(S_V_YOULOSE, "intermission: you win!");
 				}
 			}
-			else
-			{
-				et.announce(S_V_MCOMPLETE, "intermission: mission complete!");
-			}
-			sb.showscores(true);
 		}
 		else if(timeremain > 0)
 		{
@@ -824,7 +813,7 @@ struct GAMECLIENT : igameclient
         else if(m_team(gamemode, mutators) && teamcrosshair())
         {
             dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
-            if(d && d->type==ENT_PLAYER && isteam(((fpsent *)d)->team, player1->team))
+            if(d && d->type==ENT_PLAYER && ((fpsent *)d)->team == player1->team)
 				index = POINTER_TEAM;
         }
         else index = POINTER_HAIR;
@@ -854,12 +843,12 @@ struct GAMECLIENT : igameclient
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
 
-		int hoff = h*3-h*3/4;
+		renderconsole(w, h);
+
+		int hoff = h*3-h*3/4-FONTH;
 		char *command = getcurcommand();
 		if(command) rendercommand(FONTH/2, hoff, h*3-FONTH);
-		hoff += FONTH;
-
-		renderconsole(w, h);
+		hoff += FONTH*2;
 
 		if(!hidestats())
 		{

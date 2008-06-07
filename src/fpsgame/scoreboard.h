@@ -32,17 +32,16 @@ struct scoreboard : g3d_callback
 
 	struct teamscore
 	{
-        const char *team;
-		int score;
+		int team, score;
 		teamscore() {}
-		teamscore(const char *s, int n) : team(s), score(n) {}
+		teamscore(int s, int n) : team(s), score(n) {}
 	};
 
 	static int teamscorecmp(const teamscore *x, const teamscore *y)
 	{
 		if(x->score > y->score) return -1;
 		if(x->score < y->score) return 1;
-		return strcmp(x->team, y->team);
+		return x->team-y->team;
 	}
 
 	static int playersort(const fpsent **a, const fpsent **b)
@@ -77,14 +76,14 @@ struct scoreboard : g3d_callback
 		}
         else if(m_ctf(cl.gamemode))
         {
-        	loopk(cl.ctf.numteams(m_multi(cl.gamemode, cl.mutators)))
+        	loopk(numteams(cl.gamemode, cl.mutators)+TEAM_ALPHA)
         	{
         		int s = 0;
         		loopv(cl.ctf.flags)
 				{
-					if(cl.ctf.flags[i].team == k) s += cl.ctf.flags[i].score;
+					if(cl.ctf.flags[i].team == k+TEAM_ALPHA) s += cl.ctf.flags[i].score;
 				}
-				teamscores.add(teamscore(cl.ctf.flagteam(k, m_multi(cl.gamemode, cl.mutators)), s));
+				teamscores.add(teamscore(k+TEAM_ALPHA, s));
         	}
         }
 		loopi(cl.numdynents())
@@ -93,7 +92,7 @@ struct scoreboard : g3d_callback
             if(o && o->type==ENT_PLAYER)
 			{
 				teamscore *ts = NULL;
-				loopv(teamscores) if(!strcmp(teamscores[i].team, o->team)) { ts = &teamscores[i]; break; }
+				loopv(teamscores) if(teamscores[i].team == o->team) { ts = &teamscores[i]; break; }
 				if(!ts) teamscores.add(teamscore(o->team, m_stf(cl.gamemode) || m_ctf(cl.gamemode) ? 0 : o->frags));
 				else if(!m_stf(cl.gamemode) && !m_ctf(cl.gamemode)) ts->score += o->frags;
 			}
@@ -101,7 +100,7 @@ struct scoreboard : g3d_callback
 		teamscores.sort(teamscorecmp);
 	}
 
-    void bestteams(vector<const char *> &best)
+    void bestteams(vector<int> &best)
 	{
 		vector<teamscore> teamscores;
 		sortteams(teamscores);
@@ -127,7 +126,7 @@ struct scoreboard : g3d_callback
         if((*x)->score < (*y)->score) return 1;
         if((*x)->players.length() > (*y)->players.length()) return -1;
         if((*x)->players.length() < (*y)->players.length()) return 1;
-        return (*x)->team && (*y)->team ? strcmp((*x)->team, (*y)->team) : 0;
+        return (*x)->team && (*y)->team ? (*x)->team-(*y)->team : 0;
     }
 
     int groupplayers()
@@ -139,12 +138,12 @@ struct scoreboard : g3d_callback
             fpsent *o = (fpsent *)cl.iterdynents(i);
             if(!o || o->type!=ENT_PLAYER || (!showconnecting() && !o->name[0])) continue;
             if(o->state==CS_SPECTATOR) { spectators.add(o); continue; }
-            const char *team = m_team(cl.gamemode, cl.mutators) && o->team[0] ? o->team : NULL;
+            int team = m_team(cl.gamemode, cl.mutators) ? o->team : TEAM_NEUTRAL;
             bool found = false;
             loopj(numgroups)
             {
                 scoregroup &g = *groups[j];
-                if(team!=g.team && (!team || !g.team || !isteam(team, g.team))) continue;
+                if(team!=g.team && (!team || !g.team)) continue;
                 if(team && !m_stf(cl.gamemode) && !m_ctf(cl.gamemode)) g.score += o->frags;
                 g.players.add(o);
                 found = true;
@@ -228,8 +227,8 @@ struct scoreboard : g3d_callback
             if((k%2)==0) g.pushlist(); // horizontal
 
             scoregroup &sg = *groups[k];
-            const char *icon = sg.team && m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, sg.team) ? "teamblue" : "teamred") : "player";
-            int bgcolor = sg.team && m_team(cl.gamemode, cl.mutators) ? (isteam(cl.player1->team, sg.team) ? 0x3030C0 : 0xC03030) : 0,
+            const char *icon = sg.team && m_team(cl.gamemode, cl.mutators) ? teamtype[sg.team].icon : "player";
+            int bgcolor = sg.team && m_team(cl.gamemode, cl.mutators) ? teamtype[sg.team].colour : 0,
                 fgcolor = 0xFFFF80;
 
 			g.pushlist(); // vertical
@@ -269,8 +268,8 @@ struct scoreboard : g3d_callback
             {
                 g.pushlist(); // vertical
 
-                if(m_stf(cl.gamemode) && sg.score>=10000) g.textf("%s: WIN", fgcolor, NULL, sg.team);
-                else g.textf("%s: %d", fgcolor, NULL, sg.team, sg.score);
+                if(m_stf(cl.gamemode) && sg.score>=10000) g.textf("%s: WIN", fgcolor, NULL, teamtype[sg.team].name);
+                else g.textf("%s: %d", fgcolor, NULL, teamtype[sg.team].name, sg.score);
 
                 g.pushlist(); // horizontal
             }

@@ -11,6 +11,31 @@ struct sometype
 	const char *name; uchar id;
 };
 
+#define COL_WHITE			0xFFFFFF
+#define COL_BLACK			0x000000
+#define COL_GREY			0x897661
+#define COL_YELLOW			0xB49B4B
+#define COL_ORANGE			0xB42A00
+#define COL_RED				0xFF1932
+#define COL_LRED			0xFF4B4B
+#define COL_BLUE			0x3219FF
+#define COL_LBLUE			0x4BA8FF
+#define COL_GREEN			0x32FF64
+#define COL_CYAN			0x32FFFF
+#define COL_FUSCHIA			0xFFFF32
+
+#define COL_TEXTBLUE		0x6496FF
+#define COL_TEXTYELLOW		0xFFC864
+#define COL_TEXTRED			0xFF4B19
+#define COL_TEXTGREY		0xB4B4B4
+#define COL_TEXTDGREEN		0x1EC850
+
+#define COL_FIRERED			0xFF8080
+#define COL_FIREORANGE		0xA0C080
+#define COL_FIREYELLOW		0xFFC8C8
+#define COL_WATER			0x3232FF
+#define COL_BLOOD			0x19FFFF
+
 extern void lightent(extentity &e, float height = 8.0f);
 extern void lightreaching(const vec &target, vec &color, vec &dir, extentity *e = 0, float ambient = 0.4f);
 extern entity *brightestlight(const vec &target, const vec &dir);
@@ -65,7 +90,6 @@ extern void mpremip(bool local);
 extern void keypress(int code, bool isdown, int cooked);
 extern int rendercommand(int x, int y, int w);
 extern int renderconsole(int w, int h);
-extern void conoutf(const char *s, ...);
 extern char *getcurcommand();
 extern void resetcomplete();
 extern void complete(char *s);
@@ -86,7 +110,6 @@ extern int getmapversion();
 // main
 struct igame;
 
-extern void fatal(const char *s, ...);
 extern void keyrepeat(bool on);
 extern void registergame(const char *name, igame *ig);
 
@@ -134,8 +157,20 @@ extern void particle_text(const vec &s, const char *t, int type, int fade = 2000
 extern void particle_meter(const vec &s, float val, int type, int fade = 1);
 extern void particle_flare(const vec &p, const vec &dest, int fade, int type = 10, physent *owner = NULL);
 extern void particle_fireball(const vec &dest, float maxsize, int type, int fade = -1);
-extern void removetrackedparticles(physent *owner = NULL);
 
+extern void part_splash(int type, int num, int fade, const vec &p, int color, float size = 4.8f);
+extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, float size = 4.8f);
+extern void part_text(const vec &s, const char *t, int type, int fade, int color, float size = 4.8f);
+extern void part_meter(const vec &s, float val, int type, int fade, int color, float size = 4.8f);
+extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size = 4.8f, physent *owner = NULL);
+extern void part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size = 4.8f);
+extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color, float size = 4.8f);
+extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, float size = 4.8f, physent *owner = NULL);
+
+extern void removetrackedparticles(physent *owner = NULL);
+extern int particletext, maxparticledistance;
+
+void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size);
 // decal
 enum
 {
@@ -312,11 +347,6 @@ extern void process(ENetPacket *packet, int sender, int chan);
 extern void send_welcome(int n);
 extern void delclient(int n);
 extern int addclient(int type = ST_EMPTY);
-
-#ifndef STANDALONE
-extern ENetHost *clienthost;
-extern ENetPeer *curpeer, *connpeer;
-#endif // STANDALONE
 extern ENetHost *serverhost;
 
 // world
@@ -355,4 +385,3 @@ enum							// cube empty-space materials
 
 extern int ambient, skylight, watercolour, lavacolour;
 extern string cgzname, mcfname, picname, mapname;
-extern int verbose, savebak;

@@ -35,7 +35,7 @@
         putint(q, EXT_PLAYERSTATS_RESP_STATS); // send player stats following
         putint(q, ci->clientnum); //add player id
         sendstring(ci->name, q);
-        sendstring(ci->team, q);
+        sendstring(teamtype[ci->team].name, q); //backward compatibility mode
         putint(q, ci->state.frags);
         putint(q, ci->state.deaths);
         putint(q, ci->state.teamkills);
@@ -63,10 +63,10 @@
         if(m_stf(gamemode))
         {
             loopv(stfmode.scores) scores.add(teamscore(stfmode.scores[i].team, stfmode.scores[i].total));
-            loopv(clients) if(clients[i]->team[0]) //check all teams available, since stfmode.scores contains only teams with scores
+            loopv(clients) if(clients[i]->team) //check all teams available, since stfmode.scores contains only teams with scores
             {
                 teamscore *ts = NULL;
-                loopvj(scores) if(!strcmp(scores[j].name, clients[i]->team)) { ts = &scores[i]; break; }
+                loopvj(scores) if(scores[j].team == clients[i]->team) { ts = &scores[i]; break; }
                 if(!ts) scores.add(teamscore(clients[i]->team, 0));
             }
         }
@@ -74,21 +74,20 @@
         {
             loopv(ctfmode.flags)
             {
-                const char *team = ctfmode.flagteam(ctfmode.flags[i].team, m_multi(gamemode, mutators));
-                if(!team) continue;
+                if(!ctfmode.flags[i].team) continue;
                 teamscore *ts = NULL;
-                loopvj(scores) if(!strcmp(scores[j].name, team)) { ts = &scores[i]; break; }
-                if(!ts) scores.add(teamscore(team, ctfmode.flags[i].score));
+                loopvj(scores) if(scores[j].team == ctfmode.flags[i].team) { ts = &scores[i]; break; }
+                if(!ts) scores.add(teamscore(ctfmode.flags[i].team, ctfmode.flags[i].score));
                 else ts->score += ctfmode.flags[i].score;
             }
         }
         else
         {
-            loopv(clients) if(clients[i]->team[0])
+            loopv(clients) if(clients[i]->team)
             {
                 clientinfo *ci = clients[i];
                 teamscore *ts = NULL;
-                loopvj(scores) if(!strcmp(scores[j].name, ci->team)) { ts = &scores[i]; break; }
+                loopvj(scores) if(scores[j].team == ci->team) { ts = &scores[i]; break; }
                 if(!ts) scores.add(teamscore(ci->team, ci->state.frags));
                 else ts->score += ci->state.frags;
             }
@@ -96,15 +95,15 @@
 
         loopv(scores)
         {
-            sendstring(scores[i].name, p);
+            sendstring(teamtype[scores[i].team].name, p); //backward compatibility mode
             putint(p, scores[i].score);
 
             if(m_stf(gamemode))
             {
                 int flags = 0;
-                loopvj(stfmode.flags) if(!strcmp(stfmode.flags[j].owner, scores[i].name)) flags++;
+                loopvj(stfmode.flags) if(stfmode.flags[j].owner == scores[i].team) flags++;
                 putint(p, flags);
-                loopvj(stfmode.flags) if(!strcmp(stfmode.flags[j].owner, scores[i].name)) putint(p, j);
+                loopvj(stfmode.flags) if(stfmode.flags[j].owner == scores[i].team) putint(p, j);
             }
             else putint(p,-1); //no flags follow
         }

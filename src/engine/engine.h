@@ -7,7 +7,7 @@
 
 #include "cube.h"
 
-extern int curtime, lastmillis, totalmillis;
+extern int verbose, curtime, lastmillis, totalmillis;
 extern void fatal(const char *s, ...);
 extern void conoutf(const char *s, ...);
 extern void console(const char *s, int n, ...);
@@ -404,6 +404,8 @@ extern void servertoclient(int chan, uchar *buf, int len);
 extern void connects(const char *servername = NULL);
 extern void abortconnect();
 extern void clientkeepalive();
+extern ENetHost *clienthost;
+extern ENetPeer *curpeer, *connpeer;
 
 // console
 extern void writebinds(FILE *f);
@@ -576,43 +578,4 @@ extern bool getlos(vec &o, vec &q, float yaw, float pitch, float mdist = 0.f, fl
 extern bool getsight(physent *d, vec &q, vec &v, float mdist, float fx = 0.f, float fy = 0.f);
 
 #define rendernormally (!shadowmapping && !envmapping && !reflecting && !refracting)
-
-// renderparticles
-#define COL_WHITE			0xFFFFFF
-#define COL_BLACK			0x000000
-#define COL_GREY			0x897661
-#define COL_YELLOW			0xB49B4B
-#define COL_ORANGE			0xB42A00
-#define COL_RED				0xFF1932
-#define COL_LRED			0xFF4B4B
-#define COL_BLUE			0x3219FF
-#define COL_LBLUE			0x4BA8FF
-#define COL_GREEN			0x32FF64
-#define COL_CYAN			0x32FFFF
-#define COL_FUSCHIA			0xFFFF32
-
-#define COL_TEXTBLUE		0x6496FF
-#define COL_TEXTYELLOW		0xFFC864
-#define COL_TEXTRED			0xFF4B19
-#define COL_TEXTGREY		0xB4B4B4
-#define COL_TEXTDGREEN		0x1EC850
-
-#define COL_FIRERED			0xFF8080
-#define COL_FIREORANGE		0xA0C080
-#define COL_FIREYELLOW		0xFFC8C8
-#define COL_WATER			0x3232FF
-#define COL_BLOOD			0x19FFFF
-
-extern int particletext, maxparticledistance;
-
-extern void part_textf(const vec &s, char *t, bool moving, int fade, int color, float size, ...);
-extern void part_text(const vec &s, char *t, bool moving, int fade, int color, float size);
-
-extern void part_splash(int type, int num, int fade, const vec &p, int color, float size);
-extern void part_trail(int type, int fade, const vec &s, const vec &e, int color, float size);
-extern void part_meter(const vec &s, float val, int type, int fade, int color, float size);
-extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, physent *owner = NULL);
-extern void part_fireball(const vec &dest, float max, int type, int color, float size);
-extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color, float size);
-extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, float size, physent *owner = NULL);
 #endif // STANDALONE
