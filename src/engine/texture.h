@@ -180,6 +180,14 @@ struct Shader
 // each texture slot can have multiple texture frames, of which currently only the first is used
 // additional frames can be used for various shaders
 
+struct TextureAnim
+{
+	int count, delay, x, y, w, h;
+
+	TextureAnim() : count(0), delay(0) {}
+};
+
+
 struct Texture
 {
     enum
@@ -287,6 +295,10 @@ extern SDL_Surface *texdecal(SDL_Surface *s, bool clear = true);
 extern SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear = true);
 extern SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear = true);
 extern SDL_Surface *texturesurface(const char *name);
+extern SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL, TextureAnim *anim = NULL);
+
+extern Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false, bool compress = false, bool clear = true, TextureAnim *anim = NULL);
+extern Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg);
 
 extern void materialreset();
 extern void texturereset();

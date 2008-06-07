@@ -71,9 +71,9 @@ struct scoreboard : g3d_callback
 
 	void sortteams(vector<teamscore> &teamscores)
 	{
-		if(m_capture(cl.gamemode))
+		if(m_stf(cl.gamemode))
 		{
-			loopv(cl.cpc.scores) teamscores.add(teamscore(cl.cpc.scores[i].team, cl.cpc.scores[i].total));
+			loopv(cl.stf.scores) teamscores.add(teamscore(cl.stf.scores[i].team, cl.stf.scores[i].total));
 		}
         else if(m_ctf(cl.gamemode))
         {
@@ -94,8 +94,8 @@ struct scoreboard : g3d_callback
 			{
 				teamscore *ts = NULL;
 				loopv(teamscores) if(!strcmp(teamscores[i].team, o->team)) { ts = &teamscores[i]; break; }
-				if(!ts) teamscores.add(teamscore(o->team, m_capture(cl.gamemode) || m_ctf(cl.gamemode) ? 0 : o->frags));
-				else if(!m_capture(cl.gamemode) && !m_ctf(cl.gamemode)) ts->score += o->frags;
+				if(!ts) teamscores.add(teamscore(o->team, m_stf(cl.gamemode) || m_ctf(cl.gamemode) ? 0 : o->frags));
+				else if(!m_stf(cl.gamemode) && !m_ctf(cl.gamemode)) ts->score += o->frags;
 			}
 		}
 		teamscores.sort(teamscorecmp);
@@ -145,7 +145,7 @@ struct scoreboard : g3d_callback
             {
                 scoregroup &g = *groups[j];
                 if(team!=g.team && (!team || !g.team || !isteam(team, g.team))) continue;
-                if(team && !m_capture(cl.gamemode) && !m_ctf(cl.gamemode)) g.score += o->frags;
+                if(team && !m_stf(cl.gamemode) && !m_ctf(cl.gamemode)) g.score += o->frags;
                 g.players.add(o);
                 found = true;
             }
@@ -154,7 +154,7 @@ struct scoreboard : g3d_callback
             scoregroup &g = *groups[numgroups++];
             g.team = team;
             if(!team) g.score = 0;
-            else if(m_capture(cl.gamemode)) g.score = cl.cpc.findscore(o->team).total;
+            else if(m_stf(cl.gamemode)) g.score = cl.stf.findscore(o->team).total;
             else if(m_ctf(cl.gamemode)) g.score = cl.ctf.findscore(o->team);
             else g.score = o->frags;
 
@@ -192,7 +192,7 @@ struct scoreboard : g3d_callback
 			g.textf("%s: \fs\f0%d\fS frag(s), \fs\f0%d\fS death(s)", 0xFFFFFF, "player", cl.player1->name, cl.player1->frags, cl.player1->deaths);
 			g.textf("damage: \fs\f0%d\fS hp, wasted: \fs\f0%d\fS, accuracy: \fs\f0%d%%\fS", 0xFFFFFF, "info", cl.player1->totaldamage, cl.player1->totalshots-cl.player1->totaldamage, accuracy);
 
-			if(m_sp(cl.gamemode))
+			if(m_mission(cl.gamemode))
 			{
 				int pen, score = 0;
 
@@ -269,13 +269,13 @@ struct scoreboard : g3d_callback
             {
                 g.pushlist(); // vertical
 
-                if(m_capture(cl.gamemode) && sg.score>=10000) g.textf("%s: WIN", fgcolor, NULL, sg.team);
+                if(m_stf(cl.gamemode) && sg.score>=10000) g.textf("%s: WIN", fgcolor, NULL, sg.team);
                 else g.textf("%s: %d", fgcolor, NULL, sg.team, sg.score);
 
                 g.pushlist(); // horizontal
             }
 
-            if(!m_capture(cl.gamemode) && !m_ctf(cl.gamemode))
+            if(!m_stf(cl.gamemode) && !m_ctf(cl.gamemode))
             {
                 g.pushlist();
                 g.strut(7);

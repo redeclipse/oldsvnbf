@@ -311,6 +311,91 @@ hashtable<char *, Texture> textures;
 
 Texture *notexture = NULL, *blanktexture = NULL; // used as default, ensured to be loaded
 
+void cleanuptexture(Texture *t)
+{
+	DELETEA(t->alphamask);
+
+	loopvk(t->frames)
+	{
+		if(t->frames[k])
+		{
+			if(t->frames[k] == t->id) t->id = 0; // using a frame directly
+			glDeleteTextures(1, &t->frames[k]);
+			t->frames[k] = 0;
+		}
+	}
+	t->frames.setsize(0);
+
+	if(t->id)
+	{
+		glDeleteTextures(1, &t->id);
+		t->id = 0;
+	}
+}
+
+bool reloadtexture(const char *name)
+{
+    Texture *t = textures.access(path(name, true));
+    if(t) return reloadtexture(t);
+    return false;
+}
+
+bool reloadtexture(Texture *t)
+{
+    switch(t->type)
+    {
+        case Texture::STUB:
+        case Texture::IMAGE:
+        {
+            bool compress = false;
+            TextureAnim anim;
+            SDL_Surface *s = texturedata(t->name, NULL, true, &compress, &anim);
+            if(!s || !newtexture(t, NULL, s, t->clamp, t->mipmap, false, false, compress, true, &anim)) return false;
+            break;
+        }
+
+        case Texture::CUBEMAP:
+            if(!cubemaploadwildcard(t, NULL, t->mipmap, true)) return false;
+            break;
+    }
+    return true;
+}
+
+void reloadtextures()
+{
+    enumerate(textures, Texture, tex, reloadtexture(&tex));
+}
+
+
+void updatetexture(Texture *t)
+{
+	if(t->frames.length())
+	{
+		if(t->delay)
+		{
+			while(lastmillis-t->last >= t->delay)
+			{
+				t->frame++;
+				if(t->frame >= t->frames.length()) t->frame = 0;
+				t->last += t->delay;
+			}
+
+			if(t->frames.inrange(t->frame)) t->id = t->frames[t->frame];
+			else t->id = t->frames[0];
+
+			if(t->id <= 0)
+				t->id = t != notexture ? notexture->id : 0;
+		}
+		else t->id = t->frames[0];
+	}
+	else t->id = 0;
+}
+
+void updatetextures()
+{
+    enumerate(textures, Texture, tex, updatetexture(&tex));
+}
+
 static GLenum texformat(int bpp)
 {
 	switch(bpp)
@@ -346,14 +431,7 @@ static void resizetexture(int &w, int &h, bool mipit = true, GLenum format = GL_
 	h = h2;
 }
 
-struct TextureAnim
-{
-	int count, delay, x, y, w, h;
-
-	TextureAnim() : count(0), delay(0) {}
-};
-
-static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false, bool compress = false, bool clear = true, TextureAnim *anim = NULL)
+Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp, bool mipit, bool canreduce, bool transient, bool compress, bool clear, TextureAnim *anim)
 {
     if(!t)
     {
@@ -361,6 +439,7 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int cl
         t = &textures[key];
         t->name = key;
 		t->frames.setsize(0);
+		t->frame = 0;
     }
 
 	t->clamp = clamp;
@@ -377,7 +456,6 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int cl
 
 	t->bpp = s->format->BitsPerPixel;
 	t->delay = hasanim ? anim->delay : 0;
-	t->frame = 0;
 
 	t->w = t->xs = t->delay ? anim->w : s->w;
 	t->h = t->ys = t->delay ? anim->h : s->h;
@@ -392,13 +470,9 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int cl
 
 	loopi(hasanim ? anim->count : 1)
 	{
-		GLuint *id = &t->id;
-		if(hasanim)
-		{
-			while(!t->frames.inrange(i)) t->frames.add(0);
-			id = &t->frames[i];
-		}
-		glGenTextures(1, id);
+		while(!t->frames.inrange(i)) t->frames.add(0);
+
+		glGenTextures(1, &t->frames[i]);
 
 		SDL_Surface *f = s;
 		if(hasanim)
@@ -416,12 +490,13 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int cl
 			pixels = scaled;
 		}
 
-		createtexture(*id, t->w, t->h, pixels, clamp, mipit, format, GL_TEXTURE_2D, compress);
+		createtexture(t->frames[i], t->w, t->h, pixels, clamp, mipit, format, GL_TEXTURE_2D, compress);
 
 		if(pixels != f->pixels) delete[] pixels;
 		if(s != f) SDL_FreeSurface(f);
 	}
     if(clear) SDL_FreeSurface(s);
+	updatetexture(t);
     return t;
 }
 
@@ -491,7 +566,7 @@ SDL_Surface *texturesurface(const char *name)
 	return NULL;
 }
 
-static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL, TextureAnim *anim = NULL)
+SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *compress, TextureAnim *anim)
 {
 	textureparse(tname, tex ? tex->name : NULL);
 
@@ -1315,28 +1390,6 @@ void mergenormalmaps(char *heightfile, char *normalfile)    // BGR (tga) -> BGR 
 COMMAND(flipnormalmapy, "ss");
 COMMAND(mergenormalmaps, "sss");
 
-void cleanuptexture(Texture *t)
-{
-	DELETEA(t->alphamask);
-
-	loopvk(t->frames)
-	{
-		if(t->frames[k])
-		{
-			if(t->frames[k] == t->id) t->id = 0; // using a frame directly
-			glDeleteTextures(1, &t->frames[k]);
-			t->frames[k] = 0;
-		}
-	}
-	t->frames.setsize(0);
-
-	if(t->id)
-	{
-		glDeleteTextures(1, &t->id);
-		t->id = 0;
-	}
-}
-
 void cleanuptextures()
 {
     clearenvmaps();
@@ -1348,69 +1401,4 @@ void cleanuptextures()
         if(tex.type==Texture::TRANSIENT) transient.add(&tex);
     );
     loopv(transient) textures.remove(transient[i]->name);
-}
-
-bool reloadtexture(const char *name)
-{
-    Texture *t = textures.access(path(name, true));
-    if(t) return reloadtexture(t);
-    return false;
-}
-
-bool reloadtexture(Texture *t)
-{
-    switch(t->type)
-    {
-        case Texture::STUB:
-        case Texture::IMAGE:
-        {
-            bool compress = false;
-            TextureAnim anim;
-            SDL_Surface *s = texturedata(t->name, NULL, true, &compress, &anim);
-            if(!s || !newtexture(t, NULL, s, t->clamp, t->mipmap, false, false, compress, true, &anim)) return false;
-            break;
-        }
-
-        case Texture::CUBEMAP:
-            if(!cubemaploadwildcard(t, NULL, t->mipmap, true)) return false;
-            break;
-    }
-    return true;
-}
-
-void reloadtextures()
-{
-    enumerate(textures, Texture, tex, reloadtexture(&tex));
-}
-
-
-void updatetexture(Texture *t)
-{
-	if(t->frames.length())
-	{
-		if(t->delay)
-		{
-			while(lastmillis-t->last >= t->delay)
-			{
-				t->frame++;
-				if(t->frame >= t->frames.length()) t->frame = 0;
-				t->last += t->delay;
-			}
-
-			if(t->frames.length())
-			{
-				if(t->frames.inrange(t->frame)) t->id = t->frames[t->frame];
-				else t->id = t->frames[0];
-			}
-			else t->id = 0;
-
-			if(t->id <= 0)
-				t->id = t != notexture ? notexture->id : 0;
-		}
-	}
-}
-
-void updatetextures()
-{
-    enumerate(textures, Texture, tex, updatetexture(&tex));
 }

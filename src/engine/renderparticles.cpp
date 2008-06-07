@@ -728,7 +728,7 @@ void render_particles(int time)
     {
         partrenderer *p = parts[i];
         if(glaring && !(p->type&PT_GLARE)) continue;
-        if(!p->haswork() && (!p->tex || !p->tex->frames.length())) continue;
+        if(!p->haswork() && (!p->tex || p->tex->frames.length() <= 1)) continue;
 
         if(!rendered)
         {

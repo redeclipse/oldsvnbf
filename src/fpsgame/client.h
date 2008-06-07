@@ -334,7 +334,7 @@ struct clientcom : iclientcom
 			putint(p, SV_ITEMLIST);
 			cl.et.putitems(p);
 			putint(p, -1);
-			if(m_capture(cl.gamemode)) cl.cpc.sendbases(p);
+			if(m_stf(cl.gamemode)) cl.stf.sendflags(p);
             else if(m_ctf(cl.gamemode)) cl.ctf.sendflags(p);
 			senditemstoserver = false;
 		}
@@ -631,7 +631,7 @@ struct clientcom : iclientcom
 
 				case SV_MAPRELOAD:		  // server requests next map
 				{
-					s_sprintfd(nextmapalias)("nextmap_%s%s", m_capture(cl.gamemode) ? "capture_" : (m_ctf(cl.gamemode) ? "ctf_" : ""), getmapname());
+					s_sprintfd(nextmapalias)("nextmap_%s%s", m_stf(cl.gamemode) ? "stf_" : (m_ctf(cl.gamemode) ? "ctf_" : ""), getmapname());
 					const char *map = getalias(nextmapalias);	 // look up map in the cycle
 					addmsg(SV_MAPCHANGE, "rsii", *map ? map : sv->defaultmap(), cl.nextmode, cl.nextmuts);
 					break;
@@ -698,7 +698,7 @@ struct clientcom : iclientcom
 					f->state = CS_ALIVE;
 					if(local)
 					{
-						cl.et.findplayerspawn(f, m_capture(cl.gamemode) ? cl.cpc.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_multi(cl.gamemode, cl.mutators))+1 : -1);
+						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_multi(cl.gamemode, cl.mutators))+1 : -1);
 						if(f==cl.player1)
 						{
 							cl.sb.showscores(false);
@@ -776,7 +776,7 @@ struct clientcom : iclientcom
 							*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
 					if(!actor) break;
 					actor->frags = frags;
-					if(actor!=cl.player1 && !m_capture(cl.gamemode) && !m_ctf(cl.gamemode))
+					if(actor!=cl.player1 && !m_stf(cl.gamemode) && !m_ctf(cl.gamemode))
 					{
 						s_sprintfd(ds)("@%d", actor->frags);
 						particle_text(actor->abovehead(), ds, 9);
@@ -1050,22 +1050,22 @@ struct clientcom : iclientcom
 					break;
 				}
 
-				case SV_BASEINFO:
+				case SV_FLAGINFO:
 				{
-					int base = getint(p);
+					int flag = getint(p);
 					string owner, enemy;
 					int converted = getint(p);
 					getstring(text, p);
 					s_strcpy(owner, text);
 					getstring(text, p);
 					s_strcpy(enemy, text);
-					if(m_capture(cl.gamemode)) cl.cpc.updatebase(base, owner, enemy, converted);
+					if(m_stf(cl.gamemode)) cl.stf.updateflag(flag, owner, enemy, converted);
 					break;
 				}
 
-				case SV_BASES:
+				case SV_FLAGS:
 				{
-					int base = 0, converted;
+					int flag = 0, converted;
 					while((converted = getint(p))>=0)
 					{
 						string owner, enemy;
@@ -1073,7 +1073,7 @@ struct clientcom : iclientcom
 						s_strcpy(owner, text);
 						getstring(text, p);
 						s_strcpy(enemy, text);
-						cl.cpc.initbase(base++, owner, enemy, converted);
+						cl.stf.initflag(flag++, owner, enemy, converted);
 					}
 					break;
 				}
@@ -1082,7 +1082,7 @@ struct clientcom : iclientcom
 				{
 					getstring(text, p);
 					int total = getint(p);
-					if(m_capture(cl.gamemode)) cl.cpc.setscore(text, total);
+					if(m_stf(cl.gamemode)) cl.stf.setscore(text, total);
 					break;
 				}
 
@@ -1191,7 +1191,7 @@ struct clientcom : iclientcom
 		if(m_demo(gamemode)) return;
 		isready = false;
 		load_world(name);
-		if(m_capture(gamemode)) cl.cpc.setupbases();
+		if(m_stf(gamemode)) cl.stf.setupflags();
         else if(m_ctf(gamemode)) cl.ctf.setupflags();
 		isready = true;
 		if(editmode) edittoggled(editmode);
