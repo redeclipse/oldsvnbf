@@ -82,7 +82,7 @@ struct duelservmode : servmode
 		queue(ci, true, true);
 	}
 
-	void changeteam(clientinfo *ci, const char *oldteam, const char *newteam)
+	void changeteam(clientinfo *ci, int oldteam, int newteam)
 	{
 		queue(ci, true, true);
 	}
@@ -100,7 +100,7 @@ struct duelservmode : servmode
 				if ((m_dlms(sv.gamemode, sv.mutators) || alive.length() <= 1) && \
 					(e || c->state.state == CS_ALIVE) && \
 					(!alive.length() || !m_team(sv.gamemode, sv.mutators) || \
-						!isteam(c->team, alive[0]->team))) \
+						c->team != alive[0]->team)) \
 				{ \
 					alive.add(c); \
 				} \
@@ -131,7 +131,7 @@ struct duelservmode : servmode
 
 			if (alive.length() >= 2)
 			{
-				string pl[2];
+				clientinfo *pl[2];
 
 				loopv(alive)
 				{
@@ -142,7 +142,7 @@ struct duelservmode : servmode
 						alive[i]->state.state = CS_ALIVE;
 						alive[i]->state.respawn();
 						sv.sendspawn(alive[i]);
-						if(i <= 1) s_strcpy(pl[i], sv.colorname(alive[i]));
+						if(i <= 1) pl[i] = alive[i];
 						if(n >= 0) duelqueue.remove(n);
 					}
 				}
@@ -152,8 +152,10 @@ struct duelservmode : servmode
 				string fight;
 				if(m_dlms(sv.gamemode, sv.mutators))
 					s_sprintf(fight)("round %d .. fight!", duelround);
+				else if(m_team(sv.gamemode, sv.mutators))
+					s_sprintf(fight)("round %d .. %s (%s) vs %s (%s) .. fight!", duelround, pl[0]->name, teamtype[pl[0]->team].name, pl[1]->name, teamtype[pl[1]->team].name);
 				else
-					s_sprintf(fight)("round %d .. %s vs %s .. fight!", duelround, pl[0], pl[1]);
+					s_sprintf(fight)("round %d .. %s vs %s .. fight!", duelround, pl[0]->name, pl[1]->name);
 
 				sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
 
@@ -181,7 +183,7 @@ struct duelservmode : servmode
 			if (alive.length())
 			{
 				if (m_team(sv.gamemode, sv.mutators))
-					sv.servsend(-1, "%s won the duel for team %s!", sv.colorname(alive[0]), alive[0]->team);
+					sv.servsend(-1, "%s won the duel for team %s!", sv.colorname(alive[0]), teamtype[alive[0]->team].name);
 				else
 					sv.servsend(-1, "%s won the duel!", sv.colorname(alive[0]));
 			}

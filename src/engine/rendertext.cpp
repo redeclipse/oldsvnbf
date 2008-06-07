@@ -108,7 +108,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
     }
     else
     {
-        if(c=='r') c = stack[(sp > 0) ? --sp : sp]; // restore color
+        if(c=='S') c = stack[(sp > 0) ? --sp : sp]; // restore color
         else stack[sp] = c;
         switch(c)
         {
@@ -119,6 +119,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
             case 'G': case '4': color = bvec(128, 128, 128); break;   // gray
             case 'm': case '5': color = bvec(192,  64, 192); break;   // magenta
             case 'o': case '6': color = bvec(255, 128,   0); break;   // orange
+            case 'w': case '7': color = bvec(255, 255, 255); break;   // orange
             // white (provided color): everything else
         }
         glColor4ub(color.x, color.y, color.z, a);

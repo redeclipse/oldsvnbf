@@ -39,6 +39,9 @@ struct entities : icliententities
 			case WEAPON:
 				s_sprintf(emdl)("weapons/%s/item", guntype[attr1].name);
 				break;
+			case FLAG:
+				if(editmode) s_sprintf(emdl)("%s", teamtype[attr2].flag);
+				break;
 			default:
 				break;
 		}
@@ -288,8 +291,7 @@ struct entities : icliententities
 			{
 				extentity &e = *ents[i];
 				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-				enttypes &t = enttype[e.type];
-				if(t.usetype == ETU_AUTO && insidesphere(m, eye, d->radius, e.o, t.height, t.radius))
+				if(enttype[e.type].usetype == ETU_AUTO && insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
 					reaction(i, d);
 			}
 
@@ -300,9 +302,8 @@ struct entities : icliententities
 				{
 					extentity &e = *ents[i];
 					if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-					enttypes &t = enttype[e.type];
-					if(e.spawned && t.usetype == ETU_ITEM
-						&& insidesphere(m, eye, d->radius, e.o, t.height, t.radius)
+					if(e.spawned && enttype[e.type].usetype == ETU_ITEM
+						&& insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius)
 						&& d->canuse(e.type, e.attr1, e.attr2, lastmillis)
 						&& (!ents.inrange(n) || e.o.dist(m) < ents[n]->o.dist(m)))
 							n = i;
@@ -362,6 +363,11 @@ struct entities : icliententities
 				while (e.attr1 >= NUMGUNS) e.attr1 -= NUMGUNS;
 				if(e.attr2 < 0) e.attr2 = 0;
 				break;
+			case PLAYERSTART:
+			case FLAG:
+				while(e.attr2 < 0) e.attr2 += TEAM_MAX;
+				while(e.attr2 >= TEAM_MAX) e.attr2 -= TEAM_MAX;
+				if(e.attr2 < 0) e.attr2 = TEAM_NEUTRAL;
 			default:
 				break;
 		}
@@ -999,16 +1005,18 @@ struct entities : icliententities
 		{
 			extentity &e = *ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-			enttypes &t = enttype[e.type];
-			if(t.usetype == ETU_ITEM && (e.spawned || editmode))
+			bool active = (enttype[e.type].usetype == ETU_ITEM && e.spawned);
+			if(editmode || active)
 			{
 				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 
 				if(mdlname)
 				{
+					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
+					if(!active) flags |= MDL_TRANSLUCENT;
+
 					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP,
-						e.o, 0.f, 0.f, 0.f,
-						MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED);
+							e.o, 0.f, 0.f, 0.f, flags);
 				}
 			}
 		}
@@ -1046,7 +1054,12 @@ struct entities : icliententities
 
 			if(editmode)
 			{
-				particle_text(e.o, findname(e.type), entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
+				if(e.type == FLAG && e.attr2 > TEAM_NEUTRAL && e.attr2 < TEAM_MAX)
+					particle_text(vec(e.o).add(vec(0, 0, enttype[e.type].height+2)),
+						teamtype[e.attr2].name, entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
+
+				particle_text(vec(e.o).add(vec(0, 0, enttype[e.type].height+1)),
+					findname(e.type), entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
 				if(e.type != PARTICLES) regular_particle_splash(2, 2, 40, e.o);
 			}
 		}

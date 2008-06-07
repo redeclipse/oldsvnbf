@@ -41,7 +41,7 @@ struct clientcom : iclientcom
 
         extern void result(const char *s);
         CCOMMAND(getname, "", (clientcom *self), result(self->cl.player1->name));
-        CCOMMAND(getteam, "", (clientcom *self), result(self->cl.player1->team));
+        CCOMMAND(getteam, "", (clientcom *self), result(teamtype[self->cl.player1->team].name));
 
 		CCOMMAND(serversortreset, "", (clientcom *self), self->resetserversort());
         if(!*serversort()) resetserversort();
@@ -68,14 +68,35 @@ struct clientcom : iclientcom
 		else conoutf("your name is: %s", cl.colorname(cl.player1));
 	}
 
+	int teamname(const char *team)
+	{
+		if(team[0])
+		{
+			int t = atoi(team);
+
+			loopi(numteams(cl.gamemode, cl.mutators)+1)
+			{
+				if((t && t == i+TEAM_ALPHA) || !strcasecmp(teamtype[i+TEAM_ALPHA].name, team))
+				{
+					return i+TEAM_ALPHA;
+				}
+			}
+		}
+		return TEAM_ALPHA;
+	}
+
 	void switchteam(const char *team)
 	{
 		if(team[0])
 		{
-			c2sinit = false;
-			s_strncpy(cl.player1->team, team, MAXTEAMLEN);
+			int t = teamname(team);
+			if(t)
+			{
+				c2sinit = false;
+				cl.player1->team = t;
+			}
 		}
-		else conoutf("your team is: %s", cl.player1->team);
+		else conoutf("your team is: %s", teamtype[cl.player1->team].name);
 	}
 
 	int numchannels() { return 3; }
@@ -84,7 +105,7 @@ struct clientcom : iclientcom
 
 	void writeclientinfo(FILE *f)
 	{
-		fprintf(f, "name \"%s\"\nteam \"%s\"\n\n", cl.player1->name, cl.player1->team);
+		fprintf(f, "name \"%s\"\nteam \"%s\"\n\n", cl.player1->name, teamtype[cl.player1->team].name);
 	}
 
 	void gameconnect(bool _remote)
@@ -167,7 +188,11 @@ struct clientcom : iclientcom
 	{
 		if(!remote) return;
 		int i = parseplayer(arg1);
-		if(i>=0 && i!=cl.player1->clientnum) addmsg(SV_SETTEAM, "ris", i, arg2);
+		if(i>=0 && i!=cl.player1->clientnum)
+		{
+			int t = teamname(arg2);
+			if(t) addmsg(SV_SETTEAM, "ri2", i, t);
+		}
 	}
 
 	void setmaster(const char *arg)
@@ -260,10 +285,10 @@ struct clientcom : iclientcom
 		if(!colourchat()) filtertext(text, text);
 
 		string s, t;
-		s_sprintf(t)("%s", m_team(cl.gamemode, cl.mutators) || flags&SAY_TEAM ? (isteam(cl.player1->team, d->team) ? "\fb" : "\fr") : "\fg");
+		s_sprintf(t)("%s", m_team(cl.gamemode, cl.mutators) && flags&SAY_TEAM ? teamtype[d->team].chat : teamtype[TEAM_NEUTRAL].chat);
 
-		if(flags&SAY_ACTION) s_sprintf(s)("\fs%s*\fS \fs%s%s\fS \fs%s%s\fS", t, t, cl.colorname(d), t, text);
-		else s_sprintf(s)("\fs%s<\fS\fs\fw%s\fS\fs%s>\fS \fs\fw%s\fS", t, cl.colorname(d), t, text);
+		if(flags&SAY_ACTION) s_sprintf(s)("%s* \fs%s\ffS \fs%s\fS", t, cl.colorname(d), text);
+		else s_sprintf(s)("%s<\fs\fw%s\fS> \fs\fw%s\fS", t, cl.colorname(d), text);
 
 		if(d->state != CS_DEAD && d->state != CS_SPECTATOR)
 		{
@@ -344,7 +369,7 @@ struct clientcom : iclientcom
 			c2sinit = true;
 			putint(p, SV_INITC2S);
 			sendstring(cl.player1->name, p);
-			sendstring(cl.player1->team, p);
+			putint(p, cl.player1->team);
 		}
 		int i = 0;
 		while(i < messages.length()) // send messages collected during the previous frames
@@ -643,7 +668,7 @@ struct clientcom : iclientcom
 					if(!d)
 					{
 						getstring(text, p);
-						getstring(text, p);
+						getint(p);
 						break;
 					}
 					getstring(text, p);
@@ -668,8 +693,7 @@ struct clientcom : iclientcom
 						freeeditinfo(localedit);
 					}
 					s_strncpy(d->name, text, MAXNAMELEN);
-					getstring(text, p);
-					s_strncpy(d->team, text, MAXTEAMLEN);
+					d->team = getint(p);
 					break;
 				}
 
@@ -698,7 +722,7 @@ struct clientcom : iclientcom
 					f->state = CS_ALIVE;
 					if(local)
 					{
-						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(f->team) : -1, m_ctf(cl.gamemode) ? cl.ctf.teamflag(f->team, m_multi(cl.gamemode, cl.mutators))+1 : -1);
+						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(f->team) : -1, m_team(cl.gamemode, cl.mutators) ? f->team : -1);
 						if(f==cl.player1)
 						{
 							cl.sb.showscores(false);
@@ -1042,23 +1066,17 @@ struct clientcom : iclientcom
 
 				case SV_SETTEAM:
 				{
-					int wn = getint(p);
-					getstring(text, p);
+					int wn = getint(p), tn = getint(p);
 					fpsent *w = wn==cl.player1->clientnum ? cl.player1 : cl.getclient(wn);
 					if(!w) return;
-					s_strncpy(w->team, text, MAXTEAMLEN);
+					w->team = tn;
 					break;
 				}
 
 				case SV_FLAGINFO:
 				{
-					int flag = getint(p);
-					string owner, enemy;
-					int converted = getint(p);
-					getstring(text, p);
-					s_strcpy(owner, text);
-					getstring(text, p);
-					s_strcpy(enemy, text);
+					int flag = getint(p), converted = getint(p),
+							owner = getint(p), enemy = getint(p);
 					if(m_stf(cl.gamemode)) cl.stf.updateflag(flag, owner, enemy, converted);
 					break;
 				}
@@ -1068,11 +1086,7 @@ struct clientcom : iclientcom
 					int flag = 0, converted;
 					while((converted = getint(p))>=0)
 					{
-						string owner, enemy;
-						getstring(text, p);
-						s_strcpy(owner, text);
-						getstring(text, p);
-						s_strcpy(enemy, text);
+						int owner = getint(p), enemy = getint(p);
 						cl.stf.initflag(flag++, owner, enemy, converted);
 					}
 					break;
@@ -1080,9 +1094,8 @@ struct clientcom : iclientcom
 
 				case SV_TEAMSCORE:
 				{
-					getstring(text, p);
-					int total = getint(p);
-					if(m_stf(cl.gamemode)) cl.stf.setscore(text, total);
+					int team = getint(p), total = getint(p);
+					if(m_stf(cl.gamemode)) cl.stf.setscore(team, total);
 					break;
 				}
 
@@ -1153,7 +1166,7 @@ struct clientcom : iclientcom
 					fpsent *b = cl.newclient(bn);
 					if(!b)
 					{
-						getstring(text, p);
+						getint(p);
 						getstring(text, p);
 						break;
 					}
@@ -1162,10 +1175,9 @@ struct clientcom : iclientcom
 					b->state = CS_DEAD;
 					getstring(text, p);
 					s_strncpy(b->name, text, MAXNAMELEN);
-					getstring(text, p);
-					s_strncpy(b->team, text, MAXTEAMLEN);
+					b->team = getint(p);
 
-					conoutf("bot added: %s (%s) [%d]", cl.colorname(b), b->team, b->ownernum);
+					conoutf("bot added: %s (%s) [%d]", cl.colorname(b), teamtype[b->team].name, b->ownernum);
 					if(b->ownernum==cl.player1->clientnum) b->bot = new botinfo();
 					break;
 				}
@@ -1182,7 +1194,6 @@ struct clientcom : iclientcom
 
 	void changemapserv(char *name, int gamemode, int mutators)
 	{
-		if(remote && !m_mp(gamemode)) gamemode = G_DEATHMATCH;
 		cl.gamemode = gamemode; cl.mutators = mutators;
 		sv->modecheck(&cl.gamemode, &cl.mutators);
 		cl.nextmode = cl.gamemode; cl.nextmuts = cl.mutators;
