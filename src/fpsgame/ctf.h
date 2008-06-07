@@ -12,8 +12,6 @@ struct ctfstate
         bool pickup;
         fpsent *owner;
         extentity *ent;
-        vec interploc;
-        float interpangle;
         int interptime;
 #endif
 
@@ -27,8 +25,6 @@ struct ctfstate
 #else
             pickup = false;
             owner = NULL;
-            interploc = vec(0, 0, 0);
-            interpangle = 0;
             interptime = 0;
 #endif
             team = TEAM_NEUTRAL;
@@ -60,6 +56,7 @@ struct ctfstate
     {
 		flag &f = flags[i];
 		f.owner = owner;
+		f.droptime = 0;
 #ifndef CTFSERV
 		f.pickup = false;
 #endif
@@ -76,7 +73,7 @@ struct ctfstate
 		f.pickup = false;
 		f.owner = NULL;
 #endif
-    	}
+	}
 
     void returnflag(int i)
     {
@@ -109,7 +106,7 @@ struct ctfservmode : ctfstate, servmode
     void dropflag(clientinfo *ci)
     {
         if(notgotflags) return;
-        loopv(flags) if(flags[i].owner==ci->clientnum)
+        loopv(flags) if(flags[i].owner == ci->clientnum)
         {
             ivec o(vec(ci->state.o).mul(DMF));
             sendf(-1, 1, "ri6", SV_DROPFLAG, ci->clientnum, i, o.x, o.y, o.z);
@@ -298,34 +295,17 @@ struct ctfclient : ctfstate
         }
     }
 
-    vec interpflagpos(flag &f, float &angle)
-    {
-        vec pos = f.owner ? vec(f.owner->abovehead()).add(vec(0, 0, 1)) : (f.droptime ? f.droploc : f.spawnloc);
-        angle = f.owner ? f.owner->yaw : 0;
-        if(pos.x < 0) return pos;
-        if(f.interptime && f.interploc.x >= 0)
-        {
-            float t = min((lastmillis - f.interptime)/500.0f, 1.0f);
-            pos.lerp(f.interploc, pos, t);
-            angle += (1-t)*(f.interpangle - angle);
-        }
-        return pos;
-    }
-
-    vec interpflagpos(flag &f) { float angle; return interpflagpos(f, angle); }
 
     void render()
     {
         loopv(flags)
         {
             flag &f = flags[i];
-            if(!f.team || !f.ent || (!f.owner && f.droptime && f.droploc.x < 0)) continue;
+            if(!f.team || !f.ent || f.owner) continue;
             const char *flagname = teamtype[cl.player1->team].flag;
-            float angle;
-            vec pos = interpflagpos(f, angle);
-            rendermodel(!f.droptime && !f.owner ? &f.ent->light : NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP,
-                        interpflagpos(f), angle, 0,
-                        MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED | (f.droptime || f.owner ? MDL_LIGHT : 0));
+            vec pos = f.droptime ? f.droploc : f.spawnloc;
+            rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP,
+                        pos, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
 
             vec above(pos);
             above.z += enttype[FLAG].height;
@@ -397,7 +377,6 @@ struct ctfclient : ctfstate
     void dropflag(fpsent *d, int i, const vec &droploc)
     {
 		flag &f = flags[i];
-		f.interploc = interpflagpos(f, f.interpangle);
 		f.interptime = lastmillis;
 		ctfstate::dropflag(i, droploc, 1);
 		if(!cl.ph.droptofloor(f.droploc, 2, 0))
@@ -442,7 +421,7 @@ struct ctfclient : ctfstate
     void returnflag(fpsent *d, int i)
     {
 		flag &f = flags[i];
-		flageffect(i, interpflagpos(f), f.spawnloc);
+		flageffect(i, f.droploc, f.spawnloc);
 		f.interptime = 0;
 		ctfstate::returnflag(i);
 		conoutf("%s returned the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
@@ -452,7 +431,7 @@ struct ctfclient : ctfstate
     void resetflag(int i)
     {
 		flag &f = flags[i];
-		flageffect(i, interpflagpos(f), f.spawnloc);
+		flageffect(i, f.droploc, f.spawnloc);
 		f.interptime = 0;
 		ctfstate::returnflag(i);
 		conoutf("The \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
@@ -489,8 +468,8 @@ struct ctfclient : ctfstate
     void takeflag(fpsent *d, int i)
     {
 		flag &f = flags[i];
-		f.interploc = interpflagpos(f, f.interpangle);
 		f.interptime = lastmillis;
+
 		conoutf("%s %s \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		ctfstate::takeflag(i, d);
 		cl.et.announce(S_V_FLAGPICKUP);
