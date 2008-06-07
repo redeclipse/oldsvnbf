@@ -73,7 +73,7 @@
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
-				<Option parameters="-hhome -rbfa\init.cfg -du0 -df0 -dw640 -dh480"/>
+				<Option parameters="-hhome -rbfa\init.cfg -du0 -df0 -dw640 -dh480 -sltest:1"/>
 				<Option includeInTargetAll="0"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
@@ -694,14 +694,6 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
-		</Unit>
-		<Unit filename="fpsgame\capture.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\client.h">
 			<Option compilerVar=""/>

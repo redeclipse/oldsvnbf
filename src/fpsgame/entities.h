@@ -390,7 +390,7 @@ struct entities : icliententities
 
 	float dropheight(entity &e)
 	{
-		if(e.type==MAPMODEL || e.type==BASE) return 0.0f;
+		if(e.type==MAPMODEL || e.type==FLAG) return 0.0f;
 		return 4.0f;
 	}
 
@@ -427,8 +427,8 @@ struct entities : icliententities
 						if(ents[node]->type == MAPSOUND || ents[node]->type == PARTICLES) return true;
 						if(ents[node]->type == TELEPORT) return true;
 						break;
-					case BASE:
-						if(ents[node]->type == BASE) return true;
+					case FLAG:
+						if(ents[node]->type == FLAG) return true;
 						break;
 					case CHECKPOINT:
 						if(ents[node]->type == CHECKPOINT) return true;

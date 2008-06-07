@@ -224,7 +224,7 @@ struct GAMESERVER : igameserver
 		uint ip;
 	};
 
-	bool notgotitems, notgotbases;		// true when map has changed and waiting for clients to send item
+	bool notgotitems, notgotflags;		// true when map has changed and waiting for clients to send item
 	int gamemode, mutators;
 	int gamemillis, gamelimit;
 
@@ -289,9 +289,9 @@ struct GAMESERVER : igameserver
 	servmode *smode;
 	vector<servmode *> smuts;
 
-	#define CAPTURESERV 1
-	#include "capture.h"
-	#undef CAPTURESERV
+	#define STFSERV 1
+	#include "stf.h"
+	#undef STFSERV
 
     #define CTFSERV 1
     #include "ctf.h"
@@ -303,13 +303,13 @@ struct GAMESERVER : igameserver
 
 	string  motd;
 	GAMESERVER()
-		: notgotitems(true), notgotbases(false),
+		: notgotitems(true), notgotflags(false),
 			gamemode(defaultmode()), mutators(0), interm(0), minremain(10),
 			mapreload(false), lastsend(0),
 			mastermode(MM_VETO), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
 			demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
-			smode(NULL), capturemode(*this), ctfmode(*this), duelmutator(*this)
+			smode(NULL), stfmode(*this), ctfmode(*this), duelmutator(*this)
 	{
 		motd[0] = serverdesc[0] = masterpass[0] = '\0';
 		smuts.setsize(0);
@@ -381,7 +381,7 @@ struct GAMESERVER : igameserver
 			loopj(numteams) if (teamrank[i] < worstrank) { worstrank = teamrank[j]; worstteam = j; }
 			team[worstteam].add(ci);
 			float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
-			teamrank[worstteam] += (!m_capture(gamemode) && !m_ctf(gamemode) && rank != 0 ? rank : 1);
+			teamrank[worstteam] += (!m_stf(gamemode) && !m_ctf(gamemode) && rank != 0 ? rank : 1);
 			ci->state.lasttimeplayed = -1;
 		}
 		loopi(numteams)
@@ -437,7 +437,7 @@ struct GAMESERVER : igameserver
 		loopi(numteams-1)
 		{
 			teamscore &ts = teamscores[i];
-			if(m_capture(gamemode) || m_ctf(gamemode))
+			if(m_stf(gamemode) || m_ctf(gamemode))
 			{
 				if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.rank < worst->rank)) worst = &ts;
 			}
@@ -707,7 +707,7 @@ struct GAMESERVER : igameserver
 		if (m_team(gamemode, mutators)) autoteam();
 
 		// server modes
-		if (m_capture(gamemode)) smode = &capturemode;
+		if (m_stf(gamemode)) smode = &stfmode;
         else if(m_ctf(gamemode)) smode = &ctfmode;
 		else smode = NULL;
 		if(smode) smode->reset(false);
@@ -843,7 +843,7 @@ struct GAMESERVER : igameserver
 		// only allow edit messages in coop-edit mode
 		if(type>=SV_EDITENT && type<=SV_GETMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_BASEINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_DROPFLAG, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
+		static int servtypes[] = { SV_INITS2C, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_DROPFLAG, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -1304,7 +1304,7 @@ struct GAMESERVER : igameserver
 					QUEUE_MSG;
 					break;
 
-				case SV_BASEINFO:
+				case SV_FLAGINFO:
 					getint(p);
 					getint(p);
 					getstring(text, p);
@@ -1312,8 +1312,8 @@ struct GAMESERVER : igameserver
 					QUEUE_MSG;
 					break;
 
-				case SV_BASES:
-					if(ci->state.state!=CS_SPECTATOR && smode==&capturemode) capturemode.parsebases(p);
+				case SV_FLAGS:
+					if(ci->state.state!=CS_SPECTATOR && smode==&stfmode) stfmode.parseflags(p);
 					break;
 
 				case SV_TAKEFLAG:
@@ -1429,7 +1429,7 @@ struct GAMESERVER : igameserver
 				}
 
 				case SV_FORCEINTERMISSION:
-					if(m_sp(gamemode)) startintermission();
+					if(m_mission(gamemode)) startintermission();
 					break;
 
 				case SV_RECORDDEMO:
@@ -2258,7 +2258,8 @@ struct GAMESERVER : igameserver
     	{
 			loopi(G_M_NUM)
 			{
-				if ((gametype[mode].mutators & mutstype[i].type) && (muts & mutstype[i].type))
+				if ((gametype[mode].mutators & mutstype[i].type) && (muts & mutstype[i].type) &&
+					!(gametype[mode].implied & mutstype[i].type))
 				{
 					s_sprintfd(name)("%s%s%s", *gname ? gname : "", *gname ? "-" : "", mutstype[i].name);
 					s_strcpy(gname, name);
@@ -2272,7 +2273,7 @@ struct GAMESERVER : igameserver
 
     void modecheck(int *mode, int *muts)
     {
-		if(!m_game(*mode) || m_sp(*mode) || !m_mp(*mode))
+		if(!m_game(*mode) || !m_mp(*mode))
 		{
 			*mode = G_DEATHMATCH;
 			*muts = gametype[*mode].implied;

@@ -83,7 +83,7 @@ struct fpsrender
 
 		cl.et.render();
 		cl.pj.render();
-		if(m_capture(cl.gamemode)) cl.cpc.render();
+		if(m_stf(cl.gamemode)) cl.stf.render();
         else if(m_ctf(cl.gamemode)) cl.ctf.render();
 
         cl.bot.render();

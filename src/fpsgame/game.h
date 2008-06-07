@@ -11,7 +11,7 @@ enum
 	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
 	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURN, S_RLFIRE, S_RLEXPL, S_RLFLY, S_RIFLE,
 	S_ITEMPICKUP, S_ITEMSPAWN,
-	S_V_BASECAP, S_V_BASELOST,
+	S_V_FLAGSECURED, S_V_FLAGOVERTHROWN,
     S_V_FLAGPICKUP, S_V_FLAGDROP, S_V_FLAGRETURN, S_V_FLAGSCORE, S_V_FLAGRESET,
 	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_HEADSHOT,
 	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4,
@@ -36,7 +36,7 @@ enum								// static entity types
 	MONSTER,						// 10 [angle], [type]
 	TRIGGER,						// 11
 	PUSHER,							// 12 zpush, ypush, xpush
-	BASE,							// 13 idx, team
+	FLAG,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
 	CAMERA,							// 15 yaw, pitch, pan (+:horiz/-:vert), idx
 	WAYPOINT,						// 16 radius, weight
@@ -63,7 +63,7 @@ static struct enttypes
 	{ MONSTER,		59,		0,		0,		ETU_NONE,		"monster" },
 	{ TRIGGER,		58,		16,		16,		ETU_NONE,		"trigger" }, // FIXME
 	{ PUSHER,		58,		12,		12,		ETU_AUTO,		"pusher" },
-	{ BASE,			48,		32,		16,		ETU_NONE,		"base" },
+	{ FLAG,			48,		32,		16,		ETU_NONE,		"flag" },
 	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" }, // FIXME
 	{ CAMERA,		48,		0,		0,		ETU_NONE,		"camera" },
 	{ WAYPOINT,		1,		8,		8,		ETU_NONE,		"waypoint" },
@@ -133,9 +133,9 @@ enum
 {
 	G_DEMO = 0,
 	G_EDITMODE,
-	G_SINGLEPLAYER,
+	G_MISSION,
 	G_DEATHMATCH,
-	G_CAPTURE,
+	G_STF,
 	G_CTF,
 	G_MAX
 };
@@ -150,9 +150,9 @@ enum
 
 #define G_M_NUM				6
 
-#define G_M_ALL				G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_PROG|G_M_MULTI
-#define G_M_FRAG			G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI
-#define G_M_BASE			G_M_INSTA|G_M_PROG|G_M_MULTI
+#define G_M_ALL				G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_PROG|G_M_MULTI|G_M_DLMS
+#define G_M_FIGHT			G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI|G_M_DLMS
+#define G_M_FLAG			G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI
 
 static struct gametypes
 {
@@ -160,10 +160,10 @@ static struct gametypes
 } gametype[] = {
 	{ G_DEMO,			0,				0,					"Demo Playback" },
 	{ G_EDITMODE,		0,				0,					"Editing" },
-	{ G_SINGLEPLAYER,	0,				0,					"Singleplayer" },
-	{ G_DEATHMATCH,		G_M_FRAG,		0,					"Deathmatch" },
-	{ G_CAPTURE,		G_M_BASE,		G_M_TEAM,			"Base Capture" },
-	{ G_CTF,			G_M_BASE,		G_M_TEAM,			"Capture the Flag" },
+	{ G_MISSION,		0,				0,					"Mission" },
+	{ G_DEATHMATCH,		G_M_FIGHT,		0,					"Deathmatch" },
+	{ G_STF,			G_M_FLAG,		G_M_TEAM,			"Secure the Flag" },
+	{ G_CTF,			G_M_FLAG,		G_M_TEAM,			"Capture the Flag" },
 }, mutstype[] = {
 	{ G_M_TEAM,			G_M_ALL,		0,					"Team" },
 	{ G_M_INSTA,		G_M_ALL,		0,					"Instagib" },
@@ -177,20 +177,20 @@ static struct gametypes
 
 #define m_demo(a)			(a == G_DEMO)
 #define m_edit(a)			(a == G_EDITMODE)
-#define m_sp(a)				(a == G_SINGLEPLAYER)
+#define m_mission(a)		(a == G_MISSION)
 #define m_dm(a)				(a == G_DEATHMATCH)
-#define m_capture(a)		(a == G_CAPTURE)
+#define m_stf(a)			(a == G_STF)
 #define m_ctf(a)			(a == G_CTF)
 
-#define m_mp(a)				(a > G_DEMO && a < G_MAX)
-#define m_frag(a)			(a >= G_DEATHMATCH)
-#define m_base(a)			(m_capture(a) || m_ctf(a))
-#define m_timed(a)			(m_frag(a))
+#define m_mp(a)				(a > G_MISSION && a < G_MAX)
+#define m_fight(a)			(a >= G_DEATHMATCH)
+#define m_flag(a)			(m_stf(a) || m_ctf(a))
+#define m_timed(a)			(m_fight(a))
 
-#define m_team(a,b)			((m_dm(a) && (b & G_M_TEAM)) || m_base(a))
-#define m_insta(a,b)		(m_frag(a) && (b & G_M_INSTA))
-#define m_duel(a,b)			(m_frag(a) && (b & G_M_DUEL))
-#define m_prog(a,b)			(m_base(a) && (b & G_M_PROG))
+#define m_team(a,b)			((m_dm(a) && (b & G_M_TEAM)) || m_flag(a))
+#define m_insta(a,b)		(m_fight(a) && (b & G_M_INSTA))
+#define m_duel(a,b)			(m_fight(a) && (b & G_M_DUEL))
+#define m_prog(a,b)			(m_flag(a) && (b & G_M_PROG))
 #define m_multi(a,b)		(m_team(a, b) && (b & G_M_MULTI))
 #define m_dlms(a,b)			(m_duel(a, b) && (b & G_M_DLMS))
 #define isteam(a,b)			(!strcmp(a,b))
@@ -209,7 +209,7 @@ enum
 	SV_SERVMSG, SV_ITEMLIST, SV_RESUME,
     SV_EDITMODE, SV_EDITENT, SV_EDITLINK, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP,
 	SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_SETMASTER, SV_SETTEAM, SV_APPROVEMASTER,
-	SV_BASES, SV_BASEINFO,
+	SV_FLAGS, SV_FLAGINFO,
     SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS,
 	SV_TEAMSCORE, SV_FORCEINTERMISSION,
 	SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
@@ -233,7 +233,7 @@ static char msgsizelookup(int msg)
 		SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
         SV_EDITMODE, 2, SV_EDITENT, 10, SV_EDITLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0, SV_APPROVEMASTER, 2,
-		SV_BASES, 0, SV_BASEINFO, 0,
+		SV_FLAGS, 0, SV_FLAGINFO, 0,
         SV_DROPFLAG, 6, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 2, SV_RESETFLAG, 2, SV_INITFLAGS, 0,
 		SV_TEAMSCORE, 0, SV_FORCEINTERMISSION, 1,
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
@@ -598,7 +598,7 @@ struct fpsent : dynent, fpsstate
 	bool attacking, reloading, useaction;
 	int attacktime, reloadtime, usetime;
 	int lasttaunt;
-	int lastuse, lastusemillis, lastbase;
+	int lastuse, lastusemillis, lastflag;
 	int superdamage;
 	int frags, deaths, totaldamage, totalshots;
 	editinfo *edit;
@@ -644,6 +644,6 @@ struct fpsent : dynent, fpsstate
 		fpsstate::respawn();
 		lastattackgun = gunselect;
 		lasttaunt = lastuse = lastusemillis = superdamage = lastimpulse = 0;
-		lastbase = respawned = suicided = -1;
+		lastflag = respawned = suicided = -1;
 	}
 };

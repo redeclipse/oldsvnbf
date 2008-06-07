@@ -22,7 +22,7 @@
     B: 0 EXT_PLAYERSTATS cn #send by client# EXT_ACK EXT_VERSION 0 or 1 #error, if cn was > -1 and client does not exist# ...
          EXT_PLAYERSTATS_RESP_IDS pid(s) #1 packet#
          EXT_PLAYERSTATS_RESP_STATS pid playerdata #1 packet for each player#
-    C: 0 EXT_TEAMSCORE EXT_ACK EXT_VERSION 0 or 1 #error, no teammode# remaining_time gamemode loop(teamdata [numbases bases] or -1)
+    C: 0 EXT_TEAMSCORE EXT_ACK EXT_VERSION 0 or 1 #error, no teammode# remaining_time gamemode loop(teamdata [numflags flags] or -1)
 
     Errors:
     --------------
@@ -60,10 +60,10 @@
         vector<teamscore> scores;
 
         //most taken from scoreboard.h
-        if(m_capture(gamemode))
+        if(m_stf(gamemode))
         {
-            loopv(capturemode.scores) scores.add(teamscore(capturemode.scores[i].team, capturemode.scores[i].total));
-            loopv(clients) if(clients[i]->team[0]) //check all teams available, since capturemode.scores contains only teams with scores
+            loopv(stfmode.scores) scores.add(teamscore(stfmode.scores[i].team, stfmode.scores[i].total));
+            loopv(clients) if(clients[i]->team[0]) //check all teams available, since stfmode.scores contains only teams with scores
             {
                 teamscore *ts = NULL;
                 loopvj(scores) if(!strcmp(scores[j].name, clients[i]->team)) { ts = &scores[i]; break; }
@@ -99,14 +99,14 @@
             sendstring(scores[i].name, p);
             putint(p, scores[i].score);
 
-            if(m_capture(gamemode))
+            if(m_stf(gamemode))
             {
-                int bases = 0;
-                loopvj(capturemode.bases) if(!strcmp(capturemode.bases[j].owner, scores[i].name)) bases++;
-                putint(p, bases);
-                loopvj(capturemode.bases) if(!strcmp(capturemode.bases[j].owner, scores[i].name)) putint(p, j);
+                int flags = 0;
+                loopvj(stfmode.flags) if(!strcmp(stfmode.flags[j].owner, scores[i].name)) flags++;
+                putint(p, flags);
+                loopvj(stfmode.flags) if(!strcmp(stfmode.flags[j].owner, scores[i].name)) putint(p, j);
             }
-            else putint(p,-1); //no bases follow
+            else putint(p,-1); //no flags follow
         }
     }
 

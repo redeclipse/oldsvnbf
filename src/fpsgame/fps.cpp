@@ -15,7 +15,7 @@ struct GAMECLIENT : igameclient
 	#include "entities.h"
 	#include "client.h"
 	#include "bot.h"
-	#include "capture.h"
+	#include "stf.h"
     #include "ctf.h"
 
 	int nextmode, nextmuts, gamemode, mutators;
@@ -90,7 +90,7 @@ struct GAMECLIENT : igameclient
 	IVARP(statrate, 0, 200, 1000);
 
     GAMECLIENT()
-		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), cpc(*this), ctf(*this),
+		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
@@ -131,7 +131,7 @@ struct GAMECLIENT : igameclient
 
 	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
 	{
-		et.findplayerspawn(d, m_capture(gamemode) ? cpc.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1), m_ctf(gamemode) ? ctf.teamflag(player1->team, m_multi(gamemode, mutators))+1 : -1);
+		et.findplayerspawn(d, m_stf(gamemode) ? stf.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1), m_ctf(gamemode) ? ctf.teamflag(player1->team, m_multi(gamemode, mutators))+1 : -1);
 		spawnstate(d);
 		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
 	}
@@ -139,7 +139,7 @@ struct GAMECLIENT : igameclient
 	int respawnwait(fpsent *d)
 	{
 		int wait = 0;
-		if(m_capture(gamemode)) wait = cpc.respawnwait(d);
+		if(m_stf(gamemode)) wait = stf.respawnwait(d);
 		else if(m_ctf(gamemode)) wait = ctf.respawnwait(d);
 		return wait;
 	}
@@ -504,7 +504,7 @@ struct GAMECLIENT : igameclient
         fr.preload();
         et.preload();
 
-		if(m_capture(gamemode)) cpc.preload();
+		if(m_stf(gamemode)) stf.preload();
         else if(m_ctf(gamemode)) ctf.preload();
     }
 
@@ -534,7 +534,7 @@ struct GAMECLIENT : igameclient
 		sb.showscores(false);
 		intermission = false;
         maptime = 0;
-		if(m_sp(gamemode))
+		if(m_mission(gamemode))
 		{
 			s_sprintfd(aname)("bestscore_%s", getmapname());
 			const char *best = getalias(aname);
@@ -751,7 +751,7 @@ struct GAMECLIENT : igameclient
 			glEnd();
 			drawblips(rx, ry, rs);
 
-			if(m_capture(gamemode)) cpc.drawhud(ox, oy);
+			if(m_stf(gamemode)) stf.drawhud(ox, oy);
 			else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
 
 			settexture(radarpingtex());

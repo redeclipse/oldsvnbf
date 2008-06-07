@@ -350,7 +350,7 @@ struct ctfclient : ctfstate
                         MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED | (f.droptime || f.owner ? MDL_LIGHT : 0));
 
             vec above(pos);
-            above.z += enttype[BASE].height;
+            above.z += enttype[FLAG].height;
             s_sprintfd(info)("@%s flag", flagteam(f.team, m_multi(cl.gamemode, cl.mutators)));
 			particle_text(above, info, f.team==teamflag(cl.player1->team, m_multi(cl.gamemode, cl.mutators)) ? 16 : 13, 1);
         }
@@ -363,7 +363,7 @@ struct ctfclient : ctfstate
         loopv(cl.et.ents)
         {
             extentity *e = cl.et.ents[i];
-            if(e->type!=BASE || e->attr2<1 || e->attr2>numteams(m_multi(cl.gamemode, cl.mutators))) continue;
+            if(e->type!=FLAG || e->attr2<1 || e->attr2>numteams(m_multi(cl.gamemode, cl.mutators))) continue;
             addflag(x, e->o, e->attr2-1);
             flags[e->attr2-1].ent = e;
             x++;
