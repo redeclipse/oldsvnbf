@@ -42,15 +42,25 @@ struct fpsrender
 			animdelay = d->gunwait[d->gunselect] + 50;
 		}
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
-		static const char *vweps[] = { "weapons/pistol/vwep", "weapons/shotgun/vwep", "weapons/chaingun/vwep", "weapons/grenades/vwep", "weapons/flamer/vwep", "weapons/rifle/vwep", "weapons/rockets/vwep"};
         int ai = 0;
         if (d->gunselect > -1 && d->gunselect < NUMGUNS)
 		{
-            a[ai].name = vweps[d->gunselect];
+            a[ai].name = guntype[d->gunselect].vwep;
             a[ai].tag = "tag_weapon";
             a[ai].anim = ANIM_VWEP|ANIM_LOOP;
             a[ai].basetime = 0;
             ai++;
+		}
+		if(m_ctf(cl.gamemode))
+		{
+			loopv(cl.ctf.flags) if(cl.ctf.flags[i].owner == d && !cl.ctf.flags[i].droptime)
+			{
+				a[ai].name = teamtype[cl.ctf.flags[i].team].flag;
+				a[ai].tag = "tag_weapon";
+				a[ai].anim = ANIM_VWEP|ANIM_LOOP;
+				a[ai].basetime = 0;
+				ai++;
+			}
 		}
         renderclient(d, local, teamtype[team].mdl, a[0].name ? a : NULL, animflags, animdelay, lastaction, cl.intermission ? 0 : d->lastpain);
 
