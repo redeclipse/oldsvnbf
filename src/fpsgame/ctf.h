@@ -434,7 +434,7 @@ struct ctfclient : ctfstate
 		flageffect(i, f.droploc, f.spawnloc);
 		f.interptime = 0;
 		ctfstate::returnflag(i);
-		conoutf("The \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
+		conoutf("the \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
 		cl.et.announce(S_V_FLAGRESET);
     }
 
@@ -470,7 +470,7 @@ struct ctfclient : ctfstate
 		flag &f = flags[i];
 		f.interptime = lastmillis;
 
-		conoutf("%s %s \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
+		conoutf("%s %s the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		ctfstate::takeflag(i, d);
 		cl.et.announce(S_V_FLAGPICKUP);
     }
