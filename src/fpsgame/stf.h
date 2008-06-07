@@ -171,8 +171,6 @@ struct stfstate
 
 struct stfclient : stfstate
 {
-    static const int FIREBALLRADIUS = 5;
-
 	GAMECLIENT &cl;
 
     IVARP(securetether, 0, 1, 1);
@@ -183,23 +181,33 @@ struct stfclient : stfstate
 
     void rendertether(fpsent *d)
     {
+		int colour = teamtype[d->team].colour;
         int oldflag = d->lastflag;
         d->lastflag = -1;
-        vec pos(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->height)/2);
         if(d->state==CS_ALIVE)
         {
             loopv(flags)
             {
                 flaginfo &b = flags[i];
-                if(!insideflag(b, d->o) || (b.owner != d->team && b.enemy != d->team)) continue;
-                part_flare(pos, b.pos, 1, 15, teamtype[d->team].colour, 0.28f, d);
+                if(!insideflag(b, d->o) || (b.owner != d->team && b.enemy != d->team) || (b.owner == d->team && b.converted >= 2*OCCUPYLIMIT)) continue;
+
+				regularshape(4, 24, colour, 6, 1, 100, b.pos, 4.8f);
+				adddynlight(b.pos, 35, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
+				part_flare(d->o, b.pos, 600, 15, colour, 0.28f, d);
+
                 if(oldflag < 0)
-					regularshape(4, 16, teamtype[d->team].colour, 256, 5, 1000, pos, 4.8f);
+					regularshape(4, 24, colour, 6, 20, 250, d->o, 4.8f);
                 d->lastflag = i;
             }
         }
-        if(d->lastflag < 0 && oldflag >= 0)
-			regularshape(4, 16, teamtype[d->team].colour, 256, 5, 1000, pos, 4.8f);
+        if(d->lastflag < 0 && flags.inrange(oldflag))
+        {
+            flaginfo &b = flags[oldflag];
+			regularshape(4, 24, colour, 6, 20, 250, b.pos, 4.8f);
+			adddynlight(b.pos, 35, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
+			part_flare(d->o, b.pos, 600, 15, colour, 0.28f, d);
+			regularshape(4, 24, colour, 6, 20, 250, d->o, 4.8f);
+        }
     }
 
     void preload()
@@ -232,7 +240,7 @@ struct stfclient : stfstate
 			else b.info[0] = '\0';
 
             vec above(b.pos);
-            above.z += FIREBALLRADIUS+1.0f;
+            above.z += enttype[FLAG].height;
 			part_text(above, b.info, 10, 1, 0xFFFFDD);
 			if(attack)
 			{
@@ -300,8 +308,6 @@ struct stfclient : stfstate
 			flaginfo &b = flags.add();
 			b.o = e->o;
             b.pos = b.o;
-            abovemodel(b.pos, teamtype[TEAM_NEUTRAL].flag);
-            b.pos.z += FIREBALLRADIUS-2;
 			s_sprintfd(alias)("flag_%d", e->attr1);
 			const char *name = getalias(alias);
 			if(name[0]) s_strcpy(b.name, name);
@@ -343,7 +349,12 @@ struct stfclient : stfstate
 			conoutf("\f2%s overthrew %s", teamtype[b.owner].name, b.name);
 			if(b.owner == cl.player1->team) cl.et.announce(S_V_FLAGOVERTHROWN);
 		}
-        if(b.owner != owner) particle_splash(0, 200, 250, b.pos);
+        if(b.owner != owner)
+        {
+        	int colour = teamtype[owner].colour;
+			regularshape(4, 24, colour, 6, 20, 500, b.pos, 4.8f);
+			adddynlight(b.pos, 35, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
+        }
 		b.owner = owner;
 		b.enemy = enemy;
 		b.converted = converted;

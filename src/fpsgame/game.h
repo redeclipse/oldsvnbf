@@ -21,7 +21,7 @@ enum
 };
 
 
-enum								// static entity types
+enum								// entity types
 {
 	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
 	LIGHT = ET_LIGHT,				// 1  radius, intensity
@@ -46,7 +46,7 @@ enum								// static entity types
 
 enum { ETU_NONE = 0, ETU_ITEM, ETU_AUTO, ETU_MAX };
 
-static struct enttypes
+struct enttypes
 {
 	int	type, 		links,	radius,	height, usetype;		const char *name;
 } enttype[] = {
@@ -109,7 +109,7 @@ enum
 	GUNSTATE_MAX
 };
 
-static struct guntypes
+struct guntypes
 {
 	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble,	scale,	radius;	const char *name,	*vwep;
 } guntype[NUMGUNS] =
@@ -154,7 +154,7 @@ enum
 #define G_M_FIGHT			G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI|G_M_DLMS
 #define G_M_FLAG			G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI
 
-static struct gametypes
+struct gametypes
 {
 	int	type,			mutators,		implied;			const char *name;
 } gametype[] = {
@@ -216,9 +216,9 @@ enum
 	SV_ADDBOT, SV_DELBOT, SV_INITBOT
 };
 
-static char msgsizelookup(int msg)
+char msgsizelookup(int msg)
 {
-	static char msgsizesl[] =				// size inclusive message token, 0 for variable or not-checked sizes
+	char msgsizesl[] =				// size inclusive message token, 0 for variable or not-checked sizes
 	{
 		SV_INITS2C, 4, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_ANNOUNCE, 0, SV_SOUND, 3, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 2,
@@ -253,7 +253,7 @@ struct demoheader
 };
 
 enum { TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_MAX };
-static struct teamtypes
+struct teamtypes
 {
 	int	type,		colour;	const char *name,	*mdl,			*flag,			*icon,		*chat;
 } teamtype[] = {
@@ -341,7 +341,7 @@ enum
 };
 
 #ifndef STANDALONE
-static const char *serverinfotypes[] = {
+const char *serverinfotypes[] = {
 	"",
 	"host",
 	"desc",
@@ -353,7 +353,7 @@ static const char *serverinfotypes[] = {
 	"time"
 };
 
-static struct serverstatuses
+struct serverstatuses
 {
 	int type,				colour;		const char *icon;
 } serverstatus[] = {

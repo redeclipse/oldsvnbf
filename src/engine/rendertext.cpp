@@ -230,9 +230,6 @@ void text_bounds(const char *str, int &width, int &height, int maxwidth)
     #undef TEXTWORD
 }
 
-int colorpos = 0;
-char colorstack[10];
-
 void draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, bool s, int cursor, int maxwidth)
 {
     #define TEXTINDEX(idx) if(idx == cursor) { cx = x; cy = y; }
@@ -241,8 +238,11 @@ void draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a,
     #define TEXTCOLOR(idx) text_color(str[idx], colorstack, sizeof(colorstack), colorpos, color, a);
     #define TEXTCHAR(idx) x += draw_char(c, left+x, top+y)+1;
     #define TEXTWORD TEXTWORDSKELETON
+    char colorstack[10];
     bvec color(r, g, b);
-    int cx = INT_MIN, cy = 0, left = rleft, top = rtop;
+    int colorpos = 0, cx = INT_MIN, cy = 0, left = rleft, top = rtop;
+    colorstack[0] = 'c'; //indicate user color
+
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindTexture(GL_TEXTURE_2D, curfont->tex->id);
     glBegin(GL_QUADS);
