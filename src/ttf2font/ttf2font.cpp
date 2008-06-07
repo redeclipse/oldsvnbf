@@ -3,6 +3,7 @@
 
 #include "pch.h"
 #include "tools.h"
+#include <errno.h>
 
 #ifdef main
 #undef main
@@ -10,7 +11,7 @@
 
 enum { MSG_NORMAL = 0, MSG_ERROR };
 
-void msg(int type, char *text)
+void msg(int type, const char *text)
 {
 	fprintf(type == MSG_ERROR ? stderr : stdout, "[%d] %s\n", type, text);
 
@@ -26,7 +27,7 @@ void cleanup()
 	SDL_Quit();
 }
 
-void conoutf(char *text, ...)
+void conoutf(const char *text, ...)
 {
 	string str;
 	va_list vl;
@@ -38,7 +39,7 @@ void conoutf(char *text, ...)
 	msg(MSG_NORMAL, str);
 }
 
-void fatal(char *text, ...)
+void fatal(const char *text, ...)
 {
 	string str;
 	va_list vl;
