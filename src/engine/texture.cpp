@@ -528,7 +528,11 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
         {
             if(renderpath==R_FIXEDFUNCTION) texmad(s, parsevec(arg[0]), parsevec(arg[1]));
         }
-        else if(!strncmp(cmd, "ffmask", len)) s = texffmask(s, atoi(arg[0]));
+        else if(!strncmp(cmd, "ffmask", len))
+        {
+            s = texffmask(s, atoi(arg[0]));
+            if(s == &stubsurface) return s;
+        }
         else if(!strncmp(cmd, "dup", len)) texdup(s, atoi(arg[0]), atoi(arg[1]));
         else if(!strncmp(cmd, "decal", len)) s = texdecal(s);
         else if(!strncmp(cmd, "offset", len)) s = texoffset(s, atoi(arg[0]), atoi(arg[1]));
