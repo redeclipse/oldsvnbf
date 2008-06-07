@@ -391,31 +391,26 @@ struct ctfclient : ctfstate
     void flagexplosion(int i, const vec &loc)
     {
 		flag &f = flags[i];
-		int ftype;
-		vec color;
-		if(f.team==cl.player1->team) { ftype = 36; color = vec(0.25f, 0.25f, 1); }
-		else { ftype = 35; color = vec(1, 0.25f, 0.25f); }
-		particle_fireball(loc, 30, ftype);
-		adddynlight(loc, 35, color, 900, 100);
-		particle_splash(0, 150, 300, loc);
+		int colour = teamtype[f.team].colour;
+		regularshape(4, 24, colour, 6, 20, 500, loc, 4.8f);
+		adddynlight(loc, 35, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
     }
 
     void flageffect(int i, const vec &from, const vec &to)
     {
 		flag &f = flags[i];
-		vec fromexp(from), toexp(to);
 		if(from.x >= 0)
 		{
-			fromexp.z += 8;
-			flagexplosion(i, fromexp);
+			flagexplosion(i, from);
 		}
 		if(to.x >= 0)
 		{
-			toexp.z += 8;
-			flagexplosion(i, toexp);
+			flagexplosion(i, to);
 		}
 		if(from.x >= 0 && to.x >= 0)
-			part_flare(fromexp, toexp, 600, 15, teamtype[f.team].colour);
+		{
+			part_flare(from, to, 600, 15, teamtype[f.team].colour, 0.28f);
+		}
     }
 
     void returnflag(fpsent *d, int i)
@@ -468,8 +463,10 @@ struct ctfclient : ctfstate
     void takeflag(fpsent *d, int i)
     {
 		flag &f = flags[i];
+		int colour = teamtype[d->team].colour;
+		regularshape(4, 24, colour, 6, 20, 500, f.spawnloc, 4.8f);
+		adddynlight(f.spawnloc, 35, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
 		f.interptime = lastmillis;
-
 		conoutf("%s %s the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		ctfstate::takeflag(i, d);
 		cl.et.announce(S_V_FLAGPICKUP);

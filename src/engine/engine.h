@@ -190,7 +190,7 @@ extern GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16], invmvmatrix[16];
 
 extern float cursorx, cursory;
 extern vec cursordir;
-#define SENSF 33.f
+#define SENSF			33.f
 
 extern void gl_checkextensions();
 extern void gl_init(int w, int h, int bpp, int depth, int fsaa);

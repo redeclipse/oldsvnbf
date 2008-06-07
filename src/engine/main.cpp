@@ -641,9 +641,6 @@ int main(int argc, char **argv)
 	#endif
 
 	char *initscript = NULL;
-	colorpos = 0; // last but not least.
-	colorstack[0] = 'c'; //indicate user color
-
 	initing = INIT_RESET;
 	addpackagedir("data");
 	for(int i = 1; i<argc; i++)
@@ -798,8 +795,6 @@ int main(int argc, char **argv)
 
 		lastmillis += curtime;
 		totalmillis = millis;
-		colorpos = 0; // last but not least.
-		colorstack[0] = 'c'; //indicate user color
 	}
 
 	ASSERT(0);
