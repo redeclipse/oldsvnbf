@@ -69,7 +69,7 @@ DAEMON_OBJS= \
 TINCLUDES= -Ishared
 TCXXFLAGS= -Wall -DTTF2FONT $(CXXOPTFLAGS) $(TINCLUDES)
 
-TTF_LIBS=`sdl-config --libs` -lSDL_image -lSDL_ttf -png -lz
+TTF_LIBS= -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_ttf -png -lz
 TTF_OBJS= \
 	shared/tools-ttf.o \
 	ttf2font/ttf2font-ttf.o
@@ -103,7 +103,7 @@ clean-ttf:
 	$(CXX) $(DCXXFLAGS) -c -o $@ $(subst -daemon.o,.cpp,$@)
 
 %-ttf.o:
-	$(CXX) $(DCXXFLAGS) -c -o $@ $(subst -ttf.o,.cpp,$@)
+	$(CXX) $(TCXXFLAGS) -c -o $@ $(subst -ttf.o,.cpp,$@)
 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)

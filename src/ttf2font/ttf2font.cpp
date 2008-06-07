@@ -108,7 +108,11 @@ void savepng(SDL_Surface *s, const char *name)
 #define AMASK 0xff000000
 #endif
 
-#define color(n,x,y,z) SDL_Color c; c.r = x; c.g = y; c.b = z;
+struct fontchar
+{
+	char c;
+	int x, y, w, h;
+};
 
 void ttf2font(const char *name, int size, int pt, int shadow)
 {
@@ -125,55 +129,71 @@ void ttf2font(const char *name, int size, int pt, int shadow)
 		SDL_Surface *t = SDL_CreateRGBSurface(SDL_SRCALPHA, size, size, 32, RMASK, GMASK, BMASK, AMASK);
 		if(t)
 		{
+			vector<fontchar> chars;
+			SDL_Color c[2] = { { 255, 255, 255 }, { 0, 0, 0 } };
+			int x = 0, y = 0, h = 0, mw = 0, mh = 0;
+
+			loopi(TTFCHARS)
+			{
+				fontchar &a = chars.add();
+				a.c = i+TTFSTART;
+
+				s_sprintfd(m)("%c", a.c);
+				SDL_Surface *s[2];
+				loopk(2)
+				{
+					if(!(s[k] = TTF_RenderText_Solid(f, m, c[k])))
+						fatal("TTF_RenderText_Solid: [%s:%s] %s", name, size, TTF_GetError());
+				}
+
+				a.x = x;
+				a.y = y;
+				a.w = s[0]->w+shadow;
+				a.h = s[0]->h+shadow;
+
+				if(a.y+a.h >= size)
+					fatal("Image exceeded max size of %d (%d)", size, a.y+a.h);
+				if(a.x+a.w >= size)
+				{
+					a.y = y = a.y+h;
+					a.x = x = h = 0;
+				}
+
+				SDL_Rect q = { 0, 0, s[0]->w, s[0]->h };
+
+				loopk(shadow ? 2 : 1)
+				{
+					bool w = shadow && !k ? true : false;
+					SDL_Rect r = { a.x+(w?shadow:0), a.y+(w?shadow:0), s[w?1:0]->w, s[w?1:0]->h };
+					SDL_BlitSurface(s[w?1:0], &q, t, &r);
+				}
+
+				x += a.w;
+				if(a.h > h) h = a.h;
+				if(a.w > mw) mw = a.w;
+				if(a.h > mh) mh = a.h;
+
+				loopk(2) SDL_FreeSurface(s[k]);
+			}
+
 			s_sprintfd(o)("%s.cfg", n);
+			s_sprintfd(b)("%s.png", n);
+
 			FILE *p = fopen(findfile(o, "w"), "w");
 			if(p)
 			{
-				SDL_Color c[2] = { { 255, 255, 255 }, { 0, 0, 0 } };
-				s_sprintfd(b)("%s.png", n);
-
-				fprintf(p, "font default \"%s\" 32 64 0 0 0 0\n", b);
-				int x = 0, y = 0, h = 0;
-				loopi(TTFCHARS)
-				{
-					s_sprintfd(a)("%c", i+TTFSTART);
-					SDL_Surface *s[2];
-					loopk(2)
-					{
-						if(!(s[k] = TTF_RenderText_Solid(f, a, c[k])))
-							fatal("TTF_RenderText_Solid: [%s:%s] %s", name, size, TTF_GetError());
-					}
-
-					if(y+s[0]->h+shadow >= size)
-						fatal("Image exceeded max size of %d (%d)", size, y+s[0]->h+shadow);
-					if(x+s[0]->w+shadow >= size)
-					{
-						y += h;
-						x = h = 0;
-					}
-
-					SDL_Rect q = { 0, 0, s[0]->w+shadow, s[0]->h+shadow };
-
-					loopk(shadow ? 2 : 1)
-					{
-						bool w = shadow && !k ? true : false;
-						SDL_Rect r = { x+(w?shadow:0), y+(w?shadow:0), s[w?1:0]->w, s[w?1:0]->h };
-						SDL_BlitSurface(s[w?1:0], &q, t, &r);
-					}
-
-					fprintf(p, "fontchar\t%d\t%d\t%d\t%d\t\t// %s\n", x, y, s[0]->w+shadow, s[0]->h+shadow, a);
-
-					x += s[0]->w+shadow;
-					if(s[0]->h+shadow > h) h = s[0]->h+shadow;
-
-					loopk(2) SDL_FreeSurface(s[k]);
-				}
-
-				savepng(t, findfile(b, "w"));
+				fprintf(p, "font default \"%s\" %d %d 0 0 0 0\n", b, mw, mh);
+				loopv(chars)
+					fprintf(p, "fontchar\t%d\t%d\t%d\t%d\t\t// %c\n",
+						chars[i].x, chars[i].y, chars[i].w, chars[i].h, chars[i].c);
 				fclose(p);
-				conoutf("%s loaded, %s and %s saved", name, b, o);
 			}
 			else fatal("fopen: [%s] %s", o, strerror(errno));
+
+			chars.setsize(0);
+
+			savepng(t, findfile(b, "w"));
+			conoutf("%s loaded, %s and %s saved", name, b, o);
 
 			SDL_FreeSurface(t);
 		}
