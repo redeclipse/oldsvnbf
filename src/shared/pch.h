@@ -35,7 +35,10 @@
 #ifndef STANDALONE
 #include <SDL.h>
 #include <SDL_image.h>
-
+#ifdef TTF2FONT
+#include <SDL_ttf.h>
+#include <png.h>
+#else
 #define GL_GLEXT_LEGACY
 #define __glext_h__
 #define NO_SDL_GLEXT
@@ -43,8 +46,11 @@
 #undef __glext_h__
 #include "GL/glext.h"
 #endif
+#endif
 
+#ifndef TTF2FONT
 #include <enet/enet.h>
+#endif
 
 #ifdef WIN32
   #define _WINDOWS

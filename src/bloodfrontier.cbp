@@ -7,7 +7,6 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
-		<Option active_target="2"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -25,7 +24,7 @@
 				<Option output="..\bin\bloodfrontier_client.exe"/>
 				<Option working_dir="..\"/>
 				<Option object_output=".objs\client"/>
-				<Option deps_output=".deps"/>
+				<Option deps_output=".deps\client"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
@@ -36,6 +35,7 @@
 				<Option projectLibDirsRelation="1"/>
 				<Compiler>
 					<Add option="-fexpensive-optimizations"/>
+					<Add option="-Os"/>
 					<Add option="-O3"/>
 					<Add option="-Wall"/>
 					<Add option="-fsigned-char"/>
@@ -69,7 +69,7 @@
 				<Option output="..\bin\bloodfrontier_client.exe"/>
 				<Option working_dir="..\"/>
 				<Option object_output=".objs\debug"/>
-				<Option deps_output=".deps"/>
+				<Option deps_output=".deps\debug"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
@@ -109,7 +109,7 @@
 				<Option output="..\bin\bloodfrontier_server.exe"/>
 				<Option working_dir="..\"/>
 				<Option object_output=".objs\server"/>
-				<Option deps_output=".deps"/>
+				<Option deps_output=".deps\server"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
@@ -118,6 +118,8 @@
 				<Option projectResourceIncludeDirsRelation="1"/>
 				<Option projectLibDirsRelation="1"/>
 				<Compiler>
+					<Add option="-fexpensive-optimizations"/>
+					<Add option="-Os"/>
 					<Add option="-O3"/>
 					<Add option="-Wall"/>
 					<Add option="-DSTANDALONE"/>
@@ -147,8 +149,10 @@
 				<Option projectResourceIncludeDirsRelation="1"/>
 				<Option projectLibDirsRelation="1"/>
 				<Compiler>
+					<Add option="-fexpensive-optimizations"/>
+					<Add option="-Os"/>
+					<Add option="-O3"/>
 					<Add option="-Wall"/>
-					<Add option="-g"/>
 					<Add option="-DSTANDALONE"/>
 					<Add option="-DMASTERSERVER"/>
 					<Add directory="shared"/>
@@ -159,8 +163,39 @@
 					<Add directory="fpsgame"/>
 				</Compiler>
 				<Linker>
+					<Add option="-s"/>
 					<Add library="ws2_32"/>
 					<Add library="winmm"/>
+					<Add library="z"/>
+					<Add directory="lib\mingw"/>
+				</Linker>
+			</Target>
+			<Target title="ttf2font">
+				<Option output="..\bin\ttf2font.exe"/>
+				<Option working_dir="..\"/>
+				<Option object_output=".objs\ttf2font"/>
+				<Option deps_output=".deps\ttf2font"/>
+				<Option type="1"/>
+				<Option compiler="0"/>
+				<Option use_console_runner="0"/>
+				<Option parameters="font.ttf"/>
+				<Option projectResourceIncludeDirsRelation="1"/>
+				<Compiler>
+					<Add option="-fexpensive-optimizations"/>
+					<Add option="-Os"/>
+					<Add option="-O3"/>
+					<Add option="-Wall"/>
+					<Add option="-DTTF2FONT"/>
+					<Add directory="shared"/>
+					<Add directory="include"/>
+				</Compiler>
+				<Linker>
+					<Add option="-s"/>
+					<Add library="SDLmain"/>
+					<Add library="SDL"/>
+					<Add library="SDL_image"/>
+					<Add library="lib\SDL_ttf.lib"/>
+					<Add library="lib\libpng.lib"/>
 					<Add library="z"/>
 					<Add directory="lib\mingw"/>
 				</Linker>
@@ -791,6 +826,15 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 		</Unit>
+		<Unit filename="fpsgame\stf.h">
+			<Option compilerVar=""/>
+			<Option compile="0"/>
+			<Option link="0"/>
+			<Option target="client"/>
+			<Option target="debug"/>
+			<Option target="server"/>
+			<Option target="daemon"/>
+		</Unit>
 		<Unit filename="fpsgame\weapon.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
@@ -1168,6 +1212,7 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 			<Option target="daemon"/>
+			<Option target="ttf2font"/>
 		</Unit>
 		<Unit filename="shared\tools.h">
 			<Option compilerVar="CPP"/>
@@ -1176,6 +1221,18 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="server"/>
+			<Option target="daemon"/>
+			<Option target="ttf2font"/>
+		</Unit>
+		<Unit filename="ttf2font\ttf2font.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="ttf2font"/>
+		</Unit>
+		<Unit filename="ttf2font\ttf2font.rc">
+			<Option compilerVar="WINDRES"/>
+			<Option objectName="ttf2font\ttf2font.res"/>
+			<Option target="ttf2font"/>
 		</Unit>
 	</Project>
 </CodeBlocks_project_file>
