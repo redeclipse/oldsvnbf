@@ -1476,8 +1476,36 @@ void gettex()
 	}
 }
 
+void getcurtex()
+{
+    if(noedit()) return;
+    filltexlist();
+    int index = curtexindex < 0 ? 0 : curtexindex;
+    if(!texmru.inrange(index)) return;
+    intret(texmru[index]);
+}
+
+void getseltex()
+{
+    if(noedit()) return;
+    cube &c = lookupcube(sel.o.x, sel.o.y, sel.o.z, -sel.grid);
+    if(c.children || isempty(c)) return;
+    intret(c.texture[sel.orient]);
+}
+
+void gettexname(int *tex, int *subslot)
+{
+    if(noedit() || *tex<0) return;
+    Slot &slot = lookuptexture(*tex);
+    if(!slot.sts.inrange(*subslot)) return;
+    result(slot.sts[*subslot].name);
+}
+
 COMMANDN(edittex, edittex_, "i");
 COMMAND(gettex, "");
+COMMAND(getcurtex, "");
+COMMAND(getseltex, "");
+COMMAND(gettexname, "ii");
 
 void replacetexcube(cube &c, int oldtex, int newtex)
 {

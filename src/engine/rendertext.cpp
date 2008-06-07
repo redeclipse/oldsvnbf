@@ -67,7 +67,7 @@ void gettextres(int &w, int &h)
 	}
 }
 
-#define PIXELTAB (8*curfont->defaultw)
+#define PIXELTAB (4*curfont->defaultw)
 
 int text_width(const char *str) { //@TODO deprecate in favour of text_bounds(..)
     int width, height;
