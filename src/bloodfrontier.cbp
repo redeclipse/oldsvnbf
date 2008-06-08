@@ -176,11 +176,10 @@
 				<Option working_dir="..\"/>
 				<Option object_output=".objs\ttf2font"/>
 				<Option deps_output=".deps\ttf2font"/>
-				<Option type="1"/>
+				<Option type="0"/>
 				<Option compiler="0"/>
-				<Option use_console_runner="0"/>
 				<Option parameters="font.ttf"/>
-				<Option projectResourceIncludeDirsRelation="1"/>
+				<Option projectResourceIncludeDirsRelation="0"/>
 				<Compiler>
 					<Add option="-fexpensive-optimizations"/>
 					<Add option="-Os"/>

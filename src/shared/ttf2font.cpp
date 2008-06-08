@@ -9,23 +9,28 @@
 #undef main
 #endif
 
-enum { MSG_NORMAL = 0, MSG_ERROR };
-
-void msg(int type, const char *text)
-{
-	fprintf(type == MSG_ERROR ? stderr : stdout, "[%d] %s\n", type, text);
-
-#ifdef WIN32
-	if(type == MSG_ERROR)
-		MessageBox(NULL, text, "ttf2font error", type | MB_TOPMOST);
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#define RMASK 0xff000000
+#define GMASK 0x00ff0000
+#define BMASK 0x0000ff00
+#define AMASK 0x000000ff
+#else
+#define RMASK 0x000000ff
+#define GMASK 0x0000ff00
+#define BMASK 0x00ff0000
+#define AMASK 0xff000000
 #endif
-}
 
-void cleanup()
+#define TTFSTART	33
+#define TTFCHARS	94
+
+struct fontchar
 {
-	TTF_Quit();
-	SDL_Quit();
-}
+	char c;
+	int x, y, w, h;
+};
+
+int retcode = EXIT_FAILURE; // guilty until proven innocent
 
 void conoutf(const char *text, ...)
 {
@@ -36,10 +41,14 @@ void conoutf(const char *text, ...)
 	vsnprintf(str, _MAXDEFSTR-1, text, vl);
 	va_end(vl);
 
-	msg(MSG_NORMAL, str);
+#ifdef WIN32
+	MessageBox(NULL, str, "TTF2Font", MB_OK|MB_ICONINFORMATION|MB_TOPMOST);
+#else
+	fprintf(stdout, "%s\n", str);
+#endif
 }
 
-void fatal(const char *text, ...)
+void erroutf(const char *text, ...)
 {
 	string str;
 	va_list vl;
@@ -48,9 +57,11 @@ void fatal(const char *text, ...)
 	vsnprintf(str, _MAXDEFSTR-1, text, vl);
 	va_end(vl);
 
-	msg(MSG_ERROR, str);
-	cleanup();
-	exit(EXIT_FAILURE);
+#ifdef WIN32
+	MessageBox(NULL, str, "TTF2Font Error", MB_OK|MB_ICONERROR|MB_TOPMOST);
+#else
+	fprintf(stderr, "%s\n", str);
+#endif
 }
 
 void savepng(SDL_Surface *s, const char *name)
@@ -85,37 +96,16 @@ void savepng(SDL_Surface *s, const char *name)
 					png_write_end(g, NULL);
 				}
 			}
-			else fatal("failed to create png info struct");
+			else erroutf("Failed to create png info struct.");
 			png_destroy_write_struct(&g, &i);
 		}
-		else fatal("failed to create png write struct");
+		else erroutf("Failed to create png write struct.");
 		fclose(p);
 	}
-	else fatal("fopen: [%s] %s", name, strerror(errno));
+	else erroutf("Failed to open %s: %s", name, strerror(errno));
 }
 
-#define TTFSTART	33
-#define TTFCHARS	94
-
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#define RMASK 0xff000000
-#define GMASK 0x00ff0000
-#define BMASK 0x0000ff00
-#define AMASK 0x000000ff
-#else
-#define RMASK 0x000000ff
-#define GMASK 0x0000ff00
-#define BMASK 0x00ff0000
-#define AMASK 0xff000000
-#endif
-
-struct fontchar
-{
-	char c;
-	int x, y, w, h;
-};
-
-void ttf2font(const char *name, int size, int pt, int shadow)
+void ttf2font(const char *name, int size, int pt, int pad, int shadow)
 {
 	string n;
 
@@ -130,9 +120,10 @@ void ttf2font(const char *name, int size, int pt, int shadow)
 		SDL_Surface *t = SDL_CreateRGBSurface(SDL_SRCALPHA, size, size, 32, RMASK, GMASK, BMASK, AMASK);
 		if(t)
 		{
+			bool fail = false;
 			vector<fontchar> chars;
 			SDL_Color c[2] = { { 255, 255, 255 }, { 0, 0, 0 } };
-			int x = 0, y = 0, h = 0, mw = 0, mh = 0;
+			int x = pad, y = pad, h = 0, mw = 0, mh = 0;
 
 			loopi(TTFCHARS)
 			{
@@ -140,68 +131,87 @@ void ttf2font(const char *name, int size, int pt, int shadow)
 				a.c = i+TTFSTART;
 
 				s_sprintfd(m)("%c", a.c);
-				SDL_Surface *s[2];
+				SDL_Surface *s[2] = { NULL, NULL };
 				loopk(2)
 				{
 					if(!(s[k] = TTF_RenderText_Solid(f, m, c[k])))
-						fatal("TTF_RenderText_Solid: [%s:%s] %s", name, size, TTF_GetError());
+					{
+						erroutf("Failed to render font: %s", TTF_GetError());
+						fail = true;
+						break;
+					}
 				}
 
-				a.x = x;
-				a.y = y;
-				a.w = s[0]->w+shadow;
-				a.h = s[0]->h+shadow;
-
-				if(a.y+a.h >= size)
-					fatal("Image exceeded max size of %d (%d)", size, a.y+a.h);
-				if(a.x+a.w >= size)
+				if(!fail)
 				{
-					a.y = y = a.y+h;
-					a.x = x = h = 0;
+					a.x = x;
+					a.y = y;
+					a.w = s[0]->w+shadow;
+					a.h = s[0]->h+shadow;
+
+					if(a.y+a.h >= size)
+					{
+						erroutf("Image exceeded max size of %d (%d)", size, a.y+a.h);
+						fail = true;
+					}
+
+					if(!fail)
+					{
+						if(a.x+a.w >= size)
+						{
+							a.y = y = a.y+h+pad;
+							a.x = x = h = 0;
+						}
+
+						SDL_Rect q = { 0, 0, s[0]->w, s[0]->h };
+
+						loopk(shadow ? 2 : 1)
+						{
+							bool w = shadow && !k ? true : false;
+							SDL_Rect r = {
+								a.x+(w?shadow:0), a.y+(w?shadow:0), s[w?1:0]->w, s[w?1:0]->h
+							};
+							SDL_BlitSurface(s[w?1:0], &q, t, &r);
+						}
+
+						x += a.w+pad;
+						if(a.h > h) h = a.h;
+						if(a.w > mw) mw = a.w;
+						if(a.h > mh) mh = a.h;
+					}
 				}
 
-				SDL_Rect q = { 0, 0, s[0]->w, s[0]->h };
-
-				loopk(shadow ? 2 : 1)
-				{
-					bool w = shadow && !k ? true : false;
-					SDL_Rect r = { a.x+(w?shadow:0), a.y+(w?shadow:0), s[w?1:0]->w, s[w?1:0]->h };
-					SDL_BlitSurface(s[w?1:0], &q, t, &r);
-				}
-
-				x += a.w;
-				if(a.h > h) h = a.h;
-				if(a.w > mw) mw = a.w;
-				if(a.h > mh) mh = a.h;
-
-				loopk(2) SDL_FreeSurface(s[k]);
+				loopk(2) if(s[k]) SDL_FreeSurface(s[k]);
+				if(fail) break;
 			}
-
-			s_sprintfd(o)("%s.cfg", n);
-			s_sprintfd(b)("%s.png", n);
-
-			FILE *p = fopen(findfile(o, "w"), "w");
-			if(p)
+			if(!fail)
 			{
-				fprintf(p, "font default \"%s\" %d %d 0 0 0 0\n", b, mw, mh);
-				loopv(chars)
-					fprintf(p, "fontchar\t%d\t%d\t%d\t%d\t\t// %c\n",
-						chars[i].x, chars[i].y, chars[i].w, chars[i].h, chars[i].c);
-				fclose(p);
+				s_sprintfd(o)("%s.cfg", n);
+				FILE *p = fopen(findfile(o, "w"), "w");
+				if(p)
+				{
+					s_sprintfd(b)("%s.png", n);
+
+					fprintf(p, "// font generated by ttf2font\n\n");
+					fprintf(p, "font default \"%s\" %d %d 0 0 0 0\n\n", b, mw, mh);
+					loopv(chars)
+						fprintf(p, "fontchar\t%d\t%d\t%d\t%d\t\t// %c\n",
+							chars[i].x, chars[i].y, chars[i].w, chars[i].h, chars[i].c);
+					fclose(p);
+
+					savepng(t, findfile(b, "w"));
+					conoutf("Conversion of %s completed.\nWrote image %s (%dx%d).\nWrote config %s.", name, b, t->w, t->h, o);
+					retcode = EXIT_SUCCESS;
+				}
+				else erroutf("Failed to open %s: %s", o, strerror(errno));
 			}
-			else fatal("fopen: [%s] %s", o, strerror(errno));
-
 			chars.setsize(0);
-
-			savepng(t, findfile(b, "w"));
-			conoutf("%s loaded, %s and %s saved", name, b, o);
-
 			SDL_FreeSurface(t);
 		}
-		else fatal("TSDL_CreateRGBSurface: %s", SDL_GetError());
+		else erroutf("Failed to create SDL surface: %s", SDL_GetError());
 		TTF_CloseFont(f);
 	}
-	else fatal("TTF_OpenFont: [%s:%d] %s", name, size, TTF_GetError());
+	else erroutf("Failed to open font: %s", TTF_GetError());
 }
 
 int main(int argc, char *argv[])
@@ -212,13 +222,17 @@ int main(int argc, char *argv[])
 		if(SDL_Init(SDL_INIT_NOPARACHUTE) != -1)
 		{
 			if(TTF_Init() != -1)
-				ttf2font(argv[1], argc > 2 ? atoi(argv[2]) : 512, argc > 3 ? atoi(argv[3]) : 68, argc > 4 ? atoi(argv[4]) : 4);
-			else fatal("TTF_Init: %s", TTF_GetError());
-		}
-		else fatal("Could not initialize SDL: %s", SDL_GetError());
-	}
-	else fatal("usage: %s <font.ttf> [image size] [font size] [shadow depth]", argv[0]);
+			{
+				ttf2font(argv[1], argc > 2 ? atoi(argv[2]) : 512, argc > 3 ? atoi(argv[3]) : 68, argc > 4 ? atoi(argv[4]) : 1, argc > 5 ? atoi(argv[5]) : 4);
+				TTF_Quit();
+			}
+			else erroutf("Failed to initialize TTF: %s", TTF_GetError());
 
-	cleanup();
-	return EXIT_SUCCESS;
+			SDL_Quit();
+		}
+		else erroutf("Failed to initialize sdl SDL: %s", SDL_GetError());
+	}
+	else erroutf("Usage: %s <font.ttf> [image size] [font size] [padding] [shadow depth]", argv[0]);
+
+	return retcode;
 }
