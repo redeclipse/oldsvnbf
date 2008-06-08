@@ -744,7 +744,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
 	s.loaded = false;
     s.texmask |= 1<<tnum;
-	if (s.sts.length() >= TEX_MAX) conoutf("warning: too many textures, slot %d file '%s' (%d,%d)", curtexnum, name, matslot, curmatslot);
+	if (s.sts.length() >= TEX_MAX) conoutf("warning: too many textures, [%d] %s (%d,%d)", curtexnum, name, matslot, curmatslot);
 	Slot::Tex &st = s.sts.add();
 	st.type = tnum;
 	st.combined = -1;

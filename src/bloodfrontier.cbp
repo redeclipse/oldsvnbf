@@ -7,7 +7,6 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
-		<Option active_target="5"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -58,6 +57,7 @@
 					<Add library="SDL"/>
 					<Add library="SDL_image"/>
 					<Add library="SDL_mixer"/>
+					<Add library="lib\libpng.lib"/>
 					<Add library="z"/>
 					<Add library="opengl32"/>
 					<Add library="glu32"/>
@@ -98,6 +98,7 @@
 					<Add library="SDL"/>
 					<Add library="SDL_image"/>
 					<Add library="SDL_mixer"/>
+					<Add library="lib\libpng.lib"/>
 					<Add library="z"/>
 					<Add library="opengl32"/>
 					<Add library="glu32"/>
@@ -178,7 +179,7 @@
 				<Option deps_output=".deps\ttf2font"/>
 				<Option type="0"/>
 				<Option compiler="0"/>
-				<Option parameters="font.ttf"/>
+				<Option parameters="font.ttf 512 64 1 2"/>
 				<Option projectResourceIncludeDirsRelation="0"/>
 				<Compiler>
 					<Add option="-fexpensive-optimizations"/>

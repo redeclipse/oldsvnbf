@@ -182,9 +182,9 @@ enum
 extern void adddecal(int type, const vec &center, const vec &surface, float radius, const bvec &color = bvec(0xFF, 0xFF, 0xFF), int info = 0);
 
 // worldio
-extern void setnames(const char *fname, const char *cname = NULL);
-extern void load_world(const char *mname, const char *cname = NULL);
-extern void save_world(const char *mname, bool nolms = false);
+extern void setnames(char *fname);
+extern void load_world(char *mname);
+extern void save_world(char *mname, bool nolms = false);
 
 // physics
 extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr,  float hi, float lo);
@@ -384,4 +384,4 @@ enum							// cube empty-space materials
 };
 
 extern int ambient, skylight, watercolour, lavacolour;
-extern string cgzname, mcfname, picname, mapname;
+

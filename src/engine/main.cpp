@@ -98,24 +98,96 @@ void writeinitcfg()
 	fclose(f);
 }
 
-void screenshot(char *filename)
+VARP(pngcompress, Z_NO_COMPRESSION, Z_BEST_SPEED, Z_BEST_COMPRESSION);
+
+void savepng(SDL_Surface *s, const char *fname)
+{
+	FILE *p = fopen(fname, "wb");
+	if(p)
+	{
+		png_structp g = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+		if(g)
+		{
+			png_infop i = png_create_info_struct(g);
+			if(i)
+			{
+				if(!setjmp(png_jmpbuf(g)))
+				{
+					int chandepth = 8, format = -1;
+
+					switch(s->format->BytesPerPixel)
+					{
+						case 4: format = PNG_COLOR_TYPE_RGB_ALPHA; break;
+						case 3: format = PNG_COLOR_TYPE_RGB; break;
+						case 2: format = PNG_COLOR_TYPE_GRAY_ALPHA; break; // not really..
+						case 1: format = PNG_COLOR_TYPE_GRAY; break;
+						default: break;
+					}
+
+					if(format >= 0)
+					{
+						png_init_io(g, p);
+
+						png_set_compression_level(g, pngcompress);
+
+						png_set_IHDR(g, i, s->w, s->h, chandepth,
+							format, PNG_INTERLACE_NONE,
+								PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+						png_write_info(g, i);
+
+						uchar *d =(uchar *)s->pixels;
+						loopk(s->h)
+						{
+							png_write_row(g, d);
+							d += s->w*s->format->BytesPerPixel;
+						}
+						png_write_end(g, NULL);
+					}
+				}
+			}
+			png_destroy_write_struct(&g, &i);
+		}
+		fclose(p);
+	}
+}
+
+const char *ifmtexts[IFMT_MAX] = { "", ".bmp", ".png" };
+VARP(imageformat, IFMT_NONE+1, IFMT_PNG, IFMT_MAX-1);
+
+void savesurface(SDL_Surface *s, char *fname, bool msg, int format)
+{
+	int f = format > IFMT_NONE && format < IFMT_MAX ? format : imageformat;
+	const char *filename = findfile(makefile(fname, ifmtexts[f]), "wb");
+	switch(f)
+	{
+		case IFMT_PNG: savepng(s, filename); break;
+		case IFMT_BMP: SDL_SaveBMP(s, filename); break;
+		default: break;
+	}
+	if(verbose || msg) conoutf("saved image %s", filename);
+}
+
+void screenshot(char *sname)
 {
 	SDL_Surface *image = SDL_CreateRGBSurface(SDL_SWSURFACE, screen->w, screen->h, 24, 0x0000FF, 0x00FF00, 0xFF0000, 0);
-	if(!image) return;
-	uchar *tmp = new uchar[screen->w*screen->h*3];
-	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, tmp);
-	uchar *dst = (uchar *)image->pixels;
-    loopi(screen->h)
+	if(image)
 	{
-		memcpy(dst, &tmp[3*screen->w*(screen->h-i-1)], 3*screen->w);
-		endianswap(dst, 3, screen->w);
-		dst += image->pitch;
+		uchar *tmp = new uchar[screen->w*screen->h*3];
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, tmp);
+		uchar *dst = (uchar *)image->pixels;
+		loopi(screen->h)
+		{
+			memcpy(dst, &tmp[3*screen->w*(screen->h-i-1)], 3*screen->w);
+			endianswap(dst, 3, screen->w);
+			dst += image->pitch;
+		}
+		delete[] tmp;
+		s_sprintfd(fname)("%s", *sname ? sname : getmapname());
+		savesurface(image, fname, true);
+		SDL_FreeSurface(image);
 	}
-	delete[] tmp;
-	const char *name = findfile(makefile(*filename ? filename : getmapname(), ".bmp"), "wb");
-	SDL_SaveBMP(image, name);
-	SDL_FreeSurface(image);
 }
 
 COMMAND(screenshot, "s");

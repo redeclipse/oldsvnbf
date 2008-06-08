@@ -661,7 +661,7 @@ struct GAMECLIENT : igameclient
 
 			glColor4f(1.f, 1.f, 1.f, fade);
 			rendericon("textures/guioverlay", ox+20-x, oy-260, 144, 144);
-			if(!rendericon(picname, ox+28-x, oy-252, 128, 128))
+			if(!rendericon(getmapname(), ox+28-x, oy-252, 128, 128))
 				rendericon("textures/emblem", ox+20-x, oy-260, 144, 144);
 
 			draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, sv->gamename(gamemode, mutators));

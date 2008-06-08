@@ -786,8 +786,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 	}
 
 	resetmap();
-	if (mname != NULL) setnames(mname);
-	else setnames("maps/untitled");
+	setnames(mname);
 	strncpy(hdr.head, "BFGZ", 4);
 
 	hdr.version = MAPVERSION;

@@ -170,7 +170,7 @@ struct scoreboard : g3d_callback
 	{
         g.start(menustart, 0.03f, NULL, false);
 
-		s_sprintfd(modemapstr)("%s: %s", sv->gamename(cl.gamemode, cl.mutators), mapname);
+		s_sprintfd(modemapstr)("%s: %s", sv->gamename(cl.gamemode, cl.mutators), getmapname());
         if((m_timed(cl.gamemode) || cl.cc.demoplayback) && cl.minremain >= 0)
 		{
 			if(!cl.minremain) s_strcat(modemapstr, ", intermission");
