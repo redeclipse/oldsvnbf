@@ -102,7 +102,7 @@ VARP(pngcompress, Z_NO_COMPRESSION, Z_BEST_SPEED, Z_BEST_COMPRESSION);
 
 void savepng(SDL_Surface *s, const char *fname)
 {
-	FILE *p = fopen(fname, "wb");
+	FILE *p = openfile(fname, "wb");
 	if(p)
 	{
 		png_structp g = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
