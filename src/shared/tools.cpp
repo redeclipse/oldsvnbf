@@ -15,43 +15,59 @@
 string homedir = "";
 vector<char *> packagedirs;
 
-char *makefile(char *s, const char *e, bool ext, bool copy, int start)
+char *makefile(const char *s, const char *e, int revision, int start)
 {
-	char *o = s;
-    if(copy)
-    {
-        static string makefiletmp;
-        s_strcpy(makefiletmp, s);
-        o = makefiletmp;
-    }
+	static string o;
+	s_strcpy(o, s);
 
-	int d = start;
 	string m, f;
 	s_strcpy(m, o);
 
+	int d = start;
 	char *t = strpbrk(m, ".");
-	if (t) // try to detect extension and revision
+	if(t) // try to detect extension and revision
 	{
 		s_strncpy(o, m, t-m+1);
 		char *q = t+1;
-		if (isnumeric(*q)) d = min(atoi(q), 1);
+		if(isnumeric(*q)) d = min(atoi(q), 1);
 	}
 	else { s_strcpy(o, m); }
-	s_strcpy(m, o);
+	s_strcpy(f, o);
 
-	while (true)
+	bool tryrev = false;
+	while(true)
 	{
-		s_sprintf(f)("%s%s", o, *e ? e : "");
-		if (fileexists(findfile(f, "r"), "r")) { s_sprintf(o)("%s.%.4d", m, d++); }
+		s_sprintf(m)("%s%s", f, *e ? e : "");
+		if(fileexists(findfile(m, "r"), "r"))
+		{
+			if(revision)
+			{
+				if(!tryrev)
+				{
+					s_sprintf(f)("%s.r%.4d", o, revision);
+					tryrev = true;
+				}
+				else s_sprintf(f)("%s.r%.4d.%.4d", o, revision, d++);
+			}
+			else s_sprintf(f)("%s.%.4d", o, d++);
+		}
 		else break;
 	}
-	if (ext)
-	{
-		s_strcpy(s, f);
-		return s;
-	}
-	s_strcpy(o, f);
+
+	s_strcpy(o, m);
 	return o;
+}
+
+void backup(const char *fname, const char *ext, int revision, int start)
+{
+	s_sprintfd(tname)("%s%s", fname, ext);
+	s_sprintfd(bname)("%s", findfile(tname, "r"));
+	s_sprintfd(aname)("%s", findfile(tname, "w"));
+	if(fileexists(aname, "r") && !strcmp(aname, bname))
+	{
+		const char *newname = findfile(makefile(fname, ext, revision, start), "w");
+		rename(aname, newname);
+	}
 }
 
 char *makerelpath(const char *dir, const char *file, const char *prefix)

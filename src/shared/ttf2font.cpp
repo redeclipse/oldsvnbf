@@ -81,7 +81,7 @@ void savepng(SDL_Surface *s, const char *name)
 
 					png_set_compression_level(g, Z_BEST_SPEED);
 
-					png_set_IHDR(g, i, s->w, s->h, s->format->BytesPerPixel/4*8,
+					png_set_IHDR(g, i, s->w, s->h, 8,
 						PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
 							PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 

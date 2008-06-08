@@ -37,7 +37,6 @@
 #include <SDL_image.h>
 #ifdef TTF2FONT
 #include <SDL_ttf.h>
-#include <png.h>
 #else
 #define GL_GLEXT_LEGACY
 #define __glext_h__
@@ -46,6 +45,7 @@
 #undef __glext_h__
 #include "GL/glext.h"
 #endif
+#include <png.h>
 #endif
 
 #ifndef TTF2FONT

@@ -1238,17 +1238,14 @@ struct clientcom : iclientcom
 			case SV_SENDMAP:
 			{
 				if(!m_edit(cl.gamemode)) return;
-				string oldname;
-				s_strcpy(oldname, getmapname());
-				s_sprintfd(mname)("%s", getmapname());
-				s_sprintfd(fname)("%s.bgz", mname);
-				const char *file = findfile(fname, "wb");
+				extern string bgzname[MAP_MAX], mapname;
+				const char *file = findfile(bgzname[MAP_BFGZ], "wb");
 				FILE *map = fopen(file, "wb");
 				if(!map) return;
 				conoutf("received map");
 				fwrite(data, 1, len, map);
 				fclose(map);
-				load_world(mname, oldname[0] ? oldname : NULL);
+				load_world(mapname);
 				break;
 			}
 		}

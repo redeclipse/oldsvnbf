@@ -428,6 +428,19 @@ enum
 };
 extern bool initwarning(const char *desc, int level = INIT_RESET, int type = CHANGE_GFX);
 
+extern void savepng(SDL_Surface *s, const char *fname);
+
+enum
+{
+	IFMT_NONE = 0,
+	IFMT_BMP,
+	IFMT_PNG,
+	IFMT_MAX,
+};
+extern const char *ifmtexts[IFMT_MAX];
+extern int imageformat;
+extern void savesurface(SDL_Surface *s, char *name, bool msg = false, int format = IFMT_NONE);
+
 extern void resetcursor(bool warp = true, bool reset = true);
 
 extern void pushevent(const SDL_Event &e);

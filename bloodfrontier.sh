@@ -18,8 +18,8 @@ else
 	else
 		echo "Your platform does not have a pre-compiled Blood Frontier client."
 		echo "Please follow the following steps to build a native client:"
-		echo "1) Ensure you have the SDL, SDL-image, fmodex, and OpenGL *DEVELOPMENT* libraries installed."
-		echo "2) Change directory to mod/src/ and type \"make clean all\"."
+		echo "1) Ensure you have the SDL, SDL image, SDL mixer, libpng, zlib, and OpenGL *DEVELOPMENT* libraries installed."
+		echo "2) Change directory to src/ and type \"make clean all\" or \"gmake clean all\"."
 		echo "3) If the build succeeds, return to this directory and run this script again."
 		exit 1
 	fi

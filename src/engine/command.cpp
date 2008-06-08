@@ -605,13 +605,13 @@ bool execfile(const char *cfgfile)
 	if(!buf) return false;
 	execute(buf);
 	delete[] buf;
-	if (verbose >= 3) conoutf("loaded script '%s'", cfgfile);
+	if (verbose >= 3) conoutf("loaded script %s", cfgfile);
 	return true;
 }
 
 void exec(const char *cfgfile)
 {
-	if(!execfile(cfgfile)) conoutf("could not read \"%s\"", cfgfile);
+	if(!execfile(cfgfile)) conoutf("could not read %s", cfgfile);
 }
 
 void writecfg()
