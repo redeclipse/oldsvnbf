@@ -170,20 +170,20 @@ void ttf2font()
 							s[k] = TTF_RenderText_Solid(f, m, c[k]);
 							break;
 						}
-						case 2:
-						{
-							s[k] = TTF_RenderText_Blended(f, m, c[k]);
-                            if(s[k]) SDL_SetAlpha(s[k], 0, 0);
-							break;
-						}
 						case 1:
-						default:
 						{
 							s[k] = TTF_RenderText_Shaded(f, m, c[k], c[2]);
  							if(s[k])
                                 SDL_SetColorKey(s[k], SDL_SRCCOLORKEY,
 								    SDL_MapRGBA(s[k]->format, c[2].r, c[2].g, c[2].b, 0));
  							break;
+						}
+						case 2:
+						default:
+						{
+							s[k] = TTF_RenderText_Blended(f, m, c[k]);
+                            if(s[k]) SDL_SetAlpha(s[k], 0, 0);
+							break;
 						}
 					}
                     if(s[k])
@@ -277,7 +277,7 @@ void ttf2font()
 
 void usage()
 {
-	conoutf("%s usage:\n\t-? (this help)\n\t-h<home dir> (output directory)\n\t-f<font file>\n\t-i<image size>\n\t-s<font size>\n\t-p<char padding>\n\t-d<shadow depth>\n\t-q<quality> (0..1)\n\t-c<compress level> (0..9)", program);
+	conoutf("%s usage:\n\t-?\t\t(this help)\n\t-h<S>\t\t(home dir, output directory)\n\t-f<N>\t\t(font file)\n\t-i<N>\t\t(image size)\n\t-s<N>\t\t(font size)\n\t-p<N>\t\t(char padding)\n\t-d<N>\t\t(shadow depth)\n\t-q<N[0..1]>\t\t(render quality)\n\t-c<N[0..9]>\t\t(compress level)", program);
 }
 
 int main(int argc, char *argv[])
