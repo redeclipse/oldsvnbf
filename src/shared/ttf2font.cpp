@@ -253,35 +253,39 @@ int main(int argc, char *argv[])
 	program = argv[0];
 	sethomedir(".");
 
-	for(int i = 1; i < argc; i++)
+	if(argc > 1)
 	{
-		if(argv[i][0]=='-') switch(argv[i][1])
+		for(int i = 1; i < argc; i++)
 		{
-			case '?': usage(); return EXIT_SUCCESS; break;
-			case 'h': sethomedir(&argv[i][2]); break;
-			case 'f': fontname = &argv[i][2]; break;
-			case 'i': imgsize = atoi(&argv[i][2]); break;
-			case 's': fonsize = atoi(&argv[i][2]); break;
-			case 'p': padsize = atoi(&argv[i][2]); break;
-			case 'd': shdsize = atoi(&argv[i][2]); break;
-			case 'q': quality = clamp(atoi(&argv[i][2]), 0, 2); break;
-			case 'c': pngcomp = clamp(atoi(&argv[i][2]), Z_NO_COMPRESSION, Z_BEST_COMPRESSION); break;
-			default: erroutf("Unknown command line argument -%c", argv[i][1]);
+			if(argv[i][0]=='-') switch(argv[i][1])
+			{
+				case '?': usage(); return EXIT_SUCCESS; break;
+				case 'h': sethomedir(&argv[i][2]); break;
+				case 'f': fontname = &argv[i][2]; break;
+				case 'i': imgsize = atoi(&argv[i][2]); break;
+				case 's': fonsize = atoi(&argv[i][2]); break;
+				case 'p': padsize = atoi(&argv[i][2]); break;
+				case 'd': shdsize = atoi(&argv[i][2]); break;
+				case 'q': quality = clamp(atoi(&argv[i][2]), 0, 2); break;
+				case 'c': pngcomp = clamp(atoi(&argv[i][2]), Z_NO_COMPRESSION, Z_BEST_COMPRESSION); break;
+				default: erroutf("Unknown command line argument -%c", argv[i][1]);
+			}
 		}
-	}
 
-	if(SDL_Init(SDL_INIT_NOPARACHUTE) != -1)
-	{
-		if(TTF_Init() != -1)
+		if(SDL_Init(SDL_INIT_NOPARACHUTE) != -1)
 		{
-			ttf2font();
-			TTF_Quit();
-		}
-		else erroutf("Failed to initialize TTF: %s", TTF_GetError());
+			if(TTF_Init() != -1)
+			{
+				ttf2font();
+				TTF_Quit();
+			}
+			else erroutf("Failed to initialize TTF: %s", TTF_GetError());
 
-		SDL_Quit();
+			SDL_Quit();
+		}
+		else erroutf("Failed to initialize sdl SDL: %s", SDL_GetError());
 	}
-	else erroutf("Failed to initialize sdl SDL: %s", SDL_GetError());
+	else usage();
 
 	return retcode;
 }
