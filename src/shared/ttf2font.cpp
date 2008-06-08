@@ -144,6 +144,11 @@ void ttf2font()
 							s[k] = TTF_RenderText_Solid(f, m, c[k]);
 							break;
 						}
+						case 2:
+						{
+							s[k] = TTF_RenderText_Blended(f, m, c[k]);
+							break;
+						}
 						case 1:
 						default:
 						{
@@ -258,7 +263,7 @@ int main(int argc, char *argv[])
 			case 's': fonsize = atoi(&argv[i][2]); break;
 			case 'p': padsize = atoi(&argv[i][2]); break;
 			case 'd': shdsize = atoi(&argv[i][2]); break;
-			case 'q': quality = clamp(atoi(&argv[i][2]), 0, 1); break;
+			case 'q': quality = clamp(atoi(&argv[i][2]), 0, 2); break;
 			case 'c': pngcomp = clamp(atoi(&argv[i][2]), Z_NO_COMPRESSION, Z_BEST_COMPRESSION); break;
 			default: erroutf("Unknown command line argument -%c", argv[i][1]);
 		}
