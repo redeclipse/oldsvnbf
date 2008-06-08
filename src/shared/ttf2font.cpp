@@ -145,9 +145,10 @@ void ttf2font()
 	if(f)
 	{
 		SDL_Surface *t = SDL_CreateRGBSurface(SDL_SWSURFACE, imgsize, imgsize, 32, RMASK, GMASK, BMASK, AMASK);
-        loopi(t->h) memset((uchar *)t->pixels + i*t->pitch, 0, 4*t->w);
 		if(t)
 		{
+            loopi(t->h) memset((uchar *)t->pixels + i*t->pitch, 0, 4*t->w);
+
 			bool fail = false;
 			vector<fontchar> chars;
 			SDL_Color c[3] = { { 1, 1, 1, }, { 255, 255, 255 }, { 0, 0, 0 } };
