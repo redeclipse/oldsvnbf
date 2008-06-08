@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
 
 			SDL_Quit();
 		}
-		else erroutf("Failed to initialize sdl SDL: %s", SDL_GetError());
+		else erroutf("Failed to initialize SDL: %s", SDL_GetError());
 	}
 	else usage();
 
