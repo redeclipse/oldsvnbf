@@ -24,8 +24,8 @@
 #define TTFSTART	33
 #define TTFCHARS	94
 
-char *program, *fontname = "font.ttf";
-int imgsize = 512, fonsize = 48, padsize = 1, shdsize = 2, quality = 1, pngcomp = Z_BEST_SPEED;
+const char *program, *fontname = "font.ttf";
+int imgsize = 512, fonsize = 48, padsize = 1, shdsize = 2, quality = 2, pngcomp = Z_BEST_SPEED;
 
 struct fontchar
 {
@@ -147,14 +147,16 @@ void ttf2font()
 						case 2:
 						{
 							s[k] = TTF_RenderText_Blended(f, m, c[k]);
+                            if(s[k]) SDL_SetAlpha(s[k], 0, 0);
 							break;
 						}
 						case 1:
 						default:
 						{
 							s[k] = TTF_RenderText_Shaded(f, m, c[k], c[2]);
- 							SDL_SetColorKey(s[k], SDL_SRCCOLORKEY,
-								SDL_MapRGBA(s[k]->format, c[2].r, c[2].g, c[2].b, 0));
+ 							if(s[k])
+                                SDL_SetColorKey(s[k], SDL_SRCCOLORKEY,
+								    SDL_MapRGBA(s[k]->format, c[2].r, c[2].g, c[2].b, 0));
  							break;
 						}
 					}
