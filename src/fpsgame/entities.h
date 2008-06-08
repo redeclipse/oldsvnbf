@@ -1054,9 +1054,10 @@ struct entities : icliententities
 
 			if(editmode)
 			{
-				if(e.type == FLAG && e.attr2 > TEAM_NEUTRAL && e.attr2 < TEAM_MAX)
+				if(e.type == PLAYERSTART || e.type == FLAG)
 					particle_text(vec(e.o).add(vec(0, 0, enttype[e.type].height+2)),
-						teamtype[e.attr2].name, entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
+						e.attr2 >= TEAM_NEUTRAL && e.attr2 < TEAM_MAX ? teamtype[e.attr2].name : "unknown",
+							entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
 
 				particle_text(vec(e.o).add(vec(0, 0, enttype[e.type].height+1)),
 					findname(e.type), entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
