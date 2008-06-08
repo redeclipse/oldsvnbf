@@ -108,6 +108,30 @@ void savepng(SDL_Surface *s, const char *name)
 	else erroutf("Failed to open %s: %s", name, strerror(errno));
 }
 
+// only works on 32 bit surfaces with alpha in 4th byte!
+void blitchar(SDL_Surface *dst, const SDL_Rect &rect, SDL_Surface *src)
+{
+    uchar *dstp = (uchar *)dst->pixels + rect.y*dst->pitch + rect.x*4,
+          *srcp = (uchar *)src->pixels;
+    int dstpitch = dst->pitch - 4*rect.w,
+        srcpitch = src->pitch - 4*rect.w;
+    loop(y, rect.h)
+    {
+        loop(x, rect.w)
+        {
+            int k2 = srcp[3], k1 = 255 - k2;
+            dstp[0] = uchar((int(dstp[0])*k1 + int(srcp[0])*k2)/255);
+            dstp[1] = uchar((int(dstp[1])*k1 + int(srcp[1])*k2)/255);
+            dstp[2] = uchar((int(dstp[2])*k1 + int(srcp[2])*k2)/255);
+            dstp[3] = max(dstp[3], srcp[3]);
+            dstp += 4;
+            srcp += 4;
+        }
+        dstp += dstpitch;
+        srcp += srcpitch;
+    }
+}
+
 void ttf2font()
 {
 	string n;
@@ -121,11 +145,12 @@ void ttf2font()
 	if(f)
 	{
 		SDL_Surface *t = SDL_CreateRGBSurface(SDL_SWSURFACE, imgsize, imgsize, 32, RMASK, GMASK, BMASK, AMASK);
+        loopi(t->h) memset((uchar *)t->pixels + i*t->pitch, 0, 4*t->w);
 		if(t)
 		{
 			bool fail = false;
 			vector<fontchar> chars;
-			SDL_Color c[3] = { { 255, 255, 255 }, { 1, 1, 1 }, { 0, 0, 0 } };
+			SDL_Color c[3] = { { 1, 1, 1, }, { 255, 255, 255 }, { 0, 0, 0 } };
 			int x = padsize, y = padsize, h = 0, ma = 0, mw = 0, mh = 0;
 
 			loopi(TTFCHARS)
@@ -160,6 +185,12 @@ void ttf2font()
  							break;
 						}
 					}
+                    if(s[k])
+                    {
+                        SDL_Surface *c = SDL_ConvertSurface(s[k], t->format, SDL_SWSURFACE);
+                        SDL_FreeSurface(s[k]);
+                        s[k] = c;
+                    }
 					if(!s[k])
 					{
 						erroutf("Failed to render font: %s", TTF_GetError());
@@ -189,13 +220,11 @@ void ttf2font()
 							a.x = x = h = 0;
 						}
 
-						SDL_Rect q = { 0, 0, s[0]->w, s[0]->h };
-
 						loopk(shdsize ? 2 : 1)
 						{
 							bool w = shdsize && !k ? true : false;
-							SDL_Rect r = { a.x+(w?shdsize:0), a.y+(w?shdsize:0), 0, 0 };
-							SDL_BlitSurface(s[w?1:0], &q, t, &r);
+							SDL_Rect r = { a.x+(w?shdsize:0), a.y+(w?shdsize:0), s[k]->w, s[k]->h };
+                            blitchar(t, r, s[k]);
 						}
 
 						x += a.w+padsize;
