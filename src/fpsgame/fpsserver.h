@@ -684,15 +684,13 @@ struct GAMESERVER : igameserver
 		if (m_stf(gamemode)) smode = &stfmode;
         else if(m_ctf(gamemode)) smode = &ctfmode;
 		else smode = NULL;
-		if(smode) smode->reset(false);
 
-		// mutators
 		smuts.setsize(0);
 		if (m_duel(gamemode, mutators)) smuts.add(&duelmutator);
-		mutate(mut->reset(false));
 
-		// and the rest
-		if(m_timed(gamemode) && hasnonlocalclients()) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+
+		if(smode) smode->reset(false);
+		mutate(mut->reset(false));
 
 		loopv(clients)
 		{
@@ -715,6 +713,9 @@ struct GAMESERVER : igameserver
 				sendspawn(ci);
             }
 		}
+
+		if(m_timed(gamemode) && hasnonlocalclients())
+			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 
 		if(m_demo(gamemode)) setupdemoplayback();
 		else if(demonextmatch)

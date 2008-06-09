@@ -138,7 +138,7 @@ int tryfont(TTF_Font *f, int size)
 	int cf = CF_NONE;
 
 #ifndef WIN32
-	conoutf("Attempting to build image size %d...");
+	conoutf("Attempting to build image size %d...", size);
 #endif
 
 	SDL_Surface *t = SDL_CreateRGBSurface(SDL_SWSURFACE, size, size, 32, RMASK, GMASK, BMASK, AMASK);
@@ -213,7 +213,7 @@ int tryfont(TTF_Font *f, int size)
 				if(a.y+a.h >= t->h)
 				{
 #ifndef WIN32
-					conoutf("Exceeded size %d, trying next one.." t->h);
+					conoutf("Exceeded size %d at %d, trying next one.." size, a.y+a.h);
 #endif
 					cf = CF_SIZE; // keep going, we want optimal sizes
 					break;
