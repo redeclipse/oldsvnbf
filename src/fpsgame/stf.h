@@ -191,7 +191,7 @@ struct stfclient : stfstate
                 if(insideflag(b, d->o) && ((b.owner == d->team && b.enemy) || b.enemy == d->team))
                 {
 					part_trail(4, 1, cl.ph.feetpos(d), vec(b.pos).sub(vec(0, 0, 4.f)), teamtype[d->team].colour, 4.8f);
-					regularshape(4, (int)d->radius, teamtype[d->team].colour, 6, 5, 50, cl.ph.feetpos(d), 4.8f);
+					regularshape(4, (int)d->radius, teamtype[d->team].colour, 6, 1, 50, cl.ph.feetpos(d), 4.8f);
 					d->lastflag = i;
                 }
             }
@@ -233,11 +233,11 @@ struct stfclient : stfstate
 				float occupy = !b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * OCCUPYLIMIT), 0.f, 1.f) : 1.f;
 				int colour = teamtype[attack].colour;
 				part_meter(vec(b.pos).add(vec(0, 0, enttype[FLAG].height+6.f)), occupy, 11, 1, colour);
-				regularshape(4, enttype[FLAG].radius, colour, 6, 5, 250, vec(b.pos).sub(vec(0, 0, 4.f)), 4.8f);
+				regularshape(4, enttype[FLAG].radius, colour, 6, 1, 250, vec(b.pos).sub(vec(0, 0, 4.f)), 4.8f);
 				if(b.enemy && b.owner)
 				{
 					colour = teamtype[b.owner].colour; // fall through colors dynlight too
-					regularshape(4, enttype[FLAG].radius, colour, 6, 5, 250, vec(b.pos).sub(vec(0, 0, 4.f)), 4.8f);
+					regularshape(4, enttype[FLAG].radius, colour, 6, 1, 250, vec(b.pos).sub(vec(0, 0, 4.f)), 4.8f);
 				}
 				adddynlight(b.pos, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF));
 			}

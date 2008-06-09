@@ -7,7 +7,7 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
-		<Option active_target="5"/>
+		<Option active_target="1"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -29,7 +29,7 @@
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
-				<Option parameters="-hhome -rbfa\init.cfg -du0 -df0 -dw640 -dh480"/>
+				<Option parameters="-hhome -rbfa\init.cfg -du0 -df0 -dw640 -dh480 -sltest"/>
 				<Option projectLinkerOptionsRelation="1"/>
 				<Option projectIncludeDirsRelation="1"/>
 				<Option projectResourceIncludeDirsRelation="1"/>
