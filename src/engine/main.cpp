@@ -351,6 +351,8 @@ void resetgl()
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
 
+    touchvar("gamma");
+
     extern void reloadfonts();
     extern void reloadtextures();
     extern void reloadshaders();

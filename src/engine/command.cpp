@@ -221,6 +221,19 @@ int getvarmax(const char *name)
 bool identexists(const char *name) { return idents->access(name)!=NULL; }
 ident *getident(const char *name) { return idents->access(name); }
 
+void touchvar(const char *name)
+{
+    ident *id = idents->access(name);
+    if(id) switch(id->type)
+    {
+        case ID_VAR:
+        case ID_FVAR:
+        case ID_SVAR:
+            id->changed();
+            break;
+    }
+}   
+
 const char *getalias(const char *name)
 {
 	ident *i = idents->access(name);
