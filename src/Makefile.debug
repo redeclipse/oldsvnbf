@@ -114,7 +114,7 @@ server:	libenet $(SERVER_OBJS)
 daemon:	libenet $(DAEMON_OBJS)
 	$(CXX) $(DCXXFLAGS) -o bloodfrontier_daemon $(DAEMON_OBJS) $(DAEMON_LIBS)
 
-ttf2font: $(TTF_OBJS)
+ttf: $(TTF_OBJS)
 	$(CXX) $(TCXXFLAGS) -o ttf2font $(TTF_OBJS) $(TTF_LIBS)
 
 install-client: client
@@ -129,7 +129,7 @@ install-daemon: daemon
 	cp -v bloodfrontier_daemon ../bin/bloodfrontier_daemon
 	chmod +x ../bin/bloodfrontier_daemon
 
-install-ttf: ttf2font
+install-ttf: ttf
 	cp -v ttf2font ../bin/ttf2font
 	chmod +x ../bin/ttf2font
 
