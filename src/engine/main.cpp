@@ -239,6 +239,14 @@ VARFP(gamma, 30, 100, 300,
 	}
 });
 
+void resetgamma()
+{
+    float f = gamma/100.0f;
+    if(f==1) return;
+    SDL_SetGamma(1, 1, 1);
+    SDL_SetGamma(f, f, f);
+}
+
 void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
 {
     int flags = SDL_RESIZABLE;
@@ -351,8 +359,6 @@ void resetgl()
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
 
-    touchvar("gamma");
-
     extern void reloadfonts();
     extern void reloadtextures();
     extern void reloadshaders();
@@ -365,6 +371,7 @@ void resetgl()
     reloadfonts();
     inbetweenframes = true;
     computescreen("initializing...");
+    resetgamma();
     reloadshaders();
     reloadtextures();
     initlights();
