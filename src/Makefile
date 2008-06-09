@@ -117,7 +117,7 @@ daemon:	libenet $(DAEMON_OBJS)
 	$(CXX) $(DCXXFLAGS) -o bloodfrontier_daemon $(DAEMON_OBJS) $(DAEMON_LIBS)
 	strip bloodfrontier_daemon
 
-ttf2font: $(TTF_OBJS)
+ttf: $(TTF_OBJS)
 	$(CXX) $(TCXXFLAGS) -o ttf2font $(TTF_OBJS) $(TTF_LIBS)
 	strip ttf2font
 
@@ -133,7 +133,7 @@ install-daemon: daemon
 	cp -v bloodfrontier_daemon ../bin/bloodfrontier_daemon
 	chmod +x ../bin/bloodfrontier_daemon
 
-install-ttf: ttf2font
+install-ttf: ttf
 	cp -v ttf2font ../bin/ttf2font
 	chmod +x ../bin/ttf2font
 
