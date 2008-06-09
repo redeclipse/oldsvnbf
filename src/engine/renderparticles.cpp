@@ -10,16 +10,13 @@ VARP(particlesize, 20, 100, 500);
 
 // Check emit_particles() to limit the rate that paricles can be emitted for models/sparklies
 // Automatically stops particles being emitted when paused or in reflective drawing
-VARP(emitfps, 1, 60, 200);
+VARP(emitmillis, 1, 17, 1000);
 static int lastemitframe = 0;
 static bool emit = false;
 
 static bool emit_particles()
 {
     if(reflecting || refracting) return false;
-    if(emit) return emit;
-    int emitmillis = 1000/emitfps;
-    emit = (lastmillis-lastemitframe>emitmillis);
     return emit;
 }
 
@@ -1154,12 +1151,12 @@ void makeparticles(entity &e)
 
 void updateparticles()
 {
-    if(emit)
+    if(lastmillis - lastemitframe >= emitmillis)
     {
-        int emitmillis = 1000/emitfps;
-        lastemitframe = lastmillis-(lastmillis%emitmillis);
-        emit = false;
+        emit = true;
+        lastemitframe = lastmillis - (lastmillis%emitmillis);
     }
+    else emit = false;
 
     flares.makelightflares();
 	et->drawparticles();
