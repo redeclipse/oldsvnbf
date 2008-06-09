@@ -204,7 +204,7 @@ int tryfont(TTF_Font *f, int size)
 				a.w = s[0]->w+shdsize;
 				a.h = s[0]->h+shdsize;
 
-				if(a.x+a.w >= t->h)
+				if(a.x+a.w >= t->w)
 				{
 					a.y = y = a.y+h+padsize;
 					a.x = x = h = 0;
@@ -213,7 +213,7 @@ int tryfont(TTF_Font *f, int size)
 				if(a.y+a.h >= t->h)
 				{
 #ifndef WIN32
-					conoutf("Exceeded size %d at %d, trying next one.." size, a.y+a.h);
+					conoutf("Exceeded size %d at %d, trying next one.." t->h, a.y+a.h);
 #endif
 					cf = CF_SIZE; // keep going, we want optimal sizes
 					break;
