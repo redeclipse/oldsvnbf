@@ -508,7 +508,7 @@ void checkinput()
 }
 
 
-VARP(maxfps, 0, 200, 500);
+VARP(maxfps, 0, 200, 1000);
 
 void limitfps(int &millis, int curmillis)
 {
