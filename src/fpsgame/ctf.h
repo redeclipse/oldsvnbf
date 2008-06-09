@@ -302,7 +302,7 @@ struct ctfclient : ctfstate
         {
             flag &f = flags[i];
             if(!f.team || !f.ent || f.owner) continue;
-            const char *flagname = teamtype[cl.player1->team].flag;
+            const char *flagname = teamtype[f.team].flag;
             vec pos = f.droptime ? f.droploc : f.spawnloc;
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP,
                         pos, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
@@ -392,8 +392,8 @@ struct ctfclient : ctfstate
     {
 		flag &f = flags[i];
 		int colour = teamtype[f.team].colour;
-		regularshape(4, 24, colour, 6, 20, 500, loc, 4.8f);
-		adddynlight(loc, 35, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
+		regularshape(4, enttype[FLAG].radius, colour, 6, 50, 250, vec(loc).sub(vec(0, 0, 4.f)), 4.8f);
+		adddynlight(loc, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
     }
 
     void flageffect(int i, const vec &from, const vec &to)
@@ -409,7 +409,7 @@ struct ctfclient : ctfstate
 		}
 		if(from.x >= 0 && to.x >= 0)
 		{
-			part_flare(from, to, 600, 15, teamtype[f.team].colour, 0.28f);
+			part_trail(4, 250, from, to, teamtype[f.team].colour, 4.8f);
 		}
     }
 
@@ -464,8 +464,8 @@ struct ctfclient : ctfstate
     {
 		flag &f = flags[i];
 		int colour = teamtype[d->team].colour;
-		regularshape(4, 24, colour, 6, 20, 500, f.spawnloc, 4.8f);
-		adddynlight(f.spawnloc, 35, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
+		regularshape(4, enttype[FLAG].radius, colour, 6, 50, 250, vec(f.spawnloc).sub(vec(0, 0, 4.f)), 4.8f);
+		adddynlight(f.spawnloc, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
 		f.interptime = lastmillis;
 		conoutf("%s %s the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		ctfstate::takeflag(i, d);

@@ -181,32 +181,20 @@ struct stfclient : stfstate
 
     void rendertether(fpsent *d)
     {
-		int colour = teamtype[d->team].colour;
-        int oldflag = d->lastflag;
+        //int oldflag = d->lastflag;
         d->lastflag = -1;
         if(d->state==CS_ALIVE)
         {
             loopv(flags)
             {
                 flaginfo &b = flags[i];
-                if(!insideflag(b, d->o) || (b.owner != d->team && b.enemy != d->team) || (b.owner == d->team && b.converted >= 2*OCCUPYLIMIT)) continue;
-
-				regularshape(4, 24, colour, 6, 1, 100, b.pos, 4.8f);
-				adddynlight(b.pos, 35, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
-				part_flare(d->o, b.pos, 600, 15, colour, 0.28f, d);
-
-                if(oldflag < 0)
-					regularshape(4, 24, colour, 6, 20, 250, d->o, 4.8f);
-                d->lastflag = i;
+                if(insideflag(b, d->o) && ((b.owner == d->team && b.enemy) || b.enemy == d->team))
+                {
+					part_trail(4, 1, cl.ph.feetpos(d), vec(b.pos).sub(vec(0, 0, 4.f)), teamtype[d->team].colour, 4.8f);
+					regularshape(4, (int)d->radius, teamtype[d->team].colour, 6, 5, 50, cl.ph.feetpos(d), 4.8f);
+					d->lastflag = i;
+                }
             }
-        }
-        if(d->lastflag < 0 && flags.inrange(oldflag))
-        {
-            flaginfo &b = flags[oldflag];
-			regularshape(4, 24, colour, 6, 20, 250, b.pos, 4.8f);
-			adddynlight(b.pos, 35, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
-			part_flare(d->o, b.pos, 600, 15, colour, 0.28f, d);
-			regularshape(4, 24, colour, 6, 20, 250, d->o, 4.8f);
         }
     }
 
@@ -235,17 +223,23 @@ struct stfclient : stfstate
             rendermodel(&b.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, 0, 0, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
 			int attack = b.enemy ? b.enemy : b.owner;
 			if(b.enemy && b.owner)
-				s_sprintf(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].colour, teamtype[b.owner].name, teamtype[b.enemy].colour, teamtype[b.enemy].name);
+				s_sprintf(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
 			else if(attack) s_sprintf(b.info)("%s", teamtype[attack].name);
 			else b.info[0] = '\0';
 
-            vec above(b.pos);
-            above.z += enttype[FLAG].height;
-			part_text(above, b.info, 10, 1, 0xFFFFDD);
+			part_text(vec(b.pos).add(vec(0, 0, enttype[FLAG].height)), b.info, 10, 1, 0xFFFFDD);
 			if(attack)
 			{
-				above.z += 6.0f;
-				part_meter(above, b.converted/float((b.owner ? 2 : 1) * OCCUPYLIMIT), 11, 1, teamtype[attack].colour);
+				float occupy = !b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * OCCUPYLIMIT), 0.f, 1.f) : 1.f;
+				int colour = teamtype[attack].colour;
+				part_meter(vec(b.pos).add(vec(0, 0, enttype[FLAG].height+6.f)), occupy, 11, 1, colour);
+				regularshape(4, enttype[FLAG].radius, colour, 6, 5, 250, vec(b.pos).sub(vec(0, 0, 4.f)), 4.8f);
+				if(b.enemy && b.owner)
+				{
+					colour = teamtype[b.owner].colour; // fall through colors dynlight too
+					regularshape(4, enttype[FLAG].radius, colour, 6, 5, 250, vec(b.pos).sub(vec(0, 0, 4.f)), 4.8f);
+				}
+				adddynlight(b.pos, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF));
 			}
 		}
 	}
@@ -352,8 +346,7 @@ struct stfclient : stfstate
         if(b.owner != owner)
         {
         	int colour = teamtype[owner].colour;
-			regularshape(4, 24, colour, 6, 20, 500, b.pos, 4.8f);
-			adddynlight(b.pos, 35, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
+			regularshape(4, enttype[FLAG].radius, colour, 6, 20, 500, b.pos, 4.8f);
         }
 		b.owner = owner;
 		b.enemy = enemy;

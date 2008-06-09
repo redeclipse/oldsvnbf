@@ -70,33 +70,41 @@ struct clientcom : iclientcom
 
 	int teamname(const char *team)
 	{
-		if(team[0])
+		if(m_team(cl.gamemode, cl.mutators))
 		{
-			int t = atoi(team);
-
-			loopi(numteams(cl.gamemode, cl.mutators)+1)
+			if(team[0])
 			{
-				if((t && t == i+TEAM_ALPHA) || !strcasecmp(teamtype[i+TEAM_ALPHA].name, team))
+				int t = atoi(team);
+
+				loopi(numteams(cl.gamemode, cl.mutators))
 				{
-					return i+TEAM_ALPHA;
+					if((t && t == i+TEAM_ALPHA) || !strcasecmp(teamtype[i+TEAM_ALPHA].name, team))
+					{
+						return i+TEAM_ALPHA;
+					}
 				}
 			}
+			return TEAM_ALPHA;
 		}
-		return TEAM_ALPHA;
+		return TEAM_NEUTRAL;
 	}
 
 	void switchteam(const char *team)
 	{
-		if(team[0])
+		if(m_team(cl.gamemode, cl.mutators))
 		{
-			int t = teamname(team);
-			if(t)
+			if(team[0])
 			{
-				c2sinit = false;
-				cl.player1->team = t;
+				int t = teamname(team);
+				if(t != cl.player1->team)
+				{
+					c2sinit = false;
+					cl.player1->team = t;
+				}
 			}
+			else conoutf("your team is: %s", teamtype[cl.player1->team].name);
 		}
-		else conoutf("your team is: %s", teamtype[cl.player1->team].name);
+		else conoutf("can only change teams in team games");
 	}
 
 	int numchannels() { return 3; }
@@ -116,6 +124,7 @@ struct clientcom : iclientcom
 
 	void gamedisconnect(int clean)
 	{
+		if(editmode) toggleedit();
 		remote = isready = c2sinit = spectator = false;
 		cl.player1->clientnum = -1;
 		cl.player1->lifesequence = 0;
@@ -128,8 +137,7 @@ struct clientcom : iclientcom
 
 	bool allowedittoggle(bool edit)
 	{
-		bool allow = !isready || m_edit(cl.gamemode) ||
-			(cl.player1->state != CS_SPECTATOR && cl.player1->state != CS_ALIVE && cl.player1->state != CS_EDITING);
+		bool allow = edit || m_edit(cl.gamemode);
 		if(!allow) conoutf("you must be both alive and in coopedit to enter editmode");
 		return allow;
 	}
@@ -147,7 +155,9 @@ struct clientcom : iclientcom
 			cl.player1->state = CS_EDITING;
 		}
 		cl.ph.entinmap(cl.player1, false); // find spawn closest to current floating pos
-		addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
+
+		if(m_edit(cl.gamemode))
+			addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 	}
 
 	int parseplayer(const char *arg)
@@ -187,12 +197,16 @@ struct clientcom : iclientcom
 	void setteam(const char *arg1, const char *arg2)
 	{
 		if(!remote) return;
-		int i = parseplayer(arg1);
-		if(i>=0 && i!=cl.player1->clientnum)
+		if(m_team(cl.gamemode, cl.mutators))
 		{
-			int t = teamname(arg2);
-			if(t) addmsg(SV_SETTEAM, "ri2", i, t);
+			int i = parseplayer(arg1);
+			if(i>=0 && i!=cl.player1->clientnum)
+			{
+				int t = teamname(arg2);
+				if(t) addmsg(SV_SETTEAM, "ri2", i, t);
+			}
 		}
+		else conoutf("can only change teams in team games");
 	}
 
 	void setmaster(const char *arg)
@@ -1070,6 +1084,7 @@ struct clientcom : iclientcom
 					fpsent *w = wn==cl.player1->clientnum ? cl.player1 : cl.getclient(wn);
 					if(!w) return;
 					w->team = tn;
+					conoutf("%s team is now %s%s", w->name, teamtype[w->team].chat, teamtype[w->team].name);
 					break;
 				}
 
@@ -1194,6 +1209,7 @@ struct clientcom : iclientcom
 
 	void changemapserv(char *name, int gamemode, int mutators)
 	{
+		if(editmode) toggleedit();
 		cl.gamemode = gamemode; cl.mutators = mutators;
 		sv->modecheck(&cl.gamemode, &cl.mutators);
 		cl.nextmode = cl.gamemode; cl.nextmuts = cl.mutators;

@@ -76,7 +76,7 @@ struct scoreboard : g3d_callback
 		}
         else if(m_ctf(cl.gamemode))
         {
-        	loopk(numteams(cl.gamemode, cl.mutators)+TEAM_ALPHA)
+        	loopk(numteams(cl.gamemode, cl.mutators))
         	{
         		int s = 0;
         		loopv(cl.ctf.flags)

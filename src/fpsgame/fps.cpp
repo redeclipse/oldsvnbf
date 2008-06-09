@@ -432,8 +432,9 @@ struct GAMECLIENT : igameclient
 			}
 			else
 			{
-				if((m_team(gamemode, mutators) && teamscores.length() && player1->team == teamscores[0].team) ||
-					(!m_team(gamemode, mutators) && shplayers.length() && shplayers[0] == player1))
+				if(m_team(gamemode, mutators) ?
+					(teamscores.length() && player1->team == teamscores[0].team) :
+						(shplayers.length() && shplayers[0] == player1))
 				{
 					et.announce(S_V_YOUWIN, "intermission: you win!");
 				}
@@ -845,7 +846,7 @@ struct GAMECLIENT : igameclient
 
 		renderconsole(w, h);
 
-		int hoff = h*3-h*3/4-FONTH;
+		int hoff = h*3-h*3/4;
 		char *command = getcurcommand();
 		if(command) rendercommand(FONTH/2, hoff, h*3-FONTH);
 		hoff += FONTH*2;
@@ -885,9 +886,9 @@ struct GAMECLIENT : igameclient
 
 				loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
 
-				draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", h*3/5+FONTH/2, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
-				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", h*3/5+FONTH/2, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
-				draw_textf("cube %s%d", h*3/5+FONTH/2, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
+				draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", h*3/5+FONTH, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
+				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", h*3/5+FONTH, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
+				draw_textf("cube %s%d", h*3/5+FONTH, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
 			}
 		}
 
@@ -896,7 +897,7 @@ struct GAMECLIENT : igameclient
 			char *editinfo = executeret("edithud");
 			if(editinfo)
 			{
-				draw_text(editinfo, h*3/5+FONTH/2, hoff); hoff += FONTH;
+				draw_text(editinfo, h*3/5+FONTH, hoff); hoff += FONTH;
 				DELETEA(editinfo);
 			}
 		}
