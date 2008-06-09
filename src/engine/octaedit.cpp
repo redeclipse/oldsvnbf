@@ -124,7 +124,7 @@ void cancelsel()
 
 void toggleedit()
 {
-	if (!cc->allowedittoggle(editmode)) return;		 // not in most multiplayer modes
+	if (!cc->allowedittoggle(editmode)) return;
 	editmode = !editmode;
 	editing = entediting = (editmode ? 1 : 0);
 	cc->edittoggled(editmode);

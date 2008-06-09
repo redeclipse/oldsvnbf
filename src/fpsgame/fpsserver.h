@@ -369,32 +369,6 @@ struct GAMESERVER : igameserver
 		}
 	}
 
-	void autoteam()
-	{
-		vector<clientinfo *> team[MAXTEAMS];
-		float teamrank[MAXTEAMS] = { 0, 0, 0, 0 };
-		loopv(clients)
-		{
-			clientinfo *ci = clients[i];
-			int worstteam = -1;
-			float worstrank = 1e16f;
-			loopj(numteams(gamemode, mutators)+TEAM_ALPHA) if (teamrank[i] < worstrank) { worstrank = teamrank[j]; worstteam = j; }
-			team[worstteam].add(ci);
-			float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
-			teamrank[worstteam] += (!m_stf(gamemode) && !m_ctf(gamemode) && rank != 0 ? rank : 1);
-			ci->state.lasttimeplayed = -1;
-		}
-		loopi(numteams(gamemode, mutators)+TEAM_ALPHA)
-		{
-			loopvj(team[i])
-			{
-				clientinfo *ci = team[i][j];
-				if(ci->team == i+TEAM_ALPHA) continue;
-				sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, i+TEAM_ALPHA);
-			}
-		}
-	}
-
 	struct teamscore
 	{
 		int team;
@@ -422,16 +396,16 @@ struct GAMESERVER : igameserver
 			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 			ci->state.lasttimeplayed = lastmillis;
 
-			loopj(numteams(gamemode, mutators)+TEAM_ALPHA) if(ci->team == teamscores[j].team)
+			loopj(numteams(gamemode, mutators)) if(ci->team == teamscores[j].team)
 			{
 				teamscore &ts = teamscores[j];
 				float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
-				ts.rank += rank != 0 ? rank : 1;
+				ts.rank += !m_stf(gamemode) && !m_ctf(gamemode) && rank != 0 ? rank : 1;
 				ts.clients++;
 				break;
 			}
 		}
-		teamscore *worst = &teamscores[numteams(gamemode, mutators)];
+		teamscore *worst = &teamscores[0];
 		loopi(numteams(gamemode, mutators))
 		{
 			teamscore &ts = teamscores[i];
@@ -697,12 +671,14 @@ struct GAMESERVER : igameserver
 		notgotitems = true;
 		scores.setsize(0);
 
-		loopv(clients)
+		if(m_team(gamemode, mutators))
 		{
-			clientinfo *ci = clients[i];
-			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
+			loopv(clients)
+			{
+				clientinfo *ci = clients[i];
+				ci->team = TEAM_NEUTRAL; // to be reset below
+			}
 		}
-		if (m_team(gamemode, mutators)) autoteam();
 
 		// server modes
 		if (m_stf(gamemode)) smode = &stfmode;
@@ -717,12 +693,27 @@ struct GAMESERVER : igameserver
 
 		// and the rest
 		if(m_timed(gamemode) && hasnonlocalclients()) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
+
+			int team = TEAM_NEUTRAL;
+			if(m_team(gamemode, mutators)) team = chooseworstteam(ci->team);
+			sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, team);
+
+			if(smode) smode->changeteam(ci, ci->team, team);
+			mutate(mut->changeteam(ci, ci->team, team));
+
+			ci->team = team;
+
 			ci->mapchange();
-			ci->state.lasttimeplayed = lastmillis;
-            if(ci->state.state!=CS_SPECTATOR) sendspawn(ci);
+            if(ci->state.state != CS_SPECTATOR)
+            {
+				//ci->state.state = CS_DEAD;
+				//sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
+				sendspawn(ci);
+            }
 		}
 
 		if(m_demo(gamemode)) setupdemoplayback();
@@ -1032,7 +1023,7 @@ struct GAMESERVER : igameserver
 					}
 					if(havecn)
 					{
-						if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, oldpos, cp->state.o);
+						if(smode) smode->moved(cp, oldpos, cp->state.o);
 						mutate(mut->moved(cp, oldpos, cp->state.o));
 					}
 					break;
@@ -1226,10 +1217,12 @@ struct GAMESERVER : igameserver
 				{
 					QUEUE_MSG;
 					bool connected = !ci->name[0];
+
 					getstring(text, p);
 					if(!text[0]) s_strcpy(text, "unnamed");
 					QUEUE_STR(text);
 					s_strncpy(ci->name, text, MAXNAMELEN+1);
+
 					if(connected)
 					{
 						savedscore &sc = findscore(ci, false);
@@ -1243,23 +1236,30 @@ struct GAMESERVER : igameserver
 								gs.gunselect, NUMGUNS, &gs.ammo[0], -1);
 						}
 					}
+
 					int team = getint(p);
-					if(team < TEAM_ALPHA || team > MAXTEAMS) team = TEAM_ALPHA;
-					if(connected && m_team(gamemode, mutators))
+					bool badteam = m_team(gamemode, mutators) ?
+						(team < TEAM_ALPHA || team > numteams(gamemode, mutators)) :
+							team != TEAM_NEUTRAL;
+					if(connected || badteam)
 					{
-						int worst = chooseworstteam(team);
-						if(worst)
-						{
-							team = worst;
-							sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
-						}
-						QUEUE_INT(team);
+						if(m_team(gamemode, mutators))
+							team = chooseworstteam(badteam ? TEAM_ALPHA : team);
+						else team = TEAM_NEUTRAL;
+
+						sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
 					}
-					else QUEUE_INT(team);
-					if(smode && ci->state.state==CS_ALIVE && ci->team != team) smode->changeteam(ci, ci->team, team);
-					mutate(mut->changeteam(ci, ci->team, team));
+					QUEUE_INT(team);
+
+					if(team != ci->team)
+					{
+						if(smode) smode->changeteam(ci, ci->team, team);
+						mutate(mut->changeteam(ci, ci->team, team));
+					}
 					ci->team = team;
+
 					QUEUE_MSG;
+
 					if(connected && m_fight(gamemode) && !m_duel(gamemode, mutators))
 						sendf(sender, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, "fight!");
 					break;
@@ -1410,8 +1410,8 @@ struct GAMESERVER : igameserver
 					int who = getint(p), team = getint(p);
 					if(!ci->privilege || who<0 || who>=getnumclients()) break;
 					clientinfo *wi = (clientinfo *)getinfo(who);
-					if(!wi) break;
-					if (wi->state.state == CS_ALIVE && wi->team != team)
+					if(!wi || !m_team(gamemode, mutators) || team < TEAM_ALPHA || team > numteams(gamemode, mutators)) break;
+					if(wi->team != team)
 					{
 						if (smode) smode->changeteam(wi, wi->team, team);
 						mutate(mut->changeteam(wi, wi->team, team));
@@ -1584,11 +1584,9 @@ struct GAMESERVER : igameserver
 
 		//if(smode) smode->initclient(cp, p, true);
 		//mutate(mut->initclient(cp, p, true));
-		int worst = chooseworstteam(TEAM_ALPHA);
-		if(!worst) worst = TEAM_ALPHA;
-		if(smode && cp->state.state==CS_ALIVE && cp->team != worst) smode->changeteam(cp, cp->team, worst);
-		mutate(mut->changeteam(cp, cp->team, worst));
-		cp->team = worst;
+		if(m_team(gamemode, mutators)) cp->team = chooseworstteam(cp->team);
+		else cp->team = TEAM_NEUTRAL;
+
 		sendf(-1, 1, "ri3si", SV_INITBOT, cp->state.ownernum, cp->clientnum, cp->name, cp->team);
 
 		if(cp && cp->state.state!=CS_SPECTATOR)
