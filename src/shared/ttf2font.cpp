@@ -119,11 +119,11 @@ void blitchar(SDL_Surface *dst, const SDL_Rect &rect, SDL_Surface *src)
     {
         loop(x, rect.w)
         {
-            int k2 = srcp[3], k1 = 255 - k2;
-            dstp[0] = uchar((int(dstp[0])*k1 + int(srcp[0])*k2)/255);
-            dstp[1] = uchar((int(dstp[1])*k1 + int(srcp[1])*k2)/255);
-            dstp[2] = uchar((int(dstp[2])*k1 + int(srcp[2])*k2)/255);
-            dstp[3] = max(dstp[3], srcp[3]);
+            uint k1 = (255U - srcp[3]) * dstp[3], k2 = srcp[3] * 255U, kmax = max(dstp[3], srcp[3]), kscale = max(kmax * 255U, 1U);
+            dstp[0] = (dstp[0]*k1 + srcp[0]*k2) / kscale;
+            dstp[1] = (dstp[1]*k1 + srcp[1]*k2) / kscale;
+            dstp[2] = (dstp[2]*k1 + srcp[2]*k2) / kscale;
+            dstp[3] = kmax;
             dstp += 4;
             srcp += 4;
         }
