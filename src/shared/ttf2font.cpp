@@ -24,16 +24,15 @@
 #define TTFSTART	33
 #define TTFCHARS	94
 
+string basename, imgname, cfgname;
 const char *program, *fontname = "font.ttf";
-int imgsize = 512, fonsize = 48, padsize = 1, shdsize = 2, quality = 2, pngcomp = Z_BEST_SPEED;
+int retcode = -1, imgsize = 512, fonsize = 64, padsize = 1, shdsize = 2, quality = 2, pngcomp = Z_BEST_SPEED;
 
 struct fontchar
 {
 	char c;
 	int x, y, w, h;
 };
-
-int retcode = EXIT_FAILURE; // guilty until proven innocent
 
 void conoutf(const char *text, ...)
 {
@@ -109,15 +108,15 @@ void savepng(SDL_Surface *s, const char *name)
 }
 
 // only works on 32 bit surfaces with alpha in 4th byte!
-void blitchar(SDL_Surface *dst, const SDL_Rect &rect, SDL_Surface *src)
+void blitchar(SDL_Surface *dst, SDL_Surface *src, int x, int y)
 {
-    uchar *dstp = (uchar *)dst->pixels + rect.y*dst->pitch + rect.x*4,
+    uchar *dstp = (uchar *)dst->pixels + y*dst->pitch + x*4,
           *srcp = (uchar *)src->pixels;
-    int dstpitch = dst->pitch - 4*rect.w,
-        srcpitch = src->pitch - 4*rect.w;
-    loop(y, rect.h)
+    int dstpitch = dst->pitch - 4*src->w,
+        srcpitch = src->pitch - 4*src->w;
+    loop(dy, src->h)
     {
-        loop(x, rect.w)
+        loop(dx, src->w)
         {
             uint k1 = (255U - srcp[3]) * dstp[3], k2 = srcp[3] * 255U, kmax = max(dstp[3], srcp[3]), kscale = max(kmax * 255U, 1U);
             dstp[0] = (dstp[0]*k1 + srcp[0]*k2) / kscale;
@@ -132,144 +131,160 @@ void blitchar(SDL_Surface *dst, const SDL_Rect &rect, SDL_Surface *src)
     }
 }
 
-void ttf2font()
+enum { CF_NONE = 0, CF_OK, CF_FAIL, CF_SIZE };
+
+int tryfont(TTF_Font *f, int size)
 {
-	string n;
+	int cf = CF_NONE;
 
-	char *dot = strpbrk(fontname, ".");
-	if(dot) s_strncpy(n, fontname, dot-fontname+1);
-	else s_strcpy(n, fontname);
+#ifndef WIN32
+	conoutf("Attempting to build image size %d...");
+#endif
 
-	TTF_Font *f = TTF_OpenFont(findfile(fontname, "r"), fonsize);
-
-	if(f)
+	SDL_Surface *t = SDL_CreateRGBSurface(SDL_SWSURFACE, size, size, 32, RMASK, GMASK, BMASK, AMASK);
+	if(t)
 	{
-		SDL_Surface *t = SDL_CreateRGBSurface(SDL_SWSURFACE, imgsize, imgsize, 32, RMASK, GMASK, BMASK, AMASK);
-		if(t)
+		loopi(t->h) memset((uchar *)t->pixels + i*t->pitch, 0, 4*t->w);
+
+		vector<fontchar> chars;
+		SDL_Color c[3] = { { 1, 1, 1, }, { 255, 255, 255 }, { 0, 0, 0 } };
+		int x = padsize, y = padsize, h = 0, ma = 0, mw = 0, mh = 0;
+
+		loopi(TTFCHARS)
 		{
-            loopi(t->h) memset((uchar *)t->pixels + i*t->pitch, 0, 4*t->w);
+			fontchar &a = chars.add();
+			a.c = i+TTFSTART;
 
-			bool fail = false;
-			vector<fontchar> chars;
-			SDL_Color c[3] = { { 1, 1, 1, }, { 255, 255, 255 }, { 0, 0, 0 } };
-			int x = padsize, y = padsize, h = 0, ma = 0, mw = 0, mh = 0;
-
-			loopi(TTFCHARS)
+			s_sprintfd(m)("%c", a.c);
+			SDL_Surface *s[2] = { NULL, NULL };
+			loopk(2)
 			{
-				fontchar &a = chars.add();
-				a.c = i+TTFSTART;
-
-				s_sprintfd(m)("%c", a.c);
-				SDL_Surface *s[2] = { NULL, NULL };
-				loopk(2)
+				switch(quality)
 				{
-					switch(quality)
+					case 0:
 					{
-						case 0:
-						{
-							s[k] = TTF_RenderText_Solid(f, m, c[k]);
-							break;
-						}
-						case 1:
-						{
-							s[k] = TTF_RenderText_Shaded(f, m, c[k], c[2]);
- 							if(s[k])
-                                SDL_SetColorKey(s[k], SDL_SRCCOLORKEY,
-								    SDL_MapRGBA(s[k]->format, c[2].r, c[2].g, c[2].b, 0));
- 							break;
-						}
-						case 2:
-						default:
-						{
-							s[k] = TTF_RenderText_Blended(f, m, c[k]);
-                            if(s[k]) SDL_SetAlpha(s[k], 0, 0);
-							break;
-						}
+						s[k] = TTF_RenderText_Solid(f, m, c[k]);
+						break;
 					}
-                    if(s[k])
-                    {
-                        SDL_Surface *c = SDL_ConvertSurface(s[k], t->format, SDL_SWSURFACE);
-                        SDL_FreeSurface(s[k]);
-                        s[k] = c;
-                    }
-					if(!s[k])
+					case 1:
 					{
-						erroutf("Failed to render font: %s", TTF_GetError());
-						fail = true;
+						s[k] = TTF_RenderText_Shaded(f, m, c[k], c[2]);
+						if(s[k])
+							SDL_SetColorKey(s[k], SDL_SRCCOLORKEY,
+								SDL_MapRGBA(s[k]->format, c[2].r, c[2].g, c[2].b, 0));
+						break;
+					}
+					case 2:
+					default:
+					{
+						s[k] = TTF_RenderText_Blended(f, m, c[k]);
+						if(s[k]) SDL_SetAlpha(s[k], 0, 0);
 						break;
 					}
 				}
-
-				if(!fail)
+				if(s[k])
 				{
-					a.x = x;
-					a.y = y;
-					a.w = s[0]->w+shdsize;
-					a.h = s[0]->h+shdsize;
-
-					if(a.y+a.h >= imgsize)
-					{
-						erroutf("Rendering exceeded max image size of %d with %d.\nUsage currently at %d of %d surface pixels (%.1f%%).", imgsize, a.y+a.h, ma, t->w*t->h, (float(ma)/float(t->w*t->h))*100.f);
-						fail = true;
-					}
-
-					if(!fail)
-					{
-						if(a.x+a.w >= imgsize)
-						{
-							a.y = y = a.y+h+padsize;
-							a.x = x = h = 0;
-						}
-
-						loopk(shdsize ? 2 : 1)
-						{
-							bool w = shdsize && !k ? true : false;
-							SDL_Rect r = { a.x+(w?shdsize:0), a.y+(w?shdsize:0), s[k]->w, s[k]->h };
-                            blitchar(t, r, s[k]);
-						}
-
-						x += a.w+padsize;
-						if(a.h > h) h = a.h;
-						ma += a.w*a.h;
-						mw += a.w;
-						mh += a.h;
-					}
+					SDL_Surface *c = SDL_ConvertSurface(s[k], t->format, SDL_SWSURFACE);
+					SDL_FreeSurface(s[k]);
+					s[k] = c;
 				}
-
-				loopk(2) if(s[k]) SDL_FreeSurface(s[k]);
-				if(fail) break;
+				if(!s[k])
+				{
+					if(k && s[0]) SDL_FreeSurface(s[0]);
+					erroutf("Failed to render font: %s", TTF_GetError());
+					cf = CF_FAIL;
+					break;
+				}
 			}
 
-			if(!fail)
+			if(!cf)
 			{
-				s_sprintfd(o)("%s.cfg", n);
-				FILE *p = openfile(o, "w");
-				if(p)
+				a.x = x;
+				a.y = y;
+				a.w = s[0]->w+shdsize;
+				a.h = s[0]->h+shdsize;
+
+				if(a.x+a.w >= t->h)
 				{
-					s_sprintfd(b)("%s.png", n);
-					savepng(t, b);
-
-					fprintf(p, "// font generated by ttf2font\n\n");
-					fprintf(p, "font default \"%s\" %d %d 0 0 0 0\n\n", b, mw/TTFCHARS, mh/TTFCHARS);
-					loopv(chars)
-						fprintf(p, "fontchar\t%d\t%d\t%d\t%d\t\t// %c\n",
-							chars[i].x, chars[i].y, chars[i].w, chars[i].h, chars[i].c);
-					fclose(p);
-
-					conoutf("Conversion of %s at size %d completed.\n\nWrote image %s, dimensions %dx%d.\nUsed %d of %d surface pixels (%.1f%%).\n\nConfig has been saved to %s.",
-						fontname, fonsize,
-						b, t->w, t->h,
-						ma, t->w*t->h, (float(ma)/float(t->w*t->h))*100.f,
-						o
-					);
-					retcode = EXIT_SUCCESS;
+					a.y = y = a.y+h+padsize;
+					a.x = x = h = 0;
 				}
-				else erroutf("Failed to open %s: %s", o, strerror(errno));
+
+				if(a.y+a.h >= t->h)
+				{
+#ifndef WIN32
+					conoutf("Exceeded size %d, trying next one.." t->h);
+#endif
+					cf = CF_SIZE; // keep going, we want optimal sizes
+					break;
+				}
+
+				loopk(shdsize ? 2 : 1)
+				{
+					bool sd = shdsize && !k ? true : false;
+					blitchar(t, s[k], a.x+(sd?shdsize:0), a.y+(sd?shdsize:0));
+				}
+
+				x += a.w+padsize;
+				if(a.h > h) h = a.h;
+				ma += (a.w+(padsize*2))*(a.h+(padsize*2));
+				mw += a.w;
+				mh += a.h;
 			}
-			chars.setsize(0);
-			SDL_FreeSurface(t);
+			else break;
 		}
-		else erroutf("Failed to create SDL surface: %s", SDL_GetError());
+
+		if(!cf)
+		{
+			FILE *p = openfile(cfgname, "w");
+			if(p)
+			{
+				savepng(t, imgname);
+
+				fprintf(p, "// font generated by ttf2font\n\n");
+				fprintf(p, "font default \"%s\" %d %d 0 0 0 0\n\n", imgname, mw/TTFCHARS, mh/TTFCHARS);
+				loopv(chars)
+					fprintf(p, "fontchar\t%d\t%d\t%d\t%d\t\t// %c\n",
+						chars[i].x, chars[i].y, chars[i].w, chars[i].h, chars[i].c);
+				fclose(p);
+
+#ifndef WIN32
+				conoutf("-");
+#endif
+				conoutf("Conversion of %s at size %d completed.\n\nWrote image %s, dimensions %dx%d.\nUsed %d of %d surface pixels (%.1f%%).\n\nConfig has been saved to %s.",
+					fontname, fonsize,
+					imgname, t->w, t->h,
+					ma, t->w*t->h, (float(ma)/float(t->w*t->h))*100.f,
+					cfgname
+				);
+				cf = CF_OK;
+			}
+			else erroutf("Failed to open %s: %s", cfgname, strerror(errno));
+		}
+		chars.setsize(0);
+		SDL_FreeSurface(t);
+	}
+	else erroutf("Failed to create SDL surface: %s", SDL_GetError());
+
+	return cf;
+}
+
+void makefont()
+{
+	TTF_Font *f = TTF_OpenFont(findfile(fontname, "r"), fonsize);
+	if(f)
+	{
+		int size, cf;
+		for(size = imgsize; retcode < 0 && (cf = tryfont(f, size)); size += 2)
+		{
+			switch(cf)
+			{
+				case CF_SIZE: break; // continue trying then..
+				case CF_OK: retcode = EXIT_SUCCESS; break;
+				case CF_FAIL:
+				default: retcode = EXIT_FAILURE; break;
+			}
+		}
 		TTF_CloseFont(f);
 	}
 	else erroutf("Failed to open font: %s", TTF_GetError());
@@ -277,7 +292,7 @@ void ttf2font()
 
 void usage()
 {
-	conoutf("%s usage:\n\t-?\t\t(this help)\n\t-h<S>\t\t(home dir, output directory)\n\t-f<N>\t\t(font file)\n\t-i<N>\t\t(image size)\n\t-s<N>\t\t(font size)\n\t-p<N>\t\t(char padding)\n\t-d<N>\t\t(shadow depth)\n\t-q<N[0..1]>\t\t(render quality)\n\t-c<N[0..9]>\t\t(compress level)", program);
+	conoutf("%s usage:\n\n\t-?\t\tthis help\n\t-h<S>\t\thome dir, output directory\n\t-f<N>\t\tfont file\n\t-i<N>\t\timage size\n\t-s<N>\t\tfont size\n\t-p<N>\t\tchar padding\n\t-d<N>\t\tshadow depth\n\t-q<N[0..1]>\trender quality\n\t-c<N[0..9]>\tcompress level", program);
 }
 
 int main(int argc, char *argv[])
@@ -285,30 +300,44 @@ int main(int argc, char *argv[])
 	program = argv[0];
 	sethomedir(".");
 
-	if(argc > 1)
+	for(int i = 1; i < argc; i++)
 	{
-		for(int i = 1; i < argc; i++)
+		if(argv[i][0]=='-') switch(argv[i][1])
 		{
-			if(argv[i][0]=='-') switch(argv[i][1])
+			case '?': retcode = EXIT_SUCCESS; break;
+			case 'h': sethomedir(&argv[i][2]); break;
+			case 'f': fontname = &argv[i][2]; break;
+			case 'i': imgsize = min(atoi(&argv[i][2]), 2); break;
+			case 's': fonsize = min(atoi(&argv[i][2]), 1); break;
+			case 'p': padsize = min(atoi(&argv[i][2]), 0); break;
+			case 'd': shdsize = min(atoi(&argv[i][2]), 0); break;
+			case 'q': quality = clamp(atoi(&argv[i][2]), 0, 2); break;
+			case 'c': pngcomp = clamp(atoi(&argv[i][2]), Z_NO_COMPRESSION, Z_BEST_COMPRESSION); break;
+			default:
 			{
-				case '?': usage(); return EXIT_SUCCESS; break;
-				case 'h': sethomedir(&argv[i][2]); break;
-				case 'f': fontname = &argv[i][2]; break;
-				case 'i': imgsize = atoi(&argv[i][2]); break;
-				case 's': fonsize = atoi(&argv[i][2]); break;
-				case 'p': padsize = atoi(&argv[i][2]); break;
-				case 'd': shdsize = atoi(&argv[i][2]); break;
-				case 'q': quality = clamp(atoi(&argv[i][2]), 0, 2); break;
-				case 'c': pngcomp = clamp(atoi(&argv[i][2]), Z_NO_COMPRESSION, Z_BEST_COMPRESSION); break;
-				default: erroutf("Unknown command line argument -%c", argv[i][1]);
+				erroutf("Unknown command line argument -%c", argv[i][1]);
+				retcode = EXIT_FAILURE;
+				break;
 			}
 		}
+	}
+
+	if(retcode < 0)
+	{
+		char *dot = strpbrk(fontname, ".");
+		if(dot) s_strncpy(basename, fontname, dot-fontname+1);
+		else s_strcpy(basename, fontname);
+
+		s_sprintf(imgname)("%s.png", basename);
+		s_sprintf(cfgname)("%s.cfg", basename);
+
+		imgsize -= imgsize%2; // power of two
 
 		if(SDL_Init(SDL_INIT_NOPARACHUTE) != -1)
 		{
 			if(TTF_Init() != -1)
 			{
-				ttf2font();
+				makefont();
 				TTF_Quit();
 			}
 			else erroutf("Failed to initialize TTF: %s", TTF_GetError());
@@ -319,5 +348,5 @@ int main(int argc, char *argv[])
 	}
 	else usage();
 
-	return retcode;
+	return retcode < 0 ? EXIT_FAILURE : retcode;
 }
