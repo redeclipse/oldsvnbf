@@ -1084,7 +1084,6 @@ struct clientcom : iclientcom
 					fpsent *w = wn==cl.player1->clientnum ? cl.player1 : cl.getclient(wn);
 					if(!w) return;
 					w->team = tn;
-					conoutf("%s team is now %s%s", w->name, teamtype[w->team].chat, teamtype[w->team].name);
 					break;
 				}
 
