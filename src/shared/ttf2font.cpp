@@ -24,7 +24,7 @@
 #define TTFSTART	33
 #define TTFCHARS	94
 
-string basename, imgname, cfgname;
+string cutname, imgname, cfgname;
 const char *program, *fontname = "font.ttf";
 int retcode = -1, imgsize = 512, fonsize = 64, padsize = 1, shdsize = 2, quality = 2, pngcomp = Z_BEST_SPEED;
 
@@ -213,7 +213,7 @@ int tryfont(TTF_Font *f, int size)
 				if(a.y+a.h >= t->h)
 				{
 #ifndef WIN32
-					conoutf("Exceeded size %d at %d, trying next one.." t->h, a.y+a.h);
+					conoutf("Exceeded size %d at %d, trying next one..", t->h, a.y+a.h);
 #endif
 					cf = CF_SIZE; // keep going, we want optimal sizes
 					break;
@@ -325,11 +325,11 @@ int main(int argc, char *argv[])
 	if(retcode < 0)
 	{
 		char *dot = strpbrk(fontname, ".");
-		if(dot) s_strncpy(basename, fontname, dot-fontname+1);
-		else s_strcpy(basename, fontname);
+		if(dot) s_strncpy(cutname, fontname, dot-fontname+1);
+		else s_strcpy(cutname, fontname);
 
-		s_sprintf(imgname)("%s.png", basename);
-		s_sprintf(cfgname)("%s.cfg", basename);
+		s_sprintf(imgname)("%s.png", cutname);
+		s_sprintf(cfgname)("%s.cfg", cutname);
 
 		imgsize -= imgsize%2; // power of two
 
