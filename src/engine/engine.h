@@ -303,8 +303,8 @@ extern void updatevabbs(bool force = false);
 // renderva
 extern GLuint fogtex;
 
-extern void visiblecubes(cube *c, int size, int cx, int cy, int cz, int w, int h, float fov);
-extern void reflectvfcP(float z);
+extern void visiblecubes(float fov, float fovy);
+extern void reflectvfcP(float z, float minyaw = -M_PI, float maxyaw = M_PI, float minpitch = -M_PI, float maxpitch = M_PI);
 extern void restorevfcP();
 extern void createfogtex();
 extern void rendergeom(float causticspass = 0, bool fogpass = false);

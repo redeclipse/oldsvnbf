@@ -20,8 +20,7 @@ static inline void drawvatris(vtxarray *va, GLsizei numindices, const GLvoid *in
 plane vfcP[5];  // perpindictular vectors to view frustrum bounding planes
 float vfcDfog;  // far plane culling distance (fog limit).
 float vfcDnear[5], vfcDfar[5];
-int vfcw, vfch;
-float vfcfov;
+float vfcfov, vfcfovy;
 
 vtxarray *visibleva;
 
@@ -139,31 +138,34 @@ void calcvfcD()
     }
 }
 
-void setvfcP(float yaw, float pitch, const vec &camera)
+void setvfcP(float yaw, float pitch, const vec &camera, float minyaw = -M_PI, float maxyaw = M_PI, float minpitch = -M_PI, float maxpitch = M_PI)
 {
-	float yawd = (90.0f - vfcfov/2.0f) * RAD;
-	float pitchd = (90.0f - (vfcfov*float(vfch)/float(vfcw))/2.0f) * RAD;
-	yaw *= RAD;
-	pitch *= RAD;
-	vfcP[0].toplane(vec(yaw + yawd, pitch), camera);	// left plane
-	vfcP[1].toplane(vec(yaw - yawd, pitch), camera);	// right plane
-	vfcP[2].toplane(vec(yaw, pitch + pitchd), camera); // top plane
-	vfcP[3].toplane(vec(yaw, pitch - pitchd), camera); // bottom plane
-	vfcP[4].toplane(vec(yaw, pitch), camera);		  // near/far planes
-	extern int fog;
-	vfcDfog = fog;
+    float yawd = vfcfov/2.0f * RAD, pitchd = vfcfovy/2.0f * RAD;
+    yaw *= RAD;
+    pitch *= RAD;
+    vfcP[0].toplane(vec(yaw + M_PI/2 - min(yawd, -minyaw), pitch), camera);   // left plane
+    vfcP[1].toplane(vec(yaw - M_PI/2 + min(yawd,  maxyaw), pitch), camera);   // right plane
+    vfcP[2].toplane(vec(yaw, pitch + M_PI/2 - min(pitchd, -minpitch)), camera); // top plane
+    vfcP[3].toplane(vec(yaw, pitch - M_PI/2 + min(pitchd,  maxpitch)), camera); // bottom plane
+    vfcP[4].toplane(vec(yaw, pitch), camera);          // near/far planes
+    extern int fog;
+    vfcDfog = fog;
     calcvfcD();
 }
 
 plane oldvfcP[5];
 
-void reflectvfcP(float z)
+void reflectvfcP(float z, float minyaw, float maxyaw, float minpitch, float maxpitch)
 {
-	memcpy(oldvfcP, vfcP, sizeof(vfcP));
+    memcpy(oldvfcP, vfcP, sizeof(vfcP));
 
-	vec o(camera1->o);
-	o.z = z-(camera1->o.z-z);
-	setvfcP(camera1->yaw, -camera1->pitch, o);
+    if(z < 0) setvfcP(camera1->yaw, camera1->pitch, camera1->o, minyaw, maxyaw, minpitch, maxpitch);
+    else
+    {
+        vec o(camera1->o);
+        o.z = z-(camera1->o.z-z);
+        setvfcP(camera1->yaw, -camera1->pitch, o, minyaw, maxyaw, -maxpitch, -minpitch);
+    }
 }
 
 void restorevfcP()
@@ -174,19 +176,18 @@ void restorevfcP()
 
 extern vector<vtxarray *> varoot;
 
-void visiblecubes(cube *c, int size, int cx, int cy, int cz, int w, int h, float fov)
+void visiblecubes(float fov, float fovy)
 {
-	memset(vasort, 0, sizeof(vasort));
+    memset(vasort, 0, sizeof(vasort));
 
-	vfcw = w;
-	vfch = h;
-	vfcfov = fov;
+    vfcfov = fov;
+    vfcfovy = fovy;
 
-	// Calculate view frustrum: Only changes if resize, but...
-	setvfcP(camera1->yaw, camera1->pitch, camera1->o);
+    // Calculate view frustrum: Only changes if resize, but...
+    setvfcP(camera1->yaw, camera1->pitch, camera1->o);
 
-	findvisiblevas(varoot);
-	sortvisiblevas();
+    findvisiblevas(varoot);
+    sortvisiblevas();
 }
 
 static inline bool insideva(const vtxarray *va, const vec &v, int margin = 1)
@@ -406,7 +407,6 @@ void renderreflectedmapmodels()
 
     if(reflecting)
     {
-        reflectvfcP(reflectz);
         for(vtxarray *va = reflectedva; va; va = va->rnext)
         {
             if(!va->mapmodels || va->distance > reflectdist) continue;
@@ -417,7 +417,7 @@ void renderreflectedmapmodels()
     {
         octaentities *oe = mms[i];
         if(reflecting || refracting>0 ? oe->bbmax.z <= reflectz : oe->bbmin.z >= reflectz) continue;
-        if(reflecting && isvisiblecube(oe->o, oe->size) >= VFC_FOGGED) continue;
+        if(isvisiblecube(oe->o, oe->size) >= VFC_FOGGED) continue;
         loopv(oe->mapmodels)
         {
            extentity &e = *ents[oe->mapmodels[i]];
@@ -441,7 +441,6 @@ void renderreflectedmapmodels()
 		}
 		endmodelbatches();
 	}
-	if(reflecting) restorevfcP();
 }
 
 void rendermapmodels()
@@ -1815,6 +1814,7 @@ void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
         if(refracting)
         {
             if(refracting < 0 ? va->geommin.z > reflectz : va->geommax.z <= reflectz) continue;
+            if(isvisiblecube(va->o, va->size) >= VFC_NOT_VISIBLE) continue;
             if((!hasOQ || !oqfrags) && va->distance > reflectdist) break;
         }
         else if(reflecting)
@@ -1865,6 +1865,7 @@ void rendergeom(float causticspass, bool fogpass)
         if(refracting)
         {
             if((refracting < 0 ? va->geommin.z > reflectz : va->geommax.z <= reflectz) || va->occluded >= OCCLUDE_GEOM) continue;
+            if(isvisiblecube(va->o, va->size) >= VFC_NOT_VISIBLE) continue;
             if((!hasOQ || !oqfrags) && va->distance > reflectdist) break;
         }
         else if(reflecting)
@@ -2156,11 +2157,9 @@ void renderreflectedgeom(bool causticspass, bool fogpass)
 {
     if(reflecting)
     {
-        reflectvfcP(reflectz);
         reflectedva = NULL;
         findreflectedvas(varoot);
         rendergeom(causticspass ? 1 : 0, fogpass);
-        restorevfcP();
     }
     else rendergeom(causticspass ? 1 : 0, fogpass);
 }
@@ -2231,9 +2230,7 @@ bool rendersky(bool explicitonly)
 
     if(reflecting)
     {
-        reflectvfcP(reflectz);
         renderreflectedskyvas(varoot);
-        restorevfcP();
     }
     else for(vtxarray *va = visibleva; va; va = va->next)
     {
