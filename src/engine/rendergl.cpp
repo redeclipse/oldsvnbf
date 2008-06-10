@@ -974,7 +974,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
 	xtravertsva = xtraverts = glde = gbatches = 0;
 
-	visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, size, size, 90);
+	visiblecubes(90, 90);
 
 	if(limitsky()) drawskybox(farplane, true);
 
@@ -1298,7 +1298,7 @@ void gl_drawframe(int w, int h)
         else dopostfx = true;
     }
 
-    visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, curfov);
+    visiblecubes(curfov, fovy);
 
 	if(shadowmap && !hasFBO) rendershadowmap();
 

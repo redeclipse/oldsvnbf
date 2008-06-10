@@ -1041,8 +1041,8 @@ struct GAMECLIENT : igameclient
 		if(fov > MAXFOV) fov = MAXFOV;
 		if(fov < MINFOV) fov = MINFOV;
 		curfov = float(fov);
-		fovy = float(curfov*h)/w;
-		aspect = w/float(h);
+        aspect = w/float(h);
+        fovy = 2*atan2(tan(curfov/2*RAD), aspect)/RAD;
 	}
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
