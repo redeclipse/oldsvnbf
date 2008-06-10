@@ -232,9 +232,9 @@ int tryfont(TTF_Font *f, int size)
 					break;
 				}
 
-				loopk(shdsize ? 2 : 1)
+				loopk(2) if(k || shdsize)
 				{
-					bool sd = shdsize && !k ? true : false;
+					bool sd = shdsize && !k;
 					blitchar(t, s[k], a.x+(sd?shdsize:0), a.y+(sd?shdsize:0));
 				}
 
