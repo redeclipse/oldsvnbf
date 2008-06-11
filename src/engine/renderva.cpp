@@ -140,13 +140,12 @@ void calcvfcD()
 
 void setvfcP(float yaw, float pitch, const vec &camera, float minyaw = -M_PI, float maxyaw = M_PI, float minpitch = -M_PI, float maxpitch = M_PI)
 {
-    float yawd = vfcfov/2.0f * RAD, pitchd = vfcfovy/2.0f * RAD;
     yaw *= RAD;
     pitch *= RAD;
-    vfcP[0].toplane(vec(yaw + M_PI/2 - min(yawd, -minyaw), pitch), camera);   // left plane
-    vfcP[1].toplane(vec(yaw - M_PI/2 + min(yawd,  maxyaw), pitch), camera);   // right plane
-    vfcP[2].toplane(vec(yaw, pitch + M_PI/2 - min(pitchd, -minpitch)), camera); // top plane
-    vfcP[3].toplane(vec(yaw, pitch - M_PI/2 + min(pitchd,  maxpitch)), camera); // bottom plane
+    vfcP[0].toplane(vec(yaw + M_PI/2 - min(vfcfov, -minyaw), pitch), camera);   // left plane
+    vfcP[1].toplane(vec(yaw - M_PI/2 + min(vfcfov,  maxyaw), pitch), camera);   // right plane
+    vfcP[2].toplane(vec(yaw, pitch + M_PI/2 - min(vfcfovy, -minpitch)), camera); // top plane
+    vfcP[3].toplane(vec(yaw, pitch - M_PI/2 + min(vfcfovy,  maxpitch)), camera); // bottom plane
     vfcP[4].toplane(vec(yaw, pitch), camera);          // near/far planes
     extern int fog;
     vfcDfog = fog;
@@ -180,8 +179,8 @@ void visiblecubes(float fov, float fovy)
 {
     memset(vasort, 0, sizeof(vasort));
 
-    vfcfov = fov;
-    vfcfovy = fovy;
+    vfcfov = fov*0.5f*RAD;
+    vfcfovy = fovy*0.5f*RAD;
 
     // Calculate view frustrum: Only changes if resize, but...
     setvfcP(camera1->yaw, camera1->pitch, camera1->o);
