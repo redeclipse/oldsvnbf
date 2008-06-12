@@ -271,7 +271,7 @@ struct GAMECLIENT : igameclient
 			adjustscaled(int, quakewobble, 100.f);
 			adjustscaled(int, damageresidue, 100.f);
 
-			if(!menuactive()) updatemouse();
+			if(!guiactive()) updatemouse();
 
 			if(player1->state == CS_DEAD)
 			{
@@ -807,7 +807,7 @@ struct GAMECLIENT : igameclient
 		float r = 1.f, g = 1.f, b = 1.f;
         int index = POINTER_NONE;
 
-		if(menuactive()) index = POINTER_GUI;
+		if(guiactive()) index = POINTER_GUI;
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
         else if(editmode) index = POINTER_EDIT;
         else if(lastmillis-lasthit < hitcrosshair()) index = POINTER_HIT;
@@ -911,7 +911,7 @@ struct GAMECLIENT : igameclient
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			if(!menuactive())
+			if(!guiactive())
 			{
 				if(cc.ready()) drawgamehud(w, h);
 				drawhudelements(w, h);
@@ -1047,7 +1047,7 @@ struct GAMECLIENT : igameclient
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
-		if(menuactive() || mousetype())
+		if(guiactive() || mousetype())
 		{
 			if(mousetype() == 2 || mousetype() == 4)
 			{
@@ -1058,7 +1058,7 @@ struct GAMECLIENT : igameclient
 			else
 			{
 				cursorx = clamp(cursorx+(float(dx*mousesensitivity())/10000.f), 0.f, 1.f);
-				cursory = clamp(cursory+(float(dy*(!menuactive() && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f), 0.f, 1.f);;
+				cursory = clamp(cursory+(float(dy*(!guiactive() && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f), 0.f, 1.f);;
 				return true;
 			}
 		}
@@ -1144,7 +1144,7 @@ struct GAMECLIENT : igameclient
 		else if(mousetype() >= 3)
 		{
 			float yaw = camera1->yaw, pitch = camera1->pitch;
-			if(!menuactive()) vectoyawpitch(cursordir, yaw, pitch);
+			if(!guiactive()) vectoyawpitch(cursordir, yaw, pitch);
 			findorientation(camera1->o, yaw, pitch, worldpos);
 			vec dir(worldpos);
 			dir.sub(camera1->o);

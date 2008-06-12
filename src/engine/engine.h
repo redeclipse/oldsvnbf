@@ -504,6 +504,7 @@ extern bool limitsky();
 extern void g3d_render();
 extern bool g3d_windowhit(bool on, bool act);
 extern void g3d_mainmenu();
+extern bool guiactive();
 
 // grass
 extern void rendergrass();
@@ -537,7 +538,6 @@ enum
 	MN_INPUT,
 	MN_MAX
 };
-extern bool menuactive();
 
 // console
 enum

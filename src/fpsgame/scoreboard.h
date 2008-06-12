@@ -1,7 +1,6 @@
 struct scoreboard : g3d_callback
 {
 	bool scoreson;
-	vec menupos;
 	int menustart;
 	GAMECLIENT &cl;
 
@@ -20,11 +19,7 @@ struct scoreboard : g3d_callback
 
 	void showscores(bool on)
 	{
-		if(!scoreson && on)
-		{
-			menupos = menuinfrontofplayer();
-			menustart = starttime();
-		}
+		if(!scoreson && on) menustart = starttime();
 		scoreson = on;
 	}
 
@@ -401,9 +396,6 @@ struct scoreboard : g3d_callback
 
 	void show()
 	{
-		if(scoreson)
-		{
-			g3d_addgui(this);
-		}
+		if(scoreson) g3d_addgui(this);
 	}
 } sb;

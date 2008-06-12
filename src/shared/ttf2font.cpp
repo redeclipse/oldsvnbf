@@ -262,16 +262,8 @@ int tryfont(TTF_Font *f, int size)
 				{
 					if(chars[i].h != oh)
 					{
-						if(chars[i].w != ow)
-						{
-							fprintf(p, "fontchar\t%d\t%d\t%d\t%d\t\t// %c\n",
-								chars[i].x, chars[i].y, chars[i].w, chars[i].h, chars[i].c);
-						}
-						else
-						{
-							fprintf(p, "fontchar\t%d\t%d\t\t%d\t\t// %c\n",
-								chars[i].x, chars[i].y, chars[i].h, chars[i].c);
-						}
+						fprintf(p, "fontchar\t%d\t%d\t%d\t%d\t\t// %c\n",
+							chars[i].x, chars[i].y, chars[i].w, chars[i].h, chars[i].c);
 					}
 					else if(chars[i].w != ow)
 					{

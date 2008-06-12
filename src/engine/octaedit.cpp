@@ -1663,7 +1663,6 @@ COMMAND(editmat, "s");
 
 #define TEXTURE_WIDTH 10
 #define TEXTURE_HEIGHT 7
-extern int menudistance, menuautoclose;
 
 VAR(thumbtime, 0, 50, 1000);
 
@@ -1672,7 +1671,6 @@ static int lastthumbnail = 0;
 struct texturegui : g3d_callback
 {
 	bool menuon;
-	vec menupos;
 	int menustart;
 
 	void gui(g3d_gui &g, bool firstpass)
@@ -1717,7 +1715,7 @@ struct texturegui : g3d_callback
 
 	void showtextures(bool on)
 	{
-		if(on != menuon && (menuon = on)) { menupos = menuinfrontofplayer(); menustart = starttime(); }
+		if(on != menuon && (menuon = on)) menustart = starttime();
 	}
 
 	void show()
