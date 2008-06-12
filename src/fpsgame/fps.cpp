@@ -81,8 +81,6 @@ struct GAMECLIENT : igameclient
 	ITVAR(radartex, "textures/radar");
 	ITVAR(radarpingtex, "<anim:100>textures/radarping");
 
-	IVARP(autoreload, 0, 1, 1);// auto reload when empty
-
 	IVARP(hidestats, 0, 0, 1);
 	IVARP(showfpsrange, 0, 0, 1);
 	IVARP(showeditstats, 0, 1, 1);
@@ -180,12 +178,6 @@ struct GAMECLIENT : igameclient
 			cc.addmsg(SV_TRYSPAWN, "ri", d->clientnum);
 			d->respawned = d->lifesequence;
 		}
-	}
-
-	bool doautoreload()
-	{
-		return autoreload() && player1->gunselect >= 0 &&
-			!player1->ammo[player1->gunselect] && guntype[player1->gunselect].rdelay > 0;
 	}
 
 	fpsent *pointatplayer()
@@ -309,8 +301,8 @@ struct GAMECLIENT : igameclient
 				swaydir.add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), ph.maxspeed(player1)))));
 
 				et.checkitems(player1);
-				if(player1->attacking) ws.shoot(player1, worldpos);
-				if(player1->reloading || doautoreload()) ws.reload(player1);
+				ws.shoot(player1, worldpos);
+				ws.reload(player1);
 			}
 			else ph.move(player1, 20, true);
 		}
@@ -395,7 +387,7 @@ struct GAMECLIENT : igameclient
 		{
 			sb.showscores(true);
 			lastplayerstate = *player1;
-			d->attacking = d->reloading = d->useaction = false;
+			d->stopmoving();
 			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
@@ -422,7 +414,7 @@ struct GAMECLIENT : igameclient
 		if(!timeremain)
 		{
 			intermission = true;
-			player1->attacking = player1->reloading = player1->useaction = false;
+			player1->stopmoving();
 
 			sb.showscores(true);
 
@@ -712,7 +704,12 @@ struct GAMECLIENT : igameclient
 				if(isgun(d->gunselect) && d->ammo[d->gunselect] > 0)
 				{
 					bool canshoot = d->canshoot(d->gunselect, lastmillis);
-					draw_textx("%d", oy/5+rw+(FONTH/4*3), oy-75, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect]);
+					if(guntype[d->gunselect].power && d->attacking)
+					{
+						int power = clamp(int(float(lastmillis-d->attacktime)/float(guntype[d->gunselect].power)*100.f), 0, 100);
+						draw_textx("%d - %d", oy/5+rw+(FONTH/4*3), oy-75, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect], power);
+					}
+					else draw_textx("%d", oy/5+rw+(FONTH/4*3), oy-75, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect]);
 				}
 				else
 				{

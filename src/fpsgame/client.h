@@ -749,7 +749,7 @@ struct clientcom : iclientcom
 
 				case SV_SHOTFX:
 				{
-					int scn = getint(p), gun = getint(p);
+					int scn = getint(p), gun = getint(p), power = clamp(getint(p), 0, 100);
 					vec from, to;
 					loopk(3) from[k] = getint(p)/DMF;
 					loopk(3) to[k] = getint(p)/DMF;
@@ -760,7 +760,7 @@ struct clientcom : iclientcom
 					s->gunwait[gun] = guntype[gun].adelay;
 					s->gunlast[gun] = lastmillis;
 					s->lastattackgun = gun;
-					cl.ws.shootv(gun, from, to, s, false);
+					cl.ws.shootv(gun, power, from, to, s, false);
 					break;
 				}
 
@@ -829,7 +829,7 @@ struct clientcom : iclientcom
 					int trg = getint(p), gun = getint(p), m = getint(p);
 					fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
 					if(!target || gun <= -1 || gun >= NUMGUNS) break;
-					target->gunswitch(gun, m);
+					target->setgun(gun, m);
 					break;
 				}
 

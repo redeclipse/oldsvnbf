@@ -111,16 +111,16 @@ enum
 
 struct guntypes
 {
-	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	time,	kick,	wobble,	scale,	radius;	const char *name,	*vwep;
+	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,	radius;	const char *name,	*vwep;
 } guntype[NUMGUNS] =
 {
-	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		-10 ,	10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
-	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		-30,	30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
-	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		-4,		4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	3000,	-15,	10,		8,		48,		"grenades",			"weapons/grenades/vwep" },
-	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	50,		3000,	10,		50,		3000,	-1,		1,		8,		24,		"flamer",			"weapons/flamer/vwep" },
-	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		-30,	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		1000,	100,	10000,	-50,	50,		1,		128,	"rockets",			"weapons/rockets/vwep" },
+	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		0,		-10 ,	10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
+	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		0,		-30,	30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
+	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		0,		-4,		4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	1000,	3000,	-15,	10,		8,		48,		"grenades",			"weapons/grenades/vwep" },
+	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	50,		3000,	10,		50,		0,		3000,	-1,		1,		8,		24,		"flamer",			"weapons/flamer/vwep" },
+	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		0,		-30,	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		1000,	100,	0,		10000,	-50,	50,		1,		128,	"rockets",			"weapons/rockets/vwep" },
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
 
@@ -640,11 +640,22 @@ struct fpsent : dynent, fpsstate
 		vel.add(push);
 	}
 
+	void stopactions()
+	{
+		attacking = reloading = useaction = false;
+		attacktime = reloadtime = usetime = 0;
+	}
+
 	void stopmoving()
 	{
 		dynent::stopmoving();
-		attacking = reloading = useaction = false;
-		attacktime = reloadtime = usetime = 0;
+		stopactions();
+	}
+
+	void setgun(int gun, int millis)
+	{
+		gunswitch(gun, millis);
+		stopactions();
 	}
 
 	void respawn()
