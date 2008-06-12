@@ -14,7 +14,7 @@ struct GAMESERVER : igameserver
 	{
 		int type;
         int millis, id;
-		int gun;
+		int gun, power;
 		float from[3], to[3];
 	};
 
@@ -1122,6 +1122,7 @@ struct GAMESERVER : igameserver
 					shot.type = GE_SHOT;
 					shot.shot.id = getint(p);
 					shot.shot.gun = getint(p);
+					shot.shot.power = getint(p);
 					seteventmillis(shot.shot, cp->state.canshoot(shot.shot.gun, gamemillis));
 					loopk(3) shot.shot.from[k] = getint(p)/DMF;
 					loopk(3) shot.shot.to[k] = getint(p)/DMF;
@@ -1914,7 +1915,7 @@ struct GAMESERVER : igameserver
 		gs.gunstate[e.gun] = GUNSTATE_SHOOT;
 		gs.lastshot = gs.gunlast[e.gun] = e.millis;
 		gs.gunwait[e.gun] = guntype[e.gun].adelay;
-		sendf(-1, 1, "ri9x", SV_SHOTFX, ci->clientnum, e.gun,
+		sendf(-1, 1, "ri4i6x", SV_SHOTFX, ci->clientnum, e.gun, e.power,
 				int(e.from[0]*DMF), int(e.from[1]*DMF), int(e.from[2]*DMF),
 				int(e.to[0]*DMF), int(e.to[1]*DMF), int(e.to[2]*DMF),
 				ci->clientnum);

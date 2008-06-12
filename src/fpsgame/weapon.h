@@ -7,6 +7,8 @@ struct weaponstate
 	static const int OFFSETMILLIS = 500;
 	vec sg[SGRAYS];
 
+	IVARP(autoreload, 0, 1, 1);// auto reload when empty
+
 	weaponstate(GAMECLIENT &_cl) : cl(_cl)
 	{
         CCOMMAND(weapon, "ss", (weaponstate *self, char *a, char *b),
@@ -45,7 +47,7 @@ struct weaponstate
 
 		if(s != d->gunselect)
 		{
-			d->gunswitch(s, lastmillis);
+			d->setgun(s, lastmillis);
 			cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			cl.playsoundc(S_SWITCH, d);
 		}
@@ -178,8 +180,10 @@ struct weaponstate
 		return offset;
 	}
 
-	void shootv(int gun, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
+	void shootv(int gun, int power, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
 	{
+		int pow = guntype[gun].power ? power : 100;
+
 		if (guntype[gun].sound >= 0)
 		{
 			if (gun == GUN_FLAMER)
@@ -227,7 +231,8 @@ struct weaponstate
 					float dist = from.dist(to);
 					up.z += dist/8;
 				}
-				cl.pj.create(from, up, local, d, PRJ_SHOT, guntype[gun].time, guntype[gun].speed, gun);
+				int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
+				cl.pj.create(from, up, local, d, PRJ_SHOT, guntype[gun].time, spd, gun);
 				break;
 			}
 
@@ -299,9 +304,17 @@ struct weaponstate
         else adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
 	}
 
+	bool doautoreload(fpsent *d)
+	{
+		return autoreload() && d->gunselect >= 0 &&
+			!d->ammo[d->gunselect] && guntype[d->gunselect].rdelay > 0;
+	}
+
+
 	void reload(fpsent *d)
 	{
-		if (d->canreload(d->gunselect, lastmillis))
+		if(d->reloading || (d == cl.player1 && doautoreload(d)) &&
+			d->canreload(d->gunselect, lastmillis))
 		{
 			d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
 			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
@@ -311,7 +324,18 @@ struct weaponstate
 
 	void shoot(fpsent *d, vec &targ)
 	{
-		if((d != cl.player1 && d->ownernum != cl.player1->clientnum) || !d->canshoot(d->gunselect, lastmillis)) return;
+		if((d != cl.player1 && d->ownernum != cl.player1->clientnum) || !d->attacktime ||
+			!d->canshoot(d->gunselect, lastmillis)) return;
+
+		int power = 100;
+		if(guntype[d->gunselect].power)
+		{
+			power = clamp(int(float(lastmillis-d->attacktime)/float(guntype[d->gunselect].power)*100.f), 0, 100);
+			if(d->attacking && power < 100) return;
+			d->attacktime = 0;
+			d->attacking = false;
+		}
+		else if(!d->attacking) return;
 
 		d->lastattackgun = d->gunselect;
 		d->gunstate[d->gunselect] = GUNSTATE_SHOOT;
@@ -341,9 +365,9 @@ struct weaponstate
 		hits.setsizenodelete(0);
 		if(!guntype[d->gunselect].speed) raydamage(from, to, d);
 
-		shootv(d->gunselect, from, to, d, true);
+		shootv(d->gunselect, power, from, to, d, true);
 
-		cl.cc.addmsg(SV_SHOOT, "ri3i6iv", d->clientnum, lastmillis-cl.maptime, d->gunselect,
+		cl.cc.addmsg(SV_SHOOT, "ri4i6iv", d->clientnum, lastmillis-cl.maptime, d->gunselect, power,
 						(int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),
 						(int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
 						hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
