@@ -999,11 +999,13 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
 void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat);
 
+const char *loadback = "textures/loadback";
+
 void loadbackground(int w, int h)
 {
 	glColor3f(1, 1, 1);
 
-	settexture("textures/loadback");
+	settexture(loadback);
 
 	glBegin(GL_QUADS);
 

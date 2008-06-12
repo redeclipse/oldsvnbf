@@ -414,12 +414,13 @@ void resetgl()
     extern void reloadfonts();
     extern void reloadtextures();
     extern void reloadshaders();
+
     inbetweenframes = false;
     if(!reloadtexture("textures/notexture") ||
 		!reloadtexture("textures/blank") ||
 		!reloadtexture("textures/logo") ||
-		!reloadtexture("textures/loadback"))
-			fatal("failed to reload core texture");
+		!reloadtexture(loadback))
+			fatal("failed to reload core textures");
     reloadfonts();
     inbetweenframes = true;
     computescreen("initializing...");
@@ -735,6 +736,29 @@ void rehash(bool reload)
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
 
+void eastereggs()
+{
+	time_t ct = time(NULL); // current time
+	struct tm *lt = localtime(&ct);
+
+	/*
+	tm_sec		seconds after the minute (0-61)
+	tm_min		minutes after the hour (0-59)
+	tm_hour		hours since midnight (0-23)
+	tm_mday		day of the month (1-31)
+	tm_mon		months since January (0-11)
+	tm_year		elapsed years since 1900
+	tm_wday		days since Sunday (0-6)
+	tm_yday		days since January 1st (0-365)
+	tm_isdst	1 if daylight savings is on, zero if not,
+	*/
+
+	if(lt->tm_wday == 5 && lt->tm_mday == 13) // Friday the 13th
+	{
+		loadback = "textures/spookyback";
+	}
+}
+
 int frameloops = 0;
 VARP(autoconnect, 0, 1, 1);
 
@@ -818,6 +842,7 @@ int main(int argc, char **argv)
 	ncursor = SDL_GetCursor();
 	showcursor(false);
 	setcaption("loading..");
+	eastereggs();
 
 	conoutf("init: gl");
     gl_checkextensions();

@@ -206,6 +206,9 @@ extern void disablepolygonoffset(GLenum type);
 extern void setfogplane(const plane &p, bool flush = false);
 extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
 
+extern const char *loadback;
+extern void loadbackground(int w, int h);
+
 // renderextras
 extern void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradius = 0);
 
