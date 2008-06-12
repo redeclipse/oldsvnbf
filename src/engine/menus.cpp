@@ -7,7 +7,6 @@
 #define GUI_BUTTON_COLOR 0xFFFFFF
 #define GUI_TEXT_COLOR  0xDDFFDD
 
-static vec menupos;
 static int menustart = 0;
 static int menutab = 1;
 static g3d_gui *cgui = NULL;
@@ -36,18 +35,6 @@ static vector<menu *> guistack;
 static vector<char *> executelater;
 static bool shouldclearmenu = true, clearlater = false;
 
-VARP(menudistance,  16, 40,  256);
-VARP(menuautoclose, 32, 120, 4096);
-
-vec menuinfrontofplayer()
-{
-	vec dir;
-	vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
-	dir.mul(menudistance).add(camera1->o);
-	dir.z -= camera1->height-1;
-	return dir;
-}
-
 void popgui()
 {
     menu *m = guistack.pop();
@@ -66,11 +53,7 @@ void removegui(menu *m)
 
 void pushgui(menu *m, int pos = -1)
 {
-    if(guistack.empty())
-    {
-        menupos = menuinfrontofplayer();
-        resetcursor();
-    }
+    if(guistack.empty()) resetcursor();
     if(pos < 0) guistack.add(m);
     else guistack.insert(pos, m);
     if(pos < 0 || pos==guistack.length()-1)
@@ -455,4 +438,4 @@ void g3d_mainmenu()
 	if(!guistack.empty()) g3d_addgui(guistack.last());
 }
 
-bool menuactive() { return !guistack.empty(); };
+

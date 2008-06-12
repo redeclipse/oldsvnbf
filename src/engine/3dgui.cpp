@@ -636,7 +636,6 @@ struct gui : g3d_gui
 	}
 
     vec origin, scale, *savedorigin;
-	float dist;
 	g3d_callback *cb;
 
 	static float basescale;
@@ -777,7 +776,6 @@ vec gui::light;
 int gui::curdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
 int gui::ty, gui::tx, gui::tpos, *gui::tcurrent, gui::tcolor;
 static vector<gui> guis;
-VARP(guipushdist, 1, 4, 64);
 
 bool menukey(int code, bool isdown, int cooked)
 {
@@ -796,11 +794,6 @@ bool menukey(int code, bool isdown, int cooked)
 					int i = windowhit - &guis[0];
 					for(int j = guis.length()-1; j > i; j--) *guis[j].savedorigin = *guis[j-1].savedorigin;
 					*windowhit->savedorigin = origin;
-					if(guis.length() > 1)
-					{
-						if(camera1->o.dist(*windowhit->savedorigin) <= camera1->o.dist(*guis.last().savedorigin))
-							windowhit->savedorigin->add(camdir);
-					}
                 }
                 return true;
             case -5:
@@ -809,11 +802,6 @@ bool menukey(int code, bool isdown, int cooked)
 					vec origin = *guis[0].savedorigin;
 					loopj(guis.length()-1) *guis[j].savedorigin = *guis[j + 1].savedorigin;
 					*guis.last().savedorigin = origin;
-					if(guis.length() > 1)
-					{
-						if(camera1->o.dist(*guis.last().savedorigin) >= camera1->o.dist(*guis[0].savedorigin))
-							guis.last().savedorigin->sub(camdir);
-					}
                 }
                 return true;
         }
@@ -856,11 +844,8 @@ void g3d_addgui(g3d_callback *cb)
 {
 	gui &g = guis.add();
 	g.cb = cb;
-	g.origin = camera1->o;//.add(vec(vec(camera1->vel).normalize()).mul(2.f));
-	g.dist = camera1->o.dist(g.origin);
+	g.adjustscale();
 }
-
-int g3d_sort(gui *a, gui *b) { return (int)(a->dist>b->dist)*2-1; }
 
 bool g3d_windowhit(bool on, bool act)
 {
@@ -886,7 +871,6 @@ void g3d_render()
 	g3d_mainmenu();
 	cl->g3d_gamemenus();
 
-	guis.sort(g3d_sort);
     readyeditors();
     bool wasfocused = (fieldmode!=FIELDSHOW);
     fieldsactive = false;
@@ -934,3 +918,5 @@ void g3d_render()
 
 	mousebuttons = 0;
 }
+
+bool guiactive() { return guis.length() ? true : false; };

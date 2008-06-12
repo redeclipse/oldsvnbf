@@ -180,7 +180,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 	vector<char *> refs;
 	refs.setsizenodelete(0);
 
-	if (!menuactive() && centerlines)
+	if (!guiactive() && centerlines)
 	{
 		loopv(conlines[CN_CENTER]) if(totalmillis-conlines[CN_CENTER][i].outtime<centertime)
 		{
