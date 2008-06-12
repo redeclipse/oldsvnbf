@@ -4,12 +4,69 @@
 #include "engine.h"
 
 SDL_Surface *screen = NULL;
-SDL_Cursor *scursor = NULL;
+SDL_Cursor *scursor = NULL, *ncursor = NULL;
+
+void showcursor(bool show)
+{
+	//if(screen->flags & SDL_FULLSCREEN)
+	//{
+		if(show)
+		{
+			if(scursor) SDL_FreeCursor(scursor);
+			scursor = NULL;
+			SDL_SetCursor(ncursor);
+		}
+		else
+		{
+			if(!scursor)
+			{
+				Uint8 sd[1] = { 0 };
+				if(!(scursor = SDL_CreateCursor(sd, sd, 1, 1, 0, 0)))
+					fatal("could not create blank cursor");
+			}
+
+			SDL_SetCursor(scursor);
+		}
+	//}
+	//else
+	//{
+	//	SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
+	//}
+}
+
+void setcaption(const char *text)
+{
+	s_sprintfd(caption)("%s [v%.2f] %s%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "");
+	SDL_WM_SetCaption(caption, NULL);
+}
+
+void keyrepeat(bool on)
+{
+	SDL_EnableKeyRepeat(on ? SDL_DEFAULT_REPEAT_DELAY : 0,
+							 SDL_DEFAULT_REPEAT_INTERVAL);
+}
+
+void inputgrab(bool on)
+{
+#ifndef WIN32
+	if(screen->flags & SDL_FULLSCREEN)
+	{
+#endif
+		SDL_WM_GrabInput(on ? SDL_GRAB_ON : SDL_GRAB_OFF);
+		showcursor(on != true);
+#ifndef WIN32
+	}
+#endif
+	keyrepeat(on);
+}
+
+VARF(grabinput, 0, 0, 1, inputgrab(grabinput ? true : false));
+VARP(autograbinput, 0, 1, 1);
 
 void cleanup()
 {
 	cleanupserver();
-	//SDL_ShowCursor(1);
+	showcursor(true);
 	if(scursor) SDL_FreeCursor(scursor);
 	freeocta(worldroot);
 	extern void clear_command();	clear_command();
@@ -43,8 +100,7 @@ void fatal(const char *s, ...)    // failure exit
 
         if(errors <= 1) // avoid recursion
         {
-            //SDL_ShowCursor(1);
-            if(scursor) SDL_FreeCursor(scursor);
+            showcursor(true);
             #ifdef WIN32
                 MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
             #endif
@@ -383,24 +439,6 @@ void resetgl()
 
 COMMAND(resetgl, "");
 
-void keyrepeat(bool on)
-{
-	SDL_EnableKeyRepeat(on ? SDL_DEFAULT_REPEAT_DELAY : 0,
-							 SDL_DEFAULT_REPEAT_INTERVAL);
-}
-
-void inputgrab(bool on)
-{
-#ifndef WIN32
-	if(screen->flags & SDL_FULLSCREEN)
-#endif
-		SDL_WM_GrabInput(on ? SDL_GRAB_ON : SDL_GRAB_OFF);
-	keyrepeat(on);
-}
-
-VARF(grabinput, 0, 0, 1, inputgrab(grabinput ? true : false));
-VARP(autograbinput, 0, 1, 1);
-
 bool activewindow = true, warpmouse = false;
 
 vector<SDL_Event> events;
@@ -431,7 +469,7 @@ bool interceptkey(int sym)
 
 void resetcursor(bool warp, bool reset)
 {
-	if(warp && (grabinput || activewindow))
+	if(warp && grabinput)
 	{
 		SDL_WarpMouse(screen->w/2, screen->h/2);
 		warpmouse = true;
@@ -704,21 +742,6 @@ void rehash(bool reload)
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
 
-void setcursor()
-{
-	Uint8 sd[1] = { 0 };
-	if(!(scursor = SDL_CreateCursor(sd, sd, 1, 1, 0, 0)))
-		fatal("could not create blank cursor");
-
-	SDL_SetCursor(scursor);
-}
-
-void setcaption(const char *text)
-{
-	s_sprintfd(caption)("%s [v%.2f] %s%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "");
-	SDL_WM_SetCaption(caption, NULL);
-}
-
 int frameloops = 0;
 VARP(autoconnect, 0, 1, 1);
 
@@ -799,7 +822,8 @@ int main(int argc, char **argv)
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
 	conoutf("init: video: misc");
-	setcursor();
+	ncursor = SDL_GetCursor();
+	showcursor(false);
 	setcaption("loading..");
 
 	conoutf("init: gl");
@@ -839,8 +863,7 @@ int main(int argc, char **argv)
 	conoutf("init: mainloop");
 	if(initscript) execute(initscript);
 
-	//if(autograbinput && SDL_GetAppState() == SDL_APPMOUSEFOCUS)
-	//	setvar("grabinput", 1, true);
+	if(autograbinput) setvar("grabinput", 1, true);
 
 	if(autoconnect) connects();
 	else showgui("main");
