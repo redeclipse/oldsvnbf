@@ -3,10 +3,14 @@
 #include "pch.h"
 #include "engine.h"
 
+SDL_Surface *screen = NULL;
+SDL_Cursor *scursor = NULL;
+
 void cleanup()
 {
 	cleanupserver();
-	SDL_ShowCursor(1);
+	//SDL_ShowCursor(1);
+	if(scursor) SDL_FreeCursor(scursor);
 	freeocta(worldroot);
 	extern void clear_command();	clear_command();
 	extern void clear_console();	clear_console();
@@ -39,7 +43,8 @@ void fatal(const char *s, ...)    // failure exit
 
         if(errors <= 1) // avoid recursion
         {
-            SDL_ShowCursor(1);
+            //SDL_ShowCursor(1);
+            if(scursor) SDL_FreeCursor(scursor);
             #ifdef WIN32
                 MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
             #endif
@@ -49,8 +54,6 @@ void fatal(const char *s, ...)    // failure exit
 
     exit(EXIT_FAILURE);
 }
-
-SDL_Surface *screen = NULL;
 
 static int initing = NOT_INITING;
 static bool restoredinits = false;
@@ -701,6 +704,15 @@ void rehash(bool reload)
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
 
+void setcursor()
+{
+	Uint8 sd[1] = { 0 };
+	if(!(scursor = SDL_CreateCursor(sd, sd, 1, 1, 0, 0)))
+		fatal("could not create blank cursor");
+
+	SDL_SetCursor(scursor);
+}
+
 void setcaption(const char *text)
 {
 	s_sprintfd(caption)("%s [v%.2f] %s%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "");
@@ -787,6 +799,7 @@ int main(int argc, char **argv)
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
 	conoutf("init: video: misc");
+	setcursor();
 	setcaption("loading..");
 
 	conoutf("init: gl");
@@ -795,8 +808,6 @@ int main(int argc, char **argv)
     if(!(notexture = textureload("textures/notexture")) ||
 		!(blanktexture = textureload("textures/blank")))
 		fatal("could not find core textures");
-
-	SDL_ShowCursor(0);
 
 	conoutf("init: sound");
 	initsound();
