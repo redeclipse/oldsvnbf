@@ -7,6 +7,7 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
+		<Option active_target="5"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -179,7 +180,7 @@
 				<Option deps_output=".deps\ttf2font"/>
 				<Option type="0"/>
 				<Option compiler="0"/>
-				<Option parameters="-hhome -fdvscb.ttf"/>
+				<Option parameters="-hhome -fdvscb.ttf -i512 -s56 -p1 -d2"/>
 				<Option projectResourceIncludeDirsRelation="0"/>
 				<Compiler>
 					<Add option="-fexpensive-optimizations"/>
