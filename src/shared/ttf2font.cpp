@@ -13,7 +13,7 @@
 // 	-s<N>		font size
 // 	-p<N>		char padding
 // 	-d<N>		shadow depth
-// 	-q<N[0..1]>	render quality
+// 	-q<N[0..2]>	render quality
 // 	-c<N[0..9]>	compress level
 //
 #include "pch.h"
@@ -39,6 +39,11 @@
 const char *program, *fonname = "";
 string cutname, imgname, cfgname;
 int retcode = -1,
+#ifdef WIN32
+	win32msg = 1,
+#else
+	win32msg = 0,
+#endif
 	imgsize = 512, fonsize = 56, padsize = 1, shdsize = 2,
 		quality = 2, pngcomp = Z_BEST_SPEED;
 
@@ -52,10 +57,11 @@ void conoutf(const char *text, ...)
 	va_end(vl);
 
 #ifdef WIN32
-	MessageBox(NULL, str, "TTF2Font", MB_OK|MB_ICONINFORMATION|MB_TOPMOST);
-#else
-	fprintf(stdout, "%s\n", str);
+	if(win32msg)
+		MessageBox(NULL, str, "TTF2Font", MB_OK|MB_ICONINFORMATION|MB_TOPMOST);
+	else
 #endif
+		fprintf(stdout, "%s\n", str);
 }
 
 void erroutf(const char *text, ...)
@@ -68,10 +74,11 @@ void erroutf(const char *text, ...)
 	va_end(vl);
 
 #ifdef WIN32
-	MessageBox(NULL, str, "TTF2Font Error", MB_OK|MB_ICONERROR|MB_TOPMOST);
-#else
-	fprintf(stderr, "%s\n", str);
+	if(win32msg)
+		MessageBox(NULL, str, "TTF2Font Error", MB_OK|MB_ICONERROR|MB_TOPMOST);
+	else
 #endif
+		fprintf(stderr, "%s\n", str);
 }
 
 void savepng(SDL_Surface *s, const char *name)
@@ -150,9 +157,7 @@ int tryfont(TTF_Font *f, int size)
 {
 	int cf = CF_NONE;
 
-#ifndef WIN32
-	conoutf("Attempting to build image size %d...", size);
-#endif
+	if(!win32msg) conoutf("Attempting to build image size %d...", size);
 
 	SDL_Surface *t = SDL_CreateRGBSurface(SDL_SWSURFACE, size, size, 32, RMASK, GMASK, BMASK, AMASK);
 	if(t)
@@ -225,9 +230,8 @@ int tryfont(TTF_Font *f, int size)
 
 				if(a.y+a.h >= t->h)
 				{
-#ifndef WIN32
-					conoutf("Exceeded size %d at %d, trying next one..", t->h, a.y+a.h);
-#endif
+					if(!win32msg)
+						conoutf("Exceeded size %d at %d, trying next one..", t->h, a.y+a.h);
 					cf = CF_SIZE; // keep going, we want optimal sizes
 					break;
 				}
@@ -278,10 +282,9 @@ int tryfont(TTF_Font *f, int size)
 				}
 				fclose(p);
 
-#ifndef WIN32
-				conoutf(" "); // seperate the previous output nicely on other platforms
-#endif
-				conoutf("Completed conversion of font at size %d, dimensions %dx%d.\nUsed %d of %d surface pixels (%.1f%%).",
+				if(!win32msg) conoutf(" "); // seperate the previous output nicely
+
+				conoutf("Completed conversion of font at size %d, dimensions %dx%d.\nUsed %d of %d surface pixels (%.1f%%).\nNOTE: You must edit %s, it does not come ready to use.",
 					fonsize, t->w, t->h,
 					ma, t->w*t->h, (float(ma)/float(t->w*t->h))*100.f,
 					cfgname
@@ -320,7 +323,7 @@ void makefont()
 
 void usage()
 {
-	conoutf("%s usage:\n\n\t-?\t\tthis help\n\t-h<S>\t\thome dir, output directory\n\t-f<S>\t\tfont file\n\t-i<N>\t\timage size\n\t-s<N>\t\tfont size\n\t-p<N>\t\tchar padding\n\t-d<N>\t\tshadow depth\n\t-q<N[0..1]>\trender quality\n\t-c<N[0..9]>\tcompress level", program);
+	conoutf("%s usage:\n\n\t-?\t\tthis help\n\t-h<S>\t\thome dir, output directory\n\t-f<S>\t\tfont file\n\t-i<N>\t\timage size\n\t-s<N>\t\tfont size\n\t-p<N>\t\tchar padding\n\t-d<N>\t\tshadow depth\n\t-q<N[0..2]>\trender quality\n\t-c<N[0..9]>\tcompress level", program);
 }
 
 int main(int argc, char *argv[])
@@ -333,12 +336,15 @@ int main(int argc, char *argv[])
 		if(argv[i][0]=='-') switch(argv[i][1])
 		{
 			case '?': retcode = EXIT_SUCCESS; break;
+#ifdef WIN32
+			case 'w': win32msg = clamp(atoi(&argv[i][2]), 0, 1); break;
+#endif
 			case 'h': sethomedir(&argv[i][2]); break;
 			case 'f': fonname = &argv[i][2]; break;
-			case 'i': imgsize = min(atoi(&argv[i][2]), 2); break;
-			case 's': fonsize = min(atoi(&argv[i][2]), 1); break;
-			case 'p': padsize = min(atoi(&argv[i][2]), 0); break;
-			case 'd': shdsize = min(atoi(&argv[i][2]), 0); break;
+			case 'i': imgsize = max(atoi(&argv[i][2]), 2); break;
+			case 's': fonsize = max(atoi(&argv[i][2]), 1); break;
+			case 'p': padsize = max(atoi(&argv[i][2]), 0); break;
+			case 'd': shdsize = max(atoi(&argv[i][2]), 0); break;
 			case 'q': quality = clamp(atoi(&argv[i][2]), 0, 2); break;
 			case 'c': pngcomp = clamp(atoi(&argv[i][2]), Z_NO_COMPRESSION, Z_BEST_COMPRESSION); break;
 			default:
