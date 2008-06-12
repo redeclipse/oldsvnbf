@@ -214,7 +214,7 @@ void savesurface(SDL_Surface *s, char *fname, bool msg, int format)
 	switch(f)
 	{
 		case IFMT_PNG: savepng(s, filename); break;
-		case IFMT_BMP: SDL_SaveBMP(s, filename); break;
+		case IFMT_BMP: SDL_SaveBMP(s, findfile(filename, "wb")); break;
 		default: break;
 	}
 	if(verbose || msg) conoutf("saved image %s", filename);
