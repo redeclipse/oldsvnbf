@@ -8,30 +8,23 @@ SDL_Cursor *scursor = NULL, *ncursor = NULL;
 
 void showcursor(bool show)
 {
-	//if(screen->flags & SDL_FULLSCREEN)
-	//{
-		if(show)
+	if(show)
+	{
+		if(scursor) SDL_FreeCursor(scursor);
+		scursor = NULL;
+		SDL_SetCursor(ncursor);
+	}
+	else
+	{
+		if(!scursor)
 		{
-			if(scursor) SDL_FreeCursor(scursor);
-			scursor = NULL;
-			SDL_SetCursor(ncursor);
+			Uint8 sd[1] = { 0 };
+			if(!(scursor = SDL_CreateCursor(sd, sd, 1, 1, 0, 0)))
+				fatal("could not create blank cursor");
 		}
-		else
-		{
-			if(!scursor)
-			{
-				Uint8 sd[1] = { 0 };
-				if(!(scursor = SDL_CreateCursor(sd, sd, 1, 1, 0, 0)))
-					fatal("could not create blank cursor");
-			}
 
-			SDL_SetCursor(scursor);
-		}
-	//}
-	//else
-	//{
-	//	SDL_ShowCursor(show ? SDL_ENABLE : SDL_DISABLE);
-	//}
+		SDL_SetCursor(scursor);
+	}
 }
 
 void setcaption(const char *text)
