@@ -210,7 +210,7 @@ VARP(imageformat, IFMT_NONE+1, IFMT_PNG, IFMT_MAX-1);
 void savesurface(SDL_Surface *s, char *fname, bool msg, int format)
 {
 	int f = format > IFMT_NONE && format < IFMT_MAX ? format : imageformat;
-	const char *filename = findfile(makefile(fname, ifmtexts[f]), "wb");
+	const char *filename = makefile(fname, ifmtexts[f]);
 	switch(f)
 	{
 		case IFMT_PNG: savepng(s, filename); break;
