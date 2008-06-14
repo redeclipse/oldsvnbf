@@ -449,6 +449,7 @@ struct physics
             g.normalize();
             g.mul(gravityforce(pl)*secs);
         }
+        conoutf("floor: %.1f %.1f %.1f", pl->floor.x, pl->floor.y, pl->floor.z);
         if(!pl->inliquid || (!pl->move && !pl->strafe)) pl->falling.add(g);
 
         if(pl->inliquid || pl->physstate >= PHYS_SLOPE)
