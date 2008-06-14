@@ -696,6 +696,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
     if(cull&(MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED|MDL_CULL_QUERY|MDL_SHADOW|MDL_DYNSHADOW))
 	{
         radius = m->boundsphere(0/*frame*/, center, a); // FIXME
+        center.rotate_around_z((-180-yaw)*RAD);
 		center.add(o);
         if(cull&MDL_CULL_DIST && center.dist(camera1->o)/radius>maxmodelradiusdistance) return;
 		if(cull&MDL_CULL_VFC)
