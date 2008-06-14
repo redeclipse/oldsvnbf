@@ -650,14 +650,14 @@ struct GAMECLIENT : igameclient
 
 			glColor4f(1.f, 1.f, 1.f, amt);
 
-			rendericon("textures/emblem", ox+FONTH-x, oy-FONTH, FONTH, FONTH);
+			rendericon("textures/emblem", ox+FONTH/2-x, oy-FONTH, FONTH, FONTH);
 
 			draw_textx("%s", ox+FONTH*2-x, oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, title);
 
 			glColor4f(1.f, 1.f, 1.f, fade);
-			rendericon("textures/guioverlay", ox+FONTH-x, oy-FONTH*2, FONTH, FONTH);
-			if(!rendericon(getmapname(), ox+FONTH+8-x, oy-FONTH*2+8, FONTH-16, FONTH-16))
-				rendericon("textures/emblem", ox+FONTH+8-x, oy-FONTH*2+8, FONTH-16, FONTH-16);
+			rendericon("textures/guioverlay", ox+FONTH/2-x, oy-FONTH*2, FONTH, FONTH);
+			if(!rendericon(getmapname(), ox+FONTH/2+8-x, oy-FONTH*2+8, FONTH-16, FONTH-16))
+				rendericon("textures/emblem", ox+FONTH/2+8-x, oy-FONTH*2+8, FONTH-16, FONTH-16);
 
 			draw_textx("%s", ox+FONTH*2-x, oy-FONTH*2, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, sv->gamename(gamemode, mutators));
 		}
