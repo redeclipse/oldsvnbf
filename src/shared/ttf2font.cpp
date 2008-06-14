@@ -9,12 +9,13 @@
 // 	-?			this help
 // 	-h<S>		home dir, output directory
 // 	-f<S>		font file
-// 	-o<S>		output name
+// 	-n<S>		output name
 // 	-g<N[0..3]>	game type
 // 	-i<N>		image size
 // 	-s<N>		font size
 // 	-p<N>		char padding
 // 	-d<N>		shadow depth
+// 	-o<N>		outward shadow
 // 	-q<N[0..2]>	render quality
 // 	-c<N[0..9]>	compress level
 //
@@ -50,10 +51,10 @@ static struct gametypes
 	{ "fonts/"			},
 };
 
-const char *program, *fonname = NULL, *outname = NULL;
+const char *program, *fonname = NULL, *outname = "default";
 string cutname, imgname, cfgname;
 int retcode = -1, win32msg = 0, gametype = GAME_NONE,
-	imgsize = 0, fonsize = 0, padsize = 1, shdsize = 2,
+	imgsize = 0, fonsize = 0, padsize = 1, shdsize = 2, outline = 0,
 		quality = 2, pngcomp = Z_BEST_SPEED;
 
 void conoutf(const char *text, ...)
@@ -230,10 +231,11 @@ int tryfont(int isize, int fsize)
 
 				if(!cf)
 				{
+					int osize = (shdsize*(outline ? 2 : 1)), nsize = outline ? shdsize : 0;
 					a.x = x;
 					a.y = y;
-					a.w = s[0]->w+shdsize;
-					a.h = s[0]->h+shdsize;
+					a.w = s[0]->w+osize;
+					a.h = s[0]->h+osize;
 
 					if(a.x+a.w >= t->w)
 					{
@@ -248,11 +250,36 @@ int tryfont(int isize, int fsize)
 						cf = CF_SIZE; // keep going, we want optimal sizes
 						break;
 					}
-
 					loopk(2) if(k || shdsize)
 					{
 						bool sd = shdsize && !k;
-						blitchar(t, s[k], a.x+(sd?shdsize:0), a.y+(sd?shdsize:0));
+						loopj(sd && outline ? 4*shdsize : 1)
+						{
+							int m = j%4;
+							float n = ((float(j-m)/4.f)+1.f)/float(shdsize);
+							int o = int(float(osize)*n), p = osize-o;
+
+							switch(m)
+							{
+								case 3:
+									blitchar(t, s[k], a.x+p, a.y+p);
+									break;
+
+								case 2:
+									blitchar(t, s[k], a.x+o, a.y+p);
+									break;
+
+								case 1:
+									blitchar(t, s[k], a.x+p, a.y+o);
+									break;
+
+								case 0:
+								default:
+									blitchar(t, s[k], a.x+(sd?o:nsize), a.y+(sd?o:nsize));
+									break;
+							}
+
+						}
 					}
 
 					x += a.w+padsize;
@@ -310,6 +337,7 @@ int tryfont(int isize, int fsize)
 			SDL_FreeSurface(t);
 		}
 		else erroutf("Failed to create SDL surface: %s", SDL_GetError());
+
 		TTF_CloseFont(f);
 	}
 	else erroutf("Failed to open font: %s", TTF_GetError());
@@ -330,8 +358,8 @@ void makefont()
 			case CF_SIZE:
 			default:
 			{
-				if(!fonsize) fsize--;
-				else if(!imgsize) isize += 2;
+				if(!fonsize || imgsize) fsize--;
+				else if(!imgsize || fonsize) isize += 2;
 				else
 				{
 					erroutf("Failed to create the size %d font in the dimensions %dx%d.", fsize, isize);
@@ -346,7 +374,7 @@ void makefont()
 
 void usage()
 {
-	conoutf("%s usage:\n\n\t-?\t\tthis help\n\t-h<S>\t\thome dir, output directory\n\t-g<N[0..3]>\t\tgame type\n\t-f<S>\t\tfont file\n\t-o<S>\t\talternative name\n\t-i<N>\t\timage size\n\t-s<N>\t\tfont size\n\t-p<N>\t\tchar padding\n\t-d<N>\t\tshadow depth\n\t-q<N[0..2]>\trender quality\n\t-c<N[0..9]>\tcompress level", program);
+	conoutf("%s usage:\n\n\t-?\t\tthis help\n\t-h<S>\t\thome dir, output directory\n\t-g<N[0..3]>\t\tgame type\n\t-f<S>\t\tfont file\n\t-n<S>\t\toutput name\n\t-i<N>\t\timage size\n\t-s<N>\t\tfont size\n\t-p<N>\t\tchar padding\n\t-d<N>\t\tshadow depth\n\t-o<N[0..1]>\t\toutward shadow\n\t-q<N[0..2]>\trender quality\n\t-c<N[0..9]>\tcompress level", program);
 }
 
 int main(int argc, char *argv[])
@@ -364,12 +392,13 @@ int main(int argc, char *argv[])
 #endif
 			case 'h': sethomedir(&argv[i][2]); break;
 			case 'f': fonname = &argv[i][2]; break;
-			case 'o': outname = &argv[i][2]; break;
+			case 'n': outname = &argv[i][2]; break;
 			case 'g': gametype = clamp(atoi(&argv[i][2]), int(GAME_NONE), int(GAME_MAX-1)); break;
 			case 'i': imgsize = max(atoi(&argv[i][2]), 0); imgsize -= imgsize%2; break;
 			case 's': fonsize = max(atoi(&argv[i][2]), 0); break;
 			case 'p': padsize = max(atoi(&argv[i][2]), 0); break;
 			case 'd': shdsize = max(atoi(&argv[i][2]), 0); break;
+			case 'o': outline = clamp(atoi(&argv[i][2]), 0, 1); break;
 			case 'q': quality = clamp(atoi(&argv[i][2]), 0, 2); break;
 			case 'c': pngcomp = clamp(atoi(&argv[i][2]), Z_NO_COMPRESSION, Z_BEST_COMPRESSION); break;
 			default:
@@ -388,7 +417,7 @@ int main(int argc, char *argv[])
 		if(dot) s_strncpy(cutname, fonname, dot-fonname+1);
 		else s_strcpy(cutname, fonname);
 
-		if(!outname) outname = cutname;
+		if(!*outname) outname = cutname;
 
 		s_sprintf(imgname)("%s.png", outname);
 		s_sprintf(cfgname)("%s.cfg", outname);
