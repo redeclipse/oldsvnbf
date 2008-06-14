@@ -113,7 +113,7 @@ struct clientcom : iclientcom
 
 	void writeclientinfo(FILE *f)
 	{
-		fprintf(f, "name \"%s\"\nteam \"%s\"\n\n", cl.player1->name, teamtype[cl.player1->team].name);
+		fprintf(f, "name \"%s\"\n\n", cl.player1->name);
 	}
 
 	void gameconnect(bool _remote)
