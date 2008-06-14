@@ -628,7 +628,9 @@ struct GAMECLIENT : igameclient
 
 	void drawgamehud(int w, int h)
 	{
-		int ox = w*900/h, oy = 900;
+		int ox = w*3, oy = h*3;
+
+		setfont("hud");
 
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
@@ -648,16 +650,16 @@ struct GAMECLIENT : igameclient
 
 			glColor4f(1.f, 1.f, 1.f, amt);
 
-			rendericon("textures/emblem", ox+20-x, oy-75, 64, 64);
+			rendericon("textures/emblem", ox+FONTH-x, oy-FONTH, FONTH, FONTH);
 
-			draw_textx("%s", ox+100-x, oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, title);
+			draw_textx("%s", ox+FONTH*2-x, oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, title);
 
 			glColor4f(1.f, 1.f, 1.f, fade);
-			rendericon("textures/guioverlay", ox+20-x, oy-260, 144, 144);
-			if(!rendericon(getmapname(), ox+28-x, oy-252, 128, 128))
-				rendericon("textures/emblem", ox+20-x, oy-260, 144, 144);
+			rendericon("textures/guioverlay", ox+FONTH-x, oy-FONTH*2, FONTH, FONTH);
+			if(!rendericon(getmapname(), ox+FONTH+8-x, oy-FONTH*2+8, FONTH-16, FONTH-16))
+				rendericon("textures/emblem", ox+FONTH+8-x, oy-FONTH*2+8, FONTH-16, FONTH-16);
 
-			draw_textx("%s", ox+180-x, oy-180, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, sv->gamename(gamemode, mutators));
+			draw_textx("%s", ox+FONTH*2-x, oy-FONTH*2, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, sv->gamename(gamemode, mutators));
 		}
 		else
 		{
@@ -707,13 +709,13 @@ struct GAMECLIENT : igameclient
 					if(guntype[d->gunselect].power && d->attacking)
 					{
 						int power = clamp(int(float(lastmillis-d->attacktime)/float(guntype[d->gunselect].power)*100.f), 0, 100);
-						draw_textx("%d - %d", oy/5+rw+(FONTH/4*3), oy-75, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect], power);
+						draw_textx("%d - %d", oy/5+rw+(FONTH/4*3), oy-FONTH, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect], power);
 					}
-					else draw_textx("%d", oy/5+rw+(FONTH/4*3), oy-75, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect]);
+					else draw_textx("%d", oy/5+rw+(FONTH/4*3), oy-FONTH, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect]);
 				}
 				else
 				{
-					draw_textx("Out of ammo", oy/5+rw+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+					draw_textx("Out of ammo", oy/5+rw+(FONTH/4*3), oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 				}
 			}
 			else if(d->state == CS_DEAD)
@@ -723,10 +725,10 @@ struct GAMECLIENT : igameclient
 				if(wait)
 				{
 					float c = float(wait)/1000.f;
-					draw_textx("Fragged! Down for %.1fs", oy/5+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, c);
+					draw_textx("Fragged! Down for %.1fs", oy/5+(FONTH/4*3), oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, c);
 				}
 				else
-					draw_textx("Fragged! Press attack to respawn", oy/5+(FONTH/4*3), oy-75, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+					draw_textx("Fragged! Press attack to respawn", oy/5+(FONTH/4*3), oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 			}
 
 			int rx = FONTH/4, rs = oy/5, ry = oy-rs-(FONTH/4);
@@ -747,6 +749,8 @@ struct GAMECLIENT : igameclient
 			drawradar(float(rx), float(ry), float(rs));
 			glEnd();
 		}
+
+		setfont("default");
 	}
 
 	enum
