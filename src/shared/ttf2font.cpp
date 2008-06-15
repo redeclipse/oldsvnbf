@@ -184,7 +184,7 @@ int tryfont(int isize, int fsize, bool commit)
 
 			vector<fontchar> chars;
 			SDL_Color c[3] = { { 1, 1, 1, }, { 255, 255, 255 }, { 0, 0, 0 } };
-			int x = padsize, y = padsize, h = 0, mw = 0, mh = 0;
+			int x = padsize, y = padsize, h = 0, ma = 0, mw = 0, mh = 0;
 
 			loopi(FONTCHARS)
 			{
@@ -278,6 +278,7 @@ int tryfont(int isize, int fsize, bool commit)
 					if(a.h > h) h = a.h;
 					mw += a.w;
 					mh += a.h;
+					ma += (a.w+padsize)*(a.h+padsize);
 				}
 				else break;
 			}
@@ -319,7 +320,7 @@ int tryfont(int isize, int fsize, bool commit)
 
 						conoutf("Completed conversion of font at size %d, dimensions %dx%d.\nUsed %d of %d surface pixels (%.1f%%).\nNOTE: You must edit %s, it does not come ready to use.",
 							fsize, t->w, t->h,
-							mw*mh, t->w*t->h, (float(mw*mh)/float(t->w*t->h))*100.f,
+							ma, t->w*t->h, (float(ma)/float(t->w*t->h))*100.f,
 							cfgname
 						);
 						cf = CF_OK;
