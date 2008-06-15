@@ -54,7 +54,7 @@ static struct gametypes
 const char *program, *fonname = NULL, *outname = "default";
 string cutname, imgname, cfgname;
 int retcode = -1, win32msg = 0, gametype = GAME_NONE,
-	imgsize = 0, fonsize = 0, padsize = 1, shdsize = 2, outline = 0,
+	imgsize = 0, fonsize = 0, padsize = 1, shdsize = 2, outline = 1,
 		quality = 2, pngcomp = Z_BEST_SPEED;
 
 void conoutf(const char *text, ...)
@@ -260,33 +260,17 @@ int tryfont(int isize, int fsize, bool commit)
 						loopk(2) if(k || shdsize)
 						{
 							bool sd = shdsize && !k;
-							loopj(sd && outline ? 4*shdsize : 1)
+							if(sd && outline)
 							{
-								int m = j%4;
-								float n = ((float(j-m)/4.f)+1.f)/float(shdsize);
-								int o = int(float(osize)*n), p = osize-o;
-
-								switch(m)
+								loop(dx, osize+1)
 								{
-									case 3:
-										blitchar(t, s[k], a.x+p, a.y+p);
-										break;
-
-									case 2:
-										blitchar(t, s[k], a.x+o, a.y+p);
-										break;
-
-									case 1:
-										blitchar(t, s[k], a.x+p, a.y+o);
-										break;
-
-									case 0:
-									default:
-										blitchar(t, s[k], a.x+(sd?o:nsize), a.y+(sd?o:nsize));
-										break;
+									loop(dy, osize+1)
+									{
+										blitchar(t, s[k], a.x+dx, a.y+dy);
+									}
 								}
-
 							}
+							else blitchar(t, s[k], a.x+(sd?osize:nsize), a.y+(sd?osize:nsize));
 						}
 					}
 
