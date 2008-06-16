@@ -450,7 +450,7 @@ bool interceptkey(int sym)
         switch(event.type)
         {
         case SDL_KEYDOWN:
-            if(event.key.keysym.sym == SDLK_ESCAPE)
+            if(event.key.keysym.sym == sym)
                 return true;
 
         default:
