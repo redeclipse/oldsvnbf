@@ -10,6 +10,8 @@
 // 	-h<S>		home dir, output directory
 // 	-f<S>		font file
 // 	-n<S>		output name
+//	-r			reset character mapping
+//	-c<S>		load character mapping
 // 	-g<N[0..3]>	game type
 // 	-i<N>		image size
 // 	-s<N>		font size
@@ -17,7 +19,7 @@
 // 	-d<N>		shadow depth
 // 	-o<N>		outward shadow
 // 	-q<N[0..2]>	render quality
-// 	-c<N[0..9]>	compress level
+// 	-z<N[0..9]>	compress level
 //
 #include "pch.h"
 #include "tools.h"
@@ -53,7 +55,7 @@ static struct gametypes
 
 const char *program, *fonname = NULL, *outname = "default";
 string cutname, imgname, cfgname;
-int retcode = -1, win32msg = 0, gametype = GAME_NONE,
+int retcode = -1, gametype = GAME_NONE,
 	imgsize = 0, fonsize = 0, padsize = 1, shdsize = 2, outline = 1,
 		quality = 2, pngcomp = Z_BEST_SPEED;
 
@@ -66,12 +68,7 @@ void conoutf(const char *text, ...)
 	vsnprintf(str, _MAXDEFSTR-1, text, vl);
 	va_end(vl);
 
-#ifdef WIN32
-	if(win32msg)
-		MessageBox(NULL, str, "TTF2Font", MB_OK|MB_ICONINFORMATION|MB_TOPMOST);
-	else
-#endif
-		fprintf(stdout, "%s\n", str);
+	fprintf(stdout, "%s\n", str);
 }
 
 void erroutf(const char *text, ...)
@@ -83,12 +80,7 @@ void erroutf(const char *text, ...)
 	vsnprintf(str, _MAXDEFSTR-1, text, vl);
 	va_end(vl);
 
-#ifdef WIN32
-	if(win32msg)
-		MessageBox(NULL, str, "TTF2Font Error", MB_OK|MB_ICONERROR|MB_TOPMOST);
-	else
-#endif
-		fprintf(stderr, "%s\n", str);
+	fprintf(stderr, "%s\n", str);
 }
 
 void savepng(SDL_Surface *s, const char *name)
@@ -161,7 +153,41 @@ enum { CF_NONE = 0, CF_OK, CF_FAIL, CF_SIZE };
 #define FONTSTART	33
 #define FONTCHARS	94
 
-struct fontchar { char c; int x, y, w, h; };
+struct fontchar
+{
+	string c;
+	int x, y, w, h;
+
+	fontchar() : x(0), y(0), w(0), h(0) { c[0] = 0; }
+	fontchar(char *s) : x(0), y(0), w(0), h(0) { s_strcpy(c, s); }
+	~fontchar() {}
+};
+vector<fontchar> chars;
+
+void loadchars(const char *name)
+{
+	char *buf = loadfile(name, NULL);
+	if(buf)
+	{
+		char *str = buf, *sep;
+		while((sep = strpbrk(str, "\n\r")) != NULL)
+		{
+			int sub = sep-str+1;
+			if(sub && (sub < 2 || (strncmp(str, "//", 2) && strncmp(str, "# ", 2))))
+			{
+				string s;
+				s_strncpy(s, str, sub);
+				if(s[0]) chars.add(s);
+			}
+			str += sub+1;
+		}
+
+		delete[] buf;
+	}
+	else erroutf("could not load chars: %s", name);
+}
+
+SDL_Color colours[3] = { { 1, 1, 1, }, { 255, 255, 255 }, { 0, 0, 0 } };
 
 int tryfont(int isize, int fsize, bool commit)
 {
@@ -171,7 +197,7 @@ int tryfont(int isize, int fsize, bool commit)
 
 	if(f)
 	{
-		if(!win32msg && !commit)
+		if(!commit)
 			conoutf("Attempting to build size %d font in dimensions %dx%d...", fsize, isize, isize);
 
 		SDL_Surface *t = SDL_CreateRGBSurface(SDL_SWSURFACE, isize, isize, 32, RMASK, GMASK, BMASK, AMASK);
@@ -182,16 +208,11 @@ int tryfont(int isize, int fsize, bool commit)
 				loopi(t->h) memset((uchar *)t->pixels + i*t->pitch, 0, 4*t->w);
 			}
 
-			vector<fontchar> chars;
-			SDL_Color c[3] = { { 1, 1, 1, }, { 255, 255, 255 }, { 0, 0, 0 } };
 			int x = padsize, y = padsize, h = 0, ma = 0, mw = 0, mh = 0;
 
-			loopi(FONTCHARS)
+			loopv(chars)
 			{
-				fontchar &a = chars.add();
-				a.c = i+FONTSTART;
-
-				s_sprintfd(m)("%c", a.c);
+				fontchar *a = &chars[i];
 				SDL_Surface *s[2] = { NULL, NULL };
 				loopk(commit ? 2 : 1)
 				{
@@ -199,21 +220,21 @@ int tryfont(int isize, int fsize, bool commit)
 					{
 						case 0:
 						{
-							s[k] = TTF_RenderText_Solid(f, m, c[k]);
+							s[k] = TTF_RenderUTF8_Solid(f, a->c, colours[k]);
 							break;
 						}
 						case 1:
 						{
-							s[k] = TTF_RenderText_Shaded(f, m, c[k], c[2]);
+							s[k] = TTF_RenderUTF8_Shaded(f, a->c, colours[k], colours[2]);
 							if(s[k])
 								SDL_SetColorKey(s[k], SDL_SRCCOLORKEY,
-									SDL_MapRGBA(s[k]->format, c[2].r, c[2].g, c[2].b, 0));
+									SDL_MapRGBA(s[k]->format, colours[2].r, colours[2].g, colours[2].b, 0));
 							break;
 						}
 						case 2:
 						default:
 						{
-							s[k] = TTF_RenderText_Blended(f, m, c[k]);
+							s[k] = TTF_RenderUTF8_Blended(f, a->c, colours[k]);
 							if(s[k]) SDL_SetAlpha(s[k], 0, 0);
 							break;
 						}
@@ -236,21 +257,20 @@ int tryfont(int isize, int fsize, bool commit)
 				if(!cf)
 				{
 					int osize = (shdsize*(outline ? 2 : 1)), nsize = outline ? shdsize : 0;
-					a.x = x;
-					a.y = y;
-					a.w = s[0]->w+osize;
-					a.h = s[0]->h+osize;
+					a->x = x;
+					a->y = y;
+					a->w = s[0]->w+osize;
+					a->h = s[0]->h+osize;
 
-					if(a.x+a.w >= t->w)
+					if(a->x+a->w >= t->w)
 					{
-						a.y = y = a.y+h+padsize;
-						a.x = x = h = 0;
+						a->y = y = a->y+h+padsize;
+						a->x = x = h = 0;
 					}
 
-					if(a.y+a.h >= t->h)
+					if(a->y+a->h >= t->h)
 					{
-						if(!win32msg)
-							conoutf("Size %d font exceeded dimensions %dx%d at %d.", fsize, t->w, t->h, a.y+a.h);
+						conoutf("Size %d font exceeded dimensions %dx%d at %d.", fsize, t->w, t->h, a->y+a->h);
 						cf = CF_SIZE; // keep going, we want optimal sizes
 						break;
 					}
@@ -266,19 +286,19 @@ int tryfont(int isize, int fsize, bool commit)
 								{
 									loop(dy, osize+1)
 									{
-										blitchar(t, s[k], a.x+dx, a.y+dy);
+										blitchar(t, s[k], a->x+dx, a->y+dy);
 									}
 								}
 							}
-							else blitchar(t, s[k], a.x+(sd?osize:nsize), a.y+(sd?osize:nsize));
+							else blitchar(t, s[k], a->x+(sd?osize:nsize), a->y+(sd?osize:nsize));
 						}
 					}
 
-					x += a.w+padsize;
-					if(a.h > h) h = a.h;
-					mw += a.w;
-					mh += a.h;
-					ma += (a.w+padsize)*(a.h+padsize);
+					x += a->w+padsize;
+					if(a->h > h) h = a->h;
+					mw += a->w;
+					mh += a->h;
+					ma += (a->w+padsize)*(a->h+padsize);
 				}
 				else break;
 			}
@@ -300,25 +320,23 @@ int tryfont(int isize, int fsize, bool commit)
 						{
 							if(chars[i].h != oh)
 							{
-								fprintf(p, "fontchar\t%d\t%d\t%d\t%d\t\t// %c\n",
+								fprintf(p, "fontchar\t%d\t%d\t%d\t%d\t\t// %s\n",
 									chars[i].x, chars[i].y, chars[i].w, chars[i].h, chars[i].c);
 							}
 							else if(chars[i].w != ow)
 							{
-								fprintf(p, "fontchar\t%d\t%d\t%d\t\t\t// %c\n",
+								fprintf(p, "fontchar\t%d\t%d\t%d\t\t\t// %s\n",
 									chars[i].x, chars[i].y, chars[i].w, chars[i].c);
 							}
 							else
 							{
-								fprintf(p, "fontchar\t%d\t%d\t\t\t\t// %c\n",
+								fprintf(p, "fontchar\t%d\t%d\t\t\t\t// %s\n",
 									chars[i].x, chars[i].y, chars[i].c);
 							}
 						}
 						fclose(p);
 
-						if(!win32msg) conoutf(" "); // seperate the previous output nicely
-
-						conoutf("Completed conversion of font at size %d, dimensions %dx%d.\nUsed %d of %d surface pixels (%.1f%%).\nNOTE: You must edit %s, it does not come ready to use.",
+						conoutf("\n-\nCompleted conversion of font at size %d, dimensions %dx%d.\nUsed %d of %d surface pixels (%.1f%%).\nNOTE: You must edit %s, it does not come ready to use.",
 							fsize, t->w, t->h,
 							ma, t->w*t->h, (float(ma)/float(t->w*t->h))*100.f,
 							cfgname
@@ -329,7 +347,6 @@ int tryfont(int isize, int fsize, bool commit)
 				}
 				else cf = CF_OK;
 			}
-			chars.setsize(0);
 			SDL_FreeSurface(t);
 		}
 		else erroutf("Failed to create SDL surface: %s", SDL_GetError());
@@ -379,11 +396,31 @@ void makefont()
 
 void usage()
 {
-	conoutf("%s usage:\n\n\t-?\t\tthis help\n\t-h<S>\t\thome dir, output directory\n\t-g<N[0..3]>\t\tgame type\n\t-f<S>\t\tfont file\n\t-n<S>\t\toutput name\n\t-i<N>\t\timage size\n\t-s<N>\t\tfont size\n\t-p<N>\t\tchar padding\n\t-d<N>\t\tshadow depth\n\t-o<N[0..1]>\t\toutward shadow\n\t-q<N[0..2]>\trender quality\n\t-c<N[0..9]>\tcompress level", program);
+	conoutf("%s usage:\n");
+	conoutf("\t-?\t\tthis help");
+	conoutf("\t-h<S>\t\thome dir, output directory");
+	conoutf("\t-g<N[0..3]>\t\tgame type");
+	conoutf("\t-f<S>\t\tfont file");
+	conoutf("\t-n<S>\t\toutput name");
+	conoutf("\t-r\t\treset character mapping");
+	conoutf("\t-c<S>\t\tload character mapping");
+	conoutf("\t-i<N>\t\timage size");
+	conoutf("\t-s<N>\t\tfont size");
+	conoutf("\t-p<N>\t\tchar padding");
+	conoutf("\t-d<N>\t\tshadow depth");
+	conoutf("\t-o<N[0..1]>\t\toutward shadow");
+	conoutf("\t-q<N[0..2]>\trender quality");
+	conoutf("\t-z<N[0..9]>\tcompress level", program);
 }
 
 int main(int argc, char *argv[])
 {
+	loopi(FONTCHARS)
+	{
+		s_sprintfd(s)("%c", i+FONTSTART);
+		chars.add(s);
+	}
+
 	program = argv[0];
 	sethomedir(".");
 
@@ -392,12 +429,11 @@ int main(int argc, char *argv[])
 		if(argv[i][0]=='-') switch(argv[i][1])
 		{
 			case '?': retcode = EXIT_SUCCESS; break;
-#ifdef WIN32
-			case 'w': win32msg = clamp(atoi(&argv[i][2]), 0, 1); break;
-#endif
 			case 'h': sethomedir(&argv[i][2]); break;
 			case 'f': fonname = &argv[i][2]; break;
 			case 'n': outname = &argv[i][2]; break;
+			case 'r': chars.setsize(0); break;
+			case 'c': if(argv[i][2]) loadchars(&argv[i][2]); break;
 			case 'g': gametype = clamp(atoi(&argv[i][2]), int(GAME_NONE), int(GAME_MAX-1)); break;
 			case 'i': imgsize = max(atoi(&argv[i][2]), 0); imgsize -= imgsize%2; break;
 			case 's': fonsize = max(atoi(&argv[i][2]), 0); break;
@@ -405,7 +441,7 @@ int main(int argc, char *argv[])
 			case 'd': shdsize = max(atoi(&argv[i][2]), 0); break;
 			case 'o': outline = clamp(atoi(&argv[i][2]), 0, 1); break;
 			case 'q': quality = clamp(atoi(&argv[i][2]), 0, 2); break;
-			case 'c': pngcomp = clamp(atoi(&argv[i][2]), Z_NO_COMPRESSION, Z_BEST_COMPRESSION); break;
+			case 'z': pngcomp = clamp(atoi(&argv[i][2]), Z_NO_COMPRESSION, Z_BEST_COMPRESSION); break;
 			default:
 			{
 				erroutf("Unknown command line argument -%c", argv[i][1]);
@@ -416,7 +452,7 @@ int main(int argc, char *argv[])
 		else fonname = argv[i]; // for drag and drop on win32. or laziness
 	}
 
-	if(retcode < 0 && fonname)
+	if(retcode < 0 && fonname && chars.length())
 	{
 		char *dot = strpbrk(fonname, ".");
 		if(dot) s_strncpy(cutname, fonname, dot-fonname+1);
@@ -441,6 +477,8 @@ int main(int argc, char *argv[])
 		else erroutf("Failed to initialize SDL: %s", SDL_GetError());
 	}
 	else usage();
+
+	chars.setsize(0);
 
 	return retcode < 0 ? EXIT_FAILURE : retcode;
 }
