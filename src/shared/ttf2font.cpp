@@ -239,16 +239,19 @@ int tryfont(int isize, int fsize, bool commit)
 							break;
 						}
 					}
+					if(!s[k])
+						erroutf("Failed to render \"%s\": %s", a->c, TTF_GetError());
+
 					if(s[k])
 					{
 						SDL_Surface *c = SDL_ConvertSurface(s[k], t->format, SDL_SWSURFACE);
 						SDL_FreeSurface(s[k]);
 						s[k] = c;
 					}
+
 					if(!s[k])
 					{
 						if(k && s[0]) SDL_FreeSurface(s[0]);
-						erroutf("Failed to render font: %s", TTF_GetError());
 						cf = CF_FAIL;
 						break;
 					}
@@ -396,10 +399,10 @@ void makefont()
 
 void usage()
 {
-	conoutf("%s usage:\n", program);
+	conoutf("%s usage:\n");
 	conoutf("\t-?\t\tthis help");
 	conoutf("\t-h<S>\t\thome dir, output directory");
-	conoutf("\t-g<N[0..3]>\tgame type");
+	conoutf("\t-g<N[0..3]>\t\tgame type");
 	conoutf("\t-f<S>\t\tfont file");
 	conoutf("\t-n<S>\t\toutput name");
 	conoutf("\t-r\t\treset character mapping");
@@ -408,9 +411,9 @@ void usage()
 	conoutf("\t-s<N>\t\tfont size");
 	conoutf("\t-p<N>\t\tchar padding");
 	conoutf("\t-d<N>\t\tshadow depth");
-	conoutf("\t-o<N[0..1]>\toutward shadow");
+	conoutf("\t-o<N[0..1]>\t\toutward shadow");
 	conoutf("\t-q<N[0..2]>\trender quality");
-	conoutf("\t-z<N[0..9]>\tcompress level");
+	conoutf("\t-z<N[0..9]>\tcompress level", program);
 }
 
 int main(int argc, char *argv[])

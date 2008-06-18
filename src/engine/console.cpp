@@ -593,12 +593,13 @@ extern bool menukey(int code, bool isdown, int cooked);
 
 void keypress(int code, bool isdown, int cooked)
 {
+	char alpha = cooked < 0x80 ? cooked : '?';
     keym *haskey = NULL;
     loopv(keyms) if(keyms[i].code==code) { haskey = &keyms[i]; break; }
     if(haskey && haskey->pressed) execbind(*haskey, isdown); // allow pressed keys to release
-    else if(!menukey(code, isdown, cooked)) // 3D GUI mouse button intercept
+    else if(!menukey(code, isdown, alpha)) // 3D GUI mouse button intercept
     {
-        if(saycommandon) consolekey(code, isdown, cooked);
+        if(saycommandon) consolekey(code, isdown, alpha);
         else if(haskey) execbind(*haskey, isdown);
     }
 }
