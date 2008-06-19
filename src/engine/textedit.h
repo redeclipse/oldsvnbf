@@ -1,6 +1,4 @@
 
-typedef enum {EDITORFOCUSED=1, EDITORUSED, EDITORFOREVER} editormode;
-
 struct editline
 {
     enum { CHUNKSIZE = 256 };
@@ -315,7 +313,7 @@ struct editor
     {
         del();
         editline &current = currentline();
-        if(ch == '\n') 
+        if(ch == '\n')
         {
             if(maxy == -1 || cy < maxy-1)
             {
@@ -341,10 +339,10 @@ struct editor
 
         del();
 
-        if(b->lines.length() == 1 || maxy == 1) 
+        if(b->lines.length() == 1 || maxy == 1)
         {
             editline &current = currentline();
-            char *str = b->lines[0].text;            
+            char *str = b->lines[0].text;
             int slen = b->lines[0].len;
             if(maxx >= 0 && b->lines[0].len + cx > maxx) slen = maxx-cx;
             if(slen > 0)
@@ -357,7 +355,7 @@ struct editor
         }
         else
         {
-            loopv(b->lines) 
+            loopv(b->lines)
             {
                 if(!i)
                 {
@@ -518,7 +516,7 @@ struct editor
             }
             maxy--;
 
-            if(ey >= scrolly && sy <= maxy) 
+            if(ey >= scrolly && sy <= maxy)
             {
                 // crop top/bottom within window
                 if(sy < scrolly) { sy = scrolly; psy = 0; psx = 0; }

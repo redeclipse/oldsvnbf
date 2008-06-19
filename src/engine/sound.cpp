@@ -172,8 +172,8 @@ ICOMMAND(mapsound, "sis", (char *n, int *v, char *m), intret(addsound(n, *v, *m 
 
 void updatesound(int chan)
 {
-	bool posliquid = isliquid(lookupmaterial(*sounds[chan].pos)),
-			camliquid = isliquid(lookupmaterial(camera1->o));
+	bool posliquid = isliquid(lookupmaterial(*sounds[chan].pos)&MATF_VOLUME),
+			camliquid = isliquid(lookupmaterial(camera1->o)&MATF_VOLUME);
 	int vol = clamp(((soundvol*sounds[chan].vol*sounds[chan].slot->vol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
 
 	vec v;

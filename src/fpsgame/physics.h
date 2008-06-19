@@ -411,7 +411,7 @@ struct physics
 		if(m.iszero() && wantsmove)
 		{
 			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
-
+			#if 0
 			if(!floating && pl->physstate >= PHYS_SLIDE)
 			{
 				/* move up or down slopes in air
@@ -421,6 +421,7 @@ struct physics
 				if(pl->inliquid) m.z = max(m.z, dz);
 				else if(pl->floor.z >= wallz(pl)) m.z = dz;
 			}
+			#endif
 
 			m.normalize();
 		}
@@ -441,6 +442,7 @@ struct physics
     {
         float secs = curtime/1000.0f;
         vec g(0, 0, 0);
+        #if 0
         if(pl->physstate == PHYS_FALL) g.z -= gravityforce(pl)*secs;
         else if(pl->floor.z > 0 && pl->floor.z < floorz(pl))
         {
@@ -449,7 +451,6 @@ struct physics
             g.normalize();
             g.mul(gravityforce(pl)*secs);
         }
-        //conoutf("floor: %.1f %.1f %.1f", pl->floor.x, pl->floor.y, pl->floor.z);
         if(!pl->inliquid || (!pl->move && !pl->strafe)) pl->falling.add(g);
 
         if(pl->inliquid || pl->physstate >= PHYS_SLOPE)
@@ -459,6 +460,17 @@ struct physics
                   c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez(pl))/(floorz(pl)-slopez(pl)), 0.0f, 1.0f);
             pl->falling.mul(1 - c/fpsfric);
         }
+        #else
+        g.z -= gravityforce(pl)*secs;
+        if(!pl->inliquid || (!pl->move && !pl->strafe))
+        {
+        	pl->falling.add(g);
+            float friction = pl->inliquid ? sinkfric(pl) : floorfric(pl),
+                  fpsfric = friction/curtime*20.0f,
+                  c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez(pl))/(floorz(pl)-slopez(pl)), 0.0f, 1.0f);
+            pl->falling.mul(1 - c/fpsfric);
+        }
+        #endif
     }
 
     void updatematerial(physent *pl, bool local, bool floating)
@@ -467,7 +479,7 @@ struct physics
 		int material = lookupmaterial(v);
 		if(pl->state == CS_ALIVE && material != pl->inmaterial)
 		{
-			if(isliquid(material) || isliquid(pl->inmaterial))
+			if(isliquid(material&MATF_VOLUME) || isliquid(pl->inmaterial&MATF_VOLUME))
 			{
 				uchar col[3] = { 255, 255, 255 };
 				#define mattrig(mf,mz,mw) \
@@ -478,18 +490,18 @@ struct physics
 					if(mw>=0) playsound(mw, &pl->o, 255, 0, 0, SND_COPY); \
 				}
 
-				if(material == MAT_WATER || pl->inmaterial == MAT_WATER)
+				if(int(material&MATF_VOLUME) == MAT_WATER || int(pl->inmaterial&MATF_VOLUME) == MAT_WATER)
 				{
-					mattrig(getwatercolour(col), 17, material != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+					mattrig(getwatercolour(col), 17, int(material&MATF_VOLUME) != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
 				}
 
-				if(material == MAT_LAVA || pl->inmaterial == MAT_LAVA)
+				if(int(material&MATF_VOLUME) == MAT_LAVA || int(pl->inmaterial&MATF_VOLUME) == MAT_LAVA)
 				{
-					mattrig(getlavacolour(col), 4, material != MAT_LAVA ? -1 : S_FLBURN);
+					mattrig(getlavacolour(col), 4, int(material&MATF_VOLUME) != MAT_LAVA ? -1 : S_FLBURN);
 				}
 			}
 
-			if(local && pl->type == ENT_PLAYER && (material == MAT_LAVA || material == MAT_DEATH))
+			if(local && pl->type == ENT_PLAYER && (isdeadly(material&MATF_VOLUME)))
 				cl.suicide((fpsent *)pl);
 		}
 
@@ -497,7 +509,7 @@ struct physics
 
 		v = vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->height)/4);
 		bool liquid = pl->inliquid;
-		pl->inliquid = !floating && isliquid(lookupmaterial(v));
+		pl->inliquid = !floating && isliquid(lookupmaterial(v)&MATF_VOLUME);
 		if (!floating && pl->inliquid && liquid != pl->inliquid)
 			pl->vel.div(liquiddampen(pl));
     }

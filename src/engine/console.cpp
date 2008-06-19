@@ -748,7 +748,7 @@ void complete(char *s)
 	else // complete using command names
 	{
 		enumerate(*idents, ident, id,
-            if(id.complete && strncmp(id.name, s+1, completesize)==0 &&
+            if(id.flags&IDF_COMPLETE && strncmp(id.name, s+1, completesize)==0 &&
                strcmp(id.name, lastcomplete) > 0 && (!nextcomplete || strcmp(id.name, nextcomplete) < 0))
                 nextcomplete = id.name;
 		);
@@ -767,9 +767,10 @@ void setcompletion(char *s, bool on)
 	enumerate(*idents, ident, id,
 		if(!strcmp(id.name, s))
 		{
-			id.complete = on;
+			if(on && !(id.flags&IDF_COMPLETE)) id.flags |= IDF_COMPLETE;
+			else if(!on && id.flags&IDF_COMPLETE) id.flags &= ~IDF_COMPLETE;
+			return;
 		}
-		return;
 	);
 	conoutf("completion of %s failed as it does not exist", s);
 }

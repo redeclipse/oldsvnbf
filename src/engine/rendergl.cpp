@@ -685,9 +685,9 @@ static float findsurface(int fogmat, const vec &v, int &abovemat)
     do
     {
         cube &c = lookupcube(o.x, o.y, o.z);
-        if(!c.ext || c.ext->material != fogmat)
+        if(!c.ext || (c.ext->material&MATF_VOLUME) != fogmat)
         {
-            abovemat = c.ext && isliquid(c.ext->material) ? c.ext->material : MAT_AIR;
+            abovemat = c.ext && isliquid(c.ext->material&MATF_VOLUME) ? c.ext->material&MATF_VOLUME : MAT_AIR;
             return o.z;
         }
         o.z = lu.z + lusize;
@@ -955,7 +955,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
 	defaultshader->set();
 
-    int fogmat = lookupmaterial(o);
+    int fogmat = lookupmaterial(o)&MATF_VOLUME;
 	if(fogmat!=MAT_WATER && fogmat!=MAT_LAVA) fogmat = MAT_AIR;
 
 	setfog(fogmat);
@@ -1257,7 +1257,7 @@ void gl_drawframe(int w, int h)
 
     updatedynlights();
 
-    int fogmat = lookupmaterial(camera1->o), abovemat = MAT_AIR;
+    int fogmat = lookupmaterial(camera1->o)&MATF_VOLUME, abovemat = MAT_AIR;
     float fogblend = 1.0f, causticspass = 0.0f;
     if(fogmat==MAT_WATER || fogmat==MAT_LAVA)
     {

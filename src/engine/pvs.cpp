@@ -856,7 +856,7 @@ static inline bool isallclip(cube *c)
     loopi(8)
     {
         cube &h = c[i];
-        if(h.children ? !isallclip(h.children) : (!isentirelysolid(h) && (!h.ext || !isclipped(h.ext->material))))
+        if(h.children ? !isallclip(h.children) : (!isentirelysolid(h) && (!h.ext || (h.ext->material&MATF_CLIP)!=MAT_CLIP)))
             return false;
     }
     return true;
@@ -879,7 +879,7 @@ static int countviewcells(cube *c, const ivec &co, int size, int threshold)
             }
             if(isallclip(h.children)) continue;
         }
-        else if(isentirelysolid(h) || (h.ext && isclipped(h.ext->material))) continue;
+        else if(isentirelysolid(h) || (h.ext && (h.ext->material&MATF_CLIP)==MAT_CLIP)) continue;
         count++;
     }
     return count;
@@ -904,7 +904,7 @@ static void genviewcells(viewcellnode &p, cube *c, const ivec &co, int size, int
             }
             if(isallclip(h.children)) continue;
         }
-        else if(isentirelysolid(h) || (h.ext && isclipped(h.ext->material))) continue;
+        else if(isentirelysolid(h) || (h.ext && (h.ext->material&MATF_CLIP)==MAT_CLIP)) continue;
         if(pvsthreads<=1)
         {
             if(genpvs_canceled) return;

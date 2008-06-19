@@ -242,7 +242,7 @@ extern bool touchingface(cube &c, int orient);
 extern bool flataxisface(cube &c, int orient);
 extern int genclipplane(cube &c, int i, vec *v, plane *clip);
 extern void genclipplanes(cube &c, int x, int y, int z, int size, clipplanes &p);
-extern bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat = MAT_AIR, uchar nmat = MAT_AIR);
+extern bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat = MAT_AIR, uchar nmat = MAT_AIR, uchar matmask = MATF_VOLUME);
 extern int visibleorient(cube &c, int orient);
 extern bool threeplaneintersect(plane &pl1, plane &pl2, plane &pl3, vec &dest);
 extern void freemergeinfo(cube &c);
@@ -354,7 +354,7 @@ extern int optimizematsurfs(materialsurface *matbuf, int matsurfs);
 extern void setupmaterials(int start = 0, int len = 0);
 extern void rendermaterials();
 extern void drawmaterial(int orient, int x, int y, int z, int csize, int rsize, float offset);
-extern int visiblematerial(cube &c, int orient, int x, int y, int z, int size);
+extern int visiblematerial(cube &c, int orient, int x, int y, int z, int size, uchar matmask = MATF_VOLUME);
 
 // water
 extern int refracting;

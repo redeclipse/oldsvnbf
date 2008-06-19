@@ -92,9 +92,9 @@ VARF(moving, 0, 0, 1,
 	if(moving) havesel = false; // tell cursorupdate to create handle
 );
 
-VARF(gridpower, 3-VVEC_FRAC, 4, VVEC_INT-1,
+VARF(gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
 {
-	if(dragging || !hdr.worldsize) return;
+    if(dragging) return;
     gridsize = 1<<gridpower;
     if(gridsize>=hdr.worldsize) gridsize = hdr.worldsize/2;
 	cancelsel();
@@ -1637,18 +1637,27 @@ void rotate(int *cw)
 COMMAND(flip, "");
 COMMAND(rotate, "i");
 
-void setmat(cube &c, uchar mat)
+void setmat(cube &c, uchar mat, uchar matmask)
 {
 	if(c.children)
-		loopi(8) setmat(c.children[i], mat);
-	else if(mat!=MAT_AIR) ext(c).material = mat;
+        loopi(8) setmat(c.children[i], mat, matmask);
+    else if(mat!=MAT_AIR) 
+    {
+        cubeext &e = ext(c);
+        e.material &= matmask;
+        e.material |= mat;
+    }
 	else if(c.ext) c.ext->material = MAT_AIR;
 }
 
 void mpeditmat(int matid, selinfo &sel, bool local)
 {
 	if(local) cl->edittrigger(sel, EDIT_MAT, matid);
-	loopselxyz(setmat(c, matid));
+
+    uchar matmask = matid&MATF_VOLUME ? 0 : (matid&MATF_CLIP ? ~MATF_CLIP : 0xFF);
+    if(isclipped(matid&MATF_VOLUME)) matid |= MAT_CLIP;
+    if(isdeadly(matid&MATF_VOLUME)) matid |= MAT_DEATH;
+    loopselxyz(setmat(c, matid, matmask));
 }
 
 void editmat(char *name)

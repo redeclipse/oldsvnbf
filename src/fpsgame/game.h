@@ -158,19 +158,19 @@ struct gametypes
 {
 	int	type,			mutators,		implied;			const char *name;
 } gametype[] = {
-	{ G_DEMO,			0,				0,					"demo playback" },
-	{ G_EDITMODE,		0,				0,					"editing" },
-	{ G_MISSION,		0,				0,					"mission" },
-	{ G_DEATHMATCH,		G_M_FIGHT,		0,					"deathmatch" },
-	{ G_STF,			G_M_FLAG,		G_M_TEAM,			"secure the flag" },
-	{ G_CTF,			G_M_FLAG,		G_M_TEAM,			"capture the flag" },
+	{ G_DEMO,			0,				0,					"Demo" },
+	{ G_EDITMODE,		0,				0,					"Editing" },
+	{ G_MISSION,		0,				0,					"Mission" },
+	{ G_DEATHMATCH,		G_M_FIGHT,		0,					"Deathmatch" },
+	{ G_STF,			G_M_FLAG,		G_M_TEAM,			"Secure the Flag" },
+	{ G_CTF,			G_M_FLAG,		G_M_TEAM,			"Capture the Flag" },
 }, mutstype[] = {
-	{ G_M_TEAM,			G_M_ALL,		0,					"team" },
-	{ G_M_INSTA,		G_M_ALL,		0,					"instagib" },
-	{ G_M_DUEL,			G_M_ALL,		0,					"duel" },
-	{ G_M_PROG,			G_M_ALL,		0,					"progressive" },
-	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,			"multi-sided" },
-	{ G_M_DLMS,			G_M_ALL,		G_M_DUEL,			"last man standing" },
+	{ G_M_TEAM,			G_M_ALL,		0,					"Team" },
+	{ G_M_INSTA,		G_M_ALL,		0,					"Instagib" },
+	{ G_M_DUEL,			G_M_ALL,		0,					"Duel" },
+	{ G_M_PROG,			G_M_ALL,		0,					"Progressive" },
+	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,			"Multi-sided" },
+	{ G_M_DLMS,			G_M_ALL,		G_M_DUEL,			"Last Man Standing" },
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)
@@ -257,11 +257,11 @@ struct teamtypes
 {
 	int	type,		colour;	const char *name,	*mdl,			*flag,			*icon,		*chat;
 } teamtype[] = {
-	{ TEAM_NEUTRAL,	0x303030,	"neutral",		"player",		"flag",			"team",		"\fG" },
-	{ TEAM_ALPHA,	0x3030C0,	"alpha",		"player/alpha",	"flag/alpha",	"teamalpha","\fb" },
-	{ TEAM_BETA,	0xC03030,	"beta",			"player/beta",	"flag/beta",	"teambeta",	"\fr" },
-	{ TEAM_DELTA,	0xC0C030,	"delta",		"player/delta",	"flag/delta",	"teamdelta","\fy" },
-	{ TEAM_GAMMA,	0x30C030,	"gamma",		"player/gamma",	"flag/gamma",	"teamgamma","\fg" }
+	{ TEAM_NEUTRAL,	0x303030,	"Neutral",		"player",		"flag",			"team",		"\fG" },
+	{ TEAM_ALPHA,	0x3030C0,	"Alpha",		"player/alpha",	"flag/alpha",	"teamalpha","\fb" },
+	{ TEAM_BETA,	0xC03030,	"Beta",			"player/beta",	"flag/beta",	"teambeta",	"\fr" },
+	{ TEAM_DELTA,	0xC0C030,	"Delta",		"player/delta",	"flag/delta",	"teamdelta","\fy" },
+	{ TEAM_GAMMA,	0x30C030,	"Gamma",		"player/gamma",	"flag/gamma",	"teamgamma","\fg" }
 };
 
 enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };

@@ -718,7 +718,7 @@ struct facevec
 	bool operator==(const facevec &f) const { return x == f.x && y == f.y; }
 };
 
-void genfacevecs(cube &c, int orient, const ivec &pos, int size, bool solid, facevec *fvecs)
+static inline void genfacevecs(cube &c, int orient, const ivec &pos, int size, bool solid, facevec *fvecs)
 {
 	int dim = dimension(orient), coord = dimcoord(orient);
 	const ushort *fvo = fv[orient];
@@ -742,7 +742,7 @@ void genfacevecs(cube &c, int orient, const ivec &pos, int size, bool solid, fac
 	}
 }
 
-int clipfacevecy(const facevec &o, const facevec &dir, int cx, int cy, int size, facevec &r)
+static inline int clipfacevecy(const facevec &o, const facevec &dir, int cx, int cy, int size, facevec &r)
 {
 	if(dir.x >= 0)
 	{
@@ -758,7 +758,7 @@ int clipfacevecy(const facevec &o, const facevec &dir, int cx, int cy, int size,
 	return 1;
 }
 
-int clipfacevecx(const facevec &o, const facevec &dir, int cx, int cy, int size, facevec &r)
+static inline int clipfacevecx(const facevec &o, const facevec &dir, int cx, int cy, int size, facevec &r)
 {
 	if(dir.y >= 0)
 	{
@@ -774,7 +774,7 @@ int clipfacevecx(const facevec &o, const facevec &dir, int cx, int cy, int size,
 	return 1;
 }
 
-int clipfacevec(const facevec &o, const facevec &dir, int cx, int cy, int size, facevec *rvecs)
+static inline int clipfacevec(const facevec &o, const facevec &dir, int cx, int cy, int size, facevec *rvecs)
 {
 	int r = 0;
 
@@ -796,7 +796,7 @@ int clipfacevec(const facevec &o, const facevec &dir, int cx, int cy, int size, 
 	return r;
 }
 
-bool insideface(const facevec *p, int nump, const facevec *o)
+static inline bool insideface(const facevec *p, int nump, const facevec *o)
 {
 	int bounds = 0;
 	loopi(4)
@@ -811,7 +811,7 @@ bool insideface(const facevec *p, int nump, const facevec *o)
 	return bounds>=3;
 }
 
-int clipfacevecs(const facevec *o, int cx, int cy, int size, facevec *rvecs)
+static inline int clipfacevecs(const facevec *o, int cx, int cy, int size, facevec *rvecs)
 {
 	cx <<= VVEC_FRAC;
 	cy <<= VVEC_FRAC;
@@ -837,18 +837,18 @@ bool collapsedface(uint cfe)
 			((cfe >> 20) & 0x0F0F) == ((cfe >> 16) & 0x0F0F);
 }
 
-bool occludesface(cube &c, int orient, const ivec &o, int size, const ivec &vo, int vsize, uchar vmat, uchar nmat, const facevec *vf)
+static inline bool occludesface(cube &c, int orient, const ivec &o, int size, const ivec &vo, int vsize, uchar vmat, uchar nmat, uchar matmask, const facevec *vf)
 {
 	int dim = dimension(orient);
 	if(!c.children)
 	{
-		 if(nmat != MAT_AIR && c.ext && c.ext->material == nmat)
+         if(nmat != MAT_AIR && c.ext && (c.ext->material&matmask) == nmat)
 		 {
 			facevec nf[8];
 			return clipfacevecs(vf, o[C[dim]], o[R[dim]], size, nf) < 3;
 		 }
 		 if(isentirelysolid(c)) return true;
-         if(vmat != MAT_AIR && c.ext && (c.ext->material == vmat || (c.ext->material == MAT_GLASS && isliquid(vmat)))) return true;
+         if(vmat != MAT_AIR && c.ext && ((c.ext->material&matmask) == vmat || (isliquid(vmat) && isclipped(c.ext->material&MATF_VOLUME)))) return true;
 		 if(touchingface(c, orient) && faceedges(c, orient) == F_SOLID) return true;
 		 facevec cf[8];
 		 int numc = clipfacevecs(vf, o[C[dim]], o[R[dim]], size, cf);
@@ -863,13 +863,13 @@ bool occludesface(cube &c, int orient, const ivec &o, int size, const ivec &vo, 
 	int coord = dimcoord(orient);
 	loopi(8) if(octacoord(dim, i) == coord)
 	{
-		if(!occludesface(c.children[i], orient, ivec(i, o.x, o.y, o.z, size), size, vo, vsize, vmat, nmat, vf)) return false;
+        if(!occludesface(c.children[i], orient, ivec(i, o.x, o.y, o.z, size), size, vo, vsize, vmat, nmat, matmask, vf)) return false;
 	}
 
 	return true;
 }
 
-bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat, uchar nmat)
+bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat, uchar nmat, uchar matmask)
 {
 	uint cfe = faceedges(c, orient);
 	if(mat != MAT_AIR)
@@ -887,9 +887,9 @@ bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat, 
 
     if(lusize > size || (lusize == size && !o.children))
     {
-        if(nmat != MAT_AIR && o.ext && o.ext->material == nmat) return true;
+        if(nmat != MAT_AIR && o.ext && (o.ext->material&matmask) == nmat) return true;
         if(isentirelysolid(o)) return false;
-        if(mat != MAT_AIR && o.ext && (o.ext->material == mat || (o.ext->material == MAT_GLASS && isliquid(mat)))) return false;
+        if(mat != MAT_AIR && o.ext && ((o.ext->material&matmask) == mat || (isliquid(mat) && (o.ext->material&MATF_VOLUME) == MAT_GLASS))) return false;
         if(isempty(o) || !touchingface(o, opposite(orient))) return true;
         if(faceedges(o, opposite(orient)) == F_SOLID) return false;
 
@@ -907,7 +907,7 @@ bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat, 
     lu.mask(VVEC_INT_MASK);
     facevec cf[4];
     genfacevecs(c, orient, vo, size, mat != MAT_AIR, cf);
-    return !occludesface(o, opposite(orient), lu, lusize, vo, size, mat, nmat, cf);
+    return !occludesface(o, opposite(orient), lu, lusize, vo, size, mat, nmat, matmask, cf);
 }
 
 void calcvert(cube &c, int x, int y, int z, int size, vvec &v, int i, bool solid)
@@ -933,7 +933,7 @@ void calcvert(cube &c, int x, int y, int z, int size, vec &v, int i, bool solid)
 int calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *usefaces)
 {
     int vertused = 0;
-    loopi(6) if((usefaces[i] = visibleface(c, i, x, y, z, size, MAT_AIR, MAT_AIR))) vertused |= fvmasks[1<<i];
+    loopi(6) if((usefaces[i] = visibleface(c, i, x, y, z, size))) vertused |= fvmasks[1<<i];
     //loopk(4) vertused |= 1<<faceverts(c,i,k);
     loopi(8) if(vertused&(1<<i)) calcvert(c, x, y, z, size, verts[i], i);
     return vertused;

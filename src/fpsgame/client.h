@@ -880,7 +880,7 @@ struct clientcom : iclientcom
 					bool commit = true;
 					getstring(text, p);
 					ident *id = idents->access(text);
-					if(!id || !id->world || id->type != t) commit = false;
+					if(!id || !(id->flags&IDF_WORLD) || id->type != t) commit = false;
 					switch(type)
 					{
 						case ID_VAR:

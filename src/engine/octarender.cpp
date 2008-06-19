@@ -882,7 +882,7 @@ void gencubeverts(cube &c, int x, int y, int z, int size, int csi, uchar &vismas
 	}
     else if(touchingface(c, i))
     {
-        if(visibleface(c, i, x, y, z, size, MAT_AIR, MAT_NOCLIP)) ext(c).visible |= 1<<i;
+        if(visibleface(c, i, x, y, z, size, MAT_AIR, MAT_NOCLIP, MATF_CLIP)) ext(c).visible |= 1<<i;
         if(faceedges(c, i)==F_SOLID) clipmask |= 1<<i;
     }
 }

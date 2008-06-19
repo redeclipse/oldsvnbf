@@ -283,7 +283,7 @@ struct Slot
 };
 
 extern vector<Slot> slots;
-extern Slot materialslots[MAT_EDIT];
+extern Slot materialslots[MATF_VOLUME+1];
 
 extern SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, int type = TEX_DIFFUSE, bool clear = true);
 extern SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type = TEX_DIFFUSE);
@@ -350,8 +350,8 @@ extern void setuptmu(int n, const char *rgbfunc = NULL, const char *alphafunc = 
 extern void setupblurkernel(int radius, float sigma, float *weights, float *offsets);
 extern void setblurshader(int pass, int size, int radius, float *weights, float *offsets, GLenum target = GL_TEXTURE_2D);
 
-#define TVAR(n, c) _SVARF(n, n, c, if(n[0]) textureload(n);, true, false)
-#define TVARN(n, c, t) _SVARF(n, n, c, if(n[0]) t = textureload(n);, true, false)
+#define TVAR(n, c) _SVARF(n, n, c, if(n[0]) textureload(n);, IDF_PERSIST)
+#define TVARN(n, c, t) _SVARF(n, n, c, if(n[0]) t = textureload(n);, IDF_PERSIST)
 
-#define ITVAR(n, c) _ISVAR(n, c, void changed() { if(*storage.s[0]) textureload(*storage.s); }, true, false)
-#define ITVARN(n, c, t) _ISVAR(n, c, void changed() { if(*storage.s[0]) t = textureload(*storage.s); }, true, false)
+#define ITVAR(n, c) _ISVAR(n, c, void changed() { if(*storage.s[0]) textureload(*storage.s); }, IDF_PERSIST)
+#define ITVARN(n, c, t) _ISVAR(n, c, void changed() { if(*storage.s[0]) t = textureload(*storage.s); }, IDF_PERSIST)
