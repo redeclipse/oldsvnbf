@@ -81,9 +81,8 @@ struct GAMECLIENT : igameclient
 	ITVAR(radartex, "textures/radar");
 	ITVAR(radarpingtex, "<anim:100>textures/radarping");
 
-	IVARP(hidestats, 0, 0, 1);
-	IVARP(showfpsrange, 0, 0, 1);
-	IVARP(showeditstats, 0, 1, 1);
+	IVARP(showstats, 0, 1, 1);
+	IVARP(showfps, 0, 2, 2);
 	IVARP(statrate, 0, 200, 1000);
 
     GAMECLIENT()
@@ -630,7 +629,7 @@ struct GAMECLIENT : igameclient
 	{
 		int ox = w*3, oy = h*3;
 
-		setfont("hud");
+		pushfont("hud");
 
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
@@ -648,97 +647,44 @@ struct GAMECLIENT : igameclient
 			const char *title = getmaptitle();
 			if(!*title) title = "Untitled by Unknown";
 
-			glColor4f(1.f, 1.f, 1.f, amt);
-
-			rendericon("textures/emblem", ox+FONTH/2-x, oy-FONTH, FONTH, FONTH);
-
-			draw_textx("%s", ox+FONTH*2-x, oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, title);
-
 			glColor4f(1.f, 1.f, 1.f, fade);
-			rendericon("textures/guioverlay", ox+FONTH/2-x, oy-FONTH*2, FONTH, FONTH);
-			if(!rendericon(getmapname(), ox+FONTH/2+8-x, oy-FONTH*2+8, FONTH-16, FONTH-16))
-				rendericon("textures/emblem", ox+FONTH/2+8-x, oy-FONTH*2+8, FONTH-16, FONTH-16);
+			rendericon("textures/guioverlay", x-FONTH/2-FONTH*2, oy-FONTH*2, FONTH*2, FONTH*2);
+			if(!rendericon(getmapname(), x-FONTH/2-FONTH*2+8, oy-FONTH*2+8, FONTH*2-16, FONTH*2-16))
+				rendericon("textures/emblem", x-FONTH/2-FONTH*2+8, oy-FONTH*2+8, FONTH*2-16, FONTH*2-16);
 
-			draw_textx("%s", ox+FONTH*2-x, oy-FONTH*2, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, sv->gamename(gamemode, mutators));
+			draw_textx("%s", x-FONTH*3, oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, -1, title);
+			draw_textx("%s", x-FONTH*3, oy-FONTH*2, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, -1, sv->gamename(gamemode, mutators));
 		}
 		else
 		{
-			fpsent *d = player1;
-
 			if(lastmillis-maptime <= CARDTIME+CARDFADE+CARDFADE)
 				fade = amt*(float(lastmillis-maptime-CARDTIME-CARDFADE)/float(CARDFADE));
 			else fade *= amt;
 
-			if(player1->state == CS_ALIVE)
+			if((player1->state == CS_ALIVE && damageresidue > 0) || player1->state == CS_DEAD)
 			{
-				if(damageresidue > 0 || d->state == CS_DEAD)
-				{
-					int dam = d->state == CS_DEAD ? 100 : min(damageresidue, 100);
-					float pc = float(dam)/100.f;
-					settexture("textures/damage");
+				int dam = player1->state == CS_DEAD ? 100 : min(damageresidue, 100);
+				float pc = float(dam)/100.f;
+				settexture("textures/damage");
 
-					glColor4f(1.f, 1.f, 1.f, pc);
+				glColor4f(1.f, 1.f, 1.f, pc);
 
-					glBegin(GL_QUADS);
-					glTexCoord2f(0, 0); glVertex2i(0, 0);
-					glTexCoord2f(1, 0); glVertex2i(ox, 0);
-					glTexCoord2f(1, 1); glVertex2i(ox, oy);
-					glTexCoord2f(0, 1); glVertex2i(0, oy);
-					glEnd();
-				}
-			}
-
-			if(d->state == CS_ALIVE)
-			{
-				float hlt = d->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
-				if(lastmillis < d->lastregen+500) pulse *= (lastmillis-d->lastregen)/500.f;
-				settexture("textures/barv");
-				glColor4f(glow, 0.f, 0.f, pulse);
-
-				int rw = oy/5/4, rx = oy/5+FONTH/2, rh = oy/5, ry = oy-rh-(FONTH/4), ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
 				glBegin(GL_QUADS);
-				glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
-				glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
-				glTexCoord2f(1, 1); glVertex2i(rx+rw, ry+rh);
-				glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
+				glTexCoord2f(0, 0); glVertex2i(0, 0);
+				glTexCoord2f(1, 0); glVertex2i(ox, 0);
+				glTexCoord2f(1, 1); glVertex2i(ox, oy);
+				glTexCoord2f(0, 1); glVertex2i(0, oy);
 				glEnd();
-
-				if(isgun(d->gunselect) && d->ammo[d->gunselect] > 0)
-				{
-					bool canshoot = d->canshoot(d->gunselect, lastmillis);
-					if(guntype[d->gunselect].power && d->attacking)
-					{
-						int power = clamp(int(float(lastmillis-d->attacktime)/float(guntype[d->gunselect].power)*100.f), 0, 100);
-						draw_textx("%d - %d", oy/5+rw+(FONTH/4*3), oy-FONTH, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect], power);
-					}
-					else draw_textx("%d", oy/5+rw+(FONTH/4*3), oy-FONTH, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_LEFT, -1, -1, d->ammo[d->gunselect]);
-				}
-				else
-				{
-					draw_textx("Out of ammo", oy/5+rw+(FONTH/4*3), oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
-				}
-			}
-			else if(d->state == CS_DEAD)
-			{
-				int wait = respawnwait(d);
-
-				if(wait)
-				{
-					float c = float(wait)/1000.f;
-					draw_textx("Fragged! Down for %.1fs", oy/5+(FONTH/4*3), oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, c);
-				}
-				else
-					draw_textx("Fragged! Press attack to respawn", oy/5+(FONTH/4*3), oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 			}
 
-			int rx = FONTH/4, rs = oy/5, ry = oy-rs-(FONTH/4);
+			int bs = oy/4, bx = ox-bs-FONTH/4, by = FONTH/4;
 
 			settexture(radartex());
 			glColor4f(1.f, 1.f, 1.f, fade);
 			glBegin(GL_QUADS);
-			drawradar(float(rx), float(ry), float(rs));
+			drawradar(float(bx), float(by), float(bs));
 			glEnd();
-			drawblips(rx, ry, rs);
+			drawblips(bx, by, bs);
 
 			if(m_stf(gamemode)) stf.drawhud(ox, oy);
 			else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
@@ -746,11 +692,55 @@ struct GAMECLIENT : igameclient
 			settexture(radarpingtex());
 			glColor4f(1.f, 1.f, 1.f, 0.25f*fade);
 			glBegin(GL_QUADS);
-			drawradar(float(rx), float(ry), float(rs));
+			drawradar(float(bx), float(by), float(bs));
 			glEnd();
+
+			by += bs;
+
+			if(player1->state == CS_ALIVE)
+			{
+				//float hlt = player1->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
+				//if(lastmillis < player1->lastregen+500) pulse *= (lastmillis-player1->lastregen)/500.f;
+				//settexture("textures/barv");
+				//glColor4f(glow, 0.f, 0.f, pulse);
+				//int rw = oy/5/4, rx = oy/5+FONTH/2, rh = oy/5, ry = oy-rh-(FONTH/4), ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
+				//glBegin(GL_QUADS);
+				//glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
+				//glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
+				//glTexCoord2f(1, 1); glVertex2i(rx+rw, ry+rh);
+				//glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
+				//glEnd();
+
+				if(isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
+				{
+					bool canshoot = player1->canshoot(player1->gunselect, lastmillis);
+					if(guntype[player1->gunselect].power && player1->attacking)
+					{
+						int power = clamp(int(float(lastmillis-player1->attacktime)/float(guntype[player1->gunselect].power)*100.f), 0, 100);
+						draw_textx("%d - %d", ox-FONTH/4, by, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect], power);
+					}
+					else draw_textx("%d", ox-FONTH/4, by, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
+				}
+				else
+				{
+					draw_textx("Out of ammo", ox-FONTH/4, by, 255, 255, 255, int(255.f*fade), false, AL_RIGHT);
+				}
+			}
+			else if(player1->state == CS_DEAD)
+			{
+				int wait = respawnwait(player1);
+
+				if(wait)
+				{
+					float c = float(wait)/1000.f;
+					draw_textx("Fragged! Down for %.1fs", ox-FONTH/4, by, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, -1, c);
+				}
+				else
+					draw_textx("Fragged! Press attack to respawn", ox-FONTH/4, by, 255, 255, 255, int(255.f*fade), false, AL_RIGHT);
+			}
 		}
 
-		setfont("default");
+		popfont();
 	}
 
 	enum
@@ -847,25 +837,11 @@ struct GAMECLIENT : igameclient
 
 		renderconsole(w, h);
 
-		int hoff = h*3-h*3/4;
-		char *command = getcurcommand();
-		if(command) rendercommand(FONTH/2, hoff, h*3-FONTH);
-		hoff += FONTH*2;
-
-		if(!hidestats())
+		if(lastmillis-maptime > CARDTIME+CARDFADE)
 		{
-			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
-			int fps, bestdiff, worstdiff;
-			getfps(fps, bestdiff, worstdiff);
-			#if 0
-			if(showfpsrange()) draw_textx("%d+%d-%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff, perflevel);
-			else draw_textx("%d:%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, perflevel);
-			#else
-			if(showfpsrange()) draw_textx("%d+%d-%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps, bestdiff, worstdiff);
-			else draw_textx("%d", w*3-(FONTH/4), 4, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, fps);
-			#endif
+			int hoff = h*3-FONTH;
 
-			if(editmode && showeditstats() && lastmillis-maptime > CARDTIME+CARDFADE)
+			if(editmode && showstats())
 			{
 				static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
 				if(lastmillis-laststats >= statrate())
@@ -887,19 +863,36 @@ struct GAMECLIENT : igameclient
 
 				loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
 
-				draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", h*3/5+FONTH, hoff, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff += FONTH;
-				draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", h*3/5+FONTH, hoff, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff += FONTH;
-				draw_textf("cube %s%d", h*3/5+FONTH, hoff, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff += FONTH;
+				draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff -= FONTH;
+				draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff -= FONTH;
+				draw_textx("cube %s%d", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff -= FONTH;
 			}
-		}
 
-		if(editmode)
-		{
-			char *editinfo = executeret("edithud");
-			if(editinfo)
+			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
+			int fps, bestdiff, worstdiff;
+			getfps(fps, bestdiff, worstdiff);
+
+			switch(showfps())
 			{
-				draw_text(editinfo, h*3/5+FONTH, hoff); hoff += FONTH;
-				DELETEA(editinfo);
+				case 2: draw_textx("fps %d +%d-%d", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, fps, bestdiff, worstdiff); hoff -= FONTH; break;
+				case 1: draw_textx("fps %d", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, fps); hoff -= FONTH; break;
+				default: break;
+			}
+
+			if(editmode)
+			{
+				char *editinfo = executeret("edithud");
+				if(editinfo)
+				{
+					draw_textx("%s", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, editinfo); hoff -= FONTH;
+					DELETEA(editinfo);
+				}
+			}
+
+			if(getcurcommand())
+			{
+				rendercommand(FONTH/4, hoff, h*3-FONTH);
+				hoff -= FONTH;
 			}
 		}
 
@@ -912,13 +905,9 @@ struct GAMECLIENT : igameclient
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			if(!guiactive())
-			{
-				if(cc.ready()) drawgamehud(w, h);
-				drawhudelements(w, h);
-			}
+			if(cc.ready()) drawgamehud(w, h);
+			drawhudelements(w, h);
 			glDisable(GL_BLEND);
-
 			drawpointers(w, h);
 		}
 	}

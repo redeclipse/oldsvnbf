@@ -280,7 +280,7 @@ struct ctfclient : ctfstate
         }
 #endif
 
-		int x = FONTH/4, s = h/5, y = h-s-(FONTH/4);
+		int s = h/4, x = w-s-FONTH/4, y = FONTH/4;
         loopv(flags)
         {
             flag &f = flags[i];

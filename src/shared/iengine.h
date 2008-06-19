@@ -123,11 +123,11 @@ enum
 };
 extern bool setfont(const char *name);
 extern bool pushfont(const char *name);
-extern bool popfont(int num);
+extern bool popfont(int num = 1);
 extern void gettextres(int &w, int &h);
-extern void draw_text(const char *str, int rleft, int rtop, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int cursor = -1, int maxwidth = -1);
-extern void draw_textx(const char *fstr, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int align = AL_LEFT, int cursor = -1, int maxwidth = -1, ...);
-extern void draw_textf(const char *fstr, int left, int top, ...);
+extern int draw_text(const char *str, int rleft, int rtop, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int cursor = -1, int maxwidth = -1);
+extern int draw_textx(const char *fstr, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int align = AL_LEFT, int cursor = -1, int maxwidth = -1, ...);
+extern int draw_textf(const char *fstr, int left, int top, ...);
 extern int text_width(const char *str);
 extern void text_bounds(const char *str, int &width, int &height, int maxwidth = -1);
 extern int text_visible(const char *str, int hitx, int hity, int maxwidth = -1);

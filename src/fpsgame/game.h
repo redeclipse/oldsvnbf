@@ -38,7 +38,7 @@ enum								// entity types
 	PUSHER,							// 12 zpush, ypush, xpush
 	FLAG,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
-	CAMERA,							// 15 yaw, pitch, pan (+:horiz/-:vert), idx
+	CAMERA,							// 15 type, radius, weight
 	WAYPOINT,						// 16 radius, weight
 	ANNOUNCER,						// 17 maxrad, minrad, volume
 	MAXENTTYPES						// 18
