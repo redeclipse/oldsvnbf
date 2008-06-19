@@ -80,8 +80,6 @@ void conline(const char *sf, int n, int type = CON_NORMAL)
 	}
 }
 
-#define CONSPAD (FONTH/3)
-
 void console(const char *s, int type, ...)
 {
 	extern int scr_w, scr_h;
@@ -101,20 +99,6 @@ void console(const char *s, int type, ...)
 	fflush(stdout);
 
 	conline(sf, 0, type);
-#if 0
-	s = sf;
-	int n = 0, cx = 0, cy = 0, visible;
-	while((visible = curfont ? text_visible(s, cx, cy, (3*w - 2*CONSPAD - 2*FONTH/3 + FONTW*n)) : strlen(s))) // cut strings to fit on screen
-	{
-		const char *newline = (const char *)memchr(s, '\n', visible);
-		if(newline) visible = newline+1-s;
-		string t;
-		s_strncpy(t, s, visible+1);
-		conline(t, n, type);
-		s += visible;
-		n++;
-	}
-#endif
 }
 
 void conoutf(const char *s, ...)
@@ -147,7 +131,7 @@ void blendbox(int x1, int y1, int x2, int y2, bool border)
 	glDisable(GL_TEXTURE_2D);
 	glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
 	glBegin(GL_QUADS);
-	if(border) glColor3d(0.5, 0.3, 0.4);
+	if(border) glColor3d(0.5, 0.1, 0.1);
 	else glColor3d(1.0, 1.0, 1.0);
 	glVertex2i(x1, y1);
 	glVertex2i(x2, y1);
@@ -157,7 +141,7 @@ void blendbox(int x1, int y1, int x2, int y2, bool border)
 	glDisable(GL_BLEND);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUADS);
-	glColor3d(0.2, 0.7, 0.4);
+	glColor3d(0.7, 0.1, 0.1);
 	glVertex2i(x1, y1);
 	glVertex2i(x2, y1);
 	glVertex2i(x2, y2);
@@ -180,6 +164,8 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 	vector<char *> refs;
 	refs.setsizenodelete(0);
 
+	pushfont("console");
+
 	if (!guiactive() && centerlines)
 	{
 		loopv(conlines[CN_CENTER]) if(totalmillis-conlines[CN_CENTER][i].outtime<centertime)
@@ -189,15 +175,15 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 		}
 		loopvj(refs)
 		{
-			draw_textx("%s", (w*3)/2, (((h*3)/4)*3)+(FONTH*j)-FONTH, 255, 255, 255, int(255.f*(centerblend/100.f)), false, AL_CENTER, -1, -1, refs[j]);
+			draw_textx("%s", (w*3)/2, (((h*3)/4)*3)+(FONTH*j)-FONTH*2, 255, 255, 255, int(255.f*(centerblend/100.f)), false, AL_CENTER, -1, -1, refs[j]);
 		}
 	}
 
 	int numl = consize, len = 0;
 	if(fullconsole)
 	{
-        numl = min(h*3*fullconsize/100, h*3 - 2*CONSPAD - 2*FONTH/3)/FONTH;
-		blendbox(CONSPAD, CONSPAD, w*3-CONSPAD, 2*CONSPAD+numl*FONTH+2*FONTH/3, true);
+        numl = min(h*3*fullconsize/100, h*3-FONTH/3*2)/FONTH;
+		blendbox(2, 2, w*3-w*3/4-4, numl*FONTH+FONTH/3*2, true);
 	}
 
 	refs.setsizenodelete(0);
@@ -214,13 +200,17 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 		}
 	}
 
+	int cy = FONTH/3;
 	loopvrev(refs)
 	{
-		draw_textx("%s", (CONSPAD+FONTH/3), (CONSPAD+FONTH*(refs.length()-i-1)+FONTH/3), 255, 255, 255, int(255.f*(conblend/100.f)), false, AL_LEFT, -1, -1, refs[i]);
+		cy = draw_textx("%s", FONTH/3, cy, 255, 255, 255, int(255.f*(conblend/100.f)), false, AL_LEFT, -1, w*3-w*3/4-FONTH, refs[i]);
+		if(cy >= FONTH*numl) break;
 	}
 	if (refs.length() > len) len = refs.length();
 
-	return CONSPAD+len*FONTH+2*FONTH/3;
+	popfont();
+
+	return cy;
 }
 
 // keymap is defined externally in keymap.cfg

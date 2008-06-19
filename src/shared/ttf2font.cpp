@@ -363,7 +363,7 @@ int tryfont(int isize, int fsize, bool commit)
 
 void makefont()
 {
-	int isize = imgsize ? imgsize : 512, fsize = fonsize ? fonsize : (imgsize ? 256 : 64);
+	int isize = imgsize ? imgsize : (fonsize ? 2 : 512), fsize = fonsize ? fonsize : (imgsize ? 256 : 64);
 	bool commit = false;
 
 	while(retcode < 0)

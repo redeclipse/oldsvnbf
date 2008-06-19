@@ -75,10 +75,10 @@ int text_width(const char *str) { //@TODO deprecate in favour of text_bounds(..)
     return width;
 }
 
-void draw_textf(const char *fstr, int left, int top, ...)
+int draw_textf(const char *fstr, int left, int top, ...)
 {
 	s_sprintfdlv(str, top, fstr);
-	draw_text(str, left, top);
+	return draw_text(str, left, top);
 }
 
 static int draw_char(int c, int x, int y)
@@ -153,7 +153,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
                     if(w + cw >= maxwidth) break;\
                     w += cw;\
                 }\
-                if(x + w >= maxwidth && j!=0) { TEXTLINE(j-1) x = 0; y += FONTH; }\
+                if(x + w >= maxwidth && j!=0) { TEXTLINE(j-1) x = PIXELTAB; y += FONTH; }\
                 TEXTWORD\
             }\
             else\
@@ -230,11 +230,11 @@ void text_bounds(const char *str, int &width, int &height, int maxwidth)
     #undef TEXTWORD
 }
 
-void draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, bool s, int cursor, int maxwidth)
+int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, bool s, int cursor, int maxwidth)
 {
     #define TEXTINDEX(idx) if(idx == cursor) { cx = x; cy = y; }
     #define TEXTWHITE(idx)
-    #define TEXTLINE(idx)
+    #define TEXTLINE(idx) cy += FONTH;
     #define TEXTCOLOR(idx) text_color(str[idx], colorstack, sizeof(colorstack), colorpos, color, a);
     #define TEXTCHAR(idx) x += draw_char(c, left+x, top+y)+1;
     #define TEXTWORD TEXTWORDSKELETON
@@ -265,7 +265,7 @@ void draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a,
 		{
 			glColor4ub(r, g, b, a);
 			if(cx == INT_MIN) { cx = x; cy = y; }
-			if(maxwidth != -1 && cx >= maxwidth) { cx = 0; cy += FONTH; }
+			if(maxwidth != -1 && cx >= maxwidth) { cx = PIXELTAB; cy += FONTH; }
 			draw_char('_', left+cx, top+cy);
 		}
 	}
@@ -276,6 +276,7 @@ void draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a,
     #undef TEXTCOLOR
     #undef TEXTCHAR
     #undef TEXTWORD
+    return top+cy+FONTH;
 }
 
 void reloadfonts()
@@ -286,7 +287,7 @@ void reloadfonts()
 }
 
 
-void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool s, int align, int cursor, int maxwidth, ...)
+int draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool s, int align, int cursor, int maxwidth, ...)
 {
 	s_sprintfdlv(str, maxwidth, fstr);
 
@@ -303,14 +304,14 @@ void draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a,
 		default:
 			break;
 	}
-	draw_text(str, x, y, r, g, b, a, s, cursor, maxwidth);
+	return draw_text(str, x, y, r, g, b, a, s, cursor, maxwidth);
 }
 
-static vector<font *> fontstack;
+vector<font *> fontstack;
 
 bool pushfont(const char *name)
 {
-	if (curfont) fontstack.add(curfont);
+	if(curfont) fontstack.add(curfont);
 	return setfont(name);
 }
 
@@ -323,5 +324,5 @@ bool popfont(int num)
 		if (n <= 0) break;
 		fontstack.remove(--n);
 	}
-	return (n != fontstack.length());
+	return setfont(fontstack.length() ? (fontstack.last())->name : "default");
 }

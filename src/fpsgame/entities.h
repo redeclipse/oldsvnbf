@@ -281,39 +281,36 @@ struct entities : icliententities
 
 	void checkitems(fpsent *d)
 	{
-		if(d->state != CS_EDITING && d->state != CS_SPECTATOR)
-		{
-			float eye = d->height*0.5f;
-			vec m = d->o;
-			m.z -= eye;
+		float eye = d->height*0.5f;
+		vec m = d->o;
+		m.z -= eye;
 
+		loopv(ents)
+		{
+			extentity &e = *ents[i];
+			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
+			if(enttype[e.type].usetype == ETU_AUTO && insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
+				reaction(i, d);
+		}
+
+		if(d->useaction)
+		{ // difference here is the client requests it and gets the closest one
+			int n = -1;
 			loopv(ents)
 			{
 				extentity &e = *ents[i];
 				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-				if(enttype[e.type].usetype == ETU_AUTO && insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
-					reaction(i, d);
+				if(e.spawned && enttype[e.type].usetype == ETU_ITEM
+					&& insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius)
+					&& d->canuse(e.type, e.attr1, e.attr2, lastmillis)
+					&& (!ents.inrange(n) || e.o.dist(m) < ents[n]->o.dist(m)))
+						n = i;
 			}
-
-			if(d->useaction)
-			{ // difference here is the client requests it and gets the closest one
-				int n = -1;
-				loopv(ents)
-				{
-					extentity &e = *ents[i];
-					if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-					if(e.spawned && enttype[e.type].usetype == ETU_ITEM
-						&& insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius)
-						&& d->canuse(e.type, e.attr1, e.attr2, lastmillis)
-						&& (!ents.inrange(n) || e.o.dist(m) < ents[n]->o.dist(m)))
-							n = i;
-				}
-				if(ents.inrange(n)) cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, n);
-				else playsound(S_DENIED);
-				d->useaction = false;
-			}
-			if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
+			if(ents.inrange(n)) cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, n);
+			else playsound(S_DENIED);
+			d->useaction = false;
 		}
+		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
 	}
 
 	void putitems(ucharbuf &p)

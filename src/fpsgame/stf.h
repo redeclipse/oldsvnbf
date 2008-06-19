@@ -284,7 +284,7 @@ struct stfclient : stfstate
 
 	void drawhud(int w, int h)
 	{
-		int x = FONTH/4, s = h/5, y = h-s-(FONTH/4);
+		int s = h/4, x = w-s-FONTH/4, y = FONTH/4;
 		bool showenemies = lastmillis%1000 >= 500;
 		drawblips(x, y, s, 1, showenemies);
 		drawblips(x, y, s, 0, showenemies);
