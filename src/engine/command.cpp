@@ -648,7 +648,7 @@ void writecfg()
 	FILE *f = openfile("config.cfg", "w");
 	if(!f) return;
 	cc->writeclientinfo(f);
-	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n\n", ENG_VERSION, sv->gamever());
+	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n", ENG_VERSION, sv->gamever());
 #else
 	FILE *f = openfile("server.cfg", "w");
 	if(!f) return;
