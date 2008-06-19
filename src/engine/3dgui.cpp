@@ -124,7 +124,7 @@ struct gui : g3d_gui
 				y1 = cury - ((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE-h,
 				y2 = cury;
 			bool hit = tcurrent && windowhit==this && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2;
-            if(hit && (!guiclicktab || mousebuttons&G3D_DOWN)) 
+            if(hit && (!guiclicktab || mousebuttons&G3D_DOWN))
 			{
 				*tcurrent = tpos; //roll-over to switch tab
 				color = 0xFF0000;
@@ -327,7 +327,7 @@ struct gui : g3d_gui
             {
                 if(mousebuttons&G3D_DOWN) //mouse request focus
 				{
-                    useeditor(name, initmode, true); 
+                    useeditor(name, initmode, true);
                     e->mark(false);
                     fieldmode = FIELDEDIT;
                 }
@@ -869,6 +869,7 @@ void g3d_render()
 	if(actionon) mousebuttons |= G3D_PRESSED;
 	gui::reset();
 	guis.setsize(0);
+	pushfont("gui");
 
 	// call all places in the engine that may want to render a gui from here, they call g3d_addgui()
 	extern void g3d_texturemenu();
@@ -922,6 +923,7 @@ void g3d_render()
         keyrepeat(fieldmode!=FIELDSHOW);
     }
 
+	popfont();
 	mousebuttons = 0;
 }
 
