@@ -121,7 +121,7 @@
         {
             case EXT_UPTIME:
             {
-                putint(p, enet_time_get()/1000); //in seconds
+                putint(p, uint(totalmillis)/1000); //in seconds
                 break;
             }
 

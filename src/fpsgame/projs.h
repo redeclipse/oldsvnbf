@@ -156,7 +156,7 @@ struct projectiles
 		bool update(int qtime)
 		{
             int mat = lookupmaterial(vec(o.x, o.y, o.z + (aboveeye - height)/2));
-            bool water = isliquid(mat);
+            bool water = isliquid(mat&MATF_VOLUME);
 			float secs = float(qtime) / 1000.0f;
 		    vec old(o);
 

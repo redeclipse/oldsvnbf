@@ -24,8 +24,8 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
     vec step(d);
     step.sub(o);
     float len = step.magnitude();
-    int numsteps = min(int(ceil(len/LIGHTNINGSTEP)), MAXLIGHTNINGSTEPS);
-    if(numsteps > 1) step.mul(LIGHTNINGSTEP/len);
+    int numsteps = clamp(int(ceil(len/LIGHTNINGSTEP)), 2, MAXLIGHTNINGSTEPS);
+    step.div(numsteps+1);
     int jitteroffset = detrnd(int(o.x+o.y+o.z), MAXLIGHTNINGSTEPS);
     vec cur(o), up, right;
     up.orthogonal(step);
@@ -38,8 +38,11 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
         vec next(cur);
         next.add(step);
         if(j+1==numsteps) next = d;
-        next.add(vec(right).mul(sz*lnjitterx[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
-        next.add(vec(up).mul(sz*lnjittery[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
+        else
+        {
+            next.add(vec(right).mul(sz*lnjitterx[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
+            next.add(vec(up).mul(sz*lnjittery[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
+        }
         vec dir1 = next, dir2 = next, across;
         dir1.sub(cur);
         dir2.sub(camera1->o);

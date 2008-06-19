@@ -745,7 +745,7 @@ void resetmap()
 	et->getents().deletecontentsp();
 
 	enumerate(*idents, ident, id, {
-		if (id.world) // reset world vars
+		if (id.flags&IDF_WORLD) // reset world vars
 		{
 			switch (id.type)
 			{

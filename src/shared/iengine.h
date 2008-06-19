@@ -277,6 +277,7 @@ extern void gets2c();
 struct Texture;
 
 enum { G3D_DOWN = 0x0001, G3D_UP = 0x0002, G3D_PRESSED = 0x0004, G3D_ROLLOVER = 0x0008, G3D_DRAGGED = 0x0010, G3D_ALTERNATE = 0x0020 };
+enum { EDITORFOCUSED = 1, EDITORUSED, EDITORFOREVER };
 
 struct g3d_gui
 {
@@ -313,7 +314,7 @@ struct g3d_gui
 	virtual void progress(float percent) = 0;
 	virtual void strut(int size) = 0;
     virtual void space(int size) = 0;
-    virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL) = 0;
+    virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED) = 0;
     virtual void mergehits(bool on) = 0;
 };
 
@@ -327,6 +328,7 @@ struct g3d_callback
 };
 
 extern void g3d_addgui(g3d_callback *cb);
+extern void g3d_limitscale(float scale);
 
 // client
 enum { ST_EMPTY, ST_TCPIP, ST_REMOTE };
@@ -364,22 +366,36 @@ extern void gzputfloat(gzFile f, float x);
 
 enum
 {
-	MAP_BFGZ = 0,
+	MAP_NONE = 0,
+	MAP_BFGZ,
 	MAP_OCTA,
 	MAP_MAX
 };
 
-enum							// cube empty-space materials
+enum
 {
-	MAT_AIR = 0,				// the default, fill the empty space with air
-	MAT_WATER,				  	// fill with water, showing waves at the surface
-	MAT_CLIP,					// collisions always treat cube as solid
-	MAT_GLASS,				  	// behaves like clip but is blended blueish
-	MAT_NOCLIP,					// collisions always treat cube as empty
-	MAT_LAVA,					// fill with lava
-    MAT_AICLIP,                 // clip ai only
-    MAT_DEATH,                  // force player suicide
-	MAT_EDIT					// basis for the edit volumes of the above materials
+    MATF_VOLUME_SHIFT = 0,
+    MATF_CLIP_SHIFT   = 3,
+    MATF_FLAG_SHIFT   = 5,
+
+    MATF_VOLUME = 7 << MATF_VOLUME_SHIFT,
+    MATF_CLIP   = 3 << MATF_CLIP_SHIFT,
+    MATF_FLAGS  = 7 << MATF_FLAG_SHIFT
+};
+
+enum // cube empty-space materials
+{
+    MAT_AIR   = 0,                      // the default, fill the empty space with air
+    MAT_WATER = 1 << MATF_VOLUME_SHIFT, // fill with water, showing waves at the surface
+    MAT_LAVA  = 2 << MATF_VOLUME_SHIFT, // fill with lava
+    MAT_GLASS = 3 << MATF_VOLUME_SHIFT, // behaves like clip but is blended blueish
+
+    MAT_NOCLIP = 1 << MATF_CLIP_SHIFT,  // collisions always treat cube as empty
+    MAT_CLIP   = 2 << MATF_CLIP_SHIFT,  // collisions always treat cube as solid
+    MAT_AICLIP = 3 << MATF_CLIP_SHIFT,  // clip monsters only
+
+    MAT_DEATH  = 1 << MATF_FLAG_SHIFT,  // force player suicide
+    MAT_EDIT   = 4 << MATF_FLAG_SHIFT   // edit-only surfaces
 };
 
 extern int ambient, skylight, watercolour, lavacolour;

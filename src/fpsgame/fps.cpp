@@ -634,9 +634,9 @@ struct GAMECLIENT : igameclient
 		glEnd();
 	}
 
-	void drawgamehud(int w, int h)
+	int drawgamehud(int w, int h, int y)
 	{
-		int ox = w*3, oy = h*3;
+		int ox = w*3, oy = h*3, hoff = y;
 
 		pushfont("hud");
 
@@ -663,7 +663,7 @@ struct GAMECLIENT : igameclient
 
 			int ty = by + bs;
 			ty = draw_textx("%s", int(ox*amt)-FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, ox-FONTH, sv->gamename(gamemode, mutators));
-			ty = draw_textx("%s", int(ox*(1.f-amt))+FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, ox-FONTH, title);
+			ty = draw_textx("%s", ox+int(ox*(1.f-amt))-FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, ox-FONTH, title);
 		}
 		else
 		{
@@ -767,10 +767,12 @@ struct GAMECLIENT : igameclient
 				if(wait)
 				{
 					float c = float(wait)/1000.f;
-					draw_textx("Fragged! Down for %.1fs", ox-FONTH/4, by+bs, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, -1, c);
+					draw_textx("Fragged! Down for %.1fs", FONTH/4, hoff-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, c);
 				}
 				else
-					draw_textx("Fragged! Press attack to respawn", ox-FONTH/4, by+bs, 255, 255, 255, int(255.f*fade), false, AL_RIGHT);
+					draw_textx("Fragged! Press attack to respawn", FONTH/4, hoff-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
+
+				hoff -= FONTH;
 			}
 
 			settexture(radarpingtex());
@@ -781,6 +783,8 @@ struct GAMECLIENT : igameclient
 		}
 
 		popfont();
+
+		return hoff;
 	}
 
 	enum
@@ -870,8 +874,10 @@ struct GAMECLIENT : igameclient
 			drawpointer(w, h, POINTER_RELATIVE, mousetype() <= 2 ? cursorx : 0.5f, mousetype() <= 2 ? cursory : 0.5f, r, g, b);
 	}
 
-	void drawhudelements(int w, int h)
+	int drawhudelements(int w, int h, int y)
 	{
+		int hoff = y;
+
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
 
@@ -879,8 +885,6 @@ struct GAMECLIENT : igameclient
 
 		if(lastmillis-maptime > cardtime()+cardfade())
 		{
-			int hoff = h*3-FONTH;
-
 			if(editmode && showstats())
 			{
 				static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
@@ -903,9 +907,9 @@ struct GAMECLIENT : igameclient
 
 				loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
 
-				draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff -= FONTH;
-				draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff -= FONTH;
-				draw_textx("cube %s%d", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff -= FONTH;
+				draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff -= FONTH;
+				draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff -= FONTH;
+				draw_textx("cube %s%d", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff -= FONTH;
 			}
 
 			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
@@ -914,8 +918,8 @@ struct GAMECLIENT : igameclient
 
 			switch(showfps())
 			{
-				case 2: draw_textx("fps %d +%d-%d", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, fps, bestdiff, worstdiff); hoff -= FONTH; break;
-				case 1: draw_textx("fps %d", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, fps); hoff -= FONTH; break;
+				case 2: draw_textx("fps %d +%d-%d", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, fps, bestdiff, worstdiff); hoff -= FONTH; break;
+				case 1: draw_textx("fps %d", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, fps); hoff -= FONTH; break;
 				default: break;
 			}
 
@@ -924,19 +928,21 @@ struct GAMECLIENT : igameclient
 				char *editinfo = executeret("edithud");
 				if(editinfo)
 				{
-					draw_textx("%s", FONTH/4, hoff, 255, 255, 255, 255, false, AL_LEFT, -1, -1, editinfo); hoff -= FONTH;
+					draw_textx("%s", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, editinfo); hoff -= FONTH;
 					DELETEA(editinfo);
 				}
 			}
 
 			if(getcurcommand())
 			{
-				rendercommand(FONTH/4, hoff, h*3-FONTH);
+				rendercommand(FONTH/4, hoff-FONTH, h*3-FONTH);
 				hoff -= FONTH;
 			}
 		}
 
 		render_texture_panel(w, h);
+
+		return hoff;
 	}
 
 	void drawhud(int w, int h)
@@ -945,8 +951,9 @@ struct GAMECLIENT : igameclient
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			if(cc.ready()) drawgamehud(w, h);
-			drawhudelements(w, h);
+			int hoff = h*3;
+			if(cc.ready()) hoff = drawgamehud(w, h, hoff);
+			hoff = drawhudelements(w, h, hoff);
 			glDisable(GL_BLEND);
 			drawpointers(w, h);
 		}
@@ -973,7 +980,7 @@ struct GAMECLIENT : igameclient
 
 	void editvar(ident *id, bool local)
 	{
-        if(id && id->world && local && m_edit(gamemode))
+        if(id && id->flags&IDF_WORLD && local && m_edit(gamemode))
         {
         	switch(id->type)
         	{

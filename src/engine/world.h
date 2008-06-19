@@ -8,8 +8,8 @@ enum							// hardcoded texture numbers
 	DEFAULT_CEIL
 };
 
-#define OCTAVERSION 26			// diverged at ver 25
-#define MAPVERSION 30			// bump if map format changes, see worldio.cpp
+#define OCTAVERSION 27			// diverged at ver 25
+#define MAPVERSION 31			// bump if map format changes, see worldio.cpp
 
 struct binary
 {
@@ -54,14 +54,15 @@ enum
 };
 
 #define isliquid(mat) ((mat)==MAT_WATER || (mat)==MAT_LAVA)
-#define isclipped(mat) ((mat) >= MAT_CLIP && (mat) < MAT_NOCLIP)
+#define isclipped(mat) ((mat)==MAT_GLASS)
+#define isdeadly(mat) ((mat)==MAT_LAVA)
 
 // VVEC_FRAC must be between 0..3
 #define VVEC_FRAC 3
 #define VVEC_INT (16-VVEC_FRAC)
 #define VVEC_BITS (VVEC_INT + VVEC_FRAC)
 
-#define VVEC_INT_MASK	 ((1<<(VVEC_INT-1))-1)
+#define VVEC_INT_MASK     ((1<<(VVEC_INT-1))-1)
 #define VVEC_INT_COORD(n) (((n)&VVEC_INT_MASK)<<VVEC_FRAC)
 
 struct vvec : svec

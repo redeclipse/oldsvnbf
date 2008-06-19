@@ -9,6 +9,7 @@ sometype mapexts[] = {
 };
 
 string bgzname[MAP_MAX], mapname;
+int maptype = MAP_NONE;
 
 void setnames(char *fname)
 {
@@ -143,7 +144,17 @@ void loadc(gzFile f, cube &c)
 	else
 	{
 		uchar mask = gzgetc(f);
-		if(mask & 0x80) ext(c).material = gzgetc(f);
+        if(mask & 0x80)
+        {
+            int mat = gzgetc(f);
+            if((maptype == MAP_OCTA && hdr.version < 27) ||
+            	(maptype == MAP_BFGZ && hdr.version < 31))
+            {
+                static uchar matconv[] = { MAT_AIR, MAT_WATER, MAT_CLIP, MAT_GLASS|MAT_CLIP, MAT_NOCLIP, MAT_LAVA|MAT_DEATH, MAT_AICLIP, MAT_DEATH };
+                mat = size_t(mat) < sizeof(matconv)/sizeof(matconv[0]) ? matconv[mat] : MAT_AIR;
+            }
+            ext(c).material = mat;
+        }
 		if(mask & 0x3F)
 		{
 			uchar lit = 0, bright = 0;
@@ -237,7 +248,7 @@ void save_config(char *mname)
 
 	int aliases = 0;
 	enumerate(*idents, ident, id, {
-		if(id.type == ID_ALIAS && id.world && strlen(id.name))
+		if(id.type == ID_ALIAS && id.flags&IDF_WORLD && strlen(id.name))
 		{
 			aliases++;
             fprintf(h, "\"%s\" = [%s]\n", id.name, id.action);
@@ -407,11 +418,11 @@ void save_world(char *mname, bool nolms)
 	// world variables
 	int numvars = 0, vars = 0;
 	enumerate(*idents, ident, id, {
-		if((id.type == ID_VAR || id.type == ID_FVAR || id.type == ID_SVAR) && id.world && strlen(id.name)) numvars++;
+		if((id.type == ID_VAR || id.type == ID_FVAR || id.type == ID_SVAR) && id.flags&IDF_WORLD && strlen(id.name)) numvars++;
 	});
 	gzputint(f, numvars);
 	enumerate(*idents, ident, id, {
-		if((id.type == ID_VAR || id.type == ID_FVAR || id.type == ID_SVAR) && id.world && strlen(id.name))
+		if((id.type == ID_VAR || id.type == ID_FVAR || id.type == ID_SVAR) && id.flags&IDF_WORLD && strlen(id.name))
 		{
 			vars++;
 			if(verbose >= 2) renderprogress(float(vars)/float(numvars), "saving world variables...");
@@ -538,7 +549,8 @@ void load_world(char *mname)		// still supports all map formats that have existe
 	setnames(mname);
 	Texture *mapshot = textureload(mapname, 0, true, false);
 	bool samegame = true;
-	int maptype = -1, eif = 0;
+	maptype = MAP_NONE;
+	int eif = 0;
     computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
 
 	gzFile f;
@@ -620,7 +632,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 							type = ID_FVAR;
 						else proceed = false;
 					}
-					if(!id || !id->world) proceed = false;
+					if(!id || !(id->flags&IDF_WORLD)) proceed = false;
 
 					switch(type)
 					{

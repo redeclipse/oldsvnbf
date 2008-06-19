@@ -83,7 +83,10 @@ ident *newident(const char *name)
 	ident *id = idents->access(name);
 	if(!id)
 	{
-        ident init(ID_ALIAS, newstring(name), newstring(""), persistidents, worldidents);
+        int flags = 0;
+        if(persistidents) flags |= IDF_PERSIST;
+        if(worldidents) flags |= IDF_WORLD;
+        ident init(ID_ALIAS, newstring(name), newstring(""), flags);
         id = idents->access(init.name, &init);
     }
     return id;
@@ -113,9 +116,12 @@ void aliasa(const char *name, char *action)
 	ident *b = idents->access(name);
 	if(!b)
 	{
-        ident a(ID_ALIAS, newstring(name), action, persistidents, worldidents);
-        if(overrideidents) a.override = OVERRIDDEN;
-        b = idents->access(a.name, &a);
+        int flags = 0;
+        if(persistidents) flags |= IDF_PERSIST;
+        if(worldidents) flags |= IDF_WORLD;
+        ident b(ID_ALIAS, newstring(name), action, flags);
+        if(overrideidents) b.override = OVERRIDDEN;
+        idents->access(b.name, &b);
 	}
     else if(b->type != ID_ALIAS)
 	{
@@ -130,8 +136,16 @@ void aliasa(const char *name, char *action)
 		else
 		{
             if(b->override != NO_OVERRIDE) b->override = NO_OVERRIDE;
-            if(b->persist != persistidents) b->persist = persistidents;
-            if(b->world != worldidents && worldidents) b->world = worldidents;
+            if(persistidents)
+            {
+                if(!(b->flags & IDF_PERSIST)) b->flags |= IDF_PERSIST;
+            }
+            else if(b->flags & IDF_PERSIST) b->flags &= ~IDF_PERSIST;
+            if(worldidents)
+            {
+                if(!(b->flags & IDF_WORLD)) b->flags |= IDF_WORLD;
+            }
+            else if(b->flags & IDF_WORLD) b->flags &= ~IDF_WORLD;
 		}
 	}
 #ifndef STANDALONE
@@ -155,67 +169,68 @@ COMMAND(worldalias, "ss");
 
 // variable's and commands are registered through globals, see cube.h
 
-int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist, bool world)
+int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
-    ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, persist, world);
+    ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, flags);
     idents->access(name, &v);
     return cur;
 }
 
-float fvariable(const char *name, float cur, float *storage, void (*fun)(), bool persist, bool world)
+float fvariable(const char *name, float cur, float *storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
-    ident v(ID_FVAR, name, cur, storage, (void *)fun, persist, world);
+    ident v(ID_FVAR, name, cur, storage, (void *)fun, flags);
     idents->access(name, &v);
     return cur;
 }
 
-char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), bool persist, bool world)
+char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
-    ident v(ID_SVAR, name, newstring(cur), storage, (void *)fun, persist, world);
+    ident v(ID_SVAR, name, newstring(cur), storage, (void *)fun, flags);
     idents->access(name, &v);
     return v.val.s;
 }
 
-#define GETVAR(id, vartype, name, retval) \
+#define _GETVAR(id, vartype, name, retval) \
 	ident *id = idents->access(name); \
     if(!id || id->type!=vartype) return retval;
+#define GETVAR(id, name, retval) _GETVAR(id, ID_VAR, name, retval)
 void setvar(const char *name, int i, bool dofunc)
 {
-	GETVAR(id, ID_VAR, name, );
+    GETVAR(id, name, );
     *id->storage.i = clamp(i, id->minval, id->maxval);
     if(dofunc) id->changed();
 	if(verbose >= 3) conoutf("%s set to %d", id->name, *id->storage.i);
 }
 void setfvar(const char *name, float f, bool dofunc)
 {
-    GETVAR(id, ID_FVAR, name, );
+    _GETVAR(id, ID_FVAR, name, );
     *id->storage.f = f;
     if(dofunc) id->changed();
 	if(verbose >= 3) conoutf("%s set to %f", id->name, *id->storage.f);
 }
 void setsvar(const char *name, const char *str, bool dofunc)
 {
-    GETVAR(id, ID_SVAR, name, );
+    _GETVAR(id, ID_SVAR, name, );
     *id->storage.s = exchangestr(*id->storage.s, str);
 	if(dofunc) id->changed();
 	if(verbose >= 3) conoutf("%s set to %s", id->name, *id->storage.s);
 }
 int getvar(const char *name)
 {
-	GETVAR(id, ID_VAR, name, 0);
+    GETVAR(id, name, 0);
     return *id->storage.i;
 }
 int getvarmin(const char *name)
 {
-	GETVAR(id, ID_VAR, name, 0);
+    GETVAR(id, name, 0);
     return id->minval;
 }
 int getvarmax(const char *name)
 {
-	GETVAR(id, ID_VAR, name, 0);
+    GETVAR(id, name, 0);
     return id->maxval;
 }
 bool identexists(const char *name) { return idents->access(name)!=NULL; }
@@ -232,7 +247,7 @@ void touchvar(const char *name)
             id->changed();
             break;
     }
-}   
+}
 
 const char *getalias(const char *name)
 {
@@ -502,7 +517,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 					{
 #ifndef STANDALONE
 						#define WORLDVAR \
-							if (!worldidents && !editmode && id->world) \
+							if (!worldidents && !editmode && id->flags&IDF_WORLD) \
 							{ \
 								conoutf("cannot set world variable %s outside editmode", id->name); \
 								break; \
@@ -510,9 +525,9 @@ char *executeret(const char *p)               // all evaluation happens here, re
 #endif
 
                         #define OVERRIDEVAR(saveval, resetval) \
-                            if(overrideidents) \
+                            if(overrideidents || id->flags&IDF_OVERRIDE) \
                             { \
-                                if(id->persist && !id->world) \
+                                if(id->flags&IDF_PERSIST && !(id->flags&IDF_WORLD)) \
                                 { \
                                     conoutf("cannot override persistent variable %s", id->name); \
                                     break; \
@@ -639,8 +654,7 @@ void writecfg()
 	if(!f) return;
 #endif
 	enumerate(*idents, ident, id,
-        if(!id.persist || id.world) continue;
-        switch(id.type)
+        if(id.flags&IDF_PERSIST) switch(id.type)
 		{
             case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
             case ID_FVAR: fprintf(f, "%s %f\n", id.name, *id.storage.f); break;
@@ -838,7 +852,7 @@ struct sleepcmd
 {
 	int millis;
 	char *command;
-    bool override, world;
+    int flags;
 };
 vector<sleepcmd> sleepcmds;
 
@@ -847,8 +861,7 @@ void addsleep(int *msec, char *cmd)
 	sleepcmd &s = sleepcmds.add();
 	s.millis = *msec+lastmillis;
 	s.command = newstring(cmd);
-    s.override = overrideidents;
-    s.world = worldidents;
+    s.flags = (overrideidents ? IDF_OVERRIDE : 0)|(worldidents ? IDF_WORLD : 0);
 }
 
 COMMANDN(sleep, addsleep, "is");
@@ -873,15 +886,17 @@ void clearsleep(bool clearoverrides, bool clearworlds)
     int len = 0;
     loopv(sleepcmds)
     {
-        if(clearoverrides && !sleepcmds[i].override) sleepcmds[len++] = sleepcmds[i];
-        else delete[] sleepcmds[i].command;
+        if((clearoverrides && sleepcmds[i].flags&IDF_OVERRIDE) ||
+			(clearworlds && sleepcmds[i].flags&IDF_WORLD))
+				delete[] sleepcmds[i].command;
+        else sleepcmds[len++] = sleepcmds[i];
     }
     sleepcmds.setsize(len);
 }
 
-void clearsleep_(int *clearoverrides, int *clearworlds)
+void clearsleep_(int *override, int *world)
 {
-    clearsleep(*clearoverrides!=0 || overrideidents, *clearworlds!=0 || worldidents);
+    clearsleep(*override!=0 || overrideidents, *world!=0 || worldidents);
 }
 
 COMMANDN(clearsleep, clearsleep_, "ii");

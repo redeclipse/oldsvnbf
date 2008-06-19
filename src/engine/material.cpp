@@ -147,26 +147,27 @@ const char *findmaterialname(int type)
 	return NULL;
 }
 
-int visiblematerial(cube &c, int orient, int x, int y, int z, int size)
+int visiblematerial(cube &c, int orient, int x, int y, int z, int size, uchar matmask)
 {
-	if(c.ext) switch(c.ext->material)
+    uchar mat = c.ext->material&matmask;
+    if(c.ext) switch(mat)
 	{
 	case MAT_AIR:
 		 break;
 
 	case MAT_LAVA:
 	case MAT_WATER:
-		if(visibleface(c, orient, x, y, z, size, c.ext->material))
+        if(visibleface(c, orient, x, y, z, size, mat, MAT_AIR, matmask))
 			return (orient != O_BOTTOM ? MATSURF_VISIBLE : MATSURF_EDIT_ONLY);
 		break;
 
 	case MAT_GLASS:
-		if(visibleface(c, orient, x, y, z, size, MAT_GLASS))
+        if(visibleface(c, orient, x, y, z, size, MAT_GLASS, MAT_AIR, matmask))
 			return MATSURF_VISIBLE;
 		break;
 
 	default:
-		if(visibleface(c, orient, x, y, z, size, c.ext->material))
+        if(visibleface(c, orient, x, y, z, size, mat, MAT_AIR, matmask))
 			return MATSURF_EDIT_ONLY;
 		break;
 	}
@@ -177,22 +178,29 @@ void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurfa
 {
 	loopi(6)
 	{
-		int vis = visiblematerial(c, i, cx, cy, cz, size);
-		if(vis != MATSURF_NOT_VISIBLE)
-		{
-			materialsurface m;
-			m.material = (vis == MATSURF_EDIT_ONLY ? c.ext->material+MAT_EDIT : c.ext->material);
-			m.orient = i;
-			m.o = ivec(cx, cy, cz);
-			m.csize = m.rsize = size;
-			if(dimcoord(i)) m.o[dimension(i)] += size;
-			matsurfs.add(m);
-		}
-        if(isclipped(c.ext->material) && c.ext->material != MAT_CLIP)
+        static uchar matmasks[3] = { MATF_VOLUME, MATF_CLIP, MAT_DEATH };
+        int matmask = 0, vis = MATSURF_NOT_VISIBLE;
+        loopj(sizeof(matmasks)/sizeof(matmasks[0]))
         {
-            clipmask |= 1<<i;
-            if(vis == MATSURF_VISIBLE) vismask |= 1<<i;
-            else vismask &= ~(1<<i);
+            matmask = matmasks[j];
+            vis = visiblematerial(c, i, cx, cy, cz, size, matmask);
+			if(vis != MATSURF_NOT_VISIBLE)
+			{
+				materialsurface m;
+                m.material = (vis == MATSURF_EDIT_ONLY ? MAT_EDIT : 0) | (c.ext->material&matmask);
+				m.orient = i;
+				m.o = ivec(cx, cy, cz);
+				m.csize = m.rsize = size;
+				if(dimcoord(i)) m.o[dimension(i)] += size;
+				matsurfs.add(m);
+                if(isclipped(c.ext->material&matmask))
+		        {
+		            clipmask |= 1<<i;
+		            if(vis == MATSURF_VISIBLE) vismask |= 1<<i;
+		            else vismask &= ~(1<<i);
+		        }
+                break;
+            }
         }
 	}
 }
@@ -364,7 +372,7 @@ void setupmaterials(int start, int len)
 				while(o[dim^1] < maxc)
 				{
 					cube &c = lookupcube(o.x, o.y, o.z);
-					if(c.ext && isliquid(c.ext->material)) { m.ends |= 1; break; }
+                    if(c.ext && isliquid(c.ext->material&MATF_VOLUME)) { m.ends |= 1; break; }
 					o[dim^1] += lusize;
 				}
 				o[dim^1] = minc;
@@ -389,7 +397,7 @@ void setupmaterials(int start, int len)
 					m.envmap = closestenvmap(center);
 				}
 			}
-            hasmat |= 1<<m.material;
+            if(m.material&MATF_VOLUME) hasmat |= 1<<m.material;
 		}
 	}
 	loopv(water)
@@ -473,7 +481,7 @@ void sortmaterials(vector<materialsurface *> &vismats)
 			if(!editmode || !showmat)
 			{
                 if(m.material==MAT_WATER && (m.orient==O_TOP || (refracting<0 && reflectz>hdr.worldsize))) continue;
-				if(m.material>=MAT_EDIT) continue;
+                if(m.material&MAT_EDIT) continue;
                 if(glaring && m.material!=MAT_LAVA) continue;
             }
             else if(glaring) continue;
@@ -487,27 +495,25 @@ void rendermatgrid(vector<materialsurface *> &vismats)
 {
     enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	static uchar cols[MAT_EDIT][3] =
-	{
-		{ 0, 0, 0 },	// MAT_AIR - no edit volume,
-		{ 0, 0, 85 },  // MAT_WATER - blue,
-		{ 85, 0, 0 },  // MAT_CLIP - red,
-		{ 0, 85, 85 }, // MAT_GLASS - cyan,
-		{ 0, 85, 0 },  // MAT_NOCLIP - green
-		{ 85, 40, 0 }, // MAT_LAVA - orange
-        { 85, 85, 0 }, // MAT_AICLIP - yellow
-        { 40, 40, 40 } // MAT_DEATH - black
-	};
 	int lastmat = -1;
 	glBegin(GL_QUADS);
 	loopv(vismats)
 	{
 		materialsurface &m = *vismats[i];
-		int curmat = m.material >= MAT_EDIT ? m.material-MAT_EDIT : m.material;
+        int curmat = m.material&~MAT_EDIT;
 		if(curmat != lastmat)
 		{
 			lastmat = curmat;
-			glColor3ubv(cols[curmat]);
+            switch(curmat)
+            {
+                case MAT_WATER:  glColor3ub( 0,  0, 85); break; // blue
+                case MAT_CLIP:   glColor3ub(85,  0,  0); break; // red
+                case MAT_GLASS:  glColor3ub( 0, 85, 85); break; // cyan
+                case MAT_NOCLIP: glColor3ub( 0, 85,  0); break; // green
+                case MAT_LAVA:   glColor3ub(85, 40,  0); break; // orange
+                case MAT_AICLIP: glColor3ub(85, 85,  0); break; // yellow
+                case MAT_DEATH:  glColor3ub(40, 40, 40); break; // black
+            }
 		}
 		drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, -0.1f);
 	}
@@ -575,7 +581,7 @@ void rendermaterials()
 	loopv(vismats)
 	{
 		materialsurface &m = *vismats[editmode && showmat ? vismats.length()-1-i : i];
-		int curmat = !editmode || !showmat || m.material>=MAT_EDIT ? m.material : m.material+MAT_EDIT;
+        int curmat = !editmode || !showmat || m.material&MAT_EDIT ? m.material : m.material|MAT_EDIT;
 		if(lastmat!=curmat || lastorient!=m.orient || (curmat==MAT_GLASS && envmapped && m.envmap != envmapped))
 		{
 			int fogtype = lastfogtype;
@@ -780,18 +786,16 @@ void rendermaterials()
 						foggednotextureshader->set();
 						fogtype = 0;
 					}
-					static uchar blendcols[MAT_EDIT][3] =
+                    switch(curmat&~MAT_EDIT)
 					{
-						{ 0,	0,	0	}, // MAT_AIR - no edit volume,
-						{ 255, 128, 0	}, // MAT_WATER - blue,
-						{ 0,	255, 255 }, // MAT_CLIP - red,
-						{ 255, 0,	0	}, // MAT_GLASS - cyan,
-						{ 255, 0,	255 }, // MAT_NOCLIP - green
-						{ 0, 128,	255 }, // MAT_LAVA - orange
-                        { 0,   0,   255 }, // MAT_AICLIP - yellow
-                        { 192, 192, 192 }, // MAT_DEATH - black
-					};
-					glColor3ubv(blendcols[curmat >= MAT_EDIT ? curmat-MAT_EDIT : curmat]);
+                        case MAT_WATER:  glColor3ub(255, 128,   0); break; // blue
+                        case MAT_CLIP:   glColor3ub(  0, 255, 255); break; // red
+                        case MAT_GLASS:  glColor3ub(255,   0,   0); break; // cyan
+                        case MAT_NOCLIP: glColor3ub(255,   0, 255); break; // green
+                        case MAT_LAVA:   glColor3ub(  0, 128, 255); break; // orange
+                        case MAT_AICLIP: glColor3ub(  0,   0, 255); break; // yellow
+                        case MAT_DEATH:  glColor3ub(192, 192, 192); break; // black
+                    }   
 					break;
 				}
 			}

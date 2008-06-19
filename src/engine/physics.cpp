@@ -282,7 +282,7 @@ float raycube(const vec &o, const vec &ray, float radius, int mode, int size, ex
 
 		cube &c = *lc;
 		if((dist>0 || !(mode&RAY_SKIPFIRST)) &&
-			(((mode&RAY_CLIPMAT) && c.ext && isclipped(c.ext->material) && c.ext->material != MAT_CLIP) ||
+           (((mode&RAY_CLIPMAT) && c.ext && isclipped(c.ext->material&MATF_VOLUME)) ||
 			((mode&RAY_EDITMAT) && c.ext && c.ext->material != MAT_AIR) ||
 			(!(mode&RAY_PASS) && lsize==size && !isempty(c)) ||
 			isentirelysolid(c) ||
@@ -694,12 +694,11 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
         else
         {
             bool solid = false;
-            if(c[i].ext) switch(c[i].ext->material)
+            if(c[i].ext) switch(c[i].ext->material&MATF_CLIP)
 			{
                 case MAT_NOCLIP: continue;
                 case MAT_AICLIP: if(d->type==ENT_AI) solid = true; break;
                 case MAT_CLIP: if(d->type<ENT_CAMERA) solid = true; break;
-                case MAT_GLASS: solid = true; break;
             }
             if(!solid && isempty(c[i])) continue;
             if(!cubecollide(d, dir, cutoff, c[i], o.x, o.y, o.z, size, solid)) return false;
@@ -725,12 +724,11 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
     }
     if(c->children) return octacollide(d, dir, cutoff, bo, bs, c->children, ivec(bo).mask(~((2<<scale)-1)), 1<<scale);
     bool solid = false;
-    if(c->ext) switch(c->ext->material)
+    if(c->ext) switch(c->ext->material&MATF_CLIP)
     {
         case MAT_NOCLIP: return true;
         case MAT_AICLIP: if(d->type==ENT_AI) solid = true; break;
         case MAT_CLIP: if(d->type<ENT_CAMERA) solid = true; break;
-        case MAT_GLASS: solid = true; break;
     }
     if(!solid && isempty(*c)) return true;
     int csize = 2<<scale, cmask = ~(csize-1);
