@@ -42,7 +42,7 @@
 					<Add option="-fomit-frame-pointer"/>
 					<Add option="-ffast-math"/>
 					<Add option="-fno-strict-aliasing"/>
-					<Add option="-DBFAGAME"/>
+					<Add option="-DINTERFACE"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
 					<Add directory="fpsgame"/>
@@ -84,7 +84,7 @@
 					<Add option="-Wall"/>
 					<Add option="-g"/>
 					<Add option="-fsigned-char"/>
-					<Add option="-DBFAGAME"/>
+					<Add option="-DINTERFACE"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
 					<Add directory="fpsgame"/>
@@ -181,7 +181,11 @@
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
 				<Option parameters="-hhome -fdvscb.ttf -g3 -ndefault"/>
+				<Option projectCompilerOptionsRelation="1"/>
+				<Option projectLinkerOptionsRelation="1"/>
+				<Option projectIncludeDirsRelation="1"/>
 				<Option projectResourceIncludeDirsRelation="1"/>
+				<Option projectLibDirsRelation="1"/>
 				<Compiler>
 					<Add option="-fexpensive-optimizations"/>
 					<Add option="-Os"/>
@@ -197,6 +201,36 @@
 					<Add library="SDL"/>
 					<Add library="SDL_image"/>
 					<Add library="lib\SDL_ttf.lib"/>
+					<Add library="lib\libpng.lib"/>
+					<Add library="z"/>
+					<Add directory="lib\mingw"/>
+				</Linker>
+			</Target>
+			<Target title="img2anim">
+				<Option output="..\bin\img2anim.exe"/>
+				<Option working_dir="..\"/>
+				<Option object_output=".objs\img2anim"/>
+				<Option deps_output=".deps\img2anim"/>
+				<Option type="1"/>
+				<Option compiler="0"/>
+				<Option projectCompilerOptionsRelation="1"/>
+				<Option projectLinkerOptionsRelation="1"/>
+				<Option projectIncludeDirsRelation="1"/>
+				<Option projectResourceIncludeDirsRelation="1"/>
+				<Option projectLibDirsRelation="1"/>
+				<Compiler>
+					<Add option="-fexpensive-optimizations"/>
+					<Add option="-Os"/>
+					<Add option="-O3"/>
+					<Add option="-DIMG2ANIM"/>
+					<Add directory="shared"/>
+					<Add directory="include"/>
+				</Compiler>
+				<Linker>
+					<Add option="-s"/>
+					<Add library="SDLmain"/>
+					<Add library="SDL"/>
+					<Add library="SDL_image"/>
 					<Add library="lib\libpng.lib"/>
 					<Add library="z"/>
 					<Add directory="lib\mingw"/>
@@ -845,6 +879,11 @@
 			<Option target="debug"/>
 			<Option target="server"/>
 		</Unit>
+		<Unit filename="img2anim.rc">
+			<Option compilerVar="WINDRES"/>
+			<Option objectName="img2anim.res"/>
+			<Option target="img2anim"/>
+		</Unit>
 		<Unit filename="include\GL\glext.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
@@ -1194,6 +1233,10 @@
 			<Option target="client"/>
 			<Option target="debug"/>
 		</Unit>
+		<Unit filename="shared\img2anim.cpp">
+			<Option compilerVar="CPP"/>
+			<Option target="img2anim"/>
+		</Unit>
 		<Unit filename="shared\pch.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
@@ -1215,6 +1258,7 @@
 			<Option target="server"/>
 			<Option target="daemon"/>
 			<Option target="ttf2font"/>
+			<Option target="img2anim"/>
 		</Unit>
 		<Unit filename="shared\tools.h">
 			<Option compilerVar="CPP"/>
