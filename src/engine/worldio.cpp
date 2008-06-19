@@ -358,7 +358,7 @@ void save_mapshot(char *mname)
 		if(mapshotsize) image = scalesurface(image, mapshotsize, mapshotsize);
 		else if(image->w != image->h) image = scalesurface(image, image->w, image->w);
 
-		savesurface(image, mname, true);
+		savesurface(image, mname, imageformat, compresslevel);
 		SDL_FreeSurface(image);
 	}
 }

@@ -866,7 +866,7 @@ void brushvert(int *x, int *y, int *v)
 void brushimport(char *name)
 {
 	SDL_Surface *s;
-	if((s = texturesurface(name)) != NULL)
+	if((s = loadsurface(name)) != NULL)
 	{
 		if(s->w > MAXBRUSH || s->h > MAXBRUSH) // only use max size
 			s = scalesurface(s, MAXBRUSH, MAXBRUSH, true);

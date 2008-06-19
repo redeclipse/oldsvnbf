@@ -263,7 +263,7 @@ struct ctfclient : ctfstate
         if(dist >= cl.radarrange()*(1 - 0.05f)) dir.mul(cl.radarrange()*(1 - 0.05f)/dist);
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		glBegin(GL_QUADS);
-        cl.drawradar(x + s*0.5f*(1.0f + dir.x/cl.radarrange() + xoffset), y + s*0.5f*(1.0f + dir.y/cl.radarrange() + yoffset), size*s);
+        cl.drawsized(x + s*0.5f*(1.0f + dir.x/cl.radarrange() + xoffset), y + s*0.5f*(1.0f + dir.y/cl.radarrange() + yoffset), size*s);
 		glEnd();
     }
 

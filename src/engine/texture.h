@@ -294,7 +294,6 @@ extern SDL_Surface *texffmask(SDL_Surface *s, int minval, bool clear = true);
 extern SDL_Surface *texdecal(SDL_Surface *s, bool clear = true);
 extern SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear = true);
 extern SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear = true);
-extern SDL_Surface *texturesurface(const char *name);
 extern SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL, TextureAnim *anim = NULL);
 
 extern Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false, bool compress = false, bool clear = true, TextureAnim *anim = NULL);

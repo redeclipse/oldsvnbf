@@ -1679,7 +1679,7 @@ void dumplms()
 				memcpy(dest, lightmaps[i].data+3*LM_PACKW*(LM_PACKH-1-idx), 3*LM_PACKW);
 			}
 			s_sprintfd(fname)("%s_lm_%d", getmapname(), i);
-			savesurface(temp, fname);
+			savesurface(temp, fname, imageformat, compresslevel);
 		}
 		SDL_FreeSurface(temp);
 	}

@@ -430,21 +430,8 @@ enum
     CHANGE_SOUND = 1<<1
 };
 extern bool initwarning(const char *desc, int level = INIT_RESET, int type = CHANGE_GFX);
-
-extern void savepng(SDL_Surface *s, const char *fname);
-
-enum
-{
-	IFMT_NONE = 0,
-	IFMT_BMP,
-	IFMT_PNG,
-	IFMT_MAX,
-};
-extern const char *ifmtexts[IFMT_MAX];
-extern int imageformat;
-extern void savesurface(SDL_Surface *s, char *name, bool msg = false, int format = IFMT_NONE);
-
 extern void resetcursor(bool warp = true, bool reset = true);
+extern int compresslevel, imageformat;
 
 extern void pushevent(const SDL_Event &e);
 extern bool interceptkey(int sym);
@@ -570,9 +557,6 @@ extern char *getmaptitle();
 // rendergl
 #define RENDERPUSHX			8.0f
 #define RENDERPUSHZ			0.1f
-
-#define CARDTIME			3000	// title card duration
-#define CARDFADE			1500	// title card fade in/out
 
 extern int fov, maxfps, hidehud, hudblend, lastmillis, totalmillis;
 extern float curfov, fovy, aspect;

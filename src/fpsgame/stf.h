@@ -272,7 +272,7 @@ struct stfclient : stfstate
 			float dist = dir.magnitude();
 			if(dist >= cl.radarrange()) dir.mul(cl.radarrange()/dist);
 			dir.rotate_around_z(-camera1->yaw*RAD);
-			cl.drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/cl.radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/cl.radarrange()), 0.1f*s);
+			cl.drawsized(x + s*0.5f*0.95f*(1.0f+dir.x/cl.radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/cl.radarrange()), 0.1f*s);
 		}
 		glEnd();
 	}

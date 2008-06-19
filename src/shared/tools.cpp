@@ -335,6 +335,87 @@ int listfiles(const char *dir, const char *ext, vector<char *> &files)
     return dirs;
 }
 
+// png saving
+#ifndef STANDALONE
+void savepng(SDL_Surface *s, const char *fname, int compress)
+{
+	FILE *p = openfile(fname, "wb");
+	if(p)
+	{
+		png_structp g = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+		if(g)
+		{
+			png_infop i = png_create_info_struct(g);
+			if(i)
+			{
+				if(!setjmp(png_jmpbuf(g)))
+				{
+					int chandepth = 8, format = -1;
+
+					switch(s->format->BytesPerPixel)
+					{
+						case 4: format = PNG_COLOR_TYPE_RGB_ALPHA; break;
+						case 3: format = PNG_COLOR_TYPE_RGB; break;
+						case 2: format = PNG_COLOR_TYPE_GRAY_ALPHA; break; // not really..
+						case 1: format = PNG_COLOR_TYPE_GRAY; break;
+						default: break;
+					}
+
+					if(format >= 0)
+					{
+						png_init_io(g, p);
+
+						png_set_compression_level(g, compress);
+
+						png_set_IHDR(g, i, s->w, s->h, chandepth,
+							format, PNG_INTERLACE_NONE,
+								PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+						png_write_info(g, i);
+
+						uchar *d =(uchar *)s->pixels;
+						loopk(s->h)
+						{
+							png_write_row(g, d);
+							d += s->w*s->format->BytesPerPixel;
+						}
+						png_write_end(g, NULL);
+					}
+				}
+			}
+			png_destroy_write_struct(&g, &i);
+		}
+		fclose(p);
+	}
+}
+
+const char *ifmtexts[IFMT_MAX] = { "", ".bmp", ".png" };
+
+void savesurface(SDL_Surface *s, char *fname, int format, int compress)
+{
+	int f = format > IFMT_NONE && format < IFMT_MAX ? format : IFMT_PNG;
+	const char *filename = makefile(fname, ifmtexts[f]);
+	switch(f)
+	{
+		case IFMT_PNG: savepng(s, filename, compress); break;
+		case IFMT_BMP: SDL_SaveBMP(s, findfile(filename, "wb")); break;
+		default: break;
+	}
+}
+
+SDL_Surface *loadsurface(const char *name)
+{
+	const char *exts[] = { "", ".png", ".tga", ".jpg", ".bmp" }; // bmp is a last resort!
+	loopi(sizeof(exts)/sizeof(exts[0]))
+	{
+		s_sprintfd(buf)("%s%s", name, exts[i]);
+		SDL_Surface *s = IMG_Load(findfile(buf, "rb"));
+		if(s) return s;
+	}
+	return NULL;
+}
+#endif
+
 ///////////////////////// misc tools ///////////////////////
 
 void endianswap(void *memory, int stride, int length)   // little endian as storage format
