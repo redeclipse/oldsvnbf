@@ -1,6 +1,6 @@
 CXXOPTFLAGS= -O3 -fsigned-char -fomit-frame-pointer -ffast-math -fno-strict-aliasing
 INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
-CXXFLAGS= -Wall $(CXXOPTFLAGS) $(INCLUDES)
+CXXFLAGS= -Wall -DINTERFACE $(CXXOPTFLAGS) $(INCLUDES)
 
 CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lpng -lz -lGL -lGLU
 ifeq ($(shell uname -s),Linux)
@@ -74,6 +74,14 @@ TTF_OBJS= \
 	shared/tools-ttf.o \
 	shared/ttf2font-ttf.o
 
+AINCLUDES= -Ishared `sdl-config --cflags`
+ACXXFLAGS= -Wall -DIMG2ANIM $(CXXOPTFLAGS) $(TINCLUDES)
+
+ANIM_LIBS= -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lpng -lz
+ANIM_OBJS= \
+	shared/tools-anim.o \
+	shared/img2anim-anim.o
+
 default: all
 
 enet/Makefile:
@@ -96,6 +104,9 @@ clean-daemon:
 clean-ttf:
 	@rm -fv $(TTF_OBJS) ttf2font
 
+clean-anim:
+	@rm -fv $(ANIM_OBJS) img2anim
+
 %-standalone.o:
 	$(CXX) $(SCXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
 
@@ -104,6 +115,9 @@ clean-ttf:
 
 %-ttf.o:
 	$(CXX) $(TCXXFLAGS) -c -o $@ $(subst -ttf.o,.cpp,$@)
+
+%-anim.o:
+	$(CXX) $(ACXXFLAGS) -c -o $@ $(subst -anim.o,.cpp,$@)
 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)
@@ -121,6 +135,10 @@ ttf: $(TTF_OBJS)
 	$(CXX) $(TCXXFLAGS) -o ttf2font $(TTF_OBJS) $(TTF_LIBS)
 	strip ttf2font
 
+anim: $(ANIM_OBJS)
+	$(CXX) $(ACXXFLAGS) -o img2anim $(ANIM_OBJS) $(ANIM_LIBS)
+	strip img2anim
+
 install-client: client
 	cp -v bloodfrontier_client ../bin/bloodfrontier_client
 	chmod +x ../bin/bloodfrontier_client ../bloodfrontier.sh
@@ -136,6 +154,10 @@ install-daemon: daemon
 install-ttf: ttf
 	cp -v ttf2font ../bin/ttf2font
 	chmod +x ../bin/ttf2font
+
+install-anim: anim
+	cp -v img2anim ../bin/img2anim
+	chmod +x ../bin/img2anim
 
 install: install-client install-server
 

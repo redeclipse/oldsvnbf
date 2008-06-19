@@ -44,6 +44,9 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> players;		// other clients
 	fpsent lastplayerstate;
 
+	IVARP(cardtime, 0, 2000, 10000);
+	IVARP(cardfade, 0, 3000, 10000);
+
 	IVARP(cameradist, -100, 8, 100);
 	IVARP(camerashift, -100, 4, 100);
 	IVARP(cameraheight, 0, 35, 360);
@@ -79,7 +82,10 @@ struct GAMECLIENT : igameclient
 
 	ITVAR(bliptex, "textures/blip");
 	ITVAR(radartex, "textures/radar");
-	ITVAR(radarpingtex, "<anim:100>textures/radarping");
+	ITVAR(radarpingtex, "<anim:75>textures/radarping");
+	ITVAR(healthbartex, "<anim:1000>textures/healthbar");
+	ITVAR(goalbartex, "<anim:1000>textures/goalbar");
+	ITVAR(teambartex, "<anim:1000>textures/teambar");
 
 	IVARP(showstats, 0, 1, 1);
 	IVARP(showfps, 0, 2, 2);
@@ -480,6 +486,9 @@ struct GAMECLIENT : igameclient
     	textureload(radartex());
     	textureload(radarpingtex());
     	textureload(bliptex());
+    	textureload(healthbartex());
+    	textureload(teambartex());
+    	textureload(goalbartex());
 
         ws.preload();
         fr.preload();
@@ -579,7 +588,7 @@ struct GAMECLIENT : igameclient
 
 	}
 
-	void drawradar(float x, float y, float s)
+	void drawsized(float x, float y, float s)
 	{
 		glTexCoord2f(0.0f, 0.0f); glVertex2f(x,	y);
 		glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
@@ -601,7 +610,7 @@ struct GAMECLIENT : igameclient
 			if(dist >= radarrange()) continue;
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			glColor4f(0.f, 1.f, 0.f, 1.f-(dist/radarrange()));
-			drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (f->crouching ? 0.05f : 0.025f)*s);
+			drawsized(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (f->crouching ? 0.05f : 0.025f)*s);
 		}
 		loopv(et.ents)
 		{
@@ -619,7 +628,7 @@ struct GAMECLIENT : igameclient
 				dir.rotate_around_z(-camera1->yaw*RAD);
 				settexture(bliptex());
 				glColor4f(1.f, 1.f, insel ? 1.0f : 0.f, insel ? 1.f : 1.f-(dist/radarrange()));
-				drawradar(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (insel ? 0.075f : 0.025f)*s);
+				drawsized(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (insel ? 0.075f : 0.025f)*s);
 			}
 		}
 		glEnd();
@@ -634,31 +643,32 @@ struct GAMECLIENT : igameclient
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 
+		int bs = oy/4, bx = ox-bs-FONTH/4, by = FONTH/4;
 		int secs = lastmillis-maptime;
 		float fade = 1.f, amt = hudblend/100.f;
 
-		if(secs <= CARDTIME+CARDFADE)
+		if(secs <= cardtime()+cardfade())
 		{
-			int x = ox;
-
-			if(secs <= CARDTIME) x = int((float(secs)/float(CARDTIME))*(float)ox);
-			else if(secs <= CARDTIME+CARDFADE) fade -= (float(secs-CARDTIME)/float(CARDFADE));
+			float amt = 1.f;
+			if(secs <= cardtime()) fade = amt = clamp(float(secs)/float(cardtime()), 0.f, 1.f);
+			else if(secs <= cardtime()+cardfade()) fade = clamp(fade-float(secs-cardtime())/float(cardfade()), 0.f, 1.f);
 
 			const char *title = getmaptitle();
 			if(!*title) title = "Untitled by Unknown";
 
 			glColor4f(1.f, 1.f, 1.f, fade);
-			rendericon("textures/guioverlay", x-FONTH/2-FONTH*2, oy-FONTH*2, FONTH*2, FONTH*2);
-			if(!rendericon(getmapname(), x-FONTH/2-FONTH*2+8, oy-FONTH*2+8, FONTH*2-16, FONTH*2-16))
-				rendericon("textures/emblem", x-FONTH/2-FONTH*2+8, oy-FONTH*2+8, FONTH*2-16, FONTH*2-16);
+			rendericon("textures/guioverlay", ox-FONTH/2-bs, by, bs, bs);
+			if(!rendericon(getmapname(), ox-FONTH/2-bs+8, by+8, bs-16, bs-16))
+				rendericon("textures/emblem", ox-FONTH/2-bs+8, by+8, bs-16, bs-16);
 
-			draw_textx("%s", x-FONTH*3, oy-FONTH, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, -1, title);
-			draw_textx("%s", x-FONTH*3, oy-FONTH*2, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, -1, sv->gamename(gamemode, mutators));
+			int ty = by + bs;
+			ty = draw_textx("%s", int(ox*amt)-FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, ox-FONTH, sv->gamename(gamemode, mutators));
+			ty = draw_textx("%s", int(ox*(1.f-amt))+FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, ox-FONTH, title);
 		}
 		else
 		{
-			if(lastmillis-maptime <= CARDTIME+CARDFADE+CARDFADE)
-				fade = amt*(float(lastmillis-maptime-CARDTIME-CARDFADE)/float(CARDFADE));
+			if(lastmillis-maptime <= cardtime()+cardfade()+cardfade())
+				fade = amt*(float(lastmillis-maptime-cardtime()-cardfade())/float(cardfade()));
 			else fade *= amt;
 
 			if((player1->state == CS_ALIVE && damageresidue > 0) || player1->state == CS_DEAD)
@@ -677,39 +687,63 @@ struct GAMECLIENT : igameclient
 				glEnd();
 			}
 
-			int bs = oy/4, bx = ox-bs-FONTH/4, by = FONTH/4;
-
 			settexture(radartex());
 			glColor4f(1.f, 1.f, 1.f, fade);
 			glBegin(GL_QUADS);
-			drawradar(float(bx), float(by), float(bs));
+			drawsized(float(bx), float(by), float(bs));
 			glEnd();
 			drawblips(bx, by, bs);
 
 			if(m_stf(gamemode)) stf.drawhud(ox, oy);
 			else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
 
-			settexture(radarpingtex());
-			glColor4f(1.f, 1.f, 1.f, 0.25f*fade);
+			settexture(goalbartex());
+			glColor4f(1.f, 1.f, 1.f, fade);
 			glBegin(GL_QUADS);
-			drawradar(float(bx), float(by), float(bs));
+			drawsized(float(bx), float(by), float(bs));
 			glEnd();
-
-			by += bs;
 
 			if(player1->state == CS_ALIVE)
 			{
-				//float hlt = player1->health/float(MAXHEALTH), glow = min((hlt*0.5f)+0.5f, 1.f), pulse = fade;
-				//if(lastmillis < player1->lastregen+500) pulse *= (lastmillis-player1->lastregen)/500.f;
-				//settexture("textures/barv");
-				//glColor4f(glow, 0.f, 0.f, pulse);
-				//int rw = oy/5/4, rx = oy/5+FONTH/2, rh = oy/5, ry = oy-rh-(FONTH/4), ro = int(((oy/5)-(oy/30))*hlt), off = rh-ro-(oy/30);
-				//glBegin(GL_QUADS);
-				//glTexCoord2f(0, 0); glVertex2i(rx, ry+off);
-				//glTexCoord2f(1, 0); glVertex2i(rx+rw, ry+off);
-				//glTexCoord2f(1, 1); glVertex2i(rx+rw, ry+rh);
-				//glTexCoord2f(0, 1); glVertex2i(rx, ry+rh);
-				//glEnd();
+				int colour = teamtype[player1->team].colour,
+					r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
+				settexture(teambartex());
+				glColor4f(r/255.f, g/255.f, b/255.f, fade);
+				glBegin(GL_QUADS);
+				drawsized(float(bx), float(by), float(bs));
+				glEnd();
+
+				float health = float(player1->health)/float(MAXHEALTH);
+				Texture *hbar = textureload(healthbartex());
+				GLuint id = 0;
+
+				if(hbar)
+				{
+					if(hbar->frames.length())
+					{
+						int frame = clamp(int(hbar->frames.length()*health), 0, hbar->frames.length());
+						id = hbar->frames[frame];
+					}
+					else id = hbar->id;
+				}
+
+				if(id)
+				{
+					float glow = 1.f, pulse = fade;
+
+					if(lastmillis <= player1->lastregen+1000)
+					{
+						float regen = (lastmillis-player1->lastregen)/1000.f;
+						pulse *= regen;
+						glow *= regen;
+					}
+
+					glBindTexture(GL_TEXTURE_2D, id);
+					glColor4f(glow, glow, glow, pulse);
+					glBegin(GL_QUADS);
+					drawsized(float(bx), float(by), float(bs));
+					glEnd();
+				}
 
 				if(isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
 				{
@@ -717,13 +751,13 @@ struct GAMECLIENT : igameclient
 					if(guntype[player1->gunselect].power && player1->attacking)
 					{
 						int power = clamp(int(float(lastmillis-player1->attacktime)/float(guntype[player1->gunselect].power)*100.f), 0, 100);
-						draw_textx("%d - %d", ox-FONTH/4, by, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect], power);
+						draw_textx("%d - %d", ox-FONTH/4, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect], power);
 					}
-					else draw_textx("%d", ox-FONTH/4, by, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
+					else draw_textx("%d", ox-FONTH/4, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
 				}
 				else
 				{
-					draw_textx("Out of ammo", ox-FONTH/4, by, 255, 255, 255, int(255.f*fade), false, AL_RIGHT);
+					draw_textx("Out of ammo", ox-FONTH/4, by+bs, 255, 255, 255, int(255.f*fade), false, AL_RIGHT);
 				}
 			}
 			else if(player1->state == CS_DEAD)
@@ -733,11 +767,17 @@ struct GAMECLIENT : igameclient
 				if(wait)
 				{
 					float c = float(wait)/1000.f;
-					draw_textx("Fragged! Down for %.1fs", ox-FONTH/4, by, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, -1, c);
+					draw_textx("Fragged! Down for %.1fs", ox-FONTH/4, by+bs, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, -1, c);
 				}
 				else
-					draw_textx("Fragged! Press attack to respawn", ox-FONTH/4, by, 255, 255, 255, int(255.f*fade), false, AL_RIGHT);
+					draw_textx("Fragged! Press attack to respawn", ox-FONTH/4, by+bs, 255, 255, 255, int(255.f*fade), false, AL_RIGHT);
 			}
+
+			settexture(radarpingtex());
+			glColor4f(1.f, 1.f, 1.f, 0.25f*fade);
+			glBegin(GL_QUADS);
+			drawsized(float(bx+16), float(by+16), float(bs-32));
+			glEnd();
 		}
 
 		popfont();
@@ -837,7 +877,7 @@ struct GAMECLIENT : igameclient
 
 		renderconsole(w, h);
 
-		if(lastmillis-maptime > CARDTIME+CARDFADE)
+		if(lastmillis-maptime > cardtime()+cardfade())
 		{
 			int hoff = h*3-FONTH;
 
@@ -1007,9 +1047,9 @@ struct GAMECLIENT : igameclient
 
 	bool gethudcolour(vec &colour)
 	{
-		if(!maptime && lastmillis-maptime <= CARDTIME)
+		if(!maptime && lastmillis-maptime <= cardtime())
 		{
-			float fade = maptime ? float(lastmillis-maptime)/float(CARDTIME) : 0.f;
+			float fade = maptime ? float(lastmillis-maptime)/float(cardtime()) : 0.f;
 			colour = vec(fade, fade, fade);
 			return true;
 		}

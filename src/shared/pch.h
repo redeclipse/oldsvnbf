@@ -32,12 +32,26 @@
 #define _fileno fileno
 #endif
 
+
+#ifdef WIN32
+  #define _WINDOWS
+  #ifndef __GNUC__
+    #define ZLIB_DLL
+	#ifndef STANDALONE
+    #include <eh.h>
+    #include <dbghelp.h>
+	#endif
+  #endif
+#endif
+#include <zlib.h>
+
 #ifndef STANDALONE
 #include <SDL.h>
 #include <SDL_image.h>
 #ifdef TTF2FONT
 #include <SDL_ttf.h>
-#else
+#endif
+#ifdef INTERFACE
 #define GL_GLEXT_LEGACY
 #define __glext_h__
 #define NO_SDL_GLEXT
@@ -45,22 +59,11 @@
 #undef __glext_h__
 #include "GL/glext.h"
 #endif
-#include <png.h>
 #endif
 
-#ifndef TTF2FONT
+#if defined(INTERFACE) || defined(STANDALONE)
 #include <enet/enet.h>
 #endif
-
-#ifdef WIN32
-  #define _WINDOWS
-  #ifndef __GNUC__
-    #define ZLIB_DLL
-    #include <eh.h>
-    #include <dbghelp.h>
-  #endif
-#endif
-#include <zlib.h>
 
 #ifdef __sun__
 #undef sun

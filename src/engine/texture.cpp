@@ -457,8 +457,8 @@ Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp, bo
 	t->bpp = s->format->BitsPerPixel;
 	t->delay = hasanim ? anim->delay : 0;
 
-	t->w = t->xs = t->delay ? anim->w : s->w;
-	t->h = t->ys = t->delay ? anim->h : s->h;
+	t->w = t->xs = hasanim ? anim->w : s->w;
+	t->h = t->ys = hasanim ? anim->h : s->h;
 	if(canreduce) loopi(texreduce)
 	{
 		if(t->w > 1) t->w /= 2;
@@ -482,15 +482,17 @@ Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp, bo
 		}
 		uchar *pixels = (uchar *)f->pixels;
 
-		if(t->w != t->xs || t->h != t->ys)
+		if(t->w != f->w || t->h != f->h)
 		{
-			uchar *scaled = pixels;
-			if(t->w*t->h > t->xs*t->ys) scaled = new uchar[formatsize(format)*t->w*t->h];
+			uchar *scaled = new uchar[formatsize(format)*t->w*t->h];
 			gluScaleImage(format, t->xs, t->ys, GL_UNSIGNED_BYTE, pixels, t->w, t->h, GL_UNSIGNED_BYTE, scaled);
 			pixels = scaled;
 		}
 
 		createtexture(t->frames[i], t->w, t->h, pixels, clamp, mipit, format, GL_TEXTURE_2D, compress);
+
+		if(verbose >= 2)
+			conoutf("adding frame: %s (%d) [%d,%d:%d,%d]", t->name, i+1, t->w, t->h, f->w, f->h);
 
 		if(pixels != f->pixels) delete[] pixels;
 		if(s != f) SDL_FreeSurface(f);
@@ -554,18 +556,6 @@ static vec parsevec(const char *arg)
         else file++; \
     }
 
-SDL_Surface *texturesurface(const char *name)
-{
-	const char *exts[] = { "", ".png", ".tga", ".jpg", ".bmp" }; // bmp is a last resort!
-	loopi(sizeof(exts)/sizeof(exts[0]))
-	{
-		s_sprintfd(buf)("%s%s", name, exts[i]);
-		SDL_Surface *s = IMG_Load(findfile(buf, "rb"));
-		if(s) return s;
-	}
-	return NULL;
-}
-
 SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *compress, TextureAnim *anim)
 {
 	textureparse(tname, tex ? tex->name : NULL);
@@ -579,7 +569,7 @@ SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *comp
 
     if(msg) renderprogress(0, file);
 
-    SDL_Surface *s = texturesurface(file);
+    SDL_Surface *s = loadsurface(file);
     if(!s) { if(msg) conoutf("could not load texture %s", file); return NULL; }
     int bpp = s->format->BitsPerPixel;
     if(!texformat(bpp)) { SDL_FreeSurface(s); conoutf("texture must be 8, 16, 24, or 32 bpp: %s", file); return NULL; }
@@ -627,11 +617,11 @@ SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *comp
         {
         	if(anim)
         	{
-				anim->delay = atoi(arg[0]);
-				anim->w = atoi(arg[1]);
-				anim->h = atoi(arg[2]);
-				if(!anim->w) anim->w = s->h <= s->w ? s->h : s->w;
-				if(!anim->h) anim->h = s->h <= s->w ? s->h : s->w;
+				anim->delay = arg[0] ? atoi(arg[0]) : 0;
+				anim->w = arg[1] ? atoi(arg[1]) : 0;
+				anim->h = arg[2] ? atoi(arg[2]) : 0;
+				if(!anim->w) anim->w = s->h < s->w ? s->h : s->w;
+				if(!anim->h) anim->h = s->h < s->w ? s->h : s->w;
 				anim->x = s->w/anim->w;
 				anim->y = s->h/anim->h;
 				anim->count = anim->x*anim->y;
@@ -1338,7 +1328,7 @@ void writetgaheader(FILE *f, SDL_Surface *s, int bits)
 
 void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png) -> BGR (tga)
 {
-    SDL_Surface *ns = texturesurface(normalfile);
+    SDL_Surface *ns = loadsurface(normalfile);
     if(!ns) return;
     FILE *f = openfile(destfile, "wb");
     if(f)
@@ -1358,8 +1348,8 @@ void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png)
 
 void mergenormalmaps(char *heightfile, char *normalfile)    // BGR (tga) -> BGR (tga) (SDL loads TGA as BGR!)
 {
-    SDL_Surface *hs = texturesurface(heightfile);
-    SDL_Surface *ns = texturesurface(normalfile);
+    SDL_Surface *hs = loadsurface(heightfile);
+    SDL_Surface *ns = loadsurface(normalfile);
     if(hs && ns)
     {
         uchar def_n[] = { 255, 128, 128 };

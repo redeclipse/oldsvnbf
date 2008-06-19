@@ -45,7 +45,12 @@ COMMAND(fontchar, "iiii");
 bool setfont(const char *name)
 {
 	font *f = fonts.access(name);
-	if(!f) return false;
+	if(!f)
+	{
+		s_sprintfd(n)("fonts/%s.cfg", name);
+		if(!execfile(n) || !(f = fonts.access(name)))
+			return false;
+	}
 	curfont = f;
 	return true;
 }
