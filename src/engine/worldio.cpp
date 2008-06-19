@@ -8,7 +8,7 @@ sometype mapexts[] = {
 	{ ".ogz", MAP_OCTA },
 };
 
-string bgzname[MAP_MAX], mapname;
+string bgzname[MAP_MAX-1], mapname;
 int maptype = MAP_NONE;
 
 void setnames(char *fname)
@@ -21,7 +21,7 @@ void setnames(char *fname)
 	if(strpbrk(fn, "/\\")) s_strcpy(mapname, fn);
 	else s_sprintf(mapname)("maps/%s", fn);
 
-	loopi(MAP_MAX) s_sprintf(bgzname[i])("%s%s", mapname, mapexts[i].name);
+	loopi(MAP_MAX-1) s_sprintf(bgzname[i])("%s%s", mapname, mapexts[i].name);
 }
 
 ushort readushort(gzFile f)
@@ -554,7 +554,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
     computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
 
 	gzFile f;
-	loopi(MAP_MAX) if((f = opengzfile(bgzname[i], "rb9"))) break;
+	loopi(MAP_MAX-1) if((f = opengzfile(bgzname[i], "rb9"))) break;
 	if(!f)
 	{
 		conoutf("error loading %s: file unavailable", mapname);
