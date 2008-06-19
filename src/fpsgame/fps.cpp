@@ -695,10 +695,16 @@ struct GAMECLIENT : igameclient
 			glBegin(GL_QUADS);
 			drawsized(float(bx), float(by), float(bs));
 			glEnd();
-			drawblips(bx, by, bs);
 
+			drawblips(bx, by, bs);
 			if(m_stf(gamemode)) stf.drawhud(ox, oy);
 			else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
+
+			settexture(radarpingtex());
+			glColor4f(1.f, 1.f, 1.f, fade);
+			glBegin(GL_QUADS);
+			drawsized(float(bx), float(by), float(bs));
+			glEnd();
 
 			settexture(goalbartex());
 			glColor4f(1.f, 1.f, 1.f, fade);
@@ -706,14 +712,14 @@ struct GAMECLIENT : igameclient
 			drawsized(float(bx), float(by), float(bs));
 			glEnd();
 
+			settexture(teambartex());
+			glColor4f(r/255.f, g/255.f, b/255.f, fade);
+			glBegin(GL_QUADS);
+			drawsized(float(bx), float(by), float(bs));
+			glEnd();
+
 			if(player1->state == CS_ALIVE)
 			{
-				settexture(teambartex());
-				glColor4f(r/255.f, g/255.f, b/255.f, fade);
-				glBegin(GL_QUADS);
-				drawsized(float(bx), float(by), float(bs));
-				glEnd();
-
 				float health = float(player1->health)/float(MAXHEALTH);
 				Texture *hbar = textureload(healthbartex());
 				GLuint id = 0;
@@ -775,12 +781,6 @@ struct GAMECLIENT : igameclient
 
 				hoff -= FONTH;
 			}
-
-			settexture(radarpingtex());
-			glColor4f(r/255.f, g/255.f, b/255.f, fade*0.1f);
-			glBegin(GL_QUADS);
-			drawsized(float(bx), float(by), float(bs));
-			glEnd();
 		}
 
 		popfont();
