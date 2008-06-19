@@ -44,8 +44,8 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> players;		// other clients
 	fpsent lastplayerstate;
 
-	IVARP(cardtime, 0, 2000, 10000);
-	IVARP(cardfade, 0, 3000, 10000);
+	IVARP(cardtime, 0, 2500, 10000);
+	IVARP(cardfade, 0, 5000, 10000);
 
 	IVARP(cameradist, -100, 8, 100);
 	IVARP(camerashift, -100, 4, 100);
@@ -83,9 +83,9 @@ struct GAMECLIENT : igameclient
 	ITVAR(bliptex, "textures/blip");
 	ITVAR(radartex, "textures/radar");
 	ITVAR(radarpingtex, "<anim:75>textures/radarping");
-	ITVAR(healthbartex, "<anim:1000>textures/healthbar");
-	ITVAR(goalbartex, "<anim:1000>textures/goalbar");
-	ITVAR(teambartex, "<anim:1000>textures/teambar");
+	ITVAR(healthbartex, "<anim>textures/healthbar");
+	ITVAR(goalbartex, "<anim>textures/goalbar");
+	ITVAR(teambartex, "<anim>textures/teambar");
 
 	IVARP(showstats, 0, 1, 1);
 	IVARP(showfps, 0, 2, 2);
@@ -687,8 +687,11 @@ struct GAMECLIENT : igameclient
 				glEnd();
 			}
 
+			int colour = teamtype[player1->team].colour,
+				r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
+
 			settexture(radartex());
-			glColor4f(1.f, 1.f, 1.f, fade);
+			glColor4f(r/255.f, g/255.f, b/255.f, fade);
 			glBegin(GL_QUADS);
 			drawsized(float(bx), float(by), float(bs));
 			glEnd();
@@ -705,8 +708,6 @@ struct GAMECLIENT : igameclient
 
 			if(player1->state == CS_ALIVE)
 			{
-				int colour = teamtype[player1->team].colour,
-					r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
 				settexture(teambartex());
 				glColor4f(r/255.f, g/255.f, b/255.f, fade);
 				glBegin(GL_QUADS);
@@ -776,9 +777,9 @@ struct GAMECLIENT : igameclient
 			}
 
 			settexture(radarpingtex());
-			glColor4f(1.f, 1.f, 1.f, 0.25f*fade);
+			glColor4f(r/255.f, g/255.f, b/255.f, fade*0.1f);
 			glBegin(GL_QUADS);
-			drawsized(float(bx+16), float(by+16), float(bs-32));
+			drawsized(float(bx), float(by), float(bs));
 			glEnd();
 		}
 

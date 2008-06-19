@@ -411,7 +411,7 @@ struct physics
 		if(m.iszero() && wantsmove)
 		{
 			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
-			#if 0
+
 			if(!floating && pl->physstate >= PHYS_SLIDE)
 			{
 				/* move up or down slopes in air
@@ -421,7 +421,6 @@ struct physics
 				if(pl->inliquid) m.z = max(m.z, dz);
 				else if(pl->floor.z >= wallz(pl)) m.z = dz;
 			}
-			#endif
 
 			m.normalize();
 		}
@@ -442,7 +441,6 @@ struct physics
     {
         float secs = curtime/1000.0f;
         vec g(0, 0, 0);
-        #if 0
         if(pl->physstate == PHYS_FALL) g.z -= gravityforce(pl)*secs;
         else if(pl->floor.z > 0 && pl->floor.z < floorz(pl))
         {
@@ -460,17 +458,6 @@ struct physics
                   c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez(pl))/(floorz(pl)-slopez(pl)), 0.0f, 1.0f);
             pl->falling.mul(1 - c/fpsfric);
         }
-        #else
-        g.z -= gravityforce(pl)*secs;
-        if(!pl->inliquid || (!pl->move && !pl->strafe))
-        {
-        	pl->falling.add(g);
-            float friction = pl->inliquid ? sinkfric(pl) : floorfric(pl),
-                  fpsfric = friction/curtime*20.0f,
-                  c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez(pl))/(floorz(pl)-slopez(pl)), 0.0f, 1.0f);
-            pl->falling.mul(1 - c/fpsfric);
-        }
-        #endif
     }
 
     void updatematerial(physent *pl, bool local, bool floating)

@@ -384,12 +384,12 @@ void save_world(char *mname, bool nolms)
 
 	setnames(mname);
 
+	if(autosavemapshot) save_mapshot(mapname);
+	if(autosaveconfig) save_config(mapname);
+
 	backup(mapname, mapexts[MAP_BFGZ].name, hdr.revision); // x10 so we can do this more
 	gzFile f = opengzfile(bgzname[MAP_BFGZ], "wb9");
 	if(!f) { conoutf("error saving %s to %s: file error", mapname, bgzname[MAP_BFGZ]); return; }
-
-	if(autosaveconfig) save_config(mapname);
-	if(autosavemapshot) save_mapshot(mapname);
 
 	strncpy(hdr.head, "BFGZ", 4);
 	hdr.version = MAPVERSION;
