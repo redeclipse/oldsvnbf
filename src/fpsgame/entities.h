@@ -729,17 +729,104 @@ struct entities : icliententities
 			if(mver <= 12) if(f.type >= 8) f.type++;
 
 			// now translate into our format
-			if((f.type >= 14 && f.type <= 18) || f.type >= 26) f.type = NOTUSED;
-			else if(f.type >= 8 && f.type <= 13)
+			switch(f.type)
 			{
-				int gun = f.type-8, gunmap[NUMGUNS] = {
-					GUN_SG, GUN_CG, GUN_FLAMER, GUN_RIFLE, GUN_GL, GUN_PISTOL
-				};
-				f.type -= gun;
-				f.attr1 = gunmap[gun];
-				f.attr2 = 0;
+				// 1	LIGHT			1	LIGHT
+				// 2	MAPMODEL		2	MAPMODEL
+				// 3	PLAYERSTART		3	PLAYERSTART
+				// 4	ENVMAP			4	ENVMAP
+				// 5	PARTICLES		5	PARTICLES
+				// 6	MAPSOUND		6	MAPSOUND
+				// 7	SPOTLIGHT		7	SPOTLIGHT
+				case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+				{
+					break;
+				}
+
+				// 8	I_SHELLS		8	WEAPON		GUN_SG
+				// 9	I_BULLETS		8	WEAPON		GUN_CG
+				// 10	I_ROCKETS		8	WEAPON		GUN_FLAMER
+				// 11	I_ROUNDS		8	WEAPON		GUN_RIFLE
+				// 12	I_GRENADES		8	WEAPON		GUN_GL
+				// 13	I_CARTRIDGES	8	WEAPON		GUN_PISTOL
+				case 8: case 9: case 10: case 11: case 12: case 13:
+				{
+					int gun = f.type-8, gunmap[6] = {
+						GUN_SG, GUN_CG, GUN_FLAMER, GUN_RIFLE, GUN_GL, GUN_PISTOL
+					};
+
+					if(gun <= 5 && gun >= 0 && gunmap[gun])
+					{
+						f.type = WEAPON;
+						f.attr1 = gunmap[gun];
+						f.attr2 = 0;
+					}
+					else f.type = NOTUSED;
+					break;
+				}
+				// 19	TELEPORT		9	TELEPORT
+				// 20	TELEDEST		9+1	TELEPORT (linked)
+				case 19: case 20:
+				{
+					if(f.type == 20) f.mark = true; // needs translating later
+					f.type = TELEPORT;
+					break;
+				}
+				// 21	MONSTER			10	MONSTER
+				case 21:
+				{
+					f.type = MONSTER;
+					break;
+				}
+				// 22	CARROT			11	TRIGGER		0
+				case 22:
+				{
+					f.type = TRIGGER;
+					f.attr1 = f.attr2 = 0;
+					break;
+				}
+				// 23	JUMPPAD			12	PUSHER
+				case 23:
+				{
+					f.type = PUSHER;
+					break;
+				}
+				// 24	BASE			13	FLAG		A1			0
+				case 24:
+				{
+					f.type = FLAG;
+					f.attr2 = 0;
+					break;
+				}
+				// 25	RESPAWNPOINT	14	CHECKPOINT
+				case 25:
+				{
+					f.type = CHECKPOINT;
+					break;
+				}
+				// 30	FLAG			13	FLAG		-			A2
+				case 30:
+				{
+					f.mark = true;
+					f.type = FLAG;
+					break;
+				}
+
+				// 14	I_HEALTH		-	NOTUSED
+				// 15	I_BOOST			-	NOTUSED
+				// 16	I_GREENARMOUR	-	NOTUSED
+				// 17	I_YELLOWARMOUR	-	NOTUSED
+				// 18	I_QUAD			-	NOTUSED
+				// 26	BOX				-	NOTUSED
+				// 27	BARREL			-	NOTUSED
+				// 28	PLATFORM		-	NOTUSED
+				// 29	ELEVATOR		-	NOTUSED
+				default:
+				{
+					f.type = NOTUSED;
+					break;
+				}
 			}
-			else if(f.type >= 19) f.type -= 10;
 		}
 	}
 
@@ -751,6 +838,7 @@ struct entities : icliententities
 	{
 		if(gver <= 49 || mtype == MAP_OCTA)
 		{
+			int flag = 0;
 			vector<short> teleyaw;
 			loopv(ents) teleyaw.add(0);
 
@@ -758,7 +846,7 @@ struct entities : icliententities
 			{
 				fpsentity &e = (fpsentity &)*ents[i];
 
-				if(e.type == 10) // translate teledest to teleport and link them appropriately
+				if(e.type == TELEPORT && e.mark) // translate teledest to teleport and link them appropriately
 				{
 					int dest = -1;
 
@@ -766,7 +854,7 @@ struct entities : icliententities
 					{
 						fpsentity &f = (fpsentity &)*ents[j];
 
-						if(f.type == 9 && e.o.dist(f.o) <= enttype[TELEPORT].radius*2.f &&
+						if(f.type == TELEPORT && e.o.dist(f.o) <= enttype[TELEPORT].radius*2.f &&
 							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)))
 								dest = j;
 					}
@@ -789,35 +877,42 @@ struct entities : icliententities
 					{
 						fpsentity &f = (fpsentity &)*ents[j];
 
-						if(f.type == 9 && f.attr1 == e.attr2)
+						if(f.type == TELEPORT && f.attr1 == e.attr2)
 						{
 							f.links.add(dest);
 							conoutf("WARNING: teleports %d and %d linked automatically", dest, j);
 						}
 					}
+					e.mark = false;
 				}
-			}
 
-			int fcnt = 0;
+				if(e.type == FLAG && !e.mark && e.attr1 > flag)
+					flag = e.attr1;
+			}
 
 			loopv(ents)
 			{
 				fpsentity &e = (fpsentity &)*ents[i];
-				if(e.type == 9)
-				{
-					e.attr1 = teleyaw[i]; // grab what we stored earlier
-					e.attr2 = 0;
-				}
-				else if(e.type == 10) e.type = NOTUSED; // unused teledest?
-				else if(e.type >= 11) e.type--;
 
-				if(mtype == MAP_OCTA)
+				switch(e.type)
 				{
-					if(e.type == 20) e.attr1 = ++fcnt; // number them instead
-					else if(e.type >= MAXENTTYPES) e.type = NOTUSED; // sanity check
+					case TELEPORT:
+					{
+						e.attr1 = teleyaw[i]; // grab what we stored earlier
+						e.attr2 = 0;
+						break;
+					}
+					case WAYPOINT:
+					{
+						e.attr1 = enttype[WAYPOINT].radius;
+						break;
+					}
+					case FLAG:
+					{
+						if(e.mark) e.attr1 = ++flag;
+						break;
+					}
 				}
-				else if(e.type == WAYPOINT) e.attr1 = enttype[WAYPOINT].radius;
-
 			}
 		}
 

@@ -746,7 +746,7 @@ struct GAMECLIENT : igameclient
 					}
 
 					bool canshoot = player1->canshoot(player1->gunselect, lastmillis);
-					draw_textx("%d", ox-by+bs, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
+					draw_textx("%d", ox-FONTH/4, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
 				}
 			}
 			else if(player1->state == CS_DEAD)

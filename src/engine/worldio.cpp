@@ -913,15 +913,6 @@ void load_world(char *mname)		// still supports all map formats that have existe
 		}
 	}
 
-	initlights();
-	if(maptype == MAP_OCTA)
-	{
-		mpremip(true);
-		conoutf("WARNING: map imported from cube 2 format, some artifacts may be present, please check your map before saving");
-	}
-	allchanged(true);
-
-    computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
 	if(maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 29))
 	{
 		loopv(ents) if(ents[i]->type == ET_SPOTLIGHT)
@@ -948,6 +939,10 @@ void load_world(char *mname)		// still supports all map formats that have existe
 		}
 	}
 
+	initlights();
+	allchanged(true);
+
+    computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
 	renderprogress(0, "starting world...");
 	startmap(mapname);
 }
