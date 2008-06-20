@@ -40,7 +40,7 @@ struct entities : icliententities
 				s_sprintf(emdl)("weapons/%s/item", guntype[attr1].name);
 				break;
 			case FLAG:
-				if(editmode) s_sprintf(emdl)("%s", teamtype[attr2].flag);
+				if(m_edit(cl.gamemode)) s_sprintf(emdl)("%s", teamtype[attr2].flag);
 				break;
 			default:
 				break;
@@ -986,7 +986,7 @@ struct entities : icliententities
 	{
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
-			int level = (editmode ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || dropwaypoints()) ? 3 : 0));
+			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || dropwaypoints()) ? 3 : 0));
 			if(level)
 			{
 				renderprimitive(true);
@@ -1003,7 +1003,7 @@ struct entities : icliententities
 			extentity &e = *ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
 			bool active = (enttype[e.type].usetype == ETU_ITEM && e.spawned);
-			if(editmode || active)
+			if(m_edit(cl.gamemode) || active)
 			{
 				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 
@@ -1049,7 +1049,7 @@ struct entities : icliententities
 				}
 			}
 
-			if(editmode)
+			if(m_edit(cl.gamemode))
 			{
 				if(e.type == PLAYERSTART || e.type == FLAG)
 					particle_text(vec(e.o).add(vec(0, 0, enttype[e.type].height+2)),

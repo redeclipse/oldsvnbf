@@ -549,7 +549,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 	setnames(mname);
 	Texture *mapshot = textureload(mapname, 0, true, false);
 	bool samegame = true;
-	maptype = MAP_NONE;
+	maptype = -1;
 	int eif = 0;
     computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
 
