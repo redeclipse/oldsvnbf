@@ -83,14 +83,14 @@ ident *newident(const char *name)
 	ident *id = idents->access(name);
 	if(!id)
 	{
-        int flags = 0;
+        int flags = IDF_COMPLETE;
         if(persistidents) flags |= IDF_PERSIST;
         if(worldidents) flags |= IDF_WORLD;
         ident init(ID_ALIAS, newstring(name), newstring(""), flags);
         id = idents->access(init.name, &init);
     }
     return id;
-	}
+}
 
 void pusha(const char *name, char *action)
 {
@@ -116,7 +116,7 @@ void aliasa(const char *name, char *action)
 	ident *b = idents->access(name);
 	if(!b)
 	{
-        int flags = 0;
+        int flags = IDF_COMPLETE;
         if(persistidents) flags |= IDF_PERSIST;
         if(worldidents) flags |= IDF_WORLD;
         ident b(ID_ALIAS, newstring(name), action, flags);
@@ -873,9 +873,13 @@ void checksleep(int millis)
 		sleepcmd &s = sleepcmds[i];
 		if(s.millis && millis>s.millis)
 		{
+			if(s.flags&IDF_OVERRIDE) overrideidents = true;
+			if(s.flags&IDF_WORLD) worldidents = true;
 			char *cmd = s.command; // execute might create more sleep commands
 			execute(cmd);
 			delete[] cmd;
+			if(s.flags&IDF_OVERRIDE) overrideidents = false;
+			if(s.flags&IDF_WORLD) worldidents = false;
 			sleepcmds.remove(i--);
 		}
 	}
