@@ -74,8 +74,9 @@ struct enttypes
 struct fpsentity : extentity
 {
 	int schan, lastemit;
+	bool mark;
 
-	fpsentity() : schan(-1), lastemit(0) {}
+	fpsentity() : schan(-1), lastemit(0), mark(false) {}
 	~fpsentity()
 	{
 		if (issound(schan)) removesound(schan);
