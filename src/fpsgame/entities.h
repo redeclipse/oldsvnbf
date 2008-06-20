@@ -765,7 +765,7 @@ struct entities : icliententities
 					break;
 				}
 				// 19	TELEPORT		9	TELEPORT
-				// 20	TELEDEST		9+1	TELEPORT (linked)
+				// 20	TELEDEST		9	TELEPORT (linked)
 				case 19: case 20:
 				{
 					if(f.type == 20) f.mark = true; // needs translating later
@@ -854,9 +854,10 @@ struct entities : icliententities
 					{
 						fpsentity &f = (fpsentity &)*ents[j];
 
-						if(f.type == TELEPORT && e.o.dist(f.o) <= enttype[TELEPORT].radius*2.f &&
-							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)))
-								dest = j;
+						if(f.type == TELEPORT && !f.mark &&
+							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
+								e.o.dist(f.o) <= enttype[TELEPORT].radius*4.f)
+									dest = j;
 					}
 
 					if(ents.inrange(dest))
@@ -867,7 +868,6 @@ struct entities : icliententities
 					else
 					{
 						dest = i;
-						e.type--; // no teleport nearby, make this guy one
 						conoutf("WARNING: modified teledest %d [%d] to a teleport", dest, i);
 					}
 
@@ -877,17 +877,37 @@ struct entities : icliententities
 					{
 						fpsentity &f = (fpsentity &)*ents[j];
 
-						if(f.type == TELEPORT && f.attr1 == e.attr2)
+						if(f.type == TELEPORT && !f.mark && f.attr1 == e.attr2)
 						{
 							f.links.add(dest);
 							conoutf("WARNING: teleports %d and %d linked automatically", dest, j);
 						}
 					}
-					e.mark = false;
 				}
 
-				if(e.type == FLAG && !e.mark && e.attr1 > flag)
-					flag = e.attr1;
+				if(e.type == FLAG && !e.mark)
+				{
+					int dest = -1;
+
+					loopvj(ents)
+					{
+						fpsentity &f = (fpsentity &)*ents[j];
+
+						if(f.type == FLAG && f.mark &&
+							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
+								e.o.dist(f.o) <= enttype[FLAG].radius*4.f)
+									dest = j;
+					}
+					if(ents.inrange(dest))
+					{
+						fpsentity &f = (fpsentity &)*ents[dest];
+						f.attr1 = e.attr1;
+						f.mark = false;
+						e.type = NOTUSED;
+					}
+					else if(e.attr1 > flag)
+						flag = e.attr1;
+				}
 			}
 
 			loopv(ents)
@@ -900,6 +920,7 @@ struct entities : icliententities
 					{
 						e.attr1 = teleyaw[i]; // grab what we stored earlier
 						e.attr2 = 0;
+						e.mark = false;
 						break;
 					}
 					case WAYPOINT:
@@ -910,6 +931,7 @@ struct entities : icliententities
 					case FLAG:
 					{
 						if(e.mark) e.attr1 = ++flag;
+						e.mark = false;
 						break;
 					}
 				}
