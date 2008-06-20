@@ -55,23 +55,23 @@ struct ident
 
     ident() {}
     // ID_VAR
-    ident(int t, const char *n, int m, int c, int x, int *s, void *f = NULL, int flags = 0)
-        : type(t), name(n), minval(m), maxval(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags|IDF_COMPLETE)
+    ident(int t, const char *n, int m, int c, int x, int *s, void *f = NULL, int flags = IDF_COMPLETE)
+        : type(t), name(n), minval(m), maxval(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
     { val.i = c; storage.i = s; }
     // ID_FVAR
-    ident(int t, const char *n, float c, float *s, void *f = NULL, int flags = 0)
-        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags|IDF_COMPLETE)
+    ident(int t, const char *n, float c, float *s, void *f = NULL, int flags = IDF_COMPLETE)
+        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
     { val.f = c; storage.f = s; }
     // ID_SVAR
-    ident(int t, const char *n, char *c, char **s, void *f = NULL, int flags = 0)
-        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags|IDF_COMPLETE)
+    ident(int t, const char *n, char *c, char **s, void *f = NULL, int flags = IDF_COMPLETE)
+        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
     { val.s = c; storage.s = s; }
     // ID_ALIAS
     ident(int t, const char *n, char *a, int flags)
         : type(t), name(n), override(NO_OVERRIDE), stack(NULL), action(a), flags(flags) {}
     // ID_COMMAND, ID_CCOMMAND
-    ident(int t, const char *n, const char *narg, void *f = NULL, void *s = NULL, int flags = 0)
-        : type(t), name(n), fun((void (__cdecl *)(void))f), narg(narg), self(s), flags(flags|IDF_COMPLETE) {}
+    ident(int t, const char *n, const char *narg, void *f = NULL, void *s = NULL, int flags = IDF_COMPLETE)
+        : type(t), name(n), fun((void (__cdecl *)(void))f), narg(narg), self(s), flags(flags) {}
 
     virtual ~ident() {}
 
@@ -124,52 +124,52 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define COMMAND(name, nargs) COMMANDN(name, name, nargs)
 
 #define _VAR(name, global, min, cur, max, persist)  int global = variable(#name, min, cur, max, &global, NULL, persist)
-#define VARN(name, global, min, cur, max) _VAR(name, global, min, cur, max, 0)
-#define VARNP(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_PERSIST)
-#define VARNR(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_OVERRIDE)
-#define VARNW(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_WOLRD)
-#define VAR(name, min, cur, max) _VAR(name, name, min, cur, max, 0)
-#define VARP(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_PERSIST)
-#define VARR(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_OVERRIDE)
-#define VARW(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_WORLD)
+#define VARN(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_COMPLETE)
+#define VARNP(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
+#define VARNR(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
+#define VARNW(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_WOLRD|IDF_COMPLETE)
+#define VAR(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_COMPLETE)
+#define VARP(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
+#define VARR(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
+#define VARW(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_WORLD|IDF_COMPLETE)
 #define _VARF(name, global, min, cur, max, body, persist)  void var_##name(); int global = variable(#name, min, cur, max, &global, var_##name, persist); void var_##name() { body; }
-#define VARFN(name, global, min, cur, max, body) _VARF(name, global, min, cur, max, body, 0)
-#define VARF(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, 0)
-#define VARFP(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_PERSIST)
-#define VARFR(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_OVERRIDE)
-#define VARFW(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_WORLD)
+#define VARFN(name, global, min, cur, max, body) _VARF(name, global, min, cur, max, body, IDF_COMPLETE)
+#define VARF(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_COMPLETE)
+#define VARFP(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_PERSIST|IDF_COMPLETE)
+#define VARFR(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_OVERRIDE|IDF_COMPLETE)
+#define VARFW(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_WORLD|IDF_COMPLETE)
 
 #define _FVAR(name, global, cur, persist) float global = fvariable(#name, cur, &global, NULL, persist)
-#define FVARN(name, global, cur) _FVAR(name, global, cur, 0)
-#define FVARNP(name, global, cur) _FVAR(name, global, cur, IDF_PERSIST)
-#define FVARNR(name, global, cur) _FVAR(name, global, cur, IDF_OVERRIDE)
-#define FVARNW(name, global, cur) _FVAR(name, global, cur, IDF_WORLD)
-#define FVAR(name, cur) _FVAR(name, name, cur, 0)
-#define FVARP(name, cur) _FVAR(name, name, cur, IDF_PERSIST)
-#define FVARR(name, cur) _FVAR(name, name, cur, IDF_OVERRIDE)
-#define FVARW(name, cur) _FVAR(name, name, cur, IDF_WORLD)
+#define FVARN(name, global, cur) _FVAR(name, global, cur, IDF_COMPLETE)
+#define FVARNP(name, global, cur) _FVAR(name, global, cur, IDF_PERSIST|IDF_COMPLETE)
+#define FVARNR(name, global, cur) _FVAR(name, global, cur, IDF_OVERRIDE|IDF_COMPLETE)
+#define FVARNW(name, global, cur) _FVAR(name, global, cur, IDF_WORLD|IDF_COMPLETE)
+#define FVAR(name, cur) _FVAR(name, name, cur, IDF_COMPLETE)
+#define FVARP(name, cur) _FVAR(name, name, cur, IDF_PERSIST|IDF_COMPLETE)
+#define FVARR(name, cur) _FVAR(name, name, cur, IDF_OVERRIDE|IDF_COMPLETE)
+#define FVARW(name, cur) _FVAR(name, name, cur, IDF_WORLD|IDF_COMPLETE)
 #define _FVARF(name, global, cur, body, persist) void var_##name(); float global = fvariable(#name, cur, &global, var_##name, persist); void var_##name() { body; }
-#define FVARFN(name, global, cur, body) _FVARF(name, global, cur, body, 0)
-#define FVARF(name, cur, body) _FVARF(name, name, cur, body, 0)
-#define FVARFP(name, cur, body) _FVARF(name, name, cur, body, IDF_PERSIST)
-#define FVARFR(name, cur, body) _FVARF(name, name, cur, body, IDF_OVERRIDE)
-#define FVARFW(name, cur, body) _FVARF(name, name, cur, body, IDF_WORLD)
+#define FVARFN(name, global, cur, body) _FVARF(name, global, cur, body, IDF_COMPLETE)
+#define FVARF(name, cur, body) _FVARF(name, name, cur, body, IDF_COMPLETE)
+#define FVARFP(name, cur, body) _FVARF(name, name, cur, body, IDF_PERSIST|IDF_COMPLETE)
+#define FVARFR(name, cur, body) _FVARF(name, name, cur, body, IDF_OVERRIDE|IDF_COMPLETE)
+#define FVARFW(name, cur, body) _FVARF(name, name, cur, body, IDF_WORLD|IDF_COMPLETE)
 
 #define _SVAR(name, global, cur, persist) char *global = svariable(#name, cur, &global, NULL, persist)
-#define SVARN(name, global, cur) _SVAR(name, global, cur, 0)
-#define SVARNP(name, global, cur) _SVAR(name, global, cur, IDF_PERSIST)
-#define SVARNR(name, global, cur) _SVAR(name, global, cur, IDF_OVERRIDE)
-#define SVARNW(name, global, cur) _SVAR(name, global, cur, IDF_WORLD)
-#define SVAR(name, cur) _SVAR(name, name, cur, 0)
-#define SVARP(name, cur) _SVAR(name, name, cur, IDF_PERSIST)
-#define SVARR(name, cur) _SVAR(name, name, cur, IDF_OVERRIDE)
-#define SVARW(name, cur) _SVAR(name, name, cur, IDF_WORLD)
+#define SVARN(name, global, cur) _SVAR(name, global, cur, IDF_COMPLETE)
+#define SVARNP(name, global, cur) _SVAR(name, global, cur, IDF_PERSIST|IDF_COMPLETE)
+#define SVARNR(name, global, cur) _SVAR(name, global, cur, IDF_OVERRIDE|IDF_COMPLETE)
+#define SVARNW(name, global, cur) _SVAR(name, global, cur, IDF_WORLD|IDF_COMPLETE)
+#define SVAR(name, cur) _SVAR(name, name, cur, IDF_COMPLETE)
+#define SVARP(name, cur) _SVAR(name, name, cur, IDF_PERSIST|IDF_COMPLETE)
+#define SVARR(name, cur) _SVAR(name, name, cur, IDF_OVERRIDE|IDF_COMPLETE)
+#define SVARW(name, cur) _SVAR(name, name, cur, IDF_WORLD|IDF_COMPLETE)
 #define _SVARF(name, global, cur, body, persist) void var_##name(); char *global = svariable(#name, cur, &global, var_##name, persist); void var_##name() { body; }
-#define SVARFN(name, global, cur, body) _SVARF(name, global, cur, body, 0)
-#define SVARF(name, cur, body) _SVARF(name, name, cur, body, 0)
-#define SVARFP(name, cur, body) _SVARF(name, name, cur, body, IDF_PERSIST)
-#define SVARFR(name, cur, body) _SVARF(name, name, cur, body, IDF_OVERRIDE)
-#define SVARFW(name, cur, body) _SVARF(name, name, cur, body, IDF_WORLD)
+#define SVARFN(name, global, cur, body) _SVARF(name, global, cur, body, IDF_COMPLETE)
+#define SVARF(name, cur, body) _SVARF(name, name, cur, body, IDF_COMPLETE)
+#define SVARFP(name, cur, body) _SVARF(name, name, cur, body, IDF_PERSIST|IDF_COMPLETE)
+#define SVARFR(name, cur, body) _SVARF(name, name, cur, body, IDF_OVERRIDE|IDF_COMPLETE)
+#define SVARFW(name, cur, body) _SVARF(name, name, cur, body, IDF_WORLD|IDF_COMPLETE)
 
 // new style macros, have the body inline, and allow binds to happen anywhere, even inside class constructors, and access the surrounding class
 #define _COMMAND(idtype, tv, n, g, proto, b) \
@@ -194,14 +194,14 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
         int operator()() { return val.i; } \
         b \
     } n
-#define IVAR(n, m, c, x)  _IVAR(n, m, c, x, , 0)
-#define IVARF(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, 0)
-#define IVARP(n, m, c, x)  _IVAR(n, m, c, x, , IDF_PERSIST)
-#define IVARR(n, m, c, x)  _IVAR(n, m, c, x, , IDF_OVERRIDE)
-#define IVARW(n, m, c, x)  _IVAR(n, m, c, x, , IDF_WORLD)
-#define IVARFP(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_PERSIST)
-#define IVARFR(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_OVERRIDE)
-#define IVARFW(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_WORLD)
+#define IVAR(n, m, c, x)  _IVAR(n, m, c, x, , IDF_COMPLETE)
+#define IVARF(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_COMPLETE)
+#define IVARP(n, m, c, x)  _IVAR(n, m, c, x, , IDF_PERSIST|IDF_COMPLETE)
+#define IVARR(n, m, c, x)  _IVAR(n, m, c, x, , IDF_OVERRIDE|IDF_COMPLETE)
+#define IVARW(n, m, c, x)  _IVAR(n, m, c, x, , IDF_WORLD|IDF_COMPLETE)
+#define IVARFP(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_PERSIST|IDF_COMPLETE)
+#define IVARFR(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_OVERRIDE|IDF_COMPLETE)
+#define IVARFW(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_WORLD|IDF_COMPLETE)
 
 #define _IFVAR(n, c, b, p) \
 	struct var_##n : ident \
@@ -213,14 +213,14 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
         float operator()() { return val.f; } \
         b \
     } n
-#define IFVAR(n, c)  _IFVAR(n, c, , 0)
-#define IFVARF(n, c, b) _IFVAR(n, c, void changed() { b; }, 0)
-#define IFVARP(n, c)  _IFVAR(n, c, , IDF_PERSIST)
-#define IFVARR(n, c)  _IFVAR(n, c, , IDF_OVERRIDE)
-#define IFVARW(n, c)  _IFVAR(n, c, , IDF_WORLD)
-#define IFVARFP(n, c, b) _IFVAR(n, c, void changed() { b; }, IDF_PERSIST)
-#define IFVARFR(n, c, b) _IFVAR(n, c, void changed() { b; }, IDF_OVERRIDE)
-#define IFVARFW(n, c, b) _IFVAR(n, c, void changed() { b; }, IDF_WORLD)
+#define IFVAR(n, c)  _IFVAR(n, c, , IDF_COMPLETE)
+#define IFVARF(n, c, b) _IFVAR(n, c, void changed() { b; }, IDF_COMPLETE)
+#define IFVARP(n, c)  _IFVAR(n, c, , IDF_PERSIST|IDF_COMPLETE)
+#define IFVARR(n, c)  _IFVAR(n, c, , IDF_OVERRIDE|IDF_COMPLETE)
+#define IFVARW(n, c)  _IFVAR(n, c, , IDF_WORLD|IDF_COMPLETE)
+#define IFVARFP(n, c, b) _IFVAR(n, c, void changed() { b; }, IDF_PERSIST|IDF_COMPLETE)
+#define IFVARFR(n, c, b) _IFVAR(n, c, void changed() { b; }, IDF_OVERRIDE|IDF_COMPLETE)
+#define IFVARFW(n, c, b) _IFVAR(n, c, void changed() { b; }, IDF_WORLD|IDF_COMPLETE)
 
 #define _ISVAR(n, c, b, p) \
 	struct var_##n : ident \
@@ -232,11 +232,11 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
         char *operator()() { return val.s; } \
         b \
     } n
-#define ISVAR(n, c)  _ISVAR(n, c, , 0)
-#define ISVARF(n, c, b) _ISVAR(n, c, void changed() { b; }, 0)
-#define ISVARP(n, c)  _ISVAR(n, c, , IDF_PERSIST)
-#define ISVARR(n, c)  _ISVAR(n, c, , IDF_OVERRIDE)
-#define ISVARW(n, c)  _ISVAR(n, c, , IDF_WORLD)
-#define ISVARFP(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_PERSIST)
-#define ISVARFR(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_OVERRIDE)
-#define ISVARFW(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_WORLD)
+#define ISVAR(n, c)  _ISVAR(n, c, , IDF_COMPLETE)
+#define ISVARF(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_COMPLETE)
+#define ISVARP(n, c)  _ISVAR(n, c, , IDF_PERSIST|IDF_COMPLETE)
+#define ISVARR(n, c)  _ISVAR(n, c, , IDF_OVERRIDE|IDF_COMPLETE)
+#define ISVARW(n, c)  _ISVAR(n, c, , IDF_WORLD|IDF_COMPLETE)
+#define ISVARFP(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_PERSIST|IDF_COMPLETE)
+#define ISVARFR(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_OVERRIDE|IDF_COMPLETE)
+#define ISVARFW(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_WORLD|IDF_COMPLETE)

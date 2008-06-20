@@ -606,6 +606,8 @@ void load_world(char *mname)		// still supports all map formats that have existe
 			return;
 		}
 
+		maptype = MAP_BFGZ;
+
 		if(hdr.version <= 24) s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
 
 		if(verbose >= 2) conoutf("loading v%d map from %s game v%d", hdr.version, hdr.gameid, hdr.gamever);
@@ -683,8 +685,6 @@ void load_world(char *mname)		// still supports all map formats that have existe
 			conoutf("WARNING: loading map from %s game type in %s, ignoring game specific data", hdr.gameid, sv->gameid());
 			samegame = false;
 		}
-
-		maptype = MAP_BFGZ;
 	}
 	else if(strncmp(newhdr.head, "OCTA", 4) == 0)
 	{
