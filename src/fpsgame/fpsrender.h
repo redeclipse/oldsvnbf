@@ -22,28 +22,33 @@ struct fpsrender
 			if(m_team(cl.gamemode, cl.mutators)) loopv(bestteams) { if(bestteams[i] == d->team) { animflags = ANIM_WIN|ANIM_LOOP; break; } }
 			else if(bestplayers.find(d)>=0) animflags = ANIM_WIN|ANIM_LOOP;
 		}
-        else if (d->state == CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-lastaction>animdelay)
+        else if(d->state == CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-lastaction>animdelay)
 		{
 			lastaction = d->lasttaunt;
 			animflags = ANIM_TAUNT;
 			animdelay = 1000;
 		}
-		else if (isgun(d->gunselect) && lastmillis-d->gunlast[d->gunselect] < d->gunwait[d->gunselect])
+		else if(isgun(d->gunselect) && lastmillis-d->gunlast[d->gunselect] < d->gunwait[d->gunselect])
 		{
 			switch(d->gunstate[d->gunselect])
 			{
 				case GUNSTATE_SWITCH: animflags = ANIM_SWITCH; break;
-				case GUNSTATE_SHOOT: animflags = d->gunselect != GUN_GL ? ANIM_SHOOT : ANIM_THROW; break;
-				case GUNSTATE_RELOAD: animflags = d->gunselect != GUN_GL ? ANIM_RELOAD : ANIM_HOLD; break;
+				case GUNSTATE_POWER: animflags = guntype[d->gunselect].power ? ANIM_POWER : ANIM_SHOOT; break;
+				case GUNSTATE_SHOOT: animflags = guntype[d->gunselect].power ? ANIM_THROW : ANIM_SHOOT; break;
+				case GUNSTATE_RELOAD: animflags = guntype[d->gunselect].power ? ANIM_HOLD : ANIM_RELOAD; break;
 				case GUNSTATE_NONE:
 				default: break;
 			}
+
 			lastaction = d->gunlast[d->gunselect];
 			animdelay = d->gunwait[d->gunselect] + 50;
 		}
+
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
         int ai = 0;
-        if (d->gunselect > -1 && d->gunselect < NUMGUNS)
+
+        if(isgun(d->gunselect) &&
+			(!guntype[d->gunselect].power || d->gunstate[d->gunselect] != GUNSTATE_SHOOT))
 		{
             a[ai].name = guntype[d->gunselect].vwep;
             a[ai].tag = "tag_weapon";

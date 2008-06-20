@@ -366,8 +366,7 @@ extern void gzputfloat(gzFile f, float x);
 
 enum
 {
-	MAP_NONE = 0,
-	MAP_BFGZ,
+	MAP_BFGZ = 0,
 	MAP_OCTA,
 	MAP_MAX
 };

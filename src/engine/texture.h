@@ -210,6 +210,18 @@ struct Texture
     {
     	frames.setsize(0);
 	}
+
+	GLuint getframe(float amt)
+	{
+		if(frames.length())
+		{
+			int f = clamp(int(frames.length()*amt), 0, frames.length());
+
+			if(frames.inrange(f))
+				return frames[f];
+		}
+		return id;
+	}
 };
 
 enum

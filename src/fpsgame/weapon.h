@@ -311,6 +311,28 @@ struct weaponstate
 	}
 
 
+	void checkweapons(fpsent *d)
+	{
+		if(d->gunstate[d->gunselect] != GUNSTATE_NONE)
+		{
+			if(lastmillis-d->gunlast[d->gunselect] >= d->gunwait[d->gunselect] || d->state != CS_ALIVE)
+			{
+				if(d->gunstate[d->gunselect] != GUNSTATE_POWER || d->state != CS_ALIVE)
+				{
+					d->gunstate[d->gunselect] = GUNSTATE_NONE;
+					d->gunlast[d->gunselect] = lastmillis;
+					d->gunwait[d->gunselect] = 0;
+				}
+			}
+		}
+	}
+
+	void update()
+	{
+		checkweapons(cl.player1);
+		loopv(cl.players) if(cl.players[i]) checkweapons(cl.players[i]);
+	}
+
 	void reload(fpsent *d)
 	{
 		if(d->reloading || (d == cl.player1 && doautoreload(d)) &&
@@ -324,15 +346,27 @@ struct weaponstate
 
 	void shoot(fpsent *d, vec &targ)
 	{
-		if((d != cl.player1 && d->ownernum != cl.player1->clientnum) || !d->attacktime ||
-			!d->canshoot(d->gunselect, lastmillis)) return;
+		if(d != cl.player1 && d->ownernum != cl.player1->clientnum) return;
+		if(!d->canshoot(d->gunselect, lastmillis)) return;
 
 		int power = 100;
 		if(guntype[d->gunselect].power)
 		{
-			power = clamp(int(float(lastmillis-d->attacktime)/float(guntype[d->gunselect].power)*100.f), 0, 100);
-			if(d->attacking && power < 100) return;
-			d->attacktime = 0;
+			if(d->gunstate[d->gunselect] != GUNSTATE_POWER)
+			{
+				if(d->attacking)
+				{
+					d->gunstate[d->gunselect] = GUNSTATE_POWER;
+					d->gunwait[d->gunselect] = 0; // this doesn't interfere with other mechanisms
+					d->gunlast[d->gunselect] = lastmillis;
+				}
+				else return;
+			}
+
+			int secs = lastmillis-d->gunlast[d->gunselect];
+			if(d->attacking && secs < guntype[d->gunselect].power) return;
+
+			power = clamp(int(float(secs)/float(guntype[d->gunselect].power)*100.f), 0, 100);
 			d->attacking = false;
 		}
 		else if(!d->attacking) return;

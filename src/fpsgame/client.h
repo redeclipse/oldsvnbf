@@ -771,34 +771,33 @@ struct clientcom : iclientcom
 						gun = getint(p),
 						flags = getint(p),
 						damage = getint(p),
-						health = getint(p),
-						millis = getint(p);
+						health = getint(p);
 					vec dir;
 					loopk(3) dir[k] = getint(p)/DNF;
 					fpsent *target = tcn==cl.player1->clientnum ? cl.player1 : cl.getclient(tcn),
 							*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
 					if(!target || !actor) break;
-					cl.damaged(gun, flags, damage, target, actor, millis, dir);
+					cl.damaged(gun, flags, damage, target, actor, lastmillis, dir);
 					target->health = health; // just in case
 					break;
 				}
 
 				case SV_RELOAD:
 				{
-					int trg = getint(p), gun = getint(p), m = getint(p), amt = getint(p);
+					int trg = getint(p), gun = getint(p), amt = getint(p);
 					fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
 					if(!target || gun <= -1 || gun >= NUMGUNS) break;
-					target->gunreload(gun, amt, m);
+					target->gunreload(gun, amt, lastmillis);
 					break;
 				}
 
 				case SV_REGEN:
 				{
-					int trg = getint(p), amt = getint(p), ms = getint(p);
+					int trg = getint(p), amt = getint(p);
 					fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
 					if(!target) break;
 					target->health = amt;
-					target->lastregen = ms;
+					target->lastregen = lastmillis;
 					vec pos = target->o;
 					pos.z += 0.6f*(target->height + target->aboveeye) - target->height;
 					particle_splash(3, max((MAXHEALTH-target->health)/10, 1), 10000, target->o);
@@ -826,10 +825,10 @@ struct clientcom : iclientcom
 
 				case SV_GUNSELECT:
 				{
-					int trg = getint(p), gun = getint(p), m = getint(p);
+					int trg = getint(p), gun = getint(p);
 					fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
 					if(!target || gun <= -1 || gun >= NUMGUNS) break;
-					target->setgun(gun, m);
+					target->setgun(gun, lastmillis);
 					break;
 				}
 
@@ -867,9 +866,9 @@ struct clientcom : iclientcom
 
 				case SV_ITEMACC:			// server acknowledges that I picked up this item
 				{
-					int lcn = getint(p), m = getint(p), i = getint(p);
+					int lcn = getint(p), i = getint(p);
 					fpsent *d = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
-					cl.et.useeffects(d, m, i);
+					cl.et.useeffects(d, lastmillis, i);
 					break;
 				}
 
