@@ -747,13 +747,14 @@ struct skelmodel : animmodel
                 loopvj(group->blendcombos)
                 {
                     blendcombo &c = group->blendcombos[j];
-                    boneinfo &info0 = bones[c.bones[0]];
+                    int group = c.bones[0];
+                    for(int k = 1; k < 4; k++) if(c.weights[k]) group = min(group, int(c.bones[k]));
                     loopk(4) if(c.weights[k])
                     {
                         boneinfo &info = bones[c.bones[k]];
                         if(info.interpindex<0) info.interpindex = numgpubones++;
                         c.interpbones[k] = info.interpindex;
-                        if(k > 0) info.interpgroup = info0.interpgroup = min(info.interpgroup, info0.interpgroup);
+                        info.interpgroup = min(info.interpgroup, group);
                     }
                 }
             }
