@@ -788,11 +788,8 @@ int main(int argc, char **argv)
 	initsound();
 
 	conoutf("init: defaults");
-
 	persistidents = false;
-
-	if (!execfile("stdlib.cfg")) fatal("cannot find data files");
-
+	if(!execfile("stdlib.cfg")) fatal("cannot find data files");
 	if(!setfont("default")) fatal("no default font specified");
 
     conoutf("init: gl effects");
@@ -804,9 +801,8 @@ int main(int argc, char **argv)
 
 	conoutf("init: world");
 	emptymap(0, true, NULL, true);
-
-	conoutf("init: config");
 	rehash(false);
+    cl->preload();
 
 	conoutf("init: mainloop");
 	if(initscript) execute(initscript);

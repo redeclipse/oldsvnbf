@@ -898,7 +898,7 @@ void findanims(const char *pattern, vector<int> &anims)
 		"dead", "dying", "idle",
 		"forward", "backward", "left", "right",
 		"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
-		"punch", "hold", "throw", "shoot", "reload", "switch", "pain",
+		"punch", "power", "hold", "throw", "shoot", "reload", "switch", "pain",
 		"jump", "sink", "swim",
 		"edit", "lag", "taunt", "win", "lose",
 		"gun shoot", "gun idle", "gun reload",

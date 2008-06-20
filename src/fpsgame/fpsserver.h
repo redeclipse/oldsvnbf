@@ -1793,7 +1793,7 @@ struct GAMESERVER : igameserver
 		mutate(if (!mut->damage(target, actor, damage, gun, flags, hitpush)) { return; });
 		ts.dodamage(damage, gamemillis);
         actor->state.damage += damage;
-		sendf(-1, 1, "ri8i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, damage, ts.health, ts.lastpain, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
+		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, damage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
 		if(ts.health<=0)
 		{
             target->state.deaths++;
@@ -1949,7 +1949,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canswitch(e.gun, e.millis)) { return; }
 		gs.gunswitch(e.gun, e.millis);
-		sendf(-1, 1, "ri4", SV_GUNSELECT, ci->clientnum, e.gun, e.millis);
+		sendf(-1, 1, "ri3", SV_GUNSELECT, ci->clientnum, e.gun);
 	}
 
 	void processevent(clientinfo *ci, reloadevent &e)
@@ -1957,7 +1957,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canreload(e.gun, e.millis)) { return; }
 		gs.useitem(e.millis, WEAPON, e.gun, guntype[e.gun].add);
-		sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, e.gun, e.millis, gs.ammo[e.gun]);
+		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
 
 	void processevent(clientinfo *ci, useevent &e)
@@ -1979,7 +1979,7 @@ struct GAMESERVER : igameserver
 		sents[e.ent].spawned = false;
 		sents[e.ent].spawntime = spawntime(sents[e.ent].type);
 		ci->state.useitem(e.millis, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
-		sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.millis, e.ent);
+		sendf(-1, 1, "ri3", SV_ITEMACC, ci->clientnum, e.ent);
 	}
 
 	void processevents()
@@ -1997,7 +1997,7 @@ struct GAMESERVER : igameserver
 					int health = ci->state.health - (ci->state.health % REGENHEAL);
 					ci->state.health = min(health + REGENHEAL, MAXHEALTH);
 					ci->state.lastregen = gamemillis;
-					sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, ci->state.lastregen);
+					sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
 				}
 			}
 

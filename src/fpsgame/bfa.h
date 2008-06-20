@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			68
+#define GAMEVERSION			69
 
 #define GAMENAME			bfagame
 #define GAMECLIENT			bfaclient
@@ -7,4 +7,4 @@
 
 #define SERVER_PORT			28795
 #define SERVINFO_PORT		28796
-#define DEMO_VERSION		1
+#define DEMO_VERSION		GAMEVERSION

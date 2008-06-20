@@ -170,8 +170,10 @@ struct GAMECLIENT : igameclient
     bool allowmove(physent *d)
     {
         if(d->type != ENT_PLAYER) return true;
+        if(intermission) return false;
         fpsent *e = (fpsent *)d;
-        return !intermission && lastmillis-e->lasttaunt >= 1000;
+        if(lastmillis-e->lasttaunt < 1000) return false;
+        return true;
     }
 
 	void respawnself(fpsent *d)
@@ -254,12 +256,10 @@ struct GAMECLIENT : igameclient
 			ph.update();
 			pj.update();
 			et.update();
+			ws.update();
 			bot.update();
 
 			if(!allowmove(player1) || saycommandon) player1->stopmoving();
-
-			if(player1->gunstate[player1->gunselect] != GUNSTATE_NONE && lastmillis-player1->gunlast[player1->gunselect] >= player1->gunwait[player1->gunselect])
-				player1->gunstate[player1->gunselect] = GUNSTATE_NONE;
 
 			#define adjustscaled(t,n,m) \
 				if(n) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); }
@@ -483,26 +483,19 @@ struct GAMECLIENT : igameclient
 
     void preload()
     {
-    	textureload(radartex());
-    	textureload(radarpingtex());
-    	textureload(bliptex());
-    	textureload(healthbartex());
-    	textureload(teambartex());
-    	textureload(goalbartex());
-
         ws.preload();
         fr.preload();
         et.preload();
-
-		if(m_stf(gamemode)) stf.preload();
-        else if(m_ctf(gamemode)) ctf.preload();
+		stf.preload();
+        ctf.preload();
     }
 
 	void startmap(const char *name)	// called just after a map load
 	{
+		intermission = false;
         player1->respawned = player1->suicided = 0;
 		respawnent = -1;
-        lasthit = 0;
+        maptime = lasthit = 0;
 		cc.mapstart();
 		pj.reset();
 
@@ -522,8 +515,6 @@ struct GAMECLIENT : igameclient
 		et.findplayerspawn(player1, -1, -1);
 		et.resetspawns();
 		sb.showscores(false);
-		intermission = false;
-        maptime = 0;
 		if(m_mission(gamemode))
 		{
 			s_sprintfd(aname)("bestscore_%s", getmapname());
@@ -720,33 +711,21 @@ struct GAMECLIENT : igameclient
 
 			if(player1->state == CS_ALIVE)
 			{
-				float health = float(player1->health)/float(MAXHEALTH);
-				Texture *hbar = textureload(healthbartex());
-				GLuint id = 0;
-
-				if(hbar)
+				Texture *t;
+				if((t = textureload(healthbartex())) != NULL)
 				{
-					if(hbar->frames.length())
-					{
-						int frame = clamp(int(hbar->frames.length()*health), 0, hbar->frames.length());
-						id = hbar->frames[frame];
-					}
-					else id = hbar->id;
-				}
-
-				if(id)
-				{
+					float amt = clamp(float(player1->health)/float(MAXHEALTH), 0.f, 1.f);
 					float glow = 1.f, pulse = fade;
 
-					if(lastmillis <= player1->lastregen+1000)
+					if(lastmillis <= player1->lastregen+500)
 					{
-						float regen = (lastmillis-player1->lastregen)/1000.f;
-						pulse *= regen;
-						glow *= regen;
+						float regen = (lastmillis-player1->lastregen)/500.f;
+						pulse = clamp(pulse*regen, 0.3f, max(fade, 0.33f));
+						glow = clamp(glow*regen, 0.3f, 1.f);
 					}
 
-					glBindTexture(GL_TEXTURE_2D, id);
-					glColor4f(glow, glow, glow, pulse);
+					glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
+					glColor4f(glow, glow*0.3f, 0.f, pulse);
 					glBegin(GL_QUADS);
 					drawsized(float(bx), float(by), float(bs));
 					glEnd();
@@ -754,17 +733,20 @@ struct GAMECLIENT : igameclient
 
 				if(isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
 				{
-					bool canshoot = player1->canshoot(player1->gunselect, lastmillis);
-					if(guntype[player1->gunselect].power && player1->attacking)
+					if(guntype[player1->gunselect].power &&
+						player1->gunstate[player1->gunselect] == GUNSTATE_POWER &&
+							((t = textureload(healthbartex())) != NULL))
 					{
-						int power = clamp(int(float(lastmillis-player1->attacktime)/float(guntype[player1->gunselect].power)*100.f), 0, 100);
-						draw_textx("%d - %d", ox-FONTH/4, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect], power);
+						float amt = clamp(float(lastmillis-player1->gunlast[player1->gunselect])/float(guntype[player1->gunselect].power), 0.f, 1.f);
+						glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
+						glColor4f(1.f, 1.f, 0.f, fade*0.5f);
+						glBegin(GL_QUADS);
+						drawsized(float(bx+16), float(by+16), float(bs-32));
+						glEnd();
 					}
-					else draw_textx("%d", ox-FONTH/4, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
-				}
-				else
-				{
-					draw_textx("Out of ammo", ox-FONTH/4, by+bs, 255, 255, 255, int(255.f*fade), false, AL_RIGHT);
+
+					bool canshoot = player1->canshoot(player1->gunselect, lastmillis);
+					draw_textx("%d", ox-by+bs, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
 				}
 			}
 			else if(player1->state == CS_DEAD)
@@ -772,10 +754,7 @@ struct GAMECLIENT : igameclient
 				int wait = respawnwait(player1);
 
 				if(wait)
-				{
-					float c = float(wait)/1000.f;
-					draw_textx("Fragged! Down for %.1fs", FONTH/4, hoff-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, c);
-				}
+					draw_textx("Fragged! Down for %.01fs", FONTH/4, hoff-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, float(wait)/1000.f);
 				else
 					draw_textx("Fragged! Press attack to respawn", FONTH/4, hoff-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
 
