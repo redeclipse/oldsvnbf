@@ -181,7 +181,7 @@ enum
 extern void adddecal(int type, const vec &center, const vec &surface, float radius, const bvec &color = bvec(0xFF, 0xFF, 0xFF), int info = 0);
 
 // worldio
-extern void setnames(char *fname);
+extern void setnames(char *fname, int type);
 extern void load_world(char *mname);
 extern void save_world(char *mname, bool nolms = false);
 

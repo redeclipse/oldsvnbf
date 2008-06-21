@@ -155,8 +155,8 @@ struct editor
 
     vector<editline> lines; // MUST always contain at least one line!
 
-    editor(const char *name, bool keep, const char *initval) :
-        mode(keep?EDITORFOREVER:EDITORFOCUSED), active(true), name(newstring(name)), filename(NULL),
+    editor(const char *name, int mode, const char *initval) : 
+        mode(mode), active(true), name(newstring(name)), filename(NULL),
         cx(0), cy(0), mx(-1), maxx(-1), maxy(-1), scrolly(0), linewrap(false), pixelwidth(-1), pixelheight(-1)
     {
         //printf("editor %08x '%s'\n", this, name);
@@ -280,6 +280,47 @@ struct editor
             b->lines.add().set(line, len);
         }
         if(b->lines.empty()) b->lines.add().set("");
+    }
+
+    char *tostring()
+    {
+        int len = 0;
+        loopv(lines) len += lines[i].len + 1;
+        char *str = newstring(len);
+        int offset = 0;
+        loopv(lines)
+        {
+            editline &l = lines[i];
+            memcpy(&str[offset], l.text, l.len);
+            offset += l.len;
+            str[offset++] = '\n';
+        }
+        str[offset] = '\0';
+        return str;
+    }
+
+    char *selectiontostring()
+    {
+        vector<char> buf;
+        int sx, sy, ex, ey;
+        region(sx, sy, ex, ey);
+        loopi(1+ey-sy)
+        {
+            int y = sy+i;
+            char *line = lines[y].text;
+            int len = lines[y].len;
+            if(y == sy && y == ey)
+            {
+                line += sx;
+                len = ex - sx;
+            }
+            else if(y == sy) line += sx;
+            else if(y == ey) len = ex;
+            buf.put(line, len);
+            buf.add('\n');
+        }
+        buf.add('\0');
+        return newstring(buf.getbuf(), buf.length()-1);
     }
 
     void removelines(int start, int count)
@@ -602,7 +643,7 @@ static void flusheditors()
     }
 }
 
-static editor *useeditor(const char *name, bool keep, bool focus, const char *initval = NULL)
+static editor *useeditor(const char *name, int mode, bool focus, const char *initval = NULL) 
 {
     loopv(editors) if(strcmp(editors[i]->name, name) == 0)
     {
@@ -611,7 +652,7 @@ static editor *useeditor(const char *name, bool keep, bool focus, const char *in
         e->active = true;
         return e;
     }
-    editor *e = new editor(name, keep, initval);
+    editor *e = new editor(name, mode, initval);
     if(focus) editors.add(e); else editors.insert(0, e);
     return e;
 }
@@ -638,8 +679,8 @@ TEXTCOMMAND(textshow, "", (), // @DEBUG return the start of the buffer
     result(line.text);
     line.clear();
 );
-ICOMMAND(textfocus, "s", (char *name), // focus on a (or create a persistent) specific editor, else returns current name
-    if(*name) useeditor(name, true, true);
+ICOMMAND(textfocus, "si", (char *name, int *mode), // focus on a (or create a persistent) specific editor, else returns current name
+    if(*name) useeditor(name, *mode<=0 ? EDITORFOREVER : *mode, true);
     else if(editors.length() > 0) result(editors.last()->name);
 );
 TEXTCOMMAND(textprev, "", (), editors.insert(0, top); editors.pop();); // return to the previous editor
@@ -666,8 +707,8 @@ TEXTCOMMAND(textload, "s", (char *file), // loads into the topmost editor, retur
 
 #define PASTEBUFFER "#pastebuffer"
 
-TEXTCOMMAND(textcopy, "", (), editor *b = useeditor(PASTEBUFFER, true, false); top->copyselectionto(b););
-TEXTCOMMAND(textpaste, "", (), editor *b = useeditor(PASTEBUFFER, true, false); top->insertallfrom(b););
+TEXTCOMMAND(textcopy, "", (), editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false); top->copyselectionto(b););
+TEXTCOMMAND(textpaste, "", (), editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false); top->insertallfrom(b););
 TEXTCOMMAND(textmark, "i", (int *m),  // (1=mark, 2=unmark), return current mark setting if no args
     if(*m) top->mark(*m==1);
     else result(top->region() ? "1" : "2");
@@ -675,3 +716,10 @@ TEXTCOMMAND(textmark, "i", (int *m),  // (1=mark, 2=unmark), return current mark
 TEXTCOMMAND(textselectall, "", (), top->selectall(););
 TEXTCOMMAND(textclear, "", (), top->clear(););
 TEXTCOMMAND(textcurrentline, "",  (), result(top->currentline().text););
+
+TEXTCOMMAND(textexec, "i", (int *selected), // execute script commands from the buffer (0=all, 1=selected region only)
+    char *script = *selected ? top->selectiontostring() : top->tostring();
+    execute(script);
+    delete[] script;
+);
+

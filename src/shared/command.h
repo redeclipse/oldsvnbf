@@ -42,7 +42,7 @@ struct ident
     {
         const char *narg; // ID_COMMAND, ID_CCOMMAND
         char *action;     // ID_ALIAS
-        identval val;     // ID_VAR, ID_FVAR, ID_SVAR
+        identval val;// ID_VAR, ID_FVAR, ID_SVAR
     };
     union
     {
@@ -50,6 +50,7 @@ struct ident
         char *isexecuting; // ID_ALIAS
         identval overrideval; // ID_VAR, ID_FVAR, ID_SVAR
     };
+    identval def;
     identvalptr storage; // ID_VAR, ID_FVAR, ID_SVAR
     int flags;
 
@@ -57,15 +58,15 @@ struct ident
     // ID_VAR
     ident(int t, const char *n, int m, int c, int x, int *s, void *f = NULL, int flags = IDF_COMPLETE)
         : type(t), name(n), minval(m), maxval(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
-    { val.i = c; storage.i = s; }
+    { val.i = def.i = c; storage.i = s; }
     // ID_FVAR
     ident(int t, const char *n, float c, float *s, void *f = NULL, int flags = IDF_COMPLETE)
         : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
-    { val.f = c; storage.f = s; }
+    { val.f = def.f = c; storage.f = s; }
     // ID_SVAR
-    ident(int t, const char *n, char *c, char **s, void *f = NULL, int flags = IDF_COMPLETE)
+    ident(int t, const char *n, const char *c, char **s, void *f = NULL, int flags = IDF_COMPLETE)
         : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
-    { val.s = c; storage.s = s; }
+    { val.s = newstring(*c ? c : ""); def.s = newstring(*c ? c : ""); storage.s = s; }
     // ID_ALIAS
     ident(int t, const char *n, char *a, int flags)
         : type(t), name(n), override(NO_OVERRIDE), stack(NULL), action(a), flags(flags) {}
@@ -127,7 +128,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARN(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_COMPLETE)
 #define VARNP(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
 #define VARNR(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
-#define VARNW(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_WOLRD|IDF_COMPLETE)
+#define VARNW(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_WORLD|IDF_COMPLETE)
 #define VAR(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_COMPLETE)
 #define VARP(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
 #define VARR(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
@@ -225,7 +226,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define _ISVAR(n, c, b, p) \
 	struct var_##n : ident \
 	{ \
-        var_##n() : ident(ID_SVAR, #n, newstring(c), &val.s, NULL, p) \
+        var_##n() : ident(ID_SVAR, #n, c, &val.s, NULL, p) \
 		{ \
             addident(name, this); \
 		} \
@@ -240,3 +241,5 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define ISVARFP(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_PERSIST|IDF_COMPLETE)
 #define ISVARFR(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_OVERRIDE|IDF_COMPLETE)
 #define ISVARFW(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_WORLD|IDF_COMPLETE)
+
+#define RUNWORLD(n) { ident *wid = idents->access(#n); if(wid && wid->action && wid->flags&IDF_WORLD) execute(wid->action); }

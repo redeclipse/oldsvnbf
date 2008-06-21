@@ -189,7 +189,6 @@ void entitiesinoctanodes()
     loopv(et->getents()) modifyoctaent(MODOE_ADD, i);
 }
 
-extern selinfo sel;
 extern bool havesel, selectcorners;
 int entlooplevel = 0;
 int efocus = -1, enthover = -1, entorient = -1, oldhover = -1;
@@ -751,19 +750,22 @@ void resetmap()
 			{
 				case ID_VAR:
 				{
-					int val = id.val.i;
-					setvar(id.name, val, true);
+					setvar(id.name, id.def.i, true);
 					break;
 				}
 				case ID_FVAR:
 				{
-					float val = id.val.f;
-					setfvar(id.name, val, true);
+					setfvar(id.name, id.def.f, true);
 					break;
 				}
 				case ID_SVAR:
 				{
-					setsvar(id.name, "", true);
+					setsvar(id.name, *id.def.s ? id.def.s : "", true);
+					break;
+				}
+				case ID_ALIAS:
+				{
+					worldalias(id.name, "");
 					break;
 				}
 				default: break;
@@ -786,7 +788,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 	}
 
 	resetmap();
-	setnames(mname);
+	setnames(mname, MAP_BFGZ);
 	strncpy(hdr.head, "BFGZ", 4);
 
 	hdr.version = MAPVERSION;

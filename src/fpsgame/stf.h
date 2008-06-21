@@ -244,7 +244,7 @@ struct stfclient : stfstate
 		}
 	}
 
-	void drawblips(int x, int y, int s, int type, bool skipenemy = false)
+	void drawblip(int x, int y, int s, int type, bool skipenemy = false)
 	{
 		settexture(cl.bliptex());
 		switch(max(type+1, 0))
@@ -282,14 +282,14 @@ struct stfclient : stfstate
         return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(lastmillis-d->lastpain)/1000);
     }
 
-	void drawhud(int w, int h)
+	void drawblips(int w, int h)
 	{
 		int s = h/4, x = w-s-FONTH/4, y = FONTH/4;
 		bool showenemies = lastmillis%1000 >= 500;
-		drawblips(x, y, s, 1, showenemies);
-		drawblips(x, y, s, 0, showenemies);
-		drawblips(x, y, s, -1, showenemies);
-		if(showenemies) drawblips(x, y, s, -2);
+		drawblip(x, y, s, 1, showenemies);
+		drawblip(x, y, s, 0, showenemies);
+		drawblip(x, y, s, -1, showenemies);
+		if(showenemies) drawblip(x, y, s, -2);
 	}
 
 	void setupflags()

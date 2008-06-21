@@ -118,6 +118,7 @@ extern void entcancel();
 
 void cancelsel()
 {
+	efocus = enthover = -1;
     cubecancel();
     entcancel();
 }
@@ -1641,7 +1642,7 @@ void setmat(cube &c, uchar mat, uchar matmask)
 {
 	if(c.children)
         loopi(8) setmat(c.children[i], mat, matmask);
-    else if(mat!=MAT_AIR) 
+    else if(mat!=MAT_AIR)
     {
         cubeext &e = ext(c);
         e.material &= matmask;

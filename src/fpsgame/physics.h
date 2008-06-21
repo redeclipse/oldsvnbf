@@ -101,7 +101,7 @@ struct physics
 	}
 	float maxspeed(physent *d)
 	{
-		if (d->state != CS_SPECTATOR && d->state != CS_EDITING)
+		if (d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_EDITING)
 		{
 			return d->maxspeed * (float(d->crouching ? crawlspeed() : movespeed())/100.f);
 		}

@@ -944,25 +944,25 @@ struct clientcom : iclientcom
 				case SV_DELCUBE:
 				{
 					if(!d) return;
-					selinfo sel;
-					sel.o.x = getint(p); sel.o.y = getint(p); sel.o.z = getint(p);
-					sel.s.x = getint(p); sel.s.y = getint(p); sel.s.z = getint(p);
-					sel.grid = getint(p); sel.orient = getint(p);
-					sel.cx = getint(p); sel.cxs = getint(p); sel.cy = getint(p), sel.cys = getint(p);
-					sel.corner = getint(p);
+					selinfo s;
+					s.o.x = getint(p); s.o.y = getint(p); s.o.z = getint(p);
+					s.s.x = getint(p); s.s.y = getint(p); s.s.z = getint(p);
+					s.grid = getint(p); s.orient = getint(p);
+					s.cx = getint(p); s.cxs = getint(p); s.cy = getint(p), s.cys = getint(p);
+					s.corner = getint(p);
 					int dir, mode, tex, newtex, mat, allfaces;
 					ivec moveo;
 					switch(type)
 					{
-						case SV_EDITF: dir = getint(p); mode = getint(p); mpeditface(dir, mode, sel, false); break;
-						case SV_EDITT: tex = getint(p); allfaces = getint(p); mpedittex(tex, allfaces, sel, false); break;
-						case SV_EDITM: mat = getint(p); mpeditmat(mat, sel, false); break;
-						case SV_FLIP: mpflip(sel, false); break;
-						case SV_COPY: if(d) mpcopy(d->edit, sel, false); break;
-						case SV_PASTE: if(d) mppaste(d->edit, sel, false); break;
-						case SV_ROTATE: dir = getint(p); mprotate(dir, sel, false); break;
-						case SV_REPLACE: tex = getint(p); newtex = getint(p); mpreplacetex(tex, newtex, sel, false); break;
-						case SV_DELCUBE: mpdelcube(sel, false); break;
+						case SV_EDITF: dir = getint(p); mode = getint(p); mpeditface(dir, mode, s, false); break;
+						case SV_EDITT: tex = getint(p); allfaces = getint(p); mpedittex(tex, allfaces, s, false); break;
+						case SV_EDITM: mat = getint(p); mpeditmat(mat, s, false); break;
+						case SV_FLIP: mpflip(s, false); break;
+						case SV_COPY: if(d) mpcopy(d->edit, s, false); break;
+						case SV_PASTE: if(d) mppaste(d->edit, s, false); break;
+						case SV_ROTATE: dir = getint(p); mprotate(dir, s, false); break;
+						case SV_REPLACE: tex = getint(p); newtex = getint(p); mpreplacetex(tex, newtex, s, false); break;
+						case SV_DELCUBE: mpdelcube(s, false); break;
 					}
 					break;
 				}
@@ -1252,8 +1252,8 @@ struct clientcom : iclientcom
 			case SV_SENDMAP:
 			{
 				if(!m_edit(cl.gamemode)) return;
-				extern string bgzname[MAP_MAX], mapname;
-				const char *file = findfile(bgzname[MAP_BFGZ], "wb");
+				extern string mapfile, mapname;
+				const char *file = findfile(mapfile, "wb");
 				FILE *map = fopen(file, "wb");
 				if(!map) return;
 				conoutf("received map");
