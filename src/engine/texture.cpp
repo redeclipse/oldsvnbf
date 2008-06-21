@@ -759,7 +759,6 @@ void texturedel(int i, bool local)
 	{
 		if (i >= 0 && i <= curtexnum)
 		{
-			extern selinfo sel;
 			loopj(curtexnum-i)
 			{
 				int oldtex = i+j, newtex = max(i+j-1, 0);

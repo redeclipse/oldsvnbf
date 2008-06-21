@@ -276,7 +276,7 @@ void guifield(char *var, int *maxlength, char *onchange)
     const char *initval = "";
 	ident *id = getident(var);
     if(id && id->type==ID_ALIAS) initval = id->action;
-	char *result = cgui->field(var, GUI_BUTTON_COLOR, (*maxlength!=0) ? *maxlength : 12, 0, initval);
+	char *result = cgui->field(var, GUI_BUTTON_COLOR, *maxlength ? *maxlength : 12, 0, initval);
 	if(result)
 	{
 		alias(var, result);
@@ -285,14 +285,14 @@ void guifield(char *var, int *maxlength, char *onchange)
 }
 
 //-ve maxlength indicates a wrapped text field of any (approx 260 chars) length, |maxlength| is the field width
-void guieditor(char *name, int *maxlength, int *height)
+void guieditor(char *name, int *maxlength, int *height, int *mode)
 {
     if(!cgui) return;
-    cgui->field(name, GUI_BUTTON_COLOR, (*maxlength!=0) ? *maxlength : 12, *height);
+    cgui->field(name, GUI_BUTTON_COLOR, *maxlength ? *maxlength : 12, *height, NULL, *mode<=0 ? EDITORFOREVER : *mode);
     //returns a non-NULL pointer (the currentline) when the user commits, could then manipulate via text* commands
 }
 
-COMMAND(guieditor, "sii");
+COMMAND(guieditor, "siii");
 //use text<action> to do more...
 
 

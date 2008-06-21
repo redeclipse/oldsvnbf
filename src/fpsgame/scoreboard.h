@@ -310,7 +310,7 @@ struct scoreboard : g3d_callback
                 int status = 0xFFFFDD;
                 if(o->privilege) status = o->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;
                 else if(o->state==CS_DEAD) status = 0x606060;
-                g.text(cl.colorname(o), status);
+                g.text(cl.colorname(o, NULL, "", false), status);
             });
             g.poplist();
 
@@ -352,7 +352,7 @@ struct scoreboard : g3d_callback
                         g.pushlist();
                         g.background(0x808080, 3);
 					}
-                    g.text(cl.colorname(o), 0xFFFFDD, "player");
+                    g.text(cl.colorname(o, NULL, "", false), 0xFFFFDD, "player");
                     if(o==cl.player1 && highlightscore()) g.poplist();
 				}
                 g.poplist();
@@ -383,7 +383,7 @@ struct scoreboard : g3d_callback
                         g.pushlist();
                         g.background(0x808080);
                     }
-                    g.text(cl.colorname(o), status);
+                    g.text(cl.colorname(o, NULL, "", false), status);
                     if(o==cl.player1 && highlightscore()) g.poplist();
                     if(i+1<spectators.length() && (i+1)%3) g.space(1);
                     else g.poplist();

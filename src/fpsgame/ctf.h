@@ -245,7 +245,7 @@ struct ctfclient : ctfstate
         loopi(TEAM_MAX) loadmodel(teamtype[i].flag, -1, true);
     }
 
-    void drawblips(int x, int y, int s, int i, bool flagblip)
+    void drawblip(int x, int y, int s, int i, bool flagblip)
     {
 		flag &f = flags[i];
         settexture(cl.bliptex());
@@ -267,7 +267,7 @@ struct ctfclient : ctfstate
 		glEnd();
     }
 
-    void drawhud(int w, int h)
+    void drawblips(int w, int h)
     {
 #if 0
         if(cl.player1->state == CS_ALIVE)
@@ -285,13 +285,13 @@ struct ctfclient : ctfstate
         {
             flag &f = flags[i];
             if(!f.team || !f.ent) continue;
-            drawblips(x, y, s, i, false);
+            drawblip(x, y, s, i, false);
             if(f.owner)
             {
                 if(lastmillis%1000 >= 500) continue;
             }
             else if(f.droptime && lastmillis%300 >= 150) continue;
-            drawblips(x, y, s, i, true);
+            drawblip(x, y, s, i, true);
         }
     }
 

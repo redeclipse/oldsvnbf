@@ -188,7 +188,7 @@ float fvariable(const char *name, float cur, float *storage, void (*fun)(), int 
 char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
-    ident v(ID_SVAR, name, newstring(cur), storage, (void *)fun, flags);
+    ident v(ID_SVAR, name, cur, storage, (void *)fun, flags);
     idents->access(name, &v);
     return v.val.s;
 }

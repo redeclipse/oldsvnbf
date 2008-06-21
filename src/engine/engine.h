@@ -208,6 +208,8 @@ extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float 
 
 extern const char *loadback;
 extern void loadbackground(int w, int h);
+extern void computescreen(const char *text = NULL, Texture *t = NULL, const char *overlaytext = NULL);
+extern void renderprogress(float bar1, const char *text1, float bar2 = 0, const char *text2 = NULL, GLuint tex = 0);
 
 // renderextras
 extern void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradius = 0);
@@ -289,6 +291,7 @@ extern undoblock *copyundoents(undoblock *u);
 extern void pasteundoents(undoblock *u);
 
 // octaedit
+extern selinfo sel;
 extern void cancelsel();
 extern void render_texture_panel(int w, int h);
 extern void addundo(undoblock *u);
@@ -435,8 +438,7 @@ extern int compresslevel, imageformat;
 
 extern void pushevent(const SDL_Event &e);
 extern bool interceptkey(int sym);
-extern void computescreen(const char *text = NULL, Texture *t = NULL, const char *overlaytext = NULL);
-extern void renderprogress(float bar1, const char *text1, float bar2 = 0, const char *text2 = NULL, GLuint tex = 0);
+extern void getfps(int &fps, int &bestdiff, int &worstdiff);
 
 // menu
 extern void menuprocess();

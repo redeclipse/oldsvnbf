@@ -1585,8 +1585,8 @@ void createfogtex()
 
 #define NUMCAUSTICS 32
 
-VAR(causticscale, 0, 100, 10000);
-VAR(causticmillis, 0, 75, 1000);
+VARR(causticscale, 0, 100, 10000);
+VARR(causticmillis, 0, 75, 1000);
 VARP(caustics, 0, 1, 1);
 
 static Texture *caustictex[NUMCAUSTICS] = { NULL };

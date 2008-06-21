@@ -44,11 +44,11 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> players;		// other clients
 	fpsent lastplayerstate;
 
-	IVARP(cardtime, 0, 2500, 10000);
-	IVARP(cardfade, 0, 5000, 10000);
+	IVARP(cardtime, 0, 2000, 10000);
+	IVARP(cardfade, 0, 3000, 10000);
 
-	IVARP(cameradist, -100, 8, 100);
-	IVARP(camerashift, -100, 4, 100);
+	IVARP(cameradist, -100, 10, 100);
+	IVARP(camerashift, -100, 6, 100);
 	IVARP(cameraheight, 0, 35, 360);
 
 	IVARP(invmouse, 0, 0, 1);
@@ -88,6 +88,7 @@ struct GAMECLIENT : igameclient
 	ITVAR(teambartex, "<anim>textures/teambar");
 
 	IVARP(showstats, 0, 1, 1);
+	IVARP(showhudents, 0, 10, 100);
 	IVARP(showfps, 0, 2, 2);
 	IVARP(statrate, 0, 200, 1000);
 
@@ -492,6 +493,9 @@ struct GAMECLIENT : igameclient
 
 	void startmap(const char *name)	// called just after a map load
 	{
+		const char *title = getmaptitle();
+		if(*title) console("%s", CON_CENTER|CON_NORMAL, title);
+
 		intermission = false;
         player1->respawned = player1->suicided = 0;
 		respawnent = -1;
@@ -549,12 +553,24 @@ struct GAMECLIENT : igameclient
 		return false;
 	}
 
-	char *colorname(fpsent *d, char *name = NULL, const char *prefix = "")
+	char *colorname(fpsent *d, char *name = NULL, const char *prefix = "", bool team = true)
 	{
 		if(!name) name = d->name;
-		if(name[0] && !duplicatename(d, name)) return name;
 		static string cname;
-		s_sprintf(cname)("%s%s \fs\f5(%d)\fS", prefix, name, d->clientnum);
+		if(name[0] && !duplicatename(d, name))
+		{
+			if(team && m_team(gamemode, mutators))
+				s_sprintf(cname)("%s%s (\fs%s%s\fS)", prefix, name, teamtype[d->team].chat, teamtype[d->team].name);
+			else
+				s_sprintf(cname)("%s%s", prefix, name);
+		}
+		else
+		{
+			if(team && m_team(gamemode, mutators))
+				s_sprintf(cname)("%s%s (\fs%s%s\fS) [\fs\f5%d\fS]", prefix, name, teamtype[d->team].chat, teamtype[d->team].name, d->clientnum);
+			else
+				s_sprintf(cname)("%s%s [\fs\f5%d\fS]", prefix, name, d->clientnum);
+		}
 		return cname;
 	}
 
@@ -588,27 +604,68 @@ struct GAMECLIENT : igameclient
 	}
 
 
+	void drawplayerblip(fpsent *d, int x, int y, int s)
+	{
+		vec dir(d->o);
+		dir.sub(camera1->o);
+		float dist = dir.magnitude();
+		if(dist < radarrange())
+		{
+			dir.rotate_around_z(-camera1->yaw*RAD);
+
+			int colour = teamtype[d->team].colour,
+				r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
+
+			glColor4f(r/255.f, g/255.f, b/255.f, 1.f-(dist/radarrange()));
+
+			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
+				cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
+					cs = (d->crouching ? 0.005f : 0.025f)*s;
+
+			settexture(bliptex());
+			glBegin(GL_QUADS);
+			drawsized(cx, cy, cs);
+			glEnd();
+			draw_textx("%s", int(cx), int(cy+cs), 255, 255, 255, hudblend*255/100, false, AL_CENTER, -1, -1, colorname(d));
+		}
+	}
+
 	void drawblips(int x, int y, int s)
 	{
-		settexture(bliptex());
-		glBegin(GL_QUADS);
-		loopv(players) if(players[i] && players[i]->state == CS_ALIVE)
+		pushfont("radar");
+
+		loopi(4)
 		{
-			fpsent *f = players[i];
-			vec dir(f->o);
+			const char *card = "";
+			vec dir(camera1->o);
+			switch(i)
+			{
+				case 0: dir.sub(vec(0, radarrange(), 0)); card = "N"; break;
+				case 1: dir.add(vec(radarrange(), 0, 0)); card = "E"; break;
+				case 2: dir.add(vec(0, radarrange(), 0)); card = "S"; break;
+				case 3: dir.sub(vec(radarrange(), 0, 0)); card = "W"; break;
+				default: break;
+			}
 			dir.sub(camera1->o);
-			float dist = dir.magnitude();
-			if(dist >= radarrange()) continue;
+			dir.mul(4); dir.div(5);
 			dir.rotate_around_z(-camera1->yaw*RAD);
-			glColor4f(0.f, 1.f, 0.f, 1.f-(dist/radarrange()));
-			drawsized(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (f->crouching ? 0.05f : 0.025f)*s);
+
+			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
+				cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange());
+
+			draw_textx("%s", int(cx), int(cy), 255, 255, 255, hudblend*255/100, true, AL_LEFT, -1, -1, card);
 		}
+
+		loopv(players)
+			if(players[i] && players[i]->state == CS_ALIVE)
+				drawplayerblip(players[i], x, y, s);
+
 		loopv(et.ents)
 		{
 			extentity &e = *et.ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
 			enttypes &t = enttype[e.type];
-			if((t.usetype == ETU_ITEM && e.spawned) || editmode)
+			if((t.usetype == ETU_ITEM && e.spawned) || m_edit(gamemode))
 			{
 				bool insel = (editmode && (enthover == i || entgroup.find(i) >= 0));
 				vec dir(e.o);
@@ -617,152 +674,167 @@ struct GAMECLIENT : igameclient
 				if(!insel && dist >= radarrange()) continue;
 				if(dist >= radarrange()*(1 - 0.05f)) dir.mul(radarrange()*(1 - 0.05f)/dist);
 				dir.rotate_around_z(-camera1->yaw*RAD);
+				float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
+					cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
+						cs = (insel ? 0.033f : 0.025f)*s;
 				settexture(bliptex());
-				glColor4f(1.f, 1.f, insel ? 1.0f : 0.f, insel ? 1.f : 1.f-(dist/radarrange()));
-				drawsized(x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()), (insel ? 0.075f : 0.025f)*s);
+				glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, insel ? 1.f : 1.f-(dist/radarrange()));
+				glBegin(GL_QUADS);
+				drawsized(cx, cy, cs);
+				glEnd();
 			}
 		}
-		glEnd();
+		popfont();
+	}
+
+	int drawtitlecard(int w, int h, int y)
+	{
+		int ox = w*3, oy = h*3, hoff = y;
+
+		glLoadIdentity();
+		glOrtho(0, ox, oy, 0, -1, 1);
+
+		int bs = oy/4, bx = ox-bs-FONTH/4, by = FONTH/4;
+		float fade = hudblend/100.f, amt = 1.f;
+
+		if(lastmillis-maptime <= cardtime())
+		{
+			amt = clamp(float(lastmillis-maptime)/float(cardtime()), 0.f, 1.f);
+			fade = clamp(amt*fade, 0.f, 1.f);
+		}
+		else if(lastmillis-maptime <= cardtime()+cardfade())
+			fade = clamp(fade*(1.f-(float(lastmillis-maptime-cardtime())/float(cardfade()))), 0.f, 1.f);
+
+		const char *title = getmaptitle();
+		if(!*title) title = "Untitled by Unknown";
+
+		glColor4f(1.f, 1.f, 1.f, fade);
+		rendericon("textures/guioverlay", bx, by, bs, bs);
+		if(!rendericon(getmapname(), bx+8, by+8, bs-16, bs-16))
+			rendericon("textures/emblem", bx+8, by+8, bs-16, bs-16);
+
+		int ty = by + bs;
+		ty = draw_textx("%s", int(ox*amt)-FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, ox-FONTH, sv->gamename(gamemode, mutators));
+		ty = draw_textx("%s", ox+int(ox*(1.f-amt))-FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, ox-FONTH, title);
+
+		return hoff;
 	}
 
 	int drawgamehud(int w, int h, int y)
 	{
 		int ox = w*3, oy = h*3, hoff = y;
 
-		pushfont("hud");
-
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 
 		int bs = oy/4, bx = ox-bs-FONTH/4, by = FONTH/4;
-		int secs = lastmillis-maptime;
-		float fade = 1.f, amt = hudblend/100.f;
+		float fade = hudblend/100.f;
 
-		if(secs <= cardtime()+cardfade())
+		if(lastmillis-maptime <= cardtime()+cardfade()+cardfade())
 		{
-			float amt = 1.f;
-			if(secs <= cardtime()) fade = amt = clamp(float(secs)/float(cardtime()), 0.f, 1.f);
-			else if(secs <= cardtime()+cardfade()) fade = clamp(fade-float(secs-cardtime())/float(cardfade()), 0.f, 1.f);
-
-			const char *title = getmaptitle();
-			if(!*title) title = "Untitled by Unknown";
-
-			glColor4f(1.f, 1.f, 1.f, fade);
-			rendericon("textures/guioverlay", ox-FONTH/2-bs, by, bs, bs);
-			if(!rendericon(getmapname(), ox-FONTH/2-bs+8, by+8, bs-16, bs-16))
-				rendericon("textures/emblem", ox-FONTH/2-bs+8, by+8, bs-16, bs-16);
-
-			int ty = by + bs;
-			ty = draw_textx("%s", int(ox*amt)-FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, ox-FONTH, sv->gamename(gamemode, mutators));
-			ty = draw_textx("%s", ox+int(ox*(1.f-amt))-FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, ox-FONTH, title);
+			float amt = clamp(float(lastmillis-maptime-cardtime()-cardfade())/float(cardfade()), 0.f, 1.f);
+			fade = clamp(fade*amt, 0.f, 1.f);
 		}
-		else
+
+		if((player1->state == CS_ALIVE && damageresidue > 0) || player1->state == CS_DEAD)
 		{
-			if(lastmillis-maptime <= cardtime()+cardfade()+cardfade())
-				fade = amt*(float(lastmillis-maptime-cardtime()-cardfade())/float(cardfade()));
-			else fade *= amt;
+			int dam = player1->state == CS_DEAD ? 100 : min(damageresidue, 100);
+			float pc = float(dam)/100.f;
+			settexture("textures/damage");
 
-			if((player1->state == CS_ALIVE && damageresidue > 0) || player1->state == CS_DEAD)
+			glColor4f(1.f, 1.f, 1.f, pc);
+
+			glBegin(GL_QUADS);
+			glTexCoord2f(0, 0); glVertex2i(0, 0);
+			glTexCoord2f(1, 0); glVertex2i(ox, 0);
+			glTexCoord2f(1, 1); glVertex2i(ox, oy);
+			glTexCoord2f(0, 1); glVertex2i(0, oy);
+			glEnd();
+		}
+
+		int colour = teamtype[player1->team].colour,
+			r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
+
+		settexture(radartex());
+		//glColor4f(r/255.f, g/255.f, b/255.f, fade);
+		glColor4f(1.f, 1.f, 1.f, fade);
+		glBegin(GL_QUADS);
+		drawsized(float(bx), float(by), float(bs));
+		glEnd();
+
+		drawblips(bx, by, bs);
+		if(m_stf(gamemode)) stf.drawblips(ox, oy);
+		else if(m_ctf(gamemode)) ctf.drawblips(ox, oy);
+
+		settexture(radarpingtex());
+		glColor4f(1.f, 1.f, 1.f, fade);
+		glBegin(GL_QUADS);
+		drawsized(float(bx), float(by), float(bs));
+		glEnd();
+
+		settexture(goalbartex());
+		glColor4f(1.f, 1.f, 1.f, fade);
+		glBegin(GL_QUADS);
+		drawsized(float(bx), float(by), float(bs));
+		glEnd();
+
+		settexture(teambartex());
+		glColor4f(r/255.f, g/255.f, b/255.f, fade);
+		glBegin(GL_QUADS);
+		drawsized(float(bx), float(by), float(bs));
+		glEnd();
+
+		if(player1->state == CS_ALIVE)
+		{
+			Texture *t;
+			if((t = textureload(healthbartex())) != NULL)
 			{
-				int dam = player1->state == CS_DEAD ? 100 : min(damageresidue, 100);
-				float pc = float(dam)/100.f;
-				settexture("textures/damage");
+				float amt = clamp(float(player1->health)/float(MAXHEALTH), 0.f, 1.f);
+				float glow = 1.f, pulse = fade;
 
-				glColor4f(1.f, 1.f, 1.f, pc);
+				if(lastmillis <= player1->lastregen+500)
+				{
+					float regen = (lastmillis-player1->lastregen)/500.f;
+					pulse = clamp(pulse*regen, 0.3f, max(fade, 0.33f));
+					glow = clamp(glow*regen, 0.3f, 1.f);
+				}
 
+				glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
+				glColor4f(glow, glow*0.3f, 0.f, pulse);
 				glBegin(GL_QUADS);
-				glTexCoord2f(0, 0); glVertex2i(0, 0);
-				glTexCoord2f(1, 0); glVertex2i(ox, 0);
-				glTexCoord2f(1, 1); glVertex2i(ox, oy);
-				glTexCoord2f(0, 1); glVertex2i(0, oy);
+				drawsized(float(bx), float(by), float(bs));
 				glEnd();
 			}
 
-			int colour = teamtype[player1->team].colour,
-				r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
-
-			settexture(radartex());
-			glColor4f(r/255.f, g/255.f, b/255.f, fade);
-			glBegin(GL_QUADS);
-			drawsized(float(bx), float(by), float(bs));
-			glEnd();
-
-			drawblips(bx, by, bs);
-			if(m_stf(gamemode)) stf.drawhud(ox, oy);
-			else if(m_ctf(gamemode)) ctf.drawhud(ox, oy);
-
-			settexture(radarpingtex());
-			glColor4f(1.f, 1.f, 1.f, fade);
-			glBegin(GL_QUADS);
-			drawsized(float(bx), float(by), float(bs));
-			glEnd();
-
-			settexture(goalbartex());
-			glColor4f(1.f, 1.f, 1.f, fade);
-			glBegin(GL_QUADS);
-			drawsized(float(bx), float(by), float(bs));
-			glEnd();
-
-			settexture(teambartex());
-			glColor4f(r/255.f, g/255.f, b/255.f, fade);
-			glBegin(GL_QUADS);
-			drawsized(float(bx), float(by), float(bs));
-			glEnd();
-
-			if(player1->state == CS_ALIVE)
+			if(isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
 			{
-				Texture *t;
-				if((t = textureload(healthbartex())) != NULL)
+				if(guntype[player1->gunselect].power &&
+					player1->gunstate[player1->gunselect] == GUNSTATE_POWER &&
+						((t = textureload(healthbartex())) != NULL))
 				{
-					float amt = clamp(float(player1->health)/float(MAXHEALTH), 0.f, 1.f);
-					float glow = 1.f, pulse = fade;
-
-					if(lastmillis <= player1->lastregen+500)
-					{
-						float regen = (lastmillis-player1->lastregen)/500.f;
-						pulse = clamp(pulse*regen, 0.3f, max(fade, 0.33f));
-						glow = clamp(glow*regen, 0.3f, 1.f);
-					}
-
+					float amt = clamp(float(lastmillis-player1->gunlast[player1->gunselect])/float(guntype[player1->gunselect].power), 0.f, 1.f);
 					glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
-					glColor4f(glow, glow*0.3f, 0.f, pulse);
+					glColor4f(1.f, 1.f, 0.f, fade*0.5f);
 					glBegin(GL_QUADS);
-					drawsized(float(bx), float(by), float(bs));
+					drawsized(float(bx+16), float(by+16), float(bs-32));
 					glEnd();
 				}
 
-				if(isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
-				{
-					if(guntype[player1->gunselect].power &&
-						player1->gunstate[player1->gunselect] == GUNSTATE_POWER &&
-							((t = textureload(healthbartex())) != NULL))
-					{
-						float amt = clamp(float(lastmillis-player1->gunlast[player1->gunselect])/float(guntype[player1->gunselect].power), 0.f, 1.f);
-						glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
-						glColor4f(1.f, 1.f, 0.f, fade*0.5f);
-						glBegin(GL_QUADS);
-						drawsized(float(bx+16), float(by+16), float(bs-32));
-						glEnd();
-					}
-
-					bool canshoot = player1->canshoot(player1->gunselect, lastmillis);
-					draw_textx("%d", ox-FONTH/4, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
-				}
-			}
-			else if(player1->state == CS_DEAD)
-			{
-				int wait = respawnwait(player1);
-
-				if(wait)
-					draw_textx("Fragged! Down for %.01fs", FONTH/4, hoff-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, -1, float(wait)/1000.f);
-				else
-					draw_textx("Fragged! Press attack to respawn", FONTH/4, hoff-FONTH, 255, 255, 255, int(255.f*fade), false, AL_LEFT);
-
-				hoff -= FONTH;
+				bool canshoot = player1->canshoot(player1->gunselect, lastmillis);
+				draw_textx("%d", ox-FONTH/4, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
 			}
 		}
+		else if(player1->state == CS_DEAD)
+		{
+			int wait = respawnwait(player1);
 
-		popfont();
+			if(wait)
+				draw_textx("Fragged! Down for %.01fs", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1, float(wait)/1000.f);
+			else
+				draw_textx("Fragged! Press attack to respawn", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT);
+
+			hoff -= FONTH;
+		}
 
 		return hoff;
 	}
@@ -863,61 +935,80 @@ struct GAMECLIENT : igameclient
 
 		renderconsole(w, h);
 
-		if(lastmillis-maptime > cardtime()+cardfade())
+		static int laststats = 0, prevstats[11] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[11] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+		int fps, bestdiff, worstdiff;
+		getfps(fps, bestdiff, worstdiff);
+
+		if(lastmillis-laststats >= statrate())
 		{
-			if(editmode && showstats())
-			{
-				static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
-				if(lastmillis-laststats >= statrate())
-				{
-					memcpy(prevstats, curstats, sizeof(prevstats));
-					laststats = lastmillis - (lastmillis%statrate());
+			memcpy(prevstats, curstats, sizeof(prevstats));
+			laststats = lastmillis - (lastmillis%statrate());
+		}
+
+		int nextstats[11] =
+		{
+			vtris*100/max(wtris, 1),
+			vverts*100/max(wverts, 1),
+			xtraverts/1024,
+			xtravertsva/1024,
+			glde,
+			gbatches,
+			getnumqueries(),
+			rplanes,
+			fps,
+			bestdiff,
+			worstdiff
+		};
+
+		loopi(11) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
+
+		if(showstats())
+		{
+			draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
+			hoff -= FONTH;
+			draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
+			hoff -= FONTH;
+		}
+
+		switch(showfps())
+		{
+			case 2: draw_textx("fps:%d +%d-%d", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1, curstats[8], curstats[9], curstats[10]); hoff -= FONTH; break;
+			case 1: draw_textx("fps:%d", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1, curstats[8]); hoff -= FONTH; break;
+			default: break;
+		}
+
+		if(getcurcommand())
+		{
+			rendercommand(FONTH/4, hoff-FONTH, h*3-FONTH);
+			hoff -= FONTH;
+		}
+
+		if(editmode)
+		{
+			draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1,
+					sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
+						sel.cx, sel.cxs, sel.cy, sel.cys);
+			hoff -= FONTH;
+			draw_textx("corner:%d orient:%d grid:%d", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1,
+							sel.corner, sel.orient, sel.grid);
+			hoff -= FONTH;
+			draw_textx("cube:%s%d ents:%d", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1,
+				selchildcount<0 ? "1/" : "", abs(selchildcount), entgroup.length());
+			hoff -= FONTH;
+
+			#define enthudtext(n, r, g, b) \
+				if(et.ents.inrange(n)) \
+				{ \
+					fpsentity &f = (fpsentity &)*et.ents[n]; \
+					draw_textx("entity:%d %s (%d %d %d %d)", FONTH/4, hoff-FONTH, r, g, b, hudblend*255/100, false, AL_LEFT, -1, -1, \
+						n, et.findname(f.type), f.attr1, f.attr2, f.attr3, f.attr4); \
+					hoff -= FONTH; \
 				}
-				int nextstats[8] =
-				{
-					vtris*100/max(wtris, 1),
-					vverts*100/max(wverts, 1),
-					xtraverts/1024,
-					xtravertsva/1024,
-					glde,
-					gbatches,
-					getnumqueries(),
-					rplanes
-				};
 
-				loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
-
-				draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells()); hoff -= FONTH;
-				draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]); hoff -= FONTH;
-				draw_textx("cube %s%d", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, selchildcount<0 ? "1/" : "", abs(selchildcount)); hoff -= FONTH;
-			}
-
-			extern void getfps(int &fps, int &bestdiff, int &worstdiff);
-			int fps, bestdiff, worstdiff;
-			getfps(fps, bestdiff, worstdiff);
-
-			switch(showfps())
-			{
-				case 2: draw_textx("fps %d +%d-%d", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, fps, bestdiff, worstdiff); hoff -= FONTH; break;
-				case 1: draw_textx("fps %d", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, fps); hoff -= FONTH; break;
-				default: break;
-			}
-
-			if(editmode)
-			{
-				char *editinfo = executeret("edithud");
-				if(editinfo)
-				{
-					draw_textx("%s", FONTH/4, hoff-FONTH, 255, 255, 255, 255, false, AL_LEFT, -1, -1, editinfo); hoff -= FONTH;
-					DELETEA(editinfo);
-				}
-			}
-
-			if(getcurcommand())
-			{
-				rendercommand(FONTH/4, hoff-FONTH, h*3-FONTH);
-				hoff -= FONTH;
-			}
+			enthudtext(enthover, 255, 255, 196);
+			loopi(clamp(entgroup.length(), 0, showhudents()))
+				enthudtext(entgroup[i], 196, 196, 196);
 		}
 
 		render_texture_panel(w, h);
@@ -929,12 +1020,24 @@ struct GAMECLIENT : igameclient
 	{
 		if(!hidehud)
 		{
+			int hoff = h*3;
+
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			int hoff = h*3;
-			if(cc.ready()) hoff = drawgamehud(w, h, hoff);
-			hoff = drawhudelements(w, h, hoff);
+
+			if(cc.ready())
+			{
+				pushfont("hud");
+				if(lastmillis-maptime <= cardtime()+cardfade())
+					hoff = drawtitlecard(w, h, hoff);
+				else hoff = drawgamehud(w, h, hoff);
+				popfont();
+
+				hoff = drawhudelements(w, h, hoff);
+			}
+
 			glDisable(GL_BLEND);
+
 			drawpointers(w, h);
 		}
 	}

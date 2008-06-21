@@ -2222,7 +2222,7 @@ struct GAMESERVER : igameserver
 		mapdata = tmpfile();
         if(!mapdata) { sendf(sender, 1, "ris", SV_SERVMSG, "failed to open temporary file for map"); return; }
 		fwrite(data, 1, len, mapdata);
-		s_sprintfd(msg)("[%s uploaded map to server, \"/getmap\" to receive it]", colorname(ci));
+		s_sprintfd(msg)("%s uploaded map to server, \"/getmap\" to receive it", colorname(ci));
 		sendservmsg(msg);
 	}
 
@@ -2233,12 +2233,25 @@ struct GAMESERVER : igameserver
 		return false;
 	}
 
-	const char *colorname(clientinfo *ci, char *name = NULL)
+	const char *colorname(clientinfo *ci, char *name = NULL, bool team = true)
 	{
 		if(!name) name = ci->name;
-		if(name[0] && !duplicatename(ci, name)) return name;
+		if(!name) name = ci->name;
 		static string cname;
-		s_sprintf(cname)("%s \fs\f5(%d)\fS", name, ci->clientnum);
+		if(name[0] && !duplicatename(ci, name))
+		{
+			if(team && m_team(gamemode, mutators))
+				s_sprintf(cname)("%s (\fs%s%s\fS)", name, teamtype[ci->team].chat, teamtype[ci->team].name);
+			else
+				s_sprintf(cname)("%s", name);
+		}
+		else
+		{
+			if(team && m_team(gamemode, mutators))
+				s_sprintf(cname)("%s (\fs%s%s\fS) [\fs\f5%d\fS]", name, teamtype[ci->team].chat, teamtype[ci->team].name, ci->clientnum);
+			else
+				s_sprintf(cname)("%s [\fs\f5%d\fS]", name, ci->clientnum);
+		}
 		return cname;
 	}
 

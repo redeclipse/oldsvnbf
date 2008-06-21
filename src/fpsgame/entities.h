@@ -823,6 +823,7 @@ struct entities : icliententities
 				// 29	ELEVATOR		-	NOTUSED
 				default:
 				{
+					conoutf("WARNING: ignoring entity %d type %d", id, f.type);
 					f.type = NOTUSED;
 					break;
 				}
@@ -862,13 +863,13 @@ struct entities : icliententities
 
 					if(ents.inrange(dest))
 					{
+						conoutf("WARNING: replaced teledest %d with closest teleport %d", i, dest);
 						e.type = NOTUSED; // get rid of this guy then
-						conoutf("WARNING: replaced teledest %d [%d] with closest teleport", dest, i);
 					}
 					else
 					{
+						conoutf("WARNING: modified teledest %d to a teleport", i);
 						dest = i;
-						conoutf("WARNING: modified teledest %d [%d] to a teleport", dest, i);
 					}
 
 					teleyaw[dest] = e.attr1; // store the yaw for later
@@ -879,8 +880,9 @@ struct entities : icliententities
 
 						if(f.type == TELEPORT && !f.mark && f.attr1 == e.attr2)
 						{
+							if(verbose >= 2)
+								conoutf("WARNING: teleports %d and %d linked automatically", dest, j);
 							f.links.add(dest);
-							conoutf("WARNING: teleports %d and %d linked automatically", dest, j);
 						}
 					}
 				}
@@ -904,6 +906,7 @@ struct entities : icliententities
 						f.attr1 = e.attr1;
 						f.mark = false;
 						e.type = NOTUSED;
+						conoutf("WARNING: old base %d and %d replaced with flag %d", i, dest);
 					}
 					else if(e.attr1 > flag)
 						flag = e.attr1;
