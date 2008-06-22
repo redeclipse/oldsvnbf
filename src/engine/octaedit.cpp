@@ -118,7 +118,6 @@ extern void entcancel();
 
 void cancelsel()
 {
-	efocus = enthover = -1;
     cubecancel();
     entcancel();
 }
@@ -130,6 +129,7 @@ void toggleedit()
 	editing = entediting = (editmode ? 1 : 0);
 	cc->edittoggled(editmode);
 	cancelsel();
+	efocus = enthover = -1;
 	//keyrepeat(editmode);
 }
 

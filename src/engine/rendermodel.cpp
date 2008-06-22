@@ -261,7 +261,7 @@ model *loadmodel(const char *name, int i, bool msg)
 			s_sprintfd(filename)("models/%s", name);
 			renderprogress(0, filename);
 		}
-		m = new md2(name);
+		m = new md5(name);
 		loadingmodel = m;
 		if(!m->load())
 		{
@@ -271,7 +271,7 @@ model *loadmodel(const char *name, int i, bool msg)
 			if(!m->load())
 			{
                 delete m;
-                m = new md5(name);
+                m = new md2(name);
                 loadingmodel = m;
                 if(!m->load())
                 {
@@ -910,11 +910,13 @@ void findanims(const char *pattern, vector<int> &anims)
 
 void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&masks) // model skin sharing
 {
-	#define tryload(tex, path) tex = textureload(path, 0, true, false)
-
-    s_sprintfd(mdir)("models/%s", dir);
-    s_sprintfd(maltdir)("models/%s", altdir);
+	string dirs[3];
+    s_sprintf(dirs[0])("models/%s/", dir);
+    s_sprintf(dirs[1])("models/%s/", altdir);
+    s_sprintf(dirs[2])("textures/");
     masks = notexture;
+
+	#define tryload(tex, path) loopi(4) { s_sprintfd(s)("%s%s", i < 3 ? dirs[i] : "", path); if((tex = textureload(s, 0, true, false)) != NULL) break; }
     tryload(skin, "skin");
     tryload(masks, "<ffmask:25>masks");
 }

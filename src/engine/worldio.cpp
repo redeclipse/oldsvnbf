@@ -924,14 +924,17 @@ void load_world(char *mname)		// still supports all map formats that have existe
 			}
 		}
 
+		gzclose(f);
+		conoutf("loaded map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
+
+		if((maptype == MAP_OCTA && hdr.version <= 26) || (maptype == MAP_BFGZ && hdr.version <= 28))
+			mpremip(true); // fix cube size problems
+
 		if((maptype == MAP_OCTA && hdr.version <= 25) || (maptype == MAP_BFGZ && hdr.version <= 26))
 			fixlightmapnormals();
 
 		initlights();
 		allchanged(true);
-
-		gzclose(f);
-		conoutf("loaded map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
 
 		computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
 		renderprogress(0, "starting world...");
