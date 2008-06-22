@@ -1190,7 +1190,8 @@ struct clientcom : iclientcom
 					s_strncpy(b->name, text, MAXNAMELEN);
 					b->team = getint(p);
 
-					conoutf("bot added: %s (%s) [%d]", cl.colorname(b), teamtype[b->team].name, b->ownernum);
+					fpsent *o = b->ownernum==cl.player1->clientnum ? cl.player1 : cl.players[b->ownernum];
+					conoutf("%s was introduced by %s", cl.colorname(b), o ? cl.colorname(o) : "unknown");
 					if(b->ownernum==cl.player1->clientnum) b->bot = new botinfo();
 					break;
 				}

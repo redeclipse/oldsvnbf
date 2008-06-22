@@ -212,7 +212,6 @@ struct entities : icliententities
 				}
 			}
 		}
-		conoutf("unable to find a linking teleport for %d", n);
 	}
 
 	void findplayerspawn(dynent *d, int forceent = -1, int tag = -1)   // place at random spawn. also used by monsters!
@@ -804,11 +803,12 @@ struct entities : icliententities
 					f.type = CHECKPOINT;
 					break;
 				}
-				// 30	FLAG			13	FLAG		-			A2
+				// 30	FLAG			13	FLAG		#			A2
 				case 30:
 				{
 					f.mark = true;
 					f.type = FLAG;
+					f.attr1 = 0;
 					break;
 				}
 
@@ -887,7 +887,7 @@ struct entities : icliententities
 					}
 				}
 
-				if(e.type == FLAG && !e.mark)
+				if(e.type == FLAG && !e.mark) // replace bases close to real flags
 				{
 					int dest = -1;
 
@@ -897,19 +897,19 @@ struct entities : icliententities
 
 						if(f.type == FLAG && f.mark &&
 							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
-								e.o.dist(f.o) <= enttype[FLAG].radius*4.f)
+								e.o.dist(f.o) <= enttype[FLAG].radius)
 									dest = j;
 					}
 					if(ents.inrange(dest))
 					{
 						fpsentity &f = (fpsentity &)*ents[dest];
-						f.attr1 = e.attr1;
+						f.attr1 = e.attr1; // give it the old base idx
 						f.mark = false;
 						e.type = NOTUSED;
 						conoutf("WARNING: old base %d and %d replaced with flag %d", i, dest);
 					}
-					else if(e.attr1 > flag)
-						flag = e.attr1;
+					else if(!e.mark && e.attr1 > flag)
+						flag = e.attr1; // find the highest idx
 				}
 			}
 
@@ -933,7 +933,7 @@ struct entities : icliententities
 					}
 					case FLAG:
 					{
-						if(e.mark) e.attr1 = ++flag;
+						if(e.mark) e.attr1 = ++flag; // assign a sane idx
 						e.mark = false;
 						break;
 					}

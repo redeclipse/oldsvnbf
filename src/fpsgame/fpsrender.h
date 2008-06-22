@@ -70,7 +70,7 @@ struct fpsrender
         renderclient(d, local, teamtype[team].mdl, a[0].name ? a : NULL, animflags, animdelay, lastaction, cl.intermission ? 0 : d->lastpain);
 
 		s_sprintf(d->info)("%s", cl.colorname(d, NULL, "@"));
-		if(!local) part_text(d->abovehead(), d->info, 10, 1, teamtype[team].colour);
+		if(!local) part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
 	}
 
 	void render()

@@ -136,7 +136,8 @@ struct botclient
 					d->stopmoving();
 					if(d->state == CS_DEAD)
 					{
-						if(d->respawned != d->lifesequence && !cl.respawnwait(d)) cl.respawnself(d);
+						if(d->respawned != d->lifesequence && !cl.respawnwait(d))
+							cl.respawnself(d);
 					}
 					else if(d->state == CS_ALIVE) d->bot->setstate(BS_UPDATE);
 					break;
@@ -161,7 +162,7 @@ struct botclient
 				case BS_ATTACK:
 				case BS_INTEREST:
 				case BS_MAX:
-				default: break;
+				default: doreset(d); break;
 			}
 		}
 		d->lastupdate = lastmillis;
