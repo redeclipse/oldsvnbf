@@ -50,7 +50,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="..\enet\include;..\include;..\engine;..\fpsgame;..\shared"
-				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
+				PreprocessorDefinitions="INTERFACE,WIN32,NDEBUG,_CONSOLE"
 				StringPooling="true"
 				MinimalRebuild="false"
 				ExceptionHandling="2"
@@ -79,7 +79,7 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				AdditionalOptions=""
-				PreprocessorDefinitions="NDEBUG"
+				PreprocessorDefinitions="INTERFACE,NDEBUG"
 				Culture="2057"
 			/>
 			<Tool
@@ -161,7 +161,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\enet\include;..\include;..\engine;..\fpsgame;..\shared"
-				PreprocessorDefinitions="WIN32,_DEBUG,_CONSOLE"
+				PreprocessorDefinitions="INTERFACE,WIN32,_DEBUG,_CONSOLE"
 				GeneratePreprocessedFile="0"
 				ExceptionHandling="2"
 				BasicRuntimeChecks="1"
@@ -182,7 +182,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
+				PreprocessorDefinitions="INTERFACE,_DEBUG"
 				Culture="2057"
 			/>
 			<Tool
@@ -262,7 +262,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
 				AdditionalIncludeDirectories="..\enet\include;..\include;..\engine;..\fpsgame;..\shared"
-				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE,USE_ENET"
+				PreprocessorDefinitions="INTERFACE,WIN32,NDEBUG,_CONSOLE,USE_ENET"
 				StringPooling="true"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
@@ -285,7 +285,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
+				PreprocessorDefinitions="INTERFACE,NDEBUG"
 				Culture="2057"
 			/>
 			<Tool
