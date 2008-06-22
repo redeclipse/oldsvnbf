@@ -335,7 +335,7 @@ struct weaponstate
 
 	void reload(fpsent *d)
 	{
-		if(d->reloading || (d == cl.player1 && doautoreload(d)) &&
+		if((d->reloading || (d == cl.player1 && doautoreload(d))) &&
 			d->canreload(d->gunselect, lastmillis))
 		{
 			d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
