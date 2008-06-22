@@ -47,9 +47,9 @@ struct GAMECLIENT : igameclient
 	IVARP(cardtime, 0, 2000, 10000);
 	IVARP(cardfade, 0, 3000, 10000);
 
-	IVARP(cameradist, -100, 6, 100);
-	IVARP(camerashift, -100, 6, 100);
-	IVARP(cameraheight, 0, 35, 360);
+	IVARP(cameradist, -100, 1, 100);
+	IVARP(camerashift, -100, 4, 100);
+	IVARP(cameraheight, 0, 40, 360);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(mousetype, 0, 0, 4);
@@ -717,7 +717,7 @@ struct GAMECLIENT : igameclient
 
 		int ty = by + bs;
 		ty = draw_textx("%s", int(ox*amt)-FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, ox-FONTH, sv->gamename(gamemode, mutators));
-		ty = draw_textx("%s", ox+int(ox*(1.f-amt))-FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, ox-FONTH, title);
+		ty = draw_textx("%s", int(ox*(1.f-amt))+FONTH/4, ty, 255, 255, 255, int(255.f*fade), false, AL_LEFT, -1, ox-FONTH, title);
 
 		return hoff;
 	}

@@ -276,6 +276,7 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
 #define MAXCARRY		2
 #define MAXTEAMS		(TEAM_MAX-TEAM_ALPHA) // don't count neutral
 #define numteams(a,b)	(m_multi(a, b) ? MAXTEAMS : MAXTEAMS/2)
+#define isteam(a,b)		(a >= b && a <= TEAM_MAX-1)
 
 #define REGENWAIT		3000
 #define REGENTIME		1000
@@ -455,7 +456,7 @@ struct fpsstate
 					if (gunselect != attr1 && guntype[gunselect].rdelay > 0)
 					{
 						ammo[gunselect] = -1;
-						gunselect = attr1;
+						gunswitch(attr1, millis);
 					}
 					else loopi(NUMGUNS) if (ammo[i] >= 0 && i != attr1 && guntype[i].rdelay > 0)
 					{
@@ -463,6 +464,7 @@ struct fpsstate
 						break;
 					}
 				}
+				else if(gunselect != attr1) gunswitch(attr1, millis);
 
 				guntypes &g = guntype[attr1];
 				ammo[attr1] = min(ammo[attr1] + (attr2 > 0 ? attr2 : g.add), g.max);

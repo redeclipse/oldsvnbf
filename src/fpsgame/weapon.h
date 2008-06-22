@@ -313,15 +313,15 @@ struct weaponstate
 
 	void checkweapons(fpsent *d)
 	{
-		if(d->gunstate[d->gunselect] != GUNSTATE_NONE)
+		loopi(NUMGUNS) if(d->gunstate[i] != GUNSTATE_NONE)
 		{
-			if(lastmillis-d->gunlast[d->gunselect] >= d->gunwait[d->gunselect] || d->state != CS_ALIVE)
+			if(lastmillis-d->gunlast[i] >= d->gunwait[i] || d->state != CS_ALIVE)
 			{
-				if(d->gunstate[d->gunselect] != GUNSTATE_POWER || d->state != CS_ALIVE)
+				if(d->gunstate[i] != GUNSTATE_POWER || d->state != CS_ALIVE)
 				{
-					d->gunstate[d->gunselect] = GUNSTATE_NONE;
-					d->gunlast[d->gunselect] = lastmillis;
-					d->gunwait[d->gunselect] = 0;
+					d->gunstate[i] = GUNSTATE_NONE;
+					d->gunlast[i] = lastmillis;
+					d->gunwait[i] = 0;
 				}
 			}
 		}

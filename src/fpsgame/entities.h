@@ -721,6 +721,8 @@ struct entities : icliententities
 	{
 		fpsentity &f = (fpsentity &)e;
 
+		f.mark = false;
+
 		if(mtype == MAP_OCTA)
 		{
 			// sauerbraten version increments
@@ -790,11 +792,12 @@ struct entities : icliententities
 					f.type = PUSHER;
 					break;
 				}
-				// 24	BASE			13	FLAG		A1			0
+				// 24	BASE			13	FLAG		1:idx		TEAM_NEUTRAL
 				case 24:
 				{
 					f.type = FLAG;
-					f.attr2 = 0;
+					if(f.attr1 < 0) f.attr1 = 0;
+					f.attr2 = TEAM_NEUTRAL; // spawn as neutrals
 					break;
 				}
 				// 25	RESPAWNPOINT	14	CHECKPOINT
@@ -803,12 +806,12 @@ struct entities : icliententities
 					f.type = CHECKPOINT;
 					break;
 				}
-				// 30	FLAG			13	FLAG		#			A2
+				// 30	FLAG			13	FLAG		#			2:team
 				case 30:
 				{
-					f.mark = true;
 					f.type = FLAG;
 					f.attr1 = 0;
+					if(f.attr2 <= 0) f.attr2 = -1; // needs a team
 					break;
 				}
 
@@ -839,7 +842,7 @@ struct entities : icliententities
 	{
 		if(gver <= 49 || mtype == MAP_OCTA)
 		{
-			int flag = 0;
+			int flag = 0, teams[TEAM_MAX-TEAM_ALPHA] = { 0, 0, 0, 0 };
 			vector<short> teleyaw;
 			loopv(ents) teleyaw.add(0);
 
@@ -887,29 +890,32 @@ struct entities : icliententities
 					}
 				}
 
-				if(e.type == FLAG && !e.mark) // replace bases close to real flags
+				if(e.type == FLAG) // replace bases/neutral flags near team flags
 				{
-					int dest = -1;
-
-					loopvj(ents)
+					if(isteam(e.attr2, TEAM_ALPHA)) teams[e.attr2-TEAM_ALPHA]++;
+					else if(e.attr2 == TEAM_NEUTRAL)
 					{
-						fpsentity &f = (fpsentity &)*ents[j];
+						int dest = -1;
 
-						if(f.type == FLAG && f.mark &&
-							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
-								e.o.dist(f.o) <= enttype[FLAG].radius)
-									dest = j;
+						loopvj(ents)
+						{
+							fpsentity &f = (fpsentity &)*ents[j];
+
+							if(f.type == FLAG && f.attr2 != TEAM_NEUTRAL &&
+								(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
+									e.o.dist(f.o) <= enttype[FLAG].radius*4.f)
+										dest = j;
+						}
+
+						if(ents.inrange(dest))
+						{
+							fpsentity &f = (fpsentity &)*ents[dest];
+							conoutf("WARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attr1, e.attr2, dest, f.attr1, f.attr2);
+							if(!f.attr1) f.attr1 = e.attr1; // give it the old base idx
+							e.type = NOTUSED;
+						}
+						else if(e.attr1 > flag) flag = e.attr1; // find the highest idx
 					}
-					if(ents.inrange(dest))
-					{
-						fpsentity &f = (fpsentity &)*ents[dest];
-						f.attr1 = e.attr1; // give it the old base idx
-						f.mark = false;
-						e.type = NOTUSED;
-						conoutf("WARNING: old base %d and %d replaced with flag %d", i, dest);
-					}
-					else if(!e.mark && e.attr1 > flag)
-						flag = e.attr1; // find the highest idx
 				}
 			}
 
@@ -933,8 +939,16 @@ struct entities : icliententities
 					}
 					case FLAG:
 					{
-						if(e.mark) e.attr1 = ++flag; // assign a sane idx
-						e.mark = false;
+						if(!e.attr1) e.attr1 = ++flag; // assign a sane idx
+						if(!isteam(e.attr2, TEAM_NEUTRAL)) // assign a team
+						{
+							int lowest = -1;
+							loopk(TEAM_MAX-TEAM_ALPHA)
+								if(lowest<0 || teams[k] < teams[lowest])
+									lowest = i;
+							e.attr2 = lowest+TEAM_ALPHA;
+							teams[lowest]++;
+						}
 						break;
 					}
 				}
