@@ -47,7 +47,7 @@ struct GAMECLIENT : igameclient
 	IVARP(cardtime, 0, 2000, 10000);
 	IVARP(cardfade, 0, 3000, 10000);
 
-	IVARP(cameradist, -100, 10, 100);
+	IVARP(cameradist, -100, 6, 100);
 	IVARP(camerashift, -100, 6, 100);
 	IVARP(cameraheight, 0, 35, 360);
 
@@ -79,6 +79,7 @@ struct GAMECLIENT : igameclient
 
 	IVARP(radardist, 0, 256, 256);
 	IVARP(editradardist, 0, 64, 1024);
+	IVARP(radarnames, 0, 1, 1);
 
 	ITVAR(bliptex, "textures/blip");
 	ITVAR(radartex, "textures/radar");
@@ -626,7 +627,8 @@ struct GAMECLIENT : igameclient
 			glBegin(GL_QUADS);
 			drawsized(cx, cy, cs);
 			glEnd();
-			draw_textx("%s", int(cx), int(cy+cs), 255, 255, 255, hudblend*255/100, false, AL_CENTER, -1, -1, colorname(d));
+			if(radarnames())
+				draw_textx("%s", int(cx), int(cy+cs), 255, 255, 255, hudblend*255/100, false, AL_CENTER, -1, -1, colorname(d));
 		}
 	}
 
@@ -665,7 +667,7 @@ struct GAMECLIENT : igameclient
 			extentity &e = *et.ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
 			enttypes &t = enttype[e.type];
-			if((t.usetype == ETU_ITEM && e.spawned) || m_edit(gamemode))
+			if((t.usetype == ETU_ITEM && e.spawned) || editmode)
 			{
 				bool insel = (editmode && (enthover == i || entgroup.find(i) >= 0));
 				vec dir(e.o);
