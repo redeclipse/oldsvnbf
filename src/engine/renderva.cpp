@@ -318,7 +318,7 @@ void drawbb(const ivec &bo, const ivec &br, const vec &camera, int scale, const 
         loopj(4)
         {
             const ivec &cc = cubecoords[fv[i][j]];
-            glVertex3i(((cc.x ? bo.x+br.x : bo.x) - origin.x) << scale,
+            glVertex3f(((cc.x ? bo.x+br.x : bo.x) - origin.x) << scale,
                        ((cc.y ? bo.y+br.y : bo.y) - origin.y) << scale,
                        ((cc.z ? bo.z+br.z : bo.z) - origin.z) << scale);
         }
@@ -1582,6 +1582,18 @@ void createfogtex()
     glGenTextures(1, &fogtex);
     createtexture(fogtex, bilinear ? 2 : 256, 1, buf, 3, false, GL_LUMINANCE_ALPHA, GL_TEXTURE_1D);
 }
+
+#if 0
+Texture *caustic = notexture;
+SVARFW(caustictex, "<anim:75>textures/caustics", {
+	if(*caustictex)
+	{
+		s_sprintfd(s)("%s%s", renderpath==R_FIXEDFUNCTION ? "<mad:0.6,0.4>" : "<mad:-0.6,0.6>", caustictex);
+		caustic = textureload(s);
+	}
+	else caustic = notexture;
+);
+#endif
 
 #define NUMCAUSTICS 32
 

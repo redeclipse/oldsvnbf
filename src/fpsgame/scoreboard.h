@@ -71,15 +71,8 @@ struct scoreboard : g3d_callback
 		}
         else if(m_ctf(cl.gamemode))
         {
-        	loopk(numteams(cl.gamemode, cl.mutators))
-        	{
-        		int s = 0;
-        		loopv(cl.ctf.flags)
-				{
-					if(cl.ctf.flags[i].team == k+TEAM_ALPHA) s += cl.ctf.flags[i].score;
-				}
-				teamscores.add(teamscore(k+TEAM_ALPHA, s));
-        	}
+        	loopi(numteams(cl.gamemode, cl.mutators))
+				teamscores.add(teamscore(i+TEAM_ALPHA, cl.ctf.findscore(i+TEAM_ALPHA)));
         }
 		loopi(cl.numdynents())
 		{
@@ -237,7 +230,6 @@ struct scoreboard : g3d_callback
                 }
 
             g.pushlist();
-
 			if(sg.team && m_team(cl.gamemode, cl.mutators))
             {
                 g.pushlist();

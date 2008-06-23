@@ -110,7 +110,7 @@ struct rendertarget
             }
             while(!depthfmt && depthfmts[++find]);
             if(!depthfmt) depthfmt = depthfmts[find];
-        
+
             glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
         }
         texw = w;
@@ -140,8 +140,8 @@ struct rendertarget
     bool checkblurtiles(float x1, float y1, float x2, float y2, float blurmargin = 0)
     {
         float blurerror = 2.0f*float(2*blursize + blurmargin);
-        if(x2+blurerror/vieww < scissorx1 || y2+blurerror/viewh < scissory1 || 
-           x1-blurerror/vieww > scissorx2 || y1-blurerror/viewh > scissory2) 
+        if(x2+blurerror/vieww < scissorx1 || y2+blurerror/viewh < scissory1 ||
+           x1-blurerror/vieww > scissorx2 || y1-blurerror/viewh > scissory2)
             return false;
 
         if(!blurtile) return true;
@@ -252,7 +252,7 @@ struct rendertarget
         }
 
         if(scissor) glDisable(GL_SCISSOR_TEST);
-            
+
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
     }
@@ -263,8 +263,8 @@ struct rendertarget
 
     virtual bool shouldrender() { return true; }
 
-    virtual void doblur(int blursize, float blursigma) 
-    { 
+    virtual void doblur(int blursize, float blursigma)
+    {
         int sx, sy, sw, sh;
         bool scissoring = rtscissor && scissorblur(sx, sy, sw, sh) && sw > 0 && sh > 0;
         if(!scissoring) { sx = sy = 0; sw = vieww; sh = viewh; }
@@ -273,7 +273,7 @@ struct rendertarget
 
     virtual bool scissorrender(int &x, int &y, int &w, int &h)
     {
-        if(scissorx1 >= scissorx2 || scissory1 >= scissory2) 
+        if(scissorx1 >= scissorx2 || scissory1 >= scissory2)
         {
             if(vieww < texw || viewh < texh)
             {
@@ -335,7 +335,7 @@ struct rendertarget
             vieww = min(w, screen->w);
             viewh = min(h, screen->h);
         }
-        else 
+        else
         {
             if(!hasFBO)
             {
@@ -346,19 +346,19 @@ struct rendertarget
             viewh = h;
         }
         if(w!=texw || h!=texh || (texrect() ? target!=GL_TEXTURE_RECTANGLE_ARB : target!=GL_TEXTURE_2D) || (hasFBO && (swaptexs() && !rtsharefb ? !blurfb : blurfb))) cleanup();
-        
+
         if(!filter())
 		{
             if(blurtex) cleanupblur();
             blursize = 0;
         }
-            
+
         if(!rendertex) setup(w, h);
-    
+
         scissorx2 = scissory2 = -1;
         scissorx1 = scissory1 = 1;
         memset(blurtiles, 0, sizeof(blurtiles));
- 
+
         if(!shouldrender()) return;
 
         if(hasFBO)
@@ -433,10 +433,10 @@ struct rendertarget
             sh = int(0.5f*(scissory2 - scissory1)*h);
         if(flipdebug()) { sy = h - sy; sh = -sh; }
         glBegin(lines ? GL_LINE_LOOP : GL_QUADS);
-        glVertex2i(sx,      sy);
-        glVertex2i(sx + sw, sy);
-        glVertex2i(sx + sw, sy + sh);
-        glVertex2i(sx,      sy + sh);
+        glVertex2f(sx,      sy);
+        glVertex2f(sx + sw, sy);
+        glVertex2f(sx + sw, sy + sh);
+        glVertex2f(sx,      sy + sh);
         glEnd();
     }
 
@@ -492,10 +492,10 @@ struct rendertarget
         }
         if(flipdebug()) swap(ty1, ty2);
         glBegin(GL_QUADS);
-        glTexCoord2f(tx1, ty1); glVertex2i(0, 0);
-        glTexCoord2f(tx2, ty1); glVertex2i(w, 0);
-        glTexCoord2f(tx2, ty2); glVertex2i(w, h);
-        glTexCoord2f(tx1, ty2); glVertex2i(0, h);
+        glTexCoord2f(tx1, ty1); glVertex2f(0, 0);
+        glTexCoord2f(tx2, ty1); glVertex2f(w, 0);
+        glTexCoord2f(tx2, ty2); glVertex2f(w, h);
+        glTexCoord2f(tx1, ty2); glVertex2f(0, h);
         glEnd();
         notextureshader->set();
         glDisable(target);

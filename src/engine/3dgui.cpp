@@ -373,14 +373,14 @@ struct gui : g3d_gui
 
 	void rect_(float x, float y, float w, float h, int usetc = -1)
 	{
-        static const GLint tc[4][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
-		if(usetc>=0) glTexCoord2iv(tc[usetc]);
+        static const GLfloat tc[4][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
+        if(usetc>=0) glTexCoord2fv(tc[usetc]);
 		glVertex2f(x, y);
-		if(usetc>=0) glTexCoord2iv(tc[(usetc+1)%4]);
+        if(usetc>=0) glTexCoord2fv(tc[(usetc+1)%4]);
 		glVertex2f(x + w, y);
-		if(usetc>=0) glTexCoord2iv(tc[(usetc+2)%4]);
+        if(usetc>=0) glTexCoord2fv(tc[(usetc+2)%4]);
 		glVertex2f(x + w, y + h);
-		if(usetc>=0) glTexCoord2iv(tc[(usetc+3)%4]);
+        if(usetc>=0) glTexCoord2fv(tc[(usetc+3)%4]);
 		glVertex2f(x, y + h);
 		xtraverts += 4;
 	}
@@ -620,10 +620,10 @@ struct gui : g3d_gui
 						tright = tleft+xstep*wscale;
 					}
 					if(!quads) { quads = true; glBegin(GL_QUADS); }
-					glTexCoord2f(tleft,  ttop);	glVertex2i(xo,		yo);
-					glTexCoord2f(tright, ttop);	glVertex2i(xo+xstep, yo);
-					glTexCoord2f(tright, tbottom); glVertex2i(xo+xstep, yo+ystep);
-					glTexCoord2f(tleft,  tbottom); glVertex2i(xo,		yo+ystep);
+                    glTexCoord2f(tleft,  ttop);    glVertex2f(xo,       yo);
+                    glTexCoord2f(tright, ttop);    glVertex2f(xo+xstep, yo);
+                    glTexCoord2f(tright, tbottom); glVertex2f(xo+xstep, yo+ystep);
+                    glTexCoord2f(tleft,  tbottom); glVertex2f(xo,       yo+ystep);
 					xtraverts += 4;
 					if(!(p.flags&0x01)) break;
 					xo += xstep;

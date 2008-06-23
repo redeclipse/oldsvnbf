@@ -1,6 +1,7 @@
 struct ctfstate
 {
     static const int FLAGRADIUS = 16;
+    static const int FLAGLIMIT = 10;
 
     struct flag
     {
@@ -39,13 +40,15 @@ struct ctfstate
         flags.setsize(0);
     }
 
-    void addflag(int i, const vec &o, int team)
+    int addflag(const vec &o, int team, int i = -1)
     {
-    	while(!flags.inrange(i)) flags.add();
-		flag &f = flags[i];
+    	int x = i < 0 ? flags.length() : i;
+    	while(!flags.inrange(x)) flags.add();
+		flag &f = flags[x];
 		f.reset();
 		f.team = team;
 		f.spawnloc = o;
+		return x;
     }
 
 #ifdef CTFSERV
@@ -86,6 +89,13 @@ struct ctfstate
 		f.owner = NULL;
 #endif
     }
+
+    int findscore(int team)
+    {
+        int score = 0;
+        loopv(flags) if(flags[i].team==team) score += flags[i].score;
+        return score;
+    }
 };
 
 #ifdef CTFSERV
@@ -110,7 +120,7 @@ struct ctfservmode : ctfstate, servmode
         {
             ivec o(vec(ci->state.o).mul(DMF));
             sendf(-1, 1, "ri6", SV_DROPFLAG, ci->clientnum, i, o.x, o.y, o.z);
-            ctfstate::dropflag(i, o.tovec().div(DMF), sv.gamemillis);
+            ctfstate::dropflag(i, o.tovec().div(DMF), lastmillis);
         }
     }
 
@@ -144,18 +154,20 @@ struct ctfservmode : ctfstate, servmode
         static const dynent dummy;
         vec o(newpos);
         o.z -= dummy.height;
-        loopv(flags)
+        loopv(flags) if(flags[i].owner==ci->clientnum)
         {
-            flag &relay = flags[i];
-            loopvk(flags)
+            loopvk(flags) if(flags[i].team==ci->team)
             {
 				flag &goal = flags[k];
 
-				if(relay.owner==ci->clientnum && goal.team==ci->team && goal.owner<0 && !goal.droptime && o.dist(goal.spawnloc) < FLAGRADIUS)
+				if(goal.owner<0 && !goal.droptime && o.dist(goal.spawnloc) < FLAGRADIUS)
 				{
 					returnflag(i);
 					goal.score++;
 					sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, k, goal.score);
+
+	                if(findscore(goal.team) >= FLAGLIMIT)
+	                	sv.startintermission();
 				}
             }
         }
@@ -174,6 +186,7 @@ struct ctfservmode : ctfstate, servmode
 		else
 		{
 			if(f.owner>=0) return;
+            loopv(flags) if(flags[i].owner==ci->clientnum) return;
 			ctfstate::takeflag(i, ci->clientnum);
 			sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
 		}
@@ -185,7 +198,7 @@ struct ctfservmode : ctfstate, servmode
         loopv(flags)
         {
             flag &f = flags[i];
-            if(f.owner<0 && f.droptime && sv.gamemillis - f.droptime >= RESETFLAGTIME)
+            if(f.owner<0 && f.droptime && lastmillis - f.droptime >= RESETFLAGTIME)
             {
                 returnflag(i);
                 sendf(-1, 1, "ri2", SV_RESETFLAG, i);
@@ -224,7 +237,7 @@ struct ctfservmode : ctfstate, servmode
             int team = getint(p);
             vec o;
             loopk(3) o[k] = getint(p)/DMF;
-            if(notgotflags) addflag(i, o, team);
+            if(notgotflags) addflag(o, team, i);
         }
         notgotflags = false;
     }
@@ -317,14 +330,13 @@ struct ctfclient : ctfstate
     void setupflags()
     {
         reset();
-        int x = 0;
         loopv(cl.et.ents)
         {
             extentity *e = cl.et.ents[i];
             if(e->type!=FLAG || e->attr2<TEAM_ALPHA || e->attr2>numteams(cl.gamemode, cl.mutators)) continue;
-            addflag(x, e->o, e->attr2);
-            flags[e->attr2].ent = e;
-            x++;
+            int index = addflag(e->o, e->attr2);
+			if(flags.inrange(index))
+            	flags[index].ent = e;
         }
         vec center(0, 0, 0);
         loopv(flags) center.add(flags[i].spawnloc);
@@ -348,8 +360,6 @@ struct ctfclient : ctfstate
     	int numflags = getint(p);
         loopi(numflags)
         {
-        	while (!flags.inrange(i)) flags.add();
-            flag &f = flags[i];
             int team = getint(p), score = getint(p), owner = getint(p), dropped = 0;
             vec droploc(0, 0, 0);
             if(owner<0)
@@ -357,8 +367,9 @@ struct ctfclient : ctfstate
                 dropped = getint(p);
                 if(dropped) loopk(3) droploc[k] = getint(p)/DMF;
             }
-            if(commit)
+            if(commit && flags.inrange(i))
             {
+				flag &f = flags[i];
 				f.team = team;
                 f.score = score;
                 f.owner = owner>=0 ? (owner==cl.player1->clientnum ? cl.player1 : cl.newclient(owner)) : NULL;
@@ -376,6 +387,7 @@ struct ctfclient : ctfstate
 
     void dropflag(fpsent *d, int i, const vec &droploc)
     {
+        if(!flags.inrange(i)) return;
 		flag &f = flags[i];
 		f.interptime = lastmillis;
 		ctfstate::dropflag(i, droploc, 1);
@@ -415,6 +427,7 @@ struct ctfclient : ctfstate
 
     void returnflag(fpsent *d, int i)
     {
+        if(!flags.inrange(i)) return;
 		flag &f = flags[i];
 		flageffect(i, f.droploc, f.spawnloc);
 		f.interptime = 0;
@@ -425,6 +438,7 @@ struct ctfclient : ctfstate
 
     void resetflag(int i)
     {
+        if(!flags.inrange(i)) return;
 		flag &f = flags[i];
 		flageffect(i, f.droploc, f.spawnloc);
 		f.interptime = 0;
@@ -433,19 +447,9 @@ struct ctfclient : ctfstate
 		cl.et.announce(S_V_FLAGRESET);
     }
 
-	int findscore(int team)
-	{
-		int s = 0;
-		loopv(flags)
-		{
-			flag &f = flags[i];
-			if (f.team == team) s += f.score;
-		}
-		return s;
-	}
-
     void scoreflag(fpsent *d, int relay, int goal, int score)
     {
+        if(!flags.inrange(goal) || !flags.inrange(relay)) return;
 		flag &f = flags[goal];
 		flageffect(goal, flags[goal].spawnloc, flags[relay].spawnloc);
 		f.score = score;
@@ -458,10 +462,15 @@ struct ctfclient : ctfstate
 		}
 		conoutf("%s scored for \fs%s%s\fS team", d==cl.player1 ? "you" : cl.colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
 		cl.et.announce(S_V_FLAGSCORE);
+
+        int total = findscore(f.team);
+        if(total >= FLAGLIMIT)
+        	conoutf("team \fs%s%s\fS captured %d flags", teamtype[f.team].chat, teamtype[f.team].name, total);
     }
 
     void takeflag(fpsent *d, int i)
     {
+        if(!flags.inrange(i)) return;
 		flag &f = flags[i];
 		int colour = teamtype[d->team].colour;
 		regularshape(4, enttype[FLAG].radius, colour, 6, 50, 250, vec(f.spawnloc).sub(vec(0, 0, 4.f)), 4.8f);

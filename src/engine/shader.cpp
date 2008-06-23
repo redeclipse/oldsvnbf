@@ -1343,10 +1343,10 @@ void renderfsquad(int w, int h, Shader *s)
 		h <<= fsskip;
 	}
 	glBegin(GL_QUADS);
-	glTexCoord2i(0, 0); glVertex3f(-1, -1, 0);
-	glTexCoord2i(w, 0); glVertex3f( 1, -1, 0);
-	glTexCoord2i(w, h); glVertex3f( 1,  1, 0);
-	glTexCoord2i(0, h); glVertex3f(-1,  1, 0);
+    glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);
+    glTexCoord2f(w, 0); glVertex3f( 1, -1, 0);
+    glTexCoord2f(w, h); glVertex3f( 1,  1, 0);
+    glTexCoord2f(0, h); glVertex3f(-1,  1, 0);
 	glEnd();
 }
 

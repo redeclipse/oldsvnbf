@@ -88,27 +88,16 @@ void addframe(const char *name)
 	}
 }
 
-void blitimg(SDL_Surface *dst, SDL_Surface *src, int x, int y)
+void blitimg(SDL_Surface *d, SDL_Surface *s, int x, int y)
 {
-    uchar *dstp = (uchar *)dst->pixels + y*dst->pitch + x*4,
-          *srcp = (uchar *)src->pixels;
-    int dstpitch = dst->pitch - 4*src->w,
-        srcpitch = src->pitch - 4*src->w;
-    loop(dy, src->h)
-    {
-        loop(dx, src->w)
-        {
-            uint k1 = (255U - srcp[3]) * dstp[3], k2 = srcp[3] * 255U, kmax = max(dstp[3], srcp[3]), kscale = max(kmax * 255U, 1U);
-            dstp[0] = (dstp[0]*k1 + srcp[0]*k2) / kscale;
-            dstp[1] = (dstp[1]*k1 + srcp[1]*k2) / kscale;
-            dstp[2] = (dstp[2]*k1 + srcp[2]*k2) / kscale;
-            dstp[3] = kmax;
-            dstp += 4;
-            srcp += 4;
-        }
-        dstp += dstpitch;
-        srcp += srcpitch;
-    }
+	loopi(s->h)
+	{
+		uchar *dst = (uchar *)d->pixels+(i*d->pitch),
+			*src = (uchar *)s->pixels+(i*s->pitch);
+
+		memset(dst, 0, s->w*d->format->BytesPerPixel);
+		memcpy(dst, src, s->w*s->format->BytesPerPixel);
+	}
 }
 
 void makeimage()

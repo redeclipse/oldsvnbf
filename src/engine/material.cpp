@@ -149,8 +149,9 @@ const char *findmaterialname(int type)
 
 int visiblematerial(cube &c, int orient, int x, int y, int z, int size, uchar matmask)
 {
+    if(!c.ext) return MATSURF_NOT_VISIBLE;
     uchar mat = c.ext->material&matmask;
-    if(c.ext) switch(mat)
+    switch(mat)
 	{
 	case MAT_AIR:
 		 break;
@@ -677,8 +678,10 @@ void rendermaterials()
 						glEnable(GL_TEXTURE_2D);
 						textured = GL_TEXTURE_2D;
 					}
-					int tex = m.orient == O_TOP ? 0 : 1;
-					glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(tex) ? wslot.sts[tex].t->id : notexture->id);
+                    {
+                        int subslot = m.orient==O_TOP ? 0 : 1;
+                        glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(subslot) ? wslot.sts[subslot].t->id : notexture->id);
+                    }
 					break;
 				}
 				case MAT_LAVA:
@@ -709,8 +712,10 @@ void rendermaterials()
 						glEnable(GL_TEXTURE_2D);
 						textured = GL_TEXTURE_2D;
 					}
-					int tex = m.orient == O_TOP ? 0 : 1;
-					glBindTexture(GL_TEXTURE_2D, lslot.sts.inrange(tex) ? lslot.sts[tex].t->id : notexture->id);
+                    {
+                        int subslot = m.orient==O_TOP ? 0 : 1;
+                        glBindTexture(GL_TEXTURE_2D, lslot.sts.inrange(subslot) ? lslot.sts[subslot].t->id : notexture->id);
+                    }
 					break;
 				}
 				case MAT_GLASS:

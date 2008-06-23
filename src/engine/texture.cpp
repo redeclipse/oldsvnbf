@@ -1233,7 +1233,7 @@ GLuint genenvmap(const vec &o, int envmapsize)
                 yaw = 90; pitch = 90; break;
         }
         glFrontFace((side.flipx==side.flipy)!=side.swapxy ? GL_CCW : GL_CW);
-        drawcubemap(rendersize, o, yaw, pitch, side);
+        drawcubemap(rendersize, o, yaw, pitch, false, !side.flipx, !side.flipy, side.swapxy);
 		glReadPixels(0, 0, rendersize, rendersize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 		if(texsize<rendersize) gluScaleImage(GL_RGB, rendersize, rendersize, GL_UNSIGNED_BYTE, pixels, texsize, texsize, GL_UNSIGNED_BYTE, pixels);
 		createtexture(tex, texsize, texsize, pixels, 3, true, GL_RGB5, side.target);
