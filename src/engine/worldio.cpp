@@ -339,45 +339,41 @@ void save_config(char *mname)
 }
 ICOMMAND(savemapconfig, "s", (char *mname), save_config(*mname ? mname : mapname));
 
-VARP(mapshotsize, 0, 256, 1024);
-VARP(mapshotcrop, 0, 10, 99);
+VARFP(mapshotsize, 0, 256, 1024, mapshotsize -= mapshotsize%2);
 
 void save_mapshot(char *mname)
 {
 	backup(mname, ifmtexts[imageformat], hdr.revision);
 
-	SDL_Surface *image = SDL_CreateRGBSurface(SDL_SWSURFACE, screen->w, screen->h, 24, 0x0000FF, 0x00FF00, 0xFF0000, 0);
+    GLuint tex;
+	glGenTextures(1, &tex);
+	glViewport(0, 0, mapshotsize, mapshotsize);
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    uchar *pixels = new uchar[3*mapshotsize*mapshotsize];
+	memset(pixels, 0, 3*mapshotsize*mapshotsize);
+	glFrontFace(GL_CCW);
+	drawcubemap(mapshotsize, camera1->o, camera1->yaw, camera1->pitch, true, false, false, false);
+	glReadPixels(0, 0, mapshotsize, mapshotsize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+	SDL_Surface *image = SDL_CreateRGBSurface(SDL_SWSURFACE, mapshotsize, mapshotsize, 24, 0x0000FF, 0x00FF00, 0xFF0000, 0);
 	if(image)
 	{
-		uchar *tmp = new uchar[screen->w*screen->h*3];
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, tmp);
 		uchar *dst = (uchar *)image->pixels;
-		loopi(screen->h)
+		loopi(mapshotsize)
 		{
-			memcpy(dst, &tmp[3*screen->w*(screen->h-i-1)], 3*screen->w);
-			endianswap(dst, 3, screen->w);
+			memcpy(dst, &pixels[3*mapshotsize*(mapshotsize-i-1)], 3*mapshotsize);
+			endianswap(dst, 3, mapshotsize);
 			dst += image->pitch;
 		}
-		delete[] tmp;
-
-		int x = screen->w > screen->h ? (screen->w-screen->h)/2 : 0,
-			y = screen->h > screen->w ? (screen->h-screen->w)/2 : 0,
-			w = screen->w-(x*2), h = screen->h-(y*2);
-
-		if(mapshotcrop)
-		{
-			x = x+(w/mapshotcrop); w = screen->w-(x*2);
-			y = y+(h/mapshotcrop); h = screen->h-(y*2);
-		}
-
-		if(x || y || image->w != w || image->h != h) image = texcrop(image, x, y, w, h);
-		if(mapshotsize) image = scalesurface(image, mapshotsize, mapshotsize);
-		else if(image->w != image->h) image = scalesurface(image, image->w, image->w);
 
 		savesurface(image, mname, imageformat, compresslevel);
 		SDL_FreeSurface(image);
 	}
+
+	glDeleteTextures(1, &tex);
+    glFrontFace(GL_CCW);
+    delete[] pixels;
+	glViewport(0, 0, screen->w, screen->h);
 }
 ICOMMAND(savemapshot, "s", (char *mname), save_mapshot(*mname ? mname : mapname));
 
