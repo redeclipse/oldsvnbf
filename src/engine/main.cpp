@@ -559,14 +559,15 @@ void getfps(int &fps, int &bestdiff, int &worstdiff)
 	worstdiff = fps-1000/worst;
 }
 
-void getfps_()
+void getfps_(int *raw)
 {
     int fps, bestdiff, worstdiff;
-    getfps(fps, bestdiff, worstdiff);
+    if(*raw) fps = 1000/fpshistory[(fpspos+MAXFPSHISTORY-1)%MAXFPSHISTORY];
+    else getfps(fps, bestdiff, worstdiff);
     intret(fps);
 }
 
-COMMANDN(getfps, getfps_, "");
+COMMANDN(getfps, getfps_, "i");
 
 bool inbetweenframes = false;
 

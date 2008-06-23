@@ -94,10 +94,10 @@ static int draw_char(int c, int x, int y)
     float tc_right   = (info.x + info.w + curfont->offsetw) / float(curfont->tex->xs);
     float tc_bottom  = (info.y + info.h + curfont->offseth) / float(curfont->tex->ys);
 
-    glTexCoord2f(tc_left,  tc_top   ); glVertex2i(x,          y);
-    glTexCoord2f(tc_right, tc_top   ); glVertex2i(x + info.w, y);
-    glTexCoord2f(tc_right, tc_bottom); glVertex2i(x + info.w, y + info.h);
-    glTexCoord2f(tc_left,  tc_bottom); glVertex2i(x,          y + info.h);
+    glTexCoord2f(tc_left,  tc_top   ); glVertex2f(x,          y);
+    glTexCoord2f(tc_right, tc_top   ); glVertex2f(x + info.w, y);
+    glTexCoord2f(tc_right, tc_bottom); glVertex2f(x + info.w, y + info.h);
+    glTexCoord2f(tc_left,  tc_bottom); glVertex2f(x,          y + info.h);
 
     xtraverts += 4;
     return info.w;

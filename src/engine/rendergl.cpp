@@ -938,7 +938,7 @@ void drawreflection(float z, bool refract, bool clear)
 
 bool envmapping = false;
 
-void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapside &side)
+void drawcubemap(int size, const vec &o, float yaw, float pitch, bool full, bool flipx, bool flipy, bool swapxy)
 {
     envmapping = true;
 
@@ -964,7 +964,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
 	int farplane = hdr.worldsize*2;
 
-    project(90.0f, 1.0f, farplane, !side.flipx, !side.flipy, side.swapxy);
+    project(90.0f, 1.0f, farplane, flipx, flipy, swapxy);
 
 	transplayer();
 
@@ -982,14 +982,17 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
     if(!limitsky()) drawskybox(farplane, false);
 
-//	queryreflections();
+	if(full) queryreflections();
 
 	rendermapmodels();
 
-//	drawreflections();
+	if(full)
+	{
+		drawreflections();
 
-//	renderwater();
-//	rendermaterials();
+		renderwater();
+		rendermaterials();
+	}
 
 	glDisable(GL_TEXTURE_2D);
 
@@ -1009,10 +1012,10 @@ void loadbackground(int w, int h)
 
 	glBegin(GL_QUADS);
 
-	glTexCoord2f(0, 0); glVertex2i(0, 0);
-	glTexCoord2f(1, 0); glVertex2i(w, 0);
-	glTexCoord2f(1, 1); glVertex2i(w, h);
-	glTexCoord2f(0, 1); glVertex2i(0, h);
+	glTexCoord2f(0, 0); glVertex2f(0, 0);
+	glTexCoord2f(1, 0); glVertex2f(w, 0);
+	glTexCoord2f(1, 1); glVertex2f(w, h);
+	glTexCoord2f(0, 1); glVertex2f(0, h);
 
 	glEnd();
 }
@@ -1069,10 +1072,10 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 			glBindTexture(GL_TEXTURE_2D, t->id);
 			int sz = 256, x = (w-sz)/2, y = min(384, h-256);
 			glBegin(GL_QUADS);
-			glTexCoord2f(0, 0); glVertex2i(x,	y);
-			glTexCoord2f(1, 0); glVertex2i(x+sz, y);
-			glTexCoord2f(1, 1); glVertex2i(x+sz, y+sz);
-			glTexCoord2f(0, 1); glVertex2i(x,	y+sz);
+			glTexCoord2f(0, 0); glVertex2f(x,	y);
+			glTexCoord2f(1, 0); glVertex2f(x+sz, y);
+			glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
+			glTexCoord2f(0, 1); glVertex2f(x,	y+sz);
 			glEnd();
 			glEnable(GL_BLEND);
 		}
@@ -1094,10 +1097,10 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 		int x = (w-512)/2, y = 128;
 		settexture("textures/logo");
 		glBegin(GL_QUADS);
-		glTexCoord2f(0, 0); glVertex2i(x,	 y);
-		glTexCoord2f(1, 0); glVertex2i(x+512, y);
-		glTexCoord2f(1, 1); glVertex2i(x+512, y+256);
-		glTexCoord2f(0, 1); glVertex2i(x,	 y+256);
+		glTexCoord2f(0, 0); glVertex2f(x,	 y);
+		glTexCoord2f(1, 0); glVertex2f(x+512, y);
+		glTexCoord2f(1, 1); glVertex2f(x+512, y+256);
+		glTexCoord2f(0, 1); glVertex2f(x,	 y+256);
 		glEnd();
 
 		SDL_GL_SwapBuffers();
@@ -1200,10 +1203,10 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 		x *= 3;
 		y *= 3;
 		glBegin(GL_QUADS);
-		glTexCoord2f(0, 0); glVertex2i(x,	y);
-		glTexCoord2f(1, 0); glVertex2i(x+sz, y);
-		glTexCoord2f(1, 1); glVertex2i(x+sz, y+sz);
-		glTexCoord2f(0, 1); glVertex2i(x,	y+sz);
+		glTexCoord2f(0, 0); glVertex2f(x,	y);
+		glTexCoord2f(1, 0); glVertex2f(x+sz, y);
+		glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
+		glTexCoord2f(0, 1); glVertex2f(x,	y+sz);
 		glEnd();
 	}
 
@@ -1405,6 +1408,33 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 	glLoadIdentity();
 	glOrtho(0, w, h, 0, -1, 1);
 
+	if(cc->ready())
+	{
+		glEnable(GL_BLEND);
+		vec colour;
+		bool hashudcolour = cl->gethudcolour(colour);
+		if (hashudcolour || fogmat==MAT_WATER || fogmat==MAT_LAVA)
+		{
+			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+			if (hashudcolour) glColor3f(colour.x, colour.y, colour.z);
+			else
+			{
+				float overlay[3] = { 0, 0, 0 };
+				blendfogoverlay(fogmat, fogblend, overlay);
+				blendfogoverlay(abovemat, 1-fogblend, overlay);
+				glColor3fv(overlay);
+			}
+			glBegin(GL_QUADS);
+			glVertex2f(0, 0);
+			glVertex2f(w, 0);
+			glVertex2f(w, h);
+			glVertex2f(0, h);
+			glEnd();
+		}
+
+		glDisable(GL_BLEND);
+	}
+
     glColor3f(1, 1, 1);
 
     extern int debugsm;
@@ -1428,35 +1458,10 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
         viewdepthfxtex();
     }
 
-    glEnable(GL_BLEND);
-
-	vec colour;
-    bool hashudcolour = cl->gethudcolour(colour);
-	if (hashudcolour || fogmat==MAT_WATER || fogmat==MAT_LAVA)
-	{
-		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-        if (hashudcolour) glColor3f(colour.x, colour.y, colour.z);
-        else
-        {
-            float overlay[3] = { 0, 0, 0 };
-            blendfogoverlay(fogmat, fogblend, overlay);
-            blendfogoverlay(abovemat, 1-fogblend, overlay);
-            glColor3fv(overlay);
-        }
-        glBegin(GL_QUADS);
-		glVertex2i(0, 0);
-		glVertex2i(w, 0);
-		glVertex2i(w, h);
-		glVertex2i(0, h);
-		glEnd();
-	}
-
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
 
-	glDisable(GL_BLEND);
 	cl->drawhud(w, h); // can make more dramatic changes this way without getting in the way
-	glDisable(GL_BLEND);
 
 	glDisable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
@@ -1609,10 +1614,10 @@ bool rendericon(const char *icon, int x, int y, int xs, int ys)
 	{
 		glBindTexture(GL_TEXTURE_2D, t->id);
 		glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f); glVertex2i(x,	y);
-		glTexCoord2f(1.0f, 0.0f); glVertex2i(x+xs, y);
-		glTexCoord2f(1.0f, 1.0f); glVertex2i(x+xs, y+ys);
-		glTexCoord2f(0.0f, 1.0f); glVertex2i(x,	y+ys);
+		glTexCoord2f(0.0f, 0.0f); glVertex2f(x,	y);
+		glTexCoord2f(1.0f, 0.0f); glVertex2f(x+xs, y);
+		glTexCoord2f(1.0f, 1.0f); glVertex2f(x+xs, y+ys);
+		glTexCoord2f(0.0f, 1.0f); glVertex2f(x,	y+ys);
 		glEnd();
 		return true;
 	}

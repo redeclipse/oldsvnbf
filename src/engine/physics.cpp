@@ -698,7 +698,7 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
 			{
                 case MAT_NOCLIP: continue;
                 case MAT_AICLIP: if(d->type==ENT_AI) solid = true; break;
-                case MAT_CLIP: if(d->type<ENT_CAMERA) solid = true; break;
+                case MAT_CLIP: if(isclipped(c[i].ext->material&MATF_VOLUME) || d->type<ENT_CAMERA) solid = true; break;
             }
             if(!solid && isempty(c[i])) continue;
             if(!cubecollide(d, dir, cutoff, c[i], o.x, o.y, o.z, size, solid)) return false;
@@ -728,7 +728,7 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
     {
         case MAT_NOCLIP: return true;
         case MAT_AICLIP: if(d->type==ENT_AI) solid = true; break;
-        case MAT_CLIP: if(d->type<ENT_CAMERA) solid = true; break;
+        case MAT_CLIP: if(isclipped(c->ext->material&MATF_VOLUME) || d->type<ENT_CAMERA) solid = true; break;
     }
     if(!solid && isempty(*c)) return true;
     int csize = 2<<scale, cmask = ~(csize-1);

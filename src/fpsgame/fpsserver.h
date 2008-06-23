@@ -677,6 +677,7 @@ struct GAMESERVER : igameserver
 			{
 				clientinfo *ci = clients[i];
 				ci->team = TEAM_NEUTRAL; // to be reset below
+	            ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 			}
 		}
 
@@ -706,6 +707,7 @@ struct GAMESERVER : igameserver
 			ci->team = team;
 
 			ci->mapchange();
+            ci->state.lasttimeplayed = lastmillis;
             if(ci->state.state != CS_SPECTATOR)
             {
 				//ci->state.state = CS_DEAD;
@@ -1392,6 +1394,7 @@ struct GAMESERVER : igameserver
 						if(smode) smode->leavegame(spinfo);
 						mutate(mut->leavegame(spinfo));
 						spinfo->state.state = CS_SPECTATOR;
+                    	spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
 					}
 					else if(spinfo->state.state==CS_SPECTATOR && !val)
 					{
@@ -1403,6 +1406,7 @@ struct GAMESERVER : igameserver
 							if (!mut->canspawn(spinfo)) { nospawn++; }
 						});
 						if (!nospawn) sendspawn(spinfo);
+	                    spinfo->state.lasttimeplayed = lastmillis;
 					}
 					break;
 				}
