@@ -506,7 +506,7 @@ struct physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-		bool floating = (editmode && local) || pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
+		bool floating = pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
 		float secs = millis/1000.f;
 
 		if (pl->type!=ENT_CAMERA) updatematerial(pl, local, floating);

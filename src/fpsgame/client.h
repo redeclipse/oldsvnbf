@@ -1191,7 +1191,8 @@ struct clientcom : iclientcom
 					b->team = getint(p);
 
 					fpsent *o = b->ownernum==cl.player1->clientnum ? cl.player1 : cl.players[b->ownernum];
-					conoutf("%s was introduced by %s", cl.colorname(b), o ? cl.colorname(o) : "unknown");
+					s_sprintfd(m)("%s", o ? cl.colorname(o) : "unknown");
+					conoutf("%s was introduced by %s", cl.colorname(b), m);
 					if(b->ownernum==cl.player1->clientnum) b->bot = new botinfo();
 					break;
 				}
