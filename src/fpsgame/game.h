@@ -41,7 +41,8 @@ enum								// entity types
 	CAMERA,							// 15 type, radius, weight
 	WAYPOINT,						// 16 radius, weight
 	ANNOUNCER,						// 17 maxrad, minrad, volume
-	MAXENTTYPES						// 18
+	CONNECTION,						// 18
+	MAXENTTYPES						// 19
 };
 
 enum { ETU_NONE = 0, ETU_ITEM, ETU_AUTO, ETU_MAX };
@@ -66,17 +67,21 @@ struct enttypes
 	{ FLAG,			48,		32,		16,		ETU_NONE,		"flag" },
 	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" }, // FIXME
 	{ CAMERA,		48,		0,		0,		ETU_NONE,		"camera" },
-	{ WAYPOINT,		1,		8,		8,		ETU_NONE,		"waypoint" },
-	{ ANNOUNCER,	64,		0,		0,		ETU_NONE,		"announcer" }
+	{ WAYPOINT,		1,		16,		16,		ETU_NONE,		"waypoint" },
+	{ ANNOUNCER,	64,		0,		0,		ETU_NONE,		"announcer" },
+	{ CONNECTION,	70,		8,		8,		ETU_NONE,		"connection" },
 };
+
+enum { ETYPE_NONE = 0, ETYPE_WORLD, ETYPE_DYNAMIC };
 
 #ifndef STANDALONE
 struct fpsentity : extentity
 {
-	int schan, lastemit;
+	vec pos;
+	int owner, enttype, schan, lastemit;
 	bool mark;
 
-	fpsentity() : schan(-1), lastemit(0), mark(false) {}
+	fpsentity() : owner(-1), enttype(ETYPE_WORLD), schan(-1), lastemit(0), mark(false) {}
 	~fpsentity()
 	{
 		if (issound(schan)) removesound(schan);

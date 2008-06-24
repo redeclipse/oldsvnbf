@@ -496,17 +496,19 @@ struct GAMECLIENT : igameclient
 		intermission = false;
         player1->respawned = player1->suicided = 0;
 		respawnent = -1;
-        maptime = lasthit = 0;
+        maptime = lasthit = lastmouse = lastcamera = 0;
 		cc.mapstart();
 		pj.reset();
 
 		// reset perma-state
+		player1->lastnode = -1;
 		player1->frags = 0;
 		player1->deaths = 0;
 		player1->totaldamage = 0;
 		player1->totalshots = 0;
 		loopv(players) if(players[i])
 		{
+			players[i]->lastnode = -1;
 			players[i]->frags = 0;
 			players[i]->deaths = 0;
 			players[i]->totaldamage = 0;
