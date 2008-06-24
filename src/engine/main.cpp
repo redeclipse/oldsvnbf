@@ -826,19 +826,19 @@ int main(int argc, char **argv)
 
 		curtime = millis-totalmillis;
 
+		updatefpshistory(curtime);
+		//perfcheck();
+
+		checkinput();
+		menuprocess();
+		checksleep(lastmillis);
+
+		RUNWORLD(on_update);
+		cl->updateworld();
+		serverslice();
+
 		if(frameloops)
 		{
-			updatefpshistory(curtime);
-			//perfcheck();
-
-			checkinput();
-			menuprocess();
-			checksleep(lastmillis);
-
-			RUNWORLD(on_update);
-			cl->updateworld();
-			serverslice();
-
 			cl->recomputecamera(screen->w, screen->h);
 			setviewcell(camera1->o);
 			updatetextures();

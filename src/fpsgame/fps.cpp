@@ -610,21 +610,20 @@ struct GAMECLIENT : igameclient
 		{
 			dir.rotate_around_z(-camera1->yaw*RAD);
 
-			int colour = teamtype[d->team].colour,
-				r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
-
-			glColor4f(r/255.f, g/255.f, b/255.f, 1.f-(dist/radarrange()));
-
+			int colour = teamtype[d->team].colour;
 			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
 				cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
-					cs = (d->crouching ? 0.005f : 0.025f)*s;
+				cs = (d->crouching ? 0.005f : 0.025f)*s,
+				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
+				fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f);
 
 			settexture(bliptex());
+			glColor4f(r, g, b, fade);
 			glBegin(GL_QUADS);
-			drawsized(cx, cy, cs);
+			drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
 			glEnd();
 			if(radarnames())
-				draw_textx("%s", int(cx), int(cy+cs), 255, 255, 255, hudblend*255/100, false, AL_CENTER, -1, -1, colorname(d));
+				draw_textx("%s", int(cx), int(cy+cs), 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, colorname(d));
 		}
 	}
 
@@ -651,7 +650,7 @@ struct GAMECLIENT : igameclient
 			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
 				cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange());
 
-			draw_textx("%s", int(cx), int(cy), 255, 255, 255, hudblend*255/100, true, AL_LEFT, -1, -1, card);
+			draw_textx("%s", int(cx), int(cy), 255, 255, 255, hudblend*255/100, true, AL_CENTER, -1, -1, card);
 		}
 
 		loopv(players)
@@ -674,11 +673,12 @@ struct GAMECLIENT : igameclient
 				dir.rotate_around_z(-camera1->yaw*RAD);
 				float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
 					cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
-						cs = (insel ? 0.033f : 0.025f)*s;
+						cs = (insel ? 0.033f : 0.025f)*s,
+							fade = clamp(insel ? 1.f : 1.f-(dist/radarrange()), 0.f, 1.f);
 				settexture(bliptex());
-				glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, insel ? 1.f : 1.f-(dist/radarrange()));
+				glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
 				glBegin(GL_QUADS);
-				drawsized(cx, cy, cs);
+				drawsized(cx-(cs*0.5f), cy-(cs*0.5f), cs);
 				glEnd();
 			}
 		}
