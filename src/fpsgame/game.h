@@ -545,23 +545,46 @@ enum
 
 struct botstate
 {
-	int type, goal, millis, interval;
+	int type, millis, interval;
+	vector<int> route, targets;
+	float dist;
+	vec targpos;
 
-	botstate(int _type, int _goal = -1, int _millis = 0, int _interval = 0) :
-		type(_type), goal(_goal), millis(_millis), interval(_interval) {}
-	~botstate() {}
+	botstate(int _type, int _millis, int _interval = 0) : type(_type), millis(_millis), interval(_interval)
+	{
+		route.setsize(0);
+		targets.setsize(0);
+		dist = 0.f;
+		targpos = vec(0, 0, 0);
+	}
+	~botstate()
+	{
+		route.setsize(0);
+		targets.setsize(0);
+	}
+
+	int goal()
+	{
+		if(route.length()) return route.last();
+		return -1;
+	}
+
+	int target()
+	{
+		if(targets.length()) return targets.last();
+		return -1;
+	}
 };
 
 struct botinfo
 {
 	vector<botstate> state;	// stack of states
-	vector<int> route;		// current route planned
-	vec targpos;			// current targets
+	vec targpos;			// current target
 
 	botinfo()
 	{
 		reset();
-		setstate();
+		setstate(BS_WAIT, 100);
 	}
 	~botinfo()
 	{
@@ -571,38 +594,31 @@ struct botinfo
 	void reset()
 	{
 		state.setsize(0);
-		route.setsize(0);
 	}
 
-	void addstate(int type, int goal = -1, int millis = 0, int interval = 0)
+	botstate &addstate(int type, int interval = 0)
 	{
-		botstate bs(type, goal, millis, interval);
-		state.add(bs);
+		botstate bs(type, lastmillis, interval);
+		return state.add(bs);
 	}
 
 	void removestate(int index = -1)
 	{
 		if(index < 0) state.pop();
 		else if(state.inrange(index)) state.remove(index);
-		if(!state.length()) setstate();
+		if(!state.length()) addstate(BS_WAIT, 100);
 	}
 
-	void setstate(int type = BS_WAIT, int goal = -1, int interval = 0, bool pop = true)
+	botstate &setstate(int type, int interval = 0, bool pop = true)
 	{
 		bool popstate = pop && state.length() > 1;
 		if(popstate) removestate();
-		addstate(type, goal, lastmillis, interval);
+		return addstate(type, interval);
 	}
 
-	botstate &getstate(int index)
+	botstate &getstate(int idx = -1)
 	{
-		if(state.inrange(index)) return state[index];
-		return state.last();
-	}
-
-	botstate &curstate()
-	{
-		if(!state.length()) setstate();
+		if(state.inrange(idx)) return state[idx];
 		return state.last();
 	}
 };

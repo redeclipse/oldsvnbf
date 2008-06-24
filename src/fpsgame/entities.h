@@ -578,9 +578,9 @@ struct entities : icliententities
 		~linkq() {}
 	};
 
-	bool linkroute(int node, int goal, vector<int> &route, vector<int> &avoid, int flags = 0)
+	float linkroute(int node, int goal, vector<int> &route, vector<int> &avoid, int flags = 0)
 	{
-		bool result = false;
+		float result = 1e16f;
 
 		route.setsize(0);
 
@@ -685,12 +685,12 @@ struct entities : icliententities
 			if(queue.inrange(q))
 			{
 				route = queue[q]->nodes;
-				result = true;
+				result = queue[q]->weight;
 			}
 
 			loopv(queue) DELETEP(queue[i]); // purge
 
-			if(!result && !(flags & ROUTE_ABS)) // random search
+			if(result < 1e16f && !(flags & ROUTE_ABS)) // random search
 			{
 				for (int c = node; ents.inrange(c); )
 				{
@@ -709,17 +709,16 @@ struct entities : icliententities
 					if(ents.inrange(b))
 					{
 						route.add(b);
+						result += ents[b]->o.dist(e.o);
 					}
 					c = b;
 				}
-				if(route.length())
-					result = true;
 			}
 		}
 		return result;
 	}
 
-	int waypointnode(vec &v, bool dist)
+	int waypointnode(vec &v, bool dist = true)
 	{
 		int w = -1;
 		loopv(ents) if(ents[i]->type == WAYPOINT)
@@ -731,7 +730,7 @@ struct entities : icliententities
 		return w;
 	}
 
-	void waypointlink(int index, int node, bool both)
+	void waypointlink(int index, int node, bool both = true)
 	{
 		if(ents.inrange(index) && ents.inrange(node))
 		{
@@ -769,6 +768,7 @@ struct entities : icliententities
 								waypointlink(curnode, i, false);
 				}
 			}
+			else if(!ents.inrange(curnode)) curnode = waypointnode(v, false);
 			d->lastnode = curnode;
 		}
 		else d->lastnode = -1;
