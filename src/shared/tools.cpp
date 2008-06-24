@@ -38,7 +38,7 @@ char *makefile(const char *s, const char *e, int revision, int start)
 	while(true)
 	{
 		s_sprintf(m)("%s%s", f, *e ? e : "");
-		if(fileexists(findfile(m, "r"), "r"))
+		if(fileexists(findfile(m, "w"), "r"))
 		{
 			if(revision)
 			{
@@ -61,9 +61,8 @@ char *makefile(const char *s, const char *e, int revision, int start)
 void backup(const char *fname, const char *ext, int revision, int start)
 {
 	s_sprintfd(tname)("%s%s", fname, ext);
-	s_sprintfd(bname)("%s", findfile(tname, "r"));
 	s_sprintfd(aname)("%s", findfile(tname, "w"));
-	if(fileexists(aname, "r") && !strcmp(aname, bname))
+	if(fileexists(aname, "r"))
 	{
 		const char *newname = findfile(makefile(fname, ext, revision, start), "w");
 		rename(aname, newname);

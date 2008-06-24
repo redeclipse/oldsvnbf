@@ -1,9 +1,15 @@
 struct GAMESERVER : igameserver
 {
-	struct server_entity			// server side version of "entity" type
+	struct srventity
 	{
 		int type, attr1, attr2, attr3, attr4, attr5, spawntime;
-		char spawned;
+		int owner, enttype;
+		bool spawned;
+
+		srventity() : type(NOTUSED),
+			attr1(0), attr2(0), attr3(0), attr4(0), attr5(0),
+			spawntime(0), owner(-1), enttype(ETYPE_WORLD), spawned(false) {}
+		~srventity() {}
 	};
 
     static const int DEATHMILLIS = 300;
@@ -326,7 +332,7 @@ struct GAMESERVER : igameserver
 	void *newinfo() { return new clientinfo; }
 	void deleteinfo(void *ci) { delete (clientinfo *)ci; }
 
-	vector<server_entity> sents;
+	vector<srventity> sents;
 	vector<savedscore> scores;
 
 	void sendservmsg(const char *s) { sendf(-1, 1, "ris", SV_SERVMSG, s); }
@@ -1282,16 +1288,22 @@ struct GAMESERVER : igameserver
 
 				case SV_ITEMLIST:
 				{
-					bool commit = ci->state.state!=CS_SPECTATOR && notgotitems;
+					bool commit = ci->state.state != CS_SPECTATOR && notgotitems;
 					int n;
 					while((n = getint(p))!=-1)
 					{
-						server_entity se = { getint(p), getint(p), getint(p), getint(p), getint(p), getint(p), false, 0 },
-							sn = { 0, 0, 0, 0, 0, 0, false, 0 };
+						srventity se, sn;
+						se.type = getint(p);
+						se.attr1 = getint(p);
+						se.attr2 = getint(p);
+						se.attr3 = getint(p);
+						se.attr4 = getint(p);
+						se.attr5 = getint(p);
+						se.spawned = false;
 
 						if (commit)
 						{
-							while(sents.length()<n) sents.add(sn);
+							while(sents.length() < n) sents.add(sn);
 							sents.add(se);
 							sents[n].spawned = m_insta(gamemode, mutators) ? false : true;
 						}

@@ -3,6 +3,7 @@ struct entities : icliententities
 	GAMECLIENT &cl;
 
 	vector<extentity *> ents;
+	vector<int> entlinks[MAXENTTYPES];
 
 	IVARP(showentdir, 0, 1, 3);
 	IVARP(showentradius, 0, 1, 3);
@@ -14,6 +15,81 @@ struct entities : icliententities
 	entities(GAMECLIENT &_cl) : cl(_cl)
 	{
         CCOMMAND(announce, "i", (entities *self, int *idx), self->announce(*idx));
+
+        loopi(MAXENTTYPES)
+        {
+        	entlinks[i].setsize(0);
+			switch(i)
+			{
+				//	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
+				//	LIGHT = ET_LIGHT,				// 1  radius, intensity
+				case LIGHT:
+					entlinks[i].add(SPOTLIGHT);
+					break;
+				//	MAPMODEL = ET_MAPMODEL,			// 2  angle, idx
+				case MAPMODEL:
+					entlinks[i].add(TRIGGER);
+					break;
+				//	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, [team]
+				//	ENVMAP = ET_ENVMAP,				// 4  radius
+				//	PARTICLES = ET_PARTICLES,		// 5  type, [others]
+				case PARTICLES:
+				//	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume
+				case MAPSOUND:
+					entlinks[i].add(TELEPORT);
+					entlinks[i].add(TRIGGER);
+					entlinks[i].add(PUSHER);
+					break;
+				//	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
+				//	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
+				//	TELEPORT,						// 9  yaw, pitch, roll, push
+				case TELEPORT:
+					entlinks[i].add(MAPSOUND);
+					entlinks[i].add(PARTICLES);
+					entlinks[i].add(TELEPORT);
+					break;
+				//	MONSTER,						// 10 [angle], [type]
+				//	TRIGGER,						// 11
+				case TRIGGER:
+					entlinks[i].add(MAPSOUND);
+					entlinks[i].add(PARTICLES);
+					break;
+				//	PUSHER,							// 12 zpush, ypush, xpush
+				case PUSHER:
+					entlinks[i].add(MAPSOUND);
+					entlinks[i].add(PARTICLES);
+					break;
+				//	FLAG,							// 13 idx, team
+				case FLAG:
+					entlinks[i].add(FLAG);
+					break;
+				//	CHECKPOINT,						// 14 idx
+				case CHECKPOINT:
+					entlinks[i].add(CHECKPOINT);
+					break;
+				//	CAMERA,							// 15 type, radius, weight
+				case CAMERA:
+					entlinks[i].add(CAMERA);
+					entlinks[i].add(CONNECTION);
+					break;
+				//	WAYPOINT,						// 16 radius, weight
+				case WAYPOINT:
+					entlinks[i].add(WAYPOINT);
+					entlinks[i].add(PLAYERSTART);
+					entlinks[i].add(WEAPON);
+					entlinks[i].add(PUSHER);
+					entlinks[i].add(FLAG);
+					entlinks[i].add(TELEPORT);
+					break;
+				//	ANNOUNCER,						// 17 maxrad, minrad, volume
+				//	CONNECTION,						// 18
+				case CONNECTION:
+					entlinks[i].add(CONNECTION);
+					break;
+				//	MAXENTTYPES						// 19
+				default: break;
+			}
+        }
 	}
 
 	vector<extentity *> &getents() { return ents; }
@@ -407,44 +483,13 @@ struct entities : icliententities
 	{
 		if(ents.inrange(index) && ents.inrange(node))
 		{
-			if(maylink(ents[index]->type) && maylink(ents[node]->type))
-			{
-				switch(ents[index]->type)
-				{
-					case LIGHT:
-						if(ents[node]->type == SPOTLIGHT) return true;
-						break;
-					case MAPMODEL:
-						if(ents[node]->type == TRIGGER) return true;
-						break;
-					case TRIGGER:
-					case PUSHER:
-						if(ents[node]->type == MAPSOUND || ents[node]->type == PARTICLES) return true;
-						break;
-					case MAPSOUND:
-					case PARTICLES:
-						if(ents[node]->type == TELEPORT || ents[node]->type == TRIGGER || ents[node]->type == PUSHER) return true;
-						break;
-					case TELEPORT:
-						if(ents[node]->type == MAPSOUND || ents[node]->type == PARTICLES) return true;
-						if(ents[node]->type == TELEPORT) return true;
-						break;
-					case FLAG:
-						if(ents[node]->type == FLAG) return true;
-						break;
-					case CHECKPOINT:
-						if(ents[node]->type == CHECKPOINT) return true;
-						break;
-					case CAMERA:
-						if(ents[node]->type == CAMERA) return true;
-						break;
-					case WAYPOINT:
-						if(ents[node]->type == WAYPOINT) return true;
-						break;
-					default: break;
-				}
-			}
-			if(msg) conoutf("entity %s (%d) and %s (%d) are not linkable", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+			if(maylink(ents[index]->type) &&
+				maylink(ents[node]->type) &&
+					entlinks[ents[index]->type].find(ents[node]->type) >= 0)
+						return true;
+			if(msg)
+				conoutf("entity %s (%d) and %s (%d) are not linkable", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+
 			return false;
 		}
 		if(msg) conoutf("entity %d and %d are unable to be linked as one does not seem to exist", index, node);
@@ -539,7 +584,7 @@ struct entities : icliententities
 
 		route.setsize(0);
 
-		if(ents.inrange(node) && ents.inrange(goal) && ents[goal]->type == ents[node]->type && maylink(ents[node]->type))
+		if(ents.inrange(node) && ents.inrange(goal))
 		{
 			struct fpsentity &f = (fpsentity &) *ents[node], &g = (fpsentity &) *ents[goal];
 			vector<linkq *> queue;
@@ -561,7 +606,7 @@ struct entities : icliententities
 				{
 					int v = e.links[j];
 
-					if(ents.inrange(v) && ents[v]->type == f.type)
+					if(ents.inrange(v))
 					{
 						bool skip = false;
 
@@ -647,7 +692,7 @@ struct entities : icliententities
 
 			if(!result && !(flags & ROUTE_ABS)) // random search
 			{
-				for (int c = node; ents.inrange(c) && ents[c]->type == f.type; )
+				for (int c = node; ents.inrange(c); )
 				{
 					fpsentity &e = (fpsentity &) *ents[c];
 					int b = -1;
@@ -674,15 +719,29 @@ struct entities : icliententities
 		return result;
 	}
 
-	int waypointnode(vec &v, bool restrict = true, float d = 0.f, int n = -1)
+	int waypointnode(vec &v, bool dist)
 	{
 		int w = -1;
-		loopv(ents) if(ents[i]->type == WAYPOINT && i != n)
+		loopv(ents) if(ents[i]->type == WAYPOINT)
 		{
-			if((!restrict || ents[i]->o.dist(v) <= ents[i]->attr1+d) && (!ents.inrange(w) || ents[i]->o.dist(v) < ents[w]->o.dist(v)))
-				w = i;
+			if((!dist || ents[i]->o.dist(v) <= enttype[WAYPOINT].radius) &&
+				(!ents.inrange(w) || ents[i]->o.dist(v) < ents[w]->o.dist(v)))
+					w = i;
 		}
 		return w;
+	}
+
+	void waypointlink(int index, int node, bool both)
+	{
+		if(ents.inrange(index) && ents.inrange(node))
+		{
+			fpsentity &e = (fpsentity &)*ents[index], &f = (fpsentity &)*ents[node];
+
+			if(e.links.find(node) < 0)
+				linkents(index, node, true, true, false);
+			if(both && f.links.find(index) < 0)
+				linkents(node, index, true, true, false);
+		}
 	}
 
 	void waypointcheck(fpsent *d)
@@ -690,29 +749,27 @@ struct entities : icliententities
 		if(d->state == CS_ALIVE)
 		{
 			vec v(vec(d->o).sub(vec(0, 0, d->height-1)));
+			int oldnode = d->lastnode, curnode = waypointnode(v, true);
 
 			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)
 			{
-				int oldnode = d->lastnode;
-				d->lastnode = waypointnode(v);
-				if(!ents.inrange(d->lastnode)) d->lastnode = waypointnode(v, true, enttype[WAYPOINT].radius);
-				if(!ents.inrange(d->lastnode))
+				if(!ents.inrange(curnode))
 				{
-					d->lastnode = ents.length();
-					newentity(v, WAYPOINT, enttype[WAYPOINT].radius, 0, 0, 0);
+					curnode = ents.length();
+					newentity(v, WAYPOINT, 0, 0, 0, 0);
 				}
-				if(!ents.inrange(d->lastnode)) d->lastnode = oldnode; // last resort?
 
-				if(d->lastnode != oldnode && ents.inrange(oldnode) && ents.inrange(d->lastnode))
+				if(oldnode != curnode)
 				{
-					fpsentity &e = (fpsentity &)*ents[oldnode], &f = (fpsentity &)*ents[d->lastnode];
-					if(e.links.find(d->lastnode) < 0)
-						linkents(oldnode, d->lastnode, true, true, false);
-					if(!d->timeinair && f.links.find(oldnode) < 0)
-						linkents(d->lastnode, oldnode, true, true, false);
+					waypointlink(oldnode, curnode, !d->timeinair);
+
+					loopv(ents)
+						if(ents[i]->type != WAYPOINT && canlink(curnode, i) &&
+							ents[i]->o.dist(v) <= enttype[WAYPOINT].radius)
+								waypointlink(curnode, i, false);
 				}
 			}
-			else d->lastnode = waypointnode(v, false);
+			d->lastnode = curnode;
 		}
 		else d->lastnode = -1;
 	}
@@ -1028,9 +1085,6 @@ struct entities : icliententities
 				case LIGHT:
 					renderradius(e.o, e.attr1 ? e.attr1 : hdr.worldsize, e.attr1 ? e.attr1 : hdr.worldsize, false);
 					break;
-				case WAYPOINT:
-					if(e.attr1 > 0) renderradius(e.o, e.attr1, e.attr1, false);
-					break;
 				case ANNOUNCER:
 					renderradius(e.o, e.attr1, e.attr1, false);
 					renderradius(e.o, e.attr2, e.attr2, false);
@@ -1126,7 +1180,7 @@ struct entities : icliententities
 				renderprimitive(true);
 				loopv(ents)
 				{
-					renderfocus(i, renderentshow(e, entgroup.find(i) >= 0 || enthover == i ? 1 : level));
+					renderfocus(i, renderentshow(e, editmode && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
 				}
 				renderprimitive(false);
 			}
@@ -1186,11 +1240,11 @@ struct entities : icliententities
 			if(m_edit(cl.gamemode))
 			{
 				if(e.type == PLAYERSTART || e.type == FLAG)
-					particle_text(vec(e.o).add(vec(0, 0, enttype[e.type].height+2)),
+					particle_text(vec(e.o).add(vec(0, 0, 4)),
 						e.attr2 >= TEAM_NEUTRAL && e.attr2 < TEAM_MAX ? teamtype[e.attr2].name : "unknown",
 							entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
 
-				particle_text(vec(e.o).add(vec(0, 0, enttype[e.type].height+1)),
+				particle_text(vec(e.o).add(vec(0, 0, 2)),
 					findname(e.type), entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
 				if(e.type != PARTICLES) regular_particle_splash(2, 2, 40, e.o);
 			}
