@@ -1270,7 +1270,10 @@ void gl_drawframe(int w, int h)
         if(caustics && fogmat==MAT_WATER && camera1->o.z < z)
             causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
     }
-    else fogmat = MAT_AIR;
+    else
+    {
+    	fogmat = MAT_AIR;
+    }
     setfog(fogmat, fogblend, abovemat);
     if(fogmat!=MAT_AIR)
     {

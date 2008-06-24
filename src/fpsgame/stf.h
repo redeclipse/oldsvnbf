@@ -246,35 +246,35 @@ struct stfclient : stfstate
 
 	void drawblip(int x, int y, int s, int type, bool skipenemy = false)
 	{
-		settexture(cl.bliptex());
-		switch(max(type+1, 0))
-		{
-			case 2: glColor4f(0.f, 0.f, 1.f, 1.f); break;
-			case 1: glColor4f(1.f, 1.f, 1.f, 1.f); break;
-			case 0:
-			default: glColor4f(1.f, 0.f, 0.f, 1.f); break;
-		}
-		glBegin(GL_QUADS);
 		loopv(flags)
 		{
-			flaginfo &b = flags[i];
-			if(skipenemy && b.enemy) continue;
+			flaginfo &f = flags[i];
+			if(skipenemy && f.enemy) continue;
 			switch(type)
 			{
-				case 1: if(!b.owner || b.owner != cl.player1->team) continue; break;
-				case 0: if(b.owner) continue; break;
-				case -1: if(!b.owner || b.owner == cl.player1->team) continue; break;
-				case -2: if(!b.enemy || b.enemy == cl.player1->team) continue; break;
+				case 1: if(!f.owner || f.owner != cl.player1->team) continue; break;
+				case 0: if(f.owner) continue; break;
+				case -1: if(!f.owner || f.owner == cl.player1->team) continue; break;
+				case -2: if(!f.enemy || f.enemy == cl.player1->team) continue; break;
 			}
-			vec dir(b.o);
+			vec dir(f.o);
 			dir.sub(camera1->o);
 			dir.z = 0.0f;
 			float dist = dir.magnitude();
 			if(dist >= cl.radarrange()) dir.mul(cl.radarrange()/dist);
 			dir.rotate_around_z(-camera1->yaw*RAD);
-			cl.drawsized(x + s*0.5f*0.95f*(1.0f+dir.x/cl.radarrange()), y + s*0.5f*0.95f*(1.0f+dir.y/cl.radarrange()), 0.1f*s);
+			int colour = teamtype[f.owner].colour;
+			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
+				fade = 1.f;
+			if(f.owner != cl.player1->team && f.enemy != cl.player1->team)
+				fade = clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
+
+			settexture(cl.bliptex());
+			glColor4f(r, g, b, fade);
+			glBegin(GL_QUADS);
+			cl.drawsized(x + s*0.5f*0.95f*(1.0f+dir.x/cl.radarrange() - 0.025f), y + s*0.5f*0.95f*(1.0f+dir.y/cl.radarrange() - 0.025f), 0.05f*s);
+			glEnd();
 		}
-		glEnd();
 	}
 
     int respawnwait(fpsent *d)

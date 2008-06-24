@@ -261,22 +261,26 @@ struct ctfclient : ctfstate
     void drawblip(int x, int y, int s, int i, bool flagblip)
     {
 		flag &f = flags[i];
-        settexture(cl.bliptex());
-        if(f.team==cl.player1->team) glColor4f(0.f, 0.f, 1.f, 1.f);
-        else glColor4f(1.f, 0.f, 0.f, 1.f);
 		vec dir;
         if(flagblip) dir = f.owner ? f.owner->o : (f.droptime ? f.droploc : f.spawnloc);
         else dir = f.spawnloc;
 		dir.sub(camera1->o);
 		dir.z = 0.0f;
-        float size = flagblip ? 0.1f : 0.075f,
-              xoffset = flagblip ? -2*(3/32.0f)*size : -size,
-              yoffset = flagblip ? -2*(1 - 3/32.0f)*size : -size,
+        float size = flagblip ? 0.033f : 0.015f,
               dist = dir.magnitude();
         if(dist >= cl.radarrange()*(1 - 0.05f)) dir.mul(cl.radarrange()*(1 - 0.05f)/dist);
 		dir.rotate_around_z(-camera1->yaw*RAD);
+
+		int colour = teamtype[f.team].colour;
+		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
+			fade = 1.f;
+		if(f.team != cl.player1->team && f.owner->team != cl.player1->team)
+			fade = clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
+
+        settexture(cl.bliptex());
+		glColor4f(r, g, b, fade);
 		glBegin(GL_QUADS);
-        cl.drawsized(x + s*0.5f*(1.0f + dir.x/cl.radarrange() + xoffset), y + s*0.5f*(1.0f + dir.y/cl.radarrange() + yoffset), size*s);
+        cl.drawsized(x + s*0.5f*(1.0f + dir.x/cl.radarrange() - (size*0.5f)), y + s*0.5f*(1.0f + dir.y/cl.radarrange() - (size*0.5f)), size*s);
 		glEnd();
     }
 

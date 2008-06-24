@@ -1583,51 +1583,33 @@ void createfogtex()
     createtexture(fogtex, bilinear ? 2 : 256, 1, buf, 3, false, GL_LUMINANCE_ALPHA, GL_TEXTURE_1D);
 }
 
-#if 0
-Texture *caustic = notexture;
-SVARFW(caustictex, "<anim:75>textures/caustics", {
-	if(*caustictex)
+Texture *caustic = NULL;
+void loadcaustic(const char *name)
+{
+	if(*name)
 	{
-		s_sprintfd(s)("%s%s", renderpath==R_FIXEDFUNCTION ? "<mad:0.6,0.4>" : "<mad:-0.6,0.6>", caustictex);
+		s_sprintfd(s)("%s%s", renderpath==R_FIXEDFUNCTION ? "<mad:0.6,0.4>" : "<mad:-0.6,0.6>", name);
 		caustic = textureload(s);
 	}
 	else caustic = notexture;
-);
-#endif
-
-#define NUMCAUSTICS 32
-
-VARR(causticscale, 0, 100, 10000);
-VARR(causticmillis, 0, 75, 1000);
-VARP(caustics, 0, 1, 1);
-
-static Texture *caustictex[NUMCAUSTICS] = { NULL };
-
-void loadcaustics()
-{
-    if(caustictex[0]) return;
-    loopi(NUMCAUSTICS)
-    {
-        s_sprintfd(name)(
-            renderpath==R_FIXEDFUNCTION ?
-                "<mad:0.6,0.4>caustics/caust%.2d" :
-                "<mad:-0.6,0.6>caustics/caust%.2d",
-            i);
-        caustictex[i] = textureload(name);
-    }
 }
+SVARFW(caustictex, "<anim:75>textures/caustics", loadcaustic(caustictex));
+void loadcaustics() { loadcaustic(caustictex); }
+
+VARW(causticscale, 0, 100, 10000);
+VARP(caustics, 0, 1, 1);
 
 void cleanupva()
 {
     vaclearc(worldroot);
     clearqueries();
     if(fogtex) { glDeleteTextures(1, &fogtex); fogtex = 0; }
-    loopi(NUMCAUSTICS) caustictex[i] = NULL;
+    caustic = NULL;
 }
 
 void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
 {
-    if(!caustictex[0]) loadcaustics();
+    if(!caustic) loadcaustics();
 
     GLfloat s[4] = { 0.011f, 0, 0.0066f, 0 };
     GLfloat t[4] = { 0, 0.011f, 0.0066f, 0 };
@@ -1636,15 +1618,15 @@ void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
         s[k] *= 100.0f/(causticscale<<VVEC_FRAC);
         t[k] *= 100.0f/(causticscale<<VVEC_FRAC);
     }
-    int tex = (lastmillis/causticmillis)%NUMCAUSTICS;
-    float frac = float(lastmillis%causticmillis)/causticmillis;
+    int tex = (lastmillis/caustic->delay)%caustic->frames.length();
+    float frac = float(lastmillis%caustic->delay)/caustic->delay;
     if(color) color[3] = frac;
     else glColor4f(1, 1, 1, frac);
     loopi(2)
     {
         glActiveTexture_(GL_TEXTURE0_ARB+tmu+i);
         glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, caustictex[(tex+i)%NUMCAUSTICS]->id);
+        glBindTexture(GL_TEXTURE_2D, caustic->frames[(tex+i)%caustic->frames.length()]);
         if(renderpath==R_FIXEDFUNCTION)
         {
             setuptexgen();
@@ -1845,7 +1827,7 @@ void rendergeom(float causticspass, bool fogpass)
 {
     renderstate cur;
 
-    if(causticspass && ((renderpath==R_FIXEDFUNCTION && maxtmus<2) || !causticscale || !causticmillis)) causticspass = 0;
+    if(causticspass && ((renderpath==R_FIXEDFUNCTION && maxtmus<2) || !causticscale)) causticspass = 0;
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 

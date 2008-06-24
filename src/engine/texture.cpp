@@ -366,7 +366,6 @@ void reloadtextures()
     enumerate(textures, Texture, tex, reloadtexture(&tex));
 }
 
-
 void updatetexture(Texture *t)
 {
 	if(t->frames.length())

@@ -92,7 +92,7 @@ void blitimg(SDL_Surface *d, SDL_Surface *s, int x, int y)
 {
 	loopi(s->h)
 	{
-		uchar *dst = (uchar *)d->pixels+(i*d->pitch),
+		uchar *dst = (uchar *)d->pixels+((y+i)*d->pitch)+(x*d->format->BytesPerPixel),
 			*src = (uchar *)s->pixels+(i*s->pitch);
 
 		memset(dst, 0, s->w*d->format->BytesPerPixel);
@@ -102,16 +102,17 @@ void blitimg(SDL_Surface *d, SDL_Surface *s, int x, int y)
 
 void makeimage()
 {
-	int y = 0, w = 0, h = 0;
+	int y = 0, w = 0, h = 0, bpp = 0;
 	loopv(frames) if(frames[i]->s)
 	{
 		h += frames[i]->s->h;
 		if(frames[i]->s->w > w) w = frames[i]->s->w;
 		if(frames[i]->s->h > y) y = frames[i]->s->h;
+		if(frames[i]->s->format->BitsPerPixel > bpp) bpp = frames[i]->s->format->BitsPerPixel;
 	}
 	if(w && h)
 	{
-		SDL_Surface *t = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, RMASK, GMASK, BMASK, AMASK);
+		SDL_Surface *t = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, bpp, RMASK, GMASK, BMASK, AMASK);
 
 		if(t)
 		{
@@ -121,7 +122,7 @@ void makeimage()
 			}
 
 			savepng(t, imgname, pngcomp);
-			conoutf("Saved: %s", imgname);
+			conoutf("Saved %d frames to %s", frames.length(), imgname);
 
 			SDL_FreeSurface(t);
 		}
