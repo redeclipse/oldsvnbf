@@ -340,7 +340,7 @@ struct weaponstate
 		{
 			d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
 			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-			if(d == cl.player1) cl.playsoundc(S_RELOAD);
+			cl.playsoundc(S_RELOAD, d);
 		}
 	}
 

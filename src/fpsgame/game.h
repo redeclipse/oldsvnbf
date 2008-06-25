@@ -391,6 +391,13 @@ struct fpsstate
 	}
 	~fpsstate() {}
 
+	int bestgun(int millis)
+	{
+		int best = -1;
+		loopi(NUMGUNS) if(canshoot(i, millis) && i != GUN_GL) best = i;
+		return best;
+	}
+
 	bool canswitch(int gun, int millis)
 	{
 		if (isgun(gun) && (gunselect != gun) && ammo[gun] >= 0 && (guntype[gun].rdelay > 0 || ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]) && (millis-gunlast[gunselect] >= gunwait[gunselect]))
@@ -545,33 +552,25 @@ enum
 
 struct botstate
 {
-	int type, millis, interval;
-	vector<int> route, targets;
+	int type, millis, interval, target, cycles, cycle;
+	vector<int> route;
 	float dist;
 	vec targpos;
 
-	botstate(int _type, int _millis, int _interval = 0) : type(_type), millis(_millis), interval(_interval)
+	botstate(int _type, int _millis, int _interval = 0, int _cycles = 0) : type(_type), millis(_millis), interval(_interval), target(-1), cycles(0), cycle(0)
 	{
 		route.setsize(0);
-		targets.setsize(0);
-		dist = 0.f;
 		targpos = vec(0, 0, 0);
+		dist = 0.f;
 	}
 	~botstate()
 	{
 		route.setsize(0);
-		targets.setsize(0);
 	}
 
 	int goal()
 	{
 		if(route.length()) return route.last();
-		return -1;
-	}
-
-	int target()
-	{
-		if(targets.length()) return targets.last();
 		return -1;
 	}
 };
@@ -597,9 +596,9 @@ struct botinfo
 		state.setsize(0);
 	}
 
-	botstate &addstate(int type, int interval = 0)
+	botstate &addstate(int type, int interval = 0, int cycles = 0)
 	{
-		botstate bs(type, lastmillis, interval);
+		botstate bs(type, lastmillis, interval, cycles);
 		return state.add(bs);
 	}
 
@@ -610,11 +609,11 @@ struct botinfo
 		if(!state.length()) addstate(BS_WAIT, 100);
 	}
 
-	botstate &setstate(int type, int interval = 0, bool pop = true)
+	botstate &setstate(int type, int interval = 0, int cycles = 0, bool pop = true)
 	{
 		bool popstate = pop && state.length() > 1;
 		if(popstate) removestate();
-		return addstate(type, interval);
+		return addstate(type, interval, cycles);
 	}
 
 	botstate &getstate(int idx = -1)
