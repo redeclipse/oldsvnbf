@@ -10,10 +10,10 @@ struct botclient
 	static const int BOTLOSRANGE	= 514;			// line of sight range
 	static const int BOTFOVRANGE	= 128;			// field of view range
 
-	IVAR(botskill, 0, 0, 100);
+	IVAR(botskill, 1, 1, 100);
 	IVAR(botdebug, 0, 2, 4);
 
-	#define BOTRATE					(100-botskill())
+	#define BOTRATE					(101-botskill())
 	#define BOTLOSDIST				(BOTLOSRANGE-(BOTRATE*2.0f))
 	#define BOTFOVX					(BOTFOVRANGE-(BOTRATE*0.5f))
 	#define BOTFOVY					((BOTFOVRANGE*3/4)-(BOTRATE*0.5f))
@@ -53,6 +53,15 @@ struct botclient
 		}
 	}
 
+	bool hastarget(fpsent *d)
+	{
+		float cyaw = fabs(fabs(d->bot->targyaw)-fabs(d->yaw)),
+			cpitch = fabs(fabs(d->bot->targpitch)-fabs(d->pitch)),
+			amt = BOTRATE*0.25f;
+		if (cyaw <= amt && cpitch <= amt) return true;
+		return false;
+	}
+
 	float disttoplayer(fpsent *d, fpsent *e, vector<int> &route)
 	{
 		if(e && cl.et.ents.inrange(e->lastnode))
@@ -86,6 +95,8 @@ struct botclient
 		{
 			botstate &bt = d->bot->addstate(BS_UPDATE, BOTWAIT(7, 3));
 			bt.targpos = d->o;
+			d->bot->targyaw = d->yaw;
+			d->bot->targpitch = d->pitch;
 		}
 	}
 
@@ -95,8 +106,7 @@ struct botclient
 		{
 			fpsent *closest = NULL;
 			bs.dist = 1e16f;
-			d->move = d->strafe = 0;
-			d->jumping = d->attacking = false;
+			d->stopmoving();
 
 			#define getclosestplayer(e) \
 			{ \
@@ -134,17 +144,12 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			d->move = 1;
-			d->strafe = 0;
-			d->jumping = d->attacking = false;
-			vec dir(bs.targpos);
-			dir.sub(d->o);
-			if(dir.z > BOTJUMPHEIGHT && !d->jumping && !d->timeinair)
+			d->stopmoving();
+			vec off(vec(bs.targpos).sub(d->o));
+
+			if(off.z > BOTJUMPHEIGHT && !d->timeinair)
 				d->jumping = true;
-			dir.normalize();
-			vectoyawpitch(dir, d->yaw, d->pitch);
-			d->aimyaw = d->yaw;
-			d->aimpitch = d->pitch;
+
 			d->move = 1;
 			d->bot->removestate(); // bounce back to the parent
 			return true;
@@ -156,16 +161,13 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			d->move = d->strafe = 0;
-			d->jumping = false;
-			vec dir(bs.targpos);
-			dir.sub(d->o);
-			dir.normalize();
-			vectoyawpitch(dir, d->yaw, d->pitch);
-			d->aimyaw = d->yaw;
-			d->aimpitch = d->pitch;
-			d->attacking = true;
-			d->bot->removestate(); // bounce back to the parent
+			d->stopmoving();
+
+			if(hastarget(d))
+			{
+				d->attacking = true;
+				d->bot->removestate(); // bounce back to the parent
+			}
 			return true;
 		}
 		return false;
@@ -208,6 +210,53 @@ struct botclient
 		return false;
 	}
 
+	void doaim(fpsent *d, botstate &bs)
+	{
+		float amt = float(lastmillis-d->lastupdate)/(BOTRATE*0.05f);
+
+		d->bot->targyaw = -(float)atan2(bs.targpos.x-d->o.x, bs.targpos.y-d->o.y)/PI*180+180;
+
+		if (d->yaw < d->bot->targyaw-180.0f) d->yaw += 360.0f;
+		if (d->yaw > d->bot->targyaw+180.0f) d->yaw -= 360.0f;
+
+		float dist = d->o.dist(bs.targpos);
+
+		d->bot->targpitch = asin((bs.targpos.z - d->o.z) / dist) / RAD;
+
+		if (d->bot->targpitch > 90.f) d->bot->targpitch = 90.f;
+		if (d->bot->targpitch < -90.f) d->bot->targpitch = -90.f;
+
+		if (d->bot->targyaw > d->yaw)    // slowly turn bot towards target
+		{
+			d->yaw += amt;
+			if (d->bot->targyaw < d->yaw)
+				d->yaw = d->bot->targyaw;
+		}
+		else if (d->bot->targyaw < d->yaw)
+		{
+			d->yaw -= amt;
+			if (d->bot->targyaw > d->yaw)
+				d->yaw = d->bot->targyaw;
+		}
+		if (d->bot->targpitch > d->pitch)
+		{
+			d->pitch += amt;
+			if (d->bot->targpitch < d->pitch)
+				d->pitch = d->bot->targpitch;
+		}
+		else if (d->bot->targpitch < d->pitch)
+		{
+			d->pitch -= amt;
+			if (d->bot->targpitch > d->pitch)
+				d->pitch = d->bot->targpitch;
+		}
+
+		cl.fixrange(d->yaw, d->pitch);
+		findorientation(d->o, d->yaw, d->pitch, d->bot->targpos);
+		d->aimyaw = d->yaw;
+		d->aimpitch = d->pitch;
+	}
+
 	void think(fpsent *d)
 	{
 		if(!d->bot->state.length()) doreset(d, true);
@@ -220,6 +269,9 @@ struct botclient
 
 		botstate &bs = d->bot->getstate();
 		int secs = lastmillis - bs.millis;
+
+		if(d->state == CS_ALIVE && bs.type != BS_WAIT)
+			doaim(d, bs);
 
 		if(secs >= bs.interval)
 		{
@@ -253,12 +305,9 @@ struct botclient
 				default: doreset(d, false); break;
 			}
 		}
-		d->lastupdate = lastmillis;
-
-		findorientation(d->o, d->aimyaw, d->aimpitch, d->bot->targpos);
 		cl.ph.move(d, 10, true);
 
-		if(d->state == CS_ALIVE)
+		if(d->state == CS_ALIVE && bs.type != BS_WAIT)
 		{
 			cl.ws.shoot(d, d->bot->targpos);
 			if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis))
@@ -267,6 +316,7 @@ struct botclient
 				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			}
 		}
+		d->lastupdate = lastmillis;
 	}
 
 	void drawstate(fpsent *d, botstate &bs, bool top, int above)

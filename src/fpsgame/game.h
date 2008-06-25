@@ -579,6 +579,7 @@ struct botstate
 struct botinfo
 {
 	vector<botstate> state;	// stack of states
+	float targyaw, targpitch;
 	vec targpos;			// current target
 
 	botinfo()
