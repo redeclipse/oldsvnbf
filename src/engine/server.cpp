@@ -266,6 +266,7 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 			bsend += packet->dataLength;
 			break;
 		}
+		default: break;
 	}
 }
 
@@ -551,6 +552,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 	loopv(clients) switch(clients[i]->type)
 	{
 		case ST_TCPIP: nonlocalclients++; break;
+		default: break;
 	}
 
 	sv->serverupdate();

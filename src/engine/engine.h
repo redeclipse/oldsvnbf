@@ -196,7 +196,8 @@ extern void gl_checkextensions();
 extern void gl_init(int w, int h, int bpp, int depth, int fsaa);
 extern void cleangl();
 
-extern void projectcursor(float x, float y, vec &dir);
+extern void vecfromcursor(float x, float y, float z, vec &dir);
+extern void vectocursor(vec &v, float &x, float &y, float &z);
 extern void findorientation(vec &o, float yaw, float pitch, vec &pos);
 extern void rendergame();
 extern void invalidatepostfx();

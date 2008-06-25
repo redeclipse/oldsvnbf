@@ -67,6 +67,7 @@ struct igameclient
     virtual void particletrack(physent *owner, vec &o, vec &d) {}
 
 	virtual bool mousemove(int dx, int dy, int x, int y, int w, int h) = 0;
+	virtual void project(int w, int h, vec &dir, float &x, float &y) = 0;
 	virtual void recomputecamera(int w, int h) = 0;
 
 	virtual bool gamethirdperson() { return false; } ;

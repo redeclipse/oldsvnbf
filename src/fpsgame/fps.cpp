@@ -52,7 +52,7 @@ struct GAMECLIENT : igameclient
 	IVARP(camerainterp, 0, 50, 1000);
 
 	IVARP(invmouse, 0, 0, 1);
-	IVARP(mousetype, 0, 0, 4);
+	IVARP(mousetype, 0, 1, 5);
 	IVARP(mousedeadzone, 0, 10, 100);
 	IVARP(mousepanspeed, 1, 30, 1000);
 
@@ -211,35 +211,6 @@ struct GAMECLIENT : igameclient
 	void resetgamestate()
 	{
 		pj.reset();
-	}
-
-	void updatemouse()
-	{
-		if(mousetype())
-		{
-			if(!lastmouse) resetcursor();
-			else if(player1->state != CS_DEAD)
-			{
-				physent *d = mousetype() <= 2 ? player1 : camera1;
-				int frame = lastmouse-lastmillis;
-				float deadzone = (mousedeadzone()/100.f);
-				float cx = (cursorx-0.5f), cy = (0.5f-cursory);
-
-				if(cx > deadzone || cx < -deadzone)
-					d->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
-
-				if(cy > deadzone || cy < -deadzone)
-					d->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
-
-				fixrange(d->yaw, d->pitch);
-			}
-			lastmouse = lastmillis;
-		}
-		else
-		{
-			resetcursor();
-			lastmouse = 0;
-		}
 	}
 
 	void updateworld()		// main game update loop
@@ -929,10 +900,18 @@ struct GAMECLIENT : igameclient
 		glOrtho(0, w*3, h*3, 0, -1, 1);
 
 		if(index > POINTER_NONE)
-			drawpointer(w, h, index, index < POINTER_EDIT || mousetype() >= 3 ? cursorx : 0.5f, index < POINTER_EDIT || mousetype() >= 3 ? cursory : 0.5f, r, g, b);
+		{
+			float curx = index < POINTER_EDIT || mousetype() >= 4 || mousetype() == 1 ? cursorx : 0.5f,
+				cury = index < POINTER_EDIT || mousetype() >= 4 || mousetype() == 1 ? cursory : 0.5f;
+			drawpointer(w, h, index, curx, cury, r, g, b);
+		}
 
-		if(index > POINTER_GUI && mousetype())
-			drawpointer(w, h, POINTER_RELATIVE, mousetype() <= 2 ? cursorx : 0.5f, mousetype() <= 2 ? cursory : 0.5f, r, g, b);
+		if(index > POINTER_GUI && mousetype() >= 2)
+		{
+			float curx = mousetype() <= 3 ? cursorx : 0.5f,
+				cury = mousetype() <= 3 ? cursory : 0.5f;
+			drawpointer(w, h, POINTER_RELATIVE, curx, cury, r, g, b);
+		}
 	}
 
 	int drawhudelements(int w, int h, int y)
@@ -1177,9 +1156,9 @@ struct GAMECLIENT : igameclient
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
-		if(guiactive() || mousetype())
+		if(guiactive() || mousetype() >= 2)
 		{
-			if(mousetype() == 2 || mousetype() == 4)
+			if(mousetype() == 3 || mousetype() == 5)
 			{
 				cursorx = clamp(float(x)/float(w), 0.f, 1.f);
 				cursory = clamp(float(y)/float(h), 0.f, 1.f);
@@ -1194,7 +1173,7 @@ struct GAMECLIENT : igameclient
 		}
 		else
 		{
-			cursorx = cursory = 0.5f;
+			if(!mousetype()) cursorx = cursory = 0.5f;
 			player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
 			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1.f : 1.f);
 			fixrange(player1->yaw, player1->pitch);
@@ -1203,11 +1182,62 @@ struct GAMECLIENT : igameclient
 		return false;
 	}
 
+	void project(int w, int h, vec &dir, float &x, float &y)
+	{
+		if(mousetype() == 1)
+		{
+			float cx, cy, cz;
+			vectocursor(worldpos, cx, cy, cz);
+			x = float(cx)/float(w);
+			y = float(cy)/float(h);
+		}
+		vecfromcursor(x, y, 1.f, dir);
+	}
+
+	void updatemouse()
+	{
+		if(mousetype())
+		{
+			if(!lastmouse) resetcursor();
+			else if(player1->state != CS_DEAD)
+			{
+				physent *d = mousetype() <= 3 && mousetype() >= 2 ? player1 : camera1;
+				int frame = lastmouse-lastmillis;
+				if(mousetype() >= 2)
+				{
+					float deadzone = (mousedeadzone()/100.f);
+					float cx = (cursorx-0.5f), cy = (0.5f-cursory);
+
+					if(cx > deadzone || cx < -deadzone)
+						d->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+
+					if(cy > deadzone || cy < -deadzone)
+						d->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+				}
+				else
+				{
+					float offyaw = d->aimyaw-d->yaw, offpitch = d->aimpitch-d->pitch;
+					if(offyaw > 180.f) offyaw -= 360.f;
+					if(offyaw < -180.f) offyaw += 360.f;
+					if(offyaw != 0.f) d->yaw -= offyaw/90.f*frame*mousepanspeed()/100.f;
+					if(offpitch != 0.f) d->pitch -= offpitch/45.f*frame*mousepanspeed()/100.f;
+				}
+				fixrange(d->yaw, d->pitch);
+			}
+			lastmouse = lastmillis;
+		}
+		else
+		{
+			resetcursor();
+			lastmouse = 0;
+		}
+	}
+
 	void recomputecamera(int w, int h)
 	{
 		fixview(w, h);
 
-		if(mousetype() <= 2)
+		if(mousetype() <= 3)
 		{
 			findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
 		}
@@ -1222,16 +1252,16 @@ struct GAMECLIENT : igameclient
 			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
 		}
 
-		if(mousetype() >= 3 && !lastcamera)
+		if(mousetype() >= 4 && !lastcamera)
 		{
 			camera1->yaw = player1->aimyaw = player1->yaw;
 			camera1->pitch = player1->aimpitch = player1->pitch;
 		}
 
-		if(player1->state == CS_ALIVE || player1->state == CS_DEAD || player1->state == CS_SPAWNING)
+		if(player1->state == CS_ALIVE || player1->state == CS_DEAD)
 		{
 			camera1->o = player1->o;
-			camera1->aimyaw = mousetype() <= 2 ? player1->yaw : player1->aimyaw;
+			camera1->aimyaw = mousetype() <= 3 ? player1->yaw : player1->aimyaw;
 			camera1->aimpitch = 0-cameraheight();
 
 			#define cameramove(d,s) \
@@ -1259,19 +1289,21 @@ struct GAMECLIENT : igameclient
 		else if(mousetype())
 		{
 			camera1->o = player1->o;
-			camera1->aimyaw = mousetype() <= 2 ? player1->yaw : player1->aimyaw;
-			camera1->aimpitch = mousetype() <= 2 ? 0-cameraheight() : player1->aimpitch;
+			camera1->aimyaw = mousetype() <= 3 ? player1->yaw : player1->aimyaw;
+			camera1->aimpitch = mousetype() <= 3 ? 0-cameraheight() : player1->aimpitch;
 		}
 		else camera1 = player1;
 
-		if(mousetype() <= 2)
+		if(mousetype() <= 3)
 		{
 			vec dir(worldpos);
 			dir.sub(camera1->o);
 			dir.normalize();
-			vectoyawpitch(dir, camera1->yaw, camera1->pitch);
+			vectoyawpitch(dir,
+				!mousetype() || mousetype() >= 2 ? camera1->yaw : camera1->aimyaw,
+				!mousetype() || mousetype() >= 2 ? camera1->pitch : camera1->aimpitch);
 		}
-		else if(mousetype() >= 3)
+		else if(mousetype() <= 5)
 		{
 			float yaw = camera1->yaw, pitch = camera1->pitch;
 			if(!guiactive()) vectoyawpitch(cursordir, yaw, pitch);
