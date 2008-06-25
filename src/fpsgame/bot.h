@@ -296,7 +296,8 @@ struct botclient
 			}
 			last = i;
 		}
-		if(botdebug() > 3) renderline(d->o, bs.targpos, 64.f, 128.f, 64.f, false);
+		if(botdebug() > 3)
+			renderline(vec(d->o).sub(vec(0, 0, d->height*0.5f)), bs.targpos, 64.f, 128.f, 64.f, false);
 		renderprimitive(false);
 	}
 

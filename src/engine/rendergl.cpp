@@ -538,7 +538,7 @@ VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
 bool isthirdperson() { return cl->gamethirdperson() || reflecting; }
 
-void projectcursor(float x, float y, vec &dir)
+void vecfromcursor(float x, float y, float z, vec &dir)
 {
 	GLdouble cmvm[16], cpjm[16];
 	GLint view[4];
@@ -548,11 +548,27 @@ void projectcursor(float x, float y, vec &dir)
 	glGetDoublev(GL_PROJECTION_MATRIX, cpjm);
 	glGetIntegerv(GL_VIEWPORT, view);
 
-	gluUnProject(x*float(view[2]), y*float(view[3]), 1.0f, cmvm, cpjm, view, &dx, &dy, &dz);
+	gluUnProject(x*float(view[2]), (1.f-y)*float(view[3]), z, cmvm, cpjm, view, &dx, &dy, &dz);
 	dir = vec((float)dx, (float)dy, (float)dz);
-	gluUnProject(x*float(view[2]), y*float(view[3]), 0.0f, cmvm, cpjm, view, &dx, &dy, &dz);
+	gluUnProject(x*float(view[2]), (1.f-y)*float(view[3]), 0.0f, cmvm, cpjm, view, &dx, &dy, &dz);
 	dir.sub(vec((float)dx, (float)dy, (float)dz));
 	dir.normalize();
+}
+
+void vectocursor(vec &v, float &x, float &y, float &z)
+{
+	GLdouble cmvm[16], cpjm[16];
+	GLint view[4];
+	GLdouble dx, dy, dz;
+
+	glGetDoublev(GL_MODELVIEW_MATRIX, cmvm);
+	glGetDoublev(GL_PROJECTION_MATRIX, cpjm);
+	glGetIntegerv(GL_VIEWPORT, view);
+
+	gluProject(v.x, v.y, v.z, cmvm, cpjm, view, &dx, &dy, &dz);
+	x = (float)dx;
+	y = (float)view[3]-dy;
+	z = (float)dz;
 }
 
 void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, bool swapxy)
@@ -1287,7 +1303,7 @@ void gl_drawframe(int w, int h)
 	project(fovy, aspect, farplane);
 	transplayer();
     readmatrices();
-	projectcursor(cursorx, 1.f-cursory, cursordir);
+    cl->project(w, h, cursordir, cursorx, cursory);
 
 	glEnable(GL_TEXTURE_2D);
 
