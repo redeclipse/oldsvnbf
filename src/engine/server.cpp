@@ -723,9 +723,6 @@ void initruntime()
 {
 	initgame(game);
 
-	appendhomedir(sv->gameid());
-	addpackagedir(sv->gameid());
-
 #ifdef MASTERSERVER
     setupmaster();
 #endif

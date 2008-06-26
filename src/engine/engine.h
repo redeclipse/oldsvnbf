@@ -576,9 +576,5 @@ extern void renderdir(vec &o, float yaw, float pitch, bool nf = true);
 extern void renderradius(vec &o, float height, float radius, bool nf = true);
 
 extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 120);
-
-extern bool getlos(vec &o, vec &q, float yaw, float pitch, float mdist = 0.f, float fx = 0.f, float fy = 0.f);
-extern bool getsight(physent *d, vec &q, vec &v, float mdist, float fx = 0.f, float fy = 0.f);
-
 #define rendernormally (!shadowmapping && !envmapping && !reflecting && !refracting)
 #endif // STANDALONE

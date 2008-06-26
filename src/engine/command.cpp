@@ -527,7 +527,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         #define OVERRIDEVAR(saveval, resetval) \
                             if(overrideidents || id->flags&IDF_OVERRIDE) \
                             { \
-                                if(id->flags&IDF_PERSIST && !(id->flags&IDF_WORLD)) \
+                                if(id->flags&IDF_PERSIST) \
                                 { \
                                     conoutf("cannot override persistent variable %s", id->name); \
                                     break; \

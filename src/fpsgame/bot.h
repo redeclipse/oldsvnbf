@@ -10,7 +10,7 @@ struct botclient
 	static const int BOTLOSRANGE	= 514;			// line of sight range
 	static const int BOTFOVRANGE	= 128;			// field of view range
 
-	IVAR(botskill, 1, 1, 100);
+	IVAR(botskill, 1, 30, 100);
 	IVAR(botdebug, 0, 2, 4);
 
 	#define BOTRATE					(101-botskill())
@@ -50,6 +50,26 @@ struct botclient
 			fpsent *d = cl.players[i];
 			if(d->bot) think(d);
 		}
+	}
+
+	bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float fx, float fy)
+	{
+		float dist = o.dist(q);
+
+		if(dist <= mdist)
+		{
+			float fovx = fx, fovy = fy;
+
+			if (fovx <= 0.f) fovx = (float)fov;
+			if (fovy <= 0.f) fovy = (float)fov*4/3;
+
+			float x = fabs((asin((q.z-o.z)/dist)/RAD)-pitch);
+			float y = fabs((-(float)atan2(q.x-o.x, q.y-o.y)/PI*180+180)-yaw);
+
+			if(x <= fovx && y <= fovy)
+				return raycubelos(o, q, v);
+		}
+		return false;
 	}
 
 	bool hastarget(fpsent *d)
@@ -92,7 +112,8 @@ struct botclient
 		}
 		else if(d->state == CS_ALIVE)
 		{
-			botstate &c = d->bot->addstate(BS_UPDATE, BOTWAIT(5, 3));
+			botstate &c = d->bot->addstate(BS_UPDATE);
+			c.waittime = BOTWAIT(5, 3);
 			c.airtime = BOTWAIT(1, 1);
 			c.targpos = d->o;
 			d->bot->targyaw = d->yaw;
@@ -124,14 +145,14 @@ struct botclient
 				{ \
 					vec targ; \
 					float pdist = d->o.dist(ps); \
-					if(getsight((physent *)d, ps, targ, BOTLOSDIST, BOTFOVX, BOTFOVY)) \
+					if(getsight(d->o, d->yaw, d->pitch, ps, targ, BOTLOSDIST, BOTFOVX, BOTFOVY)) \
 						pdist *= 0.5f; \
 					if(pdist < b.dist) \
 					{ \
 						state = st; \
 						node = nd; \
 						b.target = tr; \
-						b.targpos = targ; \
+						b.targpos = ps; \
 						b.dist = pdist; \
 					} \
 				} \
@@ -149,17 +170,17 @@ struct botclient
 						case WEAPON:
 						{
 							if(e.spawned && e.attr1 != GUN_GL && d->ammo[e.attr1] <= 0 && e.attr1 > d->bestgun(lastmillis))
-								getclosestnode(BS_INTEREST, i, i, vec(e.o).add(vec(0, 0, enttype[e.type].height)));
+								getclosestnode(BS_INTEREST, i, i, vec(e.o).add(vec(0, 0, d->height)));
 							break;
 						}
 						default: break;
 					}
 				}
 
-				if(cl.player1->state == CS_ALIVE)
+				if(cl.player1->state == CS_ALIVE && (!m_team(cl.gamemode, cl.mutators) || d->team != cl.player1->team))
 					getclosestnode(BS_PURSUE, cl.player1->lastnode, cl.player1->clientnum, cl.player1->o);
 				loopv(cl.players)
-					if(cl.players[i] && cl.players[i] != d && cl.players[i]->state == CS_ALIVE)
+					if(cl.players[i] && cl.players[i] != d && cl.players[i]->state == CS_ALIVE && (!m_team(cl.gamemode, cl.mutators) || d->team != cl.players[i]->team))
 						getclosestnode(BS_PURSUE, cl.players[i]->lastnode, cl.players[i]->clientnum, cl.players[i]->o);
 
 				if(!state)
@@ -174,15 +195,17 @@ struct botclient
 							state = BS_INTEREST;
 							b.target = node = i;
 							b.dist = e.o.dist(d->o);
-							b.targpos = vec(e.o).add(vec(0, 0, enttype[e.type].height));
+							b.targpos = vec(e.o).add(vec(0, 0, d->height));
 						}
 					}
 				}
 
 				if(state && b.target >= 0 && cl.et.ents.inrange(node))
 				{
-					botstate &c = d->bot->addstate(state, BOTWAIT(2, 1), BOTRATE);
+					botstate &c = d->bot->addstate(state);
+					c.waittime = BOTWAIT(2, 1);
 					c.airtime = BOTWAIT(1, 1);
+					c.cycles = 100;
 					c.target = b.target;
 					c.targpos = b.targpos;
 					c.dist = disttonode(d, node, c.route);
@@ -228,42 +251,40 @@ struct botclient
 		return false;
 	}
 
-	bool wantdefer(fpsent *d, botstate &b, fpsent *e, vec &target)
-	{
-		if(getsight((physent *)d, e->o, target, BOTLOSDIST, BOTFOVX, BOTFOVY) &&
-			d->canshoot(d->gunselect, lastmillis)) return true;
-		return false;
-	}
-
 	bool dodefer(fpsent *d, botstate &b)
 	{
-		int target = -1;
-		float dist = 1e16f;
-		vec targpos, targ;
+		if(d->canshoot(d->gunselect, lastmillis))
+		{
+			int target = -1;
+			float dist = 1e16f;
+			vec targpos, targ;
 
-		if(cl.player1->state == CS_ALIVE && cl.player1->o.dist(d->o) < dist && wantdefer(d, b, cl.player1, targ))
-		{
-			target = cl.player1->clientnum;
-			targpos = targ;
-		}
-		loopv(cl.players)
-		{
-			if(cl.players[i] && cl.players[i] != d && cl.players[i]->state == CS_ALIVE && cl.players[i]->o.dist(d->o) < dist && wantdefer(d, b, cl.players[i], targ))
+			if(cl.player1->state == CS_ALIVE && (!m_team(cl.gamemode, cl.mutators) || d->team != cl.player1->team) && cl.player1->o.dist(d->o) < dist && getsight(d->o, d->yaw, d->pitch, cl.player1->o, targ, BOTLOSDIST, BOTFOVX, BOTFOVY))
 			{
-				target = cl.players[i]->clientnum;
-				targpos = targ;
+				target = cl.player1->clientnum;
+				targpos = cl.player1->o;
 			}
-		}
+			loopv(cl.players)
+			{
+				if(cl.players[i] && cl.players[i] != d && cl.players[i]->state == CS_ALIVE && (!m_team(cl.gamemode, cl.mutators) || d->team != cl.players[i]->team) && cl.players[i]->o.dist(d->o) < dist && getsight(d->o, d->yaw, d->pitch, cl.players[i]->o, targ, BOTLOSDIST, BOTFOVX, BOTFOVY))
+				{
+					target = cl.players[i]->clientnum;
+					targpos = cl.players[i]->o;
+				}
+			}
 
-		if(target >= 0)
-		{
-			botstate &c = d->bot->addstate(BS_ATTACK, BOTWAIT(3, 2), BOTRATE/10);
-			c.airtime = BOTWAIT(1, 1);
-			b.targpos = c.targpos = targpos;
-			c.target = target;
-			c.route = b.route;
-			c.dist = b.dist;
-			return true;
+			if(target >= 0)
+			{
+				botstate &c = d->bot->addstate(BS_ATTACK);
+				c.waittime = BOTWAIT(3, 2);
+				c.airtime = BOTWAIT(1, 1);
+				c.cycles = 20;
+				b.targpos = c.targpos = targpos;
+				c.target = target;
+				c.route = b.route;
+				c.dist = b.dist;
+				return true;
+			}
 		}
 		return false;
 	}
@@ -274,7 +295,7 @@ struct botclient
 		if(b.route.inrange(node) && b.route.inrange(node+1))
 		{
 			botstate &c = d->bot->addstate(BS_MOVE);
-			b.targpos = c.targpos = vec(cl.et.ents[b.route[node+1]]->o).add(vec(0, 0, d->height-1));
+			b.targpos = c.targpos = vec(cl.et.ents[b.route[node+1]]->o).add(vec(0, 0, d->height));
 			c.target = b.target;
 			c.route = b.route;
 			c.dist = b.dist;
@@ -336,22 +357,39 @@ struct botclient
 			{ // if we're here, we haven't been able to shoot
 				vec target;
 				if(e->o.dist(d->o) < BOTISNEAR && cl.et.ents.inrange(d->lastnode) &&
-					getsight((physent *)d, e->o, target, BOTLOSDIST, BOTFOVX, BOTFOVY))
-				{ // find a random node to go to, we're too close
-					int node = rnd(cl.et.ents[d->lastnode]->links.length());
-					if(cl.et.ents.inrange(cl.et.ents[d->lastnode]->links[node]))
-					{
-						fpsentity &f = (fpsentity &)*cl.et.ents[cl.et.ents[d->lastnode]->links[node]];
-						if(f.type == WAYPOINT)
+					getsight(d->o, d->yaw, d->pitch, e->o, target, BOTLOSDIST, BOTFOVX, BOTFOVY))
+				{
+					#if 0
+					int node = -1;
+					float dist = 0.f;
+					loopv(cl.et.ents[d->lastnode]->links)
+					{ // find a random node to go to, we're too close
+						if(cl.et.ents.inrange(cl.et.ents[d->lastnode]->links[i]))
 						{
-							botstate &c = d->bot->addstate(BS_MOVE);
-							b.targpos = c.targpos = vec(f.o).add(vec(0, 0, d->height-1));
-							c.target = b.target;
-							c.route = b.route;
-							c.dist = b.dist;
-							return true;
+							fpsentity &f = (fpsentity &)*cl.et.ents[cl.et.ents[d->lastnode]->links[i]];
+							if(f.type == WAYPOINT && f.o.dist(e->o) > dist)
+							{ // move away from our target for a bit
+								node = cl.et.ents[d->lastnode]->links[i];
+								dist = f.o.dist(e->o);
+							}
 						}
 					}
+
+					if(cl.et.ents.inrange(node))
+					{
+						botstate &c = d->bot->addstate(BS_MOVE);
+						b.targpos = c.targpos = vec(cl.et.ents[node]->o).add(vec(0, 0, d->height));
+						c.target = b.target;
+						c.route = b.route;
+						c.dist = dist;
+						return true;
+					}
+					#else
+					d->stopmoving();
+					d->move = rnd(2)-1;
+					d->strafe = rnd(3)-1;
+					return true;
+					#endif
 				}
 
 				if(dohunt(d, b)) return true;
@@ -503,7 +541,7 @@ struct botclient
 				int above = 0;
 				loopvrev(d->bot->state)
 				{
-					botstate &b = d->bot->getstate(i);
+					botstate &b = d->bot->state[i];
 					drawstate(d, b, top, above += 2);
 					if(botdebug() > 2 && top && rendernormally && b.type != BS_WAIT)
 						drawroute(d, b);

@@ -772,8 +772,8 @@ struct GAMECLIENT : igameclient
 
 		if(player1->state == CS_ALIVE)
 		{
-			if(!healthbartex.t) healthbartex.changed();
-			if(healthbartex.t)
+			Texture *t = textureload(healthbartex());
+			if(t)
 			{
 				float amt = clamp(float(player1->health)/float(MAXHEALTH), 0.f, 1.f);
 				float glow = 1.f, pulse = fade;
@@ -785,7 +785,7 @@ struct GAMECLIENT : igameclient
 					glow = clamp(glow*regen, 0.3f, 1.f);
 				}
 
-				glBindTexture(GL_TEXTURE_2D, healthbartex.t->getframe(amt));
+				glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
 				glColor4f(glow, glow*0.3f, 0.f, pulse);
 				glBegin(GL_QUADS);
 				drawsized(float(bx), float(by), float(bs));
@@ -794,11 +794,11 @@ struct GAMECLIENT : igameclient
 
 			if(isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
 			{
-				if(healthbartex.t && guntype[player1->gunselect].power &&
+				if(t && guntype[player1->gunselect].power &&
 					player1->gunstate[player1->gunselect] == GUNSTATE_POWER)
 				{
 					float amt = clamp(float(lastmillis-player1->gunlast[player1->gunselect])/float(guntype[player1->gunselect].power), 0.f, 1.f);
-					glBindTexture(GL_TEXTURE_2D, healthbartex.t->getframe(amt));
+					glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
 					glColor4f(1.f, 1.f, 0.f, fade*0.5f);
 					glBegin(GL_QUADS);
 					drawsized(float(bx+16), float(by+16), float(bs-32));
@@ -836,36 +836,30 @@ struct GAMECLIENT : igameclient
 		POINTER_MAX
 	};
 
-    Texture *getpointer(int index)
+    const char *getpointer(int index)
     {
-    	#define pointertex(n) \
-    	{ \
-			if(!(n).t) (n).changed(); \
-			if((n).t) return (n).t; \
-    	}
         switch(index)
         {
-            case POINTER_RELATIVE: pointertex(relativecursortex); break;
-            case POINTER_GUI: pointertex(guicursortex); break;
-            case POINTER_EDIT: pointertex(editcursortex); break;
-            case POINTER_HAIR: pointertex(crosshairtex); break;
-            case POINTER_TEAM: pointertex(teamcrosshairtex); break;
-            case POINTER_HIT: pointertex(hitcrosshairtex); break;
-            default: break;
+            case POINTER_RELATIVE: default: return relativecursortex(); break;
+            case POINTER_GUI: return guicursortex(); break;
+            case POINTER_EDIT: return editcursortex(); break;
+            case POINTER_HAIR: return crosshairtex(); break;
+            case POINTER_TEAM: return teamcrosshairtex(); break;
+            case POINTER_HIT: return hitcrosshairtex(); break;
         }
         return NULL;
     }
 
 	void drawpointer(int w, int h, int index, float x, float y, float r, float g, float b)
 	{
-		Texture *pointer = getpointer(index);
-		if(pointer)
+		Texture *pointer = textureload(getpointer(index));
+		if(pointer != NULL && pointer != notexture)
 		{
 			float chsize = index != POINTER_GUI ? crosshairsize()*w/300.0f : cursorsize()*w/300.0f,
 				chblend = index != POINTER_GUI ? crosshairblend()/100.f : cursorblend()/100.f;
 
 			glEnable(GL_BLEND);
-			if(pointer->bpp==32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			if(pointer->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			else glBlendFunc(GL_ONE, GL_ONE);
 			glColor4f(r, g, b, chblend);
 
@@ -897,6 +891,7 @@ struct GAMECLIENT : igameclient
             dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
             if(d && d->type==ENT_PLAYER && ((fpsent *)d)->team == player1->team)
 				index = POINTER_TEAM;
+			else index = POINTER_HAIR;
         }
         else index = POINTER_HAIR;
 
