@@ -376,7 +376,7 @@ struct ctfclient : ctfstate
 				flag &f = flags[i];
 				f.team = team;
                 f.score = score;
-                f.owner = owner>=0 ? (owner==cl.player1->clientnum ? cl.player1 : cl.newclient(owner)) : NULL;
+                f.owner = owner >= 0 ? cl.newclient(owner) : NULL;
                 f.droptime = dropped;
                 f.droploc = dropped ? droploc : f.spawnloc;
                 f.interptime = 0;
