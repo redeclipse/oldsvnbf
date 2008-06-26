@@ -419,24 +419,31 @@ struct GAMECLIENT : igameclient
 
 	fpsent *newclient(int cn)	// ensure valid entity
 	{
-		if(cn<0 || cn>=MAXCLIENTS)
+		if(cn < 0 || cn >= MAXCLIENTS)
 		{
 			neterr("clientnum");
 			return NULL;
 		}
-		while(cn>=players.length()) players.add(NULL);
+
+		if(cn == player1->clientnum) return player1;
+
+		while(cn >= players.length()) players.add(NULL);
+
 		if(!players[cn])
 		{
 			fpsent *d = new fpsent();
 			d->clientnum = cn;
 			players[cn] = d;
 		}
+
 		return players[cn];
 	}
 
 	fpsent *getclient(int cn)	// ensure valid entity
 	{
-		return players.inrange(cn) ? players[cn] : NULL;
+		if(cn == player1->clientnum) return player1;
+		if(players.inrange(cn)) return players[cn];
+		return NULL;
 	}
 
 	void clientdisconnected(int cn)
@@ -501,7 +508,7 @@ struct GAMECLIENT : igameclient
 	void playsoundc(int n, fpsent *d = NULL)
 	{
 		fpsent *c = d ? d : player1;
-		if(c == player1 || c->ownernum == player1->clientnum)
+		if(c == player1 || c->bot)
 			cc.addmsg(SV_SOUND, "i2", c->clientnum, n);
 		playsound(n, &c->o);
 	}
@@ -547,7 +554,7 @@ struct GAMECLIENT : igameclient
 
 	void suicide(fpsent *d)
 	{
-		if(d == player1 || d->ownernum == player1->clientnum)
+		if(d == player1 || d->bot)
 		{
 			if(d->state!=CS_ALIVE) return;
 			if(d->suicided!=d->lifesequence)

@@ -346,8 +346,7 @@ struct weaponstate
 
 	void shoot(fpsent *d, vec &targ)
 	{
-		if(d != cl.player1 && d->ownernum != cl.player1->clientnum) return;
-		if(!d->canshoot(d->gunselect, lastmillis)) return;
+		if((d != cl.player1 && !d->bot) || !d->canshoot(d->gunselect, lastmillis)) return;
 
 		int power = 100;
 		if(guntype[d->gunselect].power)

@@ -364,7 +364,7 @@ struct clientcom : iclientcom
 	{
 		updateposition(cl.player1);
 		loopv(cl.players)
-			if(cl.players[i] && cl.players[i]->ownernum >= 0 && cl.players[i]->ownernum == cl.player1->clientnum)
+			if(cl.players[i] && cl.players[i]->bot)
 				updateposition(cl.players[i]);
 
 		if(senditemstoserver)
@@ -606,7 +606,7 @@ struct clientcom : iclientcom
 				case SV_SOUND:
 				{
 					int tcn = getint(p), snd = getint(p), vol = getint(p);
-					fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
+					fpsent *t = cl.getclient(tcn);
 					if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum))
 						playsound(snd, &cl.player1->o, vol);
 					else playsound(snd, &t->o, vol);
@@ -616,7 +616,7 @@ struct clientcom : iclientcom
 				case SV_TEXT:
 				{
 					int tcn = getint(p);
-					fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
+					fpsent *t = cl.getclient(tcn);
 					int flags = getint(p);
 					getstring(text, p);
 					if(!t) break;
@@ -627,7 +627,7 @@ struct clientcom : iclientcom
 				case SV_EXECLINK:
 				{
 					int tcn = getint(p), index = getint(p);
-					fpsent *t = tcn == cl.player1->clientnum ? cl.player1 : cl.getclient(tcn);
+					fpsent *t = cl.getclient(tcn);
 					if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum)) break;
 					cl.et.execlink(t, index, false);
 					break;
@@ -645,7 +645,7 @@ struct clientcom : iclientcom
 				case SV_FORCEDEATH:
 				{
 					int lcn = getint(p);
-					fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.newclient(lcn);
+					fpsent *f = cl.newclient(lcn);
 					if(!f) break;
 					if(f==cl.player1)
 					{
@@ -718,7 +718,7 @@ struct clientcom : iclientcom
 				case SV_SPAWN:
 				{
 					int lcn = getint(p);
-					fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+					fpsent *f = cl.getclient(lcn);
 					parsestate(f, p);
 					f->state = CS_SPAWNING;
 					playsound(S_RESPAWN, &f->o);
@@ -728,8 +728,8 @@ struct clientcom : iclientcom
 				case SV_SPAWNSTATE:
 				{
 					int lcn = getint(p);
-					fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
-					bool local = (f->clientnum==cl.player1->clientnum || f->bot);
+					fpsent *f = cl.getclient(lcn);
+					bool local = (f == cl.player1 || f->bot);
 					if(f==cl.player1 && editmode) toggleedit();
 					f->respawn();
 					parsestate(f, p);
@@ -774,8 +774,7 @@ struct clientcom : iclientcom
 						health = getint(p);
 					vec dir;
 					loopk(3) dir[k] = getint(p)/DNF;
-					fpsent *target = tcn==cl.player1->clientnum ? cl.player1 : cl.getclient(tcn),
-							*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
+					fpsent *target = cl.getclient(tcn), *actor = cl.getclient(acn);
 					if(!target || !actor) break;
 					cl.damaged(gun, flags, damage, target, actor, lastmillis, dir);
 					target->health = health; // just in case
@@ -785,7 +784,7 @@ struct clientcom : iclientcom
 				case SV_RELOAD:
 				{
 					int trg = getint(p), gun = getint(p), amt = getint(p);
-					fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
+					fpsent *target = cl.getclient(trg);
 					if(!target || gun <= -1 || gun >= NUMGUNS) break;
 					target->gunreload(gun, amt, lastmillis);
 					break;
@@ -794,7 +793,7 @@ struct clientcom : iclientcom
 				case SV_REGEN:
 				{
 					int trg = getint(p), amt = getint(p);
-					fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
+					fpsent *target = cl.getclient(trg);
 					if(!target) break;
 					target->health = amt;
 					target->lastregen = lastmillis;
@@ -809,8 +808,7 @@ struct clientcom : iclientcom
 				{
 					int vcn = getint(p), acn = getint(p), frags = getint(p),
 						gun = getint(p), flags = getint(p), damage = getint(p);
-					fpsent *victim = vcn==cl.player1->clientnum ? cl.player1 : cl.getclient(vcn),
-							*actor = acn==cl.player1->clientnum ? cl.player1 : cl.getclient(acn);
+					fpsent *victim = cl.getclient(vcn), *actor = cl.getclient(acn);
 					if(!actor) break;
 					actor->frags = frags;
 					if(actor!=cl.player1 && !m_stf(cl.gamemode) && !m_ctf(cl.gamemode))
@@ -826,7 +824,7 @@ struct clientcom : iclientcom
 				case SV_GUNSELECT:
 				{
 					int trg = getint(p), gun = getint(p);
-					fpsent *target = trg == cl.player1->clientnum ? cl.player1 : cl.getclient(trg);
+					fpsent *target = cl.getclient(trg);
 					if(!target || gun <= -1 || gun >= NUMGUNS) break;
 					target->setgun(gun, lastmillis);
 					break;
@@ -835,7 +833,7 @@ struct clientcom : iclientcom
 				case SV_TAUNT:
 				{
 					int lcn = getint(p);
-					fpsent *f = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+					fpsent *f = cl.getclient(lcn);
 					if(!f) break;
 					f->lasttaunt = lastmillis;
 					break;
@@ -847,7 +845,7 @@ struct clientcom : iclientcom
 					{
 						int lcn = getint(p);
 						if(p.overread() || lcn < 0) break;
-						fpsent *f = (lcn == cl.player1->clientnum ? cl.player1 : cl.getclient(lcn));
+						fpsent *f = cl.getclient(lcn);
 						parsestate(f, p, true);
 					}
 					break;
@@ -867,7 +865,7 @@ struct clientcom : iclientcom
 				case SV_ITEMACC:			// server acknowledges that I picked up this item
 				{
 					int lcn = getint(p), i = getint(p);
-					fpsent *d = lcn==cl.player1->clientnum ? cl.player1 : cl.getclient(lcn);
+					fpsent *d = cl.getclient(lcn);
 					cl.et.useeffects(d, lastmillis, i);
 					break;
 				}
@@ -1038,8 +1036,8 @@ struct clientcom : iclientcom
 					loopv(cl.players) if(cl.players[i]) cl.players[i]->privilege = PRIV_NONE;
 					if(mn>=0)
 					{
-						fpsent *m = mn==cl.player1->clientnum ? cl.player1 : cl.newclient(mn);
-						m->privilege = priv;
+						fpsent *m = cl.getclient(mn);
+						if(m) m->privilege = priv;
 					}
 					break;
 				}
@@ -1056,14 +1054,9 @@ struct clientcom : iclientcom
 				case SV_SPECTATOR:
 				{
 					int sn = getint(p), val = getint(p);
-					fpsent *s;
-					if(sn==cl.player1->clientnum)
-					{
-						spectator = val!=0;
-						s = cl.player1;
-					}
-					else s = cl.newclient(sn);
-					if(!s) return;
+					fpsent *s = cl.newclient(sn);
+					if(!s) break;
+					if(s == cl.player1) spectator = val!=0;
 					if(val)
 					{
 						if(s==cl.player1 && editmode) toggleedit();
@@ -1080,7 +1073,7 @@ struct clientcom : iclientcom
 				case SV_SETTEAM:
 				{
 					int wn = getint(p), tn = getint(p);
-					fpsent *w = wn==cl.player1->clientnum ? cl.player1 : cl.getclient(wn);
+					fpsent *w = cl.getclient(wn);
 					if(!w) return;
 					w->team = tn;
 					break;
@@ -1123,7 +1116,7 @@ struct clientcom : iclientcom
 					int ocn = getint(p), flag = getint(p);
 					vec droploc;
 					loopk(3) droploc[k] = getint(p)/DMF;
-					fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+					fpsent *o = cl.newclient(ocn);
 					if(m_ctf(cl.gamemode)) cl.ctf.dropflag(o, flag, droploc);
 					break;
 				}
@@ -1131,7 +1124,7 @@ struct clientcom : iclientcom
 				case SV_SCOREFLAG:
 				{
 					int ocn = getint(p), relayflag = getint(p), goalflag = getint(p), score = getint(p);
-					fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+					fpsent *o = cl.newclient(ocn);
 					if(m_ctf(cl.gamemode)) cl.ctf.scoreflag(o, relayflag, goalflag, score);
 					break;
 				}
@@ -1139,7 +1132,7 @@ struct clientcom : iclientcom
 				case SV_RETURNFLAG:
 				{
 					int ocn = getint(p), flag = getint(p);
-					fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+					fpsent *o = cl.newclient(ocn);
 					if(m_ctf(cl.gamemode)) cl.ctf.returnflag(o, flag);
 					break;
 				}
@@ -1147,7 +1140,7 @@ struct clientcom : iclientcom
 				case SV_TAKEFLAG:
 				{
 					int ocn = getint(p), flag = getint(p);
-					fpsent *o = ocn==cl.player1->clientnum ? cl.player1 : cl.newclient(ocn);
+					fpsent *o = cl.newclient(ocn);
 					if(m_ctf(cl.gamemode)) cl.ctf.takeflag(o, flag);
 					break;
 				}
@@ -1190,10 +1183,10 @@ struct clientcom : iclientcom
 					s_strncpy(b->name, text, MAXNAMELEN);
 					b->team = getint(p);
 
-					fpsent *o = b->ownernum==cl.player1->clientnum ? cl.player1 : cl.players[b->ownernum];
+					fpsent *o = cl.getclient(b->ownernum);
 					s_sprintfd(m)("%s", o ? cl.colorname(o) : "unknown");
 					conoutf("%s was introduced by %s", cl.colorname(b), m);
-					if(b->ownernum==cl.player1->clientnum) b->bot = new botinfo();
+					if(o == cl.player1) b->bot = new botinfo();
 					break;
 				}
 

@@ -35,7 +35,7 @@ struct botclient
 		loopvrev(cl.players) if(cl.players[i])
 		{
 			fpsent *d = cl.players[i];
-			if (d->ownernum >= 0 && d->ownernum == cl.player1->clientnum)
+			if (d->bot)
 			{
 				cl.cc.addmsg(SV_DELBOT, "ri", d->clientnum);
 				break;
@@ -48,8 +48,7 @@ struct botclient
 		loopv(cl.players) if(cl.players[i])
 		{
 			fpsent *d = cl.players[i];
-			if(d->ownernum >= 0 && d->ownernum == cl.player1->clientnum && d->bot)
-				think(d);
+			if(d->bot) think(d);
 		}
 	}
 
@@ -331,7 +330,7 @@ struct botclient
 		{
 			if(dodefer(d, b)) return true;
 
-			fpsent *e = b.target == cl.player1->clientnum ? cl.player1 : cl.getclient(b.target);
+			fpsent *e = cl.getclient(b.target);
 
 			if(e && e->state == CS_ALIVE)
 			{ // if we're here, we haven't been able to shoot
