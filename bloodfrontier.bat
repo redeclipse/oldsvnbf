@@ -3,7 +3,7 @@
 rem set SDL_VIDEO_WINDOW_POS=0,0
 set BF_DIR=.
 set BF_HOME=home
-set BF_OPTIONS=-h%BF_HOME% -rbfa\init.cfg
+set BF_OPTIONS=-h%BF_HOME% -rinit.cfg
 
 IF EXIST bin\bloodfrontier_client.exe (
 	bin\bloodfrontier_client.exe %BF_OPTIONS% %* 

@@ -747,15 +747,21 @@ struct entities : icliententities
 	{
 		if(d->state == CS_ALIVE)
 		{
-			vec v(vec(d->o).sub(vec(0, 0, d->height-1)));
+			vec v(vec(d->o).sub(vec(0, 0, d->timeinair ? d->height : d->height-enttype[WAYPOINT].height)));
 			int oldnode = d->lastnode, curnode = waypointnode(v, true);
 
 			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)
 			{
+				if(!ents.inrange(curnode) && ents.inrange(oldnode) && ents[oldnode]->o.dist(v) <= enttype[WAYPOINT].radius*2.f)
+					curnode = oldnode;
+
 				if(!ents.inrange(curnode))
 				{
 					curnode = ents.length();
-					newentity(v, WAYPOINT, 0, 0, 0, 0);
+					vec o(d->o);
+					if(d->timeinair || !cl.ph.droptofloor(o, enttype[WAYPOINT].radius, enttype[WAYPOINT].height))
+						o = v;
+					newentity(o, WAYPOINT, 0, 0, 0, 0);
 				}
 
 				if(oldnode != curnode)
@@ -768,7 +774,9 @@ struct entities : icliententities
 								waypointlink(curnode, i, false);
 				}
 			}
-			else if(!ents.inrange(curnode)) curnode = waypointnode(v, false);
+			else if(!ents.inrange(curnode))
+				curnode = waypointnode(v, false);
+
 			d->lastnode = curnode;
 		}
 		else d->lastnode = -1;

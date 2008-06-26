@@ -67,7 +67,7 @@ struct enttypes
 	{ FLAG,			48,		32,		16,		ETU_NONE,		"flag" },
 	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" }, // FIXME
 	{ CAMERA,		48,		0,		0,		ETU_NONE,		"camera" },
-	{ WAYPOINT,		1,		16,		16,		ETU_NONE,		"waypoint" },
+	{ WAYPOINT,		1,		8,		4,		ETU_NONE,		"waypoint" },
 	{ ANNOUNCER,	64,		0,		0,		ETU_NONE,		"announcer" },
 	{ CONNECTION,	70,		8,		8,		ETU_NONE,		"connection" },
 };
@@ -557,15 +557,22 @@ struct botstate
 	float dist;
 	vec targpos;
 
-	botstate(int _type, int _millis, int _waittime = 0, int _cycles = 0) : type(_type), millis(_millis), waittime(_waittime), airtime(_waittime), target(-1), cycles(0), cycle(0)
+	botstate(int _type, int _millis) : type(_type), millis(_millis)
 	{
-		route.setsize(0);
-		targpos = vec(0, 0, 0);
-		dist = 0.f;
+		reset();
 	}
 	~botstate()
 	{
 		route.setsize(0);
+	}
+
+	void reset()
+	{
+		waittime = airtime = cycles = cycle = 0;
+		target = -1;
+		route.setsize(0);
+		targpos = vec(0, 0, 0);
+		dist = 0.f;
 	}
 
 	int goal()
@@ -584,7 +591,7 @@ struct botinfo
 	botinfo()
 	{
 		reset();
-		setstate(BS_WAIT, 100);
+		setstate(BS_WAIT);
 	}
 	~botinfo()
 	{
@@ -596,24 +603,23 @@ struct botinfo
 		state.setsize(0);
 	}
 
-	botstate &addstate(int type, int waittime = 0, int cycles = 0)
+	botstate &addstate(int type)
 	{
-		botstate bs(type, lastmillis, waittime, cycles);
+		botstate bs(type, lastmillis);
 		return state.add(bs);
 	}
 
 	void removestate(int index = -1)
 	{
-		if(index < 0) state.pop();
-		else if(state.inrange(index)) state.remove(index);
-		if(!state.length()) addstate(BS_WAIT, 100);
+		if(state.inrange(index)) state.remove(index);
+		else if(state.length()) state.pop();
+		if(!state.length()) addstate(BS_WAIT);
 	}
 
-	botstate &setstate(int type, int waittime = 0, int cycles = 0, bool pop = true)
+	botstate &setstate(int type, bool pop = true)
 	{
-		bool popstate = pop && state.length() > 1;
-		if(popstate) removestate();
-		return addstate(type, waittime, cycles);
+		if(pop) removestate();
+		return addstate(type);
 	}
 
 	botstate &getstate(int idx = -1)

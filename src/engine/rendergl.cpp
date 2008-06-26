@@ -1644,27 +1644,3 @@ bool rendericon(const char *icon, int x, int y, int xs, int ys)
 }
 
 extern int scr_w, scr_h, fov;
-
-bool getlos(vec &o, vec &q, float yaw, float pitch, float mdist, float fx, float fy)
-{
-	float dist = o.dist(q);
-
-	if (mdist <= 0.f || dist <= mdist)
-	{
-		float fovx = fx, fovy = fy;
-
-		if (fovx <= 0.f) fovx = (float)fov;
-		if (fovy <= 0.f) fovy = (float)fov*scr_h/scr_w;
-
-		float x = fabs((asin((q.z - o.z) / dist) / RAD) - pitch);
-		float y = fabs((-(float)atan2(q.x - o.x, q.y - o.y)/PI*180+180) - yaw);
-		return x <= fovx && y <= fovy;
-	}
-	return false;
-}
-
-bool getsight(physent *d, vec &q, vec &v, float mdist, float fx, float fy)
-{
-	if (getlos(d->o, q, d->yaw, d->pitch, mdist, fx, fy)) return raycubelos(d->o, q, v);
-	return false;
-}
