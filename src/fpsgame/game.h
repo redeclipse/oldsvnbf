@@ -552,12 +552,12 @@ enum
 
 struct botstate
 {
-	int type, millis, interval, target, cycles, cycle;
+	int type, millis, waittime, airtime, target, cycles, cycle;
 	vector<int> route;
 	float dist;
 	vec targpos;
 
-	botstate(int _type, int _millis, int _interval = 0, int _cycles = 0) : type(_type), millis(_millis), interval(_interval), target(-1), cycles(0), cycle(0)
+	botstate(int _type, int _millis, int _waittime = 0, int _cycles = 0) : type(_type), millis(_millis), waittime(_waittime), airtime(_waittime), target(-1), cycles(0), cycle(0)
 	{
 		route.setsize(0);
 		targpos = vec(0, 0, 0);
@@ -596,9 +596,9 @@ struct botinfo
 		state.setsize(0);
 	}
 
-	botstate &addstate(int type, int interval = 0, int cycles = 0)
+	botstate &addstate(int type, int waittime = 0, int cycles = 0)
 	{
-		botstate bs(type, lastmillis, interval, cycles);
+		botstate bs(type, lastmillis, waittime, cycles);
 		return state.add(bs);
 	}
 
@@ -609,11 +609,11 @@ struct botinfo
 		if(!state.length()) addstate(BS_WAIT, 100);
 	}
 
-	botstate &setstate(int type, int interval = 0, int cycles = 0, bool pop = true)
+	botstate &setstate(int type, int waittime = 0, int cycles = 0, bool pop = true)
 	{
 		bool popstate = pop && state.length() > 1;
 		if(popstate) removestate();
-		return addstate(type, interval, cycles);
+		return addstate(type, waittime, cycles);
 	}
 
 	botstate &getstate(int idx = -1)
