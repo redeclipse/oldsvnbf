@@ -153,8 +153,8 @@ void loadc(gzFile f, cube &c)
         if(mask & 0x80)
         {
             int mat = gzgetc(f);
-            if((maptype == MAP_OCTA && hdr.version < 27) ||
-            	(maptype == MAP_BFGZ && hdr.version < 31))
+            if((maptype == MAP_OCTA && hdr.version <= 26) ||
+            	(maptype == MAP_BFGZ && hdr.version <= 30))
             {
                 static uchar matconv[] = { MAT_AIR, MAT_WATER, MAT_CLIP, MAT_GLASS|MAT_CLIP, MAT_NOCLIP, MAT_LAVA|MAT_DEATH, MAT_AICLIP, MAT_DEATH };
                 mat = size_t(mat) < sizeof(matconv)/sizeof(matconv[0]) ? matconv[mat] : MAT_AIR;
@@ -210,9 +210,6 @@ void loadc(gzFile f, cube &c)
 						c.ext->merges = new mergeinfo[nummerges];
 						loopi(nummerges)
 						{
-							gzread(f, &c.ext->merges[i], sizeof(mergeinfo));
-							endianswap(&c.ext->merges[i], sizeof(ushort), 4);
-#if 0 // FIXME from Sauer
                             mergeinfo *m = &c.ext->merges[i];
                             gzread(f, m, sizeof(mergeinfo));
                             endianswap(m, sizeof(ushort), 4);
@@ -224,7 +221,6 @@ void loadc(gzFile f, cube &c)
                                 m->v1 = (m->v1 - vorigin) << 2;
                                 m->v2 = (m->v2 - vorigin) << 2;
                             }
-#endif
 						}
 					}
 				}
@@ -545,6 +541,16 @@ void swapXZ(cube *c)
 	}
 }
 
+static void fixoversizedcubes(cube *c, int size)
+{
+    if(size <= VVEC_INT_MASK+1) return;
+    loopi(8)
+    {
+        if(!c[i].children) subdividecube(c[i], true, false);
+        fixoversizedcubes(c[i].children, size>>1);
+    }
+}
+
 void load_world(char *mname)		// still supports all map formats that have existed since the earliest cube betas!
 {
 	int loadingstart = SDL_GetTicks();
@@ -571,22 +577,13 @@ void load_world(char *mname)		// still supports all map formats that have existe
 		{
 			if(hdr.version <= 25)
 			{
-				struct bfgzcompat : binary
-				{
-					int worldsize, numents, lightmaps;
-					int gamever, revision;
-					char maptitle[128], gameid[4];
-				} chdr;
+				bfgzcompat25 chdr;
+				memcpy(&chdr, &hdr, sizeof(binary));
 				gzread(f, &chdr.worldsize, hdr.headersize-sizeof(binary));
 				endianswap(&chdr.worldsize, sizeof(int), 5);
-				hdr.worldsize = chdr.worldsize;
-				hdr.numents = chdr.numents;
+				memcpy(&hdr.worldsize, &chdr.worldsize, sizeof(int)*2);
 				hdr.numpvs = 0;
-				hdr.lightmaps = chdr.lightmaps;
-				hdr.gamever = chdr.gamever;
-				hdr.revision = chdr.revision;
-				memcpy(hdr.maptitle, chdr.maptitle, sizeof(hdr.maptitle));
-				memcpy(hdr.gameid, chdr.gameid, sizeof(hdr.gameid));
+				memcpy(&hdr.lightmaps, &chdr.lightmaps, hdr.headersize-sizeof(binary)-sizeof(int)*2);
 			}
 			else
 			{
@@ -687,8 +684,22 @@ void load_world(char *mname)		// still supports all map formats that have existe
 		{
 			octa ohdr;
 			memcpy(&ohdr, &newhdr, sizeof(binary));
-			gzread(f, &ohdr.worldsize, hdr.headersize-sizeof(binary));
-			endianswap(&ohdr.worldsize, sizeof(int), 7);
+
+			if(ohdr.version <= 25)
+			{
+				octacompat25 chdr;
+				memcpy(&chdr, &ohdr, sizeof(binary));
+				gzread(f, &chdr.worldsize, ohdr.headersize-sizeof(binary));
+				endianswap(&chdr.worldsize, sizeof(int), 7);
+				memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*2);
+				ohdr.numpvs = 0;
+				memcpy(&ohdr.lightmaps, &chdr.lightmaps, ohdr.headersize-sizeof(binary)-sizeof(int)*2);
+			}
+			else
+			{
+				gzread(f, &ohdr.worldsize, ohdr.headersize-sizeof(binary));
+				endianswap(&ohdr.worldsize, sizeof(int), 7);
+			}
 
 			if(ohdr.version > OCTAVERSION)
 			{
@@ -698,6 +709,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 				emptymap(12, true, m);
 				return;
 			}
+
 			maptype = MAP_OCTA;
 
 			strncpy(hdr.head, ohdr.head, 4);
@@ -842,6 +854,9 @@ void load_world(char *mname)		// still supports all map formats that have existe
 		if(hdr.version <= 8)
 			converttovectorworld();
 
+		if(hdr.worldsize > VVEC_INT_MASK+1 && hdr.version <= 25)
+			fixoversizedcubes(worldroot, hdr.worldsize>>1);
+
 		renderprogress(0, "validating...");
 		validatec(worldroot, hdr.worldsize>>1);
 
@@ -923,8 +938,8 @@ void load_world(char *mname)		// still supports all map formats that have existe
 		gzclose(f);
 		conoutf("loaded map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
 
-		if((maptype == MAP_OCTA && hdr.version <= 26) || (maptype == MAP_BFGZ && hdr.version <= 28))
-			mpremip(true); // fix cube size problems
+		//if((maptype == MAP_OCTA && hdr.version <= 26) || (maptype == MAP_BFGZ && hdr.version <= 28))
+		//	mpremip(true);
 
 		if((maptype == MAP_OCTA && hdr.version <= 25) || (maptype == MAP_BFGZ && hdr.version <= 26))
 			fixlightmapnormals();

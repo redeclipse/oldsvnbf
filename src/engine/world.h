@@ -17,6 +17,25 @@ struct binary
 	int version, headersize;
 };
 
+struct octacompat25 : binary
+{
+	int worldsize;
+	int numents;
+	int waterlevel;
+	int lightmaps;
+	int mapprec, maple, mapllod;
+    uchar ambient;
+    uchar watercolour[3];
+    uchar mapwlod;
+    uchar lerpangle, lerpsubdiv, lerpsubdivsize;
+    uchar mapbe;
+    uchar skylight[3];
+    uchar lavacolour[3];
+    uchar waterfallcolour[3];
+    uchar reserved[10];
+	char maptitle[128];
+};
+
 struct octa : binary
 {
 	int worldsize;
@@ -41,6 +60,13 @@ struct bfgz : binary
     int worldsize, numents, numpvs, lightmaps;
     int gamever, revision;
     char maptitle[128], gameid[4];
+};
+
+struct bfgzcompat25 : binary
+{
+	int worldsize, numents, lightmaps;
+	int gamever, revision;
+	char maptitle[128], gameid[4];
 };
 
 #define WATER_AMPLITUDE 0.8f
