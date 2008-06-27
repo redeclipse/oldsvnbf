@@ -718,12 +718,12 @@ struct entities : icliententities
 		return result;
 	}
 
-	int waypointnode(vec &v, bool dist = true)
+	int waypointnode(vec &v, bool dist = true, int type = WAYPOINT)
 	{
-		int w = -1;
-		loopv(ents) if(ents[i]->type == WAYPOINT)
+		int w = -1, t = entlinks[WAYPOINT].find(type) >= 0 ? type : WAYPOINT;
+		loopv(ents) if(ents[i]->type == t)
 		{
-			if((!dist || ents[i]->o.dist(v) <= enttype[WAYPOINT].radius) &&
+			if((!dist || ents[i]->o.dist(v) <= enttype[t].radius) &&
 				(!ents.inrange(w) || ents[i]->o.dist(v) < ents[w]->o.dist(v)))
 					w = i;
 		}

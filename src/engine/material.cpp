@@ -479,7 +479,7 @@ void sortmaterials(vector<materialsurface *> &vismats)
 		loopi(va->matsurfs)
 		{
 			materialsurface &m = va->matbuf[i];
-			if(!editmode || !showmat)
+			if(!editmode || !showmat || !rendernormally)
 			{
                 if(m.material==MAT_WATER && (m.orient==O_TOP || (refracting<0 && reflectz>hdr.worldsize))) continue;
                 if(m.material&MAT_EDIT) continue;
@@ -581,8 +581,8 @@ void rendermaterials()
 	int lastfogtype = 1;
 	loopv(vismats)
 	{
-		materialsurface &m = *vismats[editmode && showmat ? vismats.length()-1-i : i];
-        int curmat = !editmode || !showmat || m.material&MAT_EDIT ? m.material : m.material|MAT_EDIT;
+		materialsurface &m = *vismats[editmode && showmat && rendernormally ? vismats.length()-1-i : i];
+        int curmat = !editmode || !showmat || !rendernormally || m.material&MAT_EDIT ? m.material : m.material|MAT_EDIT;
 		if(lastmat!=curmat || lastorient!=m.orient || (curmat==MAT_GLASS && envmapped && m.envmap != envmapped))
 		{
 			int fogtype = lastfogtype;
@@ -800,7 +800,7 @@ void rendermaterials()
                         case MAT_LAVA:   glColor3ub(  0, 128, 255); break; // orange
                         case MAT_AICLIP: glColor3ub(  0,   0, 255); break; // yellow
                         case MAT_DEATH:  glColor3ub(192, 192, 192); break; // black
-                    }   
+                    }
 					break;
 				}
 			}
@@ -861,7 +861,7 @@ void rendermaterials()
 	if(blended) glDisable(GL_BLEND);
 	if(overbright) resettmu(0);
 	if(!lastfogtype) glFogfv(GL_FOG_COLOR, oldfogc);
-	if(editmode && showmat)
+	if(editmode && showmat && rendernormally)
 	{
 		foggednotextureshader->set();
 		rendermatgrid(vismats);

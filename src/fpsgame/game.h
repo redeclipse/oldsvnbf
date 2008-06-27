@@ -239,7 +239,7 @@ char msgsizelookup(int msg)
         SV_EDITMODE, 2, SV_EDITENT, 10, SV_EDITLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0, SV_APPROVEMASTER, 2,
 		SV_FLAGS, 0, SV_FLAGINFO, 0,
-        SV_DROPFLAG, 6, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 2, SV_RESETFLAG, 2, SV_INITFLAGS, 0,
+        SV_DROPFLAG, 6, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 3, SV_RESETFLAG, 2, SV_INITFLAGS, 0,
 		SV_TEAMSCORE, 0, SV_FORCEINTERMISSION, 1,
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 2, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
@@ -546,13 +546,22 @@ enum
 	BS_DEFEND,		// defend goal target
 	BS_PURSUE,		// pursue goal target
 	BS_ATTACK,		// attack goal target
-	BS_INTEREST,	// game specific interest in goal entity
+	BS_INTEREST,	// interest in goal entity
 	BS_MAX
+};
+
+enum
+{
+	BTRG_NODE,
+	BTRG_PLAYER,
+	BTRG_ENTITY,
+	BTRG_FLAG,
+	BTRG_MAX
 };
 
 struct botstate
 {
-	int type, millis, waittime, airtime, target, cycles, cycle;
+	int type, millis, waittime, airtime, targtype, target, cycles, cycle;
 	vector<int> route;
 	float dist;
 	vec targpos;
@@ -569,7 +578,7 @@ struct botstate
 	void reset()
 	{
 		waittime = airtime = cycles = cycle = 0;
-		target = -1;
+		targtype = target = -1;
 		route.setsize(0);
 		targpos = vec(0, 0, 0);
 		dist = 0.f;

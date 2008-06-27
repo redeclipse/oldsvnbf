@@ -1,6 +1,5 @@
 struct ctfstate
 {
-    static const int FLAGRADIUS = 16;
     static const int FLAGLIMIT = 10;
 
     struct flag
@@ -32,6 +31,15 @@ struct ctfstate
             score = 0;
             droptime = 0;
         }
+
+#ifndef CTFSERV
+        vec &pos()
+        {
+        	if(owner) return vec(owner->o).sub(owner->height);
+        	if(droptime) return droploc;
+        	return spawnloc;
+        }
+#endif
     };
     vector<flag> flags;
 
@@ -156,11 +164,11 @@ struct ctfservmode : ctfstate, servmode
         o.z -= dummy.height;
         loopv(flags) if(flags[i].owner==ci->clientnum)
         {
-            loopvk(flags) if(flags[i].team==ci->team)
+            loopvk(flags) if(flags[k].team==ci->team)
             {
 				flag &goal = flags[k];
 
-				if(goal.owner<0 && !goal.droptime && o.dist(goal.spawnloc) < FLAGRADIUS)
+				if(goal.owner<0 && !goal.droptime && o.dist(goal.spawnloc) < enttype[FLAG].radius)
 				{
 					returnflag(i);
 					goal.score++;
@@ -262,7 +270,7 @@ struct ctfclient : ctfstate
     {
 		flag &f = flags[i];
 		vec dir;
-        if(flagblip) dir = f.owner ? f.owner->o : (f.droptime ? f.droploc : f.spawnloc);
+        if(flagblip) dir = f.pos();
         else dir = f.spawnloc;
 		dir.sub(camera1->o);
 		dir.z = 0.0f;
@@ -274,7 +282,7 @@ struct ctfclient : ctfstate
 		int colour = teamtype[f.team].colour;
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
 			fade = 1.f;
-		if(f.team != cl.player1->team && f.owner->team != cl.player1->team)
+		if(f.team != cl.player1->team && (!f.owner || f.owner->team != cl.player1->team))
 			fade = clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
 
         settexture(cl.bliptex());
@@ -320,11 +328,9 @@ struct ctfclient : ctfstate
             flag &f = flags[i];
             if(!f.team || !f.ent || f.owner) continue;
             const char *flagname = teamtype[f.team].flag;
-            vec pos = f.droptime ? f.droploc : f.spawnloc;
+            vec above(f.pos());
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP,
-                        pos, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
-
-            vec above(pos);
+                        above, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
             above.z += enttype[FLAG].height;
             s_sprintfd(info)("@%s flag", teamtype[f.team].name);
 			part_text(above, info, 10, 1, teamtype[f.team].colour);
@@ -493,10 +499,10 @@ struct ctfclient : ctfstate
         {
             flag &f = flags[i];
             if(!f.team || !f.ent || f.owner || (f.droptime ? f.droploc.x<0 : f.team==d->team)) continue;
-            if(o.dist(f.droptime ? f.droploc : f.spawnloc) < FLAGRADIUS)
+            if(o.dist(f.pos()) < enttype[FLAG].radius)
             {
                 if(f.pickup) continue;
-                cl.cc.addmsg(SV_TAKEFLAG, "ri", i);
+                cl.cc.addmsg(SV_TAKEFLAG, "ri2", d->clientnum, i);
                 f.pickup = true;
             }
             else f.pickup = false;

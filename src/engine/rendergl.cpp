@@ -757,6 +757,13 @@ static void setfog(int fogmat, float below = 1, int abovemat = MAT_AIR)
     if(renderpath!=R_FIXEDFUNCTION) setfogplane();
 }
 
+bool dopostfx = false;
+
+void invalidatepostfx()
+{
+    dopostfx = false;
+}
+
 static void blendfogoverlay(int fogmat, float blend, float *overlay)
 {
     uchar col[3];
@@ -956,6 +963,7 @@ bool envmapping = false;
 
 void drawcubemap(int size, const vec &o, float yaw, float pitch, bool full, bool flipx, bool flipy, bool swapxy)
 {
+	float fovx = 90.f, fovy = 90.f, aspect = 1.f;
     envmapping = true;
 
 	physent *oldcamera = camera1;
@@ -971,17 +979,33 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, bool full, bool
 
 	defaultshader->set();
 
-    int fogmat = lookupmaterial(o)&MATF_VOLUME;
-	if(fogmat!=MAT_WATER && fogmat!=MAT_LAVA) fogmat = MAT_AIR;
+    updatedynlights();
 
-	setfog(fogmat);
-
-	glClear(GL_DEPTH_BUFFER_BIT);
+    int fogmat = lookupmaterial(camera1->o)&MATF_VOLUME, abovemat = MAT_AIR;
+    float fogblend = 1.0f, causticspass = 0.0f;
+    if(fogmat==MAT_WATER || fogmat==MAT_LAVA)
+    {
+        float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
+        if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
+        else fogmat = abovemat;
+        if(full && caustics && fogmat==MAT_WATER && camera1->o.z < z)
+            causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
+    }
+    else
+    {
+    	fogmat = MAT_AIR;
+    }
+    setfog(fogmat, fogblend, abovemat);
+    if(full && fogmat != MAT_AIR)
+    {
+        float blend = abovemat==MAT_AIR ? fogblend : 1.0f;
+        fovy += blend*sinf(lastmillis/1000.0)*2.0f;
+        aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
+    }
 
 	int farplane = hdr.worldsize*2;
 
-    project(90.0f, 1.0f, farplane, flipx, flipy, swapxy);
-
+    project(fovy, aspect, farplane, flipx, flipy, swapxy);
 	transplayer();
 
 	glEnable(GL_TEXTURE_2D);
@@ -990,24 +1014,57 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, bool full, bool
 
 	xtravertsva = xtraverts = glde = gbatches = 0;
 
-	visiblecubes(90, 90);
+    if(full && !hasFBO)
+    {
+        if(dopostfx)
+        {
+            drawglaretex();
+            drawdepthfxtex();
+            drawreflections();
+        }
+        else dopostfx = true;
+    }
+
+	visiblecubes(fovx, fovy);
+
+	if(full && shadowmap && !hasFBO) rendershadowmap();
+
+	glClear(GL_DEPTH_BUFFER_BIT);
 
 	if(limitsky()) drawskybox(farplane, true);
 
-	rendergeom();
-
-    if(!limitsky()) drawskybox(farplane, false);
+	rendergeom(full ? causticspass : 0);
 
 	if(full) queryreflections();
+
+    if(!limitsky()) drawskybox(farplane, false);
 
 	rendermapmodels();
 
 	if(full)
 	{
-		drawreflections();
+		rendergame();
 
-		renderwater();
+	    if(hasFBO)
+	    {
+	        drawglaretex();
+	        drawdepthfxtex();
+	        drawreflections();
+	    }
+
+		renderdecals(0);
+	    renderwater();
+		rendergrass();
+
 		rendermaterials();
+		render_particles(0);
+
+		glDisable(GL_FOG);
+		glDisable(GL_CULL_FACE);
+
+	    addglare();
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_FOG);
 	}
 
 	glDisable(GL_TEXTURE_2D);
@@ -1233,13 +1290,6 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glPopMatrix();
 	glEnable(GL_DEPTH_TEST);
 	SDL_GL_SwapBuffers();
-}
-
-bool dopostfx = false;
-
-void invalidatepostfx()
-{
-    dopostfx = false;
 }
 
 GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16], invmvmatrix[16];
@@ -1642,5 +1692,3 @@ bool rendericon(const char *icon, int x, int y, int xs, int ys)
 	}
 	return false;
 }
-
-extern int scr_w, scr_h, fov;
