@@ -600,16 +600,16 @@ struct botinfo
 	botinfo()
 	{
 		reset();
-		setstate(BS_WAIT);
 	}
 	~botinfo()
 	{
-		reset();
+		state.setsize(0);
 	}
 
 	void reset()
 	{
 		state.setsize(0);
+		setstate(BS_WAIT);
 	}
 
 	botstate &addstate(int type)

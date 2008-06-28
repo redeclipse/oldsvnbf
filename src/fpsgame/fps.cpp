@@ -330,6 +330,7 @@ struct GAMECLIENT : igameclient
 			if(actor == player1)
 				lasthit = lastmillis;
 		}
+		bot.damaged(d, actor, gun, flags, damage, millis, dir);
 	}
 
 	void killed(int gun, int flags, int damage, fpsent *d, fpsent *actor)
@@ -381,6 +382,7 @@ struct GAMECLIENT : igameclient
 		playsound(S_DIE1+rnd(2), &d->o);
 
 		if(d != actor) playsound(S_DAMAGE8, &actor->o);
+		bot.killed(d, actor, gun, flags, damage);
 	}
 
 	void timeupdate(int timeremain)
