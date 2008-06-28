@@ -587,19 +587,19 @@ struct entities : icliententities
 		if(ents.inrange(node) && ents.inrange(goal))
 		{
 			struct fpsentity &f = (fpsentity &) *ents[node], &g = (fpsentity &) *ents[goal];
-			vector<linkq *> queue;
+			vector<linkq> queue;
 			int q = 0;
+			queue.setsize(0);
+			queue.add(linkq());
+			queue[q].nodes.add(node);
+			queue[q].goal = f.o.dist(g.o);
 
-			queue.add(new linkq());
-			queue[q]->nodes.add(node);
-			queue[q]->goal = f.o.dist(g.o);
-
-			while (queue.inrange(q) && queue[q]->nodes.last() != goal)
+			while (queue.inrange(q) && queue[q].nodes.last() != goal)
 			{
-				struct fpsentity &e = (fpsentity &) *ents[queue[q]->nodes.last()];
+				struct fpsentity &e = (fpsentity &) *ents[queue[q].nodes.last()];
 
-				float w = queue[q]->weight;
-				vector<int> s = queue[q]->nodes;
+				float w = queue[q].weight;
+				vector<int> s = queue[q].nodes;
 				int a = 0;
 
 				loopvj(e.links)
@@ -612,7 +612,7 @@ struct entities : icliententities
 
 						loopvk(queue)
 						{
-							if(queue[k]->nodes.find(v) >= 0 ||
+							if(queue[k].nodes.find(v) >= 0 ||
 									((flags & ROUTE_AVOID) && v != goal && avoid.find(v) >= 0) ||
 									((flags & ROUTE_GTONE) && v == goal && queue.length() == 1))
 							{
@@ -629,26 +629,26 @@ struct entities : icliententities
 							if(a)
 							{
 								r = queue.length();
-								queue.add(new linkq());
-								queue[r]->nodes = s;
-								queue[r]->weight = w;
+								queue.add(linkq());
+								queue[r].nodes = s;
+								queue[r].weight = w;
 							}
-							queue[r]->nodes.add(v);
-							queue[r]->weight += e.o.dist(h.o);
-							queue[r]->goal = h.o.dist(g.o);
+							queue[r].nodes.add(v);
+							queue[r].weight += e.o.dist(h.o);
+							queue[r].goal = h.o.dist(g.o);
 							a++;
 						}
 					}
 				}
 				if(!a)
 				{
-					queue[q]->dead = true;
+					queue[q].dead = true;
 				} // this one ain't going anywhere..
 
 				q = -1; // get shortest path
 				loopvj(queue)
 				{
-					if(!queue[j]->dead && (!queue.inrange(q) || queue[j]->weight + queue[j]->goal < queue[q]->weight + queue[q]->goal))
+					if(!queue[j].dead && (!queue.inrange(q) || queue[j].weight+queue[j].goal < queue[q].weight+queue[q].goal))
 						q = j;
 				}
 			}
@@ -661,22 +661,22 @@ struct entities : icliententities
 				{
 					int u = -1;
 
-					loopvrev(queue[j]->nodes) // find the closest node in this branch
+					loopvrev(queue[j].nodes) // find the closest node in this branch
 					{
-						if(!queue[j]->nodes.inrange(u) || ents[queue[j]->nodes[i]]->o.dist(g.o) < ents[queue[j]->nodes[u]]->o.dist(g.o))
+						if(!queue[j].nodes.inrange(u) || ents[queue[j].nodes[i]]->o.dist(g.o) < ents[queue[j].nodes[u]]->o.dist(g.o))
 							u = i;
 					}
 
-					if(queue[j]->nodes.inrange(u))
+					if(queue[j].nodes.inrange(u))
 					{
-						loopvrev(queue[j]->nodes) // trim the node list to the end at the shortest
+						loopvrev(queue[j].nodes) // trim the node list to the end at the shortest
 						{
 							if(i <= u)
 								break;
-							queue[j]->nodes.remove(i);
+							queue[j].nodes.remove(i);
 						}
 
-						if(!queue.inrange(q) || ents[queue[j]->nodes[u]]->o.dist(g.o) < ents[queue[q]->nodes.last()]->o.dist(g.o))
+						if(!queue.inrange(q) || ents[queue[j].nodes[u]]->o.dist(g.o) < ents[queue[q].nodes.last()]->o.dist(g.o))
 							q = j;
 					}
 				}
@@ -684,14 +684,13 @@ struct entities : icliententities
 
 			if(queue.inrange(q))
 			{
-				route = queue[q]->nodes;
-				result = queue[q]->weight;
+				route = queue[q].nodes;
+				result = queue[q].weight;
 			}
-
-			loopv(queue) DELETEP(queue[i]); // purge
 
 			if(result < 1e16f && !(flags & ROUTE_ABS)) // random search
 			{
+				float dist = 0.f;
 				for (int c = node; ents.inrange(c); )
 				{
 					fpsentity &e = (fpsentity &) *ents[c];
@@ -709,10 +708,11 @@ struct entities : icliententities
 					if(ents.inrange(b))
 					{
 						route.add(b);
-						result += ents[b]->o.dist(e.o);
+						dist += ents[b]->o.dist(e.o);
 					}
 					c = b;
 				}
+				if(dist > 0.f) result = dist;
 			}
 		}
 		return result;
