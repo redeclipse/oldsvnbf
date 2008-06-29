@@ -879,6 +879,12 @@ void regular_particle_splash(int type, int num, int fade, const vec &p, int dela
     regularsplash(partmaps[type].type, partmaps[type].color, radius, num, fade, p, partsize(type), delay);
 }
 
+void regular_part_splash(int type, int num, int fade, const vec &p, int color, float size, int radius, int delay)
+{
+    if(shadowmapping) return;
+    regularsplash(type, color, radius, num, fade, p, size, delay);
+}
+
 void part_splash(int type, int num, int fade, const vec &p, int color, float size)
 {
     if(shadowmapping || renderedgame) return;
