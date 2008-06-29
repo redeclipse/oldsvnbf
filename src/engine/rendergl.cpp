@@ -266,7 +266,7 @@ void gl_checkextensions()
         extern int depthfxprecision;
         if(hasTF) depthfxprecision = 1;
 
-        ati_texgen_bug = 1;
+        //ati_texgen_bug = 1;
     }
     else if(strstr(vendor, "NVIDIA"))
     {
