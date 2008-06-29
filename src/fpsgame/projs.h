@@ -147,10 +147,10 @@ struct projectiles
 					float life = (guntype[gun].time-lifetime)/float(guntype[gun].time);
 					int col = (int(255*max(1.f-life,0.f))<<16)|(int(127*max(1.f-life,0.f))<<8),
 						fade = int(500*life)+1;
-					part_splash(4, rnd(2)+1, fade, o, col, 8.0f);
+					regular_part_splash(4, rnd(2)+1, fade, o, col, 8.0f);
 				}
             }
-			else if (projtype == PRJ_GIBS) particle_splash(3, 1, 10000, o);
+			else if (projtype == PRJ_GIBS) regular_particle_splash(3, 1, 10000, o);
 		}
 
 		bool update(int qtime)
