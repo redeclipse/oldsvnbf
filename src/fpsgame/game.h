@@ -564,7 +564,7 @@ enum
 
 struct botstate
 {
-	int type, millis, targtype, target, cycle, rate;
+	int type, millis, targtype, target, cycle, rate, oldnode, lastnode;
 	vector<int> route;
 	float dist;
 	vec targpos;
@@ -582,7 +582,7 @@ struct botstate
 	void reset()
 	{
 		cycle = rate = 0;
-		targtype = target = -1;
+		targtype = target = oldnode = lastnode = -1;
 		route.setsize(0);
 		targpos = vec(0, 0, 0);
 		dist = 0.f;
@@ -601,7 +601,7 @@ struct botinfo
 	int lastaction;
 	vector<botstate> state;
 	vector<int> avoid;
-	vec target;
+	vec target, spot;
 
 	botinfo()
 	{
@@ -618,7 +618,8 @@ struct botinfo
 		lastaction = lastmillis;
 		state.setsize(0);
 		avoid.setsize(0);
-		setstate(BS_WAIT);
+		addstate(BS_WAIT);
+		spot = target = vec(0, 0, 0);
 	}
 
 	botstate &addstate(int type)
@@ -662,7 +663,7 @@ struct fpsent : dynent, fpsstate
     vec deltapos, newpos;
     float deltayaw, deltapitch, newyaw, newpitch;
     int smoothmillis;
-	int lastimpulse, lastnode;
+	int lastimpulse, oldnode, lastnode;
 	int respawned, suicided;
 	int wschan;
 	botinfo *bot;
