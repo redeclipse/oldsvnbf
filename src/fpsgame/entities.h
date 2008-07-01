@@ -578,7 +578,7 @@ struct entities : icliententities
 		~linkq() {}
 	};
 
-	float linkroute(int node, int goal, vector<int> &route, vector<int> &avoid, int flags = 0)
+	float route(int node, int goal, vector<int> &route, vector<int> &avoid, int flags = ROUTE_ABSOLUTE|ROUTE_AVOID|ROUTE_GTONE)
 	{
 		float result = 1e16f;
 
@@ -614,7 +614,7 @@ struct entities : icliententities
 						{
 							if(queue[k].nodes.find(v) >= 0 ||
 									((flags & ROUTE_AVOID) && v != goal && avoid.find(v) >= 0) ||
-									((flags & ROUTE_GTONE) && v == goal && queue.length() == 1))
+									((flags & ROUTE_GTONE) && v == goal && queue[k].nodes.length() == 1))
 							{
 								skip = true;
 								break;
@@ -653,7 +653,7 @@ struct entities : icliententities
 				}
 			}
 
-			if(!queue.inrange(q) && !(flags & ROUTE_ABS)) // didn't get there, resort to failsafe proximity match
+			if(!queue.inrange(q) && !(flags & ROUTE_ABSOLUTE)) // didn't get there, resort to failsafe proximity match
 			{
 				q = -1;
 
@@ -687,8 +687,7 @@ struct entities : icliententities
 				route = queue[q].nodes;
 				result = queue[q].weight;
 			}
-
-			if(result < 1e16f && !(flags & ROUTE_ABS)) // random search
+			else if(!(flags & ROUTE_FAILSAFE)) // random search
 			{
 				float dist = 0.f;
 				for (int c = node; ents.inrange(c); )
@@ -701,7 +700,7 @@ struct entities : icliententities
 						int n = e.links[i];
 
 						if(ents[n]->type == f.type &&
-							route.find(n) < 0 && (!(flags & ROUTE_AVOID) || avoid.find(n) >= 0) &&
+							route.find(n) < 0 && (!(flags & ROUTE_AVOID) || avoid.find(n) < 0) &&
 								(!ents.inrange(b) || (ents.inrange(n) && ents[n]->o.dist(g.o) < ents[b]->o.dist(g.o))))
 									b = n;
 					}

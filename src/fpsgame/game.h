@@ -287,9 +287,10 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
 #define REGENTIME		1000
 #define REGENHEAL		5
 
-#define ROUTE_ABS		0x0001
-#define ROUTE_AVOID		0x0002
-#define ROUTE_GTONE		0x0004
+#define ROUTE_ABSOLUTE	0x0001 // otherwise can proximity match
+#define ROUTE_FAILSAFE	0x0002 // generates a random route out of link waypoint nodes
+#define ROUTE_AVOID		0x0004 // use the avoid set provided
+#define ROUTE_GTONE		0x0008 // path must be greater than one
 
 enum
 {
@@ -550,6 +551,8 @@ enum
 	BS_MAX
 };
 
+static const int botframetimes[BS_MAX] = { 1000, 500, 500, 100, 500 };
+
 enum
 {
 	BTRG_NODE,
@@ -565,6 +568,7 @@ struct botstate
 	vector<int> route;
 	float dist;
 	vec targpos;
+	bool replan;
 
 	botstate(int _type, int _millis) : type(_type), millis(_millis)
 	{
@@ -582,6 +586,7 @@ struct botstate
 		route.setsize(0);
 		targpos = vec(0, 0, 0);
 		dist = 0.f;
+		replan = false;
 	}
 
 	int goal()
