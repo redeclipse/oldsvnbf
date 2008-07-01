@@ -482,14 +482,14 @@ struct GAMECLIENT : igameclient
 		pj.reset();
 
 		// reset perma-state
-		player1->lastnode = -1;
+		player1->oldnode = player1->lastnode = -1;
 		player1->frags = 0;
 		player1->deaths = 0;
 		player1->totaldamage = 0;
 		player1->totalshots = 0;
 		loopv(players) if(players[i])
 		{
-			players[i]->lastnode = -1;
+			players[i]->oldnode = players[i]->lastnode = -1;
 			players[i]->frags = 0;
 			players[i]->deaths = 0;
 			players[i]->totaldamage = 0;

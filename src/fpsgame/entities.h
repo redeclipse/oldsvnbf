@@ -578,7 +578,7 @@ struct entities : icliententities
 		~linkq() {}
 	};
 
-	float route(int node, int goal, vector<int> &route, vector<int> &avoid, int flags = ROUTE_ABSOLUTE|ROUTE_AVOID|ROUTE_GTONE)
+	float route(int node, int goal, vector<int> &route, vector<int> &avoid, int flags)
 	{
 		float result = 1e16f;
 
@@ -687,7 +687,7 @@ struct entities : icliententities
 				route = queue[q].nodes;
 				result = queue[q].weight;
 			}
-			else if(!(flags & ROUTE_FAILSAFE)) // random search
+			else if(flags & ROUTE_FAILSAFE) // random search
 			{
 				float dist = 0.f;
 				for (int c = node; ents.inrange(c); )
@@ -747,12 +747,12 @@ struct entities : icliententities
 		if(d->state == CS_ALIVE)
 		{
 			vec v(vec(d->o).sub(vec(0, 0, d->height)));
-			int oldnode = d->lastnode, curnode = waypointnode(v, true);
+			int curnode = waypointnode(v, true);
 
 			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)
 			{
-				if(!ents.inrange(curnode) && ents.inrange(oldnode) && ents[oldnode]->o.dist(v) <= enttype[WAYPOINT].radius*2.f)
-					curnode = oldnode;
+				if(!ents.inrange(curnode) && ents.inrange(d->oldnode) && ents[d->oldnode]->o.dist(v) <= enttype[WAYPOINT].radius*2.f)
+					curnode = d->oldnode;
 
 				if(!ents.inrange(curnode))
 				{
@@ -763,9 +763,9 @@ struct entities : icliententities
 					newentity(o, WAYPOINT, 0, 0, 0, 0);
 				}
 
-				if(oldnode != curnode)
+				if(ents.inrange(d->oldnode) && d->oldnode != curnode)
 				{
-					waypointlink(oldnode, curnode, !d->timeinair);
+					waypointlink(d->oldnode, curnode, !d->timeinair);
 
 					loopv(ents)
 						if(ents[i]->type != WAYPOINT && canlink(curnode, i) &&
@@ -776,9 +776,15 @@ struct entities : icliententities
 			else if(!ents.inrange(curnode))
 				curnode = waypointnode(v, false);
 
-			d->lastnode = curnode;
+			if(ents.inrange(curnode))
+			{
+				if(d->lastnode != curnode) d->oldnode = d->lastnode;
+				d->lastnode = curnode;
+			}
+			else if(ents.inrange(d->oldnode)) d->lastnode = d->oldnode;
+			else d->lastnode = d->oldnode = -1;
 		}
-		else d->lastnode = -1;
+		else d->lastnode = d->oldnode = -1;
 	}
 
 	void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e)
