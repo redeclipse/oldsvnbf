@@ -606,7 +606,7 @@ struct entities : icliententities
 				{
 					int v = e.links[j];
 
-					if(ents.inrange(v))
+					if(ents.inrange(v) && ents[v]->type == f.type)
 					{
 						bool skip = false;
 
@@ -700,10 +700,10 @@ struct entities : icliententities
 					{
 						int n = e.links[i];
 
-						if(route.find(n) < 0 && (!(flags & ROUTE_AVOID) || avoid.find(n) >= 0))
-							if(!ents.inrange(b) ||
-									(ents.inrange(n) && ents[n]->o.dist(g.o) < ents[b]->o.dist(g.o)))
-								b = n;
+						if(ents[n]->type == f.type &&
+							route.find(n) < 0 && (!(flags & ROUTE_AVOID) || avoid.find(n) >= 0) &&
+								(!ents.inrange(b) || (ents.inrange(n) && ents[n]->o.dist(g.o) < ents[b]->o.dist(g.o))))
+									b = n;
 					}
 					if(ents.inrange(b))
 					{
@@ -747,7 +747,7 @@ struct entities : icliententities
 	{
 		if(d->state == CS_ALIVE)
 		{
-			vec v(vec(d->o).sub(vec(0, 0, d->timeinair ? d->height : d->height-enttype[WAYPOINT].height)));
+			vec v(vec(d->o).sub(vec(0, 0, d->height)));
 			int oldnode = d->lastnode, curnode = waypointnode(v, true);
 
 			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)
@@ -759,7 +759,7 @@ struct entities : icliententities
 				{
 					curnode = ents.length();
 					vec o(d->o);
-					if(d->timeinair || !cl.ph.droptofloor(o, enttype[WAYPOINT].radius, enttype[WAYPOINT].height))
+					if(d->timeinair || !cl.ph.droptofloor(o, enttype[WAYPOINT].radius, 0))
 						o = v;
 					newentity(o, WAYPOINT, 0, 0, 0, 0);
 				}

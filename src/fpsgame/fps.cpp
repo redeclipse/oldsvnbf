@@ -540,16 +540,16 @@ struct GAMECLIENT : igameclient
 		if(name[0] && !duplicatename(d, name))
 		{
 			if(team && m_team(gamemode, mutators))
-				s_sprintf(cname)("%s%s (\fs%s%s\fS)", prefix, name, teamtype[d->team].chat, teamtype[d->team].name);
+				s_sprintf(cname)("%s\fs%s\fS (\fs%s%s\fS)", prefix, name, teamtype[d->team].chat, teamtype[d->team].name);
 			else
-				s_sprintf(cname)("%s%s", prefix, name);
+				s_sprintf(cname)("%s\fs%s\fS", prefix, name);
 		}
 		else
 		{
 			if(team && m_team(gamemode, mutators))
-				s_sprintf(cname)("%s%s (\fs%s%s\fS) [\fs\f5%d\fS]", prefix, name, teamtype[d->team].chat, teamtype[d->team].name, d->clientnum);
+				s_sprintf(cname)("%s\fs%s\fS [\fs\f5%d\fS] (\fs%s%s\fS)", prefix, name, d->clientnum, teamtype[d->team].chat, teamtype[d->team].name);
 			else
-				s_sprintf(cname)("%s%s [\fs\f5%d\fS]", prefix, name, d->clientnum);
+				s_sprintf(cname)("%s\fs%s\fS [\fs\f5%d\fS]", prefix, name, d->clientnum);
 		}
 		return cname;
 	}

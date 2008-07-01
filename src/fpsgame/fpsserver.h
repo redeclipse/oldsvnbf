@@ -2261,16 +2261,16 @@ struct GAMESERVER : igameserver
 		if(name[0] && !duplicatename(ci, name))
 		{
 			if(team && m_team(gamemode, mutators))
-				s_sprintf(cname)("%s (\fs%s%s\fS)", name, teamtype[ci->team].chat, teamtype[ci->team].name);
+				s_sprintf(cname)("\fs%s\fS (\fs%s%s\fS)", name, teamtype[ci->team].chat, teamtype[ci->team].name);
 			else
-				s_sprintf(cname)("%s", name);
+				s_sprintf(cname)("\fs%s\fS", name);
 		}
 		else
 		{
 			if(team && m_team(gamemode, mutators))
-				s_sprintf(cname)("%s (\fs%s%s\fS) [\fs\f5%d\fS]", name, teamtype[ci->team].chat, teamtype[ci->team].name, ci->clientnum);
+				s_sprintf(cname)("\fs%s\fS [\fs\f5%d\fS] (\fs%s%s\fS)", name, ci->clientnum, teamtype[ci->team].chat, teamtype[ci->team].name);
 			else
-				s_sprintf(cname)("%s [\fs\f5%d\fS]", name, ci->clientnum);
+				s_sprintf(cname)("\fs%s\fS [\fs\f5%d\fS]", name, ci->clientnum);
 		}
 		return cname;
 	}

@@ -67,7 +67,7 @@ struct enttypes
 	{ FLAG,			48,		32,		16,		ETU_NONE,		"flag" },
 	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" }, // FIXME
 	{ CAMERA,		48,		0,		0,		ETU_NONE,		"camera" },
-	{ WAYPOINT,		1,		8,		4,		ETU_NONE,		"waypoint" },
+	{ WAYPOINT,		1,		8,		8,		ETU_NONE,		"waypoint" },
 	{ ANNOUNCER,	64,		0,		0,		ETU_NONE,		"announcer" },
 	{ CONNECTION,	70,		8,		8,		ETU_NONE,		"connection" },
 };
@@ -394,7 +394,9 @@ struct fpsstate
 	int bestgun(int millis)
 	{
 		int best = -1;
-		loopi(NUMGUNS) if(canshoot(i, millis) && i != GUN_GL) best = i;
+		loopi(NUMGUNS)
+			if(guntype[i].rdelay > 0 && (canreload(i, millis) || canshoot(i, millis)))
+				best = i;
 		return best;
 	}
 
@@ -541,8 +543,6 @@ struct fpsstate
 enum
 {
 	BS_WAIT = 0,	// waiting for next command
-	BS_UPDATE,		// update current objective
-	BS_MOVE,		// move toward goal waypoint
 	BS_DEFEND,		// defend goal target
 	BS_PURSUE,		// pursue goal target
 	BS_ATTACK,		// attack goal target
@@ -561,7 +561,7 @@ enum
 
 struct botstate
 {
-	int type, millis, waittime, airtime, targtype, target, cycles, cycle;
+	int type, millis, targtype, target, cycle, rate;
 	vector<int> route;
 	float dist;
 	vec targpos;
@@ -577,7 +577,7 @@ struct botstate
 
 	void reset()
 	{
-		waittime = airtime = cycles = cycle = 0;
+		cycle = rate = 0;
 		targtype = target = -1;
 		route.setsize(0);
 		targpos = vec(0, 0, 0);
@@ -593,9 +593,10 @@ struct botstate
 
 struct botinfo
 {
-	vector<botstate> state;	// stack of states
-	float targyaw, targpitch;
-	vec targpos;			// current target
+	int lastaction;
+	vector<botstate> state;
+	vector<int> avoid;
+	vec target;
 
 	botinfo()
 	{
@@ -604,11 +605,14 @@ struct botinfo
 	~botinfo()
 	{
 		state.setsize(0);
+		avoid.setsize(0);
 	}
 
 	void reset()
 	{
+		lastaction = lastmillis;
 		state.setsize(0);
+		avoid.setsize(0);
 		setstate(BS_WAIT);
 	}
 
@@ -620,8 +624,8 @@ struct botinfo
 
 	void removestate(int index = -1)
 	{
-		if(state.inrange(index)) state.remove(index);
-		else if(state.length()) state.pop();
+		if(index < 0 && state.length()) state.pop();
+		else if(state.inrange(index)) state.remove(index);
 		if(!state.length()) addstate(BS_WAIT);
 	}
 

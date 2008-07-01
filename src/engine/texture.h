@@ -215,7 +215,7 @@ struct Texture
 	{
 		if(frames.length())
 		{
-			int f = clamp(int(frames.length()*amt), 0, frames.length());
+			int f = clamp(int((frames.length()-1)*amt), 0, frames.length()-1);
 
 			if(frames.inrange(f))
 				return frames[f];

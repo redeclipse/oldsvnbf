@@ -1186,7 +1186,7 @@ struct clientcom : iclientcom
 					fpsent *o = cl.getclient(b->ownernum);
 					s_sprintfd(m)("%s", o ? cl.colorname(o) : "unknown");
 					conoutf("%s was introduced by %s", cl.colorname(b), m);
-					if(o == cl.player1) b->bot = new botinfo();
+					if(o == cl.player1) cl.bot.create(b);
 					break;
 				}
 
