@@ -287,11 +287,6 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
 #define REGENTIME		1000
 #define REGENHEAL		5
 
-#define ROUTE_ABSOLUTE	0x0001 // otherwise can proximity match
-#define ROUTE_FAILSAFE	0x0002 // generates a random route out of link waypoint nodes
-#define ROUTE_AVOID		0x0004 // use the avoid set provided
-#define ROUTE_GTONE		0x0008 // path must be greater than one
-
 enum
 {
 	SAY_NONE = 0x0,
@@ -564,11 +559,8 @@ enum
 
 struct botstate
 {
-	int type, millis, targtype, target, cycle, rate, oldnode, lastnode;
-	vector<int> route;
-	float dist;
+	int type, millis, targtype, target, cycle;
 	vec targpos;
-	bool replan;
 
 	botstate(int _type, int _millis) : type(_type), millis(_millis)
 	{
@@ -576,23 +568,13 @@ struct botstate
 	}
 	~botstate()
 	{
-		route.setsize(0);
 	}
 
 	void reset()
 	{
-		cycle = rate = 0;
-		targtype = target = oldnode = lastnode = -1;
-		route.setsize(0);
+		cycle = 0;
+		targtype = target = -1;
 		targpos = vec(0, 0, 0);
-		dist = 0.f;
-		replan = false;
-	}
-
-	int goal()
-	{
-		if(route.length()) return route.last();
-		return -1;
 	}
 };
 
@@ -600,7 +582,7 @@ struct botinfo
 {
 	int lastaction;
 	vector<botstate> state;
-	vector<int> avoid;
+	vector<int> route, avoid;
 	vec target, spot;
 
 	botinfo()
