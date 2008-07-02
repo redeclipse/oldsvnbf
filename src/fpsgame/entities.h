@@ -580,6 +580,7 @@ struct entities : icliententities
 
 	float route(int node, int goal, vector<int> &route, vector<int> &avoid, int flags)
 	{
+		int routestart = SDL_GetTicks();
 		float result = 1e16f;
 
 		route.setsize(0);
@@ -714,6 +715,8 @@ struct entities : icliententities
 				if(dist > 0.f) result = dist;
 			}
 		}
+		if(verbose > 0)
+			conoutf("route %d to %d generated in %.4fs", node, goal, (SDL_GetTicks()-routestart)/1000.0f);
 		return result;
 	}
 

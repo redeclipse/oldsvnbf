@@ -302,8 +302,6 @@ struct botclient
 				vec targ; \
 				float pdist = d->o.dist(ps); \
 				if(dm > 0.f) pdist *= dm; \
-				if(getsight(d->o, d->yaw, d->pitch, ps, targ, BOTLOSDIST, BOTFOVX, BOTFOVY)) \
-					pdist *= BOTAFFINITY; \
 				if(pdist < b.dist) \
 				{ \
 					state = st; \
