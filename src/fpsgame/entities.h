@@ -607,7 +607,7 @@ struct entities : icliententities
 		nodes[node].prev = NULL;
 		queue.setsizenodelete(0);
 		queue.add(&nodes[node]);
-		route.setsize(0);
+		route.setsizenodelete(0);
 
 		while(!queue.empty())
 		{
