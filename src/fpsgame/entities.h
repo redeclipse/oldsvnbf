@@ -564,85 +564,91 @@ struct entities : icliententities
 
 	struct linkq
 	{
-		int node;
-		float score;
-		bool avoid;
+		uint id;
+		float curscore, estscore;
 		linkq *prev;
-		fpsentity *ent;
 
-		linkq(int n = -1, fpsentity *e = NULL) :
-			node(n), score(0.f), avoid(false), prev(NULL), ent(e) {}
-		~linkq() {}
+		linkq() : id(0), curscore(0.f), estscore(0.f), prev(NULL) {}
+
+        float score() const { return curscore + estscore; }
 	};
 
 	bool route(int node, int goal, vector<int> &route, vector<int> &avoid)
 	{
-		bool result = false;
-		if(ents.inrange(node))
+        if(!ents.inrange(node) || ents[goal]->type != ents[node]->type) return false;
+
+		static uint routeid = 1;
+		static vector<linkq> nodes;
+		static vector<linkq *> queue;
+
+		int routestart = verbose > 3 ? SDL_GetTicks() : 0;
+
+		if(!routeid)
+		{ 
+			loopv(nodes) nodes[i].id = 0;
+			routeid = 1;
+		}
+		while(nodes.length() < ents.length()) nodes.add();
+
+		loopv(avoid)
 		{
-			int routestart = SDL_GetTicks();
-			route.setsize(0);
-			linkq *d = NULL, *g = NULL;
-			vector<linkq *> nodes, queue;
-			loopv(ents) if(ents[i]->type == ents[node]->type)
+			int ent = avoid[i];
+			if(ents[ent]->type == ents[node]->type) 
 			{
-				linkq *m = new linkq(i, (fpsentity *)ents[i]);
-				if(i == node)
-				{
-					queue.add(m);
-					d = m;
-				}
-				else if(i == goal) g = m;
-				else if(avoid.find(i) >= 0) m->avoid = true; // just don't go there
-				nodes.add(m);
-			}
-			if(d && g)
-			{
-				while(!queue.empty())
-				{
-					int q = -1;
-					loopv(queue) if(!queue.inrange(q) || queue[i]->score < queue[q]->score) q = i;
-					linkq *m = queue.remove(q);
-					loopv(m->ent->links)
-					{
-						int link = m->ent->links[i];
-						if(ents.inrange(link) && link != node && ents[link]->type == ents[node]->type && !m->avoid)
-						{
-							linkq *n = NULL;
-							loopvk(nodes) if(nodes[k]->node == link) { n = nodes[k]; break; }
-							if(n)
-							{
-								float s = m->score+ents[link]->o.dist(m->ent->o)+ents[link]->o.dist(g->ent->o);
-								if(!n->prev || (s < n->score))
-								{
-									if(n != g && queue.find(n) < 0)
-										queue.add(n);
-									n->score = s;
-									n->prev = m;
-									if(n == g)
-									{
-										queue.setsize(0);
-										break;
-									}
-								}
-							}
-						}
-					}
-				}
-
-				if(g->prev) // otherwise nothing got there
-				{
-					for(linkq *m = g; m != NULL; m = m->prev)
-						route.add(m->node); // just keep it stored backward
-					result = true;
-					nodes.deletecontentsp();
-				}
-
-				if(verbose > 3)
-					conoutf("route %d to %d generated %d nodes in %fs", node, goal, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
+				nodes[ent].id = routeid;
+				nodes[ent].curscore = -1.f;
+				nodes[ent].estscore = 0.f;
 			}
 		}
-		return result;
+
+		nodes[node].id = routeid;
+		nodes[node].curscore = 0.f;
+		nodes[node].estscore = 0.f;
+		nodes[node].prev = NULL;
+		queue.setsizenodelete(0);
+		queue.add(&nodes[node]);
+		route.setsize(0);
+
+		while(!queue.empty())
+		{
+			int q = -1;
+			loopv(queue) if(!queue.inrange(q) || queue[i]->score() < queue[q]->score()) q = i;
+			linkq *m = queue.removeunordered(q);
+			float prevscore = m->curscore;
+			m->curscore = -1.f;
+			extentity &ent = *ents[m - &nodes[0]];
+			vector<int> &links = ent.links;
+			loopv(links)
+			{
+				int link = links[i];
+				if(ents.inrange(link) && ents[link]->type == ents[node]->type)
+				{
+					linkq &n = nodes[link];
+					float curscore = prevscore + ents[link]->o.dist(ent.o);
+					if(n.id == routeid && curscore >= n.curscore) continue;
+					n.curscore = curscore;
+					n.prev = m;
+					if(n.id != routeid)
+					{
+						n.estscore = ents[link]->o.dist(ents[goal]->o);
+						if(link != goal) queue.add(&n);
+						else queue.setsizenodelete(0);
+						n.id = routeid;
+					}
+				}
+			}
+		}
+
+		if(nodes[goal].prev) // otherwise nothing got there
+		{
+			for(linkq *m = &nodes[goal]; m != NULL; m = m->prev)
+				route.add(m - &nodes[0]); // just keep it stored backward
+		}
+
+		if(verbose > 3)
+			conoutf("route %d to %d generated %d nodes in %fs", node, goal, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
+				
+		return !route.empty();
 	}
 
 	int waypointnode(vec &v, bool dist = true, int type = WAYPOINT)
