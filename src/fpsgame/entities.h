@@ -639,6 +639,8 @@ struct entities : icliententities
 			}
 		}
 
+        routeid++;
+
 		if(nodes[goal].prev) // otherwise nothing got there
 		{
 			for(linkq *m = &nodes[goal]; m != NULL; m = m->prev)
