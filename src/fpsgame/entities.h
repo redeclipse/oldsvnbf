@@ -611,8 +611,8 @@ struct entities : icliententities
 
 		while(!queue.empty())
 		{
-			int q = -1;
-			loopv(queue) if(!queue.inrange(q) || queue[i]->score() < queue[q]->score()) q = i;
+			int q = queue.length()-1;
+			loopi(queue.length()-1) if(queue[i]->score() < queue[q]->score()) q = i;
 			linkq *m = queue.removeunordered(q);
 			float prevscore = m->curscore;
 			m->curscore = -1.f;
