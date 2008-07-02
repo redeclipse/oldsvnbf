@@ -75,11 +75,6 @@ struct entities : icliententities
 				//	WAYPOINT,						// 16 radius, weight
 				case WAYPOINT:
 					entlinks[i].add(WAYPOINT);
-					entlinks[i].add(PLAYERSTART);
-					entlinks[i].add(WEAPON);
-					entlinks[i].add(PUSHER);
-					entlinks[i].add(FLAG);
-					entlinks[i].add(TELEPORT);
 					break;
 				//	ANNOUNCER,						// 17 maxrad, minrad, volume
 				//	CONNECTION,						// 18
@@ -483,8 +478,7 @@ struct entities : icliententities
 	{
 		if(ents.inrange(index) && ents.inrange(node))
 		{
-			if(maylink(ents[index]->type) &&
-				maylink(ents[node]->type) &&
+			if(index != node && maylink(ents[index]->type) && maylink(ents[node]->type) &&
 					entlinks[ents[index]->type].find(ents[node]->type) >= 0)
 						return true;
 			if(msg)
@@ -498,7 +492,7 @@ struct entities : icliententities
 
 	bool linkents(int index, int node, bool add, bool local, bool toggle)
 	{
-		if(ents.inrange(index) && ents.inrange(node) && canlink(index, node, local))
+		if(ents.inrange(index) && ents.inrange(node) && index != node && canlink(index, node, local))
 		{
 			fpsentity &e = (fpsentity &)*ents[index];
 			fpsentity &f = (fpsentity &)*ents[node];
@@ -570,153 +564,84 @@ struct entities : icliententities
 
 	struct linkq
 	{
-		float weight, goal;
-		bool dead;
-		vector<int> nodes;
+		int node;
+		float score;
+		bool avoid;
+		linkq *prev;
+		fpsentity *ent;
 
-		linkq() : weight(0.f), goal(0.f), dead(false) {}
+		linkq(int n = -1, fpsentity *e = NULL) :
+			node(n), score(0.f), avoid(false), prev(NULL), ent(e) {}
 		~linkq() {}
 	};
 
-	float route(int node, int goal, vector<int> &route, vector<int> &avoid, int flags)
+	bool route(int node, int goal, vector<int> &route, vector<int> &avoid)
 	{
-		int routestart = SDL_GetTicks();
-		float result = 1e16f;
-
-		route.setsize(0);
-
-		if(ents.inrange(node) && ents.inrange(goal))
+		bool result = false;
+		if(ents.inrange(node))
 		{
-			struct fpsentity &f = (fpsentity &) *ents[node], &g = (fpsentity &) *ents[goal];
-			vector<linkq> queue;
-			int q = 0;
-			queue.setsize(0);
-			queue.add(linkq());
-			queue[q].nodes.add(node);
-			queue[q].goal = f.o.dist(g.o);
-
-			while (queue.inrange(q) && queue[q].nodes.last() != goal)
+			int routestart = SDL_GetTicks();
+			route.setsize(0);
+			linkq *d = NULL, *g = NULL;
+			vector<linkq *> nodes, queue;
+			loopv(ents) if(ents[i]->type == ents[node]->type)
 			{
-				struct fpsentity &e = (fpsentity &) *ents[queue[q].nodes.last()];
-
-				float w = queue[q].weight;
-				vector<int> s = queue[q].nodes;
-				int a = 0;
-
-				loopvj(e.links)
+				linkq *m = new linkq(i, (fpsentity *)ents[i]);
+				if(i == node)
 				{
-					int v = e.links[j];
-
-					if(ents.inrange(v) && ents[v]->type == f.type)
+					queue.add(m);
+					d = m;
+				}
+				else if(i == goal) g = m;
+				else if(avoid.find(i) >= 0) m->avoid = true; // just don't go there
+				nodes.add(m);
+			}
+			if(d && g)
+			{
+				while(!queue.empty())
+				{
+					int q = -1;
+					loopv(queue) if(!queue.inrange(q) || queue[i]->score < queue[q]->score) q = i;
+					linkq *m = queue.remove(q);
+					loopv(m->ent->links)
 					{
-						bool skip = false;
-
-						loopvk(queue)
+						int link = m->ent->links[i];
+						if(ents.inrange(link) && link != node && ents[link]->type == ents[node]->type && !m->avoid)
 						{
-							if(queue[k].nodes.find(v) >= 0 ||
-									((flags & ROUTE_AVOID) && v != goal && avoid.find(v) >= 0) ||
-									((flags & ROUTE_GTONE) && v == goal && queue[k].nodes.length() == 1))
+							linkq *n = NULL;
+							loopvk(nodes) if(nodes[k]->node == link) { n = nodes[k]; break; }
+							if(n)
 							{
-								skip = true;
-								break;
+								float s = m->score+ents[link]->o.dist(m->ent->o)+ents[link]->o.dist(g->ent->o);
+								if(!n->prev || (s < n->score))
+								{
+									if(n != g && queue.find(n) < 0)
+										queue.add(n);
+									n->score = s;
+									n->prev = m;
+									if(n == g)
+									{
+										queue.setsize(0);
+										break;
+									}
+								}
 							}
-						} // don't revisit shorter noded paths
-						if(!skip)
-						{
-							struct fpsentity &h = (fpsentity &) *ents[v];
-
-							int r = q; // continue this line for the first one
-
-							if(a)
-							{
-								r = queue.length();
-								queue.add(linkq());
-								queue[r].nodes = s;
-								queue[r].weight = w;
-							}
-							queue[r].nodes.add(v);
-							queue[r].weight += e.o.dist(h.o);
-							queue[r].goal = h.o.dist(g.o);
-							a++;
 						}
 					}
 				}
-				if(!a)
-				{
-					queue[q].dead = true;
-				} // this one ain't going anywhere..
 
-				q = -1; // get shortest path
-				loopvj(queue)
+				if(g->prev) // otherwise nothing got there
 				{
-					if(!queue[j].dead && (!queue.inrange(q) || queue[j].weight+queue[j].goal < queue[q].weight+queue[q].goal))
-						q = j;
+					for(linkq *m = g; m != NULL; m = m->prev)
+						route.add(m->node); // just keep it stored backward
+					result = true;
+					nodes.deletecontentsp();
 				}
-			}
 
-			if(!queue.inrange(q) && !(flags & ROUTE_ABSOLUTE)) // didn't get there, resort to failsafe proximity match
-			{
-				q = -1;
-
-				loopvj(queue)
-				{
-					int u = -1;
-
-					loopvrev(queue[j].nodes) // find the closest node in this branch
-					{
-						if(!queue[j].nodes.inrange(u) || ents[queue[j].nodes[i]]->o.dist(g.o) < ents[queue[j].nodes[u]]->o.dist(g.o))
-							u = i;
-					}
-
-					if(queue[j].nodes.inrange(u))
-					{
-						loopvrev(queue[j].nodes) // trim the node list to the end at the shortest
-						{
-							if(i <= u)
-								break;
-							queue[j].nodes.remove(i);
-						}
-
-						if(!queue.inrange(q) || ents[queue[j].nodes[u]]->o.dist(g.o) < ents[queue[q].nodes.last()]->o.dist(g.o))
-							q = j;
-					}
-				}
-			}
-
-			if(queue.inrange(q))
-			{
-				route = queue[q].nodes;
-				result = queue[q].weight;
-			}
-			else if(flags & ROUTE_FAILSAFE) // random search
-			{
-				float dist = 0.f;
-				for (int c = node; ents.inrange(c); )
-				{
-					fpsentity &e = (fpsentity &) *ents[c];
-					int b = -1;
-
-					loopv(e.links)
-					{
-						int n = e.links[i];
-
-						if(ents[n]->type == f.type &&
-							route.find(n) < 0 && (!(flags & ROUTE_AVOID) || avoid.find(n) < 0) &&
-								(!ents.inrange(b) || (ents.inrange(n) && ents[n]->o.dist(g.o) < ents[b]->o.dist(g.o))))
-									b = n;
-					}
-					if(ents.inrange(b))
-					{
-						route.add(b);
-						dist += ents[b]->o.dist(e.o);
-					}
-					c = b;
-				}
-				if(dist > 0.f) result = dist;
+				if(verbose > 3)
+					conoutf("route %d to %d generated %d nodes in %fs", node, goal, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
 			}
 		}
-		if(verbose > 0)
-			conoutf("route %d to %d generated in %.4fs", node, goal, (SDL_GetTicks()-routestart)/1000.0f);
 		return result;
 	}
 
@@ -750,42 +675,37 @@ struct entities : icliententities
 		if(d->state == CS_ALIVE)
 		{
 			vec v(vec(d->o).sub(vec(0, 0, d->height)));
-			int curnode = waypointnode(v, true);
+			int curnode = waypointnode(v);
 
 			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)
 			{
-				if(!ents.inrange(curnode) && ents.inrange(d->oldnode) && ents[d->oldnode]->o.dist(v) <= enttype[WAYPOINT].radius*2.f)
-					curnode = d->oldnode;
+				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= enttype[WAYPOINT].radius*2.f)
+					curnode = d->lastnode;
 
 				if(!ents.inrange(curnode))
 				{
 					curnode = ents.length();
-					vec o(d->o);
-					if(d->timeinair || !cl.ph.droptofloor(o, enttype[WAYPOINT].radius, 0))
-						o = v;
-					newentity(o, WAYPOINT, 0, 0, 0, 0);
+					newentity(v, WAYPOINT, 0, 0, 0, 0);
 				}
 
-				if(ents.inrange(d->oldnode) && d->oldnode != curnode)
-				{
-					waypointlink(d->oldnode, curnode, !d->timeinair);
+				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
+					waypointlink(d->lastnode, curnode, !d->timeinair);
 
-					loopv(ents)
-						if(ents[i]->type != WAYPOINT && canlink(curnode, i) &&
-							ents[i]->o.dist(v) <= enttype[WAYPOINT].radius)
-								waypointlink(curnode, i, false);
-				}
-			}
-			else if(!ents.inrange(curnode))
-				curnode = waypointnode(v, false);
-
-			if(ents.inrange(curnode))
-			{
-				if(d->lastnode != curnode) d->oldnode = d->lastnode;
 				d->lastnode = curnode;
 			}
-			else if(ents.inrange(d->oldnode)) d->lastnode = d->oldnode;
-			else d->lastnode = d->oldnode = -1;
+			else
+			{
+				if(!ents.inrange(curnode))
+					curnode = waypointnode(v, false);
+
+				if(ents.inrange(curnode))
+				{
+					if(d->lastnode != curnode) d->oldnode = d->lastnode;
+					d->lastnode = curnode;
+				}
+				else if(ents.inrange(d->oldnode)) d->lastnode = d->oldnode;
+				else d->lastnode = d->oldnode = -1;
+			}
 		}
 		else d->lastnode = d->oldnode = -1;
 	}
