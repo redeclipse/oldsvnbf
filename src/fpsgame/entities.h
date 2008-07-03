@@ -575,7 +575,7 @@ struct entities : icliententities
 
 	bool route(int node, int goal, vector<int> &route, vector<int> &avoid)
 	{
-        if(!ents.inrange(node) || ents[goal]->type != ents[node]->type) return false;
+        if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type) return false;
 
 		static uint routeid = 1;
 		static vector<linkq> nodes;
