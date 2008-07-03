@@ -238,7 +238,7 @@ struct GAMECLIENT : igameclient
 			adjustscaled(int, quakewobble, 100.f);
 			adjustscaled(int, damageresidue, 100.f);
 
-			if(!guiactive()) updatemouse();
+			if(!g3d_windowhit(true, false)) updatemouse();
 
 			if(player1->state == CS_DEAD)
 			{
@@ -884,7 +884,7 @@ struct GAMECLIENT : igameclient
 		float r = 1.f, g = 1.f, b = 1.f;
         int index = POINTER_NONE;
 
-		if(guiactive()) index = POINTER_GUI;
+		if(g3d_windowhit(true, false)) index = POINTER_GUI;
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
         else if(editmode) index = POINTER_EDIT;
         else if(lastmillis-lasthit < hitcrosshair()) index = POINTER_HIT;
@@ -1167,7 +1167,8 @@ struct GAMECLIENT : igameclient
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
-		if(guiactive() || mousestyle() >= 2)
+		bool windowhit = g3d_windowhit(true, false);
+		if(windowhit || mousestyle() >= 2)
 		{
 			if(mousestyle() == 3 || mousestyle() == 5)
 			{
@@ -1178,7 +1179,7 @@ struct GAMECLIENT : igameclient
 			else
 			{
 				cursorx = clamp(cursorx+(float(dx*mousesensitivity())/10000.f), 0.f, 1.f);
-				cursory = clamp(cursory+(float(dy*(!guiactive() && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f), 0.f, 1.f);;
+				cursory = clamp(cursory+(float(dy*(!windowhit && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f), 0.f, 1.f);;
 				return true;
 			}
 		}
@@ -1195,14 +1196,17 @@ struct GAMECLIENT : igameclient
 
 	void project(int w, int h, vec &dir, float &x, float &y)
 	{
-		if(mousestyle() == 1)
+		if(!g3d_windowhit(true, false))
 		{
-			float cx, cy, cz;
-			vectocursor(worldpos, cx, cy, cz);
-			x = float(cx)/float(w);
-			y = float(cy)/float(h);
+			if(mousestyle() == 1)
+			{
+				float cx, cy, cz;
+				vectocursor(worldpos, cx, cy, cz);
+				x = float(cx)/float(w);
+				y = float(cy)/float(h);
+			}
+			vecfromcursor(x, y, 1.f, dir);
 		}
-		vecfromcursor(x, y, 1.f, dir);
 	}
 
 	void updatemouse()
@@ -1317,7 +1321,7 @@ struct GAMECLIENT : igameclient
 		else if(mousestyle() <= 5)
 		{
 			float yaw = camera1->yaw, pitch = camera1->pitch;
-			if(!guiactive()) vectoyawpitch(cursordir, yaw, pitch);
+			if(!g3d_windowhit(true, false)) vectoyawpitch(cursordir, yaw, pitch);
 			findorientation(camera1->o, yaw, pitch, worldpos);
 			vec dir(worldpos);
 			dir.sub(camera1->o);
