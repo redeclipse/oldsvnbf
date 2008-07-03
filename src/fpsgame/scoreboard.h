@@ -131,7 +131,7 @@ struct scoreboard : g3d_callback
             loopj(numgroups)
             {
                 scoregroup &g = *groups[j];
-                if(team!=g.team && (!team || !g.team)) continue;
+                if(team != g.team) continue;
                 if(team && !m_stf(cl.gamemode) && !m_ctf(cl.gamemode)) g.score += o->frags;
                 g.players.add(o);
                 found = true;
