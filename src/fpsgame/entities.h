@@ -573,18 +573,19 @@ struct entities : icliententities
         float score() const { return curscore + estscore; }
 	};
 
-	bool route(int node, int goal, vector<int> &route, vector<int> &avoid)
+	bool route(int node, int goal, vector<int> &route, vector<int> &avoid, float tolerance)
 	{
-        if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type) return false;
+        if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node) return false;
 
 		static uint routeid = 1;
+		static int lowest = -1;
 		static vector<linkq> nodes;
 		static vector<linkq *> queue;
 
 		int routestart = verbose > 3 ? SDL_GetTicks() : 0;
 
 		if(!routeid)
-		{ 
+		{
 			loopv(nodes) nodes[i].id = 0;
 			routeid = 1;
 		}
@@ -593,7 +594,7 @@ struct entities : icliententities
 		loopv(avoid)
 		{
 			int ent = avoid[i];
-			if(ents[ent]->type == ents[node]->type) 
+			if(ents[ent]->type == ents[node]->type)
 			{
 				nodes[ent].id = routeid;
 				nodes[ent].curscore = -1.f;
@@ -602,9 +603,9 @@ struct entities : icliententities
 		}
 
 		nodes[node].id = routeid;
-		nodes[node].curscore = 0.f;
-		nodes[node].estscore = 0.f;
-		nodes[node].prev = NULL;
+		nodes[goal].curscore = nodes[node].curscore = 0.f;
+		nodes[goal].estscore = nodes[node].estscore = 0.f;
+		nodes[goal].prev = nodes[node].prev = NULL;
 		queue.setsizenodelete(0);
 		queue.add(&nodes[node]);
 		route.setsizenodelete(0);
@@ -631,6 +632,8 @@ struct entities : icliententities
 					if(n.id != routeid)
 					{
 						n.estscore = ents[link]->o.dist(ents[goal]->o);
+						if(n.estscore <= tolerance && (lowest < 0 || n.estscore < nodes[lowest].estscore))
+							lowest = link;
 						if(link != goal) queue.add(&n);
 						else queue.setsizenodelete(0);
 						n.id = routeid;
@@ -641,6 +644,9 @@ struct entities : icliententities
 
         routeid++;
 
+		if(!nodes[goal].prev && lowest >= 0) // if tolerance was used
+			goal = lowest;
+
 		if(nodes[goal].prev) // otherwise nothing got there
 		{
 			for(linkq *m = &nodes[goal]; m != NULL; m = m->prev)
@@ -649,7 +655,7 @@ struct entities : icliententities
 
 		if(verbose > 3)
 			conoutf("route %d to %d generated %d nodes in %fs", node, goal, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
-				
+
 		return !route.empty();
 	}
 

@@ -546,7 +546,7 @@ enum
 	BS_MAX
 };
 
-static const int botframetimes[BS_MAX] = { 100, 100, 100, 10, 100 };
+static const int botframetimes[BS_MAX] = { 0, 100, 100, 10, 100 };
 
 enum
 {
@@ -561,6 +561,7 @@ struct botstate
 {
 	int type, millis, expire, targtype, target, cycle;
 	vec targpos;
+	bool goal;
 
 	botstate(int _type, int _millis) : type(_type), millis(_millis)
 	{
@@ -575,6 +576,7 @@ struct botstate
 		expire = cycle = 0;
 		targtype = target = -1;
 		targpos = vec(0, 0, 0);
+		goal = false;
 	}
 };
 
@@ -582,7 +584,7 @@ struct botinfo
 {
 	int lastaction;
 	vector<botstate> state;
-	vector<int> route, avoid;
+	vector<int> route, avoid, ignore;
 	vec target, spot;
 
 	botinfo()
@@ -594,6 +596,7 @@ struct botinfo
 		state.setsize(0);
 		route.setsize(0);
 		avoid.setsize(0);
+		ignore.setsize(0);
 	}
 
 	void reset()
@@ -602,6 +605,7 @@ struct botinfo
 		state.setsize(0);
 		route.setsize(0);
 		avoid.setsize(0);
+		ignore.setsize(0);
 		addstate(BS_WAIT);
 		spot = target = vec(0, 0, 0);
 	}
@@ -702,3 +706,4 @@ struct fpsent : dynent, fpsstate
 		lastflag = respawned = suicided = -1;
 	}
 };
+

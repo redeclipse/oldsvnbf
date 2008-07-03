@@ -744,6 +744,7 @@ struct clientcom : iclientcom
 						}
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
 					}
+					cl.bot.spawned(f);
 					break;
 				}
 
