@@ -674,18 +674,18 @@ struct physics
 			if(smoothmove() && d->smoothmillis>0)
 			{
 				d->o = d->newpos;
-				d->aimyaw = d->newyaw;
-				d->aimpitch = d->newpitch;
+				d->yaw = d->newyaw;
+				d->pitch = d->newpitch;
 				move(d, res, local);
 				d->newpos = d->o;
 				float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove();
 				if(k>0)
 				{
 					d->o.add(vec(d->deltapos).mul(k));
-					d->aimyaw += d->deltayaw*k;
-					if(d->aimyaw<0) d->aimyaw += 360;
-					else if(d->aimyaw>=360) d->aimyaw -= 360;
-					d->aimpitch += d->deltapitch*k;
+					d->yaw += d->deltayaw*k;
+					if(d->yaw<0) d->yaw += 360;
+					else if(d->yaw>=360) d->yaw -= 360;
+					d->pitch += d->deltapitch*k;
 				}
 			}
 			else move(d, res, local);
