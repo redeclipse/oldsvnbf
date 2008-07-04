@@ -283,9 +283,9 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
 #define numteams(a,b)	(m_multi(a, b) ? MAXTEAMS : MAXTEAMS/2)
 #define isteam(a,b)		(a >= b && a <= TEAM_MAX-1)
 
-#define REGENWAIT		3000
-#define REGENTIME		1000
-#define REGENHEAL		5
+#define REGENWAIT		5000
+#define REGENTIME		2500
+#define REGENHEAL		10
 
 enum
 {

@@ -363,9 +363,9 @@ struct botclient
 
 				if(f.team == d->team)
 				{
-					if(!others && d->gunselect != GUN_PISTOL) // should we guard the base?
+					if(!others) // should we guard the base?
 					{
-						getclosestnode(BS_DEFEND, BT_FLAG, -1, j, 10000, f.pos(), enttype[FLAG].radius*2.f, 0.f);
+						getclosestnode(BS_DEFEND, BT_FLAG, -1, j, 10000, f.pos(), enttype[FLAG].radius*2.f, d->gunselect != GUN_PISTOL ? 0.f : BOTAFFINITY);
 					}
 				}
 				else

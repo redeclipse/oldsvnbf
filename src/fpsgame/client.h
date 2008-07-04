@@ -560,7 +560,7 @@ struct clientcom : iclientcom
 		{
 			prevtype = type;
 			type = getint(p);
-			conoutf("[client] msg: %d, prev: %d", type, prevtype);
+			//conoutf("[client] msg: %d, prev: %d", type, prevtype);
 			switch(type)
 			{
 				case SV_INITS2C:					// welcome messsage from the server
@@ -607,11 +607,11 @@ struct clientcom : iclientcom
 
 				case SV_SOUND:
 				{
-					int tcn = getint(p), snd = getint(p), vol = getint(p);
+					int tcn = getint(p), snd = getint(p);
 					fpsent *t = cl.getclient(tcn);
 					if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum))
-						playsound(snd, &cl.player1->o, vol);
-					else playsound(snd, &t->o, vol);
+						playsound(snd, &cl.player1->o);
+					else playsound(snd, &t->o);
 					break;
 				}
 
