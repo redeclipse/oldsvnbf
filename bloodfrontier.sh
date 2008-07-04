@@ -9,11 +9,11 @@ BF_DIR=.
 BF_OPTIONS="-h${HOME}/.bloodfrontier -rinit.cfg"
 
 if [ -e "bin/bloodfrontier_client" ]; then
-	exec bin/bloodfrontier_client ${BF_OPTIONS} $@
+	exec bin/bloodfrontier_client ${BF_OPTIONS} "$@"
 else
 	if [ -e "${BF_DIR}/bin/bloodfrontier_client" ]; then
 		pushd ${BF_DIR}
-		exec bin/bloodfrontier_client ${BF_OPTIONS} $@
+		exec bin/bloodfrontier_client ${BF_OPTIONS} "$@"
 		popd
 	else
 		echo "Your platform does not have a pre-compiled Blood Frontier client."
