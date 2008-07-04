@@ -377,7 +377,7 @@ struct entities : icliententities
 						n = i;
 			}
 			if(ents.inrange(n)) cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, n);
-			else playsound(S_DENIED);
+			else cl.playsoundc(S_DENIED, d);
 			d->useaction = false;
 		}
 		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
@@ -995,25 +995,16 @@ struct entities : icliententities
 					}
 				}
 
-				vec fr = d.o, to = f.o;
-
-				fr.z += RENDERPUSHZ;
-				to.z += RENDERPUSHZ;
-
+				vec fr(vec(d.o).add(vec(0, 0, RENDERPUSHZ))),
+					dr(vec(f.o).add(vec(0, 0, RENDERPUSHZ)));
 				vec col(0.5f, both ? 0.25f : 0.0f, 0.f);
-				renderline(fr, to, col.x, col.y, col.z, false);
-
-				vec dr = to;
-				float yaw, pitch;
-
+				renderline(fr, dr, col.x, col.y, col.z, false);
 				dr.sub(fr);
 				dr.normalize();
-
+				float yaw, pitch;
 				vectoyawpitch(dr, yaw, pitch);
-
 				dr.mul(RENDERPUSHX);
 				dr.add(fr);
-
 				rendertris(dr, yaw, pitch, 2.f, col.x*2.f, col.y*2.f, col.z*2.f, true, false);
 			}
 		}

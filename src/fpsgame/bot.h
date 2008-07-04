@@ -6,11 +6,10 @@ struct botclient
 	static const int BOTISFAR			= 128;			// too far
 	static const int BOTJUMPHEIGHT		= 6;			// decides to jump
 	static const int BOTJUMPIMPULSE		= 16;			// impulse to jump
-	static const int BOTJUMPMAX			= 32;			// too high
 	static const float BOTLOSMIN		= 64.f;			// minimum line of sight
-	static const float BOTLOSMAX		= 1024.f;		// maximum line of sight
-	static const float BOTFOVMIN		= 90.f;			// minimum field of view
-	static const float BOTFOVMAX		= 125.f;		// maximum field of view
+	static const float BOTLOSMAX		= 4096.f;		// maximum line of sight
+	static const float BOTFOVMIN		= 80.f;			// minimum field of view
+	static const float BOTFOVMAX		= 130.f;		// maximum field of view
 
 	IVAR(botskill, 1, 30, 100);
 	IVAR(botstall, 0, 0, 1);
@@ -135,8 +134,7 @@ struct botclient
 		if(!pursue || makeroute(d, e->lastnode, e->radius*2.f))
 		{
 			botstate &c = d->bot->addstate(pursue ? BS_PURSUE : BS_ATTACK);
-			c.targpos = vec(e->o).sub(vec(0, 0, e->height));
-			c.targtype = BTRG_PLAYER;
+			c.targtype = BT_PLAYER;
 			c.target = e->clientnum;
 			if(pursue) c.expire = BOTAMT(100, BOTCHANCE+1);
 			return true;
@@ -147,19 +145,45 @@ struct botclient
 
 	bool defer(fpsent *d, botstate &b, bool pursue = false)
 	{
-		if(pursue || d->canshoot(d->gunselect, lastmillis))
+		fpsent *t = NULL, *e = NULL;
+		vec targ;
+		loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && e != d && BOTTARG(d, e, true))
 		{
-			fpsent *t = NULL, *e = NULL;
-			vec targ;
-			loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && e != d && BOTTARG(d, e, true))
-			{
-				if((!t || e->o.dist(d->o) < t->o.dist(d->o)) &&
-					getsight(d->o, d->yaw, d->pitch, e->o, targ, BOTLOSDIST, BOTFOVX, BOTFOVY))
-						t = e;
-			}
-			if(t) return violence(d, b, t, pursue);
+			if((!t || e->o.dist(d->o) < t->o.dist(d->o)) &&
+				getsight(d->o, d->yaw, d->pitch, e->o, targ, BOTLOSDIST, BOTFOVX, BOTFOVY))
+					t = e;
 		}
+		if(t) return violence(d, b, t, pursue);
 		return false;
+	}
+
+	bool pursue(fpsent *d, botstate &b, fpsent *e)
+	{
+		vec efeet(vec(e->o).sub(vec(0, 0, e->height))), feet(vec(d->o).sub(vec(0, 0, d->height)));
+
+		if(d->bot->route.length() && cl.et.ents.inrange(d->bot->route[0]) &&
+			cl.et.ents[d->bot->route[0]]->o.dist(efeet) <= BOTISNEAR)
+		{
+			vector<int> waypoints;
+			waypoints.setsize(0);
+			loopvj(cl.et.ents)
+			{
+				if(cl.et.ents[j]->type == WAYPOINT && j != d->lastnode)
+				{
+					float fdist = cl.et.ents[j]->o.dist(efeet),
+						dist = cl.et.ents[j]->o.dist(feet);
+					if(dist > BOTISNEAR && fdist > BOTISNEAR && fdist < BOTISFAR)
+						waypoints.add(j);
+				}
+			}
+
+			while(!waypoints.empty())
+			{
+				int w = rnd(waypoints.length()), n = waypoints.remove(w);
+				if(makeroute(d, n)) return true;
+			}
+		}
+		return makeroute(d, e->lastnode, e->radius*2.f);
 	}
 
 	bool ctfhomerun(fpsent *d, botstate &b)
@@ -180,8 +204,7 @@ struct botclient
 			if(cl.ctf.flags.inrange(goal) && makeroute(d, cl.ctf.flags[goal].pos(), enttype[FLAG].radius*2.f))
 			{
 				botstate &c = d->bot->setstate(BS_PURSUE); // replaces current state!
-				c.targpos = cl.ctf.flags[goal].pos();
-				c.targtype = BTRG_FLAG;
+				c.targtype = BT_FLAG;
 				c.target = goal;
 				return true;
 			}
@@ -199,10 +222,10 @@ struct botclient
 			switch(b.type)
 			{
 				case BS_PURSUE:
-					if(b.targtype == BTRG_PLAYER || (b.targtype == BTRG_FLAG && m_ctf(cl.gamemode) && cl.ctf.flags[b.target].team != d->team))
+					if(b.targtype == BT_PLAYER || (b.targtype == BT_FLAG && m_ctf(cl.gamemode) && cl.ctf.flags[b.target].team != d->team))
 					{
 						result = true;
-						if(b.targtype != BTRG_PLAYER) pursue = true;
+						if(b.targtype != BT_PLAYER) pursue = true;
 					}
 					break;
 				case BS_WAIT:
@@ -216,7 +239,7 @@ struct botclient
 			if(result) violence(d, b, e, pursue);
 		}
 		vector<int> targets;
-		int others = checkothers(targets, d, BS_DEFEND, BTRG_PLAYER, d->clientnum, true);
+		int others = checkothers(targets, d, BS_DEFEND, BT_PLAYER, d->clientnum, true);
 		if(others)
 		{
 			fpsent *t;
@@ -249,7 +272,7 @@ struct botclient
 		}
 		else if(d->state == CS_ALIVE)
 		{
-			if(!b.cycle) d->bot->ignore.setsize(0);
+			if(b.cycle <= 1) d->bot->ignore.setsize(0);
 
 			if(botdebug() > 4)
 				conoutf("%s is looking for something to do", cl.colorname(d));
@@ -271,13 +294,11 @@ struct botclient
 
 			int state, node, target, targtype;
 			float dist, tolerance;
-			vec targpos;
 
 			#define resetupdatestate \
 			{ \
 				state = BS_WAIT; \
 				targtype = target = node = -1; \
-				targpos = vec(d->o).sub(vec(0, 0, d->height)); \
 				dist = 1e16f; \
 				tolerance = 0.f; \
 			}
@@ -295,7 +316,6 @@ struct botclient
 						node = wn; \
 						targtype = tt; \
 						target = tr; \
-						targpos = ps; \
 						tolerance = tl; \
 						dist = pdist; \
 					} \
@@ -308,11 +328,11 @@ struct botclient
 			{
 				ctfstate::flag &f = cl.ctf.flags[j];
 				vector<int> targets; // build a list of others who are interested in this
-				int others = checkothers(targets, d, f.team == d->team ? BS_DEFEND : BS_PURSUE, BTRG_FLAG, j, true);
+				int others = checkothers(targets, d, f.team == d->team ? BS_DEFEND : BS_PURSUE, BT_FLAG, j, true);
 				fpsent *e = NULL;
 				loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && BOTTARG(d, e, false) && !e->bot && d->team == e->team)
 				{
-					if(targets.find(e->clientnum) < 0 && e->o.dist(f.pos()) <= enttype[FLAG].radius*2.f)
+					if(targets.find(e->clientnum) < 0 && (e->o.dist(f.pos()) <= enttype[FLAG].radius*2.f || f.owner == e))
 					{
 						targets.add(e->clientnum);
 						others++;
@@ -321,9 +341,13 @@ struct botclient
 
 				if(f.team == d->team)
 				{
-					if(!others || f.owner) // should we guard the base?
+					if(f.owner)
 					{
-						getclosestnode(BS_DEFEND, BTRG_FLAG, -1, j, f.pos(), enttype[FLAG].radius*2.f, (f.owner ? 0.f : BOTAFFINITY));
+						getclosestnode(BS_PURSUE, BT_PLAYER, f.owner->lastnode, f.owner->clientnum, f.owner->o, f.owner->radius*2.f, BOTAFFINITY/10.f);
+					}
+					else if(!others) // should we guard the base?
+					{
+						getclosestnode(BS_DEFEND, BT_FLAG, -1, j, f.pos(), enttype[FLAG].radius*2.f, BOTAFFINITY);
 					}
 				}
 				else
@@ -333,12 +357,12 @@ struct botclient
 						fpsent *t;
 						loopvk(targets) if((t = cl.getclient(targets[k])))
 						{
-							getclosestnode(BS_DEFEND, BTRG_PLAYER, t->lastnode, t->clientnum, t->o, t->radius*2.f, BOTAFFINITY);
+							getclosestnode(BS_DEFEND, BT_PLAYER, t->lastnode, t->clientnum, t->o, t->radius*2.f, BOTAFFINITY);
 						}
 					}
 					else // attack the flag
 					{
-						getclosestnode(BS_PURSUE, BTRG_FLAG, -1, j, f.pos(), enttype[FLAG].radius*2.f, BOTAFFINITY);
+						getclosestnode(BS_PURSUE, BT_FLAG, -1, j, f.pos(), enttype[FLAG].radius*2.f, BOTAFFINITY);
 					}
 				}
 			}
@@ -352,7 +376,7 @@ struct botclient
 					{
 						if(e.spawned && isgun(e.attr1) && guntype[e.attr1].rdelay > 0 && d->ammo[e.attr1] <= 0 && e.attr1 > d->bestgun(lastmillis))
 						{
-							getclosestnode(BS_INTEREST, BTRG_ENTITY, -1, j, e.o, enttype[e.type].radius+d->radius, 1.f);
+							getclosestnode(BS_INTEREST, BT_ENTITY, -1, j, e.o, enttype[e.type].radius+d->radius, 1.f);
 						}
 						break;
 					}
@@ -381,7 +405,7 @@ struct botclient
 				{
 					int w = rnd(waypoints.length()), n = waypoints.remove(w);
 					fpsentity &e = (fpsentity &)*cl.et.ents[n];
-					getclosestnode(BS_INTEREST, BTRG_NODE, n, n, e.o, 0.f, 0.f);
+					getclosestnode(BS_INTEREST, BT_NODE, n, n, e.o, 0.f, 0.f);
 					if(node == n) waypoints.setsize(0);
 				}
 			}
@@ -392,9 +416,7 @@ struct botclient
 					botstate &c = d->bot->setstate(state); // replaces wait state with new one
 					c.targtype = targtype;
 					c.target = target;
-					c.targpos = targpos;
-					if(c.type != BS_INTEREST || c.targtype != BTRG_NODE)
-						c.expire = BOTAMT(100, BOTCHANCE+1);
+					c.expire = BOTAMT(100, BOTCHANCE+1);
 					return true;
 				}
 				else if(d->bot->ignore.find(node) < 0)
@@ -416,23 +438,23 @@ struct botclient
 		{
 			switch(b.targtype)
 			{
-				case BTRG_FLAG:
+				case BT_FLAG:
 				{
-					if(m_ctf(cl.gamemode) && cl.ctf.flags.inrange(b.target))
+					if(m_ctf(cl.gamemode) && cl.ctf.flags.inrange(b.target) &&
+						makeroute(d, cl.ctf.flags[b.target].pos(), enttype[FLAG].radius*2.f))
 					{
-						ctfstate::flag &f = cl.ctf.flags[b.target];
 						defer(d, b, false);
-						return makeroute(d, f.pos(), enttype[FLAG].radius*2.f);
+						return true;
 					}
 					break;
 				}
-				case BTRG_PLAYER:
+				case BT_PLAYER:
 				{
 					fpsent *e = cl.getclient(b.target);
-					if(e && e->state == CS_ALIVE)
+					if(e && e->state == CS_ALIVE && makeroute(d, e->lastnode, e->radius*2.f))
 					{
 						defer(d, b, false);
-						return makeroute(d, e->lastnode, e->radius*2.f);
+						return true;
 					}
 					break;
 				}
@@ -446,16 +468,17 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
+			vec targ;
 			fpsent *e = cl.getclient(b.target);
-			if(e && e->state == CS_ALIVE)
+			if(e && e->state == CS_ALIVE && raycubelos(d->o, e->o, targ))
 			{
-				if(!BOTCHANCE || b.cycle >= 10 || hastarget(d, b, b.targpos))
+				if(d->canshoot(d->gunselect, lastmillis) && (!BOTCHANCE || hastarget(d, b, e->o)))
 				{
 					d->attacking = true;
 					d->attacktime = lastmillis;
-					return false; // bounce back to the parent
+					return false;
 				}
-				return true;
+				return !b.goal;
 			}
 		}
 		return false;
@@ -469,9 +492,7 @@ struct botclient
 			{
 				fpsentity &e = (fpsentity &)*cl.et.ents[b.target];
 
-				defer(d, b, false);
-
-				if(enttype[e.type].usetype == ETU_ITEM && e.spawned && d->canuse(e.type, e.attr1, e.attr2, lastmillis))
+				if(enttype[e.type].usetype == ETU_ITEM && e.spawned)
 				{
 					switch(e.type)
 					{
@@ -483,19 +504,25 @@ struct botclient
 						}
 						default: break;
 					}
-
-					float eye = d->height*0.5f;
-					vec m = d->o;
-					m.z -= eye;
-
-					if(insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
+					if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
 					{
-						d->useaction = true;
-						d->usetime = lastmillis;
-						return true;
+						float eye = d->height*0.5f;
+						vec m = d->o;
+						m.z -= eye;
+
+						if(insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
+						{
+							d->useaction = true;
+							d->usetime = lastmillis;
+							return false;
+						}
 					}
 				}
-				return makeroute(d, e.o, enttype[e.type].radius+d->radius);
+				if(makeroute(d, e.o, enttype[e.type].radius+d->radius))
+				{
+					defer(d, b, b.targtype == BT_NODE);
+					return true;
+				}
 			}
 		}
 		return false;
@@ -507,7 +534,7 @@ struct botclient
 		{
 			switch(b.targtype)
 			{
-				case BTRG_FLAG:
+				case BT_FLAG:
 				{
 					if(m_ctf(cl.gamemode) && cl.ctf.flags.inrange(b.target))
 					{
@@ -526,26 +553,32 @@ struct botclient
 							if(!hasflags.length())
 								return false; // otherwise why are we pursuing home?
 
-							defer(d, b, false);
-							return makeroute(d, f.pos(), enttype[FLAG].radius*2.f);
+							if(makeroute(d, f.pos(), enttype[FLAG].radius*2.f))
+							{
+								defer(d, b, false);
+								return true;
+							}
 						}
 						else
 						{
 							if(f.owner == d) return ctfhomerun(d, b);
-							defer(d, b, false);
-							return makeroute(d, f.pos(), enttype[FLAG].radius*2.f);
+							if(makeroute(d, f.pos(), enttype[FLAG].radius*2.f))
+							{
+								defer(d, b, false);
+								return true;
+							}
 						}
 					}
 					break;
 				}
 
-				case BTRG_PLAYER:
+				case BT_PLAYER:
 				{
 					fpsent *e = cl.getclient(b.target);
-					if(e && e->state == CS_ALIVE)
+					if(e && e->state == CS_ALIVE && pursue(d, b, e))
 					{
 						defer(d, b, false);
-						return makeroute(d, e->lastnode, e->radius*2.f);
+						return true;
 					}
 					break;
 				}
@@ -583,7 +616,7 @@ struct botclient
 			if(!d->bot->route.inrange(n)) n = closenode(d, b);
 			if(d->bot->route.inrange(n) && d->bot->avoid.find(d->bot->route[n]) < 0)
 			{
-				d->bot->spot = cl.et.ents[d->bot->route[n]]->o;
+				d->bot->spot = vec(cl.et.ents[d->bot->route[n]]->o).add(vec(0, 0, d->height));
 				return true;
 			}
 
@@ -597,14 +630,10 @@ struct botclient
 
 	void aim(fpsent *d, botstate &b, vec &pos, float &yaw, float &pitch, bool aiming = true)
 	{
-		vec feet(vec(d->o).sub(vec(0, 0, d->height)));
-		float targyaw = -(float)atan2(pos.x-feet.x, pos.y-feet.y)/PI*180+180;
-
+		float targyaw = -(float)atan2(pos.x-d->o.x, pos.y-d->o.y)/PI*180+180;
 		if(yaw < targyaw-180.0f) yaw += 360.0f;
 		if(yaw > targyaw+180.0f) yaw -= 360.0f;
-
-		float dist = feet.dist(pos), targpitch = asin((pos.z-feet.z)/dist)/RAD;
-
+		float dist = d->o.dist(pos), targpitch = asin((pos.z-d->o.z)/dist)/RAD;
 		if(aiming)
 		{
 			float amt = float(lastmillis-d->lastupdate)/float(BOTRATE),
@@ -641,31 +670,27 @@ struct botclient
 		}
 	}
 
-	void process(fpsent *d)
+	void process(fpsent *d, botstate &b)
 	{
-		botstate &b = d->bot->getstate();
 		if(d->state == CS_ALIVE && b.type != BS_WAIT)
 		{
-			if(!d->attacking && !d->useaction)
+			int bestgun = d->bestgun(lastmillis);
+			if(d->gunselect != bestgun && d->canswitch(bestgun, lastmillis))
 			{
-				int bestgun = d->bestgun(lastmillis);
-				if(d->gunselect != bestgun && d->canswitch(bestgun, lastmillis))
-				{
-					d->setgun(bestgun, lastmillis);
-					cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-					cl.playsoundc(S_SWITCH, d);
-				}
-				else if(d->ammo[d->gunselect] <= 0 && d->canreload(d->gunselect, lastmillis))
-				{
-					d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
-					cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-					cl.playsoundc(S_RELOAD, d);
-				}
+				d->setgun(bestgun, lastmillis);
+				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+				cl.playsoundc(S_SWITCH, d);
+			}
+			else if(d->ammo[d->gunselect] <= 0 && d->canreload(d->gunselect, lastmillis))
+			{
+				d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
+				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+				cl.playsoundc(S_RELOAD, d);
 			}
 
 			if(hunt(d, b))
 			{
-				if(d->bot->spot.z-(d->o.z-d->height) >= BOTJUMPHEIGHT && !d->timeinair)
+				if(d->bot->spot.z-d->o.z > BOTJUMPHEIGHT && !d->timeinair)
 					d->jumping = true;
 
 				d->move = 1;
@@ -674,11 +699,17 @@ struct botclient
 			else d->move = d->strafe = 0;
 
 			vec aimpos(d->bot->spot);
-			if(b.type == BS_ATTACK) aimpos = b.targpos;
+			if(b.targtype == BT_PLAYER && (b.type == BS_ATTACK || b.type == BS_PURSUE))
+			{
+				vec targ;
+				fpsent *e = cl.getclient(b.target);
+				if(e && e->state == CS_ALIVE && raycubelos(d->o, e->o, targ))
+					aimpos = e->o;
+			}
 			aim(d, b, aimpos, d->yaw, d->pitch, true);
 			aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, false);
 		}
-		else if(d->state == CS_ALIVE && b.type == BS_WAIT && b.cycle)
+		else if(d->state == CS_ALIVE && b.type == BS_WAIT && b.cycle >= 2)
 		{
 			d->move = 1;
 			d->strafe = 0;
@@ -735,6 +766,8 @@ struct botclient
 
 	void think(fpsent *d)
 	{
+		if(!d->bot->state.length()) d->bot->reset();
+
 		// the state stack works like a chain of commands, certain commands simply replace
 		// each other, others spawn new commands to the stack the ai reads the top command
 		// from the stack and executes it or pops the stack and goes back along the history
@@ -742,18 +775,18 @@ struct botclient
 
 		if(!botstall() && !cl.intermission)
 		{
-			if(!d->bot->state.length()) d->bot->reset();
 			botstate &b = d->bot->getstate();
-			while(b.type != BS_WAIT && b.expire && lastmillis-b.millis >= b.expire)
-			{
-				d->bot->removestate();
-				b = d->bot->getstate();
-			}
-			if(lastmillis-d->bot->lastaction >= botframetimes[b.type])
+			process(d, b);
+			if(lastmillis >= b.next)
 			{
 				int cmdstart = botdebug() > 4 ? SDL_GetTicks() : 0;
 				bool result = false;
+
+				b.next = lastmillis + botframetimes[b.type];
+				b.cycle++;
+
 				avoid(d);
+
 				switch(b.type)
 				{
 					case BS_WAIT:		result = dowait(d, b);		break;
@@ -763,20 +796,16 @@ struct botclient
 					case BS_INTEREST:	result = dointerest(d, b);	break;
 					default: break;
 				}
-				if(!result) d->bot->removestate();
-				else b.cycle++;
-				d->bot->lastaction = lastmillis;
+
+				if((b.expire && (b.expire -= botframetimes[b.type]) <= 0) || !result)
+					d->bot->removestate();
+
 				if(botdebug() > 4)
 					conoutf("%s processed command (%s) in %fs", cl.colorname(d), result ? "ok" : "fail", (SDL_GetTicks()-cmdstart)/1000.0f);
 			}
-			process(d);
 			check(d);
 		}
-		else
-		{
-			d->stopmoving();
-			d->bot->lastaction = lastmillis;
-		}
+		else d->stopmoving();
 		d->lastupdate = lastmillis;
 	}
 
@@ -784,13 +813,13 @@ struct botclient
 	{
 		const char *bnames[BS_MAX] = {
 			"wait", "defend", "pursue", "attack", "interest"
-		}, *btypes[BTRG_MAX+1] = {
+		}, *btypes[BT_MAX+1] = {
 			"none", "node", "player", "entity", "flag"
 		};
-		s_sprintfd(s)("@%s%s [%d:%d] goal:%d[%d] %s:%d",
+		s_sprintfd(s)("@%s%s [%d:%d:%d] goal:%d[%d] %s:%d",
 			top ? "\fy" : "\fw",
 			bnames[b.type],
-			b.cycle, b.expire ? b.expire-(lastmillis-b.millis) : 0,
+			b.cycle, b.expire, b.next-lastmillis,
 			d->bot->route.length() ? d->bot->route[0] : -1,
 			d->bot->route.length(),
 			btypes[b.targtype+1], b.target
@@ -809,21 +838,36 @@ struct botclient
 			if(d->bot->route.inrange(last))
 			{
 				int index = d->bot->route[i], prev = d->bot->route[last];
-
 				if(cl.et.ents.inrange(index) && cl.et.ents.inrange(prev))
 				{
-					fpsentity &e = (fpsentity &) *cl.et.ents[index], &f = (fpsentity &) *cl.et.ents[prev];
-					renderline(vec(f.o).add(vec(0, 0, 4.f*amt)), vec(e.o).add(vec(0, 0, 4.f*amt)), cr*amt, cg*amt, cb*amt, false);
+					fpsentity &e = (fpsentity &) *cl.et.ents[index],
+						&f = (fpsentity &) *cl.et.ents[prev];
+					vec fr(vec(f.o).add(vec(0, 0, 4.f*amt))),
+						dr(vec(e.o).add(vec(0, 0, 4.f*amt)));
+					renderline(fr, dr, cr*amt, cg*amt, cb*amt, false);
+					dr.sub(fr);
+					dr.normalize();
+					float yaw, pitch;
+					vectoyawpitch(dr, yaw, pitch);
+					dr.mul(RENDERPUSHX);
+					dr.add(fr);
+					rendertris(dr, yaw, pitch, 2.f, cr*amt, cg*amt, cb*amt, true, false);
 				}
 			}
 			last = i;
 		}
 		if(botdebug() > 3)
 		{
-			vec target = cl.ws.gunorigin(d->gunselect, d->o, d->bot->target, d);
-			renderline(vec(target).add(vec(0, 0, 4.f*amt)), vec(d->bot->target).add(vec(0, 0, 4.f*amt)), 0.5f, 0.5f, 0.5f, false);
-			target = vec(d->o).sub(vec(0, 0, d->height));
-			renderline(vec(target).add(vec(0, 0, 4.f*amt)), vec(b.targpos).add(vec(0, 0, 4.f*amt)), 0.25f, 0.25f, 0.25f, false);
+			vec fr(cl.ws.gunorigin(d->gunselect, d->o, d->bot->target, d)),
+				dr(d->bot->target);
+			if(dr.dist(d->o) > BOTLOSDIST)
+			{
+				dr.sub(fr);
+				dr.normalize();
+				dr.mul(BOTLOSDIST);
+			}
+			renderline(fr, dr, cr, cg, cb, false);
+			rendertris(dr, d->yaw, d->pitch, 2.f, cr, cg, cb, true, false);
 		}
 		renderprimitive(false);
 	}
@@ -833,8 +877,7 @@ struct botclient
 		if(botdebug())
 		{
 			int amt[2] = { 0, 0 };
-			loopv(cl.players) if(cl.players[i] && cl.players[i]->state == CS_ALIVE && cl.players[i]->bot)
-				amt[0]++;
+			loopv(cl.players) if(cl.players[i] && cl.players[i]->bot) amt[0]++;
 			loopv(cl.players) if(cl.players[i] && cl.players[i]->state == CS_ALIVE && cl.players[i]->bot)
 			{
 				fpsent *d = cl.players[i];
