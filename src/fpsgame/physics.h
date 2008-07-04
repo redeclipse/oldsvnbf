@@ -695,7 +695,7 @@ struct physics
 
 	void otherplayers()
 	{
-		loopv(cl.players) if(cl.players[i] && cl.players[i]->ownernum<0)
+		loopv(cl.players) if(cl.players[i] && !cl.players[i]->bot)
 		{
             fpsent *d = cl.players[i];
             const int lagtime = lastmillis-d->lastupdate;

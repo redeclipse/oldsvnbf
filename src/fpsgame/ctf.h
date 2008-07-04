@@ -415,7 +415,7 @@ struct ctfclient : ctfstate
 		flag &f = flags[i];
 		int colour = teamtype[f.team].colour;
 		regularshape(4, enttype[FLAG].radius, colour, 6, 50, 250, vec(loc).sub(vec(0, 0, 4.f)), 4.8f);
-		adddynlight(loc, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
+		adddynlight(loc, enttype[FLAG].radius, vec((colour>>16)/255.f, ((colour>>8)&0xFF)/255.f, (colour&0xFF)/255.f), 900, 100);
     }
 
     void flageffect(int i, const vec &from, const vec &to)
@@ -484,7 +484,7 @@ struct ctfclient : ctfstate
 		flag &f = flags[i];
 		int colour = teamtype[d->team].colour;
 		regularshape(4, enttype[FLAG].radius, colour, 6, 50, 250, vec(f.spawnloc).sub(vec(0, 0, 4.f)), 4.8f);
-		adddynlight(f.spawnloc, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF), 900, 100);
+		adddynlight(f.spawnloc, enttype[FLAG].radius, vec((colour>>16)/255.f, ((colour>>8)&0xFF)/255.f, (colour&0xFF)/255.f), 900, 100);
 		f.interptime = lastmillis;
 		conoutf("%s %s the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		ctfstate::takeflag(i, d);
