@@ -4,7 +4,7 @@ struct botclient
 
 	static const int BOTISNEAR			= 64;			// is near
 	static const int BOTISFAR			= 128;			// too far
-	static const int BOTJUMPHEIGHT		= 6;			// decides to jump
+	static const int BOTJUMPHEIGHT		= 8;			// decides to jump
 	static const int BOTJUMPIMPULSE		= 16;			// impulse to jump
 	static const float BOTLOSMIN		= 64.f;			// minimum line of sight
 	static const float BOTLOSMAX		= 4096.f;		// maximum line of sight
@@ -702,8 +702,11 @@ struct botclient
 
 			if(hunt(d, b))
 			{
-				if(d->bot->spot.z-d->o.z > BOTJUMPHEIGHT && !d->timeinair)
+				if(d->bot->spot.z-d->o.z > BOTJUMPHEIGHT && !d->timeinair && lastmillis-d->jumptime > 1000)
+				{
 					d->jumping = true;
+					d->jumptime = lastmillis;
+				}
 
 				d->move = 1;
 				d->strafe = 0;

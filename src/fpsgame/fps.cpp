@@ -102,7 +102,7 @@ struct GAMECLIENT : igameclient
 			lasthit(0), lastcamera(0), lastmouse(0),
 			quakewobble(0), damageresidue(0),
 			liquidchan(-1),
-			player1(spawnstate(new fpsent()))
+			player1(new fpsent())
 	{
         CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1); });
 		CCOMMAND(mode, "ii", (GAMECLIENT *self, int *val, int *mut), { self->setmode(*val, *mut); });
@@ -125,21 +125,6 @@ struct GAMECLIENT : igameclient
 
 	iclientcom *getcom() { return &cc; }
 	icliententities *getents() { return &et; }
-
-	fpsent *spawnstate(fpsent *d)			  // reset player state not persistent accross spawns
-	{
-		d->respawn();
-		playsound(S_RESPAWN, &d->o);
-		d->spawnstate(gamemode, mutators);
-		return d;
-	}
-
-	void spawnplayer(fpsent *d)	// place at random spawn. also used by monsters!
-	{
-		et.findplayerspawn(d, m_stf(gamemode) ? stf.pickspawn(d->team) : (respawnent>=0 ? respawnent : -1), m_team(gamemode, mutators) ? player1->team : -1);
-		spawnstate(d);
-		d->state = cc.spectator ? CS_SPECTATOR : (d==player1 && editmode ? CS_EDITING : CS_ALIVE);
-	}
 
 	int respawnwait(fpsent *d)
 	{

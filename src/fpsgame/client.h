@@ -559,7 +559,9 @@ struct clientcom : iclientcom
 		while(p.remaining())
 		{
 			prevtype = type;
-			switch(type = getint(p))
+			type = getint(p);
+			conoutf("[client] msg: %d, prev: %d", type, prevtype);
+			switch(type)
 			{
 				case SV_INITS2C:					// welcome messsage from the server
 				{
@@ -743,6 +745,7 @@ struct clientcom : iclientcom
 							cl.lasthit = 0;
 						}
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
+						playsound(S_RESPAWN, &f->o);
 					}
 					cl.bot.spawned(f);
 					break;
@@ -1197,7 +1200,6 @@ struct clientcom : iclientcom
 					return;
 				}
 			}
-			//conoutf("[client] msg: %d, prev: %d", type, prevtype);
 		}
 	}
 
