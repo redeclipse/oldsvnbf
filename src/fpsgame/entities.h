@@ -578,9 +578,9 @@ struct entities : icliententities
         if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node) return false;
 
 		static uint routeid = 1;
-		static int lowest = -1;
 		static vector<linkq> nodes;
 		static vector<linkq *> queue;
+		int lowest = -1;
 
 		int routestart = verbose > 3 ? SDL_GetTicks() : 0;
 
