@@ -117,6 +117,7 @@ struct botclient
 		{
 			d->bot->route = route;
 			b.goal = false;
+			b.override = false;
 			return true;
 		}
 		return false;
