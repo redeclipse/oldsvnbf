@@ -17,7 +17,7 @@ bool multiplayer(bool msg)
 
 void setrate(int rate)
 {
-	if(!curpeer || !clienthost) return;
+   if(!curpeer) return;
 	enet_host_bandwidth_limit(clienthost, rate, rate);
 }
 
@@ -36,24 +36,14 @@ void throttle()
 	enet_peer_throttle_configure(curpeer, throttle_interval*1000, throttle_accel, throttle_decel);
 }
 
-void abortconnect()
-{
-	if(!connpeer) return;
-	if(connpeer->state!=ENET_PEER_STATE_DISCONNECTED) enet_peer_reset(connpeer);
-	connpeer = NULL;
-	if(curpeer || !clienthost) return;
-	enet_host_destroy(clienthost);
-	clienthost = NULL;
-}
-
 void connectfail(bool reset = false)
 {
-	bool tryagain = reset;
-	if (reset) disconnect();
+	bool again = reset;
+	if(reset) disconnect();
 
-	if (localattempt)
+	if(localattempt)
 	{
-		if (localattempt > 1)
+		if(localattempt > 1)
 		{
 			conoutf("unable to find any server on the local network");
 			if(!guiactive()) showgui("main");
@@ -62,45 +52,25 @@ void connectfail(bool reset = false)
 		else
 		{
 			conoutf("unable to find a local server, trying the local network");
-			tryagain = true;
+			again = true;
 		}
 	}
 	else
 	{
 		conoutf("\f3could not connect to server");
-		tryagain = true;
+		again = true;
 	}
-
-	if(tryagain) connects();
+    if(again) connects();
 }
 
-void disconnect(int onlyclean, int async)
+void abortconnect()
 {
-	bool cleanup = onlyclean!=0;
-	if(curpeer)
-	{
-		if(!discmillis)
-		{
-			enet_peer_disconnect(curpeer, DISC_NONE);
-			if(clienthost) enet_host_flush(clienthost);
-			discmillis = totalmillis;
-		}
-		if(curpeer->state!=ENET_PEER_STATE_DISCONNECTED)
-		{
-			if(async) return;
-			enet_peer_reset(curpeer);
-		}
-		curpeer = NULL;
-		discmillis = 0;
-		conoutf("disconnected");
-		cleanup = true;
-	}
-	if (!connpeer && clienthost)
-	{
-		enet_host_destroy(clienthost);
-		clienthost = NULL;
-	}
-	if (cleanup) cc->gamedisconnect(onlyclean);
+	if(!connpeer) return;
+	if(connpeer->state!=ENET_PEER_STATE_DISCONNECTED) enet_peer_reset(connpeer);
+	connpeer = NULL;
+    if(curpeer) return;
+	enet_host_destroy(clienthost);
+	clienthost = NULL;
 }
 
 void trydisconnect()
@@ -119,9 +89,6 @@ void trydisconnect()
 	conoutf("attempting to disconnect...");
 	disconnect(0, !discmillis);
 }
-
-COMMANDN(connect, connects, "s");
-COMMANDN(disconnect, trydisconnect, "");
 
 void connects(const char *servername)
 {
@@ -177,7 +144,39 @@ void lanconnect()
 {
 	connects();
 }
+
+void disconnect(int onlyclean, int async)
+{
+	bool cleanup = onlyclean!=0;
+	if(curpeer)
+	{
+		if(!discmillis)
+		{
+			enet_peer_disconnect(curpeer, DISC_NONE);
+			if(clienthost) enet_host_flush(clienthost);
+			discmillis = totalmillis;
+		}
+		if(curpeer->state!=ENET_PEER_STATE_DISCONNECTED)
+		{
+			if(async) return;
+			enet_peer_reset(curpeer);
+		}
+		curpeer = NULL;
+		discmillis = 0;
+		conoutf("disconnected");
+		cleanup = true;
+	}
+	if(!connpeer && clienthost)
+	{
+		enet_host_destroy(clienthost);
+		clienthost = NULL;
+	}
+	if(cleanup) cc->gamedisconnect(onlyclean);
+}
+
+COMMANDN(connect, connects, "s");
 COMMAND(lanconnect, "");
+COMMANDN(disconnect, trydisconnect, "");
 
 int lastupdate = -1000;
 
@@ -259,10 +258,12 @@ void gets2c()			// get updates from the server
 		case ENET_EVENT_TYPE_DISCONNECT:
             extern const char *disc_reasons[];
 			if(event.data>=DISC_NUM) event.data = DISC_NONE;
-			if(event.peer!=connpeer && (!discmillis || event.data))
-				conoutf("\f3server network error, disconnecting (%s) ...", disc_reasons[event.data]);
-
-			connectfail(event.peer!=connpeer);
+            if(event.peer==connpeer) connectfail(false);
+            else
+            {
+                if(!discmillis || event.data) conoutf("\f3server network error, disconnecting (%s) ...", disc_reasons[event.data]);
+                disconnect();
+            }
 			return;
 
 		default:
