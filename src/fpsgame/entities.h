@@ -580,7 +580,6 @@ struct entities : icliententities
 		static uint routeid = 1;
 		static vector<linkq> nodes;
 		static vector<linkq *> queue;
-		int lowest = -1;
 
 		int routestart = verbose > 3 ? SDL_GetTicks() : 0;
 
@@ -610,6 +609,7 @@ struct entities : icliententities
 		queue.add(&nodes[node]);
 		route.setsizenodelete(0);
 
+		int lowest = -1;
 		while(!queue.empty())
 		{
 			int q = queue.length()-1;
