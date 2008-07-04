@@ -560,7 +560,7 @@ enum
 struct botstate
 {
 	int type, millis, expire, next, targtype, target, cycle;
-	bool goal;
+	bool goal, override;
 
 	botstate(int _type, int _millis) : type(_type), millis(_millis)
 	{
@@ -575,7 +575,7 @@ struct botstate
 		expire = cycle = 0;
 		next = lastmillis;
 		targtype = target = -1;
-		goal = false;
+		goal = override = false;
 	}
 };
 
