@@ -608,6 +608,7 @@ struct clientcom : iclientcom
 				case SV_SOUND:
 				{
 					int tcn = getint(p), snd = getint(p);
+					if(snd < 0 || snd >= S_MAX) break;
 					fpsent *t = cl.getclient(tcn);
 					if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum))
 						playsound(snd, &cl.player1->o);

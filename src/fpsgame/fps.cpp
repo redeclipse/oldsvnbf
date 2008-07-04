@@ -494,6 +494,7 @@ struct GAMECLIENT : igameclient
 
 	void playsoundc(int n, fpsent *d = NULL)
 	{
+		if(n < 0 || n >= S_MAX) return;
 		fpsent *c = d ? d : player1;
 		if(c == player1 || c->bot)
 			cc.addmsg(SV_SOUND, "i2", c->clientnum, n);
