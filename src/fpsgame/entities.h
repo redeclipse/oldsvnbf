@@ -644,17 +644,14 @@ struct entities : icliententities
 
         routeid++;
 
-		if(!nodes[goal].prev && lowest >= 0) // if tolerance was used
-			goal = lowest;
-
-		if(nodes[goal].prev) // otherwise nothing got there
+		if(lowest >= 0) // otherwise nothing got there
 		{
-			for(linkq *m = &nodes[goal]; m != NULL; m = m->prev)
+			for(linkq *m = &nodes[lowest]; m != NULL; m = m->prev)
 				route.add(m - &nodes[0]); // just keep it stored backward
 		}
 
 		if(verbose > 3)
-			conoutf("route %d to %d generated %d nodes in %fs", node, goal, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
+			conoutf("route %d to %d (%d) generated %d nodes in %fs", node, goal, lowest, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
 
 		return !route.empty();
 	}
