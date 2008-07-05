@@ -792,6 +792,7 @@ struct clientcom : iclientcom
 					fpsent *target = cl.getclient(trg);
 					if(!target || gun <= -1 || gun >= NUMGUNS) break;
 					target->gunreload(gun, amt, lastmillis);
+					playsound(S_RELOAD, &target->o);
 					break;
 				}
 
@@ -832,6 +833,7 @@ struct clientcom : iclientcom
 					fpsent *target = cl.getclient(trg);
 					if(!target || gun <= -1 || gun >= NUMGUNS) break;
 					target->setgun(gun, lastmillis);
+					playsound(S_SWITCH, &target->o);
 					break;
 				}
 

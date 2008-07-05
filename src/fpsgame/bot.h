@@ -80,13 +80,13 @@ struct botclient
 		dir.normalize();
 		float targyaw, targpitch;
 		vectoyawpitch(dir, targyaw, targpitch);
-		float margin = float(BOTRATE+10)/100.f,
+		float margin = (float(BOTRATE/4)/100.f)+0.05f,
 			cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 		return cyaw < margin*BOTFOVX && cpitch < margin*BOTFOVY;
 	}
 
 	bool checkothers(vector<int> &targets, fpsent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false)
-	{
+	{ // checks the states of other bots for a match
 		targets.setsize(0);
 		fpsent *e = NULL;
 		loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && e != d && e->bot && e->state == CS_ALIVE)
@@ -145,9 +145,8 @@ struct botclient
 	bool patrol(fpsent *d, botstate &b, vec &pos, float radius, float wander)
 	{
 		vec feet(vec(d->o).sub(vec(0, 0, d->height)));
-
-		if(feet.dist(pos) <= radius || (b.override && !b.goal))
-		{
+		if(feet.dist(pos) <= radius || b.override)
+		{ // run away and back to keep ourselves busy
 			if((!b.override || b.goal) && randomnode(d, b, feet, pos, radius, wander))
 				b.override = true;
 			return true;
@@ -158,9 +157,8 @@ struct botclient
 	bool follow(fpsent *d, botstate &b, fpsent *e)
 	{
 		vec pos(vec(e->o).sub(vec(0, 0, e->height))), feet(vec(d->o).sub(vec(0, 0, d->height)));
-
-		if(feet.dist(pos) <= BOTISNEAR || (b.override && !b.goal))
-		{
+		if(feet.dist(pos) <= BOTISNEAR || b.override)
+		{ // random path if too close
 			if((!b.override || b.goal) && randomnode(d, b, feet, pos, BOTISNEAR, BOTISFAR))
 				b.override = true;
 			return true;
@@ -220,7 +218,7 @@ struct botclient
 
 			fpsent *e = NULL;
 			loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && BOTTARG(d, e, false) && !e->bot && d->team == e->team)
-			{
+			{ // try to guess what non bots are doing
 				if(targets.find(e->clientnum) < 0 && (e->o.dist(f.pos()) <= enttype[FLAG].radius*2.f || f.owner == e))
 					targets.add(e->clientnum);
 			}
@@ -230,7 +228,7 @@ struct botclient
 				bool guard = false;
 				if(f.owner || targets.empty()) guard = true;
 				else if(d->gunselect != GUN_PISTOL)
-				{
+				{ // see if we can relieve someone who only has a pistol
 					fpsent *t;
 					loopvk(targets) if((t = cl.getclient(targets[k])) && t->gunselect == GUN_PISTOL)
 					{
@@ -240,7 +238,7 @@ struct botclient
 				}
 
 				if(guard)
-				{
+				{ // defend the flag
 					interest &n = interests.add();
 					n.state = BS_DEFEND;
 					n.node = cl.et.waypointnode(f.pos(), false);
@@ -253,8 +251,8 @@ struct botclient
 			}
 			else
 			{
-				if(targets.empty()) // attack the flag
-				{
+				if(targets.empty())
+				{ // attack the flag
 					interest &n = interests.add();
 					n.state = BS_PURSUE;
 					n.node = cl.et.waypointnode(f.pos(), false);
@@ -265,7 +263,7 @@ struct botclient
 					n.score = d->o.dist(f.pos());
 				}
 				else
-				{ // ok lets help by defending the attacker
+				{ // help by defending the attacker
 					fpsent *t;
 					loopvk(targets) if((t = cl.getclient(targets[k])))
 					{
@@ -290,7 +288,7 @@ struct botclient
 				case WEAPON:
 				{
 					if(e.spawned && isgun(e.attr1) && guntype[e.attr1].rdelay > 0 && d->ammo[e.attr1] <= 0 && e.attr1 > d->bestgun(lastmillis))
-					{
+					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = BS_INTEREST;
 						n.node = cl.et.waypointnode(e.o, true);
@@ -490,13 +488,12 @@ struct botclient
 				{
 					d->attacking = true;
 					d->attacktime = lastmillis;
-					return !b.goal && !b.override;
+					return false;
 				}
 				if(b.goal) follow(d, b, e);
 				return true;
 			}
 		}
-		d->bot->enemy = -1;
 		return false;
 	}
 
@@ -507,26 +504,25 @@ struct botclient
 			if(cl.et.ents.inrange(b.target))
 			{
 				fpsentity &e = (fpsentity &)*cl.et.ents[b.target];
-
-				if(enttype[e.type].usetype == ETU_ITEM && e.spawned)
+				if(enttype[e.type].usetype == ETU_ITEM)
 				{
 					switch(e.type)
 					{
 						case WEAPON:
 						{
-							if(d->ammo[e.attr1] > 0 || e.attr1 <= d->bestgun(lastmillis))
+							if(!e.spawned || d->ammo[e.attr1] > 0 || e.attr1 <= d->bestgun(lastmillis))
 								return false;
 							break;
 						}
 						default: break;
 					}
-					if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
+					if(lastmillis-d->usetime > 3000 && d->canuse(e.type, e.attr1, e.attr2, lastmillis))
 					{
 						float eye = d->height*0.5f;
 						vec m = d->o;
 						m.z -= eye;
 
-						if(insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
+						if(insidesphere(m, eye, d->radius-1.f, e.o, enttype[e.type].height, enttype[e.type].radius))
 						{
 							d->useaction = true;
 							d->usetime = lastmillis;
@@ -597,7 +593,6 @@ struct botclient
 						defer(d, b, false);
 						return true;
 					}
-					d->bot->enemy = -1;
 					break;
 				}
 				default: break;
@@ -684,20 +679,18 @@ struct botclient
 
 	void process(fpsent *d, botstate &b)
 	{
-		if(d->state == CS_ALIVE && b.type != BS_WAIT)
+		if(d->state == CS_ALIVE)
 		{
 			int bestgun = d->bestgun(lastmillis);
 			if(d->gunselect != bestgun && d->canswitch(bestgun, lastmillis))
 			{
 				d->setgun(bestgun, lastmillis);
 				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-				cl.playsoundc(S_SWITCH, d);
 			}
 			else if(d->ammo[d->gunselect] <= 0 && d->canreload(d->gunselect, lastmillis))
 			{
 				d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
 				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-				cl.playsoundc(S_RELOAD, d);
 			}
 
 			if(hunt(d, b))
@@ -726,12 +719,7 @@ struct botclient
 			aim(d, b, aimpos, d->yaw, d->pitch, true);
 			aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, false);
 		}
-		else if(d->state == CS_ALIVE && b.type == BS_WAIT && b.cycle >= 2)
-		{
-			d->move = 1;
-			d->strafe = 0;
-		}
-		else d->stopmoving();
+		else d->move = d->strafe = 0;
 	}
 
 	void check(fpsent *d)
@@ -745,7 +733,7 @@ struct botclient
 		}
 
 		cl.ph.move(d, 10, true);
-		d->stopactions();
+		d->attacking = d->jumping = d->reloading = d->useaction = false;
 	}
 
 	void avoid(fpsent *d)

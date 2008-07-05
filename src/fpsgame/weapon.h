@@ -49,7 +49,6 @@ struct weaponstate
 		{
 			d->setgun(s, lastmillis);
 			cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-			cl.playsoundc(S_SWITCH, d);
 		}
 	}
 
@@ -335,12 +334,15 @@ struct weaponstate
 
 	void reload(fpsent *d)
 	{
-		if((d->reloading || (d == cl.player1 && doautoreload(d))) &&
-			d->canreload(d->gunselect, lastmillis))
+		if(d->reloading || (d == cl.player1 && doautoreload(d)))
 		{
-			d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
-			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-			cl.playsoundc(S_RELOAD, d);
+			if(d->canreload(d->gunselect, lastmillis))
+			{
+				d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
+				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+			}
+			else if(d->reloading) cl.playsoundc(S_DENIED, d);
+			d->reloading = false;
 		}
 	}
 
