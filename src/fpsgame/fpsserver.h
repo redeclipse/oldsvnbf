@@ -1881,7 +1881,11 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, suicideevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(gs.state!=CS_ALIVE) return;
+		if(gs.state != CS_ALIVE)
+		{
+			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
+			return;
+		}
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
 		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, 0, ci->state.health);
@@ -1930,7 +1934,11 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, shotevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !gs.canshoot(e.gun, e.millis)) { return; }
+		if(!gs.isalive(gamemillis) || !gs.canshoot(e.gun, e.millis))
+		{
+			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
+			return;
+		}
 		if (guntype[e.gun].max) gs.ammo[e.gun]--;
 		gs.gunstate[e.gun] = GUNSTATE_SHOOT;
 		gs.lastshot = gs.gunlast[e.gun] = e.millis;
@@ -1967,7 +1975,11 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, switchevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !gs.canswitch(e.gun, e.millis)) { return; }
+		if(!gs.isalive(gamemillis) || !gs.canswitch(e.gun, e.millis))
+		{
+			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
+			return;
+		}
 		gs.gunswitch(e.gun, e.millis);
 		sendf(-1, 1, "ri3", SV_GUNSELECT, ci->clientnum, e.gun);
 	}
@@ -1975,7 +1987,11 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, reloadevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !gs.canreload(e.gun, e.millis)) { return; }
+		if(!gs.isalive(gamemillis) || !gs.canreload(e.gun, e.millis))
+		{
+			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
+			return;
+		}
 		gs.useitem(e.millis, WEAPON, e.gun, guntype[e.gun].add);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
@@ -1985,15 +2001,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(minremain<=0 || !gs.isalive(gamemillis) || !sents.inrange(e.ent) || !sents[e.ent].spawned || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
 		{
-#if 0
-			const char *msg = (minremain<=0 ? "time up" :
-				(!gs.isalive(gamemillis) ? "not alive" :
-				(!sents.inrange(e.ent) ? "entity not in range" :
-				(!sents[e.ent].spawned ? "entity not spawned" :
-				(!gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis) ? "cannot use entity" :
-					"unknown reason")))));
-			servsend(ci->clientnum, "cannot pickup %d (%d): %s", e.ent, e.millis, msg);
-#endif
+			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
 		sents[e.ent].spawned = false;
