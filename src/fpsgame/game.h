@@ -582,8 +582,9 @@ struct botstate
 struct botinfo
 {
 	vector<botstate> state;
-	vector<int> route, avoid, ignore;
+	vector<int> route, avoid;
 	vec target, spot;
+	int enemy;
 
 	botinfo()
 	{
@@ -594,7 +595,6 @@ struct botinfo
 		state.setsize(0);
 		route.setsize(0);
 		avoid.setsize(0);
-		ignore.setsize(0);
 	}
 
 	void reset()
@@ -602,9 +602,9 @@ struct botinfo
 		state.setsize(0);
 		route.setsize(0);
 		avoid.setsize(0);
-		ignore.setsize(0);
 		addstate(BS_WAIT);
 		spot = target = vec(0, 0, 0);
+		enemy = NULL;
 	}
 
 	botstate &addstate(int type)

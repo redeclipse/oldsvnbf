@@ -573,7 +573,7 @@ struct entities : icliententities
         float score() const { return curscore + estscore; }
 	};
 
-	bool route(int node, int goal, vector<int> &route, vector<int> &avoid, float tolerance)
+	bool route(int node, int goal, vector<int> &route, vector<int> &avoid, float tolerance, float *score = NULL)
 	{
         if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node) return false;
 
@@ -648,6 +648,7 @@ struct entities : icliententities
 		{
 			for(linkq *m = &nodes[lowest]; m != NULL; m = m->prev)
 				route.add(m - &nodes[0]); // just keep it stored backward
+			if(!route.empty() && score) *score = nodes[lowest].score();
 		}
 
 		if(verbose > 3)
