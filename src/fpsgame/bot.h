@@ -8,10 +8,10 @@ struct botclient
 	static const int BOTJUMPIMPULSE		= 16;			// impulse to jump
 	static const float BOTLOSMIN		= 64.f;			// minimum line of sight
 	static const float BOTLOSMAX		= 4096.f;		// maximum line of sight
-	static const float BOTFOVMIN		= 80.f;			// minimum field of view
-	static const float BOTFOVMAX		= 130.f;		// maximum field of view
+	static const float BOTFOVMIN		= 90.f;			// minimum field of view
+	static const float BOTFOVMAX		= 125.f;		// maximum field of view
 
-	IVAR(botskill, 1, 30, 100);
+	IVAR(botskill, 1, 50, 100);
 	IVAR(botstall, 0, 0, 1);
 	IVAR(botdebug, 0, 2, 5);
 
@@ -80,7 +80,7 @@ struct botclient
 		dir.normalize();
 		float targyaw, targpitch;
 		vectoyawpitch(dir, targyaw, targpitch);
-		float margin = (float(BOTRATE/4)/100.f)+0.05f,
+		float margin = (float(BOTRATE/4)/100.f)+0.09f,
 			cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 		return cyaw < margin*BOTFOVX && cpitch < margin*BOTFOVY;
 	}
@@ -128,8 +128,8 @@ struct botclient
 		{
 			if(cl.et.ents[j]->type == WAYPOINT && j != d->lastnode)
 			{
-				float fdist = cl.et.ents[j]->o.dist(to), dist = cl.et.ents[j]->o.dist(from);
-				if(dist > radius && fdist > radius && fdist < wander)
+				float tdist = cl.et.ents[j]->o.dist(to), fdist = cl.et.ents[j]->o.dist(from);
+				if(tdist > radius && fdist > radius && fdist <= wander)
 					waypoints.add(j);
 			}
 		}
@@ -142,33 +142,57 @@ struct botclient
 		return false;
 	}
 
-	bool patrol(fpsent *d, botstate &b, vec &pos, float radius, float wander)
+	bool randomnode(fpsent *d, botstate &b, float radius, float wander)
 	{
 		vec feet(vec(d->o).sub(vec(0, 0, d->height)));
-		if(feet.dist(pos) <= radius || b.override)
-		{ // run away and back to keep ourselves busy
-			if((!b.override || b.goal) && randomnode(d, b, feet, pos, radius, wander))
-				b.override = true;
-			return true;
-		}
-		return makeroute(d, b, pos, radius);
+		return randomnode(d, b, feet, feet, radius, wander);
 	}
 
-	bool follow(fpsent *d, botstate &b, fpsent *e)
+	bool patrol(fpsent *d, botstate &b, vec &pos, float radius, float wander, bool retry = false)
+	{
+		vec feet(vec(d->o).sub(vec(0, 0, d->height)));
+		if(b.override || feet.dist(pos) <= radius || !makeroute(d, b, pos, wander))
+		{ // run away and back to keep ourselves busy
+			if(!b.override && randomnode(d, b, feet, pos, radius, wander))
+			{
+				b.override = true;
+				return true;
+			}
+			else if(!b.goal) return true;
+			else if(!retry)
+			{
+				b.override = false;
+				return patrol(d, b, pos, radius, wander, true);
+			}
+			return false;
+		}
+		return true;
+	}
+
+	bool follow(fpsent *d, botstate &b, fpsent *e, bool retry = false)
 	{
 		vec pos(vec(e->o).sub(vec(0, 0, e->height))), feet(vec(d->o).sub(vec(0, 0, d->height)));
-		if(feet.dist(pos) <= BOTISNEAR || b.override)
+		if(b.override || feet.dist(pos) <= BOTISNEAR || !makeroute(d, b, e->lastnode, e->radius*2.f))
 		{ // random path if too close
-			if((!b.override || b.goal) && randomnode(d, b, feet, pos, BOTISNEAR, BOTISFAR))
+			if(!b.override && randomnode(d, b, feet, pos, BOTISNEAR, BOTISFAR))
+			{
 				b.override = true;
-			return true;
+				return true;
+			}
+			else if(!b.goal) return true;
+			else if(!retry)
+			{
+				b.override = false;
+				return follow(d, b, e, true);
+			}
+			return false;
 		}
-		return makeroute(d, b, e->lastnode, e->radius*2.f);
+		return true;
 	}
 
 	bool violence(fpsent *d, botstate &b, fpsent *e, bool pursue = false)
 	{
-		if((!pursue && !b.goal) || (pursue && follow(d, b, e)))
+		if(!pursue || follow(d, b, e))
 		{
 			botstate &c = d->bot->addstate(pursue ? BS_PURSUE : BS_ATTACK);
 			c.targtype = BT_PLAYER;
@@ -400,7 +424,6 @@ struct botclient
 		{
 			if(d->respawned != d->lifesequence && !cl.respawnwait(d))
 				cl.respawnself(d);
-
 			return true;
 		}
 		else if(d->state == CS_ALIVE)
@@ -419,12 +442,9 @@ struct botclient
 				if(!hasflags.empty() && ctfhomerun(d, b))
 					return true;
 			}
-
 			if(find(d, b, true)) return true;
 			if(defer(d, b, true)) return true;
-
-			vec feet(vec(d->o).sub(vec(0, 0, d->height)));
-			if(randomnode(d, b, feet, feet, BOTISNEAR, 1e16f))
+			if(randomnode(d, b, BOTISFAR, 1e16f))
 			{
 				botstate &c = d->bot->setstate(BS_INTEREST);
 				c.targtype = BT_NODE;
@@ -459,13 +479,10 @@ struct botclient
 				case BT_PLAYER:
 				{
 					fpsent *e = cl.getclient(b.target);
-					if(e && e->state == CS_ALIVE)
+					if(e && e->state == CS_ALIVE & follow(d, b, e))
 					{
-						if(patrol(d, b, vec(e->o).sub(vec(0, 0, e->height)), d->radius*2.f, float(BOTISNEAR)))
-						{
-							defer(d, b, false);
-							return true;
-						}
+						defer(d, b, false);
+						return true;
 					}
 					break;
 				}
@@ -488,7 +505,7 @@ struct botclient
 				{
 					d->attacking = true;
 					d->attacktime = lastmillis;
-					return false;
+					return !b.override && !b.goal;
 				}
 				if(b.goal) follow(d, b, e);
 				return true;
@@ -616,19 +633,21 @@ struct botclient
 		return node;
 	}
 
-	bool hunt(fpsent *d, botstate &b)
+	bool hunt(fpsent *d, botstate &b, bool retry = false)
 	{
-		if(!d->bot->route.empty() && !b.goal)
+		if(!d->bot->route.empty())
 		{
-			int n = d->bot->route.find(d->lastnode);
+			int n = d->bot->route.find(d->lastnode), g = d->bot->route[0];
 			if(d->bot->route.inrange(n) && --n >= 0) // otherwise got to goal
 			{
 				if(!d->bot->route.inrange(n)) n = closenode(d, b);
 				if(d->bot->route.inrange(n) && d->bot->avoid.find(d->bot->route[n]) < 0)
 				{
+					b.goal = false;
 					d->bot->spot = vec(cl.et.ents[d->bot->route[n]]->o).add(vec(0, 0, d->height));
 					return true;
 				}
+				if(!retry && makeroute(d, b, g)) return hunt(d, b, true);
 			}
 		}
 		b.goal = true;
