@@ -1301,7 +1301,7 @@ struct GAMESERVER : igameserver
 						se.attr5 = getint(p);
 						se.spawned = false;
 
-						if (commit)
+						if(commit && (enttype[se.type].usetype == EU_ITEM || se.type == TRIGGER))
 						{
 							while(sents.length() < n) sents.add(sn);
 							sents.add(se);

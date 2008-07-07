@@ -214,6 +214,7 @@ struct entities : icliententities
 			}
 
 			fpsentity &e = (fpsentity &)*ents[index];
+
 			loopv(ents)
 			{
 				fpsentity &f = (fpsentity &)*ents[i];
@@ -242,7 +243,6 @@ struct entities : icliententities
 							}
 							break;
 						}
-
 						default: break;
 					}
 				}
@@ -254,34 +254,32 @@ struct entities : icliententities
 	void teleport(int n, fpsent *d)	 // also used by monsters
 	{
 		fpsentity &e = (fpsentity &)*ents[n];
-		for (int off = 0; off < e.links.length(); off++)
+		vector<int> teleports;
+		loopv(e.links)
+			if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TELEPORT)
+				teleports.add(i);
+
+		if(!teleports.empty())
 		{
-			loopi(off+1)
-			{
-				int link = rnd(e.links.length()-off)+i;
+			int r = rnd(teleports.length()), t = teleports[r];
+			fpsentity &f = (fpsentity &)*ents[t];
+			d->o = f.o;
+			d->yaw = clamp((int)f.attr1, 0, 359);
+			d->pitch = clamp((int)f.attr2, -89, 89);
+			float mag = max((float)f.attr3+d->vel.magnitude(), 64.f);
+			d->vel = vec(0, 0, 0);
+			vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
+			d->o.add(d->vel);
+			d->vel.mul(mag);
+			cl.ph.entinmap(d, false);
 
-				if(e.links.inrange(link))
-				{
-					int targ = e.links[link];
+			execlink(d, n, true);
+			execlink(d, t, true);
 
-					if(ents.inrange(targ) && ents[targ]->type == TELEPORT)
-					{
-						d->o = ents[targ]->o;
-						d->yaw = clamp((int)ents[targ]->attr1, 0, 359);
-						d->pitch = clamp((int)ents[targ]->attr2, -89, 89);
-						float mag = max((float)ents[targ]->attr3+d->vel.magnitude(), 64.f);
-						d->vel = vec(0, 0, 0);
-						vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
-						d->o.add(d->vel);
-						d->vel.mul(mag);
-						cl.ph.entinmap(d, false);
-						execlink(d, n, true);
-						execlink(d, targ, true);
-						if(d == cl.player1) cl.lastmouse = cl.lastcamera = 0;
-						return;
-					}
-				}
-			}
+			if(d == cl.player1)
+				cl.lastmouse = cl.lastcamera = 0;
+
+			return;
 		}
 	}
 
@@ -323,12 +321,13 @@ struct entities : icliententities
 
 	void reaction(int n, fpsent *d)
 	{
-		switch(ents[n]->type)
+		fpsentity &e = (fpsentity &)*ents[n];
+		switch(e.type)
 		{
 			case TELEPORT:
 			{
-				if(d->lastuse == ents[n]->type && lastmillis-d->lastusemillis<1000) break;
-				d->lastuse = ents[n]->type;
+				if(d->lastuse == e.type && lastmillis-d->lastusemillis<1000) break;
+				d->lastuse = e.type;
 				d->lastusemillis = lastmillis;
 				teleport(n, d);
 				break;
@@ -336,13 +335,40 @@ struct entities : icliententities
 
 			case PUSHER:
 			{
-				if(d->lastuse==ents[n]->type && lastmillis-d->lastusemillis<1000) break;
-				d->lastuse = ents[n]->type;
+				if(d->lastuse==e.type && lastmillis-d->lastusemillis<1000) break;
+				d->lastuse = e.type;
 				d->lastusemillis = lastmillis;
-				vec v((int)(char)ents[n]->attr3*10.0f, (int)(char)ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
+				vec v((int)(char)e.attr3*10.0f, (int)(char)e.attr2*10.0f, e.attr1*12.5f);
 				d->timeinair = 0;
                 d->falling = vec(0, 0, 0);
 				d->vel = v;
+				execlink(d, n, true);
+				break;
+			}
+
+			case TRIGGER:
+			{
+				if(d->lastuse==e.type && lastmillis-d->lastusemillis<1000)
+					break;
+				d->lastuse = e.type;
+				d->lastusemillis = lastmillis;
+				switch(e.type)
+				{
+					case TRIGGER:
+					{
+						switch(e.attr2)
+						{
+							case TR_SCRIPT:
+							{
+								s_sprintfd(s)("on_trigger_%d", e.attr1);
+								RUNWORLD(s);
+								break;
+							}
+							default: break;
+						}
+					}
+					default: break;
+				}
 				execlink(d, n, true);
 				break;
 			}
@@ -358,9 +384,28 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-			if(enttype[e.type].usetype == ETU_AUTO && insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
-				reaction(i, d);
+			if(e.type <= NOTUSED || e.type >= MAXENTTYPES || enttype[e.type].usetype != EU_AUTO)
+				continue;
+			if(!insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
+				continue;
+
+			bool activate = false;
+
+			if(e.type != TRIGGER) activate = true;
+			else if(e.spawned || !e.attr4)
+			{
+				switch(e.attr3)
+				{
+					case TA_AUTO: activate = true; break;
+					case TA_ACT:
+					{
+						if(d->useaction) activate = true;
+						break;
+					}
+					default: break;
+				}
+			}
+			if(activate) reaction(i, d);
 		}
 
 		if(d->useaction)
@@ -370,8 +415,8 @@ struct entities : icliententities
 			{
 				extentity &e = *ents[i];
 				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-				if(e.spawned && enttype[e.type].usetype == ETU_ITEM
-					&& insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius)
+				if(enttype[e.type].usetype != EU_ITEM || !e.spawned) continue;
+				if(insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius)
 					&& d->canuse(e.type, e.attr1, e.attr2, lastmillis)
 					&& (!ents.inrange(n) || e.o.dist(m) < ents[n]->o.dist(m)))
 						n = i;
@@ -387,21 +432,17 @@ struct entities : icliententities
 	{
 		loopv(ents)
 		{
-			switch (ents[i]->type)
+			fpsentity &e = (fpsentity &)*ents[i];
+			if(enttype[e.type].usetype == EU_ITEM || e.type == TRIGGER)
 			{
-				case WEAPON:
-				{
-					putint(p, i);
-					putint(p, ents[i]->type);
-					putint(p, ents[i]->attr1);
-					putint(p, ents[i]->attr2);
-					putint(p, ents[i]->attr3);
-					putint(p, ents[i]->attr4);
-					putint(p, ents[i]->attr5);
-					ents[i]->spawned = m_insta(cl.gamemode, cl.mutators) ? false : true;
-					break;
-				}
-				default: break;
+				putint(p, i);
+				putint(p, e.type);
+				putint(p, e.attr1);
+				putint(p, e.attr2);
+				putint(p, e.attr3);
+				putint(p, e.attr4);
+				putint(p, e.attr5);
+				e.spawned = m_insta(cl.gamemode, cl.mutators) ? false : true;
 			}
 		}
 	}
@@ -1129,7 +1170,7 @@ struct entities : icliententities
 		{
 			extentity &e = *ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-			bool active = (enttype[e.type].usetype == ETU_ITEM && e.spawned);
+			bool active = (enttype[e.type].usetype == EU_ITEM && e.spawned);
 			if(m_edit(cl.gamemode) || active)
 			{
 				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);

@@ -242,4 +242,4 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define ISVARFR(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_OVERRIDE|IDF_COMPLETE)
 #define ISVARFW(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_WORLD|IDF_COMPLETE)
 
-#define RUNWORLD(n) { ident *wid = idents->access(#n); if(wid && wid->action && wid->flags&IDF_WORLD) execute(wid->action); }
+#define RUNWORLD(n) { ident *wid = idents->access(n); if(wid && wid->action && wid->flags&IDF_WORLD) execute(wid->action); }

@@ -950,7 +950,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 		computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
 		renderprogress(0, "starting world...");
 		startmap(mapname);
-		RUNWORLD(on_start);
+		RUNWORLD("on_start");
 		return;
 	}
 	conoutf("unable to load %s", mapname);
