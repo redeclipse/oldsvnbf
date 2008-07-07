@@ -26,15 +26,15 @@ enum								// entity types
 	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
 	LIGHT = ET_LIGHT,				// 1  radius, intensity
 	MAPMODEL = ET_MAPMODEL,			// 2  angle, idx
-	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, [team]
+	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, team
 	ENVMAP = ET_ENVMAP,				// 4  radius
 	PARTICLES = ET_PARTICLES,		// 5  type, [others]
 	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume
 	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
 	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
 	TELEPORT,						// 9  yaw, pitch, roll, push
-	MONSTER,						// 10 [angle], [type]
-	TRIGGER,						// 11
+	MONSTER,						// 10 angle, type
+	TRIGGER,						// 11 idx, type, acttype, resettime
 	PUSHER,							// 12 zpush, ypush, xpush
 	FLAG,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
@@ -45,31 +45,33 @@ enum								// entity types
 	MAXENTTYPES						// 19
 };
 
-enum { ETU_NONE = 0, ETU_ITEM, ETU_AUTO, ETU_MAX };
+enum { EU_NONE = 0, EU_ITEM, EU_AUTO, EU_ACT, EU_MAX };
+enum { TR_NONE = 0, TR_MMODEL, TR_SCRIPT, TR_MAX };
+enum { TA_NONE = 0, TA_AUTO, TA_ACT, TA_LINK, TA_MAX };
 
 struct enttypes
 {
 	int	type, 		links,	radius,	height, usetype;		const char *name;
 } enttype[] = {
-	{ NOTUSED,		0,		0,		0,		ETU_NONE,		"none" },
-	{ LIGHT,		59,		0,		0,		ETU_NONE,		"light" },
-	{ MAPMODEL,		58,		0,		0,		ETU_NONE,		"mapmodel" },
-	{ PLAYERSTART,	59,		0,		0,		ETU_NONE,		"playerstart" },
-	{ ENVMAP,		0,		0,		0,		ETU_NONE,		"envmap" },
-	{ PARTICLES,	59,		0,		0,		ETU_NONE,		"particles" },
-	{ MAPSOUND,		58,		0,		0,		ETU_NONE,		"sound" },
-	{ SPOTLIGHT,	59,		0,		0,		ETU_NONE,		"spotlight" },
-	{ WEAPON,		59,		16,		16,		ETU_ITEM,		"weapon" },
-	{ TELEPORT,		50,		12,		12,		ETU_AUTO,		"teleport" },
-	{ MONSTER,		59,		0,		0,		ETU_NONE,		"monster" },
-	{ TRIGGER,		58,		16,		16,		ETU_NONE,		"trigger" }, // FIXME
-	{ PUSHER,		58,		12,		12,		ETU_AUTO,		"pusher" },
-	{ FLAG,			48,		32,		16,		ETU_NONE,		"flag" },
-	{ CHECKPOINT,	48,		16,		16,		ETU_NONE,		"checkpoint" }, // FIXME
-	{ CAMERA,		48,		0,		0,		ETU_NONE,		"camera" },
-	{ WAYPOINT,		1,		8,		8,		ETU_NONE,		"waypoint" },
-	{ ANNOUNCER,	64,		0,		0,		ETU_NONE,		"announcer" },
-	{ CONNECTION,	70,		8,		8,		ETU_NONE,		"connection" },
+	{ NOTUSED,		0,		0,		0,		EU_NONE,		"none" },
+	{ LIGHT,		59,		0,		0,		EU_NONE,		"light" },
+	{ MAPMODEL,		58,		0,		0,		EU_NONE,		"mapmodel" },
+	{ PLAYERSTART,	59,		0,		0,		EU_NONE,		"playerstart" },
+	{ ENVMAP,		0,		0,		0,		EU_NONE,		"envmap" },
+	{ PARTICLES,	59,		0,		0,		EU_NONE,		"particles" },
+	{ MAPSOUND,		58,		0,		0,		EU_NONE,		"sound" },
+	{ SPOTLIGHT,	59,		0,		0,		EU_NONE,		"spotlight" },
+	{ WEAPON,		59,		16,		16,		EU_ITEM,		"weapon" },
+	{ TELEPORT,		50,		12,		12,		EU_AUTO,		"teleport" },
+	{ MONSTER,		59,		0,		0,		EU_NONE,		"monster" },
+	{ TRIGGER,		58,		16,		16,		EU_AUTO,		"trigger" },
+	{ PUSHER,		58,		12,		12,		EU_AUTO,		"pusher" },
+	{ FLAG,			48,		32,		16,		EU_NONE,		"flag" },
+	{ CHECKPOINT,	48,		16,		16,		EU_NONE,		"checkpoint" }, // FIXME
+	{ CAMERA,		48,		0,		0,		EU_NONE,		"camera" },
+	{ WAYPOINT,		1,		8,		8,		EU_NONE,		"waypoint" },
+	{ ANNOUNCER,	64,		0,		0,		EU_NONE,		"announcer" },
+	{ CONNECTION,	70,		8,		8,		EU_NONE,		"connection" },
 };
 
 enum { ETYPE_NONE = 0, ETYPE_WORLD, ETYPE_DYNAMIC };
@@ -421,6 +423,11 @@ struct fpsstate
 	{
 		switch (type)
 		{
+			case TRIGGER:
+			{
+				return true;
+				break;
+			}
 			case WEAPON:
 			{ // can't use when reloading or firing
 				if (isgun(attr1) && (ammo[attr1] < guntype[attr1].max) && (millis-gunlast[attr1] >= gunwait[attr1]))
@@ -455,6 +462,10 @@ struct fpsstate
 	{
 		switch (type)
 		{
+			case TRIGGER:
+			{
+				break;
+			}
 			case WEAPON:
 			{
 				if (ammo[attr1] < 0) ammo[attr1] = 0;

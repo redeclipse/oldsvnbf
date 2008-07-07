@@ -521,7 +521,7 @@ struct botclient
 			if(cl.et.ents.inrange(b.target))
 			{
 				fpsentity &e = (fpsentity &)*cl.et.ents[b.target];
-				if(enttype[e.type].usetype == ETU_ITEM)
+				if(enttype[e.type].usetype == EU_ITEM)
 				{
 					switch(e.type)
 					{

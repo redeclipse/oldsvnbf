@@ -833,7 +833,7 @@ int main(int argc, char **argv)
 		menuprocess();
 		checksleep(lastmillis);
 
-		RUNWORLD(on_update);
+		RUNWORLD("on_update");
 		cl->updateworld();
 		serverslice();
 

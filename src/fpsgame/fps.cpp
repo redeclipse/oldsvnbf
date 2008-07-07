@@ -335,7 +335,7 @@ struct GAMECLIENT : igameclient
 		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
 		s_strcpy(dname, colorname(d));
 		s_strcpy(aname, actor->type!=ENT_INANIMATE ? colorname(actor) : "");
-		s_strcpy(oname, flags&HIT_HEAD ? "was shot in the head by" : (gun >= 0 && gun < NUMGUNS ? obitnames[gun] : "was killed by"));
+		s_strcpy(oname, gun >= 0 && gun < NUMGUNS ? obitnames[gun] : "was killed by");
         if(d==actor || actor->type==ENT_INANIMATE) console("\f2%s killed themself", cflags, dname);
 		else if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, aname, oname, dname);
 		else if(m_team(gamemode, mutators) && d->team == actor->team) console("\f2%s %s teammate %s", cflags, dname, oname, aname);
@@ -637,7 +637,7 @@ struct GAMECLIENT : igameclient
 			extentity &e = *et.ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
 			enttypes &t = enttype[e.type];
-			if((t.usetype == ETU_ITEM && e.spawned) || editmode)
+			if((t.usetype == EU_ITEM && e.spawned) || editmode)
 			{
 				bool insel = (editmode && (enthover == i || entgroup.find(i) >= 0));
 				vec dir(e.o);
