@@ -195,7 +195,7 @@ void checkmasterclients()
                 c.outputpos += res;
                 if(c.outputpos>=c.output->length()) { purgemasterclient(i--); continue; }
             }
-            else if(errno==ENOTCONN) { purgemasterclient(i--); continue; }
+            else { purgemasterclient(i--); continue; }
         }
         if(c.outputpos<0 && FD_ISSET(c.socket, &readset))
         {
@@ -203,13 +203,13 @@ void checkmasterclients()
             buf.data = &c.input[c.inputpos];
             buf.dataLength = sizeof(c.input) - c.inputpos;
             int res = enet_socket_receive(c.socket, NULL, &buf, 1);
-            if(res>=0)
+            if(res>0)
             {
                 c.inputpos += res;
                 c.input[min(c.inputpos, (int)sizeof(c.input)-1)] = '\0';
                 if(!checkmasterclientinput(c)) { purgemasterclient(i--); continue; }
             }
-            else if(errno==ENOTCONN) { purgemasterclient(i--); continue; }
+            else { purgemasterclient(i--); continue; }
         }
         if(ENET_TIME_DIFFERENCE(lastmillis, c.connecttime) >= MASTER_TIME) { purgemasterclient(i--); continue; }
     }
