@@ -7,7 +7,6 @@
 		<Option makefile="Makefile"/>
 		<Option makefile_is_custom="0"/>
 		<Option default_target="1"/>
-		<Option active_target="2"/>
 		<Option compiler="0"/>
 		<Build>
 			<Target title="data">
@@ -38,12 +37,10 @@
 				<Compiler>
 					<Add option="-fexpensive-optimizations"/>
 					<Add option="-Os"/>
-					<Add option="-O3"/>
+					<Add option="-O2"/>
 					<Add option="-Wall"/>
 					<Add option="-fsigned-char"/>
 					<Add option="-fomit-frame-pointer"/>
-					<Add option="-ffast-math"/>
-					<Add option="-fno-strict-aliasing"/>
 					<Add option="-DINTERFACE"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
@@ -126,8 +123,10 @@
 				<Compiler>
 					<Add option="-fexpensive-optimizations"/>
 					<Add option="-Os"/>
-					<Add option="-O3"/>
+					<Add option="-O2"/>
 					<Add option="-Wall"/>
+					<Add option="-fsigned-char"/>
+					<Add option="-fomit-frame-pointer"/>
 					<Add option="-DSTANDALONE"/>
 					<Add directory="shared"/>
 					<Add directory="engine"/>
@@ -158,8 +157,10 @@
 				<Compiler>
 					<Add option="-fexpensive-optimizations"/>
 					<Add option="-Os"/>
-					<Add option="-O3"/>
+					<Add option="-O2"/>
 					<Add option="-Wall"/>
+					<Add option="-fsigned-char"/>
+					<Add option="-fomit-frame-pointer"/>
 					<Add option="-DSTANDALONE"/>
 					<Add option="-DMASTERSERVER"/>
 					<Add directory="shared"/>
@@ -194,8 +195,10 @@
 				<Compiler>
 					<Add option="-fexpensive-optimizations"/>
 					<Add option="-Os"/>
-					<Add option="-O3"/>
+					<Add option="-O2"/>
 					<Add option="-Wall"/>
+					<Add option="-fsigned-char"/>
+					<Add option="-fomit-frame-pointer"/>
 					<Add option="-DTTF2FONT"/>
 					<Add directory="shared"/>
 					<Add directory="include"/>
@@ -226,7 +229,9 @@
 				<Compiler>
 					<Add option="-fexpensive-optimizations"/>
 					<Add option="-Os"/>
-					<Add option="-O3"/>
+					<Add option="-O2"/>
+					<Add option="-fsigned-char"/>
+					<Add option="-fomit-frame-pointer"/>
 					<Add option="-DIMG2ANIM"/>
 					<Add directory="shared"/>
 					<Add directory="include"/>
