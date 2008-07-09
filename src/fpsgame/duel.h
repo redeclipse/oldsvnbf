@@ -27,7 +27,7 @@ struct duelservmode : servmode
 			if (msg)
 			{
 				if(m_dlms(sv.gamemode, sv.mutators))
-					sv.servsend(ci->clientnum, "waiting for next round..");
+					sv.srvoutf(ci->clientnum, "waiting for next round..");
 				else
 				{
 					const char *r = NULL;
@@ -35,7 +35,7 @@ struct duelservmode : servmode
 					else if (!(n%2) && n != 12) r = "nd";
 					else if (!(n%1) && n != 11) r = "st";
 					else r = "th";
-					sv.servsend(ci->clientnum, "you are %d%s in the duel queue", n, r ? r : "");
+					sv.srvoutf(ci->clientnum, "you are %d%s in the duel queue", n, r ? r : "");
 				}
 			}
 		}
@@ -183,13 +183,13 @@ struct duelservmode : servmode
 			if (alive.length())
 			{
 				if (m_team(sv.gamemode, sv.mutators))
-					sv.servsend(-1, "%s won the duel for team %s!", sv.colorname(alive[0]), teamtype[alive[0]->team].name);
+					sv.srvoutf(-1, "%s won the duel for team %s!", sv.colorname(alive[0]), teamtype[alive[0]->team].name);
 				else
-					sv.servsend(-1, "%s won the duel!", sv.colorname(alive[0]));
+					sv.srvoutf(-1, "%s won the duel!", sv.colorname(alive[0]));
 			}
 			else
 			{
-				sv.servsend(-1, "everyone died!");
+				sv.srvoutf(-1, "everyone died!");
 			}
 			dueltime = sv.gamemillis + DUELMILLIS;
 		}

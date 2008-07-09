@@ -11,44 +11,44 @@ struct botclient
 	static const float BOTFOVMIN		= 90.f;			// minimum field of view
 	static const float BOTFOVMAX		= 125.f;		// maximum field of view
 
-	IVAR(botskill, 1, 50, 100);
 	IVAR(botstall, 0, 0, 1);
 	IVAR(botdebug, 0, 2, 5);
 
 	#define BOTSCALE(x)				clamp(101 - clamp(x, 1, 100), 1, 100)
-	#define BOTRATE					BOTSCALE(botskill())
-	#define BOTCHANCE				rnd(botskill())
-	#define BOTLOSDIST				clamp(BOTLOSMIN+((BOTLOSMAX-BOTLOSMIN)/float(BOTRATE)), BOTLOSMIN, float(getvar("fog"))+BOTLOSMIN)
-	#define BOTFOVX					clamp(BOTFOVMIN+((BOTFOVMAX-BOTFOVMIN)/float(BOTRATE)), BOTFOVMIN, BOTFOVMAX)
-	#define BOTFOVY					BOTFOVX*3/4
+	#define BOTRATE(x)				BOTSCALE(x)
+	#define BOTCHANCE(x)			rnd(x)
+	#define BOTLOSDIST(x)			clamp(BOTLOSMIN+((BOTLOSMAX-BOTLOSMIN)/float(x)), BOTLOSMIN, float(getvar("fog"))+BOTLOSMIN)
+	#define BOTFOVX(x)				clamp(BOTFOVMIN+((BOTFOVMAX-BOTFOVMIN)/float(x)), BOTFOVMIN, BOTFOVMAX)
+	#define BOTFOVY(x)				BOTFOVX(x)*3/4
 	#define BOTTARG(x,y,z)			(y != x && y->state == CS_ALIVE && (!z || !m_team(cl.gamemode, cl.mutators) || y->team != x->team))
 
 	botclient(GAMECLIENT &_cl) : cl(_cl)
 	{
-		CCOMMAND(addbot, "i", (botclient *self, int *n), self->addbot(*n));
-		CCOMMAND(delbot, "i", (botclient *self, int *n), self->delbot(*n));
+		CCOMMAND(addbot, "s", (botclient *self, char *s),
+			self->addbot(*s ? clamp(atoi(s), 1, 100) : 50)
+		);
+		CCOMMAND(delbot, "", (botclient *self), self->delbot());
 	}
 
-	void addbot(int n)
-	{
-		loopi(n ? n : 1) cl.cc.addmsg(SV_ADDBOT, "r");
-	}
-
-	void delbot(int n)
-	{
-		int c = n ? n : 1;
-		loopvrev(cl.players) if(cl.players[i] && cl.players[i]->bot)
-		{
-			cl.cc.addmsg(SV_DELBOT, "ri", cl.players[i]->clientnum);
-			if(--c <= 0) break;
-		}
-	}
+	void addbot(int s) { cl.cc.addmsg(SV_ADDBOT, "ri", s); }
+	void delbot() { cl.cc.addmsg(SV_DELBOT, "r"); }
 
 	void create(fpsent *d)
 	{
-		if(d->bot) return;
-		d->bot = new botinfo();
-		if(!d->bot) fatal("could not create bot");
+		if(!d->bot)
+		{
+			if(!(d->bot = new botinfo()))
+				fatal("could not create bot");
+		}
+	}
+
+	void destroy(fpsent *d)
+	{
+		if(d->bot)
+		{
+			DELETEP(d->bot);
+			d->bot = NULL;
+		}
 	}
 
 	void update()
@@ -80,9 +80,9 @@ struct botclient
 		dir.normalize();
 		float targyaw, targpitch;
 		vectoyawpitch(dir, targyaw, targpitch);
-		float margin = (float(BOTRATE/4)/100.f)+0.09f,
+		float margin = (float(BOTRATE(d->skill)/4)/100.f)+0.09f,
 			cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
-		return cyaw < margin*BOTFOVX && cpitch < margin*BOTFOVY;
+		return cyaw < margin*BOTFOVX(d->skill) && cpitch < margin*BOTFOVY(d->skill);
 	}
 
 	bool checkothers(vector<int> &targets, fpsent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false)
@@ -211,7 +211,7 @@ struct botclient
 		loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && e != d && BOTTARG(d, e, true))
 		{
 			if((!t || e->o.dist(d->o) < t->o.dist(d->o)) &&
-				getsight(d->o, d->yaw, d->pitch, e->o, targ, BOTLOSDIST, BOTFOVX, BOTFOVY))
+				getsight(d->o, d->yaw, d->pitch, e->o, targ, BOTLOSDIST(d->skill), BOTFOVX(d->skill), BOTFOVY(d->skill)))
 					t = e;
 		}
 		if(t) return violence(d, b, t, pursue);
@@ -501,7 +501,7 @@ struct botclient
 			if(e && e->state == CS_ALIVE && raycubelos(d->o, e->o, targ))
 			{
 				d->bot->enemy = e->clientnum;
-				if(d->canshoot(d->gunselect, lastmillis) && (!BOTCHANCE || hastarget(d, b, e->o)))
+				if(d->canshoot(d->gunselect, lastmillis) && (!BOTCHANCE(d->skill) || hastarget(d, b, e->o)))
 				{
 					d->attacking = true;
 					d->attacktime = lastmillis;
@@ -662,7 +662,7 @@ struct botclient
 		float dist = d->o.dist(pos), targpitch = asin((pos.z-d->o.z)/dist)/RAD;
 		if(aiming)
 		{
-			float amt = float(lastmillis-d->lastupdate)/float(BOTRATE)/10.f,
+			float amt = float(lastmillis-d->lastupdate)/float(BOTRATE(d->skill))/10.f,
 				offyaw = fabs(targyaw-yaw)*amt, offpitch = fabs(targpitch-pitch)*amt;
 
 			if(targyaw > yaw) // slowly turn bot towards target
@@ -884,11 +884,11 @@ struct botclient
 		{
 			vec fr(cl.ws.gunorigin(d->gunselect, d->o, d->bot->target, d)),
 				dr(d->bot->target);
-			if(dr.dist(d->o) > BOTLOSDIST)
+			if(dr.dist(d->o) > BOTLOSDIST(d->skill))
 			{
 				dr.sub(fr);
 				dr.normalize();
-				dr.mul(BOTLOSDIST);
+				dr.mul(BOTLOSDIST(d->skill));
 			}
 			renderline(fr, dr, cr, cg, cb, false);
 			rendertris(dr, d->yaw, d->pitch, 2.f, cr, cg, cb, true, false);

@@ -377,9 +377,9 @@ struct fpsstate
 	int health, ammo[NUMGUNS];
 	int gunselect, gunstate[NUMGUNS], gunwait[NUMGUNS], gunlast[NUMGUNS];
 	int lastdeath, lifesequence, lastshot, lastspawn, lastpain, lastregen;
-	int ownernum, spree;
+	int ownernum, skill, spree;
 
-	fpsstate() : lifesequence(0), ownernum(-1), spree(0)
+	fpsstate() : lifesequence(0), ownernum(-1), skill(0), spree(0)
 	{
 		loopi(NUMGUNS)
 		{
