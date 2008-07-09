@@ -332,10 +332,38 @@ struct GAMESERVER : igameserver
 	void *newinfo() { return new clientinfo; }
 	void deleteinfo(void *ci) { delete (clientinfo *)ci; }
 
+	const char *privname(int type)
+	{
+		switch(type)
+		{
+			case PRIV_ADMIN: return "admin";
+			case PRIV_MASTER: return "master";
+			default: return "unknown";
+		}
+	}
+
+	bool haspriv(clientinfo *ci, int flag, bool msg = false)
+	{
+		if(flag <= PRIV_MASTER && !nonspectators(ci->clientnum, true)) return true;
+		else if(ci->privilege >= flag) return true;
+		else if(msg) srvoutf(ci->clientnum, "access denied, you need %s", privname(flag));
+		return false;
+	}
+
+	void serverinit()
+	{
+		smapname[0] = '\0';
+		resetitems();
+	}
+
 	vector<srventity> sents;
 	vector<savedscore> scores;
 
-	void sendservmsg(const char *s) { sendf(-1, 1, "ris", SV_SERVMSG, s); }
+	void srvoutf(int cn, const char *s, ...)
+	{
+		s_sprintfdlv(str, s, s);
+		sendf(cn, 1, "ris", SV_SERVMSG, str);
+	}
 
 	void resetitems()
 	{
@@ -348,7 +376,7 @@ struct GAMESERVER : igameserver
 	void vote(char *map, int reqmode, int reqmuts, int sender)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
-        if(!ci || (ci->state.state==CS_SPECTATOR && !ci->privilege) || !m_game(reqmode)) return;
+        if(!ci || (ci->state.state==CS_SPECTATOR && !haspriv(ci, PRIV_MASTER, true)) || !m_game(reqmode)) return;
 
 		s_strcpy(ci->mapvote, map);
 		if(!ci->mapvote[0]) return;
@@ -356,21 +384,17 @@ struct GAMESERVER : igameserver
 		ci->modevote = reqmode; ci->mutsvote = reqmuts;
 		modecheck(&ci->modevote, &ci->mutsvote);
 
-		if(mapreload || (ci->privilege && mastermode>=MM_VETO))
+		if(mapreload || (haspriv(ci, PRIV_MASTER) && mastermode >= MM_VETO))
 		{
 			if(demorecord) enddemorecord();
 			if(!mapreload)
-			{
-				s_sprintfd(msg)("%s forced %s on map %s", privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
-				sendservmsg(msg);
-			}
+				srvoutf(-1, "%s forced %s on map %s", privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
 			sendf(-1, 1, "risi2", SV_MAPCHANGE, ci->mapvote, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 		}
 		else
 		{
-			s_sprintfd(msg)("%s suggests %s on map %s (select map to vote)", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
-			sendservmsg(msg);
+			srvoutf(-1, "%s suggests %s on map %s (select map to vote)", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
 			checkvotes();
 		}
 	}
@@ -463,8 +487,7 @@ struct GAMESERVER : igameserver
 		char *timestr = ctime(&t), *trim = timestr + strlen(timestr);
 		while(trim>timestr && isspace(*--trim)) *trim = '\0';
 		s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, gamename(gamemode, mutators), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
-		s_sprintfd(msg)("demo \"%s\" recorded", d.info);
-		sendservmsg(msg);
+		srvoutf(-1, "demo \"%s\" recorded", d.info);
 		d.data = new uchar[len];
 		d.len = len;
 		fread(d.data, 1, len, demotmp);
@@ -493,7 +516,7 @@ struct GAMESERVER : igameserver
 		}
 #endif
 
-        sendservmsg("recording demo");
+        srvoutf(-1, "recording demo");
 
         demorecord = f;
 
@@ -551,14 +574,13 @@ struct GAMESERVER : igameserver
 		{
 			loopv(demos) delete[] demos[i].data;
 			demos.setsize(0);
-			sendservmsg("cleared all demos");
+			srvoutf(-1, "cleared all demos");
 		}
 		else if(demos.inrange(n-1))
 		{
 			delete[] demos[n-1].data;
 			demos.remove(n-1);
-			s_sprintfd(msg)("cleared demo %d", n);
-			sendservmsg(msg);
+			srvoutf(-1, "cleared demo %d", n);
 		}
 	}
 
@@ -590,12 +612,11 @@ struct GAMESERVER : igameserver
 		if(msg[0])
 		{
 			if(demoplayback) { gzclose(demoplayback); demoplayback = NULL; }
-			sendservmsg(msg);
+			srvoutf(-1, "%s", msg);
 			return;
 		}
 
-		s_sprintf(msg)("playing demo \"%s\"", file);
-		sendservmsg(msg);
+		srvoutf(-1, "playing demo \"%s\"", file);
 
 		sendf(-1, 1, "rii", SV_DEMOPLAYBACK, 1);
 
@@ -615,7 +636,7 @@ struct GAMESERVER : igameserver
 
 		sendf(-1, 1, "rii", SV_DEMOPLAYBACK, 0);
 
-		sendservmsg("demo playback finished");
+		srvoutf(-1, "demo playback finished");
 
 		loopv(clients)
 		{
@@ -788,7 +809,7 @@ struct GAMESERVER : igameserver
 		loopv(clients)
 		{
 			clientinfo *oi = clients[i];
-			if((oi->state.state==CS_SPECTATOR && !oi->privilege) || oi->state.ownernum >= 0) continue;
+			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.ownernum >= 0) continue;
 			maxvotes++;
 			if(!oi->mapvote[0]) continue;
 			votecount *vc = NULL;
@@ -807,7 +828,7 @@ struct GAMESERVER : igameserver
 			if(demorecord) enddemorecord();
 			if(best && (best->count > (force ? 1 : maxvotes/2)))
 			{
-				sendservmsg(force ? "vote passed by default" : "vote passed by majority");
+				srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
 				sendf(-1, 1, "risii", SV_MAPCHANGE, best->map, best->mode, best->muts);
 				changemap(best->map, best->mode, best->muts);
 			}
@@ -819,10 +840,13 @@ struct GAMESERVER : igameserver
 		}
 	}
 
-	int nonspectators(int exclude = -1)
+	int nonspectators(int exclude = -1, bool nobots = false)
 	{
 		int n = 0;
-		loopv(clients) if(i!=exclude && clients[i]->state.state!=CS_SPECTATOR) n++;
+		loopv(clients)
+			if(clients[i]->clientnum != exclude && clients[i]->state.state != CS_SPECTATOR &&
+				(!nobots || clients[i]->state.ownernum < 0))
+				n++;
 		return n;
 	}
 
@@ -832,7 +856,7 @@ struct GAMESERVER : igameserver
         // other message types can get sent by accident if a master forces spectator on someone, so disabling this case for now and checking for spectator state in message handlers
         // spectators can only connect and talk
 		static int spectypes[] = { SV_INITC2S, SV_POS, SV_TEXT, SV_PING, SV_CLIENTPING, SV_GETMAP, SV_SETMASTER };
-		if(ci && ci->state.state==CS_SPECTATOR && !ci->privilege)
+		if(ci && ci->state.state==CS_SPECTATOR && !haspriv(ci, PRIV_MASTER))
 		{
 			loopi(sizeof(spectypes)/sizeof(int)) if(type == spectypes[i]) return type;
 			return -1;
@@ -1356,18 +1380,16 @@ struct GAMESERVER : igameserver
 				case SV_MASTERMODE:
 				{
 					int mm = getint(p);
-					if(ci->privilege && mm>=MM_OPEN && mm<=MM_PRIVATE)
+					if(haspriv(ci, PRIV_MASTER, true) && mm >= MM_OPEN && mm <= MM_PRIVATE)
 					{
-						if(ci->privilege>=PRIV_ADMIN || (mastermask&(1<<mm)))
+						if(haspriv(ci, PRIV_ADMIN) || (mastermask&(1<<mm)))
 						{
 							mastermode = mm;
-							s_sprintfd(s)("mastermode is now %d", mastermode);
-							sendservmsg(s);
+							srvoutf(-1, "mastermode is now %d", mastermode);
 						}
 						else
 						{
-							s_sprintfd(s)("mastermode %d is disabled on this server", mm);
-							sendf(sender, 1, "ris", SV_SERVMSG, s);
+							srvoutf(sender, "mastermode %d is disabled on this server", mm);
 						}
 					}
 					break;
@@ -1375,10 +1397,10 @@ struct GAMESERVER : igameserver
 
 				case SV_CLEARBANS:
 				{
-					if(ci->privilege)
+					if(haspriv(ci, PRIV_MASTER, true))
 					{
 						bannedips.setsize(0);
-						sendservmsg("cleared all bans");
+						srvoutf(-1, "cleared all bans");
 					}
 					break;
 				}
@@ -1386,7 +1408,7 @@ struct GAMESERVER : igameserver
 				case SV_KICK:
 				{
 					int victim = getint(p);
-					if(ci->privilege && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getinfo(victim))
+					if(haspriv(ci, PRIV_MASTER, true) && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getinfo(victim))
 					{
 						ban &b = bannedips.add();
 						b.time = totalmillis;
@@ -1399,7 +1421,7 @@ struct GAMESERVER : igameserver
 				case SV_SPECTATOR:
 				{
 					int spectator = getint(p), val = getint(p);
-					if(!ci->privilege && (ci->state.state==CS_SPECTATOR || spectator!=sender)) break;
+					if((ci->state.state==CS_SPECTATOR || spectator!=sender) && !haspriv(ci, PRIV_MASTER, true)) break;
 					clientinfo *spinfo = (clientinfo *)getinfo(spectator);
 					if(!spinfo) break;
 
@@ -1407,6 +1429,7 @@ struct GAMESERVER : igameserver
 
 					if(spinfo->state.state!=CS_SPECTATOR && val)
 					{
+						transferbots(spinfo);
 						if(smode) smode->leavegame(spinfo);
 						mutate(mut->leavegame(spinfo));
 						spinfo->state.state = CS_SPECTATOR;
@@ -1430,7 +1453,7 @@ struct GAMESERVER : igameserver
 				case SV_SETTEAM:
 				{
 					int who = getint(p), team = getint(p);
-					if(!ci->privilege || who<0 || who>=getnumclients()) break;
+					if(who<0 || who>=getnumclients() || !haspriv(ci, PRIV_MASTER, true)) break;
 					clientinfo *wi = (clientinfo *)getinfo(who);
 					if(!wi || !m_team(gamemode, mutators) || team < TEAM_ALPHA || team > numteams(gamemode, mutators)) break;
 					if(wi->team != team)
@@ -1453,16 +1476,15 @@ struct GAMESERVER : igameserver
 				case SV_RECORDDEMO:
 				{
 					int val = getint(p);
-					if(ci->privilege<PRIV_ADMIN) break;
+					if(!haspriv(ci, PRIV_ADMIN, true)) break;
 					demonextmatch = val!=0;
-					s_sprintfd(msg)("demo recording is %s for next match", demonextmatch ? "enabled" : "disabled");
-					sendservmsg(msg);
+					srvoutf(-1, "demo recording is %s for next match", demonextmatch ? "enabled" : "disabled");
 					break;
 				}
 
 				case SV_STOPDEMO:
 				{
-					if(ci->privilege<PRIV_ADMIN) break;
+					if(!haspriv(ci, PRIV_ADMIN, true)) break;
 					if(m_demo(gamemode)) enddemoplayback();
 					else enddemorecord();
 					break;
@@ -1471,7 +1493,7 @@ struct GAMESERVER : igameserver
 				case SV_CLEARDEMOS:
 				{
 					int demo = getint(p);
-					if(ci->privilege<PRIV_ADMIN) break;
+					if(!haspriv(ci, PRIV_ADMIN, true)) break;
 					cleardemos(demo);
 					break;
 				}
@@ -1566,17 +1588,22 @@ struct GAMESERVER : igameserver
 
 				case SV_ADDBOT:
 				{
-					if(ci->state.state==CS_SPECTATOR && !ci->privilege) break;
-					addbot(ci);
+					int skill = getint(p);
+					if(haspriv(ci, PRIV_MASTER, true))
+					{
+						if(!addbot(skill))
+							srvoutf(sender, "failed to create or assign bot");
+					}
 					break;
 				}
 
 				case SV_DELBOT:
 				{
-					int lcn = getint(p);
-					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if (cp && cp->state.ownernum >= 0 && cp->state.ownernum == ci->clientnum)
-						deletebot(cp);
+					if(haspriv(ci, PRIV_MASTER, true))
+					{
+						if(!deletebot())
+							srvoutf(sender, "failed to remove any bots");
+					}
 					break;
 				}
 
@@ -1593,52 +1620,114 @@ struct GAMESERVER : igameserver
 		}
 	}
 
-	void addbot(clientinfo *ci)
+	int findbotclient(int cn = -1, int on = -1)
 	{
-		int lcn = addclient(ST_REMOTE);
-		clientinfo *cp = (clientinfo *)getinfo(lcn);
-		cp->clientnum = lcn;
-		cp->state.ownernum = ci->clientnum;
-		cp->state.state = CS_DEAD;
-		clients.add(cp);
-		cp->state.lasttimeplayed = lastmillis;
-		s_strncpy(cp->name, "bot", MAXNAMELEN);
-
-		//if(smode) smode->initclient(cp, p, true);
-		//mutate(mut->initclient(cp, p, true));
-		if(m_team(gamemode, mutators)) cp->team = chooseworstteam(cp->team);
-		else cp->team = TEAM_NEUTRAL;
-
-		sendf(-1, 1, "ri3si", SV_INITBOT, cp->state.ownernum, cp->clientnum, cp->name, cp->team);
-
-		if(cp && cp->state.state!=CS_SPECTATOR)
+		vector<int> siblings;
+		while(siblings.length() < clients.length()) siblings.add(-1);
+		loopv(clients)
 		{
-			int nospawn = 0;
-			if(smode && !smode->canspawn(cp, true)) { nospawn++; }
-			mutate(if (!mut->canspawn(cp, true)) { nospawn++; });
-
-			if (nospawn)
-			{
-				cp->state.state = CS_DEAD;
-				sendf(-1, 1, "ri2", SV_FORCEDEATH, cp->clientnum);
-			}
+			clientinfo *ci = clients[i];
+			if(ci->state.ownernum >= 0 || ci->clientnum == cn || ci->clientnum == on || ci->state.state == CS_SPECTATOR)
+				siblings[i] = -1;
 			else
 			{
-				sendspawn(cp);
+				siblings[i] = 0;
+				loopvj(clients) if(clients[j]->state.ownernum == ci->clientnum)
+					if(clients[j]->clientnum != cn && clients[j]->clientnum != on)
+						siblings[i]++;
 			}
 		}
+		while(!siblings.empty())
+		{
+			int q = -1;
+			loopv(siblings)
+				if(siblings[i] >= 0 && (!siblings.inrange(q) || siblings[i] < siblings[q]))
+					q = i;
+			if(clients.inrange(q)) return q;
+			else siblings.remove(q);
+		}
+		return -1;
 	}
 
-	void deletebot(clientinfo *ci)
+	bool addbot(int skill)
 	{
-		int lcn = ci->clientnum;
+		int cn = addclient(ST_REMOTE);
+		if(cn >= 0)
+		{
+			clientinfo *ci = (clientinfo *)getinfo(cn);
+			if(ci)
+			{
+				ci->clientnum = cn;
+				ci->state.ownernum = findbotclient(cn);
+				if(clients.inrange(ci->state.ownernum))
+				{
+					ci->state.skill = clamp(skill, 1, 100);
+					ci->state.state = CS_DEAD;
+					clients.add(ci);
+					ci->state.lasttimeplayed = lastmillis;
+					s_strncpy(ci->name, "bot", MAXNAMELEN);
+
+					//if(smode) smode->initclient(ci, p, true);
+					//mutate(mut->initclient(ci, p, true));
+					if(m_team(gamemode, mutators)) ci->team = chooseworstteam(ci->team);
+					else ci->team = TEAM_NEUTRAL;
+
+					sendf(-1, 1, "ri4si", SV_INITBOT, ci->state.ownernum, ci->state.skill, ci->clientnum, ci->name, ci->team);
+
+					if(ci->state.state != CS_SPECTATOR)
+					{
+						int nospawn = 0;
+						if(smode && !smode->canspawn(ci, true)) { nospawn++; }
+						mutate(if (!mut->canspawn(ci, true)) { nospawn++; });
+
+						if(nospawn)
+						{
+							ci->state.state = CS_DEAD;
+							sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
+						}
+						else sendspawn(ci);
+					}
+					return true;
+				}
+				clients.removeobj(ci);
+			}
+			delclient(cn);
+		}
+		return false;
+	}
+
+	void removebot(clientinfo *ci)
+	{
+		int cn = ci->clientnum;
 		if(smode) smode->leavegame(ci, true);
 		mutate(mut->leavegame(ci));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
-		sendf(-1, 1, "ri2", SV_CDIS, lcn);
+		sendf(-1, 1, "ri2", SV_CDIS, cn);
 		clients.removeobj(ci);
-		delclient(lcn);
+		delclient(cn);
+	}
+
+	bool deletebot()
+	{
+		loopvrev(clients) if(clients[i]->state.ownernum >= 0)
+		{
+			removebot(clients[i]);
+			return true;
+		}
+		return false;
+	}
+
+	void transferbots(clientinfo *ci)
+	{
+		loopvrev(clients) if(clients[i]->state.ownernum == ci->clientnum)
+		{
+			clientinfo *cp = clients[i];
+			cp->state.ownernum = findbotclient(cp->clientnum, ci->clientnum);
+			if(clients.inrange(cp->state.ownernum))
+				sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
+			else removebot(cp);
+		}
 	}
 
 	int welcomepacket(ucharbuf &p, int n, ENetPacket *packet)
@@ -1842,25 +1931,25 @@ struct GAMESERVER : igameserver
 				{
 					case 5:
 					{
-						s_sprintfd(spr)("%s is wreaking carnage!", actor->name);
+						s_sprintfd(spr)("%s is wreaking carnage!", colorname(actor));
 						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE1, spr);
 						break;
 					}
 					case 10:
 					{
-						s_sprintfd(spr)("%s is slaughtering the opposition!", actor->name);
+						s_sprintfd(spr)("%s is slaughtering the opposition!", colorname(actor));
 						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE2, spr);
 						break;
 					}
 					case 25:
 					{
-						s_sprintfd(spr)("%s is on a massacre!", actor->name);
+						s_sprintfd(spr)("%s is on a massacre!", colorname(actor));
 						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE3, spr);
 						break;
 					}
 					case 50:
 					{
-						s_sprintfd(spr)("%s is creating a bloodbath!", actor->name);
+						s_sprintfd(spr)("%s is creating a bloodbath!", colorname(actor));
 						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE4, spr);
 						break;
 					}
@@ -1868,7 +1957,7 @@ struct GAMESERVER : igameserver
 					{
 						if(flags&HIT_HEAD)
 						{
-							s_sprintfd(spr)("%s scored a headshot!", actor->name);
+							s_sprintfd(spr)("%s scored a headshot!", colorname(actor));
 							sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_HEADSHOT, spr);
 						}
 						break;
@@ -2111,22 +2200,6 @@ struct GAMESERVER : igameserver
 		return false;
 	}
 
-	void serverinit()
-	{
-		smapname[0] = '\0';
-		resetitems();
-	}
-
-	const char *privname(int type)
-	{
-		switch(type)
-		{
-			case PRIV_ADMIN: return "admin";
-			case PRIV_MASTER: return "master";
-			default: return "unknown";
-		}
-	}
-
     void setmaster(clientinfo *ci, bool val, const char *pass = "", bool approved = false)
 	{
         if(approved && (!val || !ci->wantsmaster)) return;
@@ -2147,8 +2220,7 @@ struct GAMESERVER : igameserver
             else if(!approved && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
             {
                 ci->wantsmaster = true;
-                s_sprintfd(msg)("%s wants master. Type \"/approvemaster %d\" to approve.", colorname(ci), ci->clientnum);
-                sendservmsg(msg);
+                srvoutf(-1, "%s wants master. Type \"/approvemaster %d\" to approve.", colorname(ci), ci->clientnum);
                 return;
             }
 			else ci->privilege = PRIV_MASTER;
@@ -2161,8 +2233,7 @@ struct GAMESERVER : igameserver
 			ci->privilege = 0;
 		}
 		mastermode = MM_OPEN;
-        s_sprintfd(msg)("%s %s %s", colorname(ci), val ? (approved ? "approved for" : "claimed") : "relinquished", name);
-		sendservmsg(msg);
+        srvoutf(-1, "%s %s %s", colorname(ci), val ? (approved ? "approved for" : "claimed") : "relinquished", name);
 		currentmaster = val ? ci->clientnum : -1;
 		masterupdate = true;
         loopv(clients) clients[i]->wantsmaster = false;
@@ -2184,9 +2255,7 @@ struct GAMESERVER : igameserver
 	void clientdisconnect(int n)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
-		loopvrev(clients)
-			if(clients[i]!=ci && clients[i]->state.ownernum==ci->clientnum)
-				deletebot(clients[i]);
+		transferbots(ci);
 		if(ci->privilege) setmaster(ci, false);
 		if(smode) smode->leavegame(ci, true);
 		mutate(mut->leavegame(ci));
@@ -2194,10 +2263,7 @@ struct GAMESERVER : igameserver
 		savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, n);
 		clients.removeobj(ci);
-		if(clients.empty())
-		{
-			bannedips.setsize(0);
-		}
+		if(clients.empty()) bannedips.setsize(0);
 		else checkvotes();
 	}
 
@@ -2250,8 +2316,7 @@ struct GAMESERVER : igameserver
 		mapdata = tmpfile();
         if(!mapdata) { sendf(sender, 1, "ris", SV_SERVMSG, "failed to open temporary file for map"); return; }
 		fwrite(data, 1, len, mapdata);
-		s_sprintfd(msg)("%s uploaded map to server, \"/getmap\" to receive it", colorname(ci));
-		sendservmsg(msg);
+		srvoutf(-1, "%s uploaded map to server, \"/getmap\" to receive it", colorname(ci));
 	}
 
 	bool duplicatename(clientinfo *ci, char *name)
@@ -2351,11 +2416,5 @@ struct GAMESERVER : igameserver
 		if (strcmp(type, GAMEID) == 0) return true;
 		if (strcmp(type, "fps") == 0 || strcmp(type, "bfg") == 0) return true;
 		return false;
-	}
-
-	void servsend(int cn, const char *s, ...)
-	{
-		s_sprintfdlv(str, s, s);
-		sendf(cn, 1, "ris", SV_SERVMSG, str);
 	}
 };

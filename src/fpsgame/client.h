@@ -47,17 +47,6 @@ struct clientcom : iclientcom
         if(!*serversort()) resetserversort();
 	}
 
-	bool haspriv(int flag, bool quiet = false)
-	{
-		if(cl.player1->privilege>=flag) return true;
-		else if(!quiet)
-		{
-			const char *_privs[] = { "none", "master", "admin" };
-			conoutf("access denied, you need %s", _privs[flag]);
-		}
-		return false;
-	}
-
 	void switchname(const char *name)
 	{
 		if(name[0])
@@ -1175,7 +1164,7 @@ struct clientcom : iclientcom
 
 				case SV_INITBOT:
 				{
-					int on = getint(p), bn = getint(p);
+					int on = getint(p), sk = getint(p), bn = getint(p);
 					fpsent *b = cl.newclient(bn);
 					if(!b)
 					{
@@ -1184,16 +1173,25 @@ struct clientcom : iclientcom
 						break;
 					}
 
+					bool connecting = !b->name[0];
+					fpsent *o = cl.getclient(on);
+					s_sprintfd(m)("%s", o ? cl.colorname(o) : "unknown");
+
 					b->ownernum = on;
-					b->state = CS_DEAD;
+					b->skill = clamp(sk, 1, 100);
 					getstring(text, p);
 					s_strncpy(b->name, text, MAXNAMELEN);
 					b->team = getint(p);
 
-					fpsent *o = cl.getclient(b->ownernum);
-					s_sprintfd(m)("%s", o ? cl.colorname(o) : "unknown");
-					conoutf("%s was introduced by %s", cl.colorname(b), m);
-					if(o == cl.player1) cl.bot.create(b);
+					if(connecting)
+					{
+						b->state = CS_DEAD;
+						conoutf("%s was introduced and assigned to %s", cl.colorname(b), m);
+					}
+					else conoutf("%s was reassigned to %s", cl.colorname(b), m);
+
+					if(cl.player1->clientnum == b->ownernum) cl.bot.create(b);
+					else if(b->bot) cl.bot.destroy(b);
 					break;
 				}
 
@@ -1275,11 +1273,7 @@ struct clientcom : iclientcom
 
 	void stopdemo()
 	{
-		if(remote)
-		{
-			if(!haspriv(PRIV_ADMIN)) return;
-			addmsg(SV_STOPDEMO, "r");
-		}
+		if(remote) addmsg(SV_STOPDEMO, "r");
 		else
 		{
 			loopv(cl.players) if(cl.players[i]) cl.clientdisconnected(i);
@@ -1291,13 +1285,11 @@ struct clientcom : iclientcom
 
     void recorddemo(int val)
 	{
-		if(!haspriv(PRIV_ADMIN)) return;
         addmsg(SV_RECORDDEMO, "ri", val);
 	}
 
 	void cleardemos(int val)
 	{
-		if(!haspriv(PRIV_ADMIN)) return;
         addmsg(SV_CLEARDEMOS, "ri", val);
 	}
 
@@ -1350,7 +1342,12 @@ struct clientcom : iclientcom
 	}
 
 	bool ready() { return isready; }
-	int otherclients() { return cl.players.length(); }
+	int otherclients()
+	{
+		int n = 0; // bots don't count
+		loopv(cl.players) if(cl.players[i] && cl.players[i]->ownernum < 0) n++;
+		return n;
+	}
 
 	int serverstat(serverinfo *a)
 	{

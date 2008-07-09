@@ -111,7 +111,7 @@ struct igameserver
     virtual int serverinfoport() = 0;
     virtual int serverport() = 0;
     virtual const char *getdefaultmaster() = 0;
-    virtual void sendservmsg(const char *s) = 0;
+    virtual void srvoutf(int cn, const char *s, ...) = 0;
     virtual void changemap(const char *s, int mode = 0, int muts = 0) { return; }
     virtual const char *gameid() = 0;
 	virtual char *gamename(int mode, int muts) = 0;
