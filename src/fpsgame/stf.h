@@ -265,14 +265,14 @@ struct stfclient : stfstate
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			int colour = teamtype[f.owner].colour;
 			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-				fade = 1.f;
+				fade = 1.f, size = 0.05f;
 			if(f.owner != cl.player1->team && f.enemy != cl.player1->team)
 				fade = clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
 
-			settexture(cl.bliptex());
+			settexture(cl.flagbliptex());
 			glColor4f(r, g, b, fade);
 			glBegin(GL_QUADS);
-			cl.drawsized(x + s*0.5f*0.95f*(1.0f+dir.x/cl.radarrange() - 0.025f), y + s*0.5f*0.95f*(1.0f+dir.y/cl.radarrange() - 0.025f), 0.05f*s);
+			cl.drawsized(x + (s-size)*0.5f*(1.0f+dir.x/cl.radarrange()), y + (s-size)*0.5f*(1.0f+dir.y/cl.radarrange()), size*s);
 			glEnd();
 		}
 	}
@@ -282,9 +282,8 @@ struct stfclient : stfstate
         return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(lastmillis-d->lastpain)/1000);
     }
 
-	void drawblips(int w, int h)
+	void drawblips(int w, int h, int x, int y, int s)
 	{
-		int s = h/4, x = w-s-FONTH/4, y = FONTH/4;
 		bool showenemies = lastmillis%1000 >= 500;
 		drawblip(x, y, s, 1, showenemies);
 		drawblip(x, y, s, 0, showenemies);

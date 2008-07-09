@@ -658,6 +658,7 @@ struct fpsent : dynent, fpsstate
 	editinfo *edit;
     vec deltapos, newpos;
     float deltayaw, deltapitch, newyaw, newpitch;
+    float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
     int smoothmillis;
 	int lastimpulse, oldnode, lastnode;
 	int respawned, suicided;

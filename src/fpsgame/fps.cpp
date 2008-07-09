@@ -83,6 +83,7 @@ struct GAMECLIENT : igameclient
 	IVARP(radarnames, 0, 1, 1);
 
 	ITVAR(bliptex, "textures/blip");
+	ITVAR(flagbliptex, "textures/flagblip");
 	ITVAR(radartex, "textures/radar");
 	ITVAR(radarpingtex, "<anim:75>textures/radarping");
 	ITVAR(healthbartex, "<anim>textures/healthbar");
@@ -157,10 +158,12 @@ struct GAMECLIENT : igameclient
 
     bool allowmove(physent *d)
     {
-        if(d->type != ENT_PLAYER) return true;
-        if(intermission) return false;
-        fpsent *e = (fpsent *)d;
-        if(lastmillis-e->lasttaunt < 1000) return false;
+        if(d->type == ENT_PLAYER)
+        {
+			if(d->state == CS_DEAD) return false;
+			if(intermission) return false;
+        	if(d == player1 && saycommandon) return false;
+        }
         return true;
     }
 
@@ -214,7 +217,7 @@ struct GAMECLIENT : igameclient
 			ws.update();
 			bot.update();
 
-			if(!allowmove(player1) || saycommandon) player1->stopmoving();
+			if(!allowmove(player1)) player1->stopmoving();
 
 			#define adjustscaled(t,n,m) \
 				if(n) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); }
@@ -228,10 +231,7 @@ struct GAMECLIENT : igameclient
 			if(player1->state == CS_DEAD)
 			{
 				if(lastmillis-player1->lastpain < 2000)
-				{
-					player1->stopmoving();
 					ph.move(player1, 10, false);
-				}
 			}
 			else if(player1->state == CS_ALIVE)
 			{
@@ -619,13 +619,12 @@ struct GAMECLIENT : igameclient
 				default: break;
 			}
 			dir.sub(camera1->o);
-			dir.mul(4); dir.div(5);
 			dir.rotate_around_z(-camera1->yaw*RAD);
 
-			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
-				cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange());
+			float cx = x + (s-FONTH)*0.5f*(1.0f+dir.x/radarrange()),
+				cy = y + (s-FONTH)*0.5f*(1.0f+dir.y/radarrange());
 
-			draw_textx("%s", int(cx), int(cy), 255, 255, 255, hudblend*255/100, true, AL_CENTER, -1, -1, card);
+			draw_textx("%s", int(cx), int(cy), 255, 255, 255, hudblend*255/100, true, AL_LEFT, -1, -1, card);
 		}
 
 		loopv(players)
@@ -701,7 +700,8 @@ struct GAMECLIENT : igameclient
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 
-		int bs = oy/4, bx = ox-bs-FONTH/4, by = FONTH/4, secs = maptime ? lastmillis-maptime : 0;
+		int bs = oy/4, bo = bs/16, bx = ox-bs-FONTH/4, by = FONTH/4,
+			secs = maptime ? lastmillis-maptime : 0;
 		float fade = hudblend/100.f;
 
 		if(secs <= cardtime()+cardfade()+cardfade())
@@ -736,9 +736,9 @@ struct GAMECLIENT : igameclient
 		drawsized(float(bx), float(by), float(bs));
 		glEnd();
 
-		drawblips(bx, by, bs);
-		if(m_stf(gamemode)) stf.drawblips(ox, oy);
-		else if(m_ctf(gamemode)) ctf.drawblips(ox, oy);
+		drawblips(bx+bo, by+bo, bs-(bo*2));
+		if(m_stf(gamemode)) stf.drawblips(ox, oy, bx+bo, by+bo, bs-(bo*2));
+		else if(m_ctf(gamemode)) ctf.drawblips(ox, oy, bx+bo, by+bo, bs-(bo*2));
 
 		settexture(radarpingtex());
 		glColor4f(1.f, 1.f, 1.f, fade);
@@ -1200,7 +1200,7 @@ struct GAMECLIENT : igameclient
 		if(mousestyle())
 		{
 			if(!lastmouse) resetcursor();
-			else if(player1->state != CS_DEAD)
+			else if(allowmove(player1))
 			{
 				physent *d = mousestyle() <= 3 && mousestyle() >= 2 ? player1 : camera1;
 				int frame = lastmouse-lastmillis;
@@ -1312,20 +1312,23 @@ struct GAMECLIENT : igameclient
 			vec dir(worldpos);
 			dir.sub(camera1->o);
 			dir.normalize();
-			vectoyawpitch(dir, player1->yaw, player1->pitch);
+			if(allowmove(player1)) vectoyawpitch(dir, player1->yaw, player1->pitch);
 		}
 
-		if(lastcamera)
+		if(allowmove(player1))
 		{
-			vec dir(worldpos);
-			dir.sub(player1->o);
-			dir.normalize();
-			vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
-		}
-		else
-		{
-			player1->aimyaw = camera1->yaw;
-			player1->aimpitch = camera1->pitch;
+			if(lastcamera)
+			{
+				vec dir(worldpos);
+				dir.sub(player1->o);
+				dir.normalize();
+				vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
+			}
+			else
+			{
+				player1->aimyaw = camera1->yaw;
+				player1->aimpitch = camera1->pitch;
+			}
 		}
 
 		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
