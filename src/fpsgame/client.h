@@ -472,7 +472,7 @@ struct clientcom : iclientcom
 				f = getuint(p);
 				fpsent *d = cl.getclient(lcn);
                 if(!d || seqcolor!=(d->lifesequence&1) || d==cl.player1 || d->bot) continue;
-                float oldyaw = d->yaw, oldpitch = d->pitch;
+                float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
 				d->yaw = yaw;
 				d->pitch = pitch;
 				d->roll = roll;
@@ -500,14 +500,27 @@ struct clientcom : iclientcom
                     d->newpos = d->o;
                     d->newyaw = d->yaw;
                     d->newpitch = d->pitch;
+                    d->newaimyaw = d->aimyaw;
+                    d->newaimpitch = d->aimpitch;
+
                     d->o = oldpos;
                     d->yaw = oldyaw;
                     d->pitch = oldpitch;
+                    d->aimyaw = oldaimyaw;
+                    d->aimpitch = oldaimpitch;
+
                     (d->deltapos = oldpos).sub(d->newpos);
+
                     d->deltayaw = oldyaw - d->newyaw;
                     if(d->deltayaw > 180) d->deltayaw -= 360;
                     else if(d->deltayaw < -180) d->deltayaw += 360;
                     d->deltapitch = oldpitch - d->newpitch;
+
+                    d->deltaaimyaw = oldaimyaw - d->newaimyaw;
+                    if(d->deltaaimyaw > 180) d->deltaaimyaw -= 360;
+                    else if(d->deltaaimyaw < -180) d->deltaaimyaw += 360;
+                    d->deltaaimpitch = oldaimpitch - d->newaimpitch;
+
                     d->smoothmillis = lastmillis;
                 }
                 else d->smoothmillis = 0;

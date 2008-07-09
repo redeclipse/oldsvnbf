@@ -274,25 +274,24 @@ struct ctfclient : ctfstate
         else dir = f.spawnloc;
 		dir.sub(camera1->o);
 		dir.z = 0.0f;
-        float size = flagblip ? 0.033f : 0.015f,
-              dist = dir.magnitude();
-        if(dist >= cl.radarrange()*(1 - 0.05f)) dir.mul(cl.radarrange()*(1 - 0.05f)/dist);
+        float dist = dir.magnitude();
+        if(dist >= cl.radarrange()) dir.mul(cl.radarrange()/dist);
 		dir.rotate_around_z(-camera1->yaw*RAD);
 
 		int colour = teamtype[f.team].colour;
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-			fade = 1.f;
+			fade = 1.f, size = flagblip ? 0.033f : 0.015f;
 		if(f.team != cl.player1->team && (!f.owner || f.owner->team != cl.player1->team))
 			fade = clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
 
-        settexture(cl.bliptex());
+        settexture(cl.flagbliptex());
 		glColor4f(r, g, b, fade);
 		glBegin(GL_QUADS);
-        cl.drawsized(x + s*0.5f*(1.0f + dir.x/cl.radarrange() - (size*0.5f)), y + s*0.5f*(1.0f + dir.y/cl.radarrange() - (size*0.5f)), size*s);
+        cl.drawsized(x + (s-size)*0.5f*(1.0f + dir.x/cl.radarrange()), y + (s-size)*0.5f*(1.0f + dir.y/cl.radarrange()), size*s);
 		glEnd();
     }
 
-    void drawblips(int w, int h)
+    void drawblips(int w, int h, int x, int y, int s)
     {
 #if 0
         if(cl.player1->state == CS_ALIVE)
@@ -304,8 +303,6 @@ struct ctfclient : ctfstate
             }
         }
 #endif
-
-		int s = h/4, x = w-s-FONTH/4, y = FONTH/4;
         loopv(flags)
         {
             flag &f = flags[i];
