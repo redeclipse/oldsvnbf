@@ -6,10 +6,10 @@ struct botclient
 	static const int BOTISFAR			= 128;			// too far
 	static const int BOTJUMPHEIGHT		= 8;			// decides to jump
 	static const int BOTJUMPIMPULSE		= 16;			// impulse to jump
-	static const float BOTLOSMIN		= 64.f;			// minimum line of sight
-	static const float BOTLOSMAX		= 4096.f;		// maximum line of sight
-	static const float BOTFOVMIN		= 90.f;			// minimum field of view
-	static const float BOTFOVMAX		= 125.f;		// maximum field of view
+	static const int BOTLOSMIN			= 64;			// minimum line of sight
+	static const int BOTLOSMAX			= 4096;			// maximum line of sight
+	static const int BOTFOVMIN			= 90;			// minimum field of view
+	static const int BOTFOVMAX			= 125;			// maximum field of view
 
 	IVAR(botstall, 0, 0, 1);
 	IVAR(botdebug, 0, 2, 5);
@@ -17,9 +17,9 @@ struct botclient
 	#define BOTSCALE(x)				clamp(101 - clamp(x, 1, 100), 1, 100)
 	#define BOTRATE(x)				BOTSCALE(x)
 	#define BOTCHANCE(x)			rnd(x)
-	#define BOTLOSDIST(x)			clamp(BOTLOSMIN+((BOTLOSMAX-BOTLOSMIN)/float(x)), BOTLOSMIN, float(getvar("fog"))+BOTLOSMIN)
-	#define BOTFOVX(x)				clamp(BOTFOVMIN+((BOTFOVMAX-BOTFOVMIN)/float(x)), BOTFOVMIN, BOTFOVMAX)
-	#define BOTFOVY(x)				BOTFOVX(x)*3/4
+	#define BOTLOSDIST(x)			clamp(float(BOTLOSMIN+(BOTLOSMAX-BOTLOSMIN))/float(x), float(BOTLOSMIN), float(getvar("fog")+BOTLOSMIN))
+	#define BOTFOVX(x)				clamp(float(BOTFOVMIN+(BOTFOVMAX-BOTFOVMIN))/float(x), float(BOTFOVMIN), float(BOTFOVMAX))
+	#define BOTFOVY(x)				BOTFOVX(x)*3.f/4.f
 	#define BOTTARG(x,y,z)			(y != x && y->state == CS_ALIVE && (!z || !m_team(cl.gamemode, cl.mutators) || y->team != x->team))
 
 	botclient(GAMECLIENT &_cl) : cl(_cl)
@@ -479,7 +479,7 @@ struct botclient
 				case BT_PLAYER:
 				{
 					fpsent *e = cl.getclient(b.target);
-					if(e && e->state == CS_ALIVE & follow(d, b, e))
+					if(e && e->state == CS_ALIVE && follow(d, b, e))
 					{
 						defer(d, b, false);
 						return true;
