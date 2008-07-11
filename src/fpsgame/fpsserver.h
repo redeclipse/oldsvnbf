@@ -2324,24 +2324,20 @@ struct GAMESERVER : igameserver
 		return false;
 	}
 
-	const char *colorname(clientinfo *ci, char *name = NULL, bool team = true)
+	const char *colorname(clientinfo *ci, char *name = NULL, bool team = true, bool dupname = true)
 	{
 		if(!name) name = ci->name;
-		if(!name) name = ci->name;
 		static string cname;
-		if(name[0] && !duplicatename(ci, name))
+		s_sprintf(cname)("\fs%s\fS", name);
+		if(!name[0] || ci->state.ownernum >= 0 || (dupname && duplicatename(ci, name)))
 		{
-			if(team && m_team(gamemode, mutators))
-				s_sprintf(cname)("\fs%s\fS (\fs%s%s\fS)", name, teamtype[ci->team].chat, teamtype[ci->team].name);
-			else
-				s_sprintf(cname)("\fs%s\fS", name);
+			s_sprintfd(s)(" [\fs\f5%d\fS]", ci->clientnum);
+			s_strcat(cname, s);
 		}
-		else
+		if(team && m_team(gamemode, mutators))
 		{
-			if(team && m_team(gamemode, mutators))
-				s_sprintf(cname)("\fs%s\fS [\fs\f5%d\fS] (\fs%s%s\fS)", name, ci->clientnum, teamtype[ci->team].chat, teamtype[ci->team].name);
-			else
-				s_sprintf(cname)("\fs%s\fS [\fs\f5%d\fS]", name, ci->clientnum);
+			s_sprintfd(s)(" (\fs%s%s\fS)", teamtype[ci->team].chat, teamtype[ci->team].name);
+			s_strcat(cname, s);
 		}
 		return cname;
 	}

@@ -490,7 +490,7 @@ Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp, bo
 
 		createtexture(t->frames[i], t->w, t->h, pixels, clamp, mipit, format, GL_TEXTURE_2D, compress);
 
-		if(verbose >= 2)
+		if(verbose >= 3)
 			conoutf("adding frame: %s (%d) [%d,%d:%d,%d]", t->name, i+1, t->w, t->h, f->w, f->h);
 
 		if(pixels != f->pixels) delete[] pixels;

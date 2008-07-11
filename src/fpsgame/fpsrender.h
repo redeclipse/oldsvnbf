@@ -61,7 +61,7 @@ struct fpsrender
 			loopv(cl.ctf.flags) if(cl.ctf.flags[i].owner == d && !cl.ctf.flags[i].droptime)
 			{
 				a[ai].name = teamtype[cl.ctf.flags[i].team].flag;
-				a[ai].tag = "tag_weapon";
+				a[ai].tag = "tag_flag";
 				a[ai].anim = ANIM_VWEP|ANIM_LOOP;
 				a[ai].basetime = 0;
 				ai++;

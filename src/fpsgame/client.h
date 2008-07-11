@@ -287,11 +287,12 @@ struct clientcom : iclientcom
 	{
 		if(!colourchat()) filtertext(text, text);
 
-		string s, t;
-		s_sprintf(t)("%s", m_team(cl.gamemode, cl.mutators) && flags&SAY_TEAM ? teamtype[d->team].chat : teamtype[TEAM_NEUTRAL].chat);
+		string s, t, m;
+		s_sprintf(t)("%s", m_team(cl.gamemode, cl.mutators) && (flags & SAY_TEAM) ? teamtype[d->team].chat : teamtype[TEAM_NEUTRAL].chat);
+		s_sprintf(m)("%s", cl.colorname(d, NULL, "", m_team(cl.gamemode, cl.mutators) && (flags & SAY_TEAM) ? false : true));
 
-		if(flags&SAY_ACTION) s_sprintf(s)("%s* \fs%s\fS \fs%s\fS", t, cl.colorname(d), text);
-		else s_sprintf(s)("%s<\fs\fw%s\fS> \fs\fw%s\fS", t, cl.colorname(d), text);
+		if(flags&SAY_ACTION) s_sprintf(s)("%s* \fs%s\fS \fs%s\fS", t, m, text);
+		else s_sprintf(s)("%s<\fs\fw%s\fS> \fs\fw%s\fS", t, m, text);
 
 		if(d->state != CS_DEAD && d->state != CS_SPECTATOR)
 		{
@@ -1196,9 +1197,9 @@ struct clientcom : iclientcom
 					if(connecting)
 					{
 						b->state = CS_DEAD;
-						conoutf("%s was introduced and assigned to %s", cl.colorname(b), m);
+						conoutf("%s (skill: %d) introduced and assigned to %s", cl.colorname(b), b->skill, m);
 					}
-					else conoutf("%s was reassigned to %s", cl.colorname(b), m);
+					else conoutf("%s (skill: %d) reassigned to %s", cl.colorname(b), b->skill, m);
 
 					if(cl.player1->clientnum == b->ownernum) cl.bot.create(b);
 					else if(b->bot) cl.bot.destroy(b);

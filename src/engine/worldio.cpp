@@ -298,37 +298,37 @@ void save_config(char *mname)
 
 	loopi(MAT_EDIT)
 	{
-		if(verbose >= 2) renderprogress(float(i)/float(MAT_EDIT), "saving material slots...");
+		if(verbose) renderprogress(float(i)/float(MAT_EDIT), "saving material slots...");
 
 		if(i == MAT_WATER || i == MAT_LAVA)
 		{
 			saveslot(materialslots[i], false);
 		}
 	}
-	if(verbose >= 2) conoutf("saved %d material slots", MAT_EDIT);
+	if(verbose) conoutf("saved %d material slots", MAT_EDIT);
 
 	loopv(slots)
 	{
-		if(verbose >= 2) renderprogress(float(i)/float(slots.length()), "saving texture slots...");
+		if(verbose) renderprogress(float(i)/float(slots.length()), "saving texture slots...");
 		saveslot(slots[i], true);
 	}
-	if(verbose >= 2) conoutf("saved %d texture slots", slots.length());
+	if(verbose) conoutf("saved %d texture slots", slots.length());
 
 	loopv(mapmodels)
 	{
-		if(verbose >= 2) renderprogress(float(i)/float(mapmodels.length()), "saving mapmodel slots...");
+		if(verbose) renderprogress(float(i)/float(mapmodels.length()), "saving mapmodel slots...");
 		fprintf(h, "mmodel \"%s\"\n", mapmodels[i].name);
 	}
 	if(mapmodels.length()) fprintf(h, "\n");
-	if(verbose >= 2) conoutf("saved %d mapmodel slots", mapmodels.length());
+	if(verbose) conoutf("saved %d mapmodel slots", mapmodels.length());
 
 	loopv(mapsounds)
 	{
-		if(verbose >= 2) renderprogress(float(i)/float(mapsounds.length()), "saving mapsound slots...");
+		if(verbose) renderprogress(float(i)/float(mapsounds.length()), "saving mapsound slots...");
 		fprintf(h, "mapsound \"%s\" %d \"%s\"\n", mapsounds[i].sample->name, mapsounds[i].vol, findmaterialname(mapsounds[i].material));
 	}
 	if(mapsounds.length()) fprintf(h, "\n");
-	if(verbose >= 2) conoutf("saved %d mapsound slots", mapsounds.length());
+	if(verbose) conoutf("saved %d mapsound slots", mapsounds.length());
 
 	fclose(h);
 	if(verbose) conoutf("saved config %s", fname);
@@ -423,7 +423,7 @@ void save_world(char *mname, bool nolms)
 		if((id.type == ID_VAR || id.type == ID_FVAR || id.type == ID_SVAR) && id.flags&IDF_WORLD && strlen(id.name))
 		{
 			vars++;
-			if(verbose >= 2) renderprogress(float(vars)/float(numvars), "saving world variables...");
+			if(verbose) renderprogress(float(vars)/float(numvars), "saving world variables...");
 			gzputint(f, (int)strlen(id.name));
 			gzwrite(f, id.name, (int)strlen(id.name)+1);
 			gzputint(f, id.type);
@@ -444,7 +444,7 @@ void save_world(char *mname, bool nolms)
 		}
 	});
 
-	if(verbose >= 2) conoutf("saved %d variables", vars);
+	if(verbose) conoutf("saved %d variables", vars);
 
 	// texture slots
 	writeushort(f, texmru.length());
@@ -454,8 +454,7 @@ void save_world(char *mname, bool nolms)
 	int count = 0;
 	loopv(ents) // extended
 	{
-		if(verbose >= 2)
-			renderprogress(float(i)/float(ents.length()), "saving entities...");
+		if(verbose) renderprogress(float(i)/float(ents.length()), "saving entities...");
 		if(ents[i]->type!=ET_EMPTY)
 		{
 			entity tmp = *ents[i];
@@ -489,14 +488,14 @@ void save_world(char *mname, bool nolms)
 			count++;
 		}
 	}
-	if(verbose >= 2) conoutf("saved %d entities", count);
+	if(verbose) conoutf("saved %d entities", count);
 
 	savec(worldroot, f, nolms);
     if(!nolms)
     {
         loopv(lightmaps)
         {
-            if(verbose >= 2) renderprogress(float(i)/float(lightmaps.length()), "saving lightmaps...");
+            if(verbose) renderprogress(float(i)/float(lightmaps.length()), "saving lightmaps...");
             LightMap &lm = lightmaps[i];
             gzputc(f, lm.type | (lm.unlitx>=0 ? 0x80 : 0));
             if(lm.unlitx>=0)
@@ -506,12 +505,12 @@ void save_world(char *mname, bool nolms)
             }
             gzwrite(f, lm.data, sizeof(lm.data));
         }
-        if(verbose >= 2) conoutf("saved %d lightmaps", lightmaps.length());
+        if(verbose) conoutf("saved %d lightmaps", lightmaps.length());
         if(getnumviewcells()>0)
         {
-            if(verbose >= 2) renderprogress(0, "saving PVS...");
+            if(verbose) renderprogress(0, "saving PVS...");
             savepvs(f);
-            if(verbose >= 2) conoutf("saved %d PVS view cells", getnumviewcells());
+            if(verbose) conoutf("saved %d PVS view cells", getnumviewcells());
         }
     }
 
@@ -604,7 +603,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 
 			if(hdr.version <= 24) s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
 
-			if(verbose >= 2) conoutf("loading v%d map from %s game v%d", hdr.version, hdr.gameid, hdr.gamever);
+			if(verbose) conoutf("loading v%d map from %s game v%d", hdr.version, hdr.gameid, hdr.gamever);
 
 			if(hdr.version >= 25 || (hdr.version == 24 && hdr.gamever >= 44))
 			{
@@ -613,7 +612,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 				loopi (numvars)
 				{
 					vars++;
-					if(verbose >= 2) renderprogress(float(i)/float(vars), "loading variables...");
+					if(verbose) renderprogress(float(i)/float(vars), "loading variables...");
 					int len = hdr.version >= 25 ? gzgetint(f) : gzgetc(f);
 					if(len)
 					{
@@ -671,7 +670,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 						if(!proceed) conoutf("WARNING: ignoring variable %s stored in map", vname);
 					}
 				}
-				if(verbose >= 2) conoutf("loaded %d variables", vars);
+				if(verbose) conoutf("loaded %d variables", vars);
 			}
 
 			if(!sv->canload(hdr.gameid))
@@ -756,7 +755,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 				conoutf("WARNING: loading map from %s sauerbraten game type in %s, ignoring game specific data", gameid, sv->gameid());
 				samegame = false;
 			}
-			else if(verbose >= 2) conoutf("loading map from %s game", hdr.gameid);
+			else if(verbose) conoutf("loading map from %s game", hdr.gameid);
 
 			if(hdr.version>=16)
 			{
@@ -792,7 +791,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 		vector<extentity *> &ents = et->getents();
 		loopi(hdr.numents)
 		{
-			if(verbose >= 2) renderprogress(float(i)/float(hdr.numents), "loading entities...");
+			if(verbose) renderprogress(float(i)/float(hdr.numents), "loading entities...");
 			extentity &e = *et->newent();
 			ents.add(&e);
 			gzread(f, &e, sizeof(entity));
@@ -811,7 +810,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 					int ln = gzgetint(f);
 					e.links.add(ln);
 				}
-				if(verbose >= 2) conoutf("entity %s (%d) loaded %d link(s)", et->findname(e.type), i, links);
+				if(verbose) conoutf("entity %s (%d) loaded %d link(s)", et->findname(e.type), i, links);
 			}
 			if(hdr.version <= 14 && e.type >= ET_MAPMODEL && e.type <= 16)
 			{
@@ -843,7 +842,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 		}
 
 		et->initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
-		if(verbose >= 2) conoutf("loaded %d entities", hdr.numents);
+		if(verbose) conoutf("loaded %d entities", hdr.numents);
 
 		renderprogress(0, "loading octree...");
 		worldroot = loadchildren(f);
@@ -865,7 +864,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 
 		if(hdr.version >= 7) loopi(hdr.lightmaps)
 		{
-			if(verbose >= 2) renderprogress(i/(float)hdr.lightmaps, "loading lightmaps...");
+			if(verbose) renderprogress(i/(float)hdr.lightmaps, "loading lightmaps...");
 			LightMap &lm = lightmaps.add();
 			if(hdr.version >= 17)
 			{
@@ -883,7 +882,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 
 		if(hdr.numpvs > 0) loadpvs(f);
 
-		if(verbose >= 2) conoutf("loaded %d lightmaps", hdr.lightmaps);
+		if(verbose) conoutf("loaded %d lightmaps", hdr.lightmaps);
 
 		renderprogress(0, "loading world...");
 		cl->loadworld(f, maptype);

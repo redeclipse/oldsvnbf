@@ -80,7 +80,7 @@ struct botclient
 		dir.normalize();
 		float targyaw, targpitch;
 		vectoyawpitch(dir, targyaw, targpitch);
-		float margin = (float(BOTRATE(d->skill)/4)/100.f)+0.09f,
+		float margin = float(BOTRATE(d->skill))/400.f,
 			cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 		return cyaw < margin*BOTFOVX(d->skill) && cpitch < margin*BOTFOVY(d->skill);
 	}
