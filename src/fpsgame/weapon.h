@@ -102,11 +102,10 @@ struct weaponstate
 		shorten(from, d->o, s);
 		int hits = 0;
 		if (s.z < d->o.z-d->height*0.5f && s.z >= d->o.z-d->height) hits |= HIT_LEGS;
-		else if (s.z < d->o.z-d->height*0.2f && s.z >= d->o.z-d->height*0.5f) hits |= HIT_TORSO;
-		else if (s.z <= d->o.z+d->aboveeye && s.z >= d->o.z-d->height*0.2f) hits |= HIT_HEAD;
+		else if (s.z < d->o.z-d->aboveeye && s.z >= d->o.z-d->height*0.5f) hits |= HIT_TORSO;
+		else if (s.z <= d->o.z+d->aboveeye && s.z >= d->o.z-d->aboveeye) hits |= HIT_HEAD;
 		hit(d, v, hits, rays);
 	}
-
 
 	float middist(physent *o, vec &dir, vec &v)
 	{
@@ -297,8 +296,8 @@ struct weaponstate
 		}
 		else if((o = intersectclosest(from, to, d)))
 		{
-			hitpush(o, from, to);
 			shorten(from, o->o, to);
+			hitpush(o, from, to);
 		}
         else adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
 	}
@@ -309,20 +308,12 @@ struct weaponstate
 			!d->ammo[d->gunselect] && guntype[d->gunselect].rdelay > 0;
 	}
 
-
 	void checkweapons(fpsent *d)
 	{
 		loopi(NUMGUNS) if(d->gunstate[i] != GUNSTATE_NONE)
 		{
-			if(lastmillis-d->gunlast[i] >= d->gunwait[i] || d->state != CS_ALIVE)
-			{
-				if(d->gunstate[i] != GUNSTATE_POWER || d->state != CS_ALIVE)
-				{
-					d->gunstate[i] = GUNSTATE_NONE;
-					d->gunlast[i] = lastmillis;
-					d->gunwait[i] = 0;
-				}
-			}
+			if(d->state != CS_ALIVE || (d->gunstate[i] != GUNSTATE_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
+				d->setgunstate(i, GUNSTATE_NONE, 0, lastmillis);
 		}
 	}
 
@@ -353,14 +344,9 @@ struct weaponstate
 		int power = 100;
 		if(guntype[d->gunselect].power)
 		{
-			if(d->gunstate[d->gunselect] != GUNSTATE_POWER)
+			if(d->gunstate[d->gunselect] != GUNSTATE_POWER) // FIXME: not synched in MP yet!!
 			{
-				if(d->attacking)
-				{
-					d->gunstate[d->gunselect] = GUNSTATE_POWER;
-					d->gunwait[d->gunselect] = 0; // this doesn't interfere with other mechanisms
-					d->gunlast[d->gunselect] = lastmillis;
-				}
+				if(d->attacking) d->setgunstate(d->gunselect, GUNSTATE_POWER, 0, lastmillis);
 				else return;
 			}
 
@@ -372,11 +358,8 @@ struct weaponstate
 		}
 		else if(!d->attacking) return;
 
-		d->lastattackgun = d->gunselect;
-		d->gunstate[d->gunselect] = GUNSTATE_SHOOT;
-		d->gunwait[d->gunselect] = guntype[d->gunselect].adelay;
-		d->gunlast[d->gunselect] = lastmillis;
-		d->ammo[d->gunselect]--;
+		if(guntype[d->gunselect].max) d->ammo[d->gunselect]--;
+		d->setgunstate(d->gunselect, GUNSTATE_SHOOT, guntype[d->gunselect].adelay, lastmillis);
 		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 
 		vec to = targ, from = gunorigin(d->gunselect, d->o, to, d), unitv;
@@ -385,7 +368,7 @@ struct weaponstate
 		vec kickback(unitv);
 		kickback.mul(guntype[d->gunselect].kick);
 		d->vel.add(kickback);
-		if (d == cl.player1) cl.quakewobble += guntype[d->gunselect].wobble;
+		if(d == cl.player1) cl.quakewobble += guntype[d->gunselect].wobble;
 		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
 		if(barrier < dist)
 		{
