@@ -11,31 +11,6 @@ struct sometype
 	const char *name; uchar id;
 };
 
-#define COL_WHITE			0xFFFFFF
-#define COL_BLACK			0x000000
-#define COL_GREY			0x897661
-#define COL_YELLOW			0xB49B4B
-#define COL_ORANGE			0xB42A00
-#define COL_RED				0xFF1932
-#define COL_LRED			0xFF4B4B
-#define COL_BLUE			0x3219FF
-#define COL_LBLUE			0x4BA8FF
-#define COL_GREEN			0x32FF64
-#define COL_CYAN			0x32FFFF
-#define COL_FUSCHIA			0xFFFF32
-
-#define COL_TEXTBLUE		0x6496FF
-#define COL_TEXTYELLOW		0xFFC864
-#define COL_TEXTRED			0xFF4B19
-#define COL_TEXTGREY		0xB4B4B4
-#define COL_TEXTDGREEN		0x1EC850
-
-#define COL_FIRERED			0xFF8080
-#define COL_FIREORANGE		0xA0C080
-#define COL_FIREYELLOW		0xFFC8C8
-#define COL_WATER			0x3232FF
-#define COL_BLOOD			0x19FFFF
-
 extern void lightent(extentity &e, float height = 8.0f);
 extern void lightreaching(const vec &target, vec &color, vec &dir, extentity *e = 0, float ambient = 0.4f);
 extern entity *brightestlight(const vec &target, const vec &dir);

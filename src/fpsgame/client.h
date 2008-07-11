@@ -290,7 +290,7 @@ struct clientcom : iclientcom
 		string s, t;
 		s_sprintf(t)("%s", m_team(cl.gamemode, cl.mutators) && flags&SAY_TEAM ? teamtype[d->team].chat : teamtype[TEAM_NEUTRAL].chat);
 
-		if(flags&SAY_ACTION) s_sprintf(s)("%s* \fs%s\ffS \fs%s\fS", t, cl.colorname(d), text);
+		if(flags&SAY_ACTION) s_sprintf(s)("%s* \fs%s\fS \fs%s\fS", t, cl.colorname(d), text);
 		else s_sprintf(s)("%s<\fs\fw%s\fS> \fs\fw%s\fS", t, cl.colorname(d), text);
 
 		if(d->state != CS_DEAD && d->state != CS_SPECTATOR)

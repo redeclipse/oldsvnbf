@@ -38,8 +38,8 @@ enum								// entity types
 	PUSHER,							// 12 zpush, ypush, xpush
 	FLAG,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
-	CAMERA,							// 15 type, radius, weight
-	WAYPOINT,						// 16 radius, weight
+	CAMERA,							// 15
+	WAYPOINT,						// 16
 	ANNOUNCER,						// 17 maxrad, minrad, volume
 	CONNECTION,						// 18
 	MAXENTTYPES						// 19
@@ -92,8 +92,8 @@ struct fpsentity : extentity
 };
 #endif
 
-#define SGRAYS			20
-#define SGSPREAD		3
+#define SGRAYS			15
+#define SGSPREAD		4
 #define GUNSWITCHDELAY	500
 
 enum
@@ -123,13 +123,13 @@ struct guntypes
 	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,	radius;	const char *name,	*vwep;
 } guntype[NUMGUNS] =
 {
-	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		0,		-10 ,	10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
+	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	20,		0,		0,		0,		-10 ,	10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
 	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	10,		0,		0,		0,		-30,	30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
-	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	10,		0,		0,		0,		-4,		4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	1000,	3000,	-15,	10,		8,		48,		"grenades",			"weapons/grenades/vwep" },
-	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	50,		3000,	20,		50,		0,		3000,	-1,		1,		8,		24,		"flamer",			"weapons/flamer/vwep" },
+	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			40,		40,		75,		3000,	15,		0,		0,		0,		-4,		4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		200,	150,	1000,	3000,	-15,	10,		8,		48,		"grenades",			"weapons/grenades/vwep" },
+	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	50,		3000,	20,		100,	0,		3000,	-1,		1,		8,		24,		"flamer",			"weapons/flamer/vwep" },
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	100,	0,		0,		0,		-30,	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		200,	100,	0,		10000,	-50,	50,		1,		128,	"rockets",			"weapons/rockets/vwep" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		1000,	100,	0,		10000,	-50,	50,		1,		128,	"rockets",			"weapons/rockets/vwep" },
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
 
@@ -264,13 +264,13 @@ struct demoheader
 enum { TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_MAX };
 struct teamtypes
 {
-	int	type,		colour;	const char *name,	*mdl,			*flag,			*icon,		*chat;
+	int	type,		colour;	const char *name,	*mdl,			*flag,			*icon,			*chat;
 } teamtype[] = {
-	{ TEAM_NEUTRAL,	0x303030,	"Neutral",		"player",		"flag",			"team",		"\fG" },
-	{ TEAM_ALPHA,	0x3030C0,	"Alpha",		"player/alpha",	"flag/alpha",	"teamalpha","\fb" },
-	{ TEAM_BETA,	0xC03030,	"Beta",			"player/beta",	"flag/beta",	"teambeta",	"\fr" },
-	{ TEAM_DELTA,	0xC0C030,	"Delta",		"player/delta",	"flag/delta",	"teamdelta","\fy" },
-	{ TEAM_GAMMA,	0x30C030,	"Gamma",		"player/gamma",	"flag/gamma",	"teamgamma","\fg" }
+	{ TEAM_NEUTRAL,	0x303030,	"Neutral",		"player",		"flag",			"team",			"\fa" },
+	{ TEAM_ALPHA,	0x303090,	"Alpha",		"player/alpha",	"flag/alpha",	"teamalpha",	"\fb" },
+	{ TEAM_BETA,	0x903030,	"Beta",			"player/beta",	"flag/beta",	"teambeta",		"\fr" },
+	{ TEAM_DELTA,	0x909030,	"Delta",		"player/delta",	"flag/delta",	"teamdelta",	"\fy" },
+	{ TEAM_GAMMA,	0x309030,	"Gamma",		"player/gamma",	"flag/gamma",	"teamgamma",	"\fg" }
 };
 
 enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
@@ -641,7 +641,6 @@ struct botinfo
 
 struct fpsent : dynent, fpsstate
 {
-	int weight;
 	int clientnum, privilege, lastupdate, plag, ping;
 	bool attacking, reloading, useaction;
 	int attacktime, reloadtime, usetime;
@@ -662,7 +661,7 @@ struct fpsent : dynent, fpsstate
 	string name, info;
 	int team;
 
-	fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL)
+	fpsent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL)
 	{
 		name[0] = info[0] = 0;
 		team = TEAM_NEUTRAL;
