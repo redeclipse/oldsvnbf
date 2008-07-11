@@ -93,17 +93,17 @@ struct physics
 	}
 	float jumpvelocity(physent *d)
 	{
-		return d->inliquid ? float(liquidvel()) : float(jumpvel());
+		return (d->inliquid ? float(liquidvel()) : float(jumpvel()))*(float(d->weight)/100.f);
 	}
 	float gravityforce(physent *d)
 	{
-		return float(gravity());
+		return float(gravity())*(float(d->weight)/100.f);
 	}
 	float maxspeed(physent *d)
 	{
 		if (d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_EDITING)
 		{
-			return d->maxspeed * (float(d->crouching ? crawlspeed() : movespeed())/100.f);
+			return d->maxspeed*(float(d->crouching ? crawlspeed() : movespeed())/100.f)*(float(d->weight)/100.f);
 		}
 		return d->maxspeed;
 	}

@@ -1,7 +1,7 @@
 // engine defs
-#define ENG_VERSION		65					// engine version, integer is divided by 100.f
-#define ENG_NAME		"Blood Frontier"	// engine name
-#define ENG_RELEASE		"SVN"				// engine release name
+#define ENG_VERSION		75							// version, integer is divided by 100.f
+#define ENG_NAME		"Blood Frontier Alpha 2"	// full name
+#define ENG_RELEASE		"Genesis Edition"			// edition/release name
 
 #define MASTER_PORT		28800
 
@@ -122,6 +122,7 @@ struct font
 
 #define FONTH (curfont->defaulth)
 #define FONTW (curfont->defaultw)
+#define PIXELTAB (4*FONTW)
 #define MINRESW 640
 #define MINRESH 480
 
@@ -190,7 +191,6 @@ extern GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16], invmvmatrix[16];
 
 extern float cursorx, cursory;
 extern vec cursordir;
-#define SENSF			33.f
 
 extern void gl_checkextensions();
 extern void gl_init(int w, int h, int bpp, int depth, int fsaa);

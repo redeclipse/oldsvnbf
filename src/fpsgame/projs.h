@@ -60,6 +60,7 @@ struct projectiles
 							elasticity = 0.33f;
 							relativity = 0.5f;
 							waterfric = 2.0f;
+							weight = 50.f;
 							break;
 						case GUN_RL:
 						{
@@ -67,6 +68,7 @@ struct projectiles
 							elasticity = 0.0f;
 							relativity = 0.25f;
 							waterfric = 1.5f;
+							weight = 0.f;
 							break;
 						}
 						case GUN_FLAMER:
@@ -75,6 +77,7 @@ struct projectiles
 							elasticity = 0.01f;
 							relativity = 0.25f;
 							waterfric = 1.5f;
+							weight = 10.f;
 							vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
 							if(v.magnitude()>50) v.div(50);
 							v.mul(to.dist(from)*0.005f);
@@ -95,6 +98,7 @@ struct projectiles
 							elasticity = 0.5f;
 							relativity = 0.25f;
 							waterfric = 1.25f;
+							weight = 1.f;
 							break;
 						}
 					}
@@ -106,6 +110,7 @@ struct projectiles
 					elasticity = 0.25f;
 					relativity = 1.0f;
 					waterfric = 2.0f;
+					weight = 20.f;
 					break;
 				}
 				case PRJ_DEBRIS:
@@ -115,6 +120,7 @@ struct projectiles
 					elasticity = 0.66f;
 					relativity = 1.0f;
 					waterfric = 1.75f;
+					weight = 25.f;
 					break;
 				}
 			}
@@ -211,7 +217,7 @@ struct projectiles
 
             float diff = o.dist(old);
             movement += diff;
-			if (projtype == PRJ_SHOT && gun == GUN_GL)
+			if(projtype == PRJ_SHOT && gun == GUN_GL)
             {
                 roll += diff / (4*RAD);
                 if(roll >= 360) roll = fmod(roll, 360.0f);

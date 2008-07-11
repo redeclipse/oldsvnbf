@@ -72,8 +72,6 @@ void gettextres(int &w, int &h)
 	}
 }
 
-#define PIXELTAB (4*curfont->defaultw)
-
 int text_width(const char *str) { //@TODO deprecate in favour of text_bounds(..)
     int width, height;
     text_bounds(str, width, height);
@@ -117,19 +115,22 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
         else stack[sp] = c;
         switch(c)
         {
-            case 'g': case '0': color = bvec( 64, 255, 128); break;   // green: player talk
-            case 'b': case '1': color = bvec( 96, 160, 255); break;   // blue: "echo" command
-            case 'y': case '2': color = bvec(255, 192,  64); break;   // yellow: gameplay messages
-            case 'r': case '3': color = bvec(255,  64,  64); break;   // red: important errors
-            case 'G': case '4': color = bvec(128, 128, 128); break;   // gray
-            case 'm': case '5': color = bvec(192,  64, 192); break;   // magenta
-            case 'o': case '6': color = bvec(255, 128,   0); break;   // orange
-            case 'w': case '7': color = bvec(255, 255, 255); break;   // orange
-            // white (provided color): everything else
+            case 'g': case '0': color = bvec( 64, 255, 128); break;	// green
+            case 'b': case '1': color = bvec( 96, 160, 255); break;	// blue
+            case 'y': case '2': color = bvec(255, 192,  64); break;	// yellow
+            case 'r': case '3': color = bvec(255,  64,  64); break;	// red
+            case 'a': case '4': color = bvec(128, 128, 128); break;	// gray
+            case 'm': case '5': color = bvec(192,  64, 192); break;	// magenta
+            case 'o': case '6': color = bvec(255, 128,   0); break;	// orange
+            case 'w': case '7': color = bvec(255, 255, 255); break;	// white
+            case 'k': case '8': color = bvec(0, 0, 0); break;		// black
+			default: break; // everything else
         }
         glColor4ub(color.x, color.y, color.z, a);
     }
 }
+
+#define TEXTTAB(x) clamp(x + (PIXELTAB - (x % PIXELTAB)), x + FONTW, x + PIXELTAB)
 
 #define TEXTSKELETON \
     int y = 0, x = 0;\
@@ -138,7 +139,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
     {\
         TEXTINDEX(i)\
         int c = str[i];\
-        if(c=='\t')      { x = ((x+PIXELTAB)/PIXELTAB)*PIXELTAB; TEXTWHITE(i) }\
+        if(c=='\t')      { x = TEXTTAB(x); TEXTWHITE(i) }\
         else if(c==' ')  { x += curfont->defaultw; TEXTWHITE(i) }\
         else if(c=='\n') { TEXTLINE(i) x = 0; y += FONTH; }\
         else if(c=='\f') { if(str[i+1]) { i++; TEXTCOLOR(i) }}\

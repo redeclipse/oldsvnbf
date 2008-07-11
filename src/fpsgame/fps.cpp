@@ -57,10 +57,9 @@ struct GAMECLIENT : igameclient
 	IVARP(mousedeadzone, 0, 10, 100);
 	IVARP(mousepanspeed, 1, 30, 1000);
 
-	IVARP(mousesensitivity, 1, 10, 100);
-	IVARP(yawsensitivity, 1, 10, 1000);
-	IVARP(pitchsensitivity, 1, 7, 1000);
-	IVARP(sensitivityscale, 1, 1, 100);
+	IFVARP(yawsensitivity, 1.0f);
+	IFVARP(pitchsensitivity, 0.75f);
+	IFVARP(sensitivityscale, 100.0f);
 
 	IVARP(crosshair, 0, 1, 1);
 	IVARP(teamcrosshair, 0, 1, 1);
@@ -116,11 +115,11 @@ struct GAMECLIENT : igameclient
 					int x = atoi(s);
 					if(x)
 					{
-						setvar("yawsensitivity", x);
-						setvar("pitchsensitivity", x/2);
+						setfvar("yawsensitivity", x*0.1f);
+						setfvar("pitchsensitivity", x*0.075f);
 					}
 				}
-				intret(self->yawsensitivity());
+				conoutf("yawsensitivity = %f, pitchsensitivity = %f", self->yawsensitivity(), self->pitchsensitivity());
 			});
 	}
 
@@ -149,11 +148,6 @@ struct GAMECLIENT : igameclient
 
 			respawnself(d);
 		}
-	}
-
-	bool canjump()
-	{
-		return player1->state != CS_DEAD && !intermission;
 	}
 
     bool allowmove(physent *d)
@@ -274,7 +268,6 @@ struct GAMECLIENT : igameclient
 		if(d->state != CS_ALIVE || intermission) return;
 
 		d->dodamage(damage, millis);
-		d->superdamage = 0;
 
 		if(actor->type == ENT_PLAYER) actor->totaldamage += damage;
 
@@ -342,8 +335,6 @@ struct GAMECLIENT : igameclient
 		else console("\f2%s %s %s", cflags, dname, oname, aname);
 
 		d->state = CS_DEAD;
-        d->superdamage = max(-d->health, 0);
-
 		if(d == player1)
 		{
 			sb.showscores(true);
@@ -359,11 +350,7 @@ struct GAMECLIENT : igameclient
             d->move = d->strafe = 0;
 		}
 
-		if(d->superdamage)
-		{
-			vec from = d->abovehead();
-			loopi(rnd(d->superdamage)+1) pj.spawn(from, d->vel, d, PRJ_GIBS);
-		}
+		loopi(rnd(damage/2)+1) pj.spawn(d->o, d->vel, d, PRJ_GIBS);
 		playsound(S_DIE1+rnd(2), &d->o);
 
 		if(d != actor) playsound(S_DAMAGE8, &actor->o);
@@ -1139,7 +1126,7 @@ struct GAMECLIENT : igameclient
 		if(pitch > MAXPITCH) pitch = MAXPITCH;
 		if(pitch < -MAXPITCH) pitch = -MAXPITCH;
 		while(yaw < 0.0f) yaw += 360.0f;
-		while(yaw > 360.0f) yaw -= 360.0f;
+		while(yaw >= 360.0f) yaw -= 360.0f;
 	}
 
 	void fixview(int w, int h)
@@ -1154,9 +1141,12 @@ struct GAMECLIENT : igameclient
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
 		bool windowhit = g3d_windowhit(true, false);
+
+		#define mousesens(a,b,c) ((float(a)/float(b))*c)
+
 		if(windowhit || mousestyle() >= 2)
 		{
-			if(mousestyle() == 3 || mousestyle() == 5)
+			if(mousestyle() == 3 || mousestyle() == 5) // absolute positions, unaccelerated
 			{
 				cursorx = clamp(float(x)/float(w), 0.f, 1.f);
 				cursory = clamp(float(y)/float(h), 0.f, 1.f);
@@ -1164,17 +1154,20 @@ struct GAMECLIENT : igameclient
 			}
 			else
 			{
-				cursorx = clamp(cursorx+(float(dx*mousesensitivity())/10000.f), 0.f, 1.f);
-				cursory = clamp(cursory+(float(dy*(!windowhit && invmouse() ? -1.f : 1.f)*mousesensitivity())/10000.f), 0.f, 1.f);;
+				cursorx = clamp(cursorx+mousesens(dx, w, yawsensitivity()), 0.f, 1.f);
+				cursory = clamp(cursory+mousesens(dy, h, pitchsensitivity()*(!windowhit && invmouse() ? -1.f : 1.f)), 0.f, 1.f);
 				return true;
 			}
 		}
 		else
 		{
-			if(!mousestyle()) cursorx = cursory = 0.5f;
-			player1->yaw += (dx/SENSF)*(yawsensitivity()/(float)sensitivityscale());
-			player1->pitch -= (dy/SENSF)*(pitchsensitivity()/(float)sensitivityscale())*(invmouse() ? -1.f : 1.f);
-			fixrange(player1->yaw, player1->pitch);
+			cursorx = cursory = 0.5f;
+			if(allowmove(player1))
+			{
+				player1->yaw += mousesens(dx, w, yawsensitivity()*sensitivityscale());
+				player1->pitch -= mousesens(dy, h, pitchsensitivity()*sensitivityscale()*(!windowhit && invmouse() ? -1.f : 1.f));
+				fixrange(player1->yaw, player1->pitch);
+			}
 			return true;
 		}
 		return false;

@@ -1596,7 +1596,7 @@ void rendertris(vec &fr, float yaw, float pitch, float size, float r, float g, f
 
 		ty = yaw - 45.f;
 		if (ty < 0.f) ty += 360.f;
-		else if (ty > 360.f) ty -= 360.f;
+		else if (ty >= 360.f) ty -= 360.f;
 
 		vecfromyawpitch(ty, pitch, -1, 0, to);
 		to.mul(size);
@@ -1605,7 +1605,7 @@ void rendertris(vec &fr, float yaw, float pitch, float size, float r, float g, f
 
 		ty = yaw + 45.f;
 		if (ty < 0.f) ty += 360.f;
-		else if (ty > 360.f) ty -= 360.f;
+		else if (ty >= 360.f) ty -= 360.f;
 
 		vecfromyawpitch(ty, pitch, -1, 0, to);
 		to.mul(size);
