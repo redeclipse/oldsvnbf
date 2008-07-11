@@ -661,7 +661,7 @@ void entlink()
 			{
 				int node = entgroup[i+1];
 
-				if(verbose >= 3) conoutf("attempting to link %d and %d (%d)", index, node, i+1);
+				if(verbose >= 2) conoutf("attempting to link %d and %d (%d)", index, node, i+1);
 				if(ents.inrange(node))
 				{
 					if(!et->linkents(index, node, true, true, true) && !et->linkents(node, index, true, true, true))

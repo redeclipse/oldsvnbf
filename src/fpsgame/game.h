@@ -128,7 +128,7 @@ struct guntypes
 	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			40,		40,		75,		3000,	15,		0,		0,		0,		-4,		4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
 	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		250,	150,	1000,	3000,	-15,	10,		8,		64,		"grenades",			"weapons/grenades/vwep" },
 	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	100,	3000,	20,		75,		0,		3000,	-1,		1,		8,		16,		"flamer",			"weapons/flamer/vwep" },
-	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	100,	0,		0,		0,		-30,	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
+	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		500,	500,	100,	0,		0,		0,		-30,	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
 	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		1000,	100,	0,		10000,	-50,	50,		1,		128,	"rockets",			"weapons/rockets/vwep" },
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
@@ -266,11 +266,11 @@ struct teamtypes
 {
 	int	type,		colour;	const char *name,	*mdl,			*flag,			*icon,			*chat;
 } teamtype[] = {
-	{ TEAM_NEUTRAL,	0x303030,	"Neutral",		"player",		"flag",			"team",			"\fa" },
-	{ TEAM_ALPHA,	0x303090,	"Alpha",		"player/alpha",	"flag/alpha",	"teamalpha",	"\fb" },
-	{ TEAM_BETA,	0x903030,	"Beta",			"player/beta",	"flag/beta",	"teambeta",		"\fr" },
-	{ TEAM_DELTA,	0x909030,	"Delta",		"player/delta",	"flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0x309030,	"Gamma",		"player/gamma",	"flag/gamma",	"teamgamma",	"\fg" }
+	{ TEAM_NEUTRAL,	0x2F2F2F,	"Neutral",		"player",		"flag",			"team",			"\fa" },
+	{ TEAM_ALPHA,	0x2222FF,	"Alpha",		"player/alpha",	"flag/alpha",	"teamalpha",	"\fb" },
+	{ TEAM_BETA,	0xFF2222,	"Beta",			"player/beta",	"flag/beta",	"teambeta",		"\fr" },
+	{ TEAM_DELTA,	0xFFFF22,	"Delta",		"player/delta",	"flag/delta",	"teamdelta",	"\fy" },
+	{ TEAM_GAMMA,	0x22FF22,	"Gamma",		"player/gamma",	"flag/gamma",	"teamgamma",	"\fg" }
 };
 
 enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };

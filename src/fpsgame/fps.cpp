@@ -506,23 +506,20 @@ struct GAMECLIENT : igameclient
 		return false;
 	}
 
-	char *colorname(fpsent *d, char *name = NULL, const char *prefix = "", bool team = true)
+	char *colorname(fpsent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true)
 	{
 		if(!name) name = d->name;
 		static string cname;
-		if(name[0] && !duplicatename(d, name))
+		s_sprintf(cname)("%s\fs%s\fS", prefix, name);
+		if(!name[0] || d->ownernum >= 0 || (dupname && duplicatename(d, name)))
 		{
-			if(team && m_team(gamemode, mutators))
-				s_sprintf(cname)("%s\fs%s\fS (\fs%s%s\fS)", prefix, name, teamtype[d->team].chat, teamtype[d->team].name);
-			else
-				s_sprintf(cname)("%s\fs%s\fS", prefix, name);
+			s_sprintfd(s)(" [\fs\f5%d\fS]", d->clientnum);
+			s_strcat(cname, s);
 		}
-		else
+		if(team && m_team(gamemode, mutators))
 		{
-			if(team && m_team(gamemode, mutators))
-				s_sprintf(cname)("%s\fs%s\fS [\fs\f5%d\fS] (\fs%s%s\fS)", prefix, name, d->clientnum, teamtype[d->team].chat, teamtype[d->team].name);
-			else
-				s_sprintf(cname)("%s\fs%s\fS [\fs\f5%d\fS]", prefix, name, d->clientnum);
+			s_sprintfd(s)(" (\fs%s%s\fS)", teamtype[d->team].chat, teamtype[d->team].name);
+			s_strcat(cname, s);
 		}
 		return cname;
 	}
@@ -585,7 +582,7 @@ struct GAMECLIENT : igameclient
 			drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
 			glEnd();
 			if(radarnames())
-				draw_textx("%s", int(cx), int(cy+cs), 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, colorname(d));
+				draw_textx("%s", int(cx), int(cy+cs), 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, colorname(d, NULL, "", false));
 		}
 	}
 

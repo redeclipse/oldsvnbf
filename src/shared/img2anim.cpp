@@ -143,7 +143,6 @@ void usage()
 int main(int argc, char *argv[])
 {
 	program = argv[0];
-	sethomedir(".");
 
 	for(int i = 1; i < argc; i++)
 	{

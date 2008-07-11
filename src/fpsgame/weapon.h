@@ -101,8 +101,8 @@ struct weaponstate
 		v.normalize();
 		shorten(from, d->o, s);
 		int hits = 0;
-		if (s.z < d->o.z-d->height*0.3f && s.z >= d->o.z-d->height) hits |= HIT_LEGS;
-		else if (s.z < d->o.z-d->aboveeye && s.z >= d->o.z-d->height*0.3f) hits |= HIT_TORSO;
+		if (s.z < d->o.z-d->height*0.75f && s.z >= d->o.z-d->height) hits |= HIT_LEGS;
+		else if (s.z < d->o.z-d->aboveeye && s.z >= d->o.z-d->height*0.75f) hits |= HIT_TORSO;
 		else if (s.z <= d->o.z+d->aboveeye && s.z >= d->o.z-d->aboveeye) hits |= HIT_HEAD;
 		hit(d, v, hits, rays);
 	}

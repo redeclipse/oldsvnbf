@@ -692,7 +692,7 @@ struct entities : icliententities
 			if(!route.empty() && score) *score = nodes[lowest].score();
 		}
 
-		if(verbose > 3)
+		if(verbose >= 4)
 			conoutf("route %d to %d (%d) generated %d nodes in %fs", node, goal, lowest, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
 
 		return !route.empty();
@@ -929,8 +929,7 @@ struct entities : icliententities
 
 						if(f.type == TELEPORT && !f.mark && f.attr1 == e.attr2)
 						{
-							if(verbose >= 2)
-								conoutf("WARNING: teleports %d and %d linked automatically", dest, j);
+							if(verbose) conoutf("imported teleports %d and %d linked automatically", dest, j);
 							f.links.add(dest);
 						}
 					}
