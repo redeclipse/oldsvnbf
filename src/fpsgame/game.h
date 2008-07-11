@@ -126,8 +126,8 @@ struct guntypes
 	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	20,		0,		0,		0,		-10 ,	10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
 	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	10,		0,		0,		0,		-30,	30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
 	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			40,		40,		75,		3000,	15,		0,		0,		0,		-4,		4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		200,	150,	1000,	3000,	-15,	10,		8,		48,		"grenades",			"weapons/grenades/vwep" },
-	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	50,		3000,	20,		100,	0,		3000,	-1,		1,		8,		24,		"flamer",			"weapons/flamer/vwep" },
+	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		250,	150,	1000,	3000,	-15,	10,		8,		64,		"grenades",			"weapons/grenades/vwep" },
+	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	100,	3000,	20,		75,		0,		3000,	-1,		1,		8,		16,		"flamer",			"weapons/flamer/vwep" },
 	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	100,	0,		0,		0,		-30,	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
 	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		1000,	100,	0,		10000,	-50,	50,		1,		128,	"rockets",			"weapons/rockets/vwep" },
 };
