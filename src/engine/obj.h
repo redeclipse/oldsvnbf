@@ -128,6 +128,7 @@ struct obj : vertmodel
                                 *index = verts.length();
                                 vert &v = verts.add();
                                 v.pos = vkey.x < 0 ? vec(0, 0, 0) : attrib[0][vkey.x];
+                                v.pos = vec(v.pos.z, -v.pos.x, v.pos.y);
                                 v.norm = vkey.z < 0 ? vec(0, 0, 0) : attrib[2][vkey.z];
                                 tcvert &tcv = tcverts.add();
                                 if(vkey.y < 0) tcv.u = tcv.v = 0;
@@ -138,9 +139,9 @@ struct obj : vertmodel
                             else
                             {
                                 tri &t = tris.add();
-                                t.vert[0] = ushort(v0);
+                                t.vert[0] = ushort(*index);
                                 t.vert[1] = ushort(v1);
-                                t.vert[2] = ushort(*index);
+                                t.vert[2] = ushort(v0);
                                 v1 = *index;
                             }
                         }
