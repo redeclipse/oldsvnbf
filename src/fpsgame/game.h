@@ -124,12 +124,12 @@ struct guntypes
 } guntype[NUMGUNS] =
 {
 	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	10,		0,		0,		0,		-10 ,	10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
-	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	5,		0,		0,		0,		-30,	30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
-	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	5,		0,		0,		0,		-4,		4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
+	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	10,		0,		0,		0,		-30,	30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
+	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			50,		50,		50,		3000,	10,		0,		0,		0,		-4,		4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
 	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		100,	100,	1000,	3000,	-15,	10,		8,		48,		"grenades",			"weapons/grenades/vwep" },
-	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	50,		3000,	10,		50,		0,		3000,	-1,		1,		8,		24,		"flamer",			"weapons/flamer/vwep" },
-	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	75,		0,		0,		0,		-30,	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		1000,	100,	0,		10000,	-50,	50,		1,		128,	"rockets",			"weapons/rockets/vwep" },
+	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	50,		3000,	20,		50,		0,		3000,	-1,		1,		8,		24,		"flamer",			"weapons/flamer/vwep" },
+	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		1500,	1000,	100,	0,		0,		0,		-30,	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
+	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		200,	100,	0,		10000,	-50,	50,		1,		128,	"rockets",			"weapons/rockets/vwep" },
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
 
@@ -376,25 +376,16 @@ struct fpsstate
 {
 	int health, ammo[NUMGUNS];
 	int gunselect, gunstate[NUMGUNS], gunwait[NUMGUNS], gunlast[NUMGUNS];
-	int lastdeath, lifesequence, lastshot, lastspawn, lastpain, lastregen;
+	int lastdeath, lifesequence, lastspawn, lastpain, lastregen;
 	int ownernum, skill, spree;
 
-	fpsstate() : lifesequence(0), ownernum(-1), skill(0), spree(0)
-	{
-		loopi(NUMGUNS)
-		{
-			gunstate[i] = GUNSTATE_NONE;
-			gunwait[i] = gunlast[i] = 0;
-		}
-	}
+	fpsstate() : lifesequence(0), ownernum(-1), skill(0), spree(0) {}
 	~fpsstate() {}
 
 	int bestgun(int millis)
 	{
 		int best = -1;
-		loopi(NUMGUNS)
-			if(guntype[i].rdelay > 0 && (canreload(i, millis) || canshoot(i, millis)))
-				best = i;
+		loopi(NUMGUNS) if(guntype[i].rdelay > 0 && ammo[i] >= 0) best = i;
 		return best;
 	}
 
@@ -439,22 +430,34 @@ struct fpsstate
 		return false;
 	}
 
+	void gunreset()
+	{
+		loopi(NUMGUNS)
+		{
+			gunstate[i] = GUNSTATE_NONE;
+			gunwait[i] = gunlast[i] = 0;
+			ammo[i] = -1;
+		}
+		gunselect = -1;
+	}
+
+	void setgunstate(int gun, int state, int delay, int millis)
+	{
+		gunstate[gun] = state;
+		gunwait[gun] = delay;
+		gunlast[gun] = millis;
+	}
+
 	void gunswitch(int gun, int millis)
 	{
-		gunstate[gunselect] = GUNSTATE_SWITCH;
-		gunwait[gunselect] = GUNSWITCHDELAY;
-		gunlast[gunselect] = millis;
+		setgunstate(gunselect, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
 		gunselect = gun;
-		gunstate[gunselect] = GUNSTATE_SWITCH;
-		gunwait[gunselect] = GUNSWITCHDELAY;
-		gunlast[gunselect] = millis;
+		setgunstate(gunselect, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
 	}
 
 	void gunreload(int gun, int amt, int millis)
 	{
-		gunstate[gun] = GUNSTATE_RELOAD;
-		gunlast[gun] = millis;
-		gunwait[gun] = guntype[gun].rdelay;
+		setgunstate(gun, GUNSTATE_RELOAD, guntype[gun].rdelay, millis);
 		ammo[gun] = amt;
 	}
 
@@ -490,9 +493,7 @@ struct fpsstate
 				guntypes &g = guntype[attr1];
 				ammo[attr1] = min(ammo[attr1] + (attr2 > 0 ? attr2 : g.add), g.max);
 
-				gunstate[attr1] = GUNSTATE_RELOAD;
-				gunwait[attr1] = (guntype[attr1].rdelay ? guntype[attr1].rdelay : guntype[attr1].adelay);
-				gunlast[attr1] = lastshot = millis;
+				setgunstate(attr1, GUNSTATE_RELOAD, guntype[attr1].rdelay ? guntype[attr1].rdelay : guntype[attr1].adelay, millis);
 				break;
 			}
 			default: break;
@@ -502,15 +503,9 @@ struct fpsstate
 	void respawn()
 	{
 		health = MAXHEALTH;
-		lastdeath = lastshot = lastpain = lastregen = spree = 0;
+		lastdeath = lastpain = lastregen = spree = 0;
 		lastspawn = -1;
-		loopi(NUMGUNS)
-		{
-			gunstate[i] = GUNSTATE_NONE;
-			gunwait[i] = gunlast[i] = 0;
-			ammo[i] = -1;
-		}
-		gunselect = -1;
+		gunreset();
 	}
 
 	void spawnstate(int gamemode, int mutators)
@@ -648,7 +643,6 @@ struct fpsent : dynent, fpsstate
 {
 	int weight;
 	int clientnum, privilege, lastupdate, plag, ping;
-	int lastattackgun;
 	bool attacking, reloading, useaction;
 	int attacktime, reloadtime, usetime;
 	int lasttaunt;
@@ -710,7 +704,6 @@ struct fpsent : dynent, fpsstate
 		stopmoving();
 		dynent::reset();
 		fpsstate::respawn();
-		lastattackgun = gunselect;
 		lasttaunt = lastuse = lastusemillis = superdamage = lastimpulse = 0;
 		lastflag = respawned = suicided = -1;
 	}

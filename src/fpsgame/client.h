@@ -761,12 +761,9 @@ struct clientcom : iclientcom
 					loopk(3) from[k] = getint(p)/DMF;
 					loopk(3) to[k] = getint(p)/DMF;
 					fpsent *s = cl.getclient(scn);
-					if(!s || gun < 0) break;
+					if(!s || !isgun(gun)) break;
 					if(gun==GUN_SG) cl.ws.createrays(from, to);
-					s->gunstate[gun] = GUNSTATE_SHOOT;
-					s->gunwait[gun] = guntype[gun].adelay;
-					s->gunlast[gun] = lastmillis;
-					s->lastattackgun = gun;
+					s->setgunstate(gun, GUNSTATE_SHOOT, guntype[gun].adelay, lastmillis);
 					cl.ws.shootv(gun, power, from, to, s, false);
 					break;
 				}

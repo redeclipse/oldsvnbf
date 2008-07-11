@@ -1896,8 +1896,8 @@ struct GAMESERVER : igameserver
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
 	{
 		gamestate &ts = target->state;
-		if(flags&HIT_LEGS) damage = damage/2;
-		else if (flags&HIT_HEAD) damage = damage*2;
+		if(flags&HIT_LEGS) damage = damage/4;
+		else if (flags&HIT_TORSO) damage = damage/2;
 		if (smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { return; }
 		mutate(if (!mut->damage(target, actor, damage, gun, flags, hitpush)) { return; });
 		ts.dodamage(damage, gamemillis);
@@ -2028,10 +2028,8 @@ struct GAMESERVER : igameserver
 			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
-		if (guntype[e.gun].max) gs.ammo[e.gun]--;
-		gs.gunstate[e.gun] = GUNSTATE_SHOOT;
-		gs.lastshot = gs.gunlast[e.gun] = e.millis;
-		gs.gunwait[e.gun] = guntype[e.gun].adelay;
+		if(guntype[e.gun].max) gs.ammo[e.gun]--;
+		gs.setgunstate(e.gun, GUNSTATE_SHOOT, guntype[e.gun].adelay, e.millis);
 		sendf(-1, 1, "ri4i6x", SV_SHOTFX, ci->clientnum, e.gun, e.power,
 				int(e.from[0]*DMF), int(e.from[1]*DMF), int(e.from[2]*DMF),
 				int(e.to[0]*DMF), int(e.to[1]*DMF), int(e.to[2]*DMF),
