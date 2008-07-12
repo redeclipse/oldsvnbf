@@ -62,7 +62,7 @@ struct fpsrender
 			{
 				a[ai].name = teamtype[cl.ctf.flags[i].team].flag;
 				a[ai].tag = "tag_flag";
-				a[ai].anim = ANIM_VWEP|ANIM_LOOP;
+				a[ai].anim = ANIM_MAPMODEL|ANIM_LOOP;
 				a[ai].basetime = 0;
 				ai++;
 			}
