@@ -752,9 +752,6 @@ struct GAMESERVER : igameserver
 			demonextmatch = false;
 			setupdemorecord();
 		}
-
-		if(!m_duel(gamemode, mutators))
-			sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, "fight!");
 	}
 
 	savedscore &findscore(clientinfo *ci, bool insert)
@@ -1293,9 +1290,6 @@ struct GAMESERVER : igameserver
 					ci->team = team;
 
 					QUEUE_MSG;
-
-					if(connected && m_fight(gamemode) && !m_duel(gamemode, mutators))
-						sendf(sender, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, "fight!");
 					break;
 				}
 
