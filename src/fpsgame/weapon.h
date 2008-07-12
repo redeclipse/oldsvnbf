@@ -304,8 +304,7 @@ struct weaponstate
 
 	bool doautoreload(fpsent *d)
 	{
-		return autoreload() && d->gunselect >= 0 &&
-			!d->ammo[d->gunselect] && guntype[d->gunselect].rdelay > 0;
+		return autoreload() && isgun(d->gunselect) && d->ammo[d->gunselect] <= 0 && d->canreload(d->gunselect, lastmillis);
 	}
 
 	void checkweapons(fpsent *d)
@@ -325,7 +324,16 @@ struct weaponstate
 
 	void reload(fpsent *d)
 	{
-		if(d->reloading || (d == cl.player1 && doautoreload(d)))
+		if(guntype[d->gunselect].rdelay <= 0)
+		{
+			int bestgun = d->bestgun();
+			if(d->ammo[d->gunselect] <= 0 && d->canswitch(bestgun, lastmillis))
+			{
+				d->setgun(bestgun, lastmillis);
+				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+			}
+		}
+		else if(d->reloading || doautoreload(d))
 		{
 			if(d->canreload(d->gunselect, lastmillis))
 			{
@@ -333,13 +341,13 @@ struct weaponstate
 				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			}
 			else if(d->reloading) cl.playsoundc(S_DENIED, d);
-			d->reloading = false;
 		}
+		d->reloading = false;
 	}
 
 	void shoot(fpsent *d, vec &targ)
 	{
-		if((d != cl.player1 && !d->bot) || !d->canshoot(d->gunselect, lastmillis)) return;
+		if(!d->canshoot(d->gunselect, lastmillis)) return;
 
 		int power = 100;
 		if(guntype[d->gunselect].power)
