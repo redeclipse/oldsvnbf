@@ -687,7 +687,8 @@ void eastereggs()
 	tm_isdst	1 if daylight savings is on, zero if not,
 	*/
 
-	if(lt->tm_wday == 5 && lt->tm_mday == 13) // Friday the 13th
+	if((lt->tm_wday == 5 && lt->tm_mday == 13) ||	// Friday the 13th
+		(lt->tm_mon == 9 && lt->tm_mday == 31))		// Halloween
 	{
 		loadback = "textures/spookyback";
 	}
