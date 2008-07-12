@@ -2402,7 +2402,7 @@ struct GAMESERVER : igameserver
 		else *muts = 0;
     }
 
-	const char *defaultmap() { return "acord1"; }
+	const char *defaultmap() { return "refuge"; }
 	int defaultmode() { return G_DEATHMATCH; }
 
 	bool canload(char *type)
