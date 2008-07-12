@@ -380,11 +380,8 @@ struct botclient
 			switch(b.type)
 			{
 				case BS_PURSUE:
-					if(b.targtype == BT_PLAYER || (b.targtype == BT_FLAG && m_ctf(cl.gamemode) && cl.ctf.flags[b.target].team != d->team))
-					{
-						result = true;
-						if(b.targtype != BT_PLAYER) pursue = true;
-					}
+					result = true;
+					pursue = false;
 					break;
 				case BS_WAIT:
 				case BS_INTEREST:
