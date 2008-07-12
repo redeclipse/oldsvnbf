@@ -2218,7 +2218,7 @@ struct GAMESERVER : igameserver
             else if(!approved && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
             {
                 ci->wantsmaster = true;
-                srvoutf(-1, "%s wants master. Type \"/approvemaster %d\" to approve.", colorname(ci), ci->clientnum);
+                srvoutf(-1, "%s wants master. Type \"/approve %d\" to approve.", colorname(ci), ci->clientnum);
                 return;
             }
 			else ci->privilege = PRIV_MASTER;

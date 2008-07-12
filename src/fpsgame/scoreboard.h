@@ -270,29 +270,26 @@ struct scoreboard : g3d_callback
                 g.poplist();
             }
 
-            if(multiplayer(false) || cl.cc.demoplayback)
-            {
-                if(showpj())
-                {
-                    g.pushlist();
-                    g.strut(6);
-                    g.text("pj", fgcolor);
-                    loopscoregroup(o,
-					{
-                        if(o->state==CS_LAGGED) g.text("LAG", 0xFFFFDD);
-                        else g.textf("%d", 0xFFFFDD, NULL, o->plag);
-                    });
-                    g.poplist();
-                }
-
-                if(showping())
+			if(showpj())
+			{
+				g.pushlist();
+				g.strut(6);
+				g.text("pj", fgcolor);
+				loopscoregroup(o,
 				{
-                    g.pushlist();
-                    g.text("ping", fgcolor);
-                    g.strut(6);
-                    loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->ping));
-                    g.poplist();
-				}
+					if(o->state==CS_LAGGED) g.text("LAG", 0xFFFFDD);
+					else g.textf("%d", 0xFFFFDD, NULL, o->plag);
+				});
+				g.poplist();
+			}
+
+			if(showping())
+			{
+				g.pushlist();
+				g.text("ping", fgcolor);
+				g.strut(6);
+				loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->ping));
+				g.poplist();
 			}
 
             g.pushlist();

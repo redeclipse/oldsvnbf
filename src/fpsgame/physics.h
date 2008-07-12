@@ -663,8 +663,8 @@ struct physics
 		return false;
 	}
 
-    IVARP(smoothmove, 0, 75, 100);
-    IVARP(smoothdist, 0, 32, 64);
+    IVARP(smoothmove, -1, -1, 1000);
+    IVARP(smoothdist, 0, 64, 1024);
 
 	void smoothplayer(fpsent *d, int res, bool local)
 	{
@@ -684,7 +684,8 @@ struct physics
 
 				d->newpos = d->o;
 
-				float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove();
+				int s = smoothmove() > 0 ? smoothmove() : cl.player1->ping;
+				float k = 1.0f - float(lastmillis - d->smoothmillis)/float(s);
 				if(k>0)
 				{
 					d->o.add(vec(d->deltapos).mul(k));

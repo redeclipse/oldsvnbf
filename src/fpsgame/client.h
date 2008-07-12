@@ -726,6 +726,7 @@ struct clientcom : iclientcom
 					int lcn = getint(p);
 					fpsent *f = cl.getclient(lcn);
 					parsestate(f, p);
+					if(!f) break;
 					f->state = CS_SPAWNING;
 					playsound(S_RESPAWN, &f->o);
 					break;
@@ -735,10 +736,11 @@ struct clientcom : iclientcom
 				{
 					int lcn = getint(p);
 					fpsent *f = cl.getclient(lcn);
-					bool local = (f == cl.player1 || f->bot);
+					bool local = f && (f == cl.player1 || f->bot);
 					if(f==cl.player1 && editmode) toggleedit();
-					f->respawn();
+					if(f) f->respawn();
 					parsestate(f, p);
+					if(!f) break;
 					f->state = CS_ALIVE;
 					if(local)
 					{
@@ -872,8 +874,9 @@ struct clientcom : iclientcom
 				case SV_ITEMACC:			// server acknowledges that I picked up this item
 				{
 					int lcn = getint(p), i = getint(p);
-					fpsent *d = cl.getclient(lcn);
-					cl.et.useeffects(d, lastmillis, i);
+					fpsent *f = cl.getclient(lcn);
+					if(!f) break;
+					cl.et.useeffects(f, lastmillis, i);
 					break;
 				}
 
@@ -1124,7 +1127,7 @@ struct clientcom : iclientcom
 					vec droploc;
 					loopk(3) droploc[k] = getint(p)/DMF;
 					fpsent *o = cl.newclient(ocn);
-					if(m_ctf(cl.gamemode)) cl.ctf.dropflag(o, flag, droploc);
+					if(o && m_ctf(cl.gamemode)) cl.ctf.dropflag(o, flag, droploc);
 					break;
 				}
 
@@ -1132,7 +1135,7 @@ struct clientcom : iclientcom
 				{
 					int ocn = getint(p), relayflag = getint(p), goalflag = getint(p), score = getint(p);
 					fpsent *o = cl.newclient(ocn);
-					if(m_ctf(cl.gamemode)) cl.ctf.scoreflag(o, relayflag, goalflag, score);
+					if(o && m_ctf(cl.gamemode)) cl.ctf.scoreflag(o, relayflag, goalflag, score);
 					break;
 				}
 
@@ -1140,7 +1143,7 @@ struct clientcom : iclientcom
 				{
 					int ocn = getint(p), flag = getint(p);
 					fpsent *o = cl.newclient(ocn);
-					if(m_ctf(cl.gamemode)) cl.ctf.returnflag(o, flag);
+					if(o && m_ctf(cl.gamemode)) cl.ctf.returnflag(o, flag);
 					break;
 				}
 
@@ -1148,7 +1151,7 @@ struct clientcom : iclientcom
 				{
 					int ocn = getint(p), flag = getint(p);
 					fpsent *o = cl.newclient(ocn);
-					if(m_ctf(cl.gamemode)) cl.ctf.takeflag(o, flag);
+					if(o && m_ctf(cl.gamemode)) cl.ctf.takeflag(o, flag);
 					break;
 				}
 
