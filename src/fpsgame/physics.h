@@ -42,16 +42,15 @@ struct physics
 	#define iput(x,y,t,z,q) \
 		void do##x(bool on) \
 		{ \
-			bool val = q ? on : false; \
 			if (!q || cl.player1->state == CS_DEAD) \
 			{ \
 				cl.player1->y = false; \
-				if(z && val) cl.respawn(cl.player1); \
+				if(z && on) cl.respawn(cl.player1); \
 			} \
 			else \
 			{ \
-				cl.player1->y = val; \
-				if(val) cl.player1->t = lastmillis; \
+				cl.player1->y = on; \
+				if(on) cl.player1->t = lastmillis; \
 			} \
 		}
 
