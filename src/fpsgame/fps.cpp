@@ -317,7 +317,8 @@ struct GAMECLIENT : igameclient
 			if(d->health > 0) // else wait for killed
 			{
 				int snd = 0;
-				if(damage > 200) snd = 6;
+				if(damage > 300) snd = 7;
+				else if(damage > 200) snd = 6;
 				else if(damage > 175) snd = 5;
 				else if(damage > 150) snd = 4;
 				else if(damage > 125) snd = 3;
@@ -326,8 +327,7 @@ struct GAMECLIENT : igameclient
 				playsound(S_DAMAGE1+snd, &actor->o);
 			}
 
-			if(actor == player1)
-				lasthit = lastmillis;
+			if(actor == player1) lasthit = lastmillis;
 		}
 		bot.damaged(d, actor, gun, flags, damage, millis, dir);
 	}
@@ -374,7 +374,6 @@ struct GAMECLIENT : igameclient
 		loopi(rnd(damage/2)+1) pj.spawn(d->o, d->vel, d, PRJ_GIBS);
 		playsound(S_DIE1+rnd(2), &d->o);
 
-		if(d != actor) playsound(S_DAMAGE8, &actor->o);
 		bot.killed(d, actor, gun, flags, damage);
 	}
 
