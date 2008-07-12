@@ -27,7 +27,7 @@ struct weaponstate
 
 	void weaponswitch(fpsent *d, int a = -1, int b = -1)
 	{
-		if (d->state != CS_ALIVE || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
+		if (!cl.allowmove(cl.player1) || cl.zooming() || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
 		int s = d->gunselect;
 
 		loopi(NUMGUNS) // only loop the amount of times we have guns for
