@@ -529,8 +529,6 @@ void transplayer()
 
 float curfov = 100, fovy, aspect;
 int farplane;
-VARP(fov, 1, 120, 360);
-
 int xtraverts, xtravertsva;
 
 VARW(fog, 16, 4000, INT_MAX-1);

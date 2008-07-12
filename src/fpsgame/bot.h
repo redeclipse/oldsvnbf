@@ -56,15 +56,12 @@ struct botclient
 		loopv(cl.players) if(cl.players[i] && cl.players[i]->bot) think(cl.players[i]);
 	}
 
-	bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float fx, float fy)
+	bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float fovx, float fovy)
 	{
 		float dist = o.dist(q);
 
 		if(dist <= mdist)
 		{
-			float fovx = fx, fovy = fy;
-			if(fovx <= 0.f) fovx = (float)fov;
-			if(fovy <= 0.f) fovy = (float)fov*4/3;
 			float x = fabs((asin((q.z-o.z)/dist)/RAD)-pitch);
 			float y = fabs((-(float)atan2(q.x-o.x, q.y-o.y)/PI*180+180)-yaw);
 			if(x <= fovx && y <= fovy) return raycubelos(o, q, v);

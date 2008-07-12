@@ -1353,6 +1353,7 @@ struct clientcom : iclientcom
 	}
 
 	bool ready() { return isready; }
+	int state() { return cl.player1->state; }
 	int otherclients()
 	{
 		int n = 0; // bots don't count

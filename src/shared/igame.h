@@ -34,6 +34,7 @@ struct iclientcom
     virtual void toserver(int flags, char *text) = 0;
     virtual void changemap(const char *name) = 0;
 	virtual bool ready() { return true; }
+	virtual int state() { return CS_ALIVE; }
 	virtual int otherclients() { return 0; }
 	virtual void toservcmd(char *text, bool msg) { return; }
     virtual int numchannels() { return 1; }

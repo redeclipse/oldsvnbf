@@ -24,7 +24,7 @@ struct GAMECLIENT : igameclient
 	int respawnent, swaymillis;
 	vec swaydir;
     dynent guninterp;
-    int lasthit, lastcamera, lastmouse;
+    int lasthit, lastcamera, lastmouse, lastzoom, prevzoom, curzoom;
 	int quakewobble, damageresidue;
     int liquidchan;
 
@@ -43,6 +43,8 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> players;		// other clients
 	fpsent lastplayerstate;
 
+	IVARP(fov, 90, 120, 130);
+
 	IVARP(cardtime, 0, 2000, 10000);
 	IVARP(cardfade, 0, 3000, 10000);
 
@@ -51,23 +53,38 @@ struct GAMECLIENT : igameclient
 	IVARP(cameraheight, 0, 40, 360);
 
 	IVARP(invmouse, 0, 0, 1);
+
 	IVARP(mousetype, 0, 1, 5);
-	IVARP(editmousetype, 0, 0, 5);
 	IVARP(mousedeadzone, 0, 10, 100);
 	IVARP(mousepanspeed, 1, 30, 1000);
+	IVARP(zoommousetype, 0, 4, 5);
+	IVARP(zoomdeadzone, 0, 5, 100);
+	IVARP(zoompanspeed, 1, 5, 1000);
+	IVARP(editmousetype, 0, 0, 5);
+	IVARP(editdeadzone, 0, 25, 100);
+	IVARP(editpanspeed, 1, 30, 1000);
+	IVARP(specmousetype, 0, 0, 5);
+	IVARP(specdeadzone, 0, 10, 100);
+	IVARP(specpanspeed, 1, 30, 1000);
 
 	IFVARP(yawsensitivity, 1.0f);
 	IFVARP(pitchsensitivity, 0.75f);
 	IFVARP(sensitivityscale, 100.0f);
+	IFVARP(zoomsensitivityscale, 10.0f);
 
 	IVARP(crosshair, 0, 1, 1);
 	IVARP(teamcrosshair, 0, 1, 1);
 	IVARP(hitcrosshair, 0, 425, 1000);
 
-	IVARP(crosshairsize, 0, 25, 1000);
-	IVARP(crosshairblend, 0, 100, 100);
-	IVARP(cursorsize, 0, 30, 1000);
+	IVARP(crosshairsize, 1, 30, 1000);
+	IVARP(crosshairblend, 0, 30, 100);
+	IVARP(cursorsize, 1, 30, 1000);
 	IVARP(cursorblend, 0, 100, 100);
+
+	IVAR(zoomstyle, 0, 0, 1);
+	IVARP(zoomfov, 20, 20, 90);
+	IVARP(zoomtime, 1, 500, 10000);
+	IVARP(zoomcrosshairsize, 1, 200, 1000);
 
 	ITVAR(relativecursortex, "textures/relativecursor");
 	ITVAR(guicursortex, "textures/guicursor");
@@ -75,6 +92,7 @@ struct GAMECLIENT : igameclient
 	ITVAR(crosshairtex, "textures/crosshair");
 	ITVAR(teamcrosshairtex, "textures/teamcrosshair");
 	ITVAR(hitcrosshairtex, "textures/hitcrosshair");
+	ITVAR(zoomcrosshairtex, "textures/zoomcrosshair");
 
 	IVARP(radardist, 0, 256, 256);
 	IVARP(editradardist, 0, 64, 1024);
@@ -88,6 +106,9 @@ struct GAMECLIENT : igameclient
 	ITVAR(goalbartex, "<anim>textures/goalbar");
 	ITVAR(teambartex, "<anim>textures/teambar");
 
+	ITVAR(damagetex, "textures/damage");
+	ITVAR(zoomtex, "textures/zoom");
+
 	IVARP(showstats, 0, 1, 1);
 	IVARP(showhudents, 0, 10, 100);
 	IVARP(showfps, 0, 2, 2);
@@ -98,7 +119,7 @@ struct GAMECLIENT : igameclient
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			lasthit(0), lastcamera(0), lastmouse(0),
+			lasthit(0), lastcamera(0), lastmouse(0), lastzoom(0), prevzoom(0), curzoom(0),
 			quakewobble(0), damageresidue(0),
 			liquidchan(-1),
 			player1(new fpsent())
@@ -120,6 +141,8 @@ struct GAMECLIENT : igameclient
 				}
 				conoutf("yawsensitivity = %f, pitchsensitivity = %f", self->yawsensitivity(), self->pitchsensitivity());
 			});
+
+		CCOMMAND(zoom, "D", (GAMECLIENT *self, int *down), { self->dozoom(*down!=0); });
 	}
 
 	iclientcom *getcom() { return &cc; }
@@ -545,8 +568,26 @@ struct GAMECLIENT : igameclient
 
 	int mousestyle()
 	{
+		if(zooming()) return zoommousetype();
 		if(editmode) return editmousetype();
+		if(cc.spectator) return specmousetype();
 		return mousetype();
+	}
+
+	int deadzone()
+	{
+		if(zooming()) return zoomdeadzone();
+		if(editmode) return editdeadzone();
+		if(cc.spectator) return specdeadzone();
+		return mousedeadzone();
+	}
+
+	int panspeed()
+	{
+		if(zooming()) return zoompanspeed();
+		if(editmode) return editpanspeed();
+		if(cc.spectator) return specpanspeed();
+		return mousepanspeed();
 	}
 
 	void drawsized(float x, float y, float s)
@@ -677,6 +718,7 @@ struct GAMECLIENT : igameclient
 
 	int drawgamehud(int w, int h, int y)
 	{
+		Texture *t;
 		int ox = w*3, oy = h*3, hoff = y;
 
 		glLoadIdentity();
@@ -692,20 +734,43 @@ struct GAMECLIENT : igameclient
 			fade = clamp(fade*amt, 0.f, 1.f);
 		}
 
+		if(zooming())
+		{
+			if((t = textureload(damagetex())) != notexture)
+			{
+				int frame = lastmillis-lastzoom;
+				float pc = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
+				if(!curzoom) pc = 1.f-pc;
+				settexture("textures/zoom");
+
+				glColor4f(1.f, 1.f, 1.f, pc);
+
+				glBegin(GL_QUADS);
+				glTexCoord2f(0, 0); glVertex2f(0, 0);
+				glTexCoord2f(1, 0); glVertex2f(ox, 0);
+				glTexCoord2f(1, 1); glVertex2f(ox, oy);
+				glTexCoord2f(0, 1); glVertex2f(0, oy);
+				glEnd();
+			}
+		}
+
 		if((player1->state == CS_ALIVE && damageresidue > 0) || player1->state == CS_DEAD)
 		{
-			int dam = player1->state == CS_DEAD ? 100 : min(damageresidue, 100);
-			float pc = float(dam)/100.f;
-			settexture("textures/damage");
+			if((t = textureload(damagetex())) != notexture)
+			{
+				int dam = player1->state == CS_DEAD ? 100 : min(damageresidue, 100);
+				float pc = float(dam)/100.f;
+				settexture("textures/damage");
 
-			glColor4f(1.f, 1.f, 1.f, pc);
+				glColor4f(1.f, 1.f, 1.f, pc);
 
-			glBegin(GL_QUADS);
-			glTexCoord2f(0, 0); glVertex2f(0, 0);
-			glTexCoord2f(1, 0); glVertex2f(ox, 0);
-			glTexCoord2f(1, 1); glVertex2f(ox, oy);
-			glTexCoord2f(0, 1); glVertex2f(0, oy);
-			glEnd();
+				glBegin(GL_QUADS);
+				glTexCoord2f(0, 0); glVertex2f(0, 0);
+				glTexCoord2f(1, 0); glVertex2f(ox, 0);
+				glTexCoord2f(1, 1); glVertex2f(ox, oy);
+				glTexCoord2f(0, 1); glVertex2f(0, oy);
+				glEnd();
+			}
 		}
 
 		int colour = teamtype[player1->team].colour,
@@ -742,8 +807,7 @@ struct GAMECLIENT : igameclient
 
 		if(player1->state == CS_ALIVE)
 		{
-			Texture *t = textureload(healthbartex());
-			if(t)
+			if((t = textureload(healthbartex())) != notexture)
 			{
 				float amt = clamp(float(player1->health)/float(MAXHEALTH), 0.f, 1.f);
 				float glow = 1.f, pulse = fade;
@@ -764,8 +828,8 @@ struct GAMECLIENT : igameclient
 
 			if(isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
 			{
-				if(t && guntype[player1->gunselect].power &&
-					player1->gunstate[player1->gunselect] == GUNSTATE_POWER)
+				if(((t = textureload(healthbartex())) != notexture) &&
+					guntype[player1->gunselect].power && player1->gunstate[player1->gunselect] == GUNSTATE_POWER)
 				{
 					float amt = clamp(float(lastmillis-player1->gunlast[player1->gunselect])/float(guntype[player1->gunselect].power), 0.f, 1.f);
 					glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
@@ -803,6 +867,7 @@ struct GAMECLIENT : igameclient
 		POINTER_HAIR,
 		POINTER_TEAM,
 		POINTER_HIT,
+		POINTER_ZOOM,
 		POINTER_MAX
 	};
 
@@ -816,6 +881,7 @@ struct GAMECLIENT : igameclient
             case POINTER_HAIR: return crosshairtex(); break;
             case POINTER_TEAM: return teamcrosshairtex(); break;
             case POINTER_HIT: return hitcrosshairtex(); break;
+            case POINTER_ZOOM: return zoomcrosshairtex(); break;
         }
         return NULL;
     }
@@ -823,15 +889,31 @@ struct GAMECLIENT : igameclient
 	void drawpointer(int w, int h, int index, float x, float y, float r, float g, float b)
 	{
 		Texture *pointer = textureload(getpointer(index));
-		if(pointer != NULL && pointer != notexture)
+		if(pointer)
 		{
-			float chsize = index != POINTER_GUI ? crosshairsize()*w/300.0f : cursorsize()*w/300.0f,
-				chblend = index != POINTER_GUI ? crosshairblend()/100.f : cursorblend()/100.f;
+			float chsize = crosshairsize()*w/300.0f, blend = crosshairblend()/100.f;
+
+			if(index == POINTER_GUI)
+			{
+				chsize = cursorsize()*w/300.0f;
+				blend = cursorblend()/100.f;
+			}
+			else if(index == POINTER_ZOOM)
+			{
+				chsize = zoomcrosshairsize()*w/300.0f;
+				if(zooming())
+				{
+					int frame = lastmillis-lastzoom;
+					float amt = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
+					if(!curzoom) amt = 1.f-amt;
+					chsize *= amt;
+				}
+			}
 
 			glEnable(GL_BLEND);
 			if(pointer->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			else glBlendFunc(GL_ONE, GL_ONE);
-			glColor4f(r, g, b, chblend);
+			glColor4f(r, g, b, blend);
 
 			float cx = x*w*3.0f - (index != POINTER_GUI ? chsize/2.0f : 0);
 			float cy = y*h*3.0f - (index != POINTER_GUI ? chsize/2.0f : 0);
@@ -855,6 +937,7 @@ struct GAMECLIENT : igameclient
 		if(g3d_windowhit(true, false)) index = POINTER_GUI;
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
         else if(editmode) index = POINTER_EDIT;
+        else if(zooming()) index = POINTER_ZOOM;
         else if(lastmillis-lasthit < hitcrosshair()) index = POINTER_HIT;
         else if(m_team(gamemode, mutators) && teamcrosshair())
         {
@@ -1124,11 +1207,44 @@ struct GAMECLIENT : igameclient
 		while(yaw >= 360.0f) yaw -= 360.0f;
 	}
 
+	bool zooming()
+	{
+		if(allowmove(player1) && player1->gunselect == GUN_RIFLE &&
+			(curzoom || lastmillis-lastzoom < zoomtime()))
+			return true;
+		lastzoom = prevzoom = curzoom = 0;
+		return false;
+	}
+
+	void dozoom(bool down)
+	{
+		switch(zoomstyle())
+		{
+			case 1: curzoom = down ? 1 : 0; break;
+			case 0: default:
+				if(down) curzoom = !curzoom ? 1 : 0;
+				break;
+		}
+		if(curzoom != prevzoom)
+		{
+			lastzoom = lastmillis;
+			prevzoom = curzoom;
+		}
+	}
+
 	void fixview(int w, int h)
 	{
-		if(fov > MAXFOV) fov = MAXFOV;
-		if(fov < MINFOV) fov = MINFOV;
-		curfov = float(fov);
+		curfov = float(fov());
+
+		if(zooming())
+		{
+			int frame = lastmillis-lastzoom;
+			float diff = float(fov()-zoomfov()),
+				amt = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
+			if(!curzoom) amt = 1.f-amt;
+			curfov -= amt*diff;
+		}
+
         aspect = w/float(h);
         fovy = 2*atan2(tan(curfov/2*RAD), aspect)/RAD;
 	}
@@ -1159,8 +1275,9 @@ struct GAMECLIENT : igameclient
 			cursorx = cursory = 0.5f;
 			if(allowmove(player1))
 			{
-				player1->yaw += mousesens(dx, w, yawsensitivity()*sensitivityscale());
-				player1->pitch -= mousesens(dy, h, pitchsensitivity()*sensitivityscale()*(!windowhit && invmouse() ? -1.f : 1.f));
+				float scale = zooming() ? zoomsensitivityscale() : sensitivityscale();
+				player1->yaw += mousesens(dx, w, yawsensitivity()*scale);
+				player1->pitch -= mousesens(dy, h, pitchsensitivity()*scale*(!windowhit && invmouse() ? -1.f : 1.f));
 				fixrange(player1->yaw, player1->pitch);
 			}
 			return true;
@@ -1194,22 +1311,19 @@ struct GAMECLIENT : igameclient
 				int frame = lastmouse-lastmillis;
 				if(mousestyle() >= 2)
 				{
-					float deadzone = (mousedeadzone()/100.f);
-					float cx = (cursorx-0.5f), cy = (0.5f-cursory);
-
-					if(cx > deadzone || cx < -deadzone)
-						d->yaw -= ((cx > deadzone ? cx-deadzone : cx+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
-
-					if(cy > deadzone || cy < -deadzone)
-						d->pitch -= ((cy > deadzone ? cy-deadzone : cy+deadzone)/(1.f-deadzone))*frame*mousepanspeed()/100.f;
+					float amt = deadzone()/100.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
+					if(cx > amt || cx < -amt)
+						d->yaw -= ((cx > amt ? cx-amt : cx+amt)/(1.f-amt))*frame*panspeed()/100.f;
+					if(cy > amt || cy < -amt)
+						d->pitch -= ((cy > amt ? cy-amt : cy+amt)/(1.f-amt))*frame*panspeed()/100.f;
 				}
 				else
 				{
 					float offyaw = d->aimyaw-d->yaw, offpitch = d->aimpitch-d->pitch;
 					if(offyaw > 180.f) offyaw -= 360.f;
 					if(offyaw < -180.f) offyaw += 360.f;
-					if(offyaw != 0.f) d->yaw -= offyaw/90.f*frame*mousepanspeed()/100.f;
-					if(offpitch != 0.f) d->pitch -= offpitch/45.f*frame*mousepanspeed()/100.f;
+					if(offyaw != 0.f) d->yaw -= offyaw/90.f*frame*panspeed()/100.f;
+					if(offpitch != 0.f) d->pitch -= offpitch/45.f*frame*panspeed()/100.f;
 				}
 				fixrange(d->yaw, d->pitch);
 			}
@@ -1282,6 +1396,18 @@ struct GAMECLIENT : igameclient
 			camera1->aimpitch = mousestyle() <= 3 ? 0-cameraheight() : player1->aimpitch;
 		}
 		else camera1 = player1;
+
+
+		if(zooming())
+		{
+			vec gun(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)),
+				diff(vec(camera1->o).sub(gun));
+			int frame = lastmillis-lastzoom;
+			float amt = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
+			if(!curzoom) amt = 1.f-amt;
+			diff.mul(amt);
+			camera1->o.add(diff);
+		}
 
 		if(mousestyle() <= 3)
 		{

@@ -310,9 +310,6 @@ enum
 
 enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
 
-#define MAXFOV			125
-#define MINFOV			90
-
 enum
 {
 	CAMERA_NONE = 0,
@@ -644,8 +641,7 @@ struct fpsent : dynent, fpsstate
 	int clientnum, privilege, lastupdate, plag, ping;
 	bool attacking, reloading, useaction;
 	int attacktime, reloadtime, usetime;
-	int lasttaunt;
-	int lastuse, lastusemillis, lastflag;
+	int lasttaunt, lastuse, lastusemillis, lastflag;
 	int superdamage;
 	int frags, deaths, totaldamage, totalshots;
 	editinfo *edit;

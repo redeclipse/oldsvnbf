@@ -217,12 +217,21 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 
 struct keym
 {
+    enum
+    {
+        ACTION_DEFAULT = 0,
+        ACTION_SPECTATOR,
+        ACTION_EDITING,
+        NUMACTIONS
+    };
+
     int code;
-    char *name, *action, *editaction;
+    char *name;
+    char *actions[NUMACTIONS];
     bool pressed;
 
-    keym() : code(-1), name(NULL), action(NULL), editaction(NULL), pressed(false) {}
-    ~keym() { DELETEA(name); DELETEA(action); DELETEA(editaction); }
+    keym() : code(-1), name(NULL), pressed(false) { memset(actions, 0, sizeof(actions)); }
+    ~keym() { DELETEA(name); loopi(NUMACTIONS) DELETEA(actions[i]); }
 };
 
 vector<keym> keyms;
@@ -233,8 +242,7 @@ void keymap(char *code, char *key)
 	keym &km = keyms.add();
 	km.code = atoi(code);
 	km.name = newstring(key);
-	km.action = newstring("");
-	km.editaction = newstring("");
+    loopi(keym::NUMACTIONS) km.actions[i] = newstring("");
 }
 
 COMMAND(keymap, "ss");
@@ -251,31 +259,40 @@ keym *findbind(char *key)
 void getbind(char *key)
 {
 	keym *km = findbind(key);
-	result(km ? km->action : "");
+    result(km ? km->actions[keym::ACTION_DEFAULT] : "");
+}
+
+void getspecbind(char *key)
+{
+    keym *km = findbind(key);
+    result(km ? km->actions[keym::ACTION_SPECTATOR] : "");
 }
 
 void geteditbind(char *key)
 {
 	keym *km = findbind(key);
-	result(km ? km->editaction : "");
+    result(km ? km->actions[keym::ACTION_EDITING] : "");
 }
 
-void bindkey(char *key, char *action, bool edit)
+void bindkey(char *key, char *action, int state, const char *cmd)
 {
-	if(overrideidents) { conoutf("cannot override %s \"%s\"", edit ? "editbind" : "bind", key); return; }
+    if(overrideidents) { conoutf("cannot override %s \"%s\"", cmd, key); return; }
 	keym *km = findbind(key);
-	if(!km) { conoutf("unknown key \"%s\"", key); return; }
-	char *&binding = edit ? km->editaction : km->action;
+    if(!km) { conoutf("unknown key \"%s\"", key); return; }
+    char *&binding = km->actions[state];
 	if(!keypressed || keyaction!=binding) delete[] binding;
 	binding = newstring(action);
 }
 
-void bindnorm(char *key, char *action) { bindkey(key, action, false); }
-void bindedit(char *key, char *action) { bindkey(key, action, true);  }
+void bindnorm(char *key, char *action) { bindkey(key, action, keym::ACTION_DEFAULT, "bind"); }
+void bindspec(char *key, char *action) { bindkey(key, action, keym::ACTION_SPECTATOR, "specbind"); }
+void bindedit(char *key, char *action) { bindkey(key, action, keym::ACTION_EDITING, "editbind"); }
 
 COMMANDN(bind,	 bindnorm, "ss");
+COMMANDN(specbind, bindspec, "ss");
 COMMANDN(editbind, bindedit, "ss");
 COMMAND(getbind, "s");
+COMMAND(getspecbind, "s");
 COMMAND(geteditbind, "s");
 
 void saycommand(char *init)						 // turns input to the command line on or off
@@ -444,7 +461,8 @@ void execbind(keym &k, bool isdown)
     }
     if(isdown)
     {
-        char *&action = editmode && k.editaction[0] ? k.editaction : k.action;
+        int state = editmode ? keym::ACTION_EDITING : (cc->state() == CS_SPECTATOR ? keym::ACTION_SPECTATOR : keym::ACTION_DEFAULT);
+        char *&action = k.actions[state][0] ? k.actions[state] : k.actions[keym::ACTION_DEFAULT];
         keyaction = action;
         keypressed = &k;
         execute(keyaction);
@@ -606,10 +624,10 @@ void clear_console()
 
 void writebinds(FILE *f)
 {
-	loopv(keyms)
+    loopv(keyms) loopj(3)
 	{
-		if(*keyms[i].action)	 fprintf(f, "bind \"%s\" [%s]\n",	 keyms[i].name, keyms[i].action);
-		if(*keyms[i].editaction) fprintf(f, "editbind \"%s\" [%s]\n", keyms[i].name, keyms[i].editaction);
+        static const char *cmds[3] = { "bind", "specbind", "editbind" };
+        if(*keyms[i].actions[j]) fprintf(f, "%s \"%s\" [%s]\n", cmds[j], keyms[i].name, keyms[i].actions[j]);
 	}
 }
 
