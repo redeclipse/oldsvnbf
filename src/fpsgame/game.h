@@ -382,7 +382,7 @@ struct fpsstate
 	fpsstate() : lifesequence(0), ownernum(-1), skill(0), spree(0) {}
 	~fpsstate() {}
 
-	int bestgun(int millis)
+	int bestgun()
 	{
 		int best = -1;
 		loopi(NUMGUNS) if(guntype[i].rdelay > 0 && ammo[i] >= 0) best = i;

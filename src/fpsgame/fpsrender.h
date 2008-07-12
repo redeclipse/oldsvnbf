@@ -13,6 +13,7 @@ struct fpsrender
 	{
 		int team = m_team(cl.gamemode, cl.mutators) ? d->team : TEAM_NEUTRAL;
         int lastaction = 0, animflags = 0, animdelay = 0;
+        bool hasgun = isgun(d->gunselect) && (d->ammo[d->gunselect] > 0 || guntype[d->gunselect].rdelay > 0);
 
 		if(cl.intermission && d->state != CS_DEAD)
 		{
@@ -28,7 +29,7 @@ struct fpsrender
 			animflags = ANIM_TAUNT;
 			animdelay = 1000;
 		}
-		else if(isgun(d->gunselect) && lastmillis-d->gunlast[d->gunselect] < d->gunwait[d->gunselect])
+		else if(hasgun && lastmillis-d->gunlast[d->gunselect] < d->gunwait[d->gunselect])
 		{
 			switch(d->gunstate[d->gunselect])
 			{
@@ -47,8 +48,7 @@ struct fpsrender
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
         int ai = 0;
 
-        if(isgun(d->gunselect) &&
-			(!guntype[d->gunselect].power || d->gunstate[d->gunselect] != GUNSTATE_SHOOT))
+        if(hasgun && (!guntype[d->gunselect].power || d->gunstate[d->gunselect] != GUNSTATE_SHOOT))
 		{
             a[ai].name = guntype[d->gunselect].vwep;
             a[ai].tag = "tag_weapon";

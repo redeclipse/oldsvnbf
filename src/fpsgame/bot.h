@@ -311,7 +311,7 @@ struct botclient
 			{
 				case WEAPON:
 				{
-					if(e.spawned && isgun(e.attr1) && guntype[e.attr1].rdelay > 0 && d->ammo[e.attr1] <= 0 && e.attr1 > d->bestgun(lastmillis))
+					if(e.spawned && isgun(e.attr1) && guntype[e.attr1].rdelay > 0 && d->ammo[e.attr1] <= 0 && e.attr1 > d->bestgun())
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = BS_INTEREST;
@@ -527,7 +527,7 @@ struct botclient
 					{
 						case WEAPON:
 						{
-							if(!e.spawned || d->ammo[e.attr1] > 0 || e.attr1 <= d->bestgun(lastmillis))
+							if(!e.spawned || d->ammo[e.attr1] > 0 || e.attr1 <= d->bestgun())
 								return false;
 							break;
 						}
@@ -700,7 +700,7 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			int bestgun = d->bestgun(lastmillis);
+			int bestgun = d->bestgun();
 			if(d->gunselect != bestgun && d->canswitch(bestgun, lastmillis))
 			{
 				d->setgun(bestgun, lastmillis);

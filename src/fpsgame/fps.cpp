@@ -49,7 +49,6 @@ struct GAMECLIENT : igameclient
 	IVARP(cameradist, -100, 1, 100);
 	IVARP(camerashift, -100, 4, 100);
 	IVARP(cameraheight, 0, 40, 360);
-	IVARP(camerainterp, 0, 50, 1000);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(mousetype, 0, 1, 5);
@@ -66,7 +65,7 @@ struct GAMECLIENT : igameclient
 	IVARP(hitcrosshair, 0, 425, 1000);
 
 	IVARP(crosshairsize, 0, 25, 1000);
-	IVARP(crosshairblend, 0, 75, 100);
+	IVARP(crosshairblend, 0, 100, 100);
 	IVARP(cursorsize, 0, 30, 1000);
 	IVARP(cursorblend, 0, 100, 100);
 
@@ -202,6 +201,7 @@ struct GAMECLIENT : igameclient
         if(!maptime) maptime = lastmillis + curtime;
 
 		gets2c();
+		if(!g3d_windowhit(true, false)) updatemouse();
 
 		if(cc.ready())
 		{
@@ -219,8 +219,6 @@ struct GAMECLIENT : igameclient
 			adjustscaled(float, player1->roll, 100.f);
 			adjustscaled(int, quakewobble, 100.f);
 			adjustscaled(int, damageresidue, 100.f);
-
-			if(!g3d_windowhit(true, false)) updatemouse();
 
 			if(player1->state == CS_DEAD)
 			{
