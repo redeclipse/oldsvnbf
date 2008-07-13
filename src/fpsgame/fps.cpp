@@ -221,7 +221,11 @@ struct GAMECLIENT : igameclient
 	void updateworld()		// main game update loop
 	{
 		if(!curtime) return;
-        if(!maptime) maptime = lastmillis + curtime;
+        if(!maptime)
+        {
+        	maptime = lastmillis + curtime;
+        	return;
+        }
 
 		gets2c();
 		if(!g3d_windowhit(true, false)) updatemouse();
@@ -691,12 +695,12 @@ struct GAMECLIENT : igameclient
 		int bs = oy/4, bx = ox-bs-FONTH/4, by = FONTH/4, secs = maptime ? lastmillis-maptime : 0;
 		float fade = hudblend/100.f, amt = 1.f;
 
-		if(secs <= cardtime())
+		if(secs < cardtime())
 		{
 			amt = clamp(float(secs)/float(cardtime()), 0.f, 1.f);
 			fade = clamp(amt*fade, 0.f, 1.f);
 		}
-		else if(secs <= cardtime()+cardfade())
+		else if(secs < cardtime()+cardfade())
 			fade = clamp(fade*(1.f-(float(secs-cardtime())/float(cardfade()))), 0.f, 1.f);
 
 		const char *title = getmaptitle();
@@ -727,7 +731,7 @@ struct GAMECLIENT : igameclient
 			secs = maptime ? lastmillis-maptime : 0;
 		float fade = hudblend/100.f;
 
-		if(secs <= cardtime()+cardfade()+cardfade())
+		if(secs < cardtime()+cardfade()+cardfade())
 		{
 			float amt = clamp(float(secs-cardtime()-cardfade())/float(cardfade()), 0.f, 1.f);
 			fade = clamp(fade*amt, 0.f, 1.f);
@@ -1033,35 +1037,37 @@ struct GAMECLIENT : igameclient
 			hoff -= FONTH;
 		}
 
-		if(editmode)
+		if(cc.ready() && maptime)
 		{
-			draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1,
-					sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
-						sel.cx, sel.cxs, sel.cy, sel.cys);
-			hoff -= FONTH;
-			draw_textx("corner:%d orient:%d grid:%d", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1,
-							sel.corner, sel.orient, sel.grid);
-			hoff -= FONTH;
-			draw_textx("cube:%s%d ents:%d", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1,
-				selchildcount<0 ? "1/" : "", abs(selchildcount), entgroup.length());
-			hoff -= FONTH;
+			if(editmode)
+			{
+				draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1,
+						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
+							sel.cx, sel.cxs, sel.cy, sel.cys);
+				hoff -= FONTH;
+				draw_textx("corner:%d orient:%d grid:%d", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1,
+								sel.corner, sel.orient, sel.grid);
+				hoff -= FONTH;
+				draw_textx("cube:%s%d ents:%d", FONTH/4, hoff-FONTH, 255, 255, 255, hudblend*255/100, false, AL_LEFT, -1, -1,
+					selchildcount<0 ? "1/" : "", abs(selchildcount), entgroup.length());
+				hoff -= FONTH;
 
-			#define enthudtext(n, r, g, b) \
-				if(et.ents.inrange(n)) \
-				{ \
-					fpsentity &f = (fpsentity &)*et.ents[n]; \
-					draw_textx("entity:%d %s (%d %d %d %d)", FONTH/4, hoff-FONTH, r, g, b, hudblend*255/100, false, AL_LEFT, -1, -1, \
-						n, et.findname(f.type), f.attr1, f.attr2, f.attr3, f.attr4); \
-					hoff -= FONTH; \
-				}
+				#define enthudtext(n, r, g, b) \
+					if(et.ents.inrange(n)) \
+					{ \
+						fpsentity &f = (fpsentity &)*et.ents[n]; \
+						draw_textx("entity:%d %s (%d %d %d %d)", FONTH/4, hoff-FONTH, r, g, b, hudblend*255/100, false, AL_LEFT, -1, -1, \
+							n, et.findname(f.type), f.attr1, f.attr2, f.attr3, f.attr4); \
+						hoff -= FONTH; \
+					}
 
-			enthudtext(enthover, 255, 255, 196);
-			loopi(clamp(entgroup.length(), 0, showhudents()))
-				enthudtext(entgroup[i], 196, 196, 196);
+				enthudtext(enthover, 255, 255, 196);
+				loopi(clamp(entgroup.length(), 0, showhudents()))
+					enthudtext(entgroup[i], 196, 196, 196);
+			}
+
+			render_texture_panel(w, h);
 		}
-
-		render_texture_panel(w, h);
-
 		return hoff;
 	}
 
@@ -1069,24 +1075,22 @@ struct GAMECLIENT : igameclient
 	{
 		if(!hidehud)
 		{
-			int hoff = h*3, secs = maptime ? lastmillis-maptime : 0;
+			int hoff = h*3;
 
-			if(secs && cc.ready())
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			if(maptime && cc.ready())
 			{
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 				pushfont("hud");
-				if(secs <= cardtime()+cardfade())
+				if(lastmillis-maptime < cardtime()+cardfade())
 					hoff = drawtitlecard(w, h, hoff);
 				else hoff = drawgamehud(w, h, hoff);
 				popfont();
-
-				hoff = drawhudelements(w, h, hoff);
-
-				glDisable(GL_BLEND);
 			}
 
+			hoff = drawhudelements(w, h, hoff);
+			glDisable(GL_BLEND);
 			drawpointers(w, h);
 		}
 	}
@@ -1186,10 +1190,9 @@ struct GAMECLIENT : igameclient
 
 	bool gethudcolour(vec &colour)
 	{
-		int secs = maptime ? lastmillis-maptime : 0;
-		if(secs <= cardtime())
+		if(!maptime || lastmillis-maptime < cardtime())
 		{
-			float fade = clamp(float(secs)/float(cardtime()), 0.25f, 1.f);
+			float fade = maptime ? float(lastmillis-maptime)/float(cardtime()) : 0.f;
 			colour = vec(fade, fade, fade);
 			return true;
 		}
@@ -1339,11 +1342,6 @@ struct GAMECLIENT : igameclient
 	{
 		fixview(w, h);
 
-		if(mousestyle() <= 3)
-		{
-			findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
-		}
-
 		camera1 = &camera;
 
 		if(camera1->type != ENT_CAMERA)
@@ -1360,113 +1358,115 @@ struct GAMECLIENT : igameclient
 			camera1->pitch = player1->aimpitch = player1->pitch;
 		}
 
-		if(player1->state == CS_ALIVE || player1->state == CS_DEAD)
-		{
-			camera1->o = player1->o;
-			camera1->aimyaw = mousestyle() <= 3 ? player1->yaw : player1->aimyaw;
-			camera1->aimpitch = 0-cameraheight();
 
-			#define cameramove(d,s) \
-				if(d) \
-				{ \
-					camera1->move = !s ? (d > 0 ? -1 : 1) : 0; \
-					camera1->strafe = s ? (d > 0 ? -1 : 1) : 0; \
-					loopi(10) if(!ph.moveplayer(camera1, 10, true, abs(d))) break; \
+		if(cc.ready() && maptime)
+		{
+			if(mousestyle() <= 3)
+				findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
+
+			if(player1->state == CS_ALIVE || player1->state == CS_DEAD)
+			{
+				camera1->o = player1->o;
+				camera1->aimyaw = mousestyle() <= 3 ? player1->yaw : player1->aimyaw;
+				camera1->aimpitch = 0-cameraheight();
+
+				#define cameramove(d,s) \
+					if(d) \
+					{ \
+						camera1->move = !s ? (d > 0 ? -1 : 1) : 0; \
+						camera1->strafe = s ? (d > 0 ? -1 : 1) : 0; \
+						loopi(10) if(!ph.moveplayer(camera1, 10, true, abs(d))) break; \
+					}
+				cameramove(cameradist(), false);
+				cameramove(camerashift(), true);
+
+				if(quakewobble > 0)
+				{
+					float pc = float(min(quakewobble, 100))/100.f;
+					#define wobble (float(rnd(24)-12)*pc)
+					camera1->roll = wobble;
 				}
-			cameramove(cameradist(), false);
-			cameramove(camerashift(), true);
-
-			if(quakewobble > 0)
-			{
-				float pc = float(min(quakewobble, 100))/100.f;
-				#define wobble (float(rnd(24)-12)*pc)
-				camera1->roll = wobble;
+				else
+				{
+					quakewobble = 0;
+					camera1->roll = 0;
+				}
 			}
-			else
+			else if(mousestyle())
 			{
-				quakewobble = 0;
-				camera1->roll = 0;
+				camera1->o = player1->o;
+				camera1->aimyaw = mousestyle() <= 3 ? player1->yaw : player1->aimyaw;
+				camera1->aimpitch = mousestyle() <= 3 ? 0-cameraheight() : player1->aimpitch;
 			}
-		}
-		else if(mousestyle())
-		{
-			camera1->o = player1->o;
-			camera1->aimyaw = mousestyle() <= 3 ? player1->yaw : player1->aimyaw;
-			camera1->aimpitch = mousestyle() <= 3 ? 0-cameraheight() : player1->aimpitch;
-		}
-		else camera1 = player1;
+			else camera1 = player1;
 
 
-		if(zooming())
-		{
-			vec gun(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)),
-				diff(vec(camera1->o).sub(gun));
-			int frame = lastmillis-lastzoom;
-			float amt = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
-			if(!curzoom) amt = 1.f-amt;
-			diff.mul(amt);
-			camera1->o.add(diff);
-		}
+			if(zooming())
+			{
+				vec gun(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)),
+					diff(vec(camera1->o).sub(gun));
+				int frame = lastmillis-lastzoom;
+				float amt = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
+				if(!curzoom) amt = 1.f-amt;
+				diff.mul(amt);
+				camera1->o.add(diff);
+			}
 
-		if(mousestyle() <= 3)
-		{
-			vec dir(worldpos);
-			dir.sub(camera1->o);
-			dir.normalize();
-			vectoyawpitch(dir,
-				!mousestyle() || mousestyle() >= 2 ? camera1->yaw : camera1->aimyaw,
-				!mousestyle() || mousestyle() >= 2 ? camera1->pitch : camera1->aimpitch);
-		}
-		else if(mousestyle() <= 5)
-		{
-			float yaw = camera1->yaw, pitch = camera1->pitch;
-			if(!g3d_windowhit(true, false)) vectoyawpitch(cursordir, yaw, pitch);
-			findorientation(camera1->o, yaw, pitch, worldpos);
-			vec dir(worldpos);
-			dir.sub(camera1->o);
-			dir.normalize();
-			if(allowmove(player1)) vectoyawpitch(dir, player1->yaw, player1->pitch);
-		}
+			if(mousestyle() <= 3)
+			{
+				vec dir(worldpos);
+				dir.sub(camera1->o);
+				dir.normalize();
+				vectoyawpitch(dir,
+					!mousestyle() || mousestyle() >= 2 ? camera1->yaw : camera1->aimyaw,
+					!mousestyle() || mousestyle() >= 2 ? camera1->pitch : camera1->aimpitch);
+			}
+			else if(mousestyle() <= 5)
+			{
+				float yaw = camera1->yaw, pitch = camera1->pitch;
+				if(!g3d_windowhit(true, false)) vectoyawpitch(cursordir, yaw, pitch);
+				findorientation(camera1->o, yaw, pitch, worldpos);
+				if(allowmove(player1))
+				{
+					vec dir(worldpos);
+					dir.sub(camera1->o);
+					dir.normalize();
+					vectoyawpitch(dir, player1->yaw, player1->pitch);
+				}
+			}
 
-		if(allowmove(player1))
-		{
-			if(lastcamera)
+			if(allowmove(player1))
 			{
 				vec dir(worldpos);
 				dir.sub(player1->o);
 				dir.normalize();
 				vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
 			}
-			else
+
+			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
+			vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
+			vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
+
+			ph.updatematerial(camera1, true, true);
+
+			switch(camera1->inmaterial)
 			{
-				player1->aimyaw = camera1->yaw;
-				player1->aimpitch = camera1->pitch;
+				case MAT_WATER:
+				{
+					if(!issound(liquidchan))
+						liquidchan = playsound(S_UNDERWATER, &camera1->o, 255, 0, 0, SND_LOOP|SND_NOATTEN|SND_NODELAY);
+					break;
+				}
+				default:
+				{
+					if(issound(liquidchan)) removesound(liquidchan);
+					liquidchan = -1;
+					break;
+				}
 			}
+
+			lastcamera = lastmillis;
 		}
-
-		vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
-		vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
-		vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
-
-		ph.updatematerial(camera1, true, true);
-
-		switch(camera1->inmaterial)
-		{
-			case MAT_WATER:
-			{
-				if(!issound(liquidchan))
-					liquidchan = playsound(S_UNDERWATER, &camera1->o, 255, 0, 0, SND_LOOP|SND_NOATTEN|SND_NODELAY);
-				break;
-			}
-			default:
-			{
-				if(issound(liquidchan)) removesound(liquidchan);
-				liquidchan = -1;
-				break;
-			}
-		}
-
-		lastcamera = lastmillis;
 #if 0
 		conoutf("%.2f %.2f %.2f [%.2f %.2f %.2f] %.2f %.2f %.2f [%.2f %.2f %.2f]",
 			camera1->o.x, camera1->o.y, camera1->o.z,

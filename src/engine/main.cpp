@@ -35,8 +35,7 @@ void setcaption(const char *text)
 
 void keyrepeat(bool on)
 {
-	SDL_EnableKeyRepeat(on ? SDL_DEFAULT_REPEAT_DELAY : 0,
-							 SDL_DEFAULT_REPEAT_INTERVAL);
+	SDL_EnableKeyRepeat(on ? SDL_DEFAULT_REPEAT_DELAY : 0, SDL_DEFAULT_REPEAT_INTERVAL);
 }
 
 void inputgrab(bool on)

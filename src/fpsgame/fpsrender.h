@@ -13,7 +13,7 @@ struct fpsrender
 	{
 		int team = m_team(cl.gamemode, cl.mutators) ? d->team : TEAM_NEUTRAL;
         int lastaction = 0, animflags = 0, animdelay = 0;
-        bool hasgun = isgun(d->gunselect) && (d->ammo[d->gunselect] > 0 || guntype[d->gunselect].rdelay > 0);
+        bool hasgun = isgun(d->gunselect);
 
 		if(cl.intermission && d->state != CS_DEAD)
 		{
@@ -33,12 +33,34 @@ struct fpsrender
 		{
 			switch(d->gunstate[d->gunselect])
 			{
-				case GUNSTATE_SWITCH: animflags = ANIM_SWITCH; break;
-				case GUNSTATE_POWER: animflags = guntype[d->gunselect].power ? ANIM_POWER : ANIM_SHOOT; break;
-				case GUNSTATE_SHOOT: animflags = guntype[d->gunselect].power ? ANIM_THROW : ANIM_SHOOT; break;
-				case GUNSTATE_RELOAD: animflags = guntype[d->gunselect].power ? ANIM_HOLD : ANIM_RELOAD; break;
-				case GUNSTATE_NONE:
-				default: break;
+				case GUNSTATE_SWITCH:
+				{
+					animflags = ANIM_SWITCH;
+					break;
+				}
+				case GUNSTATE_POWER:
+				{
+					animflags = guntype[d->gunselect].power ? ANIM_POWER : ANIM_SHOOT;
+					break;
+				}
+				case GUNSTATE_SHOOT:
+				{
+					animflags = guntype[d->gunselect].power ? ANIM_THROW : ANIM_SHOOT;
+					if(guntype[d->gunselect].power) hasgun = false;
+					break;
+				}
+				case GUNSTATE_RELOAD:
+				{
+					animflags = guntype[d->gunselect].power ? ANIM_HOLD : ANIM_RELOAD;
+					if(guntype[d->gunselect].power) hasgun = false;
+					break;
+				}
+				case GUNSTATE_NONE:	default:
+				{
+					if(d->ammo[d->gunselect] <= 0 && guntype[d->gunselect].rdelay <= 0)
+						hasgun = false;
+					break;
+				}
 			}
 
 			lastaction = d->gunlast[d->gunselect];
@@ -48,7 +70,7 @@ struct fpsrender
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
         int ai = 0;
 
-        if(hasgun && (!guntype[d->gunselect].power || d->gunstate[d->gunselect] != GUNSTATE_SHOOT))
+        if(hasgun)
 		{
             a[ai].name = guntype[d->gunselect].vwep;
             a[ai].tag = "tag_weapon";
