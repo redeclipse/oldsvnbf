@@ -277,7 +277,7 @@ struct entities : icliententities
 			execlink(d, t, true);
 
 			if(d == cl.player1)
-				cl.lastmouse = cl.lastcamera = 0;
+				cl.lastcamera = 0;
 
 			return;
 		}
@@ -316,7 +316,7 @@ struct entities : icliententities
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
 			cl.ph.entinmap(d, false);
 		}
-		if(d == cl.player1) cl.lastmouse = cl.lastcamera = 0;
+		if(d == cl.player1) cl.lastcamera = 0;
 	}
 
 	void reaction(int n, fpsent *d)
@@ -727,7 +727,7 @@ struct entities : icliententities
 	{
 		if(d->state == CS_ALIVE)
 		{
-			vec v(vec(d->o).sub(vec(0, 0, d->height)));
+			vec v(cl.ph.feetpos(d, 0.f));
 			int curnode = waypointnode(v);
 
 			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)

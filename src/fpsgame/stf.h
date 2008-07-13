@@ -190,8 +190,8 @@ struct stfclient : stfstate
                 flaginfo &b = flags[i];
                 if(insideflag(b, d->o) && ((b.owner == d->team && b.enemy) || b.enemy == d->team))
                 {
-					part_trail(4, 1, cl.ph.feetpos(d), vec(b.pos).sub(vec(0, 0, 4.f)), teamtype[d->team].colour, 4.8f);
-					regularshape(4, (int)d->radius, teamtype[d->team].colour, 6, 1, 50, cl.ph.feetpos(d), 4.8f);
+					part_trail(4, 1, cl.ph.feetpos(d, 1.f), vec(b.pos).sub(vec(0, 0, 4.f)), teamtype[d->team].colour, 4.8f);
+					regularshape(4, (int)d->radius, teamtype[d->team].colour, 6, 1, 50, cl.ph.feetpos(d, 1.f), 4.8f);
 					d->lastflag = i;
                 }
             }

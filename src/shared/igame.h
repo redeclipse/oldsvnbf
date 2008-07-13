@@ -68,7 +68,7 @@ struct igameclient
     virtual void particletrack(physent *owner, vec &o, vec &d) {}
 
 	virtual bool mousemove(int dx, int dy, int x, int y, int w, int h) = 0;
-	virtual void project(int w, int h, vec &dir, float &x, float &y) = 0;
+	virtual void project(int w, int h) = 0;
 	virtual void recomputecamera(int w, int h) = 0;
 
 	virtual bool gamethirdperson() { return false; } ;
@@ -80,12 +80,7 @@ struct igameclient
 	virtual int localplayers() { return 1; }
 	virtual bool gui3d() { return true; }
 
-	virtual vec feetpos(physent *d)
-	{
-		//if (d->type == ENT_PLAYER || d->type == ENT_AI)
-		//	return vec(d->o).sub(vec(0, 0, d->height));
-		return vec(d->o);
-	}
+	virtual vec feetpos(physent *d, float off) { return vec(d->o); }
 
 	virtual void menuevent(int event) { return; }
 	virtual char *gametitle() = 0;

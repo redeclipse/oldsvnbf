@@ -69,9 +69,10 @@ struct physics
 	}
 
 
-	vec feetpos(physent *d)
+	vec feetpos(physent *d, float off = 0.f)
 	{
-		return vec(d->o).sub(vec(0, 0, d->height-1.f));
+		if(d->type == ENT_PLAYER) return vec(d->o).sub(vec(0, 0, d->height-off));
+		return vec(d->o);
 	}
 
 	float stairheight(physent *d)
@@ -460,7 +461,7 @@ struct physics
 
     void updatematerial(physent *pl, bool local, bool floating)
     {
-		vec v(pl->type != ENT_PLAYER ? pl->o : feetpos(pl));
+		vec v(pl->type != ENT_PLAYER ? pl->o : feetpos(pl, 1.f));
 		int material = lookupmaterial(v);
 		if(pl->state == CS_ALIVE && material != pl->inmaterial)
 		{

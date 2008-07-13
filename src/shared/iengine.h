@@ -120,7 +120,7 @@ extern void adddynlight(const vec &o, float radius, const vec &color, int fade =
 extern void dynlightreaching(const vec &target, vec &color, vec &dir);
 
 // rendergl
-extern vec worldpos, camdir, camright, camup;
+extern vec worldpos, camerapos, camdir, camright, camup;
 
 // renderparticles
 extern void render_particles(int time);

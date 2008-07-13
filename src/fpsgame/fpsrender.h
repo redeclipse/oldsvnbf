@@ -2,7 +2,7 @@ struct fpsrender
 {
 	GAMECLIENT &cl;
 
-	IVARP(targetlaser, 0, 0, 1);
+	//IVARP(lasersight, 0, 1, 1);
 
 	fpsrender(GAMECLIENT &_cl) : cl(_cl) {}
 
@@ -120,14 +120,15 @@ struct fpsrender
         cl.bot.render();
 
 		endmodelbatches();
-
-		if(targetlaser() && rendernormally)
+#if 0
+		if(lasersight() && cl.player1->gunselect == GUN_RIFLE && rendernormally)
 		{
 			renderprimitive(true);
-			vec v = cl.ws.gunorigin(cl.player1->gunselect, cl.player1->o, worldpos, cl.player1);
+			vec v(vec(cl.ws.gunorigin(cl.player1->gunselect, cl.player1->o, worldpos, cl.player1)).add(vec(0, 0, 1)));
 			renderline(v, worldpos, 0.2f, 0.0f, 0.0f, false);
 			renderprimitive(false);
 		}
+#endif
 	}
 
     void preload()

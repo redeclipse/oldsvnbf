@@ -502,7 +502,7 @@ void cleanupgl()
 VAR(wireframe, 0, 0, 1);
 
 physent camera, *camera1 = &camera;
-vec worldpos, camdir, camright, camup;
+vec worldpos, camerapos, camdir, camright, camup;
 
 void findorientation(vec &o, float yaw, float pitch, vec &pos)
 {
@@ -1351,7 +1351,7 @@ void gl_drawframe(int w, int h)
 	project(fovy, aspect, farplane);
 	transplayer();
     readmatrices();
-    cl->project(w, h, cursordir, cursorx, cursory);
+    cl->project(w, h);
 
 	glEnable(GL_TEXTURE_2D);
 
