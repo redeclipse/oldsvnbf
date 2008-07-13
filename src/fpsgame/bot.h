@@ -71,8 +71,7 @@ struct botclient
 
 	bool hastarget(fpsent *d, botstate &b, vec &pos)
 	{ // add margins of error
-		vec dir(d->o);
-		dir.sub(vec(0, 0, d->height));
+		vec dir(cl.ph.feetpos(d, 0.f));
 		dir.sub(pos);
 		dir.normalize();
 		float targyaw, targpitch;
@@ -141,13 +140,13 @@ struct botclient
 
 	bool randomnode(fpsent *d, botstate &b, float radius, float wander)
 	{
-		vec feet(vec(d->o).sub(vec(0, 0, d->height)));
+		vec feet(cl.ph.feetpos(d, 0.f));
 		return randomnode(d, b, feet, feet, radius, wander);
 	}
 
 	bool patrol(fpsent *d, botstate &b, vec &pos, float radius, float wander, bool retry = false)
 	{
-		vec feet(vec(d->o).sub(vec(0, 0, d->height)));
+		vec feet(cl.ph.feetpos(d, 0.f));
 		if(b.override || feet.dist(pos) <= radius || !makeroute(d, b, pos, wander))
 		{ // run away and back to keep ourselves busy
 			if(!b.override && randomnode(d, b, feet, pos, radius, wander))
@@ -168,7 +167,7 @@ struct botclient
 
 	bool follow(fpsent *d, botstate &b, fpsent *e, bool retry = false)
 	{
-		vec pos(vec(e->o).sub(vec(0, 0, e->height))), feet(vec(d->o).sub(vec(0, 0, d->height)));
+		vec pos(cl.ph.feetpos(e, 0.f)), feet(cl.ph.feetpos(d, 0.f));
 		if(b.override || feet.dist(pos) <= BOTISNEAR || !makeroute(d, b, e->lastnode, e->radius*2.f))
 		{ // random path if too close
 			if(!b.override && randomnode(d, b, feet, pos, BOTISNEAR, BOTISFAR))
@@ -620,8 +619,8 @@ struct botclient
 			fpsentity &e = (fpsentity &)*cl.et.ents[d->bot->route[i]];
 
 			if(!d->bot->route.inrange(node) ||
-				(e.o.dist(cl.ph.feetpos(d)) < enttype[WAYPOINT].radius*10.f &&
-					e.o.dist(cl.ph.feetpos(d)) < cl.et.ents[d->bot->route[node]]->o.dist(cl.ph.feetpos(d))))
+				(e.o.dist(cl.ph.feetpos(d, 0.f)) < enttype[WAYPOINT].radius*10.f &&
+					e.o.dist(cl.ph.feetpos(d, 0.f)) < cl.et.ents[d->bot->route[node]]->o.dist(cl.ph.feetpos(d, 0.f))))
 						node = i;
 		}
 		return node;
@@ -761,7 +760,7 @@ struct botclient
 				fpsent *e = NULL;
 				loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && BOTTARG(d, e, true))
 				{
-					if(f.o.dist(vec(e->o).sub(vec(0, 0, e->height))) <= e->radius+d->radius)
+					if(f.o.dist(cl.ph.feetpos(e, 0.f)) <= e->radius+d->radius)
 					{
 						d->bot->avoid.add(k);
 						found = true;

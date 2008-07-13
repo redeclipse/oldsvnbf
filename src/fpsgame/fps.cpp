@@ -24,7 +24,8 @@ struct GAMECLIENT : igameclient
 	int respawnent, swaymillis;
 	vec swaydir;
     dynent guninterp;
-    int lasthit, lastcamera, lastmouse, lastzoom, prevzoom, curzoom;
+    int lasthit, lastcamera, lastzoom, lastaim, prevzoom, curzoom;
+    float aimx, aimy;
 	int quakewobble, damageresidue;
     int liquidchan;
 
@@ -51,26 +52,38 @@ struct GAMECLIENT : igameclient
 	IVARP(cameradist, -100, 1, 100);
 	IVARP(camerashift, -100, 4, 100);
 	IVARP(cameraheight, 0, 40, 360);
+	IVARP(camerasmoothdist, 0, 100, 1000);
+	IVARP(camerasmoothangle, 0, 25, 1000);
 
 	IVARP(invmouse, 0, 0, 1);
 
 	IVARP(mousetype, 0, 1, 5);
-	IVARP(mousedeadzone, 0, 10, 100);
-	IVARP(mousepanspeed, 1, 30, 1000);
+	IVARP(mousedeadzone, 0, 5, 100);
+	IVARP(mousepantime, 1, 100, 1000);
+	IVARP(mousepanspeed, 1, 10, 1000);
+
 	IVARP(zoommousetype, 0, 4, 5);
-	IVARP(zoomdeadzone, 0, 5, 100);
-	IVARP(zoompanspeed, 1, 5, 1000);
+	IVARP(zoomdeadzone, 0, 3, 100);
+	IVARP(zoompantime, 1, 100, 1000);
+	IVARP(zoompanspeed, 1, 1, 1000);
+
 	IVARP(editmousetype, 0, 0, 5);
-	IVARP(editdeadzone, 0, 25, 100);
-	IVARP(editpanspeed, 1, 30, 1000);
+	IVARP(editdeadzone, 0, 10, 100);
+	IVARP(editpantime, 1, 100, 1000);
+	IVARP(editpanspeed, 1, 10, 1000);
+
 	IVARP(specmousetype, 0, 0, 5);
-	IVARP(specdeadzone, 0, 10, 100);
-	IVARP(specpanspeed, 1, 30, 1000);
+	IVARP(specdeadzone, 0, 5, 100);
+	IVARP(specpantime, 1, 100, 1000);
+	IVARP(specpanspeed, 1, 10, 1000);
 
 	IFVARP(yawsensitivity, 1.0f);
 	IFVARP(pitchsensitivity, 0.75f);
 	IFVARP(sensitivityscale, 100.0f);
 	IFVARP(zoomsensitivityscale, 10.0f);
+
+	IVARP(aimmouse, 0, 1, 1);
+	IVARP(aimsmooth, 0, 50, 1000);
 
 	IVARP(crosshair, 0, 1, 1);
 	IVARP(teamcrosshair, 0, 1, 1);
@@ -119,7 +132,7 @@ struct GAMECLIENT : igameclient
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			lasthit(0), lastcamera(0), lastmouse(0), lastzoom(0), prevzoom(0), curzoom(0),
+			lasthit(0), lastcamera(0), lastzoom(0), lastaim(0), prevzoom(0), curzoom(0),
 			quakewobble(0), damageresidue(0),
 			liquidchan(-1),
 			player1(new fpsent())
@@ -178,7 +191,6 @@ struct GAMECLIENT : igameclient
         {
 			if(d->state == CS_DEAD) return false;
 			if(intermission) return false;
-        	if(d == player1 && saycommandon) return false;
         }
         return true;
     }
@@ -228,7 +240,6 @@ struct GAMECLIENT : igameclient
         }
 
 		gets2c();
-		if(!g3d_windowhit(true, false)) updatemouse();
 
 		if(cc.ready())
 		{
@@ -473,7 +484,7 @@ struct GAMECLIENT : igameclient
 		intermission = false;
         player1->respawned = player1->suicided = 0;
 		respawnent = -1;
-        maptime = lasthit = lastmouse = lastcamera = 0;
+        maptime = lasthit = lastcamera = 0;
 		cc.mapstart();
 		pj.reset();
 
@@ -583,6 +594,14 @@ struct GAMECLIENT : igameclient
 		if(editmode) return editdeadzone();
 		if(cc.spectator) return specdeadzone();
 		return mousedeadzone();
+	}
+
+	int pantime()
+	{
+		if(zooming()) return zoompantime();
+		if(editmode) return editpantime();
+		if(cc.spectator) return specpantime();
+		return mousepantime();
 	}
 
 	int panspeed()
@@ -907,7 +926,7 @@ struct GAMECLIENT : igameclient
 				if(zooming())
 				{
 					int frame = lastmillis-lastzoom;
-					float amt = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
+					float amt = frame < zoomtime() ? clamp(float(frame)/float(zoomtime()), 0.f, 1.f) : 1.f;
 					if(!curzoom) amt = 1.f-amt;
 					chsize *= amt;
 				}
@@ -966,8 +985,12 @@ struct GAMECLIENT : igameclient
 
 		if(index > POINTER_NONE)
 		{
-			float curx = index < POINTER_EDIT || mousestyle() >= 4 || mousestyle() == 1 ? cursorx : 0.5f,
-				cury = index < POINTER_EDIT || mousestyle() >= 4 || mousestyle() == 1 ? cursory : 0.5f;
+			float curx = aimmouse() ? aimx : 0.5f, cury = aimmouse() ? aimy : 0.5f;
+			if(index < POINTER_EDIT || mousestyle() >= 4 || (!aimmouse() && mousestyle() == 1))
+			{
+				curx = cursorx;
+				cury = cursory;
+			}
 			drawpointer(w, h, index, curx, cury, r, g, b);
 		}
 
@@ -1229,6 +1252,7 @@ struct GAMECLIENT : igameclient
 		}
 		if(curzoom != prevzoom)
 		{
+			resetcursor();
 			lastzoom = lastmillis;
 			prevzoom = curzoom;
 		}
@@ -1242,7 +1266,7 @@ struct GAMECLIENT : igameclient
 		{
 			int frame = lastmillis-lastzoom;
 			float diff = float(fov()-zoomfov()),
-				amt = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
+				amt = frame < zoomtime() ? clamp(float(frame)/float(zoomtime()), 0.f, 1.f) : 1.f;
 			if(!curzoom) amt = 1.f-amt;
 			curfov -= amt*diff;
 		}
@@ -1287,55 +1311,63 @@ struct GAMECLIENT : igameclient
 		return false;
 	}
 
-	void project(int w, int h, vec &dir, float &x, float &y)
+	void project(int w, int h)
 	{
 		if(!g3d_windowhit(true, false))
 		{
-			if(mousestyle() == 1)
+			float cx, cy, cz, x, y;
+			vectocursor(camerapos, cx, cy, cz);
+			x = float(cx)/float(w);
+			y = float(cy)/float(h);
+
+			if(aimsmooth() && lastaim)
 			{
-				float cx, cy, cz;
-				vectocursor(worldpos, cx, cy, cz);
-				x = float(cx)/float(w);
-				y = float(cy)/float(h);
+				float amt = clamp(float(lastmillis-lastaim)/float(aimsmooth()), 0.f, 1.f),
+					offx = x-aimx, offy = y-aimy;
+				aimx += offx*amt;
+				aimy += offy*amt;
 			}
-			vecfromcursor(x, y, 1.f, dir);
+			else
+			{
+				aimx = x;
+				aimy = y;
+			}
+
+			if(mousestyle() >= 4 || !aimmouse())
+				vecfromcursor(cursorx, cursory, 1.f, cursordir);
+			else vecfromcursor(aimx, aimy, 1.f, cursordir);
 		}
 	}
 
-	void updatemouse()
+	void scaleorientation(vec &o, float yaw, float pitch, vec &pos, vec &cam, int frame, int speed)
 	{
-		if(mousestyle())
+		findorientation(o, yaw, pitch, pos);
+		if(speed && frame)
 		{
-			if(!lastmouse) resetcursor();
-			else if(allowmove(player1))
-			{
-				physent *d = mousestyle() <= 3 && mousestyle() >= 2 ? player1 : camera1;
-				int frame = lastmouse-lastmillis;
-				if(mousestyle() >= 2)
-				{
-					float amt = deadzone()/100.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
-					if(cx > amt || cx < -amt)
-						d->yaw -= ((cx > amt ? cx-amt : cx+amt)/(1.f-amt))*frame*panspeed()/100.f;
-					if(cy > amt || cy < -amt)
-						d->pitch -= ((cy > amt ? cy-amt : cy+amt)/(1.f-amt))*frame*panspeed()/100.f;
-				}
-				else
-				{
-					float offyaw = d->aimyaw-d->yaw, offpitch = d->aimpitch-d->pitch;
-					if(offyaw > 180.f) offyaw -= 360.f;
-					if(offyaw < -180.f) offyaw += 360.f;
-					if(offyaw != 0.f) d->yaw -= offyaw/90.f*frame*panspeed()/100.f;
-					if(offpitch != 0.f) d->pitch -= offpitch/45.f*frame*panspeed()/100.f;
-				}
-				fixrange(d->yaw, d->pitch);
-			}
-			lastmouse = lastmillis;
+			float amt = clamp(float(lastmillis-frame)/float(speed), 0.f, 1.f);
+			vec off(vec(vec(pos).sub(cam)).mul(amt));
+			cam.add(off);
+		}
+		else cam = pos;
+	}
+
+	void scaleyawpitch(float &yaw, float &pitch, float newyaw, float newpitch, int frame, int speed)
+	{
+		if(speed && frame)
+		{
+			float amt = float(lastmillis-frame)/float(speed),
+				offyaw = newyaw-yaw, offpitch = newpitch-pitch;
+			if(offyaw > 180.f) offyaw -= 360.f;
+			if(offyaw < -180.f) offyaw += 360.f;
+			yaw += offyaw*amt;
+			pitch += offpitch*amt;
 		}
 		else
 		{
-			resetcursor();
-			lastmouse = 0;
+			yaw = newyaw;
+			pitch = newpitch;
 		}
+		fixrange(yaw, pitch);
 	}
 
 	void recomputecamera(int w, int h)
@@ -1352,17 +1384,20 @@ struct GAMECLIENT : igameclient
 			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
 		}
 
-		if(mousestyle() >= 4 && !lastcamera)
-		{
-			camera1->yaw = player1->aimyaw = player1->yaw;
-			camera1->pitch = player1->aimpitch = player1->pitch;
-		}
-
-
 		if(cc.ready() && maptime)
 		{
+			if(!lastcamera)
+			{
+				resetcursor();
+				if(mousestyle() >= 4)
+				{
+					camera1->yaw = player1->aimyaw = player1->yaw;
+					camera1->pitch = player1->aimpitch = player1->pitch;
+				}
+			}
+
 			if(mousestyle() <= 3)
-				findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
+				scaleorientation(player1->o, player1->yaw, player1->pitch, worldpos, camerapos, lastcamera, camerasmoothdist());
 
 			if(player1->state == CS_ALIVE || player1->state == CS_DEAD)
 			{
@@ -1403,32 +1438,41 @@ struct GAMECLIENT : igameclient
 
 			if(zooming())
 			{
-				vec gun(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)),
-					diff(vec(camera1->o).sub(gun));
-				int frame = lastmillis-lastzoom;
-				float amt = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
+				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
 				if(!curzoom) amt = 1.f-amt;
-				diff.mul(amt);
-				camera1->o.add(diff);
+				vec gun(vec(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)).add(vec(0, 0, 2))),
+					off(vec(vec(gun).sub(camera1->o)).mul(amt));
+				camera1->o.add(off);
 			}
 
 			if(mousestyle() <= 3)
 			{
-				vec dir(worldpos);
+				vec dir(camerapos);
 				dir.sub(camera1->o);
 				dir.normalize();
-				vectoyawpitch(dir,
-					!mousestyle() || mousestyle() >= 2 ? camera1->yaw : camera1->aimyaw,
-					!mousestyle() || mousestyle() >= 2 ? camera1->pitch : camera1->aimpitch);
+
+				float yaw, pitch;
+				vectoyawpitch(dir, yaw, pitch);
+
+				if(mousestyle() != 1)
+				{
+					scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, lastcamera, camerasmoothangle());
+				}
+				else
+				{
+					camera1->aimyaw = yaw;
+					camera1->aimpitch = pitch;
+					scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, lastcamera, camerasmoothangle());
+				}
 			}
 			else if(mousestyle() <= 5)
 			{
-				float yaw = camera1->yaw, pitch = camera1->pitch;
-				if(!g3d_windowhit(true, false)) vectoyawpitch(cursordir, yaw, pitch);
-				findorientation(camera1->o, yaw, pitch, worldpos);
+				float yaw, pitch;
+				vectoyawpitch(cursordir, yaw, pitch);
+				scaleorientation(camera1->o, yaw, pitch, worldpos, camerapos, lastcamera, camerasmoothdist());
 				if(allowmove(player1))
 				{
-					vec dir(worldpos);
+					vec dir(camerapos);
 					dir.sub(camera1->o);
 					dir.normalize();
 					vectoyawpitch(dir, player1->yaw, player1->pitch);
@@ -1441,6 +1485,16 @@ struct GAMECLIENT : igameclient
 				dir.sub(player1->o);
 				dir.normalize();
 				vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
+
+				if(lastcamera && mousestyle() >= 2 && !g3d_windowhit(true, false))
+				{
+					physent *d = mousestyle() <= 3 ? player1 : camera1;
+					float amt = clamp(float(lastmillis-lastcamera)/float(pantime()), 0.f, 1.f)*panspeed();
+					float zone = deadzone()/100.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
+					if(cx > zone || cx < -zone) d->yaw += ((cx > zone ? cx-zone : cx+zone)/(1.f-zone))*amt;
+					if(cy > zone || cy < -zone) d->pitch += ((cy > zone ? cy-zone : cy+zone)/(1.f-zone))*amt;
+					fixrange(d->yaw, d->pitch);
+				}
 			}
 
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
