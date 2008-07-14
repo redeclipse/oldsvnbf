@@ -1058,19 +1058,22 @@ struct entities : icliententities
 			switch(e.type)
 			{
 				case MAPSOUND:
-					renderradius(e.o, e.attr2, e.attr2, false);
-					renderradius(e.o, e.attr3, e.attr3, false);
+					renderradius(e.o, e.attr2, e.attr2, e.attr2, false);
+					renderradius(e.o, e.attr3, e.attr3, e.attr3, false);
 					break;
 				case LIGHT:
-					renderradius(e.o, e.attr1 ? e.attr1 : hdr.worldsize, e.attr1 ? e.attr1 : hdr.worldsize, false);
+				{
+					int s = e.attr1 ? e.attr1 : hdr.worldsize;
+					renderradius(e.o, s, s, s, false);
 					break;
+				}
 				case ANNOUNCER:
-					renderradius(e.o, e.attr1, e.attr1, false);
-					renderradius(e.o, e.attr2, e.attr2, false);
+					renderradius(e.o, e.attr1, e.attr1, e.attr1, false);
+					renderradius(e.o, e.attr2, e.attr2, e.attr2, false);
 					break;
 				default:
-					if(enttype[e.type].height || enttype[e.type].radius)
-						renderradius(e.o, enttype[e.type].height, enttype[e.type].radius, false);
+					if(enttype[e.type].radius || enttype[e.type].height)
+						renderradius(e.o, enttype[e.type].radius, enttype[e.type].radius, enttype[e.type].height, false);
 					break;
 			}
 		}

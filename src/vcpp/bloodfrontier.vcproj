@@ -1433,7 +1433,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fpsgame\fpsrender.h"
+				RelativePath="..\fpsgame\bot.h"
 				>
 			</File>
 			<File
