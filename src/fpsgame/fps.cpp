@@ -11,7 +11,6 @@ struct GAMECLIENT : igameclient
 	#include "projs.h"
 	#include "weapon.h"
 	#include "scoreboard.h"
-	#include "fpsrender.h"
 	#include "entities.h"
 	#include "client.h"
 	#include "bot.h"
@@ -121,7 +120,7 @@ struct GAMECLIENT : igameclient
 	IVARP(statrate, 0, 200, 1000);
 
     GAMECLIENT()
-		: ph(*this), pj(*this), ws(*this), sb(*this), fr(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
+		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
@@ -153,6 +152,9 @@ struct GAMECLIENT : igameclient
 
 	iclientcom *getcom() { return &cc; }
 	icliententities *getents() { return &et; }
+
+	char *gametitle() { return sv->gamename(gamemode, mutators); }
+	char *gametext() { return getmapname(); }
 
 	float radarrange()
 	{
@@ -236,6 +238,18 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
+	void menuevent(int event)
+	{
+		int s = -1;
+		switch (event)
+		{
+			case MN_BACK: s = S_MENUBACK; break;
+			case MN_INPUT: s = S_MENUPRESS; break;
+			default: break;
+		}
+		if(s >= 0) playsound(s);
+	}
+
 	fpsent *pointatplayer()
 	{
 		loopv(players)
@@ -252,8 +266,6 @@ struct GAMECLIENT : igameclient
 		nextmode = mode; nextmuts = muts;
 		sv->modecheck(&nextmode, &nextmuts);
 	}
-
-    void render() { fr.render(); }
 
 	void resetgamestate()
 	{
@@ -500,8 +512,9 @@ struct GAMECLIENT : igameclient
 
     void preload()
     {
+    	loopi(TEAM_MAX)
+			loadmodel(teamtype[i].mdl, -1, true);
         ws.preload();
-        fr.preload();
         et.preload();
 		stf.preload();
         ctf.preload();
@@ -1351,7 +1364,7 @@ struct GAMECLIENT : igameclient
 			camera1->reset();
 			camera1->type = ENT_CAMERA;
 			camera1->state = CS_ALIVE;
-			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
+			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 1;
 		}
 
 		if(cc.ready() && maptime)
@@ -1373,8 +1386,9 @@ struct GAMECLIENT : igameclient
 
 			if(isthirdperson())
 			{
+				float angle = thirdpersonangle() ? 0-thirdpersonangle() : player1->pitch;
 				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
-				camera1->aimpitch = mousestyle() <= 1 ? 0-thirdpersonangle() : player1->aimpitch;
+				camera1->aimpitch = mousestyle() <= 1 ? angle : player1->aimpitch;
 
 				#define cameramove(d,s) \
 					if(d) \
@@ -1388,7 +1402,6 @@ struct GAMECLIENT : igameclient
 			}
 			else
 			{
-				//camera1 = player1;
 				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
 				camera1->aimpitch = mousestyle() <= 1 ? player1->pitch : player1->aimpitch;
 			}
@@ -1524,31 +1537,128 @@ struct GAMECLIENT : igameclient
 		et.adddynlights();
 	}
 
-	bool gamethirdperson()
-	{
-		return true;
-	}
+	vector<fpsent *> bestplayers;
+    vector<int> bestteams;
 
-	void menuevent(int event)
+	void renderplayer(fpsent *d, bool local)
 	{
-		int s = -1;
-		switch (event)
+		int team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL;
+        int lastaction = 0, animflags = 0, animdelay = 0;
+        bool hasgun = isgun(d->gunselect);
+
+		if(intermission && d->state != CS_DEAD)
 		{
-			case MN_BACK: s = S_MENUBACK; break;
-			case MN_INPUT: s = S_MENUPRESS; break;
-			default: break;
+			lastaction = lastmillis;
+			animflags = ANIM_LOSE|ANIM_LOOP;
+			animdelay = 1000;
+			if(m_team(gamemode, mutators)) loopv(bestteams) { if(bestteams[i] == d->team) { animflags = ANIM_WIN|ANIM_LOOP; break; } }
+			else if(bestplayers.find(d)>=0) animflags = ANIM_WIN|ANIM_LOOP;
 		}
-		if(s >= 0) playsound(s);
+        else if(d->state == CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-lastaction>animdelay)
+		{
+			lastaction = d->lasttaunt;
+			animflags = ANIM_TAUNT;
+			animdelay = 1000;
+		}
+		else if(hasgun && lastmillis-d->gunlast[d->gunselect] < d->gunwait[d->gunselect])
+		{
+			switch(d->gunstate[d->gunselect])
+			{
+				case GUNSTATE_SWITCH:
+				{
+					animflags = ANIM_SWITCH;
+					break;
+				}
+				case GUNSTATE_POWER:
+				{
+					animflags = guntype[d->gunselect].power ? ANIM_POWER : ANIM_SHOOT;
+					break;
+				}
+				case GUNSTATE_SHOOT:
+				{
+					animflags = guntype[d->gunselect].power ? ANIM_THROW : ANIM_SHOOT;
+					if(guntype[d->gunselect].power) hasgun = false;
+					break;
+				}
+				case GUNSTATE_RELOAD:
+				{
+					animflags = guntype[d->gunselect].power ? ANIM_HOLD : ANIM_RELOAD;
+					if(guntype[d->gunselect].power) hasgun = false;
+					break;
+				}
+				case GUNSTATE_NONE:	default:
+				{
+					if(d->ammo[d->gunselect] <= 0 && guntype[d->gunselect].rdelay <= 0)
+						hasgun = false;
+					break;
+				}
+			}
+
+			lastaction = d->gunlast[d->gunselect];
+			animdelay = d->gunwait[d->gunselect] + 50;
+		}
+
+        modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
+        int ai = 0;
+
+        if(hasgun)
+		{
+            a[ai].name = guntype[d->gunselect].vwep;
+            a[ai].tag = "tag_weapon";
+            a[ai].anim = ANIM_VWEP|ANIM_LOOP;
+            a[ai].basetime = 0;
+            ai++;
+		}
+		if(m_ctf(gamemode))
+		{
+			loopv(ctf.flags) if(ctf.flags[i].owner == d && !ctf.flags[i].droptime)
+			{
+				a[ai].name = teamtype[ctf.flags[i].team].flag;
+				a[ai].tag = "tag_flag";
+				a[ai].anim = ANIM_MAPMODEL|ANIM_LOOP;
+				a[ai].basetime = 0;
+				ai++;
+			}
+		}
+        renderclient(d, local, teamtype[team].mdl, a[0].name ? a : NULL, animflags, animdelay, lastaction, intermission ? 0 : d->lastpain);
+
+		s_sprintf(d->info)("%s", colorname(d, NULL, "@"));
+		if(!local) part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
 	}
 
-	char *gametitle()
-	{
-		return sv->gamename(gamemode, mutators);
-	}
+	IVARP(lasersight, 0, 0, 1);
 
-	char *gametext()
+	void render()
 	{
-		return getmapname();
+		if(intermission)
+		{
+			if(m_team(gamemode, mutators)) { bestteams.setsize(0); sb.bestteams(bestteams); }
+			else { bestplayers.setsize(0); sb.bestplayers(bestplayers); }
+		}
+
+		startmodelbatches();
+
+		fpsent *d;
+        loopi(numdynents()) if((d = (fpsent *)iterdynents(i)) && (d != player1 || isthirdperson()))
+			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
+				renderplayer(d, false);
+
+		et.render();
+		pj.render();
+		if(m_stf(gamemode)) stf.render();
+        else if(m_ctf(gamemode)) ctf.render();
+
+        bot.render();
+
+		endmodelbatches();
+
+		if(lasersight() && rendernormally)
+		{
+			renderprimitive(true);
+			vec v(vec(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)).add(vec(0, 0, 1)));
+			renderline(v, worldpos, 0.2f, 0.0f, 0.0f, false);
+			renderprimitive(false);
+		}
 	}
 };
 REGISTERGAME(GAMENAME, GAMEID, new GAMECLIENT(), new GAMESERVER());

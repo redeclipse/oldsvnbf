@@ -1613,7 +1613,7 @@ void rendertris(vec &fr, float yaw, float pitch, float size, float r, float g, f
 	});
 }
 
-void renderlineloop(vec &o, float height, float xradius, float yradius, float z, int type, float r, float g, float b, bool nf)
+void renderlineloop(vec &o, float xradius, float yradius, float zradius, float z, int type, float r, float g, float b, bool nf)
 {
 	rendernearfar(r, g, b, nf,
 	{
@@ -1624,11 +1624,11 @@ void renderlineloop(vec &o, float height, float xradius, float yradius, float z,
 			switch (type)
 			{
 				case 0:
-					p = vec(xradius*cosf(2*M_PI*i/16.0f), height*sinf(2*M_PI*i/16.0f), 0);
+					p = vec(xradius*cosf(2*M_PI*i/16.0f), zradius*sinf(2*M_PI*i/16.0f), 0);
 					p.rotate_around_x((z+90)*RAD);
 					break;
 				case 1:
-					p = vec(height*cosf(2*M_PI*i/16.0f), yradius*sinf(2*M_PI*i/16.0f), 0);
+					p = vec(zradius*cosf(2*M_PI*i/16.0f), yradius*sinf(2*M_PI*i/16.0f), 0);
 					p.rotate_around_y((z+90)*RAD);
 					break;
 				case 2:
@@ -1664,11 +1664,11 @@ void renderdir(vec &o, float yaw, float pitch, bool nf)
 	rendertris(to, yaw, pitch, 2.f, 0.f, 0.f, 0.5f, true, nf);
 }
 
-void renderradius(vec &o, float height, float radius, bool nf)
+void renderradius(vec &o, float xradius, float yradius, float zradius, bool nf)
 {
-	renderlineloop(o, height, radius, radius, 0.f, 0, 0.f, 1.f, 1.f, nf);
-	renderlineloop(o, height, radius, radius, 0.f, 1, 0.f, 1.f, 1.f, nf);
-	renderlineloop(o, height, radius, radius, 0.f, 2, 0.f, 1.f, 1.f, nf);
+	renderlineloop(o, xradius, yradius, zradius, 0.f, 0, 0.f, 1.f, 1.f, nf);
+	renderlineloop(o, xradius, yradius, zradius, 0.f, 1, 0.f, 1.f, 1.f, nf);
+	renderlineloop(o, xradius, yradius, zradius, 0.f, 2, 0.f, 1.f, 1.f, nf);
 }
 
 bool rendericon(const char *icon, int x, int y, int xs, int ys)

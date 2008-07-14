@@ -824,14 +824,6 @@
 			<Option target="server"/>
 			<Option target="daemon"/>
 		</Unit>
-		<Unit filename="fpsgame\fpsrender.h">
-			<Option compilerVar=""/>
-			<Option compile="0"/>
-			<Option link="0"/>
-			<Option target="client"/>
-			<Option target="debug"/>
-			<Option target="server"/>
-		</Unit>
 		<Unit filename="fpsgame\fpsserver.h">
 			<Option compilerVar=""/>
 			<Option compile="0"/>
