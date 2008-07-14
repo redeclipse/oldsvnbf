@@ -24,8 +24,7 @@ struct GAMECLIENT : igameclient
 	int respawnent, swaymillis;
 	vec swaydir;
     dynent guninterp;
-    int lasthit, lastcamera, lastzoom, lastaim, prevzoom, curzoom;
-    float aimx, aimy;
+    int lasthit, lastcamera, lastzoom, prevzoom, curzoom;
 	int quakewobble, damageresidue;
     int liquidchan;
 
@@ -52,38 +51,31 @@ struct GAMECLIENT : igameclient
 	IVARP(cameradist, -100, 1, 100);
 	IVARP(camerashift, -100, 4, 100);
 	IVARP(cameraheight, 0, 40, 360);
-	IVARP(camerasmoothdist, 0, 100, 1000);
-	IVARP(camerasmoothangle, 0, 25, 1000);
 
 	IVARP(invmouse, 0, 0, 1);
+	IVARP(absmouse, 0, 0, 1);
 
-	IVARP(mousetype, 0, 1, 5);
+	IVARP(mousetype, 0, 0, 2);
 	IVARP(mousedeadzone, 0, 5, 100);
-	IVARP(mousepantime, 1, 100, 1000);
 	IVARP(mousepanspeed, 1, 10, 1000);
 
-	IVARP(zoommousetype, 0, 4, 5);
+	IVARP(zoommousetype, 0, 2, 2);
 	IVARP(zoomdeadzone, 0, 3, 100);
-	IVARP(zoompantime, 1, 100, 1000);
 	IVARP(zoompanspeed, 1, 1, 1000);
 
-	IVARP(editmousetype, 0, 0, 5);
+	IVARP(editmousetype, 0, 0, 2);
 	IVARP(editdeadzone, 0, 10, 100);
-	IVARP(editpantime, 1, 100, 1000);
 	IVARP(editpanspeed, 1, 10, 1000);
 
-	IVARP(specmousetype, 0, 0, 5);
+	IVARP(specmousetype, 0, 0, 2);
 	IVARP(specdeadzone, 0, 5, 100);
-	IVARP(specpantime, 1, 100, 1000);
 	IVARP(specpanspeed, 1, 10, 1000);
 
 	IFVARP(yawsensitivity, 1.0f);
 	IFVARP(pitchsensitivity, 0.75f);
+
 	IFVARP(sensitivityscale, 100.0f);
 	IFVARP(zoomsensitivityscale, 10.0f);
-
-	IVARP(aimmouse, 0, 1, 1);
-	IVARP(aimsmooth, 0, 50, 1000);
 
 	IVARP(crosshair, 0, 1, 1);
 	IVARP(teamcrosshair, 0, 1, 1);
@@ -132,7 +124,7 @@ struct GAMECLIENT : igameclient
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			lasthit(0), lastcamera(0), lastzoom(0), lastaim(0), prevzoom(0), curzoom(0),
+			lasthit(0), lastcamera(0), lastzoom(0), prevzoom(0), curzoom(0),
 			quakewobble(0), damageresidue(0),
 			liquidchan(-1),
 			player1(new fpsent())
@@ -596,14 +588,6 @@ struct GAMECLIENT : igameclient
 		return mousedeadzone();
 	}
 
-	int pantime()
-	{
-		if(zooming()) return zoompantime();
-		if(editmode) return editpantime();
-		if(cc.spectator) return specpantime();
-		return mousepantime();
-	}
-
 	int panspeed()
 	{
 		if(zooming()) return zoompanspeed();
@@ -985,8 +969,8 @@ struct GAMECLIENT : igameclient
 
 		if(index > POINTER_NONE)
 		{
-			float curx = aimmouse() ? aimx : 0.5f, cury = aimmouse() ? aimy : 0.5f;
-			if(index < POINTER_EDIT || mousestyle() >= 4 || (!aimmouse() && mousestyle() == 1))
+			float curx = 0.5f, cury = 0.5f;
+			if(index < POINTER_EDIT || mousestyle() == 2)
 			{
 				curx = cursorx;
 				cury = cursory;
@@ -994,10 +978,10 @@ struct GAMECLIENT : igameclient
 			drawpointer(w, h, index, curx, cury, r, g, b);
 		}
 
-		if(index > POINTER_GUI && mousestyle() >= 2)
+		if(index > POINTER_GUI && mousestyle() >= 1)
 		{
-			float curx = mousestyle() <= 3 ? cursorx : 0.5f,
-				cury = mousestyle() <= 3 ? cursory : 0.5f;
+			float curx = mousestyle() == 1 ? cursorx : 0.5f,
+				cury = mousestyle() == 1 ? cursory : 0.5f;
 			drawpointer(w, h, POINTER_RELATIVE, curx, cury, r, g, b);
 		}
 	}
@@ -1281,9 +1265,9 @@ struct GAMECLIENT : igameclient
 
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
 
-		if(windowhit || mousestyle() >= 2)
+		if(windowhit || mousestyle() >= 1)
 		{
-			if(mousestyle() == 3 || mousestyle() == 5) // absolute positions, unaccelerated
+			if(absmouse()) // absolute positions, unaccelerated
 			{
 				cursorx = clamp(float(x)/float(w), 0.f, 1.f);
 				cursory = clamp(float(y)/float(h), 0.f, 1.f);
@@ -1316,39 +1300,18 @@ struct GAMECLIENT : igameclient
 		if(!g3d_windowhit(true, false))
 		{
 			float cx, cy, cz, x, y;
-			vectocursor(camerapos, cx, cy, cz);
+			vectocursor(worldpos, cx, cy, cz);
 			x = float(cx)/float(w);
 			y = float(cy)/float(h);
 
-			if(aimsmooth() && lastaim)
-			{
-				float amt = clamp(float(lastmillis-lastaim)/float(aimsmooth()), 0.f, 1.f),
-					offx = x-aimx, offy = y-aimy;
-				aimx += offx*amt;
-				aimy += offy*amt;
-			}
-			else
-			{
-				aimx = x;
-				aimy = y;
-			}
+			//if(aimmouse())
+			//{
+			//	cursorx = x;
+			//	cursory = y;
+			//}
 
-			if(mousestyle() >= 4 || !aimmouse())
-				vecfromcursor(cursorx, cursory, 1.f, cursordir);
-			else vecfromcursor(aimx, aimy, 1.f, cursordir);
+			vecfromcursor(cursorx, cursory, 1.f, cursordir);
 		}
-	}
-
-	void scaleorientation(vec &o, float yaw, float pitch, vec &pos, vec &cam, int frame, int speed)
-	{
-		findorientation(o, yaw, pitch, pos);
-		if(speed && frame)
-		{
-			float amt = clamp(float(lastmillis-frame)/float(speed), 0.f, 1.f);
-			vec off(vec(vec(pos).sub(cam)).mul(amt));
-			cam.add(off);
-		}
-		else cam = pos;
 	}
 
 	void scaleyawpitch(float &yaw, float &pitch, float newyaw, float newpitch, int frame, int speed)
@@ -1389,20 +1352,19 @@ struct GAMECLIENT : igameclient
 			if(!lastcamera)
 			{
 				resetcursor();
-				if(mousestyle() >= 4)
+				if(mousestyle() == 2)
 				{
 					camera1->yaw = player1->aimyaw = player1->yaw;
 					camera1->pitch = player1->aimpitch = player1->pitch;
 				}
 			}
 
-			if(mousestyle() <= 3)
-				scaleorientation(player1->o, player1->yaw, player1->pitch, worldpos, camerapos, lastcamera, camerasmoothdist());
+			findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
 
 			if(player1->state == CS_ALIVE || player1->state == CS_DEAD)
 			{
 				camera1->o = player1->o;
-				camera1->aimyaw = mousestyle() <= 3 ? player1->yaw : player1->aimyaw;
+				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
 				camera1->aimpitch = 0-cameraheight();
 
 				#define cameramove(d,s) \
@@ -1430,8 +1392,8 @@ struct GAMECLIENT : igameclient
 			else if(mousestyle())
 			{
 				camera1->o = player1->o;
-				camera1->aimyaw = mousestyle() <= 3 ? player1->yaw : player1->aimyaw;
-				camera1->aimpitch = mousestyle() <= 3 ? 0-cameraheight() : player1->aimpitch;
+				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
+				camera1->aimpitch = mousestyle() <= 1 ? 0-cameraheight() : player1->aimpitch;
 			}
 			else camera1 = player1;
 
@@ -1445,34 +1407,26 @@ struct GAMECLIENT : igameclient
 				camera1->o.add(off);
 			}
 
-			if(mousestyle() <= 3)
+			if(mousestyle() <= 1)
 			{
-				vec dir(camerapos);
+				vec dir(worldpos);
 				dir.sub(camera1->o);
 				dir.normalize();
-
-				float yaw, pitch;
-				vectoyawpitch(dir, yaw, pitch);
-
-				if(mousestyle() != 1)
+				vectoyawpitch(dir, camera1->yaw, camera1->pitch);
+				if(mousetype())
 				{
-					scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, lastcamera, camerasmoothangle());
-				}
-				else
-				{
-					camera1->aimyaw = yaw;
-					camera1->aimpitch = pitch;
-					scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, lastcamera, camerasmoothangle());
+					camera1->aimyaw = camera1->yaw;
+					camera1->aimpitch = camera1->pitch;
 				}
 			}
-			else if(mousestyle() <= 5)
+			else if(mousestyle() == 2)
 			{
 				float yaw, pitch;
 				vectoyawpitch(cursordir, yaw, pitch);
-				scaleorientation(camera1->o, yaw, pitch, worldpos, camerapos, lastcamera, camerasmoothdist());
+				findorientation(camera1->o, yaw, pitch, worldpos);
 				if(allowmove(player1))
 				{
-					vec dir(camerapos);
+					vec dir(worldpos);
 					dir.sub(camera1->o);
 					dir.normalize();
 					vectoyawpitch(dir, player1->yaw, player1->pitch);
@@ -1486,11 +1440,11 @@ struct GAMECLIENT : igameclient
 				dir.normalize();
 				vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
 
-				if(lastcamera && mousestyle() >= 2 && !g3d_windowhit(true, false))
+				if(lastcamera && mousestyle() >= 1 && !g3d_windowhit(true, false))
 				{
-					physent *d = mousestyle() <= 3 ? player1 : camera1;
-					float amt = clamp(float(lastmillis-lastcamera)/float(pantime()), 0.f, 1.f)*panspeed();
-					float zone = deadzone()/100.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
+					physent *d = mousestyle() == 1 ? player1 : camera1;
+					float amt = clamp(float(lastmillis-lastcamera)/100.f, 0.f, 1.f)*panspeed();
+					float zone = float(deadzone())/100.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
 					if(cx > zone || cx < -zone) d->yaw += ((cx > zone ? cx-zone : cx+zone)/(1.f-zone))*amt;
 					if(cy > zone || cy < -zone) d->pitch += ((cy > zone ? cy-zone : cy+zone)/(1.f-zone))*amt;
 					fixrange(d->yaw, d->pitch);
