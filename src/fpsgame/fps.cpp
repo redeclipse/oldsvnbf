@@ -23,7 +23,8 @@ struct GAMECLIENT : igameclient
 	int respawnent, swaymillis;
 	vec swaydir;
     dynent guninterp;
-    int lasthit, lastcamera, lastzoom, prevzoom, curzoom;
+    int lasthit, lastcamera, lastzoom;
+    bool prevzoom, zooming;
 	int quakewobble, damageresidue;
     int liquidchan;
 
@@ -71,11 +72,10 @@ struct GAMECLIENT : igameclient
 	IVARP(specdeadzone, 0, 5, 100);
 	IVARP(specpanspeed, 1, 30, 1000);
 
-	IFVARP(yawsensitivity, 1.0f);
-	IFVARP(pitchsensitivity, 0.75f);
-
-	IFVARP(sensitivityscale, 100.0f);
-	IFVARP(zoomsensitivityscale, 10.0f);
+	IFVARP(sensitivity, 10.0f);
+	IFVARP(yawsensitivity, 10.0f);
+	IFVARP(pitchsensitivity, 7.5f);
+	IFVARP(zoomsensitivity, 1.0f);
 
 	IVARP(crosshair, 0, 1, 1);
 	IVARP(teamcrosshair, 0, 1, 1);
@@ -124,7 +124,7 @@ struct GAMECLIENT : igameclient
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			lasthit(0), lastcamera(0), lastzoom(0), prevzoom(0), curzoom(0),
+			lasthit(0), lastcamera(0), lastzoom(0), prevzoom(false), zooming(false),
 			quakewobble(0), damageresidue(0),
 			liquidchan(-1),
 			player1(new fpsent())
@@ -133,20 +133,6 @@ struct GAMECLIENT : igameclient
 		CCOMMAND(mode, "ii", (GAMECLIENT *self, int *val, int *mut), { self->setmode(*val, *mut); });
 		CCOMMAND(gamemode, "", (GAMECLIENT *self), intret(self->gamemode));
 		CCOMMAND(mutators, "", (GAMECLIENT *self), intret(self->mutators));
-
-		CCOMMAND(sensitivity, "s", (GAMECLIENT *self, char *s), {
-				if(*s)
-				{
-					int x = atoi(s);
-					if(x)
-					{
-						setfvar("yawsensitivity", x*0.1f);
-						setfvar("pitchsensitivity", x*0.075f);
-					}
-				}
-				conoutf("yawsensitivity = %f, pitchsensitivity = %f", self->yawsensitivity(), self->pitchsensitivity());
-			});
-
 		CCOMMAND(zoom, "D", (GAMECLIENT *self, int *down), { self->dozoom(*down!=0); });
 	}
 
@@ -166,12 +152,13 @@ struct GAMECLIENT : igameclient
 
 	bool isthirdperson()
 	{
-		return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
+		return thirdperson() && !inzoom() &&
+			player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
 	}
 
 	int mousestyle()
 	{
-		if(zooming()) return zoommousetype();
+		if(inzoom()) return zoommousetype();
 		if(editmode) return editmousetype();
 		if(cc.spectator) return specmousetype();
 		return mousetype();
@@ -179,7 +166,7 @@ struct GAMECLIENT : igameclient
 
 	int deadzone()
 	{
-		if(zooming()) return zoomdeadzone();
+		if(inzoom()) return zoomdeadzone();
 		if(editmode) return editdeadzone();
 		if(cc.spectator) return specdeadzone();
 		return mousedeadzone();
@@ -187,10 +174,37 @@ struct GAMECLIENT : igameclient
 
 	int panspeed()
 	{
-		if(zooming()) return zoompanspeed();
+		if(inzoom()) return zoompanspeed();
 		if(editmode) return editpanspeed();
 		if(cc.spectator) return specpanspeed();
 		return mousepanspeed();
+	}
+
+	bool inzoom()
+	{
+		if(allowmove(player1) && player1->gunselect == GUN_RIFLE &&
+			(zooming || lastmillis-lastzoom < zoomtime()))
+			return true;
+		lastzoom = 0;
+		prevzoom = zooming = false;
+		return false;
+	}
+
+	void dozoom(bool down)
+	{
+		switch(zoomtype())
+		{
+			case 1: zooming = down; break;
+			case 0: default:
+				if(down) zooming = !zooming;
+				break;
+		}
+		if(zooming != prevzoom)
+		{
+			resetcursor();
+			lastzoom = lastmillis;
+			prevzoom = zooming;
+		}
 	}
 
 	int respawnwait(fpsent *d)
@@ -760,13 +774,13 @@ struct GAMECLIENT : igameclient
 			fade = clamp(fade*amt, 0.f, 1.f);
 		}
 
-		if(zooming())
+		if(inzoom())
 		{
 			if((t = textureload(damagetex())) != notexture)
 			{
 				int frame = lastmillis-lastzoom;
 				float pc = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
-				if(!curzoom) pc = 1.f-pc;
+				if(!zooming) pc = 1.f-pc;
 				settexture("textures/zoom");
 
 				glColor4f(1.f, 1.f, 1.f, pc);
@@ -927,11 +941,11 @@ struct GAMECLIENT : igameclient
 			else if(index == POINTER_ZOOM)
 			{
 				chsize = zoomcrosshairsize()*w/300.0f;
-				if(zooming())
+				if(inzoom())
 				{
 					int frame = lastmillis-lastzoom;
 					float amt = frame < zoomtime() ? clamp(float(frame)/float(zoomtime()), 0.f, 1.f) : 1.f;
-					if(!curzoom) amt = 1.f-amt;
+					if(!zooming) amt = 1.f-amt;
 					chsize *= amt;
 				}
 			}
@@ -963,7 +977,7 @@ struct GAMECLIENT : igameclient
 		if(g3d_windowhit(true, false)) index = POINTER_GUI;
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
         else if(editmode) index = POINTER_EDIT;
-        else if(zooming()) index = POINTER_ZOOM;
+        else if(inzoom()) index = POINTER_ZOOM;
         else if(lastmillis-lasthit < hitcrosshair()) index = POINTER_HIT;
         else if(m_team(gamemode, mutators) && teamcrosshair())
         {
@@ -1236,42 +1250,16 @@ struct GAMECLIENT : igameclient
 		while(yaw >= 360.0f) yaw -= 360.0f;
 	}
 
-	bool zooming()
-	{
-		if(allowmove(player1) && player1->gunselect == GUN_RIFLE &&
-			(curzoom || lastmillis-lastzoom < zoomtime()))
-			return true;
-		lastzoom = prevzoom = curzoom = 0;
-		return false;
-	}
-
-	void dozoom(bool down)
-	{
-		switch(zoomtype())
-		{
-			case 1: curzoom = down ? 1 : 0; break;
-			case 0: default:
-				if(down) curzoom = !curzoom ? 1 : 0;
-				break;
-		}
-		if(curzoom != prevzoom)
-		{
-			resetcursor();
-			lastzoom = lastmillis;
-			prevzoom = curzoom;
-		}
-	}
-
 	void fixview(int w, int h)
 	{
 		curfov = float(fov());
 
-		if(zooming())
+		if(inzoom())
 		{
 			int frame = lastmillis-lastzoom;
 			float diff = float(fov()-zoomfov()),
 				amt = frame < zoomtime() ? clamp(float(frame)/float(zoomtime()), 0.f, 1.f) : 1.f;
-			if(!curzoom) amt = 1.f-amt;
+			if(!zooming) amt = 1.f-amt;
 			curfov -= amt*diff;
 		}
 
@@ -1305,7 +1293,7 @@ struct GAMECLIENT : igameclient
 			cursorx = cursory = 0.5f;
 			if(allowmove(player1))
 			{
-				float scale = zooming() ? zoomsensitivityscale() : sensitivityscale();
+				float scale = inzoom() ? zoomsensitivity() : sensitivity();
 				player1->yaw += mousesens(dx, w, yawsensitivity()*scale);
 				player1->pitch -= mousesens(dy, h, pitchsensitivity()*scale*(!windowhit && invmouse() ? -1.f : 1.f));
 				fixrange(player1->yaw, player1->pitch);
@@ -1319,17 +1307,10 @@ struct GAMECLIENT : igameclient
 	{
 		if(!g3d_windowhit(true, false))
 		{
-			float cx, cy, cz, x, y;
-			vectocursor(worldpos, cx, cy, cz);
-			x = float(cx)/float(w);
-			y = float(cy)/float(h);
-
-			//if(aimmouse())
-			//{
-			//	cursorx = x;
-			//	cursory = y;
-			//}
-
+			//float aimx, aimy, cx, cy, cz;
+			//vectocursor(worldpos, cx, cy, cz);
+			//aimx = float(cx)/float(w);
+			//aimy = float(cy)/float(h);
 			vecfromcursor(cursorx, cursory, 1.f, cursordir);
 		}
 	}
@@ -1485,17 +1466,13 @@ struct GAMECLIENT : igameclient
 			vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
 
 			if(quakewobble > 0)
-			{
-				float pc = float(min(quakewobble, 100))/100.f;
-				#define wobble (float(rnd(24)-12)*pc)
-				camera1->roll = wobble;
-			}
+				camera1->roll = float(rnd(25)-12)*(float(min(quakewobble, 100))/100.f);
 			else camera1->roll = 0;
 
-			if(zooming())
+			if(inzoom())
 			{
 				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
-				if(!curzoom) amt = 1.f-amt;
+				if(!zooming) amt = 1.f-amt;
 				vec gun(vec(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)).add(vec(0, 0, 2))),
 					off(vec(vec(gun).sub(camera1->o)).mul(amt));
 				camera1->o.add(off);
@@ -1521,14 +1498,6 @@ struct GAMECLIENT : igameclient
 
 			lastcamera = lastmillis;
 		}
-#if 0
-		conoutf("%.2f %.2f %.2f [%.2f %.2f %.2f] %.2f %.2f %.2f [%.2f %.2f %.2f]",
-			camera1->o.x, camera1->o.y, camera1->o.z,
-			camera1->yaw, camera1->pitch, camera1->roll,
-			player1->o.x, player1->o.y, player1->o.z,
-			player1->yaw, player1->pitch, player1->roll
-		);
-#endif
 	}
 
 	void adddynlights()
