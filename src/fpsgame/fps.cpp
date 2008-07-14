@@ -48,28 +48,29 @@ struct GAMECLIENT : igameclient
 	IVARP(cardtime, 0, 2000, 10000);
 	IVARP(cardfade, 0, 3000, 10000);
 
-	IVARP(cameradist, -100, 1, 100);
-	IVARP(camerashift, -100, 4, 100);
-	IVARP(cameraheight, 0, 40, 360);
+	IVARP(thirdperson, 0, 0, 1);
+	IVARP(thirdpersondist, -100, 1, 100);
+	IVARP(thirdpersonshift, -100, 4, 100);
+	IVARP(thirdpersonangle, 0, 40, 360);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(absmouse, 0, 0, 1);
 
 	IVARP(mousetype, 0, 0, 2);
 	IVARP(mousedeadzone, 0, 5, 100);
-	IVARP(mousepanspeed, 1, 10, 1000);
+	IVARP(mousepanspeed, 1, 30, 1000);
 
 	IVARP(zoommousetype, 0, 2, 2);
 	IVARP(zoomdeadzone, 0, 3, 100);
-	IVARP(zoompanspeed, 1, 1, 1000);
+	IVARP(zoompanspeed, 1, 5, 1000);
 
 	IVARP(editmousetype, 0, 0, 2);
 	IVARP(editdeadzone, 0, 10, 100);
-	IVARP(editpanspeed, 1, 10, 1000);
+	IVARP(editpanspeed, 1, 30, 1000);
 
 	IVARP(specmousetype, 0, 0, 2);
 	IVARP(specdeadzone, 0, 5, 100);
-	IVARP(specpanspeed, 1, 10, 1000);
+	IVARP(specpanspeed, 1, 30, 1000);
 
 	IFVARP(yawsensitivity, 1.0f);
 	IFVARP(pitchsensitivity, 0.75f);
@@ -86,7 +87,7 @@ struct GAMECLIENT : igameclient
 	IVARP(cursorsize, 1, 30, 1000);
 	IVARP(cursorblend, 0, 100, 100);
 
-	IVAR(zoomstyle, 0, 0, 1);
+	IVARP(zoomtype, 0, 0, 1);
 	IVARP(zoomfov, 20, 20, 90);
 	IVARP(zoomtime, 1, 500, 10000);
 	IVARP(zoomcrosshairsize, 1, 200, 1000);
@@ -152,6 +153,43 @@ struct GAMECLIENT : igameclient
 
 	iclientcom *getcom() { return &cc; }
 	icliententities *getents() { return &et; }
+
+	float radarrange()
+	{
+		float dist = float(radardist());
+		if(editmode) dist = float(editradardist());
+		return dist;
+
+	}
+
+	bool isthirdperson()
+	{
+		return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
+	}
+
+	int mousestyle()
+	{
+		if(zooming()) return zoommousetype();
+		if(editmode) return editmousetype();
+		if(cc.spectator) return specmousetype();
+		return mousetype();
+	}
+
+	int deadzone()
+	{
+		if(zooming()) return zoomdeadzone();
+		if(editmode) return editdeadzone();
+		if(cc.spectator) return specdeadzone();
+		return mousedeadzone();
+	}
+
+	int panspeed()
+	{
+		if(zooming()) return zoompanspeed();
+		if(editmode) return editpanspeed();
+		if(cc.spectator) return specpanspeed();
+		return mousepanspeed();
+	}
 
 	int respawnwait(fpsent *d)
 	{
@@ -244,7 +282,7 @@ struct GAMECLIENT : igameclient
 			if(!allowmove(player1)) player1->stopmoving();
 
 			#define adjustscaled(t,n,m) \
-				if(n) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); }
+				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); if(n <= 0) n = (t)0; }
 
 			adjustscaled(float, player1->roll, 100.f);
 			adjustscaled(int, quakewobble, 100.f);
@@ -333,7 +371,6 @@ struct GAMECLIENT : igameclient
 				else if(damage > 50) snd = 1;
 				playsound(S_DAMAGE1+snd, &actor->o);
 			}
-
 			if(actor == player1) lasthit = lastmillis;
 		}
 		bot.damaged(d, actor, gun, flags, damage, millis, dir);
@@ -363,6 +400,8 @@ struct GAMECLIENT : igameclient
 		else console("\f2%s %s %s", cflags, dname, oname, aname);
 
 		d->state = CS_DEAD;
+		d->obliterated = !(flags & HIT_BURN) && (damage >= MAXHEALTH || (flags & HIT_EXPLODE));
+
 		if(d == player1)
 		{
 			sb.showscores(true);
@@ -562,38 +601,6 @@ struct GAMECLIENT : igameclient
 				d->suicided = d->lifesequence;
 			}
 		}
-	}
-
-	float radarrange()
-	{
-		float dist = float(radardist());
-		if(editmode) dist = float(editradardist());
-		return dist;
-
-	}
-
-	int mousestyle()
-	{
-		if(zooming()) return zoommousetype();
-		if(editmode) return editmousetype();
-		if(cc.spectator) return specmousetype();
-		return mousetype();
-	}
-
-	int deadzone()
-	{
-		if(zooming()) return zoomdeadzone();
-		if(editmode) return editdeadzone();
-		if(cc.spectator) return specdeadzone();
-		return mousedeadzone();
-	}
-
-	int panspeed()
-	{
-		if(zooming()) return zoompanspeed();
-		if(editmode) return editpanspeed();
-		if(cc.spectator) return specpanspeed();
-		return mousepanspeed();
 	}
 
 	void drawsized(float x, float y, float s)
@@ -1227,7 +1234,7 @@ struct GAMECLIENT : igameclient
 
 	void dozoom(bool down)
 	{
-		switch(zoomstyle())
+		switch(zoomtype())
 		{
 			case 1: curzoom = down ? 1 : 0; break;
 			case 0: default:
@@ -1359,13 +1366,15 @@ struct GAMECLIENT : igameclient
 				}
 			}
 
-			findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
+			if(mousestyle() <= 1)
+				findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
 
-			if(player1->state == CS_ALIVE || player1->state == CS_DEAD)
+			camera1->o = player1->o;
+
+			if(isthirdperson())
 			{
-				camera1->o = player1->o;
 				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
-				camera1->aimpitch = 0-cameraheight();
+				camera1->aimpitch = mousestyle() <= 1 ? 0-thirdpersonangle() : player1->aimpitch;
 
 				#define cameramove(d,s) \
 					if(d) \
@@ -1374,75 +1383,82 @@ struct GAMECLIENT : igameclient
 						camera1->strafe = s ? (d > 0 ? -1 : 1) : 0; \
 						loopi(10) if(!ph.moveplayer(camera1, 10, true, abs(d))) break; \
 					}
-				cameramove(cameradist(), false);
-				cameramove(camerashift(), true);
-
-				if(quakewobble > 0)
-				{
-					float pc = float(min(quakewobble, 100))/100.f;
-					#define wobble (float(rnd(24)-12)*pc)
-					camera1->roll = wobble;
-				}
-				else
-				{
-					quakewobble = 0;
-					camera1->roll = 0;
-				}
+				cameramove(thirdpersondist(), false);
+				cameramove(thirdpersonshift(), true);
 			}
-			else if(mousestyle())
+			else
 			{
-				camera1->o = player1->o;
+				//camera1 = player1;
 				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
-				camera1->aimpitch = mousestyle() <= 1 ? 0-cameraheight() : player1->aimpitch;
-			}
-			else camera1 = player1;
-
-
-			if(zooming())
-			{
-				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
-				if(!curzoom) amt = 1.f-amt;
-				vec gun(vec(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)).add(vec(0, 0, 2))),
-					off(vec(vec(gun).sub(camera1->o)).mul(amt));
-				camera1->o.add(off);
+				camera1->aimpitch = mousestyle() <= 1 ? player1->pitch : player1->aimpitch;
 			}
 
-			if(mousestyle() <= 1)
+			switch(mousestyle())
 			{
-				vec dir(worldpos);
-				dir.sub(camera1->o);
-				dir.normalize();
-				vectoyawpitch(dir, camera1->yaw, camera1->pitch);
-				if(mousetype())
+				case 0:
+				case 1:
 				{
-					camera1->aimyaw = camera1->yaw;
-					camera1->aimpitch = camera1->pitch;
+					if(isthirdperson())
+					{
+						vec dir(worldpos);
+						dir.sub(camera1->o);
+						dir.normalize();
+						vectoyawpitch(dir, camera1->yaw, camera1->pitch);
+					}
+					else
+					{
+						camera1->yaw = player1->yaw;
+						camera1->pitch = player1->pitch;
+					}
+					if(mousetype())
+					{
+						camera1->aimyaw = camera1->yaw;
+						camera1->aimpitch = camera1->pitch;
+					}
+					break;
 				}
-			}
-			else if(mousestyle() == 2)
-			{
-				float yaw, pitch;
-				vectoyawpitch(cursordir, yaw, pitch);
-				findorientation(camera1->o, yaw, pitch, worldpos);
-				if(allowmove(player1))
+				case 2:
 				{
-					vec dir(worldpos);
-					dir.sub(camera1->o);
-					dir.normalize();
-					vectoyawpitch(dir, player1->yaw, player1->pitch);
+					float yaw, pitch;
+					vectoyawpitch(cursordir, yaw, pitch);
+					findorientation(camera1->o, yaw, pitch, worldpos);
+					if(allowmove(player1))
+					{
+						if(isthirdperson())
+						{
+							vec dir(worldpos);
+							dir.sub(camera1->o);
+							dir.normalize();
+							vectoyawpitch(dir, player1->yaw, player1->pitch);
+						}
+						else
+						{
+							player1->yaw = yaw;
+							player1->pitch = pitch;
+						}
+					}
+					break;
 				}
 			}
 
 			if(allowmove(player1))
 			{
-				vec dir(worldpos);
-				dir.sub(player1->o);
-				dir.normalize();
-				vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
+				if(isthirdperson())
+				{
+					vec dir(worldpos);
+					dir.sub(player1->o);
+					dir.normalize();
+					vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
+				}
+				else
+				{
+					player1->aimyaw = camera1->yaw;
+					player1->aimpitch = camera1->pitch;
+				}
 
 				if(lastcamera && mousestyle() >= 1 && !g3d_windowhit(true, false))
 				{
-					physent *d = mousestyle() == 1 ? player1 : camera1;
+					physent *d = mousestyle() != 2 ? player1 : camera1;
 					float amt = clamp(float(lastmillis-lastcamera)/100.f, 0.f, 1.f)*panspeed();
 					float zone = float(deadzone())/100.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
 					if(cx > zone || cx < -zone) d->yaw += ((cx > zone ? cx-zone : cx+zone)/(1.f-zone))*amt;
@@ -1454,6 +1470,23 @@ struct GAMECLIENT : igameclient
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
 			vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
 			vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
+
+			if(quakewobble > 0)
+			{
+				float pc = float(min(quakewobble, 100))/100.f;
+				#define wobble (float(rnd(24)-12)*pc)
+				camera1->roll = wobble;
+			}
+			else camera1->roll = 0;
+
+			if(zooming())
+			{
+				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
+				if(!curzoom) amt = 1.f-amt;
+				vec gun(vec(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)).add(vec(0, 0, 2))),
+					off(vec(vec(gun).sub(camera1->o)).mul(amt));
+				camera1->o.add(off);
+			}
 
 			ph.updatematerial(camera1, true, true);
 

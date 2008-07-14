@@ -534,8 +534,6 @@ int xtraverts, xtravertsva;
 VARW(fog, 16, 4000, INT_MAX-1);
 VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
-bool isthirdperson() { return cl->gamethirdperson() || reflecting; }
-
 void vecfromcursor(float x, float y, float z, vec &dir)
 {
 	GLdouble cmvm[16], cpjm[16];

@@ -117,11 +117,11 @@ struct weaponstate
 		return dist;
 	}
 
-	void radialeffect(fpsent *d, vec &o, int radius)
+	void radialeffect(fpsent *d, vec &o, int radius, int flags)
 	{
 		vec dir;
 		float dist = middist(d, dir, o);
-		if(dist < radius) hit(d, dir, HIT_TORSO, int(dist*DMF));
+		if(dist < radius) hit(d, dir, flags, int(dist*DMF));
 	}
 
 	void explode(fpsent *d, vec &o, vec &vel, int id, int gun, bool local)
@@ -146,7 +146,7 @@ struct weaponstate
 		}
         adddecal(DECAL_SCORCH, o, gun==GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].radius);
 
-		if (local)
+		if(local)
 		{
 			hits.setsizenodelete(0);
 
@@ -154,7 +154,7 @@ struct weaponstate
 			{
 				fpsent *f = (fpsent *)cl.iterdynents(i);
 				if (!f || f->state != CS_ALIVE) continue;
-				radialeffect(f, o, guntype[gun].radius);
+				radialeffect(f, o, guntype[gun].radius, gun != GUN_FLAMER ? HIT_EXPLODE : HIT_BURN);
 			}
 
 			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id-cl.maptime,
