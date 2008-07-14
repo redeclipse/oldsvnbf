@@ -67,15 +67,13 @@ struct igameclient
     virtual void adddynlights() {}
     virtual void particletrack(physent *owner, vec &o, vec &d) {}
 
+	virtual bool gethudcolour(vec &colour) { return false; }
 	virtual bool mousemove(int dx, int dy, int x, int y, int w, int h) = 0;
 	virtual void project(int w, int h) = 0;
 	virtual void recomputecamera(int w, int h) = 0;
 
-	virtual bool gamethirdperson() { return false; } ;
-	virtual bool gethudcolour(vec &colour) { return false; }
-
-	virtual void loadworld(gzFile &f, int maptype) { return; };
-	virtual void saveworld(gzFile &f) { return; };
+	virtual void loadworld(gzFile &f, int maptype) { return; }
+	virtual void saveworld(gzFile &f) { return; }
 
 	virtual int localplayers() { return 1; }
 	virtual bool gui3d() { return true; }

@@ -2,7 +2,7 @@ struct fpsrender
 {
 	GAMECLIENT &cl;
 
-	//IVARP(lasersight, 0, 1, 1);
+	IVARP(lasersight, 0, 0, 1);
 
 	fpsrender(GAMECLIENT &_cl) : cl(_cl) {}
 
@@ -106,11 +106,9 @@ struct fpsrender
 		startmodelbatches();
 
 		fpsent *d;
-        loopv(cl.players) if((d = cl.players[i]) && d->state!=CS_SPECTATOR &&
-				d->state!=CS_SPAWNING && (d->state!=CS_DEAD || d->superdamage<50))
-					renderplayer(d, false);
-		if(cl.player1->state == CS_ALIVE || (cl.player1->state == CS_DEAD && cl.player1->superdamage < 50))
-			renderplayer(cl.player1, true);
+        loopi(cl.numdynents()) if((d = (fpsent *)cl.iterdynents(i)) && (d != cl.player1 || cl.isthirdperson()))
+			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
+				renderplayer(d, false);
 
 		cl.et.render();
 		cl.pj.render();
@@ -120,15 +118,14 @@ struct fpsrender
         cl.bot.render();
 
 		endmodelbatches();
-#if 0
-		if(lasersight() && cl.player1->gunselect == GUN_RIFLE && rendernormally)
+
+		if(lasersight() && rendernormally)
 		{
 			renderprimitive(true);
 			vec v(vec(cl.ws.gunorigin(cl.player1->gunselect, cl.player1->o, worldpos, cl.player1)).add(vec(0, 0, 1)));
 			renderline(v, worldpos, 0.2f, 0.0f, 0.0f, false);
 			renderprimitive(false);
 		}
-#endif
 	}
 
     void preload()

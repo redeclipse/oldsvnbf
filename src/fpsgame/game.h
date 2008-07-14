@@ -137,7 +137,9 @@ struct guntypes
 #define HIT_LEGS		0x01
 #define HIT_TORSO		0x02
 #define HIT_HEAD		0x04
-#define HIT_BURN		0x08
+
+#define HIT_BURN		0x10
+#define HIT_EXPLODE		0x10
 
 enum
 {
@@ -640,10 +642,9 @@ struct botinfo
 struct fpsent : dynent, fpsstate
 {
 	int clientnum, privilege, lastupdate, plag, ping;
-	bool attacking, reloading, useaction;
+	bool attacking, reloading, useaction, obliterated;
 	int attacktime, reloadtime, usetime;
 	int lasttaunt, lastuse, lastusemillis, lastflag;
-	int superdamage;
 	int frags, deaths, totaldamage, totalshots;
 	editinfo *edit;
     vec deltapos, newpos;
@@ -700,7 +701,8 @@ struct fpsent : dynent, fpsstate
 		stopmoving();
 		dynent::reset();
 		fpsstate::respawn();
-		lasttaunt = lastuse = lastusemillis = superdamage = lastimpulse = 0;
+		obliterated = false;
+		lasttaunt = lastuse = lastusemillis = lastimpulse = 0;
 		lastflag = respawned = suicided = -1;
 	}
 };
