@@ -27,7 +27,7 @@ struct weaponstate
 
 	void weaponswitch(fpsent *d, int a = -1, int b = -1)
 	{
-		if (!cl.allowmove(cl.player1) || cl.zooming() || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
+		if (!cl.allowmove(cl.player1) || cl.inzoom() || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
 		int s = d->gunselect;
 
 		loopi(NUMGUNS) // only loop the amount of times we have guns for
@@ -174,7 +174,8 @@ struct weaponstate
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
 		right.mul(0.36f*d->radius);
 		offset.add(right);
-		if(d->crouching) offset.z -= (d == cl.player1 ? min(1.0f, (lastmillis-d->crouchtime)/200.f) : 1.0f)*(1-CROUCHHEIGHT)*d->height;
+		if(d->crouching)
+			offset.z -= (d == cl.player1 ? min(1.0f, (lastmillis-d->crouchtime)/200.f) : 1.0f)*(1-CROUCHHEIGHT)*d->height;
 		return offset;
 	}
 
