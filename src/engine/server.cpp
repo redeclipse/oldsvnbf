@@ -18,9 +18,9 @@ void fatal(const char *s, ...)
     printf("ERROR: %s\n", msg);
     exit(EXIT_FAILURE);
 }
-VAR(verbose, 0, 1, 4);
+VAR(verbose, 0, 0, 4);
 #else
-VARP(verbose, 0, 1, 4);
+VARP(verbose, 0, 0, 4);
 #endif
 
 #define DEFAULTCLIENTS 6

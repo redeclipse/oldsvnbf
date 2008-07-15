@@ -217,18 +217,8 @@ struct GAMECLIENT : igameclient
 
 	void respawn(fpsent *d)
 	{
-		if(d->state == CS_DEAD)
-		{
-			int wait = respawnwait(d);
-
-			if(wait)
-			{
-				if(d==player1) console("\f2you must wait %d second%s before respawn!", CON_NORMAL|CON_CENTER, wait, wait!=1 ? "s" : "");
-				return;
-			}
-
+		if(d->state == CS_DEAD && !respawnwait(d))
 			respawnself(d);
-		}
 	}
 
     bool allowmove(physent *d)
@@ -385,18 +375,15 @@ struct GAMECLIENT : igameclient
 
 		if(d != actor)
 		{
-			if(d->health > 0) // else wait for killed
-			{
-				int snd = 0;
-				if(damage > 300) snd = 7;
-				else if(damage > 200) snd = 6;
-				else if(damage > 175) snd = 5;
-				else if(damage > 150) snd = 4;
-				else if(damage > 125) snd = 3;
-				else if(damage > 100) snd = 2;
-				else if(damage > 50) snd = 1;
-				playsound(S_DAMAGE1+snd, &actor->o);
-			}
+			int snd = 0;
+			if(damage >= 200) snd = 7;
+			else if(damage >= 150) snd = 6;
+			else if(damage >= 100) snd = 5;
+			else if(damage >= 75) snd = 4;
+			else if(damage >= 50) snd = 3;
+			else if(damage >= 25) snd = 2;
+			else if(damage >= 10) snd = 1;
+			playsound(S_DAMAGE1+snd, &actor->o);
 			if(actor == player1) lasthit = lastmillis;
 		}
 		bot.damaged(d, actor, gun, flags, damage, millis, dir);
