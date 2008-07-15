@@ -1280,7 +1280,7 @@ struct clientcom : iclientcom
 
 	void getmap()
 	{
-		//if(!m_edit(cl.gamemode)) { conoutf("\"getmap\" only works in coopedit mode"); return; }
+		if(!m_edit(cl.gamemode)) { conoutf("\"getmap\" only works while editing"); return; }
 		conoutf("getting map...");
 		addmsg(SV_GETMAP, "r");
 	}
