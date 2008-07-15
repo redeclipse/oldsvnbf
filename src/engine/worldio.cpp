@@ -810,7 +810,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 					int ln = gzgetint(f);
 					e.links.add(ln);
 				}
-				if(verbose) conoutf("entity %s (%d) loaded %d link(s)", et->findname(e.type), i, links);
+				if(verbose >= 2) conoutf("entity %s (%d) loaded %d link(s)", et->findname(e.type), i, links);
 			}
 			if(hdr.version <= 14 && e.type >= ET_MAPMODEL && e.type <= 16)
 			{
