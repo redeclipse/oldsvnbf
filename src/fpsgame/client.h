@@ -882,12 +882,11 @@ struct clientcom : iclientcom
 
 				case SV_EDITVAR:
 				{
-					if(!d) return;
 					int t = getint(p);
 					bool commit = true;
 					getstring(text, p);
 					ident *id = idents->access(text);
-					if(!id || !(id->flags&IDF_WORLD) || id->type != t) commit = false;
+					if(!d || !id || !(id->flags&IDF_WORLD) || id->type != t) commit = false;
 					switch(type)
 					{
 						case ID_VAR:
