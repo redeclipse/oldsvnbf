@@ -887,7 +887,7 @@ struct clientcom : iclientcom
 					getstring(text, p);
 					ident *id = idents->access(text);
 					if(!d || !id || !(id->flags&IDF_WORLD) || id->type != t) commit = false;
-					switch(type)
+					switch(t)
 					{
 						case ID_VAR:
 						{
