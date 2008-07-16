@@ -893,24 +893,22 @@ struct clientcom : iclientcom
 						case ID_VAR:
 						{
 							int val = getint(p);
-							if(id->maxval >= id->minval || val < id->minval || val > id->maxval)
+							if(id->minval > id->maxval || val < id->minval || val > id->maxval)
 								commit = false;
-
 							if(commit)
 							{
 								setvar(text, val, true);
-								conoutf("%s updated the value of %s to %d", d->name, id->name, *id->storage.i);
+								conoutf("%s set variable %s to %d", cl.colorname(d), id->name, *id->storage.i);
 							}
 							break;
 						}
 						case ID_FVAR:
 						{
 							float val = getfloat(p);
-
 							if(commit)
 							{
 								setfvar(text, val, true);
-								conoutf("%s updated the value of %s to %f", d->name, id->name, *id->storage.f);
+								conoutf("%s set float variable %s to %f", cl.colorname(d), id->name, *id->storage.f);
 							}
 							break;
 						}
@@ -921,7 +919,7 @@ struct clientcom : iclientcom
 							if(commit)
 							{
 								setsvar(text, val, true);
-								conoutf("%s updated the value of %s to %s", d->name, id->name, *id->storage.s);
+								conoutf("%s set string variable %s to %s", cl.colorname(d), id->name, *id->storage.s);
 							}
 							break;
 						}
@@ -932,7 +930,7 @@ struct clientcom : iclientcom
 							if(commit)
 							{
 								worldalias(text, val);
-								conoutf("%s updated the value of %s to %s", d->name, text, val);
+								conoutf("%s set world alias %s to %s", cl.colorname(d), text, val);
 							}
 							break;
 						}
