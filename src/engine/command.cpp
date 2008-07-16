@@ -146,11 +146,12 @@ void aliasa(const char *name, char *action)
                 if(!(b->flags & IDF_WORLD)) b->flags |= IDF_WORLD;
             }
             else if(b->flags & IDF_WORLD) b->flags &= ~IDF_WORLD;
+
+#ifndef STANDALONE
+			if(cl) cl->editvar(b, interactive);
+#endif
 		}
 	}
-#ifndef STANDALONE
-	if(b && cl) cl->editvar(b, interactive);
-#endif
 }
 
 void alias(const char *name, const char *action) { aliasa(name, newstring(action)); }
@@ -159,11 +160,11 @@ COMMAND(alias, "ss");
 
 void worldalias(const char *name, const char *action)
 {
-	overrideidents = worldidents = true;
+	worldidents = true;
 	persistidents = false;
 	alias(name, action);
 	persistidents = true;
-	overrideidents = worldidents = false;
+	worldidents = false;
 }
 COMMAND(worldalias, "ss");
 
