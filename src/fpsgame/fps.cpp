@@ -1447,7 +1447,7 @@ struct GAMECLIENT : igameclient
 				case 0:
 				case 1:
 				{
-					if(!mouseaimspeed() && isthirdperson())
+					if(!mouseaimspeed() && isthirdperson() && !inzoom())
 					{ // if they don't like it they just suffer a bit of jerking
 						vec dir(worldpos);
 						dir.sub(camera1->o);
@@ -1459,7 +1459,7 @@ struct GAMECLIENT : igameclient
 						camera1->yaw = player1->yaw;
 						camera1->pitch = player1->pitch;
 					}
-					if(mousetype())
+					if(mousestyle())
 					{
 						camera1->aimyaw = camera1->yaw;
 						camera1->aimpitch = camera1->pitch;
@@ -1473,7 +1473,7 @@ struct GAMECLIENT : igameclient
 					findorientation(camera1->o, yaw, pitch, worldpos);
 					if(allowmove(player1))
 					{
-						if(isthirdperson())
+						if(isthirdperson() && !inzoom())
 						{
 							vec dir(worldpos);
 							dir.sub(camera1->o);
@@ -1488,6 +1488,32 @@ struct GAMECLIENT : igameclient
 					}
 					break;
 				}
+			}
+
+			if(quakewobble > 0)
+				camera1->roll = float(rnd(25)-12)*(float(min(quakewobble, 100))/100.f);
+			else camera1->roll = 0;
+
+			if(!isthirdperson())
+			{
+				vec dir;
+				float yaw = camera1->aimyaw, pitch = camera1->aimpitch;
+				if(mousestyle() == 2)
+				{
+					yaw = player1->yaw;
+					pitch = player1->pitch;
+				}
+				vecfromyawpitch(yaw, pitch, 1, 0, dir);
+				dir.mul(player1->radius*firstpersonshift()/100.f);
+				camera1->o.add(dir);
+			}
+
+			if(inzoom())
+			{
+				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
+				if(!zooming) amt = 1.f-amt;
+				vec off(vec(vec(player1->o).sub(camera1->o)).mul(amt));
+				camera1->o.add(off);
 			}
 
 			if(allowmove(player1))
@@ -1519,32 +1545,6 @@ struct GAMECLIENT : igameclient
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
 			vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
 			vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
-
-			if(quakewobble > 0)
-				camera1->roll = float(rnd(25)-12)*(float(min(quakewobble, 100))/100.f);
-			else camera1->roll = 0;
-
-			if(!isthirdperson())
-			{
-				vec dir;
-				float yaw = camera1->aimyaw, pitch = camera1->aimpitch;
-				if(mousetype() == 2)
-				{
-					yaw = player1->yaw;
-					pitch = player1->pitch;
-				}
-				vecfromyawpitch(yaw, pitch, 1, 0, dir);
-				dir.mul(player1->radius*firstpersonshift()/100.f);
-				camera1->o.add(dir);
-			}
-
-			if(inzoom())
-			{
-				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
-				if(!zooming) amt = 1.f-amt;
-				vec off(vec(vec(player1->o).sub(camera1->o)).mul(amt));
-				camera1->o.add(off);
-			}
 
 			ph.updatematerial(camera1, true, true);
 
