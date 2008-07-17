@@ -1687,7 +1687,7 @@ struct texturegui : g3d_callback
 	{
 		int menutab = 1+curtexindex/(TEXTURE_WIDTH*TEXTURE_HEIGHT);
 		int origtab = menutab;
-		g.start(menustart, 0.04f, &menutab);
+		g.start(menustart, 0.04f, &menutab, true);
 		loopi(1+curtexnum/(TEXTURE_WIDTH*TEXTURE_HEIGHT))
 		{
 			g.tab((i==0)?"Textures":NULL, 0xAAFFAA);
