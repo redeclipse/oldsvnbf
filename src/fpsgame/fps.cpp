@@ -1472,7 +1472,7 @@ struct GAMECLIENT : igameclient
 				{
 					float yaw, pitch;
 					vectoyawpitch(cursordir, yaw, pitch);
-					findorientation(camera1->o, yaw, pitch, worldpos);
+					findorientation(isthirdperson() && !inzoom() ? camera1->o : player1->o, yaw, pitch, worldpos);
 					if(allowmove(player1))
 					{
 						if(isthirdperson() && !inzoom())
