@@ -170,9 +170,9 @@ struct weaponstate
 		front.mul(2);
 		front.mul(d->radius);
 		offset.add(front);
-		offset.z += (d->aboveeye + d->height)*0.875f - d->height;
+		offset.z += (d->aboveeye + d->height)*0.75f - d->height;
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
-		right.mul(0.36f*d->radius);
+		right.mul(0.35f*d->radius);
 		offset.add(right);
 		if(d->crouching)
 			offset.z -= (d == cl.player1 ? min(1.0f, (lastmillis-d->crouchtime)/200.f) : 1.0f)*(1-CROUCHHEIGHT)*d->height;
@@ -196,7 +196,8 @@ struct weaponstate
 				d->wschan = -1;
 			}
 		}
-		adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
+		if(gun != GUN_GL)
+			adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 
 		switch(gun)
 		{

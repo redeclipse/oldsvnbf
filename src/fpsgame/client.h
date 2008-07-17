@@ -892,10 +892,10 @@ struct clientcom : iclientcom
 						case ID_VAR:
 						{
 							int val = getint(p);
-							if(id->minval > id->maxval || val < id->minval || val > id->maxval)
-								commit = false;
 							if(commit)
 							{
+								if(id->minval > id->maxval || val < id->minval || val > id->maxval)
+									commit = false;
 								setvar(text, val, true);
 								conoutf("%s set variable %s to %d", cl.colorname(d), id->name, *id->storage.i);
 							}
@@ -926,7 +926,7 @@ struct clientcom : iclientcom
 						{
 							string val;
 							getstring(val, p);
-							if(commit)
+							if(commit || !id) // set aliases anyway
 							{
 								worldalias(text, val);
 								conoutf("%s set world alias %s to %s", cl.colorname(d), text, val);

@@ -48,7 +48,7 @@ struct GAMECLIENT : igameclient
 	IVARP(cardtime, 0, 2000, 10000);
 	IVARP(cardfade, 0, 3000, 10000);
 
-	IVARP(thirdperson, 0, 0, 1);
+	IVARP(thirdperson, 0, 1, 1);
 	IVARP(thirdpersondist, -100, 1, 100);
 	IVARP(thirdpersonshift, -100, 4, 100);
 	IVARP(thirdpersonangle, 0, 40, 360);
@@ -58,11 +58,12 @@ struct GAMECLIENT : igameclient
 
 	IVARP(mousetype, 0, 0, 2);
 	IVARP(mousedeadzone, 0, 5, 100);
-	IVARP(mousepanspeed, 1, 30, 1000);
+	IVARP(mousepanspeed, 1, 60, 1000);
+	IVARP(mouseaimspeed, 0, 250, 1000);
 
 	IVARP(zoommousetype, 0, 2, 2);
-	IVARP(zoomdeadzone, 0, 3, 100);
-	IVARP(zoompanspeed, 1, 5, 1000);
+	IVARP(zoomdeadzone, 0, 5, 100);
+	IVARP(zoompanspeed, 1, 10, 1000);
 
 	IVARP(editmousetype, 0, 0, 2);
 	IVARP(editdeadzone, 0, 10, 100);
@@ -70,7 +71,7 @@ struct GAMECLIENT : igameclient
 
 	IVARP(specmousetype, 0, 0, 2);
 	IVARP(specdeadzone, 0, 5, 100);
-	IVARP(specpanspeed, 1, 30, 1000);
+	IVARP(specpanspeed, 1, 60, 1000);
 
 	IFVARP(sensitivity, 10.0f);
 	IFVARP(yawsensitivity, 10.0f);
@@ -152,8 +153,9 @@ struct GAMECLIENT : igameclient
 
 	bool isthirdperson()
 	{
-		return thirdperson() && !inzoom() &&
-			player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
+		if((zooming && lastmillis-lastzoom > zoomtime()/2) || (!zooming && lastmillis-lastzoom < zoomtime()/2))
+			return false;
+		return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
 	}
 
 	int mousestyle()
@@ -996,6 +998,11 @@ struct GAMECLIENT : igameclient
 				curx = cursorx;
 				cury = cursory;
 			}
+			else if(mouseaimspeed() && isthirdperson())
+			{
+				curx = aimx;
+				cury = aimy;
+			}
 			drawpointer(w, h, index, curx, cury, r, g, b);
 		}
 
@@ -1277,7 +1284,6 @@ struct GAMECLIENT : igameclient
 		}
 		else
 		{
-			cursorx = cursory = 0.5f;
 			if(allowmove(player1))
 			{
 				float scale = inzoom() ? zoomsensitivity() : sensitivity();
@@ -1294,11 +1300,21 @@ struct GAMECLIENT : igameclient
 	{
 		if(!g3d_windowhit(true, false))
 		{
-			//float aimx, aimy, cx, cy, cz;
-			//vectocursor(worldpos, cx, cy, cz);
-			//aimx = float(cx)/float(w);
-			//aimy = float(cy)/float(h);
-			vecfromcursor(cursorx, cursory, 1.f, cursordir);
+			if(isthirdperson() && mousestyle() <= 1 && mouseaimspeed())
+			{
+				float cx, cy, cz;
+				vectocursor(worldpos, cx, cy, cz);
+				float ax = float(cx)/float(w), ay = float(cy)/float(h),
+					amt = float(curtime)/float(mouseaimspeed()), offx = ax-aimx, offy = ay-aimy;
+				aimx += offx*amt;
+				aimy += offy*amt;
+			}
+			else
+			{
+				aimx = cursorx;
+				aimy = cursory;
+			}
+			vecfromcursor(aimx, aimy, 1.f, cursordir);
 		}
 	}
 
@@ -1379,8 +1395,8 @@ struct GAMECLIENT : igameclient
 				case 0:
 				case 1:
 				{
-					if(isthirdperson())
-					{
+					if(!mouseaimspeed() && isthirdperson())
+					{ // if they don't like it they just suffer a bit of jerking
 						vec dir(worldpos);
 						dir.sub(camera1->o);
 						dir.normalize();
@@ -1496,7 +1512,7 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> bestplayers;
     vector<int> bestteams;
 
-	void renderplayer(fpsent *d, bool local)
+	void renderplayer(fpsent *d)
 	{
 		int team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL;
         int lastaction = 0, animflags = 0, animdelay = 0;
@@ -1576,10 +1592,13 @@ struct GAMECLIENT : igameclient
 				ai++;
 			}
 		}
-        renderclient(d, local, teamtype[team].mdl, a[0].name ? a : NULL, animflags, animdelay, lastaction, intermission ? 0 : d->lastpain);
+        renderclient(d, d == player1,
+			d != player1 || isthirdperson() ? teamtype[team].mdl : "player/arms",
+			a[0].name ? a : NULL, animflags, animdelay, lastaction,
+				intermission ? 0 : d->lastpain);
 
 		s_sprintf(d->info)("%s", colorname(d, NULL, "@"));
-		if(!local) part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
+		if(d != player1) part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
 	}
 
 	IVARP(lasersight, 0, 0, 1);
@@ -1595,9 +1614,9 @@ struct GAMECLIENT : igameclient
 		startmodelbatches();
 
 		fpsent *d;
-        loopi(numdynents()) if((d = (fpsent *)iterdynents(i)) && (d != player1 || isthirdperson()))
+        loopi(numdynents()) if((d = (fpsent *)iterdynents(i)))
 			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
-				renderplayer(d, false);
+				renderplayer(d);
 
 		et.render();
 		pj.render();

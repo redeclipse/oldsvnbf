@@ -121,7 +121,11 @@ void aliasa(const char *name, char *action)
         if(worldidents) flags |= IDF_WORLD;
         ident b(ID_ALIAS, newstring(name), action, flags);
         if(overrideidents) b.override = OVERRIDDEN;
-        idents->access(b.name, &b);
+        ident *c = idents->access(b.name, &b);
+
+#ifndef STANDALONE
+		if(cl && c) cl->editvar(c, interactive);
+#endif
 	}
     else if(b->type != ID_ALIAS)
 	{
