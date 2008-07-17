@@ -52,7 +52,10 @@ struct GAMECLIENT : igameclient
 	IVARP(thirdpersondist, -100, 1, 100);
 	IVARP(thirdpersonshift, -100, 4, 100);
 	IVARP(thirdpersonangle, 0, 40, 360);
-	IVARP(firstpersonshift, -100, 30, 100);
+
+	IVARP(firstpersondist, -100, 50, 100);
+	IVARP(firstpersonshift, -100, 25, 100);
+	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(absmouse, 0, 1, 1);
@@ -60,11 +63,10 @@ struct GAMECLIENT : igameclient
 	IVARP(mousetype, 0, 0, 2);
 	IVARP(mousedeadzone, 0, 5, 100);
 	IVARP(mousepanspeed, 1, 30, INT_MAX-1);
-	IVARP(mouseaimspeed, 0, 250, INT_MAX-1);
 
 	IVARP(zoommousetype, 0, 2, 2);
-	IVARP(zoomdeadzone, 0, 3, 100);
-	IVARP(zoompanspeed, 1, 5, INT_MAX-1);
+	IVARP(zoomdeadzone, 0, 30, 100);
+	IVARP(zoompanspeed, 1, 10, INT_MAX-1);
 
 	IVARP(editmousetype, 0, 0, 2);
 	IVARP(editdeadzone, 0, 50, 100);
@@ -86,6 +88,8 @@ struct GAMECLIENT : igameclient
 
 	IVARP(crosshairsize, 1, 30, 1000);
 	IVARP(crosshairblend, 0, 30, 100);
+	IVARP(crosshairspeed, 0, 250, INT_MAX-1);
+
 	IVARP(cursorsize, 1, 30, 1000);
 	IVARP(cursorblend, 0, 100, 100);
 
@@ -158,9 +162,7 @@ struct GAMECLIENT : igameclient
 
 	bool isthirdperson()
 	{
-		if(rendernormally)
-			return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
-		return true;
+		return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
 	}
 
 	int mousestyle()
@@ -234,6 +236,21 @@ struct GAMECLIENT : igameclient
 			}
 			zoomset(on, lastmillis);
 		}
+	}
+
+	void addsway(fpsent *d)
+	{
+		if(firstpersonsway())
+		{
+			if(d->physstate >= PHYS_SLOPE) swaymillis += curtime;
+
+			float k = pow(0.7f, curtime/10.0f);
+			swaydir.mul(k);
+			vec vel(d->vel);
+			vel.add(d->falling);
+			swaydir.add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), ph.maxspeed(d)))));
+		}
+		else swaydir = vec(0, 0, 0);
 	}
 
 	int respawnwait(fpsent *d)
@@ -357,15 +374,7 @@ struct GAMECLIENT : igameclient
 				else player1->lastimpulse = 0;
 
 				ph.move(player1, 20, true);
-
-				if(player1->physstate >= PHYS_SLOPE) swaymillis += curtime;
-
-				float k = pow(0.7f, curtime/10.0f);
-				swaydir.mul(k);
-				vec vel(player1->vel);
-				vel.add(player1->falling);
-				swaydir.add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), ph.maxspeed(player1)))));
-
+				addsway(player1);
 				et.checkitems(player1);
 				ws.shoot(player1, worldpos);
 				ws.reload(player1);
@@ -1049,24 +1058,15 @@ struct GAMECLIENT : igameclient
 
 		if(index > POINTER_NONE)
 		{
-			float curx = 0.5f, cury = 0.5f;
-			if(index < POINTER_EDIT || mousestyle() == 2)
-			{
-				curx = cursorx;
-				cury = cursory;
-			}
-			else if(mouseaimspeed() && isthirdperson())
-			{
-				curx = aimx;
-				cury = aimy;
-			}
+			float curx = index < POINTER_EDIT ? cursorx : aimx,
+				cury = index < POINTER_EDIT ? cursory : aimy;
 			drawpointer(w, h, index, curx, cury, r, g, b);
 		}
 
 		if(index > POINTER_GUI && mousestyle() >= 1)
 		{
 			float curx = mousestyle() == 1 ? cursorx : 0.5f,
-				cury = mousestyle() == 1 ? cursory : 0.5f;
+				cury = mousestyle() == 1 ? cursorx : 0.5f;
 			drawpointer(w, h, POINTER_RELATIVE, curx, cury, r, g, b);
 		}
 	}
@@ -1358,12 +1358,12 @@ struct GAMECLIENT : igameclient
 	{
 		if(!g3d_windowhit(true, false))
 		{
-			if(isthirdperson() && mousestyle() <= 1 && mouseaimspeed())
+			if(crosshairspeed())
 			{
 				float cx, cy, cz;
 				vectocursor(worldpos, cx, cy, cz);
 				float ax = float(cx)/float(w), ay = float(cy)/float(h),
-					amt = float(curtime)/float(mouseaimspeed()), offx = ax-aimx, offy = ay-aimy;
+					amt = float(curtime)/float(crosshairspeed()), offx = ax-aimx, offy = ay-aimy;
 				aimx += offx*amt;
 				aimy += offy*amt;
 			}
@@ -1455,7 +1455,7 @@ struct GAMECLIENT : igameclient
 				case 0:
 				case 1:
 				{
-					if(!mouseaimspeed() && isthirdperson() && !inzoom())
+					if(!crosshairspeed() && isthirdperson() && !inzoom())
 					{ // if they don't like it they just suffer a bit of jerking
 						vec dir(worldpos);
 						dir.sub(camera1->o);
@@ -1502,18 +1502,28 @@ struct GAMECLIENT : igameclient
 				camera1->roll = float(rnd(25)-12)*(float(min(quakewobble, 100))/100.f);
 			else camera1->roll = 0;
 
-			if(!isthirdperson())
+			if(!isthirdperson() && (firstpersondist() || firstpersonshift()))
 			{
-				vec dir;
 				float yaw = camera1->aimyaw, pitch = camera1->aimpitch;
 				if(mousestyle() == 2)
 				{
 					yaw = player1->yaw;
 					pitch = player1->pitch;
 				}
-				vecfromyawpitch(yaw, pitch, 1, 0, dir);
-				dir.mul(player1->radius*firstpersonshift()/100.f);
-				camera1->o.add(dir);
+				if(firstpersondist())
+				{
+					vec dir;
+					vecfromyawpitch(yaw, pitch, 1, 0, dir);
+					dir.mul(player1->radius*firstpersondist()/100.f);
+					camera1->o.add(dir);
+				}
+				if(firstpersonshift())
+				{
+					vec dir;
+					vecfromyawpitch(yaw, pitch, 0, 1, dir);
+					dir.mul(player1->radius*firstpersonshift()/100.f);
+					camera1->o.add(dir);
+				}
 			}
 
 			if(inzoom())
@@ -1597,6 +1607,22 @@ struct GAMECLIENT : igameclient
 		int anim = (d->crouching ? ANIM_CROUCH : ANIM_IDLE)|ANIM_LOOP;
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
 		vec o = vec(third ? vec(d->o).sub(vec(0, 0, d->height)) : ph.headpos(d)).sub(vec(0, 0, sink));
+		if(!third && firstpersonsway())
+		{
+			vec sway;
+			vecfromyawpitch(d->yaw, d->pitch, 1, 0, sway);
+			float swayspeed = sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y);
+			swayspeed = min(4.0f, swayspeed);
+			sway.mul(swayspeed);
+			float swayxy = sinf(swaymillis/115.0f)/float(firstpersonsway()),
+				  swayz = cosf(swaymillis/115.0f)/float(firstpersonsway());
+			swap(sway.x, sway.y);
+			sway.x *= -swayxy;
+			sway.y *= swayxy;
+			sway.z = -fabs(swayspeed*swayz);
+			sway.add(swaydir);
+			o.add(sway);
+		}
 		int basetime = 0;
 		if(animoverride()) anim = (animoverride()<0 ? ANIM_ALL : animoverride())|ANIM_LOOP;
 		else if(d->state==CS_DEAD)
@@ -1645,9 +1671,12 @@ struct GAMECLIENT : igameclient
 		int flags = MDL_LIGHT;
 		if(d->type==ENT_PLAYER) flags |= MDL_FULLBRIGHT;
 		else flags |= MDL_CULL_DIST | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
-		if(d->state==CS_LAGGED) flags |= MDL_TRANSLUCENT;
-		else if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
-		rendermodel(NULL, mdl, anim, o, testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, !rendernormally ? NULL : d, attachments, basetime);
+		if(third)
+		{
+			if(d->state==CS_LAGGED) flags |= MDL_TRANSLUCENT;
+			else if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
+		}
+		rendermodel(NULL, mdl, anim, o, !third && testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, third ? NULL : d, attachments, basetime);
 	}
 
 	void renderplayer(fpsent *d)
@@ -1736,7 +1765,7 @@ struct GAMECLIENT : igameclient
 			}
 		}
 
-        renderclient(d, d != player1 || isthirdperson(), team, a[0].name ? a : NULL, animflags, animdelay, lastaction, intermission ? 0 : d->lastpain, 0.f);
+        renderclient(d, !rendernormally || d != player1 || isthirdperson(), team, a[0].name ? a : NULL, animflags, animdelay, lastaction, intermission ? 0 : d->lastpain, 0.f);
 
 		s_sprintf(d->info)("%s", colorname(d, NULL, "@"));
 		if(d != player1) part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
@@ -1755,7 +1784,7 @@ struct GAMECLIENT : igameclient
 		startmodelbatches();
 
 		fpsent *d;
-        loopi(numdynents()) if((d = (fpsent *)iterdynents(i)) && (!rendernormally || d != player1 || !inzoomswitch()))
+        loopi(numdynents()) if((d = (fpsent *)iterdynents(i)) && (!rendernormally || d != player1 || !inzoomswitch() || d->state != CS_EDITING))
 			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
 				renderplayer(d);
 
