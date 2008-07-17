@@ -805,8 +805,6 @@ struct clientcom : iclientcom
 					if(!target) break;
 					target->health = amt;
 					target->lastregen = lastmillis;
-					vec pos = target->o;
-					pos.z += 0.6f*(target->height + target->aboveeye) - target->height;
 					particle_splash(3, max((MAXHEALTH-target->health)/10, 1), 10000, target->o);
 					playsound(S_REGEN, &target->o, ((MAXHEALTH-target->health)*255)/MAXHEALTH);
 					break;

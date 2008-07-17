@@ -206,8 +206,10 @@ struct botclient
 		vec targ;
 		loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && e != d && BOTTARG(d, e, true))
 		{
-			if((!t || e->o.dist(d->o) < t->o.dist(d->o)) &&
-				getsight(d->o, d->yaw, d->pitch, e->o, targ, BOTLOSDIST(d->skill), BOTFOVX(d->skill), BOTFOVY(d->skill)))
+			vec ep = cl.ph.headpos(e), tp = t ? cl.ph.headpos(t) : vec(0, 0, 0),
+				dp = cl.ph.headpos(d);
+			if((!t || ep.dist(d->o) < tp.dist(d->o)) &&
+				getsight(dp, d->yaw, d->pitch, ep, targ, BOTLOSDIST(d->skill), BOTFOVX(d->skill), BOTFOVY(d->skill)))
 					t = e;
 		}
 		if(t) return violence(d, b, t, pursue);
@@ -226,6 +228,7 @@ struct botclient
 
 	bool find(fpsent *d, botstate &b, bool override = true)
 	{
+		vec pos = cl.ph.headpos(d);
 		vector<interest> interests;
 		interests.setsize(0);
 
@@ -239,7 +242,8 @@ struct botclient
 			fpsent *e = NULL;
 			loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && BOTTARG(d, e, false) && !e->bot && d->team == e->team)
 			{ // try to guess what non bots are doing
-				if(targets.find(e->clientnum) < 0 && (e->o.dist(f.pos()) <= enttype[FLAG].radius*2.f || f.owner == e))
+				vec ep = cl.ph.headpos(e);
+				if(targets.find(e->clientnum) < 0 && (ep.dist(f.pos()) <= enttype[FLAG].radius*2.f || f.owner == e))
 					targets.add(e->clientnum);
 			}
 
@@ -266,7 +270,7 @@ struct botclient
 					n.targtype = BT_FLAG;
 					n.expire = 10000;
 					n.tolerance = enttype[FLAG].radius*2.f;
-					n.score = d->o.dist(f.pos())/(d->gunselect != GUN_PISTOL ? 1.f : 100.f);
+					n.score = pos.dist(f.pos())/(d->gunselect != GUN_PISTOL ? 1.f : 100.f);
 				}
 			}
 			else
@@ -280,7 +284,7 @@ struct botclient
 					n.targtype = BT_FLAG;
 					n.expire = 10000;
 					n.tolerance = enttype[FLAG].radius*2.f;
-					n.score = d->o.dist(f.pos());
+					n.score = pos.dist(f.pos());
 				}
 				else
 				{ // help by defending the attacker
@@ -288,13 +292,14 @@ struct botclient
 					loopvk(targets) if((t = cl.getclient(targets[k])))
 					{
 						interest &n = interests.add();
+						vec tp = cl.ph.headpos(t);
 						n.state = BS_DEFEND;
 						n.node = t->lastnode;
 						n.target = t->clientnum;
 						n.targtype = BT_PLAYER;
 						n.expire = 5000;
 						n.tolerance = t->radius*2.f;
-						n.score = d->o.dist(t->o);
+						n.score = pos.dist(tp);
 					}
 				}
 			}
@@ -316,7 +321,7 @@ struct botclient
 						n.targtype = BT_ENTITY;
 						n.expire = 10000;
 						n.tolerance = enttype[e.type].radius+d->radius;
-						n.score = d->o.dist(e.o)/(d->gunselect != GUN_PISTOL ? 1.f : 10.f);
+						n.score = pos.dist(e.o)/(d->gunselect != GUN_PISTOL ? 1.f : 10.f);
 					}
 					break;
 				}
@@ -343,6 +348,7 @@ struct botclient
 
 	bool ctfhomerun(fpsent *d, botstate &b)
 	{
+		vec pos = cl.ph.headpos(d);
 		loopk(2)
 		{
 			int goal = -1;
@@ -350,7 +356,7 @@ struct botclient
 			{
 				ctfstate::flag &g = cl.ctf.flags[i];
 				if(g.team == d->team && (k || (!g.owner && !g.droptime)) &&
-					(!cl.ctf.flags.inrange(goal) || g.pos().dist(d->o) < cl.ctf.flags[goal].pos().dist(d->o)))
+					(!cl.ctf.flags.inrange(goal) || g.pos().dist(pos) < cl.ctf.flags[goal].pos().dist(pos)))
 				{
 					goal = i;
 				}
@@ -489,19 +495,23 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			vec targ;
+			vec targ, pos = cl.ph.headpos(d);
 			fpsent *e = cl.getclient(b.target);
-			if(e && e->state == CS_ALIVE && raycubelos(d->o, e->o, targ))
+			if(e && e->state == CS_ALIVE)
 			{
-				d->bot->enemy = e->clientnum;
-				if(d->canshoot(d->gunselect, lastmillis) && (!BOTCHANCE(d->skill) || hastarget(d, b, e->o)))
+				vec ep = cl.ph.headpos(e);
+				if(raycubelos(pos, ep, targ))
 				{
-					d->attacking = true;
-					d->attacktime = lastmillis;
-					return !b.override && !b.goal;
+					d->bot->enemy = e->clientnum;
+					if(d->canshoot(d->gunselect, lastmillis) && (!BOTCHANCE(d->skill) || hastarget(d, b, ep)))
+					{
+						d->attacking = true;
+						d->attacktime = lastmillis;
+						return !b.override && !b.goal;
+					}
+					if(b.goal) follow(d, b, e);
+					return true;
 				}
-				if(b.goal) follow(d, b, e);
-				return true;
 			}
 		}
 		return false;
@@ -649,10 +659,11 @@ struct botclient
 
 	void aim(fpsent *d, botstate &b, vec &pos, float &yaw, float &pitch, bool aiming = true)
 	{
-		float targyaw = -(float)atan2(pos.x-d->o.x, pos.y-d->o.y)/PI*180+180;
+		vec dp = cl.ph.headpos(d);
+		float targyaw = -(float)atan2(pos.x-dp.x, pos.y-dp.y)/PI*180+180;
 		if(yaw < targyaw-180.0f) yaw += 360.0f;
 		if(yaw > targyaw+180.0f) yaw -= 360.0f;
-		float dist = d->o.dist(pos), targpitch = asin((pos.z-d->o.z)/dist)/RAD;
+		float dist = dp.dist(pos), targpitch = asin((pos.z-dp.z)/dist)/RAD;
 		if(aiming)
 		{
 			float amt = float(lastmillis-d->lastupdate)/float(BOTRATE(d->skill))/10.f,
@@ -693,6 +704,7 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
+			vec pos = cl.ph.headpos(d);
 			int bestgun = d->bestgun();
 			if(d->gunselect != bestgun && d->canswitch(bestgun, lastmillis))
 			{
@@ -707,7 +719,7 @@ struct botclient
 
 			if(hunt(d, b))
 			{
-				if(d->bot->spot.z-d->o.z > BOTJUMPHEIGHT && !d->timeinair && lastmillis-d->jumptime > 1000)
+				if(d->bot->spot.z-pos.z > BOTJUMPHEIGHT && !d->timeinair && lastmillis-d->jumptime > 1000)
 				{
 					d->jumping = true;
 					d->jumptime = lastmillis;
@@ -718,10 +730,9 @@ struct botclient
 			}
 			else d->move = d->strafe = 0;
 
-			vec aimpos;
-			fpsent *e;
-			if((e = cl.getclient(d->bot->enemy)) && e->state == CS_ALIVE &&
-				raycubelos(d->o, e->o, aimpos)) aimpos = e->o;
+			fpsent *e = cl.getclient(d->bot->enemy);
+			vec aimpos, ep = e ? cl.ph.headpos(e) : vec(0, 0, 0);
+			if(e && e->state == CS_ALIVE && raycubelos(pos, ep, aimpos)) aimpos = ep;
 			else
 			{
 				d->bot->enemy = -1;
@@ -736,7 +747,8 @@ struct botclient
 
 	void check(fpsent *d)
 	{
-		findorientation(d->o, d->yaw, d->pitch, d->bot->target);
+		vec pos = cl.ph.headpos(d);
+		findorientation(pos, d->yaw, d->pitch, d->bot->target);
 
 		if(d->state == CS_ALIVE)
 		{
@@ -876,8 +888,8 @@ struct botclient
 		if(botdebug() > 3)
 		{
 			vec fr(cl.ws.gunorigin(d->gunselect, d->o, d->bot->target, d)),
-				dr(d->bot->target);
-			if(dr.dist(d->o) > BOTLOSDIST(d->skill))
+				dr(d->bot->target), pos = cl.ph.headpos(d);
+			if(dr.dist(pos) > BOTLOSDIST(d->skill))
 			{
 				dr.sub(fr);
 				dr.normalize();

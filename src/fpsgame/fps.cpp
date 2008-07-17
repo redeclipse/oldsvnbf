@@ -392,7 +392,7 @@ struct GAMECLIENT : igameclient
 
 		if(d->type == ENT_PLAYER)
 		{
-			vec p = d->o;
+			vec p = ph.headpos(d);
 			p.z += 0.6f*(d->height + d->aboveeye) - d->height;
 			particle_splash(3, min(damage/4, 20), 10000, p);
 			if(d!=player1)
@@ -460,7 +460,8 @@ struct GAMECLIENT : igameclient
             d->move = d->strafe = 0;
 		}
 
-		loopi(rnd(damage/2)+1) pj.spawn(d->o, d->vel, d, PRJ_GIBS);
+		vec pos = ph.headpos(d);
+		loopi(rnd(damage/2)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
 		playsound(S_DIE1+rnd(2), &d->o);
 
 		bot.killed(d, actor, gun, flags, damage);
@@ -661,7 +662,7 @@ struct GAMECLIENT : igameclient
 
 	void drawplayerblip(fpsent *d, int x, int y, int s)
 	{
-		vec dir(d->o);
+		vec dir = ph.headpos(d);
 		dir.sub(camera1->o);
 		float dist = dir.magnitude();
 		if(dist < radarrange())
@@ -1195,8 +1196,9 @@ struct GAMECLIENT : igameclient
         if(owner->type!=ENT_PLAYER && owner->type!=ENT_AI) return;
         float dist = o.dist(d);
         vecfromyawpitch(owner->yaw, owner->pitch, 1, 0, d);
-        float newdist = raycube(owner->o, d, dist, RAY_CLIPMAT|RAY_POLY);
-        d.mul(min(newdist, dist)).add(owner->o);
+        vec pos = ph.headpos(owner);
+        float newdist = raycube(pos, d, dist, RAY_CLIPMAT|RAY_POLY);
+        d.mul(min(newdist, dist)).add(pos);
         o = ws.gunorigin(GUN_PISTOL, owner->o, d, (fpsent *)owner);
     }
 
@@ -1424,6 +1426,8 @@ struct GAMECLIENT : igameclient
 			if(mousestyle() <= 1)
 				findorientation(pos, player1->yaw, player1->pitch, worldpos);
 
+			camera1->o = pos;
+
 			if(isthirdperson())
 			{
 				float angle = thirdpersonangle() ? 0-thirdpersonangle() : player1->pitch;
@@ -1592,9 +1596,7 @@ struct GAMECLIENT : igameclient
 
 		int anim = (d->crouching ? ANIM_CROUCH : ANIM_IDLE)|ANIM_LOOP;
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
-		vec o(d->o);
-		if(third) o.z -= d->height;
-		o.z -= sink;
+		vec o = vec(third ? vec(d->o).sub(vec(0, 0, d->height)) : ph.headpos(d)).sub(vec(0, 0, sink));
 		int basetime = 0;
 		if(animoverride()) anim = (animoverride()<0 ? ANIM_ALL : animoverride())|ANIM_LOOP;
 		else if(d->state==CS_DEAD)
