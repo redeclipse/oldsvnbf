@@ -1012,10 +1012,12 @@ struct GAMECLIENT : igameclient
 
 	void drawpointers(int w, int h)
 	{
+		static bool wasingui;
 		float r = 1.f, g = 1.f, b = 1.f;
         int index = POINTER_NONE;
 
-		if(g3d_windowhit(true, false)) index = POINTER_GUI;
+		if(g3d_windowhit(true, false)) { index = POINTER_GUI; wasingui = true; }
+		else if(wasingui) { index = POINTER_GUI; resetcursor(); wasingui = false; }
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
         else if(editmode) index = POINTER_EDIT;
         else if(inzoom()) index = POINTER_ZOOM;
