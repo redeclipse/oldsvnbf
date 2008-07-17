@@ -576,5 +576,5 @@ extern void renderdir(vec &o, float yaw, float pitch, bool nf = true);
 extern void renderradius(vec &o, float xradius, float yradius, float zradius, bool nf = true);
 
 extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 120);
-#define rendernormally (!shadowmapping && !envmapping && !reflecting && !refracting)
+#define rendernormally ((!shadowmapping && !envmapping && !reflecting && !refracting) || glaring)
 #endif // STANDALONE
