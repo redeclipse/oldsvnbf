@@ -1538,9 +1538,9 @@ struct GAMECLIENT : igameclient
 				camera1->o.add(dir);
 			}
 
-			if(inzoom())
+			if(inzoomswitch())
 			{
-				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
+				float amt = lastmillis-lastzoom < zoomtime()/2 ? clamp(float(lastmillis-lastzoom)/float(zoomtime()/2), 0.f, 1.f) : 1.f;
 				if(!zooming) amt = 1.f-amt;
 				vec gun(vec(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)).add(vec(0, 0, 2))),
 					off(vec(vec(gun).sub(camera1->o)).mul(amt));
