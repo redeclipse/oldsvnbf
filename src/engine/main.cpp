@@ -799,6 +799,7 @@ int main(int argc, char **argv)
     loadshaders();
 	particleinit();
     initdecals();
+    preloadtextures();
 
 	conoutf("init: world");
 	emptymap(0, true, NULL, true);

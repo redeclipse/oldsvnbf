@@ -266,11 +266,11 @@ struct ctfclient : ctfstate
         loopi(TEAM_MAX) loadmodel(teamtype[i].flag, -1, true);
     }
 
-    void drawblip(int x, int y, int s, int i, bool flagblip)
+    void drawblip(int x, int y, int s, int i, bool blip)
     {
 		flag &f = flags[i];
 		vec dir;
-        if(flagblip) dir = f.pos();
+        if(blip) dir = f.pos();
         else dir = f.spawnloc;
 		dir.sub(camera1->o);
 		dir.z = 0.0f;
@@ -280,7 +280,7 @@ struct ctfclient : ctfstate
 
 		int colour = teamtype[f.team].colour;
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-			fade = 1.f, size = flagblip ? 0.033f : 0.015f;
+			fade = 1.f, size = blip ? 0.05f : 0.03f;
 		if(f.team != cl.player1->team && (!f.owner || f.owner->team != cl.player1->team))
 			fade = clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
 

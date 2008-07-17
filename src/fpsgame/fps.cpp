@@ -52,31 +52,33 @@ struct GAMECLIENT : igameclient
 	IVARP(thirdpersondist, -100, 1, 100);
 	IVARP(thirdpersonshift, -100, 4, 100);
 	IVARP(thirdpersonangle, 0, 40, 360);
+	IVARP(firstpersonshift, -100, 30, 100);
 
 	IVARP(invmouse, 0, 0, 1);
-	IVARP(absmouse, 0, 0, 1);
+	IVARP(absmouse, 0, 1, 1);
 
 	IVARP(mousetype, 0, 0, 2);
 	IVARP(mousedeadzone, 0, 5, 100);
-	IVARP(mousepanspeed, 1, 60, 1000);
-	IVARP(mouseaimspeed, 0, 250, 1000);
+	IVARP(mousepanspeed, 1, 30, INT_MAX-1);
+	IVARP(mouseaimspeed, 0, 250, INT_MAX-1);
 
 	IVARP(zoommousetype, 0, 2, 2);
-	IVARP(zoomdeadzone, 0, 5, 100);
-	IVARP(zoompanspeed, 1, 10, 1000);
+	IVARP(zoomdeadzone, 0, 3, 100);
+	IVARP(zoompanspeed, 1, 5, INT_MAX-1);
 
 	IVARP(editmousetype, 0, 0, 2);
-	IVARP(editdeadzone, 0, 10, 100);
-	IVARP(editpanspeed, 1, 30, 1000);
+	IVARP(editdeadzone, 0, 50, 100);
+	IVARP(editpanspeed, 1, 20, INT_MAX-1);
 
 	IVARP(specmousetype, 0, 0, 2);
 	IVARP(specdeadzone, 0, 5, 100);
-	IVARP(specpanspeed, 1, 60, 1000);
+	IVARP(specpanspeed, 1, 20, INT_MAX-1);
 
 	IFVARP(sensitivity, 10.0f);
 	IFVARP(yawsensitivity, 10.0f);
 	IFVARP(pitchsensitivity, 7.5f);
 	IFVARP(zoomsensitivity, 1.0f);
+	IFVARP(mousesensitivity, 1.0f);
 
 	IVARP(crosshair, 0, 1, 1);
 	IVARP(teamcrosshair, 0, 1, 1);
@@ -100,9 +102,11 @@ struct GAMECLIENT : igameclient
 	ITVAR(hitcrosshairtex, "textures/hitcrosshair");
 	ITVAR(zoomcrosshairtex, "textures/zoomcrosshair");
 
-	IVARP(radardist, 0, 256, 256);
-	IVARP(editradardist, 0, 64, 1024);
-	IVARP(radarnames, 0, 1, 1);
+	IVARP(radardist, 0, 512, 512);
+	IVARP(radarnames, 0, 1, 2);
+
+	IVARP(editradardist, 0, 512, INT_MAX-1);
+	IVARP(editradarentnames, 0, 1, 2);
 
 	ITVAR(bliptex, "textures/blip");
 	ITVAR(flagbliptex, "textures/flagblip");
@@ -111,6 +115,7 @@ struct GAMECLIENT : igameclient
 	ITVAR(healthbartex, "<anim>textures/healthbar");
 	ITVAR(goalbartex, "<anim>textures/goalbar");
 	ITVAR(teambartex, "<anim>textures/teambar");
+	ITVAR(indicatortex, "<anim>textures/indicator");
 
 	ITVAR(damagetex, "textures/damage");
 	ITVAR(zoomtex, "textures/zoom");
@@ -153,14 +158,14 @@ struct GAMECLIENT : igameclient
 
 	bool isthirdperson()
 	{
-		if((zooming && lastmillis-lastzoom > zoomtime()/2) || (!zooming && lastmillis-lastzoom < zoomtime()/2))
-			return false;
-		return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
+		if(rendernormally)
+			return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
+		return true;
 	}
 
 	int mousestyle()
 	{
-		if(inzoom()) return zoommousetype();
+		if(inzoomswitch()) return zoommousetype();
 		if(editmode) return editmousetype();
 		if(cc.spectator) return specmousetype();
 		return mousetype();
@@ -168,7 +173,7 @@ struct GAMECLIENT : igameclient
 
 	int deadzone()
 	{
-		if(inzoom()) return zoomdeadzone();
+		if(inzoomswitch()) return zoomdeadzone();
 		if(editmode) return editdeadzone();
 		if(cc.spectator) return specdeadzone();
 		return mousedeadzone();
@@ -176,36 +181,58 @@ struct GAMECLIENT : igameclient
 
 	int panspeed()
 	{
-		if(inzoom()) return zoompanspeed();
+		if(inzoomswitch()) return zoompanspeed();
 		if(editmode) return editpanspeed();
 		if(cc.spectator) return specpanspeed();
 		return mousepanspeed();
 	}
 
+	void zoomset(bool on, int millis)
+	{
+		if(on != prevzoom)
+		{
+			resetcursor();
+			lastzoom = millis;
+			prevzoom = zooming;
+		}
+		zooming = on;
+	}
+
+	bool zoomallow()
+	{
+		if(allowmove(player1) && player1->gunselect == GUN_RIFLE) return true;
+		zoomset(false, 0);
+		return false;
+	}
+
 	bool inzoom()
 	{
-		if(allowmove(player1) && player1->gunselect == GUN_RIFLE &&
-			(zooming || lastmillis-lastzoom < zoomtime()))
+		if(zoomallow() && (zooming || lastmillis-lastzoom < zoomtime()))
 			return true;
-		lastzoom = 0;
-		prevzoom = zooming = false;
+		return false;
+	}
+
+	bool inzoomswitch()
+	{
+		if(zoomallow() && ((zooming && lastmillis-lastzoom > zoomtime()/2) || (!zooming && lastmillis-lastzoom < zoomtime()/2)))
+			return true;
 		return false;
 	}
 
 	void dozoom(bool down)
 	{
-		switch(zoomtype())
+		if(zoomallow())
 		{
-			case 1: zooming = down; break;
-			case 0: default:
-				if(down) zooming = !zooming;
-				break;
-		}
-		if(zooming != prevzoom)
-		{
-			resetcursor();
-			lastzoom = lastmillis;
-			prevzoom = zooming;
+			bool on = false;
+			switch(zoomtype())
+			{
+				case 1: on = down; break;
+				case 0: default:
+					if(down) on = !zooming;
+					else on = zooming;
+					break;
+			}
+			zoomset(on, lastmillis);
 		}
 	}
 
@@ -516,7 +543,10 @@ struct GAMECLIENT : igameclient
     void preload()
     {
     	loopi(TEAM_MAX)
-			loadmodel(teamtype[i].mdl, -1, true);
+    	{
+			loadmodel(teamtype[i].tpmdl, -1, true);
+			loadmodel(teamtype[i].fpmdl, -1, true);
+    	}
         ws.preload();
         et.preload();
 		stf.preload();
@@ -649,8 +679,11 @@ struct GAMECLIENT : igameclient
 			glBegin(GL_QUADS);
 			drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
 			glEnd();
+			int ty = int(cy+cs);
 			if(radarnames())
-				draw_textx("%s", int(cx), int(cy+cs), 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, colorname(d, NULL, "", false));
+				ty += draw_textx("%s", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, colorname(d, NULL, "", false));
+			if(radarnames() == 2 && m_team(gamemode, mutators))
+				draw_textx("(\fs%s%s\fS)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, teamtype[d->team].chat, teamtype[d->team].name);
 		}
 	}
 
@@ -690,12 +723,12 @@ struct GAMECLIENT : igameclient
 			enttypes &t = enttype[e.type];
 			if((t.usetype == EU_ITEM && e.spawned) || editmode)
 			{
-				bool insel = (editmode && (enthover == i || entgroup.find(i) >= 0));
+				bool insel = editmode && (enthover == i || entgroup.find(i) >= 0);
 				vec dir(e.o);
 				dir.sub(camera1->o);
 				float dist = dir.magnitude();
 				if(!insel && dist >= radarrange()) continue;
-				if(dist >= radarrange()*(1 - 0.05f)) dir.mul(radarrange()*(1 - 0.05f)/dist);
+				if(dist >= radarrange()) dir.mul(radarrange()/dist);
 				dir.rotate_around_z(-camera1->yaw*RAD);
 				float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
 					cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
@@ -706,6 +739,11 @@ struct GAMECLIENT : igameclient
 				glBegin(GL_QUADS);
 				drawsized(cx-(cs*0.5f), cy-(cs*0.5f), cs);
 				glEnd();
+				int ty = int(cy+cs);
+				if(editradarentnames() == 2 && editmode)
+					ty += draw_textx("%s [%d]", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, t.name, i);
+				if(editradarentnames() && insel)
+					draw_textx("(%d %d %d %d)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, e.attr1, e.attr2, e.attr3, e.attr4);
 			}
 		}
 		popfont();
@@ -763,12 +801,12 @@ struct GAMECLIENT : igameclient
 			fade = clamp(fade*amt, 0.f, 1.f);
 		}
 
-		if(inzoom())
+		if(inzoomswitch())
 		{
 			if((t = textureload(damagetex())) != notexture)
 			{
 				int frame = lastmillis-lastzoom;
-				float pc = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
+				float pc = frame < zoomtime()/2 ? float(frame)/float(zoomtime()/2) : 1.f;
 				if(!zooming) pc = 1.f-pc;
 				settexture("textures/zoom");
 
@@ -857,17 +895,6 @@ struct GAMECLIENT : igameclient
 
 			if(isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
 			{
-				if(((t = textureload(healthbartex())) != notexture) &&
-					guntype[player1->gunselect].power && player1->gunstate[player1->gunselect] == GUNSTATE_POWER)
-				{
-					float amt = clamp(float(lastmillis-player1->gunlast[player1->gunselect])/float(guntype[player1->gunselect].power), 0.f, 1.f);
-					glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
-					glColor4f(1.f, 1.f, 0.f, fade*0.5f);
-					glBegin(GL_QUADS);
-					drawsized(float(bx+16), float(by+16), float(bs-32));
-					glEnd();
-				}
-
 				bool canshoot = player1->canshoot(player1->gunselect, lastmillis);
 				draw_textx("%d", ox-FONTH/4, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
 			}
@@ -922,6 +949,7 @@ struct GAMECLIENT : igameclient
 		{
 			float chsize = crosshairsize()*w/300.0f, blend = crosshairblend()/100.f;
 
+			glEnable(GL_BLEND);
 			if(index == POINTER_GUI)
 			{
 				chsize = cursorsize()*w/300.0f;
@@ -930,7 +958,7 @@ struct GAMECLIENT : igameclient
 			else if(index == POINTER_ZOOM)
 			{
 				chsize = zoomcrosshairsize()*w/300.0f;
-				if(inzoom())
+				if(inzoomswitch())
 				{
 					int frame = lastmillis-lastzoom;
 					float amt = frame < zoomtime() ? clamp(float(frame)/float(zoomtime()), 0.f, 1.f) : 1.f;
@@ -939,7 +967,6 @@ struct GAMECLIENT : igameclient
 				}
 			}
 
-			glEnable(GL_BLEND);
 			if(pointer->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			else glBlendFunc(GL_ONE, GL_ONE);
 			glColor4f(r, g, b, blend);
@@ -954,6 +981,31 @@ struct GAMECLIENT : igameclient
 			glTexCoord2d(0.0, 1.0); glVertex2f(cx, cy + chsize);
 			glEnd();
 
+
+			if(index > POINTER_GUI && player1->state == CS_ALIVE &&
+				isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
+			{
+				Texture *t;
+				if(((t = textureload(indicatortex())) != notexture) &&
+					guntype[player1->gunselect].power && player1->gunstate[player1->gunselect] == GUNSTATE_POWER)
+				{
+					float amt = clamp(float(lastmillis-player1->gunlast[player1->gunselect])/float(guntype[player1->gunselect].power), 0.f, 1.f);
+					if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+					else glBlendFunc(GL_ONE, GL_ONE);
+					chsize *= 1.5f;
+					cx = x*w*3.0f - (index != POINTER_GUI ? chsize/2.0f : 0);
+					cy = y*h*3.0f - (index != POINTER_GUI ? chsize/2.0f : 0);
+					glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
+					glColor4f(1.f, 1.f, 0.f, blend);
+					glBegin(GL_QUADS);
+					glTexCoord2d(0.0, 0.0); glVertex2f(cx, cy);
+					glTexCoord2d(1.0, 0.0); glVertex2f(cx + chsize, cy);
+					glTexCoord2d(1.0, 1.0); glVertex2f(cx + chsize, cy + chsize);
+					glTexCoord2d(0.0, 1.0); glVertex2f(cx, cy + chsize);
+					glEnd();
+				}
+			}
+
 			glDisable(GL_BLEND);
 		}
 	}
@@ -966,7 +1018,7 @@ struct GAMECLIENT : igameclient
 		if(g3d_windowhit(true, false)) index = POINTER_GUI;
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
         else if(editmode) index = POINTER_EDIT;
-        else if(inzoom()) index = POINTER_ZOOM;
+        else if(inzoomswitch()) index = POINTER_ZOOM;
         else if(lastmillis-lasthit < hitcrosshair()) index = POINTER_HIT;
         else if(m_team(gamemode, mutators) && teamcrosshair())
         {
@@ -1277,8 +1329,8 @@ struct GAMECLIENT : igameclient
 			}
 			else
 			{
-				cursorx = clamp(cursorx+mousesens(dx, w, yawsensitivity()), 0.f, 1.f);
-				cursory = clamp(cursory+mousesens(dy, h, pitchsensitivity()*(!windowhit && invmouse() ? -1.f : 1.f)), 0.f, 1.f);
+				cursorx = clamp(cursorx+mousesens(dx, w, mousesensitivity()), 0.f, 1.f);
+				cursory = clamp(cursory+mousesens(dy, h, mousesensitivity()*(!windowhit && invmouse() ? -1.f : 1.f)), 0.f, 1.f);
 				return true;
 			}
 		}
@@ -1286,7 +1338,7 @@ struct GAMECLIENT : igameclient
 		{
 			if(allowmove(player1))
 			{
-				float scale = inzoom() ? zoomsensitivity() : sensitivity();
+				float scale = inzoomswitch() ? zoomsensitivity() : sensitivity();
 				player1->yaw += mousesens(dx, w, yawsensitivity()*scale);
 				player1->pitch -= mousesens(dy, h, pitchsensitivity()*scale*(!windowhit && invmouse() ? -1.f : 1.f));
 				fixrange(player1->yaw, player1->pitch);
@@ -1472,6 +1524,20 @@ struct GAMECLIENT : igameclient
 				camera1->roll = float(rnd(25)-12)*(float(min(quakewobble, 100))/100.f);
 			else camera1->roll = 0;
 
+			if(!isthirdperson())
+			{
+				vec dir;
+				float yaw = camera1->aimyaw, pitch = camera1->aimpitch;
+				if(mousetype() == 2)
+				{
+					yaw = player1->yaw;
+					pitch = player1->pitch;
+				}
+				vecfromyawpitch(yaw, pitch, 1, 0, dir);
+				dir.mul(player1->radius*firstpersonshift()/100.f);
+				camera1->o.add(dir);
+			}
+
 			if(inzoom())
 			{
 				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
@@ -1512,11 +1578,78 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> bestplayers;
     vector<int> bestteams;
 
+	IVAR(animoverride, -1, 0, NUMANIMS-1);
+	IVAR(testanims, 0, 0, 1);
+
+	void renderclient(fpsent *d, bool third, int team, modelattach *attachments, int animflags, int animdelay, int lastaction, int lastpain, float sink)
+	{
+		string mdl;
+		if(third) s_strcpy(mdl, teamtype[team].tpmdl);
+		else s_strcpy(mdl, teamtype[team].fpmdl);
+
+		int anim = (d->crouching ? ANIM_CROUCH : ANIM_IDLE)|ANIM_LOOP;
+		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
+		vec o(d->o);
+		if(third) o.z -= d->height;
+		o.z -= sink;
+		int basetime = 0;
+		if(animoverride()) anim = (animoverride()<0 ? ANIM_ALL : animoverride())|ANIM_LOOP;
+		else if(d->state==CS_DEAD)
+		{
+			pitch = 0;
+			anim = ANIM_DYING;
+			basetime = lastpain;
+			int t = lastmillis-lastpain;
+			if(t<0 || t>20000) return;
+			if(t>1000) { anim = ANIM_DEAD|ANIM_LOOP; if(t>1600) { t -= 1600; o.z -= t*t/10000000000.0f*t/16.0f; } }
+			if(o.z<-1000) return;
+		}
+		else if(d->state==CS_EDITING || d->state==CS_SPECTATOR) anim = ANIM_EDIT|ANIM_LOOP;
+		else if(d->state==CS_LAGGED)							anim = ANIM_LAG|ANIM_LOOP;
+		else
+		{
+			if(lastmillis-lastpain<300)
+			{
+				anim = ANIM_PAIN;
+				basetime = lastpain;
+			}
+			else if(lastpain < lastaction && (animflags<0 || (d->type!=ENT_AI && lastmillis-lastaction<animdelay)))
+			{
+				anim = animflags<0 ? -animflags : animflags;
+				basetime = lastaction;
+			}
+
+			if(d->inliquid && d->physstate<=PHYS_FALL) anim |= (((cl->allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
+			else if(d->timeinair>100) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
+			else if(cl->allowmove(d))
+			{
+				if(d->crouching)
+				{
+					if(d->move>0) anim |= (ANIM_CRAWL_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+					else if(d->strafe) anim |= ((d->strafe>0 ? ANIM_CRAWL_LEFT : ANIM_CRAWL_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
+					else if(d->move<0) anim |= (ANIM_CRAWL_BACKWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+				}
+				else if(d->move>0) anim |= (ANIM_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+				else if(d->strafe) anim |= ((d->strafe>0 ? ANIM_LEFT : ANIM_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
+				else if(d->move<0) anim |= (ANIM_BACKWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+			}
+
+			if(((anim&ANIM_INDEX)==ANIM_IDLE || (anim&ANIM_INDEX)==ANIM_CROUCH) && (anim>>ANIM_SECONDARY)&ANIM_INDEX) anim >>= ANIM_SECONDARY;
+		}
+		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
+		int flags = MDL_LIGHT;
+		if(d->type==ENT_PLAYER) flags |= MDL_FULLBRIGHT;
+		else flags |= MDL_CULL_DIST | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
+		if(d->state==CS_LAGGED) flags |= MDL_TRANSLUCENT;
+		else if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
+		rendermodel(NULL, mdl, anim, o, testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, third ? NULL : d, attachments, basetime);
+	}
+
 	void renderplayer(fpsent *d)
 	{
 		int team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL;
-        int lastaction = 0, animflags = 0, animdelay = 0;
-        bool hasgun = isgun(d->gunselect);
+        int gun = d->gunselect, lastaction = 0, animflags = 0, animdelay = 0;
+        bool hasgun = isgun(gun);
 
 		if(intermission && d->state != CS_DEAD)
 		{
@@ -1532,42 +1665,47 @@ struct GAMECLIENT : igameclient
 			animflags = ANIM_TAUNT;
 			animdelay = 1000;
 		}
-		else if(hasgun && lastmillis-d->gunlast[d->gunselect] < d->gunwait[d->gunselect])
+		else if(hasgun && lastmillis-d->gunlast[gun] < d->gunwait[gun])
 		{
-			switch(d->gunstate[d->gunselect])
+			switch(d->gunstate[gun])
 			{
 				case GUNSTATE_SWITCH:
 				{
 					animflags = ANIM_SWITCH;
+					if(lastmillis-d->gunlast[gun] < d->gunwait[gun]/2)
+					{
+						if(isgun(d->lastgun) && (d->ammo[gun] > 0 || guntype[gun].rdelay > 0))
+							gun = d->lastgun;
+						else hasgun = false;
+					}
 					break;
 				}
 				case GUNSTATE_POWER:
 				{
-					animflags = guntype[d->gunselect].power ? ANIM_POWER : ANIM_SHOOT;
+					animflags = guntype[gun].power ? ANIM_POWER : ANIM_SHOOT;
 					break;
 				}
 				case GUNSTATE_SHOOT:
 				{
-					animflags = guntype[d->gunselect].power ? ANIM_THROW : ANIM_SHOOT;
-					if(guntype[d->gunselect].power) hasgun = false;
+					animflags = guntype[gun].power ? ANIM_THROW : ANIM_SHOOT;
+					if(guntype[gun].power) hasgun = false;
 					break;
 				}
 				case GUNSTATE_RELOAD:
 				{
-					animflags = guntype[d->gunselect].power ? ANIM_HOLD : ANIM_RELOAD;
-					if(guntype[d->gunselect].power) hasgun = false;
+					animflags = guntype[gun].power ? ANIM_HOLD : ANIM_RELOAD;
+					if(guntype[gun].power) hasgun = false;
 					break;
 				}
 				case GUNSTATE_NONE:	default:
 				{
-					if(d->ammo[d->gunselect] <= 0 && guntype[d->gunselect].rdelay <= 0)
+					if(d->ammo[gun] <= 0 && guntype[gun].rdelay <= 0)
 						hasgun = false;
 					break;
 				}
 			}
-
-			lastaction = d->gunlast[d->gunselect];
-			animdelay = d->gunwait[d->gunselect] + 50;
+			lastaction = d->gunlast[gun];
+			animdelay = d->gunwait[gun] + 50;
 		}
 
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
@@ -1575,7 +1713,7 @@ struct GAMECLIENT : igameclient
 
         if(hasgun)
 		{
-            a[ai].name = guntype[d->gunselect].vwep;
+            a[ai].name = guntype[gun].vwep;
             a[ai].tag = "tag_weapon";
             a[ai].anim = ANIM_VWEP|ANIM_LOOP;
             a[ai].basetime = 0;
@@ -1592,10 +1730,8 @@ struct GAMECLIENT : igameclient
 				ai++;
 			}
 		}
-        renderclient(d, d == player1,
-			d != player1 || isthirdperson() ? teamtype[team].mdl : "player/arms",
-			a[0].name ? a : NULL, animflags, animdelay, lastaction,
-				intermission ? 0 : d->lastpain);
+
+        renderclient(d, d != player1 || isthirdperson(), team, a[0].name ? a : NULL, animflags, animdelay, lastaction, intermission ? 0 : d->lastpain, 0.f);
 
 		s_sprintf(d->info)("%s", colorname(d, NULL, "@"));
 		if(d != player1) part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
@@ -1614,7 +1750,7 @@ struct GAMECLIENT : igameclient
 		startmodelbatches();
 
 		fpsent *d;
-        loopi(numdynents()) if((d = (fpsent *)iterdynents(i)))
+        loopi(numdynents()) if((d = (fpsent *)iterdynents(i)) && (!rendernormally || d != player1 || !inzoomswitch()))
 			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
 				renderplayer(d);
 
