@@ -175,7 +175,7 @@ struct weaponstate
 		right.mul(0.35f*d->radius);
 		offset.add(right);
 		if(d->crouching)
-			offset.z -= (d == cl.player1 ? min(1.0f, (lastmillis-d->crouchtime)/200.f) : 1.0f)*(1-CROUCHHEIGHT)*d->height;
+			offset.z -= min(1.0f, (lastmillis-d->crouchtime)/200.f)*(1-CROUCHHEIGHT)*d->height;
 		return offset;
 	}
 
