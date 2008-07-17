@@ -95,7 +95,7 @@ struct fpsentity : extentity
 
 #define SGRAYS			15
 #define SGSPREAD		4
-#define GUNSWITCHDELAY	500
+#define GUNSWITCHDELAY	800
 
 enum
 {
@@ -267,13 +267,13 @@ struct demoheader
 enum { TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_MAX };
 struct teamtypes
 {
-	int	type,		colour;	const char *name,	*mdl,			*flag,			*icon,			*chat;
+	int	type,		colour;	const char *name,	*tpmdl,			*fpmdl,				*flag,			*icon,			*chat;
 } teamtype[] = {
-	{ TEAM_NEUTRAL,	0x2F2F2F,	"Neutral",		"player",		"flag",			"team",			"\fa" },
-	{ TEAM_ALPHA,	0x2222FF,	"Alpha",		"player/alpha",	"flag/alpha",	"teamalpha",	"\fb" },
-	{ TEAM_BETA,	0xFF2222,	"Beta",			"player/beta",	"flag/beta",	"teambeta",		"\fr" },
-	{ TEAM_DELTA,	0xFFFF22,	"Delta",		"player/delta",	"flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0x22FF22,	"Gamma",		"player/gamma",	"flag/gamma",	"teamgamma",	"\fg" }
+	{ TEAM_NEUTRAL,	0x2F2F2F,	"Neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
+	{ TEAM_ALPHA,	0x2222FF,	"Alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
+	{ TEAM_BETA,	0xFF2222,	"Beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
+	{ TEAM_DELTA,	0xFFFF22,	"Delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
+	{ TEAM_GAMMA,	0x22FF22,	"Gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" }
 };
 
 enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
@@ -375,7 +375,7 @@ struct serverstatuses
 struct fpsstate
 {
 	int health, ammo[NUMGUNS];
-	int gunselect, gunstate[NUMGUNS], gunwait[NUMGUNS], gunlast[NUMGUNS];
+	int lastgun, gunselect, gunstate[NUMGUNS], gunwait[NUMGUNS], gunlast[NUMGUNS];
 	int lastdeath, lifesequence, lastspawn, lastpain, lastregen;
 	int ownernum, skill, spree;
 
@@ -438,7 +438,7 @@ struct fpsstate
 			gunwait[i] = gunlast[i] = 0;
 			ammo[i] = -1;
 		}
-		gunselect = -1;
+		lastgun = gunselect = -1;
 	}
 
 	void setgunstate(int gun, int state, int delay, int millis)
@@ -450,7 +450,11 @@ struct fpsstate
 
 	void gunswitch(int gun, int millis)
 	{
-		setgunstate(gunselect, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
+		if(gun != gunselect)
+		{
+			lastgun = gunselect;
+			setgunstate(lastgun, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
+		}
 		gunselect = gun;
 		setgunstate(gunselect, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
 	}
@@ -513,7 +517,7 @@ struct fpsstate
 		if(m_insta(gamemode, mutators))
 		{
 			health = 1;
-			gunselect = GUN_RIFLE;
+			lastgun = gunselect = GUN_RIFLE;
 			loopi(NUMGUNS)
 			{
 				gunstate[i] = GUNSTATE_NONE;
@@ -523,7 +527,7 @@ struct fpsstate
 		else
 		{
 			health = MAXHEALTH;
-			gunselect = GUN_PISTOL;
+			lastgun = gunselect = GUN_PISTOL;
 			loopi(NUMGUNS)
 			{
 				gunstate[i] = GUNSTATE_NONE;

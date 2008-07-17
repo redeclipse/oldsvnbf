@@ -170,7 +170,7 @@ struct weaponstate
 		front.mul(2);
 		front.mul(d->radius);
 		offset.add(front);
-		offset.z += (d->aboveeye + d->height)*0.75f - d->height;
+		offset.z += (d->aboveeye + d->height)*0.835f - d->height;
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
 		right.mul(0.35f*d->radius);
 		offset.add(right);
