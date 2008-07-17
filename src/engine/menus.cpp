@@ -20,7 +20,7 @@ struct menu : g3d_callback
     void gui(g3d_gui &g, bool firstpass)
     {
         cgui = &g;
-        cgui->start(menustart, 0.03f, &menutab);
+        cgui->start(menustart, 0.03f, &menutab, true);
         cgui->tab(header ? header : name, GUI_TITLE_COLOR);
         execute(contents);
         cgui->end();
@@ -373,7 +373,7 @@ static struct applymenu : menu
     void gui(g3d_gui &g, bool firstpass)
     {
         if(guistack.empty()) return;
-        g.start(menustart, 0.03f);
+        g.start(menustart, 0.03f, NULL, true);
         g.text("the following settings have changed:", GUI_TEXT_COLOR, "info");
         loopv(needsapply) g.text(needsapply[i].desc, GUI_TEXT_COLOR, "info");
         g.separator();

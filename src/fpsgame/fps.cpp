@@ -165,7 +165,7 @@ struct GAMECLIENT : igameclient
 
 	int mousestyle()
 	{
-		if(inzoomswitch()) return zoommousetype();
+		if(inzoom()) return zoommousetype();
 		if(editmode) return editmousetype();
 		if(cc.spectator) return specmousetype();
 		return mousetype();
@@ -173,7 +173,7 @@ struct GAMECLIENT : igameclient
 
 	int deadzone()
 	{
-		if(inzoomswitch()) return zoomdeadzone();
+		if(inzoom()) return zoomdeadzone();
 		if(editmode) return editdeadzone();
 		if(cc.spectator) return specdeadzone();
 		return mousedeadzone();
@@ -181,7 +181,7 @@ struct GAMECLIENT : igameclient
 
 	int panspeed()
 	{
-		if(inzoomswitch()) return zoompanspeed();
+		if(inzoom()) return zoompanspeed();
 		if(editmode) return editpanspeed();
 		if(cc.spectator) return specpanspeed();
 		return mousepanspeed();
@@ -801,12 +801,12 @@ struct GAMECLIENT : igameclient
 			fade = clamp(fade*amt, 0.f, 1.f);
 		}
 
-		if(inzoomswitch())
+		if(inzoom())
 		{
 			if((t = textureload(damagetex())) != notexture)
 			{
 				int frame = lastmillis-lastzoom;
-				float pc = frame < zoomtime()/2 ? float(frame)/float(zoomtime()/2) : 1.f;
+				float pc = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
 				if(!zooming) pc = 1.f-pc;
 				settexture("textures/zoom");
 
@@ -958,7 +958,7 @@ struct GAMECLIENT : igameclient
 			else if(index == POINTER_ZOOM)
 			{
 				chsize = zoomcrosshairsize()*w/300.0f;
-				if(inzoomswitch())
+				if(inzoom())
 				{
 					int frame = lastmillis-lastzoom;
 					float amt = frame < zoomtime() ? clamp(float(frame)/float(zoomtime()), 0.f, 1.f) : 1.f;
@@ -1018,7 +1018,7 @@ struct GAMECLIENT : igameclient
 		if(g3d_windowhit(true, false)) index = POINTER_GUI;
         else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
         else if(editmode) index = POINTER_EDIT;
-        else if(inzoomswitch()) index = POINTER_ZOOM;
+        else if(inzoom()) index = POINTER_ZOOM;
         else if(lastmillis-lasthit < hitcrosshair()) index = POINTER_HIT;
         else if(m_team(gamemode, mutators) && teamcrosshair())
         {
@@ -1338,7 +1338,7 @@ struct GAMECLIENT : igameclient
 		{
 			if(allowmove(player1))
 			{
-				float scale = inzoomswitch() ? zoomsensitivity() : sensitivity();
+				float scale = inzoom() ? zoomsensitivity() : sensitivity();
 				player1->yaw += mousesens(dx, w, yawsensitivity()*scale);
 				player1->pitch -= mousesens(dy, h, pitchsensitivity()*scale*(!windowhit && invmouse() ? -1.f : 1.f));
 				fixrange(player1->yaw, player1->pitch);
@@ -1538,9 +1538,9 @@ struct GAMECLIENT : igameclient
 				camera1->o.add(dir);
 			}
 
-			if(inzoomswitch())
+			if(inzoom())
 			{
-				float amt = lastmillis-lastzoom < zoomtime()/2 ? clamp(float(lastmillis-lastzoom)/float(zoomtime()/2), 0.f, 1.f) : 1.f;
+				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
 				if(!zooming) amt = 1.f-amt;
 				vec gun(vec(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)).add(vec(0, 0, 2))),
 					off(vec(vec(gun).sub(camera1->o)).mul(amt));
@@ -1642,7 +1642,7 @@ struct GAMECLIENT : igameclient
 		else flags |= MDL_CULL_DIST | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
 		if(d->state==CS_LAGGED) flags |= MDL_TRANSLUCENT;
 		else if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
-		rendermodel(NULL, mdl, anim, o, testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, third ? NULL : d, attachments, basetime);
+		rendermodel(NULL, mdl, anim, o, testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, !rendernormally ? NULL : d, attachments, basetime);
 	}
 
 	void renderplayer(fpsent *d)
