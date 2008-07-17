@@ -68,6 +68,17 @@ struct physics
 		cl.cc.addmsg(SV_TAUNT, "ri", d->clientnum);
 	}
 
+	vec headpos(physent *d, float off = 0.f)
+	{
+		if(d->type == ENT_PLAYER)
+		{
+			vec offset(vec(d->o).sub(vec(0, 0, off)));
+			if(d->crouching)
+				offset.z -= min(1.0f, (lastmillis-d->crouchtime)/200.f)*(1-CROUCHHEIGHT)*d->height;
+			return offset;
+		}
+		return vec(d->o);
+	}
 
 	vec feetpos(physent *d, float off = 0.f)
 	{

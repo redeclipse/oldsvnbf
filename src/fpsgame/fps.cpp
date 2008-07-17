@@ -289,7 +289,8 @@ struct GAMECLIENT : igameclient
 		{
 			fpsent *o = players[i];
 			if(!o) continue;
-			if(intersect(o, player1->o, worldpos)) return o;
+			vec pos = ph.headpos(player1, 0.f);
+			if(intersect(o, pos, worldpos)) return o;
 		}
 		return NULL;
 	}
@@ -1024,7 +1025,8 @@ struct GAMECLIENT : igameclient
         else if(lastmillis-lasthit < hitcrosshair()) index = POINTER_HIT;
         else if(m_team(gamemode, mutators) && teamcrosshair())
         {
-            dynent *d = ws.intersectclosest(player1->o, worldpos, player1);
+            vec pos = ph.headpos(player1, 0.f);
+            dynent *d = ws.intersectclosest(pos, worldpos, player1);
             if(d && d->type==ENT_PLAYER && ((fpsent *)d)->team == player1->team)
 				index = POINTER_TEAM;
 			else index = POINTER_HAIR;
@@ -1417,10 +1419,10 @@ struct GAMECLIENT : igameclient
 				}
 			}
 
-			if(mousestyle() <= 1)
-				findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
+			vec pos = ph.headpos(player1, 0.f);
 
-			camera1->o = player1->o;
+			if(mousestyle() <= 1)
+				findorientation(pos, player1->yaw, player1->pitch, worldpos);
 
 			if(isthirdperson())
 			{
@@ -1472,7 +1474,7 @@ struct GAMECLIENT : igameclient
 				{
 					float yaw, pitch;
 					vectoyawpitch(cursordir, yaw, pitch);
-					findorientation(isthirdperson() && !inzoom() ? camera1->o : player1->o, yaw, pitch, worldpos);
+					findorientation(isthirdperson() && !inzoom() ? camera1->o : pos, yaw, pitch, worldpos);
 					if(allowmove(player1))
 					{
 						if(isthirdperson() && !inzoom())
@@ -1514,7 +1516,7 @@ struct GAMECLIENT : igameclient
 			{
 				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
 				if(!zooming) amt = 1.f-amt;
-				vec off(vec(vec(player1->o).sub(camera1->o)).mul(amt));
+				vec off(vec(vec(pos).sub(camera1->o)).mul(amt));
 				camera1->o.add(off);
 			}
 
@@ -1523,7 +1525,7 @@ struct GAMECLIENT : igameclient
 				if(isthirdperson())
 				{
 					vec dir(worldpos);
-					dir.sub(player1->o);
+					dir.sub(pos);
 					dir.normalize();
 					vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
 				}
