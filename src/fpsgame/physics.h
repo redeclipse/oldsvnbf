@@ -42,7 +42,7 @@ struct physics
 	#define iput(x,y,t,z,q) \
 		void do##x(bool on) \
 		{ \
-			if (!q || cl.player1->state == CS_DEAD) \
+			if(!q || cl.player1->state == CS_DEAD) \
 			{ \
 				cl.player1->y = false; \
 				if(z && on) cl.respawn(cl.player1); \
@@ -62,8 +62,8 @@ struct physics
 
 	void taunt(fpsent *d)
 	{
-        if (d->state!=CS_ALIVE || d->physstate<PHYS_SLOPE) return;
-		if (lastmillis-d->lasttaunt<1000) return;
+        if(d->state!=CS_ALIVE || d->physstate<PHYS_SLOPE) return;
+		if(lastmillis-d->lasttaunt<1000) return;
 		d->lasttaunt = lastmillis;
 		cl.cc.addmsg(SV_TAUNT, "ri", d->clientnum);
 	}
@@ -112,7 +112,7 @@ struct physics
 	}
 	float maxspeed(physent *d)
 	{
-		if (d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_EDITING)
+		if(d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_EDITING)
 		{
 			return d->maxspeed*(float(d->crouching ? crawlspeed() : movespeed())/100.f)*(float(d->weight)/100.f);
 		}
@@ -395,17 +395,17 @@ struct physics
 
 	void modifyvelocity(physent *pl, bool local, bool floating, int millis)
 	{
-		if (floating)
+		if(floating)
 		{
-			if (pl->jumping)
+			if(pl->jumping)
 			{
 				pl->jumping = pl->crouching = false;
 				pl->vel.z = jumpvelocity(pl);
 			}
 		}
-		else if (pl->physstate >= PHYS_SLOPE || pl->inliquid)
+		else if(pl->physstate >= PHYS_SLOPE || pl->inliquid)
 		{
-			if (pl->jumping)
+			if(pl->jumping)
 			{
 				pl->jumping = pl->crouching = false;
 
@@ -414,7 +414,7 @@ struct physics
 				playsound(S_JUMP, &pl->o);
 			}
 		}
-        if (pl->physstate == PHYS_FALL) pl->timeinair += curtime;
+        if(pl->physstate == PHYS_FALL) pl->timeinair += curtime;
 
 		vec m(0.0f, 0.0f, 0.0f);
         bool wantsmove = cl.allowmove(pl) && (pl->move || pl->strafe);
@@ -437,7 +437,7 @@ struct physics
 
 		vec d(m);
 		d.mul(maxspeed(pl));
-		if(floating) { if (local) d.mul(floatspeed()/100.0f); }
+		if(floating) { if(local) d.mul(floatspeed()/100.0f); }
 		else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
 		float friction = pl->inliquid && !floating ? liquidfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
 		float fpsfric = friction/millis*20.0f;
@@ -507,7 +507,7 @@ struct physics
 		v = vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->height)/4);
 		bool liquid = pl->inliquid;
 		pl->inliquid = !floating && isliquid(lookupmaterial(v)&MATF_VOLUME);
-		if (!floating && pl->inliquid && liquid != pl->inliquid)
+		if(!floating && pl->inliquid && liquid != pl->inliquid)
 			pl->vel.div(liquiddampen(pl));
     }
 
@@ -520,7 +520,7 @@ struct physics
 		bool floating = pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
 		float secs = millis/1000.f;
 
-		if (pl->type!=ENT_CAMERA) updatematerial(pl, local, floating);
+		if(pl->type!=ENT_CAMERA) updatematerial(pl, local, floating);
 
         // apply gravity
         if(!floating && pl->type!=ENT_CAMERA) modifygravity(pl, millis);
@@ -566,19 +566,19 @@ struct physics
 			pl->moving = false;
 
 		pl->lastmoveattempt = lastmillis;
-		if (pl->o!=oldpos) pl->lastmove = lastmillis;
+		if(pl->o!=oldpos) pl->lastmove = lastmillis;
 		return true;
 	}
 
 	bool move(physent *d, int moveres = 10, bool local = true, int millis = 0, int repeat = 0)
 	{
-		if (!millis) millis = physframetime();
-		if (!repeat) repeat = physicsrepeat;
+		if(!millis) millis = physframetime();
+		if(!repeat) repeat = physicsrepeat;
 
 		loopi(repeat)
 		{
-			if (!moveplayer(d, moveres, local, millis)) return false;
-			if (local && d->o.z < 0 && d->state == CS_ALIVE)
+			if(!moveplayer(d, moveres, local, millis)) return false;
+			if(local && d->o.z < 0 && d->state == CS_ALIVE)
 			{
 				cl.suicide((fpsent *)d);
 				return false;

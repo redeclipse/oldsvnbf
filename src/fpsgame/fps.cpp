@@ -480,7 +480,7 @@ struct GAMECLIENT : igameclient
 		}
 
 		vec pos = ph.headpos(d);
-		loopi(rnd(damage/2)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
+		loopi(rnd((damage+2)/2)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
 		playsound(S_DIE1+rnd(2), &d->o);
 
 		bot.killed(d, actor, gun, flags, damage);
@@ -491,27 +491,30 @@ struct GAMECLIENT : igameclient
 		minremain = timeremain;
 		if(!timeremain)
 		{
-			intermission = true;
-			player1->stopmoving();
-
-			sb.showscores(true);
-
-			if(m_mission(gamemode))
+			if(!intermission)
 			{
-				et.announce(S_V_MCOMPLETE, "intermission: mission complete!");
-			}
-			else
-			{
-				if(m_team(gamemode, mutators) ?
-					(teamscores.length() && player1->team == teamscores[0].team) :
-						(shplayers.length() && shplayers[0] == player1))
+				player1->stopmoving();
+				sb.showscores(true);
+
+				if(m_mission(gamemode))
 				{
-					et.announce(S_V_YOUWIN, "intermission: you win!");
+					et.announce(S_V_MCOMPLETE, "intermission: mission complete!");
 				}
 				else
 				{
-					et.announce(S_V_YOULOSE, "intermission: you win!");
+					bool won = m_team(gamemode, mutators) ?
+						(teamscores.length() && player1->team == teamscores[0].team) :
+							(shplayers.length() && shplayers[0] == player1);
+					if(won)
+					{
+						et.announce(S_V_YOUWIN, "intermission: you win!");
+					}
+					else
+					{
+						et.announce(S_V_YOULOSE, "intermission: you lose!");
+					}
 				}
+				intermission = true;
 			}
 		}
 		else if(timeremain > 0)
@@ -604,12 +607,6 @@ struct GAMECLIENT : igameclient
 		et.findplayerspawn(player1, -1, -1);
 		et.resetspawns();
 		sb.showscores(false);
-		if(m_mission(gamemode))
-		{
-			s_sprintfd(aname)("bestscore_%s", getmapname());
-			const char *best = getalias(aname);
-			if(*best) conoutf("\f2try to beat your best score so far: %s", best);
-		}
 	}
 
 	void playsoundc(int n, fpsent *d = NULL)
@@ -694,6 +691,9 @@ struct GAMECLIENT : igameclient
 				cs = (d->crouching ? 0.005f : 0.025f)*s,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
 				fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f);
+
+			if(lastmillis-d->lastspawn <= REGENWAIT)
+				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
 
 			settexture(bliptex());
 			glColor4f(r, g, b, fade);
@@ -822,7 +822,7 @@ struct GAMECLIENT : igameclient
 			fade = clamp(fade*amt, 0.f, 1.f);
 		}
 
-		if(inzoom())
+		if(player1->state == CS_ALIVE && inzoom())
 		{
 			if((t = textureload(damagetex())) != notexture)
 			{
@@ -1203,7 +1203,7 @@ struct GAMECLIENT : igameclient
 
     void particletrack(physent *owner, vec &o, vec &d)
     {
-        if(owner->type!=ENT_PLAYER && owner->type!=ENT_AI) return;
+        if(owner->type != ENT_PLAYER) return;
         float dist = o.dist(d);
         vecfromyawpitch(owner->yaw, owner->pitch, 1, 0, d);
         vec pos = ph.headpos(owner);
@@ -1683,15 +1683,16 @@ struct GAMECLIENT : igameclient
 
 			if(((anim&ANIM_INDEX)==ANIM_IDLE || (anim&ANIM_INDEX)==ANIM_CROUCH) && (anim>>ANIM_SECONDARY)&ANIM_INDEX) anim >>= ANIM_SECONDARY;
 		}
+
 		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
 		int flags = MDL_LIGHT;
+
 		if(d->type==ENT_PLAYER) flags |= MDL_FULLBRIGHT;
 		else flags |= MDL_CULL_DIST | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
-		if(third)
-		{
-			if(d->state==CS_LAGGED) flags |= MDL_TRANSLUCENT;
-			else if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
-		}
+
+		if(d->state == CS_LAGGED || (d->state == CS_ALIVE && lastmillis-d->lastspawn <= REGENWAIT))
+			flags |= MDL_TRANSLUCENT;
+		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
 		rendermodel(NULL, mdl, anim, o, !third && testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, d, attachments, basetime);
 	}
 

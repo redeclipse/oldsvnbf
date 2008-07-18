@@ -613,8 +613,7 @@ struct clientcom : iclientcom
 					int tcn = getint(p), snd = getint(p);
 					if(snd < 0 || snd >= S_MAX) break;
 					fpsent *t = cl.getclient(tcn);
-					if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum))
-						playsound(snd, &cl.player1->o);
+					if(!t) break;
 					else playsound(snd, &t->o);
 					break;
 				}
@@ -674,11 +673,11 @@ struct clientcom : iclientcom
 					break;
 				}
 
-				case SV_MAPRELOAD:		  // server requests next map
+				case SV_MAPRELOAD: // server requests next map
 				{
-					s_sprintfd(nextmapalias)("nextmap_%s%s", m_stf(cl.gamemode) ? "stf_" : (m_ctf(cl.gamemode) ? "ctf_" : ""), getmapname());
-					const char *map = getalias(nextmapalias);	 // look up map in the cycle
-					addmsg(SV_MAPCHANGE, "rsii", *map ? map : sv->defaultmap(), cl.nextmode, cl.nextmuts);
+					if(m_stf(cl.gamemode)) showgui("stfmaps");
+					else if(m_ctf(cl.gamemode)) showgui("ctfmaps");
+					else showgui("maps");
 					break;
 				}
 
@@ -735,12 +734,11 @@ struct clientcom : iclientcom
 				case SV_SPAWNSTATE:
 				{
 					int lcn = getint(p);
-					fpsent *f = cl.getclient(lcn);
-					bool local = f && (f == cl.player1 || f->bot);
-					if(f==cl.player1 && editmode) toggleedit();
-					if(f) f->respawn();
+					fpsent *f = cl.newclient(lcn);
+					bool local = f == cl.player1 || f->bot;
+					if(f == cl.player1 && editmode) toggleedit();
+					f->respawn();
 					parsestate(f, p);
-					if(!f) break;
 					f->state = CS_ALIVE;
 					if(local)
 					{

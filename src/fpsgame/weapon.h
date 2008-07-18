@@ -20,27 +20,27 @@ struct weaponstate
 		CCOMMAND(ammo, "s", (weaponstate *self, char *a),
 		{
 			int n = a[0] ? atoi(a) : self->cl.player1->gunselect;
-			if (n <= -1 || n >= NUMGUNS) return;
+			if(n <= -1 || n >= NUMGUNS) return;
 			intret(self->cl.player1->ammo[n]);
 		});
 	}
 
 	void weaponswitch(fpsent *d, int a = -1, int b = -1)
 	{
-		if (!cl.allowmove(cl.player1) || cl.inzoom() || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
+		if(!cl.allowmove(cl.player1) || cl.inzoom() || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
 		int s = d->gunselect;
 
 		loopi(NUMGUNS) // only loop the amount of times we have guns for
 		{
-			if (a >= 0) s = a;
+			if(a >= 0) s = a;
 			else s += b;
 
 			while (s >= NUMGUNS) s -= NUMGUNS;
 			while (s <= -1) s += NUMGUNS;
 
-			if (!d->canswitch(s, lastmillis))
+			if(!d->canswitch(s, lastmillis))
 			{
-				if (a >= 0) return;
+				if(a >= 0) return;
 			}
 			else break;
 		}
@@ -103,9 +103,9 @@ struct weaponstate
 		float off = d->crouching ? min(1.0f, (lastmillis-d->crouchtime)/200.f)*(1-CROUCHHEIGHT)*d->height : 1.f,
 			h = d->height*off, a = d->aboveeye*off;
 		int hits = 0;
-		if (s.z < pos.z-h*0.75f && s.z >= pos.z-h) hits |= HIT_LEGS;
-		else if (s.z < pos.z-a*2.f && s.z >= pos.z-h*0.75f) hits |= HIT_TORSO;
-		else if (s.z <= pos.z+a && s.z >= pos.z-a*2.f) hits |= HIT_HEAD;
+		if(s.z < pos.z-h*0.75f && s.z >= pos.z-h) hits |= HIT_LEGS;
+		else if(s.z < pos.z-a*2.f && s.z >= pos.z-h*0.75f) hits |= HIT_TORSO;
+		else if(s.z <= pos.z+a && s.z >= pos.z-a*2.f) hits |= HIT_HEAD;
 		hit(d, v, hits, rays);
 	}
 
@@ -115,7 +115,7 @@ struct weaponstate
 		middle.z += (o->aboveeye-o->height)/2;
 		float dist = middle.dist(v, dir);
 		dir.div(dist);
-		if (dist < 0) dist = 0;
+		if(dist < 0) dist = 0;
 		return dist;
 	}
 
@@ -131,7 +131,7 @@ struct weaponstate
 		vec dir;
 		float dist = middist(camera1, dir, o);
 
-		if (guntype[gun].esound >= 0)
+		if(guntype[gun].esound >= 0)
 			playsound(guntype[gun].esound, &o, 255, 0, 0, SND_COPY);
 
 		if(gun != GUN_FLAMER)
@@ -155,7 +155,7 @@ struct weaponstate
 			loopi(cl.numdynents())
 			{
 				fpsent *f = (fpsent *)cl.iterdynents(i);
-				if (!f || f->state != CS_ALIVE) continue;
+				if(!f || f->state != CS_ALIVE || lastmillis-d->lastspawn <= REGENWAIT) continue;
 				radialeffect(f, o, guntype[gun].radius, gun != GUN_FLAMER ? HIT_EXPLODE : HIT_BURN);
 			}
 
@@ -169,9 +169,9 @@ struct weaponstate
 		vec offset(from);
 		vec front, right;
 		vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
-		front.mul(d->radius*1.75f);
+		front.mul(d->radius*1.5f);
 		offset.add(front);
-		offset.z += (d->aboveeye + d->height)*0.875f - d->height;
+		offset.z += (d->aboveeye + d->height)*0.85f - d->height;
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
 		right.mul(d->radius*0.36f);
 		offset.add(right);
@@ -184,11 +184,11 @@ struct weaponstate
 	{
 		int pow = guntype[gun].power ? power : 100;
 
-		if (guntype[gun].sound >= 0)
+		if(guntype[gun].sound >= 0)
 		{
-			if (gun == GUN_FLAMER)
+			if(gun == GUN_FLAMER)
 			{
-				if (!issound(d->wschan))
+				if(!issound(d->wschan))
 					d->wschan = playsound(guntype[gun].sound, &from, 255, 0, 0, SND_COPY);
 			}
 			else
@@ -227,7 +227,7 @@ struct weaponstate
 			case GUN_FLAMER:
 			{
 				vec up = to;
-				if (gun == GUN_GL)
+				if(gun == GUN_GL)
 				{
 					float dist = from.dist(to);
 					up.z += dist/8;
@@ -252,7 +252,7 @@ struct weaponstate
 		loopi(cl.numdynents())
 		{
 			fpsent *o = (fpsent *)cl.iterdynents(i);
-            if(!o || o==at || o->state!=CS_ALIVE) continue;
+            if(!o || o==at || o->state!=CS_ALIVE || lastmillis-o->lastspawn <= REGENWAIT) continue;
 			if(!intersect(o, from, to)) continue;
 			float dist = at->o.dist(o->o);
 			if(dist<bestdist)
@@ -343,7 +343,7 @@ struct weaponstate
 				d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
 				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			}
-			else if(d->reloading) cl.playsoundc(S_DENIED, d);
+			//else if(d->reloading) cl.playsoundc(S_DENIED, d);
 		}
 		d->reloading = false;
 	}
