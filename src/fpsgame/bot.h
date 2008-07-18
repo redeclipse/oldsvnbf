@@ -25,7 +25,7 @@ struct botclient
 	botclient(GAMECLIENT &_cl) : cl(_cl)
 	{
 		CCOMMAND(addbot, "s", (botclient *self, char *s),
-			self->addbot(*s ? clamp(atoi(s), 1, 100) : 50)
+			self->addbot(*s ? clamp(atoi(s), 1, 100) : 100)
 		);
 		CCOMMAND(delbot, "", (botclient *self), self->delbot());
 	}
@@ -666,7 +666,7 @@ struct botclient
 		float dist = dp.dist(pos), targpitch = asin((pos.z-dp.z)/dist)/RAD;
 		if(aiming)
 		{
-			float amt = float(lastmillis-d->lastupdate)/float(BOTRATE(d->skill))/8.f,
+			float amt = float(lastmillis-d->lastupdate)/float(BOTRATE(d->skill))/10.f,
 				offyaw = fabs(targyaw-yaw)*amt, offpitch = fabs(targpitch-pitch)*amt;
 
 			if(targyaw > yaw) // slowly turn bot towards target

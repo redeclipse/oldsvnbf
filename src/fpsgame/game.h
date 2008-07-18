@@ -376,7 +376,7 @@ struct fpsstate
 {
 	int health, ammo[NUMGUNS];
 	int lastgun, gunselect, gunstate[NUMGUNS], gunwait[NUMGUNS], gunlast[NUMGUNS];
-	int lastdeath, lifesequence, lastspawn, lastpain, lastregen;
+	int lastdeath, lifesequence, lastspawn, lastrespawn, lastpain, lastregen;
 	int ownernum, skill, spree;
 
 	fpsstate() : lifesequence(0), ownernum(-1), skill(0), spree(0) {}
@@ -501,11 +501,12 @@ struct fpsstate
 		}
 	}
 
-	void respawn()
+	void respawn(int millis)
 	{
 		health = MAXHEALTH;
 		lastdeath = lastpain = lastregen = spree = 0;
-		lastspawn = -1;
+		lastspawn = millis;
+		lastrespawn = -1;
 		gunreset();
 	}
 
@@ -664,7 +665,7 @@ struct fpsent : dynent, fpsstate
 	{
 		name[0] = info[0] = 0;
 		team = TEAM_NEUTRAL;
-		respawn();
+		respawn(-1);
 	}
 	~fpsent()
 	{
@@ -697,11 +698,11 @@ struct fpsent : dynent, fpsstate
 		stopactions();
 	}
 
-	void respawn()
+	void respawn(int millis)
 	{
 		stopmoving();
 		dynent::reset();
-		fpsstate::respawn();
+		fpsstate::respawn(millis);
 		obliterated = false;
 		lasttaunt = lastuse = lastusemillis = lastimpulse = 0;
 		lastflag = respawned = suicided = -1;
