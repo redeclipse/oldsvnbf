@@ -140,7 +140,7 @@ struct duelservmode : servmode
 					if (m_dlms(sv.gamemode, sv.mutators) || i <= 1)
 					{
 						alive[i]->state.state = CS_ALIVE;
-						alive[i]->state.respawn();
+						alive[i]->state.respawn(sv.gamemillis);
 						sv.sendspawn(alive[i]);
 						if(i <= 1) pl[i] = alive[i];
 						if(n >= 0) duelqueue.remove(n);

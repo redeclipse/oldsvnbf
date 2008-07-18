@@ -737,7 +737,7 @@ struct clientcom : iclientcom
 					fpsent *f = cl.newclient(lcn);
 					bool local = f == cl.player1 || f->bot;
 					if(f == cl.player1 && editmode) toggleedit();
-					f->respawn();
+					f->respawn(lastmillis);
 					parsestate(f, p);
 					f->state = CS_ALIVE;
 					if(local)
