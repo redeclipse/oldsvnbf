@@ -169,12 +169,11 @@ struct weaponstate
 		vec offset(from);
 		vec front, right;
 		vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
-		front.mul(2);
-		front.mul(d->radius);
+		front.mul(d->radius*1.75f);
 		offset.add(front);
-		offset.z += (d->aboveeye + d->height)*0.835f - d->height;
+		offset.z += (d->aboveeye + d->height)*0.875f - d->height;
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
-		right.mul(0.35f*d->radius);
+		right.mul(d->radius*0.36f);
 		offset.add(right);
 		if(d->crouching)
 			offset.z -= min(1.0f, (lastmillis-d->crouchtime)/200.f)*(1-CROUCHHEIGHT)*d->height;
