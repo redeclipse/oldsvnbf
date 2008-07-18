@@ -20,7 +20,7 @@ struct botclient
 	#define BOTLOSDIST(x)			clamp(float(BOTLOSMIN+(BOTLOSMAX-BOTLOSMIN))/float(x), float(BOTLOSMIN), float(getvar("fog")+BOTLOSMIN))
 	#define BOTFOVX(x)				clamp(float(BOTFOVMIN+(BOTFOVMAX-BOTFOVMIN))/float(x), float(BOTFOVMIN), float(BOTFOVMAX))
 	#define BOTFOVY(x)				BOTFOVX(x)*3.f/4.f
-	#define BOTTARG(x,y,z)			(y != x && y->state == CS_ALIVE && (!z || !m_team(cl.gamemode, cl.mutators) || y->team != x->team))
+	#define BOTTARG(x,y,z)			(y != x && y->state == CS_ALIVE && lastmillis-y->lastspawn > REGENWAIT && (!z || !m_team(cl.gamemode, cl.mutators) || y->team != x->team))
 
 	botclient(GAMECLIENT &_cl) : cl(_cl)
 	{
@@ -503,7 +503,7 @@ struct botclient
 				if(raycubelos(pos, ep, targ))
 				{
 					d->bot->enemy = e->clientnum;
-					if(d->canshoot(d->gunselect, lastmillis) && (!BOTCHANCE(d->skill) || hastarget(d, b, ep)))
+					if(lastmillis-e->lastspawn > REGENWAIT && d->canshoot(d->gunselect, lastmillis) && (!BOTCHANCE(d->skill) || hastarget(d, b, ep)))
 					{
 						d->attacking = true;
 						d->attacktime = lastmillis;
@@ -666,7 +666,7 @@ struct botclient
 		float dist = dp.dist(pos), targpitch = asin((pos.z-dp.z)/dist)/RAD;
 		if(aiming)
 		{
-			float amt = float(lastmillis-d->lastupdate)/float(BOTRATE(d->skill))/10.f,
+			float amt = float(lastmillis-d->lastupdate)/float(BOTRATE(d->skill))/8.f,
 				offyaw = fabs(targyaw-yaw)*amt, offpitch = fabs(targpitch-pitch)*amt;
 
 			if(targyaw > yaw) // slowly turn bot towards target
@@ -732,7 +732,7 @@ struct botclient
 
 			fpsent *e = cl.getclient(d->bot->enemy);
 			vec aimpos, ep = e ? cl.ph.headpos(e) : vec(0, 0, 0);
-			if(e && e->state == CS_ALIVE && raycubelos(pos, ep, aimpos)) aimpos = ep;
+			if(e && e->state == CS_ALIVE && lastmillis-e->lastspawn > REGENWAIT && raycubelos(pos, ep, aimpos)) aimpos = ep;
 			else
 			{
 				d->bot->enemy = -1;

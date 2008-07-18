@@ -384,11 +384,10 @@ struct GAMESERVER : igameserver
 		ci->modevote = reqmode; ci->mutsvote = reqmuts;
 		modecheck(&ci->modevote, &ci->mutsvote);
 
-		if(mapreload || (haspriv(ci, PRIV_MASTER) && mastermode >= MM_VETO))
+		if(haspriv(ci, PRIV_MASTER) && mastermode >= MM_VETO)
 		{
 			if(demorecord) enddemorecord();
-			if(!mapreload)
-				srvoutf(-1, "%s forced %s on map %s", privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf(-1, "%s forced %s on map %s", privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
 			sendf(-1, 1, "risi2", SV_MAPCHANGE, ci->mapvote, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 		}
@@ -829,10 +828,10 @@ struct GAMESERVER : igameserver
 				sendf(-1, 1, "risii", SV_MAPCHANGE, best->map, best->mode, best->muts);
 				changemap(best->map, best->mode, best->muts);
 			}
-			else
+			else if(clients.length() && !mapreload)
 			{
+				sendf(-1, 1, "ri", SV_MAPRELOAD);
 				mapreload = true;
-				if(clients.length()) sendf(-1, 1, "ri", SV_MAPRELOAD);
 			}
 		}
 	}
@@ -1299,7 +1298,6 @@ struct GAMESERVER : igameserver
 					getstring(text, p);
 					filtertext(text, text);
 					int reqmode = getint(p), reqmuts = getint(p);
-					if(type!=SV_MAPVOTE && !mapreload) break;
 					vote(text, reqmode, reqmuts, sender);
 					break;
 				}
@@ -1764,7 +1762,7 @@ struct GAMESERVER : igameserver
 				if (!mut->canspawn(ci, true)) { nospawn++; }
 			);
 
-			if (nospawn)
+			if(nospawn)
 			{
 				ci->state.state = CS_DEAD;
 				putint(p, SV_FORCEDEATH);
@@ -1834,9 +1832,9 @@ struct GAMESERVER : igameserver
 			{
 				minremain = gamemillis >= gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
 				sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-				if (!minremain)
+				if(!minremain)
 				{
-					if (smode) smode->intermission();
+					if(smode) smode->intermission();
 					mutate(mut->intermission());
 				}
 				else if(minremain == 1)
@@ -1890,10 +1888,11 @@ struct GAMESERVER : igameserver
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
 	{
 		gamestate &ts = target->state;
+		if(gamemillis-ts.lastspawn <= REGENWAIT) return;
 		if(flags&HIT_LEGS) damage = damage/4;
 		else if (flags&HIT_TORSO) damage = damage/2;
-		if (smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { return; }
-		mutate(if (!mut->damage(target, actor, damage, gun, flags, hitpush)) { return; });
+		if(smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { return; }
+		mutate(if(!mut->damage(target, actor, damage, gun, flags, hitpush)) { return; });
 		ts.dodamage(damage, gamemillis);
         actor->state.damage += damage;
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, damage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
@@ -1966,7 +1965,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(gs.state != CS_ALIVE)
 		{
-			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
+			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
@@ -2019,7 +2018,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canshoot(e.gun, e.millis))
 		{
-			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
+			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
 		if(guntype[e.gun].max) gs.ammo[e.gun]--;
@@ -2058,7 +2057,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canswitch(e.gun, e.millis))
 		{
-			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
+			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
 		gs.gunswitch(e.gun, e.millis);
@@ -2070,7 +2069,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canreload(e.gun, e.millis))
 		{
-			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
+			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
 		gs.useitem(e.millis, WEAPON, e.gun, guntype[e.gun].add);
@@ -2082,7 +2081,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		if(minremain<=0 || !gs.isalive(gamemillis) || !sents.inrange(e.ent) || !sents[e.ent].spawned || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
 		{
-			sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
+			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
 		sents[e.ent].spawned = false;
@@ -2168,10 +2167,10 @@ struct GAMESERVER : igameserver
 			masterupdate = false;
 		}
 
-		if ((m_timed(gamemode) && hasnonlocalclients()) && gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)
+		if((m_timed(gamemode) && hasnonlocalclients()) && gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)
 			checkintermission();
 
-		if (interm && gamemillis > interm)
+		if(interm && gamemillis >= interm) // wait then call for next map
 		{
 			if(demorecord) enddemorecord();
 			interm = 0;
