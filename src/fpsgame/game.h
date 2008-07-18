@@ -493,11 +493,8 @@ struct fpsstate
 					}
 				}
 				else if(gunselect != attr1) gunswitch(attr1, millis);
-
-				guntypes &g = guntype[attr1];
-				ammo[attr1] = min(ammo[attr1] + (attr2 > 0 ? attr2 : g.add), g.max);
-
-				setgunstate(attr1, GUNSTATE_RELOAD, guntype[attr1].rdelay ? guntype[attr1].rdelay : guntype[attr1].adelay, millis);
+				else setgunstate(attr1, GUNSTATE_RELOAD, guntype[attr1].rdelay ? guntype[attr1].rdelay : guntype[attr1].adelay, millis);
+				ammo[attr1] = min(ammo[attr1] + (attr2 > 0 ? attr2 : guntype[attr1].add), guntype[attr1].max);
 				break;
 			}
 			default: break;

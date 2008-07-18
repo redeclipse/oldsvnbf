@@ -43,16 +43,16 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> players;		// other clients
 	fpsent lastplayerstate;
 
-	IVARP(fov, 90, 120, 130);
-
 	IVARP(cardtime, 0, 2000, 10000);
 	IVARP(cardfade, 0, 3000, 10000);
 
 	IVARP(thirdperson, 0, 1, 1);
+	IVARP(thirdpersonfov, 90, 120, 130);
 	IVARP(thirdpersondist, -100, 1, 100);
 	IVARP(thirdpersonshift, -100, 4, 100);
 	IVARP(thirdpersonangle, 0, 40, 360);
 
+	IVARP(firstpersonfov, 90, 100, 130);
 	IVARP(firstpersondist, -100, 50, 100);
 	IVARP(firstpersonshift, -100, 25, 100);
 	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
@@ -69,10 +69,12 @@ struct GAMECLIENT : igameclient
 	IVARP(zoompanspeed, 1, 10, INT_MAX-1);
 
 	IVARP(editmousetype, 0, 0, 2);
+	IVARP(editfov, 1, 120, 360);
 	IVARP(editdeadzone, 0, 50, 100);
 	IVARP(editpanspeed, 1, 20, INT_MAX-1);
 
 	IVARP(specmousetype, 0, 0, 2);
+	IVARP(specfov, 1, 120, 360);
 	IVARP(specdeadzone, 0, 5, 100);
 	IVARP(specpanspeed, 1, 20, INT_MAX-1);
 
@@ -162,7 +164,7 @@ struct GAMECLIENT : igameclient
 
 	bool isthirdperson()
 	{
-		return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
+		return thirdperson() && !editmode && !cc.spectator;
 	}
 
 	int mousestyle()
@@ -187,6 +189,14 @@ struct GAMECLIENT : igameclient
 		if(editmode) return editpanspeed();
 		if(cc.spectator) return specpanspeed();
 		return mousepanspeed();
+	}
+
+	int fov()
+	{
+		if(editmode) return editfov();
+		if(cc.spectator) return specfov();
+		if(isthirdperson()) return thirdpersonfov();
+		return firstpersonfov();
 	}
 
 	void zoomset(bool on, int millis)
@@ -1682,100 +1692,99 @@ struct GAMECLIENT : igameclient
 			if(d->state==CS_LAGGED) flags |= MDL_TRANSLUCENT;
 			else if((anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
 		}
-		rendermodel(NULL, mdl, anim, o, !third && testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, third ? d : NULL, attachments, basetime);
+		rendermodel(NULL, mdl, anim, o, !third && testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, d, attachments, basetime);
 	}
 
 	void renderplayer(fpsent *d, bool third)
 	{
-		int team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL;
-        int gun = d->gunselect, lastaction = 0, animflags = 0, animdelay = 0;
+        modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
+		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
+			gun = d->gunselect, lastaction = lastmillis, animflags = 0, animdelay = 0;
         bool hasgun = isgun(gun);
 
-		if(intermission && d->state != CS_DEAD)
+		s_sprintf(d->info)("%s", colorname(d, NULL, "@"));
+
+		if(d->state != CS_DEAD)
 		{
-			lastaction = lastmillis;
-			animflags = ANIM_LOSE|ANIM_LOOP;
-			animdelay = 1000;
-			if(m_team(gamemode, mutators)) loopv(bestteams) { if(bestteams[i] == d->team) { animflags = ANIM_WIN|ANIM_LOOP; break; } }
-			else if(bestplayers.find(d)>=0) animflags = ANIM_WIN|ANIM_LOOP;
-		}
-        else if(d->state == CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-lastaction>animdelay)
-		{
-			lastaction = d->lasttaunt;
-			animflags = ANIM_TAUNT;
-			animdelay = 1000;
-		}
-		else if(hasgun && lastmillis-d->gunlast[gun] < d->gunwait[gun])
-		{
-			switch(d->gunstate[gun])
+			if(intermission)
 			{
-				case GUNSTATE_SWITCH:
-				{
-					animflags = ANIM_SWITCH;
-					if(lastmillis-d->gunlast[gun] < d->gunwait[gun]/2)
-					{
-						if(isgun(d->lastgun) && (d->ammo[gun] > 0 || guntype[gun].rdelay > 0))
-							gun = d->lastgun;
-						else hasgun = false;
-					}
-					break;
-				}
-				case GUNSTATE_POWER:
-				{
-					animflags = guntype[gun].power ? ANIM_POWER : ANIM_SHOOT;
-					break;
-				}
-				case GUNSTATE_SHOOT:
-				{
-					animflags = guntype[gun].power ? ANIM_THROW : ANIM_SHOOT;
-					if(guntype[gun].power) hasgun = false;
-					break;
-				}
-				case GUNSTATE_RELOAD:
-				{
-					animflags = guntype[gun].power ? ANIM_HOLD : ANIM_RELOAD;
-					if(guntype[gun].power) hasgun = false;
-					break;
-				}
-				case GUNSTATE_NONE:	default:
-				{
-					if(d->ammo[gun] <= 0 && guntype[gun].rdelay <= 0)
-						hasgun = false;
-					break;
-				}
+				lastaction = lastmillis;
+				animflags = ANIM_LOSE|ANIM_LOOP;
+				animdelay = 1000;
+				if(m_team(gamemode, mutators)) loopv(bestteams) { if(bestteams[i] == d->team) { animflags = ANIM_WIN|ANIM_LOOP; break; } }
+				else if(bestplayers.find(d)>=0) animflags = ANIM_WIN|ANIM_LOOP;
 			}
-			lastaction = d->gunlast[gun];
-			animdelay = d->gunwait[gun] + 50;
-		}
-
-        modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
-        int ai = 0;
-
-        if(hasgun)
-		{
-            a[ai].name = guntype[gun].vwep;
-            a[ai].tag = "tag_weapon";
-            a[ai].anim = ANIM_VWEP|ANIM_LOOP;
-            a[ai].basetime = 0;
-            ai++;
-		}
-		if(m_ctf(gamemode))
-		{
-			loopv(ctf.flags) if(ctf.flags[i].owner == d && !ctf.flags[i].droptime)
+			else if(d->state == CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-lastaction>animdelay)
 			{
-				a[ai].name = teamtype[ctf.flags[i].team].flag;
-				a[ai].tag = "tag_flag";
-				a[ai].anim = ANIM_MAPMODEL|ANIM_LOOP;
+				lastaction = d->lasttaunt;
+				animflags = ANIM_TAUNT;
+				animdelay = 1000;
+			}
+			else if(hasgun && lastmillis-d->gunlast[gun] < d->gunwait[gun])
+			{
+				switch(d->gunstate[gun])
+				{
+					case GUNSTATE_SWITCH:
+					{
+						animflags = ANIM_SWITCH;
+						if(lastmillis-d->gunlast[gun] < d->gunwait[gun]/2)
+						{
+							if(isgun(d->lastgun) && (d->ammo[gun] > 0 || guntype[gun].rdelay > 0))
+								gun = d->lastgun;
+							else hasgun = false;
+						}
+						break;
+					}
+					case GUNSTATE_POWER:
+					{
+						animflags = guntype[gun].power ? ANIM_POWER : ANIM_SHOOT;
+						break;
+					}
+					case GUNSTATE_SHOOT:
+					{
+						animflags = guntype[gun].power ? ANIM_THROW : ANIM_SHOOT;
+						if(guntype[gun].power) hasgun = false;
+						break;
+					}
+					case GUNSTATE_RELOAD:
+					{
+						animflags = guntype[gun].power ? ANIM_HOLD : ANIM_RELOAD;
+						if(guntype[gun].power) hasgun = false;
+						break;
+					}
+					case GUNSTATE_NONE:	default:
+					{
+						if(d->ammo[gun] <= 0 && guntype[gun].rdelay <= 0)
+							hasgun = false;
+						break;
+					}
+				}
+				lastaction = d->gunlast[gun];
+				animdelay = d->gunwait[gun] + 50;
+			}
+
+			if(hasgun)
+			{
+				a[ai].name = guntype[gun].vwep;
+				a[ai].tag = "tag_weapon";
+				a[ai].anim = ANIM_VWEP|ANIM_LOOP;
 				a[ai].basetime = 0;
 				ai++;
 			}
+			if(m_ctf(gamemode))
+			{
+				loopv(ctf.flags) if(ctf.flags[i].owner == d && !ctf.flags[i].droptime)
+				{
+					a[ai].name = teamtype[ctf.flags[i].team].flag;
+					a[ai].tag = "tag_flag";
+					a[ai].anim = ANIM_MAPMODEL|ANIM_LOOP;
+					a[ai].basetime = 0;
+					ai++;
+				}
+			}
+			if(d != player1) part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
 		}
-
         renderclient(d, third, team, a[0].name ? a : NULL, animflags, animdelay, lastaction, intermission ? 0 : d->lastpain, 0.f);
-
-		s_sprintf(d->info)("%s", colorname(d, NULL, "@"));
-		if(d != player1 && d->state != CS_DEAD)
-			part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
 	}
 
 	IVARP(lasersight, 0, 0, 1);
