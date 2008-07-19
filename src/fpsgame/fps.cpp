@@ -75,7 +75,7 @@ struct GAMECLIENT : igameclient
 
 	IVARP(editmousetype, 0, 0, 2);
 	IVARP(editfov, 1, 120, 360);
-	IVARP(editdeadzone, 0, 50, 100);
+	IVARP(editdeadzone, 0, 20, 100);
 	IVARP(editpanspeed, 1, 20, INT_MAX-1);
 
 	IVARP(specmousetype, 0, 0, 2);
