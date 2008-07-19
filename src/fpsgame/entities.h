@@ -132,57 +132,27 @@ struct entities : icliententities
 			}
 		}
 		if(!announcer)
-		{
+		{ // if there's no announcer entities, just encompass the level
 			loopi(13)
 			{
 				vec v;
 				switch(i)
 				{
-					case 1:
-						v = vec(0, 0, 0.5f*getworldsize());
-						break;
-					case 2:
-						v = vec(0, getworldsize(), 0.5f*getworldsize());
-						break;
-					case 3:
-						v = vec(getworldsize(), getworldsize(), 0.5f*getworldsize());
-						break;
-					case 4:
-						v = vec(getworldsize(), 0, 0.5f*getworldsize());
-						break;
-
-					case 5:
-						v = vec(0, 0, getworldsize());
-						break;
-					case 6:
-						v = vec(0, getworldsize(), getworldsize());
-						break;
-					case 7:
-						v = vec(getworldsize(), getworldsize(), getworldsize());
-						break;
-					case 8:
-						v = vec(getworldsize(), 0, getworldsize());
-						break;
-
-					case 9:
-						v = vec(0, 0, 0.5f*getworldsize());
-						break;
-					case 10:
-						v = vec(0, getworldsize(), 0);
-						break;
-					case 11:
-						v = vec(getworldsize(), getworldsize(), 0);
-						break;
-					case 12:
-						v = vec(getworldsize(), 0, 0);
-						break;
-
-					case 0:
-					default:
-						v = vec(0.5f*getworldsize(), 0.5f*getworldsize(), 0.5f*getworldsize());
-						break;
+					case 1:		v = vec(0, 0, 0.5f*getworldsize()); break;
+					case 2:		v = vec(0, getworldsize(), 0.5f*getworldsize()); break;
+					case 3:		v = vec(getworldsize(), getworldsize(), 0.5f*getworldsize()); break;
+					case 4:		v = vec(getworldsize(), 0, 0.5f*getworldsize()); break;
+					case 5:		v = vec(0, 0, getworldsize()); break;
+					case 6:		v = vec(0, getworldsize(), getworldsize()); break;
+					case 7:		v = vec(getworldsize(), getworldsize(), getworldsize()); break;
+					case 8:		v = vec(getworldsize(), 0, getworldsize()); break;
+					case 9:		v = vec(0, 0, 0.5f*getworldsize()); break;
+					case 10:	v = vec(0, getworldsize(), 0); break;
+					case 11:	v = vec(getworldsize(), getworldsize(), 0); break;
+					case 12:	v = vec(getworldsize(), 0, 0); break;
+					default:	v = vec(0.5f*getworldsize(), 0.5f*getworldsize(), 0.5f*getworldsize()); break;
 				}
-				playsound(idx, &v, 255, getworldsize()/2, 0, SND_COPY);
+				playsound(idx, &v, 255, getworldsize(), 0, SND_COPY);
 			}
 		}
 		if(*msg) conoutf("\fr%s", msg);
@@ -252,7 +222,7 @@ struct entities : icliententities
 	}
 
 
-	void teleport(int n, fpsent *d)	 // also used by monsters
+	void teleport(int n, fpsent *d)
 	{
 		fpsentity &e = (fpsentity &)*ents[n];
 		vector<int> teleports;

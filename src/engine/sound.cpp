@@ -25,8 +25,8 @@ VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_S
 VARF(soundchans, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARP(soundmaxatonce, 0, 24, INT_MAX-1);
-VARP(soundmaxdist, 0, 512, INT_MAX-1);
+VARP(soundmaxatonce, 0, 64, INT_MAX-1);
+VARP(soundmaxdist, 0, 4096, INT_MAX-1);
 
 void initsound()
 {
@@ -192,7 +192,6 @@ void updatesound(int chan)
 		else if(posliquid || camliquid) vol = int(vol*0.25f);
 
 		float maxrad = float(sounds[chan].maxrad > 0 && sounds[chan].maxrad < soundmaxdist ? sounds[chan].maxrad : soundmaxdist);
-
 		if(vol && sounds[chan].dist <= maxrad)
 		{
 			float minrad = float(sounds[chan].minrad < maxrad ? sounds[chan].minrad : maxrad);
