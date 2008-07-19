@@ -5,7 +5,7 @@ struct scoreboard : g3d_callback
 	GAMECLIENT &cl;
 
 	IVARP(scoresinfo, 0, 1, 1);
-	IVARP(showclientnum, 0, 0, 1);
+	IVARP(showclientnum, 0, 1, 1);
     IVARP(showpj, 0, 1, 1);
     IVARP(showping, 0, 1, 1);
     IVARP(showspectators, 0, 1, 1);
@@ -277,7 +277,8 @@ struct scoreboard : g3d_callback
 				g.text("pj", fgcolor);
 				loopscoregroup(o,
 				{
-					if(o->state==CS_LAGGED) g.text("LAG", 0xFFFFDD);
+					if(o->ownernum >= 0) g.textf("%d", 0xFFDD99, NULL, o->skill);
+					else if(o->state==CS_LAGGED) g.text("LAG", 0xFFFFDD);
 					else g.textf("%d", 0xFFFFDD, NULL, o->plag);
 				});
 				g.poplist();
@@ -288,7 +289,15 @@ struct scoreboard : g3d_callback
 				g.pushlist();
 				g.text("ping", fgcolor);
 				g.strut(6);
-				loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->ping));
+				loopscoregroup(o,
+				{
+					if(o->ownernum >= 0)
+					{
+						fpsent *od = cl.getclient(o->ownernum);
+						g.textf("%d", 0xFFDD99, NULL, od ? od->ping : 0);
+					}
+					else g.textf("%d", 0xFFFFDD, NULL, o->ping);
+				});
 				g.poplist();
 			}
 
@@ -308,7 +317,15 @@ struct scoreboard : g3d_callback
                 g.space(1);
                 g.pushlist();
                 g.text("cn", fgcolor);
-                loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->clientnum));
+                loopscoregroup(o,
+                {
+                	if(o->ownernum >= 0)
+					{
+						fpsent *od = cl.getclient(o->ownernum);
+						g.textf("%d [%d]", 0xFFDD99, NULL, o->clientnum, od ? od->clientnum : -1);
+					}
+					else g.textf("%d", 0xFFFFDD, NULL, o->clientnum);
+				});
                 g.poplist();
             }
 

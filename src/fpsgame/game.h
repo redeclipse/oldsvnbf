@@ -154,12 +154,12 @@ struct guntypes
 	int info, 		anim,			sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,	radius;	const char *name,	*vwep;
 } guntype[NUMGUNS] =
 {
-	{ GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	25,		0,		0,		0,		-10,    10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
-	{ GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	10,		0,		0,		0,		-30,    30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
-	{ GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			40,		40,		75,		3000,	15,		0,		0,		0,		-5,	     4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
-	{ GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		250,	150,	1000,	3000,	-15,    10,		8,		64,		"grenades",			"weapons/grenades/vwep" },
-	{ GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	75, 	3000,	25,		80,		0,		3000,	-1,		 1,		8,		20,		"flamer",			"weapons/flamer/vwep" },
-	{ GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		750,	600,	100,	0,		0,		0,		-30,  	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
+	{ GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	1000,	25,		0,		0,		0,		-10,    10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
+	{ GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			1,		2,		500,	1500,	10,		0,		0,		0,		-30,    30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
+	{ GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			20,		80,		100,	1000,	15,		0,		0,		0,		-5,	     4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
+	{ GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	6,		12,		1500,	0,		250,	150,	1000,	3000,	-15,    10,		8,		64,		"grenades",			"weapons/grenades/vwep" },
+	{ GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			25,		100,	150, 	2000,	25,		80,		0,		3000,	-1,		 1,		8,		20,		"flamer",			"weapons/flamer/vwep" },
+	{ GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			1,		6,		500,	1000,	100,	0,		0,		0,		-30,  	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
 
@@ -298,11 +298,11 @@ struct teamtypes
 {
 	int	type,		colour;	const char *name,	*tpmdl,			*fpmdl,				*flag,			*icon,			*chat;
 } teamtype[] = {
-	{ TEAM_NEUTRAL,	0x2F2F2F,	"Neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
-	{ TEAM_ALPHA,	0x2222FF,	"Alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
-	{ TEAM_BETA,	0xFF2222,	"Beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
-	{ TEAM_DELTA,	0xFFFF22,	"Delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0x22FF22,	"Gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" }
+	{ TEAM_NEUTRAL,	0x2F2F2F,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
+	{ TEAM_ALPHA,	0x2222FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
+	{ TEAM_BETA,	0xFF2222,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
+	{ TEAM_DELTA,	0xFFFF22,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
+	{ TEAM_GAMMA,	0x22FF22,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" }
 };
 
 enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
@@ -654,6 +654,7 @@ struct botinfo
 	{
 		if(index < 0 && state.length()) state.pop();
 		else if(state.inrange(index)) state.remove(index);
+		enemy = -1;
 		if(!state.length()) addstate(BS_WAIT);
 	}
 
