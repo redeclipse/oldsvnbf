@@ -1801,7 +1801,7 @@ struct GAMESERVER : igameserver
 			loopv(clients)
 			{
 				clientinfo *oi = clients[i];
-				if(oi->clientnum==n) continue;
+				if(oi->clientnum == n) continue;
 				sendstate(oi, p);
 			}
 			putint(p, -1);
