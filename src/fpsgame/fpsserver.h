@@ -1983,10 +1983,11 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		switch(e.gun)
 		{
+#if 0
 			case GUN_RL:
                 if(!gs.rockets.remove(e.id)) return;
 				break;
-
+#endif
 			case GUN_GL:
                 if(!gs.grenades.remove(e.id)) return;
 				break;
@@ -2030,7 +2031,9 @@ struct GAMESERVER : igameserver
         gs.shotdamage += guntype[e.gun].damage*(e.gun==GUN_SG ? SGRAYS : 1);
 		switch(e.gun)
 		{
+#if 0
             case GUN_RL: gs.rockets.add(e.id); break;
+#endif
             case GUN_GL: gs.grenades.add(e.id); break;
             case GUN_FLAMER: gs.flames.add(e.id); break;
 			default:

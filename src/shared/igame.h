@@ -51,17 +51,21 @@ struct igameclient
 
     virtual bool clientoption(char *arg) { return false; }
     virtual void updateworld() = 0;
+
     virtual void editvar(ident *id, bool local) = 0;
     virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
+
     virtual void resetgamestate() = 0;
     virtual void newmap(int size) = 0;
     virtual void startmap(const char *name) = 0;
     virtual void preload() {}
     virtual void drawhud(int w, int h) = 0;
+
     virtual bool allowmove(physent *d) { return true; }
+
     virtual dynent *iterdynents(int i) = 0;
     virtual int numdynents() = 0;
-    virtual void render() = 0;
+
     virtual void g3d_gamemenus() = 0;
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}
     virtual void adddynlights() {}
@@ -78,11 +82,13 @@ struct igameclient
 	virtual int localplayers() { return 1; }
 	virtual bool gui3d() { return true; }
 
-	virtual vec feetpos(physent *d, float off) { return vec(d->o); }
-
 	virtual void menuevent(int event) { return; }
 	virtual char *gametitle() = 0;
 	virtual char *gametext() = 0;
+
+	virtual int numanims() = 0;
+	virtual void findanims(const char *pattern, vector<int> &anims) = 0;
+    virtual void render() = 0;
 };
 
 struct igameserver

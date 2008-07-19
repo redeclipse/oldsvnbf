@@ -697,7 +697,7 @@ struct clientcom : iclientcom
 						if(strcmp(d->name, text))
 						{
 							string oldname, newname;
-							s_strcpy(oldname, cl.colorname(d));
+							s_strcpy(oldname, cl.colorname(d, NULL, false));
 							s_strcpy(newname, cl.colorname(d, text));
 							conoutf("%s is now known as %s", oldname, newname);
 						}
@@ -705,7 +705,7 @@ struct clientcom : iclientcom
 					else					// new client
 					{
 						c2sinit = false;	// send new players my info again
-						conoutf("connected: %s", cl.colorname(d, text));
+						conoutf("connected: %s", cl.colorname(d, text, false));
 						loopv(cl.players)	// clear copies since new player doesn't have them
 							if(cl.players[i]) freeeditinfo(cl.players[i]->edit);
 						extern editinfo *localedit;
@@ -723,9 +723,9 @@ struct clientcom : iclientcom
 				case SV_SPAWN:
 				{
 					int lcn = getint(p);
-					fpsent *f = cl.getclient(lcn);
+					fpsent *f = cl.newclient(lcn);
+					f->respawn(lastmillis);
 					parsestate(f, p);
-					if(!f) break;
 					f->state = CS_SPAWNING;
 					playsound(S_RESPAWN, &f->o);
 					break;
@@ -1190,12 +1190,12 @@ struct clientcom : iclientcom
 					s_strncpy(b->name, text, MAXNAMELEN);
 					b->team = getint(p);
 
-					if(connecting)
+					if(o)
 					{
-						b->state = CS_DEAD;
-						conoutf("%s (skill: %d) introduced and assigned to %s", cl.colorname(b), b->skill, m);
+						if(connecting)
+							conoutf("%s (skill: %d) introduced and assigned to %s", cl.colorname(b), b->skill, m);
+						else conoutf("%s (skill: %d) reassigned to %s", cl.colorname(b), b->skill, m);
 					}
-					else conoutf("%s (skill: %d) reassigned to %s", cl.colorname(b), b->skill, m);
 
 					if(cl.player1->clientnum == b->ownernum) cl.bot.create(b);
 					else if(b->bot) cl.bot.destroy(b);

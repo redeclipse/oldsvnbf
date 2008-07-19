@@ -467,7 +467,7 @@ extern vector<mapmodelinfo> mapmodels;
 extern void mmodel(char *name);
 extern void mapmodelreset();
 
-extern void findanims(const char *pattern, vector<int> &anims);
+extern bool matchanim(const char *name, const char *pattern);
 extern void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&masks);
 extern model *loadmodel(const char *name, int i = -1, bool msg = false);
 extern mapmodelinfo &getmminfo(int i);

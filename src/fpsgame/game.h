@@ -91,7 +91,41 @@ struct fpsentity : extentity
 		schan = -1;
 	}
 };
+
+const char *animnames[] =
+{
+	"dead", "dying", "pain",
+	"forward", "backward", "left", "right",
+	"jump", "sink", "swim",
+	"mapmodel", "trigger",
+	"edit", "lag", "taunt", "win", "lose",
+	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
+	"idle", "shoot", "reload", "power", "switch", "throw",
+	"pistol", "pistol shoot", "pistol reload",
+	"shotgun", "shotgun shoot", "shotgun reload",
+	"chaingun", "chaingun shoot", "chaingun reload",
+	"grenades", "grenades throw", "grenades reload", "grenades power",
+	"flamer", "flamer shoot", "flamer reload",
+	"rifle", "rifle shoot", "rifle reload",
+	"vwep", "shield", "powerup",
+	""
+};
 #endif
+
+enum
+{
+	ANIM_EDIT = ANIM_GAMESPECIFIC, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
+	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
+    ANIM_IDLE, ANIM_SHOOT, ANIM_RELOAD, ANIM_POWER, ANIM_SWITCH, ANIM_THROW,
+    ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
+    ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
+    ANIM_CHAINGUN, ANIM_CHAINGUN_SHOOT, ANIM_CHAINGUN_RELOAD,
+    ANIM_GRENADES, ANIM_GRENADES_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADES_POWER,
+    ANIM_FLAMER, ANIM_FLAMER_SHOOT, ANIM_FLAMER_RELOAD,
+    ANIM_RIFLE, ANIM_RIFLE_SHOOT, ANIM_RIFLE_RELOAD,
+    ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
+    ANIM_MAX
+};
 
 #define SGRAYS			15
 #define SGSPREAD		4
@@ -105,32 +139,30 @@ enum
 	GUN_GL,
 	GUN_FLAMER,
 	GUN_RIFLE,
-	GUN_RL,
 	NUMGUNS
 };
 
 enum
 {
-	GUNSTATE_NONE = 0,
-	GUNSTATE_SWITCH,
+	GUNSTATE_IDLE = 0,
 	GUNSTATE_SHOOT,
-	GUNSTATE_POWER,
 	GUNSTATE_RELOAD,
+	GUNSTATE_POWER,
+	GUNSTATE_SWITCH,
 	GUNSTATE_MAX
 };
 
 struct guntypes
 {
-	int info, 		sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,	radius;	const char *name,	*vwep;
+	int info, 		anim,			sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,	radius;	const char *name,	*vwep;
 } guntype[NUMGUNS] =
 {
-	{ GUN_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	25,		0,		0,		0,		-10,    10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
-	{ GUN_SG,		S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	10,		0,		0,		0,		-30,    30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
-	{ GUN_CG,		S_CG,		-1,			S_WHIRR,	-1,			40,		40,		75,		3000,	15,		0,		0,		0,		-5,	     4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
-	{ GUN_GL,		S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		250,	150,	1000,	3000,	-15,    10,		8,		64,		"grenades",			"weapons/grenades/vwep" },
-	{ GUN_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	75, 	3000,	25,		80,		0,		3000,	-1,		 1,		8,		20,		"flamer",			"weapons/flamer/vwep" },
-	{ GUN_RIFLE,	S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		750,	600,	100,	0,		0,		0,		-30,  	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
-	{ GUN_RL,		S_RLFIRE,	S_RLEXPL,	S_RLFLY,	-1,			1,		1,		2500,	0,		1000,	100,	0,		10000,	-50,  	50,		1,		128,	"rockets",			"weapons/rockets/vwep" },
+	{ GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	2000,	25,		0,		0,		0,		-10,    10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
+	{ GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			1,		8,		1000,	500,	10,		0,		0,		0,		-30,    30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
+	{ GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			40,		40,		75,		3000,	15,		0,		0,		0,		-5,	     4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
+	{ GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		250,	150,	1000,	3000,	-15,    10,		8,		64,		"grenades",			"weapons/grenades/vwep" },
+	{ GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			100,	100,	75, 	3000,	25,		80,		0,		3000,	-1,		 1,		8,		20,		"flamer",			"weapons/flamer/vwep" },
+	{ GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		750,	600,	100,	0,		0,		0,		-30,  	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
 
@@ -434,7 +466,7 @@ struct fpsstate
 	{
 		loopi(NUMGUNS)
 		{
-			gunstate[i] = GUNSTATE_NONE;
+			gunstate[i] = GUNSTATE_IDLE;
 			gunwait[i] = gunlast[i] = 0;
 			ammo[i] = -1;
 		}
@@ -518,7 +550,7 @@ struct fpsstate
 			lastgun = gunselect = GUN_RIFLE;
 			loopi(NUMGUNS)
 			{
-				gunstate[i] = GUNSTATE_NONE;
+				gunstate[i] = GUNSTATE_IDLE;
 				ammo[i] = (i == GUN_RIFLE ? guntype[i].add : -1);
 			}
 		}
@@ -528,7 +560,7 @@ struct fpsstate
 			lastgun = gunselect = GUN_PISTOL;
 			loopi(NUMGUNS)
 			{
-				gunstate[i] = GUNSTATE_NONE;
+				gunstate[i] = GUNSTATE_IDLE;
 				ammo[i] = (i == GUN_PISTOL || i == GUN_GL ? guntype[i].add : -1);
 			}
 		}
