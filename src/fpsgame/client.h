@@ -374,6 +374,16 @@ struct clientcom : iclientcom
 			putint(p, SV_INITC2S);
 			sendstring(cl.player1->name, p);
 			putint(p, cl.player1->team);
+			loopv(cl.players) if(cl.players[i] && cl.players[i]->bot)
+			{
+				fpsent *f = cl.players[i];
+				putint(p, SV_INITBOT);
+				putint(p, f->ownernum);
+				putint(p, f->skill);
+				putint(p, f->clientnum);
+				sendstring(f->name, p);
+				putint(p, f->team);
+			}
 		}
 		int i = 0;
 		while(i < messages.length()) // send messages collected during the previous frames
@@ -706,6 +716,7 @@ struct clientcom : iclientcom
 					else					// new client
 					{
 						c2sinit = false;	// send new players my info again
+						d->respawn(lastmillis);
 						conoutf("connected: %s", cl.colorname(d, text, false));
 						loopv(cl.players)	// clear copies since new player doesn't have them
 							if(cl.players[i]) freeeditinfo(cl.players[i]->edit);

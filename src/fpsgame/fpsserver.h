@@ -1599,6 +1599,18 @@ struct GAMESERVER : igameserver
 					break;
 				}
 
+				case SV_INITBOT:
+				{
+					QUEUE_MSG;
+					QUEUE_INT(getint(p));
+					QUEUE_INT(getint(p));
+					QUEUE_INT(getint(p));
+					getstring(text, p);
+					QUEUE_STR(text);
+					QUEUE_INT(getint(p));
+					break;
+				}
+
 				default:
 				{
 					int size = msgsizelookup(type);
@@ -1619,13 +1631,13 @@ struct GAMESERVER : igameserver
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->state.ownernum >= 0 || ci->clientnum == cn || ci->clientnum == on || ci->state.state == CS_SPECTATOR)
+			if(ci->state.ownernum >= 0 || ci->clientnum == on || ci->state.state == CS_SPECTATOR)
 				siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
-				loopvj(clients) if(clients[j]->state.ownernum == ci->clientnum)
-					if(clients[j]->clientnum != cn && clients[j]->clientnum != on)
+				loopvj(clients)
+					if(clients[j]->state.ownernum == ci->clientnum)
 						siblings[i]++;
 			}
 		}
@@ -1636,7 +1648,8 @@ struct GAMESERVER : igameserver
 				if(siblings[i] >= 0 && (!siblings.inrange(q) || siblings[i] < siblings[q]))
 					q = i;
 			if(clients.inrange(q)) return q;
-			else siblings.remove(q);
+			else if(siblings.inrange(q)) siblings.remove(q);
+			else break;
 		}
 		return -1;
 	}
@@ -1659,8 +1672,6 @@ struct GAMESERVER : igameserver
 					ci->state.lasttimeplayed = lastmillis;
 					s_strncpy(ci->name, "bot", MAXNAMELEN);
 
-					//if(smode) smode->initclient(ci, p, true);
-					//mutate(mut->initclient(ci, p, true));
 					if(m_team(gamemode, mutators)) ci->team = chooseworstteam(ci->team);
 					else ci->team = TEAM_NEUTRAL;
 
@@ -1715,10 +1726,11 @@ struct GAMESERVER : igameserver
 		loopvrev(clients) if(clients[i]->state.ownernum == ci->clientnum)
 		{
 			clientinfo *cp = clients[i];
-			cp->state.ownernum = findbotclient(cp->clientnum, ci->clientnum);
-			if(clients.inrange(cp->state.ownernum))
-				sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
-			else removebot(cp);
+			//cp->state.ownernum = findbotclient(cp->clientnum, ci->clientnum);
+			//if(clients.inrange(cp->state.ownernum))
+			//	sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
+			//else
+			removebot(cp);
 		}
 	}
 
@@ -1761,7 +1773,6 @@ struct GAMESERVER : igameserver
             mutate(
 				if (!mut->canspawn(ci, true)) { nospawn++; }
 			);
-
 			if(nospawn)
 			{
 				ci->state.state = CS_DEAD;
@@ -1784,21 +1795,8 @@ struct GAMESERVER : igameserver
 			putint(p, 1);
 			sendf(-1, 1, "ri3x", SV_SPECTATOR, n, 1, n);
 		}
-		if(clients.length()>1)
+		if(clients.length() > 1)
 		{
-			loopv(clients)
-			{
-				clientinfo *cp = clients[i];
-				if (cp && cp->state.ownernum >= 0)
-				{
-					putint(p, SV_INITBOT);
-					putint(p, cp->state.ownernum);
-					putint(p, cp->clientnum);
-					sendstring(cp->name, p);
-					putint(p, cp->team);
-				}
-			}
-
 			putint(p, SV_RESUME);
 			loopv(clients)
 			{
@@ -1809,7 +1807,7 @@ struct GAMESERVER : igameserver
 			putint(p, -1);
 		}
 
-		if (motd[0])
+		if(motd[0])
 		{
 			putint(p, SV_SERVMSG);
 			sendstring(motd, p);
