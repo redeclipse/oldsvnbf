@@ -675,6 +675,7 @@ struct clientcom : iclientcom
 
 				case SV_MAPRELOAD: // server requests next map
 				{
+					if(cl.intermission) cl.sb.showscores(false);
 					if(m_stf(cl.gamemode)) showgui("stfmaps");
 					else if(m_ctf(cl.gamemode)) showgui("ctfmaps");
 					else showgui("maps");
