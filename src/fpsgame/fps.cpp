@@ -1026,10 +1026,10 @@ struct GAMECLIENT : igameclient
 			float cy = y*h*3.f - (index != POINTER_GUI ? chsize/2.0f : 0);
 			glBindTexture(GL_TEXTURE_2D, pointer->id);
 			glBegin(GL_QUADS);
-			glTexCoord2d(0.0, 0.0); glVertex2f(cx, cy);
-			glTexCoord2d(1.0, 0.0); glVertex2f(cx + chsize, cy);
-			glTexCoord2d(1.0, 1.0); glVertex2f(cx + chsize, cy + chsize);
-			glTexCoord2d(0.0, 1.0); glVertex2f(cx, cy + chsize);
+			glTexCoord2f(0.0f, 0.0f); glVertex2f(cx, cy);
+			glTexCoord2f(1.0f, 0.0f); glVertex2f(cx + chsize, cy);
+			glTexCoord2f(1.0f, 1.0f); glVertex2f(cx + chsize, cy + chsize);
+			glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + chsize);
 			glEnd();
 
 			if(index > POINTER_GUI && player1->state == CS_ALIVE &&
@@ -1048,10 +1048,10 @@ struct GAMECLIENT : igameclient
 					glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
 					glColor4f(1.f, 1.f, 0.f, blend);
 					glBegin(GL_QUADS);
-					glTexCoord2d(0.0, 0.0); glVertex2f(cx, cy);
-					glTexCoord2d(1.0, 0.0); glVertex2f(cx + chsize, cy);
-					glTexCoord2d(1.0, 1.0); glVertex2f(cx + chsize, cy + chsize);
-					glTexCoord2d(0.0, 1.0); glVertex2f(cx, cy + chsize);
+					glTexCoord2f(0.0f, 0.0f); glVertex2f(cx, cy);
+					glTexCoord2f(1.0f, 0.0f); glVertex2f(cx + chsize, cy);
+					glTexCoord2f(1.0f, 1.0f); glVertex2f(cx + chsize, cy + chsize);
+					glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + chsize);
 					glEnd();
 				}
 			}
@@ -1105,7 +1105,7 @@ struct GAMECLIENT : igameclient
 		if(index > POINTER_GUI && mousestyle() >= 1)
 		{
 			float curx = mousestyle() == 1 ? cursorx : 0.5f,
-				cury = mousestyle() == 1 ? cursorx : 0.5f;
+				cury = mousestyle() == 1 ? cursory : 0.5f;
 			drawpointer(w, h, POINTER_RELATIVE, curx, cury, r, g, b);
 		}
 	}
@@ -1652,13 +1652,12 @@ struct GAMECLIENT : igameclient
 				anims.add(i);
 	}
 
-	void renderclient(fpsent *d, bool third, bool trans, int team, modelattach *attachments, int animflags, int animdelay, int lastaction, float speed)
+	void renderclient(fpsent *d, bool third, bool trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, float speed)
 	{
 		string mdl;
 		if(third) s_strcpy(mdl, teamtype[team].tpmdl);
 		else s_strcpy(mdl, teamtype[team].fpmdl);
 
-		int anim = ANIM_IDLE|ANIM_LOOP;
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
 		vec o = vec(third ? vec(d->o).sub(vec(0, 0, d->height)) : ph.headpos(d));
 		if(!third && firstpersonsway())
@@ -1677,20 +1676,22 @@ struct GAMECLIENT : igameclient
 			sway.add(swaydir);
 			o.add(sway);
 		}
-		int basetime = 0;
-		if(animoverride()) anim = (animoverride()<0 ? ANIM_ALL : animoverride())|ANIM_LOOP;
+
+		int anim = animflags, basetime = lastaction;
+		if(animoverride())
+		{
+			anim = (animoverride()<0 ? ANIM_ALL : animoverride())|ANIM_LOOP;
+			basetime = 0;
+		}
 		else
 		{
-			anim = animflags;
-			basetime = lastaction;
-
-			if(d->inliquid && d->physstate<=PHYS_FALL)
-				anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
-			else if(d->timeinair > 100)
-				anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
-			else if(allowmove(d))
+			if(secondary)
 			{
-				if(d->crouching)
+				if(d->inliquid && d->physstate <= PHYS_FALL)
+					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
+				else if(d->timeinair > 1000)
+					anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
+				else if(d->crouching)
 				{
 					if(d->move>0)		anim |= (ANIM_CRAWL_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 					else if(d->strafe)	anim |= ((d->strafe>0 ? ANIM_CRAWL_LEFT : ANIM_CRAWL_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
@@ -1702,8 +1703,16 @@ struct GAMECLIENT : igameclient
 				else if(d->move<0) anim |= (ANIM_BACKWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 			}
 
-			if((anim&ANIM_INDEX)==ANIM_IDLE && (anim>>ANIM_SECONDARY)&ANIM_INDEX)
-				anim >>= ANIM_SECONDARY;
+			if((anim>>ANIM_SECONDARY)&ANIM_INDEX) switch(anim&ANIM_INDEX)
+			{
+				case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN:
+				case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_RIFLE:
+				{
+					anim >>= ANIM_SECONDARY;
+					break;
+				}
+				default: break;
+			}
 		}
 
 		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX))
@@ -1724,6 +1733,7 @@ struct GAMECLIENT : igameclient
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			gun = d->gunselect, lastaction = lastmillis,
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
+		bool secondary = false;
 
 		s_sprintf(d->info)("%s", colorname(d, NULL, "@"));
 
@@ -1732,7 +1742,10 @@ struct GAMECLIENT : igameclient
 			if(d->obliterated) return;
 			animflags = ANIM_DYING;
 			lastaction = d->lastpain;
-		}
+			int t = lastmillis-lastaction;
+			if(t < 0 || t > 20000) return;
+			if(t > 1000) { animflags = ANIM_DEAD|ANIM_LOOP; }
+        }
 		else if(d->state == CS_EDITING || d->state == CS_SPECTATOR)
 		{
 			animflags = ANIM_EDIT|ANIM_LOOP;
@@ -1757,12 +1770,14 @@ struct GAMECLIENT : igameclient
 		}
 		else if(lastmillis-d->lastpain <= 300)
 		{
+			secondary = allowmove(d);
 			lastaction = d->lastpain;
 			animflags = ANIM_PAIN;
 			animdelay = 300;
 		}
 		else
 		{
+			secondary = allowmove(d);
 			bool showgun = isgun(gun);
 			if(showgun)
 			{
@@ -1783,32 +1798,35 @@ struct GAMECLIENT : igameclient
 								gun = d->lastgun;
 							else showgun = false;
 						}
+						animflags = ANIM_SWITCH;
 						break;
 					}
 					case GUNSTATE_POWER:
 					{
 						if(!guntype[gun].power) gunstate = GUNSTATE_SHOOT;
+						animflags = (guntype[gun].anim+gunstate);
 						break;
 					}
 					case GUNSTATE_SHOOT:
 					{
 						if(guntype[gun].power) showgun = false;
+						animflags = (guntype[gun].anim+gunstate);
 						break;
 					}
 					case GUNSTATE_RELOAD:
 					{
 						if(guntype[gun].power) showgun = false;
+						animflags = (guntype[gun].anim+gunstate);
 						break;
 					}
 					case GUNSTATE_IDLE:	default:
 					{
 						if(d->ammo[gun] <= 0 && guntype[gun].rdelay <= 0)
 							showgun = false;
+						animflags = (guntype[gun].anim+gunstate)|ANIM_LOOP;
 						break;
 					}
 				}
-				animflags = guntype[gun].anim + gunstate;
-				if(gunstate == GUNSTATE_IDLE) animflags |= ANIM_LOOP;
 
 				if(showgun)
 				{ // we could probably animate the vwep too now..
@@ -1839,7 +1857,7 @@ struct GAMECLIENT : igameclient
 		if(third && d != player1 && d->state != CS_DEAD && d->state != CS_SPECTATOR)
 			part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
 
-        renderclient(d, third, trans, team, a[0].name ? a : NULL, animflags, animdelay, lastaction, 0.f);
+        renderclient(d, third, trans, team, a[0].name ? a : NULL, secondary, animflags, animdelay, lastaction, 0.f);
 	}
 
 	IVARP(lasersight, 0, 0, 1);

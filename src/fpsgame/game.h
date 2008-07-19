@@ -94,13 +94,11 @@ struct fpsentity : extentity
 
 const char *animnames[] =
 {
-	"dead", "dying", "pain",
+	"dead", "dying", "idle",
 	"forward", "backward", "left", "right",
-	"jump", "sink", "swim",
-	"mapmodel", "trigger",
-	"edit", "lag", "taunt", "win", "lose",
+	"pain", "jump", "sink", "swim", "mapmodel",
+	"edit", "lag", "switch", "taunt", "win", "lose",
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
-	"idle", "shoot", "reload", "power", "switch", "throw",
 	"pistol", "pistol shoot", "pistol reload",
 	"shotgun", "shotgun shoot", "shotgun reload",
 	"chaingun", "chaingun shoot", "chaingun reload",
@@ -114,9 +112,8 @@ const char *animnames[] =
 
 enum
 {
-	ANIM_EDIT = ANIM_GAMESPECIFIC, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
+	ANIM_EDIT = ANIM_GAMESPECIFIC, ANIM_LAG, ANIM_SWITCH, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
-    ANIM_IDLE, ANIM_SHOOT, ANIM_RELOAD, ANIM_POWER, ANIM_SWITCH, ANIM_THROW,
     ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
     ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
     ANIM_CHAINGUN, ANIM_CHAINGUN_SHOOT, ANIM_CHAINGUN_RELOAD,

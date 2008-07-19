@@ -97,10 +97,9 @@ struct physent                                  // base entity type, can be affe
 
 enum
 {
-    ANIM_DEAD = 0, ANIM_DYING, ANIM_PAIN,
+    ANIM_DEAD = 0, ANIM_DYING, ANIM_IDLE,
     ANIM_FORWARD, ANIM_BACKWARD, ANIM_LEFT, ANIM_RIGHT,
-    ANIM_JUMP, ANIM_SINK, ANIM_SWIM,
-    ANIM_MAPMODEL, ANIM_TRIGGER,
+    ANIM_PAIN, ANIM_JUMP, ANIM_SINK, ANIM_SWIM, ANIM_MAPMODEL,
     ANIM_GAMESPECIFIC
 };
 
