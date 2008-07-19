@@ -3,12 +3,12 @@
 #include "pch.h"
 #include "engine.h"
 
-VARP(centerblend, 0, 99, 100); // so it doesn't get hooked by hudblend defaults
 VARP(centertime, 200, 5000, INT_MAX-1);
 VARP(centerlines, 0, 3, 5);
+FVARP(centerblend, 0.99f);
 
-VARP(conblend, 0, 99, 100); // so it doesn't get hooked by hudblend defaults
 VARP(contime, 200, 20000, INT_MAX-1);
+FVARP(conblend, 0.99f);
 
 ICOMMAND(centerprint, "C", (char *s), console("\f6%s", CON_CENTER, s););
 
@@ -175,7 +175,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 		}
 		loopvj(refs)
 		{
-			draw_textx("%s", (w*3)/2, (((h*3)/4)*3)+(FONTH*j)-FONTH*2, 255, 255, 255, int(255.f*(centerblend/100.f)), false, AL_CENTER, -1, -1, refs[j]);
+			draw_textx("%s", (w*3)/2, (((h*3)/4)*3)+(FONTH*j)-FONTH*2, 255, 255, 255, int(255*centerblend), false, AL_CENTER, -1, -1, refs[j]);
 		}
 	}
 
@@ -203,7 +203,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 	int cy = FONTH/3;
 	loopvrev(refs)
 	{
-		cy = draw_textx("%s", FONTH/3, cy, 255, 255, 255, int(255.f*(conblend/100.f)), false, AL_LEFT, -1, w*3-w*3/4-FONTH, refs[i]);
+		cy = draw_textx("%s", FONTH/3, cy, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, w*3-w*3/4-FONTH, refs[i]);
 		if(cy >= FONTH*numl) break;
 	}
 	if (refs.length() > len) len = refs.length();

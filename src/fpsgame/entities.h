@@ -152,7 +152,7 @@ struct entities : icliententities
 					case 12:	v = vec(getworldsize(), 0, 0); break;
 					default:	v = vec(0.5f*getworldsize(), 0.5f*getworldsize(), 0.5f*getworldsize()); break;
 				}
-				playsound(idx, &v, 255, getworldsize(), 0, SND_COPY);
+				playsound(idx, &v, 255, getworldsize()*2/3, 0, SND_COPY);
 			}
 		}
 		if(*msg) conoutf("\fr%s", msg);
