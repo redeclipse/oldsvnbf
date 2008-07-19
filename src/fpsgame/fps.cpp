@@ -54,13 +54,13 @@ struct GAMECLIENT : igameclient
 	IVARP(thirdpersondist, -100, 1, 100);
 	IVARP(thirdpersonshift, -100, 4, 100);
 	IVARP(thirdpersonangle, 0, 40, 360);
-	IVARP(thirdpersontranslucent, 0, 0, 1);
+	IVARP(thirdpersontranslucent, 0, 1, 1);
 
 	IVARP(firstpersonfov, 90, 100, 150);
 	IVARP(firstpersondist, -100, 50, 100);
 	IVARP(firstpersonshift, -100, 25, 100);
 	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
-	IVARP(firstpersontranslucent, 0, 0, 1);
+	IVARP(firstpersontranslucent, 0, 1, 1);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(absmouse, 0, 1, 1);
@@ -89,11 +89,8 @@ struct GAMECLIENT : igameclient
 	IFVARP(zoomsensitivity, 1.0f);
 	IFVARP(mousesensitivity, 1.0f);
 
-	IVARP(crosshair, 0, 1, 1);
-	IVARP(teamcrosshair, 0, 1, 1);
-	IVARP(hitcrosshair, 0, 425, 1000);
-
 	IVARP(crosshairspeed, 0, 250, INT_MAX-1);
+	IVARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
 	IFVARP(crosshairsize, 0.03f);
 	IFVARP(crosshairblend, 0.3f);
 
@@ -699,17 +696,14 @@ struct GAMECLIENT : igameclient
 		if(dist < radarrange())
 		{
 			dir.rotate_around_z(-camera1->yaw*RAD);
-
 			int colour = teamtype[d->team].colour;
-			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
-				cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
+			float cx = x + s*0.5f*(1.0f+dir.x/radarrange()),
+				cy = y + s*0.5f*(1.0f+dir.y/radarrange()),
 				cs = (d->crouching ? 0.005f : 0.025f)*s,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
 				fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*radarblipblend();
-
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
-
 			settexture(bliptex());
 			glColor4f(r, g, b, fade);
 			glBegin(GL_QUADS);
@@ -1068,15 +1062,15 @@ struct GAMECLIENT : igameclient
 
 		if(g3d_windowhit(true, false)) { index = POINTER_GUI; wasingui = true; }
 		else if(wasingui) { index = POINTER_GUI; resetcursor(); wasingui = false; }
-        else if(!crosshair() || hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
+        else if(hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
         else if(editmode) index = POINTER_EDIT;
         else if(inzoom()) index = POINTER_ZOOM;
-        else if(lastmillis-lasthit < hitcrosshair()) index = POINTER_HIT;
-        else if(m_team(gamemode, mutators) && teamcrosshair())
+        else if(lastmillis-lasthit <= crosshairhitspeed()) index = POINTER_HIT;
+        else if(m_team(gamemode, mutators))
         {
             vec pos = ph.headpos(player1, 0.f);
             dynent *d = ws.intersectclosest(pos, worldpos, player1);
-            if(d && d->type==ENT_PLAYER && ((fpsent *)d)->team == player1->team)
+            if(d && d->type == ENT_PLAYER && ((fpsent *)d)->team == player1->team)
 				index = POINTER_TEAM;
 			else index = POINTER_HAIR;
         }

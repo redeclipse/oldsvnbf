@@ -1770,9 +1770,7 @@ struct GAMESERVER : igameserver
 		{
 			int nospawn = 0;
             if(smode && !smode->canspawn(ci, true)) { nospawn++; }
-            mutate(
-				if (!mut->canspawn(ci, true)) { nospawn++; }
-			);
+            mutate(if(!mut->canspawn(ci, true)) { nospawn++; });
 			if(nospawn)
 			{
 				ci->state.state = CS_DEAD;

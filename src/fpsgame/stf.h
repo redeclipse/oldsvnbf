@@ -268,11 +268,12 @@ struct stfclient : stfstate
 				fade = cl.radarblipblend(), size = 0.05f;
 			if(f.owner != cl.player1->team && f.enemy != cl.player1->team)
 				fade = clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
-
+			float cx = x + s*0.5f*(1.0f+dir.x/cl.radarrange()),
+				cy = y + s*0.5f*(1.0f+dir.y/cl.radarrange()), cs = size*s;
 			settexture(cl.flagbliptex());
 			glColor4f(r, g, b, fade);
 			glBegin(GL_QUADS);
-			cl.drawsized(x + (s-size)*0.5f*(1.0f+dir.x/cl.radarrange()), y + (s-size)*0.5f*(1.0f+dir.y/cl.radarrange()), size*s);
+			cl.drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
 			glEnd();
 		}
 	}

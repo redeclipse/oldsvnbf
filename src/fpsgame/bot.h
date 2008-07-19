@@ -7,25 +7,22 @@ struct botclient
 	static const int BOTJUMPHEIGHT		= 8;			// decides to jump
 	static const int BOTJUMPIMPULSE		= 16;			// impulse to jump
 	static const int BOTLOSMIN			= 64;			// minimum line of sight
-	static const int BOTLOSMAX			= 8192;			// maximum line of sight
-	static const int BOTFOVMIN			= 80;			// minimum field of view
-	static const int BOTFOVMAX			= 150;			// maximum field of view
+	static const int BOTLOSMAX			= 4096;			// maximum line of sight
+	static const int BOTFOVMIN			= 90;			// minimum field of view
+	static const int BOTFOVMAX			= 130;			// maximum field of view
 
 	IVAR(botstall, 0, 0, 1);
 	IVAR(botdebug, 0, 2, 5);
 
-	#define BOTSCALE(x)				clamp(101 - clamp(x, 1, 100), 1, 100)
-	#define BOTRATE(x)				BOTSCALE(x)
-	#define BOTCHANCE(x)			rnd(x)
-	#define BOTLOSDIST(x)			clamp(float(BOTLOSMIN+(BOTLOSMAX-BOTLOSMIN))/float(x), float(BOTLOSMIN), float(getvar("fog")+BOTLOSMIN))
-	#define BOTFOVX(x)				clamp(float(BOTFOVMIN+(BOTFOVMAX-BOTFOVMIN))/float(x), float(BOTFOVMIN), float(BOTFOVMAX))
+	#define BOTLOSDIST(x)			clamp((BOTLOSMIN+(BOTLOSMAX-BOTLOSMIN))/100.f*float(x), float(BOTLOSMIN), float(getvar("fog")+BOTLOSMIN))
+	#define BOTFOVX(x)				clamp((BOTFOVMIN+(BOTFOVMAX-BOTFOVMIN))/100.f*float(x), float(BOTFOVMIN), float(BOTFOVMAX))
 	#define BOTFOVY(x)				BOTFOVX(x)*3.f/4.f
 	#define BOTTARG(x,y,z)			(y != x && y->state == CS_ALIVE && lastmillis-y->lastspawn > REGENWAIT && (!z || !m_team(cl.gamemode, cl.mutators) || y->team != x->team))
 
 	botclient(GAMECLIENT &_cl) : cl(_cl)
 	{
 		CCOMMAND(addbot, "s", (botclient *self, char *s),
-			self->addbot(*s ? clamp(atoi(s), 1, 100) : 100)
+			self->addbot(*s ? clamp(atoi(s), 1, 100) : rnd(100)+1)
 		);
 		CCOMMAND(delbot, "", (botclient *self), self->delbot());
 	}
@@ -71,14 +68,20 @@ struct botclient
 
 	bool hastarget(fpsent *d, botstate &b, vec &pos)
 	{ // add margins of error
-		vec dir(cl.ph.feetpos(d, 0.f));
-		dir.sub(pos);
-		dir.normalize();
-		float targyaw, targpitch;
-		vectoyawpitch(dir, targyaw, targpitch);
-		float margin = float(BOTRATE(d->skill))/400.f,
-			cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
-		return cyaw < margin*BOTFOVX(d->skill) && cpitch < margin*BOTFOVY(d->skill);
+		if(!rnd(d->skill*10)) return true;
+		else
+		{
+			vec dir(cl.ph.feetpos(d, 0.f));
+			dir.sub(pos);
+			dir.normalize();
+			float targyaw, targpitch;
+			vectoyawpitch(dir, targyaw, targpitch);
+			float skew = float(lastmillis-b.millis)/float(d->skill*33),
+				cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
+			if(cyaw <= BOTFOVX(d->skill)*skew && cpitch <= BOTFOVY(d->skill)*skew)
+				return true;
+		}
+		return false;
 	}
 
 	bool checkothers(vector<int> &targets, fpsent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false)
@@ -173,7 +176,6 @@ struct botclient
 			if(!b.override && randomnode(d, b, feet, pos, BOTISNEAR, BOTISFAR))
 			{
 				b.override = true;
-				return true;
 			}
 			else if(!b.goal) return true;
 			else if(!retry)
@@ -181,8 +183,9 @@ struct botclient
 				b.override = false;
 				return follow(d, b, e, true);
 			}
-			return false;
+			else return false;
 		}
+		d->bot->enemy = e->clientnum;
 		return true;
 	}
 
@@ -497,13 +500,13 @@ struct botclient
 		{
 			vec targ, pos = cl.ph.headpos(d);
 			fpsent *e = cl.getclient(b.target);
-			if(e && e->state == CS_ALIVE)
+			if(e)
 			{
 				vec ep = cl.ph.headpos(e);
-				if(raycubelos(pos, ep, targ))
+				if(e->state == CS_ALIVE && raycubelos(pos, ep, targ))
 				{
 					d->bot->enemy = e->clientnum;
-					if(lastmillis-e->lastspawn > REGENWAIT && d->canshoot(d->gunselect, lastmillis) && (!BOTCHANCE(d->skill) || hastarget(d, b, ep)))
+					if(d->canshoot(d->gunselect, lastmillis) && hastarget(d, b, ep))
 					{
 						d->attacking = true;
 						d->attacktime = lastmillis;
@@ -607,11 +610,13 @@ struct botclient
 				case BT_PLAYER:
 				{
 					fpsent *e = cl.getclient(b.target);
-					if(e && e->state == CS_ALIVE && follow(d, b, e))
+					if(e)
 					{
-						d->bot->enemy = e->clientnum;
-						defer(d, b, false);
-						return true;
+						if(e->state == CS_ALIVE && follow(d, b, e))
+						{
+							defer(d, b, false);
+							return true;
+						}
 					}
 					break;
 				}
@@ -657,16 +662,16 @@ struct botclient
 		return false;
 	}
 
-	void aim(fpsent *d, botstate &b, vec &pos, float &yaw, float &pitch, bool aiming = true)
+	void aim(fpsent *d, botstate &b, vec &pos, float &yaw, float &pitch, int skew)
 	{
 		vec dp = cl.ph.headpos(d);
 		float targyaw = -(float)atan2(pos.x-dp.x, pos.y-dp.y)/PI*180+180;
 		if(yaw < targyaw-180.0f) yaw += 360.0f;
 		if(yaw > targyaw+180.0f) yaw -= 360.0f;
 		float dist = dp.dist(pos), targpitch = asin((pos.z-dp.z)/dist)/RAD;
-		if(aiming)
+		if(skew)
 		{
-			float amt = float(lastmillis-d->lastupdate)/float(BOTRATE(d->skill))/10.f,
+			float amt = float(lastmillis-d->lastupdate)/float((101-d->skill)*skew),
 				offyaw = fabs(targyaw-yaw)*amt, offpitch = fabs(targpitch-pitch)*amt;
 
 			if(targyaw > yaw) // slowly turn bot towards target
@@ -719,18 +724,17 @@ struct botclient
 
 			bool aiming = false;
 			fpsent *e = cl.getclient(d->bot->enemy);
-			vec targ, enemypos = e ? cl.ph.headpos(e) : vec(0, 0, 0);
-			if(e && e->state == CS_ALIVE && lastmillis-e->lastspawn > REGENWAIT)
+			if(e)
 			{
-				aim(d, b, enemypos, d->yaw, d->pitch, true);
+				vec enemypos = cl.ph.headpos(e);
+				aim(d, b, enemypos, d->yaw, d->pitch, 10);
 				aiming = true;
 			}
 
 			if(hunt(d, b))
 			{
-				if(!aiming)
-					aim(d, b, d->bot->spot, d->yaw, d->pitch, true);
-				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, false);
+				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 100);
+				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 0);
 
 				if(d->bot->spot.z-pos.z > BOTJUMPHEIGHT && !d->timeinair && lastmillis-d->jumptime > 1000)
 				{
