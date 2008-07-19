@@ -873,7 +873,7 @@ struct animmodel : model
                 conoutf("invalid frame %d, range %d in model %s", frame, range, model->loadname);
                 return;
             }
-            if(!anims[animpart]) anims[animpart] = new vector<animspec>[NUMANIMS];
+            if(!anims[animpart]) anims[animpart] = new vector<animspec>[cl->numanims()];
             animspec &spec = anims[animpart][num].add();
             spec.frame = frame;
             spec.range = range;

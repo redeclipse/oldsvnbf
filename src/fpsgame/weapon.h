@@ -140,8 +140,11 @@ struct weaponstate
 
 			particle_splash(0, 200, 300, o);
 			particle_fireball(o, guntype[gun].radius, gun == GUN_GL ? 23 : 22);
+#if 0
 			if(gun==GUN_RL) adddynlight(o, 1.15f*guntype[gun].radius, vec(2, 1.5f, 1), 1100, 100, 0, 0.66f*guntype[gun].radius, vec(1.1f, 0.66f, 0.22f));
-			else adddynlight(o, 1.15f*guntype[gun].radius, vec(2, 1.5f, 1), 1100, 100);
+			else
+#endif
+				adddynlight(o, 1.15f*guntype[gun].radius, vec(2, 1.5f, 1), 1100, 100);
 
 			loopi(rnd(20)+10)
 				cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
@@ -169,11 +172,11 @@ struct weaponstate
 		vec offset(from);
 		vec front, right;
 		vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
-		front.mul(d->radius*1.5f);
+		front.mul(d->radius*1.77f);
 		offset.add(front);
-		offset.z += (d->aboveeye + d->height)*0.85f - d->height;
+		offset.z += (d->aboveeye + d->height)*0.87f - d->height;
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
-		right.mul(d->radius*0.36f);
+		right.mul(d->radius*0.355f);
 		offset.add(right);
 		if(d->crouching)
 			offset.z -= min(1.0f, (lastmillis-d->crouchtime)/200.f)*(1-CROUCHHEIGHT)*d->height;
@@ -222,7 +225,9 @@ struct weaponstate
 				break;
 			}
 
+#if 0
 			case GUN_RL:
+#endif
 			case GUN_GL:
 			case GUN_FLAMER:
 			{
@@ -312,10 +317,10 @@ struct weaponstate
 
 	void checkweapons(fpsent *d)
 	{
-		loopi(NUMGUNS) if(d->gunstate[i] != GUNSTATE_NONE)
+		loopi(NUMGUNS) if(d->gunstate[i] != GUNSTATE_IDLE)
 		{
 			if(d->state != CS_ALIVE || (d->gunstate[i] != GUNSTATE_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
-				d->setgunstate(i, GUNSTATE_NONE, 0, lastmillis);
+				d->setgunstate(i, GUNSTATE_IDLE, 0, lastmillis);
 		}
 	}
 

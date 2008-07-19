@@ -62,6 +62,7 @@ struct projectiles
 							waterfric = 2.0f;
 							weight = 50.f;
 							break;
+#if 0
 						case GUN_RL:
 						{
 							aboveeye = height = radius = 2.0f;
@@ -71,6 +72,7 @@ struct projectiles
 							weight = 0.f;
 							break;
 						}
+#endif
 						case GUN_FLAMER:
 						{
 							aboveeye = height = radius = 2.0f;
@@ -312,10 +314,12 @@ struct projectiles
             		yaw = pitch = proj.roll;
             		s_sprintf(mname)("%s", "projectiles/grenade");
             	}
+#if 0
             	else if (proj.gun == GUN_RL)
             	{
 					s_sprintf(mname)("%s", "projectiles/rocket");
             	}
+#endif
             	else continue;
 			}
             else if (proj.projtype == PRJ_GIBS)
@@ -342,9 +346,11 @@ struct projectiles
 
 			switch (proj.gun)
 			{
+#if 0
 				case GUN_RL:
 					adddynlight(proj.o, 0.66f*guntype[proj.gun].radius, vec(1.1f, 0.66f, 0.22f));
 					break;
+#endif
 				case GUN_FLAMER:
 					adddynlight(proj.o, 0.66f*guntype[proj.gun].radius, vec(1.1f, 0.22f, 0.02f));
 					break;

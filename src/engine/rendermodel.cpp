@@ -891,23 +891,6 @@ bool matchanim(const char *name, const char *pattern)
 	return false;
 }
 
-void findanims(const char *pattern, vector<int> &anims)
-{
-	static const char *names[] =
-	{
-		"dead", "dying", "idle",
-		"forward", "backward", "left", "right",
-		"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
-		"punch", "power", "hold", "throw", "shoot", "reload", "switch", "pain",
-		"jump", "sink", "swim",
-		"edit", "lag", "taunt", "win", "lose",
-		"gun shoot", "gun idle", "gun reload",
-		"vwep", "shield", "powerup",
-		"mapmodel", "trigger"
-	};
-	loopi(sizeof(names)/sizeof(names[0])) if(matchanim(names[i], pattern)) anims.add(i);
-}
-
 void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&masks) // model skin sharing
 {
 	string dirs[3];

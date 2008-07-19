@@ -21,8 +21,8 @@ struct GAMECLIENT : igameclient
 	bool intermission;
 	int maptime, minremain;
 	int respawnent, swaymillis;
+	dynent fpsmodel;
 	vec swaydir;
-    dynent guninterp;
     int lasthit, lastcamera, lastzoom;
     bool prevzoom, zooming;
 	int quakewobble, damageresidue;
@@ -51,11 +51,13 @@ struct GAMECLIENT : igameclient
 	IVARP(thirdpersondist, -100, 1, 100);
 	IVARP(thirdpersonshift, -100, 4, 100);
 	IVARP(thirdpersonangle, 0, 40, 360);
+	IVARP(thirdpersontranslucent, 0, 0, 1);
 
 	IVARP(firstpersonfov, 90, 100, 130);
 	IVARP(firstpersondist, -100, 50, 100);
 	IVARP(firstpersonshift, -100, 25, 100);
 	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
+	IVARP(firstpersontranslucent, 0, 0, 1);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(absmouse, 0, 1, 1);
@@ -442,14 +444,17 @@ struct GAMECLIENT : igameclient
 	{
 		if(d->state!=CS_ALIVE || intermission) return;
 
-		static const char *obitnames[NUMGUNS] = {
+		static const char *obitnames[] = {
 			"ate a bullet from",
 			"was filled with buckshot by",
 			"was riddled with holes by",
 			"was blown to pieces by",
 			"was char-grilled by",
 			"was pierced by",
-			"rode the wrong end of a rocket from"
+#if 0
+			"rode the wrong end of a rocket from",
+#endif
+			""
 		};
 		string dname, aname, oname;
 		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
@@ -1611,18 +1616,27 @@ struct GAMECLIENT : igameclient
 	vector<fpsent *> bestplayers;
     vector<int> bestteams;
 
-	IVAR(animoverride, -1, 0, NUMANIMS-1);
+	IVAR(animoverride, -1, 0, ANIM_MAX-1);
 	IVAR(testanims, 0, 0, 1);
 
-	void renderclient(fpsent *d, bool third, int team, modelattach *attachments, int animflags, int animdelay, int lastaction, int lastpain, float sink)
+	int numanims() { return ANIM_MAX; }
+
+	void findanims(const char *pattern, vector<int> &anims)
+	{
+		loopi(sizeof(animnames)/sizeof(animnames[0]))
+			if(*animnames[i] && matchanim(animnames[i], pattern))
+				anims.add(i);
+	}
+
+	void renderclient(fpsent *d, bool third, bool trans, int team, modelattach *attachments, int animflags, int animdelay, int lastaction, float speed)
 	{
 		string mdl;
 		if(third) s_strcpy(mdl, teamtype[team].tpmdl);
 		else s_strcpy(mdl, teamtype[team].fpmdl);
 
-		int anim = (d->crouching ? ANIM_CROUCH : ANIM_IDLE)|ANIM_LOOP;
+		int anim = ANIM_IDLE|ANIM_LOOP;
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
-		vec o = vec(third ? vec(d->o).sub(vec(0, 0, d->height)) : ph.headpos(d)).sub(vec(0, 0, sink));
+		vec o = vec(third ? vec(d->o).sub(vec(0, 0, d->height)) : ph.headpos(d));
 		if(!third && firstpersonsway())
 		{
 			vec sway;
@@ -1641,151 +1655,167 @@ struct GAMECLIENT : igameclient
 		}
 		int basetime = 0;
 		if(animoverride()) anim = (animoverride()<0 ? ANIM_ALL : animoverride())|ANIM_LOOP;
-		else if(d->state==CS_DEAD)
-		{
-			pitch = 0;
-			anim = ANIM_DYING;
-			basetime = lastpain;
-			int t = lastmillis-lastpain;
-			if(t<0 || t>20000) return;
-			if(t>1000) { anim = ANIM_DEAD|ANIM_LOOP; if(t>1600) { t -= 1600; o.z -= t*t/10000000000.0f*t/16.0f; } }
-			if(o.z<-1000) return;
-		}
-		else if(d->state==CS_EDITING || d->state==CS_SPECTATOR) anim = ANIM_EDIT|ANIM_LOOP;
-		else if(d->state==CS_LAGGED)							anim = ANIM_LAG|ANIM_LOOP;
 		else
 		{
-			if(lastmillis-lastpain<300)
-			{
-				anim = ANIM_PAIN;
-				basetime = lastpain;
-			}
-			else if(lastpain < lastaction && (animflags<0 || (d->type!=ENT_AI && lastmillis-lastaction<animdelay)))
-			{
-				anim = animflags<0 ? -animflags : animflags;
-				basetime = lastaction;
-			}
+			anim = animflags;
+			basetime = lastaction;
 
-			if(d->inliquid && d->physstate<=PHYS_FALL) anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
-			else if(d->timeinair>100) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
+			if(d->inliquid && d->physstate<=PHYS_FALL)
+				anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
+			else if(d->timeinair > 100)
+				anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
 			else if(allowmove(d))
 			{
 				if(d->crouching)
 				{
-					if(d->move>0) anim |= (ANIM_CRAWL_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
-					else if(d->strafe) anim |= ((d->strafe>0 ? ANIM_CRAWL_LEFT : ANIM_CRAWL_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
-					else if(d->move<0) anim |= (ANIM_CRAWL_BACKWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+					if(d->move>0)		anim |= (ANIM_CRAWL_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+					else if(d->strafe)	anim |= ((d->strafe>0 ? ANIM_CRAWL_LEFT : ANIM_CRAWL_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
+					else if(d->move<0)	anim |= (ANIM_CRAWL_BACKWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+					else				anim |= (ANIM_CROUCH|ANIM_LOOP)<<ANIM_SECONDARY;
 				}
 				else if(d->move>0) anim |= (ANIM_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 				else if(d->strafe) anim |= ((d->strafe>0 ? ANIM_LEFT : ANIM_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
 				else if(d->move<0) anim |= (ANIM_BACKWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 			}
 
-			if(((anim&ANIM_INDEX)==ANIM_IDLE || (anim&ANIM_INDEX)==ANIM_CROUCH) && (anim>>ANIM_SECONDARY)&ANIM_INDEX) anim >>= ANIM_SECONDARY;
+			if((anim&ANIM_INDEX)==ANIM_IDLE && (anim>>ANIM_SECONDARY)&ANIM_INDEX)
+				anim >>= ANIM_SECONDARY;
 		}
 
-		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
-		int flags = MDL_LIGHT;
+		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX))
+			anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
 
+		int flags = MDL_LIGHT;
 		if(d->type==ENT_PLAYER) flags |= MDL_FULLBRIGHT;
 		else flags |= MDL_CULL_DIST | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
-
-		if(d->state == CS_LAGGED || (d->state == CS_ALIVE && lastmillis-d->lastspawn <= REGENWAIT))
-			flags |= MDL_TRANSLUCENT;
+		if(trans) flags |= MDL_TRANSLUCENT;
 		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
-		rendermodel(NULL, mdl, anim, o, !third && testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, d, attachments, basetime);
+		dynent *e = third ? (dynent *)d : (dynent *)&fpsmodel;
+		rendermodel(NULL, mdl, anim, o, !third && testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, e, attachments, basetime, speed);
 	}
 
-	void renderplayer(fpsent *d, bool third)
+	void renderplayer(fpsent *d, bool third, bool trans)
 	{
         modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
-			gun = d->gunselect, lastaction = lastmillis, animflags = 0, animdelay = 0;
-        bool hasgun = isgun(gun);
+			gun = d->gunselect, lastaction = lastmillis,
+			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 
 		s_sprintf(d->info)("%s", colorname(d, NULL, "@"));
 
-		if(d->state != CS_DEAD)
+		if(d->state == CS_DEAD)
 		{
-			if(intermission)
+			if(d->obliterated) return;
+			animflags = ANIM_DYING;
+			lastaction = d->lastpain;
+		}
+		else if(d->state == CS_EDITING || d->state == CS_SPECTATOR)
+		{
+			animflags = ANIM_EDIT|ANIM_LOOP;
+		}
+		else if(d->state == CS_LAGGED)
+		{
+			animflags = ANIM_LAG|ANIM_LOOP;
+		}
+		else if(intermission)
+		{
+			lastaction = lastmillis;
+			animflags = ANIM_LOSE|ANIM_LOOP;
+			animdelay = 1000;
+			if(m_team(gamemode, mutators)) loopv(bestteams) { if(bestteams[i] == d->team) { animflags = ANIM_WIN|ANIM_LOOP; break; } }
+			else if(bestplayers.find(d)>=0) animflags = ANIM_WIN|ANIM_LOOP;
+		}
+		else if(d->lasttaunt && lastmillis-d->lasttaunt <= 1000)
+		{
+			lastaction = d->lasttaunt;
+			animflags = ANIM_TAUNT;
+			animdelay = 1000;
+		}
+		else if(lastmillis-d->lastpain <= 300)
+		{
+			lastaction = d->lastpain;
+			animflags = ANIM_PAIN;
+			animdelay = 300;
+		}
+		else
+		{
+			bool showgun = isgun(gun);
+			if(showgun)
 			{
-				lastaction = lastmillis;
-				animflags = ANIM_LOSE|ANIM_LOOP;
-				animdelay = 1000;
-				if(m_team(gamemode, mutators)) loopv(bestteams) { if(bestteams[i] == d->team) { animflags = ANIM_WIN|ANIM_LOOP; break; } }
-				else if(bestplayers.find(d)>=0) animflags = ANIM_WIN|ANIM_LOOP;
-			}
-			else if(d->state == CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-lastaction>animdelay)
-			{
-				lastaction = d->lasttaunt;
-				animflags = ANIM_TAUNT;
-				animdelay = 1000;
-			}
-			else if(hasgun && lastmillis-d->gunlast[gun] < d->gunwait[gun])
-			{
-				switch(d->gunstate[gun])
+				int gunstate = GUNSTATE_IDLE;
+				if(lastmillis-d->gunlast[gun] <= d->gunwait[gun])
+				{
+					gunstate = d->gunstate[gun];
+					lastaction = d->gunlast[gun];
+					animdelay = d->gunwait[gun];
+				}
+				switch(gunstate)
 				{
 					case GUNSTATE_SWITCH:
 					{
-						animflags = ANIM_SWITCH;
-						if(lastmillis-d->gunlast[gun] < d->gunwait[gun]/2)
+						if(lastmillis-d->gunlast[gun] <= d->gunwait[gun]/2)
 						{
 							if(isgun(d->lastgun) && (d->ammo[gun] > 0 || guntype[gun].rdelay > 0))
 								gun = d->lastgun;
-							else hasgun = false;
+							else showgun = false;
 						}
 						break;
 					}
 					case GUNSTATE_POWER:
 					{
-						animflags = guntype[gun].power ? ANIM_POWER : ANIM_SHOOT;
+						if(!guntype[gun].power) gunstate = GUNSTATE_SHOOT;
 						break;
 					}
 					case GUNSTATE_SHOOT:
 					{
-						animflags = guntype[gun].power ? ANIM_THROW : ANIM_SHOOT;
-						if(guntype[gun].power) hasgun = false;
+						if(guntype[gun].power) showgun = false;
 						break;
 					}
 					case GUNSTATE_RELOAD:
 					{
-						animflags = guntype[gun].power ? ANIM_HOLD : ANIM_RELOAD;
-						if(guntype[gun].power) hasgun = false;
+						if(guntype[gun].power) showgun = false;
 						break;
 					}
-					case GUNSTATE_NONE:	default:
+					case GUNSTATE_IDLE:	default:
 					{
 						if(d->ammo[gun] <= 0 && guntype[gun].rdelay <= 0)
-							hasgun = false;
+							showgun = false;
 						break;
 					}
 				}
-				lastaction = d->gunlast[gun];
-				animdelay = d->gunwait[gun] + 50;
-			}
+				animflags = guntype[gun].anim + gunstate;
+				if(gunstate == GUNSTATE_IDLE) animflags |= ANIM_LOOP;
 
-			if(hasgun)
-			{
-				a[ai].name = guntype[gun].vwep;
-				a[ai].tag = "tag_weapon";
-				a[ai].anim = ANIM_VWEP|ANIM_LOOP;
-				a[ai].basetime = 0;
-				ai++;
-			}
-			if(m_ctf(gamemode))
-			{
-				loopv(ctf.flags) if(ctf.flags[i].owner == d && !ctf.flags[i].droptime)
-				{
-					a[ai].name = teamtype[ctf.flags[i].team].flag;
-					a[ai].tag = "tag_flag";
-					a[ai].anim = ANIM_MAPMODEL|ANIM_LOOP;
+				if(showgun)
+				{ // we could probably animate the vwep too now..
+					a[ai].name = guntype[gun].vwep;
+					a[ai].tag = "tag_weapon";
+					a[ai].anim = ANIM_VWEP|ANIM_LOOP;
 					a[ai].basetime = 0;
 					ai++;
 				}
 			}
-			if(d != player1) part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
+
+			if(third)
+			{
+				if(m_ctf(gamemode))
+				{
+					loopv(ctf.flags) if(ctf.flags[i].owner == d && !ctf.flags[i].droptime)
+					{
+						a[ai].name = teamtype[ctf.flags[i].team].flag;
+						a[ai].tag = "tag_flag";
+						a[ai].anim = ANIM_MAPMODEL|ANIM_LOOP;
+						a[ai].basetime = 0;
+						ai++;
+					}
+				}
+			}
 		}
-        renderclient(d, third, team, a[0].name ? a : NULL, animflags, animdelay, lastaction, intermission ? 0 : d->lastpain, 0.f);
+
+		if(third && d != player1 && d->state != CS_DEAD && d->state != CS_SPECTATOR)
+			part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
+
+        renderclient(d, third, trans, team, a[0].name ? a : NULL, animflags, animdelay, lastaction, 0.f);
 	}
 
 	IVARP(lasersight, 0, 0, 1);
@@ -1803,10 +1833,10 @@ struct GAMECLIENT : igameclient
 		fpsent *d;
         loopi(numdynents()) if((d = (fpsent *)iterdynents(i)) && (!rendernormally || d != player1 || (isthirdperson() && !inzoomswitch())))
 			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
-				renderplayer(d, true);
+				renderplayer(d, true, (d->state == CS_LAGGED || (d->state == CS_ALIVE && lastmillis-d->lastspawn <= REGENWAIT) || (d == player1 && thirdpersontranslucent())));
 
 		if(player1->state == CS_ALIVE && !isthirdperson() && !inzoomswitch())
-			renderplayer(player1, false);
+			renderplayer(player1, false, (player1->state == CS_LAGGED || (player1->state == CS_ALIVE && lastmillis-player1->lastspawn <= REGENWAIT) || firstpersontranslucent()));
 
 		et.render();
 		pj.render();

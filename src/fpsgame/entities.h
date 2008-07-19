@@ -195,7 +195,8 @@ struct entities : icliententities
 	{
         if(d && ents.inrange(n))
 		{
-			particle_text(d->abovehead(), itemname(n), 15);
+			if(d != cl.player1 || cl.isthirdperson())
+				particle_text(d->abovehead(), itemname(n), 15);
 			playsound(S_ITEMPICKUP, &d->o);
 			d->useitem(m, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
 			ents[n]->spawned = false;

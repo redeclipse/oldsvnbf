@@ -65,23 +65,23 @@ struct md3 : vertmodel
             endianswap(&header.version, sizeof(int), 1);
             endianswap(&header.flags, sizeof(int), 9);
             if(strncmp(header.id, "IDP3", 4) != 0 || header.version != 15) // header check
-            { 
+            {
                 fclose(f);
-                conoutf("md3: corrupted header"); 
-                return false; 
+                conoutf("md3: corrupted header");
+                return false;
             }
 
             name = newstring(path);
 
             numframes = header.numframes;
-            numtags = header.numtags;        
+            numtags = header.numtags;
             if(numtags)
             {
                 tags = new tag[numframes*numtags];
                 fseek(f, header.ofs_tags, SEEK_SET);
                 md3tag tag;
-                
-                loopi(header.numframes*header.numtags) 
+
+                loopi(header.numframes*header.numtags)
                 {
                     fread(&tag, sizeof(md3tag), 1, f);
                     endianswap(&tag.pos, sizeof(float), 12);
@@ -95,7 +95,7 @@ struct md3 : vertmodel
                     m.X.w = tag.pos.x;
                     m.Y.w = tag.pos.y;
                     m.Z.w = tag.pos.z;
-                    loopj(3) 
+                    loopj(3)
                     {
                         m.X[j] = tag.rotation[j][0];
                         m.Y[j] = tag.rotation[j][1];
@@ -122,11 +122,11 @@ struct md3 : vertmodel
                 md3meshheader mheader;
                 fseek(f, mesh_offset, SEEK_SET);
                 fread(&mheader, sizeof(md3meshheader), 1, f);
-                endianswap(&mheader.flags, sizeof(int), 10); 
+                endianswap(&mheader.flags, sizeof(int), 10);
 
                 m.name = newstring(mheader.name);
-               
-                m.numtris = mheader.numtriangles; 
+
+                m.numtris = mheader.numtriangles;
                 m.tris = new tri[m.numtris];
                 fseek(f, mesh_offset + mheader.ofs_triangles, SEEK_SET);
                 loopj(m.numtris)
@@ -139,12 +139,12 @@ struct md3 : vertmodel
 
                 m.numverts = mheader.numvertices;
                 m.tcverts = new tcvert[m.numverts];
-                fseek(f, mesh_offset + mheader.ofs_uv , SEEK_SET); 
+                fseek(f, mesh_offset + mheader.ofs_uv , SEEK_SET);
                 fread(m.tcverts, 2*sizeof(float), m.numverts, f); // read the UV data
                 endianswap(m.tcverts, sizeof(float), 2*m.numverts);
-                
+
                 m.verts = new vert[numframes*m.numverts];
-                fseek(f, mesh_offset + mheader.ofs_vertices, SEEK_SET); 
+                fseek(f, mesh_offset + mheader.ofs_vertices, SEEK_SET);
                 loopj(numframes*m.numverts)
                 {
                     md3vertex v;
@@ -169,7 +169,7 @@ struct md3 : vertmodel
             return true;
         }
     };
-    
+
     void extendbb(int frame, vec &center, vec &radius, modelattach &a)
     {
         vec acenter, aradius;
@@ -177,7 +177,7 @@ struct md3 : vertmodel
         float margin = 2*max(aradius.x, max(aradius.y, aradius.z));
         radius.x += margin;
         radius.y += margin;
-    }   
+    }
 
     meshgroup *loadmeshes(char *name, va_list args)
     {
@@ -234,7 +234,7 @@ struct md3 : vertmodel
 };
 
 void md3load(char *model)
-{   
+{
     if(!loadingmd3) { conoutf("not loading an md3"); return; }
     s_sprintfd(filename)("%s/%s", md3dir, model);
     md3::part &mdl = *new md3::part;
@@ -245,7 +245,7 @@ void md3load(char *model)
     mdl.meshes = loadingmd3->sharemeshes(path(filename));
     if(!mdl.meshes) conoutf("could not load %s", filename); // ignore failure
     else mdl.initskins();
-}  
+}
 
 void md3pitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax)
 {
@@ -282,7 +282,7 @@ void md3pitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pit
 #define loopmd3skins(meshname, s, body) loopmd3meshes(meshname, m, { md3::skin &s = mdl.skins[i]; body; })
 
 void md3skin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin)
-{    
+{
     loopmd3skins(meshname, s,
         s.tex = textureload(makerelpath(md3dir, tex), 0, true, false);
         if(*masks)
@@ -292,7 +292,7 @@ void md3skin(char *meshname, char *tex, char *masks, float *envmapmax, float *en
             s.envmapmin = *envmapmin;
         }
     );
-}   
+}
 
 void md3spec(char *meshname, int *percent)
 {
@@ -371,8 +371,8 @@ void md3anim(char *anim, int *frame, int *range, float *speed, int *priority)
 {
     if(!loadingmd3 || loadingmd3->parts.empty()) { conoutf("not loading an md3"); return; }
     vector<int> anims;
-    findanims(anim, anims);
-    if(anims.empty()) conoutf("could not find animation %s", anim);
+    cl->findanims(anim, anims);
+    if(anims.empty()) conoutf("could not find animation %s in %s", anim, loadingmd3->loadname);
     else loopv(anims)
     {
         loadingmd3->parts.last()->setanim(0, anims[i], *frame, *range, *speed, *priority);

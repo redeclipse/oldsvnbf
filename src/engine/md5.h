@@ -15,7 +15,7 @@ struct md5weight
     int joint;
     float bias;
     vec pos;
-};  
+};
 
 struct md5vert
 {
@@ -78,7 +78,7 @@ struct md5 : skelmodel
                 loopj(v.count)
                 {
                     md5weight &w = weightinfo[v.start+j];
-                    sorted = c.addweight(sorted, w.bias, w.joint); 
+                    sorted = c.addweight(sorted, w.bias, w.joint);
                 }
                 c.finalize(sorted);
                 vv.blend = addblendcombo(c);
@@ -93,7 +93,7 @@ struct md5 : skelmodel
                 tri &t = tris[i];
                 vert &v1 = verts[t.vert[0]], &v2 = verts[t.vert[1]], &v3 = verts[t.vert[2]];
                 vec norm;
-                norm.cross(vec(v2.pos).sub(v1.pos), vec(v3.pos).sub(v1.pos)); 
+                norm.cross(vec(v2.pos).sub(v1.pos), vec(v3.pos).sub(v1.pos));
                 if(!areaweight) norm.normalize();
                 v1.norm.add(norm);
                 v2.norm.add(norm);
@@ -116,7 +116,7 @@ struct md5 : skelmodel
                 if(strstr(buf, "// meshes:"))
                 {
                     char *start = strchr(buf, ':')+1;
-                    if(*start==' ') start++; 
+                    if(*start==' ') start++;
                     char *end = start + strlen(start)-1;
                     while(end >= start && isspace(*end)) end--;
                     name = newstring(start, end+1-start);
@@ -124,7 +124,7 @@ struct md5 : skelmodel
                 else if(strstr(buf, "shader"))
                 {
                     char *start = strchr(buf, '"'), *end = start ? strchr(start+1, '"') : NULL;
-                    if(start && end) 
+                    if(start && end)
                     {
                         char *texname = newstring(start+1, end-(start+1));
                         part *p = loadingmd5->parts.last();
@@ -136,7 +136,7 @@ struct md5 : skelmodel
                 }
                 else if(sscanf(buf, " numverts %d", &numverts)==1)
                 {
-                    numverts = max(numverts, 0);        
+                    numverts = max(numverts, 0);
                     if(numverts)
                     {
                         vertinfo = new md5vert[numverts];
@@ -172,7 +172,7 @@ struct md5 : skelmodel
 
     struct md5meshgroup : skelmeshgroup
     {
-        md5meshgroup() 
+        md5meshgroup()
         {
         }
 
@@ -379,11 +379,11 @@ struct md5 : skelmodel
                         }
                         frame[i] = dualquat(j.orient, j.pos);
 #if 0
-                        if(h.parent<0) frame[i] = dualquat(j.orient, j.pos); 
+                        if(h.parent<0) frame[i] = dualquat(j.orient, j.pos);
                         else (frame[i] = frame[h.parent]).mul(dualquat(j.orient, j.pos));
 #endif
                     }
-                }    
+                }
             }
 
             DELETEA(animdata);
@@ -391,7 +391,7 @@ struct md5 : skelmodel
 
 #if 0
             vector<dualquat> invbase;
-            loopi(numbones) 
+            loopi(numbones)
             {
                 dualquat &d = invbase.add(basebones[i]);
 #if 1
@@ -400,10 +400,10 @@ struct md5 : skelmodel
 #endif
                 d.invert();
             }
-            loopi(animframes) 
+            loopi(animframes)
             {
                 dualquat *frame = &animbones[i*numbones];
-                loopj(numbones) 
+                loopj(numbones)
                 {
                     dualquat &d = frame[j];
 #if 1
@@ -426,10 +426,10 @@ struct md5 : skelmodel
             name = newstring(meshfile);
 
             if(!loadmd5mesh(meshfile)) return false;
-            
+
             return true;
         }
-    };            
+    };
 
     void extendbb(int frame, vec &center, vec &radius, modelattach &a)
     {
@@ -489,7 +489,7 @@ struct md5 : skelmodel
             return false;
         }
         loadingmd5 = NULL;
-        loopv(parts) 
+        loopv(parts)
         {
             skelpart *p = (skelpart *)parts[i];
             p->endanimparts();
@@ -510,7 +510,7 @@ void md5load(char *meshfile, char *skelname)
     mdl.pitchscale = mdl.pitchoffset = mdl.pitchmin = mdl.pitchmax = 0;
     mdl.meshes = loadingmd5->sharemeshes(path(filename), skelname[0] ? skelname : NULL);
     if(!mdl.meshes) conoutf("could not load %s", filename); // ignore failure
-    else 
+    else
     {
         mdl.initanimparts();
         mdl.initskins();
@@ -529,7 +529,7 @@ void md5tag(char *name, char *tagname)
     }
     conoutf("could not find bone %s for tag %s", name, tagname);
 }
-        
+
 void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax)
 {
     if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("not loading an md5"); return; }
@@ -679,9 +679,9 @@ void md5anim(char *anim, char *animfile, float *speed, int *priority)
     if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("not loading an md5"); return; }
 
     vector<int> anims;
-    findanims(anim, anims);
-    if(anims.empty()) conoutf("could not find animation %s", anim);
-    else 
+    cl->findanims(anim, anims);
+    if(anims.empty()) conoutf("could not find animation %s in %s", anim, loadingmd5->loadname);
+    else
     {
         s_sprintfd(filename)("%s/%s", md5dir, animfile);
         md5::part *p = loadingmd5->parts.last();
@@ -748,5 +748,5 @@ COMMAND(md5scroll, "sff");
 COMMAND(md5animpart, "s");
 COMMAND(md5anim, "ssfi");
 COMMAND(md5link, "iis");
-COMMAND(md5noclip, "si");            
+COMMAND(md5noclip, "si");
 
