@@ -708,7 +708,7 @@ struct clientcom : iclientcom
 						if(strcmp(d->name, text))
 						{
 							string oldname, newname;
-							s_strcpy(oldname, cl.colorname(d, NULL, false));
+							s_strcpy(oldname, cl.colorname(d, NULL, "", false));
 							s_strcpy(newname, cl.colorname(d, text));
 							conoutf("%s is now known as %s", oldname, newname);
 						}
@@ -716,8 +716,7 @@ struct clientcom : iclientcom
 					else					// new client
 					{
 						c2sinit = false;	// send new players my info again
-						d->respawn(lastmillis);
-						conoutf("connected: %s", cl.colorname(d, text, false));
+						conoutf("connected: %s", cl.colorname(d, text, "", false));
 						loopv(cl.players)	// clear copies since new player doesn't have them
 							if(cl.players[i]) freeeditinfo(cl.players[i]->edit);
 						extern editinfo *localedit;
@@ -862,7 +861,8 @@ struct clientcom : iclientcom
 					{
 						int lcn = getint(p);
 						if(p.overread() || lcn < 0) break;
-						fpsent *f = cl.getclient(lcn);
+						fpsent *f = cl.newclient(lcn);
+						f->respawn(0);
 						parsestate(f, p, true);
 					}
 					break;

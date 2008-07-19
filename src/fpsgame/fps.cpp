@@ -654,7 +654,7 @@ struct GAMECLIENT : igameclient
 	{
 		if(!name) name = d->name;
 		static string cname;
-		s_sprintf(cname)("%s\fs%s\fS", prefix, name);
+		s_sprintf(cname)("%s\fs%s\fS", *prefix ? prefix : "", name);
 		if(!name[0] || d->ownernum >= 0 || (dupname && duplicatename(d, name)))
 		{
 			s_sprintfd(s)(" [\fs\f5%d\fS]", d->clientnum);
