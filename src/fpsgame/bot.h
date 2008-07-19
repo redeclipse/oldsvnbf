@@ -7,9 +7,9 @@ struct botclient
 	static const int BOTJUMPHEIGHT		= 8;			// decides to jump
 	static const int BOTJUMPIMPULSE		= 16;			// impulse to jump
 	static const int BOTLOSMIN			= 64;			// minimum line of sight
-	static const int BOTLOSMAX			= 4096;			// maximum line of sight
-	static const int BOTFOVMIN			= 90;			// minimum field of view
-	static const int BOTFOVMAX			= 125;			// maximum field of view
+	static const int BOTLOSMAX			= 8192;			// maximum line of sight
+	static const int BOTFOVMIN			= 80;			// minimum field of view
+	static const int BOTFOVMAX			= 150;			// maximum field of view
 
 	IVAR(botstall, 0, 0, 1);
 	IVAR(botdebug, 0, 2, 5);
@@ -717,8 +717,21 @@ struct botclient
 				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			}
 
+			bool aiming = false;
+			fpsent *e = cl.getclient(d->bot->enemy);
+			vec targ, enemypos = e ? cl.ph.headpos(e) : vec(0, 0, 0);
+			if(e && e->state == CS_ALIVE && lastmillis-e->lastspawn > REGENWAIT)
+			{
+				aim(d, b, enemypos, d->yaw, d->pitch, true);
+				aiming = true;
+			}
+
 			if(hunt(d, b))
 			{
+				if(!aiming)
+					aim(d, b, d->bot->spot, d->yaw, d->pitch, true);
+				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, false);
+
 				if(d->bot->spot.z-pos.z > BOTJUMPHEIGHT && !d->timeinair && lastmillis-d->jumptime > 1000)
 				{
 					d->jumping = true;
@@ -728,19 +741,10 @@ struct botclient
 				d->move = 1;
 				d->strafe = 0;
 			}
-			else d->move = d->strafe = 0;
-
-			fpsent *e = cl.getclient(d->bot->enemy);
-			vec aimpos, ep = e ? cl.ph.headpos(e) : vec(0, 0, 0);
-			if(e && e->state == CS_ALIVE && lastmillis-e->lastspawn > REGENWAIT && raycubelos(pos, ep, aimpos)) aimpos = ep;
 			else
 			{
-				d->bot->enemy = -1;
-				aimpos = d->bot->spot;
+				d->move = d->strafe = 0;
 			}
-
-			aim(d, b, aimpos, d->yaw, d->pitch, true);
-			aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, false);
 		}
 		else d->move = d->strafe = 0;
 	}

@@ -47,13 +47,13 @@ struct GAMECLIENT : igameclient
 	IVARP(cardfade, 0, 3000, 10000);
 
 	IVARP(thirdperson, 0, 1, 1);
-	IVARP(thirdpersonfov, 90, 120, 130);
+	IVARP(thirdpersonfov, 90, 120, 150);
 	IVARP(thirdpersondist, -100, 1, 100);
 	IVARP(thirdpersonshift, -100, 4, 100);
 	IVARP(thirdpersonangle, 0, 40, 360);
 	IVARP(thirdpersontranslucent, 0, 0, 1);
 
-	IVARP(firstpersonfov, 90, 100, 130);
+	IVARP(firstpersonfov, 90, 100, 150);
 	IVARP(firstpersondist, -100, 50, 100);
 	IVARP(firstpersonshift, -100, 25, 100);
 	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
@@ -98,7 +98,7 @@ struct GAMECLIENT : igameclient
 	IVARP(cursorblend, 0, 100, 100);
 
 	IVARP(zoomtype, 0, 0, 1);
-	IVARP(zoomfov, 20, 20, 90);
+	IVARP(zoomfov, 20, 20, 150);
 	IVARP(zoomtime, 1, 500, 10000);
 	IVARP(zoomcrosshairsize, 1, 200, 1000);
 
