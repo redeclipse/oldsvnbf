@@ -1104,10 +1104,10 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 	int w = screen->w, h = screen->h;
 	if(overlaytext && text)
     {
-        s_sprintfd(caption)("%s %s", text, overlaytext);
+        s_sprintfd(caption)("%s - %s", overlaytext, text);
         setcaption(caption);
     }
-    else setcaption(overlaytext ? overlaytext : text);
+    else setcaption(text);
     getcomputescreenres(w, h);
 	gettextres(w, h);
 	glEnable(GL_BLEND);
@@ -1162,6 +1162,12 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
             draw_text(overlaytext, tx, ty);
             glPopMatrix();
         }
+
+		glPushMatrix();
+		glScalef(1/3.0f, 1/3.0f, 1);
+		s_sprintfd(vstr)("v%.2f (%s)", float(ENG_VERSION)/100.f, ENG_RELEASE);
+		draw_text(vstr, w*3-text_width(vstr)-FONTH, int(h*2.6f));
+		glPopMatrix();
 
 		int x = (w-512)/2, y = 128;
 		settexture("textures/logo");
@@ -1532,7 +1538,7 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 	glEnable(GL_DEPTH_TEST);
 }
 
-VARP(hudblend, 0, 99, 100);
+FVARP(hudblend, 0.99f);
 
 #define rendernearfar(a,b,c,d,e) \
 	if (d) { \

@@ -1,7 +1,7 @@
 // engine defs
-#define ENG_VERSION		75							// version, integer is divided by 100.f
-#define ENG_NAME		"Blood Frontier Alpha 2"	// full name
-#define ENG_RELEASE		"Genesis Edition"			// edition/release name
+#define ENG_VERSION		75					// version, integer is divided by 100.f
+#define ENG_NAME		"Blood Frontier"	// full name
+#define ENG_RELEASE		"Alpha 2"			// edition/release name
 
 #define MASTER_PORT		28800
 
@@ -561,7 +561,8 @@ extern char *getmaptitle();
 #define RENDERPUSHX			8.0f
 #define RENDERPUSHZ			0.1f
 
-extern int dynentsize, axfps, hidehud, hudblend, lastmillis, totalmillis;
+extern int dynentsize, axfps, hidehud, lastmillis, totalmillis;
+extern float hudblend;
 extern int ambient, skylight, watercolour, lavacolour;
 extern float curfov, fovy, aspect;
 
