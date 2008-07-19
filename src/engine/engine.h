@@ -135,7 +135,7 @@ extern Texture *textureload(const char *name, int clamp = 0, bool mipit = true, 
 extern void loadalphamask(Texture *t);
 extern GLuint cubemapfromsky(int size);
 extern Texture *cubemapload(const char *name, bool mipit = true, bool msg = true);
-extern void drawcubemap(int size, const vec &o, float yaw, float pitch, bool full, bool flipx, bool flipy, bool swapxy);
+extern void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool flipx, bool flipy, bool swapxy);
 extern Slot	&lookuptexture(int tex, bool load = true);
 extern void loadshaders();
 extern Shader  *lookupshader(int slot);
