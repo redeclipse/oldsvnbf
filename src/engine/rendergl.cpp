@@ -957,7 +957,7 @@ void drawreflection(float z, bool refract, bool clear)
 
 bool envmapping = false;
 
-void drawcubemap(int size, const vec &o, float yaw, float pitch, bool full, bool flipx, bool flipy, bool swapxy)
+void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool flipx, bool flipy, bool swapxy)
 {
 	float fovx = 90.f, fovy = 90.f, aspect = 1.f;
     envmapping = true;
@@ -984,7 +984,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, bool full, bool
         float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
         if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
         else fogmat = abovemat;
-        if(full && caustics && fogmat==MAT_WATER && camera1->o.z < z)
+        if(level && caustics && fogmat==MAT_WATER && camera1->o.z < z)
             causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
     }
     else
@@ -992,7 +992,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, bool full, bool
     	fogmat = MAT_AIR;
     }
     setfog(fogmat, fogblend, abovemat);
-    if(full && fogmat != MAT_AIR)
+    if(level && fogmat != MAT_AIR)
     {
         float blend = abovemat==MAT_AIR ? fogblend : 1.0f;
         fovy += blend*sinf(lastmillis/1000.0)*2.0f;
@@ -1010,7 +1010,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, bool full, bool
 
 	xtravertsva = xtraverts = glde = gbatches = 0;
 
-    if(full && !hasFBO)
+    if(level && !hasFBO)
     {
         if(dopostfx)
         {
@@ -1023,21 +1023,21 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, bool full, bool
 
 	visiblecubes(fovx, fovy);
 
-	if(full && shadowmap && !hasFBO) rendershadowmap();
+	if(level && shadowmap && !hasFBO) rendershadowmap();
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	if(limitsky()) drawskybox(farplane, true);
 
-	rendergeom(full ? causticspass : 0);
+	rendergeom(level ? causticspass : 0);
 
-	if(full) queryreflections();
+	if(level) queryreflections();
 
     if(!limitsky()) drawskybox(farplane, false);
 
 	rendermapmodels();
 
-	if(full)
+	if(level >= 2)
 	{
 		rendergame();
 
