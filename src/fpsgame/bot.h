@@ -76,8 +76,10 @@ struct botclient
 			dir.normalize();
 			float targyaw, targpitch;
 			vectoyawpitch(dir, targyaw, targpitch);
-			float skew = float(lastmillis-b.millis)/float(d->skill*50),
-				cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
+			float rtime = d->skill*guntype[d->gunselect].rdelay/100.f,
+				atime = d->skill*guntype[d->gunselect].adelay/10.f,
+					skew = float(lastmillis-b.millis)/(rtime+atime),
+						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 			if(cyaw <= BOTFOVX(d->skill)*skew && cpitch <= BOTFOVY(d->skill)*skew)
 				return true;
 		}
@@ -191,15 +193,18 @@ struct botclient
 
 	bool violence(fpsent *d, botstate &b, fpsent *e, bool pursue = false)
 	{
-		if(!pursue || follow(d, b, e))
+		if(BOTTARG(d, e, true))
 		{
-			botstate &c = d->bot->addstate(pursue ? BS_PURSUE : BS_ATTACK);
-			c.targtype = BT_PLAYER;
-			d->bot->enemy = c.target = e->clientnum;
-			if(pursue) c.expire = 10000;
-			return true;
+			if(!pursue || follow(d, b, e))
+			{
+				botstate &c = d->bot->addstate(pursue ? BS_PURSUE : BS_ATTACK);
+				c.targtype = BT_PLAYER;
+				d->bot->enemy = c.target = e->clientnum;
+				if(pursue) c.expire = 10000;
+				return true;
+			}
+			if(pursue) return violence(d, b, e, false);
 		}
-		if(pursue) return violence(d, b, e, false);
 		return false;
 	}
 
@@ -378,34 +383,37 @@ struct botclient
 
 	void damaged(fpsent *d, fpsent *e, int gun, int flags, int damage, int millis, vec &dir)
 	{
-		if(d->bot)
+		if(BOTTARG(d, e, true))
 		{
-			botstate &b = d->bot->getstate();
-			bool result = false, pursue = false;
-			switch(b.type)
+			if(d->bot)
 			{
-				case BS_PURSUE:
-					result = true;
-					pursue = false;
-					break;
-				case BS_WAIT:
-				case BS_INTEREST:
-					result = true;
-					pursue = true;
-					break;
-				case BS_ATTACK:
-				case BS_DEFEND: default: break;
+				botstate &b = d->bot->getstate();
+				bool result = false, pursue = false;
+				switch(b.type)
+				{
+					case BS_PURSUE:
+						result = true;
+						pursue = false;
+						break;
+					case BS_WAIT:
+					case BS_INTEREST:
+						result = true;
+						pursue = true;
+						break;
+					case BS_ATTACK:
+					case BS_DEFEND: default: break;
+				}
+				if(result) violence(d, b, e, pursue);
 			}
-			if(result) violence(d, b, e, pursue);
-		}
-		vector<int> targets;
-		if(checkothers(targets, d, BS_DEFEND, BT_PLAYER, d->clientnum, true))
-		{
-			fpsent *t;
-			loopv(targets) if((t = cl.getclient(targets[i])) && t->bot)
+			vector<int> targets;
+			if(checkothers(targets, d, BS_DEFEND, BT_PLAYER, d->clientnum, true))
 			{
-				botstate &c = t->bot->getstate();
-				violence(t, c, e, true);
+				fpsent *t;
+				loopv(targets) if((t = cl.getclient(targets[i])) && t->bot)
+				{
+					botstate &c = t->bot->getstate();
+					violence(t, c, e, true);
+				}
 			}
 		}
 	}
@@ -500,7 +508,7 @@ struct botclient
 		{
 			vec targ, pos = cl.headpos(d);
 			fpsent *e = cl.getclient(b.target);
-			if(e)
+			if(e && BOTTARG(d, e, true))
 			{
 				vec ep = cl.headpos(e);
 				if(e->state == CS_ALIVE && raycubelos(pos, ep, targ))
@@ -671,7 +679,7 @@ struct botclient
 		float dist = dp.dist(pos), targpitch = asin((pos.z-dp.z)/dist)/RAD;
 		if(skew)
 		{
-			float amt = float(lastmillis-d->lastupdate)/float((101-d->skill)*skew),
+			float amt = float(lastmillis-d->lastupdate)/float((111-d->skill)*skew),
 				offyaw = fabs(targyaw-yaw)*amt, offpitch = fabs(targpitch-pitch)*amt;
 
 			if(targyaw > yaw) // slowly turn bot towards target
@@ -727,13 +735,13 @@ struct botclient
 			if(e)
 			{
 				vec enemypos = cl.headpos(e);
-				aim(d, b, enemypos, d->yaw, d->pitch, 10);
+				aim(d, b, enemypos, d->yaw, d->pitch, 5);
 				aiming = true;
 			}
 
 			if(hunt(d, b))
 			{
-				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 20);
+				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 50);
 				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 0);
 
 				if(d->bot->spot.z-pos.z > BOTJUMPHEIGHT && !d->timeinair && lastmillis-d->jumptime > 1000)

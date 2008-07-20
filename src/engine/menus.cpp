@@ -111,6 +111,9 @@ void guinoautotab(char *contents)
 }
 
 //@DOC name and icon are optional
+SVAR(guirollovername, "");
+SVAR(guirolloveraction, "");
+
 void guibutton(char *name, char *action, char *icon, char *altact)
 {
 	if(!cgui) return;
@@ -125,10 +128,13 @@ void guibutton(char *name, char *action, char *icon, char *altact)
 	}
 	else if(ret&G3D_ROLLOVER)
 	{
-		alias("guirollovername", name);
-		alias("guirolloveraction", action);
+		setsvar("guirollovername", name, true);
+		setsvar("guirolloveraction", action, true);
 	}
 }
+
+SVAR(guirolloverimgpath, "");
+SVAR(guirolloverimgaction, "");
 
 void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpath, char *altact)
 {
@@ -153,8 +159,8 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
 	}
 	else if(ret&G3D_ROLLOVER)
 	{
-		alias("guirolloverimgpath", path);
-		alias("guirolloverimgaction", action);
+		setsvar("guirolloverimgpath", path, true);
+		setsvar("guirolloverimgaction", action, true);
 	}
 }
 

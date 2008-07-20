@@ -38,18 +38,22 @@ struct scoreboard : g3d_callback
 		if(interm)
 		{
 			if(m_mission(cl.gamemode))
-				cl.et.announce(S_V_MCOMPLETE, "intermission: mission complete!", true);
+				cl.et.announce(S_V_MCOMPLETE, "mission complete!", true);
 			else
 			{
 				if(!groupplayers()) return;
 				scoregroup &sg = *groups[0];
-				if(sg.players.find(cl.player1) >= 0)
+				if(m_team(cl.gamemode, cl.mutators))
 				{
-					cl.et.announce(S_V_YOUWIN, "intermission: you win!", true);
+					bool win = sg.players.find(cl.player1) >= 0;
+					s_sprintfd(s)("%s team \fs%s%s\fS won the match with a total score of %d", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
+					cl.et.announce(win ? S_V_YOUWIN : S_V_YOULOSE, s, true);
 				}
 				else
 				{
-					cl.et.announce(S_V_YOULOSE, "intermission: you lose!", true);
+					bool win = sg.players[0] == cl.player1;
+					s_sprintfd(s)("%s won the match with a total score of %d", win ? "you" : cl.colorname(sg.players[0]), sg.players[0]->frags);
+					cl.et.announce(win ? S_V_YOUWIN : S_V_YOULOSE, s, true);
 				}
 			}
 		}
