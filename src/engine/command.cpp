@@ -125,7 +125,7 @@ void aliasa(const char *name, char *action)
 		idents->access(b.name, &b);
 #else
 		ident *c = idents->access(b.name, &b);
-		if(cl && c) cl->editvar(c, interactive);
+		if(cc && c) cc->editvar(c, interactive);
 #endif
 	}
     else if(b->type != ID_ALIAS)
@@ -153,7 +153,7 @@ void aliasa(const char *name, char *action)
             else if(b->flags & IDF_WORLD) b->flags &= ~IDF_WORLD;
 
 #ifndef STANDALONE
-			if(cl) cl->editvar(b, interactive);
+			if(cc) cc->editvar(b, interactive);
 #endif
 		}
 	}
@@ -465,11 +465,30 @@ char *executeret(const char *p)               // all evaluation happens here, re
 		else
 		{
 			ident *id = idents->access(c);
-            if(!id)
+            if(!id || id->flags&IDF_GAME)
 			{
                 if(!isdigit(*c) && ((*c!='+' && *c!='-' && *c!='.') || !isdigit(c[1])))
-                    conoutf("unknown command: %s", c);
-				setretval(newstring(c));
+                {
+#ifndef STANDALONE
+					string arg;
+					arg[0] = 0;
+					if(numargs > 1) loopk(numargs-1) if(w[k])
+					{
+						if(k) s_strcat(arg, " ");
+						s_strcat(arg, w[k+1]);
+					}
+					if(cc && cc->sendcmd(numargs, c, numargs > 1 && arg[0] ? arg : NULL))
+					{
+						setretval(newstring("~async~"));
+					}
+					else
+#endif
+					{
+						conoutf("unknown command: %s", c);
+						setretval(newstring(c));
+					}
+                }
+				else setretval(newstring(c));
 			}
             else switch(id->type)
 			{
@@ -555,7 +574,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         *id->storage.i = i1;
                         id->changed();                                             // call trigger function if available
 #ifndef STANDALONE
-						if(cl) cl->editvar(id, interactive);
+						if(cc) cc->editvar(id, interactive);
 #endif
 					}
                     break;
@@ -571,7 +590,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         *id->storage.f = atof(w[1]);
                         id->changed();
 #ifndef STANDALONE
-						if(cl) cl->editvar(id, interactive);
+						if(cc) cc->editvar(id, interactive);
 #endif
                     }
                     break;
@@ -587,7 +606,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         *id->storage.s = newstring(w[1]);
                         id->changed();
 #ifndef STANDALONE
-						if(cl) cl->editvar(id, interactive);
+						if(cc) cc->editvar(id, interactive);
 #endif
 					}
 					break;

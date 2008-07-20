@@ -766,7 +766,7 @@ void texturedel(int i, bool local)
 			loopj(curtexnum-i)
 			{
 				int oldtex = i+j, newtex = max(i+j-1, 0);
-				if(local) cl->edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
+				if(cc && local) cc->edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
 				loopk(8) replacetexcube(worldroot[k], oldtex, newtex);
 			}
 			slots[i].reset();

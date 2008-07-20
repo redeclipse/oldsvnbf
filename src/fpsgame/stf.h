@@ -334,14 +334,14 @@ struct stfclient : stfstate
 		{
 			if(b.owner != owner)
 			{
-				conoutf("\f2%s secured %s", teamtype[owner].name, b.name);
-				if(owner == cl.player1->team) cl.et.announce(S_V_FLAGSECURED);
+				s_sprintfd(s)("%s secured %s", teamtype[owner].name, b.name);
+				cl.et.announce(S_V_FLAGSECURED, s, true);
 			}
 		}
 		else if(b.owner)
 		{
-			conoutf("\f2%s overthrew %s", teamtype[b.owner].name, b.name);
-			if(b.owner == cl.player1->team) cl.et.announce(S_V_FLAGOVERTHROWN);
+			s_sprintfd(s)("%s overthrew %s", teamtype[b.owner].name, b.name);
+			cl.et.announce(S_V_FLAGOVERTHROWN, s, true);
 		}
         if(b.owner != owner)
         {
@@ -356,7 +356,6 @@ struct stfclient : stfstate
 	void setscore(int team, int total)
 	{
 		findscore(team).total = total;
-		if(total>=10000) conoutf("team %s secured all flags", teamtype[team].name);
 	}
 
     int closesttoenemy(int team, bool noattacked = false, bool farthest = false)

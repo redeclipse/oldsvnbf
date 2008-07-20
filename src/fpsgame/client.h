@@ -310,9 +310,81 @@ struct clientcom : iclientcom
 		addmsg(SV_TEXT, "ri2s", cl.player1->clientnum, flags, text);
 	}
 
-	void toservcmd(char *text, bool msg)
+	bool sendcmd(int nargs, char *cmd, char *arg)
 	{
-		addmsg(SV_COMMAND, "rs", text);
+		if(isready)
+		{
+			if(nargs > 1 && arg)
+				addmsg(SV_COMMAND, "ri2ss", cl.player1->clientnum, nargs, cmd, arg);
+			else
+				addmsg(SV_COMMAND, "ri2s", cl.player1->clientnum, 1, cmd);
+			return true;
+		}
+		return false;
+	}
+
+	void editvar(ident *id, bool local)
+	{
+        if(id && id->flags&IDF_WORLD && local && m_edit(cl.gamemode))
+        {
+        	switch(id->type)
+        	{
+        		case ID_VAR:
+					addmsg(SV_EDITVAR, "risi", id->type, id->name, *id->storage.i);
+					break;
+        		case ID_FVAR:
+					addmsg(SV_EDITVAR, "risf", id->type, id->name, *id->storage.f);
+					break;
+        		case ID_SVAR:
+					addmsg(SV_EDITVAR, "riss", id->type, id->name, *id->storage.s);
+					break;
+        		case ID_ALIAS:
+					addmsg(SV_EDITVAR, "riss", id->type, id->name, id->action);
+					break;
+				default: break;
+        	}
+        }
+	}
+
+	void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)
+	{
+        if(m_edit(cl.gamemode)) switch(op)
+		{
+			case EDIT_FLIP:
+			case EDIT_COPY:
+			case EDIT_PASTE:
+			case EDIT_DELCUBE:
+			{
+				addmsg(SV_EDITF + op, "ri9i4",
+					sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
+					sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner);
+				break;
+			}
+			case EDIT_MAT:
+			case EDIT_ROTATE:
+			{
+				addmsg(SV_EDITF + op, "ri9i5",
+					sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
+					sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner,
+					arg1);
+				break;
+			}
+			case EDIT_FACE:
+			case EDIT_TEX:
+			case EDIT_REPLACE:
+			{
+				addmsg(SV_EDITF + op, "ri9i6",
+					sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
+					sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner,
+					arg1, arg2);
+				break;
+			}
+            case EDIT_REMIP:
+            {
+                addmsg(SV_EDITF + op, "r");
+                break;
+            }
+		}
 	}
 
 	void updateposition(fpsent *d)
@@ -614,7 +686,7 @@ struct clientcom : iclientcom
 				{
 					int snd = getint(p);
 					getstring(text, p);
-					cl.et.announce(snd, text);
+					cl.et.announce(snd, text, false);
 					break;
 				}
 

@@ -4,6 +4,20 @@ struct scoreboard : g3d_callback
 	int menustart;
 	GAMECLIENT &cl;
 
+	struct sline { string s; };
+	struct teamscore
+	{
+		int team, score;
+		teamscore() {}
+		teamscore(int s, int n) : team(s), score(n) {}
+	};
+    struct scoregroup : teamscore
+    {
+        vector<fpsent *> players;
+    };
+    vector<scoregroup *> groups;
+    vector<fpsent *> spectators;
+
 	IVARP(scoresinfo, 0, 1, 1);
 	IVARP(showclientnum, 0, 1, 1);
     IVARP(showpj, 0, 1, 1);
@@ -17,20 +31,29 @@ struct scoreboard : g3d_callback
         CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0));
 	}
 
-	void showscores(bool on)
+	void showscores(bool on, bool interm = false)
 	{
 		if(!scoreson && on) menustart = starttime();
 		scoreson = on;
+		if(interm)
+		{
+			if(m_mission(cl.gamemode))
+				cl.et.announce(S_V_MCOMPLETE, "intermission: mission complete!", true);
+			else
+			{
+				if(!groupplayers()) return;
+				scoregroup &sg = *groups[0];
+				if(sg.players.find(cl.player1) >= 0)
+				{
+					cl.et.announce(S_V_YOUWIN, "intermission: you win!", true);
+				}
+				else
+				{
+					cl.et.announce(S_V_YOULOSE, "intermission: you lose!", true);
+				}
+			}
+		}
 	}
-
-	struct sline { string s; };
-
-	struct teamscore
-	{
-		int team, score;
-		teamscore() {}
-		teamscore(int s, int n) : team(s), score(n) {}
-	};
 
 	static int teamscorecmp(const teamscore *x, const teamscore *y)
 	{
@@ -95,13 +118,6 @@ struct scoreboard : g3d_callback
 		while(teamscores.length()>1 && teamscores.last().score < teamscores[0].score) teamscores.drop();
 		loopv(teamscores) best.add(teamscores[i].team);
 	}
-
-    struct scoregroup : teamscore
-    {
-        vector<fpsent *> players;
-    };
-    vector<scoregroup *> groups;
-    vector<fpsent *> spectators;
 
     static int scoregroupcmp(const scoregroup **x, const scoregroup **y)
     {
@@ -170,7 +186,7 @@ struct scoreboard : g3d_callback
 		}
 		g.text(modemapstr, 0xFFFF80, "server");
 
-		if (!cl.minremain || scoresinfo())
+		if(!cl.minremain || scoresinfo())
 		{
 			int accuracy = cl.player1->totaldamage*100/max(cl.player1->totalshots, 1);
 
