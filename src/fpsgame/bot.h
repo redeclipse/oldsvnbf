@@ -76,7 +76,7 @@ struct botclient
 			dir.normalize();
 			float targyaw, targpitch;
 			vectoyawpitch(dir, targyaw, targpitch);
-			float skew = float(lastmillis-b.millis)/float(d->skill*33),
+			float skew = float(lastmillis-b.millis)/float(d->skill*50),
 				cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 			if(cyaw <= BOTFOVX(d->skill)*skew && cpitch <= BOTFOVY(d->skill)*skew)
 				return true;
@@ -733,7 +733,7 @@ struct botclient
 
 			if(hunt(d, b))
 			{
-				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 100);
+				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 20);
 				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 0);
 
 				if(d->bot->spot.z-pos.z > BOTJUMPHEIGHT && !d->timeinair && lastmillis-d->jumptime > 1000)

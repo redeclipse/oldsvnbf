@@ -231,13 +231,18 @@ struct GAMESERVER : igameserver
 		uint ip;
 	};
 
+	IVARG(teamdamage, 0, 1, 1);
+	IVARG(timelimit, 0, 10, INT_MAX-1);
+	//IVARG(fraglimit, 0, 0, INT_MAX-1);
+	IVARG(ctflimit, 0, 10, INT_MAX-1);
+
 	bool notgotitems, notgotflags;		// true when map has changed and waiting for clients to send item
 	int gamemode, mutators;
 	int gamemillis, gamelimit;
 
 	string serverdesc;
 	string smapname;
-	int interm, minremain;
+	int interm, minremain, oldtimelimit;
 	bool mapreload;
 	enet_uint32 lastsend;
 	int mastermode, mastermask;
@@ -311,7 +316,7 @@ struct GAMESERVER : igameserver
 	string  motd;
 	GAMESERVER()
 		: notgotitems(true), notgotflags(false),
-			gamemode(defaultmode()), mutators(0), interm(0), minremain(10),
+			gamemode(defaultmode()), mutators(0), interm(0), minremain(10), oldtimelimit(10),
 			mapreload(false), lastsend(0),
 			mastermode(MM_VETO), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
@@ -346,7 +351,7 @@ struct GAMESERVER : igameserver
 	{
 		if(flag <= PRIV_MASTER && !nonspectators(ci->clientnum, true)) return true;
 		else if(ci->privilege >= flag) return true;
-		else if(msg) srvoutf(ci->clientnum, "access denied, you need %s", privname(flag));
+		else if(msg) srvoutf(ci->clientnum, "\fgaccess denied, you need %s", privname(flag));
 		return false;
 	}
 
@@ -354,6 +359,40 @@ struct GAMESERVER : igameserver
 	{
 		smapname[0] = '\0';
 		resetitems();
+	}
+
+	void emptyserver()
+	{
+		bannedips.setsize(0);
+		enumerate(*idents, ident, id, {
+			if(id.flags&IDF_GAME) // reset vars
+			{
+				switch(id.type)
+				{
+					case ID_VAR:
+					{
+						setvar(id.name, id.def.i, true);
+						break;
+					}
+					case ID_FVAR:
+					{
+						setfvar(id.name, id.def.f, true);
+						break;
+					}
+					case ID_SVAR:
+					{
+						setsvar(id.name, *id.def.s ? id.def.s : "", true);
+						break;
+					}
+					case ID_ALIAS:
+					{
+						worldalias(id.name, "");
+						break;
+					}
+					default: break;
+				}
+			}
+		});
 	}
 
 	vector<srventity> sents;
@@ -689,8 +728,9 @@ struct GAMESERVER : igameserver
 		gamemode = mode; mutators = muts;
 		modecheck(&gamemode, &mutators);
 		gamemillis = 0;
-		minremain = 10; // FIXME
-		gamelimit = minremain*60000;
+		oldtimelimit = timelimit();
+		minremain = timelimit() ? timelimit() : -1;
+		gamelimit = timelimit() ? minremain*60000 : 0;
 		interm = 0;
 		s_strcpy(smapname, s);
 		resetitems();
@@ -1237,9 +1277,13 @@ struct GAMESERVER : igameserver
 
 				case SV_COMMAND:
 				{
-					getstring(text, p);
-					filtertext(text, text);
-					//servcmd(ci, text, false);
+					int lcn = getint(p), nargs = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					string cmd;
+					getstring(cmd, p);
+					if(nargs > 1) getstring(text, p);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					parsecommand(cp, nargs, cmd, nargs > 1 ? text : NULL);
 					break;
 				}
 
@@ -1734,6 +1778,84 @@ struct GAMESERVER : igameserver
 		}
 	}
 
+	void parsecommand(clientinfo *ci, int nargs, char *cmd, char *arg)
+	{
+		if(haspriv(ci, PRIV_MASTER, true))
+		{
+			ident *id = idents->access(cmd);
+			if(id && id->flags&IDF_GAME)
+			{
+				switch(id->type)
+				{
+					case ID_COMMAND:
+					{
+						string s;
+						if(nargs <= 1 || !arg) s_strcpy(s, cmd);
+						else s_sprintf(s)("%s %s", cmd, arg);
+						char *ret = executeret(s);
+						if(ret)
+						{
+							srvoutf(-1, "\fg%s: %s returned %s", colorname(ci), cmd, ret);
+							delete[] ret;
+						}
+						break;
+					}
+					case ID_VAR:
+					{
+						if(nargs <= 1 || !arg)
+						{
+							srvoutf(ci->clientnum, "\fg%s = %d", id->name, *id->storage.i);
+							break;
+						}
+						if(id->maxval < id->minval)
+						{
+							srvoutf(ci->clientnum, "\fgcannot override variable: %s", id->name);
+							break;
+						}
+						int val = atoi(arg);
+						if(val < id->minval || val > id->maxval)
+						{
+							srvoutf(ci->clientnum, "\fgvalid range for %s is %d..%d", id->name, id->minval, id->maxval);
+							break;
+						}
+                        *id->storage.i = val;
+                        id->changed();
+						srvoutf(-1, "\fg%s set %s to %d", colorname(ci), id->name, *id->storage.i);
+						break;
+					}
+					case ID_FVAR:
+					{
+						if(nargs <= 1 || !arg)
+						{
+							srvoutf(ci->clientnum, "\fg%s = %f", id->name, *id->storage.f);
+							break;
+						}
+						float val = atof(arg);
+                        *id->storage.f = val;
+                        id->changed();
+						srvoutf(-1, "\fg%s set %s to %f", colorname(ci), id->name, *id->storage.f);
+						break;
+					}
+					case ID_SVAR:
+					{
+						if(nargs <= 1 || !arg)
+						{
+							srvoutf(ci->clientnum, strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", id->name, *id->storage.s);
+							break;
+						}
+						delete[] *id->storage.s;
+                        *id->storage.s = newstring(arg);
+                        id->changed();
+						srvoutf(-1, "\fg%s set %s to %s", colorname(ci), id->name, *id->storage.s);
+						break;
+					}
+					default: break;
+				}
+			}
+			else srvoutf(ci->clientnum, "\fgunknown command: %s", id->name);
+		}
+	}
+
 	int welcomepacket(ucharbuf &p, int n, ENetPacket *packet)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
@@ -1822,11 +1944,21 @@ struct GAMESERVER : igameserver
 
 	void checkintermission()
 	{
-		if (clients.length())
+		if(clients.length())
 		{
-			if(minremain > 0)
+			if(minremain)
 			{
-				minremain = gamemillis >= gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
+				if(timelimit() != oldtimelimit)
+				{
+					if(timelimit()) gamelimit += (timelimit()-oldtimelimit)*60000;
+					oldtimelimit = timelimit();
+				}
+				if(timelimit())
+				{
+					if(gamemillis >= gamelimit) minremain = 0;
+					else minremain = (gamelimit-gamemillis+60000-1)/60000;
+				}
+				else minremain = -1;
 				sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 				if(!minremain)
 				{
@@ -1836,13 +1968,15 @@ struct GAMESERVER : igameserver
 				else if(minremain == 1)
 					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, "only one minute left of play!");
 			}
-			if (!interm && minremain <= 0) interm = gamemillis+10000;
+			if(!minremain && !interm) interm = gamemillis+10000;
 		}
 	}
 
 	void startintermission()
 	{
+		minremain = 0;
 		gamelimit = min(gamelimit, gamemillis);
+		sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 		checkintermission();
 	}
 
@@ -1884,7 +2018,8 @@ struct GAMESERVER : igameserver
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
 	{
 		gamestate &ts = target->state;
-		if(gamemillis-ts.lastspawn <= REGENWAIT) return;
+		if(gamemillis-ts.lastspawn <= REGENWAIT || (!teamdamage() && m_team(gamemode, mutators) && actor->team == target->team))
+			return;
 		if(flags&HIT_LEGS) damage = damage/4;
 		else if (flags&HIT_TORSO) damage = damage/2;
 		if(smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { return; }
@@ -1912,7 +2047,6 @@ struct GAMESERVER : igameserver
 			ts.state = CS_DEAD;
 			ts.lastdeath = gamemillis;
 			// don't issue respawn yet until DEATHMILLIS has elapsed
-			// ts.respawn();
 			if(fragvalue > 0)
 			{
 				actor->state.spree++;
@@ -2166,8 +2300,10 @@ struct GAMESERVER : igameserver
 			masterupdate = false;
 		}
 
-		if((m_timed(gamemode) && hasnonlocalclients()) && gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)
-			checkintermission();
+		if((m_timed(gamemode) && hasnonlocalclients()) &&
+			((timelimit() != oldtimelimit) ||
+			(gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
+				checkintermission();
 
 		if(interm && gamemillis >= interm) // wait then call for next map
 		{
@@ -2253,7 +2389,7 @@ struct GAMESERVER : igameserver
 		savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, n);
 		clients.removeobj(ci);
-		if(clients.empty()) bannedips.setsize(0);
+		if(clients.empty()) emptyserver();
 		else checkvotes();
 	}
 

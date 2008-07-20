@@ -1,7 +1,5 @@
 struct ctfstate
 {
-    static const int FLAGLIMIT = 10;
-
     struct flag
     {
         vec droploc, spawnloc;
@@ -174,7 +172,7 @@ struct ctfservmode : ctfstate, servmode
 					goal.score++;
 					sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, k, goal.score);
 
-	                if(findscore(goal.team) >= FLAGLIMIT)
+	                if(sv.ctflimit() && findscore(goal.team) >= sv.ctflimit())
 	                	sv.startintermission();
 				}
             }
@@ -403,8 +401,8 @@ struct ctfclient : ctfstate
 			f.droploc = vec(-1, -1, -1);
 			f.interptime = 0;
 		}
-		conoutf("%s dropped the the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
-		cl.et.announce(S_V_FLAGDROP);
+		s_sprintfd(s)("%s dropped the the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
+		cl.et.announce(S_V_FLAGDROP, s, true);
     }
 
     void flagexplosion(int i, const vec &loc)
@@ -439,8 +437,8 @@ struct ctfclient : ctfstate
 		flageffect(i, f.droploc, f.spawnloc);
 		f.interptime = 0;
 		ctfstate::returnflag(i);
-		conoutf("%s returned the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
-		cl.et.announce(S_V_FLAGRETURN);
+		s_sprintfd(s)("%s returned the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
+		cl.et.announce(S_V_FLAGRETURN, s, true);
     }
 
     void resetflag(int i)
@@ -450,8 +448,8 @@ struct ctfclient : ctfstate
 		flageffect(i, f.droploc, f.spawnloc);
 		f.interptime = 0;
 		ctfstate::returnflag(i);
-		conoutf("the \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
-		cl.et.announce(S_V_FLAGRESET);
+		s_sprintfd(s)("the \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
+		cl.et.announce(S_V_FLAGRESET, s, true);
     }
 
     void scoreflag(fpsent *d, int relay, int goal, int score)
@@ -467,12 +465,8 @@ struct ctfclient : ctfstate
 			s_sprintfd(ds)("@%d", score);
 			particle_text(d->abovehead(), ds, 9);
 		}
-		conoutf("%s scored for \fs%s%s\fS team", d==cl.player1 ? "you" : cl.colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
-		cl.et.announce(S_V_FLAGSCORE);
-
-        int total = findscore(f.team);
-        if(total >= FLAGLIMIT)
-        	conoutf("team \fs%s%s\fS captured %d flags", teamtype[f.team].chat, teamtype[f.team].name, total);
+		s_sprintfd(s)("%s scored for \fs%s%s\fS team", d==cl.player1 ? "you" : cl.colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
+		cl.et.announce(S_V_FLAGSCORE, s, true);
     }
 
     void takeflag(fpsent *d, int i)
@@ -483,9 +477,9 @@ struct ctfclient : ctfstate
 		regularshape(4, enttype[FLAG].radius, colour, 6, 50, 250, vec(f.spawnloc).sub(vec(0, 0, 4.f)), 4.8f);
 		adddynlight(f.spawnloc, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
 		f.interptime = lastmillis;
-		conoutf("%s %s the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
+		s_sprintfd(s)("%s %s the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		ctfstate::takeflag(i, d);
-		cl.et.announce(S_V_FLAGPICKUP);
+		cl.et.announce(S_V_FLAGPICKUP, s, true);
     }
 
     void checkflags(fpsent *d)

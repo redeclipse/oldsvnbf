@@ -387,8 +387,8 @@ struct physics
 		{
 			if(pl->jumping)
 			{
+				if(pl->crouching) pl->crouchtime = lastmillis;
 				pl->jumping = pl->crouching = false;
-				pl->crouchtime = lastmillis;
 				pl->vel.z = jumpvelocity(pl);
 			}
 		}
@@ -396,8 +396,8 @@ struct physics
 		{
 			if(pl->jumping)
 			{
+				if(pl->crouching) pl->crouchtime = lastmillis;
 				pl->jumping = pl->crouching = false;
-				pl->crouchtime = lastmillis;
 				pl->vel.z = jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x /= liquiddampen(pl); pl->vel.y /= liquiddampen(pl); }
 				playsound(S_JUMP, &pl->o);

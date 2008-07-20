@@ -32,11 +32,13 @@ struct iclientcom
     virtual void edittoggled(bool edit) {}
     virtual void writeclientinfo(FILE *f) = 0;
     virtual void toserver(int flags, char *text) = 0;
+	virtual bool sendcmd(int nargs, char *cmd, char *arg) = 0;
+    virtual void editvar(ident *id, bool local) = 0;
+    virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
     virtual void changemap(const char *name) = 0;
 	virtual bool ready() { return true; }
 	virtual int state() { return CS_ALIVE; }
 	virtual int otherclients() { return 0; }
-	virtual void toservcmd(char *text, bool msg) { return; }
     virtual int numchannels() { return 1; }
 	virtual int servercompare(serverinfo *a, serverinfo *b) { return strcmp(a->name, b->name); }
     virtual const char *serverinfogui(g3d_gui *g, vector<serverinfo *> &servers) { return NULL; }
@@ -51,9 +53,6 @@ struct igameclient
 
     virtual bool clientoption(char *arg) { return false; }
     virtual void updateworld() = 0;
-
-    virtual void editvar(ident *id, bool local) = 0;
-    virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
 
     virtual void resetgamestate() = 0;
     virtual void newmap(int size) = 0;

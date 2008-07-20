@@ -483,7 +483,7 @@ struct GAMECLIENT : igameclient
 			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
-			et.announce(lastmillis-d->lastspawn < 10000 ? S_V_OWNED : S_V_FRAGGED);
+			et.announce(lastmillis-d->lastspawn < 10000 ? S_V_OWNED : S_V_FRAGGED, "", true);
 		}
 		else
 		{
@@ -505,26 +505,7 @@ struct GAMECLIENT : igameclient
 			if(!intermission)
 			{
 				player1->stopmoving();
-				sb.showscores(true);
-
-				if(m_mission(gamemode))
-				{
-					et.announce(S_V_MCOMPLETE, "intermission: mission complete!");
-				}
-				else
-				{
-					bool won = m_team(gamemode, mutators) ?
-						(teamscores.length() && player1->team == teamscores[0].team) :
-							(shplayers.length() && shplayers[0] == player1);
-					if(won)
-					{
-						et.announce(S_V_YOUWIN, "intermission: you win!");
-					}
-					else
-					{
-						et.announce(S_V_YOULOSE, "intermission: you lose!");
-					}
-				}
+				sb.showscores(true, true);
 				intermission = true;
 			}
 		}
@@ -1238,70 +1219,6 @@ struct GAMECLIENT : igameclient
 	void newmap(int size)
 	{
 		cc.addmsg(SV_NEWMAP, "ri", size);
-	}
-
-	void editvar(ident *id, bool local)
-	{
-        if(id && id->flags&IDF_WORLD && local && m_edit(gamemode))
-        {
-        	switch(id->type)
-        	{
-        		case ID_VAR:
-					cc.addmsg(SV_EDITVAR, "risi", id->type, id->name, *id->storage.i);
-					break;
-        		case ID_FVAR:
-					cc.addmsg(SV_EDITVAR, "risf", id->type, id->name, *id->storage.f);
-					break;
-        		case ID_SVAR:
-					cc.addmsg(SV_EDITVAR, "riss", id->type, id->name, *id->storage.s);
-					break;
-        		case ID_ALIAS:
-					cc.addmsg(SV_EDITVAR, "riss", id->type, id->name, id->action);
-					break;
-				default: break;
-        	}
-        }
-	}
-
-	void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)
-	{
-        if(m_edit(gamemode)) switch(op)
-		{
-			case EDIT_FLIP:
-			case EDIT_COPY:
-			case EDIT_PASTE:
-			case EDIT_DELCUBE:
-			{
-				cc.addmsg(SV_EDITF + op, "ri9i4",
-					sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
-					sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner);
-				break;
-			}
-			case EDIT_MAT:
-			case EDIT_ROTATE:
-			{
-				cc.addmsg(SV_EDITF + op, "ri9i5",
-					sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
-					sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner,
-					arg1);
-				break;
-			}
-			case EDIT_FACE:
-			case EDIT_TEX:
-			case EDIT_REPLACE:
-			{
-				cc.addmsg(SV_EDITF + op, "ri9i6",
-					sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
-					sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner,
-					arg1, arg2);
-				break;
-			}
-            case EDIT_REMIP:
-            {
-                cc.addmsg(SV_EDITF + op, "r");
-                break;
-            }
-		}
 	}
 
 	void g3d_gamemenus() { sb.show(); }
