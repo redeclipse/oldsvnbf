@@ -160,7 +160,7 @@ struct entities : icliententities
 			}
 			lastannouncement = lastmillis;
 		}
-		if(*msg) conoutf("\fr%s", msg);
+		if(*msg) console("\fg%s", (force ? CON_CENTER : 0)|CON_NORMAL, msg);
 	}
 
 	// these two functions are called when the server acknowledges that you really

@@ -80,6 +80,8 @@ void conline(const char *sf, int n, int type = CON_NORMAL)
 	}
 }
 
+SVAR(contimefmt, "%c");
+
 void console(const char *s, int type, ...)
 {
 	extern int scr_w, scr_h;
@@ -89,10 +91,7 @@ void console(const char *s, int type, ...)
 	s_sprintfdlv(sf, type, s);
 
 	string osf, psf, fmt;
-
-	if (identexists("contimefmt")) s_sprintf(fmt)("%s", getalias("contimefmt"));
-	else s_sprintf(fmt)("%%c");
-
+	s_sprintf(fmt)(contimefmt);
 	filtertext(osf, sf);
 	s_sprintf(psf)("%s [%02x] %s", gettime(fmt), type, osf);
 	printf("%s\n", osf);
@@ -360,6 +359,8 @@ void pasteconsole()
 	#endif
 }
 
+SVAR(commandbuffer, "");
+
 struct hline
 {
     char *buf, *action, *prompt;
@@ -400,7 +401,7 @@ struct hline
     {
         if(action)
         {
-            alias("commandbuf", buf);
+            setsvar("commandbuffer", buf, true);
             execute(action);
         }
         else if(buf[0]=='/') execute(buf+1);

@@ -800,7 +800,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
     hdr.numpvs = 0;
 	hdr.lightmaps = 0;
 
-	s_strncpy(hdr.maptitle, "Untitled Map by Unknown Author", 128);
+	hdr.maptitle[0] = 0;
 	s_strncpy(hdr.gameid, sv->gameid(), 4);
 
 	texmru.setsize(0);
