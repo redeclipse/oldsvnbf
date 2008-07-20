@@ -324,7 +324,7 @@ struct GAMECLIENT : igameclient
 		{
 			fpsent *o = players[i];
 			if(!o) continue;
-			vec pos = ph.headpos(player1, 0.f);
+			vec pos = headpos(player1, 0.f);
 			if(intersect(o, pos, worldpos)) return o;
 		}
 		return NULL;
@@ -419,7 +419,7 @@ struct GAMECLIENT : igameclient
 
 		if(d->type == ENT_PLAYER)
 		{
-			vec p = ph.headpos(d);
+			vec p = headpos(d);
 			p.z += 0.6f*(d->height + d->aboveeye) - d->height;
 			particle_splash(3, min(damage/4, 20), 10000, p);
 			if(d!=player1)
@@ -490,7 +490,7 @@ struct GAMECLIENT : igameclient
             d->move = d->strafe = 0;
 		}
 
-		vec pos = ph.headpos(d);
+		vec pos = headpos(d);
 		loopi(rnd((damage+2)/2)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
 		playsound(S_DIE1+rnd(2), &d->o);
 
@@ -690,7 +690,7 @@ struct GAMECLIENT : igameclient
 	void drawplayerblip(fpsent *d, int x, int y, int s)
 	{
 		pushfont("radar");
-		vec dir = ph.headpos(d);
+		vec dir = headpos(d);
 		dir.sub(camera1->o);
 		float dist = dir.magnitude();
 		if(dist < radarrange())
@@ -1068,7 +1068,7 @@ struct GAMECLIENT : igameclient
         else if(lastmillis-lasthit <= crosshairhitspeed()) index = POINTER_HIT;
         else if(m_team(gamemode, mutators))
         {
-            vec pos = ph.headpos(player1, 0.f);
+            vec pos = headpos(player1, 0.f);
             dynent *d = ws.intersectclosest(pos, worldpos, player1);
             if(d && d->type == ENT_PLAYER && ((fpsent *)d)->team == player1->team)
 				index = POINTER_TEAM;
@@ -1229,7 +1229,7 @@ struct GAMECLIENT : igameclient
         if(owner->type != ENT_PLAYER) return;
         float dist = o.dist(d);
         vecfromyawpitch(owner->yaw, owner->pitch, 1, 0, d);
-        vec pos = ph.headpos(owner);
+        vec pos = headpos(owner);
         float newdist = raycube(pos, d, dist, RAY_CLIPMAT|RAY_POLY);
         d.mul(min(newdist, dist)).add(pos);
         o = ws.gunorigin(GUN_PISTOL, owner->o, d, (fpsent *)owner);
@@ -1323,6 +1323,33 @@ struct GAMECLIENT : igameclient
 			return true;
 		}
 		return false;
+	}
+
+	float curheight(physent *d)
+	{
+		if(ph.iscrouching(d))
+		{
+			float crouchoff = 1.f-CROUCHHEIGHT;
+			if(d->type == ENT_PLAYER)
+			{
+				float amt = clamp(float(lastmillis-d->crouchtime)/200.f, 0.f, 1.f);
+				if(!d->crouching) amt = 1.f-amt;
+				crouchoff *= amt;
+			}
+			return d->height-(d->height*crouchoff);
+		}
+		return d->height;
+	}
+
+	vec headpos(physent *d, float off = 0.f)
+	{
+		return vec(d->o).sub(vec(0, 0, off+(d->height-curheight(d))));
+	}
+
+	vec feetpos(physent *d, float off = 0.f)
+	{
+		if(d->type == ENT_PLAYER) return vec(d->o).sub(vec(0, 0, d->height-off));
+		return vec(d->o);
 	}
 
 	void fixrange(float &yaw, float &pitch)
@@ -1454,7 +1481,7 @@ struct GAMECLIENT : igameclient
 				}
 			}
 
-			vec pos = ph.headpos(player1, 0.f);
+			vec pos = headpos(player1, 0.f);
 
 			if(mousestyle() <= 1)
 				findorientation(pos, player1->yaw, player1->pitch, worldpos);
@@ -1653,7 +1680,7 @@ struct GAMECLIENT : igameclient
 		else s_strcpy(mdl, teamtype[team].fpmdl);
 
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
-		vec o = vec(third ? vec(d->o).sub(vec(0, 0, d->height)) : ph.headpos(d));
+		vec o = vec(third ? vec(d->o).sub(vec(0, 0, d->height)) : headpos(d));
 		if(!third && firstpersonsway())
 		{
 			vec sway;
@@ -1709,8 +1736,20 @@ struct GAMECLIENT : igameclient
 			}
 		}
 
-		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX))
-			anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
+		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) switch(anim&ANIM_INDEX)
+		{
+			case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN:
+			case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_RIFLE:
+			{
+				anim |= ((anim&ANIM_INDEX)|ANIM_LOOP)<<ANIM_SECONDARY;
+				break;
+			}
+			default:
+			{
+				anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
+				break;
+			}
+		}
 
 		int flags = MDL_LIGHT;
 		if(d->type==ENT_PLAYER) flags |= MDL_FULLBRIGHT;
@@ -1764,14 +1803,14 @@ struct GAMECLIENT : igameclient
 		}
 		else if(lastmillis-d->lastpain <= 300)
 		{
-			secondary = allowmove(d);
+			secondary = third && allowmove(d);
 			lastaction = d->lastpain;
 			animflags = ANIM_PAIN;
 			animdelay = 300;
 		}
 		else
 		{
-			secondary = allowmove(d);
+			secondary = third && allowmove(d);
 			bool showgun = isgun(gun);
 			if(showgun)
 			{

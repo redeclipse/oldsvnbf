@@ -387,7 +387,7 @@ physent *hitplayer; // whether the collection hit a player
 vec wall; // just the normal vectors.
 float walldistance;
 
-bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr,  float hi, float lo)
+bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr, float hi, float lo)
 {
     float below = (o.z-lo) - (d->o.z+d->height),
           above = (d->o.z-d->height) - (o.z+hi);
@@ -812,7 +812,7 @@ bool intersect(physent *d, vec &from, vec &to)	// if lineseg hits entity boundin
 		&& p->x >= d->o.x-d->radius
 		&& p->y <= d->o.y+d->radius
 		&& p->y >= d->o.y-d->radius
-		&& p->z <= d->o.z+d->aboveeye - (d->crouching ? (1-CROUCHHEIGHT)*d->height : 0)
+		&& p->z <= d->o.z+d->aboveeye-(d->height-cl->curheight(d))
 		&& p->z >= d->o.z-d->height;
 }
 

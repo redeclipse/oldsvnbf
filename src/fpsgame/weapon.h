@@ -96,12 +96,11 @@ struct weaponstate
 
 	void hitpush(fpsent *d, vec &from, vec &to, int rays = 1)
 	{
-		vec v(to), s(to), pos = cl.ph.headpos(d);
+		vec v(to), s(to), pos = cl.headpos(d);
 		v.sub(from);
 		v.normalize();
 		shorten(from, pos, s);
-		float off = d->crouching ? min(1.0f, (lastmillis-d->crouchtime)/200.f)*(1-CROUCHHEIGHT)*d->height : 1.f,
-			h = d->height*off, a = d->aboveeye*off;
+		float h = cl.curheight(d), a = d->aboveeye;
 		int hits = 0;
 		if(s.z < pos.z-h*0.75f && s.z >= pos.z-h) hits |= HIT_LEGS;
 		else if(s.z < pos.z-a*2.f && s.z >= pos.z-h*0.75f) hits |= HIT_TORSO;
@@ -169,17 +168,18 @@ struct weaponstate
 
 	vec gunorigin(int gun, const vec &from, const vec &to, fpsent *d)
 	{
+		bool third = d != cl.player1 || cl.isthirdperson();
+		float hoff = third ? 0.865f : 0.895f, roff = third ? 0.355f : 0.36f;
 		vec offset(from);
 		vec front, right;
 		vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
-		front.mul(d->radius*1.77f);
+		front.mul(d->radius*2.f);
 		offset.add(front);
-		offset.z += (d->aboveeye + d->height)*0.87f - d->height;
+		offset.z += (d->aboveeye + d->height)*hoff - d->height;
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
-		right.mul(d->radius*0.355f);
+		right.mul(d->radius*roff);
 		offset.add(right);
-		if(d->crouching)
-			offset.z -= min(1.0f, (lastmillis-d->crouchtime)/200.f)*(1-CROUCHHEIGHT)*d->height;
+		if(d->crouching) offset.z -= d->height-cl.curheight(d);
 		return offset;
 	}
 

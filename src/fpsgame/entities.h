@@ -698,7 +698,7 @@ struct entities : icliententities
 	{
 		if(d->state == CS_ALIVE)
 		{
-			vec v(cl.ph.feetpos(d, 0.f));
+			vec v(cl.feetpos(d, 0.f));
 			int curnode = waypointnode(v);
 
 			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)

@@ -39,26 +39,32 @@ struct physics
 	}
 
 	// inputs
-	#define iput(x,y,t,z,q) \
-		void do##x(bool on) \
+	#define iput(x,y,t,z,a,q) \
+		void do##x(bool down) \
 		{ \
 			if(!q || cl.player1->state == CS_DEAD) \
 			{ \
 				cl.player1->y = false; \
-				if(z && on) cl.respawn(cl.player1); \
+				if(z && down) cl.respawn(cl.player1); \
 			} \
 			else \
 			{ \
-				cl.player1->y = on; \
-				if(on) cl.player1->t = lastmillis; \
+				if((a && cl.player1->y != down) || (!a && down)) \
+					cl.player1->t = lastmillis; \
+				cl.player1->y = down; \
 			} \
 		}
 
-	iput(crouch,	crouching,	crouchtime,	false,	cl.allowmove(cl.player1));
-	iput(jump,		jumping,	jumptime,	false,	cl.allowmove(cl.player1));
-	iput(attack,	attacking,	attacktime,	true,	cl.allowmove(cl.player1));
-	iput(reload,	reloading,	reloadtime,	true,	cl.allowmove(cl.player1));
-	iput(action,	useaction,	usetime,	true,	cl.allowmove(cl.player1));
+	iput(crouch,	crouching,	crouchtime,	false,	true,	cl.allowmove(cl.player1));
+	iput(jump,		jumping,	jumptime,	false,	false,	cl.allowmove(cl.player1));
+	iput(attack,	attacking,	attacktime,	true,	false,	cl.allowmove(cl.player1));
+	iput(reload,	reloading,	reloadtime,	true,	false,	cl.allowmove(cl.player1));
+	iput(action,	useaction,	usetime,	true,	false,	cl.allowmove(cl.player1));
+
+	bool iscrouching(physent *d)
+	{
+		return d->crouching || lastmillis-d->crouchtime <= 200;
+	}
 
 	void taunt(fpsent *d)
 	{
@@ -66,24 +72,6 @@ struct physics
 		if(lastmillis-d->lasttaunt<1000) return;
 		d->lasttaunt = lastmillis;
 		cl.cc.addmsg(SV_TAUNT, "ri", d->clientnum);
-	}
-
-	vec headpos(physent *d, float off = 0.f)
-	{
-		if(d->type == ENT_PLAYER)
-		{
-			vec offset(vec(d->o).sub(vec(0, 0, off)));
-			if(d->crouching)
-				offset.z -= min(1.0f, (lastmillis-d->crouchtime)/200.f)*(1-CROUCHHEIGHT)*d->height;
-			return offset;
-		}
-		return vec(d->o);
-	}
-
-	vec feetpos(physent *d, float off = 0.f)
-	{
-		if(d->type == ENT_PLAYER) return vec(d->o).sub(vec(0, 0, d->height-off));
-		return vec(d->o);
 	}
 
 	float stairheight(physent *d)
@@ -114,7 +102,7 @@ struct physics
 	{
 		if(d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_EDITING)
 		{
-			return d->maxspeed*(float(d->crouching ? crawlspeed() : movespeed())/100.f)*(float(d->weight)/100.f);
+			return d->maxspeed*(float(iscrouching(d) ? crawlspeed() : movespeed())/100.f)*(float(d->weight)/100.f);
 		}
 		return d->maxspeed;
 	}
@@ -400,6 +388,7 @@ struct physics
 			if(pl->jumping)
 			{
 				pl->jumping = pl->crouching = false;
+				pl->crouchtime = lastmillis;
 				pl->vel.z = jumpvelocity(pl);
 			}
 		}
@@ -408,7 +397,7 @@ struct physics
 			if(pl->jumping)
 			{
 				pl->jumping = pl->crouching = false;
-
+				pl->crouchtime = lastmillis;
 				pl->vel.z = jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x /= liquiddampen(pl); pl->vel.y /= liquiddampen(pl); }
 				playsound(S_JUMP, &pl->o);
@@ -472,7 +461,7 @@ struct physics
 
     void updatematerial(physent *pl, bool local, bool floating)
     {
-		vec v(pl->type != ENT_PLAYER ? pl->o : feetpos(pl, 1.f));
+		vec v(pl->type != ENT_PLAYER ? pl->o : cl.feetpos(pl, 1.f));
 		int material = lookupmaterial(v);
 		if(pl->state == CS_ALIVE && material != pl->inmaterial)
 		{
