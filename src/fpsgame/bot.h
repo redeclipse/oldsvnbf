@@ -71,7 +71,7 @@ struct botclient
 		if(!rnd(d->skill*10)) return true;
 		else
 		{
-			vec dir(cl.ph.feetpos(d, 0.f));
+			vec dir(cl.feetpos(d, 0.f));
 			dir.sub(pos);
 			dir.normalize();
 			float targyaw, targpitch;
@@ -143,13 +143,13 @@ struct botclient
 
 	bool randomnode(fpsent *d, botstate &b, float radius, float wander)
 	{
-		vec feet(cl.ph.feetpos(d, 0.f));
+		vec feet(cl.feetpos(d, 0.f));
 		return randomnode(d, b, feet, feet, radius, wander);
 	}
 
 	bool patrol(fpsent *d, botstate &b, vec &pos, float radius, float wander, bool retry = false)
 	{
-		vec feet(cl.ph.feetpos(d, 0.f));
+		vec feet(cl.feetpos(d, 0.f));
 		if(b.override || feet.dist(pos) <= radius || !makeroute(d, b, pos, wander))
 		{ // run away and back to keep ourselves busy
 			if(!b.override && randomnode(d, b, feet, pos, radius, wander))
@@ -170,7 +170,7 @@ struct botclient
 
 	bool follow(fpsent *d, botstate &b, fpsent *e, bool retry = false)
 	{
-		vec pos(cl.ph.feetpos(e, 0.f)), feet(cl.ph.feetpos(d, 0.f));
+		vec pos(cl.feetpos(e, 0.f)), feet(cl.feetpos(d, 0.f));
 		if(b.override || feet.dist(pos) <= BOTISNEAR || !makeroute(d, b, e->lastnode, e->radius*2.f))
 		{ // random path if too close
 			if(!b.override && randomnode(d, b, feet, pos, BOTISNEAR, BOTISFAR))
@@ -209,8 +209,8 @@ struct botclient
 		vec targ;
 		loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && e != d && BOTTARG(d, e, true))
 		{
-			vec ep = cl.ph.headpos(e), tp = t ? cl.ph.headpos(t) : vec(0, 0, 0),
-				dp = cl.ph.headpos(d);
+			vec ep = cl.headpos(e), tp = t ? cl.headpos(t) : vec(0, 0, 0),
+				dp = cl.headpos(d);
 			if((!t || ep.dist(d->o) < tp.dist(d->o)) &&
 				getsight(dp, d->yaw, d->pitch, ep, targ, BOTLOSDIST(d->skill), BOTFOVX(d->skill), BOTFOVY(d->skill)))
 					t = e;
@@ -231,7 +231,7 @@ struct botclient
 
 	bool find(fpsent *d, botstate &b, bool override = true)
 	{
-		vec pos = cl.ph.headpos(d);
+		vec pos = cl.headpos(d);
 		vector<interest> interests;
 		interests.setsize(0);
 
@@ -245,7 +245,7 @@ struct botclient
 			fpsent *e = NULL;
 			loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && BOTTARG(d, e, false) && !e->bot && d->team == e->team)
 			{ // try to guess what non bots are doing
-				vec ep = cl.ph.headpos(e);
+				vec ep = cl.headpos(e);
 				if(targets.find(e->clientnum) < 0 && (ep.dist(f.pos()) <= enttype[FLAG].radius*2.f || f.owner == e))
 					targets.add(e->clientnum);
 			}
@@ -295,7 +295,7 @@ struct botclient
 					loopvk(targets) if((t = cl.getclient(targets[k])))
 					{
 						interest &n = interests.add();
-						vec tp = cl.ph.headpos(t);
+						vec tp = cl.headpos(t);
 						n.state = BS_DEFEND;
 						n.node = t->lastnode;
 						n.target = t->clientnum;
@@ -351,7 +351,7 @@ struct botclient
 
 	bool ctfhomerun(fpsent *d, botstate &b)
 	{
-		vec pos = cl.ph.headpos(d);
+		vec pos = cl.headpos(d);
 		loopk(2)
 		{
 			int goal = -1;
@@ -498,11 +498,11 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			vec targ, pos = cl.ph.headpos(d);
+			vec targ, pos = cl.headpos(d);
 			fpsent *e = cl.getclient(b.target);
 			if(e)
 			{
-				vec ep = cl.ph.headpos(e);
+				vec ep = cl.headpos(e);
 				if(e->state == CS_ALIVE && raycubelos(pos, ep, targ))
 				{
 					d->bot->enemy = e->clientnum;
@@ -634,8 +634,8 @@ struct botclient
 			fpsentity &e = (fpsentity &)*cl.et.ents[d->bot->route[i]];
 
 			if(!d->bot->route.inrange(node) ||
-				(e.o.dist(cl.ph.feetpos(d, 0.f)) < enttype[WAYPOINT].radius*10.f &&
-					e.o.dist(cl.ph.feetpos(d, 0.f)) < cl.et.ents[d->bot->route[node]]->o.dist(cl.ph.feetpos(d, 0.f))))
+				(e.o.dist(cl.feetpos(d, 0.f)) < enttype[WAYPOINT].radius*10.f &&
+					e.o.dist(cl.feetpos(d, 0.f)) < cl.et.ents[d->bot->route[node]]->o.dist(cl.feetpos(d, 0.f))))
 						node = i;
 		}
 		return node;
@@ -664,7 +664,7 @@ struct botclient
 
 	void aim(fpsent *d, botstate &b, vec &pos, float &yaw, float &pitch, int skew)
 	{
-		vec dp = cl.ph.headpos(d);
+		vec dp = cl.headpos(d);
 		float targyaw = -(float)atan2(pos.x-dp.x, pos.y-dp.y)/PI*180+180;
 		if(yaw < targyaw-180.0f) yaw += 360.0f;
 		if(yaw > targyaw+180.0f) yaw -= 360.0f;
@@ -709,7 +709,7 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			vec pos = cl.ph.headpos(d);
+			vec pos = cl.headpos(d);
 			int bestgun = d->bestgun();
 			if(d->gunselect != bestgun && d->canswitch(bestgun, lastmillis))
 			{
@@ -726,7 +726,7 @@ struct botclient
 			fpsent *e = cl.getclient(d->bot->enemy);
 			if(e)
 			{
-				vec enemypos = cl.ph.headpos(e);
+				vec enemypos = cl.headpos(e);
 				aim(d, b, enemypos, d->yaw, d->pitch, 10);
 				aiming = true;
 			}
@@ -755,7 +755,7 @@ struct botclient
 
 	void check(fpsent *d)
 	{
-		vec pos = cl.ph.headpos(d);
+		vec pos = cl.headpos(d);
 		findorientation(pos, d->yaw, d->pitch, d->bot->target);
 
 		if(d->state == CS_ALIVE)
@@ -780,7 +780,7 @@ struct botclient
 				fpsent *e = NULL;
 				loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && BOTTARG(d, e, true))
 				{
-					if(f.o.dist(cl.ph.feetpos(e, 0.f)) <= e->radius+d->radius)
+					if(f.o.dist(cl.feetpos(e, 0.f)) <= e->radius+d->radius)
 					{
 						d->bot->avoid.add(k);
 						found = true;
@@ -896,7 +896,7 @@ struct botclient
 		if(botdebug() > 3)
 		{
 			vec fr(cl.ws.gunorigin(d->gunselect, d->o, d->bot->target, d)),
-				dr(d->bot->target), pos = cl.ph.headpos(d);
+				dr(d->bot->target), pos = cl.headpos(d);
 			if(dr.dist(pos) > BOTLOSDIST(d->skill))
 			{
 				dr.sub(fr);
