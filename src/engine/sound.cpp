@@ -234,7 +234,7 @@ void updatesounds()
 
 int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 {
-	if(nosound || !soundvol || !camera1) return -1;
+	if(nosound || !soundvol) return -1;
 
 	if(!(flags&SND_MAP))
 	{
@@ -244,7 +244,9 @@ int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 		if(soundmaxatonce && soundsatonce > soundmaxatonce) return -1;
 	}
 
-	vec *p = pos != NULL ? pos : &camera1->o;
+	physent *player = (physent *)cl->iterdynents(0);
+	if(!player) player = camera1;
+	vec *p = pos != NULL ? pos : &player->o;
 
 	vector<soundslot> &soundset = flags&SND_MAP ? mapsounds : gamesounds;
 

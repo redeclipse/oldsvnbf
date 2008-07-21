@@ -192,11 +192,11 @@ struct weaponstate
 			if(gun == GUN_FLAMER)
 			{
 				if(!issound(d->wschan))
-					d->wschan = playsound(guntype[gun].sound, &from, 255, 0, 0, SND_COPY);
+					d->wschan = playsound(guntype[gun].sound, &d->o, 255, 0, 0);
 			}
 			else
 			{
-				playsound(guntype[gun].sound, &from, 255, 0, 0, SND_COPY);
+				playsound(guntype[gun].sound, &d->o, 255, 0, 0);
 				d->wschan = -1;
 			}
 		}

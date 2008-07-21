@@ -587,6 +587,7 @@ struct GAMECLIENT : igameclient
 		player1->deaths = 0;
 		player1->totaldamage = 0;
 		player1->totalshots = 0;
+		player1->state = CS_DEAD;
 		loopv(players) if(players[i])
 		{
 			players[i]->oldnode = players[i]->lastnode = -1;
@@ -594,9 +595,8 @@ struct GAMECLIENT : igameclient
 			players[i]->deaths = 0;
 			players[i]->totaldamage = 0;
 			players[i]->totalshots = 0;
+			players[i]->state = CS_DEAD;
 		}
-
-		et.findplayerspawn(player1, -1, -1);
 		et.resetspawns();
 		sb.showscores(false);
 	}

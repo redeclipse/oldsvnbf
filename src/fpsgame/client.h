@@ -118,6 +118,7 @@ struct clientcom : iclientcom
 		cl.player1->clientnum = -1;
 		cl.player1->lifesequence = 0;
 		cl.player1->privilege = PRIV_NONE;
+		cl.player1->state = CS_DEAD;
         removetrackedparticles();
 		loopv(cl.players) DELETEP(cl.players[i]);
 		cleardynentcache();
@@ -1290,12 +1291,11 @@ struct clientcom : iclientcom
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
-		isready = false;
 		load_world(name);
 		if(m_stf(gamemode)) cl.stf.setupflags();
         else if(m_ctf(gamemode)) cl.ctf.setupflags();
-		isready = true;
 		if(editmode) edittoggled(editmode);
+		cl.player1->state = CS_DEAD;
 	}
 
 	void changemap(const char *name) // request map change, server may ignore

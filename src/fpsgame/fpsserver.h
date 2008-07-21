@@ -777,11 +777,7 @@ struct GAMESERVER : igameserver
 			ci->mapchange();
             ci->state.lasttimeplayed = lastmillis;
             if(ci->state.state != CS_SPECTATOR)
-            {
-				//ci->state.state = CS_DEAD;
-				//sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
 				sendspawn(ci);
-            }
 		}
 
 		if(m_timed(gamemode) && hasnonlocalclients())
