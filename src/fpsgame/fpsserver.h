@@ -326,13 +326,13 @@ struct GAMESERVER : igameserver
 	{
 		motd[0] = serverdesc[0] = masterpass[0] = '\0';
 		smuts.setsize(0);
-#ifndef STANDALONE
+
 		CCOMMAND(gameid, "", (GAMESERVER *self), result(self->gameid()));
 		CCOMMAND(gamever, "", (GAMESERVER *self), intret(self->gamever()));
 		CCOMMAND(gamename, "ii", (GAMESERVER *self, int *g, int *m), result(self->gamename(*g, *m)));
 		CCOMMAND(defaultmap, "", (GAMESERVER *self), result(self->defaultmap()));
 		CCOMMAND(defaultmode, "", (GAMESERVER *self), intret(self->defaultmode()));
-#endif
+		CCOMMAND(mutscheck, "ii", (GAMESERVER *self, int *g, int *m), intret(self->mutscheck(*g, *m)));
 	}
 
 	void *newinfo() { return new clientinfo; }
@@ -2530,6 +2530,13 @@ struct GAMESERVER : igameserver
 		}
 		else *muts = 0;
     }
+
+	int mutscheck(int mode, int muts)
+	{
+		int gm = mode, mt = muts;
+		modecheck(&gm, &mt);
+		return mt;
+	}
 
 	const char *defaultmap() { return "refuge"; }
 	int defaultmode() { return G_DEATHMATCH; }
