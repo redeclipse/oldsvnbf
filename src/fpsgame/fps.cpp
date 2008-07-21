@@ -667,7 +667,6 @@ struct GAMECLIENT : igameclient
 		glTexCoord2f(0.0f, 1.0f); glVertex2f(x,	y+s);
 	}
 
-
 	void drawplayerblip(fpsent *d, int x, int y, int s)
 	{
 		pushfont("radar");
