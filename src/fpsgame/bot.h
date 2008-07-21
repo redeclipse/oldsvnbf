@@ -735,30 +735,25 @@ struct botclient
 			if(e)
 			{
 				vec enemypos = cl.headpos(e);
-				aim(d, b, enemypos, d->yaw, d->pitch, 3);
+				aim(d, b, enemypos, d->yaw, d->pitch, 8);
 				aiming = true;
 			}
 
 			if(hunt(d, b))
 			{
-				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 30);
-				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 0);
+				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 16);
+				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 4);
 
 				if(d->bot->spot.z-pos.z > BOTJUMPHEIGHT && !d->timeinair && lastmillis-d->jumptime > 1000)
 				{
 					d->jumping = true;
 					d->jumptime = lastmillis;
 				}
-
-				d->move = 1;
-				d->strafe = 0;
 			}
-			else
-			{
-				d->move = d->strafe = 0;
-			}
+			d->move = 1; // keep on movin'
+			d->strafe = 0;
 		}
-		else d->move = d->strafe = 0;
+		else d->stopmoving();
 	}
 
 	void check(fpsent *d)
