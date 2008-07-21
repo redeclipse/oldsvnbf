@@ -1677,7 +1677,7 @@ struct GAMESERVER : igameserver
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->state.ownernum >= 0 || ci->clientnum == on || ci->state.state == CS_SPECTATOR)
+			if(ci->state.ownernum >= 0 || ci->clientnum == on || !ci->name[0] || ci->state.state == CS_SPECTATOR)
 				siblings[i] = -1;
 			else
 			{
@@ -1787,7 +1787,7 @@ struct GAMESERVER : igameserver
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->state.ownernum >= 0 || ci->state.state == CS_SPECTATOR) siblings[i] = -1;
+			if(ci->state.ownernum >= 0 || !ci->name[0] || ci->state.state == CS_SPECTATOR) siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
@@ -1807,12 +1807,13 @@ struct GAMESERVER : igameserver
 			loopvrev(clients) if(clients[i]->state.ownernum == ci->clientnum)
 			{
 				clientinfo *cp = clients[i];
-				cp->state.ownernum = findbotclient(cp->clientnum, ci->clientnum);
+				cp->state.ownernum = lo;
 				if(clients.inrange(cp->state.ownernum))
 				{
 					sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
 					return true;
 				}
+				else removebot(ci);
 			}
 		}
 		return false;
@@ -1902,7 +1903,7 @@ struct GAMESERVER : igameserver
 					default: break;
 				}
 			}
-			else srvoutf(ci->clientnum, "\fgunknown command: %s", id->name);
+			else srvoutf(ci->clientnum, "\fgunknown command: %s", cmd);
 		}
 	}
 
@@ -2435,7 +2436,6 @@ struct GAMESERVER : igameserver
 		if(mastermode>=MM_LOCKED) ci->state.state = CS_SPECTATOR;
 		if(currentmaster>=0) masterupdate = true;
 		ci->state.lasttimeplayed = lastmillis;
-		checkbots();
 		return DISC_NONE;
 	}
 
@@ -2451,11 +2451,7 @@ struct GAMESERVER : igameserver
 		sendf(-1, 1, "ri2", SV_CDIS, n);
 		clients.removeobj(ci);
 		if(clients.empty()) cleanup();
-		else
-		{
-			checkbots();
-			checkvotes();
-		}
+		else checkvotes();
 	}
 
 	#include "extinfo.h"
