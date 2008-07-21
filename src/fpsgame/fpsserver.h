@@ -235,6 +235,7 @@ struct GAMESERVER : igameserver
 	IVARG(timelimit, 0, 10, INT_MAX-1);
 	//IVARG(fraglimit, 0, 0, INT_MAX-1);
 	IVARG(ctflimit, 0, 10, INT_MAX-1);
+	IVARG(stflimit, 0, 1, 1);
 
 	bool notgotitems, notgotflags;		// true when map has changed and waiting for clients to send item
 	int gamemode, mutators;

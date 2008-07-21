@@ -478,7 +478,7 @@ struct stfservmode : stfstate, servmode
 	void update()
 	{
 		if(sv.minremain<0) return;
-		endcheck();
+		if(sv.stflimit()) endcheck();
 		int t = sv.gamemillis/1000 - (sv.gamemillis-curtime)/1000;
 		if(t<1) return;
 		loopv(flags)
