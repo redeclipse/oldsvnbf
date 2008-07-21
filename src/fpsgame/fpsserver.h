@@ -1625,7 +1625,7 @@ struct GAMESERVER : igameserver
 					int skill = getint(p);
 					if(haspriv(ci, PRIV_MASTER, true))
 					{
-						if(botbalance())
+						if(!m_fight(gamemode) && botbalance())
 							srvoutf(sender, "cannot create bots while botbalance is enabled");
 						else if(!addbot(skill))
 							srvoutf(sender, "failed to create or assign bot");
@@ -1637,7 +1637,7 @@ struct GAMESERVER : igameserver
 				{
 					if(haspriv(ci, PRIV_MASTER, true))
 					{
-						if(botbalance())
+						if(!m_fight(gamemode) && botbalance())
 							srvoutf(sender, "cannot remove bots while botbalance is enabled");
 						else if(!deletebot())
 							srvoutf(sender, "failed to remove any bots");
