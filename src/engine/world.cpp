@@ -453,7 +453,9 @@ void entpush(int *dir)
 		groupedit(e.o[d] += float(s*sel.grid));
 	if(entitysurf==1)
 	{
-		camera1->o[d] += s*sel.grid;
+		physent *player = (physent *)cl->iterdynents(0);
+		if(!player) player = camera1;
+		player->o[d] += s*sel.grid;
 	}
 }
 
@@ -462,7 +464,9 @@ void entautoview(int *dir)
 {
 	if(!haveselent()) return;
 	static int s = 0;
-	vec v(camera1->o);
+	physent *player = (physent *)cl->iterdynents(0);
+	if(!player) player = camera1;
+	vec v(player->o);
 	v.sub(worldpos);
 	v.normalize();
 	v.mul(entautoviewdist);
@@ -471,7 +475,7 @@ void entautoview(int *dir)
 	if(t<0 && s>0) s = entgroup.length() - s;
 	entfocus(entgroup[s],
 		v.add(e.o);
-		camera1->o = v;
+		player->o = v;
 	);
 }
 
@@ -821,10 +825,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 	    persistidents = true;
 	    overrideidents = worldidents = false;
     }
-
 	startmap("");
-	//camera1->o.z += camera1->height+1;
-
 	return true;
 }
 
