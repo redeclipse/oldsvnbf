@@ -477,18 +477,11 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						if(k) s_strcat(arg, " ");
 						s_strcat(arg, w[k+1]);
 					}
-					if(cc && cc->sendcmd(numargs, c, numargs > 1 && arg[0] ? arg : NULL))
-					{
-						setretval(newstring("~async~"));
-					}
-					else
+					if(!cc || !cc->sendcmd(numargs, c, numargs > 1 && arg[0] ? arg : NULL))
 #endif
-					{
 						conoutf("unknown command: %s", c);
-						setretval(newstring(c));
-					}
                 }
-				else setretval(newstring(c));
+				setretval(newstring(c));
 			}
             else switch(id->type)
 			{
