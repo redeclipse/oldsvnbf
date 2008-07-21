@@ -650,7 +650,7 @@ struct clientcom : iclientcom
 			{
 				case SV_INITS2C:					// welcome messsage from the server
 				{
-					int mycn = getint(p), gver = getint(p), hasmap = getint(p);
+					int mycn = getint(p), gver = getint(p);
 					if(gver!=GAMEVERSION)
 					{
 						conoutf("you are using a different game version (you: %d, server: %d)", GAMEVERSION, gver);
@@ -658,18 +658,6 @@ struct clientcom : iclientcom
 						return;
 					}
 					cl.player1->clientnum = mycn;	  // we are now fully ready
-					switch (hasmap)
-					{
-						case 0:
-							changemap(getmapname());
-							break;
-						case 2:
-							senditemstoserver = true;
-							break;
-						case 1:
-						default:
-							break;
-					}
 					isready = true;
 					break;
 				}
@@ -755,16 +743,14 @@ struct clientcom : iclientcom
 					break;
 				}
 
-				case SV_MAPRELOAD: // server requests next map
+				case SV_MAPREQUEST: // server requests next map
 				{
-					if(cl.intermission) cl.sb.showscores(false);
-					if(m_stf(cl.gamemode)) showgui("stfmaps");
-					else if(m_ctf(cl.gamemode)) showgui("ctfmaps");
-					else showgui("maps");
+					cl.sb.showscores(false);
+					showgui("maps");
 					break;
 				}
 
-				case SV_INITC2S:			// another client either connected or changed name/team
+				case SV_INITC2S: // another client either connected or changed name/team
 				{
 					d = cl.newclient(cn);
 					if(!d)

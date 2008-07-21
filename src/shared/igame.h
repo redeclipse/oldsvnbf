@@ -101,7 +101,6 @@ struct igameserver
     virtual bool serveroption(char *arg) { return false; }
     virtual void *newinfo() = 0;
     virtual void deleteinfo(void *ci) = 0;
-    virtual void serverinit() = 0;
     virtual void clientdisconnect(int n) = 0;
     virtual int clientconnect(int n, uint ip) = 0;
     virtual const char *servername() = 0;

@@ -22,7 +22,7 @@ struct botclient
 	botclient(GAMECLIENT &_cl) : cl(_cl)
 	{
 		CCOMMAND(addbot, "s", (botclient *self, char *s),
-			self->addbot(*s ? clamp(atoi(s), 1, 100) : rnd(100)+1)
+			self->addbot(*s ? clamp(atoi(s), 1, 100) : -1)
 		);
 		CCOMMAND(delbot, "", (botclient *self), self->delbot());
 	}
@@ -76,8 +76,8 @@ struct botclient
 			dir.normalize();
 			float targyaw, targpitch;
 			vectoyawpitch(dir, targyaw, targpitch);
-			float rtime = d->skill*guntype[d->gunselect].rdelay/100.f,
-				atime = d->skill*guntype[d->gunselect].adelay/10.f,
+			float rtime = d->skill*guntype[d->gunselect].rdelay/1000.f,
+				atime = d->skill*guntype[d->gunselect].adelay/100.f,
 					skew = float(lastmillis-b.millis)/(rtime+atime),
 						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 			if(cyaw <= BOTFOVX(d->skill)*skew && cpitch <= BOTFOVY(d->skill)*skew)
@@ -514,7 +514,7 @@ struct botclient
 				if(e->state == CS_ALIVE && raycubelos(pos, ep, targ))
 				{
 					d->bot->enemy = e->clientnum;
-					if(d->canshoot(d->gunselect, lastmillis) && hastarget(d, b, ep))
+					if(m_fight(cl.gamemode) && d->canshoot(d->gunselect, lastmillis) && hastarget(d, b, ep))
 					{
 						d->attacking = true;
 						d->attacktime = lastmillis;
@@ -735,13 +735,13 @@ struct botclient
 			if(e)
 			{
 				vec enemypos = cl.headpos(e);
-				aim(d, b, enemypos, d->yaw, d->pitch, 5);
+				aim(d, b, enemypos, d->yaw, d->pitch, 3);
 				aiming = true;
 			}
 
 			if(hunt(d, b))
 			{
-				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 50);
+				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 30);
 				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 0);
 
 				if(d->bot->spot.z-pos.z > BOTJUMPHEIGHT && !d->timeinair && lastmillis-d->jumptime > 1000)

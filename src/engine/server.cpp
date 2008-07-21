@@ -691,9 +691,6 @@ void setupserver()
 	{
 		enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 	}
-
-	sv->serverinit();
-
 	int d = sv->defaultmode();
 	string s, m;
 	s_strcpy(m, load && *load ? load : sv->defaultmap());

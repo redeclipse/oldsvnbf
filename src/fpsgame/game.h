@@ -173,6 +173,7 @@ struct guntypes
 enum
 {
 	G_DEMO = 0,
+	G_LOBBY,
 	G_EDITMODE,
 	G_MISSION,
 	G_DEATHMATCH,
@@ -200,6 +201,7 @@ struct gametypes
 	int	type,			mutators,		implied;			const char *name;
 } gametype[] = {
 	{ G_DEMO,			0,				0,					"Demo" },
+	{ G_LOBBY,			0,				0,					"Lobby" },
 	{ G_EDITMODE,		0,				0,					"Editing" },
 	{ G_MISSION,		0,				0,					"Mission" },
 	{ G_DEATHMATCH,		G_M_FIGHT,		0,					"Deathmatch" },
@@ -217,6 +219,7 @@ struct gametypes
 #define m_game(a)			(a > -1 && a < G_MAX)
 
 #define m_demo(a)			(a == G_DEMO)
+#define m_lobby(a)			(a == G_LOBBY)
 #define m_edit(a)			(a == G_EDITMODE)
 #define m_mission(a)		(a == G_MISSION)
 #define m_dm(a)				(a == G_DEATHMATCH)
@@ -244,7 +247,7 @@ enum
 	SV_GUNSELECT, SV_TAUNT,
 	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMUSE, SV_EXECLINK,
 	SV_PING, SV_PONG, SV_CLIENTPING,
-	SV_TIMEUP, SV_MAPRELOAD, SV_ITEMACC,
+	SV_TIMEUP, SV_MAPREQUEST, SV_ITEMACC,
 	SV_SERVMSG, SV_ITEMLIST, SV_RESUME,
     SV_EDITMODE, SV_EDITENT, SV_EDITLINK, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP,
 	SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_SETMASTER, SV_SETTEAM, SV_APPROVEMASTER,
@@ -261,7 +264,7 @@ char msgsizelookup(int msg)
 {
 	char msgsizesl[] =				// size inclusive message token, 0 for variable or not-checked sizes
 	{
-		SV_INITS2C, 4, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_COMMAND, 0,
+		SV_INITS2C, 3, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_SOUND, 3, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 2,
 		SV_DIED, 7, SV_DAMAGE, 10, SV_SHOTFX, 9,
@@ -269,7 +272,7 @@ char msgsizelookup(int msg)
 		SV_GUNSELECT, 0, SV_TAUNT, 2,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 4, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
-		SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_ITEMACC, 3,
+		SV_TIMEUP, 2, SV_MAPREQUEST, 1, SV_ITEMACC, 3,
 		SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
         SV_EDITMODE, 2, SV_EDITENT, 10, SV_EDITLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0, SV_APPROVEMASTER, 2,
