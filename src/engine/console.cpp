@@ -39,7 +39,7 @@ void conline(const char *sf, int n, int type = CON_NORMAL)
 		{
 			cline cl;
 			cl.cref = conlines[i].length()>100 ? conlines[i].pop().cref : newstringbuf("");
-			cl.outtime = totalmillis;
+			cl.outtime = lastmillis;
 
 			int pos = n && i == CN_CENTER ? n : 0;
 			conlines[i].insert(pos,cl);
@@ -167,7 +167,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 
 	if (!guiactive() && centerlines)
 	{
-		loopv(conlines[CN_CENTER]) if(totalmillis-conlines[CN_CENTER][i].outtime<centertime)
+		loopv(conlines[CN_CENTER]) if(lastmillis-conlines[CN_CENTER][i].outtime<centertime)
 		{
 			refs.add(conlines[CN_CENTER][i].cref);
 			if(refs.length() >= centerlines) break;
@@ -191,7 +191,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 	{
 		loopv(conlines[CN_NORMAL])
 		{
-			if(conskip ? i>=conskip-1 || i>=conlines[CN_NORMAL].length()-numl : fullconsole || totalmillis-conlines[CN_NORMAL][i].outtime<contime)
+			if(conskip ? i>=conskip-1 || i>=conlines[CN_NORMAL].length()-numl : fullconsole || lastmillis-conlines[CN_NORMAL][i].outtime<contime)
 			{
 				refs.add(conlines[CN_NORMAL][i].cref);
 				if (refs.length() >= numl) break;

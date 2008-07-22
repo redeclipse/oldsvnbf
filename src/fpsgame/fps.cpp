@@ -1642,7 +1642,7 @@ struct GAMECLIENT : igameclient
 
 			if((anim>>ANIM_SECONDARY)&ANIM_INDEX) switch(anim&ANIM_INDEX)
 			{
-				case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN:
+				case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_CHAINGUN:
 				case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_RIFLE:
 				{
 					anim >>= ANIM_SECONDARY;
@@ -1654,7 +1654,7 @@ struct GAMECLIENT : igameclient
 
 		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) switch(anim&ANIM_INDEX)
 		{
-			case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN:
+			case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_CHAINGUN:
 			case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_RIFLE:
 			{
 				anim |= ((anim&ANIM_INDEX)|ANIM_LOOP)<<ANIM_SECONDARY;
