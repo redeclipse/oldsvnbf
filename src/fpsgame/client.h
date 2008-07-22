@@ -1597,7 +1597,7 @@ struct clientcom : iclientcom
 					}
 					else if(!k) invert = true;
 				}
-				s_sprintfd(u)("serversort = \"%d%s%s\"",
+				s_sprintfd(u)("serversort [%d%s%s]",
 					invert ? 0-i : i, st[0] ? " " : "", st[0] ? st : "");
 				execute(u);
 			}
@@ -1614,65 +1614,65 @@ struct clientcom : iclientcom
         g->poplist();
     }
 
-    bool serverinfoentry(g3d_gui *g, int i, serverinfo &si)
+    bool serverinfoentry(g3d_gui *g, int i, serverinfo *si)
     {
 		string text; text[0] = 0;
-		int colour = serverstatus[serverstat(&si)].colour;
+		int colour = serverstatus[serverstat(si)].colour;
 		switch(i)
 		{
 			case SINFO_STATUS:
 			{
-				if(g->button("", colour, serverstatus[serverstat(&si)].icon) & G3D_UP)
+				if(g->button("", colour, serverstatus[serverstat(si)].icon) & G3D_UP)
 					return true;
 				break;
 			}
 			case SINFO_HOST:
 			{
-				if(g->buttonf("%s ", colour, NULL, si.name) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, si->name) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_DESC:
 			{
-				s_strncpy(text, si.sdesc, 18);
+				s_strncpy(text, si->sdesc, 18);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_PING:
 			{
-				s_sprintf(text)("%d", si.ping);
+				s_sprintf(text)("%d", si->ping);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_PLAYERS:
 			{
-				s_sprintf(text)("%d", si.numplayers);
+				s_sprintf(text)("%d", si->numplayers);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_MAXCLIENTS:
 			{
-				if(si.attr.length() > 4 && si.attr[4] >= 0)
-					s_sprintf(text)("%d", si.attr[4]);
+				if(si->attr.length() > 4 && si->attr[4] >= 0)
+					s_sprintf(text)("%d", si->attr[4]);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_GAME:
 			{
-				if(si.attr.length() > 2)
-					s_sprintf(text)("%s", sv->gamename(si.attr[1], si.attr[2]));
+				if(si->attr.length() > 2)
+					s_sprintf(text)("%s", sv->gamename(si->attr[1], si->attr[2]));
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_MAP:
 			{
-				s_strncpy(text, si.map, 18);
+				s_strncpy(text, si->map, 18);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_TIME:
 			{
-				if(si.attr.length() > 3 && si.attr[3] >= 0)
-					s_sprintf(text)("%d %s", si.attr[3], si.attr[3] == 1 ? "min" : "mins");
+				if(si->attr.length() > 3 && si->attr[3] >= 0)
+					s_sprintf(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
@@ -1696,10 +1696,10 @@ struct clientcom : iclientcom
 				for(int j = start; j < end; j++)
 				{
 					if(!i && g->shouldtab()) { end = j; break; }
-					serverinfo &si = *servers[j];
-					if(si.ping >= 0 && si.attr.length() && si.attr[0]==GAMEVERSION)
+					serverinfo *si = servers[j];
+					if(si->ping >= 0 && si->attr.length() && si->attr[0]==GAMEVERSION)
 					{
-						if(serverinfoentry(g, i, si)) name = si.name;
+						if(serverinfoentry(g, i, si)) name = si->name;
 					}
 				}
 				serverinfoendcolumn(g, i);
