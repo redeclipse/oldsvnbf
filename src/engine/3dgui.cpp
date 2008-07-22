@@ -729,7 +729,7 @@ TVARN(guioverlaytex, "textures/guioverlay", gui::overlaytex);
 TVARN(guislidertex, "textures/guislider", gui::slidertex);
 
 //chop skin into a grid
-const int gui::skiny[] = {0, 7, 21, 34, 48, 56, 104, 111, 116, 128},
+const int gui::skiny[] = {0, 7, 21, 34, 48, 56, 104, 111, 119, 128},
 		  gui::skinx[] = {0, 11, 23, 37, 105, 119, 137, 151, 215, 229, 245, 256};
 //Note: skinx[3]-skinx[2] = skinx[7]-skinx[6]
 //	  skinx[5]-skinx[4] = skinx[9]-skinx[8]
