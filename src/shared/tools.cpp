@@ -397,7 +397,12 @@ void savesurface(SDL_Surface *s, char *fname, int format, int compress)
 	switch(f)
 	{
 		case IFMT_PNG: savepng(s, filename, compress); break;
-		case IFMT_BMP: SDL_SaveBMP(s, findfile(filename, "wb")); break;
+		case IFMT_BMP:
+		{
+			const char *fname = findfile(filename, "wb");
+			SDL_SaveBMP(s, fname);
+			break;
+		}
 		default: break;
 	}
 }
