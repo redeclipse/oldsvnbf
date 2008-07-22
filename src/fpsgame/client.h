@@ -122,7 +122,8 @@ struct clientcom : iclientcom
         removetrackedparticles();
 		loopv(cl.players) DELETEP(cl.players[i]);
 		cleardynentcache();
-		emptymap(0, true, NULL, true);
+		//causes a slowdown on exit/disconnect, do we need this when we don't operate offline?
+		//emptymap(0, true, NULL, true);
 	}
 
 	bool allowedittoggle(bool edit)

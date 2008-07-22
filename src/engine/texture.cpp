@@ -397,7 +397,7 @@ void updatetextures()
 
 void preloadtextures()
 {
-    enumerate(*idents, ident, i, if(i.type == ID_SVAR && (i.flags & IDF_TEXTURE) && *i.storage.s[0]) textureload(*i.storage.s));
+    enumerate(*idents, ident, i, if(i.type == ID_SVAR && (i.flags & IDF_TEXTURE)) i.changed());
 }
 
 static GLenum texformat(int bpp)

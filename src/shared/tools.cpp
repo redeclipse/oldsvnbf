@@ -392,6 +392,7 @@ const char *ifmtexts[IFMT_MAX] = { "", ".bmp", ".png" };
 
 void savesurface(SDL_Surface *s, char *fname, int format, int compress)
 {
+	if(!s) return;
 	int f = format > IFMT_NONE && format < IFMT_MAX ? format : IFMT_PNG;
 	const char *filename = makefile(fname, ifmtexts[f]);
 	switch(f)
@@ -400,6 +401,7 @@ void savesurface(SDL_Surface *s, char *fname, int format, int compress)
 		case IFMT_BMP:
 		{
 			const char *name = findfile(filename, "wb");
+			if(!name) name = filename;
 			SDL_SaveBMP(s, name);
 			break;
 		}

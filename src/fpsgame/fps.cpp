@@ -63,7 +63,7 @@ struct GAMECLIENT : igameclient
 	IVARP(firstpersontranslucent, 0, 1, 1);
 
 	IVARP(invmouse, 0, 0, 1);
-	IVARP(absmouse, 0, 1, 1);
+	IVARP(absmouse, 0, 0, 1);
 
 	IVARP(mousetype, 0, 0, 2);
 	IVARP(mousedeadzone, 0, 5, 100);
@@ -102,13 +102,13 @@ struct GAMECLIENT : igameclient
 	IVARP(zoomtime, 1, 500, 10000);
 	IFVARP(zoomcrosshairsize, 0.3f);
 
-	ITVAR(relativecursortex, "textures/relativecursor");
-	ITVAR(guicursortex, "textures/guicursor");
-	ITVAR(editcursortex, "textures/editcursor");
-	ITVAR(crosshairtex, "textures/crosshair");
-	ITVAR(teamcrosshairtex, "textures/teamcrosshair");
-	ITVAR(hitcrosshairtex, "textures/hitcrosshair");
-	ITVAR(zoomcrosshairtex, "textures/zoomcrosshair");
+	ITVAR(relativecursortex, "textures/relativecursor", 3);
+	ITVAR(guicursortex, "textures/guicursor", 3);
+	ITVAR(editcursortex, "textures/editcursor", 3);
+	ITVAR(crosshairtex, "textures/crosshair", 3);
+	ITVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
+	ITVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
+	ITVAR(zoomcrosshairtex, "textures/zoomcrosshair", 3);
 
 	IVARP(radardist, 0, 512, 512);
 	IVARP(radarnames, 0, 1, 2);
@@ -123,17 +123,17 @@ struct GAMECLIENT : igameclient
 	IVARP(editradardist, 0, 512, INT_MAX-1);
 	IVARP(editradarentnames, 0, 1, 2);
 
-	ITVAR(bliptex, "textures/blip");
-	ITVAR(flagbliptex, "textures/flagblip");
-	ITVAR(radartex, "textures/radar");
-	ITVAR(radarpingtex, "<anim:75>textures/radarping");
-	ITVAR(healthbartex, "<anim>textures/healthbar");
-	ITVAR(goalbartex, "<anim>textures/goalbar");
-	ITVAR(teambartex, "<anim>textures/teambar");
-	ITVAR(indicatortex, "<anim>textures/indicator");
+	ITVAR(bliptex, "textures/blip", 0);
+	ITVAR(flagbliptex, "textures/flagblip", 0);
+	ITVAR(radartex, "textures/radar", 0);
+	ITVAR(radarpingtex, "<anim:75>textures/radarping", 0);
+	ITVAR(healthbartex, "<anim>textures/healthbar", 0);
+	ITVAR(goalbartex, "<anim>textures/goalbar", 0);
+	ITVAR(teambartex, "<anim>textures/teambar", 0);
+	ITVAR(indicatortex, "<anim>textures/indicator", 0);
 
-	ITVAR(damagetex, "textures/damage");
-	ITVAR(zoomtex, "textures/zoom");
+	ITVAR(damagetex, "textures/damage", 0);
+	ITVAR(zoomtex, "textures/zoom", 0);
 
 	IVARP(showstats, 0, 1, 1);
 	IVARP(showhudents, 0, 10, 100);
@@ -969,7 +969,7 @@ struct GAMECLIENT : igameclient
 
 	void drawpointer(int w, int h, int index, float x, float y, float r, float g, float b)
 	{
-		Texture *pointer = textureload(getpointer(index));
+		Texture *pointer = textureload(getpointer(index), 3, true);
 		if(pointer)
 		{
 			float chsize = crosshairsize()*w*3.f, blend = crosshairblend();
