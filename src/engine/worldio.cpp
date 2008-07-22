@@ -943,6 +943,7 @@ void load_world(char *mname)		// still supports all map formats that have existe
 		if((maptype == MAP_OCTA && hdr.version <= 25) || (maptype == MAP_BFGZ && hdr.version <= 26))
 			fixlightmapnormals();
 
+        entitiesinoctanodes();
 		initlights();
 		allchanged(true);
 
