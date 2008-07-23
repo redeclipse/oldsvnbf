@@ -431,15 +431,6 @@ struct md5 : skelmodel
         }
     };
 
-    void extendbb(int frame, vec &center, vec &radius, modelattach &a)
-    {
-        vec acenter, aradius;
-        a.m->boundbox(frame, acenter, aradius);
-        float margin = 2*max(aradius.x, max(aradius.y, aradius.z));
-        radius.x += margin;
-        radius.y += margin;
-    }
-
     meshgroup *loadmeshes(char *name, va_list args)
     {
         md5meshgroup *group = new md5meshgroup;
