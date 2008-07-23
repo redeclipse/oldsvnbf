@@ -485,6 +485,7 @@ struct GAMECLIENT : igameclient
 
 		d->state = CS_DEAD;
 		d->obliterated = !(flags & HIT_BURN) && (damage >= MAXHEALTH || (flags & HIT_EXPLODE));
+        d->lastpain = lastmillis;
 
 		if(d == player1)
 		{
