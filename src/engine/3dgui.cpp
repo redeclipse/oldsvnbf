@@ -661,7 +661,7 @@ struct gui : g3d_gui
 		initscale *= 0.025f;
 		basescale = initscale;
 		if(layoutpass) scale.x = scale.y = scale.z = basescale*min((totalmillis-starttime)/300.0f, 1.0f);
-        passthrough = scale.x<basescale || !allowinput;
+        passthrough = !allowinput;
 		curdepth = -1;
 		curlist = -1;
 		tpos = 0;
@@ -807,7 +807,7 @@ bool menukey(int code, bool isdown, int cooked)
                 return true;
         }
 
-        return false;
+        return guiactive();
     }
     switch(code)
     {
@@ -834,11 +834,16 @@ bool menukey(int code, bool isdown, int cooked)
         case -5:
             break;
         default:
-            if(!cooked || (code<32)) return false;
+            if(!cooked || (code<32)) return guiactive();
     }
     if(!isdown) return true;
     e->key(code, cooked);
     return true;
+}
+
+bool guiactive(bool hit, bool pass)
+{
+	return (guis.length() && (!pass || !gui::passthrough)) || (hit && windowhit);
 }
 
 void g3d_addgui(g3d_callback *cb)
@@ -855,12 +860,12 @@ void g3d_limitscale(float scale)
 
 bool g3d_windowhit(bool on, bool act)
 {
-	if (act)
+	if(act)
 	{
         if(on) { firstx = gui::hitx; firsty = gui::hity; }
         mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
     } else if(!on && windowhit) cleargui(1);
-    return (guis.length() && !gui::passthrough) || windowhit;
+    return guiactive();
 }
 
 void g3d_render()
@@ -925,5 +930,3 @@ void g3d_render()
 	popfont();
 	mousebuttons = 0;
 }
-
-bool guiactive() { return guis.length() ? true : false; };
