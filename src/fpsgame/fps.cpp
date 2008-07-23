@@ -140,6 +140,8 @@ struct GAMECLIENT : igameclient
 	IVARP(showfps, 0, 2, 2);
 	IVARP(statrate, 0, 200, 1000);
 
+	ISVARP(lobbymenu, "main");
+
     GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
@@ -599,6 +601,9 @@ struct GAMECLIENT : igameclient
 		}
 		et.resetspawns();
 		sb.showscores(false);
+
+		if(m_lobby(gamemode) && *lobbymenu())
+			showgui(lobbymenu());
 	}
 
 	void playsoundc(int n, fpsent *d = NULL)
@@ -1212,7 +1217,7 @@ struct GAMECLIENT : igameclient
         vec pos = headpos(owner);
         float newdist = raycube(pos, d, dist, RAY_CLIPMAT|RAY_POLY);
         d.mul(min(newdist, dist)).add(pos);
-        o = ws.gunorigin(GUN_PISTOL, owner->o, d, (fpsent *)owner);
+        o = ws.gunorigin(owner->o, d, (fpsent *)owner);
     }
 
 	void newmap(int size)
@@ -1840,7 +1845,7 @@ struct GAMECLIENT : igameclient
 		if(lasersight() && rendernormally)
 		{
 			renderprimitive(true);
-			vec v(vec(ws.gunorigin(player1->gunselect, player1->o, worldpos, player1)).add(vec(0, 0, 1)));
+			vec v(vec(ws.gunorigin(player1->o, worldpos, player1)).add(vec(0, 0, 1)));
 			renderline(v, worldpos, 0.2f, 0.0f, 0.0f, false);
 			renderprimitive(false);
 		}

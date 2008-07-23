@@ -679,7 +679,7 @@ void writecfg()
             case ID_SVAR: fprintf(f, "%s [%s]\n", id.name, *id.storage.s); break;
 			case ID_ALIAS:
 			{
-				if(id.override==NO_OVERRIDE && !strstr(id.name, "nextmap_") && id.action[0])
+				if(id.override==NO_OVERRIDE && id.action[0])
 					fprintf(f, "\"%s\" = [%s]\n", id.name, id.action);
 				break;
 			}

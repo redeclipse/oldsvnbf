@@ -11,8 +11,7 @@ struct botclient
 	static const int BOTFOVMIN			= 90;			// minimum field of view
 	static const int BOTFOVMAX			= 130;			// maximum field of view
 
-	IVAR(botstall, 0, 0, 1);
-	IVAR(botdebug, 0, 2, 5);
+	IVAR(botdebug, 0, 0, 5);
 
 	#define BOTLOSDIST(x)			clamp((BOTLOSMIN+(BOTLOSMAX-BOTLOSMIN))/100.f*float(x), float(BOTLOSMIN), float(getvar("fog")+BOTLOSMIN))
 	#define BOTFOVX(x)				clamp((BOTFOVMIN+(BOTFOVMAX-BOTFOVMIN))/100.f*float(x), float(BOTFOVMIN), float(BOTFOVMAX))
@@ -813,7 +812,7 @@ struct botclient
 		// from the stack and executes it or pops the stack and goes back along the history
 		// until it finds a suitable command to execute.
 
-		if(!botstall() && !cl.intermission)
+		if(!cl.intermission)
 		{
 			botstate &b = d->bot->getstate();
 			process(d, b);
@@ -898,7 +897,7 @@ struct botclient
 		}
 		if(botdebug() > 3)
 		{
-			vec fr(cl.ws.gunorigin(d->gunselect, d->o, d->bot->target, d)),
+			vec fr(cl.ws.gunorigin(d->o, d->bot->target, d)),
 				dr(d->bot->target), pos = cl.headpos(d);
 			if(dr.dist(pos) > BOTLOSDIST(d->skill))
 			{
