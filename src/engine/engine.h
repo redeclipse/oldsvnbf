@@ -200,6 +200,7 @@ extern void vecfromcursor(float x, float y, float z, vec &dir);
 extern void vectocursor(vec &v, float &x, float &y, float &z);
 extern void findorientation(vec &o, float yaw, float pitch, vec &pos);
 extern void rendergame();
+extern void renderavatar();
 extern void invalidatepostfx();
 extern void gl_drawframe(int w, int h);
 extern void enablepolygonoffset(GLenum type);

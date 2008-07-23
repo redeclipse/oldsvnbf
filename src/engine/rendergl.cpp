@@ -784,12 +784,17 @@ static void blendfogoverlay(int fogmat, float blend, float *overlay)
     }
 }
 
-bool renderedgame = false;
+bool renderedgame = false, renderedavatar = false;
 
 void rendergame()
 {
     cl->render();
     if(!shadowmapping) renderedgame = true;
+}
+
+void renderavatar()
+{
+    cl->renderavatar();
 }
 
 VARP(skyboxglare, 0, 1, 1);
@@ -821,6 +826,8 @@ void drawglare()
     renderwater();
     rendermaterials();
     render_particles(0);
+
+    renderavatar();
 
     glFogf(GL_FOG_START, oldfogstart);
     glFogf(GL_FOG_END, oldfogend);
@@ -928,6 +935,8 @@ void drawreflection(float z, bool refract, bool clear)
     renderdecals(0);
     rendermaterials();
     render_particles(0);
+
+    renderavatar();
 
     if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
@@ -1407,6 +1416,8 @@ void gl_drawframe(int w, int h)
 
 	rendermaterials();
 	render_particles(curtime);
+
+    renderavatar();
 
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);
