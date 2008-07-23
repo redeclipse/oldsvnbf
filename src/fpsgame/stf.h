@@ -280,7 +280,7 @@ struct stfclient : stfstate
 
     int respawnwait(fpsent *d)
     {
-        return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)-(lastmillis-d->lastpain)/1000);
+        return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)*1000-(lastmillis-d->lastpain));
     }
 
 	void drawblips(int w, int h, int x, int y, int s)
