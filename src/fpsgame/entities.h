@@ -89,7 +89,7 @@ struct entities : icliententities
 
 	vector<extentity *> &getents() { return ents; }
 
-   const char *itemname(int i)
+	const char *itemname(int i)
 	{
 		if(ents[i]->type == WEAPON)
 		{
@@ -170,8 +170,9 @@ struct entities : icliententities
 	{
         if(d && ents.inrange(n))
 		{
-			if(d != cl.player1 || cl.isthirdperson())
-				particle_text(d->abovehead(), itemname(n), 15);
+			const char *item = itemname(n);
+			if(item && (d != cl.player1 || cl.isthirdperson()))
+				particle_text(d->abovehead(), item, 15);
 			playsound(S_ITEMPICKUP, &d->o);
 			d->useitem(m, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
 			ents[n]->spawned = false;

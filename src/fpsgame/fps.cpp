@@ -152,7 +152,7 @@ struct GAMECLIENT : igameclient
 			liquidchan(-1),
 			player1(new fpsent())
 	{
-        CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1); });
+        CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1, 0); });
 		CCOMMAND(mode, "ii", (GAMECLIENT *self, int *val, int *mut), { self->setmode(*val, *mut); });
 		CCOMMAND(gamemode, "", (GAMECLIENT *self), intret(self->gamemode));
 		CCOMMAND(mutators, "", (GAMECLIENT *self), intret(self->mutators));
@@ -472,9 +472,15 @@ struct GAMECLIENT : igameclient
 		s_strcpy(dname, colorname(d));
 		s_strcpy(aname, actor->type!=ENT_INANIMATE ? colorname(actor) : "");
 		s_strcpy(oname, gun >= 0 && gun < NUMGUNS ? obitnames[gun] : "was killed by");
-        if(d==actor || actor->type==ENT_INANIMATE) console("\f2%s killed themself", cflags, dname);
+        if(d==actor || actor->type==ENT_INANIMATE)
+        {
+        	if(flags&HIT_MELT) console("\f2%s melted", cflags, dname);
+        	else if(flags&HIT_FALL) console("\f2%s thought they could fly", cflags, dname);
+        	else console("\f2%s suicided", cflags, dname);
+        }
 		else if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, aname, oname, dname);
-		else if(m_team(gamemode, mutators) && d->team == actor->team) console("\f2%s %s teammate %s", cflags, dname, oname, aname);
+		else if(m_team(gamemode, mutators) && d->team == actor->team)
+			console("\f2%s %s teammate %s", cflags, dname, oname, aname);
 		else console("\f2%s %s %s", cflags, dname, oname, aname);
 
 		d->state = CS_DEAD;
@@ -654,14 +660,14 @@ struct GAMECLIENT : igameclient
 		return cname;
 	}
 
-	void suicide(fpsent *d)
+	void suicide(fpsent *d, int flags)
 	{
 		if(d == player1 || d->bot)
 		{
 			if(d->state!=CS_ALIVE) return;
 			if(d->suicided!=d->lifesequence)
 			{
-				cc.addmsg(SV_SUICIDE, "ri", d->clientnum);
+				cc.addmsg(SV_SUICIDE, "ri2", d->clientnum, flags);
 				d->suicided = d->lifesequence;
 			}
 		}
@@ -1691,7 +1697,7 @@ struct GAMECLIENT : igameclient
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			gun = d->gunselect, lastaction = lastmillis,
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
-		bool secondary = false;
+		bool secondary = false, showgun = isgun(gun);
 
 		s_sprintf(d->info)("%s", colorname(d, NULL, "@"));
 
@@ -1736,7 +1742,6 @@ struct GAMECLIENT : igameclient
 		else
 		{
 			secondary = third && allowmove(d);
-			bool showgun = isgun(gun);
 			if(showgun)
 			{
 				int gunstate = GUNSTATE_IDLE;
@@ -1785,29 +1790,28 @@ struct GAMECLIENT : igameclient
 						break;
 					}
 				}
+			}
+		}
 
-				if(showgun)
-				{ // we could probably animate the vwep too now..
-					a[ai].name = guntype[gun].vwep;
-					a[ai].tag = "tag_weapon";
-					a[ai].anim = ANIM_VWEP|ANIM_LOOP;
+		if(showgun)
+		{ // we could probably animate the vwep too now..
+			a[ai].name = guntype[gun].vwep;
+			a[ai].tag = "tag_weapon";
+			a[ai].anim = ANIM_VWEP|ANIM_LOOP;
+			a[ai].basetime = 0;
+			ai++;
+		}
+		if(third)
+		{
+			if(m_ctf(gamemode))
+			{
+				loopv(ctf.flags) if(ctf.flags[i].owner == d && !ctf.flags[i].droptime)
+				{
+					a[ai].name = teamtype[ctf.flags[i].team].flag;
+					a[ai].tag = "tag_flag";
+					a[ai].anim = ANIM_MAPMODEL|ANIM_LOOP;
 					a[ai].basetime = 0;
 					ai++;
-				}
-			}
-
-			if(third)
-			{
-				if(m_ctf(gamemode))
-				{
-					loopv(ctf.flags) if(ctf.flags[i].owner == d && !ctf.flags[i].droptime)
-					{
-						a[ai].name = teamtype[ctf.flags[i].team].flag;
-						a[ai].tag = "tag_flag";
-						a[ai].anim = ANIM_MAPMODEL|ANIM_LOOP;
-						a[ai].basetime = 0;
-						ai++;
-					}
 				}
 			}
 		}

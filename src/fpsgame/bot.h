@@ -720,12 +720,10 @@ struct botclient
 			int bestgun = d->bestgun();
 			if(d->gunselect != bestgun && d->canswitch(bestgun, lastmillis))
 			{
-				d->setgun(bestgun, lastmillis);
 				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			}
 			else if(d->ammo[d->gunselect] <= 0 && d->canreload(d->gunselect, lastmillis))
 			{
-				d->gunreload(d->gunselect, guntype[d->gunselect].add, lastmillis);
 				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			}
 

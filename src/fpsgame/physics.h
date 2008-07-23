@@ -488,7 +488,7 @@ struct physics
 			}
 
 			if(local && pl->type == ENT_PLAYER && (isdeadly(material&MATF_VOLUME)))
-				cl.suicide((fpsent *)pl);
+				cl.suicide((fpsent *)pl, int(material&MATF_VOLUME) == MAT_LAVA ? HIT_MELT : 0);
 		}
 
 		pl->inmaterial = material;
@@ -569,7 +569,7 @@ struct physics
 			if(!moveplayer(d, moveres, local, millis)) return false;
 			if(local && d->o.z < 0 && d->state == CS_ALIVE)
 			{
-				cl.suicide((fpsent *)d);
+				cl.suicide((fpsent *)d, HIT_FALL);
 				return false;
 			}
 		}
