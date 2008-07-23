@@ -120,7 +120,11 @@ struct clientcom : iclientcom
 		cl.player1->privilege = PRIV_NONE;
 		cl.player1->state = CS_DEAD;
         removetrackedparticles();
-		loopv(cl.players) DELETEP(cl.players[i]);
+		loopv(cl.players) if(cl.players[i])
+        {
+            removesoundowner(&cl.players[i]->o);
+            DELETEP(cl.players[i]);
+        }
 		cleardynentcache();
 		//causes a slowdown on exit/disconnect, do we need this when we don't operate offline?
 		//emptymap(0, true, NULL, true);

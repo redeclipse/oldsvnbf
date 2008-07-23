@@ -205,7 +205,7 @@ struct entities : icliententities
 						{
 							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && mapsounds.inrange(f.attr1) && !issound(f.schan))
 							{
-								playsound(f.attr1, both ? &f.o : &e.o, f.attr4, f.attr2, f.attr3, SND_MAP);
+								playsound(f.attr1, both ? &f.o : &e.o, f.attr4, f.attr2, f.attr3, SND_MAP|SND_COPY);
 								f.lastemit = lastmillis;
 								if(both) e.lastemit = lastmillis;
 							}
