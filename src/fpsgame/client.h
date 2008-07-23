@@ -122,6 +122,7 @@ struct clientcom : iclientcom
         removetrackedparticles();
 		loopv(cl.players) if(cl.players[i])
         {
+            removetrackedsounds(cl.players[i]);
             DELETEP(cl.players[i]);
         }
 		cleardynentcache();
