@@ -291,7 +291,7 @@ struct GAMECLIENT : igameclient
     {
         if(d->type == ENT_PLAYER)
         {
-        	if(guiactive(true, true)) return false;
+        	if(d == player1 && guiactive(true, true)) return false;
 			if(d->state == CS_DEAD) return false;
 			if(intermission) return false;
         }
