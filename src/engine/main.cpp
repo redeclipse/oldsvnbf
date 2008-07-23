@@ -838,7 +838,7 @@ int main(int argc, char **argv)
 		cl->updateworld();
 		serverslice();
 
-		if(cc->ready() && frameloops)
+		if(frameloops)
 		{
 			cl->recomputecamera(screen->w, screen->h);
 			setviewcell(camera1->o);

@@ -1626,10 +1626,14 @@ struct GAMESERVER : igameserver
 					{
 						if(m_lobby(gamemode))
 							srvoutf(sender, "you are currently in the lobby, please select a gamemode");
-						else if(!m_fight(gamemode) && botbalance())
+						else if(m_fight(gamemode) && botbalance())
 						{
-							int b = botbalance();
-							if(b < MAXCLIENTS-1) setvar("botbalance", b+1, true);
+							if(botbalance() < MAXCLIENTS-1)
+							{
+								*botbalance.storage.i++;
+								botbalance.changed();
+								srvoutf(-1, "%s increased botbalance to %d", colorname(ci), botbalance());
+							}
 							else srvoutf(sender, "botbalance is at its highest");
 						}
 						else if(!addbot(skill))
@@ -1644,10 +1648,14 @@ struct GAMESERVER : igameserver
 					{
 						if(m_lobby(gamemode))
 							srvoutf(sender, "you are currently in the lobby, please select a gamemode");
-						else if(!m_fight(gamemode) && botbalance())
+						else if(m_fight(gamemode) && botbalance())
 						{
-							int b = botbalance();
-							if(b > 0) setvar("botbalance", b-1, true);
+							if(botbalance() > 0)
+							{
+								*botbalance.storage.i--;
+								botbalance.changed();
+								srvoutf(-1, "%s decreased botbalance to %d", colorname(ci), botbalance());
+							}
 							else srvoutf(sender, "botbalance is at its lowest");
 						}
 						else if(!deletebot())
