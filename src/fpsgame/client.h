@@ -122,7 +122,6 @@ struct clientcom : iclientcom
         removetrackedparticles();
 		loopv(cl.players) if(cl.players[i])
         {
-            removesoundowner(&cl.players[i]->o);
             DELETEP(cl.players[i]);
         }
 		cleardynentcache();
@@ -307,7 +306,7 @@ struct clientcom : iclientcom
 		}
 
 		console("%s", (centerchat() ? CON_CENTER : 0)|CON_NORMAL, s);
-		playsound(S_CHAT);
+		playsound(S_CHAT, 0, 255, camera1->o, camera1);
 	}
 
 	void toserver(int flags, char *text)
@@ -690,7 +689,7 @@ struct clientcom : iclientcom
 					if(snd < 0 || snd >= S_MAX) break;
 					fpsent *t = cl.getclient(tcn);
 					if(!t) break;
-					else playsound(snd, &t->o);
+					else playsound(snd, 0, 255, t->o, t);
 					break;
 				}
 
@@ -802,7 +801,7 @@ struct clientcom : iclientcom
 					f->respawn(lastmillis);
 					parsestate(f, p);
 					f->state = CS_SPAWNING;
-					playsound(S_RESPAWN, &f->o);
+					playsound(S_RESPAWN, 0, 255, f->o, f);
 					break;
 				}
 
@@ -817,14 +816,15 @@ struct clientcom : iclientcom
 					f->state = CS_ALIVE;
 					if(local)
 					{
-						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(f->team) : -1, m_team(cl.gamemode, cl.mutators) ? f->team : -1);
+						int team = m_mayhem(cl.gamemode, cl.mutators) ? (f->team%numteams(cl.gamemode, cl.mutators))+1 : f->team;
+						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(team) : -1, m_team(cl.gamemode, cl.mutators) ? team : -1);
 						if(f==cl.player1)
 						{
 							cl.sb.showscores(false);
 							cl.lasthit = 0;
 						}
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
-						playsound(S_RESPAWN, &f->o);
+						playsound(S_RESPAWN, 0, 255, f->o, f);
 					}
 					cl.bot.spawned(f);
 					break;
@@ -867,7 +867,7 @@ struct clientcom : iclientcom
 					fpsent *target = cl.getclient(trg);
 					if(!target || gun <= -1 || gun >= NUMGUNS) break;
 					target->gunreload(gun, amt, lastmillis);
-					playsound(S_RELOAD, &target->o);
+					playsound(S_RELOAD, 0, 255, target->o, target);
 					break;
 				}
 
@@ -879,7 +879,7 @@ struct clientcom : iclientcom
 					target->health = amt;
 					target->lastregen = lastmillis;
 					particle_splash(3, max((MAXHEALTH-target->health)/10, 1), 10000, target->o);
-					playsound(S_REGEN, &target->o, ((MAXHEALTH-target->health)*255)/MAXHEALTH);
+					playsound(S_REGEN, 0, ((MAXHEALTH-target->health)*255)/MAXHEALTH, target->o, target);
 					break;
 				}
 
@@ -906,7 +906,7 @@ struct clientcom : iclientcom
 					fpsent *target = cl.getclient(trg);
 					if(!target || gun <= -1 || gun >= NUMGUNS) break;
 					target->setgun(gun, lastmillis);
-					playsound(S_SWITCH, &target->o);
+					playsound(S_SWITCH, 0, 255, target->o, target);
 					break;
 				}
 
@@ -937,7 +937,7 @@ struct clientcom : iclientcom
 					int i = getint(p);
 					if(!cl.et.ents.inrange(i)) break;
 					cl.et.setspawn(i, true);
-					playsound(S_ITEMSPAWN, &cl.et.ents[i]->o);
+					playsound(S_ITEMSPAWN, 0, 255, cl.et.ents[i]->o);
 					const char *name = cl.et.itemname(i);
 					if(name) particle_text(cl.et.ents[i]->o, name, 9);
 					break;

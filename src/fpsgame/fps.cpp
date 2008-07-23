@@ -318,7 +318,7 @@ struct GAMECLIENT : igameclient
 			case MN_INPUT: s = S_MENUPRESS; break;
 			default: break;
 		}
-		if(s >= 0) playsound(s);
+		if(s >= 0) playsound(s, 0, 255, camera1->o, camera1);
 	}
 
 	fpsent *pointatplayer()
@@ -432,7 +432,7 @@ struct GAMECLIENT : igameclient
 				s_sprintfd(ds)("@%d", damage);
 				particle_text(d->abovehead(), ds, 8);
 			}
-			playsound(S_PAIN1+rnd(5), &d->o);
+			playsound(S_PAIN1+rnd(5), 0, 255, d->o, d);
 		}
 
 		if(d != actor)
@@ -445,7 +445,7 @@ struct GAMECLIENT : igameclient
 			else if(damage >= 50) snd = 3;
 			else if(damage >= 25) snd = 2;
 			else if(damage >= 10) snd = 1;
-			playsound(S_DAMAGE1+snd, &actor->o);
+			playsound(S_DAMAGE1+snd, 0, 255, actor->o, actor);
 			if(actor == player1) lasthit = lastmillis;
 		}
 		bot.damaged(d, actor, gun, flags, damage, millis, dir);
@@ -504,7 +504,7 @@ struct GAMECLIENT : igameclient
 
 		vec pos = headpos(d);
 		loopi(rnd((damage+2)/2)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
-		playsound(S_DIE1+rnd(2), &d->o);
+		playsound(S_DIE1+rnd(2), 0, 255, d->o, d);
 
 		bot.killed(d, actor, gun, flags, damage);
 	}
@@ -564,7 +564,7 @@ struct GAMECLIENT : igameclient
 		if(d->name[0]) conoutf("player %s disconnected", colorname(d));
 		pj.remove(d);
         removetrackedparticles(d);
-        removesoundowner(&d->o);
+		removetrackedsounds(d);
 		DELETEP(players[cn]);
 		cleardynentcache();
 	}
@@ -621,9 +621,8 @@ struct GAMECLIENT : igameclient
 	{
 		if(n < 0 || n >= S_MAX) return;
 		fpsent *c = d ? d : player1;
-		if(c == player1 || c->bot)
-			cc.addmsg(SV_SOUND, "i2", c->clientnum, n);
-		playsound(n, &c->o);
+		if(c == player1 || c->bot) cc.addmsg(SV_SOUND, "i2", c->clientnum, n);
+		playsound(n, 0, 255, c->o, c);
 	}
 
 	int numdynents() { return 1+players.length(); }
@@ -1570,7 +1569,7 @@ struct GAMECLIENT : igameclient
 				case MAT_WATER:
 				{
 					if(!issound(liquidchan))
-						liquidchan = playsound(S_UNDERWATER, &camera1->o, 255, 0, 0, SND_LOOP|SND_NOATTEN|SND_NODELAY);
+						liquidchan = playsound(S_UNDERWATER, SND_LOOP|SND_NOATTEN|SND_NODELAY, 255, camera1->o, camera1);
 					break;
 				}
 				default:

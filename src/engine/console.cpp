@@ -155,8 +155,8 @@ void blendbox(int x1, int y1, int x2, int y2, bool border)
 	defaultshader->set();
 }
 
-VARP(consize, 0, 5, 100);
-VARP(fullconsize, 0, 33, 100);
+VARP(consize, 0, 33, 100);
+VARP(fullconsize, 0, 75, 100);
 
 int renderconsole(int w, int h)					// render buffer taking into account time & scrolling
 {
@@ -172,18 +172,12 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 			refs.add(conlines[CN_CENTER][i].cref);
 			if(refs.length() >= centerlines) break;
 		}
-		loopvj(refs)
-		{
-			draw_textx("%s", (w*3)/2, (((h*3)/4)*3)+(FONTH*j)-FONTH*2, 255, 255, 255, int(255*centerblend), false, AL_CENTER, -1, -1, refs[j]);
-		}
+		int cy = (((h*3)/4)*3)-FONTH*2;
+		loopv(refs)
+			cy = draw_textx("%s", (w*3)/2, cy, 255, 255, 255, int(255*centerblend), false, AL_CENTER, -1, -1, refs[i]);
 	}
 
-	int numl = consize, len = 0;
-	if(fullconsole)
-	{
-        numl = min(h*3*fullconsize/100, h*3-FONTH/3*2)/FONTH;
-		blendbox(2, 2, w*3-w*3/4-4, numl*FONTH+FONTH/3*2, true);
-	}
+	int numl = min(h*3*(fullconsole ? fullconsize : consize)/100, h*3-FONTH/3*2)/FONTH;
 
 	refs.setsizenodelete(0);
 
@@ -201,11 +195,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 
 	int cy = FONTH/3;
 	loopvrev(refs)
-	{
 		cy = draw_textx("%s", FONTH/3, cy, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, w*3-w*3/4-FONTH, refs[i]);
-		if(cy >= FONTH*numl) break;
-	}
-	if (refs.length() > len) len = refs.length();
 
 	popfont();
 

@@ -130,7 +130,7 @@ struct entities : icliententities
 				fpsentity &e = (fpsentity &)*ents[i];
 				if(e.type == ANNOUNCER)
 				{
-					playsound(idx, &e.o, e.attr3, e.attr1, e.attr2, SND_COPY);
+					playsound(idx, 0, e.attr3, e.o, NULL, e.attr1, e.attr2);
 					announcer = true;
 				}
 			}
@@ -155,7 +155,7 @@ struct entities : icliententities
 						case 12:	v = vec(getworldsize(), 0, 0); break;
 						default:	v = vec(0.5f*getworldsize(), 0.5f*getworldsize(), 0.5f*getworldsize()); break;
 					}
-					playsound(idx, &v, 255, getworldsize()*3/4, 0, SND_COPY);
+					playsound(idx, 0, 255, v, NULL, getworldsize()*3/4, 0);
 				}
 			}
 			lastannouncement = lastmillis;
@@ -173,7 +173,7 @@ struct entities : icliententities
 			const char *item = itemname(n);
 			if(item && (d != cl.player1 || cl.isthirdperson()))
 				particle_text(d->abovehead(), item, 15);
-			playsound(S_ITEMPICKUP, &d->o);
+			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
 			d->useitem(m, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
 			ents[n]->spawned = false;
 		}
@@ -205,7 +205,7 @@ struct entities : icliententities
 						{
 							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && mapsounds.inrange(f.attr1) && !issound(f.schan))
 							{
-								playsound(f.attr1, both ? &f.o : &e.o, f.attr4, f.attr2, f.attr3, SND_MAP|SND_COPY);
+								playsound(f.attr1, SND_MAP, f.attr4, both ? f.o : e.o, NULL, f.attr2, f.attr3);
 								f.lastemit = lastmillis;
 								if(both) e.lastemit = lastmillis;
 							}
@@ -1123,7 +1123,7 @@ struct entities : icliententities
 			fpsentity &e = (fpsentity &)*ents[i];
 			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1) && !issound(e.schan))
 			{
-				e.schan = playsound(e.attr1, &e.o, e.attr4, e.attr2, e.attr3, SND_MAP|SND_LOOP);
+				e.schan = playsound(e.attr1, SND_MAP|SND_LOOP, e.attr4, e.o, NULL, e.attr2, e.attr3);
 				e.lastemit = lastmillis; // prevent clipping when moving around
 			}
 		}

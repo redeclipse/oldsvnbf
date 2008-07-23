@@ -130,7 +130,7 @@ struct weaponstate
 		float dist = middist(camera1, dir, o);
 
 		if(guntype[gun].esound >= 0)
-			playsound(guntype[gun].esound, &o, 255, 0, 0, SND_COPY);
+			playsound(guntype[gun].esound, 0, 255, o);
 
 		if(gun != GUN_FLAMER)
 		{
@@ -191,11 +191,11 @@ struct weaponstate
 			if(gun == GUN_FLAMER)
 			{
 				if(!issound(d->wschan))
-					d->wschan = playsound(guntype[gun].sound, &d->o, 255, 0, 0);
+					d->wschan = playsound(guntype[gun].sound, 0, 255, d->o, d);
 			}
 			else
 			{
-				playsound(guntype[gun].sound, &d->o, 255, 0, 0);
+				playsound(guntype[gun].sound, 0, 255, d->o, d);
 				d->wschan = -1;
 			}
 		}

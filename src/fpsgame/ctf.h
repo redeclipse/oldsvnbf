@@ -119,25 +119,25 @@ struct ctfservmode : ctfstate, servmode
         notgotflags = !empty;
     }
 
-    void dropflag(clientinfo *ci)
+    void dropflag(clientinfo *ci, const vec &o)
     {
         if(notgotflags) return;
         loopv(flags) if(flags[i].owner == ci->clientnum)
         {
-            ivec o(vec(ci->state.o).mul(DMF));
-            sendf(-1, 1, "ri6", SV_DROPFLAG, ci->clientnum, i, o.x, o.y, o.z);
-            ctfstate::dropflag(i, o.tovec().div(DMF), lastmillis);
+			ivec p(vec(ci->state.o.dist(o) > enttype[FLAG].radius+12.f ? ci->state.o : o).mul(DMF));
+            sendf(-1, 1, "ri6", SV_DROPFLAG, ci->clientnum, i, p.x, p.y, p.z);
+            ctfstate::dropflag(i, p.tovec().div(DMF), lastmillis);
         }
     }
 
     void leavegame(clientinfo *ci, bool disconnecting = false)
     {
-        dropflag(ci);
+        dropflag(ci, ci->state.o);
     }
 
     void died(clientinfo *ci, clientinfo *actor)
     {
-        dropflag(ci);
+        dropflag(ci, ci->state.o);
     }
 
     bool canchangeteam(clientinfo *ci, int oldteam, int newteam)
@@ -151,7 +151,7 @@ struct ctfservmode : ctfstate, servmode
 
     void changeteam(clientinfo *ci, int oldteam, int newteam)
     {
-        dropflag(ci);
+        dropflag(ci, ci->state.o);
     }
 
     void moved(clientinfo *ci, const vec &oldpos, const vec &newpos)
@@ -257,7 +257,17 @@ struct ctfclient : ctfstate
 
     ctfclient(GAMECLIENT &cl) : cl(cl)
     {
+    	CCOMMAND(dropflags, "", (ctfclient *self), self->dropflags());
     }
+
+	void dropflags()
+	{
+		vec dir;
+		vecfromyawpitch(cl.player1->aimyaw, cl.player1->aimpitch, -cl.player1->move, -cl.player1->strafe, dir);
+		dir.mul((cl.player1->radius*2.f)+enttype[FLAG].radius+1.f);
+		vec o(vec(cl.player1->o).add(dir).mul(DMF));
+		cl.cc.addmsg(SV_DROPFLAG, "ri4", cl.player1->clientnum, o.x, o.y, o.z);
+	}
 
     void preload()
     {
@@ -474,8 +484,8 @@ struct ctfclient : ctfstate
         if(!flags.inrange(i)) return;
 		flag &f = flags[i];
 		int colour = teamtype[d->team].colour;
-		regularshape(4, enttype[FLAG].radius, colour, 6, 50, 250, vec(f.spawnloc).sub(vec(0, 0, 4.f)), 4.8f);
-		adddynlight(f.spawnloc, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
+		regularshape(4, enttype[FLAG].radius, colour, 6, 50, 250, vec(f.pos()).sub(vec(0, 0, 4.f)), 4.8f);
+		adddynlight(f.pos(), enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
 		f.interptime = lastmillis;
 		s_sprintfd(s)("%s %s the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		ctfstate::takeflag(i, d);
