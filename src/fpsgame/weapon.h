@@ -166,7 +166,7 @@ struct weaponstate
 		}
 	}
 
-	vec gunorigin(int gun, const vec &from, const vec &to, fpsent *d)
+	vec gunorigin(const vec &from, const vec &to, fpsent *d)
 	{
 		bool third = d != cl.player1 || cl.isthirdperson();
 		float hoff = third ? 0.865f : 0.895f, roff = third ? 0.355f : 0.36f;
@@ -378,7 +378,7 @@ struct weaponstate
 		d->setgunstate(d->gunselect, GUNSTATE_SHOOT, guntype[d->gunselect].adelay, lastmillis);
 		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 
-		vec to = targ, from = gunorigin(d->gunselect, d->o, to, d), unitv;
+		vec to = targ, from = gunorigin(d->o, to, d), unitv;
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		vec kickback(unitv);
