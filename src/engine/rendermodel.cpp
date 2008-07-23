@@ -201,7 +201,7 @@ COMMAND(mdlbb, "fff");
 void mdlextendbb(float *x, float *y, float *z)
 {
     checkmdl;
-    loadingmdl->bbextend = vec(*x, *y, *z);
+    loadingmodel->bbextend = vec(*x, *y, *z);
 }
 
 COMMAND(mdlextendbb, "fff");
@@ -530,7 +530,7 @@ void renderbatchedmodel(model *m, batchedmodel &b)
     if((!shadowmap || renderpath==R_FIXEDFUNCTION) && (b.cull&(MDL_SHADOW|MDL_DYNSHADOW)) && dynshadow && hasstencil && !reflecting && refracting<=0)
 	{
 		vec center;
-        float radius = m->boundsphere(0/*frame*/, center, a); // FIXME
+        float radius = m->boundsphere(0/*frame*/, center); // FIXME
 		center.add(b.pos);
 		rendershadow(b.dir, m, b.anim, b.pos, center, radius, b.yaw, b.pitch, b.roll, b.speed, b.basetime, b.d, b.cull, a);
         if((b.cull&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
@@ -703,7 +703,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
          doOQ = cull&MDL_CULL_QUERY && hasOQ && oqfrags && oqdynent;
     if(cull&(MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED|MDL_CULL_QUERY|MDL_SHADOW|MDL_DYNSHADOW))
 	{
-        radius = m->boundsphere(0/*frame*/, center, a); // FIXME
+        radius = m->boundsphere(0/*frame*/, center); // FIXME
         center.rotate_around_z((-180-yaw)*RAD);
 		center.add(o);
         if(cull&MDL_CULL_DIST && center.dist(camera1->o)/radius>maxmodelradiusdistance) return;
