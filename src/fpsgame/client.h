@@ -861,7 +861,7 @@ struct clientcom : iclientcom
 				{
 					int trg = getint(p), gun = getint(p), amt = getint(p);
 					fpsent *target = cl.getclient(trg);
-					if(!target || gun <= -1 || gun >= NUMGUNS) break;
+					if(!target || target == player1 || target->bot || gun <= -1 || gun >= NUMGUNS) break;
 					target->gunreload(gun, amt, lastmillis);
 					playsound(S_RELOAD, &target->o);
 					break;
@@ -900,7 +900,7 @@ struct clientcom : iclientcom
 				{
 					int trg = getint(p), gun = getint(p);
 					fpsent *target = cl.getclient(trg);
-					if(!target || gun <= -1 || gun >= NUMGUNS) break;
+					if(!target || target == player1 || target->bot || gun <= -1 || gun >= NUMGUNS) break;
 					target->setgun(gun, lastmillis);
 					playsound(S_SWITCH, &target->o);
 					break;
@@ -910,7 +910,7 @@ struct clientcom : iclientcom
 				{
 					int lcn = getint(p);
 					fpsent *f = cl.getclient(lcn);
-					if(!f) break;
+					if(!f || f == player1 || f->bot) break;
 					f->lasttaunt = lastmillis;
 					break;
 				}

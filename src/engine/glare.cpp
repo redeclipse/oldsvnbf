@@ -18,7 +18,7 @@ void cleanupglare()
 }
 
 VARFP(glaresize, 6, 8, 10, cleanupglare());
-VARP(glare, 0, 1, 1);
+VARP(glare, 0, 0, 1);
 VARP(blurglare, 0, 4, 7);
 VARP(blurglaresigma, 1, 50, 200);
 
