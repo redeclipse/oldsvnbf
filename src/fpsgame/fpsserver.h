@@ -61,7 +61,7 @@ struct GAMESERVER : igameserver
 
 	struct suicideevent
 	{
-		int type;
+		int type, flags;
 	};
 
 	struct useevent
@@ -1170,11 +1170,12 @@ struct GAMESERVER : igameserver
 
 				case SV_SUICIDE:
 				{
-					int lcn = getint(p);
+					int lcn = getint(p), flags = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					gameevent &suicide = cp->addevent();
 					suicide.type = GE_SUICIDE;
+					suicide.suicide.flags = flags;
 					break;
 				}
 
@@ -1826,7 +1827,7 @@ struct GAMESERVER : igameserver
 			loopvrev(clients) if(clients[i]->state.ownernum == ci->clientnum)
 			{
 				clientinfo *cp = clients[i];
-				cp->state.ownernum = lo;
+				cp->state.ownernum = clients[lo]->clientnum;
 				if(clients.inrange(cp->state.ownernum))
 				{
 					sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
@@ -2191,7 +2192,7 @@ struct GAMESERVER : igameserver
 		}
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
-		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, 0, ci->state.health);
+		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, e.flags, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(mut->died(ci, NULL));

@@ -163,12 +163,15 @@ struct guntypes
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
 
-#define HIT_LEGS		0x01
-#define HIT_TORSO		0x02
-#define HIT_HEAD		0x04
+#define HIT_LEGS		0x001
+#define HIT_TORSO		0x002
+#define HIT_HEAD		0x004
 
-#define HIT_BURN		0x10
-#define HIT_EXPLODE		0x10
+#define HIT_BURN		0x010
+#define HIT_EXPLODE		0x020
+
+#define HIT_MELT		0x100
+#define HIT_FALL		0x200
 
 enum
 {
