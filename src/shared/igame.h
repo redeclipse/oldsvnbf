@@ -72,7 +72,6 @@ struct igameclient
 
 	virtual bool gethudcolour(vec &colour) { return false; }
 
-	virtual float curheight(physent *d) = 0;
 	virtual vec headpos(physent *d, float off) = 0;
 	virtual vec feetpos(physent *d, float off) = 0;
 	virtual bool mousemove(int dx, int dy, int x, int y, int w, int h) = 0;

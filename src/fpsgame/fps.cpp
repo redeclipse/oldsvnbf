@@ -344,6 +344,23 @@ struct GAMECLIENT : igameclient
 		pj.reset();
 	}
 
+	void otherplayers()
+	{
+		loopv(players) if(players[i])
+		{
+            fpsent *d = players[i];
+			heightoffset(d);
+            const int lagtime = lastmillis-d->lastupdate;
+            if(d->bot || !lagtime || intermission) continue;
+            else if(lagtime>1000 && d->state==CS_ALIVE)
+			{
+                d->state = CS_LAGGED;
+				continue;
+			}
+			ph.smoothplayer(d, 1, false);
+		}
+	}
+
 	void updateworld()		// main game update loop
 	{
 		if(!curtime) return;
@@ -363,7 +380,9 @@ struct GAMECLIENT : igameclient
 			ws.update();
 			bot.update();
 
+			otherplayers();
 			if(!allowmove(player1)) player1->stopmoving();
+			heightoffset(player1);
 
 			#define adjustscaled(t,n,m) \
 				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); if(n <= 0) n = (t)0; }
@@ -502,8 +521,12 @@ struct GAMECLIENT : igameclient
             d->move = d->strafe = 0;
 		}
 
-		vec pos = headpos(d);
+		vec pos = headpos(d);//, dir, to(pos);
 		loopi(rnd((damage+2)/2)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
+		//vecfromyawpitch(d->aimyaw, d->aimpitch, 1, 0, dir);
+		//dir.mul(d->radius*2.f);
+		//pos.add(vec(dir).mul(32.f));
+		//pj.create(pos, to, d == player1 || d->bot, d, PRJ_ENT, 10000, spd, WEAPON, gun);
 		playsound(S_DIE1+rnd(2), 0, 255, d->o, d);
 
 		bot.killed(d, actor, gun, flags, damage);
@@ -1257,8 +1280,9 @@ struct GAMECLIENT : igameclient
 		return false;
 	}
 
-	float curheight(physent *d)
+	void heightoffset(physent *d)
 	{
+		d->o.z -= d->height;
 		if(ph.iscrouching(d))
 		{
 			float crouchoff = 1.f-CROUCHHEIGHT;
@@ -1268,14 +1292,15 @@ struct GAMECLIENT : igameclient
 				if(!d->crouching) amt = 1.f-amt;
 				crouchoff *= amt;
 			}
-			return d->height-(d->height*crouchoff);
+			d->height = PLAYERHEIGHT-(PLAYERHEIGHT*crouchoff);
 		}
-		return d->height;
+		else d->height = PLAYERHEIGHT;
+		d->o.z += d->height;
 	}
 
 	vec headpos(physent *d, float off = 0.f)
 	{
-		return vec(d->o).sub(vec(0, 0, off+(d->height-curheight(d))));
+		return vec(d->o).sub(vec(0, 0, off));
 	}
 
 	vec feetpos(physent *d, float off = 0.f)

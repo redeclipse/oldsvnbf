@@ -387,8 +387,7 @@ struct physics
 		{
 			if(pl->jumping)
 			{
-				if(pl->crouching) pl->crouchtime = lastmillis;
-				pl->jumping = pl->crouching = false;
+				pl->jumping = false;
 				pl->vel.z = jumpvelocity(pl);
 			}
 		}
@@ -396,8 +395,7 @@ struct physics
 		{
 			if(pl->jumping)
 			{
-				if(pl->crouching) pl->crouchtime = lastmillis;
-				pl->jumping = pl->crouching = false;
+				pl->jumping = false;
 				pl->vel.z = jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x /= liquiddampen(pl); pl->vel.y /= liquiddampen(pl); }
 				playsound(S_JUMP, 0, 255, pl->o, pl);
@@ -707,22 +705,6 @@ struct physics
 		else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) move(d, res, local);
 	}
 
-	void otherplayers()
-	{
-		loopv(cl.players) if(cl.players[i] && !cl.players[i]->bot)
-		{
-            fpsent *d = cl.players[i];
-            const int lagtime = lastmillis-d->lastupdate;
-            if(!lagtime || cl.intermission) continue;
-            else if(lagtime>1000 && d->state==CS_ALIVE)
-			{
-                d->state = CS_LAGGED;
-				continue;
-			}
-			smoothplayer(d, 1, false);
-		}
-	}
-
 	bool droptofloor(vec &o, float radius, float height)
 	{
 		if(!insideworld(o)) return false;
@@ -750,7 +732,6 @@ struct physics
 		physicsrepeat = faketime/physframetime();
 		physicsfraction = faketime%physframetime();
 		cleardynentcache();
-		otherplayers();
 	}
 } ph;
 

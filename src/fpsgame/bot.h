@@ -790,7 +790,7 @@ struct botclient
 				if(!found) loopv(cl.pj.projs) if(cl.pj.projs[i] && cl.pj.projs[i]->state == CS_ALIVE)
 				{
 					if(cl.pj.projs[i]->projtype == PRJ_SHOT &&
-						f.o.dist(cl.pj.projs[i]->o) <= guntype[cl.pj.projs[i]->gun].radius+d->radius)
+						f.o.dist(cl.pj.projs[i]->o) <= guntype[cl.pj.projs[i]->attr1].radius+d->radius)
 						{
 							d->bot->avoid.add(k);
 							found = true;

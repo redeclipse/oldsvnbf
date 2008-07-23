@@ -8,6 +8,7 @@ struct weaponstate
 	vec sg[SGRAYS];
 
 	IVARP(autoreload, 0, 1, 1);// auto reload when empty
+	IVARP(switchgl, 0, 0, 1);
 
 	weaponstate(GAMECLIENT &_cl) : cl(_cl)
 	{
@@ -37,6 +38,8 @@ struct weaponstate
 
 			while (s >= NUMGUNS) s -= NUMGUNS;
 			while (s <= -1) s += NUMGUNS;
+			if(a < 0 && !switchgl() && s == GUN_GL)
+				s += b;
 
 			if(!d->canswitch(s, lastmillis))
 			{
@@ -99,7 +102,7 @@ struct weaponstate
 		v.sub(from);
 		v.normalize();
 		shorten(from, pos, s);
-		float h = cl.curheight(d), a = d->aboveeye;
+		float h = d->height, a = d->aboveeye;
 		int hits = 0;
 		if(s.z < pos.z-h*0.75f && s.z >= pos.z-h) hits |= HIT_LEGS;
 		else if(s.z < pos.z-a*2.f && s.z >= pos.z-h*0.75f) hits |= HIT_TORSO;
@@ -178,7 +181,6 @@ struct weaponstate
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
 		right.mul(d->radius*roff);
 		offset.add(right);
-		if(d->crouching) offset.z -= d->height-cl.curheight(d);
 		return offset;
 	}
 
@@ -237,7 +239,7 @@ struct weaponstate
 					up.z += dist/8;
 				}
 				int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
-				cl.pj.create(from, up, local, d, PRJ_SHOT, guntype[gun].time, spd, gun);
+				cl.pj.create(from, up, local, d, PRJ_SHOT, guntype[gun].time, spd, WEAPON, gun);
 				break;
 			}
 

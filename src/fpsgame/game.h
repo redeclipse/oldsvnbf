@@ -13,6 +13,7 @@ enum
 	S_ITEMPICKUP, S_ITEMSPAWN, 	S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED, S_MENUPRESS, S_MENUBACK,
+	//S_V_PISTOL, S_V_SG, S_V_CG, S_V_GL, S_V_FLAMER, S_V_RIFLE,
 	S_V_FLAGSECURED, S_V_FLAGOVERTHROWN,
     S_V_FLAGPICKUP, S_V_FLAGDROP, S_V_FLAGRETURN, S_V_FLAGSCORE, S_V_FLAGRESET,
 	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_HEADSHOT,
@@ -80,11 +81,10 @@ enum { ETYPE_NONE = 0, ETYPE_WORLD, ETYPE_DYNAMIC };
 #ifndef STANDALONE
 struct fpsentity : extentity
 {
-	vec pos;
-	int owner, enttype, schan, lastemit;
+	int schan, lastemit;
 	bool mark;
 
-	fpsentity() : owner(-1), enttype(ETYPE_WORLD), schan(-1), lastemit(0), mark(false) {}
+	fpsentity() : schan(-1), lastemit(0), mark(false) {}
 	~fpsentity()
 	{
 		if (issound(schan)) removesound(schan);
@@ -127,6 +127,7 @@ enum
 #define SGRAYS			15
 #define SGSPREAD		4
 #define GUNSWITCHDELAY	800
+#define PLAYERHEIGHT	15.f
 
 enum
 {
@@ -151,15 +152,29 @@ enum
 
 struct guntypes
 {
-	int info, 		anim,			sound, 		esound, 	fsound,		rsound,		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,	radius;	const char *name,	*vwep;
+	int info, 		anim,			sound, 		esound, 	fsound,		rsound,		ssound,
+			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,
+				radius;	const char *name,		*vwep;
 } guntype[NUMGUNS] =
 {
-	{ GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			12,		12,		250,	1000,	25,		0,		0,		0,		-10,    10,		0,		0,		"pistol",			"weapons/pistol/vwep" },
-	{ GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			1,		8,		600,	1100,	10,		0,		0,		0,		-30,    30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
-	{ GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			40,		40,		90,	    1200,	15,		0,		0,		0,		-5,	     4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
-	{ GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		250,	150,	1000,	3000,	-15,    10,		8,		64,		"grenades",			"weapons/grenades/vwep" },
-	{ GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	-1,			50,		50,		100, 	2000,	25,		80,		0,		3000,	-1,		 1,		8,		20,		"flamer",			"weapons/flamer/vwep" },
-	{ GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		600,	1000,	100,	0,		0,		0,		-30,  	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
+	{ GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
+			12,		12,		250,	1000,	25,		0,		0,		0,		-10,    10,		0,
+				0,					"pistol",	"weapons/pistol/vwep" },
+	{ GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
+			1,		8,		600,	1100,	10,		0,		0,		0,		-30,    30, 	0,
+				0,					"shotgun",	"weapons/shotgun/vwep" },
+	{ GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
+			40,		40,		90,	    1200,	15,		0,		0,		0,		-5,	     4,		0,
+				0,					"chaingun",	"weapons/chaingun/vwep" },
+	{ GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
+			2,		4,		1500,	0,		250,	150,	1000,	3000,	-15,    10,		8,
+				64,					"grenades",	"weapons/grenades/vwep" },
+	{ GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	-1,			S_ITEMSPAWN,
+			50,		50,		100, 	2000,	25,		80,		0,		3000,	-1,		 1,		8,
+				20,					"flamer",	"weapons/flamer/vwep" },
+	{ GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
+			1,		5,		600,	1000,	100,	0,		0,		0,		-30,  	20,		0,
+				0,					"rifle",	"weapons/rifle/vwep" },
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
 
@@ -316,7 +331,7 @@ struct teamtypes
 	{ TEAM_GAMMA,	0x22FF22,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" }
 };
 
-enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS };
+enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
 
 #define PLATFORMBORDER	0.2f
 #define PLATFORMMARGIN	10.0f

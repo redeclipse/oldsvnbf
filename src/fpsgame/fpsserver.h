@@ -363,6 +363,9 @@ struct GAMESERVER : igameserver
 
 	void cleanup()
 	{
+		gamemode = defaultmode();
+		mutators = 0;
+		modecheck(&gamemode, &mutators);
 		s_strcpy(smapname, defaultmap());
 		resetitems();
 		bannedips.setsize(0);
