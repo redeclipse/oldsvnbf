@@ -659,7 +659,36 @@ struct botclient
 				if(d->bot->route.inrange(n) && d->bot->avoid.find(d->bot->route[n]) < 0)
 				{
 					b.goal = false;
-					d->bot->spot = vec(cl.et.ents[d->bot->route[n]]->o).add(vec(0, 0, d->height));
+					vec from = cl.et.ents[d->bot->route[n]]->o, to(vec(from).add(vec(0, 0, PLAYERHEIGHT))), unitv;
+					float dist = to.dist(from, unitv);
+					unitv.div(dist);
+					float barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_POLY);
+					if(barrier < dist)
+					{
+						to = unitv;
+						to.mul(barrier);
+						to.add(from);
+					}
+					d->bot->spot = to;
+					vec pos = cl.feetpos(d);
+					if(d->bot->spot.z-pos.z <= PLAYERHEIGHT && d->bot->spot.z-pos.z >= PLAYERHEIGHT*CROUCHHEIGHT)
+					{
+						if(!d->crouching)
+						{
+							d->crouching = true;
+							d->crouchtime = lastmillis;
+						}
+					}
+					else
+					{
+						d->crouching = false;
+						d->crouchtime = lastmillis;
+					}
+					if(d->bot->spot.z-PLAYERHEIGHT-pos.z >= BOTJUMPHEIGHT && !d->jumping && !d->timeinair && lastmillis-d->jumptime > 1000)
+					{
+						d->jumping = true;
+						d->jumptime = lastmillis;
+					}
 					return true;
 				}
 				if(!retry && makeroute(d, b, g)) return hunt(d, b, true);
@@ -716,7 +745,6 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			vec pos = cl.headpos(d);
 			int bestgun = d->bestgun();
 			if(d->gunselect != bestgun && d->canswitch(bestgun, lastmillis))
 			{
@@ -740,12 +768,6 @@ struct botclient
 			{
 				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 16);
 				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 4);
-
-				if(d->bot->spot.z-pos.z > BOTJUMPHEIGHT && !d->timeinair && lastmillis-d->jumptime > 1000)
-				{
-					d->jumping = true;
-					d->jumptime = lastmillis;
-				}
 			}
 			d->move = 1; // keep on movin'
 			d->strafe = 0;
@@ -758,6 +780,7 @@ struct botclient
 		vec pos = cl.headpos(d);
 		findorientation(pos, d->yaw, d->pitch, d->bot->target);
 
+		if(!cl.allowmove(d)) d->stopmoving();
 		if(d->state == CS_ALIVE)
 		{
 			cl.et.checkitems(d);
@@ -790,7 +813,7 @@ struct botclient
 				if(!found) loopv(cl.pj.projs) if(cl.pj.projs[i] && cl.pj.projs[i]->state == CS_ALIVE)
 				{
 					if(cl.pj.projs[i]->projtype == PRJ_SHOT &&
-						f.o.dist(cl.pj.projs[i]->o) <= guntype[cl.pj.projs[i]->attr1].radius+d->radius)
+						f.o.dist(cl.pj.projs[i]->o) <= guntype[cl.pj.projs[i]->attr1	].radius+d->radius)
 						{
 							d->bot->avoid.add(k);
 							found = true;

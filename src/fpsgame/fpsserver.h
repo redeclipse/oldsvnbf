@@ -238,8 +238,8 @@ struct GAMESERVER : igameserver
 
 	IVARG(botbalance, 0, 6, MAXCLIENTS-1);
 	IVARG(botratio, 0, 2, 100);
-	IVARG(botminskill, 0, 33, 100);
-	IVARG(botmaxskill, 0, 99, 100);
+	IVARG(botminskill, 0, 25, 100);
+	IVARG(botmaxskill, 0, 75, 100);
 
 	bool notgotitems, notgotflags;		// true when map has changed and waiting for clients to send item
 	int gamemode, mutators;
@@ -1868,6 +1868,14 @@ struct GAMESERVER : igameserver
 		}
 		else if(nonspectators())
 		{
+			loopvrev(clients) if(clients[i]->state.ownernum >= 0)
+			{
+				int m = botmaxskill() > botminskill() ? botmaxskill() : botminskill(),
+					n = botminskill() < botmaxskill() ? botminskill() : botmaxskill();
+				if(clients[i]->state.skill > m || clients[i]->state.skill < n)
+					removebot(clients[i]);
+			}
+
 			if(m_fight(gamemode))
 			{
 				if(botbalance())
