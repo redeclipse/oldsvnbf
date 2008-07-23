@@ -198,6 +198,14 @@ void mdlbb(float *rad, float *h, float *height)
 
 COMMAND(mdlbb, "fff");
 
+void mdlextendbb(float *x, float *y, float *z)
+{
+    checkmdl;
+    loadingmdl->bbextend = vec(*x, *y, *z);
+}
+
+COMMAND(mdlextendbb, "fff");
+
 void mdlname()
 {
 	checkmdl;
