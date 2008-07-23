@@ -100,6 +100,17 @@ struct entities : icliententities
 		return NULL;
 	}
 
+	int itemsound(int i)
+	{
+		if(ents[i]->type == WEAPON)
+		{
+			int gun = ents[i]->attr1;
+			if(gun <= -1 || gun >= NUMGUNS) gun = 0;
+			return guntype[gun].ssound;
+		}
+		return NULL;
+	}
+
 	const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
 	{
 		static string emdl;

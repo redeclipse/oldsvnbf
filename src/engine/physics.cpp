@@ -812,7 +812,7 @@ bool intersect(physent *d, vec &from, vec &to)	// if lineseg hits entity boundin
 		&& p->x >= d->o.x-d->radius
 		&& p->y <= d->o.y+d->radius
 		&& p->y >= d->o.y-d->radius
-		&& p->z <= d->o.z+d->aboveeye-(d->height-cl->curheight(d))
+		&& p->z <= d->o.z+d->aboveeye
 		&& p->z >= d->o.z-d->height;
 }
 
