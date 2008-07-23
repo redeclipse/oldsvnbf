@@ -4,7 +4,7 @@
 VARFP(waterreflect, 0, 1, 1, cleanreflections());
 VARFP(waterrefract, 0, 1, 1, cleanreflections());
 VARFP(waterenvmap, 0, 1, 1, cleanreflections());
-VARFP(waterfallrefract, 0, 1, 1, cleanreflections());
+VARFP(waterfallrefract, 0, 0, 1, cleanreflections());
 VARP(refractfog, 0, 1, 1);
 
 /* vertex water */
