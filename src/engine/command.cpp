@@ -379,7 +379,7 @@ char *lookup(char *n)							// find value of ident referenced with $ in exp
 	return n;
 }
 
-char *parseword(const char *&p)                       // parse single argument, including expressions
+char *parseword(const char *&p, int arg, int &infix)                       // parse single argument, including expressions
 {
 	for(;;)
 	{
@@ -407,6 +407,10 @@ char *parseword(const char *&p)                       // parse single argument, 
 		p += 2;
 	}
 	if(p-word==0) return NULL;
+    if(arg==1 && p-word==1) switch(*word)
+    {
+        case '=': infix = *word; break;
+    }
 	char *s = newstring(word, p-word);
     if(*s=='$') return lookup(s);               // substitute variables
 	return s;
@@ -440,12 +444,12 @@ char *executeret(const char *p)               // all evaluation happens here, re
     #define setretval(v) { char *rv = v; if(rv) retval = rv; }
 	for(bool cont = true; cont;)				// for each ; seperated statement
 	{
-		int numargs = MAXWORDS;
+		int numargs = MAXWORDS, infix = 0;
 		loopi(MAXWORDS)						 // collect all argument values
 		{
             w[i] = (char *)"";
 			if(i>numargs) continue;
-            char *s = parseword(p);             // parse and evaluate exps
+            char *s = parseword(p, i, infix);   // parse and evaluate exps
 			if(s) w[i] = s;
 			else numargs = i;
 		}
@@ -457,11 +461,16 @@ char *executeret(const char *p)               // all evaluation happens here, re
 
 		DELETEA(retval);
 
-		if(w[1][0]=='=' && !w[1][1])
-		{
-			aliasa(c, numargs>2 ? w[2] : newstring(""));
-			w[2] = NULL;
-		}
+        if(infix)
+        {
+            switch(infix)
+            {
+                case '=':
+                    aliasa(c, numargs>2 ? w[2] : newstring(""));
+                    w[2] = NULL;
+                    break;
+            }
+        }
 		else
 		{
 			ident *id = idents->access(c);
