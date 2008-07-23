@@ -1631,7 +1631,7 @@ struct GAMESERVER : igameserver
 						{
 							if(botbalance() < MAXCLIENTS-1)
 							{
-								*botbalance.storage.i++;
+								++*botbalance.storage.i;
 								botbalance.changed();
 								srvoutf(-1, "%s increased botbalance to %d", colorname(ci), botbalance());
 							}
@@ -1653,7 +1653,7 @@ struct GAMESERVER : igameserver
 						{
 							if(botbalance() > 0)
 							{
-								*botbalance.storage.i--;
+								--*botbalance.storage.i;
 								botbalance.changed();
 								srvoutf(-1, "%s decreased botbalance to %d", colorname(ci), botbalance());
 							}
