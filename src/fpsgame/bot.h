@@ -659,20 +659,15 @@ struct botclient
 				if(d->bot->route.inrange(n) && d->bot->avoid.find(d->bot->route[n]) < 0)
 				{
 					b.goal = false;
-					vec from = cl.et.ents[d->bot->route[n]]->o, to(vec(from).add(vec(0, 0, PLAYERHEIGHT))), unitv;
+					vec from = cl.et.ents[d->bot->route[n]]->o, to(vec(from).add(vec(0, 0, PLAYERHEIGHT+d->aboveeye))), unitv;
 					float dist = to.dist(from, unitv);
 					unitv.div(dist);
-					float barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_POLY);
-					if(barrier < dist)
+					float barrier = raycube(from, unitv, dist, RAY_CLIPMAT);
+					if(barrier < dist && dist > PLAYERHEIGHT*CROUCHHEIGHT)
 					{
 						to = unitv;
 						to.mul(barrier);
 						to.add(from);
-					}
-					d->bot->spot = to;
-					vec pos = cl.feetpos(d);
-					if(d->bot->spot.z-pos.z <= PLAYERHEIGHT && d->bot->spot.z-pos.z >= PLAYERHEIGHT*CROUCHHEIGHT)
-					{
 						if(!d->crouching)
 						{
 							d->crouching = true;
@@ -684,7 +679,9 @@ struct botclient
 						d->crouching = false;
 						d->crouchtime = lastmillis;
 					}
-					if(d->bot->spot.z-PLAYERHEIGHT-pos.z >= BOTJUMPHEIGHT && !d->jumping && !d->timeinair && lastmillis-d->jumptime > 1000)
+					d->bot->spot = to;
+					vec pos = cl.feetpos(d);
+					if(d->bot->spot.z-PLAYERHEIGHT-pos.z > BOTJUMPHEIGHT && !d->jumping && !d->timeinair && lastmillis-d->jumptime > 1000)
 					{
 						d->jumping = true;
 						d->jumptime = lastmillis;

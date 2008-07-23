@@ -238,8 +238,8 @@ struct GAMESERVER : igameserver
 
 	IVARG(botbalance, 0, 6, MAXCLIENTS-1);
 	IVARG(botratio, 0, 2, 100);
-	IVARG(botminskill, 0, 25, 100);
-	IVARG(botmaxskill, 0, 75, 100);
+	IVARG(botminskill, 0, 30, 100);
+	IVARG(botmaxskill, 0, 80, 100);
 
 	bool notgotitems, notgotflags;		// true when map has changed and waiting for clients to send item
 	int gamemode, mutators;
