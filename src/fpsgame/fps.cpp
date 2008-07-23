@@ -564,6 +564,7 @@ struct GAMECLIENT : igameclient
 		if(d->name[0]) conoutf("player %s disconnected", colorname(d));
 		pj.remove(d);
         removetrackedparticles(d);
+        removesoundowner(&d->o);
 		DELETEP(players[cn]);
 		cleardynentcache();
 	}

@@ -232,6 +232,16 @@ void updatesounds()
 	if(music && !Mix_PlayingMusic()) musicdone(true);
 }
 
+void removesoundowner(vec *pos)
+{
+    loopv(sounds) if(sounds[i].inuse && sounds[i].pos == pos)
+    {
+        sounds[i].flags |= SND_COPY;
+        sounds[i].posval = *sounds[i].pos;
+        sounds[i].pos = &sounds[i].posval;
+    }
+}
+
 int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 {
 	if(nosound || !soundvol) return -1;

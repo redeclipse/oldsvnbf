@@ -29,6 +29,7 @@ struct projectiles
 		{
 			if (issound(schan)) removesound(schan);
 			schan = -1;
+            removesoundowner(&o);
 		}
 
 		void init(vec &_f, vec &_t, bool _b, fpsent *_o, int _n, int _i, int _s, int _g, int _l)
@@ -285,10 +286,18 @@ struct projectiles
 
 	void remove(fpsent *owner)
 	{
-		loopv(projs) if(projs[i]->owner==owner) { delete projs[i]; projs.remove(i--); }
+		loopv(projs) if(projs[i]->owner==owner) 
+        { 
+            delete projs[i]; 
+            projs.remove(i--); 
+        }
 	}
 
-	void reset() { projs.deletecontentsp(); projs.setsize(0); }
+	void reset() 
+    { 
+        projs.deletecontentsp(); 
+        projs.setsize(0); 
+    }
 
 	void spawn(vec &p, vec &vel, fpsent *d, int type)
 	{

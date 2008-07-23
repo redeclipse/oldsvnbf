@@ -59,6 +59,7 @@ extern int addsound(const char *name, int vol, int material, vector<soundslot> &
 extern void removesound(int c);
 extern void clearsound();
 extern int playsound(int n, vec *pos = NULL, int vol = 255, int maxrad = 1024, int minrad = 2, int flags = 0);
+extern void removesoundowner(vec *pos);
 
 extern void initmumble();
 extern void closemumble();
