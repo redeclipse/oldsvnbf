@@ -1828,12 +1828,11 @@ struct GAMECLIENT : igameclient
 		startmodelbatches();
 
 		fpsent *d;
-        loopi(numdynents()) if((d = (fpsent *)iterdynents(i)) && (!rendernormally || d != player1 || (isthirdperson() && !inzoomswitch())))
+        loopi(numdynents()) if((d = (fpsent *)iterdynents(i)) && d != player1)
+        {
 			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
-				renderplayer(d, true, (d->state == CS_LAGGED || (d->state == CS_ALIVE && lastmillis-d->lastspawn <= REGENWAIT) || (d == player1 && thirdpersontranslucent())));
-
-		if(player1->state == CS_ALIVE && !isthirdperson() && !inzoomswitch())
-			renderplayer(player1, false, (player1->state == CS_LAGGED || (player1->state == CS_ALIVE && lastmillis-player1->lastspawn <= REGENWAIT) || firstpersontranslucent()));
+				renderplayer(d, true, d->state == CS_LAGGED || (d->state == CS_ALIVE && lastmillis-d->lastspawn <= REGENWAIT));
+        }
 
 		et.render();
 		pj.render();
@@ -1851,6 +1850,21 @@ struct GAMECLIENT : igameclient
 			renderprimitive(false);
 		}
 	}
+
+    void renderavatar()
+    {
+        if(inzoomswitch()) return;
+
+        if(isthirdperson())
+        {
+            if(player1->state!=CS_SPECTATOR && (player1->state!=CS_DEAD || !player1->obliterated))
+                renderplayer(player1, true, (player1->state == CS_ALIVE && lastmillis-player1->lastspawn <= REGENWAIT) || thirdpersontranslucent());
+        }
+        else if(player1->state == CS_ALIVE)
+        {
+            renderplayer(player1, false, (lastmillis-player1->lastspawn <= REGENWAIT) || firstpersontranslucent());
+        }
+    }
 };
 REGISTERGAME(GAMENAME, GAMEID, new GAMECLIENT(), new GAMESERVER());
 #else

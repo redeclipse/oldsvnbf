@@ -164,6 +164,7 @@ static struct shadowmaptexture : rendertarget
         shadowmapcasters = 0;
         shadowmapping = true;
         rendergame();
+        renderavatar();
         shadowmapping = false;
 
         if(shadowmapcasters && smdepthpeel)

@@ -92,6 +92,7 @@ struct igameclient
 	virtual int numanims() = 0;
 	virtual void findanims(const char *pattern, vector<int> &anims) = 0;
     virtual void render() = 0;
+    virtual void renderavatar() = 0;
 };
 
 struct igameserver
