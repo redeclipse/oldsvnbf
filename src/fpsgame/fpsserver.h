@@ -1624,8 +1624,14 @@ struct GAMESERVER : igameserver
 					int skill = getint(p);
 					if(haspriv(ci, PRIV_MASTER, true))
 					{
-						if(!m_fight(gamemode) && botbalance())
-							srvoutf(sender, "cannot create bots while botbalance is enabled");
+						if(m_lobby(gamemode))
+							srvoutf(sender, "you are currently in the lobby, please select a gamemode");
+						else if(!m_fight(gamemode) && botbalance())
+						{
+							int b = botbalance();
+							if(b < MAXCLIENTS-1) setvar("botbalance", b+1, true);
+							else srvoutf(sender, "botbalance is at its highest");
+						}
 						else if(!addbot(skill))
 							srvoutf(sender, "failed to create or assign bot");
 					}
@@ -1636,8 +1642,14 @@ struct GAMESERVER : igameserver
 				{
 					if(haspriv(ci, PRIV_MASTER, true))
 					{
-						if(!m_fight(gamemode) && botbalance())
-							srvoutf(sender, "cannot remove bots while botbalance is enabled");
+						if(m_lobby(gamemode))
+							srvoutf(sender, "you are currently in the lobby, please select a gamemode");
+						else if(!m_fight(gamemode) && botbalance())
+						{
+							int b = botbalance();
+							if(b > 0) setvar("botbalance", b-1, true);
+							else srvoutf(sender, "botbalance is at its lowest");
+						}
 						else if(!deletebot())
 							srvoutf(sender, "failed to remove any bots");
 					}
@@ -1820,12 +1832,21 @@ struct GAMESERVER : igameserver
 
 	void checkbots()
 	{
-		if(nonspectators() && botbalance() && m_fight(gamemode))
+		if(m_lobby(gamemode))
 		{
-			while(nonspectators() < botbalance() && addbot(-1)) ;
-			while(nonspectators() > botbalance() && deletebot()) ;
+			loopvrev(clients)
+				if(clients[i]->state.ownernum > 0)
+					removebot(clients[i]);
 		}
-		while(reassignbots()) ;
+		else
+		{
+			if(nonspectators() && botbalance() && m_fight(gamemode))
+			{
+				while(nonspectators() < botbalance() && addbot(-1)) ;
+				while(nonspectators() > botbalance() && deletebot()) ;
+			}
+			while(reassignbots()) ;
+		}
 	}
 
 	void parsecommand(clientinfo *ci, int nargs, char *cmd, char *arg)
@@ -2077,7 +2098,11 @@ struct GAMESERVER : igameserver
 	{
 		gamestate &ts = target->state;
 		if(!m_fight(gamemode) || gamemillis-ts.lastspawn <= REGENWAIT || (!teamdamage() && m_team(gamemode, mutators) && actor->team == target->team))
+		{
+			if(m_lobby(gamemode))
+				srvoutf(actor->clientnum, "you are currently in the lobby, please select a gamemode");
 			return;
+		}
 		if(flags&HIT_LEGS) damage = damage/4;
 		else if (flags&HIT_TORSO) damage = damage/2;
 		if(smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { return; }
