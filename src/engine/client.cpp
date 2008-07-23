@@ -46,7 +46,6 @@ void connectfail(bool reset = false)
 		if(localattempt > 1)
 		{
 			conoutf("unable to find any server on the local network");
-			if(!guiactive()) showgui("main");
 			localattempt = 0;
 		}
 		else

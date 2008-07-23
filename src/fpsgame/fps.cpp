@@ -66,21 +66,21 @@ struct GAMECLIENT : igameclient
 	IVARP(absmouse, 0, 0, 1);
 
 	IVARP(mousetype, 0, 0, 2);
-	IVARP(mousedeadzone, 0, 5, 100);
+	IVARP(mousedeadzone, 0, 10, 100);
 	IVARP(mousepanspeed, 1, 30, INT_MAX-1);
 
 	IVARP(zoommousetype, 0, 2, 2);
-	IVARP(zoomdeadzone, 0, 30, 100);
+	IVARP(zoomdeadzone, 0, 25, 100);
 	IVARP(zoompanspeed, 1, 10, INT_MAX-1);
 
 	IVARP(editmousetype, 0, 0, 2);
 	IVARP(editfov, 1, 120, 360);
-	IVARP(editdeadzone, 0, 20, 100);
+	IVARP(editdeadzone, 0, 10, 100);
 	IVARP(editpanspeed, 1, 20, INT_MAX-1);
 
 	IVARP(specmousetype, 0, 0, 2);
 	IVARP(specfov, 1, 120, 360);
-	IVARP(specdeadzone, 0, 5, 100);
+	IVARP(specdeadzone, 0, 10, 100);
 	IVARP(specpanspeed, 1, 20, INT_MAX-1);
 
 	IFVARP(sensitivity, 10.0f);
@@ -1041,12 +1041,13 @@ struct GAMECLIENT : igameclient
 
 	void drawpointers(int w, int h)
 	{
-		static bool wasingui;
 		float r = 1.f, g = 1.f, b = 1.f;
         int index = POINTER_NONE;
 
-		if(g3d_windowhit(true, false)) { index = POINTER_GUI; wasingui = true; }
-		else if(wasingui) { index = POINTER_GUI; resetcursor(); wasingui = false; }
+		if(guiactive(true, false))
+		{
+			if(guiactive()) index = POINTER_GUI;
+		}
         else if(hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
         else if(editmode) index = POINTER_EDIT;
         else if(inzoom()) index = POINTER_ZOOM;
@@ -1302,11 +1303,11 @@ struct GAMECLIENT : igameclient
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
-		bool windowhit = g3d_windowhit(true, false);
+		bool hit = guiactive();
 
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
 
-		if(windowhit || mousestyle() >= 1)
+		if(hit || mousestyle() >= 1)
 		{
 			if(absmouse()) // absolute positions, unaccelerated
 			{
@@ -1317,7 +1318,7 @@ struct GAMECLIENT : igameclient
 			else
 			{
 				cursorx = clamp(cursorx+mousesens(dx, w, mousesensitivity()), 0.f, 1.f);
-				cursory = clamp(cursory+mousesens(dy, h, mousesensitivity()*(!windowhit && invmouse() ? -1.f : 1.f)), 0.f, 1.f);
+				cursory = clamp(cursory+mousesens(dy, h, mousesensitivity()*(!hit && invmouse() ? -1.f : 1.f)), 0.f, 1.f);
 				return true;
 			}
 		}
@@ -1327,7 +1328,7 @@ struct GAMECLIENT : igameclient
 			{
 				float scale = inzoom() ? zoomsensitivity() : sensitivity();
 				player1->yaw += mousesens(dx, w, yawsensitivity()*scale);
-				player1->pitch -= mousesens(dy, h, pitchsensitivity()*scale*(!windowhit && invmouse() ? -1.f : 1.f));
+				player1->pitch -= mousesens(dy, h, pitchsensitivity()*scale*(!hit && invmouse() ? -1.f : 1.f));
 				fixrange(player1->yaw, player1->pitch);
 			}
 			return true;
@@ -1337,7 +1338,7 @@ struct GAMECLIENT : igameclient
 
 	void project(int w, int h)
 	{
-		if(!g3d_windowhit(true, false))
+		if(!guiactive())
 		{
 			if(mousestyle() <= 1 && crosshairspeed())
 			{
@@ -1536,11 +1537,11 @@ struct GAMECLIENT : igameclient
 				}
 				fixrange(player1->aimyaw, player1->aimpitch);
 
-				if(lastcamera && mousestyle() >= 1 && !g3d_windowhit(true, false))
+				if(lastcamera && mousestyle() >= 1 && !guiactive())
 				{
 					physent *d = mousestyle() != 2 ? player1 : camera1;
 					float amt = clamp(float(lastmillis-lastcamera)/100.f, 0.f, 1.f)*panspeed();
-					float zone = float(deadzone())/100.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
+					float zone = float(deadzone())/200.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
 					if(cx > zone || cx < -zone) d->yaw += ((cx > zone ? cx-zone : cx+zone)/(1.f-zone))*amt;
 					if(cy > zone || cy < -zone) d->pitch += ((cy > zone ? cy-zone : cy+zone)/(1.f-zone))*amt;
 					fixrange(d->yaw, d->pitch);
