@@ -67,7 +67,7 @@ struct enttypes
 	{ MONSTER,		59,		0,		0,		EU_NONE,		"monster" },
 	{ TRIGGER,		58,		16,		16,		EU_AUTO,		"trigger" },
 	{ PUSHER,		58,		12,		12,		EU_AUTO,		"pusher" },
-	{ FLAG,			48,		32,		16,		EU_NONE,		"flag" },
+	{ FLAG,			48,		16,		16,		EU_NONE,		"flag" },
 	{ CHECKPOINT,	48,		16,		16,		EU_NONE,		"checkpoint" }, // FIXME
 	{ CAMERA,		48,		0,		0,		EU_NONE,		"camera" },
 	{ WAYPOINT,		1,		8,		8,		EU_NONE,		"waypoint" },
@@ -158,7 +158,7 @@ struct guntypes
 	{ GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			1,		8,		600,	1100,	10,		0,		0,		0,		-30,    30, 	0,		0,		"shotgun",			"weapons/shotgun/vwep" },
 	{ GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			40,		40,		90,	    1200,	15,		0,		0,		0,		-5,	     4,		0,		0,		"chaingun",			"weapons/chaingun/vwep" },
 	{ GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	2,		4,		1500,	0,		250,	150,	1000,	3000,	-15,    10,		8,		64,		"grenades",			"weapons/grenades/vwep" },
-	{ GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	-1,			-1,			50,		50,		100, 	2000,	25,		80,		0,		3000,	-1,		 1,		8,		20,		"flamer",			"weapons/flamer/vwep" },
+	{ GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	-1,			50,		50,		100, 	2000,	25,		80,		0,		3000,	-1,		 1,		8,		20,		"flamer",			"weapons/flamer/vwep" },
 	{ GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			1,		5,		600,	1000,	100,	0,		0,		0,		-30,  	20,		0,		0,		"rifle",			"weapons/rifle/vwep" },
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
@@ -192,12 +192,14 @@ enum
 
 #define G_M_MULTI			0x0010	// mutli team
 #define G_M_DLMS			0x0020	// last man standing
+#define G_M_MAYHEM			0x0040	// mayhem
 
 #define G_M_NUM				6
 
 #define G_M_ALL				G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_PROG|G_M_MULTI|G_M_DLMS
 #define G_M_FIGHT			G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI|G_M_DLMS
-#define G_M_FLAG			G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI
+#define G_M_STF				G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM
+#define G_M_CTF				G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM
 
 struct gametypes
 {
@@ -208,8 +210,8 @@ struct gametypes
 	{ G_EDITMODE,		0,				0,					"Editing" },
 	{ G_MISSION,		0,				0,					"Mission" },
 	{ G_DEATHMATCH,		G_M_FIGHT,		0,					"Deathmatch" },
-	{ G_STF,			G_M_FLAG,		G_M_TEAM,			"Secure the Flag" },
-	{ G_CTF,			G_M_FLAG,		G_M_TEAM,			"Capture the Flag" },
+	{ G_STF,			G_M_STF,		G_M_TEAM,			"Secure the Flag" },
+	{ G_CTF,			G_M_CTF,		G_M_TEAM,			"Capture the Flag" },
 }, mutstype[] = {
 	{ G_M_TEAM,			G_M_ALL,		0,					"Team" },
 	{ G_M_INSTA,		G_M_ALL,		0,					"Instagib" },
@@ -217,6 +219,7 @@ struct gametypes
 	{ G_M_PROG,			G_M_ALL,		0,					"Progressive" },
 	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,			"Multi-sided" },
 	{ G_M_DLMS,			G_M_ALL,		G_M_DUEL,			"Last Man Standing" },
+	{ G_M_MAYHEM,		G_M_ALL,		0,					"Mayhem" },
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)
@@ -233,12 +236,13 @@ struct gametypes
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
 #define m_timed(a)			(m_fight(a))
 
-#define m_team(a,b)			((m_dm(a) && (b & G_M_TEAM)) || m_flag(a))
-#define m_insta(a,b)		(m_fight(a) && (b & G_M_INSTA))
-#define m_duel(a,b)			(m_fight(a) && (b & G_M_DUEL))
-#define m_prog(a,b)			(m_flag(a) && (b & G_M_PROG))
-#define m_multi(a,b)		(m_team(a, b) && (b & G_M_MULTI))
-#define m_dlms(a,b)			(m_duel(a, b) && (b & G_M_DLMS))
+#define m_team(a,b)			((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))
+#define m_insta(a,b)		((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
+#define m_duel(a,b)			((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
+#define m_prog(a,b)			((b & G_M_PROG) || (gametype[a].implied & G_M_PROG))
+#define m_multi(a,b)		((b & G_M_MULTI) || (gametype[a].implied & G_M_MULTI))
+#define m_dlms(a,b)			((b & G_M_DLMS) || (gametype[a].implied & G_M_DLMS))
+#define m_mayhem(a,b)		((b & G_M_MAYHEM) || (gametype[a].implied & G_M_MAYHEM))
 
 // network messages codes, c2s, c2c, s2c
 enum
@@ -280,7 +284,7 @@ char msgsizelookup(int msg)
         SV_EDITMODE, 2, SV_EDITENT, 10, SV_EDITLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0, SV_APPROVEMASTER, 2,
 		SV_FLAGS, 0, SV_FLAGINFO, 0,
-        SV_DROPFLAG, 6, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 3, SV_RESETFLAG, 2, SV_INITFLAGS, 0,
+        SV_DROPFLAG, 0, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 3, SV_RESETFLAG, 2, SV_INITFLAGS, 0,
 		SV_TEAMSCORE, 0, SV_FORCEINTERMISSION, 1,
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 2, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,

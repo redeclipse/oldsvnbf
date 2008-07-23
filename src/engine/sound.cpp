@@ -22,7 +22,7 @@ void setmusicvol(int musicvol)
 VARP(soundvol, 0, 255, 255);
 VARFP(musicvol, 0, 255, 255, setmusicvol(musicvol));
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundchans, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(soundchans, 0, 128, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARP(soundmaxatonce, 0, 64, INT_MAX-1);
@@ -172,12 +172,14 @@ ICOMMAND(mapsound, "sis", (char *n, int *v, char *m), intret(addsound(n, *v, *m 
 
 void updatesound(int chan)
 {
-	bool posliquid = isliquid(lookupmaterial(*sounds[chan].pos)&MATF_VOLUME),
+	if(sounds[chan].owner) sounds[chan].pos = sounds[chan].owner->o;
+
+	bool posliquid = isliquid(lookupmaterial(sounds[chan].pos)&MATF_VOLUME),
 			camliquid = isliquid(lookupmaterial(camera1->o)&MATF_VOLUME);
 	int vol = clamp(((soundvol*sounds[chan].vol*sounds[chan].slot->vol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
 
 	vec v;
-	sounds[chan].dist = camera1->o.dist(*sounds[chan].pos, v);
+	sounds[chan].dist = camera1->o.dist(sounds[chan].pos, v);
 
 	if(!(sounds[chan].flags&SND_NOATTEN))
 	{
@@ -232,17 +234,7 @@ void updatesounds()
 	if(music && !Mix_PlayingMusic()) musicdone(true);
 }
 
-void removesoundowner(vec *pos)
-{
-    loopv(sounds) if(sounds[i].inuse && sounds[i].pos == pos)
-    {
-        sounds[i].flags |= SND_COPY;
-        sounds[i].posval = *sounds[i].pos;
-        sounds[i].pos = &sounds[i].posval;
-    }
-}
-
-int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
+int playsound(int n, int flags, int vol, vec &pos, physent *d, int maxrad, int minrad)
 {
 	if(nosound || !soundvol) return -1;
 
@@ -253,10 +245,6 @@ int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 		lastsoundmillis = totalmillis;
 		if(soundmaxatonce && soundsatonce > soundmaxatonce) return -1;
 	}
-
-	physent *player = (physent *)cl->iterdynents(0);
-	if(!player) player = camera1;
-	vec *p = pos != NULL ? pos : &player->o;
 
 	vector<soundslot> &soundset = flags&SND_MAP ? mapsounds : gamesounds;
 
@@ -277,13 +265,8 @@ int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 			sounds[chan].inuse = true;
 			sounds[chan].flags = flags;
 			sounds[chan].millis = totalmillis;
-
-			if(flags&SND_COPY)
-			{
-				sounds[chan].posval = vec(*p);
-				sounds[chan].pos = &sounds[chan].posval;
-			}
-			else sounds[chan].pos = p;
+			sounds[chan].owner = d;
+			sounds[chan].pos = pos;
 
 			updatesound(chan);
 			return chan;
@@ -295,8 +278,15 @@ int playsound(int n, vec *pos, int vol, int maxrad, int minrad, int flags)
 	return -1;
 }
 
-void sound(int *n, int *vol) { intret(playsound(*n, NULL, *vol ? *vol : 255)); }
+void sound(int *n, int *vol) { intret(playsound(*n, 0, *vol ? *vol : 255, camera1->o, camera1)); }
 COMMAND(sound, "ii");
+
+void removetrackedsounds(physent *d)
+{
+	loopv(sounds)
+		if(sounds[i].inuse && sounds[i].owner == d)
+			removesound(i);
+}
 
 void resetsound()
 {

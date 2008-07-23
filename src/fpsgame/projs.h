@@ -27,9 +27,10 @@ struct projectiles
 		}
 		~projent()
 		{
-			if (issound(schan)) removesound(schan);
+			removetrackedparticles(this);
+			removetrackedsounds(this);
+			if(issound(schan)) removesound(schan);
 			schan = -1;
-            removesoundowner(&o);
 		}
 
 		void init(vec &_f, vec &_t, bool _b, fpsent *_o, int _n, int _i, int _s, int _g, int _l)
@@ -147,7 +148,7 @@ struct projectiles
             {
 				if (guntype[gun].fsound >= 0 && !issound(schan))
 				{
-					schan = playsound(guntype[gun].fsound, &o, 255, 0, 0, SND_LOOP);
+					schan = playsound(guntype[gun].fsound, 0, 255, o, this);
 				}
 
 				regular_particle_splash(5, 1, 500, o);
@@ -206,9 +207,9 @@ struct projectiles
 
 						if (vol)
 						{
-							if (projtype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, &o, vol);
-							else if (projtype == PRJ_GIBS) playsound(S_SPLAT, &o, vol);
-							else if (projtype == PRJ_DEBRIS) playsound(S_DEBRIS, &o, vol);
+							if (projtype == PRJ_SHOT && guntype[gun].rsound >= 0) playsound(guntype[gun].rsound, 0, vol, o, this);
+							else if (projtype == PRJ_GIBS) playsound(S_SPLAT, 0, vol, o, this);
+							else if (projtype == PRJ_DEBRIS) playsound(S_DEBRIS, 0, vol, o, this);
 						}
 					}
                     movement = 0;
@@ -286,17 +287,17 @@ struct projectiles
 
 	void remove(fpsent *owner)
 	{
-		loopv(projs) if(projs[i]->owner==owner) 
-        { 
-            delete projs[i]; 
-            projs.remove(i--); 
+		loopv(projs) if(projs[i]->owner==owner)
+        {
+            delete projs[i];
+            projs.remove(i--);
         }
 	}
 
-	void reset() 
-    { 
-        projs.deletecontentsp(); 
-        projs.setsize(0); 
+	void reset()
+    {
+        projs.deletecontentsp();
+        projs.setsize(0);
     }
 
 	void spawn(vec &p, vec &vel, fpsent *d, int type)

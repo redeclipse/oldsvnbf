@@ -400,7 +400,7 @@ struct physics
 				pl->jumping = pl->crouching = false;
 				pl->vel.z = jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x /= liquiddampen(pl); pl->vel.y /= liquiddampen(pl); }
-				playsound(S_JUMP, &pl->o);
+				playsound(S_JUMP, 0, 255, pl->o, pl);
 			}
 		}
         if(pl->physstate == PHYS_FALL) pl->timeinair += curtime;
@@ -473,7 +473,7 @@ struct physics
 					mf; \
 					int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
 					part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, mz, 100, 200, icol, 0.6f); \
-					if(mw>=0) playsound(mw, &pl->o, 255, 0, 0, SND_COPY); \
+					if(mw>=0) playsound(mw, 0, 255, pl->o, pl); \
 				}
 
 				if(int(material&MATF_VOLUME) == MAT_WATER || int(pl->inmaterial&MATF_VOLUME) == MAT_WATER)
@@ -545,7 +545,7 @@ struct physics
 			loopi(moveres) if(!move(pl, d)) { if(pl->type==ENT_CAMERA) return false; if(++collisions<5) i--; } // discrete steps collision detection & sliding
 			if(!pl->timeinair && vel.z <= -64) // if we land after long time must have been a high jump, make thud sound
 			{
-				playsound(S_LAND, &pl->o);
+				playsound(S_LAND, 0, 255, pl->o, pl);
 			}
 		}
 
