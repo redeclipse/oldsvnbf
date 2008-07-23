@@ -807,7 +807,7 @@ bool menukey(int code, bool isdown, int cooked)
                 return true;
         }
 
-        return guiactive();
+        return false;
     }
     switch(code)
     {
@@ -834,7 +834,7 @@ bool menukey(int code, bool isdown, int cooked)
         case -5:
             break;
         default:
-            if(!cooked || (code<32)) return guiactive();
+            if(!cooked || (code<32)) return false;
     }
     if(!isdown) return true;
     e->key(code, cooked);

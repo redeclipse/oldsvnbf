@@ -291,6 +291,7 @@ struct GAMECLIENT : igameclient
     {
         if(d->type == ENT_PLAYER)
         {
+        	if(guiactive(true, true)) return false;
 			if(d->state == CS_DEAD) return false;
 			if(intermission) return false;
         }
@@ -401,6 +402,8 @@ struct GAMECLIENT : igameclient
 			}
 			else ph.move(player1, 20, true);
 		}
+		else if(!guiactive()) showgui("main");
+
 		if(player1->clientnum >= 0) c2sinfo();
 	}
 
