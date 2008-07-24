@@ -321,7 +321,8 @@ struct GAMESERVER : igameserver
 	string  motd;
 	GAMESERVER()
 		: notgotitems(true), notgotflags(false),
-			gamemode(defaultmode()), mutators(0), interm(0), minremain(10), oldtimelimit(10),
+			gamemode(defaultmode()), mutators(0),
+			interm(0), minremain(10), oldtimelimit(10),
 			maprequest(false), lastsend(0),
 			mastermode(MM_VETO), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
@@ -432,7 +433,7 @@ struct GAMESERVER : igameserver
 		{
 			if(demorecord) enddemorecord();
 			srvoutf(-1, "%s forced %s on map %s", privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
-			sendf(-1, 1, "risi2", SV_MAPCHANGE, ci->mapvote, ci->modevote, ci->mutsvote);
+			sendf(-1, 1, "ri2si2", SV_MAPCHANGE, 1, ci->mapvote, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 		}
 		else
@@ -866,7 +867,7 @@ struct GAMESERVER : igameserver
 			if(best && (best->count > (force ? 1 : maxvotes/2)))
 			{
 				srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
-				sendf(-1, 1, "risii", SV_MAPCHANGE, best->map, best->mode, best->muts);
+				sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, best->map, best->mode, best->muts);
 				changemap(best->map, best->mode, best->muts);
 			}
 			else if(clients.length() && !maprequest)
@@ -900,9 +901,9 @@ struct GAMESERVER : igameserver
 		}
 #endif
 		// only allow edit messages in coop-edit mode
-		if(type>=SV_EDITENT && type<=SV_GETMAP && !m_edit(gamemode)) return -1;
+		if(type >= SV_EDITENT && type <= SV_GETMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_NEWGAME, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
+		static int servtypes[] = { SV_INITS2C, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -1339,7 +1340,6 @@ struct GAMESERVER : igameserver
 				}
 
 				case SV_MAPVOTE:
-				case SV_MAPCHANGE:
 				{
 					getstring(text, p);
 					filtertext(text, text);
@@ -1985,65 +1985,74 @@ struct GAMESERVER : igameserver
 		putint(p, SV_INITS2C);
 		putint(p, n);
 		putint(p, GAMEVERSION);
-		if(smapname[0])
+		putint(p, SV_MAPCHANGE);
+		if(!smapname[0])
 		{
-			putint(p, SV_MAPCHANGE);
-			sendstring(smapname, p);
-			putint(p, gamemode);
-			putint(p, mutators);
-			if(!ci || (m_timed(gamemode) && hasnonlocalclients()))
+			putint(p, 0);
+			if(m_edit(gamemode) && nonspectators(ci->clientnum, true))
 			{
-				putint(p, SV_TIMEUP);
-				putint(p, minremain);
-			}
-			putint(p, SV_ITEMLIST);
-			loopv(sents) if(sents[i].spawned)
-			{
-				putint(p, i);
-				putint(p, sents[i].type);
-				putint(p, sents[i].attr1);
-				putint(p, sents[i].attr2);
-				putint(p, sents[i].attr3);
-				putint(p, sents[i].attr4);
-				putint(p, sents[i].attr5);
-			}
-			putint(p, -1);
-
-			if(ci && ci->state.state!=CS_SPECTATOR)
-			{
-				int nospawn = 0;
-				if(smode && !smode->canspawn(ci, true)) { nospawn++; }
-				mutate(if(!mut->canspawn(ci, true)) { nospawn++; });
-				if(nospawn)
+				clientinfo *best = NULL;
+				loopv(clients) if(clients[i]->name[0] && clients[i]->state.ownernum < 0 && clients[i]->state.state != CS_SPECTATOR)
 				{
-					ci->state.state = CS_DEAD;
-					putint(p, SV_FORCEDEATH);
-					putint(p, n);
-					sendf(-1, 1, "ri2x", SV_FORCEDEATH, n, n);
+					clientinfo *cs = clients[i];
+					if(haspriv(cs, PRIV_MASTER)) { best = cs; break; }
+					if(!best || cs->state.timeplayed > best->state.timeplayed)
+						best = cs;
 				}
-				else
-				{
-					spawnstate(ci);
-					putint(p, SV_SPAWNSTATE);
-					sendstate(ci, p);
-					ci->state.lastrespawn = ci->state.lastspawn = gamemillis;
-				}
-			}
-			if(ci && ci->state.state==CS_SPECTATOR)
-			{
-				putint(p, SV_SPECTATOR);
-				putint(p, n);
-				putint(p, 1);
-				sendf(-1, 1, "ri3x", SV_SPECTATOR, n, 1, n);
+				if(best) sendf(best->clientnum, 1, "ri", SV_GETMAP);
 			}
 		}
 		else
 		{
-			ci->state.state = CS_DEAD;
-			putint(p, SV_FORCEDEATH);
+			putint(p, 1);
+			sendstring(smapname, p);
+		}
+		putint(p, gamemode);
+		putint(p, mutators);
+		if(!ci || (m_timed(gamemode) && hasnonlocalclients()))
+		{
+			putint(p, SV_TIMEUP);
+			putint(p, minremain);
+		}
+		putint(p, SV_ITEMLIST);
+		loopv(sents) if(sents[i].spawned)
+		{
+			putint(p, i);
+			putint(p, sents[i].type);
+			putint(p, sents[i].attr1);
+			putint(p, sents[i].attr2);
+			putint(p, sents[i].attr3);
+			putint(p, sents[i].attr4);
+			putint(p, sents[i].attr5);
+		}
+		putint(p, -1);
+
+		if(ci && ci->state.state!=CS_SPECTATOR)
+		{
+			int nospawn = 0;
+			if(smode && !smode->canspawn(ci, true)) { nospawn++; }
+			mutate(if(!mut->canspawn(ci, true)) { nospawn++; });
+			if(nospawn)
+			{
+				ci->state.state = CS_DEAD;
+				putint(p, SV_FORCEDEATH);
+				putint(p, n);
+				sendf(-1, 1, "ri2x", SV_FORCEDEATH, n, n);
+			}
+			else
+			{
+				spawnstate(ci);
+				putint(p, SV_SPAWNSTATE);
+				sendstate(ci, p);
+				ci->state.lastrespawn = ci->state.lastspawn = gamemillis;
+			}
+		}
+		if(ci && ci->state.state==CS_SPECTATOR)
+		{
+			putint(p, SV_SPECTATOR);
 			putint(p, n);
-			sendf(-1, 1, "ri2x", SV_FORCEDEATH, n, n);
-			putint(p, SV_NEWGAME);
+			putint(p, 1);
+			sendf(-1, 1, "ri3x", SV_SPECTATOR, n, 1, n);
 		}
 
 		if(clients.length() > 1)

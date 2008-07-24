@@ -126,8 +126,6 @@ struct clientcom : iclientcom
             DELETEP(cl.players[i]);
         }
 		cleardynentcache();
-		//causes a slowdown on exit/disconnect, do we need this when we don't operate offline?
-		//emptymap(0, true, NULL, true);
 	}
 
 	bool allowedittoggle(bool edit)
@@ -716,9 +714,10 @@ struct clientcom : iclientcom
 
 				case SV_MAPCHANGE:
 				{
-					getstring(text, p);
+					int hasmap = getint(p);
+					if(hasmap) getstring(text, p);
 					int mode = getint(p), muts = getint(p);
-					changemapserv(text, mode, muts);
+					changemapserv(hasmap ? text : NULL, mode, muts);
 					mapchanged = true;
 					break;
 				}
@@ -1232,6 +1231,12 @@ struct clientcom : iclientcom
 					break;
 				}
 
+				case SV_GETMAP:
+				{
+					conoutf("server has requested we send the map..");
+					sendmap();
+				}
+
 				case SV_NEWMAP:
 				{
 					int size = getint(p);
@@ -1297,7 +1302,8 @@ struct clientcom : iclientcom
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
-		load_world(name);
+		if(!name) emptymap(0, true, NULL);
+		else load_world(name);
 		if(m_stf(gamemode)) cl.stf.setupflags();
         else if(m_ctf(gamemode)) cl.ctf.setupflags();
 		if(editmode) edittoggled(editmode);
@@ -1391,13 +1397,17 @@ struct clientcom : iclientcom
 
 	void sendmap()
 	{
-		if(!m_edit(cl.gamemode) || (spectator && !cl.player1->privilege)) { conoutf("\"sendmap\" only works in coopedit mode"); return; }
+		if(!m_edit(cl.gamemode) || (spectator && !cl.player1->privilege))
+		{
+			conoutf("\"sendmap\" only works in coopedit mode");
+			return;
+		}
 		conoutf("sending map...");
-		s_sprintfd(mname)("%s", getmapname());
+		extern string mapname, mapfile;
+		s_sprintfd(mname)("%s", mapname);
+		s_sprintfd(fname)("%s", mapfile);
 		save_world(mname, true);
-		s_sprintfd(fname)("%s.bgz", mname);
-		const char *file = findfile(fname, "rb");
-		FILE *map = fopen(file, "rb");
+		FILE *map = openfile(fname, "rb");
 		if(map)
 		{
 			fseek(map, 0, SEEK_END);
@@ -1406,7 +1416,6 @@ struct clientcom : iclientcom
 			fclose(map);
 		}
 		else conoutf("could not read map");
-		remove(file);
 	}
 
 	void gotoplayer(const char *arg)
