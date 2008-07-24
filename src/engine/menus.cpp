@@ -365,7 +365,7 @@ void guiservers()
 	}
 }
 
-COMMAND(newgui, "sss");
+COMMAND(newgui, "ssss");
 COMMAND(guimodify, "ss");
 COMMAND(guibutton, "ssss");
 COMMAND(guitext, "ss");
