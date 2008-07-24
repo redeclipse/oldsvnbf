@@ -674,7 +674,7 @@ struct botclient
 							d->crouchtime = lastmillis;
 						}
 					}
-					else
+					else if(d->crouching)
 					{
 						d->crouching = false;
 						d->crouchtime = lastmillis;
