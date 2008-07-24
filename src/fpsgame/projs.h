@@ -171,9 +171,9 @@ struct projectiles
 			if(proj.attr1 == GUN_FLAMER)
 			{
 				int col = (int(255*max(1.25f-life,0.f))<<16)|(int(127*max(1.25f-life,0.f))<<8),
-					fade = int(10*life)+1;
+					fade = int(10*life)+10;
 				proj.radius = guntype[proj.attr1].size*life;
-				regular_part_splash(4, 1, fade, proj.o, col, float(proj.radius));
+				regular_part_splash(4, 3, fade, proj.o, col, float(proj.radius));
 			}
 			else regular_particle_splash(5, 1, 20, proj.o);
 		}
