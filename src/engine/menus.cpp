@@ -322,7 +322,7 @@ void guilist(char *contents)
 	cgui->poplist();
 }
 
-void newgui(char *name, char *contents, char *initscript)
+void newgui(char *name, char *contents, char *initscript, char *header)
 {
     menu *m = guis.access(name);
     if(!m)
@@ -339,18 +339,11 @@ void newgui(char *name, char *contents, char *initscript)
     }
     m->contents = contents && contents[0] ? newstring(contents) : NULL;
     m->initscript = initscript && initscript[0] ? newstring(initscript) : NULL;
-}
-
-void guiheader(char *header)
-{
-	if(!cmenu) return;
-    if(cmenu->header) delete[] cmenu->header;
-	cmenu->header = header && header[0] ? newstring(header) : NULL;
+    m->header = header && header[0] ? newstring(header) : NULL;
 }
 
 void guimodify(char *name, char *contents)
 {
-	if(!cgui) return;
     menu *m = guis.access(name);
     if(!m) return;
     if(m->contents) delete[] m->contents;
@@ -373,7 +366,6 @@ void guiservers()
 }
 
 COMMAND(newgui, "sss");
-COMMAND(guiheader, "s");
 COMMAND(guimodify, "ss");
 COMMAND(guibutton, "ssss");
 COMMAND(guitext, "ss");
