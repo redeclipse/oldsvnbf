@@ -68,7 +68,7 @@ extern void resetcomplete();
 extern void complete(char *s);
 
 // menus
-extern void newgui(char *name, char *contents, char *header = NULL);
+extern void newgui(char *name, char *contents, char *initaction = NULL);
 extern void showgui(const char *name);
 
 // world

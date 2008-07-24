@@ -10,25 +10,32 @@
 static int menustart = 0;
 static int menutab = 1;
 static g3d_gui *cgui = NULL;
-
 struct menu : g3d_callback
 {
-    char *name, *header, *contents;
+    char *name, *header, *contents, *initscript;
+    int passes;
 
-    menu() : name(NULL), header(NULL), contents(NULL) {}
+    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0) {}
 
     void gui(g3d_gui &g, bool firstpass)
     {
         cgui = &g;
+        extern menu *cmenu;
+        cmenu = this;
         cgui->start(menustart, 0.03f, &menutab, true);
         cgui->tab(header ? header : name, GUI_TITLE_COLOR);
-        execute(contents);
+		if(!passes && initscript && *initscript)
+			execute(initscript);
+        if(contents && *contents) execute(contents);
         cgui->end();
+        cmenu = NULL;
         cgui = NULL;
+		passes++;
     }
 
     virtual void clear() {}
 };
+menu *cmenu = NULL;
 
 static hashtable<const char *, menu> guis;
 static vector<menu *> guistack;
@@ -38,6 +45,7 @@ static bool shouldclearmenu = true, clearlater = false;
 void popgui()
 {
     menu *m = guistack.pop();
+    m->passes = 0;
     m->clear();
 }
 
@@ -46,6 +54,7 @@ void removegui(menu *m)
     loopv(guistack) if(guistack[i]==m)
     {
         guistack.remove(i);
+		m->passes = 0;
         m->clear();
         return;
     }
@@ -61,6 +70,7 @@ void pushgui(menu *m, int pos = -1)
         menutab = 1;
         menustart = totalmillis;
     }
+	if(m) m->passes = 0;
 }
 
 void restoregui(int pos)
@@ -69,6 +79,8 @@ void restoregui(int pos)
     loopi(clear) popgui();
     menutab = 1;
     menustart = totalmillis;
+	menu *m = guistack.last();
+	if(m) m->passes = 0;
 }
 
 void showgui(const char *name)
@@ -310,7 +322,7 @@ void guilist(char *contents)
 	cgui->poplist();
 }
 
-void newgui(char *name, char *contents, char *header)
+void newgui(char *name, char *contents, char *initscript)
 {
     menu *m = guis.access(name);
     if(!m)
@@ -323,9 +335,26 @@ void newgui(char *name, char *contents, char *header)
     {
         DELETEA(m->header);
         DELETEA(m->contents);
+        DELETEA(m->initscript);
     }
-    m->header = header && header[0] ? newstring(header) : NULL;
-    m->contents = newstring(contents);
+    m->contents = contents && contents[0] ? newstring(contents) : NULL;
+    m->initscript = initscript && initscript[0] ? newstring(initscript) : NULL;
+}
+
+void guiheader(char *header)
+{
+	if(!cmenu) return;
+    if(cmenu->header) delete[] cmenu->header;
+	cmenu->header = header && header[0] ? newstring(header) : NULL;
+}
+
+void guimodify(char *name, char *contents)
+{
+	if(!cgui) return;
+    menu *m = guis.access(name);
+    if(!m) return;
+    if(m->contents) delete[] m->contents;
+	m->contents = contents && contents[0] ? newstring(contents) : NULL;
 }
 
 void guiservers()
@@ -344,6 +373,8 @@ void guiservers()
 }
 
 COMMAND(newgui, "sss");
+COMMAND(guiheader, "s");
+COMMAND(guimodify, "ss");
 COMMAND(guibutton, "ssss");
 COMMAND(guitext, "ss");
 COMMAND(guiservers, "s");

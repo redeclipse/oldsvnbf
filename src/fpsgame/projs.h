@@ -22,7 +22,7 @@ struct projectiles
         fpsent *owner;
 		const char *mdl;
 
-		projent() : id(-1), mdl("")
+		projent() : id(-1), mdl(NULL)
 		{
 			schan = -1;
 			reset();
@@ -145,7 +145,7 @@ struct projectiles
 			}
 			default: break;
 		}
-		if(*proj.mdl) setbbfrommodel(&proj, proj.mdl);
+		if(proj.mdl && *proj.mdl) setbbfrommodel(&proj, proj.mdl);
 		proj.height += 1.f;
 		proj.radius += 1.f;
 		proj.xradius += 1.f;
@@ -369,7 +369,7 @@ struct projectiles
 
 	void render()
 	{
-		loopv(projs) if(*projs[i]->mdl)
+		loopv(projs) if(projs[i]->mdl && *projs[i]->mdl)
 		{
 			projent &proj = *(projs[i]);
 			float yaw = proj.yaw, pitch = proj.pitch;

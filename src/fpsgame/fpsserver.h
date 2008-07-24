@@ -871,7 +871,7 @@ struct GAMESERVER : igameserver
 			}
 			else if(clients.length() && !maprequest)
 			{
-				sendf(-1, 1, "ri", SV_MAPREQUEST);
+				sendf(-1, 1, "ri", SV_NEWGAME);
 				maprequest = true;
 			}
 		}
@@ -902,7 +902,7 @@ struct GAMESERVER : igameserver
 		// only allow edit messages in coop-edit mode
 		if(type>=SV_EDITENT && type<=SV_GETMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_MAPREQUEST, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
+		static int servtypes[] = { SV_INITS2C, SV_NEWGAME, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -2043,7 +2043,7 @@ struct GAMESERVER : igameserver
 			putint(p, SV_FORCEDEATH);
 			putint(p, n);
 			sendf(-1, 1, "ri2x", SV_FORCEDEATH, n, n);
-			putint(p, SV_MAPREQUEST);
+			putint(p, SV_NEWGAME);
 		}
 
 		if(clients.length() > 1)

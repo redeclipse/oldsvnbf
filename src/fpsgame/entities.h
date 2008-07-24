@@ -1115,8 +1115,7 @@ struct entities : icliententities
         {
         	extentity &e = *ents[i];
 			const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-            if(!mdlname) continue;
-            loadmodel(mdlname, -1, true);
+            if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
         }
     }
 
@@ -1159,8 +1158,7 @@ struct entities : icliententities
 			if(m_edit(cl.gamemode) || active)
 			{
 				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-
-				if(mdlname)
+				if(mdlname && *mdlname)
 				{
 					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
 					if(!active) flags |= MDL_TRANSLUCENT;
