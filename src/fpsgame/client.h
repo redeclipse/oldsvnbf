@@ -749,10 +749,10 @@ struct clientcom : iclientcom
 					break;
 				}
 
-				case SV_MAPREQUEST: // server requests next map
+				case SV_NEWGAME: // server requests next game
 				{
 					cl.sb.showscores(false);
-					showgui("maps");
+					showgui("game");
 					break;
 				}
 
