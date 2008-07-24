@@ -9,7 +9,7 @@ enum
 	S_JUMP = 0, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR,
 	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
-	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURN, S_RLFIRE, S_RLEXPL, S_RLFLY, S_RIFLE,
+	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURNING, S_FLBURN, S_RIFLE,
 	S_ITEMPICKUP, S_ITEMSPAWN, 	S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED, S_MENUPRESS, S_MENUBACK,
@@ -154,27 +154,27 @@ struct guntypes
 {
 	int info, 		anim,			sound, 		esound, 	fsound,		rsound,		ssound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,
-				radius;	const char *name,		*vwep;
+				size,	explode;const char *name,		*vwep;
 } guntype[NUMGUNS] =
 {
 	{ GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
 			12,		12,		250,	1000,	25,		0,		0,		0,		-10,    10,		0,
-				0,					"pistol",	"weapons/pistol/vwep" },
+				1,		0,					"pistol",	"weapons/pistol/vwep" },
 	{ GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
 			1,		8,		600,	1100,	10,		0,		0,		0,		-30,    30, 	0,
-				0,					"shotgun",	"weapons/shotgun/vwep" },
+				1,		0,					"shotgun",	"weapons/shotgun/vwep" },
 	{ GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
 			40,		40,		90,	    1200,	15,		0,		0,		0,		-5,	     4,		0,
-				0,					"chaingun",	"weapons/chaingun/vwep" },
+				1,		0,					"chaingun",	"weapons/chaingun/vwep" },
 	{ GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
 			2,		4,		1500,	0,		250,	150,	1000,	3000,	-15,    10,		8,
-				64,					"grenades",	"weapons/grenades/vwep" },
-	{ GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	-1,			S_ITEMSPAWN,
+				1,		64,					"grenades",	"weapons/grenades/vwep" },
+	{ GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURNING,S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
 			50,		50,		100, 	2000,	25,		80,		0,		3000,	-1,		 1,		8,
-				20,					"flamer",	"weapons/flamer/vwep" },
+				15,		16,					"flamer",	"weapons/flamer/vwep" },
 	{ GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
 			1,		5,		600,	1000,	100,	0,		0,		0,		-30,  	20,		0,
-				0,					"rifle",	"weapons/rifle/vwep" },
+				1,		0,					"rifle",	"weapons/rifle/vwep" },
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
 
