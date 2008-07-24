@@ -2268,13 +2268,13 @@ struct GAMESERVER : igameserver
 		{
 			hitevent &h = ci->events[i].hit;
 			clientinfo *target = (clientinfo *)getinfo(h.target);
-            if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.dist<0 || h.dist>guntype[e.gun].radius) continue;
+            if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.dist<0 || h.dist>guntype[e.gun].explode) continue;
 
 			int j = 1;
 			for(j = 1; j<i; j++) if(ci->events[j].hit.target==h.target) break;
 			if(j<i) continue;
 
-			int damage = int(guntype[e.gun].damage*(1-h.dist/guntype[e.gun].scale/guntype[e.gun].radius));
+			int damage = int(guntype[e.gun].damage*(1-h.dist/guntype[e.gun].scale/guntype[e.gun].explode));
 			dodamage(target, ci, damage, e.gun, h.flags, h.dir);
 		}
 	}

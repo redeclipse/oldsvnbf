@@ -20,8 +20,9 @@ struct projectiles
 		int schan, id;
         entitylight light;
         fpsent *owner;
+		const char *mdl;
 
-		projent() : id(-1)
+		projent() : id(-1), mdl("")
 		{
 			schan = -1;
 			reset();
@@ -34,205 +35,231 @@ struct projectiles
 			schan = -1;
 		}
 
-		void init()
-		{
-			state = CS_ALIVE;
-
-			vec dir(vec(vec(to).sub(from)).normalize());
-
-			switch (projtype)
-			{
-				case PRJ_SHOT:
-				{
-					switch(attr1)
-					{
-						case GUN_GL:
-							aboveeye = height = radius = 1.0f;
-							elasticity = 0.33f;
-							relativity = 0.5f;
-							waterfric = 2.0f;
-							weight = 50.f;
-							break;
-#if 0
-						case GUN_RL:
-						{
-							aboveeye = height = radius = 2.0f;
-							elasticity = 0.0f;
-							relativity = 0.25f;
-							waterfric = 1.5f;
-							weight = 0.f;
-							break;
-						}
-#endif
-						case GUN_FLAMER:
-						{
-							aboveeye = height = radius = 2.0f;
-							elasticity = 0.01f;
-							relativity = 0.25f;
-							waterfric = 1.5f;
-							weight = 10.f;
-							vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
-							if(v.magnitude()>50) v.div(50);
-							v.mul(to.dist(from)*0.005f);
-							v.z /= 2;
-							dir = to;
-							dir.add(v);
-							dir.sub(from);
-							dir.normalize();
-							break;
-						}
-						case GUN_PISTOL:
-						case GUN_SG:
-						case GUN_CG:
-						case GUN_RIFLE:
-						default:
-						{
-							aboveeye = height = radius = 1.0f;
-							elasticity = 0.5f;
-							relativity = 0.25f;
-							waterfric = 1.25f;
-							weight = 1.f;
-							break;
-						}
-					}
-					break;
-				}
-				case PRJ_GIBS:
-				{
-					aboveeye = height = radius = 1.0f;
-					elasticity = 0.25f;
-					relativity = 1.0f;
-					waterfric = 2.0f;
-					weight = 20.f;
-					break;
-				}
-				case PRJ_ENT:
-				{
-					aboveeye = 1.f;
-					height = enttype[ent].height;
-					radius = enttype[ent].radius;
-					elasticity = 0.25f;
-					relativity = 1.0f;
-					waterfric = 1.75f;
-					weight = 100.f;
-					break;
-				}
-				case PRJ_DEBRIS:
-				default:
-				{
-					aboveeye = height = radius = 1.0f;
-					elasticity = 0.66f;
-					relativity = 1.0f;
-					waterfric = 1.75f;
-					weight = 25.f;
-					break;
-				}
-			}
-
-			vectoyawpitch(dir, yaw, pitch);
-			vel = vec(vec(dir).mul(maxspeed)).add(vec(owner->vel).mul(relativity));
-			dir.mul(2);
-			o.add(vec(dir).mul(radius)); // a push to get out of the way
-		}
-
 		void reset()
 		{
-			physent::reset();
 			type = ENT_BOUNCE;
+			state = CS_ALIVE;
 			roll = 0.f;
-		}
-
-		void check()
-		{
-            if(projtype == PRJ_SHOT)
-            {
-				if(guntype[attr1].fsound >= 0 && !issound(schan))
-				{
-					schan = playsound(guntype[attr1].fsound, 0, 255, o, this);
-				}
-
-				regular_particle_splash(5, 1, 500, o);
-				if(attr1 == GUN_FLAMER)
-				{
-					float life = (guntype[attr1].time-lifetime)/float(guntype[attr1].time);
-					int col = (int(255*max(1.f-life,0.f))<<16)|(int(127*max(1.f-life,0.f))<<8),
-						fade = int(500*life)+1;
-					regular_part_splash(4, rnd(2)+1, fade, o, col, 8.0f);
-				}
-            }
-			else if(projtype == PRJ_GIBS) regular_particle_splash(3, 1, 10000, o);
-		}
-
-		bool update(int qtime)
-		{
-            int mat = lookupmaterial(vec(o.x, o.y, o.z + (aboveeye - height)/2));
-            bool water = isliquid(mat&MATF_VOLUME);
-			float secs = float(qtime) / 1000.0f;
-		    vec old(o);
-
-			if(elasticity > 0.f) vel.sub(vec(0, 0, float(getvar("gravity"))*secs));
-
-			vec dir(vel);
-			if(water)
-			{
-				if(projtype == PRJ_SHOT && attr1 == GUN_FLAMER)
-				{
-					movement = 0;
-					return false; // gets "put out"
-				}
-				dir.div(waterfric);
-			}
-			if(isdeadly(mat&MATF_VOLUME))
-			{
-				movement = 0;
-				return false; // gets "put out"
-			}
-			dir.mul(secs);
-			o.add(dir);
-
-			if(!collide(this, dir) || inside || hitplayer)
-			{
-				o = old;
-
-				if(projtype != PRJ_SHOT || attr1 == GUN_GL)
-				{
-					vec pos(wall);
-
-					if(hitplayer) pos = vec(vec(o).sub(hitplayer->o)).normalize();
-					vel.apply(pos, elasticity);
-					if(hitplayer) vel.influence(pos, hitplayer->vel, elasticity);
-
-					if(movement > 8.0f)
-					{
-						int mag = int(vel.magnitude()), vol = clamp(mag*10, 1, 255);
-
-						if(vol)
-						{
-							if(projtype == PRJ_SHOT && guntype[attr1].rsound >= 0) playsound(guntype[attr1].rsound, 0, vol, o, this);
-							else if(projtype == PRJ_GIBS) playsound(S_SPLAT, 0, vol, o, this);
-							else if(projtype == PRJ_DEBRIS) playsound(S_DEBRIS, 0, vol, o, this);
-						}
-					}
-                    movement = 0;
-					return true; // stay alive until timeout
-				}
-                movement = 0;
-				return false; // die on impact
-			}
-
-            float diff = o.dist(old);
-            movement += diff;
-			if(projtype == PRJ_SHOT && attr1 == GUN_GL)
-            {
-                roll += diff / (4*RAD);
-                if(roll >= 360) roll = fmod(roll, 360.0f);
-            }
-
-			return true;
+			physent::reset();
 		}
 	};
-
 	vector<projent *> projs;
+
+	void init(projent &proj)
+	{
+		vec dir(vec(vec(proj.to).sub(proj.from)).normalize());
+
+		switch(proj.projtype)
+		{
+			case PRJ_SHOT:
+			{
+				switch(proj.attr1)
+				{
+					case GUN_GL:
+						proj.mdl = "projectiles/grenade";
+						proj.aboveeye = 1.0f;
+						proj.elasticity = 0.33f;
+						proj.relativity = 0.5f;
+						proj.waterfric = 2.0f;
+						proj.weight = 50.f;
+						break;
+#if 0
+					case GUN_RL:
+					{
+						proj.aboveeye = 1.0f;
+						proj.elasticity = 0.0f;
+						proj.relativity = 0.25f;
+						proj.waterfric = 1.5f;
+						proj.weight = 0.f;
+						break;
+					}
+#endif
+					case GUN_FLAMER:
+					{
+						proj.aboveeye = 1.0f;
+						proj.height = proj.radius = guntype[proj.attr1].size*0.25f; // size increases over time
+						proj.elasticity = 0.1f; // doesn't "bounce" per se
+						proj.relativity = 0.25f;
+						proj.waterfric = 1.5f;
+						proj.weight = 33.f;
+						vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
+						if(v.magnitude()>50) v.div(50);
+						v.mul(proj.to.dist(proj.from)*0.005f);
+						v.z /= 2;
+						dir = proj.to;
+						dir.add(v);
+						dir.sub(proj.from);
+						dir.normalize();
+						break;
+					}
+					case GUN_PISTOL:
+					case GUN_SG:
+					case GUN_CG:
+					case GUN_RIFLE:
+					default:
+					{
+						proj.aboveeye = 1.0f;
+						proj.elasticity = 0.5f;
+						proj.relativity = 0.25f;
+						proj.waterfric = 1.25f;
+						proj.weight = 1.f;
+						break;
+					}
+				}
+				break;
+			}
+			case PRJ_GIBS:
+			{
+				proj.mdl = ((int)(size_t)&proj)&0x40 ? "gibc" : "gibh";
+				proj.aboveeye = 1.0f;
+				proj.elasticity = 0.25f;
+				proj.relativity = 1.0f;
+				proj.waterfric = 2.0f;
+				proj.weight = 10.f;
+				break;
+			}
+			case PRJ_DEBRIS:
+			{
+				switch(((((int)(size_t)&proj)&0xC0)>>6)+1)
+				{
+					case 4: proj.mdl = "debris/debris04"; break;
+					case 3: proj.mdl = "debris/debris03"; break;
+					case 2: proj.mdl = "debris/debris02"; break;
+					case 1: default: proj.mdl = "debris/debris01"; break;
+				}
+				proj.aboveeye = 1.0f;
+				proj.elasticity = 0.66f;
+				proj.relativity = 1.0f;
+				proj.waterfric = 1.75f;
+				proj.weight = 25.f;
+				break;
+			}
+			case PRJ_ENT:
+			{
+				proj.mdl = cl.et.entmdlname(proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4);
+				proj.aboveeye = 1.f;
+				proj.elasticity = 0.15f;
+				proj.relativity = 1.0f;
+				proj.waterfric = 1.75f;
+				proj.weight = 75.f;
+				break;
+			}
+			default: break;
+		}
+		if(*proj.mdl) setbbfrommodel(&proj, proj.mdl);
+		proj.height += 1.f;
+		proj.radius += 1.f;
+		proj.xradius += 1.f;
+		proj.yradius += 1.f;
+		vectoyawpitch(dir, proj.yaw, proj.pitch);
+		proj.vel = vec(vec(dir).mul(cl.ph.maxspeed(&proj))).add(vec(proj.owner->vel).mul(proj.relativity));
+		dir.mul(2);
+		proj.o.add(vec(dir).mul(proj.owner->radius)); // a push to get out of the way
+	}
+
+	void check(projent &proj)
+	{
+		if(proj.projtype == PRJ_SHOT)
+		{
+			float life = clamp((guntype[proj.attr1].time-proj.lifetime)/float(guntype[proj.attr1].time), 0.33f, 1.0f);
+
+			if(guntype[proj.attr1].fsound >= 0 && !issound(proj.schan))
+			{
+				proj.schan = playsound(guntype[proj.attr1].fsound, 0, proj.attr1 == GUN_FLAMER ? int(255*life) : 255, proj.o, &proj);
+			}
+
+			if(proj.attr1 == GUN_FLAMER)
+			{
+				int col = (int(255*max(1.25f-life,0.f))<<16)|(int(127*max(1.25f-life,0.f))<<8),
+					fade = int(10*life)+1;
+				proj.radius = guntype[proj.attr1].size*life;
+				regular_part_splash(4, 1, fade, proj.o, col, float(proj.radius));
+			}
+			else regular_particle_splash(5, 1, 20, proj.o);
+		}
+		else if(proj.projtype == PRJ_GIBS) regular_particle_splash(3, 1, 10000, proj.o);
+	}
+
+	bool update(projent &proj, int qtime)
+	{
+		int mat = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.height)/2));
+
+		if(isdeadly(mat&MATF_VOLUME) || proj.o.z < 0)
+		{
+			proj.movement = 0;
+			return false; // gets destroyed
+		}
+
+		bool water = isliquid(mat&MATF_VOLUME);
+		float secs = float(qtime) / 1000.0f;
+		vec old(proj.o);
+		if(proj.weight > 0.f) proj.vel.sub(vec(0, 0, cl.ph.gravityforce(&proj)*secs));
+		vec dir(proj.vel);
+
+		if(water)
+		{
+			if(proj.projtype == PRJ_SHOT && proj.attr1 == GUN_FLAMER)
+			{
+				proj.movement = 0;
+				return false; // gets "put out"
+			}
+			dir.div(proj.waterfric);
+		}
+		dir.mul(secs);
+		proj.o.add(dir);
+
+		if(!collide(&proj, dir) || inside || hitplayer)
+		{
+			proj.o = old;
+
+			if(proj.projtype == PRJ_GIBS || proj.projtype == PRJ_DEBRIS || proj.projtype == PRJ_ENT ||
+				(proj.projtype == PRJ_SHOT && (proj.attr1 == GUN_GL || (proj.attr1 == GUN_FLAMER && !hitplayer))))
+			{
+				vec pos(wall);
+
+				if(proj.movement > 2.0f)
+				{
+					int mag = int(proj.vel.magnitude()), vol = clamp(mag*10, 1, 255);
+
+					if(proj.projtype == PRJ_SHOT && proj.attr1 == GUN_FLAMER)
+					{
+						vec vdir = proj.vel.magnitude() > 2.0f ? vec(proj.vel).neg().normalize() : vec(vec(proj.o).sub(wall)).neg().normalize();
+						adddecal(DECAL_SCORCH, proj.o, vdir, guntype[proj.attr1].explode);
+					}
+					if(vol)
+					{
+						if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].rsound >= 0) playsound(guntype[proj.attr1].rsound, 0, vol, proj.o, &proj);
+						else if(proj.projtype == PRJ_GIBS) playsound(S_SPLAT, 0, vol, proj.o, &proj);
+						else if(proj.projtype == PRJ_DEBRIS) playsound(S_DEBRIS, 0, vol, proj.o, &proj);
+					}
+				}
+
+				if(hitplayer) pos = vec(vec(proj.o).sub(hitplayer->o)).normalize();
+				proj.vel.apply(pos, proj.elasticity);
+				if(hitplayer) proj.vel.influence(pos, hitplayer->vel, proj.elasticity);
+				proj.movement = 0;
+				return true; // stay alive until timeout
+			}
+			proj.vel = vec(vec(proj.o).sub(wall)).normalize().mul(proj.radius);
+			proj.movement = 0;
+			return false; // die on impact
+		}
+
+		float dist = proj.o.dist(old), diff = dist/(4*RAD);
+		proj.movement += dist;
+		if(proj.projtype == PRJ_SHOT && proj.attr1 == GUN_GL)
+		{
+			proj.roll += diff;
+			if(proj.roll >= 360) proj.roll = fmod(proj.roll, 360.0f);
+		}
+		else if(proj.projtype == PRJ_ENT && proj.pitch != 0.f)
+		{
+			if(proj.pitch < 0.f) { proj.pitch += diff; if(proj.pitch > 0.f) proj.pitch = 0.f; }
+			if(proj.pitch > 0.f) { proj.pitch -= diff; if(proj.pitch < 0.f) proj.pitch = 0.f; }
+		}
+
+		return true;
+	}
 
 	void create(vec &from, vec &to, bool local, fpsent *owner, int type, int lifetime, int speed, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0)
 	{
@@ -251,7 +278,7 @@ struct projectiles
 		proj.id = lastmillis;
 		proj.movement = 0;
 		proj.owner = owner;
-		proj.init();
+		init(proj);
 		projs.add(&proj);
 	}
 
@@ -261,7 +288,7 @@ struct projectiles
 		{
 			projent &proj = *(projs[i]);
 
-			proj.check();
+			check(proj);
 
 			if(!proj.owner) proj.state = CS_DEAD;
 
@@ -269,9 +296,9 @@ struct projectiles
             {
                 loopj(cl.ph.physicsrepeat)
                 {
-                    if((proj.lifetime -= cl.ph.physframetime()) <= 0 || !proj.update(cl.ph.physframetime()))
+                    if((proj.lifetime -= cl.ph.physframetime()) <= 0 || !update(proj, cl.ph.physframetime()))
                     {
-                        if(guntype[proj.attr1].radius)
+                        if(guntype[proj.attr1].explode)
                             cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.attr1, proj.local);
                         proj.state = CS_DEAD;
                         break;
@@ -283,9 +310,9 @@ struct projectiles
 				int qtime = min(rtime, 30);
 				rtime -= qtime;
 
-				if((proj.lifetime -= qtime) <= 0 || !proj.update(qtime))
+				if((proj.lifetime -= qtime) <= 0 || !update(proj, qtime))
 				{
-					if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].radius)
+					if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
 						cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.attr1, proj.local);
 					proj.state = CS_DEAD;
 					break;
@@ -325,11 +352,10 @@ struct projectiles
 
 	void render()
 	{
-		loopv(projs)
+		loopv(projs) if(*projs[i]->mdl)
 		{
 			projent &proj = *(projs[i]);
 			float yaw = proj.yaw, pitch = proj.pitch;
-			string mname;
             int cull = MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT;
 
             if(proj.projtype == PRJ_SHOT)
@@ -337,34 +363,24 @@ struct projectiles
             	if(proj.attr1 == GUN_GL)
             	{
             		yaw = pitch = proj.roll;
-            		s_sprintf(mname)("%s", "projectiles/grenade");
             	}
-#if 0
-            	else if(proj.attr1 == GUN_RL)
-            	{
-					s_sprintf(mname)("%s", "projectiles/rocket");
-            	}
-#endif
             	else continue;
 			}
             else if(proj.projtype == PRJ_GIBS)
             {
-				s_sprintf(mname)("%s", ((int)(size_t)&proj)&0x40 ? "gibc" : "gibh");
 				cull |= MDL_CULL_DIST;
 			}
 			else if(proj.projtype == PRJ_DEBRIS)
 			{
-				s_sprintf(mname)("debris/debris0%d", ((((int)(size_t)&proj)&0xC0)>>6)+1);
 				cull |= MDL_CULL_DIST;
 			}
 			else if(proj.projtype == PRJ_ENT)
 			{
-				s_sprintf(mname)("%s", cl.et.entmdlname(proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4));
 				cull |= MDL_CULL_DIST;
 			}
 			else continue;
 
-			rendermodel(&proj.light, mname, ANIM_MAPMODEL|ANIM_LOOP, proj.o, yaw+90, pitch, 0, cull);
+			rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, yaw+90, pitch, 0, cull);
 		}
 	}
 
@@ -378,11 +394,11 @@ struct projectiles
 			{
 #if 0
 				case GUN_RL:
-					adddynlight(proj.o, 0.66f*guntype[proj.attr1].radius, vec(1.1f, 0.66f, 0.22f));
+					adddynlight(proj.o, 0.66f*guntype[proj.attr1].explode, vec(1.1f, 0.66f, 0.22f));
 					break;
 #endif
 				case GUN_FLAMER:
-					adddynlight(proj.o, 0.66f*guntype[proj.attr1].radius, vec(1.1f, 0.22f, 0.02f));
+					adddynlight(proj.o, 0.66f*guntype[proj.attr1].explode, vec(1.1f, 0.22f, 0.02f));
 					break;
 				default:
 					break;

@@ -137,20 +137,20 @@ struct weaponstate
 
 		if(gun != GUN_FLAMER)
 		{
-			cl.quakewobble += int(guntype[gun].damage*(1-dist/guntype[gun].scale/guntype[gun].radius));
+			cl.quakewobble += int(guntype[gun].damage*(1-dist/guntype[gun].scale/guntype[gun].explode));
 
 			particle_splash(0, 200, 300, o);
-			particle_fireball(o, guntype[gun].radius, gun == GUN_GL ? 23 : 22);
+			particle_fireball(o, guntype[gun].explode, gun == GUN_GL ? 23 : 22);
 #if 0
-			if(gun==GUN_RL) adddynlight(o, 1.15f*guntype[gun].radius, vec(2, 1.5f, 1), 1100, 100, 0, 0.66f*guntype[gun].radius, vec(1.1f, 0.66f, 0.22f));
+			if(gun==GUN_RL) adddynlight(o, 1.15f*guntype[gun].explode, vec(2, 1.5f, 1), 1100, 100, 0, 0.66f*guntype[gun].explode, vec(1.1f, 0.66f, 0.22f));
 			else
 #endif
-				adddynlight(o, 1.15f*guntype[gun].radius, vec(2, 1.5f, 1), 1100, 100);
+				adddynlight(o, 1.15f*guntype[gun].explode, vec(2, 1.5f, 1), 1100, 100);
 
 			loopi(rnd(20)+10)
 				cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
 		}
-        adddecal(DECAL_SCORCH, o, gun==GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].radius);
+        adddecal(DECAL_SCORCH, o, gun==GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
 
 		if(local)
 		{
@@ -160,7 +160,7 @@ struct weaponstate
 			{
 				fpsent *f = (fpsent *)cl.iterdynents(i);
 				if(!f || f->state != CS_ALIVE || lastmillis-d->lastspawn <= REGENWAIT) continue;
-				radialeffect(f, o, guntype[gun].radius, gun != GUN_FLAMER ? HIT_EXPLODE : HIT_BURN);
+				radialeffect(f, o, guntype[gun].explode, gun != GUN_FLAMER ? HIT_EXPLODE : HIT_BURN);
 			}
 
 			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id-cl.maptime,

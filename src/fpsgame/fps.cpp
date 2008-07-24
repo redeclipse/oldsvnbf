@@ -502,9 +502,26 @@ struct GAMECLIENT : igameclient
 			console("\f2%s %s teammate %s", cflags, dname, oname, aname);
 		else console("\f2%s %s %s", cflags, dname, oname, aname);
 
-		d->state = CS_DEAD;
-		d->obliterated = !(flags & HIT_BURN) && (damage >= MAXHEALTH || (flags & HIT_EXPLODE));
+		d->obliterated = (
+			(flags & HIT_EXPLODE) || (flags & HIT_MELT) || (flags & HIT_FALL) ||
+				(!(flags & HIT_BURN) && (damage >= MAXHEALTH*15/10))
+		);
         d->lastpain = lastmillis;
+
+		vec dir, from, to;
+		vecfromyawpitch(d->aimyaw, d->aimpitch, 1, 0, dir);
+		dir.mul(d->radius*2.f);
+		to = vec(d->o).add(vec(dir).mul(32.f));
+		from = ws.gunorigin(d->o, to, d);
+		pj.create(from, to, d == player1 || d->bot, d, PRJ_ENT, 5000, 50, WEAPON, d->gunselect);
+
+		vec pos = headpos(d);
+		int gibs = (damage+2)/2;
+		if(d->obliterated) gibs *= 2;
+		else playsound(S_DIE1+rnd(2), 0, 255, d->o, d);
+		loopi(rnd(gibs)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
+
+		d->state = CS_DEAD;
 
 		if(d == player1)
 		{
@@ -520,14 +537,6 @@ struct GAMECLIENT : igameclient
 		{
             d->move = d->strafe = 0;
 		}
-
-		vec pos = headpos(d);//, dir, to(pos);
-		loopi(rnd((damage+2)/2)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
-		//vecfromyawpitch(d->aimyaw, d->aimpitch, 1, 0, dir);
-		//dir.mul(d->radius*2.f);
-		//pos.add(vec(dir).mul(32.f));
-		//pj.create(pos, to, d == player1 || d->bot, d, PRJ_ENT, 10000, spd, WEAPON, gun);
-		playsound(S_DIE1+rnd(2), 0, 255, d->o, d);
 
 		bot.killed(d, actor, gun, flags, damage);
 	}
@@ -1729,7 +1738,8 @@ struct GAMECLIENT : igameclient
 
 		if(d->state == CS_DEAD)
 		{
-			if(d->obliterated) return;
+			if(d->obliterated) return; // not shown at all
+			showgun = false;
 			animflags = ANIM_DYING;
 			lastaction = d->lastpain;
 			int t = lastmillis-lastaction;
