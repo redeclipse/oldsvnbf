@@ -964,6 +964,12 @@ void part_fireball(const vec &dest, float maxsize, int type, int fade, int color
     newparticle(dest, vec(0, 0, 1), fade, type, color, size)->val = growth;
 }
 
+void regular_part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size)
+{
+    if(shadowmapping || renderedgame || !emit_particles()) return;
+    part_fireball(dest, maxsize, type, fade, color, size);
+}
+
 void particle_fireball(const vec &dest, float maxsize, int type, int fade)
 {
     part_fireball(dest, maxsize, partmaps[type].type, fade, partmaps[type].color, partsize(type));

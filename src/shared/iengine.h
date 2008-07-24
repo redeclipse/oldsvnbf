@@ -137,6 +137,7 @@ extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int colo
 extern void part_text(const vec &s, const char *t, int type, int fade, int color, float size = 4.8f);
 extern void part_meter(const vec &s, float val, int type, int fade, int color, float size = 4.8f);
 extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size = 4.8f, physent *owner = NULL);
+extern void regular_part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size = 4.8f);
 extern void part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size = 4.8f);
 extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color, float size = 4.8f);
 extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, float size = 4.8f, physent *owner = NULL);

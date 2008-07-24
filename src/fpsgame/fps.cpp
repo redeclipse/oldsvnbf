@@ -497,7 +497,7 @@ struct GAMECLIENT : igameclient
         	else if(flags&HIT_FALL) console("\f2%s thought they could fly", cflags, dname);
         	else console("\f2%s suicided", cflags, dname);
         }
-		else if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, aname, oname, dname);
+		else if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, dname, oname, aname);
 		else if(m_team(gamemode, mutators) && d->team == actor->team)
 			console("\f2%s %s teammate %s", cflags, dname, oname, aname);
 		else console("\f2%s %s %s", cflags, dname, oname, aname);

@@ -273,7 +273,7 @@ int playsound(int n, int flags, int vol, vec &pos, physent *d, int maxrad, int m
 		}
 		else conoutf("cannot play sound %d (%s): %s", n, soundset[n].sample->name, Mix_GetError());
 	}
-	else conoutf("unregistered sound: %d", n);
+	else if(n > 0) conoutf("unregistered sound: %d", n);
 
 	return -1;
 }
