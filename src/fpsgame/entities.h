@@ -113,63 +113,58 @@ struct entities : icliententities
 
 	const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
 	{
-		static string emdl;
-		emdl[0] = 0;
-
-		switch (type)
+		switch(type)
 		{
-			case WEAPON:
-				s_sprintf(emdl)("weapons/%s/item", guntype[attr1].name);
-				break;
-			case FLAG:
-				if(m_edit(cl.gamemode)) s_sprintf(emdl)("%s", teamtype[attr2].flag);
-				break;
-			default:
-				break;
+			case WEAPON: return guntype[attr1].item;
+			case FLAG: return teamtype[attr2].flag;
+			default: break;
 		}
-		return emdl[0] ? emdl : NULL;
+		return "";
 	}
 
 	void announce(int idx, const char *msg = "", bool force = false)
 	{
-		static int lastannouncement;
-		if(force || lastmillis-lastannouncement > 1000)
+		if(idx > 0 && idx < S_MAX)
 		{
-			bool announcer = false;
-			loopv(ents)
+			static int lastannouncement;
+			if(force || lastmillis-lastannouncement > 1000)
 			{
-				fpsentity &e = (fpsentity &)*ents[i];
-				if(e.type == ANNOUNCER)
+				bool announcer = false;
+				loopv(ents)
 				{
-					playsound(idx, 0, e.attr3, e.o, NULL, e.attr1, e.attr2);
-					announcer = true;
-				}
-			}
-			if(!announcer)
-			{ // if there's no announcer entities, just encompass the level
-				loopi(13)
-				{
-					vec v;
-					switch(i)
+					fpsentity &e = (fpsentity &)*ents[i];
+					if(e.type == ANNOUNCER)
 					{
-						case 1:		v = vec(0, 0, 0.5f*getworldsize()); break;
-						case 2:		v = vec(0, getworldsize(), 0.5f*getworldsize()); break;
-						case 3:		v = vec(getworldsize(), getworldsize(), 0.5f*getworldsize()); break;
-						case 4:		v = vec(getworldsize(), 0, 0.5f*getworldsize()); break;
-						case 5:		v = vec(0, 0, getworldsize()); break;
-						case 6:		v = vec(0, getworldsize(), getworldsize()); break;
-						case 7:		v = vec(getworldsize(), getworldsize(), getworldsize()); break;
-						case 8:		v = vec(getworldsize(), 0, getworldsize()); break;
-						case 9:		v = vec(0, 0, 0.5f*getworldsize()); break;
-						case 10:	v = vec(0, getworldsize(), 0); break;
-						case 11:	v = vec(getworldsize(), getworldsize(), 0); break;
-						case 12:	v = vec(getworldsize(), 0, 0); break;
-						default:	v = vec(0.5f*getworldsize(), 0.5f*getworldsize(), 0.5f*getworldsize()); break;
+						playsound(idx, 0, e.attr3, e.o, NULL, e.attr1, e.attr2);
+						announcer = true;
 					}
-					playsound(idx, 0, 255, v, NULL, getworldsize()*3/4, 0);
 				}
+				if(!announcer)
+				{ // if there's no announcer entities, just encompass the level
+					loopi(13)
+					{
+						vec v;
+						switch(i)
+						{
+							case 1:		v = vec(0, 0, 0.5f*getworldsize()); break;
+							case 2:		v = vec(0, getworldsize(), 0.5f*getworldsize()); break;
+							case 3:		v = vec(getworldsize(), getworldsize(), 0.5f*getworldsize()); break;
+							case 4:		v = vec(getworldsize(), 0, 0.5f*getworldsize()); break;
+							case 5:		v = vec(0, 0, getworldsize()); break;
+							case 6:		v = vec(0, getworldsize(), getworldsize()); break;
+							case 7:		v = vec(getworldsize(), getworldsize(), getworldsize()); break;
+							case 8:		v = vec(getworldsize(), 0, getworldsize()); break;
+							case 9:		v = vec(0, 0, 0.5f*getworldsize()); break;
+							case 10:	v = vec(0, getworldsize(), 0); break;
+							case 11:	v = vec(getworldsize(), getworldsize(), 0); break;
+							case 12:	v = vec(getworldsize(), 0, 0); break;
+							default:	v = vec(0.5f*getworldsize(), 0.5f*getworldsize(), 0.5f*getworldsize()); break;
+						}
+						playsound(idx, 0, 255, v, NULL, getworldsize()*3/4, 0);
+					}
+				}
+				lastannouncement = lastmillis;
 			}
-			lastannouncement = lastmillis;
 		}
 		if(*msg) console("\fg%s", (force ? CON_CENTER : 0)|CON_NORMAL, msg);
 	}

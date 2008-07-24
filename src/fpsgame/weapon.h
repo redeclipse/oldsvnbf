@@ -133,12 +133,11 @@ struct weaponstate
 		float dist = middist(camera1, dir, o);
 
 		if(guntype[gun].esound >= 0)
-			playsound(guntype[gun].esound, 0, 255, o);
+			playsound(guntype[gun].esound, 0, 128, o);
 
 		if(gun != GUN_FLAMER)
 		{
 			cl.quakewobble += int(guntype[gun].damage*(1-dist/guntype[gun].scale/guntype[gun].explode));
-
 			particle_splash(0, 200, 300, o);
 			particle_fireball(o, guntype[gun].explode, gun == GUN_GL ? 23 : 22);
 #if 0
@@ -150,6 +149,9 @@ struct weaponstate
 			loopi(rnd(20)+10)
 				cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
 		}
+		else
+			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), 100, 10);
+
         adddecal(DECAL_SCORCH, o, gun==GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
 
 		if(local)
@@ -159,7 +161,7 @@ struct weaponstate
 			loopi(cl.numdynents())
 			{
 				fpsent *f = (fpsent *)cl.iterdynents(i);
-				if(!f || f->state != CS_ALIVE || lastmillis-d->lastspawn <= REGENWAIT) continue;
+				if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
 				radialeffect(f, o, guntype[gun].explode, gun != GUN_FLAMER ? HIT_EXPLODE : HIT_BURN);
 			}
 

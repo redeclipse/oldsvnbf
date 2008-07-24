@@ -152,29 +152,48 @@ enum
 
 struct guntypes
 {
-	int info, 		anim,			sound, 		esound, 	fsound,		rsound,		ssound,
-			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,
-				size,	explode;const char *name,		*vwep;
+	int	info, 		anim,			sound, 		esound, 	fsound,		rsound,		ssound,
+		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,
+		size,	explode; float offset,	elasticity,	relativity,	waterfric,	weight;
+	const char *name,		*item,						*vwep;
 } guntype[NUMGUNS] =
 {
-	{ GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-			12,		12,		250,	1000,	25,		0,		0,		0,		-10,    10,		0,
-				1,		0,					"pistol",	"weapons/pistol/vwep" },
-	{ GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-			1,		8,		600,	1100,	10,		0,		0,		0,		-30,    30, 	0,
-				1,		0,					"shotgun",	"weapons/shotgun/vwep" },
-	{ GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-			40,		40,		90,	    1200,	15,		0,		0,		0,		-5,	     4,		0,
-				1,		0,					"chaingun",	"weapons/chaingun/vwep" },
-	{ GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
-			2,		4,		1500,	0,		250,	150,	1000,	3000,	-15,    10,		8,
-				1,		64,					"grenades",	"weapons/grenades/vwep" },
-	{ GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURNING,S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
-			50,		50,		100, 	2000,	25,		80,		0,		3000,	-1,		 1,		8,
-				15,		16,					"flamer",	"weapons/flamer/vwep" },
-	{ GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-			1,		5,		600,	1000,	100,	0,		0,		0,		-30,  	20,		0,
-				1,		0,					"rifle",	"weapons/rifle/vwep" },
+	{
+		GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
+		12,		12,		250,	1000,	25,		0,		0,		0,		-10,    10,		0,
+		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
+				"pistol",	"weapons/pistol/item",		"weapons/pistol/vwep"
+	},
+	{
+		GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
+		1,		8,		600,	1100,	10,		0,		0,		0,		-30,    30, 	0,
+		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
+				"shotgun",	"weapons/shotgun/item",		"weapons/shotgun/vwep"
+	},
+	{
+		GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
+		40,		40,		90,	    1200,	15,		0,		0,		0,		-5,	     4,		0,
+		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
+				"chaingun",	"weapons/chaingun/item",	"weapons/chaingun/vwep"
+	},
+	{
+		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
+		2,		4,		1500,	0,		200,	150,	1000,	3000,	-15,    10,		8,
+		3,		64,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
+				"grenades",	"weapons/grenades/item",	"weapons/grenades/vwep"
+	},
+	{
+		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURNING,S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
+		50,		50,		100, 	2000,	10,		100,		0,		3000,	-1,		 1,		8,
+		15,		16,				0.1f,	0.1f,		0.25f,		1.5f,		50.f,
+				"flamer",	"weapons/flamer/item",		"weapons/flamer/vwep"
+	},
+	{
+		GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
+		1,		5,		600,	1000,	100,	0,		0,		0,		-30,  	20,		0,
+		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
+				"rifle",	"weapons/rifle/item",		"weapons/rifle/vwep"
+	}
 };
 #define isgun(gun)	(gun > -1 && gun < NUMGUNS)
 

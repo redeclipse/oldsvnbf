@@ -481,7 +481,7 @@ struct physics
 
 				if(int(material&MATF_VOLUME) == MAT_LAVA || int(pl->inmaterial&MATF_VOLUME) == MAT_LAVA)
 				{
-					mattrig(getlavacolour(col), 4, int(material&MATF_VOLUME) != MAT_LAVA ? -1 : S_FLBURN);
+					mattrig(getlavacolour(col), 4, int(material&MATF_VOLUME) != MAT_LAVA ? -1 : S_FLBURNING);
 				}
 			}
 
