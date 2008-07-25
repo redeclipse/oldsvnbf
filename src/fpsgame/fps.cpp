@@ -23,8 +23,8 @@ struct GAMECLIENT : igameclient
 	int respawnent, swaymillis;
 	dynent fpsmodel;
 	vec swaydir;
-    int lasthit, lastcamera, lastzoom;
-    bool prevzoom, zooming, waszooming;
+    int lasthit, lastcamera, lastzoom, lastmousetype;
+    bool prevzoom, zooming;
 	int quakewobble, damageresidue;
     int liquidchan;
 
@@ -148,7 +148,8 @@ struct GAMECLIENT : igameclient
 			intermission(false), openedmenu(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			lasthit(0), lastcamera(0), lastzoom(0), prevzoom(false), zooming(false), waszooming(false),
+			lasthit(0), lastcamera(0), lastzoom(0), lastmousetype(0),
+			prevzoom(false), zooming(false),
 			quakewobble(0), damageresidue(0),
 			liquidchan(-1),
 			player1(new fpsent())
@@ -1346,12 +1347,6 @@ struct GAMECLIENT : igameclient
 				amt = frame < zoomtime() ? clamp(float(frame)/float(zoomtime()), 0.f, 1.f) : 1.f;
 			if(!zooming) amt = 1.f-amt;
 			curfov -= amt*diff;
-			waszooming = true;
-		}
-		else if(waszooming)
-		{
-			resetcursor();
-			waszooming = false;
 		}
 
         aspect = w/float(h);
@@ -1395,6 +1390,12 @@ struct GAMECLIENT : igameclient
 
 	void project(int w, int h)
 	{
+		int style = g3d_active() ? -1 : mousestyle();
+		if(style != lastmousetype)
+		{
+			resetcursor();
+			lastmousetype = style;
+		}
 		if(!g3d_active())
 		{
 			if(mousestyle() <= 1 && isthirdperson() ? thirdpersonaim() : firstpersonaim())
