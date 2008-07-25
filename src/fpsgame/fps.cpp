@@ -140,9 +140,7 @@ struct GAMECLIENT : igameclient
 	IVARP(showfps, 0, 2, 2);
 	IVARP(statrate, 0, 200, 1000);
 
-	ISVARP(lobbymenu, "main");
-
-    GAMECLIENT()
+	GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
 			maptime(0), minremain(0), respawnent(-1),
@@ -649,9 +647,6 @@ struct GAMECLIENT : igameclient
 		}
 		et.resetspawns();
 		sb.showscores(false);
-
-		if(name && *name && m_lobby(gamemode) && *lobbymenu())
-			showgui(lobbymenu());
 	}
 
 	void playsoundc(int n, fpsent *d = NULL)

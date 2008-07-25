@@ -9,6 +9,7 @@ struct clientcom : iclientcom
 	IVARP(colourchat, 0, 1, 1);
 
 	ISVARP(serversort, "");
+	ISVARP(lobbymenu, "main");
 
 	clientcom(GAMECLIENT &_cl) : cl(_cl),
 		c2sinit(false), senditemstoserver(false),
@@ -1334,6 +1335,8 @@ struct clientcom : iclientcom
 			emptymap(0, true, NULL);
 			needsmap = true;
 		}
+		else if(m_lobby(cl.gamemode) && *lobbymenu())
+			showgui(lobbymenu());
 		if(m_stf(gamemode)) cl.stf.setupflags();
         else if(m_ctf(gamemode)) cl.ctf.setupflags();
 		if(editmode) edittoggled(editmode);
