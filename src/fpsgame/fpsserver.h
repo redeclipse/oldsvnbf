@@ -739,7 +739,6 @@ struct GAMESERVER : igameserver
 		minremain = timelimit() ? timelimit() : -1;
 		gamelimit = timelimit() ? minremain*60000 : 0;
 		interm = 0;
-		interm = 0;
 		s_strcpy(smapname, s);
 		resetitems();
 		notgotitems = true;
