@@ -1852,7 +1852,7 @@ struct GAMESERVER : igameserver
 					sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
 					return true;
 				}
-				else removebot(ci);
+				else removebot(cp);
 			}
 		}
 		return false;
@@ -1860,7 +1860,22 @@ struct GAMESERVER : igameserver
 
 	void checkbots(bool renew = false)
 	{
-		if(m_lobby(gamemode))
+		if(renew)
+		{
+			if(botratio() && nonspectators() && m_fight(gamemode) && m_team(gamemode, mutators))
+			{
+				loopvrev(clients) if(clients[i]->state.ownernum >= 0)
+				{
+					int team = chooseworstteam(clients[i]);
+					if(team != clients[i]->team)
+					{
+						clients[i]->team = team;
+						sendf(-1, 1, "ri3", SV_SETTEAM, clients[i]->clientnum, clients[i]->team);
+					}
+				}
+			}
+		}
+		else if(m_lobby(gamemode))
 		{
 			loopvrev(clients)
 				if(clients[i]->state.ownernum >= 0)
@@ -1882,19 +1897,6 @@ struct GAMESERVER : igameserver
 				{
 					while(nonspectators() < botbalance() && addbot(-1)) ;
 					while(nonspectators() > botbalance() && deletebot()) ;
-				}
-
-				if(renew && botratio() && m_team(gamemode, mutators))
-				{
-					loopvrev(clients) if(clients[i]->state.ownernum >= 0)
-					{
-						int team = chooseworstteam(clients[i]);
-						if(team != clients[i]->team)
-						{
-							clients[i]->team = team;
-							sendf(-1, 1, "ri3", SV_SETTEAM, clients[i]->clientnum, clients[i]->team);
-						}
-					}
 				}
 			}
 			while(reassignbots()) ;
