@@ -140,6 +140,8 @@ struct GAMECLIENT : igameclient
 	IVARP(showfps, 0, 2, 2);
 	IVARP(statrate, 0, 200, 1000);
 
+	IVARP(openmainmenu, 0, 1, 1);
+
 	GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
 			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
@@ -156,6 +158,7 @@ struct GAMECLIENT : igameclient
 		CCOMMAND(mutators, "", (GAMECLIENT *self), intret(self->mutators));
 		CCOMMAND(zoom, "D", (GAMECLIENT *self, int *down), { self->dozoom(*down!=0); });
 		s_strcpy(player1->name, "unnamed");
+		if(openmainmenu()) showgui("main");
 	}
 
 	iclientcom *getcom() { return &cc; }
