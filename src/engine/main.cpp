@@ -31,7 +31,7 @@ void setcaption(const char *text)
 {
     static string caption = "";
 	s_sprintfd(newcaption)("%s v%.2f (%s)%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "");
-    if(strcmp(caption, newcaption)) 
+    if(strcmp(caption, newcaption))
     {
         s_strcpy(caption, newcaption);
 	    SDL_WM_SetCaption(caption, NULL);
@@ -817,7 +817,7 @@ int main(int argc, char **argv)
 	if(autograbinput) setvar("grabinput", 1, true);
 
 	if(autoconnect) connects();
-	else showgui("main");
+	else if(!guiactive()) showgui("main");
 
 	resetfpshistory();
 

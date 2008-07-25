@@ -498,7 +498,7 @@ extern bool limitsky();
 extern void g3d_render();
 extern bool g3d_windowhit(bool on, bool act);
 extern void g3d_mainmenu();
-extern bool guiactive(bool hit = true, bool pass = true);
+extern bool g3d_active(bool hit = true, bool pass = true);
 
 // grass
 extern void rendergrass();
