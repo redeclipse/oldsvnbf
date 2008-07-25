@@ -804,8 +804,6 @@ struct botclient
 
 	void process(fpsent *d, botstate &b)
 	{
-		cl.heightoffset(d);
-
 		if(d->state == CS_ALIVE)
 		{
 			//if(d->gunselect != bestgun && d->canswitch(bestgun, lastmillis))
