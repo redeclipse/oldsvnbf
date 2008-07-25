@@ -160,19 +160,19 @@ struct guntypes
 {
 	{
 		GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		12,		12,		250,	1000,	10,		0,		0,		0,		-10,    10,		0,
+		12,		12,		250,	1000,	15,		0,		0,		0,		-10,    10,		0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"pistol",	"weapons/pistol/item",		"weapons/pistol/vwep"
 	},
 	{
 		GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		1,		8,		600,	1100,	15,		0,		0,		0,		-30,    30, 	0,
+		1,		2,		600,	1200,	15,		0,		0,		0,		-30,    30, 	0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"shotgun",	"weapons/shotgun/item",		"weapons/shotgun/vwep"
 	},
 	{
 		GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		40,		40,		90,	    1200,	15,		0,		0,		0,		-5,	     4,		0,
+		40,		40,		90,	    1200,	15,		0,		0,		0,		-5,	     5,		0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"chaingun",	"weapons/chaingun/item",	"weapons/chaingun/vwep"
 	},
@@ -184,13 +184,13 @@ struct guntypes
 	},
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURNING,S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
-		50,		50,		100, 	2000,	10,		100,		0,		3000,	-1,		 1,		8,
-		15,		16,				0.1f,	0.1f,		0.25f,		1.5f,		50.f,
+		50,		50,		100, 	2000,	15,		100,		0,		3000,	-1,		 1,		8,
+		24,		24,				0.1f,	0.1f,		0.25f,		1.5f,		50.f,
 				"flamer",	"weapons/flamer/item",		"weapons/flamer/vwep"
 	},
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		1,		5,		600,	1000,	100,	0,		0,		0,		-30,  	20,		0,
+		1,		2,		750,	1300,	100,	0,		0,		0,		-30,  	20,		0,
 		1,		0,				2.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"rifle",	"weapons/rifle/item",		"weapons/rifle/vwep"
 	}
