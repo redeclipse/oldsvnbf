@@ -388,8 +388,8 @@ struct GAMECLIENT : igameclient
 				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); if(n <= 0) n = (t)0; }
 
 			adjustscaled(float, player1->roll, 100.f);
-			adjustscaled(int, quakewobble, 10.f);
-			adjustscaled(int, damageresidue, 10.f);
+			adjustscaled(int, quakewobble, 500.f);
+			adjustscaled(int, damageresidue, 500.f);
 
 			if(player1->state == CS_DEAD)
 			{

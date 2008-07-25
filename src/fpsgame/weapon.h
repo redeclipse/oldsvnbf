@@ -343,15 +343,10 @@ struct weaponstate
 				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, bestgun);
 			}
 		}
-		else if(d->reloading || doautoreload(d))
+		else if((d->reloading || doautoreload(d)) && d->canreload(d->gunselect, lastmillis))
 		{
-			if(d->canreload(d->gunselect, lastmillis))
-			{
-				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-			}
-			//else if(d->reloading) cl.playsoundc(S_DENIED, d);
+			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 		}
-		d->reloading = false;
 	}
 
 	void shoot(fpsent *d, vec &targ)

@@ -151,8 +151,8 @@ struct projectiles
 		if(proj.mdl && *proj.mdl)
 		{
 			setbbfrommodel(&proj, proj.mdl);
-			proj.height += 4.f;
 		}
+		if(proj.projtype == PRJ_ENT) proj.height += 4.f;
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
 		proj.vel = vec(vec(dir).mul(cl.ph.maxspeed(&proj))).add(vec(proj.owner->vel).mul(proj.relativity));
 		dir.mul(2);
