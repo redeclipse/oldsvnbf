@@ -1078,19 +1078,11 @@ struct GAMESERVER : igameserver
 					int physstate = getuint(p);
 					if(physstate&0x20) loopi(2) getint(p);
 					if(physstate&0x10) getint(p);
+                    getuint(p);
 					if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
 					{
 						cp->position.setsizenodelete(0);
 						while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
-					}
-					uint f = getuint(p);
-					if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
-					{
-						f &= 0xF;
-						curmsg = p.length();
-						ucharbuf buf = cp->position.reserve(4);
-						putuint(buf, f);
-						cp->position.addbuf(buf);
 					}
 					if(havecn)
 					{
