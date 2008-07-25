@@ -18,7 +18,7 @@ struct GAMECLIENT : igameclient
     #include "ctf.h"
 
 	int nextmode, nextmuts, gamemode, mutators;
-	bool intermission;
+	bool intermission, openedmenu;
 	int maptime, minremain;
 	int respawnent, swaymillis;
 	dynent fpsmodel;
@@ -144,7 +144,7 @@ struct GAMECLIENT : igameclient
 
 	GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
-			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false),
+			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false), openedmenu(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
 			lasthit(0), lastcamera(0), lastzoom(0), prevzoom(false), zooming(false),
@@ -158,7 +158,6 @@ struct GAMECLIENT : igameclient
 		CCOMMAND(mutators, "", (GAMECLIENT *self), intret(self->mutators));
 		CCOMMAND(zoom, "D", (GAMECLIENT *self, int *down), { self->dozoom(*down!=0); });
 		s_strcpy(player1->name, "unnamed");
-		if(openmainmenu()) showgui("main");
 	}
 
 	iclientcom *getcom() { return &cc; }
@@ -371,6 +370,11 @@ struct GAMECLIENT : igameclient
         	maptime = lastmillis + curtime;
         	return;
         }
+		if(!openedmenu && openmainmenu())
+		{
+			showgui("main");
+			openedmenu = true;
+		}
 
 		gets2c();
 
@@ -423,7 +427,6 @@ struct GAMECLIENT : igameclient
 			}
 			else ph.move(player1, 20, true);
 		}
-		else if(!guiactive()) showgui("main");
 
 		if(player1->clientnum >= 0) c2sinfo();
 	}
