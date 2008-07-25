@@ -29,8 +29,13 @@ void showcursor(bool show)
 
 void setcaption(const char *text)
 {
-	s_sprintfd(caption)("%s v%.2f (%s)%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "");
-	SDL_WM_SetCaption(caption, NULL);
+    static string caption = "";
+	s_sprintfd(newcaption)("%s v%.2f (%s)%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "");
+    if(strcmp(caption, newcaption)) 
+    {
+        s_strcpy(caption, newcaption);
+	    SDL_WM_SetCaption(caption, NULL);
+    }
 }
 
 void keyrepeat(bool on)
