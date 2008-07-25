@@ -124,8 +124,8 @@ enum
     ANIM_MAX
 };
 
-#define SGRAYS			15
-#define SGSPREAD		4
+#define SGRAYS			50
+#define SGSPREAD		5
 #define GUNSWITCHDELAY	800
 #define PLAYERHEIGHT	15.f
 
