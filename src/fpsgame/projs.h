@@ -151,6 +151,10 @@ struct projectiles
 		if(proj.mdl && *proj.mdl)
 		{
 			setbbfrommodel(&proj, proj.mdl);
+			proj.radius += 1.f;
+			proj.xradius += 1.f;
+			proj.yradius += 1.f;
+			proj.height += 1.f;
 		}
 		if(proj.projtype == PRJ_ENT) proj.height += 4.f;
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
