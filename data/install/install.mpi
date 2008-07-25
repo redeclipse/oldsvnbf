@@ -135,7 +135,7 @@ ProjectID
 AD7B5390-BFDC-455D-8818-99A72170E7B9
 
 ProjectVersion
-0.0.7.5
+1.2.7.0
 
 SaveOnlyToplevelDirs
 No
@@ -179,6 +179,18 @@ WizardWidth
 }
 
 array set ::InstallJammer::InstallCommandLineOptions {
+D
+{{} Prefix No No {} {set the value of an option in the installer}}
+
+S
+{InstallMode Switch No No Silent {run the installer in silent mode}}
+
+T
+{Testing Switch Yes No {} {run installer without installing any files}}
+
+Y
+{InstallMode Switch No No Default {accept all defaults and run the installer}}
+
 debug
 {Debugging Switch Yes No {} {run installer in debug mode}}
 
@@ -196,6 +208,12 @@ test
 
 }
 array set ::InstallJammer::UninstallCommandLineOptions {
+S
+{UninstallMode Switch No No Silent {run the uninstaller in silent mode}}
+
+Y
+{UninstallMode Switch No No Default {accept all defaults and run the uninstaller}}
+
 debugconsole
 {ShowConsole Switch Yes No {} {run uninstaller with a debug console open}}
 
@@ -207,7 +225,7 @@ test
 
 }
 FileGroup ::3A46FBF5-F027-4222-9E3F-35923F5A8540 -setup Install -active Yes -platforms {AIX-ppc FreeBSD-4-x86 FreeBSD-x86 HPUX-hppa Linux-x86 Solaris-sparc Windows TarArchive ZipArchive} -name {Blood Frontier} -parent FileGroups
-File ::221D41B7-0B9F-451A-823C-877653153708 -type dir -name {C:/Media/Games/BloodFrontier/export/BloodFrontier/bin} -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
+File ::221D41B7-0B9F-451A-823C-877653153708 -type dir -name C:/Media/Games/BloodFrontier/export/BloodFrontier/bin -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
 File ::A8A757FA-22FA-4841-AA59-84A3F93D6A72 -name bloodfrontier_client -permissions 00775 -parent 221D41B7-0B9F-451A-823C-877653153708
 File ::BBFD02C7-5E05-47D6-975E-4B95545D9C92 -name bloodfrontier_client.exe -parent 221D41B7-0B9F-451A-823C-877653153708
 File ::069B1DE4-4DBA-4DDA-8416-AC7BBC50E320 -name bloodfrontier_client.exe.manifest -parent 221D41B7-0B9F-451A-823C-877653153708
@@ -237,7 +255,7 @@ File ::8DE8B9F6-E4E2-4C2C-89C1-A154BF5079AA -name smpeg.dll -parent 221D41B7-0B9
 File ::A520548F-47CA-4BAC-BC20-5F4F4F77DC3B -name ttf2font -permissions 00775 -parent 221D41B7-0B9F-451A-823C-877653153708
 File ::FEB9C49D-9969-45F4-8C6C-5F254CF630A4 -name ttf2font.exe -parent 221D41B7-0B9F-451A-823C-877653153708
 File ::17F6EF51-84B3-4E5A-A93E-9BA97B65ABF3 -name zlib1.dll -parent 221D41B7-0B9F-451A-823C-877653153708
-File ::76AFDE17-A291-4BF7-9BE1-A2EF9ECC4061 -type dir -name {C:/Media/Games/BloodFrontier/export/BloodFrontier/data} -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
+File ::76AFDE17-A291-4BF7-9BE1-A2EF9ECC4061 -type dir -name C:/Media/Games/BloodFrontier/export/BloodFrontier/data -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
 File ::BC480F4D-9519-4A7E-9F81-A6CEFB0041B2 -name brush.cfg -parent 76AFDE17-A291-4BF7-9BE1-A2EF9ECC4061
 File ::DEF94848-A3ED-4D17-AABA-241B2A7103A2 -name defaults.cfg -parent 76AFDE17-A291-4BF7-9BE1-A2EF9ECC4061
 File ::7253B75C-83F6-428D-9D37-93B726980BA5 -name engine.cfg -parent 76AFDE17-A291-4BF7-9BE1-A2EF9ECC4061
@@ -629,9 +647,6 @@ File ::ADD5F580-9C87-4CBE-9122-794E501853B9 -name hud.cfg -parent 9164DDAD-D4F8-
 File ::802FA605-A18A-40FE-8E88-670ACFF0C6BC -name hud.png -parent 9164DDAD-D4F8-4D44-A0A2-851ECF995AAB
 File ::039A7566-BE02-444B-82B6-9E36472E76DB -name radar.cfg -parent 9164DDAD-D4F8-4D44-A0A2-851ECF995AAB
 File ::145C9E31-143F-4604-966C-D557B229C4A5 -name radar.png -parent 9164DDAD-D4F8-4D44-A0A2-851ECF995AAB
-File ::8672EFF6-FC58-4A97-BA61-F0C12EA2D575 -type dir -name inst_art -parent 76AFDE17-A291-4BF7-9BE1-A2EF9ECC4061
-File ::C8351F04-0B29-4356-B766-677C5932B8FF -name large.gif -parent 8672EFF6-FC58-4A97-BA61-F0C12EA2D575
-File ::267580DC-D7CF-427F-B589-7915A4883C70 -name small.gif -parent 8672EFF6-FC58-4A97-BA61-F0C12EA2D575
 File ::8004D238-FC26-4648-B909-210F372B5B63 -type dir -name maps -parent 76AFDE17-A291-4BF7-9BE1-A2EF9ECC4061
 File ::8BB26A45-A536-4727-AD19-F7B3C84DD32D -name citadel.bgz -parent 8004D238-FC26-4648-B909-210F372B5B63
 File ::02ECBDE6-D7BE-4DDA-92C2-BABC5653D065 -name citadel.cfg -parent 8004D238-FC26-4648-B909-210F372B5B63
@@ -1360,7 +1375,11 @@ File ::8471AD3C-2E50-492D-8845-E8EA611CB74D -name celllight_nz.jpg -parent D4942
 File ::6851630C-3931-4AFB-ABF9-02B205F75F50 -name celllight_px.jpg -parent D4942583-FC5D-423B-A77D-BF0AB63750EB
 File ::FE362FD8-5BD5-4F44-8BFD-503B10E0A34E -name celllight_py.jpg -parent D4942583-FC5D-423B-A77D-BF0AB63750EB
 File ::B209C460-E39E-4B25-AB13-7F13DFDF6711 -name celllight_pz.jpg -parent D4942583-FC5D-423B-A77D-BF0AB63750EB
-File ::358B6FBD-A248-40A2-BE45-8E6D28913742 -type dir -name {C:/Media/Games/BloodFrontier/export/BloodFrontier/src} -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
+File ::C27757C5-6C4E-42E1-8807-9CC47072886E -type dir -name install -parent 76AFDE17-A291-4BF7-9BE1-A2EF9ECC4061
+File ::605EEECF-30D1-43F7-B03B-4967F8032639 -name install.mpi -parent C27757C5-6C4E-42E1-8807-9CC47072886E
+File ::024A4D1A-FF57-4D3A-94FC-FC4EEB5188D0 -name large.gif -parent C27757C5-6C4E-42E1-8807-9CC47072886E
+File ::FA490488-FD98-478B-906F-30EEECEDFECB -name small.gif -parent C27757C5-6C4E-42E1-8807-9CC47072886E
+File ::358B6FBD-A248-40A2-BE45-8E6D28913742 -type dir -name C:/Media/Games/BloodFrontier/export/BloodFrontier/src -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
 File ::8A5D3CA8-9EA4-499B-9514-B133828F2657 -name bloodfrontier.cbp -parent 358B6FBD-A248-40A2-BE45-8E6D28913742
 File ::0A4065F5-F741-47F5-BD66-AABA6F8A9EA1 -name bloodfrontier.ico -parent 358B6FBD-A248-40A2-BE45-8E6D28913742
 File ::6C1FA271-0E1B-4B36-B138-16E90669214B -name bloodfrontier.rc -parent 358B6FBD-A248-40A2-BE45-8E6D28913742
@@ -1593,9 +1612,9 @@ File ::2DBE02DC-36C9-4F5F-80DC-E6F43D31FA43 -type dir -name vcpp -parent 358B6FB
 File ::7DBD8BF0-6F8A-4AAC-AA4A-C5B0D3DF0E31 -name bloodfrontier.sln -parent 2DBE02DC-36C9-4F5F-80DC-E6F43D31FA43
 File ::249F216F-620E-4DF7-BBAF-E4CFDED3DB1C -name bloodfrontier.suo -parent 2DBE02DC-36C9-4F5F-80DC-E6F43D31FA43
 File ::70150CAB-6344-4E56-A6A1-581BFDC3A20B -name bloodfrontier.vcproj -parent 2DBE02DC-36C9-4F5F-80DC-E6F43D31FA43
-File ::027119D8-1EDF-490B-BFC4-920D8BF31235 -name {C:/Media/Games/BloodFrontier/export/BloodFrontier/bloodfrontier.bat} -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
-File ::34325A3A-7F08-4F41-A901-6A82CC34AEF0 -name {C:/Media/Games/BloodFrontier/export/BloodFrontier/bloodfrontier.sh} -permissions 00775 -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
-File ::AC18D8FF-B204-4C92-9C6C-58EAE7CF074D -name {C:/Media/Games/BloodFrontier/export/BloodFrontier/readme.txt} -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
+File ::027119D8-1EDF-490B-BFC4-920D8BF31235 -name C:/Media/Games/BloodFrontier/export/BloodFrontier/bloodfrontier.bat -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
+File ::34325A3A-7F08-4F41-A901-6A82CC34AEF0 -name C:/Media/Games/BloodFrontier/export/BloodFrontier/bloodfrontier.sh -permissions 00775 -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
+File ::AC18D8FF-B204-4C92-9C6C-58EAE7CF074D -name C:/Media/Games/BloodFrontier/export/BloodFrontier/readme.txt -parent 3A46FBF5-F027-4222-9E3F-35923F5A8540
 Component ::445414A7-445A-4B1F-BE68-574CA88E5A8A -setup Install -active Yes -platforms {AIX-ppc FreeBSD-4-x86 FreeBSD-x86 HPUX-hppa Linux-x86 Solaris-sparc Windows} -name {Default Component} -parent Components
 SetupType ::07E8A9EE-0FE9-41EC-95CF-197541E74FAF -setup Install -active Yes -platforms {AIX-ppc FreeBSD-4-x86 FreeBSD-x86 HPUX-hppa Linux-x86 Solaris-sparc Windows} -name Typical -parent SetupTypes
 SetupType ::7C1D9A1D-E997-4AB0-B852-D7FE19B93E3A -setup Install -active Yes -platforms {AIX-ppc FreeBSD-4-x86 FreeBSD-x86 HPUX-hppa Linux-x86 Solaris-sparc Windows} -name Custom -parent SetupTypes
@@ -1608,9 +1627,11 @@ InstallComponent 3875FBB0-086F-4022-A96C-600838118EF8 -setup Install -type pane 
 Condition 272642BA-4D08-41E7-992F-622DC6961AE0 -active Yes -parent 3875FBB0-086F-4022-A96C-600838118EF8 -title {Script Condition} -component ScriptCondition -TreeObject::id 272642BA-4D08-41E7-992F-622DC6961AE0
 Condition B275FA21-E658-4BDF-99CA-35F2D7F34A60 -active Yes -parent 3875FBB0-086F-4022-A96C-600838118EF8 -title {String Is Condition} -component StringIsCondition -TreeObject::id B275FA21-E658-4BDF-99CA-35F2D7F34A60
 InstallComponent 2AF1D0A5-4EB0-484C-99A2-48C8539D4413 -setup Install -type action -title {Populate Setup Types} -component PopulateSetupTypes -active Yes -parent 3875FBB0-086F-4022-A96C-600838118EF8
+InstallComponent 9A141BE0-A5B0-4903-BC6E-FCC507FF5729 -setup Install -type action -title {Populate Setup Types} -component PopulateSetupTypes -active Yes -parent 3875FBB0-086F-4022-A96C-600838118EF8
 InstallComponent 294805A0-7632-44F0-9554-7B6A62CF8403 -setup Install -type pane -conditions 9F0B2207-C782-462F-A69C-452900C086A4 -title {Choose Components} -component ChooseComponents -command insert -active Yes -parent StandardInstall
 Condition 9F0B2207-C782-462F-A69C-452900C086A4 -active Yes -parent 294805A0-7632-44F0-9554-7B6A62CF8403 -title {String Equal Condition} -component StringEqualCondition -TreeObject::id 9F0B2207-C782-462F-A69C-452900C086A4
 InstallComponent 58FD3301-1A9F-4078-8E6C-DEB5955D4B35 -setup Install -type action -title {Populate Components} -component PopulateComponents -active Yes -parent 294805A0-7632-44F0-9554-7B6A62CF8403
+InstallComponent FEC16C25-EA01-4676-9D70-CAF22FA8A047 -setup Install -type action -title {Populate Components} -component PopulateComponents -active Yes -parent 294805A0-7632-44F0-9554-7B6A62CF8403
 InstallComponent DE64E870-31A2-404C-8E2B-9496576844FF -setup Install -type pane -title {Start Copying Files} -component StartCopyingFiles -active Yes -parent StandardInstall
 InstallComponent 2489E216-0B82-4921-95CB-8B46D4B99ADA -setup Install -type pane -title {Copying Files} -component CopyFiles -active Yes -parent StandardInstall
 InstallComponent 2EA1FDF4-25FB-469A-B894-8C3C9CEF8E5C -setup Install -type action -title {Disable Buttons} -component ModifyWidget -active Yes -parent 2489E216-0B82-4921-95CB-8B46D4B99ADA
@@ -1649,6 +1670,15 @@ InstallComponent 7ACD40BD-3773-49A9-8A92-809E23ADE3CC -setup Install -type actio
 InstallComponent E7EC301D-0A4D-4EDE-AE1C-63CF733E4162 -setup Install -type action -title {Execute Action} -component ExecuteAction -active Yes -parent ConsoleInstall
 InstallComponent 0375A79E-17D6-4ECB-A518-D416F02781F9 -setup Install -type action -title {Console Message} -component ConsoleMessage -active Yes -parent ConsoleInstall
 InstallComponent D13D8E7B-D646-45F9-947F-956B13ACCAFF -setup Install -type action -title Exit -component Exit -active Yes -parent ConsoleInstall
+InstallComponent 39E1ABEA-DD3C-4787-80D2-3807E3DC15E1 -setup Install -type action -title {Console Ask Yes Or No} -component ConsoleAskYesOrNo -active Yes -parent ConsoleInstall
+InstallComponent 30A38812-14A3-481C-8D53-5387CFE24373 -setup Install -type action -conditions D4FEE894-6B74-4FB3-BD9D-F9496FC8CEA0 -title Exit -component Exit -command insert -active Yes -parent ConsoleInstall
+Condition D4FEE894-6B74-4FB3-BD9D-F9496FC8CEA0 -active Yes -parent 30A38812-14A3-481C-8D53-5387CFE24373 -title {String Is Condition} -component StringIsCondition -TreeObject::id D4FEE894-6B74-4FB3-BD9D-F9496FC8CEA0
+InstallComponent 2FEAA6D3-070E-4627-BA78-9AEBA4B351BB -setup Install -type action -conditions A33203ED-1952-4F31-AD08-29169FD77D4A -title {Console Get User Input} -component ConsoleGetUserInput -command insert -active Yes -parent ConsoleInstall
+Condition A33203ED-1952-4F31-AD08-29169FD77D4A -active Yes -parent 2FEAA6D3-070E-4627-BA78-9AEBA4B351BB -title {File Permission Condition} -component FilePermissionCondition -TreeObject::id A33203ED-1952-4F31-AD08-29169FD77D4A
+InstallComponent 1B09FECC-83EB-46D3-91C0-ED3382729E06 -setup Install -type action -title {Console Message} -component ConsoleMessage -active Yes -parent ConsoleInstall
+InstallComponent 4DD1D176-8A12-453A-A413-D12231E7287D -setup Install -type action -title {Execute Action} -component ExecuteAction -active Yes -parent ConsoleInstall
+InstallComponent 3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B -setup Install -type action -title {Console Message} -component ConsoleMessage -active Yes -parent ConsoleInstall
+InstallComponent B052F6BA-CA56-4AF4-B615-51FB830418BB -setup Install -type action -title Exit -component Exit -active Yes -parent ConsoleInstall
 InstallComponent F47C1A80-276C-45A5-B7FC-A3D5C9C9E155 -setup Install -type action -title {Execute Action} -component ExecuteAction -active Yes -parent SilentInstall
 InstallComponent 2A70426E-40DB-48CA-8497-FA0AB05CC08E -setup Install -type action -title Exit -component Exit -active Yes -parent SilentInstall
 InstallComponent 3E659266-2965-4DFC-9F72-93AB0A86600C -setup Install -type actiongroup -title {Setup Actions} -alias {Setup Actions} -active Yes -parent ActionGroupsInstall
@@ -1694,6 +1724,13 @@ InstallComponent 2782CB57-F827-4EF5-B1E0-B00CD59625ED -setup Uninstall -type act
 InstallComponent 1FD2F70D-E7CF-4417-904B-833D407AA073 -setup Uninstall -type action -title {Execute Action} -component ExecuteAction -active Yes -parent ConsoleUninstall
 InstallComponent B0BE906D-7295-4689-B12E-9285F0F205EF -setup Uninstall -type action -title {Console Message} -component ConsoleMessage -active Yes -parent ConsoleUninstall
 InstallComponent 7FB8FDBE-1660-461C-8760-994DD9409465 -setup Uninstall -type action -title Exit -component Exit -active Yes -parent ConsoleUninstall
+InstallComponent A1CC6326-1B51-468D-BDF5-61DFD28947E9 -setup Uninstall -type action -title {Console Ask Yes Or No} -component ConsoleAskYesOrNo -active Yes -parent ConsoleUninstall
+InstallComponent 5412824A-C6F3-44C0-815A-4DA52178627D -setup Uninstall -type action -conditions 64FD41EA-7233-4F2B-8E8F-D84C10F3051E -title Exit -component Exit -command insert -active Yes -parent ConsoleUninstall
+Condition 64FD41EA-7233-4F2B-8E8F-D84C10F3051E -active Yes -parent 5412824A-C6F3-44C0-815A-4DA52178627D -title {String Is Condition} -component StringIsCondition -TreeObject::id 64FD41EA-7233-4F2B-8E8F-D84C10F3051E
+InstallComponent 7F31CD77-B291-4E6C-B7CD-C2C78E1E017C -setup Uninstall -type action -title {Console Message} -component ConsoleMessage -active Yes -parent ConsoleUninstall
+InstallComponent 5A8F9904-EEA4-49E5-969B-6E0618AB253C -setup Uninstall -type action -title {Execute Action} -component ExecuteAction -active Yes -parent ConsoleUninstall
+InstallComponent 1A949672-B2D7-4F5D-B4AF-F6869F66503F -setup Uninstall -type action -title {Console Message} -component ConsoleMessage -active Yes -parent ConsoleUninstall
+InstallComponent 7EFFBFDC-EB8C-469D-919F-E3824F51CAA2 -setup Uninstall -type action -title Exit -component Exit -active Yes -parent ConsoleUninstall
 InstallComponent B158BF14-728A-4FB0-86CA-5305E6B304E3 -setup Uninstall -type action -title {Execute Action} -component ExecuteAction -active Yes -parent SilentUninstall
 InstallComponent 27D0892A-C0D9-435D-B0DE-DAE2F9D3B6AF -setup Uninstall -type action -title Exit -component Exit -active Yes -parent SilentUninstall
 InstallComponent E02C659D-3479-4DE1-97D2-FCC4777AB211 -setup Uninstall -type actiongroup -title {Setup Actions} -alias {Setup Actions} -active Yes -parent ActionGroupsUninstall
@@ -1745,6 +1782,12 @@ false
 
 106E4A2D-3705-4E1C-AE3A-0B773E0D57E5,String
 <%UpgradeInstall%>
+
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message,subst
+1
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message,subst
+1
 
 1FD2F70D-E7CF-4417-904B-833D407AA073,Action
 {Uninstall Actions}
@@ -1842,6 +1885,12 @@ disabled
 2EA1FDF4-25FB-469A-B894-8C3C9CEF8E5C,Widget
 {Back Button;Next Button}
 
+2FEAA6D3-070E-4627-BA78-9AEBA4B351BB,Prompt
+<%ConsoleSelectDestinationText%>
+
+2FEAA6D3-070E-4627-BA78-9AEBA4B351BB,VirtualText
+InstallDir
+
 31474AEF-AC6C-41B9-BC7C-D5F991374FCC,ShortcutName
 <%AppName%>
 
@@ -1884,6 +1933,12 @@ Yes
 3875FBB0-086F-4022-A96C-600838118EF8,Title,subst
 1
 
+39E1ABEA-DD3C-4787-80D2-3807E3DC15E1,Default
+Yes
+
+39E1ABEA-DD3C-4787-80D2-3807E3DC15E1,Prompt
+<%InstallStartupText%>
+
 3A46FBF5-F027-4222-9E3F-35923F5A8540,Destination
 <%InstallDir%>
 
@@ -1910,6 +1965,9 @@ LaunchApplication
 
 3A78AB68-18C2-43E2-B8ED-482DF5EFC4B3,Y
 160
+
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message,subst
+1
 
 3E2AE7B6-F131-4515-A532-5874BE91D420,CheckCondition
 {Before Action is Executed}
@@ -1986,6 +2044,9 @@ Yes
 4AD7B4BE-BAEF-49F8-9686-E99E6DEC2105,NextButton,subst
 1
 
+4DD1D176-8A12-453A-A413-D12231E7287D,Action
+{Install Actions}
+
 4DF89448-F504-441B-8B40-E7624AAD271B,Default
 Yes
 
@@ -2028,6 +2089,9 @@ Yes
 58FD3301-1A9F-4078-8E6C-DEB5955D4B35,ExecuteAction
 {Before Pane is Displayed}
 
+5A8F9904-EEA4-49E5-969B-6E0618AB253C,Action
+{Uninstall Actions}
+
 5BB456F6-6A27-4112-B842-D3AD8E6766D9,ProgramCommandLine
 <%ProgramExecutable%>
 
@@ -2066,6 +2130,15 @@ No
 
 6131E4EA-3066-40F7-B8DA-6564CD426721,String
 <%LaunchApplication%>
+
+64FD41EA-7233-4F2B-8E8F-D84C10F3051E,CheckCondition
+{Before Action is Executed}
+
+64FD41EA-7233-4F2B-8E8F-D84C10F3051E,Operator
+false
+
+64FD41EA-7233-4F2B-8E8F-D84C10F3051E,String
+<%Answer%>
 
 660DEBF0-FEF5-4251-986A-AB370520BEFB,Default
 Yes
@@ -2129,6 +2202,12 @@ disabled
 
 7C1D9A1D-E997-4AB0-B852-D7FE19B93E3A,Name
 Custom
+
+7EFFBFDC-EB8C-469D-919F-E3824F51CAA2,ExitType
+Finish
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message,subst
+1
 
 7FB8FDBE-1660-461C-8760-994DD9409465,ExitType
 Finish
@@ -2221,7 +2300,7 @@ ViewReadme
 140
 
 9610E5D7-8AAA-42C9-823B-EC9B4D6541CE,CheckCondition
-{Before Next Action is Executed}
+{Before Action is Executed}
 
 9610E5D7-8AAA-42C9-823B-EC9B4D6541CE,FailureMessage
 <%DirectoryPermissionText%>
@@ -2280,11 +2359,29 @@ A13D9531-D0C9-4BDF-B989-31957930313B,CheckCondition
 A13D9531-D0C9-4BDF-B989-31957930313B,Filename
 <%ProgramExecutable%>
 
+A1CC6326-1B51-468D-BDF5-61DFD28947E9,Default
+Yes
+
+A1CC6326-1B51-468D-BDF5-61DFD28947E9,Prompt
+<%UninstallStartupText%>
+
 A2B3C6E8-9CB0-4F4D-ACCF-027B1DAC86F2,CheckCondition
 {Before Action is Executed}
 
 A2B3C6E8-9CB0-4F4D-ACCF-027B1DAC86F2,Filename
 <%ProgramExecutable%>
+
+A33203ED-1952-4F31-AD08-29169FD77D4A,CheckCondition
+{Before Next Action is Executed}
+
+A33203ED-1952-4F31-AD08-29169FD77D4A,FailureMessage
+<%DirectoryPermissionText%>
+
+A33203ED-1952-4F31-AD08-29169FD77D4A,Filename
+<%InstallDir%>
+
+A33203ED-1952-4F31-AD08-29169FD77D4A,Permission
+{can create}
 
 A481CD5A-F403-488D-B87A-5AFD96584BB7,String
 <%ErrorsOccurred%>
@@ -2379,6 +2476,9 @@ No
 AIX-ppc,RootInstallDir
 /usr/local/<%ShortAppName%>
 
+B052F6BA-CA56-4AF4-B615-51FB830418BB,ExitType
+Finish
+
 B0BE906D-7295-4689-B12E-9285F0F205EF,Message,subst
 1
 
@@ -2450,6 +2550,15 @@ InstallDir
 
 D13D8E7B-D646-45F9-947F-956B13ACCAFF,ExitType
 Finish
+
+D4FEE894-6B74-4FB3-BD9D-F9496FC8CEA0,CheckCondition
+{Before Action is Executed}
+
+D4FEE894-6B74-4FB3-BD9D-F9496FC8CEA0,Operator
+false
+
+D4FEE894-6B74-4FB3-BD9D-F9496FC8CEA0,String
+<%Answer%>
 
 D5C749D5-7B7A-4E26-83A3-2DCD498FB9FA,BackButton,subst
 1
@@ -2815,7 +2924,7 @@ Linux-x86,DefaultFilePermission
 0755
 
 Linux-x86,Executable
-<%AppName%>-<%Version%>-<%Platform%><%Ext%>
+<%ShortAppName%>-<%Version%>-<%Platform%>.run
 
 Linux-x86,FallBackToConsole
 Yes
@@ -2971,7 +3080,7 @@ Windows,Active
 Yes
 
 Windows,Executable
-<%AppName%>-<%Version%>-<%Platform%><%Ext%>
+<%ShortAppName%>-<%Version%>-<%Platform%>.exe
 
 Windows,IncludeTWAPI
 No
@@ -3072,11 +3181,23 @@ ZipArchive,VirtualTextMap
 0375A79E-17D6-4ECB-A518-D416F02781F9,Message
 <%InstallationCompleteText%>
 
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message
+<%UninstallCompleteText%>
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message
+<%InstallingApplicationText%>
+
 2782CB57-F827-4EF5-B1E0-B00CD59625ED,Message
 <%UninstallingApplicationText%>
 
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message
+<%InstallationCompleteText%>
+
 7ACD40BD-3773-49A9-8A92-809E23ADE3CC,Message
 <%InstallingApplicationText%>
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message
+<%UninstallingApplicationText%>
 
 B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 <%UninstallCompleteText%>
@@ -3089,11 +3210,20 @@ B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 07E8A9EE-0FE9-41EC-95CF-197541E74FAF,Description
 <%TypicalInstallDescription%>
 
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message
+<%UninstallCompleteText%>
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message
+<%InstallingApplicationText%>
+
 2782CB57-F827-4EF5-B1E0-B00CD59625ED,Message
 <%UninstallingApplicationText%>
 
 3A78AB68-18C2-43E2-B8ED-482DF5EFC4B3,Text
 <%LaunchApplicationText%>
+
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message
+<%InstallationCompleteText%>
 
 419632DA-91E9-44E8-B1A1-40AF909B85F6,Text
 <%CreateDesktopShortcutText%>
@@ -3112,6 +3242,9 @@ B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 
 7C1D9A1D-E997-4AB0-B852-D7FE19B93E3A,Description
 <%CustomInstallDescription%>
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message
+<%UninstallingApplicationText%>
 
 9363B67A-E38E-4EC0-9EB6-C338C6E0066A,Text
 <%ViewReadmeText%>
@@ -3148,11 +3281,23 @@ DBA90B52-773F-4B86-9676-3BB0659BD714,Text
 0375A79E-17D6-4ECB-A518-D416F02781F9,Message
 <%InstallationCompleteText%>
 
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message
+<%UninstallCompleteText%>
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message
+<%InstallingApplicationText%>
+
 2782CB57-F827-4EF5-B1E0-B00CD59625ED,Message
 <%UninstallingApplicationText%>
 
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message
+<%InstallationCompleteText%>
+
 7ACD40BD-3773-49A9-8A92-809E23ADE3CC,Message
 <%InstallingApplicationText%>
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message
+<%UninstallingApplicationText%>
 
 B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 <%UninstallCompleteText%>
@@ -3162,11 +3307,23 @@ B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 0375A79E-17D6-4ECB-A518-D416F02781F9,Message
 <%InstallationCompleteText%>
 
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message
+<%UninstallCompleteText%>
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message
+<%InstallingApplicationText%>
+
 2782CB57-F827-4EF5-B1E0-B00CD59625ED,Message
 <%UninstallingApplicationText%>
 
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message
+<%InstallationCompleteText%>
+
 7ACD40BD-3773-49A9-8A92-809E23ADE3CC,Message
 <%InstallingApplicationText%>
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message
+<%UninstallingApplicationText%>
 
 B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 <%UninstallCompleteText%>
@@ -3176,11 +3333,23 @@ B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 0375A79E-17D6-4ECB-A518-D416F02781F9,Message
 <%InstallationCompleteText%>
 
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message
+<%UninstallCompleteText%>
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message
+<%InstallingApplicationText%>
+
 2782CB57-F827-4EF5-B1E0-B00CD59625ED,Message
 <%UninstallingApplicationText%>
 
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message
+<%InstallationCompleteText%>
+
 7ACD40BD-3773-49A9-8A92-809E23ADE3CC,Message
 <%InstallingApplicationText%>
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message
+<%UninstallingApplicationText%>
 
 B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 <%UninstallCompleteText%>
@@ -3190,11 +3359,23 @@ B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 0375A79E-17D6-4ECB-A518-D416F02781F9,Message
 <%InstallationCompleteText%>
 
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message
+<%UninstallCompleteText%>
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message
+<%InstallingApplicationText%>
+
 2782CB57-F827-4EF5-B1E0-B00CD59625ED,Message
 <%UninstallingApplicationText%>
 
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message
+<%InstallationCompleteText%>
+
 7ACD40BD-3773-49A9-8A92-809E23ADE3CC,Message
 <%InstallingApplicationText%>
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message
+<%UninstallingApplicationText%>
 
 B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 <%UninstallCompleteText%>
@@ -3204,11 +3385,23 @@ B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 0375A79E-17D6-4ECB-A518-D416F02781F9,Message
 <%InstallationCompleteText%>
 
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message
+<%UninstallCompleteText%>
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message
+<%InstallingApplicationText%>
+
 2782CB57-F827-4EF5-B1E0-B00CD59625ED,Message
 <%UninstallingApplicationText%>
 
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message
+<%InstallationCompleteText%>
+
 7ACD40BD-3773-49A9-8A92-809E23ADE3CC,Message
 <%InstallingApplicationText%>
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message
+<%UninstallingApplicationText%>
 
 B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 <%UninstallCompleteText%>
@@ -3218,11 +3411,23 @@ B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 0375A79E-17D6-4ECB-A518-D416F02781F9,Message
 <%InstallationCompleteText%>
 
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message
+<%UninstallCompleteText%>
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message
+<%InstallingApplicationText%>
+
 2782CB57-F827-4EF5-B1E0-B00CD59625ED,Message
 <%UninstallingApplicationText%>
 
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message
+<%InstallationCompleteText%>
+
 7ACD40BD-3773-49A9-8A92-809E23ADE3CC,Message
 <%InstallingApplicationText%>
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message
+<%UninstallingApplicationText%>
 
 B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 <%UninstallCompleteText%>
@@ -3232,11 +3437,23 @@ B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 0375A79E-17D6-4ECB-A518-D416F02781F9,Message
 <%InstallationCompleteText%>
 
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message
+<%UninstallCompleteText%>
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message
+<%InstallingApplicationText%>
+
 2782CB57-F827-4EF5-B1E0-B00CD59625ED,Message
 <%UninstallingApplicationText%>
 
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message
+<%InstallationCompleteText%>
+
 7ACD40BD-3773-49A9-8A92-809E23ADE3CC,Message
 <%InstallingApplicationText%>
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message
+<%UninstallingApplicationText%>
 
 B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 <%UninstallCompleteText%>
@@ -3246,11 +3463,23 @@ B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 0375A79E-17D6-4ECB-A518-D416F02781F9,Message
 <%InstallationCompleteText%>
 
+1A949672-B2D7-4F5D-B4AF-F6869F66503F,Message
+<%UninstallCompleteText%>
+
+1B09FECC-83EB-46D3-91C0-ED3382729E06,Message
+<%InstallingApplicationText%>
+
 2782CB57-F827-4EF5-B1E0-B00CD59625ED,Message
 <%UninstallingApplicationText%>
 
+3D9F5E82-A9BD-46BF-ADFE-1B64B24B983B,Message
+<%InstallationCompleteText%>
+
 7ACD40BD-3773-49A9-8A92-809E23ADE3CC,Message
 <%InstallingApplicationText%>
+
+7F31CD77-B291-4E6C-B7CD-C2C78E1E017C,Message
+<%UninstallingApplicationText%>
 
 B0BE906D-7295-4689-B12E-9285F0F205EF,Message
 <%UninstallCompleteText%>
