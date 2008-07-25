@@ -110,7 +110,7 @@ struct obj : vertmodel
                         for(;;)
                         {
                             while(isspace(*c)) c++;
-                            if(!*c) break; 
+                            if(!*c) break;
                             ivec vkey(-1, -1, -1);
                             loopi(3)
                             {
@@ -184,12 +184,12 @@ struct obj : vertmodel
         Texture *tex, *masks;
         loadskin(loadname, pname, tex, masks);
         mdl.initskins(tex, masks);
-        if(tex==notexture) conoutf("could not load model skin for %s", name1);
+        if(tex==notexture) conoutf("\frcould not load model skin for %s", name1);
         return true;
     }
 
     bool load()
-    { 
+    {
         if(loaded) return true;
         s_sprintf(objdir)("models/%s", loadname);
         s_sprintfd(cfgname)("models/%s/obj.cfg", loadname);
@@ -215,7 +215,7 @@ struct obj : vertmodel
 
 void objload(char *model)
 {
-    if(!loadingobj) { conoutf("not loading an obj"); return; }
+    if(!loadingobj) { conoutf("\frnot loading an obj"); return; }
     s_sprintfd(filename)("%s/%s", objdir, model);
     obj::part &mdl = *new obj::part;
     loadingobj->parts.add(&mdl);
@@ -223,13 +223,13 @@ void objload(char *model)
     mdl.index = loadingobj->parts.length()-1;
     if(mdl.index) mdl.pitchscale = mdl.pitchoffset = mdl.pitchmin = mdl.pitchmax = 0;
     mdl.meshes = loadingobj->sharemeshes(path(filename));
-    if(!mdl.meshes) conoutf("could not load %s", filename); // ignore failure
+    if(!mdl.meshes) conoutf("\frcould not load %s", filename); // ignore failure
     else mdl.initskins();
 }
 
 void objpitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax)
 {
-    if(!loadingobj || loadingobj->parts.empty()) { conoutf("not loading an obj"); return; }
+    if(!loadingobj || loadingobj->parts.empty()) { conoutf("\frnot loading an obj"); return; }
     obj::part &mdl = *loadingobj->parts.last();
 
     mdl.pitchscale = *pitchscale;
@@ -247,7 +247,7 @@ void objpitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pit
 }
 
 #define loopobjmeshes(meshname, m, body) \
-    if(!loadingobj || loadingobj->parts.empty()) { conoutf("not loading an obj"); return; } \
+    if(!loadingobj || loadingobj->parts.empty()) { conoutf("\frnot loading an obj"); return; } \
     obj::part &mdl = *loadingobj->parts.last(); \
     if(!mdl.meshes) return; \
     loopv(mdl.meshes->meshes) \

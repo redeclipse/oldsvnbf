@@ -11,7 +11,7 @@ bool multiplayer(bool msg)
 {
 	// check if we're playing alone
 	int n = cc->otherclients();
-	if (n && msg) conoutf("operation not available with other clients");
+	if (n && msg) conoutf("\froperation not available with other clients");
 	return n > 0;
 }
 
@@ -45,18 +45,18 @@ void connectfail(bool reset = false)
 	{
 		if(localattempt > 1)
 		{
-			conoutf("unable to find any server on the local network");
+			conoutf("\frunable to find any server on the local network");
 			localattempt = 0;
 		}
 		else
 		{
-			conoutf("unable to find a local server, trying the local network");
+			conoutf("\fgunable to find a local server, trying the local network");
 			again = true;
 		}
 	}
 	else
 	{
-		conoutf("\f3could not connect to server");
+		conoutf("\frcould not connect to server");
 		again = true;
 	}
     if(again) connects();
@@ -76,16 +76,16 @@ void trydisconnect()
 {
 	if(connpeer)
 	{
-		conoutf("aborting connection attempt");
+		conoutf("\fwaborting connection attempt");
 		abortconnect();
 		return;
 	}
 	if(!curpeer)
 	{
-		conoutf("not connected");
+		conoutf("\frnot connected");
 		return;
 	}
-	conoutf("attempting to disconnect...");
+	conoutf("\fwattempting to disconnect...");
 	disconnect(0, !discmillis);
 }
 
@@ -100,10 +100,10 @@ void connects(const char *servername)
 	{
 		localattempt = 0;
 		addserver(servername);
-		conoutf("attempting to connect to %s", servername);
+		conoutf("\fwattempting to connect to %s", servername);
 		if(!resolverwait(servername, &address))
 		{
-			conoutf("could not resolve server %s", servername);
+			conoutf("\frcould not resolve server %s", servername);
 			return;
 		}
 	}
@@ -113,13 +113,13 @@ void connects(const char *servername)
 		{
 			if (!resolverwait("localhost", &address))
 			{
-				conoutf("could not resolve localhost");
+				conoutf("\frcould not resolve localhost");
 				return;
 			}
 		}
 		else
 		{
-			conoutf("attempting to connect to a local server");
+			conoutf("\fwattempting to connect to a local server");
 			address.host = ENET_HOST_BROADCAST;
 		}
 		localattempt++;
@@ -162,7 +162,7 @@ void disconnect(int onlyclean, int async)
 		}
 		curpeer = NULL;
 		discmillis = 0;
-		conoutf("disconnected");
+		conoutf("\fodisconnected");
 		cleanup = true;
 	}
 	if(!connpeer && clienthost)
@@ -202,7 +202,7 @@ void c2sinfo(int rate)					 // send update to the server
 
 void neterr(const char *s)
 {
-	conoutf("\f3illegal network message (%s)", s);
+	conoutf("\frillegal network message (%s)", s);
 	disconnect();
 }
 
@@ -225,7 +225,7 @@ void gets2c()			// get updates from the server
 	if(!clienthost) return;
 	if(connpeer && totalmillis/3000 > connmillis/3000)
 	{
-		conoutf("connection attempt %d", connattempts+1);
+		conoutf("\fwconnection attempt %d", connattempts+1);
 		connmillis = totalmillis;
 		++connattempts;
 		if(connattempts > 3)
@@ -242,14 +242,14 @@ void gets2c()			// get updates from the server
 			curpeer = connpeer;
 			connpeer = NULL;
 			localattempt = 0;
-			conoutf("connected to server");
+			conoutf("\fgconnected to server");
 			throttle();
 			if(rate) setrate(rate);
 			cc->gameconnect(true);
 			break;
 
 		case ENET_EVENT_TYPE_RECEIVE:
-			if(discmillis) conoutf("attempting to disconnect...");
+			if(discmillis) conoutf("\fwattempting to disconnect...");
 			else servertoclient(event.channelID, event.packet->data, (int)event.packet->dataLength);
 			enet_packet_destroy(event.packet);
 			break;
@@ -260,7 +260,7 @@ void gets2c()			// get updates from the server
             if(event.peer==connpeer) connectfail(false);
             else
             {
-                if(!discmillis || event.data) conoutf("\f3server network error, disconnecting (%s) ...", disc_reasons[event.data]);
+                if(!discmillis || event.data) conoutf("\frserver network error, disconnecting (%s) ...", disc_reasons[event.data]);
                 disconnect();
             }
 			return;

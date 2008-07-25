@@ -2,7 +2,7 @@ struct clientcom : iclientcom
 {
 	GAMECLIENT &cl;
 
-	bool c2sinit, senditemstoserver, isready, remote, demoplayback, spectator;
+	bool c2sinit, senditemstoserver, isready, remote, demoplayback, spectator, needsmap;
 	int lastping;
 
 	IVARP(centerchat, 0, 1, 1);
@@ -12,7 +12,7 @@ struct clientcom : iclientcom
 
 	clientcom(GAMECLIENT &_cl) : cl(_cl),
 		c2sinit(false), senditemstoserver(false),
-		isready(false), remote(false), demoplayback(false), spectator(false),
+		isready(false), remote(false), demoplayback(false), spectator(false), needsmap(false),
 		lastping(0)
 	{
         CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(SAY_NONE, s));
@@ -54,7 +54,7 @@ struct clientcom : iclientcom
 			c2sinit = false;
 			s_strncpy(cl.player1->name, name, MAXNAMELEN);
 		}
-		else conoutf("your name is: %s", cl.colorname(cl.player1));
+		else conoutf("\fyyour name is: %s", cl.colorname(cl.player1));
 	}
 
 	int teamname(const char *team)
@@ -91,9 +91,9 @@ struct clientcom : iclientcom
 					cl.player1->team = t;
 				}
 			}
-			else conoutf("your team is: %s", teamtype[cl.player1->team].name);
+			else conoutf("\fyyour team is: %s", teamtype[cl.player1->team].name);
 		}
-		else conoutf("can only change teams in team games");
+		else conoutf("\frcan only change teams in team games");
 	}
 
 	int numchannels() { return 3; }
@@ -114,7 +114,7 @@ struct clientcom : iclientcom
 	void gamedisconnect(int clean)
 	{
 		if(editmode) toggleedit();
-		remote = isready = c2sinit = spectator = false;
+		needsmap = remote = isready = c2sinit = spectator = false;
 		cl.player1->clientnum = -1;
 		cl.player1->lifesequence = 0;
 		cl.player1->privilege = PRIV_NONE;
@@ -131,7 +131,7 @@ struct clientcom : iclientcom
 	bool allowedittoggle(bool edit)
 	{
 		bool allow = edit || m_edit(cl.gamemode);
-		if(!allow) conoutf("you must be both alive and in coopedit to enter editmode");
+		if(!allow) conoutf("\fryou must be both alive and in coopedit to enter editmode");
 		return allow;
 	}
 
@@ -199,7 +199,7 @@ struct clientcom : iclientcom
 				if(t) addmsg(SV_SETTEAM, "ri2", i, t);
 			}
 		}
-		else conoutf("can only change teams in team games");
+		else conoutf("\frcan only change teams in team games");
 	}
 
 	void setmaster(const char *arg)
@@ -491,12 +491,12 @@ struct clientcom : iclientcom
         if(resume && d==cl.player1)
         {
             getint(p);
-            loopi(NUMGUNS) getint(p);
+            loopi(GUN_MAX) getint(p);
         }
         else
         {
             d->gunselect = getint(p);
-            loopi(NUMGUNS) d->ammo[i] = getint(p);
+            loopi(GUN_MAX) d->ammo[i] = getint(p);
         }
     }
 
@@ -649,7 +649,7 @@ struct clientcom : iclientcom
 		{
 			prevtype = type;
 			type = getint(p);
-			//conoutf("[client] msg: %d, prev: %d", type, prevtype);
+			//conoutf("\fo[client] msg: %d, prev: %d", type, prevtype);
 			switch(type)
 			{
 				case SV_INITS2C:					// welcome messsage from the server
@@ -657,7 +657,7 @@ struct clientcom : iclientcom
 					int mycn = getint(p), gver = getint(p);
 					if(gver!=GAMEVERSION)
 					{
-						conoutf("you are using a different game version (you: %d, server: %d)", GAMEVERSION, gver);
+						conoutf("\fryou are using a different game version (you: %d, server: %d)", GAMEVERSION, gver);
 						disconnect();
 						return;
 					}
@@ -700,6 +700,17 @@ struct clientcom : iclientcom
 					getstring(text, p);
 					if(!t) break;
 					saytext(t, flags, text);
+					break;
+				}
+
+				case SV_COMMAND:
+				{
+					int lcn = getint(p);
+					fpsent *f = cl.getclient(lcn);
+					string cmd;
+					getstring(cmd, p);
+					getstring(text, p);
+					parsecommand(f ? f : NULL, cmd, text);
 					break;
 				}
 
@@ -773,13 +784,13 @@ struct clientcom : iclientcom
 							string oldname, newname;
 							s_strcpy(oldname, cl.colorname(d, NULL, "", false));
 							s_strcpy(newname, cl.colorname(d, text));
-							conoutf("%s is now known as %s", oldname, newname);
+							conoutf("\fo%s is now known as %s", oldname, newname);
 						}
 					}
 					else					// new client
 					{
 						c2sinit = false;	// send new players my info again
-						conoutf("connected: %s", cl.colorname(d, text, "", false));
+						conoutf("\fgconnected: %s", cl.colorname(d, text, "", false));
 						loopv(cl.players)	// clear copies since new player doesn't have them
 							if(cl.players[i]) freeeditinfo(cl.players[i]->edit);
 						extern editinfo *localedit;
@@ -802,6 +813,7 @@ struct clientcom : iclientcom
 					parsestate(f, p);
 					f->state = CS_SPAWNING;
 					playsound(S_RESPAWN, 0, 255, f->o, f);
+					regularshape(7, int(f->height), 0666666, 21, 50, 500, f->o, 2.f);
 					break;
 				}
 
@@ -825,6 +837,7 @@ struct clientcom : iclientcom
 						}
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
 						playsound(S_RESPAWN, 0, 255, f->o, f);
+						regularshape(7, int(f->height), 0x666666, 21, 50, 500, f->o, 2.f);
 					}
 					cl.bot.spawned(f);
 					break;
@@ -856,8 +869,7 @@ struct clientcom : iclientcom
 					loopk(3) dir[k] = getint(p)/DNF;
 					fpsent *target = cl.getclient(tcn), *actor = cl.getclient(acn);
 					if(!target || !actor) break;
-					cl.damaged(gun, flags, damage, target, actor, lastmillis, dir);
-					target->health = health; // just in case
+					cl.damaged(gun, flags, damage, health, target, actor, lastmillis, dir);
 					break;
 				}
 
@@ -865,7 +877,7 @@ struct clientcom : iclientcom
 				{
 					int trg = getint(p), gun = getint(p), amt = getint(p);
 					fpsent *target = cl.getclient(trg);
-					if(!target || gun <= -1 || gun >= NUMGUNS) break;
+					if(!target || !isgun(gun)) break;
 					target->gunreload(gun, amt, lastmillis);
 					playsound(S_RELOAD, 0, 255, target->o, target);
 					break;
@@ -904,7 +916,7 @@ struct clientcom : iclientcom
 				{
 					int trg = getint(p), gun = getint(p);
 					fpsent *target = cl.getclient(trg);
-					if(!target || gun <= -1 || gun >= NUMGUNS) break;
+					if(!target || !isgun(gun)) break;
 					target->setgun(gun, lastmillis);
 					playsound(S_SWITCH, 0, 255, target->o, target);
 					break;
@@ -940,6 +952,7 @@ struct clientcom : iclientcom
 					playsound(S_ITEMSPAWN, 0, 255, cl.et.ents[i]->o);
 					const char *name = cl.et.itemname(i);
 					if(name) particle_text(cl.et.ents[i]->o, name, 9);
+					regularshape(7, enttype[cl.et.ents[i]->type].radius, 0x666666, 21, 20, 500, cl.et.ents[i]->o, 1.f);
 					break;
 				}
 
@@ -969,7 +982,7 @@ struct clientcom : iclientcom
 								if(id->minval > id->maxval || val < id->minval || val > id->maxval)
 									commit = false;
 								setvar(text, val, true);
-								conoutf("%s set variable %s to %d", cl.colorname(d), id->name, *id->storage.i);
+								conoutf("\fy%s set variable %s to %d", cl.colorname(d), id->name, *id->storage.i);
 							}
 							break;
 						}
@@ -979,7 +992,7 @@ struct clientcom : iclientcom
 							if(commit)
 							{
 								setfvar(text, val, true);
-								conoutf("%s set float variable %s to %f", cl.colorname(d), id->name, *id->storage.f);
+								conoutf("\fy%s set float variable %s to %f", cl.colorname(d), id->name, *id->storage.f);
 							}
 							break;
 						}
@@ -990,7 +1003,7 @@ struct clientcom : iclientcom
 							if(commit)
 							{
 								setsvar(text, val, true);
-								conoutf("%s set string variable %s to %s", cl.colorname(d), id->name, *id->storage.s);
+								conoutf("\fy%s set string variable %s to %s", cl.colorname(d), id->name, *id->storage.s);
 							}
 							break;
 						}
@@ -1001,7 +1014,7 @@ struct clientcom : iclientcom
 							if(commit || !id) // set aliases anyway
 							{
 								worldalias(text, val);
-								conoutf("%s set world alias %s to %s", cl.colorname(d), text, val);
+								conoutf("\fy%s set world alias %s to %s", cl.colorname(d), text, val);
 							}
 							break;
 						}
@@ -1046,7 +1059,7 @@ struct clientcom : iclientcom
 				case SV_REMIP:
 				{
 					if(!d) return;
-					conoutf("%s remipped", cl.colorname(d));
+					conoutf("\fy%s remipped", cl.colorname(d));
 					mpremip(false);
 					break;
 				}
@@ -1090,11 +1103,11 @@ struct clientcom : iclientcom
 				case SV_SENDDEMOLIST:
 				{
 					int demos = getint(p);
-					if(!demos) conoutf("no demos available");
+					if(!demos) conoutf("\frno demos available");
 					else loopi(demos)
 					{
 						getstring(text, p);
-						conoutf("%d. %s", i+1, text);
+						conoutf("\fw%d. %s", i+1, text);
 					}
 					break;
 				}
@@ -1233,8 +1246,22 @@ struct clientcom : iclientcom
 
 				case SV_GETMAP:
 				{
-					conoutf("server has requested we send the map..");
+					conoutf("\fyserver has requested we send the map..");
 					sendmap();
+					break;
+				}
+
+				case SV_SENDMAP:
+				{
+					int ocn = getint(p);
+					fpsent *o = cl.newclient(ocn);
+					conoutf("\fymap uploaded by %s..", o ? cl.colorname(o) : "server");
+					if(needsmap)
+					{
+						needsmap = false;
+						getmap();
+					}
+					break;
 				}
 
 				case SV_NEWMAP:
@@ -1275,8 +1302,8 @@ struct clientcom : iclientcom
 					if(o)
 					{
 						if(connecting)
-							conoutf("%s (skill: %d) introduced and assigned to %s", cl.colorname(b), b->skill, m);
-						else conoutf("%s (skill: %d) reassigned to %s", cl.colorname(b), b->skill, m);
+							conoutf("\fg%s (skill: %d) introduced and assigned to %s", cl.colorname(b), b->skill, m);
+						else conoutf("\fg%s (skill: %d) reassigned to %s", cl.colorname(b), b->skill, m);
 					}
 
 					if(cl.player1->clientnum == b->ownernum) cl.bot.create(b);
@@ -1302,8 +1329,11 @@ struct clientcom : iclientcom
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
-		if(!name) emptymap(0, true, NULL);
-		else load_world(name);
+		if(!name || !load_world(name))
+		{
+			emptymap(0, true, NULL);
+			needsmap = true;
+		}
 		if(m_stf(gamemode)) cl.stf.setupflags();
         else if(m_ctf(gamemode)) cl.ctf.setupflags();
 		if(editmode) edittoggled(editmode);
@@ -1331,7 +1361,7 @@ struct clientcom : iclientcom
 				s_sprintfd(fname)("%d.dmo", lastmillis);
 				FILE *demo = openfile(fname, "wb");
 				if(!demo) return;
-				conoutf("received demo \"%s\"", fname);
+				conoutf("\fyreceived demo \"%s\"", fname);
 				fwrite(data, 1, len, demo);
 				fclose(demo);
 				break;
@@ -1344,10 +1374,10 @@ struct clientcom : iclientcom
 				const char *file = findfile(mapfile, "wb");
 				FILE *map = fopen(file, "wb");
 				if(!map) return;
-				conoutf("received map");
+				conoutf("\fyreceived map");
 				fwrite(data, 1, len, map);
 				fclose(map);
-				load_world(mapname);
+				if(!load_world(mapname)) emptymap(0, true, NULL);
 				break;
 			}
 		}
@@ -1355,8 +1385,8 @@ struct clientcom : iclientcom
 
 	void getmap()
 	{
-		if(!m_edit(cl.gamemode)) { conoutf("\"getmap\" only works while editing"); return; }
-		conoutf("getting map...");
+		if(!m_edit(cl.gamemode)) { conoutf("\fr\"getmap\" only works while editing"); return; }
+		conoutf("\fygetting map...");
 		addmsg(SV_GETMAP, "r");
 	}
 
@@ -1384,14 +1414,14 @@ struct clientcom : iclientcom
 
     void getdemo(int i)
 	{
-		if(i<=0) conoutf("getting demo...");
-		else conoutf("getting demo %d...", i);
+		if(i<=0) conoutf("\fygetting demo...");
+		else conoutf("\fygetting demo %d...", i);
 		addmsg(SV_GETDEMO, "ri", i);
 	}
 
 	void listdemos()
 	{
-		conoutf("listing demos...");
+		conoutf("\fylisting demos...");
 		addmsg(SV_LISTDEMOS, "r");
 	}
 
@@ -1399,10 +1429,10 @@ struct clientcom : iclientcom
 	{
 		if(!m_edit(cl.gamemode) || (spectator && !cl.player1->privilege))
 		{
-			conoutf("\"sendmap\" only works in coopedit mode");
+			conoutf("\fr\"sendmap\" only works in coopedit mode");
 			return;
 		}
-		conoutf("sending map...");
+		conoutf("\fysending map...");
 		extern string mapname, mapfile;
 		s_sprintfd(mname)("%s", mapname);
 		s_sprintfd(fname)("%s", mapfile);
@@ -1411,11 +1441,64 @@ struct clientcom : iclientcom
 		if(map)
 		{
 			fseek(map, 0, SEEK_END);
-			if(ftell(map) > 1024*1024) conoutf("map is too large");
+			if(ftell(map) > 1024*1024) conoutf("\frmap is too large");
 			else sendfile(-1, 2, map);
 			fclose(map);
 		}
-		else conoutf("could not read map");
+		else conoutf("\frcould not read map");
+	}
+
+	void parsecommand(fpsent *d, char *cmd, char *arg)
+	{
+		ident *id = idents->access(cmd);
+		if(id && id->flags&IDF_GAME)
+		{
+			string val;
+			val[0] = 0;
+			switch(id->type)
+			{
+				case ID_COMMAND:
+				{
+					string s;
+					s_sprintf(s)("%s %s", cmd, arg);
+					char *ret = executeret(s);
+					if(ret)
+					{
+						conoutf("\fy%s: %s", cmd, ret);
+						delete[] ret;
+					}
+					return;
+				}
+				case ID_VAR:
+				{
+					int ret = atoi(arg);
+					*id->storage.i = ret;
+					id->changed();
+					s_sprintf(val)("%d", *id->storage.i);
+					break;
+				}
+				case ID_FVAR:
+				{
+					float ret = atof(arg);
+					*id->storage.f = ret;
+					id->changed();
+					s_sprintf(val)("%f", *id->storage.f);
+					break;
+				}
+				case ID_SVAR:
+				{
+					delete[] *id->storage.s;
+					*id->storage.s = newstring(arg);
+					id->changed();
+					s_sprintf(val)("%s", *id->storage.s);
+					break;
+				}
+				default: return;
+			}
+			if((d || verbose) && val[0])
+				conoutf("\fy%s set %s to %s", d ? cl.colorname(d) : "the server", cmd, val);
+		}
+		else conoutf("\fr%s sent unknown command: %s", d ? cl.colorname(d) : "the server", cmd);
 	}
 
 	void gotoplayer(const char *arg)

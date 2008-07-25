@@ -21,23 +21,23 @@ struct weaponstate
 		CCOMMAND(ammo, "s", (weaponstate *self, char *a),
 		{
 			int n = a[0] ? atoi(a) : self->cl.player1->gunselect;
-			if(n <= -1 || n >= NUMGUNS) return;
+			if(n <= -1 || n >= GUN_MAX) return;
 			intret(self->cl.player1->ammo[n]);
 		});
 	}
 
 	void weaponswitch(fpsent *d, int a = -1, int b = -1)
 	{
-		if(!cl.allowmove(cl.player1) || cl.inzoom() || a < -1 || b < -1 || a >= NUMGUNS || b >= NUMGUNS) return;
+		if(!cl.allowmove(cl.player1) || cl.inzoom() || a < -1 || b < -1 || a >= GUN_MAX || b >= GUN_MAX) return;
 		int s = d->gunselect;
 
-		loopi(NUMGUNS) // only loop the amount of times we have guns for
+		loopi(GUN_MAX) // only loop the amount of times we have guns for
 		{
 			if(a >= 0) s = a;
 			else s += b;
 
-			while (s >= NUMGUNS) s -= NUMGUNS;
-			while (s <= -1) s += NUMGUNS;
+			while (s >= GUN_MAX) s -= GUN_MAX;
+			while (s <= -1) s += GUN_MAX;
 			if(a < 0 && !switchgl() && s == GUN_GL)
 				s += b;
 
@@ -320,7 +320,7 @@ struct weaponstate
 
 	void checkweapons(fpsent *d)
 	{
-		loopi(NUMGUNS) if(d->gunstate[i] != GUNSTATE_IDLE)
+		loopi(GUN_MAX) if(d->gunstate[i] != GUNSTATE_IDLE)
 		{
 			if(d->state != CS_ALIVE || (d->gunstate[i] != GUNSTATE_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
 				d->setgunstate(i, GUNSTATE_IDLE, 0, lastmillis);
@@ -370,7 +370,7 @@ struct weaponstate
 		}
 		else if(!d->attacking) return;
 
-		if(guntype[d->gunselect].max) d->ammo[d->gunselect]--;
+		if(guntype[d->gunselect].max) d->ammo[d->gunselect] = max(d->ammo[d->gunselect]-1, 0);
 		d->setgunstate(d->gunselect, GUNSTATE_SHOOT, guntype[d->gunselect].adelay, lastmillis);
 		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 
@@ -405,7 +405,7 @@ struct weaponstate
 
     void preload()
     {
-        loopi(NUMGUNS)
+        loopi(GUN_MAX)
         {
             const char *file = guntype[i].name;
             if(!file) continue;

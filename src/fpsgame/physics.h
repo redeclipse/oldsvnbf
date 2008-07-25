@@ -459,7 +459,7 @@ struct physics
 
     void updatematerial(physent *pl, bool local, bool floating)
     {
-		vec v(pl->type != ENT_PLAYER ? pl->o : cl.feetpos(pl, 1.f));
+		vec v(cl.feetpos(pl, 1.f));
 		int material = lookupmaterial(v);
 		if(pl->state == CS_ALIVE && material != pl->inmaterial)
 		{
@@ -470,13 +470,13 @@ struct physics
 				{ \
 					mf; \
 					int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
-					part_spawn(v, vec(pl->xradius, pl->yradius, 4.f), 0, mz, 100, 200, icol, 0.6f); \
+					regularshape(mz, int(pl->height), icol, 21, rnd(20)+1, 100, v, mz == 4 ? 4.f : 1.f); \
 					if(mw>=0) playsound(mw, 0, 255, pl->o, pl); \
 				}
 
 				if(int(material&MATF_VOLUME) == MAT_WATER || int(pl->inmaterial&MATF_VOLUME) == MAT_WATER)
 				{
-					mattrig(getwatercolour(col), 17, int(material&MATF_VOLUME) != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+					mattrig(getwatercolour(col), 6, int(material&MATF_VOLUME) != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
 				}
 
 				if(int(material&MATF_VOLUME) == MAT_LAVA || int(pl->inmaterial&MATF_VOLUME) == MAT_LAVA)
@@ -656,7 +656,7 @@ struct physics
 			d->o.y += (rnd(21)-10)*i/5;
 			d->o.z += (rnd(21)-10)*i/5;
 		}
-        conoutf("can't find entity spawn spot! (%.1f, %.1f, %.1f)", d->o.x, d->o.y, d->o.z);
+        conoutf("\frcan't find entity spawn spot! (%.1f, %.1f, %.1f)", d->o.x, d->o.y, d->o.z);
 		// leave ent at original pos, possibly stuck
 		d->o = orig;
 		return false;

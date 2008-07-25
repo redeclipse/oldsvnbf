@@ -130,7 +130,7 @@ void aliasa(const char *name, char *action)
 	}
     else if(b->type != ID_ALIAS)
 	{
-		conoutf("cannot redefine builtin %s with an alias", name);
+		conoutf("\frcannot redefine builtin %s with an alias", name);
 		delete[] action;
 	}
 	else
@@ -208,21 +208,21 @@ void setvar(const char *name, int i, bool dofunc)
     GETVAR(id, name, );
     *id->storage.i = clamp(i, id->minval, id->maxval);
     if(dofunc) id->changed();
-	if(verbose >= 2) conoutf("%s set to %d", id->name, *id->storage.i);
+	if(verbose >= 2) conoutf("\fw%s set to %d", id->name, *id->storage.i);
 }
 void setfvar(const char *name, float f, bool dofunc)
 {
     _GETVAR(id, ID_FVAR, name, );
     *id->storage.f = f;
     if(dofunc) id->changed();
-	if(verbose >= 2) conoutf("%s set to %f", id->name, *id->storage.f);
+	if(verbose >= 2) conoutf("\fw%s set to %f", id->name, *id->storage.f);
 }
 void setsvar(const char *name, const char *str, bool dofunc)
 {
     _GETVAR(id, ID_SVAR, name, );
     *id->storage.s = exchangestr(*id->storage.s, str);
 	if(dofunc) id->changed();
-	if(verbose >= 2) conoutf("%s set to %s", id->name, *id->storage.s);
+	if(verbose >= 2) conoutf("\fw%s set to %s", id->name, *id->storage.s);
 }
 int getvar(const char *name)
 {
@@ -340,7 +340,7 @@ char *parseexp(const char *&p, int right)          // parse any nested set of ()
 		else if(!c)
 		{
 			p--;
-			conoutf("missing \"%c\"", right);
+			conoutf("\frmissing \"%c\"", right);
 			wordbuf.setsize(0);
 			bufnest--;
 			return NULL;
@@ -375,7 +375,7 @@ char *lookup(char *n)							// find value of ident referenced with $ in exp
         case ID_SVAR: return exchangestr(n, *id->storage.s);
         case ID_ALIAS: return exchangestr(n, id->action);
 	}
-	conoutf("unknown alias lookup: %s", n+1);
+	conoutf("\frunknown alias lookup: %s", n+1);
 	return n;
 }
 
@@ -488,7 +488,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 					}
 					if(!cc || !cc->sendcmd(numargs, c, numargs > 1 && arg[0] ? arg : NULL))
 #endif
-						conoutf("unknown command: %s", c);
+						conoutf("\frunknown command: %s", c);
                 }
 				setretval(newstring(c));
 			}
@@ -538,15 +538,15 @@ char *executeret(const char *p)               // all evaluation happens here, re
 				}
 
 				case ID_VAR:						// game defined variables
-                    if(numargs <= 1) conoutf("%s = %d", c, *id->storage.i);      // var with no value just prints its current value
-                    else if(id->minval>id->maxval) conoutf("variable %s is read-only", id->name);
+                    if(numargs <= 1) conoutf("\fw%s = %d", c, *id->storage.i);      // var with no value just prints its current value
+                    else if(id->minval>id->maxval) conoutf("\frvariable %s is read-only", id->name);
 					else
 					{
 #ifndef STANDALONE
 						#define WORLDVAR \
 							if (!worldidents && !editmode && id->flags&IDF_WORLD) \
 							{ \
-								conoutf("cannot set world variable %s outside editmode", id->name); \
+								conoutf("\frcannot set world variable %s outside editmode", id->name); \
 								break; \
 							}
 #endif
@@ -556,7 +556,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                             { \
                                 if(id->flags&IDF_PERSIST) \
                                 { \
-                                    conoutf("cannot override persistent variable %s", id->name); \
+                                    conoutf("\frcannot override persistent variable %s", id->name); \
                                     break; \
                                 } \
                                 if(id->override==NO_OVERRIDE) { saveval; id->override = OVERRIDDEN; } \
@@ -571,7 +571,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         if(i1<id->minval || i1>id->maxval)
 						{
                             i1 = i1<id->minval ? id->minval : id->maxval;                // clamp to valid range
-                            conoutf("valid range for %s is %d..%d", id->name, id->minval, id->maxval);
+                            conoutf("\frvalid range for %s is %d..%d", id->name, id->minval, id->maxval);
 						}
                         *id->storage.i = i1;
                         id->changed();                                             // call trigger function if available
@@ -582,7 +582,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                     break;
 
                 case ID_FVAR:
-                    if(numargs <= 1) conoutf("%s = %f", c, *id->storage.f);
+                    if(numargs <= 1) conoutf("\fw%s = %f", c, *id->storage.f);
                     else
                     {
 #ifndef STANDALONE
@@ -660,13 +660,13 @@ bool execfile(const char *cfgfile)
 	if(!buf) return false;
 	execute(buf);
 	delete[] buf;
-	if (verbose >= 3) conoutf("loaded script %s", cfgfile);
+	if (verbose >= 3) conoutf("\fwloaded script %s", cfgfile);
 	return true;
 }
 
 void exec(const char *cfgfile)
 {
-	if(!execfile(cfgfile)) conoutf("could not read %s", cfgfile);
+	if(!execfile(cfgfile)) conoutf("\frcould not read %s", cfgfile);
 }
 
 void writecfg()
@@ -846,7 +846,7 @@ void rndn(int *a)		  { intret(*a>0 ? rnd(*a) : 0); }  COMMANDN(rnd, rndn, "i");
 
 void strcmpa(char *a, char *b) { intret(strcmp(a,b)==0); }  COMMANDN(strcmp, strcmpa, "ss");
 
-ICOMMAND(echo, "C", (char *s), conoutf("\fs\fw%s\fS", s));
+ICOMMAND(echo, "C", (char *s), conoutf("\fw%s", s));
 
 void strstra(char *a, char *b) { char *s = strstr(a, b); intret(s ? s-a : -1); } COMMANDN(strstr, strstra, "ss");
 

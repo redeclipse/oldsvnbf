@@ -293,13 +293,13 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
             if(hasGM && hwmipmap) glTexImage1D(subtarget, 0, compressed, w, 0, format, type, pixels);
             else if(gluBuild1DMipmaps(subtarget, compressed, w, format, type, pixels))
             {
-                if(compressed==component || gluBuild1DMipmaps(subtarget, component, w, format, type, pixels)) conoutf("could not build mipmaps");
+                if(compressed==component || gluBuild1DMipmaps(subtarget, component, w, format, type, pixels)) conoutf("\frcould not build mipmaps");
             }
         }
         else if(hasGM && hwmipmap) glTexImage2D(subtarget, 0, compressed, w, h, 0, format, type, pixels);
         else if(gluBuild2DMipmaps(subtarget, compressed, w, h, format, type, pixels))
 		{
-			if(compressed==component || gluBuild2DMipmaps(subtarget, component, w, h, format, type, pixels)) conoutf("could not build mipmaps");
+			if(compressed==component || gluBuild2DMipmaps(subtarget, component, w, h, format, type, pixels)) conoutf("\frcould not build mipmaps");
 		}
 	}
     else if(target==GL_TEXTURE_1D) glTexImage1D(subtarget, 0, component, w, 0, format, type, pixels);
@@ -496,7 +496,7 @@ Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp, bo
 		createtexture(t->frames[i], t->w, t->h, pixels, clamp, mipit, format, GL_TEXTURE_2D, compress);
 
 		if(verbose >= 3)
-			conoutf("adding frame: %s (%d) [%d,%d:%d,%d]", t->name, i+1, t->w, t->h, f->w, f->h);
+			conoutf("\fwadding frame: %s (%d) [%d,%d:%d,%d]", t->name, i+1, t->w, t->h, f->w, f->h);
 
 		if(pixels != f->pixels) delete[] pixels;
 		if(s != f) SDL_FreeSurface(f);
@@ -564,7 +564,7 @@ SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *comp
 {
 	textureparse(tname, tex ? tex->name : NULL);
 
-	if(!file) { if(msg) conoutf("could not load texture %s", tname); return NULL; }
+	if(!file) { if(msg) conoutf("\frcould not load texture %s", tname); return NULL; }
 
     if(cmds)
     {
@@ -574,9 +574,9 @@ SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *comp
     if(msg) renderprogress(0, file);
 
     SDL_Surface *s = loadsurface(file);
-    if(!s) { if(msg) conoutf("could not load texture %s", file); return NULL; }
+    if(!s) { if(msg) conoutf("\frcould not load texture %s", file); return NULL; }
     int bpp = s->format->BitsPerPixel;
-    if(!texformat(bpp)) { SDL_FreeSurface(s); conoutf("texture must be 8, 16, 24, or 32 bpp: %s", file); return NULL; }
+    if(!texformat(bpp)) { SDL_FreeSurface(s); conoutf("\frtexture must be 8, 16, 24, or 32 bpp: %s", file); return NULL; }
 
     while(cmds)
     {
@@ -738,7 +738,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 	Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
 	s.loaded = false;
     s.texmask |= 1<<tnum;
-	if (s.sts.length() >= TEX_MAX) conoutf("warning: too many textures, [%d] %s (%d,%d)", curtexnum, name, matslot, curmatslot);
+	if (s.sts.length() >= TEX_MAX) conoutf("\frwarning: too many textures, [%d] %s (%d,%d)", curtexnum, name, matslot, curmatslot);
 	Slot::Tex &st = s.sts.add();
 	st.type = tnum;
 	st.combined = -1;
@@ -775,9 +775,9 @@ void texturedel(int i, bool local)
 			curtexnum--;
 			allchanged();
 		}
-		else if (local) conoutf("texture to delete must be in range 0..%d", curtexnum);
+		else if (local) conoutf("\frtexture to delete must be in range 0..%d", curtexnum);
 	}
-	else if (local) conoutf("not enough texture slots, please add another one first");
+	else if (local) conoutf("\frnot enough texture slots, please add another one first");
 }
 
 ICOMMAND(texturedel, "i", (int *i), {
@@ -1125,7 +1125,7 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg)
         if(!format) format = texformat(surface[i]->format->BitsPerPixel);
         else if(texformat(surface[i]->format->BitsPerPixel)!=format)
         {
-            if(surface[i] && msg) conoutf("cubemap texture %s doesn't match other sides' format", sname);
+            if(surface[i] && msg) conoutf("\frcubemap texture %s doesn't match other sides' format", sname);
             loopj(i) SDL_FreeSurface(surface[j]);
             return NULL;
         }
@@ -1173,7 +1173,7 @@ Texture *cubemapload(const char *name, bool mipit, bool msg)
 	{
 		s_sprintfd(pname)("%s_*", name);
 		t = cubemaploadwildcard(NULL, pname, mipit, false);
-		if(!t && msg) conoutf("could not load envmap %s", name);
+		if(!t && msg) conoutf("\frcould not load envmap %s", name);
 	}
 	else t = cubemaploadwildcard(NULL, name, mipit, msg);
 	return t;

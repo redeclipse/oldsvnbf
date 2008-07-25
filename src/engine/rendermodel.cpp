@@ -14,7 +14,7 @@ model *loadingmodel = NULL;
 #include "md5.h"
 #include "obj.h"
 
-#define checkmdl if(!loadingmodel) { conoutf("not loading a model"); return; }
+#define checkmdl if(!loadingmodel) { conoutf("\frnot loading a model"); return; }
 
 void mdlcullface(int *cullface)
 {
@@ -315,11 +315,11 @@ void cleanupmodels()
 void clearmodel(char *name)
 {
     model **m = mdllookup.access(name);
-    if(!m) { conoutf("model %s is not loaded", name); return; }
+    if(!m) { conoutf("\frmodel %s is not loaded", name); return; }
     mdllookup.remove(name);
     (*m)->cleanup();
     delete *m;
-    conoutf("cleared model %s", name);
+    conoutf("\fycleared model %s", name);
 }
 
 COMMAND(clearmodel, "s");

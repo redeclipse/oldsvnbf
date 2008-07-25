@@ -28,15 +28,15 @@ struct tristrip
 				if(n[i]==neighbor) return true;
 				else if(n[i]==old) { n[i] = neighbor; return true; }
 			}
-			if(dbgts && old==UNUSED) conoutf("excessive links");
+			if(dbgts && old==UNUSED) conoutf("\frexcessive links");
 			return false;
-		}	
- 
+		}
+
 		void unlink(ushort neighbor, ushort unused = UNUSED)
 		{
 			loopi(3) if(n[i]==neighbor) n[i] = unused;
 		}
- 
+
 		int numlinks() const { int num = 0; loopi(3) if(n[i]<UNUSED) num++; return num; }
 
 		bool hasvert(ushort idx) const { loopi(3) if(v[i]==idx) return true; return false; }
@@ -51,18 +51,18 @@ struct tristrip
 
 	void addtriangles(const ushort *triidxs, int numtris)
 	{
-		if(dbgts) conoutf("addtriangles: tris = %d, inds = %d", numtris, numtris*3);
+		if(dbgts) conoutf("\fwaddtriangles: tris = %d, inds = %d", numtris, numtris*3);
 		loopi(numtris)
 		{
 			triangle &tri = triangles.add();
-			loopj(3) 
+			loopj(3)
 			{
 				tri.v[j] = *triidxs++;
 				tri.n[j] = UNUSED;
 			}
 			if(tri.v[0]==tri.v[1] || tri.v[1]==tri.v[2] || tri.v[2]==tri.v[0])
 			{
-				if(dbgts) conoutf("degenerate triangle");
+				if(dbgts) conoutf("\frdegenerate triangle");
 				triangles.drop();
 			}
 		}
@@ -97,18 +97,18 @@ struct tristrip
 				if(!owner) continue;
 				else if(!tri.link(*owner))
 				{
-					if(dbgts) conoutf("failed linkage 1: %d -> %d", *owner, i);
+					if(dbgts) conoutf("\frfailed linkage 1: %d -> %d", *owner, i);
 				}
 				else if(!triangles[*owner].link(i))
 				{
-					if(dbgts) conoutf("failed linkage 2: %d -> %d", *owner, i);
+					if(dbgts) conoutf("\frfailed linkage 2: %d -> %d", *owner, i);
 					tri.unlink(*owner);
 				}
 			}
 		}
 		loopi(4) connectivity[i].setsizenodelete(0);
 		loopv(triangles) connectivity[triangles[i].numlinks()].add(i);
-		if(dbgts) conoutf("no connections: %d", connectivity[0].length());
+		if(dbgts) conoutf("\frno connections: %d", connectivity[0].length());
 	}
 
 	void removeconnectivity(ushort i)
@@ -137,8 +137,8 @@ struct tristrip
 
 	ushort leastconnected()
 	{
-		loopi(4) if(!connectivity[i].empty()) 
-		{ 
+		loopi(4) if(!connectivity[i].empty())
+		{
 			ushort least = connectivity[i].pop();
 			removeconnectivity(least);
 			return least;
@@ -169,8 +169,8 @@ struct tristrip
 		{
 			triangle &nexttri = triangles[tri.n[i]];
 			int score = nexttri.numlinks();
-			bool swap = false; 
-			if(v1!=UNUSED) 
+			bool swap = false;
+			if(v1!=UNUSED)
 			{
 				if(!nexttri.hasvert(v1))
 				{
@@ -184,7 +184,7 @@ struct tristrip
 			}
 			if(score < nextscore) { next = tri.n[i]; nextswap = swap; nextscore = score; }
 		}
-		if(next!=UNUSED) 
+		if(next!=UNUSED)
 		{
 			tri.unlink(next, REMOVED);
 			connectivity[triangles[next].numlinks()].replacewithlast(next);
@@ -205,9 +205,9 @@ struct tristrip
 			loopi(3) strip.add(first.v[!prims && reverse && i>=1 ? 3-i : i]);
 			return;
 		}
-		int from = findedge(first, triangles[cur]), 
+		int from = findedge(first, triangles[cur]),
 			to = findedge(first, triangles[cur], first.v[from]);
-		if(from+1!=to) swap(int, from, to); 
+		if(from+1!=to) swap(int, from, to);
 		strip.add(first.v[(to+1)%3]);
 		if(reverse) swap(int, from, to);
 		strip.add(first.v[from]);
@@ -255,11 +255,11 @@ struct tristrip
 			strips.add(LIST);
 			loopv(singles) strips.add(singles[i]);
 		}
-		if(dbgts) conoutf("strips = %d, tris = %d, inds = %d, merges = %d", numstrips, numtris, numtris + numstrips*2, (degen ? 2 : 1)*(numstrips-1));
+		if(dbgts) conoutf("\fwstrips = %d, tris = %d, inds = %d, merges = %d", numstrips, numtris, numtris + numstrips*2, (degen ? 2 : 1)*(numstrips-1));
 	}
 
 };
 
 static inline uint hthash(const tristrip::edge &x) { return x.from^x.to; }
 static inline bool htcmp(const tristrip::edge &x, const tristrip::edge &y) { return x.from==y.from && x.to==y.to; }
-			
+

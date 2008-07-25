@@ -1099,7 +1099,7 @@ void calclight(int quality)
 {
 	if(!setlightmapquality(quality))
 	{
-		conoutf("valid range for calclight quality is 0..3");
+		conoutf("\frvalid range for calclight quality is 0..3");
 		return;
 	}
 	computescreen("computing lightmaps... (esc to abort)");
@@ -1132,9 +1132,9 @@ void calclight(int quality)
 	computescreen("lighting done...");
 	allchanged();
 	if(calclight_canceled)
-		conoutf("calclight aborted");
+		conoutf("\fycalclight aborted");
 	else
-		conoutf("generated %d lightmaps using %d%% of %d textures (%.1f seconds)",
+		conoutf("\fggenerated %d lightmaps using %d%% of %d textures (%.1f seconds)",
 			total,
 			lightmaps.length() ? lumels * 100 / (lightmaps.length() * LM_PACKW * LM_PACKH) : 0,
 			lightmaps.length(),
@@ -1150,7 +1150,7 @@ void patchlight(int quality)
 	if(noedit(true)) return;
 	if(!setlightmapquality(quality))
 	{
-		conoutf("valid range for patchlight quality is 0..3");
+		conoutf("\frvalid range for patchlight quality is 0..3");
 		return;
 	}
 	computescreen("patching lightmaps... (esc to abort)");
@@ -1184,9 +1184,9 @@ void patchlight(int quality)
 	computescreen("lighting done...");
 	allchanged();
 	if(calclight_canceled)
-		conoutf("patchlight aborted");
+		conoutf("\fypatchlight aborted");
 	else
-		conoutf("patched %d lightmaps using %d%% of %d textures (%.1f seconds)",
+		conoutf("\fgpatched %d lightmaps using %d%% of %d textures (%.1f seconds)",
 			total,
 			lightmaps.length() ? lumels * 100 / (lightmaps.length() * LM_PACKW * LM_PACKH) : 0,
 			lightmaps.length(),

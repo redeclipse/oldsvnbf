@@ -157,6 +157,7 @@ struct GAMECLIENT : igameclient
 		CCOMMAND(gamemode, "", (GAMECLIENT *self), intret(self->gamemode));
 		CCOMMAND(mutators, "", (GAMECLIENT *self), intret(self->mutators));
 		CCOMMAND(zoom, "D", (GAMECLIENT *self, int *down), { self->dozoom(*down!=0); });
+		s_strcpy(player1->name, "unnamed");
 	}
 
 	iclientcom *getcom() { return &cc; }
@@ -388,8 +389,8 @@ struct GAMECLIENT : igameclient
 				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); if(n <= 0) n = (t)0; }
 
 			adjustscaled(float, player1->roll, 100.f);
-			adjustscaled(int, quakewobble, 500.f);
-			adjustscaled(int, damageresidue, 500.f);
+			adjustscaled(int, quakewobble, 150.f);
+			adjustscaled(int, damageresidue, 200.f);
 
 			if(player1->state == CS_DEAD)
 			{
@@ -426,11 +427,12 @@ struct GAMECLIENT : igameclient
 		if(player1->clientnum >= 0) c2sinfo();
 	}
 
-	void damaged(int gun, int flags, int damage, fpsent *d, fpsent *actor, int millis, vec &dir)
+	void damaged(int gun, int flags, int damage, int health, fpsent *d, fpsent *actor, int millis, vec &dir)
 	{
 		if(d->state != CS_ALIVE || intermission) return;
 
-		d->dodamage(damage, millis);
+        d->lastregen = d->lastpain = lastmillis;
+        d->health = health;
 
 		if(actor->type == ENT_PLAYER) actor->totaldamage += damage;
 
@@ -467,7 +469,8 @@ struct GAMECLIENT : igameclient
 			playsound(S_DAMAGE1+snd, 0, 255, actor->o, actor);
 			if(actor == player1) lasthit = lastmillis;
 		}
-		bot.damaged(d, actor, gun, flags, damage, millis, dir);
+
+		bot.damaged(d, actor, gun, flags, damage, health, millis, dir);
 	}
 
 	void killed(int gun, int flags, int damage, fpsent *d, fpsent *actor)
@@ -490,7 +493,7 @@ struct GAMECLIENT : igameclient
 		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
 		s_strcpy(dname, colorname(d));
 		s_strcpy(aname, actor->type!=ENT_INANIMATE ? colorname(actor) : "");
-		s_strcpy(oname, gun >= 0 && gun < NUMGUNS ? obitnames[gun] : "was killed by");
+		s_strcpy(oname, gun >= 0 && gun < GUN_MAX ? obitnames[gun] : "was killed by");
         if(d==actor || actor->type==ENT_INANIMATE)
         {
         	if(flags&HIT_MELT) console("\f2%s melted", cflags, dname);
@@ -506,9 +509,9 @@ struct GAMECLIENT : igameclient
 			(flags & HIT_EXPLODE) || (flags & HIT_MELT) || (flags & HIT_FALL) ||
 				(!(flags & HIT_BURN) && (damage >= MAXHEALTH*15/10))
 		);
-        d->lastpain = lastmillis;
+        d->lastregen = d->lastpain = lastmillis;
 
-		if(isgun(d->gunselect))
+		if(isgun(d->gunselect) && !m_noitems(gamemode, mutators))
 		{
 			vec dir, from, to;
 			vecfromyawpitch(d->aimyaw, d->aimpitch, 1, 0, dir);
@@ -596,7 +599,7 @@ struct GAMECLIENT : igameclient
 		if(!players.inrange(cn)) return;
 		fpsent *d = players[cn];
 		if(!d) return;
-		if(d->name[0]) conoutf("player %s disconnected", colorname(d));
+		if(d->name[0]) conoutf("\foplayer %s disconnected", colorname(d));
 		pj.remove(d);
         removetrackedparticles(d);
 		removetrackedsounds(d);
@@ -685,7 +688,7 @@ struct GAMECLIENT : igameclient
 		s_sprintf(cname)("%s\fs%s\fS", *prefix ? prefix : "", name);
 		if(!name[0] || d->ownernum >= 0 || (dupname && duplicatename(d, name)))
 		{
-			s_sprintfd(s)(" [\fs\f5%d\fS]", d->clientnum);
+			s_sprintfd(s)(" [\fs%s%d\fS]", d->ownernum >= 0 ? "\fc" : "\fm", d->clientnum);
 			s_strcat(cname, s);
 		}
 		if(team && m_team(gamemode, mutators))
@@ -1110,7 +1113,7 @@ struct GAMECLIENT : igameclient
 		if(index >= POINTER_HAIR)
 		{
 			if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
-			else if(r && g && b && !editmode && !m_insta(gamemode, mutators))
+			else if(r && g && b && !editmode)
 			{
 				if(player1->health<=25) { r = 1; g = b = 0; }
 				else if(player1->health<=50) { r = 1; g = 0.5f; b = 0; }
@@ -1533,7 +1536,7 @@ struct GAMECLIENT : igameclient
 			fixrange(camera1->aimyaw, camera1->aimpitch);
 
 			if(quakewobble > 0)
-				camera1->roll = float(rnd(25)-12)*(float(min(quakewobble, 100))/100.f);
+				camera1->roll = float(rnd(21)-10)*(float(min(quakewobble, 100))/100.f);
 			else camera1->roll = 0;
 
 			if(!isthirdperson() && (firstpersondist() || firstpersonshift()))

@@ -67,7 +67,7 @@ struct md3 : vertmodel
             if(strncmp(header.id, "IDP3", 4) != 0 || header.version != 15) // header check
             {
                 fclose(f);
-                conoutf("md3: corrupted header");
+                conoutf("\frmd3: corrupted header");
                 return false;
             }
 
@@ -195,7 +195,7 @@ struct md3 : vertmodel
         Texture *tex, *masks;
         loadskin(loadname, pname, tex, masks);
         mdl.initskins(tex, masks);
-        if(tex==notexture) conoutf("could not load model skin for %s", name1);
+        if(tex==notexture) conoutf("\frcould not load model skin for %s", name1);
         return true;
     }
 
@@ -226,7 +226,7 @@ struct md3 : vertmodel
 
 void md3load(char *model)
 {
-    if(!loadingmd3) { conoutf("not loading an md3"); return; }
+    if(!loadingmd3) { conoutf("\frnot loading an md3"); return; }
     s_sprintfd(filename)("%s/%s", md3dir, model);
     md3::part &mdl = *new md3::part;
     loadingmd3->parts.add(&mdl);
@@ -234,13 +234,13 @@ void md3load(char *model)
     mdl.index = loadingmd3->parts.length()-1;
     if(mdl.index) mdl.pitchscale = mdl.pitchoffset = mdl.pitchmin = mdl.pitchmax = 0;
     mdl.meshes = loadingmd3->sharemeshes(path(filename));
-    if(!mdl.meshes) conoutf("could not load %s", filename); // ignore failure
+    if(!mdl.meshes) conoutf("\frcould not load %s", filename); // ignore failure
     else mdl.initskins();
 }
 
 void md3pitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax)
 {
-    if(!loadingmd3 || loadingmd3->parts.empty()) { conoutf("not loading an md3"); return; }
+    if(!loadingmd3 || loadingmd3->parts.empty()) { conoutf("\frnot loading an md3"); return; }
     md3::part &mdl = *loadingmd3->parts.last();
 
     mdl.pitchscale = *pitchscale;
@@ -258,7 +258,7 @@ void md3pitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pit
 }
 
 #define loopmd3meshes(meshname, m, body) \
-    if(!loadingmd3 || loadingmd3->parts.empty()) { conoutf("not loading an md3"); return; } \
+    if(!loadingmd3 || loadingmd3->parts.empty()) { conoutf("\frnot loading an md3"); return; } \
     md3::part &mdl = *loadingmd3->parts.last(); \
     if(!mdl.meshes) return; \
     loopv(mdl.meshes->meshes) \
@@ -360,10 +360,10 @@ void md3scroll(char *meshname, float *scrollu, float *scrollv)
 
 void md3anim(char *anim, int *frame, int *range, float *speed, int *priority)
 {
-    if(!loadingmd3 || loadingmd3->parts.empty()) { conoutf("not loading an md3"); return; }
+    if(!loadingmd3 || loadingmd3->parts.empty()) { conoutf("\frnot loading an md3"); return; }
     vector<int> anims;
     cl->findanims(anim, anims);
-    if(anims.empty()) conoutf("could not find animation %s in %s", anim, loadingmd3->loadname);
+    if(anims.empty()) conoutf("\frcould not find animation %s in %s", anim, loadingmd3->loadname);
     else loopv(anims)
     {
         loadingmd3->parts.last()->setanim(0, anims[i], *frame, *range, *speed, *priority);
@@ -372,9 +372,9 @@ void md3anim(char *anim, int *frame, int *range, float *speed, int *priority)
 
 void md3link(int *parent, int *child, char *tagname)
 {
-    if(!loadingmd3) { conoutf("not loading an md3"); return; }
-    if(!loadingmd3->parts.inrange(*parent) || !loadingmd3->parts.inrange(*child)) { conoutf("no models loaded to link"); return; }
-    if(!loadingmd3->parts[*parent]->link(loadingmd3->parts[*child], tagname)) conoutf("could not link model %s", loadingmd3->loadname);
+    if(!loadingmd3) { conoutf("\frnot loading an md3"); return; }
+    if(!loadingmd3->parts.inrange(*parent) || !loadingmd3->parts.inrange(*child)) { conoutf("\frno models loaded to link"); return; }
+    if(!loadingmd3->parts[*parent]->link(loadingmd3->parts[*child], tagname)) conoutf("\frcould not link model %s", loadingmd3->loadname);
 }
 
 void md3noclip(char *meshname, int *noclip)

@@ -227,7 +227,7 @@ vector<keym> keyms;
 
 void keymap(char *code, char *key)
 {
-	if(overrideidents) { conoutf("cannot override keymap %s", code); return; }
+	if(overrideidents) { conoutf("\frcannot override keymap %s", code); return; }
 	keym &km = keyms.add();
 	km.code = atoi(code);
 	km.name = newstring(key);
@@ -265,9 +265,9 @@ void geteditbind(char *key)
 
 void bindkey(char *key, char *action, int state, const char *cmd)
 {
-    if(overrideidents) { conoutf("cannot override %s \"%s\"", cmd, key); return; }
+    if(overrideidents) { conoutf("\frcannot override %s \"%s\"", cmd, key); return; }
 	keym *km = findbind(key);
-    if(!km) { conoutf("unknown key \"%s\"", key); return; }
+    if(!km) { conoutf("\frunknown key \"%s\"", key); return; }
     char *&binding = km->actions[state];
 	if(!keypressed || keyaction!=binding) delete[] binding;
 	binding = newstring(action);
@@ -666,7 +666,7 @@ void addcomplete(char *command, int type, char *dir, char *ext)
 {
 	if(overrideidents)
 	{
-		conoutf("cannot override complete %s", command);
+		conoutf("\frcannot override complete %s", command);
 		return;
 	}
 	if(!dir[0])
@@ -780,7 +780,7 @@ void setcompletion(char *s, bool on)
 			return;
 		}
 	);
-	conoutf("completion of %s failed as it does not exist", s);
+	conoutf("\frcompletion of %s failed as it does not exist", s);
 }
 
 ICOMMAND(setcomplete, "ss", (char *s, char *t), {

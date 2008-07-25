@@ -178,14 +178,22 @@ struct scoreboard : g3d_callback
 	{
         g.start(menustart, 0.03f, NULL, false);
 
+		int numgroups = groupplayers();
+
 		s_sprintfd(modemapstr)("%s: %s", sv->gamename(cl.gamemode, cl.mutators), getmapname());
         if((m_timed(cl.gamemode) || cl.cc.demoplayback) && cl.minremain >= 0)
 		{
 			if(!cl.minremain) s_strcat(modemapstr, ", intermission");
 			else
 			{
-				s_sprintfd(timestr)(", %d %s remaining", cl.minremain, cl.minremain==1 ? "minute" : "minutes");
-				s_strcat(modemapstr, timestr);
+				s_sprintfd(cstr)(", %d %s remain", cl.minremain, cl.minremain==1 ? "minute" : "minutes");
+				s_strcat(modemapstr, cstr);
+				if(m_ctf(cl.gamemode) && ctflimit)
+				{
+					int captures = clamp(groups[0]->score-ctflimit, 0, ctflimit);
+					s_sprintf(cstr)(", %d %s to go", captures, captures==1 ? "capture" : "captures");
+					s_strcat(modemapstr, cstr);
+				}
 			}
 		}
 		g.text(modemapstr, 0xFFFF80, "server");
@@ -229,7 +237,6 @@ struct scoreboard : g3d_callback
 		}
 		g.separator();
 
-		int numgroups = groupplayers();
         loopk(numgroups)
         {
             if((k%2)==0) g.pushlist(); // horizontal
@@ -297,7 +304,7 @@ struct scoreboard : g3d_callback
 				g.text("pj", fgcolor);
 				loopscoregroup(o,
 				{
-					if(o->ownernum >= 0) g.textf("%d", 0xFFDD99, NULL, o->skill);
+					if(o->ownernum >= 0) g.textf("\fs%s%d\fS", 0xFF9955, NULL, o->ownernum == cl.player1->clientnum ? "\fg" : "\fc", o->skill);
 					else if(o->state==CS_LAGGED) g.text("LAG", 0xFFFFDD);
 					else g.textf("%d", 0xFFFFDD, NULL, o->plag);
 				});
@@ -314,7 +321,7 @@ struct scoreboard : g3d_callback
 					if(o->ownernum >= 0)
 					{
 						fpsent *od = cl.getclient(o->ownernum);
-						g.textf("%d", 0xFFDD99, NULL, od ? od->ping : 0);
+						g.textf("\fs%s%d\fS", 0xFF9955, NULL, o->ownernum == cl.player1->clientnum ? "\fg" : "\fc", od ? od->ping : 0);
 					}
 					else g.textf("%d", 0xFFFFDD, NULL, o->ping);
 				});
@@ -340,10 +347,7 @@ struct scoreboard : g3d_callback
                 loopscoregroup(o,
                 {
                 	if(o->ownernum >= 0)
-					{
-						fpsent *od = cl.getclient(o->ownernum);
-						g.textf("%d [%d]", 0xFFDD99, NULL, o->clientnum, od ? od->clientnum : -1);
-					}
+						g.textf("\fw%d [\fs%s%d\fS]", 0xFF9955, NULL, o->clientnum, o->ownernum == cl.player1->clientnum ? "\fg" : "\fc", o->ownernum);
 					else g.textf("%d", 0xFFFFDD, NULL, o->clientnum);
 				});
                 g.poplist();

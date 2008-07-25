@@ -164,7 +164,7 @@ struct duelservmode : servmode
 					if (!sv.sents[j].spawned)
 					{
 						sv.sents[j].spawntime = 0;
-						if (m_insta(sv.gamemode, sv.mutators))
+						if (m_noitems(sv.gamemode, sv.mutators))
 						{
 							sv.sents[j].spawned = false;
 						}

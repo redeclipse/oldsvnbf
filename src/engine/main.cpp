@@ -88,7 +88,7 @@ void fatal(const char *s, ...)    // failure exit
     if(errors <= 2) // print up to one extra recursive error
     {
         s_sprintfdlv(msg,s,s);
-        puts(msg);
+        printf("%s\n", msg);
 
         if(errors <= 1) // avoid recursion
         {
@@ -187,7 +187,7 @@ void setfullscreen(bool enable)
 #endif
 }
 
-VARF(fullscreen, 0, 0, 1, setfullscreen(fullscreen!=0));
+VARF(fullscreen, 0, 1, 1, setfullscreen(fullscreen!=0));
 
 void screenres(int *w, int *h)
 {
@@ -218,8 +218,8 @@ VARFP(gamma, 30, 100, 300,
 	float f = gamma/100.0f;
 	if(SDL_SetGamma(f,f,f)==-1)
 	{
-		conoutf("Could not set gamma (card/driver doesn't support it?)");
-		conoutf("sdl: %s", SDL_GetError());
+		conoutf("\frcould not set gamma (card/driver doesn't support it?)");
+		conoutf("\frsdl: %s", SDL_GetError());
 	}
 });
 
@@ -294,10 +294,10 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
     if(!screen) fatal("Unable to create OpenGL screen: %s", SDL_GetError());
     else
     {
-        if(!hasbpp) conoutf("%d bit color buffer not supported - disabling", colorbits);
-        if(depthbits && (config&1)==0) conoutf("%d bit z-buffer not supported - disabling", depthbits);
-        if(stencilbits && (config&2)==0) conoutf("Stencil buffer not supported - disabling");
-        if(fsaa>0 && (config&4)==0) conoutf("%dx anti-aliasing not supported - disabling", fsaa);
+        if(!hasbpp) conoutf("\fr%d bit color buffer not supported - disabling", colorbits);
+        if(depthbits && (config&1)==0) conoutf("\fr%d bit z-buffer not supported - disabling", depthbits);
+        if(stencilbits && (config&2)==0) conoutf("\frStencil buffer not supported - disabling");
+        if(fsaa>0 && (config&4)==0) conoutf("\fr%dx anti-aliasing not supported - disabling", fsaa);
     }
 
     scr_w = screen->w;
@@ -735,7 +735,7 @@ int main(int argc, char **argv)
 						shaderprecision = min(max(n - 1, 0), 3);
 						break;
 					}
-					default: conoutf("unknown display option %c", argv[i][2]); break;
+					default: conoutf("\frunknown display option %c", argv[i][2]); break;
 				}
 				break;
 			}
@@ -746,13 +746,13 @@ int main(int argc, char **argv)
 	}
 	initing = NOT_INITING;
 
-	conoutf("init: enet");
+	conoutf("\fminit: enet");
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 
-	conoutf("init: runtime");
+	conoutf("\fminit: runtime");
 	initruntime();
 
-	conoutf("init: sdl");
+	conoutf("\fminit: sdl");
     int par = 0;
 	#ifdef _DEBUG
 	par = SDL_INIT_NOPARACHUTE;
@@ -768,32 +768,32 @@ int main(int argc, char **argv)
 	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
 	if (SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
 
-	conoutf("init: video: mode");
+	conoutf("\fminit: video mode");
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
-	conoutf("init: video: misc");
+	conoutf("\fminit: video misc");
 	ncursor = SDL_GetCursor();
 	showcursor(false);
 	setcaption("loading..");
 	eastereggs();
 
-	conoutf("init: gl");
+	conoutf("\fminit: gl");
     gl_checkextensions();
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
     if(!(notexture = textureload("textures/notexture")) ||
 		!(blanktexture = textureload("textures/blank")))
 		fatal("could not find core textures");
 
-	conoutf("init: sound");
+	conoutf("\fminit: sound");
 	initsound();
 
-	conoutf("init: defaults");
+	conoutf("\fminit: defaults");
 	persistidents = false;
 	if(!execfile("stdlib.cfg")) fatal("cannot find data files");
 	if(!setfont("default")) fatal("no default font specified");
 
-    conoutf("init: gl effects");
+    conoutf("\fminit: gl effects");
 	computescreen("loading...");
 	inbetweenframes = true;
     loadshaders();
@@ -801,12 +801,12 @@ int main(int argc, char **argv)
     initdecals();
     preloadtextures();
 
-	conoutf("init: world");
+	conoutf("\fminit: world");
 	emptymap(0, true, NULL, true);
 	rehash(false);
     cl->preload();
 
-	conoutf("init: mainloop");
+	conoutf("\fminit: mainloop");
 	if(initscript) execute(initscript);
 
 	if(autograbinput) setvar("grabinput", 1, true);

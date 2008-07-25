@@ -3,12 +3,11 @@ struct GAMESERVER : igameserver
 	struct srventity
 	{
 		int type, attr1, attr2, attr3, attr4, attr5, spawntime;
-		int owner, enttype;
 		bool spawned;
 
 		srventity() : type(NOTUSED),
 			attr1(0), attr2(0), attr3(0), attr4(0), attr5(0),
-			spawntime(0), owner(-1), enttype(ETYPE_WORLD), spawned(false) {}
+			spawntime(0), spawned(false) {}
 		~srventity() {}
 	};
 
@@ -232,16 +231,6 @@ struct GAMESERVER : igameserver
 		uint ip;
 	};
 
-	IVARG(teamdamage, 0, 1, 1);
-	IVARG(timelimit, 0, 10, INT_MAX-1);
-	IVARG(ctflimit, 0, 10, INT_MAX-1);
-	IVARG(stflimit, 0, 1, 1);
-
-	IVARG(botbalance, 0, 6, MAXCLIENTS-1);
-	IVARG(botratio, 0, 2, 100);
-	IVARG(botminskill, 0, 30, 100);
-	IVARG(botmaxskill, 0, 80, 100);
-
 	bool notgotitems, notgotflags;		// true when map has changed and waiting for clients to send item
 	int gamemode, mutators;
 	int gamemillis, gamelimit;
@@ -359,7 +348,7 @@ struct GAMESERVER : igameserver
 	{
 		if(flag <= PRIV_MASTER && !nonspectators(ci->clientnum, true)) return true;
 		else if(ci->privilege >= flag) return true;
-		else if(msg) srvoutf(ci->clientnum, "\fgaccess denied, you need %s", privname(flag));
+		else if(msg) srvoutf(ci->clientnum, "\fraccess denied, you need %s", privname(flag));
 		return false;
 	}
 
@@ -372,7 +361,7 @@ struct GAMESERVER : igameserver
 		resetitems();
 		bannedips.setsize(0);
 		enumerate(*idents, ident, id, {
-			if(id.flags&IDF_GAME) // reset vars
+			if(id.flags&IDF_GAME && !strncmp(id.name, "sv_", 3)) // reset vars
 			{
 				switch(id.type)
 				{
@@ -417,7 +406,10 @@ struct GAMESERVER : igameserver
 		//cps.reset();
 	}
 
-	int spawntime(int type) { return ((MAXCLIENTS+41)-nonspectators())*100; } // so, range is 4100..30000 ms
+	int spawntime(int type)
+	{
+		return ((MAXCLIENTS+41)-nonspectators())*100; // so, range is 4100..30000 ms
+	}
 
 	void vote(char *map, int reqmode, int reqmuts, int sender)
 	{
@@ -476,7 +468,7 @@ struct GAMESERVER : igameserver
 				teamscore &ts = teamscores[j];
 				float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
 				ts.rank += rank;
-				ts.clients += !botratio() || ci->state.ownernum >= 0 ? 1 : botratio()+(nonspectators(-1, true) > 1 ? 1 : 0);
+				ts.clients += !sv_botratio || ci->state.ownernum >= 0 ? 1 : sv_botratio+(nonspectators(-1, true) > 1 ? 1 : 0);
 				break;
 			}
 		}
@@ -735,9 +727,9 @@ struct GAMESERVER : igameserver
 		gamemode = mode; mutators = muts;
 		modecheck(&gamemode, &mutators);
 		gamemillis = 0;
-		oldtimelimit = timelimit();
-		minremain = timelimit() ? timelimit() : -1;
-		gamelimit = timelimit() ? minremain*60000 : 0;
+		oldtimelimit = sv_timelimit;
+		minremain = sv_timelimit ? sv_timelimit : -1;
+		gamelimit = sv_timelimit ? minremain*60000 : 0;
 		interm = 0;
 		s_strcpy(smapname, s);
 		resetitems();
@@ -868,12 +860,20 @@ struct GAMESERVER : igameserver
 		votecount *best = NULL;
 		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
 
-		if(best && best->count >= maxvotes)
+		if(force || (best && best->count >= maxvotes))
 		{
 			if(demorecord) enddemorecord();
 			srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
-			sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, best->map, best->mode, best->muts);
-			changemap(best->map, best->mode, best->muts);
+			if(best && best->count >= maxvotes)
+			{
+				sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, best->map, best->mode, best->muts);
+				changemap(best->map, best->mode, best->muts);
+			}
+			else
+			{
+				sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, smapname[0] ? smapname : defaultmap(), gamemode, mutators);
+				changemap(smapname[0] ? smapname : defaultmap(), gamemode, mutators);
+			}
 		}
 	}
 
@@ -1312,7 +1312,7 @@ struct GAMESERVER : igameserver
 							sendf(-1, 1, "ri7vi", SV_RESUME, sender,
 								gs.state, gs.frags,
 								gs.lifesequence, gs.health,
-								gs.gunselect, NUMGUNS, &gs.ammo[0], -1);
+								gs.gunselect, GUN_MAX, &gs.ammo[0], -1);
 						}
 					}
 
@@ -1597,11 +1597,7 @@ struct GAMESERVER : igameserver
 				}
 
 				case SV_GETMAP:
-					if(mapdata)
-					{
-						sendf(sender, 1, "ris", SV_SERVMSG, "server sending map...");
-						sendfile(sender, 2, mapdata, "ri", SV_SENDMAP);
-					}
+					if(mapdata) sendfile(sender, 2, mapdata, "ri", SV_SENDMAP);
 					else sendf(sender, 1, "ris", SV_SERVMSG, "no map to send");
 					break;
 
@@ -1645,15 +1641,14 @@ struct GAMESERVER : igameserver
 					int skill = getint(p);
 					if(haspriv(ci, PRIV_MASTER, true))
 					{
-						if(m_lobby(gamemode))
-							srvoutf(sender, "you are currently in the lobby, please select a game mode");
-						else if(m_fight(gamemode) && botbalance())
+						if(m_lobby(gamemode)) sendf(sender, 1, "ri", SV_NEWGAME);
+						else if(m_fight(gamemode) && sv_botbalance)
 						{
-							if(botbalance() < MAXCLIENTS-1)
+							if(sv_botbalance < MAXCLIENTS-1)
 							{
-								++*botbalance.storage.i;
-								botbalance.changed();
-								srvoutf(-1, "%s increased botbalance to %d", colorname(ci), botbalance());
+								setvar("sv_botbalance", sv_botbalance+1, true);
+								s_sprintfd(val)("%d", sv_botbalance);
+								sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
 							}
 							else srvoutf(sender, "botbalance is at its highest");
 						}
@@ -1667,15 +1662,14 @@ struct GAMESERVER : igameserver
 				{
 					if(haspriv(ci, PRIV_MASTER, true))
 					{
-						if(m_lobby(gamemode))
-							srvoutf(sender, "you are currently in the lobby, please select a game mode");
-						else if(m_fight(gamemode) && botbalance())
+						if(m_lobby(gamemode)) sendf(sender, 1, "ri", SV_NEWGAME);
+						else if(m_fight(gamemode) && sv_botbalance)
 						{
-							if(botbalance() > 1)
+							if(sv_botbalance > 1)
 							{
-								--*botbalance.storage.i;
-								botbalance.changed();
-								srvoutf(-1, "%s decreased botbalance to %d", colorname(ci), botbalance());
+								setvar("botbalance", sv_botbalance-1, true);
+								s_sprintfd(val)("%d", sv_botbalance);
+								sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
 							}
 							else srvoutf(sender, "botbalance is at its lowest");
 						}
@@ -1706,7 +1700,7 @@ struct GAMESERVER : igameserver
 					break;
 				}
 			}
-			//conoutf("[server] msg: %d, prev: %d", type, prevtype);
+			//conoutf("\fy[server] msg: %d, prev: %d", type, prevtype);
 		}
 	}
 
@@ -1752,8 +1746,8 @@ struct GAMESERVER : igameserver
 				ci->state.ownernum = findbotclient();
 				if(ci->state.ownernum >= 0)
 				{
-					int s = skill, m = botmaxskill() > botminskill() ? botmaxskill() : botminskill(),
-						n = botminskill() < botmaxskill() ? botminskill() : botmaxskill();
+					int s = skill, m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
+						n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
 					if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
 					ci->state.skill = clamp(s, 1, 100);
 					ci->state.state = CS_DEAD;
@@ -1864,7 +1858,7 @@ struct GAMESERVER : igameserver
 	{
 		if(renew)
 		{
-			if(botratio() && nonspectators() && m_fight(gamemode) && m_team(gamemode, mutators))
+			if(sv_botratio && nonspectators() && m_fight(gamemode) && m_team(gamemode, mutators))
 			{
 				loopvrev(clients) if(clients[i]->state.ownernum >= 0)
 				{
@@ -1887,18 +1881,18 @@ struct GAMESERVER : igameserver
 		{
 			loopvrev(clients) if(clients[i]->state.ownernum >= 0)
 			{
-				int m = botmaxskill() > botminskill() ? botmaxskill() : botminskill(),
-					n = botminskill() < botmaxskill() ? botminskill() : botmaxskill();
+				int m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
+					n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
 				if(clients[i]->state.skill > m || clients[i]->state.skill < n)
 					removebot(clients[i]);
 			}
 
 			if(m_fight(gamemode))
 			{
-				if(botbalance())
+				if(sv_botbalance)
 				{
-					while(nonspectators() < botbalance() && addbot(-1)) ;
-					while(nonspectators() > botbalance() && deletebot()) ;
+					while(nonspectators() < sv_botbalance && addbot(-1)) ;
+					while(nonspectators() > sv_botbalance && deletebot()) ;
 				}
 			}
 			while(reassignbots()) ;
@@ -1909,77 +1903,81 @@ struct GAMESERVER : igameserver
 	{
 		if(haspriv(ci, PRIV_MASTER, true))
 		{
-			ident *id = idents->access(cmd);
+			s_sprintfd(cmdname)("sv_%s", cmd);
+			ident *id = idents->access(cmdname);
 			if(id && id->flags&IDF_GAME)
 			{
+				string val;
+				val[0] = 0;
 				switch(id->type)
 				{
 					case ID_COMMAND:
 					{
 						string s;
 						if(nargs <= 1 || !arg) s_strcpy(s, cmd);
-						else s_sprintf(s)("%s %s", cmd, arg);
+						else s_sprintf(s)("sv_%s %s", cmd, arg);
 						char *ret = executeret(s);
 						if(ret)
 						{
-							srvoutf(-1, "\fg%s: %s returned %s", colorname(ci), cmd, ret);
+							srvoutf(-1, "\fy%s: %s returned %s", colorname(ci), cmd, ret);
 							delete[] ret;
 						}
-						break;
+						return;
 					}
 					case ID_VAR:
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvoutf(ci->clientnum, "\fg%s = %d", id->name, *id->storage.i);
-							break;
+							srvoutf(ci->clientnum, "\fy%s = %d", cmd, *id->storage.i);
+							return;
 						}
 						if(id->maxval < id->minval)
 						{
-							srvoutf(ci->clientnum, "\fgcannot override variable: %s", id->name);
-							break;
+							srvoutf(ci->clientnum, "\frcannot override variable: %s", cmd);
+							return;
 						}
-						int val = atoi(arg);
-						if(val < id->minval || val > id->maxval)
+						int ret = atoi(arg);
+						if(ret < id->minval || ret > id->maxval)
 						{
-							srvoutf(ci->clientnum, "\fgvalid range for %s is %d..%d", id->name, id->minval, id->maxval);
-							break;
+							srvoutf(ci->clientnum, "\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
+							return;
 						}
-                        *id->storage.i = val;
+                        *id->storage.i = ret;
                         id->changed();
-						srvoutf(-1, "\fg%s set %s to %d", colorname(ci), id->name, *id->storage.i);
+                        s_sprintf(val)("%d", *id->storage.i);
 						break;
 					}
 					case ID_FVAR:
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvoutf(ci->clientnum, "\fg%s = %f", id->name, *id->storage.f);
-							break;
+							srvoutf(ci->clientnum, "\fy%s = %f", cmd, *id->storage.f);
+							return;
 						}
-						float val = atof(arg);
-                        *id->storage.f = val;
+						float ret = atof(arg);
+                        *id->storage.f = ret;
                         id->changed();
-						srvoutf(-1, "\fg%s set %s to %f", colorname(ci), id->name, *id->storage.f);
+                        s_sprintf(val)("%f", *id->storage.f);
 						break;
 					}
 					case ID_SVAR:
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvoutf(ci->clientnum, strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", id->name, *id->storage.s);
-							break;
+							srvoutf(ci->clientnum, strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", cmd, *id->storage.s);
+							return;
 						}
 						delete[] *id->storage.s;
                         *id->storage.s = newstring(arg);
                         id->changed();
-						srvoutf(-1, "\fg%s set %s to %s", colorname(ci), id->name, *id->storage.s);
+                        s_sprintf(val)("%s", *id->storage.s);
 						break;
 					}
-					default: break;
+					default: return;
 				}
+				if(val[0]) sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, cmd, val);
 			}
-			else srvoutf(ci->clientnum, "\fgunknown command: %s", cmd);
+			else srvoutf(ci->clientnum, "\frunknown command: %s", cmd);
 		}
 	}
 
@@ -2030,6 +2028,40 @@ struct GAMESERVER : igameserver
 			putint(p, sents[i].attr5);
 		}
 		putint(p, -1);
+
+		enumerate(*idents, ident, id, {
+			if(id.flags&IDF_GAME && !strncmp(id.name, "sv_", 3)) // reset vars
+			{
+				string val; val[0] = 0;
+				s_sprintfd(cmd)("%s", &id.name[3]);
+				switch(id.type)
+				{
+					case ID_VAR:
+					{
+						s_sprintf(val)("%d", *id.storage.i);
+						break;
+					}
+					case ID_FVAR:
+					{
+						s_sprintf(val)("%f", *id.storage.f);
+						break;
+					}
+					case ID_SVAR:
+					{
+						s_sprintf(val)("%s", *id.storage.s);
+						break;
+					}
+					default: break;
+				}
+				if(cmd[0] && val[0])
+				{
+					putint(p, SV_COMMAND);
+					putint(p, -1);
+					sendstring(cmd, p);
+					sendstring(val, p);
+				}
+			}
+		});
 
 		if(ci && ci->state.state!=CS_SPECTATOR)
 		{
@@ -2092,12 +2124,12 @@ struct GAMESERVER : igameserver
 		{
 			if(minremain)
 			{
-				if(timelimit() != oldtimelimit)
+				if(sv_timelimit != oldtimelimit)
 				{
-					if(timelimit()) gamelimit += (timelimit()-oldtimelimit)*60000;
-					oldtimelimit = timelimit();
+					if(sv_timelimit) gamelimit += (sv_timelimit-oldtimelimit)*60000;
+					oldtimelimit = sv_timelimit;
 				}
-				if(timelimit())
+				if(sv_timelimit)
 				{
 					if(gamemillis >= gamelimit) minremain = 0;
 					else minremain = (gamelimit-gamemillis+60000-1)/60000;
@@ -2112,7 +2144,11 @@ struct GAMESERVER : igameserver
 				else if(minremain == 1)
 					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, "only one minute left of play!");
 			}
-			if(!minremain && !interm) interm = gamemillis+5000;
+			if(!minremain && !interm)
+			{
+				maprequest = false;
+				interm = gamemillis+10000;
+			}
 		}
 	}
 
@@ -2134,7 +2170,7 @@ struct GAMESERVER : igameserver
 	void spawnstate(clientinfo *ci)
 	{
 		gamestate &gs = ci->state;
-		gs.spawnstate(gamemode, mutators);
+		gs.spawnstate(m_insta(gamemode, mutators) ? sv_instaspawngun : sv_spawngun);
 		gs.lifesequence++;
 	}
 
@@ -2143,7 +2179,7 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		spawnstate(ci);
 		int own = ci->state.ownernum >= 0 ? ci->state.ownernum : ci->clientnum;
-		sendf(own, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, NUMGUNS, &gs.ammo[0]);
+		sendf(own, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, GUN_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
 	}
 
@@ -2156,26 +2192,30 @@ struct GAMESERVER : igameserver
         putint(p, gs.lifesequence);
         putint(p, gs.health);
         putint(p, gs.gunselect);
-        loopi(NUMGUNS) putint(p, gs.ammo[i]);
+        loopi(GUN_MAX) putint(p, gs.ammo[i]);
     }
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
 	{
 		gamestate &ts = target->state;
-		if(!m_fight(gamemode) || gamemillis-ts.lastspawn <= REGENWAIT || (!teamdamage() && m_team(gamemode, mutators) && actor->team == target->team))
-		{
-			if(m_lobby(gamemode))
-				srvoutf(actor->clientnum, "you are currently in the lobby, please select a game mode");
-			return;
-		}
-		if(flags&HIT_LEGS) damage = damage/4;
-		else if (flags&HIT_TORSO) damage = damage/2;
-		if(smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { return; }
-		mutate(if(!mut->damage(target, actor, damage, gun, flags, hitpush)) { return; });
-		ts.dodamage(damage, gamemillis);
-        actor->state.damage += damage;
-		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, damage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
-		if(ts.health<=0)
+		if(gamemillis-ts.lastspawn <= REGENWAIT) return;
+		int setdamage = damage, realdamage = damage;
+
+		if(flags&HIT_LEGS) setdamage = damage/4;
+		else if (flags&HIT_TORSO) setdamage = damage/2;
+		if(smode && !smode->damage(target, actor, setdamage, gun, flags, hitpush)) { return; }
+		mutate(if(!mut->damage(target, actor, setdamage, gun, flags, hitpush)) { return; });
+
+		if(!m_fight(gamemode) || (!sv_teamdamage && m_team(gamemode, mutators) && actor->team == target->team))
+			realdamage = 0;
+		else if(m_insta(gamemode, mutators)) realdamage = max(setdamage, ts.health);
+		else realdamage = setdamage;
+
+		ts.dodamage(realdamage, gamemillis);
+        actor->state.damage += realdamage;
+		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, setdamage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
+
+		if(realdamage && ts.health <= 0)
 		{
             target->state.deaths++;
             if(actor!=target && m_team(gamemode, mutators) && actor->team == target->team) actor->state.teamkills++;
@@ -2189,8 +2229,8 @@ struct GAMESERVER : igameserver
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
 			}
 			ts.gundrop.reset();
-			ts.gundrop.add(ts.gunselect);
-			sendf(-1, 1, "ri7", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, gun, flags, damage);
+			if(!m_noitems(gamemode, mutators)) ts.gundrop.add(ts.gunselect);
+			sendf(-1, 1, "ri7", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, gun, flags, realdamage);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
 			mutate(mut->died(target, actor));
@@ -2200,7 +2240,7 @@ struct GAMESERVER : igameserver
 			if(fragvalue > 0)
 			{
 				actor->state.spree++;
-				switch (actor->state.spree)
+				switch(actor->state.spree)
 				{
 					case 5:
 					{
@@ -2236,6 +2276,8 @@ struct GAMESERVER : igameserver
 						break;
 					}
 				}
+				//if(sv_fraglimit && actor->state.frags >= sv_fraglimit)
+				//	startintermission();
 			}
 		}
 	}
@@ -2252,7 +2294,7 @@ struct GAMESERVER : igameserver
         ci->state.deaths++;
 		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, e.flags, ci->state.health);
 		gs.gundrop.reset();
-		gs.gundrop.add(gs.gunselect);
+		if(!m_noitems(gamemode, mutators)) gs.gundrop.add(gs.gunselect);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(mut->died(ci, NULL));
@@ -2299,12 +2341,15 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, shotevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !gs.canshoot(e.gun, e.millis))
+		if(!gs.isalive(gamemillis) || !gs.canshoot(e.gun, e.millis) || !isgun(e.gun))
 		{
 			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
+			if(guntype[e.gun].max && isgun(e.gun))
+				gs.ammo[e.gun] = max(gs.ammo[e.gun]-1, 0); // keep synched!
 			return;
 		}
-		if(guntype[e.gun].max) gs.ammo[e.gun]--;
+		if(guntype[e.gun].max)
+			gs.ammo[e.gun] = max(gs.ammo[e.gun]-1, 0); // keep synched!
 		gs.setgunstate(e.gun, GUNSTATE_SHOOT, guntype[e.gun].adelay, e.millis);
 		sendf(-1, 1, "ri4i6x", SV_SHOTFX, ci->clientnum, e.gun, e.power,
 				int(e.from[0]*DMF), int(e.from[1]*DMF), int(e.from[2]*DMF),
@@ -2364,7 +2409,7 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, useevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!minremain || !gs.isalive(gamemillis))
+		if(!minremain || !gs.isalive(gamemillis) || m_noitems(gamemode, mutators))
 		{
 			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
@@ -2383,7 +2428,7 @@ struct GAMESERVER : igameserver
 			clientinfo *cp = (clientinfo *)getinfo(e.owner);
 			if(!cp || cp->state.gundrop.projs.empty()) return;
 			int gun = cp->state.gundrop.projs[0];
-			if(!isgun(gun) || !gs.canuse(WEAPON, gun, guntype[gun].add, e.millis))
+			if(!isgun(gun) || !gs.canuse(WEAPON, gun, guntype[gun].add, e.millis) || m_noitems(gamemode, mutators))
 				return;
 			cp->state.gundrop.reset();
 			ci->state.useitem(e.millis, false, WEAPON, gun, guntype[gun].add);
@@ -2442,7 +2487,7 @@ struct GAMESERVER : igameserver
 		else if(minremain)
 		{
 			processevents();
-			if(curtime && !m_insta(gamemode, mutators))
+			if(curtime && !m_noitems(gamemode, mutators))
             {
                 loopv(sents) if(sents[i].spawntime && sents[i].type == WEAPON)
 			    {
@@ -2471,7 +2516,7 @@ struct GAMESERVER : igameserver
 		}
 
 		if((m_timed(gamemode) && hasnonlocalclients()) &&
-			((timelimit() != oldtimelimit) ||
+			((sv_timelimit != oldtimelimit) ||
 			(gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
 				checkintermission();
 
@@ -2626,7 +2671,7 @@ struct GAMESERVER : igameserver
 		mapdata = tmpfile();
         if(!mapdata) { sendf(sender, 1, "ris", SV_SERVMSG, "failed to open temporary file for map"); return; }
 		fwrite(data, 1, len, mapdata);
-		srvoutf(-1, "%s uploaded map to server, \"/getmap\" to receive it", colorname(ci));
+		sendf(-1, 1, "ri2", SV_SENDMAP, sender);
 	}
 
 	bool duplicatename(clientinfo *ci, char *name)
@@ -2643,7 +2688,7 @@ struct GAMESERVER : igameserver
 		s_sprintf(cname)("\fs%s\fS", name);
 		if(!name[0] || ci->state.ownernum >= 0 || (dupname && duplicatename(ci, name)))
 		{
-			s_sprintfd(s)(" [\fs\f5%d\fS]", ci->clientnum);
+			s_sprintfd(s)(" [\fs%s%d\fS]", ci->state.ownernum >= 0 ? "\fc" : "\fm", ci->clientnum);
 			s_strcat(cname, s);
 		}
 		if(team && m_team(gamemode, mutators))
