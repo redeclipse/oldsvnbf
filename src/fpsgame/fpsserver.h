@@ -1893,11 +1893,11 @@ struct GAMESERVER : igameserver
 
 	void parsecommand(clientinfo *ci, int nargs, char *cmd, char *arg)
 	{
-		if(haspriv(ci, PRIV_MASTER, true))
+		s_sprintfd(cmdname)("sv_%s", cmd);
+		ident *id = idents->access(cmdname);
+		if(id && id->flags&IDF_GAME)
 		{
-			s_sprintfd(cmdname)("sv_%s", cmd);
-			ident *id = idents->access(cmdname);
-			if(id && id->flags&IDF_GAME)
+			if(haspriv(ci, PRIV_MASTER, true))
 			{
 				string val;
 				val[0] = 0;
@@ -1969,8 +1969,8 @@ struct GAMESERVER : igameserver
 				}
 				if(val[0]) sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, cmd, val);
 			}
-			else srvoutf(ci->clientnum, "\frunknown command: %s", cmd);
 		}
+		else srvoutf(ci->clientnum, "\frunknown command: %s", cmd);
 	}
 
 	int welcomepacket(ucharbuf &p, int n, ENetPacket *packet)
