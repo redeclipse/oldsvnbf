@@ -938,7 +938,7 @@ struct clientcom : iclientcom
 						int lcn = getint(p);
 						if(p.overread() || lcn < 0) break;
 						fpsent *f = cl.newclient(lcn);
-						f->respawn(0);
+						if(f!=cl.player1) f->respawn(0);
 						parsestate(f, p, true);
 					}
 					break;
