@@ -870,7 +870,15 @@ struct GAMESERVER : igameserver
 			else if(maxvotes == 3) maxvotes = 2;
 			else maxvotes = maxvotes/2;
 		}
-		else maxvotes = maxvotes/2;
+		else
+		{
+			if(nonspectators(-1, true) > 1)
+			{
+				if(maxvotes >= nonspectators(-1, true)/2) maxvotes = maxvotes/2;
+				else maxvotes = nonspectators(-1, true)/2;
+			}
+			else maxvotes = 1;
+		}
 
 		if(best && best->count > maxvotes)
 		{
