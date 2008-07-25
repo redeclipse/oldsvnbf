@@ -94,7 +94,7 @@ struct entities : icliententities
 		if(type == WEAPON)
 		{
 			int gun = attr1;
-			if(gun <= -1 || gun >= NUMGUNS) gun = 0;
+			if(!isgun(gun)) gun = GUN_PISTOL;
 			return guntype[gun].name;
 		}
 		return NULL;
@@ -172,6 +172,7 @@ struct entities : icliententities
 					particle_text(d->abovehead(), item, 15);
 				playsound(S_ITEMPICKUP, 0, 255, d->o, d);
 				d->useitem(lastmillis, false, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+				regularshape(7, enttype[ents[n]->type].radius, 0x666666, 21, 20, 500, ents[n]->o, 1.f);
 				ents[n]->spawned = false;
 			}
 		}
@@ -422,7 +423,7 @@ struct entities : icliententities
 				putint(p, e.attr3);
 				putint(p, e.attr4);
 				putint(p, e.attr5);
-				e.spawned = m_insta(cl.gamemode, cl.mutators) ? false : true;
+				e.spawned = m_noitems(cl.gamemode, cl.mutators) ? false : true;
 			}
 		}
 	}
@@ -447,8 +448,8 @@ struct entities : icliententities
 		switch(e.type)
 		{
 			case WEAPON:
-				while (e.attr1 < 0) e.attr1 += NUMGUNS;
-				while (e.attr1 >= NUMGUNS) e.attr1 -= NUMGUNS;
+				while (e.attr1 < 0) e.attr1 += GUN_MAX;
+				while (e.attr1 >= GUN_MAX) e.attr1 -= GUN_MAX;
 				if(e.attr2 < 0) e.attr2 = 0;
 				break;
 			case PLAYERSTART:
@@ -503,11 +504,11 @@ struct entities : icliententities
 					entlinks[ents[index]->type].find(ents[node]->type) >= 0)
 						return true;
 			if(msg)
-				conoutf("entity %s (%d) and %s (%d) are not linkable", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+				conoutf("\frentity %s (%d) and %s (%d) are not linkable", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 
 			return false;
 		}
-		if(msg) conoutf("entity %d and %d are unable to be linked as one does not seem to exist", index, node);
+		if(msg) conoutf("\frentity %d and %d are unable to be linked as one does not seem to exist", index, node);
 		return false;
 	}
 
@@ -529,7 +530,7 @@ struct entities : icliententities
 						cl.cc.addmsg(SV_EDITLINK, "ri3", 0, index, node);
 
 					if(verbose >= 3)
-						conoutf("entity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+						conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 					return true;
 				}
 				else if(toggle && canlink(node, index))
@@ -539,7 +540,7 @@ struct entities : icliententities
 						cl.cc.addmsg(SV_EDITLINK, "ri3", 1, node, index);
 
 					if(verbose >= 3)
-						conoutf("entity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
+						conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 					return true;
 				}
 			}
@@ -550,7 +551,7 @@ struct entities : icliententities
 					cl.cc.addmsg(SV_EDITLINK, "ri3", 0, node, index);
 
 				if(verbose >= 3)
-					conoutf("entity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
+					conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 				return true;
 			}
 			else if(toggle || add)
@@ -560,12 +561,12 @@ struct entities : icliententities
 					cl.cc.addmsg(SV_EDITLINK, "ri3", 1, index, node);
 
 				if(verbose >= 3)
-					conoutf("entity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+					conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 				return true;
 			}
 		}
 		if(verbose >= 3)
-			conoutf("entity %s (%d) and %s (%d) failed linking", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+			conoutf("\frentity %s (%d) and %s (%d) failed linking", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 		return false;
 	}
 
@@ -673,7 +674,7 @@ struct entities : icliententities
 		}
 
 		if(verbose >= 4)
-			conoutf("route %d to %d (%d) generated %d nodes in %fs", node, goal, lowest, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
+			conoutf("\fwroute %d to %d (%d) generated %d nodes in %fs", node, goal, lowest, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
 
 		return !route.empty();
 	}
@@ -852,7 +853,7 @@ struct entities : icliententities
 				// 29	ELEVATOR		-	NOTUSED
 				default:
 				{
-					conoutf("WARNING: ignoring entity %d type %d", id, f.type);
+					conoutf("\frWARNING: ignoring entity %d type %d", id, f.type);
 					f.type = NOTUSED;
 					break;
 				}
@@ -892,12 +893,12 @@ struct entities : icliententities
 
 					if(ents.inrange(dest))
 					{
-						conoutf("WARNING: replaced teledest %d with closest teleport %d", i, dest);
+						conoutf("\frWARNING: replaced teledest %d with closest teleport %d", i, dest);
 						e.type = NOTUSED; // get rid of this guy then
 					}
 					else
 					{
-						conoutf("WARNING: modified teledest %d to a teleport", i);
+						conoutf("\frWARNING: modified teledest %d to a teleport", i);
 						dest = i;
 					}
 
@@ -909,7 +910,7 @@ struct entities : icliententities
 
 						if(f.type == TELEPORT && !f.mark && f.attr1 == e.attr2)
 						{
-							if(verbose) conoutf("imported teleports %d and %d linked automatically", dest, j);
+							if(verbose) conoutf("\frimported teleports %d and %d linked automatically", dest, j);
 							f.links.add(dest);
 						}
 					}
@@ -935,7 +936,7 @@ struct entities : icliententities
 						if(ents.inrange(dest))
 						{
 							fpsentity &f = (fpsentity &)*ents[dest];
-							conoutf("WARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attr1, e.attr2, dest, f.attr1, f.attr2);
+							conoutf("\frWARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attr1, e.attr2, dest, f.attr1, f.attr2);
 							if(!f.attr1) f.attr1 = e.attr1; // give it the old base idx
 							e.type = NOTUSED;
 						}
@@ -1206,7 +1207,7 @@ struct entities : icliententities
 
 				particle_text(vec(e.o).add(vec(0, 0, 2)),
 					findname(e.type), entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
-				if(e.type != PARTICLES) regular_particle_splash(2, 2, 40, e.o);
+				renderradius(e.o, 1, 1, 1, false);
 			}
 		}
 	}

@@ -158,7 +158,7 @@ extern void adddecal(int type, const vec &center, const vec &surface, float radi
 
 // worldio
 extern void setnames(char *fname, int type);
-extern void load_world(char *mname);
+extern bool load_world(char *mname);
 extern void save_world(char *mname, bool nolms = false);
 
 // physics

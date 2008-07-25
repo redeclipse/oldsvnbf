@@ -7,8 +7,8 @@
 VAR(version, 1, ENG_VERSION, -1); // for scripts
 
 #ifdef STANDALONE
-void conoutf(const char *s, ...) { s_sprintfdlv(str, s, s); printf("%s\n", str); }
-void console(const char *s, int n, ...) { s_sprintfdlv(str, n, s); printf("%s\n", str); }
+void conoutf(const char *s, ...) { s_sprintfdlv(str, s, s); string st; filtertext(st, str); printf("%s\n", st); }
+void console(const char *s, int n, ...) { s_sprintfdlv(str, n, s); string st; filtertext(st, str); printf("%s\n", st); }
 void servertoclient(int chan, uchar *buf, int len) {}
 void fatal(const char *s, ...)
 {
@@ -67,7 +67,7 @@ void initgame(const char *type)
 			if(!cl || !cl->clientoption(gameargs[i]))
 			{
 				if(!sv->serveroption(gameargs[i]))
-					conoutf("unknown command-line option: %s", gameargs[i]);
+					conoutf("\frunknown command-line option: %s", gameargs[i]);
 			}
 		}
 	}
@@ -337,7 +337,7 @@ void disconnect_client(int n, int reason)
 	sv->deleteinfo(clients[n]->info);
 	clients[n]->info = NULL;
 	s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
-	conoutf("%s", s);
+	conoutf("\fr%s", s);
 	sv->srvoutf(-1, "%s", s);
 }
 
@@ -444,7 +444,7 @@ ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const ch
 {
 	if(remoteaddress.host==ENET_HOST_ANY)
 	{
-		conoutf("looking up %s...", hostname);
+		conoutf("\fwlooking up %s...", hostname);
 		if(!resolverwait(hostname, &remoteaddress)) return ENET_SOCKET_NULL;
 	}
 	ENetSocket sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM, localaddress);
@@ -457,7 +457,7 @@ ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const ch
 	s_sprintfd(mget)("%s", req);
 	buf.data = mget;
 	buf.dataLength = strlen((char *)buf.data);
-	conoutf("sending request to %s...", hostname);
+	conoutf("\fwsending request to %s...", hostname);
 	enet_socket_send(sock, NULL, &buf, 1);
 	return sock;
 }
@@ -503,7 +503,7 @@ void checkmasterreply()
 	if(mssock!=ENET_SOCKET_NULL && !masterreceive(mssock, masterb))
 	{
 		mssock = ENET_SOCKET_NULL;
-		conoutf("master reply: %s", masterrep);
+		conoutf("\fymaster reply: %s", masterrep);
 	}
 }
 
@@ -572,7 +572,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 		if (totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
 		{
 			laststatus = totalmillis;
-			if (nonlocalclients || bsend || brec) conoutf("status: %d remote clients, %.1f send, %.1f rec (K/sec)", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
+			if (nonlocalclients || bsend || brec) conoutf("\fmstatus: %d remote clients, %.1f send, %.1f rec (K/sec)", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
 			bsend = brec = 0;
 		}
 	}
@@ -596,7 +596,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 				c.peer->data = &c;
 				char hn[1024];
 				s_strcpy(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
-				conoutf("client connected (%s)", c.hostname);
+				conoutf("\fgclient connected (%s)", c.hostname);
 				int reason = DISC_MAXCLIENTS;
 				if(nonlocalclients<maxclients && !(reason = sv->clientconnect(c.num, c.peer->address.host)))
 				{
@@ -618,7 +618,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 			{
 				client *c = (client *)event.peer->data;
 				if(!c) break;
-				conoutf("disconnected client (%s)", c->hostname);
+				conoutf("\fodisconnected client (%s)", c->hostname);
 				sv->clientdisconnect(c->num);
 				nonlocalclients--;
 				c->type = ST_EMPTY;
@@ -639,7 +639,7 @@ void serverloop()
 	#ifdef WIN32
 	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 	#endif
-	conoutf("dedicated server started, waiting for clients... [Ctrl-C to exit]");
+	conoutf("\fydedicated server started, waiting for clients... [Ctrl-C to exit]");
 	for(;;)
 	{
 		int _lastmillis = lastmillis;
@@ -665,7 +665,7 @@ void serverloop()
 
 void setupserver()
 {
-	conoutf("init: server");
+	conoutf("\fminit: server");
 	pubserv = servertype >= 2 ? true : false;
 	if(!master) master = sv->getdefaultmaster();
 	s_strcpy(masterserv, master);
@@ -673,18 +673,18 @@ void setupserver()
 	ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
 	if (*ip)
 	{
-		if (enet_address_set_host(&address, ip) < 0) conoutf("WARNING: server ip not resolved");
+		if (enet_address_set_host(&address, ip) < 0) conoutf("\frWARNING: server ip not resolved");
 		else msaddress.host = address.host;
 	}
 	serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
-	if (!serverhost) { conoutf("could not create server socket"); return; }
+	if (!serverhost) { conoutf("\frcould not create server socket"); return; }
 	loopi (maxclients) serverhost->peers[i].data = NULL;
 
 	address.port = sv->serverinfoport();
 	pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
 	if (pongsock == ENET_SOCKET_NULL)
 	{
-		conoutf("could not create server info socket, publicity disabled");
+		conoutf("\frcould not create server info socket, publicity disabled");
 		pubserv = false;
 	}
 	else
@@ -709,7 +709,7 @@ void setupserver()
 	{
 		updatemaster();
 	}
-	if(verbose) conoutf("game server for %s started", game);
+	if(verbose) conoutf("\fygame server for %s started", game);
 
 #ifndef STANDALONE
 	if(servertype >= 3) serverloop();

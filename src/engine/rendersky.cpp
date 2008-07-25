@@ -10,7 +10,7 @@ void loadsky(const char *basename, Texture *texs[6])
         const char *side = cubemapsides[i].name;
 		s_sprintfd(name)("%s_%s", basename, side);
 		if((texs[i] = textureload(name, 3, true, false))==notexture)
-			conoutf("could not load sky texture %s_%s", basename, side);
+			conoutf("\frcould not load sky texture %s_%s", basename, side);
 	}
 }
 
@@ -20,7 +20,7 @@ Texture *loadskyoverlay(const char *basename)
 {
 	Texture *t = textureload(basename, 0, true, false);
     if(t==notexture)
-		conoutf("could not load sky overlay texture %s", basename);
+		conoutf("\frcould not load sky overlay texture %s", basename);
     return t;
 }
 

@@ -198,7 +198,7 @@ VAR(entediting, 0, 0, 1);
 
 bool noentedit()
 {
-	if(!editmode) { conoutf("operation only allowed in edit mode"); return true; }
+	if(!editmode) { conoutf("\froperation only allowed in edit mode"); return true; }
 	return !entediting;
 }
 
@@ -665,18 +665,18 @@ void entlink()
 			{
 				int node = entgroup[i+1];
 
-				if(verbose >= 2) conoutf("attempting to link %d and %d (%d)", index, node, i+1);
+				if(verbose >= 2) conoutf("\fwattempting to link %d and %d (%d)", index, node, i+1);
 				if(ents.inrange(node))
 				{
 					if(!et->linkents(index, node, true, true, true) && !et->linkents(node, index, true, true, true))
-						conoutf("ERROR: failed linking %d and %d (%d)", index, node, i+1);
+						conoutf("\frERROR: failed linking %d and %d (%d)", index, node, i+1);
 				}
-				else conoutf("ERROR: %d (%d) is not in range", node, i+1);
+				else conoutf("\frERROR: %d (%d) is not in range", node, i+1);
 			}
 		}
-		else conoutf("ERROR: %d (%d) is not in range", index, 0);
+		else conoutf("\frERROR: %d (%d) is not in range", index, 0);
 	}
-	else conoutf("ERROR: more than one entity must be selected to link");
+	else conoutf("\frERROR: more than one entity must be selected to link");
 }
 COMMAND(entlink, "");
 
@@ -787,7 +787,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 {
 	if(!force && !editmode)
 	{
-		conoutf("newmap only allowed in edit mode");
+		conoutf("\frnewmap only allowed in edit mode");
 		return false;
 	}
 
@@ -833,7 +833,7 @@ bool enlargemap(bool force)
 {
 	if(!force && !editmode)
 	{
-		conoutf("mapenlarge only allowed in edit mode");
+		conoutf("\frmapenlarge only allowed in edit mode");
 		return false;
 	}
 	if(hdr.worldsize >= 1<<20) return false;

@@ -492,7 +492,7 @@ struct md5 : skelmodel
 
 void md5load(char *meshfile, char *skelname)
 {
-    if(!loadingmd5) { conoutf("not loading an md5"); return; }
+    if(!loadingmd5) { conoutf("\frnot loading an md5"); return; }
     s_sprintfd(filename)("%s/%s", md5dir, meshfile);
     md5::skelpart &mdl = *new md5::skelpart;
     loadingmd5->parts.add(&mdl);
@@ -500,7 +500,7 @@ void md5load(char *meshfile, char *skelname)
     mdl.index = loadingmd5->parts.length()-1;
     mdl.pitchscale = mdl.pitchoffset = mdl.pitchmin = mdl.pitchmax = 0;
     mdl.meshes = loadingmd5->sharemeshes(path(filename), skelname[0] ? skelname : NULL);
-    if(!mdl.meshes) conoutf("could not load %s", filename); // ignore failure
+    if(!mdl.meshes) conoutf("\frcould not load %s", filename); // ignore failure
     else
     {
         mdl.initanimparts();
@@ -510,7 +510,7 @@ void md5load(char *meshfile, char *skelname)
 
 void md5tag(char *name, char *tagname)
 {
-    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("not loading an md5"); return; }
+    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("\frnot loading an md5"); return; }
     md5::part &mdl = *loadingmd5->parts.last();
     int i = mdl.meshes ? ((md5::skelmeshgroup *)mdl.meshes)->skel->findbone(name) : -1;
     if(i >= 0)
@@ -518,12 +518,12 @@ void md5tag(char *name, char *tagname)
         ((md5::skelmeshgroup *)mdl.meshes)->skel->addtag(tagname, i);
         return;
     }
-    conoutf("could not find bone %s for tag %s", name, tagname);
+    conoutf("\frcould not find bone %s for tag %s", name, tagname);
 }
 
 void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax)
 {
-    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("not loading an md5"); return; }
+    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("\frnot loading an md5"); return; }
     md5::part &mdl = *loadingmd5->parts.last();
 
     if(name[0])
@@ -546,7 +546,7 @@ void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin
             }
             return;
         }
-        conoutf("could not find bone %s to pitch", name);
+        conoutf("\frcould not find bone %s to pitch", name);
         return;
     }
 
@@ -565,7 +565,7 @@ void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin
 }
 
 #define loopmd5meshes(meshname, m, body) \
-    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("not loading an md5"); return; } \
+    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("\frnot loading an md5"); return; } \
     md5::part &mdl = *loadingmd5->parts.last(); \
     if(!mdl.meshes) return; \
     loopv(mdl.meshes->meshes) \
@@ -667,17 +667,17 @@ void md5scroll(char *meshname, float *scrollu, float *scrollv)
 
 void md5anim(char *anim, char *animfile, float *speed, int *priority)
 {
-    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("not loading an md5"); return; }
+    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("\frnot loading an md5"); return; }
 
     vector<int> anims;
     cl->findanims(anim, anims);
-    if(anims.empty()) conoutf("could not find animation %s in %s", anim, loadingmd5->loadname);
+    if(anims.empty()) conoutf("\frcould not find animation %s in %s", anim, loadingmd5->loadname);
     else
     {
         s_sprintfd(filename)("%s/%s", md5dir, animfile);
         md5::part *p = loadingmd5->parts.last();
         md5::skelanimspec *sa = ((md5::md5meshgroup *)p->meshes)->loadmd5anim(path(filename));
-        if(!sa) conoutf("could not load md5anim file %s", filename);
+        if(!sa) conoutf("\frcould not load md5anim file %s", filename);
         else loopv(anims)
         {
             loadingmd5->parts.last()->setanim(p->numanimparts-1, anims[i], sa->frame, sa->range, *speed, *priority);
@@ -687,7 +687,7 @@ void md5anim(char *anim, char *animfile, float *speed, int *priority)
 
 void md5animpart(char *maskstr)
 {
-    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("not loading an md5"); return; }
+    if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("\frnot loading an md5"); return; }
 
     md5::skelpart *p = (md5::skelpart *)loadingmd5->parts.last();
 
@@ -698,21 +698,21 @@ void md5animpart(char *maskstr)
     {
         char *bonestr = bonestrs[i];
         int bone = p->meshes ? ((md5::skelmeshgroup *)p->meshes)->skel->findbone(bonestr[0]=='!' ? bonestr+1 : bonestr) : -1;
-        if(bone<0) { conoutf("could not find bone %s for anim part mask [%s]", bonestr, maskstr); bonestrs.deletecontentsa(); return; }
+        if(bone<0) { conoutf("\frcould not find bone %s for anim part mask [%s]", bonestr, maskstr); bonestrs.deletecontentsa(); return; }
         bonemask.add(bone | (bonestr[0]=='!' ? BONEMASK_NOT : 0));
     }
     bonestrs.deletecontentsa();
     bonemask.sort(bonemaskcmp);
     if(bonemask.length()) bonemask.add(BONEMASK_END);
 
-    if(!p->addanimpart(bonemask.getbuf())) conoutf("too many animation parts");
+    if(!p->addanimpart(bonemask.getbuf())) conoutf("\frtoo many animation parts");
 }
 
 void md5link(int *parent, int *child, char *tagname)
 {
-    if(!loadingmd5) { conoutf("not loading an md5"); return; }
-    if(!loadingmd5->parts.inrange(*parent) || !loadingmd5->parts.inrange(*child)) { conoutf("no models loaded to link"); return; }
-    if(!loadingmd5->parts[*parent]->link(loadingmd5->parts[*child], tagname)) conoutf("could not link model %s", loadingmd5->loadname);
+    if(!loadingmd5) { conoutf("\frnot loading an md5"); return; }
+    if(!loadingmd5->parts.inrange(*parent) || !loadingmd5->parts.inrange(*child)) { conoutf("\frno models loaded to link"); return; }
+    if(!loadingmd5->parts[*parent]->link(loadingmd5->parts[*child], tagname)) conoutf("\frcould not link model %s", loadingmd5->loadname);
 }
 
 void md5noclip(char *meshname, int *noclip)

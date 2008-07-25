@@ -34,7 +34,7 @@ void initsound()
 	{
 		if(Mix_OpenAudio(soundfreq, MIX_DEFAULT_FORMAT, soundmono ? 1 : 2, soundbufferlen) == -1)
 		{
-			conoutf("sound initialisation failed: %s", Mix_GetError());
+			conoutf("\frsound initialisation failed: %s", Mix_GetError());
 			return;
 		}
 
@@ -109,7 +109,7 @@ void playmusic(char *name, char *cmd)
 		}
 		else
 		{
-			conoutf("could not play music: %s", sn);
+			conoutf("\frcould not play music: %s", sn);
 		}
 	}
 }
@@ -146,7 +146,7 @@ int addsound(const char *name, int vol, int material, vector<soundslot> &sounds)
 			if((sample->sound = Mix_LoadWAV(file)) != NULL) break;
 		}
 
-		if(!sample->sound) { conoutf("failed to load sample: %s", sample->name); return -1; }
+		if(!sample->sound) { conoutf("\frfailed to load sample: %s", sample->name); return -1; }
 	}
 	soundslot &slot = sounds.add();
 	slot.sample = sample;
@@ -271,9 +271,9 @@ int playsound(int n, int flags, int vol, vec &pos, physent *d, int maxrad, int m
 			updatesound(chan);
 			return chan;
 		}
-		else conoutf("cannot play sound %d (%s): %s", n, soundset[n].sample->name, Mix_GetError());
+		else conoutf("\frcannot play sound %d (%s): %s", n, soundset[n].sample->name, Mix_GetError());
 	}
-	else if(n > 0) conoutf("unregistered sound: %d", n);
+	else if(n > 0) conoutf("\frunregistered sound: %d", n);
 
 	return -1;
 }
@@ -293,7 +293,7 @@ void resetsound()
     const SDL_version *v = Mix_Linked_Version();
     if(SDL_VERSIONNUM(v->major, v->minor, v->patch) <= SDL_VERSIONNUM(1, 2, 8))
     {
-        conoutf("Sound reset not available in-game due to SDL_mixer-1.2.8 bug. Please restart for changes to take effect.");
+        conoutf("\frsound reset not available in-game due to SDL_mixer-1.2.8 bug, please restart for changes to take effect.");
         return;
     }
     clearchanges(CHANGE_SOUND);

@@ -251,7 +251,7 @@ struct md2 : vertmodel
         Texture *tex, *masks;
         loadskin(loadname, pname, tex, masks);
         mdl.initskins(tex, masks);
-        if(tex==notexture) conoutf("could not load model skin for %s", name1);
+        if(tex==notexture) conoutf("\frcould not load model skin for %s", name1);
         loadingmd2 = this;
         persistidents = false;
         s_sprintfd(name3)("models/%s/md2.cfg", loadname);
@@ -269,7 +269,7 @@ struct md2 : vertmodel
 
 void md2pitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax)
 {
-    if(!loadingmd2 || loadingmd2->parts.empty()) { conoutf("not loading an md2"); return; }
+    if(!loadingmd2 || loadingmd2->parts.empty()) { conoutf("\frnot loading an md2"); return; }
     md2::part &mdl = *loadingmd2->parts.last();
 
     mdl.pitchscale = *pitchscale;
@@ -288,10 +288,10 @@ void md2pitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pit
 
 void md2anim(char *anim, int *frame, int *range, float *speed, int *priority)
 {
-    if(!loadingmd2 || loadingmd2->parts.empty()) { conoutf("not loading an md2"); return; }
+    if(!loadingmd2 || loadingmd2->parts.empty()) { conoutf("\frnot loading an md2"); return; }
     vector<int> anims;
     cl->findanims(anim, anims);
-    if(anims.empty()) conoutf("could not find animation %s in %s", anim, loadingmd2->loadname);
+    if(anims.empty()) conoutf("\frcould not find animation %s in %s", anim, loadingmd2->loadname);
     else loopv(anims)
     {
         loadingmd2->parts.last()->setanim(0, anims[i], *frame, *range, *speed, *priority);

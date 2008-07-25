@@ -129,8 +129,8 @@ void gl_checkextensions()
     const char *exts = (const char *)glGetString(GL_EXTENSIONS);
     const char *renderer = (const char *)glGetString(GL_RENDERER);
     const char *version = (const char *)glGetString(GL_VERSION);
-    conoutf("Renderer: %s (%s)", renderer, vendor);
-    conoutf("Driver: %s", version);
+    conoutf("\fmrenderer: %s (%s)", renderer, vendor);
+    conoutf("\fmdriver: %s", version);
 
 #ifdef __APPLE__
     extern int mac_osversion();
@@ -149,7 +149,7 @@ void gl_checkextensions()
         if(strstr(exts, "GL_NV_texture_env_combine4")) hasTE4 = true;
         if(strstr(exts, "GL_EXT_texture_env_dot3") || strstr(exts, "GL_ARB_texture_env_dot3")) hasD3 = true;
     }
-    else conoutf("WARNING: No texture_env_combine extension! (your video card is WAY too old)");
+    else conoutf("\frWARNING: No texture_env_combine extension! (your video card is WAY too old)");
 
     if(strstr(exts, "GL_ARB_multitexture"))
     {
@@ -160,7 +160,7 @@ void gl_checkextensions()
         glMultiTexCoord4f_     = (PFNGLMULTITEXCOORD4FARBPROC)    getprocaddress("glMultiTexCoord4fARB");
         hasMT = true;
     }
-    else conoutf("WARNING: No multitexture extension!");
+    else conoutf("\frWARNING: No multitexture extension!");
 
     if(strstr(exts, "GL_ARB_vertex_buffer_object"))
     {
@@ -173,9 +173,9 @@ void gl_checkextensions()
         glDeleteBuffers_    = (PFNGLDELETEBUFFERSARBPROC)   getprocaddress("glDeleteBuffersARB");
         glGetBufferSubData_ = (PFNGLGETBUFFERSUBDATAARBPROC)getprocaddress("glGetBufferSubDataARB");
         hasVBO = true;
-        //conoutf("Using GL_ARB_vertex_buffer_object extension.");
+        //conoutf("\frUsing GL_ARB_vertex_buffer_object extension.");
     }
-    else conoutf("WARNING: No vertex_buffer_object extension! (geometry heavy maps will be SLOW)");
+    else conoutf("\frWARNING: No vertex_buffer_object extension! (geometry heavy maps will be SLOW)");
 
     if(strstr(exts, "GL_EXT_draw_range_elements"))
     {
@@ -197,7 +197,7 @@ void gl_checkextensions()
     if(strstr(exts, "GL_ARB_texture_float") || strstr(exts, "GL_ATI_texture_float"))
     {
         hasTF = true;
-        //conoutf("Using GL_ARB_texture_float extension");
+        //conoutf("\frUsing GL_ARB_texture_float extension");
         shadowmap = 1;
         extern int smoothshadowmappeel;
         smoothshadowmappeel = 1;
@@ -219,9 +219,9 @@ void gl_checkextensions()
         glFramebufferRenderbuffer_ = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)getprocaddress("glFramebufferRenderbufferEXT");
         glGenerateMipmap_          = (PFNGLGENERATEMIPMAPEXTPROC)         getprocaddress("glGenerateMipmapEXT");
         hasFBO = true;
-        //conoutf("Using GL_EXT_framebuffer_object extension.");
+        //conoutf("\frUsing GL_EXT_framebuffer_object extension.");
     }
-    else conoutf("WARNING: No framebuffer object support. (reflective water may be slow)");
+    else conoutf("\frWARNING: No framebuffer object support. (reflective water may be slow)");
 
     if(strstr(exts, "GL_ARB_occlusion_query"))
     {
@@ -237,16 +237,16 @@ void gl_checkextensions()
             glGetQueryObjectiv_ =  (PFNGLGETQUERYOBJECTIVARBPROC) getprocaddress("glGetQueryObjectivARB");
             glGetQueryObjectuiv_ = (PFNGLGETQUERYOBJECTUIVARBPROC)getprocaddress("glGetQueryObjectuivARB");
             hasOQ = true;
-            //conoutf("Using GL_ARB_occlusion_query extension.");
+            //conoutf("\frUsing GL_ARB_occlusion_query extension.");
 #if defined(__APPLE__) && SDL_BYTEORDER == SDL_BIG_ENDIAN
             if(strstr(vendor, "ATI") && (osversion<0x1050)) ati_oq_bug = 1;
 #endif
-            if(ati_oq_bug) conoutf("WARNING: Using ATI occlusion query bug workaround. (use \"/ati_oq_bug 0\" to disable if unnecessary)");
+            if(ati_oq_bug) conoutf("\frWARNING: Using ATI occlusion query bug workaround. (use \"/ati_oq_bug 0\" to disable if unnecessary)");
         }
     }
     if(!hasOQ)
     {
-        conoutf("WARNING: No occlusion query support! (large maps may be SLOW)");
+        conoutf("\frWARNING: No occlusion query support! (large maps may be SLOW)");
         zpass = 0;
         extern int vacubesize;
         vacubesize = 64;
@@ -257,7 +257,7 @@ void gl_checkextensions()
     if(strstr(vendor, "ATI"))
     {
         floatvtx = 1;
-        //conoutf("WARNING: ATI cards may show garbage in skybox. (use \"/ati_skybox_bug 1\" to fix)");
+        //conoutf("\frWARNING: ATI cards may show garbage in skybox. (use \"/ati_skybox_bug 1\" to fix)");
 
         reservedynlighttc = 2;
         reserveshadowmaptc = 3;
@@ -305,7 +305,7 @@ void gl_checkextensions()
 
         if(!hasOQ) waterrefract = 0;
     }
-    //if(floatvtx) conoutf("WARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
+    //if(floatvtx) conoutf("\frWARNING: Using floating point vertexes. (use \"/floatvtx 0\" to disable)");
 
     if(strstr(exts, "GL_ARB_vertex_program") && strstr(exts, "GL_ARB_fragment_program"))
     {
@@ -345,7 +345,7 @@ void gl_checkextensions()
                 //if(osversion<0x1050) ??
                 apple_glsldepth_bug = 1;
 #endif
-                if(apple_glsldepth_bug) conoutf("WARNING: Using Apple GLSL depth bug workaround. (use \"/apple_glsldepth_bug 0\" to disable if unnecessary");
+                if(apple_glsldepth_bug) conoutf("\frWARNING: Using Apple GLSL depth bug workaround. (use \"/apple_glsldepth_bug 0\" to disable if unnecessary");
             }
         }
 
@@ -356,7 +356,7 @@ void gl_checkextensions()
         if(osversion>=0x1050)
         {
             apple_ff_bug = 1;
-            conoutf("WARNING: Using Leopard ARB_position_invariant bug workaround. (use \"/apple_ff_bug 0\" to disable if unnecessary)");
+            conoutf("\frWARNING: Using Leopard ARB_position_invariant bug workaround. (use \"/apple_ff_bug 0\" to disable if unnecessary)");
         }
 #endif
     }
@@ -375,14 +375,14 @@ void gl_checkextensions()
     {
         usetexrect = 1;
         hasTR = true;
-        //conoutf("Using GL_ARB_texture_rectangle extension.");
+        //conoutf("\frUsing GL_ARB_texture_rectangle extension.");
     }
-    else if(hasMT && hasVP && hasFP) conoutf("WARNING: No texture rectangle support. (no full screen shaders)");
+    else if(hasMT && hasVP && hasFP) conoutf("\frWARNING: No texture rectangle support. (no full screen shaders)");
 
     if(strstr(exts, "GL_EXT_packed_depth_stencil") || strstr(exts, "GL_NV_packed_depth_stencil"))
     {
         hasDS = true;
-        //conoutf("Using GL_EXT_packed_depth_stencil extension.");
+        //conoutf("\frUsing GL_EXT_packed_depth_stencil extension.");
     }
 
     if(strstr(exts, "GL_EXT_blend_minmax"))
@@ -390,7 +390,7 @@ void gl_checkextensions()
         glBlendEquation_ = (PFNGLBLENDEQUATIONEXTPROC) getprocaddress("glBlendEquationEXT");
         hasBE = true;
         if(strstr(vendor, "ATI")) ati_minmax_bug = 1;
-        //conoutf("Using GL_EXT_blend_minmax extension.");
+        //conoutf("\frUsing GL_EXT_blend_minmax extension.");
     }
 
     if(strstr(exts, "GL_ARB_texture_cube_map"))
@@ -399,21 +399,21 @@ void gl_checkextensions()
         glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, &val);
         hwcubetexsize = val;
         hasCM = true;
-        //conoutf("Using GL_ARB_texture_cube_map extension.");
+        //conoutf("\frUsing GL_ARB_texture_cube_map extension.");
     }
-    else conoutf("WARNING: No cube map texture support. (no reflective glass)");
+    else conoutf("\frWARNING: No cube map texture support. (no reflective glass)");
 
     if(strstr(exts, "GL_ARB_texture_non_power_of_two"))
     {
         hasNP2 = true;
-        //conoutf("Using GL_ARB_texture_non_power_of_two extension.");
+        //conoutf("\frUsing GL_ARB_texture_non_power_of_two extension.");
     }
-    else conoutf("WARNING: Non-power-of-two textures not supported!");
+    else conoutf("\frWARNING: Non-power-of-two textures not supported!");
 
     if(strstr(exts, "GL_EXT_texture_compression_s3tc"))
     {
         hasTC = true;
-        //conoutf("Using GL_EXT_texture_compression_s3tc extension.");
+        //conoutf("\frUsing GL_EXT_texture_compression_s3tc extension.");
     }
 
     if(strstr(exts, "GL_EXT_texture_filter_anisotropic"))
@@ -422,13 +422,13 @@ void gl_checkextensions()
        glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &val);
        hwmaxaniso = val;
        hasAF = true;
-       //conoutf("Using GL_EXT_texture_filter_anisotropic extension.");
+       //conoutf("\frUsing GL_EXT_texture_filter_anisotropic extension.");
     }
 
     if(strstr(exts, "GL_SGIS_generate_mipmap"))
     {
         hasGM = true;
-        //conoutf("Using GL_SGIS_generate_mipmap extension.");
+        //conoutf("\frUsing GL_SGIS_generate_mipmap extension.");
     }
 
     GLint val;
@@ -472,18 +472,18 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     extern int useshaders;
     if(!useshaders || (useshaders<0 && avoidshaders) || !hasMT || !hasVP || !hasFP)
     {
-        if(!hasMT || !hasVP || !hasFP) conoutf("WARNING: No shader support! Using fixed-function fallback. (no fancy visuals for you)");
-        else if(useshaders<0 && !hasTF) conoutf("WARNING: Disabling shaders for extra performance. (use \"/shaders 1\" to enable shaders if desired)");
+        if(!hasMT || !hasVP || !hasFP) conoutf("\frWARNING: No shader support! Using fixed-function fallback. (no fancy visuals for you)");
+        else if(useshaders<0 && !hasTF) conoutf("\frWARNING: Disabling shaders for extra performance. (use \"/shaders 1\" to enable shaders if desired)");
         renderpath = R_FIXEDFUNCTION;
-        conoutf("Rendering using the OpenGL 1.5 fixed-function path.");
-        if(ati_texgen_bug) conoutf("WARNING: Using ATI texgen bug workaround. (use \"/ati_texgen_bug 0\" to disable if unnecessary)");
-        if(nvidia_texgen_bug) conoutf("WARNING: Using NVIDIA texgen bug workaround. (use \"/nvidia_texgen_bug 0\" to disable if unnecessary)");
+        conoutf("\fmRendering using the OpenGL 1.5 fixed-function path.");
+        if(ati_texgen_bug) conoutf("\frWARNING: Using ATI texgen bug workaround. (use \"/ati_texgen_bug 0\" to disable if unnecessary)");
+        if(nvidia_texgen_bug) conoutf("\frWARNING: Using NVIDIA texgen bug workaround. (use \"/nvidia_texgen_bug 0\" to disable if unnecessary)");
     }
     else
     {
         renderpath = hasGLSL ? R_GLSLANG : R_ASMSHADER;
-        if(renderpath==R_GLSLANG) conoutf("Rendering using the OpenGL 1.5 GLSL shader path.");
-        else conoutf("Rendering using the OpenGL 1.5 assembly shader path.");
+        if(renderpath==R_GLSLANG) conoutf("\fmRendering using the OpenGL 1.5 GLSL shader path.");
+        else conoutf("\fmRendering using the OpenGL 1.5 assembly shader path.");
     }
 
     if(fsaa) glEnable(GL_MULTISAMPLE);
@@ -1235,9 +1235,9 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 
 	if (verbose >= 4)
 	{
-		if (text2) conoutf("%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
-		else if (text1) conoutf("%s [%.2f%%]", text1, bar1*100.f);
-		else conoutf("progressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+		if (text2) conoutf("\fm%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+		else if (text1) conoutf("\fm%s [%.2f%%]", text1, bar1*100.f);
+		else conoutf("\fmprogressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
 	}
 
 	int w = screen->w, h = screen->h;

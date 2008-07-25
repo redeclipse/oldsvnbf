@@ -8,44 +8,6 @@ struct projectiles
 	{
 	}
 
-	struct projent : dynent
-	{
-		vec from, to;
-		int lifetime;
-		float movement, roll;
-		bool local, beenused;
-		int projtype;
-		float elasticity, relativity, waterfric;
-		int ent, attr1, attr2, attr3, attr4;
-		int schan, id;
-        entitylight light;
-        fpsent *owner;
-		const char *mdl;
-
-		projent() : id(-1), mdl(NULL)
-		{
-			schan = -1;
-			reset();
-		}
-		~projent()
-		{
-			removetrackedparticles(this);
-			removetrackedsounds(this);
-			if(issound(schan)) removesound(schan);
-			schan = -1;
-		}
-
-		void reset()
-		{
-			type = ENT_BOUNCE;
-			state = CS_ALIVE;
-			lifetime = ent = attr1 = attr2 = attr3 = attr4 = 0;
-			schan = id = -1;
-			movement = roll = 0.f;
-			beenused = false;
-			physent::reset();
-		}
-	};
 	vector<projent *> projs;
 
 	void init(projent &proj)
@@ -178,11 +140,8 @@ struct projectiles
 			if(proj.attr1 == GUN_FLAMER)
 			{
 				int col = (int(254*(1.25f-life))<<16)|(int(96*(1.2f-life))<<8);
-				//regular_part_fireball(proj.o, size, 14, 1, col, size);
 				loopi(rnd(5)+1)
 					regular_part_splash(4, 1, 50, proj.o, col, size, int(proj.radius), 2);
-				loopi(rnd(5)+1)
-					regular_part_splash(5, 1, 25, proj.o, 0x231008, 4.f, int(size), 2);
 
 				loopi(cl.numdynents())
 				{
@@ -194,11 +153,7 @@ struct projectiles
 					if(dist < size) return false;
 				}
 			}
-			else
-			{
-				loopi(rnd(5)+1)
-					regular_part_splash(5, 1, 100, proj.o, 0x231008, size, int(proj.radius), 3);
-			}
+			regularshape(5, int(proj.radius), 0x231008, 21, rnd(5)+1, 100, proj.o, 2.f);
 		}
 		else if(proj.projtype == PRJ_GIBS)
 			regular_part_splash(0, 1, 10000, proj.o, 0x60FFFF, proj.radius, int(proj.radius), 3);
@@ -296,7 +251,7 @@ struct projectiles
 
 		if(type == PRJ_ENT && ent == WEAPON) loopvrev(projs)
 		{
-			projent &proj = *(projs[i]);
+			projent &proj = *projs[i];
 			if(proj.owner == owner && proj.projtype == PRJ_ENT && proj.ent == WEAPON)
 			{
 				proj.beenused = true;
@@ -327,12 +282,14 @@ struct projectiles
 	{
 		loopv(projs)
 		{
-			projent &proj = *(projs[i]);
+			projent &proj = *projs[i];
 
 			if(!proj.owner || proj.state == CS_DEAD || !check(proj))
 			{
 				proj.state = CS_DEAD;
-				if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
+				if(proj.projtype == PRJ_ENT)
+					regularshape(7, int(proj.radius), 0x666666, 21, 20, 500, proj.o, 1.f);
+				else if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
 					cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.attr1, proj.local);
 			}
 			else if(proj.state != CS_DEAD)
@@ -357,8 +314,8 @@ struct projectiles
 
 					if((proj.lifetime -= qtime) <= 0 || !update(proj, qtime))
 					{
-						if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
-							cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.attr1, proj.local);
+						if(proj.projtype == PRJ_ENT)
+							regularshape(7, int(proj.radius), 0x666666, 21, 20, 500, proj.o, 1.f);
 						proj.state = CS_DEAD;
 						break;
 					}
@@ -415,17 +372,17 @@ struct projectiles
 	bool usecheck(fpsent *d, vec &m, float eye)
 	{
 		int n = -1;
-		loopv(projs) if(projs[i]->projtype == PRJ_ENT && projs[i]->ent == WEAPON && projs[i]->state != CS_DEAD && !projs[i]->beenused && projs[i]->owner)
+		loopv(projs) if(projs[i]->projtype == PRJ_ENT && projs[i]->ent == WEAPON && projs[i]->state != CS_DEAD && projs[i]->owner)
 		{
-			projent &proj = *(projs[i]);
-			if(insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius)
+			projent &proj = *projs[i];
+			if(!projs[i]->beenused && insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius)
 				&& d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis)
 				&& (!projs.inrange(n) || proj.o.dist(m) < projs[n]->o.dist(m)))
 					n = i;
 		}
 		if(projs.inrange(n))
 		{
-			projs[n]->beenused = true;
+			projs[n]->beenused = true; // even if we didn't get it
 			cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, -1, projs[n]->owner->clientnum);
 			return true;
 		}
@@ -436,7 +393,7 @@ struct projectiles
 	{
 		loopv(projs) if(projs[i]->owner && !projs[i]->beenused && projs[i]->state != CS_DEAD && projs[i]->mdl && *projs[i]->mdl)
 		{
-			projent &proj = *(projs[i]);
+			projent &proj = *projs[i];
 			float yaw = proj.yaw, pitch = proj.pitch;
             int flags = MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT;
 
@@ -470,7 +427,7 @@ struct projectiles
 	{
 		loopv(projs) if(projs[i]->projtype == PRJ_SHOT)
 		{
-			projent &proj = *(projs[i]);
+			projent &proj = *projs[i];
 
 			switch(proj.attr1)
 			{

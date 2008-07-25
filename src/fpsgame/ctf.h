@@ -172,7 +172,7 @@ struct ctfservmode : ctfstate, servmode
 					goal.score++;
 					sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, k, goal.score);
 
-	                if(sv.ctflimit() && findscore(goal.team) >= sv.ctflimit())
+	                if(sv_ctflimit && findscore(goal.team) >= sv_ctflimit)
 	                	sv.startintermission();
 				}
             }
@@ -419,7 +419,7 @@ struct ctfclient : ctfstate
     {
 		flag &f = flags[i];
 		int colour = teamtype[f.team].colour;
-		regularshape(4, enttype[FLAG].radius, colour, 6, 50, 250, vec(loc).sub(vec(0, 0, 4.f)), 4.8f);
+		regularshape(6, enttype[FLAG].radius, colour, 21, 50, 1000, vec(loc).add(vec(0, 0, 4.f)), 4.8f);
 		adddynlight(loc, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
     }
 
@@ -436,7 +436,7 @@ struct ctfclient : ctfstate
 		}
 		if(from.x >= 0 && to.x >= 0)
 		{
-			part_trail(4, 250, from, to, teamtype[f.team].colour, 4.8f);
+			part_trail(6, 250, from, to, teamtype[f.team].colour, 4.8f);
 		}
     }
 
@@ -484,7 +484,7 @@ struct ctfclient : ctfstate
         if(!flags.inrange(i)) return;
 		flag &f = flags[i];
 		int colour = teamtype[d->team].colour;
-		regularshape(4, enttype[FLAG].radius, colour, 6, 50, 250, vec(f.pos()).sub(vec(0, 0, 4.f)), 4.8f);
+		regularshape(6, enttype[FLAG].radius, colour, 21, 50, 1000, vec(f.pos()).add(vec(0, 0, 4.f)), 4.8f);
 		adddynlight(f.pos(), enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
 		f.interptime = lastmillis;
 		s_sprintfd(s)("%s %s the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);

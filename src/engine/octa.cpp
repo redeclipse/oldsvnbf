@@ -109,10 +109,10 @@ void optiface(uchar *p, cube &c)
 void printcube()
 {
 	cube &c = lookupcube(lu.x, lu.y, lu.z, 0); // assume this is cube being pointed at
-	conoutf("= %p = (%d, %d, %d) @ %d", &c, lu.x, lu.y, lu.z, lusize);
-	conoutf(" x  %.8x", c.faces[0]);
-	conoutf(" y  %.8x", c.faces[1]);
-	conoutf(" z  %.8x", c.faces[2]);
+	conoutf("\fw= %p = (%d, %d, %d) @ %d", &c, lu.x, lu.y, lu.z, lusize);
+	conoutf("\fw x  %.8x", c.faces[0]);
+	conoutf("\fw y  %.8x", c.faces[1]);
+	conoutf("\fw z  %.8x", c.faces[2]);
 }
 
 COMMAND(printcube, "");
@@ -579,7 +579,7 @@ void edgespan2vectorcube(cube &c)
 
 void converttovectorworld()
 {
-	conoutf("WARNING: old map, use savecurrentmap");
+	conoutf("\frWARNING: old map, use savecurrentmap");
 	loopi(8) edgespan2vectorcube(worldroot[i]);
 }
 
