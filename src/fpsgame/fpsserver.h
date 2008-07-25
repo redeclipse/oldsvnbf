@@ -1361,7 +1361,7 @@ struct GAMESERVER : igameserver
 						{
 							while(sents.length() < n) sents.add(sn);
 							sents.add(se);
-							sents[n].spawned = m_insta(gamemode, mutators) ? false : true;
+							sents[n].spawned = m_noitems(gamemode, mutators) ? false : true;
 						}
 					}
 					break;
