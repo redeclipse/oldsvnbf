@@ -69,10 +69,6 @@ struct GAMECLIENT : igameclient
 	IVARP(mousedeadzone, 0, 10, 100);
 	IVARP(mousepanspeed, 1, 30, INT_MAX-1);
 
-	IVARP(zoommousetype, 0, 2, 2);
-	IVARP(zoomdeadzone, 0, 25, 100);
-	IVARP(zoompanspeed, 1, 10, INT_MAX-1);
-
 	IVARP(editmousetype, 0, 0, 2);
 	IVARP(editfov, 1, 120, 360);
 	IVARP(editdeadzone, 0, 10, 100);
@@ -98,9 +94,12 @@ struct GAMECLIENT : igameclient
 	IFVARP(cursorblend, 1.f);
 
 	IVARP(zoomtype, 0, 0, 1);
-	IVARP(zoomfov, 20, 20, 150);
-	IVARP(zoomtime, 1, 500, 10000);
+	IVARP(zoomfov, 1, 20, 150);
+	IVARP(zoomtime, 1, 300, 10000);
 	IFVARP(zoomcrosshairsize, 0.3f);
+	IVARP(zoommousetype, 0, 2, 2);
+	IVARP(zoomdeadzone, 0, 25, 100);
+	IVARP(zoompanspeed, 1, 10, INT_MAX-1);
 
 	ITVAR(relativecursortex, "textures/relativecursor", 3);
 	ITVAR(guicursortex, "textures/guicursor", 3);
@@ -350,7 +349,6 @@ struct GAMECLIENT : igameclient
 		loopv(players) if(players[i])
 		{
             fpsent *d = players[i];
-			heightoffset(d);
             const int lagtime = lastmillis-d->lastupdate;
             if(d->bot || !lagtime || intermission) continue;
             else if(lagtime>1000 && d->state==CS_ALIVE)
@@ -651,7 +649,7 @@ struct GAMECLIENT : igameclient
 		et.resetspawns();
 		sb.showscores(false);
 
-		if(m_lobby(gamemode) && *lobbymenu())
+		if(name && *name && m_lobby(gamemode) && *lobbymenu())
 			showgui(lobbymenu());
 	}
 
