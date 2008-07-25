@@ -850,8 +850,8 @@ struct GAMESERVER : igameserver
 		{
 			clientinfo *oi = clients[i];
 			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.ownernum >= 0) continue;
-			maxvotes++;
 			if(!oi->mapvote[0]) continue;
+			maxvotes++;
 			votecount *vc = NULL;
 			loopvj(votes) if(!strcmp(oi->mapvote, votes[j].map) && oi->modevote==votes[j].mode && oi->mutsvote==votes[j].muts)
 			{
