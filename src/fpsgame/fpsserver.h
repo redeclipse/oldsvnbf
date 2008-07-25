@@ -864,23 +864,11 @@ struct GAMESERVER : igameserver
 		votecount *best = NULL;
 		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
 
-		if(force)
-		{
-			if(maxvotes <= 2) maxvotes = 1;
-			else if(maxvotes == 3) maxvotes = 2;
-			else maxvotes = maxvotes/2;
-		}
-		else
-		{
-			if(nonspectators(-1, true) > 1)
-			{
-				if(maxvotes >= nonspectators(-1, true)/2) maxvotes = maxvotes/2;
-				else maxvotes = nonspectators(-1, true)/2;
-			}
-			else maxvotes = 1;
-		}
+		int pass = 1, pls = nonspectators(-1, true) > 1 ? min(nonspectators(-1, true) / 2, 2) : 1;
+		if(force || pls == 1 || maxvotes < pls) maxvotes = pls;
+		else maxvotes = maxvotes/2;
 
-		if(best && best->count > maxvotes)
+		if(best && best->count > pass)
 		{
 			if(demorecord) enddemorecord();
 			srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
