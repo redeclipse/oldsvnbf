@@ -171,7 +171,7 @@ struct entities : icliententities
 				if(item && (d != cl.player1 || cl.isthirdperson()))
 					particle_text(d->abovehead(), item, 15);
 				playsound(S_ITEMPICKUP, 0, 255, d->o, d);
-				d->useitem(lastmillis, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+				d->useitem(lastmillis, true, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
 				ents[n]->spawned = false;
 			}
 		}

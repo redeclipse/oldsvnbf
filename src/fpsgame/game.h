@@ -539,7 +539,7 @@ struct fpsstate
 		ammo[gun] = amt;
 	}
 
-	void useitem(int millis, int type, int attr1, int attr2)
+	void useitem(int millis, bool limit, int type, int attr1, int attr2)
 	{
 		switch (type)
 		{
@@ -568,7 +568,7 @@ struct fpsstate
 				}
 				else if(gunselect != attr1) gunswitch(attr1, millis);
 				else setgunstate(attr1, GUNSTATE_RELOAD, guntype[attr1].rdelay ? guntype[attr1].rdelay : guntype[attr1].adelay, millis);
-				ammo[attr1] = min(ammo[attr1] + (attr2 > 0 ? attr2 : guntype[attr1].add), guntype[attr1].max);
+				ammo[attr1] = clamp(ammo[attr1] + (attr2 > 0 ? attr2 : guntype[attr1].add), guntype[attr1].add, limit ? guntype[attr1].add : guntype[attr1].max);
 				break;
 			}
 			default: break;
