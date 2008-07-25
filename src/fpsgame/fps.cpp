@@ -50,6 +50,7 @@ struct GAMECLIENT : igameclient
 	IFVARP(titlecardypos, 0.01f);
 
 	IVARP(thirdperson, 0, 1, 1);
+	IVARP(thirdpersonaim, 0, 250, INT_MAX-1);
 	IVARP(thirdpersonfov, 90, 120, 150);
 	IVARP(thirdpersondist, -100, 1, 100);
 	IVARP(thirdpersonshift, -100, 4, 100);
@@ -57,6 +58,7 @@ struct GAMECLIENT : igameclient
 	IVARP(thirdpersontranslucent, 0, 0, 1);
 
 	IVARP(firstpersonfov, 90, 100, 150);
+	IVARP(firstpersonaim, 0, 0, INT_MAX-1);
 	IVARP(firstpersondist, -100, 50, 100);
 	IVARP(firstpersonshift, -100, 25, 100);
 	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
@@ -85,7 +87,6 @@ struct GAMECLIENT : igameclient
 	IFVARP(zoomsensitivity, 1.0f);
 	IFVARP(mousesensitivity, 1.0f);
 
-	IVARP(crosshairspeed, 0, 250, INT_MAX-1);
 	IVARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
 	IFVARP(crosshairsize, 0.03f);
 	IFVARP(crosshairblend, 0.3f);
@@ -1388,12 +1389,12 @@ struct GAMECLIENT : igameclient
 	{
 		if(!guiactive())
 		{
-			if(mousestyle() <= 1 && crosshairspeed())
+			if(mousestyle() <= 1 && isthirdperson() ? thirdpersonaim() : firstpersonaim())
 			{
 				float cx, cy, cz;
 				vectocursor(worldpos, cx, cy, cz);
 				float ax = float(cx)/float(w), ay = float(cy)/float(h),
-					amt = float(curtime)/float(crosshairspeed()), offx = ax-aimx, offy = ay-aimy;
+					amt = float(curtime)/float(isthirdperson() ? thirdpersonaim() : firstpersonaim()), offx = ax-aimx, offy = ay-aimy;
 				aimx += offx*amt;
 				aimy += offy*amt;
 			}
@@ -1485,7 +1486,7 @@ struct GAMECLIENT : igameclient
 				case 0:
 				case 1:
 				{
-					if(!crosshairspeed() && isthirdperson() && !inzoom())
+					if(!thirdpersonaim() && isthirdperson() && !inzoom())
 					{ // if they don't like it they just suffer a bit of jerking
 						vec dir(worldpos);
 						dir.sub(camera1->o);
