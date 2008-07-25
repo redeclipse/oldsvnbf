@@ -468,7 +468,7 @@ struct GAMESERVER : igameserver
 				teamscore &ts = teamscores[j];
 				float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
 				ts.rank += rank;
-				ts.clients += !sv_botratio || ci->state.ownernum >= 0 ? 1 : sv_botratio+(nonspectators(-1, true) > 1 ? 1 : 0);
+				ts.clients += !sv_botratio || ci->state.ownernum >= 0 ? 1 : sv_botratio+(nonspectators(-1, true) <= 1 ? 1 : 0);
 				break;
 			}
 		}
@@ -853,8 +853,8 @@ struct GAMESERVER : igameserver
 			vc->count++;
 		}
 
-		int pls = nonspectators(-1, true) > 1 ? nonspectators(-1, true) / 2 : 1;
-		if(!force && (pls == 1 || maxvotes < pls)) maxvotes = pls;
+		int pls = (nonspectators(-1, true) + 1)/2;
+		if(!force && maxvotes < pls) maxvotes = pls;
 		else maxvotes = maxvotes/2;
 
 		votecount *best = NULL;
@@ -1659,7 +1659,7 @@ struct GAMESERVER : igameserver
 						{
 							if(sv_botbalance > 1)
 							{
-								setvar("botbalance", sv_botbalance-1, true);
+								setvar("sv_botbalance", sv_botbalance-1, true);
 								s_sprintfd(val)("%d", sv_botbalance);
 								sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
 							}
@@ -2519,7 +2519,7 @@ struct GAMESERVER : igameserver
 				if(demorecord) enddemorecord();
 				sendf(-1, 1, "ri", SV_NEWGAME);
 				maprequest = true;
-				interm = gamemillis+10000;
+				interm = gamemillis+20000;
 			}
 			else
 			{
