@@ -849,8 +849,8 @@ struct GAMESERVER : igameserver
 		loopv(clients)
 		{
 			clientinfo *oi = clients[i];
-			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.ownernum >= 0) continue;
-			if(!oi->mapvote[0]) continue;
+			if(!oi->mapvote[0] || (oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.ownernum >= 0)
+				continue;
 			maxvotes++;
 			votecount *vc = NULL;
 			loopvj(votes) if(!strcmp(oi->mapvote, votes[j].map) && oi->modevote==votes[j].mode && oi->mutsvote==votes[j].muts)
@@ -861,14 +861,15 @@ struct GAMESERVER : igameserver
 			if(!vc) vc = &votes.add(votecount(oi->mapvote, oi->modevote, oi->mutsvote));
 			vc->count++;
 		}
+
+		int pls = nonspectators(-1, true) > 1 ? nonspectators(-1, true) / 2 : 1;
+		if(!force && (pls == 1 || maxvotes < pls)) maxvotes = pls;
+		else maxvotes = maxvotes/2;
+
 		votecount *best = NULL;
 		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
 
-		int pass = 1, pls = nonspectators(-1, true) > 1 ? min(nonspectators(-1, true) / 2, 2) : 1;
-		if(force || pls == 1 || maxvotes < pls) maxvotes = pls;
-		else maxvotes = maxvotes/2;
-
-		if(best && best->count > pass)
+		if(best && best->count > maxvotes)
 		{
 			if(demorecord) enddemorecord();
 			srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
