@@ -419,7 +419,7 @@ struct clientcom : iclientcom
             }
             if(d->falling.z) putint(q, (int)(d->falling.z*DVELF));
 			// pack rest in almost always 1 byte: strafe:2, move:2, garmour: 1, yarmour: 1, quad: 1
-			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouching ? 1 : 0)<<3);
+			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouching ? 1 : 0)<<4);
 			putuint(q, flags);
 			enet_packet_resize(packet, q.length());
 			sendpackettoserv(packet, 0);
