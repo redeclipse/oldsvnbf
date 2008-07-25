@@ -349,6 +349,7 @@ struct GAMECLIENT : igameclient
 		{
             fpsent *d = players[i];
             const int lagtime = lastmillis-d->lastupdate;
+			heightoffset(d, d->bot!=NULL);
             if(d->bot || !lagtime || intermission) continue;
             else if(lagtime>1000 && d->state==CS_ALIVE)
 			{
@@ -380,7 +381,7 @@ struct GAMECLIENT : igameclient
 
 			otherplayers();
 			if(!allowmove(player1)) player1->stopmoving();
-			heightoffset(player1);
+			heightoffset(player1, true);
 
 			#define adjustscaled(t,n,m) \
 				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); if(n <= 0) n = (t)0; }
@@ -1289,9 +1290,9 @@ struct GAMECLIENT : igameclient
 		return false;
 	}
 
-	void heightoffset(physent *d)
+	void heightoffset(physent *d, bool local)
 	{
-		d->o.z -= d->height;
+		if(local) d->o.z -= d->height;
 		if(ph.iscrouching(d))
 		{
 			float crouchoff = 1.f-CROUCHHEIGHT;
@@ -1304,7 +1305,7 @@ struct GAMECLIENT : igameclient
 			d->height = PLAYERHEIGHT-(PLAYERHEIGHT*crouchoff);
 		}
 		else d->height = PLAYERHEIGHT;
-		d->o.z += d->height;
+		if(local) d->o.z += d->height;
 	}
 
 	vec headpos(physent *d, float off = 0.f)
