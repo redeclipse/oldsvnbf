@@ -1709,14 +1709,14 @@ struct GAMESERVER : igameserver
 		}
 	}
 
-	int findbotclient(int cn = -1, int on = -1)
+	int findbotclient()
 	{
 		vector<int> siblings;
 		while(siblings.length() < clients.length()) siblings.add(-1);
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->state.ownernum >= 0 || ci->clientnum == on || !ci->name[0] || ci->state.state == CS_SPECTATOR)
+			if(ci->state.ownernum >= 0 || !ci->name[0] || ci->state.state == CS_SPECTATOR)
 				siblings[i] = -1;
 			else
 			{
@@ -1732,7 +1732,7 @@ struct GAMESERVER : igameserver
 			loopv(siblings)
 				if(siblings[i] >= 0 && (!siblings.inrange(q) || siblings[i] < siblings[q]))
 					q = i;
-			if(clients.inrange(q)) return q;
+			if(siblings.inrange(q)) return clients[q]->clientnum;
 			else if(siblings.inrange(q)) siblings.remove(q);
 			else break;
 		}
@@ -1748,8 +1748,8 @@ struct GAMESERVER : igameserver
 			if(ci)
 			{
 				ci->clientnum = cn;
-				ci->state.ownernum = findbotclient(cn);
-				if(clients.inrange(ci->state.ownernum))
+				ci->state.ownernum = findbotclient();
+				if(ci->state.ownernum >= 0)
 				{
 					int s = skill, m = botmaxskill() > botminskill() ? botmaxskill() : botminskill(),
 						n = botminskill() < botmaxskill() ? botminskill() : botmaxskill();
@@ -1826,7 +1826,8 @@ struct GAMESERVER : igameserver
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->state.ownernum >= 0 || !ci->name[0] || ci->state.state == CS_SPECTATOR) siblings[i] = -1;
+			if(ci->state.ownernum >= 0 || !ci->name[0] || ci->state.state == CS_SPECTATOR)
+				siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
@@ -1847,7 +1848,7 @@ struct GAMESERVER : igameserver
 			{
 				clientinfo *cp = clients[i];
 				cp->state.ownernum = clients[lo]->clientnum;
-				if(clients.inrange(cp->state.ownernum))
+				if(cp->state.ownernum >= 0)
 				{
 					sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
 					return true;
