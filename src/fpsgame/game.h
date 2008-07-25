@@ -166,7 +166,7 @@ struct guntypes
 	},
 	{
 		GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		1,		8,		16,	600,	1200,	8,		0,		0,		0,		-30,    30, 	0,
+		1,		8,		16,	600,	1200,	10,		0,		0,		0,		-30,    30, 	0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"shotgun",	"weapons/shotgun/item",		"weapons/shotgun/vwep"
 	},
