@@ -165,7 +165,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 
 	pushfont("console");
 
-	if (!guiactive(true, false) && centerlines)
+	if (!g3d_active(true, false) && centerlines)
 	{
 		loopv(conlines[CN_CENTER]) if(lastmillis-conlines[CN_CENTER][i].outtime<centertime)
 		{

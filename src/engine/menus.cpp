@@ -467,4 +467,7 @@ void g3d_mainmenu()
 	if(!guistack.empty()) g3d_addgui(guistack.last());
 }
 
-
+bool guiactive()
+{
+	return !guistack.empty();
+}

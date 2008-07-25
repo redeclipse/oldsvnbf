@@ -288,7 +288,7 @@ void cursorupdate()
 		od  = dimension(orient),
 		odc = dimcoord(orient);
 
-    bool hidecursor = guiactive(true, false), hovering = false;
+    bool hidecursor = g3d_active(true, false), hovering = false;
     hmapsel = false;
 
 	if(moving)

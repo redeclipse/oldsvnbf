@@ -24,7 +24,7 @@ struct GAMECLIENT : igameclient
 	dynent fpsmodel;
 	vec swaydir;
     int lasthit, lastcamera, lastzoom;
-    bool prevzoom, zooming;
+    bool prevzoom, zooming, waszooming;
 	int quakewobble, damageresidue;
     int liquidchan;
 
@@ -144,10 +144,11 @@ struct GAMECLIENT : igameclient
 
 	GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
-			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0), intermission(false), openedmenu(false),
+			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0),
+			intermission(false), openedmenu(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
-			lasthit(0), lastcamera(0), lastzoom(0), prevzoom(false), zooming(false),
+			lasthit(0), lastcamera(0), lastzoom(0), prevzoom(false), zooming(false), waszooming(false),
 			quakewobble(0), damageresidue(0),
 			liquidchan(-1),
 			player1(new fpsent())
@@ -214,7 +215,6 @@ struct GAMECLIENT : igameclient
 	{
 		if(on != zooming)
 		{
-			resetcursor();
 			lastzoom = millis;
 			prevzoom = zooming;
 		}
@@ -292,7 +292,7 @@ struct GAMECLIENT : igameclient
     {
         if(d->type == ENT_PLAYER)
         {
-        	if(d == player1 && guiactive(true, true)) return false;
+        	if(d == player1 && g3d_active(true, true)) return false;
 			if(d->state == CS_DEAD) return false;
 			if(intermission) return false;
         }
@@ -372,7 +372,7 @@ struct GAMECLIENT : igameclient
         }
 		if(!openedmenu && openmainmenu())
 		{
-			showgui("main");
+			if(!guiactive()) showgui("main");
 			openedmenu = true;
 		}
 
@@ -1093,9 +1093,9 @@ struct GAMECLIENT : igameclient
 		float r = 1.f, g = 1.f, b = 1.f;
         int index = POINTER_NONE;
 
-		if(guiactive(true, false))
+		if(g3d_active(true, false))
 		{
-			if(guiactive()) index = POINTER_GUI;
+			if(g3d_active()) index = POINTER_GUI;
 		}
         else if(hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
         else if(editmode) index = POINTER_EDIT;
@@ -1346,6 +1346,12 @@ struct GAMECLIENT : igameclient
 				amt = frame < zoomtime() ? clamp(float(frame)/float(zoomtime()), 0.f, 1.f) : 1.f;
 			if(!zooming) amt = 1.f-amt;
 			curfov -= amt*diff;
+			waszooming = true;
+		}
+		else if(waszooming)
+		{
+			resetcursor();
+			waszooming = false;
 		}
 
         aspect = w/float(h);
@@ -1354,7 +1360,7 @@ struct GAMECLIENT : igameclient
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
-		bool hit = guiactive();
+		bool hit = g3d_active();
 
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
 
@@ -1389,7 +1395,7 @@ struct GAMECLIENT : igameclient
 
 	void project(int w, int h)
 	{
-		if(!guiactive())
+		if(!g3d_active())
 		{
 			if(mousestyle() <= 1 && isthirdperson() ? thirdpersonaim() : firstpersonaim())
 			{
@@ -1588,7 +1594,7 @@ struct GAMECLIENT : igameclient
 				}
 				fixrange(player1->aimyaw, player1->aimpitch);
 
-				if(lastcamera && mousestyle() >= 1 && !guiactive())
+				if(lastcamera && mousestyle() >= 1 && !g3d_active())
 				{
 					physent *d = mousestyle() != 2 ? player1 : camera1;
 					float amt = clamp(float(lastmillis-lastcamera)/100.f, 0.f, 1.f)*panspeed();

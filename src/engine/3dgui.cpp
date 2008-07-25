@@ -841,7 +841,7 @@ bool menukey(int code, bool isdown, int cooked)
     return true;
 }
 
-bool guiactive(bool hit, bool pass)
+bool g3d_active(bool hit, bool pass)
 {
 	return (guis.length() && (!pass || !gui::passthrough)) || (hit && windowhit);
 }
@@ -865,7 +865,7 @@ bool g3d_windowhit(bool on, bool act)
         if(on) { firstx = gui::hitx; firsty = gui::hity; }
         mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
     } else if(!on && windowhit) cleargui(1);
-    return guiactive();
+    return g3d_active();
 }
 
 void g3d_render()

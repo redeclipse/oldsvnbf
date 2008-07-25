@@ -762,7 +762,7 @@ struct clientcom : iclientcom
 				case SV_NEWGAME: // server requests next game
 				{
 					cl.sb.showscores(false);
-					showgui("game");
+					if(!guiactive()) showgui("game");
 					break;
 				}
 
@@ -1338,7 +1338,7 @@ struct clientcom : iclientcom
         else if(m_ctf(gamemode)) cl.ctf.setupflags();
 		if(editmode) edittoggled(editmode);
 		cl.player1->state = CS_DEAD;
-		if(!guiactive(true, false) && m_lobby(cl.gamemode))
+		if(m_lobby(cl.gamemode) && !guiactive())
 			showgui("game");
 	}
 
