@@ -13,7 +13,7 @@ struct projectiles
 		vec from, to;
 		int lifetime;
 		float movement, roll;
-		bool local;
+		bool local, beenused;
 		int projtype;
 		float elasticity, relativity, waterfric;
 		int ent, attr1, attr2, attr3, attr4;
@@ -39,7 +39,10 @@ struct projectiles
 		{
 			type = ENT_BOUNCE;
 			state = CS_ALIVE;
-			roll = 0.f;
+			lifetime = ent = attr1 = attr2 = attr3 = attr4 = 0;
+			schan = id = -1;
+			movement = roll = 0.f;
+			beenused = false;
 			physent::reset();
 		}
 	};
@@ -172,8 +175,11 @@ struct projectiles
 			{
 				int col = (int(254*(1.25f-life))<<16)|(int(96*(1.2f-life))<<8);
 				//regular_part_fireball(proj.o, size, 14, 1, col, size);
-				regular_part_splash(4, 1, 50, proj.o, col, size);
-				regular_part_splash(5, 1, 25, proj.o, 0x342110, size);
+				loopi(rnd(5)+1)
+					regular_part_splash(4, 1, 50, proj.o, col, size, int(proj.radius), 2);
+				loopi(rnd(5)+1)
+					regular_part_splash(5, 1, 25, proj.o, 0x231008, 4.f, int(size), 2);
+
 				loopi(cl.numdynents())
 				{
 					fpsent *f = (fpsent *)cl.iterdynents(i);
@@ -184,9 +190,14 @@ struct projectiles
 					if(dist < size) return false;
 				}
 			}
-			else regular_part_splash(5, rnd(3)+1, 100, proj.o, 0x231008, size);
+			else
+			{
+				loopi(rnd(5)+1)
+					regular_part_splash(5, 1, 100, proj.o, 0x231008, size, int(proj.radius), 3);
+			}
 		}
-		else if(proj.projtype == PRJ_GIBS) regular_particle_splash(3, 1, 10000, proj.o);
+		else if(proj.projtype == PRJ_GIBS)
+			regular_part_splash(0, 1, 10000, proj.o, 0x60FFFF, proj.radius, int(proj.radius), 3);
 
 		return true;
 	}
@@ -230,7 +241,9 @@ struct projectiles
 				{
 					int mag = int(proj.vel.magnitude()), vol = clamp(mag*10, 1, 255);
 
-					if(!hitplayer && proj.projtype == PRJ_SHOT && proj.attr1 == GUN_FLAMER)
+					if(proj.projtype == PRJ_GIBS)
+						part_splash(0, 1, 10000, proj.o, 0x60FFFF, proj.radius);
+					else if(!hitplayer && proj.projtype == PRJ_SHOT && proj.attr1 == GUN_FLAMER)
 						adddecal(DECAL_SCORCH, proj.o, wall, guntype[proj.attr1].explode);
 
 					if(vol)
@@ -275,6 +288,18 @@ struct projectiles
 
 	void create(vec &from, vec &to, bool local, fpsent *owner, int type, int lifetime, int speed, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0)
 	{
+		if(!owner || !lifetime || !speed) return;
+
+		if(type == PRJ_ENT && ent == WEAPON) loopvrev(projs)
+		{
+			projent &proj = *(projs[i]);
+			if(proj.owner == owner && proj.projtype == PRJ_ENT && proj.ent == WEAPON)
+			{
+				proj.beenused = true;
+				proj.state = CS_DEAD;
+			}
+		}
+
 		projent &proj = *(new projent());
 		proj.o = proj.from = from;
 		proj.to = to;
@@ -300,7 +325,7 @@ struct projectiles
 		{
 			projent &proj = *(projs[i]);
 
-			if(!check(proj) || !proj.owner)
+			if(!proj.owner || proj.state == CS_DEAD || !check(proj))
 			{
 				proj.state = CS_DEAD;
 				if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
@@ -367,9 +392,45 @@ struct projectiles
 		create(p, to, true, d, type, rnd(1000)+1000, rnd(100)+20, -1);
 	}
 
+	void useeffects(fpsent *d, fpsent *f)
+	{
+		loopv(projs) if(projs[i]->projtype == PRJ_ENT && projs[i]->ent == WEAPON && projs[i]->owner && projs[i]->owner == f)
+		{
+			projent &proj = *projs[i];
+			const char *item = cl.et.itemname(proj.ent, proj.attr1, proj.attr2);
+			if(item && (d != cl.player1 || cl.isthirdperson()))
+				particle_text(d->abovehead(), item, 15);
+			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
+			d->useitem(lastmillis, proj.ent, proj.attr1, proj.attr2);
+			proj.beenused = true;
+			proj.state = CS_DEAD;
+			return;
+		}
+	}
+
+	bool usecheck(fpsent *d, vec &m, float eye)
+	{
+		int n = -1;
+		loopv(projs) if(projs[i]->projtype == PRJ_ENT && projs[i]->ent == WEAPON && projs[i]->state != CS_DEAD && !projs[i]->beenused && projs[i]->owner)
+		{
+			projent &proj = *(projs[i]);
+			if(insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius)
+				&& d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis)
+				&& (!projs.inrange(n) || proj.o.dist(m) < projs[n]->o.dist(m)))
+					n = i;
+		}
+		if(projs.inrange(n))
+		{
+			projs[n]->beenused = true;
+			cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, -1, projs[n]->owner->clientnum);
+			return true;
+		}
+		return false;
+	}
+
 	void render()
 	{
-		loopv(projs) if(projs[i]->mdl && *projs[i]->mdl)
+		loopv(projs) if(projs[i]->owner && !projs[i]->beenused && projs[i]->state != CS_DEAD && projs[i]->mdl && *projs[i]->mdl)
 		{
 			projent &proj = *(projs[i]);
 			float yaw = proj.yaw, pitch = proj.pitch;
@@ -393,7 +454,7 @@ struct projectiles
 			}
 			else if(proj.projtype == PRJ_ENT)
 			{
-				flags |= MDL_CULL_DIST|MDL_TRANSLUCENT;
+				flags |= MDL_CULL_DIST;
 			}
 			else continue;
 

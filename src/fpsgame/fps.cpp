@@ -54,13 +54,13 @@ struct GAMECLIENT : igameclient
 	IVARP(thirdpersondist, -100, 1, 100);
 	IVARP(thirdpersonshift, -100, 4, 100);
 	IVARP(thirdpersonangle, 0, 40, 360);
-	IVARP(thirdpersontranslucent, 0, 1, 1);
+	IVARP(thirdpersontranslucent, 0, 0, 1);
 
 	IVARP(firstpersonfov, 90, 100, 150);
 	IVARP(firstpersondist, -100, 50, 100);
 	IVARP(firstpersonshift, -100, 25, 100);
 	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
-	IVARP(firstpersontranslucent, 0, 1, 1);
+	IVARP(firstpersontranslucent, 0, 0, 1);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(absmouse, 0, 0, 1);
@@ -135,7 +135,7 @@ struct GAMECLIENT : igameclient
 	ITVAR(damagetex, "textures/damage", 0);
 	ITVAR(zoomtex, "textures/zoom", 0);
 
-	IVARP(showstats, 0, 1, 1);
+	IVARP(showstats, 0, 0, 1);
 	IVARP(showhudents, 0, 10, 100);
 	IVARP(showfps, 0, 2, 2);
 	IVARP(statrate, 0, 200, 1000);
@@ -445,7 +445,7 @@ struct GAMECLIENT : igameclient
 		{
 			vec p = headpos(d);
 			p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-			particle_splash(3, min(damage/4, 20), 10000, p);
+			particle_splash(3, min(damage/4, 10), 10000, p);
 			if(d!=player1)
 			{
 				s_sprintfd(ds)("@%d", damage);
@@ -508,15 +508,18 @@ struct GAMECLIENT : igameclient
 		);
         d->lastpain = lastmillis;
 
-		vec dir, from, to;
-		vecfromyawpitch(d->aimyaw, d->aimpitch, 1, 0, dir);
-		dir.mul(d->radius*2.f);
-		to = vec(d->o).add(vec(dir).mul(32.f));
-		from = ws.gunorigin(d->o, to, d);
-		pj.create(from, to, d == player1 || d->bot, d, PRJ_ENT, 5000, 50, WEAPON, d->gunselect);
+		if(isgun(d->gunselect))
+		{
+			vec dir, from, to;
+			vecfromyawpitch(d->aimyaw, d->aimpitch, 1, 0, dir);
+			dir.mul(d->radius*2.f);
+			to = vec(d->o).add(vec(dir).mul(32.f));
+			from = ws.gunorigin(d->o, to, d);
+			pj.create(from, to, d == player1 || d->bot, d, PRJ_ENT, 10000, 50, WEAPON, d->gunselect, guntype[d->gunselect].add);
+		}
 
 		vec pos = headpos(d);
-		int gibs = (damage+2)/2;
+		int gibs = clamp((damage+3)/3, 1, 25);
 		if(d->obliterated) gibs *= 2;
 		else playsound(S_DIE1+rnd(2), 0, 255, d->o, d);
 		loopi(rnd(gibs)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
