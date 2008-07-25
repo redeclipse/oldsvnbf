@@ -739,6 +739,7 @@ struct GAMESERVER : igameserver
 		minremain = timelimit() ? timelimit() : -1;
 		gamelimit = timelimit() ? minremain*60000 : 0;
 		interm = 0;
+		interm = 0;
 		s_strcpy(smapname, s);
 		resetitems();
 		notgotitems = true;
@@ -863,24 +864,20 @@ struct GAMESERVER : igameserver
 		votecount *best = NULL;
 		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
 
-		if(force || maxvotes <= 2) maxvotes = 1;
-		else if(maxvotes == 3) maxvotes = 2;
+		if(force)
+		{
+			if(maxvotes <= 2) maxvotes = 1;
+			else if(maxvotes == 3) maxvotes = 2;
+			else maxvotes = maxvotes/2;
+		}
 		else maxvotes = maxvotes/2;
 
-		if(force || (best && best->count > maxvotes))
+		if(best && best->count > maxvotes)
 		{
 			if(demorecord) enddemorecord();
-			if(best && best->count > maxvotes)
-			{
-				srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
-				sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, best->map, best->mode, best->muts);
-				changemap(best->map, best->mode, best->muts);
-			}
-			else if(clients.length() && !maprequest)
-			{
-				sendf(-1, 1, "ri", SV_NEWGAME);
-				maprequest = true;
-			}
+			srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
+			sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, best->map, best->mode, best->muts);
+			changemap(best->map, best->mode, best->muts);
 		}
 	}
 
@@ -2119,7 +2116,7 @@ struct GAMESERVER : igameserver
 				else if(minremain == 1)
 					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, "only one minute left of play!");
 			}
-			if(!minremain && !interm) interm = gamemillis+10000;
+			if(!minremain && !interm) interm = gamemillis+5000;
 		}
 	}
 
@@ -2484,9 +2481,18 @@ struct GAMESERVER : igameserver
 
 		if(interm && gamemillis >= interm) // wait then call for next map
 		{
-			if(demorecord) enddemorecord();
-			interm = 0;
-			checkvotes(true);
+			if(!maprequest)
+			{
+				if(demorecord) enddemorecord();
+				sendf(-1, 1, "ri", SV_NEWGAME);
+				maprequest = true;
+				interm = gamemillis+10000;
+			}
+			else
+			{
+				interm = 0;
+				checkvotes(true);
+			}
 		}
 	}
 
