@@ -216,6 +216,7 @@ struct GAMECLIENT : igameclient
 	{
 		if(on != zooming)
 		{
+			resetcursor();
 			lastzoom = millis;
 			prevzoom = zooming;
 		}

@@ -156,7 +156,7 @@ struct guntypes
 	},
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		1,		5,		10,	800,	1400,	100,	0,		0,		0,		-30,  	20,		0,
+		1,		5,		10,	800,	1600,	100,	0,		0,		0,		-35,  	25,		0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"rifle",	"weapons/rifle/item",		"weapons/rifle/vwep"
 	}
