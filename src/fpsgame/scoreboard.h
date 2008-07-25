@@ -188,12 +188,12 @@ struct scoreboard : g3d_callback
 			{
 				s_sprintfd(cstr)(", %d %s remain", cl.minremain, cl.minremain==1 ? "minute" : "minutes");
 				s_strcat(modemapstr, cstr);
-				if(m_ctf(cl.gamemode) && ctflimit)
-				{
-					int captures = clamp(groups[0]->score-ctflimit, 0, ctflimit);
-					s_sprintf(cstr)(", %d %s to go", captures, captures==1 ? "capture" : "captures");
-					s_strcat(modemapstr, cstr);
-				}
+				//if(m_ctf(cl.gamemode) && ctflimit)
+				//{
+				//	int captures = clamp(groups[0]->score-ctflimit, 0, ctflimit);
+				//	s_sprintf(cstr)(", %d %s to go", captures, captures==1 ? "capture" : "captures");
+				//	s_strcat(modemapstr, cstr);
+				//}
 			}
 		}
 		g.text(modemapstr, 0xFFFF80, "server");

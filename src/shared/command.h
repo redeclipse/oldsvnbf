@@ -134,7 +134,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARP(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
 #define VARR(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
 #define VARW(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_WORLD|IDF_COMPLETE)
-#define VARG(name, min, cur, max) _VAR(sv_##name, sv_##name, min, cur, max, IDF_GAME);_VAR(name, name, min, cur, max, IDF_GAME)
+#define VARG(name, min, cur, max) _VAR(sv_##name, sv_##name, min, cur, max, IDF_GAME);_VAR(name, name, min, cur, max, IDF_GAME|IDF_COMPLETE)
 #define _VARF(name, global, min, cur, max, body, persist)  void var_##name(); int global = variable(#name, min, cur, max, &global, var_##name, persist); void var_##name() { body; }
 #define VARFN(name, global, min, cur, max, body) _VARF(name, global, min, cur, max, body, IDF_COMPLETE)
 #define VARF(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_COMPLETE)

@@ -490,7 +490,19 @@ char *executeret(const char *p)               // all evaluation happens here, re
 #endif
 						conoutf("\frunknown command: %s", c);
                 }
-				setretval(newstring(c));
+                if(id && id->flags&IDF_GAME)
+                {
+                	string val; val[0] = 0;
+                	switch(id->type)
+                	{
+                		case ID_VAR: s_sprintf(val)("%d", *id->storage.i); break;
+                		case ID_FVAR: s_sprintf(val)("%d", *id->storage.i); break;
+                		case ID_SVAR: s_sprintf(val)("%d", *id->storage.i); break;
+                		default: break;
+                	}
+                	setretval(newstring(val[0] ? val : c));
+                }
+				else setretval(newstring(c));
 			}
             else switch(id->type)
 			{
