@@ -68,7 +68,7 @@ struct GAMESERVER : igameserver
 	{
 		int type;
 		int millis, id;
-		int ent;
+		int ent, owner;
 	};
 
 	union gameevent
@@ -111,7 +111,7 @@ struct GAMESERVER : igameserver
 	{
 		vec o;
 		int state;
-        projectilestate rockets, grenades, flames;
+        projectilestate gundrop, rockets, grenades, flames;
 		int frags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed;
 		float effectiveness;
@@ -127,6 +127,7 @@ struct GAMESERVER : igameserver
 		{
 			if(state!=CS_SPECTATOR) state = CS_DEAD;
 			lifesequence = 0;
+			gundrop.reset();
             rockets.reset();
             grenades.reset();
             flames.reset();
@@ -1036,6 +1037,7 @@ struct GAMESERVER : igameserver
         #define QUEUE_FLT(n) QUEUE_BUF(4, putfloat(buf, n))
         #define QUEUE_STR(text) QUEUE_BUF(2*strlen(text)+1, sendstring(text, buf))
 
+		static gameevent dummyevent;
 		#define seteventmillis(event, eventcond) \
 		{ \
 			if(!cp->timesync || (cp->events.length()==1 && eventcond)) \
@@ -1117,6 +1119,7 @@ struct GAMESERVER : igameserver
 					if(val)
 					{
 						ci->events.setsizenodelete(0);
+						ci->state.gundrop.reset();
 						ci->state.rockets.reset();
 						ci->state.grenades.reset();
 						ci->state.flames.reset();
@@ -1188,19 +1191,19 @@ struct GAMESERVER : igameserver
 				{
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					gameevent &shot = cp->addevent();
+					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
+					gameevent &shot = havecn ? cp->addevent() : dummyevent;
 					shot.type = GE_SHOT;
 					shot.shot.id = getint(p);
 					shot.shot.gun = getint(p);
 					shot.shot.power = getint(p);
-					seteventmillis(shot.shot, cp->state.canshoot(shot.shot.gun, gamemillis));
+					if(havecn) seteventmillis(shot.shot, cp->state.canshoot(shot.shot.gun, gamemillis));
 					loopk(3) shot.shot.from[k] = getint(p)/DMF;
 					loopk(3) shot.shot.to[k] = getint(p)/DMF;
 					int hits = getint(p);
 					loopk(hits)
 					{
-						gameevent &hit = cp->addevent();
+						gameevent &hit = havecn ? cp->addevent() : dummyevent;
 						hit.type = GE_HIT;
 						hit.hit.flags = getint(p);
 						hit.hit.target = getint(p);
@@ -1215,12 +1218,12 @@ struct GAMESERVER : igameserver
 				{
 					int lcn = getint(p), id = getint(p), gun = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					gameevent &reload = cp->addevent();
+					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
+					gameevent &reload = havecn ? cp->addevent() : dummyevent;
 					reload.type = GE_RELOAD;
 					reload.reload.id = id;
 					reload.reload.gun = gun;
-					seteventmillis(reload.reload, cp->state.canreload(reload.reload.gun, gamemillis));
+					if(havecn) seteventmillis(reload.reload, cp->state.canreload(reload.reload.gun, gamemillis));
 					break;
 				}
 
@@ -1228,17 +1231,17 @@ struct GAMESERVER : igameserver
 				{
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					gameevent &exp = cp->addevent();
+					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
+					gameevent &exp = havecn ? cp->addevent() : dummyevent;
 					exp.type = GE_EXPLODE;
 					exp.explode.id = getint(p);
-					seteventmillis(exp.explode, true);
+					if(havecn) seteventmillis(exp.explode, true);
 					exp.explode.gun = getint(p);
 					exp.explode.id = getint(p);
 					int hits = getint(p);
 					loopk(hits)
 					{
-						gameevent &hit = cp->addevent();
+						gameevent &hit = havecn ? cp->addevent() : dummyevent;
 						hit.type = GE_HIT;
 						hit.hit.flags = getint(p);
 						hit.hit.target = getint(p);
@@ -1251,14 +1254,15 @@ struct GAMESERVER : igameserver
 
 				case SV_ITEMUSE:
 				{
-					int lcn = getint(p), id = getint(p), ent = getint(p);
+					int lcn = getint(p), id = getint(p), ent = getint(p), tcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					gameevent &use = cp->addevent();
 					use.type = GE_USE;
-					use.use.ent = ent;
 					use.use.id = id;
-					seteventmillis(use.use, sents.inrange(ent) ? cp->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false);
+					use.use.ent = ent;
+					use.use.owner = tcn;
+					seteventmillis(use.use, use.use.ent >= 0 ? (sents.inrange(ent) ? cp->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false) : true);
 					break;
 				}
 
@@ -2187,6 +2191,8 @@ struct GAMESERVER : igameserver
 				else { friends = 1; enemies = clients.length()-1; }
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
 			}
+			ts.gundrop.reset();
+			ts.gundrop.add(ts.gunselect);
 			sendf(-1, 1, "ri7", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, gun, flags, damage);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
@@ -2248,6 +2254,8 @@ struct GAMESERVER : igameserver
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
 		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, e.flags, ci->state.health);
+		gs.gundrop.reset();
+		gs.gundrop.add(gs.gunselect);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(mut->died(ci, NULL));
@@ -2305,7 +2313,7 @@ struct GAMESERVER : igameserver
 				int(e.from[0]*DMF), int(e.from[1]*DMF), int(e.from[2]*DMF),
 				int(e.to[0]*DMF), int(e.to[1]*DMF), int(e.to[2]*DMF),
 				ci->clientnum);
-        gs.shotdamage += guntype[e.gun].damage*(e.gun==GUN_SG ? SGRAYS : 1);
+		gs.shotdamage += guntype[e.gun].damage*(e.gun==GUN_SG ? SGRAYS : 1);
 		switch(e.gun)
 		{
 #if 0
@@ -2359,15 +2367,31 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, useevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!minremain || !gs.isalive(gamemillis) || !sents.inrange(e.ent) || !sents[e.ent].spawned || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
+		if(!minremain || !gs.isalive(gamemillis))
 		{
 			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
-		sents[e.ent].spawned = false;
-		sents[e.ent].spawntime = spawntime(sents[e.ent].type);
-		ci->state.useitem(e.millis, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
-		sendf(-1, 1, "ri3", SV_ITEMACC, ci->clientnum, e.ent);
+		if(e.ent >= 0)
+		{
+			if(!sents.inrange(e.ent) || !sents[e.ent].spawned || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
+				return;
+			sents[e.ent].spawned = false;
+			sents[e.ent].spawntime = spawntime(sents[e.ent].type);
+			ci->state.useitem(e.millis, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
+			sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.ent, -1);
+		}
+		else if(e.owner >= 0)
+		{
+			clientinfo *cp = (clientinfo *)getinfo(e.owner);
+			if(!cp || cp->state.gundrop.projs.empty()) return;
+			int gun = cp->state.gundrop.projs[0];
+			if(!isgun(gun) || !gs.canuse(WEAPON, gun, guntype[gun].add, e.millis))
+				return;
+			cp->state.gundrop.reset();
+			ci->state.useitem(e.millis, WEAPON, gun, guntype[gun].add);
+			sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, -1, e.owner);
+		}
 	}
 
 	void processevents()

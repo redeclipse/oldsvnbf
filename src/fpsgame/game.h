@@ -124,7 +124,7 @@ enum
     ANIM_MAX
 };
 
-#define SGRAYS			50
+#define SGRAYS			20
 #define SGSPREAD		5
 #define GUNSWITCHDELAY	800
 #define PLAYERHEIGHT	15.f
@@ -160,7 +160,7 @@ struct guntypes
 {
 	{
 		GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		12,		12,		250,	1000,	25,		0,		0,		0,		-10,    10,		0,
+		12,		12,		250,	1000,	10,		0,		0,		0,		-10,    10,		0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"pistol",	"weapons/pistol/item",		"weapons/pistol/vwep"
 	},
@@ -191,7 +191,7 @@ struct guntypes
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
 		1,		5,		600,	1000,	100,	0,		0,		0,		-30,  	20,		0,
-		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
+		1,		0,				2.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"rifle",	"weapons/rifle/item",		"weapons/rifle/vwep"
 	}
 };
@@ -311,9 +311,9 @@ char msgsizelookup(int msg)
 		SV_DIED, 7, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 13, SV_SPAWN, 4, SV_FORCEDEATH, 2,
 		SV_GUNSELECT, 0, SV_TAUNT, 2,
-		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 4, SV_EXECLINK, 3,
+		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
-		SV_TIMEUP, 2, SV_NEWGAME, 1, SV_ITEMACC, 3,
+		SV_TIMEUP, 2, SV_NEWGAME, 1, SV_ITEMACC, 0,
 		SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
         SV_EDITMODE, 2, SV_EDITENT, 10, SV_EDITLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0, SV_APPROVEMASTER, 2,
@@ -636,6 +636,7 @@ enum
 	BT_PLAYER,
 	BT_ENTITY,
 	BT_FLAG,
+	BT_DROP,
 	BT_MAX
 };
 

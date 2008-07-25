@@ -336,6 +336,21 @@ struct botclient
 			}
 		}
 
+		loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->state != CS_DEAD && !cl.pj.projs[j]->beenused && cl.pj.projs[j]->owner)
+		{
+			if(isgun(cl.pj.projs[j]->attr1) && guntype[cl.pj.projs[j]->attr1].rdelay > 0 && d->ammo[cl.pj.projs[j]->attr1] <= 0 && cl.pj.projs[j]->attr1 > d->bestgun())
+			{ // go get a weapon upgrade
+				interest &n = interests.add();
+				n.state = BS_INTEREST;
+				n.node = cl.et.waypointnode(cl.pj.projs[j]->o, true);
+				n.target = cl.pj.projs[j]->attr1;
+				n.targtype = BT_DROP;
+				n.expire = 10000;
+				n.tolerance = enttype[cl.pj.projs[j]->ent].radius+d->radius;
+				n.score = pos.dist(cl.pj.projs[j]->o)/(d->gunselect != GUN_PISTOL ? 1.f : 10.f);
+			}
+		}
+
 		while(!interests.empty())
 		{
 			int q = interests.length()-1;
@@ -531,40 +546,74 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			if(cl.et.ents.inrange(b.target))
+			switch(b.targtype)
 			{
-				fpsentity &e = (fpsentity &)*cl.et.ents[b.target];
-				if(enttype[e.type].usetype == EU_ITEM)
+				case BT_ENTITY:
 				{
-					switch(e.type)
+					if(cl.et.ents.inrange(b.target))
 					{
-						case WEAPON:
+						fpsentity &e = (fpsentity &)*cl.et.ents[b.target];
+						if(enttype[e.type].usetype == EU_ITEM)
 						{
-							if(!e.spawned || d->ammo[e.attr1] > 0 || e.attr1 <= d->bestgun())
-								return false;
-							break;
-						}
-						default: break;
-					}
-					if(lastmillis-d->usetime > 3000 && d->canuse(e.type, e.attr1, e.attr2, lastmillis))
-					{
-						float eye = d->height*0.5f;
-						vec m = d->o;
-						m.z -= eye;
+							switch(e.type)
+							{
+								case WEAPON:
+								{
+									if(!e.spawned || d->ammo[e.attr1] > 0 || e.attr1 <= d->bestgun())
+										return false;
+									break;
+								}
+								default: break;
+							}
+							if(lastmillis-d->usetime > 3000 && d->canuse(e.type, e.attr1, e.attr2, lastmillis))
+							{
+								float eye = d->height*0.5f;
+								vec m = d->o;
+								m.z -= eye;
 
-						if(insidesphere(m, eye, d->radius-1.f, e.o, enttype[e.type].height, enttype[e.type].radius))
+								if(insidesphere(m, eye, d->radius-1.f, e.o, enttype[e.type].height, enttype[e.type].radius))
+								{
+									d->useaction = true;
+									d->usetime = lastmillis;
+									return false;
+								}
+							}
+						}
+						if(makeroute(d, b, e.o, enttype[e.type].radius+d->radius))
 						{
-							d->useaction = true;
-							d->usetime = lastmillis;
-							return false;
+							defer(d, b, b.targtype == BT_NODE);
+							return true;
 						}
 					}
+					break;
 				}
-				if(makeroute(d, b, e.o, enttype[e.type].radius+d->radius))
+				case BT_DROP:
 				{
-					defer(d, b, b.targtype == BT_NODE);
-					return true;
+					if(cl.et.ents.inrange(b.goal))
+					{
+						fpsentity &e = (fpsentity &)*cl.et.ents[b.goal];
+						if(lastmillis-d->usetime > 3000 && d->canuse(WEAPON, b.target, 0, lastmillis))
+						{
+							float eye = d->height*0.5f;
+							vec m = d->o;
+							m.z -= eye;
+
+							if(insidesphere(m, eye, d->radius-1.f, e.o, enttype[WEAPON].height, enttype[WEAPON].radius))
+							{
+								d->useaction = true;
+								d->usetime = lastmillis;
+								return false;
+							}
+						}
+						if(makeroute(d, b, e.o, enttype[WEAPON].radius+d->radius))
+						{
+							defer(d, b, false);
+							return true;
+						}
+					}
+					break;
 				}
+				default: break;
 			}
 		}
 		return false;

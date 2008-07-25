@@ -89,24 +89,13 @@ struct entities : icliententities
 
 	vector<extentity *> &getents() { return ents; }
 
-	const char *itemname(int i)
+	const char *itemname(int type, int attr1 = 0, int attr2 = 0)
 	{
-		if(ents[i]->type == WEAPON)
+		if(type == WEAPON)
 		{
-			int gun = ents[i]->attr1;
+			int gun = attr1;
 			if(gun <= -1 || gun >= NUMGUNS) gun = 0;
 			return guntype[gun].name;
-		}
-		return NULL;
-	}
-
-	int itemsound(int i)
-	{
-		if(ents[i]->type == WEAPON)
-		{
-			int gun = ents[i]->attr1;
-			if(gun <= -1 || gun >= NUMGUNS) gun = 0;
-			return guntype[gun].ssound;
 		}
 		return NULL;
 	}
@@ -172,16 +161,24 @@ struct entities : icliententities
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
 
-	void useeffects(fpsent *d, int m, int n)
+	void useeffects(fpsent *d, int n, int o)
 	{
-        if(d && ents.inrange(n))
+		if(n >= 0)
 		{
-			const char *item = itemname(n);
-			if(item && (d != cl.player1 || cl.isthirdperson()))
-				particle_text(d->abovehead(), item, 15);
-			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
-			d->useitem(m, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
-			ents[n]->spawned = false;
+			if(d && ents.inrange(n))
+			{
+				const char *item = itemname(ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+				if(item && (d != cl.player1 || cl.isthirdperson()))
+					particle_text(d->abovehead(), item, 15);
+				playsound(S_ITEMPICKUP, 0, 255, d->o, d);
+				d->useitem(lastmillis, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+				ents[n]->spawned = false;
+			}
+		}
+		else if(o >= 0)
+		{
+			fpsent *f = cl.getclient(o);
+			if(f) cl.pj.useeffects(d, f);
 		}
 	}
 
@@ -404,8 +401,8 @@ struct entities : icliententities
 					&& (!ents.inrange(n) || e.o.dist(m) < ents[n]->o.dist(m)))
 						n = i;
 			}
-			if(ents.inrange(n)) cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, n);
-			else cl.playsoundc(S_DENIED, d);
+			if(ents.inrange(n)) cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, n, -1);
+			else if(!cl.pj.usecheck(d, m, eye)) cl.playsoundc(S_DENIED, d);
 			d->useaction = false;
 		}
 		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
