@@ -148,11 +148,11 @@ struct projectiles
 			}
 			default: break;
 		}
-		if(proj.mdl && *proj.mdl) setbbfrommodel(&proj, proj.mdl);
-		proj.height += 1.f;
-		proj.radius += 1.f;
-		proj.xradius += 1.f;
-		proj.yradius += 1.f;
+		if(proj.mdl && *proj.mdl)
+		{
+			setbbfrommodel(&proj, proj.mdl);
+			proj.height += 4.f;
+		}
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
 		proj.vel = vec(vec(dir).mul(cl.ph.maxspeed(&proj))).add(vec(proj.owner->vel).mul(proj.relativity));
 		dir.mul(2);

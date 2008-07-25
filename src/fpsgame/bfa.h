@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			86
+#define GAMEVERSION			87
 
 #define GAMENAME			bfagame
 #define GAMECLIENT			bfaclient
