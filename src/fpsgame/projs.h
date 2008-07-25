@@ -405,7 +405,7 @@ struct projectiles
 			if(item && (d != cl.player1 || cl.isthirdperson()))
 				particle_text(d->abovehead(), item, 15);
 			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
-			d->useitem(lastmillis, proj.ent, proj.attr1, proj.attr2);
+			d->useitem(lastmillis, false, proj.ent, proj.attr1, proj.attr2);
 			proj.beenused = true;
 			proj.state = CS_DEAD;
 			return;

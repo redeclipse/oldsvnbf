@@ -2358,7 +2358,7 @@ struct GAMESERVER : igameserver
 			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
-		gs.useitem(e.millis, WEAPON, e.gun, guntype[e.gun].add);
+		gs.useitem(e.millis, true, WEAPON, e.gun, guntype[e.gun].add);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
 
@@ -2376,7 +2376,7 @@ struct GAMESERVER : igameserver
 				return;
 			sents[e.ent].spawned = false;
 			sents[e.ent].spawntime = spawntime(sents[e.ent].type);
-			ci->state.useitem(e.millis, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
+			ci->state.useitem(e.millis, false, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
 			sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.ent, -1);
 		}
 		else if(e.owner >= 0)
@@ -2387,7 +2387,7 @@ struct GAMESERVER : igameserver
 			if(!isgun(gun) || !gs.canuse(WEAPON, gun, guntype[gun].add, e.millis))
 				return;
 			cp->state.gundrop.reset();
-			ci->state.useitem(e.millis, WEAPON, gun, guntype[gun].add);
+			ci->state.useitem(e.millis, false, WEAPON, gun, guntype[gun].add);
 			sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, -1, e.owner);
 		}
 	}
