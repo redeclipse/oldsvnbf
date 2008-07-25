@@ -476,7 +476,7 @@ struct GAMESERVER : igameserver
 				teamscore &ts = teamscores[j];
 				float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
 				ts.rank += rank;
-				ts.clients += !botratio() || ci->state.ownernum >= 0 ? 1 : botratio()+(!nonspectators(ci->clientnum, true) ? 1 : 0);
+				ts.clients += !botratio() || ci->state.ownernum >= 0 ? 1 : botratio()+(nonspectators(-1, true) > 1 ? 1 : 0);
 				break;
 			}
 		}
@@ -861,11 +861,16 @@ struct GAMESERVER : igameserver
 			vc->count++;
 		}
 		votecount *best = NULL;
-		loopv(votes) if(!best || votes[i].count > best->count || (votes[i].count == best->count && rnd(2))) best = &votes[i];
-		if(force || (best && best->count > maxvotes/2))
+		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
+
+		if(force || maxvotes <= 2) maxvotes = 1;
+		else if(maxvotes == 3) maxvotes = 2;
+		else maxvotes = maxvotes/2;
+
+		if(force || (best && best->count > maxvotes))
 		{
 			if(demorecord) enddemorecord();
-			if(best && (best->count > (force ? 1 : maxvotes/2)))
+			if(best && best->count > maxvotes)
 			{
 				srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
 				sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, best->map, best->mode, best->muts);
@@ -1515,8 +1520,7 @@ struct GAMESERVER : igameserver
 					{
 						if (smode) smode->changeteam(wi, wi->team, team);
 						mutate(mut->changeteam(wi, wi->team, team));
-						if(wi->state.ownernum < 0)
-							checkbots(true);
+						if(wi->state.ownernum < 0) checkbots(true);
 					}
 					wi->team = team;
 					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
