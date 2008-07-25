@@ -489,6 +489,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     if(fsaa) glEnable(GL_MULTISAMPLE);
 
     inittmus();
+    setuptexcompress();
 }
 
 void cleanupgl()
