@@ -55,9 +55,9 @@ struct projectiles
 						proj.relativity = guntype[proj.attr1].relativity;
 						proj.waterfric = guntype[proj.attr1].waterfric;
 						proj.weight = guntype[proj.attr1].weight;
-						vec v(rnd(81)-40, rnd(81)-40, rnd(81)-40);
-						if(v.magnitude()>40) v.div(40);
-						v.z /= 2.5f;
+						vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
+						if(v.magnitude()>50) v.div(50);
+						v.z /= 3.f;
 						proj.to.add(v);
 						break;
 					}
@@ -112,9 +112,9 @@ struct projectiles
 				proj.waterfric = 1.75f;
 				proj.weight = 100.f;
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
-				vec v(rnd(81)-40, rnd(81)-40, rnd(81)-40);
-				if(v.magnitude()>40) v.div(40);
-				v.z /= 2.5f;
+				vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
+				if(v.magnitude()>50) v.div(50);
+				v.z /= 2.f;
 				proj.to.add(v);
 				break;
 			}
@@ -184,7 +184,7 @@ struct projectiles
 
 				if(proj.attr1 == GUN_FLAMER)
 				{
-					int col = (int(250*(1.1f-life))<<16)|(int(80*(1.0f-life))<<8);
+					int col = ((int(250*(1.0f-life))<<16)+1)|((int(80*(1.0f-life))+1)<<8);
 					loopi(rnd(5)+1)
 						regular_part_splash(4, 1, 50, proj.o, col, size, int(proj.radius), 2);
 
