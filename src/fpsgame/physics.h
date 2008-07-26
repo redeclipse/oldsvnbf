@@ -639,7 +639,7 @@ struct physics
 		d->o = old;
 	}
 
-	bool entinmap(dynent *d, bool avoidplayers)		// brute force but effective way to find a free spawn spot in the map
+	bool entinmap(physent *d, bool avoidplayers)		// brute force but effective way to find a free spawn spot in the map
 	{
 		d->o.z += d->height;	 // pos specified is at feet
 		vec orig = d->o;

@@ -347,13 +347,24 @@ struct GAMECLIENT : igameclient
 		pj.reset();
 	}
 
+	void checkoften(fpsent *d)
+	{
+		heightoffset(d, d == player1 || d->bot);
+		if(d->wschan >= 0 && !issound(d->wschan)) d->wschan = -1;
+		loopi(GUN_MAX) if(d->gunstate[i] != GUNSTATE_IDLE)
+		{
+			if(d->state != CS_ALIVE || (d->gunstate[i] != GUNSTATE_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
+				d->setgunstate(i, GUNSTATE_IDLE, 0, lastmillis);
+		}
+	}
+
 	void otherplayers()
 	{
 		loopv(players) if(players[i])
 		{
             fpsent *d = players[i];
             const int lagtime = lastmillis-d->lastupdate;
-			heightoffset(d, d->bot!=NULL);
+            checkoften(d);
             if(d->bot || !lagtime || intermission) continue;
             else if(lagtime>1000 && d->state==CS_ALIVE)
 			{
@@ -385,12 +396,11 @@ struct GAMECLIENT : igameclient
 			ph.update();
 			pj.update();
 			et.update();
-			ws.update();
 			bot.update();
 
 			otherplayers();
 			if(!allowmove(player1)) player1->stopmoving();
-			heightoffset(player1, true);
+            checkoften(player1);
 
 			#define adjustscaled(t,n,m) \
 				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); if(n <= 0) n = (t)0; }
@@ -516,16 +526,8 @@ struct GAMECLIENT : igameclient
 				(!(flags & HIT_BURN) && (damage >= MAXHEALTH*15/10))
 		);
         d->lastregen = d->lastpain = lastmillis;
-
 		if(isgun(d->gunselect) && !m_noitems(gamemode, mutators))
-		{
-			vec dir, from, to;
-			vecfromyawpitch(d->aimyaw, d->aimpitch, 1, 0, dir);
-			dir.mul(d->radius*2.f);
-			to = vec(d->o).add(vec(dir).mul(32.f));
-			from = ws.gunorigin(d->o, to, d);
-			pj.create(from, to, d == player1 || d->bot, d, PRJ_ENT, 10000, 50, WEAPON, d->gunselect, guntype[d->gunselect].add);
-		}
+			pj.dropgun(d, d->gunselect, 0);
 
 		vec pos = headpos(d);
 		int gibs = clamp((damage+3)/3, 1, 25);

@@ -190,21 +190,9 @@ struct weaponstate
 	{
 		int pow = guntype[gun].power ? power : 100;
 
-		if(guntype[gun].sound >= 0)
-		{
-			if(gun == GUN_FLAMER)
-			{
-				if(!issound(d->wschan))
-					d->wschan = playsound(guntype[gun].sound, 0, 255, d->o, d);
-			}
-			else
-			{
-				playsound(guntype[gun].sound, 0, 255, d->o, d);
-				d->wschan = -1;
-			}
-		}
-		if(gun != GUN_GL)
-			adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
+		if(gun == GUN_FLAMER && !issound(d->wschan))
+			d->wschan = playsound(guntype[gun].sound, 0, 255, d->o, d);
+		else playsound(guntype[gun].sound, 0, 255, d->o, d);
 
 		switch(gun)
 		{
@@ -216,6 +204,8 @@ struct weaponstate
                     particle_flare(from, sg[i], 300, 10, d);
                     if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
+				adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
+				playsound(guntype[gun].sound, 0, 255, d->o, d);
 				break;
 			}
 
@@ -225,23 +215,19 @@ struct weaponstate
 				particle_splash(0, 200, 250, to);
                 particle_flare(from, to, 600, 10, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
+                adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
 				break;
 			}
 
 #if 0
 			case GUN_RL:
 #endif
-			case GUN_GL:
 			case GUN_FLAMER:
+                adddynlight(from, 40, vec(1.1f, 0.33f, 0.01f), 40, 0, DL_FLASH);
+			case GUN_GL:
 			{
-				vec up = to;
-				if(gun == GUN_GL)
-				{
-					float dist = from.dist(to);
-					up.z += dist/8;
-				}
 				int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
-				cl.pj.create(from, up, local, d, PRJ_SHOT, guntype[gun].time, spd, WEAPON, gun);
+				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, WEAPON, gun);
 				break;
 			}
 
@@ -249,6 +235,7 @@ struct weaponstate
 				particle_splash(0, 200, 250, to);
 				particle_trail(21, 500, from, to);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
+                adddynlight(from, 40, vec(1.1f, 0.88f, 0.44f), 40, 0, DL_FLASH);
 				break;
 		}
 	}
@@ -316,21 +303,6 @@ struct weaponstate
 	bool doautoreload(fpsent *d)
 	{
 		return autoreload() && isgun(d->gunselect) && d->ammo[d->gunselect] <= 0 && d->canreload(d->gunselect, lastmillis);
-	}
-
-	void checkweapons(fpsent *d)
-	{
-		loopi(GUN_MAX) if(d->gunstate[i] != GUNSTATE_IDLE)
-		{
-			if(d->state != CS_ALIVE || (d->gunstate[i] != GUNSTATE_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
-				d->setgunstate(i, GUNSTATE_IDLE, 0, lastmillis);
-		}
-	}
-
-	void update()
-	{
-		checkweapons(cl.player1);
-		loopv(cl.players) if(cl.players[i]) checkweapons(cl.players[i]);
 	}
 
 	void reload(fpsent *d)

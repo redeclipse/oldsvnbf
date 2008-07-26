@@ -837,7 +837,7 @@ struct clientcom : iclientcom
 						}
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
 						playsound(S_RESPAWN, 0, 255, f->o, f);
-						regularshape(7, int(f->height), 0x666666, 21, 50, 500, f->o, 2.f);
+						regularshape(7, int(f->height), 0x202020, 21, 50, 500, f->o, 2.f);
 					}
 					cl.bot.spawned(f);
 					break;
@@ -952,7 +952,7 @@ struct clientcom : iclientcom
 					playsound(S_ITEMSPAWN, 0, 255, cl.et.ents[i]->o);
 					const char *name = cl.et.itemname(i);
 					if(name) particle_text(cl.et.ents[i]->o, name, 9);
-					regularshape(7, enttype[cl.et.ents[i]->type].radius, 0x666666, 21, 20, 500, cl.et.ents[i]->o, 1.f);
+					regularshape(7, enttype[cl.et.ents[i]->type].radius, 0x202020, 21, 20, 500, cl.et.ents[i]->o, 1.f);
 					break;
 				}
 

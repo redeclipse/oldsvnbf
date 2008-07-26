@@ -95,6 +95,12 @@ struct GAMESERVER : igameserver
 			projs.add(val);
         }
 
+        void push(int val)
+        {
+        	reset();
+			add(val);
+        }
+
         bool remove(int val)
         {
             loopv(projs) if(projs[i]==val)
@@ -2215,9 +2221,9 @@ struct GAMESERVER : igameserver
 				else { friends = 1; enemies = clients.length()-1; }
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
 			}
-			ts.gundrop.reset();
-			if(!m_noitems(gamemode, mutators)) ts.gundrop.add(ts.gunselect);
 			sendf(-1, 1, "ri7", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, gun, flags, realdamage);
+			if(isgun(ts.gunselect) && !m_noitems(gamemode, mutators))
+				ts.gundrop.push(ts.gunselect);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
 			mutate(mut->died(target, actor));
@@ -2280,8 +2286,8 @@ struct GAMESERVER : igameserver
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
 		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, e.flags, ci->state.health);
-		gs.gundrop.reset();
-		if(!m_noitems(gamemode, mutators)) gs.gundrop.add(gs.gunselect);
+		if(isgun(gs.gunselect) && !m_noitems(gamemode, mutators))
+			gs.gundrop.push(gs.gunselect);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(mut->died(ci, NULL));
@@ -2389,8 +2395,10 @@ struct GAMESERVER : igameserver
 			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
-		gs.useitem(e.millis, true, WEAPON, e.gun, guntype[e.gun].add);
+		int dropped = gs.useitem(e.millis, true, WEAPON, e.gun, guntype[e.gun].add);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
+		if(isgun(dropped) && !m_noitems(gamemode, mutators))
+			gs.gundrop.push(dropped);
 	}
 
 	void processevent(clientinfo *ci, useevent &e)
@@ -2401,13 +2409,14 @@ struct GAMESERVER : igameserver
 			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
+		int dropped = -1;
 		if(e.ent >= 0)
 		{
 			if(!sents.inrange(e.ent) || !sents[e.ent].spawned || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
 				return;
 			sents[e.ent].spawned = false;
 			sents[e.ent].spawntime = spawntime(sents[e.ent].type);
-			ci->state.useitem(e.millis, false, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
+			dropped = gs.useitem(e.millis, false, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
 			sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.ent, -1);
 		}
 		else if(e.owner >= 0)
@@ -2417,9 +2426,14 @@ struct GAMESERVER : igameserver
 			int gun = cp->state.gundrop.projs[0];
 			if(!isgun(gun) || !gs.canuse(WEAPON, gun, guntype[gun].add, e.millis) || m_noitems(gamemode, mutators))
 				return;
-			cp->state.gundrop.reset();
-			ci->state.useitem(e.millis, false, WEAPON, gun, guntype[gun].add);
+			dropped = gs.useitem(e.millis, false, WEAPON, gun, guntype[gun].add);
 			sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, -1, e.owner);
+			cp->state.gundrop.reset();
+		}
+		if(isgun(dropped) && !m_noitems(gamemode, mutators))
+		{
+			gs.gundrop.reset();
+			gs.gundrop.add(dropped);
 		}
 	}
 
