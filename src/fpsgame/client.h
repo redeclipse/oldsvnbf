@@ -1437,9 +1437,8 @@ struct clientcom : iclientcom
 		conoutf("\fysending map...");
 		extern string mapname, mapfile;
 		s_sprintfd(mname)("%s", mapname);
-		s_sprintfd(fname)("%s", mapfile);
 		save_world(mname, true);
-		FILE *map = openfile(fname, "rb");
+		FILE *map = openfile(mapfile, "rb");
 		if(map)
 		{
 			fseek(map, 0, SEEK_END);
