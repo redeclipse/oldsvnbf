@@ -840,9 +840,10 @@ struct GAMESERVER : igameserver
 		loopv(clients)
 		{
 			clientinfo *oi = clients[i];
-			if(!oi->mapvote[0] || (oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.ownernum >= 0)
+			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.ownernum >= 0)
 				continue;
 			maxvotes++;
+			if(!oi->mapvote[0]) continue;
 			votecount *vc = NULL;
 			loopvj(votes) if(!strcmp(oi->mapvote, votes[j].map) && oi->modevote==votes[j].mode && oi->mutsvote==votes[j].muts)
 			{
@@ -853,18 +854,15 @@ struct GAMESERVER : igameserver
 			vc->count++;
 		}
 
-		int pls = (nonspectators(-1, true) + 1)/2;
-		if(!force && maxvotes < pls) maxvotes = pls;
-		else maxvotes = maxvotes/2;
-
 		votecount *best = NULL;
 		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
 
-		if(force || (best && best->count >= maxvotes))
+		int reqvotes = max(maxvotes / 2, force ? 1 : 2);
+		if(force || (best && best->count >= reqvotes))
 		{
 			if(demorecord) enddemorecord();
 			srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
-			if(best && best->count >= maxvotes)
+			if(best && best->count >= reqvotes)
 			{
 				sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, best->map, best->mode, best->muts);
 				changemap(best->map, best->mode, best->muts);
@@ -1505,7 +1503,7 @@ struct GAMESERVER : igameserver
 					{
 						if (smode) smode->changeteam(wi, wi->team, team);
 						mutate(mut->changeteam(wi, wi->team, team));
-						if(wi->state.ownernum < 0) checkbots(true);
+						checkbots(true);
 					}
 					wi->team = team;
 					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
@@ -1856,10 +1854,7 @@ struct GAMESERVER : igameserver
 				{
 					int team = chooseworstteam(clients[i]);
 					if(team != clients[i]->team)
-					{
-						clients[i]->team = team;
-						sendf(-1, 1, "ri3", SV_SETTEAM, clients[i]->clientnum, clients[i]->team);
-					}
+						sendf(-1, 1, "ri3", SV_SETTEAM, clients[i]->clientnum, team);
 				}
 			}
 		}
