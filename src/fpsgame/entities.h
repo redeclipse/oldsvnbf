@@ -171,8 +171,10 @@ struct entities : icliententities
 				if(item && (d != cl.player1 || cl.isthirdperson()))
 					particle_text(d->abovehead(), item, 15);
 				playsound(S_ITEMPICKUP, 0, 255, d->o, d);
-				d->useitem(lastmillis, false, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
-				regularshape(7, enttype[ents[n]->type].radius, 0x666666, 21, 20, 500, ents[n]->o, 1.f);
+				int dropped = d->useitem(lastmillis, false, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
+				if(isgun(dropped) && !m_noitems(cl.gamemode, cl.mutators))
+					cl.pj.dropgun(d, dropped, (d->gunwait[dropped]/2)-50);
+				regularshape(7, enttype[ents[n]->type].radius, 0x202020, 21, 20, 500, ents[n]->o, 1.f);
 				ents[n]->spawned = false;
 			}
 		}
@@ -1124,6 +1126,7 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			fpsentity &e = (fpsentity &)*ents[i];
+			if(!issound(e.schan) && e.schan >= 0) e.schan = -1;
 			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1) && !issound(e.schan))
 			{
 				e.schan = playsound(e.attr1, SND_MAP|SND_LOOP, e.attr4, e.o, NULL, e.attr2, e.attr3);

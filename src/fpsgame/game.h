@@ -151,7 +151,7 @@ struct guntypes
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURNING,S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
 		50,		50,		200,100, 	2000,	15,		100,	0,		3000,	-1,		 1,		8,
-		24,		24,				0.1f,	0.1f,		0.25f,		1.5f,		50.f,
+		24,		28,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,
 				"flamer",	"weapons/flamer/item",		"weapons/flamer/vwep"
 	},
 	{
@@ -422,28 +422,28 @@ struct fpsstate
 
 	bool canswitch(int gun, int millis)
 	{
-		if (isgun(gun) && (gunselect != gun) && ammo[gun] >= 0 && (guntype[gun].rdelay > 0 || ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]) && (millis-gunlast[gunselect] >= gunwait[gunselect]))
+		if(isgun(gun) && (gunselect != gun) && ammo[gun] >= 0 && (guntype[gun].rdelay > 0 || ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]) && (millis-gunlast[gunselect] >= gunwait[gunselect]))
 			return true;
 		return false;
 	}
 
 	bool canshoot(int gun, int millis)
 	{
-		if (isgun(gun) && (ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]))
+		if(isgun(gun) && (ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]))
 			return true;
 		return false;
 	}
 
 	bool canreload(int gun, int millis)
 	{
-		if (isgun(gun) && (ammo[gun] < guntype[gun].charge && ammo[gun] >= 0) && (guntype[gun].rdelay > 0) && (millis-gunlast[gun] >= gunwait[gun]))
+		if(isgun(gun) && (ammo[gun] < guntype[gun].charge && ammo[gun] >= 0) && (guntype[gun].rdelay > 0) && (millis-gunlast[gun] >= gunwait[gun]))
 			return true;
 		return false;
 	}
 
 	bool canuse(int type, int attr1, int attr2, int millis)
 	{
-		switch (type)
+		switch(type)
 		{
 			case TRIGGER:
 			{
@@ -452,7 +452,7 @@ struct fpsstate
 			}
 			case WEAPON:
 			{ // can't use when reloading or firing
-				if (isgun(attr1) && (ammo[attr1] < guntype[attr1].max) && (millis-gunlast[attr1] >= gunwait[attr1]))
+				if(isgun(attr1) && (ammo[attr1] < guntype[attr1].max) && (millis-gunlast[attr1] >= gunwait[attr1]))
 					return true;
 				break;
 			}
@@ -474,9 +474,12 @@ struct fpsstate
 
 	void setgunstate(int gun, int state, int delay, int millis)
 	{
-		gunstate[gun] = state;
-		gunwait[gun] = delay;
-		gunlast[gun] = millis;
+		if(isgun(gun))
+		{
+			gunstate[gun] = state;
+			gunwait[gun] = delay;
+			gunlast[gun] = millis;
+		}
 	}
 
 	void gunswitch(int gun, int millis)
@@ -493,32 +496,36 @@ struct fpsstate
 	void gunreload(int gun, int amt, int millis)
 	{
 		setgunstate(gun, GUNSTATE_RELOAD, guntype[gun].rdelay, millis);
-		ammo[gun] = amt;
+		if(isgun(gun)) ammo[gun] = amt;
 	}
 
-	void useitem(int millis, bool limit, int type, int attr1, int attr2)
+	int useitem(int millis, bool limit, int type, int attr1, int attr2)
 	{
-		switch (type)
+		switch(type)
 		{
-			case TRIGGER:
-			{
-				break;
-			}
+			case TRIGGER: return 0;
 			case WEAPON:
 			{
-				if (ammo[attr1] < 0) ammo[attr1] = 0;
+				if(ammo[attr1] < 0) ammo[attr1] = 0;
 
-				int carry = 0;
-				loopi(GUN_MAX) if (ammo[i] >= 0 && guntype[i].rdelay > 0) carry++;
-				if (carry > MAXCARRY)
+				int carry = 0, dropped = -1;
+				loopi(GUN_MAX) if(ammo[i] >= 0 && guntype[i].rdelay > 0) carry++;
+				if(carry > MAXCARRY)
 				{
-					if (gunselect != attr1 && guntype[gunselect].rdelay > 0)
+					if(gunselect != attr1 && guntype[gunselect].rdelay > 0)
 					{
-						ammo[gunselect] = -1;
+						if(isgun(gunselect))
+						{
+							setgunstate(gunselect, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
+							dropped = gunselect;
+							ammo[gunselect] = -1;
+						}
 						gunswitch(attr1, millis);
 					}
-					else loopi(GUN_MAX) if (ammo[i] >= 0 && i != attr1 && guntype[i].rdelay > 0)
+					else loopi(GUN_MAX) if(ammo[i] >= 0 && i != attr1 && guntype[i].rdelay > 0)
 					{
+						setgunstate(i, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
+						dropped = i;
 						ammo[i] = -1;
 						break;
 					}
@@ -526,10 +533,11 @@ struct fpsstate
 				else if(gunselect != attr1) gunswitch(attr1, millis);
 				else setgunstate(attr1, GUNSTATE_RELOAD, guntype[attr1].rdelay ? guntype[attr1].rdelay : guntype[attr1].adelay, millis);
 				ammo[attr1] = clamp(max(ammo[attr1],0)+(attr2 > 0 ? attr2 : guntype[attr1].add), guntype[attr1].add, limit ? guntype[attr1].charge : guntype[attr1].max);
-				break;
+				return dropped;
 			}
 			default: break;
 		}
+		return -1;
 	}
 
 	void respawn(int millis)
@@ -570,7 +578,7 @@ struct fpsentity : extentity
 	fpsentity() : schan(-1), lastemit(0), mark(false) {}
 	~fpsentity()
 	{
-		if (issound(schan)) removesound(schan);
+		if(issound(schan)) removesound(schan);
 		schan = -1;
 	}
 };
@@ -789,7 +797,7 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
 struct projent : dynent
 {
 	vec from, to;
-	int lifetime;
+	int lifetime, waittime;
 	float movement, roll;
 	bool local, beenused;
 	int projtype;
@@ -817,7 +825,7 @@ struct projent : dynent
 	{
 		type = ENT_BOUNCE;
 		state = CS_ALIVE;
-		lifetime = ent = attr1 = attr2 = attr3 = attr4 = 0;
+		lifetime = waittime = ent = attr1 = attr2 = attr3 = attr4 = 0;
 		schan = id = -1;
 		movement = roll = 0.f;
 		beenused = false;

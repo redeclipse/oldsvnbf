@@ -723,7 +723,7 @@ struct botclient
 				if(d->bot->route.inrange(n) && d->bot->avoid.find(d->bot->route[n]) < 0)
 				{
 					b.goal = false;
-					vec from = cl.et.ents[d->bot->route[n]]->o, to(vec(from).add(vec(0, 0, PLAYERHEIGHT+d->aboveeye))), unitv;
+					vec from = vec(cl.et.ents[d->bot->route[n]]->o).add(vec(0, 1, d->aboveeye)), to(vec(from).add(vec(0, 0, PLAYERHEIGHT))), unitv;
 					float dist = to.dist(from, unitv);
 					unitv.div(dist);
 					float barrier = raycube(from, unitv, dist, RAY_CLIPMAT);
