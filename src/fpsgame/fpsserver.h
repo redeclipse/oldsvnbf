@@ -1329,9 +1329,10 @@ struct GAMESERVER : igameserver
 					{
 						if(smode) smode->changeteam(ci, ci->team, team);
 						mutate(mut->changeteam(ci, ci->team, team));
-						checkbots(true);
+						connected = true;
 					}
 					ci->team = team;
+					if(connected) checkbots(true);
 
 					QUEUE_MSG;
 					break;
@@ -1505,14 +1506,16 @@ struct GAMESERVER : igameserver
 					if(who<0 || who>=getnumclients() || !haspriv(ci, PRIV_MASTER, true)) break;
 					clientinfo *wi = (clientinfo *)getinfo(who);
 					if(!wi || !m_team(gamemode, mutators) || team < TEAM_ALPHA || team > numteams(gamemode, mutators)) break;
+					bool teamed = false;
 					if(wi->team != team)
 					{
 						if (smode) smode->changeteam(wi, wi->team, team);
 						mutate(mut->changeteam(wi, wi->team, team));
-						checkbots(true);
+						teamed = true;
 					}
 					wi->team = team;
 					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
+					if(teamed) checkbots(true);
 					QUEUE_INT(SV_SETTEAM);
 					QUEUE_INT(who);
 					QUEUE_INT(team);
@@ -1860,7 +1863,10 @@ struct GAMESERVER : igameserver
 				{
 					int team = chooseworstteam(clients[i]);
 					if(team != clients[i]->team)
+					{
+						clients[i]->team = team;
 						sendf(-1, 1, "ri3", SV_SETTEAM, clients[i]->clientnum, team);
+					}
 				}
 			}
 		}
@@ -2600,7 +2606,6 @@ struct GAMESERVER : igameserver
 		if(mastermode>=MM_LOCKED) ci->state.state = CS_SPECTATOR;
 		if(currentmaster>=0) masterupdate = true;
 		ci->state.lasttimeplayed = lastmillis;
-		checkbots(true);
 		return DISC_NONE;
 	}
 
