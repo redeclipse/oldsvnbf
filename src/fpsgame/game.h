@@ -126,7 +126,7 @@ struct guntypes
 {
 	{
 		GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		12,		12,		64,	250,	1000,	16,		0,		0,		0,		-10,    10,		0,
+		12,		12,		64,	250,	1000,	20,		0,		0,		0,		-10,    10,		0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"pistol",	"weapons/pistol/item",		"weapons/pistol/vwep"
 	},
@@ -138,7 +138,7 @@ struct guntypes
 	},
 	{
 		GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		40,		40,		120,100,    1000,	16,		0,		0,		0,		-5,	     5,		0,
+		40,		40,		120,100,    1000,	15,		0,		0,		0,		-5,	     5,		0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"chaingun",	"weapons/chaingun/item",	"weapons/chaingun/vwep"
 	},
@@ -754,6 +754,8 @@ struct fpsent : dynent, fpsstate
 	{
 		freeeditinfo(edit);
 		if(bot) delete bot;
+		if(issound(wschan)) removesound(wschan);
+		wschan = -1;
 	}
 
 	void hitpush(int damage, const vec &dir, fpsent *actor, int gun)

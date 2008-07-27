@@ -305,7 +305,7 @@ struct clientcom : iclientcom
 		}
 
 		console("%s", (centerchat() ? CON_CENTER : 0)|CON_NORMAL, s);
-		playsound(S_CHAT, 0, 255, camera1->o, camera1);
+		playsound(S_CHAT, SND_NOCULL, 255, camera1->o, camera1);
 	}
 
 	void toserver(int flags, char *text)
@@ -688,7 +688,7 @@ struct clientcom : iclientcom
 					if(snd < 0 || snd >= S_MAX) break;
 					fpsent *t = cl.getclient(tcn);
 					if(!t) break;
-					else playsound(snd, 0, 255, t->o, t);
+					playsound(snd, 0, 255, t->o, t);
 					break;
 				}
 
@@ -1496,7 +1496,7 @@ struct clientcom : iclientcom
 				}
 				default: return;
 			}
-			if((d || verbose) && val[0])
+			if(d || verbose)
 				conoutf("\fy%s set %s to %s", d ? cl.colorname(d) : "the server", cmd, val);
 		}
 		else conoutf("\fr%s sent unknown command: %s", d ? cl.colorname(d) : "the server", cmd);

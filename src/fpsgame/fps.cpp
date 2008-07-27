@@ -321,7 +321,7 @@ struct GAMECLIENT : igameclient
 			case MN_INPUT: s = S_MENUPRESS; break;
 			default: break;
 		}
-		if(s >= 0) playsound(s, 0, 255, camera1->o, camera1);
+		if(s >= 0) playsound(s, SND_NOCULL, 255, camera1->o, camera1);
 	}
 
 	fpsent *pointatplayer()
@@ -350,7 +350,6 @@ struct GAMECLIENT : igameclient
 	void checkoften(fpsent *d)
 	{
 		heightoffset(d, d == player1 || d->bot);
-		if(d->wschan >= 0 && !issound(d->wschan)) d->wschan = -1;
 		loopi(GUN_MAX) if(d->gunstate[i] != GUNSTATE_IDLE)
 		{
 			if(d->state != CS_ALIVE || (d->gunstate[i] != GUNSTATE_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
@@ -1620,7 +1619,7 @@ struct GAMECLIENT : igameclient
 				case MAT_WATER:
 				{
 					if(!issound(liquidchan))
-						liquidchan = playsound(S_UNDERWATER, SND_LOOP|SND_NOATTEN|SND_NODELAY, 255, camera1->o, camera1);
+						playsound(S_UNDERWATER, SND_LOOP|SND_NOATTEN|SND_NODELAY|SND_NOCULL, 255, camera1->o, camera1, &liquidchan);
 					break;
 				}
 				default:
