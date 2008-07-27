@@ -979,7 +979,7 @@ struct botclient
 		}
 		if(botdebug() > 3)
 		{
-			vec fr(cl.ws.gunorigin(d->o, d->bot->target, d)),
+			vec fr(cl.ws.gunorigin(d->o, d->bot->target, d, true)),
 				dr(d->bot->target), pos = cl.headpos(d);
 			if(dr.dist(pos) > BOTLOSDIST(d->skill))
 			{

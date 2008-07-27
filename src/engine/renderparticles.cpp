@@ -20,42 +20,7 @@ static bool emit_particles()
     return emit;
 }
 
-enum
-{
-    PT_PART = 0,
-    PT_TAPE,
-    PT_TRAIL,
-    PT_TEXT,
-    PT_TEXTUP,
-    PT_METER,
-    PT_METERVS,
-    PT_FIREBALL,
-    PT_LIGHTNING,
-    PT_FLARE,
-
-    PT_MOD   = 1<<8,
-    PT_RND4  = 1<<9,
-    PT_LERP  = 1<<10, // use very sparingly - order of blending issues
-    PT_TRACK = 1<<11,
-    PT_GLARE = 1<<12,
-};
-
 const char *partnames[] = { "part", "tape", "trail", "text", "textup", "meter", "metervs", "fireball", "lightning", "flare" };
-
-struct particle
-{
-    vec o, d;
-    int fade, millis;
-    bvec color;
-    uchar flags;
-    float size;
-    union
-    {
-        const char *text;         // will call delete[] on this only if it starts with an @
-        float val;
-        physent *owner;
-    };
-};
 
 struct partvert
 {
@@ -86,7 +51,7 @@ struct partrenderer
     virtual void init(int n) { }
     virtual void reset() = NULL;
     virtual void resettracked(physent *owner) { }
-    virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size) = NULL;
+    virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *d = NULL) = NULL;
     virtual void update() { }
     virtual void render() = NULL;
     virtual bool haswork() = NULL;
@@ -105,7 +70,7 @@ struct partrenderer
     {
         o = p->o;
         d = p->d;
-        if(type&PT_TRACK && p->owner) cl->particletrack(p->owner, o, d);
+        if(p->owner) cl->particletrack(p, type, ts, o, d, lastpass); //type&PT_TRACK &&
         if(p->fade <= 5)
         {
             ts = 1;
@@ -115,7 +80,7 @@ struct partrenderer
         {
             ts = lastmillis-p->millis;
             blend = max(255 - (ts<<8)/p->fade, 0);
-            if(grav)
+            if(!p->owner && grav)
             {
                 if(ts > p->fade) ts = p->fade;
                 float t = (float)(ts);
@@ -182,12 +147,12 @@ struct listrenderer : partrenderer
         list = NULL;
     }
 
-    void resettracked(physent *owner)
+    void resettracked(physent *pl)
     {
-        if(!(type&PT_TRACK)) return;
+        //if(!(type&PT_TRACK)) return;
         for(listparticle **prev = &list, *cur = list; cur; cur = *prev)
         {
-            if(!owner || cur->owner==owner)
+            if(cur->owner == pl)
             {
                 *prev = cur->next;
                 cur->next = parempty;
@@ -197,7 +162,7 @@ struct listrenderer : partrenderer
         }
     }
 
-    particle *addpart(const vec &o, const vec &d, int fade, int color, float size)
+    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL)
     {
         if(!parempty)
         {
@@ -216,7 +181,7 @@ struct listrenderer : partrenderer
         p->millis = lastmillis;
         p->color = bvec(color>>16, (color>>8)&0xFF, color&0xFF);
         p->size = size;
-        p->owner = NULL;
+        p->owner = pl;
         return p;
     }
 
@@ -483,13 +448,13 @@ struct varenderer : partrenderer
         lastupdate = -1;
     }
 
-    void resettracked(physent *owner)
+    void resettracked(physent *pl)
     {
-        if(!(type&PT_TRACK)) return;
+        //if(!(type&PT_TRACK)) return;
         loopi(numparts)
         {
             particle *p = parts+i;
-            if(!owner || (p->owner == owner)) p->fade = -1;
+            if(p->owner == pl) p->fade = -1;
         }
         lastupdate = -1;
     }
@@ -506,7 +471,7 @@ struct varenderer : partrenderer
 
     bool usesvertexarray() { return true; }
 
-    particle *addpart(const vec &o, const vec &d, int fade, int color, float size)
+    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL)
     {
         particle *p = parts + (numparts < maxparts ? numparts++ : rnd(maxparts)); //next free slot, or kill a random kitten
         p->o = o;
@@ -515,7 +480,7 @@ struct varenderer : partrenderer
         p->millis = lastmillis;
         p->color = bvec(color>>16, (color>>8)&0xFF, color&0xFF);
         p->size = size;
-        p->owner = NULL;
+        p->owner = pl;
         p->flags = 0x80;
         int offset = p-parts;
         if(type&PT_RND4) p->flags |= detrnd(offset, 4)<<2;
@@ -661,9 +626,9 @@ void cleanupparticles()
     loopi(sizeof(parts)/sizeof(parts[0])) parts[i]->cleanup();
 }
 
-void removetrackedparticles(physent *owner)
+void removetrackedparticles(physent *pl)
 {
-    loopi(sizeof(parts)/sizeof(parts[0])) parts[i]->resettracked(owner);
+    loopi(sizeof(parts)/sizeof(parts[0])) parts[i]->resettracked(pl);
 }
 
 VARP(particleglare, 0, 4, 100);
@@ -695,7 +660,7 @@ void render_particles(int time)
             if(type&PT_LERP) s_strcat(info, "l,");
             if(type&PT_MOD) s_strcat(info, "m,");
             if(type&PT_RND4) s_strcat(info, "r,");
-            if(type&PT_TRACK) s_strcat(info, "t,");
+            //if(type&PT_TRACK) s_strcat(info, "t,");
             if(parts[i]->collide) s_strcat(info, "c,");
             s_sprintfd(ds)("%d\t%s(%s%d) %s", parts[i]->count(), partnames[type&0xFF], info, parts[i]->grav, (title?title:""));
             draw_text(ds, FONTH, (i+n/2)*FONTH);
@@ -788,12 +753,28 @@ void render_particles(int time)
     }
 }
 
-static inline particle *newparticle(const vec &o, const vec &d, int fade, int type, int color, float size)
+static inline particle *newparticle(const vec &o, const vec &d, int fade, int type, int color, float size, physent *pl = NULL)
 {
-    return parts[type]->addpart(o, d, fade, color, size);
+    return parts[type]->addpart(o, d, fade, color, size, pl);
 }
 
 VARP(maxparticledistance, 256, 1024, 4096);
+
+static void create(int type, int color, int fade, const vec &p, float size, physent *pl)
+{
+    if(camera1->o.dist(p) > maxparticledistance) return;
+    float collidez = parts[type]->collide ? p.z - raycube(p, vec(0, 0, -1), COLLIDERADIUS, RAY_CLIPMAT) + COLLIDEERROR : -1;
+    int fmin = 1;
+    int fmax = fade*3;
+	int f = fmin + rnd(fmax); //help deallocater by using fade distribution rather than random
+	newparticle(p, p, f, type, color, size, pl)->val = collidez;
+}
+
+static void regularcreate(int type, int color, int fade, const vec &p, float size, physent *pl, int delay=0)
+{
+    if(!emit_particles() || (delay > 0 && rnd(delay) != 0)) return;
+    create(type, color, fade, p, size, pl);
+}
 
 static void splash(int type, int color, int radius, int num, int fade, const vec &p, float size)
 {
@@ -872,6 +853,29 @@ static inline float partsize(int type)
     return partmaps[type].size * particlesize/100.0f;
 }
 
+void regular_particle_create(int type, int fade, const vec &p, physent *pl, int delay)
+{
+    if(shadowmapping) return;
+    regularcreate(partmaps[type].type, partmaps[type].color, fade, p, partsize(type), pl, delay);
+}
+
+void regular_part_create(int type, int fade, const vec &p, int color, float size, physent *pl, int delay)
+{
+    if(shadowmapping) return;
+    regularcreate(type, color, fade, p, size, pl, delay);
+}
+
+void part_create(int type, int fade, const vec &p, int color, float size, physent *pl)
+{
+    if(shadowmapping || renderedgame) return;
+    create(type, color, fade, p, size, pl);
+}
+
+void particle_create(int type, int fade, const vec &p, physent *pl)
+{
+    part_create(partmaps[type].type, fade, p, partmaps[type].color, partsize(type), pl);
+}
+
 void regular_particle_splash(int type, int num, int fade, const vec &p, int delay)
 {
     if(shadowmapping) return;
@@ -945,15 +949,15 @@ void particle_meter(const vec &s, float val, int type, int fade)
     part_meter(s, val, partmaps[type].type, fade, partmaps[type].color, partmaps[type].size);
 }
 
-void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, physent *owner)
+void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, physent *pl)
 {
     if(shadowmapping || renderedgame) return;
-    newparticle(p, dest, fade, type, color, size)->owner = owner;
+    newparticle(p, dest, fade, type, color, size, pl);
 }
 
-void particle_flare(const vec &p, const vec &dest, int fade, int type, physent *owner)
+void particle_flare(const vec &p, const vec &dest, int fade, int type, physent *pl)
 {
-    part_flare(p, dest, fade, partmaps[type].type, partmaps[type].color, partsize(type), owner);
+    part_flare(p, dest, fade, partmaps[type].type, partmaps[type].color, partsize(type), pl);
 }
 
 void part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size)
@@ -986,7 +990,7 @@ void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fa
     }
 }
 
-void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, float size, physent *owner)
+void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, float size, physent *pl)
 {
     if(shadowmapping || renderedgame) return;
     loopi(amt)
@@ -997,7 +1001,7 @@ void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &
         vec to(rnd(int(w.x*2))-int(w.x), rnd(int(w.y*2))-int(w.y), rnd(int(w.z*2))-int(w.z)+z1);
         to.add(d);
 
-        newparticle(from, to, fade, type, color, size)->owner = owner;
+        newparticle(from, to, fade, type, color, size, pl);
     }
 }
 

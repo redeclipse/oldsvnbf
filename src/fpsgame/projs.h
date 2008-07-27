@@ -15,7 +15,7 @@ struct projectiles
 		if(waited)
 		{
 			findorientation(proj.owner->o, proj.owner->aimyaw, proj.owner->aimpitch, proj.to);
-			proj.o = cl.ws.gunorigin(proj.owner->o, proj.to, proj.owner);
+			proj.o = cl.ws.gunorigin(proj.owner->o, proj.to, proj.owner, proj.owner != cl.player1 || cl.isthirdperson());
 		}
 
 		switch(proj.projtype)
@@ -198,7 +198,7 @@ struct projectiles
 						if(dist < size) return false;
 					}
 				}
-				regularshape(5, int(proj.radius), 0x231008, 21, rnd(5)+1, 100, proj.o, 2.f);
+				regularshape(5, int(proj.radius), 0x231008, 53, rnd(5)+1, 100, proj.o, 2.f);
 			}
 			else if(proj.projtype == PRJ_GIBS)
 				regular_part_splash(0, 1, 10000, proj.o, 0x60FFFF, proj.radius, int(proj.radius), 3);
@@ -348,7 +348,7 @@ struct projectiles
 			{
 				proj.state = CS_DEAD;
 				if(proj.projtype == PRJ_ENT)
-					regularshape(7, int(proj.radius), 0x202020, 21, 20, 500, proj.o, 1.f);
+					regularshape(7, int(proj.radius), 0x202020, 53, 50, 500, proj.o, 1.f);
 				else if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
 					cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.attr1, proj.local);
 			}
@@ -384,7 +384,7 @@ struct projectiles
 					if((proj.lifetime -= qtime) <= 0 || !move(proj, qtime))
 					{
 						if(proj.projtype == PRJ_ENT)
-							regularshape(7, int(proj.radius), 0x202020, 21, 20, 500, proj.o, 1.f);
+							regularshape(7, int(proj.radius), 0x202020, 53, 50, 500, proj.o, 1.f);
 						proj.state = CS_DEAD;
 						break;
 					}
@@ -470,8 +470,13 @@ struct projectiles
 					break;
 #endif
 				case GUN_FLAMER:
-					adddynlight(proj.o, 1.15f*proj.radius, vec(1.1f, 0.22f, 0.02f));
+				{
+					float life = clamp((guntype[proj.attr1].time-proj.lifetime)/float(guntype[proj.attr1].time), 0.05f, 1.0f),
+							size = guntype[proj.attr1].size*min(life*2.f,1.f)*1.15f;
+					vec col(1.1f*max(1.0f-life,0.1f), 0.25f*max(1.0f-life,0.05f), 0.00f);
+					adddynlight(proj.o, size, col);
 					break;
+				}
 				default:
 					break;
 			}

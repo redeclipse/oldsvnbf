@@ -191,7 +191,7 @@ struct stfclient : stfstate
                 if(insideflag(b, d->o) && ((b.owner == d->team && b.enemy) || b.enemy == d->team))
                 {
 					part_trail(6, 1, cl.feetpos(d, 1.f), vec(b.pos).sub(vec(0, 0, 4.f)), teamtype[d->team].colour, 4.8f);
-					regularshape(6, (int)d->height, teamtype[d->team].colour, 21, 3, 50, cl.feetpos(d, 1.f), 4.8f);
+					regularshape(6, (int)d->height, teamtype[d->team].colour, 53, 3, 50, cl.feetpos(d, 1.f), 4.8f);
 					d->lastflag = i;
                 }
             }
@@ -346,7 +346,7 @@ struct stfclient : stfstate
         if(b.owner != owner)
         {
         	int colour = teamtype[owner].colour;
-			regularshape(6, enttype[FLAG].radius, colour, 21, 50, 1000, vec(b.pos).add(vec(0, 0, 4.f)), 4.8f);
+			regularshape(6, enttype[FLAG].radius, colour, 53, 50, 1000, vec(b.pos).add(vec(0, 0, 4.f)), 4.8f);
         }
 		b.owner = owner;
 		b.enemy = enemy;

@@ -1262,15 +1262,19 @@ struct GAMECLIENT : igameclient
 	{
 	}
 
-    void particletrack(physent *owner, vec &o, vec &d)
+    void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass)
     {
-        if(owner->type != ENT_PLAYER) return;
-        float dist = o.dist(d);
-        vecfromyawpitch(owner->yaw, owner->pitch, 1, 0, d);
-        vec pos = headpos(owner);
-        float newdist = raycube(pos, d, dist, RAY_CLIPMAT|RAY_POLY);
-        d.mul(min(newdist, dist)).add(pos);
-        o = ws.gunorigin(owner->o, d, (fpsent *)owner);
+        if(p->owner->type != ENT_PLAYER) return;
+
+        switch(type&0xFF)
+        {
+        	case PT_PART: case PT_TAPE: case PT_FIREBALL: case PT_LIGHTNING: case PT_FLARE:
+        	{
+				o = ws.gunorigin(p->owner->o, d, (fpsent *)p->owner, p->owner != player1 || isthirdperson());
+				break;
+        	}
+        	default: break;
+        }
     }
 
 	void newmap(int size)
@@ -1904,7 +1908,7 @@ struct GAMECLIENT : igameclient
 		if(lasersight() && rendernormally)
 		{
 			renderprimitive(true);
-			vec v(vec(ws.gunorigin(player1->o, worldpos, player1)).add(vec(0, 0, 1)));
+			vec v(vec(ws.gunorigin(player1->o, worldpos, player1, isthirdperson())).add(vec(0, 0, 1)));
 			renderline(v, worldpos, 0.2f, 0.0f, 0.0f, false);
 			renderprimitive(false);
 		}
