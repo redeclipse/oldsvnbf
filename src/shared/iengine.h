@@ -122,28 +122,68 @@ extern void dynlightreaching(const vec &target, vec &color, vec &dir);
 extern vec worldpos, camerapos, camdir, camright, camup;
 
 // renderparticles
+enum
+{
+    PT_PART = 0,
+    PT_TAPE,
+    PT_TRAIL,
+    PT_TEXT,
+    PT_TEXTUP,
+    PT_METER,
+    PT_METERVS,
+    PT_FIREBALL,
+    PT_LIGHTNING,
+    PT_FLARE,
+
+    PT_MOD   = 1<<8,
+    PT_RND4  = 1<<9,
+    PT_LERP  = 1<<10, // use very sparingly - order of blending issues
+    PT_TRACK = 1<<11,
+    PT_GLARE = 1<<12,
+};
+
+
+struct particle
+{
+    vec o, d;
+    int fade, millis;
+    bvec color;
+    uchar flags;
+    float size;
+    union
+    {
+        const char *text;         // will call delete[] on this only if it starts with an @
+        float val;
+    };
+	physent *owner;
+};
+
 extern void render_particles(int time);
-extern void regular_particle_splash(int type, int num, int fade, const vec &p, int delay = 0);
+extern void regular_part_create(int type, int fade, const vec &p, int color, float size = 4.8f, physent *pl = NULL, int delay = 0);
+extern void regular_particle_create(int type, int fade, const vec &p, physent *pl = NULL, int delay = 0);
+extern void part_create(int type, int fade, const vec &p, int color, float size = 4.8f, physent *pl = NULL);
+extern void particle_create(int type, int fade, const vec &p, physent *pl = NULL);
 extern void regular_part_splash(int type, int num, int fade, const vec &p, int color, float size = 4.8f, int radius = 150, int delay = 0);
-
-extern void particle_splash(int type, int num, int fade, const vec &p);
-extern void particle_trail(int type, int fade, const vec &from, const vec &to);
-extern void particle_text(const vec &s, const char *t, int type, int fade = 2000);
-extern void particle_meter(const vec &s, float val, int type, int fade = 1);
-extern void particle_flare(const vec &p, const vec &dest, int fade, int type = 10, physent *owner = NULL);
-extern void particle_fireball(const vec &dest, float maxsize, int type, int fade = -1);
-
+extern void regular_particle_splash(int type, int num, int fade, const vec &p, int delay = 0);
 extern void part_splash(int type, int num, int fade, const vec &p, int color, float size = 4.8f);
+extern void particle_splash(int type, int num, int fade, const vec &p);
+
 extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, float size = 4.8f);
+extern void particle_trail(int type, int fade, const vec &from, const vec &to);
 extern void part_text(const vec &s, const char *t, int type, int fade, int color, float size = 4.8f);
+extern void particle_text(const vec &s, const char *t, int type, int fade = 2000);
 extern void part_meter(const vec &s, float val, int type, int fade, int color, float size = 4.8f);
-extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size = 4.8f, physent *owner = NULL);
+extern void particle_meter(const vec &s, float val, int type, int fade = 1);
+extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size = 4.8f, physent *pl = NULL);
+extern void particle_flare(const vec &p, const vec &dest, int fade, int type = 10, physent *pl = NULL);
 extern void regular_part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size = 4.8f);
 extern void part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size = 4.8f);
-extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color, float size = 4.8f);
-extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, float size = 4.8f, physent *owner = NULL);
+extern void particle_fireball(const vec &dest, float maxsize, int type, int fade = -1);
 
-extern void removetrackedparticles(physent *owner = NULL);
+extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color, float size = 4.8f);
+extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, float size = 4.8f, physent *pl = NULL);
+
+extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;
 
 void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size);

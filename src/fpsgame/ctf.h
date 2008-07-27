@@ -419,7 +419,7 @@ struct ctfclient : ctfstate
     {
 		flag &f = flags[i];
 		int colour = teamtype[f.team].colour;
-		regularshape(6, enttype[FLAG].radius, colour, 21, 50, 1000, vec(loc).add(vec(0, 0, 4.f)), 4.8f);
+		regularshape(6, enttype[FLAG].radius, colour, 53, 50, 1000, vec(loc).add(vec(0, 0, 4.f)), 4.8f);
 		adddynlight(loc, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
     }
 
@@ -484,7 +484,7 @@ struct ctfclient : ctfstate
         if(!flags.inrange(i)) return;
 		flag &f = flags[i];
 		int colour = teamtype[d->team].colour;
-		regularshape(6, enttype[FLAG].radius, colour, 21, 50, 1000, vec(f.pos()).add(vec(0, 0, 4.f)), 4.8f);
+		regularshape(6, enttype[FLAG].radius, colour, 53, 50, 1000, vec(f.pos()).add(vec(0, 0, 4.f)), 4.8f);
 		adddynlight(f.pos(), enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
 		f.interptime = lastmillis;
 		s_sprintfd(s)("%s %s the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);

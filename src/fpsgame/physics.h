@@ -470,7 +470,7 @@ struct physics
 				{ \
 					mf; \
 					int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
-					regularshape(mz, int(pl->height), icol, 21, rnd(20)+1, 100, v, mz == 4 ? 4.f : 1.f); \
+					regularshape(mz, int(pl->height), icol, 53, rnd(20)+1, 100, v, mz == 4 ? 8.f : 1.f); \
 					if(mw>=0) playsound(mw, 0, 255, pl->o, pl); \
 				}
 
@@ -481,7 +481,7 @@ struct physics
 
 				if(int(material&MATF_VOLUME) == MAT_LAVA || int(pl->inmaterial&MATF_VOLUME) == MAT_LAVA)
 				{
-					mattrig(getlavacolour(col), 4, int(material&MATF_VOLUME) != MAT_LAVA ? -1 : S_FLBURNING);
+					mattrig(getlavacolour(col), 7, int(material&MATF_VOLUME) != MAT_LAVA ? -1 : S_FLBURNING);
 				}
 			}
 

@@ -170,14 +170,24 @@ struct weaponstate
 		}
 	}
 
-	vec gunorigin(const vec &from, const vec &to, fpsent *d)
+	vec gunorigin(const vec &from, const vec &to, fpsent *d, bool third)
 	{
-		bool third = d != cl.player1 || cl.isthirdperson();
-		float hoff = third ? 0.865f : 0.895f, roff = third ? 0.355f : 0.36f;
+		bool oversized = d->gunselect == GUN_SG || d->gunselect == GUN_FLAMER || d->gunselect == GUN_RIFLE;
+		float hoff = 0.f, roff = 0.f, dmul = oversized ? 3.f : 2.f;
+		if(third)
+		{
+			hoff = oversized ? 0.885f : 0.865f;
+			roff = oversized ? 0.335f : 0.355f;
+		}
+		else
+		{
+			hoff = oversized ? 0.915f : 0.895f;
+			roff = oversized ? 0.34f : 0.36f;
+		}
 		vec offset(from);
 		vec front, right;
 		vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
-		front.mul(d->radius*2.f);
+		front.mul(d->radius*dmul);
 		offset.add(front);
 		offset.z += (d->aboveeye + d->height)*hoff - d->height;
 		vecfromyawpitch(d->yaw, 0, 0, -1, right);
@@ -204,12 +214,14 @@ struct weaponstate
 			{
 				loopi(SGRAYS)
 				{
+					vec pos(from);
+					pos.add(vec(sg[i]).sub(from).normalize().mul(1.5f));
 					particle_splash(0, 20, 250, sg[i]);
                     particle_flare(from, sg[i], 300, 10, d);
+					part_create(4, 100, pos, 0xFFAA00, 1.5f, d);
                     if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
-				adddynlight(from, 75, vec(1.1f, 0.66f, 0.22f), 100, 0, DL_FLASH);
-				regular_part_splash(4, 1, 100, from, 0xFFBB00, 3.f, 2);
+				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 100, 0, DL_FLASH);
 				break;
 			}
 
@@ -219,8 +231,8 @@ struct weaponstate
 				particle_splash(0, 200, 250, to);
                 particle_flare(from, to, 600, 10, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
-                adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				regular_part_splash(4, 1, 50, from, 0xFFAA00, 1.5f, 2);
+                adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
+				part_create(4, 50, from, 0xFFAA00, 1.5f, d);
 				break;
 			}
 
@@ -233,7 +245,7 @@ struct weaponstate
 				int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
 				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, WEAPON, gun);
 				if(gun == GUN_FLAMER)
-					adddynlight(from, 100, vec(1.1f, 0.33f, 0.01f), 200, 0, DL_FLASH);
+					adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 500, 0, DL_FLASH);
 				break;
 			}
 
@@ -242,8 +254,8 @@ struct weaponstate
 				particle_splash(0, 200, 250, to);
 				particle_trail(21, 500, from, to);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
-                adddynlight(from, 75, vec(1.1f, 0.88f, 0.44f), 200, 0, DL_FLASH);
-				regular_part_splash(4, 1, 200, from, 0xFFFFFF, 3.f, 2);
+                adddynlight(from, 50, vec(1.1f, 0.88f, 0.44f), 50, 0, DL_FLASH);
+				part_create(4, 200, from, 0xFFFFFF, 3.f, d);
 				break;
 			}
 		}
@@ -355,7 +367,7 @@ struct weaponstate
 		d->setgunstate(d->gunselect, GUNSTATE_SHOOT, guntype[d->gunselect].adelay, lastmillis);
 		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
 
-		vec to = targ, from = gunorigin(d->o, to, d), unitv;
+		vec to = targ, from = gunorigin(d->o, to, d, d != cl.player1 || cl.isthirdperson()), unitv;
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		vec kickback(unitv);

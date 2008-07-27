@@ -68,7 +68,7 @@ struct igameclient
     virtual void g3d_gamemenus() = 0;
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}
     virtual void adddynlights() {}
-    virtual void particletrack(physent *owner, vec &o, vec &d) {}
+    virtual void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass) {}
 
 	virtual bool gethudcolour(vec &colour) { return false; }
 
