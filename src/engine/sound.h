@@ -32,26 +32,36 @@ struct sound
 	physent *owner;
 	int vol, curvol, curpan;
 	int flags, maxrad, minrad;
-	float dist;
-	bool inuse, map;
-	int millis;
+	int millis, ends, slotnum, chan, *hook;
 
-	sound() : slot(NULL), owner(NULL),
-		vol(255), curvol(255), curpan(127), flags(0),
-			maxrad(0), minrad(0), dist(0.f), inuse(false), millis(0) {}
+	sound() : hook(NULL) { reset(); }
 	~sound() {}
+
+	void reset()
+	{
+		slot = NULL;
+		owner = NULL;
+		vol = curvol = 255;
+		curpan = 127;
+		flags = maxrad = minrad = millis = ends = slotnum = 0;
+		chan = -1;
+		if(hook) *hook = -1;
+		hook = NULL;
+	}
 };
 
 #define SND_LOOP	0x0001
 #define SND_MAP		0x0002
-#define SND_NOATTEN	0x0004	// disable attenuation
-#define SND_NODELAY	0x0008	// disable delay
+
+#define SND_NOATTEN	0x0010	// disable attenuation
+#define SND_NODELAY	0x0020	// disable delay
+#define SND_NOCULL	0x0040	// disable culling
 
 extern hashtable<const char *, soundsample> soundsamples;
 extern vector<soundslot> gamesounds, mapsounds;
 extern vector<sound> sounds;
 
-#define issound(c) (sounds.inrange(c) && sounds[c].inuse)
+#define issound(c) (sounds.inrange(c) && sounds[c].chan >= 0 && Mix_Playing(c))
 
 extern void initsound();
 extern void stopsound();
@@ -59,7 +69,7 @@ extern void updatesounds();
 extern int addsound(const char *name, int vol, int material, vector<soundslot> &sounds);
 extern void removesound(int c);
 extern void clearsound();
-extern int playsound(int n, int flags, int vol, vec &pos, physent *d = NULL, int maxrad = 1024, int minrad = 2);
+extern int playsound(int n, int flags, int vol, vec &pos, physent *d = NULL, int *hook = NULL, int ends = 0, int maxrad = 1024, int minrad = 2);
 extern void removetrackedsounds(physent *d);
 
 extern void initmumble();

@@ -49,15 +49,15 @@ struct projectiles
 #endif
 					case GUN_FLAMER:
 					{
-						proj.height = proj.radius = guntype[proj.attr1].size*0.1f;
+						proj.height = proj.radius = guntype[proj.attr1].size*0.05f;
 						proj.aboveeye = guntype[proj.attr1].offset;
 						proj.elasticity = guntype[proj.attr1].elasticity;
 						proj.relativity = guntype[proj.attr1].relativity;
 						proj.waterfric = guntype[proj.attr1].waterfric;
 						proj.weight = guntype[proj.attr1].weight;
-						vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
-						if(v.magnitude()>50) v.div(50);
-						v.z /= 3.f;
+						vec v(rnd(81)-40, rnd(81)-40, rnd(81)-50);
+						if(v.magnitude()>40) v.div(40);
+						v.z /= 2.f;
 						proj.to.add(v);
 						break;
 					}
@@ -176,15 +176,15 @@ struct projectiles
 		{
 			if(proj.projtype == PRJ_SHOT)
 			{
-				float life = clamp(((guntype[proj.attr1].time-proj.lifetime)*2.f)/float(guntype[proj.attr1].time), 0.1f, 1.0f),
-						size = guntype[proj.attr1].size*life;
+				float life = clamp((guntype[proj.attr1].time-proj.lifetime)/float(guntype[proj.attr1].time), 0.05f, 1.0f),
+						size = guntype[proj.attr1].size*min(life*2.f,1.f);
 
 				if(guntype[proj.attr1].fsound >= 0 && !issound(proj.schan))
-					proj.schan = playsound(guntype[proj.attr1].fsound, 0, proj.attr1 == GUN_FLAMER ? int(255*life) : 255, proj.o, &proj);
+					playsound(guntype[proj.attr1].fsound, 0, proj.attr1 == GUN_FLAMER ? int(255*life) : 255, proj.o, &proj, &proj.schan);
 
 				if(proj.attr1 == GUN_FLAMER)
 				{
-					int col = ((int(250*(1.0f-life))<<16)+1)|((int(80*(1.0f-life))+1)<<8);
+					int col = ((int(254*max(1.0f-life,0.1f))<<16)+1)|((int(64*max(1.0f-life,0.05f))+1)<<8);
 					loopi(rnd(5)+1)
 						regular_part_splash(4, 1, 50, proj.o, col, size, int(proj.radius), 2);
 
@@ -219,7 +219,8 @@ struct projectiles
 		bool water = isliquid(mat&MATF_VOLUME);
 		float secs = float(qtime) / 1000.0f;
 		vec old(proj.o);
-		if(proj.weight > 0.f) proj.vel.sub(vec(0, 0, cl.ph.gravityforce(&proj)*secs));
+		if(proj.weight > 0.f)
+			proj.vel.z -=  cl.ph.gravityforce(&proj)*secs;
 		vec dir(proj.vel);
 
 		if(water)
@@ -234,14 +235,19 @@ struct projectiles
 		dir.mul(secs);
 		proj.o.add(dir);
 
-		if(!collide(&proj, dir) || inside || (proj.projtype != PRJ_ENT && hitplayer))
+		bool playercol = proj.projtype != PRJ_ENT;
+		if(!collide(&proj, dir, 0.f, playercol) || inside || (playercol && hitplayer))
 		{
 			proj.o = old;
+			vec pos;
+			if(playercol && hitplayer)
+				pos = vec(vec(hitplayer->o).sub(proj.o)).normalize();
+			else pos = wall;
 
 			if(proj.projtype == PRJ_GIBS || proj.projtype == PRJ_DEBRIS || proj.projtype == PRJ_ENT ||
 				(proj.projtype == PRJ_SHOT && (proj.attr1 == GUN_GL || (proj.attr1 == GUN_FLAMER && !hitplayer))))
 			{
-				if(proj.movement > 2.0f)
+				if(proj.movement > 1.f)
 				{
 					int mag = int(proj.vel.magnitude()), vol = clamp(mag*10, 1, 255);
 
@@ -252,24 +258,25 @@ struct projectiles
 
 					if(vol)
 					{
-						if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].rsound >= 0) playsound(guntype[proj.attr1].rsound, 0, vol, proj.o, &proj);
-						else if(proj.projtype == PRJ_GIBS) playsound(S_SPLAT, 0, vol, proj.o, &proj);
-						else if(proj.projtype == PRJ_DEBRIS) playsound(S_DEBRIS, 0, vol, proj.o, &proj);
+						if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].rsound >= 0)
+							playsound(guntype[proj.attr1].rsound, 0, vol, proj.o, &proj);
+						else if(proj.projtype == PRJ_GIBS)
+							playsound(S_SPLAT, 0, vol, proj.o, &proj);
+						else if(proj.projtype == PRJ_DEBRIS)
+							playsound(S_DEBRIS, 0, vol, proj.o, &proj);
 					}
 				}
 				if(proj.elasticity > 0.f)
 				{
-					vec pos;
-					if(hitplayer)
-						pos = vec(vec(proj.o).sub(hitplayer->o)).neg().normalize();
-					else pos = wall;
 					proj.vel.apply(pos, proj.elasticity);
-					if(hitplayer) proj.vel.apply(hitplayer->vel, proj.elasticity);
+					if(playercol && hitplayer)
+						proj.vel.apply(hitplayer->vel, proj.elasticity*proj.relativity*0.1f);
 				}
+				else proj.vel = vec(0, 0, 0);
 				proj.movement = 0;
 				return true; // stay alive until timeout
 			}
-			proj.vel = vec(vec(proj.o).sub(wall)).normalize().mul(proj.radius);
+			proj.vel = vec(pos).mul(proj.radius);
 			proj.movement = 0;
 			return false; // die on impact
 		}
@@ -413,44 +420,6 @@ struct projectiles
 		to.normalize();
 		to.add(p);
 		create(p, to, true, d, type, rnd(3000)+1000, 0, rnd(30)+10, -1);
-	}
-
-	void useeffects(fpsent *d, fpsent *f)
-	{
-		loopv(projs) if(projs[i]->projtype == PRJ_ENT && projs[i]->ent == WEAPON && projs[i]->owner && projs[i]->owner == f)
-		{
-			projent &proj = *projs[i];
-			const char *item = cl.et.itemname(proj.ent, proj.attr1, proj.attr2);
-			if(item && (d != cl.player1 || cl.isthirdperson()))
-				particle_text(d->abovehead(), item, 15);
-			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
-			int dropped = d->useitem(lastmillis, false, proj.ent, proj.attr1, proj.attr2);
-			if(isgun(dropped) && !m_noitems(cl.gamemode, cl.mutators))
-				dropgun(d, dropped, (d->gunwait[dropped]/2)-50);
-			proj.beenused = true;
-			proj.state = CS_DEAD;
-			return;
-		}
-	}
-
-	bool usecheck(fpsent *d, vec &m, float eye)
-	{
-		int n = -1;
-		loopv(projs) if(projs[i]->projtype == PRJ_ENT && projs[i]->ent == WEAPON && projs[i]->state != CS_DEAD && projs[i]->owner && projs[i]->waittime <= 0)
-		{
-			projent &proj = *projs[i];
-			if(!projs[i]->beenused && insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius)
-				&& d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis)
-				&& (!projs.inrange(n) || proj.o.dist(m) < projs[n]->o.dist(m)))
-					n = i;
-		}
-		if(projs.inrange(n))
-		{
-			projs[n]->beenused = true; // even if we didn't get it
-			cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, -1, projs[n]->owner->clientnum);
-			return true;
-		}
-		return false;
 	}
 
 	void render()

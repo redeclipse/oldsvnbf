@@ -190,8 +190,12 @@ struct weaponstate
 	{
 		int pow = guntype[gun].power ? power : 100;
 
-		if(gun == GUN_FLAMER && !issound(d->wschan))
-			d->wschan = playsound(guntype[gun].sound, 0, 255, d->o, d);
+		if(gun == GUN_FLAMER)
+		{
+			int ends = lastmillis + d->gunwait[gun];
+			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
+			else playsound(guntype[gun].sound, SND_LOOP, 255, d->o, d, &d->wschan, ends);
+		}
 		else playsound(guntype[gun].sound, 0, 255, d->o, d);
 
 		switch(gun)
@@ -204,8 +208,8 @@ struct weaponstate
                     particle_flare(from, sg[i], 300, 10, d);
                     if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
-				adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
-				playsound(guntype[gun].sound, 0, 255, d->o, d);
+				adddynlight(from, 75, vec(1.1f, 0.66f, 0.22f), 100, 0, DL_FLASH);
+				regular_part_splash(4, 1, 100, from, 0xFFBB00, 3.f, 2);
 				break;
 			}
 
@@ -215,7 +219,8 @@ struct weaponstate
 				particle_splash(0, 200, 250, to);
                 particle_flare(from, to, 600, 10, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
-                adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 40, 0, DL_FLASH);
+                adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
+				regular_part_splash(4, 1, 50, from, 0xFFAA00, 1.5f, 2);
 				break;
 			}
 
@@ -223,20 +228,24 @@ struct weaponstate
 			case GUN_RL:
 #endif
 			case GUN_FLAMER:
-                adddynlight(from, 40, vec(1.1f, 0.33f, 0.01f), 40, 0, DL_FLASH);
 			case GUN_GL:
 			{
 				int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
 				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, WEAPON, gun);
+				if(gun == GUN_FLAMER)
+					adddynlight(from, 100, vec(1.1f, 0.33f, 0.01f), 200, 0, DL_FLASH);
 				break;
 			}
 
 			case GUN_RIFLE:
+			{
 				particle_splash(0, 200, 250, to);
 				particle_trail(21, 500, from, to);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
-                adddynlight(from, 40, vec(1.1f, 0.88f, 0.44f), 40, 0, DL_FLASH);
+                adddynlight(from, 75, vec(1.1f, 0.88f, 0.44f), 200, 0, DL_FLASH);
+				regular_part_splash(4, 1, 200, from, 0xFFFFFF, 3.f, 2);
 				break;
+			}
 		}
 	}
 

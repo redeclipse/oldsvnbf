@@ -1974,7 +1974,7 @@ struct GAMESERVER : igameserver
 					}
 					default: return;
 				}
-				if(val[0]) sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, cmd, val);
+				sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, cmd, val);
 			}
 		}
 		else srvoutf(ci->clientnum, "\frunknown command: %s", cmd);
@@ -2052,7 +2052,7 @@ struct GAMESERVER : igameserver
 					}
 					default: break;
 				}
-				if(cmd[0] && val[0])
+				if(cmd[0])
 				{
 					putint(p, SV_COMMAND);
 					putint(p, -1);

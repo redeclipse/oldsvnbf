@@ -124,7 +124,7 @@ struct entities : icliententities
 					fpsentity &e = (fpsentity &)*ents[i];
 					if(e.type == ANNOUNCER)
 					{
-						playsound(idx, 0, e.attr3, e.o, NULL, e.attr1, e.attr2);
+						playsound(idx, 0, e.attr3, e.o, NULL, NULL, 0, e.attr1, e.attr2);
 						announcer = true;
 					}
 				}
@@ -149,7 +149,7 @@ struct entities : icliententities
 							case 12:	v = vec(getworldsize(), 0, 0); break;
 							default:	v = vec(0.5f*getworldsize(), 0.5f*getworldsize(), 0.5f*getworldsize()); break;
 						}
-						playsound(idx, 0, 255, v, NULL, getworldsize()*3/4, 0);
+						playsound(idx, 0, 255, v, NULL, NULL, 0, getworldsize()*5/4, 0);
 					}
 				}
 				lastannouncement = lastmillis;
@@ -181,7 +181,25 @@ struct entities : icliententities
 		else if(o >= 0)
 		{
 			fpsent *f = cl.getclient(o);
-			if(f) cl.pj.useeffects(d, f);
+			if(f)
+			{
+				loopv(cl.pj.projs)
+				{
+					projent &proj = *cl.pj.projs[i];
+					if(proj.projtype != PRJ_ENT || proj.ent != WEAPON || !proj.owner || proj.owner != f)
+						continue;
+					const char *item = itemname(proj.ent, proj.attr1, proj.attr2);
+					if(item && (d != cl.player1 || cl.isthirdperson()))
+						particle_text(d->abovehead(), item, 15);
+					playsound(S_ITEMPICKUP, 0, 255, d->o, d);
+					int dropped = d->useitem(lastmillis, false, proj.ent, proj.attr1, proj.attr2);
+					if(isgun(dropped) && !m_noitems(cl.gamemode, cl.mutators))
+						cl.pj.dropgun(d, dropped, (d->gunwait[dropped]/2)-50);
+					proj.beenused = true;
+					proj.state = CS_DEAD;
+					return;
+				}
+			}
 		}
 	}
 
@@ -209,11 +227,14 @@ struct entities : icliententities
 					{
 						case MAPSOUND:
 						{
-							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && mapsounds.inrange(f.attr1) && !issound(f.schan))
+							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && mapsounds.inrange(f.attr1))
 							{
-								playsound(f.attr1, SND_MAP, f.attr4, both ? f.o : e.o, NULL, f.attr2, f.attr3);
-								f.lastemit = lastmillis;
-								if(both) e.lastemit = lastmillis;
+								if(!issound(f.schan))
+								{
+									playsound(f.attr1, SND_MAP, f.attr4, both ? f.o : e.o, NULL, &f.schan, 0, f.attr2, f.attr3);
+									f.lastemit = lastmillis;
+									if(both) e.lastemit = lastmillis;
+								}
 							}
 							break;
 						}
@@ -358,55 +379,128 @@ struct entities : icliententities
 		}
 	}
 
+	enum { ITEM_ENT = 0, ITEM_PROJ, ITEM_MAX };
+	struct actitem
+	{
+		int type, target;
+		float score;
+
+		actitem() : type(ITEM_ENT), target(-1), score(0.f) {}
+		~actitem() {}
+	};
+
 	void checkitems(fpsent *d)
 	{
 		float eye = d->height*0.5f;
 		vec m = d->o;
 		m.z -= eye;
+		vector<actitem> actitems;
 
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-			if(e.type <= NOTUSED || e.type >= MAXENTTYPES || enttype[e.type].usetype != EU_AUTO)
+			if(e.type <= NOTUSED || e.type >= MAXENTTYPES || enttype[e.type].usetype == EU_NONE)
 				continue;
 			if(!insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
 				continue;
 
-			bool activate = false;
-
-			if(e.type != TRIGGER) activate = true;
-			else if(e.spawned || !e.attr4)
+			switch(enttype[e.type].usetype)
 			{
-				switch(e.attr3)
+				case EU_AUTO:
 				{
-					case TA_AUTO: activate = true; break;
-					case TA_ACT:
+					bool activate = false;
+					if(e.type != TRIGGER) activate = true;
+					else if(e.spawned || !e.attr4)
 					{
-						if(d->useaction) activate = true;
+						switch(e.attr3)
+						{
+							case TA_AUTO: activate = true; break;
+							case TA_ACT:
+							{
+								if(!d->useaction) break;
+								actitem &t = actitems.add();
+								t.type = ITEM_ENT;
+								t.target = i;
+								t.score = m.dist(e.o);
+								break;
+							}
+							default: break;
+						}
+					}
+					if(activate) reaction(i, d);
+					break;
+				}
+				case EU_ITEM:
+				{
+					if(!d->useaction || !e.spawned) break;
+					actitem &t = actitems.add();
+					t.type = ITEM_ENT;
+					t.target = i;
+					t.score = m.dist(e.o);
+					break;
+				}
+				default: break;
+			}
+		}
+		if(d->useaction)
+		{
+			loopv(cl.pj.projs)
+			{
+				projent &proj = *cl.pj.projs[i];
+				if(proj.projtype != PRJ_ENT || proj.ent != WEAPON)
+					continue;
+				if(proj.state == CS_DEAD || !proj.owner || proj.waittime > 0)
+					continue;
+				if(!insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius))
+					continue;
+				actitem &t = actitems.add();
+				t.type = ITEM_PROJ;
+				t.target = i;
+				t.score = m.dist(proj.o);
+			}
+
+			int closest = -1;
+			loopv(actitems)
+				if(!actitems.inrange(closest) || actitems[i].score < actitems[closest].score)
+					closest = i;
+
+			if(actitems.inrange(closest))
+			{
+				actitem &t = actitems[closest];
+				switch(t.type)
+				{
+					case ITEM_ENT:
+					{
+						extentity &e = *ents[t.target];
+						if(enttype[e.type].usetype == EU_ITEM)
+						{
+							if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
+							{
+								e.spawned = false;
+								cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, t.target, -1);
+							}
+							else cl.playsoundc(S_DENIED, d);
+						}
+						else if(enttype[e.type].usetype == EU_AUTO)
+							reaction(t.target, d);
+						else cl.playsoundc(S_DENIED, d);
+						break;
+					}
+					case ITEM_PROJ:
+					{
+						projent &proj = *cl.pj.projs[t.target];
+						if(d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis))
+						{
+							proj.beenused = true;
+							cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, -1, proj.owner->clientnum);
+						}
+						else cl.playsoundc(S_DENIED, d);
 						break;
 					}
 					default: break;
 				}
+				d->useaction = false;
 			}
-			if(activate) reaction(i, d);
-		}
-
-		if(d->useaction)
-		{ // difference here is the client requests it and gets the closest one
-			int n = -1;
-			loopv(ents)
-			{
-				extentity &e = *ents[i];
-				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-				if(enttype[e.type].usetype != EU_ITEM || !e.spawned) continue;
-				if(insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius)
-					&& d->canuse(e.type, e.attr1, e.attr2, lastmillis)
-					&& (!ents.inrange(n) || e.o.dist(m) < ents[n]->o.dist(m)))
-						n = i;
-			}
-			if(ents.inrange(n)) cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, n, -1);
-			else if(!cl.pj.usecheck(d, m, eye)) cl.playsoundc(S_DENIED, d);
-			d->useaction = false;
 		}
 		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
 	}
@@ -1126,11 +1220,13 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			fpsentity &e = (fpsentity &)*ents[i];
-			if(!issound(e.schan) && e.schan >= 0) e.schan = -1;
-			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1) && !issound(e.schan))
+			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1))
 			{
-				e.schan = playsound(e.attr1, SND_MAP|SND_LOOP, e.attr4, e.o, NULL, e.attr2, e.attr3);
-				e.lastemit = lastmillis; // prevent clipping when moving around
+				if(!issound(e.schan))
+				{
+					playsound(e.attr1, SND_MAP|SND_LOOP, e.attr4, e.o, NULL, &e.schan, 0, e.attr2, e.attr3);
+					e.lastemit = lastmillis; // prevent clipping when moving around
+				}
 			}
 		}
 	}
