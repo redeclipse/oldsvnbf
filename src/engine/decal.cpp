@@ -25,7 +25,7 @@ enum
     DF_ADD        = 1<<4
 };
 
-VARFP(maxdecaltris, 1, 16384, INT_MAX-1, initdecals());
+VARFP(maxdecaltris, 1, 4096, INT_MAX-1, initdecals());
 VARP(decalfade, 1000, 60000, INT_MAX-1);
 VAR(dbgdec, 0, 0, 1);
 
