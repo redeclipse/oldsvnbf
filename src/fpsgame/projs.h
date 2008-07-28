@@ -198,7 +198,7 @@ struct projectiles
 						if(dist < size) return false;
 					}
 				}
-				regularshape(5, int(proj.radius), 0x231008, 53, rnd(5)+1, 100, proj.o, 2.f);
+				regularshape(5, int(proj.radius), 0x443322, 21, rnd(5)+1, 100, proj.o, 2.f);
 			}
 			else if(proj.projtype == PRJ_GIBS)
 				regular_part_splash(0, 1, 10000, proj.o, 0x60FFFF, proj.radius, int(proj.radius), 3);
@@ -247,9 +247,9 @@ struct projectiles
 			if(proj.projtype == PRJ_GIBS || proj.projtype == PRJ_DEBRIS || proj.projtype == PRJ_ENT ||
 				(proj.projtype == PRJ_SHOT && (proj.attr1 == GUN_GL || (proj.attr1 == GUN_FLAMER && !hitplayer))))
 			{
-				if(proj.movement > 1.f)
+				if(proj.movement > 2.f)
 				{
-					int mag = int(proj.vel.magnitude()), vol = clamp(mag*10, 1, 255);
+					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 1, 255);
 
 					if(proj.projtype == PRJ_GIBS)
 						part_splash(0, 1, 10000, proj.o, 0x60FFFF, proj.radius);
@@ -348,7 +348,7 @@ struct projectiles
 			{
 				proj.state = CS_DEAD;
 				if(proj.projtype == PRJ_ENT)
-					regularshape(7, int(proj.radius), 0x202020, 53, 50, 500, proj.o, 1.f);
+					regularshape(7, int(proj.radius), 0x888822, 21, 50, 100, proj.o, 1.f);
 				else if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
 					cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.attr1, proj.local);
 			}
@@ -384,7 +384,7 @@ struct projectiles
 					if((proj.lifetime -= qtime) <= 0 || !move(proj, qtime))
 					{
 						if(proj.projtype == PRJ_ENT)
-							regularshape(7, int(proj.radius), 0x202020, 53, 50, 500, proj.o, 1.f);
+							regularshape(7, int(proj.radius), 0x888822, 21, 50, 100, proj.o, 1.f);
 						proj.state = CS_DEAD;
 						break;
 					}

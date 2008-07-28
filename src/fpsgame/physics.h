@@ -466,22 +466,22 @@ struct physics
 			if(isliquid(material&MATF_VOLUME) || isliquid(pl->inmaterial&MATF_VOLUME))
 			{
 				uchar col[3] = { 255, 255, 255 };
-				#define mattrig(mf,mz,mw) \
+				#define mattrig(mf,mz,mt,ms,mw) \
 				{ \
 					mf; \
 					int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
-					regularshape(mz, int(pl->height), icol, 53, rnd(20)+1, 100, v, mz == 4 ? 8.f : 1.f); \
+					regularshape(mz, int(pl->height), icol, 21, 50, mt, v, ms); \
 					if(mw>=0) playsound(mw, 0, 255, pl->o, pl); \
 				}
 
 				if(int(material&MATF_VOLUME) == MAT_WATER || int(pl->inmaterial&MATF_VOLUME) == MAT_WATER)
 				{
-					mattrig(getwatercolour(col), 6, int(material&MATF_VOLUME) != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+					mattrig(getwatercolour(col), 6, 250, 1.f, int(material&MATF_VOLUME) != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
 				}
 
 				if(int(material&MATF_VOLUME) == MAT_LAVA || int(pl->inmaterial&MATF_VOLUME) == MAT_LAVA)
 				{
-					mattrig(getlavacolour(col), 7, int(material&MATF_VOLUME) != MAT_LAVA ? -1 : S_FLBURNING);
+					mattrig(getlavacolour(col), 4, 1000, 8.f, int(material&MATF_VOLUME) != MAT_LAVA ? -1 : S_FLBURNING);
 				}
 			}
 
