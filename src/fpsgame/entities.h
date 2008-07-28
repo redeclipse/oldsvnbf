@@ -1306,7 +1306,7 @@ struct entities : icliententities
 
 				particle_text(vec(e.o).add(vec(0, 0, 2)),
 					findname(e.type), entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
-				renderradius(e.o, 1, 1, 1, false);
+				part_create(3, 1, e.o, 0xFFFFFF, 1.f);
 			}
 		}
 	}

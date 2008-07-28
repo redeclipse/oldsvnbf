@@ -63,7 +63,7 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
 struct lightningrenderer : listrenderer
 {
     lightningrenderer()
-        : listrenderer("textures/lightning", PT_LIGHTNING|PT_GLARE, 0, 0)
+        : listrenderer("particles/lightning", PT_LIGHTNING|PT_GLARE, 0, 0)
     {}
 
     void startrender()
