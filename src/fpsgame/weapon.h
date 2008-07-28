@@ -202,7 +202,7 @@ struct weaponstate
 
 		if(gun == GUN_FLAMER)
 		{
-			int ends = lastmillis + d->gunwait[gun];
+			int ends = lastmillis+(d->gunwait[gun]*2);
 			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
 			else playsound(guntype[gun].sound, SND_LOOP, 255, d->o, d, &d->wschan, ends);
 		}
@@ -218,9 +218,9 @@ struct weaponstate
                     particle_flare(from, sg[i], 300, 10, d);
                     if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
-				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 100, 0, DL_FLASH);
-				part_create(19+rnd(3), 100, from, 0xFFAA00, 2.4f, d);
-				part_splash(2, rnd(5)+1, 100, from, 0x111111, 1.2f);
+				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
+				part_create(19+rnd(3), 50, from, 0xFFAA00, 2.5f, d);
+				part_splash(2, rnd(5)+1, 100, from, 0x111111, 1.0f);
 				break;
 			}
 
@@ -231,8 +231,8 @@ struct weaponstate
                 particle_flare(from, to, 600, 10, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
                 adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				part_create(19+rnd(3), 50, from, 0xFFAA00, 1.2f, d);
-				part_splash(2, rnd(5)+1, 100, from, 0x111111, 0.6f);
+				part_create(19+rnd(3), 50, from, 0xFFAA00, 1.5f, d);
+				part_splash(2, rnd(5)+1, 75, from, 0x111111, 0.5f);
 				break;
 			}
 
@@ -245,7 +245,7 @@ struct weaponstate
 				int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
 				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, WEAPON, gun);
 				if(gun == GUN_FLAMER)
-					adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 500, 0, DL_FLASH);
+					adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
 				break;
 			}
 
@@ -255,8 +255,8 @@ struct weaponstate
 				particle_trail(21, 500, from, to);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
                 adddynlight(from, 50, vec(1.1f, 0.88f, 0.44f), 50, 0, DL_FLASH);
-				part_create(2, 200, from, 0xFFFFFF, 2.4f, d);
-				part_splash(2, rnd(5)+1, 100, from, 0x111111, 1.2f);
+				part_create(2, 100, from, 0xFFFFFF, 2.5f, d);
+				part_splash(2, rnd(5)+1, 100, from, 0x111111, 1.0f);
 				break;
 			}
 		}
