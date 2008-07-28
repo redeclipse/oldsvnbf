@@ -146,7 +146,7 @@ enum
 struct particle
 {
     vec o, d;
-    int fade, millis;
+    int fade, millis, frame;
     bvec color;
     uchar flags;
     float size;
