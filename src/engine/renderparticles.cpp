@@ -599,9 +599,9 @@ static partrenderer *parts[] =
     new quadrenderer("textures/smoke",				PT_PART,          -15, 0),			// 16 big  fast rising smoke
     new trailrenderer("textures/base",				PT_TRAIL|PT_LERP,   2, 0),			// 17 water, entity
     &noglarefireballs,																	// 18 explosion fireball no glare
-    new quadrenderer("textures/muzzle1",			PT_PART|PT_GLARE,  20, 0),			// 19 muzzle flashes
-    new quadrenderer("textures/muzzle2",			PT_PART|PT_GLARE,  20, 0),			// 20 muzzle flashes
-    new quadrenderer("textures/muzzle3",			PT_PART|PT_GLARE,  20, 0),			// 21 muzzle flashes
+    new quadrenderer("textures/muzzle1",			PT_PART|PT_GLARE|PT_RND4,  0, 0),	// 19 muzzle flashes
+    new quadrenderer("textures/muzzle2",			PT_PART|PT_GLARE|PT_RND4,  0, 0),	// 20 muzzle flashes
+    new quadrenderer("textures/muzzle3",			PT_PART|PT_GLARE|PT_RND4,  0, 0),	// 21 muzzle flashes
     &flares // must be done last
 };
 
