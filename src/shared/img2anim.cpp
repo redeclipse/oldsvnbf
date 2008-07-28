@@ -102,12 +102,12 @@ void blitimg(SDL_Surface *d, SDL_Surface *s, int x, int y)
 
 void makeimage()
 {
-	int y = 0, w = 0, h = 0, bpp = 0;
+	int x = 0, w = 0, h = 0, bpp = 0;
 	loopv(frames) if(frames[i]->s)
 	{
-		h += frames[i]->s->h;
-		if(frames[i]->s->w > w) w = frames[i]->s->w;
-		if(frames[i]->s->h > y) y = frames[i]->s->h;
+		w += frames[i]->s->w;
+		if(frames[i]->s->h > h) h = frames[i]->s->h;
+		if(frames[i]->s->w > x) x = frames[i]->s->w;
 		if(frames[i]->s->format->BitsPerPixel > bpp) bpp = frames[i]->s->format->BitsPerPixel;
 	}
 	if(w && h)
@@ -116,14 +116,9 @@ void makeimage()
 
 		if(t)
 		{
-			loopv(frames)
-			{
-				blitimg(t, frames[i]->s, 0, i*y);
-			}
-
+			loopv(frames) blitimg(t, frames[i]->s, i*x, 0);
 			savepng(t, imgname, pngcomp);
 			conoutf("Saved %d frames to %s", frames.length(), imgname);
-
 			SDL_FreeSurface(t);
 		}
 		else erroutf("Failed to create SDL surface: %s", SDL_GetError());

@@ -185,9 +185,7 @@ struct projectiles
 				if(proj.attr1 == GUN_FLAMER)
 				{
 					int col = ((int(254*max(1.0f-life,0.1f))<<16)+1)|((int(64*max(1.0f-life,0.05f))+1)<<8);
-					loopi(rnd(5)+1)
-						regular_part_splash(4, 1, 50, proj.o, col, size, int(proj.radius), 2);
-
+					regular_part_splash(4, rnd(5)+1, 50, proj.o, col, size, int(proj.radius));
 					loopi(cl.numdynents())
 					{
 						fpsent *f = (fpsent *)cl.iterdynents(i);
@@ -201,7 +199,7 @@ struct projectiles
 				regularshape(5, int(proj.radius), 0x443322, 21, rnd(5)+1, 100, proj.o, 2.f);
 			}
 			else if(proj.projtype == PRJ_GIBS)
-				regular_part_splash(0, 1, 10000, proj.o, 0x60FFFF, proj.radius, int(proj.radius), 3);
+				regular_part_splash(0, 1, 5000, proj.o, 0x60FFFF, proj.radius, int(proj.radius), 3);
 		}
 		return true;
 	}

@@ -1264,7 +1264,7 @@ struct GAMECLIENT : igameclient
 
     void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass)
     {
-        if(p->owner->type != ENT_PLAYER) return;
+        if(!p->owner || p->owner->type != ENT_PLAYER) return;
 
         switch(type&0xFF)
         {

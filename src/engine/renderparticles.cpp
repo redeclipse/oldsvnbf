@@ -38,10 +38,10 @@ struct partrenderer
     Texture *tex;
     const char *texname;
     uint type;
-    int grav, collide;
+    int grav, collide, frames;
 
-    partrenderer(const char *texname, int type, int grav, int collide)
-        : tex(NULL), texname(texname), type(type), grav(grav), collide(collide)
+    partrenderer(const char *texname, int type, int grav, int collide, int frames = 1)
+        : tex(NULL), texname(texname), type(type), grav(grav), collide(collide), frames(frames)
     {
     }
     virtual ~partrenderer()
@@ -70,7 +70,7 @@ struct partrenderer
     {
         o = p->o;
         d = p->d;
-        if(p->owner) cl->particletrack(p, type, ts, o, d, lastpass); //type&PT_TRACK &&
+        cl->particletrack(p, type, ts, o, d, lastpass); //type&PT_TRACK &&
         if(p->fade <= 5)
         {
             ts = 1;
@@ -119,8 +119,8 @@ struct listrenderer : partrenderer
 {
     listparticle *list;
 
-    listrenderer(const char *texname, int type, int grav, int collide)
-        : partrenderer(texname, type, grav, collide), list(NULL)
+    listrenderer(const char *texname, int type, int grav, int collide, int frames = 1)
+        : partrenderer(texname, type, grav, collide, frames), list(NULL)
     {
     }
 
@@ -323,8 +323,8 @@ static meterrenderer meters(PT_METER|PT_LERP), metervs(PT_METERVS|PT_LERP);
 
 struct textrenderer : listrenderer
 {
-    textrenderer(int type, int grav = 0)
-        : listrenderer(NULL, type, grav, 0)
+    textrenderer(int type, int grav = 0, int frames = 1)
+        : listrenderer(NULL, type, grav, 0, frames)
     {}
 
     void startrender()
@@ -423,8 +423,8 @@ struct varenderer : partrenderer
     particle *parts;
     int maxparts, numparts, lastupdate;
 
-    varenderer(const char *texname, int type, int grav, int collide)
-        : partrenderer(texname, type, grav, collide),
+    varenderer(const char *texname, int type, int grav, int collide, int frames = 1)
+        : partrenderer(texname, type, grav, collide, frames),
           verts(NULL), parts(NULL), maxparts(0), numparts(0), lastupdate(-1)
     {
     }
@@ -483,6 +483,7 @@ struct varenderer : partrenderer
         int offset = p-parts;
         if(type&PT_RND4) p->flags |= detrnd(offset, 4)<<2;
         if((type&0xFF)==PT_PART) p->flags |= detrnd(offset*offset+37, 4);
+        if(frames > 1) p->frame = rnd(frames);
         lastupdate = -1;
         return p;
     }
@@ -513,12 +514,14 @@ struct varenderer : partrenderer
                 vs[(orient+3)&3].u = u1; \
                 vs[(orient+3)&3].v = v1; \
             } while(0)
+            float piece = 1.f / float(frames), off = p->frame * piece;
             if(type&PT_RND4)
             {
-                float tx = 0.5f*((p->flags>>2)&1), ty = 0.5f*((p->flags>>3)&1);
-                SETTEXCOORDS(tx, tx + 0.5f, ty, ty + 0.5f);
+                float tx = off + (0.5f * ((p->flags>>2)&1) * piece);
+                float ty = 0.5f * ((p->flags>>3)&1);
+                SETTEXCOORDS(tx, tx + (piece * 0.5f), ty, ty + 0.5f);
             }
-            else SETTEXCOORDS(0, 1, 0, 1);
+            else SETTEXCOORDS(off, off + piece, 0, 1);
 
             #define SETCOLOR(r, g, b, a) \
             do { \
@@ -582,10 +585,10 @@ static partrenderer *parts[] =
 {
     new quadrenderer("particles/blood",				PT_PART|PT_MOD|PT_RND4, 2, 1),		// 0 blood spats (note: rgb is inverted)
     new quadrenderer("particles/spark",				PT_PART|PT_GLARE,   2, 0),			// 1 sparks
-    new quadrenderer("particles/smoke",				PT_PART,          -20, 0),			// 2 small slowly rising smoke
+    new quadrenderer("particles/smoke",				PT_PART,          -20, 0, 3),		// 2 small slowly rising smoke
     new quadrenderer("particles/entity",			PT_PART|PT_GLARE,  20, 0),			// 3 edit mode entities
     new quadrenderer("<anim:50>particles/fireball",	PT_PART|PT_GLARE,  20, 0),			// 4 fireball1
-    new quadrenderer("particles/smoke",				PT_PART,          -20, 0),			// 5 big  slowly rising smoke
+    new quadrenderer("particles/smoke",				PT_PART,          -20, 0, 3),		// 5 big  slowly rising smoke
     new quadrenderer("<anim:100>particles/plasma",	PT_PART|PT_GLARE,  20, 0),			// 6 fireball2
 	new quadrenderer("<anim:100>particles/electric",PT_PART|PT_GLARE,  20, 0),			// 7 big fireball3
     &textups,																			// 8 TEXT, floats up
@@ -593,15 +596,13 @@ static partrenderer *parts[] =
     &texts,																				// 10 TEXT, SMALL, NON-MOVING
     &meters,																			// 11 METER, SMALL, NON-MOVING
     &metervs,																			// 12 METER vs., SMALL, NON-MOVING
-    new quadrenderer("particles/smoke",				PT_PART,           20, 0),			// 13 small  slowly sinking smoke trail
+    new quadrenderer("particles/smoke",				PT_PART,           20, 0, 3),		// 13 small  slowly sinking smoke trail
     &fireballs,																			// 14 explosion fireball
     &lightnings,																		// 15 lightning
-    new quadrenderer("particles/smoke",				PT_PART,          -15, 0),			// 16 big  fast rising smoke
-    new trailrenderer("particles/base",				PT_TRAIL|PT_LERP,   2, 0),			// 17 water, entity
+    new quadrenderer("particles/smoke",				PT_PART,          -15, 0, 3),		// 16 big  fast rising smoke
+    new trailrenderer("particles/entity",			PT_TRAIL|PT_LERP,   2, 0),			// 17 water, entity
     &noglarefireballs,																	// 18 explosion fireball no glare
-    new quadrenderer("particles/muzzle1",			PT_PART|PT_GLARE,  0, 0),			// 19 muzzle flashes
-    new quadrenderer("particles/muzzle2",			PT_PART|PT_GLARE,  0, 0),			// 20 muzzle flashes
-    new quadrenderer("particles/muzzle3",			PT_PART|PT_GLARE,  0, 0),			// 21 muzzle flashes
+    new quadrenderer("particles/muzzle",			PT_PART|PT_GLARE,  0, 0, 6),		// 19 muzzle flashes
     &flares // must be done last
 };
 
