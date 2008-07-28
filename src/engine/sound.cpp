@@ -22,10 +22,10 @@ void setmusicvol(int musicvol)
 VARP(soundvol, 0, 255, 255);
 VARFP(musicvol, 0, 255, 255, setmusicvol(musicvol));
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundchans, 0, 128, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARP(soundmaxatonce, 0, 64, INT_MAX-1);
+VARP(soundmaxatonce, 0, 32, INT_MAX-1);
 VARP(soundmaxdist, 0, 4096, INT_MAX-1);
 
 void initsound()
@@ -208,7 +208,7 @@ void updatesound(int chan)
 {
 	sound &s = sounds[chan];
 	bool waiting = (!(s.flags&SND_NODELAY) && Mix_Paused(chan));
-	if(s.curvol > 0 || (s.flags&SND_NOCULL) || (s.flags&SND_MAP))
+	if((s.flags&SND_NOCULL) || s.curvol > 0)
 	{
 		if(waiting)
 		{ // delay the sound based on average physical constants
@@ -229,7 +229,7 @@ void updatesound(int chan)
 			Mix_SetPanning(chan, 255-s.curpan, s.curpan);
 		}
 	}
-	else if(!waiting)
+	else
 	{
 		removesound(chan);
 		if(verbose >= 4) conoutf("culled sound %d (%d)", chan, s.curvol);
@@ -278,20 +278,19 @@ int playsound(int n, int flags, int vol, vec &pos, physent *d, int *hook, int en
 		int cvol = 0, cpan = 0, v = vol > 0 && vol < 255 ? vol : 255,
 			x = maxrad > 0 ? maxrad : getworldsize()/2, y = minrad > 0 ? minrad : 0;
 
-		calcvol(
-			flags, v, slot->vol, slot->material, x, y, pos,
-			&cvol, &cpan
-		);
+		calcvol(flags, v, slot->vol, slot->material, x, y, pos, &cvol, &cpan);
 
-		if(cvol > 0 || (flags&SND_NOCULL) || (flags&SND_MAP))
+		if((flags&SND_NOCULL) || cvol > 0)
 		{
 			int chan = Mix_PlayChannel(-1, soundset[n].sample->sound, flags&SND_LOOP ? -1 : 0);
 			if(chan < 0)
 			{
 				int lowest = -1;
 				loopv(sounds) if(sounds[i].chan >= 0 && !(sounds[i].flags&SND_NOCULL) && !(sounds[i].flags&SND_MAP))
-					if(sounds[i].vol < cvol && (!sounds.inrange(lowest) || sounds[i].vol < sounds[lowest].vol))
-						lowest = i;
+					if((flags&SND_NOCULL) || sounds[i].vol < cvol)
+						if(!sounds.inrange(lowest) || sounds[i].vol < sounds[lowest].vol)
+							lowest = i;
+
 				if(sounds.inrange(lowest))
 				{
 					removesound(lowest);

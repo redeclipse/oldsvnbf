@@ -174,7 +174,7 @@ struct entities : icliententities
 				int dropped = d->useitem(lastmillis, false, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
 				if(isgun(dropped) && !m_noitems(cl.gamemode, cl.mutators))
 					cl.pj.dropgun(d, dropped, (d->gunwait[dropped]/2)-50);
-				regularshape(7, enttype[ents[n]->type].radius, 0x202020, 53, 20, 500, ents[n]->o, 1.f);
+				regularshape(7, enttype[ents[n]->type].radius, 0x888822, 21, 50, 100, ents[n]->o, 1.f);
 				ents[n]->spawned = false;
 			}
 		}
