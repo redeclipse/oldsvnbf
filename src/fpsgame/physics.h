@@ -696,8 +696,6 @@ struct physics
             else if(d->aimyaw>=360) d->aimyaw -= 360;
             d->aimpitch += d->deltaaimpitch*k;
         }
-
-        d->lastpredict = lastmillis;
     }
 
 	void smoothplayer(fpsent *d, int res, bool local)
