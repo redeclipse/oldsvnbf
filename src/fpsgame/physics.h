@@ -661,7 +661,7 @@ struct physics
 		return false;
 	}
 
-    IVARP(smoothmove, -1, -1, 1000);
+    IVARP(smoothmove, 0, 75, 1000);
     IVARP(smoothdist, 0, 64, 1024);
 
     void predictplayer(fpsent *d, bool domove, int res = 0, bool local = false)
@@ -681,8 +681,7 @@ struct physics
             d->newpos = d->o;
         }
 
-        int s = smoothmove() > 0 ? smoothmove() : cl.player1->ping;
-        float k = 1.0f - float(lastmillis - d->smoothmillis)/float(s);
+        float k = 1.0f - float(lastmillis - d->smoothmillis)/float(smoothmove());
         if(k>0)
         {
             d->o.add(vec(d->deltapos).mul(k));
