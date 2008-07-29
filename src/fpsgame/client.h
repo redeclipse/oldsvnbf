@@ -935,6 +935,16 @@ struct clientcom : iclientcom
 					}
 					if(!victim) break;
 					cl.killed(gun, flags, damage, victim, actor);
+					victim->gunreset();
+					break;
+				}
+
+				case SV_DROP:
+				{
+					int trg = getint(p), gs = getint(p), drop = getint(p);
+					fpsent *target = cl.getclient(trg);
+					if(!target) break;
+					cl.pj.drop(target, gs, drop);
 					break;
 				}
 
@@ -982,8 +992,8 @@ struct clientcom : iclientcom
 					break;
 				}
 
-				case SV_ITEMACC:			// server acknowledges that I picked up this item
-				{
+				case SV_ITEMACC:
+				{ // uses a specific drop so the client knows what to replace
 					int lcn = getint(p), ocn = getint(p), ent = getint(p), drop = getint(p);
 					fpsent *f = cl.getclient(lcn);
 					if(!f) break;

@@ -321,12 +321,19 @@ struct projectiles
 		projs.add(&proj);
 	}
 
-	void drop(fpsent *d, int n, int delay)
+	void drop(fpsent *d, int g, int n, int delay = 0)
 	{
-		if(cl.et.ents.inrange(n) && !m_noitems(cl.gamemode, cl.mutators))
+		if(n >= 0)
 		{
-			fpsentity &e = (fpsentity &)*cl.et.ents[n];
-			create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_ENT, 30000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4);
+			if(cl.et.ents.inrange(n) && !m_noitems(cl.gamemode, cl.mutators))
+			{
+				fpsentity &e = (fpsentity &)*cl.et.ents[n];
+				create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_ENT, 30000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4);
+			}
+		}
+		else if(g == GUN_GL)
+		{
+			create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_SHOT, guntype[d->gunselect].time, 50, 1, -1, WEAPON, d->gunselect);
 		}
 	}
 

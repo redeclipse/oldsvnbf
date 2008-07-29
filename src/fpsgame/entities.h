@@ -183,7 +183,7 @@ struct entities : icliententities
 			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
 			int drop = d->useitem(lastmillis, r, n, e.type, e.attr1, e.attr2);
 			if(ents.inrange(drop) && ents[drop]->type == WEAPON && isgun(ents[drop]->attr1))
-				cl.pj.drop(d, drop, (d->gunwait[ents[drop]->attr1]/2)-50);
+				cl.pj.drop(d, ents[drop]->attr1, drop, (d->gunwait[ents[drop]->attr1]/2)-50);
 			regularshape(7, enttype[e.type].radius, 0x888822, 21, 50, 250, pos, 1.f);
 			if(o < 0) e.spawned = false;
 		}

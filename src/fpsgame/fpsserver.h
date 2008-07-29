@@ -1999,18 +1999,26 @@ struct GAMESERVER : igameserver
 				else { friends = 1; enemies = clients.length()-1; }
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
 			}
-			sendf(-1, 1, "ri7", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, gun, flags, realdamage);
-			if(isgun(ts.gunselect))
+			if(ts.gunselect == GUN_GL)
 			{
-				if(ts.gunselect == GUN_GL) ts.grenades.add(-1);
-				else if(!m_noitems(gamemode, mutators) && sents.inrange(ts.entid[ts.gunselect]))
-					ts.dropped.add(ts.entid[ts.gunselect]);
+				ts.grenades.add(-1);
+				sendf(-1, 1, "ri4", SV_DROP, target->clientnum, ts.gunselect, -1);
 			}
+			if(!m_noitems(gamemode, mutators)) loopi(GUN_MAX)
+			{
+				if(guntype[i].rdelay > 0 && ts.ammo[i] >= 0 && sents.inrange(ts.entid[i]))
+				{
+					ts.dropped.add(ts.entid[i]);
+					sendf(-1, 1, "ri4", SV_DROP, target->clientnum, i, ts.entid[i]);
+				}
+			}
+			sendf(-1, 1, "ri7", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, gun, flags, realdamage);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
 			mutate(smuts, mut->died(target, actor));
 			ts.state = CS_DEAD;
 			ts.lastdeath = gamemillis;
+			ts.gunreset();
 			// don't issue respawn yet until DEATHMILLIS has elapsed
 			if(fragvalue > 0)
 			{
@@ -2067,18 +2075,27 @@ struct GAMESERVER : igameserver
 		}
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
-		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, e.flags, ci->state.health);
-		if(isgun(gs.gunselect))
+		if(gs.gunselect == GUN_GL)
 		{
-			if(gs.gunselect == GUN_GL) gs.grenades.add(-1);
-			else if(!m_noitems(gamemode, mutators) && sents.inrange(gs.entid[gs.gunselect]))
-				gs.dropped.add(gs.entid[gs.gunselect]);
+			gs.grenades.add(-1);
+			sendf(-1, 1, "ri4", SV_DROP, ci->clientnum, gs.gunselect, -1);
 		}
+		if(!m_noitems(gamemode, mutators)) loopi(GUN_MAX)
+		{
+			if(guntype[i].rdelay > 0 && gs.ammo[i] >= 0 && sents.inrange(gs.entid[i]))
+			{
+				gs.dropped.add(gs.entid[i]);
+				sendf(-1, 1, "ri4", SV_DROP, ci->clientnum, i, gs.entid[i]);
+			}
+		}
+		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, e.flags, ci->state.health);
+
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(smuts, mut->died(ci, NULL));
 		gs.state = CS_DEAD;
-		gs.respawn(gamemillis);
+		gs.lastdeath = gamemillis;
+		gs.gunreset();
 	}
 
 	void processevent(clientinfo *ci, explodeevent &e)
@@ -2215,14 +2232,13 @@ struct GAMESERVER : igameserver
 			if(!found) return;
 		}
 		else if(!sents[e.ent].spawned) return;
-
-		int drop = gs.useitem(e.millis, -1, e.ent, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
-		sendf(-1, 1, "ri5", SV_ITEMACC, ci->clientnum, e.owner, e.ent, drop);
-		if(e.owner < 0)
+		else
 		{
 			sents[e.ent].spawned = false;
 			sents[e.ent].millis = gamemillis;
 		}
+		int drop = gs.useitem(e.millis, -1, e.ent, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
+		sendf(-1, 1, "ri5", SV_ITEMACC, ci->clientnum, e.owner, e.ent, drop);
 		if(sents.inrange(drop) && !m_noitems(gamemode, mutators)) gs.dropped.add(drop);
 	}
 
