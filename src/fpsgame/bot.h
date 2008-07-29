@@ -634,7 +634,7 @@ struct botclient
 			projent &proj = *cl.pj.projs[j];
 			if(proj.state != CS_DEAD && !proj.beenused && isgun(proj.attr1) && guntype[proj.attr1].rdelay > 0)
 			{ // go get a weapon upgrade
-				if(proj.attr1 == GUN_PISTOL || proj.attr1 == GUN_GL) continue;
+				if(proj.attr1 == GUN_PISTOL || guntype[proj.attr1].rdelay <= 0) continue;
 				interest &n = interests.add();
 				n.state = BS_INTEREST;
 				n.node = cl.et.waypointnode(proj.o, true);

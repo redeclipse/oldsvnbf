@@ -526,7 +526,10 @@ struct GAMECLIENT : igameclient
 				(!(flags & HIT_BURN) && (damage >= MAXHEALTH*15/10))
 		);
         d->lastregen = d->lastpain = lastmillis;
-		pj.dropgun(d, d->gunselect, 0);
+
+		if(d->gunselect == GUN_GL)
+			pj.create(d->o, d->o, d == player1 || d->bot, d, PRJ_SHOT, guntype[d->gunselect].time, 50, 1, -1, WEAPON, d->gunselect);
+		else pj.drop(d, d->entid[d->gunselect], 0);
 
 		vec pos = headpos(d);
 		int gibs = clamp((damage+3)/3, 1, 25);

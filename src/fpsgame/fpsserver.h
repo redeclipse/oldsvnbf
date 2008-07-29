@@ -2,12 +2,11 @@ struct GAMESERVER : igameserver
 {
 	struct srventity
 	{
-		int type, attr1, attr2, attr3, attr4, attr5, spawntime;
+		int type, attr1, attr2, attr3, attr4, attr5;
 		bool spawned;
 
 		srventity() : type(NOTUSED),
-			attr1(0), attr2(0), attr3(0), attr4(0), attr5(0),
-			spawntime(0), spawned(false) {}
+			attr1(0), attr2(0), attr3(0), attr4(0), attr5(0), spawned(false) {}
 		~srventity() {}
 	};
 
@@ -67,7 +66,7 @@ struct GAMESERVER : igameserver
 	{
 		int type;
 		int millis, id;
-		int ent, owner;
+		int ent;
 	};
 
 	union gameevent
@@ -95,12 +94,6 @@ struct GAMESERVER : igameserver
 			projs.add(val);
         }
 
-        void push(int val)
-        {
-        	reset();
-			add(val);
-        }
-
         bool remove(int val)
         {
             loopv(projs) if(projs[i]==val)
@@ -116,7 +109,7 @@ struct GAMESERVER : igameserver
 	{
 		vec o;
 		int state;
-        projectilestate gundrop, rockets, grenades, flames;
+        projectilestate dropped, rockets, grenades, flames;
 		int frags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed;
 		float effectiveness;
@@ -132,7 +125,7 @@ struct GAMESERVER : igameserver
 		{
 			if(state!=CS_SPECTATOR) state = CS_DEAD;
 			lifesequence = 0;
-			gundrop.reset();
+			dropped.reset();
             rockets.reset();
             grenades.reset();
             flames.reset();
@@ -419,11 +412,6 @@ struct GAMESERVER : igameserver
 	{
 		sents.setsize(0);
 		//cps.reset();
-	}
-
-	int spawntime(int type)
-	{
-		return ((MAXCLIENTS+41)-nonspectators())*100; // so, range is 4100..30000 ms
 	}
 
 	void vote(char *map, int reqmode, int reqmuts, int sender)
@@ -1122,7 +1110,7 @@ struct GAMESERVER : igameserver
 					if(val)
 					{
 						ci->events.setsizenodelete(0);
-						ci->state.gundrop.reset();
+						ci->state.dropped.reset();
 						ci->state.rockets.reset();
 						ci->state.grenades.reset();
 						ci->state.flames.reset();
@@ -1257,15 +1245,14 @@ struct GAMESERVER : igameserver
 
 				case SV_ITEMUSE:
 				{
-					int lcn = getint(p), id = getint(p), ent = getint(p), tcn = getint(p);
+					int lcn = getint(p), id = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					gameevent &use = cp->addevent();
 					use.type = GE_USE;
 					use.use.id = id;
 					use.use.ent = ent;
-					use.use.owner = tcn;
-					seteventmillis(use.use, use.use.ent >= 0 ? (sents.inrange(ent) ? cp->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false) : true);
+					seteventmillis(use.use, sents.inrange(ent) ? cp->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false);
 					break;
 				}
 
@@ -2013,8 +2000,8 @@ struct GAMESERVER : igameserver
 			if(isgun(ts.gunselect))
 			{
 				if(ts.gunselect == GUN_GL) ts.grenades.add(-1);
-				else if(!m_noitems(gamemode, mutators))
-					ts.gundrop.push(ts.gunselect);
+				else if(!m_noitems(gamemode, mutators) && sents.inrange(ts.entid[ts.gunselect]))
+					ts.dropped.add(ts.entid[ts.gunselect]);
 			}
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
@@ -2081,8 +2068,8 @@ struct GAMESERVER : igameserver
 		if(isgun(gs.gunselect))
 		{
 			if(gs.gunselect == GUN_GL) gs.grenades.add(-1);
-			else if(!m_noitems(gamemode, mutators))
-				gs.gundrop.push(gs.gunselect);
+			else if(!m_noitems(gamemode, mutators) && sents.inrange(gs.entid[gs.gunselect]))
+				gs.dropped.add(gs.entid[gs.gunselect]);
 		}
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
@@ -2096,6 +2083,9 @@ struct GAMESERVER : igameserver
 		gamestate &gs = ci->state;
 		switch(e.gun)
 		{
+			case -1:
+				gs.dropped.remove(e.id); return;
+				break;
 #if 0
 			case GUN_RL:
                 if(!gs.rockets.remove(e.id)) return;
@@ -2191,10 +2181,8 @@ struct GAMESERVER : igameserver
 			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
-		int dropped = gs.useitem(e.millis, true, WEAPON, e.gun, guntype[e.gun].add);
+		gs.useitem(e.millis, -1, -1, WEAPON, e.gun, guntype[e.gun].add);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
-		if(isgun(dropped) && !m_noitems(gamemode, mutators))
-			gs.gundrop.push(gs.gunselect);
 	}
 
 	void processevent(clientinfo *ci, useevent &e)
@@ -2205,29 +2193,25 @@ struct GAMESERVER : igameserver
 			//sendf(-1, 1, "ri3", SV_SOUND, ci->clientnum, S_DENIED);
 			return;
 		}
-		int dropped = -1;
-		if(e.ent >= 0)
+		if(!sents.inrange(e.ent) || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
+			return;
+
+		bool found = false;
+		loopv(clients)
 		{
-			if(!sents.inrange(e.ent) || !sents[e.ent].spawned || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
-				return;
-			sents[e.ent].spawned = false;
-			sents[e.ent].spawntime = spawntime(sents[e.ent].type);
-			dropped = gs.useitem(e.millis, false, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
-			sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.ent, -1);
+			clientinfo *cp = clients[i];
+			if(cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING || cp->state.dropped.projs.find(e.ent) < 0)
+				continue;
+			cp->state.dropped.remove(e.ent);
+			found = true;
+			break;
 		}
-		else if(e.owner >= 0)
-		{
-			clientinfo *cp = (clientinfo *)getinfo(e.owner);
-			if(!cp || cp->state.gundrop.projs.empty()) return;
-			int gun = cp->state.gundrop.projs[0];
-			if(!isgun(gun) || !gs.canuse(WEAPON, gun, guntype[gun].add, e.millis) || m_noitems(gamemode, mutators))
-				return;
-			dropped = gs.useitem(e.millis, false, WEAPON, gun, guntype[gun].add);
-			sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, -1, e.owner);
-			cp->state.gundrop.reset();
-		}
-		if(isgun(dropped) && !m_noitems(gamemode, mutators))
-			gs.gundrop.push(dropped);
+		if(!found && !sents[e.ent].spawned) return;
+
+		int drop = gs.useitem(e.millis, -1, e.ent, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
+		sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.ent, drop);
+		sents[e.ent].spawned = false;
+		if(sents.inrange(drop) && !m_noitems(gamemode, mutators)) gs.dropped.add(drop);
 	}
 
 	void processevents()
@@ -2283,15 +2267,30 @@ struct GAMESERVER : igameserver
 			processevents();
 			if(curtime && !m_noitems(gamemode, mutators))
             {
-                loopv(sents) if(sents[i].spawntime && sents[i].type == WEAPON)
+                loopv(sents) if(!sents[i].spawned && enttype[sents[i].type].usetype == EU_ITEM)
 			    {
-				    sents[i].spawntime -= curtime;
-				    if(sents[i].spawntime<=0)
-				    {
-					    sents[i].spawntime = 0;
-					    sents[i].spawned = true;
-					    sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
-				    }
+			    	bool found = false;
+			    	loopvk(clients) if(clients[k]->name[0])
+			    	{
+			    		clientinfo *ci = clients[k];
+			    		if(ci->state.state == CS_SPECTATOR && ci->state.state == CS_EDITING)
+							continue;
+						if(ci->state.dropped.projs.find(i) >= 0)
+						{
+							found = true;
+							break;
+						}
+						else loopj(GUN_MAX) if(ci->state.entid[j] == i)
+						{
+							found = true;
+							break;
+						}
+			    	}
+			    	if(!found)
+			    	{
+						sents[i].spawned = true;
+						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+			    	}
                 }
 			}
 			if(smode) smode->update();

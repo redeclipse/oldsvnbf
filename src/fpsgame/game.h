@@ -409,7 +409,7 @@ FVARG(speedscale, 1.f);
 // inherited by fpsent and server clients
 struct fpsstate
 {
-	int health, ammo[GUN_MAX];
+	int health, ammo[GUN_MAX], entid[GUN_MAX];
 	int lastgun, gunselect, gunstate[GUN_MAX], gunwait[GUN_MAX], gunlast[GUN_MAX];
 	int lastdeath, lifesequence, lastspawn, lastrespawn, lastpain, lastregen;
 	int ownernum, skill, spree;
@@ -471,7 +471,7 @@ struct fpsstate
 		{
 			gunstate[i] = GUNSTATE_IDLE;
 			gunwait[i] = gunlast[i] = 0;
-			ammo[i] = -1;
+			ammo[i] = entid[i] = -1;
 		}
 		lastgun = gunselect = -1;
 	}
@@ -503,7 +503,7 @@ struct fpsstate
 		if(isgun(gun)) ammo[gun] = amt;
 	}
 
-	int useitem(int millis, bool limit, int type, int attr1, int attr2)
+	int useitem(int millis, int drop, int id, int type, int attr1, int attr2)
 	{
 		switch(type)
 		{
@@ -513,30 +513,43 @@ struct fpsstate
 				if(ammo[attr1] < 0) ammo[attr1] = 0;
 
 				int carry = 0, dropped = -1;
-				loopi(GUN_MAX) if(ammo[i] >= 0 && guntype[i].rdelay > 0) carry++;
-				if(carry > MAXCARRY)
+				if(drop >= 0)
+				{
+					loopi(GUN_MAX) if(entid[i] == drop)
+					{
+						setgunstate(i, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
+						ammo[i] = entid[i] = -1;
+						break;
+					}
+					dropped = drop;
+				}
+				loopi(GUN_MAX)
+					if(ammo[i] >= 0 && guntype[i].rdelay > 0)
+						carry++;
+				if(dropped < 0 && id >= 0 && carry > MAXCARRY)
 				{
 					if(gunselect != attr1 && guntype[gunselect].rdelay > 0)
 					{
 						if(isgun(gunselect))
 						{
 							setgunstate(gunselect, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
-							dropped = gunselect;
-							ammo[gunselect] = -1;
+							dropped = entid[gunselect];
+							ammo[gunselect] = entid[gunselect] = -1;
 						}
 						gunswitch(attr1, millis);
 					}
 					else loopi(GUN_MAX) if(ammo[i] >= 0 && i != attr1 && guntype[i].rdelay > 0)
 					{
 						setgunstate(i, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
-						dropped = i;
-						ammo[i] = -1;
+						dropped = entid[i];
+						ammo[i] = entid[i] = -1;
 						break;
 					}
 				}
 				else if(gunselect != attr1) gunswitch(attr1, millis);
 				else setgunstate(attr1, GUNSTATE_RELOAD, guntype[attr1].rdelay ? guntype[attr1].rdelay : guntype[attr1].adelay, millis);
-				ammo[attr1] = clamp(max(ammo[attr1],0)+(attr2 > 0 ? attr2 : guntype[attr1].add), guntype[attr1].add, limit ? guntype[attr1].charge : guntype[attr1].max);
+				if(id >= 0) entid[attr1] = id;
+				ammo[attr1] = clamp(max(ammo[attr1],0)+(attr2 > 0 ? attr2 : guntype[attr1].add), guntype[attr1].add, id < 0 ? guntype[attr1].charge : guntype[attr1].max);
 				return dropped;
 			}
 			default: break;
@@ -560,7 +573,7 @@ struct fpsstate
 		loopi(GUN_MAX)
 		{
 			gunstate[i] = GUNSTATE_IDLE;
-			ammo[i] = (i == spawngun || i == GUN_GL ? guntype[i].add : -1);
+			ammo[i] = (i == spawngun || guntype[i].rdelay <= 0 ? guntype[i].add : -1);
 		}
 	}
 

@@ -321,28 +321,12 @@ struct projectiles
 		projs.add(&proj);
 	}
 
-	void dropgun(fpsent *d, int gun, int delay)
+	void drop(fpsent *d, int n, int delay)
 	{
-		if(isgun(gun))
+		if(cl.et.ents.inrange(n) && !m_noitems(cl.gamemode, cl.mutators))
 		{
-			bool local = d == cl.player1 || d->bot;
-			if(gun == GUN_GL)
-			{
-				create(d->o, d->o, local, d, PRJ_SHOT, guntype[gun].time, 50, 1, -1, WEAPON, gun);
-			}
-			else if(!m_noitems(cl.gamemode, cl.mutators))
-			{
-				loopvrev(projs)
-				{
-					projent &proj = *projs[i];
-					if(proj.owner == d && proj.projtype == PRJ_ENT && proj.ent == WEAPON)
-					{
-						proj.beenused = true;
-						proj.state = CS_DEAD;
-					}
-				}
-				create(d->o, d->o, local, d, PRJ_ENT, INT_MAX-1, delay, 20, 0, WEAPON, gun, guntype[gun].add);
-			}
+			fpsentity &e = (fpsentity &)*cl.et.ents[n];
+			create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_ENT, 30000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4);
 		}
 	}
 
@@ -355,7 +339,14 @@ struct projectiles
 			{
 				proj.state = CS_DEAD;
 				if(proj.projtype == PRJ_ENT)
-					regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 1.f);
+				{
+					if(!proj.beenused)
+					{
+						regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 1.f);
+						if(proj.local)
+							cl.cc.addmsg(SV_EXPLODE, "ri5", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0);
+					}
+				}
 				else if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
 					cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.attr1, proj.local);
 			}
@@ -391,7 +382,14 @@ struct projectiles
 					if((proj.lifetime -= qtime) <= 0 || !move(proj, qtime))
 					{
 						if(proj.projtype == PRJ_ENT)
-							regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 1.f);
+						{
+							if(!proj.beenused)
+							{
+								regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 1.f);
+								if(proj.local)
+									cl.cc.addmsg(SV_EXPLODE, "ri5", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0);
+							}
+						}
 						proj.state = CS_DEAD;
 						break;
 					}
