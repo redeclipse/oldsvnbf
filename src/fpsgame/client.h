@@ -585,6 +585,7 @@ struct clientcom : iclientcom
 				f = getuint(p);
 				fpsent *d = cl.getclient(lcn);
                 if(!d || seqcolor!=(d->lifesequence&1) || d==cl.player1 || d->bot) continue;
+                if(cl.smoothmove() && d->smoothmillis>=0 && d->lastpredict < cl.lastmillis) cl.ph.predictplayer(d, false);
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
 				d->yaw = yaw;
 				d->pitch = pitch;
