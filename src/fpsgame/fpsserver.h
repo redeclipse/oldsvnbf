@@ -4,9 +4,10 @@ struct GAMESERVER : igameserver
 	{
 		int type, attr1, attr2, attr3, attr4, attr5;
 		bool spawned;
+		int millis;
 
 		srventity() : type(NOTUSED),
-			attr1(0), attr2(0), attr3(0), attr4(0), attr5(0), spawned(false) {}
+			attr1(0), attr2(0), attr3(0), attr4(0), attr5(0), spawned(false), millis(0) {}
 		~srventity() {}
 	};
 
@@ -66,7 +67,7 @@ struct GAMESERVER : igameserver
 	{
 		int type;
 		int millis, id;
-		int ent;
+		int owner, ent;
 	};
 
 	union gameevent
@@ -1245,12 +1246,13 @@ struct GAMESERVER : igameserver
 
 				case SV_ITEMUSE:
 				{
-					int lcn = getint(p), id = getint(p), ent = getint(p);
+					int lcn = getint(p), id = getint(p), ocn = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					gameevent &use = cp->addevent();
 					use.type = GE_USE;
 					use.use.id = id;
+					use.use.owner = ocn;
 					use.use.ent = ent;
 					seteventmillis(use.use, sents.inrange(ent) ? cp->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false);
 					break;
@@ -1362,6 +1364,7 @@ struct GAMESERVER : igameserver
 							while(sents.length() < n) sents.add(sn);
 							sents.add(se);
 							sents[n].spawned = m_noitems(gamemode, mutators) ? false : true;
+							sents[n].millis = gamemillis;
 						}
 					}
 					break;
@@ -2197,20 +2200,25 @@ struct GAMESERVER : igameserver
 			return;
 
 		bool found = false;
-		loopv(clients)
+		if(e.owner >= 0) loopv(clients) if(clients[i]->clientnum == e.owner)
 		{
 			clientinfo *cp = clients[i];
-			if(cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING || cp->state.dropped.projs.find(e.ent) < 0)
-				continue;
-			cp->state.dropped.remove(e.ent);
-			found = true;
+			if(cp->state.dropped.projs.find(e.ent) >= 0)
+			{
+				cp->state.dropped.remove(e.ent);
+				found = true;
+			}
 			break;
 		}
-		if(!found && !sents[e.ent].spawned) return;
+		else if(!sents[e.ent].spawned) return;
 
 		int drop = gs.useitem(e.millis, -1, e.ent, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
-		sendf(-1, 1, "ri4", SV_ITEMACC, ci->clientnum, e.ent, drop);
-		sents[e.ent].spawned = false;
+		sendf(-1, 1, "ri5", SV_ITEMACC, ci->clientnum, e.owner, e.ent, drop);
+		if(e.owner < 0)
+		{
+			sents[e.ent].spawned = false;
+			sents[e.ent].millis = gamemillis;
+		}
 		if(sents.inrange(drop) && !m_noitems(gamemode, mutators)) gs.dropped.add(drop);
 	}
 
@@ -2269,26 +2277,35 @@ struct GAMESERVER : igameserver
             {
                 loopv(sents) if(!sents[i].spawned && enttype[sents[i].type].usetype == EU_ITEM)
 			    {
-			    	bool found = false;
-			    	loopvk(clients) if(clients[k]->name[0])
+					bool found = false;
+			    	if(entspawntime)
 			    	{
-			    		clientinfo *ci = clients[k];
-			    		if(ci->state.state == CS_SPECTATOR && ci->state.state == CS_EDITING)
-							continue;
-						if(ci->state.dropped.projs.find(i) >= 0)
-						{
+			    		if(gamemillis-sents[i].millis < entspawntime*60000)
 							found = true;
-							break;
-						}
-						else loopj(GUN_MAX) if(ci->state.entid[j] == i)
+			    	}
+			    	else
+			    	{
+						loopvk(clients) if(clients[k]->name[0])
 						{
-							found = true;
-							break;
+							clientinfo *ci = clients[k];
+							if(ci->state.state == CS_SPECTATOR && ci->state.state == CS_EDITING)
+								continue;
+							if(ci->state.dropped.projs.find(i) >= 0)
+							{
+								found = true;
+								break;
+							}
+							else loopj(GUN_MAX) if(ci->state.entid[j] == i)
+							{
+								found = true;
+								break;
+							}
 						}
 			    	}
 			    	if(!found)
 			    	{
 						sents[i].spawned = true;
+						sents[i].millis = gamemillis;
 						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
 			    	}
                 }

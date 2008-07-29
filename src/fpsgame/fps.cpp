@@ -61,9 +61,9 @@ struct GAMECLIENT : igameclient
 	IVARP(firstpersonaim, 0, 0, INT_MAX-1);
 	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
 	IVARP(firstpersontranslucent, 0, 0, 1);
-	IFVARP(firstpersondist, 0.1f);
-	IFVARP(firstpersonshift, 0.3f);
-	IFVARP(firstpersonadjust, 0.1f);
+	IFVARP(firstpersondist, 0.3f);
+	IFVARP(firstpersonshift, -0.3f);
+	IFVARP(firstpersonadjust, 0.f);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(absmouse, 0, 0, 1);
