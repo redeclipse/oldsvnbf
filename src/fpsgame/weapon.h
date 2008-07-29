@@ -165,7 +165,7 @@ struct weaponstate
 				radialeffect(f, o, guntype[gun].explode, gun != GUN_FLAMER ? HIT_EXPLODE : HIT_BURN);
 			}
 
-			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id-cl.maptime,
+			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id >= 0 ? id-cl.maptime : id,
 					hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 		}
 	}
@@ -176,13 +176,13 @@ struct weaponstate
 		float hoff = 0.f, roff = 0.f, dmul = oversized ? 3.f : 2.f;
 		if(third)
 		{
-			hoff = oversized ? 0.885f : 0.865f;
-			roff = oversized ? 0.335f : 0.355f;
+			hoff = oversized ? 0.88f : 0.86f;
+			roff = oversized ? 0.33f : 0.35f;
 		}
 		else
 		{
-			hoff = oversized ? 0.915f : 0.895f;
-			roff = oversized ? 0.34f : 0.36f;
+			hoff = oversized ? 0.92f : 0.89f;
+			roff = oversized ? 0.33f : 0.28f;
 		}
 		vec offset(from);
 		vec front, right;
@@ -243,7 +243,7 @@ struct weaponstate
 			case GUN_GL:
 			{
 				int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
-				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, WEAPON, gun);
+				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
 				if(gun == GUN_FLAMER)
 				{
 					adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
@@ -375,7 +375,7 @@ struct weaponstate
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		vec kickback(unitv);
-		kickback.mul(guntype[d->gunselect].kick);
+		kickback.mul(guntype[d->gunselect].kick*(cl.ph.iscrouching(d) ? 0.1f : 1.f));
 		d->vel.add(kickback);
 		if(d == cl.player1) cl.quakewobble += guntype[d->gunselect].wobble;
 		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);

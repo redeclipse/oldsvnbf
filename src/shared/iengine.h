@@ -22,7 +22,7 @@ extern float raycubepos(const vec &o, const vec &ray, vec &hit, float radius = 0
 extern float rayfloor  (const vec &o, vec &floor, int mode = 0, float radius = 0);
 extern bool  raycubelos(const vec &o, const vec &dest, vec &hitpos);
 
-extern void settexture(const char *name, bool clamp = false);
+extern void settexture(const char *name, int clamp = 0);
 
 // octaedit
 
