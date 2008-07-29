@@ -664,41 +664,48 @@ struct physics
     IVARP(smoothmove, -1, -1, 1000);
     IVARP(smoothdist, 0, 64, 1024);
 
+    void predictplayer(fpsent *d, bool move)
+    {
+        d->o = d->newpos;
+
+        d->yaw = d->newyaw;
+        d->pitch = d->newpitch;
+
+        d->aimyaw = d->newaimyaw;
+        d->aimpitch = d->newaimpitch;
+
+        if(move)
+        {
+            move(d, res, local);
+
+            d->newpos = d->o;
+        }
+
+        int s = smoothmove() > 0 ? smoothmove() : cl.player1->ping;
+        float k = 1.0f - float(lastmillis - d->smoothmillis)/float(s);
+        if(k>0)
+        {
+            d->o.add(vec(d->deltapos).mul(k));
+
+            d->yaw += d->deltayaw*k;
+            if(d->yaw<0) d->yaw += 360;
+            else if(d->yaw>=360) d->yaw -= 360;
+            d->pitch += d->deltapitch*k;
+
+            d->aimyaw += d->deltaaimyaw*k;
+            if(d->aimyaw<0) d->aimyaw += 360;
+            else if(d->aimyaw>=360) d->aimyaw -= 360;
+            d->aimpitch += d->deltaaimpitch*k;
+        }
+
+        d->lastpredict = lastmillis;
+    }
+
 	void smoothplayer(fpsent *d, int res, bool local)
 	{
 		if(d->state==CS_ALIVE || d->state==CS_EDITING)
 		{
-			if(smoothmove() && d->smoothmillis>0)
-			{
-				d->o = d->newpos;
-
-				d->yaw = d->newyaw;
-				d->pitch = d->newpitch;
-
-				d->aimyaw = d->newaimyaw;
-				d->aimpitch = d->newaimpitch;
-
-				move(d, res, local);
-
-				d->newpos = d->o;
-
-				int s = smoothmove() > 0 ? smoothmove() : cl.player1->ping;
-				float k = 1.0f - float(lastmillis - d->smoothmillis)/float(s);
-				if(k>0)
-				{
-					d->o.add(vec(d->deltapos).mul(k));
-
-					d->yaw += d->deltayaw*k;
-					if(d->yaw<0) d->yaw += 360;
-					else if(d->yaw>=360) d->yaw -= 360;
-					d->pitch += d->deltapitch*k;
-
-					d->aimyaw += d->deltaaimyaw*k;
-					if(d->aimyaw<0) d->aimyaw += 360;
-					else if(d->aimyaw>=360) d->aimyaw -= 360;
-					d->aimpitch += d->deltaaimpitch*k;
-				}
-			}
+			if(smoothmove() && d->smoothmillis>0) predictplayer(d, true);
 			else move(d, res, local);
 		}
 		else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) move(d, res, local);
