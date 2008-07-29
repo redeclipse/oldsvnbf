@@ -387,6 +387,8 @@ enum
 	SSTAT_MAX
 };
 
+VARG(netframetime, 0, 40, 1000);
+
 VARG(teamdamage, 0, 1, 1);
 
 VARG(timelimit, 0, 10, INT_MAX-1);

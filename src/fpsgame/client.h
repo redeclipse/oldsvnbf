@@ -126,6 +126,35 @@ struct clientcom : iclientcom
             DELETEP(cl.players[i]);
         }
 		cleardynentcache();
+		enumerate(*idents, ident, id, {
+			if(id.flags&IDF_GAME && strncmp(id.name, "sv_", 3)) // reset vars
+			{
+				switch(id.type)
+				{
+					case ID_VAR:
+					{
+						setvar(id.name, id.def.i, true);
+						break;
+					}
+					case ID_FVAR:
+					{
+						setfvar(id.name, id.def.f, true);
+						break;
+					}
+					case ID_SVAR:
+					{
+						setsvar(id.name, *id.def.s ? id.def.s : "", true);
+						break;
+					}
+					case ID_ALIAS:
+					{
+						worldalias(id.name, "");
+						break;
+					}
+					default: break;
+				}
+			}
+		});
 	}
 
 	bool allowedittoggle(bool edit)
@@ -316,12 +345,9 @@ struct clientcom : iclientcom
 
 	bool sendcmd(int nargs, char *cmd, char *arg)
 	{
-		if(isready)
+		if(isready && nargs > 1)
 		{
-			if(nargs > 1 && arg)
-				addmsg(SV_COMMAND, "ri2ss", cl.player1->clientnum, nargs, cmd, arg);
-			else
-				addmsg(SV_COMMAND, "ri2s", cl.player1->clientnum, 1, cmd);
+			addmsg(SV_COMMAND, "ri2ss", cl.player1->clientnum, nargs, cmd, arg);
 			return true;
 		}
 		return false;
@@ -952,7 +978,7 @@ struct clientcom : iclientcom
 					playsound(S_ITEMSPAWN, 0, 255, cl.et.ents[i]->o);
 					const char *name = cl.et.itemname(i);
 					if(name) particle_text(cl.et.ents[i]->o, name, 9);
-					regularshape(7, enttype[cl.et.ents[i]->type].radius, 0x888822, 21, 50, 100, cl.et.ents[i]->o, 1.f);
+					regularshape(7, enttype[cl.et.ents[i]->type].radius, 0x888822, 53, 50, 250, cl.et.ents[i]->o, 1.f);
 					break;
 				}
 
@@ -1280,34 +1306,12 @@ struct clientcom : iclientcom
 
 				case SV_INITBOT:
 				{
-					int on = getint(p), sk = getint(p), bn = getint(p);
-					fpsent *b = cl.newclient(bn);
-					if(!b)
-					{
-						getint(p);
-						getstring(text, p);
-						break;
-					}
-
-					bool connecting = !b->name[0];
-					fpsent *o = cl.getclient(on);
-					s_sprintfd(m)("%s", o ? cl.colorname(o) : "unknown");
-
-					b->ownernum = on;
-					b->skill = clamp(sk, 1, 100);
+					int on = getint(p), sk = clamp(getint(p), 1, 100), bn = getint(p);
 					getstring(text, p);
-					s_strncpy(b->name, text, MAXNAMELEN);
-					b->team = getint(p);
-
-					if(o)
-					{
-						if(connecting)
-							conoutf("\fg%s (skill: %d) introduced and assigned to %s", cl.colorname(b), b->skill, m);
-						else conoutf("\fg%s (skill: %d) reassigned to %s", cl.colorname(b), b->skill, m);
-					}
-
-					if(cl.player1->clientnum == b->ownernum) cl.bot.create(b);
-					else if(b->bot) cl.bot.destroy(b);
+					int tm = getint(p);
+					fpsent *b = cl.newclient(bn);
+					if(!b) break;
+					cl.bot.init(b, on, sk, bn, text, tm);
 					break;
 				}
 

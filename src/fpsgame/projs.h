@@ -347,7 +347,7 @@ struct projectiles
 			{
 				proj.state = CS_DEAD;
 				if(proj.projtype == PRJ_ENT)
-					regularshape(7, int(proj.radius), 0x888822, 21, 50, 100, proj.o, 1.f);
+					regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 1.f);
 				else if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
 					cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.attr1, proj.local);
 			}
@@ -383,7 +383,7 @@ struct projectiles
 					if((proj.lifetime -= qtime) <= 0 || !move(proj, qtime))
 					{
 						if(proj.projtype == PRJ_ENT)
-							regularshape(7, int(proj.radius), 0x888822, 21, 50, 100, proj.o, 1.f);
+							regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 1.f);
 						proj.state = CS_DEAD;
 						break;
 					}
