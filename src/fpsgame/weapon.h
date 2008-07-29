@@ -56,7 +56,7 @@ struct weaponstate
 
 	void offsetray(vec &from, vec &to, int spread, vec &dest)
 	{
-		float f = to.dist(from)*spread/1000;
+		float f = to.dist(from)*float(spread)/10000.f;
 		for(;;)
 		{
 			#define RNDD rnd(101)-50
@@ -215,7 +215,7 @@ struct weaponstate
 				loopi(SGRAYS)
 				{
 					particle_splash(0, 20, 250, sg[i]);
-                    particle_flare(from, sg[i], 300, 10, d);
+                    particle_flare(from, sg[i], 50, 10, d);
                     if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
 				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
@@ -228,7 +228,7 @@ struct weaponstate
 			case GUN_PISTOL:
 			{
 				particle_splash(0, 200, 250, to);
-                particle_flare(from, to, 600, 10, d);
+                particle_flare(from, to, 50, 10, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
                 adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
 				part_create(19, 50, from, 0xFFAA00, 4.f, d);

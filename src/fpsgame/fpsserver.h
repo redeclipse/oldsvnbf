@@ -2199,16 +2199,20 @@ struct GAMESERVER : igameserver
 		if(!sents.inrange(e.ent) || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
 			return;
 
-		bool found = false;
-		if(e.owner >= 0) loopv(clients) if(clients[i]->clientnum == e.owner)
+		if(e.owner >= 0)
 		{
-			clientinfo *cp = clients[i];
-			if(cp->state.dropped.projs.find(e.ent) >= 0)
+			bool found = false;
+			loopv(clients) if(clients[i]->clientnum == e.owner)
 			{
-				cp->state.dropped.remove(e.ent);
-				found = true;
+				clientinfo *cp = clients[i];
+				if(cp->state.dropped.projs.find(e.ent) >= 0)
+				{
+					cp->state.dropped.remove(e.ent);
+					found = true;
+				}
+				break;
 			}
-			break;
+			if(!found) return;
 		}
 		else if(!sents[e.ent].spawned) return;
 
