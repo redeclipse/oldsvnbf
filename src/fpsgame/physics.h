@@ -664,7 +664,7 @@ struct physics
     IVARP(smoothmove, -1, -1, 1000);
     IVARP(smoothdist, 0, 64, 1024);
 
-    void predictplayer(fpsent *d, bool move)
+    void predictplayer(fpsent *d, bool domove, int res = 0, bool local = false)
     {
         d->o = d->newpos;
 
@@ -674,7 +674,7 @@ struct physics
         d->aimyaw = d->newaimyaw;
         d->aimpitch = d->newaimpitch;
 
-        if(move)
+        if(domove)
         {
             move(d, res, local);
 
@@ -705,7 +705,7 @@ struct physics
 	{
 		if(d->state==CS_ALIVE || d->state==CS_EDITING)
 		{
-			if(smoothmove() && d->smoothmillis>0) predictplayer(d, true);
+			if(smoothmove() && d->smoothmillis>0) predictplayer(d, true, res, local);
 			else move(d, res, local);
 		}
 		else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) move(d, res, local);
