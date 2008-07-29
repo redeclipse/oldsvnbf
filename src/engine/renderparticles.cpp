@@ -514,7 +514,12 @@ struct varenderer : partrenderer
                 vs[(orient+3)&3].u = u1; \
                 vs[(orient+3)&3].v = v1; \
             } while(0)
-            float piece = 1.f / float(frames), off = p->frame * piece;
+            float piece = 1.f, off = 0.f;
+            if(frames > 1)
+            {
+				piece = 1.f / float(frames);
+				off = p->frame * piece;
+            }
             if(type&PT_RND4)
             {
                 float tx = off + (0.5f * ((p->flags>>2)&1) * piece);

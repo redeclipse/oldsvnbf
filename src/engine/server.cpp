@@ -774,13 +774,13 @@ bool serveroption(char *opt)
 int main(int argc, char* argv[])
 {
 	servertype = 3;
-	execfile("server.cfg");
 	for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 	atexit(enet_deinitialize);
 	atexit(cleanupserver);
 	enet_time_set(0);
 	initruntime();
+	execfile("server.cfg");
 	serverloop();
 	return 0;
 }

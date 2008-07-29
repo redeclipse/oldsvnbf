@@ -474,7 +474,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 		else
 		{
 			ident *id = idents->access(c);
-            if(!id || id->flags&IDF_GAME)
+            if(!id || (id->flags&IDF_GAME && numargs > 1))
 			{
                 if(!isdigit(*c) && ((*c!='+' && *c!='-' && *c!='.') || !isdigit(c[1])))
                 {
@@ -486,7 +486,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						if(k) s_strcat(arg, " ");
 						s_strcat(arg, w[k+1]);
 					}
-					if(!cc || !cc->sendcmd(numargs, c, numargs > 1 && arg[0] ? arg : NULL))
+					if(!cc || !cc->sendcmd(numargs, c, arg))
 #endif
 						conoutf("\frunknown command: %s", c);
                 }

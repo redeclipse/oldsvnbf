@@ -439,7 +439,7 @@ struct GAMECLIENT : igameclient
 			else ph.move(player1, 20, true);
 		}
 
-		if(player1->clientnum >= 0) c2sinfo();
+		if(player1->clientnum >= 0) c2sinfo(netframetime);
 	}
 
 	void damaged(int gun, int flags, int damage, int health, fpsent *d, fpsent *actor, int millis, vec &dir)

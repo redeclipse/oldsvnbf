@@ -312,7 +312,11 @@ struct GAMESERVER : igameserver
 
 	#include "duel.h"
 
-	#define mutate(b) loopvk(smuts) { servmode *mut = smuts[k]; { b; } }
+	#define mutate(a,b) loopvk(a) { servmode *mut = a[k]; { b; } }
+
+	#define BOTSERV 1
+	#include "bot.h"
+	#undef BOTSERV
 
 	string  motd;
 	GAMESERVER()
@@ -323,7 +327,8 @@ struct GAMESERVER : igameserver
 			mastermode(MM_VETO), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
 			demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
-			smode(NULL), stfmode(*this), ctfmode(*this), duelmutator(*this)
+			smode(NULL), stfmode(*this), ctfmode(*this), duelmutator(*this),
+			bot(*this)
 	{
 		CCOMMAND(gameid, "", (GAMESERVER *self), result(self->gameid()));
 		CCOMMAND(gamever, "", (GAMESERVER *self), intret(self->gamever()));
@@ -334,7 +339,7 @@ struct GAMESERVER : igameserver
 
 		motd[0] = serverdesc[0] = masterpass[0] = '\0';
 		smuts.setsize(0);
-		cleanup();
+		cleanup(true);
 	}
 
 	void *newinfo() { return new clientinfo; }
@@ -358,7 +363,7 @@ struct GAMESERVER : igameserver
 		return false;
 	}
 
-	void cleanup()
+	void cleanup(bool init)
 	{
 		gamemode = defaultmode();
 		mutators = 0;
@@ -366,35 +371,39 @@ struct GAMESERVER : igameserver
 		s_strcpy(smapname, defaultmap());
 		resetitems();
 		bannedips.setsize(0);
-		enumerate(*idents, ident, id, {
-			if(id.flags&IDF_GAME && !strncmp(id.name, "sv_", 3)) // reset vars
-			{
-				switch(id.type)
+		if(!init)
+		{
+			enumerate(*idents, ident, id, {
+				if(id.flags&IDF_GAME && !strncmp(id.name, "sv_", 3)) // reset vars
 				{
-					case ID_VAR:
+					switch(id.type)
 					{
-						setvar(id.name, id.def.i, true);
-						break;
+						case ID_VAR:
+						{
+							setvar(id.name, id.def.i, true);
+							break;
+						}
+						case ID_FVAR:
+						{
+							setfvar(id.name, id.def.f, true);
+							break;
+						}
+						case ID_SVAR:
+						{
+							setsvar(id.name, *id.def.s ? id.def.s : "", true);
+							break;
+						}
+						case ID_ALIAS:
+						{
+							worldalias(id.name, "");
+							break;
+						}
+						default: break;
 					}
-					case ID_FVAR:
-					{
-						setfvar(id.name, id.def.f, true);
-						break;
-					}
-					case ID_SVAR:
-					{
-						setsvar(id.name, *id.def.s ? id.def.s : "", true);
-						break;
-					}
-					case ID_ALIAS:
-					{
-						worldalias(id.name, "");
-						break;
-					}
-					default: break;
 				}
-			}
-		});
+			});
+			execfile("server.cfg");
+		}
 	}
 
 	vector<srventity> sents;
@@ -762,7 +771,7 @@ struct GAMESERVER : igameserver
 
 
 		if(smode) smode->reset(false);
-		mutate(mut->reset(false));
+		mutate(smuts, mut->reset(false));
 
 		loopv(clients)
 		{
@@ -773,7 +782,7 @@ struct GAMESERVER : igameserver
 			sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, team);
 
 			if(smode) smode->changeteam(ci, ci->team, team);
-			mutate(mut->changeteam(ci, ci->team, team));
+			mutate(smuts, mut->changeteam(ci, ci->team, team));
 
 			ci->team = team;
 
@@ -1009,9 +1018,9 @@ struct GAMESERVER : igameserver
 	{
 		if(clients.empty()) return false;
 		enet_uint32 millis = enet_time_get()-lastsend;
-		if(millis<33) return false;
+		if(millis<(enet_uint32)sv_netframetime) return false;
 		bool flush = buildworldstate();
-		lastsend += millis - (millis%33);
+		lastsend += millis - (millis%sv_netframetime);
 		return flush;
 	}
 
@@ -1091,7 +1100,7 @@ struct GAMESERVER : igameserver
 					if(havecn)
 					{
 						if(smode) smode->moved(cp, oldpos, cp->state.o);
-						mutate(mut->moved(cp, oldpos, cp->state.o));
+						mutate(smuts, mut->moved(cp, oldpos, cp->state.o));
 					}
 					break;
 				}
@@ -1105,7 +1114,7 @@ struct GAMESERVER : igameserver
 						if(val) smode->leavegame(ci);
 						else smode->entergame(ci);
 					}
-					mutate({
+					mutate(smuts, {
 						if (val) mut->leavegame(ci);
 						else mut->entergame(ci);
 					});
@@ -1129,7 +1138,7 @@ struct GAMESERVER : igameserver
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					int nospawn = 0;
 					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
-					mutate(if (!mut->canspawn(cp, false, true)) { nospawn++; });
+					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
 					if(cp->state.state!=CS_DEAD || cp->state.lastrespawn>=0 || nospawn)
 						break;
 					if(cp->state.lastdeath) cp->state.respawn(gamemillis);
@@ -1161,7 +1170,7 @@ struct GAMESERVER : igameserver
 					cp->state.state = CS_ALIVE;
 					cp->state.gunselect = gunselect;
 					if(smode) smode->spawned(cp);
-					mutate(mut->spawned(cp););
+					mutate(smuts, mut->spawned(cp););
 					QUEUE_BUF(100,
 					{
 						putint(buf, SV_SPAWN);
@@ -1320,7 +1329,6 @@ struct GAMESERVER : igameserver
 					{
 						if(m_team(gamemode, mutators)) team = chooseworstteam(ci);
 						else team = TEAM_NEUTRAL;
-
 						sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
 					}
 					QUEUE_INT(team);
@@ -1328,11 +1336,11 @@ struct GAMESERVER : igameserver
 					if(team != ci->team)
 					{
 						if(smode) smode->changeteam(ci, ci->team, team);
-						mutate(mut->changeteam(ci, ci->team, team));
+						mutate(smuts, mut->changeteam(ci, ci->team, team));
 						connected = true;
 					}
 					ci->team = team;
-					if(connected) checkbots(true);
+					if(connected) bot.checkbots(true);
 
 					QUEUE_MSG;
 					break;
@@ -1478,11 +1486,11 @@ struct GAMESERVER : igameserver
 					if(spinfo->state.state!=CS_SPECTATOR && val)
 					{
 						if(smode) smode->leavegame(spinfo);
-						mutate(mut->leavegame(spinfo));
+						mutate(smuts, mut->leavegame(spinfo));
 						spinfo->state.state = CS_SPECTATOR;
                     	spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
-						removebots(spinfo);
-						checkbots(true);
+						bot.removebots(spinfo);
+						bot.checkbots(true);
 					}
 					else if(spinfo->state.state==CS_SPECTATOR && !val)
 					{
@@ -1490,12 +1498,12 @@ struct GAMESERVER : igameserver
 						spinfo->state.respawn(gamemillis);
 						int nospawn = 0;
 						if (smode && !smode->canspawn(spinfo)) { nospawn++; }
-						mutate({
+						mutate(smuts, {
 							if (!mut->canspawn(spinfo)) { nospawn++; }
 						});
 						if (!nospawn) sendspawn(spinfo);
 	                    spinfo->state.lasttimeplayed = lastmillis;
-						checkbots(true);
+						bot.checkbots(true);
 					}
 					break;
 				}
@@ -1510,12 +1518,12 @@ struct GAMESERVER : igameserver
 					if(wi->team != team)
 					{
 						if (smode) smode->changeteam(wi, wi->team, team);
-						mutate(mut->changeteam(wi, wi->team, team));
+						mutate(smuts, mut->changeteam(wi, wi->team, team));
 						teamed = true;
 					}
 					wi->team = team;
 					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
-					if(teamed) checkbots(true);
+					if(teamed) bot.checkbots(true);
 					QUEUE_INT(SV_SETTEAM);
 					QUEUE_INT(who);
 					QUEUE_INT(team);
@@ -1610,7 +1618,7 @@ struct GAMESERVER : igameserver
 						resetitems();
 						notgotitems = false;
 						if(smode) smode->reset(true);
-						mutate(mut->reset(true));
+						mutate(smuts, mut->reset(true));
 					}
 					QUEUE_MSG;
 					break;
@@ -1637,44 +1645,13 @@ struct GAMESERVER : igameserver
 
 				case SV_ADDBOT:
 				{
-					int skill = getint(p);
-					if(haspriv(ci, PRIV_MASTER, true))
-					{
-						if(m_lobby(gamemode)) sendf(sender, 1, "ri", SV_NEWGAME);
-						else if(m_fight(gamemode) && sv_botbalance)
-						{
-							if(sv_botbalance < MAXCLIENTS-1)
-							{
-								setvar("sv_botbalance", sv_botbalance+1, true);
-								s_sprintfd(val)("%d", sv_botbalance);
-								sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
-							}
-							else srvoutf(sender, "botbalance is at its highest");
-						}
-						else if(!addbot(skill))
-							srvoutf(sender, "failed to create or assign bot");
-					}
+					bot.reqadd(ci, getint(p));
 					break;
 				}
 
 				case SV_DELBOT:
 				{
-					if(haspriv(ci, PRIV_MASTER, true))
-					{
-						if(m_lobby(gamemode)) sendf(sender, 1, "ri", SV_NEWGAME);
-						else if(m_fight(gamemode) && sv_botbalance)
-						{
-							if(sv_botbalance > 1)
-							{
-								setvar("sv_botbalance", sv_botbalance-1, true);
-								s_sprintfd(val)("%d", sv_botbalance);
-								sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
-							}
-							else srvoutf(sender, "botbalance is at its lowest");
-						}
-						else if(!deletebot())
-							srvoutf(sender, "failed to remove any bots");
-					}
+					bot.reqdel(ci);
 					break;
 				}
 
@@ -1700,201 +1677,6 @@ struct GAMESERVER : igameserver
 				}
 			}
 			//conoutf("\fy[server] msg: %d, prev: %d", type, prevtype);
-		}
-	}
-
-	int findbotclient()
-	{
-		vector<int> siblings;
-		while(siblings.length() < clients.length()) siblings.add(-1);
-		loopv(clients)
-		{
-			clientinfo *ci = clients[i];
-			if(ci->state.ownernum >= 0 || !ci->name[0] || ci->state.state == CS_SPECTATOR)
-				siblings[i] = -1;
-			else
-			{
-				siblings[i] = 0;
-				loopvj(clients)
-					if(clients[j]->state.ownernum == ci->clientnum)
-						siblings[i]++;
-			}
-		}
-		while(!siblings.empty())
-		{
-			int q = -1;
-			loopv(siblings)
-				if(siblings[i] >= 0 && (!siblings.inrange(q) || siblings[i] < siblings[q]))
-					q = i;
-			if(siblings.inrange(q)) return clients[q]->clientnum;
-			else if(siblings.inrange(q)) siblings.remove(q);
-			else break;
-		}
-		return -1;
-	}
-
-	bool addbot(int skill)
-	{
-		int cn = addclient(ST_REMOTE);
-		if(cn >= 0)
-		{
-			clientinfo *ci = (clientinfo *)getinfo(cn);
-			if(ci)
-			{
-				ci->clientnum = cn;
-				ci->state.ownernum = findbotclient();
-				if(ci->state.ownernum >= 0)
-				{
-					int s = skill, m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
-						n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
-					if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
-					ci->state.skill = clamp(s, 1, 100);
-					ci->state.state = CS_DEAD;
-					clients.add(ci);
-					ci->state.lasttimeplayed = lastmillis;
-					s_strncpy(ci->name, "bot", MAXNAMELEN);
-
-					if(m_team(gamemode, mutators)) ci->team = chooseworstteam(ci);
-					else ci->team = TEAM_NEUTRAL;
-
-					sendf(-1, 1, "ri4si", SV_INITBOT, ci->state.ownernum, ci->state.skill, ci->clientnum, ci->name, ci->team);
-
-					if(ci->state.state != CS_SPECTATOR)
-					{
-						int nospawn = 0;
-						if(smode && !smode->canspawn(ci, true)) { nospawn++; }
-						mutate(if (!mut->canspawn(ci, true)) { nospawn++; });
-
-						if(nospawn)
-						{
-							ci->state.state = CS_DEAD;
-							sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
-						}
-						else sendspawn(ci);
-					}
-					return true;
-				}
-				clients.removeobj(ci);
-			}
-			delclient(cn);
-		}
-		return false;
-	}
-
-	void removebot(clientinfo *ci)
-	{
-		int cn = ci->clientnum;
-		if(smode) smode->leavegame(ci, true);
-		mutate(mut->leavegame(ci));
-		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-		savescore(ci);
-		sendf(-1, 1, "ri2", SV_CDIS, cn);
-		clients.removeobj(ci);
-		delclient(cn);
-	}
-
-	bool deletebot()
-	{
-		loopvrev(clients) if(clients[i]->state.ownernum >= 0)
-		{
-			removebot(clients[i]);
-			return true;
-		}
-		return false;
-	}
-
-	void removebots(clientinfo *ci)
-	{
-		loopvrev(clients) if(clients[i]->state.ownernum == ci->clientnum)
-		{
-			clientinfo *cp = clients[i];
-			removebot(cp);
-		}
-	}
-
-	bool reassignbots()
-	{
-		vector<int> siblings;
-		while(siblings.length() < clients.length()) siblings.add(-1);
-		int hi = -1, lo = -1;
-		loopv(clients)
-		{
-			clientinfo *ci = clients[i];
-			if(ci->state.ownernum >= 0 || !ci->name[0] || ci->state.state == CS_SPECTATOR)
-				siblings[i] = -1;
-			else
-			{
-				siblings[i] = 0;
-				loopvj(clients)
-					if(clients[j]->state.ownernum == ci->clientnum)
-						siblings[i]++;
-
-				if(!siblings.inrange(hi) || siblings[i] > siblings[hi])
-					hi = i;
-				if(!siblings.inrange(lo) || siblings[i] < siblings[lo])
-					lo = i;
-			}
-		}
-		if(siblings.inrange(hi) && siblings.inrange(lo) && (siblings[hi]-siblings[lo]) > 1)
-		{
-			clientinfo *ci = clients[hi];
-			loopvrev(clients) if(clients[i]->state.ownernum == ci->clientnum)
-			{
-				clientinfo *cp = clients[i];
-				cp->state.ownernum = clients[lo]->clientnum;
-				if(cp->state.ownernum >= 0)
-				{
-					sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
-					return true;
-				}
-				else removebot(cp);
-			}
-		}
-		return false;
-	}
-
-	void checkbots(bool renew = false)
-	{
-		if(renew)
-		{
-			if(sv_botratio && nonspectators() && m_fight(gamemode) && m_team(gamemode, mutators))
-			{
-				loopvrev(clients) if(clients[i]->state.ownernum >= 0)
-				{
-					int team = chooseworstteam(clients[i]);
-					if(team != clients[i]->team)
-					{
-						clients[i]->team = team;
-						sendf(-1, 1, "ri3", SV_SETTEAM, clients[i]->clientnum, team);
-					}
-				}
-			}
-		}
-		else if(m_lobby(gamemode))
-		{
-			loopvrev(clients)
-				if(clients[i]->state.ownernum >= 0)
-					removebot(clients[i]);
-		}
-		else if(nonspectators())
-		{
-			loopvrev(clients) if(clients[i]->state.ownernum >= 0)
-			{
-				int m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
-					n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
-				if(clients[i]->state.skill > m || clients[i]->state.skill < n)
-					removebot(clients[i]);
-			}
-
-			if(m_fight(gamemode))
-			{
-				if(sv_botbalance)
-				{
-					while(nonspectators() < sv_botbalance && addbot(-1)) ;
-					while(nonspectators() > sv_botbalance && deletebot()) ;
-				}
-			}
-			while(reassignbots()) ;
 		}
 	}
 
@@ -2066,7 +1848,7 @@ struct GAMESERVER : igameserver
 		{
 			int nospawn = 0;
 			if(smode && !smode->canspawn(ci, true)) { nospawn++; }
-			mutate(if(!mut->canspawn(ci, true)) { nospawn++; });
+			mutate(smuts, if(!mut->canspawn(ci, true)) { nospawn++; });
 			if(nospawn)
 			{
 				ci->state.state = CS_DEAD;
@@ -2112,7 +1894,7 @@ struct GAMESERVER : igameserver
 		p.buf = packet->data;
 
 		if(smode) smode->initclient(ci, p, true);
-		mutate(mut->initclient(ci, p, true));
+		mutate(smuts, mut->initclient(ci, p, true));
 
 		return 1;
 	}
@@ -2138,7 +1920,7 @@ struct GAMESERVER : igameserver
 				if(!minremain)
 				{
 					if(smode) smode->intermission();
-					mutate(mut->intermission());
+					mutate(smuts, mut->intermission());
 				}
 				else if(minremain == 1)
 					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, "only one minute left of play!");
@@ -2203,7 +1985,7 @@ struct GAMESERVER : igameserver
 		if(flags&HIT_LEGS) setdamage = damage/4;
 		else if (flags&HIT_TORSO) setdamage = damage/2;
 		if(smode && !smode->damage(target, actor, setdamage, gun, flags, hitpush)) { return; }
-		mutate(if(!mut->damage(target, actor, setdamage, gun, flags, hitpush)) { return; });
+		mutate(smuts, if(!mut->damage(target, actor, setdamage, gun, flags, hitpush)) { return; });
 
 		if(!m_fight(gamemode) || (!sv_teamdamage && m_team(gamemode, mutators) && actor->team == target->team))
 			realdamage = 0;
@@ -2232,7 +2014,7 @@ struct GAMESERVER : igameserver
 				ts.gundrop.push(ts.gunselect);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
-			mutate(mut->died(target, actor));
+			mutate(smuts, mut->died(target, actor));
 			ts.state = CS_DEAD;
 			ts.lastdeath = gamemillis;
 			// don't issue respawn yet until DEATHMILLIS has elapsed
@@ -2296,7 +2078,7 @@ struct GAMESERVER : igameserver
 			gs.gundrop.push(gs.gunselect);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
-		mutate(mut->died(ci, NULL));
+		mutate(smuts, mut->died(ci, NULL));
 		gs.state = CS_DEAD;
 		gs.respawn(gamemillis);
 	}
@@ -2508,8 +2290,8 @@ struct GAMESERVER : igameserver
                 }
 			}
 			if(smode) smode->update();
-			mutate(mut->update());
-			checkbots();
+			mutate(smuts, mut->update());
+			bot.checkbots();
 		}
 
 		while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000)
@@ -2612,19 +2394,19 @@ struct GAMESERVER : igameserver
 	void clientdisconnect(int n)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
-		removebots(ci);
+		bot.removebots(ci);
 		if(ci->privilege) setmaster(ci, false);
 		if(smode) smode->leavegame(ci, true);
-		mutate(mut->leavegame(ci));
+		mutate(smuts, mut->leavegame(ci));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, n);
 		clients.removeobj(ci);
-		if(clients.empty()) cleanup();
+		if(clients.empty()) cleanup(false);
 		else
 		{
 			checkvotes();
-			checkbots(true);
+			bot.checkbots(true);
 		}
 	}
 

@@ -1,3 +1,250 @@
+#ifdef BOTSERV
+struct botserv
+{
+	GAMESERVER &sv;
+	botserv(GAMESERVER &_sv) : sv(_sv) {}
+
+	void reqadd(clientinfo *ci, int skill)
+	{
+		if(sv.haspriv(ci, PRIV_MASTER, true))
+		{
+			if(m_lobby(sv.gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
+			else if(m_fight(sv.gamemode) && sv_botbalance)
+			{
+				if(sv_botbalance < MAXCLIENTS-1)
+				{
+					setvar("sv_botbalance", sv_botbalance+1, true);
+					s_sprintfd(val)("%d", sv_botbalance);
+					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
+				}
+				else sv.srvoutf(ci->clientnum, "botbalance is at its highest");
+			}
+			else if(!addbot(skill))
+				sv.srvoutf(ci->clientnum, "failed to create or assign bot");
+		}
+	}
+
+	void reqdel(clientinfo *ci)
+	{
+		if(sv.haspriv(ci, PRIV_MASTER, true))
+		{
+			if(m_lobby(sv.gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
+			else if(m_fight(sv.gamemode) && sv_botbalance)
+			{
+				if(sv_botbalance > 1)
+				{
+					setvar("sv_botbalance", sv_botbalance-1, true);
+					s_sprintfd(val)("%d", sv_botbalance);
+					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
+				}
+				else sv.srvoutf(ci->clientnum, "botbalance is at its lowest");
+			}
+			else if(!delbot())
+				sv.srvoutf(ci->clientnum, "failed to remove any bots");
+		}
+	}
+
+	int findbotclient()
+	{
+		vector<int> siblings;
+		while(siblings.length() < sv.clients.length()) siblings.add(-1);
+		loopv(sv.clients)
+		{
+			clientinfo *ci = sv.clients[i];
+			if(ci->state.ownernum >= 0 || !ci->name[0] || ci->state.state == CS_SPECTATOR)
+				siblings[i] = -1;
+			else
+			{
+				siblings[i] = 0;
+				loopvj(sv.clients)
+					if(sv.clients[j]->state.ownernum == ci->clientnum)
+						siblings[i]++;
+			}
+		}
+		while(!siblings.empty())
+		{
+			int q = -1;
+			loopv(siblings)
+				if(siblings[i] >= 0 && (!siblings.inrange(q) || siblings[i] < siblings[q]))
+					q = i;
+			if(siblings.inrange(q)) return sv.clients[q]->clientnum;
+			else if(siblings.inrange(q)) siblings.remove(q);
+			else break;
+		}
+		return -1;
+	}
+
+	bool addbot(int skill)
+	{
+		int cn = addclient(ST_REMOTE);
+		if(cn >= 0)
+		{
+			clientinfo *ci = (clientinfo *)getinfo(cn);
+			if(ci)
+			{
+				ci->clientnum = cn;
+				ci->state.ownernum = findbotclient();
+				if(ci->state.ownernum >= 0)
+				{
+					int s = skill, m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
+						n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
+					if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
+					ci->state.skill = clamp(s, 1, 100);
+					ci->state.state = CS_DEAD;
+					sv.clients.add(ci);
+					ci->state.lasttimeplayed = lastmillis;
+					s_strncpy(ci->name, "bot", MAXNAMELEN);
+
+					if(m_team(sv.gamemode, sv.mutators)) ci->team = sv.chooseworstteam(ci);
+					else ci->team = TEAM_NEUTRAL;
+
+					sendf(-1, 1, "ri4si", SV_INITBOT, ci->state.ownernum, ci->state.skill, ci->clientnum, ci->name, ci->team);
+
+					if(ci->state.state != CS_SPECTATOR)
+					{
+						int nospawn = 0;
+						if(sv.smode && !sv.smode->canspawn(ci, true)) { nospawn++; }
+						mutate(sv.smuts, if (!mut->canspawn(ci, true)) { nospawn++; });
+
+						if(nospawn)
+						{
+							ci->state.state = CS_DEAD;
+							sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
+						}
+						else sv.sendspawn(ci);
+					}
+					return true;
+				}
+				sv.clients.removeobj(ci);
+			}
+			delclient(cn);
+		}
+		return false;
+	}
+
+	void removebot(clientinfo *ci)
+	{
+		int cn = ci->clientnum;
+		if(sv.smode) sv.smode->leavegame(ci, true);
+		mutate(sv.smuts, mut->leavegame(ci));
+		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
+		sv.savescore(ci);
+		sendf(-1, 1, "ri2", SV_CDIS, cn);
+		sv.clients.removeobj(ci);
+		delclient(cn);
+	}
+
+	bool delbot()
+	{
+		loopvrev(sv.clients) if(sv.clients[i]->state.ownernum >= 0)
+		{
+			removebot(sv.clients[i]);
+			return true;
+		}
+		return false;
+	}
+
+	void removebots(clientinfo *ci)
+	{
+		loopvrev(sv.clients) if(sv.clients[i]->state.ownernum == ci->clientnum)
+		{
+			clientinfo *cp = sv.clients[i];
+			removebot(cp);
+		}
+	}
+
+	bool reassignbots()
+	{
+		vector<int> siblings;
+		while(siblings.length() < sv.clients.length()) siblings.add(-1);
+		int hi = -1, lo = -1;
+		loopv(sv.clients)
+		{
+			clientinfo *ci = sv.clients[i];
+			if(ci->state.ownernum >= 0 || !ci->name[0] || ci->state.state == CS_SPECTATOR)
+				siblings[i] = -1;
+			else
+			{
+				siblings[i] = 0;
+				loopvj(sv.clients)
+					if(sv.clients[j]->state.ownernum == ci->clientnum)
+						siblings[i]++;
+
+				if(!siblings.inrange(hi) || siblings[i] > siblings[hi])
+					hi = i;
+				if(!siblings.inrange(lo) || siblings[i] < siblings[lo])
+					lo = i;
+			}
+		}
+		if(siblings.inrange(hi) && siblings.inrange(lo) && (siblings[hi]-siblings[lo]) > 1)
+		{
+			clientinfo *ci = sv.clients[hi];
+			loopvrev(sv.clients) if(sv.clients[i]->state.ownernum == ci->clientnum)
+			{
+				clientinfo *cp = sv.clients[i];
+				cp->state.ownernum = sv.clients[lo]->clientnum;
+				if(cp->state.ownernum >= 0)
+				{
+					sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
+					return true;
+				}
+				else removebot(cp);
+			}
+		}
+		return false;
+	}
+
+	void checkbots(bool renew = false)
+	{
+		if(renew)
+		{
+			if(sv_botratio && sv.nonspectators() && m_fight(sv.gamemode) && m_team(sv.gamemode, sv.mutators))
+			{
+				loopvrev(sv.clients) if(sv.clients[i]->state.ownernum >= 0)
+				{
+					clientinfo *cp = sv.clients[i];
+					int team = sv.chooseworstteam(cp);
+					if(team != cp->team)
+					{
+						cp->team = team;
+						sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
+					}
+				}
+			}
+		}
+		else if(m_lobby(sv.gamemode))
+		{
+			loopvrev(sv.clients)
+				if(sv.clients[i]->state.ownernum >= 0)
+					removebot(sv.clients[i]);
+		}
+		else if(sv.nonspectators())
+		{
+			loopvrev(sv.clients) if(sv.clients[i]->state.ownernum >= 0)
+			{
+				clientinfo *cp = sv.clients[i];
+				int m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
+					n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
+				if(cp->state.skill > m || cp->state.skill < n)
+				{
+					cp->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
+					sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
+				}
+			}
+
+			if(m_fight(sv.gamemode))
+			{
+				if(sv_botbalance)
+				{
+					while(sv.nonspectators() < sv_botbalance && addbot(-1)) ;
+					while(sv.nonspectators() > sv_botbalance && delbot()) ;
+				}
+			}
+			while(reassignbots()) ;
+		}
+	}
+} bot;
+#else
 struct botclient
 {
 	GAMECLIENT &cl;
@@ -44,6 +291,46 @@ struct botclient
 		{
 			DELETEP(d->bot);
 			d->bot = NULL;
+		}
+	}
+
+	void init(fpsent *d, int on, int sk, int bn, char *name, int tm)
+	{
+		bool rst = false;
+		fpsent *o = cl.getclient(on);
+		s_sprintfd(m)("%s", o ? cl.colorname(o) : "unknown");
+		string r; r[0] = 0;
+
+		if(!d->name[0])
+		{
+			s_sprintf(r)("assigned to %s at skill %d", m, sk);
+			rst = true;
+		}
+		else if(d->ownernum != on)
+		{
+			s_sprintf(r)("reassigned to %s", m);
+			rst = true;
+		}
+		else if(d->skill != sk)
+		{
+			s_sprintf(r)("changed skill to %d", sk);
+		}
+		else if(d->team != tm)
+		{
+			s_sprintf(r)("balanced to \fs%s%s\fS team", teamtype[tm].chat, teamtype[tm].name);
+		}
+
+		s_strncpy(d->name, name, MAXNAMELEN);
+		d->ownernum = on;
+		d->skill = sk;
+		d->team = tm;
+
+		if(r[0]) conoutf("\fg%s %s", cl.colorname(d), r);
+
+		if(rst) // only if connecting or changing owners
+		{
+			if(cl.player1->clientnum == d->ownernum) create(d);
+			else if(d->bot) destroy(d);
 		}
 	}
 
@@ -324,7 +611,7 @@ struct botclient
 			{
 				case WEAPON:
 				{
-					if(e.spawned && isgun(e.attr1) && guntype[e.attr1].rdelay > 0 && d->ammo[e.attr1] <= 0 && e.attr1 != GUN_PISTOL)
+					if(e.spawned && isgun(e.attr1) && guntype[e.attr1].rdelay > 0 && e.attr1 != GUN_PISTOL)
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = BS_INTEREST;
@@ -333,7 +620,7 @@ struct botclient
 						n.targtype = BT_ENTITY;
 						n.expire = 10000;
 						n.tolerance = enttype[e.type].radius+d->radius;
-						n.score = pos.dist(e.o)/(d->gunselect != GUN_PISTOL ? 1.f : 10.f);
+						n.score = pos.dist(e.o)/(d->ammo[e.attr1] <= 0 ? 10.f : 1.f);
 						n.defers = true;
 					}
 					break;
@@ -345,7 +632,7 @@ struct botclient
 		loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner)
 		{
 			projent &proj = *cl.pj.projs[j];
-			if(proj.state != CS_DEAD && !proj.beenused && isgun(proj.attr1) && guntype[proj.attr1].rdelay > 0 && d->ammo[proj.attr1] <= 0 && proj.attr1 != GUN_PISTOL)
+			if(proj.state != CS_DEAD && !proj.beenused && isgun(proj.attr1) && guntype[proj.attr1].rdelay > 0 && proj.attr1 != GUN_PISTOL)
 			{ // go get a weapon upgrade
 				interest &n = interests.add();
 				n.state = BS_INTEREST;
@@ -354,7 +641,7 @@ struct botclient
 				n.targtype = BT_DROP;
 				n.expire = 5000;
 				n.tolerance = enttype[proj.ent].radius+d->radius;
-				n.score = pos.dist(proj.o)/(d->gunselect != GUN_PISTOL ? 1.f : 10.f);
+				n.score = pos.dist(proj.o)/(d->ammo[proj.attr1] <= 0 ? 10.f : 1.f);
 				n.defers = true;
 			}
 		}
@@ -570,24 +857,11 @@ struct botclient
 							{
 								case WEAPON:
 								{
-									if(!e.spawned || d->ammo[e.attr1] > 0 || e.attr1 == GUN_PISTOL)
+									if(!e.spawned || e.attr1 == GUN_PISTOL)
 										return false;
 									break;
 								}
 								default: break;
-							}
-							if(lastmillis-d->usetime > 3000 && d->canuse(e.type, e.attr1, e.attr2, lastmillis))
-							{
-								float eye = d->height*0.5f;
-								vec m = d->o;
-								m.z -= eye;
-
-								if(insidesphere(m, eye, d->radius-1.f, e.o, enttype[e.type].height, enttype[e.type].radius))
-								{
-									d->useaction = true;
-									d->usetime = lastmillis;
-									return false;
-								}
 							}
 						}
 						if(makeroute(d, b, e.o, enttype[e.type].radius+d->radius))
@@ -603,21 +877,8 @@ struct botclient
 					loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner->clientnum == b.target)
 					{
 						projent &proj = *cl.pj.projs[j];
-						if(!proj.beenused && proj.state != CS_DEAD && d->ammo[proj.attr1] <= 0 && proj.attr1 != GUN_PISTOL)
+						if(!proj.beenused && proj.state != CS_DEAD && proj.attr1 != GUN_PISTOL)
 						{
-							if(lastmillis-d->usetime > 3000 && d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis))
-							{
-								float eye = d->height*0.5f;
-								vec m = d->o;
-								m.z -= eye;
-
-								if(insidesphere(m, eye, d->radius-1.f, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius))
-								{
-									d->useaction = true;
-									d->usetime = lastmillis;
-									return false;
-								}
-							}
 							if(makeroute(d, b, proj.o, enttype[proj.ent].radius+d->radius))
 							{
 								defer(d, b, false);
@@ -814,6 +1075,53 @@ struct botclient
 			if(d->ammo[d->gunselect] <= 0 && d->canreload(d->gunselect, lastmillis))
 			{
 				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+			}
+			else if(lastmillis-d->usetime > 3000 && !d->useaction)
+			{
+				bool useme = false;
+				loopv(cl.et.ents) if(enttype[cl.et.ents[i]->type].usetype == EU_ITEM && cl.et.ents[i]->type == WEAPON)
+				{
+					fpsentity &e = (fpsentity &)*cl.et.ents[i];
+					if(e.spawned && e.attr1 != GUN_PISTOL)
+					{
+						if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
+						{
+							float eye = d->height*0.5f;
+							vec m = d->o;
+							m.z -= eye;
+
+							if(insidesphere(m, eye, d->radius-1.f, e.o, enttype[e.type].height, enttype[e.type].radius))
+							{
+								useme = true;
+								break;
+							}
+						}
+					}
+				}
+				if(!useme) loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner)
+				{
+					projent &proj = *cl.pj.projs[j];
+					if(!proj.beenused && proj.state != CS_DEAD && d->ammo[proj.attr1] <= 0 && proj.attr1 != GUN_PISTOL)
+					{
+						if(d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis))
+						{
+							float eye = d->height*0.5f;
+							vec m = d->o;
+							m.z -= eye;
+
+							if(insidesphere(m, eye, d->radius-1.f, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius))
+							{
+								useme = true;
+								break;
+							}
+						}
+					}
+				}
+				if(useme)
+				{
+					d->useaction = true;
+					d->usetime = lastmillis;
+				}
 			}
 
 			bool aiming = false;
@@ -1021,3 +1329,4 @@ struct botclient
 		}
 	}
 } bot;
+#endif
