@@ -56,22 +56,22 @@ struct ident
 
     ident() {}
     // ID_VAR
-    ident(int t, const char *n, int m, int c, int x, int *s, void *f = NULL, int flags = IDF_COMPLETE)
+    ident(int t, const char *n, int m, int c, int x, int *s, void *f, int flags = IDF_COMPLETE)
         : type(t), name(n), minval(m), maxval(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
     { val.i = def.i = c; storage.i = s; }
     // ID_FVAR
-    ident(int t, const char *n, float c, float *s, void *f = NULL, int flags = IDF_COMPLETE)
+    ident(int t, const char *n, float c, float *s, void *f, int flags = IDF_COMPLETE)
         : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
     { val.f = def.f = c; storage.f = s; }
     // ID_SVAR
-    ident(int t, const char *n, const char *c, char **s, void *f = NULL, int flags = IDF_COMPLETE)
+    ident(int t, const char *n, char *d, char *c, char **s, void *f, int flags = IDF_COMPLETE)
         : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
-    { val.s = newstring(*c ? c : ""); def.s = newstring(*c ? c : ""); storage.s = s; }
+    { val.s = c; def.s = d; storage.s = s; }
     // ID_ALIAS
     ident(int t, const char *n, char *a, int flags)
         : type(t), name(n), override(NO_OVERRIDE), stack(NULL), action(a), flags(flags) {}
     // ID_COMMAND, ID_CCOMMAND
-    ident(int t, const char *n, const char *narg, void *f = NULL, void *s = NULL, int flags = IDF_COMPLETE)
+    ident(int t, const char *n, const char *narg, void *f, void *s, int flags = IDF_COMPLETE)
         : type(t), name(n), fun((void (__cdecl *)(void))f), narg(narg), self(s), flags(flags) {}
 
     virtual ~ident() {}
@@ -90,7 +90,7 @@ extern identtable *idents;
 
 extern int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), int flags);
 extern float fvariable(const char *name, float cur, float *storage, void (*fun)(), int flags);
-extern char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), int flags);
+extern char *svariable(const char *name, char *cur, char **storage, void (*fun)(), int flags);
 extern void setvar(const char *name, int i, bool dofunc = false);
 extern void setfvar(const char *name, float f, bool dofunc = false);
 extern void setsvar(const char *name, const char *str, bool dofunc = false);
@@ -197,7 +197,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define _IVAR(n, m, c, x, b, p) \
 	struct var_##n : ident \
 	{ \
-        var_##n() : ident(ID_VAR, #n, m, c, x, &val.i, NULL, p) \
+        var_##n() : ident(ID_VAR, #n, m, c, x, &val.i, (void *)NULL, p) \
 		{ \
             addident(name, this); \
 		} \
@@ -216,7 +216,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define _IFVAR(n, c, b, p) \
 	struct var_##n : ident \
 	{ \
-        var_##n() : ident(ID_FVAR, #n, c, &val.f, NULL, p) \
+        var_##n() : ident(ID_FVAR, #n, c, &val.f, (void *)NULL, p) \
 		{ \
             addident(name, this); \
 		} \
@@ -235,7 +235,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define _ISVAR(n, c, b, p) \
 	struct var_##n : ident \
 	{ \
-        var_##n() : ident(ID_SVAR, #n, c, &val.s, NULL, p) \
+        var_##n() : ident(ID_SVAR, #n, c, c, &val.s, (void *)NULL, p) \
 		{ \
             addident(name, this); \
 		} \

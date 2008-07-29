@@ -119,12 +119,12 @@ void aliasa(const char *name, char *action)
         int flags = IDF_COMPLETE;
         if(persistidents) flags |= IDF_PERSIST;
         if(worldidents) flags |= IDF_WORLD;
-        ident b(ID_ALIAS, newstring(name), action, flags);
-        if(overrideidents) b.override = OVERRIDDEN;
+        ident d(ID_ALIAS, newstring(name), action, flags);
+        if(overrideidents && d.flags&IDF_OVERRIDE) d.override = OVERRIDDEN;
 #ifdef STANDALONE
-		idents->access(b.name, &b);
+		idents->access(d.name, &d);
 #else
-		ident *c = idents->access(b.name, &b);
+		ident *c = idents->access(d.name, &d);
 		if(cc && c) cc->editvar(c, interactive);
 #endif
 	}
@@ -137,7 +137,7 @@ void aliasa(const char *name, char *action)
 	{
         if(b->action != b->isexecuting) delete[] b->action;
         b->action = action;
-        if(overrideidents) b->override = OVERRIDDEN;
+        if(overrideidents && b->flags&IDF_OVERRIDE) b->override = OVERRIDDEN;
 		else
 		{
             if(b->override != NO_OVERRIDE) b->override = NO_OVERRIDE;
@@ -146,11 +146,8 @@ void aliasa(const char *name, char *action)
                 if(!(b->flags & IDF_PERSIST)) b->flags |= IDF_PERSIST;
             }
             else if(b->flags & IDF_PERSIST) b->flags &= ~IDF_PERSIST;
-            if(worldidents)
-            {
-                if(!(b->flags & IDF_WORLD)) b->flags |= IDF_WORLD;
-            }
-            else if(b->flags & IDF_WORLD) b->flags &= ~IDF_WORLD;
+            if(b->type == ID_ALIAS && worldidents && !(b->flags & IDF_WORLD))
+				b->flags |= IDF_WORLD;
 
 #ifndef STANDALONE
 			if(cc) cc->editvar(b, interactive);
@@ -191,10 +188,10 @@ float fvariable(const char *name, float cur, float *storage, void (*fun)(), int 
     return cur;
 }
 
-char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), int flags)
+char *svariable(const char *name, char *cur, char **storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
-    ident v(ID_SVAR, name, cur, storage, (void *)fun, flags);
+    ident v(ID_SVAR, name, cur, cur, storage, (void *)fun, flags);
     idents->access(name, &v);
     return v.val.s;
 }
@@ -264,7 +261,7 @@ const char *getalias(const char *name)
 bool addcommand(const char *name, void (*fun)(), const char *narg)
 {
 	if(!idents) idents = new identtable;
-    ident c(ID_COMMAND, name, narg, (void *)fun);
+    ident c(ID_COMMAND, name, narg, (void *)fun, (void *)NULL);
 	idents->access(name, &c);
 	return false;
 }
@@ -564,7 +561,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 #endif
 
                         #define OVERRIDEVAR(saveval, resetval) \
-                            if(overrideidents || id->flags&IDF_OVERRIDE) \
+                            if(overrideidents && id->flags&IDF_OVERRIDE) \
                             { \
                                 if(id->flags&IDF_PERSIST) \
                                 { \
@@ -639,7 +636,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 					}
 					_numargs = numargs-1;
 					bool wasoverriding = overrideidents;
-                    if(id->override!=NO_OVERRIDE) overrideidents = true;
+                    if(id->flags&IDF_OVERRIDE && id->override!=NO_OVERRIDE) overrideidents = true;
                     char *wasexecuting = id->isexecuting;
                     id->isexecuting = id->action;
                     setretval(executeret(id->action));

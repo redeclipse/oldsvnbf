@@ -611,7 +611,7 @@ struct botclient
 			{
 				case WEAPON:
 				{
-					if(e.spawned && isgun(e.attr1) && guntype[e.attr1].rdelay > 0 && e.attr1 != GUN_PISTOL)
+					if(e.spawned && isgun(e.attr1) && guntype[e.attr1].rdelay > 0 && e.attr1 != GUN_PISTOL && guntype[e.attr1].rdelay > 0)
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = BS_INTEREST;
@@ -632,9 +632,8 @@ struct botclient
 		loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner != d)
 		{
 			projent &proj = *cl.pj.projs[j];
-			if(proj.state != CS_DEAD && !proj.beenused && isgun(proj.attr1) && guntype[proj.attr1].rdelay > 0)
+			if(proj.state != CS_DEAD && !proj.beenused && isgun(proj.attr1) && proj.attr1 != GUN_PISTOL && guntype[proj.attr1].rdelay > 0)
 			{ // go get a weapon upgrade
-				if(proj.attr1 == GUN_PISTOL || guntype[proj.attr1].rdelay <= 0) continue;
 				interest &n = interests.add();
 				n.state = BS_INTEREST;
 				n.node = cl.et.waypointnode(proj.o, true);
@@ -858,7 +857,7 @@ struct botclient
 							{
 								case WEAPON:
 								{
-									if(!e.spawned || e.attr1 == GUN_PISTOL)
+									if(!e.spawned || e.attr1 == GUN_PISTOL || guntype[e.attr1].rdelay <= 0)
 										return false;
 									break;
 								}
@@ -878,7 +877,7 @@ struct botclient
 					loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner != d && cl.pj.projs[j]->owner->clientnum == b.target)
 					{
 						projent &proj = *cl.pj.projs[j];
-						if(!proj.beenused && proj.state != CS_DEAD && proj.attr1 != GUN_PISTOL && proj.attr1 != GUN_GL)
+						if(!proj.beenused && proj.state != CS_DEAD && proj.attr1 != GUN_PISTOL && guntype[proj.attr1].rdelay > 0)
 						{
 							if(makeroute(d, b, proj.o, enttype[proj.ent].radius+d->radius))
 							{
@@ -1083,7 +1082,7 @@ struct botclient
 				loopv(cl.et.ents) if(enttype[cl.et.ents[i]->type].usetype == EU_ITEM && cl.et.ents[i]->type == WEAPON)
 				{
 					fpsentity &e = (fpsentity &)*cl.et.ents[i];
-					if(e.spawned && e.attr1 != GUN_PISTOL)
+					if(e.spawned && e.attr1 != GUN_PISTOL && guntype[e.attr1].rdelay > 0)
 					{
 						if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
 						{
@@ -1102,7 +1101,7 @@ struct botclient
 				if(!useme) loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner != d)
 				{
 					projent &proj = *cl.pj.projs[j];
-					if(!proj.beenused && proj.state != CS_DEAD && d->ammo[proj.attr1] <= 0 && proj.attr1 != GUN_PISTOL && proj.attr1 != GUN_GL)
+					if(!proj.beenused && proj.state != CS_DEAD && d->ammo[proj.attr1] <= 0 && proj.attr1 != GUN_PISTOL && guntype[proj.attr1].rdelay > 0)
 					{
 						if(d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis))
 						{

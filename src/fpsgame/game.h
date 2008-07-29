@@ -91,7 +91,7 @@ enum
 };
 
 #define SGRAYS			20
-#define SGSPREAD		5
+#define SGSPREAD		50
 #define GUNSWITCHDELAY	800
 #define PLAYERHEIGHT	15.f
 

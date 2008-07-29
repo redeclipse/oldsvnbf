@@ -802,13 +802,13 @@ int main(int argc, char **argv)
 	computescreen("loading...");
 	inbetweenframes = true;
     loadshaders();
-	particleinit();
-    initdecals();
-    preloadtextures();
 
 	conoutf("\fminit: world");
 	emptymap(0, true, NULL, true);
 	rehash(false);
+    preloadtextures();
+	particleinit();
+    initdecals();
     cl->preload();
 
 	conoutf("\fminit: mainloop");
