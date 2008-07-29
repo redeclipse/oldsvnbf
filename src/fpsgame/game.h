@@ -390,15 +390,16 @@ enum
 VARG(netframetime, 0, 40, 1000);
 
 VARG(teamdamage, 0, 1, 1);
-VARG(timelimit, 0, 10, INT_MAX-1);
-VARG(ctflimit, 0, 10, INT_MAX-1);
+VARG(entspawntime, 0, 0, 60);
+VARG(timelimit, 0, 10, 60);
+VARG(ctflimit, 0, 10, 100);
 VARG(stflimit, 0, 1, 1);
 
 VARG(spawngun, 0, GUN_PISTOL, GUN_MAX-1);
 VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
-VARG(botbalance, 0, 6, MAXCLIENTS-1);
-VARG(botratio, 0, 2, 100);
+VARG(botbalance, 0, 4, 16);
+VARG(botratio, 0, 2, 10);
 VARG(botminskill, 0, 30, 100);
 VARG(botmaxskill, 0, 80, 100);
 
