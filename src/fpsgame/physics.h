@@ -92,19 +92,19 @@ struct physics
 	}
 	float jumpvelocity(physent *d)
 	{
-		return (d->inliquid ? float(liquidvel()) : float(jumpvel()))*(float(d->weight)/100.f);
+		return (d->inliquid ? float(liquidvel()) : float(jumpvel()))*(float(d->weight)/100.f)*jumpscale;
 	}
 	float gravityforce(physent *d)
 	{
-		return float(gravity())*(float(d->weight)/100.f);
+		return float(gravity())*(float(d->weight)/100.f)*gravityscale;
 	}
 	float maxspeed(physent *d)
 	{
 		if(d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_EDITING)
 		{
-			return d->maxspeed*(float(iscrouching(d) ? crawlspeed() : movespeed())/100.f)*(float(d->weight)/100.f);
+			return d->maxspeed*(float(iscrouching(d) ? crawlspeed() : movespeed())/100.f)*(float(d->weight)/100.f)*speedscale;
 		}
-		return d->maxspeed;
+		return d->maxspeed*(float(movespeed())/100.f)*(float(d->weight)/100.f)*speedscale;
 	}
 	float stepspeed(physent *d)
 	{
@@ -135,7 +135,6 @@ struct physics
 	{
 		return d->type == ENT_CAMERA || d->state == CS_SPECTATOR || d->state == CS_EDITING;
 	}
-
 
     void recalcdir(physent *d, const vec &oldvel, vec &dir)
     {

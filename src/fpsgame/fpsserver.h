@@ -2010,8 +2010,12 @@ struct GAMESERVER : igameserver
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
 			}
 			sendf(-1, 1, "ri7", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, gun, flags, realdamage);
-			if(isgun(ts.gunselect) && !m_noitems(gamemode, mutators))
-				ts.gundrop.push(ts.gunselect);
+			if(isgun(ts.gunselect))
+			{
+				if(ts.gunselect == GUN_GL) ts.grenades.add(-1);
+				else if(!m_noitems(gamemode, mutators))
+					ts.gundrop.push(ts.gunselect);
+			}
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
 			mutate(smuts, mut->died(target, actor));
@@ -2074,8 +2078,12 @@ struct GAMESERVER : igameserver
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
 		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, e.flags, ci->state.health);
-		if(isgun(gs.gunselect) && !m_noitems(gamemode, mutators))
-			gs.gundrop.push(gs.gunselect);
+		if(isgun(gs.gunselect))
+		{
+			if(gs.gunselect == GUN_GL) gs.grenades.add(-1);
+			else if(!m_noitems(gamemode, mutators))
+				gs.gundrop.push(gs.gunselect);
+		}
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(smuts, mut->died(ci, NULL));
@@ -2186,7 +2194,7 @@ struct GAMESERVER : igameserver
 		int dropped = gs.useitem(e.millis, true, WEAPON, e.gun, guntype[e.gun].add);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 		if(isgun(dropped) && !m_noitems(gamemode, mutators))
-			gs.gundrop.push(dropped);
+			gs.gundrop.push(gs.gunselect);
 	}
 
 	void processevent(clientinfo *ci, useevent &e)
@@ -2219,10 +2227,7 @@ struct GAMESERVER : igameserver
 			cp->state.gundrop.reset();
 		}
 		if(isgun(dropped) && !m_noitems(gamemode, mutators))
-		{
-			gs.gundrop.reset();
-			gs.gundrop.add(dropped);
-		}
+			gs.gundrop.push(dropped);
 	}
 
 	void processevents()

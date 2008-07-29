@@ -49,20 +49,21 @@ struct GAMECLIENT : igameclient
 	IFVARP(titlecardxpos, 0.74f);
 	IFVARP(titlecardypos, 0.01f);
 
-	IVARP(thirdperson, 0, 1, 1);
+	IVARP(thirdperson, 0, 0, 1);
 	IVARP(thirdpersonaim, 0, 250, INT_MAX-1);
 	IVARP(thirdpersonfov, 90, 120, 150);
+	IVARP(thirdpersontranslucent, 0, 0, 1);
 	IVARP(thirdpersondist, -100, 1, 100);
 	IVARP(thirdpersonshift, -100, 4, 100);
 	IVARP(thirdpersonangle, 0, 40, 360);
-	IVARP(thirdpersontranslucent, 0, 0, 1);
 
 	IVARP(firstpersonfov, 90, 100, 150);
 	IVARP(firstpersonaim, 0, 0, INT_MAX-1);
-	IVARP(firstpersondist, -100, 50, 100);
-	IVARP(firstpersonshift, -100, 25, 100);
 	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
 	IVARP(firstpersontranslucent, 0, 0, 1);
+	IFVARP(firstpersondist, 0.1f);
+	IFVARP(firstpersonshift, 0.3f);
+	IFVARP(firstpersonadjust, 0.1f);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(absmouse, 0, 0, 1);
@@ -89,16 +90,16 @@ struct GAMECLIENT : igameclient
 
 	IVARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
 	IFVARP(crosshairsize, 0.03f);
-	IFVARP(crosshairblend, 0.3f);
+	IFVARP(crosshairblend, 0.5f);
 
 	IFVARP(cursorsize, 0.03f);
 	IFVARP(cursorblend, 1.f);
 
 	IVARP(zoomtype, 0, 0, 1);
-	IVARP(zoomfov, 1, 20, 150);
+	IVARP(zoomfov, 1, 35, 150);
 	IVARP(zoomtime, 1, 300, 10000);
 	IFVARP(zoomcrosshairsize, 0.3f);
-	IVARP(zoommousetype, 0, 2, 2);
+	IVARP(zoommousetype, 0, 0, 2);
 	IVARP(zoomdeadzone, 0, 25, 100);
 	IVARP(zoompanspeed, 1, 10, INT_MAX-1);
 
@@ -123,8 +124,8 @@ struct GAMECLIENT : igameclient
 	IVARP(editradardist, 0, 512, INT_MAX-1);
 	IVARP(editradarentnames, 0, 1, 2);
 
-	ITVAR(bliptex, "textures/blip", 0);
-	ITVAR(flagbliptex, "textures/flagblip", 0);
+	ITVAR(bliptex, "textures/blip", 3);
+	ITVAR(flagbliptex, "textures/flagblip", 3);
 	ITVAR(radartex, "textures/radar", 0);
 	ITVAR(radarpingtex, "<anim:75>textures/radarping", 0);
 	ITVAR(healthbartex, "<anim>textures/healthbar", 0);
@@ -525,8 +526,7 @@ struct GAMECLIENT : igameclient
 				(!(flags & HIT_BURN) && (damage >= MAXHEALTH*15/10))
 		);
         d->lastregen = d->lastpain = lastmillis;
-		if(isgun(d->gunselect) && !m_noitems(gamemode, mutators))
-			pj.dropgun(d, d->gunselect, 0);
+		pj.dropgun(d, d->gunselect, 0);
 
 		vec pos = headpos(d);
 		int gibs = clamp((damage+3)/3, 1, 25);
@@ -741,7 +741,7 @@ struct GAMECLIENT : igameclient
 				fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*radarblipblend();
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
-			settexture(bliptex());
+			settexture(bliptex(), 3);
 			glColor4f(r, g, b, fade);
 			glBegin(GL_QUADS);
 			drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
@@ -802,7 +802,7 @@ struct GAMECLIENT : igameclient
 					cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
 						cs = (insel ? 0.033f : 0.025f)*s,
 							fade = clamp(insel ? 1.f : 1.f-(dist/radarrange()), 0.f, 1.f)*radarblipblend();
-				settexture(bliptex());
+				settexture(bliptex(), 3);
 				glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
 				glBegin(GL_QUADS);
 				drawsized(cx-(cs*0.5f), cy-(cs*0.5f), cs);
@@ -1129,8 +1129,8 @@ struct GAMECLIENT : igameclient
 
 		if(index > POINTER_NONE)
 		{
-			float curx = index < POINTER_EDIT ? cursorx : aimx,
-				cury = index < POINTER_EDIT ? cursory : aimy;
+			float curx = index < POINTER_EDIT || mousestyle() == 2 ? cursorx : aimx,
+				cury = index < POINTER_EDIT || mousestyle() == 2 ? cursory : aimy;
 			drawpointer(w, h, index, curx, cury, r, g, b);
 		}
 
@@ -1404,7 +1404,7 @@ struct GAMECLIENT : igameclient
 		}
 		if(!g3d_active())
 		{
-			if(mousestyle() <= 1 && isthirdperson() ? thirdpersonaim() : firstpersonaim())
+			if(isthirdperson() ? thirdpersonaim() : firstpersonaim())
 			{
 				float cx, cy, cz;
 				vectocursor(worldpos, cx, cy, cz);
@@ -1553,7 +1553,7 @@ struct GAMECLIENT : igameclient
 				camera1->roll = float(rnd(21)-10)*(float(min(quakewobble, 100))/100.f);
 			else camera1->roll = 0;
 
-			if(!isthirdperson() && (firstpersondist() || firstpersonshift()))
+			if(!isthirdperson())
 			{
 				float yaw = camera1->aimyaw, pitch = camera1->aimpitch;
 				if(mousestyle() == 2)
@@ -1561,18 +1561,25 @@ struct GAMECLIENT : igameclient
 					yaw = player1->yaw;
 					pitch = player1->pitch;
 				}
-				if(firstpersondist())
+				if(firstpersondist() != 0.f)
 				{
 					vec dir;
 					vecfromyawpitch(yaw, pitch, 1, 0, dir);
-					dir.mul(player1->radius*firstpersondist()/100.f);
+					dir.mul(player1->radius*firstpersondist());
 					camera1->o.add(dir);
 				}
-				if(firstpersonshift())
+				if(firstpersonshift() != 0.f)
 				{
 					vec dir;
-					vecfromyawpitch(yaw, pitch, 0, 1, dir);
-					dir.mul(player1->radius*firstpersonshift()/100.f);
+					vecfromyawpitch(yaw, pitch, 0, -1, dir);
+					dir.mul(player1->radius*firstpersonshift());
+					camera1->o.add(dir);
+				}
+				if(firstpersonadjust() != 0.f)
+				{
+					vec dir;
+					vecfromyawpitch(yaw, pitch+90.f, 1, 0, dir);
+					dir.mul(player1->height*firstpersonadjust());
 					camera1->o.add(dir);
 				}
 			}

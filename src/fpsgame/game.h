@@ -390,9 +390,7 @@ enum
 VARG(netframetime, 0, 40, 1000);
 
 VARG(teamdamage, 0, 1, 1);
-
 VARG(timelimit, 0, 10, INT_MAX-1);
-//VARG(fraglimit, 0, 0, INT_MAX-1);
 VARG(ctflimit, 0, 10, INT_MAX-1);
 VARG(stflimit, 0, 1, 1);
 
@@ -403,6 +401,10 @@ VARG(botbalance, 0, 6, MAXCLIENTS-1);
 VARG(botratio, 0, 2, 100);
 VARG(botminskill, 0, 30, 100);
 VARG(botmaxskill, 0, 80, 100);
+
+FVARG(gravityscale, 1.f);
+FVARG(jumpscale, 1.f);
+FVARG(speedscale, 1.f);
 
 // inherited by fpsent and server clients
 struct fpsstate

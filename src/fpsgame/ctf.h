@@ -292,7 +292,7 @@ struct ctfclient : ctfstate
 			fade *= clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
 		float cx = x + s*0.5f*(1.0f+dir.x/cl.radarrange()),
 			cy = y + s*0.5f*(1.0f+dir.y/cl.radarrange()), cs = size*s;
-        settexture(cl.flagbliptex());
+        settexture(cl.flagbliptex(), 3);
 		glColor4f(r, g, b, fade);
 		glBegin(GL_QUADS);
         cl.drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);

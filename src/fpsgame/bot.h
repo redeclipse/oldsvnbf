@@ -629,11 +629,12 @@ struct botclient
 			}
 		}
 
-		loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner)
+		loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner != d)
 		{
 			projent &proj = *cl.pj.projs[j];
-			if(proj.state != CS_DEAD && !proj.beenused && isgun(proj.attr1) && guntype[proj.attr1].rdelay > 0 && proj.attr1 != GUN_PISTOL)
+			if(proj.state != CS_DEAD && !proj.beenused && isgun(proj.attr1) && guntype[proj.attr1].rdelay > 0)
 			{ // go get a weapon upgrade
+				if(proj.attr1 == GUN_PISTOL || proj.attr1 == GUN_GL) continue;
 				interest &n = interests.add();
 				n.state = BS_INTEREST;
 				n.node = cl.et.waypointnode(proj.o, true);
@@ -874,10 +875,10 @@ struct botclient
 				}
 				case BT_DROP:
 				{
-					loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner->clientnum == b.target)
+					loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner != d && cl.pj.projs[j]->owner->clientnum == b.target)
 					{
 						projent &proj = *cl.pj.projs[j];
-						if(!proj.beenused && proj.state != CS_DEAD && proj.attr1 != GUN_PISTOL)
+						if(!proj.beenused && proj.state != CS_DEAD && proj.attr1 != GUN_PISTOL && proj.attr1 != GUN_GL)
 						{
 							if(makeroute(d, b, proj.o, enttype[proj.ent].radius+d->radius))
 							{
@@ -1098,10 +1099,10 @@ struct botclient
 						}
 					}
 				}
-				if(!useme) loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner)
+				if(!useme) loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner != d)
 				{
 					projent &proj = *cl.pj.projs[j];
-					if(!proj.beenused && proj.state != CS_DEAD && d->ammo[proj.attr1] <= 0 && proj.attr1 != GUN_PISTOL)
+					if(!proj.beenused && proj.state != CS_DEAD && d->ammo[proj.attr1] <= 0 && proj.attr1 != GUN_PISTOL && proj.attr1 != GUN_GL)
 					{
 						if(d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis))
 						{

@@ -131,7 +131,7 @@ struct projectiles
 
 		vec dir(vec(vec(proj.to).sub(proj.o)).normalize());
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
-		proj.vel = vec(vec(dir).mul(cl.ph.maxspeed(&proj))).add(vec(proj.owner->vel).mul(proj.relativity));
+		proj.vel = vec(vec(dir).mul(proj.maxspeed)).add(vec(proj.owner->vel).mul(proj.relativity));
 
 		vec orig = proj.o;
 		bool found = false;
@@ -296,7 +296,7 @@ struct projectiles
 		return true;
 	}
 
-	void create(vec &from, vec &to, bool local, fpsent *d, int type, int lifetime, int waittime, int speed, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0)
+	void create(vec &from, vec &to, bool local, fpsent *d, int type, int lifetime, int waittime, int speed, int id = 0, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0)
 	{
 		if(!d || !lifetime || !speed) return;
 
@@ -313,7 +313,8 @@ struct projectiles
 		proj.attr3 = attr3;
 		proj.attr4 = attr4;
 		proj.maxspeed = speed;
-		proj.id = lastmillis;
+		if(id) proj.id = id;
+		else proj.id = lastmillis;
 		proj.movement = 0;
 		proj.owner = d;
 		if(!waittime) init(proj, false);
@@ -322,19 +323,26 @@ struct projectiles
 
 	void dropgun(fpsent *d, int gun, int delay)
 	{
-		if(isgun(gun) && !m_noitems(cl.gamemode, cl.mutators))
+		if(isgun(gun))
 		{
-			loopvrev(projs)
-			{
-				projent &proj = *projs[i];
-				if(proj.owner == d && proj.projtype == PRJ_ENT && proj.ent == WEAPON)
-				{
-					proj.beenused = true;
-					proj.state = CS_DEAD;
-				}
-			}
 			bool local = d == cl.player1 || d->bot;
-			create(d->o, d->o, local, d, PRJ_ENT, INT_MAX-1, delay, 20, WEAPON, gun, guntype[gun].add);
+			if(gun == GUN_GL)
+			{
+				create(d->o, d->o, local, d, PRJ_SHOT, guntype[gun].time, 50, 1, -1, WEAPON, gun);
+			}
+			else if(!m_noitems(cl.gamemode, cl.mutators))
+			{
+				loopvrev(projs)
+				{
+					projent &proj = *projs[i];
+					if(proj.owner == d && proj.projtype == PRJ_ENT && proj.ent == WEAPON)
+					{
+						proj.beenused = true;
+						proj.state = CS_DEAD;
+					}
+				}
+				create(d->o, d->o, local, d, PRJ_ENT, INT_MAX-1, delay, 20, 0, WEAPON, gun, guntype[gun].add);
+			}
 		}
 	}
 
@@ -418,7 +426,7 @@ struct projectiles
 		vec to(rnd(100)-50, rnd(100)-50, rnd(100)-50);
 		to.normalize();
 		to.add(p);
-		create(p, to, true, d, type, rnd(3000)+1000, 0, rnd(30)+10, -1);
+		create(p, to, true, d, type, rnd(3000)+1000, 0, rnd(30)+10, 0, -1);
 	}
 
 	void render()
