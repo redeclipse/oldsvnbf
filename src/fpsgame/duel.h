@@ -159,21 +159,10 @@ struct duelservmode : servmode
 
 				sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
 
-				loopvj(sv.sents)
+				loopvj(sv.sents) if(!sv.sents[j].spawned && !m_noitems(sv.gamemode, sv.mutators))
 				{
-					if (!sv.sents[j].spawned)
-					{
-						sv.sents[j].spawntime = 0;
-						if (m_noitems(sv.gamemode, sv.mutators))
-						{
-							sv.sents[j].spawned = false;
-						}
-						else
-						{
-							sv.sents[j].spawned = true;
-							sendf(-1, 1, "ri2", SV_ITEMSPAWN, j);
-						}
-					}
+					sv.sents[j].spawned = true;
+					sendf(-1, 1, "ri2", SV_ITEMSPAWN, j);
 				}
 				dueltime = 0;
 			}

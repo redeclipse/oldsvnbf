@@ -165,7 +165,7 @@ struct weaponstate
 				radialeffect(f, o, guntype[gun].explode, gun != GUN_FLAMER ? HIT_EXPLODE : HIT_BURN);
 			}
 
-			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id >= 0 ? id-cl.maptime : id,
+			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id-cl.maptime,
 					hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 		}
 	}

@@ -161,45 +161,35 @@ struct entities : icliententities
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
 
-	void useeffects(fpsent *d, int n, int o)
+	void useeffects(fpsent *d, int n, int r)
 	{
-		if(n >= 0)
+		if(d && ents.inrange(n))
 		{
-			if(d && ents.inrange(n))
+			fpsentity &e = (fpsentity &)*ents[n];
+			vec pos = e.o;
+			loopk(cl.numdynents())
 			{
-				const char *item = itemname(ents[n]->type, ents[n]->attr1, ents[n]->attr2);
-				if(item && (d != cl.player1 || cl.isthirdperson()))
-					particle_text(d->abovehead(), item, 15);
-				playsound(S_ITEMPICKUP, 0, 255, d->o, d);
-				int dropped = d->useitem(lastmillis, false, ents[n]->type, ents[n]->attr1, ents[n]->attr2);
-				if(isgun(dropped) && !m_noitems(cl.gamemode, cl.mutators))
-					cl.pj.dropgun(d, dropped, (d->gunwait[dropped]/2)-50);
-				regularshape(7, enttype[ents[n]->type].radius, 0x888822, 21, 50, 250, ents[n]->o, 1.f);
-				ents[n]->spawned = false;
-			}
-		}
-		else if(o >= 0)
-		{
-			fpsent *f = cl.getclient(o);
-			if(f)
-			{
-				loopv(cl.pj.projs)
+				dynent *f = cl.iterdynents(k);
+				if(f && f->type == ENT_PLAYER) loopv(cl.pj.projs)
 				{
 					projent &proj = *cl.pj.projs[i];
-					if(proj.projtype != PRJ_ENT || proj.ent != WEAPON || !proj.owner || proj.owner != f)
+					if(proj.projtype != PRJ_ENT || proj.id != n || !proj.owner || proj.owner != f)
 						continue;
-					const char *item = itemname(proj.ent, proj.attr1, proj.attr2);
-					if(item && (d != cl.player1 || cl.isthirdperson()))
-						particle_text(d->abovehead(), item, 15);
-					playsound(S_ITEMPICKUP, 0, 255, d->o, d);
-					int dropped = d->useitem(lastmillis, false, proj.ent, proj.attr1, proj.attr2);
-					if(isgun(dropped) && !m_noitems(cl.gamemode, cl.mutators))
-						cl.pj.dropgun(d, dropped, (d->gunwait[dropped]/2)-50);
+					pos = proj.o;
 					proj.beenused = true;
 					proj.state = CS_DEAD;
-					return;
+					break;
 				}
 			}
+			const char *item = itemname(e.type, e.attr1, e.attr2);
+			if(item && (d != cl.player1 || cl.isthirdperson()))
+				particle_text(d->abovehead(), item, 15);
+			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
+			int drop = d->useitem(lastmillis, r, n, e.type, e.attr1, e.attr2);
+			if(ents.inrange(drop) && ents[drop]->type == WEAPON && isgun(ents[drop]->attr1))
+				cl.pj.drop(d, drop, (d->gunwait[ents[drop]->attr1]/2)-50);
+			regularshape(7, enttype[e.type].radius, 0x888822, 21, 50, 250, pos, 1.f);
+			e.spawned = false;
 		}
 	}
 
@@ -477,7 +467,7 @@ struct entities : icliententities
 							if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
 							{
 								e.spawned = false;
-								cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, t.target, -1);
+								cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, t.target);
 							}
 							else cl.playsoundc(S_DENIED, d);
 						}
@@ -492,7 +482,7 @@ struct entities : icliententities
 						if(d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis))
 						{
 							proj.beenused = true;
-							cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, -1, proj.owner->clientnum);
+							cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, proj.id);
 						}
 						else cl.playsoundc(S_DENIED, d);
 						break;
