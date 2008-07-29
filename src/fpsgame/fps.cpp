@@ -509,7 +509,7 @@ struct GAMECLIENT : igameclient
 		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
 		s_strcpy(dname, colorname(d));
 		s_strcpy(aname, actor->type!=ENT_INANIMATE ? colorname(actor) : "");
-		s_strcpy(oname, gun >= 0 && gun < GUN_MAX ? obitnames[gun] : "was killed by");
+		s_strcpy(oname, isgun(gun) ? obitnames[gun] : "was killed by");
         if(d==actor || actor->type==ENT_INANIMATE)
         {
         	if(flags&HIT_MELT) console("\f2%s melted", cflags, dname);
@@ -526,10 +526,6 @@ struct GAMECLIENT : igameclient
 				(!(flags & HIT_BURN) && (damage >= MAXHEALTH*15/10))
 		);
         d->lastregen = d->lastpain = lastmillis;
-
-		if(d->gunselect == GUN_GL)
-			pj.create(d->o, d->o, d == player1 || d->bot, d, PRJ_SHOT, guntype[d->gunselect].time, 50, 1, -1, WEAPON, d->gunselect);
-		else pj.drop(d, d->entid[d->gunselect], 0);
 
 		vec pos = headpos(d);
 		int gibs = clamp((damage+3)/3, 1, 25);
@@ -784,38 +780,49 @@ struct GAMECLIENT : igameclient
 		popfont();
 	}
 
+	void drawentblip(int x, int y, int s, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool spawned)
+	{
+		if(type <= NOTUSED || type >= MAXENTTYPES) return;
+		enttypes &t = enttype[type];
+		if((t.usetype == EU_ITEM && spawned) || editmode)
+		{
+			bool insel = et.ents.inrange(n) && editmode && (enthover == n || entgroup.find(n) >= 0);
+			vec dir(o);
+			dir.sub(camera1->o);
+			float dist = dir.magnitude();
+			if(!insel && dist >= radarrange()) return;
+			if(dist >= radarrange()) dir.mul(radarrange()/dist);
+			dir.rotate_around_z(-camera1->yaw*RAD);
+			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
+				cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
+					cs = (insel ? 0.033f : 0.025f)*s,
+						fade = clamp(insel ? 1.f : 1.f-(dist/radarrange()), 0.f, 1.f)*radarblipblend();
+			settexture(bliptex(), 3);
+			glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
+			glBegin(GL_QUADS);
+			drawsized(cx-(cs*0.5f), cy-(cs*0.5f), cs);
+			glEnd();
+			int ty = int(cy+cs);
+			if(editradarentnames() == 2 && editmode)
+				ty += draw_textx("%s [%d]", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, t.name, n);
+			if(editradarentnames() && insel)
+				draw_textx("(%d %d %d %d)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, attr1, attr2, attr3, attr4);
+		}
+	}
+
 	void drawentblips(int x, int y, int s)
 	{
 		pushfont("radar");
 		loopv(et.ents)
 		{
 			extentity &e = *et.ents[i];
-			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-			enttypes &t = enttype[e.type];
-			if((t.usetype == EU_ITEM && e.spawned) || editmode)
-			{
-				bool insel = editmode && (enthover == i || entgroup.find(i) >= 0);
-				vec dir(e.o);
-				dir.sub(camera1->o);
-				float dist = dir.magnitude();
-				if(!insel && dist >= radarrange()) continue;
-				if(dist >= radarrange()) dir.mul(radarrange()/dist);
-				dir.rotate_around_z(-camera1->yaw*RAD);
-				float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
-					cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
-						cs = (insel ? 0.033f : 0.025f)*s,
-							fade = clamp(insel ? 1.f : 1.f-(dist/radarrange()), 0.f, 1.f)*radarblipblend();
-				settexture(bliptex(), 3);
-				glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
-				glBegin(GL_QUADS);
-				drawsized(cx-(cs*0.5f), cy-(cs*0.5f), cs);
-				glEnd();
-				int ty = int(cy+cs);
-				if(editradarentnames() == 2 && editmode)
-					ty += draw_textx("%s [%d]", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, t.name, i);
-				if(editradarentnames() && insel)
-					draw_textx("(%d %d %d %d)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, e.attr1, e.attr2, e.attr3, e.attr4);
-			}
+			drawentblip(x, y, s, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.spawned);
+		}
+
+		loopv(pj.projs) if(pj.projs[i]->projtype == PRJ_ENT && pj.projs[i]->owner)
+		{
+			projent &proj = *pj.projs[i];
+			drawentblip(x, y, s, -1, proj.o, proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.state != CS_DEAD && !proj.beenused);
 		}
 		popfont();
 	}
