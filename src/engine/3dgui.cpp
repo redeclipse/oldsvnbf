@@ -636,7 +636,7 @@ struct gui : g3d_gui
 		if(quads) glEnd();
 	}
 
-    vec origin, scale, *savedorigin;
+    vec origin, scale;
 	g3d_callback *cb;
 
     static float basescale, maxscale;
@@ -784,31 +784,7 @@ bool menukey(int code, bool isdown, int cooked)
     else if(code==-3 && g3d_windowhit(isdown, false)) return true;
 
     editor *e = currentfocus();
-    if((fieldmode == FIELDSHOW) || !e)
-    {
-        if(windowhit) switch(code)
-        {
-            case -4: // window "management"
-                if(isdown)
-                {
-					vec origin = *guis.last().savedorigin;
-					int i = windowhit - &guis[0];
-					for(int j = guis.length()-1; j > i; j--) *guis[j].savedorigin = *guis[j-1].savedorigin;
-					*windowhit->savedorigin = origin;
-                }
-                return true;
-            case -5:
-                if(isdown)
-                {
-					vec origin = *guis[0].savedorigin;
-					loopj(guis.length()-1) *guis[j].savedorigin = *guis[j + 1].savedorigin;
-					*guis.last().savedorigin = origin;
-                }
-                return true;
-        }
-
-        return false;
-    }
+    if((fieldmode == FIELDSHOW) || !e) return false;
     switch(code)
     {
         case SDLK_ESCAPE: //cancel editing without commit
