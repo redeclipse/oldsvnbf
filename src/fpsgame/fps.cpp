@@ -996,7 +996,7 @@ struct GAMECLIENT : igameclient
 			if(wait)
 				draw_textx("Fragged! Down for %.01fs", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, float(wait)/1000.f);
 			else
-				draw_textx("Fragged! Press attack to respawn", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT);
+				draw_textx("Fragged! Attack to respawn", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT);
 
 			hoff -= FONTH;
 		}

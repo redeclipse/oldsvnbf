@@ -215,7 +215,7 @@ struct gametypes
 	{ G_CTF,			G_M_CTF,		G_M_TEAM,			"Capture the Flag" },
 }, mutstype[] = {
 	{ G_M_TEAM,			G_M_ALL,		0,					"Team" },
-	{ G_M_INSTA,		G_M_ALL,		0,					"Instagib" },
+	{ G_M_INSTA,		G_M_ALL,		G_M_NOITEMS,		"Instagib" },
 	{ G_M_DUEL,			G_M_ALL,		0,					"Duel" },
 	{ G_M_PROG,			G_M_ALL,		0,					"Progressive" },
 	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,			"Multi-sided" },
@@ -466,13 +466,17 @@ struct fpsstate
 		return false;
 	}
 
-	void gunreset()
+	void gunreset(bool full)
 	{
 		loopi(GUN_MAX)
 		{
-			gunstate[i] = GUNSTATE_IDLE;
-			gunwait[i] = gunlast[i] = 0;
-			ammo[i] = entid[i] = -1;
+			if(full)
+			{
+				gunstate[i] = GUNSTATE_IDLE;
+				gunwait[i] = gunlast[i] = 0;
+				ammo[i] = -1;
+			}
+			entid[i] = -1;
 		}
 		lastgun = gunselect = -1;
 	}
@@ -489,73 +493,26 @@ struct fpsstate
 
 	void gunswitch(int gun, int millis)
 	{
-		if(gun != gunselect)
-		{
-			lastgun = gunselect;
-			setgunstate(lastgun, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
-		}
+		lastgun = gunselect;
+		setgunstate(lastgun, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
 		gunselect = gun;
-		setgunstate(gunselect, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
+		setgunstate(gun, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
 	}
 
-	void gunreload(int gun, int amt, int millis)
-	{
-		setgunstate(gun, GUNSTATE_RELOAD, guntype[gun].rdelay, millis);
-		if(isgun(gun)) ammo[gun] = amt;
-	}
-
-	int useitem(int millis, int drop, int id, int type, int attr1, int attr2)
+	void useitem(int millis, int id, int type, int attr1, int attr2)
 	{
 		switch(type)
 		{
-			case TRIGGER: return 0;
+			case TRIGGER: break;
 			case WEAPON:
 			{
-				if(ammo[attr1] < 0) ammo[attr1] = 0;
-
-				int carry = 0, dropped = -1;
-				if(drop >= 0)
-				{
-					loopi(GUN_MAX) if(entid[i] == drop)
-					{
-						setgunstate(i, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
-						ammo[i] = entid[i] = -1;
-						dropped = drop;
-						break;
-					}
-				}
-				loopi(GUN_MAX)
-					if(ammo[i] >= 0 && guntype[i].rdelay > 0)
-						carry++;
-				if(dropped < 0 && id >= 0 && carry > MAXCARRY)
-				{
-					if(gunselect != attr1 && guntype[gunselect].rdelay > 0)
-					{
-						if(isgun(gunselect))
-						{
-							setgunstate(gunselect, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
-							dropped = entid[gunselect];
-							ammo[gunselect] = entid[gunselect] = -1;
-						}
-						gunswitch(attr1, millis);
-					}
-					else loopi(GUN_MAX) if(ammo[i] >= 0 && i != attr1 && guntype[i].rdelay > 0)
-					{
-						setgunstate(i, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
-						dropped = entid[i];
-						ammo[i] = entid[i] = -1;
-						break;
-					}
-				}
-				else if(gunselect != attr1) gunswitch(attr1, millis);
-				else setgunstate(attr1, GUNSTATE_RELOAD, guntype[attr1].rdelay ? guntype[attr1].rdelay : guntype[attr1].adelay, millis);
-				if(id >= 0) entid[attr1] = id;
-				ammo[attr1] = clamp(max(ammo[attr1],0)+(attr2 > 0 ? attr2 : guntype[attr1].add), guntype[attr1].add, id < 0 ? guntype[attr1].charge : guntype[attr1].max);
-				return dropped;
+				gunswitch(attr1, millis);
+				ammo[attr1] = clamp(max(ammo[attr1], 0)+(attr2 > 0 ? attr2 : guntype[attr1].add), guntype[attr1].add, guntype[attr1].max);
+				entid[attr1] = id;
+				break;
 			}
 			default: break;
 		}
-		return -1;
 	}
 
 	void respawn(int millis)
@@ -564,7 +521,7 @@ struct fpsstate
 		lastdeath = lastpain = lastregen = spree = 0;
 		lastspawn = millis;
 		lastrespawn = -1;
-		gunreset();
+		gunreset(true);
 	}
 
 	void spawnstate(int spawngun)
@@ -574,7 +531,9 @@ struct fpsstate
 		loopi(GUN_MAX)
 		{
 			gunstate[i] = GUNSTATE_IDLE;
+			gunwait[i] = gunlast[i] = 0;
 			ammo[i] = (i == spawngun || guntype[i].rdelay <= 0 ? guntype[i].add : -1);
+			entid[i] = -1;
 		}
 	}
 
@@ -600,6 +559,7 @@ struct fpsentity : extentity
 		schan = -1;
 	}
 };
+enum { ITEM_ENT = 0, ITEM_PROJ, ITEM_MAX };
 
 const char *animnames[] =
 {
@@ -744,7 +704,7 @@ struct botinfo
 
 struct fpsent : dynent, fpsstate
 {
-	int clientnum, privilege, lastupdate, plag, ping;
+	int clientnum, privilege, lastupdate, lastpredict, plag, ping;
 	bool attacking, reloading, useaction, obliterated;
 	int attacktime, reloadtime, usetime;
 	int lasttaunt, lastuse, lastusemillis, lastflag;
@@ -762,7 +722,7 @@ struct fpsent : dynent, fpsstate
 	string name, info;
 	int team;
 
-	fpsent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL)
+	fpsent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL)
 	{
 		name[0] = info[0] = 0;
 		team = TEAM_NEUTRAL;
@@ -792,12 +752,6 @@ struct fpsent : dynent, fpsstate
 	void stopmoving()
 	{
 		dynent::stopmoving();
-		stopactions();
-	}
-
-	void setgun(int gun, int millis)
-	{
-		gunswitch(gun, millis);
 		stopactions();
 	}
 

@@ -839,7 +839,7 @@ struct clientcom : iclientcom
 					parsestate(f, p);
 					f->state = CS_SPAWNING;
 					playsound(S_RESPAWN, 0, 255, f->o, f);
-					regularshape(7, int(f->height), 0x222288, 21, 50, 250, f->o, 2.f);
+					regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 2.f);
 					break;
 				}
 
@@ -863,7 +863,7 @@ struct clientcom : iclientcom
 						}
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
 						playsound(S_RESPAWN, 0, 255, f->o, f);
-						regularshape(7, int(f->height), 0x222288, 21, 50, 250, f->o, 2.f);
+						regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 2.f);
 					}
 					cl.bot.spawned(f);
 					break;
@@ -904,7 +904,8 @@ struct clientcom : iclientcom
 					int trg = getint(p), gun = getint(p), amt = getint(p);
 					fpsent *target = cl.getclient(trg);
 					if(!target || !isgun(gun)) break;
-					target->gunreload(gun, amt, lastmillis);
+					target->setgunstate(gun, GUNSTATE_RELOAD, guntype[gun].rdelay, lastmillis);
+					target->ammo[gun] = amt;
 					playsound(S_RELOAD, 0, 255, target->o, target);
 					break;
 				}
@@ -935,7 +936,7 @@ struct clientcom : iclientcom
 					}
 					if(!victim) break;
 					cl.killed(gun, flags, damage, victim, actor);
-					victim->gunreset();
+					victim->gunreset(true);
 					break;
 				}
 
@@ -953,7 +954,7 @@ struct clientcom : iclientcom
 					int trg = getint(p), gun = getint(p);
 					fpsent *target = cl.getclient(trg);
 					if(!target || !isgun(gun)) break;
-					target->setgun(gun, lastmillis);
+					target->gunswitch(gun, lastmillis);
 					playsound(S_SWITCH, 0, 255, target->o, target);
 					break;
 				}
@@ -982,22 +983,22 @@ struct clientcom : iclientcom
 
 				case SV_ITEMSPAWN:
 				{
-					int i = getint(p);
-					if(!cl.et.ents.inrange(i)) break;
-					cl.et.setspawn(i, true);
-					playsound(S_ITEMSPAWN, 0, 255, cl.et.ents[i]->o);
-					const char *name = cl.et.itemname(i);
-					if(name) particle_text(cl.et.ents[i]->o, name, 9);
-					regularshape(7, enttype[cl.et.ents[i]->type].radius, 0x888822, 53, 50, 250, cl.et.ents[i]->o, 1.f);
+					int ent = getint(p);
+					if(!cl.et.ents.inrange(ent)) break;
+					cl.et.setspawn(ent, true);
+					playsound(S_ITEMSPAWN, 0, 255, cl.et.ents[ent]->o);
+					const char *name = cl.et.itemname(ent);
+					if(name) particle_text(cl.et.ents[ent]->o, name, 9);
+					regularshape(7, enttype[cl.et.ents[ent]->type].radius, 0x888822, 53, 50, 250, cl.et.ents[ent]->o, 1.f);
 					break;
 				}
 
 				case SV_ITEMACC:
 				{ // uses a specific drop so the client knows what to replace
-					int lcn = getint(p), ocn = getint(p), ent = getint(p), drop = getint(p);
+					int lcn = getint(p), ent = getint(p), gun = getint(p), drop = getint(p);
 					fpsent *f = cl.getclient(lcn);
 					if(!f) break;
-					cl.et.useeffects(f, ocn, ent, drop);
+					cl.et.useeffects(f, ent, gun, drop);
 					break;
 				}
 

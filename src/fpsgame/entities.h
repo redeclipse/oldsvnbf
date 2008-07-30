@@ -161,31 +161,34 @@ struct entities : icliententities
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
 
-	void useeffects(fpsent *d, int o, int n, int r)
+	void useeffects(fpsent *d, int n, int g, int r)
 	{
 		if(d && ents.inrange(n))
 		{
 			fpsentity &e = (fpsentity &)*ents[n];
 			vec pos = e.o;
-			if(o >= 0) loopv(cl.pj.projs)
+			loopv(cl.pj.projs)
 			{
 				projent &proj = *cl.pj.projs[i];
-				if(proj.projtype != PRJ_ENT || proj.id != n || !proj.owner || proj.owner->clientnum != o)
-					continue;
+				if(proj.projtype != PRJ_ENT || proj.id != n) continue;
 				pos = proj.o;
 				proj.beenused = true;
 				proj.state = CS_DEAD;
-				break;
 			}
 			const char *item = itemname(e.type, e.attr1, e.attr2);
 			if(item && (d != cl.player1 || cl.isthirdperson()))
 				particle_text(d->abovehead(), item, 15);
 			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
-			int drop = d->useitem(lastmillis, r, n, e.type, e.attr1, e.attr2);
-			if(ents.inrange(drop) && ents[drop]->type == WEAPON && isgun(ents[drop]->attr1))
-				cl.pj.drop(d, ents[drop]->attr1, drop, (d->gunwait[ents[drop]->attr1]/2)-50);
+			if(isgun(g))
+			{
+				d->ammo[g] = d->entid[g] = -1;
+				d->gunselect = g;
+			}
+			d->useitem(lastmillis, n, e.type, e.attr1, e.attr2);
+			if(ents.inrange(r) && ents[r]->type == WEAPON && isgun(ents[r]->attr1))
+				cl.pj.drop(d, ents[r]->attr1, r, (d->gunwait[ents[r]->attr1]/2)-50);
 			regularshape(7, enttype[e.type].radius, 0x888822, 21, 50, 250, pos, 1.f);
-			if(o < 0) e.spawned = false;
+			e.spawned = false;
 		}
 	}
 
@@ -365,7 +368,6 @@ struct entities : icliententities
 		}
 	}
 
-	enum { ITEM_ENT = 0, ITEM_PROJ, ITEM_MAX };
 	struct actitem
 	{
 		int type, target;
@@ -375,7 +377,7 @@ struct entities : icliententities
 		~actitem() {}
 	};
 
-	void checkitems(fpsent *d)
+	bool closestitem(fpsent *d, bool use, int *type, int *id)
 	{
 		float eye = d->height*0.5f;
 		vec m = d->o;
@@ -403,7 +405,7 @@ struct entities : icliententities
 							case TA_AUTO: activate = true; break;
 							case TA_ACT:
 							{
-								if(!d->useaction) break;
+								if(use && !d->useaction) break;
 								actitem &t = actitems.add();
 								t.type = ITEM_ENT;
 								t.target = i;
@@ -413,12 +415,12 @@ struct entities : icliententities
 							default: break;
 						}
 					}
-					if(activate) reaction(i, d);
+					if(use && activate) reaction(i, d);
 					break;
 				}
 				case EU_ITEM:
 				{
-					if(!d->useaction || !e.spawned) break;
+					if((use && !d->useaction) || !e.spawned) break;
 					actitem &t = actitems.add();
 					t.type = ITEM_ENT;
 					t.target = i;
@@ -428,14 +430,14 @@ struct entities : icliententities
 				default: break;
 			}
 		}
-		if(d->useaction)
+		if(!use || d->useaction)
 		{
 			loopv(cl.pj.projs)
 			{
 				projent &proj = *cl.pj.projs[i];
-				if(proj.projtype != PRJ_ENT || proj.ent != WEAPON)
+				if(proj.projtype != PRJ_ENT || enttype[proj.ent].usetype != EU_ITEM)
 					continue;
-				if(proj.state == CS_DEAD || !proj.owner || proj.waittime > 0)
+				if(proj.state == CS_DEAD || !proj.owner || proj.waittime > 0 || proj.beenused)
 					continue;
 				if(!insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius))
 					continue;
@@ -453,40 +455,48 @@ struct entities : icliententities
 			if(actitems.inrange(closest))
 			{
 				actitem &t = actitems[closest];
-				switch(t.type)
-				{
-					case ITEM_ENT:
-					{
-						extentity &e = *ents[t.target];
-						if(enttype[e.type].usetype == EU_ITEM)
-						{
-							if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
-							{
-								e.spawned = false;
-								cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, -1, t.target);
-							}
-							else cl.playsoundc(S_DENIED, d);
-						}
-						else if(enttype[e.type].usetype == EU_AUTO)
-							reaction(t.target, d);
-						else cl.playsoundc(S_DENIED, d);
-						break;
-					}
-					case ITEM_PROJ:
-					{
-						projent &proj = *cl.pj.projs[t.target];
-						if(d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis))
-						{
-							proj.beenused = true;
-							cl.cc.addmsg(SV_ITEMUSE, "ri4", d->clientnum, lastmillis-cl.maptime, proj.owner->clientnum, proj.id);
-						}
-						else cl.playsoundc(S_DENIED, d);
-						break;
-					}
-					default: break;
-				}
-				d->useaction = false;
+				*type = t.type;
+				*id = t.target;
+				return true;
 			}
+		}
+		return false;
+	}
+
+	void checkitems(fpsent *d)
+	{
+		int type, id;
+		if(closestitem(d, true, &type, &id))
+		{
+			switch(type)
+			{
+				case ITEM_ENT:
+				{
+					if(!cl.et.ents.inrange(id)) break;
+					extentity &e = *ents[id];
+					if(enttype[e.type].usetype == EU_ITEM)
+					{
+						if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
+							cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, id);
+						else playsound(S_DENIED, 0, 255, d->o, d);
+					}
+					else if(enttype[e.type].usetype == EU_AUTO)
+						reaction(id, d);
+					else playsound(S_DENIED, 0, 255, d->o, d);
+					break;
+				}
+				case ITEM_PROJ:
+				{
+					if(!cl.pj.projs.inrange(id)) break;
+					projent &proj = *cl.pj.projs[id];
+					if(d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis))
+						cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, proj.id);
+					else playsound(S_DENIED, 0, 255, d->o, d);
+					break;
+				}
+				default: break;
+			}
+			d->useaction = false;
 		}
 		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
 	}
@@ -505,13 +515,24 @@ struct entities : icliententities
 				putint(p, e.attr3);
 				putint(p, e.attr4);
 				putint(p, e.attr5);
-				e.spawned = m_noitems(cl.gamemode, cl.mutators) ? false : true;
+				setspawn(i, m_noitems(cl.gamemode, cl.mutators) ? false : true);
 			}
 		}
 	}
 
 	void resetspawns() { loopv(ents) ents[i]->spawned = false; }
-	void setspawn(int i, bool on) { if(ents.inrange(i)) ents[i]->spawned = on; }
+	void setspawn(int n, bool on)
+	{
+		loopv(cl.pj.projs)
+		{
+			projent &proj = *cl.pj.projs[i];
+			if(proj.projtype != PRJ_ENT || proj.id != n)
+				continue;
+			proj.beenused = true;
+			proj.state = CS_DEAD;
+		}
+		if(ents.inrange(n)) ents[n]->spawned = on;
+	}
 
 	extentity *newent() { return new fpsentity(); }
 

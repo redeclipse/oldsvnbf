@@ -289,6 +289,7 @@ struct projectiles
 		}
 		else if(proj.projtype == PRJ_ENT && proj.pitch != 0.f)
 		{
+			proj.roll = 0.f;
 			if(proj.pitch < 0.f) { proj.pitch += diff; if(proj.pitch > 0.f) proj.pitch = 0.f; }
 			if(proj.pitch > 0.f) { proj.pitch -= diff; if(proj.pitch < 0.f) proj.pitch = 0.f; }
 		}
@@ -332,9 +333,7 @@ struct projectiles
 			}
 		}
 		else if(g == GUN_GL)
-		{
-			create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_SHOT, guntype[d->gunselect].time, 50, 1, -1, WEAPON, d->gunselect);
-		}
+			create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_SHOT, 10, 50, 1, -1, WEAPON, d->gunselect);
 	}
 
 	void update()
@@ -436,35 +435,12 @@ struct projectiles
 
 	void render()
 	{
-		loopv(projs) if(projs[i]->owner && !projs[i]->beenused && projs[i]->waittime <= 0 && projs[i]->state != CS_DEAD && projs[i]->mdl && *projs[i]->mdl)
+		loopv(projs) if(projs[i]->owner && !projs[i]->beenused && projs[i]->waittime <= 0 && projs[i]->state != CS_DEAD)
 		{
 			projent &proj = *projs[i];
-			float yaw = proj.yaw, pitch = proj.pitch;
-            int flags = MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT;
-
-            if(proj.projtype == PRJ_SHOT)
-            {
-            	if(proj.attr1 == GUN_GL)
-            	{
-            		yaw = pitch = proj.roll;
-            	}
-            	else continue;
-			}
-            else if(proj.projtype == PRJ_GIBS)
-            {
-				flags |= MDL_CULL_DIST;
-			}
-			else if(proj.projtype == PRJ_DEBRIS)
-			{
-				flags |= MDL_CULL_DIST;
-			}
-			else if(proj.projtype == PRJ_ENT)
-			{
-				flags |= MDL_CULL_DIST;
-			}
-			else continue;
-
-			rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, yaw+90, pitch, 0, flags);
+            if(proj.projtype != PRJ_SHOT && proj.projtype != PRJ_ENT) continue;
+            if(projs[i]->mdl && *projs[i]->mdl)
+				rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, proj.yaw+90, proj.pitch, proj.roll, MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT|MDL_CULL_DIST);
 		}
 	}
 

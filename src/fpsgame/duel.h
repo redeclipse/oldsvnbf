@@ -161,6 +161,13 @@ struct duelservmode : servmode
 
 				loopvj(sv.sents) if(!sv.sents[j].spawned && !m_noitems(sv.gamemode, sv.mutators))
 				{
+					loopvk(sv.clients)
+					{
+						clientinfo *ci = sv.clients[k];
+						if(ci->state.dropped.projs.find(j) >= 0)
+							ci->state.dropped.projs.remove(j);
+						loop(e, GUN_MAX) if(ci->state.entid[e] == j) ci->state.entid[e] = -1;
+					}
 					sv.sents[j].spawned = true;
 					sendf(-1, 1, "ri2", SV_ITEMSPAWN, j);
 				}

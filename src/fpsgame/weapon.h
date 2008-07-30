@@ -36,22 +36,19 @@ struct weaponstate
 			if(a >= 0) s = a;
 			else s += b;
 
-			while (s >= GUN_MAX) s -= GUN_MAX;
-			while (s <= -1) s += GUN_MAX;
+			while(s > GUN_MAX-1) s -= GUN_MAX;
+			while(s < 0) s += GUN_MAX;
 			if(a < 0 && !switchgl() && s == GUN_GL)
-				s += b;
+				continue;
 
-			if(!d->canswitch(s, lastmillis))
+			if(d->canswitch(s, lastmillis))
 			{
-				if(a >= 0) return;
+				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, s);
+				return;
 			}
-			else break;
+			else if(a >= 0) break;
 		}
-
-		if(s != d->gunselect)
-		{
-			cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, s);
-		}
+		playsound(S_DENIED, 0, 255, d->o, d);
 	}
 
 	void offsetray(vec &from, vec &to, int spread, vec &dest)
@@ -327,7 +324,7 @@ struct weaponstate
 
 	bool doautoreload(fpsent *d)
 	{
-		return autoreload() && isgun(d->gunselect) && d->ammo[d->gunselect] <= 0 && d->canreload(d->gunselect, lastmillis);
+		return autoreload() && isgun(d->gunselect) && !d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis);
 	}
 
 	void reload(fpsent *d)
@@ -387,7 +384,7 @@ struct weaponstate
 		}
 
 		if(d->gunselect==GUN_SG) createrays(from, to);
-		else if(d->gunselect==GUN_CG) offsetray(from, to, 1, to);
+		else if(d->gunselect==GUN_CG) offsetray(from, to, 5, to);
 
 		hits.setsizenodelete(0);
 		if(!guntype[d->gunselect].speed) raydamage(from, to, d);
