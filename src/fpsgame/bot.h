@@ -607,11 +607,12 @@ struct botclient
 		loopvj(cl.et.ents)
 		{
 			fpsentity &e = (fpsentity &)*cl.et.ents[j];
+			if(enttype[e.type].usetype != EU_ITEM) continue;
 			switch(e.type)
 			{
 				case WEAPON:
 				{
-					if(e.spawned && isgun(e.attr1) && guntype[e.attr1].rdelay > 0 && e.attr1 != GUN_PISTOL && guntype[e.attr1].rdelay > 0)
+					if(e.spawned && isgun(e.attr1) && e.attr1 != GUN_PISTOL && guntype[e.attr1].rdelay > 0)
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = BS_INTEREST;
@@ -629,20 +630,30 @@ struct botclient
 			}
 		}
 
-		loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner != d)
+		loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->owner && cl.pj.projs[j]->state != CS_DEAD)
 		{
 			projent &proj = *cl.pj.projs[j];
-			if(proj.state != CS_DEAD && !proj.beenused && isgun(proj.attr1) && proj.attr1 != GUN_PISTOL && guntype[proj.attr1].rdelay > 0)
-			{ // go get a weapon upgrade
-				interest &n = interests.add();
-				n.state = BS_INTEREST;
-				n.node = cl.et.waypointnode(proj.o, true);
-				n.target = proj.owner->clientnum;
-				n.targtype = BT_DROP;
-				n.expire = 5000;
-				n.tolerance = enttype[proj.ent].radius+d->radius;
-				n.score = pos.dist(proj.o)/(d->ammo[proj.attr1] <= 0 ? 10.f : 1.f);
-				n.defers = true;
+			if(enttype[proj.ent].usetype != EU_ITEM) continue;
+			switch(proj.ent)
+			{
+				case WEAPON:
+				{
+					if(!proj.beenused && isgun(proj.attr1) && proj.attr1 != GUN_PISTOL && guntype[proj.attr1].rdelay > 0)
+					{ // go get a weapon upgrade
+						if(proj.owner == d && d->gunselect != GUN_PISTOL) break;
+						interest &n = interests.add();
+						n.state = BS_INTEREST;
+						n.node = cl.et.waypointnode(proj.o, true);
+						n.target = proj.id;
+						n.targtype = BT_DROP;
+						n.expire = 5000;
+						n.tolerance = enttype[proj.ent].radius+d->radius;
+						n.score = pos.dist(proj.o)/(d->ammo[proj.attr1] <= 0 ? 10.f : 1.f);
+						n.defers = true;
+					}
+					break;
+				}
+				default: break;
 			}
 		}
 
@@ -851,18 +862,16 @@ struct botclient
 					if(cl.et.ents.inrange(b.target))
 					{
 						fpsentity &e = (fpsentity &)*cl.et.ents[b.target];
-						if(enttype[e.type].usetype == EU_ITEM)
+						if(enttype[e.type].usetype != EU_ITEM) return false;
+						switch(e.type)
 						{
-							switch(e.type)
+							case WEAPON:
 							{
-								case WEAPON:
-								{
-									if(!e.spawned || e.attr1 == GUN_PISTOL || guntype[e.attr1].rdelay <= 0)
-										return false;
-									break;
-								}
-								default: break;
+								if(!e.spawned || e.attr1 == GUN_PISTOL || guntype[e.attr1].rdelay <= 0)
+									return false;
+								break;
 							}
+							default: break;
 						}
 						if(makeroute(d, b, e.o, enttype[e.type].radius+d->radius))
 						{
@@ -874,16 +883,26 @@ struct botclient
 				}
 				case BT_DROP:
 				{
-					loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner != d && cl.pj.projs[j]->owner->clientnum == b.target)
+					loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->state != CS_DEAD && cl.pj.projs[j]->owner && cl.pj.projs[j]->id == b.target)
 					{
 						projent &proj = *cl.pj.projs[j];
-						if(!proj.beenused && proj.state != CS_DEAD && proj.attr1 != GUN_PISTOL && guntype[proj.attr1].rdelay > 0)
+						if(enttype[proj.ent].usetype != EU_ITEM) return false;
+						switch(proj.ent)
 						{
-							if(makeroute(d, b, proj.o, enttype[proj.ent].radius+d->radius))
+							case WEAPON:
 							{
-								defer(d, b, false);
-								return true;
+								if(proj.beenused || proj.attr1 == GUN_PISTOL || guntype[proj.attr1].rdelay <= 0)
+									return false;
+								if(proj.owner == d && d->gunselect != GUN_PISTOL)
+									return false;
+								break;
 							}
+							default: break;
+						}
+						if(makeroute(d, b, proj.o, enttype[proj.ent].radius+d->radius))
+						{
+							defer(d, b, false);
+							return true;
 						}
 						break;
 					}
@@ -1078,49 +1097,51 @@ struct botclient
 			}
 			else if(lastmillis-d->usetime > 3000 && !d->useaction)
 			{
-				bool useme = false;
-				loopv(cl.et.ents) if(enttype[cl.et.ents[i]->type].usetype == EU_ITEM && cl.et.ents[i]->type == WEAPON)
+				int type, id;
+				if(cl.et.closestitem(d, false, &type, &id))
 				{
-					fpsentity &e = (fpsentity &)*cl.et.ents[i];
-					if(e.spawned && e.attr1 != GUN_PISTOL && guntype[e.attr1].rdelay > 0)
+					int ent = -1, attr1 = 0, attr2 = 0;
+					switch(type)
 					{
-						if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
+						case ITEM_ENT:
 						{
-							float eye = d->height*0.5f;
-							vec m = d->o;
-							m.z -= eye;
-
-							if(insidesphere(m, eye, d->radius-1.f, e.o, enttype[e.type].height, enttype[e.type].radius))
-							{
-								useme = true;
-								break;
-							}
+							if(!cl.et.ents.inrange(id)) break;
+							extentity &e = *cl.et.ents[id];
+							if(enttype[e.type].usetype != EU_ITEM) break;
+							ent = e.type;
+							attr1 = e.attr1;
+							attr2 = e.attr2;
+							break;
 						}
+						case ITEM_PROJ:
+						{
+							if(!cl.pj.projs.inrange(id)) break;
+							projent &proj = *cl.pj.projs[id];
+							if(enttype[proj.ent].usetype != EU_ITEM) break;
+							if(proj.owner == d && d->gunselect != GUN_PISTOL) break;
+							ent = proj.ent;
+							attr1 = proj.attr1;
+							attr2 = proj.attr2;
+							break;
+						}
+						default: break;
 					}
-				}
-				if(!useme) loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ent == WEAPON && cl.pj.projs[j]->owner && cl.pj.projs[j]->owner != d)
-				{
-					projent &proj = *cl.pj.projs[j];
-					if(!proj.beenused && proj.state != CS_DEAD && d->ammo[proj.attr1] <= 0 && proj.attr1 != GUN_PISTOL && guntype[proj.attr1].rdelay > 0)
+					switch(ent)
 					{
-						if(d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis))
+						case WEAPON:
 						{
-							float eye = d->height*0.5f;
-							vec m = d->o;
-							m.z -= eye;
-
-							if(insidesphere(m, eye, d->radius-1.f, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius))
-							{
-								useme = true;
+							if(attr1 == GUN_PISTOL || guntype[attr1].rdelay <= 0)
 								break;
+							if(d->canuse(ent, attr1, attr2, lastmillis))
+							{
+								d->useaction = true;
+								d->usetime = lastmillis;
 							}
+							break;
 						}
+						default: break;
 					}
-				}
-				if(useme)
-				{
-					d->useaction = true;
-					d->usetime = lastmillis;
+
 				}
 			}
 

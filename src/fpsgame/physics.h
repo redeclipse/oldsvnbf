@@ -677,7 +677,6 @@ struct physics
         if(domove)
         {
             move(d, res, local);
-
             d->newpos = d->o;
         }
 

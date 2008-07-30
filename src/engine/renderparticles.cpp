@@ -595,7 +595,7 @@ static partrenderer *parts[] =
     new quadrenderer("<anim:50>particles/fireball",	PT_PART|PT_GLARE,  20, 0),			// 4 fireball1
     new quadrenderer("particles/smoke",				PT_PART,          -20, 0, 3),		// 5 big  slowly rising smoke
     new quadrenderer("<anim:100>particles/plasma",	PT_PART|PT_GLARE,  20, 0),			// 6 fireball2
-	new quadrenderer("<anim:100>particles/electric",PT_PART|PT_GLARE,  20, 0),			// 7 big fireball3
+	new quadrenderer("<anim:150>particles/electric",PT_PART|PT_GLARE,  20, 0),			// 7 big fireball3
     &textups,																			// 8 TEXT, floats up
     new taperenderer("particles/flare",				PT_TAPE|PT_GLARE,   0, 0),			// 9 streak
     &texts,																				// 10 TEXT, SMALL, NON-MOVING
