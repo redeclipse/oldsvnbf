@@ -528,77 +528,80 @@ struct botclient
 		vector<interest> interests;
 		interests.setsize(0);
 
-		if(m_ctf(cl.gamemode)) loopvj(cl.ctf.flags)
-		{
-			ctfstate::flag &f = cl.ctf.flags[j];
-
-			vector<int> targets; // build a list of others who are interested in this
-			checkothers(targets, d, f.team == d->team ? BS_DEFEND : BS_PURSUE, BT_FLAG, j, true);
-
-			fpsent *e = NULL;
-			loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && BOTTARG(d, e, false) && !e->bot && d->team == e->team)
-			{ // try to guess what non bots are doing
-				vec ep = cl.headpos(e);
-				if(targets.find(e->clientnum) < 0 && (ep.dist(f.pos()) <= enttype[FLAG].radius*2.f || f.owner == e))
-					targets.add(e->clientnum);
-			}
-
-			if(f.team == d->team)
+		if(m_ctf(cl.gamemode)) 
+        {
+			loopvj(cl.ctf.flags)
 			{
-				bool guard = false;
-				if(f.owner || targets.empty()) guard = true;
-				else if(d->gunselect != GUN_PISTOL)
-				{ // see if we can relieve someone who only has a pistol
-					fpsent *t;
-					loopvk(targets) if((t = cl.getclient(targets[k])) && t->gunselect == GUN_PISTOL)
-					{
-						guard = true;
-						break;
+				ctfstate::flag &f = cl.ctf.flags[j];
+
+				vector<int> targets; // build a list of others who are interested in this
+				checkothers(targets, d, f.team == d->team ? BS_DEFEND : BS_PURSUE, BT_FLAG, j, true);
+
+				fpsent *e = NULL;
+				loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && BOTTARG(d, e, false) && !e->bot && d->team == e->team)
+				{ // try to guess what non bots are doing
+					vec ep = cl.headpos(e);
+					if(targets.find(e->clientnum) < 0 && (ep.dist(f.pos()) <= enttype[FLAG].radius*2.f || f.owner == e))
+						targets.add(e->clientnum);
+				}
+
+				if(f.team == d->team)
+				{
+					bool guard = false;
+					if(f.owner || targets.empty()) guard = true;
+					else if(d->gunselect != GUN_PISTOL)
+					{ // see if we can relieve someone who only has a pistol
+						fpsent *t;
+						loopvk(targets) if((t = cl.getclient(targets[k])) && t->gunselect == GUN_PISTOL)
+						{
+							guard = true;
+							break;
+						}
+					}
+
+					if(guard)
+					{ // defend the flag
+						interest &n = interests.add();
+						n.state = BS_DEFEND;
+						n.node = cl.et.waypointnode(f.pos(), false);
+						n.target = j;
+						n.targtype = BT_FLAG;
+						n.expire = 10000;
+						n.tolerance = enttype[FLAG].radius*2.f;
+						n.score = pos.dist(f.pos())/(d->gunselect != GUN_PISTOL ? 1.f : 100.f);
+						n.defers = false;
 					}
 				}
-
-				if(guard)
-				{ // defend the flag
-					interest &n = interests.add();
-					n.state = BS_DEFEND;
-					n.node = cl.et.waypointnode(f.pos(), false);
-					n.target = j;
-					n.targtype = BT_FLAG;
-					n.expire = 10000;
-					n.tolerance = enttype[FLAG].radius*2.f;
-					n.score = pos.dist(f.pos())/(d->gunselect != GUN_PISTOL ? 1.f : 100.f);
-					n.defers = false;
-				}
-			}
-			else
-			{
-				if(targets.empty())
-				{ // attack the flag
-					interest &n = interests.add();
-					n.state = BS_PURSUE;
-					n.node = cl.et.waypointnode(f.pos(), false);
-					n.target = j;
-					n.targtype = BT_FLAG;
-					n.expire = 10000;
-					n.tolerance = enttype[FLAG].radius*2.f;
-					n.score = pos.dist(f.pos());
-					n.defers = false;
-				}
 				else
-				{ // help by defending the attacker
-					fpsent *t;
-					loopvk(targets) if((t = cl.getclient(targets[k])))
-					{
+				{
+					if(targets.empty())
+					{ // attack the flag
 						interest &n = interests.add();
-						vec tp = cl.headpos(t);
-						n.state = BS_DEFEND;
-						n.node = t->lastnode;
-						n.target = t->clientnum;
-						n.targtype = BT_PLAYER;
-						n.expire = 5000;
-						n.tolerance = t->radius*2.f;
-						n.score = pos.dist(tp);
+						n.state = BS_PURSUE;
+						n.node = cl.et.waypointnode(f.pos(), false);
+						n.target = j;
+						n.targtype = BT_FLAG;
+						n.expire = 10000;
+						n.tolerance = enttype[FLAG].radius*2.f;
+						n.score = pos.dist(f.pos());
 						n.defers = false;
+					}
+					else
+					{ // help by defending the attacker
+						fpsent *t;
+						loopvk(targets) if((t = cl.getclient(targets[k])))
+						{
+							interest &n = interests.add();
+							vec tp = cl.headpos(t);
+							n.state = BS_DEFEND;
+							n.node = t->lastnode;
+							n.target = t->clientnum;
+							n.targtype = BT_PLAYER;
+							n.expire = 5000;
+							n.tolerance = t->radius*2.f;
+							n.score = pos.dist(tp);
+							n.defers = false;
+						}
 					}
 				}
 			}
@@ -1200,15 +1203,18 @@ struct botclient
 						break;
 					}
 				}
-				if(!found) loopv(cl.pj.projs) if(cl.pj.projs[i] && cl.pj.projs[i]->state == CS_ALIVE)
+				if(!found) 
 				{
-					if(cl.pj.projs[i]->projtype == PRJ_SHOT &&
-						f.o.dist(cl.pj.projs[i]->o) <= guntype[cl.pj.projs[i]->attr1].explode+d->radius)
-						{
-							d->bot->avoid.add(k);
-							found = true;
-							break;
-						}
+					loopv(cl.pj.projs) if(cl.pj.projs[i] && cl.pj.projs[i]->state == CS_ALIVE)
+					{
+						if(cl.pj.projs[i]->projtype == PRJ_SHOT &&
+							f.o.dist(cl.pj.projs[i]->o) <= guntype[cl.pj.projs[i]->attr1].explode+d->radius)
+							{
+								d->bot->avoid.add(k);
+								found = true;
+								break;
+							}
+					}
 				}
 			}
 		}

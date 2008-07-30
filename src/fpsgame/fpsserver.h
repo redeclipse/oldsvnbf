@@ -1366,11 +1366,14 @@ struct GAMESERVER : igameserver
 							sents[n].millis = gamemillis;
 						}
 					}
-					if(commit) loopvk(clients)
+					if(commit) 
 					{
-						clientinfo *cp = clients[k];
-						cp->state.dropped.reset();
-						cp->state.gunreset(false);
+						loopvk(clients)
+						{
+							clientinfo *cp = clients[k];
+							cp->state.dropped.reset();
+							cp->state.gunreset(false);
+						}
 					}
 					break;
 				}

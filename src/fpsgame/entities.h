@@ -465,7 +465,7 @@ struct entities : icliententities
 
 	void checkitems(fpsent *d)
 	{
-		int type, id;
+		int type = -1, id = -1;
 		if(closestitem(d, true, &type, &id))
 		{
 			switch(type)
