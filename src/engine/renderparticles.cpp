@@ -51,7 +51,7 @@ struct partrenderer
     virtual void init(int n) { }
     virtual void reset() = NULL;
     virtual void resettracked(physent *owner) { }
-    virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *d = NULL) = NULL;
+    virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) = NULL;
     virtual void update() { }
     virtual void render() = NULL;
     virtual bool haswork() = NULL;
