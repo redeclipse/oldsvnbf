@@ -99,7 +99,7 @@ struct GAMECLIENT : igameclient
 	IVARP(zoomfov, 1, 35, 150);
 	IVARP(zoomtime, 1, 300, 10000);
 	IFVARP(zoomcrosshairsize, 0.3f);
-	IVARP(zoommousetype, 0, 0, 2);
+	IVARP(zoommousetype, 0, 2, 2);
 	IVARP(zoomdeadzone, 0, 25, 100);
 	IVARP(zoompanspeed, 1, 10, INT_MAX-1);
 
@@ -311,18 +311,6 @@ struct GAMECLIENT : igameclient
 			cc.addmsg(SV_TRYSPAWN, "ri", d->clientnum);
 			d->respawned = d->lifesequence;
 		}
-	}
-
-	void menuevent(int event)
-	{
-		int s = -1;
-		switch (event)
-		{
-			case MN_BACK: s = S_MENUBACK; break;
-			case MN_INPUT: s = S_MENUPRESS; break;
-			default: break;
-		}
-		if(s >= 0) playsound(s, SND_NOCULL, 255, camera1->o, camera1);
 	}
 
 	fpsent *pointatplayer()
