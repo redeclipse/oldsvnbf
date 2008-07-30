@@ -90,7 +90,7 @@ extern identtable *idents;
 
 extern int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), int flags);
 extern float fvariable(const char *name, float cur, float *storage, void (*fun)(), int flags);
-extern char *svariable(const char *name, char *cur, char **storage, void (*fun)(), int flags);
+extern char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), int flags);
 extern void setvar(const char *name, int i, bool dofunc = false);
 extern void setfvar(const char *name, float f, bool dofunc = false);
 extern void setsvar(const char *name, const char *str, bool dofunc = false);
@@ -235,7 +235,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define _ISVAR(n, c, b, p) \
 	struct var_##n : ident \
 	{ \
-        var_##n() : ident(ID_SVAR, #n, c, c, &val.s, (void *)NULL, p) \
+        var_##n() : ident(ID_SVAR, #n, newstring(c), newstring(c), &val.s, (void *)NULL, p) \
 		{ \
             addident(name, this); \
 		} \
