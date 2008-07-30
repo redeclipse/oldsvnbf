@@ -84,7 +84,6 @@ struct igameclient
 	virtual int localplayers() { return 1; }
 	virtual bool gui3d() { return true; }
 
-	virtual void menuevent(int event) { return; }
 	virtual char *gametitle() = 0;
 	virtual char *gametext() = 0;
 
