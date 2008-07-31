@@ -140,6 +140,7 @@ enum
     PT_LERP  = 1<<10, // use very sparingly - order of blending issues
     PT_TRACK = 1<<11,
     PT_GLARE = 1<<12,
+    PT_SOFT  = 1<<13
 };
 
 
