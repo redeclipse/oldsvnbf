@@ -1890,6 +1890,7 @@ struct GAMESERVER : igameserver
 
 		enet_packet_resize(packet, packet->dataLength + MAXTRANS);
 		p.buf = packet->data;
+        p.maxlen = packet->dataLength;
 
 		if(smode) smode->initclient(ci, p, true);
 		mutate(smuts, mut->initclient(ci, p, true));
