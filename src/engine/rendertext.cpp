@@ -107,7 +107,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
     if(c=='s') // save color
     {
         c = stack[sp];
-        if(sp<size-1) stack[sp++] = c;
+        if(sp<size-1) stack[++sp] = c;
     }
     else
     {
