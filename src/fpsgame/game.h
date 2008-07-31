@@ -391,8 +391,6 @@ enum
 	SSTAT_MAX
 };
 
-VARG(netframetime, 0, 40, 1000);
-
 VARG(teamdamage, 0, 1, 1);
 VARG(entspawntime, 0, 0, 60);
 VARG(timelimit, 0, 10, 60);
@@ -720,7 +718,7 @@ struct botinfo
 	vector<botstate> state;
 	vector<int> route, avoid;
 	vec target, spot;
-	int enemy;
+	int enemy, gunpref, lastreq;
 
 	botinfo()
 	{
@@ -739,8 +737,10 @@ struct botinfo
 		route.setsize(0);
 		avoid.setsize(0);
 		addstate(BS_WAIT);
+		gunpref = rnd(GUN_MAX-1)+1;
 		spot = target = vec(0, 0, 0);
 		enemy = NULL;
+		lastreq = 0;
 	}
 
 	botstate &addstate(int type)

@@ -528,7 +528,7 @@ struct botclient
 		vector<interest> interests;
 		interests.setsize(0);
 
-		if(m_ctf(cl.gamemode)) 
+		if(m_ctf(cl.gamemode))
         {
 			loopvj(cl.ctf.flags)
 			{
@@ -568,7 +568,7 @@ struct botclient
 						n.targtype = BT_FLAG;
 						n.expire = 10000;
 						n.tolerance = enttype[FLAG].radius*2.f;
-						n.score = pos.dist(f.pos())/(d->gunselect != GUN_PISTOL ? 1.f : 100.f);
+						n.score = pos.dist(f.pos())/(d->gunselect != GUN_PISTOL ? 100.f : 1.f);
 						n.defers = false;
 					}
 				}
@@ -607,56 +607,59 @@ struct botclient
 			}
 		}
 
-		loopvj(cl.et.ents)
+		if(!d->hasgun(d->bot->gunpref))
 		{
-			fpsentity &e = (fpsentity &)*cl.et.ents[j];
-			if(enttype[e.type].usetype != EU_ITEM) continue;
-			switch(e.type)
+			loopvj(cl.et.ents)
 			{
-				case WEAPON:
+				fpsentity &e = (fpsentity &)*cl.et.ents[j];
+				if(enttype[e.type].usetype != EU_ITEM) continue;
+				switch(e.type)
 				{
-					if(e.spawned && isgun(e.attr1) && e.attr1 != GUN_PISTOL && guntype[e.attr1].rdelay > 0)
-					{ // go get a weapon upgrade
-						interest &n = interests.add();
-						n.state = BS_INTEREST;
-						n.node = cl.et.waypointnode(e.o, true);
-						n.target = j;
-						n.targtype = BT_ENTITY;
-						n.expire = 10000;
-						n.tolerance = enttype[e.type].radius+d->radius;
-						n.score = pos.dist(e.o)/(d->hasgun(e.attr1) ? 1.f : 10.f);
-						n.defers = true;
+					case WEAPON:
+					{
+						if(e.spawned && isgun(e.attr1) && !d->hasgun(e.attr1))
+						{ // go get a weapon upgrade
+							interest &n = interests.add();
+							n.state = BS_INTEREST;
+							n.node = cl.et.waypointnode(e.o, true);
+							n.target = j;
+							n.targtype = BT_ENTITY;
+							n.expire = 10000;
+							n.tolerance = enttype[e.type].radius+d->radius;
+							n.score = pos.dist(e.o)/(e.attr1 != d->bot->gunpref ? 1.f : 10.f);
+							n.defers = true;
+						}
+						break;
 					}
-					break;
+					default: break;
 				}
-				default: break;
 			}
-		}
 
-		loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ready())
-		{
-			projent &proj = *cl.pj.projs[j];
-			if(enttype[proj.ent].usetype != EU_ITEM || !cl.et.ents.inrange(proj.id)) continue;
-			switch(proj.ent)
+			loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ready())
 			{
-				case WEAPON:
+				projent &proj = *cl.pj.projs[j];
+				if(enttype[proj.ent].usetype != EU_ITEM || !cl.et.ents.inrange(proj.id)) continue;
+				switch(proj.ent)
 				{
-					if(isgun(proj.attr1) && proj.attr1 != GUN_PISTOL && guntype[proj.attr1].rdelay > 0)
-					{ // go get a weapon upgrade
-						if(proj.owner == d && d->gunselect != GUN_PISTOL) break;
-						interest &n = interests.add();
-						n.state = BS_INTEREST;
-						n.node = cl.et.waypointnode(proj.o, true);
-						n.target = proj.id;
-						n.targtype = BT_DROP;
-						n.expire = 5000;
-						n.tolerance = enttype[proj.ent].radius+d->radius;
-						n.score = pos.dist(proj.o)/(d->hasgun(proj.attr1) ? 1.f : 10.f);
-						n.defers = true;
+					case WEAPON:
+					{
+						if(isgun(proj.attr1) && !d->hasgun(proj.attr1))
+						{ // go get a weapon upgrade
+							if(proj.owner == d && d->gunselect != GUN_PISTOL) break;
+							interest &n = interests.add();
+							n.state = BS_INTEREST;
+							n.node = cl.et.waypointnode(proj.o, true);
+							n.target = proj.id;
+							n.targtype = BT_DROP;
+							n.expire = 5000;
+							n.tolerance = enttype[proj.ent].radius+d->radius;
+							n.score = pos.dist(proj.o)/(proj.attr1 != d->bot->gunpref ? 1.f : 10.f);
+							n.defers = true;
+						}
+						break;
 					}
-					break;
+					default: break;
 				}
-				default: break;
 			}
 		}
 
@@ -870,7 +873,9 @@ struct botclient
 						{
 							case WEAPON:
 							{
-								if(!e.spawned || e.attr1 == GUN_PISTOL || guntype[e.attr1].rdelay <= 0)
+								if(d->hasgun(d->bot->gunpref))
+									return false;
+								if(!e.spawned || d->hasgun(e.attr1))
 									return false;
 								break;
 							}
@@ -894,7 +899,9 @@ struct botclient
 						{
 							case WEAPON:
 							{
-								if(proj.attr1 == GUN_PISTOL || guntype[proj.attr1].rdelay <= 0)
+								if(d->hasgun(d->bot->gunpref))
+									return false;
+								if(d->hasgun(proj.attr1))
 									return false;
 								if(proj.owner == d && d->gunselect != GUN_PISTOL)
 									return false;
@@ -1089,21 +1096,22 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			//if(d->gunselect != bestgun && d->canswitch(bestgun, lastmillis))
-			//{
-			//	cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-			//}
-			//else
-			if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis))
+			if(lastmillis-d->bot->lastreq > 1000)
 			{
-				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-			}
-			else if(lastmillis-d->usetime > 3000 && !d->useaction)
-			{
-				vector<actitem> actitems;
-				if(cl.et.collateitems(d, false, true, actitems))
+				if(d->hasgun(d->bot->gunpref) && d->gunselect != d->bot->gunpref && d->canswitch(d->bot->gunpref, lastmillis))
 				{
-					while(!actitems.empty())
+					cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->bot->gunpref);
+					d->bot->lastreq = lastmillis;
+				}
+				else if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis))
+				{
+					cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+					d->bot->lastreq = lastmillis;
+				}
+				else if(!d->hasgun(d->bot->gunpref) && !d->useaction)
+				{
+					vector<actitem> actitems;
+					if(cl.et.collateitems(d, false, true, actitems))
 					{
 						int closest = actitems.length()-1;
 						loopv(actitems)
@@ -1111,7 +1119,7 @@ struct botclient
 								closest = i;
 
 						actitem &t = actitems[closest];
-						int ent = -1, attr1 = 0, attr2 = 0;
+						int ent = -1;
 						switch(t.type)
 						{
 							case ITEM_ENT:
@@ -1119,42 +1127,42 @@ struct botclient
 								if(!cl.et.ents.inrange(t.target)) break;
 								extentity &e = *cl.et.ents[t.target];
 								if(enttype[e.type].usetype != EU_ITEM) break;
-								ent = e.type;
-								attr1 = e.attr1;
-								attr2 = e.attr2;
+								ent = t.target;
 								break;
 							}
 							case ITEM_PROJ:
 							{
 								if(!cl.pj.projs.inrange(t.target)) break;
 								projent &proj = *cl.pj.projs[t.target];
-								if(enttype[proj.ent].usetype != EU_ITEM) break;
+								if(!cl.et.ents.inrange(proj.id)) break;
+								extentity &e = *cl.et.ents[proj.id];
+								if(enttype[e.type].usetype != EU_ITEM) break;
 								if(proj.owner == d && d->gunselect != GUN_PISTOL) break;
-								ent = proj.ent;
-								attr1 = proj.attr1;
-								attr2 = proj.attr2;
+								ent = proj.id;
 								break;
 							}
 							default: break;
 						}
-						switch(ent)
+						if(cl.et.ents.inrange(ent))
 						{
-							case WEAPON:
+							extentity &e = *cl.et.ents[ent];
+							if(d->canuse(e.type, e.attr1, e.attr2, lastmillis)) switch(e.type)
 							{
-								if(attr1 == GUN_PISTOL || guntype[attr1].rdelay <= 0)
+								case WEAPON:
+								{
+									if(d->hasgun(e.attr1)) break;
+									if(d->gunselect != GUN_PISTOL && e.attr1 != d->bot->gunpref)
+										break;
+									d->useaction = true;
+									d->usetime = d->bot->lastreq = lastmillis;
 									break;
-								d->useaction = true;
-								d->usetime = lastmillis;
-								break;
+								}
+								default: break;
 							}
-							default: break;
 						}
-						if(d->useaction) break;
-						else actitems.remove(closest);
 					}
 				}
 			}
-
 			bool aiming = false;
 			fpsent *e = cl.getclient(d->bot->enemy);
 			if(e)
@@ -1210,7 +1218,7 @@ struct botclient
 						break;
 					}
 				}
-				if(!found) 
+				if(!found)
 				{
 					loopv(cl.pj.projs) if(cl.pj.projs[i] && cl.pj.projs[i]->state == CS_ALIVE)
 					{

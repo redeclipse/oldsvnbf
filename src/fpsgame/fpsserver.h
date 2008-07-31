@@ -1007,9 +1007,9 @@ struct GAMESERVER : igameserver
 	{
 		if(clients.empty()) return false;
 		enet_uint32 millis = enet_time_get()-lastsend;
-		if(millis<(enet_uint32)sv_netframetime) return false;
+		if(millis<33) return false;
 		bool flush = buildworldstate();
-		lastsend += millis - (millis%sv_netframetime);
+		lastsend += millis - (millis%33);
 		return flush;
 	}
 
@@ -1366,7 +1366,7 @@ struct GAMESERVER : igameserver
 							sents[n].millis = gamemillis;
 						}
 					}
-					if(commit) 
+					if(commit)
 					{
 						loopvk(clients)
 						{
