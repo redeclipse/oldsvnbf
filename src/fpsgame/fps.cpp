@@ -449,7 +449,7 @@ struct GAMECLIENT : igameclient
 			else ph.move(player1, 20, true);
 		}
 
-		if(player1->clientnum >= 0) c2sinfo(netframetime);
+		if(player1->clientnum >= 0) c2sinfo(33);
 	}
 
 	void damaged(int gun, int flags, int damage, int health, fpsent *d, fpsent *actor, int millis, vec &dir)
@@ -571,25 +571,25 @@ struct GAMECLIENT : igameclient
 				{
 					case 5:
 					{
-						s_strcat(d->obit, "with carnage!");
+						s_strcat(d->obit, " with carnage!");
 						anc = S_V_SPREE1;
 						break;
 					}
 					case 10:
 					{
-						s_strcat(d->obit, "who is slaughtering!");
+						s_strcat(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
 						break;
 					}
 					case 25:
 					{
-						s_strcat(d->obit, "going on a massacre!");
+						s_strcat(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
 						break;
 					}
 					case 50:
 					{
-						s_strcat(d->obit, "creating a bloodbath!");
+						s_strcat(d->obit, " creating a bloodbath!");
 						anc = S_V_SPREE4;
 						break;
 					}
