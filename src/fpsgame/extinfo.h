@@ -66,7 +66,7 @@
             loopv(clients) if(clients[i]->team) //check all teams available, since stfmode.scores contains only teams with scores
             {
                 teamscore *ts = NULL;
-                loopvj(scores) if(scores[j].team == clients[i]->team) { ts = &scores[i]; break; }
+                loopvj(scores) if(scores[j].team == clients[i]->team) { ts = &scores[j]; break; }
                 if(!ts) scores.add(teamscore(clients[i]->team, 0));
             }
         }
@@ -76,7 +76,7 @@
             {
                 if(!ctfmode.flags[i].team) continue;
                 teamscore *ts = NULL;
-                loopvj(scores) if(scores[j].team == ctfmode.flags[i].team) { ts = &scores[i]; break; }
+                loopvj(scores) if(scores[j].team == ctfmode.flags[i].team) { ts = &scores[j]; break; }
                 if(!ts) scores.add(teamscore(ctfmode.flags[i].team, ctfmode.flags[i].score));
                 else ts->score += ctfmode.flags[i].score;
             }
@@ -87,7 +87,7 @@
             {
                 clientinfo *ci = clients[i];
                 teamscore *ts = NULL;
-                loopvj(scores) if(scores[j].team == ci->team) { ts = &scores[i]; break; }
+                loopvj(scores) if(scores[j].team == ci->team) { ts = &scores[j]; break; }
                 if(!ts) scores.add(teamscore(ci->team, ci->state.frags));
                 else ts->score += ci->state.frags;
             }
