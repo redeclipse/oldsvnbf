@@ -45,8 +45,8 @@ struct GAMECLIENT : igameclient
 
 	IVARP(titlecardtime, 0, 2000, 10000);
 	IVARP(titlecardfade, 0, 3000, 10000);
-	IFVARP(titlecardsize, 0.25f);
-	IFVARP(titlecardxpos, 0.74f);
+	IFVARP(titlecardsize, 0.22f);
+	IFVARP(titlecardxpos, 0.77f);
 	IFVARP(titlecardypos, 0.01f);
 
 	IVARP(thirdperson, 0, 0, 1);
@@ -113,10 +113,10 @@ struct GAMECLIENT : igameclient
 
 	IVARP(radardist, 0, 512, 512);
 	IVARP(radarnames, 0, 1, 2);
-	IFVARP(radarsize, 0.20f);
-	IFVARP(radarxpos, 0.79f);
+	IFVARP(radarsize, 0.22f);
+	IFVARP(radarxpos, 0.77f);
 	IFVARP(radarypos, 0.01f);
-	IFVARP(radarblend, 0.7f);
+	IFVARP(radarblend, 0.75f);
 	IFVARP(radarblipblend, 1.0f);
 	IFVARP(radarbarblend, 1.0f);
 	IFVARP(radarcardblend, 1.0f);
@@ -136,6 +136,8 @@ struct GAMECLIENT : igameclient
 	ITVAR(damagetex, "textures/damage", 0);
 	ITVAR(zoomtex, "textures/zoom", 0);
 
+	IVARP(showammo, 0, 2, 2);
+	IVARP(showpickups, 0, 2, 2);
 	IVARP(showstats, 0, 0, 1);
 	IVARP(showhudents, 0, 10, 100);
 	IVARP(showfps, 0, 2, 2);
@@ -331,9 +333,30 @@ struct GAMECLIENT : igameclient
 		sv->modecheck(&nextmode, &nextmuts);
 	}
 
-	void resetgamestate()
+	void resetstates(int types)
 	{
-		pj.reset();
+		if(types & ST_REQS) ws.requestswitch = ws.requestreload = 0;
+		if(types & ST_CAMERA)
+		{
+			lastcamera = 0;
+			zoomset(false, 0);
+		}
+		if(types & ST_CURSOR) resetcursor();
+		if(types & ST_GAME)
+		{
+			sb.showscores(false);
+			lasthit = 0;
+		}
+		if(types & ST_SPAWNS)
+		{
+			et.resetspawns();
+			pj.reset();
+
+			// reset perma-state
+			dynent *d;
+			loopi(numdynents()) if((d = iterdynents(i)) && d->type == ENT_PLAYER)
+				((fpsent *)d)->resetstate(lastmillis);
+		}
 	}
 
 	void checkoften(fpsent *d)
@@ -376,9 +399,7 @@ struct GAMECLIENT : igameclient
 			if(!guiactive()) showgui("main");
 			openedmenu = true;
 		}
-
 		gets2c();
-
 		if(cc.ready())
 		{
 			ph.update();
@@ -479,64 +500,115 @@ struct GAMECLIENT : igameclient
 
 	void killed(int gun, int flags, int damage, fpsent *d, fpsent *actor)
 	{
-		if(d->state!=CS_ALIVE || intermission) return;
+		if(d->type != ENT_PLAYER) return;
 
-		static const char *obitnames[] = {
-			"ate a bullet from",
-			"was filled with buckshot by",
-			"was riddled with holes by",
-			"was blown to pieces by",
-			"was char-grilled by",
-			"was pierced by",
-#if 0
-			"rode the wrong end of a rocket from",
-#endif
-			""
-		};
-		string dname, aname, oname;
-		int cflags = (d==player1 || actor==player1 ? CON_CENTER : 0)|CON_NORMAL;
-		s_strcpy(dname, colorname(d));
-		s_strcpy(aname, actor->type!=ENT_INANIMATE ? colorname(actor) : "");
-		s_strcpy(oname, isgun(gun) ? obitnames[gun] : "was killed by");
-        if(d==actor || actor->type==ENT_INANIMATE)
-        {
-        	if(flags&HIT_MELT) console("\f2%s melted", cflags, dname);
-        	else if(flags&HIT_FALL) console("\f2%s thought they could fly", cflags, dname);
-        	else console("\f2%s suicided", cflags, dname);
-        }
-		else if(actor->type==ENT_AI) console("\f2%s %s %s", cflags, dname, oname, aname);
-		else if(m_team(gamemode, mutators) && d->team == actor->team)
-			console("\f2%s %s teammate %s", cflags, dname, oname, aname);
-		else console("\f2%s %s %s", cflags, dname, oname, aname);
-
-		d->obliterated = (
-			(flags & HIT_EXPLODE) || (flags & HIT_MELT) || (flags & HIT_FALL) ||
-				(!(flags & HIT_BURN) && (damage >= MAXHEALTH*15/10))
-		);
+		d->obit[0] = 0;
+		d->obliterated = (d == actor) || (flags & HIT_EXPLODE) || (flags & HIT_MELT) || (damage >= MAXHEALTH*2);
         d->lastregen = d->lastpain = lastmillis;
-
-		vec pos = headpos(d);
-		int gibs = clamp((damage+3)/3, 1, 25);
-		if(d->obliterated) gibs *= 2;
-		else playsound(S_DIE1+rnd(2), 0, 255, d->o, d);
-		loopi(rnd(gibs)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
-
 		d->state = CS_DEAD;
+		d->deaths++;
+
+		int anc = -1, dth = S_DIE1+rnd(2);
+		if((flags & HIT_MELT) || (flags & HIT_BURN)) dth = S_FLBURN;
+		else if(d->obliterated) dth = S_SPLAT;
 
 		if(d == player1)
 		{
+			anc = d->obliterated || lastmillis-d->lastspawn <= 5000 ? S_V_OWNED : S_V_FRAGGED;
 			sb.showscores(true);
 			lastplayerstate = *player1;
 			d->stopmoving();
-			d->deaths++;
 			d->pitch = 0;
 			d->roll = 0;
-			et.announce(lastmillis-d->lastspawn < 10000 ? S_V_OWNED : S_V_FRAGGED, "", true);
 		}
+		else d->move = d->strafe = 0;
+
+        if(d == actor)
+        {
+        	if(flags & HIT_MELT) s_strcpy(d->obit, "melted");
+        	else if(flags & HIT_FALL) s_strcpy(d->obit, "thought they could fly");
+        	else if(flags & HIT_EXPLODE) s_strcpy(d->obit, "decided to go out kamikaze style");
+        	else if(flags & HIT_BURN) s_strcpy(d->obit, "was like a moth attracted to a flame");
+        	else s_strcpy(d->obit, "suicided");
+        }
 		else
 		{
-            d->move = d->strafe = 0;
+			static const char *obitnames[3][GUN_MAX] = {
+				{
+					"ate a bullet from",
+					"was filled with buckshot by",
+					"was riddled with holes by",
+					"was blown to pieces by",
+					"was char-grilled by",
+					"was pierced by"
+				},
+				{
+					"received a bullet shaped brain implant from",
+					"was given scrambled brains cooked up by",
+					"was air conditioned courtesy of",
+					"was blown to pieces by",
+					"was char-grilled by",
+					"was expertly sniped by"
+				},
+				{
+					"exploded from a measily bullet shot by",
+					"was turned into little chunks by",
+					"was swiss-cheesed by",
+					"was obliterated by",
+					"was made the main course by order of chef",
+					"had their head blown clean off by"
+				}
+			};
+
+			int o = (flags & HIT_HEAD) ? 1 : (d->obliterated ? 2 : 0);
+			const char *oname = isgun(gun) ? obitnames[o][gun] : "was killed by";
+			if(m_team(gamemode, mutators) && d->team == actor->team)
+				s_sprintf(d->obit)("%s teammate %s", oname, colorname(actor));
+			else
+			{
+				s_sprintf(d->obit)("%s %s", oname, colorname(actor));
+				switch(actor->spree)
+				{
+					case 5:
+					{
+						s_strcat(d->obit, "with carnage!");
+						anc = S_V_SPREE1;
+						break;
+					}
+					case 10:
+					{
+						s_strcat(d->obit, "who is slaughtering!");
+						anc = S_V_SPREE2;
+						break;
+					}
+					case 25:
+					{
+						s_strcat(d->obit, "going on a massacre!");
+						anc = S_V_SPREE3;
+						break;
+					}
+					case 50:
+					{
+						s_strcat(d->obit, "creating a bloodbath!");
+						anc = S_V_SPREE4;
+						break;
+					}
+					default:
+					{
+						if(flags & HIT_HEAD) anc = S_V_HEADSHOT;
+						break;
+					}
+				}
+			}
 		}
+		bool af = (d == player1 || actor == player1);
+		if(dth >= 0) playsound(dth, 0, 255, d->o, d);
+		s_sprintfd(a)("\f2%s %s", colorname(d), d->obit);
+		et.announce(anc, a, af);
+
+		vec pos = headpos(d);
+		int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
+		loopi(rnd(gibs)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
 
 		bot.killed(d, actor, gun, flags, damage);
 	}
@@ -622,28 +694,9 @@ struct GAMECLIENT : igameclient
 		intermission = false;
         player1->respawned = player1->suicided = 0;
 		respawnent = -1;
-        maptime = lasthit = lastcamera = 0;
+        maptime = 0;
 		cc.mapstart();
-		pj.reset();
-
-		// reset perma-state
-		player1->oldnode = player1->lastnode = -1;
-		player1->frags = 0;
-		player1->deaths = 0;
-		player1->totaldamage = 0;
-		player1->totalshots = 0;
-		player1->state = CS_DEAD;
-		loopv(players) if(players[i])
-		{
-			players[i]->oldnode = players[i]->lastnode = -1;
-			players[i]->frags = 0;
-			players[i]->deaths = 0;
-			players[i]->totaldamage = 0;
-			players[i]->totalshots = 0;
-			players[i]->state = CS_DEAD;
-		}
-		et.resetspawns();
-		sb.showscores(false);
+        resetstates(ST_ALL);
 	}
 
 	void playsoundc(int n, fpsent *d = NULL)
@@ -701,297 +754,6 @@ struct GAMECLIENT : igameclient
 				d->suicided = d->lifesequence;
 			}
 		}
-	}
-
-	void drawsized(float x, float y, float s)
-	{
-		glTexCoord2f(0.0f, 0.0f); glVertex2f(x,	y);
-		glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
-		glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
-		glTexCoord2f(0.0f, 1.0f); glVertex2f(x,	y+s);
-	}
-
-	void drawplayerblip(fpsent *d, int x, int y, int s)
-	{
-		pushfont("radar");
-		vec dir = headpos(d);
-		dir.sub(camera1->o);
-		float dist = dir.magnitude();
-		if(dist < radarrange())
-		{
-			dir.rotate_around_z(-camera1->yaw*RAD);
-			int colour = teamtype[d->team].colour;
-			float cx = x + s*0.5f*(1.0f+dir.x/radarrange()),
-				cy = y + s*0.5f*(1.0f+dir.y/radarrange()),
-				cs = (d->crouching ? 0.005f : 0.025f)*s,
-				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-				fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*radarblipblend();
-			if(lastmillis-d->lastspawn <= REGENWAIT)
-				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
-			settexture(bliptex(), 3);
-			glColor4f(r, g, b, fade);
-			glBegin(GL_QUADS);
-			drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
-			glEnd();
-			int ty = int(cy+cs);
-			if(radarnames())
-				ty += draw_textx("%s", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, colorname(d, NULL, "", false));
-			if(radarnames() == 2 && m_team(gamemode, mutators))
-				draw_textx("(\fs%s%s\fS)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, teamtype[d->team].chat, teamtype[d->team].name);
-		}
-		popfont();
-	}
-
-	void drawcardinalblips(int x, int y, int s)
-	{
-		pushfont("radar");
-		loopi(4)
-		{
-			const char *card = "";
-			vec dir(camera1->o);
-			switch(i)
-			{
-				case 0: dir.sub(vec(0, radarrange(), 0)); card = "N"; break;
-				case 1: dir.add(vec(radarrange(), 0, 0)); card = "E"; break;
-				case 2: dir.add(vec(0, radarrange(), 0)); card = "S"; break;
-				case 3: dir.sub(vec(radarrange(), 0, 0)); card = "W"; break;
-				default: break;
-			}
-			dir.sub(camera1->o);
-			dir.rotate_around_z(-camera1->yaw*RAD);
-
-			float cx = x + (s-FONTH)*0.5f*(1.0f+dir.x/radarrange()),
-				cy = y + (s-FONTH)*0.5f*(1.0f+dir.y/radarrange());
-
-			draw_textx("%s", int(cx), int(cy), 255, 255, 255, int(255*radarcardblend()), true, AL_LEFT, -1, -1, card);
-		}
-		popfont();
-	}
-
-	void drawentblip(int x, int y, int s, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool spawned)
-	{
-		if(type <= NOTUSED || type >= MAXENTTYPES) return;
-		enttypes &t = enttype[type];
-		if((t.usetype == EU_ITEM && spawned) || editmode)
-		{
-			bool insel = et.ents.inrange(n) && editmode && (enthover == n || entgroup.find(n) >= 0);
-			vec dir(o);
-			dir.sub(camera1->o);
-			float dist = dir.magnitude();
-			if(!insel && dist >= radarrange()) return;
-			if(dist >= radarrange()) dir.mul(radarrange()/dist);
-			dir.rotate_around_z(-camera1->yaw*RAD);
-			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
-				cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
-					cs = (insel ? 0.033f : 0.025f)*s,
-						fade = clamp(insel ? 1.f : 1.f-(dist/radarrange()), 0.f, 1.f)*radarblipblend();
-			settexture(bliptex(), 3);
-			glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
-			glBegin(GL_QUADS);
-			drawsized(cx-(cs*0.5f), cy-(cs*0.5f), cs);
-			glEnd();
-			int ty = int(cy+cs);
-			if(editradarentnames() == 2 && editmode)
-				ty += draw_textx("%s [%d]", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, t.name, n);
-			if(editradarentnames() && insel)
-				draw_textx("(%d %d %d %d)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, attr1, attr2, attr3, attr4);
-		}
-	}
-
-	void drawentblips(int x, int y, int s)
-	{
-		pushfont("radar");
-		loopv(et.ents)
-		{
-			extentity &e = *et.ents[i];
-			drawentblip(x, y, s, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.spawned);
-		}
-
-		loopv(pj.projs) if(pj.projs[i]->projtype == PRJ_ENT && pj.projs[i]->owner)
-		{
-			projent &proj = *pj.projs[i];
-			drawentblip(x, y, s, -1, proj.o, proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.state != CS_DEAD && !proj.beenused);
-		}
-		popfont();
-	}
-
-	int drawtitlecard(int w, int h, int y)
-	{
-		int ox = w*3, oy = h*3, hoff = y;
-
-		glLoadIdentity();
-		glOrtho(0, ox, oy, 0, -1, 1);
-
-		int bs = int(ox*titlecardsize()), bx = int(ox*titlecardxpos()), by = int(oy*titlecardypos()),
-			secs = maptime ? lastmillis-maptime : 0;
-		float fade = hudblend, amt = 1.f;
-
-		bool inverty = by+(bs/2) > oy/2 ? true : false;
-
-		if(secs < titlecardtime())
-		{
-			amt = clamp(float(secs)/float(titlecardtime()), 0.f, 1.f);
-			fade = clamp(amt*fade, 0.f, 1.f);
-		}
-		else if(secs < titlecardtime()+titlecardfade())
-			fade = clamp(fade*(1.f-(float(secs-titlecardtime())/float(titlecardfade()))), 0.f, 1.f);
-
-		const char *title = getmaptitle();
-		if(!*title) title = "Untitled by Unknown";
-
-		int rs = int(bs*amt), rx = bx+(bs-rs), ry = by;
-		glColor4f(1.f, 1.f, 1.f, fade*0.9f);
-		if(!rendericon(getmapname(), rx, ry, rs, rs))
-			rendericon("textures/emblem", rx, ry, rs, rs);
-		glColor4f(1.f, 1.f, 1.f, fade);
-		rendericon("textures/guioverlay", rx, ry, rs, rs);
-
-		int tx = bx + bs, ty = inverty ? by - FONTH : by + bs, ts = int(tx*(1.f-amt));
-		loopi(2)
-		{
-			if((i && !inverty) || (!i && inverty))
-				draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, title);
-			else
-				draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, sv->gamename(gamemode, mutators));
-			ty = inverty ? ty - FONTH : ty + FONTH;
-		}
-		return hoff;
-	}
-
-	int drawgamehud(int w, int h, int y)
-	{
-		Texture *t;
-		int ox = w*3, oy = h*3, hoff = y;
-
-		glLoadIdentity();
-		glOrtho(0, ox, oy, 0, -1, 1);
-
-		int secs = maptime ? lastmillis-maptime : 0;
-		float fade = hudblend;
-
-		if(secs < titlecardtime()+titlecardfade()+titlecardfade())
-		{
-			float amt = clamp(float(secs-titlecardtime()-titlecardfade())/float(titlecardfade()), 0.f, 1.f);
-			fade = clamp(fade*amt, 0.f, 1.f);
-		}
-
-		if(player1->state == CS_ALIVE && inzoom())
-		{
-			if((t = textureload(damagetex())) != notexture)
-			{
-				int frame = lastmillis-lastzoom;
-				float pc = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
-				if(!zooming) pc = 1.f-pc;
-				settexture("textures/zoom");
-
-				glColor4f(1.f, 1.f, 1.f, pc);
-
-				glBegin(GL_QUADS);
-				glTexCoord2f(0, 0); glVertex2f(0, 0);
-				glTexCoord2f(1, 0); glVertex2f(ox, 0);
-				glTexCoord2f(1, 1); glVertex2f(ox, oy);
-				glTexCoord2f(0, 1); glVertex2f(0, oy);
-				glEnd();
-			}
-		}
-
-		if((player1->state == CS_ALIVE && damageresidue > 0) || player1->state == CS_DEAD)
-		{
-			if((t = textureload(damagetex())) != notexture)
-			{
-				int dam = player1->state == CS_DEAD ? 100 : min(damageresidue, 100);
-				float pc = float(dam)/100.f;
-				settexture("textures/damage");
-
-				glColor4f(1.f, 1.f, 1.f, pc);
-
-				glBegin(GL_QUADS);
-				glTexCoord2f(0, 0); glVertex2f(0, 0);
-				glTexCoord2f(1, 0); glVertex2f(ox, 0);
-				glTexCoord2f(1, 1); glVertex2f(ox, oy);
-				glTexCoord2f(0, 1); glVertex2f(0, oy);
-				glEnd();
-			}
-		}
-
-		int bs = int(ox*radarsize()), bo = int(bs/16.f), bx = int(ox*radarxpos()), by = int(oy*radarypos()),
-			colour = teamtype[player1->team].colour,
-				r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
-
-		settexture(radartex());
-		glColor4f(1.f, 1.f, 1.f, fade*radarblend());
-		glBegin(GL_QUADS);
-		drawsized(float(bx), float(by), float(bs));
-		glEnd();
-
-		drawentblips(bx+bo, by+bo, bs-(bo*2));
-
-		if(m_stf(gamemode)) stf.drawblips(ox, oy, bx+bo, by+bo, bs-(bo*2));
-		else if(m_ctf(gamemode)) ctf.drawblips(ox, oy, bx+bo, by+bo, bs-(bo*2));
-
-		loopv(players)
-			if(players[i] && players[i]->state == CS_ALIVE)
-				drawplayerblip(players[i], bx+bo, by+bo, bs-(bo*2));
-
-		settexture(radarpingtex());
-		glColor4f(1.f, 1.f, 1.f, fade*radarblend());
-		glBegin(GL_QUADS);
-		drawsized(float(bx), float(by), float(bs));
-		glEnd();
-
-		settexture(goalbartex());
-		glColor4f(1.f, 1.f, 1.f, fade*radarbarblend());
-		glBegin(GL_QUADS);
-		drawsized(float(bx), float(by), float(bs));
-		glEnd();
-
-		settexture(teambartex());
-		glColor4f(r/255.f, g/255.f, b/255.f, fade*radarbarblend());
-		glBegin(GL_QUADS);
-		drawsized(float(bx), float(by), float(bs));
-		glEnd();
-
-		if(player1->state == CS_ALIVE)
-		{
-			if((t = textureload(healthbartex())) != notexture)
-			{
-				float amt = clamp(float(player1->health)/float(MAXHEALTH), 0.f, 1.f);
-				float glow = 1.f, pulse = fade;
-
-				if(lastmillis <= player1->lastregen+500)
-				{
-					float regen = (lastmillis-player1->lastregen)/500.f;
-					pulse = clamp(pulse*regen, 0.3f, max(fade, 0.33f))*radarbarblend();
-					glow = clamp(glow*regen, 0.3f, 1.f);
-				}
-
-				glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
-				glColor4f(glow, glow*0.3f, 0.f, pulse);
-				glBegin(GL_QUADS);
-				drawsized(float(bx), float(by), float(bs));
-				glEnd();
-			}
-			if(isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
-			{
-				bool canshoot = player1->canshoot(player1->gunselect, lastmillis);
-				draw_textx("%d", bx+bs, by+bs, canshoot ? 255 : 128, canshoot ? 255 : 128, canshoot ? 255 : 128, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, player1->ammo[player1->gunselect]);
-			}
-		}
-		else if(player1->state == CS_DEAD)
-		{
-			int wait = respawnwait(player1);
-
-			if(wait)
-				draw_textx("Fragged! Down for %.01fs", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, float(wait)/1000.f);
-			else
-				draw_textx("Fragged! Attack to respawn", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT);
-
-			hoff -= FONTH;
-		}
-
-		drawcardinalblips(bx+bo, by+bo, bs-(bo*2));
-
-		return hoff;
 	}
 
 	enum
@@ -1061,8 +823,7 @@ struct GAMECLIENT : igameclient
 			glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + chsize);
 			glEnd();
 
-			if(index > POINTER_GUI && player1->state == CS_ALIVE &&
-				isgun(player1->gunselect) && player1->ammo[player1->gunselect] > 0)
+			if(index > POINTER_GUI && player1->state == CS_ALIVE && isgun(player1->gunselect))
 			{
 				Texture *t;
 				if(((t = textureload(indicatortex())) != notexture) &&
@@ -1140,10 +901,399 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
-	int drawhudelements(int w, int h, int y)
+	void drawsized(float x, float y, float s)
 	{
-		int hoff = y;
+		glTexCoord2f(0.0f, 0.0f); glVertex2f(x,	y);
+		glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
+		glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
+		glTexCoord2f(0.0f, 1.0f); glVertex2f(x,	y+s);
+	}
 
+	void drawplayerblip(fpsent *d, int x, int y, int s)
+	{
+		vec dir = headpos(d);
+		dir.sub(camera1->o);
+		float dist = dir.magnitude();
+		if(dist < radarrange())
+		{
+			dir.rotate_around_z(-camera1->yaw*RAD);
+			int colour = teamtype[d->team].colour;
+			float cx = x + s*0.5f*(1.0f+dir.x/radarrange()),
+				cy = y + s*0.5f*(1.0f+dir.y/radarrange()),
+				cs = (d->crouching ? 0.005f : 0.025f)*s,
+				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
+				fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*radarblipblend();
+			if(lastmillis-d->lastspawn <= REGENWAIT)
+				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
+			settexture(bliptex(), 3);
+			glColor4f(r, g, b, fade);
+			glBegin(GL_QUADS);
+			drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
+			glEnd();
+			int ty = int(cy+cs);
+			if(radarnames())
+				ty += draw_textx("%s", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, colorname(d, NULL, "", false));
+			if(radarnames() == 2 && m_team(gamemode, mutators))
+				draw_textx("(\fs%s%s\fS)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, teamtype[d->team].chat, teamtype[d->team].name);
+		}
+	}
+
+	void drawcardinalblips(int x, int y, int s)
+	{
+		pushfont("radar");
+		loopi(4)
+		{
+			const char *card = "";
+			vec dir(camera1->o);
+			switch(i)
+			{
+				case 0: dir.sub(vec(0, radarrange(), 0)); card = "N"; break;
+				case 1: dir.add(vec(radarrange(), 0, 0)); card = "E"; break;
+				case 2: dir.add(vec(0, radarrange(), 0)); card = "S"; break;
+				case 3: dir.sub(vec(radarrange(), 0, 0)); card = "W"; break;
+				default: break;
+			}
+			dir.sub(camera1->o);
+			dir.rotate_around_z(-camera1->yaw*RAD);
+
+			float cx = x + (s-FONTH)*0.5f*(1.0f+dir.x/radarrange()),
+				cy = y + (s-FONTH)*0.5f*(1.0f+dir.y/radarrange());
+
+			draw_textx("%s", int(cx), int(cy), 255, 255, 255, int(255*radarcardblend()), true, AL_LEFT, -1, -1, card);
+		}
+		popfont();
+	}
+
+	void drawentblip(int x, int y, int s, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool spawned)
+	{
+		if(type <= NOTUSED || type >= MAXENTTYPES) return;
+		enttypes &t = enttype[type];
+		if((t.usetype == EU_ITEM && spawned) || editmode)
+		{
+			bool insel = et.ents.inrange(n) && editmode && (enthover == n || entgroup.find(n) >= 0);
+			vec dir(o);
+			dir.sub(camera1->o);
+			float dist = dir.magnitude();
+			if(!insel && dist >= radarrange()) return;
+			if(dist >= radarrange()) dir.mul(radarrange()/dist);
+			dir.rotate_around_z(-camera1->yaw*RAD);
+			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
+				cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
+					cs = (insel ? 0.033f : 0.025f)*s,
+						fade = clamp(insel ? 1.f : 1.f-(dist/radarrange()), 0.f, 1.f)*radarblipblend();
+			settexture(bliptex(), 3);
+			glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
+			glBegin(GL_QUADS);
+			drawsized(cx-(cs*0.5f), cy-(cs*0.5f), cs);
+			glEnd();
+			int ty = int(cy+cs);
+			if(editradarentnames() == 2 && editmode)
+				ty += draw_textx("%s [%d]", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, t.name, n);
+			if(editradarentnames() && insel)
+				draw_textx("(%d %d %d %d)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, attr1, attr2, attr3, attr4);
+		}
+	}
+
+	void drawentblips(int x, int y, int s)
+	{
+		loopv(et.ents)
+		{
+			extentity &e = *et.ents[i];
+			drawentblip(x, y, s, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.spawned);
+		}
+
+		loopv(pj.projs) if(pj.projs[i]->projtype == PRJ_ENT && pj.projs[i]->ready())
+		{
+			projent &proj = *pj.projs[i];
+			if(et.ents.inrange(proj.id))
+				drawentblip(x, y, s, -1, proj.o, proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, true);
+		}
+	}
+
+	void drawtitlecard(int w, int h)
+	{
+		int ox = w*3, oy = h*3;
+
+		glLoadIdentity();
+		glOrtho(0, ox, oy, 0, -1, 1);
+		pushfont("emphasis");
+
+		int bs = int(ox*titlecardsize()), bx = int(ox*titlecardxpos()), by = int(oy*titlecardypos()),
+			secs = maptime ? lastmillis-maptime : 0;
+		float fade = hudblend, amt = 1.f;
+
+		bool inverty = by+(bs/2) > oy/2 ? true : false;
+
+		if(secs < titlecardtime())
+		{
+			amt = clamp(float(secs)/float(titlecardtime()), 0.f, 1.f);
+			fade = clamp(amt*fade, 0.f, 1.f);
+		}
+		else if(secs < titlecardtime()+titlecardfade())
+			fade = clamp(fade*(1.f-(float(secs-titlecardtime())/float(titlecardfade()))), 0.f, 1.f);
+
+		const char *title = getmaptitle();
+		if(!*title) title = "Untitled by Unknown";
+
+		int rs = int(bs*amt), rx = bx+(bs-rs), ry = by;
+		glColor4f(1.f, 1.f, 1.f, fade*0.9f);
+		if(!rendericon(getmapname(), rx, ry, rs, rs))
+			rendericon("textures/emblem", rx, ry, rs, rs);
+		glColor4f(1.f, 1.f, 1.f, fade);
+		rendericon("textures/guioverlay", rx, ry, rs, rs);
+
+		int tx = bx + bs, ty = inverty ? by - FONTH - FONTH/2 : by + bs + FONTH/2, ts = int(tx*(1.f-amt));
+		loopi(2)
+		{
+			if((i && !inverty) || (!i && inverty))
+				draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, title);
+			else
+				draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, sv->gamename(gamemode, mutators));
+			ty = inverty ? ty - FONTH : ty + FONTH;
+		}
+		popfont();
+	}
+
+	void drawgamehud(int w, int h)
+	{
+		Texture *t;
+		int ox = w*3, oy = h*3;
+
+		glLoadIdentity();
+		glOrtho(0, ox, oy, 0, -1, 1);
+		pushfont("hud");
+
+		int secs = maptime ? lastmillis-maptime : 0;
+		float fade = hudblend;
+
+		if(secs < titlecardtime()+titlecardfade()+titlecardfade())
+		{
+			float amt = clamp(float(secs-titlecardtime()-titlecardfade())/float(titlecardfade()), 0.f, 1.f);
+			fade = clamp(fade*amt, 0.f, 1.f);
+		}
+
+		if(player1->state == CS_ALIVE && inzoom())
+		{
+			if((t = textureload(damagetex())) != notexture)
+			{
+				int frame = lastmillis-lastzoom;
+				float pc = frame < zoomtime() ? float(frame)/float(zoomtime()) : 1.f;
+				if(!zooming) pc = 1.f-pc;
+				settexture("textures/zoom");
+
+				glColor4f(1.f, 1.f, 1.f, pc);
+
+				glBegin(GL_QUADS);
+				glTexCoord2f(0, 0); glVertex2f(0, 0);
+				glTexCoord2f(1, 0); glVertex2f(ox, 0);
+				glTexCoord2f(1, 1); glVertex2f(ox, oy);
+				glTexCoord2f(0, 1); glVertex2f(0, oy);
+				glEnd();
+			}
+		}
+
+		if((player1->state == CS_ALIVE && damageresidue > 0) || player1->state == CS_DEAD)
+		{
+			if((t = textureload(damagetex())) != notexture)
+			{
+				int dam = player1->state == CS_DEAD ? 100 : min(damageresidue, 100);
+				float pc = float(dam)/100.f;
+				settexture("textures/damage");
+
+				glColor4f(1.f, 1.f, 1.f, pc);
+
+				glBegin(GL_QUADS);
+				glTexCoord2f(0, 0); glVertex2f(0, 0);
+				glTexCoord2f(1, 0); glVertex2f(ox, 0);
+				glTexCoord2f(1, 1); glVertex2f(ox, oy);
+				glTexCoord2f(0, 1); glVertex2f(0, oy);
+				glEnd();
+			}
+		}
+
+		int bs = int(ox*radarsize()), bo = int(bs/16.f), bx = int(ox*radarxpos()), by = int(oy*radarypos()),
+			colour = teamtype[player1->team].colour,
+				r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
+
+		pushfont("radar");
+		settexture(radartex());
+		glColor4f(1.f, 1.f, 1.f, fade*radarblend());
+		glBegin(GL_QUADS);
+		drawsized(float(bx), float(by), float(bs));
+		glEnd();
+
+		drawentblips(bx+bo, by+bo, bs-(bo*2));
+
+		if(m_stf(gamemode)) stf.drawblips(ox, oy, bx+bo, by+bo, bs-(bo*2));
+		else if(m_ctf(gamemode)) ctf.drawblips(ox, oy, bx+bo, by+bo, bs-(bo*2));
+
+		loopv(players)
+			if(players[i] && players[i]->state == CS_ALIVE)
+				drawplayerblip(players[i], bx+bo, by+bo, bs-(bo*2));
+
+		settexture(radarpingtex());
+		glColor4f(1.f, 1.f, 1.f, fade*radarblend());
+		glBegin(GL_QUADS);
+		drawsized(float(bx), float(by), float(bs));
+		glEnd();
+
+		settexture(goalbartex());
+		glColor4f(1.f, 1.f, 1.f, fade*radarbarblend());
+		glBegin(GL_QUADS);
+		drawsized(float(bx), float(by), float(bs));
+		glEnd();
+
+		settexture(teambartex());
+		glColor4f(r/255.f, g/255.f, b/255.f, fade*radarbarblend());
+		glBegin(GL_QUADS);
+		drawsized(float(bx), float(by), float(bs));
+		glEnd();
+		popfont();
+
+		int tz = bx + bs, tp = by + bs + FONTH/2;
+		if(player1->state == CS_ALIVE)
+		{
+			if((t = textureload(healthbartex())) != notexture)
+			{
+				float amt = clamp(float(player1->health)/float(MAXHEALTH), 0.f, 1.f);
+				float glow = 1.f, pulse = fade;
+
+				if(lastmillis <= player1->lastregen+500)
+				{
+					float regen = (lastmillis-player1->lastregen)/500.f;
+					pulse = clamp(pulse*regen, 0.3f, max(fade, 0.33f))*radarbarblend();
+					glow = clamp(glow*regen, 0.3f, 1.f);
+				}
+
+				glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
+				glColor4f(glow, glow*0.3f, 0.f, pulse);
+				glBegin(GL_QUADS);
+				drawsized(float(bx), float(by), float(bs));
+				glEnd();
+			}
+			if(showammo()) loopi(GUN_MAX) if(player1->hasgun(i))
+			{
+				const char *tcol = "\fa", *pad = " ";
+				bool curgun = (i == player1->gunselect);
+				if(curgun)
+				{
+					if(player1->canshoot(i, lastmillis)) tcol = "\fg";
+					else tcol = "\fr";
+					pad = "";
+					pushfont("emphasis");
+				}
+				else if(showammo() < 2) continue;
+				if(guntype[i].charge)
+					draw_textx("%d/%d ]%s", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, player1->ammo[i], guntype[i].charge, pad);
+				else draw_textx("%d ]%s", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, player1->ammo[i], pad);
+				tp = draw_textx("%s[ \fs%s%s\fS", bx, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_LEFT, -1, -1, pad, tcol, guntype[i].name);
+				if(curgun) popfont();
+			}
+			tp += FONTH/2;
+			if(showpickups())
+			{
+				vector<actitem> actitems;
+				if(et.collateitems(player1, false, true, actitems))
+				{
+					bool found = false;
+					while(!actitems.empty())
+					{
+						int closest = actitems.length()-1;
+						loopv(actitems)
+							if(actitems[i].score < actitems[closest].score)
+								closest = i;
+
+						actitem &t = actitems[closest];
+						int ent = -1;
+						switch(t.type)
+						{
+							case ITEM_ENT:
+							{
+								if(!et.ents.inrange(t.target)) break;
+								ent = t.target;
+								break;
+							}
+							case ITEM_PROJ:
+							{
+								if(!pj.projs.inrange(t.target)) break;
+								projent &proj = *pj.projs[t.target];
+								if(!et.ents.inrange(proj.id)) break;
+								ent = proj.id;
+								break;
+							}
+							default: break;
+						}
+						if(et.ents.inrange(ent))
+						{
+							extentity &e = *et.ents[ent];
+							if(enttype[e.type].usetype == EU_ITEM)
+							{
+								if(!found)
+								{
+									pushfont("emphasis");
+									int drop = -1;
+									if(e.type == WEAPON && player1->ammo[e.attr1] < 0 && player1->carry() >= MAXCARRY)
+										drop = player1->drop(e.attr1);
+									if(isgun(drop))
+									{
+										tp = draw_textx("Press ACTION to swap", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1);
+										tp = draw_textx("[ \fs\fg%s\fS ] for [ \fs\fy%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, guntype[drop].name, et.itemname(e.type, e.attr1, e.attr2));
+									}
+									else
+									{
+										tp = draw_textx("Press ACTION to pickup", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1);
+										tp = draw_textx("[ \fs\fy%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, et.itemname(e.type, e.attr1, e.attr2));
+									}
+									popfont();
+									tp += FONTH/2;
+									if(showpickups() < 2) break;
+									else found = true;
+								}
+								else
+									tp = draw_textx("[ \fs\fa%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, et.itemname(e.type, e.attr1, e.attr2));
+							}
+						}
+						actitems.remove(closest);
+					}
+					popfont();
+				}
+			}
+		}
+		else if(player1->state == CS_DEAD)
+		{
+			pushfont("emphasis");
+			tp = draw_textx("Fragged!", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1);
+			int wait = respawnwait(player1);
+			if(wait)
+				tp = draw_textx("Down for %.01fs", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, float(wait)/1000.f);
+			else
+				tp = draw_textx("Press ATTACK to respawn", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1);
+			popfont();
+		}
+		else if(player1->state == CS_EDITING)
+		{
+			#define enthudtext(n, r, g, b) \
+				if(et.ents.inrange(n)) \
+				{ \
+					fpsentity &f = (fpsentity &)*et.ents[n]; \
+					tp = draw_textx("entity %d, %s (%d %d %d %d)", tz, tp, r, g, b, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, \
+						n, et.findname(f.type), f.attr1, f.attr2, f.attr3, f.attr4); \
+				}
+
+			pushfont("emphasis");
+			enthudtext(enthover, 255, 255, 64);
+			popfont();
+			loopi(clamp(entgroup.length(), 0, showhudents()))
+				enthudtext(entgroup[i], 128, 128, 128);
+		}
+
+		drawcardinalblips(bx+bo, by+bo, bs-(bo*2));
+		popfont();
+	}
+
+	void drawhudelements(int w, int h)
+	{
+		int hoff = h*3;
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
 
@@ -1212,46 +1362,29 @@ struct GAMECLIENT : igameclient
 				draw_textx("cube:%s%d ents:%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
 					selchildcount<0 ? "1/" : "", abs(selchildcount), entgroup.length());
 				hoff -= FONTH;
-
-				#define enthudtext(n, r, g, b) \
-					if(et.ents.inrange(n)) \
-					{ \
-						fpsentity &f = (fpsentity &)*et.ents[n]; \
-						draw_textx("entity:%d %s (%d %d %d %d)", FONTH/4, hoff-FONTH, r, g, b, int(255*hudblend), false, AL_LEFT, -1, -1, \
-							n, et.findname(f.type), f.attr1, f.attr2, f.attr3, f.attr4); \
-						hoff -= FONTH; \
-					}
-
-				enthudtext(enthover, 255, 255, 196);
-				loopi(clamp(entgroup.length(), 0, showhudents()))
-					enthudtext(entgroup[i], 196, 196, 196);
 			}
 
 			render_texture_panel(w, h);
 		}
-		return hoff;
 	}
 
 	void drawhud(int w, int h)
 	{
 		if(!hidehud)
 		{
-			int hoff = h*3;
-
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			if(maptime && cc.ready())
 			{
-				pushfont("hud");
 				if(lastmillis-maptime < titlecardtime()+titlecardfade())
-					hoff = drawtitlecard(w, h, hoff);
-				else hoff = drawgamehud(w, h, hoff);
-				popfont();
+					drawtitlecard(w, h);
+				else drawgamehud(w, h);
 			}
+			drawhudelements(w, h);
 
-			hoff = drawhudelements(w, h, hoff);
 			glDisable(GL_BLEND);
+
 			drawpointers(w, h);
 		}
 	}
@@ -1402,12 +1535,14 @@ struct GAMECLIENT : igameclient
 		}
 		if(!g3d_active())
 		{
-			if(isthirdperson() ? thirdpersonaim() : firstpersonaim())
+			int aim = isthirdperson() ? thirdpersonaim() : firstpersonaim();
+			if(aim)
 			{
 				float cx, cy, cz;
 				vectocursor(worldpos, cx, cy, cz);
 				float ax = float(cx)/float(w), ay = float(cy)/float(h),
-					amt = float(curtime)/float(isthirdperson() ? thirdpersonaim() : firstpersonaim()), offx = ax-aimx, offy = ay-aimy;
+					amt = float(curtime)/float(aim),
+						offx = ax-aimx, offy = ay-aimy;
 				aimx += offx*amt;
 				aimy += offy*amt;
 			}
@@ -1416,7 +1551,9 @@ struct GAMECLIENT : igameclient
 				aimx = cursorx;
 				aimy = cursory;
 			}
-			vecfromcursor(aimx, aimy, 1.f, cursordir);
+			float vx = mousestyle() <= 1 ? aimx : cursorx,
+				vy = mousestyle() <= 1 ? aimy : cursory;
+			vecfromcursor(vx, vy, 1.f, cursordir);
 		}
 	}
 
@@ -1818,8 +1955,7 @@ struct GAMECLIENT : igameclient
 					{
 						if(lastmillis-d->gunlast[gun] <= d->gunwait[gun]/2)
 						{
-							if(isgun(d->lastgun) && (d->ammo[gun] > 0 || guntype[gun].rdelay > 0))
-								gun = d->lastgun;
+							if(isgun(d->lastgun)) gun = d->lastgun;
 							else showgun = false;
 						}
 						animflags = ANIM_SWITCH;
@@ -1845,9 +1981,8 @@ struct GAMECLIENT : igameclient
 					}
 					case GUNSTATE_IDLE:	default:
 					{
-						if(d->ammo[gun] <= 0 && guntype[gun].rdelay <= 0)
-							showgun = false;
-						animflags = (guntype[gun].anim+gunstate)|ANIM_LOOP;
+						if(!d->hasgun(gun)) showgun = false;
+						else animflags = (guntype[gun].anim+gunstate)|ANIM_LOOP;
 						break;
 					}
 				}

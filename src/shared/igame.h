@@ -54,7 +54,6 @@ struct igameclient
     virtual bool clientoption(char *arg) { return false; }
     virtual void updateworld() = 0;
 
-    virtual void resetgamestate() = 0;
     virtual void newmap(int size) = 0;
     virtual void startmap(const char *name) = 0;
     virtual void preload() {}

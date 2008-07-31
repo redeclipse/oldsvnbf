@@ -54,7 +54,6 @@ void inputgrab(bool on)
 #ifndef WIN32
 	}
 #endif
-	keyrepeat(on);
 }
 
 VARF(grabinput, 0, 0, 1, inputgrab(grabinput ? true : false));
@@ -780,6 +779,7 @@ int main(int argc, char **argv)
 	conoutf("\fminit: video misc");
 	ncursor = SDL_GetCursor();
 	showcursor(false);
+	keyrepeat(false);
 	setcaption("loading..");
 	eastereggs();
 

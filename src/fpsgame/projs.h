@@ -172,7 +172,7 @@ struct projectiles
 
 	bool check(projent &proj)
 	{
-		if(proj.state == CS_ALIVE && !proj.beenused && proj.waittime <= 0)
+		if(proj.ready())
 		{
 			if(proj.projtype == PRJ_SHOT)
 			{
@@ -435,12 +435,11 @@ struct projectiles
 
 	void render()
 	{
-		loopv(projs) if(projs[i]->owner && !projs[i]->beenused && projs[i]->waittime <= 0 && projs[i]->state != CS_DEAD)
+		loopv(projs) if(projs[i]->ready() && projs[i]->mdl && *projs[i]->mdl)
 		{
 			projent &proj = *projs[i];
-            if(proj.projtype != PRJ_SHOT && proj.projtype != PRJ_ENT) continue;
-            if(projs[i]->mdl && *projs[i]->mdl)
-				rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, proj.yaw+90, proj.pitch, proj.roll, MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT|MDL_CULL_DIST);
+            if(proj.projtype == PRJ_ENT && !cl.et.ents.inrange(proj.id)) continue;
+			rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, proj.yaw+90, proj.pitch, proj.roll, MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT|MDL_CULL_DIST);
 		}
 	}
 

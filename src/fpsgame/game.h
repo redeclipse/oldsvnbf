@@ -163,15 +163,18 @@ struct guntypes
 };
 #define isgun(gun)	(gun > -1 && gun < GUN_MAX)
 
-#define HIT_LEGS		0x001
-#define HIT_TORSO		0x002
-#define HIT_HEAD		0x004
-
-#define HIT_BURN		0x010
-#define HIT_EXPLODE		0x020
-
-#define HIT_MELT		0x100
-#define HIT_FALL		0x200
+enum
+{
+	HIT_NONE 	= 0,
+	HIT_LEGS	= 1<<2,
+	HIT_TORSO	= 1<<3,
+	HIT_HEAD	= 1<<4,
+	HIT_BURN	= 1<<5,
+	HIT_EXPLODE	= 1<<6,
+	HIT_MELT	= 1<<7,
+	HIT_FALL	= 1<<8,
+	HIT_NUM		= 7
+};
 
 enum
 {
@@ -185,22 +188,23 @@ enum
 	G_MAX
 };
 
-#define G_M_TEAM			0x0001	// team
-#define G_M_INSTA			0x0002	// instagib
-#define G_M_DUEL			0x0004	// duel
-#define G_M_PROG			0x0008	// progressive
-
-#define G_M_MULTI			0x0010	// mutli team
-#define G_M_DLMS			0x0020	// last man standing
-#define G_M_MAYHEM			0x0040	// mayhem
-#define G_M_NOITEMS			0x0080	// noitems
-
-#define G_M_NUM				8
-
-#define G_M_ALL				G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_PROG|G_M_MULTI|G_M_DLMS|G_M_MAYHEM|G_M_NOITEMS
-#define G_M_FIGHT			G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI|G_M_DLMS|G_M_NOITEMS
-#define G_M_STF				G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM|G_M_NOITEMS
-#define G_M_CTF				G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM|G_M_NOITEMS
+enum
+{
+	G_M_NONE	= 0,
+	G_M_TEAM	= 1<<2,
+	G_M_INSTA	= 1<<3,
+	G_M_DUEL	= 1<<4,
+	G_M_PROG	= 1<<5,
+	G_M_MULTI	= 1<<6,
+	G_M_DLMS	= 1<<7,
+	G_M_MAYHEM	= 1<<8,
+	G_M_NOITEMS	= 1<<9,
+	G_M_ALL		= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_PROG|G_M_MULTI|G_M_DLMS|G_M_MAYHEM|G_M_NOITEMS,
+	G_M_FIGHT	= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI|G_M_DLMS|G_M_NOITEMS,
+	G_M_STF		= G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM|G_M_NOITEMS,
+	G_M_CTF		= G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM|G_M_NOITEMS,
+	G_M_NUM		= 8
+};
 
 struct gametypes
 {
@@ -277,7 +281,7 @@ char msgsizelookup(int msg)
 		SV_INITS2C, 3, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_SOUND, 3, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 3,
-		SV_DIED, 7, SV_DAMAGE, 10, SV_SHOTFX, 9,
+		SV_DIED, 8, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 13, SV_SPAWN, 4, SV_FORCEDEATH, 2,
 		SV_DROP, 4, SV_GUNSELECT, 0, SV_TAUNT, 2,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_EXECLINK, 3,
@@ -400,8 +404,8 @@ VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
 VARG(botbalance, 0, 4, 16);
 VARG(botratio, 0, 2, 10);
-VARG(botminskill, 0, 30, 100);
-VARG(botmaxskill, 0, 80, 100);
+VARG(botminskill, 0, 35, 100);
+VARG(botmaxskill, 0, 85, 100);
 
 FVARG(gravityscale, 1.f);
 FVARG(jumpscale, 1.f);
@@ -418,55 +422,50 @@ struct fpsstate
 	fpsstate() : lifesequence(0), ownernum(-1), skill(0), spree(0) {}
 	~fpsstate() {}
 
-	int bestgun()
+	int hasgun(int gun, int level = 0, int exclude = -1)
 	{
-		int best = -1;
-		loopi(GUN_MAX) if(guntype[i].rdelay > 0 && ammo[i] >= 0) best = i;
-		return best;
-	}
-
-	bool canswitch(int gun, int millis)
-	{
-		if(isgun(gun) && (gunselect != gun) && ammo[gun] >= 0 && (guntype[gun].rdelay > 0 || ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]) && (millis-gunlast[gunselect] >= gunwait[gunselect]))
-			return true;
-		return false;
-	}
-
-	bool canshoot(int gun, int millis)
-	{
-		if(isgun(gun) && (ammo[gun] > 0) && (millis-gunlast[gun] >= gunwait[gun]))
-			return true;
-		return false;
-	}
-
-	bool canreload(int gun, int millis)
-	{
-		if(isgun(gun) && (ammo[gun] < guntype[gun].charge && ammo[gun] >= 0) && (guntype[gun].rdelay > 0) && (millis-gunlast[gun] >= gunwait[gun]))
-			return true;
-		return false;
-	}
-
-	bool canuse(int type, int attr1, int attr2, int millis)
-	{
-		switch(type)
+		if(isgun(gun) && gun != exclude)
 		{
-			case TRIGGER:
+			if(ammo[gun] > 0 || (guntype[gun].rdelay > 0 && !ammo[gun])) switch(level)
 			{
-				return true;
-				break;
+				case 0: default: return true; break; // has gun at all
+				case 1: if(guntype[gun].rdelay > 0) return true; break; // only carriables
+				case 2: if(ammo[gun] > 0 && guntype[gun].rdelay > 0) return true; break; // only carriables with actual ammo
 			}
-			case WEAPON:
-			{ // can't use when reloading or firing
-				if(isgun(attr1) && (ammo[attr1] < guntype[attr1].max) && (millis-gunlast[attr1] >= gunwait[attr1]))
-					return true;
-				break;
-			}
-			default: break;
 		}
 		return false;
 	}
 
-	void gunreset(bool full)
+	int bestgun()
+	{
+		int best = -1;
+		loopi(GUN_MAX) if(hasgun(i, 1)) best = i;
+		return best;
+	}
+
+	int carry()
+	{
+		int carry = 0;
+		loopi(GUN_MAX) if(hasgun(i, 1)) carry++;
+		return carry;
+	}
+
+	int drop(int exclude = -1)
+	{
+		int gun = -1;
+		if(hasgun(gunselect, 1, exclude)) gun = gunselect;
+		else
+		{
+			loopi(GUN_MAX) if(hasgun(i, 1, exclude))
+			{
+				gun = i;
+				break;
+			}
+		}
+		return gun;
+	}
+
+	void gunreset(bool full = false)
 	{
 		loopi(GUN_MAX)
 		{
@@ -497,6 +496,52 @@ struct fpsstate
 		setgunstate(lastgun, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
 		gunselect = gun;
 		setgunstate(gun, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
+	}
+
+	bool gunwaited(int gun, int millis)
+	{
+		return !isgun(gun) || millis-gunlast[gun] >= gunwait[gun];
+	}
+
+	bool canswitch(int gun, int millis)
+	{
+		if(gun != gunselect && hasgun(gun) && gunwaited(gun, millis) && gunwaited(gunselect, millis))
+			return true;
+		return false;
+	}
+
+	bool canshoot(int gun, int millis)
+	{
+		if(hasgun(gun) && ammo[gun] > 0 && gunwaited(gun, millis))
+			return true;
+		return false;
+	}
+
+	bool canreload(int gun, int millis)
+	{
+		if(hasgun(gun, 1) && ammo[gun] < guntype[gun].charge && gunwaited(gun, millis) && gunwaited(gunselect, millis))
+			return true;
+		return false;
+	}
+
+	bool canuse(int type, int attr1, int attr2, int millis)
+	{
+		switch(type)
+		{
+			case TRIGGER:
+			{
+				return true;
+				break;
+			}
+			case WEAPON:
+			{ // can't use when reloading or firing
+				if(isgun(attr1) && ammo[attr1] < guntype[attr1].max && gunwaited(attr1, millis) && gunwaited(gunselect, millis))
+					return true;
+				break;
+			}
+			default: break;
+		}
+		return false;
 	}
 
 	void useitem(int millis, int id, int type, int attr1, int attr2)
@@ -532,7 +577,7 @@ struct fpsstate
 		{
 			gunstate[i] = GUNSTATE_IDLE;
 			gunwait[i] = gunlast[i] = 0;
-			ammo[i] = (i == spawngun || guntype[i].rdelay <= 0 ? guntype[i].add : -1);
+			ammo[i] = (i == spawngun || guntype[i].rdelay <= 0) ? guntype[i].add : -1;
 			entid[i] = -1;
 		}
 	}
@@ -547,6 +592,20 @@ struct fpsstate
 };
 
 #ifndef STANDALONE
+enum
+{
+	ST_NONE		= 0,
+	ST_REQS		= 1<<2,
+	ST_CAMERA	= 1<<3,
+	ST_CURSOR	= 1<<4,
+	ST_GAME		= 1<<5,
+	ST_SPAWNS	= 1<<6,
+	ST_DEFAULT	= ST_REQS|ST_CAMERA|ST_CURSOR|ST_GAME,
+	ST_VIEW		= ST_CURSOR|ST_CAMERA,
+	ST_ALL		= ST_REQS|ST_CAMERA|ST_CURSOR|ST_GAME|ST_SPAWNS,
+	ST_NUM		= 5
+};
+
 struct fpsentity : extentity
 {
 	int schan, lastemit;
@@ -560,6 +619,14 @@ struct fpsentity : extentity
 	}
 };
 enum { ITEM_ENT = 0, ITEM_PROJ, ITEM_MAX };
+struct actitem
+{
+	int type, target;
+	float score;
+
+	actitem() : type(ITEM_ENT), target(-1), score(0.f) {}
+	~actitem() {}
+};
 
 const char *animnames[] =
 {
@@ -612,7 +679,7 @@ enum
 	BS_MAX
 };
 
-static const int botframetimes[BS_MAX] = { 10, 50, 50, 10, 50 };
+static const int botframetimes[BS_MAX] = { 100, 50, 50, 25, 50 };
 
 enum
 {
@@ -640,7 +707,8 @@ struct botstate
 	void reset()
 	{
 		expire = cycle = 0;
-		next = lastmillis;
+		next = millis;
+		if(type == BS_WAIT) next += rnd(2000) + 1000;
 		targtype = target = -1;
 		goal = override = false;
 		defers = true;
@@ -719,12 +787,12 @@ struct fpsent : dynent, fpsstate
 	int wschan;
 	botinfo *bot;
 
-	string name, info;
+	string name, info, obit;
 	int team;
 
 	fpsent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL)
 	{
-		name[0] = info[0] = 0;
+		name[0] = info[0] = obit[0] = 0;
 		team = TEAM_NEUTRAL;
 		respawn(-1);
 	}
@@ -763,6 +831,15 @@ struct fpsent : dynent, fpsstate
 		obliterated = false;
 		lasttaunt = lastuse = lastusemillis = lastimpulse = 0;
 		lastflag = respawned = suicided = -1;
+		obit[0] = 0;
+	}
+
+	void resetstate(int millis)
+	{
+		respawn(millis);
+		oldnode = lastnode = -1;
+		frags = deaths = totaldamage = totalshots = 0;
+		state = CS_DEAD;
 	}
 };
 
@@ -804,6 +881,13 @@ struct projent : dynent
 		movement = roll = 0.f;
 		beenused = false;
 		physent::reset();
+	}
+
+	bool ready()
+	{
+		if(owner && !beenused && waittime <= 0 && state != CS_DEAD)
+			return true;
+		return false;
 	}
 };
 #endif

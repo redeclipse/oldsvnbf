@@ -7,10 +7,12 @@ struct weaponstate
 	static const int OFFSETMILLIS = 500;
 	vec sg[SGRAYS];
 
+	int requestswitch, requestreload;
+
 	IVARP(autoreload, 0, 1, 1);// auto reload when empty
 	IVARP(switchgl, 0, 0, 1);
 
-	weaponstate(GAMECLIENT &_cl) : cl(_cl)
+	weaponstate(GAMECLIENT &_cl) : cl(_cl), requestswitch(0), requestreload(0)
 	{
         CCOMMAND(weapon, "ss", (weaponstate *self, char *a, char *b),
 		{
@@ -28,7 +30,9 @@ struct weaponstate
 
 	void weaponswitch(fpsent *d, int a = -1, int b = -1)
 	{
-		if(!cl.allowmove(cl.player1) || cl.inzoom() || a < -1 || b < -1 || a >= GUN_MAX || b >= GUN_MAX) return;
+		if(a < -1 || b < -1 || a >= GUN_MAX || b >= GUN_MAX) return;
+		if(lastmillis-requestswitch <= 1000) return;
+		if (!cl.allowmove(cl.player1) || cl.inzoom()) return;
 		int s = d->gunselect;
 
 		loopi(GUN_MAX) // only loop the amount of times we have guns for
@@ -44,6 +48,7 @@ struct weaponstate
 			if(d->canswitch(s, lastmillis))
 			{
 				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, s);
+				requestswitch = lastmillis;
 				return;
 			}
 			else if(a >= 0) break;
@@ -324,7 +329,7 @@ struct weaponstate
 
 	bool doautoreload(fpsent *d)
 	{
-		return autoreload() && isgun(d->gunselect) && !d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis);
+		return autoreload() && d->hasgun(d->gunselect, 1) && !d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis);
 	}
 
 	void reload(fpsent *d)
@@ -334,12 +339,20 @@ struct weaponstate
 			int bestgun = d->bestgun();
 			if(d->ammo[d->gunselect] <= 0 && d->canswitch(bestgun, lastmillis))
 			{
-				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, bestgun);
+				if(lastmillis-requestswitch > 1000)
+				{
+					cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, bestgun);
+					requestswitch = lastmillis;
+				}
 			}
 		}
 		else if((d->reloading || doautoreload(d)) && d->canreload(d->gunselect, lastmillis))
 		{
-			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+			if(lastmillis-requestreload > 1000)
+			{
+				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+				requestreload = lastmillis;
+			}
 		}
 	}
 

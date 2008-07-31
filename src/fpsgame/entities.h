@@ -113,7 +113,7 @@ struct entities : icliententities
 
 	void announce(int idx, const char *msg = "", bool force = false)
 	{
-		if(idx > 0 && idx < S_MAX)
+		if(sounds.inrange(idx))
 		{
 			static int lastannouncement;
 			if(force || lastmillis-lastannouncement > 1000)
@@ -190,6 +190,211 @@ struct entities : icliententities
 			regularshape(7, enttype[e.type].radius, 0x888822, 21, 50, 250, pos, 1.f);
 			e.spawned = false;
 		}
+	}
+
+	bool collateitems(fpsent *d, bool use, bool can, vector<actitem> &actitems)
+	{
+		float eye = d->height*0.5f;
+		vec m = d->o;
+		m.z -= eye;
+
+		loopv(ents)
+		{
+			extentity &e = *ents[i];
+			if(e.type <= NOTUSED || e.type >= MAXENTTYPES || enttype[e.type].usetype == EU_NONE)
+				continue;
+			if(!insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
+				continue;
+
+			switch(enttype[e.type].usetype)
+			{
+				case EU_AUTO:
+				{
+					if(e.type != TRIGGER)
+					{
+						if(use) reaction(i, d);
+					}
+					else if(e.spawned || !e.attr4)
+					{
+						switch(e.attr3)
+						{
+							case TA_AUTO:
+								if(use) reaction(i, d);
+								break;
+							case TA_ACT:
+							{
+								actitem &t = actitems.add();
+								t.type = ITEM_ENT;
+								t.target = i;
+								t.score = m.dist(e.o);
+								break;
+							}
+							default: break;
+						}
+					}
+					break;
+				}
+				case EU_ITEM:
+				{
+					if(!e.spawned) break;
+					if(can && !d->canuse(e.type, e.attr1, e.attr2, lastmillis))
+						break;
+					actitem &t = actitems.add();
+					t.type = ITEM_ENT;
+					t.target = i;
+					t.score = m.dist(e.o);
+					break;
+				}
+				default: break;
+			}
+		}
+		loopv(cl.pj.projs)
+		{
+			projent &proj = *cl.pj.projs[i];
+			if(proj.projtype != PRJ_ENT || !proj.ready()) continue;
+			if(enttype[proj.ent].usetype != EU_ITEM || !ents.inrange(proj.id))
+				continue;
+			if(can && !d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis)) continue;
+			if(!insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius))
+				continue;
+			actitem &t = actitems.add();
+			t.type = ITEM_PROJ;
+			t.target = i;
+			t.score = m.dist(proj.o);
+		}
+		return !actitems.empty();
+	}
+
+	void checkitems(fpsent *d)
+	{
+		vector<actitem> actitems;
+		if(collateitems(d, true, true, actitems))
+		{
+			if(d->useaction)
+			{
+				while(!actitems.empty())
+				{
+					int closest = actitems.length()-1;
+					loopv(actitems)
+						if(actitems[i].score < actitems[closest].score)
+							closest = i;
+
+					actitem &t = actitems[closest];
+					switch(t.type)
+					{
+						case ITEM_ENT:
+						{
+							if(!ents.inrange(t.target)) break;
+							extentity &e = *ents[t.target];
+							if(enttype[e.type].usetype == EU_ITEM)
+							{
+								cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, t.target);
+								d->useaction = false;
+							}
+							else if(enttype[e.type].usetype == EU_AUTO)
+							{
+								reaction(t.target, d);
+								d->useaction = false;
+							}
+							break;
+						}
+						case ITEM_PROJ:
+						{
+							if(!cl.pj.projs.inrange(t.target)) break;
+							projent &proj = *cl.pj.projs[t.target];
+							cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, proj.id);
+							d->useaction = false;
+							break;
+						}
+						default: break;
+					}
+					if(!d->useaction) break;
+					else actitems.remove(closest);
+				}
+				if(d->useaction)
+				{
+					d->useaction = false;
+					playsound(S_DENIED, 0, 255, d->o, d);
+				}
+			}
+		}
+		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
+	}
+
+	void putitems(ucharbuf &p)
+	{
+		loopv(ents)
+		{
+			fpsentity &e = (fpsentity &)*ents[i];
+			if(enttype[e.type].usetype == EU_ITEM || e.type == TRIGGER)
+			{
+				putint(p, i);
+				putint(p, e.type);
+				putint(p, e.attr1);
+				putint(p, e.attr2);
+				putint(p, e.attr3);
+				putint(p, e.attr4);
+				putint(p, e.attr5);
+				setspawn(i, m_noitems(cl.gamemode, cl.mutators) ? false : true);
+			}
+		}
+	}
+
+	void resetspawns() { loopv(ents) ents[i]->spawned = false; }
+	void setspawn(int n, bool on)
+	{
+		loopv(cl.pj.projs)
+		{
+			projent &proj = *cl.pj.projs[i];
+			if(proj.projtype != PRJ_ENT || proj.id != n)
+				continue;
+			proj.beenused = true;
+			proj.state = CS_DEAD;
+		}
+		if(ents.inrange(n)) ents[n]->spawned = on;
+	}
+
+	extentity *newent() { return new fpsentity(); }
+
+	void fixentity(extentity &e)
+	{
+		fpsentity &f = (fpsentity &)e;
+
+		if(issound(f.schan))
+		{
+			removesound(f.schan);
+			f.schan = -1;
+			if(f.type == MAPSOUND)
+				f.lastemit = lastmillis; // prevent clipping when moving around
+		}
+
+		switch(e.type)
+		{
+			case WEAPON:
+				while (e.attr1 < 0) e.attr1 += GUN_MAX;
+				while (e.attr1 >= GUN_MAX) e.attr1 -= GUN_MAX;
+				if(e.attr2 < 0) e.attr2 = 0;
+				break;
+			case PLAYERSTART:
+			case FLAG:
+				while(e.attr2 < 0) e.attr2 += TEAM_MAX;
+				while(e.attr2 >= TEAM_MAX) e.attr2 -= TEAM_MAX;
+				if(e.attr2 < 0) e.attr2 = TEAM_NEUTRAL;
+			default:
+				break;
+		}
+	}
+
+	const char *findname(int type)
+	{
+		if(type >= NOTUSED && type < MAXENTTYPES) return enttype[type].name;
+		return "";
+	}
+
+	int findtype(char *type)
+	{
+		loopi(MAXENTTYPES) if(!strcmp(type, enttype[i].name)) return i;
+		return NOTUSED;
 	}
 
 	// these functions are called when the client touches the item
@@ -269,9 +474,7 @@ struct entities : icliententities
 			execlink(d, n, true);
 			execlink(d, t, true);
 
-			if(d == cl.player1)
-				cl.lastcamera = 0;
-
+			if(d == cl.player1) cl.resetstates(ST_VIEW);
 			return;
 		}
 	}
@@ -309,7 +512,6 @@ struct entities : icliententities
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
 			cl.ph.entinmap(d, false);
 		}
-		if(d == cl.player1) cl.lastcamera = 0;
 	}
 
 	void reaction(int n, fpsent *d)
@@ -366,215 +568,6 @@ struct entities : icliententities
 				break;
 			}
 		}
-	}
-
-	struct actitem
-	{
-		int type, target;
-		float score;
-
-		actitem() : type(ITEM_ENT), target(-1), score(0.f) {}
-		~actitem() {}
-	};
-
-	bool closestitem(fpsent *d, bool use, int *type, int *id)
-	{
-		float eye = d->height*0.5f;
-		vec m = d->o;
-		m.z -= eye;
-		vector<actitem> actitems;
-
-		loopv(ents)
-		{
-			extentity &e = *ents[i];
-			if(e.type <= NOTUSED || e.type >= MAXENTTYPES || enttype[e.type].usetype == EU_NONE)
-				continue;
-			if(!insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
-				continue;
-
-			switch(enttype[e.type].usetype)
-			{
-				case EU_AUTO:
-				{
-					bool activate = false;
-					if(e.type != TRIGGER) activate = true;
-					else if(e.spawned || !e.attr4)
-					{
-						switch(e.attr3)
-						{
-							case TA_AUTO: activate = true; break;
-							case TA_ACT:
-							{
-								if(use && !d->useaction) break;
-								actitem &t = actitems.add();
-								t.type = ITEM_ENT;
-								t.target = i;
-								t.score = m.dist(e.o);
-								break;
-							}
-							default: break;
-						}
-					}
-					if(use && activate) reaction(i, d);
-					break;
-				}
-				case EU_ITEM:
-				{
-					if((use && !d->useaction) || !e.spawned) break;
-					actitem &t = actitems.add();
-					t.type = ITEM_ENT;
-					t.target = i;
-					t.score = m.dist(e.o);
-					break;
-				}
-				default: break;
-			}
-		}
-		if(!use || d->useaction)
-		{
-			loopv(cl.pj.projs)
-			{
-				projent &proj = *cl.pj.projs[i];
-				if(proj.projtype != PRJ_ENT || enttype[proj.ent].usetype != EU_ITEM)
-					continue;
-				if(proj.state == CS_DEAD || !proj.owner || proj.waittime > 0 || proj.beenused)
-					continue;
-				if(!insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius))
-					continue;
-				actitem &t = actitems.add();
-				t.type = ITEM_PROJ;
-				t.target = i;
-				t.score = m.dist(proj.o);
-			}
-
-			int closest = -1;
-			loopv(actitems)
-				if(!actitems.inrange(closest) || actitems[i].score < actitems[closest].score)
-					closest = i;
-
-			if(actitems.inrange(closest))
-			{
-				actitem &t = actitems[closest];
-				*type = t.type;
-				*id = t.target;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	void checkitems(fpsent *d)
-	{
-		int type = -1, id = -1;
-		if(closestitem(d, true, &type, &id))
-		{
-			switch(type)
-			{
-				case ITEM_ENT:
-				{
-					if(!cl.et.ents.inrange(id)) break;
-					extentity &e = *ents[id];
-					if(enttype[e.type].usetype == EU_ITEM)
-					{
-						if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
-							cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, id);
-						else playsound(S_DENIED, 0, 255, d->o, d);
-					}
-					else if(enttype[e.type].usetype == EU_AUTO)
-						reaction(id, d);
-					else playsound(S_DENIED, 0, 255, d->o, d);
-					break;
-				}
-				case ITEM_PROJ:
-				{
-					if(!cl.pj.projs.inrange(id)) break;
-					projent &proj = *cl.pj.projs[id];
-					if(d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis))
-						cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, proj.id);
-					else playsound(S_DENIED, 0, 255, d->o, d);
-					break;
-				}
-				default: break;
-			}
-			d->useaction = false;
-		}
-		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
-	}
-
-	void putitems(ucharbuf &p)
-	{
-		loopv(ents)
-		{
-			fpsentity &e = (fpsentity &)*ents[i];
-			if(enttype[e.type].usetype == EU_ITEM || e.type == TRIGGER)
-			{
-				putint(p, i);
-				putint(p, e.type);
-				putint(p, e.attr1);
-				putint(p, e.attr2);
-				putint(p, e.attr3);
-				putint(p, e.attr4);
-				putint(p, e.attr5);
-				setspawn(i, m_noitems(cl.gamemode, cl.mutators) ? false : true);
-			}
-		}
-	}
-
-	void resetspawns() { loopv(ents) ents[i]->spawned = false; }
-	void setspawn(int n, bool on)
-	{
-		loopv(cl.pj.projs)
-		{
-			projent &proj = *cl.pj.projs[i];
-			if(proj.projtype != PRJ_ENT || proj.id != n)
-				continue;
-			proj.beenused = true;
-			proj.state = CS_DEAD;
-		}
-		if(ents.inrange(n)) ents[n]->spawned = on;
-	}
-
-	extentity *newent() { return new fpsentity(); }
-
-	void fixentity(extentity &e)
-	{
-		fpsentity &f = (fpsentity &)e;
-
-		if(issound(f.schan))
-		{
-			removesound(f.schan);
-			f.schan = -1;
-			if(f.type == MAPSOUND)
-				f.lastemit = lastmillis; // prevent clipping when moving around
-		}
-
-		switch(e.type)
-		{
-			case WEAPON:
-				while (e.attr1 < 0) e.attr1 += GUN_MAX;
-				while (e.attr1 >= GUN_MAX) e.attr1 -= GUN_MAX;
-				if(e.attr2 < 0) e.attr2 = 0;
-				break;
-			case PLAYERSTART:
-			case FLAG:
-				while(e.attr2 < 0) e.attr2 += TEAM_MAX;
-				while(e.attr2 >= TEAM_MAX) e.attr2 -= TEAM_MAX;
-				if(e.attr2 < 0) e.attr2 = TEAM_NEUTRAL;
-			default:
-				break;
-		}
-	}
-
-	const char *findname(int type)
-	{
-		if(type >= NOTUSED && type < MAXENTTYPES) return enttype[type].name;
-		return "";
-	}
-
-	int findtype(char *type)
-	{
-		loopi(MAXENTTYPES) if(!strcmp(type, enttype[i].name)) return i;
-		return NOTUSED;
 	}
 
 	void editent(int i)
@@ -1306,14 +1299,15 @@ struct entities : icliententities
 
 			if(m_edit(cl.gamemode))
 			{
+				bool hasent = (entgroup.find(i) >= 0 || enthover == i);
 				if(e.type == PLAYERSTART || e.type == FLAG)
 					particle_text(vec(e.o).add(vec(0, 0, 4)),
 						e.attr2 >= TEAM_NEUTRAL && e.attr2 < TEAM_MAX ? teamtype[e.attr2].name : "unknown",
-							entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
+							hasent ? 13 : 11, 1);
 
-				particle_text(vec(e.o).add(vec(0, 0, 2)),
-					findname(e.type), entgroup.find(i) >= 0 || enthover == i ? 13 : 11, 1);
-				part_create(3, 1, e.o, 0xFFFFFF, 1.f);
+				particle_text(vec(e.o).add(vec(0, 0, 2)), findname(e.type), hasent ? 13 : 11, 1);
+				if(e.type != PARTICLES)
+					part_create(3, 1, e.o, hasent ? 0xFF8822 : 0x888800, 1.f);
 			}
 		}
 	}

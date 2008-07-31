@@ -1,7 +1,7 @@
 // engine defs
 #define ENG_VERSION		76					// version, integer is divided by 100.f
 #define ENG_NAME		"Blood Frontier"	// full name
-#define ENG_RELEASE		"Alpha 2"			// edition/release name
+#define ENG_RELEASE		"Alpha 2.1"			// edition/release name
 
 #define MASTER_PORT		28800
 

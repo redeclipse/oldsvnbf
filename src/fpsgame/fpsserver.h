@@ -2006,6 +2006,7 @@ struct GAMESERVER : igameserver
 				if(m_team(gamemode, mutators)) loopv(clients) if(clients[i]->team != actor->team) enemies++; else friends++;
 				else { friends = 1; enemies = clients.length()-1; }
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
+                actor->state.spree++;
 			}
 			if(ts.gunselect == GUN_GL)
 			{
@@ -2014,14 +2015,14 @@ struct GAMESERVER : igameserver
 			}
 			if(!m_noitems(gamemode, mutators) && !sv_entspawntime)
 			{
-				loopi(GUN_MAX) if(guntype[i].rdelay > 0 && ts.ammo[i] >= 0 && sents.inrange(ts.entid[i]))
+				loopi(GUN_MAX) if(ts.hasgun(i, 1) && sents.inrange(ts.entid[i]))
 				{
 					ts.dropped.add(ts.entid[i]);
 					sendf(-1, 1, "ri4", SV_DROP, target->clientnum, i, ts.entid[i]);
 					ts.entid[i] = -1;
 				}
 			}
-			sendf(-1, 1, "ri7", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, gun, flags, realdamage);
+			sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, actor->state.spree, gun, flags, realdamage);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
 			mutate(smuts, mut->died(target, actor));
@@ -2029,56 +2030,13 @@ struct GAMESERVER : igameserver
 			ts.lastdeath = gamemillis;
 			ts.gunreset(true);
 			// don't issue respawn yet until DEATHMILLIS has elapsed
-			if(fragvalue > 0)
-			{
-				actor->state.spree++;
-				switch(actor->state.spree)
-				{
-					case 5:
-					{
-						s_sprintfd(spr)("%s is wreaking carnage!", colorname(actor));
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE1, spr);
-						break;
-					}
-					case 10:
-					{
-						s_sprintfd(spr)("%s is slaughtering the opposition!", colorname(actor));
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE2, spr);
-						break;
-					}
-					case 25:
-					{
-						s_sprintfd(spr)("%s is on a massacre!", colorname(actor));
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE3, spr);
-						break;
-					}
-					case 50:
-					{
-						s_sprintfd(spr)("%s is creating a bloodbath!", colorname(actor));
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_SPREE4, spr);
-						break;
-					}
-					default:
-					{
-						if(flags&HIT_HEAD)
-						{
-							s_sprintfd(spr)("%s scored a headshot!", colorname(actor));
-							sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_HEADSHOT, spr);
-						}
-						break;
-					}
-				}
-				//if(sv_fraglimit && actor->state.frags >= sv_fraglimit)
-				//	startintermission();
-			}
 		}
 	}
 
 	void processevent(clientinfo *ci, suicideevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(gs.state != CS_ALIVE)
-			return;
+		if(gs.state != CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
 		if(gs.gunselect == GUN_GL)
@@ -2088,14 +2046,14 @@ struct GAMESERVER : igameserver
 		}
 		if(!m_noitems(gamemode, mutators) && !sv_entspawntime)
 		{
-			loopi(GUN_MAX) if(guntype[i].rdelay > 0 && gs.ammo[i] >= 0 && sents.inrange(gs.entid[i]))
+			loopi(GUN_MAX) if(gs.hasgun(i, 1) && sents.inrange(gs.entid[i]))
 			{
 				gs.dropped.add(gs.entid[i]);
 				sendf(-1, 1, "ri4", SV_DROP, ci->clientnum, i, gs.entid[i]);
 				gs.entid[i] = -1;
 			}
 		}
-		sendf(-1, 1, "ri7", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, -1, e.flags, ci->state.health);
+		sendf(-1, 1, "ri8", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, 0, -1, e.flags, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(smuts, mut->died(ci, NULL));
@@ -2189,8 +2147,16 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, switchevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !gs.canswitch(e.gun, e.millis))
+		if(!gs.isalive(gamemillis))
+		{
+			srvoutf(ci->clientnum, "server error: you are not alive to switch to the %s", guntype[e.gun].name);
 			return;
+		}
+		if(!gs.canswitch(e.gun, e.millis))
+		{
+			srvoutf(ci->clientnum, "server error: your current state forbids you from switching to the %s", guntype[e.gun]);
+			return;
+		}
 		gs.gunswitch(e.gun, e.millis);
 		sendf(-1, 1, "ri3", SV_GUNSELECT, ci->clientnum, e.gun);
 	}
@@ -2198,8 +2164,16 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, reloadevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !gs.canreload(e.gun, e.millis))
+		if(!gs.isalive(gamemillis))
+		{
+			srvoutf(ci->clientnum, "server error: you are not alive to reload the %s", guntype[e.gun].name);
 			return;
+		}
+		if(!gs.canreload(e.gun, e.millis))
+		{
+			srvoutf(ci->clientnum, "server error: your current state forbids you from reloading the %s", guntype[e.gun].name);
+			return;
+		}
 		gs.setgunstate(e.gun, GUNSTATE_RELOAD, guntype[e.gun].rdelay, e.millis);
 		gs.ammo[e.gun] = clamp(max(gs.ammo[e.gun], 0) + guntype[e.gun].add, guntype[e.gun].add, guntype[e.gun].charge);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
@@ -2208,10 +2182,21 @@ struct GAMESERVER : igameserver
 	void processevent(clientinfo *ci, useevent &e)
 	{
 		gamestate &gs = ci->state;
-		if(!minremain || !gs.isalive(gamemillis) || m_noitems(gamemode, mutators))
+		if(!gs.isalive(gamemillis) || m_noitems(gamemode, mutators))
+		{
+			srvoutf(ci->clientnum, "server error: the current game parameters do not allow you to pick up entity %d", e.ent);
 			return;
-		if(!sents.inrange(e.ent) || !gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
+		}
+		if(!sents.inrange(e.ent))
+		{
+			srvoutf(ci->clientnum, "server error: you cannot pick up entity %d as it does not exist", e.ent);
 			return;
+		}
+		if(!gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
+		{
+			srvoutf(ci->clientnum, "server error: your current state forbids you from picking up entity %d", e.ent);
+			return;
+		}
 
 		bool found = false;
 		loopv(clients)
@@ -2223,25 +2208,16 @@ struct GAMESERVER : igameserver
 				found = true;
 			}
 		}
-		if(!found && !sents[e.ent].spawned) return;
+		if(!found && !sents[e.ent].spawned)
+		{
+			srvoutf(ci->clientnum, "server error: there is no instance of entity %d for you to pick up", e.ent);
+			return;
+		}
 
 		int gun = -1, dropped = -1;
 		if(sents[e.ent].type == WEAPON && gs.ammo[sents[e.ent].attr1] < 0)
 		{
-			int carry = 0;
-			loopi(GUN_MAX) if(gs.ammo[i] >= 0 && guntype[i].rdelay > 0) carry++;
-			if(carry >= MAXCARRY)
-			{
-				if(isgun(gs.gunselect) && gs.ammo[gs.gunselect] >= 0 && gs.gunselect != sents[e.ent].attr1 && guntype[gs.gunselect].rdelay > 0)
-				{
-					gun = gs.gunselect;
-				}
-				else loopi(GUN_MAX) if(gs.ammo[i] >= 0 && i != sents[e.ent].attr1 && guntype[i].rdelay > 0)
-				{
-					gun = i;
-					break;
-				}
-			}
+			if(gs.carry() >= MAXCARRY) gun = gs.drop(sents[e.ent].attr1);
 		}
 		if(isgun(gun))
 		{
@@ -2310,7 +2286,7 @@ struct GAMESERVER : igameserver
 		else if(minremain)
 		{
 			processevents();
-			if(curtime && !m_noitems(gamemode, mutators))
+			if(!m_noitems(gamemode, mutators))
             {
                 loopv(sents) if(!sents[i].spawned && enttype[sents[i].type].usetype == EU_ITEM)
 			    {

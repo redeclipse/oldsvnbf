@@ -42,7 +42,7 @@ struct physics
 	#define iput(x,y,t,z,a,q) \
 		void do##x(bool down) \
 		{ \
-			if(!q || cl.player1->state == CS_DEAD) \
+			if(!q) \
 			{ \
 				cl.player1->y = false; \
 				if(z && down) cl.respawn(cl.player1); \
