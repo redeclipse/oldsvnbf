@@ -173,11 +173,10 @@ struct clientcom : iclientcom
 		}
 		else
 		{
-			cl.resetgamestate();
 			cl.player1->state = CS_EDITING;
+			cl.resetstates(ST_DEFAULT);
 		}
 		cl.ph.entinmap(cl.player1, false); // find spawn closest to current floating pos
-
 		if(m_edit(cl.gamemode))
 			addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 	}
@@ -847,25 +846,20 @@ struct clientcom : iclientcom
 				{
 					int lcn = getint(p);
 					fpsent *f = cl.newclient(lcn);
-					bool local = f == cl.player1 || f->bot;
 					if(f == cl.player1 && editmode) toggleedit();
 					f->respawn(lastmillis);
 					parsestate(f, p);
 					f->state = CS_ALIVE;
-					if(local)
+					if(f == cl.player1 || f->bot)
 					{
 						int team = m_mayhem(cl.gamemode, cl.mutators) ? (f->team%numteams(cl.gamemode, cl.mutators))+1 : f->team;
 						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(team) : -1, m_team(cl.gamemode, cl.mutators) ? team : -1);
-						if(f==cl.player1)
-						{
-							cl.sb.showscores(false);
-							cl.lasthit = 0;
-						}
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
 						playsound(S_RESPAWN, 0, 255, f->o, f);
 						regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 2.f);
 					}
 					cl.bot.spawned(f);
+					if(f == cl.player1) cl.resetstates(ST_DEFAULT);
 					break;
 				}
 
@@ -904,6 +898,7 @@ struct clientcom : iclientcom
 					int trg = getint(p), gun = getint(p), amt = getint(p);
 					fpsent *target = cl.getclient(trg);
 					if(!target || !isgun(gun)) break;
+					if(target == cl.player1) cl.ws.requestreload = 0;
 					target->setgunstate(gun, GUNSTATE_RELOAD, guntype[gun].rdelay, lastmillis);
 					target->ammo[gun] = amt;
 					playsound(S_RELOAD, 0, 255, target->o, target);
@@ -917,18 +912,19 @@ struct clientcom : iclientcom
 					if(!target) break;
 					target->health = amt;
 					target->lastregen = lastmillis;
-					particle_splash(3, max((MAXHEALTH-target->health)/10, 1), 10000, target->o);
-					playsound(S_REGEN, 0, ((MAXHEALTH-target->health)*255)/MAXHEALTH, target->o, target);
+					particle_splash(3, max((MAXHEALTH-target->health)/10, 3), 10000, target->o);
+					playsound(S_REGEN, 0, 255, target->o, target);
 					break;
 				}
 
 				case SV_DIED:
 				{
-					int vcn = getint(p), acn = getint(p), frags = getint(p),
+					int vcn = getint(p), acn = getint(p), frags = getint(p), spree = getint(p),
 						gun = getint(p), flags = getint(p), damage = getint(p);
 					fpsent *victim = cl.getclient(vcn), *actor = cl.getclient(acn);
 					if(!actor) break;
 					actor->frags = frags;
+					actor->spree = spree;
 					if(actor!=cl.player1 && !m_stf(cl.gamemode) && !m_ctf(cl.gamemode))
 					{
 						s_sprintfd(ds)("@%d", actor->frags);
@@ -954,6 +950,7 @@ struct clientcom : iclientcom
 					int trg = getint(p), gun = getint(p);
 					fpsent *target = cl.getclient(trg);
 					if(!target || !isgun(gun)) break;
+					if(target == cl.player1) cl.ws.requestswitch = 0;
 					target->gunswitch(gun, lastmillis);
 					playsound(S_SWITCH, 0, 255, target->o, target);
 					break;
