@@ -428,7 +428,8 @@ struct fpsstate
 			{
 				case 0: default: return true; break; // has gun at all
 				case 1: if(guntype[gun].rdelay > 0) return true; break; // only carriables
-				case 2: if(ammo[gun] > 0 && guntype[gun].rdelay > 0) return true; break; // only carriables with actual ammo
+				case 2: if(ammo[gun] > 0) return true; break; // only with actual ammo
+				case 3: if(ammo[gun] > 0 && guntype[gun].rdelay > 0) return true; break; // only carriables with actual ammo
 			}
 		}
 		return false;
@@ -706,7 +707,8 @@ struct botstate
 	{
 		expire = cycle = 0;
 		next = millis;
-		if(type == BS_WAIT) next += rnd(2000) + 1000;
+		if(type == BS_WAIT)
+			next += rnd(1500) + 1500;
 		targtype = target = -1;
 		goal = override = false;
 		defers = true;

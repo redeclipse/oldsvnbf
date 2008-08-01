@@ -1098,9 +1098,12 @@ struct botclient
 		{
 			if(lastmillis-d->bot->lastreq > 1000)
 			{
-				if(d->hasgun(d->bot->gunpref) && d->gunselect != d->bot->gunpref && d->canswitch(d->bot->gunpref, lastmillis))
+				int gun = -1;
+				if(d->hasgun(d->bot->gunpref)) gun = d->bot->gunpref; // could be any gun
+				else loopi(GUN_MAX) if(d->hasgun(i, 1)) gun = i; // only choose carriables here
+				if(gun != d->gunselect && d->canswitch(gun, lastmillis))
 				{
-					cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, d->bot->gunpref);
+					cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, gun);
 					d->bot->lastreq = lastmillis;
 				}
 				else if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis))
@@ -1192,7 +1195,7 @@ struct botclient
 		if(d->state == CS_ALIVE)
 		{
 			cl.et.checkitems(d);
-			cl.ws.shoot(d, d->bot->target);
+			cl.ws.shoot(d, d->bot->target, 100); // always use full power
 		}
 
 		cl.ph.move(d, 10, true);
