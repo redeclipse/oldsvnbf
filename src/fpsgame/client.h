@@ -834,6 +834,12 @@ struct clientcom : iclientcom
 				{
 					int lcn = getint(p);
 					fpsent *f = cl.newclient(lcn);
+					if(f->lastdeath && !f->obliterated)
+					{
+						vec pos = cl.feetpos(f), vel(0, 0, 1);
+						int gibs = clamp(((0-f->health)+4)/4, 1, 10);
+						loopi(rnd(gibs)+1) cl.pj.spawn(pos, vel, f, PRJ_GIBS);
+					}
 					f->respawn(lastmillis);
 					parsestate(f, p);
 					f->state = CS_SPAWNING;
@@ -846,6 +852,12 @@ struct clientcom : iclientcom
 				{
 					int lcn = getint(p);
 					fpsent *f = cl.newclient(lcn);
+					if(f->lastdeath && !f->obliterated)
+					{
+						vec pos = cl.feetpos(f), vel(0, 0, 1);
+						int gibs = clamp(((0-f->health)+4)/4, 1, 10);
+						loopi(rnd(gibs)+1) cl.pj.spawn(pos, vel, f, PRJ_GIBS);
+					}
 					if(f == cl.player1 && editmode) toggleedit();
 					f->respawn(lastmillis);
 					parsestate(f, p);
@@ -932,6 +944,7 @@ struct clientcom : iclientcom
 					}
 					if(!victim) break;
 					cl.killed(gun, flags, damage, victim, actor);
+					victim->lastdeath = lastmillis;
 					victim->gunreset(true);
 					break;
 				}

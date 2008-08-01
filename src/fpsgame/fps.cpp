@@ -514,7 +514,7 @@ struct GAMECLIENT : igameclient
 
 		if(d == player1)
 		{
-			anc = d->obliterated || lastmillis-d->lastspawn <= 5000 ? S_V_OWNED : S_V_FRAGGED;
+			anc = S_V_FRAGGED;
 			sb.showscores(true);
 			lastplayerstate = *player1;
 			d->stopmoving();
@@ -560,6 +560,9 @@ struct GAMECLIENT : igameclient
 				}
 			};
 
+			if(d == player1 && (d->obliterated || lastmillis-d->lastspawn <= 5000))
+				anc = S_V_OWNED;
+
 			int o = (flags & HIT_HEAD) ? 1 : (d->obliterated ? 2 : 0);
 			const char *oname = isgun(gun) ? obitnames[o][gun] : "was killed by";
 			if(m_team(gamemode, mutators) && d->team == actor->team)
@@ -571,7 +574,7 @@ struct GAMECLIENT : igameclient
 				{
 					case 5:
 					{
-						s_strcat(d->obit, " with carnage!");
+						s_strcat(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
 						break;
 					}

@@ -167,7 +167,7 @@ struct weaponstate
 				radialeffect(f, o, guntype[gun].explode, gun != GUN_FLAMER ? HIT_EXPLODE : HIT_BURN);
 			}
 
-			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id-cl.maptime,
+			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id >= 0 ? id-cl.maptime : id,
 					hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 		}
 	}
@@ -356,23 +356,26 @@ struct weaponstate
 		}
 	}
 
-	void shoot(fpsent *d, vec &targ)
+	void shoot(fpsent *d, vec &targ, int pow = 0)
 	{
 		if(!d->canshoot(d->gunselect, lastmillis)) return;
 
-		int power = 100;
+		int power = pow ? pow : 100;
 		if(guntype[d->gunselect].power)
 		{
-			if(d->gunstate[d->gunselect] != GUNSTATE_POWER) // FIXME: not synched in MP yet!!
+			if(!pow)
 			{
-				if(d->attacking) d->setgunstate(d->gunselect, GUNSTATE_POWER, 0, lastmillis);
-				else return;
+				if(d->gunstate[d->gunselect] != GUNSTATE_POWER) // FIXME: not synched in MP yet!!
+				{
+					if(d->attacking) d->setgunstate(d->gunselect, GUNSTATE_POWER, 0, lastmillis);
+					else return;
+				}
+
+				int secs = lastmillis-d->gunlast[d->gunselect];
+				if(d->attacking && secs < guntype[d->gunselect].power) return;
+
+				power = clamp(int(float(secs)/float(guntype[d->gunselect].power)*100.f), 0, 100);
 			}
-
-			int secs = lastmillis-d->gunlast[d->gunselect];
-			if(d->attacking && secs < guntype[d->gunselect].power) return;
-
-			power = clamp(int(float(secs)/float(guntype[d->gunselect].power)*100.f), 0, 100);
 			d->attacking = false;
 		}
 		else if(!d->attacking) return;
