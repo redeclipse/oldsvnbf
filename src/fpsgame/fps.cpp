@@ -18,9 +18,8 @@ struct GAMECLIENT : igameclient
     #include "ctf.h"
 
 	int nextmode, nextmuts, gamemode, mutators;
-	bool intermission, openedmenu;
-	int maptime, minremain;
-	int respawnent, swaymillis;
+	bool intermission;
+	int maptime, minremain, swaymillis;
 	dynent fpsmodel;
 	vec swaydir;
     int lasthit, lastcamera, lastzoom, lastmousetype;
@@ -145,10 +144,8 @@ struct GAMECLIENT : igameclient
 
 	GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
-			nextmode(G_LOBBY), nextmuts(0), gamemode(G_LOBBY), mutators(0),
-			intermission(false), openedmenu(false),
-			maptime(0), minremain(0), respawnent(-1),
-			swaymillis(0), swaydir(0, 0, 0),
+			nextmode(G_LOBBY), nextmuts(0), gamemode(G_LOBBY), mutators(0), intermission(false),
+			maptime(0), minremain(0), swaymillis(0), swaydir(0, 0, 0),
 			lasthit(0), lastcamera(0), lastzoom(0), lastmousetype(0),
 			prevzoom(false), zooming(false),
 			quakewobble(0), damageresidue(0),
@@ -690,9 +687,7 @@ struct GAMECLIENT : igameclient
 		if(*title) console("%s", CON_CENTER|CON_NORMAL, title);
 
 		intermission = false;
-        player1->respawned = player1->suicided = 0;
-		respawnent = -1;
-        maptime = 0;
+        player1->respawned = player1->suicided = maptime = 0;
 		cc.mapstart();
         resetstates(ST_ALL);
 	}
@@ -962,7 +957,7 @@ struct GAMECLIENT : igameclient
 		popfont();
 	}
 
-	void drawentblip(int x, int y, int s, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool spawned)
+	void drawentblip(int x, int y, int s, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool spawned)
 	{
 		if(type <= NOTUSED || type >= MAXENTTYPES) return;
 		enttypes &t = enttype[type];
@@ -987,8 +982,6 @@ struct GAMECLIENT : igameclient
 			int ty = int(cy+cs);
 			if(editradarentnames() == 2 && editmode)
 				ty += draw_textx("%s [%d]", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, t.name, n);
-			if(editradarentnames() && insel)
-				ty += draw_textx("(%d %d %d %d)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, attr1, attr2, attr3, attr4);
 		}
 	}
 
@@ -997,14 +990,14 @@ struct GAMECLIENT : igameclient
 		loopv(et.ents)
 		{
 			extentity &e = *et.ents[i];
-			drawentblip(x, y, s, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.spawned);
+			drawentblip(x, y, s, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned);
 		}
 
 		loopv(pj.projs) if(pj.projs[i]->projtype == PRJ_ENT && pj.projs[i]->ready())
 		{
 			projent &proj = *pj.projs[i];
 			if(et.ents.inrange(proj.id))
-				drawentblip(x, y, s, -1, proj.o, proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, true);
+				drawentblip(x, y, s, -1, proj.o, proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5, true);
 		}
 	}
 
@@ -1238,12 +1231,12 @@ struct GAMECLIENT : igameclient
 									if(isgun(drop))
 									{
 										tp += draw_textx("Press [ \fs\fg%s\fS ] to swap", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, actkey);
-										tp += draw_textx("[ \fs\fy%s\fS ] for [ \fs\fy%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, guntype[drop].name, et.itemname(e.type, e.attr1, e.attr2));
+										tp += draw_textx("[ \fs\fy%s\fS ] for [ \fs\fy%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, guntype[drop].name, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
 									}
 									else
 									{
 										tp += draw_textx("Press [ \fs\fg%s\fS ] to pickup", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, actkey);
-										tp += draw_textx("[ \fs\fy%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, et.itemname(e.type, e.attr1, e.attr2));
+										tp += draw_textx("[ \fs\fy%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
 									}
 									popfont();
 									tp += FONTH/2;
@@ -1251,7 +1244,7 @@ struct GAMECLIENT : igameclient
 									else found = true;
 								}
 								else
-									tp += draw_textx("[ \fs\fa%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, et.itemname(e.type, e.attr1, e.attr2));
+									tp += draw_textx("[ \fs\fa%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
 							}
 							else if(enttype[e.type].usetype == EU_AUTO)
 							{
@@ -1299,10 +1292,17 @@ struct GAMECLIENT : igameclient
 				{
 					fpsentity &f = (fpsentity &)*et.ents[n];
 					if(n == enthover) pushfont("emphasis");
-					tp += draw_textx("entity %d, %s (%d %d %d %d)", tz, tp,
+					tp += draw_textx("entity %d, %s", tz, tp,
 						n == enthover ? 255 : 196, 196, 196, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1,
-							n, et.findname(f.type), f.attr1, f.attr2, f.attr3, f.attr4);
-					if(n == enthover) popfont();
+							n, et.findname(f.type));
+					if(n == enthover)
+					{
+						popfont();
+						tp += draw_textx("%s (%d %d %d %d %d)", tz, tp,
+							255, 196, 196, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1,
+								et.entinfo(f.type, f.attr1, f.attr2, f.attr3, f.attr4, f.attr5, true),
+									f.attr1, f.attr2, f.attr3, f.attr4, f.attr5);
+					}
 				}
 			}
 		}

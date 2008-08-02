@@ -563,7 +563,7 @@ void dropent()
 	groupedit(dropentity(e));
 }
 
-extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3, int v4)
+extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3, int v4, int v5)
 {
 	extentity &e = *et->newent();
 	e.o = o;
@@ -571,7 +571,7 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
 	e.attr2 = v2;
 	e.attr3 = v3;
 	e.attr4 = v4;
-	e.attr5 = 0;
+	e.attr5 = v5;
 	e.type = type;
 	e.reserved = 0;
 	e.spawned = false;
@@ -595,9 +595,9 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
 	return &e;
 }
 
-void newentity(int type, int a1, int a2, int a3, int a4)
+void newentity(int type, int a1, int a2, int a3, int a4, int a5)
 {
-	extentity *t = newentity(true, camera1->o, type, a1, a2, a3, a4);
+	extentity *t = newentity(true, camera1->o, type, a1, a2, a3, a4, a5);
 	dropentity(*t);
 	et->getents().add(t);
 	int i = et->getents().length()-1;
@@ -607,12 +607,12 @@ void newentity(int type, int a1, int a2, int a3, int a4)
 	entedit(i, e.type = type);
 }
 
-void newent(char *what, int *a1, int *a2, int *a3, int *a4)
+void newent(char *what, int *a1, int *a2, int *a3, int *a4, int *a5)
 {
 	if(noentedit()) return;
 	int type = et->findtype(what);
 	if(type != ET_EMPTY)
-		newentity(type, *a1, *a2, *a3, *a4);
+		newentity(type, *a1, *a2, *a3, *a4, *a5);
 }
 
 int entcopygrid;
@@ -639,7 +639,7 @@ void entpaste()
 		entity &c = entcopybuf[i];
 		vec o(c.o);
 		o.mul(m).add(sel.o.v);
-		extentity *e = newentity(true, o, ET_EMPTY, c.attr1, c.attr2, c.attr3, c.attr4);
+		extentity *e = newentity(true, o, ET_EMPTY, c.attr1, c.attr2, c.attr3, c.attr4, c.attr5);
 		et->getents().add(e);
 		entadd(++last);
 	}
@@ -681,7 +681,7 @@ void entlink()
 COMMAND(entlink, "");
 
 
-void entset(char *what, int *a1, int *a2, int *a3, int *a4)
+void entset(char *what, int *a1, int *a2, int *a3, int *a4, int *a5)
 {
 	if(noentedit()) return;
 	int type = et->findtype(what);
@@ -689,14 +689,15 @@ void entset(char *what, int *a1, int *a2, int *a3, int *a4)
 			  e.attr1=*a1;
 			  e.attr2=*a2;
 			  e.attr3=*a3;
-			  e.attr4=*a4;);
+			  e.attr4=*a4;
+			  e.attr5=*a5;);
 }
 
 ICOMMAND(enthavesel,"",  (), addimplicit(intret(entgroup.length())));
 ICOMMAND(entselect, "s", (char *body), if(!noentedit()) addgroup(e.type != ET_EMPTY && entgroup.find(n)<0 && execute(body)>0));
 ICOMMAND(entloop,   "s", (char *body), if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(body)))));
 ICOMMAND(insel,     "",  (), entfocus(efocus, intret(pointinsel(sel, e.o))));
-ICOMMAND(entget,    "",  (), entfocus(efocus, s_sprintfd(s)("%s %d %d %d %d", et->findname(e.type), e.attr1, e.attr2, e.attr3, e.attr4);  result(s)));
+ICOMMAND(entget,    "",  (), entfocus(efocus, s_sprintfd(s)("%s %d %d %d %d", et->findname(e.type), e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);  result(s)));
 COMMAND(entset, "siiii");
 
 
@@ -861,12 +862,12 @@ ICOMMAND(mapsize, "", (void),
     intret(size);
 });
 
-void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool local)
+void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool local)
 {
 	if(et->getents().length()<=i)
 	{
 		while(et->getents().length()<i) et->getents().add(et->newent())->type = ET_EMPTY;
-		extentity *e = newentity(local, o, type, attr1, attr2, attr3, attr4);
+		extentity *e = newentity(local, o, type, attr1, attr2, attr3, attr4, attr5);
 		et->getents().add(e);
 		addentity(i);
 	}
@@ -876,14 +877,14 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
 		removeentity(i);
 		e.type = type;
 		e.o = o;
-		e.attr1 = attr1; e.attr2 = attr2; e.attr3 = attr3; e.attr4 = attr4;
+		e.attr1 = attr1; e.attr2 = attr2; e.attr3 = attr3; e.attr4 = attr4; e.attr5 = attr5;
 		addentity(i);
 	}
 }
 
-void newentity(vec &v, int type, int a1, int a2, int a3, int a4)
+void newentity(vec &v, int type, int a1, int a2, int a3, int a4, int a5)
 {
-	extentity *t = newentity(true, v, type, a1, a2, a3, a4);
+	extentity *t = newentity(true, v, type, a1, a2, a3, a4, a5);
 	et->getents().add(t);
 	int i = et->getents().length()-1;
 	t->type = ET_EMPTY;

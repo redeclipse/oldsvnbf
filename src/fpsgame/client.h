@@ -999,7 +999,7 @@ struct clientcom : iclientcom
 					if(!cl.et.ents.inrange(ent)) break;
 					cl.et.setspawn(ent, true);
 					playsound(S_ITEMSPAWN, 0, 255, cl.et.ents[ent]->o);
-					const char *name = cl.et.itemname(ent);
+					const char *name = cl.et.entinfo(cl.et.ents[ent]->type, cl.et.ents[ent]->attr1, cl.et.ents[ent]->attr2, cl.et.ents[ent]->attr4, cl.et.ents[ent]->attr4, cl.et.ents[ent]->attr5, true);
 					if(name) particle_text(cl.et.ents[ent]->o, name, 9);
 					regularshape(7, enttype[cl.et.ents[ent]->type].radius, 0x888822, 53, 50, 250, cl.et.ents[ent]->o, 1.f);
 					break;
@@ -1118,9 +1118,9 @@ struct clientcom : iclientcom
 					int i = getint(p);
 					float x = getint(p)/DMF, y = getint(p)/DMF, z = getint(p)/DMF;
 					int type = getint(p);
-					int attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p);
+					int attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p), attr5 = getint(p);
 
-					mpeditent(i, vec(x, y, z), type, attr1, attr2, attr3, attr4, false);
+					mpeditent(i, vec(x, y, z), type, attr1, attr2, attr3, attr4, attr5, false);
 					break;
 				}
 

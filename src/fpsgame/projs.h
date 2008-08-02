@@ -105,7 +105,7 @@ struct projectiles
 			}
 			case PRJ_ENT:
 			{
-				proj.mdl = cl.et.entmdlname(proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4);
+				proj.mdl = cl.et.entmdlname(proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5);
 				proj.aboveeye = 1.f;
 				proj.elasticity = 0.35f;
 				proj.relativity = 0.85f;
@@ -297,7 +297,7 @@ struct projectiles
 		return true;
 	}
 
-	void create(vec &from, vec &to, bool local, fpsent *d, int type, int lifetime, int waittime, int speed, int id = 0, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0)
+	void create(vec &from, vec &to, bool local, fpsent *d, int type, int lifetime, int waittime, int speed, int id = 0, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
 	{
 		if(!d || !lifetime || !speed) return;
 
@@ -313,6 +313,7 @@ struct projectiles
 		proj.attr2 = attr2;
 		proj.attr3 = attr3;
 		proj.attr4 = attr4;
+		proj.attr5 = attr5;
 		proj.maxspeed = speed;
 		if(id) proj.id = id;
 		else proj.id = lastmillis;
@@ -329,7 +330,7 @@ struct projectiles
 			if(cl.et.ents.inrange(n) && !m_noitems(cl.gamemode, cl.mutators))
 			{
 				fpsentity &e = (fpsentity &)*cl.et.ents[n];
-				create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_ENT, 30000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4);
+				create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_ENT, 30000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 			}
 		}
 		else if(g == GUN_GL)

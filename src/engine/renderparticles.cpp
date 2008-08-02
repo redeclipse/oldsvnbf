@@ -921,10 +921,10 @@ static struct partmap { int type; int color; float size; } partmaps[] =
     { 13, 0x897661, 0.6f }, // 21 greyish-brown:   small  slowly sinking smoke trail
     { 14, 0xFF8080, 4.0f }, // 22 red explosion fireball
     { 14, 0xA0C080, 4.0f }, // 23 orange explosion fireball
-    /* @UNUSED */ { -1, 0, 0.0f}, // 24
+    { 10, 0xFFFFFF, 1.5f }, // 24 TEXT WHITE, TINY, NON-MOVING
     { 16, 0x897661, 2.4f }, // 25 greyish-brown:   big  fast rising smoke
-    /* @UNUSED */ { -1, 0, 0.0f}, // 26
-    /* @UNUSED */ { -1, 0, 0.0f}, // 27
+    { 10, 0xFFFFFF, 2.5f }, // 26 TEXT WHITE, NON-MOVING
+    { 10, 0xFFFFFF, 2.0f }, // 27 TEXT WHITE, SMALL, NON-MOVING
     { 15, 0xFFFFFF, 0.28f}, // 28 lightning
     { 15, 0xFF2222, 0.28f}, // 29 lightning: red
     { 15, 0x2222FF, 0.28f}, // 30 lightning: blue
@@ -1196,7 +1196,7 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
     }
 }
 
-void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4)
+void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
 {
     switch(attr1)
     {
@@ -1251,7 +1251,7 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4)
 
 void makeparticles(entity &e)
 {
-	makeparticle(e.o, e.attr1, e.attr2, e.attr3, e.attr4);
+	makeparticle(e.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 }
 
 void updateparticles()

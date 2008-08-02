@@ -26,16 +26,16 @@ enum
 enum								// entity types
 {
 	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
-	LIGHT = ET_LIGHT,				// 1  radius, intensity
+	LIGHT = ET_LIGHT,				// 1  radius, intensity or red, green, blue
 	MAPMODEL = ET_MAPMODEL,			// 2  angle, idx
-	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, team
+	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, team, id
 	ENVMAP = ET_ENVMAP,				// 4  radius
 	PARTICLES = ET_PARTICLES,		// 5  type, [others]
 	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume
 	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
 	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
 	TELEPORT,						// 9  yaw, pitch, roll, push
-	MONSTER,						// 10 angle, type
+	OBSOLETED,						// 10
 	TRIGGER,						// 11 idx, type, acttype, resettime
 	PUSHER,							// 12 zpush, ypush, xpush
 	FLAG,							// 13 idx, team
@@ -65,7 +65,7 @@ struct enttypes
 	{ SPOTLIGHT,	59,		0,		0,		EU_NONE,		"spotlight" },
 	{ WEAPON,		59,		16,		16,		EU_ITEM,		"weapon" },
 	{ TELEPORT,		50,		12,		12,		EU_AUTO,		"teleport" },
-	{ MONSTER,		59,		0,		0,		EU_NONE,		"monster" },
+	{ OBSOLETED,	59,		0,		0,		EU_NONE,		"obsoleted" },
 	{ TRIGGER,		58,		16,		16,		EU_AUTO,		"trigger" },
 	{ PUSHER,		58,		12,		12,		EU_AUTO,		"pusher" },
 	{ FLAG,			48,		16,		16,		EU_NONE,		"flag" },
@@ -311,7 +311,7 @@ struct demoheader
 	int version, gamever;
 };
 
-enum { TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_MAX };
+enum { TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_ENEMY, TEAM_MAX };
 struct teamtypes
 {
 	int	type,		colour;	const char *name,	*tpmdl,			*fpmdl,				*flag,			*icon,			*chat;
@@ -320,18 +320,30 @@ struct teamtypes
 	{ TEAM_ALPHA,	0x2222FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
 	{ TEAM_BETA,	0xFF2222,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
 	{ TEAM_DELTA,	0xFFFF22,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0x22FF22,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" }
+	{ TEAM_GAMMA,	0x22FF22,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
+	{ TEAM_ENEMY,	0xFFFFFF,	"enemy",		"player",		"player/vwep",		"flag",			"team",			"\fa" }
 };
-
-#define PLATFORMBORDER	0.2f
-#define PLATFORMMARGIN	10.0f
 
 #define MAXNAMELEN		16
 #define MAXHEALTH		100
 #define MAXCARRY		2
-#define MAXTEAMS		(TEAM_MAX-TEAM_ALPHA) // don't count neutral
+#define MAXTEAMS		TEAM_GAMMA
 #define numteams(a,b)	(m_multi(a, b) ? MAXTEAMS : MAXTEAMS/2)
-#define isteam(a,b)		(a >= b && a <= TEAM_MAX-1)
+#define isteam(a,b)		(a >= b && a <= MAXTEAMS)
+
+enum { ENEMY_BOT = 0, ENEMY_BSOLDIER, ENEMY_RSOLDIER, ENEMY_YSOLDIER, ENEMY_GSOLDIER, ENEMY_MAX };
+struct enemytypes
+{
+	int type,			colour; const char *name,	*mdl;
+} enemytype[] = {
+	{ ENEMY_BOT,		0x2F2F2F,	"neutral",		"player" },
+	{ ENEMY_BSOLDIER,	0x2222FF,	"alpha",		"player/alpha" },
+	{ ENEMY_RSOLDIER,	0xFF2222,	"beta",			"player/beta" },
+	{ ENEMY_YSOLDIER,	0xFFFF22,	"delta",		"player/delta" },
+	{ ENEMY_GSOLDIER,	0x22FF22,	"gamma",		"player/gamma" },
+};
+
+#define isenemy(a)		(a >= 0 && a <= ENEMY_MAX-1)
 
 #define REGENWAIT		3000
 #define REGENTIME		1000
@@ -339,9 +351,10 @@ struct teamtypes
 
 enum
 {
-	SAY_NONE = 0x0,
-	SAY_ACTION = 0x1,
-	SAY_TEAM = 0x2,
+	SAY_NONE = 0,
+	SAY_ACTION = 1<<2,
+	SAY_TEAM = 1<<3,
+	SAY_NUM = 2
 };
 
 enum
@@ -859,7 +872,7 @@ struct projent : dynent
 	bool local, beenused;
 	int projtype;
 	float elasticity, relativity, waterfric;
-	int ent, attr1, attr2, attr3, attr4;
+	int ent, attr1, attr2, attr3, attr4, attr5;
 	int schan, id;
 	entitylight light;
 	fpsent *owner;
@@ -882,7 +895,7 @@ struct projent : dynent
 	{
 		type = ENT_BOUNCE;
 		state = CS_ALIVE;
-		lifetime = waittime = ent = attr1 = attr2 = attr3 = attr4 = 0;
+		lifetime = waittime = ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
 		schan = id = -1;
 		movement = roll = 0.f;
 		beenused = false;
