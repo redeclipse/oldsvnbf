@@ -48,7 +48,7 @@ struct entities : icliententities
 					entlinks[i].add(PARTICLES);
 					entlinks[i].add(TELEPORT);
 					break;
-				//	MONSTER,						// 10 [angle], [type]
+				//	OBSOLETED,						// 10
 				//	TRIGGER,						// 11
 				case TRIGGER:
 					entlinks[i].add(MAPSOUND);
@@ -89,15 +89,53 @@ struct entities : icliententities
 
 	vector<extentity *> &getents() { return ents; }
 
-	const char *itemname(int type, int attr1 = 0, int attr2 = 0)
+	const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false)
 	{
+		static string entinfostr;
+		string str;
+		entinfostr[0] = 0;
+		#define addentinfo(s) { \
+			if(entinfostr[0]) s_strcat(entinfostr, ", "); \
+			s_strcat(entinfostr, s); \
+		}
+		if(type == PLAYERSTART || type == FLAG)
+		{
+			if(isteam(attr2, TEAM_ALPHA))
+			{
+				s_sprintf(str)("team %s", teamtype[attr2].name);
+				addentinfo(str);
+			}
+			else if(attr2 == TEAM_NEUTRAL || attr2 == TEAM_ENEMY)
+			{
+				s_sprintf(str)("%s", teamtype[attr2].name);
+				addentinfo(str);
+			}
+		}
 		if(type == WEAPON)
 		{
-			int gun = attr1;
-			if(!isgun(gun)) gun = GUN_PISTOL;
-			return guntype[gun].name;
+			if(isgun(attr1))
+			{
+				int a = attr2 > 0 && attr2 <= guntype[attr1].max ? attr2 : guntype[attr1].add;
+				if(full) s_sprintf(str)("%s, %d ammo", guntype[attr1].name, a);
+				else s_sprintf(str)("%s", guntype[attr1].name);
+				addentinfo(str);
+			}
 		}
-		return NULL;
+		if(type == TRIGGER)
+		{
+			if(full)
+			{
+				const char *trignames[2][4] = {
+						{ "unknown", "mapmodel", "script", "" },
+						{ "unknown", "automatically", "by action", "by link" }
+				};
+				int tr = attr2 <= TR_NONE || attr2 >= TR_MAX ? TR_NONE : attr2,
+					ta = attr3 <= TA_NONE || attr3 >= TA_MAX ? TA_NONE : attr3;
+				s_sprintf(str)("%s activated %s", trignames[0][tr], trignames[1][ta]);
+				addentinfo(str);
+			}
+		}
+		return entinfostr;
 	}
 
 	const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
@@ -172,7 +210,7 @@ struct entities : icliententities
 				proj.beenused = true;
 				proj.state = CS_DEAD;
 			}
-			const char *item = itemname(e.type, e.attr1, e.attr2);
+			const char *item = entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 			if(item && (d != cl.player1 || cl.isthirdperson()))
 				particle_text(d->abovehead(), item, 15);
 			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
@@ -573,7 +611,7 @@ struct entities : icliententities
 		if(e.type == NOTUSED) linkclear(i);
 		fixentity(e);
 		if(multiplayer(false) && m_edit(cl.gamemode))
-			cl.cc.addmsg(SV_EDITENT, "ri9", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4); // FIXME
+			cl.cc.addmsg(SV_EDITENT, "ri9i", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5); // FIXME
 	}
 
 	float dropheight(entity &e)
@@ -812,7 +850,7 @@ struct entities : icliententities
 				if(!ents.inrange(curnode))
 				{
 					curnode = ents.length();
-					newentity(v, WAYPOINT, 0, 0, 0, 0);
+					newentity(v, WAYPOINT, 0, 0, 0, 0, 0);
 				}
 
 				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
@@ -893,10 +931,10 @@ struct entities : icliententities
 					f.type = TELEPORT;
 					break;
 				}
-				// 21	MONSTER			10	MONSTER
+				// 21	MONSTER			10	OBSOLETED
 				case 21:
 				{
-					f.type = MONSTER;
+					f.type = OBSOLETED;
 					break;
 				}
 				// 22	CARROT			11	TRIGGER		0
@@ -1284,27 +1322,38 @@ struct entities : icliententities
 						fpsentity &f = (fpsentity &)*ents[e.links[k]];
 						if(f.links.find(i) >= 0 && lastmillis-f.lastemit < 500)
 						{
-							makeparticle(f.o, e.attr1, e.attr2, e.attr3, e.attr4);
+							makeparticle(f.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 							both = true;
 						}
 					}
 
 					if(!both) // hasn't got an active reciprocal link (fallback)
-						makeparticle(e.o, e.attr1, e.attr2, e.attr3, e.attr4);
+						makeparticle(e.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 				}
 			}
 
 			if(m_edit(cl.gamemode))
 			{
 				bool hasent = (entgroup.find(i) >= 0 || enthover == i);
-				if(e.type == PLAYERSTART || e.type == FLAG)
-					particle_text(vec(e.o).add(vec(0, 0, 4)),
-						e.attr2 >= TEAM_NEUTRAL && e.attr2 < TEAM_MAX ? teamtype[e.attr2].name : "unknown",
-							hasent ? 13 : 11, 1);
+				vec pos(e.o), off(0, 0, 1.5f);
+				string s;
 
-				particle_text(vec(e.o).add(vec(0, 0, 2)), findname(e.type), hasent ? 13 : 11, 1);
 				if(e.type != PARTICLES)
-					part_create(3, 1, e.o, hasent ? 0xFF6600 : 0xFFFF00, 1.5f);
+					part_create(3, 1, pos, hasent ? 0xFF6600 : 0xFFFF00, 1.5f);
+
+				s_sprintf(s)("@%s%s", hasent ? "\fo" : "\fy", enttype[e.type].name);
+				particle_text(pos.add(off), s, 26, 1);
+				if(hasent)
+				{
+					const char *info = entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true);
+					if(*info)
+					{
+						s_sprintf(s)("@\fo%s", info);
+						particle_text(pos.add(off), s, 27, 1);
+					}
+					s_sprintf(s)("@\fo(%d %d %d %d %d)", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+					particle_text(pos.add(off), s, 27, 1);
+				}
 			}
 		}
 	}
