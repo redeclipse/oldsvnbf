@@ -471,3 +471,5 @@ bool guiactive()
 {
 	return !guistack.empty();
 }
+
+ICOMMAND(guistacklen, "", (void), intret(guistack.length()));

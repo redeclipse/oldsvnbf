@@ -391,6 +391,10 @@ enum
 	SSTAT_MAX
 };
 
+SVARG(defaultmap, "overseer");
+VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
+VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
+
 VARG(teamdamage, 0, 1, 1);
 VARG(entspawntime, 0, 0, 60);
 VARG(timelimit, 0, 10, 60);

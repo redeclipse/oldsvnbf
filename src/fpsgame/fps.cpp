@@ -143,11 +143,9 @@ struct GAMECLIENT : igameclient
 	IVARP(showfps, 0, 2, 2);
 	IVARP(statrate, 0, 200, 1000);
 
-	IVARP(openmainmenu, 0, 1, 1);
-
 	GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
-			nextmode(sv->defaultmode()), nextmuts(0), gamemode(sv->defaultmode()), mutators(0),
+			nextmode(G_LOBBY), nextmuts(0), gamemode(G_LOBBY), mutators(0),
 			intermission(false), openedmenu(false),
 			maptime(0), minremain(0), respawnent(-1),
 			swaymillis(0), swaydir(0, 0, 0),
@@ -394,12 +392,9 @@ struct GAMECLIENT : igameclient
         	maptime = lastmillis + curtime;
         	return;
         }
-		if(!openedmenu && openmainmenu())
-		{
-			if(!guiactive()) showgui("main");
-			openedmenu = true;
-		}
+
 		gets2c();
+
 		if(cc.ready())
 		{
 			ph.update();
@@ -937,7 +932,7 @@ struct GAMECLIENT : igameclient
 			if(radarnames())
 				ty += draw_textx("%s", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, colorname(d, NULL, "", false));
 			if(radarnames() == 2 && m_team(gamemode, mutators))
-				draw_textx("(\fs%s%s\fS)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, teamtype[d->team].chat, teamtype[d->team].name);
+				ty += draw_textx("(\fs%s%s\fS)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, teamtype[d->team].chat, teamtype[d->team].name);
 		}
 	}
 
@@ -959,7 +954,7 @@ struct GAMECLIENT : igameclient
 			dir.sub(camera1->o);
 			dir.rotate_around_z(-camera1->yaw*RAD);
 
-			float cx = x + (s-FONTH)*0.5f*(1.0f+dir.x/radarrange()),
+			float cx = x + (s-FONTW)*0.5f*(1.0f+dir.x/radarrange()),
 				cy = y + (s-FONTH)*0.5f*(1.0f+dir.y/radarrange());
 
 			draw_textx("%s", int(cx), int(cy), 255, 255, 255, int(255*radarcardblend()), true, AL_LEFT, -1, -1, card);
@@ -993,7 +988,7 @@ struct GAMECLIENT : igameclient
 			if(editradarentnames() == 2 && editmode)
 				ty += draw_textx("%s [%d]", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, t.name, n);
 			if(editradarentnames() && insel)
-				draw_textx("(%d %d %d %d)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, attr1, attr2, attr3, attr4);
+				ty += draw_textx("(%d %d %d %d)", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, attr1, attr2, attr3, attr4);
 		}
 	}
 
@@ -1189,7 +1184,7 @@ struct GAMECLIENT : igameclient
 				if(guntype[i].charge)
 					draw_textx("%d/%d ]%s", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, player1->ammo[i], guntype[i].charge, pad);
 				else draw_textx("%d ]%s", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, player1->ammo[i], pad);
-				tp = draw_textx("%s[ \fs%s%s\fS", bx, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_LEFT, -1, -1, pad, tcol, guntype[i].name);
+				tp += draw_textx("%s[ \fs%s%s\fS", bx, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_LEFT, -1, -1, pad, tcol, guntype[i].name);
 				if(curgun) popfont();
 			}
 			tp += FONTH/2;
@@ -1228,6 +1223,9 @@ struct GAMECLIENT : igameclient
 						}
 						if(et.ents.inrange(ent))
 						{
+							const char *a = retbindaction("action", keym::ACTION_DEFAULT, 0);
+							s_sprintfd(actkey)("%s", a && *a ? a : "ACTION");
+
 							extentity &e = *et.ents[ent];
 							if(enttype[e.type].usetype == EU_ITEM)
 							{
@@ -1239,13 +1237,13 @@ struct GAMECLIENT : igameclient
 										drop = player1->drop(e.attr1);
 									if(isgun(drop))
 									{
-										tp = draw_textx("Press ACTION to swap", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1);
-										tp = draw_textx("[ \fs\fg%s\fS ] for [ \fs\fy%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, guntype[drop].name, et.itemname(e.type, e.attr1, e.attr2));
+										tp += draw_textx("Press [ \fs\fg%s\fS ] to swap", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, actkey);
+										tp += draw_textx("[ \fs\fy%s\fS ] for [ \fs\fy%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, guntype[drop].name, et.itemname(e.type, e.attr1, e.attr2));
 									}
 									else
 									{
-										tp = draw_textx("Press ACTION to pickup", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1);
-										tp = draw_textx("[ \fs\fy%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, et.itemname(e.type, e.attr1, e.attr2));
+										tp += draw_textx("Press [ \fs\fg%s\fS ] to pickup", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, actkey);
+										tp += draw_textx("[ \fs\fy%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, et.itemname(e.type, e.attr1, e.attr2));
 									}
 									popfont();
 									tp += FONTH/2;
@@ -1253,7 +1251,22 @@ struct GAMECLIENT : igameclient
 									else found = true;
 								}
 								else
-									tp = draw_textx("[ \fs\fa%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, et.itemname(e.type, e.attr1, e.attr2));
+									tp += draw_textx("[ \fs\fa%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, et.itemname(e.type, e.attr1, e.attr2));
+							}
+							else if(enttype[e.type].usetype == EU_AUTO)
+							{
+								if(!found)
+								{
+									pushfont("emphasis");
+									tp += draw_textx("Press [ \fs\fg%s\fS ] to interact", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, actkey);
+									tp += draw_textx("with [ \fs\fc%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, enttype[e.type].name);
+									popfont();
+									tp += FONTH/2;
+									if(showpickups() < 2) break;
+									else found = true;
+								}
+								else
+									tp += draw_textx("[ \fs\fa%s\fS ]", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, enttype[e.type].name);
 							}
 						}
 						actitems.remove(closest);
@@ -1265,29 +1278,33 @@ struct GAMECLIENT : igameclient
 		else if(player1->state == CS_DEAD)
 		{
 			pushfont("emphasis");
-			tp = draw_textx("Fragged!", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1);
+			tp += draw_textx("Fragged!", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1);
 			int wait = respawnwait(player1);
 			if(wait)
-				tp = draw_textx("Down for %.01fs", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, float(wait)/1000.f);
+				tp += draw_textx("Down for %.01fs", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, float(wait)/1000.f);
 			else
-				tp = draw_textx("Press ATTACK to respawn", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1);
+			{
+				const char *a = retbindaction("attack", keym::ACTION_DEFAULT, 0);
+				s_sprintfd(actkey)("%s", a && *a ? a : "ACTION");
+				tp += draw_textx("Press [ \fs\fg%s\fS ] to respawn", tz, tp, 255, 255, 255, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, actkey);
+			}
 			popfont();
 		}
 		else if(player1->state == CS_EDITING)
 		{
-			#define enthudtext(n, r, g, b) \
-				if(et.ents.inrange(n)) \
-				{ \
-					fpsentity &f = (fpsentity &)*et.ents[n]; \
-					tp = draw_textx("entity %d, %s (%d %d %d %d)", tz, tp, r, g, b, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1, \
-						n, et.findname(f.type), f.attr1, f.attr2, f.attr3, f.attr4); \
+			loopi(clamp(entgroup.length()+1, 0, showhudents()))
+			{
+				int n = i ? entgroup[i-1] : enthover;
+				if((!i || n != enthover) && et.ents.inrange(n))
+				{
+					fpsentity &f = (fpsentity &)*et.ents[n];
+					if(n == enthover) pushfont("emphasis");
+					tp += draw_textx("entity %d, %s (%d %d %d %d)", tz, tp,
+						n == enthover ? 255 : 196, 196, 196, int(255.f*fade*radarblend()), false, AL_RIGHT, -1, -1,
+							n, et.findname(f.type), f.attr1, f.attr2, f.attr3, f.attr4);
+					if(n == enthover) popfont();
 				}
-
-			pushfont("emphasis");
-			enthudtext(enthover, 255, 255, 64);
-			popfont();
-			loopi(clamp(entgroup.length(), 0, showhudents()))
-				enthudtext(entgroup[i], 128, 128, 128);
+			}
 		}
 
 		drawcardinalblips(bx+bo, by+bo, bs-(bo*2));
@@ -1296,11 +1313,11 @@ struct GAMECLIENT : igameclient
 
 	void drawhudelements(int w, int h)
 	{
-		int hoff = h*3;
+		int ox = w*3, oy = h*3, hoff = oy;
 		glLoadIdentity();
-		glOrtho(0, w*3, h*3, 0, -1, 1);
+		glOrtho(0, ox, oy, 0, -1, 1);
 
-		renderconsole(w, h);
+		renderconsole(ox, oy);
 
 		static int laststats = 0, prevstats[11] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[11] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -1332,39 +1349,31 @@ struct GAMECLIENT : igameclient
 
 		if(showstats())
 		{
-			draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
-			hoff -= FONTH;
-			draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
-			hoff -= FONTH;
+			hoff -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
+			hoff -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
 		}
 
 		switch(showfps())
 		{
-			case 2: draw_textx("fps:%d +%d-%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], curstats[9], curstats[10]); hoff -= FONTH; break;
-			case 1: draw_textx("fps:%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8]); hoff -= FONTH; break;
+			case 2: hoff -= draw_textx("fps:%d +%d-%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], curstats[9], curstats[10]); break;
+			case 1: hoff -= draw_textx("fps:%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8]); break;
 			default: break;
 		}
 
 		if(getcurcommand())
-		{
-			rendercommand(FONTH/4, hoff-FONTH, h*3-FONTH);
-			hoff -= FONTH;
-		}
+			hoff -= rendercommand(FONTH/4, hoff-FONTH, w*3-FONTH);
 
 		if(cc.ready() && maptime)
 		{
 			if(editmode)
 			{
-				draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
+				hoff -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
 						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
 							sel.cx, sel.cxs, sel.cy, sel.cys);
-				hoff -= FONTH;
-				draw_textx("corner:%d orient:%d grid:%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
+				hoff -= draw_textx("corner:%d orient:%d grid:%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
 								sel.corner, sel.orient, sel.grid);
-				hoff -= FONTH;
-				draw_textx("cube:%s%d ents:%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
+				hoff -= draw_textx("cube:%s%d ents:%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
 					selchildcount<0 ? "1/" : "", abs(selchildcount), entgroup.length());
-				hoff -= FONTH;
 			}
 
 			render_texture_panel(w, h);
@@ -1466,14 +1475,30 @@ struct GAMECLIENT : igameclient
 		return vec(d->o);
 	}
 
-	void fixrange(float &yaw, float &pitch)
+	void fixfullrange(float &yaw, float &pitch, float &roll, bool full)
 	{
-		const float MAXPITCH = 89.9f;
-
-		if(pitch > MAXPITCH) pitch = MAXPITCH;
-		if(pitch < -MAXPITCH) pitch = -MAXPITCH;
+		if(full)
+		{
+			while(pitch < -180.0f) pitch += 360.0f;
+			while(pitch >= 180.0f) pitch -= 360.0f;
+			while(roll < -180.0f) roll += 360.0f;
+			while(roll >= 180.0f) roll -= 360.0f;
+		}
+		else
+		{
+			if(pitch > 89.9f) pitch = 89.9f;
+			if(pitch < -89.9f) pitch = -89.9f;
+			if(roll > 89.9f) roll = 89.9f;
+			if(roll < -89.9f) roll = -89.9f;
+		}
 		while(yaw < 0.0f) yaw += 360.0f;
 		while(yaw >= 360.0f) yaw -= 360.0f;
+	}
+
+	void fixrange(float &yaw, float &pitch)
+	{
+		float r = 0.f;
+		fixfullrange(yaw, pitch, r, false);
 	}
 
 	void fixview(int w, int h)
@@ -1521,7 +1546,7 @@ struct GAMECLIENT : igameclient
 				float scale = inzoom() ? zoomsensitivity() : sensitivity();
 				player1->yaw += mousesens(dx, w, yawsensitivity()*scale);
 				player1->pitch -= mousesens(dy, h, pitchsensitivity()*scale*(!hit && invmouse() ? -1.f : 1.f));
-				fixrange(player1->yaw, player1->pitch);
+				fixfullrange(player1->yaw, player1->pitch, player1->roll, false);
 			}
 			return true;
 		}
@@ -1645,7 +1670,7 @@ struct GAMECLIENT : igameclient
 						dir.sub(camera1->o);
 						dir.normalize();
 						vectoyawpitch(dir, camera1->yaw, camera1->pitch);
-						fixrange(camera1->yaw, camera1->pitch);
+						fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
 					}
 					else
 					{
@@ -1684,7 +1709,7 @@ struct GAMECLIENT : igameclient
 				}
 			}
 
-			fixrange(camera1->yaw, camera1->pitch);
+			fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
 			fixrange(camera1->aimyaw, camera1->aimpitch);
 
 			if(quakewobble > 0)
@@ -1753,7 +1778,7 @@ struct GAMECLIENT : igameclient
 					float zone = float(deadzone())/200.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
 					if(cx > zone || cx < -zone) d->yaw += ((cx > zone ? cx-zone : cx+zone)/(1.f-zone))*amt;
 					if(cy > zone || cy < -zone) d->pitch += ((cy > zone ? cy-zone : cy+zone)/(1.f-zone))*amt;
-					fixrange(d->yaw, d->pitch);
+					fixfullrange(d->yaw, d->pitch, d->roll, false);
 				}
 			}
 
@@ -1812,21 +1837,24 @@ struct GAMECLIENT : igameclient
 
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
 		vec o = vec(third ? vec(d->o).sub(vec(0, 0, d->height)) : headpos(d));
-		if(!third && firstpersonsway())
+		if(!third)
 		{
-			vec sway;
-			vecfromyawpitch(d->yaw, d->pitch, 1, 0, sway);
-			float swayspeed = sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y);
-			swayspeed = min(4.0f, swayspeed);
-			sway.mul(swayspeed);
-			float swayxy = sinf(swaymillis/115.0f)/float(firstpersonsway()),
-				  swayz = cosf(swaymillis/115.0f)/float(firstpersonsway());
-			swap(sway.x, sway.y);
-			sway.x *= -swayxy;
-			sway.y *= swayxy;
-			sway.z = -fabs(swayspeed*swayz);
-			sway.add(swaydir);
-			o.add(sway);
+			if(firstpersonsway())
+			{
+				vec sway;
+				vecfromyawpitch(d->yaw, d->pitch, 1, 0, sway);
+				float swayspeed = sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y);
+				swayspeed = min(4.0f, swayspeed);
+				sway.mul(swayspeed);
+				float swayxy = sinf(swaymillis/115.0f)/float(firstpersonsway()),
+					  swayz = cosf(swaymillis/115.0f)/float(firstpersonsway());
+				swap(sway.x, sway.y);
+				sway.x *= -swayxy;
+				sway.y *= swayxy;
+				sway.z = -fabs(swayspeed*swayz);
+				sway.add(swaydir);
+				o.add(sway);
+			}
 		}
 
 		int anim = animflags, basetime = lastaction;
@@ -1883,7 +1911,7 @@ struct GAMECLIENT : igameclient
 		}
 
 		int flags = MDL_LIGHT;
-		if(d->type==ENT_PLAYER) flags |= MDL_FULLBRIGHT;
+		if(d->type == ENT_PLAYER) flags |= MDL_FULLBRIGHT;
 		else flags |= MDL_CULL_DIST | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
 		if(trans) flags |= MDL_TRANSLUCENT;
 		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;

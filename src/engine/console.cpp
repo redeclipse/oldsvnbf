@@ -113,13 +113,11 @@ COMMAND(toggleconsole, "");
 int rendercommand(int x, int y, int w)
 {
     if(!saycommandon) return 0;
-
     s_sprintfd(s)("%s %s", commandprompt ? commandprompt : ">", commandbuf);
     int width, height;
     text_bounds(s, width, height, w);
-    y-= height-FONTH;
-    draw_text(s, x, y, 0xFF, 0xFF, 0xFF, 0xFF, true, (commandpos>=0) ? (commandpos+1+(commandprompt?strlen(commandprompt):1)) : strlen(s), w);
-    return height;
+    y -= height - FONTH;
+    return draw_text(s, x, y, 0xFF, 0xFF, 0xFF, 0xFF, true, (commandpos>=0) ? (commandpos+1+(commandprompt?strlen(commandprompt):1)) : strlen(s), w);
 }
 
 void blendbox(int x1, int y1, int x2, int y2, bool border)
@@ -172,12 +170,12 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 			refs.add(conlines[CN_CENTER][i].cref);
 			if(refs.length() >= centerlines) break;
 		}
-		int cy = (((h*3)/4)*3)-FONTH*2;
+		int cy = ((h/4)*3)-FONTH*2;
 		loopv(refs)
-			cy = draw_textx("%s", (w*3)/2, cy, 255, 255, 255, int(255*centerblend), false, AL_CENTER, -1, -1, refs[i]);
+			cy += draw_textx("%s", w/2, cy, 255, 255, 255, int(255*centerblend), false, AL_CENTER, -1, -1, refs[i]);
 	}
 
-	int numl = min(h*3*(fullconsole ? fullconsize : consize)/100, h*3-FONTH/3*2)/FONTH;
+	int numl = min(h*(fullconsole ? fullconsize : consize)/100, h-FONTH/3*2)/FONTH;
 
 	refs.setsizenodelete(0);
 
@@ -195,7 +193,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 
 	int cy = FONTH/3;
 	loopvrev(refs)
-		cy = draw_textx("%s", FONTH/3, cy, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, w*3-w*3/4-FONTH, refs[i]);
+		cy += draw_textx("%s", FONTH/3, cy, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, w-w/4-FONTH, refs[i]);
 
 	popfont();
 
@@ -203,26 +201,6 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 }
 
 // keymap is defined externally in keymap.cfg
-
-struct keym
-{
-    enum
-    {
-        ACTION_DEFAULT = 0,
-        ACTION_SPECTATOR,
-        ACTION_EDITING,
-        NUMACTIONS
-    };
-
-    int code;
-    char *name;
-    char *actions[NUMACTIONS];
-    bool pressed;
-
-    keym() : code(-1), name(NULL), pressed(false) { memset(actions, 0, sizeof(actions)); }
-    ~keym() { DELETEA(name); loopi(NUMACTIONS) DELETEA(actions[i]); }
-};
-
 vector<keym> keyms;
 
 void keymap(char *code, char *key)
@@ -245,22 +223,48 @@ keym *findbind(char *key)
 	return NULL;
 }
 
-void getbind(char *key)
+int findactionkey(char *action, int which, int num)
 {
-	keym *km = findbind(key);
-    result(km ? km->actions[keym::ACTION_DEFAULT] : "");
+	int n = 0;
+	s_sprintfd(a)(" %s ", action); // hack
+	loopv(keyms) if(!strcasecmp(keyms[i].actions[which], action) || !strcasecmp(keyms[i].actions[which], a))
+	{
+		n++;
+		if(num && n >= num) { n = i; break; }
+	}
+	return n;
 }
 
-void getspecbind(char *key)
-{
-    keym *km = findbind(key);
-    result(km ? km->actions[keym::ACTION_SPECTATOR] : "");
-}
-
-void geteditbind(char *key)
+const char *retbind(char *key, int which)
 {
 	keym *km = findbind(key);
-    result(km ? km->actions[keym::ACTION_EDITING] : "");
+    return km ? km->actions[which] : "";
+}
+
+const char *retbindaction(char *action, int which, int num)
+{
+	if(num)
+	{
+		int k = findactionkey(action, which, num);
+		return keyms.inrange(k) ? keyms[k].name : "";
+	}
+	else
+	{
+		static string bindactionstr;
+		bindactionstr[0] = 0;
+		int q = findactionkey(action, which, 0);
+		loopi(q)
+		{
+			int k = findactionkey(action, which, i+1);
+			if(keyms.inrange(k))
+			{
+				if(i) s_strcat(bindactionstr, i+1 == q ? (i >= 2 ? ", or " : " or ") : ", ");
+				s_strcat(bindactionstr, keyms[k].name);
+			}
+		}
+		return bindactionstr;
+	}
+	return NULL;
 }
 
 void bindkey(char *key, char *action, int state, const char *cmd)
@@ -280,9 +284,12 @@ void bindedit(char *key, char *action) { bindkey(key, action, keym::ACTION_EDITI
 COMMANDN(bind,	 bindnorm, "ss");
 COMMANDN(specbind, bindspec, "ss");
 COMMANDN(editbind, bindedit, "ss");
-COMMAND(getbind, "s");
-COMMAND(getspecbind, "s");
-COMMAND(geteditbind, "s");
+ICOMMAND(getbind, "s", (char *s), result(retbind(s, keym::ACTION_DEFAULT)));
+ICOMMAND(getspecbind, "s", (char *s), result(retbind(s, keym::ACTION_SPECTATOR)));
+ICOMMAND(geteditbind, "s", (char *s), result(retbind(s, keym::ACTION_EDITING)));
+ICOMMAND(getbindaction, "si", (char *s, int *t), result(retbindaction(s, keym::ACTION_DEFAULT, *t)));
+ICOMMAND(getspecbindaction, "si", (char *s, int *t), result(retbindaction(s, keym::ACTION_SPECTATOR, *t)));
+ICOMMAND(geteditbindaction, "si", (char *s, int *t), result(retbindaction(s, keym::ACTION_EDITING, *t)));
 
 void saycommand(char *init)						 // turns input to the command line on or off
 {

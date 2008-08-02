@@ -89,6 +89,9 @@ extern void registergame(const char *name, igame *ig);
 #define REGISTERGAME(t, n, c, s) struct t : igame { t() { registergame(n, this); } igameclient *newclient() { return c; } igameserver *newserver() { return s; } } reg_##t
 
 // rendertext
+extern char *savecolour, *restorecolour, *green, *blue, *yellow, *red, *gray,
+	*magenta, *orange, *white, *black, *cyan;
+
 enum
 {
 	AL_LEFT = 0,
@@ -98,7 +101,6 @@ enum
 extern bool setfont(const char *name);
 extern bool pushfont(const char *name);
 extern bool popfont(int num = 1);
-extern void gettextres(int &w, int &h);
 extern int draw_text(const char *str, int rleft, int rtop, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int cursor = -1, int maxwidth = -1);
 extern int draw_textx(const char *fstr, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int align = AL_LEFT, int cursor = -1, int maxwidth = -1, ...);
 extern int draw_textf(const char *fstr, int left, int top, ...);
@@ -120,6 +122,8 @@ extern void dynlightreaching(const vec &target, vec &color, vec &dir);
 
 // rendergl
 extern vec worldpos, camerapos, camdir, camright, camup;
+extern void getscreenres(int &w, int &h);
+extern void gettextres(int &w, int &h);
 
 // renderparticles
 enum

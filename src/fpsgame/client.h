@@ -924,8 +924,10 @@ struct clientcom : iclientcom
 					if(!target) break;
 					target->health = amt;
 					target->lastregen = lastmillis;
-					particle_splash(3, max((MAXHEALTH-target->health)/10, 3), 10000, target->o);
+					int left = clamp(MAXHEALTH-max(target->health-REGENHEAL, 0), 1, 100);
+					particle_splash(3, max(left/10, 3), 10000, target->o);
 					playsound(S_REGEN, 0, 255, target->o, target);
+					if(target == cl.player1) cl.damageresidue += left;
 					break;
 				}
 
@@ -1359,12 +1361,10 @@ struct clientcom : iclientcom
 			emptymap(0, true, NULL);
 			needsmap = true;
 		}
+		cl.player1->state = CS_DEAD;
+		if(editmode) edittoggled(editmode);
 		if(m_stf(gamemode)) cl.stf.setupflags();
         else if(m_ctf(gamemode)) cl.ctf.setupflags();
-		if(editmode) edittoggled(editmode);
-		cl.player1->state = CS_DEAD;
-		if(m_lobby(cl.gamemode) && !guiactive())
-			showgui("game");
 	}
 
 	void changemap(const char *name) // request map change, server may ignore

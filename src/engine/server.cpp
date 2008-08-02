@@ -691,19 +691,7 @@ void setupserver()
 	{
 		enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 	}
-	int d = sv->defaultmode();
-	string s, m;
-	s_strcpy(m, load && *load ? load : sv->defaultmap());
-
-	char *t = strpbrk(m, ":");
-	if(t && *t)
-	{
-		s_strncpy(s, m, t-m+1);
-		d = min(atoi(t+1), 1);
-	}
-	else { s_strcpy(s, m); }
-
-	sv->changemap(s, d, 0x00);
+	sv->changemap(load && *load ? load : NULL, -1, -1);
 
 	if (pubserv && *masterserv)
 	{

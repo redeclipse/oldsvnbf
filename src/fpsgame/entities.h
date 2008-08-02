@@ -1304,7 +1304,7 @@ struct entities : icliententities
 
 				particle_text(vec(e.o).add(vec(0, 0, 2)), findname(e.type), hasent ? 13 : 11, 1);
 				if(e.type != PARTICLES)
-					part_create(3, 1, e.o, hasent ? 0xFF8822 : 0x888800, 1.f);
+					part_create(3, 1, e.o, hasent ? 0xFF6600 : 0xFFFF00, 1.5f);
 			}
 		}
 	}

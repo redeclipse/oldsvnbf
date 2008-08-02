@@ -315,7 +315,7 @@ struct GAMESERVER : igameserver
 	string  motd;
 	GAMESERVER()
 		: notgotitems(true), notgotflags(false),
-			gamemode(defaultmode()), mutators(0),
+			gamemode(G_LOBBY), mutators(0),
 			interm(0), minremain(10), oldtimelimit(10),
 			maprequest(false), lastsend(0),
 			mastermode(MM_VETO), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
@@ -327,8 +327,6 @@ struct GAMESERVER : igameserver
 		CCOMMAND(gameid, "", (GAMESERVER *self), result(self->gameid()));
 		CCOMMAND(gamever, "", (GAMESERVER *self), intret(self->gamever()));
 		CCOMMAND(gamename, "ii", (GAMESERVER *self, int *g, int *m), result(self->gamename(*g, *m)));
-		CCOMMAND(defaultmap, "", (GAMESERVER *self), result(self->defaultmap()));
-		CCOMMAND(defaultmode, "", (GAMESERVER *self), intret(self->defaultmode()));
 		CCOMMAND(mutscheck, "ii", (GAMESERVER *self, int *g, int *m), intret(self->mutscheck(*g, *m)));
 
 		motd[0] = serverdesc[0] = masterpass[0] = '\0';
@@ -359,10 +357,10 @@ struct GAMESERVER : igameserver
 
 	void cleanup(bool init)
 	{
-		gamemode = defaultmode();
-		mutators = 0;
+		gamemode = sv_defaultmode;
+		mutators = sv_defaultmuts;
 		modecheck(&gamemode, &mutators);
-		s_strcpy(smapname, defaultmap());
+		s_strcpy(smapname, choosemap(NULL));
 		resetitems();
 		bannedips.setsize(0);
 		if(!init)
@@ -728,14 +726,15 @@ struct GAMESERVER : igameserver
 		else enddemorecord();
 
 		maprequest = false;
-		gamemode = mode; mutators = muts;
+		gamemode = mode >= 0 ? mode : sv_defaultmode;
+		mutators = muts >= 0 ? muts : sv_defaultmuts;
 		modecheck(&gamemode, &mutators);
 		gamemillis = 0;
 		oldtimelimit = sv_timelimit;
 		minremain = sv_timelimit ? sv_timelimit : -1;
 		gamelimit = sv_timelimit ? minremain*60000 : 0;
 		interm = 0;
-		s_strcpy(smapname, s);
+		s_strcpy(smapname, s && *s ? s : sv_defaultmap);
 		resetitems();
 		notgotitems = true;
 		scores.setsize(0);
@@ -873,8 +872,9 @@ struct GAMESERVER : igameserver
 			}
 			else
 			{
-				sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, smapname[0] ? smapname : defaultmap(), gamemode, mutators);
-				changemap(smapname[0] ? smapname : defaultmap(), gamemode, mutators);
+				const char *map = choosemap(smapname);
+				sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, map, gamemode, mutators);
+				changemap(map, gamemode, mutators);
 			}
 		}
 	}
@@ -2586,8 +2586,10 @@ struct GAMESERVER : igameserver
 		return mt;
 	}
 
-	const char *defaultmap() { return "refuge"; }
-	int defaultmode() { return G_LOBBY; }
+	const char *choosemap(const char *suggest)
+	{
+		return suggest && *suggest ? suggest : sv_defaultmap;
+	}
 
 	bool canload(char *type)
 	{

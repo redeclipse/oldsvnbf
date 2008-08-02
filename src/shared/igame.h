@@ -112,13 +112,12 @@ struct igameserver
     virtual int serverport() = 0;
     virtual const char *getdefaultmaster() = 0;
     virtual void srvoutf(int cn, const char *s, ...) = 0;
-    virtual void changemap(const char *s, int mode = 0, int muts = 0) { return; }
+    virtual void changemap(const char *s, int mode, int muts) { return; }
     virtual const char *gameid() = 0;
 	virtual char *gamename(int mode, int muts) = 0;
 	virtual void modecheck(int *mode, int *muts) = 0;
 	virtual int gamever() = 0;
-    virtual const char *defaultmap() = 0;
-    virtual int defaultmode() = 0;
+    virtual const char *choosemap(const char *suggest) = 0;
     virtual bool canload(char *type) = 0;
 };
 

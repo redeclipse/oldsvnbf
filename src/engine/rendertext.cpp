@@ -55,23 +55,6 @@ bool setfont(const char *name)
 	return true;
 }
 
-void gettextres(int &w, int &h)
-{
-	if(w < MINRESW || h < MINRESH)
-	{
-		if(MINRESW > w*MINRESH/h)
-		{
-			h = h*MINRESW/w;
-			w = MINRESW;
-		}
-		else
-		{
-			w = w*MINRESH/h;
-			h = MINRESH;
-		}
-	}
-}
-
 int text_width(const char *str) { //@TODO deprecate in favour of text_bounds(..)
     int width, height;
     text_bounds(str, width, height);
@@ -102,6 +85,19 @@ static int draw_char(int c, int x, int y)
 }
 
 //stack[sp] is current color index
+SVARP(savecolour, "\fs");
+SVARP(restorecolour, "\fS");
+SVARP(green, "\fg");
+SVARP(blue, "\fb");
+SVARP(yellow, "\fy");
+SVARP(red, "\fr");
+SVARP(gray, "\fa");
+SVARP(magenta, "\fm");
+SVARP(orange, "\fo");
+SVARP(white, "\fw");
+SVARP(black, "\fk");
+SVARP(cyan, "\fc");
+
 static void text_color(char c, char *stack, int size, int &sp, bvec color, int a)
 {
     if(c=='s') // save color
@@ -283,7 +279,7 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
     #undef TEXTCOLOR
     #undef TEXTCHAR
     #undef TEXTWORD
-    return top+cy+FONTH;
+    return cy + FONTH;
 }
 
 void reloadfonts()
