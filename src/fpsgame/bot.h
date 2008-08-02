@@ -1082,7 +1082,6 @@ struct botclient
 				pitch -= offpitch;
 				if(targpitch > pitch) pitch = targpitch;
 			}
-
 			cl.fixrange(yaw, pitch);
 		}
 		else

@@ -1079,6 +1079,38 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
     envmapping = false;
 }
 
+VARP(scr_virtw, 0, 1024, INT_MAX-1);
+VARP(scr_virth, 0, 768, INT_MAX-1);
+VARP(scr_minw, 0, 640, INT_MAX-1);
+VARP(scr_minh, 0, 480, INT_MAX-1);
+
+void getscreenres(int &w, int &h)
+{
+    float wk = 1, hk = 1;
+    if(w < scr_virtw) wk = float(scr_virtw)/w;
+    if(h < scr_virth) hk = float(scr_virth)/h;
+    wk = hk = max(wk, hk);
+    w = int(ceil(w*wk));
+    h = int(ceil(h*hk));
+}
+
+void gettextres(int &w, int &h)
+{
+	if(w < scr_minw || h < scr_minh)
+	{
+		if(scr_minw > w*scr_minh/h)
+		{
+			h = h*scr_minw/w;
+			w = scr_minw;
+		}
+		else
+		{
+			w = w*scr_minh/h;
+			h = scr_minh;
+		}
+	}
+}
+
 void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat);
 
 const char *loadback = "textures/loadback";
@@ -1099,16 +1131,6 @@ void loadbackground(int w, int h)
 	glEnd();
 }
 
-static void getcomputescreenres(int &w, int &h)
-{
-    float wk = 1, hk = 1;
-    if(w < 1024) wk = 1024.0f/w;
-    if(h < 768) hk = 768.0f/h;
-    wk = hk = max(wk, hk);
-    w = int(ceil(w*wk));
-    h = int(ceil(h*hk));
-}
-
 void computescreen(const char *text, Texture *t, const char *overlaytext)
 {
 	int w = screen->w, h = screen->h;
@@ -1118,7 +1140,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
         setcaption(caption);
     }
     else setcaption(text);
-    getcomputescreenres(w, h);
+    getscreenres(w, h);
 	gettextres(w, h);
 	glEnable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
@@ -1242,7 +1264,7 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	}
 
 	int w = screen->w, h = screen->h;
-    getcomputescreenres(w, h);
+    getscreenres(w, h);
 	gettextres(w, h);
 
 	glDisable(GL_DEPTH_TEST);
