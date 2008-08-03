@@ -1206,7 +1206,7 @@ struct botclient
 		d->bot->avoid.setsize(0);
 		if(d->state == CS_ALIVE)
 		{
-			loopvk(cl.et.ents) if(cl.et.ents[k]->type == WAYPOINT && d->bot->avoid.find(k) < 0)
+			loopvk(cl.et.ents) if(cl.et.ents[k]->type == WAYPOINT)
 			{
 				bool found = false;
 				fpsentity &f = (fpsentity &)*cl.et.ents[k];
