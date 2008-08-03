@@ -339,7 +339,7 @@ struct botclient
 	void update()
 	{
 		bool avoided = false;
-		loopv(cl.players) if(cl.players[i] && cl.players[i]->bot) 
+		loopv(cl.players) if(cl.players[i] && cl.players[i]->bot)
 		{
 			if(!avoided)
 			{
@@ -1219,7 +1219,7 @@ struct botclient
 	void avoid()
 	{
 		// guess as to the radius of bots and other critters relying on the avoid set for now
-		float guessradius = cl.player1->radius; 
+		float guessradius = cl.player1->radius;
 
         obstacles.clear();
         loopi(cl.numdynents())
@@ -1246,8 +1246,8 @@ struct botclient
 				loopvk(cl.et.ents)
 				{
 					fpsentity &e = *(fpsentity *)cl.et.ents[k];
-					if(e.type == WAYPOINT && e.o.squaredist(p->o) <= limit) 
-						obstacles.add(p, k);	
+					if(e.type == WAYPOINT && e.o.squaredist(p->o) <= limit)
+						obstacles.add(p, k);
 				}
 			}
 		}
@@ -1268,7 +1268,6 @@ struct botclient
 			process(d, b);
 			if(lastmillis >= b.next)
 			{
-				int cmdstart = botdebug() > 4 ? SDL_GetTicks() : 0;
 				bool result = false;
 
 				b.next = lastmillis + botframetimes[b.type];
@@ -1286,9 +1285,6 @@ struct botclient
 
 				if((b.expire && (b.expire -= botframetimes[b.type]) <= 0) || !result)
 					d->bot->removestate();
-
-				if(botdebug() > 4)
-					conoutf("\fy%s processed command (%s) in %fs", cl.colorname(d), result ? "ok" : "fail", (SDL_GetTicks()-cmdstart)/1000.0f);
 			}
 			check(d);
 		}

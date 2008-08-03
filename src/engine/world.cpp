@@ -647,7 +647,7 @@ void entpaste()
 	groupeditundo(e.type = entcopybuf[j++].type;);
 }
 
-COMMAND(newent, "siiii");
+COMMAND(newent, "siiiii");
 COMMAND(delent, "");
 COMMAND(dropent, "");
 COMMAND(entcopy, "");
@@ -698,7 +698,7 @@ ICOMMAND(entselect, "s", (char *body), if(!noentedit()) addgroup(e.type != ET_EM
 ICOMMAND(entloop,   "s", (char *body), if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(body)))));
 ICOMMAND(insel,     "",  (), entfocus(efocus, intret(pointinsel(sel, e.o))));
 ICOMMAND(entget,    "",  (), entfocus(efocus, s_sprintfd(s)("%s %d %d %d %d", et->findname(e.type), e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);  result(s)));
-COMMAND(entset, "siiii");
+COMMAND(entset, "siiiii");
 
 
 int findentity(int type, int index, int attr1, int attr2)
