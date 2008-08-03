@@ -19,6 +19,10 @@
 				<Option use_console_runner="0"/>
 				<Option includeInTargetAll="0"/>
 				<Option projectResourceIncludeDirsRelation="1"/>
+				<Compiler>
+					<Add option="-fsigned-char"/>
+					<Add option="-fomit-frame-pointer"/>
+				</Compiler>
 			</Target>
 			<Target title="client">
 				<Option output="..\bin\bloodfrontier_client.exe"/>
@@ -70,6 +74,48 @@
 				<Option working_dir="..\"/>
 				<Option object_output=".objs\debug"/>
 				<Option deps_output=".deps\debug"/>
+				<Option type="1"/>
+				<Option compiler="0"/>
+				<Option use_console_runner="0"/>
+				<Option parameters="-hhome -rinit.cfg -du0 -df0 -dw640 -dh480"/>
+				<Option includeInTargetAll="0"/>
+				<Option projectCompilerOptionsRelation="1"/>
+				<Option projectLinkerOptionsRelation="1"/>
+				<Option projectIncludeDirsRelation="1"/>
+				<Option projectResourceIncludeDirsRelation="1"/>
+				<Option projectLibDirsRelation="1"/>
+				<Compiler>
+					<Add option="-Wall"/>
+					<Add option="-g"/>
+					<Add option="-fsigned-char"/>
+					<Add option="-DINTERFACE"/>
+					<Add directory="shared"/>
+					<Add directory="engine"/>
+					<Add directory="fpsgame"/>
+					<Add directory="enet\include"/>
+					<Add directory="include"/>
+				</Compiler>
+				<Linker>
+					<Add option="-mwindows"/>
+					<Add library="mingw32"/>
+					<Add library="SDLmain"/>
+					<Add library="SDL"/>
+					<Add library="SDL_image"/>
+					<Add library="SDL_mixer"/>
+					<Add library="lib\libpng.lib"/>
+					<Add library="z"/>
+					<Add library="opengl32"/>
+					<Add library="glu32"/>
+					<Add library="ws2_32"/>
+					<Add library="winmm"/>
+					<Add directory="lib\mingw"/>
+				</Linker>
+			</Target>
+			<Target title="profile">
+				<Option output="..\bin\bloodfrontier_client.exe"/>
+				<Option working_dir="..\"/>
+				<Option object_output=".objs\profile"/>
+				<Option deps_output=".deps\profile"/>
 				<Option type="1"/>
 				<Option compiler="0"/>
 				<Option use_console_runner="0"/>
@@ -252,6 +298,7 @@
 			<Option objectName="bloodfrontier.res"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="daemon"/>
 		</Unit>
@@ -259,6 +306,7 @@
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="data"/>
 			<Option target="daemon"/>
@@ -267,6 +315,7 @@
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="data"/>
 			<Option target="daemon"/>
@@ -277,6 +326,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="enet\include\enet\enet.h">
 			<Option compilerVar="CPP"/>
@@ -285,6 +335,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="enet\include\enet\list.h">
 			<Option compilerVar="CPP"/>
@@ -293,6 +344,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="enet\include\enet\protocol.h">
 			<Option compilerVar="CPP"/>
@@ -301,6 +353,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="enet\include\enet\time.h">
 			<Option compilerVar="CPP"/>
@@ -309,6 +362,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="enet\include\enet\types.h">
 			<Option compilerVar="CPP"/>
@@ -317,6 +371,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="enet\include\enet\unix.h">
 			<Option compilerVar="CPP"/>
@@ -325,6 +380,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="enet\include\enet\utility.h">
 			<Option compilerVar="CPP"/>
@@ -333,6 +389,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="enet\include\enet\win32.h">
 			<Option compilerVar="CPP"/>
@@ -341,11 +398,13 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="enet\list.c">
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="data"/>
 			<Option target="daemon"/>
@@ -354,6 +413,7 @@
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="data"/>
 			<Option target="daemon"/>
@@ -362,6 +422,7 @@
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="data"/>
 			<Option target="daemon"/>
@@ -370,6 +431,7 @@
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="data"/>
 			<Option target="daemon"/>
@@ -378,6 +440,7 @@
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="data"/>
 			<Option target="daemon"/>
@@ -386,6 +449,7 @@
 			<Option compilerVar="CC"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="data"/>
 			<Option target="daemon"/>
@@ -394,6 +458,7 @@
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\animmodel.h">
@@ -402,11 +467,13 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\bih.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\bih.h">
@@ -416,17 +483,20 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\client.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\command.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="daemon"/>
 		</Unit>
@@ -434,17 +504,20 @@
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\decal.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\dynlight.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\engine.h">
 			<Option compilerVar="CPP"/>
@@ -453,6 +526,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\explosion.h">
 			<Option compilerVar=""/>
@@ -460,16 +534,19 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\glare.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\grass.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\hash.h">
@@ -479,6 +556,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\lensflare.h">
 			<Option compilerVar=""/>
@@ -486,11 +564,13 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\lightmap.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\lightmap.h">
@@ -500,6 +580,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\lightning.h">
 			<Option compilerVar=""/>
@@ -507,11 +588,13 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\main.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\master.cpp">
@@ -528,6 +611,7 @@
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\md2.h">
@@ -537,6 +621,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\md3.h">
 			<Option compilerVar="CPP"/>
@@ -545,6 +630,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\md5.h">
 			<Option compilerVar=""/>
@@ -552,11 +638,13 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\menus.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\model.h">
@@ -566,17 +654,20 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\normal.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\octa.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\octa.h">
@@ -586,52 +677,61 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\octaedit.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\octarender.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\physics.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\pvs.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\rendergl.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\rendermodel.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\renderparticles.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\rendersky.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\rendertarget.h">
@@ -640,17 +740,20 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\rendertext.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\renderva.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\server.cpp">
@@ -658,6 +761,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="daemon"/>
 		</Unit>
@@ -665,18 +769,21 @@
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\shader.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\shadowmap.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\skelmodel.h">
 			<Option compilerVar=""/>
@@ -684,11 +791,13 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\sound.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\sound.h">
@@ -697,6 +806,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\textedit.h">
 			<Option compilerVar=""/>
@@ -704,11 +814,13 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\texture.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\texture.h">
@@ -718,6 +830,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\tristrip.h">
 			<Option compilerVar="CPP"/>
@@ -726,6 +839,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\vertmodel.h">
 			<Option compilerVar="CPP"/>
@@ -734,17 +848,20 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\water.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\world.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="engine\world.h">
@@ -754,11 +871,13 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="engine\worldio.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="fpsgame\bfa.h">
@@ -775,6 +894,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="fpsgame\client.h">
 			<Option compilerVar=""/>
@@ -782,6 +902,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\ctf.h">
@@ -790,6 +911,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\duel.h">
@@ -798,6 +920,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\entities.h">
@@ -806,6 +929,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\extinfo.h">
@@ -814,6 +938,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="daemon"/>
 		</Unit>
@@ -821,6 +946,7 @@
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="daemon"/>
 		</Unit>
@@ -830,6 +956,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\game.h">
@@ -838,6 +965,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\physics.h">
@@ -846,6 +974,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\projs.h">
@@ -854,6 +983,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\scoreboard.h">
@@ -862,6 +992,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="fpsgame\stf.h">
@@ -870,6 +1001,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="daemon"/>
 		</Unit>
@@ -879,6 +1011,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="img2anim.rc">
@@ -892,6 +1025,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL.h">
 			<Option compilerVar=""/>
@@ -899,6 +1033,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_active.h">
 			<Option compilerVar=""/>
@@ -906,6 +1041,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_audio.h">
 			<Option compilerVar=""/>
@@ -913,6 +1049,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_byteorder.h">
 			<Option compilerVar=""/>
@@ -920,6 +1057,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_cdrom.h">
 			<Option compilerVar=""/>
@@ -927,6 +1065,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_config.h">
 			<Option compilerVar=""/>
@@ -934,6 +1073,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_config_macosx.h">
 			<Option compilerVar=""/>
@@ -941,6 +1081,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_config_win32.h">
 			<Option compilerVar=""/>
@@ -948,6 +1089,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_copying.h">
 			<Option compilerVar=""/>
@@ -955,6 +1097,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_cpuinfo.h">
 			<Option compilerVar=""/>
@@ -962,6 +1105,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_endian.h">
 			<Option compilerVar=""/>
@@ -969,6 +1113,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_error.h">
 			<Option compilerVar=""/>
@@ -976,6 +1121,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_events.h">
 			<Option compilerVar=""/>
@@ -983,6 +1129,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_getenv.h">
 			<Option compilerVar=""/>
@@ -990,6 +1137,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_image.h">
 			<Option compilerVar=""/>
@@ -997,6 +1145,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_joystick.h">
 			<Option compilerVar=""/>
@@ -1004,6 +1153,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_keyboard.h">
 			<Option compilerVar=""/>
@@ -1011,6 +1161,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_keysym.h">
 			<Option compilerVar=""/>
@@ -1018,6 +1169,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_loadso.h">
 			<Option compilerVar=""/>
@@ -1025,6 +1177,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_main.h">
 			<Option compilerVar=""/>
@@ -1032,6 +1185,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_mixer.h">
 			<Option compilerVar=""/>
@@ -1039,6 +1193,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_mouse.h">
 			<Option compilerVar=""/>
@@ -1046,6 +1201,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_mutex.h">
 			<Option compilerVar=""/>
@@ -1053,6 +1209,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_name.h">
 			<Option compilerVar=""/>
@@ -1060,6 +1217,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_opengl.h">
 			<Option compilerVar=""/>
@@ -1067,6 +1225,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_platform.h">
 			<Option compilerVar=""/>
@@ -1074,6 +1233,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_quit.h">
 			<Option compilerVar=""/>
@@ -1081,6 +1241,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_rwops.h">
 			<Option compilerVar=""/>
@@ -1088,6 +1249,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_stdinc.h">
 			<Option compilerVar=""/>
@@ -1095,6 +1257,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_syswm.h">
 			<Option compilerVar=""/>
@@ -1102,6 +1265,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_thread.h">
 			<Option compilerVar=""/>
@@ -1109,6 +1273,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_timer.h">
 			<Option compilerVar=""/>
@@ -1116,6 +1281,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_types.h">
 			<Option compilerVar=""/>
@@ -1123,6 +1289,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_version.h">
 			<Option compilerVar=""/>
@@ -1130,6 +1297,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\SDL_video.h">
 			<Option compilerVar=""/>
@@ -1137,6 +1305,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\begin_code.h">
 			<Option compilerVar=""/>
@@ -1144,6 +1313,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\close_code.h">
 			<Option compilerVar=""/>
@@ -1151,6 +1321,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\wincompat.h">
 			<Option compilerVar=""/>
@@ -1158,6 +1329,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\zconf.h">
 			<Option compilerVar=""/>
@@ -1165,6 +1337,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="include\zlib.h">
 			<Option compilerVar=""/>
@@ -1172,6 +1345,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="shared\attrs.h">
 			<Option compilerVar=""/>
@@ -1179,6 +1353,7 @@
 			<Option link="0"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 		</Unit>
 		<Unit filename="shared\command.h">
@@ -1188,6 +1363,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="shared\cube.h">
 			<Option compilerVar="CPP"/>
@@ -1196,6 +1372,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="shared\ents.h">
 			<Option compilerVar="CPP"/>
@@ -1204,11 +1381,13 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="shared\geom.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="shared\geom.h">
@@ -1218,6 +1397,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="shared\iengine.h">
 			<Option compilerVar="CPP"/>
@@ -1226,6 +1406,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="shared\igame.h">
 			<Option compilerVar="CPP"/>
@@ -1234,6 +1415,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="shared\img2anim.cpp">
 			<Option compilerVar="CPP"/>
@@ -1243,6 +1425,7 @@
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="data"/>
 		</Unit>
 		<Unit filename="shared\pch.h">
@@ -1252,11 +1435,13 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 		</Unit>
 		<Unit filename="shared\tools.cpp">
 			<Option compilerVar="CPP"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="daemon"/>
 			<Option target="ttf2font"/>
@@ -1269,6 +1454,7 @@
 			<Option target="data"/>
 			<Option target="client"/>
 			<Option target="debug"/>
+			<Option target="profile"/>
 			<Option target="server"/>
 			<Option target="daemon"/>
 			<Option target="ttf2font"/>

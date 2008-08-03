@@ -139,7 +139,7 @@ struct weaponstate
 
 		if(gun != GUN_FLAMER)
 		{
-			cl.quakewobble += int(guntype[gun].damage*(1-dist/guntype[gun].scale/guntype[gun].explode));
+			cl.quakewobble += int(guntype[gun].damage*(1.f-dist/guntype[gun].scale/guntype[gun].explode/10.f));
 			particle_splash(0, 200, 300, o);
 			particle_fireball(o, guntype[gun].explode, gun == GUN_GL ? 23 : 22);
 #if 0
