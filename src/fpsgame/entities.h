@@ -212,7 +212,10 @@ struct entities : icliententities
 			}
 			const char *item = entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 			if(item && (d != cl.player1 || cl.isthirdperson()))
-				particle_text(d->abovehead(), item, 15);
+			{
+				s_sprintfd(ds)("@%s", item);
+				particle_text(d->abovehead(), ds, 15);
+			}
 			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
 			if(isgun(g))
 			{

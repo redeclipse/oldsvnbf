@@ -90,6 +90,8 @@ struct GAMECLIENT : igameclient
 	IVARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
 	IFVARP(crosshairsize, 0.03f);
 	IFVARP(crosshairblend, 0.5f);
+	IFVARP(indicatorblend, 1.f);
+	IFVARP(clipbarblend, 1.f);
 
 	IFVARP(cursorsize, 0.03f);
 	IFVARP(cursorblend, 1.f);
@@ -131,6 +133,13 @@ struct GAMECLIENT : igameclient
 	ITVAR(goalbartex, "<anim>textures/goalbar", 0);
 	ITVAR(teambartex, "<anim>textures/teambar", 0);
 	ITVAR(indicatortex, "<anim>textures/indicator", 0);
+
+	ITVAR(pistolcliptex, "<anim>textures/pistolclip", 0);
+	ITVAR(shotguncliptex, "<anim>textures/shotgunclip", 0);
+	ITVAR(chainguncliptex, "<anim>textures/chaingunclip", 0);
+	ITVAR(grenadescliptex, "<anim>textures/grenadesclip", 0);
+	ITVAR(flamercliptex, "<anim>textures/flamerclip", 0);
+	ITVAR(riflecliptex, "<anim>textures/rifleclip", 0);
 
 	ITVAR(damagetex, "textures/damage", 0);
 	ITVAR(zoomtex, "textures/zoom", 0);
@@ -806,8 +815,8 @@ struct GAMECLIENT : igameclient
 			else glBlendFunc(GL_ONE, GL_ONE);
 			glColor4f(r, g, b, blend);
 
-			float cx = x*w*3.f - (index != POINTER_GUI ? chsize/2.0f : 0);
-			float cy = y*h*3.f - (index != POINTER_GUI ? chsize/2.0f : 0);
+			float ox = x*w*3.f, oy = y*h*3.f, os = index != POINTER_GUI ? chsize/2.0f : 0,
+				cx = ox-os, cy = oy-os;
 			glBindTexture(GL_TEXTURE_2D, pointer->id);
 			glBegin(GL_QUADS);
 			glTexCoord2f(0.0f, 0.0f); glVertex2f(cx, cy);
@@ -816,25 +825,50 @@ struct GAMECLIENT : igameclient
 			glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + chsize);
 			glEnd();
 
-			if(index > POINTER_GUI && player1->state == CS_ALIVE && isgun(player1->gunselect))
+			if(index > POINTER_GUI && player1->state == CS_ALIVE && isgun(player1->gunselect) && player1->hasgun(player1->gunselect))
 			{
 				Texture *t;
-				if(((t = textureload(indicatortex())) != notexture) &&
-					guntype[player1->gunselect].power && player1->gunstate[player1->gunselect] == GUNSTATE_POWER)
+				if(guntype[player1->gunselect].power && player1->gunstate[player1->gunselect] == GUNSTATE_POWER &&
+					((t = textureload(indicatortex())) != notexture))
 				{
-					float amt = clamp(float(lastmillis-player1->gunlast[player1->gunselect])/float(guntype[player1->gunselect].power), 0.f, 1.f);
+					float off = float(lastmillis-player1->gunlast[player1->gunselect])/float(guntype[player1->gunselect].power),
+						amt = clamp(off, 0.f, 1.f);
 					if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 					else glBlendFunc(GL_ONE, GL_ONE);
-					chsize *= float(t->w)/float(pointer->w);
-					cx = x*w*3.f-chsize/2.0f;
-					cy = y*h*3.f-chsize/2.0f;
+					float nsize = chsize*(float(t->w)/float(pointer->w));
+					cx = ox-nsize/2.0f;
+					cy = oy-nsize/2.0f;
 					glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
-					glColor4f(1.f, 1.f, 0.f, blend);
+					glColor4f(1.f, 1.f, 0.f, indicatorblend());
 					glBegin(GL_QUADS);
 					glTexCoord2f(0.0f, 0.0f); glVertex2f(cx, cy);
-					glTexCoord2f(1.0f, 0.0f); glVertex2f(cx + chsize, cy);
-					glTexCoord2f(1.0f, 1.0f); glVertex2f(cx + chsize, cy + chsize);
-					glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + chsize);
+					glTexCoord2f(1.0f, 0.0f); glVertex2f(cx + nsize, cy);
+					glTexCoord2f(1.0f, 1.0f); glVertex2f(cx + nsize, cy + nsize);
+					glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + nsize);
+					glEnd();
+				}
+
+				const char *cliptexs[GUN_MAX] = {
+					pistolcliptex(), shotguncliptex(), chainguncliptex(),
+					grenadescliptex(), flamercliptex(), riflecliptex()
+				};
+
+				if(((t = textureload(cliptexs[player1->gunselect])) != notexture))
+				{
+					float off = float(player1->ammo[player1->gunselect])/float(guntype[player1->gunselect].charge),
+						amt = clamp(off, 0.f, 1.f);
+					if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+					else glBlendFunc(GL_ONE, GL_ONE);
+					float nsize = chsize*(float(t->w)/float(pointer->w));
+					cx = ox-nsize/2.0f;
+					cy = oy-nsize/2.0f;
+					glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
+					glColor4f(1.f, 1.f, 1.f, clipbarblend());
+					glBegin(GL_QUADS);
+					glTexCoord2f(0.0f, 0.0f); glVertex2f(cx, cy);
+					glTexCoord2f(1.0f, 0.0f); glVertex2f(cx + nsize, cy);
+					glTexCoord2f(1.0f, 1.0f); glVertex2f(cx + nsize, cy + nsize);
+					glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + nsize);
 					glEnd();
 				}
 			}
