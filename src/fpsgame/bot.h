@@ -248,6 +248,7 @@ struct botserv
 struct botclient
 {
 	GAMECLIENT &cl;
+    avoidset obstacles;
 
 	static const int BOTISNEAR			= 64;			// is near
 	static const int BOTISFAR			= 128;			// too far
@@ -263,9 +264,10 @@ struct botclient
 	#define BOTLOSDIST(x)			clamp((BOTLOSMIN+(BOTLOSMAX-BOTLOSMIN))/100.f*float(x), float(BOTLOSMIN), float(getvar("fog")+BOTLOSMIN))
 	#define BOTFOVX(x)				clamp((BOTFOVMIN+(BOTFOVMAX-BOTFOVMIN))/100.f*float(x), float(BOTFOVMIN), float(BOTFOVMAX))
 	#define BOTFOVY(x)				BOTFOVX(x)*3.f/4.f
-	#define BOTTARG(x,y,z)			(y != x && y->state == CS_ALIVE && lastmillis-y->lastspawn > REGENWAIT && (!z || !m_team(cl.gamemode, cl.mutators) || y->team != x->team))
+    #define BOTMAYTARG(y)           ((y)->state == CS_ALIVE && lastmillis-(y)->lastspawn > REGENWAIT)
+	#define BOTTARG(x,y,z)			((y) != (x) && BOTMAYTARG(y) && (!z || AVOIDENEMY(x, y)))
 
-	botclient(GAMECLIENT &_cl) : cl(_cl)
+	botclient(GAMECLIENT &_cl) : cl(_cl), obstacles(_cl)
 	{
 		CCOMMAND(addbot, "s", (botclient *self, char *s),
 			self->addbot(*s ? clamp(atoi(s), 1, 100) : -1)
@@ -336,7 +338,16 @@ struct botclient
 
 	void update()
 	{
-		loopv(cl.players) if(cl.players[i] && cl.players[i]->bot) think(cl.players[i]);
+		bool avoided = false;
+		loopv(cl.players) if(cl.players[i] && cl.players[i]->bot) 
+		{
+			if(!avoided)
+			{
+				avoid();
+				avoided = true;
+			}
+			think(cl.players[i]);
+		}
 	}
 
 	bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float fovx, float fovy)
@@ -392,7 +403,7 @@ struct botclient
 
 	bool makeroute(fpsent *d, botstate &b, int node, float tolerance = 0.f)
 	{
-		if(cl.et.route(d->lastnode, node, d->bot->route, d->bot->avoid, tolerance))
+		if(cl.et.route(d, d->lastnode, node, d->bot->route, obstacles, tolerance))
 		{
 			b.goal = false;
 			b.override = false;
@@ -991,13 +1002,17 @@ struct botclient
 	{
 		vec pos(cl.feetpos(d, 0.f));
 		int node = -1;
+		float mindist = 1e16f;
 		loopvrev(d->bot->route) if(cl.et.ents.inrange(d->bot->route[i]) && d->bot->route[i] != d->lastnode && d->bot->route[i] != d->oldnode)
 		{
 			fpsentity &e = (fpsentity &)*cl.et.ents[d->bot->route[i]];
 
-			if(!d->bot->route.inrange(node) ||
-				e.o.dist(pos) < min(enttype[WAYPOINT].radius*10.f, cl.et.ents[d->bot->route[node]]->o.dist(pos)))
-						node = i;
+			float dist = e.o.dist(pos);
+			if(dist < mindist)
+			{
+				node = i;
+				mindist = min(dist, enttype[WAYPOINT].radius*10.0f);
+			}
 		}
 		return node;
 	}
@@ -1010,7 +1025,7 @@ struct botclient
 			if(d->bot->route.inrange(n) && --n >= 0) // otherwise got to goal
 			{
 				if(!d->bot->route.inrange(n)) n = closenode(d, b);
-				if(d->bot->route.inrange(n) && d->bot->avoid.find(d->bot->route[n]) < 0)
+				if(d->bot->route.inrange(n) && !obstacles.find(d->bot->route[n], d))
 				{
 					b.goal = false;
 					vec from = vec(cl.et.ents[d->bot->route[n]]->o).add(vec(0, 1, d->aboveeye)), to(vec(from).add(vec(0, 0, PLAYERHEIGHT))), unitv;
@@ -1201,37 +1216,38 @@ struct botclient
 		d->attacking = d->jumping = d->reloading = d->useaction = false;
 	}
 
-	void avoid(fpsent *d)
+	void avoid()
 	{
-		d->bot->avoid.setsize(0);
-		if(d->state == CS_ALIVE)
-		{
-			loopvk(cl.et.ents) if(cl.et.ents[k]->type == WAYPOINT)
+		// guess as to the radius of bots and other critters relying on the avoid set for now
+		float guessradius = cl.player1->radius; 
+
+        obstacles.clear();
+        loopi(cl.numdynents())
+        {
+            fpsent *d = (fpsent *)cl.iterdynents(i);
+            if(!d || !BOTMAYTARG(d)) continue;
+			vec pos(cl.feetpos(d, 0.f));
+			float limit = guessradius + d->radius;
+			limit *= limit; // square it to avoid expensive square roots
+			loopvk(cl.et.ents)
 			{
-				bool found = false;
-				fpsentity &f = (fpsentity &)*cl.et.ents[k];
-				fpsent *e = NULL;
-				loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && BOTTARG(d, e, true))
+				fpsentity &e = *(fpsentity *)cl.et.ents[k];
+				if(e.type == WAYPOINT && e.o.squaredist(pos) <= limit)
+					obstacles.add(d, k);
+			}
+		}
+		loopv(cl.pj.projs)
+		{
+			projent *p = cl.pj.projs[i];
+			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT)
+			{
+				float limit = guntype[p->attr1].explode + guessradius;
+				limit *= limit; // square it to avoid expensive square roots
+				loopvk(cl.et.ents)
 				{
-					if(f.o.dist(cl.feetpos(e, 0.f)) <= e->radius+d->radius)
-					{
-						d->bot->avoid.add(k);
-						found = true;
-						break;
-					}
-				}
-				if(!found)
-				{
-					loopv(cl.pj.projs) if(cl.pj.projs[i] && cl.pj.projs[i]->state == CS_ALIVE)
-					{
-						if(cl.pj.projs[i]->projtype == PRJ_SHOT &&
-							f.o.dist(cl.pj.projs[i]->o) <= guntype[cl.pj.projs[i]->attr1].explode+d->radius)
-							{
-								d->bot->avoid.add(k);
-								found = true;
-								break;
-							}
-					}
+					fpsentity &e = *(fpsentity *)cl.et.ents[k];
+					if(e.type == WAYPOINT && e.o.squaredist(p->o) <= limit) 
+						obstacles.add(p, k);	
 				}
 			}
 		}
@@ -1257,8 +1273,6 @@ struct botclient
 
 				b.next = lastmillis + botframetimes[b.type];
 				b.cycle++;
-
-				avoid(d);
 
 				switch(b.type)
 				{

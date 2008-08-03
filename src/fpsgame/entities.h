@@ -1,3 +1,61 @@
+#define AVOIDENEMY(x, y) (!m_team(cl.gamemode, cl.mutators) || (x)->team != (y)->team)
+
+struct avoidset
+{
+    struct obstacle
+    {
+        dynent *ent;
+        int numwaypoints;
+        bool avoid;
+
+        obstacle(dynent *ent) : ent(ent), numwaypoints(0) {}
+    };
+
+    GAMECLIENT &cl;
+    vector<obstacle> obstacles;
+    vector<int> waypoints;
+
+    avoidset(GAMECLIENT &cl) : cl(cl) {}
+
+    void clear()
+    {
+        obstacles.setsizenodelete(0);
+        waypoints.setsizenodelete(0);
+    }
+
+    void add(dynent *ent, int waypoint)
+    {
+        if(obstacles.empty() || ent!=obstacles.last().ent) obstacles.add(obstacle(ent));
+        obstacles.last().numwaypoints++;
+        waypoints.add(waypoint);
+    }
+
+    #define loopavoid(v, d, body) \
+        do { \
+            int cur = 0; \
+            loopv((v).obstacles) \
+            { \
+                avoidset::obstacle &ob = (v).obstacles[i]; \
+                int next = cur + ob.numwaypoints; \
+                if(ob.ent != (d) && (ob.ent->type != ENT_PLAYER || AVOIDENEMY((d), (fpsent *)ob.ent))) \
+                { \
+                    for(; cur < next; cur++) \
+                    { \
+                        int ent = (v).waypoints[cur]; \
+                        body; \
+                    } \
+                } \
+                cur = next; \
+            } \
+        } while(0)
+
+    bool find(int waypoint, fpsent *d)
+    {
+        loopavoid(*this, d, { if(ent == waypoint) return true; });
+        return false;
+    }
+};
+
 struct entities : icliententities
 {
 	GAMECLIENT &cl;
@@ -729,7 +787,7 @@ struct entities : icliententities
         float score() const { return curscore + estscore; }
 	};
 
-	bool route(int node, int goal, vector<int> &route, vector<int> &avoid, float tolerance, float *score = NULL)
+	bool route(fpsent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, float *score = NULL)
 	{
         if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node) return false;
 
@@ -746,16 +804,15 @@ struct entities : icliententities
 		}
 		while(nodes.length() < ents.length()) nodes.add();
 
-		loopv(avoid)
+		loopavoid(obstacles, d,
 		{
-			int ent = avoid[i];
 			if(ents[ent]->type == ents[node]->type)
 			{
 				nodes[ent].id = routeid;
 				nodes[ent].curscore = -1.f;
 				nodes[ent].estscore = 0.f;
 			}
-		}
+		});
 
 		nodes[node].id = routeid;
 		nodes[goal].curscore = nodes[node].curscore = 0.f;
@@ -813,15 +870,19 @@ struct entities : icliententities
 		return !route.empty();
 	}
 
-	int waypointnode(vec &v, bool dist = true, int type = WAYPOINT)
+	int waypointnode(const vec &v, bool dist = true, int type = WAYPOINT)
 	{
 		int w = -1, t = entlinks[WAYPOINT].find(type) >= 0 ? type : WAYPOINT;
-		loopv(ents) if(ents[i]->type == t)
-		{
-			if((!dist || ents[i]->o.dist(v) <= enttype[t].radius) &&
-				(!ents.inrange(w) || ents[i]->o.dist(v) < ents[w]->o.dist(v)))
-					w = i;
-		}
+        float mindist = dist ? enttype[t].radius * enttype[t].radius : 1e16f; // avoid square roots
+        loopv(ents) if(ents[i]->type == t)
+        {
+            float dist = ents[i]->o.squaredist(v);
+            if(dist <= mindist)
+            {
+                w = i;
+                mindist = dist;
+            }
+        }
 		return w;
 	}
 

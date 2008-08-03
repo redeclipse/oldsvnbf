@@ -735,7 +735,7 @@ struct botstate
 struct botinfo
 {
 	vector<botstate> state;
-	vector<int> route, avoid;
+	vector<int> route;
 	vec target, spot;
 	int enemy, gunpref, lastreq;
 
@@ -747,14 +747,12 @@ struct botinfo
 	{
 		state.setsize(0);
 		route.setsize(0);
-		avoid.setsize(0);
 	}
 
 	void reset()
 	{
 		state.setsize(0);
 		route.setsize(0);
-		avoid.setsize(0);
 		addstate(BS_WAIT);
 		gunpref = rnd(GUN_MAX-1)+1;
 		spot = target = vec(0, 0, 0);
