@@ -144,7 +144,7 @@ struct guntypes
 	},
 	{
 		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
-		2,		0,		8,	1500,	0,		200,	150,	1000,	3000,	-15,    10,		8,
+		2,		0,		4,	1500,	0,		200,	150,	1000,	3000,	-15,    10,		8,
 		3,		64,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"grenades",	"weapons/grenades/item",	"weapons/grenades/vwep"
 	},

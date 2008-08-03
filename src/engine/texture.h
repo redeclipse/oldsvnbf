@@ -211,14 +211,20 @@ struct Texture
     	frames.setsize(0);
 	}
 
-	GLuint getframe(float amt)
+	GLuint idframe(int id)
+	{
+		if(!frames.empty())
+			return frames[clamp(id, 0, frames.length()-1)];
+		return id;
+	}
+
+	GLuint getframe(float amt, float up = 0.5f)
 	{
 		if(!frames.empty())
 		{
-			int m = frames.length()-1;
-			float a = float(m)*amt;
-			int f = clamp(int(a), 0, m);
-			if(frames.inrange(f)) return frames[f];
+			float f = float(frames.length()-1)*amt, s = f-float(int(f));
+			int t = int(f)+(s > up ? 1 : 0);
+			return frames[clamp(t, 0, frames.length()-1)];
 		}
 		return id;
 	}

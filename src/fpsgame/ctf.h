@@ -287,16 +287,14 @@ struct ctfclient : ctfstate
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		int colour = teamtype[f.team].colour;
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-			fade = cl.radarblipblend(), size = blip ? 0.05f : 0.03f;
+			fade = cl.blipblend(), size = blip ? 0.05f : 0.03f;
 		if(f.team != cl.player1->team && (!f.owner || f.owner->team != cl.player1->team))
 			fade *= clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
 		float cx = x + s*0.5f*(1.0f+dir.x/cl.radarrange()),
 			cy = y + s*0.5f*(1.0f+dir.y/cl.radarrange()), cs = size*s;
         settexture(cl.flagbliptex(), 3);
 		glColor4f(r, g, b, fade);
-		glBegin(GL_QUADS);
         cl.drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
-		glEnd();
     }
 
     void drawblips(int w, int h, int x, int y, int s)
