@@ -217,13 +217,13 @@ COMMAND(keymap, "ss");
 keym *keypressed = NULL;
 char *keyaction = NULL;
 
-keym *findbind(char *key)
+keym *findbind(const char *key)
 {
 	loopv(keyms) if(!strcasecmp(keyms[i].name, key)) return &keyms[i];
 	return NULL;
 }
 
-int findactionkey(char *action, int which, int num)
+int findactionkey(const char *action, int which, int num)
 {
 	int n = 0;
 	s_sprintfd(a)(" %s ", action); // hack
@@ -235,13 +235,13 @@ int findactionkey(char *action, int which, int num)
 	return n;
 }
 
-const char *retbind(char *key, int which)
+const char *retbind(const char *key, int which)
 {
 	keym *km = findbind(key);
     return km ? km->actions[which] : "";
 }
 
-const char *retbindaction(char *action, int which, int num)
+const char *retbindaction(const char *action, int which, int num)
 {
 	if(num)
 	{

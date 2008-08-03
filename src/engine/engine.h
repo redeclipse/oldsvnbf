@@ -437,11 +437,11 @@ extern vector<keym> keyms;
 
 extern keym *keypressed;
 extern char *keyaction;
-extern keym *findbind(char *key);
-extern int findactionkey(char *action, int which, int num);
+extern keym *findbind(const char *key);
+extern int findactionkey(const char *action, int which, int num);
 
-extern const char *retbind(char *key, int which);
-extern const char *retbindaction(char *action, int which, int num);
+extern const char *retbind(const char *key, int which);
+extern const char *retbindaction(const char *action, int which, int num);
 extern void writebinds(FILE *f);
 extern void writecompletions(FILE *f);
 extern const char *addreleaseaction(const char *s);
