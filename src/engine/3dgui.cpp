@@ -27,8 +27,6 @@ static bool fieldsactive = false;
 VARP(guiautotab, 6, 16, 40);
 VARP(guiclicktab, 0, 0, 1);
 
-extern char *guiskintex, *guioverlaytex, *guislidertex;
-
 struct gui : g3d_gui
 {
 	struct list

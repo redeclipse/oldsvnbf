@@ -1058,23 +1058,24 @@ struct GAMECLIENT : igameclient
 			fade = clamp(fade*(1.f-(float(secs-titlecardtime())/float(titlecardfade()))), 0.f, 1.f);
 
 		const char *title = getmaptitle();
-		if(!*title) title = "Untitled by Unknown";
+		if(!*title) title = getmapname();
 
 		int rs = int(bs*amt), rx = bx+(bs-rs), ry = by;
 		glColor4f(1.f, 1.f, 1.f, fade*0.9f);
 		if(!rendericon(getmapname(), rx, ry, rs, rs))
 			rendericon("textures/emblem", rx, ry, rs, rs);
 		glColor4f(1.f, 1.f, 1.f, fade);
-		rendericon("textures/guioverlay", rx, ry, rs, rs);
+		rendericon(guioverlaytex, rx, ry, rs, rs);
 
 		int tx = bx + bs, ty = inverty ? by - FONTH - FONTH/2 : by + bs + FONTH/2, ts = int(tx*(1.f-amt));
 		loopi(2)
 		{
+			int th = FONTH;
 			if((i && !inverty) || (!i && inverty))
-				draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, title);
+				th = draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, title);
 			else
-				draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, sv->gamename(gamemode, mutators));
-			ty = inverty ? ty - FONTH : ty + FONTH;
+				th = draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, sv->gamename(gamemode, mutators));
+			ty = inverty ? ty - th : ty + th;
 		}
 		popfont();
 	}
