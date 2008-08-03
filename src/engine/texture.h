@@ -213,12 +213,12 @@ struct Texture
 
 	GLuint getframe(float amt)
 	{
-		if(frames.length())
+		if(!frames.empty())
 		{
-			int f = clamp(int((frames.length()-1)*amt), 0, frames.length()-1);
-
-			if(frames.inrange(f))
-				return frames[f];
+			int m = frames.length()-1;
+			float a = float(m)*amt;
+			int f = clamp(int(a), 0, m);
+			if(frames.inrange(f)) return frames[f];
 		}
 		return id;
 	}

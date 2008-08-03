@@ -999,8 +999,12 @@ struct clientcom : iclientcom
 					if(!cl.et.ents.inrange(ent)) break;
 					cl.et.setspawn(ent, true);
 					playsound(S_ITEMSPAWN, 0, 255, cl.et.ents[ent]->o);
-					const char *name = cl.et.entinfo(cl.et.ents[ent]->type, cl.et.ents[ent]->attr1, cl.et.ents[ent]->attr2, cl.et.ents[ent]->attr4, cl.et.ents[ent]->attr4, cl.et.ents[ent]->attr5, true);
-					if(name) particle_text(cl.et.ents[ent]->o, name, 9);
+					const char *item = cl.et.entinfo(cl.et.ents[ent]->type, cl.et.ents[ent]->attr1, cl.et.ents[ent]->attr2, cl.et.ents[ent]->attr4, cl.et.ents[ent]->attr4, cl.et.ents[ent]->attr5, true);
+					if(item)
+					{
+						s_sprintfd(ds)("@%s", item);
+						particle_text(cl.et.ents[ent]->o, ds, 9);
+					}
 					regularshape(7, enttype[cl.et.ents[ent]->type].radius, 0x888822, 53, 50, 250, cl.et.ents[ent]->o, 1.f);
 					break;
 				}
