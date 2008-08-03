@@ -1509,13 +1509,16 @@ struct GAMECLIENT : igameclient
 
 	vec headpos(physent *d, float off = 0.f)
 	{
-		return vec(d->o).sub(vec(0, 0, off));
+		vec pos(d->o);
+		pos.z -= off;
+		return pos;
 	}
 
 	vec feetpos(physent *d, float off = 0.f)
 	{
-		if(d->type == ENT_PLAYER) return vec(d->o).sub(vec(0, 0, d->height-off));
-		return vec(d->o);
+ 		vec pos(d->o);
+		if(d->type == ENT_PLAYER) pos.z -= d->height+off;
+		return pos;
 	}
 
 	void fixfullrange(float &yaw, float &pitch, float &roll, bool full)

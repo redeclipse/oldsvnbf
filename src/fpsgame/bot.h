@@ -989,14 +989,14 @@ struct botclient
 
 	int closenode(fpsent *d, botstate &b)
 	{
+		vec pos(cl.feetpos(d, 0.f));
 		int node = -1;
 		loopvrev(d->bot->route) if(cl.et.ents.inrange(d->bot->route[i]) && d->bot->route[i] != d->lastnode && d->bot->route[i] != d->oldnode)
 		{
 			fpsentity &e = (fpsentity &)*cl.et.ents[d->bot->route[i]];
 
 			if(!d->bot->route.inrange(node) ||
-				(e.o.dist(cl.feetpos(d, 0.f)) < enttype[WAYPOINT].radius*10.f &&
-					e.o.dist(cl.feetpos(d, 0.f)) < cl.et.ents[d->bot->route[node]]->o.dist(cl.feetpos(d, 0.f))))
+				e.o.dist(pos) < min(enttype[WAYPOINT].radius*10.f, cl.et.ents[d->bot->route[node]]->o.dist(pos)))
 						node = i;
 		}
 		return node;
