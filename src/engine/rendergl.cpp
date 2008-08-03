@@ -1169,7 +1169,6 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
         }
 		if(t)
 		{
-			glDisable(GL_BLEND);
 			glBindTexture(GL_TEXTURE_2D, t->id);
 			int sz = 256, x = (w-sz)/2, y = min(384, h-256);
 			glBegin(GL_QUADS);
@@ -1178,27 +1177,26 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 			glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
 			glTexCoord2f(0, 1); glVertex2f(x,	y+sz);
 			glEnd();
-			glEnable(GL_BLEND);
+			settexture(guioverlaytex);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0, 0); glVertex2f(x,	y);
+			glTexCoord2f(1, 0); glVertex2f(x+sz, y);
+			glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
+			glTexCoord2f(0, 1); glVertex2f(x,	y+sz);
+			glEnd();
 		}
         if(overlaytext)
         {
-            int sz = 256, x = (w-sz)/2, y = min(384, h-256), tw = text_width(overlaytext);
-            int tx = t && tw < sz*2 - FONTH/3 ?
-                        2*(x + sz) - tw - FONTH/3 :
-                        2*(x + sz/2) - tw/2,
-                     ty = t ?
-                        2*(y + sz) - FONTH*4/3 :
-                        2*(y + sz/2) - FONTH/2;
+			int sz = 256, x = (w-sz)/2, y = min(384, h-256);
             glPushMatrix();
-            glScalef(1/2.0f, 1/2.0f, 1);
-            draw_text(overlaytext, tx, ty);
+            glScalef(1/3.0f, 1/3.0f, 1);
+			draw_textx("%s", x*3+sz*3-FONTH, y*3+FONTH, 255, 255, 255, 255, false, AL_RIGHT, -1, sz*3-FONTH*2, overlaytext);
             glPopMatrix();
         }
 
 		glPushMatrix();
 		glScalef(1/3.0f, 1/3.0f, 1);
-		s_sprintfd(vstr)("v%.2f (%s)", float(ENG_VERSION)/100.f, ENG_RELEASE);
-		draw_text(vstr, w*3-text_width(vstr)-FONTH, int(h*2.6f));
+		draw_textx("v%.2f (%s)", w*3-FONTH, int(h*2.6f), 255, 255, 255, 255, false, AL_RIGHT, -1, -1, float(ENG_VERSION)/100.f, ENG_RELEASE);
 		glPopMatrix();
 
 		int x = (w-512)/2, y = 128;
