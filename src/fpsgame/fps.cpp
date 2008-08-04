@@ -3,7 +3,6 @@
 #include "bfa.h"
 #include "game.h"
 #include "fpsserver.h"
-
 #ifndef STANDALONE
 struct GAMECLIENT : igameclient
 {
@@ -117,7 +116,7 @@ struct GAMECLIENT : igameclient
 	IVARP(showinfo, 0, 2, 2);
 	IVARP(showindicator, 0, 1, 1);
 	IVARP(showcliphair, 0, 1, 1);
-	IVARP(showclipammo, 0, 3, 3);
+	IVARP(showclipammo, 0, 2, 2);
 
 	IVARP(snipetype, 0, 0, 1);
 	IVARP(snipemouse, 0, 2, 2);
@@ -151,8 +150,13 @@ struct GAMECLIENT : igameclient
 	ITVAR(goalbartex, "<anim>textures/goalbar", 0);
 	ITVAR(teambartex, "<anim>textures/teambar", 0);
 
-	ITVAR(ammohudtex, "textures/ammohud", 3);
 	ITVAR(indicatortex, "<anim>textures/indicator", 3);
+	ITVAR(pistolhudtex, "textures/pistolhud", 0);
+	ITVAR(shotgunhudtex, "textures/shotgunhud", 0);
+	ITVAR(chaingunhudtex, "textures/chaingunhud", 0);
+	ITVAR(grenadeshudtex, "textures/grenadeshud", 0);
+	ITVAR(flamerhudtex, "textures/flamerhud", 0);
+	ITVAR(riflehudtex, "textures/riflehud", 0);
 	ITVAR(pistolcliptex, "<anim>textures/pistolclip", 3);
 	ITVAR(shotguncliptex, "<anim>textures/shotgunclip", 3);
 	ITVAR(chainguncliptex, "<anim>textures/chaingunclip", 3);
@@ -1193,34 +1197,32 @@ struct GAMECLIENT : igameclient
 
 			if(showclipammo())
 			{
-				int ta = int(ox*ammosize()), tv = bx + bs - ta,
-					tr = ta/2, tq = tr - FONTH/2;
+				int ta = int(ox*ammosize()), tb = ta*3, tv = bx + bs - tb,
+					to = ta/16, tr = ta/2, tq = tr - FONTH/2;
 				const char *cliptexs[GUN_MAX] = {
 					pistolcliptex(), shotguncliptex(), chainguncliptex(),
 					grenadescliptex(), flamercliptex(), riflecliptex()
+				}, *hudtexs[GUN_MAX] = {
+					pistolhudtex(), shotgunhudtex(), chaingunhudtex(),
+					grenadeshudtex(), flamerhudtex(), riflehudtex()
 				};
-				loopi(GUN_MAX)
+				loopi(GUN_MAX) if(player1->hasgun(i) && (i == player1->gunselect || showclipammo() > 1))
 				{
-					int g = showclipammo() > 2 ? GUN_MAX-1-i : i;
-					bool curgun = g == player1->gunselect;
-					if(player1->hasgun(g) && (curgun || showclipammo() > 1))
-					{
-						settexture(ammohudtex(), 3);
-						glColor4f(1.f, 1.f, 1.f, fade*(curgun ? ammoblend() : ammoblendinactive()));
-						drawtex(float(tv-1), float(tp-1), float(ta+2), float(ta+2));
-						t = textureload(cliptexs[g], 3);
-						glBindTexture(GL_TEXTURE_2D, t->retframe(player1->ammo[g], guntype[g].rdelay > 0 ? guntype[g].charge : guntype[g].max));
-						glColor4f(1.f, 1.f, 1.f, fade*(curgun ? ammoblend() : ammoblendinactive()));
-						drawtex(float(tv+1), float(tp+1), float(ta-2), float(ta-2));
-						if(curgun) pushfont("emphasis");
-						int ts = tv + tr, tt = tp + tq;
-						draw_textx("%s%d", ts, tt, 255, 255, 255, int(255.f*fade*(curgun ? ammoblend() : ammoblendinactive())), false, AL_CENTER, -1, -1, player1->canshoot(g, lastmillis) ? "\fw" : "\fr", player1->ammo[g]);
-						if(curgun) popfont();
-						if(showclipammo() > 2) tv -= ta;
-						else tp += ta;
-					}
+					float blend = fade * (i == player1->gunselect ? ammoblend() : ammoblendinactive());
+					settexture(hudtexs[i], 0);
+					glColor4f(1.f, 1.f, 1.f, blend);
+					drawtex(float(tv), float(tp), float(tb), float(ta));
+					t = textureload(cliptexs[i], 3);
+					glBindTexture(GL_TEXTURE_2D, t->retframe(player1->ammo[i], guntype[i].rdelay > 0 ? guntype[i].charge : guntype[i].max));
+					glColor4f(1.f, 1.f, 1.f, blend);
+					drawtex(float(tv+to/2), float(tp+to/2), float(ta-to), float(ta-to));
+					if(i == player1->gunselect) pushfont("emphasis");
+					int ts = tv + tr, tt = tp + tq;
+					draw_textx("%s%d", ts, tt, 255, 255, 255, int(255.f*blend), false, AL_CENTER, -1, -1, player1->canshoot(i, lastmillis) ? "\fw" : "\fr", player1->ammo[i]);
+					if(i == player1->gunselect) popfont();
+					tp += ta;
 				}
-				tp += FONTH/2 + (showclipammo() > 2 ? ta : 0);
+				tp += FONTH/2;
 			}
 			if(showinfo())
 			{
