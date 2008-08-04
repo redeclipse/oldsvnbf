@@ -22,14 +22,19 @@ VAR(verbose, 0, 0, 4);
 #else
 VARP(verbose, 0, 0, 4);
 #endif
+SVAR(game, "bfa");
 
-#define DEFAULTCLIENTS 6
-int servertype = 1; // 0: none, 1: private, 2: public, 3: dedicated
-bool pubserv = false;
+VAR(servertype, 0, 1, 3); // 0: none, 1: private, 2: public, 3: dedicated
+VAR(serveruprate, 0, 0, INT_MAX-1);
+VAR(serverclients, 1, 6, MAXCLIENTS);
+VAR(serverport, 1, ENG_SERVER_PORT, INT_MAX-1);
+VAR(serverqueryport, 1, ENG_QUERY_PORT, INT_MAX-1);
+VAR(servermasterport, 1, ENG_MASTER_PORT, INT_MAX-1);
+SVAR(servermaster, ENG_MASTER_HOST);
+SVAR(serverip, "");
+
 int curtime = 0, totalmillis = 0, lastmillis = 0;
-int uprate = 0, maxclients = DEFAULTCLIENTS;
-const char *ip = "", *master = NULL;
-const char *game = "bfa", *load = NULL;
+const char *load = NULL;
 
 igameclient *cl = NULL;
 igameserver *sv = NULL;
@@ -52,11 +57,11 @@ void initgame(const char *type)
 	if(!ig) fatal("cannot start game module: %s", type);
 
 	sv = (*ig)->newserver();
-	if (sv)
+	if(sv)
 	{
 		cl = (*ig)->newclient();
 
-		if (cl)
+		if(cl)
 		{
 			cc = cl->getcom();
 			et = cl->getents();
@@ -325,7 +330,7 @@ void sendf(int cn, int chan, const char *format, ...)
 	if(packet->referenceCount==0) enet_packet_destroy(packet);
 }
 
-const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned", "tag type", "ip is banned", "server is in private mode", "server FULL (maxclients)" };
+const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned", "tag type", "ip is banned", "server is in private mode", "server is full" };
 
 void disconnect_client(int n, int reason)
 {
@@ -366,7 +371,7 @@ void clienttoserver(int chan, ENetPacket *packet)
 
 void delclient(int n)
 {
-	if (clients.inrange(n))
+	if(clients.inrange(n))
 	{
 		if(clients[n]->type==ST_TCPIP) clients[n]->peer->data = NULL;
 		clients[n]->type = ST_EMPTY;
@@ -383,7 +388,7 @@ int addclient(int type)
 		n = i;
 		break;
 	}
-	if (!clients.inrange(n))
+	if(!clients.inrange(n))
 	{
 		client *c = new client;
 		n = c->num = clients.length();
@@ -400,7 +405,7 @@ bool hasnonlocalclients() { return nonlocalclients!=0; }
 
 static ENetAddress pongaddr;
 
-void sendserverinforeply(ucharbuf &p)
+void sendqueryreply(ucharbuf &p)
 {
     ENetBuffer buf;
     buf.data = p.buf;
@@ -422,7 +427,7 @@ void sendpongs()		// reply all server info requests
 		if(len < 0) return;
         ucharbuf req(pong, len), p(pong, sizeof(pong));
         p.len += len;
-        sv->serverinforeply(req, p);
+        sv->queryreply(req, p);
 	}
 }
 
@@ -450,14 +455,14 @@ ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const ch
 	ENetSocket sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM, localaddress);
 	if(sock==ENET_SOCKET_NULL || connectwithtimeout(sock, hostname, remoteaddress)<0)
 	{
-		conoutf(sock==ENET_SOCKET_NULL ? "could not open socket" : "could not connect");
+		conoutf(sock==ENET_SOCKET_NULL ? "could not open socket to %s:[%d]" : "could not connect to %s:[%d]", hostname, remoteaddress.port);
 		return ENET_SOCKET_NULL;
 	}
 	ENetBuffer buf;
 	s_sprintfd(mget)("%s", req);
 	buf.data = mget;
 	buf.dataLength = strlen((char *)buf.data);
-	conoutf("\fwsending request to %s...", hostname);
+	conoutf("\fwsending request to %s:[%d]", hostname, remoteaddress.port);
 	enet_socket_send(sock, NULL, &buf, 1);
 	return sock;
 }
@@ -483,16 +488,17 @@ bool masterreceive(ENetSocket sock, ENetBuffer &buf, int timeout = 0)
 
 ENetSocket mssock = ENET_SOCKET_NULL;
 ENetAddress msaddress = { ENET_HOST_ANY, ENET_PORT_ANY };
-ENetAddress masteradr = { ENET_HOST_ANY, MASTER_PORT };
+ENetAddress masteradr = { ENET_HOST_ANY, ENET_PORT_ANY };
 int lastupdatemaster = 0;
-string masterserv;
 uchar masterrep[MAXTRANS];
 ENetBuffer masterb;
 
 void updatemaster()
 {
 	if(mssock!=ENET_SOCKET_NULL) enet_socket_destroy(mssock);
-	mssock = mastersend(masteradr, masterserv, "add", &msaddress);
+	s_sprintfd(s)("add %d %d", serverport, serverqueryport);
+	masteradr.port = servermasterport;
+	mssock = mastersend(masteradr, servermaster, s, &msaddress);
 	masterrep[0] = 0;
 	masterb.data = masterrep;
 	masterb.dataLength = MAXTRANS-1;
@@ -512,13 +518,14 @@ void checkmasterreply()
 uchar *retrieveservers(uchar *buf, int buflen)
 {
 	buf[0] = '\0';
+	masteradr.port = servermasterport;
 	ENetAddress address = masteradr;
-	ENetSocket sock = mastersend(address, masterserv, "list");
+	ENetSocket sock = mastersend(address, servermaster, "list");
 	if(sock==ENET_SOCKET_NULL) return buf;
 	/* only cache this if connection succeeds */
 	masteradr = address;
 
-	s_sprintfd(text)("retrieving servers from %s... (esc to abort)", masterserv);
+	s_sprintfd(text)("retrieving servers from %s:[%d] (esc to abort)", servermaster, masteradr.port);
 	renderprogress(0, text);
 
 	ENetBuffer eb;
@@ -545,7 +552,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 
 void serverslice()	// main server update, called from main loop in sp, or from below in dedicated server
 {
-	if (!serverhost) return;
+	if(!serverhost) return;
 
 	nonlocalclients = 0;
 
@@ -559,20 +566,20 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 
 	sendpongs();
 
-	if (pubserv)
+	if(servertype >= 2)
 	{
-		if (*masterserv) checkmasterreply();
+		if(*servermaster) checkmasterreply();
 
-		if (totalmillis-lastupdatemaster > 60*60*1000 && *masterserv)		// send alive signal to master every hour of uptime
+		if(totalmillis-lastupdatemaster > 60*60*1000 && *servermaster)		// send alive signal to master every hour of uptime
 		{
 			updatemaster();
 			lastupdatemaster = totalmillis;
 		}
 
-		if (totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
+		if(totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
 		{
 			laststatus = totalmillis;
-			if (nonlocalclients || bsend || brec) conoutf("\fmstatus: %d remote clients, %.1f send, %.1f rec (K/sec)", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
+			if(nonlocalclients || bsend || brec) conoutf("\fmstatus: %d remote clients, %.1f send, %.1f rec (K/sec)", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
 			bsend = brec = 0;
 		}
 	}
@@ -598,7 +605,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 				s_strcpy(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
 				conoutf("\fgclient connected (%s)", c.hostname);
 				int reason = DISC_MAXCLIENTS;
-				if(nonlocalclients<maxclients && !(reason = sv->clientconnect(c.num, c.peer->address.host)))
+				if(nonlocalclients<serverclients && !(reason = sv->clientconnect(c.num, c.peer->address.host)))
 				{
 					nonlocalclients++;
 					send_welcome(c.num);
@@ -666,26 +673,22 @@ void serverloop()
 void setupserver()
 {
 	conoutf("\fminit: server");
-	pubserv = servertype >= 2 ? true : false;
-	if(!master) master = sv->getdefaultmaster();
-	s_strcpy(masterserv, master);
-
-	ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
-	if (*ip)
+	ENetAddress address = { ENET_HOST_ANY, serverport };
+	if(*serverip)
 	{
-		if (enet_address_set_host(&address, ip) < 0) conoutf("\frWARNING: server ip not resolved");
+		if(enet_address_set_host(&address, serverip) < 0) conoutf("\frWARNING: server ip not resolved");
 		else msaddress.host = address.host;
 	}
-	serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
-	if (!serverhost) { conoutf("\frcould not create server socket"); return; }
-	loopi (maxclients) serverhost->peers[i].data = NULL;
+	serverhost = enet_host_create(&address, serverclients+1, 0, serveruprate);
+	if(!serverhost) { conoutf("\frcould not create server socket"); return; }
+	loopi(serverclients) serverhost->peers[i].data = NULL;
 
-	address.port = sv->serverinfoport();
+	address.port = serverqueryport;
 	pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
-	if (pongsock == ENET_SOCKET_NULL)
+	if(pongsock == ENET_SOCKET_NULL)
 	{
 		conoutf("\frcould not create server info socket, publicity disabled");
-		pubserv = false;
+		setvar("servertype", 1);
 	}
 	else
 	{
@@ -693,7 +696,7 @@ void setupserver()
 	}
 	sv->changemap(load && *load ? load : NULL, -1, -1);
 
-	if (pubserv && *masterserv)
+	if(servertype >= 2 && *servermaster)
 	{
 		updatemaster();
 	}
@@ -718,7 +721,7 @@ bool serveroption(char *opt)
 {
 	switch(opt[1])
 	{
-		case 'g': game = opt+2; return true;
+		case 'g': setsvar("game", opt+2); return true;
 		case 'h': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); return true;
 		case 'p': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); return true;
 		case 'v': setvar("verbose", atoi(opt+2)); return true;
@@ -726,18 +729,15 @@ bool serveroption(char *opt)
 		{
 			switch(opt[2])
 			{
-				case 'u': uprate = atoi(opt+3); return true;
-				case 'c':
-				{
-					int clients = atoi(opt+3);
-					if(clients > 0) maxclients = min(clients, MAXCLIENTS);
-					else maxclients = DEFAULTCLIENTS;
-					return true;
-				}
-				case 'i': ip = opt+3; return true;
-				case 'm': master = opt+3; return true;
+				case 'u': setvar("serveruprate", atoi(opt+3)); return true;
+				case 'c': setvar("serverclients", atoi(opt+3)); return true;
+				case 'i': setsvar("serverip", opt+3); return true;
+				case 'm': setsvar("servermaster", opt+3); return true;
 				case 'l': load = opt+3; return true;
-				case 's': servertype = atoi(opt+3); return true;
+				case 's': setvar("servertype", atoi(opt+3)); return true;
+				case 'p': setvar("serverport", atoi(opt+3)); return true;
+				case 'q': setvar("serverqueryport", atoi(opt+3)); return true;
+				case 'a': setvar("servermasterport", atoi(opt+3)); return true;
 			}
 		}
 #ifdef MASTERSERVER

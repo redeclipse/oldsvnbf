@@ -1702,47 +1702,42 @@ struct clientcom : iclientcom
 		return strcmp(a->name, b->name);
 	}
 
-    bool serverinfostartcolumn(g3d_gui *g, int i)
+    void serverstartcolumn(g3d_gui *g, int i)
     {
-    	if(i > -1 && i < SINFO_MAX)
-    	{
-			g->pushlist();
+		g->pushlist();
 
-			if(g->buttonf("%s ", 0xA0A0A0, NULL, serverinfotypes[i]) & G3D_UP)
+		if(g->buttonf("%s ", 0xA0A0A0, NULL, serverinfotypes[i]) & G3D_UP)
+		{
+			string st; st[0] = 0;
+			bool invert = false;
+			int len = execute("listlen $serversort");
+			loopk(len)
 			{
-				string st; st[0] = 0;
-				bool invert = false;
-				int len = execute("listlen $serversort");
-				loopk(len)
+				s_sprintfd(s)("at $serversort %d", k);
+
+				int n = execute(s);
+				if(abs(n) != i)
 				{
-					s_sprintfd(s)("at $serversort %d", k);
-
-					int n = execute(s);
-					if(abs(n) != i)
-					{
-						s_sprintfd(t)("%s%d", st[0] ? " " : "", n);
-						s_sprintf(st)("%s%s", st[0] ? st : "", t);
-					}
-					else if(!k) invert = true;
+					s_sprintfd(t)("%s%d", st[0] ? " " : "", n);
+					s_sprintf(st)("%s%s", st[0] ? st : "", t);
 				}
-				s_sprintfd(u)("serversort [%d%s%s]",
-					invert ? 0-i : i, st[0] ? " " : "", st[0] ? st : "");
-				execute(u);
+				else if(!k) invert = true;
 			}
+			s_sprintfd(u)("serversort [%d%s%s]",
+				invert ? 0-i : i, st[0] ? " " : "", st[0] ? st : "");
+			execute(u);
+		}
 
-			g->mergehits(true);
-			return true;
-    	}
-        return false;
+		g->mergehits(true);
     }
 
-    void serverinfoendcolumn(g3d_gui *g, int i)
+    void serverendcolumn(g3d_gui *g, int i)
     {
         g->mergehits(false);
         g->poplist();
     }
 
-    bool serverinfoentry(g3d_gui *g, int i, serverinfo *si)
+    bool serverentry(g3d_gui *g, int i, serverinfo *si)
     {
 		string text; text[0] = 0;
 		int colour = serverstatus[serverstat(si)].colour;
@@ -1756,7 +1751,7 @@ struct clientcom : iclientcom
 			}
 			case SINFO_HOST:
 			{
-				if(g->buttonf("%s ", colour, NULL, si->name) & G3D_UP) return true;
+				if(g->buttonf("%s:%d ", colour, NULL, si->name, si->port) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_DESC:
@@ -1810,9 +1805,16 @@ struct clientcom : iclientcom
 		return false;
     }
 
-	const char *serverinfogui(g3d_gui *g, vector<serverinfo *> &servers)
+	int serverbrowser(g3d_gui *g)
 	{
-		const char *name = NULL;
+		if(servers.empty())
+		{
+			g->pushlist();
+			g->text("no servers, press update to see some..", 0xFFDDDD);
+			g->poplist();
+			return -1;
+		}
+		int n = -1;
 		for(int start = 0; start < servers.length();)
 		{
 			if(start > 0) g->tab();
@@ -1820,21 +1822,21 @@ struct clientcom : iclientcom
 			g->pushlist();
 			loopi(SINFO_MAX)
 			{
-				if(!serverinfostartcolumn(g, i)) break;
+				serverstartcolumn(g, i);
 				for(int j = start; j < end; j++)
 				{
 					if(!i && g->shouldtab()) { end = j; break; }
 					serverinfo *si = servers[j];
 					if(si->ping >= 0 && si->attr.length() && si->attr[0]==GAMEVERSION)
 					{
-						if(serverinfoentry(g, i, si)) name = si->name;
+						if(serverentry(g, i, si)) n = j;
 					}
 				}
-				serverinfoendcolumn(g, i);
+				serverendcolumn(g, i);
 			}
 			g->poplist();
 			start = end;
 		}
-		return name;
+		return n;
 	}
 } cc;

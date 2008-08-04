@@ -263,7 +263,7 @@ extern void getstring(char *t, ucharbuf &p, int len = MAXTRANS);
 extern void filtertext(char *dst, const char *src, bool whitespace = true, int len = sizeof(string)-1);
 extern void disconnect_client(int n, int reason);
 extern bool hasnonlocalclients();
-extern void sendserverinforeply(ucharbuf &p);
+extern void sendqueryreply(ucharbuf &p);
 
 // client
 struct serverinfo
@@ -273,16 +273,17 @@ struct serverinfo
     string name;
     string map;
     string sdesc;
-    int numplayers, ping, resolved;
+    int numplayers, ping, resolved, port, qport;
     vector<int> attr;
     ENetAddress address;
 
     serverinfo()
-     : numplayers(0), ping(999), resolved(UNRESOLVED)
+     : numplayers(0), ping(999), resolved(UNRESOLVED), port(ENG_SERVER_PORT), qport(ENG_QUERY_PORT)
     {
         name[0] = map[0] = sdesc[0] = '\0';
     }
 };
+extern vector<serverinfo *> servers;
 
 extern void c2sinfo(int rate = 33);
 extern void sendpackettoserv(ENetPacket *packet, int chan);

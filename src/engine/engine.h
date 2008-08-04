@@ -1,13 +1,17 @@
 // engine defs
-#define ENG_VERSION		76					// version, integer is divided by 100.f
-#define ENG_NAME		"Blood Frontier"	// full name
-#define ENG_RELEASE		"Alpha 2.1"			// edition/release name
+#define ENG_VERSION			77					// version, integer is divided by 100.f
+#define ENG_NAME			"Blood Frontier"	// full name
+#define ENG_RELEASE			"Alpha 2.2"			// edition/release name
 
-#define MASTER_PORT		28800
+#define ENG_SERVER_PORT		28795
+#define ENG_QUERY_PORT		28796
+#define ENG_MASTER_PORT		28800
+#define ENG_MASTER_HOST		"bloodfrontier.com"
 
 #include "cube.h"
 
 extern int verbose, curtime, lastmillis, totalmillis;
+extern int serverport, serverqueryport, servermasterport, serverclients;
 extern void fatal(const char *s, ...);
 extern void conoutf(const char *s, ...);
 extern void console(const char *s, int n, ...);
@@ -388,7 +392,6 @@ extern void drawdepthfxtex();
 
 // server
 extern vector<char *> gameargs;
-
 extern void initruntime();
 extern void cleanupserver();
 extern void serverslice();
@@ -402,13 +405,12 @@ extern bool serveroption(char *opt);
 // serverbrowser
 extern bool resolverwait(const char *name, ENetAddress *address);
 extern int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address);
-extern void addserver(const char *servername);
-extern char *getservername(int n);
+extern void addserver(const char *name, int port, int qport);
 extern void writeservercfg();
 
 // client
 extern void servertoclient(int chan, uchar *buf, int len);
-extern void connects(const char *servername = NULL);
+extern void connects(const char *name = NULL, int port = ENG_SERVER_PORT, int qport = ENG_QUERY_PORT);
 extern void abortconnect();
 extern void clientkeepalive();
 extern ENetHost *clienthost;
