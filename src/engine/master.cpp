@@ -132,10 +132,10 @@ bool checkmasterclientinput(masterclient &c)
 	bool result = false;
 	const int MAXWORDS = 25;
 	char *w[MAXWORDS], *p = c.input;
+	int numargs = MAXWORDS;
 	conoutf("master cmd from %s: %s", c.name, p);
-	for(;;)
+	while(!result)
 	{
-		int numargs = MAXWORDS;
 		loopi(MAXWORDS)
 		{
             w[i] = (char *)"";
@@ -178,7 +178,7 @@ bool checkmasterclientinput(masterclient &c)
 		if(!*w[0])
 		{
 			if(*p) continue;
-			else break;
+			else result = true;
 		}
 		else if(!strcmp(w[0], "add"))
 		{
@@ -187,7 +187,6 @@ bool checkmasterclientinput(masterclient &c)
 			if(*w[2]) qport = clamp(atoi(w[2]), 1, INT_MAX-1);
 			addmasterentry(c, port, qport);
 			result = true;
-			break;
 		}
 		else if(!strcmp(w[0], "list"))
 		{
@@ -196,17 +195,15 @@ bool checkmasterclientinput(masterclient &c)
 			c.output = masterlists.last();
 			c.outputpos = 0;
 			result = true;
-			break;
 		}
-		else break;
+		else
+		{
+			c.output = &registermasterout;
+			c.outputpos = 0;
+			result = true;
+		}
+		loopj(numargs) if(w[j]) delete[] w[j];
 	}
-	if(!result)
-	{
-		c.output = &registermasterout;
-		c.outputpos = 0;
-		result = true;
-	}
-	loopj(MAXWORDS) if(w[j]) delete[] w[j];
 	return result || c.inputpos < (int)sizeof(c.input);
 }
 
