@@ -196,23 +196,7 @@ struct botserv
 
 	void checkbots(bool renew = false)
 	{
-		if(renew)
-		{
-			if(sv_botratio && sv.nonspectators() && m_fight(sv.gamemode) && m_team(sv.gamemode, sv.mutators))
-			{
-				loopvrev(sv.clients) if(sv.clients[i]->state.ownernum >= 0)
-				{
-					clientinfo *cp = sv.clients[i];
-					int team = sv.chooseworstteam(cp);
-					if(team != cp->team)
-					{
-						cp->team = team;
-						sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
-					}
-				}
-			}
-		}
-		else if(m_lobby(sv.gamemode))
+		if(m_lobby(sv.gamemode))
 		{
 			loopvrev(sv.clients)
 				if(sv.clients[i]->state.ownernum >= 0)
@@ -249,6 +233,7 @@ struct botclient
 {
 	GAMECLIENT &cl;
     avoidset obstacles;
+    int avoidmillis;
 
 	static const int BOTISNEAR			= 64;			// is near
 	static const int BOTISFAR			= 128;			// too far
@@ -267,7 +252,7 @@ struct botclient
     #define BOTMAYTARG(y)           ((y)->state == CS_ALIVE && lastmillis-(y)->lastspawn > REGENWAIT)
 	#define BOTTARG(x,y,z)			((y) != (x) && BOTMAYTARG(y) && (!z || AVOIDENEMY(x, y)))
 
-	botclient(GAMECLIENT &_cl) : cl(_cl), obstacles(_cl)
+	botclient(GAMECLIENT &_cl) : cl(_cl), obstacles(_cl), avoidmillis(0)
 	{
 		CCOMMAND(addbot, "s", (botclient *self, char *s),
 			self->addbot(*s ? clamp(atoi(s), 1, 100) : -1)
@@ -373,7 +358,8 @@ struct botclient
 			dir.normalize();
 			float targyaw, targpitch;
 			vectoyawpitch(dir, targyaw, targpitch);
-			float rtime = d->skill*guntype[d->gunselect].rdelay/1000.f,
+			int rdelay = guntype[d->gunselect].rdelay > 0 ? guntype[d->gunselect].rdelay : guntype[d->gunselect].adelay*10;
+			float rtime = d->skill*rdelay/1000.f,
 				atime = d->skill*guntype[d->gunselect].adelay/100.f,
 					skew = float(lastmillis-b.millis)/(rtime+atime),
 						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
@@ -777,6 +763,27 @@ struct botclient
 		}
 		else if(d->state == CS_ALIVE)
 		{
+			if(d->timeinair && cl.et.ents.inrange(d->lastnode))
+			{ // we need to make a quick decision to find a landing spot
+				int closest = -1;
+				fpsentity &e = *(fpsentity *)cl.et.ents[d->lastnode];
+				if(!e.links.empty()) loopv(e.links) if(cl.et.ents.inrange(e.links[i]))
+				{
+					fpsentity &f = *(fpsentity *)cl.et.ents[e.links[i]];
+					if(!cl.et.ents.inrange(closest) ||
+						f.o.squaredist(d->o) < cl.et.ents[closest]->o.squaredist(d->o))
+							closest = e.links[i];
+				}
+				if(cl.et.ents.inrange(closest))
+				{
+					botstate &c = d->bot->setstate(BS_INTEREST);
+					c.targtype = BT_NODE;
+					c.target = closest;
+					c.expire = 1000;
+					c.defers = false;
+					return true;
+				}
+			}
 			if(m_ctf(cl.gamemode))
 			{
 				vector<int> hasflags;
@@ -1027,32 +1034,18 @@ struct botclient
 				if(!d->bot->route.inrange(n)) n = closenode(d, b);
 				if(d->bot->route.inrange(n) && !obstacles.find(d->bot->route[n], d))
 				{
+					fpsentity &e = *(fpsentity *)cl.et.ents[d->bot->route[n]];
 					b.goal = false;
-					vec from = vec(cl.et.ents[d->bot->route[n]]->o).add(vec(0, 1, d->aboveeye)), to(vec(from).add(vec(0, 0, PLAYERHEIGHT))), unitv;
-					float dist = to.dist(from, unitv);
-					unitv.div(dist);
-					float barrier = raycube(from, unitv, dist, RAY_CLIPMAT);
-					if(barrier < dist && dist > PLAYERHEIGHT*CROUCHHEIGHT)
-					{
-						to = unitv;
-						to.mul(barrier);
-						to.add(from);
-						if(!d->crouching)
-						{
-							d->crouching = true;
-							d->crouchtime = lastmillis;
-						}
-					}
-					else if(d->crouching)
-					{
-						d->crouching = false;
-						d->crouchtime = lastmillis;
-					}
-					d->bot->spot = to;
+					d->bot->spot = vec(e.o).add(vec(0, 1, d->height));
 					vec pos = cl.feetpos(d);
 					if(d->bot->spot.z-PLAYERHEIGHT-pos.z > BOTJUMPHEIGHT && !d->jumping && !d->timeinair && lastmillis-d->jumptime > 1000)
 					{
 						d->jumping = true;
+						d->jumptime = lastmillis;
+					}
+					if(((e.attr1 & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime > 250))
+					{
+						d->crouching = !d->crouching;
 						d->jumptime = lastmillis;
 					}
 					return true;
@@ -1128,7 +1121,7 @@ struct botclient
 				else if(!d->hasgun(d->bot->gunpref) && !d->useaction)
 				{
 					vector<actitem> actitems;
-					if(cl.et.collateitems(d, false, true, actitems))
+					if(cl.et.collateitems(d, false, actitems))
 					{
 						int closest = actitems.length()-1;
 						loopv(actitems)
@@ -1185,14 +1178,13 @@ struct botclient
 			if(e)
 			{
 				vec enemypos = cl.headpos(e);
-				aim(d, b, enemypos, d->yaw, d->pitch, 8);
+				aim(d, b, enemypos, d->yaw, d->pitch, 9);
 				aiming = true;
 			}
-
 			if(hunt(d, b))
 			{
-				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 16);
-				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 4);
+				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 15);
+				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 3);
 			}
 			d->move = 1; // keep on movin'
 			d->strafe = 0;
@@ -1218,38 +1210,42 @@ struct botclient
 
 	void avoid()
 	{
-		// guess as to the radius of bots and other critters relying on the avoid set for now
-		float guessradius = cl.player1->radius;
-
-        obstacles.clear();
-        loopi(cl.numdynents())
-        {
-            fpsent *d = (fpsent *)cl.iterdynents(i);
-            if(!d || !BOTMAYTARG(d)) continue;
-			vec pos(cl.feetpos(d, 0.f));
-			float limit = guessradius + d->radius;
-			limit *= limit; // square it to avoid expensive square roots
-			loopvk(cl.et.ents)
-			{
-				fpsentity &e = *(fpsentity *)cl.et.ents[k];
-				if(e.type == WAYPOINT && e.o.squaredist(pos) <= limit)
-					obstacles.add(d, k);
-			}
-		}
-		loopv(cl.pj.projs)
+		if(lastmillis-avoidmillis > 500) // only generate twice a second
 		{
-			projent *p = cl.pj.projs[i];
-			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT)
+			// guess as to the radius of bots and other critters relying on the avoid set for now
+			float guessradius = cl.player1->radius;
+
+			obstacles.clear();
+			loopi(cl.numdynents())
 			{
-				float limit = guntype[p->attr1].explode + guessradius;
+				fpsent *d = (fpsent *)cl.iterdynents(i);
+				if(!d || !BOTMAYTARG(d)) continue;
+				vec pos(cl.feetpos(d, 0.f));
+				float limit = guessradius + d->radius;
 				limit *= limit; // square it to avoid expensive square roots
 				loopvk(cl.et.ents)
 				{
 					fpsentity &e = *(fpsentity *)cl.et.ents[k];
-					if(e.type == WAYPOINT && e.o.squaredist(p->o) <= limit)
-						obstacles.add(p, k);
+					if(e.type == WAYPOINT && e.o.squaredist(pos) <= limit)
+						obstacles.add(d, k);
 				}
 			}
+			loopv(cl.pj.projs)
+			{
+				projent *p = cl.pj.projs[i];
+				if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT)
+				{
+					float limit = guntype[p->attr1].explode + guessradius;
+					limit *= limit; // square it to avoid expensive square roots
+					loopvk(cl.et.ents)
+					{
+						fpsentity &e = *(fpsentity *)cl.et.ents[k];
+						if(e.type == WAYPOINT && e.o.squaredist(p->o) <= limit)
+							obstacles.add(p, k);
+					}
+				}
+			}
+			avoidmillis = lastmillis;
 		}
 	}
 
@@ -1268,11 +1264,10 @@ struct botclient
 			process(d, b);
 			if(lastmillis >= b.next)
 			{
-				bool result = false;
-
-				b.next = lastmillis + botframetimes[b.type];
+				bool result = true;
+				int frame = botframetimes[b.type] - d->skill;
+				b.next = lastmillis + frame;
 				b.cycle++;
-
 				switch(b.type)
 				{
 					case BS_WAIT:		result = dowait(d, b);		break;
@@ -1280,10 +1275,9 @@ struct botclient
 					case BS_PURSUE:		result = dopursue(d, b);	break;
 					case BS_ATTACK:		result = doattack(d, b);	break;
 					case BS_INTEREST:	result = dointerest(d, b);	break;
-					default: break;
+					default:			result = false;				break;
 				}
-
-				if((b.expire && (b.expire -= botframetimes[b.type]) <= 0) || !result)
+				if((b.expire && (b.expire -= frame) <= 0) || !result)
 					d->bot->removestate();
 			}
 			check(d);
