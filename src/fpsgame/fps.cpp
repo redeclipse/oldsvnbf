@@ -988,8 +988,8 @@ struct GAMECLIENT : igameclient
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
 			settexture(bliptex(), 3);
-			drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
 			glColor4f(r, g, b, fade);
+			drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
 			int ty = int(cy+cs);
 			if(radarnames())
 				ty += draw_textx("%s", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, colorname(d, NULL, "", false));
