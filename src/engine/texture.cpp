@@ -349,7 +349,9 @@ void cleanuptexture(Texture *t)
 
 bool reloadtexture(const char *name)
 {
-    Texture *t = textures.access(path(name, true));
+	string tname;
+	s_strcpy(tname, name);
+    Texture *t = textures.access(tname);
     if(t) return reloadtexture(t);
     return false;
 }

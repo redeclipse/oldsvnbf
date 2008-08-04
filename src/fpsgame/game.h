@@ -695,7 +695,7 @@ enum
 	BS_MAX
 };
 
-static const int botframetimes[BS_MAX] = { 100, 50, 50, 25, 50 };
+static const int botframetimes[BS_MAX] = { 300, 150, 150, 75, 150 };
 
 enum
 {
