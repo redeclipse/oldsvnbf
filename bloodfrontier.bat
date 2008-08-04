@@ -5,12 +5,12 @@ set BF_DIR=.
 set BF_HOME=home
 set BF_OPTIONS=-h%BF_HOME% -rinit.cfg
 
-IF EXIST bin\bloodfrontier_client.exe (
-	start bin\bloodfrontier_client.exe %BF_OPTIONS% %* 
+IF EXIST bin\bfclient.exe (
+	start bin\bfclient.exe %BF_OPTIONS% %* 
 ) ELSE (
-	IF EXIST %BF_DIR%\bin\bloodfrontier_client.exe (
+	IF EXIST %BF_DIR%\bin\bfclient.exe (
 		pushd %BF_DIR%
-		start bin\bloodfrontier_client.exe %BF_OPTIONS% %*
+		start bin\bfclient.exe %BF_OPTIONS% %*
 		popd
 	) ELSE (
 		echo Unable to find the Blood Frontier client
