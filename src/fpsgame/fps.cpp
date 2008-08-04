@@ -568,25 +568,25 @@ struct GAMECLIENT : igameclient
 					"ate a bullet from",
 					"was filled with buckshot by",
 					"was riddled with holes by",
-					"was blown to pieces by",
 					"was char-grilled by",
-					"was pierced by"
+					"was pierced by",
+					"was blown to pieces by",
 				},
 				{
 					"received a bullet shaped brain implant from",
 					"was given scrambled brains cooked up by",
 					"was air conditioned courtesy of",
-					"was blown to pieces by",
 					"was char-grilled by",
-					"was expertly sniped by"
+					"was expertly sniped by",
+					"was blown to pieces by",
 				},
 				{
 					"exploded from a measily bullet shot by",
 					"was turned into little chunks by",
 					"was swiss-cheesed by",
-					"was obliterated by",
 					"was made the main course by order of chef",
-					"had their head blown clean off by"
+					"had their head blown clean off by",
+					"was obliterated by",
 				}
 			};
 
@@ -879,7 +879,7 @@ struct GAMECLIENT : igameclient
 				{
 					const char *cliptexs[GUN_MAX] = {
 						pistolcliptex(), shotguncliptex(), chainguncliptex(),
-						grenadescliptex(), flamercliptex(), riflecliptex()
+						flamercliptex(), riflecliptex(), grenadescliptex(),
 					};
 					t = textureload(cliptexs[player1->gunselect], 3);
 					if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1203,10 +1203,10 @@ struct GAMECLIENT : igameclient
 					to = ta/16, tr = ta/2, tq = tr - FONTH/2;
 				const char *cliptexs[GUN_MAX] = {
 					pistolcliptex(), shotguncliptex(), chainguncliptex(),
-					grenadescliptex(), flamercliptex(), riflecliptex()
+					flamercliptex(), riflecliptex(), grenadescliptex(),
 				}, *hudtexs[GUN_MAX] = {
 					pistolhudtex(), shotgunhudtex(), chaingunhudtex(),
-					grenadeshudtex(), flamerhudtex(), riflehudtex()
+					flamerhudtex(), riflehudtex(), grenadeshudtex(),
 				};
 				loopi(GUN_MAX) if(player1->hasgun(i) && (i == player1->gunselect || showclipammo() > 1))
 				{

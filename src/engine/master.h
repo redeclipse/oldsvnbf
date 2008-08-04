@@ -1,5 +1,3 @@
-#define MASTER_PORT		28800
-
 struct mastermsg
 {
     virtual ~mastermsg() {}
@@ -24,6 +22,7 @@ struct masterclient
 {
     ENetAddress address;
     ENetSocket socket;
+    string name;
     char input[4096];
     mastermsg *output;
     int inputpos, outputpos;
@@ -36,6 +35,7 @@ struct masterentry
 {
     ENetAddress address;
     enet_uint32 registertime;
+    int port, qport;
 };
 
 struct masterlist : mastermsg

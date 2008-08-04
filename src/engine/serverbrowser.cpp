@@ -42,7 +42,7 @@ int resolverloop(void * data)
 		rt->starttime = totalmillis;
 		SDL_UnlockMutex(resolvermutex);
 
-		ENetAddress address = { ENET_HOST_ANY, sv->serverinfoport() };
+		ENetAddress address = { ENET_HOST_ANY, serverqueryport };
 		enet_address_set_host(&address, rt->query);
 
 		SDL_LockMutex(resolvermutex);
@@ -263,13 +263,12 @@ vector<serverinfo *> servers;
 ENetSocket pingsock = ENET_SOCKET_NULL;
 int lastinfo = 0;
 
-char *getservername(int n) { return servers[n]->name; }
-
-static serverinfo *newserver(const char *name, uint ip = ENET_HOST_ANY, uint port = sv->serverinfoport())
+static serverinfo *newserver(const char *name, int port = ENG_SERVER_PORT, int qport = 29786, uint ip = ENET_HOST_ANY)
 {
     serverinfo *si = new serverinfo;
     si->address.host = ip;
-    si->address.port = port;
+    si->address.port = si->qport = qport;
+    si->port = port;
     if(ip!=ENET_HOST_ANY) si->resolved = serverinfo::RESOLVED;
 
     if(name) s_strcpy(si->name, name);
@@ -284,10 +283,13 @@ static serverinfo *newserver(const char *name, uint ip = ENET_HOST_ANY, uint por
     return si;
 }
 
-void addserver(const char *servername)
+void addserver(const char *name, int port, int qport)
 {
-    loopv(servers) if(!strcmp(servers[i]->name, servername)) return;
-    newserver(servername);
+    loopv(servers)
+		if(!strcmp(servers[i]->name, name) && servers[i]->port == port && servers[i]->qport == qport)
+			return;
+	if(newserver(name, port, qport) && verbose >= 2)
+		conoutf("added server %s (%d,%d)", name, port, qport);
 }
 
 VAR(searchlan, 0, 0, 1);
@@ -321,7 +323,7 @@ void pingservers()
     {
         ENetAddress address;
         address.host = ENET_HOST_BROADCAST;
-        address.port = sv->serverinfoport();
+        address.port = serverqueryport;
         buf.data = ping;
         buf.dataLength = p.length();
         enet_socket_send(pingsock, &address, &buf, 1);
@@ -345,7 +347,7 @@ void checkresolver()
 	if(!resolving) return;
 
 	const char *name = NULL;
-	ENetAddress addr = { ENET_HOST_ANY, sv->serverinfoport() };
+	ENetAddress addr = { ENET_HOST_ANY, serverqueryport };
 	while(resolvercheck(&name, &addr))
 	{
 		loopv(servers)
@@ -409,11 +411,11 @@ void refreshservers()
 		pingservers();
 }
 
-const char *showservers(g3d_gui *cgui)
+int showservers(g3d_gui *cgui)
 {
 	refreshservers();
     servers.sort(sicompare);
-	return cc->serverinfogui(cgui, servers);
+	return cc->serverbrowser(cgui);
 }
 
 void clearservers()
@@ -426,16 +428,16 @@ void updatefrommaster()
 {
 	uchar buf[32000];
 	uchar *reply = retrieveservers(buf, sizeof(buf));
-	if(!*reply || strstr((char *)reply, "<html>") || strstr((char *)reply, "<HTML>")) conoutf("master server not replying");
-	else
+	if(*reply)
 	{
         clearservers();
 		execute((char *)reply);
 	}
+	else conoutf("master server not replying");
 	refreshservers();
 }
 
-COMMAND(addserver, "s");
+ICOMMAND(addserver, "sii", (char *n, int *a, int *b), addserver(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT));
 COMMAND(clearservers, "");
 COMMAND(updatefrommaster, "");
 
@@ -444,7 +446,7 @@ void writeservercfg()
 	FILE *f = openfile("servers.cfg", "w");
 	if(!f) return;
 	fprintf(f, "// servers connected to are added here automatically\n\n");
-	loopvrev(servers) fprintf(f, "addserver %s\n", servers[i]->name);
+	loopvrev(servers) fprintf(f, "addserver %s %d %d\n", servers[i]->name, servers[i]->port, servers[i]->qport);
 	fclose(f);
 }
 

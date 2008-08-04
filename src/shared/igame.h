@@ -41,7 +41,7 @@ struct iclientcom
 	virtual int otherclients() { return 0; }
     virtual int numchannels() { return 1; }
 	virtual int servercompare(serverinfo *a, serverinfo *b) { return strcmp(a->name, b->name); }
-    virtual const char *serverinfogui(g3d_gui *g, vector<serverinfo *> &servers) { return NULL; }
+    virtual int serverbrowser(g3d_gui *g) { return -1; }
 };
 
 struct igameclient
@@ -101,16 +101,12 @@ struct igameserver
     virtual void deleteinfo(void *ci) = 0;
     virtual void clientdisconnect(int n) = 0;
     virtual int clientconnect(int n, uint ip) = 0;
-    virtual const char *servername() = 0;
     virtual void recordpacket(int chan, void *data, int len) {}
     virtual void parsepacket(int sender, int chan, bool reliable, ucharbuf &p) = 0;
     virtual bool sendpackets() = 0;
     virtual int welcomepacket(ucharbuf &p, int n, ENetPacket *packet) = 0;
-    virtual void serverinforeply(ucharbuf &req, ucharbuf &p) = 0;
+    virtual void queryreply(ucharbuf &req, ucharbuf &p) = 0;
     virtual void serverupdate() = 0;
-    virtual int serverinfoport() = 0;
-    virtual int serverport() = 0;
-    virtual const char *getdefaultmaster() = 0;
     virtual void srvoutf(int cn, const char *s, ...) = 0;
     virtual void changemap(const char *s, int mode, int muts) { return; }
     virtual const char *gameid() = 0;

@@ -352,14 +352,14 @@ void guimodify(char *name, char *contents)
 
 void guiservers()
 {
-	extern const char *showservers(g3d_gui *cgui);
 	if(cgui)
 	{
-		const char *name = showservers(cgui);
-		if(name)
+		extern int showservers(g3d_gui *cgui);
+		int n = showservers(cgui);
+		if(n >= 0 && servers.inrange(n))
 		{
-			s_sprintfd(connect)("connect %s", name);
-			executelater.add(newstring(connect));
+			s_sprintfd(c)("connect %s %d %d", servers[n]->name, servers[n]->port, servers[n]->qport);
+			executelater.add(newstring(c));
             if(shouldclearmenu) clearlater = true;
 		}
 	}
@@ -369,7 +369,7 @@ COMMAND(newgui, "ssss");
 COMMAND(guimodify, "ss");
 COMMAND(guibutton, "ssss");
 COMMAND(guitext, "ss");
-COMMAND(guiservers, "s");
+COMMAND(guiservers, "");
 COMMANDN(cleargui, cleargui_, "i");
 COMMAND(showgui, "s");
 COMMAND(guistayopen, "s");

@@ -758,7 +758,7 @@ struct botinfo
 		route.setsize(0);
 		addstate(BS_WAIT);
 		gunpref = rnd(GUN_MAX-1)+1;
-		if(guntype[gunpref].rdelay <= 0) gunpref += rnd(3)-1;
+		if(guntype[gunpref].rdelay <= 0) gunpref = (gunpref+rnd(3)-1)%GUN_MAX;
 		spot = target = vec(0, 0, 0);
 		enemy = NULL;
 		lastreq = 0;

@@ -235,7 +235,6 @@ struct GAMESERVER : igameserver
 	int gamemode, mutators;
 	int gamemillis, gamelimit;
 
-	string serverdesc;
 	string smapname;
 	int interm, minremain, oldtimelimit;
 	bool maprequest;
@@ -243,7 +242,6 @@ struct GAMESERVER : igameserver
 	int mastermode, mastermask;
 	int currentmaster;
 	bool masterupdate;
-	string masterpass;
 	FILE *mapdata;
 
 	vector<ban> bannedips;
@@ -312,7 +310,10 @@ struct GAMESERVER : igameserver
 	#include "bot.h"
 	#undef BOTSERV
 
-	string  motd;
+	ISVAR(serverdesc, "");
+	ISVAR(servermotd, "");
+	ISVAR(serverpass, "");
+
 	GAMESERVER()
 		: notgotitems(true), notgotflags(false),
 			gamemode(G_LOBBY), mutators(0),
@@ -328,8 +329,6 @@ struct GAMESERVER : igameserver
 		CCOMMAND(gamever, "", (GAMESERVER *self), intret(self->gamever()));
 		CCOMMAND(gamename, "ii", (GAMESERVER *self, int *g, int *m), result(self->gamename(*g, *m)));
 		CCOMMAND(mutscheck, "ii", (GAMESERVER *self, int *g, int *m), intret(self->mutscheck(*g, *m)));
-
-		motd[0] = serverdesc[0] = masterpass[0] = '\0';
 		smuts.setsize(0);
 		cleanup(true);
 	}
@@ -394,7 +393,7 @@ struct GAMESERVER : igameserver
 					}
 				}
 			});
-			execfile("server.cfg");
+			execfile("servexec.cfg");
 		}
 	}
 
@@ -1882,10 +1881,10 @@ struct GAMESERVER : igameserver
 			putint(p, -1);
 		}
 
-		if(motd[0])
+		if(*servermotd())
 		{
 			putint(p, SV_SERVMSG);
-			sendstring(motd, p);
+			sendstring(servermotd(), p);
 		}
 
 		enet_packet_resize(packet, packet->dataLength + MAXTRANS);
@@ -2362,10 +2361,10 @@ struct GAMESERVER : igameserver
 	{
 		if(arg[0]=='-' && arg[1]=='s') switch(arg[2])
 		{
-			case 'd': s_strcpy(serverdesc, &arg[3]); return true;
-			case 'p': s_strcpy(masterpass, &arg[3]); return true;
+			case 'd': setsvar("serverdesc", &arg[3]); return true;
+			case 'P': setsvar("serverpass", &arg[3]); return true;
 			case 'o': if(atoi(&arg[3])) mastermask = (1<<MM_OPEN) | (1<<MM_VETO); return true;
-			case 'M': s_strcpy(motd, &arg[3]); return true;
+			case 'M': setsvar("servermotd", &arg[3]); return true;
 			default: break;
 		}
 		return false;
@@ -2379,15 +2378,15 @@ struct GAMESERVER : igameserver
 		{
 			if(ci->privilege)
 			{
-				if(!masterpass[0] || !pass[0]==(ci->privilege!=PRIV_ADMIN)) return;
+				if(!*serverpass() || !pass[0]==(ci->privilege!=PRIV_ADMIN)) return;
 			}
-            else if(ci->state.state==CS_SPECTATOR && (!masterpass[0] || strcmp(masterpass, pass))) return;
+            else if(ci->state.state==CS_SPECTATOR && (!*serverpass() || strcmp(serverpass(), pass))) return;
             loopv(clients) if(ci!=clients[i] && clients[i]->privilege)
 			{
-				if(masterpass[0] && !strcmp(masterpass, pass)) clients[i]->privilege = PRIV_NONE;
+				if(*serverpass() && !strcmp(serverpass(), pass)) clients[i]->privilege = PRIV_NONE;
 				else return;
 			}
-            if(masterpass[0] && !strcmp(masterpass, pass)) ci->privilege = PRIV_ADMIN;
+            if(*serverpass() && !strcmp(serverpass(), pass)) ci->privilege = PRIV_ADMIN;
             else if(!approved && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
             {
                 ci->wantsmaster = true;
@@ -2443,26 +2442,11 @@ struct GAMESERVER : igameserver
 	}
 
 	#include "extinfo.h"
-
-	const char *servername() { return "bloodfrontierserver"; }
-	int serverinfoport()
-	{
-		return SERVINFO_PORT;
-	}
-	int serverport()
-	{
-		return SERVER_PORT;
-	}
-	const char *getdefaultmaster()
-	{
-		return "bloodfrontier.com";
-	}
-
-    void serverinforeply(ucharbuf &req, ucharbuf &p)
+    void queryreply(ucharbuf &req, ucharbuf &p)
 	{
         if(!getint(req))
         {
-            extserverinforeply(req, p);
+            extqueryreply(req, p);
             return;
         }
 
@@ -2474,11 +2458,11 @@ struct GAMESERVER : igameserver
 		putint(p, gamemode);			// 2
 		putint(p, mutators);			// 3
 		putint(p, minremain);			// 4
-		putint(p, maxclients);			// 5
+		putint(p, serverclients);		// 5
 		putint(p, mastermode);			// 6
 		sendstring(smapname, p);
-		sendstring(serverdesc, p);
-		sendserverinforeply(p);
+		sendstring(serverdesc(), p);
+		sendqueryreply(p);
 	}
 
 	void receivefile(int sender, uchar *data, int len)

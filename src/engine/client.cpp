@@ -89,29 +89,33 @@ void trydisconnect()
 	disconnect(0, !discmillis);
 }
 
-void connects(const char *servername)
+void connects(const char *name, int port, int qport)
 {
 	trydisconnect();
 
 	ENetAddress address;
-	address.port = sv->serverport();
+	if(!port) port = ENG_SERVER_PORT;
+	if(!qport) qport = ENG_QUERY_PORT;
 
-	if (servername != NULL)
+	if(name && *name)
 	{
 		localattempt = 0;
-		addserver(servername);
-		conoutf("\fwattempting to connect to %s", servername);
-		if(!resolverwait(servername, &address))
+		address.port = port;
+		addserver(name, port, qport);
+		conoutf("\fwattempting to connect to %s:[%d]", name, port);
+		if(!resolverwait(name, &address))
 		{
-			conoutf("\frcould not resolve server %s", servername);
+			conoutf("\frcould not resolve host %s", name);
 			return;
 		}
 	}
 	else
 	{
-		if (!localattempt)
+		if(!localattempt)
 		{
-			if (!resolverwait("localhost", &address))
+			address.port = serverport;
+			addserver("localhost", serverport, serverqueryport);
+			if(!resolverwait("localhost", &address))
 			{
 				conoutf("\frcould not resolve localhost");
 				return;
@@ -133,7 +137,7 @@ void connects(const char *servername)
 		enet_host_flush(clienthost);
 		connmillis = totalmillis;
 		connattempts = 0;
-		s_sprintfd(cs)("connecting to %s (esc to abort)", servername != NULL ? servername : "local server");
+		s_sprintfd(cs)("connecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
 		computescreen(cs);
 	}
 	else connectfail(false);
@@ -173,7 +177,7 @@ void disconnect(int onlyclean, int async)
 	if(cleanup) cc->gamedisconnect(onlyclean);
 }
 
-COMMANDN(connect, connects, "s");
+ICOMMAND(connect, "sii", (char *n, int *a, int *b), connects(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT));
 COMMAND(lanconnect, "");
 COMMANDN(disconnect, trydisconnect, "");
 

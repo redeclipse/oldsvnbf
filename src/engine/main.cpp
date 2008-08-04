@@ -813,9 +813,7 @@ int main(int argc, char **argv)
 
 	conoutf("\fminit: mainloop");
 	if(initscript) execute(initscript);
-
 	if(autograbinput) setvar("grabinput", 1, true);
-
 	if(autoconnect) connects();
 	else if(!guiactive()) showgui("main");
 

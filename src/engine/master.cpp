@@ -13,9 +13,9 @@
 #include <errno.h>
 #endif
 
-VARP(masterserver, 0, 1, 1);
-SVARP(masterip, "");
-VARP(masterport, 1025, MASTER_PORT, INT_MAX-1);
+VAR(masterserver, 0, 1, 1);
+VAR(masterport, 1, ENG_MASTER_PORT, INT_MAX-1);
+SVAR(masterip, "");
 
 vector<masterentry> masterentries;
 vector<masterlist *> masterlists;
@@ -45,7 +45,7 @@ void setupmaster()
 
     enet_time_set(0);
 
-    conoutf("master server started on %s port %d", *masterip ? masterip : "localhost", masterport);
+    conoutf("master server started on %s:[%d]", *masterip ? masterip : "localhost", masterport);
 }
 
 void genmasterlist()
@@ -59,7 +59,7 @@ void genmasterlist()
         masterentry &s = masterentries[i];
         string hostname;
         if(enet_address_get_host_ip(&s.address, hostname, sizeof(hostname))<0) continue;
-        s_sprintfd(cmd)("addserver %s\n", hostname);
+        s_sprintfd(cmd)("addserver %s %d %d\n", hostname, s.port, s.qport);
         l->buf.put(cmd, strlen(cmd));
     }
     l->buf.add('\0');
@@ -67,9 +67,9 @@ void genmasterlist()
     updatemasterlist = false;
 }
 
-masterout registermasterout("registered server"), renewmasterout("renewed server registration");
+masterout unkcmdout("unknown command"), registermasterout("registered server"), renewmasterout("renewed server registration");
 
-void addmasterentry(masterclient &c)
+void addmasterentry(masterclient &c, int port, int qport)
 {
     if(masterentries.length()>=SERVER_LIMIT) return;
     loopv(masterentries)
@@ -85,12 +85,12 @@ void addmasterentry(masterclient &c)
     }
     masterentry &s = masterentries.add();
     s.address = c.address;
+    s.port = port;
+    s.qport = qport;
     s.registertime = lastmillis;
     c.output = &registermasterout;
     c.outputpos = 0;
-    string name;
-    if(enet_address_get_host_ip(&c.address, name, sizeof(name))<0) s_strcpy(name, "<<unknown host>>");
-    if(verbose) conoutf("master server received registration from %s", name);
+    if(verbose) conoutf("master received registration from %s (ports %d,%d)", c.name, port, qport);
     updatemasterlist = true;
 }
 
@@ -129,20 +129,85 @@ void purgemasterclient(int n)
 bool checkmasterclientinput(masterclient &c)
 {
     if(c.inputpos<0) return true;
-    else if(strstr(c.input, "add"))
-    {
-        addmasterentry(c);
-        return true;
-    }
-    else if(strstr(c.input, "list"))
-    {
-        genmasterlist();
-        if(masterlists.empty()) return false;
-        c.output = masterlists.last();
-        c.outputpos = 0;
-        return true;
-    }
-    else return c.inputpos<(int)sizeof(c.input);
+	bool result = false;
+	const int MAXWORDS = 25;
+	char *w[MAXWORDS], *p = c.input;
+	conoutf("master cmd from %s: %s", c.name, p);
+	for(;;)
+	{
+		int numargs = MAXWORDS;
+		loopi(MAXWORDS)
+		{
+            w[i] = (char *)"";
+			if(i > numargs) continue;
+			for(;;)
+			{
+				p += strspn(p, " \t\r");
+				if(p[0] != '/' || p[1] != '/') break;
+				p += strcspn(p, "\n\0");
+			}
+			if(*p=='\"')
+			{
+				p++;
+				const char *word = p;
+				p += strcspn(p, "\"\r\n\0");
+				char *s = newstring(word, p-word);
+				if(*p=='\"') p++;
+				if(s) w[i] = s;
+				else numargs = i;
+				continue;
+			}
+			const char *word = p;
+			for(;;)
+			{
+				p += strcspn(p, "/; \t\r\n\0");
+				if(p[0] != '/' || p[1] == '/') break;
+				else if(p[1] == '\0') { p++; break; }
+				p += 2;
+			}
+			if(p-word == 0) numargs = i;
+			else
+			{
+				char *s = newstring(word, p-word);
+				if(s) w[i] = s;
+				else numargs = i;
+			}
+		}
+
+        p += strcspn(p, ";\n\0"); p++;
+		if(!*w[0])
+		{
+			if(*p) continue;
+			else break;
+		}
+		else if(!strcmp(w[0], "add"))
+		{
+			int port = ENG_SERVER_PORT, qport = ENG_QUERY_PORT;
+			if(*w[1]) port = clamp(atoi(w[1]), 1, INT_MAX-1);
+			if(*w[2]) qport = clamp(atoi(w[2]), 1, INT_MAX-1);
+			addmasterentry(c, port, qport);
+			result = true;
+			break;
+		}
+		else if(!strcmp(w[0], "list"))
+		{
+			genmasterlist();
+			if(masterlists.empty()) return false;
+			c.output = masterlists.last();
+			c.outputpos = 0;
+			result = true;
+			break;
+		}
+		else break;
+	}
+	if(!result)
+	{
+		c.output = &registermasterout;
+		c.outputpos = 0;
+		result = true;
+	}
+	loopj(MAXWORDS) if(w[j]) delete[] w[j];
+	return result || c.inputpos < (int)sizeof(c.input);
 }
 
 fd_set readset, writeset;
@@ -178,6 +243,7 @@ void checkmasterclients()
             c->socket = masterclientsocket;
             c->connecttime = lastmillis;
             masterclients.add(c);
+			enet_address_get_host_ip(&c->address, c->name, sizeof(c->name));
         }
     }
 
