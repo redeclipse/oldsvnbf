@@ -93,13 +93,13 @@ libenet: enet/Makefile
 clean: clean-client clean-server enet/Makefile
 
 clean-client:
-	@rm -fv $(CLIENT_OBJS) bloodfrontier_client
+	@rm -fv $(CLIENT_OBJS) bfclient
 
 clean-server:
-	@rm -fv $(SERVER_OBJS) bloodfrontier_server
+	@rm -fv $(SERVER_OBJS) bfserver
 
 clean-daemon:
-	@rm -fv $(DAEMON_OBJS) bloodfrontier_daemon
+	@rm -fv $(DAEMON_OBJS) bfdaemon
 
 clean-ttf:
 	@rm -fv $(TTF_OBJS) ttf2font
@@ -120,13 +120,13 @@ clean-anim:
 	$(CXX) $(ACXXFLAGS) -c -o $@ $(subst -anim.o,.cpp,$@)
 
 client:	libenet $(CLIENT_OBJS)
-	$(CXX) $(CXXFLAGS) -o bloodfrontier_client $(CLIENT_OBJS) $(CLIENT_LIBS)
+	$(CXX) $(CXXFLAGS) -o bfclient $(CLIENT_OBJS) $(CLIENT_LIBS)
 
 server:	libenet $(SERVER_OBJS)
-	$(CXX) $(SCXXFLAGS) -o bloodfrontier_server $(SERVER_OBJS) $(SERVER_LIBS)
+	$(CXX) $(SCXXFLAGS) -o bfserver $(SERVER_OBJS) $(SERVER_LIBS)
 
 daemon:	libenet $(DAEMON_OBJS)
-	$(CXX) $(DCXXFLAGS) -o bloodfrontier_daemon $(DAEMON_OBJS) $(DAEMON_LIBS)
+	$(CXX) $(DCXXFLAGS) -o bfdaemon $(DAEMON_OBJS) $(DAEMON_LIBS)
 
 ttf: $(TTF_OBJS)
 	$(CXX) $(TCXXFLAGS) -o ttf2font $(TTF_OBJS) $(TTF_LIBS)
@@ -135,16 +135,16 @@ anim: $(ANIM_OBJS)
 	$(CXX) $(ACXXFLAGS) -o img2anim $(ANIM_OBJS) $(ANIM_LIBS)
 
 install-client: client
-	cp -v bloodfrontier_client ../bin/bloodfrontier_client
-	chmod +x ../bin/bloodfrontier_client ../bloodfrontier.sh
+	cp -v bfclient ../bin/bfclient
+	chmod +x ../bin/bfclient ../bloodfrontier.sh
 
 install-server: server
-	cp -v bloodfrontier_server ../bin/bloodfrontier_server
-	chmod +x ../bin/bloodfrontier_server
+	cp -v bfserver ../bin/bfserver
+	chmod +x ../bin/bfserver
 
 install-daemon: daemon
-	cp -v bloodfrontier_daemon ../bin/bloodfrontier_daemon
-	chmod +x ../bin/bloodfrontier_daemon
+	cp -v bfdaemon ../bin/bfdaemon
+	chmod +x ../bin/bfdaemon
 
 install-ttf: ttf
 	cp -v ttf2font ../bin/ttf2font
