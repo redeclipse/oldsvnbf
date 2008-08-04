@@ -130,7 +130,7 @@ struct entities : icliententities
 					entlinks[i].add(CAMERA);
 					entlinks[i].add(CONNECTION);
 					break;
-				//	WAYPOINT,						// 16 radius, weight
+				//	WAYPOINT,						// 16 cmd
 				case WAYPOINT:
 					entlinks[i].add(WAYPOINT);
 					break;
@@ -173,7 +173,7 @@ struct entities : icliententities
 		{
 			if(isgun(attr1))
 			{
-				int a = attr2 > 0 && attr2 <= guntype[attr1].max ? attr2 : guntype[attr1].add;
+				int a = clamp(attr2 > 0 ? attr2 : guntype[attr1].add, 1, guntype[attr1].max);
 				if(full) s_sprintf(str)("%s, %d ammo", guntype[attr1].name, a);
 				else s_sprintf(str)("%s", guntype[attr1].name);
 				addentinfo(str);
@@ -192,6 +192,10 @@ struct entities : icliententities
 				s_sprintf(str)("%s activated %s", trignames[0][tr], trignames[1][ta]);
 				addentinfo(str);
 			}
+		}
+		if(type == WAYPOINT)
+		{
+			if(attr1 & WP_CROUCH) addentinfo("crouch");
 		}
 		return entinfostr;
 	}
@@ -288,7 +292,7 @@ struct entities : icliententities
 		}
 	}
 
-	bool collateitems(fpsent *d, bool use, bool can, vector<actitem> &actitems)
+	bool collateitems(fpsent *d, bool use, vector<actitem> &actitems)
 	{
 		float eye = d->height*0.5f;
 		vec m = d->o;
@@ -333,8 +337,6 @@ struct entities : icliententities
 				case EU_ITEM:
 				{
 					if(!e.spawned) break;
-					if(can && !d->canuse(e.type, e.attr1, e.attr2, lastmillis))
-						break;
 					actitem &t = actitems.add();
 					t.type = ITEM_ENT;
 					t.target = i;
@@ -350,7 +352,6 @@ struct entities : icliententities
 			if(proj.projtype != PRJ_ENT || !proj.ready()) continue;
 			if(enttype[proj.ent].usetype != EU_ITEM || !ents.inrange(proj.id))
 				continue;
-			if(can && !d->canuse(proj.ent, proj.attr1, proj.attr2, lastmillis)) continue;
 			if(!insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius))
 				continue;
 			actitem &t = actitems.add();
@@ -364,54 +365,58 @@ struct entities : icliententities
 	void checkitems(fpsent *d)
 	{
 		vector<actitem> actitems;
-		if(collateitems(d, true, true, actitems))
+		if(d->useaction && collateitems(d, true, actitems))
 		{
+			while(!actitems.empty())
+			{
+				int closest = actitems.length()-1;
+				loopv(actitems)
+					if(actitems[i].score < actitems[closest].score)
+						closest = i;
+
+				actitem &t = actitems[closest];
+				int ent = -1;
+				switch(t.type)
+				{
+					case ITEM_ENT:
+					{
+						if(!ents.inrange(t.target)) break;
+						ent = t.target;
+						break;
+					}
+					case ITEM_PROJ:
+					{
+						if(!cl.pj.projs.inrange(t.target)) break;
+						projent &proj = *cl.pj.projs[t.target];
+						ent = proj.id;
+						break;
+					}
+					default: break;
+				}
+				if(cl.et.ents.inrange(ent))
+				{
+					extentity &e = *ents[ent];
+					if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
+					{
+						if(enttype[e.type].usetype == EU_ITEM)
+						{
+							cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, ent);
+							d->useaction = false;
+						}
+						else if(enttype[e.type].usetype == EU_AUTO)
+						{
+							reaction(t.target, d);
+							d->useaction = false;
+						}
+					}
+				}
+				if(!d->useaction) break;
+				else actitems.remove(closest);
+			}
 			if(d->useaction)
 			{
-				while(!actitems.empty())
-				{
-					int closest = actitems.length()-1;
-					loopv(actitems)
-						if(actitems[i].score < actitems[closest].score)
-							closest = i;
-
-					actitem &t = actitems[closest];
-					switch(t.type)
-					{
-						case ITEM_ENT:
-						{
-							if(!ents.inrange(t.target)) break;
-							extentity &e = *ents[t.target];
-							if(enttype[e.type].usetype == EU_ITEM)
-							{
-								cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, t.target);
-								d->useaction = false;
-							}
-							else if(enttype[e.type].usetype == EU_AUTO)
-							{
-								reaction(t.target, d);
-								d->useaction = false;
-							}
-							break;
-						}
-						case ITEM_PROJ:
-						{
-							if(!cl.pj.projs.inrange(t.target)) break;
-							projent &proj = *cl.pj.projs[t.target];
-							cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, proj.id);
-							d->useaction = false;
-							break;
-						}
-						default: break;
-					}
-					if(!d->useaction) break;
-					else actitems.remove(closest);
-				}
-				if(d->useaction)
-				{
-					d->useaction = false;
-					playsound(S_DENIED, 0, 255, d->o, d);
-				}
+				d->useaction = false;
+				playsound(S_DENIED, 0, 255, d->o, d);
 			}
 		}
 		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
@@ -876,11 +881,11 @@ struct entities : icliententities
         float mindist = dist ? enttype[t].radius * enttype[t].radius : 1e16f; // avoid square roots
         loopv(ents) if(ents[i]->type == t)
         {
-            float dist = ents[i]->o.squaredist(v);
-            if(dist <= mindist)
+            float u = ents[i]->o.squaredist(v);
+            if(u <= mindist)
             {
                 w = i;
-                mindist = dist;
+                mindist = u;
             }
         }
 		return w;
@@ -905,18 +910,17 @@ struct entities : icliententities
 		{
 			vec v(cl.feetpos(d, 0.f));
 			int curnode = waypointnode(v);
-
 			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)
 			{
 				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= enttype[WAYPOINT].radius*2.f)
 					curnode = d->lastnode;
-
 				if(!ents.inrange(curnode))
 				{
+					int cmds = WP_NONE;
+					if(d->crouching) cmds |= WP_CROUCH;
 					curnode = ents.length();
-					newentity(v, WAYPOINT, 0, 0, 0, 0, 0);
+					newentity(v, WAYPOINT, cmds, 0, 0, 0, 0);
 				}
-
 				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
 					waypointlink(d->lastnode, curnode, !d->timeinair);
 
@@ -924,9 +928,7 @@ struct entities : icliententities
 			}
 			else
 			{
-				if(!ents.inrange(curnode))
-					curnode = waypointnode(v, false);
-
+				if(!ents.inrange(curnode)) curnode = waypointnode(v, false);
 				if(ents.inrange(curnode))
 				{
 					if(d->lastnode != curnode) d->oldnode = d->lastnode;
@@ -1155,7 +1157,7 @@ struct entities : icliententities
 					}
 					case WAYPOINT:
 					{
-						e.attr1 = enttype[WAYPOINT].radius;
+						e.attr1 = WP_NONE;
 						break;
 					}
 					case FLAG:
@@ -1176,10 +1178,25 @@ struct entities : icliententities
 			}
 		}
 
+		physent dummyent;
+		dummyent.height = dummyent.radius = dummyent.xradius = dummyent.yradius = 1;
 		loopvj(ents)
 		{
 			fpsentity &e = (fpsentity &)*ents[j];
 			loopvrev(e.links) if(!canlink(j, e.links[i], true)) e.links.remove(i);
+
+			if(gver <= 90)
+			{
+				if(e.type == WEAPON)
+				{
+					if(e.attr1 > 3) e.attr1--;
+					else if(e.attr1 == 3) e.attr1 = GUN_GL;
+				}
+				else if(e.type == WAYPOINT)
+				{
+					e.attr1 = e.attr2 = e.attr3 = e.attr4 = e.attr5 = 0;
+				}
+			}
 		}
 	}
 

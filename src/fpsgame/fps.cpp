@@ -107,13 +107,14 @@ struct GAMECLIENT : igameclient
 	IVARP(radardist, 0, 512, 512);
 	IVARP(radarnames, 0, 1, 2);
 	IFVARP(radarsize, 0.22f);
-	IFVARP(ammosize, 0.06f);
+	IFVARP(ammosize, 0.05f);
 	IVARP(editradardist, 0, 512, INT_MAX-1);
 	IVARP(editradarentnames, 0, 1, 2);
 
 	IVARP(showcrosshair, 0, 1, 1);
 	IVARP(showdamage, 0, 1, 1);
 	IVARP(showinfo, 0, 2, 2);
+	IVARP(shownameinfo, 0, 2, 2);
 	IVARP(showindicator, 0, 1, 1);
 	IVARP(showcliphair, 0, 1, 1);
 	IVARP(showclipammo, 0, 2, 2);
@@ -531,7 +532,6 @@ struct GAMECLIENT : igameclient
 	{
 		if(d->type != ENT_PLAYER) return;
 
-		d->obit[0] = 0;
 		d->obliterated = (d == actor) || (flags & HIT_EXPLODE) || (flags & HIT_MELT) || (damage >= MAXHEALTH*2);
         d->lastregen = d->lastpain = lastmillis;
 		d->state = CS_DEAD;
@@ -552,6 +552,7 @@ struct GAMECLIENT : igameclient
 		}
 		else d->move = d->strafe = 0;
 
+		s_strcpy(d->obit, "rests in pieces");
         if(d == actor)
         {
         	if(flags & HIT_MELT) s_strcpy(d->obit, "melted");
@@ -886,7 +887,7 @@ struct GAMECLIENT : igameclient
 					float nsize = chsize*(float(t->w)/float(pointer->w));
 					cx = ox-nsize/2.0f;
 					cy = oy-nsize/2.0f;
-					glBindTexture(GL_TEXTURE_2D, t->retframe(player1->ammo[player1->gunselect], guntype[player1->gunselect].rdelay > 0 ? guntype[player1->gunselect].charge : guntype[player1->gunselect].max));
+					glBindTexture(GL_TEXTURE_2D, t->retframe(player1->ammo[player1->gunselect], guntype[player1->gunselect].max));
 					glColor4f(1.f, 1.f, 1.f, clipbarblend());
 					glBegin(GL_QUADS);
 					glTexCoord2f(0.0f, 0.0f); glVertex2f(cx, cy);
@@ -978,7 +979,8 @@ struct GAMECLIENT : igameclient
 				cy = y + s*0.5f*(1.0f+dir.y/radarrange()),
 				cs = (d->crouching ? 0.005f : 0.025f)*s,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-				fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blipblend();
+				fmag = clamp(d->vel.magnitude()/ph.maxspeed(d), 0.f, 1.f),
+				fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blipblend()*fmag;
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
 			settexture(bliptex(), 3);
@@ -1213,7 +1215,7 @@ struct GAMECLIENT : igameclient
 					glColor4f(1.f, 1.f, 1.f, blend);
 					drawtex(float(tv), float(tp), float(tb), float(ta));
 					t = textureload(cliptexs[i], 3);
-					glBindTexture(GL_TEXTURE_2D, t->retframe(player1->ammo[i], guntype[i].rdelay > 0 ? guntype[i].charge : guntype[i].max));
+					glBindTexture(GL_TEXTURE_2D, t->retframe(player1->ammo[i], guntype[i].max));
 					glColor4f(1.f, 1.f, 1.f, blend);
 					drawtex(float(tv+to/2), float(tp+to/2), float(ta-to), float(ta-to));
 					if(i == player1->gunselect) pushfont("emphasis");
@@ -1227,7 +1229,7 @@ struct GAMECLIENT : igameclient
 			if(showinfo())
 			{
 				vector<actitem> actitems;
-				if(et.collateitems(player1, false, true, actitems))
+				if(et.collateitems(player1, false, actitems))
 				{
 					bool found = false;
 					while(!actitems.empty())
@@ -1977,7 +1979,18 @@ struct GAMECLIENT : igameclient
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showgun = isgun(gun);
 
-		s_sprintf(d->info)("%s", colorname(d, NULL, "@"));
+		if(shownameinfo() && third && d != player1 && d->state != CS_SPECTATOR)
+		{
+			string s;
+			vec pos(d->o), off(0, 0, 2);
+			if(shownameinfo() > 1 && d->state == CS_DEAD)
+			{
+				s_sprintf(s)("@%s", d->obit);
+				part_text(pos.add(off), s, 10, 1, 0xFFFFFF);
+			}
+			s_sprintf(s)("@%s", colorname(d));
+			part_text(pos.add(off), s, 10, 1, 0xFFFFFF);
+		}
 
 		if(d->state == CS_DEAD)
 		{
@@ -2092,9 +2105,6 @@ struct GAMECLIENT : igameclient
 				}
 			}
 		}
-
-		if(third && d != player1 && d->state != CS_DEAD && d->state != CS_SPECTATOR)
-			part_text(d->abovehead(), d->info, 10, 1, 0xFFFFFF);
 
         renderclient(d, third, trans, team, a[0].name ? a : NULL, secondary, animflags, animdelay, lastaction, 0.f);
 	}

@@ -41,7 +41,7 @@ enum								// entity types
 	FLAG,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
 	CAMERA,							// 15
-	WAYPOINT,						// 16
+	WAYPOINT,						// 16 cmd
 	ANNOUNCER,						// 17 maxrad, minrad, volume
 	CONNECTION,						// 18
 	MAXENTTYPES						// 19
@@ -100,9 +100,9 @@ enum
 	GUN_PISTOL = 0,
 	GUN_SG,
 	GUN_CG,
-	GUN_GL,
 	GUN_FLAMER,
 	GUN_RIFLE,
+	GUN_GL,
 	GUN_MAX
 };
 
@@ -119,61 +119,60 @@ enum
 struct guntypes
 {
 	int	info, 		anim,			sound, 		esound, 	fsound,		rsound,		ssound,
-		add,	charge,	max,adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,
+		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,
 		size,	explode; float offset,	elasticity,	relativity,	waterfric,	weight;
 	const char *name,		*item,						*vwep;
 } guntype[GUN_MAX] =
 {
 	{
 		GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		12,		12,		64,	250,	1000,	20,		0,		0,		0,		-10,    10,		0,
+		12,		12,		250,	1000,	20,		0,		0,		0,		-10,    10,		0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"pistol",	"weapons/pistol/item",		"weapons/pistol/vwep"
 	},
 	{
 		GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		1,		8,		16,	600,	1200,	10,		0,		0,		0,		-30,    30, 	0,
+		1,		8,		600,	1200,	10,		0,		0,		0,		-30,    30, 	0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"shotgun",	"weapons/shotgun/item",		"weapons/shotgun/vwep"
 	},
 	{
 		GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		40,		40,		120,100,    1000,	15,		0,		0,		0,		-5,	     5,		0,
+		40,		40,		100,    1000,	15,		0,		0,		0,		-5,	     5,		0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"chaingun",	"weapons/chaingun/item",	"weapons/chaingun/vwep"
 	},
 	{
-		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
-		2,		0,		4,	1500,	0,		200,	150,	1000,	3000,	-15,    10,		8,
-		3,		64,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
-				"grenades",	"weapons/grenades/item",	"weapons/grenades/vwep"
-	},
-	{
 		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURNING,S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
-		50,		50,		200,100, 	2000,	15,		100,	0,		3000,	-1,		 1,		8,
+		50,		50,		100, 	2000,	15,		100,	0,		3000,	-1,		 1,		8,
 		24,		28,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,
 				"flamer",	"weapons/flamer/item",		"weapons/flamer/vwep"
 	},
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		1,		5,		10,	800,	1600,	100,	0,		0,		0,		-35,  	25,		0,
+		1,		5,		800,	1600,	100,	0,		0,		0,		-35,  	25,		0,
 		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"rifle",	"weapons/rifle/item",		"weapons/rifle/vwep"
-	}
+	},
+	{
+		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
+		2,		4,		1500,	0,		200,	150,	1000,	3000,	-15,    10,		8,
+		3,		64,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
+				"grenades",	"weapons/grenades/item",	"weapons/grenades/vwep"
+	},
 };
 #define isgun(gun)	(gun > -1 && gun < GUN_MAX)
 
 enum
 {
 	HIT_NONE 	= 0,
-	HIT_LEGS	= 1<<2,
-	HIT_TORSO	= 1<<3,
-	HIT_HEAD	= 1<<4,
-	HIT_BURN	= 1<<5,
-	HIT_EXPLODE	= 1<<6,
-	HIT_MELT	= 1<<7,
-	HIT_FALL	= 1<<8,
-	HIT_NUM		= 7
+	HIT_LEGS	= 1<<0,
+	HIT_TORSO	= 1<<1,
+	HIT_HEAD	= 1<<2,
+	HIT_BURN	= 1<<3,
+	HIT_EXPLODE	= 1<<4,
+	HIT_MELT	= 1<<5,
+	HIT_FALL	= 1<<6,
 };
 
 enum
@@ -191,41 +190,41 @@ enum
 enum
 {
 	G_M_NONE	= 0,
-	G_M_TEAM	= 1<<2,
-	G_M_INSTA	= 1<<3,
-	G_M_DUEL	= 1<<4,
-	G_M_PROG	= 1<<5,
-	G_M_MULTI	= 1<<6,
-	G_M_DLMS	= 1<<7,
-	G_M_MAYHEM	= 1<<8,
-	G_M_NOITEMS	= 1<<9,
+	G_M_TEAM	= 1<<0,
+	G_M_INSTA	= 1<<1,
+	G_M_DUEL	= 1<<2,
+	G_M_PROG	= 1<<3,
+	G_M_MULTI	= 1<<4,
+	G_M_DLMS	= 1<<5,
+	G_M_MAYHEM	= 1<<6,
+	G_M_NOITEMS	= 1<<7,
 	G_M_ALL		= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_PROG|G_M_MULTI|G_M_DLMS|G_M_MAYHEM|G_M_NOITEMS,
 	G_M_FIGHT	= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI|G_M_DLMS|G_M_NOITEMS,
 	G_M_STF		= G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM|G_M_NOITEMS,
 	G_M_CTF		= G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM|G_M_NOITEMS,
-	G_M_NUM		= 8
 };
+#define G_M_NUM 8
 
 struct gametypes
 {
 	int	type,			mutators,		implied;			const char *name;
 } gametype[] = {
-	{ G_DEMO,			0,				0,					"Demo" },
-	{ G_LOBBY,			0,				0,					"Lobby" },
-	{ G_EDITMODE,		0,				0,					"Editing" },
-	{ G_MISSION,		0,				0,					"Mission" },
-	{ G_DEATHMATCH,		G_M_FIGHT,		0,					"Deathmatch" },
+	{ G_DEMO,			G_M_NONE,		G_M_NONE,			"Demo" },
+	{ G_LOBBY,			G_M_NONE,		G_M_NONE,			"Lobby" },
+	{ G_EDITMODE,		G_M_NONE,		G_M_NONE,			"Editing" },
+	{ G_MISSION,		G_M_NONE,		G_M_NONE,			"Mission" },
+	{ G_DEATHMATCH,		G_M_FIGHT,		G_M_NONE,			"Deathmatch" },
 	{ G_STF,			G_M_STF,		G_M_TEAM,			"Secure the Flag" },
 	{ G_CTF,			G_M_CTF,		G_M_TEAM,			"Capture the Flag" },
 }, mutstype[] = {
-	{ G_M_TEAM,			G_M_ALL,		0,					"Team" },
+	{ G_M_TEAM,			G_M_ALL,		G_M_NONE,			"Team" },
 	{ G_M_INSTA,		G_M_ALL,		G_M_NOITEMS,		"Instagib" },
-	{ G_M_DUEL,			G_M_ALL,		0,					"Duel" },
-	{ G_M_PROG,			G_M_ALL,		0,					"Progressive" },
+	{ G_M_DUEL,			G_M_ALL,		G_M_NONE,			"Duel" },
+	{ G_M_PROG,			G_M_ALL,		G_M_NONE,			"Progressive" },
 	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,			"Multi-sided" },
 	{ G_M_DLMS,			G_M_ALL,		G_M_DUEL,			"Last Man Standing" },
-	{ G_M_MAYHEM,		G_M_ALL,		0,					"Mayhem" },
-	{ G_M_NOITEMS,		G_M_ALL,		0,					"No Items" },
+	{ G_M_MAYHEM,		G_M_ALL,		G_M_NONE,			"Mayhem" },
+	{ G_M_NOITEMS,		G_M_ALL,		G_M_NONE,			"No Items" },
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)
@@ -351,11 +350,11 @@ struct enemytypes
 
 enum
 {
-	SAY_NONE = 0,
-	SAY_ACTION = 1<<2,
-	SAY_TEAM = 1<<3,
-	SAY_NUM = 2
+	SAY_NONE	= 0,
+	SAY_ACTION	= 1<<0,
+	SAY_TEAM	= 1<<1,
 };
+#define SAY_NUM 2
 
 enum
 {
@@ -418,7 +417,6 @@ VARG(spawngun, 0, GUN_PISTOL, GUN_MAX-1);
 VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
 VARG(botbalance, 0, 4, 16);
-VARG(botratio, 0, 2, 10);
 VARG(botminskill, 0, 35, 100);
 VARG(botmaxskill, 0, 85, 100);
 
@@ -521,7 +519,7 @@ struct fpsstate
 
 	bool canswitch(int gun, int millis)
 	{
-		if(gun != gunselect && hasgun(gun) && gunwaited(gun, millis) && gunwaited(gunselect, millis))
+		if(gun != gunselect && gunwaited(gunselect, millis) && hasgun(gun) && gunwaited(gun, millis))
 			return true;
 		return false;
 	}
@@ -535,14 +533,14 @@ struct fpsstate
 
 	bool canreload(int gun, int millis)
 	{
-		if(hasgun(gun, 1) && ammo[gun] < guntype[gun].charge && gunwaited(gun, millis) && gunwaited(gunselect, millis))
+		if(gunwaited(gunselect, millis) && hasgun(gun, 1) && ammo[gun] < guntype[gun].max && gunwaited(gun, millis))
 			return true;
 		return false;
 	}
 
 	bool canuse(int type, int attr1, int attr2, int millis)
 	{
-		switch(type)
+		if(gunwaited(gunselect, millis)) switch(type)
 		{
 			case TRIGGER:
 			{
@@ -551,7 +549,7 @@ struct fpsstate
 			}
 			case WEAPON:
 			{ // can't use when reloading or firing
-				if(isgun(attr1) && ammo[attr1] < guntype[attr1].max && gunwaited(attr1, millis) && gunwaited(gunselect, millis))
+				if(isgun(attr1) && !hasgun(attr1, 1) && gunwaited(attr1, millis))
 					return true;
 				break;
 			}
@@ -568,7 +566,7 @@ struct fpsstate
 			case WEAPON:
 			{
 				gunswitch(attr1, millis);
-				ammo[attr1] = clamp(max(ammo[attr1], 0)+(attr2 > 0 ? attr2 : guntype[attr1].add), guntype[attr1].add, guntype[attr1].max);
+				ammo[attr1] = clamp(attr2 > 0 ? attr2 : guntype[attr1].add, 1, guntype[attr1].max);
 				entid[attr1] = id;
 				break;
 			}
@@ -611,15 +609,14 @@ struct fpsstate
 enum
 {
 	ST_NONE		= 0,
-	ST_REQS		= 1<<2,
-	ST_CAMERA	= 1<<3,
-	ST_CURSOR	= 1<<4,
-	ST_GAME		= 1<<5,
-	ST_SPAWNS	= 1<<6,
+	ST_REQS		= 1<<0,
+	ST_CAMERA	= 1<<1,
+	ST_CURSOR	= 1<<2,
+	ST_GAME		= 1<<3,
+	ST_SPAWNS	= 1<<4,
 	ST_DEFAULT	= ST_REQS|ST_CAMERA|ST_CURSOR|ST_GAME,
 	ST_VIEW		= ST_CURSOR|ST_CAMERA,
 	ST_ALL		= ST_REQS|ST_CAMERA|ST_CURSOR|ST_GAME|ST_SPAWNS,
-	ST_NUM		= 5
 };
 
 struct fpsentity : extentity
@@ -695,7 +692,7 @@ enum
 	BS_MAX
 };
 
-static const int botframetimes[BS_MAX] = { 300, 150, 150, 75, 150 };
+static const int botframetimes[BS_MAX] = { 250, 250, 250, 125, 250 };
 
 enum
 {
@@ -705,6 +702,12 @@ enum
 	BT_FLAG,
 	BT_DROP,
 	BT_MAX
+};
+
+enum
+{
+	WP_NONE = 0,
+	WP_CROUCH = 1<<0,
 };
 
 struct botstate
@@ -755,6 +758,7 @@ struct botinfo
 		route.setsize(0);
 		addstate(BS_WAIT);
 		gunpref = rnd(GUN_MAX-1)+1;
+		if(guntype[gunpref].rdelay <= 0) gunpref += rnd(3)-1;
 		spot = target = vec(0, 0, 0);
 		enemy = NULL;
 		lastreq = 0;

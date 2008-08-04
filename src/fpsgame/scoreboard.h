@@ -25,7 +25,6 @@ struct scoreboard : g3d_callback
     IVARP(showspectators, 0, 1, 1);
     IVARP(highlightscore, 0, 1, 1);
     IVARP(showconnecting, 0, 0, 1);
-    IVARP(showobits, 0, 1, 1);
 
 	scoreboard(GAMECLIENT &_cl) : scoreson(false), cl(_cl)
 	{
@@ -350,18 +349,6 @@ struct scoreboard : g3d_callback
                 	if(o->ownernum >= 0)
 						g.textf("\fw%d [\fs%s%d\fS]", 0xFF9955, NULL, o->clientnum, o->ownernum == cl.player1->clientnum ? "\fg" : "\fc", o->ownernum);
 					else g.textf("%d", 0xFFFFDD, NULL, o->clientnum);
-				});
-                g.poplist();
-            }
-
-            if(showobits())
-			{
-                g.space(1);
-                g.pushlist();
-                g.text("obit", fgcolor);
-                loopscoregroup(o,
-                {
-					g.textf("%s", 0xFFFFDD, NULL, o->state == CS_DEAD && o->obit[0] ? o->obit : " ");
 				});
                 g.poplist();
             }

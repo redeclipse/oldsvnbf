@@ -470,7 +470,7 @@ struct GAMESERVER : igameserver
 				teamscore &ts = teamscores[j];
 				float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
 				ts.rank += rank;
-				ts.clients += !sv_botratio || ci->state.ownernum >= 0 ? 1 : sv_botratio+(nonspectators(-1, true) <= 1 ? 1 : 0);
+				ts.clients++;
 				break;
 			}
 		}
@@ -750,12 +750,12 @@ struct GAMESERVER : igameserver
 		}
 
 		// server modes
-		if (m_stf(gamemode)) smode = &stfmode;
+		if(m_stf(gamemode)) smode = &stfmode;
         else if(m_ctf(gamemode)) smode = &ctfmode;
 		else smode = NULL;
 
 		smuts.setsize(0);
-		if (m_duel(gamemode, mutators)) smuts.add(&duelmutator);
+		if(m_duel(gamemode, mutators)) smuts.add(&duelmutator);
 
 
 		if(smode) smode->reset(false);
@@ -2176,7 +2176,7 @@ struct GAMESERVER : igameserver
 			return;
 		}
 		gs.setgunstate(e.gun, GUNSTATE_RELOAD, guntype[e.gun].rdelay, e.millis);
-		gs.ammo[e.gun] = clamp(max(gs.ammo[e.gun], 0) + guntype[e.gun].add, guntype[e.gun].add, guntype[e.gun].charge);
+		gs.ammo[e.gun] = clamp(max(gs.ammo[e.gun], 0) + guntype[e.gun].add, guntype[e.gun].add, guntype[e.gun].max);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
 	}
 
@@ -2525,18 +2525,15 @@ struct GAMESERVER : igameserver
     {
     	static string gname;
     	gname[0] = 0;
-    	if(gametype[mode].mutators && muts)
-    	{
-			loopi(G_M_NUM)
+    	if(gametype[mode].mutators && muts) loopi(G_M_NUM)
+		{
+			if ((gametype[mode].mutators & mutstype[i].type) && (muts & mutstype[i].type) &&
+				(!gametype[mode].implied || !(gametype[mode].implied & mutstype[i].type)))
 			{
-				if ((gametype[mode].mutators & mutstype[i].type) && (muts & mutstype[i].type) &&
-					!(gametype[mode].implied & mutstype[i].type))
-				{
-					s_sprintfd(name)("%s%s%s", *gname ? gname : "", *gname ? "-" : "", mutstype[i].name);
-					s_strcpy(gname, name);
-				}
+				s_sprintfd(name)("%s%s%s", *gname ? gname : "", *gname ? "-" : "", mutstype[i].name);
+				s_strcpy(gname, name);
 			}
-    	}
+		}
 		s_sprintfd(mname)("%s%s%s", *gname ? gname : "", *gname ? " " : "", gametype[mode].name);
 		s_strcpy(gname, mname);
 		return gname;
@@ -2550,33 +2547,34 @@ struct GAMESERVER : igameserver
 			*muts = gametype[*mode].implied;
 		}
 
-		if(gametype[*mode].mutators && *muts)
+		#define modecheckreset { i = 0; continue; }
+		if(gametype[*mode].mutators && *muts) loopi(G_M_NUM)
 		{
-			loopi(G_M_NUM)
+			if(!(gametype[*mode].mutators & mutstype[i].type) && (*muts & mutstype[i].type))
 			{
-				if(!(gametype[*mode].mutators & mutstype[i].type) && (*muts & mutstype[i].type))
-					*muts &= ~mutstype[i].type;
-
-				if(gametype[*mode].implied && (gametype[*mode].implied & mutstype[i].type) && !(*muts & mutstype[i].type))
-					*muts |= mutstype[i].type;
-
-				if(*muts & mutstype[i].type)
+				*muts &= ~mutstype[i].type;
+				modecheckreset;
+			}
+			if(gametype[*mode].implied && (gametype[*mode].implied & mutstype[i].type) && !(*muts & mutstype[i].type))
+			{
+				*muts |= mutstype[i].type;
+				modecheckreset;
+			}
+			if(*muts & mutstype[i].type) loopj(G_M_NUM)
+			{
+				if(mutstype[i].mutators && !(mutstype[i].mutators & mutstype[j].type) && (*muts & mutstype[j].type))
 				{
-					loopj(G_M_NUM)
-					{
-						if(mutstype[i].mutators && !(mutstype[i].mutators & mutstype[j].type) && (*muts & mutstype[j].type))
-							*muts &= ~mutstype[j].type;
-
-						if(mutstype[i].implied && (mutstype[i].implied & mutstype[j].type) && !(*muts & mutstype[j].type))
-							*muts |= mutstype[j].type;
-
-						if((mutstype[i].implied & mutstype[j].type) && !(*muts & mutstype[j].type))
-							*muts |= mutstype[j].type;
-					}
+					*muts &= ~mutstype[j].type;
+					modecheckreset;
+				}
+				if(mutstype[i].implied && (mutstype[i].implied & mutstype[j].type) && !(*muts & mutstype[j].type))
+				{
+					*muts |= mutstype[j].type;
+					modecheckreset;
 				}
 			}
 		}
-		else *muts = 0;
+		else *muts = G_M_NONE;
     }
 
 	int mutscheck(int mode, int muts)
