@@ -403,7 +403,7 @@ extern void lanconnect();
 extern bool serveroption(char *opt);
 
 // serverbrowser
-extern bool resolverwait(const char *name, ENetAddress *address);
+extern bool resolverwait(const char *name, int port, ENetAddress *address);
 extern int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address);
 extern void addserver(const char *name, int port, int qport);
 extern void writeservercfg();

@@ -103,7 +103,7 @@ void connects(const char *name, int port, int qport)
 		address.port = port;
 		addserver(name, port, qport);
 		conoutf("\fwattempting to connect to %s:[%d]", name, port);
-		if(!resolverwait(name, &address))
+		if(!resolverwait(name, port, &address))
 		{
 			conoutf("\frcould not resolve host %s", name);
 			return;
@@ -115,7 +115,7 @@ void connects(const char *name, int port, int qport)
 		{
 			address.port = serverport;
 			addserver("localhost", serverport, serverqueryport);
-			if(!resolverwait("localhost", &address))
+			if(!resolverwait("localhost", serverport, &address))
 			{
 				conoutf("\frcould not resolve localhost");
 				return;
