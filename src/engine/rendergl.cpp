@@ -1486,8 +1486,6 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 		glPopMatrix();
 	}
 
-    g3d_render();
-
 	glDisable(GL_TEXTURE_2D);
 	notextureshader->set();
 
