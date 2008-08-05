@@ -75,7 +75,7 @@ void addmasterentry(masterclient &c, int port, int qport)
     loopv(masterentries)
     {
         masterentry &s = masterentries[i];
-        if(s.address.host==c.address.host)
+        if(s.address.host == c.address.host && s.port == port && s.qport == qport)
         {
             s.registertime = lastmillis;
             c.output = &renewmasterout;
