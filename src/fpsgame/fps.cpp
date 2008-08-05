@@ -708,24 +708,26 @@ struct GAMECLIENT : igameclient
 
     void preload()
     {
-    	loopi(TEAM_MAX)
+    	int n = m_team(gamemode, mutators) ? numteams(gamemode, mutators)+1 : 1;
+    	loopi(n)
     	{
 			loadmodel(teamtype[i].tpmdl, -1, true);
 			loadmodel(teamtype[i].fpmdl, -1, true);
     	}
-        ws.preload();
+    	ws.preload();
+		pj.preload();
         et.preload();
-		stf.preload();
-        ctf.preload();
+		if(m_edit(gamemode) || m_stf(gamemode)) stf.preload();
+        if(m_edit(gamemode) || m_ctf(gamemode)) ctf.preload();
     }
 
 	void startmap(const char *name)	// called just after a map load
 	{
 		const char *title = getmaptitle();
 		if(*title) console("%s", CON_CENTER|CON_NORMAL, title);
-
 		intermission = false;
         player1->respawned = player1->suicided = maptime = 0;
+        preload();
 		cc.mapstart();
         resetstates(ST_ALL);
 	}

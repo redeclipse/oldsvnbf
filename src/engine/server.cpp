@@ -680,7 +680,12 @@ void setupserver()
 		else msaddress.host = address.host;
 	}
 	serverhost = enet_host_create(&address, serverclients+1, 0, serveruprate);
-	if(!serverhost) { conoutf("\frcould not create server socket"); return; }
+	if(!serverhost)
+	{
+		conoutf("\frcould not create server socket");
+		setvar("servertype", 0);
+		return;
+	}
 	loopi(serverclients) serverhost->peers[i].data = NULL;
 
 	address.port = serverqueryport;

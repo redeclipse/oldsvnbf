@@ -413,16 +413,16 @@ struct weaponstate
 						hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 	}
 
-    void preload()
+    void preload(int gun = -1)
     {
-        loopi(GUN_MAX)
+    	int g = gun < 0 ? (m_insta(cl.gamemode, cl.mutators) ? instaspawngun : spawngun) : gun;
+    	if(isgun(g))
         {
-            const char *file = guntype[i].name;
-            if(!file) continue;
-            s_sprintfd(mdl)("weapons/%s", file);
+        	string mdl;
+            s_sprintf(mdl)("weapons/%s", guntype[g].name);
             loadmodel(mdl, -1, true);
-            s_sprintf(mdl)("weapons/%s/vwep", file);
-            loadmodel(mdl, -1, true);
+			s_sprintf(mdl)("weapons/%s/vwep", guntype[g].name);
+			loadmodel(mdl, -1, true);
         }
     }
 } ws;

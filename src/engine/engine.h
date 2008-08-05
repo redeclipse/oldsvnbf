@@ -11,7 +11,7 @@
 #include "cube.h"
 
 extern int verbose, curtime, lastmillis, totalmillis;
-extern int serverport, serverqueryport, servermasterport, serverclients;
+extern int servertype, serverport, serverqueryport, servermasterport, serverclients;
 extern void fatal(const char *s, ...);
 extern void conoutf(const char *s, ...);
 extern void console(const char *s, int n, ...);
