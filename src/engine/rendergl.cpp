@@ -1250,11 +1250,15 @@ static void bar(float bar, int w, int o, float r, float g, float b)
 
 void renderprogress(float bar1, const char *text1, float bar2, const char *text2, GLuint tex)	// also used during loading
 {
-	if (!inbetweenframes) return;
+	if(!inbetweenframes) return;
 
 	clientkeepalive();
 
-	if (verbose >= 4)
+    #ifdef __APPLE__
+    interceptkey(SDLK_UNKNOWN); // keep the event queue awake to avoid 'beachball' cursor
+    #endif
+
+	if(verbose >= 4)
 	{
 		if (text2) conoutf("\fm%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
 		else if (text1) conoutf("\fm%s [%.2f%%]", text1, bar1*100.f);
