@@ -56,7 +56,6 @@ struct igameclient
 
     virtual void newmap(int size) = 0;
     virtual void startmap(const char *name) = 0;
-    virtual void preload() {}
     virtual void drawhud(int w, int h) = 0;
 
     virtual bool allowmove(physent *d) { return true; }

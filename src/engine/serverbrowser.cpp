@@ -437,6 +437,8 @@ void clearservers()
 {
     resolverclear();
     servers.deletecontentsp();
+	if(servertype)
+		addserver("localhost", serverport, serverqueryport);
 }
 
 void updatefrommaster()
@@ -449,7 +451,6 @@ void updatefrommaster()
 		execute((char *)reply);
 	}
 	else conoutf("master server not replying");
-	addserver("localhost", serverport, serverqueryport);
 	refreshservers();
 }
 

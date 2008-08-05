@@ -210,7 +210,7 @@ struct gametypes
 	int	type,			mutators,		implied;			const char *name;
 } gametype[] = {
 	{ G_DEMO,			G_M_NONE,		G_M_NONE,			"Demo" },
-	{ G_LOBBY,			G_M_NONE,		G_M_NONE,			"Lobby" },
+	{ G_LOBBY,			G_M_NONE,		G_M_NOITEMS,		"Lobby" },
 	{ G_EDITMODE,		G_M_NONE,		G_M_NONE,			"Editing" },
 	{ G_MISSION,		G_M_NONE,		G_M_NONE,			"Mission" },
 	{ G_DEATHMATCH,		G_M_FIGHT,		G_M_NONE,			"Deathmatch" },

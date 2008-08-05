@@ -472,8 +472,8 @@ struct entities : icliententities
 		switch(e.type)
 		{
 			case WEAPON:
-				while (e.attr1 < 0) e.attr1 += GUN_MAX;
-				while (e.attr1 >= GUN_MAX) e.attr1 -= GUN_MAX;
+				while(e.attr1 < 0) e.attr1 += GUN_MAX;
+				while(e.attr1 >= GUN_MAX) e.attr1 -= GUN_MAX;
 				if(e.attr2 < 0) e.attr2 = 0;
 				break;
 			case PLAYERSTART:
@@ -1321,11 +1321,12 @@ struct entities : icliententities
 
     void preload()
     {
-        loopv(ents)
+        if(!m_noitems(cl.gamemode, cl.mutators)) loopv(ents)
         {
         	extentity &e = *ents[i];
 			const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
             if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
+            if(e.type == WEAPON && isgun(e.attr1)) cl.ws.preload(e.attr1);
         }
     }
 

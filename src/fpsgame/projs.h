@@ -431,7 +431,19 @@ struct projectiles
 		vec to(rnd(100)-50, rnd(100)-50, rnd(100)-50);
 		to.normalize();
 		to.add(p);
-		create(p, to, true, d, type, rnd(3000)+1000, 0, rnd(30)+10, 0, -1);
+		create(p, to, true, d, type, rnd(2000)+2000, 0, rnd(30)+10, 0, -1);
+	}
+
+	void preload()
+	{
+		const char *mdls[] = {
+			"projectiles/grenade",
+			"gibc", "gibh",
+			"debris/debris01", "debris/debris02",
+			"debris/debris03", "debris/debris04",
+			""
+		};
+		for(int i = 0; *mdls[i]; i++) loadmodel(mdls[i], -1, true);
 	}
 
 	void render()

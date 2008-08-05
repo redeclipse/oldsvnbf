@@ -809,7 +809,6 @@ int main(int argc, char **argv)
     preloadtextures();
 	particleinit();
     initdecals();
-    cl->preload();
 
 	conoutf("\fminit: mainloop");
 	if(initscript) execute(initscript);
