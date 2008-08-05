@@ -823,8 +823,6 @@ struct GAMECLIENT : igameclient
 		if(pointer)
 		{
 			float chsize = crosshairsize()*w*3.f, blend = crosshairblend();
-
-			glEnable(GL_BLEND);
 			if(index == POINTER_GUI)
 			{
 				chsize = cursorsize()*w*3.f;
@@ -899,14 +897,11 @@ struct GAMECLIENT : igameclient
 					glEnd();
 				}
 			}
-
-			glDisable(GL_BLEND);
 		}
 	}
 
 	void drawpointers(int w, int h)
 	{
-		float r = 1.f, g = 1.f, b = 1.f;
         int index = POINTER_NONE;
 
 		if(g3d_active(true, false))
@@ -914,8 +909,7 @@ struct GAMECLIENT : igameclient
 			if(g3d_active()) index = POINTER_GUI;
 			else return;
 		}
-		else if(!showcrosshair()) return;
-        else if(hidehud || player1->state == CS_DEAD) index = POINTER_NONE;
+        else if(hidehud || !showcrosshair() || player1->state == CS_DEAD) return;
         else if(editmode) index = POINTER_EDIT;
         else if(inzoom() && player1->gunselect == GUN_RIFLE) index = POINTER_SNIPE;
         else if(lastmillis-lasthit <= crosshairhitspeed()) index = POINTER_HIT;
@@ -929,6 +923,7 @@ struct GAMECLIENT : igameclient
         }
         else index = POINTER_HAIR;
 
+		float r = 1.f, g = 1.f, b = 1.f;
 		if(index >= POINTER_HAIR)
 		{
 			if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
@@ -939,22 +934,26 @@ struct GAMECLIENT : igameclient
 			}
 		}
 
+		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(0, w*3, h*3, 0, -1, 1);
 
-		if(index > POINTER_NONE)
-		{
-			float curx = index < POINTER_EDIT || mousestyle() == 2 ? cursorx : aimx,
-				cury = index < POINTER_EDIT || mousestyle() == 2 ? cursory : aimy;
-			drawpointer(w, h, index, curx, cury, r, g, b);
-		}
+		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+
+		float curx = index < POINTER_EDIT || mousestyle() == 2 ? cursorx : aimx,
+			cury = index < POINTER_EDIT || mousestyle() == 2 ? cursory : aimy;
+
+		drawpointer(w, h, index, curx, cury, r, g, b);
 
 		if(index > POINTER_GUI && mousestyle() >= 1)
 		{
-			float curx = mousestyle() == 1 ? cursorx : 0.5f,
-				cury = mousestyle() == 1 ? cursory : 0.5f;
+			curx = mousestyle() == 1 ? cursorx : 0.5f;
+			cury = mousestyle() == 1 ? cursory : 0.5f;
 			drawpointer(w, h, POINTER_RELATIVE, curx, cury, r, g, b);
 		}
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
 	}
 
 	void drawtex(float x, float y, float w, float h)
@@ -1433,7 +1432,6 @@ struct GAMECLIENT : igameclient
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 			if(maptime && cc.ready())
 			{
 				if(lastmillis-maptime < titlecardtime()+titlecardfade())
@@ -1441,11 +1439,10 @@ struct GAMECLIENT : igameclient
 				else drawgamehud(w, h);
 			}
 			drawhudelements(w, h);
-
 			glDisable(GL_BLEND);
-
-			drawpointers(w, h);
 		}
+		g3d_render();
+		drawpointers(w, h); // gets done last!
 	}
 
 	void lighteffects(dynent *e, vec &color, vec &dir)

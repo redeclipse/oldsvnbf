@@ -879,7 +879,7 @@ void g3d_render()
 		glPushMatrix();
 		glLoadIdentity();
 
-        glDisable(GL_DEPTH_TEST);
+		glDisable(GL_DEPTH_TEST);
 
 		loopvrev(guis) guis[i].cb->gui(guis[i], false);
 
