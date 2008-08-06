@@ -1518,7 +1518,7 @@ struct GAMECLIENT : igameclient
 	vec feetpos(physent *d, float off = 0.f)
 	{
  		vec pos(d->o);
-		if(d->type == ENT_PLAYER) pos.z += d->height+off;
+		if(d->type == ENT_PLAYER) pos.z += off-d->height;
 		return pos;
 	}
 
@@ -1887,7 +1887,7 @@ struct GAMECLIENT : igameclient
 		else s_strcpy(mdl, teamtype[team].fpmdl);
 
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
-		vec o = vec(third ? vec(d->o).sub(vec(0, 0, d->height)) : headpos(d));
+		vec o = vec(third ? feetpos(d) : headpos(d));
 		if(!third)
 		{
 			if(firstpersonsway())
