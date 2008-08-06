@@ -1156,7 +1156,7 @@ struct botclient
 						if(cl.et.ents.inrange(ent))
 						{
 							extentity &e = *cl.et.ents[ent];
-							if(d->canuse(e.type, e.attr1, e.attr2, lastmillis)) switch(e.type)
+							if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis)) switch(e.type)
 							{
 								case WEAPON:
 								{

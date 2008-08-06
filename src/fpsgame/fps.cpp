@@ -1292,7 +1292,7 @@ struct GAMECLIENT : igameclient
 								else
 									tp += draw_textx("[ \fs\fa%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
 							}
-							else if(enttype[e.type].usetype == EU_AUTO)
+							else if(e.type == TRIGGER && (e.spawned || !e.attr4) && e.attr3 == TA_ACT)
 							{
 								if(!found)
 								{
@@ -1518,7 +1518,7 @@ struct GAMECLIENT : igameclient
 	vec feetpos(physent *d, float off = 0.f)
 	{
  		vec pos(d->o);
-		if(d->type == ENT_PLAYER) pos.z -= d->height+off;
+		if(d->type == ENT_PLAYER) pos.z += d->height+off;
 		return pos;
 	}
 

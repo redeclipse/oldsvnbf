@@ -1252,7 +1252,7 @@ struct GAMESERVER : igameserver
 					use.type = GE_USE;
 					use.use.id = id;
 					use.use.ent = ent;
-					seteventmillis(use.use, sents.inrange(ent) ? cp->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, gamemillis) : false);
+					seteventmillis(use.use, sents.inrange(ent) ? cp->state.canuse(sents[ent].type, sents[ent].attr1, sents[ent].attr2, sents[ent].attr3, sents[ent].attr4, sents[ent].attr5, gamemillis) : false);
 					break;
 				}
 
@@ -2192,7 +2192,7 @@ struct GAMESERVER : igameserver
 			srvoutf(ci->clientnum, "server error: you cannot pick up entity %d as it does not exist", e.ent);
 			return;
 		}
-		if(!gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, e.millis))
+		if(!gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, e.millis))
 		{
 			srvoutf(ci->clientnum, "server error: your current state forbids you from picking up entity %d", e.ent);
 			return;
