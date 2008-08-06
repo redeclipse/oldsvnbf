@@ -388,8 +388,8 @@ extern bool getentboundingbox(extentity &e, ivec &o, ivec &r);
 void rendermapmodel(extentity &e)
 {
 	int anim = ANIM_MAPMODEL|ANIM_LOOP, basetime = 0;
-	mapmodelinfo &mmi = getmminfo(e.attr2);
-	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)((e.attr1+7)-(e.attr1+7)%15), 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_DYNLIGHT, NULL, NULL, basetime);
+	mapmodelinfo &mmi = getmminfo(e.attr1);
+	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)(e.attr2%360), (float)(e.attr3%360), (float)(e.attr4%360), MDL_CULL_VFC | MDL_CULL_DIST | MDL_DYNLIGHT, NULL, NULL, basetime);
 }
 
 extern int reflectdist;

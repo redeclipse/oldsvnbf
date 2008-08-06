@@ -27,7 +27,7 @@ enum								// entity types
 {
 	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
 	LIGHT = ET_LIGHT,				// 1  radius, intensity or red, green, blue
-	MAPMODEL = ET_MAPMODEL,			// 2  angle, idx
+	MAPMODEL = ET_MAPMODEL,			// 2  idx, yaw, pitch, roll
 	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, team, id
 	ENVMAP = ET_ENVMAP,				// 4  radius
 	PARTICLES = ET_PARTICLES,		// 5  type, [others]

@@ -796,6 +796,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			e.links.setsize(0);
 			e.spawned = false;
 			e.inoctanode = false;
+			if(hdr.version <= 31) e.attr5 = 0;
 			if(maptype == MAP_OCTA) { loopj(eif) gzgetc(f); }
 			et->readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
 			if(maptype == MAP_BFGZ && et->maylink(hdr.gamever <= 49 && e.type >= 10 ? e.type-1 : e.type, hdr.gamever))
@@ -835,7 +836,13 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 				if(e.attr4) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attr4);
 				e.attr3 = e.attr4 = 0;
 			}
-			if(hdr.version <= 31) e.attr5 = 0;
+			if(hdr.version <= 31 && e.type == ET_MAPMODEL)
+			{
+				int angle = e.attr1;
+				e.attr1 = e.attr2;
+				e.attr2 = angle;
+				e.attr3 = e.attr4 = e.attr5 = 0;
+			}
 		}
 
 		et->initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
@@ -922,11 +929,11 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 					conoutf("\frWARNING: auto import linked spotlight %d to light %d", i, closest);
 				}
 			}
-			if(e.type == ET_MAPMODEL && e.attr2 >= 0)
+			if(e.type == ET_MAPMODEL && e.attr1 >= 0)
 			{
-				mapmodelinfo &mmi = getmminfo(e.attr2);
-				if(!&mmi) conoutf("\frcould not find map model: %d", e.attr2);
-				else if(!loadmodel(NULL, e.attr2, true))
+				mapmodelinfo &mmi = getmminfo(e.attr1);
+				if(!&mmi) conoutf("\frcould not find map model: %d", e.attr1);
+				else if(!loadmodel(NULL, e.attr1, true))
 					conoutf("\frcould not load model: %s", mmi.name);
 			}
 		}

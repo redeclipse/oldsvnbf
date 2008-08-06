@@ -84,7 +84,7 @@ struct entities : icliententities
 				case LIGHT:
 					entlinks[i].add(SPOTLIGHT);
 					break;
-				//	MAPMODEL = ET_MAPMODEL,			// 2  angle, idx
+				//	MAPMODEL = ET_MAPMODEL,			// 2  idx, yaw, pitch, roll
 				case MAPMODEL:
 					entlinks[i].add(TRIGGER);
 					break;
@@ -1283,7 +1283,7 @@ struct entities : icliententities
 			case PLAYERSTART:
 			case MAPMODEL:
 			{
-				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, 0, false);
+				if(!level || showentdir() >= level) renderdir(e.o, e.attr2, e.attr3, false);
 				break;
 			}
 			case TELEPORT:
