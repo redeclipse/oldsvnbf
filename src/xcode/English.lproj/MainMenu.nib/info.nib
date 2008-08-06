@@ -5,13 +5,13 @@
 	<key>IBFramework Version</key>
 	<string>670</string>
 	<key>IBLastKnownRelativeProjectPath</key>
-	<string>../sauerbraten.xcodeproj</string>
+	<string>../bloodfrontier.xcodeproj</string>
 	<key>IBOldestOS</key>
 	<integer>5</integer>
 	<key>IBOpenObjects</key>
 	<array>
-		<integer>208</integer>
 		<integer>111</integer>
+		<integer>208</integer>
 	</array>
 	<key>IBSystem Version</key>
 	<string>9E17</string>
