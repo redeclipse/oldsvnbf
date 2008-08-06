@@ -835,6 +835,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 				if(e.attr4) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attr4);
 				e.attr3 = e.attr4 = 0;
 			}
+			if(hdr.version <= 32) e.attr5 = 0;
 		}
 
 		et->initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
