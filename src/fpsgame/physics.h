@@ -423,10 +423,13 @@ struct physics
 
 		vec d(m);
 		d.mul(maxspeed(pl));
-		if(floating) { if(local) d.mul(floatspeed()/100.0f); }
-		else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+        if(pl->type==ENT_PLAYER)
+        {
+		    if(floating) { if(local) d.mul(floatspeed()/100.0f); }
+		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+        }
 		float friction = pl->inliquid && !floating ? liquidfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
-		float fpsfric = friction/millis*20.0f;
+		float fpsfric = max(friction/millis*20.0f, 1.0f);
 
         pl->vel.mul(fpsfric-1);
         pl->vel.add(d);
@@ -503,7 +506,7 @@ struct physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-		bool floating = pl->state==CS_EDITING || pl->state==CS_SPECTATOR;
+		bool floating = pl->type==ENT_PLAYER && (pl->state==CS_EDITING || pl->state==CS_SPECTATOR);
 		float secs = millis/1000.f;
 
 		if(pl->type!=ENT_CAMERA) updatematerial(pl, local, floating);
