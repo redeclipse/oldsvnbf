@@ -846,14 +846,6 @@ void texscale(float *scale)
 }
 COMMAND(texscale, "f");
 
-void texclamp(int *cmp)
-{
-    if(slots.empty()) return;
-    Slot &s = slots.last();
-    s.clamp = clamp(*cmp, 0, 3);
-}
-COMMAND(texclamp, "i");
-
 static int findtextype(Slot &s, int type, int last = -1)
 {
 	for(int i = last+1; i<s.sts.length(); i++) if((type&(1<<s.sts[i].type)) && s.sts[i].combined<0) return i;
@@ -998,7 +990,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 			break;
 	}
 
-	t.t = newtexture(NULL, key.getbuf(), ts, s.clamp, true, true, true, compress, true, &anim);
+	t.t = newtexture(NULL, key.getbuf(), ts, 0, true, true, true, compress, true, &anim);
 }
 
 Slot dummyslot;
@@ -1059,7 +1051,7 @@ Texture *loadthumbnail(Slot &slot)
                 if(g->w != s->w || g->h != s->h) g = scalesurface(g, s->w, s->h);
                 addglow(s, g, slot.glowcolor);
             }
-            t = newtexture(NULL, name.getbuf(), s, slot.clamp, false, false, true);
+            t = newtexture(NULL, name.getbuf(), s, 0, false, false, true);
             t->xs = xs;
             t->ys = ys;
             slot.thumbnail = t;

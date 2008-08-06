@@ -260,7 +260,7 @@ struct Slot
 	Shader *shader;
 	vector<ShaderParam> params;
     float scale;
-    int rotation, xoffset, yoffset, clamp;
+    int rotation, xoffset, yoffset;
     float scrollS, scrollT;
     vec glowcolor, pulseglowcolor;
     float pulseglowspeed;
@@ -277,7 +277,7 @@ struct Slot
 		shader = NULL;
 		params.setsize(0);
         scale = 1;
-        rotation = xoffset = yoffset = clamp = 0;
+        rotation = xoffset = yoffset = 0;
         scrollS = scrollT = 0;
         glowcolor = vec(1, 1, 1);
         pulseglowcolor = vec(0, 0, 0);
