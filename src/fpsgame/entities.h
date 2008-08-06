@@ -303,48 +303,14 @@ struct entities : icliententities
 			extentity &e = *ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES || enttype[e.type].usetype == EU_NONE)
 				continue;
+			if(enttype[e.type].usetype == EU_ITEM && !e.spawned) continue;
 			if(!insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
 				continue;
-
-			switch(enttype[e.type].usetype)
-			{
-				case EU_AUTO:
-				{
-					if(e.type != TRIGGER)
-					{
-						if(use) reaction(i, d);
-					}
-					else if(e.spawned || !e.attr4)
-					{
-						switch(e.attr3)
-						{
-							case TA_AUTO:
-								if(use) reaction(i, d);
-								break;
-							case TA_ACT:
-							{
-								actitem &t = actitems.add();
-								t.type = ITEM_ENT;
-								t.target = i;
-								t.score = m.dist(e.o);
-								break;
-							}
-							default: break;
-						}
-					}
-					break;
-				}
-				case EU_ITEM:
-				{
-					if(!e.spawned) break;
-					actitem &t = actitems.add();
-					t.type = ITEM_ENT;
-					t.target = i;
-					t.score = m.dist(e.o);
-					break;
-				}
-				default: break;
-			}
+			actitem &t = actitems.add();
+			t.type = ITEM_ENT;
+			t.target = i;
+			t.score = m.dist(e.o);
+			break;
 		}
 		loopv(cl.pj.projs)
 		{
@@ -365,7 +331,7 @@ struct entities : icliententities
 	void checkitems(fpsent *d)
 	{
 		vector<actitem> actitems;
-		if(d->useaction && collateitems(d, true, actitems))
+		if(collateitems(d, true, actitems))
 		{
 			while(!actitems.empty())
 			{
@@ -396,27 +362,31 @@ struct entities : icliententities
 				if(cl.et.ents.inrange(ent))
 				{
 					extentity &e = *ents[ent];
-					if(d->canuse(e.type, e.attr1, e.attr2, lastmillis))
+					if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis))
 					{
-						if(enttype[e.type].usetype == EU_ITEM)
+						if(enttype[e.type].usetype == EU_ITEM && d->useaction)
 						{
 							cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, ent);
 							d->useaction = false;
 						}
 						else if(enttype[e.type].usetype == EU_AUTO)
 						{
-							reaction(t.target, d);
-							d->useaction = false;
+							if(e.type != TRIGGER ||
+								((e.spawned || !e.attr4) && (e.attr3 == TA_ACT && d->useaction) || e.attr3 == TA_AUTO))
+							{
+								reaction(t.target, d);
+								if(e.type == TRIGGER && e.attr3 == TA_ACT)
+									d->useaction = false;
+							}
 						}
 					}
+					else if(enttype[e.type].usetype == EU_ITEM && d->useaction)
+					{
+						d->useaction = false;
+						playsound(S_DENIED, 0, 255, d->o, d);
+					}
 				}
-				if(!d->useaction) break;
-				else actitems.remove(closest);
-			}
-			if(d->useaction)
-			{
-				d->useaction = false;
-				playsound(S_DENIED, 0, 255, d->o, d);
+				actitems.remove(closest);
 			}
 		}
 		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);

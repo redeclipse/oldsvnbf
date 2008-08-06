@@ -6,8 +6,6 @@
 
 Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
-VARP(particlesize, 20, 100, 500);
-
 // Check emit_particles() to limit the rate that paricles can be emitted for models/sparklies
 // Automatically stops particles being emitted when paused or in reflective drawing
 VARP(emitmillis, 1, 17, 1000);
@@ -898,17 +896,17 @@ static void regularsplash(int type, int color, int radius, int num, int fade, co
 // @NOTE potentially this and the following public funcs can be tidied up, but lets please defer that for a little bit...
 static struct partmap { int type; int color; float size; } partmaps[] =
 {
-    {  1, 0xB49B4B, 0.24f}, // 0 yellow: sparks
+    {  1, 0xB49B4B, 0.6f }, // 0 yellow: sparks
     {  2, 0x897661, 0.6f }, // 1 greyish-brown:   small slowly rising smoke
-    {  3, 0x3232FF, 0.32f}, // 2 blue:   edit mode entities
-    {  0, 0x60FFFF, 2.96f}, // 3 red:    blood spats (note: rgb is inverted)
+    {  3, 0x3232FF, 0.3f }, // 2 blue:   edit mode entities
+    {  0, 0x60FFFF, 4.0f }, // 3 red:    blood spats (note: rgb is inverted)
     {  5, 0xFFC8C8, 4.8f }, // 4 yellow: fireball1
     {  6, 0x897661, 2.4f }, // 5 greyish-brown:   big  slowly rising smoke
     {  7, 0xFFFFFF, 4.8f }, // 6 blue:   fireball2
     {  8, 0xFFFFFF, 4.8f }, // 7 green:  big fireball3
     {  9, 0xFF4B19, 4.0f }, // 8 TEXT RED
     {  9, 0x32FF64, 4.0f }, // 9 TEXT GREEN
-    { 10, 0xFFC864, 0.28f}, // 10 yellow flare
+    { 10, 0xFFC864, 0.6f }, // 10 yellow flare
     { 11, 0x1EC850, 2.0f }, // 11 TEXT DARKGREEN, SMALL, NON-MOVING
     {  8, 0xFFFFFF, 2.0f }, // 12 green small fireball3
     { 11, 0xFF4B19, 2.0f }, // 13 TEXT RED, SMALL, NON-MOVING
@@ -926,9 +924,9 @@ static struct partmap { int type; int color; float size; } partmaps[] =
     { 17, 0x897661, 2.4f }, // 25 greyish-brown:   big  fast rising smoke
     { 11, 0xFFFFFF, 2.5f }, // 26 TEXT WHITE, NON-MOVING
     { 11, 0xFFFFFF, 2.0f }, // 27 TEXT WHITE, SMALL, NON-MOVING
-    { 16, 0xFFFFFF, 0.28f}, // 28 lightning
-    { 16, 0xFF2222, 0.28f}, // 29 lightning: red
-    { 16, 0x2222FF, 0.28f}, // 30 lightning: blue
+    { 16, 0xFFFFFF, 0.3f }, // 28 lightning
+    { 16, 0xFF2222, 0.3f }, // 29 lightning: red
+    { 16, 0x2222FF, 0.3f }, // 30 lightning: blue
     { 19, 0x802020, 4.8f }, // 31 fireball: red, no glare
     { 19, 0x2020FF, 4.8f }, // 32 fireball: blue, no glare
     { 19, 0x208020, 4.8f }, // 33 fireball: green, no glare
@@ -938,10 +936,7 @@ static struct partmap { int type; int color; float size; } partmaps[] =
     // fill the above @UNUSED slots first!
 };
 
-static inline float partsize(int type)
-{
-    return partmaps[type].size * particlesize/100.0f;
-}
+static inline float partsize(int type) { return partmaps[type].size; }
 
 void regular_particle_create(int type, int fade, const vec &p, physent *pl, int delay)
 {

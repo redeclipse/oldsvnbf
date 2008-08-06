@@ -538,8 +538,10 @@ struct fpsstate
 		return false;
 	}
 
-	bool canuse(int type, int attr1, int attr2, int millis)
+	bool canuse(int type, int attr1, int attr2, int attr3, int attr4, int attr5, int millis)
 	{
+		if((type != TRIGGER || attr3 == TA_AUTO) && enttype[type].usetype == EU_AUTO)
+			return true;
 		if(gunwaited(gunselect, millis)) switch(type)
 		{
 			case TRIGGER:
