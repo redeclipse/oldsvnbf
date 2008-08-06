@@ -336,7 +336,7 @@ struct ctfclient : ctfstate
                         above, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
             above.z += enttype[FLAG].height;
             s_sprintfd(info)("@%s flag", teamtype[f.team].name);
-			part_text(above, info, 10, 1, teamtype[f.team].colour);
+			part_text(above, info, 11, 1, teamtype[f.team].colour);
         }
     }
 
@@ -434,7 +434,7 @@ struct ctfclient : ctfstate
 		}
 		if(from.x >= 0 && to.x >= 0)
 		{
-			part_trail(6, 250, from, to, teamtype[f.team].colour, 4.8f);
+			part_trail(7, 250, from, to, teamtype[f.team].colour, 4.8f);
 		}
     }
 

@@ -221,8 +221,8 @@ struct weaponstate
                     if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
 				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				part_create(19, 50, from, 0xFFAA00, 8.f, d);
-				regularshape(5, 2, 0x333333, 21, rnd(20)+1, 25, from, 1.5f);
+				part_create(20, 50, from, 0xFFAA00, 8.f, d);
+				regularshape(6, 2, 0x333333, 21, rnd(20)+1, 25, from, 1.5f);
 				break;
 			}
 
@@ -233,8 +233,8 @@ struct weaponstate
                 particle_flare(from, to, 50, 10, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
                 adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				part_create(19, 50, from, 0xFFAA00, 4.f, d);
-				regularshape(5, 1, 0x333333, 21, rnd(10)+1, 25, from, 0.5f);
+				part_create(20, 50, from, 0xFFAA00, 4.f, d);
+				regularshape(6, 1, 0x333333, 21, rnd(10)+1, 25, from, 0.5f);
 				break;
 			}
 
@@ -249,7 +249,7 @@ struct weaponstate
 				if(gun == GUN_FLAMER)
 				{
 					adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
-					part_create(19, 50, from, 0xFF2200, 5.f, d);
+					part_create(20, 50, from, 0xFF2200, 5.f, d);
 				}
 				break;
 			}
