@@ -1185,17 +1185,29 @@ struct entities : icliententities
 			fpsentity &e = (fpsentity &)*ents[j];
 			loopvrev(e.links) if(!canlink(j, e.links[i], true)) e.links.remove(i);
 
-			if(gver <= 90)
+			switch(e.type)
 			{
-				if(e.type == WEAPON)
+				case PARTICLES:
 				{
-					if(e.attr1 > 3) e.attr1--;
-					else if(e.attr1 == 3) e.attr1 = GUN_GL;
+					if(gver <= 92) e.attr5 = 0;
+					break;
 				}
-				else if(e.type == WAYPOINT)
+				case WEAPON:
 				{
-					e.attr1 = e.attr2 = e.attr3 = e.attr4 = e.attr5 = 0;
+					if(gver <= 90)
+					{
+						if(e.attr1 > 3) e.attr1--;
+						else if(e.attr1 == 3) e.attr1 = GUN_GL;
+					}
+					break;
 				}
+				case WAYPOINT:
+				{
+					if(gver <= 90)
+						e.attr1 = e.attr2 = e.attr3 = e.attr4 = e.attr5 = 0;
+					break;
+				}
+				default: break;
 			}
 		}
 	}
