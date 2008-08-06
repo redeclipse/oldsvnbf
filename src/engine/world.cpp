@@ -17,13 +17,12 @@ bool getentboundingbox(extentity &e, ivec &o, ivec &r)
 			return false;
 		case ET_MAPMODEL:
 		{
-			model *m = loadmodel(NULL, e.attr2);
+			model *m = loadmodel(NULL, e.attr1);
 			if(m)
 			{
 				vec center, radius;
 				m->boundbox(0, center, radius);
-				rotatebb(center, radius, e.attr1);
-
+				rotatebb(center, radius, e.attr2);
 				o = e.o;
 				o.add(center);
 				r = radius;
@@ -64,7 +63,7 @@ void modifyoctaentity(int flags, int id, cube *c, const ivec &cor, int size, con
 			switch(et->getents()[id]->type)
 			{
 				case ET_MAPMODEL:
-					if(loadmodel(NULL, et->getents()[id]->attr2))
+					if(loadmodel(NULL, et->getents()[id]->attr1))
 					{
                         if(va)
                         {
@@ -96,7 +95,7 @@ void modifyoctaentity(int flags, int id, cube *c, const ivec &cor, int size, con
 			switch(et->getents()[id]->type)
 			{
 				case ET_MAPMODEL:
-					if(loadmodel(NULL, et->getents()[id]->attr2))
+					if(loadmodel(NULL, et->getents()[id]->attr1))
 					{
 						oe.mapmodels.removeobj(id);
                         if(va)
@@ -319,10 +318,10 @@ void entrotate(int *cw)
 void entselectionbox(const entity &e, vec &eo, vec &es)
 {
 	model *m = NULL;
-	if(e.type == ET_MAPMODEL && (m = loadmodel(NULL, e.attr2)))
+	if(e.type == ET_MAPMODEL && (m = loadmodel(NULL, e.attr1)))
 	{
 		m->collisionbox(0, eo, es);
-		rotatebb(eo, es, e.attr1);
+		rotatebb(eo, es, e.attr2);
 		if(m->collide)
 			eo.z -= camera1->aboveeye; // wacky but true. see physics collide
 		else
@@ -516,12 +515,12 @@ bool dropentity(entity &e, int drop = -1)
 	if(drop<0) drop = entdrop;
 	if(e.type == ET_MAPMODEL)
 	{
-		model *m = loadmodel(NULL, e.attr2);
+		model *m = loadmodel(NULL, e.attr1);
 		if(m)
 		{
 			vec center;
 			m->boundbox(0, center, radius);
-			rotatebb(center, radius, e.attr1);
+			rotatebb(center, radius, e.attr2);
 			radius.x += fabs(center.x);
 			radius.y += fabs(center.y);
 		}
@@ -578,20 +577,7 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
 	e.inoctanode = false;
     e.light.color = vec(1, 1, 1);
     e.light.dir = vec(0, 0, 1);
-	if(local)
-	{
-		switch(type)
-		{
-				case ET_MAPMODEL:
-					e.attr4 = e.attr3;
-					e.attr3 = e.attr2;
-					e.attr2 = e.attr1;
-				case ET_PLAYERSTART:
-					e.attr1 = (int)camera1->yaw;
-					break;
-		}
-		et->fixentity(e);
-	}
+	if(local) et->fixentity(e);
 	return &e;
 }
 

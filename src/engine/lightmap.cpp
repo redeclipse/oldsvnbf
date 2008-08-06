@@ -1464,7 +1464,7 @@ void lightent(extentity &e, float height)
 	float amb = ambient/255.0f;
 	if(e.type==ET_MAPMODEL)
 	{
-		model *m = loadmodel(NULL, e.attr2);
+		model *m = loadmodel(NULL, e.attr1);
 		if(m) height = m->above()*0.75f;
 	}
 	else if(e.type>=ET_GAMESPECIFIC) amb = 0.4f;
