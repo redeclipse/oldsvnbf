@@ -1228,7 +1228,7 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
             const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f };
             int type = typemap[attr1-4];
             float size = sizemap[attr1-4];
-            if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, 200, o, size);
+            if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size);
             else newparticle(o, offsetvec(o, attr2, 1+attr3), 1, type, colorfromattr(attr4), size);
             break;
         }
