@@ -1187,11 +1187,6 @@ struct entities : icliententities
 
 			switch(e.type)
 			{
-				case PARTICLES:
-				{
-					if(gver <= 92) e.attr5 = 0;
-					break;
-				}
 				case WEAPON:
 				{
 					if(gver <= 90)
