@@ -608,7 +608,7 @@ struct botclient
 		{
 			loopvj(cl.et.ents)
 			{
-				fpsentity &e = (fpsentity &)*cl.et.ents[j];
+				fpsentity &e = *(fpsentity *)cl.et.ents[j];
 				if(enttype[e.type].usetype != EU_ITEM) continue;
 				switch(e.type)
 				{
@@ -885,7 +885,7 @@ struct botclient
 				{
 					if(cl.et.ents.inrange(b.target))
 					{
-						fpsentity &e = (fpsentity &)*cl.et.ents[b.target];
+						fpsentity &e = *(fpsentity *)cl.et.ents[b.target];
 						if(enttype[e.type].usetype != EU_ITEM) return false;
 						switch(e.type)
 						{
@@ -1012,7 +1012,7 @@ struct botclient
 		float mindist = 1e16f;
 		loopvrev(d->bot->route) if(cl.et.ents.inrange(d->bot->route[i]) && d->bot->route[i] != d->lastnode && d->bot->route[i] != d->oldnode)
 		{
-			fpsentity &e = (fpsentity &)*cl.et.ents[d->bot->route[i]];
+			fpsentity &e = *(fpsentity *)cl.et.ents[d->bot->route[i]];
 
 			float dist = e.o.dist(pos);
 			if(dist < mindist)
@@ -1317,8 +1317,8 @@ struct botclient
 				int index = d->bot->route[i], prev = d->bot->route[last];
 				if(cl.et.ents.inrange(index) && cl.et.ents.inrange(prev))
 				{
-					fpsentity &e = (fpsentity &) *cl.et.ents[index],
-						&f = (fpsentity &) *cl.et.ents[prev];
+					fpsentity &e = *(fpsentity *)cl.et.ents[index],
+						&f = *(fpsentity *)cl.et.ents[prev];
 					vec fr(vec(f.o).add(vec(0, 0, 4.f*amt))),
 						dr(vec(e.o).add(vec(0, 0, 4.f*amt)));
 					renderline(fr, dr, cr, cg, cb, false);
