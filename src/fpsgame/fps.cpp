@@ -26,17 +26,6 @@ struct GAMECLIENT : igameclient
 	int quakewobble, damageresidue;
     int liquidchan;
 
-	struct sline { string s; };
-	struct teamscore
-	{
-		int team, score;
-		teamscore() {}
-		teamscore(int s, int n) : team(s), score(n) {}
-	};
-
-	vector<fpsent *> shplayers;
-	vector<teamscore> teamscores;
-
 	fpsent *player1;				// our client
 	vector<fpsent *> players;		// other clients
 	fpsent lastplayerstate;
@@ -109,7 +98,7 @@ struct GAMECLIENT : igameclient
 	IFVARP(radarsize, 0.22f);
 	IFVARP(ammosize, 0.05f);
 	IVARP(editradardist, 0, 512, INT_MAX-1);
-	IVARP(editradarentnames, 0, 1, 2);
+	IVARP(editradarnoisy, 0, 1, 2);
 
 	IVARP(showcrosshair, 0, 1, 1);
 	IVARP(showdamage, 0, 1, 1);
@@ -133,7 +122,6 @@ struct GAMECLIENT : igameclient
 	IVARP(pronepanspeed, 1, 10, INT_MAX-1);
 	IVARP(pronefov, 70, 70, 150);
 	IVARP(pronetime, 1, 150, 10000);
-
 
 	ITVAR(relativecursortex, "textures/relativecursor", 3);
 	ITVAR(guicursortex, "textures/guicursor", 3);
@@ -1021,29 +1009,30 @@ struct GAMECLIENT : igameclient
 		popfont();
 	}
 
-	void drawentblip(int x, int y, int s, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool spawned)
+	void drawentblip(int x, int y, int s, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool spawned, int lastspawn)
 	{
-		if(type <= NOTUSED || type >= MAXENTTYPES) return;
-		enttypes &t = enttype[type];
-		if((t.usetype == EU_ITEM && spawned) || editmode)
+		if(type > NOTUSED && type < MAXENTTYPES && ((enttype[type].usetype == EU_ITEM && spawned) || editmode))
 		{
-			bool insel = et.ents.inrange(n) && editmode && (enthover == n || entgroup.find(n) >= 0);
+			bool insel = editmode && et.ents.inrange(n) && (enthover == n || entgroup.find(n) >= 0);
+			float inspawn = spawned && lastspawn && lastmillis-lastspawn <= 1000 ? float(lastmillis-lastspawn)/1000.f : 0.f;
+			if(enttype[type].noisy && (!editmode || !editradarnoisy() || (editradarnoisy() < 2 && !insel)))
+				return;
 			vec dir(o);
 			dir.sub(camera1->o);
 			float dist = dir.magnitude();
-			if(!insel && dist >= radarrange()) return;
-			if(dist >= radarrange()) dir.mul(radarrange()/dist);
+			if(dist >= radarrange())
+			{
+				if(insel || inspawn) dir.mul(radarrange()/dist);
+				else return;
+			}
 			dir.rotate_around_z(-camera1->yaw*RAD);
-			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()),
-				cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
-					cs = (insel ? 0.033f : 0.025f)*s,
-						fade = clamp(insel ? 1.f : 1.f-(dist/radarrange()), 0.f, 1.f)*blipblend();
+			float cx = x + s*0.5f*0.95f*(1.0f+dir.x/radarrange()), cy = y + s*0.5f*0.95f*(1.0f+dir.y/radarrange()),
+				cs = (inspawn > 0.f ? (2.0f-inspawn)*0.025f : (insel ? 0.033f : 0.025f))*s,
+					range = (inspawn > 0.f ? 2.f-inspawn : 1.f)-(insel ? 1.f : (dist/radarrange())),
+						fade = clamp(range, 0.f, 1.f)*blipblend();
 			settexture(bliptex(), 3);
-			glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
+			glColor4f(1.f, inspawn > 0.f ? inspawn : (insel ? 0.5f : 1.f), 0.f, fade);
 			drawsized(cx-(cs*0.5f), cy-(cs*0.5f), cs);
-			int ty = int(cy+cs);
-			if(editradarentnames() == 2 && editmode)
-				ty += draw_textx("%s [%d]", int(cx), ty, 255, 255, 255, int(fade*255.f), false, AL_CENTER, -1, -1, t.name, n);
 		}
 	}
 
@@ -1051,15 +1040,15 @@ struct GAMECLIENT : igameclient
 	{
 		loopv(et.ents)
 		{
-			extentity &e = *et.ents[i];
-			drawentblip(x, y, s, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned);
+			fpsentity &e = *(fpsentity *)et.ents[i];
+			drawentblip(x, y, s, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned, e.lastspawn);
 		}
 
 		loopv(pj.projs) if(pj.projs[i]->projtype == PRJ_ENT && pj.projs[i]->ready())
 		{
 			projent &proj = *pj.projs[i];
 			if(et.ents.inrange(proj.id))
-				drawentblip(x, y, s, -1, proj.o, proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5, true);
+				drawentblip(x, y, s, -1, proj.o, proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5, true, proj.spawntime);
 		}
 	}
 
@@ -2048,7 +2037,7 @@ struct GAMECLIENT : igameclient
 					{
 						if(lastmillis-d->gunlast[gun] <= d->gunwait[gun]/2)
 						{
-							if(isgun(d->lastgun)) gun = d->lastgun;
+							if(d->hasgun(d->lastgun)) gun = d->lastgun;
 							else showgun = false;
 						}
 						animflags = ANIM_SWITCH;

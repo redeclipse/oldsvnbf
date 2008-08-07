@@ -132,6 +132,7 @@ struct projectiles
 		vec dir(vec(vec(proj.to).sub(proj.o)).normalize());
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
 		proj.vel = vec(vec(dir).mul(proj.maxspeed)).add(vec(proj.owner->vel).mul(proj.relativity));
+		proj.spawntime = lastmillis;
 
 		vec orig = proj.o;
 		bool found = false;

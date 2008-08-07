@@ -53,27 +53,27 @@ enum { TA_NONE = 0, TA_AUTO, TA_ACT, TA_LINK, TA_MAX };
 
 struct enttypes
 {
-	int	type, 		links,	radius,	height, usetype;		const char *name;
+	int	type, 		links,	radius,	height, usetype; bool noisy;	const char *name;
 } enttype[] = {
-	{ NOTUSED,		0,		0,		0,		EU_NONE,		"none" },
-	{ LIGHT,		59,		0,		0,		EU_NONE,		"light" },
-	{ MAPMODEL,		58,		0,		0,		EU_NONE,		"mapmodel" },
-	{ PLAYERSTART,	59,		0,		0,		EU_NONE,		"playerstart" },
-	{ ENVMAP,		0,		0,		0,		EU_NONE,		"envmap" },
-	{ PARTICLES,	59,		0,		0,		EU_NONE,		"particles" },
-	{ MAPSOUND,		58,		0,		0,		EU_NONE,		"sound" },
-	{ SPOTLIGHT,	59,		0,		0,		EU_NONE,		"spotlight" },
-	{ WEAPON,		59,		16,		16,		EU_ITEM,		"weapon" },
-	{ TELEPORT,		50,		12,		12,		EU_AUTO,		"teleport" },
-	{ OBSOLETED,	59,		0,		0,		EU_NONE,		"obsoleted" },
-	{ TRIGGER,		58,		16,		16,		EU_AUTO,		"trigger" },
-	{ PUSHER,		58,		12,		12,		EU_AUTO,		"pusher" },
-	{ FLAG,			48,		16,		16,		EU_NONE,		"flag" },
-	{ CHECKPOINT,	48,		16,		16,		EU_NONE,		"checkpoint" }, // FIXME
-	{ CAMERA,		48,		0,		0,		EU_NONE,		"camera" },
-	{ WAYPOINT,		1,		8,		8,		EU_NONE,		"waypoint" },
-	{ ANNOUNCER,	64,		0,		0,		EU_NONE,		"announcer" },
-	{ CONNECTION,	70,		8,		8,		EU_NONE,		"connection" },
+	{ NOTUSED,		0,		0,		0,		EU_NONE,	true,		"none" },
+	{ LIGHT,		59,		0,		0,		EU_NONE,	true,		"light" },
+	{ MAPMODEL,		58,		0,		0,		EU_NONE,	true,		"mapmodel" },
+	{ PLAYERSTART,	59,		0,		0,		EU_NONE,	false,		"playerstart" },
+	{ ENVMAP,		0,		0,		0,		EU_NONE,	true,		"envmap" },
+	{ PARTICLES,	59,		0,		0,		EU_NONE,	true,		"particles" },
+	{ MAPSOUND,		58,		0,		0,		EU_NONE,	true,		"sound" },
+	{ SPOTLIGHT,	59,		0,		0,		EU_NONE,	true,		"spotlight" },
+	{ WEAPON,		59,		16,		16,		EU_ITEM,	false,		"weapon" },
+	{ TELEPORT,		50,		12,		12,		EU_AUTO,	false,		"teleport" },
+	{ OBSOLETED,	59,		0,		0,		EU_NONE,	false,		"obsoleted" },
+	{ TRIGGER,		58,		16,		16,		EU_AUTO,	false,		"trigger" },
+	{ PUSHER,		58,		12,		12,		EU_AUTO,	false,		"pusher" },
+	{ FLAG,			48,		16,		16,		EU_NONE,	false,		"flag" },
+	{ CHECKPOINT,	48,		16,		16,		EU_NONE,	false,		"checkpoint" }, // FIXME
+	{ CAMERA,		48,		0,		0,		EU_NONE,	false,		"camera" },
+	{ WAYPOINT,		1,		8,		8,		EU_NONE,	true,		"waypoint" },
+	{ ANNOUNCER,	64,		0,		0,		EU_NONE,	false,		"announcer" },
+	{ CONNECTION,	70,		8,		8,		EU_NONE,	true,		"connection" },
 };
 
 enum
@@ -623,10 +623,10 @@ enum
 
 struct fpsentity : extentity
 {
-	int schan, lastemit;
+	int schan, lastemit, lastspawn;
 	bool mark;
 
-	fpsentity() : schan(-1), lastemit(0), mark(false) {}
+	fpsentity() : schan(-1), lastemit(0), lastspawn(0), mark(false) {}
 	~fpsentity()
 	{
 		if(issound(schan)) removesound(schan);
@@ -871,7 +871,7 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
 struct projent : dynent
 {
 	vec from, to;
-	int lifetime, waittime;
+	int lifetime, waittime, spawntime;
 	float movement, roll;
 	bool local, beenused;
 	int projtype;
@@ -899,7 +899,8 @@ struct projent : dynent
 	{
 		type = ENT_BOUNCE;
 		state = CS_ALIVE;
-		lifetime = waittime = ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
+		lifetime = waittime = spawntime = 0;
+		ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
 		schan = id = -1;
 		movement = roll = 0.f;
 		beenused = false;

@@ -63,6 +63,8 @@ struct entities : icliententities
 	vector<extentity *> ents;
 	vector<int> entlinks[MAXENTTYPES];
 
+	IVARP(showentinfo, 0, 1, 5);
+	IVARP(showentnoisy, 0, 1, 2);
 	IVARP(showentdir, 0, 1, 3);
 	IVARP(showentradius, 0, 1, 3);
 	IVARP(showentlinks, 0, 1, 3);
@@ -219,7 +221,7 @@ struct entities : icliententities
 			bool announcer = false;
 			loopv(ents)
 			{
-				fpsentity &e = (fpsentity &)*ents[i];
+				fpsentity &e = *(fpsentity *)ents[i];
 				if(e.type == ANNOUNCER)
 				{
 					playsound(idx, 0, e.attr3, e.o, NULL, NULL, 0, e.attr1, e.attr2);
@@ -262,7 +264,7 @@ struct entities : icliententities
 	{
 		if(d && ents.inrange(n))
 		{
-			fpsentity &e = (fpsentity &)*ents[n];
+			fpsentity &e = *(fpsentity *)ents[n];
 			vec pos = e.o;
 			loopv(cl.pj.projs)
 			{
@@ -396,7 +398,7 @@ struct entities : icliententities
 	{
 		loopv(ents)
 		{
-			fpsentity &e = (fpsentity &)*ents[i];
+			fpsentity &e = *(fpsentity *)ents[i];
 			if(enttype[e.type].usetype == EU_ITEM || e.type == TRIGGER)
 			{
 				putint(p, i);
@@ -422,7 +424,9 @@ struct entities : icliententities
 			proj.beenused = true;
 			proj.state = CS_DEAD;
 		}
-		if(ents.inrange(n)) ents[n]->spawned = on;
+		if(ents.inrange(n))
+			if((ents[n]->spawned = on))
+				((fpsentity *)ents[n])->lastspawn = lastmillis;
 	}
 
 	extentity *newent() { return new fpsentity(); }
@@ -479,11 +483,11 @@ struct entities : icliententities
 				if(d->bot) return;
 			}
 
-			fpsentity &e = (fpsentity &)*ents[index];
+			fpsentity &e = *(fpsentity *)ents[index];
 
 			loopv(ents)
 			{
-				fpsentity &f = (fpsentity &)*ents[i];
+				fpsentity &f = *(fpsentity *)ents[i];
 				if(f.links.find(index) >= 0)
 				{
 					bool both = e.links.find(i) >= 0;
@@ -522,7 +526,7 @@ struct entities : icliententities
 
 	void teleport(int n, fpsent *d)
 	{
-		fpsentity &e = (fpsentity &)*ents[n];
+		fpsentity &e = *(fpsentity *)ents[n];
 		vector<int> teleports;
 		loopv(e.links)
 			if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TELEPORT)
@@ -531,7 +535,7 @@ struct entities : icliententities
 		if(!teleports.empty())
 		{
 			int r = rnd(teleports.length()), t = teleports[r];
-			fpsentity &f = (fpsentity &)*ents[t];
+			fpsentity &f = *(fpsentity *)ents[t];
 			d->o = f.o;
 			d->yaw = clamp((int)f.attr1, 0, 359);
 			d->pitch = clamp((int)f.attr2, -89, 89);
@@ -587,7 +591,7 @@ struct entities : icliententities
 
 	void reaction(int n, fpsent *d)
 	{
-		fpsentity &e = (fpsentity &)*ents[n];
+		fpsentity &e = *(fpsentity *)ents[n];
 		switch(e.type)
 		{
 			case TELEPORT:
@@ -683,8 +687,7 @@ struct entities : icliententities
 	{
 		if(ents.inrange(index) && ents.inrange(node) && index != node && canlink(index, node, local))
 		{
-			fpsentity &e = (fpsentity &)*ents[index];
-			fpsentity &f = (fpsentity &)*ents[node];
+			fpsentity &e = *(fpsentity *)ents[index], &f = *(fpsentity *)ents[node];
 			int g;
 
 			if((toggle || !add) && (g = e.links.find(node)) >= 0)
@@ -741,7 +744,7 @@ struct entities : icliententities
 	{
 		loopvj(ents) if(maylink(ents[j]->type))
 		{
-			fpsentity &e = (fpsentity &)*ents[j];
+			fpsentity &e = *(fpsentity *)ents[j];
 
 			loopvrev(e.links) if(e.links[i] == n)
 			{
@@ -865,7 +868,7 @@ struct entities : icliententities
 	{
 		if(ents.inrange(index) && ents.inrange(node))
 		{
-			fpsentity &e = (fpsentity &)*ents[index], &f = (fpsentity &)*ents[node];
+			fpsentity &e = *(fpsentity *)ents[index], &f = *(fpsentity *)ents[node];
 
 			if(e.links.find(node) < 0)
 				linkents(index, node, true, true, false);
@@ -882,7 +885,7 @@ struct entities : icliententities
 			int curnode = waypointnode(v);
 			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)
 			{
-				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= enttype[WAYPOINT].radius*2.f)
+				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= d->radius+enttype[WAYPOINT].radius)
 					curnode = d->lastnode;
 				if(!ents.inrange(curnode))
 				{
@@ -1042,7 +1045,7 @@ struct entities : icliententities
 
 			loopv(ents)
 			{
-				fpsentity &e = (fpsentity &)*ents[i];
+				fpsentity &e = *(fpsentity *)ents[i];
 
 				if(e.type == TELEPORT && e.mark) // translate teledest to teleport and link them appropriately
 				{
@@ -1050,7 +1053,7 @@ struct entities : icliententities
 
 					loopvj(ents) // see if this guy is sitting on top of a teleport already
 					{
-						fpsentity &f = (fpsentity &)*ents[j];
+						fpsentity &f = *(fpsentity *)ents[j];
 
 						if(f.type == TELEPORT && !f.mark &&
 							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
@@ -1073,7 +1076,7 @@ struct entities : icliententities
 
 					loopvj(ents) // find linked teleport(s)
 					{
-						fpsentity &f = (fpsentity &)*ents[j];
+						fpsentity &f = *(fpsentity *)ents[j];
 
 						if(f.type == TELEPORT && !f.mark && f.attr1 == e.attr2)
 						{
@@ -1092,7 +1095,7 @@ struct entities : icliententities
 
 						loopvj(ents)
 						{
-							fpsentity &f = (fpsentity &)*ents[j];
+							fpsentity &f = *(fpsentity *)ents[j];
 
 							if(f.type == FLAG && f.attr2 != TEAM_NEUTRAL &&
 								(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
@@ -1102,7 +1105,7 @@ struct entities : icliententities
 
 						if(ents.inrange(dest))
 						{
-							fpsentity &f = (fpsentity &)*ents[dest];
+							fpsentity &f = *(fpsentity *)ents[dest];
 							conoutf("\frWARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attr1, e.attr2, dest, f.attr1, f.attr2);
 							if(!f.attr1) f.attr1 = e.attr1; // give it the old base idx
 							e.type = NOTUSED;
@@ -1114,7 +1117,7 @@ struct entities : icliententities
 
 			loopv(ents)
 			{
-				fpsentity &e = (fpsentity &)*ents[i];
+				fpsentity &e = *(fpsentity *)ents[i];
 
 				switch(e.type)
 				{
@@ -1152,7 +1155,7 @@ struct entities : icliententities
 		dummyent.height = dummyent.radius = dummyent.xradius = dummyent.yradius = 1;
 		loopvj(ents)
 		{
-			fpsentity &e = (fpsentity &)*ents[j];
+			fpsentity &e = *(fpsentity *)ents[j];
 			loopvrev(e.links) if(!canlink(j, e.links[i], true)) e.links.remove(i);
 
 			switch(e.type)
@@ -1177,19 +1180,17 @@ struct entities : icliententities
 		}
 	}
 
-	#define renderfocus(i,f) { extentity &e = *ents[i]; f; }
+	#define renderfocus(i,f) { fpsentity &e = *(fpsentity *)ents[i]; f; }
 
-	void renderlinked(extentity &e)
+	void renderlinked(fpsentity &e)
 	{
-		fpsentity &d = (fpsentity &)e;
-
-		loopv(d.links)
+		loopv(e.links)
 		{
-			int index = d.links[i];
+			int index = e.links[i];
 
 			if(ents.inrange(index))
 			{
-				fpsentity &f = (fpsentity &)*ents[index];
+				fpsentity &f = *(fpsentity *)ents[index];
 				bool both = false;
 
 				loopvj(f.links)
@@ -1197,8 +1198,8 @@ struct entities : icliententities
 					int g = f.links[j];
 					if(ents.inrange(g))
 					{
-						fpsentity &h = (fpsentity &)*ents[g];
-						if(&h == &d)
+						fpsentity &h = *(fpsentity *)ents[g];
+						if(&h == &e)
 						{
 							both = true;
 							break;
@@ -1206,7 +1207,7 @@ struct entities : icliententities
 					}
 				}
 
-				vec fr(vec(d.o).add(vec(0, 0, RENDERPUSHZ))),
+				vec fr(vec(e.o).add(vec(0, 0, RENDERPUSHZ))),
 					dr(vec(f.o).add(vec(0, 0, RENDERPUSHZ)));
 				vec col(0.5f, both ? 0.25f : 0.0f, 0.f);
 				renderline(fr, dr, col.x, col.y, col.z, false);
@@ -1221,7 +1222,7 @@ struct entities : icliententities
 		}
 	}
 
-	void renderentshow(extentity &e, int level)
+	void renderentshow(fpsentity &e, int level)
 	{
 		if(!level || showentradius() >= level)
 		{
@@ -1275,7 +1276,7 @@ struct entities : icliententities
 				renderlinked(e);
 	}
 
-	void renderentlight(extentity &e)
+	void renderentlight(fpsentity &e)
 	{
 		vec color(e.attr2, e.attr3, e.attr4);
 		color.div(255.f);
@@ -1313,7 +1314,7 @@ struct entities : icliententities
 		loopv(cl.players) if(cl.players[i]) waypointcheck(cl.players[i]);
 		loopv(ents)
 		{
-			fpsentity &e = (fpsentity &)*ents[i];
+			fpsentity &e = *(fpsentity *)ents[i];
 			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1))
 			{
 				if(!issound(e.schan))
@@ -1343,7 +1344,7 @@ struct entities : icliententities
 
 		loopv(ents)
 		{
-			extentity &e = *ents[i];
+			fpsentity &e = *(fpsentity *)ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
 			bool active = (enttype[e.type].usetype == EU_ITEM && e.spawned);
 			if(m_edit(cl.gamemode) || active)
@@ -1365,7 +1366,7 @@ struct entities : icliententities
 	{
 		loopv(ents)
 		{
-			fpsentity &e = (fpsentity &)*ents[i];
+			fpsentity &e = *(fpsentity *)ents[i];
 
 			if(e.type == NOTUSED) continue;
 
@@ -1378,7 +1379,7 @@ struct entities : icliententities
 
 					loopvk(e.links) if(ents.inrange(e.links[k]))
 					{
-						fpsentity &f = (fpsentity &)*ents[e.links[k]];
+						fpsentity &f = *(fpsentity *)ents[e.links[k]];
 						if(f.links.find(i) >= 0 && lastmillis-f.lastemit < 500)
 						{
 							makeparticle(f.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
@@ -1391,27 +1392,32 @@ struct entities : icliententities
 				}
 			}
 
-			if(m_edit(cl.gamemode))
+			if(m_edit(cl.gamemode) && (showentinfo() || editmode) &&
+				(!enttype[e.type].noisy || showentnoisy() >= 2 || (showentnoisy() && editmode)))
 			{
 				bool hasent = (entgroup.find(i) >= 0 || enthover == i);
-				vec pos(e.o), off(0, 0, 1.5f);
-				string s;
 
 				if(e.type != PARTICLES)
-					part_create(3, 1, pos, hasent ? 0xFF6600 : 0xFFFF00, 1.5f);
+					part_create(3, 1, e.o, hasent ? 0xFF6600 : 0xFFFF00, hasent ? 2.0f : 1.5f);
 
-				s_sprintf(s)("@%s%s", hasent ? "\fo" : "\fy", enttype[e.type].name);
-				particle_text(pos.add(off), s, 26, 1);
-				if(hasent)
+				if(showentinfo() >= 2 || editmode)
 				{
-					const char *info = entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true);
-					if(*info)
+					string s;
+					vec pos(e.o), off(0, 0, 1.5f);
+
+					s_sprintf(s)("@%s%s", hasent ? "\fo" : "\fy", enttype[e.type].name);
+					particle_text(pos.add(off), s, hasent ? 26 : 27, 1);
+
+					if(showentinfo() >= 3 || hasent)
 					{
-						s_sprintf(s)("@\fo%s", info);
-						particle_text(pos.add(off), s, 27, 1);
+						s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fy", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+						particle_text(pos.add(off), s, hasent ? 27 : 24, 1);
 					}
-					s_sprintf(s)("@\fo(%d %d %d %d %d)", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-					particle_text(pos.add(off), s, 27, 1);
+					if(showentinfo() >= 4 || hasent)
+					{
+						s_sprintf(s)("@%s%s", hasent ? "\fw" : "\fy", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, showentinfo() >= 5 || hasent));
+						particle_text(pos.add(off), s, hasent ? 27 : 24, 1);
+					}
 				}
 			}
 		}
