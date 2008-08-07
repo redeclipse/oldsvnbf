@@ -674,8 +674,9 @@ void md5anim(char *anim, char *animfile, float *speed, int *priority)
     if(anims.empty()) conoutf("\frcould not find animation %s in %s", anim, loadingmd5->loadname);
     else
     {
-        s_sprintfd(filename)("%s/%s", md5dir, animfile);
         md5::part *p = loadingmd5->parts.last();
+        if(!p->meshes) return;
+        s_sprintfd(filename)("%s/%s", md5dir, animfile);
         md5::skelanimspec *sa = ((md5::md5meshgroup *)p->meshes)->loadmd5anim(path(filename));
         if(!sa) conoutf("\frcould not load md5anim file %s", filename);
         else loopv(anims)
