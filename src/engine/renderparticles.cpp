@@ -918,8 +918,8 @@ static struct partmap { int type; int color; float size; } partmaps[] =
     { 13, 0xFF1932, 2.0f }, // 19 METER RED vs. BLUE, SMALL, NON-MOVING (note swaps r<->b)
     { 13, 0x3219FF, 2.0f }, // 20 METER BLUE vs. RED, SMALL, NON-MOVING (note swaps r<->b)
     { 14, 0x897661, 0.6f }, // 21 greyish-brown:   small  slowly sinking smoke trail
-    { 15, 0xFF8080, 4.0f }, // 22 red explosion fireball
-    { 15, 0xA0C080, 4.0f }, // 23 orange explosion fireball
+    { 15, 0xFF6666, 4.0f }, // 22 red explosion fireball
+    { 15, 0x888822, 4.0f }, // 23 orange explosion fireball
     { 11, 0xFFFFFF, 1.5f }, // 24 TEXT WHITE, TINY, NON-MOVING
     { 17, 0x897661, 2.4f }, // 25 greyish-brown:   big  fast rising smoke
     { 11, 0xFFFFFF, 2.5f }, // 26 TEXT WHITE, NON-MOVING
