@@ -335,7 +335,7 @@ struct projectiles
 			}
 		}
 		else if(g == GUN_GL)
-			create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_SHOT, 10, 50, 1, -1, WEAPON, d->gunselect);
+			create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_SHOT, 500, 50, 5, -1, WEAPON, d->gunselect);
 	}
 
 	void update()

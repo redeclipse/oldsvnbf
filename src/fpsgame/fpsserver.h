@@ -2154,7 +2154,7 @@ struct GAMESERVER : igameserver
 		}
 		if(!gs.canswitch(e.gun, e.millis))
 		{
-			srvoutf(ci->clientnum, "server error: your current state forbids you from switching to the %s", guntype[e.gun]);
+			srvoutf(ci->clientnum, "server error: your current state forbids you from switching to the %s", guntype[e.gun].name);
 			return;
 		}
 		gs.gunswitch(e.gun, e.millis);

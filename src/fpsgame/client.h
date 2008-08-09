@@ -836,7 +836,7 @@ struct clientcom : iclientcom
 					fpsent *f = cl.newclient(lcn);
 					if(f->lastdeath && !f->obliterated)
 					{
-						vec pos = cl.feetpos(f), vel(0, 0, 1);
+						vec pos = cl.feetpos(f), vel(0, 0, 4);
 						int gibs = clamp(((0-f->health)+4)/4, 1, 10);
 						loopi(rnd(gibs)+1) cl.pj.spawn(pos, vel, f, PRJ_GIBS);
 					}
@@ -854,7 +854,7 @@ struct clientcom : iclientcom
 					fpsent *f = cl.newclient(lcn);
 					if(f->lastdeath && !f->obliterated)
 					{
-						vec pos = cl.feetpos(f), vel(0, 0, 1);
+						vec pos = cl.feetpos(f), vel(0, 0, 4);
 						int gibs = clamp(((0-f->health)+4)/4, 1, 10);
 						loopi(rnd(gibs)+1) cl.pj.spawn(pos, vel, f, PRJ_GIBS);
 					}
