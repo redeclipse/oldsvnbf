@@ -1970,7 +1970,7 @@ struct GAMECLIENT : igameclient
 		if(shownameinfo() && third && d != player1 && d->state != CS_SPECTATOR)
 		{
 			string s;
-			vec pos(d->o), off(0, 0, 2);
+			vec pos(d->abovehead()), off(0, 0, 2);
 			if(shownameinfo() > 1 && d->state == CS_DEAD)
 			{
 				s_sprintf(s)("@%s", d->obit);

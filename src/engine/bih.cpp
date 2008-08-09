@@ -45,7 +45,7 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
 
     vec invray(ray.x ? 1/ray.x : 1e16f, ray.y ? 1/ray.y : 1e16f, ray.z ? 1/ray.z : 1e16f);
     float tmin, tmax;
-    float t1 = (bbmin.x - o.x)*invray.x, 
+    float t1 = (bbmin.x - o.x)*invray.x,
           t2 = (bbmax.x - o.x)*invray.x;
     if(invray.x > 0) { tmin = t1; tmax = t2; } else { tmin = t2; tmax = t1; }
     t1 = (bbmin.y - o.y)*invray.y;
@@ -137,7 +137,7 @@ static int bihsort(const ushort *x, const ushort *y)
 void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, int depth)
 {
     maxdepth = max(maxdepth, depth);
-   
+
     vec vmin(1e16f, 1e16f, 1e16f), vmax(-1e16f, -1e16f, -1e16f);
     loopi(numindices)
     {
@@ -176,15 +176,15 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, in
         tri &tri = tris[indices[left]];
         float amin = min(tri.a[axis], min(tri.b[axis], tri.c[axis])),
               amax = max(tri.a[axis], max(tri.b[axis], tri.c[axis]));
-        if(max(split - amin, 0.0f) > max(amax - split, 0.0f)) 
+        if(max(split - amin, 0.0f) > max(amax - split, 0.0f))
         {
             ++left;
             splitleft = max(splitleft, amax);
         }
-        else 
-        { 
-            --right; 
-            swap(indices[left], indices[right]); 
+        else
+        {
+            --right;
+            swap(indices[left], indices[right]);
             splitright = min(splitright, amin);
         }
     }
@@ -219,13 +219,13 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, in
     }
 
     if(numindices-right==1) buildnodes[node].child[1] = (1<<15) | (left==1 ? 1<<14 : 0) | indices[right];
-    else 
+    else
     {
         buildnodes[node].child[1] = (left==1 ? 1<<14 : 0) | buildnodes.length();
         build(buildnodes, &indices[right], numindices-right, depth+1);
     }
 }
- 
+
 BIH::BIH(vector<tri> *t)
 {
     numtris = t[0].length() + t[1].length();
@@ -238,7 +238,7 @@ BIH::BIH(vector<tri> *t)
         return;
     }
 
-    tris = new tri[numtris]; 
+    tris = new tri[numtris];
     noclip = &tris[t[0].length()];
     memcpy(tris, t[0].getbuf(), t[0].length()*sizeof(tri));
     memcpy(noclip, t[1].getbuf(), t[1].length()*sizeof(tri));
@@ -281,7 +281,7 @@ static inline void yawray(vec &o, vec &ray, float angle)
 
 bool mmintersect(const extentity &e, const vec &o, const vec &ray, float maxdist, int mode, float &dist)
 {
-    model *m = loadmodel(NULL, e.attr2);
+    model *m = loadmodel(NULL, e.attr1);
     if(!m) return false;
     if(mode&RAY_SHADOW)
     {
@@ -292,7 +292,7 @@ bool mmintersect(const extentity &e, const vec &o, const vec &ray, float maxdist
     if(!maxdist) maxdist = 1e16f;
     vec yo(o);
     yo.sub(e.o);
-    float yaw = -180.0f-(float)((e.attr1+7)-(e.attr1+7)%15);
+    float yaw = -180.0f-(float)(e.attr2%360);
     vec yray(ray);
     if(yaw != 0) yawray(yo, yray, yaw);
     return m->bih->traverse(yo, yray, maxdist, dist, mode);

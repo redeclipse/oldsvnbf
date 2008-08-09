@@ -1252,6 +1252,10 @@ struct entities : icliententities
 		switch(e.type)
 		{
 			case PLAYERSTART:
+			{
+				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, 0.f, false);
+				break;
+			}
 			case MAPMODEL:
 			{
 				if(!level || showentdir() >= level) renderdir(e.o, e.attr2, e.attr3, false);

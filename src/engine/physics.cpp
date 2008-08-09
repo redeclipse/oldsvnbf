@@ -589,16 +589,16 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
     loopv(oc.mapmodels)
     {
         extentity &e = *ents[oc.mapmodels[i]];
-        model *m = loadmodel(NULL, e.attr2);
+        model *m = loadmodel(NULL, e.attr1);
         if(!m || !m->collide) continue;
         vec center, radius;
         m->collisionbox(0, center, radius);
         if(!m->ellipsecollide || d->collidetype!=COLLIDE_ELLIPSE)
         {
-            rotatebb(center, radius, e.attr1);
+            rotatebb(center, radius, e.attr2);
             if(!rectcollide(d, dir, center.add(e.o), radius.x, radius.y, radius.z, radius.z)) return false;
         }
-        else if(!ellipsecollide(d, dir, center.add(e.o), float((e.attr1+7)-(e.attr1+7)%15), radius.x, radius.y, radius.z, radius.z)) return false;
+        else if(!ellipsecollide(d, dir, center.add(e.o), float(e.attr2%360), radius.x, radius.y, radius.z, radius.z)) return false;
     }
     return true;
 }

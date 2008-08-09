@@ -1,0 +1,1 @@
+"black" is in the public domain, if you can't make black images then something is wrong.
