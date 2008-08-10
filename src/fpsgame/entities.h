@@ -530,9 +530,9 @@ struct entities : icliententities
 		vector<int> teleports;
 		loopv(e.links)
 			if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TELEPORT)
-				teleports.add(i);
+				teleports.add(e.links[i]);
 
-		if(!teleports.empty())
+		while(!teleports.empty())
 		{
 			int r = rnd(teleports.length()), t = teleports[r];
 			fpsentity &f = *(fpsentity *)ents[t];
@@ -544,13 +544,14 @@ struct entities : icliententities
 			vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 			d->o.add(d->vel);
 			d->vel.mul(mag);
-			cl.ph.entinmap(d, false);
-
-			execlink(d, n, true);
-			execlink(d, t, true);
-
-			if(d == cl.player1) cl.resetstates(ST_VIEW);
-			return;
+			if(cl.ph.entinmap(d, false))
+			{
+				execlink(d, n, true);
+				execlink(d, t, true);
+				if(d == cl.player1) cl.resetstates(ST_VIEW);
+				break;
+			}
+			teleports.remove(r);
 		}
 	}
 
