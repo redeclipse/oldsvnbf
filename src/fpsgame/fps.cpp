@@ -578,9 +578,6 @@ struct GAMECLIENT : igameclient
 				}
 			};
 
-			if(d == player1 && (d->obliterated || lastmillis-d->lastspawn <= 5000))
-				anc = S_V_OWNED;
-
 			int o = (flags & HIT_HEAD) ? 1 : (d->obliterated ? 2 : 0);
 			const char *oname = isgun(gun) ? obitnames[o][gun] : "was killed by";
 			if(m_team(gamemode, mutators) && d->team == actor->team)
@@ -594,29 +591,46 @@ struct GAMECLIENT : igameclient
 					{
 						s_strcat(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
+						s_sprintfd(ds)("@\fgCARNAGE");
+						particle_text(d->abovehead(), ds, 8);
 						break;
 					}
 					case 10:
 					{
 						s_strcat(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
+						s_sprintfd(ds)("@\fgSLAUGHTER");
+						particle_text(d->abovehead(), ds, 8);
 						break;
 					}
 					case 25:
 					{
 						s_strcat(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
+						s_sprintfd(ds)("@\fgMASSACRE");
+						particle_text(d->abovehead(), ds, 8);
 						break;
 					}
 					case 50:
 					{
 						s_strcat(d->obit, " creating a bloodbath!");
 						anc = S_V_SPREE4;
+						s_sprintfd(ds)("@\fgBLOODBATH");
+						particle_text(d->abovehead(), ds, 8);
 						break;
 					}
 					default:
 					{
-						if(flags & HIT_HEAD) anc = S_V_HEADSHOT;
+						if(flags & HIT_HEAD)
+						{
+							anc = S_V_HEADSHOT;
+							s_sprintfd(ds)("@\fgHEADSHOT");
+							particle_text(d->abovehead(), ds, 8);
+						}
+						else if(d->obliterated || lastmillis-d->lastspawn <= REGENWAIT*3)
+						{
+							anc = S_V_OWNED;
+						}
 						break;
 					}
 				}
@@ -624,8 +638,10 @@ struct GAMECLIENT : igameclient
 		}
 		bool af = (d == player1 || actor == player1);
 		if(dth >= 0) playsound(dth, 0, 255, d->o, d);
-		s_sprintfd(a)("\f2%s %s", colorname(d), d->obit);
+		s_sprintfd(a)("\fy%s %s", colorname(d), d->obit);
 		et.announce(anc, a, af);
+		s_sprintfd(da)("@%s", a);
+		particle_text(d->abovehead(), da, 8);
 
 		vec pos = headpos(d);
 		int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);

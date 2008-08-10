@@ -904,15 +904,15 @@ static struct partmap { int type; int color; float size; } partmaps[] =
     {  6, 0x897661, 2.4f }, // 5 greyish-brown:   big  slowly rising smoke
     {  7, 0xFFFFFF, 4.8f }, // 6 blue:   fireball2
     {  8, 0xFFFFFF, 4.8f }, // 7 green:  big fireball3
-    {  9, 0xFF4B19, 4.0f }, // 8 TEXT RED
-    {  9, 0x32FF64, 4.0f }, // 9 TEXT GREEN
+    {  9, 0xFFFFFF, 3.0f }, // 8 TEXT RED
+    {  9, 0xFFFFFF, 4.0f }, // 9 TEXT GREEN
     { 10, 0xFFC864, 0.6f }, // 10 yellow flare
-    { 11, 0x1EC850, 2.0f }, // 11 TEXT DARKGREEN, SMALL, NON-MOVING
+    { 11, 0xFFFFFF, 2.0f }, // 11 TEXT DARKGREEN, SMALL, NON-MOVING
     {  8, 0xFFFFFF, 2.0f }, // 12 green small fireball3
-    { 11, 0xFF4B19, 2.0f }, // 13 TEXT RED, SMALL, NON-MOVING
-    { 11, 0xB4B4B4, 2.0f }, // 14 TEXT GREY, SMALL, NON-MOVING
-    {  9, 0xFFC864, 4.0f }, // 15 TEXT YELLOW
-    { 11, 0x6496FF, 2.0f }, // 16 TEXT BLUE, SMALL, NON-MOVING
+    { 11, 0xFFFFFF, 2.0f }, // 13 TEXT RED, SMALL, NON-MOVING
+    { 11, 0xFFFFFF, 2.0f }, // 14 TEXT GREY, SMALL, NON-MOVING
+    {  9, 0xFFFFFF, 4.0f }, // 15 TEXT YELLOW
+    { 11, 0xFFFFFF, 2.0f }, // 16 TEXT BLUE, SMALL, NON-MOVING
     { 12, 0xFF1932, 2.0f }, // 17 METER RED, SMALL, NON-MOVING
     { 12, 0x3219FF, 2.0f }, // 18 METER BLUE, SMALL, NON-MOVING
     { 13, 0xFF1932, 2.0f }, // 19 METER RED vs. BLUE, SMALL, NON-MOVING (note swaps r<->b)
@@ -930,7 +930,7 @@ static struct partmap { int type; int color; float size; } partmaps[] =
     { 19, 0x802020, 4.8f }, // 31 fireball: red, no glare
     { 19, 0x2020FF, 4.8f }, // 32 fireball: blue, no glare
     { 19, 0x208020, 4.8f }, // 33 fireball: green, no glare
-    {  9, 0x6496FF, 4.0f }, // 34 TEXT BLUE
+    {  9, 0xFFFFFF, 4.0f }, // 34 TEXT BLUE
     { 15, 0x802020, 4.8f }, // 35 fireball: red
     { 15, 0x2020FF, 4.8f }, // 36 fireball: blue
     // fill the above @UNUSED slots first!

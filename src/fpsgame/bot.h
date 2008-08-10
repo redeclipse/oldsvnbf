@@ -1178,16 +1178,28 @@ struct botclient
 			if(e)
 			{
 				vec enemypos = cl.headpos(e);
-				aim(d, b, enemypos, d->yaw, d->pitch, 9);
+				aim(d, b, enemypos, d->yaw, d->pitch, 8);
 				aiming = true;
 			}
 			if(hunt(d, b))
 			{
-				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 15);
-				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 3);
+				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 4);
+				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 2);
 			}
-			d->move = 1; // keep on movin'
-			d->strafe = 0;
+
+			float yaw = d->aimyaw-d->yaw;
+			while(yaw < 0.0f) yaw += 360.0f;
+			while(yaw >= 360.0f) yaw -= 360.0f;
+			if(yaw >= 337.5f || yaw < 22.5f) { d->move = 1; d->strafe = 0; }
+			else if(yaw >= 22.5f && yaw < 67.5f) { d->move = d->strafe = 1; d->aimyaw -= 45.f; }
+			else if(yaw >= 67.5f && yaw < 112.5f) { d->move = 0; d->strafe = 1; d->aimyaw -= 90.f; }
+			else if(yaw >= 112.5f && yaw < 157.5f) { d->move = -1; d->strafe = 1; d->aimyaw -= 135.f; }
+			else if(yaw >= 157.5f && yaw < 202.5f) { d->move = -1; d->strafe = 0; d->aimyaw -= 180.f; }
+			else if(yaw >= 202.5f && yaw < 247.5f) { d->move = d->strafe = -1; d->aimyaw -= 225.f; }
+			else if(yaw >= 247.5f && yaw < 292.5f) { d->move = 0; d->strafe = -1; d->aimyaw -= 270.f; }
+			else if(yaw >= 292.5f && yaw < 337.5f) { d->move = 1; d->strafe = -1; d->aimyaw -= 315.f; }
+			else { d->move = 1; d->strafe = 0; } // wtf?
+			cl.fixrange(d->aimyaw, d->aimpitch);
 		}
 		else d->stopmoving();
 	}
@@ -1262,7 +1274,8 @@ struct botclient
 		{
 			botstate &b = d->bot->getstate();
 			process(d, b);
-			if(lastmillis >= b.next)
+			bool override = d->state == CS_ALIVE && (b.goal || d->bot->route.empty());
+			if(override || lastmillis >= b.next)
 			{
 				bool result = true;
 				int frame = botframetimes[b.type] - d->skill;
