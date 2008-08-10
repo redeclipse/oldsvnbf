@@ -1103,7 +1103,7 @@ struct botclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			if(lastmillis-d->bot->lastreq > 1000)
+			if(lastmillis-d->bot->lastreq > 500)
 			{
 				int gun = -1;
 				if(d->hasgun(d->bot->gunpref)) gun = d->bot->gunpref; // could be any gun

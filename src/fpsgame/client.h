@@ -939,11 +939,6 @@ struct clientcom : iclientcom
 					if(!actor) break;
 					actor->frags = frags;
 					actor->spree = spree;
-					if(actor!=cl.player1 && !m_stf(cl.gamemode) && !m_ctf(cl.gamemode))
-					{
-						s_sprintfd(ds)("@%d", actor->frags);
-						particle_text(actor->abovehead(), ds, 9);
-					}
 					if(!victim) break;
 					cl.killed(gun, flags, damage, victim, actor);
 					victim->lastdeath = lastmillis;
