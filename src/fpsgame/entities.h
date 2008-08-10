@@ -71,8 +71,9 @@ struct entities : icliententities
 	IVARP(showlighting, 0, 1, 1);
 
 	IVAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
+	bool autodropwaypoints;
 
-	entities(GAMECLIENT &_cl) : cl(_cl)
+	entities(GAMECLIENT &_cl) : cl(_cl), autodropwaypoints(false)
 	{
         CCOMMAND(announce, "i", (entities *self, int *idx), self->announce(*idx));
 
@@ -849,6 +850,11 @@ struct entities : icliententities
 		return !route.empty();
 	}
 
+	bool waypointdrop()
+	{
+		return (m_fight(cl.gamemode) && autodropwaypoints) || dropwaypoints();
+	}
+
 	int waypointnode(const vec &v, bool dist = true, int type = WAYPOINT)
 	{
 		int w = -1, t = entlinks[WAYPOINT].find(type) >= 0 ? type : WAYPOINT;
@@ -884,10 +890,11 @@ struct entities : icliententities
 		{
 			vec v(cl.feetpos(d, 0.f));
 			int curnode = waypointnode(v);
-			if(m_edit(cl.gamemode) && dropwaypoints() && d == cl.player1)
+			if(waypointdrop() && ((m_fight(cl.gamemode) && d->ownernum < 0) || d == cl.player1))
 			{
 				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= d->radius+enttype[WAYPOINT].radius)
 					curnode = d->lastnode;
+
 				if(!ents.inrange(curnode))
 				{
 					int cmds = WP_NONE;
@@ -1154,6 +1161,7 @@ struct entities : icliententities
 
 		physent dummyent;
 		dummyent.height = dummyent.radius = dummyent.xradius = dummyent.yradius = 1;
+		int waypoints = 0;
 		loopvj(ents)
 		{
 			fpsentity &e = *(fpsentity *)ents[j];
@@ -1172,8 +1180,30 @@ struct entities : icliententities
 				}
 				case WAYPOINT:
 				{
+					waypoints++;
 					if(gver <= 90)
 						e.attr1 = e.attr2 = e.attr3 = e.attr4 = e.attr5 = 0;
+					break;
+				}
+				default: break;
+			}
+		}
+		autodropwaypoints = m_fight(cl.gamemode) && !waypoints;
+	}
+
+	void mapstart()
+	{
+		if(autodropwaypoints) loopv(ents)
+		{
+			fpsentity &e = *(fpsentity *)ents[i];
+			vec v(e.o);
+			v.z -= dropheight(e);
+			switch(e.type)
+			{
+				case PLAYERSTART:
+				case WEAPON:
+				{
+					newentity(v, WAYPOINT, 0, 0, 0, 0, 0);
 					break;
 				}
 				default: break;
