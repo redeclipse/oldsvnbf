@@ -103,7 +103,7 @@ struct GAMECLIENT : igameclient
 	IVARP(showcrosshair, 0, 1, 1);
 	IVARP(showdamage, 0, 1, 1);
 	IVARP(showinfo, 0, 2, 2);
-	IVARP(shownameinfo, 0, 2, 2);
+	IVARP(shownameinfo, 0, 1, 2);
 	IVARP(showindicator, 0, 1, 1);
 	IVARP(showcliphair, 0, 1, 1);
 	IVARP(showclipammo, 0, 2, 2);
@@ -1986,15 +1986,8 @@ struct GAMECLIENT : igameclient
 
 		if(shownameinfo() && third && d != player1 && d->state != CS_SPECTATOR)
 		{
-			string s;
-			vec pos(d->abovehead()), off(0, 0, 2);
-			if(shownameinfo() > 1 && d->state == CS_DEAD)
-			{
-				s_sprintf(s)("@%s", d->obit);
-				part_text(pos.add(off), s, 10, 1, 0xFFFFFF);
-			}
-			s_sprintf(s)("@%s", colorname(d));
-			part_text(pos.add(off), s, 10, 1, 0xFFFFFF);
+			s_sprintfd(s)("@%s", colorname(d));
+			part_text(d->abovehead(), s, 11, 1, 0xFFFFFF);
 		}
 
 		if(d->state == CS_DEAD)
