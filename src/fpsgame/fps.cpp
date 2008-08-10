@@ -732,6 +732,7 @@ struct GAMECLIENT : igameclient
 		intermission = false;
         player1->respawned = player1->suicided = maptime = 0;
         preload();
+        et.mapstart();
 		cc.mapstart();
         resetstates(ST_ALL);
 	}
