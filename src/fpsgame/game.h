@@ -200,6 +200,7 @@ enum
 	G_M_NOITEMS	= 1<<7,
 	G_M_ALL		= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_PROG|G_M_MULTI|G_M_DLMS|G_M_MAYHEM|G_M_NOITEMS,
 	G_M_FIGHT	= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI|G_M_DLMS|G_M_NOITEMS,
+	G_M_DUKE	= G_M_INSTA|G_M_DUEL|G_M_DLMS|G_M_NOITEMS,
 	G_M_STF		= G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM|G_M_NOITEMS,
 	G_M_CTF		= G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM|G_M_NOITEMS,
 };
@@ -219,10 +220,10 @@ struct gametypes
 }, mutstype[] = {
 	{ G_M_TEAM,			G_M_ALL,		G_M_NONE,			"Team" },
 	{ G_M_INSTA,		G_M_ALL,		G_M_NOITEMS,		"Instagib" },
-	{ G_M_DUEL,			G_M_ALL,		G_M_NONE,			"Duel" },
+	{ G_M_DUEL,			G_M_DUKE,		G_M_NONE,			"Duel" },
 	{ G_M_PROG,			G_M_ALL,		G_M_NONE,			"Progressive" },
 	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,			"Multi-sided" },
-	{ G_M_DLMS,			G_M_ALL,		G_M_DUEL,			"Last Man Standing" },
+	{ G_M_DLMS,			G_M_DUKE,		G_M_DUEL,			"Last Man Standing" },
 	{ G_M_MAYHEM,		G_M_ALL,		G_M_NONE,			"Mayhem" },
 	{ G_M_NOITEMS,		G_M_ALL,		G_M_NONE,			"No Items" },
 };
