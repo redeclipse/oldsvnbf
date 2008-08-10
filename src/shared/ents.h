@@ -72,8 +72,8 @@ struct physent                                  // base entity type, can be affe
     uchar type;                                 // one of ENT_* above
     uchar collidetype;                          // one of COLLIDE_* above
 
-    physent() : maxspeed(100), weight(100.f), radius(5.0f), height(15.f), aboveeye(1.f),
-        xradius(5.0f), yradius(5.0f), zmargin(0),
+    physent() : maxspeed(120), weight(120.f), radius(5.5f), height(15.f), aboveeye(1.f),
+        xradius(5.5f), yradius(5.5f), zmargin(0),
 		blocked(false), moving(true),
 		onplayer(NULL), lastmove(0), lastmoveattempt(0), collisions(0), stacks(0),
 		state(CS_ALIVE), type(ENT_PLAYER),

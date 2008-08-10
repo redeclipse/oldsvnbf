@@ -3,10 +3,14 @@ struct physics
 	GAMECLIENT &cl;
 
 	IVARW(crawlspeed,		1,			25,			INT_MAX-1);	// crawl speed
-	IVARW(gravity,			0,			25,			INT_MAX-1);	// gravity
-	IVARW(jumpvel,			0,			60,			INT_MAX-1);	// extra velocity to add when jumping
+	IVARW(gravity,			1,			25,			INT_MAX-1);	// gravity
+	IVARW(jumpvel,			1,			60,			INT_MAX-1);	// extra velocity to add when jumping
 	IVARW(movespeed,		1,			45,			INT_MAX-1);	// speed
-	IVARW(liquidvel,		0,			45,			1024);		// extra liquid velocity
+	IVARW(liquidvel,		1,			45,			1024);		// extra liquid velocity
+	IVARW(liquidfric,		1,			15,			INT_MAX-1);
+	IVARW(sinkfric,			1,			3,			INT_MAX-1);
+	IVARW(floorfric,		1,			5,			INT_MAX-1);
+	IVARW(airfric,			1,			25,			INT_MAX-1);
 
 	IVARP(floatspeed,		10,			100,		1000);
 	IVARP(physframetime,	5,			5,			20);
@@ -74,22 +78,6 @@ struct physics
 		cl.cc.addmsg(SV_TAUNT, "ri", d->clientnum);
 	}
 
-	float stairheight(physent *d)
-	{
-		return 4.1f;
-	}
-	float floorz(physent *d)
-	{
-		return 0.867f;
-	}
-	float slopez(physent *d)
-	{
-		return 0.5f;
-	}
-	float wallz(physent *d)
-	{
-		return 0.2f;
-	}
 	float jumpvelocity(physent *d)
 	{
 		return (d->inliquid ? float(liquidvel()) : float(jumpvel()))*(float(d->weight)/100.f)*jumpscale;
@@ -105,30 +93,6 @@ struct physics
 			return d->maxspeed*(float(iscrouching(d) ? crawlspeed() : movespeed())/100.f)*(float(d->weight)/100.f)*speedscale;
 		}
 		return d->maxspeed*(float(movespeed())/100.f)*(float(d->weight)/100.f)*speedscale;
-	}
-	float stepspeed(physent *d)
-	{
-		return 1.0f;
-	}
-	float liquiddampen(physent *d)
-	{
-		return 8.f;
-	}
-	float liquidfric(physent *d)
-	{
-		return 20.f;
-	}
-    float sinkfric(physent *d)
-    {
-        return 2.0f;
-    }
-	float floorfric(physent *d)
-	{
-		return 6.f;
-	}
-	float airfric(physent *d)
-	{
-		return 30.f;
 	}
 
 	bool movepitch(physent *d)
@@ -165,7 +129,7 @@ struct physics
 
     void switchfloor(physent *d, vec &dir, const vec &floor)
     {
-        if(floor.z >= floorz(d)) d->falling = vec(0, 0, 0);
+        if(floor.z >= floorz) d->falling = vec(0, 0, 0);
 
         vec oldvel(d->vel);
         oldvel.add(d->falling);
@@ -195,7 +159,7 @@ struct physics
 		}
 		/* try stepping up */
 		d->o = old;
-		d->o.z += dir.magnitude()*stepspeed(d);
+		d->o.z += dir.magnitude()*stepspeed;
 		if(collide(d, vec(0, 0, 1)))
 		{
 			if(d->physstate == PHYS_FALL)
@@ -216,9 +180,9 @@ struct physics
 	{
 		vec old(d->o);
 		vec dv(dir.x*a, dir.y*a, -step*b), v(dv);
-		v.mul(stairheight(d)/(step*b));
+		v.mul(stairheight/(step*b));
 		d->o.add(v);
-		if(!collide(d, vec(0, 0, -1), slopez(d)))
+		if(!collide(d, vec(0, 0, -1), slopez))
 		{
 			d->o = old;
 			d->o.add(dv);
@@ -235,8 +199,8 @@ struct physics
 		if(d->physstate >= PHYS_FLOOR && (floor.z == 0.0f || floor.z == 1.0f))
 		{
 			vec moved(d->o);
-			d->o.z -= stairheight(d) + 0.1f;
-			if(!collide(d, vec(0, 0, -1), slopez(d)))
+			d->o.z -= stairheight+0.1f;
+			if(!collide(d, vec(0, 0, -1), slopez))
 			{
 				d->o = moved;
 				d->physstate = PHYS_STEP_DOWN;
@@ -245,9 +209,9 @@ struct physics
 			else d->o = moved;
 		}
 	#endif
-        if(floor.z > 0.0f && floor.z < slopez(d))
+        if(floor.z > 0.0f && floor.z < slopez)
         {
-            if(floor.z >= wallz(d)) switchfloor(d, dir, floor);
+            if(floor.z >= wallz) switchfloor(d, dir, floor);
             d->timeinair = 0;
             d->physstate = PHYS_SLIDE;
             d->floor = floor;
@@ -267,7 +231,7 @@ struct physics
         switchfloor(d, dir, floor);
         d->timeinair = 0;
 
-		if(floor.z >= floorz(d)) d->physstate = PHYS_FLOOR;
+		if(floor.z >= floorz) d->physstate = PHYS_FLOOR;
 		else d->physstate = PHYS_SLOPE;
 		d->floor = floor;
 	}
@@ -277,12 +241,12 @@ struct physics
 		bool found = false;
 		vec moved(d->o);
 		d->o.z -= 0.1f;
-		if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? slopez(d) : floorz(d)))
+		if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? slopez : floorz))
 		{
 			floor = wall;
 			found = true;
 		}
-		else if(collided && obstacle.z >= slopez(d))
+		else if(collided && obstacle.z >= slopez)
 		{
 			floor = obstacle;
 			found = true;
@@ -293,7 +257,7 @@ struct physics
             if(!collide(d, vec(0, 0, -1)) && wall.z > 0.0f)
             {
                 floor = wall;
-                if(floor.z >= slopez(d)) found = true;
+                if(floor.z >= slopez) found = true;
             }
         }
         else if(d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f)
@@ -302,13 +266,13 @@ struct physics
             if(!collide(d, vec(d->floor).neg(), 0.95f) || !collide(d, vec(0, 0, -1)))
             {
                 floor = wall;
-                if(floor.z >= slopez(d) && floor.z < 1.0f) found = true;
+                if(floor.z >= slopez && floor.z < 1.0f) found = true;
             }
         }
         if(collided && (!found || obstacle.z > floor.z))
         {
             floor = obstacle;
-            slide = !found && (floor.z < wallz(d) || floor.z >= slopez(d));
+            slide = !found && (floor.z < wallz || floor.z >= slopez);
         }
 		d->o = moved;
 		return found;
@@ -320,7 +284,7 @@ struct physics
 		#if 0
 		if(d->physstate == PHYS_STEP_DOWN && dir.z <= 0.0f && cl.allowmove(d) && (d->move || d->strafe))
 		{
-			float step = dir.magnitude()*stepspeed(d);
+			float step = dir.magnitude()*stepspeed;
 			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
 			if(trystepdown(d, dir, step, 0.5f, 0.5f)) return true;
 			if(trystepdown(d, dir, step, 0.25f, 0.75f)) return true;
@@ -336,7 +300,7 @@ struct physics
 		{
             obstacle = wall;
             /* check to see if there is an obstacle that would prevent this one from being used as a floor */
-            if(d->type==ENT_PLAYER && ((wall.z>=slopez(d) && dir.z<0) || (wall.z<=-slopez(d) && dir.z>0)) && (dir.x || dir.y) && !collide(d, vec(dir.x, dir.y, 0)))
+            if(d->type==ENT_PLAYER && ((wall.z>=slopez && dir.z<0) || (wall.z<=-slopez && dir.z>0)) && (dir.x || dir.y) && !collide(d, vec(dir.x, dir.y, 0)))
             {
                 if(wall.dot(dir) >= 0) slidecollide = true;
                 obstacle = wall;
@@ -344,15 +308,15 @@ struct physics
 
             d->o = old;
             if(d->type == ENT_CAMERA) return false;
-            float stepdist = (d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f ? d->radius+0.1f : stairheight(d));
+            float stepdist = (d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f ? d->radius+0.1f : stairheight);
             d->o.z -= stepdist;
             d->zmargin = -stepdist;
-            if(d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR || (!collide(d, vec(0, 0, -1), slopez(d)) && (d->physstate==PHYS_STEP_UP || wall.z>=floorz(d))))
+            if(d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR || (!collide(d, vec(0, 0, -1), slopez) && (d->physstate==PHYS_STEP_UP || wall.z>=floorz)))
             {
                 d->o = old;
                 d->zmargin = 0;
-                float floorz = (d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR ? d->floor.z : wall.z);
-                if(trystepup(d, dir, floorz < 1.0f ? d->radius+0.1f : stairheight(d))) return true;
+                float fz = (d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR ? d->floor.z : wall.z);
+                if(trystepup(d, dir, fz < 1.0f ? d->radius+0.1f : stairheight)) return true;
             }
             else
             {
@@ -366,7 +330,7 @@ struct physics
 		vec floor(0, 0, 0);
 		bool slide = collided,
 			 found = findfloor(d, collided, obstacle, slide, floor);
-        if(slide || (!collided && floor.z > 0 && floor.z < wallz(d)))
+        if(slide || (!collided && floor.z > 0 && floor.z < wallz))
         {
             slideagainst(d, dir, slide ? obstacle : floor, found || slidecollide);
 			if(d->type == ENT_AI || d->type == ENT_INANIMATE) d->blocked = true;
@@ -396,7 +360,7 @@ struct physics
 			{
 				pl->jumping = false;
 				pl->vel.z = jumpvelocity(pl);
-				if(pl->inliquid) { pl->vel.x /= liquiddampen(pl); pl->vel.y /= liquiddampen(pl); }
+				if(pl->inliquid) { pl->vel.x /= liquiddampen; pl->vel.y /= liquiddampen; }
 				playsound(S_JUMP, 0, 255, pl->o, pl);
 			}
 		}
@@ -415,7 +379,7 @@ struct physics
 				 */
 				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
 				if(pl->inliquid) m.z = max(m.z, dz);
-				else if(pl->floor.z >= wallz(pl)) m.z = dz;
+				else if(pl->floor.z >= wallz) m.z = dz;
 			}
 
 			m.normalize();
@@ -428,7 +392,7 @@ struct physics
 		    if(floating) { if(local) d.mul(floatspeed()/100.0f); }
 		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
         }
-		float friction = pl->inliquid && !floating ? liquidfric(pl) : (pl->physstate >= PHYS_SLOPE || floating ? floorfric(pl) : airfric(pl));
+		float friction = pl->inliquid && !floating ? liquidfric() : (pl->physstate >= PHYS_SLOPE || floating ? floorfric() : airfric());
 		float fpsfric = max(friction/millis*20.0f, 1.0f);
 
         pl->vel.mul(fpsfric-1);
@@ -441,7 +405,7 @@ struct physics
         float secs = curtime/1000.0f;
         vec g(0, 0, 0);
         if(pl->physstate == PHYS_FALL) g.z -= gravityforce(pl)*secs;
-        else if(pl->floor.z > 0 && pl->floor.z < floorz(pl))
+        else if(pl->floor.z > 0 && pl->floor.z < floorz)
         {
             g.z = -1;
             g.project(pl->floor);
@@ -452,9 +416,9 @@ struct physics
 
         if(pl->inliquid || pl->physstate >= PHYS_SLOPE)
         {
-            float friction = pl->inliquid ? sinkfric(pl) : floorfric(pl),
+            float friction = pl->inliquid ? sinkfric() : floorfric(),
                   fpsfric = friction/curtime*20.0f,
-                  c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez(pl))/(floorz(pl)-slopez(pl)), 0.0f, 1.0f);
+                  c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez)/(floorz-slopez), 0.0f, 1.0f);
             pl->falling.mul(1 - c/fpsfric);
         }
     }
@@ -497,7 +461,7 @@ struct physics
 		bool liquid = pl->inliquid;
 		pl->inliquid = !floating && isliquid(lookupmaterial(v)&MATF_VOLUME);
 		if(!floating && pl->inliquid && liquid != pl->inliquid)
-			pl->vel.div(liquiddampen(pl));
+			pl->vel.div(liquiddampen);
     }
 
 	// main physics routine, moves a player/monster for a time step
@@ -615,25 +579,25 @@ struct physics
 			case PHYS_SLOPE:
 			case PHYS_FLOOR:
 				d->o.z -= 0.1f;
-				if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? slopez(d) : floorz(d)))
+				if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? slopez : floorz))
 					d->floor = wall;
 				else if(d->physstate == PHYS_SLOPE)
 				{
 					d->o.z -= d->radius;
-					if(!collide(d, vec(0, 0, -1), slopez(d)))
+					if(!collide(d, vec(0, 0, -1), slopez))
 						d->floor = wall;
 				}
 				break;
 
 			case PHYS_STEP_UP:
-				d->o.z -= stairheight(d)+0.1f;
-				if(!collide(d, vec(0, 0, -1), slopez(d)))
+				d->o.z -= stairheight+0.1f;
+				if(!collide(d, vec(0, 0, -1), slopez))
 					d->floor = wall;
 				break;
 
 			case PHYS_SLIDE:
 				d->o.z -= d->radius+0.1f;
-				if(!collide(d, vec(0, 0, -1)) && wall.z < slopez(d))
+				if(!collide(d, vec(0, 0, -1)) && wall.z < slopez)
 					d->floor = wall;
 				break;
 		}

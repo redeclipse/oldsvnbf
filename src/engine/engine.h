@@ -476,6 +476,7 @@ extern void addchange(const char *desc, int type);
 extern void clearchanges(int type);
 
 // physics
+extern const float stairheight, floorz, slopez, wallz, stepspeed, liquiddampen;
 extern bool pointincube(const clipplanes &p, const vec &v);
 extern bool overlapsdynent(const vec &o, float radius);
 extern void rotatebb(vec &center, vec &radius, int yaw);
