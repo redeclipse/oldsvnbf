@@ -592,7 +592,7 @@ struct GAMECLIENT : igameclient
 						s_strcat(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
 						s_sprintfd(ds)("@\fgCARNAGE");
-						particle_text(d->abovehead(), ds, 8);
+						particle_text(actor->abovehead(), ds, 8);
 						break;
 					}
 					case 10:
@@ -600,7 +600,7 @@ struct GAMECLIENT : igameclient
 						s_strcat(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
 						s_sprintfd(ds)("@\fgSLAUGHTER");
-						particle_text(d->abovehead(), ds, 8);
+						particle_text(actor->abovehead(), ds, 8);
 						break;
 					}
 					case 25:
@@ -608,7 +608,7 @@ struct GAMECLIENT : igameclient
 						s_strcat(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
 						s_sprintfd(ds)("@\fgMASSACRE");
-						particle_text(d->abovehead(), ds, 8);
+						particle_text(actor->abovehead(), ds, 8);
 						break;
 					}
 					case 50:
@@ -616,7 +616,7 @@ struct GAMECLIENT : igameclient
 						s_strcat(d->obit, " creating a bloodbath!");
 						anc = S_V_SPREE4;
 						s_sprintfd(ds)("@\fgBLOODBATH");
-						particle_text(d->abovehead(), ds, 8);
+						particle_text(actor->abovehead(), ds, 8);
 						break;
 					}
 					default:
@@ -625,7 +625,7 @@ struct GAMECLIENT : igameclient
 						{
 							anc = S_V_HEADSHOT;
 							s_sprintfd(ds)("@\fgHEADSHOT");
-							particle_text(d->abovehead(), ds, 8);
+							particle_text(actor->abovehead(), ds, 8);
 						}
 						else if(d->obliterated || lastmillis-d->lastspawn <= REGENWAIT*3)
 						{
