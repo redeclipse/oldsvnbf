@@ -417,8 +417,8 @@ VARG(spawngun, 0, GUN_PISTOL, GUN_MAX-1);
 VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
 VARG(botbalance, 0, 4, 16);
-VARG(botminskill, 0, 35, 100);
-VARG(botmaxskill, 0, 85, 100);
+VARG(botminskill, 0, 50, 100);
+VARG(botmaxskill, 0, 100, 100);
 
 FVARG(gravityscale, 1.f);
 FVARG(jumpscale, 1.f);
