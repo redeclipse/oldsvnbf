@@ -836,8 +836,11 @@ bool g3d_windowhit(bool on, bool act)
 {
 	if(act)
 	{
-        if(on) { firstx = gui::hitx; firsty = gui::hity; }
-        mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
+        if(actionon || windowhit)
+        {
+            if(on) { firstx = gui::hitx; firsty = gui::hity; }
+            mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
+        }
     } else if(!on && windowhit) cleargui(1);
     return g3d_active();
 }
