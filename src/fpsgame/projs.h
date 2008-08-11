@@ -4,6 +4,8 @@ struct projectiles
 {
 	GAMECLIENT &cl;
 
+	IVARA(maxprojectiles, 0, 200, INT_MAX-1);
+
 	projectiles(GAMECLIENT &_cl) : cl(_cl)
 	{
 	}
@@ -307,6 +309,7 @@ struct projectiles
 		proj.to = to;
 		proj.local = local;
 		proj.projtype = type;
+		proj.addtime = lastmillis;
 		proj.lifetime = lifetime;
 		proj.waittime = waittime;
 		proj.ent = ent;
@@ -340,6 +343,30 @@ struct projectiles
 
 	void update()
 	{
+		int numprojs = projs.length();
+		if(numprojs > maxprojectiles())
+		{
+			vector<projent *> canremove;
+			loopvrev(projs)
+				if(projs[i]->ready() && (projs[i]->projtype == PRJ_DEBRIS || projs[i]->projtype == PRJ_GIBS))
+					canremove.add(projs[i]);
+
+			while(!canremove.empty() && numprojs > maxprojectiles())
+			{
+				int oldest = 0;
+				loopv(canremove)
+					if(lastmillis-canremove[i]->addtime > lastmillis-canremove[oldest]->addtime)
+						oldest = i;
+				if(canremove.inrange(oldest))
+				{
+					canremove[oldest]->state = CS_DEAD;
+					canremove.remove(oldest);
+					numprojs--;
+				}
+				else break;
+			}
+		}
+
 		loopv(projs)
 		{
 			projent &proj = *projs[i];

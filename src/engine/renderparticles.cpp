@@ -6,6 +6,17 @@
 
 Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
+#define MAXPARTICLES 40000
+
+VARA(maxparticles, 10, 4000, MAXPARTICLES);
+VARA(maxparticledistance, 256, 1024, 4096);
+VARA(maxtrail, 1, 500, 10000);
+
+VARP(particletext, 0, 1, 1);
+VARP(outlinemeters, 0, 0, 1);
+VARP(particleglare, 0, 4, 100);
+VAR(debugparticles, 0, 0, 1);
+
 // Check emit_particles() to limit the rate that paricles can be emitted for models/sparklies
 // Automatically stops particles being emitted when paused or in reflective drawing
 VARP(emitmillis, 1, 17, 1000);
@@ -111,8 +122,6 @@ struct listparticle : particle
 };
 
 static listparticle *parempty = NULL;
-
-VARP(outlinemeters, 0, 0, 1);
 
 struct listrenderer : partrenderer
 {
@@ -420,11 +429,11 @@ struct varenderer : partrenderer
 {
     partvert *verts;
     particle *parts;
-    int maxparts, numparts, lastupdate;
+    int numparts, lastupdate;
 
     varenderer(const char *texname, int type, int grav, int collide, int frames = 1)
         : partrenderer(texname, type, grav, collide, frames),
-          verts(NULL), parts(NULL), maxparts(0), numparts(0), lastupdate(-1)
+          verts(NULL), parts(NULL), numparts(0), lastupdate(-1)
     {
     }
 
@@ -432,9 +441,8 @@ struct varenderer : partrenderer
     {
         DELETEA(parts);
         DELETEA(verts);
-        parts = new particle[n];
-        verts = new partvert[n*4];
-        maxparts = n;
+        parts = new particle[MAXPARTICLES];
+        verts = new partvert[MAXPARTICLES*4];
         numparts = 0;
         lastupdate = -1;
     }
@@ -470,7 +478,7 @@ struct varenderer : partrenderer
 
     particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL)
     {
-        particle *p = parts + (numparts < maxparts ? numparts++ : rnd(maxparts)); //next free slot, or kill a random kitten
+        particle *p = parts + (numparts < maxparticles ? numparts++ : rnd(maxparticles)); //next free slot, or kill a random kitten
         p->o = o;
         p->d = d;
         p->fade = fade;
@@ -670,8 +678,6 @@ void finddepthfxranges()
     if(depthfxscissor<2 && numdepthfxranges>0) depthfxtex.addscissorbox(depthfxmin, depthfxmax);
 }
 
-VARFP(maxparticles, 10, 4000, 40000, particleinit());
-
 void particleinit()
 {
     if(!particleshader) particleshader = lookupshaderbyname("particle");
@@ -697,10 +703,6 @@ void removetrackedparticles(physent *pl)
 {
     loopi(sizeof(parts)/sizeof(parts[0])) parts[i]->resettracked(pl);
 }
-
-VARP(particleglare, 0, 4, 100);
-
-VAR(debugparticles, 0, 0, 1);
 
 void render_particles(int time)
 {
@@ -846,8 +848,6 @@ static inline particle *newparticle(const vec &o, const vec &d, int fade, int ty
     return parts[type]->addpart(o, d, fade, color, size, pl);
 }
 
-VARP(maxparticledistance, 256, 1024, 4096);
-
 static void create(int type, int color, int fade, const vec &p, float size, physent *pl)
 {
     if(camera1->o.dist(p) > maxparticledistance) return;
@@ -985,8 +985,6 @@ void particle_splash(int type, int num, int fade, const vec &p)
     part_splash(partmaps[type].type, num, fade, p, partmaps[type].color, partsize(type));
 }
 
-VARP(maxtrail, 1, 500, 10000);
-
 void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, float size)
 {
     if(shadowmapping || renderedgame) return;
@@ -1007,8 +1005,6 @@ void particle_trail(int type, int fade, const vec &s, const vec &e)
 {
     part_trail(partmaps[type].type, fade, s, e, partmaps[type].color, partsize(type));
 }
-
-VARP(particletext, 0, 1, 1);
 
 void part_text(const vec &s, const char *t, int type, int fade, int color, float size)
 {

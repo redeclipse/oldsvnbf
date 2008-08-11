@@ -5,7 +5,7 @@ enum { ID_VAR, ID_FVAR, ID_SVAR, ID_COMMAND, ID_CCOMMAND, ID_ALIAS };
 
 enum { NO_OVERRIDE = INT_MAX, OVERRIDDEN = 0 };
 
-enum { IDF_PERSIST = 1<<0, IDF_OVERRIDE = 1<<1, IDF_WORLD = 1<<2, IDF_COMPLETE = 1<<3, IDF_TEXTURE = 1<<4, IDF_GAME = 1<<5 };
+enum { IDF_PERSIST = 1<<0, IDF_OVERRIDE = 1<<1, IDF_WORLD = 1<<2, IDF_COMPLETE = 1<<3, IDF_TEXTURE = 1<<4, IDF_GAME = 1<<5, IDF_AUTO = 1<<6 };
 
 struct identstack
 {
@@ -130,11 +130,13 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARNR(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
 #define VARNW(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_WORLD|IDF_COMPLETE)
 #define VARNG(name, global, min, cur, max) _VAR(sv_##name, sv_##global, min, cur, max, IDF_GAME);_VAR(name, global, min, cur, max, IDF_GAME|IDF_COMPLETE)
+#define VARNA(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_PERSIST|IDF_AUTO|IDF_COMPLETE)
 #define VAR(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_COMPLETE)
 #define VARP(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
 #define VARR(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
 #define VARW(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_WORLD|IDF_COMPLETE)
 #define VARG(name, min, cur, max) _VAR(sv_##name, sv_##name, min, cur, max, IDF_GAME);_VAR(name, name, min, cur, max, IDF_GAME|IDF_COMPLETE)
+#define VARA(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_PERSIST|IDF_AUTO|IDF_COMPLETE)
 #define _VARF(name, global, min, cur, max, body, persist)  void var_##name(); int global = variable(#name, min, cur, max, &global, var_##name, persist); void var_##name() { body; }
 #define VARFN(name, global, min, cur, max, body) _VARF(name, global, min, cur, max, body, IDF_COMPLETE)
 #define VARF(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_COMPLETE)
@@ -142,6 +144,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARFR(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_OVERRIDE|IDF_COMPLETE)
 #define VARFW(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_WORLD|IDF_COMPLETE)
 #define VARFG(name, min, cur, max, svbody, ccbody) _VARF(sv_##name, sv_##name, min, cur, max, svbody, IDF_GAME);_VARF(name, name, min, cur, max, ccbody, IDF_GAME|IDF_COMPLETE)
+#define VARFA(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_PERSIST|IDF_AUTO|IDF_COMPLETE)
 
 #define _FVAR(name, global, cur, persist) float global = fvariable(#name, cur, &global, NULL, persist)
 #define FVARN(name, global, cur) _FVAR(name, global, cur, IDF_COMPLETE)
@@ -209,9 +212,11 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define IVARP(n, m, c, x)  _IVAR(n, m, c, x, , IDF_PERSIST|IDF_COMPLETE)
 #define IVARR(n, m, c, x)  _IVAR(n, m, c, x, , IDF_OVERRIDE|IDF_COMPLETE)
 #define IVARW(n, m, c, x)  _IVAR(n, m, c, x, , IDF_WORLD|IDF_COMPLETE)
+#define IVARA(n, m, c, x)  _IVAR(n, m, c, x, , IDF_PERSIST|IDF_AUTO|IDF_COMPLETE)
 #define IVARFP(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_PERSIST|IDF_COMPLETE)
 #define IVARFR(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_OVERRIDE|IDF_COMPLETE)
 #define IVARFW(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_WORLD|IDF_COMPLETE)
+#define IVARFA(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_PERSIST|IDF_AUTO|IDF_COMPLETE)
 
 #define _IFVAR(n, c, b, p) \
 	struct var_##n : ident \

@@ -544,7 +544,8 @@ extern void loadsky(char *basename);
 
 // main
 extern void setcaption(const char *text);
-extern int grabinput, perflevel, colorpos;
+extern int grabinput, colorpos, curfps, bestfps, worstfps, bestfpsdiff, worstfpsdiff, maxfps,
+	autoadjust, autoadjustlevel, autoadjustmin, autoadjustmax, autoadjustfps, autoadjustfps, autoadjustrate;
 extern char colorstack[10];
 extern int getmatvec(vec v);
 

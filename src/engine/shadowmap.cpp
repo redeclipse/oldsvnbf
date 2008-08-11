@@ -6,9 +6,9 @@ VARP(shadowmap, 0, 0, 1);
 
 extern void cleanshadowmap();
 VARFP(shadowmapsize, 7, 9, 11, cleanshadowmap());
-VARP(shadowmapradius, 64, 96, 256);
+VARA(shadowmapradius, 64, 96, 256);
 VAR(shadowmapheight, 0, 32, 128);
-VARP(shadowmapdist, 128, 256, 512);
+VARA(shadowmapdist, 128, 256, 512);
 VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
 VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
 VARW(shadowmapambient, 0, 0, 0xFFFFFF);
@@ -273,8 +273,8 @@ bool isshadowmapreceiver(vtxarray *va)
     float skew = va->size/2*SHADOWSKEW;
     if(!shadowmap || !shadowmaptex ||
        va->o.z + va->size <= shadowfocus.z - shadowmapdist || va->o.z >= shadowfocus.z ||
-       va->o.x + va->size <= cx - shadowmapradius-skew || va->o.x >= cx + shadowmapradius+skew || 
-       va->o.y + va->size <= cy - shadowmapradius-skew || va->o.y >= cy + shadowmapradius+skew) 
+       va->o.x + va->size <= cx - shadowmapradius-skew || va->o.x >= cx + shadowmapradius+skew ||
+       va->o.y + va->size <= cy - shadowmapradius-skew || va->o.y >= cy + shadowmapradius+skew)
         return false;
     return true;
 #endif
@@ -365,7 +365,7 @@ void rendershadowmap()
     if(!shadowmap || renderpath==R_FIXEDFUNCTION) return;
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
-    glDisable(GL_FOG); 
+    glDisable(GL_FOG);
     shadowmaptex.render(1<<shadowmapsize, 1<<shadowmapsize, blurshadowmap, blursmsigma/100.0f);
     glEnable(GL_FOG);
 }

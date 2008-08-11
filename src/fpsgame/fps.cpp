@@ -77,6 +77,7 @@ struct GAMECLIENT : igameclient
 	IFVARP(snipesensitivity, 3.0f);
 	IFVARP(pronesensitivity, 5.0f);
 
+	IVARP(crosshairclip, 0, 1, 1);
 	IVARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
 	IFVARP(crosshairsize, 0.03f);
 	IFVARP(cursorsize, 0.03f);
@@ -102,11 +103,16 @@ struct GAMECLIENT : igameclient
 
 	IVARP(showcrosshair, 0, 1, 1);
 	IVARP(showdamage, 0, 1, 1);
-	IVARP(showinfo, 0, 2, 2);
+	IVARP(showhudinfo, 0, 1, 2);
+	IVARP(showhudammo, 0, 2, 2);
 	IVARP(shownameinfo, 0, 1, 2);
 	IVARP(showindicator, 0, 1, 1);
-	IVARP(showcliphair, 0, 1, 1);
-	IVARP(showclipammo, 0, 2, 2);
+
+	IVARP(showstats, 0, 0, 1);
+	IVARP(showhudentinfo, 0, 1, 2);
+	IVARP(showhudents, 0, 10, 100);
+	IVARP(showfps, 0, 2, 2);
+	IVARP(statrate, 0, 200, 1000);
 
 	IVARP(snipetype, 0, 0, 1);
 	IVARP(snipemouse, 0, 2, 2);
@@ -154,11 +160,6 @@ struct GAMECLIENT : igameclient
 	ITVAR(riflecliptex, "<anim>textures/rifleclip", 3);
 	ITVAR(damagetex, "textures/damage", 0);
 	ITVAR(snipetex, "textures/snipe", 0);
-
-	IVARP(showstats, 0, 0, 1);
-	IVARP(showhudents, 0, 10, 100);
-	IVARP(showfps, 0, 2, 2);
-	IVARP(statrate, 0, 200, 1000);
 
 	GAMECLIENT()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
@@ -880,7 +881,7 @@ struct GAMECLIENT : igameclient
 					glEnd();
 				}
 
-				if(showcliphair())
+				if(crosshairclip())
 				{
 					const char *cliptexs[GUN_MAX] = {
 						pistolcliptex(), shotguncliptex(), chainguncliptex(),
@@ -1204,7 +1205,7 @@ struct GAMECLIENT : igameclient
 			glColor4f(glow, glow*0.3f, 0.f, pulse);
 			drawsized(float(bx), float(by), float(bs));
 
-			if(showclipammo())
+			if(showhudammo())
 			{
 				int ta = int(ox*ammosize()), tb = ta*3, tv = bx + bs - tb,
 					to = ta/16, tr = ta/2, tq = tr - FONTH/2;
@@ -1215,7 +1216,7 @@ struct GAMECLIENT : igameclient
 					pistolhudtex(), shotgunhudtex(), chaingunhudtex(),
 					flamerhudtex(), riflehudtex(), grenadeshudtex(),
 				};
-				loopi(GUN_MAX) if(player1->hasgun(i) && (i == player1->gunselect || showclipammo() > 1))
+				loopi(GUN_MAX) if(player1->hasgun(i) && (i == player1->gunselect || showhudammo() > 1))
 				{
 					float blend = fade * (i == player1->gunselect ? ammoblend() : ammoblendinactive());
 					settexture(hudtexs[i], 0);
@@ -1233,7 +1234,7 @@ struct GAMECLIENT : igameclient
 				}
 				tp += FONTH/2;
 			}
-			if(showinfo())
+			if(showhudinfo())
 			{
 				vector<actitem> actitems;
 				if(et.collateitems(player1, false, actitems))
@@ -1292,7 +1293,7 @@ struct GAMECLIENT : igameclient
 									}
 									popfont();
 									tp += FONTH/2;
-									if(showinfo() < 2) break;
+									if(showhudinfo() < 2) break;
 									else found = true;
 								}
 								else
@@ -1307,7 +1308,7 @@ struct GAMECLIENT : igameclient
 									tp += draw_textx("with [ \fs\fc%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, enttype[e.type].name);
 									popfont();
 									tp += FONTH/2;
-									if(showinfo() < 2) break;
+									if(showhudinfo() < 2) break;
 									else found = true;
 								}
 								else
@@ -1337,19 +1338,19 @@ struct GAMECLIENT : igameclient
 		}
 		else if(player1->state == CS_EDITING)
 		{
-			loopi(clamp(entgroup.length()+1, 0, showhudents()))
+			if(showhudentinfo()) loopi(clamp(entgroup.length()+1, 0, showhudents()))
 			{
 				int n = i ? entgroup[i-1] : enthover;
 				if((!i || n != enthover) && et.ents.inrange(n))
 				{
 					fpsentity &f = (fpsentity &)*et.ents[n];
-					if(n == enthover) pushfont("emphasis");
+					if(showhudentinfo() > 2 || n == enthover) pushfont("emphasis");
 					tp += draw_textx("entity %d, %s", bx+bs, tp,
 						n == enthover ? 255 : 196, 196, 196, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1,
 							n, et.findname(f.type));
-					if(n == enthover)
+					if(showhudentinfo() > 2 || n == enthover) popfont();
+					if(showhudentinfo() > 1 || n == enthover)
 					{
-						popfont();
 						tp += draw_textx("%s (%d %d %d %d %d)", bx+bs, tp,
 							255, 196, 196, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1,
 								et.entinfo(f.type, f.attr1, f.attr2, f.attr3, f.attr4, f.attr5, true),
@@ -1371,18 +1372,15 @@ struct GAMECLIENT : igameclient
 
 		renderconsole(ox, oy);
 
-		static int laststats = 0, prevstats[11] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[11] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-		int fps, bestdiff, worstdiff;
-		getfps(fps, bestdiff, worstdiff);
+		static int laststats = 0, prevstats[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 		if(lastmillis-laststats >= statrate())
 		{
 			memcpy(prevstats, curstats, sizeof(prevstats));
-			laststats = lastmillis - (lastmillis%statrate());
+			laststats = lastmillis-(lastmillis%statrate());
 		}
 
-		int nextstats[11] =
+		int nextstats[12] =
 		{
 			vtris*100/max(wtris, 1),
 			vverts*100/max(wverts, 1),
@@ -1392,12 +1390,13 @@ struct GAMECLIENT : igameclient
 			gbatches,
 			getnumqueries(),
 			rplanes,
-			fps,
-			bestdiff,
-			worstdiff
+			curfps,
+			bestfpsdiff,
+			worstfpsdiff,
+			autoadjustlevel
 		};
 
-		loopi(11) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
+		loopi(12) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
 
 		if(showstats())
 		{
@@ -1405,10 +1404,16 @@ struct GAMECLIENT : igameclient
 			hoff -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
 		}
 
-		switch(showfps())
+		if(showfps()) switch(showfps())
 		{
-			case 2: hoff -= draw_textx("fps:%d +%d-%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], curstats[9], curstats[10]); break;
-			case 1: hoff -= draw_textx("fps:%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8]); break;
+			case 2:
+				if(autoadjust) hoff -= draw_textx("fps:%d (%d/%d) +%d-%d [%d%%]", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], autoadjustfps, maxfps, curstats[9], curstats[10], curstats[11]);
+				else hoff -= draw_textx("fps:%d (%d) +%d-%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], maxfps, curstats[9], curstats[10]);
+				break;
+			case 1:
+				if(autoadjust) hoff -= draw_textx("fps:%d (%d/%d) [%d%%]", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], autoadjustfps, maxfps, curstats[11]);
+				else hoff -= draw_textx("fps:%d (%d)", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], maxfps);
+				break;
 			default: break;
 		}
 

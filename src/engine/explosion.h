@@ -193,7 +193,7 @@ static void initsphere(int slices, int stacks)
     }
 }
 
-VARP(explosion2d, 0, 0, 1);
+VARP(explosion2d, 0, 1, 1);
 
 static void setupexplosion()
 {
