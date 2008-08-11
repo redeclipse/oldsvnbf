@@ -872,7 +872,7 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
 struct projent : dynent
 {
 	vec from, to;
-	int lifetime, waittime, spawntime;
+	int addtime, lifetime, waittime, spawntime;
 	float movement, roll;
 	bool local, beenused;
 	int projtype;
@@ -900,7 +900,7 @@ struct projent : dynent
 	{
 		type = ENT_BOUNCE;
 		state = CS_ALIVE;
-		lifetime = waittime = spawntime = 0;
+		addtime = lifetime = waittime = spawntime = 0;
 		ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
 		schan = id = -1;
 		movement = roll = 0.f;

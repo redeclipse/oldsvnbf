@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "engine.h"
 
-VARP(grassanimdist, 0, 500, 10000);
-VARP(grassdist, 0, 500, 10000);
-VARP(grassfalloff, 0, 100, 1000);
+VARA(grassanimdist, 0, 500, 10000);
+VARA(grassdist, 0, 500, 10000);
+VARA(grassfalloff, 0, 100, 1000);
 
 VARW(grasswidth, 1, 6, 64);
 VARW(grassheight, 1, 8, 64);
@@ -231,9 +231,8 @@ VAR(grasstest, 0, 0, 3);
 
 static Texture *grasstex = NULL;
 
-VARP(grasslod, 0, 25, 1000);
-
-VARP(grasslodz, 0, 150, 10000);
+VARA(grasslod, 0, 25, 1000);
+VARA(grasslodz, 0, 150, 10000);
 
 float loddist(const vec &o)
 {
@@ -247,7 +246,7 @@ VARW(grassrand, 0, 30, 90);
 VARP(grasssamples, 0, 50, 10000);
 VARP(grassbillboard, 0, 1, 100);
 VARP(grassbbcorrect, 0, 1, 1);
-VARP(grasstaper, 0, 200, 10000);
+VARA(grasstaper, 0, 200, 10000);
 
 void rendergrasssample(const grasssample &g, const vec &o, float dist, int seed, float height, int numsamples)
 {

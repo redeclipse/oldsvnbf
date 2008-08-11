@@ -468,7 +468,7 @@ void checkinput()
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
 			{
-				if (lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
+				if(lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
 				keypress(-event.button.button, event.button.state!=0, 0);
 				lasttype = event.type;
 				lastbut = event.button.button;
@@ -534,18 +534,6 @@ void stackdumper(unsigned int type, EXCEPTION_POINTERS *ep)
 
 int fpspos = 0, fpshistory[MAXFPSHISTORY];
 
-void resetfpshistory()
-{
-	loopi(MAXFPSHISTORY) fpshistory[i] = 1;
-	fpspos = 0;
-}
-
-void updatefpshistory(int millis)
-{
-	fpshistory[fpspos++] = max(1, min(1000, millis));
-	if(fpspos>=MAXFPSHISTORY) fpspos = 0;
-}
-
 void getfps(int &fps, int &bestdiff, int &worstdiff)
 {
 	int total = fpshistory[MAXFPSHISTORY-1], best = total, worst = total;
@@ -572,6 +560,80 @@ void getfps_(int *raw)
 
 COMMANDN(getfps, getfps_, "i");
 
+VAR(curfps, 1, 0, -1);
+VAR(bestfps, 1, 0, -1);
+VAR(bestfpsdiff, 1, 0, -1);
+VAR(worstfps, 1, 0, -1);
+VAR(worstfpsdiff, 1, 0, -1);
+
+int lastautoadjust = 0;
+
+VARP(autoadjust, 0, 1, 1);				// auto performance adjust
+VARP(autoadjustmin, 0, 0, 100);			// lowest level to go to
+VARP(autoadjustmax, 0, 100, 100);		// highest level to go to
+VARFP(autoadjustfps, 0, 25, 100,		// aim for this fps or higher
+	autoadjustfps = min(autoadjustfps, maxfps-1));
+VARP(autoadjustrate, 0, 500, 10000);	// only adjust this often
+VARFP(autoadjustlimit, 0, 10, 100,	// going below this automatically scales to minimum
+	autoadjustlimit = min(autoadjustlimit, autoadjustfps-1));
+
+void autoadjustset(int level)
+{
+	if(level >= 0 && level <= 100)
+	{
+		enumerate(*idents, ident, i, if(i.type == ID_VAR && (i.flags & IDF_AUTO)) {
+			int n = i.maxval-i.minval > 1 ? int((float(i.maxval-i.minval)/100.f)*float(level))+i.minval : (level ? i.maxval : i.minval);
+			*i.storage.i = clamp(n, i.minval, i.maxval);
+		});
+	}
+}
+
+VARFP(autoadjustlevel, 0, 100, 100, autoadjustset(autoadjustlevel));
+
+void autoadjustcheck(int frames)
+{
+	if(autoadjust && (!lastautoadjust || lastmillis-lastautoadjust > autoadjustrate))
+	{
+		if(lastautoadjust && frames > MAXFPSHISTORY)
+		{
+			if(worstfps < autoadjustlimit && autoadjustlevel > autoadjustmin)
+				setvar("autoadjustlevel", autoadjustmin, true);
+			else
+			{
+				float amt = float(worstfps)/float(autoadjustfps);
+				if(amt < 1.f)
+					setvar("autoadjustlevel", max(autoadjustlevel-int((1.f-amt)*10.f), autoadjustmin), true);
+				else if(amt > 1.f)
+					setvar("autoadjustlevel", min(autoadjustlevel+int(amt), autoadjustmax), true);
+			}
+		}
+		lastautoadjust = lastmillis;
+	}
+}
+
+void resetfps()
+{
+	loopi(MAXFPSHISTORY) fpshistory[i] = 1;
+	fpspos = 0;
+}
+
+void updatefps(int frames, int millis)
+{
+	fpshistory[fpspos++] = max(1, min(1000, millis));
+	if(fpspos >= MAXFPSHISTORY) fpspos = 0;
+
+	int fps, bestdiff, worstdiff;
+	getfps(fps, bestdiff, worstdiff);
+
+	curfps = fps;
+	bestfps = fps+bestdiff;
+	bestfpsdiff = bestdiff;
+	worstfps = fps-worstdiff;
+	worstfpsdiff = worstdiff;
+
+	autoadjustcheck(frames);
+}
+
 bool inbetweenframes = false;
 
 static bool findarg(int argc, char **argv, const char *str)
@@ -585,75 +647,9 @@ static void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = total
 VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
 VARFP(clockfix, 0, 0, 1, clockreset());
 
-VAR(curfps, 1, 0, -1);
-VAR(bestfps, 1, 0, -1);
-VAR(worstfps, 1, 0, -1);
-
-#if 0
-int lastperf = 0;
-
-VARP(perfauto, 0, 1, 1);		// auto performance adjust
-VARP(perfmin, 0, 0, 100);		// lowest perf level to go to
-VARP(perfmax, 0, 100, 100);		// highest perf level to go to
-VARFP(perffps, 0, 25, 100,		// aim for this fps or higher
-	perffps = min(perffps, maxfps-1));
-VARP(perfrate, 0, 500, 10000);	// only adjust this often
-VARFP(perflimit, 0, 10, 100,	// going below this automatically scales to minimum
-	perflimit = min(perflimit, perffps-1));
-
-void perfset(int level)
-{
-	if (level >= 0 && level <= 100)
-	{
-		#define perfvarscl(s,v,n0,n1) \
-			{ \
-				int _##s = int((float(n0-n1)/float(v))*float(level))+n1; \
-				setvar(#s, clamp(_##s, n1, n0), true); \
-			} \
-
-		perfvarscl(decalfade,			100,	60000,		1);
-		perfvarscl(dynlightdist,		100,	10000,		128);
-		perfvarscl(emitfps,				100,	60,			1);
-		perfvarscl(grassanimdist,		100,	10000,		0);
-		perfvarscl(grassdist,			100,	10000,		0);
-		perfvarscl(grassfalloff,		100,	1000,		0);
-		perfvarscl(grasslod,			100,	1000,		0);
-		perfvarscl(grasslodz,			100,	10000,		0);
-		perfvarscl(grasstaper,			100,	200,		0);
-		perfvarscl(maxparticledistance,	100,	1024,		256);
-		perfvarscl(maxreflect,			100,	8,			1);
-		perfvarscl(reflectdist,			100,	10000,		128);
-
-		lastperf = lastmillis;
-	}
-}
-
-VARFP(perflevel, 0, 100, 100, perfset(perflevel));
-
-void perfcheck()
-{
-	extern void getfps(int &fps, int &bestdiff, int &worstdiff);
-	int fps, bestdiff, worstdiff;
-	getfps(fps, bestdiff, worstdiff);
-
-	setvar("curfps", fps);
-	setvar("bestfps", fps+bestdiff);
-	setvar("worstfps", fps-worstdiff);
-
-	if (perfauto && (lastmillis-lastperf > perfrate || fps-worstdiff < perflimit))
-	{
-		float amt = float(fps-worstdiff)/float(perffps);
-
-		if (fps-worstdiff < perflimit && perflevel > perfmin) setvar("perflevel", perfmin, true);
-		else if (amt < 1.f) setvar("perflevel", max(perflevel-int((1.f-amt)*10.f), perfmin), true);
-		else if (amt > 1.f) setvar("perflevel", min(perflevel+int(amt), perfmax), true);
-	}
-}
-#endif
-
 void rehash(bool reload)
 {
-	if (reload)
+	if(reload)
 	{
 		writeservercfg();
 		writecfg();
@@ -697,9 +693,7 @@ void eastereggs()
 	}
 }
 
-int frameloops = 0;
 VARP(autoconnect, 0, 1, 1);
-
 int main(int argc, char **argv)
 {
 	#ifdef WIN32
@@ -770,7 +764,7 @@ int main(int argc, char **argv)
 	//#endif
 
 	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
-	if (SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
+	if(SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
 
 	conoutf("\fminit: video mode");
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;
@@ -816,9 +810,9 @@ int main(int argc, char **argv)
 	if(autoconnect) connects();
 	else if(!guiactive()) showgui("main");
 
-	resetfpshistory();
+	resetfps();
 
-	for(frameloops = 0; ; frameloops++)
+	for(int frameloops = 0; ; frameloops = frameloops >= INT_MAX-1 ? MAXFPSHISTORY+1 : frameloops+1)
 	{
 		int millis = SDL_GetTicks() - clockrealbase;
 		if(clockfix) millis = int(millis*(double(clockerror)/1000000));
@@ -829,19 +823,16 @@ int main(int argc, char **argv)
 
 		curtime = millis-totalmillis;
 
-		updatefpshistory(curtime);
-		//perfcheck();
-
+		updatefps(frameloops, curtime);
 		checkinput();
 		menuprocess();
 		checksleep(lastmillis);
-
-		RUNWORLD("on_update");
-		cl->updateworld();
 		serverslice();
 
 		if(frameloops)
 		{
+			RUNWORLD("on_update");
+			cl->updateworld();
 			cl->recomputecamera(screen->w, screen->h);
 			setviewcell(camera1->o);
 			updatetextures();
@@ -849,7 +840,7 @@ int main(int argc, char **argv)
 			updatesounds();
 
 			inbetweenframes = false;
-			if(frameloops>2) gl_drawframe(screen->w, screen->h);
+			if(frameloops > 2) gl_drawframe(screen->w, screen->h);
 			SDL_GL_SwapBuffers();
 			inbetweenframes = true;
 

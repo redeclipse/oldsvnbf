@@ -122,8 +122,8 @@ struct duelservmode : servmode
 					alive[i]->state.state = CS_ALIVE;
 					alive[i]->state.respawn(sv.gamemillis);
 					sv.sendspawn(alive[i]);
-					if(duelqueue.find(alive[i]->clientnum))
-						duelqueue.remove(alive[i]->clientnum);
+					int n = duelqueue.find(alive[i]->clientnum);
+					if(n >= 0) duelqueue.remove(n);
 				}
 				duelround++;
 

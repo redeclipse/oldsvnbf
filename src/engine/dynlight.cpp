@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "engine.h"
 
-VARP(maxdynlights, 0, min(3, MAXDYNLIGHTS), MAXDYNLIGHTS);
-VARP(dynlightdist, 0, 1024, 10000);
+VARA(maxdynlights, 0, min(3, MAXDYNLIGHTS), MAXDYNLIGHTS);
+VARA(dynlightdist, 0, 1024, 10000);
 
 struct dynlight
 {
@@ -103,7 +103,7 @@ int finddynlights()
         dynlight &d = dynlights[j];
         if(d.curradius <= 0) continue;
         d.dist = camera1->o.dist(d.o) - d.curradius;
-        if(d.dist > dynlightdist || isvisiblesphere(d.curradius, d.o) >= VFC_FOGGED || pvsoccluded(d.o, 2*int(d.curradius+1))) 
+        if(d.dist > dynlightdist || isvisiblesphere(d.curradius, d.o) >= VFC_FOGGED || pvsoccluded(d.o, 2*int(d.curradius+1)))
             continue;
 
         e.o = d.o;
@@ -144,7 +144,7 @@ void dynlightreaching(const vec &target, vec &color, vec &dir)
         if(x+y>0)
         {
             dir.mul(x);
-            dyndir.mul(y); 
+            dyndir.mul(y);
             dir.add(dyndir).div(x+y);
             if(dir.iszero()) dir = vec(0, 0, 1);
             else dir.normalize();

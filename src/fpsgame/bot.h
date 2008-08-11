@@ -408,14 +408,12 @@ struct botclient
 	{
 		vector<int> waypoints;
 		waypoints.setsize(0);
-		loopvj(cl.et.ents)
+		loopvj(cl.et.ents) if(cl.et.ents[j]->type == WAYPOINT && j != d->lastnode)
 		{
-			if(cl.et.ents[j]->type == WAYPOINT && j != d->lastnode)
-			{
-				float tdist = cl.et.ents[j]->o.dist(to), fdist = cl.et.ents[j]->o.dist(from);
-				if(tdist > radius && fdist > radius && fdist <= wander)
-					waypoints.add(j);
-			}
+			float r = radius*radius, w = wander*wander,
+				tdist = cl.et.ents[j]->o.squaredist(to), fdist = cl.et.ents[j]->o.squaredist(from);
+			if(tdist > r && fdist > r && fdist <= w)
+				waypoints.add(j);
 		}
 
 		while(!waypoints.empty())
@@ -435,7 +433,7 @@ struct botclient
 	bool patrol(fpsent *d, botstate &b, vec &pos, float radius, float wander, bool retry = false)
 	{
 		vec feet(cl.feetpos(d, 0.f));
-		if(b.override || feet.dist(pos) <= radius || !makeroute(d, b, pos, wander))
+		if(b.override || feet.squaredist(pos) <= radius*radius || !makeroute(d, b, pos, wander))
 		{ // run away and back to keep ourselves busy
 			if(!b.override && randomnode(d, b, feet, pos, radius, wander))
 			{
@@ -456,7 +454,7 @@ struct botclient
 	bool follow(fpsent *d, botstate &b, fpsent *e, bool retry = false)
 	{
 		vec pos(cl.feetpos(e, 0.f)), feet(cl.feetpos(d, 0.f));
-		if(b.override || feet.dist(pos) <= BOTISNEAR || !makeroute(d, b, e->lastnode, e->radius*2.f))
+		if(b.override || !makeroute(d, b, e->lastnode, e->radius*2.f))
 		{ // random path if too close
 			if(!b.override && randomnode(d, b, feet, pos, BOTISNEAR, BOTISFAR))
 			{
@@ -471,6 +469,12 @@ struct botclient
 			else return false;
 		}
 		d->bot->enemy = e->clientnum;
+		while(!d->bot->route.empty())
+		{
+			extentity &e = *cl.et.ents[d->bot->route[0]];
+			if(e.o.squaredist(pos) <= BOTISNEAR*BOTISNEAR) d->bot->route.remove(0);
+			else break;
+		}
 		return true;
 	}
 
@@ -500,7 +504,7 @@ struct botclient
 		{
 			vec ep = cl.headpos(e), tp = t ? cl.headpos(t) : vec(0, 0, 0),
 				dp = cl.headpos(d);
-			if((!t || ep.dist(d->o) < tp.dist(d->o)) &&
+			if((!t || ep.squaredist(d->o) < tp.squaredist(d->o)) &&
 				getsight(dp, d->yaw, d->pitch, ep, targ, BOTLOSDIST(d->skill), BOTFOVX(d->skill), BOTFOVY(d->skill)))
 					t = e;
 		}
@@ -538,7 +542,7 @@ struct botclient
 				loopi(cl.numdynents()) if((e = (fpsent *)cl.iterdynents(i)) && BOTTARG(d, e, false) && !e->bot && d->team == e->team)
 				{ // try to guess what non bots are doing
 					vec ep = cl.headpos(e);
-					if(targets.find(e->clientnum) < 0 && (ep.dist(f.pos()) <= enttype[FLAG].radius*2.f || f.owner == e))
+					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= ((enttype[FLAG].radius*enttype[FLAG].radius)*2.f) || f.owner == e))
 						targets.add(e->clientnum);
 				}
 
@@ -565,7 +569,7 @@ struct botclient
 						n.targtype = BT_FLAG;
 						n.expire = 10000;
 						n.tolerance = enttype[FLAG].radius*2.f;
-						n.score = pos.dist(f.pos())/(d->gunselect != GUN_PISTOL ? 100.f : 1.f);
+						n.score = pos.squaredist(f.pos())/(d->gunselect != GUN_PISTOL ? 100.f : 1.f);
 						n.defers = false;
 					}
 				}
@@ -580,7 +584,7 @@ struct botclient
 						n.targtype = BT_FLAG;
 						n.expire = 10000;
 						n.tolerance = enttype[FLAG].radius*2.f;
-						n.score = pos.dist(f.pos());
+						n.score = pos.squaredist(f.pos());
 						n.defers = false;
 					}
 					else
@@ -596,7 +600,7 @@ struct botclient
 							n.targtype = BT_PLAYER;
 							n.expire = 5000;
 							n.tolerance = t->radius*2.f;
-							n.score = pos.dist(tp);
+							n.score = pos.squaredist(tp);
 							n.defers = false;
 						}
 					}
@@ -623,7 +627,7 @@ struct botclient
 							n.targtype = BT_ENTITY;
 							n.expire = 10000;
 							n.tolerance = enttype[e.type].radius+d->radius;
-							n.score = pos.dist(e.o)/(e.attr1 != d->bot->gunpref ? 1.f : 10.f);
+							n.score = pos.squaredist(e.o)/(e.attr1 != d->bot->gunpref ? 1.f : 10.f);
 							n.defers = true;
 						}
 						break;
@@ -650,7 +654,7 @@ struct botclient
 							n.targtype = BT_DROP;
 							n.expire = 5000;
 							n.tolerance = enttype[proj.ent].radius+d->radius;
-							n.score = pos.dist(proj.o)/(proj.attr1 != d->bot->gunpref ? 1.f : 10.f);
+							n.score = pos.squaredist(proj.o)/(proj.attr1 != d->bot->gunpref ? 1.f : 10.f);
 							n.defers = true;
 						}
 						break;
@@ -688,7 +692,7 @@ struct botclient
 			{
 				ctfstate::flag &g = cl.ctf.flags[i];
 				if(g.team == d->team && (k || (!g.owner && !g.droptime)) &&
-					(!cl.ctf.flags.inrange(goal) || g.pos().dist(pos) < cl.ctf.flags[goal].pos().dist(pos)))
+					(!cl.ctf.flags.inrange(goal) || g.pos().squaredist(pos) < cl.ctf.flags[goal].pos().squaredist(pos)))
 				{
 					goal = i;
 				}
@@ -1014,11 +1018,11 @@ struct botclient
 		{
 			fpsentity &e = *(fpsentity *)cl.et.ents[d->bot->route[i]];
 
-			float dist = e.o.dist(pos);
+			float dist = e.o.squaredist(pos);
 			if(dist < mindist)
 			{
 				node = i;
-				mindist = min(dist, enttype[WAYPOINT].radius*10.0f);
+				mindist = min(dist, (enttype[WAYPOINT].radius*enttype[WAYPOINT].radius)*10.0f);
 			}
 		}
 		return node;
