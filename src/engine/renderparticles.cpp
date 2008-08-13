@@ -8,9 +8,9 @@ Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
 #define MAXPARTICLES 40000
 
-VAR(maxparticles, 10, 4000, MAXPARTICLES);
-VAR(maxparticledistance, 256, 1024, 4096);
-VAR(maxtrail, 1, 500, 10000);
+VARFP(maxparticles, 10, 4000, MAXPARTICLES, particleinit());
+VARA(maxparticledistance, 256, 1024, 4096);
+VARA(maxtrail, 1, 500, 10000);
 
 VARP(particletext, 0, 1, 1);
 VARP(outlinemeters, 0, 0, 1);
@@ -429,11 +429,11 @@ struct varenderer : partrenderer
 {
     partvert *verts;
     particle *parts;
-    int numparts, lastupdate;
+    int maxparts, numparts, lastupdate;
 
     varenderer(const char *texname, int type, int grav, int collide, int frames = 1)
         : partrenderer(texname, type, grav, collide, frames),
-          verts(NULL), parts(NULL), numparts(0), lastupdate(-1)
+          verts(NULL), parts(NULL), maxparts(0), numparts(0), lastupdate(-1)
     {
     }
 
@@ -441,8 +441,9 @@ struct varenderer : partrenderer
     {
         DELETEA(parts);
         DELETEA(verts);
-        parts = new particle[MAXPARTICLES];
-        verts = new partvert[MAXPARTICLES*4];
+        parts = new particle[n];
+        verts = new partvert[n*4];
+        maxparts = n;
         numparts = 0;
         lastupdate = -1;
     }
@@ -478,7 +479,7 @@ struct varenderer : partrenderer
 
     particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL)
     {
-        particle *p = parts + (numparts < maxparticles ? numparts++ : rnd(maxparticles)); //next free slot, or kill a random kitten
+        particle *p = parts + (numparts < maxparts ? numparts++ : rnd(maxparts)); //next free slot, or kill a random kitten
         p->o = o;
         p->d = d;
         p->fade = fade;
