@@ -582,8 +582,9 @@ void autoadjustset(int level)
 	if(level >= 0 && level <= 100)
 	{
 		enumerate(*idents, ident, i, if(i.type == ID_VAR && (i.flags & IDF_AUTO)) {
-			int n = i.maxval-i.minval > 1 ? int((float(i.maxval-i.minval)/100.f)*float(level))+i.minval : (level ? i.maxval : i.minval);
-			*i.storage.i = clamp(n, i.minval, i.maxval);
+			int n = i.def.i-i.minval > 1 ? int((float(i.def.i-i.minval)/100.f)*float(level))+i.minval : (level ? i.def.i : i.minval);
+			*i.storage.i = clamp(n, i.minval, i.def.i);
+			i.changed();
 		});
 	}
 }

@@ -8,8 +8,8 @@ VARFP(waterfallrefract, 0, 0, 1, cleanreflections());
 VARP(refractfog, 0, 1, 1);
 
 /* vertex water */
-VAR(watersubdiv, 0, 2, 3);
-VAR(waterlod, 0, 1, 3);
+VARP(watersubdiv, 0, 2, 3);
+VARP(waterlod, 0, 1, 3);
 
 static int wx1, wy1, wx2, wy2, wsize;
 float wcol[4];
@@ -991,7 +991,7 @@ void queryreflections()
 	}
 }
 
-VARA(maxreflect, 1, 1, 8);
+VARP(maxreflect, 1, 1, 8);
 
 int refracting = 0;
 bool reflecting = false, fading = false, fogging = false;
