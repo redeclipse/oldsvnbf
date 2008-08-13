@@ -172,11 +172,17 @@ COMMAND(worldalias, "ss");
 
 // variable's and commands are registered through globals, see cube.h
 
+void buggy(ident *id)
+{
+}
+
 int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
     ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, flags);
-    idents->access(name, &v);
+    ident *id = idents->access(name, &v);
+    if(!strcmp(name, "maxdecaltris"))
+        buggy(id);
     return cur;
 }
 
@@ -678,6 +684,10 @@ void exec(const char *cfgfile)
 	if(!execfile(cfgfile)) conoutf("\frcould not read %s", cfgfile);
 }
 
+void bug(const char *name, ident *id)
+{
+}
+
 void writecfg()
 {
 #ifndef STANDALONE
@@ -690,6 +700,8 @@ void writecfg()
 	if(!f) return;
 #endif
 	enumerate(*idents, ident, id,
+        if(!strcmp(id.name, "maxdecaltris"))
+            bug(id.name, &id);
         if(id.flags&IDF_PERSIST) switch(id.type)
 		{
             case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
