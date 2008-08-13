@@ -8,9 +8,9 @@ Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
 #define MAXPARTICLES 40000
 
-VARA(maxparticles, 10, 4000, MAXPARTICLES);
-VARA(maxparticledistance, 256, 1024, 4096);
-VARA(maxtrail, 1, 500, 10000);
+VAR(maxparticles, 10, 4000, MAXPARTICLES);
+VAR(maxparticledistance, 256, 1024, 4096);
+VAR(maxtrail, 1, 500, 10000);
 
 VARP(particletext, 0, 1, 1);
 VARP(outlinemeters, 0, 0, 1);
