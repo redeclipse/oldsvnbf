@@ -771,12 +771,15 @@ struct botclient
 			{ // we need to make a quick decision to find a landing spot
 				int closest = -1;
 				fpsentity &e = *(fpsentity *)cl.et.ents[d->lastnode];
-				if(!e.links.empty()) loopv(e.links) if(cl.et.ents.inrange(e.links[i]))
+				if(!e.links.empty()) 
 				{
-					fpsentity &f = *(fpsentity *)cl.et.ents[e.links[i]];
-					if(!cl.et.ents.inrange(closest) ||
-						f.o.squaredist(d->o) < cl.et.ents[closest]->o.squaredist(d->o))
-							closest = e.links[i];
+					loopv(e.links) if(cl.et.ents.inrange(e.links[i]))
+					{
+						fpsentity &f = *(fpsentity *)cl.et.ents[e.links[i]];
+						if(!cl.et.ents.inrange(closest) ||
+							f.o.squaredist(d->o) < cl.et.ents[closest]->o.squaredist(d->o))
+								closest = e.links[i];
+					}
 				}
 				if(cl.et.ents.inrange(closest))
 				{

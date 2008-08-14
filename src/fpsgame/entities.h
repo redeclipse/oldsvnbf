@@ -375,7 +375,7 @@ struct entities : icliententities
 						else if(enttype[e.type].usetype == EU_AUTO)
 						{
 							if(e.type != TRIGGER ||
-								((e.spawned || !e.attr4) && (e.attr3 == TA_ACT && d->useaction) || e.attr3 == TA_AUTO))
+								((e.spawned || !e.attr4) && ((e.attr3 == TA_ACT && d->useaction) || e.attr3 == TA_AUTO)))
 							{
 								reaction(t.target, d);
 								if(e.type == TRIGGER && e.attr3 == TA_ACT)
@@ -1193,20 +1193,23 @@ struct entities : icliententities
 
 	void mapstart()
 	{
-		if(autodropwaypoints) loopv(ents)
+		if(autodropwaypoints) 
 		{
-			fpsentity &e = *(fpsentity *)ents[i];
-			vec v(e.o);
-			v.z -= dropheight(e);
-			switch(e.type)
+			loopv(ents)
 			{
-				case PLAYERSTART:
-				case WEAPON:
+				fpsentity &e = *(fpsentity *)ents[i];
+				vec v(e.o);
+				v.z -= dropheight(e);
+				switch(e.type)
 				{
-					newentity(v, WAYPOINT, 0, 0, 0, 0, 0);
-					break;
+					case PLAYERSTART:
+					case WEAPON:
+					{
+						newentity(v, WAYPOINT, 0, 0, 0, 0, 0);
+						break;
+					}
+					default: break;
 				}
-				default: break;
 			}
 		}
 	}
@@ -1334,12 +1337,15 @@ struct entities : icliententities
 
     void preload()
     {
-        if(!m_noitems(cl.gamemode, cl.mutators)) loopv(ents)
-        {
-        	extentity &e = *ents[i];
-			const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-            if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
-            if(e.type == WEAPON && isgun(e.attr1)) cl.ws.preload(e.attr1);
+        if(!m_noitems(cl.gamemode, cl.mutators)) 
+		{
+			loopv(ents)
+        	{
+        		extentity &e = *ents[i];
+				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+            	if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
+            	if(e.type == WEAPON && isgun(e.attr1)) cl.ws.preload(e.attr1);
+			}
         }
     }
 
