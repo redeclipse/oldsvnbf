@@ -1,4 +1,4 @@
-CXXOPTFLAGS= -O2 -fsigned-char -fomit-frame-pointer
+CXXOPTFLAGS= -O2 -fsigned-char -finline-functions -fomit-frame-pointer -fno-strict-aliasing
 INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
 CXXFLAGS= -Wall -DINTERFACE $(CXXOPTFLAGS) $(INCLUDES)
 
