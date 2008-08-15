@@ -1983,7 +1983,7 @@ struct GAMECLIENT : igameclient
 
 	void renderplayer(fpsent *d, bool third, bool trans)
 	{
-        modelattach a[4] = { { NULL }, { NULL }, { NULL }, { NULL } };
+        modelattach a[4];
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			gun = d->gunselect, lastaction = lastmillis,
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
