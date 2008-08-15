@@ -543,7 +543,11 @@ struct animmodel : model
         bool link(part *p, const char *tag, int anim = -1, int basetime = 0, vec *pos = NULL)
         {
             int i = meshes->findtag(tag);
-            if(i<0) return false;
+            if(i<0) 
+            {
+                loopv(links) if(links[i].p && links[i].p->link(p, tag, anim, basetime, pos)) return true;
+                return false;
+            }
             linkedpart &l = links.add();
             l.p = p;
             l.tag = i;
@@ -556,6 +560,7 @@ struct animmodel : model
         bool unlink(part *p)
         {
             loopvrev(links) if(links[i].p==p) { links.remove(i, 1); return true; }
+            loopv(links) if(links[i].p && links[i].p->unlink(p)) return true;
             return false;
         }
 
@@ -838,6 +843,12 @@ struct animmodel : model
                         lookupmats[lookuppos+1].mul(lookupmats[lookuppos], link.matrix);
                         lookuppos++;
                         if(link.pos) *link.pos = vec(lookupmats[lookuppos].X.w, lookupmats[lookuppos].Y.w, lookupmats[lookuppos].Z.w);
+
+                        if(!link.p)
+                        {
+                            lookuppos--;
+                            continue;
+                        }
                     }
 
                     vec naxis(raxis), ndir(rdir), ncampos(rcampos);
@@ -934,7 +945,11 @@ struct animmodel : model
             for(int i = 0; a[i].tag; i++)
             {
                 animmodel *m = (animmodel *)a[i].m;
-                if(!m || !m->loaded) continue;
+                if(!m || !m->loaded) 
+                {
+                    if(a[i].pos) link(NULL, a[i].tag, 0, 0, a[i].pos);
+                    continue;
+                }
                 part *p = m->parts[0];
                 switch(linktype(m))
                 {
@@ -959,7 +974,11 @@ struct animmodel : model
         if(a) for(int i = 0; a[i].tag; i++)
         {
             animmodel *m = (animmodel *)a[i].m;
-            if(!m || !m->loaded) continue;
+            if(!m || !m->loaded) 
+            {
+                if(a[i].pos) unlink(NULL);
+                continue;
+            }
             part *p = m->parts[0];
             switch(linktype(m))
             {
@@ -994,6 +1013,7 @@ struct animmodel : model
         if(anim&ANIM_LOOKUP)
         {
             lookuppos = 0;
+            lookupmats[0].identity();
             lookupmats[0].translate(o);
             lookupmats[0].rotate_around_z((yaw+180)*RAD);
             if(roll) lookupmats[0].rotate_around_x(-roll*RAD);
