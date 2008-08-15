@@ -449,6 +449,23 @@ struct matrix3x4
     }
     void mul(const matrix3x4 &n) { mul(matrix3x4(*this), n); }
 
+    void mul(const matrix3x4 &m, const float *n)
+    {
+        X = vec4(m.X.dot3(vec(n[0], n[1], n[2])),
+                 m.X.dot3(vec(n[4], n[5], n[6])),
+                 m.X.dot3(vec(n[8], n[9], n[10])),
+                 m.X.dot(vec(n[12], n[13], n[14])));
+        Y = vec4(m.Y.dot3(vec(n[0], n[1], n[2])),
+                 m.Y.dot3(vec(n[4], n[5], n[6])),
+                 m.Y.dot3(vec(n[8], n[9], n[10])),
+                 m.Y.dot(vec(n[12], n[13], n[14])));
+        Z = vec4(m.Z.dot3(vec(n[0], n[1], n[2])),
+                 m.Z.dot3(vec(n[4], n[5], n[6])),
+                 m.Z.dot3(vec(n[8], n[9], n[10])),
+                 m.Z.dot(vec(n[12], n[13], n[14])));
+    }
+    void mul(const float *n) { mul(matrix3x4(*this), n); }
+
     void rotate(float angle, const vec &d)
     {
         float c = cosf(angle), s = sinf(angle);
@@ -461,6 +478,39 @@ struct matrix3x4
         Y = vec4(d.y*d.x*(1-c)+d.z*s, d.y*d.y*(1-c)+c, d.y*d.z*(1-c)-d.x*s, 0);
         Z = vec4(d.x*d.z*(1-c)-d.y*s, d.y*d.z*(1-c)+d.x*s, d.z*d.z*(1-c)+c, 0);
     }
+
+    #define ROTVEC(V, a, b) \
+    { \
+        float a = V.a, b = V.b; \
+        V.a = a*c + b*s; \
+        V.b = b*c - a*s; \
+    }
+
+    void rotate_around_x(float angle)
+    {
+        float c = cosf(angle), s = sinf(angle);
+        ROTVEC(X, y, z);
+        ROTVEC(Y, y, z);
+        ROTVEC(Z, y, z);
+    }
+
+    void rotate_around_y(float angle)
+    {
+        float c = cosf(angle), s = sinf(angle);
+        ROTVEC(X, z, x);
+        ROTVEC(Y, z, x);
+        ROTVEC(Z, z, x);
+    }
+
+    void rotate_around_z(float angle)
+    {
+        float c = cosf(angle), s = sinf(angle);
+        ROTVEC(X, x, y);
+        ROTVEC(Y, x, y);
+        ROTVEC(Z, x, y);
+    }
+
+    #undef ROTVEC
 
     vec transform(const vec &o) const { return vec(X.dot(o), Y.dot(o), Z.dot(o)); }
     vec transformnormal(const vec &o) const { return vec(X.dot3(o), Y.dot3(o), Z.dot3(o)); }
