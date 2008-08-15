@@ -810,11 +810,12 @@ struct fpsent : dynent, fpsstate
 	int respawned, suicided;
 	int wschan;
 	botinfo *bot;
+    vec muzzle;
 
 	string name, info, obit;
 	int team;
 
-	fpsent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL)
+	fpsent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL), muzzle(-1, -1, -1)
 	{
 		name[0] = info[0] = obit[0] = 0;
 		team = TEAM_NEUTRAL;
