@@ -793,9 +793,9 @@ void rendergame()
     if(!shadowmapping) renderedgame = true;
 }
 
-void renderavatar()
+void renderavatar(bool early)
 {
-    cl->renderavatar();
+    cl->renderavatar(early);
 }
 
 VARP(skyboxglare, 0, 1, 1);
@@ -828,7 +828,7 @@ void drawglare()
     rendermaterials();
     render_particles(0);
 
-    renderavatar();
+    renderavatar(false);
 
     glFogf(GL_FOG_START, oldfogstart);
     glFogf(GL_FOG_END, oldfogend);
@@ -937,7 +937,7 @@ void drawreflection(float z, bool refract, bool clear)
     rendermaterials();
     render_particles(0);
 
-    renderavatar();
+    renderavatar(false);
 
     if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
@@ -1426,6 +1426,7 @@ void gl_drawframe(int w, int h)
 
 	rendermapmodels();
     rendergame();
+    renderavatar(true);
 
     if(hasFBO)
     {
@@ -1441,7 +1442,7 @@ void gl_drawframe(int w, int h)
 	rendermaterials();
 	render_particles(curtime);
 
-    renderavatar();
+    renderavatar(false);
 
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);

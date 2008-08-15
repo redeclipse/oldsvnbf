@@ -2109,6 +2109,14 @@ struct GAMECLIENT : igameclient
 			}
 		}
 
+        if(rendernormally)
+        {
+            d->muzzle = vec(-1, -1, -1);
+            a[ai].tag = "tag_muzzle";
+            a[ai].pos = &d->muzzle;
+            ai++;
+        }
+
         renderclient(d, third, trans, team, a[0].name ? a : NULL, secondary, animflags, animdelay, lastaction, 0.f);
 	}
 
@@ -2148,8 +2156,9 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
-    void renderavatar()
+    void renderavatar(bool early)
     {
+        if(early) return;
         if(inzoomswitch() && player1->gunselect == GUN_RIFLE) return;
         if(isthirdperson())
         {
