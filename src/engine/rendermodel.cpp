@@ -753,7 +753,9 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
             return;
         }
     }
-    if(showboundingbox && !shadowmapping)
+
+    if(cull&MDL_NORENDER) anim |= ANIM_NORENDER;
+    else if(showboundingbox && !shadowmapping)
 	{
 		renderprimitive(true);
 		if(d && showboundingbox==1)
@@ -806,9 +808,10 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
         if(cull&MDL_DYNLIGHT) dynlightreaching(o, lightcolor, lightdir);
     }
 
-	if(a) for(int i = 0; a[i].name; i++)
+	if(a) for(int i = 0; a[i].tag; i++)
 	{
-		a[i].m = loadmodel(a[i].name);
+		if(a[i].name) a[i].m = loadmodel(a[i].name);
+        if(a[i].pos) anim |= ANIM_LOOKUP;
 		//if(a[i].m && a[i].m->type()!=m->type()) a[i].m = NULL;
 	}
 

@@ -221,14 +221,19 @@ extern void updatedynentcache(physent *d);
 extern void cleardynentcache();
 
 // rendermodel
-enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_LIGHT = 1<<6, MDL_DYNLIGHT = 1<<7, MDL_TRANSLUCENT = 1<<8, MDL_FULLBRIGHT = 1<<9 };
+enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_LIGHT = 1<<6, MDL_DYNLIGHT = 1<<7, MDL_TRANSLUCENT = 1<<8, MDL_FULLBRIGHT = 1<<9, MDL_NORENDER = 1<<10 };
 
 struct model;
 struct modelattach
 {
-    const char *name, *tag;
+    const char *tag, *name;
     int anim, basetime;
+    vec *pos;
     model *m;
+
+    modelattach() : tag(NULL), name(NULL), anim(0), basetime(0), pos(NULL), m(NULL) {}
+    modelattach(const char *tag, const char *name, int anim, int basetime) : tag(tag), name(name), anim(anim), basetime(basetime), pos(NULL), m(NULL) {}
+    modelattach(const char *tag, vec *pos) : tag(tag), name(NULL), anim(0), basetime(0), pos(pos), m(NULL) {}
 };
 
 extern void startmodelbatches();

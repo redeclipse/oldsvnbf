@@ -487,9 +487,10 @@ struct animmodel : model
     {
         part *p;
         int tag, anim, basetime;
+        vec *pos;
         GLfloat matrix[16];
 
-        linkedpart() : p(NULL), tag(-1), anim(-1), basetime(0) {}
+        linkedpart() : p(NULL), tag(-1), anim(-1), basetime(0), pos(NULL) {}
     };
 
     struct part
@@ -539,7 +540,7 @@ struct animmodel : model
             }
         }
 
-        bool link(part *p, const char *tag, int anim = -1, int basetime = 0)
+        bool link(part *p, const char *tag, int anim = -1, int basetime = 0, vec *pos = NULL)
         {
             int i = meshes->findtag(tag);
             if(i<0) return false;
@@ -548,6 +549,7 @@ struct animmodel : model
             l.tag = i;
             l.anim = anim;
             l.basetime = basetime;
+            l.pos = pos;
             return true;
         }
 
@@ -767,26 +769,40 @@ struct animmodel : model
                 }
             }
 
-            if(!model->cullface && enablecullface) { glDisable(GL_CULL_FACE); enablecullface = false; }
-            else if(model->cullface && !enablecullface) { glEnable(GL_CULL_FACE); enablecullface = true; }
+            if(!(anim&ANIM_NORENDER))
+            {
+                if(!model->cullface && enablecullface) { glDisable(GL_CULL_FACE); enablecullface = false; }
+                else if(model->cullface && !enablecullface) { glEnable(GL_CULL_FACE); enablecullface = true; }
+            }
 
             vec raxis(axis), rdir(dir), rcampos(campos);
             plane rfogplane(fogplane);
             float pitchamount = calcpitchaxis(anim, pitch, raxis, rdir, rcampos, rfogplane);
             if(pitchamount)
             {
-                glPushMatrix();
-                glRotatef(pitchamount, axis.x, axis.y, axis.z);
-                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                if(anim&ANIM_LOOKUP)
                 {
-                    glMatrixMode(GL_TEXTURE);
+                    matrix3x4 m;
+                    m.rotate(pitchamount*RAD, axis);
+                    lookupmats[lookuppos+1].mul(lookupmats[lookuppos], m);
+                    lookuppos++;
+                }
+
+                if(!(anim&ANIM_NORENDER))
+                {
                     glPushMatrix();
                     glRotatef(pitchamount, axis.x, axis.y, axis.z);
-                    glMatrixMode(GL_MODELVIEW);
+                    if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                    {
+                        glMatrixMode(GL_TEXTURE);
+                        glPushMatrix();
+                        glRotatef(pitchamount, axis.x, axis.y, axis.z);
+                        glMatrixMode(GL_MODELVIEW);
+                    }
                 }
             }
 
-            if(!(anim&ANIM_NOSKIN))
+            if(!(anim&(ANIM_NOSKIN|ANIM_NORENDER)))
             {
                 if(renderpath!=R_FIXEDFUNCTION)
                 {
@@ -817,18 +833,28 @@ struct animmodel : model
                 {
                     linkedpart &link = links[i];
 
+                    if(anim&ANIM_LOOKUP)
+                    {
+                        lookupmats[lookuppos+1].mul(lookupmats[lookuppos], link.matrix);
+                        lookuppos++;
+                        if(link.pos) *link.pos = vec(lookupmats[lookuppos].X.w, lookupmats[lookuppos].Y.w, lookupmats[lookuppos].Z.w);
+                    }
+
                     vec naxis(raxis), ndir(rdir), ncampos(rcampos);
                     plane nfogplane(rfogplane);
                     calcnormal(link.matrix, naxis);
-                    if(!(anim&ANIM_NOSKIN))
+                    if(!(anim&(ANIM_NOSKIN|ANIM_NORENDER)))
                     {
                         calcnormal(link.matrix, ndir);
                         calcvertex(link.matrix, ncampos);
                         calcplane(link.matrix, nfogplane);
                     }
 
-                    glPushMatrix();
-                    glMultMatrixf(link.matrix);
+                    if(!(anim&ANIM_NORENDER))
+                    {
+                        glPushMatrix();
+                        glMultMatrixf(link.matrix);
+                    }
                     if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
                     {
                         glMatrixMode(GL_TEXTURE);
@@ -849,18 +875,25 @@ struct animmodel : model
                         glPopMatrix();
                         glMatrixMode(GL_MODELVIEW);
                     }
-                    glPopMatrix();
+                    if(!(anim&ANIM_NORENDER)) glPopMatrix();
+
+                    if(anim&ANIM_LOOKUP) lookuppos--;
                 }
             }
 
             if(pitchamount)
             {
-                glPopMatrix();
-                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                if(anim&ANIM_LOOKUP) lookuppos--;
+
+                if(!(anim&ANIM_NORENDER))
                 {
-                    glMatrixMode(GL_TEXTURE);
                     glPopMatrix();
-                    glMatrixMode(GL_MODELVIEW);
+                    if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                    {
+                        glMatrixMode(GL_TEXTURE);
+                        glPopMatrix();
+                        glMatrixMode(GL_MODELVIEW);
+                    }
                 }
             }
         }
@@ -898,7 +931,7 @@ struct animmodel : model
         if(a)
         {
             int index = parts.last()->index + parts.last()->numanimparts;
-            for(int i = 0; a[i].name; i++)
+            for(int i = 0; a[i].tag; i++)
             {
                 animmodel *m = (animmodel *)a[i].m;
                 if(!m || !m->loaded) continue;
@@ -906,7 +939,7 @@ struct animmodel : model
                 switch(linktype(m))
                 {
                     case LINK_TAG:
-                        p->index = link(p, a[i].tag, a[i].anim, a[i].basetime) ? index : -1;
+                        p->index = link(p, a[i].tag, a[i].anim, a[i].basetime, a[i].pos) ? index : -1;
                         break;
 
                     case LINK_COOP:
@@ -923,7 +956,7 @@ struct animmodel : model
         animstate as[MAXANIMPARTS];
         parts[0]->render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane, as);
 
-        if(a) for(int i = 0; a[i].name; i++)
+        if(a) for(int i = 0; a[i].tag; i++)
         {
             animmodel *m = (animmodel *)a[i].m;
             if(!m || !m->loaded) continue;
@@ -958,6 +991,21 @@ struct animmodel : model
         pitch += offsetpitch;
         roll += offsetroll;
 
+        if(anim&ANIM_LOOKUP)
+        {
+            lookuppos = 0;
+            lookupmats[0].translate(o);
+            lookupmats[0].rotate_around_z((yaw+180)*RAD);
+            if(roll) lookupmats[0].rotate_around_x(-roll*RAD);
+        }
+
+        if(anim&ANIM_NORENDER)
+        {
+            render(anim, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
+            if(d) d->lastrendered = lastmillis;
+            return;
+        }
+
         if(!(anim&ANIM_NOSKIN))
         {
             fogplane = plane(0, 0, 1, o.z-reflectz);
@@ -974,7 +1022,7 @@ struct animmodel : model
             campos.rotate_around_x(roll*RAD);
 
             if(envmapped()) anim |= ANIM_ENVMAP;
-            else if(a) for(int i = 0; a[i].name; i++) if(a[i].m && a[i].m->envmapped())
+            else if(a) for(int i = 0; a[i].tag; i++) if(a[i].m && a[i].m->envmapped())
             {
                 anim |= ANIM_ENVMAP;
                 break;
@@ -1105,9 +1153,9 @@ struct animmodel : model
         return bih;
     }
 
-    bool link(part *p, const char *tag, int anim = -1, int basetime = 0)
+    bool link(part *p, const char *tag, int anim = -1, int basetime = 0, vec *pos = NULL)
     {
-        loopv(parts) if(parts[i]->link(p, tag, anim, basetime)) return true;
+        loopv(parts) if(parts[i]->link(p, tag, anim, basetime, pos)) return true;
         return false;
     }
 
@@ -1223,7 +1271,8 @@ struct animmodel : model
     static void *lastvbuf, *lasttcbuf, *lastmtcbuf, *lastnbuf, *lastbbuf, *lastsdata, *lastbdata;
     static GLuint lastebuf, lastenvmaptex, closestenvmaptex;
     static Texture *lasttex, *lastmasks, *lastnormalmap;
-    static int envmaptmu, fogtmu;
+    static int envmaptmu, fogtmu, lookuppos;
+    static matrix3x4 lookupmats[32];
 
     void startrender()
     {
@@ -1360,5 +1409,6 @@ float animmodel::lastalphatest = -1;
 void *animmodel::lastvbuf = NULL, *animmodel::lasttcbuf = NULL, *animmodel::lastmtcbuf = NULL, *animmodel::lastnbuf = NULL, *animmodel::lastbbuf = NULL, *animmodel::lastsdata = NULL, *animmodel::lastbdata = NULL;
 GLuint animmodel::lastebuf = 0, animmodel::lastenvmaptex = 0, animmodel::closestenvmaptex = 0;
 Texture *animmodel::lasttex = NULL, *animmodel::lastmasks = NULL, *animmodel::lastnormalmap = NULL;
-int animmodel::envmaptmu = -1, animmodel::fogtmu = -1;
+int animmodel::envmaptmu = -1, animmodel::fogtmu = -1, animmodel::lookuppos = 0;
+matrix3x4 animmodel::lookupmats[32];
 

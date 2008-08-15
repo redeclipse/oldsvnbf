@@ -1520,6 +1520,17 @@ struct skelmodel : animmodel
             if(skel->shouldcleanup()) skel->cleanup();
             else if(norms!=vnorms || tangents!=vtangents) cleanup();
 
+            if(as->anim&ANIM_NORENDER)
+            {
+                if(!skel->numframes) skel->calctags(p);
+                else
+                {
+                    skelcacheentry &sc = skel->checkskelcache(as, pitch, axis);
+                    skel->calctags(sc, p);
+                }
+                return;
+            }
+
             if(!skel->numframes)
             {
                 if(hasVBO ? !vbocache->vbuf : !vbocache->vdata) genvbo(norms, tangents, *vbocache);
