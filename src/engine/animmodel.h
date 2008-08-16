@@ -1175,14 +1175,14 @@ struct animmodel : model
 
     bool link(part *p, const char *tag, int anim = -1, int basetime = 0, vec *pos = NULL)
     {
-        loopv(parts) if(parts[i]->link(p, tag, anim, basetime, pos)) return true;
-        return false;
+        if(parts.empty()) return false;
+        return parts[0]->link(p, tag, anim, basetime, pos);
     }
 
     bool unlink(part *p)
     {
-        loopv(parts) if(parts[i]->unlink(p)) return true;
-        return false;
+        if(parts.empty()) return false;
+        return parts[0]->unlink(p);
     }
 
     bool envmapped()
