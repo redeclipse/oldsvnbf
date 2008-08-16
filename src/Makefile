@@ -1,6 +1,6 @@
 CXXOPTFLAGS= -O2 -fsigned-char -finline-functions -fomit-frame-pointer -fno-strict-aliasing
 INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
-CXXFLAGS= -Wall -DINTERFACE $(CXXOPTFLAGS) $(INCLUDES)
+CXXFLAGS= -Wall -DINTERFACE -DIRC $(CXXOPTFLAGS) $(INCLUDES)
 
 CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lpng -lz -lGL -lGLU
 ifeq ($(shell uname -s),Linux)
@@ -18,6 +18,7 @@ CLIENT_OBJS= \
 	engine/dynlight.o \
 	engine/glare.o \
 	engine/grass.o \
+	engine/irc.o	\
 	engine/lightmap.o \
 	engine/main.o \
 	engine/material.o \
@@ -46,22 +47,24 @@ CLIENT_OBJS= \
 	fpsgame/fps.o 
 
 SINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include
-SCXXFLAGS= -Wall -DSTANDALONE $(CXXOPTFLAGS) $(SINCLUDES)
+SCXXFLAGS= -Wall -DSTANDALONE -DIRC $(CXXOPTFLAGS) $(SINCLUDES)
 
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
 	shared/tools-standalone.o \
 	engine/command-standalone.o \
+	engine/irc-standalone.o	\
 	engine/server-standalone.o \
 	fpsgame/fps-standalone.o
 
 DINCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include
-DCXXFLAGS= -Wall -DSTANDALONE -DMASTERSERVER $(CXXOPTFLAGS) $(DINCLUDES)
+DCXXFLAGS= -Wall -DSTANDALONE -DMASTERSERVER -DIRC $(CXXOPTFLAGS) $(DINCLUDES)
 
 DAEMON_LIBS=-Lenet -lenet -lz
 DAEMON_OBJS= \
 	shared/tools-daemon.o \
 	engine/command-daemon.o \
+	engine/irc-daemon.o	\
 	engine/master-daemon.o \
 	engine/server-daemon.o \
 	fpsgame/fps-daemon.o

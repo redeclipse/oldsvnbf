@@ -657,6 +657,9 @@ void serverloop()
 		checkmaster();
 		#endif
 		if(servertype) serverslice();
+#ifdef IRC
+		ircslice();
+#endif
 
 		if((int)enet_time_get()-lastmillis <= 0)
 		{
