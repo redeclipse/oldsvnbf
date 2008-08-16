@@ -42,6 +42,7 @@
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-fno-strict-aliasing" />
 					<Add option="-DINTERFACE" />
+					<Add option="-DIRC" />
 					<Add directory="shared" />
 					<Add directory="engine" />
 					<Add directory="fpsgame" />
@@ -84,6 +85,7 @@
 					<Add option="-g" />
 					<Add option="-fsigned-char" />
 					<Add option="-DINTERFACE" />
+					<Add option="-DIRC" />
 					<Add directory="shared" />
 					<Add directory="engine" />
 					<Add directory="fpsgame" />
@@ -127,6 +129,7 @@
 					<Add option="-pg" />
 					<Add option="-fsigned-char" />
 					<Add option="-DINTERFACE" />
+					<Add option="-DIRC" />
 					<Add directory="shared" />
 					<Add directory="engine" />
 					<Add directory="fpsgame" />
@@ -172,6 +175,7 @@
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-fno-strict-aliasing" />
 					<Add option="-DSTANDALONE" />
+					<Add option="-DIRC" />
 					<Add directory="shared" />
 					<Add directory="engine" />
 					<Add directory="fpsgame" />
@@ -207,6 +211,7 @@
 					<Add option="-fno-strict-aliasing" />
 					<Add option="-DSTANDALONE" />
 					<Add option="-DMASTERSERVER" />
+					<Add option="-DIRC" />
 					<Add directory="shared" />
 					<Add directory="engine" />
 					<Add directory="include" />
@@ -508,6 +513,17 @@
 			<Option target="client" />
 			<Option target="debug" />
 			<Option target="profile" />
+		</Unit>
+		<Unit filename="engine\irc.cpp">
+			<Option target="client" />
+			<Option target="server" />
+			<Option target="daemon" />
+		</Unit>
+		<Unit filename="engine\irc.h">
+			<Option target="client" />
+			<Option target="debug" />
+			<Option target="server" />
+			<Option target="daemon" />
 		</Unit>
 		<Unit filename="engine\lensflare.h">
 			<Option target="client" />

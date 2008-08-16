@@ -1,5 +1,11 @@
 // the interface the game uses to access the engine
 
+extern int verbose, curtime, lastmillis, totalmillis;
+extern int servertype, serverport, serverqueryport, servermasterport, serverclients;
+extern void fatal(const char *s, ...);
+extern void conoutf(const char *s, ...);
+extern void console(const char *s, int n, ...);
+
 #ifdef __GNUC__
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
 #else
@@ -269,6 +275,8 @@ extern void filtertext(char *dst, const char *src, bool whitespace = true, int l
 extern void disconnect_client(int n, int reason);
 extern bool hasnonlocalclients();
 extern void sendqueryreply(ucharbuf &p);
+extern bool resolverwait(const char *name, int port, ENetAddress *address);
+extern int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address);
 
 // client
 struct serverinfo

@@ -9,13 +9,6 @@
 #define ENG_MASTER_HOST		"bloodfrontier.com"
 
 #include "cube.h"
-
-extern int verbose, curtime, lastmillis, totalmillis;
-extern int servertype, serverport, serverqueryport, servermasterport, serverclients;
-extern void fatal(const char *s, ...);
-extern void conoutf(const char *s, ...);
-extern void console(const char *s, int n, ...);
-
 #include "iengine.h"
 #include "igame.h"
 
@@ -23,7 +16,9 @@ extern igameclient *cl;
 extern igameserver *sv;
 extern iclientcom *cc;
 extern icliententities *et;
-
+#ifdef IRC
+#include "irc.h"
+#endif
 #ifdef MASTERSERVER
 #include "master.h"
 #endif
@@ -403,8 +398,6 @@ extern void lanconnect();
 extern bool serveroption(char *opt);
 
 // serverbrowser
-extern bool resolverwait(const char *name, int port, ENetAddress *address);
-extern int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address);
 extern void addserver(const char *name, int port, int qport);
 extern void writeservercfg();
 
