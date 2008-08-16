@@ -773,7 +773,7 @@ int main(int argc, char* argv[])
 	atexit(cleanupserver);
 	enet_time_set(0);
 	initruntime();
-	execfile("server.cfg");
+	execfile("autoserv.cfg");
 	serverloop();
 	return 0;
 }
