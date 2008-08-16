@@ -516,6 +516,7 @@
 		</Unit>
 		<Unit filename="engine\irc.cpp">
 			<Option target="client" />
+			<Option target="debug" />
 			<Option target="server" />
 			<Option target="daemon" />
 		</Unit>
