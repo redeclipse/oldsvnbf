@@ -568,12 +568,12 @@ void vectocursor(vec &v, float &x, float &y, float &z)
 	z = (float)dz;
 }
 
-void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, bool swapxy)
+void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, bool swapxy, float zscale)
 {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     if(swapxy) glRotatef(90, 0, 0, 1);
-    if(flipx || flipy!=swapxy) glScalef(flipx ? -1 : 1, flipy!=swapxy ? -1 : 1, 1);
+    if(flipx || flipy!=swapxy || zscale!=1) glScalef(flipx ? -1 : 1, flipy!=swapxy ? -1 : 1, zscale);
     gluPerspective(fovy, aspect, 0.54f, farplane);
     glMatrixMode(GL_MODELVIEW);
 }
@@ -828,7 +828,9 @@ void drawglare()
     rendermaterials();
     render_particles(0);
 
+    project(fovy, aspect, farplane, false, false, false, 0.5f);
     renderavatar(false);
+    project(fovy, aspect, farplane);
 
     glFogf(GL_FOG_START, oldfogstart);
     glFogf(GL_FOG_END, oldfogend);
@@ -1442,7 +1444,9 @@ void gl_drawframe(int w, int h)
 	rendermaterials();
 	render_particles(curtime);
 
+    project(fovy, aspect, farplane, false, false, false, 0.5f);
     renderavatar(false);
+    project(fovy, aspect, farplane);
 
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);
