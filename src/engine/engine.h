@@ -591,7 +591,7 @@ extern float hudblend;
 extern int ambient, skylight, watercolour, lavacolour;
 extern float curfov, fovy, aspect;
 
-extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false, bool swapxy = false);
+extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false, bool swapxy = false, float zscale = 1);
 extern void transplayer();
 
 extern void renderprimitive(bool on);
