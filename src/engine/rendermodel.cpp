@@ -832,7 +832,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 		b.cull = cull;
 		b.d = d;
 		b.attached = a ? modelattached.length() : -1;
-		if(a) for(int i = 0;; i++) { modelattached.add(a[i]); if(!a[i].name) break; }
+		if(a) for(int i = 0;; i++) { modelattached.add(a[i]); if(!a[i].tag) break; }
         if(doOQ) d->query = b.query = newquery(d);
 		return;
 	}
