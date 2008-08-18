@@ -225,7 +225,7 @@ void ircparse(ircnet *n, char *reply)
 			char *nick = NULL, *user = NULL, *host = NULL;
 			if(isfrom)
 			{
-				char *t = w[0], *u = strrchr(t, '!');
+				char *t = newstring(w[0]), *u = strrchr(t, '!');
 				if(u)
 				{
 					nick = newstring(t, u-t);
@@ -237,8 +237,9 @@ void ircparse(ircnet *n, char *reply)
 						u++;
 						if(*u) host = newstring(u);
 					}
+					DELETEP(t);
 				}
-				else nick = newstring(t);
+				else nick = t;
 				g = 1;
 			}
 			else nick = newstring(n->serv);
