@@ -67,7 +67,6 @@ void ircoutf(const char *msg, ...)
 int ircrecv(ircnet *n, int timeout)
 {
 	if(!n) return -1;
-	n->input[0] = 0;
 	if(n->sock == ENET_SOCKET_NULL) return -1;
 	enet_uint32 events = ENET_SOCKET_WAIT_RECEIVE;
 	ENetBuffer buf;
@@ -107,6 +106,7 @@ void ircaddnet(int type, const char *name, const char *serv, int port, const cha
 	s_strcpy(n.passkey, passkey);
 	n.address.host = ENET_HOST_ANY;
 	n.address.port = n.port;
+	n.input[0] = 0;
 	conoutf("added irc %s %s (%s:%d) [%s]", type == IRCT_RELAY ? "relay" : "client", name, serv, port, nick);
 }
 
@@ -339,6 +339,8 @@ void ircparse(ircnet *n, char *reply)
 	loopi(MAXWORDS) w[i] = NULL;
 	while(p && *p)
 	{
+		const char *start = p;
+		bool line = false;
 		int numargs = 0, g = *p == ':' ? 1 : 0;
 		if(g) p++;
 		loopi(MAXWORDS)
@@ -352,12 +354,12 @@ void ircparse(ircnet *n, char *reply)
 				char *s = full ? newstring(word+1, p-word-1) : newstring(word, p-word);
 				w[numargs] = s;
 				numargs++;
-				if(*p == '\n' || *p == '\r') { p++; break; }
+				if(*p == '\n' || *p == '\r') line = true;
 				p++;
 			}
+			if(line) break;
 		}
-
-		if(numargs)
+		if(line)
 		{
 			char *user[3] = { NULL, NULL, NULL };
 			if(g)
@@ -381,9 +383,16 @@ void ircparse(ircnet *n, char *reply)
 			if(numargs > g) ircprocess(n, user, g, numargs, w);
 			loopi(3) DELETEA(user[i]);
 		}
+		else
+		{
+			char *s = newstring(start);
+			s_strcpy(reply, s);
+			DELETEA(s);
+		}
 		loopi(MAXWORDS) DELETEA(w[i]);
 		while(p && (*p == '\n' || *p == '\r' || *p == ' ')) p++;
 	}
+
 }
 
 void irccleanup()
