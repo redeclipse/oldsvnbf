@@ -13,14 +13,16 @@ void console(const char *s, int n, ...)
 	string st;
 	filtertext(st, str);
 	printf("%s\n", st);
-#ifdef IRC
-	ircoutf("%s", st);
-#endif
 }
 void conoutf(const char *s, ...)
 {
 	s_sprintfdv(str, s);
 	console("%s", 0, str);
+#ifdef IRC
+	string st;
+	filtertext(st, str);
+	ircoutf("%s", st);
+#endif
 }
 void servertoclient(int chan, uchar *buf, int len) {}
 void fatal(const char *s, ...)

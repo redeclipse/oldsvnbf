@@ -130,6 +130,7 @@ struct botserv
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		sv.savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, cn);
+		sv.relayf("\fo* %s has left the game", sv.colorname(ci));
 		sv.clients.removeobj(ci);
 		delclient(cn);
 	}
@@ -777,7 +778,7 @@ struct botclient
 			{ // we need to make a quick decision to find a landing spot
 				int closest = -1;
 				fpsentity &e = *(fpsentity *)cl.et.ents[d->lastnode];
-				if(!e.links.empty()) 
+				if(!e.links.empty())
 				{
 					loopv(e.links) if(cl.et.ents.inrange(e.links[i]))
 					{

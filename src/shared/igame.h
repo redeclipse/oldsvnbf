@@ -95,6 +95,8 @@ struct igameserver
 {
     virtual ~igameserver() {}
 
+	virtual void srvmsgf(int cn, const char *s, ...) = 0;
+	virtual void srvoutf(int cn, const char *s, ...) = 0;
     virtual bool serveroption(char *arg) { return false; }
     virtual void *newinfo() = 0;
     virtual void deleteinfo(void *ci) = 0;
@@ -106,7 +108,6 @@ struct igameserver
     virtual int welcomepacket(ucharbuf &p, int n, ENetPacket *packet) = 0;
     virtual void queryreply(ucharbuf &req, ucharbuf &p) = 0;
     virtual void serverupdate() = 0;
-    virtual void srvoutf(int cn, const char *s, ...) = 0;
     virtual void changemap(const char *s, int mode, int muts) { return; }
     virtual const char *gameid() = 0;
 	virtual char *gamename(int mode, int muts) = 0;

@@ -12,7 +12,7 @@ enum { IRCT_NONE = 0, IRCT_CLIENT, IRCT_RELAY, IRCT_MAX };
 enum { IRC_DISC = 0, IRC_ATTEMPT, IRC_CONN, IRC_ONLINE, IRC_MAX };
 struct ircnet
 {
-	int type, state, port;
+	int type, state, port, lastattempt;
 	string name, serv, nick, passkey;
 	ENetAddress address;
 	ENetSocket sock;
