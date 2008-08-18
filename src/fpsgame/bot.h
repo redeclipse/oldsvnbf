@@ -532,8 +532,8 @@ struct botclient
 	bool find(fpsent *d, botstate &b, bool override = true)
 	{
 		vec pos = cl.headpos(d);
-		vector<interest> interests;
-		interests.setsize(0);
+		static vector<interest> interests;
+		interests.setsizenodelete(0);
 
 		if(m_ctf(cl.gamemode))
         {
@@ -799,8 +799,8 @@ struct botclient
 			}
 			if(m_ctf(cl.gamemode))
 			{
-				vector<int> hasflags;
-				hasflags.setsize(0);
+				static vector<int> hasflags;
+				hasflags.setsizenodelete(0);
 				loopv(cl.ctf.flags)
 				{
 					ctfstate::flag &g = cl.ctf.flags[i];
@@ -968,8 +968,8 @@ struct botclient
 						ctfstate::flag &f = cl.ctf.flags[b.target];
 						if(f.team == d->team)
 						{
-							vector<int> hasflags;
-							hasflags.setsize(0);
+							static vector<int> hasflags;
+							hasflags.setsizenodelete(0);
 							loopv(cl.ctf.flags)
 							{
 								ctfstate::flag &g = cl.ctf.flags[i];
@@ -1133,7 +1133,8 @@ struct botclient
 				}
 				else if(!d->hasgun(d->bot->gunpref) && !d->useaction)
 				{
-					vector<actitem> actitems;
+					static vector<actitem> actitems;
+                    actitems.setsizenodelete(0);
 					if(cl.et.collateitems(d, false, actitems))
 					{
 						int closest = actitems.length()-1;
