@@ -302,17 +302,21 @@ void ircparse(ircnet *n, char *reply)
 
 void irccleanup()
 {
+    int quitting = 0;
 	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL)
 	{
 		ircnet *n = &ircnets[i];
-		if(n->state != IRC_DISC) ircsend(n, "QUIT");
+		if(n->state != IRC_DISC) 
+        {
+            ircsend(n, "QUIT");
+            quitting++;
+        }
 	}
-	conoutf("Waiting for IRC threads to finish...");
-#ifdef WIN32
-	Sleep(3000);
-#else
-	sleep(3);
-#endif
+    if(quitting)
+    {
+	    conoutf("Waiting for IRC threads to finish...");
+        SDL_Delay(3000);
+    }
 	ircslice();
 	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL)
 	{
