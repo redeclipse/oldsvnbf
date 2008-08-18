@@ -200,6 +200,8 @@ void ircparse(ircnet *n, char *reply)
 	while(p && *p)
 	{
 		int numargs = 0;
+		bool isfrom = *p == ':';
+		if(isfrom) p++;
 		loopi(MAXWORDS)
 		{
 			const char *word = p;
@@ -219,12 +221,10 @@ void ircparse(ircnet *n, char *reply)
 
 		if(numargs)
 		{
-			bool isfrom = *w[0] == ':';
-			int g = isfrom ? 1 : 0;
+			int g = 0;
 			char *nick = NULL, *user = NULL, *host = NULL;
 			if(isfrom)
 			{
-				w[0]++;
 				char *t = w[0], *u = strrchr(t, '!');
 				if(u)
 				{
@@ -239,6 +239,7 @@ void ircparse(ircnet *n, char *reply)
 					}
 				}
 				else nick = newstring(t);
+				g = 1;
 			}
 			else nick = newstring(n->serv);
 
