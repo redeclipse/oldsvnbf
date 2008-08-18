@@ -197,6 +197,9 @@ void cleanupserver()
 #ifdef MASTERSERVER
 	cleanupmaster();
 #endif
+#ifdef IRC
+	irccleanup();
+#endif
 #ifdef STANDALONE
 	writecfg();
 #endif
