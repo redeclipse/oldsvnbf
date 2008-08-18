@@ -202,10 +202,10 @@ void ircparse(ircnet *n, char *reply)
 {
 	const int MAXWORDS = 25;
 	char *w[MAXWORDS], *p = reply;
+	loopi(MAXWORDS) w[i] = NULL;
 	while(p && *p)
 	{
 		int numargs = 0;
-		loopi(MAXWORDS) w[i] = NULL;
 		loopi(MAXWORDS)
 		{
 			const char *word = p;
@@ -215,15 +215,11 @@ void ircparse(ircnet *n, char *reply)
 			else
 			{
 				char *s = newstring(word, p-word);
-				if(s)
-				{
-					if(full) s++;
-					w[numargs] = s;
-					numargs++;
-					if(*p == '\n' || *p == '\r') break;
-					p++;
-				}
-				else break;
+				if(full) s++;
+				w[numargs] = s;
+				numargs++;
+				if(*p == '\n' || *p == '\r') break;
+				p++;
 			}
 		}
 
@@ -245,7 +241,7 @@ void ircparse(ircnet *n, char *reply)
 					{
 						user = newstring(t, u-t);
 						u++;
-						host = newstring(u ? u : "");
+						if(*u) host = newstring(u);
 					}
 				}
 				else nick = newstring(t);
@@ -342,7 +338,7 @@ void ircparse(ircnet *n, char *reply)
 			if(user) DELETEP(user);
 			if(host) DELETEP(host);
 		}
-		loopj(MAXWORDS) if(w[j]) delete[] w[j];
+		loopi(MAXWORDS) if(w[i]) DELETEP(w[i]);
 		while(p && (*p == '\n' || *p == '\r' || *p == ' ')) p++;
 	}
 }
