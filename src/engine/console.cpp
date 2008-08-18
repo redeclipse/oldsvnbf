@@ -98,6 +98,9 @@ void console(const char *s, int type, ...)
 	fflush(stdout);
 
 	conline(sf, 0, type);
+#ifdef IRC
+	ircoutf("%s", sf);
+#endif
 }
 
 void conoutf(const char *s, ...)

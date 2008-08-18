@@ -404,6 +404,18 @@ struct GAMESERVER : igameserver
 	{
 		s_sprintfdlv(str, s, s);
 		sendf(cn, 1, "ris", SV_SERVMSG, str);
+		if(cn < 0)
+		{
+			string st;
+			filtertext(st, str);
+			ircoutf("%s", st);
+		}
+	}
+
+	void relayf(const char *s, ...)
+	{
+		s_sprintfdlv(str, s, s);
+		ircoutf("%s", str);
 	}
 
 	void resetitems()
@@ -1269,6 +1281,8 @@ struct GAMESERVER : igameserver
 						if(t == cp || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && cp->team != t->team)) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
+					if(flags&SAY_ACTION) relayf("* %s %s", colorname(cp), text);
+					else relayf("<%s> %s", colorname(cp), text);
 					break;
 				}
 

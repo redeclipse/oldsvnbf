@@ -7,8 +7,21 @@
 VAR(version, 1, ENG_VERSION, -1); // for scripts
 
 #ifdef STANDALONE
-void conoutf(const char *s, ...) { s_sprintfdlv(str, s, s); string st; filtertext(st, str); printf("%s\n", st); }
-void console(const char *s, int n, ...) { s_sprintfdlv(str, n, s); string st; filtertext(st, str); printf("%s\n", st); }
+void console(const char *s, int n, ...)
+{
+	s_sprintfdlv(str, n, s);
+	string st;
+	filtertext(st, str);
+	printf("%s\n", st);
+#ifdef IRC
+	ircoutf("%s", st);
+#endif
+}
+void conoutf(const char *s, ...)
+{
+	s_sprintfdv(str, s);
+	console("%s", 0, str);
+}
 void servertoclient(int chan, uchar *buf, int len) {}
 void fatal(const char *s, ...)
 {
@@ -582,7 +595,8 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 		if(totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
 		{
 			laststatus = totalmillis;
-			if(nonlocalclients || bsend || brec) conoutf("\fmstatus: %d remote clients, %.1f send, %.1f rec (K/sec)", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
+			if(nonlocalclients || bsend || brec)
+				conoutf("\fmstatus: %d remote clients, %.1f send, %.1f rec (K/sec)", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
 			bsend = brec = 0;
 		}
 	}
