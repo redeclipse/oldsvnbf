@@ -229,11 +229,11 @@ void ircparse(ircnet *n, char *reply)
 				if(u)
 				{
 					nick = newstring(t, u-t);
-					t = u+1;
-					u = strrchr(t, '@');
+					char *v = u + 1;
+					u = strrchr(v, '@');
 					if(u)
 					{
-						user = newstring(t, u-t);
+						user = newstring(t, u-v);
 						u++;
 						if(*u) host = newstring(u);
 					}
