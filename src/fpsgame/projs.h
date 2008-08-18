@@ -203,7 +203,7 @@ struct projectiles
 					regularshape(5, int(proj.radius), 0x443322, 21, rnd(5)+1, 100, proj.o, 2.f);
 			}
 			else if(proj.projtype == PRJ_GIBS)
-				regular_part_splash(0, 1, 5000, proj.o, 0x60FFFF, proj.radius, int(proj.radius), 3);
+				regular_part_splash(0, 1, 5000, proj.o, 0x60FFFF, proj.radius, int(proj.radius), 5);
 		}
 		return true;
 	}
