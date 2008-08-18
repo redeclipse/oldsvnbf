@@ -237,7 +237,6 @@ void ircparse(ircnet *n, char *reply)
 						u++;
 						if(*u) host = newstring(u);
 					}
-					DELETEA(t);
 				}
 				else nick = newstring(t);
 				g = 1;
