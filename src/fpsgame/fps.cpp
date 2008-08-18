@@ -1315,7 +1315,7 @@ struct GAMECLIENT : igameclient
 									tp += draw_textx("[ \fs\fa%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, enttype[e.type].name);
 							}
 						}
-						actitems.remove(closest);
+						actitems.removeunordered(closest);
 					}
 					popfont();
 				}
