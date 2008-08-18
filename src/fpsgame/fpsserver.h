@@ -408,10 +408,16 @@ struct GAMESERVER : igameserver
 		ircoutf("%s", st);
 	}
 
-	void srvoutf(int cn, const char *s, ...)
+	void srvmsgf(int cn, const char *s, ...)
 	{
 		s_sprintfdlv(str, s, s);
 		sendf(cn, 1, "ris", SV_SERVMSG, str);
+	}
+
+	void srvoutf(int cn, const char *s, ...)
+	{
+		s_sprintfdlv(str, s, s);
+		srvmsgf(cn, "%s", str);
 		if(cn < 0) relayf("%s", str);
 	}
 
@@ -435,7 +441,7 @@ struct GAMESERVER : igameserver
 		if(haspriv(ci, PRIV_MASTER) && mastermode >= MM_VETO)
 		{
 			if(demorecord) enddemorecord();
-			srvoutf(-1, "%s forced %s on map %s", privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf(-1, "%s [%s] forced %s on map %s", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
 			sendf(-1, 1, "ri2si2", SV_MAPCHANGE, 1, ci->mapvote, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 		}
@@ -1278,8 +1284,8 @@ struct GAMESERVER : igameserver
 						if(t == cp || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && cp->team != t->team)) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
-					if(flags&SAY_ACTION) relayf("* %s %s", colorname(cp), text);
-					else relayf("<%s> %s", colorname(cp), text);
+					if(flags&SAY_ACTION) relayf("* %s %s", colorname(cp, NULL, flags&SAY_TEAM), text);
+					else relayf("<%s> %s", colorname(cp, NULL, flags&SAY_TEAM), text);
 					break;
 				}
 
@@ -1302,9 +1308,6 @@ struct GAMESERVER : igameserver
 
 					getstring(text, p);
 					if(!text[0]) s_strcpy(text, "unnamed");
-					QUEUE_STR(text);
-					s_strncpy(ci->name, text, MAXNAMELEN+1);
-
 					if(connected)
 					{
 						savedscore &sc = findscore(ci, false);
@@ -1317,7 +1320,20 @@ struct GAMESERVER : igameserver
 								gs.lifesequence, gs.health,
 								gs.gunselect, GUN_MAX, &gs.ammo[0], -1);
 						}
+						relayf("\fg* %s has joined the game", colorname(ci, text));
 					}
+					else
+					{
+						if(strcmp(ci->name, text))
+						{
+							string oldname, newname;
+							s_strcpy(oldname, colorname(ci));
+							s_strcpy(newname, colorname(ci, text));
+							relayf("\fm* %s is now known as %s", oldname, newname);
+						}
+					}
+					QUEUE_STR(text);
+					s_strncpy(ci->name, text, MAXNAMELEN+1);
 
 					int team = getint(p);
 					bool badteam = m_team(gamemode, mutators) ?
@@ -1613,7 +1629,7 @@ struct GAMESERVER : igameserver
 
 				case SV_GETMAP:
 					if(mapdata) sendfile(sender, 2, mapdata, "ri", SV_SENDMAP);
-					else sendf(sender, 1, "ris", SV_SERVMSG, "no map to send");
+					else srvoutf(sender, "no map to send");
 					break;
 
 				case SV_NEWMAP:
@@ -2443,6 +2459,7 @@ struct GAMESERVER : igameserver
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, n);
+		relayf("\fo* %s has left the game", colorname(ci));
 		clients.removeobj(ci);
 		if(clients.empty()) cleanup(false);
 		else
@@ -2484,7 +2501,7 @@ struct GAMESERVER : igameserver
 		if(mapdata) { fclose(mapdata); mapdata = NULL; }
 		if(!len) return;
 		mapdata = tmpfile();
-        if(!mapdata) { sendf(sender, 1, "ris", SV_SERVMSG, "failed to open temporary file for map"); return; }
+        if(!mapdata) { srvoutf(sender, "failed to open temporary file for map"); return; }
 		fwrite(data, 1, len, mapdata);
 		sendf(-1, 1, "ri2", SV_SENDMAP, sender);
 	}

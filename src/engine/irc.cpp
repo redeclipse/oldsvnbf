@@ -13,6 +13,7 @@ ircnet *ircfind(const char *name)
 void ircconnect(ircnet *n)
 {
 	if(!n) return;
+	n->lastattempt = lastmillis;
 	if(n->address.host == ENET_HOST_ANY)
 	{
 		printf("looking up %s:[%d]...", n->serv, n->port);
@@ -70,8 +71,9 @@ int ircrecv(ircnet *n, int timeout)
 	if(n->sock == ENET_SOCKET_NULL) return -1;
 	enet_uint32 events = ENET_SOCKET_WAIT_RECEIVE;
 	ENetBuffer buf;
-	buf.data = n->input;
-	buf.dataLength = 4095;
+	int nlen = strlen((char *)n->input);
+	buf.data = ((char *)n->input)+nlen;
+	buf.dataLength = sizeof(n->input)-nlen;
 	if(enet_socket_wait(n->sock, &events, timeout) >= 0 && events)
 	{
 		int len = enet_socket_receive(n->sock, NULL, &buf, 1);
@@ -80,7 +82,7 @@ int ircrecv(ircnet *n, int timeout)
 			enet_socket_destroy(n->sock);
 			return NULL;
 		}
-		buf.data = ((char *)buf.data) + len;
+		buf.data = ((char *)buf.data)+len;
 		((char *)buf.data)[0] = 0;
 		buf.dataLength -= len;
 		return len;
@@ -99,7 +101,9 @@ void ircaddnet(int type, const char *name, const char *serv, int port, const cha
 	ircnet &n = ircnets.add();
 	n.type = type;
 	n.state = IRC_DISC;
+	n.sock = ENET_SOCKET_NULL;
 	n.port = port;
+	n.lastattempt = 0;
 	s_strcpy(n.name, name);
 	s_strcpy(n.serv, serv);
 	s_strcpy(n.nick, nick);
@@ -200,12 +204,15 @@ ICOMMAND(joinircchan, "sss", (const char *n, const char *c, const char *z), {
 void ircprintf(ircnet *n, char *target, char *msg, ...)
 {
 	s_sprintfdlv(str, msg, msg);
-	string st;
+	string st, s;
 	filtertext(st, str);
-	s_sprintfd(s)("[%s]:%s %s\n", n->name, target ? target : n->nick, st);
-	printf("%s", s);
+	if(target && strcasecmp(target, n->nick))
+		s_sprintf(s)("[%s]:%s", n->name, target);
+	else s_sprintf(s)("[%s]", n->name);
+	printf("%s %s\n", s, st);
+	sv->srvmsgf(-1, "%s %s", s, str);
 #ifndef STANDALONE
-	conline(s, 0, CON_NORMAL);
+	console("%s %s", CON_NORMAL, s, str);
 #endif
 }
 
@@ -266,6 +273,13 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 			ircprintf(n, w[g+1], "\fr* %s (%s@%s) has kicked %s from %s", user[0], user[1], user[2], w[g+2], w[g+1]);
 		}
 	}
+	else if(!strcasecmp(w[g], "MODE"))
+	{
+		if(numargs > g+2)
+			ircprintf(n, w[g+1], "\fr* %s (%s@%s) sets mode: %s %s", user[0], user[1], user[2], w[g+1], w[g+2]);
+		else if(numargs > g+1)
+			ircprintf(n, w[g+1], "\fr* %s (%s@%s) sets mode: %s", user[0], user[1], user[2], w[g+1]);
+	}
 	else if(!strcasecmp(w[g], "PING"))
 	{
 		if(numargs > g+1)
@@ -278,16 +292,14 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 	{
 		int numeric = *w[g] && *w[g] >= '0' && *w[g] <= '9' ? atoi(w[g]) : 0, off = 0;
 		string s; s[0] = 0;
-
-		char *targ = numargs > g+off ? w[g+off] : NULL;
+		char *targ = numargs > g+1 ? w[g+1] : NULL;
 		if(numeric)
 		{
-			if(numeric == 353) off = 2;
-			else off = 1;
+			off = numeric == 353 ? 2 : 1;
 			if(numargs > g+off+1 && ircfindchan(n, w[g+off+1]))
 			{
+				targ = w[g+off+1];
 				off++;
-				targ = w[g+off];
 			}
 		}
 		else s_strcat(s, user[0]);
@@ -300,6 +312,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 		if(numeric) switch(numeric)
 		{
 			case 376:
+			case 422:
 			{
 				if(n->state == IRC_CONN)
 				{
@@ -345,21 +358,22 @@ void ircparse(ircnet *n, char *reply)
 		if(g) p++;
 		loopi(MAXWORDS)
 		{
+			if(!p || !*p) break;
 			const char *word = p;
 			bool full = i && *p == ':';
 			p += strcspn(p, full ? "\r\n\0" : " \r\n\0");
-			if(p-word == 0) break;
+			if(p-word <= full ? 1 : 0) break;
 			else
 			{
 				char *s = full ? newstring(word+1, p-word-1) : newstring(word, p-word);
 				w[numargs] = s;
 				numargs++;
 				if(*p == '\n' || *p == '\r') line = true;
-				p++;
+				if(*p) p++;
 			}
 			if(line) break;
 		}
-		if(line)
+		if(line && numargs)
 		{
 			char *user[3] = { NULL, NULL, NULL };
 			if(g)
@@ -383,16 +397,21 @@ void ircparse(ircnet *n, char *reply)
 			if(numargs > g) ircprocess(n, user, g, numargs, w);
 			loopi(3) DELETEA(user[i]);
 		}
-		else
-		{
-			char *s = newstring(start);
-			s_strcpy(reply, s);
-			DELETEA(s);
-		}
 		loopi(MAXWORDS) DELETEA(w[i]);
+		if(!line)
+		{
+			if(start && *start)
+			{
+				char *s = newstring(start);
+				s_strcpy(reply, s);
+				DELETEA(s);
+			}
+			else *reply = 0;
+			return;
+		}
 		while(p && (*p == '\n' || *p == '\r' || *p == ' ')) p++;
 	}
-
+	*reply = 0;
 }
 
 void irccleanup()
@@ -406,40 +425,56 @@ void irccleanup()
 
 void ircslice()
 {
-	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL)
+	loopv(ircnets)
 	{
 		ircnet *n = &ircnets[i];
-		switch(n->state)
+		if(n->sock != ENET_SOCKET_NULL && n->state != IRC_DISC)
 		{
-			case IRC_ATTEMPT:
+			switch(n->state)
 			{
-				if(*n->passkey) ircsend(n, "PASS %s", n->passkey);
-				ircsend(n, "NICK %s", n->nick);
-				ircsend(n, "USER %s +iw %s :%s", n->nick, n->nick, n->nick);
-				n->state = IRC_CONN;
-				loopvj(n->channels) n->channels[j].state = IRCC_NONE;
-				break;
-			}
-			case IRC_CONN:
-			case IRC_ONLINE:
-			{
-				if(ircrecv(n) > 0) ircparse(n, (char *)n->input);
-				break;
-			}
-			default: break;
-		}
-
-		if(n->state == IRC_ONLINE)
-		{
-			loopvj(n->channels)
-			{
-				ircchan *c = &n->channels[j];
-				if(c->type == IRCCT_AUTO && c->state != IRCC_JOINED && c->state != IRCC_JOINING && (!c->lastjoin || lastmillis-c->lastjoin >= 5000))
+				case IRC_ATTEMPT:
 				{
-					if(c->state != IRCC_BANNED || !c->lastjoin || lastmillis-c->lastjoin >= 300000)
-						ircjoin(n, c);
+					if(*n->passkey) ircsend(n, "PASS %s", n->passkey);
+					ircsend(n, "NICK %s", n->nick);
+					ircsend(n, "USER %s +iw %s :%s", n->nick, n->nick, n->nick);
+					n->state = IRC_CONN;
+					loopvj(n->channels) n->channels[j].state = IRCC_NONE;
+					break;
+				}
+				case IRC_CONN:
+				case IRC_ONLINE:
+				{
+					if(ircrecv(n) > 0) ircparse(n, (char *)n->input);
+					break;
+				}
+				default:
+				{
+					ircprintf(n, NULL, "* disconnected");
+					enet_socket_destroy(n->sock);
+					n->state = IRC_DISC;
+					n->sock = ENET_SOCKET_NULL;
+					n->lastattempt = lastmillis;
+					break;
 				}
 			}
+
+			if(n->state == IRC_ONLINE)
+			{
+				loopvj(n->channels)
+				{
+					ircchan *c = &n->channels[j];
+					if(c->type == IRCCT_AUTO && c->state != IRCC_JOINED && c->state != IRCC_JOINING && (!c->lastjoin || lastmillis-c->lastjoin >= 5000))
+					{
+						if(c->state != IRCC_BANNED || !c->lastjoin || lastmillis-c->lastjoin >= 300000)
+							ircjoin(n, c);
+					}
+				}
+			}
+		}
+		else if(n->type == IRCT_RELAY)
+		{
+			if(!n->lastattempt || lastmillis-n->lastattempt >= 60000)
+				ircconnect(n);
 		}
 	}
 }

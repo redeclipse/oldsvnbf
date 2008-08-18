@@ -809,13 +809,13 @@ struct clientcom : iclientcom
 							string oldname, newname;
 							s_strcpy(oldname, cl.colorname(d, NULL, "", false));
 							s_strcpy(newname, cl.colorname(d, text));
-							conoutf("\fo%s is now known as %s", oldname, newname);
+							conoutf("\fm* %s is now known as %s", oldname, newname);
 						}
 					}
 					else					// new client
 					{
 						c2sinit = false;	// send new players my info again
-						conoutf("\fgconnected: %s", cl.colorname(d, text, "", false));
+						conoutf("\fg* %s has joined the game", cl.colorname(d, text, "", false));
 						loopv(cl.players)	// clear copies since new player doesn't have them
 							if(cl.players[i]) freeeditinfo(cl.players[i]->edit);
 						extern editinfo *localedit;

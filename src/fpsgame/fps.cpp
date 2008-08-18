@@ -703,7 +703,7 @@ struct GAMECLIENT : igameclient
 		if(!players.inrange(cn)) return;
 		fpsent *d = players[cn];
 		if(!d) return;
-		if(d->name[0]) conoutf("\foplayer %s disconnected", colorname(d));
+		if(d->name[0]) conoutf("\fo* %s left the game", colorname(d));
 		pj.remove(d);
         removetrackedparticles(d);
 		removetrackedsounds(d);

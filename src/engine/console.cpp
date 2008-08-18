@@ -84,29 +84,25 @@ SVAR(contimefmt, "%c");
 
 void console(const char *s, int type, ...)
 {
-	extern int scr_w, scr_h;
-	int w = screen ? screen->w : scr_w, h = screen ? screen->h : scr_h;
-	gettextres(w, h);
-
 	s_sprintfdlv(sf, type, s);
-
 	string osf, psf, fmt;
 	s_sprintf(fmt)(contimefmt);
 	filtertext(osf, sf);
 	s_sprintf(psf)("%s [%02x] %s", gettime(fmt), type, osf);
 	printf("%s\n", osf);
 	fflush(stdout);
-
 	conline(sf, 0, type);
-#ifdef IRC
-	ircoutf("%s", sf);
-#endif
 }
 
 void conoutf(const char *s, ...)
 {
 	s_sprintfdv(sf, s);
 	console("%s", CON_NORMAL, sf);
+#ifdef IRC
+	string osf;
+	filtertext(osf, sf);
+	ircoutf("%s", osf);
+#endif
 }
 
 bool fullconsole = false;
