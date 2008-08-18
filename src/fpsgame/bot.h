@@ -406,19 +406,22 @@ struct botclient
 
 	bool randomnode(fpsent *d, botstate &b, vec &from, vec &to, float radius, float wander)
 	{
-		vector<int> waypoints;
-		waypoints.setsize(0);
+		static vector<int> waypoints;
+		waypoints.setsizenodelete(0);
+		float r = radius*radius, w = wander*wander;
 		loopvj(cl.et.ents) if(cl.et.ents[j]->type == WAYPOINT && j != d->lastnode)
 		{
-			float r = radius*radius, w = wander*wander,
-				tdist = cl.et.ents[j]->o.squaredist(to), fdist = cl.et.ents[j]->o.squaredist(from);
-			if(tdist > r && fdist > r && fdist <= w)
-				waypoints.add(j);
+			float fdist = cl.et.ents[j]->o.squaredist(from);
+			if(fdist <= w)
+			{
+				float tdist = cl.et.ents[j]->o.squaredist(to);
+				if(tdist > r && fdist > r) waypoints.add(j);
+			}
 		}
 
 		while(!waypoints.empty())
 		{
-			int w = rnd(waypoints.length()), n = waypoints.remove(w);
+			int w = rnd(waypoints.length()), n = waypoints.removeunordered(w);
 			if(makeroute(d, b, n)) return true;
 		}
 		return false;
@@ -469,12 +472,15 @@ struct botclient
 			else return false;
 		}
 		d->bot->enemy = e->clientnum;
-		while(!d->bot->route.empty())
+		int removed = 0;
+		while(removed < d->bot->route.length())
 		{
-			extentity &e = *cl.et.ents[d->bot->route[0]];
-			if(e.o.squaredist(pos) <= BOTISNEAR*BOTISNEAR) d->bot->route.remove(0);
+			extentity &e = *cl.et.ents[d->bot->route[removed]];
+			if(e.o.squaredist(pos) <= BOTISNEAR*BOTISNEAR) removed++;
 			else break;
 		}
+		if(removed >= d->bot->route.length()) d->bot->route.setsizenodelete(0);
+		else if(removed > 0) d->bot->route.remove(0, removed);
 		return true;
 	}
 
@@ -1194,18 +1200,21 @@ struct botclient
 				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 2);
 			}
 
-			float yaw = d->aimyaw-d->yaw;
-			while(yaw < 0.0f) yaw += 360.0f;
-			while(yaw >= 360.0f) yaw -= 360.0f;
-			if(yaw >= 337.5f || yaw < 22.5f) { d->move = 1; d->strafe = 0; }
-			else if(yaw >= 22.5f && yaw < 67.5f) { d->move = d->strafe = 1; d->aimyaw -= 45.f; }
-			else if(yaw >= 67.5f && yaw < 112.5f) { d->move = 0; d->strafe = 1; d->aimyaw -= 90.f; }
-			else if(yaw >= 112.5f && yaw < 157.5f) { d->move = -1; d->strafe = 1; d->aimyaw -= 135.f; }
-			else if(yaw >= 157.5f && yaw < 202.5f) { d->move = -1; d->strafe = 0; d->aimyaw -= 180.f; }
-			else if(yaw >= 202.5f && yaw < 247.5f) { d->move = d->strafe = -1; d->aimyaw -= 225.f; }
-			else if(yaw >= 247.5f && yaw < 292.5f) { d->move = 0; d->strafe = -1; d->aimyaw -= 270.f; }
-			else if(yaw >= 292.5f && yaw < 337.5f) { d->move = 1; d->strafe = -1; d->aimyaw -= 315.f; }
-			else { d->move = 1; d->strafe = 0; } // wtf?
+            const struct aimdir { int move, strafe, offset; } aimdirs[8] =
+            {
+                {  1,  0,   0 },
+                {  1,  1,  45 },
+                {  0,  1,  90 },
+                { -1,  1, 135 },
+                { -1,  0, 180 },
+                { -1, -1, 225 },
+                {  0, -1, 270 },
+                {  1, -1, 315 }
+            };
+            const aimdir &ad = aimdirs[(int)floor((d->aimyaw - d->yaw + 22.5f)/45.0f) & 7];
+            d->move = ad.move;
+            d->strafe = ad.strafe;
+            d->aimyaw -= ad.offset;
 			cl.fixrange(d->aimyaw, d->aimpitch);
 		}
 		else d->stopmoving();

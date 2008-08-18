@@ -360,7 +360,7 @@ struct projectiles
 				if(canremove.inrange(oldest))
 				{
 					canremove[oldest]->state = CS_DEAD;
-					canremove.remove(oldest);
+					canremove.removeunordered(oldest);
 					numprojs--;
 				}
 				else break;
@@ -434,7 +434,7 @@ struct projectiles
 			if(proj.state == CS_DEAD)
 			{
 				delete &proj;
-				projs.remove(i--);
+				projs.removeunordered(i--);
 			}
 		}
 	}
@@ -444,7 +444,7 @@ struct projectiles
 		loopv(projs) if(projs[i]->owner==owner)
         {
             delete projs[i];
-            projs.remove(i--);
+            projs.removeunordered(i--);
         }
 	}
 

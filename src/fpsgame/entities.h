@@ -312,7 +312,7 @@ struct entities : icliententities
 			actitem &t = actitems.add();
 			t.type = ITEM_ENT;
 			t.target = i;
-			t.score = m.dist(e.o);
+			t.score = m.squaredist(e.o);
 			break;
 		}
 		loopv(cl.pj.projs)
@@ -326,14 +326,15 @@ struct entities : icliententities
 			actitem &t = actitems.add();
 			t.type = ITEM_PROJ;
 			t.target = i;
-			t.score = m.dist(proj.o);
+			t.score = m.squaredist(proj.o);
 		}
 		return !actitems.empty();
 	}
 
 	void checkitems(fpsent *d)
 	{
-		vector<actitem> actitems;
+		static vector<actitem> actitems;
+        actitems.setsizenodelete(0);
 		if(collateitems(d, true, actitems))
 		{
 			while(!actitems.empty())
@@ -389,7 +390,7 @@ struct entities : icliententities
 						playsound(S_DENIED, 0, 255, d->o, d);
 					}
 				}
-				actitems.remove(closest);
+				actitems.removeunordered(closest);
 			}
 		}
 		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
