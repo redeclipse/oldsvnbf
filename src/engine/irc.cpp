@@ -64,14 +64,14 @@ void ircoutf(const char *msg, ...)
 	}
 }
 
-int ircrecv(ircnet *n, char *input, int timeout)
+int ircrecv(ircnet *n, int timeout)
 {
 	if(!n) return -1;
 	n->input[0] = 0;
 	if(n->sock == ENET_SOCKET_NULL) return -1;
 	enet_uint32 events = ENET_SOCKET_WAIT_RECEIVE;
 	ENetBuffer buf;
-	buf.data = input;
+	buf.data = n->input;
 	buf.dataLength = 4095;
 	if(enet_socket_wait(n->sock, &events, timeout) >= 0 && events)
 	{
@@ -87,12 +87,6 @@ int ircrecv(ircnet *n, char *input, int timeout)
 		return len;
 	}
 	return -1;
-}
-
-char *ircread(ircnet *n)
-{
-	if(n && ircrecv(n, (char *)n->input) > 0) return newstring((char *)n->input);
-	return NULL;
 }
 
 void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *passkey)
@@ -371,12 +365,7 @@ void ircslice()
 			case IRC_CONN:
 			case IRC_ONLINE:
 			{
-				char *reply = ircread(n);
-				if(reply)
-				{
-					ircparse(n, reply);
-					DELETEP(reply);
-				}
+				if(ircrecv(n) > 0) ircparse(n, (char *)n->input);
 				break;
 			}
 			default: break;
