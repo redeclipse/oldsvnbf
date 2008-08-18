@@ -6,7 +6,7 @@ vector<ircnet> ircnets;
 
 ircnet *ircfind(const char *name)
 {
-	loopv(ircnets) if(!strcmp(ircnets[i].name, name)) return &ircnets[i];
+	if(name && *name) loopv(ircnets) if(!strcmp(ircnets[i].name, name)) return &ircnets[i];
 	return NULL;
 }
 
@@ -133,7 +133,7 @@ ICOMMAND(connectirc, "s", (const char *name), {
 
 ircchan *ircfindchan(ircnet *n, const char *name)
 {
-	if(n) loopv(n->channels) if(!strcasecmp(n->channels[i].name, name))
+	if(n && name && *name) loopv(n->channels) if(!strcasecmp(n->channels[i].name, name))
 		return &n->channels[i];
 	return NULL;
 }
@@ -202,7 +202,7 @@ void ircprintf(ircnet *n, char *target, char *msg, ...)
 	s_sprintfdlv(str, msg, msg);
 	string st;
 	filtertext(st, str);
-	s_sprintfd(s)("[%s%s%s] %s\n", n->name, target ? ":" : "", target ? target : "", st);
+	s_sprintfd(s)("[%s]:%s %s\n", n->name, target ? target : n->nick, st);
 	printf("%s", s);
 #ifndef STANDALONE
 	conline(s, 0, CON_NORMAL);
@@ -213,13 +213,19 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 {
 	if(!strcasecmp(w[g], "NOTICE") || !strcasecmp(w[g], "PRIVMSG"))
 	{
-		bool ismsg = strcasecmp(w[g], "NOTICE");
-		ircprintf(n, g ? w[g+1] : n->nick, "%c%s%c %s", ismsg ? '<' : '(', user[0], ismsg ? '>' : ')', w[g+2]);
+		if(numargs > g+1)
+		{
+			bool ismsg = strcasecmp(w[g], "NOTICE");
+			ircprintf(n, g && strcasecmp(w[g+1], n->nick) ? w[g+1] : n->nick, "%c%s%c %s", ismsg ? '<' : '(', user[0], ismsg ? '>' : ')', w[g+2]);
+		}
 	}
 	else if(!strcasecmp(w[g], "NICK"))
 	{
-		if(!strcasecmp(user[0], n->nick)) s_strcpy(n->nick, user[0]);
-		ircprintf(n, NULL, "\fm* %s (%s@%s) is now known as %s", user[0], user[1], user[2], w[g+1]);
+		if(numargs > g+1)
+		{
+			if(!strcasecmp(user[0], n->nick)) s_strcpy(n->nick, w[g+1]);
+			ircprintf(n, NULL, "\fm* %s (%s@%s) is now known as %s", user[0], user[1], user[2], w[g+1]);
+		}
 	}
 	else if(!strcasecmp(w[g], "JOIN"))
 	{
@@ -272,18 +278,25 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 	{
 		int numeric = *w[g] && *w[g] >= '0' && *w[g] <= '9' ? atoi(w[g]) : 0, off = 0;
 		string s; s[0] = 0;
+
+		char *targ = numargs > g+off ? w[g+off] : NULL;
 		if(numeric)
 		{
 			if(numeric == 353) off = 2;
 			else off = 1;
+			if(numargs > g+off+1 && ircfindchan(n, w[g+off+1]))
+			{
+				off++;
+				targ = w[g+off];
+			}
 		}
 		else s_strcat(s, user[0]);
-		for(int i = g+off+1; i < numargs && w[i]; i++)
+		for(int i = g+off+1; numargs > i && w[i]; i++)
 		{
 			if(s[0]) s_strcat(s, " ");
 			s_strcat(s, w[i]);
 		}
-		if(s[0]) ircprintf(n, ircfindchan(n, w[g+off+1]) ? w[g+off+1] : w[g+off], "%s %s", w[g], s);
+		if(s[0]) ircprintf(n, targ, "%s %s", w[g], s);
 		if(numeric) switch(numeric)
 		{
 			case 376:
@@ -294,6 +307,14 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 					ircprintf(n, NULL, "\fc* Now connected to %s as %s", user[0], n->nick);
 				}
 				break;
+			}
+			case 433:
+			{
+				if(n->state == IRC_CONN)
+				{
+					s_strcat(n->nick, "_");
+					ircsend(n, "NICK %s", n->nick);
+				}
 			}
 			case 474:
 			{
