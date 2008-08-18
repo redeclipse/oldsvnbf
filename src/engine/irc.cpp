@@ -92,6 +92,11 @@ int ircrecv(ircnet *n, int timeout)
 void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *passkey)
 {
 	if(!serv || !port || !nick) return;
+	if(ircfind(name))
+	{
+		conoutf("ircnet %s already exists", name);
+		return;
+	}
 	ircnet &n = ircnets.add();
 	n.type = type;
 	n.state = IRC_DISC;
@@ -192,6 +197,120 @@ ICOMMAND(joinircchan, "sss", (const char *n, const char *c, const char *z), {
 	ircaddchan(IRCCT_NONE, n, c, z);
 });
 
+void ircprintf(ircnet *n, char *target, char *msg, ...)
+{
+	s_sprintfdlv(str, msg, msg);
+	string st;
+	filtertext(st, str);
+	s_sprintfd(s)("[%s%s%s] %s\n", n->name, target ? ":" : "", target ? target : "", st);
+	printf("%s", s);
+#ifndef STANDALONE
+	conline(s, 0, CON_NORMAL);
+#endif
+}
+
+void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
+{
+	if(!strcasecmp(w[g], "NOTICE") || !strcasecmp(w[g], "PRIVMSG"))
+	{
+		bool ismsg = strcasecmp(w[g], "NOTICE");
+		ircprintf(n, g ? w[g+1] : n->nick, "%c%s%c %s", ismsg ? '<' : '(', user[0], ismsg ? '>' : ')', w[g+2]);
+	}
+	else if(!strcasecmp(w[g], "NICK"))
+	{
+		if(!strcasecmp(user[0], n->nick)) s_strcpy(n->nick, user[0]);
+		ircprintf(n, NULL, "\fm* %s (%s@%s) is now known as %s", user[0], user[1], user[2], w[g+1]);
+	}
+	else if(!strcasecmp(w[g], "JOIN"))
+	{
+		if(numargs > g+1)
+		{
+			ircchan *c = ircfindchan(n, w[g+1]);
+			if(c && !strcasecmp(user[0], n->nick))
+			{
+				c->state = IRCC_JOINED;
+				c->lastjoin = lastmillis;
+			}
+			ircprintf(n, w[g+1], "\fg* %s (%s@%s) has joined %s", user[0], user[1], user[2], w[g+1]);
+		}
+	}
+	else if(!strcasecmp(w[g], "PART"))
+	{
+		if(numargs > g+1)
+		{
+			ircchan *c = ircfindchan(n, w[g+1]);
+			if(c && !strcasecmp(user[0], n->nick))
+			{
+				c->state = IRCC_NONE;
+				c->lastjoin = lastmillis;
+			}
+			ircprintf(n, w[g+1], "\fo* %s (%s@%s) has left %s", user[0], user[1], user[2], w[g+1]);
+		}
+	}
+	else if(!strcasecmp(w[g], "KICK"))
+	{
+		if(numargs > g+2)
+		{
+			ircchan *c = ircfindchan(n, w[g+1]);
+			if(c && !strcasecmp(w[g+2], n->nick))
+			{
+				c->state = IRCC_KICKED;
+				c->lastjoin = lastmillis;
+			}
+			ircprintf(n, w[g+1], "\fr* %s (%s@%s) has kicked %s from %s", user[0], user[1], user[2], w[g+2], w[g+1]);
+		}
+	}
+	else if(!strcasecmp(w[g], "PING"))
+	{
+		if(numargs > g+1)
+		{
+			ircprintf(n, NULL, "%s PING %s", user[0], w[g+1]);
+			ircsend(n, "PONG %s", w[g+1]);
+		}
+	}
+	else
+	{
+		int numeric = *w[g] && *w[g] >= '0' && *w[g] <= '9' ? atoi(w[g]) : 0, off = 0;
+		string s; s[0] = 0;
+		if(numeric)
+		{
+			if(numeric == 353) off = 2;
+			else off = 1;
+		}
+		else s_strcat(s, user[0]);
+		for(int i = g+off+1; i < numargs && w[i]; i++)
+		{
+			if(s[0]) s_strcat(s, " ");
+			s_strcat(s, w[i]);
+		}
+		if(s[0]) ircprintf(n, ircfindchan(n, w[g+off+1]) ? w[g+off+1] : w[g+off], "%s %s", w[g], s);
+		if(numeric) switch(numeric)
+		{
+			case 376:
+			{
+				if(n->state == IRC_CONN)
+				{
+					n->state = IRC_ONLINE;
+					ircprintf(n, NULL, "\fc* Now connected to %s as %s", user[0], n->nick);
+				}
+				break;
+			}
+			case 474:
+			{
+				ircchan *c = ircfindchan(n, w[g+2]);
+				if(c)
+				{
+					c->state = IRCC_BANNED;
+					c->lastjoin = lastmillis;
+					if(c->type == IRCCT_AUTO)
+						ircprintf(n, w[g+2], "\fc* Waiting 5 mins to rejoin %s", c->name);
+				}
+			}
+			default: break;
+		}
+	}
+}
+
 void ircparse(ircnet *n, char *reply)
 {
 	const int MAXWORDS = 25;
@@ -199,9 +318,8 @@ void ircparse(ircnet *n, char *reply)
 	loopi(MAXWORDS) w[i] = NULL;
 	while(p && *p)
 	{
-		int numargs = 0;
-		bool isfrom = *p == ':';
-		if(isfrom) p++;
+		int numargs = 0, g = *p == ':' ? 1 : 0;
+		if(g) p++;
 		loopi(MAXWORDS)
 		{
 			const char *word = p;
@@ -220,131 +338,27 @@ void ircparse(ircnet *n, char *reply)
 
 		if(numargs)
 		{
-			int g = 0;
-			char *nick = NULL, *user = NULL, *host = NULL;
-			if(isfrom)
+			char *user[3] = { NULL, NULL, NULL };
+			if(g)
 			{
 				const char *t = w[0];
 				char *u = strrchr(t, '!');
 				if(u)
 				{
-					nick = newstring(t, u-t);
+					user[0] = newstring(t, u-t);
 					t = u + 1;
 					u = strrchr(t, '@');
 					if(u)
 					{
-						user = newstring(t, u-t);
-						if(*u++) host = newstring(u);
+						user[1] = newstring(t, u-t);
+						if(*u++) user[2] = newstring(u);
 					}
 				}
-				else nick = newstring(t);
-				g = 1;
+				else user[0] = newstring(t);
 			}
-			else nick = newstring(n->serv);
-
-			if(numargs > g)
-			{
-				if(!strcasecmp(w[g], "NOTICE") || !strcasecmp(w[g], "PRIVMSG"))
-				{
-					bool ismsg = strcasecmp(w[g], "NOTICE");
-					if(!strcasecmp(w[g+1], n->nick))
-						printf("[%s] %c%s%c %s\n", n->name, ismsg ? '<' : '(', nick, ismsg ? '>' : ')', w[g+2]);
-					else
-						printf("[%s] %c%s%c:%s %s\n", n->name, ismsg ? '<' : '(', nick, ismsg ? '>' : ')', w[g+1], w[g+2]);
-				}
-				else if(!strcasecmp(w[g], "NICK"))
-				{
-					if(!strcasecmp(nick, n->nick)) s_strcpy(n->nick, nick);
-					printf("[%s] * %s (%s@%s) is now known as %s\n", n->name, nick, user, host, w[g+1]);
-				}
-				else if(!strcasecmp(w[g], "JOIN"))
-				{
-					if(numargs > g+1)
-					{
-						ircchan *c = ircfindchan(n, w[g+1]);
-						if(c)
-						{
-							if(!strcasecmp(nick, n->nick))
-							{
-								c->state = IRCC_JOINED;
-							}
-							printf("[%s] * %s (%s@%s) has joined %s\n", n->name, nick, user, host, c->name);
-						}
-						else printf("[%s] * %s (%s@%s) has joined %s\n", n->name, nick, user, host, w[g+1]);
-					}
-				}
-				else if(!strcasecmp(w[g], "PART"))
-				{
-					if(numargs > g+1)
-					{
-						ircchan *c = ircfindchan(n, w[g+1]);
-						if(c)
-						{
-							printf("[%s] * %s (%s@%s) has left %s\n", n->name, nick, user, host, c->name);
-							if(!strcasecmp(nick, n->nick))
-							{
-								c->state = IRCC_NONE;
-								c->lastjoin = lastmillis;
-							}
-						}
-						else printf("[%s] * %s (%s@%s) has left %s\n", n->name, nick, user, host, w[g+1]);
-					}
-				}
-				else if(!strcasecmp(w[g], "KICK"))
-				{
-					if(numargs > g+2)
-					{
-						ircchan *c = ircfindchan(n, w[g+1]);
-						if(c)
-						{
-							printf("[%s] * %s (%s@%s) has kicked %s from %s\n", n->name, nick, user, host, w[g+2], c->name);
-							if(!strcasecmp(w[g+2], n->nick))
-							{
-								c->state = IRCC_NONE;
-								c->lastjoin = lastmillis;
-							}
-						}
-						else printf("[%s] * %s (%s@%s) has kicked %s from %s\n", n->name, nick, user, host, w[g+2], w[g+1]);
-					}
-				}
-				else if(!strcasecmp(w[g], "PING"))
-				{
-					if(numargs > g+1)
-					{
-						printf("[%s] %s PING %s\n", n->name, nick, w[g+1]);
-						ircsend(n, "PONG %s", w[g+1]);
-					}
-				}
-				else
-				{
-					int numeric = *w[g] && *w[g] >= '0' && *w[g] <= '9' ? atoi(w[g]) : 0;
-					string s; s[0] = 0;
-					if(!numeric) s_strcat(s, nick);
-					if(numargs > 1) loopi(numargs-1) if(w[i+1])
-					{
-						if(numeric && i == 1) continue;
-						if(s[0]) s_strcat(s, " ");
-						s_strcat(s, w[i+1]);
-					}
-					if(s[0]) printf("[%s] %s\n", n->name, s);
-					if(numeric) switch(numeric)
-					{
-						case 376:
-						{
-							if(n->state == IRC_CONN)
-							{
-								n->state = IRC_ONLINE;
-								conoutf("[%s] * Now connected to %s as %s", n->name, nick, n->nick);
-							}
-							break;
-						}
-						default: break;
-					}
-				}
-			}
-			DELETEA(nick);
-			DELETEA(user);
-			DELETEA(host);
+			else user[0] = newstring(n->serv);
+			if(numargs > g) ircprocess(n, user, g, numargs, w);
+			loopi(3) DELETEA(user[i]);
 		}
 		loopi(MAXWORDS) DELETEA(w[i]);
 		while(p && (*p == '\n' || *p == '\r' || *p == ' ')) p++;
@@ -391,7 +405,10 @@ void ircslice()
 			{
 				ircchan *c = &n->channels[j];
 				if(c->type == IRCCT_AUTO && c->state != IRCC_JOINED && c->state != IRCC_JOINING && (!c->lastjoin || lastmillis-c->lastjoin >= 5000))
-					ircjoin(n, c);
+				{
+					if(c->state != IRCC_BANNED || !c->lastjoin || lastmillis-c->lastjoin >= 300000)
+						ircjoin(n, c);
+				}
 			}
 		}
 	}
