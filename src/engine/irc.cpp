@@ -2,7 +2,6 @@
 #include "pch.h"
 #include "engine.h"
 
-extern char *exchangestr(char *o, const char *n);
 vector<ircnet> ircnets;
 
 ircnet *ircfind(const char *name)
@@ -16,7 +15,7 @@ void ircconnect(ircnet *n)
 	if(!n) return;
 	if(n->address.host == ENET_HOST_ANY)
 	{
-		conoutf("looking up %s:[%d]...", n->serv, n->port);
+		printf("looking up %s:[%d]...", n->serv, n->port);
 		if(!resolverwait(n->serv, n->port, &n->address))
 		{
 			n->state = IRC_DISC;
@@ -39,38 +38,53 @@ void ircsend(ircnet *n, const char *msg, ...)
 {
 	if(!n) return;
 	s_sprintfdlv(str, msg, msg);
-	conoutf(">%s< %s", n->name, str);
-	if(n->sock == ENET_SOCKET_NULL) { conoutf("not connected"); return; }
+	if(n->sock == ENET_SOCKET_NULL) return;
 	s_strcat(str, "\n");
+	printf(">%s< %s", n->name, str);
 	ENetBuffer buf;
 	buf.data = str;
 	buf.dataLength = strlen((char *)buf.data);
 	enet_socket_send(n->sock, NULL, &buf, 1);
 }
 
-int ircrecv(ircnet *n, char *input, int timeout = 0)
+void ircoutf(const char *msg, ...)
 {
-	if(n)
+	s_sprintfdlv(str, msg, msg);
+	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL && ircnets[i].state == IRC_ONLINE)
 	{
-		n->input[0] = 0;
-		if(n->sock == ENET_SOCKET_NULL) return -1;
-		enet_uint32 events = ENET_SOCKET_WAIT_RECEIVE;
-		ENetBuffer buf;
-		buf.data = input;
-		buf.dataLength = sizeof(n->input);
-		if(enet_socket_wait(n->sock, &events, timeout) >= 0 && events)
+		ircnet *n = &ircnets[i];
+		string s; s[0] = 0;
+		loopvj(n->channels) if(n->channels[j].state == IRCC_JOINED)
 		{
-			int len = enet_socket_receive(n->sock, NULL, &buf, 1);
-			if(len <= 0)
-			{
-				enet_socket_destroy(n->sock);
-				return NULL;
-			}
-			buf.data = ((char *)buf.data)+len;
-			((char *)buf.data)[0] = 0;
-			buf.dataLength -= len;
-			return len;
+			ircchan *c = &n->channels[j];
+			if(s[0]) s_strcat(s, ",");
+			s_strcat(s, c->name);
 		}
+		if(s[0]) ircsend(n, "PRIVMSG %s :%s", s, str);
+	}
+}
+
+int ircrecv(ircnet *n, char *input, int timeout)
+{
+	if(!n) return -1;
+	n->input[0] = 0;
+	if(n->sock == ENET_SOCKET_NULL) return -1;
+	enet_uint32 events = ENET_SOCKET_WAIT_RECEIVE;
+	ENetBuffer buf;
+	buf.data = input;
+	buf.dataLength = 4095;
+	if(enet_socket_wait(n->sock, &events, timeout) >= 0 && events)
+	{
+		int len = enet_socket_receive(n->sock, NULL, &buf, 1);
+		if(len <= 0)
+		{
+			enet_socket_destroy(n->sock);
+			return NULL;
+		}
+		buf.data = ((char *)buf.data) + len;
+		((char *)buf.data)[0] = 0;
+		buf.dataLength -= len;
+		return len;
 	}
 	return -1;
 }
@@ -81,17 +95,17 @@ char *ircread(ircnet *n)
 	return NULL;
 }
 
-void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *passkey = "")
+void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *passkey)
 {
 	if(!serv || !port || !nick) return;
 	ircnet &n = ircnets.add();
 	n.type = type;
 	n.state = IRC_DISC;
 	n.port = port;
-	n.name = newstring(name);
-	n.serv = newstring(serv);
-	n.nick = newstring(nick);
-	n.passkey = newstring(passkey);
+	s_strcpy(n.name, name);
+	s_strcpy(n.serv, serv);
+	s_strcpy(n.nick, nick);
+	s_strcpy(n.passkey, passkey);
 	n.address.host = ENET_HOST_ANY;
 	n.address.port = n.port;
 	conoutf("added irc %s %s (%s:%d) [%s]", type == IRCT_RELAY ? "relay" : "client", name, serv, port, nick);
@@ -133,9 +147,10 @@ bool ircjoin(ircnet *n, ircchan *c)
 		conoutf("ircnet %s is not connected", n->name);
 		return false;
 	}
-	//if(*c->passkey) ircsend(n, "JOIN %s :%s", c->name, c->passkey);
-	//else ircsend(n, "JOIN %s", c->name);
+	if(*c->passkey) ircsend(n, "JOIN %s :%s", c->name, c->passkey);
+	else ircsend(n, "JOIN %s", c->name);
 	c->state = IRCC_JOINING;
+	c->lastjoin = lastmillis;
 	return true;
 }
 
@@ -151,7 +166,7 @@ bool ircjoinchan(ircnet *n, const char *name)
 	return ircjoin(n, c);
 }
 
-bool ircaddchan(int type, const char *name, const char *channel, const char *passkey = "")
+bool ircaddchan(int type, const char *name, const char *channel, const char *passkey)
 {
 	ircnet *n = ircfind(name);
 	if(!n)
@@ -168,8 +183,9 @@ bool ircaddchan(int type, const char *name, const char *channel, const char *pas
 	ircchan &d = n->channels.add();
 	d.state = IRCC_NONE;
 	d.type = type;
-	d.name = newstring(channel);
-	d.passkey = newstring(passkey);
+	d.lastjoin = 0;
+	s_strcpy(d.name, channel);
+	s_strcpy(d.passkey, passkey);
 	if(n->state != IRC_DISC) ircjoin(n, &d);
 	conoutf("%s added channel %s", n->name, d.name);
 	return true;
@@ -189,7 +205,6 @@ void ircparse(ircnet *n, char *reply)
 	while(p && *p)
 	{
 		int numargs = 0;
-		//conoutf("remain: %s", p);
 		loopi(MAXWORDS) w[i] = NULL;
 		loopi(MAXWORDS)
 		{
@@ -241,30 +256,59 @@ void ircparse(ircnet *n, char *reply)
 			{
 				bool ismsg = strcasecmp(w[g], "NOTICE");
 				if(!strcasecmp(w[g+1], n->nick))
-					conoutf("[%s] %c%s%c %s", n->name, ismsg ? '<' : '(', nick, ismsg ? '>' : ')', w[g+2]);
+					printf("[%s] %c%s%c %s\n", n->name, ismsg ? '<' : '(', nick, ismsg ? '>' : ')', w[g+2]);
 				else
-					conoutf("[%s] %c%s%c:%s %s", n->name, ismsg ? '<' : '(', nick, ismsg ? '>' : ')', w[g+1], w[g+2]);
+					printf("[%s] %c%s%c:%s %s\n", n->name, ismsg ? '<' : '(', nick, ismsg ? '>' : ')', w[g+1], w[g+2]);
 			}
 			else if(!strcasecmp(w[g], "NICK"))
 			{
-				if(!strcasecmp(nick, n->nick)) n->nick = exchangestr(n->nick, nick);
-				conoutf("[%s] * %s (%s@%s) is now known as %s", n->name, nick, user, host, w[g+1]);
+				if(!strcasecmp(nick, n->nick)) s_strcpy(n->nick, nick);
+				printf("[%s] * %s (%s@%s) is now known as %s\n", n->name, nick, user, host, w[g+1]);
 			}
 			else if(!strcasecmp(w[g], "JOIN"))
 			{
-				//ircchan *c = ircfindchan(n, w[g+1]);
-				//if(c)
-				//{
-				//	if(c->state == IRCC_JOINING && !strcasecmp(nick, n->nick))
-				//		c->state = IRCC_JOINED;
-				//	conoutf("[%s] * %s (%s@%s) has joined %s", n->name, nick, user, host, c->name);
-				//}
-				//else
-				conoutf("[%s] * %s (%s@%s) has joined %s", n->name, nick, user, host, w[g+1]);
+				ircchan *c = ircfindchan(n, w[g+1]);
+				if(c)
+				{
+					if(!strcasecmp(nick, n->nick))
+					{
+						c->state = IRCC_JOINED;
+					}
+					printf("[%s] * %s (%s@%s) has joined %s\n", n->name, nick, user, host, c->name);
+				}
+				else printf("[%s] * %s (%s@%s) has joined %s\n", n->name, nick, user, host, w[g+1]);
+			}
+			else if(!strcasecmp(w[g], "PART"))
+			{
+				ircchan *c = ircfindchan(n, w[g+1]);
+				if(c)
+				{
+					printf("[%s] * %s (%s@%s) has left %s\n", n->name, nick, user, host, c->name);
+					if(!strcasecmp(nick, n->nick))
+					{
+						c->state = IRCC_NONE;
+						c->lastjoin = lastmillis;
+					}
+				}
+				else printf("[%s] * %s (%s@%s) has left %s\n", n->name, nick, user, host, w[g+1]);
+			}
+			else if(!strcasecmp(w[g], "KICK"))
+			{
+				ircchan *c = ircfindchan(n, w[g+1]);
+				if(c)
+				{
+					printf("[%s] * %s (%s@%s) has kicked %s from %s\n", n->name, nick, user, host, w[g+2], c->name);
+					if(!strcasecmp(w[g+2], n->nick))
+					{
+						c->state = IRCC_NONE;
+						c->lastjoin = lastmillis;
+					}
+				}
+				else printf("[%s] * %s (%s@%s) has kicked %s from %s\n", n->name, nick, user, host, w[g+2], w[g+1]);
 			}
 			else if(!strcasecmp(w[g], "PING"))
 			{
-				conoutf("[%s] %s PING %s", n->name, nick, w[g+1]);
+				printf("[%s] %s PING %s\n", n->name, nick, w[g+1]);
 				ircsend(n, "PONG %s", w[g+1]);
 			}
 			else
@@ -272,19 +316,22 @@ void ircparse(ircnet *n, char *reply)
 				int numeric = *w[g] && *w[g] >= '0' && *w[g] <= '9' ? atoi(w[g]) : 0;
 				string s; s[0] = 0;
 				if(!numeric) s_strcat(s, nick);
-
-				loopi(numargs-1) if(w[i+1])
+				if(numargs > 1) loopi(numargs-1) if(w[i+1])
 				{
+					if(numeric && i == 1) continue;
 					if(s[0]) s_strcat(s, " ");
 					s_strcat(s, w[i+1]);
 				}
-				if(s[0]) conoutf("[%s] %s", n->name, s);
-
+				if(s[0]) printf("[%s] %s\n", n->name, s);
 				if(numeric) switch(numeric)
 				{
 					case 376:
 					{
-						if(n->state == IRC_CONN) n->state = IRC_ONLINE;
+						if(n->state == IRC_CONN)
+						{
+							n->state = IRC_ONLINE;
+							conoutf("[%s] * Now connected to %s as %s", n->name, nick, n->nick);
+						}
 						break;
 					}
 					default: break;
@@ -302,22 +349,6 @@ void ircparse(ircnet *n, char *reply)
 
 void irccleanup()
 {
-    int quitting = 0;
-	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL)
-	{
-		ircnet *n = &ircnets[i];
-		if(n->state != IRC_DISC) 
-        {
-            ircsend(n, "QUIT");
-            quitting++;
-        }
-	}
-    if(quitting)
-    {
-	    conoutf("Waiting for IRC threads to finish...");
-        SDL_Delay(3000);
-    }
-	ircslice();
 	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL)
 	{
 		ircnet *n = &ircnets[i];
@@ -330,8 +361,7 @@ void ircslice()
 	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL)
 	{
 		ircnet *n = &ircnets[i];
-		int oldstate = n->state;
-		switch(oldstate)
+		switch(n->state)
 		{
 			case IRC_ATTEMPT:
 			{
@@ -355,10 +385,15 @@ void ircslice()
 			}
 			default: break;
 		}
-		if(n->state != oldstate && n->state == IRC_ONLINE)
+
+		if(n->state == IRC_ONLINE)
 		{
-			conoutf("[%s] * Now connected to %s as %s", n->name, n->serv, n->nick);
-			loopvj(n->channels) ircjoin(n, &n->channels[j]);
+			loopvj(n->channels)
+			{
+				ircchan *c = &n->channels[j];
+				if(c->type == IRCCT_AUTO && c->state != IRCC_JOINED && c->state != IRCC_JOINING && (!c->lastjoin || lastmillis-c->lastjoin >= 5000))
+					ircjoin(n, c);
+			}
 		}
 	}
 }
