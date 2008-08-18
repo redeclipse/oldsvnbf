@@ -29,7 +29,7 @@ extern ircnet *ircfind(const char *name);
 extern void ircconnect(ircnet *n);
 extern void ircsend(ircnet *n, const char *msg, ...);
 extern void ircoutf(const char *msg, ...);
-extern int ircrecv(ircnet *n, char *input, int timeout = 0);
+extern int ircrecv(ircnet *n, int timeout = 0);
 extern char *ircread(ircnet *n);
 extern void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *passkey = "");
 extern ircchan *ircfindchan(ircnet *n, const char *name);
