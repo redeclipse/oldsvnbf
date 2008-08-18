@@ -237,7 +237,7 @@ void ircparse(ircnet *n, char *reply)
 						u++;
 						if(*u) host = newstring(u);
 					}
-					DELETEP(t);
+					DELETEA(t);
 				}
 				else nick = t;
 				g = 1;
@@ -330,11 +330,11 @@ void ircparse(ircnet *n, char *reply)
 				}
 			}
 
-			if(nick) DELETEP(nick);
-			if(user) DELETEP(user);
-			if(host) DELETEP(host);
+			DELETEA(nick);
+			DELETEA(user);
+			DELETEA(host);
 		}
-		loopi(MAXWORDS) if(w[i]) DELETEP(w[i]);
+		loopi(MAXWORDS) DELETEA(w[i]);
 		while(p && (*p == '\n' || *p == '\r' || *p == ' ')) p++;
 	}
 }
