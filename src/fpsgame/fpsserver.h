@@ -400,22 +400,19 @@ struct GAMESERVER : igameserver
 	vector<srventity> sents;
 	vector<savedscore> scores;
 
+	void relayf(const char *s, ...)
+	{
+		s_sprintfdlv(str, s, s);
+		string st;
+		filtertext(st, str);
+		ircoutf("%s", st);
+	}
+
 	void srvoutf(int cn, const char *s, ...)
 	{
 		s_sprintfdlv(str, s, s);
 		sendf(cn, 1, "ris", SV_SERVMSG, str);
-		if(cn < 0)
-		{
-			string st;
-			filtertext(st, str);
-			ircoutf("%s", st);
-		}
-	}
-
-	void relayf(const char *s, ...)
-	{
-		s_sprintfdlv(str, s, s);
-		ircoutf("%s", str);
+		if(cn < 0) relayf("%s", str);
 	}
 
 	void resetitems()
