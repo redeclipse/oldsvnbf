@@ -1893,7 +1893,7 @@ struct GAMECLIENT : igameclient
 				anims.add(i);
 	}
 
-	void renderclient(fpsent *d, bool third, bool trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, float speed)
+	void renderclient(fpsent *d, bool third, bool trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, float speed, bool early)
 	{
 		string mdl;
 		if(third) s_strcpy(mdl, teamtype[team].tpmdl);
@@ -1979,11 +1979,12 @@ struct GAMECLIENT : igameclient
 		else flags |= MDL_CULL_DIST | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
 		if(trans) flags |= MDL_TRANSLUCENT;
 		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
+        if(early) flags |= MDL_NORENDER;
 		dynent *e = third ? (dynent *)d : (dynent *)&fpsmodel;
 		rendermodel(NULL, mdl, anim, o, !third && testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, e, attachments, basetime, speed);
 	}
 
-	void renderplayer(fpsent *d, bool third, bool trans)
+	void renderplayer(fpsent *d, bool third, bool trans, bool early = false)
 	{
         modelattach a[4];
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
@@ -2111,7 +2112,7 @@ struct GAMECLIENT : igameclient
 			}
 		}
 
-        if(rendernormally)
+        if(rendernormally && (early || d != player1))
         {
             d->muzzle = vec(-1, -1, -1);
             a[ai].tag = "tag_muzzle";
@@ -2119,7 +2120,7 @@ struct GAMECLIENT : igameclient
             ai++;
         }
 
-        renderclient(d, third, trans, team, a[0].name ? a : NULL, secondary, animflags, animdelay, lastaction, 0.f);
+        renderclient(d, third, trans, team, a[0].name ? a : NULL, secondary, animflags, animdelay, lastaction, 0.f, early);
 	}
 
 	IVARP(lasersight, 0, 0, 1);
@@ -2160,16 +2161,15 @@ struct GAMECLIENT : igameclient
 
     void renderavatar(bool early)
     {
-        if(early) return;
         if(inzoomswitch() && player1->gunselect == GUN_RIFLE) return;
         if(isthirdperson())
         {
             if(player1->state!=CS_SPECTATOR && (player1->state!=CS_DEAD || !player1->obliterated))
-                renderplayer(player1, true, (player1->state == CS_ALIVE && lastmillis-player1->lastspawn <= REGENWAIT) || thirdpersontranslucent());
+                renderplayer(player1, true, (player1->state == CS_ALIVE && lastmillis-player1->lastspawn <= REGENWAIT) || thirdpersontranslucent(), early);
         }
         else if(player1->state == CS_ALIVE)
         {
-            renderplayer(player1, false, (lastmillis-player1->lastspawn <= REGENWAIT) || firstpersontranslucent());
+            renderplayer(player1, false, (lastmillis-player1->lastspawn <= REGENWAIT) || firstpersontranslucent(), early);
         }
     }
 };

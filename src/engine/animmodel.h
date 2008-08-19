@@ -939,11 +939,14 @@ struct animmodel : model
     {
         if(!loaded) return;
 
+        int numtags = 0;
         if(a)
         {
             int index = parts.last()->index + parts.last()->numanimparts;
             for(int i = 0; a[i].tag; i++)
             {
+                numtags++;
+
                 animmodel *m = (animmodel *)a[i].m;
                 if(!m || !m->loaded) 
                 {
@@ -971,7 +974,7 @@ struct animmodel : model
         animstate as[MAXANIMPARTS];
         parts[0]->render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane, as);
 
-        if(a) for(int i = 0; a[i].tag; i++)
+        if(a) for(int i = numtags-1; i >= 0; i--)
         {
             animmodel *m = (animmodel *)a[i].m;
             if(!m || !m->loaded) 
