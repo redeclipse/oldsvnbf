@@ -201,7 +201,7 @@ ICOMMAND(joinircchan, "sss", (const char *n, const char *c, const char *z), {
 	ircaddchan(IRCCT_NONE, n, c, z);
 });
 
-void ircprintf(ircnet *n, char *target, char *msg, ...)
+void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 {
 	s_sprintfdlv(str, msg, msg);
 	string st, s;
