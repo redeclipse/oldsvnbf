@@ -149,13 +149,13 @@ struct editor
 
     int scrolly; // vertical scroll offset
 
-    bool linewrap;
+    bool linewrap, keepsfocus;
     int pixelwidth; // required for up/down/hit/draw/bounds
     int pixelheight; // -1 for variable sized, i.e. from bounds()
 
     vector<editline> lines; // MUST always contain at least one line!
 
-    editor(const char *name, int mode, const char *initval) : 
+    editor(const char *name, int mode, const char *initval) :
         mode(mode), active(true), name(newstring(name)), filename(NULL),
         cx(0), cy(0), mx(-1), maxx(-1), maxy(-1), scrolly(0), linewrap(false), pixelwidth(-1), pixelheight(-1)
     {
@@ -225,8 +225,8 @@ struct editor
     // also ensures that cy is always within lines[] and cx is valid
     bool region(int &sx, int &sy, int &ex, int &ey)
     {
+        if(lines.empty()) lines.add().set("");
         int n = lines.length();
-        assert(n != 0);
         if(cy < 0) cy = 0; else if(cy >= n) cy = n-1;
         int len = lines[cy].len;
         if(cx < 0) cx = 0; else if(cx > len) cx = len;
@@ -250,8 +250,8 @@ struct editor
     // also ensures that cy is always within lines[] and cx is valid
     editline &currentline()
     {
+        if(lines.empty()) lines.add().set("");
         int n = lines.length();
-        assert(n != 0);
         if(cy < 0) cy = 0; else if(cy >= n) cy = n-1;
         if(cx < 0) cx = 0; else if(cx > lines[cy].len) cx = lines[cy].len;
         return lines[cy];
@@ -533,8 +533,8 @@ struct editor
             {
                 int width, height;
                 text_bounds(lines[i].text, width, height, maxwidth);
-                if(h + height > pixelheight) { scrolly = i+1; break; }
                 h += height;
+                if(h > pixelheight) { scrolly = i + 1; break; }
             }
         }
 
@@ -643,7 +643,7 @@ static void flusheditors()
     }
 }
 
-static editor *useeditor(const char *name, int mode, bool focus, const char *initval = NULL) 
+static editor *useeditor(const char *name, int mode, bool focus, const char *initval = NULL)
 {
     loopv(editors) if(strcmp(editors[i]->name, name) == 0)
     {

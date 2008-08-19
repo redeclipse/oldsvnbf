@@ -41,7 +41,7 @@ void ircsend(ircnet *n, const char *msg, ...)
 	s_sprintfdlv(str, msg, msg);
 	if(n->sock == ENET_SOCKET_NULL) return;
 	s_strcat(str, "\n");
-	printf(">%s< %s", n->name, str);
+	printf("[%s] >>> %s", n->name, str);
 	ENetBuffer buf;
 	buf.data = str;
 	buf.dataLength = strlen((char *)buf.data);
@@ -51,7 +51,7 @@ void ircsend(ircnet *n, const char *msg, ...)
 void ircoutf(const char *msg, ...)
 {
 	s_sprintfdlv(str, msg, msg);
-	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL && ircnets[i].state == IRC_ONLINE)
+	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL && ircnets[i].type == IRCT_RELAY && ircnets[i].state == IRC_ONLINE)
 	{
 		ircnet *n = &ircnets[i];
 		string s; s[0] = 0;
@@ -93,9 +93,11 @@ int ircrecv(ircnet *n, int timeout)
 void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *passkey)
 {
 	if(!serv || !port || !nick) return;
-	if(ircfind(name))
+	ircnet *m = ircfind(name);
+	if(m)
 	{
-		conoutf("ircnet %s already exists", name);
+		if(m->state != IRC_DISC) conoutf("ircnet %s already exists", m->name);
+		else ircconnect(m);
 		return;
 	}
 	ircnet &n = ircnets.add();
@@ -120,6 +122,7 @@ ICOMMAND(addircclient, "ssiss", (const char *n, const char *s, int *p, const cha
 ICOMMAND(addircrelay, "ssiss", (const char *n, const char *s, int *p, const char *c, const char *z), {
 	ircaddnet(IRCT_RELAY, n, s, *p, c, z);
 });
+
 ICOMMAND(connectirc, "s", (const char *name), {
 	ircnet *n = ircfind(name);
 	if(!n)
@@ -206,11 +209,30 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 	s_sprintfdlv(str, msg, msg);
 	string st, s;
 	filtertext(st, str);
-	if(target && strcasecmp(target, n->nick))
-		s_sprintf(s)("[%s]:%s", n->name, target);
-	else s_sprintf(s)("[%s]", n->name);
+	ircchan *c = ircfindchan(n, target);
+	if(c)
+	{
+		s_sprintf(s)("[%s]:%s", n->name, c->name);
+		while(c->lines.length() >= 1000)
+		{
+			char *s = c->lines.remove(0);
+			DELETEA(s);
+		}
+		c->lines.add(newstring(str));
+	}
+	else
+	{
+		s_sprintf(s)("[%s]", n->name);
+		while(n->lines.length() >= 1000)
+		{
+			char *s = n->lines.remove(0);
+			DELETEA(s);
+		}
+		n->lines.add(newstring(str));
+	}
 	printf("%s %s\n", s, st);
-	sv->srvmsgf(-1, "%s %s", s, str);
+	if(n->type == IRCT_RELAY)
+		sv->srvmsgf(-1, "%s %s", s, str);
 #ifndef STANDALONE
 	console("%s %s", CON_NORMAL, s, str);
 #endif
@@ -438,11 +460,26 @@ void ircslice()
 					ircsend(n, "NICK %s", n->nick);
 					ircsend(n, "USER %s +iw %s :%s", n->nick, n->nick, n->nick);
 					n->state = IRC_CONN;
-					loopvj(n->channels) n->channels[j].state = IRCC_NONE;
+					loopvj(n->channels)
+					{
+						ircchan *c = &n->channels[j];
+						c->state = IRCC_NONE;
+						c->lastjoin = 0;
+					}
 					break;
 				}
-				case IRC_CONN:
+
 				case IRC_ONLINE:
+					loopvj(n->channels)
+					{
+						ircchan *c = &n->channels[j];
+						if(c->type == IRCCT_AUTO && c->state != IRCC_JOINED && c->state != IRCC_JOINING && (!c->lastjoin || lastmillis-c->lastjoin >= 5000))
+						{
+							if(c->state != IRCC_BANNED || !c->lastjoin || lastmillis-c->lastjoin >= 300000)
+								ircjoin(n, c);
+						}
+					}
+				case IRC_CONN:
 				{
 					if(ircrecv(n) > 0) ircparse(n, (char *)n->input);
 					break;
@@ -457,25 +494,81 @@ void ircslice()
 					break;
 				}
 			}
-
-			if(n->state == IRC_ONLINE)
-			{
-				loopvj(n->channels)
-				{
-					ircchan *c = &n->channels[j];
-					if(c->type == IRCCT_AUTO && c->state != IRCC_JOINED && c->state != IRCC_JOINING && (!c->lastjoin || lastmillis-c->lastjoin >= 5000))
-					{
-						if(c->state != IRCC_BANNED || !c->lastjoin || lastmillis-c->lastjoin >= 300000)
-							ircjoin(n, c);
-					}
-				}
-			}
 		}
-		else if(n->type == IRCT_RELAY)
+		else
 		{
 			if(!n->lastattempt || lastmillis-n->lastattempt >= 60000)
 				ircconnect(n);
 		}
 	}
 }
+#ifndef STANDALONE
+bool ircgui(g3d_gui *g, const char *s)
+{
+	g->allowautotab(false);
+	int nets = 0;
+	loopv(ircnets) if(ircnets[i].name[0] && ircnets[i].sock != ENET_SOCKET_NULL)
+	{
+		ircnet *n = &ircnets[i];
+		g->pushlist();
+		g->buttonf("%s via %s:[%d] ", GUI_BUTTON_COLOR, NULL, n->name, n->serv, n->port);
+		const char *ircstates[IRC_MAX] = {
+				"\froffline", "\foconnecting", "\fynegotiating", "\fgonline"
+		};
+		g->buttonf("\fs%s\fS as %s", GUI_BUTTON_COLOR, NULL, ircstates[n->state], n->nick);
+		g->poplist();
+		nets++;
+	}
+	if(nets)
+	{
+		loopv(ircnets) if(ircnets[i].state != IRC_DISC && ircnets[i].name[0] && ircnets[i].sock != ENET_SOCKET_NULL)
+		{
+			ircnet *n = &ircnets[i];
+			s_sprintfd(tab)("%s", n->name);
+			s_sprintfd(window)("%s_window", n->name);
+			s_sprintfd(input)("%s_input", n->name);
+			g->tab(tab, GUI_TITLE_COLOR);
+			g->fieldclear(window);
+			g->field(window, GUI_TEXT_COLOR, -80, 20, "", EDITORREADONLY);
+			loopvk(n->lines) g->fieldline(window, n->lines[k]);
+			char *w = g->field(input, GUI_TEXT_COLOR, -80, 0, "", EDITORFOREVER, true);
+			if(w && *w)
+			{
+				ircsend(n, "%s", w);
+				ircprintf(n, NULL, ">%s< %s", n->nick, w);
+				*w = 0;
+			}
+			loopvj(n->channels) if(n->channels[j].state != IRCC_NONE && n->channels[j].name[0])
+			{
+				ircchan *c = &n->channels[j];
+				s_sprintfd(ctab)("%s", c->name);
+				s_sprintfd(cwindow)("%s_%s_window", n->name, c->name);
+				s_sprintfd(cinput)("%s_%s_input", n->name, c->name);
+				g->tab(ctab, GUI_TITLE_COLOR);
+				g->fieldclear(cwindow);
+				g->field(cwindow, GUI_TEXT_COLOR, -80, 20, "", EDITORREADONLY);
+				loopvk(c->lines) g->fieldline(cwindow, c->lines[k]);
+				char *v = g->field(cinput, GUI_TEXT_COLOR, -80, 0, "", EDITORFOREVER, true);
+				if(v && *v)
+				{
+					ircsend(n, "PRIVMSG %s :%s", c->name, v);
+					ircprintf(n, c->name, "<%s> %s", n->nick, v);
+					*v = 0;
+				}
+			}
+		}
+	}
+	else g->text("no current connections..", GUI_TEXT_COLOR);
+	return true;
+}
+
+void guiirc(const char *s)
+{
+	if(cgui)
+	{
+		if(!ircgui(cgui, s) && shouldclearmenu) clearlater = true;
+	}
+}
+COMMAND(guiirc, "s");
+#endif
 #endif
