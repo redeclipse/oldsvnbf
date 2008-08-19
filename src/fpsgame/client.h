@@ -1701,7 +1701,7 @@ struct clientcom : iclientcom
     {
 		g->pushlist();
 
-		if(g->buttonf("%s ", 0xA0A0A0, NULL, serverinfotypes[i]) & G3D_UP)
+		if(g->buttonf("%s ", GUI_BUTTON_COLOR, NULL, serverinfotypes[i]) & G3D_UP)
 		{
 			string st; st[0] = 0;
 			bool invert = false;
@@ -1805,7 +1805,7 @@ struct clientcom : iclientcom
 		if(servers.empty())
 		{
 			g->pushlist();
-			g->text("no servers, press update to see some..", 0xFFDDDD);
+			g->text("no servers, press update to see some..", GUI_TEXT_COLOR);
 			g->poplist();
 			return -1;
 		}

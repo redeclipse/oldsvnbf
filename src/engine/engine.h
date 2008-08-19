@@ -464,6 +464,43 @@ extern bool interceptkey(int sym);
 extern void getfps(int &fps, int &bestdiff, int &worstdiff);
 
 // menu
+#define GUI_TITLE_COLOR  0xFFDD88
+#define GUI_BUTTON_COLOR 0xFFFFFF
+#define GUI_TEXT_COLOR  0xDDFFDD
+
+extern int cmenustart, cmenutab;
+extern g3d_gui *cgui;
+struct menu : g3d_callback
+{
+    char *name, *header, *contents, *initscript;
+    int passes;
+
+    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0) {}
+
+    void gui(g3d_gui &g, bool firstpass)
+    {
+        cgui = &g;
+        extern menu *cmenu;
+        cmenu = this;
+        cgui->start(cmenustart, 0.03f, &cmenutab, true);
+        cgui->tab(header ? header : name, GUI_TITLE_COLOR);
+		if(!passes && initscript && *initscript)
+			execute(initscript);
+        if(contents && *contents) execute(contents);
+        cgui->end();
+        cmenu = NULL;
+        cgui = NULL;
+		passes++;
+    }
+
+    virtual void clear() {}
+};
+extern menu *cmenu;
+extern hashtable<const char *, menu> guis;
+extern vector<menu *> guistack;
+extern vector<char *> executelater;
+extern bool shouldclearmenu, clearlater;
+
 extern void menuprocess();
 extern void addchange(const char *desc, int type);
 extern void clearchanges(int type);
@@ -522,6 +559,7 @@ extern void g3d_render();
 extern bool g3d_windowhit(bool on, bool act);
 extern void g3d_mainmenu();
 extern bool g3d_active(bool hit = true, bool pass = true);
+extern void g3d_texturemenu();
 
 // grass
 extern void rendergrass();

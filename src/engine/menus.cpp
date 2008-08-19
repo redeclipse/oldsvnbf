@@ -3,44 +3,13 @@
 #include "pch.h"
 #include "engine.h"
 
-#define GUI_TITLE_COLOR  0xFFDD88
-#define GUI_BUTTON_COLOR 0xFFFFFF
-#define GUI_TEXT_COLOR  0xDDFFDD
-
-static int menustart = 0;
-static int menutab = 1;
-static g3d_gui *cgui = NULL;
-struct menu : g3d_callback
-{
-    char *name, *header, *contents, *initscript;
-    int passes;
-
-    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0) {}
-
-    void gui(g3d_gui &g, bool firstpass)
-    {
-        cgui = &g;
-        extern menu *cmenu;
-        cmenu = this;
-        cgui->start(menustart, 0.03f, &menutab, true);
-        cgui->tab(header ? header : name, GUI_TITLE_COLOR);
-		if(!passes && initscript && *initscript)
-			execute(initscript);
-        if(contents && *contents) execute(contents);
-        cgui->end();
-        cmenu = NULL;
-        cgui = NULL;
-		passes++;
-    }
-
-    virtual void clear() {}
-};
+int cmenustart = 0, cmenutab = 1;
+g3d_gui *cgui = NULL;
 menu *cmenu = NULL;
-
-static hashtable<const char *, menu> guis;
-static vector<menu *> guistack;
-static vector<char *> executelater;
-static bool shouldclearmenu = true, clearlater = false;
+hashtable<const char *, menu> guis;
+vector<menu *> guistack;
+vector<char *> executelater;
+bool shouldclearmenu = true, clearlater = false;
 
 void popgui()
 {
@@ -67,8 +36,8 @@ void pushgui(menu *m, int pos = -1)
     else guistack.insert(pos, m);
     if(pos < 0 || pos==guistack.length()-1)
     {
-        menutab = 1;
-        menustart = totalmillis;
+        cmenutab = 1;
+        cmenustart = totalmillis;
     }
 	if(m) m->passes = 0;
 }
@@ -77,8 +46,8 @@ void restoregui(int pos)
 {
     int clear = guistack.length()-pos-1;
     loopi(clear) popgui();
-    menutab = 1;
-    menustart = totalmillis;
+    cmenutab = 1;
+    cmenustart = totalmillis;
 	menu *m = guistack.last();
 	if(m) m->passes = 0;
 }
@@ -402,7 +371,7 @@ static struct applymenu : menu
     void gui(g3d_gui &g, bool firstpass)
     {
         if(guistack.empty()) return;
-        g.start(menustart, 0.03f, NULL, true);
+        g.start(cmenustart, 0.03f, NULL, true);
         g.text("the following settings have changed:", GUI_TEXT_COLOR, "info");
         loopv(needsapply) g.text(needsapply[i].desc, GUI_TEXT_COLOR, "info");
         g.separator();

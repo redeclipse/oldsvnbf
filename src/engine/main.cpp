@@ -829,6 +829,9 @@ int main(int argc, char **argv)
 		menuprocess();
 		checksleep(lastmillis);
 		serverslice();
+#ifdef IRC
+		ircslice();
+#endif
 
 		if(frameloops)
 		{

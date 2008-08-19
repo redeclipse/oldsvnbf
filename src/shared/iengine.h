@@ -310,7 +310,7 @@ extern void gets2c();
 struct Texture;
 
 enum { G3D_DOWN = 0x0001, G3D_UP = 0x0002, G3D_PRESSED = 0x0004, G3D_ROLLOVER = 0x0008, G3D_DRAGGED = 0x0010, G3D_ALTERNATE = 0x0020 };
-enum { EDITORFOCUSED = 1, EDITORUSED, EDITORFOREVER };
+enum { EDITORREADONLY = 0, EDITORFOCUSED, EDITORUSED, EDITORFOREVER };
 
 struct g3d_gui
 {
@@ -347,7 +347,11 @@ struct g3d_gui
 	virtual void progress(float percent) = 0;
 	virtual void strut(int size) = 0;
     virtual void space(int size) = 0;
-    virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED) = 0;
+    virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED, bool resets = false) = 0;
+    virtual void fieldline(const char *name, const char *str) = 0;
+    virtual void fieldclear(const char *name) = 0;
+    virtual int fieldset(int n = -1) = 0;
+    virtual void fieldscroll(const char *name, int n = -1) = 0;
     virtual void mergehits(bool on) = 0;
 };
 

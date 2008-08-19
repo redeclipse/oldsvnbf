@@ -14,7 +14,8 @@ static struct gui *windowhit = NULL;
 
 static float firstx, firsty;
 
-static enum {FIELDCOMMIT, FIELDABORT, FIELDEDIT, FIELDSHOW} fieldmode = FIELDSHOW;
+enum {FIELDCOMMIT, FIELDABORT, FIELDEDIT, FIELDSHOW};
+static int fieldmode = FIELDSHOW;
 static bool fieldsactive = false;
 
 #define SHADOW 4
@@ -290,7 +291,7 @@ struct gui : g3d_gui
 		}
 	}
 
-    char *field(const char *name, int color, int length, int height, const char *initval, int initmode)
+    char *field(const char *name, int color, int length, int height, const char *initval, int initmode, bool resets)
 	{
         editor *e = useeditor(name, initmode, false, initval); // generate a new editor if necessary
         if(layoutpass)
@@ -323,7 +324,7 @@ struct gui : g3d_gui
             bool hit = ishit(w, h);
             if(hit)
             {
-                if(mousebuttons&G3D_DOWN) //mouse request focus
+                if(mousebuttons&G3D_DOWN || (resets && fieldmode == FIELDSHOW)) //mouse request focus
 				{
                     useeditor(name, initmode, true);
                     e->mark(false);
@@ -335,7 +336,8 @@ struct gui : g3d_gui
             if(editing && ((fieldmode==FIELDCOMMIT) || (fieldmode==FIELDABORT) || !hit)) // commit field if user pressed enter or wandered out of focus
             {
                 if(fieldmode==FIELDCOMMIT || (fieldmode!=FIELDABORT && !hit)) result = e->currentline().text;
-                e->active = (e->mode!=EDITORFOCUSED);
+                if(resets) e->cx = 0;
+				e->active = (e->mode!=EDITORFOCUSED);
                 fieldmode = FIELDSHOW;
 			}
             else fieldsactive = true;
@@ -367,6 +369,45 @@ struct gui : g3d_gui
         }
 
 		return result;
+	}
+
+    void fieldline(const char *name, const char *str)
+	{
+        if(layoutpass) loopv(editors) if(strcmp(editors[i]->name, name) == 0)
+		{
+			editor *e = editors[i];
+			e->lines.add().set(str);
+            if(e != currentfocus())
+            {
+				e->scrolly = 0;
+				e->cy = e->lines.length();
+            }
+		}
+	}
+
+	void fieldclear(const char *name)
+	{
+        if(layoutpass) loopvrev(editors) if(strcmp(editors[i]->name, name) == 0)
+		{
+			editor *e = editors[i];
+			e->clear(NULL);
+		}
+	}
+
+	int fieldset(int n)
+	{
+        if(n >= 0) fieldmode = n;
+        return fieldmode;
+	}
+
+	void fieldscroll(const char *name, int n)
+	{
+        if(!layoutpass) loopv(editors) if(strcmp(editors[i]->name, name) == 0)
+		{
+			editor *e = editors[i];
+			e->cx = 0;
+			e->cy = e->scrolly = i >= 0 ? i : e->lines.length()-e->pixelheight/FONTH;
+		}
 	}
 
 	void rect_(float x, float y, float w, float h, int usetc = -1)
@@ -774,7 +815,7 @@ bool gui::passthrough, gui::shouldmergehits = false, gui::shouldautotab = true;
 vec gui::light;
 int gui::curdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
 int gui::ty, gui::tx, gui::tpos, *gui::tcurrent, gui::tcolor;
-static vector<gui> guis;
+static vector<gui> gui2ds;
 
 bool menukey(int code, bool isdown, int cooked)
 {
@@ -817,12 +858,12 @@ bool menukey(int code, bool isdown, int cooked)
 
 bool g3d_active(bool hit, bool pass)
 {
-	return (guis.length() && (!pass || !gui::passthrough)) || (hit && windowhit);
+	return (gui2ds.length() && (!pass || !gui::passthrough)) || (hit && windowhit);
 }
 
 void g3d_addgui(g3d_callback *cb)
 {
-	gui &g = guis.add();
+	gui &g = gui2ds.add();
 	g.cb = cb;
 	g.adjustscale();
 }
@@ -850,12 +891,10 @@ void g3d_render()
 	windowhit = NULL;
 	if(actionon) mousebuttons |= G3D_PRESSED;
 	gui::reset();
-	guis.setsize(0);
+	gui2ds.setsize(0);
 	pushfont("gui");
 
 	// call all places in the engine that may want to render a gui from here, they call g3d_addgui()
-	extern void g3d_texturemenu();
-
 	g3d_texturemenu();
 	g3d_mainmenu();
 	cl->g3d_gamemenus();
@@ -865,10 +904,10 @@ void g3d_render()
     fieldsactive = false;
 
 	layoutpass = true;
-	loopv(guis) guis[i].cb->gui(guis[i], true);
+	loopv(gui2ds) gui2ds[i].cb->gui(gui2ds[i], true);
 	layoutpass = false;
 
-	if(guis.length())
+	if(gui2ds.length())
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -884,7 +923,7 @@ void g3d_render()
 
 		glDisable(GL_DEPTH_TEST);
 
-		loopvrev(guis) guis[i].cb->gui(guis[i], false);
+		loopvrev(gui2ds) gui2ds[i].cb->gui(gui2ds[i], false);
 
         glEnable(GL_DEPTH_TEST);
 
