@@ -291,7 +291,7 @@ struct gui : g3d_gui
 		}
 	}
 
-    char *field(const char *name, int color, int length, int height, const char *initval, int initmode, bool resets)
+    char *field(const char *name, int color, int length, int height, const char *initval, int initmode)
 	{
         editor *e = useeditor(name, initmode, false, initval); // generate a new editor if necessary
         if(layoutpass)
@@ -319,12 +319,12 @@ struct gui : g3d_gui
         if(wasvertical && e->maxy != 1) pushlist();
 
 		char *result = NULL;
-        if(visible() && !layoutpass)
+        if(visible())
 		{
             bool hit = ishit(w, h);
             if(hit)
             {
-                if(mousebuttons&G3D_DOWN || (resets && fieldmode == FIELDSHOW)) //mouse request focus
+                if(mousebuttons&G3D_DOWN) //mouse request focus
 				{
                     useeditor(name, initmode, true);
                     e->mark(false);
@@ -336,7 +336,6 @@ struct gui : g3d_gui
             if(editing && ((fieldmode==FIELDCOMMIT) || (fieldmode==FIELDABORT) || !hit)) // commit field if user pressed enter or wandered out of focus
             {
                 if(fieldmode==FIELDCOMMIT || (fieldmode!=FIELDABORT && !hit)) result = e->currentline().text;
-                if(resets) e->cx = 0;
 				e->active = (e->mode!=EDITORFOCUSED);
                 fieldmode = FIELDSHOW;
 			}
@@ -355,7 +354,6 @@ struct gui : g3d_gui
 			defaultshader->set();
 		}
     	layout(w, h);
-
         if(e->maxy != 1)
         {
             int slines = e->lines.length()-e->pixelheight/FONTH;
@@ -367,7 +365,6 @@ struct gui : g3d_gui
             }
             if(wasvertical) poplist();
         }
-
 		return result;
 	}
 
@@ -377,36 +374,44 @@ struct gui : g3d_gui
 		{
 			editor *e = editors[i];
 			e->lines.add().set(str);
-            if(e != currentfocus())
-            {
-				e->scrolly = 0;
-				e->cy = e->lines.length();
-            }
+			e->mark(false);
+            return;
 		}
 	}
 
-	void fieldclear(const char *name)
+	void fieldclear(const char *name, const char *init)
 	{
         if(layoutpass) loopvrev(editors) if(strcmp(editors[i]->name, name) == 0)
 		{
 			editor *e = editors[i];
-			e->clear(NULL);
+			e->clear(init);
+			return;
 		}
 	}
 
-	int fieldset(int n)
+	int fieldedit(const char *name)
 	{
-        if(n >= 0) fieldmode = n;
+		loopvrev(editors) if(strcmp(editors[i]->name, name) == 0)
+		{
+			editor *e = editors[i];
+			useeditor(name, e->mode, true);
+			e->mark(false);
+			e->cx = e->cy = 0;
+			fieldmode = FIELDEDIT;
+			return fieldmode;
+		}
         return fieldmode;
 	}
 
 	void fieldscroll(const char *name, int n)
 	{
-        if(!layoutpass) loopv(editors) if(strcmp(editors[i]->name, name) == 0)
+		if(n < 0 && mousebuttons&G3D_DOWN) return; // don't auto scroll during edits
+        if(layoutpass) loopv(editors) if(strcmp(editors[i]->name, name) == 0)
 		{
 			editor *e = editors[i];
-			e->cx = 0;
-			e->cy = e->scrolly = i >= 0 ? i : e->lines.length()-e->pixelheight/FONTH;
+			e->scrolly = e->cx = 0;
+			e->cy = n >= 0 ? n : e->lines.length();
+			return;
 		}
 	}
 
