@@ -16,16 +16,17 @@ void ircconnect(ircnet *n)
 	n->lastattempt = lastmillis;
 	if(n->address.host == ENET_HOST_ANY)
 	{
-		printf("looking up %s:[%d]...", n->serv, n->port);
+		conoutf("looking up %s:[%d]...", n->serv, n->port);
 		if(!resolverwait(n->serv, n->port, &n->address))
 		{
+			conoutf("unable to resolve %s:[%d]...", n->serv, n->port);
 			n->state = IRC_DISC;
 			return;
 		}
 	}
 	ENetAddress any = { ENET_HOST_ANY, 0 };
 	n->sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM, &any);
-	if(n->sock==ENET_SOCKET_NULL || connectwithtimeout(n->sock, n->serv, n->address)<0)
+	if(n->sock == ENET_SOCKET_NULL || connectwithtimeout(n->sock, n->serv, n->address)<0)
 	{
 		conoutf(n->sock == ENET_SOCKET_NULL ? "could not open socket to %s:[%d]" : "could not connect to %s:[%d]", n->serv, n->port);
 		n->state = IRC_DISC;
@@ -41,7 +42,7 @@ void ircsend(ircnet *n, const char *msg, ...)
 	s_sprintfdlv(str, msg, msg);
 	if(n->sock == ENET_SOCKET_NULL) return;
 	s_strcat(str, "\n");
-	printf("[%s] >>> %s", n->name, str);
+	console("[%s] >>> %s", 0, n->name, str);
 	ENetBuffer buf;
 	buf.data = str;
 	buf.dataLength = strlen((char *)buf.data);
@@ -122,7 +123,6 @@ ICOMMAND(addircclient, "ssiss", (const char *n, const char *s, int *p, const cha
 ICOMMAND(addircrelay, "ssiss", (const char *n, const char *s, int *p, const char *c, const char *z), {
 	ircaddnet(IRCT_RELAY, n, s, *p, c, z);
 });
-
 ICOMMAND(connectirc, "s", (const char *name), {
 	ircnet *n = ircfind(name);
 	if(!n)
@@ -230,22 +230,48 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 		}
 		n->lines.add(newstring(str));
 	}
-	printf("%s %s\n", s, st);
 	if(n->type == IRCT_RELAY)
 		sv->srvmsgf(-1, "%s %s", s, str);
-#ifndef STANDALONE
-	console("%s %s", CON_NORMAL, s, str);
-#endif
+	console("%s %s", 0, s, str); // console is not used to relay
 }
 
 void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 {
 	if(!strcasecmp(w[g], "NOTICE") || !strcasecmp(w[g], "PRIVMSG"))
 	{
-		if(numargs > g+1)
+		if(numargs > g+2)
 		{
 			bool ismsg = strcasecmp(w[g], "NOTICE");
-			ircprintf(n, g && strcasecmp(w[g+1], n->nick) ? w[g+1] : n->nick, "%c%s%c %s", ismsg ? '<' : '(', user[0], ismsg ? '>' : ')', w[g+2]);
+			if(*w[g+2] == '\001')
+			{
+				char *p = w[g+2];
+				p++;
+				const char *word = p;
+				p += strcspn(p, " \001\0");
+				if(p-word > 0)
+				{
+					char *q = newstring(word, p-word);
+					p++;
+					const char *start = p;
+					p += strcspn(p, "\001\0");
+					char *r = newstring(p, p-start);
+					if(ismsg)
+					{
+						if(!strcasecmp(q, "ACTION"))
+							ircprintf(n, g ? w[g+1] : NULL, "\fm* %s %s", user[0], r);
+						else
+						{
+							if(!strcasecmp(q, "VERSION"))
+								ircsend(n, "NOTICE %s :\001VERSION %s v%.2f (%s) IRC interface\001", user[0], ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE);
+							ircprintf(n, g ? w[g+1] : NULL, "\fr* %s requests: %s %s", user[0], q, r);
+						}
+					}
+					else ircprintf(n, g ? w[g+1] : NULL, "\fr* %s replied: %s %s", user[0], q, r);
+					DELETEA(q); DELETEA(r);
+				}
+			}
+			else if(ismsg) ircprintf(n, g ? w[g+1] : NULL, "\fa<%s> %s", user[0], w[g+2]);
+			else ircprintf(n, g ? w[g+1] : NULL, "\fo-%s- %s", user[0], w[g+2]);
 		}
 	}
 	else if(!strcasecmp(w[g], "NICK"))
@@ -330,7 +356,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 			if(s[0]) s_strcat(s, " ");
 			s_strcat(s, w[i]);
 		}
-		if(s[0]) ircprintf(n, targ, "%s %s", w[g], s);
+		if(s[0]) ircprintf(n, targ, "\fw%s %s", w[g], s);
 		if(numeric) switch(numeric)
 		{
 			case 376:
@@ -339,7 +365,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 				if(n->state == IRC_CONN)
 				{
 					n->state = IRC_ONLINE;
-					ircprintf(n, NULL, "\fc* Now connected to %s as %s", user[0], n->nick);
+					ircprintf(n, NULL, "\fb* Now connected to %s as %s", user[0], n->nick);
 				}
 				break;
 			}
@@ -359,7 +385,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 					c->state = IRCC_BANNED;
 					c->lastjoin = lastmillis;
 					if(c->type == IRCCT_AUTO)
-						ircprintf(n, w[g+2], "\fc* Waiting 5 mins to rejoin %s", c->name);
+						ircprintf(n, w[g+2], "\fb* Waiting 5 mins to rejoin %s", c->name);
 				}
 			}
 			default: break;
@@ -468,12 +494,11 @@ void ircslice()
 					}
 					break;
 				}
-
 				case IRC_ONLINE:
 					loopvj(n->channels)
 					{
 						ircchan *c = &n->channels[j];
-						if(c->type == IRCCT_AUTO && c->state != IRCC_JOINED && c->state != IRCC_JOINING && (!c->lastjoin || lastmillis-c->lastjoin >= 5000))
+						if(c->type == IRCCT_AUTO && c->state != IRCC_JOINED && (!c->lastjoin || lastmillis-c->lastjoin >= 5000))
 						{
 							if(c->state != IRCC_BANNED || !c->lastjoin || lastmillis-c->lastjoin >= 300000)
 								ircjoin(n, c);
@@ -503,62 +528,144 @@ void ircslice()
 	}
 }
 #ifndef STANDALONE
+void irccmd(ircnet *n, ircchan *c, char *s)
+{
+	char *p = s;
+	if(*p == '/')
+	{
+		p++;
+		const char *word = p;
+		p += strcspn(p, " \n\0");
+		if(p-word > 0)
+		{
+			char *q = newstring(word, p-word), *r = newstring(*p ? ++p : "");
+			if(!strcasecmp(q, "me"))
+			{
+				if(c)
+				{
+					ircsend(n, "PRIVMSG %s :\001ACTION %s\001", c->name, r);
+					ircprintf(n, c->name, "\fm* %s %s", n->nick, r);
+				}
+				else ircprintf(n, NULL, "\fb* You are not on a channel");
+			}
+			else if(!strcasecmp(q, "join"))
+			{
+				ircchan *d = ircfindchan(n, r);
+				if(d) ircjoin(n, d);
+				else ircaddchan(IRCCT_AUTO, n->name, r);
+			}
+			else if(!strcasecmp(q, "part"))
+			{
+				ircchan *d = ircfindchan(n, r);
+				if(d) ircsend(n, "PART %s", d->name);
+				else if(c) ircsend(n, "PART %s", c->name);
+				else ircsend(n, "PART %s", r);
+			}
+			DELETEA(q); DELETEA(r);
+			return;
+		}
+		ircprintf(n, c ? c->name : NULL, "\fb* You are not on a channel");
+	}
+	else if(c)
+	{
+		ircsend(n, "PRIVMSG %s :%s", c->name, p);
+		ircprintf(n, c->name, "\fa<%s> %s", n->nick, p);
+	}
+	else
+	{
+		ircsend(n, "%s", p);
+		ircprintf(n, NULL, "\fc>%s< %s", n->nick, p);
+	}
+}
+
+bool ircchangui(g3d_gui *g, ircnet *n, ircchan *c, bool tab)
+{
+	if(tab) g->tab(c->name, GUI_TITLE_COLOR);
+
+	s_sprintfd(cwindow)("%s_%s_window", n->name, c->name);
+	g->fieldclear(cwindow);
+	loopvk(c->lines) g->fieldline(cwindow, c->lines[k]);
+	g->field(cwindow, GUI_TEXT_COLOR, -80, 20, NULL, EDITORREADONLY);
+	g->fieldscroll(cwindow);
+
+	s_sprintfd(cinput)("%s_%s_input", n->name, c->name);
+	char *v = g->field(cinput, GUI_TEXT_COLOR, -80, 0, "", EDITORFOREVER);
+	if(v && *v)
+	{
+		irccmd(n, c, v);
+		*v = 0;
+		g->fieldedit(cinput);
+	}
+	return true;
+}
+
+bool ircnetgui(g3d_gui *g, ircnet *n, bool tab)
+{
+	if(tab) g->tab(n->name, GUI_TITLE_COLOR);
+
+	s_sprintfd(window)("%s_window", n->name);
+	g->fieldclear(window);
+	loopvk(n->lines) g->fieldline(window, n->lines[k]);
+	g->field(window, GUI_TEXT_COLOR, -80, 20, NULL, EDITORREADONLY);
+	g->fieldscroll(window);
+
+	s_sprintfd(input)("%s_input", n->name);
+	char *w = g->field(input, GUI_TEXT_COLOR, -80, 0, "", EDITORFOREVER);
+	if(w && *w)
+	{
+		irccmd(n, NULL, w);
+		*w = 0;
+		g->fieldedit(input);
+	}
+
+	loopvj(n->channels) if(n->channels[j].state != IRCC_NONE && n->channels[j].name[0])
+	{
+		ircchan *c = &n->channels[j];
+		if(!ircchangui(g, n, c, true)) return false;
+	}
+
+	return true;
+}
+
 bool ircgui(g3d_gui *g, const char *s)
 {
 	g->allowautotab(false);
-	int nets = 0;
-	loopv(ircnets) if(ircnets[i].name[0] && ircnets[i].sock != ENET_SOCKET_NULL)
+	g->strut(81);
+	if(s && *s)
 	{
-		ircnet *n = &ircnets[i];
-		g->pushlist();
-		g->buttonf("%s via %s:[%d] ", GUI_BUTTON_COLOR, NULL, n->name, n->serv, n->port);
-		const char *ircstates[IRC_MAX] = {
-				"\froffline", "\foconnecting", "\fynegotiating", "\fgonline"
-		};
-		g->buttonf("\fs%s\fS as %s", GUI_BUTTON_COLOR, NULL, ircstates[n->state], n->nick);
-		g->poplist();
-		nets++;
+		ircnet *n = ircfind(s);
+		if(n)
+		{
+			if(!ircnetgui(g, n, false)) return false;
+		}
+		else g->textf("not currently connected to %s", GUI_TEXT_COLOR, NULL, s);
 	}
-	if(nets)
+	else
 	{
-		loopv(ircnets) if(ircnets[i].state != IRC_DISC && ircnets[i].name[0] && ircnets[i].sock != ENET_SOCKET_NULL)
+		int nets = 0;
+		loopv(ircnets) if(ircnets[i].name[0] && ircnets[i].sock != ENET_SOCKET_NULL)
 		{
 			ircnet *n = &ircnets[i];
-			s_sprintfd(tab)("%s", n->name);
-			s_sprintfd(window)("%s_window", n->name);
-			s_sprintfd(input)("%s_input", n->name);
-			g->tab(tab, GUI_TITLE_COLOR);
-			g->fieldclear(window);
-			g->field(window, GUI_TEXT_COLOR, -80, 20, "", EDITORREADONLY);
-			loopvk(n->lines) g->fieldline(window, n->lines[k]);
-			char *w = g->field(input, GUI_TEXT_COLOR, -80, 0, "", EDITORFOREVER, true);
-			if(w && *w)
+			g->pushlist();
+			g->buttonf("%s via %s:[%d]", GUI_BUTTON_COLOR, NULL, n->name, n->serv, n->port);
+			g->space(1);
+			const char *ircstates[IRC_MAX] = {
+					"\froffline", "\foconnecting", "\fynegotiating", "\fgonline"
+			};
+			g->buttonf("\fs%s\fS as %s", GUI_BUTTON_COLOR, NULL, ircstates[n->state], n->nick);
+			g->poplist();
+			nets++;
+		}
+		if(nets)
+		{
+			loopv(ircnets) if(ircnets[i].state != IRC_DISC && ircnets[i].name[0] && ircnets[i].sock != ENET_SOCKET_NULL)
 			{
-				ircsend(n, "%s", w);
-				ircprintf(n, NULL, ">%s< %s", n->nick, w);
-				*w = 0;
-			}
-			loopvj(n->channels) if(n->channels[j].state != IRCC_NONE && n->channels[j].name[0])
-			{
-				ircchan *c = &n->channels[j];
-				s_sprintfd(ctab)("%s", c->name);
-				s_sprintfd(cwindow)("%s_%s_window", n->name, c->name);
-				s_sprintfd(cinput)("%s_%s_input", n->name, c->name);
-				g->tab(ctab, GUI_TITLE_COLOR);
-				g->fieldclear(cwindow);
-				g->field(cwindow, GUI_TEXT_COLOR, -80, 20, "", EDITORREADONLY);
-				loopvk(c->lines) g->fieldline(cwindow, c->lines[k]);
-				char *v = g->field(cinput, GUI_TEXT_COLOR, -80, 0, "", EDITORFOREVER, true);
-				if(v && *v)
-				{
-					ircsend(n, "PRIVMSG %s :%s", c->name, v);
-					ircprintf(n, c->name, "<%s> %s", n->nick, v);
-					*v = 0;
-				}
+				ircnet *n = &ircnets[i];
+				if(!ircnetgui(g, n, true)) return false;
 			}
 		}
+		else g->text("no current connections..", GUI_TEXT_COLOR);
 	}
-	else g->text("no current connections..", GUI_TEXT_COLOR);
 	return true;
 }
 

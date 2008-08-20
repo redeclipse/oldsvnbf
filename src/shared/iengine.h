@@ -347,10 +347,10 @@ struct g3d_gui
 	virtual void progress(float percent) = 0;
 	virtual void strut(int size) = 0;
     virtual void space(int size) = 0;
-    virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED, bool resets = false) = 0;
+    virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED) = 0;
     virtual void fieldline(const char *name, const char *str) = 0;
-    virtual void fieldclear(const char *name) = 0;
-    virtual int fieldset(int n = -1) = 0;
+    virtual void fieldclear(const char *name, const char *init = "") = 0;
+    virtual int fieldedit(const char *name) = 0;
     virtual void fieldscroll(const char *name, int n = -1) = 0;
     virtual void mergehits(bool on) = 0;
 };
