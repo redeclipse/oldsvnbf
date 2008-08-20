@@ -405,7 +405,7 @@ struct gui : g3d_gui
 
 	void fieldscroll(const char *name, int n)
 	{
-		if(n < 0 && mousebuttons&G3D_DOWN) return; // don't auto scroll during edits
+		if(n < 0 && mousebuttons&G3D_PRESSED) return; // don't auto scroll during edits
         if(layoutpass) loopv(editors) if(strcmp(editors[i]->name, name) == 0)
 		{
 			editor *e = editors[i];
