@@ -319,7 +319,7 @@ struct GAMESERVER : igameserver
 			gamemode(G_LOBBY), mutators(0),
 			interm(0), minremain(10), oldtimelimit(10),
 			maprequest(false), lastsend(0),
-			mastermode(MM_VETO), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
+			mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
 			mapdata(NULL), reliablemessages(false),
 			demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
 			smode(NULL), stfmode(*this), ctfmode(*this), duelmutator(*this),
