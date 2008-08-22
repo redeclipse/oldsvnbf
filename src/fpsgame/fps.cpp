@@ -2123,8 +2123,6 @@ struct GAMECLIENT : igameclient
         renderclient(d, third, trans, team, a[0].name ? a : NULL, secondary, animflags, animdelay, lastaction, 0.f, early);
 	}
 
-	IVARP(lasersight, 0, 0, 1);
-
 	void render()
 	{
 		if(intermission)
@@ -2149,14 +2147,6 @@ struct GAMECLIENT : igameclient
         bot.render();
 
 		endmodelbatches();
-
-		if(lasersight() && rendernormally)
-		{
-			renderprimitive(true);
-			vec v(vec(ws.gunorigin(player1->o, worldpos, player1, isthirdperson())).add(vec(0, 0, 1)));
-			renderline(v, worldpos, 0.2f, 0.0f, 0.0f, false);
-			renderprimitive(false);
-		}
 	}
 
     void renderavatar(bool early)
