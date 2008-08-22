@@ -324,6 +324,11 @@ void md3alphablend(char *meshname, int *blend)
     loopmd3skins(meshname, s, s.alphablend = *blend!=0);
 }
 
+void md3cullface(char *meshname, int *cullface)
+{
+    loopmd3skins(meshname, s, s.cullface = *cullface!=0);
+}
+
 void md3envmap(char *meshname, char *envmap)
 {
     Texture *tex = cubemapload(envmap);
@@ -391,6 +396,7 @@ COMMAND(md3glow, "si");
 COMMAND(md3glare, "sff");
 COMMAND(md3alphatest, "sf");
 COMMAND(md3alphablend, "si");
+COMMAND(md3cullface, "si");
 COMMAND(md3envmap, "ss");
 COMMAND(md3bumpmap, "sss");
 COMMAND(md3translucent, "sf");

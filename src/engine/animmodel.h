@@ -75,9 +75,9 @@ struct animmodel : model
         Texture *tex, *masks, *envmap, *unlittex, *normalmap;
         Shader *shader;
         float spec, ambient, glow, specglare, glowglare, fullbright, envmapmin, envmapmax, translucency, scrollu, scrollv, alphatest;
-        bool alphablend;
+        bool alphablend, cullface;
 
-        skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), specglare(1), glowglare(1), fullbright(0), envmapmin(0), envmapmax(0), translucency(0.5f), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true) {}
+        skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), specglare(1), glowglare(1), fullbright(0), envmapmin(0), envmapmax(0), translucency(0.5f), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true), cullface(true) {}
 
         bool multitextured() { return enableglow; }
         bool envmapped() { return hasCM && envmapmax>0 && envmapmodels && (renderpath!=R_FIXEDFUNCTION || maxtmus >= (fogging ? 4 : 3)); }
@@ -253,6 +253,9 @@ struct animmodel : model
 
         void bind(mesh *b, const animstate *as)
         {
+            if(!cullface && enablecullface) { glDisable(GL_CULL_FACE); enablecullface = false; }
+            else if(cullface && !enablecullface) { glEnable(GL_CULL_FACE); enablecullface = true; }
+
             if(as->anim&ANIM_NOSKIN)
             {
                 if(enablealphatest) { glDisable(GL_ALPHA_TEST); enablealphatest = false; }
@@ -774,12 +777,6 @@ struct animmodel : model
                 }
             }
 
-            if(!(anim&ANIM_NORENDER))
-            {
-                if(!model->cullface && enablecullface) { glDisable(GL_CULL_FACE); enablecullface = false; }
-                else if(model->cullface && !enablecullface) { glEnable(GL_CULL_FACE); enablecullface = true; }
-            }
-
             vec raxis(axis), rdir(dir), rcampos(campos);
             plane rfogplane(fogplane);
             float pitchamount = calcpitchaxis(anim, pitch, raxis, rdir, rcampos, rfogplane);
@@ -1271,6 +1268,12 @@ struct animmodel : model
     {
         if(parts.empty()) loaddefaultparts();
         loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].fullbright = fullbright;
+    }
+
+    void setcullface(bool cullface)
+    {
+        if(parts.empty()) loaddefaultparts();
+        loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].cullface = cullface;
     }
 
     void calcbb(int frame, vec &center, vec &radius)

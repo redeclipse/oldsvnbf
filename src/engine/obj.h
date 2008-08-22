@@ -313,6 +313,11 @@ void objalphablend(char *meshname, int *blend)
     loopobjskins(meshname, s, s.alphablend = *blend!=0);
 }
 
+void objcullface(char *meshname, int *cullface)
+{
+    loopobjskins(meshname, s, s.cullface = *cullface!=0);
+}
+
 void objenvmap(char *meshname, char *envmap)
 {
     Texture *tex = cubemapload(envmap);
@@ -361,6 +366,7 @@ COMMAND(objglow, "si");
 COMMAND(objglare, "sff");
 COMMAND(objalphatest, "sf");
 COMMAND(objalphablend, "si");
+COMMAND(objcullface, "si");
 COMMAND(objenvmap, "ss");
 COMMAND(objbumpmap, "sss");
 COMMAND(objtranslucent, "sf");

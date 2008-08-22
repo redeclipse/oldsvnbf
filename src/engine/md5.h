@@ -631,6 +631,11 @@ void md5alphablend(char *meshname, int *blend)
     loopmd5skins(meshname, s, s.alphablend = *blend!=0);
 }
 
+void md5cullface(char *meshname, int *cullface)
+{
+    loopmd5skins(meshname, s, s.cullface = *cullface!=0);
+}
+
 void md5envmap(char *meshname, char *envmap)
 {
     Texture *tex = cubemapload(envmap);
@@ -731,6 +736,7 @@ COMMAND(md5glow, "si");
 COMMAND(md5glare, "sff");
 COMMAND(md5alphatest, "sf");
 COMMAND(md5alphablend, "si");
+COMMAND(md5cullface, "si");
 COMMAND(md5envmap, "ss");
 COMMAND(md5bumpmap, "sss");
 COMMAND(md5translucent, "sf");
