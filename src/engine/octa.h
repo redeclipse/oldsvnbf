@@ -93,7 +93,7 @@ struct octaentities
 	vector<int> mapmodels;
 	vector<int> other;
 	occludequery *query;
-	octaentities *next;
+	octaentities *next, *rnext;
 	int distance;
 	ivec o;
 	int size;

@@ -358,7 +358,6 @@ void findvisiblemms(const vector<extentity *> &ents)
 				loopv(oe->mapmodels)
 				{
 					extentity &e = *ents[oe->mapmodels[i]];
-                    if(e.visible) continue;
                     e.visible = true;
 					++visible;
 				}
@@ -394,27 +393,30 @@ void rendermapmodel(extentity &e)
 
 extern int reflectdist;
 
-static vector<octaentities *> renderedmms;
-
 vtxarray *reflectedva;
 
 void renderreflectedmapmodels()
 {
-    vector<octaentities *> reflectedmms;
-    vector<octaentities *> &mms = reflecting ? reflectedmms : renderedmms;
     const vector<extentity *> &ents = et->getents();
 
+    octaentities *mms = visiblemms;
     if(reflecting)
     {
+        octaentities **lastmms = &mms;
         for(vtxarray *va = reflectedva; va; va = va->rnext)
         {
             if(!va->mapmodels || va->distance > reflectdist) continue;
-            loopv(*va->mapmodels) reflectedmms.add((*va->mapmodels)[i]);
+            loopv(*va->mapmodels)
+            {
+                octaentities *oe = (*va->mapmodels)[i];
+                *lastmms = oe;
+                lastmms = &oe->rnext;
+            }
         }
+        *lastmms = NULL;
     }
-    loopv(mms)
+    for(octaentities *oe = mms; oe; oe = reflecting ? oe->rnext : oe->next)
     {
-        octaentities *oe = mms[i];
         if(reflecting || refracting>0 ? oe->bbmax.z <= reflectz : oe->bbmin.z >= reflectz) continue;
         if(isvisiblecube(oe->o, oe->size) >= VFC_FOGGED) continue;
         loopv(oe->mapmodels)
@@ -424,22 +426,21 @@ void renderreflectedmapmodels()
            e.visible = true;
         }
     }
-    if(mms.length())
-	{
-		startmodelbatches();
-		loopv(mms)
-		{
-			octaentities *oe = mms[i];
-			loopv(oe->mapmodels)
-			{
-				extentity &e = *ents[oe->mapmodels[i]];
+    if(mms)
+    {
+        startmodelbatches();
+        for(octaentities *oe = mms; oe; oe = reflecting ? oe->rnext : oe->next)
+        {
+            loopv(oe->mapmodels)
+            {
+                extentity &e = *ents[oe->mapmodels[i]];
                 if(!e.visible) continue;
-				rendermapmodel(e);
+                rendermapmodel(e);
                 e.visible = false;
-			}
-		}
-		endmodelbatches();
-	}
+            }
+        }
+        endmodelbatches();
+    }
 }
 
 void rendermapmodels()
@@ -453,24 +454,24 @@ void rendermapmodels()
 	static int skipoq = 0;
 	bool doquery = hasOQ && oqfrags && oqmm;
 
-	renderedmms.setsizenodelete(0);
 	startmodelbatches();
 	for(octaentities *oe = visiblemms; oe; oe = oe->next) if(oe->distance>=0)
 	{
-		loopv(oe->mapmodels)
-		{
-			extentity &e = *ents[oe->mapmodels[i]];
-			if(!e.visible) continue;
-			if(renderedmms.empty() || renderedmms.last()!=oe)
-			{
-				renderedmms.add(oe);
-				oe->query = doquery && oe->distance>0 && !(++skipoq%oqmm) ? newquery(oe) : NULL;
-				if(oe->query) startmodelquery(oe->query);
-			}
-			rendermapmodel(e);
+        bool rendered = false;
+        loopv(oe->mapmodels)
+        {
+            extentity &e = *ents[oe->mapmodels[i]];
+            if(!e.visible) continue;
+            if(!rendered)
+            {
+                rendered = true;
+                oe->query = doquery && oe->distance>0 && !(++skipoq%oqmm) ? newquery(oe) : NULL;
+                if(oe->query) startmodelquery(oe->query);
+            }
+            rendermapmodel(e);
             e.visible = false;
-		}
-		if(renderedmms.length() && renderedmms.last()==oe && oe->query) endmodelquery();
+        }
+        if(rendered && oe->query) endmodelquery();
 	}
 	endmodelbatches();
 
