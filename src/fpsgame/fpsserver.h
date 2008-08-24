@@ -874,7 +874,7 @@ struct GAMESERVER : igameserver
 		votecount *best = NULL;
 		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
 
-		int reqvotes = max(maxvotes / 2, force ? 1 : 2);
+		int reqvotes = max(maxvotes / 2, min(maxvotes, force ? 1 : 2));
 		if(force || (best && best->count >= reqvotes))
 		{
 			if(demorecord) enddemorecord();
