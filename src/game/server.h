@@ -1,4 +1,4 @@
-struct GAMESERVER : igameserver
+struct gameserver : igameserver
 {
 	struct srventity
 	{
@@ -106,7 +106,7 @@ struct GAMESERVER : igameserver
         }
     };
 
-	struct gamestate : fpsstate
+	struct servstate : gamestate
 	{
 		vec o;
 		int state;
@@ -115,7 +115,7 @@ struct GAMESERVER : igameserver
 		int lasttimeplayed, timeplayed;
 		float effectiveness;
 
-		gamestate() : state(CS_DEAD) {}
+		servstate() : state(CS_DEAD) {}
 
 		bool isalive(int gamemillis)
 		{
@@ -140,7 +140,7 @@ struct GAMESERVER : igameserver
 
 		void respawn(int millis)
 		{
-			fpsstate::respawn(millis);
+			gamestate::respawn(millis);
 			o = vec(-1e10f, -1e10f, -1e10f);
 		}
 	};
@@ -152,7 +152,7 @@ struct GAMESERVER : igameserver
 		int frags, timeplayed, deaths, teamkills, shotdamage, damage;
 		float effectiveness;
 
-		void save(gamestate &gs)
+		void save(servstate &gs)
 		{
 			frags = gs.frags;
             deaths = gs.deaths;
@@ -163,7 +163,7 @@ struct GAMESERVER : igameserver
 			effectiveness = gs.effectiveness;
 		}
 
-		void restore(gamestate &gs)
+		void restore(servstate &gs)
 		{
 			gs.frags = frags;
             gs.deaths = deaths;
@@ -183,7 +183,7 @@ struct GAMESERVER : igameserver
 		int privilege;
         bool spectator, timesync, wantsmaster;
         int gameoffset, lastevent;
-		gamestate state;
+		servstate state;
 		vector<gameevent> events;
 		vector<uchar> position, messages;
         vector<clientinfo *> targets;
@@ -266,9 +266,9 @@ struct GAMESERVER : igameserver
 
 	struct servmode
 	{
-		GAMESERVER &sv;
+		gameserver &sv;
 
-		servmode(GAMESERVER &sv) : sv(sv) {}
+		servmode(gameserver &sv) : sv(sv) {}
 		virtual ~servmode() {}
 
 		virtual void entergame(clientinfo *ci) {}
@@ -314,7 +314,7 @@ struct GAMESERVER : igameserver
 	ISVAR(servermotd, "");
 	ISVAR(serverpass, "");
 
-	GAMESERVER()
+	gameserver()
 		: notgotitems(true), notgotflags(false),
 			gamemode(G_LOBBY), mutators(0),
 			interm(0), minremain(10), oldtimelimit(10),
@@ -325,10 +325,10 @@ struct GAMESERVER : igameserver
 			smode(NULL), stfmode(*this), ctfmode(*this), duelmutator(*this),
 			bot(*this)
 	{
-		CCOMMAND(gameid, "", (GAMESERVER *self), result(self->gameid()));
-		CCOMMAND(gamever, "", (GAMESERVER *self), intret(self->gamever()));
-		CCOMMAND(gamename, "ii", (GAMESERVER *self, int *g, int *m), result(self->gamename(*g, *m)));
-		CCOMMAND(mutscheck, "ii", (GAMESERVER *self, int *g, int *m), intret(self->mutscheck(*g, *m)));
+		CCOMMAND(gameid, "", (gameserver *self), result(self->gameid()));
+		CCOMMAND(gamever, "", (gameserver *self), intret(self->gamever()));
+		CCOMMAND(gamename, "ii", (gameserver *self, int *g, int *m), result(self->gamename(*g, *m)));
+		CCOMMAND(mutscheck, "ii", (gameserver *self, int *g, int *m), intret(self->mutscheck(*g, *m)));
 		smuts.setsize(0);
 		cleanup(true);
 	}
@@ -438,7 +438,7 @@ struct GAMESERVER : igameserver
 		ci->modevote = reqmode; ci->mutsvote = reqmuts;
 		modecheck(&ci->modevote, &ci->mutsvote);
 
-		if(haspriv(ci, PRIV_MASTER) && mastermode >= MM_VETO)
+		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !nonspectators(ci->clientnum, true)))
 		{
 			if(demorecord) enddemorecord();
 			srvoutf(-1, "%s [%s] forced %s on map %s", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
@@ -447,7 +447,7 @@ struct GAMESERVER : igameserver
 		}
 		else
 		{
-			srvoutf(-1, "%s suggests %s on map %s (select map to vote)", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf(-1, "%s suggests %s on map %s", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
 			checkvotes();
 		}
 	}
@@ -874,7 +874,7 @@ struct GAMESERVER : igameserver
 		votecount *best = NULL;
 		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
 
-		int reqvotes = max(maxvotes / 2, min(maxvotes, force ? 1 : 2));
+		int reqvotes = max(maxvotes / 2, force ? 1 : 2);
 		if(force || (best && best->count >= reqvotes))
 		{
 			if(demorecord) enddemorecord();
@@ -926,7 +926,7 @@ struct GAMESERVER : igameserver
 	static void freecallback(ENetPacket *packet)
 	{
 		extern igameserver *sv;
-		((GAMESERVER *)sv)->cleanworldstate(packet);
+		((gameserver *)sv)->cleanworldstate(packet);
 	}
 
 	void cleanworldstate(ENetPacket *packet)
@@ -1314,7 +1314,7 @@ struct GAMESERVER : igameserver
 						if(&sc)
 						{
 							sc.restore(ci->state);
-							gamestate &gs = ci->state;
+							servstate &gs = ci->state;
 							sendf(-1, 1, "ri7vi", SV_RESUME, sender,
 								gs.state, gs.frags,
 								gs.lifesequence, gs.health,
@@ -1975,14 +1975,14 @@ struct GAMESERVER : igameserver
 
 	void spawnstate(clientinfo *ci)
 	{
-		gamestate &gs = ci->state;
+		servstate &gs = ci->state;
 		gs.spawnstate(m_insta(gamemode, mutators) ? sv_instaspawngun : sv_spawngun);
 		gs.lifesequence++;
 	}
 
 	void sendspawn(clientinfo *ci)
 	{
-		gamestate &gs = ci->state;
+		servstate &gs = ci->state;
 		spawnstate(ci);
 		int own = ci->state.ownernum >= 0 ? ci->state.ownernum : ci->clientnum;
 		sendf(own, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, GUN_MAX, &gs.ammo[0]);
@@ -1991,7 +1991,7 @@ struct GAMESERVER : igameserver
 
     void sendstate(clientinfo *ci, ucharbuf &p)
     {
-		gamestate &gs = ci->state;
+		servstate &gs = ci->state;
         putint(p, ci->clientnum);
         putint(p, gs.state);
         putint(p, gs.frags);
@@ -2003,7 +2003,7 @@ struct GAMESERVER : igameserver
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
 	{
-		gamestate &ts = target->state;
+		servstate &ts = target->state;
 		if(gamemillis-ts.lastspawn <= REGENWAIT) return;
 		int setdamage = damage, realdamage = damage;
 
@@ -2062,7 +2062,7 @@ struct GAMESERVER : igameserver
 
 	void processevent(clientinfo *ci, suicideevent &e)
 	{
-		gamestate &gs = ci->state;
+		servstate &gs = ci->state;
 		if(gs.state != CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
@@ -2091,7 +2091,7 @@ struct GAMESERVER : igameserver
 
 	void processevent(clientinfo *ci, explodeevent &e)
 	{
-		gamestate &gs = ci->state;
+		servstate &gs = ci->state;
 		switch(e.gun)
 		{
 			case -1:
@@ -2130,7 +2130,7 @@ struct GAMESERVER : igameserver
 
 	void processevent(clientinfo *ci, shotevent &e)
 	{
-		gamestate &gs = ci->state;
+		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !gs.canshoot(e.gun, e.millis) || !isgun(e.gun))
 		{
 			if(guntype[e.gun].max && isgun(e.gun))
@@ -2173,7 +2173,7 @@ struct GAMESERVER : igameserver
 
 	void processevent(clientinfo *ci, switchevent &e)
 	{
-		gamestate &gs = ci->state;
+		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis))
 		{
 			srvoutf(ci->clientnum, "server error: you are not alive to switch to the %s", guntype[e.gun].name);
@@ -2190,7 +2190,7 @@ struct GAMESERVER : igameserver
 
 	void processevent(clientinfo *ci, reloadevent &e)
 	{
-		gamestate &gs = ci->state;
+		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis))
 		{
 			srvoutf(ci->clientnum, "server error: you are not alive to reload the %s", guntype[e.gun].name);
@@ -2208,7 +2208,7 @@ struct GAMESERVER : igameserver
 
 	void processevent(clientinfo *ci, useevent &e)
 	{
-		gamestate &gs = ci->state;
+		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || m_noitems(gamemode, mutators))
 		{
 			srvoutf(ci->clientnum, "server error: the current game parameters do not allow you to pick up entity %d", e.ent);

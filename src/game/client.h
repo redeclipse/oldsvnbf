@@ -1,6 +1,6 @@
 struct clientcom : iclientcom
 {
-	GAMECLIENT &cl;
+	gameclient &cl;
 
 	bool c2sinit, senditemstoserver, isready, remote, demoplayback, spectator, needsmap;
 	int lastping;
@@ -10,7 +10,7 @@ struct clientcom : iclientcom
 
 	ISVARP(serversort, "");
 
-	clientcom(GAMECLIENT &_cl) : cl(_cl),
+	clientcom(gameclient &_cl) : cl(_cl),
 		c2sinit(false), senditemstoserver(false),
 		isready(false), remote(false), demoplayback(false), spectator(false), needsmap(false),
 		lastping(0)
@@ -190,13 +190,13 @@ struct clientcom : iclientcom
 		// try case sensitive first
 		loopi(cl.numdynents())
 		{
-			fpsent *o = (fpsent *)cl.iterdynents(i);
+			gameent *o = (gameent *)cl.iterdynents(i);
 			if(o && !strcmp(arg, o->name)) return o->clientnum;
 		}
 		// nothing found, try case insensitive
 		loopi(cl.numdynents())
 		{
-			fpsent *o = (fpsent *)cl.iterdynents(i);
+			gameent *o = (gameent *)cl.iterdynents(i);
 			if(o && !strcasecmp(arg, o->name)) return o->clientnum;
 		}
 		return -1;
@@ -315,7 +315,7 @@ struct clientcom : iclientcom
 		loopi(len) messages.add(buf[i]);
 	}
 
-	void saytext(fpsent *d, int flags, char *text)
+	void saytext(gameent *d, int flags, char *text)
 	{
 		if(!colourchat()) filtertext(text, text);
 
@@ -416,7 +416,7 @@ struct clientcom : iclientcom
 		}
 	}
 
-	void updateposition(fpsent *d)
+	void updateposition(gameent *d)
 	{
         if(d->state==CS_ALIVE || d->state==CS_EDITING)
 		{
@@ -436,7 +436,7 @@ struct clientcom : iclientcom
 			putint(q, (int)(d->vel.x*DVELF));		  // quantize to itself, almost always 1 byte
 			putint(q, (int)(d->vel.y*DVELF));
 			putint(q, (int)(d->vel.z*DVELF));
-            putuint(q, d->physstate | (d->falling.x || d->falling.y ? 0x20 : 0) | (d->falling.z ? 0x10 : 0) | ((((fpsent *)d)->lifesequence&1)<<6));
+            putuint(q, d->physstate | (d->falling.x || d->falling.y ? 0x20 : 0) | (d->falling.z ? 0x10 : 0) | ((((gameent *)d)->lifesequence&1)<<6));
             if(d->falling.x || d->falling.y)
             {
                 putint(q, (int)(d->falling.x*DVELF));      // quantize to itself, almost always 1 byte
@@ -477,7 +477,7 @@ struct clientcom : iclientcom
 			putint(p, cl.player1->team);
 			loopv(cl.players) if(cl.players[i] && cl.players[i]->bot)
 			{
-				fpsent *f = cl.players[i];
+				gameent *f = cl.players[i];
 				putint(p, SV_INITBOT);
 				putint(p, f->ownernum);
 				putint(p, f->skill);
@@ -505,9 +505,9 @@ struct clientcom : iclientcom
 		return 1;
 	}
 
-    void parsestate(fpsent *d, ucharbuf &p, bool resume = false)
+    void parsestate(gameent *d, ucharbuf &p, bool resume = false)
     {
-        if(!d) { static fpsent dummy; d = &dummy; }
+        if(!d) { static gameent dummy; d = &dummy; }
 		if(d==cl.player1) getint(p);
 		else d->state = getint(p);
 		d->frags = getint(p);
@@ -525,7 +525,7 @@ struct clientcom : iclientcom
         }
     }
 
-	void updatepos(fpsent *d)
+	void updatepos(gameent *d)
 	{
 		// update the position of other clients in the game in our world
 		// don't care if he's in the scenery or other players,
@@ -582,7 +582,7 @@ struct clientcom : iclientcom
                 if(physstate&0x10) falling.z = getint(p)/DVELF;
                 int seqcolor = (physstate>>6)&1;
 				f = getuint(p);
-				fpsent *d = cl.getclient(lcn);
+				gameent *d = cl.getclient(lcn);
                 if(!d || seqcolor!=(d->lifesequence&1) || d==cl.player1 || d->bot) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
 				d->yaw = yaw;
@@ -664,7 +664,7 @@ struct clientcom : iclientcom
 		}
 	}
 
-	void parsemessages(int cn, fpsent *d, ucharbuf &p)
+	void parsemessages(int cn, gameent *d, ucharbuf &p)
 	{
 		static char text[MAXTRANS];
 		int type = -1, prevtype = -1;
@@ -711,7 +711,7 @@ struct clientcom : iclientcom
 				{
 					int tcn = getint(p), snd = getint(p);
 					if(snd < 0 || snd >= S_MAX) break;
-					fpsent *t = cl.getclient(tcn);
+					gameent *t = cl.getclient(tcn);
 					if(!t) break;
 					playsound(snd, 0, 255, t->o, t);
 					break;
@@ -720,7 +720,7 @@ struct clientcom : iclientcom
 				case SV_TEXT:
 				{
 					int tcn = getint(p);
-					fpsent *t = cl.getclient(tcn);
+					gameent *t = cl.getclient(tcn);
 					int flags = getint(p);
 					getstring(text, p);
 					if(!t) break;
@@ -731,7 +731,7 @@ struct clientcom : iclientcom
 				case SV_COMMAND:
 				{
 					int lcn = getint(p);
-					fpsent *f = cl.getclient(lcn);
+					gameent *f = cl.getclient(lcn);
 					string cmd;
 					getstring(cmd, p);
 					getstring(text, p);
@@ -742,7 +742,7 @@ struct clientcom : iclientcom
 				case SV_EXECLINK:
 				{
 					int tcn = getint(p), index = getint(p);
-					fpsent *t = cl.getclient(tcn);
+					gameent *t = cl.getclient(tcn);
 					if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum)) break;
 					cl.et.execlink(t, index, false);
 					break;
@@ -761,7 +761,7 @@ struct clientcom : iclientcom
 				case SV_FORCEDEATH:
 				{
 					int lcn = getint(p);
-					fpsent *f = cl.newclient(lcn);
+					gameent *f = cl.newclient(lcn);
 					if(!f) break;
 					if(f==cl.player1)
 					{
@@ -833,7 +833,7 @@ struct clientcom : iclientcom
 				case SV_SPAWN:
 				{
 					int lcn = getint(p);
-					fpsent *f = cl.newclient(lcn);
+					gameent *f = cl.newclient(lcn);
 					if(f->lastdeath && !f->obliterated)
 					{
 						vec pos = cl.feetpos(f), vel(0, 0, 4);
@@ -851,7 +851,7 @@ struct clientcom : iclientcom
 				case SV_SPAWNSTATE:
 				{
 					int lcn = getint(p);
-					fpsent *f = cl.newclient(lcn);
+					gameent *f = cl.newclient(lcn);
 					if(f->lastdeath && !f->obliterated)
 					{
 						vec pos = cl.feetpos(f), vel(0, 0, 4);
@@ -881,7 +881,7 @@ struct clientcom : iclientcom
 					vec from, to;
 					loopk(3) from[k] = getint(p)/DMF;
 					loopk(3) to[k] = getint(p)/DMF;
-					fpsent *s = cl.getclient(scn);
+					gameent *s = cl.getclient(scn);
 					if(!s || !isgun(gun)) break;
 					if(gun==GUN_SG) cl.ws.createrays(from, to);
 					s->setgunstate(gun, GUNSTATE_SHOOT, guntype[gun].adelay, lastmillis);
@@ -899,7 +899,7 @@ struct clientcom : iclientcom
 						health = getint(p);
 					vec dir;
 					loopk(3) dir[k] = getint(p)/DNF;
-					fpsent *target = cl.getclient(tcn), *actor = cl.getclient(acn);
+					gameent *target = cl.getclient(tcn), *actor = cl.getclient(acn);
 					if(!target || !actor) break;
 					cl.damaged(gun, flags, damage, health, target, actor, lastmillis, dir);
 					break;
@@ -908,7 +908,7 @@ struct clientcom : iclientcom
 				case SV_RELOAD:
 				{
 					int trg = getint(p), gun = getint(p), amt = getint(p);
-					fpsent *target = cl.getclient(trg);
+					gameent *target = cl.getclient(trg);
 					if(!target || !isgun(gun)) break;
 					if(target == cl.player1) cl.ws.requestreload = 0;
 					target->setgunstate(gun, GUNSTATE_RELOAD, guntype[gun].rdelay, lastmillis);
@@ -920,7 +920,7 @@ struct clientcom : iclientcom
 				case SV_REGEN:
 				{
 					int trg = getint(p), amt = getint(p);
-					fpsent *target = cl.getclient(trg);
+					gameent *target = cl.getclient(trg);
 					if(!target) break;
 					target->health = amt;
 					target->lastregen = lastmillis;
@@ -935,7 +935,7 @@ struct clientcom : iclientcom
 				{
 					int vcn = getint(p), acn = getint(p), frags = getint(p), spree = getint(p),
 						gun = getint(p), flags = getint(p), damage = getint(p);
-					fpsent *victim = cl.getclient(vcn), *actor = cl.getclient(acn);
+					gameent *victim = cl.getclient(vcn), *actor = cl.getclient(acn);
 					if(!actor) break;
 					actor->frags = frags;
 					actor->spree = spree;
@@ -949,7 +949,7 @@ struct clientcom : iclientcom
 				case SV_DROP:
 				{
 					int trg = getint(p), gs = getint(p), drop = getint(p);
-					fpsent *target = cl.getclient(trg);
+					gameent *target = cl.getclient(trg);
 					if(!target) break;
 					cl.pj.drop(target, gs, drop);
 					break;
@@ -958,7 +958,7 @@ struct clientcom : iclientcom
 				case SV_GUNSELECT:
 				{
 					int trg = getint(p), gun = getint(p);
-					fpsent *target = cl.getclient(trg);
+					gameent *target = cl.getclient(trg);
 					if(!target || !isgun(gun)) break;
 					if(target == cl.player1) cl.ws.requestswitch = 0;
 					target->gunswitch(gun, lastmillis);
@@ -969,7 +969,7 @@ struct clientcom : iclientcom
 				case SV_TAUNT:
 				{
 					int lcn = getint(p);
-					fpsent *f = cl.getclient(lcn);
+					gameent *f = cl.getclient(lcn);
 					if(!f) break;
 					f->lasttaunt = lastmillis;
 					break;
@@ -981,7 +981,7 @@ struct clientcom : iclientcom
 					{
 						int lcn = getint(p);
 						if(p.overread() || lcn < 0) break;
-						fpsent *f = cl.newclient(lcn);
+						gameent *f = cl.newclient(lcn);
 						if(f!=cl.player1) f->respawn(0);
 						parsestate(f, p, true);
 					}
@@ -1007,7 +1007,7 @@ struct clientcom : iclientcom
 				case SV_ITEMACC:
 				{ // uses a specific drop so the client knows what to replace
 					int lcn = getint(p), ent = getint(p), gun = getint(p), drop = getint(p);
-					fpsent *f = cl.getclient(lcn);
+					gameent *f = cl.getclient(lcn);
 					if(!f) break;
 					cl.et.useeffects(f, ent, gun, drop);
 					break;
@@ -1176,7 +1176,7 @@ struct clientcom : iclientcom
 					loopv(cl.players) if(cl.players[i]) cl.players[i]->privilege = PRIV_NONE;
 					if(mn>=0)
 					{
-						fpsent *m = cl.getclient(mn);
+						gameent *m = cl.getclient(mn);
 						if(m) m->privilege = priv;
 					}
 					break;
@@ -1194,7 +1194,7 @@ struct clientcom : iclientcom
 				case SV_SPECTATOR:
 				{
 					int sn = getint(p), val = getint(p);
-					fpsent *s = cl.newclient(sn);
+					gameent *s = cl.newclient(sn);
 					if(!s) break;
 					if(s == cl.player1) spectator = val!=0;
 					if(val)
@@ -1213,7 +1213,7 @@ struct clientcom : iclientcom
 				case SV_SETTEAM:
 				{
 					int wn = getint(p), tn = getint(p);
-					fpsent *w = cl.getclient(wn);
+					gameent *w = cl.getclient(wn);
 					if(!w) return;
 					w->team = tn;
 					break;
@@ -1256,7 +1256,7 @@ struct clientcom : iclientcom
 					int ocn = getint(p), flag = getint(p);
 					vec droploc;
 					loopk(3) droploc[k] = getint(p)/DMF;
-					fpsent *o = cl.newclient(ocn);
+					gameent *o = cl.newclient(ocn);
 					if(o && m_ctf(cl.gamemode)) cl.ctf.dropflag(o, flag, droploc);
 					break;
 				}
@@ -1264,7 +1264,7 @@ struct clientcom : iclientcom
 				case SV_SCOREFLAG:
 				{
 					int ocn = getint(p), relayflag = getint(p), goalflag = getint(p), score = getint(p);
-					fpsent *o = cl.newclient(ocn);
+					gameent *o = cl.newclient(ocn);
 					if(o && m_ctf(cl.gamemode)) cl.ctf.scoreflag(o, relayflag, goalflag, score);
 					break;
 				}
@@ -1272,7 +1272,7 @@ struct clientcom : iclientcom
 				case SV_RETURNFLAG:
 				{
 					int ocn = getint(p), flag = getint(p);
-					fpsent *o = cl.newclient(ocn);
+					gameent *o = cl.newclient(ocn);
 					if(o && m_ctf(cl.gamemode)) cl.ctf.returnflag(o, flag);
 					break;
 				}
@@ -1280,7 +1280,7 @@ struct clientcom : iclientcom
 				case SV_TAKEFLAG:
 				{
 					int ocn = getint(p), flag = getint(p);
-					fpsent *o = cl.newclient(ocn);
+					gameent *o = cl.newclient(ocn);
 					if(o && m_ctf(cl.gamemode)) cl.ctf.takeflag(o, flag);
 					break;
 				}
@@ -1302,7 +1302,7 @@ struct clientcom : iclientcom
 				case SV_SENDMAP:
 				{
 					int ocn = getint(p);
-					fpsent *o = cl.newclient(ocn);
+					gameent *o = cl.newclient(ocn);
 					conoutf("\fymap uploaded by %s..", o ? cl.colorname(o) : "server");
 					if(needsmap)
 					{
@@ -1331,7 +1331,7 @@ struct clientcom : iclientcom
 					int on = getint(p), sk = clamp(getint(p), 1, 100), bn = getint(p);
 					getstring(text, p);
 					int tm = getint(p);
-					fpsent *b = cl.newclient(bn);
+					gameent *b = cl.newclient(bn);
 					if(!b) break;
 					cl.bot.init(b, on, sk, bn, text, tm);
 					break;
@@ -1424,7 +1424,7 @@ struct clientcom : iclientcom
 			loopv(cl.players) if(cl.players[i]) cl.clientdisconnected(i);
 
 			extern igameserver *sv;
-			((GAMESERVER *)sv)->enddemoplayback();
+			((gameserver *)sv)->enddemoplayback();
 		}
 	}
 
@@ -1473,7 +1473,7 @@ struct clientcom : iclientcom
 		else conoutf("\frcould not read map");
 	}
 
-	void parsecommand(fpsent *d, char *cmd, char *arg)
+	void parsecommand(gameent *d, char *cmd, char *arg)
 	{
 		ident *id = idents->access(cmd);
 		if(id && id->flags&IDF_GAME)
@@ -1532,7 +1532,7 @@ struct clientcom : iclientcom
 		int i = parseplayer(arg);
 		if(i>=0 && i!=cl.player1->clientnum)
 		{
-			fpsent *d = cl.getclient(i);
+			gameent *d = cl.getclient(i);
 			if(!d) return;
 			cl.player1->o = d->o;
 			vec dir;

@@ -8,7 +8,7 @@ struct ctfstate
         int owner;
 #else
         bool pickup;
-        fpsent *owner;
+        gameent *owner;
         extentity *ent;
         int interptime;
 #endif
@@ -60,7 +60,7 @@ struct ctfstate
 #ifdef CTFSERV
     void takeflag(int i, int owner)
 #else
-    void takeflag(int i, fpsent *owner)
+    void takeflag(int i, gameent *owner)
 #endif
     {
 		flag &f = flags[i];
@@ -111,7 +111,7 @@ struct ctfservmode : ctfstate, servmode
 
     bool notgotflags;
 
-    ctfservmode(GAMESERVER &sv) : servmode(sv), notgotflags(false) {}
+    ctfservmode(gameserver &sv) : servmode(sv), notgotflags(false) {}
 
     void reset(bool empty)
     {
@@ -253,9 +253,9 @@ struct ctfclient : ctfstate
 {
     static const int RESPAWNSECS = 3;
 
-    GAMECLIENT &cl;
+    gameclient &cl;
 
-    ctfclient(GAMECLIENT &cl) : cl(cl)
+    ctfclient(gameclient &cl) : cl(cl)
     {
     	CCOMMAND(dropflags, "", (ctfclient *self), self->dropflags());
     }
@@ -398,7 +398,7 @@ struct ctfclient : ctfstate
         }
     }
 
-    void dropflag(fpsent *d, int i, const vec &droploc)
+    void dropflag(gameent *d, int i, const vec &droploc)
     {
         if(!flags.inrange(i)) return;
 		flag &f = flags[i];
@@ -438,7 +438,7 @@ struct ctfclient : ctfstate
 		}
     }
 
-    void returnflag(fpsent *d, int i)
+    void returnflag(gameent *d, int i)
     {
         if(!flags.inrange(i)) return;
 		flag &f = flags[i];
@@ -460,7 +460,7 @@ struct ctfclient : ctfstate
 		cl.et.announce(S_V_FLAGRESET, s, true);
     }
 
-    void scoreflag(fpsent *d, int relay, int goal, int score)
+    void scoreflag(gameent *d, int relay, int goal, int score)
     {
         if(!flags.inrange(goal) || !flags.inrange(relay)) return;
 		flag &f = flags[goal];
@@ -477,7 +477,7 @@ struct ctfclient : ctfstate
 		cl.et.announce(S_V_FLAGSCORE, s, true);
     }
 
-    void takeflag(fpsent *d, int i)
+    void takeflag(gameent *d, int i)
     {
         if(!flags.inrange(i)) return;
 		flag &f = flags[i];
@@ -490,7 +490,7 @@ struct ctfclient : ctfstate
 		cl.et.announce(S_V_FLAGPICKUP, s, true);
     }
 
-    void checkflags(fpsent *d)
+    void checkflags(gameent *d)
     {
         vec o = d->o;
         o.z -= d->height;
@@ -508,7 +508,7 @@ struct ctfclient : ctfstate
        }
     }
 
-    int respawnwait(fpsent *d)
+    int respawnwait(gameent *d)
     {
         return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)*1000-(lastmillis-d->lastpain));
     }

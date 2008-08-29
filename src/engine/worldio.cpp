@@ -335,7 +335,7 @@ void save_config(char *mname)
 }
 ICOMMAND(savemapconfig, "s", (char *mname), save_config(*mname ? mname : mapname));
 
-VARFP(mapshotsize, 0, 256, 1024, mapshotsize -= mapshotsize%2);
+VARFP(mapshotsize, 0, 256, INT_MAX-1, mapshotsize -= mapshotsize%2);
 
 void save_mapshot(char *mname)
 {
@@ -348,7 +348,7 @@ void save_mapshot(char *mname)
     uchar *pixels = new uchar[3*mapshotsize*mapshotsize];
 	memset(pixels, 0, 3*mapshotsize*mapshotsize);
 	glFrontFace(GL_CCW);
-	drawcubemap(mapshotsize, 1, camera1->o, camera1->yaw, camera1->pitch, false, false, false);
+	drawcubemap(mapshotsize, 2, camera1->o, camera1->yaw, camera1->pitch, false, false, false);
 	glReadPixels(0, 0, mapshotsize, mapshotsize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
 	SDL_Surface *image = SDL_CreateRGBSurface(SDL_SWSURFACE, mapshotsize, mapshotsize, 24, 0x0000FF, 0x00FF00, 0xFF0000, 0);

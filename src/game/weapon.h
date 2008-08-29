@@ -2,7 +2,7 @@
 
 struct weaponstate
 {
-	GAMECLIENT &cl;
+	gameclient &cl;
 
 	static const int OFFSETMILLIS = 500;
 	vec sg[SGRAYS];
@@ -12,7 +12,7 @@ struct weaponstate
 	IVARP(autoreload, 0, 1, 1);// auto reload when empty
 	IVARP(switchgl, 0, 0, 1);
 
-	weaponstate(GAMECLIENT &_cl) : cl(_cl), requestswitch(0), requestreload(0)
+	weaponstate(gameclient &_cl) : cl(_cl), requestswitch(0), requestreload(0)
 	{
         CCOMMAND(weapon, "ss", (weaponstate *self, char *a, char *b),
 		{
@@ -28,7 +28,7 @@ struct weaponstate
 		});
 	}
 
-	void weaponswitch(fpsent *d, int a = -1, int b = -1)
+	void weaponswitch(gameent *d, int a = -1, int b = -1)
 	{
 		if(a < -1 || b < -1 || a >= GUN_MAX || b >= GUN_MAX) return;
 		if(lastmillis-requestswitch <= 1000) return;
@@ -88,7 +88,7 @@ struct weaponstate
 	};
 	vector<hitmsg> hits;
 
-	void hit(fpsent *d, vec &vel, int flags = 0, int info = 1)
+	void hit(gameent *d, vec &vel, int flags = 0, int info = 1)
 	{
 		hitmsg &h = hits.add();
 		h.flags = flags;
@@ -98,7 +98,7 @@ struct weaponstate
 		h.dir = ivec(int(vel.x*DNF), int(vel.y*DNF), int(vel.z*DNF));
 	}
 
-	void hitpush(fpsent *d, vec &from, vec &to, int rays = 1)
+	void hitpush(gameent *d, vec &from, vec &to, int rays = 1)
 	{
 		vec v(to), s(to), pos = cl.headpos(d);
 		v.sub(from);
@@ -122,14 +122,14 @@ struct weaponstate
 		return dist;
 	}
 
-	void radialeffect(fpsent *d, vec &o, int radius, int flags)
+	void radialeffect(gameent *d, vec &o, int radius, int flags)
 	{
 		vec dir;
 		float dist = middist(d, dir, o);
 		if(dist < radius) hit(d, dir, flags, int(dist*DMF));
 	}
 
-	void explode(fpsent *d, vec &o, vec &vel, int id, int gun, bool local)
+	void explode(gameent *d, vec &o, vec &vel, int id, int gun, bool local)
 	{
 		vec dir;
 		float dist = middist(camera1, dir, o);
@@ -162,7 +162,7 @@ struct weaponstate
 
 			loopi(cl.numdynents())
 			{
-				fpsent *f = (fpsent *)cl.iterdynents(i);
+				gameent *f = (gameent *)cl.iterdynents(i);
 				if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
 				radialeffect(f, o, guntype[gun].explode, gun != GUN_FLAMER ? HIT_EXPLODE : HIT_BURN);
 			}
@@ -172,7 +172,7 @@ struct weaponstate
 		}
 	}
 
-	vec gunorigin(const vec &from, const vec &to, fpsent *d, bool third)
+	vec gunorigin(const vec &from, const vec &to, gameent *d, bool third)
 	{
 		bool oversized = d->gunselect == GUN_SG || d->gunselect == GUN_FLAMER || d->gunselect == GUN_RIFLE;
 		float hoff = 0.f, roff = 0.f, dmul = oversized ? 3.f : 2.f;
@@ -198,7 +198,7 @@ struct weaponstate
 		return offset;
 	}
 
-	void shootv(int gun, int power, vec &from, vec &to, fpsent *d, bool local)	 // create visual effect from a shot
+	void shootv(int gun, int power, vec &from, vec &to, gameent *d, bool local)	 // create visual effect from a shot
 	{
 		int pow = guntype[gun].power ? power : 100;
 
@@ -267,13 +267,13 @@ struct weaponstate
 		}
 	}
 
-	fpsent *intersectclosest(vec &from, vec &to, fpsent *at)
+	gameent *intersectclosest(vec &from, vec &to, gameent *at)
 	{
-		fpsent *best = NULL;
+		gameent *best = NULL;
 		float bestdist = 1e16f;
 		loopi(cl.numdynents())
 		{
-			fpsent *o = (fpsent *)cl.iterdynents(i);
+			gameent *o = (gameent *)cl.iterdynents(i);
             if(!o || o==at || o->state!=CS_ALIVE || lastmillis-o->lastspawn <= REGENWAIT) continue;
 			if(!intersect(o, from, to)) continue;
 			float dist = at->o.dist(o->o);
@@ -291,9 +291,9 @@ struct weaponstate
 		target.sub(from).normalize().mul(from.dist(to)).add(from);
 	}
 
-	void raydamage(vec &from, vec &to, fpsent *d)
+	void raydamage(vec &from, vec &to, gameent *d)
 	{
-		fpsent *o, *cl;
+		gameent *o, *cl;
 		if(d->gunselect==GUN_SG)
 		{
 			bool done[SGRAYS];
@@ -327,12 +327,12 @@ struct weaponstate
         else adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
 	}
 
-	bool doautoreload(fpsent *d)
+	bool doautoreload(gameent *d)
 	{
 		return autoreload() && d->hasgun(d->gunselect, 1) && !d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis);
 	}
 
-	void reload(fpsent *d)
+	void reload(gameent *d)
 	{
 		if(guntype[d->gunselect].rdelay <= 0)
 		{
@@ -356,7 +356,7 @@ struct weaponstate
 		}
 	}
 
-	void shoot(fpsent *d, vec &targ, int pow = 0)
+	void shoot(gameent *d, vec &targ, int pow = 0)
 	{
 		if(!d->canshoot(d->gunselect, lastmillis)) return;
 

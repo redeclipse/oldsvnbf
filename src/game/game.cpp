@@ -1,10 +1,9 @@
 #include "pch.h"
 #include "engine.h"
-#include "bfa.h"
 #include "game.h"
-#include "fpsserver.h"
+#include "server.h"
 #ifndef STANDALONE
-struct GAMECLIENT : igameclient
+struct gameclient : igameclient
 {
 	#include "physics.h"
 	#include "projs.h"
@@ -26,13 +25,13 @@ struct GAMECLIENT : igameclient
 	int quakewobble, damageresidue;
     int liquidchan;
 
-	fpsent *player1;				// our client
-	vector<fpsent *> players;		// other clients
-	fpsent lastplayerstate;
+	gameent *player1;				// our client
+	vector<gameent *> players;		// other clients
+	gameent lastplayerstate;
 
 	IVARP(titlecardtime, 0, 2000, 10000);
 	IVARP(titlecardfade, 0, 3000, 10000);
-	IFVARP(titlecardsize, 0.22f);
+	IFVARP(titlecardsize, 0.3f);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(absmouse, 0, 0, 1);
@@ -96,8 +95,8 @@ struct GAMECLIENT : igameclient
 
 	IVARP(radardist, 0, 512, 512);
 	IVARP(radarnames, 0, 1, 2);
-	IFVARP(radarsize, 0.22f);
-	IFVARP(ammosize, 0.05f);
+	IFVARP(radarsize, 0.3f);
+	IFVARP(ammosize, 0.07f);
 	IVARP(editradardist, 0, 512, INT_MAX-1);
 	IVARP(editradarnoisy, 0, 1, 2);
 
@@ -161,7 +160,7 @@ struct GAMECLIENT : igameclient
 	ITVAR(damagetex, "textures/damage", 0);
 	ITVAR(snipetex, "textures/snipe", 0);
 
-	GAMECLIENT()
+	gameclient()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
 			nextmode(G_LOBBY), nextmuts(0), gamemode(G_LOBBY), mutators(0), intermission(false),
 			maptime(0), minremain(0), swaymillis(0), swaydir(0, 0, 0),
@@ -169,13 +168,13 @@ struct GAMECLIENT : igameclient
 			prevzoom(false), zooming(false),
 			quakewobble(0), damageresidue(0),
 			liquidchan(-1),
-			player1(new fpsent())
+			player1(new gameent())
 	{
-        CCOMMAND(kill, "",  (GAMECLIENT *self), { self->suicide(self->player1, 0); });
-		CCOMMAND(mode, "ii", (GAMECLIENT *self, int *val, int *mut), { self->setmode(*val, *mut); });
-		CCOMMAND(gamemode, "", (GAMECLIENT *self), intret(self->gamemode));
-		CCOMMAND(mutators, "", (GAMECLIENT *self), intret(self->mutators));
-		CCOMMAND(zoom, "D", (GAMECLIENT *self, int *down), { self->dozoom(*down!=0); });
+        CCOMMAND(kill, "",  (gameclient *self), { self->suicide(self->player1, 0); });
+		CCOMMAND(mode, "ii", (gameclient *self, int *val, int *mut), { self->setmode(*val, *mut); });
+		CCOMMAND(gamemode, "", (gameclient *self), intret(self->gamemode));
+		CCOMMAND(mutators, "", (gameclient *self), intret(self->mutators));
+		CCOMMAND(zoom, "D", (gameclient *self, int *down), { self->dozoom(*down!=0); });
 		s_strcpy(player1->name, "unnamed");
 	}
 
@@ -286,7 +285,7 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
-	void addsway(fpsent *d)
+	void addsway(gameent *d)
 	{
 		if(firstpersonsway())
 		{
@@ -301,7 +300,7 @@ struct GAMECLIENT : igameclient
 		else swaydir = vec(0, 0, 0);
 	}
 
-	int respawnwait(fpsent *d)
+	int respawnwait(gameent *d)
 	{
 		int wait = 0;
 		if(m_stf(gamemode)) wait = stf.respawnwait(d);
@@ -309,7 +308,7 @@ struct GAMECLIENT : igameclient
 		return wait;
 	}
 
-	void respawn(fpsent *d)
+	void respawn(gameent *d)
 	{
 		if(d->state == CS_DEAD && !respawnwait(d))
 			respawnself(d);
@@ -326,7 +325,7 @@ struct GAMECLIENT : igameclient
         return true;
     }
 
-	void respawnself(fpsent *d)
+	void respawnself(gameent *d)
 	{
 		d->stopmoving();
 
@@ -337,11 +336,11 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
-	fpsent *pointatplayer()
+	gameent *pointatplayer()
 	{
 		loopv(players)
 		{
-			fpsent *o = players[i];
+			gameent *o = players[i];
 			if(!o) continue;
 			vec pos = headpos(player1, 0.f);
 			if(intersect(o, pos, worldpos)) return o;
@@ -377,11 +376,11 @@ struct GAMECLIENT : igameclient
 			// reset perma-state
 			dynent *d;
 			loopi(numdynents()) if((d = iterdynents(i)) && d->type == ENT_PLAYER)
-				((fpsent *)d)->resetstate(lastmillis);
+				((gameent *)d)->resetstate(lastmillis);
 		}
 	}
 
-	void checkoften(fpsent *d)
+	void checkoften(gameent *d)
 	{
 		heightoffset(d, d == player1 || d->bot);
 		loopi(GUN_MAX) if(d->gunstate[i] != GUNSTATE_IDLE)
@@ -395,7 +394,7 @@ struct GAMECLIENT : igameclient
 	{
 		loopv(players) if(players[i])
 		{
-            fpsent *d = players[i];
+            gameent *d = players[i];
             const int lagtime = lastmillis-d->lastupdate;
             checkoften(d);
             if(d->bot || !lagtime || intermission) continue;
@@ -471,7 +470,7 @@ struct GAMECLIENT : igameclient
 		if(player1->clientnum >= 0) c2sinfo(33);
 	}
 
-	void damaged(int gun, int flags, int damage, int health, fpsent *d, fpsent *actor, int millis, vec &dir)
+	void damaged(int gun, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
 	{
 		if(d->state != CS_ALIVE || intermission) return;
 
@@ -517,7 +516,7 @@ struct GAMECLIENT : igameclient
 		bot.damaged(d, actor, gun, flags, damage, health, millis, dir);
 	}
 
-	void killed(int gun, int flags, int damage, fpsent *d, fpsent *actor)
+	void killed(int gun, int flags, int damage, gameent *d, gameent *actor)
 	{
 		if(d->type != ENT_PLAYER) return;
 
@@ -669,7 +668,7 @@ struct GAMECLIENT : igameclient
 		}
 	}
 
-	fpsent *newclient(int cn)	// ensure valid entity
+	gameent *newclient(int cn)	// ensure valid entity
 	{
 		if(cn < 0 || cn >= MAXCLIENTS)
 		{
@@ -683,7 +682,7 @@ struct GAMECLIENT : igameclient
 
 		if(!players[cn])
 		{
-			fpsent *d = new fpsent();
+			gameent *d = new gameent();
 			d->clientnum = cn;
 			players[cn] = d;
 		}
@@ -691,7 +690,7 @@ struct GAMECLIENT : igameclient
 		return players[cn];
 	}
 
-	fpsent *getclient(int cn)	// ensure valid entity
+	gameent *getclient(int cn)	// ensure valid entity
 	{
 		if(cn == player1->clientnum) return player1;
 		if(players.inrange(cn)) return players[cn];
@@ -701,7 +700,7 @@ struct GAMECLIENT : igameclient
 	void clientdisconnected(int cn)
 	{
 		if(!players.inrange(cn)) return;
-		fpsent *d = players[cn];
+		gameent *d = players[cn];
 		if(!d) return;
 		if(d->name[0]) conoutf("\fo* %s left the game", colorname(d));
 		pj.remove(d);
@@ -738,10 +737,10 @@ struct GAMECLIENT : igameclient
         resetstates(ST_ALL);
 	}
 
-	void playsoundc(int n, fpsent *d = NULL)
+	void playsoundc(int n, gameent *d = NULL)
 	{
 		if(n < 0 || n >= S_MAX) return;
-		fpsent *c = d ? d : player1;
+		gameent *c = d ? d : player1;
 		if(c == player1 || c->bot) cc.addmsg(SV_SOUND, "i2", c->clientnum, n);
 		playsound(n, 0, 255, c->o, c);
 	}
@@ -756,7 +755,7 @@ struct GAMECLIENT : igameclient
 		return NULL;
 	}
 
-	bool duplicatename(fpsent *d, char *name = NULL)
+	bool duplicatename(gameent *d, char *name = NULL)
 	{
 		if(!name) name = d->name;
 		if(d!=player1 && !strcmp(name, player1->name)) return true;
@@ -764,7 +763,7 @@ struct GAMECLIENT : igameclient
 		return false;
 	}
 
-	char *colorname(fpsent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true)
+	char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true)
 	{
 		if(!name) name = d->name;
 		static string cname;
@@ -782,7 +781,7 @@ struct GAMECLIENT : igameclient
 		return cname;
 	}
 
-	void suicide(fpsent *d, int flags)
+	void suicide(gameent *d, int flags)
 	{
 		if(d == player1 || d->bot)
 		{
@@ -828,15 +827,15 @@ struct GAMECLIENT : igameclient
 		Texture *pointer = textureload(getpointer(index), 3, true);
 		if(pointer)
 		{
-			float chsize = crosshairsize()*w*3.f, blend = crosshairblend();
+			float chsize = crosshairsize()*h*3.f, blend = crosshairblend();
 			if(index == POINTER_GUI)
 			{
-				chsize = cursorsize()*w*3.f;
+				chsize = cursorsize()*h*3.f;
 				blend = cursorblend();
 			}
 			else if(index == POINTER_SNIPE)
 			{
-				chsize = snipecrosshairsize()*w*3.f;
+				chsize = snipecrosshairsize()*h*3.f;
 				if(inzoom() && player1->gunselect == GUN_RIFLE)
 				{
 					int frame = lastmillis-lastzoom;
@@ -923,7 +922,7 @@ struct GAMECLIENT : igameclient
         {
             vec pos = headpos(player1, 0.f);
             dynent *d = ws.intersectclosest(pos, worldpos, player1);
-            if(d && d->type == ENT_PLAYER && ((fpsent *)d)->team == player1->team)
+            if(d && d->type == ENT_PLAYER && ((gameent *)d)->team == player1->team)
 				index = POINTER_TEAM;
 			else index = POINTER_HAIR;
         }
@@ -973,7 +972,7 @@ struct GAMECLIENT : igameclient
 	}
 	void drawsized(float x, float y, float s) { drawtex(x, y, s, s); }
 
-	void drawplayerblip(fpsent *d, int x, int y, int s)
+	void drawplayerblip(gameent *d, int x, int y, int s)
 	{
 		vec dir = headpos(d);
 		dir.sub(camera1->o);
@@ -1058,7 +1057,7 @@ struct GAMECLIENT : igameclient
 	{
 		loopv(et.ents)
 		{
-			fpsentity &e = *(fpsentity *)et.ents[i];
+			gameentity &e = *(gameentity *)et.ents[i];
 			drawentblip(x, y, s, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned, e.lastspawn);
 		}
 
@@ -1078,7 +1077,7 @@ struct GAMECLIENT : igameclient
 		glOrtho(0, ox, oy, 0, -1, 1);
 		pushfont("emphasis");
 
-		int bs = int(ox*titlecardsize()), bp = int(ox*0.01f), bx = ox-bs-bp, by = bp,
+		int bs = int(oy*titlecardsize()), bp = int(oy*0.01f), bx = ox-bs-bp, by = bp,
 			secs = maptime ? lastmillis-maptime : 0;
 		float fade = hudblend, amt = 1.f;
 
@@ -1157,7 +1156,7 @@ struct GAMECLIENT : igameclient
 			glEnd();
 		}
 
-		int bs = int(ox*radarsize()), bo = int(bs/16.f), bp = int(ox*0.01f), bx = ox-bs-bp, by = bp,
+		int bs = int(oy*radarsize()), bo = int(bs/16.f), bp = int(oy*0.01f), bx = ox-bs-bp, by = bp,
 			colour = teamtype[player1->team].colour,
 				r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
 
@@ -1207,7 +1206,7 @@ struct GAMECLIENT : igameclient
 
 			if(showhudammo())
 			{
-				int ta = int(ox*ammosize()), tb = ta*3, tv = bx + bs - tb,
+				int ta = int(oy*ammosize()), tb = ta*3, tv = bx + bs - tb,
 					to = ta/16, tr = ta/2, tq = tr - FONTH/2;
 				const char *cliptexs[GUN_MAX] = {
 					pistolcliptex(), shotguncliptex(), chainguncliptex(),
@@ -1343,7 +1342,7 @@ struct GAMECLIENT : igameclient
 				int n = i ? entgroup[i-1] : enthover;
 				if((!i || n != enthover) && et.ents.inrange(n))
 				{
-					fpsentity &f = (fpsentity &)*et.ents[n];
+					gameentity &f = (gameentity &)*et.ents[n];
 					if(showhudentinfo() > 2 || n == enthover) pushfont("emphasis");
 					tp += draw_textx("entity %d, %s", bx+bs, tp,
 						n == enthover ? 255 : 196, 196, 196, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1,
@@ -1468,9 +1467,9 @@ struct GAMECLIENT : igameclient
         {
         	case PT_PART: case PT_TAPE: case PT_FIREBALL: case PT_LIGHTNING: case PT_FLARE:
         	{
-                fpsent *owner = (fpsent *)p->owner;
+                gameent *owner = (gameent *)p->owner;
                 if(owner->muzzle.x >= 0) o = owner->muzzle;
-				else o = ws.gunorigin(p->owner->o, d, (fpsent *)p->owner, p->owner != player1 || isthirdperson());
+				else o = ws.gunorigin(p->owner->o, d, (gameent *)p->owner, p->owner != player1 || isthirdperson());
 				break;
         	}
         	default: break;
@@ -1878,7 +1877,7 @@ struct GAMECLIENT : igameclient
 		et.adddynlights();
 	}
 
-	vector<fpsent *> bestplayers;
+	vector<gameent *> bestplayers;
     vector<int> bestteams;
 
 	IVAR(animoverride, -1, 0, ANIM_MAX-1);
@@ -1893,7 +1892,7 @@ struct GAMECLIENT : igameclient
 				anims.add(i);
 	}
 
-	void renderclient(fpsent *d, bool third, bool trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, float speed, bool early)
+	void renderclient(gameent *d, bool third, bool trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, float speed, bool early)
 	{
 		string mdl;
 		if(third) s_strcpy(mdl, teamtype[team].tpmdl);
@@ -1984,7 +1983,7 @@ struct GAMECLIENT : igameclient
 		rendermodel(NULL, mdl, anim, o, !third && testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, e, attachments, basetime, speed);
 	}
 
-	void renderplayer(fpsent *d, bool third, bool trans, bool early = false)
+	void renderplayer(gameent *d, bool third, bool trans, bool early = false)
 	{
         modelattach a[4];
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
@@ -2133,8 +2132,8 @@ struct GAMECLIENT : igameclient
 
 		startmodelbatches();
 
-		fpsent *d;
-        loopi(numdynents()) if((d = (fpsent *)iterdynents(i)) && d != player1)
+		gameent *d;
+        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
         {
 			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
 				renderplayer(d, true, d->state == CS_LAGGED || (d->state == CS_ALIVE && lastmillis-d->lastspawn <= REGENWAIT));
@@ -2163,7 +2162,7 @@ struct GAMECLIENT : igameclient
         }
     }
 };
-REGISTERGAME(GAMENAME, GAMEID, new GAMECLIENT(), new GAMESERVER());
+REGISTERGAME(GAMEID, new gameclient(), new gameserver());
 #else
-REGISTERGAME(GAMENAME, GAMEID, NULL, new GAMESERVER());
+REGISTERGAME(GAMEID, NULL, new gameserver());
 #endif

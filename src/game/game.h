@@ -1,3 +1,7 @@
+#define GAMEID				"bfa"
+#define GAMEVERSION			93
+#define DEMO_VERSION		GAMEVERSION
+
 // network quantization scale
 #define DMF 16.0f			// for world locations
 #define DNF 100.0f			// for normalized vectors
@@ -425,16 +429,16 @@ FVARG(gravityscale, 1.f);
 FVARG(jumpscale, 1.f);
 FVARG(speedscale, 1.f);
 
-// inherited by fpsent and server clients
-struct fpsstate
+// inherited by gameent and server clients
+struct gamestate
 {
 	int health, ammo[GUN_MAX], entid[GUN_MAX];
 	int lastgun, gunselect, gunstate[GUN_MAX], gunwait[GUN_MAX], gunlast[GUN_MAX];
 	int lastdeath, lifesequence, lastspawn, lastrespawn, lastpain, lastregen;
 	int ownernum, skill, spree;
 
-	fpsstate() : lifesequence(0), ownernum(-1), skill(0), spree(0) {}
-	~fpsstate() {}
+	gamestate() : lifesequence(0), ownernum(-1), skill(0), spree(0) {}
+	~gamestate() {}
 
 	int hasgun(int gun, int level = 0, int exclude = -1)
 	{
@@ -622,13 +626,13 @@ enum
 	ST_ALL		= ST_REQS|ST_CAMERA|ST_CURSOR|ST_GAME|ST_SPAWNS,
 };
 
-struct fpsentity : extentity
+struct gameentity : extentity
 {
 	int schan, lastemit, lastspawn;
 	bool mark;
 
-	fpsentity() : schan(-1), lastemit(0), lastspawn(0), mark(false) {}
-	~fpsentity()
+	gameentity() : schan(-1), lastemit(0), lastspawn(0), mark(false) {}
+	~gameentity()
 	{
 		if(issound(schan)) removesound(schan);
 		schan = -1;
@@ -794,7 +798,7 @@ struct botinfo
 	}
 };
 
-struct fpsent : dynent, fpsstate
+struct gameent : dynent, gamestate
 {
 	int clientnum, privilege, lastupdate, lastpredict, plag, ping;
 	bool attacking, reloading, useaction, obliterated;
@@ -815,13 +819,13 @@ struct fpsent : dynent, fpsstate
 	string name, info, obit;
 	int team;
 
-	fpsent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL), muzzle(-1, -1, -1)
+	gameent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL), muzzle(-1, -1, -1)
 	{
 		name[0] = info[0] = obit[0] = 0;
 		team = TEAM_NEUTRAL;
 		respawn(-1);
 	}
-	~fpsent()
+	~gameent()
 	{
 		freeeditinfo(edit);
 		if(bot) delete bot;
@@ -829,7 +833,7 @@ struct fpsent : dynent, fpsstate
 		wschan = -1;
 	}
 
-	void hitpush(int damage, const vec &dir, fpsent *actor, int gun)
+	void hitpush(int damage, const vec &dir, gameent *actor, int gun)
 	{
 		vec push(dir);
 		push.mul(damage/weight);
@@ -852,7 +856,7 @@ struct fpsent : dynent, fpsstate
 	{
 		stopmoving();
 		dynent::reset();
-		fpsstate::respawn(millis);
+		gamestate::respawn(millis);
 		obliterated = false;
 		lasttaunt = lastuse = lastusemillis = lastimpulse = 0;
 		lastflag = respawned = suicided = -1;
@@ -881,7 +885,7 @@ struct projent : dynent
 	int ent, attr1, attr2, attr3, attr4, attr5;
 	int schan, id;
 	entitylight light;
-	fpsent *owner;
+	gameent *owner;
 	const char *mdl;
 
 	projent() : projtype(PRJ_SHOT), id(-1), mdl(NULL)
