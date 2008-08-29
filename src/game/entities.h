@@ -11,11 +11,11 @@ struct avoidset
         obstacle(dynent *ent) : ent(ent), numwaypoints(0) {}
     };
 
-    GAMECLIENT &cl;
+    gameclient &cl;
     vector<obstacle> obstacles;
     vector<int> waypoints;
 
-    avoidset(GAMECLIENT &cl) : cl(cl) {}
+    avoidset(gameclient &cl) : cl(cl) {}
 
     void clear()
     {
@@ -37,7 +37,7 @@ struct avoidset
             { \
                 avoidset::obstacle &ob = (v).obstacles[i]; \
                 int next = cur + ob.numwaypoints; \
-                if(ob.ent != (d) && (ob.ent->type != ENT_PLAYER || AVOIDENEMY((d), (fpsent *)ob.ent))) \
+                if(ob.ent != (d) && (ob.ent->type != ENT_PLAYER || AVOIDENEMY((d), (gameent *)ob.ent))) \
                 { \
                     for(; cur < next; cur++) \
                     { \
@@ -49,7 +49,7 @@ struct avoidset
             } \
         } while(0)
 
-    bool find(int waypoint, fpsent *d)
+    bool find(int waypoint, gameent *d)
     {
         loopavoid(*this, d, { if(ent == waypoint) return true; });
         return false;
@@ -58,7 +58,7 @@ struct avoidset
 
 struct entities : icliententities
 {
-	GAMECLIENT &cl;
+	gameclient &cl;
 
 	vector<extentity *> ents;
 	vector<int> entlinks[MAXENTTYPES];
@@ -73,7 +73,7 @@ struct entities : icliententities
 	IVAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 	bool autodropwaypoints;
 
-	entities(GAMECLIENT &_cl) : cl(_cl), autodropwaypoints(false)
+	entities(gameclient &_cl) : cl(_cl), autodropwaypoints(false)
 	{
         CCOMMAND(announce, "i", (entities *self, int *idx), self->announce(*idx));
 
@@ -222,7 +222,7 @@ struct entities : icliententities
 			bool announcer = false;
 			loopv(ents)
 			{
-				fpsentity &e = *(fpsentity *)ents[i];
+				gameentity &e = *(gameentity *)ents[i];
 				if(e.type == ANNOUNCER)
 				{
 					playsound(idx, 0, e.attr3, e.o, NULL, NULL, 0, e.attr1, e.attr2);
@@ -261,11 +261,11 @@ struct entities : icliententities
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
 
-	void useeffects(fpsent *d, int n, int g, int r)
+	void useeffects(gameent *d, int n, int g, int r)
 	{
 		if(d && ents.inrange(n))
 		{
-			fpsentity &e = *(fpsentity *)ents[n];
+			gameentity &e = *(gameentity *)ents[n];
 			vec pos = e.o;
 			loopv(cl.pj.projs)
 			{
@@ -295,7 +295,7 @@ struct entities : icliententities
 		}
 	}
 
-	bool collateitems(fpsent *d, bool use, vector<actitem> &actitems)
+	bool collateitems(gameent *d, bool use, vector<actitem> &actitems)
 	{
 		float eye = d->height*0.5f;
 		vec m = d->o;
@@ -331,7 +331,7 @@ struct entities : icliententities
 		return !actitems.empty();
 	}
 
-	void checkitems(fpsent *d)
+	void checkitems(gameent *d)
 	{
 		static vector<actitem> actitems;
         actitems.setsizenodelete(0);
@@ -400,7 +400,7 @@ struct entities : icliententities
 	{
 		loopv(ents)
 		{
-			fpsentity &e = *(fpsentity *)ents[i];
+			gameentity &e = *(gameentity *)ents[i];
 			if(enttype[e.type].usetype == EU_ITEM || e.type == TRIGGER)
 			{
 				putint(p, i);
@@ -428,14 +428,14 @@ struct entities : icliententities
 		}
 		if(ents.inrange(n))
 			if((ents[n]->spawned = on))
-				((fpsentity *)ents[n])->lastspawn = lastmillis;
+				((gameentity *)ents[n])->lastspawn = lastmillis;
 	}
 
-	extentity *newent() { return new fpsentity(); }
+	extentity *newent() { return new gameentity(); }
 
 	void fixentity(extentity &e)
 	{
-		fpsentity &f = (fpsentity &)e;
+		gameentity &f = (gameentity &)e;
 
 		if(issound(f.schan))
 		{
@@ -475,7 +475,7 @@ struct entities : icliententities
 	}
 
 	// these functions are called when the client touches the item
-	void execlink(fpsent *d, int index, bool local)
+	void execlink(gameent *d, int index, bool local)
 	{
 		if(d && ents.inrange(index) && maylink(ents[index]->type))
 		{
@@ -485,11 +485,11 @@ struct entities : icliententities
 				if(d->bot) return;
 			}
 
-			fpsentity &e = *(fpsentity *)ents[index];
+			gameentity &e = *(gameentity *)ents[index];
 
 			loopv(ents)
 			{
-				fpsentity &f = *(fpsentity *)ents[i];
+				gameentity &f = *(gameentity *)ents[i];
 				if(f.links.find(index) >= 0)
 				{
 					bool both = e.links.find(i) >= 0;
@@ -526,9 +526,9 @@ struct entities : icliententities
 	}
 
 
-	void teleport(int n, fpsent *d)
+	void teleport(int n, gameent *d)
 	{
-		fpsentity &e = *(fpsentity *)ents[n];
+		gameentity &e = *(gameentity *)ents[n];
 		vector<int> teleports;
 		loopv(e.links)
 			if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TELEPORT)
@@ -537,7 +537,7 @@ struct entities : icliententities
 		while(!teleports.empty())
 		{
 			int r = rnd(teleports.length()), t = teleports[r];
-			fpsentity &f = *(fpsentity *)ents[t];
+			gameentity &f = *(gameentity *)ents[t];
 			d->o = f.o;
 			d->yaw = clamp((int)f.attr1, 0, 359);
 			d->pitch = clamp((int)f.attr2, -89, 89);
@@ -592,9 +592,9 @@ struct entities : icliententities
 		}
 	}
 
-	void reaction(int n, fpsent *d)
+	void reaction(int n, gameent *d)
 	{
-		fpsentity &e = *(fpsentity *)ents[n];
+		gameentity &e = *(gameentity *)ents[n];
 		switch(e.type)
 		{
 			case TELEPORT:
@@ -690,7 +690,7 @@ struct entities : icliententities
 	{
 		if(ents.inrange(index) && ents.inrange(node) && index != node && canlink(index, node, local))
 		{
-			fpsentity &e = *(fpsentity *)ents[index], &f = *(fpsentity *)ents[node];
+			gameentity &e = *(gameentity *)ents[index], &f = *(gameentity *)ents[node];
 			int g;
 
 			if((toggle || !add) && (g = e.links.find(node)) >= 0)
@@ -747,7 +747,7 @@ struct entities : icliententities
 	{
 		loopvj(ents) if(maylink(ents[j]->type))
 		{
-			fpsentity &e = *(fpsentity *)ents[j];
+			gameentity &e = *(gameentity *)ents[j];
 
 			loopvrev(e.links) if(e.links[i] == n)
 			{
@@ -768,7 +768,7 @@ struct entities : icliententities
         float score() const { return curscore + estscore; }
 	};
 
-	bool route(fpsent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, float *score = NULL)
+	bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, float *score = NULL)
 	{
         if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node) return false;
 
@@ -876,7 +876,7 @@ struct entities : icliententities
 	{
 		if(ents.inrange(index) && ents.inrange(node))
 		{
-			fpsentity &e = *(fpsentity *)ents[index], &f = *(fpsentity *)ents[node];
+			gameentity &e = *(gameentity *)ents[index], &f = *(gameentity *)ents[node];
 
 			if(e.links.find(node) < 0)
 				linkents(index, node, true, true, false);
@@ -885,7 +885,7 @@ struct entities : icliententities
 		}
 	}
 
-	void waypointcheck(fpsent *d)
+	void waypointcheck(gameent *d)
 	{
 		if(d->state == CS_ALIVE)
 		{
@@ -925,7 +925,7 @@ struct entities : icliententities
 
 	void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e)
 	{
-		fpsentity &f = (fpsentity &)e;
+		gameentity &f = (gameentity &)e;
 
 		f.mark = false;
 
@@ -1054,7 +1054,7 @@ struct entities : icliententities
 
 			loopv(ents)
 			{
-				fpsentity &e = *(fpsentity *)ents[i];
+				gameentity &e = *(gameentity *)ents[i];
 
 				if(e.type == TELEPORT && e.mark) // translate teledest to teleport and link them appropriately
 				{
@@ -1062,7 +1062,7 @@ struct entities : icliententities
 
 					loopvj(ents) // see if this guy is sitting on top of a teleport already
 					{
-						fpsentity &f = *(fpsentity *)ents[j];
+						gameentity &f = *(gameentity *)ents[j];
 
 						if(f.type == TELEPORT && !f.mark &&
 							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
@@ -1085,7 +1085,7 @@ struct entities : icliententities
 
 					loopvj(ents) // find linked teleport(s)
 					{
-						fpsentity &f = *(fpsentity *)ents[j];
+						gameentity &f = *(gameentity *)ents[j];
 
 						if(f.type == TELEPORT && !f.mark && f.attr1 == e.attr2)
 						{
@@ -1104,7 +1104,7 @@ struct entities : icliententities
 
 						loopvj(ents)
 						{
-							fpsentity &f = *(fpsentity *)ents[j];
+							gameentity &f = *(gameentity *)ents[j];
 
 							if(f.type == FLAG && f.attr2 != TEAM_NEUTRAL &&
 								(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
@@ -1114,7 +1114,7 @@ struct entities : icliententities
 
 						if(ents.inrange(dest))
 						{
-							fpsentity &f = *(fpsentity *)ents[dest];
+							gameentity &f = *(gameentity *)ents[dest];
 							conoutf("\frWARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attr1, e.attr2, dest, f.attr1, f.attr2);
 							if(!f.attr1) f.attr1 = e.attr1; // give it the old base idx
 							e.type = NOTUSED;
@@ -1126,7 +1126,7 @@ struct entities : icliententities
 
 			loopv(ents)
 			{
-				fpsentity &e = *(fpsentity *)ents[i];
+				gameentity &e = *(gameentity *)ents[i];
 
 				switch(e.type)
 				{
@@ -1165,7 +1165,7 @@ struct entities : icliententities
 		int waypoints = 0;
 		loopvj(ents)
 		{
-			fpsentity &e = *(fpsentity *)ents[j];
+			gameentity &e = *(gameentity *)ents[j];
 			loopvrev(e.links) if(!canlink(j, e.links[i], true)) e.links.remove(i);
 
 			switch(e.type)
@@ -1194,11 +1194,11 @@ struct entities : icliententities
 
 	void mapstart()
 	{
-		if(autodropwaypoints) 
+		if(autodropwaypoints)
 		{
 			loopv(ents)
 			{
-				fpsentity &e = *(fpsentity *)ents[i];
+				gameentity &e = *(gameentity *)ents[i];
 				vec v(e.o);
 				v.z -= dropheight(e);
 				switch(e.type)
@@ -1215,9 +1215,9 @@ struct entities : icliententities
 		}
 	}
 
-	#define renderfocus(i,f) { fpsentity &e = *(fpsentity *)ents[i]; f; }
+	#define renderfocus(i,f) { gameentity &e = *(gameentity *)ents[i]; f; }
 
-	void renderlinked(fpsentity &e)
+	void renderlinked(gameentity &e)
 	{
 		loopv(e.links)
 		{
@@ -1225,7 +1225,7 @@ struct entities : icliententities
 
 			if(ents.inrange(index))
 			{
-				fpsentity &f = *(fpsentity *)ents[index];
+				gameentity &f = *(gameentity *)ents[index];
 				bool both = false;
 
 				loopvj(f.links)
@@ -1233,7 +1233,7 @@ struct entities : icliententities
 					int g = f.links[j];
 					if(ents.inrange(g))
 					{
-						fpsentity &h = *(fpsentity *)ents[g];
+						gameentity &h = *(gameentity *)ents[g];
 						if(&h == &e)
 						{
 							both = true;
@@ -1257,7 +1257,7 @@ struct entities : icliententities
 		}
 	}
 
-	void renderentshow(fpsentity &e, int level)
+	void renderentshow(gameentity &e, int level)
 	{
 		if(!level || showentradius() >= level)
 		{
@@ -1315,7 +1315,7 @@ struct entities : icliententities
 				renderlinked(e);
 	}
 
-	void renderentlight(fpsentity &e)
+	void renderentlight(gameentity &e)
 	{
 		vec color(e.attr2, e.attr3, e.attr4);
 		color.div(255.f);
@@ -1338,7 +1338,7 @@ struct entities : icliententities
 
     void preload()
     {
-        if(!m_noitems(cl.gamemode, cl.mutators)) 
+        if(!m_noitems(cl.gamemode, cl.mutators))
 		{
 			loopv(ents)
         	{
@@ -1356,7 +1356,7 @@ struct entities : icliententities
 		loopv(cl.players) if(cl.players[i]) waypointcheck(cl.players[i]);
 		loopv(ents)
 		{
-			fpsentity &e = *(fpsentity *)ents[i];
+			gameentity &e = *(gameentity *)ents[i];
 			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1))
 			{
 				if(!issound(e.schan))
@@ -1386,7 +1386,7 @@ struct entities : icliententities
 
 		loopv(ents)
 		{
-			fpsentity &e = *(fpsentity *)ents[i];
+			gameentity &e = *(gameentity *)ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
 			bool active = (enttype[e.type].usetype == EU_ITEM && e.spawned);
 			if(m_edit(cl.gamemode) || active)
@@ -1408,7 +1408,7 @@ struct entities : icliententities
 	{
 		loopv(ents)
 		{
-			fpsentity &e = *(fpsentity *)ents[i];
+			gameentity &e = *(gameentity *)ents[i];
 
 			if(e.type == NOTUSED) continue;
 
@@ -1421,7 +1421,7 @@ struct entities : icliententities
 
 					loopvk(e.links) if(ents.inrange(e.links[k]))
 					{
-						fpsentity &f = *(fpsentity *)ents[e.links[k]];
+						gameentity &f = *(gameentity *)ents[e.links[k]];
 						if(f.links.find(i) >= 0 && lastmillis-f.lastemit < 500)
 						{
 							makeparticle(f.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);

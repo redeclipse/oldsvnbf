@@ -2,7 +2,7 @@ struct scoreboard : g3d_callback
 {
 	bool scoreson;
 	int menustart;
-	GAMECLIENT &cl;
+	gameclient &cl;
 
 	struct sline { string s; };
 	struct teamscore
@@ -13,10 +13,10 @@ struct scoreboard : g3d_callback
 	};
     struct scoregroup : teamscore
     {
-        vector<fpsent *> players;
+        vector<gameent *> players;
     };
     vector<scoregroup *> groups;
-    vector<fpsent *> spectators;
+    vector<gameent *> spectators;
 
 	IVARP(scoresinfo, 0, 1, 1);
 	IVARP(showclientnum, 0, 1, 1);
@@ -26,7 +26,7 @@ struct scoreboard : g3d_callback
     IVARP(highlightscore, 0, 1, 1);
     IVARP(showconnecting, 0, 0, 1);
 
-	scoreboard(GAMECLIENT &_cl) : scoreson(false), cl(_cl)
+	scoreboard(gameclient &_cl) : scoreson(false), cl(_cl)
 	{
         CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0));
 	}
@@ -66,7 +66,7 @@ struct scoreboard : g3d_callback
 		return x->team-y->team;
 	}
 
-	static int playersort(const fpsent **a, const fpsent **b)
+	static int playersort(const gameent **a, const gameent **b)
 	{
 		if((*a)->state==CS_SPECTATOR)
 		{
@@ -79,11 +79,11 @@ struct scoreboard : g3d_callback
 		return strcmp((*a)->name, (*b)->name);
 	}
 
-    void bestplayers(vector<fpsent *> &best)
+    void bestplayers(vector<gameent *> &best)
 	{
 		loopi(cl.numdynents())
 		{
-			fpsent *o = (fpsent *)cl.iterdynents(i);
+			gameent *o = (gameent *)cl.iterdynents(i);
             if(o && o->type==ENT_PLAYER && o->state!=CS_SPECTATOR) best.add(o);
 		}
         best.sort(playersort);
@@ -103,7 +103,7 @@ struct scoreboard : g3d_callback
         }
 		loopi(cl.numdynents())
 		{
-			fpsent *o = (fpsent *)cl.iterdynents(i);
+			gameent *o = (gameent *)cl.iterdynents(i);
             if(o && o->type==ENT_PLAYER)
 			{
 				teamscore *ts = NULL;
@@ -143,7 +143,7 @@ struct scoreboard : g3d_callback
         spectators.setsize(0);
         loopi(cl.numdynents())
         {
-            fpsent *o = (fpsent *)cl.iterdynents(i);
+            gameent *o = (gameent *)cl.iterdynents(i);
             if(!o || o->type!=ENT_PLAYER || (!showconnecting() && !o->name[0])) continue;
             if(o->state==CS_SPECTATOR) { spectators.add(o); continue; }
             int team = m_team(cl.gamemode, cl.mutators) ? o->team : TEAM_NEUTRAL;
@@ -252,7 +252,7 @@ struct scoreboard : g3d_callback
             #define loopscoregroup(o, b) \
                 loopv(sg.players) \
                 { \
-                    fpsent *o = sg.players[i]; \
+                    gameent *o = sg.players[i]; \
                     b; \
                 }
 
@@ -320,7 +320,7 @@ struct scoreboard : g3d_callback
 				{
 					if(o->ownernum >= 0)
 					{
-						fpsent *od = cl.getclient(o->ownernum);
+						gameent *od = cl.getclient(o->ownernum);
 						g.textf("\fs%s%d\fS", 0xFF9955, NULL, o->ownernum == cl.player1->clientnum ? "\fg" : "\fc", od ? od->ping : 0);
 					}
 					else g.textf("%d", 0xFFFFDD, NULL, o->ping);
@@ -376,7 +376,7 @@ struct scoreboard : g3d_callback
                 g.text("spectator", 0xFFFF80, "server");
                 loopv(spectators)
                 {
-                    fpsent *o = spectators[i];
+                    gameent *o = spectators[i];
                     if(o==cl.player1 && highlightscore())
                     {
                         g.pushlist();
@@ -405,7 +405,7 @@ struct scoreboard : g3d_callback
                         g.pushlist();
                         g.text("", 0xFFFFDD, "player");
                     }
-                    fpsent *o = spectators[i];
+                    gameent *o = spectators[i];
                     int status = 0xFFFFDD;
                     if(o->privilege) status = o->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;
                     if(o==cl.player1 && highlightscore())

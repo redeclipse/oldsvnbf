@@ -1,23 +1,23 @@
 struct physics
 {
-	GAMECLIENT &cl;
+	gameclient &cl;
 
-	IVARW(crawlspeed,		1,			25,			INT_MAX-1);	// crawl speed
-	IVARW(gravity,			1,			25,			INT_MAX-1);	// gravity
-	IVARW(jumpvel,			1,			60,			INT_MAX-1);	// extra velocity to add when jumping
-	IVARW(movespeed,		1,			45,			INT_MAX-1);	// speed
-	IVARW(liquidvel,		1,			45,			1024);		// extra liquid velocity
-	IVARW(liquidfric,		1,			15,			INT_MAX-1);
-	IVARW(sinkfric,			1,			3,			INT_MAX-1);
-	IVARW(floorfric,		1,			5,			INT_MAX-1);
-	IVARW(airfric,			1,			25,			INT_MAX-1);
+	IFVARW(crawlspeed,		30.f);	// crawl speed
+	IFVARW(gravity,			40.f);	// gravity
+	IFVARW(jumpvel,			80.f);	// extra velocity to add when jumping
+	IFVARW(movespeed,		50.f);	// speed
+	IFVARW(liquidvel,		50.f);	// extra liquid velocity
+	IFVARW(liquidfric,		10.f);
+	IFVARW(sinkfric,		3.f);
+	IFVARW(floorfric,		5.f);
+	IFVARW(airfric,			25.f);
 
 	IVARP(floatspeed,		10,			100,		1000);
 	IVARP(physframetime,	5,			5,			20);
 
 	int spawncycle, fixspawn, physicsfraction, physicsrepeat;
 
-	physics(GAMECLIENT &_cl) : cl(_cl)
+	physics(gameclient &_cl) : cl(_cl)
 	{
 		#define movedir(name, v, d, s, os) \
 			CCOMMAND(name, "D", (physics *self, int *down), { \
@@ -70,7 +70,7 @@ struct physics
 		return d->crouching || lastmillis-d->crouchtime <= 200;
 	}
 
-	void taunt(fpsent *d)
+	void taunt(gameent *d)
 	{
         if(d->state!=CS_ALIVE || d->physstate<PHYS_SLOPE) return;
 		if(lastmillis-d->lasttaunt<1000) return;
@@ -452,7 +452,7 @@ struct physics
 			}
 
 			if(local && pl->type == ENT_PLAYER && (isdeadly(material&MATF_VOLUME)))
-				cl.suicide((fpsent *)pl, int(material&MATF_VOLUME) == MAT_LAVA ? HIT_MELT : 0);
+				cl.suicide((gameent *)pl, int(material&MATF_VOLUME) == MAT_LAVA ? HIT_MELT : 0);
 		}
 
 		pl->inmaterial = material;
@@ -533,7 +533,7 @@ struct physics
 			if(!moveplayer(d, moveres, local, millis)) return false;
 			if(local && d->o.z < 0 && d->state == CS_ALIVE)
 			{
-				cl.suicide((fpsent *)d, HIT_FALL);
+				cl.suicide((gameent *)d, HIT_FALL);
 				return false;
 			}
 		}
@@ -631,7 +631,7 @@ struct physics
     IVARP(smoothmove, 0, 75, 1000);
     IVARP(smoothdist, 0, 64, 1024);
 
-    void predictplayer(fpsent *d, bool domove, int res = 0, bool local = false)
+    void predictplayer(gameent *d, bool domove, int res = 0, bool local = false)
     {
         d->o = d->newpos;
 
@@ -664,7 +664,7 @@ struct physics
         }
     }
 
-	void smoothplayer(fpsent *d, int res, bool local)
+	void smoothplayer(gameent *d, int res, bool local)
 	{
 		if(d->state==CS_ALIVE || d->state==CS_EDITING)
 		{

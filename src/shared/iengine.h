@@ -92,7 +92,7 @@ struct igame;
 extern void keyrepeat(bool on);
 extern void registergame(const char *name, igame *ig);
 
-#define REGISTERGAME(t, n, c, s) struct t : igame { t() { registergame(n, this); } igameclient *newclient() { return c; } igameserver *newserver() { return s; } } reg_##t
+#define REGISTERGAME(n, c, s) struct game : igame { game() { registergame(n, this); } igameclient *newclient() { return c; } igameserver *newserver() { return s; } } reg_game
 
 // rendertext
 extern char *savecolour, *restorecolour, *green, *blue, *yellow, *red, *gray,

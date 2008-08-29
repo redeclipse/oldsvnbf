@@ -2,11 +2,11 @@
 
 struct projectiles
 {
-	GAMECLIENT &cl;
+	gameclient &cl;
 
 	IVARA(maxprojectiles, 0, 200, INT_MAX-1);
 
-	projectiles(GAMECLIENT &_cl) : cl(_cl)
+	projectiles(gameclient &_cl) : cl(_cl)
 	{
 	}
 
@@ -191,7 +191,7 @@ struct projectiles
 					regular_part_splash(4, rnd(3)+2, 20, proj.o, col, size, int(proj.radius));
 					loopi(cl.numdynents())
 					{
-						fpsent *f = (fpsent *)cl.iterdynents(i);
+						gameent *f = (gameent *)cl.iterdynents(i);
 						if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT)
 							continue;
 						vec dir;
@@ -300,7 +300,7 @@ struct projectiles
 		return true;
 	}
 
-	void create(vec &from, vec &to, bool local, fpsent *d, int type, int lifetime, int waittime, int speed, int id = 0, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
+	void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int waittime, int speed, int id = 0, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
 	{
 		if(!d || !lifetime || !speed) return;
 
@@ -327,13 +327,13 @@ struct projectiles
 		projs.add(&proj);
 	}
 
-	void drop(fpsent *d, int g, int n, int delay = 0)
+	void drop(gameent *d, int g, int n, int delay = 0)
 	{
 		if(n >= 0)
 		{
 			if(cl.et.ents.inrange(n) && !m_noitems(cl.gamemode, cl.mutators))
 			{
-				fpsentity &e = (fpsentity &)*cl.et.ents[n];
+				gameentity &e = (gameentity &)*cl.et.ents[n];
 				create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_ENT, 30000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 			}
 		}
@@ -439,7 +439,7 @@ struct projectiles
 		}
 	}
 
-	void remove(fpsent *owner)
+	void remove(gameent *owner)
 	{
 		loopv(projs) if(projs[i]->owner==owner)
         {
@@ -454,7 +454,7 @@ struct projectiles
         projs.setsize(0);
     }
 
-	void spawn(vec &p, vec &vel, fpsent *d, int type)
+	void spawn(vec &p, vec &vel, gameent *d, int type)
 	{
 		vec to(rnd(100)-50, rnd(100)-50, rnd(100)-50);
 		to.normalize();

@@ -34,7 +34,7 @@
 					<Add option="-DIRC" />
 					<Add directory="shared" />
 					<Add directory="engine" />
-					<Add directory="fpsgame" />
+					<Add directory="game" />
 					<Add directory="enet\include" />
 					<Add directory="include" />
 				</Compiler>
@@ -77,7 +77,7 @@
 					<Add option="-DIRC" />
 					<Add directory="shared" />
 					<Add directory="engine" />
-					<Add directory="fpsgame" />
+					<Add directory="game" />
 					<Add directory="enet\include" />
 					<Add directory="include" />
 				</Compiler>
@@ -124,7 +124,7 @@
 					<Add directory="include" />
 					<Add directory="enet\include" />
 					<Add directory="daemon" />
-					<Add directory="fpsgame" />
+					<Add directory="game" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -157,7 +157,7 @@
 					<Add directory="include" />
 					<Add directory="enet\include" />
 					<Add directory="daemon" />
-					<Add directory="fpsgame" />
+					<Add directory="game" />
 				</Compiler>
 				<Linker>
 					<Add library="ws2_32" />
@@ -191,7 +191,7 @@
 					<Add option="-DIRC" />
 					<Add directory="shared" />
 					<Add directory="engine" />
-					<Add directory="fpsgame" />
+					<Add directory="game" />
 					<Add directory="enet\include" />
 					<Add directory="include" />
 				</Compiler>
@@ -297,7 +297,7 @@
 					<Add option="-DIRC" />
 					<Add directory="shared" />
 					<Add directory="engine" />
-					<Add directory="fpsgame" />
+					<Add directory="game" />
 					<Add directory="enet\include" />
 					<Add directory="include" />
 				</Compiler>
@@ -818,42 +818,36 @@
 			<Option target="profile" />
 			<Option target="data" />
 		</Unit>
-		<Unit filename="fpsgame\bfa.h">
-			<Option target="client" />
-			<Option target="server" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
-		</Unit>
-		<Unit filename="fpsgame\bot.h">
+		<Unit filename="game\bot.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
 		</Unit>
-		<Unit filename="fpsgame\client.h">
+		<Unit filename="game\client.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="fpsgame\ctf.h">
+		<Unit filename="game\ctf.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="fpsgame\duel.h">
+		<Unit filename="game\duel.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="fpsgame\entities.h">
+		<Unit filename="game\entities.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="fpsgame\extinfo.h">
+		<Unit filename="game\extinfo.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
@@ -861,7 +855,7 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 		</Unit>
-		<Unit filename="fpsgame\fps.cpp">
+		<Unit filename="game\game.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
@@ -869,37 +863,37 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 		</Unit>
-		<Unit filename="fpsgame\fpsserver.h">
+		<Unit filename="game\server.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="fpsgame\game.h">
+		<Unit filename="game\game.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="fpsgame\physics.h">
+		<Unit filename="game\physics.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="fpsgame\projs.h">
+		<Unit filename="game\projs.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="fpsgame\scoreboard.h">
+		<Unit filename="game\scoreboard.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="fpsgame\stf.h">
+		<Unit filename="game\stf.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
@@ -907,7 +901,7 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 		</Unit>
-		<Unit filename="fpsgame\weapon.h">
+		<Unit filename="game\weapon.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />

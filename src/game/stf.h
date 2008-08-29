@@ -171,15 +171,15 @@ struct stfstate
 
 struct stfclient : stfstate
 {
-	GAMECLIENT &cl;
+	gameclient &cl;
 
     IVARP(securetether, 0, 1, 1);
 
-	stfclient(GAMECLIENT &cl) : cl(cl)
+	stfclient(gameclient &cl) : cl(cl)
 	{
 	}
 
-    void rendertether(fpsent *d)
+    void rendertether(gameent *d)
     {
         //int oldflag = d->lastflag;
         d->lastflag = -1;
@@ -210,7 +210,7 @@ struct stfclient : stfstate
         {
             loopv(cl.players)
             {
-                fpsent *d = cl.players[i];
+                gameent *d = cl.players[i];
                 if(d) rendertether(d);
             }
             rendertether(cl.player1);
@@ -276,7 +276,7 @@ struct stfclient : stfstate
 		}
 	}
 
-    int respawnwait(fpsent *d)
+    int respawnwait(gameent *d)
     {
         return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)*1000-(lastmillis-d->lastpain));
     }
@@ -420,7 +420,7 @@ struct stfservmode : stfstate, servmode
 	int scoresec;
 	bool notgotflags;
 
-	stfservmode(GAMESERVER &sv) : servmode(sv), scoresec(0), notgotflags(false) {}
+	stfservmode(gameserver &sv) : servmode(sv), scoresec(0), notgotflags(false) {}
 
 	void reset(bool empty)
 	{
@@ -434,7 +434,7 @@ struct stfservmode : stfstate, servmode
 		flaginfo &b = flags[n];
 		loopv(sv.clients)
 		{
-			GAMESERVER::clientinfo *ci = sv.clients[i];
+			gameserver::clientinfo *ci = sv.clients[i];
 			if(!ci->spectator && ci->state.state==CS_ALIVE && ci->team && ci->team == team && insideflag(b, ci->state.o))
 				b.enter(ci->team);
 		}
