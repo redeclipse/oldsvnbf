@@ -1113,8 +1113,6 @@ void gettextres(int &w, int &h)
 	}
 }
 
-void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat);
-
 const char *loadback = "textures/loadback";
 
 void loadbackground(int w, int h)
@@ -1357,122 +1355,122 @@ void readmatrices()
     invmvmatrix[15] = 1;
 }
 
-void gl_drawframe(int w, int h)
-{
-	defaultshader->set();
-
-    updatedynlights();
-
-    int fogmat = lookupmaterial(camera1->o)&MATF_VOLUME, abovemat = MAT_AIR;
-    float fogblend = 1.0f, causticspass = 0.0f;
-    if(fogmat==MAT_WATER || fogmat==MAT_LAVA)
-    {
-        float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
-        if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
-        else fogmat = abovemat;
-        if(caustics && fogmat==MAT_WATER && camera1->o.z < z)
-            causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
-    }
-    else
-    {
-    	fogmat = MAT_AIR;
-    }
-    setfog(fogmat, fogblend, abovemat);
-    if(fogmat!=MAT_AIR)
-    {
-        float blend = abovemat==MAT_AIR ? fogblend : 1.0f;
-        fovy += blend*sinf(lastmillis/1000.0)*2.0f;
-        aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
-    }
-
-    farplane = hdr.worldsize*2;
-
-	project(fovy, aspect, farplane);
-	transplayer();
-    readmatrices();
-    cl->project(w, h);
-
-	glEnable(GL_TEXTURE_2D);
-
-	glPolygonMode(GL_FRONT_AND_BACK, wireframe && editmode ? GL_LINE : GL_FILL);
-
-	xtravertsva = xtraverts = glde = gbatches = 0;
-
-    if(!hasFBO)
-    {
-        if(dopostfx)
-        {
-            drawglaretex();
-            drawdepthfxtex();
-            drawreflections();
-        }
-        else dopostfx = true;
-    }
-
-    visiblecubes(curfov, fovy);
-
-	if(shadowmap && !hasFBO) rendershadowmap();
-
-	glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
-
-	if(limitsky()) drawskybox(farplane, true);
-
-	rendergeom(causticspass);
-
-    extern int outline, blankgeom;
-    if(!wireframe && editmode && (outline || (fullbright && blankgeom))) renderoutline();
-
-	queryreflections();
-
-    if(!limitsky()) drawskybox(farplane, false);
-
-	rendermapmodels();
-    rendergame();
-    renderavatar(true);
-
-    if(hasFBO)
-    {
-        drawglaretex();
-        drawdepthfxtex();
-        drawreflections();
-    }
-
-    renderdecals(curtime);
-    renderwater();
-    rendergrass();
-
-	rendermaterials();
-	render_particles(curtime);
-
-    project(fovy, aspect, farplane, false, false, false, 0.5f);
-    renderavatar(false);
-    project(fovy, aspect, farplane);
-
-	glDisable(GL_FOG);
-	glDisable(GL_CULL_FACE);
-
-    addglare();
-	renderfullscreenshader(w, h);
-
-    gl_drawhud(w, h, fogmat, fogblend, abovemat);
-
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_FOG);
-
-    renderedgame = false;
-}
-
 VARP(hidehud, 0, 0, 1);
 
 float cursorx = 0.5f, cursory = 0.5f, aimx = 0.5f, aimy = 0.5f;
 vec cursordir(0, 0, 0);
 
-void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
-{
-    defaultshader->set();
+FVARP(hudblend, 0.99f);
 
-	if(!cc->ready())
+void gl_drawframe(int w, int h)
+{
+	int fogmat = MAT_AIR, abovemat = MAT_AIR;
+	float fogblend = 1.0f, causticspass = 0.0f;
+	bool isready = cc->ready();
+
+	defaultshader->set();
+
+	if(isready)
 	{
+		updatedynlights();
+
+		fogmat = lookupmaterial(camera1->o)&MATF_VOLUME;
+		if(fogmat==MAT_WATER || fogmat==MAT_LAVA)
+		{
+			float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
+			if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
+			else fogmat = abovemat;
+			if(caustics && fogmat==MAT_WATER && camera1->o.z < z)
+				causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
+		}
+		else
+		{
+			fogmat = MAT_AIR;
+		}
+		setfog(fogmat, fogblend, abovemat);
+		if(fogmat!=MAT_AIR)
+		{
+			float blend = abovemat==MAT_AIR ? fogblend : 1.0f;
+			fovy += blend*sinf(lastmillis/1000.0)*2.0f;
+			aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
+		}
+
+		farplane = hdr.worldsize*2;
+
+		project(fovy, aspect, farplane);
+		transplayer();
+		readmatrices();
+		cl->project(w, h);
+
+		glEnable(GL_TEXTURE_2D);
+
+		glPolygonMode(GL_FRONT_AND_BACK, wireframe && editmode ? GL_LINE : GL_FILL);
+
+		xtravertsva = xtraverts = glde = gbatches = 0;
+
+		if(!hasFBO)
+		{
+			if(dopostfx)
+			{
+				drawglaretex();
+				drawdepthfxtex();
+				drawreflections();
+			}
+			else dopostfx = true;
+		}
+
+		visiblecubes(curfov, fovy);
+
+		if(shadowmap && !hasFBO) rendershadowmap();
+
+		glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
+
+		if(limitsky()) drawskybox(farplane, true);
+
+		rendergeom(causticspass);
+
+		extern int outline, blankgeom;
+		if(!wireframe && editmode && (outline || (fullbright && blankgeom))) renderoutline();
+
+		queryreflections();
+
+		if(!limitsky()) drawskybox(farplane, false);
+
+		rendermapmodels();
+		rendergame();
+		renderavatar(true);
+
+		if(hasFBO)
+		{
+			drawglaretex();
+			drawdepthfxtex();
+			drawreflections();
+		}
+
+		renderdecals(curtime);
+		renderwater();
+		rendergrass();
+
+		rendermaterials();
+		render_particles(curtime);
+
+		project(fovy, aspect, farplane, false, false, false, 0.5f);
+		renderavatar(false);
+		project(fovy, aspect, farplane);
+
+		glDisable(GL_FOG);
+		glDisable(GL_CULL_FACE);
+
+		addglare();
+		renderfullscreenshader(w, h);
+
+		glDisable(GL_TEXTURE_2D);
+	}
+	else
+	{
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
@@ -1483,9 +1481,11 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 		glLoadIdentity();
 
         glDisable(GL_DEPTH_TEST);
+		glEnable(GL_TEXTURE_2D);
 
 		loadbackground(w, h);
 
+		glDisable(GL_TEXTURE_2D);
         glEnable(GL_DEPTH_TEST);
 
 		glMatrixMode(GL_PROJECTION);
@@ -1494,7 +1494,6 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 		glPopMatrix();
 	}
 
-	glDisable(GL_TEXTURE_2D);
 	notextureshader->set();
 
 	if(editmode && !hidehud)
@@ -1507,17 +1506,14 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 	}
 
 	glDisable(GL_DEPTH_TEST);
-
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
 	gettextres(w, h);
-
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, w, h, 0, -1, 1);
 
-	if(cc->ready())
+	if(isready)
 	{
 		glEnable(GL_BLEND);
 		vec colour;
@@ -1542,41 +1538,44 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
 		}
 
 		glDisable(GL_BLEND);
+
+		glColor3f(1, 1, 1);
+
+		extern int debugsm;
+		if(debugsm)
+		{
+			extern void viewshadowmap();
+			viewshadowmap();
+		}
+
+		extern int debugglare;
+		if(debugglare)
+		{
+			extern void viewglaretex();
+			viewglaretex();
+		}
+
+		extern int debugdepthfx;
+		if(debugdepthfx)
+		{
+			extern void viewdepthfxtex();
+			viewdepthfxtex();
+		}
 	}
-
-    glColor3f(1, 1, 1);
-
-    extern int debugsm;
-    if(debugsm)
-    {
-        extern void viewshadowmap();
-        viewshadowmap();
-    }
-
-    extern int debugglare;
-    if(debugglare)
-    {
-        extern void viewglaretex();
-        viewglaretex();
-    }
-
-    extern int debugdepthfx;
-    if(debugdepthfx)
-    {
-        extern void viewdepthfxtex();
-        viewdepthfxtex();
-    }
 
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
-
-	cl->drawhud(w, h); // can make more dramatic changes this way without getting in the way
-
+	cl->drawhud(w, h);
 	glDisable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
-}
 
-FVARP(hudblend, 0.99f);
+	if(!isready)
+	{
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_FOG);
+	}
+    renderedgame = false;
+}
 
 #define rendernearfar(a,b,c,d,e) \
 	if (d) { \

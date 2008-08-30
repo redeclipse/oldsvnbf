@@ -354,10 +354,8 @@ struct aiclient
 			float targyaw, targpitch;
 			vectoyawpitch(dir, targyaw, targpitch);
 			int rdelay = guntype[d->gunselect].rdelay > 0 ? guntype[d->gunselect].rdelay : guntype[d->gunselect].adelay*10;
-			float rtime = d->skill*rdelay/1000.f,
-				atime = d->skill*guntype[d->gunselect].adelay/100.f,
-					skew = float(lastmillis-b.millis)/(rtime+atime),
-						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
+			float rtime = d->skill*rdelay/1000.f, atime = d->skill*guntype[d->gunselect].adelay/100.f,
+					skew = float(lastmillis-b.millis)/(rtime+atime), cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 			if(cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew)
 				return true;
 		}
@@ -1187,13 +1185,13 @@ struct aiclient
 			if(e)
 			{
 				vec enemypos = cl.headpos(e);
-				aim(d, b, enemypos, d->yaw, d->pitch, 8);
+				aim(d, b, enemypos, d->yaw, d->pitch, 9);
 				aiming = true;
 			}
 			if(hunt(d, b))
 			{
-				if(!aiming) aim(d, b, d->ai->spot, d->yaw, d->pitch, 4);
-				aim(d, b, d->ai->spot, d->aimyaw, d->aimpitch, 2);
+				if(!aiming) aim(d, b, d->ai->spot, d->yaw, d->pitch, 6);
+				aim(d, b, d->ai->spot, d->aimyaw, d->aimpitch, 3);
 			}
 
             const struct aimdir { int move, strafe, offset; } aimdirs[8] =

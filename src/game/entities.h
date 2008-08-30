@@ -63,6 +63,7 @@ struct entities : icliententities
 	vector<extentity *> ents;
 	vector<int> entlinks[MAXENTTYPES];
 
+	IVARP(showentnames, 0, 1, 2);
 	IVARP(showentinfo, 0, 1, 5);
 	IVARP(showentnoisy, 0, 1, 2);
 	IVARP(showentdir, 0, 1, 3);
@@ -177,8 +178,8 @@ struct entities : icliententities
 			if(isgun(attr1))
 			{
 				int a = clamp(attr2 > 0 ? attr2 : guntype[attr1].add, 1, guntype[attr1].max);
-				if(full) s_sprintf(str)("%s, %d ammo", guntype[attr1].name, a);
-				else s_sprintf(str)("%s", guntype[attr1].name);
+				if(full) s_sprintf(str)("\fs%s%s\fS, %d ammo", guntype[attr1].text, guntype[attr1].name, a);
+				else s_sprintf(str)("\fs%s%s\fS", guntype[attr1].text, guntype[attr1].name);
 				addentinfo(str);
 			}
 		}
@@ -1404,50 +1405,42 @@ struct entities : icliententities
 		}
 	}
 
-	void drawparticles()
+	void drawparticle(gameentity &e, vec &o, int idx, bool spawned)
 	{
-		loopv(ents)
+		if(e.type == NOTUSED) return;
+		string s;
+		if(e.type == PARTICLES && o.dist(camera1->o) <= maxparticledistance)
 		{
-			gameentity &e = *(gameentity *)ents[i];
-
-			if(e.type == NOTUSED) continue;
-
-			if(e.type == PARTICLES && e.o.dist(camera1->o) <= maxparticledistance)
+			if(idx >= 0 || !e.links.length()) makeparticles((entity &)e);
+			else if(lastmillis-e.lastemit < 500)
 			{
-				if(!e.links.length()) makeparticles((entity &)e);
-				else if(lastmillis-e.lastemit < 500)
+				bool both = false;
+
+				loopvk(e.links) if(ents.inrange(e.links[k]))
 				{
-					bool both = false;
-
-					loopvk(e.links) if(ents.inrange(e.links[k]))
+					gameentity &f = *(gameentity *)ents[e.links[k]];
+					if(f.links.find(idx) >= 0 && lastmillis-f.lastemit < 500)
 					{
-						gameentity &f = *(gameentity *)ents[e.links[k]];
-						if(f.links.find(i) >= 0 && lastmillis-f.lastemit < 500)
-						{
-							makeparticle(f.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-							both = true;
-						}
+						makeparticle(f.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+						both = true;
 					}
-
-					if(!both) // hasn't got an active reciprocal link (fallback)
-						makeparticle(e.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 				}
+
+				if(!both) // hasn't got an active reciprocal link (fallback)
+					makeparticle(o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 			}
+		}
 
-			if(m_edit(cl.gamemode) && (showentinfo() || editmode) &&
-				(!enttype[e.type].noisy || showentnoisy() >= 2 || (showentnoisy() && editmode)))
+		if(m_edit(cl.gamemode))
+		{
+			if((showentinfo() || editmode) && (!enttype[e.type].noisy || showentnoisy() >= 2 || (showentnoisy() && editmode)))
 			{
-				bool hasent = (entgroup.find(i) >= 0 || enthover == i);
-
-				if(e.type != PARTICLES)
-					part_create(3, 1, e.o, hasent ? 0xFF6600 : 0xFFFF00, hasent ? 2.0f : 1.5f);
-
+				bool hasent = idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
+				vec off(0, 0, 2.f), pos(o);
+				part_create(3, 1, pos, hasent ? 0xFF6600 : 0xFFFF00, hasent ? 2.0f : 1.5f);
 				if(showentinfo() >= 2 || editmode)
 				{
-					string s;
-					vec pos(e.o), off(0, 0, 1.5f);
-
-					s_sprintf(s)("@%s%s", hasent ? "\fo" : "\fy", enttype[e.type].name);
+					s_sprintf(s)("@%s%s (%d)", hasent ? "\fo" : "\fy", enttype[e.type].name, idx >= 0 ? idx : 0);
 					particle_text(pos.add(off), s, hasent ? 26 : 27, 1);
 
 					if(showentinfo() >= 3 || hasent)
@@ -1462,6 +1455,32 @@ struct entities : icliententities
 					}
 				}
 			}
+		}
+		else if(showentnames())
+		{
+			if(e.type == WEAPON && spawned)
+			{
+				s_sprintf(s)("@%s", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
+				particle_text(vec(o).add(vec(0, 0, 4)), s, 26, 1);
+			}
+		}
+	}
+
+	void drawparticles()
+	{
+		loopv(ents)
+		{
+			gameentity &e = *(gameentity *)ents[i];
+			if(e.type == NOTUSED) continue;
+			drawparticle(e, e.o, i, e.spawned);
+		}
+		loopv(cl.pj.projs)
+		{
+			projent &proj = *cl.pj.projs[i];
+			if(proj.projtype != PRJ_ENT || !ents.inrange(proj.id))
+				continue;
+			gameentity &e = *(gameentity *)ents[proj.id];
+			drawparticle(e, proj.o, -1, proj.ready());
 		}
 	}
 } et;
