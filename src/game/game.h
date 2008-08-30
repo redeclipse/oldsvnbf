@@ -275,7 +275,7 @@ enum
 	SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
 	SV_CLIENT, SV_RELOAD, SV_REGEN,
-	SV_ADDBOT, SV_DELBOT, SV_INITBOT
+	SV_ADDBOT, SV_DELBOT, SV_INITAI
 };
 
 char msgsizelookup(int msg)
@@ -300,7 +300,7 @@ char msgsizelookup(int msg)
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 2, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
 		SV_CLIENT, 0, SV_RELOAD, 0, SV_REGEN, 0,
-		SV_ADDBOT, 0, SV_DELBOT, 0, SV_INITBOT, 0,
+		SV_ADDBOT, 0, SV_DELBOT, 0, SV_INITAI, 0,
 		-1
 	};
 	for(char *p = msgsizesl; *p>=0; p += 2) if(*p==msg) return p[1];
@@ -334,20 +334,6 @@ struct teamtypes
 #define MAXTEAMS		TEAM_GAMMA
 #define numteams(a,b)	(m_multi(a, b) ? MAXTEAMS : MAXTEAMS/2)
 #define isteam(a,b)		(a >= b && a <= MAXTEAMS)
-
-enum { ENEMY_BOT = 0, ENEMY_BSOLDIER, ENEMY_RSOLDIER, ENEMY_YSOLDIER, ENEMY_GSOLDIER, ENEMY_MAX };
-struct enemytypes
-{
-	int type,			colour; const char *name,	*mdl;
-} enemytype[] = {
-	{ ENEMY_BOT,		0x2F2F2F,	"neutral",		"player" },
-	{ ENEMY_BSOLDIER,	0x2222FF,	"alpha",		"player/alpha" },
-	{ ENEMY_RSOLDIER,	0xFF2222,	"beta",			"player/beta" },
-	{ ENEMY_YSOLDIER,	0xFFFF22,	"delta",		"player/delta" },
-	{ ENEMY_GSOLDIER,	0x22FF22,	"gamma",		"player/gamma" },
-};
-
-#define isenemy(a)		(a >= 0 && a <= ENEMY_MAX-1)
 
 #define REGENWAIT		3000
 #define REGENTIME		1000
@@ -429,15 +415,30 @@ FVARG(gravityscale, 1.f);
 FVARG(jumpscale, 1.f);
 FVARG(speedscale, 1.f);
 
+enum { AI_NONE = 0, AI_BOT, AI_BSOLDIER, AI_RSOLDIER, AI_YSOLDIER, AI_GSOLDIER, AI_MAX };
+#define isaitype(a)	(a >= 0 && a <= AI_MAX-1)
+
+struct aitypes
+{
+	int type,			colour; const char *name,	*mdl;
+} aitype[] = {
+	{ AI_NONE,		0xFFFFFF,	"",				"" },
+	{ AI_BOT,		0x2F2F2F,	"bot",			"player" },
+	{ AI_BSOLDIER,	0x2222FF,	"alpha",		"player/alpha" },
+	{ AI_RSOLDIER,	0xFF2222,	"beta",			"player/beta" },
+	{ AI_YSOLDIER,	0xFFFF22,	"delta",		"player/delta" },
+	{ AI_GSOLDIER,	0x22FF22,	"gamma",		"player/gamma" },
+};
+
 // inherited by gameent and server clients
 struct gamestate
 {
 	int health, ammo[GUN_MAX], entid[GUN_MAX];
 	int lastgun, gunselect, gunstate[GUN_MAX], gunwait[GUN_MAX], gunlast[GUN_MAX];
 	int lastdeath, lifesequence, lastspawn, lastrespawn, lastpain, lastregen;
-	int ownernum, skill, spree;
+	int aitype, ownernum, skill, spree;
 
-	gamestate() : lifesequence(0), ownernum(-1), skill(0), spree(0) {}
+	gamestate() : lifesequence(0), aitype(AI_NONE), ownernum(-1), skill(0), spree(0) {}
 	~gamestate() {}
 
 	int hasgun(int gun, int level = 0, int exclude = -1)
@@ -688,27 +689,27 @@ struct serverstatuses
 	{ SSTAT_UNKNOWN,		0x888888,	"serverunk" }
 };
 
-// bot state information for the owner client
+// ai state information for the owner client
 enum
 {
-	BS_WAIT = 0,	// waiting for next command
-	BS_DEFEND,		// defend goal target
-	BS_PURSUE,		// pursue goal target
-	BS_ATTACK,		// attack goal target
-	BS_INTEREST,	// interest in goal entity
-	BS_MAX
+	AI_S_WAIT = 0,		// waiting for next command
+	AI_S_DEFEND,		// defend goal target
+	AI_S_PURSUE,		// pursue goal target
+	AI_S_ATTACK,		// attack goal target
+	AI_S_INTEREST,		// interest in goal entity
+	AI_S_MAX
 };
 
-static const int botframetimes[BS_MAX] = { 250, 250, 250, 125, 250 };
+static const int aiframetimes[AI_S_MAX] = { 250, 250, 250, 125, 250 };
 
 enum
 {
-	BT_NODE,
-	BT_PLAYER,
-	BT_ENTITY,
-	BT_FLAG,
-	BT_DROP,
-	BT_MAX
+	AI_T_NODE,
+	AI_T_PLAYER,
+	AI_T_ENTITY,
+	AI_T_FLAG,
+	AI_T_DROP,
+	AI_T_MAX
 };
 
 enum
@@ -717,16 +718,16 @@ enum
 	WP_CROUCH = 1<<0,
 };
 
-struct botstate
+struct aistate
 {
 	int type, millis, expire, next, targtype, target, cycle;
 	bool goal, override, defers;
 
-	botstate(int _type, int _millis) : type(_type), millis(_millis)
+	aistate(int _type, int _millis) : type(_type), millis(_millis)
 	{
 		reset();
 	}
-	~botstate()
+	~aistate()
 	{
 	}
 
@@ -734,7 +735,7 @@ struct botstate
 	{
 		expire = cycle = 0;
 		next = millis;
-		if(type == BS_WAIT)
+		if(type == AI_S_WAIT)
 			next += rnd(1500) + 1500;
 		targtype = target = -1;
 		goal = override = false;
@@ -742,28 +743,21 @@ struct botstate
 	}
 };
 
-struct botinfo
+struct aiinfo
 {
-	vector<botstate> state;
+	vector<aistate> state;
 	vector<int> route;
 	vec target, spot;
 	int enemy, gunpref, lastreq;
 
-	botinfo()
-	{
-		reset();
-	}
-	~botinfo()
-	{
-		state.setsize(0);
-		route.setsize(0);
-	}
+	aiinfo() { reset(); }
+	~aiinfo() { state.setsize(0); route.setsize(0); }
 
 	void reset()
 	{
 		state.setsize(0);
 		route.setsize(0);
-		addstate(BS_WAIT);
+		addstate(AI_S_WAIT);
 		gunpref = rnd(GUN_MAX-1)+1;
 		if(guntype[gunpref].rdelay <= 0) gunpref = (gunpref+rnd(3)-1)%GUN_MAX;
 		spot = target = vec(0, 0, 0);
@@ -771,9 +765,9 @@ struct botinfo
 		lastreq = 0;
 	}
 
-	botstate &addstate(int type)
+	aistate &addstate(int t)
 	{
-		botstate bs(type, lastmillis);
+		aistate bs(t, lastmillis);
 		return state.add(bs);
 	}
 
@@ -782,16 +776,16 @@ struct botinfo
 		if(index < 0 && state.length()) state.pop();
 		else if(state.inrange(index)) state.remove(index);
 		enemy = -1;
-		if(!state.length()) addstate(BS_WAIT);
+		if(!state.length()) addstate(AI_S_WAIT);
 	}
 
-	botstate &setstate(int type, bool pop = true)
+	aistate &setstate(int t, bool pop = true)
 	{
 		if(pop) removestate();
-		return addstate(type);
+		return addstate(t);
 	}
 
-	botstate &getstate(int idx = -1)
+	aistate &getstate(int idx = -1)
 	{
 		if(state.inrange(idx)) return state[idx];
 		return state.last();
@@ -813,13 +807,13 @@ struct gameent : dynent, gamestate
 	int lastimpulse, oldnode, lastnode;
 	int respawned, suicided;
 	int wschan;
-	botinfo *bot;
+	aiinfo *ai;
     vec muzzle;
 
 	string name, info, obit;
 	int team;
 
-	gameent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), bot(NULL), muzzle(-1, -1, -1)
+	gameent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), ai(NULL), muzzle(-1, -1, -1)
 	{
 		name[0] = info[0] = obit[0] = 0;
 		team = TEAM_NEUTRAL;
@@ -828,7 +822,7 @@ struct gameent : dynent, gamestate
 	~gameent()
 	{
 		freeeditinfo(edit);
-		if(bot) delete bot;
+		if(ai) delete ai;
 		if(issound(wschan)) removesound(wschan);
 		wschan = -1;
 	}

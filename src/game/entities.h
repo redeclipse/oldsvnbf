@@ -482,7 +482,7 @@ struct entities : icliententities
 			if(local)
 			{
 				cl.cc.addmsg(SV_EXECLINK, "ri2", d->clientnum, index);
-				if(d->bot) return;
+				if(d->ai) return;
 			}
 
 			gameentity &e = *(gameentity *)ents[index];
@@ -891,7 +891,7 @@ struct entities : icliententities
 		{
 			vec v(cl.feetpos(d, 0.f));
 			int curnode = waypointnode(v);
-			if(waypointdrop() && ((m_fight(cl.gamemode) && d->ownernum < 0) || d == cl.player1))
+			if(waypointdrop() && ((m_fight(cl.gamemode) && d->aitype == AI_NONE) || d == cl.player1))
 			{
 				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= d->radius+enttype[WAYPOINT].radius)
 					curnode = d->lastnode;

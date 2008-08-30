@@ -11,7 +11,7 @@ struct gameclient : igameclient
 	#include "scoreboard.h"
 	#include "entities.h"
 	#include "client.h"
-	#include "bot.h"
+	#include "ai.h"
 	#include "stf.h"
     #include "ctf.h"
 
@@ -161,7 +161,7 @@ struct gameclient : igameclient
 	ITVAR(snipetex, "textures/snipe", 0);
 
 	gameclient()
-		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), bot(*this), stf(*this), ctf(*this),
+		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), ai(*this), stf(*this), ctf(*this),
 			nextmode(G_LOBBY), nextmuts(0), gamemode(G_LOBBY), mutators(0), intermission(false),
 			maptime(0), minremain(0), swaymillis(0), swaydir(0, 0, 0),
 			lasthit(0), lastcamera(0), lastzoom(0), lastmousetype(0),
@@ -382,7 +382,7 @@ struct gameclient : igameclient
 
 	void checkoften(gameent *d)
 	{
-		heightoffset(d, d == player1 || d->bot);
+		heightoffset(d, d == player1 || d->ai);
 		loopi(GUN_MAX) if(d->gunstate[i] != GUNSTATE_IDLE)
 		{
 			if(d->state != CS_ALIVE || (d->gunstate[i] != GUNSTATE_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
@@ -397,7 +397,7 @@ struct gameclient : igameclient
             gameent *d = players[i];
             const int lagtime = lastmillis-d->lastupdate;
             checkoften(d);
-            if(d->bot || !lagtime || intermission) continue;
+            if(d->ai || !lagtime || intermission) continue;
             else if(lagtime>1000 && d->state==CS_ALIVE)
 			{
                 d->state = CS_LAGGED;
@@ -423,7 +423,7 @@ struct gameclient : igameclient
 			ph.update();
 			pj.update();
 			et.update();
-			bot.update();
+			ai.update();
 
 			otherplayers();
 			if(!allowmove(player1)) player1->stopmoving();
@@ -513,7 +513,7 @@ struct gameclient : igameclient
 			if(actor == player1) lasthit = lastmillis;
 		}
 
-		bot.damaged(d, actor, gun, flags, damage, health, millis, dir);
+		ai.damaged(d, actor, gun, flags, damage, health, millis, dir);
 	}
 
 	void killed(int gun, int flags, int damage, gameent *d, gameent *actor)
@@ -647,7 +647,7 @@ struct gameclient : igameclient
 		int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
 		loopi(rnd(gibs)+1) pj.spawn(pos, d->vel, d, PRJ_GIBS);
 
-		bot.killed(d, actor, gun, flags, damage);
+		ai.killed(d, actor, gun, flags, damage);
 	}
 
 	void timeupdate(int timeremain)
@@ -741,7 +741,7 @@ struct gameclient : igameclient
 	{
 		if(n < 0 || n >= S_MAX) return;
 		gameent *c = d ? d : player1;
-		if(c == player1 || c->bot) cc.addmsg(SV_SOUND, "i2", c->clientnum, n);
+		if(c == player1 || c->ai) cc.addmsg(SV_SOUND, "i2", c->clientnum, n);
 		playsound(n, 0, 255, c->o, c);
 	}
 
@@ -768,9 +768,9 @@ struct gameclient : igameclient
 		if(!name) name = d->name;
 		static string cname;
 		s_sprintf(cname)("%s\fs%s\fS", *prefix ? prefix : "", name);
-		if(!name[0] || d->ownernum >= 0 || (dupname && duplicatename(d, name)))
+		if(!name[0] || d->aitype != AI_NONE || (dupname && duplicatename(d, name)))
 		{
-			s_sprintfd(s)(" [\fs%s%d\fS]", d->ownernum >= 0 ? "\fc" : "\fm", d->clientnum);
+			s_sprintfd(s)(" [\fs%s%d\fS]", d->aitype != AI_NONE ? "\fc" : "\fm", d->clientnum);
 			s_strcat(cname, s);
 		}
 		if(team && m_team(gamemode, mutators))
@@ -783,7 +783,7 @@ struct gameclient : igameclient
 
 	void suicide(gameent *d, int flags)
 	{
-		if(d == player1 || d->bot)
+		if(d == player1 || d->ai)
 		{
 			if(d->state!=CS_ALIVE) return;
 			if(d->suicided!=d->lifesequence)
@@ -2143,7 +2143,7 @@ struct gameclient : igameclient
 		pj.render();
 		if(m_stf(gamemode)) stf.render();
         else if(m_ctf(gamemode)) ctf.render();
-        bot.render();
+        ai.render();
 
 		endmodelbatches();
 	}

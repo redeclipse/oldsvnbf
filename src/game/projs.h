@@ -334,11 +334,11 @@ struct projectiles
 			if(cl.et.ents.inrange(n) && !m_noitems(cl.gamemode, cl.mutators))
 			{
 				gameentity &e = (gameentity &)*cl.et.ents[n];
-				create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_ENT, 30000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+				create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_ENT, 30000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 			}
 		}
 		else if(g == GUN_GL)
-			create(d->o, d->o, d == cl.player1 || d->bot, d, PRJ_SHOT, 500, 50, 5, -1, WEAPON, d->gunselect);
+			create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_SHOT, 500, 50, 5, -1, WEAPON, d->gunselect);
 	}
 
 	void update()
