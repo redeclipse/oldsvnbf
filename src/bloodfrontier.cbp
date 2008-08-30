@@ -818,9 +818,12 @@
 			<Option target="profile" />
 			<Option target="data" />
 		</Unit>
-		<Unit filename="game\bot.h">
+		<Unit filename="game\ai.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
 			<Option target="profile" />
 		</Unit>
 		<Unit filename="game\client.h">
@@ -863,12 +866,6 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 		</Unit>
-		<Unit filename="game\server.h">
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-		</Unit>
 		<Unit filename="game\game.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -888,6 +885,12 @@
 			<Option target="server" />
 		</Unit>
 		<Unit filename="game\scoreboard.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="profile" />
+			<Option target="server" />
+		</Unit>
+		<Unit filename="game\server.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
