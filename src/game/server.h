@@ -2176,12 +2176,12 @@ struct gameserver : igameserver
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis))
 		{
-			srvoutf(ci->clientnum, "server error: you are not alive to switch to the %s", guntype[e.gun].name);
+			//srvoutf(ci->clientnum, "server error: you are not alive to switch to the %s", guntype[e.gun].name);
 			return;
 		}
 		if(!gs.canswitch(e.gun, e.millis))
 		{
-			srvoutf(ci->clientnum, "server error: your current state forbids you from switching to the %s", guntype[e.gun].name);
+			//srvoutf(ci->clientnum, "server error: your current state forbids you from switching to the %s", guntype[e.gun].name);
 			return;
 		}
 		gs.gunswitch(e.gun, e.millis);
@@ -2193,12 +2193,12 @@ struct gameserver : igameserver
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis))
 		{
-			srvoutf(ci->clientnum, "server error: you are not alive to reload the %s", guntype[e.gun].name);
+			//srvoutf(ci->clientnum, "server error: you are not alive to reload the %s", guntype[e.gun].name);
 			return;
 		}
 		if(!gs.canreload(e.gun, e.millis))
 		{
-			srvoutf(ci->clientnum, "server error: your current state forbids you from reloading the %s", guntype[e.gun].name);
+			//srvoutf(ci->clientnum, "server error: your current state forbids you from reloading the %s", guntype[e.gun].name);
 			return;
 		}
 		gs.setgunstate(e.gun, GUNSTATE_RELOAD, guntype[e.gun].rdelay, e.millis);
@@ -2211,17 +2211,17 @@ struct gameserver : igameserver
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || m_noitems(gamemode, mutators))
 		{
-			srvoutf(ci->clientnum, "server error: the current game parameters do not allow you to pick up entity %d", e.ent);
+			//srvoutf(ci->clientnum, "server error: the current game parameters do not allow you to pick up entity %d", e.ent);
 			return;
 		}
 		if(!sents.inrange(e.ent))
 		{
-			srvoutf(ci->clientnum, "server error: you cannot pick up entity %d as it does not exist", e.ent);
+			//srvoutf(ci->clientnum, "server error: you cannot pick up entity %d as it does not exist", e.ent);
 			return;
 		}
 		if(!gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, e.millis))
 		{
-			srvoutf(ci->clientnum, "server error: your current state forbids you from picking up entity %d", e.ent);
+			//srvoutf(ci->clientnum, "server error: your current state forbids you from picking up entity %d", e.ent);
 			return;
 		}
 
@@ -2237,7 +2237,7 @@ struct gameserver : igameserver
 		}
 		if(!found && !sents[e.ent].spawned)
 		{
-			srvoutf(ci->clientnum, "server error: there is no instance of entity %d for you to pick up", e.ent);
+			//srvoutf(ci->clientnum, "server error: there is no instance of entity %d for you to pick up", e.ent);
 			return;
 		}
 
