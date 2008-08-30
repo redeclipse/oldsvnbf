@@ -447,41 +447,12 @@ struct aiclient
 		return true;
 	}
 
-	bool follow(gameent *d, aistate &b, gameent *e, bool retry = false)
-	{
-		vec pos(cl.feetpos(e, 0.f)), feet(cl.feetpos(d, 0.f));
-		if(b.override || !makeroute(d, b, e->lastnode, e->radius*2.f))
-		{ // random path if too close
-			if(!b.override && randomnode(d, b, feet, pos, AIISNEAR, AIISFAR))
-			{
-				b.override = true;
-			}
-			else if(!b.goal) return true;
-			else if(!retry)
-			{
-				b.override = false;
-				return follow(d, b, e, true);
-			}
-			else return false;
-		}
-		d->ai->enemy = e->clientnum;
-		int removed = 0;
-		while(removed < d->ai->route.length())
-		{
-			extentity &e = *cl.et.ents[d->ai->route[removed]];
-			if(e.o.squaredist(pos) <= AIISNEAR*AIISNEAR) removed++;
-			else break;
-		}
-		if(removed >= d->ai->route.length()) d->ai->route.setsizenodelete(0);
-		else if(removed > 0) d->ai->route.remove(0, removed);
-		return true;
-	}
-
 	bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false)
 	{
 		if(AITARG(d, e, true))
 		{
-			if(!pursue || follow(d, b, e))
+			vec epos(cl.feetpos(e, 0.f));
+			if(!pursue || patrol(d, b, epos, AIISNEAR, AIISNEAR))
 			{
 				aistate &c = d->ai->addstate(pursue ? AI_S_PURSUE : AI_S_ATTACK);
 				c.targtype = AI_T_PLAYER;
@@ -516,9 +487,7 @@ struct aiclient
 		int state, node, target, targtype, expire;
 		float tolerance, score;
 		bool defers;
-
-		interest() :
-			state(-1), node(-1), target(-1), targtype(-1), expire(0), tolerance(0.f), score(0.f) {}
+		interest() : state(-1), node(-1), target(-1), targtype(-1), expire(0), tolerance(0.f), score(0.f) {}
 		~interest() {}
 	};
 
@@ -842,10 +811,14 @@ struct aiclient
 				case AI_T_PLAYER:
 				{
 					gameent *e = cl.getclient(b.target);
-					if(e && e->state == CS_ALIVE && follow(d, b, e))
+					if(e)
 					{
-						defer(d, b, false);
-						return true;
+						vec epos(cl.feetpos(e, 0.f));
+						if(e->state == CS_ALIVE && patrol(d, b, epos, AIISNEAR, AIISNEAR))
+						{
+							defer(d, b, false);
+							return true;
+						}
 					}
 					break;
 				}
@@ -873,7 +846,11 @@ struct aiclient
 						d->attacktime = lastmillis;
 						return !b.override && !b.goal;
 					}
-					if(b.defers && b.goal) follow(d, b, e);
+					if(b.defers && b.goal)
+					{
+						vec epos(cl.feetpos(e, 0.f));
+						return patrol(d, b, epos, AIISNEAR, AIISNEAR);
+					}
 					return true;
 				}
 			}
@@ -997,7 +974,8 @@ struct aiclient
 					gameent *e = cl.getclient(b.target);
 					if(e)
 					{
-						if(e->state == CS_ALIVE && follow(d, b, e))
+						vec epos(cl.feetpos(e, 0.f));
+						if(e->state == CS_ALIVE && patrol(d, b, epos, AIISNEAR, AIISNEAR))
 						{
 							defer(d, b, false);
 							return true;
