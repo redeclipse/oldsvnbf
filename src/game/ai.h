@@ -1,8 +1,8 @@
-#ifdef BOTSERV
-struct botserv
+#ifdef AISERV
+struct aiserv
 {
 	gameserver &sv;
-	botserv(gameserver &_sv) : sv(_sv) {}
+	aiserv(gameserver &_sv) : sv(_sv) {}
 
 	void reqadd(clientinfo *ci, int skill)
 	{
@@ -19,7 +19,7 @@ struct botserv
 				}
 				else sv.srvoutf(ci->clientnum, "botbalance is at its highest");
 			}
-			else if(!addbot(skill))
+			else if(!addai(AI_BOT, skill))
 				sv.srvoutf(ci->clientnum, "failed to create or assign bot");
 		}
 	}
@@ -39,26 +39,25 @@ struct botserv
 				}
 				else sv.srvoutf(ci->clientnum, "botbalance is at its lowest");
 			}
-			else if(!delbot())
+			else if(!delai(AI_BOT))
 				sv.srvoutf(ci->clientnum, "failed to remove any bots");
 		}
 	}
 
-	int findbotclient()
+	int findaiclient()
 	{
 		vector<int> siblings;
 		while(siblings.length() < sv.clients.length()) siblings.add(-1);
 		loopv(sv.clients)
 		{
 			clientinfo *ci = sv.clients[i];
-			if(ci->state.ownernum >= 0 || !ci->name[0] || ci->state.state == CS_SPECTATOR)
+			if(ci->state.aitype != AI_NONE || !ci->name[0] || ci->state.state == CS_SPECTATOR)
 				siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
-				loopvj(sv.clients)
-					if(sv.clients[j]->state.ownernum == ci->clientnum)
-						siblings[i]++;
+				loopvj(sv.clients) if(sv.clients[j]->state.aitype != AI_NONE && sv.clients[j]->state.ownernum == ci->clientnum)
+					siblings[i]++;
 			}
 		}
 		while(!siblings.empty())
@@ -74,16 +73,17 @@ struct botserv
 		return -1;
 	}
 
-	bool addbot(int skill)
+	bool addai(int type, int skill)
 	{
 		int cn = addclient(ST_REMOTE);
-		if(cn >= 0)
+		if(cn >= 0 && isaitype(type))
 		{
 			clientinfo *ci = (clientinfo *)getinfo(cn), *cp = NULL;
 			if(ci)
 			{
 				ci->clientnum = cn;
-				ci->state.ownernum = findbotclient();
+				ci->state.aitype = type;
+				ci->state.ownernum = findaiclient();
 				if(ci->state.ownernum >= 0 && ((cp = (clientinfo *)getinfo(cn))))
 				{
 					int s = skill, m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
@@ -93,12 +93,12 @@ struct botserv
 					ci->state.state = CS_DEAD;
 					sv.clients.add(ci);
 					ci->state.lasttimeplayed = lastmillis;
-					s_strncpy(ci->name, "bot", MAXNAMELEN);
+					s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
 
 					if(m_team(sv.gamemode, sv.mutators)) ci->team = sv.chooseworstteam(ci);
 					else ci->team = TEAM_NEUTRAL;
 
-					sendf(-1, 1, "ri4si", SV_INITBOT, ci->state.ownernum, ci->state.skill, ci->clientnum, ci->name, ci->team);
+					sendf(-1, 1, "ri5si", SV_INITAI, ci->state.aitype, ci->state.ownernum, ci->state.skill, ci->clientnum, ci->name, ci->team);
 					s_sprintfd(o)("%s", sv.colorname(cp));
 					sv.relayf("\fg* %s assigned to %s at skill %d", sv.colorname(ci), o, ci->state.skill);
 
@@ -124,7 +124,7 @@ struct botserv
 		return false;
 	}
 
-	void removebot(clientinfo *ci)
+	void deleteai(clientinfo *ci)
 	{
 		int cn = ci->clientnum;
 		if(sv.smode) sv.smode->leavegame(ci, true);
@@ -137,26 +137,23 @@ struct botserv
 		delclient(cn);
 	}
 
-	bool delbot()
+	bool delai(int type)
 	{
-		loopvrev(sv.clients) if(sv.clients[i]->state.ownernum >= 0)
+		loopvrev(sv.clients) if(sv.clients[i]->state.aitype == type && sv.clients[i]->state.ownernum >= 0)
 		{
-			removebot(sv.clients[i]);
+			deleteai(sv.clients[i]);
 			return true;
 		}
 		return false;
 	}
 
-	void removebots(clientinfo *ci)
+	void removeai(clientinfo *ci)
 	{
 		loopvrev(sv.clients) if(sv.clients[i]->state.ownernum == ci->clientnum)
-		{
-			clientinfo *cp = sv.clients[i];
-			removebot(cp);
-		}
+			deleteai(sv.clients[i]);
 	}
 
-	bool reassignbots()
+	bool reassignai()
 	{
 		vector<int> siblings;
 		while(siblings.length() < sv.clients.length()) siblings.add(-1);
@@ -164,15 +161,13 @@ struct botserv
 		loopv(sv.clients)
 		{
 			clientinfo *ci = sv.clients[i];
-			if(ci->state.ownernum >= 0 || !ci->name[0] || ci->state.state == CS_SPECTATOR)
+			if(ci->state.aitype != AI_NONE || !ci->name[0] || ci->state.state == CS_SPECTATOR)
 				siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
-				loopvj(sv.clients)
-					if(sv.clients[j]->state.ownernum == ci->clientnum)
-						siblings[i]++;
-
+				loopvj(sv.clients) if(sv.clients[j]->state.aitype != AI_NONE && sv.clients[j]->state.ownernum == ci->clientnum)
+					siblings[i]++;
 				if(!siblings.inrange(hi) || siblings[i] > siblings[hi])
 					hi = i;
 				if(!siblings.inrange(lo) || siblings[i] < siblings[lo])
@@ -182,18 +177,18 @@ struct botserv
 		if(siblings.inrange(hi) && siblings.inrange(lo) && (siblings[hi]-siblings[lo]) > 1)
 		{
 			clientinfo *ci = sv.clients[hi];
-			loopvrev(sv.clients) if(sv.clients[i]->state.ownernum == ci->clientnum)
+			loopvrev(sv.clients) if(sv.clients[i]->state.aitype != AI_NONE && sv.clients[i]->state.ownernum == ci->clientnum)
 			{
 				clientinfo *cp = sv.clients[i];
 				cp->state.ownernum = sv.clients[lo]->clientnum;
 				if(cp->state.ownernum >= 0)
 				{
-					sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
+					sendf(-1, 1, "ri5si", SV_INITAI, cp->state.aitype, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
 					s_sprintfd(o)("%s", sv.colorname(ci));
 					sv.relayf("\fg* %s reassigned to %s", sv.colorname(cp), o);
 					return true;
 				}
-				else removebot(cp);
+				else deleteai(cp);
 			}
 		}
 		return false;
@@ -203,22 +198,21 @@ struct botserv
 	{
 		int m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
 			n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
-		loopv(sv.clients) if(sv.clients[i]->state.ownernum >= 0 && (sv.clients[i]->state.skill > m || sv.clients[i]->state.skill < n))
+		loopv(sv.clients) if(sv.clients[i]->state.aitype == AI_BOT && (sv.clients[i]->state.skill > m || sv.clients[i]->state.skill < n))
 		{
 			clientinfo *cp = sv.clients[i];
 			cp->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
-			sendf(-1, 1, "ri4si", SV_INITBOT, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
+			sendf(-1, 1, "ri5si", SV_INITAI, cp->state.aitype, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
 			sv.relayf("\fg* %s changed skill to %d", sv.colorname(cp), cp->state.skill);
 		}
 	}
 
-	void checkbots(bool renew = false)
+	void checkai(bool renew = false)
 	{
 		if(m_lobby(sv.gamemode))
 		{
-			loopvrev(sv.clients)
-				if(sv.clients[i]->state.ownernum >= 0)
-					removebot(sv.clients[i]);
+			loopvrev(sv.clients) if(sv.clients[i]->state.aitype != AI_NONE)
+				deleteai(sv.clients[i]);
 		}
 		else if(sv.nonspectators())
 		{
@@ -227,44 +221,44 @@ struct botserv
 			{
 				if(sv_botbalance)
 				{
-					while(sv.nonspectators() < sv_botbalance && addbot(-1)) ;
-					while(sv.nonspectators() > sv_botbalance && delbot()) ;
+					while(sv.nonspectators() < sv_botbalance && addai(AI_BOT, -1)) ;
+					while(sv.nonspectators() > sv_botbalance && delai(AI_BOT)) ;
 				}
 			}
-			while(reassignbots()) ;
+			while(reassignai()) ;
 		}
 	}
-} bot;
+} ai;
 #else
-struct botclient
+struct aiclient
 {
 	gameclient &cl;
     avoidset obstacles;
     int avoidmillis;
 
-	static const int BOTISNEAR			= 64;			// is near
-	static const int BOTISFAR			= 128;			// too far
-	static const int BOTJUMPHEIGHT		= 8;			// decides to jump
-	static const int BOTJUMPIMPULSE		= 16;			// impulse to jump
-	static const int BOTLOSMIN			= 64;			// minimum line of sight
-	static const int BOTLOSMAX			= 4096;			// maximum line of sight
-	static const int BOTFOVMIN			= 90;			// minimum field of view
-	static const int BOTFOVMAX			= 130;			// maximum field of view
+	static const int AIISNEAR			= 64;			// is near
+	static const int AIISFAR			= 128;			// too far
+	static const int AIJUMPHEIGHT		= 8;			// decides to jump
+	static const int AIJUMPIMPULSE		= 16;			// impulse to jump
+	static const int AILOSMIN			= 64;			// minimum line of sight
+	static const int AILOSMAX			= 4096;			// maximum line of sight
+	static const int AIFOVMIN			= 90;			// minimum field of view
+	static const int AIFOVMAX			= 130;			// maximum field of view
 
-	IVAR(botdebug, 0, 0, 5);
+	IVAR(aidebug, 0, 0, 5);
 
-	#define BOTLOSDIST(x)			clamp((BOTLOSMIN+(BOTLOSMAX-BOTLOSMIN))/100.f*float(x), float(BOTLOSMIN), float(getvar("fog")+BOTLOSMIN))
-	#define BOTFOVX(x)				clamp((BOTFOVMIN+(BOTFOVMAX-BOTFOVMIN))/100.f*float(x), float(BOTFOVMIN), float(BOTFOVMAX))
-	#define BOTFOVY(x)				BOTFOVX(x)*3.f/4.f
-    #define BOTMAYTARG(y)           ((y)->state == CS_ALIVE && lastmillis-(y)->lastspawn > REGENWAIT)
-	#define BOTTARG(x,y,z)			((y) != (x) && BOTMAYTARG(y) && (!z || AVOIDENEMY(x, y)))
+	#define AILOSDIST(x)			clamp((AILOSMIN+(AILOSMAX-AILOSMIN))/100.f*float(x), float(AILOSMIN), float(getvar("fog")+AILOSMIN))
+	#define AIFOVX(x)				clamp((AIFOVMIN+(AIFOVMAX-AIFOVMIN))/100.f*float(x), float(AIFOVMIN), float(AIFOVMAX))
+	#define AIFOVY(x)				AIFOVX(x)*3.f/4.f
+    #define AIMAYTARG(y)           ((y)->state == CS_ALIVE && lastmillis-(y)->lastspawn > REGENWAIT)
+	#define AITARG(x,y,z)			((y) != (x) && AIMAYTARG(y) && (!z || AVOIDENEMY(x, y)))
 
-	botclient(gameclient &_cl) : cl(_cl), obstacles(_cl), avoidmillis(0)
+	aiclient(gameclient &_cl) : cl(_cl), obstacles(_cl), avoidmillis(0)
 	{
-		CCOMMAND(addbot, "s", (botclient *self, char *s),
+		CCOMMAND(addbot, "s", (aiclient *self, char *s),
 			self->addbot(*s ? clamp(atoi(s), 1, 100) : -1)
 		);
-		CCOMMAND(delbot, "", (botclient *self), self->delbot());
+		CCOMMAND(delbot, "", (aiclient *self), self->delbot());
 	}
 
 	void addbot(int s) { cl.cc.addmsg(SV_ADDBOT, "ri", s); }
@@ -272,23 +266,16 @@ struct botclient
 
 	void create(gameent *d)
 	{
-		if(!d->bot)
-		{
-			if(!(d->bot = new botinfo()))
-				fatal("could not create bot");
-		}
+		if(!d->ai && ((d->ai = new aiinfo()) == NULL))
+			fatal("could not create ai");
 	}
 
 	void destroy(gameent *d)
 	{
-		if(d->bot)
-		{
-			DELETEP(d->bot);
-			d->bot = NULL;
-		}
+		if(d->ai) DELETEP(d->ai);
 	}
 
-	void init(gameent *d, int on, int sk, int bn, char *name, int tm)
+	void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm)
 	{
 		bool rst = false;
 		gameent *o = cl.getclient(on);
@@ -315,6 +302,7 @@ struct botclient
 		}
 
 		s_strncpy(d->name, name, MAXNAMELEN);
+		d->aitype = at;
 		d->ownernum = on;
 		d->skill = sk;
 		d->team = tm;
@@ -324,14 +312,14 @@ struct botclient
 		if(rst) // only if connecting or changing owners
 		{
 			if(cl.player1->clientnum == d->ownernum) create(d);
-			else if(d->bot) destroy(d);
+			else if(d->ai) destroy(d);
 		}
 	}
 
 	void update()
 	{
 		bool avoided = false;
-		loopv(cl.players) if(cl.players[i] && cl.players[i]->bot)
+		loopv(cl.players) if(cl.players[i] && cl.players[i]->ai)
 		{
 			if(!avoided)
 			{
@@ -355,7 +343,7 @@ struct botclient
 		return false;
 	}
 
-	bool hastarget(gameent *d, botstate &b, vec &pos)
+	bool hastarget(gameent *d, aistate &b, vec &pos)
 	{ // add margins of error
 		if(!rnd(d->skill*10)) return true;
 		else
@@ -370,22 +358,22 @@ struct botclient
 				atime = d->skill*guntype[d->gunselect].adelay/100.f,
 					skew = float(lastmillis-b.millis)/(rtime+atime),
 						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
-			if(cyaw <= BOTFOVX(d->skill)*skew && cpitch <= BOTFOVY(d->skill)*skew)
+			if(cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew)
 				return true;
 		}
 		return false;
 	}
 
 	bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false)
-	{ // checks the states of other bots for a match
+	{ // checks the states of other ai for a match
 		targets.setsize(0);
 		gameent *e = NULL;
-		loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && e != d && e->bot && e->state == CS_ALIVE)
+		loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && e != d && e->ai && e->state == CS_ALIVE)
 		{
 			if(targets.find(e->clientnum) >= 0) continue;
 			if(teams && m_team(cl.gamemode, cl.mutators) && d && d->team != e->team) continue;
 
-			botstate &b = e->bot->getstate();
+			aistate &b = e->ai->getstate();
 			if(state >= 0 && b.type != state) continue;
 			if(target >= 0 && b.target != target) continue;
 			if(targtype >=0 && b.targtype != targtype) continue;
@@ -394,9 +382,9 @@ struct botclient
 		return !targets.empty();
 	}
 
-	bool makeroute(gameent *d, botstate &b, int node, float tolerance = 0.f)
+	bool makeroute(gameent *d, aistate &b, int node, float tolerance = 0.f)
 	{
-		if(cl.et.route(d, d->lastnode, node, d->bot->route, obstacles, tolerance))
+		if(cl.et.route(d, d->lastnode, node, d->ai->route, obstacles, tolerance))
 		{
 			b.goal = false;
 			b.override = false;
@@ -405,13 +393,13 @@ struct botclient
 		return false;
 	}
 
-	bool makeroute(gameent *d, botstate &b, vec &pos, float tolerance = 0.f, bool dist = false)
+	bool makeroute(gameent *d, aistate &b, vec &pos, float tolerance = 0.f, bool dist = false)
 	{
 		int node = cl.et.waypointnode(pos, dist);
 		return makeroute(d, b, node, tolerance);
 	}
 
-	bool randomnode(gameent *d, botstate &b, vec &from, vec &to, float radius, float wander)
+	bool randomnode(gameent *d, aistate &b, vec &from, vec &to, float radius, float wander)
 	{
 		static vector<int> waypoints;
 		waypoints.setsizenodelete(0);
@@ -434,13 +422,13 @@ struct botclient
 		return false;
 	}
 
-	bool randomnode(gameent *d, botstate &b, float radius, float wander)
+	bool randomnode(gameent *d, aistate &b, float radius, float wander)
 	{
 		vec feet(cl.feetpos(d, 0.f));
 		return randomnode(d, b, feet, feet, radius, wander);
 	}
 
-	bool patrol(gameent *d, botstate &b, vec &pos, float radius, float wander, bool retry = false)
+	bool patrol(gameent *d, aistate &b, vec &pos, float radius, float wander, bool retry = false)
 	{
 		vec feet(cl.feetpos(d, 0.f));
 		if(b.override || feet.squaredist(pos) <= radius*radius || !makeroute(d, b, pos, wander))
@@ -461,12 +449,12 @@ struct botclient
 		return true;
 	}
 
-	bool follow(gameent *d, botstate &b, gameent *e, bool retry = false)
+	bool follow(gameent *d, aistate &b, gameent *e, bool retry = false)
 	{
 		vec pos(cl.feetpos(e, 0.f)), feet(cl.feetpos(d, 0.f));
 		if(b.override || !makeroute(d, b, e->lastnode, e->radius*2.f))
 		{ // random path if too close
-			if(!b.override && randomnode(d, b, feet, pos, BOTISNEAR, BOTISFAR))
+			if(!b.override && randomnode(d, b, feet, pos, AIISNEAR, AIISFAR))
 			{
 				b.override = true;
 			}
@@ -478,29 +466,29 @@ struct botclient
 			}
 			else return false;
 		}
-		d->bot->enemy = e->clientnum;
+		d->ai->enemy = e->clientnum;
 		int removed = 0;
-		while(removed < d->bot->route.length())
+		while(removed < d->ai->route.length())
 		{
-			extentity &e = *cl.et.ents[d->bot->route[removed]];
-			if(e.o.squaredist(pos) <= BOTISNEAR*BOTISNEAR) removed++;
+			extentity &e = *cl.et.ents[d->ai->route[removed]];
+			if(e.o.squaredist(pos) <= AIISNEAR*AIISNEAR) removed++;
 			else break;
 		}
-		if(removed >= d->bot->route.length()) d->bot->route.setsizenodelete(0);
-		else if(removed > 0) d->bot->route.remove(0, removed);
+		if(removed >= d->ai->route.length()) d->ai->route.setsizenodelete(0);
+		else if(removed > 0) d->ai->route.remove(0, removed);
 		return true;
 	}
 
-	bool violence(gameent *d, botstate &b, gameent *e, bool pursue = false)
+	bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false)
 	{
-		if(BOTTARG(d, e, true))
+		if(AITARG(d, e, true))
 		{
 			if(!pursue || follow(d, b, e))
 			{
-				botstate &c = d->bot->addstate(pursue ? BS_PURSUE : BS_ATTACK);
-				c.targtype = BT_PLAYER;
+				aistate &c = d->ai->addstate(pursue ? AI_S_PURSUE : AI_S_ATTACK);
+				c.targtype = AI_T_PLAYER;
 				c.defers = b.defers;
-				d->bot->enemy = c.target = e->clientnum;
+				d->ai->enemy = c.target = e->clientnum;
 				if(pursue) c.expire = 10000;
 				return true;
 			}
@@ -509,16 +497,16 @@ struct botclient
 		return false;
 	}
 
-	bool defer(gameent *d, botstate &b, bool pursue = false)
+	bool defer(gameent *d, aistate &b, bool pursue = false)
 	{
 		gameent *t = NULL, *e = NULL;
 		vec targ;
-		loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && e != d && BOTTARG(d, e, true))
+		loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && e != d && AITARG(d, e, true))
 		{
 			vec ep = cl.headpos(e), tp = t ? cl.headpos(t) : vec(0, 0, 0),
 				dp = cl.headpos(d);
 			if((!t || ep.squaredist(d->o) < tp.squaredist(d->o)) &&
-				getsight(dp, d->yaw, d->pitch, ep, targ, BOTLOSDIST(d->skill), BOTFOVX(d->skill), BOTFOVY(d->skill)))
+				getsight(dp, d->yaw, d->pitch, ep, targ, AILOSDIST(d->skill), AIFOVX(d->skill), AIFOVY(d->skill)))
 					t = e;
 		}
 		if(t) return violence(d, b, t, pursue);
@@ -536,7 +524,7 @@ struct botclient
 		~interest() {}
 	};
 
-	bool find(gameent *d, botstate &b, bool override = true)
+	bool find(gameent *d, aistate &b, bool override = true)
 	{
 		vec pos = cl.headpos(d);
 		static vector<interest> interests;
@@ -549,11 +537,11 @@ struct botclient
 				ctfstate::flag &f = cl.ctf.flags[j];
 
 				vector<int> targets; // build a list of others who are interested in this
-				checkothers(targets, d, f.team == d->team ? BS_DEFEND : BS_PURSUE, BT_FLAG, j, true);
+				checkothers(targets, d, f.team == d->team ? AI_S_DEFEND : AI_S_PURSUE, AI_T_FLAG, j, true);
 
 				gameent *e = NULL;
-				loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && BOTTARG(d, e, false) && !e->bot && d->team == e->team)
-				{ // try to guess what non bots are doing
+				loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
+				{ // try to guess what non ai are doing
 					vec ep = cl.headpos(e);
 					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= ((enttype[FLAG].radius*enttype[FLAG].radius)*2.f) || f.owner == e))
 						targets.add(e->clientnum);
@@ -576,10 +564,10 @@ struct botclient
 					if(guard)
 					{ // defend the flag
 						interest &n = interests.add();
-						n.state = BS_DEFEND;
+						n.state = AI_S_DEFEND;
 						n.node = cl.et.waypointnode(f.pos(), false);
 						n.target = j;
-						n.targtype = BT_FLAG;
+						n.targtype = AI_T_FLAG;
 						n.expire = 10000;
 						n.tolerance = enttype[FLAG].radius*2.f;
 						n.score = pos.squaredist(f.pos())/(d->gunselect != GUN_PISTOL ? 100.f : 1.f);
@@ -591,10 +579,10 @@ struct botclient
 					if(targets.empty())
 					{ // attack the flag
 						interest &n = interests.add();
-						n.state = BS_PURSUE;
+						n.state = AI_S_PURSUE;
 						n.node = cl.et.waypointnode(f.pos(), false);
 						n.target = j;
-						n.targtype = BT_FLAG;
+						n.targtype = AI_T_FLAG;
 						n.expire = 10000;
 						n.tolerance = enttype[FLAG].radius*2.f;
 						n.score = pos.squaredist(f.pos());
@@ -607,10 +595,10 @@ struct botclient
 						{
 							interest &n = interests.add();
 							vec tp = cl.headpos(t);
-							n.state = BS_DEFEND;
+							n.state = AI_S_DEFEND;
 							n.node = t->lastnode;
 							n.target = t->clientnum;
-							n.targtype = BT_PLAYER;
+							n.targtype = AI_T_PLAYER;
 							n.expire = 5000;
 							n.tolerance = t->radius*2.f;
 							n.score = pos.squaredist(tp);
@@ -621,7 +609,7 @@ struct botclient
 			}
 		}
 
-		if(!d->hasgun(d->bot->gunpref))
+		if(!d->hasgun(d->ai->gunpref))
 		{
 			loopvj(cl.et.ents)
 			{
@@ -634,13 +622,13 @@ struct botclient
 						if(e.spawned && isgun(e.attr1) && !d->hasgun(e.attr1))
 						{ // go get a weapon upgrade
 							interest &n = interests.add();
-							n.state = BS_INTEREST;
+							n.state = AI_S_INTEREST;
 							n.node = cl.et.waypointnode(e.o, true);
 							n.target = j;
-							n.targtype = BT_ENTITY;
+							n.targtype = AI_T_ENTITY;
 							n.expire = 10000;
 							n.tolerance = enttype[e.type].radius+d->radius;
-							n.score = pos.squaredist(e.o)/(e.attr1 != d->bot->gunpref ? 1.f : 10.f);
+							n.score = pos.squaredist(e.o)/(e.attr1 != d->ai->gunpref ? 1.f : 10.f);
 							n.defers = true;
 						}
 						break;
@@ -661,13 +649,13 @@ struct botclient
 						{ // go get a weapon upgrade
 							if(proj.owner == d && d->gunselect != GUN_PISTOL) break;
 							interest &n = interests.add();
-							n.state = BS_INTEREST;
+							n.state = AI_S_INTEREST;
 							n.node = cl.et.waypointnode(proj.o, true);
 							n.target = proj.id;
-							n.targtype = BT_DROP;
+							n.targtype = AI_T_DROP;
 							n.expire = 5000;
 							n.tolerance = enttype[proj.ent].radius+d->radius;
-							n.score = pos.squaredist(proj.o)/(proj.attr1 != d->bot->gunpref ? 1.f : 10.f);
+							n.score = pos.squaredist(proj.o)/(proj.attr1 != d->ai->gunpref ? 1.f : 10.f);
 							n.defers = true;
 						}
 						break;
@@ -684,7 +672,7 @@ struct botclient
 			interest n = interests.removeunordered(q);
 			if(makeroute(d, b, n.node, n.tolerance))
 			{
-				botstate &c = override ? d->bot->setstate(n.state) : d->bot->addstate(n.state);
+				aistate &c = override ? d->ai->setstate(n.state) : d->ai->addstate(n.state);
 				c.targtype = n.targtype;
 				c.target = n.target;
 				c.expire = n.expire;
@@ -695,7 +683,7 @@ struct botclient
 		return false;
 	}
 
-	bool ctfhomerun(gameent *d, botstate &b)
+	bool ctfhomerun(gameent *d, aistate &b)
 	{
 		vec pos = cl.headpos(d);
 		loopk(2)
@@ -713,8 +701,8 @@ struct botclient
 
 			if(cl.ctf.flags.inrange(goal) && makeroute(d, b, cl.ctf.flags[goal].pos(), enttype[FLAG].radius*2.f))
 			{
-				botstate &c = d->bot->setstate(BS_PURSUE); // replaces current state!
-				c.targtype = BT_FLAG;
+				aistate &c = d->ai->setstate(AI_S_PURSUE); // replaces current state!
+				c.targtype = AI_T_FLAG;
 				c.target = goal;
 				c.defers = false;
 				return true;
@@ -725,35 +713,35 @@ struct botclient
 
 	void damaged(gameent *d, gameent *e, int gun, int flags, int damage, int health, int millis, vec &dir)
 	{
-		if(BOTTARG(d, e, true))
+		if(AITARG(d, e, true))
 		{
-			if(d->bot)
+			if(d->ai)
 			{
-				botstate &b = d->bot->getstate();
+				aistate &b = d->ai->getstate();
 				bool result = false, pursue = false;
 				switch(b.type)
 				{
-					case BS_PURSUE:
+					case AI_S_PURSUE:
 						result = true;
 						pursue = false;
 						break;
-					case BS_WAIT:
-					case BS_INTEREST:
+					case AI_S_WAIT:
+					case AI_S_INTEREST:
 						result = true;
 						pursue = true;
 						break;
-					case BS_ATTACK:
-					case BS_DEFEND: default: break;
+					case AI_S_ATTACK:
+					case AI_S_DEFEND: default: break;
 				}
 				if(result) violence(d, b, e, pursue);
 			}
 			vector<int> targets;
-			if(checkothers(targets, d, BS_DEFEND, BT_PLAYER, d->clientnum, true))
+			if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
 			{
 				gameent *t;
-				loopv(targets) if((t = cl.getclient(targets[i])) && t->bot)
+				loopv(targets) if((t = cl.getclient(targets[i])) && t->ai)
 				{
-					botstate &c = t->bot->getstate();
+					aistate &c = t->ai->getstate();
 					violence(t, c, e, false);
 				}
 			}
@@ -762,15 +750,15 @@ struct botclient
 
 	void spawned(gameent *d)
 	{
-		if(d->bot) d->bot->reset();
+		if(d->ai) d->ai->reset();
 	}
 
 	void killed(gameent *d, gameent *e, int gun, int flags, int damage)
 	{
-		if(d->bot) d->bot->reset();
+		if(d->ai) d->ai->reset();
 	}
 
-	bool dowait(gameent *d, botstate &b)
+	bool dowait(gameent *d, aistate &b)
 	{
 		if(d->state == CS_DEAD)
 		{
@@ -796,8 +784,8 @@ struct botclient
 				}
 				if(cl.et.ents.inrange(closest))
 				{
-					botstate &c = d->bot->setstate(BS_INTEREST);
-					c.targtype = BT_NODE;
+					aistate &c = d->ai->setstate(AI_S_INTEREST);
+					c.targtype = AI_T_NODE;
 					c.target = closest;
 					c.expire = 1000;
 					c.defers = false;
@@ -820,11 +808,11 @@ struct botclient
 			}
 			if(find(d, b, true)) return true;
 			if(defer(d, b, true)) return true;
-			if(randomnode(d, b, BOTISFAR, 1e16f))
+			if(randomnode(d, b, AIISFAR, 1e16f))
 			{
-				botstate &c = d->bot->setstate(BS_INTEREST);
-				c.targtype = BT_NODE;
-				c.target = d->bot->route[0];
+				aistate &c = d->ai->setstate(AI_S_INTEREST);
+				c.targtype = AI_T_NODE;
+				c.target = d->ai->route[0];
 				c.expire = 10000;
 				c.defers = true;
 				return true;
@@ -833,13 +821,13 @@ struct botclient
 		return true; // but don't pop the state
 	}
 
-	bool dodefend(gameent *d, botstate &b)
+	bool dodefend(gameent *d, aistate &b)
 	{
 		if(d->state == CS_ALIVE)
 		{
 			switch(b.targtype)
 			{
-				case BT_FLAG:
+				case AI_T_FLAG:
 				{
 					if(m_ctf(cl.gamemode) && cl.ctf.flags.inrange(b.target))
 					{
@@ -853,7 +841,7 @@ struct botclient
 					}
 					break;
 				}
-				case BT_PLAYER:
+				case AI_T_PLAYER:
 				{
 					gameent *e = cl.getclient(b.target);
 					if(e && e->state == CS_ALIVE && follow(d, b, e))
@@ -869,18 +857,18 @@ struct botclient
 		return false;
 	}
 
-	bool doattack(gameent *d, botstate &b)
+	bool doattack(gameent *d, aistate &b)
 	{
 		if(d->state == CS_ALIVE)
 		{
 			vec targ, pos = cl.headpos(d);
 			gameent *e = cl.getclient(b.target);
-			if(e && BOTTARG(d, e, true))
+			if(e && AITARG(d, e, true))
 			{
 				vec ep = cl.headpos(e);
 				if(e->state == CS_ALIVE && raycubelos(pos, ep, targ))
 				{
-					d->bot->enemy = e->clientnum;
+					d->ai->enemy = e->clientnum;
 					if(m_fight(cl.gamemode) && d->canshoot(d->gunselect, lastmillis) && hastarget(d, b, ep))
 					{
 						d->attacking = true;
@@ -895,13 +883,13 @@ struct botclient
 		return false;
 	}
 
-	bool dointerest(gameent *d, botstate &b)
+	bool dointerest(gameent *d, aistate &b)
 	{
 		if(d->state == CS_ALIVE)
 		{
 			switch(b.targtype)
 			{
-				case BT_ENTITY:
+				case AI_T_ENTITY:
 				{
 					if(cl.et.ents.inrange(b.target))
 					{
@@ -911,7 +899,7 @@ struct botclient
 						{
 							case WEAPON:
 							{
-								if(d->hasgun(d->bot->gunpref))
+								if(d->hasgun(d->ai->gunpref))
 									return false;
 								if(!e.spawned || d->hasgun(e.attr1))
 									return false;
@@ -921,13 +909,13 @@ struct botclient
 						}
 						if(makeroute(d, b, e.o, enttype[e.type].radius+d->radius))
 						{
-							defer(d, b, b.targtype == BT_NODE);
+							defer(d, b, b.targtype == AI_T_NODE);
 							return true;
 						}
 					}
 					break;
 				}
-				case BT_DROP:
+				case AI_T_DROP:
 				{
 					loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ready() && cl.pj.projs[j]->id == b.target)
 					{
@@ -937,7 +925,7 @@ struct botclient
 						{
 							case WEAPON:
 							{
-								if(d->hasgun(d->bot->gunpref))
+								if(d->hasgun(d->ai->gunpref))
 									return false;
 								if(d->hasgun(proj.attr1))
 									return false;
@@ -962,13 +950,13 @@ struct botclient
 		return false;
 	}
 
-	bool dopursue(gameent *d, botstate &b)
+	bool dopursue(gameent *d, aistate &b)
 	{
 		if(d->state == CS_ALIVE)
 		{
 			switch(b.targtype)
 			{
-				case BT_FLAG:
+				case AI_T_FLAG:
 				{
 					if(m_ctf(cl.gamemode) && cl.ctf.flags.inrange(b.target))
 					{
@@ -1006,7 +994,7 @@ struct botclient
 					break;
 				}
 
-				case BT_PLAYER:
+				case AI_T_PLAYER:
 				{
 					gameent *e = cl.getclient(b.target);
 					if(e)
@@ -1025,14 +1013,14 @@ struct botclient
 		return false;
 	}
 
-	int closenode(gameent *d, botstate &b)
+	int closenode(gameent *d, aistate &b)
 	{
 		vec pos(cl.feetpos(d, 0.f));
 		int node = -1;
 		float mindist = 1e16f;
-		loopvrev(d->bot->route) if(cl.et.ents.inrange(d->bot->route[i]) && d->bot->route[i] != d->lastnode && d->bot->route[i] != d->oldnode)
+		loopvrev(d->ai->route) if(cl.et.ents.inrange(d->ai->route[i]) && d->ai->route[i] != d->lastnode && d->ai->route[i] != d->oldnode)
 		{
-			gameentity &e = *(gameentity *)cl.et.ents[d->bot->route[i]];
+			gameentity &e = *(gameentity *)cl.et.ents[d->ai->route[i]];
 
 			float dist = e.o.squaredist(pos);
 			if(dist < mindist)
@@ -1044,21 +1032,21 @@ struct botclient
 		return node;
 	}
 
-	bool hunt(gameent *d, botstate &b, bool retry = false)
+	bool hunt(gameent *d, aistate &b, bool retry = false)
 	{
-		if(!d->bot->route.empty())
+		if(!d->ai->route.empty())
 		{
-			int n = d->bot->route.find(d->lastnode), g = d->bot->route[0];
-			if(d->bot->route.inrange(n) && --n >= 0) // otherwise got to goal
+			int n = d->ai->route.find(d->lastnode), g = d->ai->route[0];
+			if(d->ai->route.inrange(n) && --n >= 0) // otherwise got to goal
 			{
-				if(!d->bot->route.inrange(n)) n = closenode(d, b);
-				if(d->bot->route.inrange(n) && !obstacles.find(d->bot->route[n], d))
+				if(!d->ai->route.inrange(n)) n = closenode(d, b);
+				if(d->ai->route.inrange(n) && !obstacles.find(d->ai->route[n], d))
 				{
-					gameentity &e = *(gameentity *)cl.et.ents[d->bot->route[n]];
+					gameentity &e = *(gameentity *)cl.et.ents[d->ai->route[n]];
 					b.goal = false;
-					d->bot->spot = vec(e.o).add(vec(0, 1, d->height));
+					d->ai->spot = vec(e.o).add(vec(0, 1, d->height));
 					vec pos = cl.feetpos(d);
-					if(d->bot->spot.z-PLAYERHEIGHT-pos.z > BOTJUMPHEIGHT && !d->jumping && !d->timeinair && lastmillis-d->jumptime > 1000)
+					if(d->ai->spot.z-PLAYERHEIGHT-pos.z > AIJUMPHEIGHT && !d->jumping && !d->timeinair && lastmillis-d->jumptime > 1000)
 					{
 						d->jumping = true;
 						d->jumptime = lastmillis;
@@ -1077,7 +1065,7 @@ struct botclient
 		return false;
 	}
 
-	void aim(gameent *d, botstate &b, vec &pos, float &yaw, float &pitch, int skew)
+	void aim(gameent *d, aistate &b, vec &pos, float &yaw, float &pitch, int skew)
 	{
 		vec dp = cl.headpos(d);
 		float targyaw = -(float)atan2(pos.x-dp.x, pos.y-dp.y)/PI*180+180;
@@ -1089,7 +1077,7 @@ struct botclient
 			float amt = float(lastmillis-d->lastupdate)/float((111-d->skill)*skew),
 				offyaw = fabs(targyaw-yaw)*amt, offpitch = fabs(targpitch-pitch)*amt;
 
-			if(targyaw > yaw) // slowly turn bot towards target
+			if(targyaw > yaw) // slowly turn ai towards target
 			{
 				yaw += offyaw;
 				if(targyaw < yaw) yaw = targyaw;
@@ -1119,26 +1107,26 @@ struct botclient
 		}
 	}
 
-	void process(gameent *d, botstate &b)
+	void process(gameent *d, aistate &b)
 	{
 		if(d->state == CS_ALIVE)
 		{
-			if(lastmillis-d->bot->lastreq > 500)
+			if(lastmillis-d->ai->lastreq > 500)
 			{
 				int gun = -1;
-				if(d->hasgun(d->bot->gunpref)) gun = d->bot->gunpref; // could be any gun
+				if(d->hasgun(d->ai->gunpref)) gun = d->ai->gunpref; // could be any gun
 				else loopi(GUN_MAX) if(d->hasgun(i, 1)) gun = i; // only choose carriables here
 				if(gun != d->gunselect && d->canswitch(gun, lastmillis))
 				{
 					cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, gun);
-					d->bot->lastreq = lastmillis;
+					d->ai->lastreq = lastmillis;
 				}
 				else if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis))
 				{
 					cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-					d->bot->lastreq = lastmillis;
+					d->ai->lastreq = lastmillis;
 				}
-				else if(!d->hasgun(d->bot->gunpref) && !d->useaction)
+				else if(!d->hasgun(d->ai->gunpref) && !d->useaction)
 				{
 					static vector<actitem> actitems;
                     actitems.setsizenodelete(0);
@@ -1182,10 +1170,10 @@ struct botclient
 								case WEAPON:
 								{
 									if(d->hasgun(e.attr1)) break;
-									if(d->gunselect != GUN_PISTOL && e.attr1 != d->bot->gunpref)
+									if(d->gunselect != GUN_PISTOL && e.attr1 != d->ai->gunpref)
 										break;
 									d->useaction = true;
-									d->usetime = d->bot->lastreq = lastmillis;
+									d->usetime = d->ai->lastreq = lastmillis;
 									break;
 								}
 								default: break;
@@ -1195,7 +1183,7 @@ struct botclient
 				}
 			}
 			bool aiming = false;
-			gameent *e = cl.getclient(d->bot->enemy);
+			gameent *e = cl.getclient(d->ai->enemy);
 			if(e)
 			{
 				vec enemypos = cl.headpos(e);
@@ -1204,8 +1192,8 @@ struct botclient
 			}
 			if(hunt(d, b))
 			{
-				if(!aiming) aim(d, b, d->bot->spot, d->yaw, d->pitch, 4);
-				aim(d, b, d->bot->spot, d->aimyaw, d->aimpitch, 2);
+				if(!aiming) aim(d, b, d->ai->spot, d->yaw, d->pitch, 4);
+				aim(d, b, d->ai->spot, d->aimyaw, d->aimpitch, 2);
 			}
 
             const struct aimdir { int move, strafe, offset; } aimdirs[8] =
@@ -1231,13 +1219,13 @@ struct botclient
 	void check(gameent *d)
 	{
 		vec pos = cl.headpos(d);
-		findorientation(pos, d->yaw, d->pitch, d->bot->target);
+		findorientation(pos, d->yaw, d->pitch, d->ai->target);
 
 		if(!cl.allowmove(d)) d->stopmoving();
 		if(d->state == CS_ALIVE)
 		{
 			cl.et.checkitems(d);
-			cl.ws.shoot(d, d->bot->target, 100); // always use full power
+			cl.ws.shoot(d, d->ai->target, 100); // always use full power
 		}
 
 		cl.ph.move(d, 10, true);
@@ -1248,14 +1236,14 @@ struct botclient
 	{
 		if(lastmillis-avoidmillis > 500) // only generate twice a second
 		{
-			// guess as to the radius of bots and other critters relying on the avoid set for now
+			// guess as to the radius of ai and other critters relying on the avoid set for now
 			float guessradius = cl.player1->radius;
 
 			obstacles.clear();
 			loopi(cl.numdynents())
 			{
 				gameent *d = (gameent *)cl.iterdynents(i);
-				if(!d || !BOTMAYTARG(d)) continue;
+				if(!d || !AIMAYTARG(d)) continue;
 				vec pos(cl.feetpos(d, 0.f));
 				float limit = guessradius + d->radius;
 				limit *= limit; // square it to avoid expensive square roots
@@ -1287,7 +1275,7 @@ struct botclient
 
 	void think(gameent *d)
 	{
-		if(d->bot->state.empty()) d->bot->reset();
+		if(d->ai->state.empty()) d->ai->reset();
 
 		// the state stack works like a chain of commands, certain commands simply replace
 		// each other, others spawn new commands to the stack the ai reads the top command
@@ -1296,26 +1284,26 @@ struct botclient
 
 		if(!cl.intermission)
 		{
-			botstate &b = d->bot->getstate();
+			aistate &b = d->ai->getstate();
 			process(d, b);
-			bool override = d->state == CS_ALIVE && (b.goal || d->bot->route.empty());
+			bool override = d->state == CS_ALIVE && (b.goal || d->ai->route.empty());
 			if(override || lastmillis >= b.next)
 			{
 				bool result = true;
-				int frame = botframetimes[b.type] - d->skill;
+				int frame = aiframetimes[b.type] - d->skill;
 				b.next = lastmillis + frame;
 				b.cycle++;
 				switch(b.type)
 				{
-					case BS_WAIT:		result = dowait(d, b);		break;
-					case BS_DEFEND:		result = dodefend(d, b);	break;
-					case BS_PURSUE:		result = dopursue(d, b);	break;
-					case BS_ATTACK:		result = doattack(d, b);	break;
-					case BS_INTEREST:	result = dointerest(d, b);	break;
+					case AI_S_WAIT:		result = dowait(d, b);		break;
+					case AI_S_DEFEND:		result = dodefend(d, b);	break;
+					case AI_S_PURSUE:		result = dopursue(d, b);	break;
+					case AI_S_ATTACK:		result = doattack(d, b);	break;
+					case AI_S_INTEREST:	result = dointerest(d, b);	break;
 					default:			result = false;				break;
 				}
 				if((b.expire && (b.expire -= frame) <= 0) || !result)
-					d->bot->removestate();
+					d->ai->removestate();
 			}
 			check(d);
 		}
@@ -1323,35 +1311,35 @@ struct botclient
 		d->lastupdate = lastmillis;
 	}
 
-	void drawstate(gameent *d, botstate &b, bool top, int above)
+	void drawstate(gameent *d, aistate &b, bool top, int above)
 	{
-		const char *bnames[BS_MAX] = {
+		const char *bnames[AI_S_MAX] = {
 			"wait", "defend", "pursue", "attack", "interest"
-		}, *btypes[BT_MAX+1] = {
+		}, *btypes[AI_T_MAX+1] = {
 			"none", "node", "player", "entity", "flag"
 		};
 		s_sprintfd(s)("@%s%s [%d:%d:%d] goal:%d[%d] %s:%d",
 			top ? "\fy" : "\fw",
 			bnames[b.type],
 			b.cycle, b.expire, b.next-lastmillis,
-			!d->bot->route.empty() ? d->bot->route[0] : -1,
-			d->bot->route.length(),
+			!d->ai->route.empty() ? d->ai->route[0] : -1,
+			d->ai->route.length(),
 			btypes[b.targtype+1], b.target
 		);
 		particle_text(vec(d->abovehead()).add(vec(0, 0, above)), s, 14, 1);
 	}
 
-	void drawroute(gameent *d, botstate &b, float amt = 1.f)
+	void drawroute(gameent *d, aistate &b, float amt = 1.f)
 	{
 		renderprimitive(true);
 		int colour = teamtype[d->team].colour, last = -1;
 		float cr = (colour>>16)/255.f, cg = ((colour>>8)&0xFF)/255.f, cb = (colour&0xFF)/255.f;
 
-		loopvrev(d->bot->route)
+		loopvrev(d->ai->route)
 		{
-			if(d->bot->route.inrange(last))
+			if(d->ai->route.inrange(last))
 			{
-				int index = d->bot->route[i], prev = d->bot->route[last];
+				int index = d->ai->route[i], prev = d->ai->route[last];
 				if(cl.et.ents.inrange(index) && cl.et.ents.inrange(prev))
 				{
 					gameentity &e = *(gameentity *)cl.et.ents[index],
@@ -1370,15 +1358,15 @@ struct botclient
 			}
 			last = i;
 		}
-		if(botdebug() > 3)
+		if(aidebug() > 3)
 		{
-			vec fr(cl.ws.gunorigin(d->o, d->bot->target, d, true)),
-				dr(d->bot->target), pos = cl.headpos(d);
-			if(dr.dist(pos) > BOTLOSDIST(d->skill))
+			vec fr(cl.ws.gunorigin(d->o, d->ai->target, d, true)),
+				dr(d->ai->target), pos = cl.headpos(d);
+			if(dr.dist(pos) > AILOSDIST(d->skill))
 			{
 				dr.sub(fr);
 				dr.normalize();
-				dr.mul(BOTLOSDIST(d->skill));
+				dr.mul(AILOSDIST(d->skill));
 			}
 			renderline(fr, dr, cr, cg, cb, false);
 			rendertris(dr, d->yaw, d->pitch, 2.f, cr, cg, cb, true, false);
@@ -1388,30 +1376,30 @@ struct botclient
 
 	void render()
 	{
-		if(botdebug())
+		if(aidebug())
 		{
 			int amt[2] = { 0, 0 };
-			loopv(cl.players) if(cl.players[i] && cl.players[i]->bot) amt[0]++;
-			loopv(cl.players) if(cl.players[i] && cl.players[i]->state == CS_ALIVE && cl.players[i]->bot)
+			loopv(cl.players) if(cl.players[i] && cl.players[i]->ai) amt[0]++;
+			loopv(cl.players) if(cl.players[i] && cl.players[i]->state == CS_ALIVE && cl.players[i]->ai)
 			{
 				gameent *d = cl.players[i];
 				bool top = true;
 				int above = 0;
 				amt[1]++;
-				loopvrev(d->bot->state)
+				loopvrev(d->ai->state)
 				{
-					botstate &b = d->bot->state[i];
+					aistate &b = d->ai->state[i];
 					drawstate(d, b, top, above += 2);
-					if(botdebug() > 2 && top && rendernormally && b.type != BS_WAIT)
+					if(aidebug() > 2 && top && rendernormally && b.type != AI_S_WAIT)
 						drawroute(d, b, float(amt[1])/float(amt[0]));
 					if(top)
 					{
-						if(botdebug() > 1) top = false;
+						if(aidebug() > 1) top = false;
 						else break;
 					}
 				}
 			}
 		}
 	}
-} bot;
+} ai;
 #endif

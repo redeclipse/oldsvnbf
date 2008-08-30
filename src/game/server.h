@@ -306,9 +306,9 @@ struct gameserver : igameserver
 
 	#define mutate(a,b) loopvk(a) { servmode *mut = a[k]; { b; } }
 
-	#define BOTSERV 1
-	#include "bot.h"
-	#undef BOTSERV
+	#define AISERV 1
+	#include "ai.h"
+	#undef AISERV
 
 	ISVAR(serverdesc, "");
 	ISVAR(servermotd, "");
@@ -323,7 +323,7 @@ struct gameserver : igameserver
 			mapdata(NULL), reliablemessages(false),
 			demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
 			smode(NULL), stfmode(*this), ctfmode(*this), duelmutator(*this),
-			bot(*this)
+			ai(*this)
 	{
 		CCOMMAND(gameid, "", (gameserver *self), result(self->gameid()));
 		CCOMMAND(gamever, "", (gameserver *self), intret(self->gamever()));
@@ -492,7 +492,7 @@ struct gameserver : igameserver
 		loopi(numteams(gamemode, mutators))
 		{
 			teamscore &ts = teamscores[i];
-			if(who->state.ownernum >= 0 || m_stf(gamemode) || m_ctf(gamemode))
+			if(who->state.aitype != AI_NONE || m_stf(gamemode) || m_ctf(gamemode))
 			{
 				if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.rank < worst->rank)) worst = &ts;
 			}
@@ -857,7 +857,7 @@ struct gameserver : igameserver
 		loopv(clients)
 		{
 			clientinfo *oi = clients[i];
-			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.ownernum >= 0)
+			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.aitype != AI_NONE)
 				continue;
 			maxvotes++;
 			if(!oi->mapvote[0]) continue;
@@ -893,12 +893,12 @@ struct gameserver : igameserver
 		}
 	}
 
-	int nonspectators(int exclude = -1, bool nobots = false)
+	int nonspectators(int exclude = -1, bool noai = false)
 	{
 		int n = 0;
 		loopv(clients)
 			if(clients[i]->clientnum != exclude && clients[i]->state.state != CS_SPECTATOR &&
-				(!nobots || clients[i]->state.ownernum < 0))
+				(!noai || clients[i]->state.aitype == AI_NONE))
 				n++;
 		return n;
 	}
@@ -1354,7 +1354,7 @@ struct gameserver : igameserver
 						connected = true;
 					}
 					ci->team = team;
-					if(connected) bot.checkbots(true);
+					if(connected) ai.checkai(true);
 
 					QUEUE_MSG;
 					break;
@@ -1513,8 +1513,8 @@ struct gameserver : igameserver
 						mutate(smuts, mut->leavegame(spinfo));
 						spinfo->state.state = CS_SPECTATOR;
                     	spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
-						bot.removebots(spinfo);
-						bot.checkbots(true);
+						ai.removeai(spinfo);
+						ai.checkai(true);
 					}
 					else if(spinfo->state.state==CS_SPECTATOR && !val)
 					{
@@ -1527,7 +1527,7 @@ struct gameserver : igameserver
 						});
 						if (!nospawn) sendspawn(spinfo);
 	                    spinfo->state.lasttimeplayed = lastmillis;
-						bot.checkbots(true);
+						ai.checkai(true);
 					}
 					break;
 				}
@@ -1547,7 +1547,7 @@ struct gameserver : igameserver
 					}
 					wi->team = team;
 					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
-					if(teamed) bot.checkbots(true);
+					if(teamed) ai.checkai(true);
 					QUEUE_INT(SV_SETTEAM);
 					QUEUE_INT(who);
 					QUEUE_INT(team);
@@ -1669,17 +1669,17 @@ struct gameserver : igameserver
 
 				case SV_ADDBOT:
 				{
-					bot.reqadd(ci, getint(p));
+					ai.reqadd(ci, getint(p));
 					break;
 				}
 
 				case SV_DELBOT:
 				{
-					bot.reqdel(ci);
+					ai.reqdel(ci);
 					break;
 				}
 
-				case SV_INITBOT:
+				case SV_INITAI:
 				{
 					QUEUE_MSG;
 					QUEUE_INT(getint(p));
@@ -1799,7 +1799,7 @@ struct gameserver : igameserver
 			if(m_edit(gamemode) && nonspectators(ci->clientnum, true))
 			{
 				clientinfo *best = NULL;
-				loopv(clients) if(clients[i]->name[0] && clients[i]->state.ownernum < 0 && clients[i]->state.state != CS_SPECTATOR)
+				loopv(clients) if(clients[i]->name[0] && clients[i]->state.aitype == AI_NONE && clients[i]->state.state != CS_SPECTATOR)
 				{
 					clientinfo *cs = clients[i];
 					if(haspriv(cs, PRIV_MASTER)) { best = cs; break; }
@@ -1984,7 +1984,7 @@ struct gameserver : igameserver
 	{
 		servstate &gs = ci->state;
 		spawnstate(ci);
-		int own = ci->state.ownernum >= 0 ? ci->state.ownernum : ci->clientnum;
+		int own = ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum;
 		sendf(own, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, GUN_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
 	}
@@ -2349,7 +2349,7 @@ struct gameserver : igameserver
 			}
 			if(smode) smode->update();
 			mutate(smuts, mut->update());
-			bot.checkbots();
+			ai.checkai();
 		}
 
 		while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000)
@@ -2452,7 +2452,7 @@ struct gameserver : igameserver
 	void clientdisconnect(int n)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
-		bot.removebots(ci);
+		ai.removeai(ci);
 		if(ci->privilege) setmaster(ci, false);
 		if(smode) smode->leavegame(ci, true);
 		mutate(smuts, mut->leavegame(ci));
@@ -2465,7 +2465,7 @@ struct gameserver : igameserver
 		else
 		{
 			checkvotes();
-			bot.checkbots(true);
+			ai.checkai(true);
 		}
 	}
 
@@ -2479,7 +2479,7 @@ struct gameserver : igameserver
         }
 
 		int numplayers = 0;
-		loopv(clients) if(clients[i] && clients[i]->state.ownernum < 0) numplayers++;
+		loopv(clients) if(clients[i] && clients[i]->state.aitype == AI_NONE) numplayers++;
 		putint(p, numplayers);
 		putint(p, 6);					// number of attrs following
 		putint(p, GAMEVERSION);			// 1
@@ -2518,9 +2518,9 @@ struct gameserver : igameserver
 		if(!name) name = ci->name;
 		static string cname;
 		s_sprintf(cname)("\fs%s\fS", name);
-		if(!name[0] || ci->state.ownernum >= 0 || (dupname && duplicatename(ci, name)))
+		if(!name[0] || ci->state.aitype != AI_NONE || (dupname && duplicatename(ci, name)))
 		{
-			s_sprintfd(s)(" [\fs%s%d\fS]", ci->state.ownernum >= 0 ? "\fc" : "\fm", ci->clientnum);
+			s_sprintfd(s)(" [\fs%s%d\fS]", ci->state.aitype != AI_NONE ? "\fc" : "\fm", ci->clientnum);
 			s_strcat(cname, s);
 		}
 		if(team && m_team(gamemode, mutators))

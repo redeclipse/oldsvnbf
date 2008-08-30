@@ -455,7 +455,7 @@ struct clientcom : iclientcom
 	{
 		updateposition(cl.player1);
 		loopv(cl.players)
-			if(cl.players[i] && cl.players[i]->bot)
+			if(cl.players[i] && cl.players[i]->ai)
 				updateposition(cl.players[i]);
 
 		if(senditemstoserver)
@@ -475,10 +475,11 @@ struct clientcom : iclientcom
 			putint(p, SV_INITC2S);
 			sendstring(cl.player1->name, p);
 			putint(p, cl.player1->team);
-			loopv(cl.players) if(cl.players[i] && cl.players[i]->bot)
+			loopv(cl.players) if(cl.players[i] && cl.players[i]->ai)
 			{
 				gameent *f = cl.players[i];
-				putint(p, SV_INITBOT);
+				putint(p, SV_INITAI);
+				putint(p, f->aitype);
 				putint(p, f->ownernum);
 				putint(p, f->skill);
 				putint(p, f->clientnum);
@@ -583,7 +584,7 @@ struct clientcom : iclientcom
                 int seqcolor = (physstate>>6)&1;
 				f = getuint(p);
 				gameent *d = cl.getclient(lcn);
-                if(!d || seqcolor!=(d->lifesequence&1) || d==cl.player1 || d->bot) continue;
+                if(!d || seqcolor!=(d->lifesequence&1) || d==cl.player1 || d->ai) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
 				d->yaw = yaw;
 				d->pitch = pitch;
@@ -743,7 +744,7 @@ struct clientcom : iclientcom
 				{
 					int tcn = getint(p), index = getint(p);
 					gameent *t = cl.getclient(tcn);
-					if(!t || !d || (t->clientnum!=d->clientnum && t->ownernum!=d->clientnum)) break;
+					if(!t || !d || (t->clientnum != d->clientnum && t->ownernum != d->clientnum)) break;
 					cl.et.execlink(t, index, false);
 					break;
 				}
@@ -862,7 +863,7 @@ struct clientcom : iclientcom
 					f->respawn(lastmillis);
 					parsestate(f, p);
 					f->state = CS_ALIVE;
-					if(f == cl.player1 || f->bot)
+					if(f == cl.player1 || f->ai)
 					{
 						int team = m_mayhem(cl.gamemode, cl.mutators) ? (f->team%numteams(cl.gamemode, cl.mutators))+1 : f->team;
 						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(team) : -1, m_team(cl.gamemode, cl.mutators) ? team : -1);
@@ -870,7 +871,7 @@ struct clientcom : iclientcom
 						playsound(S_RESPAWN, 0, 255, f->o, f);
 						regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 2.f);
 					}
-					cl.bot.spawned(f);
+					cl.ai.spawned(f);
 					if(f == cl.player1) cl.resetstates(ST_DEFAULT);
 					break;
 				}
@@ -1326,14 +1327,14 @@ struct clientcom : iclientcom
 					break;
 				}
 
-				case SV_INITBOT:
+				case SV_INITAI:
 				{
-					int on = getint(p), sk = clamp(getint(p), 1, 100), bn = getint(p);
+					int at = getint(p), on = getint(p), sk = clamp(getint(p), 1, 100), bn = getint(p);
 					getstring(text, p);
 					int tm = getint(p);
 					gameent *b = cl.newclient(bn);
 					if(!b) break;
-					cl.bot.init(b, on, sk, bn, text, tm);
+					cl.ai.init(b, at, on, sk, bn, text, tm);
 					break;
 				}
 
@@ -1545,8 +1546,8 @@ struct clientcom : iclientcom
 	int state() { return cl.player1->state; }
 	int otherclients()
 	{
-		int n = 0; // bots don't count
-		loopv(cl.players) if(cl.players[i] && cl.players[i]->ownernum < 0) n++;
+		int n = 0; // ai don't count
+		loopv(cl.players) if(cl.players[i] && cl.players[i]->aitype == AI_NONE) n++;
 		return n;
 	}
 

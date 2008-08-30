@@ -304,7 +304,7 @@ struct scoreboard : g3d_callback
 				g.text("pj", fgcolor);
 				loopscoregroup(o,
 				{
-					if(o->ownernum >= 0) g.textf("\fs%s%d\fS", 0xFF9955, NULL, o->ownernum == cl.player1->clientnum ? "\fg" : "\fc", o->skill);
+					if(o->aitype != AI_NONE) g.textf("\fs%s%d\fS", 0xFF9955, NULL, o->ownernum == cl.player1->clientnum ? "\fg" : "\fc", o->skill);
 					else if(o->state==CS_LAGGED) g.text("LAG", 0xFFFFDD);
 					else g.textf("%d", 0xFFFFDD, NULL, o->plag);
 				});
@@ -318,7 +318,7 @@ struct scoreboard : g3d_callback
 				g.strut(6);
 				loopscoregroup(o,
 				{
-					if(o->ownernum >= 0)
+					if(o->aitype != AI_NONE)
 					{
 						gameent *od = cl.getclient(o->ownernum);
 						g.textf("\fs%s%d\fS", 0xFF9955, NULL, o->ownernum == cl.player1->clientnum ? "\fg" : "\fc", od ? od->ping : 0);
@@ -346,7 +346,7 @@ struct scoreboard : g3d_callback
                 g.text("cn", fgcolor);
                 loopscoregroup(o,
                 {
-                	if(o->ownernum >= 0)
+                	if(o->aitype != AI_NONE)
 						g.textf("\fw%d [\fs%s%d\fS]", 0xFF9955, NULL, o->clientnum, o->ownernum == cl.player1->clientnum ? "\fg" : "\fc", o->ownernum);
 					else g.textf("%d", 0xFFFFDD, NULL, o->clientnum);
 				});
