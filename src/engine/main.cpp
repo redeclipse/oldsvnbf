@@ -694,16 +694,6 @@ void eastereggs()
 	}
 }
 
-VARP(magiceye, 0, 0, 1);
-VARP(magiceyefocus, 0, 1, 1);
-FVARP(magiceyeoffset, 0.5f);
-
-void updateframe(int w, int h, bool draw)
-{
-	setviewcell(camera1->o);
-	if(draw) gl_drawframe(w, h);
-}
-
 VARP(autoconnect, 0, 1, 1);
 int main(int argc, char **argv)
 {
@@ -847,39 +837,12 @@ int main(int argc, char **argv)
 			RUNWORLD("on_update");
 			cl->updateworld();
 			cl->recomputecamera(screen->w, screen->h);
+			setviewcell(camera1->o);
 			updatetextures();
 			updateparticles();
 			updatesounds();
 			inbetweenframes = false;
-			if(magiceye)
-			{
-				glClearColor(0, 0, 0, 0);
-				glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-				int w = screen->w/2, h = screen->h, ct = curtime;
-				physent *oldcamera = camera1;
-				static physent mcamera;
-				loopi(2)
-				{
-					mcamera = *oldcamera;
-					camera1 = &mcamera;
-					glViewport(i ? w : 0, 0, w, h);
-					if(i) curtime = 0;
-					vec off;
-					vecfromyawpitch(camera1->yaw, 0, 0, i ? 1 : -1, off);
-					off.mul(magiceyeoffset);
-					camera1->o.add(off);
-					if(magiceyefocus)
-					{
-						vec nrm(vec(worldpos).sub(camera1->o).normalize());
-						vectoyawpitch(nrm, camera1->yaw, camera1->pitch);
-					}
-					updateframe(w, h, frameloops > 2);
-					if(i) curtime = ct;
-					camera1 = oldcamera;
-				}
-				glViewport(0, 0, screen->w, screen->h);
-			}
-			else updateframe(screen->w, screen->h, frameloops > 2);
+			if(frameloops > 2) gl_drawframe(screen->w, screen->h);
 			SDL_GL_SwapBuffers();
 			inbetweenframes = true;
 			s_sprintfd(cap)("%s - %s", cl->gametitle(), cl->gametext());
