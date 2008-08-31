@@ -1452,7 +1452,7 @@ struct framebuffercopy
 };
 
 #define DTR 0.0174532925
-enum { VW_NORMAL = 0, VW_MAGIC, VW_STEREO, VW_STEREO_BLEND = VW_STEREO, VW_STEREO_AVG, VW_MAX, VW_STEREO_REDCYAN = VW_MAX };
+enum { VW_NORMAL = 0, VW_MAGIC, VW_STEREO, VW_STEREO_BLEND = VW_STEREO, VW_STEREO_BLEND_REDCYAN, VW_STEREO_AVG, VW_MAX, VW_STEREO_REDCYAN = VW_MAX };
 enum { VP_LEFT, VP_RIGHT, VP_MAX, VP_CAMERA = VP_MAX };
 
 framebuffercopy views[VP_MAX];
@@ -1481,7 +1481,8 @@ bool needsview(int v, int targtype)
     {
         case VW_NORMAL: return targtype == VP_CAMERA;
         case VW_MAGIC: return targtype == VP_LEFT || targtype == VP_RIGHT;
-        case VW_STEREO_BLEND: return targtype >= VP_LEFT && targtype <= VP_CAMERA;
+        case VW_STEREO_BLEND: 
+        case VW_STEREO_BLEND_REDCYAN: return targtype >= VP_LEFT && targtype <= VP_CAMERA;
         case VW_STEREO_AVG:
         case VW_STEREO_REDCYAN: return targtype == VP_LEFT || targtype == VP_RIGHT;
     }
@@ -1493,7 +1494,8 @@ bool copyview(int v, int targtype)
     switch(v)
     {
         case VW_MAGIC: return targtype == VP_LEFT || targtype == VP_RIGHT;
-        case VW_STEREO_BLEND: return targtype == VP_RIGHT; 
+        case VW_STEREO_BLEND: 
+        case VW_STEREO_BLEND_REDCYAN: return targtype == VP_RIGHT; 
         case VW_STEREO_AVG: return targtype == VP_LEFT;
     }
     return false;
@@ -1503,7 +1505,8 @@ bool clearview(int v, int targtype)
 {
     switch(v)
     {
-        case VW_STEREO_BLEND: return targtype == VP_LEFT || targtype == VP_CAMERA;
+        case VW_STEREO_BLEND: 
+        case VW_STEREO_BLEND_REDCYAN: return targtype == VP_LEFT || targtype == VP_CAMERA;
         case VW_STEREO_REDCYAN: return targtype == VP_LEFT; 
     }
     return true;
@@ -1553,6 +1556,7 @@ void drawview(int targtype)
             {
                 case VW_STEREO_BLEND: setcolormask(targtype == VP_LEFT, false, targtype == VP_RIGHT); break;
                 case VW_STEREO_AVG: setcolormask(targtype == VP_LEFT, true, targtype == VP_RIGHT); break;
+                case VW_STEREO_BLEND_REDCYAN:
                 case VW_STEREO_REDCYAN: setcolormask(targtype == VP_LEFT, targtype == VP_RIGHT, targtype == VP_RIGHT); break;
             }
             glColorMask(COLORMASK, GL_TRUE);
@@ -1765,10 +1769,13 @@ void gl_drawframe(int w, int h)
 			break;
 		}
 		case VW_STEREO_BLEND:
+        case VW_STEREO_BLEND_REDCYAN:
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_FALSE, GL_TRUE, GL_TRUE);
 			glColor4f(1.f, 1.f, 1.f, stereoblend/100.f); views[VP_RIGHT].draw(0, 0, 1, 1);
+            if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 			glDisable(GL_BLEND);
 			break;
 		}
