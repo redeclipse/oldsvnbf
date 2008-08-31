@@ -1361,117 +1361,282 @@ FVARP(hudblend, 0.99f);
 float cursorx = 0.5f, cursory = 0.5f, aimx = 0.5f, aimy = 0.5f;
 vec cursordir(0, 0, 0);
 
-void gl_drawframe(int w, int h)
+#define DTR 0.0174532925
+enum { VW_NORMAL = 0, VW_MAGIC, VW_STEREO };
+enum { VP_CAMERA = 0, VP_LEFT, VP_RIGHT, VP_MAX };
+
+VARP(viewtype, VW_NORMAL, VW_NORMAL, VW_STEREO);
+VARP(stereoblend, 0, 50, 100);
+FVARP(stereodist, 0.5f);
+FVARP(stereoplane, 10.f);
+FVARP(stereonear, 3.f);
+
+int fogmat = MAT_AIR, abovemat = MAT_AIR;
+float fogblend = 1.0f, causticspass = 0.0f;
+#include "rendertarget.h"
+struct viewport : rendertarget
 {
-	int fogmat = MAT_AIR, abovemat = MAT_AIR;
-	float fogblend = 1.0f, causticspass = 0.0f;
+	int targtype;
 
-	defaultshader->set();
-	updatedynlights();
+	viewport(int t) : targtype(t) {}
+	~viewport() { cleanup(); }
 
-	fogmat = lookupmaterial(camera1->o)&MATF_VOLUME;
-	if(fogmat==MAT_WATER || fogmat==MAT_LAVA)
+    bool swaptexs() const { return false; }
+	bool screenview() const { return true; }
+	bool shouldrender() { return true; }
+    bool texrect() const { return false; }
+    bool filter() const { return false; }
+
+	bool dorender()
 	{
-		float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
-		if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
-		else fogmat = abovemat;
-		if(caustics && fogmat==MAT_WATER && camera1->o.z < z)
-			causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
-	}
-	else
-	{
-		fogmat = MAT_AIR;
-	}
-	setfog(fogmat, fogblend, abovemat);
-	if(fogmat!=MAT_AIR)
-	{
-		float blend = abovemat==MAT_AIR ? fogblend : 1.0f;
-		fovy += blend*sinf(lastmillis/1000.0)*2.0f;
-		aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
-	}
+		defaultshader->set();
+		updatedynlights();
 
-	farplane = hdr.worldsize*2;
+		setfog(fogmat, fogblend, abovemat);
+  		project(fovy, aspect, farplane);
+		transplayer();
+		if(targtype == VP_LEFT || targtype == VP_RIGHT)
+		{
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			float top = stereonear*tan(DTR*fovy/2), right = aspect*top, iod = stereodist/2, fs = iod*stereonear/stereoplane;
+			glFrustum(targtype == VP_LEFT ? -right+fs : -right-fs, targtype == VP_LEFT ? right+fs : right-fs, -top, top, stereonear, farplane);
+			glTranslatef(targtype == VP_LEFT ? iod : -iod, 0.f, 0.f);
+			glMatrixMode(GL_MODELVIEW);
+		}
+		readmatrices();
 
-	project(fovy, aspect, farplane);
-	transplayer();
-	readmatrices();
-	if(curtime) cl->project(w, h);
+		glEnable(GL_TEXTURE_2D);
+		glPolygonMode(GL_FRONT_AND_BACK, wireframe && editmode ? GL_LINE : GL_FILL);
 
-	glEnable(GL_TEXTURE_2D);
+		xtravertsva = xtraverts = glde = gbatches = 0;
 
-	glPolygonMode(GL_FRONT_AND_BACK, wireframe && editmode ? GL_LINE : GL_FILL);
+		if(!hasFBO)
+		{
+			if(dopostfx)
+			{
+				drawglaretex();
+				drawdepthfxtex();
+				drawreflections();
+			}
+			else dopostfx = true;
+		}
 
-	xtravertsva = xtraverts = glde = gbatches = 0;
+		visiblecubes(curfov, fovy);
+		if(shadowmap && !hasFBO) rendershadowmap();
 
-	if(!hasFBO)
-	{
-		if(dopostfx)
+		glClearColor(0, 0, 0, 0);
+		glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
+
+		if(limitsky()) drawskybox(farplane, true);
+		rendergeom(causticspass);
+		extern int outline, blankgeom;
+		if(!wireframe && editmode && (outline || (fullbright && blankgeom))) renderoutline();
+		queryreflections();
+		if(!limitsky()) drawskybox(farplane, false);
+
+		rendermapmodels();
+		rendergame();
+		renderavatar(true);
+
+		if(hasFBO)
 		{
 			drawglaretex();
 			drawdepthfxtex();
 			drawreflections();
 		}
-		else dopostfx = true;
+
+		renderdecals(curtime);
+		renderwater();
+		rendergrass();
+
+		rendermaterials();
+		render_particles(curtime);
+
+		project(fovy, aspect, farplane, false, false, false, 0.5f);
+		renderavatar(false);
+		project(fovy, aspect, farplane);
+
+		glDisable(GL_FOG);
+		glDisable(GL_CULL_FACE);
+
+		addglare();
+		renderfullscreenshader(vieww, viewh);
+
+		glDisable(GL_TEXTURE_2D);
+		notextureshader->set();
+		if(editmode && !hidehud)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glDepthMask(GL_FALSE);
+			cursorupdate();
+			glDepthMask(GL_TRUE);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+
+		glDisable(GL_DEPTH_TEST);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		gettextres(vieww, viewh);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, vieww, viewh, 0, -1, 1);
+
+		glEnable(GL_BLEND);
+		vec colour;
+		bool hashudcolour = cl->gethudcolour(colour);
+		if(hashudcolour || fogmat==MAT_WATER || fogmat==MAT_LAVA)
+		{
+			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+			if(hashudcolour) glColor3f(colour.x, colour.y, colour.z);
+			else
+			{
+				float overlay[3] = { 0, 0, 0 };
+				blendfogoverlay(fogmat, fogblend, overlay);
+				blendfogoverlay(abovemat, 1-fogblend, overlay);
+				glColor3fv(overlay);
+			}
+			glBegin(GL_QUADS);
+			glVertex2f(0, 0);
+			glVertex2f(vieww, 0);
+			glVertex2f(vieww, viewh);
+			glVertex2f(0, viewh);
+			glEnd();
+		}
+		glDisable(GL_BLEND);
+
+		glColor3f(1, 1, 1);
+		extern int debugsm;
+		if(debugsm)
+		{
+			extern void viewshadowmap();
+			viewshadowmap();
+		}
+
+		extern int debugglare;
+		if(debugglare)
+		{
+			extern void viewglaretex();
+			viewglaretex();
+		}
+
+		extern int debugdepthfx;
+		if(debugdepthfx)
+		{
+			extern void viewdepthfxtex();
+			viewdepthfxtex();
+		}
+
+		glEnable(GL_TEXTURE_2D);
+		defaultshader->set();
+		cl->drawhud(vieww, viewh);
+		glDisable(GL_TEXTURE_2D);
+
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_FOG);
+		renderedgame = false;
+
+		return true;
 	}
 
-	visiblecubes(curfov, fovy);
-
-	if(shadowmap && !hasFBO) rendershadowmap();
-
-	glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
-
-	if(limitsky()) drawskybox(farplane, true);
-
-	rendergeom(causticspass);
-
-	extern int outline, blankgeom;
-	if(!wireframe && editmode && (outline || (fullbright && blankgeom))) renderoutline();
-
-	queryreflections();
-
-	if(!limitsky()) drawskybox(farplane, false);
-
-	rendermapmodels();
-	rendergame();
-	renderavatar(true);
-
-	if(hasFBO)
+	bool check(int v)
 	{
-		drawglaretex();
-		drawdepthfxtex();
-		drawreflections();
+		switch(v)
+		{
+			case VW_NORMAL:
+			{
+				if(targtype == VP_CAMERA) return true;
+				break;
+			}
+			case VW_MAGIC:
+			{
+				if(targtype == VP_LEFT || targtype == VP_RIGHT) return true;
+				break;
+			}
+			case VW_STEREO:
+			{
+				if(targtype >= VP_CAMERA && targtype <= VP_RIGHT) return true;
+				break;
+			}
+			 default: break;
+		}
+		return false;
 	}
 
-	renderdecals(curtime);
-	renderwater();
-	rendergrass();
+	void update(int w, int h)
+	{
+		/*
+		physent *oldcamera = camera1;
+		static physent mcamera;
+		mcamera = *camera1;
+		camera1 = &mcamera;
+		*/
+		if(targtype == VP_LEFT || targtype == VP_RIGHT)
+		{
+			vec off;
+			vecfromyawpitch(camera1->yaw, 0, 0, targtype == VP_RIGHT ? 1 : -1, off);
+			off.mul(stereodist);
+			camera1->o.add(off);
+		}
+		render(w, h, 0, 0.f);
+		//camera1 = oldcamera;
+	}
 
-	rendermaterials();
-	render_particles(curtime);
+	void draw(int dx, int dy, int dw, int dh, int sw, int sh)
+	{
+		int x = dx, y = sh-dy, w = x+dw, h = y-dh;
+        glBindTexture(GL_TEXTURE_2D, rendertex);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.f, 0.f); glVertex2f(x, y);
+        glTexCoord2f(1.f, 0.f); glVertex2f(w, y);
+        glTexCoord2f(1.f, 1.f); glVertex2f(w, h);
+        glTexCoord2f(0.f, 1.f); glVertex2f(x, h);
+        glEnd();
+	}
+};
+vector<viewport *> viewports;
 
-	project(fovy, aspect, farplane, false, false, false, 0.5f);
-	renderavatar(false);
+void gl_drawframe(int w, int h)
+{
+	fogmat = lookupmaterial(camera1->o)&MATF_VOLUME;
+	if(fogmat == MAT_WATER || fogmat == MAT_LAVA)
+	{
+		float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
+		if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
+		else fogmat = abovemat;
+		if(caustics && fogmat == MAT_WATER && camera1->o.z < z)
+			causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
+
+		float blend = abovemat == MAT_AIR ? fogblend : 1.0f;
+		fovy += blend*sinf(lastmillis/1000.0)*2.0f;
+		aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
+	}
+	else fogmat = MAT_AIR;
+
+	farplane = hdr.worldsize*2;
 	project(fovy, aspect, farplane);
+	transplayer();
+	readmatrices();
+	cl->project(w, h);
+
+	int oldcurtime = curtime;
+	loopi(VP_MAX)
+	{
+		if(!viewports.inrange(i)) viewports.add(new viewport(i));
+		if(viewports[i]->check(viewtype))
+		{
+			viewports[i]->update(viewtype == VW_MAGIC ? w/2 : w, h);
+			curtime = 0;
+		}
+	}
+	curtime = oldcurtime;
+
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);
-
-	addglare();
-	renderfullscreenshader(w, h);
-
-	glDisable(GL_TEXTURE_2D);
-
-	notextureshader->set();
-
-	if(editmode && !hidehud)
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDepthMask(GL_FALSE);
-		cursorupdate();
-		glDepthMask(GL_TRUE);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
-
 	glDisable(GL_DEPTH_TEST);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -1479,64 +1644,33 @@ void gl_drawframe(int w, int h)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, w, h, 0, -1, 1);
-
-	glEnable(GL_BLEND);
-	vec colour;
-	bool hashudcolour = cl->gethudcolour(colour);
-	if (hashudcolour || fogmat==MAT_WATER || fogmat==MAT_LAVA)
-	{
-		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-		if (hashudcolour) glColor3f(colour.x, colour.y, colour.z);
-		else
-		{
-			float overlay[3] = { 0, 0, 0 };
-			blendfogoverlay(fogmat, fogblend, overlay);
-			blendfogoverlay(abovemat, 1-fogblend, overlay);
-			glColor3fv(overlay);
-		}
-		glBegin(GL_QUADS);
-		glVertex2f(0, 0);
-		glVertex2f(w, 0);
-		glVertex2f(w, h);
-		glVertex2f(0, h);
-		glEnd();
-	}
-
 	glDisable(GL_BLEND);
-
-	glColor3f(1, 1, 1);
-
-	extern int debugsm;
-	if(debugsm)
-	{
-		extern void viewshadowmap();
-		viewshadowmap();
-	}
-
-	extern int debugglare;
-	if(debugglare)
-	{
-		extern void viewglaretex();
-		viewglaretex();
-	}
-
-	extern int debugdepthfx;
-	if(debugdepthfx)
-	{
-		extern void viewdepthfxtex();
-		viewdepthfxtex();
-	}
-
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
-	cl->drawhud(w, h);
+	glColor3f(1.f, 1.f, 1.f);
+	switch(viewtype)
+	{
+		case 0: default: viewports[VP_CAMERA]->draw(0, 0, w, h, w, h); break;
+		case 1:
+		{
+			viewports[VP_LEFT]->draw(0, 0, w/2, h, w, h);
+			viewports[VP_RIGHT]->draw(w/2, 0, w/2, h, w, h);
+			break;
+		}
+		case 2:
+		{
+			viewports[VP_CAMERA]->draw(0, 0, w, h, w, h);
+			glEnable(GL_BLEND);
+			glColor4f(1.f, 0.f, 0.f, stereoblend/100.f); viewports[VP_LEFT]->draw(0, 0, w, h, w, h);
+			glColor4f(0.f, 0.f, 1.f, stereoblend/100.f); viewports[VP_RIGHT]->draw(0, 0, w, h, w, h);
+			glDisable(GL_BLEND);
+			break;
+		}
+	}
 	glDisable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
-
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_FOG);
-
-    renderedgame = false;
 }
 
 #define rendernearfar(a,b,c,d,e) \

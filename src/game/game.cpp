@@ -55,8 +55,8 @@ struct gameclient : igameclient
 	IVARP(firstpersonaim, 0, 0, INT_MAX-1);
 	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
 	IVARP(firstpersontranslucent, 0, 0, 1);
-	IFVARP(firstpersondist, 0.3f);
-	IFVARP(firstpersonshift, -0.3f);
+	IFVARP(firstpersondist, -0.25f);
+	IFVARP(firstpersonshift, 0.25f);
 	IFVARP(firstpersonadjust, 0.f);
 
 	IVARP(editmouse, 0, 0, 2);
@@ -1787,27 +1787,6 @@ struct gameclient : igameclient
 					yaw = player1->yaw;
 					pitch = player1->pitch;
 				}
-				if(firstpersondist() != 0.f)
-				{
-					vec dir;
-					vecfromyawpitch(yaw, pitch, 1, 0, dir);
-					dir.mul(player1->radius*firstpersondist());
-					camera1->o.add(dir);
-				}
-				if(firstpersonshift() != 0.f)
-				{
-					vec dir;
-					vecfromyawpitch(yaw, pitch, 0, -1, dir);
-					dir.mul(player1->radius*firstpersonshift());
-					camera1->o.add(dir);
-				}
-				if(firstpersonadjust() != 0.f)
-				{
-					vec dir;
-					vecfromyawpitch(yaw, pitch+90.f, 1, 0, dir);
-					dir.mul(player1->height*firstpersonadjust());
-					camera1->o.add(dir);
-				}
 			}
 
 			if(inzoom() && player1->gunselect == GUN_RIFLE)
@@ -1902,21 +1881,38 @@ struct gameclient : igameclient
 		vec o = vec(third ? feetpos(d) : headpos(d));
 		if(!third)
 		{
-			if(firstpersonsway())
+			vec dir;
+			if(firstpersonsway() != 0.f)
 			{
-				vec sway;
-				vecfromyawpitch(d->yaw, d->pitch, 1, 0, sway);
-				float swayspeed = sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y);
-				swayspeed = min(4.0f, swayspeed);
-				sway.mul(swayspeed);
+				vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
+				float swayspeed = min(4.f, sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y));
+				dir.mul(swayspeed);
 				float swayxy = sinf(swaymillis/115.0f)/float(firstpersonsway()),
 					  swayz = cosf(swaymillis/115.0f)/float(firstpersonsway());
-				swap(sway.x, sway.y);
-				sway.x *= -swayxy;
-				sway.y *= swayxy;
-				sway.z = -fabs(swayspeed*swayz);
-				sway.add(swaydir);
-				o.add(sway);
+				swap(dir.x, dir.y);
+				dir.x *= -swayxy;
+				dir.y *= swayxy;
+				dir.z = -fabs(swayspeed*swayz);
+				dir.add(swaydir);
+				o.add(dir);
+			}
+			if(firstpersondist() != 0.f)
+			{
+				vecfromyawpitch(yaw, pitch, 1, 0, dir);
+				dir.mul(player1->radius*firstpersondist());
+				o.add(dir);
+			}
+			if(firstpersonshift() != 0.f)
+			{
+				vecfromyawpitch(yaw, pitch, 0, -1, dir);
+				dir.mul(player1->radius*firstpersonshift());
+				o.add(dir);
+			}
+			if(firstpersonadjust() != 0.f)
+			{
+				vecfromyawpitch(yaw, pitch+90.f, 1, 0, dir);
+				dir.mul(player1->height*firstpersonadjust());
+				o.add(dir);
 			}
 		}
 
