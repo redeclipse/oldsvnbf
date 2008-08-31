@@ -986,7 +986,7 @@ void queryreflections()
 	{
 		defaultshader->set();
 		glDepthMask(GL_TRUE);
-		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glColorMask(COLORMASK, GL_TRUE);
 		glEnable(GL_CULL_FACE);
 	}
 }
@@ -1036,7 +1036,7 @@ void maskreflection(Reflection &ref, float offset, bool reflect)
 	defaultshader->set();
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_TEXTURE_2D);
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glColorMask(COLORMASK, GL_TRUE);
 	glDepthFunc(GL_LESS);
 	glDepthRange(0, 1);
 }

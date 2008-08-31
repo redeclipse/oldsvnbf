@@ -198,11 +198,17 @@ static struct shadowmaptexture : rendertarget
     {
         if(shadowmapcasters)
         {
-            glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
-            debugscissor(w, h);
-            glColorMask(GL_FALSE, GL_FALSE, GL_TRUE, GL_FALSE);
-            debugblurtiles(w, h);
-            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            if(colormask[0])
+            {
+                glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
+                debugscissor(w, h);
+            }
+            if(colormask[2])
+            {
+                glColorMask(GL_FALSE, GL_FALSE, GL_TRUE, GL_FALSE);
+                debugblurtiles(w, h);
+            }
+            glColorMask(COLORMASK, GL_TRUE);
         }
     }
 } shadowmaptex;

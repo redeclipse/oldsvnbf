@@ -141,7 +141,7 @@ bool drawskylimits(bool explicitonly)
     glDisable(GL_TEXTURE_2D);
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     bool rendered = rendersky(explicitonly);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glColorMask(COLORMASK, GL_TRUE);
     glEnable(GL_TEXTURE_2D);
 
     return rendered;
@@ -248,7 +248,7 @@ void drawskybox(int farplane, bool limited)
     {
         if((spinclouds || yawclouds) && renderedskyfaces&0x0F) renderedskyfaces |= 0x0F;
 
-        if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+        if(fading) glColorMask(COLORMASK, GL_FALSE);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -268,7 +268,7 @@ void drawskybox(int farplane, bool limited)
 
     if(!glaring && cloudlayer[0] && cloudheight && renderedskyfaces&(cloudheight < 0 ? 0x1F : 0x2F))
     {
-        if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+        if(fading) glColorMask(COLORMASK, GL_FALSE);
 
         glDisable(GL_CULL_FACE);
 
