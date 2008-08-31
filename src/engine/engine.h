@@ -76,6 +76,9 @@ extern PFNGLDRAWRANGEELEMENTSEXTPROC glDrawRangeElements_;
 // GL_EXT_blend_minmax
 extern PFNGLBLENDEQUATIONEXTPROC glBlendEquation_;
 
+// GL_EXT_blend_color
+extern PFNGLBLENDCOLOREXTPROC glBlendColor_;
+
 // GL_EXT_multi_draw_arrays
 extern PFNGLMULTIDRAWARRAYSEXTPROC   glMultiDrawArrays_;
 extern PFNGLMULTIDRAWELEMENTSEXTPROC glMultiDrawElements_;
@@ -190,6 +193,20 @@ extern GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16], invmvmatrix[16];
 extern float cursorx, cursory, aimx, aimy;
 extern vec cursordir;
 
+extern GLenum colormask[3];
+#define COLORMASK colormask[0], colormask[1], colormask[2]
+#define SAVECOLORMASK \
+    GLenum oldcolormask[3]; \
+    memcpy(oldcolormask, colormask, sizeof(oldcolormask)); \
+    setcolormask(); \
+    if(memcmp(colormask, oldcolormask, sizeof(oldcolormask))) glColorMask(COLORMASK, GL_TRUE);
+#define RESTORECOLORMASK \
+    if(memcmp(colormask, oldcolormask, sizeof(oldcolormask))) \
+    { \
+        memcpy(colormask, oldcolormask, sizeof(oldcolormask)); \
+        glColorMask(COLORMASK, GL_TRUE); \
+    }
+
 extern void gl_checkextensions();
 extern void gl_init(int w, int h, int bpp, int depth, int fsaa);
 extern void cleangl();
@@ -205,6 +222,7 @@ extern void enablepolygonoffset(GLenum type);
 extern void disablepolygonoffset(GLenum type);
 extern void setfogplane(const plane &p, bool flush = false);
 extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
+extern void setcolormask(bool r = true, bool g = true, bool b = true);
 
 extern const char *loadback;
 extern void loadbackground(int w, int h);

@@ -402,6 +402,8 @@ struct rendertarget
             sh = viewh;
         }
 
+        SAVECOLORMASK
+
         bool succeeded = dorender();
 
         if(scissoring) glDisable(GL_SCISSOR_TEST);
@@ -416,6 +418,8 @@ struct rendertarget
 
             if(blursize) doblur(blursize, blursigma);
         }
+
+        RESTORECOLORMASK
 
         if(hasFBO) glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
         glViewport(0, 0, screen->w, screen->h);

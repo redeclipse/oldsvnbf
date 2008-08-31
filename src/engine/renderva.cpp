@@ -475,26 +475,26 @@ void rendermapmodels()
 	}
 	endmodelbatches();
 
-	bool colormask = true;
+	bool queried = false;
 	for(octaentities *oe = visiblemms; oe; oe = oe->next) if(oe->distance<0)
 	{
 		oe->query = doquery ? newquery(oe) : NULL;
 		if(!oe->query) continue;
-		if(colormask)
+		if(!queried)
 		{
 			glDepthMask(GL_FALSE);
 			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 			nocolorshader->set();
-			colormask = false;
+            queried = true;
 		}
 		startquery(oe->query);
 		drawbb(oe->bbmin, ivec(oe->bbmax).sub(oe->bbmin));
 		endquery(oe->query);
 	}
-	if(!colormask)
+	if(queried)
 	{
 		glDepthMask(GL_TRUE);
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, fading ? GL_FALSE : GL_TRUE);
+        glColorMask(COLORMASK, fading ? GL_FALSE : GL_TRUE);
 	}
 }
 
@@ -1355,7 +1355,7 @@ static void renderbatches(renderstate &cur, int pass)
     if(curbatch >= 0)
     {
         if(!cur.depthmask) { cur.depthmask = true; glDepthMask(GL_TRUE); }
-        if(!cur.colormask) { cur.colormask = true; glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); }
+        if(!cur.colormask) { cur.colormask = true; glColorMask(COLORMASK, GL_TRUE); }
     }
     while(curbatch >= 0)
     {
@@ -1938,7 +1938,7 @@ void rendergeom(float causticspass, bool fogpass)
 
     if(geombatches.length()) renderbatches(cur, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
 
-    if(!cur.colormask) { cur.colormask = true; glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); }
+    if(!cur.colormask) { cur.colormask = true; glColorMask(COLORMASK, GL_TRUE); }
     if(!cur.depthmask) { cur.depthmask = true; glDepthMask(GL_TRUE); }
 
 	if(doOQ)
@@ -2063,9 +2063,9 @@ void rendergeom(float causticspass, bool fogpass)
             setupcaustics(0, causticspass);
             glBlendFunc(GL_ZERO, renderpath==R_FIXEDFUNCTION ? GL_SRC_COLOR : GL_ONE_MINUS_SRC_COLOR);
             glFogfv(GL_FOG_COLOR, renderpath==R_FIXEDFUNCTION ? onefog : zerofog);
-            if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+            if(fading) glColorMask(COLORMASK, GL_FALSE);
             rendergeommultipass(cur, RENDERPASS_CAUSTICS, fogpass);
-            if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            if(fading) glColorMask(COLORMASK, GL_TRUE);
             loopi(2)
             {
                 glActiveTexture_(GL_TEXTURE0_ARB+i);
