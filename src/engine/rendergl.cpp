@@ -808,9 +808,7 @@ void renderavatar(bool early)
     cl->renderavatar(early);
 }
 
-int curtargtype = 0;
-
-extern void stereoproject(int targtype, float zscale = 1);
+extern void viewproject(float zscale = 1);
 
 VARP(skyboxglare, 0, 1, 1);
 
@@ -842,9 +840,9 @@ void drawglare()
     rendermaterials();
     render_particles(0);
 
-    stereoproject(curtargtype, 0.5f);
+    viewproject(0.5f);
     renderavatar(false);
-    stereoproject(curtargtype);
+    viewproject();
 
     glFogf(GL_FOG_START, oldfogstart);
     glFogf(GL_FOG_END, oldfogend);
@@ -1512,24 +1510,26 @@ bool clearview(int v, int targtype)
     return true;
 }
 
-void stereoproject(int targtype, float zscale)
+static int curview = VP_NORMAL;
+
+void viewproject(float zscale)
 {
-    if(targtype != VP_LEFT && targtype != VP_RIGHT) project(fovy, aspect, farplane, false, false, false, zscale);
+    if(curview != VP_LEFT && curview != VP_RIGHT) project(fovy, aspect, farplane, false, false, false, zscale);
     else
     {
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         if(zscale != 1) glScalef(1, 1, zscale);
         float top = stereonear*tan(DTR*fovy/2), right = aspect*top, iod = stereodist/2, fs = iod*stereonear/stereoplane;
-        glFrustum(targtype == VP_LEFT ? -right+fs : -right-fs, targtype == VP_LEFT ? right+fs : right-fs, -top, top, stereonear, farplane);
-        glTranslatef(targtype == VP_LEFT ? iod : -iod, 0.f, 0.f);
+        glFrustum(curview == VP_LEFT ? -right+fs : -right-fs, curview == VP_LEFT ? right+fs : right-fs, -top, top, stereonear, farplane);
+        glTranslatef(curview == VP_LEFT ? iod : -iod, 0.f, 0.f);
         glMatrixMode(GL_MODELVIEW);
     }
 }
 
 void drawview(int targtype)
 {
-    curtargtype = targtype;
+    curview = targtype;
 
 	vec oldcam(camera1->o);
     if(targtype == VP_LEFT || targtype == VP_RIGHT)
@@ -1544,12 +1544,10 @@ void drawview(int targtype)
 	updatedynlights();
 
 	setfog(fogmat, fogblend, abovemat);
-  	stereoproject(targtype);
+  	viewproject();
 	transplayer();
 	if(targtype == VP_LEFT || targtype == VP_RIGHT)
 	{
-        stereoproject(targtype);
-
 		if(viewtype >= VW_STEREO) 
         {
             switch(viewtype)
@@ -1612,9 +1610,9 @@ void drawview(int targtype)
 	rendermaterials();
 	render_particles(curtime);
 
-    stereoproject(targtype, 0.5f);
+    viewproject(0.5f);
 	renderavatar(false);
-    stereoproject(targtype);
+    viewproject();
 
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);
