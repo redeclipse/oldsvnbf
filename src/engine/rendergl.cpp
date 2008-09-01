@@ -1479,7 +1479,7 @@ bool needsview(int v, int targtype)
     {
         case VW_NORMAL: return targtype == VP_CAMERA;
         case VW_MAGIC: return targtype == VP_LEFT || targtype == VP_RIGHT;
-        case VW_STEREO_BLEND: 
+        case VW_STEREO_BLEND:
         case VW_STEREO_BLEND_REDCYAN: return targtype >= VP_LEFT && targtype <= VP_CAMERA;
         case VW_STEREO_AVG:
         case VW_STEREO_REDCYAN: return targtype == VP_LEFT || targtype == VP_RIGHT;
@@ -1492,8 +1492,8 @@ bool copyview(int v, int targtype)
     switch(v)
     {
         case VW_MAGIC: return targtype == VP_LEFT || targtype == VP_RIGHT;
-        case VW_STEREO_BLEND: 
-        case VW_STEREO_BLEND_REDCYAN: return targtype == VP_RIGHT; 
+        case VW_STEREO_BLEND:
+        case VW_STEREO_BLEND_REDCYAN: return targtype == VP_RIGHT;
         case VW_STEREO_AVG: return targtype == VP_LEFT;
     }
     return false;
@@ -1503,14 +1503,14 @@ bool clearview(int v, int targtype)
 {
     switch(v)
     {
-        case VW_STEREO_BLEND: 
+        case VW_STEREO_BLEND:
         case VW_STEREO_BLEND_REDCYAN: return targtype == VP_LEFT || targtype == VP_CAMERA;
-        case VW_STEREO_REDCYAN: return targtype == VP_LEFT; 
+        case VW_STEREO_REDCYAN: return targtype == VP_LEFT;
     }
     return true;
 }
 
-static int curview = VP_NORMAL;
+static int curview = VP_CAMERA;
 
 void viewproject(float zscale)
 {
@@ -1531,15 +1531,6 @@ void drawview(int targtype)
 {
     curview = targtype;
 
-	vec oldcam(camera1->o);
-    if(targtype == VP_LEFT || targtype == VP_RIGHT)
-    {
-        vec off;
-        vecfromyawpitch(camera1->yaw, 0, 0, targtype == VP_RIGHT ? 1 : -1, off);
-        off.mul(stereodist);
-        camera1->o.add(off);
-    }
-
 	defaultshader->set();
 	updatedynlights();
 
@@ -1548,7 +1539,7 @@ void drawview(int targtype)
 	transplayer();
 	if(targtype == VP_LEFT || targtype == VP_RIGHT)
 	{
-		if(viewtype >= VW_STEREO) 
+		if(viewtype >= VW_STEREO)
         {
             switch(viewtype)
             {
@@ -1703,8 +1694,6 @@ void drawview(int targtype)
             glColorMask(COLORMASK, GL_TRUE);
         }
     }
-
-	camera1->o = oldcam;
 }
 
 void gl_drawframe(int w, int h)
@@ -1736,7 +1725,7 @@ void gl_drawframe(int w, int h)
 		drawview(i);
 		if(copyview(viewtype, i))
 		{
-			views[i].copy();	
+			views[i].copy();
 			copies++;
 		}
 		curtime = 0;
@@ -1763,7 +1752,7 @@ void gl_drawframe(int w, int h)
 		case VW_MAGIC:
 		{
 			views[VP_LEFT].draw(0, 0, 0.5f, 1);
-			views[VP_RIGHT].draw(0.5f, 0, 0.5f, 1); 
+			views[VP_RIGHT].draw(0.5f, 0, 0.5f, 1);
 			break;
 		}
 		case VW_STEREO_BLEND:
@@ -1783,7 +1772,7 @@ void gl_drawframe(int w, int h)
             if(hasBC)
             {
                 glBlendFunc(GL_ONE, GL_CONSTANT_COLOR_EXT);
-                glBlendColor_(0.f, 0.5f, 1.f, 1.f); 
+                glBlendColor_(0.f, 0.5f, 1.f, 1.f);
             }
             else
             {
