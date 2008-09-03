@@ -15,7 +15,7 @@ struct gameclient : igameclient
 	#include "stf.h"
     #include "ctf.h"
 
-	int nextmode, nextmuts, gamemode, mutators;
+	int nextmode, nextmuts, nextstyle, gamemode, mutators, gamestyle;
 	bool intermission;
 	int maptime, minremain, swaymillis;
 	dynent fpsmodel;
@@ -162,7 +162,7 @@ struct gameclient : igameclient
 
 	gameclient()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), ai(*this), stf(*this), ctf(*this),
-			nextmode(G_LOBBY), nextmuts(0), gamemode(G_LOBBY), mutators(0), intermission(false),
+			nextmode(G_LOBBY), nextmuts(0), nextstyle(G_S_PVS), gamemode(G_LOBBY), mutators(0), gamestyle(G_S_PVS), intermission(false),
 			maptime(0), minremain(0), swaymillis(0), swaydir(0, 0, 0),
 			lasthit(0), lastcamera(0), lastzoom(0), lastmousetype(0),
 			prevzoom(false), zooming(false),
@@ -171,9 +171,10 @@ struct gameclient : igameclient
 			player1(new gameent())
 	{
         CCOMMAND(kill, "",  (gameclient *self), { self->suicide(self->player1, 0); });
-		CCOMMAND(mode, "ii", (gameclient *self, int *val, int *mut), { self->setmode(*val, *mut); });
+		CCOMMAND(mode, "iii", (gameclient *self, int *val, int *mut, int *style), { self->setmode(*val, *mut, *style); });
 		CCOMMAND(gamemode, "", (gameclient *self), intret(self->gamemode));
 		CCOMMAND(mutators, "", (gameclient *self), intret(self->mutators));
+		CCOMMAND(gamestyle, "", (gameclient *self), intret(self->gamestyle));
 		CCOMMAND(zoom, "D", (gameclient *self, int *down), { self->dozoom(*down!=0); });
 		s_strcpy(player1->name, "unnamed");
 	}
@@ -181,7 +182,7 @@ struct gameclient : igameclient
 	iclientcom *getcom() { return &cc; }
 	icliententities *getents() { return &et; }
 
-	char *gametitle() { return sv->gamename(gamemode, mutators); }
+	char *gametitle() { return sv->gamename(gamemode, mutators, gamestyle); }
 	char *gametext() { return getmapname(); }
 
 	float radarrange()
@@ -348,10 +349,10 @@ struct gameclient : igameclient
 		return NULL;
 	}
 
-	void setmode(int mode, int muts)
+	void setmode(int mode, int muts, int style)
 	{
-		nextmode = mode; nextmuts = muts;
-		sv->modecheck(&nextmode, &nextmuts);
+		nextmode = mode; nextmuts = muts; nextstyle = style;
+		sv->modecheck(&nextmode, &nextmuts, &nextstyle);
 	}
 
 	void resetstates(int types)
@@ -1100,7 +1101,7 @@ struct gameclient : igameclient
 		rendericon(guioverlaytex, rx, ry, rs, rs);
 
 		int tx = bx + bs, ty = by + bs + FONTH/2, ts = int(tx*(1.f-amt));
-		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, sv->gamename(gamemode, mutators));
+		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, sv->gamename(gamemode, mutators, gamestyle));
 		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, title);
 		popfont();
 	}

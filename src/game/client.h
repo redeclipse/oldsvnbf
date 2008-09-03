@@ -753,8 +753,8 @@ struct clientcom : iclientcom
 				{
 					int hasmap = getint(p);
 					if(hasmap) getstring(text, p);
-					int mode = getint(p), muts = getint(p);
-					changemapserv(hasmap ? text : NULL, mode, muts);
+					int mode = getint(p), muts = getint(p), style = getint(p);
+					changemapserv(hasmap ? text : NULL, mode, muts, style);
 					mapchanged = true;
 					break;
 				}
@@ -1347,12 +1347,12 @@ struct clientcom : iclientcom
 		}
 	}
 
-	void changemapserv(char *name, int gamemode, int mutators)
+	void changemapserv(char *name, int gamemode, int mutators, int gamestyle)
 	{
 		if(editmode) toggleedit();
-		cl.gamemode = gamemode; cl.mutators = mutators;
-		sv->modecheck(&cl.gamemode, &cl.mutators);
-		cl.nextmode = cl.gamemode; cl.nextmuts = cl.mutators;
+		cl.gamemode = gamemode; cl.mutators = mutators; cl.gamestyle = gamestyle;
+		sv->modecheck(&cl.gamemode, &cl.mutators, &cl.gamestyle);
+		cl.nextmode = cl.gamemode; cl.nextmuts = cl.mutators; cl.nextstyle = cl.gamestyle;
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
@@ -1370,9 +1370,9 @@ struct clientcom : iclientcom
 	void changemap(const char *name) // request map change, server may ignore
 	{
         if(spectator && !cl.player1->privilege) return;
-        int nextmode = cl.nextmode, nextmuts = cl.nextmuts; // in case stopdemo clobbers these
+        int nextmode = cl.nextmode, nextmuts = cl.nextmuts, nextstyle = cl.nextstyle; // in case stopdemo clobbers these
         if(!remote) stopdemo();
-        addmsg(SV_MAPVOTE, "rsii", name, nextmode, nextmuts);
+        addmsg(SV_MAPVOTE, "rsi3", name, nextmode, nextmuts, nextstyle);
 	}
 
 	void receivefile(uchar *data, int len)
@@ -1770,15 +1770,15 @@ struct clientcom : iclientcom
 			}
 			case SINFO_MAXCLIENTS:
 			{
-				if(si->attr.length() > 4 && si->attr[4] >= 0)
-					s_sprintf(text)("%d", si->attr[4]);
+				if(si->attr.length() > 4 && si->attr[5] >= 0)
+					s_sprintf(text)("%d", si->attr[5]);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_GAME:
 			{
 				if(si->attr.length() > 2)
-					s_sprintf(text)("%s", sv->gamename(si->attr[1], si->attr[2]));
+					s_sprintf(text)("%s", sv->gamename(si->attr[1], si->attr[2], si->attr[3]));
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
@@ -1790,8 +1790,8 @@ struct clientcom : iclientcom
 			}
 			case SINFO_TIME:
 			{
-				if(si->attr.length() > 3 && si->attr[3] >= 0)
-					s_sprintf(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
+				if(si->attr.length() > 3 && si->attr[4] >= 0)
+					s_sprintf(text)("%d %s", si->attr[4], si->attr[4] == 1 ? "min" : "mins");
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}

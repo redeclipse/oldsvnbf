@@ -108,10 +108,10 @@ struct igameserver
     virtual int welcomepacket(ucharbuf &p, int n, ENetPacket *packet) = 0;
     virtual void queryreply(ucharbuf &req, ucharbuf &p) = 0;
     virtual void serverupdate() = 0;
-    virtual void changemap(const char *s, int mode, int muts) { return; }
+    virtual void changemap(const char *s, int mode, int muts, int style) { return; }
     virtual const char *gameid() = 0;
-	virtual char *gamename(int mode, int muts) = 0;
-	virtual void modecheck(int *mode, int *muts) = 0;
+	virtual char *gamename(int mode, int muts, int style) = 0;
+	virtual void modecheck(int *mode, int *muts, int *style) = 0;
 	virtual int gamever() = 0;
     virtual const char *choosemap(const char *suggest) = 0;
     virtual bool canload(char *type) = 0;
