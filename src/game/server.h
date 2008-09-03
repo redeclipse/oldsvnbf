@@ -179,7 +179,7 @@ struct gameserver : igameserver
 	{
 		int clientnum, team;
 		string name, mapvote;
-		int modevote, mutsvote;
+		int modevote, mutsvote, stylevote;
 		int privilege;
         bool spectator, timesync, wantsmaster;
         int gameoffset, lastevent;
@@ -232,7 +232,7 @@ struct gameserver : igameserver
 	};
 
 	bool notgotitems, notgotflags;		// true when map has changed and waiting for clients to send item
-	int gamemode, mutators;
+	int gamemode, mutators, gamestyle;
 	int gamemillis, gamelimit;
 
 	string smapname;
@@ -316,7 +316,7 @@ struct gameserver : igameserver
 
 	gameserver()
 		: notgotitems(true), notgotflags(false),
-			gamemode(G_LOBBY), mutators(0),
+			gamemode(G_LOBBY), mutators(0), gamestyle(G_S_PVS),
 			interm(0), minremain(10), oldtimelimit(10),
 			maprequest(false), lastsend(0),
 			mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false),
@@ -327,8 +327,9 @@ struct gameserver : igameserver
 	{
 		CCOMMAND(gameid, "", (gameserver *self), result(self->gameid()));
 		CCOMMAND(gamever, "", (gameserver *self), intret(self->gamever()));
-		CCOMMAND(gamename, "ii", (gameserver *self, int *g, int *m), result(self->gamename(*g, *m)));
-		CCOMMAND(mutscheck, "ii", (gameserver *self, int *g, int *m), intret(self->mutscheck(*g, *m)));
+		CCOMMAND(gamename, "iii", (gameserver *self, int *g, int *m, int *s), result(self->gamename(*g, *m, *s)));
+		CCOMMAND(mutscheck, "iii", (gameserver *self, int *g, int *m, int *s), intret(self->mutscheck(*g, *m, *s)));
+		CCOMMAND(stylecheck, "iii", (gameserver *self, int *g, int *m, int *s), intret(self->stylecheck(*g, *m, *s)));
 		smuts.setsize(0);
 		cleanup(true);
 	}
@@ -358,7 +359,8 @@ struct gameserver : igameserver
 	{
 		gamemode = sv_defaultmode;
 		mutators = sv_defaultmuts;
-		modecheck(&gamemode, &mutators);
+		gamestyle = sv_defaultstyle;
+		modecheck(&gamemode, &mutators, &gamestyle);
 		s_strcpy(smapname, choosemap(NULL));
 		resetitems();
 		bannedips.setsize(0);
@@ -427,7 +429,7 @@ struct gameserver : igameserver
 		//cps.reset();
 	}
 
-	void vote(char *map, int reqmode, int reqmuts, int sender)
+	void vote(char *map, int reqmode, int reqmuts, int reqstyle, int sender)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
         if(!ci || (ci->state.state==CS_SPECTATOR && !haspriv(ci, PRIV_MASTER, true)) || !m_game(reqmode)) return;
@@ -435,19 +437,19 @@ struct gameserver : igameserver
 		s_strcpy(ci->mapvote, map);
 		if(!ci->mapvote[0]) return;
 
-		ci->modevote = reqmode; ci->mutsvote = reqmuts;
-		modecheck(&ci->modevote, &ci->mutsvote);
+		ci->modevote = reqmode; ci->mutsvote = reqmuts; ci->stylevote = reqstyle;
+		modecheck(&ci->modevote, &ci->mutsvote, &ci->stylevote);
 
 		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !nonspectators(ci->clientnum, true)))
 		{
 			if(demorecord) enddemorecord();
-			srvoutf(-1, "%s [%s] forced %s on map %s", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
-			sendf(-1, 1, "ri2si2", SV_MAPCHANGE, 1, ci->mapvote, ci->modevote, ci->mutsvote);
-			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
+			srvoutf(-1, "%s [%s] forced %s on map %s", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote, ci->stylevote), map);
+			sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, ci->mapvote, ci->modevote, ci->mutsvote, ci->stylevote);
+			changemap(ci->mapvote, ci->modevote, ci->mutsvote, ci->stylevote);
 		}
 		else
 		{
-			srvoutf(-1, "%s suggests %s on map %s", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf(-1, "%s suggests %s on map %s", colorname(ci), gamename(ci->modevote, ci->mutsvote, ci->stylevote), map);
 			checkvotes();
 		}
 	}
@@ -539,7 +541,7 @@ struct gameserver : igameserver
 		time_t t = time(NULL);
 		char *timestr = ctime(&t), *trim = timestr + strlen(timestr);
 		while(trim>timestr && isspace(*--trim)) *trim = '\0';
-		s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, gamename(gamemode, mutators), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
+		s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, gamename(gamemode, mutators, gamestyle), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
 		srvoutf(-1, "demo \"%s\" recorded", d.info);
 		d.data = new uchar[len];
 		d.len = len;
@@ -734,7 +736,7 @@ struct gameserver : igameserver
 		}
 	}
 
-	void changemap(const char *s, int mode, int muts)
+	void changemap(const char *s, int mode, int muts, int style)
 	{
 		if(m_demo(gamemode)) enddemoplayback();
 		else enddemorecord();
@@ -742,7 +744,8 @@ struct gameserver : igameserver
 		maprequest = false;
 		gamemode = mode >= 0 ? mode : sv_defaultmode;
 		mutators = muts >= 0 ? muts : sv_defaultmuts;
-		modecheck(&gamemode, &mutators);
+		gamestyle = style >= 0 ? style : sv_defaultstyle;
+		modecheck(&gamemode, &mutators, &gamestyle);
 		gamemillis = 0;
 		oldtimelimit = sv_timelimit;
 		minremain = sv_timelimit ? sv_timelimit : -1;
@@ -770,7 +773,6 @@ struct gameserver : igameserver
 
 		smuts.setsize(0);
 		if(m_duel(gamemode, mutators)) smuts.add(&duelmutator);
-
 
 		if(smode) smode->reset(false);
 		mutate(smuts, mut->reset(false));
@@ -845,9 +847,9 @@ struct gameserver : igameserver
 	struct votecount
 	{
 		char *map;
-		int mode, muts, count;
+		int mode, muts, style, count;
 		votecount() {}
-		votecount(char *s, int n, int m) : map(s), mode(n), muts(m), count(0) {}
+		votecount(char *s, int n, int m, int t) : map(s), mode(n), muts(m), style(t), count(0) {}
 	};
 
 	void checkvotes(bool force = false)
@@ -862,12 +864,12 @@ struct gameserver : igameserver
 			maxvotes++;
 			if(!oi->mapvote[0]) continue;
 			votecount *vc = NULL;
-			loopvj(votes) if(!strcmp(oi->mapvote, votes[j].map) && oi->modevote==votes[j].mode && oi->mutsvote==votes[j].muts)
+			loopvj(votes) if(!strcmp(oi->mapvote, votes[j].map) && oi->modevote==votes[j].mode && oi->mutsvote==votes[j].muts && oi->stylevote==votes[j].style)
 			{
 				vc = &votes[j];
 				break;
 			}
-			if(!vc) vc = &votes.add(votecount(oi->mapvote, oi->modevote, oi->mutsvote));
+			if(!vc) vc = &votes.add(votecount(oi->mapvote, oi->modevote, oi->mutsvote, oi->stylevote));
 			vc->count++;
 		}
 
@@ -881,14 +883,14 @@ struct gameserver : igameserver
 			srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
 			if(best && best->count >= reqvotes)
 			{
-				sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, best->map, best->mode, best->muts);
-				changemap(best->map, best->mode, best->muts);
+				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, best->map, best->mode, best->muts, best->style);
+				changemap(best->map, best->mode, best->muts, best->style);
 			}
 			else
 			{
 				const char *map = choosemap(smapname);
-				sendf(-1, 1, "ri2sii", SV_MAPCHANGE, 1, map, gamemode, mutators);
-				changemap(map, gamemode, mutators);
+				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, gamemode, mutators, gamestyle);
+				changemap(map, gamemode, mutators, gamestyle);
 			}
 		}
 	}
@@ -1364,8 +1366,8 @@ struct gameserver : igameserver
 				{
 					getstring(text, p);
 					filtertext(text, text);
-					int reqmode = getint(p), reqmuts = getint(p);
-					vote(text, reqmode, reqmuts, sender);
+					int reqmode = getint(p), reqmuts = getint(p), reqstyle = getint(p);
+					vote(text, reqmode, reqmuts, reqstyle, sender);
 					break;
 				}
 
@@ -1816,6 +1818,7 @@ struct gameserver : igameserver
 		}
 		putint(p, gamemode);
 		putint(p, mutators);
+		putint(p, gamestyle);
 		if(!ci || (m_timed(gamemode) && hasnonlocalclients()))
 		{
 			putint(p, SV_TIMEUP);
@@ -2485,9 +2488,10 @@ struct gameserver : igameserver
 		putint(p, GAMEVERSION);			// 1
 		putint(p, gamemode);			// 2
 		putint(p, mutators);			// 3
-		putint(p, minremain);			// 4
-		putint(p, serverclients);		// 5
-		putint(p, mastermode);			// 6
+		putint(p, gamestyle);			// 4
+		putint(p, minremain);			// 5
+		putint(p, serverclients);		// 6
+		putint(p, mastermode);			// 7
 		sendstring(smapname, p);
 		sendstring(serverdesc(), p);
 		sendqueryreply(p);
@@ -2533,7 +2537,7 @@ struct gameserver : igameserver
 
     const char *gameid() { return GAMEID; }
     int gamever() { return GAMEVERSION; }
-    char *gamename(int mode, int muts)
+    char *gamename(int mode, int muts, int style)
     {
     	static string gname;
     	gname[0] = 0;
@@ -2546,18 +2550,30 @@ struct gameserver : igameserver
 				s_strcpy(gname, name);
 			}
 		}
-		s_sprintfd(mname)("%s%s%s", *gname ? gname : "", *gname ? " " : "", gametype[mode].name);
+		s_sprintfd(mname)("%s: %s%s%s", gamestyles[style], *gname ? gname : "", *gname ? " " : "", gametype[mode].name);
 		s_strcpy(gname, mname);
 		return gname;
     }
 
-    void modecheck(int *mode, int *muts)
+    void modecheck(int *mode, int *muts, int *style)
     {
 		if(!m_game(*mode))
 		{
 			*mode = G_DEATHMATCH;
 			*muts = gametype[*mode].implied;
+			*style = G_S_PVS;
 		}
+
+#if 0
+		if(gametype[*mode].styles && !(gametype[*mode].styles & (1<<*style)))
+		{
+			loopi(G_S_MAX) if(gametype[*mode].styles & (1<<i))
+			{
+				*style = i;
+				break;
+			}
+		}
+#endif
 
 		#define modecheckreset { i = 0; continue; }
 		if(gametype[*mode].mutators && *muts) loopi(G_M_NUM)
@@ -2585,15 +2601,33 @@ struct gameserver : igameserver
 					modecheckreset;
 				}
 			}
+#if 0
+			if((*muts & mutstype[i].type) && mutstype[i].styles && !(mutstype[i].styles & (1<<*style)))
+			{
+				loopj(G_S_MAX) if(mutstype[i].styles & (1<<j))
+				{
+					*style = j;
+					break;
+				}
+				modecheckreset;
+			}
+#endif
 		}
 		else *muts = G_M_NONE;
     }
 
-	int mutscheck(int mode, int muts)
+	int mutscheck(int mode, int muts, int style)
 	{
-		int gm = mode, mt = muts;
-		modecheck(&gm, &mt);
+		int gm = mode, mt = muts, st = style;
+		modecheck(&gm, &mt, &st);
 		return mt;
+	}
+
+	int stylecheck(int mode, int muts, int style)
+	{
+		int gm = mode, mt = muts, st = style;
+		modecheck(&gm, &mt, &st);
+		return st;
 	}
 
 	const char *choosemap(const char *suggest)

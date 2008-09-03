@@ -143,7 +143,11 @@ struct entities : icliententities
 				case CONNECTION:
 					entlinks[i].add(CONNECTION);
 					break;
-				//	MAXENTTYPES						// 19
+				//	PATH,						// 18
+				case PATH:
+					entlinks[i].add(PATH);
+					break;
+				//	MAXENTTYPES						// 20
 				default: break;
 			}
         }

@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			93
+#define GAMEVERSION			94
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -48,7 +48,8 @@ enum								// entity types
 	WAYPOINT,						// 16 cmd
 	ANNOUNCER,						// 17 maxrad, minrad, volume
 	CONNECTION,						// 18
-	MAXENTTYPES						// 19
+	PATH,							// 19
+	MAXENTTYPES						// 20
 };
 
 enum { EU_NONE = 0, EU_ITEM, EU_AUTO, EU_ACT, EU_MAX };
@@ -77,7 +78,8 @@ struct enttypes
 	{ CAMERA,		48,		0,		0,		EU_NONE,	false,		"camera" },
 	{ WAYPOINT,		1,		8,		8,		EU_NONE,	true,		"waypoint" },
 	{ ANNOUNCER,	64,		0,		0,		EU_NONE,	false,		"announcer" },
-	{ CONNECTION,	70,		8,		8,		EU_NONE,	true,		"connection" },
+	{ CONNECTION,	70,		0,		0,		EU_NONE,	true,		"connection" },
+	{ PATH,			94,		0,		0,		EU_NONE,	true,		"path" },
 };
 
 enum
@@ -193,6 +195,14 @@ enum
 
 enum
 {
+	G_S_PVS		= 0,
+	G_S_SSP,
+	G_S_MAX,
+	G_S_ALL		= (1<<G_S_PVS)|(1<<G_S_SSP)
+};
+
+enum
+{
 	G_M_NONE	= 0,
 	G_M_TEAM	= 1<<0,
 	G_M_INSTA	= 1<<1,
@@ -212,24 +222,28 @@ enum
 
 struct gametypes
 {
-	int	type,			mutators,		implied;			const char *name;
+	int	type,			mutators,		implied,		styles;			const char *name;
 } gametype[] = {
-	{ G_DEMO,			G_M_NONE,		G_M_NONE,			"Demo" },
-	{ G_LOBBY,			G_M_NONE,		G_M_NOITEMS,		"Lobby" },
-	{ G_EDITMODE,		G_M_NONE,		G_M_NONE,			"Editing" },
-	{ G_MISSION,		G_M_NONE,		G_M_NONE,			"Mission" },
-	{ G_DEATHMATCH,		G_M_FIGHT,		G_M_NONE,			"Deathmatch" },
-	{ G_STF,			G_M_STF,		G_M_TEAM,			"Secure the Flag" },
-	{ G_CTF,			G_M_CTF,		G_M_TEAM,			"Capture the Flag" },
+	{ G_DEMO,			G_M_NONE,		G_M_NONE,		G_S_ALL,		"Demo" },
+	{ G_LOBBY,			G_M_NONE,		G_M_NOITEMS,	G_S_ALL,		"Lobby" },
+	{ G_EDITMODE,		G_M_NONE,		G_M_NONE,		G_S_ALL,		"Editing" },
+	{ G_MISSION,		G_M_NONE,		G_M_NONE,		G_S_ALL,		"Mission" },
+	{ G_DEATHMATCH,		G_M_FIGHT,		G_M_NONE,		G_S_ALL,		"Deathmatch" },
+	{ G_STF,			G_M_STF,		G_M_TEAM,		G_S_ALL,		"Secure the Flag" },
+	{ G_CTF,			G_M_CTF,		G_M_TEAM,		G_S_ALL,		"Capture the Flag" },
 }, mutstype[] = {
-	{ G_M_TEAM,			G_M_ALL,		G_M_NONE,			"Team" },
-	{ G_M_INSTA,		G_M_ALL,		G_M_NOITEMS,		"Instagib" },
-	{ G_M_DUEL,			G_M_DUKE,		G_M_NONE,			"Duel" },
-	{ G_M_PROG,			G_M_ALL,		G_M_NONE,			"Progressive" },
-	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,			"Multi-sided" },
-	{ G_M_DLMS,			G_M_DUKE,		G_M_DUEL,			"Last Man Standing" },
-	{ G_M_MAYHEM,		G_M_ALL,		G_M_NONE,			"Mayhem" },
-	{ G_M_NOITEMS,		G_M_ALL,		G_M_NONE,			"No Items" },
+	{ G_M_TEAM,			G_M_ALL,		G_M_NONE,		G_S_ALL,		"Team" },
+	{ G_M_INSTA,		G_M_ALL,		G_M_NOITEMS,	G_S_ALL,		"Instagib" },
+	{ G_M_DUEL,			G_M_DUKE,		G_M_NONE,		G_S_ALL,		"Duel" },
+	{ G_M_PROG,			G_M_ALL,		G_M_NONE,		G_S_ALL,		"Progressive" },
+	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,		G_S_ALL,		"Multi-sided" },
+	{ G_M_DLMS,			G_M_DUKE,		G_M_DUEL,		G_S_ALL,		"Last Man Standing" },
+	{ G_M_MAYHEM,		G_M_ALL,		G_M_NONE,		G_S_ALL,		"Mayhem" },
+	{ G_M_NOITEMS,		G_M_ALL,		G_M_NONE,		G_S_ALL,		"No Items" },
+};
+
+const char *gamestyles[G_S_MAX] = {
+	"View Shooter", "Side Scroller"
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)
@@ -245,6 +259,11 @@ struct gametypes
 #define m_fight(a)			(a >= G_DEATHMATCH)
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
 #define m_timed(a)			(m_fight(a))
+
+#define m_style(a)			(a > -1 && a < G_S_MAX)
+
+#define m_pvs(a)			(a == G_S_PVS)
+#define m_ssp(a)			(a == G_S_SSP)
 
 #define m_team(a,b)			((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))
 #define m_insta(a,b)		((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
@@ -397,6 +416,7 @@ enum
 SVARG(defaultmap, "overseer");
 VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
+VARG(defaultstyle, G_S_PVS, G_S_PVS, G_S_SSP);
 
 VARG(teamdamage, 0, 1, 1);
 VARG(entspawntime, 0, 0, 60);
