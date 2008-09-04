@@ -5,29 +5,29 @@ struct avoidset
     struct obstacle
     {
         dynent *ent;
-        int numwaypoints;
+        int numentities;
         bool avoid;
 
-        obstacle(dynent *ent) : ent(ent), numwaypoints(0) {}
+        obstacle(dynent *ent) : ent(ent), numentities(0) {}
     };
 
     gameclient &cl;
     vector<obstacle> obstacles;
-    vector<int> waypoints;
+    vector<int> entities;
 
     avoidset(gameclient &cl) : cl(cl) {}
 
     void clear()
     {
         obstacles.setsizenodelete(0);
-        waypoints.setsizenodelete(0);
+        entities.setsizenodelete(0);
     }
 
-    void add(dynent *ent, int waypoint)
+    void add(dynent *ent, int entity)
     {
         if(obstacles.empty() || ent!=obstacles.last().ent) obstacles.add(obstacle(ent));
-        obstacles.last().numwaypoints++;
-        waypoints.add(waypoint);
+        obstacles.last().numentities++;
+        entities.add(entity);
     }
 
     #define loopavoid(v, d, body) \
@@ -36,12 +36,12 @@ struct avoidset
             loopv((v).obstacles) \
             { \
                 avoidset::obstacle &ob = (v).obstacles[i]; \
-                int next = cur + ob.numwaypoints; \
+                int next = cur + ob.numentities; \
                 if(ob.ent != (d) && (ob.ent->type != ENT_PLAYER || AVOIDENEMY((d), (gameent *)ob.ent))) \
                 { \
                     for(; cur < next; cur++) \
                     { \
-                        int ent = (v).waypoints[cur]; \
+                        int ent = (v).entities[cur]; \
                         body; \
                     } \
                 } \
@@ -49,9 +49,9 @@ struct avoidset
             } \
         } while(0)
 
-    bool find(int waypoint, gameent *d)
+    bool find(int entity, gameent *d)
     {
-        loopavoid(*this, d, { if(ent == waypoint) return true; });
+        loopavoid(*this, d, { if(ent == entity) return true; });
         return false;
     }
 };
@@ -71,10 +71,10 @@ struct entities : icliententities
 	IVARP(showentlinks, 0, 1, 3);
 	IVARP(showlighting, 0, 1, 1);
 
-	IVAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
-	bool autodropwaypoints;
+	IVAR(dropentities, 0, 0, 1); // drop entities during play
+	bool autodropentities;
 
-	entities(gameclient &_cl) : cl(_cl), autodropwaypoints(false)
+	entities(gameclient &_cl) : cl(_cl), autodropentities(false)
 	{
         CCOMMAND(announce, "i", (entities *self, int *idx), self->announce(*idx));
 
@@ -143,11 +143,7 @@ struct entities : icliententities
 				case CONNECTION:
 					entlinks[i].add(CONNECTION);
 					break;
-				//	PATH,						// 18
-				case PATH:
-					entlinks[i].add(PATH);
-					break;
-				//	MAXENTTYPES						// 20
+				//	MAXENTTYPES						// 19
 				default: break;
 			}
         }
@@ -368,7 +364,7 @@ struct entities : icliententities
 					}
 					default: break;
 				}
-				if(cl.et.ents.inrange(ent))
+				if(ents.inrange(ent))
 				{
 					extentity &e = *ents[ent];
 					if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis))
@@ -856,12 +852,12 @@ struct entities : icliententities
 		return !route.empty();
 	}
 
-	bool waypointdrop()
+	bool entitydrop()
 	{
-		return (m_fight(cl.gamemode) && autodropwaypoints) || dropwaypoints();
+		return (m_fight(cl.gamemode) && autodropentities) || dropentities();
 	}
 
-	int waypointnode(const vec &v, bool dist = true, int type = WAYPOINT)
+	int entitynode(const vec &v, bool dist = true, int type = WAYPOINT)
 	{
 		int w = -1, t = entlinks[WAYPOINT].find(type) >= 0 ? type : WAYPOINT;
         float mindist = dist ? enttype[t].radius * enttype[t].radius : 1e16f; // avoid square roots
@@ -877,7 +873,7 @@ struct entities : icliententities
 		return w;
 	}
 
-	void waypointlink(int index, int node, bool both = true)
+	void entitylink(int index, int node, bool both = true)
 	{
 		if(ents.inrange(index) && ents.inrange(node))
 		{
@@ -890,13 +886,13 @@ struct entities : icliententities
 		}
 	}
 
-	void waypointcheck(gameent *d)
+	void entitycheck(gameent *d)
 	{
 		if(d->state == CS_ALIVE)
 		{
 			vec v(cl.feetpos(d, 0.f));
-			int curnode = waypointnode(v);
-			if(waypointdrop() && ((m_fight(cl.gamemode) && d->aitype == AI_NONE) || d == cl.player1))
+			int curnode = entitynode(v);
+			if(m_pvs(cl.gamestyle) && entitydrop() && ((m_fight(cl.gamemode) && d->aitype == AI_NONE) || d == cl.player1))
 			{
 				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= d->radius+enttype[WAYPOINT].radius)
 					curnode = d->lastnode;
@@ -909,20 +905,64 @@ struct entities : icliententities
 					newentity(v, WAYPOINT, cmds, 0, 0, 0, 0);
 				}
 				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
-					waypointlink(d->lastnode, curnode, !d->timeinair);
+					entitylink(d->lastnode, curnode, !d->timeinair);
 
 				d->lastnode = curnode;
 			}
 			else
 			{
-				if(!ents.inrange(curnode)) curnode = waypointnode(v, false);
+				if(!ents.inrange(curnode))
+				{
+					if(!ents.inrange(d->lastnode)) curnode = entitynode(v, false);
+					else curnode = d->lastnode;
+				}
 				if(ents.inrange(curnode))
 				{
-					if(d->lastnode != curnode) d->oldnode = d->lastnode;
+					if(d->lastnode != curnode)
+					{
+						d->oldnode = d->lastnode;
+						d->targnode = -1;
+						if(m_ssp(cl.gamestyle) && d == cl.player1)
+						{
+							float minyaw = 1e16f;
+							gameentity &e = *(gameentity *)ents[curnode];
+							loopv(e.links) if(ents.inrange(e.links[i]))
+							{
+								gameentity &f = *(gameentity *)ents[e.links[i]];
+								vec dir(vec(f.o).sub(e.o).normalize());
+								float yaw, pitch;
+								vectoyawpitch(dir, yaw, pitch);
+								float offyaw = fabs(yaw-d->yaw);
+								if(!ents.inrange(d->targnode) || offyaw < minyaw)
+								{
+									d->targnode = e.links[i];
+									minyaw = offyaw;
+								}
+							}
+						}
+					}
 					d->lastnode = curnode;
 				}
 				else if(ents.inrange(d->oldnode)) d->lastnode = d->oldnode;
 				else d->lastnode = d->oldnode = -1;
+
+				if(m_ssp(cl.gamestyle) && d == cl.player1)
+				{
+					if(ents.inrange(d->targnode))
+					{
+						d->mdir[MDIR_FORWARD] = vec(ents[d->targnode]->o).sub(v).normalize();
+						d->mdir[MDIR_BACKWARD] = vec(ents[d->lastnode]->o).sub(v).normalize();
+						float dummy;
+						vectoyawpitch(d->mdir[MDIR_FORWARD], d->yaw, dummy);
+					}
+					else
+					{
+						vecfromyawpitch(d->yaw, 0.f, 1, 0, d->mdir[MDIR_FORWARD]);
+						d->mdir[MDIR_BACKWARD] = vec(d->mdir[MDIR_FORWARD]).neg();
+					}
+					d->aimyaw = d->yaw;
+					d->aimpitch = d->pitch = 0.f;
+				}
 			}
 		}
 		else d->lastnode = d->oldnode = -1;
@@ -1167,7 +1207,7 @@ struct entities : icliententities
 
 		physent dummyent;
 		dummyent.height = dummyent.radius = dummyent.xradius = dummyent.yradius = 1;
-		int waypoints = 0;
+		int entities = 0;
 		loopvj(ents)
 		{
 			gameentity &e = *(gameentity *)ents[j];
@@ -1186,7 +1226,7 @@ struct entities : icliententities
 				}
 				case WAYPOINT:
 				{
-					waypoints++;
+					entities++;
 					if(gver <= 90)
 						e.attr1 = e.attr2 = e.attr3 = e.attr4 = e.attr5 = 0;
 					break;
@@ -1194,12 +1234,12 @@ struct entities : icliententities
 				default: break;
 			}
 		}
-		autodropwaypoints = m_fight(cl.gamemode) && !waypoints;
+		autodropentities = m_fight(cl.gamemode) && !entities;
 	}
 
 	void mapstart()
 	{
-		if(autodropwaypoints)
+		if(autodropentities)
 		{
 			loopv(ents)
 			{
@@ -1316,7 +1356,7 @@ struct entities : icliententities
 		}
 
 		if(enttype[e.type].links)
-			if(!level || showentlinks() >= level || (e.type == WAYPOINT && dropwaypoints()))
+			if(!level || showentlinks() >= level || (e.type == WAYPOINT && dropentities()))
 				renderlinked(e);
 	}
 
@@ -1357,8 +1397,8 @@ struct entities : icliententities
 
  	void update()
 	{
-		waypointcheck(cl.player1);
-		loopv(cl.players) if(cl.players[i]) waypointcheck(cl.players[i]);
+		entitycheck(cl.player1);
+		loopv(cl.players) if(cl.players[i]) entitycheck(cl.players[i]);
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
@@ -1377,7 +1417,7 @@ struct entities : icliententities
 	{
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
-			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || dropwaypoints()) ? 3 : 0));
+			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || dropentities()) ? 3 : 0));
 			if(level)
 			{
 				renderprimitive(true);

@@ -393,14 +393,14 @@ struct aiclient
 
 	bool makeroute(gameent *d, aistate &b, vec &pos, float tolerance = 0.f, bool dist = false)
 	{
-		int node = cl.et.waypointnode(pos, dist);
+		int node = cl.et.entitynode(pos, dist);
 		return makeroute(d, b, node, tolerance);
 	}
 
 	bool randomnode(gameent *d, aistate &b, vec &from, vec &to, float radius, float wander)
 	{
-		static vector<int> waypoints;
-		waypoints.setsizenodelete(0);
+		static vector<int> entities;
+		entities.setsizenodelete(0);
 		float r = radius*radius, w = wander*wander;
 		loopvj(cl.et.ents) if(cl.et.ents[j]->type == WAYPOINT && j != d->lastnode)
 		{
@@ -408,13 +408,13 @@ struct aiclient
 			if(fdist <= w)
 			{
 				float tdist = cl.et.ents[j]->o.squaredist(to);
-				if(tdist > r && fdist > r) waypoints.add(j);
+				if(tdist > r && fdist > r) entities.add(j);
 			}
 		}
 
-		while(!waypoints.empty())
+		while(!entities.empty())
 		{
-			int w = rnd(waypoints.length()), n = waypoints.removeunordered(w);
+			int w = rnd(entities.length()), n = entities.removeunordered(w);
 			if(makeroute(d, b, n)) return true;
 		}
 		return false;
@@ -532,7 +532,7 @@ struct aiclient
 					{ // defend the flag
 						interest &n = interests.add();
 						n.state = AI_S_DEFEND;
-						n.node = cl.et.waypointnode(f.pos(), false);
+						n.node = cl.et.entitynode(f.pos(), false);
 						n.target = j;
 						n.targtype = AI_T_FLAG;
 						n.expire = 10000;
@@ -547,7 +547,7 @@ struct aiclient
 					{ // attack the flag
 						interest &n = interests.add();
 						n.state = AI_S_PURSUE;
-						n.node = cl.et.waypointnode(f.pos(), false);
+						n.node = cl.et.entitynode(f.pos(), false);
 						n.target = j;
 						n.targtype = AI_T_FLAG;
 						n.expire = 10000;
@@ -590,7 +590,7 @@ struct aiclient
 						{ // go get a weapon upgrade
 							interest &n = interests.add();
 							n.state = AI_S_INTEREST;
-							n.node = cl.et.waypointnode(e.o, true);
+							n.node = cl.et.entitynode(e.o, true);
 							n.target = j;
 							n.targtype = AI_T_ENTITY;
 							n.expire = 10000;
@@ -617,7 +617,7 @@ struct aiclient
 							if(proj.owner == d && d->gunselect != GUN_PISTOL) break;
 							interest &n = interests.add();
 							n.state = AI_S_INTEREST;
-							n.node = cl.et.waypointnode(proj.o, true);
+							n.node = cl.et.entitynode(proj.o, true);
 							n.target = proj.id;
 							n.targtype = AI_T_DROP;
 							n.expire = 5000;

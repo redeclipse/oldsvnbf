@@ -19,17 +19,10 @@ struct physics
 
 	physics(gameclient &_cl) : cl(_cl)
 	{
-		#define movedir(name, v, d, s, os) \
-			CCOMMAND(name, "D", (physics *self, int *down), { \
-				self->cl.player1->s = *down != 0; \
-				self->cl.player1->v = self->cl.player1->s ? d : (self->cl.player1->os ? -(d) : 0); \
-			});
-
-		movedir(backward,	move,	-1,		k_down,		k_up);
-		movedir(forward,	move,	1,		k_up,		k_down);
-		movedir(left,		strafe,	1,		k_left,		k_right);
-		movedir(right,		strafe,	-1,		k_right,	k_left);
-
+		CCOMMAND(backward, "D", (physics *self, int *down), { self->dobackward(*down!=0); });
+		CCOMMAND(forward, "D", (physics *self, int *down), { self->doforward(*down!=0); });
+		CCOMMAND(left, "D", (physics *self, int *down), { self->doleft(*down!=0); });
+		CCOMMAND(right, "D", (physics *self, int *down), { self->doright(*down!=0); });
 		CCOMMAND(crouch, "D", (physics *self, int *down), { self->docrouch(*down!=0); });
 		CCOMMAND(jump,   "D", (physics *self, int *down), { self->dojump(*down!=0); });
 		CCOMMAND(attack, "D", (physics *self, int *down), { self->doattack(*down!=0); });
@@ -41,6 +34,27 @@ struct physics
 		spawncycle = -1;
 		fixspawn = 4;
 	}
+
+	#define imov(x,y,z,q) \
+		void do##x(bool down) \
+		{ \
+			if(!q || !down) \
+			{ \
+				(y) = 0; \
+			} \
+			else \
+			{ \
+				(y) = z; \
+			} \
+		}
+
+	#define swappedmove		(m_ssp(cl.gamestyle) ? cl.player1->move : cl.player1->strafe)
+	#define swappeddir(x)	(m_ssp(cl.gamestyle) ? -x : x)
+
+	imov(backward,	cl.player1->move,	-1,				cl.allowmove(cl.player1));
+	imov(forward,	cl.player1->move,	1,				cl.allowmove(cl.player1));
+	imov(left,		swappedmove,		swappeddir(1),	cl.allowmove(cl.player1));
+	imov(right,		swappedmove,		swappeddir(-1),	cl.allowmove(cl.player1));
 
 	// inputs
 	#define iput(x,y,t,z,a,q) \
