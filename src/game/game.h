@@ -38,8 +38,8 @@ enum								// entity types
 	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume
 	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
 	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
-	TELEPORT,						// 9  yaw, pitch, roll, push
-	OBSOLETED,						// 10
+	TELEPORT,						// 9  yaw, pitch, push
+	PORTAL,							// 10 yaw, pitch, id
 	TRIGGER,						// 11 idx, type, acttype, resettime
 	PUSHER,							// 12 zpush, ypush, xpush
 	FLAG,							// 13 idx, team
@@ -57,27 +57,27 @@ enum { TA_NONE = 0, TA_AUTO, TA_ACT, TA_LINK, TA_MAX };
 
 struct enttypes
 {
-	int	type, 		links,	radius,	height, usetype; bool noisy;	const char *name;
+	int	type, 		links,	radius,	usetype; bool noisy;	const char *name;
 } enttype[] = {
-	{ NOTUSED,		0,		0,		0,		EU_NONE,	true,		"none" },
-	{ LIGHT,		59,		0,		0,		EU_NONE,	true,		"light" },
-	{ MAPMODEL,		58,		0,		0,		EU_NONE,	true,		"mapmodel" },
-	{ PLAYERSTART,	59,		0,		0,		EU_NONE,	false,		"playerstart" },
-	{ ENVMAP,		0,		0,		0,		EU_NONE,	true,		"envmap" },
-	{ PARTICLES,	59,		0,		0,		EU_NONE,	true,		"particles" },
-	{ MAPSOUND,		58,		0,		0,		EU_NONE,	true,		"sound" },
-	{ SPOTLIGHT,	59,		0,		0,		EU_NONE,	true,		"spotlight" },
-	{ WEAPON,		59,		16,		16,		EU_ITEM,	false,		"weapon" },
-	{ TELEPORT,		50,		12,		12,		EU_AUTO,	false,		"teleport" },
-	{ OBSOLETED,	59,		0,		0,		EU_NONE,	false,		"obsoleted" },
-	{ TRIGGER,		58,		16,		16,		EU_AUTO,	false,		"trigger" },
-	{ PUSHER,		58,		12,		12,		EU_AUTO,	false,		"pusher" },
-	{ FLAG,			48,		16,		16,		EU_NONE,	false,		"flag" },
-	{ CHECKPOINT,	48,		16,		16,		EU_NONE,	false,		"checkpoint" }, // FIXME
-	{ CAMERA,		48,		0,		0,		EU_NONE,	false,		"camera" },
-	{ WAYPOINT,		1,		8,		8,		EU_NONE,	true,		"waypoint" },
-	{ ANNOUNCER,	64,		0,		0,		EU_NONE,	false,		"announcer" },
-	{ CONNECTION,	70,		0,		0,		EU_NONE,	true,		"connection" },
+	{ NOTUSED,		0,		0,		EU_NONE,	true,		"none" },
+	{ LIGHT,		59,		0,		EU_NONE,	true,		"light" },
+	{ MAPMODEL,		58,		0,		EU_NONE,	true,		"mapmodel" },
+	{ PLAYERSTART,	59,		0,		EU_NONE,	false,		"playerstart" },
+	{ ENVMAP,		0,		0,		EU_NONE,	true,		"envmap" },
+	{ PARTICLES,	59,		0,		EU_NONE,	true,		"particles" },
+	{ MAPSOUND,		58,		0,		EU_NONE,	true,		"sound" },
+	{ SPOTLIGHT,	59,		0,		EU_NONE,	true,		"spotlight" },
+	{ WEAPON,		59,		16,		EU_ITEM,	false,		"weapon" },
+	{ TELEPORT,		50,		12,		EU_AUTO,	false,		"teleport" },
+	{ PORTAL,		59,		12,		EU_AUTO,	false,		"portal" },
+	{ TRIGGER,		58,		16,		EU_AUTO,	false,		"trigger" },
+	{ PUSHER,		58,		12,		EU_AUTO,	false,		"pusher" },
+	{ FLAG,			48,		16,		EU_NONE,	false,		"flag" },
+	{ CHECKPOINT,	48,		16,		EU_NONE,	false,		"checkpoint" }, // FIXME
+	{ CAMERA,		48,		0,		EU_NONE,	false,		"camera" },
+	{ WAYPOINT,		1,		8,		EU_NONE,	true,		"waypoint" },
+	{ ANNOUNCER,	64,		0,		EU_NONE,	false,		"announcer" },
+	{ CONNECTION,	70,		0,		EU_NONE,	true,		"connection" },
 };
 
 enum
@@ -647,14 +647,26 @@ enum
 
 struct gameentity : extentity
 {
-	int schan, lastemit, lastspawn;
+	int schan, lastuse, lastemit, lastspawn;
 	bool mark;
+	portal *port;
 
-	gameentity() : schan(-1), lastemit(0), lastspawn(0), mark(false) {}
+	gameentity() : schan(-1), lastuse(0), lastemit(0), lastspawn(0), mark(false), port(NULL) {}
 	~gameentity()
 	{
 		if(issound(schan)) removesound(schan);
 		schan = -1;
+		removeportal();
+	}
+
+	void removeportal()
+	{
+		if(port)
+		{
+			portals.removeobj(port);
+			DELETEP(port);
+			port = NULL;
+		}
 	}
 };
 enum { ITEM_ENT = 0, ITEM_PROJ, ITEM_MAX };
@@ -816,7 +828,7 @@ struct gameent : dynent, gamestate
 	int clientnum, privilege, lastupdate, lastpredict, plag, ping;
 	bool attacking, reloading, useaction, obliterated;
 	int attacktime, reloadtime, usetime;
-	int lasttaunt, lastuse, lastusemillis, lastflag;
+	int lasttaunt, lastflag;
 	int frags, deaths, totaldamage, totalshots;
 	editinfo *edit;
     vec deltapos, newpos;
@@ -871,7 +883,7 @@ struct gameent : dynent, gamestate
 		dynent::reset();
 		gamestate::respawn(millis);
 		obliterated = false;
-		lasttaunt = lastuse = lastusemillis = lastimpulse = 0;
+		lasttaunt = lastimpulse = 0;
 		lastflag = respawned = suicided = lastnode = oldnode = targnode = -1;
 		obit[0] = 0;
 	}

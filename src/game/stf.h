@@ -163,7 +163,7 @@ struct stfstate
 	bool insideflag(const flaginfo &b, const vec &o)
 	{
 		float dx = (b.o.x-o.x), dy = (b.o.y-o.y), dz = (b.o.z-o.z+14);
-		return dx*dx + dy*dy <= enttype[FLAG].radius*enttype[FLAG].radius && fabs(dz) <= enttype[FLAG].height;
+		return dx*dx + dy*dy <= enttype[FLAG].radius*enttype[FLAG].radius && fabs(dz) <= enttype[FLAG].radius;
 	}
 };
 
@@ -227,12 +227,12 @@ struct stfclient : stfstate
 			else if(attack) s_sprintf(b.info)("%s", teamtype[attack].name);
 			else b.info[0] = '\0';
 
-			part_text(vec(b.pos).add(vec(0, 0, enttype[FLAG].height)), b.info, 11, 1, 0xFFFFDD);
+			part_text(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)), b.info, 11, 1, 0xFFFFDD);
 			if(attack)
 			{
 				float occupy = !b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * OCCUPYLIMIT), 0.f, 1.f) : 1.f;
 				int colour = teamtype[attack].colour;
-				part_meter(vec(b.pos).add(vec(0, 0, enttype[FLAG].height+6.f)), occupy, 12, 1, colour);
+				part_meter(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius+6.f)), occupy, 12, 1, colour);
 				regularshape(6, enttype[FLAG].radius, colour, 21, rnd(5)+1, 250, vec(b.pos).sub(vec(0, 0, 4.f)), 4.8f);
 				if(b.enemy && b.owner)
 				{
