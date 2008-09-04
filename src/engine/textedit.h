@@ -332,7 +332,11 @@ struct editor
     void del() // removes the current selection (if any)
     {
         int sx, sy, ex, ey;
-        if(!region(sx, sy, ex, ey)) return;
+        if(!region(sx, sy, ex, ey))
+        {
+            mark(false);
+            return;
+        }
         if(sy == ey)
         {
             if(sx == 0 || ex == lines[ey].len) removelines(sy, 1);
