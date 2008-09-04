@@ -1966,9 +1966,20 @@ TVARN(portaltex, "textures/portal", portaltexture, 0);
 
 void renderportals(int time)
 {
+    if(portals.empty()) return;
+
 	if(!portaltexture || portaltexture==notexture)
 		if(!(portaltexture = textureload(portaltex, 0, true)))
 			fatal("could not load portal texture");
+
+    defaultshader->set();
+
+    glEnable(GL_BLEND);
+    glDisable(GL_CULL_FACE);
+    if(portaltexture->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    else glBlendFunc(GL_ONE, GL_ONE);
+
+    glBindTexture(GL_TEXTURE_2D, portaltexture->id);
 
 	loopv(portals)
 	{
@@ -1979,12 +1990,7 @@ void renderportals(int time)
 		glRotatef(p->yaw-180.f, 0, 0, 1);
 		glRotatef(p->pitch, 1, 0, 0);
 		glScalef(p->radius, p->radius, p->radius);
-		glEnable(GL_BLEND);
-		glDisable(GL_CULL_FACE);
-		if(portaltexture->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		else glBlendFunc(GL_ONE, GL_ONE);
 		glColor3fv(portalcolours[p->type].v);
-		glBindTexture(GL_TEXTURE_2D, portaltexture->id);
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.f, 0.f, 1.f);
 		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.f, 0.f, 1.f);
@@ -1992,8 +1998,9 @@ void renderportals(int time)
 		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.f, 0.f, -1.f);
 		xtraverts += 4;
 		glEnd();
-		glEnable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
 		glPopMatrix();
 	}
+
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
 }
