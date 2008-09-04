@@ -48,8 +48,7 @@ enum								// entity types
 	WAYPOINT,						// 16 cmd
 	ANNOUNCER,						// 17 maxrad, minrad, volume
 	CONNECTION,						// 18
-	PATH,							// 19
-	MAXENTTYPES						// 20
+	MAXENTTYPES						// 19
 };
 
 enum { EU_NONE = 0, EU_ITEM, EU_AUTO, EU_ACT, EU_MAX };
@@ -79,7 +78,6 @@ struct enttypes
 	{ WAYPOINT,		1,		8,		8,		EU_NONE,	true,		"waypoint" },
 	{ ANNOUNCER,	64,		0,		0,		EU_NONE,	false,		"announcer" },
 	{ CONNECTION,	70,		0,		0,		EU_NONE,	true,		"connection" },
-	{ PATH,			94,		0,		0,		EU_NONE,	true,		"path" },
 };
 
 enum
@@ -812,6 +810,7 @@ struct aiinfo
 	}
 };
 
+enum { MDIR_FORWARD = 0, MDIR_BACKWARD, MDIR_MAX };
 struct gameent : dynent, gamestate
 {
 	int clientnum, privilege, lastupdate, lastpredict, plag, ping;
@@ -824,11 +823,11 @@ struct gameent : dynent, gamestate
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
     int smoothmillis;
-	int lastimpulse, oldnode, lastnode;
+	int lastimpulse, oldnode, lastnode, targnode;
 	int respawned, suicided;
 	int wschan;
 	aiinfo *ai;
-    vec muzzle;
+    vec muzzle, mdir[MDIR_MAX];
 
 	string name, info, obit;
 	int team;
@@ -873,7 +872,7 @@ struct gameent : dynent, gamestate
 		gamestate::respawn(millis);
 		obliterated = false;
 		lasttaunt = lastuse = lastusemillis = lastimpulse = 0;
-		lastflag = respawned = suicided = -1;
+		lastflag = respawned = suicided = lastnode = oldnode = targnode = -1;
 		obit[0] = 0;
 	}
 

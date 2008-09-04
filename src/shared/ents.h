@@ -149,9 +149,6 @@ struct occludequery;
 
 struct dynent : physent                         // animated characters, or characters that can receive input
 {
-    bool k_left, k_right, k_up, k_down;         // see input code
-    float targetyaw, rotspeed;                  // AI rotation
-
     entitylight light;
     animinterpinfo animinterp[MAXANIMPARTS];
     occludequery *query;
@@ -164,9 +161,7 @@ struct dynent : physent                         // animated characters, or chara
 
     void stopmoving()
     {
-        k_left = k_right = k_up = k_down = jumping = crouching = false;
         move = strafe = 0;
-        targetyaw = rotspeed = 0;
     }
 
     void reset()
