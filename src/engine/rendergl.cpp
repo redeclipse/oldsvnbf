@@ -948,6 +948,7 @@ void drawreflection(float z, bool refract, bool clear)
     if(fogging) setfogplane(1, z);
     if(refracting) rendergrass();
     renderdecals(0);
+    renderportals(0);
     rendermaterials();
     render_particles(0);
 
@@ -1073,6 +1074,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 	    }
 
 		renderdecals(0);
+		renderportals(0);
 	    renderwater();
 		rendergrass();
 
@@ -1595,6 +1597,7 @@ void drawview(int targtype)
 	}
 
 	renderdecals(curtime);
+	renderportals(curtime);
 	renderwater();
 	rendergrass();
 
@@ -1932,9 +1935,9 @@ void renderdir(vec &o, float yaw, float pitch, bool nf)
 
 void renderradius(vec &o, float xradius, float yradius, float zradius, bool nf)
 {
-	renderlineloop(o, xradius, yradius, zradius, 0.f, 0, 0.f, 1.f, 1.f, nf);
-	renderlineloop(o, xradius, yradius, zradius, 0.f, 1, 0.f, 1.f, 1.f, nf);
-	renderlineloop(o, xradius, yradius, zradius, 0.f, 2, 0.f, 1.f, 1.f, nf);
+	renderlineloop(o, xradius, yradius, zradius, 0.f, 0, 0.f, 0.75, 0.75f, nf);
+	renderlineloop(o, xradius, yradius, zradius, 0.f, 1, 0.f, 0.5f, 1.f, nf);
+	renderlineloop(o, xradius, yradius, zradius, 0.f, 2, 0.f, 1.f, 0.5f, nf);
 }
 
 bool rendericon(const char *icon, int x, int y, int xs, int ys)
@@ -1953,4 +1956,44 @@ bool rendericon(const char *icon, int x, int y, int xs, int ys)
 		return true;
 	}
 	return false;
+}
+
+vector<portal *> portals;
+
+vec portalcolours[PORTAL_MAX] = { vec(0.f, 0.f, 1.f), vec(1.f, 0.5f, 0.f) };
+Texture *portaltexture = NULL;
+TVARN(portaltex, "textures/portal", portaltexture, 0);
+
+void renderportals(int time)
+{
+	if(!portaltexture || portaltexture==notexture)
+		if(!(portaltexture = textureload(portaltex, 0, true)))
+			fatal("could not load portal texture");
+
+	loopv(portals)
+	{
+		portal *p = portals[i];
+		glPushMatrix();
+		vec o(vec(p->o).add(p->n));
+		glTranslatef(o.x, o.y, o.z);
+		glRotatef(p->yaw-180.f, 0, 0, 1);
+		glRotatef(p->pitch, 1, 0, 0);
+		glScalef(p->radius, p->radius, p->radius);
+		glEnable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		if(portaltexture->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		else glBlendFunc(GL_ONE, GL_ONE);
+		glColor3fv(portalcolours[p->type].v);
+		glBindTexture(GL_TEXTURE_2D, portaltexture->id);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.f, 0.f, 1.f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.f, 0.f, 1.f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.f, 0.f, -1.f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.f, 0.f, -1.f);
+		xtraverts += 4;
+		glEnd();
+		glEnable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glPopMatrix();
+	}
 }

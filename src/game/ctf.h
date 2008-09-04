@@ -332,9 +332,8 @@ struct ctfclient : ctfstate
             if(!f.team || !f.ent || f.owner) continue;
             const char *flagname = teamtype[f.team].flag;
             vec above(f.pos());
-            rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP,
-                        above, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
-            above.z += enttype[FLAG].height;
+            rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
+            above.z += enttype[FLAG].radius;
             s_sprintfd(info)("@%s flag", teamtype[f.team].name);
 			part_text(above, info, 11, 1, teamtype[f.team].colour);
         }

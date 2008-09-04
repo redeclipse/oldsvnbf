@@ -110,7 +110,10 @@ struct entities : icliententities
 					entlinks[i].add(PARTICLES);
 					entlinks[i].add(TELEPORT);
 					break;
-				//	OBSOLETED,						// 10
+				//	PORTAL,							// 10 id, xnorm, ynorm, znorm
+				case PORTAL:
+					entlinks[i].add(PORTAL);
+					break;
 				//	TRIGGER,						// 11
 				case TRIGGER:
 					entlinks[i].add(MAPSOUND);
@@ -308,7 +311,7 @@ struct entities : icliententities
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES || enttype[e.type].usetype == EU_NONE)
 				continue;
 			if(enttype[e.type].usetype == EU_ITEM && !e.spawned) continue;
-			if(!insidesphere(m, eye, d->radius, e.o, enttype[e.type].height, enttype[e.type].radius))
+			if(!insidesphere(m, eye, d->radius, e.o, enttype[e.type].radius, enttype[e.type].radius))
 				continue;
 			actitem &t = actitems.add();
 			t.type = ITEM_ENT;
@@ -322,7 +325,7 @@ struct entities : icliententities
 			if(proj.projtype != PRJ_ENT || !proj.ready()) continue;
 			if(enttype[proj.ent].usetype != EU_ITEM || !ents.inrange(proj.id))
 				continue;
-			if(!insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].height, enttype[proj.ent].radius))
+			if(!insidesphere(m, eye, d->radius, proj.o, enttype[proj.ent].radius, enttype[proj.ent].radius))
 				continue;
 			actitem &t = actitems.add();
 			t.type = ITEM_PROJ;
@@ -441,23 +444,33 @@ struct entities : icliententities
 		if(issound(f.schan))
 		{
 			removesound(f.schan);
-			f.schan = -1;
-			if(f.type == MAPSOUND)
-				f.lastemit = lastmillis; // prevent clipping when moving around
+			f.schan = -1; // prevent clipping when moving around
+			if(f.type == MAPSOUND) f.lastemit = lastmillis;
 		}
+		f.removeportal();
 
 		switch(e.type)
 		{
 			case WEAPON:
 				while(e.attr1 < 0) e.attr1 += GUN_MAX;
 				while(e.attr1 >= GUN_MAX) e.attr1 -= GUN_MAX;
-				if(e.attr2 < 0) e.attr2 = 0;
 				break;
 			case PLAYERSTART:
+				while(e.attr1 < 0) e.attr1 += 360;
+				while(e.attr1 >= 360) e.attr1 -= 360;
 			case FLAG:
 				while(e.attr2 < 0) e.attr2 += TEAM_MAX;
 				while(e.attr2 >= TEAM_MAX) e.attr2 -= TEAM_MAX;
-				if(e.attr2 < 0) e.attr2 = TEAM_NEUTRAL;
+				break;
+			case PORTAL:
+				while(e.attr3 < 0) e.attr3 += PORTAL_MAX;
+				while(e.attr3 >= PORTAL_MAX) e.attr3 -= PORTAL_MAX;
+			case TELEPORT:
+				while(e.attr1 < 0) e.attr1 += 360;
+				while(e.attr1 >= 360) e.attr1 -= 360;
+				while(e.attr2 < 0) e.attr2 += 360;
+				while(e.attr2 >= 360) e.attr2 -= 360;
+				break;
 			default:
 				break;
 		}
@@ -532,26 +545,34 @@ struct entities : icliententities
 		gameentity &e = *(gameentity *)ents[n];
 		vector<int> teleports;
 		loopv(e.links)
-			if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TELEPORT)
+			if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == e.type && (e.type != PORTAL || e.attr3 != ents[e.links[i]]->attr3))
 				teleports.add(e.links[i]);
 
 		while(!teleports.empty())
 		{
-			int r = rnd(teleports.length()), t = teleports[r];
+			int r = e.type == TELEPORT ? rnd(teleports.length()) : 0, t = teleports[r];
 			gameentity &f = *(gameentity *)ents[t];
-			d->o = f.o;
-			d->yaw = clamp((int)f.attr1, 0, 359);
-			d->pitch = clamp((int)f.attr2, -89, 89);
-			float mag = max((float)f.attr3+d->vel.magnitude(), 64.f);
-			d->vel = vec(0, 0, 0);
+			d->o = vec(f.o).sub(vec(0, 0, d->height/2));
+			d->yaw = f.attr1;
+			d->pitch = f.attr2;
+			float mag = d->vel.magnitude();
+			if(e.type == TELEPORT) mag = max((float)f.attr3+mag, 64.f);
+			else if(e.type == PORTAL) mag = max(mag, 1.f);
 			vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
-			d->o.add(d->vel);
-			d->vel.mul(mag);
 			if(cl.ph.entinmap(d, false))
 			{
-				execlink(d, n, true);
-				execlink(d, t, true);
-				if(d == cl.player1) cl.resetstates(ST_VIEW);
+				d->vel.mul(mag);
+				cl.fixfullrange(d->yaw, d->pitch, d->roll, true);
+				if(e.type == TELEPORT)
+				{
+					execlink(d, n, true);
+					execlink(d, t, true);
+				}
+				if(d == cl.player1)
+				{
+					f.lastuse = lastmillis;
+					cl.resetstates(ST_VIEW);
+				}
 				break;
 			}
 			teleports.remove(r);
@@ -599,19 +620,18 @@ struct entities : icliententities
 		switch(e.type)
 		{
 			case TELEPORT:
+			case PORTAL:
 			{
-				if(d->lastuse == e.type && lastmillis-d->lastusemillis<1000) break;
-				d->lastuse = e.type;
-				d->lastusemillis = lastmillis;
+				if(lastmillis-e.lastuse < 500) break;
+				e.lastuse = lastmillis;
 				teleport(n, d);
 				break;
 			}
 
 			case PUSHER:
 			{
-				if(d->lastuse==e.type && lastmillis-d->lastusemillis<1000) break;
-				d->lastuse = e.type;
-				d->lastusemillis = lastmillis;
+				if(lastmillis-e.lastuse < 1000) break;
+				e.lastuse = lastmillis;
 				vec v((int)(char)e.attr3*10.0f, (int)(char)e.attr2*10.0f, e.attr1*12.5f);
 				d->timeinair = 0;
                 d->falling = vec(0, 0, 0);
@@ -622,10 +642,8 @@ struct entities : icliententities
 
 			case TRIGGER:
 			{
-				if(d->lastuse==e.type && lastmillis-d->lastusemillis<1000)
-					break;
-				d->lastuse = e.type;
-				d->lastusemillis = lastmillis;
+				if(lastmillis-e.lastuse < 1000) break;
+				e.lastuse = lastmillis;
 				switch(e.type)
 				{
 					case TRIGGER:
@@ -1024,10 +1042,10 @@ struct entities : icliententities
 					f.type = TELEPORT;
 					break;
 				}
-				// 21	MONSTER			10	OBSOLETED
+				// 21	MONSTER			10	NOTUSED
 				case 21:
 				{
-					f.type = OBSOLETED;
+					f.type = NOTUSED;
 					break;
 				}
 				// 22	CARROT			11	TRIGGER		0
@@ -1323,8 +1341,8 @@ struct entities : icliententities
 					renderradius(e.o, e.attr2, e.attr2, e.attr2, false);
 					break;
 				default:
-					if(enttype[e.type].radius || enttype[e.type].height)
-						renderradius(e.o, enttype[e.type].radius, enttype[e.type].radius, enttype[e.type].height, false);
+					if(enttype[e.type].radius || enttype[e.type].radius)
+						renderradius(e.o, enttype[e.type].radius, enttype[e.type].radius, enttype[e.type].radius, false);
 					break;
 			}
 		}
@@ -1342,6 +1360,7 @@ struct entities : icliententities
 				break;
 			}
 			case TELEPORT:
+			case PORTAL:
 			{
 				if(!level || showentdir() >= level) renderdir(e.o, e.attr1, e.attr2, false);
 				break;
@@ -1410,6 +1429,19 @@ struct entities : icliententities
 					e.lastemit = lastmillis; // prevent clipping when moving around
 				}
 			}
+			if(e.type == PORTAL)
+			{
+				if(!e.port) e.port = portals.add(new portal(e.attr3, e.o, e.attr1, e.attr2, enttype[e.type].radius, i));
+				if(e.port && !e.port->link) loopvk(e.links) if(ents.inrange(e.links[i]))
+				{
+					gameentity &f = *(gameentity *)ents[e.links[i]];
+					if(f.type == PORTAL && f.attr3 != e.attr3 && f.port)
+					{
+						e.port->link = f.port;
+						f.port->link = e.port;
+					}
+				}
+			}
 		}
 	}
 
@@ -1418,15 +1450,12 @@ struct entities : icliententities
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
 			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || dropentities()) ? 3 : 0));
-			if(level)
+			renderprimitive(true);
+			if(level) loopv(ents)
 			{
-				renderprimitive(true);
-				loopv(ents)
-				{
-					renderfocus(i, renderentshow(e, editmode && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
-				}
-				renderprimitive(false);
+				if(level) renderfocus(i, renderentshow(e, editmode && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
 			}
+			renderprimitive(false);
 		}
 
 		loopv(ents)
@@ -1442,8 +1471,7 @@ struct entities : icliententities
 					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
 					if(!active) flags |= MDL_TRANSLUCENT;
 
-					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP,
-							e.o, 0.f, 0.f, 0.f, flags);
+					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, e.o, 0.f, 0.f, 0.f, flags);
 				}
 			}
 		}

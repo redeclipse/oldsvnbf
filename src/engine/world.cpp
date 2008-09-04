@@ -718,6 +718,7 @@ void splitocta(cube *c, int size)
 void resetmap()
 {
 	renderprogress(0, "resetting map...");
+	portals.deletecontentsp();
 	materialreset();
 	texturereset();
 	mapmodelreset();

@@ -631,10 +631,7 @@ struct physics
 				d->o = orig;
 				return false;
 			}
-			d->o = orig;
-			d->o.x += (rnd(21)-10)*i/5;  // increasing distance
-			d->o.y += (rnd(21)-10)*i/5;
-			d->o.z += (rnd(21)-10)*i/5;
+			d->o = vec(orig).add(vec(d->vel).mul(i));
 		}
         conoutf("\frcan't find entity spawn spot! (%.1f, %.1f, %.1f)", d->o.x, d->o.y, d->o.z);
 		// leave ent at original pos, possibly stuck
