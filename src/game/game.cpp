@@ -1836,28 +1836,20 @@ struct gameclient : igameclient
 			else if(m_ssp(gamestyle))
 			{
 				vec dir;
-				vecfromyawpitch(player1->yaw, player1->pitch, 0, -1, dir);
+				vecfromyawpitch(player1->aimyaw, player1->aimpitch, 0, -1, dir);
 				camera1->o = vec(player1->o).add(dir.mul(sspcameradist()));
 				dir = vec(player1->o).sub(camera1->o).normalize();
 				vectoyawpitch(dir, camera1->yaw, camera1->pitch);
 				fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
-				if(lastcamera)
+				if(allowmove(player1))
 				{
-					float yaw, pitch;
-					vectoyawpitch(cursordir, yaw, pitch);
-					fixrange(yaw, pitch);
-					findorientation(camera1->o, yaw, pitch, worldpos);
-					if(allowmove(player1))
-					{
-						/*
-						vec dir(worldpos);
-						dir.sub(player1->o);
-						dir.normalize();
-						vectoyawpitch(dir, player1->yaw, player1->pitch);
-						*/
-						fixfullrange(player1->yaw, player1->pitch, player1->roll, false);
-					}
+					dir = vec(cursorx*2.f-1.f, 0.f, (1.f-cursory)*2.f-1.f);
+					player1->pitch = asin(dir.z/dir.magnitude())/RAD;
+					player1->yaw = player1->aimyaw;
+					if(dir.x < 0.f) player1->yaw -= 180.f;
+					fixfullrange(player1->yaw, player1->pitch, player1->roll, false);
 				}
+				findorientation(player1->o, player1->yaw, player1->pitch, worldpos);
 			}
 
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);

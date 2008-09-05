@@ -950,7 +950,7 @@ struct entities : icliententities
 								vec dir(vec(f.o).sub(e.o).normalize());
 								float yaw, pitch;
 								vectoyawpitch(dir, yaw, pitch);
-								float offyaw = fabs(yaw-d->yaw);
+								float offyaw = fabs(yaw-d->aimyaw);
 								if(!ents.inrange(d->targnode) || offyaw < minyaw)
 								{
 									d->targnode = e.links[i];
@@ -971,15 +971,13 @@ struct entities : icliententities
 						d->mdir[MDIR_FORWARD] = vec(ents[d->targnode]->o).sub(v).normalize();
 						d->mdir[MDIR_BACKWARD] = vec(ents[d->lastnode]->o).sub(v).normalize();
 						float dummy;
-						vectoyawpitch(d->mdir[MDIR_FORWARD], d->yaw, dummy);
+						vectoyawpitch(d->mdir[MDIR_FORWARD], d->aimyaw, dummy);
 					}
 					else
 					{
-						vecfromyawpitch(d->yaw, 0.f, 1, 0, d->mdir[MDIR_FORWARD]);
+						vecfromyawpitch(d->aimyaw, 0.f, 1, 0, d->mdir[MDIR_FORWARD]);
 						d->mdir[MDIR_BACKWARD] = vec(d->mdir[MDIR_FORWARD]).neg();
 					}
-					d->aimyaw = d->yaw;
-					d->aimpitch = d->pitch = 0.f;
 				}
 			}
 		}
