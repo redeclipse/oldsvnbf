@@ -1,6 +1,9 @@
 "black"
 	This set is in the public domain, if you can't make black images then something is wrong.
 
+"gradient"
+	This set is in the public domain, it was created using the gradient fill tool in GIMP.
+	
 "stars"
 	This set is in the public domain, it was created with Starbox 1.9 by Alex Grigny de Castro
 		from the included xgStars.txt - it contains both skybox and skydome counterparts.

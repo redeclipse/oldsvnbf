@@ -429,7 +429,7 @@ struct aiclient
 	bool patrol(gameent *d, aistate &b, vec &pos, float radius, float wander, bool retry = false)
 	{
 		vec feet(cl.feetpos(d, 0.f));
-		if(b.override || feet.squaredist(pos) <= radius*radius || !makeroute(d, b, pos, wander))
+		if(b.override || feet.squaredist(pos) <= radius*radius || !makeroute(d, b, pos))
 		{ // run away and back to keep ourselves busy
 			if(!b.override && randomnode(d, b, feet, pos, radius, wander))
 			{
@@ -452,7 +452,7 @@ struct aiclient
 		if(AITARG(d, e, true))
 		{
 			vec epos(cl.feetpos(e, 0.f));
-			if(!pursue || patrol(d, b, epos, AIISNEAR, AIISNEAR))
+			if(!pursue || patrol(d, b, epos, AIISNEAR, AIISFAR))
 			{
 				aistate &c = d->ai->addstate(pursue ? AI_S_PURSUE : AI_S_ATTACK);
 				c.targtype = AI_T_PLAYER;
@@ -666,7 +666,7 @@ struct aiclient
 				}
 			}
 
-			if(cl.ctf.flags.inrange(goal) && makeroute(d, b, cl.ctf.flags[goal].pos(), enttype[FLAG].radius*2.f))
+			if(cl.ctf.flags.inrange(goal) && makeroute(d, b, cl.ctf.flags[goal].pos(), enttype[FLAG].radius))
 			{
 				aistate &c = d->ai->setstate(AI_S_PURSUE); // replaces current state!
 				c.targtype = AI_T_FLAG;
@@ -814,7 +814,7 @@ struct aiclient
 					if(e)
 					{
 						vec epos(cl.feetpos(e, 0.f));
-						if(e->state == CS_ALIVE && patrol(d, b, epos, AIISNEAR, AIISNEAR))
+						if(e->state == CS_ALIVE && patrol(d, b, epos, AIISNEAR, AIISFAR))
 						{
 							defer(d, b, false);
 							return true;
@@ -849,7 +849,7 @@ struct aiclient
 					if(b.defers && b.goal)
 					{
 						vec epos(cl.feetpos(e, 0.f));
-						return patrol(d, b, epos, AIISNEAR, AIISNEAR);
+						return patrol(d, b, epos, AIISNEAR, AIISFAR);
 					}
 					return true;
 				}
@@ -882,7 +882,7 @@ struct aiclient
 							}
 							default: break;
 						}
-						if(makeroute(d, b, e.o, enttype[e.type].radius+d->radius))
+						if(makeroute(d, b, e.o, enttype[e.type].radius))
 						{
 							defer(d, b, b.targtype == AI_T_NODE);
 							return true;
@@ -910,7 +910,7 @@ struct aiclient
 							}
 							default: break;
 						}
-						if(makeroute(d, b, proj.o, enttype[proj.ent].radius+d->radius))
+						if(makeroute(d, b, proj.o, enttype[proj.ent].radius))
 						{
 							defer(d, b, false);
 							return true;
@@ -950,7 +950,7 @@ struct aiclient
 							if(hasflags.empty())
 								return false; // otherwise why are we pursuing home?
 
-							if(makeroute(d, b, f.pos(), enttype[FLAG].radius*2.f))
+							if(makeroute(d, b, f.pos(), enttype[FLAG].radius))
 							{
 								defer(d, b, false);
 								return true;
@@ -959,7 +959,7 @@ struct aiclient
 						else
 						{
 							if(f.owner == d) return ctfhomerun(d, b);
-							if(makeroute(d, b, f.pos(), enttype[FLAG].radius*2.f))
+							if(makeroute(d, b, f.pos(), enttype[FLAG].radius))
 							{
 								defer(d, b, false);
 								return true;
@@ -975,7 +975,7 @@ struct aiclient
 					if(e)
 					{
 						vec epos(cl.feetpos(e, 0.f));
-						if(e->state == CS_ALIVE && patrol(d, b, epos, AIISNEAR, AIISNEAR))
+						if(e->state == CS_ALIVE && patrol(d, b, epos, AIISNEAR, AIISFAR))
 						{
 							defer(d, b, false);
 							return true;
