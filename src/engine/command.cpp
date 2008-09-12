@@ -87,7 +87,7 @@ ident *newident(const char *name)
         if(persistidents) flags |= IDF_PERSIST;
         if(worldidents) flags |= IDF_WORLD;
         ident init(ID_ALIAS, newstring(name), newstring(""), flags);
-        id = idents->access(init.name, &init);
+        id = &idents->access(init.name, init);
     }
     return id;
 }
@@ -122,10 +122,10 @@ void aliasa(const char *name, char *action)
         ident d(ID_ALIAS, newstring(name), action, flags);
         if(overrideidents && d.flags&IDF_OVERRIDE) d.override = OVERRIDDEN;
 #ifdef STANDALONE
-		idents->access(d.name, &d);
+		idents->access(d.name, d);
 #else
-		ident *c = idents->access(d.name, &d);
-		if(cc && c) cc->editvar(c, interactive);
+		ident &c = idents->access(d.name, d);
+		if(cc) cc->editvar(&c, interactive);
 #endif
 	}
     else if(b->type != ID_ALIAS)
@@ -172,17 +172,11 @@ COMMAND(worldalias, "ss");
 
 // variable's and commands are registered through globals, see cube.h
 
-void buggy(ident *id)
-{
-}
-
 int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
     ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, flags);
-    ident *id = idents->access(name, &v);
-    if(!strcmp(name, "maxdecaltris"))
-        buggy(id);
+    idents->access(name, v);
     return cur;
 }
 
@@ -190,7 +184,7 @@ float fvariable(const char *name, float cur, float *storage, void (*fun)(), int 
 {
     if(!idents) idents = new identtable;
     ident v(ID_FVAR, name, cur, storage, (void *)fun, flags);
-    idents->access(name, &v);
+    idents->access(name, v);
     return cur;
 }
 
@@ -198,7 +192,7 @@ char *svariable(const char *name, const char *cur, char **storage, void (*fun)()
 {
     if(!idents) idents = new identtable;
     ident v(ID_SVAR, name, newstring(cur), newstring(cur), storage, (void *)fun, flags);
-    idents->access(name, &v);
+    idents->access(name, v);
     return v.val.s;
 }
 
@@ -268,14 +262,14 @@ bool addcommand(const char *name, void (*fun)(), const char *narg)
 {
 	if(!idents) idents = new identtable;
     ident c(ID_COMMAND, name, narg, (void *)fun, (void *)NULL);
-	idents->access(name, &c);
+	idents->access(name, c);
 	return false;
 }
 
 void addident(const char *name, ident *id)
 {
 	if(!idents) idents = new identtable;
-	idents->access(name, id);
+	idents->access(name, *id);
 }
 
 static vector<vector<char> *> wordbufs;
@@ -684,10 +678,6 @@ void exec(const char *cfgfile)
 	if(!execfile(cfgfile)) conoutf("\frcould not read %s", cfgfile);
 }
 
-void bug(const char *name, ident *id)
-{
-}
-
 void writecfg()
 {
 #ifndef STANDALONE
@@ -700,8 +690,6 @@ void writecfg()
 	if(!f) return;
 #endif
 	enumerate(*idents, ident, id,
-        if(!strcmp(id.name, "maxdecaltris"))
-            bug(id.name, &id);
         if(id.flags&IDF_PERSIST) switch(id.type)
 		{
             case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
