@@ -37,7 +37,17 @@ void setupmaster()
         if(enet_address_set_host(&address, masterip)<0)
             fatal("failed to resolve server address: %s\n", masterip);
     }
-    mastersocket = enet_socket_create(ENET_SOCKET_TYPE_STREAM, &address);
+    mastersocket = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
+    if(sock!=ENET_SOCKET_NULL && enet_socket_bind(mastersocket, &address) < 0)
+    {
+        enet_socket_destroy(sock);
+        sock = ENET_SOCKET_NULL;
+    }
+    if(sock!=ENET_SOCKET_NULL && enet_socket_listen(mastersocket, -1) < 0)
+    {
+        enet_socket_destroy(sock);
+        sock = ENET_SOCKET_NULL;
+    }
     if(mastersocket==ENET_SOCKET_NULL)
         fatal("failed to create master server socket\n");
     if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_NONBLOCK, 1)<0)
