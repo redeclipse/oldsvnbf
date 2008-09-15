@@ -24,8 +24,7 @@ void ircconnect(ircnet *n)
 			return;
 		}
 	}
-	ENetAddress any = { ENET_HOST_ANY, 0 };
-	n->sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM, &any);
+	n->sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
 	if(n->sock == ENET_SOCKET_NULL || connectwithtimeout(n->sock, n->serv, n->address)<0)
 	{
 		conoutf(n->sock == ENET_SOCKET_NULL ? "could not open socket to %s:[%d]" : "could not connect to %s:[%d]", n->serv, n->port);

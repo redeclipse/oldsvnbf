@@ -470,7 +470,12 @@ ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const ch
 		conoutf("\fwlooking up %s:[%d]...", hostname, remoteaddress.port);
 		if(!resolverwait(hostname, remoteaddress.port, &remoteaddress)) return ENET_SOCKET_NULL;
 	}
-	ENetSocket sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM, localaddress);
+    ENetSocket sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
+    if(sock!=ENET_SOCKET_NULL && localaddress && enet_socket_bind(sock, localaddress) < 0)
+    {
+        enet_socket_destroy(sock);
+        sock = ENET_SOCKET_NULL;
+    }
 	if(sock==ENET_SOCKET_NULL || connectwithtimeout(sock, hostname, remoteaddress)<0)
 	{
 		conoutf(sock==ENET_SOCKET_NULL ? "could not open socket to %s:[%d]" : "could not connect to %s:[%d]", hostname, remoteaddress.port);
@@ -711,7 +716,12 @@ void setupserver()
 	loopi(serverclients) serverhost->peers[i].data = NULL;
 
 	address.port = serverqueryport;
-	pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, &address);
+    pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
+    if(pongsock != ENET_SOCKET_NULL && enet_socket_bind(pongsock, &address) < 0)
+    {
+        enet_socket_destroy(pongsock);
+        pongsock = ENET_SOCKET_NULL;
+    }
 	if(pongsock == ENET_SOCKET_NULL)
 	{
 		conoutf("\frcould not create server info socket, publicity disabled");

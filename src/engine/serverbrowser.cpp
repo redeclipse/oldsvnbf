@@ -313,7 +313,7 @@ void pingservers()
 {
     if(pingsock == ENET_SOCKET_NULL)
     {
-        pingsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM, NULL);
+        pingsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
         if(pingsock == ENET_SOCKET_NULL)
         {
             lastinfo = totalmillis;
