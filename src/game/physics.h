@@ -623,18 +623,37 @@ struct physics
 	{
 		d->o.z += d->height;	 // pos specified is at feet
 		vec orig = d->o;
-		loopi(100)				  // try max 100 times
-		{
-			if(collide(d) && !inside) return true;
-			if(hitplayer && avoidplayers)
-			{
-				d->o = orig;
-				return false;
+		#define inmapchk(x,y) \
+			loopi(x) \
+			{ \
+				if(i) \
+				{ \
+					d->o = orig; \
+					y; \
+				} \
+				if(collide(d) && !inside) \
+				{ \
+					if(hitplayer) \
+					{ \
+						if(!avoidplayers) continue; \
+						d->o = orig; \
+						return false; \
+					} \
+					return true; \
+				} \
 			}
-			d->o = vec(orig).add(vec(d->vel).mul(i));
-		}
-        conoutf("\frcan't find entity spawn spot! (%.1f, %.1f, %.1f)", d->o.x, d->o.y, d->o.z);
-		// leave ent at original pos, possibly stuck
+
+		inmapchk(10, { d->o.add(vec(d->vel).mul((rnd(21)-10)*i/5)); });
+		inmapchk(10, {
+				d->o.add(vec(d->vel).mul((rnd(21)-10)*i/5));
+				d->o.z += fabs(d->vel.z)*((rnd(21)-10)*i/5)*2;
+			});
+		inmapchk(100, {
+				d->o.x += (rnd(21)-10)*i/5;  // increasing distance
+				d->o.y += (rnd(21)-10)*i/5;
+				d->o.z += (rnd(21)-10)*i/5;
+			});
+
 		d->o = orig;
 		return false;
 	}
