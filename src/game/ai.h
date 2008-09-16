@@ -84,7 +84,7 @@ struct aiserv
 				ci->clientnum = cn;
 				ci->state.aitype = type;
 				ci->state.ownernum = findaiclient();
-				if(ci->state.ownernum >= 0 && ((cp = (clientinfo *)getinfo(cn))))
+				if(ci->state.ownernum >= 0 && ((cp = (clientinfo *)getinfo(ci->state.ownernum))))
 				{
 					int s = skill, m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
 						n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;

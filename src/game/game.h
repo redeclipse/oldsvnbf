@@ -231,7 +231,7 @@ struct gametypes
 	{ G_CTF,			G_M_CTF,		G_M_TEAM,		G_S_ALL,		"Capture the Flag" },
 }, mutstype[] = {
 	{ G_M_TEAM,			G_M_ALL,		G_M_NONE,		G_S_ALL,		"Team" },
-	{ G_M_INSTA,		G_M_ALL,		G_M_NOITEMS,	G_S_ALL,		"Instagib" },
+	{ G_M_INSTA,		G_M_ALL,		G_M_NONE,		G_S_ALL,		"Instagib" },
 	{ G_M_DUEL,			G_M_DUKE,		G_M_NONE,		G_S_ALL,		"Duel" },
 	{ G_M_PROG,			G_M_ALL,		G_M_NONE,		G_S_ALL,		"Progressive" },
 	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,		G_S_ALL,		"Multi-sided" },
@@ -241,7 +241,7 @@ struct gametypes
 };
 
 const char *gamestyles[G_S_MAX] = {
-	"View Shooter", "Side Scroller"
+	"Shooter", "Platformer"
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)
