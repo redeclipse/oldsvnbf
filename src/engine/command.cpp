@@ -897,7 +897,7 @@ void addsleep(int *msec, char *cmd)
 	sleepcmd &s = sleepcmds.add();
 	s.millis = *msec+lastmillis;
 	s.command = newstring(cmd);
-    s.flags = (overrideidents ? IDF_OVERRIDE : 0)|(worldidents ? IDF_WORLD : 0);
+    s.flags = (overrideidents ? IDF_OVERRIDE : 0)|(worldidents ? IDF_WORLD : 0)|(persistidents ? IDF_PERSIST : 0);
 }
 
 COMMANDN(sleep, addsleep, "is");
@@ -909,14 +909,20 @@ void checksleep(int millis)
 		sleepcmd &s = sleepcmds[i];
 		if(s.millis && millis>s.millis)
 		{
-			if(s.flags&IDF_OVERRIDE) overrideidents = true;
-			if(s.flags&IDF_WORLD) worldidents = true;
+            bool oldpersistidents = persistidents,
+                 oldoverrideidents = overrideidents,
+                 oldworldidents = worldidents;
+            persistidents = (s.flags&IDF_PERSIST)!=0;
+            overrideidents = (s.flags&IDF_OVERRIDE)!=0;
+            worldidents = (s.flags&IDF_WORLD)!=0;
 			char *cmd = s.command; // execute might create more sleep commands
+            s.command = NULL;
 			execute(cmd);
 			delete[] cmd;
-			if(s.flags&IDF_OVERRIDE) overrideidents = false;
-			if(s.flags&IDF_WORLD) worldidents = false;
-			sleepcmds.remove(i--);
+            persistidents = oldpersistidents;
+            overrideidents = oldoverrideidents;
+            worldidents = oldworldidents;
+            if(sleepcmds.inrange(i) && !sleepcmds[i].command) sleepcmds.remove(i--);
 		}
 	}
 }
@@ -924,7 +930,7 @@ void checksleep(int millis)
 void clearsleep(bool clearoverrides, bool clearworlds)
 {
     int len = 0;
-    loopv(sleepcmds)
+    loopv(sleepcmds) if(sleepcmds[i].command)
     {
         if((clearoverrides && sleepcmds[i].flags&IDF_OVERRIDE) ||
 			(clearworlds && sleepcmds[i].flags&IDF_WORLD))
@@ -943,7 +949,6 @@ COMMANDN(clearsleep, clearsleep_, "ii");
 
 ICOMMAND(exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
 
-string _gettime;
 char *gettime(char *format)
 {
 	time_t ltime;
@@ -952,9 +957,10 @@ char *gettime(char *format)
 	ltime = time (NULL);
 	t = localtime (&ltime);
 
-	strftime (_gettime, sizeof (_gettime) - 1, format, t);
+    static string buf;
+	strftime (buf, sizeof (buf) - 1, format, t);
 
-	return _gettime;
+	return buf;
 }
 ICOMMAND(gettime, "s", (char *a), result(gettime(a)));
 
