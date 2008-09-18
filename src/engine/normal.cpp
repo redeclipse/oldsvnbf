@@ -21,9 +21,9 @@ struct nkey
 
 struct nval
 {
-    int normals;
+    int flat, normals;
 
-    nval() : normals(-1) {}
+    nval() : flat(0), normals(-1) {}
 };
 
 static inline bool htcmp(const nkey &x, const nkey &y)
@@ -43,7 +43,7 @@ VARW(lerpangle, 0, 44, 180);
 
 static float lerpthreshold = 0;
 
-void addnormal(const ivec &origin, const vvec &offset, const vec &surface)
+static void addnormal(const ivec &origin, const vvec &offset, const vec &surface)
 {
     nkey key(origin, offset);
     nval &val = normalgroups[key];
@@ -53,14 +53,27 @@ void addnormal(const ivec &origin, const vvec &offset, const vec &surface)
     val.normals = normals.length()-1;
 }
 
+static void addnormal(const ivec &origin, const vvec &offset, int axis)
+{
+    nkey key(origin, offset);
+    nval &val = normalgroups[key];
+    val.flat += 1<<(4*axis);
+}
+
 void findnormal(const ivec &origin, const vvec &offset, const vec &surface, vec &v)
 {
     nkey key(origin, offset);
-    nval *val = normalgroups.access(key);
+    const nval *val = normalgroups.access(key);
     if(!val) { v = surface; return; }
 
     v = vec(0, 0, 0);
     int total = 0;
+    if(surface.x >= lerpthreshold) { int n = (val->flat>>4)&0xF; v.x += n; total += n; }
+    else if(surface.x <= -lerpthreshold) { int n = val->flat&0xF; v.x -= n; total += n; }
+    if(surface.y >= lerpthreshold) { int n = (val->flat>>12)&0xF; v.y += n; total += n; }
+    else if(surface.y <= -lerpthreshold) { int n = (val->flat>>8)&0xF; v.y -= n; total += n; }
+    if(surface.z >= lerpthreshold) { int n = (val->flat>>20)&0xF; v.z += n; total += n; }
+    else if(surface.z <= -lerpthreshold) { int n = (val->flat>>16)&0xF; v.z -= n; total += n; }
     for(int cur = val->normals; cur >= 0;)
     {
         normal &o = normals[cur];
@@ -112,8 +125,12 @@ void addnormals(cube &c, const ivec &o, int size)
 		if(c.texture[i] == DEFAULT_SKY) continue;
 
 		plane planes[2];
-		int numplanes = genclipplane(c, i, verts, planes);
-		if(!numplanes) continue;
+        int numplanes = 0;
+        if(!flataxisface(c, i))
+        {
+            numplanes = genclipplane(c, i, verts, planes);
+            if(!numplanes) continue;
+        }
 		int subdiv = 0;
 		if(lerpsubdiv && size > lerpsubdivsize) // && faceedges(c, i) == F_SOLID)
 		{
@@ -133,6 +150,21 @@ void addnormals(cube &c, const ivec &o, int size)
         {
             const vvec &v = vvecs[idxs[j]], &vn = vvecs[idxs[(j+1)%4]];
             if(v==vn) continue;
+            if(!numplanes)
+            {
+                addnormal(o, v, i);
+                if(subdiv < 2) continue;
+                ivec dv;
+                loopk(3) dv[k] = (int(vn[k]) - int(v[k])) / subdiv;
+                if(dv.iszero()) continue;
+                vvec vs(v);
+                loopk(subdiv - 1)
+                {
+                    vs.add(dv);
+                    addnormal(o, vs, i);
+                }
+                continue;
+            }
             const vec &cur = numplanes < 2 || j == 1 ? planes[0] : (j == 3 ? planes[1] : avg);
             addnormal(o, v, cur);
             if(subdiv < 2) continue;
