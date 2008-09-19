@@ -1292,7 +1292,7 @@ GLuint fsfb[NUMSCALE-1];
 GLfloat fsparams[4];
 int fs_w = 0, fs_h = 0, fspasses = NUMSCALE, fsskip = 1;
 
-void setfullscreenshader(char *name, int *x, int *y, int *z, int *w)
+void setfullscreenshader(char *name, float *x, float *y, float *z, float *w)
 {
 	if(!hasTR || !*name)
 	{
@@ -1324,14 +1324,14 @@ void setfullscreenshader(char *name, int *x, int *y, int *z, int *w)
 			}
 		}
 		conoutf("\fmnow rendering with: %s", name);
-		fsparams[0] = *x/255.0f;
-		fsparams[1] = *y/255.0f;
-		fsparams[2] = *z/255.0f;
-		fsparams[3] = *w/255.0f;
+        fsparams[0] = *x;
+        fsparams[1] = *y;
+        fsparams[2] = *z;
+        fsparams[3] = *w;
 	}
 }
 
-COMMAND(setfullscreenshader, "siiii");
+COMMAND(setfullscreenshader, "sffff");
 
 void renderfsquad(int w, int h, Shader *s)
 {
@@ -1380,8 +1380,10 @@ void renderfullscreenshader(int w, int h)
 		}
 	}
 
-	setenvparamfv("fsparams", SHPARAM_PIXEL, 0, fsparams);
-	setenvparamf("millis", SHPARAM_VERTEX, 1, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);
+    setenvparamfv("fsparams", SHPARAM_VERTEX, 0, fsparams);
+    setenvparamfv("fsparams", SHPARAM_PIXEL, 0, fsparams);
+    setenvparamf("millis", SHPARAM_VERTEX, 1, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);
+    setenvparamf("screenscale", SHPARAM_VERTEX, 2, w, h);
 
 	int nw = w, nh = h;
 
