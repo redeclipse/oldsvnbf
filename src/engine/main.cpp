@@ -178,7 +178,7 @@ void screenshot(char *sname)
 	}
 }
 
-COMMAND(screenshot, "si");
+COMMAND(screenshot, "s");
 COMMAND(quit, "");
 
 void setfullscreen(bool enable)
