@@ -1612,7 +1612,7 @@ void drawview(int targtype)
 	glDisable(GL_CULL_FACE);
 
 	addglare();
-	renderfullscreenshader(screen->w, screen->h);
+	renderpostfx();
 
 	glDisable(GL_TEXTURE_2D);
 	notextureshader->set();
