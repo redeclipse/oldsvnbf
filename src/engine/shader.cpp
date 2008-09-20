@@ -1285,144 +1285,203 @@ COMMAND(setvertexparam, "iffff");
 COMMAND(setpixelparam, "iffff");
 COMMAND(setuniformparam, "sffff");
 
-const int NUMSCALE = 7;
-Shader *fsshader = NULL, *scaleshader = NULL, *initshader = NULL;
-GLuint rendertarget[NUMSCALE];
-GLuint fsfb[NUMSCALE-1];
-GLfloat fsparams[4];
-int fs_w = 0, fs_h = 0, fspasses = NUMSCALE, fsskip = 1;
+#define NUMPOSTFXBINDS 10
 
-void setfullscreenshader(char *name, float *x, float *y, float *z, float *w)
+struct postfxtex
 {
-	if(!hasTR || !*name)
-	{
-		fsshader = NULL;
-	}
-	else
-	{
-		Shader *s = lookupshaderbyname(name);
-		if(!s) return conoutf("\frno such fullscreen shader: %s", name);
-		fsshader = s;
-		s_sprintfd(ssname)("%s_scale", name);
-		s_sprintfd(isname)("%s_init", name);
-		scaleshader = lookupshaderbyname(ssname);
-		initshader = lookupshaderbyname(isname);
-		fspasses = NUMSCALE;
-		fsskip = 1;
-		if(scaleshader)
-		{
-			int len = strlen(name);
-			char c = name[--len];
-			if(isdigit(c))
-			{
-				if(len>0 && isdigit(name[--len]))
-				{
-					fsskip = c-'0';
-					fspasses = name[len]-'0';
-				}
-				else fspasses = c-'0';
-			}
-		}
-		conoutf("\fmnow rendering with: %s", name);
-        fsparams[0] = *x;
-        fsparams[1] = *y;
-        fsparams[2] = *z;
-        fsparams[3] = *w;
-	}
+    GLuint id;
+    int scale, used;
+
+    postfxtex() : id(0), scale(0), used(-1) {}
+};
+vector<postfxtex> postfxtexs;
+int postfxbinds[NUMPOSTFXBINDS];
+GLuint postfxfb = 0;
+int postfxw = 0, postfxh = 0;
+
+struct postfxpass
+{
+    Shader *shader;
+    vec4 params;
+    uint inputs, freeinputs;
+    int outputbind, outputscale;
+
+    postfxpass() : shader(NULL), inputs(1), freeinputs(1), outputbind(0), outputscale(0) {}
+};
+vector<postfxpass> postfxpasses;
+
+static int allocatepostfxtex(int scale)
+{
+    loopv(postfxtexs)
+    {
+        postfxtex &t = postfxtexs[i];
+        if(t.scale==scale && t.used < 0) return i;
+    }
+    postfxtex &t = postfxtexs.add();
+    t.scale = scale;
+    glGenTextures(1, &t.id);
+    createtexture(t.id, max(screen->w>>scale, 1), max(screen->h>>scale, 1), NULL, 3, false, GL_RGB, GL_TEXTURE_RECTANGLE_ARB);
+    return postfxtexs.length()-1;
 }
 
-COMMAND(setfullscreenshader, "sffff");
-
-void renderfsquad(int w, int h, Shader *s)
+void cleanuppostfx(bool fullclean)
 {
-	s->set();
-	glViewport(0, 0, w, h);
-	if(s==scaleshader || s==initshader)
-	{
-		w <<= fsskip;
-		h <<= fsskip;
-	}
-	glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);
-    glTexCoord2f(w, 0); glVertex3f( 1, -1, 0);
-    glTexCoord2f(w, h); glVertex3f( 1,  1, 0);
-    glTexCoord2f(0, h); glVertex3f(-1,  1, 0);
-	glEnd();
+    if(fullclean && postfxfb)
+    {
+        glDeleteFramebuffers_(1, &postfxfb);
+        postfxfb = 0;
+    }
+
+    loopv(postfxtexs) glDeleteTextures(1, &postfxtexs[i].id);
+    postfxtexs.setsize(0);
+
+    postfxw = 0;
+    postfxh = 0;
 }
 
-void renderfullscreenshader(int w, int h)
+void renderpostfx()
 {
-	if(!fsshader || renderpath==R_FIXEDFUNCTION) return;
+    if(postfxpasses.empty() || renderpath==R_FIXEDFUNCTION) return;
 
-	glDisable(GL_DEPTH_TEST);
-	glDepthMask(GL_FALSE);
-	glEnable(GL_TEXTURE_RECTANGLE_ARB);
+    if(postfxw != screen->w || postfxh != screen->h)
+    {
+        cleanuppostfx(false);
+        postfxw = screen->w;
+        postfxh = screen->h;
+    }
 
-	if(fs_w != w || fs_h != h)
-	{
-		if(!fs_w && !fs_h)
-		{
-			glGenTextures(NUMSCALE, rendertarget);
-			if(hasFBO) glGenFramebuffers_(NUMSCALE-1, fsfb);
-		}
-		loopi(NUMSCALE)
-			createtexture(rendertarget[i], w>>i, h>>i, NULL, 3, false, GL_RGB, GL_TEXTURE_RECTANGLE_ARB);
-		fs_w = w;
-		fs_h = h;
-		if(fsfb[0])
-		{
-			loopi(NUMSCALE-1)
-			{
-				glBindFramebuffer_(GL_FRAMEBUFFER_EXT, fsfb[i]);
-				glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, rendertarget[i+1], 0);
-			}
-			glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
-		}
-	}
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
 
-    setenvparamfv("fsparams", SHPARAM_VERTEX, 0, fsparams);
-    setenvparamfv("fsparams", SHPARAM_PIXEL, 0, fsparams);
+    int binds[NUMPOSTFXBINDS];
+    loopi(NUMPOSTFXBINDS) binds[i] = -1;
+    loopv(postfxtexs) postfxtexs[i].used = -1;
+
+    binds[0] = allocatepostfxtex(0);
+    postfxtexs[binds[0]].used = 0;
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, postfxtexs[binds[0]].id);
+    glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, 0, 0, screen->w, screen->h);
+
+    if(hasFBO && postfxpasses.length() > 1)
+    {
+        if(!postfxfb) glGenFramebuffers_(1, &postfxfb);
+        glBindFramebuffer_(GL_FRAMEBUFFER_EXT, postfxfb);
+    }
+
     setenvparamf("millis", SHPARAM_VERTEX, 1, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);
-    setenvparamf("screenscale", SHPARAM_VERTEX, 2, w, h);
 
-	int nw = w, nh = h;
+    loopv(postfxpasses)
+    {
+        postfxpass &p = postfxpasses[i];
 
-	loopi(fspasses)
-	{
-		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, rendertarget[i*fsskip]);
-		glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, 0, 0, nw, nh);
-		if(i>=fspasses-1 || !scaleshader || fsfb[0]) break;
-		renderfsquad(nw >>= fsskip, nh >>= fsskip, !i && initshader ? initshader : scaleshader);
-	}
-	if(scaleshader && fsfb[0])
-	{
-		loopi(fspasses-1)
-		{
-			if(i) glBindTexture(GL_TEXTURE_RECTANGLE_ARB, rendertarget[i*fsskip]);
-			glBindFramebuffer_(GL_FRAMEBUFFER_EXT, fsfb[(i+1)*fsskip-1]);
-			renderfsquad(nw >>= fsskip, nh >>= fsskip, !i && initshader ? initshader : scaleshader);
-		}
-		glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
-	}
+        int tex = -1;
+        if(!postfxpasses.inrange(i+1))
+        {
+            if(hasFBO && postfxpasses.length() > 1) glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
+        }
+        else
+        {
+            tex = allocatepostfxtex(p.outputscale);
+            if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_RECTANGLE_ARB, postfxtexs[tex].id, 0);
+        }
 
-	if(scaleshader) loopi(fspasses)
-	{
-		glActiveTexture_(GL_TEXTURE0_ARB+i);
-		glEnable(GL_TEXTURE_RECTANGLE_ARB);
-		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, rendertarget[i*fsskip]);
-	}
-	renderfsquad(w, h, fsshader);
+        int w = tex >= 0 ? max(screen->w>>postfxtexs[tex].scale, 1) : screen->w,
+            h = tex >= 0 ? max(screen->h>>postfxtexs[tex].scale, 1) : screen->h;
+        glViewport(0, 0, w, h);
+        p.shader->set();
+        setlocalparamfv("params", SHPARAM_VERTEX, 0, p.params.v);
+        setlocalparamfv("params", SHPARAM_PIXEL, 0, p.params.v);
+        int tw = w, th = h, tmu = 0;
+        loopj(NUMPOSTFXBINDS) if(p.inputs&(1<<j) && binds[j] >= 0)
+        {
+            if(!tmu)
+            {
+                tw = max(screen->w>>postfxtexs[binds[j]].scale, 1);
+                th = max(screen->h>>postfxtexs[binds[j]].scale, 1);
+            }
+            else glActiveTexture_(GL_TEXTURE0_ARB + tmu);
+            glBindTexture(GL_TEXTURE_RECTANGLE_ARB, postfxtexs[binds[j]].id);
+            ++tmu;
+        }
+        if(tmu) glActiveTexture_(GL_TEXTURE0_ARB);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0,  0);  glVertex2f(-1, -1);
+        glTexCoord2f(tw, 0);  glVertex2f( 1, -1);
+        glTexCoord2f(tw, th); glVertex2f( 1,  1);
+        glTexCoord2f(0,  th); glVertex2f(-1,  1);
+        glEnd();
 
-	if(scaleshader) loopi(fspasses)
-	{
-		glActiveTexture_(GL_TEXTURE0_ARB+i);
-		glDisable(GL_TEXTURE_RECTANGLE_ARB);
-	}
+        loopj(NUMPOSTFXBINDS) if(p.freeinputs&(1<<j) && binds[j] >= 0)
+        {
+            postfxtexs[binds[j]].used = -1;
+            binds[j] = -1;
+        }
+        if(tex >= 0)
+        {
+            if(binds[p.outputbind] >= 0) postfxtexs[binds[p.outputbind]].used = -1;
+            binds[p.outputbind] = tex;
+            postfxtexs[tex].used = p.outputbind;
+            if(!hasFBO)
+            {
+                glBindTexture(GL_TEXTURE_RECTANGLE_ARB, postfxtexs[tex].id);
+                glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, 0, 0, w, h);
+            }
+        }
+    }
 
-	glActiveTexture_(GL_TEXTURE0_ARB);
-	glDepthMask(GL_TRUE);
-	glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
 }
+
+static bool addpostfx(const char *name, int outputbind, int outputscale, uint inputs, uint freeinputs, const vec4 &params)
+{
+    if(!hasTR || !*name) return false;
+    Shader *s = lookupshaderbyname(name);
+    if(!s)
+    {
+        conoutf("no such postfx shader: %s", name);
+        return false;
+    }
+    postfxpass &p = postfxpasses.add();
+    p.shader = s;
+    p.outputbind = outputbind;
+    p.outputscale = outputscale;
+    p.inputs = inputs;
+    p.freeinputs = freeinputs;
+    p.params = params;
+    return true;
+}
+
+void clearpostfx()
+{
+    postfxpasses.setsize(0);
+    cleanuppostfx(false);
+}
+
+COMMAND(clearpostfx, "");
+
+ICOMMAND(addpostfx, "siisffff", (char *name, int *bind, int *scale, char *inputs, float *x, float *y, float *z, float *w),
+{
+    int inputmask = inputs[0] ? 0 : 1;
+    int freemask = inputs[0] ? 0 : 1;
+    bool freeinputs = true;
+    for(; *inputs; inputs++) if(isdigit(*inputs))
+    {
+        inputmask |= 1<<(*inputs-'0');
+        if(freeinputs) freemask |= 1<<(*inputs-'0');
+    }
+    else if(*inputs=='+') freeinputs = false;
+    else if(*inputs=='-') freeinputs = true;
+    inputmask &= (1<<NUMPOSTFXBINDS)-1;
+    freemask &= (1<<NUMPOSTFXBINDS)-1;
+    addpostfx(name, clamp(*bind, 0, NUMPOSTFXBINDS-1), max(*scale, 0), inputmask, freemask, vec4(*x, *y, *z, *w));
+});
+
+ICOMMAND(setpostfx, "sffff", (char *name, float *x, float *y, float *z, float *w),
+{
+    clearpostfx();
+    addpostfx(name, 0, 0, 1, 1, vec4(*x, *y, *z, *w));
+});
 
 struct tmufunc
 {
@@ -1605,13 +1664,7 @@ void inittmus()
 
 void cleanupshaders()
 {
-    if(fs_w || fs_h)
-    {
-        glDeleteTextures(NUMSCALE, rendertarget);
-        if(hasFBO) glDeleteFramebuffers_(NUMSCALE-1, fsfb);
-        fs_w = fs_h = 0;
-    }
-    fsshader = NULL;
+    cleanuppostfx(true);
 
     defaultshader = notextureshader = nocolorshader = foggedshader = foggednotextureshader = NULL;
     enumerate(shaders, Shader, s, s.cleanup());
