@@ -356,7 +356,7 @@ void gl_checkextensions()
         else if(strstr(vendor, "Tungsten")) mesa_program_bug = 1;
 
 #ifdef __APPLE__
-        if(osversion>=0x1050)
+        if(osversion>=0x1050 && osversion<0x1055) // a temporary leopard driver bug
         {
             apple_ff_bug = 1;
             conoutf("\frWARNING: Using Leopard ARB_position_invariant bug workaround. (use \"/apple_ff_bug 0\" to disable if unnecessary)");
