@@ -203,76 +203,6 @@
 					<Add directory="lib\mingw" />
 				</Linker>
 			</Target>
-			<Target title="ttf2font">
-				<Option output="..\bin\ttf2font.exe" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="..\" />
-				<Option object_output=".objs\ttf2font" />
-				<Option deps_output=".deps\ttf2font" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Option use_console_runner="0" />
-				<Option parameters="-hhome -fdvscb.ttf -g3 -ndefault" />
-				<Option projectCompilerOptionsRelation="1" />
-				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="1" />
-				<Option projectResourceIncludeDirsRelation="1" />
-				<Option projectLibDirsRelation="1" />
-				<Compiler>
-					<Add option="-fexpensive-optimizations" />
-					<Add option="-O2" />
-					<Add option="-Wall" />
-					<Add option="-fsigned-char" />
-					<Add option="-finline-functions" />
-					<Add option="-fomit-frame-pointer" />
-					<Add option="-fno-strict-aliasing" />
-					<Add option="-DTTF2FONT" />
-					<Add directory="shared" />
-					<Add directory="include" />
-				</Compiler>
-				<Linker>
-					<Add option="-s" />
-					<Add library="SDLmain" />
-					<Add library="SDL" />
-					<Add library="SDL_image" />
-					<Add library="lib\SDL_ttf.lib" />
-					<Add library="lib\libpng.lib" />
-					<Add library="z" />
-					<Add directory="lib\mingw" />
-				</Linker>
-			</Target>
-			<Target title="img2anim">
-				<Option output="..\bin\img2anim.exe" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="..\" />
-				<Option object_output=".objs\img2anim" />
-				<Option deps_output=".deps\img2anim" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Option projectCompilerOptionsRelation="1" />
-				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="1" />
-				<Option projectResourceIncludeDirsRelation="1" />
-				<Option projectLibDirsRelation="1" />
-				<Compiler>
-					<Add option="-fexpensive-optimizations" />
-					<Add option="-O2" />
-					<Add option="-fsigned-char" />
-					<Add option="-finline-functions" />
-					<Add option="-fomit-frame-pointer" />
-					<Add option="-fno-strict-aliasing" />
-					<Add option="-DIMG2ANIM" />
-					<Add directory="shared" />
-					<Add directory="include" />
-				</Compiler>
-				<Linker>
-					<Add option="-s" />
-					<Add library="SDLmain" />
-					<Add library="SDL" />
-					<Add library="SDL_image" />
-					<Add library="lib\libpng.lib" />
-					<Add library="z" />
-					<Add directory="lib\mingw" />
-				</Linker>
-			</Target>
 			<Target title="profile">
 				<Option output="..\bin\bfclient.exe" prefix_auto="0" extension_auto="0" />
 				<Option working_dir="..\" />
@@ -344,23 +274,9 @@
 		</Unit>
 		<Unit filename="enet\callbacks.c">
 			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
 		</Unit>
 		<Unit filename="enet\host.c">
 			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
 		</Unit>
 		<Unit filename="enet\include\enet\callbacks.h">
 			<Option target="client" />
@@ -417,63 +333,21 @@
 		</Unit>
 		<Unit filename="enet\list.c">
 			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
 		</Unit>
 		<Unit filename="enet\packet.c">
 			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
 		</Unit>
 		<Unit filename="enet\peer.c">
 			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
 		</Unit>
 		<Unit filename="enet\protocol.c">
 			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
 		</Unit>
 		<Unit filename="enet\unix.c">
 			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
 		</Unit>
 		<Unit filename="enet\win32.c">
 			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
 		</Unit>
 		<Unit filename="engine\3dgui.cpp">
 			<Option target="client" />
@@ -723,15 +597,7 @@
 			<Option target="profile" />
 			<Option target="data" />
 		</Unit>
-		<Unit filename="engine\server.cpp">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
-		</Unit>
+		<Unit filename="engine\server.cpp" />
 		<Unit filename="engine\serverbrowser.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -909,10 +775,6 @@
 			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
-		</Unit>
-		<Unit filename="img2anim.rc">
-			<Option compilerVar="WINDRES" />
-			<Option target="img2anim" />
 		</Unit>
 		<Unit filename="include\GL\glext.h">
 			<Option target="client" />
@@ -1167,9 +1029,6 @@
 			<Option target="client-dbg" />
 			<Option target="profile" />
 		</Unit>
-		<Unit filename="shared\img2anim.cpp">
-			<Option target="img2anim" />
-		</Unit>
 		<Unit filename="shared\pch.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -1188,27 +1047,9 @@
 			<Option target="profile" />
 			<Option target="server" />
 			<Option target="daemon" />
-			<Option target="ttf2font" />
-			<Option target="img2anim" />
 			<Option target="daemon-dbg" />
 		</Unit>
-		<Unit filename="shared\tools.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="daemon" />
-			<Option target="ttf2font" />
-			<Option target="daemon-dbg" />
-		</Unit>
-		<Unit filename="shared\ttf2font.cpp">
-			<Option target="ttf2font" />
-		</Unit>
-		<Unit filename="ttf2font.rc">
-			<Option compilerVar="WINDRES" />
-			<Option target="ttf2font" />
-		</Unit>
+		<Unit filename="shared\tools.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
