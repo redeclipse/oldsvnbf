@@ -69,23 +69,7 @@ DAEMON_OBJS= \
 	engine/server-daemon.o \
 	game/game-daemon.o
 
-TINCLUDES= -Ishared `sdl-config --cflags`
-TCXXFLAGS= -Wall -DTTF2FONT $(CXXOPTFLAGS) $(TINCLUDES)
-
-TTF_LIBS= -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_ttf -lpng -lz
-TTF_OBJS= \
-	shared/tools-ttf.o \
-	shared/ttf2font-ttf.o
-
-AINCLUDES= -Ishared `sdl-config --cflags`
-ACXXFLAGS= -Wall -DIMG2ANIM $(CXXOPTFLAGS) $(TINCLUDES)
-
-ANIM_LIBS= -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lpng -lz
-ANIM_OBJS= \
-	shared/tools-anim.o \
-	shared/img2anim-anim.o
-
-default: all
+	default: all
 
 enet/Makefile:
 	cd enet; chmod +x ./configure; ./configure
@@ -104,23 +88,11 @@ clean-server:
 clean-daemon:
 	@rm -fv $(DAEMON_OBJS) bfdaemon
 
-clean-ttf:
-	@rm -fv $(TTF_OBJS) ttf2font
-
-clean-anim:
-	@rm -fv $(ANIM_OBJS) img2anim
-
 %-standalone.o:
 	$(CXX) $(SCXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
 
 %-daemon.o:
 	$(CXX) $(DCXXFLAGS) -c -o $@ $(subst -daemon.o,.cpp,$@)
-
-%-ttf.o:
-	$(CXX) $(TCXXFLAGS) -c -o $@ $(subst -ttf.o,.cpp,$@)
-
-%-anim.o:
-	$(CXX) $(ACXXFLAGS) -c -o $@ $(subst -anim.o,.cpp,$@)
 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bfclient $(CLIENT_OBJS) $(CLIENT_LIBS)
@@ -130,12 +102,6 @@ server:	libenet $(SERVER_OBJS)
 
 daemon:	libenet $(DAEMON_OBJS)
 	$(CXX) $(DCXXFLAGS) -o bfdaemon $(DAEMON_OBJS) $(DAEMON_LIBS)
-
-ttf: $(TTF_OBJS)
-	$(CXX) $(TCXXFLAGS) -o ttf2font $(TTF_OBJS) $(TTF_LIBS)
-
-anim: $(ANIM_OBJS)
-	$(CXX) $(ACXXFLAGS) -o img2anim $(ANIM_OBJS) $(ANIM_LIBS)
 
 install-client: client
 	cp -v bfclient ../bin/bfclient
@@ -148,14 +114,6 @@ install-server: server
 install-daemon: daemon
 	cp -v bfdaemon ../bin/bfdaemon
 	chmod +x ../bin/bfdaemon
-
-install-ttf: ttf
-	cp -v ttf2font ../bin/ttf2font
-	chmod +x ../bin/ttf2font
-
-install-anim: anim
-	cp -v img2anim ../bin/img2anim
-	chmod +x ../bin/img2anim
 
 install: install-client install-server
 
