@@ -717,7 +717,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			}
 			else
 			{
-				if(gzread(f, &ohdr.worldsize, ohdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary))
+				if(gzread(f, &ohdr.worldsize, ohdr.headersize-sizeof(binary))!=ohdr.headersize-(int)sizeof(binary))
                 {
                     conoutf("\frerror loading %s: malformatted header", mapname);
                     gzclose(f);
