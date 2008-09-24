@@ -561,41 +561,59 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 		gzFile f = opengzfile(mapfile, "rb9");
 		if(!f) continue;
 
-		Texture *mapshot = textureload(mapname, 0, true, false);
-		bool samegame = true;
-		int eif = 0;
-		computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
-		resetmap();
+        Texture *mapshot = notexture;
+        bool samegame = true;
+        int eif = 0;
 
-		binary newhdr;
-		gzread(f, &newhdr, sizeof(binary));
+		bfgz newhdr;
+		if(gzread(f, &newhdr, sizeof(binary))!=(int)sizeof(binary))
+        {
+            conoutf("\frerror loading %s: malformatted header", mapname);
+            gzclose(f);
+            return false;
+        }
 		endianswap(&newhdr.version, sizeof(int), 2);
-		memcpy(&hdr, &newhdr, sizeof(binary));
 
 		if(strncmp(newhdr.head, "BFGZ", 4) == 0)
 		{
-			if(hdr.version <= 25)
+			if(newhdr.version <= 25)
 			{
 				bfgzcompat25 chdr;
-				memcpy(&chdr, &hdr, sizeof(binary));
-				gzread(f, &chdr.worldsize, hdr.headersize-sizeof(binary));
+				memcpy(&chdr, &newhdr, sizeof(binary));
+				if(gzread(f, &chdr.worldsize, newhdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary))
+                {
+                    conoutf("\frerror loading %s: malformatted header", mapname);
+                    gzclose(f);
+                    return false;
+                }
 				endianswap(&chdr.worldsize, sizeof(int), 5);
-				memcpy(&hdr.worldsize, &chdr.worldsize, sizeof(int)*2);
-				hdr.numpvs = 0;
-				memcpy(&hdr.lightmaps, &chdr.lightmaps, hdr.headersize-sizeof(binary)-sizeof(int)*2);
+				memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*2);
+				newhdr.numpvs = 0;
+				memcpy(&newhdr.lightmaps, &chdr.lightmaps, newhdr.headersize-sizeof(binary)-sizeof(int)*2);
 			}
 			else
 			{
-				gzread(f, &hdr.worldsize, hdr.headersize-sizeof(binary));
-				endianswap(&hdr.worldsize, sizeof(int), 6);
+				if(gzread(f, &newhdr.worldsize, newhdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary))
+                {
+                    conoutf("\frerror loading %s: malformatted header", mapname);
+                    gzclose(f);
+                    return false;
+                }
+				endianswap(&newhdr.worldsize, sizeof(int), 6);
 			}
 
-			if(hdr.version > MAPVERSION)
+			if(newhdr.version > MAPVERSION)
 			{
 				conoutf("\frerror loading %s: requires a newer version of Blood Frontier", mapname);
 				gzclose(f);
 				return false;
 			}
+
+            hdr = newhdr;
+
+            mapshot = textureload(mapname, 0, true, false);
+            computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
+            resetmap();
 
 			maptype = MAP_BFGZ;
 
@@ -686,7 +704,12 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			{
 				octacompat25 chdr;
 				memcpy(&chdr, &ohdr, sizeof(binary));
-				gzread(f, &chdr.worldsize, ohdr.headersize-sizeof(binary));
+				if(gzread(f, &chdr.worldsize, ohdr.headersize-sizeof(binary))!=ohdr.headersize-(int)sizeof(binary))
+                {
+                    conoutf("\frerror loading %s: malformatted header", mapname);
+                    gzclose(f);
+                    return false;
+                }
 				endianswap(&chdr.worldsize, sizeof(int), 7);
 				memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*2);
 				ohdr.numpvs = 0;
@@ -694,7 +717,12 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			}
 			else
 			{
-				gzread(f, &ohdr.worldsize, ohdr.headersize-sizeof(binary));
+				if(gzread(f, &ohdr.worldsize, ohdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary))
+                {
+                    conoutf("\frerror loading %s: malformatted header", mapname);
+                    gzclose(f);
+                    return false;
+                }
 				endianswap(&ohdr.worldsize, sizeof(int), 7);
 			}
 
@@ -704,6 +732,12 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 				gzclose(f);
 				return false;
 			}
+
+            hdr = newhdr;
+
+            mapshot = textureload(mapname, 0, true, false);
+            computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
+            resetmap();
 
 			maptype = MAP_OCTA;
 
@@ -762,7 +796,11 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 
 			if(hdr.version<25) hdr.numpvs = 0;
 		}
-		else continue;
+		else 
+        {
+            gzclose(f);
+            continue;
+        }
 
 		renderprogress(0, "clearing world...");
 
