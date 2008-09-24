@@ -69,7 +69,7 @@ DAEMON_OBJS= \
 	engine/server-daemon.o \
 	game/game-daemon.o
 
-	default: all
+default: all
 
 enet/Makefile:
 	cd enet; chmod +x ./configure; ./configure
