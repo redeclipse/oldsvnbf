@@ -455,7 +455,7 @@ struct vertmodel : animmodel
             n.mul(m, tags[frame*numtags + i].transform);
         }
 
-        void calctagmatrix(int i, const animstate &as, GLfloat *matrix)
+        void calctagmatrix(int i, const animstate &as, glmatrixf &matrix)
         {
             const matrix3x4 &tag1 = tags[as.cur.fr1*numtags + i].transform, 
                             &tag2 = tags[as.cur.fr2*numtags + i].transform;

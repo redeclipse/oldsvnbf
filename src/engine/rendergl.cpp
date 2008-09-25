@@ -547,35 +547,22 @@ VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
 void vecfromcursor(float x, float y, float z, vec &dir)
 {
-	GLdouble cmvm[16], cpjm[16];
-	GLint view[4];
-	GLdouble dx, dy, dz;
-
-	glGetDoublev(GL_MODELVIEW_MATRIX, cmvm);
-	glGetDoublev(GL_PROJECTION_MATRIX, cpjm);
-	glGetIntegerv(GL_VIEWPORT, view);
-
-	gluUnProject(x*float(view[2]), (1.f-y)*float(view[3]), z, cmvm, cpjm, view, &dx, &dy, &dz);
-	dir = vec((float)dx, (float)dy, (float)dz);
-	gluUnProject(x*float(view[2]), (1.f-y)*float(view[3]), 0.0f, cmvm, cpjm, view, &dx, &dy, &dz);
-	dir.sub(vec((float)dx, (float)dy, (float)dz));
-	dir.normalize();
+    vec4 dir1, dir2; 
+    invmvpmatrix.transform(vec(x*2-1, 1-2*y, z*2-1), dir1);
+    invmvpmatrix.transform(vec(x*2-1, 1-2*y, -1), dir2);
+    dir = vec(dir1.x, dir1.y, dir1.z).div(dir1.w);
+    dir.sub(vec(dir2.x, dir2.y, dir2.z).div(dir2.w));
+    dir.normalize();
 }
 
 void vectocursor(vec &v, float &x, float &y, float &z)
 {
-	GLdouble cmvm[16], cpjm[16];
-	GLint view[4];
-	GLdouble dx, dy, dz;
+    vec4 screenpos;
+    mvpmatrix.transform(v, screenpos);
 
-	glGetDoublev(GL_MODELVIEW_MATRIX, cmvm);
-	glGetDoublev(GL_PROJECTION_MATRIX, cpjm);
-	glGetIntegerv(GL_VIEWPORT, view);
-
-	gluProject(v.x, v.y, v.z, cmvm, cpjm, view, &dx, &dy, &dz);
-	x = (float)dx;
-	y = (float)view[3]-dy;
-	z = (float)dz;
+	x = screenpos.x/screenpos.w*0.5f + 0.5f;
+	y = 0.5f - screenpos.y/screenpos.w*0.5f;
+	z = screenpos.z/screenpos.w*0.5f + 0.5f;
 }
 
 void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, bool swapxy, float zscale)
@@ -590,32 +577,31 @@ void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, boo
 
 VAR(reflectclip, 0, 6, 64);
 
-GLfloat clipmatrix[16];
+glmatrixf clipmatrix;
 
-void genclipmatrix(float a, float b, float c, float d, GLfloat matrix[16])
+void genclipmatrix(float a, float b, float c, float d)
 {
-	// transform the clip plane into camera space
+    // transform the clip plane into camera space
     float clip[4];
     loopi(4) clip[i] = a*invmvmatrix[i*4 + 0] + b*invmvmatrix[i*4 + 1] + c*invmvmatrix[i*4 + 2] + d*invmvmatrix[i*4 + 3];
 
-    memcpy(matrix, projmatrix, 16*sizeof(GLfloat));
-
-	float x = ((clip[0]<0 ? -1 : (clip[0]>0 ? 1 : 0)) + matrix[8]) / matrix[0],
-		  y = ((clip[1]<0 ? -1 : (clip[1]>0 ? 1 : 0)) + matrix[9]) / matrix[5],
-		  w = (1 + matrix[10]) / matrix[14],
-		  scale = 2 / (x*clip[0] + y*clip[1] - clip[2] + w*clip[3]);
-	matrix[2] = clip[0]*scale;
-	matrix[6] = clip[1]*scale;
-	matrix[10] = clip[2]*scale + 1.0f;
-	matrix[14] = clip[3]*scale;
+    float x = ((clip[0]<0 ? -1 : (clip[0]>0 ? 1 : 0)) + projmatrix[8]) / projmatrix[0],
+          y = ((clip[1]<0 ? -1 : (clip[1]>0 ? 1 : 0)) + projmatrix[9]) / projmatrix[5],
+          w = (1 + projmatrix[10]) / projmatrix[14],
+          scale = 2 / (x*clip[0] + y*clip[1] - clip[2] + w*clip[3]);
+    clipmatrix = projmatrix;
+    clipmatrix[2] = clip[0]*scale;
+    clipmatrix[6] = clip[1]*scale;
+    clipmatrix[10] = clip[2]*scale + 1.0f;
+    clipmatrix[14] = clip[3]*scale;
 }
 
-void setclipmatrix(GLfloat matrix[16])
+void setclipmatrix()
 {
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadMatrixf(matrix);
-	glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadMatrixf(clipmatrix.v);
+    glMatrixMode(GL_MODELVIEW);
 }
 
 void undoclipmatrix()
@@ -640,13 +626,12 @@ void enablepolygonoffset(GLenum type)
 
     bool clipped = reflectz < 1e15f && reflectclip;
 
-    GLfloat offsetmatrix[16];
-    memcpy(offsetmatrix, clipped ? clipmatrix : projmatrix, 16*sizeof(GLfloat));
+    glmatrixf offsetmatrix = clipped ? clipmatrix : projmatrix;
     offsetmatrix[14] += depthoffset * projmatrix[10];
 
     glMatrixMode(GL_PROJECTION);
     if(!clipped) glPushMatrix();
-    glLoadMatrixf(offsetmatrix);
+    glLoadMatrixf(offsetmatrix.v);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -661,7 +646,7 @@ void disablepolygonoffset(GLenum type)
     bool clipped = reflectz < 1e15f && reflectclip;
 
     glMatrixMode(GL_PROJECTION);
-    if(clipped) glLoadMatrixf(clipmatrix);
+    if(clipped) glLoadMatrixf(clipmatrix.v);
     else glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
 }
@@ -925,8 +910,8 @@ void drawreflection(float z, bool refract, bool clear)
             if(camera1->o.z>=zclip && camera1->o.z<=z+4.0f) zclip = z;
             if(reflecting) zclip = 2*z - zclip;
         }
-        genclipmatrix(0, 0, refracting>0 ? 1 : -1, refracting>0 ? -zclip : zclip, clipmatrix);
-        setclipmatrix(clipmatrix);
+        genclipmatrix(0, 0, refracting>0 ? 1 : -1, refracting>0 ? -zclip : zclip);
+        setclipmatrix();
     }
 
 
@@ -937,7 +922,7 @@ void drawreflection(float z, bool refract, bool clear)
         if(fading) glColorMask(COLORMASK, GL_TRUE);
         if(reflectclip && z>=0) undoclipmatrix();
         drawskybox(farplane, false);
-        if(reflectclip && z>=0) setclipmatrix(clipmatrix);
+        if(reflectclip && z>=0) setclipmatrix();
         if(fading) glColorMask(COLORMASK, GL_FALSE);
     }
     else if(fading) glColorMask(COLORMASK, GL_FALSE);
@@ -1341,32 +1326,16 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	SDL_GL_SwapBuffers();
 }
 
-GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16], invmvmatrix[16];
+glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
 
 void readmatrices()
 {
-    glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix);
-    glGetFloatv(GL_PROJECTION_MATRIX, projmatrix);
+    glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix.v);
+    glGetFloatv(GL_PROJECTION_MATRIX, projmatrix.v);
 
-    loopi(4) loopj(4)
-    {
-        float c = 0;
-        loopk(4) c += projmatrix[k*4 + j] * mvmatrix[i*4 + k];
-        mvpmatrix[i*4 + j] = c;
-    }
-
-    loopi(3)
-    {
-        loopj(3) invmvmatrix[i*4 + j] = mvmatrix[i + j*4];
-        invmvmatrix[i*4 + 3] = 0;
-    }
-    loopi(3)
-    {
-        float c = 0;
-        loopj(3) c -= mvmatrix[i*4 + j] * mvmatrix[12 + j];
-        invmvmatrix[12 + i] = c;
-    }
-    invmvmatrix[15] = 1;
+    mvpmatrix.mul(projmatrix, mvmatrix);
+    invmvmatrix.invert(mvmatrix);
+    invmvpmatrix.invert(mvpmatrix);
 }
 
 VARP(hidehud, 0, 0, 1);

@@ -71,7 +71,7 @@ void guessshadowdir()
 
 bool shadowmapping = false;
 
-static GLdouble shadowmapprojection[16], shadowmapmodelview[16];
+static glmatrixf shadowmapprojection, shadowmapmodelview;
 
 VARP(shadowmapbias, 0, 5, 1024);
 VARP(shadowmappeelbias, 0, 20, 1024);
@@ -156,8 +156,8 @@ static struct shadowmaptexture : rendertarget
         shadowfocus.add(dirx.mul(shadowoffset.x));
         shadowfocus.add(diry.mul(shadowoffset.y));
 
-        glGetDoublev(GL_PROJECTION_MATRIX, shadowmapprojection);
-        glGetDoublev(GL_MODELVIEW_MATRIX, shadowmapmodelview);
+        glGetFloatv(GL_PROJECTION_MATRIX, shadowmapprojection.v);
+        glGetFloatv(GL_MODELVIEW_MATRIX, shadowmapmodelview.v);
 
         setenvparamf("shadowmapbias", SHPARAM_VERTEX, 0, -shadowmapbias/float(shadowmapdist), 1 - (shadowmapbias + (smoothshadowmappeel ? 0 : shadowmappeelbias))/float(shadowmapdist));
 
@@ -314,8 +314,8 @@ void pushshadowmap()
     glLoadIdentity();
     glTranslatef(0.5f, 0.5f, 1-shadowmapbias/float(shadowmapdist));
     glScalef(0.5f, 0.5f, -1);
-    glMultMatrixd(shadowmapprojection);
-    glMultMatrixd(shadowmapmodelview);
+    glMultMatrixf(shadowmapprojection.v);
+    glMultMatrixf(shadowmapmodelview.v);
     glPushMatrix();
     glMatrixMode(GL_MODELVIEW);
     glActiveTexture_(GL_TEXTURE0_ARB);

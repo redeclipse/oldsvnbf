@@ -267,7 +267,7 @@ struct Reflection
 {
 	GLuint tex, refracttex;
 	int height, depth, lastupdate, lastused;
-	GLfloat tm[16];
+    glmatrixf projmat;
 	occludequery *query;
 	vector<materialsurface *> matsurfs;
 
@@ -302,13 +302,9 @@ void getlavacolour(uchar *lcol)
 
 void setprojtexmatrix(Reflection &ref, bool init = true)
 {
-    if(init && ref.lastupdate==totalmillis)
-    {
-        memcpy(ref.tm, mvpmatrix, 16*sizeof(GLfloat));
-        loopi(2) loopj(4) ref.tm[i + j*4] = 0.5f*(ref.tm[i + j*4] + ref.tm[3 + j*4]);
-    }
+    if(init && ref.lastupdate==totalmillis) (ref.projmat = mvpmatrix).projective();
 
-    glLoadMatrixf(ref.tm);
+    glLoadMatrixf(ref.projmat.v);
 }
 
 void setuprefractTMUs()
@@ -1066,16 +1062,11 @@ static bool calcscissorbox(Reflection &ref, int size, float &minyaw, float &maxy
     float sx1 = 1, sy1 = 1, sx2 = -1, sy2 = -1;
     loopi(8)
     {
-        ivec p(i&1 ? bbmax.x : bbmin.x, i&2 ? bbmax.y : bbmin.y, i&4 ? bbmax.z : bbmin.z);
-        float w = p.x*mvpmatrix[3] + p.y*mvpmatrix[7] + p.z*mvpmatrix[11] + mvpmatrix[15],
-              x = (p.x*mvpmatrix[0] + p.y*mvpmatrix[4] + p.z*mvpmatrix[8] + mvpmatrix[12]),
-              y = (p.x*mvpmatrix[1] + p.y*mvpmatrix[5] + p.z*mvpmatrix[9] + mvpmatrix[13]),
-              z = (p.x*mvpmatrix[2] + p.y*mvpmatrix[6] + p.z*mvpmatrix[10] + mvpmatrix[14]);
-        v[i] = vec4(x, y, z, w);
-        if(z >= 0)
+        vec4 &p = v[i];
+        mvpmatrix.transform(ivec(i&1 ? bbmax.x : bbmin.x, i&2 ? bbmax.y : bbmin.y, i&4 ? bbmax.z : bbmin.z), p);
+        if(p.z >= 0)
         {
-            x /= w;
-            y /= w;
+            float x = p.x / p.w, y = p.y / p.w;
             sx1 = min(sx1, x);
             sy1 = min(sy1, y);
             sx2 = max(sx2, x);

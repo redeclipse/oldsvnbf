@@ -720,6 +720,179 @@ struct bvec
     vec tovec() const { return vec(x*(2.0f/255.0f)-1.0f, y*(2.0f/255.0f)-1.0f, z*(2.0f/255.0f)-1.0f); }
 };
 
+struct glmatrixf
+{
+    float v[16];
+
+    glmatrixf() {}
+    glmatrixf(const matrix3x4 &m)
+    {
+        v[0] = m.X.x; v[1] = m.Y.x; v[2] = m.Z.x;
+        v[4] = m.X.y; v[5] = m.Y.y; v[6] = m.Z.y;
+        v[8] = m.X.z; v[9] = m.Y.z; v[10] = m.Z.z;
+        v[12] = m.X.w; v[13] = m.Y.w; v[14] = m.Z.w;
+        v[3] = v[7] = v[11] = 0.0f; v[15] = 1.0f;
+    }
+
+    float operator[](int i) const { return v[i]; }
+    float &operator[](int i) { return v[i]; }
+
+    #define ROTVEC(A, B) \
+    { \
+        float a = A, b = B; \
+        A = a*c + b*s; \
+        B = b*c - a*s; \
+    }
+
+    void rotate_around_x(float angle)
+    {
+        float c = cosf(angle), s = sinf(angle);
+        ROTVEC(v[4], v[8]);
+        ROTVEC(v[5], v[9]);
+        ROTVEC(v[6], v[10]);
+    }
+
+    void rotate_around_y(float angle)
+    {
+        float c = cosf(angle), s = sinf(angle);
+        ROTVEC(v[8], v[0]);
+        ROTVEC(v[9], v[1]);
+        ROTVEC(v[10], v[2]);
+    }
+
+    void rotate_around_z(float angle)
+    {
+        float c = cosf(angle), s = sinf(angle);
+        ROTVEC(v[0], v[4]);
+        ROTVEC(v[1], v[5]);
+        ROTVEC(v[2], v[6]);
+    }
+
+    #undef ROTVEC
+
+    #define MULMAT(row, col) \
+       v[col + row] = x[row]*y[col] + x[row + 4]*y[col + 1] + x[row + 8]*y[col + 2] + x[row + 12]*y[col + 3];
+
+    template<class XT, class YT>
+    void mul(const XT x[16], const YT y[16])
+    {
+        MULMAT(0, 0); MULMAT(1, 0); MULMAT(2, 0); MULMAT(3, 0);
+        MULMAT(0, 4); MULMAT(1, 4); MULMAT(2, 4); MULMAT(3, 4);
+        MULMAT(0, 8); MULMAT(1, 8); MULMAT(2, 8); MULMAT(3, 8);
+        MULMAT(0, 12); MULMAT(1, 12); MULMAT(2, 12); MULMAT(3, 12);
+    }
+
+    #undef MULMAT
+
+    void mul(const glmatrixf &x, const glmatrixf &y)
+    {
+        mul(x.v, y.v);
+    }
+
+    void identity()
+    {
+        static const float m[16] =
+        {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        };
+        memcpy(v, m, sizeof(v));
+    }
+
+    void translate(float x, float y, float z)
+    {
+        v[12] += x;
+        v[13] += y;
+        v[14] += z;
+    }
+
+    void translate(const vec &o)
+    {
+        translate(o.x, o.y, o.z);
+    }
+
+    void scale(float x, float y, float z)
+    {
+        v[0] *= x; v[1] *= x; v[2] *= x; v[3] *= x;
+        v[4] *= y; v[5] *= y; v[6] *= y; v[7] *= y;
+        v[8] *= z; v[9] *= z; v[10] *= z; v[11] *= z;
+    }
+
+    void reflectz(float z)
+    {
+        v[8] = -v[8]; v[9] = -v[9]; v[10] = -v[10]; v[11] = -v[11];
+        v[14] += 2*z;
+    }
+
+    void projective()
+    {
+        loopi(2) loopj(4) v[i + j*4] = 0.5f*(v[i + j*4] + v[3 + j*4]);
+    }
+
+    void transpose()
+    {
+        swap(v[1], v[4]); swap(v[2], v[8]); swap(v[3], v[12]);
+        swap(v[6], v[9]); swap(v[7], v[13]);
+        swap(v[11], v[14]);
+    }
+
+    void invertnormal(vec &dir) const
+    {
+        vec n(dir);
+        dir.x = n.x*v[0] + n.y*v[1] + n.z*v[2];
+        dir.y = n.x*v[4] + n.y*v[5] + n.z*v[6];
+        dir.z = n.x*v[8] + n.y*v[9] + n.z*v[10];
+    }
+
+    void invertvertex(vec &pos) const
+    {
+        pos.x -= v[12];
+        pos.y -= v[13];
+        pos.z -= v[14];
+        invertnormal(pos);
+    }
+
+    void invertplane(plane &p)
+    {
+        p.offset += p.x*v[12] + p.y*v[13] + p.z*v[14];
+        invertnormal(p);
+    }
+
+    template<class T> float transformx(const T &p) const
+    {
+        return p.x*v[0] + p.y*v[4] + p.z*v[8] + v[12];
+    }
+
+    template<class T> float transformy(const T &p) const
+    {
+        return p.x*v[1] + p.y*v[5] + p.z*v[9] + v[13];
+    }
+
+    template<class T> float transformz(const T &p) const
+    {
+        return p.x*v[2] + p.y*v[6] + p.z*v[10] + v[14];
+    }
+
+    template<class T> float transformw(const T &p) const
+    {
+        return p.x*v[3] + p.y*v[7] + p.z*v[11] + v[15];
+    }
+
+    template<class T> void transform(const T &in, vec4 &out) const
+    {
+        out.x = transformx(in);
+        out.y = transformy(in);
+        out.z = transformz(in);
+        out.w = transformw(in);
+    }
+
+    float determinant() const;
+    void adjoint(const glmatrixf &m);
+    bool invert(const glmatrixf &m, float mindet = 1.0e-10f);
+};
+
 extern bool raysphereintersect(vec c, float radius, const vec &o, const vec &ray, float &dist);
 extern bool rayrectintersect(const vec &b, const vec &s, const vec &o, const vec &ray, float &dist, int &orient);
 

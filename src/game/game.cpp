@@ -1636,11 +1636,10 @@ struct gameclient : igameclient
 			int aim = m_pvs(gamestyle) ? (isthirdperson() ? thirdpersonaim() : firstpersonaim()) : 0;
 			if(aim)
 			{
-				float cx, cy, cz;
-				vectocursor(worldpos, cx, cy, cz);
-				float ax = float(cx)/float(w), ay = float(cy)/float(h),
-					amt = float(curtime)/float(aim),
-						offx = ax-aimx, offy = ay-aimy;
+				float ax, ay, az;
+				vectocursor(worldpos, ax, ay, az);
+				float amt = float(curtime)/float(aim),
+					  offx = ax-aimx, offy = ay-aimy;
 				aimx += offx*amt;
 				aimy += offy*amt;
 			}

@@ -1020,17 +1020,13 @@ struct skelmodel : animmodel
 
         void calctagmatrix(int bone, const matrix3x4 &m, linkedpart &l)
         {
-            matrix3x4 t;
-            if(numframes) t.mul(m, bones[bone].base);
-            else t = m;
-            loopk(4)
+            if(numframes)
             {
-                l.matrix[4*k] = t.X[k];
-                l.matrix[4*k+1] = t.Y[k];
-                l.matrix[4*k+2] = t.Z[k];
+                matrix3x4 t;
+                t.mul(m, bones[bone].base);
+                l.matrix = t;
             }
-            l.matrix[3] = l.matrix[7] = l.matrix[11] = 0.0f;
-            l.matrix[15] = 1.0f;
+            else l.matrix = m;
         }
 
         void calctags(skelcacheentry &sc, part *p)
