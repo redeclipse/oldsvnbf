@@ -37,14 +37,14 @@ static struct depthfxtexture : rendertarget
 
     float eyedepth(const vec &p) const
     {
-        return max(-(p.x*mvmatrix[2] + p.y*mvmatrix[6] + p.z*mvmatrix[10] + mvmatrix[14]), 0.0f);
+        return max(-mvmatrix.transformz(p), 0.0f);
     }
 
     void addscissorvert(const vec &v, float &sx1, float &sy1, float &sx2, float &sy2)
     {
-        float w = v.x*mvpmatrix[3] + v.y*mvpmatrix[7] + v.z*mvpmatrix[11] + mvpmatrix[15],
-              x = (v.x*mvpmatrix[0] + v.y*mvpmatrix[4] + v.z*mvpmatrix[8] + mvpmatrix[12]) / w,
-              y = (v.x*mvpmatrix[1] + v.y*mvpmatrix[5] + v.z*mvpmatrix[9] + mvpmatrix[13]) / w;
+        float w = mvpmatrix.transformw(v),
+              x = mvpmatrix.transformx(v) / w,
+              y = mvpmatrix.transformy(v) / w;
         sx1 = min(sx1, x);
         sy1 = min(sy1, y);
         sx2 = max(sx2, x);
@@ -54,9 +54,9 @@ static struct depthfxtexture : rendertarget
     bool addscissorbox(const vec &center, float size)
     {
         extern float fovy, aspect;
-        vec e(center.x*mvmatrix[0] + center.y*mvmatrix[4] + center.z*mvmatrix[8] + mvmatrix[12],
-              center.x*mvmatrix[1] + center.y*mvmatrix[5] + center.z*mvmatrix[9] + mvmatrix[13],
-              center.x*mvmatrix[2] + center.y*mvmatrix[6] + center.z*mvmatrix[10] + mvmatrix[14]);
+        vec e(mvmatrix.transformx(center),
+              mvmatrix.transformy(center),
+              mvmatrix.transformz(center));
         float zz = e.z*e.z, xx = e.x*e.x, yy = e.y*e.y, rr = size*size,
               dx = zz*(xx + zz) - rr*zz, dy = zz*(yy + zz) - rr*zz,
               focaldist = 1.0f/tan(fovy*0.5f*RAD),
