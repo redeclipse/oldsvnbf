@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			94
+#define GAMEVERSION			95
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -38,10 +38,10 @@ enum								// entity types
 	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume
 	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
 	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
-	TELEPORT,						// 9  yaw, pitch, push
-	PORTAL,							// 10 yaw, pitch, id
+	TELEPORT,						// 9  yaw, pitch, push, [radius] [portal]
+	RESERVED,						// 10
 	TRIGGER,						// 11 idx, type, acttype, resettime
-	PUSHER,							// 12 zpush, ypush, xpush
+	PUSHER,							// 12 zpush, ypush, xpush, [radius]
 	FLAG,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
 	CAMERA,							// 15
@@ -69,7 +69,7 @@ struct enttypes
 	{ SPOTLIGHT,	59,		0,		EU_NONE,	true,		"spotlight" },
 	{ WEAPON,		59,		16,		EU_ITEM,	false,		"weapon" },
 	{ TELEPORT,		50,		12,		EU_AUTO,	false,		"teleport" },
-	{ PORTAL,		59,		12,		EU_AUTO,	false,		"portal" },
+	{ RESERVED,		59,		12,		EU_NONE,	false,		"reserved" },
 	{ TRIGGER,		58,		16,		EU_AUTO,	false,		"trigger" },
 	{ PUSHER,		58,		12,		EU_AUTO,	false,		"pusher" },
 	{ FLAG,			48,		16,		EU_NONE,	false,		"flag" },
@@ -649,24 +649,12 @@ struct gameentity : extentity
 {
 	int schan, lastuse, lastemit, lastspawn;
 	bool mark;
-	portal *port;
 
-	gameentity() : schan(-1), lastuse(0), lastemit(0), lastspawn(0), mark(false), port(NULL) {}
+	gameentity() : schan(-1), lastuse(0), lastemit(0), lastspawn(0), mark(false) {}
 	~gameentity()
 	{
 		if(issound(schan)) removesound(schan);
 		schan = -1;
-		removeportal();
-	}
-
-	void removeportal()
-	{
-		if(port)
-		{
-			portals.removeobj(port);
-			DELETEP(port);
-			port = NULL;
-		}
 	}
 };
 enum { ITEM_ENT = 0, ITEM_PROJ, ITEM_MAX };

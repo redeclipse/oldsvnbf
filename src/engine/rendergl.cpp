@@ -547,7 +547,7 @@ VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
 void vecfromcursor(float x, float y, float z, vec &dir)
 {
-    vec4 dir1, dir2; 
+    vec4 dir1, dir2;
     invmvpmatrix.transform(vec(x*2-1, 1-2*y, z*2-1), dir1);
     invmvpmatrix.transform(vec(x*2-1, 1-2*y, -1), dir2);
     dir = vec(dir1.x, dir1.y, dir1.z).div(dir1.w);
@@ -933,7 +933,6 @@ void drawreflection(float z, bool refract, bool clear)
     if(fogging) setfogplane(1, z);
     if(refracting) rendergrass();
     renderdecals(0);
-    renderportals(0);
     rendermaterials();
     render_particles(0);
 
@@ -1059,7 +1058,6 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 	    }
 
 		renderdecals(0);
-		renderportals(0);
 	    renderwater();
 		rendergrass();
 
@@ -1566,7 +1564,6 @@ void drawview(int targtype)
 	}
 
 	renderdecals(curtime);
-	renderportals(curtime);
 	renderwater();
 	rendergrass();
 
@@ -1789,6 +1786,7 @@ void renderprimitive(bool on)
 {
 	if (on)
 	{
+		glPushMatrix();
 		notextureshader->set();
 		glDisable(GL_TEXTURE_2D);
 		glDisable(GL_CULL_FACE);
@@ -1801,6 +1799,7 @@ void renderprimitive(bool on)
 		glEnable(GL_TEXTURE_2D);
 		glEnable(GL_CULL_FACE);
 		glDisable(GL_BLEND);
+		glPopMatrix();
 	}
 }
 
@@ -1925,51 +1924,4 @@ bool rendericon(const char *icon, int x, int y, int xs, int ys)
 		return true;
 	}
 	return false;
-}
-
-vector<portal *> portals;
-
-vec portalcolours[PORTAL_MAX] = { vec(0.f, 0.f, 1.f), vec(1.f, 0.5f, 0.f) };
-Texture *portaltexture = NULL;
-TVARN(portaltex, "textures/portal", portaltexture, 0);
-
-void renderportals(int time)
-{
-    if(portals.empty()) return;
-
-	if(!portaltexture || portaltexture==notexture)
-		if(!(portaltexture = textureload(portaltex, 0, true)))
-			fatal("could not load portal texture");
-
-    defaultshader->set();
-
-    glEnable(GL_BLEND);
-    glDisable(GL_CULL_FACE);
-    if(portaltexture->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    else glBlendFunc(GL_ONE, GL_ONE);
-
-    glBindTexture(GL_TEXTURE_2D, portaltexture->id);
-
-	loopv(portals)
-	{
-		portal *p = portals[i];
-		glPushMatrix();
-		vec o(vec(p->o).add(p->n));
-		glTranslatef(o.x, o.y, o.z);
-		glRotatef(p->yaw-180.f, 0, 0, 1);
-		glRotatef(p->pitch, 1, 0, 0);
-		glScalef(p->radius, p->radius, p->radius);
-		glColor3fv(portalcolours[p->type].v);
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.f, 0.f, 1.f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.f, 0.f, 1.f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.f, 0.f, -1.f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.f, 0.f, -1.f);
-		xtraverts += 4;
-		glEnd();
-		glPopMatrix();
-	}
-
-    glEnable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
 }

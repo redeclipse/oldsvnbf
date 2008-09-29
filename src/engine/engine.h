@@ -229,24 +229,6 @@ extern void loadbackground(int w, int h);
 extern void computescreen(const char *text = NULL, Texture *t = NULL, const char *overlaytext = NULL);
 extern void renderprogress(float bar1, const char *text1, float bar2 = 0, const char *text2 = NULL, GLuint tex = 0);
 
-enum { PORTAL_A = 0, PORTAL_B, PORTAL_MAX };
-struct portal
-{
-	int type, id;
-	float yaw, pitch, radius;
-	vec o, n;
-	portal *link;
-
-	portal(int _type, vec &_o, float _yaw, float _pitch, float _radius, int _id = -1) :
-		type(_type), id(_id), yaw(_yaw), pitch(_pitch), radius(_radius), o(_o), n(0, 0, 0), link(NULL)
-	{
-		vecfromyawpitch(yaw, pitch, 1, 0, n);
-	}
-	~portal() {}
-};
-extern vector<portal *> portals;
-extern void renderportals(int time);
-
 // renderextras
 extern void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradius = 0);
 
