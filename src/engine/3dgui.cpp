@@ -515,8 +515,8 @@ struct gui : g3d_gui
         }
         loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/t->xs; tc[k][1] = tc[k][1]/yt - float(yoff)/t->ys; }
         vec color = hit ? vec(1, 0.5f, 0.5f) : (overlaid ? vec(1, 1, 1) : light);
-        glColor3fv(color.v);
         glBindTexture(GL_TEXTURE_2D, t->id);
+        glColor3fv(color.v);
         glBegin(GL_QUADS);
         glTexCoord2fv(tc[0]); glVertex2f(x,    y);
         glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
@@ -525,10 +525,10 @@ struct gui : g3d_gui
         glEnd();
         if(glowtex)
         {
-            if(hit || overlaid) { loopk(3) color[k] *= glowcolor[k]; glColor3fv(color.v); }
-            else glColor3fv(glowcolor.v);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE);
             glBindTexture(GL_TEXTURE_2D, glowtex->id);
+            if(hit || overlaid) { loopk(3) color[k] *= glowcolor[k]; glColor3fv(color.v); }
+            else glColor3fv(glowcolor.v);
             glBegin(GL_QUADS);
             glTexCoord2fv(tc[0]); glVertex2f(x,    y);
             glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
@@ -541,8 +541,8 @@ struct gui : g3d_gui
 		if(overlaid)
 		{
 			if(!overlaytex) overlaytex = textureload(guioverlaytex, 3);
-			glColor3fv(light.v);
 			glBindTexture(GL_TEXTURE_2D, overlaytex->id);
+            glColor3fv(light.v);
 			glBegin(GL_QUADS);
 			rect_(x, y, xs, ys, 0);
 			glEnd();
@@ -704,7 +704,7 @@ struct gui : g3d_gui
 	{
 		initscale *= 0.025f;
 		basescale = initscale;
-		if(layoutpass) scale.x = scale.y = scale.z = basescale*min((totalmillis-starttime)/300.0f, 1.0f);
+        if(layoutpass) scale.x = scale.y = scale.z = min(basescale*(totalmillis-starttime)/300.0f, basescale);
         passthrough = !allowinput;
 		curdepth = -1;
 		curlist = -1;
