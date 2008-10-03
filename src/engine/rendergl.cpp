@@ -298,7 +298,7 @@ void gl_checkextensions()
         apple_vp_bug = 1;
 #endif
     }
-    else if(strstr(vendor, "Tungsten") || strstr(vendor, "Mesa") || strstr(vendor, "Microsoft") || strstr(vendor, "S3 Graphics"))
+    else if(strstr(vendor, "Tungsten") || strstr(vendor, "Mesa") || strstr(vendor, "DRI") || strstr(vendor, "Microsoft") || strstr(vendor, "S3 Graphics"))
     {
         avoidshaders = 1;
         floatvtx = 1;
