@@ -26,14 +26,12 @@ ENetSocket mastersocket = ENET_SOCKET_NULL;
 
 void setupmaster()
 {
-	conoutf("init: master");
+	conoutf("init: master (%s:%d)", *masterip ? masterip : "*", masterport);
 
-	ENetAddress address;
-	address.host = ENET_HOST_ANY;
-	address.port = masterport;
+	ENetAddress address = { ENET_HOST_ANY,  masterport };
 
-	if(*masterip && enet_address_set_host(&address, masterip)<0)
-		fatal("failed to resolve server address: %s", masterip);
+	if(*masterip && enet_address_set_host(&address, masterip) < 0)
+		fatal("failed to resolve master address: %s", masterip);
 
 	if((mastersocket = enet_socket_create(ENET_SOCKET_TYPE_STREAM)) == ENET_SOCKET_NULL)
 		fatal("failed to create master server socket");
@@ -44,7 +42,7 @@ void setupmaster()
 	if(enet_socket_listen(mastersocket, -1) < 0)
 		fatal("failed to listen on master server socket");
 
-	if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_NONBLOCK, 1)<0)
+	if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_NONBLOCK, 1) < 0)
 		fatal("failed to make master server socket non-blocking");
 
 	//enet_time_set(0);
