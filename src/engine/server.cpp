@@ -748,6 +748,8 @@ void initruntime()
 {
 	initgame(game);
 
+	execfile("autoserv.cfg");
+
 #ifdef MASTERSERVER
     setupmaster();
 #endif
@@ -805,7 +807,6 @@ int main(int argc, char* argv[])
 	atexit(cleanupserver);
 	enet_time_set(0);
 	initruntime();
-	execfile("autoserv.cfg");
 	serverloop();
 	return 0;
 }
