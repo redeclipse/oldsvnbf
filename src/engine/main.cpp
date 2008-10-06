@@ -801,12 +801,16 @@ int main(int argc, char **argv)
 
 	conoutf("\fminit: world");
 	emptymap(0, true, NULL, true);
+
+	conoutf("\fminit: config");
 	rehash(false);
+
+	conoutf("\fminit: preload");
     preloadtextures();
 	particleinit();
     initdecals();
 
-	conoutf("\fminit: mainloop");
+	conoutf("\fminit: main");
 	if(initscript) execute(initscript);
 	if(autograbinput) setvar("grabinput", 1, true);
 	if(autoconnect) connects();

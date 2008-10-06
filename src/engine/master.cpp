@@ -28,118 +28,111 @@ void setupmaster()
 {
 	conoutf("init: master");
 
-    ENetAddress address;
-    address.host = ENET_HOST_ANY;
-    address.port = masterport;
+	ENetAddress address;
+	address.host = ENET_HOST_ANY;
+	address.port = masterport;
 
-    if(*masterip)
-    {
-        if(enet_address_set_host(&address, masterip)<0)
-            fatal("failed to resolve server address: %s", masterip);
-    }
+	if(*masterip && enet_address_set_host(&address, masterip)<0)
+		fatal("failed to resolve server address: %s", masterip);
 
-    mastersocket = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
-    if(mastersocket != ENET_SOCKET_NULL && enet_socket_bind(mastersocket, &address) < 0)
-    {
-        enet_socket_destroy(mastersocket);
-        mastersocket = ENET_SOCKET_NULL;
-    }
-    if(mastersocket != ENET_SOCKET_NULL && enet_socket_listen(mastersocket, -1) < 0)
-    {
-        enet_socket_destroy(mastersocket);
-        mastersocket = ENET_SOCKET_NULL;
-    }
-    if(mastersocket == ENET_SOCKET_NULL)
-        fatal("failed to create master server socket");
-    if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_NONBLOCK, 1)<0)
-        fatal("failed to make master server socket non-blocking");
+	if((mastersocket = enet_socket_create(ENET_SOCKET_TYPE_STREAM)) == ENET_SOCKET_NULL)
+		fatal("failed to create master server socket");
+
+	if(enet_socket_bind(mastersocket, &address) < 0)
+		fatal("failed to bind master server socket");
+
+	if(enet_socket_listen(mastersocket, -1) < 0)
+		fatal("failed to listen on master server socket");
+
+	if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_NONBLOCK, 1)<0)
+		fatal("failed to make master server socket non-blocking");
 
 	//enet_time_set(0);
 
-    conoutf("master server started on %s:[%d]", *masterip ? masterip : "localhost", masterport);
+	conoutf("master server started on %s:[%d]", *masterip ? masterip : "localhost", masterport);
 }
 
 void genmasterlist()
 {
-    if(!updatemasterlist) return;
-    while(masterlists.length() && masterlists.last()->refs<=0)
-        delete masterlists.pop();
-    masterlist *l = new masterlist;
-    loopv(masterentries)
-    {
-        masterentry &s = masterentries[i];
-        string hostname;
-        if(enet_address_get_host_ip(&s.address, hostname, sizeof(hostname))<0) continue;
-        s_sprintfd(cmd)("addserver %s %d %d\n", hostname, s.port, s.qport);
-        l->buf.put(cmd, strlen(cmd));
-    }
-    l->buf.add('\0');
+	if(!updatemasterlist) return;
+	while(masterlists.length() && masterlists.last()->refs<=0)
+		delete masterlists.pop();
+	masterlist *l = new masterlist;
+	loopv(masterentries)
+	{
+		masterentry &s = masterentries[i];
+		string hostname;
+		if(enet_address_get_host_ip(&s.address, hostname, sizeof(hostname))<0) continue;
+		s_sprintfd(cmd)("addserver %s %d %d\n", hostname, s.port, s.qport);
+		l->buf.put(cmd, strlen(cmd));
+	}
+	l->buf.add('\0');
 	masterlists.add(l);
-    updatemasterlist = false;
+	updatemasterlist = false;
 }
 
 masterout unkcmdout("unknown command"), registermasterout("registered server"), renewmasterout("renewed server registration");
 
 void addmasterentry(masterclient &c, int port, int qport)
 {
-    if(masterentries.length()>=SERVER_LIMIT) return;
-    loopv(masterentries)
-    {
-        masterentry &s = masterentries[i];
-        if(s.address.host == c.address.host && s.port == port && s.qport == qport)
-        {
-            s.registertime = lastmillis;
-            c.output = &renewmasterout;
-            c.outputpos = 0;
-            return;
-        }
-    }
-    masterentry &s = masterentries.add();
-    s.address = c.address;
-    s.port = port;
-    s.qport = qport;
-    s.registertime = lastmillis;
-    c.output = &registermasterout;
-    c.outputpos = 0;
-    if(verbose) conoutf("master received registration from %s (ports %d,%d)", c.name, port, qport);
-    updatemasterlist = true;
+	if(masterentries.length()>=SERVER_LIMIT) return;
+	loopv(masterentries)
+	{
+		masterentry &s = masterentries[i];
+		if(s.address.host == c.address.host && s.port == port && s.qport == qport)
+		{
+			s.registertime = lastmillis;
+			c.output = &renewmasterout;
+			c.outputpos = 0;
+			return;
+		}
+	}
+	masterentry &s = masterentries.add();
+	s.address = c.address;
+	s.port = port;
+	s.qport = qport;
+	s.registertime = lastmillis;
+	c.output = &registermasterout;
+	c.outputpos = 0;
+	if(verbose) conoutf("master received registration from %s (ports %d,%d)", c.name, port, qport);
+	updatemasterlist = true;
 }
 
 void checkmasterentries()
 {
-    loopv(masterentries)
-    {
-        masterentry &s = masterentries[i];
-        if(ENET_TIME_DIFFERENCE(lastmillis, s.registertime) > KEEPALIVE_TIME)
-        {
-            masterentries.remove(i--);
-            updatemasterlist = true;
-        }
-    }
+	loopv(masterentries)
+	{
+		masterentry &s = masterentries[i];
+		if(ENET_TIME_DIFFERENCE(lastmillis, s.registertime) > KEEPALIVE_TIME)
+		{
+			masterentries.remove(i--);
+			updatemasterlist = true;
+		}
+	}
 }
 
 void masterlist::purge()
 {
-    refs = max(refs - 1, 0);
-    if(refs<=0 && masterlists.last()!=this)
-    {
-        masterlists.removeobj(this);
-        delete this;
-    }
+	refs = max(refs - 1, 0);
+	if(refs<=0 && masterlists.last()!=this)
+	{
+		masterlists.removeobj(this);
+		delete this;
+	}
 }
 
 void purgemasterclient(int n)
 {
-    masterclient &c = *masterclients[n];
-    if(c.output) c.output->purge();
-    enet_socket_destroy(c.socket);
-    delete masterclients[n];
-    masterclients.remove(n);
+	masterclient &c = *masterclients[n];
+	if(c.output) c.output->purge();
+	enet_socket_destroy(c.socket);
+	delete masterclients[n];
+	masterclients.remove(n);
 }
 
 bool checkmasterclientinput(masterclient &c)
 {
-    if(c.inputpos<0) return true;
+	if(c.inputpos<0) return true;
 	bool result = false;
 	const int MAXWORDS = 25;
 	char *w[MAXWORDS], *p = c.input;
@@ -149,7 +142,7 @@ bool checkmasterclientinput(masterclient &c)
 	{
 		loopi(MAXWORDS)
 		{
-            w[i] = (char *)"";
+			w[i] = (char *)"";
 			if(i > numargs) continue;
 			for(;;)
 			{
@@ -185,7 +178,7 @@ bool checkmasterclientinput(masterclient &c)
 			}
 		}
 
-        p += strcspn(p, ";\n\0"); p++;
+		p += strcspn(p, ";\n\0"); p++;
 		if(!*w[0])
 		{
 			if(*p) continue;
@@ -222,71 +215,71 @@ fd_set readset, writeset;
 
 void checkmasterclients()
 {
-    fd_set readset, writeset;
-    int nfds = mastersocket;
-    FD_ZERO(&readset);
-    FD_ZERO(&writeset);
-    FD_SET(mastersocket, &readset);
-    loopv(masterclients)
-    {
-        masterclient &c = *masterclients[i];
-        if(c.outputpos>=0) FD_SET(c.socket, &writeset);
-        else FD_SET(c.socket, &readset);
-        nfds = max(nfds, (int)c.socket);
-    }
-    timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 0;
-    if(select(nfds+1, &readset, &writeset, NULL, &tv)<=0) return;
+	fd_set readset, writeset;
+	int nfds = mastersocket;
+	FD_ZERO(&readset);
+	FD_ZERO(&writeset);
+	FD_SET(mastersocket, &readset);
+	loopv(masterclients)
+	{
+		masterclient &c = *masterclients[i];
+		if(c.outputpos>=0) FD_SET(c.socket, &writeset);
+		else FD_SET(c.socket, &readset);
+		nfds = max(nfds, (int)c.socket);
+	}
+	timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+	if(select(nfds+1, &readset, &writeset, NULL, &tv)<=0) return;
 
-    if(FD_ISSET(mastersocket, &readset))
-    {
-        ENetAddress address;
-        ENetSocket masterclientsocket = enet_socket_accept(mastersocket, &address);
-        if(masterclients.length()>=MASTER_LIMIT) enet_socket_destroy(masterclientsocket);
-        else if(masterclientsocket!=ENET_SOCKET_NULL)
-        {
-            masterclient *c = new masterclient;
-            c->address = address;
-            c->socket = masterclientsocket;
-            c->connecttime = lastmillis;
-            masterclients.add(c);
+	if(FD_ISSET(mastersocket, &readset))
+	{
+		ENetAddress address;
+		ENetSocket masterclientsocket = enet_socket_accept(mastersocket, &address);
+		if(masterclients.length()>=MASTER_LIMIT) enet_socket_destroy(masterclientsocket);
+		else if(masterclientsocket!=ENET_SOCKET_NULL)
+		{
+			masterclient *c = new masterclient;
+			c->address = address;
+			c->socket = masterclientsocket;
+			c->connecttime = lastmillis;
+			masterclients.add(c);
 			enet_address_get_host_ip(&c->address, c->name, sizeof(c->name));
-        }
-    }
+		}
+	}
 
-    loopv(masterclients)
-    {
-        masterclient &c = *masterclients[i];
-        if(c.outputpos>=0 && FD_ISSET(c.socket, &writeset))
-        {
-            ENetBuffer buf;
-            buf.data = (void *)&c.output->getbuf()[c.outputpos];
-            buf.dataLength = c.output->length()-c.outputpos;
-            int res = enet_socket_send(c.socket, NULL, &buf, 1);
-            if(res>=0)
-            {
-                c.outputpos += res;
-                if(c.outputpos>=c.output->length()) { purgemasterclient(i--); continue; }
-            }
-            else { purgemasterclient(i--); continue; }
-        }
-        if(c.outputpos<0 && FD_ISSET(c.socket, &readset))
-        {
-            ENetBuffer buf;
-            buf.data = &c.input[c.inputpos];
-            buf.dataLength = sizeof(c.input) - c.inputpos;
-            int res = enet_socket_receive(c.socket, NULL, &buf, 1);
-            if(res>0)
-            {
-                c.inputpos += res;
-                c.input[min(c.inputpos, (int)sizeof(c.input)-1)] = '\0';
-                if(!checkmasterclientinput(c)) { purgemasterclient(i--); continue; }
-            }
-            else { purgemasterclient(i--); continue; }
-        }
-        if(ENET_TIME_DIFFERENCE(lastmillis, c.connecttime) >= MASTER_TIME) { purgemasterclient(i--); continue; }
-    }
+	loopv(masterclients)
+	{
+		masterclient &c = *masterclients[i];
+		if(c.outputpos>=0 && FD_ISSET(c.socket, &writeset))
+		{
+			ENetBuffer buf;
+			buf.data = (void *)&c.output->getbuf()[c.outputpos];
+			buf.dataLength = c.output->length()-c.outputpos;
+			int res = enet_socket_send(c.socket, NULL, &buf, 1);
+			if(res>=0)
+			{
+				c.outputpos += res;
+				if(c.outputpos>=c.output->length()) { purgemasterclient(i--); continue; }
+			}
+			else { purgemasterclient(i--); continue; }
+		}
+		if(c.outputpos<0 && FD_ISSET(c.socket, &readset))
+		{
+			ENetBuffer buf;
+			buf.data = &c.input[c.inputpos];
+			buf.dataLength = sizeof(c.input) - c.inputpos;
+			int res = enet_socket_receive(c.socket, NULL, &buf, 1);
+			if(res>0)
+			{
+				c.inputpos += res;
+				c.input[min(c.inputpos, (int)sizeof(c.input)-1)] = '\0';
+				if(!checkmasterclientinput(c)) { purgemasterclient(i--); continue; }
+			}
+			else { purgemasterclient(i--); continue; }
+		}
+		if(ENET_TIME_DIFFERENCE(lastmillis, c.connecttime) >= MASTER_TIME) { purgemasterclient(i--); continue; }
+	}
 }
 
 void checkmaster()

@@ -33,9 +33,9 @@ void fatal(const char *s, ...)
     printf("ERROR: %s\n", msg);
     exit(EXIT_FAILURE);
 }
-VAR(verbose, 0, 0, 4);
+VAR(verbose, 0, 0, 5);
 #else
-VARP(verbose, 0, 0, 4);
+VARP(verbose, 0, 0, 5);
 #endif
 SVAR(game, "bfa");
 
@@ -750,10 +750,13 @@ void initruntime()
 
 	execfile("autoserv.cfg");
 
+	if(servertype)
+	{
 #ifdef MASTERSERVER
-    setupmaster();
+		if(masterserver) setupmaster();
 #endif
-	if(servertype) setupserver();
+		setupserver();
+	}
 }
 
 bool serveroption(char *opt)
