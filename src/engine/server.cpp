@@ -804,8 +804,8 @@ int main(int argc, char* argv[])
 	atexit(enet_deinitialize);
 	atexit(cleanupserver);
 	enet_time_set(0);
-	execfile("autoserv.cfg");
 	initruntime();
+	execfile("autoserv.cfg");
 	serverloop();
 	return 0;
 }

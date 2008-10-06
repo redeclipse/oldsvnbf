@@ -34,9 +34,12 @@ void setupmaster()
 
     if(*masterip)
     {
+        conoutf("attempting to use master address %s", masterip);
         if(enet_address_set_host(&address, masterip)<0)
             fatal("failed to resolve server address: %s", masterip);
     }
+    else conoutf("attempting to listen on all addresses");
+
     mastersocket = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
     if(mastersocket != ENET_SOCKET_NULL && enet_socket_bind(mastersocket, &address) < 0)
     {
