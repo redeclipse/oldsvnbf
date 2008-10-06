@@ -35,25 +35,27 @@ void setupmaster()
     if(*masterip)
     {
         if(enet_address_set_host(&address, masterip)<0)
-            fatal("failed to resolve server address: %s\n", masterip);
+            fatal("failed to resolve server address: %s", masterip);
     }
     mastersocket = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
     if(mastersocket != ENET_SOCKET_NULL && enet_socket_bind(mastersocket, &address) < 0)
     {
         enet_socket_destroy(mastersocket);
         mastersocket = ENET_SOCKET_NULL;
+        conoutf("failed to bind master socket");
     }
     if(mastersocket != ENET_SOCKET_NULL && enet_socket_listen(mastersocket, -1) < 0)
     {
         enet_socket_destroy(mastersocket);
         mastersocket = ENET_SOCKET_NULL;
+        conoutf("failed to listen on master socket");
     }
     if(mastersocket == ENET_SOCKET_NULL)
-        fatal("failed to create master server socket\n");
+        fatal("failed to create master server socket");
     if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_NONBLOCK, 1)<0)
-        fatal("failed to make master server socket non-blocking\n");
+        fatal("failed to make master server socket non-blocking");
 
-    enet_time_set(0);
+	//enet_time_set(0);
 
     conoutf("master server started on %s:[%d]", *masterip ? masterip : "localhost", masterport);
 }
