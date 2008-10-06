@@ -18,9 +18,9 @@ struct soundsample
 struct soundslot
 {
 	soundsample *sample;
-	int vol, material;
+	int vol, material, maxrad, minrad;
 
-	soundslot() : sample(NULL), vol(0), material(-1) {}
+	soundslot() : sample(NULL), vol(255), material(MAT_AIR), maxrad(-1), minrad(-1) {}
 	~soundslot() {}
 };
 
@@ -66,10 +66,10 @@ extern vector<sound> sounds;
 extern void initsound();
 extern void stopsound();
 extern void updatesounds();
-extern int addsound(const char *name, int vol, int material, vector<soundslot> &sounds);
+extern int addsound(const char *name, int vol, int material, int maxrad, int minrad, vector<soundslot> &sounds);
 extern void removesound(int c);
 extern void clearsound();
-extern int playsound(int n, int flags, int vol, vec &pos, physent *d = NULL, int *hook = NULL, int ends = 0, int maxrad = 1024, int minrad = 2);
+extern int playsound(int n, int flags, int vol, vec &pos, physent *d = NULL, int *hook = NULL, int ends = 0, int maxrad = -1, int minrad = -1);
 extern void removetrackedsounds(physent *d);
 
 extern void initmumble();

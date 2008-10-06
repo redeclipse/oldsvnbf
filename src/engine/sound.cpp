@@ -124,7 +124,7 @@ int findsound(const char *name, int vol, vector<soundslot> &sounds)
 	return -1;
 }
 
-int addsound(const char *name, int vol, int material, vector<soundslot> &sounds)
+int addsound(const char *name, int vol, int material, int maxrad, int minrad, vector<soundslot> &sounds)
 {
 	soundsample *sample = soundsamples.access(name);
 	if(!sample)
@@ -150,24 +150,14 @@ int addsound(const char *name, int vol, int material, vector<soundslot> &sounds)
 	soundslot &slot = sounds.add();
 	slot.sample = sample;
 	slot.vol = vol >= 0 ? min(vol, 255) : 255;
-	switch(material)
-	{
-		case MAT_AIR:
-		case MAT_CLIP:
-		case MAT_NOCLIP:
-		case MAT_WATER:
-		case MAT_LAVA:
-			slot.material = material;
-			break;
-		default:
-			slot.material = MAT_NOCLIP;
-			break;
-	}
+	slot.material = material;
+	slot.maxrad = maxrad > 0 ? maxrad : -1; // use these values if none are supplied when playing
+	slot.minrad = minrad >= 0 ? minrad : -1;
 	return sounds.length()-1;
 }
 
-ICOMMAND(registersound, "sis", (char *n, int *v, char *m), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_NOCLIP, gamesounds)));
-ICOMMAND(mapsound, "sis", (char *n, int *v, char *m), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_NOCLIP, mapsounds)));
+ICOMMAND(registersound, "sisss", (char *n, int *v, char *m, char *w, char *x), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, gamesounds)));
+ICOMMAND(mapsound, "sisss", (char *n, int *v, char *m, char *w, char *x), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, mapsounds)));
 
 void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minrad, vec &pos, int *curvol, int *curpan)
 {
@@ -275,8 +265,18 @@ int playsound(int n, int flags, int vol, vec &pos, physent *d, int *hook, int en
 	if(soundset.inrange(n) && soundset[n].sample->sound)
 	{
 		soundslot *slot = &soundset[n];
-		int cvol = 0, cpan = 0, v = vol > 0 && vol < 255 ? vol : 255,
-			x = maxrad > 0 ? maxrad : getworldsize()/2, y = minrad > 0 ? minrad : 0;
+		int cvol = 0, cpan = 0, v = vol > 0 && vol < 256 ? vol : 255, x = maxrad, y = minrad;
+
+		if(x <= 0)
+		{
+			if(slot->maxrad > 0) x = slot->maxrad;
+			else x = 1024;
+		}
+		if(y < 0)
+		{
+			if(slot->minrad >= 0) y = slot->minrad;
+			else y = 2;
+		}
 
 		calcvol(flags, v, slot->vol, slot->material, x, y, pos, &cvol, &cpan);
 
