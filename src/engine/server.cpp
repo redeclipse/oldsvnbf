@@ -699,11 +699,12 @@ void serverloop()
 
 void setupserver()
 {
-	conoutf("\fminit: server");
+	conoutf("\fminit: server (%s:%d)", *serverip ? serverip : "*", serverport);
 	ENetAddress address = { ENET_HOST_ANY, serverport };
 	if(*serverip)
 	{
-		if(enet_address_set_host(&address, serverip) < 0) conoutf("\frWARNING: server ip not resolved");
+		if(enet_address_set_host(&address, serverip) < 0)
+			conoutf("\frWARNING: server address not resolved");
 		else msaddress.host = address.host;
 	}
 	serverhost = enet_host_create(&address, serverclients+1, 0, serveruprate);
