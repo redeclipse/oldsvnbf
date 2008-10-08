@@ -22,6 +22,13 @@ extern icliententities *et;
 #ifdef MASTERSERVER
 #include "master.h"
 #endif
+
+enum
+{
+	S_GUIPRESS = 0, S_GUIBACK, S_GUIACT,
+	S_GAMESPECIFIC
+};
+
 #ifndef STANDALONE
 #include "world.h"
 #include "octa.h"

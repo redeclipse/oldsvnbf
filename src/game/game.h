@@ -7,10 +7,9 @@
 #define DNF 100.0f			// for normalized vectors
 #define DVELF 1.0f			// for playerspeed based velocity vectors
 
-// hardcoded sounds, defined in sounds.cfg
 enum
 {
-	S_JUMP = 0, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
+	S_JUMP = S_GAMESPECIFIC, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR,
 	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
 	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURNING, S_FLBURN, S_RIFLE,
