@@ -57,6 +57,8 @@ struct sound
 #define SND_NODELAY	0x0020	// disable delay
 #define SND_NOCULL	0x0040	// disable culling
 
+#define SND_FORCED	SND_NOATTEN|SND_NODELAY|SND_NOCULL
+
 extern hashtable<const char *, soundsample> soundsamples;
 extern vector<soundslot> gamesounds, mapsounds;
 extern vector<sound> sounds;

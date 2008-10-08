@@ -6,7 +6,10 @@ vector<ircnet> ircnets;
 
 ircnet *ircfind(const char *name)
 {
-	if(name && *name) loopv(ircnets) if(!strcmp(ircnets[i].name, name)) return &ircnets[i];
+	if(name && *name)
+	{
+		loopv(ircnets) if(!strcmp(ircnets[i].name, name)) return &ircnets[i];
+	}
 	return NULL;
 }
 
@@ -40,8 +43,8 @@ void ircsend(ircnet *n, const char *msg, ...)
 	if(!n) return;
 	s_sprintfdlv(str, msg, msg);
 	if(n->sock == ENET_SOCKET_NULL) return;
-	s_strcat(str, "\n");
 	console("[%s] >>> %s", 0, n->name, str);
+	s_strcat(str, "\n");
 	ENetBuffer buf;
 	buf.data = str;
 	buf.dataLength = strlen((char *)buf.data);
@@ -139,8 +142,11 @@ ICOMMAND(connectirc, "s", (const char *name), {
 
 ircchan *ircfindchan(ircnet *n, const char *name)
 {
-	if(n && name && *name) loopv(n->channels) if(!strcasecmp(n->channels[i].name, name))
-		return &n->channels[i];
+	if(n && name && *name)
+	{
+		loopv(n->channels) if(!strcasecmp(n->channels[i].name, name))
+			return &n->channels[i];
+	}
 	return NULL;
 }
 
