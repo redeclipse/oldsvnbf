@@ -409,8 +409,6 @@ bool remip(cube &c, int x, int y, int z, int size)
     else if((remipprogress++&0x7FF)==1) renderprogress(float(remipprogress)/remiptotal, "remipping...");
 
 	bool perfect = true;
-	uchar mat = ch[0].ext ? ch[0].ext->material : MAT_AIR;
-
 	loopi(8)
 	{
 		ivec o(i, x, y, z, size);
@@ -424,6 +422,27 @@ bool remip(cube &c, int x, int y, int z, int size)
 	if(!perfect) return false;
 	if(size<<1 > VVEC_INT_MASK+1) return false;
 
+    uchar mat = MAT_AIR;
+    loopi(8)
+    {
+        mat = ch[i].ext ? ch[i].ext->material : MAT_AIR;
+        if((mat&MATF_CLIP) == MAT_NOCLIP)
+        {
+            if(i > 0) return false;
+            while(++i < 8) if(!ch[i].ext || ch[i].ext->material != mat) return false;
+            break;
+        }
+        else if(!isentirelysolid(ch[i]))
+        {
+            while(++i < 8)
+            {
+                uchar omat = ch[i].ext ? ch[i].ext->material : MAT_AIR;
+                if(isentirelysolid(ch[i]) ? (omat&MATF_CLIP) == MAT_NOCLIP : mat != omat) return false;
+            }
+            break;
+        }
+    }
+
 	cube n = c;
 	forcemip(n);
 	n.children = NULL;
@@ -436,8 +455,7 @@ bool remip(cube &c, int x, int y, int z, int size)
 	{
 		if(ch[i].faces[0] != nh[i].faces[0] ||
 			ch[i].faces[1] != nh[i].faces[1] ||
-			ch[i].faces[2] != nh[i].faces[2] ||
-			(ch[i].ext ? ch[i].ext->material : MAT_AIR) != mat)
+			ch[i].faces[2] != nh[i].faces[2])
 			{ freeocta(nh); return false; }
 
 		if(isempty(ch[i]) && isempty(nh[i])) continue;
