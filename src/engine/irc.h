@@ -48,5 +48,6 @@ extern bool ircjoin(ircnet *n, ircchan *c);
 extern bool ircjoinchan(ircnet *n, const char *name);
 extern bool ircaddchan(int type, const char *name, const char *channel, const char *passkey = "");
 extern void ircparse(ircnet *n, char *reply);
+extern void ircdiscon(ircnet *n);
 extern void irccleanup();
 extern void ircslice();
