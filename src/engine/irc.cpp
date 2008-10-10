@@ -273,7 +273,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 					p++;
 					const char *start = p;
 					p += strcspn(p, "\001\0");
-					char *r = newstring(p, p-start);
+					char *r = p-start > 0 ? newstring(start, p-start) : newstring("");
 					if(ismsg)
 					{
 						if(!strcasecmp(q, "ACTION"))
