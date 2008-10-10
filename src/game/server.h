@@ -2563,6 +2563,7 @@ struct gameserver : igameserver
 			*muts = gametype[*mode].implied;
 			*style = G_S_PVS;
 		}
+		if(!m_pvs(*style)) *style = G_S_PVS;
 
 #if 0
 		if(gametype[*mode].styles && !(gametype[*mode].styles & (1<<*style)))

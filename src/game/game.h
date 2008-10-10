@@ -34,7 +34,7 @@ enum								// entity types
 	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, team, id
 	ENVMAP = ET_ENVMAP,				// 4  radius
 	PARTICLES = ET_PARTICLES,		// 5  type, [others]
-	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume
+	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume, flags
 	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
 	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
 	TELEPORT,						// 9  yaw, pitch, push, [radius] [portal]

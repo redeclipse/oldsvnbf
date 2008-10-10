@@ -185,6 +185,18 @@ struct entities : icliententities
 				addentinfo(str);
 			}
 		}
+		if(type == MAPSOUND)
+		{
+			if(full)
+			{
+				if(mapsounds.inrange(attr1))
+					addentinfo(mapsounds[attr1].sample->name);
+				//if(e.attr5 & SND_LOOP) addentinfo("loop");
+				if(attr5 & SND_NOATTEN) addentinfo("noatten");
+				if(attr5 & SND_NODELAY) addentinfo("nodelay");
+				if(attr5 & SND_NOCULL) addentinfo("nocull");
+			}
+		}
 		if(type == TRIGGER)
 		{
 			if(full)
@@ -201,7 +213,10 @@ struct entities : icliententities
 		}
 		if(type == WAYPOINT)
 		{
-			if(attr1 & WP_CROUCH) addentinfo("crouch");
+			if(full)
+			{
+				if(attr1 & WP_CROUCH) addentinfo("crouch");
+			}
 		}
 		return entinfostr;
 	}
@@ -513,7 +528,10 @@ struct entities : icliententities
 							{
 								if(!issound(f.schan))
 								{
-									playsound(f.attr1, SND_MAP, f.attr4, both ? f.o : e.o, NULL, &f.schan, 0, f.attr2, f.attr3);
+									int flags = int(f.attr5);
+									if(!(flags & SND_MAP)) flags |= SND_MAP;
+									if(flags & SND_LOOP) flags &= ~SND_LOOP;
+									playsound(f.attr1, flags, f.attr4, both ? f.o : e.o, NULL, &f.schan, 0, f.attr2, f.attr3);
 									f.lastemit = lastmillis;
 									if(both) e.lastemit = lastmillis;
 								}
@@ -1425,7 +1443,10 @@ struct entities : icliententities
 			{
 				if(!issound(e.schan))
 				{
-					playsound(e.attr1, SND_MAP|SND_LOOP, e.attr4, e.o, NULL, &e.schan, 0, e.attr2, e.attr3);
+					int flags = int(e.attr5);
+					if(!(flags & SND_MAP)) flags |= SND_MAP;
+					if(!(flags & SND_LOOP)) flags |= SND_LOOP; // only this type uses loop
+					playsound(e.attr1, flags, e.attr4, e.o, NULL, &e.schan, 0, e.attr2, e.attr3);
 					e.lastemit = lastmillis; // prevent clipping when moving around
 				}
 			}
