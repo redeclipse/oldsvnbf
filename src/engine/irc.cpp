@@ -83,14 +83,14 @@ int ircrecv(ircnet *n, int timeout)
 		if(len <= 0)
 		{
 			enet_socket_destroy(n->sock);
-			return NULL;
+			return -1;
 		}
 		buf.data = ((char *)buf.data)+len;
 		((char *)buf.data)[0] = 0;
 		buf.dataLength -= len;
 		return len;
 	}
-	return -1;
+	return 0;
 }
 
 void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *passkey)
@@ -214,16 +214,29 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 	s_sprintfdlv(str, msg, msg);
 	string st, s;
 	filtertext(st, str);
-	ircchan *c = ircfindchan(n, target);
-	if(c)
+	if(target && *target && strcasecmp(target, n->nick))
 	{
-		s_sprintf(s)("[%s]:%s", n->name, c->name);
-		while(c->lines.length() >= 1000)
+		ircchan *c = ircfindchan(n, target);
+		if(c)
 		{
-			char *s = c->lines.remove(0);
-			DELETEA(s);
+			s_sprintf(s)("[%s]:%s", n->name, c->name);
+			while(c->lines.length() >= 1000)
+			{
+				char *s = c->lines.remove(0);
+				DELETEA(s);
+			}
+			c->lines.add(newstring(str));
 		}
-		c->lines.add(newstring(str));
+		else
+		{
+			s_sprintf(s)("[%s]:%s", n->name, target);
+			while(n->lines.length() >= 1000)
+			{
+				char *s = n->lines.remove(0);
+				DELETEA(s);
+			}
+			n->lines.add(newstring(str));
+		}
 	}
 	else
 	{
@@ -247,7 +260,8 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 		if(numargs > g+2)
 		{
 			bool ismsg = strcasecmp(w[g], "NOTICE");
-			if(*w[g+2] == '\001')
+			int len = strlen(w[g+2]);
+			if(w[g+2][0] == '\001' && w[g+2][len-1] == '\001')
 			{
 				char *p = w[g+2];
 				p++;
@@ -266,12 +280,15 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 							ircprintf(n, g ? w[g+1] : NULL, "\fm* %s %s", user[0], r);
 						else
 						{
+							ircprintf(n, g ? w[g+1] : NULL, "\fr%s requests: %s %s", user[0], q, r);
+
 							if(!strcasecmp(q, "VERSION"))
 								ircsend(n, "NOTICE %s :\001VERSION %s v%.2f (%s) IRC interface\001", user[0], ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE);
-							ircprintf(n, g ? w[g+1] : NULL, "\fr* %s requests: %s %s", user[0], q, r);
+							else if(!strcasecmp(q, "PING")) // eh, echo back
+								ircsend(n, "NOTICE %s :\001PING %s\001", user[0], r);
 						}
 					}
-					else ircprintf(n, g ? w[g+1] : NULL, "\fr* %s replied: %s %s", user[0], q, r);
+					else ircprintf(n, g ? w[g+1] : NULL, "\fr%s replied: %s %s", user[0], q, r);
 					DELETEA(q); DELETEA(r);
 				}
 			}
@@ -284,7 +301,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 		if(numargs > g+1)
 		{
 			if(!strcasecmp(user[0], n->nick)) s_strcpy(n->nick, w[g+1]);
-			ircprintf(n, NULL, "\fm* %s (%s@%s) is now known as %s", user[0], user[1], user[2], w[g+1]);
+			ircprintf(n, NULL, "\fm%s (%s@%s) is now known as %s", user[0], user[1], user[2], w[g+1]);
 		}
 	}
 	else if(!strcasecmp(w[g], "JOIN"))
@@ -297,7 +314,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 				c->state = IRCC_JOINED;
 				c->lastjoin = lastmillis;
 			}
-			ircprintf(n, w[g+1], "\fg* %s (%s@%s) has joined %s", user[0], user[1], user[2], w[g+1]);
+			ircprintf(n, w[g+1], "\fg%s (%s@%s) has joined", user[0], user[1], user[2]);
 		}
 	}
 	else if(!strcasecmp(w[g], "PART"))
@@ -310,7 +327,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 				c->state = IRCC_NONE;
 				c->lastjoin = lastmillis;
 			}
-			ircprintf(n, w[g+1], "\fo* %s (%s@%s) has left %s", user[0], user[1], user[2], w[g+1]);
+			ircprintf(n, w[g+1], "\fo%s (%s@%s) has left", user[0], user[1], user[2]);
 		}
 	}
 	else if(!strcasecmp(w[g], "KICK"))
@@ -323,15 +340,15 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 				c->state = IRCC_KICKED;
 				c->lastjoin = lastmillis;
 			}
-			ircprintf(n, w[g+1], "\fr* %s (%s@%s) has kicked %s from %s", user[0], user[1], user[2], w[g+2], w[g+1]);
+			ircprintf(n, w[g+1], "\fr%s (%s@%s) has kicked %s from %s", user[0], user[1], user[2], w[g+2], w[g+1]);
 		}
 	}
 	else if(!strcasecmp(w[g], "MODE"))
 	{
 		if(numargs > g+2)
-			ircprintf(n, w[g+1], "\fr* %s (%s@%s) sets mode: %s %s", user[0], user[1], user[2], w[g+1], w[g+2]);
+			ircprintf(n, w[g+1], "\fr%s (%s@%s) sets mode: %s %s", user[0], user[1], user[2], w[g+1], w[g+2]);
 		else if(numargs > g+1)
-			ircprintf(n, w[g+1], "\fr* %s (%s@%s) sets mode: %s", user[0], user[1], user[2], w[g+1]);
+			ircprintf(n, w[g+1], "\fr%s (%s@%s) sets mode: %s", user[0], user[1], user[2], w[g+1]);
 	}
 	else if(!strcasecmp(w[g], "PING"))
 	{
@@ -362,6 +379,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 			s_strcat(s, w[i]);
 		}
 		if(s[0]) ircprintf(n, targ, "\fw%s %s", w[g], s);
+		else ircprintf(n, targ, "\fw%s", w[g]);
 		if(numeric) switch(numeric)
 		{
 			case 376:
@@ -370,7 +388,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 				if(n->state == IRC_CONN)
 				{
 					n->state = IRC_ONLINE;
-					ircprintf(n, NULL, "\fb* Now connected to %s as %s", user[0], n->nick);
+					ircprintf(n, NULL, "\fbNow connected to %s as %s", user[0], n->nick);
 				}
 				break;
 			}
@@ -390,7 +408,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 					c->state = IRCC_BANNED;
 					c->lastjoin = lastmillis;
 					if(c->type == IRCCT_AUTO)
-						ircprintf(n, w[g+2], "\fb* Waiting 5 mins to rejoin %s", c->name);
+						ircprintf(n, w[g+2], "\fbWaiting 5 mins to rejoin %s", c->name);
 				}
 			}
 			default: break;
@@ -409,21 +427,26 @@ void ircparse(ircnet *n, char *reply)
 		bool line = false;
 		int numargs = 0, g = *p == ':' ? 1 : 0;
 		if(g) p++;
+		bool full = false;
 		loopi(MAXWORDS)
 		{
 			if(!p || !*p) break;
 			const char *word = p;
-			bool full = i && *p == ':';
+			if(*p == ':') full = true; // uses the rest of the input line then
 			p += strcspn(p, full ? "\r\n\0" : " \r\n\0");
-			if(p-word <= full ? 1 : 0) break;
-			else
+
+			char *s = NULL;
+			if(p-word > (full ? 1 : 0))
 			{
-				char *s = full ? newstring(word+1, p-word-1) : newstring(word, p-word);
-				w[numargs] = s;
-				numargs++;
-				if(*p == '\n' || *p == '\r') line = true;
-				if(*p) p++;
+				if(full) s = newstring(word+1, p-word-1);
+				else s = newstring(word, p-word);
 			}
+			else s = newstring("");
+			w[numargs] = s;
+			numargs++;
+
+			if(*p == '\n' || *p == '\r') line = true;
+			if(*p) p++;
 			if(line) break;
 		}
 		if(line && numargs)
@@ -467,12 +490,23 @@ void ircparse(ircnet *n, char *reply)
 	*reply = 0;
 }
 
+void ircdiscon(ircnet *n)
+{
+	if(!n) return;
+	ircprintf(n, NULL, "Disconnected");
+	enet_socket_destroy(n->sock);
+	n->state = IRC_DISC;
+	n->sock = ENET_SOCKET_NULL;
+	n->lastattempt = lastmillis;
+}
+
+
 void irccleanup()
 {
 	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL)
 	{
 		ircnet *n = &ircnets[i];
-		enet_socket_destroy(n->sock);
+		ircdiscon(n);
 	}
 }
 
@@ -500,6 +534,7 @@ void ircslice()
 					break;
 				}
 				case IRC_ONLINE:
+				{
 					loopvj(n->channels)
 					{
 						ircchan *c = &n->channels[j];
@@ -509,18 +544,25 @@ void ircslice()
 								ircjoin(n, c);
 						}
 					}
+					// fall through
+				}
 				case IRC_CONN:
 				{
-					if(ircrecv(n) > 0) ircparse(n, (char *)n->input);
+					switch(ircrecv(n))
+					{
+						case -1: ircdiscon(n); break; // fail
+						case 0: break;
+						default:
+						{
+							ircparse(n, (char *)n->input);
+							break;
+						}
+					}
 					break;
 				}
 				default:
 				{
-					ircprintf(n, NULL, "* disconnected");
-					enet_socket_destroy(n->sock);
-					n->state = IRC_DISC;
-					n->sock = ENET_SOCKET_NULL;
-					n->lastattempt = lastmillis;
+					ircdiscon(n);
 					break;
 				}
 			}
@@ -551,7 +593,7 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 					ircsend(n, "PRIVMSG %s :\001ACTION %s\001", c->name, r);
 					ircprintf(n, c->name, "\fm* %s %s", n->nick, r);
 				}
-				else ircprintf(n, NULL, "\fb* You are not on a channel");
+				else ircprintf(n, NULL, "\fbYou are not on a channel");
 			}
 			else if(!strcasecmp(q, "join"))
 			{
@@ -569,7 +611,7 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 			DELETEA(q); DELETEA(r);
 			return;
 		}
-		ircprintf(n, c ? c->name : NULL, "\fb* You are not on a channel");
+		ircprintf(n, c ? c->name : NULL, "\fbYou are not on a channel");
 	}
 	else if(c)
 	{
