@@ -2484,7 +2484,7 @@ struct gameserver : igameserver
 		int numplayers = 0;
 		loopv(clients) if(clients[i] && clients[i]->state.aitype == AI_NONE) numplayers++;
 		putint(p, numplayers);
-		putint(p, 6);					// number of attrs following
+		putint(p, 7);					// number of attrs following
 		putint(p, GAMEVERSION);			// 1
 		putint(p, gamemode);			// 2
 		putint(p, mutators);			// 3
