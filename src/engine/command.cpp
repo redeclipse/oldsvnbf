@@ -685,10 +685,6 @@ void writecfg()
 	if(!f) return;
 	cc->writeclientinfo(f);
 	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n", ENG_VERSION, sv->gamever());
-#else
-	FILE *f = openfile("server.cfg", "w");
-	if(!f) return;
-#endif
 	enumerate(*idents, ident, id,
         if(id.flags&IDF_PERSIST) switch(id.type)
 		{
@@ -703,12 +699,11 @@ void writecfg()
 			}
 		}
 	);
-#ifndef STANDALONE
 	writebinds(f);
 	writecompletions(f);
 	fprintf(f, "] [ echo \"WARNING: config from different version ignored\" ]\n");
-#endif
 	fclose(f);
+#endif
 }
 
 COMMAND(writecfg, "");

@@ -216,7 +216,7 @@ struct weaponstate
 				loopi(SGRAYS)
 				{
 					particle_splash(0, 20, 250, sg[i]);
-                    particle_flare(from, sg[i], 50, 10, d);
+                    particle_flare(from, sg[i], 250, 10, d);
                     if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
 				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
@@ -229,7 +229,7 @@ struct weaponstate
 			case GUN_PISTOL:
 			{
 				particle_splash(0, 200, 250, to);
-                particle_flare(from, to, 50, 10, d);
+                particle_flare(from, to, 250, 10, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
                 adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
 				part_create(20, 50, from, 0xFFAA00, 4.f, d);

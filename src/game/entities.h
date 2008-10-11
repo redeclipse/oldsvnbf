@@ -191,10 +191,9 @@ struct entities : icliententities
 			{
 				if(mapsounds.inrange(attr1))
 					addentinfo(mapsounds[attr1].sample->name);
-				//if(e.attr5 & SND_LOOP) addentinfo("loop");
-				if(attr5 & SND_NOATTEN) addentinfo("noatten");
-				if(attr5 & SND_NODELAY) addentinfo("nodelay");
-				if(attr5 & SND_NOCULL) addentinfo("nocull");
+				if(attr5 & 0x01) addentinfo("noatten");
+				if(attr5 & 0x02) addentinfo("nodelay");
+				if(attr5 & 0x04) addentinfo("nocull");
 			}
 		}
 		if(type == TRIGGER)
@@ -528,9 +527,10 @@ struct entities : icliententities
 							{
 								if(!issound(f.schan))
 								{
-									int flags = int(f.attr5);
-									if(!(flags & SND_MAP)) flags |= SND_MAP;
-									if(flags & SND_LOOP) flags &= ~SND_LOOP;
+									int flags = SND_MAP;
+									if(f.attr5 & 0x01) flags |= SND_NOATTEN;
+									if(f.attr5 & 0x02) flags |= SND_NODELAY;
+									if(f.attr5 & 0x04) flags |= SND_NOCULL;
 									playsound(f.attr1, flags, f.attr4, both ? f.o : e.o, NULL, &f.schan, 0, f.attr2, f.attr3);
 									f.lastemit = lastmillis;
 									if(both) e.lastemit = lastmillis;
@@ -1320,18 +1320,9 @@ struct entities : icliententities
 						}
 					}
 				}
-
-				vec fr(vec(e.o).add(vec(0, 0, RENDERPUSHZ))),
-					dr(vec(f.o).add(vec(0, 0, RENDERPUSHZ)));
-				vec col(0.5f, both ? 0.25f : 0.0f, 0.f);
-				renderline(fr, dr, col.x, col.y, col.z, false);
-				dr.sub(fr);
-				dr.normalize();
-				float yaw, pitch;
-				vectoyawpitch(dr, yaw, pitch);
-				dr.mul(RENDERPUSHX);
-				dr.add(fr);
-				rendertris(dr, yaw, pitch, 2.f, col.x*2.f, col.y*2.f, col.z*2.f, true, false);
+				part_flare(vec(e.o).add(vec(0, 0, RENDERPUSHZ)),
+					vec(f.o).add(vec(0, 0, RENDERPUSHZ)),
+						10, 21, both ? 0xF08020 : 0xF02020, 0.2f);
 			}
 		}
 	}
@@ -1443,9 +1434,10 @@ struct entities : icliententities
 			{
 				if(!issound(e.schan))
 				{
-					int flags = int(e.attr5);
-					if(!(flags & SND_MAP)) flags |= SND_MAP;
-					if(!(flags & SND_LOOP)) flags |= SND_LOOP; // only this type uses loop
+					int flags = SND_MAP;
+					if(e.attr5 & 0x01) flags |= SND_NOATTEN;
+					if(e.attr5 & 0x02) flags |= SND_NODELAY;
+					if(e.attr5 & 0x04) flags |= SND_NOCULL;
 					playsound(e.attr1, flags, e.attr4, e.o, NULL, &e.schan, 0, e.attr2, e.attr3);
 					e.lastemit = lastmillis; // prevent clipping when moving around
 				}
