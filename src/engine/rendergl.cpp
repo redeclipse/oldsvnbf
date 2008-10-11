@@ -1197,7 +1197,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 		glPopMatrix();
 
 		int x = (w-512)/2, y = 128;
-		settexture("textures/logo");
+		settexture("textures/logo", 3);
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); glVertex2f(x,	 y);
 		glTexCoord2f(1, 0); glVertex2f(x+512, y);

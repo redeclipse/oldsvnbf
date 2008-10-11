@@ -250,7 +250,7 @@ void save_config(char *mname)
 
 	int aliases = 0;
 	enumerate(*idents, ident, id, {
-		if(id.type == ID_ALIAS && id.flags&IDF_WORLD && strlen(id.name))
+		if(id.type == ID_ALIAS && id.flags&IDF_WORLD && strlen(id.name) && strlen(id.action))
 		{
 			aliases++;
             fprintf(h, "\"%s\" = [%s]\n", id.name, id.action);
@@ -796,7 +796,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 
 			if(hdr.version<25) hdr.numpvs = 0;
 		}
-		else 
+		else
         {
             gzclose(f);
             continue;

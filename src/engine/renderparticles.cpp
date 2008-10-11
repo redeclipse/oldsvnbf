@@ -647,6 +647,7 @@ static partrenderer *parts[] =
     new trailrenderer("particles/entity",			PT_TRAIL|PT_LERP,   2, 0),			// 18 water, entity
     &noglarefireballs,																	// 19 explosion fireball no glare
     new quadrenderer("particles/muzzle",			PT_PART|PT_GLARE,  0, 0, 6),		// 20 muzzle flashes
+    new taperenderer("particles/line",				PT_TAPE|PT_GLARE,   0, 0),			// 21 line
     &flares // must be done last
 };
 
@@ -907,7 +908,7 @@ static struct partmap { int type; int color; float size; } partmaps[] =
     {  8, 0xFFFFFF, 4.8f }, // 7 green:  big fireball3
     {  9, 0xFFFFFF, 3.0f }, // 8 TEXT RED
     {  9, 0xFFFFFF, 4.0f }, // 9 TEXT GREEN
-    { 10, 0xFFC864, 0.6f }, // 10 yellow flare
+    { 10, 0xFFC864, 1.2f }, // 10 yellow flare
     { 11, 0xFFFFFF, 2.0f }, // 11 TEXT DARKGREEN, SMALL, NON-MOVING
     {  8, 0xFFFFFF, 2.0f }, // 12 green small fireball3
     { 11, 0xFFFFFF, 2.0f }, // 13 TEXT RED, SMALL, NON-MOVING
@@ -921,13 +922,13 @@ static struct partmap { int type; int color; float size; } partmaps[] =
     { 14, 0x897661, 0.6f }, // 21 greyish-brown:   small  slowly sinking smoke trail
     { 15, 0xFF6666, 4.0f }, // 22 red explosion fireball
     { 15, 0x888822, 4.0f }, // 23 orange explosion fireball
-    { 11, 0xFFFFFF, 1.5f }, // 24 TEXT WHITE, TINY, NON-MOVING
+    { 11, 0xFFFFFF, 1.2f }, // 24 TEXT WHITE, TINY, NON-MOVING
     { 17, 0x897661, 2.4f }, // 25 greyish-brown:   big  fast rising smoke
     { 11, 0xFFFFFF, 2.5f }, // 26 TEXT WHITE, NON-MOVING
     { 11, 0xFFFFFF, 2.0f }, // 27 TEXT WHITE, SMALL, NON-MOVING
-    { 16, 0xFFFFFF, 0.3f }, // 28 lightning
-    { 16, 0xFF2222, 0.3f }, // 29 lightning: red
-    { 16, 0x2222FF, 0.3f }, // 30 lightning: blue
+    { 16, 0xFFFFFF, 0.6f }, // 28 lightning
+    { 16, 0xFF2222, 0.6f }, // 29 lightning: red
+    { 16, 0x2222FF, 0.6f }, // 30 lightning: blue
     { 19, 0x802020, 4.8f }, // 31 fireball: red, no glare
     { 19, 0x2020FF, 4.8f }, // 32 fireball: blue, no glare
     { 19, 0x208020, 4.8f }, // 33 fireball: green, no glare
