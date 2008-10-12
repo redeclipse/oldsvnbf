@@ -1434,7 +1434,7 @@ struct entities : icliententities
 			{
 				if(!issound(e.schan))
 				{
-					int flags = SND_MAP;
+					int flags = SND_MAP|SND_LOOP;
 					if(e.attr5 & 0x01) flags |= SND_NOATTEN;
 					if(e.attr5 & 0x02) flags |= SND_NODELAY;
 					if(e.attr5 & 0x04) flags |= SND_NOCULL;

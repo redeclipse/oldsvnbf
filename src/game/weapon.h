@@ -173,28 +173,32 @@ struct weaponstate
 
 	vec gunorigin(const vec &from, const vec &to, gameent *d, bool third)
 	{
-		bool oversized = d->gunselect == GUN_SG || d->gunselect == GUN_FLAMER || d->gunselect == GUN_RIFLE;
-		float hoff = 0.f, roff = 0.f, dmul = oversized ? 3.f : 2.f;
-		if(third)
-		{
-			hoff = oversized ? 0.88f : 0.86f;
-			roff = oversized ? 0.33f : 0.35f;
-		}
+		vec origin;
+		if(d->muzzle.x >= 0) origin = d->muzzle;
 		else
 		{
-			hoff = oversized ? 0.92f : 0.89f;
-			roff = oversized ? 0.33f : 0.28f;
+			bool oversized = d->gunselect == GUN_SG || d->gunselect == GUN_FLAMER || d->gunselect == GUN_RIFLE;
+			float hoff = 0.f, roff = 0.f, dmul = oversized ? 3.f : 2.f;
+			if(third)
+			{
+				hoff = oversized ? 0.88f : 0.86f;
+				roff = oversized ? 0.33f : 0.35f;
+			}
+			else
+			{
+				hoff = oversized ? 0.92f : 0.89f;
+				roff = oversized ? 0.35f : 0.33f;
+			}
+			vec front, right;
+			vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
+			front.mul(d->radius*dmul);
+			origin = vec(from).add(front);
+			origin.z += (d->aboveeye + d->height)*hoff - d->height;
+			vecfromyawpitch(d->yaw, 0, 0, -1, right);
+			right.mul(d->radius*roff);
+			origin.add(right);
 		}
-		vec offset(from);
-		vec front, right;
-		vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
-		front.mul(d->radius*dmul);
-		offset.add(front);
-		offset.z += (d->aboveeye + d->height)*hoff - d->height;
-		vecfromyawpitch(d->yaw, 0, 0, -1, right);
-		right.mul(d->radius*roff);
-		offset.add(right);
-		return offset;
+		return origin;
 	}
 
 	void shootv(int gun, int power, vec &from, vec &to, gameent *d, bool local)	 // create visual effect from a shot
@@ -228,7 +232,7 @@ struct weaponstate
 			case GUN_CG:
 			case GUN_PISTOL:
 			{
-				particle_splash(0, 200, 250, to);
+				particle_splash(0, 200, gun == GUN_CG ? 100 : 200, to);
                 particle_flare(from, to, 250, 10, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
                 adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);

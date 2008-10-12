@@ -1474,9 +1474,7 @@ struct gameclient : igameclient
         {
         	case PT_PART: case PT_TAPE: case PT_FIREBALL: case PT_LIGHTNING: case PT_FLARE:
         	{
-                gameent *owner = (gameent *)p->owner;
-                if(owner->muzzle.x >= 0) o = owner->muzzle;
-				else o = ws.gunorigin(p->owner->o, d, (gameent *)p->owner, p->owner != player1 || isthirdperson());
+				o = ws.gunorigin(p->owner->o, d, (gameent *)p->owner, p->owner != player1 || isthirdperson());
 				break;
         	}
         	default: break;
