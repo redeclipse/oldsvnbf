@@ -778,29 +778,62 @@ COMMAND(texture, "ssiiif");
 
 void texturedel(int i, bool local)
 {
-	if (curtexnum > 8)
+	loopj(curtexnum-i)
 	{
-		if (i >= 0 && i <= curtexnum)
-		{
-			loopj(curtexnum-i)
-			{
-				int oldtex = i+j, newtex = max(i+j-1, 0);
-				if(cc && local) cc->edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
-				loopk(8) replacetexcube(worldroot[k], oldtex, newtex);
-			}
-			slots[i].reset();
-			slots.remove(i);
-
-			curtexnum--;
-			allchanged();
-		}
-		else if (local) conoutf("\frtexture to delete must be in range 0..%d", curtexnum);
+		int oldtex = i+j, newtex = max(i+j-1, 0);
+		if(cc && local) cc->edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
+		loopk(8) replacetexcube(worldroot[k], oldtex, newtex);
 	}
-	else if (local) conoutf("\frnot enough texture slots, please add another one first");
+	slots[i].reset();
+	slots.remove(i);
+	curtexnum--;
 }
 
 ICOMMAND(texturedel, "i", (int *i), {
-	texturedel(*i, true);
+	if (curtexnum > 8)
+	{
+		if (*i >= 0 && *i <= curtexnum)
+		{
+			texturedel(*i, true);
+			allchanged();
+		}
+		else conoutf("\frtexture to delete must be in range 0..%d", curtexnum);
+	}
+	else conoutf("\frnot enough texture slots, please add another one first");
+});
+
+bool findcubetex(cube *c, int i)
+{
+	loopj(8)
+	{
+		if(c[j].children)
+		{
+			if(findcubetex(c[j].children, i)) return true;
+		}
+		else if(!isempty(c[j]))
+		{
+			loopk(6) if(c[j].texture[k] == i) return true;
+		}
+	}
+	return false;
+}
+
+void texturecull(bool local)
+{
+	loopirev(curtexnum)
+	{
+		if(curtexnum <= 8) break;
+		if(!findcubetex(worldroot, i)) texturedel(i, local);
+	}
+}
+
+ICOMMAND(texturecull, "", (void), {
+	if (curtexnum > 8)
+	{
+		texturecull(true);
+		allchanged();
+	}
+	else conoutf("\frnot enough texture slots");
 });
 
 void autograss(char *name)
