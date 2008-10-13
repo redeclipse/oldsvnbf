@@ -1290,10 +1290,10 @@ struct gameclient : igameclient
 											player1->carry() >= MAXCARRY) drop = player1->drop(e.attr1);
 									if(isgun(drop))
 									{
+										s_sprintfd(dropgun)("%s", et.entinfo(WEAPON, drop, player1->ammo[drop], 0, 0, 0, true));
 										tp += draw_textx("Press [ \fs\fg%s\fS ] to swap", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
 										tp += draw_textx("[ \fs%s\fS ] for [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1,
-											et.entinfo(WEAPON, drop, player1->ammo[drop], 0, 0, 0, true),
-												et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
+											dropgun, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
 									}
 									else
 									{
