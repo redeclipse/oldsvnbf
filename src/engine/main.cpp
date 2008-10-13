@@ -698,7 +698,7 @@ void eastereggs()
 bool findoctadir(const char *name)
 {
 	s_sprintfd(octalogo)("%s/data/sauer_logo_512_256a.png", name);
-	if(findfile(octalogo, "r"))
+	if(fileexists(findfile(octalogo, "r"), "r"))
 	{
 		conoutf("\fgfound OCTA directory: %s", name);
 		s_sprintfd(octadata)("%s/data", name);
