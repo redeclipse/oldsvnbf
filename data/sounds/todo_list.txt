@@ -1,11 +1,11 @@
 *******************************************************************
 * This file contains the sound assets that need to be created
-* for the game. Many current exist in the game and some do not.
+* for the game. Many currently exist in the game and some do not.
 * This file also lists who is currently working on a specific 
 * asset. Please place your name in the appropriate field 
-* (Artist Wrking) if you are, or wish to work on a particular sound 
-* asset.
-* If you create any sound effects please modify this text file
+* if you are, or wish to work on a particular sound asset.
+*
+* If you create/or need sound effects please modify this text file
 * appropriately.
 *******************************************************************
 
