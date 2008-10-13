@@ -695,6 +695,22 @@ void eastereggs()
 	}
 }
 
+bool findoctadir(const char *name)
+{
+	s_sprintfd(octalogo)("%s/data/sauer_logo_512_256a.png", name);
+	if(findfile(octalogo, "r"))
+	{
+		conoutf("\fgfound OCTA directory: %s", name);
+		s_sprintfd(octadata)("%s/data", name);
+		s_sprintfd(octapaks)("%s/packages", name);
+		addpackagedir(name);
+		addpackagedir(octadata);
+		addpackagedir(octapaks);
+		return true;
+	}
+	return false;
+}
+
 VARP(autoconnect, 0, 1, 1);
 int main(int argc, char **argv)
 {
@@ -709,7 +725,9 @@ int main(int argc, char **argv)
 
 	char *initscript = NULL;
 	initing = INIT_RESET;
+
 	addpackagedir("data");
+
 	for(int i = 1; i<argc; i++)
 	{
 		if(argv[i][0]=='-') switch(argv[i][1])
@@ -740,10 +758,27 @@ int main(int argc, char **argv)
 				break;
 			}
 			case 'x': initscript = &argv[i][2]; break;
+			case 'o':
+			{
+				#ifndef putenv
+				#ifdef _putenv
+				#define putenv _putenv
+				#endif
+				#endif
+				#ifdef putenv
+				s_sprintfd(octaenv)("OCTA_DIR=\"%s\"", &argv[i][2]);
+				putenv(octaenv);
+				conoutf("\fgset OCTA_DIR to: %s", &argv[i][2]);
+				#else
+				conoutf("\frunable to automatically set OCTA_DIR on your operating system");
+				#endif
+				break;
+			}
 			default: if(!serveroption(argv[i])) gameargs.add(argv[i]); break;
 		}
 		else gameargs.add(argv[i]);
 	}
+
 	initing = NOT_INITING;
 
 	conoutf("\fminit: enet");
@@ -809,6 +844,23 @@ int main(int argc, char **argv)
     preloadtextures();
 	particleinit();
     initdecals();
+
+	// MEGAHACK: try to find Sauerbraten, done after our own data so as to not clobber stuff
+	const char *octadir = getenv("OCTA_DIR");
+	if(!octadir || !*octadir || !findoctadir(octadir))
+	{ // user hasn't specifically set it, try some common locations alongside our folder
+		const char *tryoctadirs[4] = { // by no means a definitive list either..
+			"../Sauerbraten", "../sauerbraten", "../sauer",
+#if defined(WIN32)
+			"/Program Files/Sauerbraten"
+#elif defined(__APPLE__)
+			"/Volumes/Play/sauerbraten"
+#else
+			"/usr/games/sauerbraten"
+#endif
+		};
+		loopi(4) if(findoctadir(tryoctadirs[i])) break;
+	}
 
 	conoutf("\fminit: main");
 	if(initscript) execute(initscript);

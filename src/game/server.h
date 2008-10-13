@@ -2638,8 +2638,8 @@ struct gameserver : igameserver
 
 	bool canload(char *type)
 	{
-		if(strcmp(type, GAMEID) == 0) return true;
-		if(strcmp(type, "fps") == 0 || strcmp(type, "bfg") == 0) return true;
+		if(!strcmp(type, gameid()) || !strcmp(type, "fps") || !strcmp(type, "bfg"))
+			return true;
 		return false;
 	}
 };

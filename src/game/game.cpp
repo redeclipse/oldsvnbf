@@ -1285,17 +1285,21 @@ struct gameclient : igameclient
 								{
 									pushfont("emphasis");
 									int drop = -1;
-									if(e.type == WEAPON && player1->ammo[e.attr1] < 0 && player1->carry() >= MAXCARRY)
-										drop = player1->drop(e.attr1);
+									if(e.type == WEAPON && guntype[player1->gunselect].rdelay > 0 &&
+										player1->ammo[e.attr1] < 0 && guntype[e.attr1].rdelay > 0 &&
+											player1->carry() >= MAXCARRY) drop = player1->drop(e.attr1);
 									if(isgun(drop))
 									{
 										tp += draw_textx("Press [ \fs\fg%s\fS ] to swap", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
-										tp += draw_textx("[ \fs\fy%s\fS ] for [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, guntype[drop].name, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
+										tp += draw_textx("[ \fs%s\fS ] for [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1,
+											et.entinfo(WEAPON, drop, player1->ammo[drop], 0, 0, 0, true),
+												et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
 									}
 									else
 									{
 										tp += draw_textx("Press [ \fs\fg%s\fS ] to pickup", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
-										tp += draw_textx("[ \fs\fy%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
+										tp += draw_textx("[ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1,
+											et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
 									}
 									popfont();
 									tp += FONTH/2;
