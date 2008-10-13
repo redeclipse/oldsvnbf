@@ -644,7 +644,7 @@ struct entities : icliententities
 
 			case PUSHER:
 			{
-				vec dir((int)(char)e.attr3*10.0f, (int)(char)e.attr2*10.0f, e.attr1*12.5f);
+				vec dir((int)(char)e.attr3*10.f, (int)(char)e.attr2*10.f, e.attr1*10.f);
 				d->timeinair = 0;
                 d->falling = vec(0, 0, 0);
 				loopk(3)
