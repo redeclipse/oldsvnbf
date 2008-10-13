@@ -1,0 +1,127 @@
+*******************************************************************
+* This file contains the sound assets that need to be created
+* for the game. Many current exist in the game and some do not.
+* This file also lists who is currently working on a specific 
+* asset. Please place your name in the appropriate field 
+* (Artist Wrking) if you are, or wish to work on a particular sound 
+* asset.
+* If you create any sound effects please modify this text file
+* appropriately.
+*******************************************************************
+
+@ = PRIORITY ITEM
+ 
+###################################################################   
+###                       Ambience                              ###
+###################################################################   
+___________________________________________________________________
+Sound Name     ::  Qty :: NotDone/Exists/Replace/Comp/Artist Working
+-------------------------------------------------------------------
+@ Lava           :: 4 :: Complete??
+@ Wind           :: 4 :: Blackshoe working
+@ Waterfall      :: 4 :: Blackshoe working
+@ Waterflow      :: 1 :: Blackshoe working
+Creek          :: 1 :: Blackshoe working
+River Sounds   :: 4 :: Blackshoe working
+Night Crickets :: 1 :: Blackshoe working
+@ Machine        :: 3 :: 1 Complete, 2 Not Done yet
+Frogs          :: 1 :: Replace
+Forest Sounds  :: 5 :: Blackshoe working
+@ Fire           :: 4 :: 1 Complete, 1 Replace, 2 Not done yet
+@ Electric Snds  :: 4 :: Replace
+Distant Cars   :: 3 :: Replace
+Cycadas        :: 2 :: Blackshoe working
+CaveDrop       :: 1 :: Replace
+
+###################################################################   
+###                       Sound FX                              ###
+###################################################################   
+___________________________________________________________________
+Sound Name     ::  Qty :: NotDone/Exists/Replace/Comp/Artist Working
+-------------------------------------------------------------------
+@ Burn           :: 1 :: Replace
+@ Burning        :: 1 :: Replace/Modify
+ChatBeep       :: 2 :: Complete
+@ Damage Sounds  :: 8 :: Replace
+Debris         :: 1 :: Exists, HOW IS THIS USED???
+@ Denied         :: 1 :: Replace
+@ ItemPickup     :: 3 :: 1 Exists, Replace
+ItemSpawn      :: 1 :: Complete??
+JumpPad        :: 1 :: Complete??
+@ Land           :: 2 :: Replace
+Menu Beeps     :: 4 :: 3 Complete, 1 left, Blackshoe Working
+@ Regenerate     :: 1 :: Replace/Modify
+@ ReSpawn        :: 1 :: Replace/Modify
+@ Splash         :: 2 :: Replace/Modify
+Switch         :: 3 :: Replace, Different switch types/sizes
+Teleport       :: 1 :: Replace/Modify
+@ Underwater     :: 1 :: Replace/Modify
+Whirr          :: 1 :: WHAT IS THIS USED FOR???
+Whizz          :: 1 :: WHAT IS THIS USED FOR???
+
+###################################################################   
+###                        Weapons                              ###
+###################################################################   
+___________________________________________________________________
+Sound Name     ::  Qty :: NotDone/Exists/Replace/Comp/Artist Working
+-------------------------------------------------------------------
+@ Pistol         :: 3 :: Exists, Replace?
+@  '' Reload     :: 3 :: Blackshoe working (recording 20/10)
+@ Rifle          :: 5 :: Blackshoe working (recording 20/10)
+@  '' Reload     :: 3 :: Blackshoe working (recording 20/10)
+@ Shotgun        :: 5 :: Blackshoe working (recording 20/10)
+@  '' Reload     :: 3 :: Blackshoe working (recording 20/10)
+ChainGun       :: 1 :: Complete??
+@  '' Reload     :: 3 :: Not Done
+Flamer         :: 1 :: Blackshoe working, Complete??
+@  '' Reload     :: 1 :: IS THIS EVEN NEEDED ????
+@ Grenade Explos :: 3 :: Blackshoe working
+@ Grenade Fire   :: 3 :: Blackshoe working
+@ Grenade Hit    :: 3 :: Blackshoe working
+Weapon Trigger :: NEED FOR FIND OUT IF IT IS IMPLEMENTED??
+
+###################################################################   
+###                       Annoicer                              ###
+###################################################################   
+___________________________________________________________________
+___________________________________________________________________
+Sound Name     ::  Qty :: NotDone/Exists/Replace/Comp/Artist Working
+-------------------------------------------------------------------
+@ Bloodbath      :: 1 :: Replace
+@ Carnage        :: 1 :: Replace
+@ Checkpoint     :: 1 :: Replace
+@ Fight          :: 1 :: Replace
+@ FlagCaptured   :: 1 :: Replace
+@ FlagDropped    :: 1 :: Replace
+@ FlagOverTrown  :: 1 :: Replace
+@ FlagReset      :: 1 :: Replace
+@ FlagSecured    :: 1 :: Replace
+@ FlagTaken      :: 1 :: Replace
+@ Fragged        :: 1 :: Replace
+@ HeadShot       :: 1 :: Replace
+@ Massacre       :: 1 :: Replace
+@ MissionComplete:: 1 :: Replace
+@ OneMinueRemains:: 1 :: Replace
+@ Owned          :: 1 :: Replace
+@ Slaughter      :: 1 :: Replace
+@ You Lose       :: 1 :: Replace
+@ You Win        :: 1 :: Replace
+
+###################################################################   
+###                     Player Sounds                           ###
+###################################################################      
+___________________________________________________________________
+Sound Name     ::  Qty :: NotDone/Exists/Replace/Comp/Artist Working
+-------------------------------------------------------------------
+@ Death          :: 2 min:: Exists, Replace later?? 
+@ Pain           :: 6 min:: Exists, Replace later??
+@ Jump           :: 5    :: 1 Exists, Replace
+
+---Footsteps---
+@ On Thick Metal :: 6 :: Blackshoe working
+@ On Thin Metal  :: 6 :: Blackshoe working
+On Wood        :: 6 :: Blackshoe working
+On Grass       :: 6 :: Blackshoe working
+On Glass       :: 6 :: NotDone
+On Gravel      :: 6 :: NotDone 
+@ In Water       :: 4 :: 1 Exists, Replace
