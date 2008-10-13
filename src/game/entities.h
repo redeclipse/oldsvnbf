@@ -570,12 +570,12 @@ struct entities : icliententities
 			d->timeinair = 0;
 			d->falling = vec(0, 0, 0);
 			d->o = vec(f.o).sub(vec(0, 0, d->height/2));
-			d->yaw = f.attr1;
-			d->pitch = f.attr2;
-			float mag = max(d->vel.magnitude(), 1.f);
-			vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 			if(cl.ph.entinmap(d, false))
 			{
+				d->yaw = f.attr1;
+				d->pitch = f.attr2;
+				float mag = max(d->vel.magnitude(), f.attr3 ? float(f.attr3) : 100.f);
+				vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 				d->vel.mul(mag);
 				cl.fixfullrange(d->yaw, d->pitch, d->roll, true);
 				if(e.type == TELEPORT)
@@ -590,7 +590,7 @@ struct entities : icliententities
 				}
 				break;
 			}
-			teleports.remove(r);
+			teleports.remove(r); // must've really sucked, try another one
 		}
 	}
 
@@ -1010,11 +1010,7 @@ struct entities : icliententities
 
 		if(mtype == MAP_OCTA)
 		{
-			// sauerbraten version increments
-			if(mver <= 10) if(f.type >= 7) f.type++;
-			if(mver <= 12) if(f.type >= 8) f.type++;
-
-			// now translate into our format
+			// translate into our format
 			switch(f.type)
 			{
 				// 1	LIGHT			1	LIGHT
@@ -1041,7 +1037,7 @@ struct entities : icliententities
 						GUN_SG, GUN_CG, GUN_FLAMER, GUN_RIFLE, GUN_GL, GUN_PISTOL
 					};
 
-					if(gun <= 5 && gun >= 0 && gunmap[gun])
+					if(gun >= 0 && gun <= 5)
 					{
 						f.type = WEAPON;
 						f.attr1 = gunmap[gun];
@@ -1212,7 +1208,10 @@ struct entities : icliententities
 					case TELEPORT:
 					{
 						e.attr1 = teleyaw[i]; // grab what we stored earlier
-						e.attr2 = 0;
+						e.attr2 = e.attr4 = 0; // not set in octa
+						e.attr3 = 100; // give a push
+						e.attr5 = 1; // give it a pretty portal
+						e.o.z += cl.player1->height/2; // teleport in BF is at middle
 						e.mark = false;
 						break;
 					}
@@ -1251,8 +1250,8 @@ struct entities : icliententities
 			{
 				case WEAPON:
 				{
-					if(gver <= 90)
-					{
+					if(mtype == MAP_BFGZ && gver <= 90)
+					{ // move grenades to the end of the weapon array
 						if(e.attr1 > 3) e.attr1--;
 						else if(e.attr1 == 3) e.attr1 = GUN_GL;
 					}
@@ -1261,7 +1260,7 @@ struct entities : icliententities
 				case WAYPOINT:
 				{
 					entities++;
-					if(gver <= 90)
+					if(mtype == MAP_BFGZ && gver <= 90)
 						e.attr1 = e.attr2 = e.attr3 = e.attr4 = e.attr5 = 0;
 					break;
 				}
@@ -1284,6 +1283,7 @@ struct entities : icliententities
 				{
 					case PLAYERSTART:
 					case WEAPON:
+					case FLAG:
 					{
 						newentity(v, WAYPOINT, 0, 0, 0, 0, 0);
 						break;

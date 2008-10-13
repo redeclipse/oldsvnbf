@@ -43,7 +43,7 @@ Regards,
 		o GUI artwork 
 
 	* Alex "Blackshoe" Anguix
-		o Sound engineering
+		o Sound design
 
 == Supporters ==
 	* "PunDit"

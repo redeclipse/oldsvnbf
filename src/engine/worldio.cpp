@@ -704,7 +704,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			{
 				octacompat25 chdr;
 				memcpy(&chdr, &ohdr, sizeof(binary));
-				if(gzread(f, &chdr.worldsize, ohdr.headersize-sizeof(binary))!=ohdr.headersize-(int)sizeof(binary))
+				if(gzread(f, &chdr.worldsize, sizeof(octacompat25)-sizeof(binary))!=sizeof(octacompat25)-(int)sizeof(binary))
                 {
                     conoutf("\frerror loading %s: malformatted header", mapname);
                     gzclose(f);
@@ -713,11 +713,11 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 				endianswap(&chdr.worldsize, sizeof(int), 7);
 				memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*2);
 				ohdr.numpvs = 0;
-				memcpy(&ohdr.lightmaps, &chdr.lightmaps, ohdr.headersize-sizeof(binary)-sizeof(int)*2);
+				memcpy(&ohdr.lightmaps, &chdr.lightmaps, sizeof(octacompat25)-sizeof(binary)-sizeof(int)*2);
 			}
 			else
 			{
-				if(gzread(f, &ohdr.worldsize, ohdr.headersize-sizeof(binary))!=ohdr.headersize-(int)sizeof(binary))
+				if(gzread(f, &ohdr.worldsize, sizeof(octa)-sizeof(binary))!=sizeof(octa)-(int)sizeof(binary))
                 {
                     conoutf("\frerror loading %s: malformatted header", mapname);
                     gzclose(f);
@@ -771,21 +771,21 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			setvar("lerpsubdivsize", ohdr.lerpsubdivsize);
 
 			string gameid;
-			s_strcpy(gameid, "fps");
-
+			s_strcpy(gameid, "???");
 			if(hdr.version >= 16)
 			{
 				int len = gzgetc(f);
 				gzread(f, gameid, len+1);
 			}
-			strncpy(hdr.head, gameid, 4);
+			else s_strcpy(gameid, "fps");
+			strncpy(hdr.gameid, gameid, 4);
 
 			if(!sv->canload(hdr.gameid))
 			{
-				conoutf("\frWARNING: loading map from %s sauerbraten game type in %s, ignoring game specific data", gameid, sv->gameid());
+				conoutf("\frWARNING: loading OCTA v%d map from %s game, ignoring game specific data", hdr.version, hdr.gameid);
 				samegame = false;
 			}
-			else if(verbose) conoutf("\fwloading map from %s game", hdr.gameid);
+			else if(verbose) conoutf("\fwloading OCTA v%d map from %s game", hdr.version, hdr.gameid);
 
 			if(hdr.version>=16)
 			{
@@ -834,19 +834,15 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			e.links.setsize(0);
 			e.spawned = false;
 			e.inoctanode = false;
-			if(hdr.version <= 31) e.attr5 = 0;
-			if(maptype == MAP_OCTA) { loopj(eif) gzgetc(f); }
-			et->readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
-			if(maptype == MAP_BFGZ && et->maylink(hdr.gamever <= 49 && e.type >= 10 ? e.type-1 : e.type, hdr.gamever))
+			if(maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 31))
+				e.attr5 = 0; // init ever-present attr5
+			if(maptype == MAP_OCTA)
 			{
-				int links = gzgetint(f);
-				loopk(links)
-				{
-					int ln = gzgetint(f);
-					e.links.add(ln);
-				}
-				if(verbose >= 2) conoutf("\fwentity %s (%d) loaded %d link(s)", et->findname(e.type), i, links);
+				loopj(eif) gzgetc(f);
 			}
+			// sauerbraten version increments
+			if(hdr.version <= 10 && e.type >= 7) e.type++;
+			if(hdr.version <= 12 && e.type >= 8) e.type++;
 			if(hdr.version <= 14 && e.type >= ET_MAPMODEL && e.type <= 16)
 			{
 				if(e.type == 16) e.type = ET_MAPMODEL;
@@ -860,6 +856,17 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			{
 				ents.pop();
 				continue;
+			}
+			et->readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
+			if(maptype == MAP_BFGZ && et->maylink(hdr.gamever <= 49 && e.type >= 10 ? e.type-1 : e.type, hdr.gamever))
+			{
+				int links = gzgetint(f);
+				loopk(links)
+				{
+					int ln = gzgetint(f);
+					e.links.add(ln);
+				}
+				if(verbose >= 2) conoutf("\fwentity %s (%d) loaded %d link(s)", et->findname(e.type), i, links);
 			}
 			if(!insideworld(e.o))
 			{
@@ -882,7 +889,6 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 				e.attr3 = e.attr4 = e.attr5 = 0;
 			}
 		}
-
 		et->initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
 		if(verbose) conoutf("\fwloaded %d entities", hdr.numents);
 
