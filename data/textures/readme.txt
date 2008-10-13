@@ -1,10 +1,9 @@
-Textures in this directory
-	(C) 2007-2008 Blood Frontier, Anthony Cord, Quinton Reeves
-	Use without permission is not allowed
-
 scorch.png and the Sauerbraten/Cube 2 Logo
 	(C) 2007-2008 Marcus "makkE" Biel, Sauerbraten Engine
-	
-lavatn.jpg
-	(!) 2008 Quinton Reeves
-	This file is released into the public domain.
+
+All other files in this directory are:
+	(C) 2007-2008 Anthony "Acord" Cord, all rights reserved.
+
+The "textures" package included in Blood Frontier may only be distributed
+	with the Blood Frontier package. Redistribution or repacking outside
+	this context without the author's consent is strictly prohibited.

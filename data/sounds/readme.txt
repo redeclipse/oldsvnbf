@@ -1,6 +1,4 @@
-All sounds in this directory are original works by Quinton "quin" Reeves.
-
-Files in this directory are released under the Creative Commons license:
+Unless otherwise specified, files in this directory are released under the Creative Commons license:
 
 	Attribution-ShareAlike 3.0
 
