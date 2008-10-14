@@ -234,7 +234,7 @@ struct entities : icliententities
 	void announce(int idx, const char *msg = "", bool force = false)
 	{
 		static int lastannouncement;
-		if(idx > -1 && idx < S_MAX && (force || lastmillis-lastannouncement > 1000))
+		if(idx > -1 && idx < S_MAX && (force || lastmillis-lastannouncement >= 1000))
 		{
 			bool announcer = false;
 			loopv(ents)
@@ -528,9 +528,9 @@ struct entities : icliententities
 								if(!issound(f.schan))
 								{
 									int flags = SND_MAP;
-									if(f.attr5 & 0x01) flags |= SND_NOATTEN;
-									if(f.attr5 & 0x02) flags |= SND_NODELAY;
-									if(f.attr5 & 0x04) flags |= SND_NOCULL;
+									if(f.attr5&SND_NOATTEN) flags |= SND_NOATTEN;
+									if(f.attr5&SND_NODELAY) flags |= SND_NODELAY;
+									if(f.attr5&SND_NOCULL) flags |= SND_NOCULL;
 									playsound(f.attr1, flags, f.attr4, both ? f.o : e.o, NULL, &f.schan, 0, f.attr2, f.attr3);
 									f.lastemit = lastmillis;
 									if(both) e.lastemit = lastmillis;
@@ -636,9 +636,11 @@ struct entities : icliententities
 		{
 			case TELEPORT:
 			{
-				if(lastmillis-e.lastuse < 500) break;
-				e.lastuse = lastmillis;
-				teleport(n, d);
+				if(lastmillis-e.lastuse >= 1000)
+				{
+					e.lastuse = lastmillis;
+					teleport(n, d);
+				}
 				break;
 			}
 
@@ -652,34 +654,38 @@ struct entities : icliententities
 					if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
 						d->vel.v[k] = dir.v[k];
 				}
-				if(lastmillis-e.lastuse < 1000) break;
-				e.lastuse = lastmillis;
-				execlink(d, n, true);
+				if(lastmillis-e.lastuse >= 1000)
+				{
+					e.lastuse = lastmillis;
+					execlink(d, n, true);
+				}
 				break;
 			}
 
 			case TRIGGER:
 			{
-				if(lastmillis-e.lastuse < 1000) break;
-				e.lastuse = lastmillis;
-				switch(e.type)
+				if(lastmillis-e.lastuse >= 1000)
 				{
-					case TRIGGER:
+					e.lastuse = lastmillis;
+					switch(e.type)
 					{
-						switch(e.attr2)
+						case TRIGGER:
 						{
-							case TR_SCRIPT:
+							switch(e.attr2)
 							{
-								s_sprintfd(s)("on_trigger_%d", e.attr1);
-								RUNWORLD(s);
-								break;
+								case TR_SCRIPT:
+								{
+									s_sprintfd(s)("on_trigger_%d", e.attr1);
+									RUNWORLD(s);
+									break;
+								}
+								default: break;
 							}
-							default: break;
 						}
+						default: break;
 					}
-					default: break;
+					execlink(d, n, true);
 				}
-				execlink(d, n, true);
 				break;
 			}
 		}
@@ -1210,7 +1216,7 @@ struct entities : icliententities
 						e.attr1 = teleyaw[i]; // grab what we stored earlier
 						e.attr2 = e.attr4 = 0; // not set in octa
 						e.attr3 = 100; // give a push
-						e.attr5 = 1; // give it a pretty portal
+						e.attr5 = 0x11A; // give it a pretty blueish portal like sauer's
 						e.o.z += cl.player1->height/2; // teleport in BF is at middle
 						e.mark = false;
 						break;
@@ -1388,9 +1394,9 @@ struct entities : icliententities
 
 	void renderentlight(gameentity &e)
 	{
-		vec color(e.attr2, e.attr3, e.attr4);
-		color.div(255.f);
-		adddynlight(vec(e.o), float(e.attr1 ? e.attr1 : hdr.worldsize), color);
+		vec colour(e.attr2, e.attr3, e.attr4);
+		colour.div(255.f);
+		adddynlight(vec(e.o), float(e.attr1 ? e.attr1 : hdr.worldsize), colour);
 	}
 
 	void adddynlights()
@@ -1430,14 +1436,14 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit > 500 && mapsounds.inrange(e.attr1))
+			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit >= 1000 && mapsounds.inrange(e.attr1))
 			{
 				if(!issound(e.schan))
 				{
-					int flags = SND_MAP|SND_LOOP;
-					if(e.attr5 & 0x01) flags |= SND_NOATTEN;
-					if(e.attr5 & 0x02) flags |= SND_NODELAY;
-					if(e.attr5 & 0x04) flags |= SND_NOCULL;
+					int flags = SND_MAP|SND_LOOP; // ambient sounds loop
+					if(e.attr5&SND_NOATTEN) flags |= SND_NOATTEN;
+					if(e.attr5&SND_NODELAY) flags |= SND_NODELAY;
+					if(e.attr5&SND_NOCULL) flags |= SND_NOCULL;
 					playsound(e.attr1, flags, e.attr4, e.o, NULL, &e.schan, 0, e.attr2, e.attr3);
 					e.lastemit = lastmillis; // prevent clipping when moving around
 				}
@@ -1479,7 +1485,10 @@ struct entities : icliententities
 			glScalef(radius, radius, radius);
 
 			glBindTexture(GL_TEXTURE_2D, t->id);
-			glColor3f(0.f, 0.f, 1.f);
+
+			int attr = int(e.attr5), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
+			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
+			glColor3f(r, g, b);
 			glBegin(GL_QUADS);
 			glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.f, 0.f, 1.f);
 			glTexCoord2f(1.0f, 0.0f); glVertex3f(1.f, 0.f, 1.f);

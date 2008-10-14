@@ -81,8 +81,8 @@ struct gameclient : igameclient
 
 	IVARP(crosshairclip, 0, 1, 1);
 	IVARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
-	IFVARP(crosshairsize, 0.03f);
-	IFVARP(cursorsize, 0.03f);
+	IFVARP(crosshairsize, 0.05f);
+	IFVARP(cursorsize, 0.05f);
 	IFVARP(cursorblend, 1.f);
 
 	IFVARP(crosshairblend, 0.5f);
@@ -98,7 +98,7 @@ struct gameclient : igameclient
 
 	IVARP(radardist, 0, 512, 512);
 	IVARP(radarnames, 0, 1, 2);
-	IFVARP(radarsize, 0.3f);
+	IFVARP(radarsize, 0.33f);
 	IFVARP(ammosize, 0.07f);
 	IVARP(editradardist, 0, 512, INT_MAX-1);
 	IVARP(editradarnoisy, 0, 1, 2);
@@ -117,12 +117,12 @@ struct gameclient : igameclient
 	IVARP(statrate, 0, 200, 1000);
 
 	IVARP(snipetype, 0, 0, 1);
-	IVARP(snipemouse, 0, 2, 2);
+	IVARP(snipemouse, 0, 0, 2);
 	IVARP(snipedeadzone, 0, 25, 100);
 	IVARP(snipepanspeed, 1, 10, INT_MAX-1);
 	IVARP(snipefov, 1, 35, 150);
 	IVARP(snipetime, 1, 300, 10000);
-	IFVARP(snipecrosshairsize, 0.3f);
+	IFVARP(snipecrosshairsize, 0.5f);
 
 	IVARP(pronetype, 0, 0, 1);
 	IVARP(pronemouse, 0, 0, 2);
