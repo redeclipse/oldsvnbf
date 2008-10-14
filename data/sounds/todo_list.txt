@@ -125,3 +125,5 @@ On Grass       :: 6 :: Blackshoe working
 On Glass       :: 6 :: NotDone
 On Gravel      :: 6 :: NotDone 
 @ In Water       :: 4 :: 1 Exists, Replace
+
+Cloths Rustling :: 3 :: NotDone
