@@ -87,25 +87,25 @@ ___________________________________________________________________
 ___________________________________________________________________
 Sound Name     ::  Qty :: NotDone/Exists/Replace/Comp/Artist Working
 -------------------------------------------------------------------
-@ Bloodbath      :: 1 :: Replace
-@ Carnage        :: 1 :: Replace
-@ Checkpoint     :: 1 :: Replace
-@ Fight          :: 1 :: Replace
-@ FlagCaptured   :: 1 :: Replace
-@ FlagDropped    :: 1 :: Replace
-@ FlagOverTrown  :: 1 :: Replace
-@ FlagReset      :: 1 :: Replace
-@ FlagSecured    :: 1 :: Replace
-@ FlagTaken      :: 1 :: Replace
-@ Fragged        :: 1 :: Replace
-@ HeadShot       :: 1 :: Replace
-@ Massacre       :: 1 :: Replace
-@ MissionComplete:: 1 :: Replace
-@ OneMinueRemains:: 1 :: Replace
-@ Owned          :: 1 :: Replace
-@ Slaughter      :: 1 :: Replace
-@ You Lose       :: 1 :: Replace
-@ You Win        :: 1 :: Replace
+@ Bloodbath      :: 1 :: Stefan Working
+@ Carnage        :: 1 :: Stefan Working
+@ Checkpoint     :: 1 :: Stefan Working
+@ Fight          :: 1 :: Stefan Working
+@ FlagCaptured   :: 1 :: Stefan Working
+@ FlagDropped    :: 1 :: Stefan Working
+@ FlagOverTrown  :: 1 :: Stefan Working
+@ FlagReset      :: 1 :: Stefan Working
+@ FlagSecured    :: 1 :: Stefan Working
+@ FlagTaken      :: 1 :: Stefan Working
+@ Fragged        :: 1 :: Stefan Working
+@ HeadShot       :: 1 :: Stefan Working
+@ Massacre       :: 1 :: Stefan Working
+@ MissionComplete:: 1 :: Stefan Working
+@ OneMinueRemains:: 1 :: Stefan Working
+@ Owned          :: 1 :: Stefan Working
+@ Slaughter      :: 1 :: Stefan Working
+@ You Lose       :: 1 :: Stefan Working
+@ You Win        :: 1 :: Stefan Working
 
 ###################################################################   
 ###                     Player Sounds                           ###
