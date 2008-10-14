@@ -14,7 +14,7 @@ VARA(maxtrail, 1, 500, 10000);
 
 VARP(particletext, 0, 1, 1);
 VARP(outlinemeters, 0, 0, 1);
-VARP(particleglare, 0, 4, 100);
+VARP(particleglare, 0, 1, 100);
 VAR(debugparticles, 0, 0, 1);
 
 // Check emit_particles() to limit the rate that paricles can be emitted for models/sparklies
