@@ -44,20 +44,27 @@ Sound Name     ::  Qty :: NotDone/Exists/Replace/Comp/Artist Working
 ChatBeep       :: 2 :: Complete
 @ Damage Sounds  :: 8 :: Replace
 Debris         :: 1 :: Exists, HOW IS THIS USED???
+	Quin: When explosion debris bounces off stuff.
 @ Denied         :: 1 :: Replace
 @ ItemPickup     :: 3 :: 1 Exists, Replace
 ItemSpawn      :: 1 :: Complete??
+	Quin: Idea, instead of 'itemspawn', maybe a voice announcement or seperate sound for each weapon?
 JumpPad        :: 1 :: Complete??
+	Quin: This is actually an optional mapsound now.
 @ Land           :: 2 :: Replace
 Menu Beeps     :: 4 :: 3 Complete, 1 left, Blackshoe Working
 @ Regenerate     :: 1 :: Replace/Modify
 @ ReSpawn        :: 1 :: Replace/Modify
 @ Splash         :: 2 :: Replace/Modify
 Switch         :: 3 :: Replace, Different switch types/sizes
+	Quin: This is actually an optional mapsound now.
 Teleport       :: 1 :: Replace/Modify
+	Quin: This is actually an optional mapsound now.
 @ Underwater     :: 1 :: Replace/Modify
 Whirr          :: 1 :: WHAT IS THIS USED FOR???
+	Quin: When a bullet is travelling in the air (not used yet).
 Whizz          :: 1 :: WHAT IS THIS USED FOR???
+	Quin: When a grenade is travelling in the air.
 
 ###################################################################   
 ###                        Weapons                              ###
@@ -79,6 +86,7 @@ Flamer         :: 1 :: Blackshoe working, Complete??
 @ Grenade Fire   :: 3 :: Blackshoe working
 @ Grenade Hit    :: 3 :: Blackshoe working
 Weapon Trigger :: NEED FOR FIND OUT IF IT IS IMPLEMENTED??
+	Quin: what would this be used for?
 
 ###################################################################   
 ###                       Annoicer                              ###
