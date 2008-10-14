@@ -2001,9 +2001,9 @@ struct gameclient : igameclient
 		int flags = MDL_LIGHT;
 		if(d != player1) flags |= MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
 		if(d->type != ENT_PLAYER) flags |= MDL_CULL_DIST;
-		if(trans) flags |= MDL_TRANSLUCENT;
-		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
         if(early) flags |= MDL_NORENDER;
+		else if(trans) flags |= MDL_TRANSLUCENT;
+		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
 		dynent *e = third ? (dynent *)d : (dynent *)&fpsmodel;
 		rendermodel(NULL, mdl, anim, o, !third && testanims() && d == player1 ? 0 : yaw+90, pitch, roll, flags, e, attachments, basetime, speed);
 	}
