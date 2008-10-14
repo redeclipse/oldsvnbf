@@ -825,9 +825,13 @@ void drawglare()
     rendermaterials();
     render_particles(0);
 
-    viewproject(0.5f);
-    renderavatar(false);
-    viewproject();
+    if(cl->isthirdperson()) renderavatar(false);
+    else
+    {
+        viewproject(0.5f);
+        renderavatar(false);
+        viewproject();
+    }
 
     glFogf(GL_FOG_START, oldfogstart);
     glFogf(GL_FOG_END, oldfogend);
