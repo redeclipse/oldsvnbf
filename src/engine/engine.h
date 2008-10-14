@@ -23,11 +23,7 @@ extern icliententities *et;
 #include "master.h"
 #endif
 
-enum
-{
-	S_GUIPRESS = 0, S_GUIBACK, S_GUIACT,
-	S_GAMESPECIFIC
-};
+#include "sound.h"
 
 #ifndef STANDALONE
 #include "world.h"
@@ -36,7 +32,6 @@ enum
 #include "bih.h"
 #include "texture.h"
 #include "model.h"
-#include "sound.h"
 
 // GL_ARB_multitexture
 extern PFNGLACTIVETEXTUREARBPROC		glActiveTexture_;

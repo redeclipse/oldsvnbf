@@ -1,5 +1,23 @@
-#include "SDL_mixer.h"
+enum
+{
+	S_GUIPRESS = 0, S_GUIBACK, S_GUIACT,
+	S_GAMESPECIFIC
+};
 
+enum
+{
+	SND_NONE	= 0,
+	SND_NOATTEN	= 1<<0,	// disable attenuation
+	SND_NODELAY	= 1<<1,	// disable delay
+	SND_NOCULL	= 1<<2,	// disable culling
+	SND_LOOP	= 1<<3,
+	SND_MAP		= 1<<4,
+	SND_FORCED	= SND_NOATTEN|SND_NODELAY|SND_NOCULL,
+	SND_MASKF	= SND_LOOP|SND_MAP
+};
+
+#ifndef STANDALONE
+#include "SDL_mixer.h"
 extern bool nosound;
 extern int soundvol;
 
@@ -50,15 +68,6 @@ struct sound
 	}
 };
 
-#define SND_LOOP	0x0001
-#define SND_MAP		0x0002
-
-#define SND_NOATTEN	0x0010	// disable attenuation
-#define SND_NODELAY	0x0020	// disable delay
-#define SND_NOCULL	0x0040	// disable culling
-
-#define SND_FORCED	SND_NOATTEN|SND_NODELAY|SND_NOCULL
-
 extern hashtable<const char *, soundsample> soundsamples;
 extern vector<soundslot> gamesounds, mapsounds;
 extern vector<sound> sounds;
@@ -79,3 +88,4 @@ extern void closemumble();
 extern void updatemumble();
 
 extern int soundvol, musicvol, soundmono, soundchans, soundbufferlen, soundfreq, maxsoundsatonce;
+#endif
