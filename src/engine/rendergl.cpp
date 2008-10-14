@@ -1570,9 +1570,13 @@ void drawview(int targtype)
 	rendermaterials();
 	render_particles(curtime);
 
-    viewproject(0.5f);
-	renderavatar(false);
-    viewproject();
+    if(cl->isthirdperson()) renderavatar(false);
+    else
+    {
+        viewproject(0.5f);
+	    renderavatar(false);
+        viewproject();
+    }
 
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);

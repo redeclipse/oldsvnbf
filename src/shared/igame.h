@@ -89,6 +89,7 @@ struct igameclient
 	virtual void findanims(const char *pattern, vector<int> &anims) = 0;
     virtual void render() = 0;
     virtual void renderavatar(bool early) = 0;
+    virtual bool isthirdperson() = 0;
 };
 
 struct igameserver
