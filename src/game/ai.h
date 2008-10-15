@@ -429,7 +429,7 @@ struct aiclient
 	bool patrol(gameent *d, aistate &b, vec &pos, float radius, float wander, bool retry = false)
 	{
 		vec feet(cl.feetpos(d, 0.f));
-		if(b.override || feet.squaredist(pos) <= radius*radius || !makeroute(d, b, pos))
+		if(feet.squaredist(pos) <= radius*radius || !makeroute(d, b, pos))
 		{ // run away and back to keep ourselves busy
 			if(!b.override && randomnode(d, b, feet, pos, radius, wander))
 			{
@@ -452,16 +452,13 @@ struct aiclient
 		if(AITARG(d, e, true))
 		{
 			vec epos(cl.feetpos(e, 0.f));
-			if(!pursue || patrol(d, b, epos, AIISNEAR, AIISFAR))
-			{
-				aistate &c = d->ai->addstate(pursue ? AI_S_PURSUE : AI_S_ATTACK);
-				c.targtype = AI_T_PLAYER;
-				c.defers = b.defers;
-				d->ai->enemy = c.target = e->clientnum;
-				if(pursue) c.expire = 10000;
-				return true;
-			}
-			if(pursue) return violence(d, b, e, false);
+			aistate &c = d->ai->addstate(pursue ? AI_S_PURSUE : AI_S_ATTACK);
+			c.targtype = AI_T_PLAYER;
+			c.defers = b.defers;
+			d->ai->enemy = c.target = e->clientnum;
+			if(pursue) c.expire = 5000;
+			patrol(d, c, epos, AIISNEAR, AIISFAR);
+			return true;
 		}
 		return false;
 	}

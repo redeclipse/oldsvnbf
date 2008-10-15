@@ -2038,7 +2038,7 @@ struct gameserver : igameserver
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
                 actor->state.spree++;
 			}
-			if(ts.gunselect == GUN_GL)
+			if(ts.gunselect == GUN_GL && ts.ammo[ts.gunselect] > 0)
 			{
 				ts.grenades.add(-1);
 				sendf(-1, 1, "ri4", SV_DROP, target->clientnum, ts.gunselect, -1);
@@ -2069,7 +2069,7 @@ struct gameserver : igameserver
 		if(gs.state != CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
-		if(gs.gunselect == GUN_GL)
+		if(gs.gunselect == GUN_GL && gs.ammo[gs.gunselect] > 0)
 		{
 			gs.grenades.add(-1);
 			sendf(-1, 1, "ri4", SV_DROP, ci->clientnum, gs.gunselect, -1);
@@ -2321,9 +2321,12 @@ struct gameserver : igameserver
                 loopv(sents) if(!sents[i].spawned && enttype[sents[i].type].usetype == EU_ITEM)
 			    {
 					bool found = false;
-			    	if(sv_entspawntime)
+					int spawntime = sv_entspawntime*60000;
+					if(sents[i].type == WEAPON && guntype[sents[i].attr1].rdelay <= 0)
+						spawntime = guntype[sents[i].attr1].adelay*10*sv_entspawntime;
+			    	if(spawntime)
 			    	{
-			    		if(gamemillis-sents[i].millis < sv_entspawntime*60000)
+			    		if(gamemillis-sents[i].millis <= spawntime)
 							found = true;
 			    	}
 			    	else

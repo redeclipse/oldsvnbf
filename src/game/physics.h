@@ -38,14 +38,8 @@ struct physics
 	#define imov(x,y,z,q) \
 		void do##x(bool down) \
 		{ \
-			if(!q || !down) \
-			{ \
-				(y) = 0; \
-			} \
-			else \
-			{ \
-				(y) = z; \
-			} \
+			if(!q || !down) { if(y == z) y = 0; } \
+			else y = z; \
 		}
 
 	#define swappedmove		(m_ssp(cl.gamestyle) ? cl.player1->move : cl.player1->strafe)
