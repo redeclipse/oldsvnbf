@@ -159,7 +159,7 @@ struct guntypes
 	},
 	{
 		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
-		2,		8,		1500,	0,		200,	150,	1000,	3000,	-15,    10,		8,
+		2,		4,		1500,	0,		200,	150,	1000,	3000,	-15,    10,		8,
 		3,		64,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
 				"grenades",	"\fm",	"weapons/grenades/item",	"weapons/grenades/vwep"
 	},
@@ -592,7 +592,7 @@ struct gamestate
 			{
 				gunswitch(attr1, millis);
 				ammo[attr1] = clamp(ammo[attr1]+(attr2 > 0 ? attr2 : guntype[attr1].add), 1, guntype[attr1].max);
-				entid[attr1] = id;
+				if(guntype[attr1].rdelay > 0) entid[attr1] = id;
 				break;
 			}
 			default: break;
