@@ -593,7 +593,7 @@ struct gamestate
 			case WEAPON:
 			{
 				gunswitch(attr1, millis);
-				ammo[attr1] = clamp(ammo[attr1]+(attr2 > 0 ? attr2 : guntype[attr1].add), 1, guntype[attr1].max);
+				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+(attr2 > 0 ? attr2 : guntype[attr1].add), 1, guntype[attr1].max);
 				if(guntype[attr1].rdelay > 0) entid[attr1] = id;
 				break;
 			}

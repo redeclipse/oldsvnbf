@@ -154,12 +154,12 @@ struct gameclient : igameclient
 	ITVAR(grenadeshudtex, "textures/grenadeshud", 0);
 	ITVAR(flamerhudtex, "textures/flamerhud", 0);
 	ITVAR(riflehudtex, "textures/riflehud", 0);
-	ITVAR(pistolcliptex, "textures/pistolclip2", 3);
-	ITVAR(shotguncliptex, "textures/shotgunclip2", 3);
-	ITVAR(chainguncliptex, "textures/chaingunclip2", 3);
-	ITVAR(grenadescliptex, "<anim>textures/grenadesclip", 3);
-	ITVAR(flamercliptex, "<anim>textures/flamerclip", 3);
-	ITVAR(riflecliptex, "textures/rifleclip2", 3);
+	ITVAR(pistolcliptex, "textures/pistolclip", 3);
+	ITVAR(shotguncliptex, "textures/shotgunclip", 3);
+	ITVAR(chainguncliptex, "textures/chaingunclip", 3);
+	ITVAR(grenadescliptex, "textures/grenadesclip", 3);
+	ITVAR(flamercliptex, "textures/flamerclip", 3);
+	ITVAR(riflecliptex, "textures/rifleclip", 3);
 	ITVAR(damagetex, "textures/damage", 0);
 	ITVAR(snipetex, "textures/snipe", 0);
 
@@ -537,7 +537,7 @@ struct gameclient : igameclient
 			d->pitch = 0;
 			d->roll = 0;
 		}
-		else 
+		else
         {
             d->move = d->strafe = 0;
             d->resetinterp();
@@ -832,7 +832,7 @@ struct gameclient : igameclient
             flamercliptex(), riflecliptex(), grenadescliptex(),
         };
         Texture *t = textureload(cliptexs[gun], 3);
-        if(pointer) 
+        if(pointer)
         {
             size *= t->w/float(pointer->w);
             x -= size/2.0f;
