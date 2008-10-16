@@ -235,7 +235,7 @@ struct aiclient
 {
 	gameclient &cl;
     avoidset obstacles;
-    int avoidmillis;
+    int avoidmillis, currentai;
 
 	static const int AIISNEAR			= 32;			// is near
 	static const int AIISFAR			= 128;			// too far
@@ -255,7 +255,7 @@ struct aiclient
 	#define AITARG(x,y,z)			(y != x && AIMAYTARG(y) && (!z || AVOIDENEMY(x, y)))
 	#define AICANSEE(x,y,z)			getsight(x, z->yaw, z->pitch, y, targ, AILOSDIST(z->skill), AIFOVX(z->skill), AIFOVY(z->skill))
 
-	aiclient(gameclient &_cl) : cl(_cl), obstacles(_cl), avoidmillis(0)
+	aiclient(gameclient &_cl) : cl(_cl), obstacles(_cl), avoidmillis(0), currentai(0)
 	{
 		CCOMMAND(addbot, "s", (aiclient *self, char *s),
 			self->addbot(*s ? clamp(atoi(s), 1, 100) : -1)
@@ -325,9 +325,18 @@ struct aiclient
 			numai++;
 		if(numai)
 		{
-			avoid();
+			if(lastmillis-avoidmillis > 500) // only generate twice a second max
+			{
+				avoid();
+				avoidmillis = lastmillis;
+			}
+			int idx = 0;
+			if(currentai >= numai || currentai < 0) currentai = 0;
 			loopv(cl.players) if(cl.players[i] && cl.players[i]->ai)
-				think(cl.players[i], numai);
+			{
+				think(cl.players[i], idx);
+				idx++;
+			}
 		}
 	}
 
@@ -459,7 +468,6 @@ struct aiclient
 			c.defers = b.defers;
 			d->ai->enemy = c.target = e->clientnum;
 			if(pursue) c.expire = 5000;
-			if(c.defers) patrol(d, c, epos, AIISNEAR, AIISFAR);
 			return true;
 		}
 		return false;
@@ -1173,25 +1181,23 @@ struct aiclient
 			{
 				if(!aiming) aim(d, b, d->ai->spot, d->yaw, d->pitch, 3);
 				aim(d, b, d->ai->spot, d->aimyaw, d->aimpitch);
-
-				const struct aimdir { int move, strafe, offset; } aimdirs[8] =
-				{
-					{  1,  0,   0 },
-					{  1,  1,  45 },
-					{  0,  1,  90 },
-					{ -1,  1, 135 },
-					{ -1,  0, 180 },
-					{ -1, -1, 225 },
-					{  0, -1, 270 },
-					{  1, -1, 315 }
-				};
-				const aimdir &ad = aimdirs[(int)floor((d->aimyaw - d->yaw + 22.5f)/45.0f) & 7];
-				d->move = ad.move;
-				d->strafe = ad.strafe;
-				d->aimyaw -= ad.offset;
-				cl.fixrange(d->aimyaw, d->aimpitch);
 			}
-			else d->move = d->strafe = 0;
+			const struct aimdir { int move, strafe, offset; } aimdirs[8] =
+			{
+				{  1,  0,   0 },
+				{  1,  1,  45 },
+				{  0,  1,  90 },
+				{ -1,  1, 135 },
+				{ -1,  0, 180 },
+				{ -1, -1, 225 },
+				{  0, -1, 270 },
+				{  1, -1, 315 }
+			};
+			const aimdir &ad = aimdirs[(int)floor((d->aimyaw - d->yaw + 22.5f)/45.0f) & 7];
+			d->move = ad.move;
+			d->strafe = ad.strafe;
+			d->aimyaw -= ad.offset;
+			cl.fixrange(d->aimyaw, d->aimpitch);
 		}
 		else d->stopmoving();
 	}
@@ -1214,46 +1220,42 @@ struct aiclient
 
 	void avoid()
 	{
-		if(lastmillis-avoidmillis > 500) // only generate twice a second
-		{
-			// guess as to the radius of ai and other critters relying on the avoid set for now
-			float guessradius = cl.player1->radius;
+		// guess as to the radius of ai and other critters relying on the avoid set for now
+		float guessradius = cl.player1->radius;
 
-			obstacles.clear();
-			loopi(cl.numdynents())
+		obstacles.clear();
+		loopi(cl.numdynents())
+		{
+			gameent *d = (gameent *)cl.iterdynents(i);
+			if(!d || !AIMAYTARG(d)) continue;
+			vec pos(cl.feetpos(d, 0.f));
+			float limit = guessradius + d->radius;
+			limit *= limit; // square it to avoid expensive square roots
+			loopvk(cl.et.ents)
 			{
-				gameent *d = (gameent *)cl.iterdynents(i);
-				if(!d || !AIMAYTARG(d)) continue;
-				vec pos(cl.feetpos(d, 0.f));
-				float limit = guessradius + d->radius;
+				gameentity &e = *(gameentity *)cl.et.ents[k];
+				if(e.type == WAYPOINT && e.o.squaredist(pos) <= limit)
+					obstacles.add(d, k);
+			}
+		}
+		loopv(cl.pj.projs)
+		{
+			projent *p = cl.pj.projs[i];
+			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT)
+			{
+				float limit = guntype[p->attr1].explode + guessradius;
 				limit *= limit; // square it to avoid expensive square roots
 				loopvk(cl.et.ents)
 				{
 					gameentity &e = *(gameentity *)cl.et.ents[k];
-					if(e.type == WAYPOINT && e.o.squaredist(pos) <= limit)
-						obstacles.add(d, k);
+					if(e.type == WAYPOINT && e.o.squaredist(p->o) <= limit)
+						obstacles.add(p, k);
 				}
 			}
-			loopv(cl.pj.projs)
-			{
-				projent *p = cl.pj.projs[i];
-				if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT)
-				{
-					float limit = guntype[p->attr1].explode + guessradius;
-					limit *= limit; // square it to avoid expensive square roots
-					loopvk(cl.et.ents)
-					{
-						gameentity &e = *(gameentity *)cl.et.ents[k];
-						if(e.type == WAYPOINT && e.o.squaredist(p->o) <= limit)
-							obstacles.add(p, k);
-					}
-				}
-			}
-			avoidmillis = lastmillis;
 		}
 	}
 
-	void think(gameent *d, int numai)
+	void think(gameent *d, int idx)
 	{
 		if(d->ai->state.empty()) d->ai->reset();
 
@@ -1266,24 +1268,28 @@ struct aiclient
 		{
 			aistate &b = d->ai->getstate();
 			process(d, b);
-			bool override = d->state == CS_ALIVE && (b.goal || d->ai->route.empty());
-			if(override || lastmillis >= b.next)
+			if(idx == currentai)
 			{
-				bool result = true;
-				int frame = (aiframetimes[b.type]-d->skill)*numai;
-				b.next = lastmillis + frame;
-				b.cycle++;
-				switch(b.type)
+				bool override = d->state == CS_ALIVE && (b.goal || d->ai->route.empty());
+				if(override || lastmillis >= b.next)
 				{
-					case AI_S_WAIT:			result = dowait(d, b);		break;
-					case AI_S_DEFEND:		result = dodefend(d, b);	break;
-					case AI_S_PURSUE:		result = dopursue(d, b);	break;
-					case AI_S_ATTACK:		result = doattack(d, b);	break;
-					case AI_S_INTEREST:		result = dointerest(d, b);	break;
-					default:				result = false;				break;
+					bool result = true;
+					int frame = aiframetimes[b.type]-d->skill;
+					b.next = lastmillis + frame;
+					b.cycle++;
+					switch(b.type)
+					{
+						case AI_S_WAIT:			result = dowait(d, b);		break;
+						case AI_S_DEFEND:		result = dodefend(d, b);	break;
+						case AI_S_PURSUE:		result = dopursue(d, b);	break;
+						case AI_S_ATTACK:		result = doattack(d, b);	break;
+						case AI_S_INTEREST:		result = dointerest(d, b);	break;
+						default:				result = false;				break;
+					}
+					if((b.expire && (b.expire -= frame) <= 0) || !result)
+						d->ai->removestate();
 				}
-				if((b.expire && (b.expire -= frame) <= 0) || !result)
-					d->ai->removestate();
+				currentai++;
 			}
 			check(d);
 		}

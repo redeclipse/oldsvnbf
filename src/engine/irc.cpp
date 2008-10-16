@@ -506,6 +506,7 @@ void irccleanup()
 	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL)
 	{
 		ircnet *n = &ircnets[i];
+		ircsend(n, "QUIT :Blood Frontier, it's bloody fun! http://bloodfrontier.com/");
 		ircdiscon(n);
 	}
 }
