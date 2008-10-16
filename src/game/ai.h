@@ -459,7 +459,7 @@ struct aiclient
 			c.defers = b.defers;
 			d->ai->enemy = c.target = e->clientnum;
 			if(pursue) c.expire = 5000;
-			patrol(d, c, epos, AIISNEAR, AIISFAR);
+			if(c.defers) patrol(d, c, epos, AIISNEAR, AIISFAR);
 			return true;
 		}
 		return false;
