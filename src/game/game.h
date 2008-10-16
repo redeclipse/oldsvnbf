@@ -425,7 +425,7 @@ VARG(spawngun, 0, GUN_PISTOL, GUN_MAX-1);
 VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
 VARG(botbalance, 0, 4, MAXCLIENTS/2);
-VARG(botminskill, 0, 50, 100);
+VARG(botminskill, 0, 80, 100);
 VARG(botmaxskill, 0, 100, 100);
 
 FVARG(gravityscale, 1.f);
@@ -778,7 +778,7 @@ struct aiinfo
 		route.setsize(0);
 		addstate(AI_S_WAIT);
 		gunpref = rnd(GUN_MAX-1)+1;
-		if(guntype[gunpref].rdelay <= 0) gunpref = (gunpref+rnd(3)-1)%GUN_MAX;
+		while(guntype[gunpref].rdelay <= 0) gunpref--;
 		spot = target = vec(0, 0, 0);
 		enemy = NULL;
 		lastreq = 0;
