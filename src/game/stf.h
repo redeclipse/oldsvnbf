@@ -162,7 +162,7 @@ struct stfstate
 
 	bool insideflag(const flaginfo &b, const vec &o)
 	{
-		float dx = (b.o.x-o.x), dy = (b.o.y-o.y), dz = (b.o.z-o.z+14);
+		float dx = (b.o.x-o.x), dy = (b.o.y-o.y), dz = (b.o.z-o.z);
 		return dx*dx + dy*dy <= enttype[FLAG].radius*enttype[FLAG].radius && fabs(dz) <= enttype[FLAG].radius;
 	}
 };
@@ -179,6 +179,11 @@ struct stfclient : stfstate
 	{
 	}
 
+    bool insideflag(const flaginfo &b, gameent *d)
+    {
+        return insideflag(b, cl.feetpos(d));
+    }
+
     void rendertether(gameent *d)
     {
         //int oldflag = d->lastflag;
@@ -188,7 +193,7 @@ struct stfclient : stfstate
             loopv(flags)
             {
                 flaginfo &b = flags[i];
-                if(insideflag(b, d->o) && ((b.owner == d->team && b.enemy) || b.enemy == d->team))
+                if(insideflag(b) && ((b.owner == d->team && b.enemy) || b.enemy == d->team))
                 {
 					part_trail(7, 1, cl.feetpos(d, 1.f), vec(b.pos).sub(vec(0, 0, 4.f)), teamtype[d->team].colour, 4.8f);
 					regularshape(7, (int)d->height, teamtype[d->team].colour, 53, 3, 50, cl.feetpos(d, 1.f), 4.8f);
