@@ -158,15 +158,13 @@ struct ctfservmode : ctfstate, servmode
     {
         if(notgotflags) return;
         static const dynent dummy;
-        vec o(newpos);
-        o.z -= dummy.height;
         loopv(flags) if(flags[i].owner==ci->clientnum)
         {
             loopvk(flags) if(flags[k].team==ci->team)
             {
 				flag &goal = flags[k];
 
-				if(goal.owner<0 && !goal.droptime && o.dist(goal.spawnloc) < enttype[FLAG].radius)
+				if(goal.owner<0 && !goal.droptime && newpos.dist(goal.spawnloc) < enttype[FLAG].radius)
 				{
 					returnflag(i);
 					goal.score++;
@@ -491,8 +489,7 @@ struct ctfclient : ctfstate
 
     void checkflags(gameent *d)
     {
-        vec o = d->o;
-        o.z -= d->height;
+        vec o = cl.feetpos(d);
         loopv(flags)
         {
             flag &f = flags[i];
