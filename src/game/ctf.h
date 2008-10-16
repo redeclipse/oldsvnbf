@@ -157,7 +157,6 @@ struct ctfservmode : ctfstate, servmode
     void moved(clientinfo *ci, const vec &oldpos, const vec &newpos)
     {
         if(notgotflags) return;
-        static const dynent dummy;
         loopv(flags) if(flags[i].owner==ci->clientnum)
         {
             loopvk(flags) if(flags[k].team==ci->team)
