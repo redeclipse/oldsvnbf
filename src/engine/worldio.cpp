@@ -751,7 +751,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			hdr.revision = 1;
 			strncpy(hdr.maptitle, ohdr.maptitle, 128);
 
-			if(ohdr.version<=20) conoutf("\fyloading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
+			if(ohdr.version<=20) conoutf("\frloading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
 			if(!ohdr.ambient) ohdr.ambient = 25;
 			if(!ohdr.lerpsubdivsize)
 			{

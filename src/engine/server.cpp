@@ -532,7 +532,7 @@ void checkmasterreply()
 	if(mssock!=ENET_SOCKET_NULL && !masterreceive(mssock, masterb))
 	{
 		mssock = ENET_SOCKET_NULL;
-		conoutf("\fymaster reply: %s", masterrep);
+		conoutf("\fgmaster reply: %s", masterrep);
 	}
 }
 
@@ -670,7 +670,7 @@ void serverloop()
 	#ifdef WIN32
 	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 	#endif
-	conoutf("\fydedicated server started, waiting for clients... [Ctrl-C to exit]");
+	conoutf("\fgdedicated server started, waiting for clients... [Ctrl-C to exit]");
 	for(;;)
 	{
 		int _lastmillis = lastmillis;
@@ -738,7 +738,7 @@ void setupserver()
 	{
 		updatemaster();
 	}
-	if(verbose) conoutf("\fygame server for %s started", game);
+	if(verbose) conoutf("\fggame server for %s started", game);
 
 #ifndef STANDALONE
 	if(servertype >= 3) serverloop();

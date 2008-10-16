@@ -11,7 +11,7 @@ struct aiserv
 			if(m_lobby(sv.gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
 			else if(m_fight(sv.gamemode) && sv_botbalance)
 			{
-				if(sv_botbalance < MAXCLIENTS-1)
+				if(sv_botbalance < MAXCLIENTS/2)
 				{
 					setvar("sv_botbalance", sv_botbalance+1, true);
 					s_sprintfd(val)("%d", sv_botbalance);
@@ -221,8 +221,9 @@ struct aiserv
 			{
 				if(sv_botbalance)
 				{
-					while(sv.nonspectators() < sv_botbalance && addai(AI_BOT, -1)) ;
-					while(sv.nonspectators() > sv_botbalance && delai(AI_BOT)) ;
+					int balance = sv_botbalance * (m_team(sv.gamemode, sv.mutators) ? 2 : 1);
+					while(sv.nonspectators() < balance && addai(AI_BOT, -1)) ;
+					while(sv.nonspectators() > balance && delai(AI_BOT)) ;
 				}
 			}
 			while(reassignai()) ;
@@ -236,9 +237,9 @@ struct aiclient
     avoidset obstacles;
     int avoidmillis;
 
-	static const int AIISNEAR			= 64;			// is near
+	static const int AIISNEAR			= 32;			// is near
 	static const int AIISFAR			= 128;			// too far
-	static const int AIJUMPHEIGHT		= 8;			// decides to jump
+	static const int AIJUMPHEIGHT		= 6;			// decides to jump
 	static const int AIJUMPIMPULSE		= 16;			// impulse to jump
 	static const int AILOSMIN			= 64;			// minimum line of sight
 	static const int AILOSMAX			= 4096;			// maximum line of sight
@@ -250,8 +251,9 @@ struct aiclient
 	#define AILOSDIST(x)			clamp((AILOSMIN+(AILOSMAX-AILOSMIN))/100.f*float(x), float(AILOSMIN), float(getvar("fog")+AILOSMIN))
 	#define AIFOVX(x)				clamp((AIFOVMIN+(AIFOVMAX-AIFOVMIN))/100.f*float(x), float(AIFOVMIN), float(AIFOVMAX))
 	#define AIFOVY(x)				AIFOVX(x)*3.f/4.f
-    #define AIMAYTARG(y)           ((y)->state == CS_ALIVE && lastmillis-(y)->lastspawn > REGENWAIT)
-	#define AITARG(x,y,z)			((y) != (x) && AIMAYTARG(y) && (!z || AVOIDENEMY(x, y)))
+    #define AIMAYTARG(y)           (y->state == CS_ALIVE && lastmillis-y->lastspawn > REGENWAIT)
+	#define AITARG(x,y,z)			(y != x && AIMAYTARG(y) && (!z || AVOIDENEMY(x, y)))
+	#define AICANSEE(x,y,z)			getsight(x, z->yaw, z->pitch, y, targ, AILOSDIST(z->skill), AIFOVX(z->skill), AIFOVY(z->skill))
 
 	aiclient(gameclient &_cl) : cl(_cl), obstacles(_cl), avoidmillis(0)
 	{
@@ -318,15 +320,14 @@ struct aiclient
 
 	void update()
 	{
-		bool avoided = false;
+		int numai = 0;
 		loopv(cl.players) if(cl.players[i] && cl.players[i]->ai)
+			numai++;
+		if(numai)
 		{
-			if(!avoided)
-			{
-				avoid();
-				avoided = true;
-			}
-			think(cl.players[i]);
+			avoid();
+			loopv(cl.players) if(cl.players[i] && cl.players[i]->ai)
+				think(cl.players[i], numai);
 		}
 	}
 
@@ -380,14 +381,15 @@ struct aiclient
 		return !targets.empty();
 	}
 
-	bool makeroute(gameent *d, aistate &b, int node, float tolerance = 0.f)
+	bool makeroute(gameent *d, aistate &b, int node, float tolerance = 0.f, bool retry = false)
 	{
-		if(cl.et.route(d, d->lastnode, node, d->ai->route, obstacles, tolerance))
+		if(cl.et.route(d, d->lastnode, node, d->ai->route, obstacles, tolerance, retry))
 		{
 			b.goal = false;
 			b.override = false;
 			return true;
 		}
+		else if(!retry) return makeroute(d, b, node, tolerance, true);
 		return false;
 	}
 
@@ -466,14 +468,15 @@ struct aiclient
 	bool defer(gameent *d, aistate &b, bool pursue = false)
 	{
 		gameent *t = NULL, *e = NULL;
-		vec targ;
+		vec targ, dp = cl.headpos(d), tp = vec(0, 0, 0);
 		loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && e != d && AITARG(d, e, true))
 		{
-			vec ep = cl.headpos(e), tp = t ? cl.headpos(t) : vec(0, 0, 0),
-				dp = cl.headpos(d);
-			if((!t || ep.squaredist(d->o) < tp.squaredist(d->o)) &&
-				getsight(dp, d->yaw, d->pitch, ep, targ, AILOSDIST(d->skill), AIFOVX(d->skill), AIFOVY(d->skill)))
-					t = e;
+			vec ep = cl.headpos(e);
+			if((!t || ep.squaredist(d->o) < tp.squaredist(d->o)) && (pursue || AICANSEE(dp, ep, d)))
+			{
+				t = e;
+				tp = ep;
+			}
 		}
 		if(t) return violence(d, b, t, pursue);
 		return false;
@@ -834,7 +837,7 @@ struct aiclient
 			if(e && AITARG(d, e, true))
 			{
 				vec ep = cl.headpos(e);
-				if(e->state == CS_ALIVE && raycubelos(pos, ep, targ))
+				if(e->state == CS_ALIVE && AICANSEE(pos, ep, d))
 				{
 					d->ai->enemy = e->clientnum;
 					if(m_fight(cl.gamemode) && d->canshoot(d->gunselect, lastmillis) && hastarget(d, b, ep))
@@ -1013,13 +1016,13 @@ struct aiclient
 			if(d->ai->route.inrange(n) && --n >= 0) // otherwise got to goal
 			{
 				if(!d->ai->route.inrange(n)) n = closenode(d, b);
-				if(d->ai->route.inrange(n) && !obstacles.find(d->ai->route[n], d))
+				if(d->ai->route.inrange(n) && (retry || !obstacles.find(d->ai->route[n], d)))
 				{
 					gameentity &e = *(gameentity *)cl.et.ents[d->ai->route[n]];
 					b.goal = false;
 					d->ai->spot = vec(e.o).add(vec(0, 1, d->height));
 					vec pos = cl.feetpos(d);
-					if(d->ai->spot.z-PLAYERHEIGHT-pos.z > AIJUMPHEIGHT && !d->jumping && !d->timeinair && lastmillis-d->jumptime > 1000)
+					if((!d->timeinair && d->ai->spot.z-PLAYERHEIGHT-pos.z > AIJUMPHEIGHT) || (d->timeinair && cl.ph.canimpulse(d)))
 					{
 						d->jumping = true;
 						d->jumptime = lastmillis;
@@ -1038,7 +1041,7 @@ struct aiclient
 		return false;
 	}
 
-	void aim(gameent *d, aistate &b, vec &pos, float &yaw, float &pitch, int skew)
+	void aim(gameent *d, aistate &b, vec &pos, float &yaw, float &pitch, int skew = 0)
 	{
 		vec dp = cl.headpos(d);
 		float targyaw = -(float)atan2(pos.x-dp.x, pos.y-dp.y)/PI*180+180;
@@ -1159,32 +1162,36 @@ struct aiclient
 			gameent *e = cl.getclient(d->ai->enemy);
 			if(e)
 			{
-				vec enemypos = cl.headpos(e);
-				aim(d, b, enemypos, d->yaw, d->pitch, 9);
-				aiming = true;
+				vec targ, dp = cl.headpos(d), ep = cl.headpos(e);
+				if(AICANSEE(dp, ep, d))
+				{
+					aim(d, b, ep, d->yaw, d->pitch, 9);
+					aiming = true;
+				}
 			}
 			if(hunt(d, b))
 			{
-				if(!aiming) aim(d, b, d->ai->spot, d->yaw, d->pitch, 6);
-				aim(d, b, d->ai->spot, d->aimyaw, d->aimpitch, 3);
-			}
+				if(!aiming) aim(d, b, d->ai->spot, d->yaw, d->pitch, 3);
+				aim(d, b, d->ai->spot, d->aimyaw, d->aimpitch);
 
-            const struct aimdir { int move, strafe, offset; } aimdirs[8] =
-            {
-                {  1,  0,   0 },
-                {  1,  1,  45 },
-                {  0,  1,  90 },
-                { -1,  1, 135 },
-                { -1,  0, 180 },
-                { -1, -1, 225 },
-                {  0, -1, 270 },
-                {  1, -1, 315 }
-            };
-            const aimdir &ad = aimdirs[(int)floor((d->aimyaw - d->yaw + 22.5f)/45.0f) & 7];
-            d->move = ad.move;
-            d->strafe = ad.strafe;
-            d->aimyaw -= ad.offset;
-			cl.fixrange(d->aimyaw, d->aimpitch);
+				const struct aimdir { int move, strafe, offset; } aimdirs[8] =
+				{
+					{  1,  0,   0 },
+					{  1,  1,  45 },
+					{  0,  1,  90 },
+					{ -1,  1, 135 },
+					{ -1,  0, 180 },
+					{ -1, -1, 225 },
+					{  0, -1, 270 },
+					{  1, -1, 315 }
+				};
+				const aimdir &ad = aimdirs[(int)floor((d->aimyaw - d->yaw + 22.5f)/45.0f) & 7];
+				d->move = ad.move;
+				d->strafe = ad.strafe;
+				d->aimyaw -= ad.offset;
+				cl.fixrange(d->aimyaw, d->aimpitch);
+			}
+			else d->move = d->strafe = 0;
 		}
 		else d->stopmoving();
 	}
@@ -1246,7 +1253,7 @@ struct aiclient
 		}
 	}
 
-	void think(gameent *d)
+	void think(gameent *d, int numai)
 	{
 		if(d->ai->state.empty()) d->ai->reset();
 
@@ -1263,17 +1270,17 @@ struct aiclient
 			if(override || lastmillis >= b.next)
 			{
 				bool result = true;
-				int frame = aiframetimes[b.type] - d->skill;
+				int frame = (aiframetimes[b.type]-d->skill)*numai;
 				b.next = lastmillis + frame;
 				b.cycle++;
 				switch(b.type)
 				{
-					case AI_S_WAIT:		result = dowait(d, b);		break;
+					case AI_S_WAIT:			result = dowait(d, b);		break;
 					case AI_S_DEFEND:		result = dodefend(d, b);	break;
 					case AI_S_PURSUE:		result = dopursue(d, b);	break;
 					case AI_S_ATTACK:		result = doattack(d, b);	break;
-					case AI_S_INTEREST:	result = dointerest(d, b);	break;
-					default:			result = false;				break;
+					case AI_S_INTEREST:		result = dointerest(d, b);	break;
+					default:				result = false;				break;
 				}
 				if((b.expire && (b.expire -= frame) <= 0) || !result)
 					d->ai->removestate();

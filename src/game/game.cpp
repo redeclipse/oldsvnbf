@@ -450,21 +450,6 @@ struct gameclient : igameclient
 			}
 			else if(player1->state == CS_ALIVE)
 			{
-				if(player1->timeinair)
-				{
-					if(player1->jumping && lastmillis-player1->lastimpulse > ph.gravityforce(player1)*100)
-					{
-						vec dir;
-						vecfromyawpitch(player1->yaw, player1->move || player1->strafe ? player1->pitch : 90.f, player1->move || player1->strafe ? player1->move : 1, player1->strafe, dir);
-						dir.normalize();
-						dir.mul(ph.jumpvelocity(player1));
-						player1->vel.add(dir);
-						player1->lastimpulse = lastmillis;
-						player1->jumping = false;
-					}
-				}
-				else player1->lastimpulse = 0;
-
 				ph.move(player1, 20, true);
 				addsway(player1);
 				et.checkitems(player1);

@@ -955,7 +955,7 @@ static void lockpvs_(bool lock)
     lockedwaterpvs = 0;
     loopi(wbytes) lockedwaterpvs |= pvsbuf[d->offset + i] << (i*8);
     loopi(MAXWATERPVS) lockedwaterplanes[i] = waterplanes[i].height;
-    conoutf("\fylocked view cell at %.1f, %.1f, %.1f", camera1->o.x, camera1->o.y, camera1->o.z);
+    conoutf("\fglocked view cell at %.1f, %.1f, %.1f", camera1->o.x, camera1->o.y, camera1->o.z);
 }
 
 VARF(lockpvs, 0, 0, 1, lockpvs_(lockpvs!=0));
@@ -1065,7 +1065,7 @@ void testpvs(int *vcsize)
     lockedpvs = w.testviewcell(o, size, &lockedwaterpvs, &len);
     loopi(MAXWATERPVS) lockedwaterplanes[i] = waterplanes[i].height;
     lockpvs = 1;
-    conoutf("\fygenerated test view cell of size %d at %.1f, %.1f, %.1f (%d B)", size, camera1->o.x, camera1->o.y, camera1->o.z, len);
+    conoutf("\fggenerated test view cell of size %d at %.1f, %.1f, %.1f (%d B)", size, camera1->o.x, camera1->o.y, camera1->o.z, len);
 
     origpvsnodes.setsizenodelete(0);
     numwaterplanes = oldnumwaterplanes;
@@ -1148,7 +1148,7 @@ void genpvs(int *viewcellsize)
     if(genpvs_canceled)
     {
         clearpvs();
-        conoutf("\fygenpvs aborted");
+        conoutf("\frgenpvs aborted");
     }
     else conoutf("\fggenerated %d unique view cells totaling %.1f kB and averaging %d B (%.1f seconds)",
             pvs.length(), pvsbuf.length()/1024.0f, pvsbuf.length()/max(pvs.length(), 1), (end - start) / 1000.0f);

@@ -1132,7 +1132,7 @@ void calclight(int quality)
 	computescreen("lighting done...");
 	allchanged();
 	if(calclight_canceled)
-		conoutf("\fycalclight aborted");
+		conoutf("\frcalclight aborted");
 	else
 		conoutf("\fggenerated %d lightmaps using %d%% of %d textures (%.1f seconds)",
 			total,
@@ -1184,7 +1184,7 @@ void patchlight(int quality)
 	computescreen("lighting done...");
 	allchanged();
 	if(calclight_canceled)
-		conoutf("\fypatchlight aborted");
+		conoutf("\frpatchlight aborted");
 	else
 		conoutf("\fgpatched %d lightmaps using %d%% of %d textures (%.1f seconds)",
 			total,

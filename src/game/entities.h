@@ -594,7 +594,7 @@ struct entities : icliententities
 		}
 	}
 
-	void findplayerspawn(dynent *d, int forceent = -1, int tag = -1)   // place at random spawn. also used by monsters!
+	void findplayerspawn(dynent *d, int forceent = -1, int tag = -1, int retries = 0)   // place at random spawn. also used by monsters!
 	{
 		int pick = forceent;
 		if(pick<0)
@@ -622,6 +622,7 @@ struct entities : icliententities
 				}
 			}
 		}
+		else if(retries < 2) findplayerspawn(d, -1, retries < 1 ? tag : -1, retries+1);
 		else
 		{
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
@@ -811,7 +812,7 @@ struct entities : icliententities
         float score() const { return curscore + estscore; }
 	};
 
-	bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, float *score = NULL)
+	bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, bool retry = false, float *score = NULL)
 	{
         if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node) return false;
 
@@ -828,15 +829,18 @@ struct entities : icliententities
 		}
 		while(nodes.length() < ents.length()) nodes.add();
 
-		loopavoid(obstacles, d,
+		if(!retry)
 		{
-			if(ents[ent]->type == ents[node]->type)
+			loopavoid(obstacles, d,
 			{
-				nodes[ent].id = routeid;
-				nodes[ent].curscore = -1.f;
-				nodes[ent].estscore = 0.f;
-			}
-		});
+				if(ents[ent]->type == ents[node]->type)
+				{
+					nodes[ent].id = routeid;
+					nodes[ent].curscore = -1.f;
+					nodes[ent].estscore = 0.f;
+				}
+			});
+		}
 
 		nodes[node].id = routeid;
 		nodes[goal].curscore = nodes[node].curscore = 0.f;
@@ -1302,7 +1306,7 @@ struct entities : icliententities
 
 	#define renderfocus(i,f) { gameentity &e = *(gameentity *)ents[i]; f; }
 
-	void renderlinked(gameentity &e)
+	void renderlinked(gameentity &e, int idx)
 	{
 		loopv(e.links)
 		{
@@ -1316,7 +1320,7 @@ struct entities : icliententities
 				loopvj(f.links)
 				{
 					int g = f.links[j];
-					if(ents.inrange(g))
+					if(ents.inrange(g) && g > idx) // smaller dual links are done already?
 					{
 						gameentity &h = *(gameentity *)ents[g];
 						if(&h == &e)
@@ -1326,15 +1330,29 @@ struct entities : icliententities
 						}
 					}
 				}
+#if 0
 				part_flare(vec(e.o).add(vec(0, 0, RENDERPUSHZ)),
 					vec(f.o).add(vec(0, 0, RENDERPUSHZ)),
 						10, 21, both ? 0xF08020 : 0xF02020, 0.2f);
+#else
+				vec fr(vec(e.o).add(vec(0, 0, RENDERPUSHZ))), dr(vec(f.o).add(vec(0, 0, RENDERPUSHZ)));
+				vec col(0.5f, both ? 0.25f : 0.0f, 0.f);
+				renderline(fr, dr, col.x, col.y, col.z, false);
+				dr.sub(fr);
+				dr.normalize();
+				float yaw, pitch;
+				vectoyawpitch(dr, yaw, pitch);
+				dr.mul(RENDERPUSHX);
+				dr.add(fr);
+				rendertris(dr, yaw, pitch, 2.f, col.x*2.f, col.y*2.f, col.z*2.f, true, false);
+#endif
 			}
 		}
 	}
 
-	void renderentshow(gameentity &e, int level)
+	void renderentshow(gameentity &e, int idx, int level)
 	{
+		if(level != 1 && e.o.dist(camera1->o) > maxparticledistance) return;
 		if(!level || showentradius() >= level)
 		{
 			switch(e.type)
@@ -1389,7 +1407,7 @@ struct entities : icliententities
 
 		if(enttype[e.type].links)
 			if(!level || showentlinks() >= level || (e.type == WAYPOINT && dropentities()))
-				renderlinked(e);
+				renderlinked(e, idx);
 	}
 
 	void renderentlight(gameentity &e)
@@ -1455,11 +1473,11 @@ struct entities : icliententities
 	{
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
-			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || dropentities()) ? 3 : 0));
+			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || (dropentities() && !m_fight(cl.gamemode))) ? 3 : 0));
 			renderprimitive(true);
 			if(level) loopv(ents)
 			{
-				if(level) renderfocus(i, renderentshow(e, editmode && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
+				renderfocus(i, renderentshow(e, i, editmode && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
 			}
 			renderprimitive(false);
 		}
@@ -1468,7 +1486,7 @@ struct entities : icliententities
 		if(t) loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(e.type != TELEPORT || !e.attr5) continue;
+			if(e.type != TELEPORT || !e.attr5 || e.o.dist(camera1->o) > maxparticledistance) continue;
 			glPushMatrix();
 			glEnable(GL_BLEND);
 			glDisable(GL_CULL_FACE);
@@ -1522,9 +1540,9 @@ struct entities : icliententities
 
 	void drawparticle(gameentity &e, vec &o, int idx, bool spawned)
 	{
-		if(e.type == NOTUSED) return;
+		if(e.type == NOTUSED || o.dist(camera1->o) > maxparticledistance) return;
 		string s;
-		if(e.type == PARTICLES && o.dist(camera1->o) <= maxparticledistance)
+		if(e.type == PARTICLES)
 		{
 			if(idx >= 0 || !e.links.length()) makeparticles((entity &)e);
 			else if(lastmillis-e.lastemit < 500)
@@ -1586,7 +1604,6 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(e.type == NOTUSED) continue;
 			drawparticle(e, e.o, i, e.spawned);
 		}
 		loopv(cl.pj.projs)

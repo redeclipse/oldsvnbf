@@ -319,7 +319,7 @@ void clearmodel(char *name)
     mdllookup.remove(name);
     (*m)->cleanup();
     delete *m;
-    conoutf("\fycleared model %s", name);
+    conoutf("\fgcleared model %s", name);
 }
 
 COMMAND(clearmodel, "s");

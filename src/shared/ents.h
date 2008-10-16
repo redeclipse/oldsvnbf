@@ -60,7 +60,7 @@ struct physent                                  // base entity type, can be affe
 	int inmaterial;
     bool inliquid;
     bool jumping, crouching;
-    int jumptime, crouchtime;
+    int jumptime, crouchtime, lastimpulse;
     bool blocked, moving;                       // used by physics to signal ai
     physent *onplayer;
     int lastmove, lastmoveattempt, collisions, stacks;
@@ -86,7 +86,7 @@ struct physent                                  // base entity type, can be affe
     {
     	inmaterial = 0;
     	inliquid = jumping = crouching  = false;
-        jumptime = crouchtime = timeinair = 0;
+        jumptime = crouchtime = timeinair = lastimpulse = 0;
         strafe = move = 0;
         physstate = PHYS_FALL;
 		o = vel = falling = vec(0, 0, 0);
