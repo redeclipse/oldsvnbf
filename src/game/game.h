@@ -828,11 +828,13 @@ struct gameent : dynent, gamestate
 	int wschan;
 	aiinfo *ai;
     vec muzzle, mdir[MDIR_MAX];
+	bool k_up, k_down, k_left, k_right;
 
 	string name, info, obit;
 	int team;
 
-	gameent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), wschan(-1), ai(NULL), muzzle(-1, -1, -1)
+	gameent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), wschan(-1), ai(NULL), muzzle(-1, -1, -1),
+		k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
 		team = TEAM_NEUTRAL;

@@ -42,20 +42,17 @@ struct physics
 		fixspawn = 4;
 	}
 
-	#define imov(x,y,z,q) \
-		void do##x(bool down) \
+	#define imov(name,v,d,s,os) \
+		void do##name(bool down) \
 		{ \
-			if(!q || !down) { if(y == z) y = 0; } \
-			else y = z; \
+			cl.player1->s = down && cl.allowmove(cl.player1); \
+			cl.player1->v = cl.player1->s ? d : (cl.player1->os ? -(d) : 0); \
 		}
 
-	#define swappedmove		(m_ssp(cl.gamestyle) ? cl.player1->move : cl.player1->strafe)
-	#define swappeddir(x)	(m_ssp(cl.gamestyle) ? -x : x)
-
-	imov(backward,	cl.player1->move,	-1,				cl.allowmove(cl.player1));
-	imov(forward,	cl.player1->move,	1,				cl.allowmove(cl.player1));
-	imov(left,		swappedmove,		swappeddir(1),	cl.allowmove(cl.player1));
-	imov(right,		swappedmove,		swappeddir(-1),	cl.allowmove(cl.player1));
+	imov(backward, move,   -1, k_down,  k_up);
+	imov(forward,  move,    1, k_up,    k_down);
+	imov(left,     strafe,  1, k_left,  k_right);
+	imov(right,    strafe, -1, k_right, k_left);
 
 	// inputs
 	#define iput(x,y,t,z,a,q) \
@@ -586,7 +583,7 @@ struct physics
             return;
         }
 
-        if(local) 
+        if(local)
         {
             d->o = d->newpos;
             d->o.z += d->height;
