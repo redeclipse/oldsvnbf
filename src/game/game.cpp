@@ -423,6 +423,12 @@ struct gameclient : igameclient
         	return;
         }
 
+        if(cc.ready() && player1->state == CS_ALIVE)
+        {
+            // do shooting here before network update for greater accuracy with what the player sees
+            ws.shoot(player1, worldpos);
+        }
+
 		gets2c();
 
 		if(cc.ready())
@@ -453,7 +459,7 @@ struct gameclient : igameclient
 				ph.move(player1, 20, true);
 				addsway(player1);
 				et.checkitems(player1);
-				ws.shoot(player1, worldpos);
+				//ws.shoot(player1, worldpos);
 				ws.reload(player1);
 			}
 			else ph.move(player1, 20, true);
