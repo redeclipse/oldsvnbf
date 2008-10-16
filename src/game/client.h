@@ -427,7 +427,7 @@ struct clientcom : iclientcom
 			putint(q, d->clientnum);
 			putuint(q, (int)(d->o.x*DMF));			  // quantize coordinates to 1/4th of a cube, between 1 and 3 bytes
 			putuint(q, (int)(d->o.y*DMF));
-			putuint(q, (int)(d->o.z*DMF));
+			putuint(q, (int)((d->o.z - d->height)*DMF));
 			putint(q, (int)d->yaw);
 			putint(q, (int)d->pitch);
 			putint(q, (int)d->roll);
@@ -602,6 +602,7 @@ struct clientcom : iclientcom
                 if(cl.allowmove(d))
                 {
                     d->o = o;
+                    d->o.z += d->height;
                     d->vel = vel;
                     d->falling = falling;
                     d->physstate = physstate & 0x0F;
@@ -616,6 +617,7 @@ struct clientcom : iclientcom
                 else if(cl.ph.smoothmove() && d->smoothmillis>=0 && oldpos.dist(d->o) < cl.ph.smoothdist())
                 {
                     d->newpos = d->o;
+                    d->newpos.z -= d->height;
                     d->newyaw = d->yaw;
                     d->newpitch = d->pitch;
                     d->newaimyaw = d->aimyaw;
@@ -627,6 +629,7 @@ struct clientcom : iclientcom
                     d->aimyaw = oldaimyaw;
                     d->aimpitch = oldaimpitch;
 
+                    oldpos.z -= d->height;
                     (d->deltapos = oldpos).sub(d->newpos);
 
                     d->deltayaw = oldyaw - d->newyaw;

@@ -86,6 +86,7 @@ struct physent                                  // base entity type, can be affe
     void resetinterp()
     {
         newpos = o;
+        newpos.z -= height;
         deltapos = vec(0, 0, 0);
     }
 

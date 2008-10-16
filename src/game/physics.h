@@ -568,6 +568,7 @@ struct physics
     void interppos(physent *d)
     {
         d->o = d->newpos;
+        d->o.z += d->height;
 
         int diff = lastphysframe - (lastmillis + curtime);
         if(diff <= 0 || !physinterp()) return;
@@ -585,7 +586,11 @@ struct physics
             return;
         }
 
-        if(local) d->o = d->newpos;
+        if(local) 
+        {
+            d->o = d->newpos;
+            d->o.z += d->height;
+        }
         loopi(physsteps-1) moveplayer(d, moveres, local, physframetime());
         if(local) d->deltapos = d->o;
         moveplayer(d, moveres, local, physframetime());
@@ -593,6 +598,7 @@ struct physics
         {
             d->newpos = d->o;
             d->deltapos.sub(d->newpos);
+            d->newpos.z -= d->height;
             interppos(d);
         }
 	}
@@ -710,6 +716,7 @@ struct physics
     void predictplayer(gameent *d, bool domove, int res = 0, bool local = false)
     {
         d->o = d->newpos;
+        d->o.z += d->height;
 
         d->yaw = d->newyaw;
         d->pitch = d->newpitch;
@@ -721,6 +728,7 @@ struct physics
         {
             move(d, res, local);
             d->newpos = d->o;
+            d->newpos.z -= d->height;
         }
 
         float k = 1.0f - float(lastmillis - d->smoothmillis)/float(smoothmove());
