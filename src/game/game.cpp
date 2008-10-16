@@ -154,12 +154,12 @@ struct gameclient : igameclient
 	ITVAR(grenadeshudtex, "textures/grenadeshud", 0);
 	ITVAR(flamerhudtex, "textures/flamerhud", 0);
 	ITVAR(riflehudtex, "textures/riflehud", 0);
-	ITVAR(pistolcliptex, "<anim>textures/pistolclip", 3);
-	ITVAR(shotguncliptex, "<anim>textures/shotgunclip", 3);
-	ITVAR(chainguncliptex, "<anim>textures/chaingunclip", 3);
+	ITVAR(pistolcliptex, "textures/pistolclip2", 3);
+	ITVAR(shotguncliptex, "textures/shotgunclip2", 3);
+	ITVAR(chainguncliptex, "textures/chaingunclip2", 3);
 	ITVAR(grenadescliptex, "<anim>textures/grenadesclip", 3);
 	ITVAR(flamercliptex, "<anim>textures/flamerclip", 3);
-	ITVAR(riflecliptex, "<anim>textures/rifleclip", 3);
+	ITVAR(riflecliptex, "textures/rifleclip2", 3);
 	ITVAR(damagetex, "textures/damage", 0);
 	ITVAR(snipetex, "textures/snipe", 0);
 
@@ -825,6 +825,52 @@ struct gameclient : igameclient
         return NULL;
     }
 
+    void drawclip(int gun, float x, float y, float size, float blend, Texture *pointer = NULL)
+    {
+        const char *cliptexs[GUN_MAX] = {
+            pistolcliptex(), shotguncliptex(), chainguncliptex(),
+            flamercliptex(), riflecliptex(), grenadescliptex(),
+        };
+        Texture *t = textureload(cliptexs[gun], 3);
+        if(pointer) 
+        {
+            size *= t->w/float(pointer->w);
+            x -= size/2.0f;
+            y -= size/2.0f;
+        }
+        int ammo = player1->ammo[gun], maxammo = guntype[gun].max;
+        glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
+        glColor4f(1.f, 1.f, 1.f, blend);
+        float cx = x + size/2.0f, cy = y + size/2.0f;
+
+        if(t->frames.length()>1)
+        {
+            drawtex(x, y, size, size);
+        }
+        else
+        switch(gun)
+        {
+            case GUN_FLAMER:
+                drawslice(0,
+                          max(ammo-min(maxammo - ammo, 2), 0)/float(maxammo),
+                          cx, cy, size/2.0f);
+                if(player1->ammo[gun] < guntype[gun].max)
+                {
+                    drawfadedslice(max(ammo-min(maxammo - ammo, 2), 0)/float(maxammo),
+                                   min(min(maxammo - ammo, ammo), 2) /float(maxammo),
+                                   cx, cy, size/2.0f,
+                                   blend);
+                }
+                break;
+
+            default:
+                drawslice(0.5f/maxammo,
+                          ammo/float(maxammo),
+                          cx, cy, size/2.0f);
+                break;
+        }
+    }
+
 	void drawpointer(int w, int h, int index, float x, float y, float r, float g, float b)
 	{
 		Texture *pointer = textureload(getpointer(index), 3, true);
@@ -885,24 +931,8 @@ struct gameclient : igameclient
 
 				if(crosshairclip())
 				{
-					const char *cliptexs[GUN_MAX] = {
-						pistolcliptex(), shotguncliptex(), chainguncliptex(),
-						flamercliptex(), riflecliptex(), grenadescliptex(),
-					};
-					t = textureload(cliptexs[player1->gunselect], 3);
-					if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-					else glBlendFunc(GL_ONE, GL_ONE);
-					float nsize = chsize*(float(t->w)/float(pointer->w));
-					cx = ox-nsize/2.0f;
-					cy = oy-nsize/2.0f;
-					glBindTexture(GL_TEXTURE_2D, t->retframe(player1->ammo[player1->gunselect], guntype[player1->gunselect].max));
-					glColor4f(1.f, 1.f, 1.f, clipbarblend());
-					glBegin(GL_QUADS);
-					glTexCoord2f(0.0f, 0.0f); glVertex2f(cx, cy);
-					glTexCoord2f(1.0f, 0.0f); glVertex2f(cx + nsize, cy);
-					glTexCoord2f(1.0f, 1.0f); glVertex2f(cx + nsize, cy + nsize);
-					glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + nsize);
-					glEnd();
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                    drawclip(player1->gunselect, ox, oy, chsize, clipbarblend(), pointer);
 				}
 			}
 		}
@@ -1211,10 +1241,7 @@ struct gameclient : igameclient
 			{
 				int ta = int(oy*ammosize()), tb = ta*3, tv = bx + bs - tb,
 					to = ta/16, tr = ta/2, tq = tr - FONTH/2;
-				const char *cliptexs[GUN_MAX] = {
-					pistolcliptex(), shotguncliptex(), chainguncliptex(),
-					flamercliptex(), riflecliptex(), grenadescliptex(),
-				}, *hudtexs[GUN_MAX] = {
+				const char *hudtexs[GUN_MAX] = {
 					pistolhudtex(), shotgunhudtex(), chaingunhudtex(),
 					flamerhudtex(), riflehudtex(), grenadeshudtex(),
 				};
@@ -1224,10 +1251,7 @@ struct gameclient : igameclient
 					settexture(hudtexs[i], 0);
 					glColor4f(1.f, 1.f, 1.f, blend);
 					drawtex(float(tv), float(tp), float(tb), float(ta));
-					t = textureload(cliptexs[i], 3);
-					glBindTexture(GL_TEXTURE_2D, t->retframe(player1->ammo[i], guntype[i].max));
-					glColor4f(1.f, 1.f, 1.f, blend);
-					drawtex(float(tv+to/2), float(tp+to/2), float(ta-to), float(ta-to));
+                    drawclip(i, tv+to/2, tp+to/2, ta-to, blend);
 					if(i == player1->gunselect) pushfont("emphasis");
 					int ts = tv + tr, tt = tp + tq;
 					draw_textx("%s%d", ts, tt, 255, 255, 255, int(255.f*blend), false, AL_CENTER, -1, -1, player1->canshoot(i, lastmillis) ? "\fw" : "\fr", player1->ammo[i]);

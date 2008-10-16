@@ -1933,3 +1933,66 @@ bool rendericon(const char *icon, int x, int y, int xs, int ys)
 	}
 	return false;
 }
+
+void drawslice(float start, float length, float x, float y, float size)
+{
+    float end = start + length,
+          sx = cosf((start + 0.25f)*2*M_PI), sy = -sinf((start + 0.25f)*2*M_PI),
+          ex = cosf((end + 0.25f)*2*M_PI), ey = -sinf((end + 0.25f)*2*M_PI);
+    glBegin(GL_TRIANGLE_FAN);
+    glTexCoord2f(0.5f, 0.5f); glVertex2f(x, y);
+
+    if(start < 0.125f || start >= 0.875f) { glTexCoord2f(0.5f + 0.5f*sx/sy, 0); glVertex2f(x + sx/sy*size, y - size);  }
+    else if(start < 0.375f) { glTexCoord2f(1, 0.5f - 0.5f*sy/sx); glVertex2f(x + size, y - sy/sx*size); }
+    else if(start < 0.625f) { glTexCoord2f(0.5f - 0.5f*sx/sy, 1); glVertex2f(x - sx/sy*size, y + size); }
+    else { glTexCoord2f(0, 0.5f + 0.5f*sy/sx); glVertex2f(x - size, y + sy/sx*size); }
+
+    if(start <= 0.125f && end >= 0.125f) { glTexCoord2f(1, 0); glVertex2f(x + size, y - size); }
+    if(start <= 0.375f && end >= 0.375f) { glTexCoord2f(1, 1); glVertex2f(x + size, y + size); }
+    if(start <= 0.625f && end >= 0.625f) { glTexCoord2f(0, 1); glVertex2f(x - size, y + size); }
+    if(start <= 0.875f && end >= 0.875f) { glTexCoord2f(0, 0); glVertex2f(x - size, y - size); }
+
+    if(end < 0.125f || end >= 0.875f) { glTexCoord2f(0.5f + 0.5f*ex/ey, 0); glVertex2f(x + ex/ey*size, y - size);  }
+    else if(end < 0.375f) { glTexCoord2f(1, 0.5f - 0.5f*ey/ex); glVertex2f(x + size, y - ey/ex*size); }
+    else if(end < 0.625f) { glTexCoord2f(0.5f - 0.5f*ex/ey, 1); glVertex2f(x - ex/ey*size, y + size); }
+    else { glTexCoord2f(0, 0.5f + 0.5f*ey/ex); glVertex2f(x - size, y + ey/ex*size); }
+    glEnd();
+}
+
+void drawfadedslice(float start, float length, float x, float y, float size, float alpha, float minsize)
+{
+    float end = start + length,
+          sx = cosf((start + 0.25f)*2*M_PI), sy = -sinf((start + 0.25f)*2*M_PI),
+          ex = cosf((end + 0.25f)*2*M_PI), ey = -sinf((end + 0.25f)*2*M_PI);
+
+    #define SLICEVERT(ox, oy) \
+    { \
+        glTexCoord2f(0.5f + (ox)*0.5f, 0.5f + (oy)*0.5f); \
+        glVertex2f(x + (ox)*size, y + (oy)*size); \
+    }
+    #define SLICESPOKE(ox, oy) \
+    { \
+        SLICEVERT((ox)*minsize, (oy)*minsize); \
+        SLICEVERT(ox, oy); \
+    }
+
+    glBegin(GL_TRIANGLE_STRIP);
+    glColor4f(1, 1, 1, alpha);
+    if(start < 0.125f || start >= 0.875f) SLICESPOKE(sx/sy, -1)
+    else if(start < 0.375f) SLICESPOKE(1, -sy/sx)
+    else if(start < 0.625f) SLICESPOKE(-sx/sy, 1)
+    else SLICESPOKE(-1, sy/sx)
+
+    if(start <= 0.125f && end >= 0.125f) { glColor4f(1, 1, 1, alpha - alpha*(0.125f - start)/(end - start)); SLICESPOKE(1, -1) }
+    if(start <= 0.375f && end >= 0.375f) { glColor4f(1, 1, 1, alpha - alpha*(0.375f - start)/(end - start)); SLICESPOKE(1, 1) }
+    if(start <= 0.625f && end >= 0.625f) { glColor4f(1, 1, 1, alpha - alpha*(0.625f - start)/(end - start)); SLICESPOKE(-1, 1) }
+    if(start <= 0.875f && end >= 0.875f) { glColor4f(1, 1, 1, alpha - alpha*(0.875f - start)/(end - start)); SLICESPOKE(-1, -1) }
+
+    glColor4f(1, 1, 1, 0);
+    if(end < 0.125f || end >= 0.875f) SLICESPOKE(ex/ey, -1)
+    else if(end < 0.375f) SLICESPOKE(1, -ey/ex)
+    else if(end < 0.625f) SLICESPOKE(-ex/ey, 1)
+    else SLICESPOKE(-1, ey/ex)
+    glEnd();
+}
+
