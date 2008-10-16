@@ -457,16 +457,16 @@ struct gameclient : igameclient
 			}
 			else if(player1->state == CS_ALIVE)
 			{
-				ph.move(player1, 20, true);
+				ph.move(player1, 10, true);
 				addsway(player1);
 				et.checkitems(player1);
 				//ws.shoot(player1, worldpos);
 				ws.reload(player1);
 			}
-			else ph.move(player1, 20, true);
+			else ph.move(player1, 10, true);
 		}
 
-		if(player1->clientnum >= 0) c2sinfo(33);
+		if(player1->clientnum >= 0) c2sinfo(40);
 	}
 
 	void damaged(int gun, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
