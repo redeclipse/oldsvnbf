@@ -1502,7 +1502,7 @@ struct gameclient : igameclient
 
 	void heightoffset(physent *d, bool local)
 	{
-		if(local) d->o.z -= d->height;
+		d->o.z -= d->height;
 		if(ph.iscrouching(d))
 		{
 			float crouchoff = 1.f-CROUCHHEIGHT;
@@ -1515,7 +1515,7 @@ struct gameclient : igameclient
 			d->height = PLAYERHEIGHT-(PLAYERHEIGHT*crouchoff);
 		}
 		else d->height = PLAYERHEIGHT;
-		if(local) d->o.z += d->height;
+		d->o.z += d->height;
 	}
 
 	vec headpos(physent *d, float off = 0.f)

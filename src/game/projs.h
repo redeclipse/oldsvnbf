@@ -311,6 +311,7 @@ struct projectiles
 
         bool alive = true;
         proj.o = proj.newpos;
+        proj.o.z += proj.height;
         loopi(cl.ph.physsteps-1)
         {
             if((proj.lifetime -= cl.ph.physframetime()) <= 0 || !move(proj, cl.ph.physframetime()))
@@ -323,6 +324,7 @@ struct projectiles
         if(alive && ((proj.lifetime -= cl.ph.physframetime()) <= 0 || !move(proj, cl.ph.physframetime()))) alive = false;
         proj.newpos = proj.o;
         proj.deltapos.sub(proj.newpos);
+        proj.newpos.z -= proj.height;
         cl.ph.interppos(&proj);
         return alive;
     }
