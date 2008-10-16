@@ -171,6 +171,7 @@ struct projectiles
 			proj.o = orig;
 			cl.ph.entinmap(&proj, false); // failsafe
 		}
+        proj.resetinterp();
 	}
 
 	bool check(projent &proj)
@@ -300,6 +301,32 @@ struct projectiles
 		return true;
 	}
 
+    bool move(projent &proj)
+    {
+        if(cl.ph.physsteps <= 0)
+        {
+            cl.ph.interppos(&proj);
+            return true;
+        }
+
+        bool alive = true;
+        proj.o = proj.newpos;
+        loopi(cl.ph.physsteps-1)
+        {
+            if((proj.lifetime -= cl.ph.physframetime()) <= 0 || !move(proj, cl.ph.physframetime()))
+            {
+                alive = false;
+                break;
+            }
+        }
+        proj.deltapos = proj.o;
+        if(alive && ((proj.lifetime -= cl.ph.physframetime()) <= 0 || !move(proj, cl.ph.physframetime()))) alive = false;
+        proj.newpos = proj.o;
+        proj.deltapos.sub(proj.newpos);
+        cl.ph.interppos(&proj);
+        return alive;
+    }
+
 	void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int waittime, int speed, int id = 0, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
 	{
 		if(!d || !lifetime || !speed) return;
@@ -396,17 +423,27 @@ struct projectiles
 					}
 					else continue;
 				}
-				if(proj.projtype == PRJ_SHOT)
+				if(proj.projtype == PRJ_SHOT || proj.projtype==PRJ_ENT)
 				{
-					loopj(cl.ph.physicsrepeat)
-					{
-						if((proj.lifetime -= cl.ph.physframetime()) <= 0 || !move(proj, cl.ph.physframetime()))
-						{
-							if(guntype[proj.attr1].explode)
-								cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.attr1, proj.local);
-							proj.state = CS_DEAD;
-							break;
-						}
+                    if(!move(proj))
+                    {
+                        switch(proj.projtype)
+                        {
+                            case PRJ_SHOT:
+							    if(guntype[proj.attr1].explode)
+								    cl.ws.explode(proj.owner, proj.o, proj.vel, proj.id, proj.attr1, proj.local);
+                                break;
+
+                            case PRJ_ENT:
+                                if(!proj.beenused)
+                                {
+                                    regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 1.f);
+                                    if(proj.local)
+                                        cl.cc.addmsg(SV_EXPLODE, "ri5", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0);
+                                }
+                                break;
+                        }
+						proj.state = CS_DEAD;
 					}
 				}
 				else for(int rtime = curtime; proj.state != CS_DEAD && rtime > 0;)
@@ -416,15 +453,6 @@ struct projectiles
 
 					if((proj.lifetime -= qtime) <= 0 || !move(proj, qtime))
 					{
-						if(proj.projtype == PRJ_ENT)
-						{
-							if(!proj.beenused)
-							{
-								regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 1.f);
-								if(proj.local)
-									cl.cc.addmsg(SV_EXPLODE, "ri5", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0);
-							}
-						}
 						proj.state = CS_DEAD;
 						break;
 					}

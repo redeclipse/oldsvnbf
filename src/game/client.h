@@ -608,7 +608,12 @@ struct clientcom : iclientcom
                     cl.ph.updatephysstate(d);
                     updatepos(d);
                 }
-                if(cl.ph.smoothmove() && d->smoothmillis>=0 && oldpos.dist(d->o) < cl.ph.smoothdist())
+                if(d->state==CS_DEAD)
+                {
+                    d->resetinterp();
+                    d->smoothmillis = 0;
+                }
+                else if(cl.ph.smoothmove() && d->smoothmillis>=0 && oldpos.dist(d->o) < cl.ph.smoothdist())
                 {
                     d->newpos = d->o;
                     d->newyaw = d->yaw;
@@ -769,6 +774,7 @@ struct clientcom : iclientcom
 						if(editmode) toggleedit();
 						cl.sb.showscores(true);
 					}
+                    else f->resetinterp();
 					f->state = CS_DEAD;
 					break;
 				}
@@ -1207,6 +1213,7 @@ struct clientcom : iclientcom
 					{
 						s->state = CS_DEAD;
 						if(s==cl.player1) cl.sb.showscores(true);
+                        else s->resetinterp();
 					}
 					break;
 				}
@@ -1539,6 +1546,7 @@ struct clientcom : iclientcom
 			vec dir;
 			vecfromyawpitch(cl.player1->yaw, cl.player1->pitch, 1, 0, dir);
 			cl.player1->o.add(dir.mul(-32));
+            cl.player1->resetinterp();
 		}
 	}
 
