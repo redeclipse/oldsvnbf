@@ -424,7 +424,7 @@ VARG(stflimit, 0, 1, 1);
 VARG(spawngun, 0, GUN_PISTOL, GUN_MAX-1);
 VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
-VARG(botbalance, 0, 4, 16);
+VARG(botbalance, 0, 4, MAXCLIENTS/2);
 VARG(botminskill, 0, 50, 100);
 VARG(botmaxskill, 0, 100, 100);
 
@@ -468,6 +468,7 @@ struct gamestate
 				case 1: if(guntype[gun].rdelay > 0) return true; break; // only carriables
 				case 2: if(ammo[gun] > 0) return true; break; // only with actual ammo
 				case 3: if(ammo[gun] > 0 && guntype[gun].rdelay > 0) return true; break; // only carriables with actual ammo
+				case 4: if(ammo[gun] >= (guntype[gun].rdelay > 0 ? 0 : guntype[gun].max)) return true; break; // only carriables or those with < max
 			}
 		}
 		return false;
@@ -490,7 +491,8 @@ struct gamestate
 	int drop(int exclude = -1)
 	{
 		int gun = -1;
-		if(hasgun(gunselect, 1, exclude)) gun = gunselect;
+		if(hasgun(GUN_PISTOL, 1, exclude)) gun = GUN_PISTOL; // get rid of pistol first
+		else if(hasgun(gunselect, 1, exclude)) gun = gunselect;
 		else
 		{
 			loopi(GUN_MAX) if(hasgun(i, 1, exclude))
@@ -574,7 +576,7 @@ struct gamestate
 			}
 			case WEAPON:
 			{ // can't use when reloading or firing
-				if(isgun(attr1) && !hasgun(attr1, 1) && gunwaited(attr1, millis))
+				if(isgun(attr1) && !hasgun(attr1, 4) && gunwaited(attr1, millis))
 					return true;
 				break;
 			}
@@ -822,7 +824,7 @@ struct gameent : dynent, gamestate
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
     int smoothmillis;
-	int lastimpulse, oldnode, lastnode, targnode;
+	int oldnode, lastnode, targnode;
 	int respawned, suicided;
 	int wschan;
 	aiinfo *ai;
@@ -831,7 +833,7 @@ struct gameent : dynent, gamestate
 	string name, info, obit;
 	int team;
 
-	gameent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), lastimpulse(0), wschan(-1), ai(NULL), muzzle(-1, -1, -1)
+	gameent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), wschan(-1), ai(NULL), muzzle(-1, -1, -1)
 	{
 		name[0] = info[0] = obit[0] = 0;
 		team = TEAM_NEUTRAL;
@@ -870,7 +872,7 @@ struct gameent : dynent, gamestate
 		dynent::reset();
 		gamestate::respawn(millis);
 		obliterated = false;
-		lasttaunt = lastimpulse = 0;
+		lasttaunt = 0;
 		lastflag = respawned = suicided = lastnode = oldnode = targnode = -1;
 		obit[0] = 0;
 	}

@@ -1323,6 +1323,7 @@ struct gameserver : igameserver
 								gs.gunselect, GUN_MAX, &gs.ammo[0], -1);
 						}
 						relayf("\fg* %s has joined the game", colorname(ci, text));
+						ai.checkai(true);
 					}
 					else
 					{
@@ -1356,7 +1357,6 @@ struct gameserver : igameserver
 						connected = true;
 					}
 					ci->team = team;
-					if(connected) ai.checkai(true);
 
 					QUEUE_MSG;
 					break;
@@ -1726,7 +1726,7 @@ struct gameserver : igameserver
 						char *ret = executeret(s);
 						if(ret)
 						{
-							srvoutf(-1, "\fy%s: %s returned %s", colorname(ci), cmd, ret);
+							srvoutf(-1, "\fm%s: %s returned %s", colorname(ci), cmd, ret);
 							delete[] ret;
 						}
 						return;
@@ -1735,7 +1735,7 @@ struct gameserver : igameserver
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvoutf(ci->clientnum, "\fy%s = %d", cmd, *id->storage.i);
+							srvoutf(ci->clientnum, "\fm%s = %d", cmd, *id->storage.i);
 							return;
 						}
 						if(id->maxval < id->minval)
@@ -1758,7 +1758,7 @@ struct gameserver : igameserver
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvoutf(ci->clientnum, "\fy%s = %f", cmd, *id->storage.f);
+							srvoutf(ci->clientnum, "\fm%s = %f", cmd, *id->storage.f);
 							return;
 						}
 						float ret = atof(arg);
@@ -2258,11 +2258,8 @@ struct gameserver : igameserver
 		gs.useitem(e.millis, e.ent, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
 		sendf(-1, 1, "ri5", SV_ITEMACC, ci->clientnum, e.ent, gun, dropped);
 		if(sents.inrange(dropped)) gs.dropped.add(dropped);
-		if(sents[e.ent].spawned)
-		{
-			sents[e.ent].spawned = false;
-			sents[e.ent].millis = gamemillis;
-		}
+		sents[e.ent].spawned = false;
+		sents[e.ent].millis = gamemillis;
 	}
 
 	void processevents()
@@ -2322,8 +2319,8 @@ struct gameserver : igameserver
 			    {
 					bool found = false;
 					int spawntime = sv_entspawntime*60000;
-					if(sents[i].type == WEAPON && guntype[sents[i].attr1].rdelay <= 0)
-						spawntime = guntype[sents[i].attr1].adelay*10*sv_entspawntime;
+					if(!spawntime && sents[i].type == WEAPON && guntype[sents[i].attr1].rdelay <= 0)
+						spawntime = guntype[sents[i].attr1].adelay*10;
 			    	if(spawntime)
 			    	{
 			    		if(gamemillis-sents[i].millis <= spawntime)

@@ -7,9 +7,6 @@
 #include "engine.h"
 
 const int MAXCLIPPLANES = 1024;
-const float stairheight = 4.1f, floorz = 0.867f, slopez = 0.5f, wallz = 0.2f,
-	stepspeed = 1.0f, liquiddampen = 8.f;
-
 clipplanes clipcache[MAXCLIPPLANES], *nextclip = clipcache;
 
 static inline void setcubeclip(cube &c, int x, int y, int z, int size)

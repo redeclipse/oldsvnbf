@@ -54,7 +54,7 @@ struct clientcom : iclientcom
 			c2sinit = false;
 			s_strncpy(cl.player1->name, name, MAXNAMELEN);
 		}
-		else conoutf("\fyyour name is: %s", cl.colorname(cl.player1));
+		else conoutf("\fmyour name is: %s", cl.colorname(cl.player1));
 	}
 
 	int teamname(const char *team)
@@ -91,7 +91,7 @@ struct clientcom : iclientcom
 					cl.player1->team = t;
 				}
 			}
-			else conoutf("\fyyour team is: %s", teamtype[cl.player1->team].name);
+			else conoutf("\fmyour team is: %s", teamtype[cl.player1->team].name);
 		}
 		else conoutf("\frcan only change teams in team games");
 	}
@@ -1031,7 +1031,7 @@ struct clientcom : iclientcom
 								if(id->minval > id->maxval || val < id->minval || val > id->maxval)
 									commit = false;
 								setvar(text, val, true);
-								conoutf("\fy%s set variable %s to %d", cl.colorname(d), id->name, *id->storage.i);
+								conoutf("\fm%s set variable %s to %d", cl.colorname(d), id->name, *id->storage.i);
 							}
 							break;
 						}
@@ -1041,7 +1041,7 @@ struct clientcom : iclientcom
 							if(commit)
 							{
 								setfvar(text, val, true);
-								conoutf("\fy%s set float variable %s to %f", cl.colorname(d), id->name, *id->storage.f);
+								conoutf("\fm%s set float variable %s to %f", cl.colorname(d), id->name, *id->storage.f);
 							}
 							break;
 						}
@@ -1052,7 +1052,7 @@ struct clientcom : iclientcom
 							if(commit)
 							{
 								setsvar(text, val, true);
-								conoutf("\fy%s set string variable %s to %s", cl.colorname(d), id->name, *id->storage.s);
+								conoutf("\fm%s set string variable %s to %s", cl.colorname(d), id->name, *id->storage.s);
 							}
 							break;
 						}
@@ -1063,7 +1063,7 @@ struct clientcom : iclientcom
 							if(commit || !id) // set aliases anyway
 							{
 								worldalias(text, val);
-								conoutf("\fy%s set world alias %s to %s", cl.colorname(d), text, val);
+								conoutf("\fm%s set world alias %s to %s", cl.colorname(d), text, val);
 							}
 							break;
 						}
@@ -1108,7 +1108,7 @@ struct clientcom : iclientcom
 				case SV_REMIP:
 				{
 					if(!d) return;
-					conoutf("\fy%s remipped", cl.colorname(d));
+					conoutf("\fm%s remipped", cl.colorname(d));
 					mpremip(false);
 					break;
 				}
@@ -1295,7 +1295,7 @@ struct clientcom : iclientcom
 
 				case SV_GETMAP:
 				{
-					conoutf("\fyserver has requested we send the map..");
+					conoutf("\fmserver has requested we send the map..");
 					sendmap();
 					break;
 				}
@@ -1304,7 +1304,7 @@ struct clientcom : iclientcom
 				{
 					int ocn = getint(p);
 					gameent *o = cl.newclient(ocn);
-					conoutf("\fymap uploaded by %s..", o ? cl.colorname(o) : "server");
+					conoutf("\fmmap uploaded by %s..", o ? cl.colorname(o) : "server");
 					if(needsmap)
 					{
 						needsmap = false;
@@ -1388,7 +1388,7 @@ struct clientcom : iclientcom
 				s_sprintfd(fname)("%d.dmo", lastmillis);
 				FILE *demo = openfile(fname, "wb");
 				if(!demo) return;
-				conoutf("\fyreceived demo \"%s\"", fname);
+				conoutf("\fmreceived demo \"%s\"", fname);
 				fwrite(data, 1, len, demo);
 				fclose(demo);
 				break;
@@ -1401,7 +1401,7 @@ struct clientcom : iclientcom
 				const char *file = findfile(mapfile, "wb");
 				FILE *map = fopen(file, "wb");
 				if(!map) return;
-				conoutf("\fyreceived map");
+				conoutf("\fmreceived map");
 				fwrite(data, 1, len, map);
 				fclose(map);
 				if(!load_world(mapname)) emptymap(0, true, NULL);
@@ -1413,7 +1413,7 @@ struct clientcom : iclientcom
 	void getmap()
 	{
 		if(!m_edit(cl.gamemode)) { conoutf("\fr\"getmap\" only works while editing"); return; }
-		conoutf("\fygetting map...");
+		conoutf("\fmgetting map...");
 		addmsg(SV_GETMAP, "r");
 	}
 
@@ -1441,14 +1441,14 @@ struct clientcom : iclientcom
 
     void getdemo(int i)
 	{
-		if(i<=0) conoutf("\fygetting demo...");
-		else conoutf("\fygetting demo %d...", i);
+		if(i<=0) conoutf("\fmgetting demo...");
+		else conoutf("\fmgetting demo %d...", i);
 		addmsg(SV_GETDEMO, "ri", i);
 	}
 
 	void listdemos()
 	{
-		conoutf("\fylisting demos...");
+		conoutf("\fmlisting demos...");
 		addmsg(SV_LISTDEMOS, "r");
 	}
 
@@ -1459,7 +1459,7 @@ struct clientcom : iclientcom
 			conoutf("\fr\"sendmap\" only works in coopedit mode");
 			return;
 		}
-		conoutf("\fysending map...");
+		conoutf("\fmsending map...");
 		extern string mapname, mapfile;
 		s_sprintfd(mname)("%s", mapname);
 		save_world(mname, true);
@@ -1490,7 +1490,7 @@ struct clientcom : iclientcom
 					char *ret = executeret(s);
 					if(ret)
 					{
-						conoutf("\fy%s: %s", cmd, ret);
+						conoutf("\fm%s: %s", cmd, ret);
 						delete[] ret;
 					}
 					return;
@@ -1522,7 +1522,7 @@ struct clientcom : iclientcom
 				default: return;
 			}
 			if(d || verbose)
-				conoutf("\fy%s set %s to %s", d ? cl.colorname(d) : "the server", cmd, val);
+				conoutf("\fm%s set %s to %s", d ? cl.colorname(d) : "the server", cmd, val);
 		}
 		else conoutf("\fr%s sent unknown command: %s", d ? cl.colorname(d) : "the server", cmd);
 	}
