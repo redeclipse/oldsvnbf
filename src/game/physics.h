@@ -20,8 +20,9 @@ struct physics
 
 	IVARP(floatspeed,		10,			100,		1000);
 	IVARP(physframetime,	5,			5,			20);
+    IVARP(physinterp,       0,          1,          1);
 
-	int spawncycle, fixspawn, physicsfraction, physicsrepeat;
+	int spawncycle, fixspawn, physsteps, lastphysframe;
 
 	physics(gameclient &_cl) : cl(_cl)
 	{
@@ -36,7 +37,7 @@ struct physics
 		CCOMMAND(action, "D", (physics *self, int *down), { self->doaction(*down!=0); });
         CCOMMAND(taunt, "", (physics *self), { self->taunt(self->cl.player1); });
 
-		physicsfraction = physicsrepeat = 0;
+		physsteps = lastphysframe = 0;
 		spawncycle = -1;
 		fixspawn = 4;
 	}
@@ -554,24 +555,46 @@ struct physics
 
 		pl->lastmoveattempt = lastmillis;
 		if(pl->o!=oldpos) pl->lastmove = lastmillis;
+
+        if((pl->type==ENT_PLAYER || pl->type==ENT_AI) && local && pl->o.z < 0 && pl->state == CS_ALIVE)
+        {
+            cl.suicide((gameent *)pl, HIT_FALL);
+            return false;
+        }
+
 		return true;
 	}
 
-	bool move(physent *d, int moveres = 10, bool local = true, int millis = 0, int repeat = 0)
-	{
-		if(!millis) millis = physframetime();
-		if(!repeat) repeat = physicsrepeat;
+    void interppos(physent *d)
+    {
+        d->o = d->newpos;
 
-		loopi(repeat)
-		{
-			if(!moveplayer(d, moveres, local, millis)) return false;
-			if(local && d->o.z < 0 && d->state == CS_ALIVE)
-			{
-				cl.suicide((gameent *)d, HIT_FALL);
-				return false;
-			}
-		}
-		return true;
+        int diff = lastphysframe - (lastmillis + curtime);
+        if(diff <= 0 || !physinterp()) return;
+
+        vec deltapos(d->deltapos);
+        deltapos.mul(min(diff, physframetime())/float(physframetime()));
+        d->o.add(deltapos);
+    }
+
+	void move(physent *d, int moveres = 10, bool local = true)
+	{
+        if(physsteps <= 0)
+        {
+            if(local) interppos(d);
+            return;
+        }
+
+        if(local) d->o = d->newpos;
+        loopi(physsteps-1) moveplayer(d, moveres, local, physframetime());
+        if(local) d->deltapos = d->o;
+        moveplayer(d, moveres, local, physframetime());
+        if(local)
+        {
+            d->newpos = d->o;
+            d->deltapos.sub(d->newpos);
+            interppos(d);
+        }
 	}
 
 	void avoidcollision(physent *d, const vec &dir, physent *obstacle, float space)
@@ -657,8 +680,10 @@ struct physics
 					{ \
 						if(!avoidplayers) continue; \
 						d->o = orig; \
+                        d->resetinterp(); \
 						return false; \
 					} \
+                    d->resetinterp(); \
 					return true; \
 				} \
 			}
@@ -675,6 +700,7 @@ struct physics
 			});
 
 		d->o = orig;
+        d->resetinterp();
 		return false;
 	}
 
@@ -747,9 +773,13 @@ struct physics
 
 	void update()		  // optimally schedule physics frames inside the graphics frames
 	{
-	    int faketime = curtime+physicsfraction;
-		physicsrepeat = faketime/physframetime();
-		physicsfraction = faketime%physframetime();
+        int diff = lastmillis + curtime - lastphysframe;
+        if(diff <= 0) physsteps = 0;
+        else
+        {
+            physsteps = (diff + physframetime() - 1)/physframetime();
+            lastphysframe += physsteps * physframetime();
+        }
 		cleardynentcache();
 	}
 } ph;

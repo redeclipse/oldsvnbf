@@ -530,7 +530,11 @@ struct gameclient : igameclient
 			d->pitch = 0;
 			d->roll = 0;
 		}
-		else d->move = d->strafe = 0;
+		else 
+        {
+            d->move = d->strafe = 0;
+            d->resetinterp();
+        }
 
 		s_strcpy(d->obit, "rests in pieces");
         if(d == actor)

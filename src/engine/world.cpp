@@ -475,6 +475,7 @@ void entautoview(int *dir)
 	entfocus(entgroup[s],
 		v.add(e.o);
 		player->o = v;
+        player->resetinterp();
 	);
 }
 

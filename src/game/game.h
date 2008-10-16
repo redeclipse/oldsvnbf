@@ -820,7 +820,6 @@ struct gameent : dynent, gamestate
 	int lasttaunt, lastflag;
 	int frags, deaths, totaldamage, totalshots;
 	editinfo *edit;
-    vec deltapos, newpos;
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
     int smoothmillis;
