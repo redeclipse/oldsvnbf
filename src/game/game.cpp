@@ -423,21 +423,22 @@ struct gameclient : igameclient
         	return;
         }
 
-        if(cc.ready() && player1->state == CS_ALIVE)
+        if(cc.ready())
         {
-            // do shooting here before network update for greater accuracy with what the player sees
-            ws.shoot(player1, worldpos);
+            // do shooting/projectile update here before network update for greater accuracy with what the player sees
+
+            ph.update();
+            pj.update();
+            et.update();
+            ai.update();
+
+            if(player1->state == CS_ALIVE) ws.shoot(player1, worldpos);
         }
 
 		gets2c();
 
 		if(cc.ready())
 		{
-			ph.update();
-			pj.update();
-			et.update();
-			ai.update();
-
 			otherplayers();
 			if(!allowmove(player1)) player1->stopmoving();
             checkoften(player1);
