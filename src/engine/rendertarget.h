@@ -14,11 +14,18 @@ struct rendertarget
 #define BLURTILEMASK (0xFFFFFFFFU>>(32-BLURTILES))
     uint blurtiles[BLURTILES+1];
 
-    rendertarget() : texw(0), texh(0), vieww(0), viewh(0), colorfmt(GL_FALSE), depthfmt(GL_FALSE), target(GL_TEXTURE_2D), rendertex(0), renderfb(0), renderdb(0), blurtex(0), blurfb(0), blurdb(0), blursize(0), blursigma(0)
+    bool initialized;
+
+    rendertarget() : texw(0), texh(0), vieww(0), viewh(0), colorfmt(GL_FALSE), depthfmt(GL_FALSE), target(GL_TEXTURE_2D), rendertex(0), renderfb(0), renderdb(0), blurtex(0), blurfb(0), blurdb(0), blursize(0), blursigma(0), initialized(false)
     {
     }
 
     virtual ~rendertarget() {}
+
+    virtual GLenum attachment() const
+    {
+        return GL_COLOR_ATTACHMENT0_EXT;
+    }
 
     virtual const GLenum *colorformats() const
     {
@@ -81,6 +88,13 @@ struct rendertarget
 
         target = texrect() ? GL_TEXTURE_RECTANGLE_ARB : GL_TEXTURE_2D;
 
+        GLenum attach = attachment();
+        if(hasFBO && attach == GL_DEPTH_ATTACHMENT_EXT)
+        {
+            glDrawBuffer(GL_NONE);
+            glReadBuffer(GL_NONE);
+        }
+
         const GLenum *colorfmts = colorformats();
         int find = 0;
         do
@@ -89,14 +103,14 @@ struct rendertarget
             if(!hasFBO) break;
             else
             {
-                glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, target, rendertex, 0);
+                glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, attach, target, rendertex, 0);
                 if(glCheckFramebufferStatus_(GL_FRAMEBUFFER_EXT)==GL_FRAMEBUFFER_COMPLETE_EXT) break;
             }
         }
         while(!colorfmt && colorfmts[++find]);
         if(!colorfmt) colorfmt = colorfmts[find];
 
-        if(hasFBO)
+        if(hasFBO && attach != GL_DEPTH_ATTACHMENT_EXT)
         {
             if(!renderdb) { glGenRenderbuffers_(1, &renderdb); depthfmt = GL_FALSE; }
             if(!depthfmt) glBindRenderbuffer_(GL_RENDERBUFFER_EXT, renderdb);
@@ -115,6 +129,7 @@ struct rendertarget
         }
         texw = w;
         texh = h;
+        initialized = false;
     }
 
     bool addblurtiles(float x1, float y1, float x2, float y2, float blurmargin = 0)
@@ -317,7 +332,7 @@ struct rendertarget
     virtual bool texrect() const { return false; }
     virtual bool filter() const { return true; }
 
-    void render(int w, int h, int blursize, float blursigma)
+    void render(int w, int h, int blursize = 0, float blursigma = 0)
     {
         w = min(w, hwtexsize);
         h = min(h, hwtexsize);
@@ -375,7 +390,7 @@ struct rendertarget
             }
             glBindFramebuffer_(GL_FRAMEBUFFER_EXT, renderfb);
             if(swaptexs() && blursize && rtsharefb)
-                glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, target, rendertex, 0);
+                glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, attachment(), target, rendertex, 0);
             glViewport(0, 0, vieww, viewh);
         }
         else glViewport(screen->w-vieww, screen->h-viewh, vieww, viewh);
@@ -413,8 +428,16 @@ struct rendertarget
             if(!hasFBO)
             {
                 glBindTexture(target, rendertex);
+                if(!initialized)
+                {
+                    sx = screen->w-vieww;
+                    sy = screen->h-viewh;
+                    sw = vieww;
+                    sh = viewh;
+                }
                 glCopyTexSubImage2D(target, 0, sx-(screen->w-vieww), sy-(screen->h-viewh), sx, sy, sw, sh);
             }
+            initialized = true;
 
             if(blursize) doblur(blursize, blursigma);
         }

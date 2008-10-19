@@ -811,7 +811,8 @@ enum
 	RENDERPASS_Z,
     RENDERPASS_GLOW,
     RENDERPASS_CAUSTICS,
-    RENDERPASS_FOG
+    RENDERPASS_FOG,
+    RENDERPASS_SHADOWMAP
 };
 
 struct geombatch
@@ -973,7 +974,7 @@ static void changefogplane(renderstate &cur, int pass, vtxarray *va)
 
 static void changevbuf(renderstate &cur, int pass, vtxarray *va)
 {
-    if(setorigin(va, pass==RENDERPASS_LIGHTMAP && !envmapping && !glaring))
+    if(setorigin(va, renderpath!=R_FIXEDFUNCTION ? pass==RENDERPASS_LIGHTMAP && !envmapping && !glaring : pass==RENDERPASS_SHADOWMAP))
     {
         cur.visibledynlights = 0;
         cur.dynlightmask = 0;
@@ -1488,6 +1489,36 @@ void renderfoggedvas(renderstate &cur, bool doquery = false)
     foggedvas.setsizenodelete(0);
 }
 
+void rendershadowmappass(renderstate &cur, vtxarray *va)
+{
+    if(cur.vbuf!=va->vbuf) changevbuf(cur, RENDERPASS_SHADOWMAP, va);
+    elementset *texs = va->eslist;
+    ushort *edata = va->edata;
+    loopi(va->texs)
+    {
+        elementset &es = texs[i];
+        int len = es.length[1] - es.length[0];
+        if(len > 0)
+        {
+            drawtris(len, &edata[es.length[0]], es.minvert[1], es.maxvert[1]);
+            vtris += len/3;
+        }
+        len = es.length[3] - es.length[2];
+        if(len > 0)
+        {
+            drawtris(len, &edata[es.length[2]], es.minvert[3], es.maxvert[3]);
+            vtris += len/3;
+        }
+        len = es.length[5] - es.length[4];
+        if(len > 0)
+        {
+            drawtris(len, &edata[es.length[4]], es.minvert[5], es.maxvert[5]);
+            vtris += len/3;
+        }
+        edata += es.length[5];
+    }
+}
+
 VAR(batchgeom, 0, 1, 1);
 
 void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bool fogpass = false, bool doquery = false)
@@ -1529,6 +1560,10 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
             }
             drawvatris(va, 3*va->tris, va->edata);
             xtravertsva += va->verts;
+            break;
+
+        case RENDERPASS_SHADOWMAP:
+            if(isshadowmapreceiver(va)) rendershadowmappass(cur, va);
             break;
 
         case RENDERPASS_CAUSTICS:
@@ -1842,7 +1877,7 @@ void rendergeom(float causticspass, bool fogpass)
     if(!doOQ)
     {
         setupTMUs(cur, causticspass, fogpass);
-        if(shadowmap && !envmapping && !glaring) pushshadowmap();
+        if(shadowmap && !envmapping && !glaring && renderpath!=R_FIXEDFUNCTION) pushshadowmap();
     }
 
     finddynlights();
@@ -1944,7 +1979,7 @@ void rendergeom(float causticspass, bool fogpass)
 	if(doOQ)
 	{
         setupTMUs(cur, causticspass, fogpass);
-        if(shadowmap && !envmapping && !glaring)
+        if(shadowmap && !envmapping && !glaring && renderpath!=R_FIXEDFUNCTION)
         {
             glPopMatrix();
             glPushMatrix();
@@ -2008,7 +2043,7 @@ void rendergeom(float causticspass, bool fogpass)
         if(foggedvas.empty()) glDepthFunc(GL_LESS);
     }
 
-    if(shadowmap && !envmapping && !glaring) popshadowmap();
+    if(shadowmap && !envmapping && !glaring && renderpath!=R_FIXEDFUNCTION) popshadowmap();
 
     cleanupTMUs(cur);
 
@@ -2018,7 +2053,7 @@ void rendergeom(float causticspass, bool fogpass)
         if(doOQ) glDepthFunc(GL_LESS);
     }
 
-    if(renderpath==R_FIXEDFUNCTION ? (glowpass && cur.skippedglow) || (causticspass>=1 && cur.causticstmu<0) || (fogpass && cur.fogtmu<0) : causticspass)
+    if(renderpath==R_FIXEDFUNCTION ? (glowpass && cur.skippedglow) || (causticspass>=1 && cur.causticstmu<0) || (fogpass && cur.fogtmu<0) || (shadowmap && shadowmapcasters) : causticspass)
     {
         glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
@@ -2078,6 +2113,38 @@ void rendergeom(float causticspass, bool fogpass)
                 if(i) glDisable(GL_TEXTURE_2D);
             }
             glActiveTexture_(GL_TEXTURE0_ARB);
+        }
+
+        if(renderpath==R_FIXEDFUNCTION && shadowmap && shadowmapcasters)
+        {
+            glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+            glFogfv(GL_FOG_COLOR, zerofog);
+            glPopMatrix();
+            glPushMatrix();
+            pushshadowmap();
+            resetorigin();
+            if(cur.fogtmu>=0)
+            {
+                setuptmu(0, "C * T");
+                glActiveTexture_(GL_TEXTURE1_ARB);
+                glEnable(GL_TEXTURE_1D);
+                setuptexgen(1);
+                setuptmu(1, "P * T~a");
+                if(!fogtex) createfogtex();
+                glBindTexture(GL_TEXTURE_1D, fogtex);
+                glActiveTexture_(GL_TEXTURE0_ARB);
+            }
+            rendergeommultipass(cur, RENDERPASS_SHADOWMAP, fogpass);
+            popshadowmap();
+            if(cur.fogtmu>=0)
+            {
+                resettmu(0);
+                glActiveTexture_(GL_TEXTURE1_ARB);
+                resettmu(1);
+                disabletexgen();
+                glDisable(GL_TEXTURE_1D);
+                glActiveTexture_(GL_TEXTURE0_ARB);
+            }
         }
 
         if(renderpath==R_FIXEDFUNCTION && fogpass && cur.fogtmu<0)
