@@ -452,7 +452,7 @@ void popshadowmap()
 
 void rendershadowmap()
 {
-    if(!shadowmap || renderpath!=R_FIXEDFUNCTION || !hasSGIDT || !hasSGISH) return;
+    if(!shadowmap || (renderpath==R_FIXEDFUNCTION && (!hasSGIDT || !hasSGISH))) return;
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
     if(renderpath!=R_FIXEDFUNCTION || !fogging) glDisable(GL_FOG);
