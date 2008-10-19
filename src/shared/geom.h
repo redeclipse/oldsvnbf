@@ -826,9 +826,10 @@ struct glmatrixf
         v[14] += 2*z;
     }
 
-    void projective()
+    void projective(float zscale = 0.5f, float zoffset = 0.5f)
     {
         loopi(2) loopj(4) v[i + j*4] = 0.5f*(v[i + j*4] + v[3 + j*4]);
+        loopj(4) v[2 + j*4] = zscale*v[2 + j*4] + zoffset*v[3 + j*4];
     }
 
     void transpose()

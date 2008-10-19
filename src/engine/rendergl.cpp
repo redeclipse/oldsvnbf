@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "engine.h"
 
-bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false;
+bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false;
 
 VAR(renderpath, 1, 0, 0);
 
@@ -440,6 +440,31 @@ void gl_checkextensions()
         hasGM = true;
         //conoutf("\frUsing GL_SGIS_generate_mipmap extension.");
     }
+
+    if(strstr(exts, "GL_ARB_depth_texture"))
+    {
+        hasSGIDT = hasDT = true;
+        //conoutf(CON_INIT, "Using GL_ARB_depth_texture extension.");
+    }
+    else if(strstr(exts, "GL_SGIX_depth_texture"))
+    {
+        hasSGIDT = true;
+        //conoutf(CON_INIT, "Using GL_SGIX_depth_texture extension.");
+    }
+
+    if(strstr(exts, "GL_ARB_shadow"))
+    {
+        hasSGISH = hasSH = true;
+        if(strstr(vendor, "NVIDIA")) hasNVPCF = true;
+        //conoutf(CON_INIT, "Using GL_ARB_shadow extension.");
+    }
+    else if(strstr(exts, "GL_SGIX_shadow"))
+    {
+        hasSGISH = true;
+        //conoutf(CON_INIT, "Using GL_SGIX_shadow extension.");
+    }
+
+    if(!hasSGIDT && !hasSGISH) shadowmap = 0;
 
     GLint val;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val);

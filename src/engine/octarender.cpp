@@ -585,7 +585,7 @@ struct texcoords
 void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *surface, surfacenormals *normals, int tj = -1, ushort envmap = EMID_NONE)
 {
     int index[4];
-    int shadowmask = texture==DEFAULT_SKY || renderpath==R_FIXEDFUNCTION ? 0 : calcshadowmask(vv);
+    int shadowmask = texture==DEFAULT_SKY ? 0 : calcshadowmask(vv);
     LightMap *lm = NULL;
     LightMapTexture *lmtex = NULL;
     if(!nolights && surface && lightmaps.inrange(surface->lmid-LMID_RESERVED))

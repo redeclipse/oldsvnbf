@@ -527,7 +527,7 @@ void renderbatchedmodel(model *m, batchedmodel &b)
 {
 	modelattach *a = NULL;
 	if(b.attached>=0) a = &modelattached[b.attached];
-    if(((!shadowmap && !glaring) || renderpath==R_FIXEDFUNCTION) && (b.cull&(MDL_SHADOW|MDL_DYNSHADOW)) && dynshadow && hasstencil && !reflecting && refracting<=0)
+    if(!shadowmap && !glaring && (b.cull&(MDL_SHADOW|MDL_DYNSHADOW)) && dynshadow && hasstencil && !reflecting && refracting<=0)
 	{
 		vec center;
         float radius = m->boundsphere(0/*frame*/, center); // FIXME
@@ -699,7 +699,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 	if(!m) return;
 	vec center;
 	float radius = 0;
-    bool shadow = ((!shadowmap && !glaring) || renderpath==R_FIXEDFUNCTION) && (cull&(MDL_SHADOW|MDL_DYNSHADOW)) && dynshadow && hasstencil,
+    bool shadow = !shadowmap && !glaring && (cull&(MDL_SHADOW|MDL_DYNSHADOW)) && dynshadow && hasstencil,
          doOQ = cull&MDL_CULL_QUERY && hasOQ && oqfrags && oqdynent;
     if(cull&(MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED|MDL_CULL_QUERY|MDL_SHADOW|MDL_DYNSHADOW))
 	{

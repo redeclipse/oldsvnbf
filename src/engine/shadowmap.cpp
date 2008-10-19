@@ -12,6 +12,7 @@ VAR(shadowmapdist, 128, 256, 512);
 VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
 VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
 VARW(shadowmapambient, 0, 0, 0xFFFFFF);
+VARP(shadowmapintensity, 0, 40, 100);
 
 VARP(blurshadowmap, 0, 1, 3);
 VARP(blursmsigma, 1, 100, 200);
@@ -71,7 +72,7 @@ void guessshadowdir()
 
 bool shadowmapping = false;
 
-static glmatrixf shadowmapprojection, shadowmapmodelview;
+static glmatrixf shadowmapmatrix;
 
 VARP(shadowmapbias, 0, 5, 1024);
 VARP(shadowmappeelbias, 0, 20, 1024);
@@ -80,14 +81,26 @@ VAR(smoothshadowmappeel, 1, 0, 0);
 
 static struct shadowmaptexture : rendertarget
 {
+    GLenum attachment() const
+    {
+        return renderpath==R_FIXEDFUNCTION ? GL_DEPTH_ATTACHMENT_EXT : GL_COLOR_ATTACHMENT0_EXT;
+    }
+
     const GLenum *colorformats() const
     {
+        if(renderpath==R_FIXEDFUNCTION)
+        {
+            static const GLenum depthtexfmts[] = { GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT32, GL_FALSE };
+            return depthtexfmts;
+        }
+
         static const GLenum colorfmts[] = { GL_RGBA16F_ARB, GL_RGBA16, GL_RGBA, GL_RGBA8, GL_FALSE };
         int offset = fpshadowmap && hasTF && hasFBO ? 0 : (shadowmapprecision && hasFBO ? 1 : 2);
         return &colorfmts[offset];
     }
 
-    bool swaptexs() const { return true; }
+    bool filter() const { return renderpath!=R_FIXEDFUNCTION || hasNVPCF; }
+    bool swaptexs() const { return renderpath!=R_FIXEDFUNCTION; }
 
     bool scissorblur(int &x, int &y, int &w, int &h)
     {
@@ -108,8 +121,14 @@ static struct shadowmaptexture : rendertarget
 
     void doclear()
     {
+        if(!hasFBO && rtscissor)
+        {
+            glEnable(GL_SCISSOR_TEST);
+            glScissor(screen->w-vieww, screen->h-viewh, vieww, viewh);
+        }
         glClearColor(0, 0, 0, 0);
-        glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT | (renderpath!=R_FIXEDFUNCTION ? GL_COLOR_BUFFER_BIT : 0));
+        if(!hasFBO && rtscissor) glDisable(GL_SCISSOR_TEST);
     }
 
     bool dorender()
@@ -156,10 +175,18 @@ static struct shadowmaptexture : rendertarget
         shadowfocus.add(dirx.mul(shadowoffset.x));
         shadowfocus.add(diry.mul(shadowoffset.y));
 
-        glGetFloatv(GL_PROJECTION_MATRIX, shadowmapprojection.v);
-        glGetFloatv(GL_MODELVIEW_MATRIX, shadowmapmodelview.v);
+        glmatrixf proj, mv;
+        glGetFloatv(GL_PROJECTION_MATRIX, proj.v);
+        glGetFloatv(GL_MODELVIEW_MATRIX, mv.v);
+        shadowmapmatrix.mul(proj, mv);
+        if(renderpath==R_FIXEDFUNCTION) shadowmapmatrix.projective();
+        else shadowmapmatrix.projective(-1, 1-shadowmapbias/float(shadowmapdist));
 
-        setenvparamf("shadowmapbias", SHPARAM_VERTEX, 0, -shadowmapbias/float(shadowmapdist), 1 - (shadowmapbias + (smoothshadowmappeel ? 0 : shadowmappeelbias))/float(shadowmapdist));
+        glColor3f(0, 0, 0);
+        glDisable(GL_TEXTURE_2D);
+
+        if(renderpath!=R_FIXEDFUNCTION) setenvparamf("shadowmapbias", SHPARAM_VERTEX, 0, -shadowmapbias/float(shadowmapdist), 1 - (shadowmapbias + (smoothshadowmappeel ? 0 : shadowmappeelbias))/float(shadowmapdist));
+        else glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
         shadowmapcasters = 0;
         shadowmapping = true;
@@ -167,7 +194,10 @@ static struct shadowmaptexture : rendertarget
         renderavatar(false);
         shadowmapping = false;
 
-        if(shadowmapcasters && smdepthpeel)
+        glEnable(GL_TEXTURE_2D);
+
+        if(renderpath==R_FIXEDFUNCTION) glColorMask(COLORMASK, GL_TRUE);
+        else if(shadowmapcasters && smdepthpeel)
         {
             int sx, sy, sw, sh;
             bool scissoring = rtscissor && scissorblur(sx, sy, sw, sh) && sw > 0 && sh > 0;
@@ -257,7 +287,7 @@ bool addshadowmapcaster(const vec &o, float xyrad, float zrad)
 
 bool isshadowmapreceiver(vtxarray *va)
 {
-    if(!shadowmap || renderpath==R_FIXEDFUNCTION || !shadowmapcasters) return false;
+    if(!shadowmap || !shadowmapcasters) return false;
 
     if(va->shadowmapmax.z <= shadowfocus.z - shadowmapdist || va->shadowmapmin.z >= shadowfocus.z) return false;
 
@@ -304,20 +334,52 @@ void pushshadowmap()
 {
     if(!shadowmap || !shadowmaptex.rendertex) return;
 
+    if(renderpath==R_FIXEDFUNCTION)
+    {
+        static GLfloat texgenS[4] = { 1, 0, 0, 0 },
+                       texgenT[4] = { 0, 1, 0, 0 },
+                       texgenR[4] = { 0, 0, 1, 0 };
+
+        glBindTexture(GL_TEXTURE_2D, shadowmaptex.rendertex);
+
+        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+        glTexGenfv(GL_S, GL_OBJECT_PLANE, texgenS);
+        glEnable(GL_TEXTURE_GEN_S);
+
+        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+        glTexGenfv(GL_T, GL_OBJECT_PLANE, texgenT);
+        glEnable(GL_TEXTURE_GEN_T);
+
+        glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+        glTexGenfv(GL_R, GL_OBJECT_PLANE, texgenR);
+        glEnable(GL_TEXTURE_GEN_R);
+
+        if(hasDT && hasSH)
+        {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_GEQUAL);
+            glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE_ARB, GL_LUMINANCE);
+        }
+        else
+        {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_SGIX, GL_TRUE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_OPERATOR_SGIX, GL_TEXTURE_GEQUAL_R_SGIX);
+        }
+
+        glColor3f(shadowmapintensity/100.0f, shadowmapintensity/100.0f, shadowmapintensity/100.0f);
+
+        return;
+    }
+
     glActiveTexture_(GL_TEXTURE7_ARB);
-    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, shadowmaptex.rendertex);
 
     glActiveTexture_(GL_TEXTURE2_ARB);
-    glEnable(GL_TEXTURE_2D);
     glMatrixMode(GL_TEXTURE);
-    glLoadIdentity();
-    glTranslatef(0.5f, 0.5f, 1-shadowmapbias/float(shadowmapdist));
-    glScalef(0.5f, 0.5f, -1);
-    glMultMatrixf(shadowmapprojection.v);
-    glMultMatrixf(shadowmapmodelview.v);
+    glLoadMatrixf(shadowmapmatrix.v);
     glPushMatrix();
     glMatrixMode(GL_MODELVIEW);
+
     glActiveTexture_(GL_TEXTURE0_ARB);
     glClientActiveTexture_(GL_TEXTURE0_ARB);
 
@@ -341,39 +403,61 @@ void adjustshadowmatrix(const ivec &o, float scale)
 {
     if(!shadowmap || !shadowmaptex.rendertex) return;
 
-    glActiveTexture_(GL_TEXTURE2_ARB);
-    glMatrixMode(GL_TEXTURE);
-    glPopMatrix();
-    glPushMatrix();
-    glTranslatef(o.x, o.y, o.z);
-    glScalef(scale, scale, scale);
-    glMatrixMode(GL_MODELVIEW);
-    glActiveTexture_(GL_TEXTURE0_ARB);
+    if(renderpath==R_FIXEDFUNCTION)
+    {
+        const GLfloat *v = shadowmapmatrix.v;
+        GLfloat texgenS[4] = { v[0]*scale, v[4]*scale, v[8]*scale, v[0]*o.x + v[4]*o.y + v[8]*o.z + v[12] },
+                texgenT[4] = { v[1]*scale, v[5]*scale, v[9]*scale, v[1]*o.x + v[5]*o.y + v[9]*o.z + v[13] },
+                texgenR[4] = { v[2]*scale, v[6]*scale, v[10]*scale, v[2]*o.x + v[6]*o.y + v[10]*o.z + v[14] };
+        glTexGenfv(GL_S, GL_OBJECT_PLANE, texgenS);
+        glTexGenfv(GL_T, GL_OBJECT_PLANE, texgenT);
+        glTexGenfv(GL_R, GL_OBJECT_PLANE, texgenR);
+    }
+    else
+    {
+        glActiveTexture_(GL_TEXTURE2_ARB);
+        glMatrixMode(GL_TEXTURE);
+        glPopMatrix();
+        glPushMatrix();
+        glTranslatef(o.x, o.y, o.z);
+        glScalef(scale, scale, scale);
+        glMatrixMode(GL_MODELVIEW);
+        glActiveTexture_(GL_TEXTURE0_ARB);
+    }
 }
 
 void popshadowmap()
 {
     if(!shadowmap || !shadowmaptex.rendertex) return;
 
-    glActiveTexture_(GL_TEXTURE7_ARB);
-    glDisable(GL_TEXTURE_2D);
+    if(renderpath!=R_FIXEDFUNCTION)
+    {
+        glActiveTexture_(GL_TEXTURE2_ARB);
+        glMatrixMode(GL_TEXTURE);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
 
-    glActiveTexture_(GL_TEXTURE2_ARB);
-    glMatrixMode(GL_TEXTURE);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
+        glActiveTexture_(GL_TEXTURE0_ARB);
+    }
+    else
+    {
+        glDisable(GL_TEXTURE_GEN_S);
+        glDisable(GL_TEXTURE_GEN_T);
+        glDisable(GL_TEXTURE_GEN_R);
 
-    glActiveTexture_(GL_TEXTURE0_ARB);
+        if(hasDT && hasSH) glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE);
+        else glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_SGIX, GL_FALSE);
+    }
 }
 
 void rendershadowmap()
 {
-    if(!shadowmap || renderpath==R_FIXEDFUNCTION) return;
+    if(!shadowmap || renderpath!=R_FIXEDFUNCTION || !hasSGIDT || !hasSGISH) return;
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
-    glDisable(GL_FOG);
-    shadowmaptex.render(1<<shadowmapsize, 1<<shadowmapsize, blurshadowmap, blursmsigma/100.0f);
-    glEnable(GL_FOG);
+    if(renderpath!=R_FIXEDFUNCTION || !fogging) glDisable(GL_FOG);
+    shadowmaptex.render(1<<shadowmapsize, 1<<shadowmapsize, renderpath!=R_FIXEDFUNCTION ? blurshadowmap : 0, blursmsigma/100.0f);
+    if(renderpath!=R_FIXEDFUNCTION || !fogging) glEnable(GL_FOG);
 }
 
 VAR(debugsm, 0, 0, 1);

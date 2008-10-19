@@ -273,9 +273,11 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
             type = GL_FLOAT;
             break;
 
-		case GL_DEPTH_COMPONENT:
-			type = GL_FLOAT;
-			break;
+        case GL_DEPTH_COMPONENT16:
+        case GL_DEPTH_COMPONENT24:
+        case GL_DEPTH_COMPONENT32:
+            format = GL_DEPTH_COMPONENT;
+            break;
 
         case GL_RGB5:
 		case GL_RGB8:
