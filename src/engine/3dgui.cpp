@@ -370,7 +370,8 @@ struct gui : g3d_gui
 
     void fieldline(const char *name, const char *str)
 	{
-        if(layoutpass) loopv(editors) if(strcmp(editors[i]->name, name) == 0)
+        if(!layoutpass) return;
+        loopv(editors) if(strcmp(editors[i]->name, name) == 0)
 		{
 			editor *e = editors[i];
 			e->lines.add().set(str);
@@ -381,7 +382,8 @@ struct gui : g3d_gui
 
 	void fieldclear(const char *name, const char *init)
 	{
-        if(layoutpass) loopvrev(editors) if(strcmp(editors[i]->name, name) == 0)
+        if(!layoutpass) return;
+        loopvrev(editors) if(strcmp(editors[i]->name, name) == 0)
 		{
 			editor *e = editors[i];
 			e->clear(init);
@@ -406,7 +408,8 @@ struct gui : g3d_gui
 	void fieldscroll(const char *name, int n)
 	{
 		if(n < 0 && mousebuttons&G3D_PRESSED) return; // don't auto scroll during edits
-        if(layoutpass) loopv(editors) if(strcmp(editors[i]->name, name) == 0)
+        if(!layoutpass) return;
+        loopv(editors) if(strcmp(editors[i]->name, name) == 0)
 		{
 			editor *e = editors[i];
 			e->scrolly = e->cx = 0;
