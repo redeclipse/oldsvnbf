@@ -1469,54 +1469,62 @@ struct entities : icliententities
 		}
 	}
 
+    void renderteleport(gameentity &e, Texture *t)
+    {
+		glPushMatrix();
+		glEnable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		else glBlendFunc(GL_ONE, GL_ONE);
+
+		vec dir;
+		vecfromyawpitch((float)e.attr1, (float)e.attr2, 1, 0, dir);
+		vec o(vec(e.o).add(dir));
+		glTranslatef(o.x, o.y, o.z);
+		glRotatef((float)e.attr1-180.f, 0, 0, 1);
+		glRotatef((float)e.attr2, 1, 0, 0);
+		float radius = (float)(e.attr4 ? e.attr4 : enttype[e.type].radius);
+		glScalef(radius, radius, radius);
+
+		glBindTexture(GL_TEXTURE_2D, t->id);
+
+		int attr = int(e.attr5), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
+		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
+		glColor3f(r, g, b);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.f, 0.f, 1.f);
+		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.f, 0.f, 1.f);
+		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.f, 0.f, -1.f);
+		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.f, 0.f, -1.f);
+		xtraverts += 4;
+		glEnd();
+		glEnable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glPopMatrix();
+	}
+
 	void render()
 	{
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
 			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || (dropentities() && !m_fight(cl.gamemode))) ? 3 : 0));
 			renderprimitive(true);
-			if(level) loopv(ents)
-			{
-				renderfocus(i, renderentshow(e, i, editmode && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
-			}
+			if(level) 
+            {
+                loopv(ents)
+			    {
+				    renderfocus(i, renderentshow(e, i, editmode && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
+			    }
+            }
 			renderprimitive(false);
 		}
 
 		Texture *t = textureload(portaltex(), 0, true);
-		if(t) loopv(ents)
+		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(e.type != TELEPORT || !e.attr5 || e.o.dist(camera1->o) > maxparticledistance) continue;
-			glPushMatrix();
-			glEnable(GL_BLEND);
-			glDisable(GL_CULL_FACE);
-			if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			else glBlendFunc(GL_ONE, GL_ONE);
-
-			vec dir;
-			vecfromyawpitch((float)e.attr1, (float)e.attr2, 1, 0, dir);
-			vec o(vec(e.o).add(dir));
-			glTranslatef(o.x, o.y, o.z);
-			glRotatef((float)e.attr1-180.f, 0, 0, 1);
-			glRotatef((float)e.attr2, 1, 0, 0);
-			float radius = (float)(e.attr4 ? e.attr4 : enttype[e.type].radius);
-			glScalef(radius, radius, radius);
-
-			glBindTexture(GL_TEXTURE_2D, t->id);
-
-			int attr = int(e.attr5), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
-			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-			glColor3f(r, g, b);
-			glBegin(GL_QUADS);
-			glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.f, 0.f, 1.f);
-			glTexCoord2f(1.0f, 0.0f); glVertex3f(1.f, 0.f, 1.f);
-			glTexCoord2f(1.0f, 1.0f); glVertex3f(1.f, 0.f, -1.f);
-			glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.f, 0.f, -1.f);
-			xtraverts += 4;
-			glEnd();
-			glEnable(GL_CULL_FACE);
-			glDisable(GL_BLEND);
-			glPopMatrix();
+			if(e.type == TELEPORT && e.attr5 && e.o.dist(camera1->o) < maxparticledistance)
+				renderteleport(e, t);
 		}
 
 		loopv(ents)
