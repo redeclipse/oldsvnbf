@@ -1028,7 +1028,7 @@ struct aiclient
 				{
 					gameentity &e = *(gameentity *)cl.et.ents[d->ai->route[n]];
 					b.goal = false;
-					d->ai->spot = vec(e.o).add(vec(0, 1, d->height));
+					d->ai->spot = vec(e.o).add(vec(0, 0, d->height));
 					vec pos = cl.feetpos(d);
 					if((!d->timeinair && d->ai->spot.z-PLAYERHEIGHT-pos.z > AIJUMPHEIGHT) || (d->timeinair && cl.ph.canimpulse(d)))
 					{
@@ -1185,13 +1185,13 @@ struct aiclient
 			const struct aimdir { int move, strafe, offset; } aimdirs[8] =
 			{
 				{  1,  0,   0 },
-				{  1,  1,  45 },
-				{  0,  1,  90 },
-				{ -1,  1, 135 },
+				{  1,  -1,  45 },
+				{  0,  -1,  90 },
+				{ -1,  -1, 135 },
 				{ -1,  0, 180 },
-				{ -1, -1, 225 },
-				{  0, -1, 270 },
-				{  1, -1, 315 }
+				{ -1, 1, 225 },
+				{  0, 1, 270 },
+				{  1, 1, 315 }
 			};
 			const aimdir &ad = aimdirs[(int)floor((d->aimyaw - d->yaw + 22.5f)/45.0f) & 7];
 			d->move = ad.move;
@@ -1227,7 +1227,7 @@ struct aiclient
 		loopi(cl.numdynents())
 		{
 			gameent *d = (gameent *)cl.iterdynents(i);
-			if(!d || !AIMAYTARG(d)) continue;
+			if(!d || d->state != CS_ALIVE) continue;
 			vec pos(cl.feetpos(d, 0.f));
 			float limit = guessradius + d->radius;
 			limit *= limit; // square it to avoid expensive square roots
@@ -1356,6 +1356,19 @@ struct aiclient
 			}
 			renderline(fr, dr, cr, cg, cb, false);
 			rendertris(dr, d->yaw, d->pitch, 2.f, cr, cg, cb, true, false);
+		}
+		if(aidebug() > 4)
+		{
+			vec pos = cl.feetpos(d, 0.f);
+			if(d->ai->spot != vec(0, 0, 0))
+			{
+				vec spot = vec(d->ai->spot).sub(vec(0, 0, d->height));
+				renderline(pos, spot, 1.f, 1.f, 0.f, false);
+			}
+			if(cl.et.ents.inrange(d->lastnode))
+			{
+				renderline(pos, cl.et.ents[d->lastnode]->o, 0.f, 1.f, 0.f, false);
+			}
 		}
 		renderprimitive(false);
 	}
