@@ -6,9 +6,8 @@ struct physics
 	IFVARW(gravity,			40.f);	// gravity
 	IFVARW(jumpvel,			80.f);	// extra velocity to add when jumping
 	IFVARW(movespeed,		50.f);	// speed
-	IFVARW(liquidvel,		50.f);	// extra liquid velocity
 	IFVARW(liquidfric,		10.f);
-	IFVARW(liquiddampen,	4.f);
+	IFVARW(liquidscale,		0.75f);
 	IFVARW(sinkfric,		3.f);
 	IFVARW(floorfric,		5.f);
 	IFVARW(airfric,			25.f);
@@ -92,11 +91,11 @@ struct physics
 
 	float jumpvelocity(physent *d)
 	{
-		return (d->inliquid ? float(liquidvel()) : float(jumpvel()))*(float(d->weight)/100.f)*jumpscale;
+		return jumpvel()*(d->weight/100.f)*(d->inliquid ? liquidscale() : 1.f)*jumpscale;
 	}
 	float gravityforce(physent *d)
 	{
-		return float(gravity())*(float(d->weight)/100.f)*gravityscale;
+		return gravity()*(d->weight/100.f)*gravityscale;
 	}
 
 	bool canimpulse(physent *d)
@@ -369,7 +368,7 @@ struct physics
 			pl->lastimpulse = 0;
 			if(pl->jumping)
 			{
-				pl->vel.z = jumpvelocity(pl);
+				pl->vel.z = min(pl->vel.z, 0.f) + jumpvelocity(pl);
 				pl->jumping = false;
 			}
 		}
@@ -378,8 +377,8 @@ struct physics
 			pl->lastimpulse = 0;
 			if(pl->jumping)
 			{
-				pl->vel.z = jumpvelocity(pl);
-				if(pl->inliquid) { pl->vel.x /= liquiddampen(); pl->vel.y /= liquiddampen(); }
+				pl->vel.z = min(pl->vel.z, 0.f) + jumpvelocity(pl);
+				if(pl->inliquid) { pl->vel.x *= liquidscale(); pl->vel.y *= liquidscale(); }
 				playsound(S_JUMP, 0, 255, pl->o, pl);
 				pl->jumping = false;
 			}
@@ -455,45 +454,38 @@ struct physics
 
     void updatematerial(physent *pl, bool local, bool floating)
     {
-		vec v(cl.feetpos(pl, 1.f));
+		vec v = pl->type == ENT_PLAYER ? cl.feetpos(pl, 1.f) : pl->o;
 		int material = lookupmaterial(v);
-		if(pl->state == CS_ALIVE && material != pl->inmaterial)
+		int curmat = material&MATF_VOLUME, oldmat = pl->inmaterial&MATF_VOLUME;
+
+		if(!floating && curmat != oldmat)
 		{
-			if(isliquid(material&MATF_VOLUME) || isliquid(pl->inmaterial&MATF_VOLUME))
-			{
-				uchar col[3] = { 255, 255, 255 };
-				#define mattrig(mf,mz,mt,ms,mw) \
-				{ \
-					mf; \
-					int icol = (col[2] + (col[1] << 8) + (col[0] << 16)); \
-					regularshape(mz, int(pl->height), icol, 21, 50, mt, v, ms); \
-					if(mw>=0) playsound(mw, 0, 255, pl->o, pl); \
-				}
-
-				if(int(material&MATF_VOLUME) == MAT_WATER || int(pl->inmaterial&MATF_VOLUME) == MAT_WATER)
-				{
-					mattrig(getwatercolour(col), 6, 250, 1.f, int(material&MATF_VOLUME) != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-				}
-
-				if(int(material&MATF_VOLUME) == MAT_LAVA || int(pl->inmaterial&MATF_VOLUME) == MAT_LAVA)
-				{
-					mattrig(getlavacolour(col), 4, 1000, 8.f, int(material&MATF_VOLUME) != MAT_LAVA ? -1 : S_FLBURNING);
-				}
-
-				if(!isliquid(material&MATF_VOLUME) && isliquid(pl->inmaterial&MATF_VOLUME))
-					pl->vel.z += jumpvelocity(pl);
+			uchar mcol[3] = { 255, 255, 255 };
+			#define mattrig(mf,mz,mt,ms,mw) \
+			{ \
+				mf; \
+				int col = (mcol[2] + (mcol[1] << 8) + (mcol[0] << 16)); \
+				regularshape(mz, int(pl->radius), col, 21, 50, mt, v, ms); \
+				if(mw >= 0) playsound(mw, 0, 255, pl->o, pl); \
 			}
+			if(curmat == MAT_WATER || oldmat == MAT_WATER)
+				mattrig(getwatercolour(mcol), 6, 250, 1.f, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+			if(curmat == MAT_LAVA || oldmat == MAT_LAVA)
+				mattrig(getlavacolour(mcol), 4, 1000, 2.f, curmat != MAT_LAVA ? -1 : S_FLBURNING);
 
-			if(local && pl->type == ENT_PLAYER && (isdeadly(material&MATF_VOLUME)))
-				cl.suicide((gameent *)pl, int(material&MATF_VOLUME) == MAT_LAVA ? HIT_MELT : 0);
+			if(local)
+			{
+				if(!isliquid(curmat) && isliquid(oldmat))
+					pl->vel.z = min(pl->vel.z, 0.f) + jumpvelocity(pl);
+				else if(isliquid(curmat) && !isliquid(oldmat))
+					pl->vel.mul(liquidscale());
+
+				if(pl->type == ENT_PLAYER && pl->state == CS_ALIVE && isdeadly(curmat))
+					cl.suicide((gameent *)pl, curmat == MAT_LAVA ? HIT_MELT : 0);
+			}
 		}
 		pl->inmaterial = material;
-
-		v = vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->height)/4);
-		bool liquid = pl->inliquid;
-		pl->inliquid = !floating && isliquid(lookupmaterial(v)&MATF_VOLUME);
-		if(!floating && pl->inliquid && liquid != pl->inliquid)
-			pl->vel.div(liquiddampen());
+		pl->inliquid = !floating && isliquid(curmat);
     }
 
 	// main physics routine, moves a player/monster for a time step
