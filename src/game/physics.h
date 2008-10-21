@@ -6,11 +6,17 @@ struct physics
 	IFVARW(gravity,			40.f);	// gravity
 	IFVARW(jumpvel,			80.f);	// extra velocity to add when jumping
 	IFVARW(movespeed,		50.f);	// speed
+
+	IFVARW(impulsevel,		100.f);	// extra velocity to add when impulsing
+	IFVARW(impulsespeed,	100.f);	// modifier of gravity that determines impulse interval
+	IVARW(impulsetime,		-1, 0, INT_MAX-1); // overrides impulsespeed to a specific time interval (-1 = turn off impulse, 0 = use impulsespeed)
+
 	IFVARW(liquidfric,		10.f);
-	IFVARW(liquidscale,		0.75f);
-	IFVARW(sinkfric,		3.f);
+	IFVARW(liquidscale,		0.9f);
+	IFVARW(sinkfric,		2.f);
 	IFVARW(floorfric,		5.f);
 	IFVARW(airfric,			25.f);
+
 	IFVARW(stairheight,		4.1f);
 	IFVARW(floorz,			0.867f);
 	IFVARW(slopez,			0.5f);
@@ -93,6 +99,12 @@ struct physics
 	{
 		return jumpvel()*(d->weight/100.f)*(d->inliquid ? liquidscale() : 1.f)*jumpscale;
 	}
+
+	float impulsevelocity(physent *d)
+	{
+		return impulsevel()*(d->weight/100.f)*jumpscale;
+	}
+
 	float gravityforce(physent *d)
 	{
 		return gravity()*(d->weight/100.f)*gravityscale;
@@ -100,7 +112,9 @@ struct physics
 
 	bool canimpulse(physent *d)
 	{
-		return lastmillis-d->lastimpulse > gravityforce(d)*100;
+		int timelen = impulsetime() ? impulsetime() : int(gravityforce(d)*impulsespeed());
+		if(timelen > 0) return lastmillis-d->lastimpulse > timelen;
+		return false;
 	}
 
 	float maxspeed(physent *d)
@@ -368,7 +382,7 @@ struct physics
 			pl->lastimpulse = 0;
 			if(pl->jumping)
 			{
-				pl->vel.z = min(pl->vel.z, 0.f) + jumpvelocity(pl);
+				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				pl->jumping = false;
 			}
 		}
@@ -377,7 +391,7 @@ struct physics
 			pl->lastimpulse = 0;
 			if(pl->jumping)
 			{
-				pl->vel.z = min(pl->vel.z, 0.f) + jumpvelocity(pl);
+				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x *= liquidscale(); pl->vel.y *= liquidscale(); }
 				playsound(S_JUMP, 0, 255, pl->o, pl);
 				pl->jumping = false;
@@ -388,7 +402,7 @@ struct physics
 			vec dir;
 			vecfromyawpitch(pl->yaw, pl->move || pl->strafe ? pl->pitch : 90.f, pl->move || pl->strafe ? pl->move : 1, pl->strafe, dir);
 			dir.normalize();
-			dir.mul(jumpvelocity(pl));
+			dir.mul(impulsevelocity(pl));
 			pl->vel.add(dir);
 			pl->lastimpulse = lastmillis;
 			pl->jumping = false;
@@ -476,7 +490,7 @@ struct physics
 			if(local)
 			{
 				if(!isliquid(curmat) && isliquid(oldmat))
-					pl->vel.z = min(pl->vel.z, 0.f) + jumpvelocity(pl);
+					pl->vel.z = max(pl->vel.z, jumpvelocity(pl));
 				else if(isliquid(curmat) && !isliquid(oldmat))
 					pl->vel.mul(liquidscale());
 

@@ -1027,7 +1027,8 @@ struct aiclient
 				gameentity &e = *(gameentity *)cl.et.ents[d->ai->route[n]];
 				vec pos = cl.feetpos(d);
 				d->ai->spot = e.o;
-				if((!d->timeinair && d->ai->spot.z-pos.z > AIJUMPHEIGHT) || (d->timeinair && cl.ph.canimpulse(d)))
+				if((!d->timeinair && d->ai->spot.z-pos.z > AIJUMPHEIGHT) ||
+					(d->timeinair && d->vel.z <= 1.f && cl.ph.canimpulse(d))) // try to impulse at height of a jump
 				{
 					d->jumping = true;
 					d->jumptime = lastmillis;
@@ -1057,7 +1058,7 @@ struct aiclient
 		if(skew)
 		{
 			float amt = float(lastmillis-d->lastupdate)/float((111-d->skill)*(skew+rnd(skew))),
-				offyaw = fabs(targyaw-yaw)*amt, offpitch = fabs(targpitch-pitch)*amt;
+				offyaw = fabs(targyaw-yaw)*amt, offpitch = fabs(targpitch-pitch)*amt*0.25f;
 
 			if(targyaw > yaw) // slowly turn ai towards target
 			{

@@ -142,12 +142,9 @@ struct gameclient : igameclient
 	ITVAR(bliptex, "textures/blip", 3);
 	ITVAR(flagbliptex, "textures/flagblip", 3);
 	ITVAR(radartex, "textures/radar", 0);
-	ITVAR(radarpingtex, "<anim:75>textures/radarping", 0);
-	ITVAR(healthbartex, "<anim>textures/healthbar", 0);
-	ITVAR(goalbartex, "<anim>textures/goalbar", 0);
-	ITVAR(teambartex, "<anim>textures/teambar", 0);
+	ITVAR(healthbartex, "textures/healthbar", 0);
 
-	ITVAR(indicatortex, "<anim>textures/indicator", 3);
+	ITVAR(indicatortex, "textures/indicator", 3);
 	ITVAR(pistolhudtex, "textures/pistolhud", 0);
 	ITVAR(shotgunhudtex, "textures/shotgunhud", 0);
 	ITVAR(chaingunhudtex, "textures/chaingunhud", 0);
@@ -831,34 +828,31 @@ struct gameclient : igameclient
             pistolcliptex(), shotguncliptex(), chainguncliptex(),
             flamercliptex(), riflecliptex(), grenadescliptex(),
         };
+        float px = x, py = y, psize = size;
         Texture *t = textureload(cliptexs[gun], 3);
         if(pointer)
         {
-            size *= t->w/float(pointer->w);
-            x -= size/2.0f;
-            y -= size/2.0f;
+            psize *= t->w/float(pointer->w);
+            px -= psize/2.0f;
+            py -= psize/2.0f;
         }
         int ammo = player1->ammo[gun], maxammo = guntype[gun].max;
         glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
         glColor4f(1.f, 1.f, 1.f, blend);
-        float cx = x + size/2.0f, cy = y + size/2.0f;
+        float cx = px + psize/2.0f, cy = py + psize/2.0f;
 
-        if(t->frames.length()>1)
-        {
-            drawtex(x, y, size, size);
-        }
-        else
-        switch(gun)
+        if(t->frames.length()>1) drawtex(px, py, psize, psize);
+        else switch(gun)
         {
             case GUN_FLAMER:
                 drawslice(0,
                           max(ammo-min(maxammo - ammo, 2), 0)/float(maxammo),
-                          cx, cy, size/2.0f);
+                          cx, cy, psize/2.0f);
                 if(player1->ammo[gun] < guntype[gun].max)
                 {
                     drawfadedslice(max(ammo-min(maxammo - ammo, 2), 0)/float(maxammo),
                                    min(min(maxammo - ammo, ammo), 2) /float(maxammo),
-                                   cx, cy, size/2.0f,
+                                   cx, cy, psize/2.0f,
                                    blend);
                 }
                 break;
@@ -866,9 +860,35 @@ struct gameclient : igameclient
             default:
                 drawslice(0.5f/maxammo,
                           ammo/float(maxammo),
-                          cx, cy, size/2.0f);
+                          cx, cy, psize/2.0f);
                 break;
         }
+		if(showindicator() && guntype[gun].power && player1->gunselect == gun && player1->gunstate[gun] == GUNSTATE_POWER)
+		{
+			px = x;
+			py = y;
+			psize = size;
+			t = textureload(indicatortex(), 3);
+			if(pointer)
+			{
+				psize *= t->w/float(pointer->w);
+				px -= psize/2.0f;
+				py -= psize/2.0f;
+			}
+
+			if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			else glBlendFunc(GL_ONE, GL_ONE);
+
+			cx = px + psize/2.0f;
+			cy = py + psize/2.0f;
+
+			float amt = clamp(float(lastmillis-player1->gunlast[gun])/float(guntype[gun].power), 0.f, 1.f);
+			glBindTexture(GL_TEXTURE_2D, t->retframe(lastmillis-player1->gunlast[gun], guntype[gun].power));
+			glColor4f(clamp(amt, 0.3f, 1.f), clamp(amt, 0.3f, 1.f), 0.f, indicatorblend());
+
+			if(t->frames.length() > 1) drawtex(px, py, psize, psize);
+			else drawslice(0, amt, cx, cy, psize/2.0f);
+		}
     }
 
 	void drawpointer(int w, int h, int index, float x, float y, float r, float g, float b)
@@ -908,32 +928,10 @@ struct gameclient : igameclient
 			glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + chsize);
 			glEnd();
 
-			if(index > POINTER_GUI && m_pvs(gamestyle) && player1->state == CS_ALIVE && isgun(player1->gunselect) && player1->hasgun(player1->gunselect))
+			if(index > POINTER_GUI && player1->state == CS_ALIVE && isgun(player1->gunselect) && player1->hasgun(player1->gunselect) && crosshairclip())
 			{
-				Texture *t;
-				if(showindicator() && guntype[player1->gunselect].power && player1->gunstate[player1->gunselect] == GUNSTATE_POWER)
-				{
-					t = textureload(indicatortex(), 3);
-					if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-					else glBlendFunc(GL_ONE, GL_ONE);
-					float nsize = chsize*(float(t->w)/float(pointer->w));
-					cx = ox-nsize/2.0f;
-					cy = oy-nsize/2.0f;
-					glBindTexture(GL_TEXTURE_2D, t->retframe(lastmillis-player1->gunlast[player1->gunselect], guntype[player1->gunselect].power));
-					glColor4f(1.f, 1.f, 0.f, indicatorblend());
-					glBegin(GL_QUADS);
-					glTexCoord2f(0.0f, 0.0f); glVertex2f(cx, cy);
-					glTexCoord2f(1.0f, 0.0f); glVertex2f(cx + nsize, cy);
-					glTexCoord2f(1.0f, 1.0f); glVertex2f(cx + nsize, cy + nsize);
-					glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + nsize);
-					glEnd();
-				}
-
-				if(crosshairclip())
-				{
-                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                    drawclip(player1->gunselect, ox, oy, chsize, clipbarblend(), pointer);
-				}
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				drawclip(player1->gunselect, ox, oy, chsize, clipbarblend(), pointer);
 			}
 		}
 	}
@@ -1195,7 +1193,7 @@ struct gameclient : igameclient
 
 		pushfont("radar");
 		settexture(radartex());
-		glColor4f(1.f, 1.f, 1.f, fade*radarblend());
+		glColor4f((r/255.f)*0.25f, (g/255.f)*0.25f, (b/255.f)*0.25f, fade*radarblend());
 		drawsized(float(bx), float(by), float(bs));
 
 		drawentblips(bx+bo, by+bo, bs-(bo*2));
@@ -1207,24 +1205,14 @@ struct gameclient : igameclient
 			if(players[i] && players[i]->state == CS_ALIVE)
 				drawplayerblip(players[i], bx+bo, by+bo, bs-(bo*2));
 
-		settexture(radarpingtex());
-		glColor4f(1.f, 1.f, 1.f, fade*radarblend());
-		drawsized(float(bx), float(by), float(bs));
-
-		settexture(goalbartex());
-		glColor4f(1.f, 1.f, 1.f, fade*barblend());
-		drawsized(float(bx), float(by), float(bs));
-
-		settexture(teambartex());
-		glColor4f(r/255.f, g/255.f, b/255.f, fade*barblend());
-		drawsized(float(bx), float(by), float(bs));
 		popfont();
 
 		int tp = by + bs + FONTH/2;
 		if(player1->state == CS_ALIVE)
 		{
 			t = textureload(healthbartex());
-			float glow = 1.f, pulse = fade;
+			float amt = max(player1->health, 0)/float(MAXHEALTH),
+				glow = 1.f, pulse = fade, cr = 1.f*amt, cg = 0.25f*amt, cb = 0.f;
 
 			if(lastmillis <= player1->lastregen+500)
 			{
@@ -1234,8 +1222,13 @@ struct gameclient : igameclient
 			}
 
 			glBindTexture(GL_TEXTURE_2D, t->retframe(player1->health, MAXHEALTH));
-			glColor4f(glow, glow*0.3f, 0.f, pulse);
-			drawsized(float(bx), float(by), float(bs));
+			glColor4f(clamp(cr, 0.3f, 1.f)*glow, clamp(cg, 0.f, 1.f)*glow, clamp(cb, 0.f, 1.f)*glow, pulse);
+			if(t->frames.length() > 1) drawsized(float(bx), float(by), float(bs));
+			else
+			{
+				float hs = float(bs)/2.0f, hx = float(bx)+hs, hy = float(by)+hs;
+				drawslice(0, amt, hx, hy, hs);
+			}
 
 			if(showhudammo())
 			{
@@ -1878,6 +1871,8 @@ struct gameclient : igameclient
 			vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
 
 			camera1->inmaterial = lookupmaterial(camera1->o);
+			camera1->inliquid = isliquid(camera1->inmaterial&MATF_VOLUME);
+
 			switch(camera1->inmaterial)
 			{
 				case MAT_WATER:

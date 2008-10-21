@@ -716,25 +716,8 @@ void splitocta(cube *c, int size)
 	}
 }
 
-void resetmap()
+void clearworldvars(bool msg = false)
 {
-	renderprogress(0, "resetting map...");
-	materialreset();
-	texturereset();
-	mapmodelreset();
-	clearoverrides();
-	clearsound();
-	cleanreflections();
-	resetlightmaps();
-    clearpvs();
-	clearparticles();
-    cleardecals();
-	clearsleep();
-	cancelsel();
-	pruneundos();
-
-	et->getents().deletecontentsp();
-
 	enumerate(*idents, ident, id, {
 		if(id.flags&IDF_WORLD) // reset world vars
 		{
@@ -764,6 +747,29 @@ void resetmap()
 			}
 		}
 	});
+	if(msg) conoutf("world variables reset");
+}
+
+ICOMMAND(resetworldvars, "", (), clearworldvars(true));
+
+void resetmap()
+{
+	renderprogress(0, "resetting map...");
+	materialreset();
+	texturereset();
+	mapmodelreset();
+	clearoverrides();
+	clearsound();
+	cleanreflections();
+	resetlightmaps();
+    clearpvs();
+	clearparticles();
+    cleardecals();
+	clearsleep();
+	cancelsel();
+	pruneundos();
+	et->getents().deletecontentsp();
+	clearworldvars();
 }
 
 void startmap(const char *name)

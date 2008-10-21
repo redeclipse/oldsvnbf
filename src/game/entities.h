@@ -1227,7 +1227,7 @@ struct entities : icliententities
 					}
 					case WAYPOINT:
 					{
-						e.attr1 = WP_NONE;
+						e.attr1 = 0;
 						break;
 					}
 					case FLAG:
@@ -1265,6 +1265,12 @@ struct entities : icliententities
 						if(e.attr1 > 3) e.attr1--;
 						else if(e.attr1 == 3) e.attr1 = GUN_GL;
 					}
+					break;
+				}
+				case PUSHER:
+				{
+					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 95))
+						e.attr1 = int(e.attr1*12.5f);
 					break;
 				}
 				case WAYPOINT:
@@ -1509,7 +1515,7 @@ struct entities : icliententities
 		{
 			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || (dropentities() && !m_fight(cl.gamemode))) ? 3 : 0));
 			renderprimitive(true);
-			if(level) 
+			if(level)
             {
                 loopv(ents)
 			    {
