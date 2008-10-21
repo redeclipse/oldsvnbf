@@ -1270,7 +1270,7 @@ struct entities : icliententities
 				case PUSHER:
 				{
 					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 95))
-						e.attr1 = int(e.attr1*12.5f);
+						e.attr1 = int(e.attr1*1.25f);
 					break;
 				}
 				case WAYPOINT:
