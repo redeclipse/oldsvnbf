@@ -63,7 +63,7 @@ struct decalrenderer
         }
         decals = new decalinfo[tris];
         maxdecals = tris;
-        tex = textureload(texname);
+        tex = textureload(texname, 3);
         maxverts = tris*3 + 3;
         availverts = maxverts - 3;
         verts = new decalvert[maxverts];
