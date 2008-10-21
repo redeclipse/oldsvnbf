@@ -1322,7 +1322,7 @@ struct gameserver : igameserver
 								gs.lifesequence, gs.health,
 								gs.gunselect, GUN_MAX, &gs.ammo[0], -1);
 						}
-						relayf("\fg* %s has joined the game", colorname(ci, text));
+						relayf("\fg%s has joined the game", colorname(ci, text));
 						ai.checkai(true);
 					}
 					else
@@ -1332,7 +1332,7 @@ struct gameserver : igameserver
 							string oldname, newname;
 							s_strcpy(oldname, colorname(ci));
 							s_strcpy(newname, colorname(ci, text));
-							relayf("\fm* %s is now known as %s", oldname, newname);
+							relayf("\fm%s is now known as %s", oldname, newname);
 						}
 					}
 					QUEUE_STR(text);
@@ -2462,7 +2462,7 @@ struct gameserver : igameserver
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, n);
-		relayf("\fo* %s has left the game", colorname(ci));
+		relayf("\fo%s has left the game", colorname(ci));
 		clients.removeobj(ci);
 		if(clients.empty()) cleanup(false);
 		else
