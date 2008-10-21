@@ -1514,15 +1514,15 @@ struct entities : icliententities
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
 			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || (dropentities() && !m_fight(cl.gamemode))) ? 3 : 0));
-			renderprimitive(true);
 			if(level)
             {
+                renderprimitive(true);
                 loopv(ents)
 			    {
 				    renderfocus(i, renderentshow(e, i, editmode && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
 			    }
+                renderprimitive(false);
             }
-			renderprimitive(false);
 		}
 
 		Texture *t = textureload(portaltex(), 0, true);

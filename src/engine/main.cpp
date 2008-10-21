@@ -124,7 +124,7 @@ VARF(scr_w, 320, 1024, 10000, initwarning("screen resolution"));
 VARF(scr_h, 200, 768, 10000, initwarning("screen resolution"));
 VARF(colorbits, 0, 0, 32, initwarning("color depth"));
 VARF(depthbits, 0, 0, 32, initwarning("depth-buffer precision"));
-VARF(stencilbits, 0, 1, 32, initwarning("stencil-buffer precision"));
+VARF(stencilbits, 0, 0, 32, initwarning("stencil-buffer precision"));
 VARF(fsaa, -1, -1, 16, initwarning("anti-aliasing"));
 VARF(vsync, -1, -1, 1, initwarning("vertical sync"));
 
@@ -284,10 +284,10 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
         if(depthbits) SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, config&1 ? depthbits : 16);
         if(stencilbits)
         {
-            SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, config&2 ? 1 : 0);
-            hasstencil = (config&2)!=0;
+            hasstencil = config&2 ? stencilbits : 0;
+            SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, hasstencil);
         }
-        else hasstencil = false;
+        else hasstencil = 0;
         if(fsaa>0)
         {
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, config&4 ? 1 : 0);
