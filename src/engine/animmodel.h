@@ -265,7 +265,7 @@ struct animmodel : model
                 if(enablelighting) { glDisable(GL_LIGHTING); enablelighting = false; }
                 if(enablefog) disablefog(true);
                 if(shadowmapping) SETMODELSHADER(b, shadowmapcaster);
-                else /*if(as->anim&ANIM_SHADOW)*/ SETMODELSHADER(b, dynshadow); // this shader also gets used with color mask disabled
+                else /*if(as->anim&ANIM_SHADOW)*/ SETMODELSHADER(b, notexturemodel); // this shader also gets used with color mask disabled
                 return;
             }
             Texture *s = bumpmapped() && unlittex ? unlittex : tex,

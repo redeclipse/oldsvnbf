@@ -373,116 +373,12 @@ void renderellipse(vec &o, float xradius, float yradius, float yaw)
 	glEnd();
 }
 
-void setshadowmatrix(const plane &p, const vec &dir)
-{
-	float d = p.dot(dir);
-	GLfloat m[16] =
-	{
-		d-dir.x*p.x,		-dir.y*p.x,		-dir.z*p.x,	  0,
-		 -dir.x*p.y,	  d-dir.y*p.y,		-dir.z*p.y,	  0,
-		 -dir.x*p.z,		-dir.y*p.z,	  d-dir.z*p.z,	  0,
-		 -dir.x*p.offset,  -dir.y*p.offset,  -dir.z*p.offset, d
-	};
-	glMultMatrixf(m);
-}
-
-VARP(bounddynshadows, 0, 1, 1);
-VARP(dynshadow, 0, 60, 100);
-
-void rendershadow(vec &dir, model *m, int anim, const vec &o, vec center, float radius, float yaw, float pitch, float roll, float speed, int basetime, dynent *d, int cull, modelattach *a)
-{
-	vec floor;
-	float dist = rayfloor(center, floor, 0, center.z);
-	if(dist<=0 || dist>=center.z) return;
-	center.z -= dist;
-    if((cull&MDL_CULL_VFC) && refracting<0 && center.z>=reflectz) return;
-	if(vec(center).sub(camera1->o).dot(floor)>0) return;
-
-    vec shaddir;
-    if(cull&MDL_DYNSHADOW)
-    {
-        extern vec shadowdir;
-        shaddir = shadowdir;
-        shaddir.normalize();
-    }
-	else
-	{
-		shaddir = dir;
-		shaddir.z = 0;
-		if(!shaddir.iszero()) shaddir.normalize();
-		shaddir.z = 1.5f*(dir.z*0.5f+1);
-		shaddir.normalize();
-	}
-
-	glDisable(GL_TEXTURE_2D);
-	glDepthMask(GL_FALSE);
-
-    if(!hasFBO || !reflecting || !refracting || hasDS)
-    {
-        glEnable(GL_STENCIL_TEST);
-
-        if(bounddynshadows)
-        {
-            nocolorshader->set();
-            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-            glStencilFunc(GL_ALWAYS, 1, 1);
-            glStencilOp(GL_KEEP, GL_REPLACE, GL_ZERO);
-
-            vec below(center);
-            below.z -= 1.0f;
-            glPushMatrix();
-            setshadowmatrix(plane(floor, -floor.dot(below)), shaddir);
-            glBegin(GL_QUADS);
-            loopi(6) if((shaddir[dimension(i)]>0)==dimcoord(i)) loopj(4)
-            {
-                const ivec &cc = cubecoords[fv[i][j]];
-                glVertex3f(center.x + (cc.x ? 1.5f : -1.5f)*radius,
-                           center.y + (cc.y ? 1.5f : -1.5f)*radius,
-                           cc.z ? center.z + dist + radius : below.z);
-                xtraverts += 4;
-            }
-            glEnd();
-            glPopMatrix();
-
-            glColorMask(COLORMASK, fading ? GL_FALSE : GL_TRUE);
-        }
-    }
-
-    float intensity = dynshadow/100.0f;
-    if(fogging)
-    {
-        if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, max(0.1f, reflectz-center.z));
-        else intensity *= 1.0f - max(0.0f, min(1.0f, (reflectz - center.z)/waterfog));
-    }
-    if((anim&ANIM_INDEX)==ANIM_DYING) intensity *= max(1.0f - (lastmillis - basetime)/1000.0f, 0.0f);
-    glColor4f(0, 0, 0, intensity);
-
-    if(!hasFBO || !reflecting || !refracting || hasDS)
-    {
-        glStencilFunc(GL_NOTEQUAL, bounddynshadows ? 0 : 1, 1);
-        glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
-    }
-
-    vec above(center);
-    above.z += 0.25f;
-
-    glPushMatrix();
-    setshadowmatrix(plane(floor, -floor.dot(above)), shaddir);
-    m->render(anim|ANIM_NOSKIN|ANIM_SHADOW, speed, basetime, o, yaw, pitch, roll, d, a);
-    glPopMatrix();
-
-    glEnable(GL_TEXTURE_2D);
-    glDepthMask(GL_TRUE);
-
-    if(!hasFBO || !reflecting || !refracting || hasDS) glDisable(GL_STENCIL_TEST);
-}
-
 struct batchedmodel
 {
 	vec pos, color, dir;
 	int anim;
 	float yaw, pitch, roll, speed;
-	int basetime, cull;
+	int basetime, flags;
 	dynent *d;
 	int attached;
 	occludequery *query;
@@ -490,6 +386,7 @@ struct batchedmodel
 struct modelbatch
 {
 	model *m;
+    int flags;
 	vector<batchedmodel> batched;
 };
 static vector<modelbatch *> batches;
@@ -503,38 +400,29 @@ void startmodelbatches()
 	modelattached.setsizenodelete(0);
 }
 
-batchedmodel &addbatchedmodel(model *m)
+modelbatch &addbatchedmodel(model *m)
 {
-	modelbatch *b = NULL;
-	if(m->batch>=0 && m->batch<numbatches && batches[m->batch]->m==m) b = batches[m->batch];
-	else
-	{
-		if(numbatches<batches.length())
-		{
-			b = batches[numbatches];
-			b->batched.setsizenodelete(0);
-		}
-		else b = batches.add(new modelbatch);
-		b->m = m;
-		m->batch = numbatches++;
-	}
-	batchedmodel &bm = b->batched.add();
-	bm.query = modelquery;
-	return bm;
+    modelbatch *b = NULL;
+    if(m->batch>=0 && m->batch<numbatches && batches[m->batch]->m==m) b = batches[m->batch];
+    else
+    {
+        if(numbatches<batches.length())
+        {
+            b = batches[numbatches];
+            b->batched.setsizenodelete(0);
+        }
+        else b = batches.add(new modelbatch);
+        b->m = m;
+        b->flags = 0;
+        m->batch = numbatches++;
+    }
+    return *b;
 }
 
 void renderbatchedmodel(model *m, batchedmodel &b)
 {
 	modelattach *a = NULL;
 	if(b.attached>=0) a = &modelattached[b.attached];
-    if(!shadowmap && !glaring && (b.cull&(MDL_SHADOW|MDL_DYNSHADOW)) && dynshadow && hasstencil && !reflecting && refracting<=0)
-	{
-		vec center;
-        float radius = m->boundsphere(0/*frame*/, center); // FIXME
-		center.add(b.pos);
-		rendershadow(b.dir, m, b.anim, b.pos, center, radius, b.yaw, b.pitch, b.roll, b.speed, b.basetime, b.d, b.cull, a);
-        if((b.cull&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
-	}
 
 	int anim = b.anim;
     if(shadowmapping)
@@ -546,8 +434,8 @@ void renderbatchedmodel(model *m, batchedmodel &b)
     }
     else
     {
-        if(b.cull&MDL_TRANSLUCENT) anim |= ANIM_TRANSLUCENT;
-        if(b.cull&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
+        if(b.flags&MDL_TRANSLUCENT) anim |= ANIM_TRANSLUCENT;
+        if(b.flags&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
     }
 
 	m->render(anim, b.speed, b.basetime, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir);
@@ -574,18 +462,31 @@ void endmodelbatches()
 	{
 		modelbatch &b = *batches[i];
 		if(b.batched.empty()) continue;
+        if(b.flags&(MDL_SHADOW|MDL_DYNSHADOW))
+        {
+            vec center, bbradius;
+            b.m->boundbox(0/*frame*/, center, bbradius); // FIXME
+            loopvj(b.batched)
+            {
+                batchedmodel &bm = b.batched[j];
+                if(bm.flags&(MDL_SHADOW|MDL_DYNSHADOW))
+                    renderblob(bm.flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, bm.pos, bm.d ? bm.d->radius : max(bbradius.x, bbradius.y));
+            }
+            flushblobs();
+        }
 		bool rendered = false;
 		occludequery *query = NULL;
 		loopvj(b.batched)
 		{
 			batchedmodel &bm = b.batched[j];
+            if(bm.flags&MDL_CULL_VFC) continue;
 			if(bm.query!=query)
 			{
 				if(query) endquery(query);
 				query = bm.query;
                 if(query) startquery(query);
 			}
-            if(bm.cull&MDL_TRANSLUCENT && (!query || query->owner==bm.d))
+            if(bm.flags&MDL_TRANSLUCENT && (!query || query->owner==bm.d))
 			{
 				translucentmodel &tm = translucent.add();
 				tm.m = b.m;
@@ -646,6 +547,7 @@ void endmodelquery()
 		modelquery = NULL;
 		return;
 	}
+    flushblobs();
 	int minattached = modelattached.length();
 	startquery(modelquery);
 	loopi(numbatches)
@@ -693,22 +595,23 @@ void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
 
 extern int oqfrags;
 
-void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw, float pitch, float roll, int cull, dynent *d, modelattach *a, int basetime, float speed)
+void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw, float pitch, float roll, int flags, dynent *d, modelattach *a, int basetime, float speed)
 {
-    if(shadowmapping && !(cull&(MDL_SHADOW|MDL_DYNSHADOW))) return;
+    if(shadowmapping && !(flags&(MDL_SHADOW|MDL_DYNSHADOW))) return;
 	model *m = loadmodel(mdl);
 	if(!m) return;
-	vec center;
-	float radius = 0;
-    bool shadow = !shadowmap && !glaring && (cull&(MDL_SHADOW|MDL_DYNSHADOW)) && dynshadow && hasstencil,
-         doOQ = cull&MDL_CULL_QUERY && hasOQ && oqfrags && oqdynent;
-    if(cull&(MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED|MDL_CULL_QUERY|MDL_SHADOW|MDL_DYNSHADOW))
+    vec center, bbradius;
+    float radius = 0;
+    bool shadow = !shadowmap && !glaring && (flags&(MDL_SHADOW|MDL_DYNSHADOW)) && showblobs,
+         doOQ = flags&MDL_CULL_QUERY && hasOQ && oqfrags && oqdynent;
+    if(flags&(MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED|MDL_CULL_QUERY|MDL_SHADOW|MDL_DYNSHADOW))
 	{
-        radius = m->boundsphere(0/*frame*/, center); // FIXME
+        m->boundbox(0/*frame*/, center, bbradius); // FIXME
+        radius = bbradius.magnitude();
         center.rotate_around_z((-180-yaw)*RAD);
 		center.add(o);
-        if(cull&MDL_CULL_DIST && center.dist(camera1->o)/radius>maxmodelradiusdistance) return;
-		if(cull&MDL_CULL_VFC)
+        if(flags&MDL_CULL_DIST && center.dist(camera1->o)/radius>maxmodelradiusdistance) return;
+		if(flags&MDL_CULL_VFC)
 		{
             if(reflecting || refracting)
             {
@@ -730,12 +633,12 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
         {
             if(d)
             {
-                if(cull&MDL_CULL_OCCLUDED && d->occluded>=OCCLUDE_PARENT) return;
+                if(flags&MDL_CULL_OCCLUDED && d->occluded>=OCCLUDE_PARENT) return;
                 if(doOQ && d->occluded+1>=OCCLUDE_BB && d->query && d->query->owner==d && checkquery(d->query)) return;
             }
             if(!addshadowmapcaster(center, radius, radius)) return;
 		}
-        else if(cull&MDL_CULL_OCCLUDED && modeloccluded(center, radius))
+        else if(flags&MDL_CULL_OCCLUDED && modeloccluded(center, radius))
         {
             if(!reflecting && !refracting && d)
             {
@@ -755,7 +658,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
         }
     }
 
-    if(cull&MDL_NORENDER) anim |= ANIM_NORENDER;
+    if(flags&MDL_NORENDER) anim |= ANIM_NORENDER;
     else if(showboundingbox && !shadowmapping)
 	{
 		renderprimitive(true);
@@ -783,7 +686,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 		{
         	if(!reflecting && !refracting) d->occluded = OCCLUDE_NOTHING;
             if(!light) light = &d->light;
-            if(cull&MDL_LIGHT && light->millis!=lastmillis)
+            if(flags&MDL_LIGHT && light->millis!=lastmillis)
             {
                 lightreaching(d->o, light->color, light->dir);
                 dynlightreaching(o, light->color, light->dir);
@@ -791,7 +694,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
                 light->millis = lastmillis;
             }
         }
-        else if(cull&MDL_LIGHT)
+        else if(flags&MDL_LIGHT)
         {
             if(!light)
             {
@@ -806,7 +709,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
             }
         }
         if(light) { lightcolor = light->color; lightdir = light->dir; }
-        if(cull&MDL_DYNLIGHT) dynlightreaching(o, lightcolor, lightdir);
+        if(flags&MDL_DYNLIGHT) dynlightreaching(o, lightcolor, lightdir);
     }
 
 	if(a) for(int i = 0; a[i].tag; i++)
@@ -820,7 +723,9 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 
 	if(numbatches>=0)
 	{
-		batchedmodel &b = addbatchedmodel(m);
+        modelbatch &mb = addbatchedmodel(m);
+        batchedmodel &b = mb.batched.add();
+        b.query = modelquery;
 		b.pos = o;
         b.color = lightcolor;
         b.dir = lightdir;
@@ -830,7 +735,13 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 		b.roll = roll;
 		b.speed = speed;
 		b.basetime = basetime;
-		b.cull = cull;
+        b.flags = flags & ~(MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
+        if(!shadow || reflecting || refracting>0)
+        {
+            b.flags &= ~(MDL_SHADOW|MDL_DYNSHADOW);
+            if((flags&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) b.flags |= MDL_CULL_VFC;
+        }
+        mb.flags |= b.flags;
 		b.d = d;
 		b.attached = a ? modelattached.length() : -1;
 		if(a) for(int i = 0;; i++) { modelattached.add(a[i]); if(!a[i].tag) break; }
@@ -838,13 +749,14 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 		return;
 	}
 
-	m->startrender();
-
     if(shadow && !reflecting && refracting<=0)
-	{
-		rendershadow(lightdir, m, anim, o, center, radius, yaw, pitch, roll, speed, basetime, d, cull, a);
-        if((cull&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) { m->endrender(); return; }
-	}
+    {
+        renderblob(flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, o, d ? d->radius : max(bbradius.x, bbradius.y));
+        flushblobs();
+        if((flags&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
+    }
+
+	m->startrender();
 
     if(shadowmapping)
     {
@@ -855,8 +767,8 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
     }
     else
     {
-        if(cull&MDL_TRANSLUCENT) anim |= ANIM_TRANSLUCENT;
-        if(cull&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
+        if(flags&MDL_TRANSLUCENT) anim |= ANIM_TRANSLUCENT;
+        if(flags&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
     }
 
     if(doOQ)

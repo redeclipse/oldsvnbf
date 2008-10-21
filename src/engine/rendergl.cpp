@@ -3,7 +3,8 @@
 #include "pch.h"
 #include "engine.h"
 
-bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasstencil = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false;
+bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false;
+int hasstencil = 0;
 
 VAR(renderpath, 1, 0, 0);
 
@@ -959,7 +960,7 @@ void drawreflection(float z, bool refract, bool clear)
     if(reflectmms) renderreflectedmapmodels();
     rendergame();
 
-    if(fogging) setfogplane(1, z);
+    if(renderpath!=R_FIXEDFUNCTION && fogging) setfogplane(1, z);
     if(refracting) rendergrass();
     renderdecals(0);
     rendermaterials();
@@ -969,7 +970,7 @@ void drawreflection(float z, bool refract, bool clear)
 
     if(fading) glColorMask(COLORMASK, GL_TRUE);
 
-    if(fogging) setfogplane();
+    if(renderpath!=R_FIXEDFUNCTION && fogging) setfogplane();
 
     if(reflectclip && z>=0) undoclipmatrix();
 

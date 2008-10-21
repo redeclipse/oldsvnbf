@@ -187,7 +187,8 @@ static inline bool pvsoccluded(const ivec &bborigin, int size)
 }
 
 // rendergl
-extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasstencil, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF;
+extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF;
+extern int hasstencil;
 
 extern bool envmapping, renderedgame;
 extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
@@ -564,6 +565,21 @@ extern void updateparticles();
 extern void initdecals();
 extern void cleardecals();
 extern void renderdecals(int time);
+
+// blob
+
+enum
+{
+    BLOB_STATIC = 0,
+    BLOB_DYNAMIC
+};
+
+extern int showblobs;
+
+extern void initblobs(int type = -1);
+extern void resetblobs();
+extern void renderblob(int type, const vec &o, float radius);
+extern void flushblobs();
 
 // rendersky
 extern int explicitsky;
