@@ -259,7 +259,7 @@ struct blobrenderer
                 dupblob();
                 limit = maxverts - 2;
             }
-            limit = min(end - cur, min(limit, (maxindexes - endindex)/3));
+            limit = min(int(end - cur), min(limit, (maxindexes - endindex)/3));
             while(availverts < limit+2) if(!freeblob()) return;
             while(availindexes < limit*3) if(!freeblob()) return;
 
