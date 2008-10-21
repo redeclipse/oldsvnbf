@@ -702,7 +702,7 @@ struct gameclient : igameclient
 		if(!players.inrange(cn)) return;
 		gameent *d = players[cn];
 		if(!d) return;
-		if(d->name[0]) conoutf("\fo* %s left the game", colorname(d));
+		if(d->name[0]) conoutf("\fo%s left the game", colorname(d));
 		pj.remove(d);
         removetrackedparticles(d);
 		removetrackedsounds(d);

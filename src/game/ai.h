@@ -276,34 +276,14 @@ struct aiclient
 		bool rst = false;
 		gameent *o = cl.getclient(on);
 		s_sprintfd(m)("%s", o ? cl.colorname(o) : "unknown");
-		string r; r[0] = 0;
 
-		if(!d->name[0])
-		{
-			s_sprintf(r)("assigned to %s at skill %d", m, sk);
-			rst = true;
-		}
-		else if(d->ownernum != on)
-		{
-			s_sprintf(r)("reassigned to %s", m);
-			rst = true;
-		}
-		else if(d->skill != sk)
-		{
-			s_sprintf(r)("changed skill to %d", sk);
-		}
-		else if(d->team != tm)
-		{
-			s_sprintf(r)("balanced to \fs%s%s\fS team", teamtype[tm].chat, teamtype[tm].name);
-		}
+		if(!d->name[0] || d->ownernum != on) rst = true;
 
 		s_strncpy(d->name, name, MAXNAMELEN);
 		d->aitype = at;
 		d->ownernum = on;
 		d->skill = sk;
 		d->team = tm;
-
-		if(r[0]) conoutf("\fg* %s %s", cl.colorname(d), r);
 
 		if(rst) // only if connecting or changing owners
 		{
