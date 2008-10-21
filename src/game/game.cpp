@@ -1014,7 +1014,7 @@ struct gameclient : igameclient
 			int colour = teamtype[d->team].colour;
 			float cx = x + s*0.5f*(1.0f+dir.x/radarrange()),
 				cy = y + s*0.5f*(1.0f+dir.y/radarrange()),
-				cs = (d->crouching ? 0.005f : 0.025f)*s,
+				cs = (d->crouching ? 0.05f : 0.25f)*s,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
 				fmag = clamp(d->vel.magnitude()/ph.maxspeed(d), 0.f, 1.f),
 				fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blipblend()*fmag;
@@ -1033,7 +1033,7 @@ struct gameclient : igameclient
 
 	void drawcardinalblips(int x, int y, int s)
 	{
-		pushfont("radar");
+		pushfont("emphasis");
 		loopi(4)
 		{
 			const char *card = "";

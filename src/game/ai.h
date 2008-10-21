@@ -99,8 +99,6 @@ struct aiserv
 					else ci->team = TEAM_NEUTRAL;
 
 					sendf(-1, 1, "ri5si", SV_INITAI, ci->state.aitype, ci->state.ownernum, ci->state.skill, ci->clientnum, ci->name, ci->team);
-					s_sprintfd(o)("%s", sv.colorname(cp));
-					sv.relayf("\fg* %s assigned to %s at skill %d", sv.colorname(ci), o, ci->state.skill);
 
 					if(ci->state.state != CS_SPECTATOR)
 					{
@@ -132,7 +130,6 @@ struct aiserv
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		sv.savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, cn);
-		sv.relayf("\fo* %s has left the game", sv.colorname(ci));
 		sv.clients.removeobj(ci);
 		delclient(cn);
 	}
@@ -184,8 +181,6 @@ struct aiserv
 				if(cp->state.ownernum >= 0)
 				{
 					sendf(-1, 1, "ri5si", SV_INITAI, cp->state.aitype, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
-					s_sprintfd(o)("%s", sv.colorname(ci));
-					sv.relayf("\fg* %s reassigned to %s", sv.colorname(cp), o);
 					return true;
 				}
 				else deleteai(cp);
@@ -203,7 +198,6 @@ struct aiserv
 			clientinfo *cp = sv.clients[i];
 			cp->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
 			sendf(-1, 1, "ri5si", SV_INITAI, cp->state.aitype, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
-			sv.relayf("\fg* %s changed skill to %d", sv.colorname(cp), cp->state.skill);
 		}
 	}
 
