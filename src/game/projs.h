@@ -146,26 +146,15 @@ struct projectiles
 
 		vec dir(vec(vec(proj.to).sub(proj.o)).normalize());
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
-		vec rel = vec(dir).mul(proj.owner->vel.magnitude());
+		vec rel = dir;
 		if(proj.relativity) rel.add(vec(proj.owner->vel).mul(proj.relativity));
-		proj.vel = vec(vec(dir).mul(proj.maxspeed)).add(rel);
-		proj.o.add(vec(dir).mul(proj.owner->radius*1.5f));
+		proj.vel = vec(rel).add(vec(dir).mul(proj.maxspeed));
+		proj.o.add(vec(dir).mul(proj.owner->radius+proj.radius));
 		proj.spawntime = lastmillis;
 
 		vec orig = proj.o;
 		bool found = false;
-		if(proj.projtype == PRJ_SHOT)
-		{
-			switch(proj.attr1)
-			{
-				case GUN_FLAMER:
-					proj.radius = proj.height = guntype[proj.attr1].offset;
-				case GUN_PISTOL:
-					found = true; // explode in face then
-				default: break;
-			}
-		}
-		if(!found) loopi(100)
+		loopi(10)
 		{
 			if(!collide(&proj) || inside || (proj.projtype != PRJ_ENT && hitplayer))
 			{
@@ -180,12 +169,23 @@ struct projectiles
 					proj.vel.apply(pos, amt);
 					if(hitplayer) proj.vel.apply(hitplayer->vel, amt);
 				}
-				else proj.o.add(vec(proj.vel).mul(0.01f));
+				else proj.o.add(dir);
 			}
 			else
 			{
 				found = true;
 				break;
+			}
+		}
+		if(!found && proj.projtype == PRJ_SHOT)
+		{
+			switch(proj.attr1)
+			{
+				case GUN_FLAMER:
+					proj.radius = proj.height = guntype[proj.attr1].offset;
+				case GUN_PISTOL:
+					found = true; // explode in face then
+				default: break;
 			}
 		}
 		if(!found)
@@ -210,16 +210,16 @@ struct projectiles
 				float size = 0.f;
 				if(proj.attr1 == GUN_PISTOL)
 				{
-					int fade = clamp(int(proj.vel.magnitude()), 1, 25);
-					size = proj.radius;
-					regular_part_splash(7, rnd(2)+1, fade, proj.o, 0x44AAFF, size+1.f, int(proj.radius*3));
+					int fade = clamp(int(proj.vel.magnitude()), 1, 50);
+					size = guntype[proj.attr1].size*min(life*5.f,1.f);
+					regular_part_splash(7, rnd(2)+1, fade, proj.o, teamtype[proj.owner->team].colour, size, int(proj.radius*3));
 				}
 				else if(proj.attr1 == GUN_FLAMER)
 				{
 					size = guntype[proj.attr1].size*min(life*2.f,1.f);
 					int col = ((int(254*max(1.0f-life,0.1f))<<16)+1)|((int(64*max(1.0f-life,0.05f))+1)<<8),
-						fade = clamp(int(proj.vel.magnitude()*2.f), 1, 100);
-					regular_part_splash(4, rnd(3)+1, fade, proj.o, col, size+1.f, int(proj.radius*2));
+						fade = clamp(int(proj.vel.magnitude()*5.f), 1, 150);
+					regular_part_splash(4, rnd(3)+1, fade, proj.o, col, size, int(proj.radius*2));
 				}
 				else
 					regularshape(5, int(proj.radius), 0x443322, 21, rnd(5)+1, 100, proj.o, 2.f);
@@ -231,7 +231,7 @@ struct projectiles
 						continue;
 					vec dir;
 					float dist = cl.ws.middist(f, dir, proj.o);
-					if(dist < proj.radius) return false;
+					if(dist <= size) return false;
 				}
 			}
 			else if(proj.projtype == PRJ_GIBS)
@@ -555,7 +555,7 @@ struct projectiles
 			{
 				case GUN_PISTOL:
 				{
-					vec col(0.25f, 0.8f, 1.1f);
+					vec col((teamtype[proj.owner->team].colour>>16)/255.f, ((teamtype[proj.owner->team].colour>>8)&0xFF)/255.f, (teamtype[proj.owner->team].colour&0xFF)/255.f);
 					adddynlight(proj.o, proj.radius*2.f, col);
 					break;
 				}

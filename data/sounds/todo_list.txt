@@ -65,6 +65,9 @@ Whirr          :: 1 :: WHAT IS THIS USED FOR???
 	Quin: When a bullet is travelling in the air (not used yet).
 Whizz          :: 1 :: WHAT IS THIS USED FOR???
 	Quin: When a grenade is travelling in the air.
+Hum				:: 1 :: Energy humming through the air.
+Energy			:: 1 :: Energy impacting.
+Pistol			:: 1 :: New pistol sound needed for new plasma pistol.
 
 ###################################################################   
 ###                        Weapons                              ###

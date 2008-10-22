@@ -11,7 +11,7 @@ struct aiserv
 			if(m_lobby(sv.gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
 			else if(m_fight(sv.gamemode) && sv_botbalance)
 			{
-				if(sv_botbalance < MAXCLIENTS/2)
+				if(sv_botbalance < 32)
 				{
 					setvar("sv_botbalance", sv_botbalance+1, true);
 					s_sprintfd(val)("%d", sv_botbalance);
@@ -31,7 +31,7 @@ struct aiserv
 			if(m_lobby(sv.gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
 			else if(m_fight(sv.gamemode) && sv_botbalance)
 			{
-				if(sv_botbalance > 1)
+				if(sv_botbalance > 0)
 				{
 					setvar("sv_botbalance", sv_botbalance-1, true);
 					s_sprintfd(val)("%d", sv_botbalance);
@@ -215,7 +215,7 @@ struct aiserv
 			{
 				if(sv_botbalance)
 				{
-					int balance = sv_botbalance * (m_team(sv.gamemode, sv.mutators) ? 2 : 1);
+					int balance = sv_botbalance * (m_team(sv.gamemode, sv.mutators) ? numteams(sv.gamemode, sv.mutators) : 1);
 					while(sv.nonspectators() < balance && addai(AI_BOT, -1)) ;
 					while(sv.nonspectators() > balance && delai(AI_BOT)) ;
 				}
@@ -464,156 +464,70 @@ struct aiclient
 		return false;
 	}
 
-	struct interest
+	void gunfind(gameent *d, aistate &b, vector<interest> &interests)
 	{
-		int state, node, target, targtype, expire;
-		float tolerance, score;
-		bool defers;
-		interest() : state(-1), node(-1), target(-1), targtype(-1), expire(0), tolerance(0.f), score(0.f) {}
-		~interest() {}
-	};
+		vec pos = cl.headpos(d);
+		loopvj(cl.et.ents)
+		{
+			gameentity &e = *(gameentity *)cl.et.ents[j];
+			if(enttype[e.type].usetype != EU_ITEM) continue;
+			switch(e.type)
+			{
+				case WEAPON:
+				{
+					if(e.spawned && isgun(e.attr1) && !d->hasgun(e.attr1))
+					{ // go get a weapon upgrade
+						interest &n = interests.add();
+						n.state = AI_S_INTEREST;
+						n.node = cl.et.entitynode(e.o, true);
+						n.target = j;
+						n.targtype = AI_T_ENTITY;
+						n.expire = 10000;
+						n.tolerance = enttype[e.type].radius+d->radius;
+						n.score = pos.squaredist(e.o)/(e.attr1 != d->ai->gunpref ? 1.f : 10.f);
+						n.defers = true;
+					}
+					break;
+				}
+				default: break;
+			}
+		}
+
+		loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ready())
+		{
+			projent &proj = *cl.pj.projs[j];
+			if(enttype[proj.ent].usetype != EU_ITEM || !cl.et.ents.inrange(proj.id)) continue;
+			switch(proj.ent)
+			{
+				case WEAPON:
+				{
+					if(isgun(proj.attr1) && !d->hasgun(proj.attr1))
+					{ // go get a weapon upgrade
+						if(proj.owner == d && d->gunselect != GUN_PISTOL) break;
+						interest &n = interests.add();
+						n.state = AI_S_INTEREST;
+						n.node = cl.et.entitynode(proj.o, true);
+						n.target = proj.id;
+						n.targtype = AI_T_DROP;
+						n.expire = 5000;
+						n.tolerance = enttype[proj.ent].radius+d->radius;
+						n.score = pos.squaredist(proj.o)/(proj.attr1 != d->ai->gunpref ? 1.f : 10.f);
+						n.defers = true;
+					}
+					break;
+				}
+				default: break;
+			}
+		}
+	}
 
 	bool find(gameent *d, aistate &b, bool override = true)
 	{
-		vec pos = cl.headpos(d);
 		static vector<interest> interests;
 		interests.setsizenodelete(0);
 
-		if(m_ctf(cl.gamemode))
-        {
-			loopvj(cl.ctf.flags)
-			{
-				ctfstate::flag &f = cl.ctf.flags[j];
-
-				vector<int> targets; // build a list of others who are interested in this
-				checkothers(targets, d, f.team == d->team ? AI_S_DEFEND : AI_S_PURSUE, AI_T_FLAG, j, true);
-
-				gameent *e = NULL;
-				loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
-				{ // try to guess what non ai are doing
-					vec ep = cl.headpos(e);
-					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= ((enttype[FLAG].radius*enttype[FLAG].radius)*2.f) || f.owner == e))
-						targets.add(e->clientnum);
-				}
-
-				if(f.team == d->team)
-				{
-					bool guard = false;
-					if(f.owner || targets.empty()) guard = true;
-					else if(d->gunselect != GUN_PISTOL)
-					{ // see if we can relieve someone who only has a pistol
-						gameent *t;
-						loopvk(targets) if((t = cl.getclient(targets[k])) && t->gunselect == GUN_PISTOL)
-						{
-							guard = true;
-							break;
-						}
-					}
-
-					if(guard)
-					{ // defend the flag
-						interest &n = interests.add();
-						n.state = AI_S_DEFEND;
-						n.node = cl.et.entitynode(f.pos(), false);
-						n.target = j;
-						n.targtype = AI_T_FLAG;
-						n.expire = 10000;
-						n.tolerance = enttype[FLAG].radius*2.f;
-						n.score = pos.squaredist(f.pos())/(d->gunselect != GUN_PISTOL ? 100.f : 1.f);
-						n.defers = false;
-					}
-				}
-				else
-				{
-					if(targets.empty())
-					{ // attack the flag
-						interest &n = interests.add();
-						n.state = AI_S_PURSUE;
-						n.node = cl.et.entitynode(f.pos(), false);
-						n.target = j;
-						n.targtype = AI_T_FLAG;
-						n.expire = 10000;
-						n.tolerance = enttype[FLAG].radius*2.f;
-						n.score = pos.squaredist(f.pos());
-						n.defers = false;
-					}
-					else
-					{ // help by defending the attacker
-						gameent *t;
-						loopvk(targets) if((t = cl.getclient(targets[k])))
-						{
-							interest &n = interests.add();
-							vec tp = cl.headpos(t);
-							n.state = AI_S_DEFEND;
-							n.node = t->lastnode;
-							n.target = t->clientnum;
-							n.targtype = AI_T_PLAYER;
-							n.expire = 5000;
-							n.tolerance = t->radius*2.f;
-							n.score = pos.squaredist(tp);
-							n.defers = false;
-						}
-					}
-				}
-			}
-		}
-
-		if(!d->hasgun(d->ai->gunpref))
-		{
-			loopvj(cl.et.ents)
-			{
-				gameentity &e = *(gameentity *)cl.et.ents[j];
-				if(enttype[e.type].usetype != EU_ITEM) continue;
-				switch(e.type)
-				{
-					case WEAPON:
-					{
-						if(e.spawned && isgun(e.attr1) && !d->hasgun(e.attr1))
-						{ // go get a weapon upgrade
-							interest &n = interests.add();
-							n.state = AI_S_INTEREST;
-							n.node = cl.et.entitynode(e.o, true);
-							n.target = j;
-							n.targtype = AI_T_ENTITY;
-							n.expire = 10000;
-							n.tolerance = enttype[e.type].radius+d->radius;
-							n.score = pos.squaredist(e.o)/(e.attr1 != d->ai->gunpref ? 1.f : 10.f);
-							n.defers = true;
-						}
-						break;
-					}
-					default: break;
-				}
-			}
-
-			loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ready())
-			{
-				projent &proj = *cl.pj.projs[j];
-				if(enttype[proj.ent].usetype != EU_ITEM || !cl.et.ents.inrange(proj.id)) continue;
-				switch(proj.ent)
-				{
-					case WEAPON:
-					{
-						if(isgun(proj.attr1) && !d->hasgun(proj.attr1))
-						{ // go get a weapon upgrade
-							if(proj.owner == d && d->gunselect != GUN_PISTOL) break;
-							interest &n = interests.add();
-							n.state = AI_S_INTEREST;
-							n.node = cl.et.entitynode(proj.o, true);
-							n.target = proj.id;
-							n.targtype = AI_T_DROP;
-							n.expire = 5000;
-							n.tolerance = enttype[proj.ent].radius+d->radius;
-							n.score = pos.squaredist(proj.o)/(proj.attr1 != d->ai->gunpref ? 1.f : 10.f);
-							n.defers = true;
-						}
-						break;
-					}
-					default: break;
-				}
-			}
-		}
-
+		if(m_ctf(cl.gamemode)) cl.ctf.aifind(d, b, interests);
+		if(!d->hasgun(d->ai->gunpref)) gunfind(d, b, interests);
 		while(!interests.empty())
 		{
 			int q = interests.length()-1;
@@ -626,34 +540,6 @@ struct aiclient
 				c.target = n.target;
 				c.expire = n.expire;
 				c.defers = n.defers;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool ctfhomerun(gameent *d, aistate &b)
-	{
-		vec pos = cl.headpos(d);
-		loopk(2)
-		{
-			int goal = -1;
-			loopv(cl.ctf.flags)
-			{
-				ctfstate::flag &g = cl.ctf.flags[i];
-				if(g.team == d->team && (k || (!g.owner && !g.droptime)) &&
-					(!cl.ctf.flags.inrange(goal) || g.pos().squaredist(pos) < cl.ctf.flags[goal].pos().squaredist(pos)))
-				{
-					goal = i;
-				}
-			}
-
-			if(cl.ctf.flags.inrange(goal) && makeroute(d, b, cl.ctf.flags[goal].pos(), enttype[FLAG].radius))
-			{
-				aistate &c = d->ai->setstate(AI_S_PURSUE); // replaces current state!
-				c.targtype = AI_T_FLAG;
-				c.target = goal;
-				c.defers = false;
 				return true;
 			}
 		}
@@ -744,20 +630,7 @@ struct aiclient
 					return true;
 				}
 			}
-			if(m_ctf(cl.gamemode))
-			{
-				static vector<int> hasflags;
-				hasflags.setsizenodelete(0);
-				loopv(cl.ctf.flags)
-				{
-					ctfstate::flag &g = cl.ctf.flags[i];
-					if(g.team != d->team && g.owner == d)
-						hasflags.add(i);
-				}
-
-				if(!hasflags.empty() && ctfhomerun(d, b))
-					return true;
-			}
+			if(m_ctf(cl.gamemode) && cl.ctf.aicheck(d, b)) return true;
 			if(find(d, b, true)) return true;
 			if(defer(d, b, true)) return true;
 			if(randomnode(d, b, AIISFAR, 1e16f))
@@ -779,18 +652,9 @@ struct aiclient
 		{
 			switch(b.targtype)
 			{
-				case AI_T_FLAG:
+				case AI_T_AFFINITY:
 				{
-					if(m_ctf(cl.gamemode) && cl.ctf.flags.inrange(b.target))
-					{
-						ctfstate::flag &f = cl.ctf.flags[b.target];
-						if(f.owner && violence(d, b, f.owner, true)) return true;
-						if(patrol(d, b, f.pos(), enttype[FLAG].radius, enttype[FLAG].radius*4.f))
-						{
-							defer(d, b, false);
-							return true;
-						}
-					}
+					if(m_ctf(cl.gamemode)) return cl.ctf.aidefend(d, b);
 					break;
 				}
 				case AI_T_PLAYER:
@@ -916,41 +780,9 @@ struct aiclient
 		{
 			switch(b.targtype)
 			{
-				case AI_T_FLAG:
+				case AI_T_AFFINITY:
 				{
-					if(m_ctf(cl.gamemode) && cl.ctf.flags.inrange(b.target))
-					{
-						ctfstate::flag &f = cl.ctf.flags[b.target];
-						if(f.team == d->team)
-						{
-							static vector<int> hasflags;
-							hasflags.setsizenodelete(0);
-							loopv(cl.ctf.flags)
-							{
-								ctfstate::flag &g = cl.ctf.flags[i];
-								if(g.team != d->team && g.owner == d)
-									hasflags.add(i);
-							}
-
-							if(hasflags.empty())
-								return false; // otherwise why are we pursuing home?
-
-							if(makeroute(d, b, f.pos(), enttype[FLAG].radius))
-							{
-								defer(d, b, false);
-								return true;
-							}
-						}
-						else
-						{
-							if(f.owner == d) return ctfhomerun(d, b);
-							if(makeroute(d, b, f.pos(), enttype[FLAG].radius))
-							{
-								defer(d, b, false);
-								return true;
-							}
-						}
-					}
+					if(m_ctf(cl.gamemode)) return cl.ctf.aipursue(d, b);
 					break;
 				}
 

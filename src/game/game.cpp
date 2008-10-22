@@ -1033,7 +1033,7 @@ struct gameclient : igameclient
 
 	void drawcardinalblips(int x, int y, int s)
 	{
-		pushfont("hud");
+		pushfont("emphasis");
 		loopi(4)
 		{
 			const char *card = "";
