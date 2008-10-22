@@ -210,7 +210,7 @@ struct projectiles
 				float size = 0.f;
 				if(proj.attr1 == GUN_PISTOL)
 				{
-					int fade = clamp(int(proj.vel.magnitude()), 1, 50);
+					int fade = clamp(int(proj.vel.magnitude()*2.f), 1, 100);
 					size = guntype[proj.attr1].size*min(life*6.f,1.f);
 					regular_part_splash(7, rnd(2)+1, fade, proj.o, teamtype[proj.owner->team].colour, size, int(proj.radius*3));
 				}
