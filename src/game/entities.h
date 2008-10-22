@@ -31,13 +31,14 @@ struct avoidset
     }
 
     #define loopavoid(v, d, body) \
-        do { \
+        if(!(v).obstacles.empty()) \
+        { \
             int cur = 0; \
             loopv((v).obstacles) \
             { \
                 avoidset::obstacle &ob = (v).obstacles[i]; \
                 int next = cur + ob.numentities; \
-                if(ob.ent != (d) && (ob.ent->type != ENT_PLAYER || AVOIDENEMY((d), (gameent *)ob.ent))) \
+                if(ob.ent && ob.ent != (d) && (ob.ent->type != ENT_PLAYER || AVOIDENEMY((d), (gameent *)ob.ent))) \
                 { \
                     for(; cur < next; cur++) \
                     { \
@@ -47,7 +48,7 @@ struct avoidset
                 } \
                 cur = next; \
             } \
-        } while(0)
+        }
 
     bool find(int entity, gameent *d)
     {
@@ -1265,6 +1266,8 @@ struct entities : icliententities
 						if(e.attr1 > 3) e.attr1--;
 						else if(e.attr1 == 3) e.attr1 = GUN_GL;
 					}
+					if((mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 96)) && e.attr1 == GUN_PISTOL)
+						e.attr1 = GUN_GL; // pistol is pointless
 					break;
 				}
 				case PUSHER:

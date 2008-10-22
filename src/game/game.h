@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			96
+#define GAMEVERSION			97
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -10,7 +10,7 @@
 enum
 {
 	S_JUMP = S_GAMESPECIFIC, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
-	S_SPLASH1, S_SPLASH2, S_UNDERWATER, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR,
+	S_SPLASH1, S_SPLASH2, S_UNDERWATER, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR, S_ENERGY, S_HUM,
 	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
 	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURNING, S_FLBURN, S_RIFLE,
 	S_ITEMPICKUP, S_ITEMSPAWN, 	S_REGEN,
@@ -123,44 +123,44 @@ struct guntypes
 {
 	int	info, 		anim,			sound, 		esound, 	fsound,		rsound,		ssound,
 		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,
-		size,	explode; float offset,	elasticity,	relativity,	waterfric,	weight;
+		size,	explode; float offset,	elasticity,	relativity,	waterfric,	weight; bool carry;
 	const char *name, *text,		*item,						*vwep;
 } guntype[GUN_MAX] =
 {
 	{
-		GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		12,		12,		250,	1000,	20,		0,		0,		0,		-10,    10,		0,
-		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
-				"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep"
+		GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
+		20,		20,		100,	500,	10,		200,	0,		5000,	-5,		5,		1,
+		2,		8,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
+				"pistol",	"\fc",	"weapons/pistol/item",		"weapons/pistol/vwep"
 	},
 	{
 		GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
 		1,		8,		600,	1200,	10,		0,		0,		0,		-30,    30, 	0,
-		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
+		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
 				"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep"
 	},
 	{
 		GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
 		40,		40,		100,    1000,	15,		0,		0,		0,		-5,	     5,		0,
-		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
+		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
 				"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep"
 	},
 	{
-		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURNING,S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
+		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
 		50,		50,		100, 	2000,	15,		100,	0,		3000,	-1,		 1,		8,
-		24,		28,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,
+		24,		28,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
 				"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep"
 	},
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
 		1,		5,		800,	1600,	100,	0,		0,		0,		-35,  	25,		0,
-		1,		0,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
-				"rifle",	"\fw",	"weapons/rifle/item",		"weapons/rifle/vwep"
+		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
+				"rifle",	"\fa",	"weapons/rifle/item",		"weapons/rifle/vwep"
 	},
 	{
 		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
 		2,		4,		1500,	0,		200,	150,	1000,	3000,	-15,    10,		8,
-		3,		64,				1.0f,	0.33f,		0.5f,		2.0f,		75.f,
+		3,		64,				1.0f,	0.33f,		0.45f,		2.0f,		75.f,		false,
 				"grenades",	"\fm",	"weapons/grenades/item",	"weapons/grenades/vwep"
 	},
 };
@@ -336,11 +336,11 @@ struct teamtypes
 {
 	int	type,		colour;	const char *name,	*tpmdl,			*fpmdl,				*flag,			*icon,			*chat;
 } teamtype[] = {
-	{ TEAM_NEUTRAL,	0xAFAFAF,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
-	{ TEAM_ALPHA,	0xAAAAFF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
-	{ TEAM_BETA,	0xFFAAAA,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
-	{ TEAM_DELTA,	0xFFFFAA,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0xAAFFAA,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
+	{ TEAM_NEUTRAL,	0x8F8F8F,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
+	{ TEAM_ALPHA,	0x8888FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
+	{ TEAM_BETA,	0xFF8888,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
+	{ TEAM_DELTA,	0xFFFF88,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
+	{ TEAM_GAMMA,	0x88FF88,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
 	{ TEAM_ENEMY,	0xFFFFFF,	"enemy",		"player",		"player/vwep",		"flag",			"team",			"\fa" }
 };
 
@@ -440,11 +440,11 @@ struct aitypes
 	int type,			colour; const char *name,	*mdl;
 } aitype[] = {
 	{ AI_NONE,		0xFFFFFF,	"",				"" },
-	{ AI_BOT,		0x2F2F2F,	"bot",			"player" },
-	{ AI_BSOLDIER,	0x2222FF,	"alpha",		"player/alpha" },
-	{ AI_RSOLDIER,	0xFF2222,	"beta",			"player/beta" },
-	{ AI_YSOLDIER,	0xFFFF22,	"delta",		"player/delta" },
-	{ AI_GSOLDIER,	0x22FF22,	"gamma",		"player/gamma" },
+	{ AI_BOT,		0x8F8F8F,	"bot",			"player" },
+	{ AI_BSOLDIER,	0x8888FF,	"alpha",		"player/alpha" },
+	{ AI_RSOLDIER,	0xFF8888,	"beta",			"player/beta" },
+	{ AI_YSOLDIER,	0xFFFF88,	"delta",		"player/delta" },
+	{ AI_GSOLDIER,	0x88FF88,	"gamma",		"player/gamma" },
 };
 
 // inherited by gameent and server clients
@@ -465,10 +465,10 @@ struct gamestate
 			if(ammo[gun] > 0 || (guntype[gun].rdelay > 0 && !ammo[gun])) switch(level)
 			{
 				case 0: default: return true; break; // has gun at all
-				case 1: if(guntype[gun].rdelay > 0) return true; break; // only carriables
+				case 1: if(guntype[gun].carry) return true; break; // only carriable
 				case 2: if(ammo[gun] > 0) return true; break; // only with actual ammo
-				case 3: if(ammo[gun] > 0 && guntype[gun].rdelay > 0) return true; break; // only carriables with actual ammo
-				case 4: if(ammo[gun] >= (guntype[gun].rdelay > 0 ? 0 : guntype[gun].max)) return true; break; // only carriables or those with < max
+				case 3: if(ammo[gun] > 0 && guntype[gun].rdelay > 0) return true; break; // only reloadable with actual ammo
+				case 4: if(ammo[gun] >= (guntype[gun].rdelay > 0 ? 0 : guntype[gun].max)) return true; break; // only reloadable or those with < max
 			}
 		}
 		return false;
@@ -491,8 +491,7 @@ struct gamestate
 	int drop(int exclude = -1)
 	{
 		int gun = -1;
-		if(hasgun(GUN_PISTOL, 1, exclude)) gun = GUN_PISTOL; // get rid of pistol first
-		else if(hasgun(gunselect, 1, exclude)) gun = gunselect;
+		if(hasgun(gunselect, 1, exclude)) gun = gunselect;
 		else
 		{
 			loopi(GUN_MAX) if(hasgun(i, 1, exclude))
@@ -558,7 +557,7 @@ struct gamestate
 
 	bool canreload(int gun, int millis)
 	{
-		if(gunwaited(gunselect, millis) && hasgun(gun, 1) && ammo[gun] < guntype[gun].max && gunwaited(gun, millis))
+		if(gunwaited(gunselect, millis) && guntype[gun].rdelay > 0 && hasgun(gun) && ammo[gun] < guntype[gun].max && gunwaited(gun, millis))
 			return true;
 		return false;
 	}
@@ -618,7 +617,7 @@ struct gamestate
 		{
 			gunstate[i] = GUNSTATE_IDLE;
 			gunwait[i] = gunlast[i] = 0;
-			ammo[i] = (i == spawngun || guntype[i].rdelay <= 0) ? guntype[i].add : -1;
+			ammo[i] = (i == spawngun || !guntype[i].carry) ? guntype[i].add : -1;
 			entid[i] = -1;
 		}
 	}
@@ -778,7 +777,7 @@ struct aiinfo
 		route.setsize(0);
 		addstate(AI_S_WAIT);
 		gunpref = rnd(GUN_MAX-1)+1;
-		while(guntype[gunpref].rdelay <= 0) gunpref--;
+		while(!guntype[gunpref].carry) if((gunpref -= 1) < 0) gunpref += GUN_MAX;
 		spot = target = vec(0, 0, 0);
 		enemy = NULL;
 		lastreq = 0;
@@ -848,10 +847,10 @@ struct gameent : dynent, gamestate
 		wschan = -1;
 	}
 
-	void hitpush(int damage, const vec &dir, gameent *actor, int gun)
+	void hitpush(int damage, const vec &dir)
 	{
 		vec push(dir);
-		push.mul(damage/weight);
+		push.mul(damage/weight*100.f);
 		vel.add(push);
 	}
 

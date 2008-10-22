@@ -136,7 +136,9 @@ struct weaponstate
 		if(guntype[gun].esound >= 0)
 			playsound(guntype[gun].esound, 0, 128, o);
 
-		if(gun != GUN_FLAMER)
+		if(gun == GUN_PISTOL) adddynlight(o, 1.15f*guntype[gun].explode, vec(0.25f, 0.8f, 1.1f), 100, 10);
+		else if(gun == GUN_FLAMER) adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), 100, 10);
+		else
 		{
 			cl.quakewobble += int(guntype[gun].damage*(1.f-dist/guntype[gun].scale/guntype[gun].explode/10.f));
 			particle_splash(0, 200, 300, o);
@@ -150,10 +152,8 @@ struct weaponstate
 			loopi(rnd(20)+10)
 				cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
 		}
-		else
-			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), 100, 10);
-
-        adddecal(DECAL_SCORCH, o, gun==GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
+        adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*2.0f);
+        adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*0.75f, gun == GUN_PISTOL ? bvec(32, 96, 158) : bvec(158, 96, 16));
 
 		if(local)
 		{
@@ -163,7 +163,7 @@ struct weaponstate
 			{
 				gameent *f = (gameent *)cl.iterdynents(i);
 				if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
-				radialeffect(f, o, guntype[gun].explode, gun != GUN_FLAMER ? HIT_EXPLODE : HIT_BURN);
+				radialeffect(f, o, guntype[gun].explode, gun == GUN_FLAMER || gun == GUN_PISTOL ? HIT_BURN : HIT_EXPLODE);
 			}
 
 			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id >= 0 ? id-cl.maptime : id,
@@ -224,13 +224,12 @@ struct weaponstate
                     if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
 				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				part_create(20, 50, from, 0xFFAA00, 6.f, d);
+				part_create(20, 50, from, 0xFFAA00, 4.f, d);
 				regularshape(6, 2, 0x333333, 21, rnd(20)+1, 25, from, 1.5f);
 				break;
 			}
 
 			case GUN_CG:
-			case GUN_PISTOL:
 			{
 				particle_splash(0, 200, gun == GUN_CG ? 100 : 200, to);
                 particle_flare(from, to, 250, 10, d);
@@ -244,15 +243,21 @@ struct weaponstate
 #if 0
 			case GUN_RL:
 #endif
+			case GUN_PISTOL:
 			case GUN_FLAMER:
 			case GUN_GL:
 			{
 				int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
 				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
-				if(gun == GUN_FLAMER)
+				if(gun == GUN_PISTOL)
+				{
+					adddynlight(from, 25, vec(0.25f, 0.8f, 1.1f), 20, 0, DL_FLASH);
+					part_create(20, 50, from, 0x2288AA, 2.f, d);
+				}
+				else if(gun == GUN_FLAMER)
 				{
 					adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
-					part_create(20, 50, from, 0xFF2200, 4.f, d);
+					part_create(20, 50, from, 0xFF2200, 3.f, d);
 				}
 				break;
 			}
@@ -263,7 +268,7 @@ struct weaponstate
 				particle_trail(21, 1000, from, to);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
                 adddynlight(from, 50, vec(1.1f, 0.88f, 0.44f), 50, 0, DL_FLASH);
-				part_create(2, 100, from, 0xFFFFFF, 6.f, d);
+				part_create(2, 100, from, 0xFFFFFF, 4.f, d);
 				regularshape(5, 2, 0x666666, 21, rnd(20)+1, 25, from, 2.f);
 				break;
 			}
@@ -332,7 +337,7 @@ struct weaponstate
 
 	bool doautoreload(gameent *d)
 	{
-		return autoreload() && d->hasgun(d->gunselect, 1) && !d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis);
+		return autoreload() && d->hasgun(d->gunselect) && !d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis);
 	}
 
 	void reload(gameent *d)
