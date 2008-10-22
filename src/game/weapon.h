@@ -260,7 +260,7 @@ struct weaponstate
 				if(gun == GUN_PISTOL)
 				{
 					adddynlight(from, 25, vec((teamtype[d->team].colour>>16)/255.f, ((teamtype[d->team].colour>>8)&0xFF)/255.f, (teamtype[d->team].colour&0xFF)/255.f), 20, 0, DL_FLASH);
-					part_create(7, 50, from, teamtype[d->team].colour, 1.2f, d);
+					part_create(7, 50, from, teamtype[d->team].colour, 1.0f, d);
 				}
 				else if(gun == GUN_FLAMER)
 				{
@@ -273,7 +273,7 @@ struct weaponstate
 			case GUN_RIFLE:
 			{
 				part_splash(14, 100, 250, to, teamtype[d->team].colour, 1.2f);
-				part_trail(14, 1500, from, to, teamtype[d->team].colour, 1.2f);
+				part_trail(14, 500, from, to, teamtype[d->team].colour, 1.0f);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
                 adddynlight(from, 50, vec((teamtype[d->team].colour>>16)/255.f, ((teamtype[d->team].colour>>8)&0xFF)/255.f, (teamtype[d->team].colour&0xFF)/255.f), 50, 0, DL_FLASH);
 				part_create(2, 100, from, teamtype[d->team].colour, 2.f, d);
