@@ -507,6 +507,185 @@ struct ctfclient : ctfstate
     {
         return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)*1000-(lastmillis-d->lastpain));
     }
+
+	bool aicheck(gameent *d, aistate &b)
+	{
+		static vector<int> hasflags;
+		hasflags.setsizenodelete(0);
+		loopv(flags)
+		{
+			flag &g = flags[i];
+			if(g.team != d->team && g.owner == d)
+				hasflags.add(i);
+		}
+
+		if(!hasflags.empty() && aihomerun(d, b))
+			return true;
+
+		return false;
+	}
+
+
+	void aifind(gameent *d, aistate &b, vector<interest> &interests)
+	{
+		vec pos = cl.headpos(d);
+		loopvj(flags)
+		{
+			flag &f = flags[j];
+
+			vector<int> targets; // build a list of others who are interested in this
+			cl.ai.checkothers(targets, d, f.team == d->team ? AI_S_DEFEND : AI_S_PURSUE, AI_T_AFFINITY, j, true);
+
+			gameent *e = NULL;
+			loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
+			{ // try to guess what non ai are doing
+				vec ep = cl.headpos(e);
+				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= ((enttype[FLAG].radius*enttype[FLAG].radius)*2.f) || f.owner == e))
+					targets.add(e->clientnum);
+			}
+
+			if(f.team == d->team)
+			{
+				bool guard = false;
+				if(f.owner || targets.empty()) guard = true;
+				else if(d->gunselect != GUN_PISTOL)
+				{ // see if we can relieve someone who only has a pistol
+					gameent *t;
+					loopvk(targets) if((t = cl.getclient(targets[k])) && t->gunselect == GUN_PISTOL)
+					{
+						guard = true;
+						break;
+					}
+				}
+
+				if(guard)
+				{ // defend the flag
+					interest &n = interests.add();
+					n.state = AI_S_DEFEND;
+					n.node = cl.et.entitynode(f.pos(), false);
+					n.target = j;
+					n.targtype = AI_T_AFFINITY;
+					n.expire = 10000;
+					n.tolerance = enttype[FLAG].radius*2.f;
+					n.score = pos.squaredist(f.pos())/(d->gunselect != GUN_PISTOL ? 100.f : 1.f);
+					n.defers = false;
+				}
+			}
+			else
+			{
+				if(targets.empty())
+				{ // attack the flag
+					interest &n = interests.add();
+					n.state = AI_S_PURSUE;
+					n.node = cl.et.entitynode(f.pos(), false);
+					n.target = j;
+					n.targtype = AI_T_AFFINITY;
+					n.expire = 10000;
+					n.tolerance = enttype[FLAG].radius*2.f;
+					n.score = pos.squaredist(f.pos());
+					n.defers = false;
+				}
+				else
+				{ // help by defending the attacker
+					gameent *t;
+					loopvk(targets) if((t = cl.getclient(targets[k])))
+					{
+						interest &n = interests.add();
+						vec tp = cl.headpos(t);
+						n.state = AI_S_DEFEND;
+						n.node = t->lastnode;
+						n.target = t->clientnum;
+						n.targtype = AI_T_PLAYER;
+						n.expire = 5000;
+						n.tolerance = t->radius*2.f;
+						n.score = pos.squaredist(tp);
+						n.defers = false;
+					}
+				}
+			}
+		}
+	}
+
+	bool aihomerun(gameent *d, aistate &b)
+	{
+		vec pos = cl.headpos(d);
+		loopk(2)
+		{
+			int goal = -1;
+			loopv(flags)
+			{
+				flag &g = flags[i];
+				if(g.team == d->team && (k || (!g.owner && !g.droptime)) &&
+					(!flags.inrange(goal) || g.pos().squaredist(pos) < flags[goal].pos().squaredist(pos)))
+				{
+					goal = i;
+				}
+			}
+
+			if(flags.inrange(goal) && cl.ai.makeroute(d, b, flags[goal].pos(), enttype[FLAG].radius))
+			{
+				aistate &c = d->ai->setstate(AI_S_PURSUE); // replaces current state!
+				c.targtype = AI_T_AFFINITY;
+				c.target = goal;
+				c.defers = false;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool aidefend(gameent *d, aistate &b)
+	{
+		if(flags.inrange(b.target))
+		{
+			flag &f = flags[b.target];
+			if(f.owner && cl.ai.violence(d, b, f.owner, true)) return true;
+			if(cl.ai.patrol(d, b, f.pos(), enttype[FLAG].radius, enttype[FLAG].radius*4.f))
+			{
+				cl.ai.defer(d, b, false);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool aipursue(gameent *d, aistate &b)
+	{
+		if(flags.inrange(b.target))
+		{
+			flag &f = flags[b.target];
+			if(f.team == d->team)
+			{
+				static vector<int> hasflags;
+				hasflags.setsizenodelete(0);
+				loopv(flags)
+				{
+					flag &g = flags[i];
+					if(g.team != d->team && g.owner == d)
+						hasflags.add(i);
+				}
+
+				if(hasflags.empty())
+					return false; // otherwise why are we pursuing home?
+
+				if(cl.ai.makeroute(d, b, f.pos(), enttype[FLAG].radius))
+				{
+					cl.ai.defer(d, b, false);
+					return true;
+				}
+			}
+			else
+			{
+				if(f.owner == d) return aihomerun(d, b);
+				if(cl.ai.makeroute(d, b, f.pos(), enttype[FLAG].radius))
+				{
+					cl.ai.defer(d, b, false);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 } ctf;
 #endif
 

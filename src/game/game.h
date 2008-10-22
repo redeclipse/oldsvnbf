@@ -97,6 +97,7 @@ enum
 #define SGSPREAD		50
 #define GUNSWITCHDELAY	800
 #define PLAYERHEIGHT	15.f
+#define EXPLOSIONSCALE	16.f
 
 enum
 {
@@ -122,44 +123,44 @@ enum
 struct guntypes
 {
 	int	info, 		anim,			sound, 		esound, 	fsound,		rsound,		ssound,
-		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,	scale,
+		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,
 		size,	explode; float offset,	elasticity,	relativity,	waterfric,	weight; bool carry;
 	const char *name, *text,		*item,						*vwep;
 } guntype[GUN_MAX] =
 {
 	{
 		GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
-		30,		30,		100,	500,	10,		200,	0,		5000,	-5,		5,		8,
-		2,		12,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
+		30,		30,		100,	500,	10,		200,	0,		5000,	-5,		5,
+		4,		12,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
 				"pistol",	"\fc",	"weapons/pistol/item",		"weapons/pistol/vwep"
 	},
 	{
 		GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		1,		8,		600,	1200,	10,		0,		0,		0,		-30,    30, 	0,
+		1,		8,		600,	1200,	10,		0,		0,		0,		-30,    30,
 		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
 				"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep"
 	},
 	{
 		GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		40,		40,		100,    1000,	15,		0,		0,		0,		-5,	     5,		0,
+		40,		40,		100,    1000,	15,		0,		0,		0,		-5,	     5,
 		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
 				"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep"
 	},
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
-		50,		50,		150, 	2000,	15,		100,	0,		3000,	-1,		 1,		8,
+		50,		50,		150, 	2000,	15,		100,	0,		3000,	-1,		 1,
 		24,		28,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
 				"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep"
 	},
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		1,		5,		800,	1600,	100,	0,		0,		0,		-35,  	25,		0,
+		1,		5,		800,	1600,	100,	0,		0,		0,		-35,  	25,
 		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
 				"rifle",	"\fa",	"weapons/rifle/item",		"weapons/rifle/vwep"
 	},
 	{
 		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
-		2,		4,		1500,	0,		200,	150,	1000,	3000,	-15,    10,		8,
+		2,		4,		1500,	0,		200,	150,	1000,	3000,	-15,    10,
 		3,		64,				1.0f,	0.33f,		0.45f,		2.0f,		75.f,		false,
 				"grenades",	"\fm",	"weapons/grenades/item",	"weapons/grenades/vwep"
 	},
@@ -336,11 +337,11 @@ struct teamtypes
 {
 	int	type,		colour;	const char *name,	*tpmdl,			*fpmdl,				*flag,			*icon,			*chat;
 } teamtype[] = {
-	{ TEAM_NEUTRAL,	0x8F8F8F,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
-	{ TEAM_ALPHA,	0x8888FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
-	{ TEAM_BETA,	0xFF8888,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
-	{ TEAM_DELTA,	0xFFFF88,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0x88FF88,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
+	{ TEAM_NEUTRAL,	0x6F6F6F,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
+	{ TEAM_ALPHA,	0x6666FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
+	{ TEAM_BETA,	0xFF6666,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
+	{ TEAM_DELTA,	0xFFFF66,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
+	{ TEAM_GAMMA,	0x66FF66,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
 	{ TEAM_ENEMY,	0xFFFFFF,	"enemy",		"player",		"player/vwep",		"flag",			"team",			"\fa" }
 };
 
@@ -417,14 +418,14 @@ VARG(defaultstyle, G_S_PVS, G_S_PVS, G_S_SSP);
 
 VARG(teamdamage, 0, 1, 1);
 VARG(entspawntime, 0, 0, 60);
-VARG(timelimit, 0, 10, 60);
-VARG(ctflimit, 0, 10, 100);
-VARG(stflimit, 0, 1, 1);
+VARG(timelimit, 0, 15, 60);
+VARG(ctflimit, 0, 20, 100);
+VARG(stflimit, 0, 0, 1);
 
 VARG(spawngun, 0, GUN_PISTOL, GUN_MAX-1);
 VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
-VARG(botbalance, 0, 4, MAXCLIENTS/2);
+VARG(botbalance, 0, 4, 32);
 VARG(botminskill, 0, 60, 100);
 VARG(botmaxskill, 0, 90, 100);
 
@@ -440,11 +441,11 @@ struct aitypes
 	int type,			colour; const char *name,	*mdl;
 } aitype[] = {
 	{ AI_NONE,		0xFFFFFF,	"",				"" },
-	{ AI_BOT,		0x8F8F8F,	"bot",			"player" },
-	{ AI_BSOLDIER,	0x8888FF,	"alpha",		"player/alpha" },
-	{ AI_RSOLDIER,	0xFF8888,	"beta",			"player/beta" },
-	{ AI_YSOLDIER,	0xFFFF88,	"delta",		"player/delta" },
-	{ AI_GSOLDIER,	0x88FF88,	"gamma",		"player/gamma" },
+	{ AI_BOT,		0x6F6F6F,	"bot",			"player" },
+	{ AI_BSOLDIER,	0x6666FF,	"alpha",		"player/alpha" },
+	{ AI_RSOLDIER,	0xFF6666,	"beta",			"player/beta" },
+	{ AI_YSOLDIER,	0xFFFF66,	"delta",		"player/delta" },
+	{ AI_GSOLDIER,	0x66FF66,	"gamma",		"player/gamma" },
 };
 
 // inherited by gameent and server clients
@@ -724,8 +725,8 @@ enum
 {
 	AI_T_NODE,
 	AI_T_PLAYER,
+	AI_T_AFFINITY,
 	AI_T_ENTITY,
-	AI_T_FLAG,
 	AI_T_DROP,
 	AI_T_MAX
 };
@@ -734,6 +735,15 @@ enum
 {
 	WP_NONE = 0,
 	WP_CROUCH = 1<<0,
+};
+
+struct interest
+{
+	int state, node, target, targtype, expire;
+	float tolerance, score;
+	bool defers;
+	interest() : state(-1), node(-1), target(-1), targtype(-1), expire(0), tolerance(0.f), score(0.f) {}
+	~interest() {}
 };
 
 struct aistate

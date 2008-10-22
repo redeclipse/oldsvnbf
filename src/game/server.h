@@ -2129,7 +2129,7 @@ struct gameserver : igameserver
 			for(j = 1; j<i; j++) if(ci->events[j].hit.target==h.target) break;
 			if(j<i) continue;
 
-			int damage = int(guntype[e.gun].damage*(1.f-h.dist/guntype[e.gun].scale/guntype[e.gun].explode));
+			int damage = int(guntype[e.gun].damage*(1.f-h.dist/EXPLOSIONSCALE/guntype[e.gun].explode));
 			dodamage(target, ci, damage, e.gun, h.flags, h.dir);
 		}
 	}
