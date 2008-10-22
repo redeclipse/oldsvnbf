@@ -834,7 +834,7 @@ struct entities : icliententities
 		{
 			loopavoid(obstacles, d,
 			{
-				if(ents[ent]->type == ents[node]->type)
+				if(ents.inrange(ent) && ents[ent]->type == ents[node]->type)
 				{
 					nodes[ent].id = routeid;
 					nodes[ent].curscore = -1.f;

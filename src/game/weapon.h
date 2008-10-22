@@ -138,7 +138,7 @@ struct weaponstate
 
 		if(gun == GUN_PISTOL)
 		{
-			regular_part_splash(7, rnd(2)+1, 50, o, teamtype[d->team].colour, guntype[gun].explode, 5);
+			regular_part_splash(7, rnd(2)+1, 50, o, teamtype[d->team].colour, guntype[gun].explode*0.75f, 5);
 			adddynlight(o, 1.15f*guntype[gun].explode, vec((teamtype[d->team].colour>>16)/255.f, ((teamtype[d->team].colour>>8)&0xFF)/255.f, (teamtype[d->team].colour&0xFF)/255.f), 100, 10);
 		}
 		else if(gun == GUN_FLAMER)

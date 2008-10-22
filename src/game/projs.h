@@ -211,7 +211,7 @@ struct projectiles
 				if(proj.attr1 == GUN_PISTOL)
 				{
 					int fade = clamp(int(proj.vel.magnitude()), 1, 50);
-					size = guntype[proj.attr1].size*min(life*5.f,1.f);
+					size = guntype[proj.attr1].size*min(life*6.f,1.f);
 					regular_part_splash(7, rnd(2)+1, fade, proj.o, teamtype[proj.owner->team].colour, size, int(proj.radius*3));
 				}
 				else if(proj.attr1 == GUN_FLAMER)
