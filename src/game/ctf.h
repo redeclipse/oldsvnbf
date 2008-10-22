@@ -284,7 +284,7 @@ struct ctfclient : ctfstate
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		int colour = teamtype[f.team].colour;
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-			fade = cl.blipblend(), size = blip ? 0.05f : 0.03f;
+			fade = cl.blipblend(), size = blip ? 0.075f : 0.05f;
 		if(f.team != cl.player1->team && (!f.owner || f.owner->team != cl.player1->team))
 			fade *= clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
 		float cx = x + s*0.5f*(1.0f+dir.x/cl.radarrange()),

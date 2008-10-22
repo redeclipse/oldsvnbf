@@ -189,7 +189,7 @@ struct projectiles
 				if(proj.attr1 == GUN_FLAMER)
 				{
 					int col = ((int(254*max(1.0f-life,0.1f))<<16)+1)|((int(64*max(1.0f-life,0.05f))+1)<<8);
-					regular_part_splash(4, rnd(3)+2, 20, proj.o, col, size, int(proj.radius));
+					regular_part_splash(4, rnd(3)+3, guntype[proj.attr1].adelay*3, proj.o, col, size, int(proj.radius));
 					loopi(cl.numdynents())
 					{
 						gameent *f = (gameent *)cl.iterdynents(i);

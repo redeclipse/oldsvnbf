@@ -224,7 +224,7 @@ struct weaponstate
                     if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
 				}
 				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				part_create(20, 50, from, 0xFFAA00, 8.f, d);
+				part_create(20, 50, from, 0xFFAA00, 6.f, d);
 				regularshape(6, 2, 0x333333, 21, rnd(20)+1, 25, from, 1.5f);
 				break;
 			}
@@ -236,7 +236,7 @@ struct weaponstate
                 particle_flare(from, to, 250, 10, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
                 adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				part_create(20, 50, from, 0xFFAA00, 4.f, d);
+				part_create(20, 50, from, 0xFFAA00, 3.f, d);
 				regularshape(6, 1, 0x333333, 21, rnd(10)+1, 25, from, 0.5f);
 				break;
 			}
@@ -252,7 +252,7 @@ struct weaponstate
 				if(gun == GUN_FLAMER)
 				{
 					adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
-					part_create(20, 50, from, 0xFF2200, 5.f, d);
+					part_create(20, 50, from, 0xFF2200, 4.f, d);
 				}
 				break;
 			}
@@ -260,10 +260,10 @@ struct weaponstate
 			case GUN_RIFLE:
 			{
 				particle_splash(0, 200, 250, to);
-				particle_trail(21, 500, from, to);
+				particle_trail(21, 1000, from, to);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
                 adddynlight(from, 50, vec(1.1f, 0.88f, 0.44f), 50, 0, DL_FLASH);
-				part_create(2, 100, from, 0xFFFFFF, 4.f, d);
+				part_create(2, 100, from, 0xFFFFFF, 6.f, d);
 				regularshape(5, 2, 0x666666, 21, rnd(20)+1, 25, from, 2.f);
 				break;
 			}
