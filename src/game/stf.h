@@ -270,7 +270,7 @@ struct stfclient : stfstate
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			int colour = teamtype[f.owner].colour;
 			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-				fade = cl.blipblend(), size = 0.05f;
+				fade = cl.blipblend(), size = 0.075f;
 			if(f.owner != cl.player1->team && f.enemy != cl.player1->team)
 				fade = clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
 			float cx = x + s*0.5f*(1.0f+dir.x/cl.radarrange()),

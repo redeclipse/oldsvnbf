@@ -85,9 +85,9 @@ struct gameclient : igameclient
 	IFVARP(cursorsize, 0.05f);
 	IFVARP(cursorblend, 1.f);
 
-	IFVARP(crosshairblend, 0.5f);
-	IFVARP(indicatorblend, 1.f);
-	IFVARP(clipbarblend, 1.f);
+	IFVARP(crosshairblend, 1.f);
+	IFVARP(indicatorblend, 0.5f);
+	IFVARP(clipbarblend, 0.5f);
 	IFVARP(radarblend, 0.75f);
 	IFVARP(blipblend, 1.0f);
 	IFVARP(barblend, 1.0f);
@@ -1033,7 +1033,7 @@ struct gameclient : igameclient
 
 	void drawcardinalblips(int x, int y, int s)
 	{
-		pushfont("emphasis");
+		pushfont("hud");
 		loopi(4)
 		{
 			const char *card = "";
@@ -1519,6 +1519,12 @@ struct gameclient : igameclient
 		{
 			float fade = maptime ? float(lastmillis-maptime)/float(titlecardtime()) : 0.f;
 			colour = vec(fade, fade, fade);
+			return true;
+		}
+		if(lastmillis-player1->lastregen < REGENTIME)
+		{
+			float fade = float(lastmillis-player1->lastregen)/float(REGENTIME);
+			colour = vec(1.f, fade, fade);
 			return true;
 		}
 		return false;

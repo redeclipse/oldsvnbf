@@ -937,7 +937,6 @@ struct clientcom : iclientcom
 					int left = clamp(MAXHEALTH-max(target->health-REGENHEAL, 0), 1, 100);
 					particle_splash(3, max(left/10, 3), 10000, target->o);
 					playsound(S_REGEN, 0, 255, target->o, target);
-					if(target == cl.player1) cl.damageresidue += left;
 					break;
 				}
 
