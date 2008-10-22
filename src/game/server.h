@@ -110,7 +110,7 @@ struct gameserver : igameserver
 	{
 		vec o;
 		int state;
-        projectilestate dropped, rockets, grenades, flames;
+        projectilestate dropped, plasma, grenades, flames;
 		int frags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed;
 		float effectiveness;
@@ -127,7 +127,7 @@ struct gameserver : igameserver
 			if(state!=CS_SPECTATOR) state = CS_DEAD;
 			lifesequence = 0;
 			dropped.reset();
-            rockets.reset();
+            plasma.reset();
             grenades.reset();
             flames.reset();
 
@@ -1128,7 +1128,7 @@ struct gameserver : igameserver
 					{
 						ci->events.setsizenodelete(0);
 						ci->state.dropped.reset();
-						ci->state.rockets.reset();
+						ci->state.plasma.reset();
 						ci->state.grenades.reset();
 						ci->state.flames.reset();
 					}
@@ -2100,6 +2100,9 @@ struct gameserver : igameserver
 			case -1:
 				gs.dropped.remove(e.id); return;
 				break;
+			case GUN_PISTOL:
+                if(!gs.plasma.remove(e.id)) return;
+				break;
 #if 0
 			case GUN_RL:
                 if(!gs.rockets.remove(e.id)) return;
@@ -2150,6 +2153,7 @@ struct gameserver : igameserver
 		gs.shotdamage += guntype[e.gun].damage*(e.gun==GUN_SG ? SGRAYS : 1);
 		switch(e.gun)
 		{
+            case GUN_PISTOL: gs.plasma.add(e.id); break;
 #if 0
             case GUN_RL: gs.rockets.add(e.id); break;
 #endif

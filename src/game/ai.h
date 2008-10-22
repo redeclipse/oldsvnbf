@@ -662,9 +662,11 @@ struct aiclient
 
 	void damaged(gameent *d, gameent *e, int gun, int flags, int damage, int health, int millis, vec &dir)
 	{
-		if(AITARG(d, e, true))
+		if(d->ai)
 		{
-			if(d->ai)
+			d->hitpush(damage, dir);
+
+			if(AITARG(d, e, true)) // see if this ai is interested in a grudge
 			{
 				aistate &b = d->ai->getstate();
 				bool result = false, pursue = false;
@@ -684,15 +686,16 @@ struct aiclient
 				}
 				if(result) violence(d, b, e, pursue);
 			}
-			vector<int> targets;
-			if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
+		}
+
+		vector<int> targets; // check if one of our ai is defending them
+		if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
+		{
+			gameent *t;
+			loopv(targets) if((t = cl.getclient(targets[i])) && t->ai && AITARG(t, e, true))
 			{
-				gameent *t;
-				loopv(targets) if((t = cl.getclient(targets[i])) && t->ai)
-				{
-					aistate &c = t->ai->getstate();
-					violence(t, c, e, false);
-				}
+				aistate &c = t->ai->getstate();
+				violence(t, c, e, false);
 			}
 		}
 	}
@@ -995,10 +998,10 @@ struct aiclient
 		if(!d->ai->route.empty())
 		{
 			int m = d->ai->route.find(d->lastnode), g = d->ai->route[0],
-				n = m >= 0 ? m-1 : (retries ? closenode(d, b) : -1);
-			if(d->ai->route.inrange(n) && (retries > 1 || !obstacles.find(d->ai->route[n], d)))
+				n = d->ai->route.inrange(m-1) >= 0 ? d->ai->route[m-1] : (retries ? closenode(d, b) : -1);
+			if(cl.et.ents.inrange(n))
 			{
-				gameentity &e = *(gameentity *)cl.et.ents[d->ai->route[n]];
+				gameentity &e = *(gameentity *)cl.et.ents[n];
 				vec pos = cl.feetpos(d);
 				d->ai->spot = e.o;
 				if((!d->timeinair && d->ai->spot.z-pos.z > AIJUMPHEIGHT) ||
@@ -1015,7 +1018,7 @@ struct aiclient
 				d->ai->spot.z += d->height;
 				return true;
 			}
-			if(retries <= 2 && (retries < 2 || makeroute(d, b, g))) // remake route after second pass
+			if(retries <= 1 && (retries < 1 || makeroute(d, b, g))) // remake route after second pass
 				return hunt(d, b, retries+1);
 		}
 		b.goal = true;

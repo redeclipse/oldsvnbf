@@ -440,12 +440,12 @@ struct gameclient : igameclient
 			if(!allowmove(player1)) player1->stopmoving();
             checkoften(player1);
 
-			#define adjustscaled(t,n,m) \
-				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/m)); if(n <= 0) n = (t)0; }
+			#define adjustscaled(t,n) \
+				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/100.f)); if(n <= 0) n = (t)0; }
 
-			adjustscaled(float, player1->roll, 100.f);
-			adjustscaled(int, quakewobble, 150.f);
-			adjustscaled(int, damageresidue, 200.f);
+			adjustscaled(float, player1->roll);
+			adjustscaled(int, quakewobble);
+			adjustscaled(int, damageresidue);
 
 			if(player1->state == CS_DEAD)
 			{
@@ -477,9 +477,9 @@ struct gameclient : igameclient
 
 		if(d == player1)
 		{
-			quakewobble += damage;
-			damageresidue += damage;
-			d->hitpush(damage, dir, actor, gun);
+			quakewobble += damage/2;
+			damageresidue += damage*2;
+			d->hitpush(damage, dir);
 		}
 
 		if(d->type == ENT_PLAYER)
@@ -546,14 +546,14 @@ struct gameclient : igameclient
         	if(flags & HIT_MELT) s_strcpy(d->obit, "melted");
         	else if(flags & HIT_FALL) s_strcpy(d->obit, "thought they could fly");
         	else if(flags & HIT_EXPLODE) s_strcpy(d->obit, "decided to go out kamikaze style");
-        	else if(flags & HIT_BURN) s_strcpy(d->obit, "was like a moth attracted to a flame");
+        	else if(flags & HIT_BURN) s_strcpy(d->obit, "burned themselves up");
         	else s_strcpy(d->obit, "suicided");
         }
 		else
 		{
 			static const char *obitnames[3][GUN_MAX] = {
 				{
-					"ate a bullet from",
+					"was plasmified by",
 					"was filled with buckshot by",
 					"was riddled with holes by",
 					"was char-grilled by",
@@ -561,7 +561,7 @@ struct gameclient : igameclient
 					"was blown to pieces by",
 				},
 				{
-					"received a bullet shaped brain implant from",
+					"was decapitated with plasma by",
 					"was given scrambled brains cooked up by",
 					"was air conditioned courtesy of",
 					"was char-grilled by",
@@ -569,7 +569,7 @@ struct gameclient : igameclient
 					"was blown to pieces by",
 				},
 				{
-					"exploded from a measily bullet shot by",
+					"was reduced to ooze by",
 					"was turned into little chunks by",
 					"was swiss-cheesed by",
 					"was made the main course by order of chef",
@@ -1298,8 +1298,8 @@ struct gameclient : igameclient
 								{
 									pushfont("emphasis");
 									int drop = -1;
-									if(e.type == WEAPON && guntype[player1->gunselect].rdelay > 0 &&
-										player1->ammo[e.attr1] < 0 && guntype[e.attr1].rdelay > 0 &&
+									if(e.type == WEAPON && guntype[player1->gunselect].carry &&
+										player1->ammo[e.attr1] < 0 && guntype[e.attr1].carry &&
 											player1->carry() >= MAXCARRY) drop = player1->drop(e.attr1);
 									if(isgun(drop))
 									{
@@ -1523,7 +1523,7 @@ struct gameclient : igameclient
 		}
 		if(lastmillis-player1->lastregen < REGENTIME)
 		{
-			float fade = float(lastmillis-player1->lastregen)/float(REGENTIME);
+			float fade = clamp(float(lastmillis-player1->lastregen)/float(REGENTIME), 0.35f, 1.f);
 			colour = vec(1.f, fade, fade);
 			return true;
 		}
