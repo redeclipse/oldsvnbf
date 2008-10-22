@@ -34,9 +34,9 @@ struct projectiles
 						proj.relativity = guntype[proj.attr1].relativity;
 						proj.waterfric = guntype[proj.attr1].waterfric;
 						proj.weight = guntype[proj.attr1].weight;
-						vec v(rnd(21)-10, rnd(21)-10, rnd(21)-10);
-						if(v.magnitude()>20) v.div(20);
-						v.z /= 4.f;
+						vec v(rnd(11)-5, rnd(11)-5, rnd(11)-5);
+						if(v.magnitude()>5) v.div(5);
+						v.z /= 5.f;
 						proj.to.add(v);
 						break;
 					}
@@ -123,9 +123,9 @@ struct projectiles
 				proj.mdl = cl.et.entmdlname(proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5);
 				proj.aboveeye = 1.f;
 				proj.elasticity = 0.35f;
-				proj.relativity = 0.85f;
+				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
-				proj.weight = 100.f;
+				proj.weight = 90.f;
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
 				vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
 				if(v.magnitude()>50) v.div(50);
@@ -146,16 +146,26 @@ struct projectiles
 
 		vec dir(vec(vec(proj.to).sub(proj.o)).normalize());
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
-		vec rel;
-		vecfromyawpitch(proj.yaw, proj.pitch, 1, 0, rel);
-		rel.mul(proj.owner->vel.magnitude());
+		vec rel = vec(dir).mul(proj.owner->vel.magnitude());
 		if(proj.relativity) rel.add(vec(proj.owner->vel).mul(proj.relativity));
 		proj.vel = vec(vec(dir).mul(proj.maxspeed)).add(rel);
+		proj.o.add(vec(dir).mul(proj.owner->radius*1.5f));
 		proj.spawntime = lastmillis;
 
 		vec orig = proj.o;
 		bool found = false;
-		loopi(100)
+		if(proj.projtype == PRJ_SHOT)
+		{
+			switch(proj.attr1)
+			{
+				case GUN_FLAMER:
+					proj.radius = proj.height = guntype[proj.attr1].offset;
+				case GUN_PISTOL:
+					found = true; // explode in face then
+				default: break;
+			}
+		}
+		if(!found) loopi(100)
 		{
 			if(!collide(&proj) || inside || (proj.projtype != PRJ_ENT && hitplayer))
 			{
@@ -170,7 +180,7 @@ struct projectiles
 					proj.vel.apply(pos, amt);
 					if(hitplayer) proj.vel.apply(hitplayer->vel, amt);
 				}
-				else proj.o.add(vec(proj.vel).mul(0.1f));
+				else proj.o.add(vec(proj.vel).mul(0.01f));
 			}
 			else
 			{
@@ -178,9 +188,7 @@ struct projectiles
 				break;
 			}
 		}
-		if(proj.projtype == PRJ_SHOT && proj.attr1 == GUN_FLAMER)
-			proj.radius = proj.height = guntype[proj.attr1].offset;
-		else if(!found)
+		if(!found)
 		{
 			proj.o = orig;
 			cl.ph.entinmap(&proj, false); // failsafe
@@ -448,7 +456,7 @@ struct projectiles
 					}
 					else continue;
 				}
-				if(proj.projtype == PRJ_SHOT || proj.projtype==PRJ_ENT)
+				if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_ENT)
 				{
                     if(!move(proj))
                     {

@@ -136,8 +136,16 @@ struct weaponstate
 		if(guntype[gun].esound >= 0)
 			playsound(guntype[gun].esound, 0, 128, o);
 
-		if(gun == GUN_PISTOL) adddynlight(o, 1.15f*guntype[gun].explode, vec(0.25f, 0.8f, 1.1f), 100, 10);
-		else if(gun == GUN_FLAMER) adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), 100, 10);
+		if(gun == GUN_PISTOL)
+		{
+			regular_part_splash(7, rnd(2)+1, 200, o, 0x44AAFF, 1.25f*guntype[gun].size, 5);
+			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.25f, 0.8f, 1.1f), 100, 10);
+		}
+		else if(gun == GUN_FLAMER)
+		{
+			regular_part_splash(7, rnd(2)+1, 200, o, 0xCC6600, 1.25f*guntype[gun].size, 5);
+			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), 100, 10);
+		}
 		else
 		{
 			cl.quakewobble += int(guntype[gun].damage*(1.f-dist/guntype[gun].scale/guntype[gun].explode/10.f));
@@ -152,8 +160,8 @@ struct weaponstate
 			loopi(rnd(20)+10)
 				cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
 		}
-        adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*2.0f);
-        adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*0.75f, gun == GUN_PISTOL ? bvec(32, 96, 158) : bvec(158, 96, 16));
+        adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*1.5f);
+        adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*0.5f, gun == GUN_PISTOL ? bvec(8, 32, 96) : bvec(96, 48, 16));
 
 		if(local)
 		{
