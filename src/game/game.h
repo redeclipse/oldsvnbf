@@ -129,8 +129,8 @@ struct guntypes
 {
 	{
 		GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
-		20,		20,		100,	500,	10,		200,	0,		5000,	-5,		5,		1,
-		2,		8,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
+		30,		30,		100,	500,	10,		200,	0,		5000,	-5,		5,		8,
+		2,		12,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
 				"pistol",	"\fc",	"weapons/pistol/item",		"weapons/pistol/vwep"
 	},
 	{
@@ -147,7 +147,7 @@ struct guntypes
 	},
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
-		50,		50,		100, 	2000,	15,		100,	0,		3000,	-1,		 1,		8,
+		50,		50,		150, 	2000,	15,		100,	0,		3000,	-1,		 1,		8,
 		24,		28,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
 				"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep"
 	},
