@@ -912,11 +912,7 @@ struct projent : dynent
 	gameent *owner;
 	const char *mdl;
 
-	projent() : projtype(PRJ_SHOT), id(-1), mdl(NULL)
-	{
-		schan = -1;
-		reset();
-	}
+	projent() : projtype(PRJ_SHOT), id(-1), mdl(NULL) { reset(); }
 	~projent()
 	{
 		removetrackedparticles(this);
@@ -927,6 +923,7 @@ struct projent : dynent
 
 	void reset()
 	{
+		physent::reset();
 		type = ENT_BOUNCE;
 		state = CS_ALIVE;
 		addtime = lifetime = waittime = spawntime = 0;
@@ -934,7 +931,6 @@ struct projent : dynent
 		schan = id = -1;
 		movement = roll = 0.f;
 		beenused = false;
-		physent::reset();
 	}
 
 	bool ready()
