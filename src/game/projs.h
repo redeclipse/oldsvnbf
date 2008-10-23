@@ -210,15 +210,15 @@ struct projectiles
 				float size = 0.f;
 				if(proj.attr1 == GUN_PISTOL)
 				{
-					int fade = clamp(int(proj.vel.magnitude()*2.f), 1, 100);
 					size = guntype[proj.attr1].size*min(life*6.f,1.f);
+					int fade = clamp(int(proj.vel.magnitude()*2.f), 10, 100);
 					regular_part_splash(7, rnd(2)+1, fade, proj.o, teamtype[proj.owner->team].colour, size, int(proj.radius*3));
 				}
 				else if(proj.attr1 == GUN_FLAMER)
 				{
 					size = guntype[proj.attr1].size*min(life*2.f,1.f);
 					int col = ((int(254*max(1.0f-life,0.1f))<<16)+1)|((int(64*max(1.0f-life,0.05f))+1)<<8),
-						fade = clamp(int(proj.vel.magnitude()*5.f), 1, 150);
+						fade = clamp(int(proj.vel.magnitude()*5.f), 15, 150);
 					regular_part_splash(4, rnd(3)+1, fade, proj.o, col, size, int(proj.radius*2));
 				}
 				else
