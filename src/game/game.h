@@ -11,12 +11,12 @@ enum
 {
 	S_JUMP = S_GAMESPECIFIC, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR, S_ENERGY, S_HUM,
-	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_CG,
+	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_CG,
 	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURNING, S_FLBURN, S_RIFLE,
 	S_ITEMPICKUP, S_ITEMSPAWN, 	S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED,
-	//S_V_PISTOL, S_V_SG, S_V_CG, S_V_GL, S_V_FLAMER, S_V_RIFLE,
+	//S_V_PLASMA, S_V_SG, S_V_CG, S_V_GL, S_V_FLAMER, S_V_RIFLE,
 	S_V_FLAGSECURED, S_V_FLAGOVERTHROWN,
     S_V_FLAGPICKUP, S_V_FLAGDROP, S_V_FLAGRETURN, S_V_FLAGSCORE, S_V_FLAGRESET,
 	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_HEADSHOT,
@@ -83,7 +83,7 @@ enum
 {
 	ANIM_EDIT = ANIM_GAMESPECIFIC, ANIM_LAG, ANIM_SWITCH, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
-    ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
+    ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
     ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
     ANIM_CHAINGUN, ANIM_CHAINGUN_SHOOT, ANIM_CHAINGUN_RELOAD,
     ANIM_GRENADES, ANIM_GRENADES_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADES_POWER,
@@ -101,7 +101,7 @@ enum
 
 enum
 {
-	GUN_PISTOL = 0,
+	GUN_PLASMA = 0,
 	GUN_SG,
 	GUN_CG,
 	GUN_FLAMER,
@@ -129,10 +129,10 @@ struct guntypes
 } guntype[GUN_MAX] =
 {
 	{
-		GUN_PISTOL,	ANIM_PISTOL,	S_PISTOL,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
+		GUN_PLASMA,	ANIM_PLASMA,	S_PLASMA,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
 		30,		30,		100,	500,	10,		200,	0,		5000,	-5,		5,
 		4,		12,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
-				"pistol",	"\fc",	"weapons/pistol/item",		"weapons/pistol/vwep"
+				"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep"
 	},
 	{
 		GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
@@ -422,7 +422,7 @@ VARG(timelimit, 0, 15, 60);
 VARG(ctflimit, 0, 20, 100);
 VARG(stflimit, 0, 0, 1);
 
-VARG(spawngun, 0, GUN_PISTOL, GUN_MAX-1);
+VARG(spawngun, 0, GUN_PLASMA, GUN_MAX-1);
 VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
 VARG(botbalance, 0, 4, 32);
@@ -675,7 +675,7 @@ const char *animnames[] =
 	"pain", "jump", "sink", "swim", "mapmodel",
 	"edit", "lag", "switch", "taunt", "win", "lose",
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
-	"pistol", "pistol shoot", "pistol reload",
+	"plasma", "plasma shoot", "plasma reload",
 	"shotgun", "shotgun shoot", "shotgun reload",
 	"chaingun", "chaingun shoot", "chaingun reload",
 	"grenades", "grenades throw", "grenades reload", "grenades power",
@@ -749,7 +749,7 @@ struct interest
 struct aistate
 {
 	int type, millis, expire, next, targtype, target, cycle;
-	bool goal, override, defers;
+	bool override, defers;
 
 	aistate(int _type, int _millis) : type(_type), millis(_millis)
 	{
@@ -766,7 +766,7 @@ struct aistate
 		if(type == AI_S_WAIT)
 			next += rnd(1500) + 1500;
 		targtype = target = -1;
-		goal = override = false;
+		override = false;
 		defers = true;
 	}
 };

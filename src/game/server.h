@@ -347,9 +347,20 @@ struct gameserver : igameserver
 		}
 	}
 
+	int numclients(int exclude = -1, bool nospec = true, bool noai = false)
+	{
+		int n = 0;
+		loopv(clients)
+			if(clients[i]->clientnum != exclude &&
+				(!nospec || clients[i]->state.state != CS_SPECTATOR) &&
+				(!noai || clients[i]->state.aitype == AI_NONE))
+				n++;
+		return n;
+	}
+
 	bool haspriv(clientinfo *ci, int flag, bool msg = false)
 	{
-		if(flag <= PRIV_MASTER && !nonspectators(ci->clientnum, true)) return true;
+		if(flag <= PRIV_MASTER && !numclients(ci->clientnum, false, true)) return true;
 		else if(ci->privilege >= flag) return true;
 		else if(msg) srvoutf(ci->clientnum, "\fraccess denied, you need %s", privname(flag));
 		return false;
@@ -440,7 +451,7 @@ struct gameserver : igameserver
 		ci->modevote = reqmode; ci->mutsvote = reqmuts; ci->stylevote = reqstyle;
 		modecheck(&ci->modevote, &ci->mutsvote, &ci->stylevote);
 
-		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !nonspectators(ci->clientnum, true)))
+		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, true, true)))
 		{
 			if(demorecord) enddemorecord();
 			srvoutf(-1, "%s [%s] forced %s on map %s", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote, ci->stylevote), map);
@@ -895,16 +906,6 @@ struct gameserver : igameserver
 		}
 	}
 
-	int nonspectators(int exclude = -1, bool noai = false)
-	{
-		int n = 0;
-		loopv(clients)
-			if(clients[i]->clientnum != exclude && clients[i]->state.state != CS_SPECTATOR &&
-				(!noai || clients[i]->state.aitype == AI_NONE))
-				n++;
-		return n;
-	}
-
 	int checktype(int type, clientinfo *ci)
 	{
 #if 0
@@ -1323,7 +1324,6 @@ struct gameserver : igameserver
 								gs.gunselect, GUN_MAX, &gs.ammo[0], -1);
 						}
 						relayf("\fg%s has joined the game", colorname(ci, text));
-						ai.checkai(true);
 					}
 					else
 					{
@@ -1515,8 +1515,6 @@ struct gameserver : igameserver
 						mutate(smuts, mut->leavegame(spinfo));
 						spinfo->state.state = CS_SPECTATOR;
                     	spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
-						ai.removeai(spinfo);
-						ai.checkai(true);
 					}
 					else if(spinfo->state.state==CS_SPECTATOR && !val)
 					{
@@ -1529,7 +1527,6 @@ struct gameserver : igameserver
 						});
 						if (!nospawn) sendspawn(spinfo);
 	                    spinfo->state.lasttimeplayed = lastmillis;
-						ai.checkai(true);
 					}
 					break;
 				}
@@ -1540,16 +1537,13 @@ struct gameserver : igameserver
 					if(who<0 || who>=getnumclients() || !haspriv(ci, PRIV_MASTER, true)) break;
 					clientinfo *wi = (clientinfo *)getinfo(who);
 					if(!wi || !m_team(gamemode, mutators) || team < TEAM_ALPHA || team > numteams(gamemode, mutators)) break;
-					bool teamed = false;
 					if(wi->team != team)
 					{
 						if (smode) smode->changeteam(wi, wi->team, team);
 						mutate(smuts, mut->changeteam(wi, wi->team, team));
-						teamed = true;
 					}
 					wi->team = team;
 					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
-					if(teamed) ai.checkai(true);
 					QUEUE_INT(SV_SETTEAM);
 					QUEUE_INT(who);
 					QUEUE_INT(team);
@@ -1698,7 +1692,7 @@ struct gameserver : igameserver
 					int size = msgsizelookup(type);
 					if(size==-1) { disconnect_client(sender, DISC_TAGT); return; }
 					if(size>0) loopi(size-1) getint(p);
-					if(ci && ci->state.state!=CS_SPECTATOR) QUEUE_MSG;
+					if(ci) QUEUE_MSG;
 					break;
 				}
 			}
@@ -1798,7 +1792,7 @@ struct gameserver : igameserver
 		if(!smapname[0])
 		{
 			putint(p, 0);
-			if(m_edit(gamemode) && nonspectators(ci->clientnum, true))
+			if(m_edit(gamemode) && numclients(ci->clientnum, true, true))
 			{
 				clientinfo *best = NULL;
 				loopv(clients) if(clients[i]->name[0] && clients[i]->state.aitype == AI_NONE && clients[i]->state.state != CS_SPECTATOR)
@@ -2100,14 +2094,9 @@ struct gameserver : igameserver
 			case -1:
 				gs.dropped.remove(e.id); return;
 				break;
-			case GUN_PISTOL:
+			case GUN_PLASMA:
                 if(!gs.plasma.remove(e.id)) return;
 				break;
-#if 0
-			case GUN_RL:
-                if(!gs.rockets.remove(e.id)) return;
-				break;
-#endif
 			case GUN_GL:
                 if(!gs.grenades.remove(e.id)) return;
 				break;
@@ -2153,10 +2142,7 @@ struct gameserver : igameserver
 		gs.shotdamage += guntype[e.gun].damage*(e.gun==GUN_SG ? SGRAYS : 1);
 		switch(e.gun)
 		{
-            case GUN_PISTOL: gs.plasma.add(e.id); break;
-#if 0
-            case GUN_RL: gs.rockets.add(e.id); break;
-#endif
+            case GUN_PLASMA: gs.plasma.add(e.id); break;
             case GUN_GL: gs.grenades.add(e.id); break;
             case GUN_FLAMER: gs.flames.add(e.id); break;
 			default:
@@ -2312,7 +2298,6 @@ struct gameserver : igameserver
 	void serverupdate()
 	{
 		gamemillis += curtime;
-
 		if(m_demo(gamemode)) readdemo();
 		else if(minremain)
 		{
@@ -2356,7 +2341,6 @@ struct gameserver : igameserver
 			}
 			if(smode) smode->update();
 			mutate(smuts, mut->update());
-			ai.checkai();
 		}
 
 		while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000)
@@ -2389,6 +2373,7 @@ struct gameserver : igameserver
 				checkvotes(true);
 			}
 		}
+		ai.checkai();
 	}
 
 	bool serveroption(char *arg)
@@ -2469,11 +2454,7 @@ struct gameserver : igameserver
 		relayf("\fo%s has left the game", colorname(ci));
 		clients.removeobj(ci);
 		if(clients.empty()) cleanup(false);
-		else
-		{
-			checkvotes();
-			ai.checkai(true);
-		}
+		else checkvotes();
 	}
 
 	#include "extinfo.h"

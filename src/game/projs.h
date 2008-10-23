@@ -26,7 +26,7 @@ struct projectiles
 			{
 				switch(proj.attr1)
 				{
-					case GUN_PISTOL:
+					case GUN_PLASMA:
 					{
 						proj.height = proj.radius = guntype[proj.attr1].size;
 						proj.aboveeye = guntype[proj.attr1].offset;
@@ -52,17 +52,6 @@ struct projectiles
 						proj.to.z += dist/8;
 						break;
 					}
-#if 0
-					case GUN_RL:
-					{
-						proj.aboveeye = guntype[proj.attr1].offset;
-						proj.elasticity = guntype[proj.attr1].elasticity;
-						proj.relativity = guntype[proj.attr1].relativity;
-						proj.waterfric = guntype[proj.attr1].waterfric;
-						proj.weight = guntype[proj.attr1].weight;
-						break;
-					}
-#endif
 					case GUN_FLAMER:
 					{
 						proj.height = proj.radius = guntype[proj.attr1].size*0.05f;
@@ -183,7 +172,7 @@ struct projectiles
 			{
 				case GUN_FLAMER:
 					proj.radius = proj.height = guntype[proj.attr1].offset;
-				case GUN_PISTOL:
+				case GUN_PLASMA:
 					found = true; // explode in face then
 				default: break;
 			}
@@ -208,7 +197,7 @@ struct projectiles
 					playsound(guntype[proj.attr1].fsound, 0, proj.attr1 == GUN_FLAMER ? int(255*life) : 255, proj.o, &proj, &proj.schan);
 
 				float size = 0.f;
-				if(proj.attr1 == GUN_PISTOL)
+				if(proj.attr1 == GUN_PLASMA)
 				{
 					size = guntype[proj.attr1].size*min(life*6.f,1.f);
 					int fade = clamp(int(proj.vel.magnitude()*2.f), 10, 100);
@@ -553,17 +542,12 @@ struct projectiles
 
 			switch(proj.attr1)
 			{
-				case GUN_PISTOL:
+				case GUN_PLASMA:
 				{
 					vec col((teamtype[proj.owner->team].colour>>16)/255.f, ((teamtype[proj.owner->team].colour>>8)&0xFF)/255.f, (teamtype[proj.owner->team].colour&0xFF)/255.f);
 					adddynlight(proj.o, proj.radius*2.f, col);
 					break;
 				}
-#if 0
-				case GUN_RL:
-					adddynlight(proj.o, 1.15f*proj.radius, vec(1.1f, 0.66f, 0.22f));
-					break;
-#endif
 				case GUN_FLAMER:
 				{
 					float life = clamp((guntype[proj.attr1].time-proj.lifetime)/float(guntype[proj.attr1].time), 0.05f, 1.0f),

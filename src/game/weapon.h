@@ -136,7 +136,7 @@ struct weaponstate
 		if(guntype[gun].esound >= 0)
 			playsound(guntype[gun].esound, 0, 128, o);
 
-		if(gun == GUN_PISTOL)
+		if(gun == GUN_PLASMA)
 		{
 			regular_part_splash(7, rnd(2)+1, 50, o, teamtype[d->team].colour, guntype[gun].explode*0.75f, 5);
 			adddynlight(o, 1.15f*guntype[gun].explode, vec((teamtype[d->team].colour>>16)/255.f, ((teamtype[d->team].colour>>8)&0xFF)/255.f, (teamtype[d->team].colour&0xFF)/255.f), 100, 10);
@@ -151,17 +151,12 @@ struct weaponstate
 			cl.quakewobble += int(guntype[gun].damage*(1.f-dist/EXPLOSIONSCALE/guntype[gun].explode/10.f));
 			particle_splash(0, 200, 300, o);
 			particle_fireball(o, guntype[gun].explode, gun == GUN_GL ? 23 : 22);
-#if 0
-			if(gun==GUN_RL) adddynlight(o, 1.15f*guntype[gun].explode, vec(2, 1.5f, 1), 1100, 100, 0, 0.66f*guntype[gun].explode, vec(1.1f, 0.66f, 0.22f));
-			else
-#endif
-				adddynlight(o, 1.15f*guntype[gun].explode, vec(2, 1.5f, 1), 1100, 100);
-
+			adddynlight(o, 1.15f*guntype[gun].explode, vec(2, 1.5f, 1), 1100, 100);
 			loopi(rnd(20)+10)
 				cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
 		}
         adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
-        adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*0.5f, gun == GUN_PISTOL ? bvec((teamtype[d->team].colour>>16)/2, ((teamtype[d->team].colour>>8)&0xFF)/2, (teamtype[d->team].colour&0xFF)/3) : bvec(96, 48, 16));
+        adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*0.5f, gun == GUN_PLASMA ? bvec((teamtype[d->team].colour>>16)/2, ((teamtype[d->team].colour>>8)&0xFF)/2, (teamtype[d->team].colour&0xFF)/3) : bvec(96, 48, 16));
 
 		if(local)
 		{
@@ -171,7 +166,7 @@ struct weaponstate
 			{
 				gameent *f = (gameent *)cl.iterdynents(i);
 				if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
-				radialeffect(f, o, guntype[gun].explode, gun == GUN_FLAMER || gun == GUN_PISTOL ? HIT_BURN : HIT_EXPLODE);
+				radialeffect(f, o, guntype[gun].explode, gun == GUN_FLAMER || gun == GUN_PLASMA ? HIT_BURN : HIT_EXPLODE);
 			}
 
 			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id >= 0 ? id-cl.maptime : id,
@@ -247,17 +242,13 @@ struct weaponstate
 				regularshape(6, 1, 0x333333, 21, rnd(10)+1, 25, from, 0.5f);
 				break;
 			}
-
-#if 0
-			case GUN_RL:
-#endif
-			case GUN_PISTOL:
+			case GUN_PLASMA:
 			case GUN_FLAMER:
 			case GUN_GL:
 			{
 				int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
 				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
-				if(gun == GUN_PISTOL)
+				if(gun == GUN_PLASMA)
 				{
 					adddynlight(from, 25, vec((teamtype[d->team].colour>>16)/255.f, ((teamtype[d->team].colour>>8)&0xFF)/255.f, (teamtype[d->team].colour&0xFF)/255.f), 20, 0, DL_FLASH);
 					part_create(7, 50, from, teamtype[d->team].colour, 1.0f, d);
