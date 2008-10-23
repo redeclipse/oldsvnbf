@@ -354,6 +354,10 @@ void pushshadowmap()
         glTexGenfv(GL_R, GL_OBJECT_PLANE, texgenR);
         glEnable(GL_TEXTURE_GEN_R);
 
+        // intel driver bug workaround: when R texgen is enabled, it uses the value of Q, even if not enabled!
+        // MUST set Q with glTexCoord4f, glTexCoord3f does not work
+        glTexCoord4f(0, 0, 0, 1);
+
         if(hasDT && hasSH)
         {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE);
