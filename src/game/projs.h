@@ -68,6 +68,7 @@ struct projectiles
 					}
 					case GUN_SG:
 					case GUN_CG:
+					case GUN_CARBINE:
 					case GUN_RIFLE:
 					default:
 					{
@@ -185,48 +186,31 @@ struct projectiles
         proj.resetinterp();
 	}
 
-	bool check(projent &proj)
+	void effect(projent &proj)
 	{
-		if(proj.ready())
+		if(proj.projtype == PRJ_SHOT)
 		{
-			if(proj.projtype == PRJ_SHOT)
+			float life = clamp((guntype[proj.attr1].time-proj.lifetime)/float(guntype[proj.attr1].time), 0.05f, 1.0f);
+
+			if(guntype[proj.attr1].fsound >= 0 && !issound(proj.schan))
+				playsound(guntype[proj.attr1].fsound, 0, proj.attr1 == GUN_FLAMER ? int(255*life) : 255, proj.o, &proj, &proj.schan);
+			if(proj.attr1 == GUN_PLASMA)
 			{
-				float life = clamp((guntype[proj.attr1].time-proj.lifetime)/float(guntype[proj.attr1].time), 0.05f, 1.0f);
-
-				if(guntype[proj.attr1].fsound >= 0 && !issound(proj.schan))
-					playsound(guntype[proj.attr1].fsound, 0, proj.attr1 == GUN_FLAMER ? int(255*life) : 255, proj.o, &proj, &proj.schan);
-
-				float size = 0.f;
-				if(proj.attr1 == GUN_PLASMA)
-				{
-					size = guntype[proj.attr1].size*min(life*6.f,1.f);
-					int fade = clamp(int(proj.vel.magnitude()*2.f), 10, 100);
-					regular_part_splash(7, rnd(2)+1, fade, proj.o, teamtype[proj.owner->team].colour, size, int(proj.radius*3));
-				}
-				else if(proj.attr1 == GUN_FLAMER)
-				{
-					size = guntype[proj.attr1].size*min(life*2.f,1.f);
-					int col = ((int(254*max(1.0f-life,0.1f))<<16)+1)|((int(64*max(1.0f-life,0.05f))+1)<<8),
-						fade = clamp(int(proj.vel.magnitude()*5.f), 15, 150);
-					regular_part_splash(4, rnd(3)+1, fade, proj.o, col, size, int(proj.radius*2));
-				}
-				else
-					regularshape(5, int(proj.radius), 0x443322, 21, rnd(5)+1, 100, proj.o, 2.f);
-
-				if(size > 0.f) loopi(cl.numdynents())
-				{
-					gameent *f = (gameent *)cl.iterdynents(i);
-					if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT)
-						continue;
-					vec dir;
-					float dist = cl.ws.middist(f, dir, proj.o);
-					if(dist <= size) return false;
-				}
+				float size = guntype[proj.attr1].size*min(life*10.f,1.f);
+				regular_part_splash(7, rnd(2)+1, 25, proj.o, teamtype[proj.owner->team].colour, size, int(proj.radius*3));
 			}
-			else if(proj.projtype == PRJ_GIBS)
-				regular_part_splash(0, 1, 5000, proj.o, 0x60FFFF, proj.radius*0.65f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
+			else if(proj.attr1 == GUN_FLAMER)
+			{
+				float size = guntype[proj.attr1].size*min(life*2.f,1.f);
+				int col = ((int(254*max(1.0f-life,0.1f))<<16)+1)|((int(64*max(1.0f-life,0.05f))+1)<<8),
+					fade = clamp(int(proj.vel.magnitude()*5.f), 15, 150);
+				regular_part_splash(4, rnd(3)+1, fade, proj.o, col, size, int(proj.radius*2));
+			}
+			else
+				regularshape(5, int(proj.radius), 0x443322, 21, rnd(5)+1, 100, proj.o, 2.f);
 		}
-		return true;
+		else if(proj.projtype == PRJ_GIBS)
+			regular_part_splash(0, 1, 5000, proj.o, 0x60FFFF, proj.radius*0.65f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
 	}
 
 	bool move(projent &proj, int qtime)
@@ -419,7 +403,7 @@ struct projectiles
 		loopv(projs)
 		{
 			projent &proj = *projs[i];
-			if(!proj.owner || proj.state == CS_DEAD || !check(proj))
+			if(!proj.owner || proj.state == CS_DEAD)
 			{
 				proj.state = CS_DEAD;
 				if(proj.projtype == PRJ_ENT)
@@ -467,6 +451,7 @@ struct projectiles
                         }
 						proj.state = CS_DEAD;
 					}
+					else effect(proj);
 				}
 				else for(int rtime = curtime; proj.state != CS_DEAD && rtime > 0;)
 				{
@@ -478,6 +463,7 @@ struct projectiles
 						proj.state = CS_DEAD;
 						break;
 					}
+					else effect(proj);
 				}
 			}
 

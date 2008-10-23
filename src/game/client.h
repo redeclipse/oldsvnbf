@@ -98,7 +98,7 @@ struct clientcom : iclientcom
 
 	int numchannels() { return 3; }
 
-	void mapstart() { if(!spectator || cl.player1->privilege) senditemstoserver = true; }
+	void mapstart() { senditemstoserver = true; }
 
 	void writeclientinfo(FILE *f)
 	{
@@ -258,6 +258,7 @@ struct clientcom : iclientcom
 
 	void addmsg(int type, const char *fmt = NULL, ...)
 	{
+		/*
 		if(remote && spectator && (!cl.player1->privilege || type<SV_MASTERMODE))
 		{
 			static int spectypes[] = { SV_MAPVOTE, SV_GETMAP, SV_TEXT, SV_SETMASTER };
@@ -269,6 +270,7 @@ struct clientcom : iclientcom
 			}
 			if(!allowed) return;
 		}
+		*/
 		static uchar buf[MAXTRANS];
 		ucharbuf p(buf, MAXTRANS);
 		putint(p, type);
@@ -497,7 +499,7 @@ struct clientcom : iclientcom
 			i += 2 + len;
 		}
 		messages.remove(0, i);
-		if(!spectator && p.remaining()>=10 && lastmillis-lastping>250)
+		if(p.remaining()>=10 && lastmillis-lastping>250)
 		{
 			putint(p, SV_PING);
 			putint(p, lastmillis);
@@ -761,8 +763,8 @@ struct clientcom : iclientcom
 				{
 					int hasmap = getint(p);
 					if(hasmap) getstring(text, p);
-					int mode = getint(p), muts = getint(p), style = getint(p);
-					changemapserv(hasmap ? text : NULL, mode, muts, style);
+					int mode = getint(p), muts = getint(p);
+					changemapserv(hasmap ? text : NULL, mode, muts);
 					mapchanged = true;
 					break;
 				}
@@ -1356,12 +1358,12 @@ struct clientcom : iclientcom
 		}
 	}
 
-	void changemapserv(char *name, int gamemode, int mutators, int gamestyle)
+	void changemapserv(char *name, int gamemode, int mutators)
 	{
 		if(editmode) toggleedit();
-		cl.gamemode = gamemode; cl.mutators = mutators; cl.gamestyle = gamestyle;
-		sv->modecheck(&cl.gamemode, &cl.mutators, &cl.gamestyle);
-		cl.nextmode = cl.gamemode; cl.nextmuts = cl.mutators; cl.nextstyle = cl.gamestyle;
+		cl.gamemode = gamemode; cl.mutators = mutators;
+		sv->modecheck(&cl.gamemode, &cl.mutators);
+		cl.nextmode = cl.gamemode; cl.nextmuts = cl.mutators;
 		cl.minremain = -1;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
@@ -1378,10 +1380,9 @@ struct clientcom : iclientcom
 
 	void changemap(const char *name) // request map change, server may ignore
 	{
-        if(spectator && !cl.player1->privilege) return;
-        int nextmode = cl.nextmode, nextmuts = cl.nextmuts, nextstyle = cl.nextstyle; // in case stopdemo clobbers these
+        int nextmode = cl.nextmode, nextmuts = cl.nextmuts; // in case stopdemo clobbers these
         if(!remote) stopdemo();
-        addmsg(SV_MAPVOTE, "rsi3", name, nextmode, nextmuts, nextstyle);
+        addmsg(SV_MAPVOTE, "rsi2", name, nextmode, nextmuts);
 	}
 
 	void receivefile(uchar *data, int len)
@@ -1463,7 +1464,7 @@ struct clientcom : iclientcom
 
 	void sendmap()
 	{
-		if(!m_edit(cl.gamemode) || (spectator && !cl.player1->privilege))
+		if(!m_edit(cl.gamemode))
 		{
 			conoutf("\fr\"sendmap\" only works in coopedit mode");
 			return;
@@ -1787,8 +1788,8 @@ struct clientcom : iclientcom
 			}
 			case SINFO_GAME:
 			{
-				if(si->attr.length() > 2)
-					s_sprintf(text)("%s", sv->gamename(si->attr[1], si->attr[2], si->attr[3]));
+				if(si->attr.length() > 1)
+					s_sprintf(text)("%s", sv->gamename(si->attr[1], si->attr[2]));
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}

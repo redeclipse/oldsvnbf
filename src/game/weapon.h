@@ -261,13 +261,14 @@ struct weaponstate
 				break;
 			}
 
+			case GUN_CARBINE:
 			case GUN_RIFLE:
 			{
-				part_splash(14, 100, 250, to, teamtype[d->team].colour, 1.2f);
-				part_trail(14, 500, from, to, teamtype[d->team].colour, 1.0f);
+				part_splash(14, gun == GUN_RIFLE ?  50 : 25, gun == GUN_RIFLE ? 250 : 100, to, teamtype[d->team].colour, gun == GUN_RIFLE ? 1.2f : 0.6f);
+				part_trail(14, gun == GUN_RIFLE ? 750 : 500, from, to, teamtype[d->team].colour, gun == GUN_RIFLE ? 1.0f : 0.5f);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
                 adddynlight(from, 50, vec((teamtype[d->team].colour>>16)/255.f, ((teamtype[d->team].colour>>8)&0xFF)/255.f, (teamtype[d->team].colour&0xFF)/255.f), 50, 0, DL_FLASH);
-				part_create(2, 100, from, teamtype[d->team].colour, 2.f, d);
+				part_create(2, 100, from, teamtype[d->team].colour, gun == GUN_RIFLE ? 2.f : 1.2f, d);
 				break;
 			}
 		}
