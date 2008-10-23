@@ -44,6 +44,8 @@ struct blobrenderer
 
     vec blobmin, blobmax;
     ivec bborigin, bbsize;
+    float blobalphalow, blobalphahigh;
+    uchar blobalpha;
 
     blobrenderer(const char *texname)
       : texname(texname), tex(NULL),
@@ -238,9 +240,9 @@ struct blobrenderer
         v.u = (pos.x - blobmin.x) / (blobmax.x - blobmin.x);
         v.v = (pos.y - blobmin.y) / (blobmax.y - blobmin.y);
         v.color = bvec(255, 255, 255);
-        if(pos.z < blobmin.z + blobfadelow) v.alpha = uchar(blobintensity*255/100.0f * (pos.z - blobmin.z) / float(blobfadelow));
-        else if(pos.z > blobmax.z - blobfadehigh) v.alpha = uchar(blobintensity*255/100.0f * (blobmax.z - pos.z) / float(blobfadehigh));
-        else v.alpha = (blobintensity*255)/100;
+        if(pos.z < blobmin.z + blobfadelow) v.alpha = uchar(blobalphalow * (pos.z - blobmin.z));
+        else if(pos.z > blobmax.z - blobfadehigh) v.alpha = uchar(blobalphahigh * (blobmax.z - pos.z));
+        else v.alpha = blobalpha;
         return endvert++;
     }
 
@@ -431,7 +433,7 @@ struct blobrenderer
         }
     }
 
-    blobinfo *addblob(const vec &o, float radius)
+    blobinfo *addblob(const vec &o, float radius, float fade)
     {
         lastblob = &blobs[endblob];
         blobinfo &b = newblob(o, radius);
@@ -444,6 +446,10 @@ struct blobrenderer
         blobmax.z += blobfadehigh;
         (bborigin = blobmin).sub(2);
         (bbsize = blobmax).sub(blobmin).add(4);
+        float scale =  fade*blobintensity*255/100.0f;
+        blobalphalow = scale / blobfadelow;
+        blobalphahigh = scale / blobfadehigh;
+        blobalpha = uchar(scale);
         gentris(worldroot, ivec(0, 0, 0), hdr.worldsize>>1);
         return b.millis >= 0 ? &b : NULL;
     } 
@@ -486,7 +492,29 @@ struct blobrenderer
 
     static blobrenderer *lastrender;
 
-    void renderblob(const vec &o, float radius)
+    void fadeblob(blobinfo *b, float fade)
+    {
+        float minz = b->o.z - (blobheight + blobfadelow), maxz = b->o.z + blobfadehigh,
+              scale = fade*blobintensity*255/100.0f, scalelow = scale / blobfadelow, scalehigh = scale / blobfadehigh;
+        uchar alpha = uchar(scale); 
+        b->millis = totalmillis;
+        do
+        {
+            if(b->endvert - b->startvert >= 3) for(blobvert *v = &verts[b->startvert], *end = &verts[b->endvert]; v < end; v++)
+            {
+                float z = v->pos.z;
+                if(z < minz + blobfadelow) v->alpha = uchar(scalelow * (z - minz));
+                else if(z > maxz - blobfadehigh) v->alpha = uchar(scalehigh * (maxz - z));
+                else v->alpha = alpha;
+            }
+            int offset = b - &blobs[0] + 1;
+            if(offset >= maxblobs) offset = 0;
+            if(offset < endblob ? offset > startblob || startblob > endblob : offset > startblob) b = &blobs[offset];
+            else break;
+        } while(b->millis < 0);
+    }
+
+    void renderblob(const vec &o, float radius, float fade)
     {
         if(lastrender != this)
         {
@@ -509,10 +537,11 @@ struct blobrenderer
         blobinfo *b = cache[hash];
         if(!b || b->millis <= lastreset || b->o!=o || b->radius!=radius)
         {
-            b = addblob(o, radius);
+            b = addblob(o, radius, fade);
             cache[hash] = b;
             if(!b) return;
         }
+        else if(fade < 1 && b->millis < totalmillis) fadeblob(b, fade); 
         do
         {
             if(b->endvert - b->startvert >= 3)
@@ -537,8 +566,8 @@ VARFP(blobdyntris, 128, 4096, 1<<16, initblobs(BLOB_DYNAMIC));
 
 static blobrenderer blobs[] = 
 {
-    blobrenderer("packages/particles/blob.png"),
-    blobrenderer("packages/particles/blob.png")
+    blobrenderer("data/particles/blob.png"),
+    blobrenderer("data/particles/blob.png")
 };
 
 void initblobs(int type)
@@ -552,11 +581,11 @@ void resetblobs()
     blobrenderer::lastreset = totalmillis;
 }
 
-void renderblob(int type, const vec &o, float radius)
+void renderblob(int type, const vec &o, float radius, float fade)
 {
     if(!showblobs) return;
     if(refracting < 0 && o.z - blobheight - blobfadelow >= reflectz) return;
-    blobs[type].renderblob(o, radius + blobmargin);
+    blobs[type].renderblob(o, radius + blobmargin, fade);
 }
 
 void flushblobs()
