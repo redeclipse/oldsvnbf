@@ -732,7 +732,7 @@ void setupserver()
 	{
 		enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 	}
-	sv->changemap(load && *load ? load : NULL, -1, -1, -1);
+	sv->changemap(load && *load ? load : NULL);
 
 	if(servertype >= 2 && *servermaster)
 	{

@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			97
+#define GAMEVERSION			98
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -12,11 +12,10 @@ enum
 	S_JUMP = S_GAMESPECIFIC, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR, S_ENERGY, S_HUM,
 	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_CG,
-	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURNING, S_FLBURN, S_RIFLE,
+	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURNING, S_FLBURN, S_CARBINE, S_RIFLE,
 	S_ITEMPICKUP, S_ITEMSPAWN, 	S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED,
-	//S_V_PLASMA, S_V_SG, S_V_CG, S_V_GL, S_V_FLAMER, S_V_RIFLE,
 	S_V_FLAGSECURED, S_V_FLAGOVERTHROWN,
     S_V_FLAGPICKUP, S_V_FLAGDROP, S_V_FLAGRETURN, S_V_FLAGSCORE, S_V_FLAGRESET,
 	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_HEADSHOT,
@@ -88,6 +87,7 @@ enum
     ANIM_CHAINGUN, ANIM_CHAINGUN_SHOOT, ANIM_CHAINGUN_RELOAD,
     ANIM_GRENADES, ANIM_GRENADES_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADES_POWER,
     ANIM_FLAMER, ANIM_FLAMER_SHOOT, ANIM_FLAMER_RELOAD,
+    ANIM_CARBINE, ANIM_CARBINE_SHOOT, ANIM_CARBINE_RELOAD,
     ANIM_RIFLE, ANIM_RIFLE_SHOOT, ANIM_RIFLE_RELOAD,
     ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
     ANIM_MAX
@@ -105,6 +105,7 @@ enum
 	GUN_SG,
 	GUN_CG,
 	GUN_FLAMER,
+	GUN_CARBINE,
 	GUN_RIFLE,
 	GUN_GL,
 	GUN_MAX
@@ -130,7 +131,7 @@ struct guntypes
 {
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	S_PLASMA,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
-		30,		30,		100,	500,	10,		200,	0,		5000,	-5,		5,
+		30,		30,		150,	500,	10,		200,	0,		10000,	-5,		5,
 		4,		12,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
 				"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep"
 	},
@@ -148,15 +149,21 @@ struct guntypes
 	},
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
-		50,		50,		150, 	2000,	15,		100,	0,		3000,	-1,		 1,
+		50,		50,		200, 	2000,	15,		100,	0,		3000,	-1,		 1,
 		24,		28,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
 				"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep"
+	},
+	{
+		GUN_CARBINE,ANIM_CARBINE,	S_CARBINE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
+		20,		20,		500,    1000,	25,		0,		0,		0,		-10,	10,
+		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
+				"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep"
 	},
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
 		1,		5,		800,	1600,	100,	0,		0,		0,		-35,  	25,
 		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
-				"rifle",	"\fa",	"weapons/rifle/item",		"weapons/rifle/vwep"
+				"rifle",	"\fw",	"weapons/rifle/item",		"weapons/rifle/vwep"
 	},
 	{
 		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
@@ -193,14 +200,6 @@ enum
 
 enum
 {
-	G_S_PVS		= 0,
-	G_S_SSP,
-	G_S_MAX,
-	G_S_ALL		= (1<<G_S_PVS)|(1<<G_S_SSP)
-};
-
-enum
-{
 	G_M_NONE	= 0,
 	G_M_TEAM	= 1<<0,
 	G_M_INSTA	= 1<<1,
@@ -220,28 +219,24 @@ enum
 
 struct gametypes
 {
-	int	type,			mutators,		implied,		styles;			const char *name;
+	int	type,			mutators,		implied;		const char *name;
 } gametype[] = {
-	{ G_DEMO,			G_M_NONE,		G_M_NONE,		G_S_ALL,		"Demo" },
-	{ G_LOBBY,			G_M_NONE,		G_M_NOITEMS,	G_S_ALL,		"Lobby" },
-	{ G_EDITMODE,		G_M_NONE,		G_M_NONE,		G_S_ALL,		"Editing" },
-	{ G_MISSION,		G_M_NONE,		G_M_NONE,		G_S_ALL,		"Mission" },
-	{ G_DEATHMATCH,		G_M_FIGHT,		G_M_NONE,		G_S_ALL,		"Deathmatch" },
-	{ G_STF,			G_M_STF,		G_M_TEAM,		G_S_ALL,		"Secure the Flag" },
-	{ G_CTF,			G_M_CTF,		G_M_TEAM,		G_S_ALL,		"Capture the Flag" },
+	{ G_DEMO,			G_M_NONE,		G_M_NONE,		"Demo" },
+	{ G_LOBBY,			G_M_NONE,		G_M_NOITEMS,	"Lobby" },
+	{ G_EDITMODE,		G_M_NONE,		G_M_NONE,		"Editing" },
+	{ G_MISSION,		G_M_NONE,		G_M_NONE,		"Mission" },
+	{ G_DEATHMATCH,		G_M_FIGHT,		G_M_NONE,		"Deathmatch" },
+	{ G_STF,			G_M_STF,		G_M_TEAM,		"Secure the Flag" },
+	{ G_CTF,			G_M_CTF,		G_M_TEAM,		"Capture the Flag" },
 }, mutstype[] = {
-	{ G_M_TEAM,			G_M_ALL,		G_M_NONE,		G_S_ALL,		"Team" },
-	{ G_M_INSTA,		G_M_ALL,		G_M_NONE,		G_S_ALL,		"Instagib" },
-	{ G_M_DUEL,			G_M_DUKE,		G_M_NONE,		G_S_ALL,		"Duel" },
-	{ G_M_PROG,			G_M_ALL,		G_M_NONE,		G_S_ALL,		"Progressive" },
-	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,		G_S_ALL,		"Multi-sided" },
-	{ G_M_DLMS,			G_M_DUKE,		G_M_DUEL,		G_S_ALL,		"Last Man Standing" },
-	{ G_M_MAYHEM,		G_M_ALL,		G_M_NONE,		G_S_ALL,		"Mayhem" },
-	{ G_M_NOITEMS,		G_M_ALL,		G_M_NONE,		G_S_ALL,		"No Items" },
-};
-
-const char *gamestyles[G_S_MAX] = {
-	"Shooter", "Platformer"
+	{ G_M_TEAM,			G_M_ALL,		G_M_NONE,		"Team" },
+	{ G_M_INSTA,		G_M_ALL,		G_M_NONE,		"Instagib" },
+	{ G_M_DUEL,			G_M_DUKE,		G_M_NONE,		"Duel" },
+	{ G_M_PROG,			G_M_ALL,		G_M_NONE,		"Progressive" },
+	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,		"Multi-sided" },
+	{ G_M_DLMS,			G_M_DUKE,		G_M_DUEL,		"Last Man Standing" },
+	{ G_M_MAYHEM,		G_M_ALL,		G_M_NONE,		"Mayhem" },
+	{ G_M_NOITEMS,		G_M_ALL,		G_M_NONE,		"No Items" },
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)
@@ -257,11 +252,6 @@ const char *gamestyles[G_S_MAX] = {
 #define m_fight(a)			(a >= G_DEATHMATCH)
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
 #define m_timed(a)			(m_fight(a))
-
-#define m_style(a)			(a > -1 && a < G_S_MAX)
-
-#define m_pvs(a)			(a == G_S_PVS)
-#define m_ssp(a)			(a == G_S_SSP)
 
 #define m_team(a,b)			((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))
 #define m_insta(a,b)		((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
@@ -337,7 +327,7 @@ struct teamtypes
 {
 	int	type,		colour;	const char *name,	*tpmdl,			*fpmdl,				*flag,			*icon,			*chat;
 } teamtype[] = {
-	{ TEAM_NEUTRAL,	0x6F6F6F,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
+	{ TEAM_NEUTRAL,	0x666666,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
 	{ TEAM_ALPHA,	0x6666FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
 	{ TEAM_BETA,	0xFF6666,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
 	{ TEAM_DELTA,	0xFFFF66,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
@@ -414,7 +404,6 @@ enum
 SVARG(defaultmap, "overseer");
 VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
-VARG(defaultstyle, G_S_PVS, G_S_PVS, G_S_SSP);
 
 VARG(teamdamage, 0, 1, 1);
 VARG(entspawntime, 0, 0, 60);
@@ -441,7 +430,7 @@ struct aitypes
 	int type,			colour; const char *name,	*mdl;
 } aitype[] = {
 	{ AI_NONE,		0xFFFFFF,	"",				"" },
-	{ AI_BOT,		0x6F6F6F,	"bot",			"player" },
+	{ AI_BOT,		0x666666,	"bot",			"player" },
 	{ AI_BSOLDIER,	0x6666FF,	"alpha",		"player/alpha" },
 	{ AI_RSOLDIER,	0xFF6666,	"beta",			"player/beta" },
 	{ AI_YSOLDIER,	0xFFFF66,	"delta",		"player/delta" },
@@ -680,6 +669,7 @@ const char *animnames[] =
 	"chaingun", "chaingun shoot", "chaingun reload",
 	"grenades", "grenades throw", "grenades reload", "grenades power",
 	"flamer", "flamer shoot", "flamer reload",
+	"carbine", "carbine shoot", "carbine reload",
 	"rifle", "rifle shoot", "rifle reload",
 	"vwep", "shield", "powerup",
 	""
@@ -832,7 +822,7 @@ struct gameent : dynent, gamestate
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
     int smoothmillis;
-	int oldnode, lastnode, targnode;
+	int lastnode;
 	int respawned, suicided;
 	int wschan;
 	aiinfo *ai;
@@ -883,14 +873,14 @@ struct gameent : dynent, gamestate
 		gamestate::respawn(millis);
 		obliterated = false;
 		lasttaunt = 0;
-		lastflag = respawned = suicided = lastnode = oldnode = targnode = -1;
+		lastflag = respawned = suicided = lastnode = -1;
 		obit[0] = 0;
 	}
 
 	void resetstate(int millis)
 	{
 		respawn(millis);
-		oldnode = lastnode = -1;
+		lastnode = -1;
 		frags = deaths = totaldamage = totalshots = 0;
 		state = CS_DEAD;
 	}

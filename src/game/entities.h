@@ -939,7 +939,7 @@ struct entities : icliententities
 		{
 			vec v(cl.feetpos(d, 0.f));
 			int curnode = entitynode(v);
-			if(m_pvs(cl.gamestyle) && entitydrop() && ((m_fight(cl.gamemode) && d->aitype == AI_NONE) || d == cl.player1))
+			if(entitydrop() && ((m_fight(cl.gamemode) && d->aitype == AI_NONE) || d == cl.player1))
 			{
 				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= d->radius+enttype[WAYPOINT].radius)
 					curnode = d->lastnode;
@@ -958,59 +958,12 @@ struct entities : icliententities
 			}
 			else
 			{
-				if(!ents.inrange(curnode))
-				{
-					if(!ents.inrange(d->lastnode)) curnode = entitynode(v, false);
-					else curnode = d->lastnode;
-				}
-				if(ents.inrange(curnode))
-				{
-					if(d->lastnode != curnode)
-					{
-						d->oldnode = d->lastnode;
-						d->targnode = -1;
-						if(m_ssp(cl.gamestyle) && d == cl.player1)
-						{
-							float minyaw = 1e16f;
-							gameentity &e = *(gameentity *)ents[curnode];
-							loopv(e.links) if(ents.inrange(e.links[i]))
-							{
-								gameentity &f = *(gameentity *)ents[e.links[i]];
-								vec dir(vec(f.o).sub(e.o).normalize());
-								float yaw, pitch;
-								vectoyawpitch(dir, yaw, pitch);
-								float offyaw = fabs(yaw-d->aimyaw);
-								if(!ents.inrange(d->targnode) || offyaw < minyaw)
-								{
-									d->targnode = e.links[i];
-									minyaw = offyaw;
-								}
-							}
-						}
-					}
-					d->lastnode = curnode;
-				}
-				else if(ents.inrange(d->oldnode)) d->lastnode = d->oldnode;
-				else d->lastnode = d->oldnode = -1;
-
-				if(m_ssp(cl.gamestyle) && d == cl.player1)
-				{
-					if(ents.inrange(d->targnode))
-					{
-						d->mdir[MDIR_FORWARD] = vec(ents[d->targnode]->o).sub(v).normalize();
-						d->mdir[MDIR_BACKWARD] = vec(ents[d->lastnode]->o).sub(v).normalize();
-						float dummy;
-						vectoyawpitch(d->mdir[MDIR_FORWARD], d->aimyaw, dummy);
-					}
-					else
-					{
-						vecfromyawpitch(d->aimyaw, 0.f, 1, 0, d->mdir[MDIR_FORWARD]);
-						d->mdir[MDIR_BACKWARD] = vec(d->mdir[MDIR_FORWARD]).neg();
-					}
-				}
+				if(!ents.inrange(curnode)) curnode = entitynode(v, false);
+				if(ents.inrange(curnode)) d->lastnode = curnode;
+				else d->lastnode = -1;
 			}
 		}
-		else d->lastnode = d->oldnode = -1;
+		else d->lastnode = -1;
 	}
 
 	void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e)
@@ -1045,7 +998,7 @@ struct entities : icliententities
 				case 8: case 9: case 10: case 11: case 12: case 13:
 				{
 					int gun = f.type-8, gunmap[6] = {
-						GUN_SG, GUN_CG, GUN_FLAMER, GUN_RIFLE, GUN_GL, GUN_PLASMA
+						GUN_SG, GUN_CG, GUN_FLAMER, GUN_RIFLE, GUN_GL, GUN_CARBINE
 					};
 
 					if(gun >= 0 && gun <= 5)
@@ -1263,11 +1216,12 @@ struct entities : icliententities
 				{
 					if(mtype == MAP_BFGZ && gver <= 90)
 					{ // move grenades to the end of the weapon array
-						if(e.attr1 > 3) e.attr1--;
+						if(e.attr1 >= 4) e.attr1--;
 						else if(e.attr1 == 3) e.attr1 = GUN_GL;
 					}
-					if((mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 96)) && e.attr1 == GUN_PLASMA)
-						e.attr1 = GUN_GL; // plasma is pointless
+					if(mtype == MAP_BFGZ && gver <= 97 && e.attr1 >= 4)
+						e.attr1++; // add in carbine
+					if(e.attr1 == GUN_PLASMA) e.attr1 = GUN_CARBINE; // plasma is permanent
 					break;
 				}
 				case PUSHER:

@@ -715,14 +715,10 @@ struct aiclient
 				case AI_T_PLAYER:
 				{
 					gameent *e = cl.getclient(b.target);
-					if(e)
+					if(e && e->state == CS_ALIVE)
 					{
 						vec epos(cl.feetpos(e, 0.f));
-						if(e->state == CS_ALIVE && patrol(d, b, epos, AIISNEAR, AIISFAR))
-						{
-							defer(d, b, false);
-							return true;
-						}
+						return patrol(d, b, epos, AIISNEAR, AIISFAR);
 					}
 					break;
 				}
@@ -786,11 +782,7 @@ struct aiclient
 							}
 							default: break;
 						}
-						if(makeroute(d, b, e.o, enttype[e.type].radius))
-						{
-							defer(d, b, b.targtype == AI_T_NODE);
-							return true;
-						}
+						return makeroute(d, b, e.o, enttype[e.type].radius);
 					}
 					break;
 				}
@@ -814,11 +806,7 @@ struct aiclient
 							}
 							default: break;
 						}
-						if(makeroute(d, b, proj.o, enttype[proj.ent].radius))
-						{
-							defer(d, b, false);
-							return true;
-						}
+						return makeroute(d, b, proj.o, enttype[proj.ent].radius);
 						break;
 					}
 					break;
@@ -844,14 +832,10 @@ struct aiclient
 				case AI_T_PLAYER:
 				{
 					gameent *e = cl.getclient(b.target);
-					if(e)
+					if(e && e->state == CS_ALIVE)
 					{
 						vec epos(cl.feetpos(e, 0.f));
-						if(e->state == CS_ALIVE && patrol(d, b, epos, AIISNEAR, AIISFAR))
-						{
-							defer(d, b, false);
-							return true;
-						}
+						return patrol(d, b, epos, AIISNEAR, AIISFAR);
 					}
 					break;
 				}
@@ -865,11 +849,10 @@ struct aiclient
 	{
 		vec pos = cl.feetpos(d, 0.f);
 		int node = -1;
-		float mindist = (enttype[WAYPOINT].radius*enttype[WAYPOINT].radius)*2.f;
-		loopvrev(d->ai->route) if(cl.et.ents.inrange(d->ai->route[i]) && d->ai->route[i] != d->lastnode && d->ai->route[i] != d->oldnode)
+		float mindist = 1e16f;
+		loopvrev(d->ai->route) if(cl.et.ents.inrange(d->ai->route[i]))
 		{
 			gameentity &e = *(gameentity *)cl.et.ents[d->ai->route[i]];
-
 			float dist = e.o.squaredist(pos);
 			if(dist <= mindist)
 			{
@@ -1060,6 +1043,7 @@ struct aiclient
 				aiming = true;
 			}
 		}
+		else d->ai->enemy = -1;
 		if(hunt(d))
 		{
 			if(!aiming) aim(d, d->ai->spot, d->yaw, d->pitch, 10);
@@ -1091,11 +1075,14 @@ struct aiclient
 
 		if(cl.allowmove(d) && d->state == CS_ALIVE)
 		{
-			int busy = 0;
 			bool r = false, p = false;
-			if(process(d)) busy = 1;
+			int busy = process(d) ? 1 : 0;
 			if(!decision(d, &r, &p, false) || !r) busy = 2;
-			request(d, busy);
+			if(!request(d, busy) && !busy)
+			{
+				aistate &b = d->ai->getstate();
+				defer(d, b, false);
+			}
 			cl.et.checkitems(d);
 			cl.ws.shoot(d, d->ai->target, 100); // always use full power
 		}

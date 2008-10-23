@@ -180,7 +180,7 @@ struct scoreboard : g3d_callback
 
 		int numgroups = groupplayers();
 
-		s_sprintfd(modemapstr)("%s: %s", sv->gamename(cl.gamemode, cl.mutators, cl.gamestyle), getmapname());
+		s_sprintfd(modemapstr)("%s: %s", sv->gamename(cl.gamemode, cl.mutators), getmapname());
         if((m_timed(cl.gamemode) || cl.cc.demoplayback) && cl.minremain >= 0)
 		{
 			if(!cl.minremain) s_strcat(modemapstr, ", intermission");
