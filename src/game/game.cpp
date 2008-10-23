@@ -145,13 +145,13 @@ struct gameclient : igameclient
 	ITVAR(healthbartex, "textures/healthbar", 0);
 
 	ITVAR(indicatortex, "textures/indicator", 3);
-	ITVAR(pistolhudtex, "textures/pistolhud", 0);
+	ITVAR(plasmahudtex, "textures/plasmahud", 0);
 	ITVAR(shotgunhudtex, "textures/shotgunhud", 0);
 	ITVAR(chaingunhudtex, "textures/chaingunhud", 0);
 	ITVAR(grenadeshudtex, "textures/grenadeshud", 0);
 	ITVAR(flamerhudtex, "textures/flamerhud", 0);
 	ITVAR(riflehudtex, "textures/riflehud", 0);
-	ITVAR(pistolcliptex, "textures/pistolclip", 3);
+	ITVAR(plasmacliptex, "textures/plasmaclip", 3);
 	ITVAR(shotguncliptex, "textures/shotgunclip", 3);
 	ITVAR(chainguncliptex, "textures/chaingunclip", 3);
 	ITVAR(grenadescliptex, "textures/grenadesclip", 3);
@@ -825,7 +825,7 @@ struct gameclient : igameclient
     void drawclip(int gun, float x, float y, float size, float blend, Texture *pointer = NULL)
     {
         const char *cliptexs[GUN_MAX] = {
-            pistolcliptex(), shotguncliptex(), chainguncliptex(),
+            plasmacliptex(), shotguncliptex(), chainguncliptex(),
             flamercliptex(), riflecliptex(), grenadescliptex(),
         };
         float px = x, py = y, psize = size;
@@ -1212,17 +1212,17 @@ struct gameclient : igameclient
 		{
 			t = textureload(healthbartex());
 			float amt = max(player1->health, 0)/float(MAXHEALTH),
-				glow = 1.f, pulse = fade, cr = 1.f*amt, cg = 0.25f*amt, cb = 0.f;
+				glow = 1.f, pulse = fade, cr = 1.f*amt, cg = 0.3f*amt, cb = 0.f;
 
-			if(lastmillis <= player1->lastregen+500)
+			if(lastmillis-player1->lastregen < 500)
 			{
-				float regen = (lastmillis-player1->lastregen)/500.f;
+				float regen = clamp((lastmillis-player1->lastregen)/500.f, 0.f, 1.f);
 				pulse = clamp(pulse*regen, 0.3f, max(fade, 0.33f))*barblend();
 				glow = clamp(glow*regen, 0.3f, 1.f);
 			}
 
 			glBindTexture(GL_TEXTURE_2D, t->retframe(player1->health, MAXHEALTH));
-			glColor4f(clamp(cr, 0.3f, 1.f)*glow, clamp(cg, 0.f, 1.f)*glow, clamp(cb, 0.f, 1.f)*glow, pulse);
+			glColor4f(clamp(cr, 0.5f, 1.f)*glow, clamp(cg, 0.f, 1.f)*glow, clamp(cb, 0.f, 1.f)*glow, pulse);
 			if(t->frames.length() > 1) drawsized(float(bx), float(by), float(bs));
 			else
 			{
@@ -1235,7 +1235,7 @@ struct gameclient : igameclient
 				int ta = int(oy*ammosize()), tb = ta*3, tv = bx + bs - tb,
 					to = ta/16, tr = ta/2, tq = tr - FONTH/2;
 				const char *hudtexs[GUN_MAX] = {
-					pistolhudtex(), shotgunhudtex(), chaingunhudtex(),
+					plasmahudtex(), shotgunhudtex(), chaingunhudtex(),
 					flamerhudtex(), riflehudtex(), grenadeshudtex(),
 				};
 				loopi(GUN_MAX) if(player1->hasgun(i) && (i == player1->gunselect || showhudammo() > 1))
@@ -1519,12 +1519,6 @@ struct gameclient : igameclient
 		{
 			float fade = maptime ? float(lastmillis-maptime)/float(titlecardtime()) : 0.f;
 			colour = vec(fade, fade, fade);
-			return true;
-		}
-		if(lastmillis-player1->lastregen < REGENTIME)
-		{
-			float fade = clamp(float(lastmillis-player1->lastregen)/float(REGENTIME), 0.35f, 1.f);
-			colour = vec(1.f, fade, fade);
 			return true;
 		}
 		return false;
@@ -1993,7 +1987,7 @@ struct gameclient : igameclient
 
 			if((anim>>ANIM_SECONDARY)&ANIM_INDEX) switch(anim&ANIM_INDEX)
 			{
-				case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_CHAINGUN:
+				case ANIM_IDLE: case ANIM_PLASMA: case ANIM_SHOTGUN: case ANIM_CHAINGUN:
 				case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_RIFLE:
 				{
 					anim >>= ANIM_SECONDARY;
@@ -2005,7 +1999,7 @@ struct gameclient : igameclient
 
 		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) switch(anim&ANIM_INDEX)
 		{
-			case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_CHAINGUN:
+			case ANIM_IDLE: case ANIM_PLASMA: case ANIM_SHOTGUN: case ANIM_CHAINGUN:
 			case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_RIFLE:
 			{
 				anim |= ((anim&ANIM_INDEX)|ANIM_LOOP)<<ANIM_SECONDARY;

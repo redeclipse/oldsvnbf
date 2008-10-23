@@ -1041,11 +1041,11 @@ struct entities : icliententities
 				// 10	I_ROCKETS		8	WEAPON		GUN_FLAMER
 				// 11	I_ROUNDS		8	WEAPON		GUN_RIFLE
 				// 12	I_GRENADES		8	WEAPON		GUN_GL
-				// 13	I_CARTRIDGES	8	WEAPON		GUN_PISTOL
+				// 13	I_CARTRIDGES	8	WEAPON		GUN_PLASMA
 				case 8: case 9: case 10: case 11: case 12: case 13:
 				{
 					int gun = f.type-8, gunmap[6] = {
-						GUN_SG, GUN_CG, GUN_FLAMER, GUN_RIFLE, GUN_GL, GUN_PISTOL
+						GUN_SG, GUN_CG, GUN_FLAMER, GUN_RIFLE, GUN_GL, GUN_PLASMA
 					};
 
 					if(gun >= 0 && gun <= 5)
@@ -1266,8 +1266,8 @@ struct entities : icliententities
 						if(e.attr1 > 3) e.attr1--;
 						else if(e.attr1 == 3) e.attr1 = GUN_GL;
 					}
-					if((mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 96)) && e.attr1 == GUN_PISTOL)
-						e.attr1 = GUN_GL; // pistol is pointless
+					if((mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 96)) && e.attr1 == GUN_PLASMA)
+						e.attr1 = GUN_GL; // plasma is pointless
 					break;
 				}
 				case PUSHER:

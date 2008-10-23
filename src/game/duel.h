@@ -89,7 +89,7 @@ struct duelservmode : servmode
 
 	void update()
 	{
-		if(sv.interm || sv.gamemillis < dueltime || sv.nonspectators() < 2) return;
+		if(sv.interm || sv.gamemillis < dueltime || sv.numclients() < 2) return;
 		vector<clientinfo *> alive;
 
 		alive.setsize(0);

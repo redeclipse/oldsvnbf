@@ -548,10 +548,10 @@ struct ctfclient : ctfstate
 			{
 				bool guard = false;
 				if(f.owner || targets.empty()) guard = true;
-				else if(d->gunselect != GUN_PISTOL)
-				{ // see if we can relieve someone who only has a pistol
+				else if(d->gunselect != GUN_PLASMA)
+				{ // see if we can relieve someone who only has a plasma
 					gameent *t;
-					loopvk(targets) if((t = cl.getclient(targets[k])) && t->gunselect == GUN_PISTOL)
+					loopvk(targets) if((t = cl.getclient(targets[k])) && t->gunselect == GUN_PLASMA)
 					{
 						guard = true;
 						break;
@@ -567,7 +567,7 @@ struct ctfclient : ctfstate
 					n.targtype = AI_T_AFFINITY;
 					n.expire = 10000;
 					n.tolerance = enttype[FLAG].radius*2.f;
-					n.score = pos.squaredist(f.pos())/(d->gunselect != GUN_PISTOL ? 100.f : 1.f);
+					n.score = pos.squaredist(f.pos())/(d->gunselect != GUN_PLASMA ? 100.f : 1.f);
 					n.defers = false;
 				}
 			}
