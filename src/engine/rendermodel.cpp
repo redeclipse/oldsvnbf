@@ -470,7 +470,8 @@ void endmodelbatches()
             {
                 batchedmodel &bm = b.batched[j];
                 if(bm.flags&(MDL_SHADOW|MDL_DYNSHADOW))
-                    renderblob(bm.flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, bm.pos, bm.d ? bm.d->radius : max(bbradius.x, bbradius.y));
+                    renderblob(bm.flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, bm.pos, bm.d ? bm.d->radius : max(bbradius.x, bbradius.y),
+                        (bm.anim&ANIM_INDEX)==ANIM_DYING ? max(1.0f - (lastmillis - bm.basetime)/1000.0f, 0.0f) : 1.0f);
             }
             flushblobs();
         }
@@ -751,7 +752,8 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 
     if(shadow && !reflecting && refracting<=0)
     {
-        renderblob(flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, o, d ? d->radius : max(bbradius.x, bbradius.y));
+        renderblob(flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, o, d ? d->radius : max(bbradius.x, bbradius.y),
+            (anim&ANIM_INDEX)==ANIM_DYING ? max(1.0f - (lastmillis - basetime)/1000.0f, 0.0f) : 1.0f);
         flushblobs();
         if((flags&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
     }
