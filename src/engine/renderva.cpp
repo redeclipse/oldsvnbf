@@ -1859,6 +1859,8 @@ void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
 VAR(oqgeom, 0, 1, 1);
 VAR(oqbatch, 0, 1, 1);
 
+VAR(dbgffsm, 0, 0, 1);
+
 void rendergeom(float causticspass, bool fogpass)
 {
     renderstate cur;
@@ -2134,7 +2136,9 @@ void rendergeom(float causticspass, bool fogpass)
                 glBindTexture(GL_TEXTURE_1D, fogtex);
                 glActiveTexture_(GL_TEXTURE0_ARB);
             }
+            if(dbgffsm) { glDisable(GL_BLEND); glDisable(GL_TEXTURE_2D); glColor3f(1, 0, 1); }
             rendergeommultipass(cur, RENDERPASS_SHADOWMAP, fogpass);
+            if(dbgffsm) { glEnable(GL_BLEND); glEnable(GL_TEXTURE_2D); }
             popshadowmap();
             if(cur.fogtmu>=0)
             {

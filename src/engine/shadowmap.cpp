@@ -21,6 +21,7 @@ VARP(blursmsigma, 1, 100, 200);
 
 vec shadowoffset(0, 0, 0), shadowfocus(0, 0, 0), shadowdir(0, SHADOWSKEW, 1);
 VAR(shadowmapcasters, 1, 0, 0);
+float shadowmapmaxz = 0;
 
 void setshadowdir(int angle)
 {
@@ -171,7 +172,7 @@ static struct shadowmaptexture : rendertarget
         glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);
         shadowfocus = camera1->o;
         shadowfocus.add(dir);
-        shadowfocus.add(vec(-shadowdir.x, -shadowdir.y, 1).mul(shadowmapheight));
+        shadowfocus.add(vec(shadowdir).mul(shadowmapheight));
         shadowfocus.add(dirx.mul(shadowoffset.x));
         shadowfocus.add(diry.mul(shadowoffset.y));
 
@@ -189,10 +190,12 @@ static struct shadowmaptexture : rendertarget
         else glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
         shadowmapcasters = 0;
+        shadowmapmaxz = shadowfocus.z - shadowmapdist;
         shadowmapping = true;
         rendergame();
         renderavatar(false);
         shadowmapping = false;
+        shadowmapmaxz = min(shadowmapmaxz, shadowfocus.z);
 
         glEnable(GL_TEXTURE_2D);
 
@@ -248,6 +251,99 @@ void cleanshadowmap()
     shadowmaptex.cleanup(true);
 }
 
+static int scissoring = 0, oldscissor[4];
+
+VAR(ffsmscissor, 0, 1, 1);
+
+static int calcscissorbox(int &sx, int &sy, int &sw, int &sh)
+{
+    scissoring = 0;
+    if(!ffsmscissor) return 0;
+
+    int smx, smy, smw, smh;
+    shadowmaptex.scissorblur(smx, smy, smw, smh);
+
+    vec forward, right;
+    vecfromyawpitch(camera1->yaw, 0, -1, 0, forward);
+    vecfromyawpitch(camera1->yaw, 0, 0, -1, right);
+    forward.mul(shadowmapradius*2.0f/shadowmaptex.viewh);
+    right.mul(shadowmapradius*2.0f/shadowmaptex.vieww);
+
+    vec bottom(shadowfocus);
+    bottom.sub(vec(shadowdir).mul(shadowmapdist));
+    bottom.add(vec(forward).mul(smy - shadowmaptex.viewh/2)).add(vec(right).mul(smx - shadowmaptex.vieww/2));
+    vec top(bottom);
+    top.add(vec(shadowdir).mul(shadowmapmaxz - (shadowfocus.z - shadowmapdist)));
+
+    vec4 v[8];
+    float sx1 = 1, sy1 = 1, sx2 = -1, sy2 = -1;
+    loopi(8)
+    {
+        vec c = i&4 ? top : bottom;
+        if(i&1) c.add(vec(right).mul(smw));
+        if(i&2) c.add(vec(forward).mul(smh));
+        if(reflecting) c.z = 2*reflectz - c.z;
+        vec4 &p = v[i];
+        mvpmatrix.transform(c, p);
+        if(p.z >= 0)
+        {
+            float x = p.x / p.w, y = p.y / p.w;
+            sx1 = min(sx1, x);
+            sy1 = min(sy1, y);
+            sx2 = max(sx2, x);
+            sy2 = max(sy2, y);
+        }
+    }
+    if(sx1 >= sx2 || sy1 >= sy2) return 0;
+    loopi(8)
+    {
+        const vec4 &p = v[i];
+        if(p.z >= 0) continue;
+        loopj(3)
+        {
+            const vec4 &o = v[i^(1<<j)];
+            if(o.z <= 0) continue;
+            float t = p.z/(p.z - o.z),
+                  w = p.w + t*(o.w - p.w),
+                  x = (p.x + t*(o.x - p.x))/w,
+                  y = (p.y + t*(o.y - p.y))/w;
+            sx1 = min(sx1, x);
+            sy1 = min(sy1, y);
+            sx2 = max(sx2, x);
+            sy2 = max(sy2, y);
+        }
+    }
+    sx1 = max(sx1, -1.0f);
+    sy1 = max(sy1, -1.0f);
+    sx2 = min(sx2, 1.0f);
+    sy2 = min(sy2, 1.0f);
+    if(sx1 <= -1 && sy1 <= -1 && sx2 >= 1 && sy2 >= 1) return 0;
+
+    int viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    sx = viewport[0] + int(floor((sx1+1)*0.5f*viewport[2]));
+    sy = viewport[1] + int(floor((sy1+1)*0.5f*viewport[3]));
+    sw = viewport[0] + int(ceil((sx2+1)*0.5f*viewport[2])) - sx;
+    sh = viewport[1] + int(ceil((sy2+1)*0.5f*viewport[3])) - sy;
+    if(sw <= 0 || sh <= 0) return 0;
+
+    if(glIsEnabled(GL_SCISSOR_TEST))
+    {
+        glGetIntegerv(GL_SCISSOR_BOX, oldscissor);
+        sw += sx;
+        sh += sy;
+        sx = max(sx, oldscissor[0]);
+        sy = max(sy, oldscissor[1]);
+        sw = min(sw, oldscissor[0] + oldscissor[2]) - sx;
+        sh = min(sh, oldscissor[1] + oldscissor[3]) - sy;
+        if(sw <= 0 || sh <= 0) return 0;
+        scissoring = 2;
+    }
+    else scissoring = 1;
+
+    return scissoring;
+}
+
 void calcshadowmapbb(const vec &o, float xyrad, float zrad, float &x1, float &y1, float &x2, float &y2)
 {
     vec skewdir(shadowdir);
@@ -276,6 +372,8 @@ bool addshadowmapcaster(const vec &o, float xyrad, float zrad)
 {
     if(o.z + zrad <= shadowfocus.z - shadowmapdist || o.z - zrad >= shadowfocus.z) return false;
 
+    shadowmapmaxz = max(shadowmapmaxz, o.z + zrad);
+
     float x1, y1, x2, y2;
     calcshadowmapbb(o, xyrad, zrad, x1, y1, x2, y2);
 
@@ -289,7 +387,7 @@ bool isshadowmapreceiver(vtxarray *va)
 {
     if(!shadowmap || !shadowmapcasters) return false;
 
-    if(va->shadowmapmax.z <= shadowfocus.z - shadowmapdist || va->shadowmapmin.z >= shadowfocus.z) return false;
+    if(va->shadowmapmax.z <= shadowfocus.z - shadowmapdist || va->shadowmapmin.z >= shadowmapmaxz) return false;
 
     float xyrad = SQRT2*0.5f*max(va->shadowmapmax.x-va->shadowmapmin.x, va->shadowmapmax.y-va->shadowmapmin.y),
           zrad = 0.5f*(va->shadowmapmax.z-va->shadowmapmin.z),
@@ -305,10 +403,10 @@ bool isshadowmapreceiver(vtxarray *va)
 #if 0
     // cheaper inexact test
     float dz = va->o.z + va->size/2 - shadowfocus.z;
-    float cx = shadowfocus.x - dz*shadowdir.x, cy = shadowfocus.y - dz*shadowdir.y;
+    float cx = shadowfocus.x + dz*shadowdir.x, cy = shadowfocus.y + dz*shadowdir.y;
     float skew = va->size/2*SHADOWSKEW;
     if(!shadowmap || !shadowmaptex ||
-       va->o.z + va->size <= shadowfocus.z - shadowmapdist || va->o.z >= shadowfocus.z ||
+       va->o.z + va->size <= shadowfocus.z - shadowmapdist || va->o.z >= shadowmapmaxz ||
        va->o.x + va->size <= cx - shadowmapradius-skew || va->o.x >= cx + shadowmapradius+skew ||
        va->o.y + va->size <= cy - shadowmapradius-skew || va->o.y >= cy + shadowmapradius+skew)
         return false;
@@ -320,7 +418,7 @@ bool isshadowmapcaster(const vec &o, float rad)
 {
     // cheaper inexact test
     float dz = o.z - shadowfocus.z;
-    float cx = shadowfocus.x - dz*shadowdir.x, cy = shadowfocus.y - dz*shadowdir.y;
+    float cx = shadowfocus.x + dz*shadowdir.x, cy = shadowfocus.y + dz*shadowdir.y;
     float skew = rad*SHADOWSKEW;
     if(!shadowmapping ||
        o.z + rad <= shadowfocus.z - shadowmapdist || o.z - rad >= shadowfocus.z ||
@@ -372,6 +470,12 @@ void pushshadowmap()
 
         glColor3f(shadowmapintensity/100.0f, shadowmapintensity/100.0f, shadowmapintensity/100.0f);
 
+        int sx, sy, sw, sh;
+        if(calcscissorbox(sx, sy, sw, sh))
+        {
+            glScissor(sx, sy, sw, sh);
+            if(scissoring<=1) glEnable(GL_SCISSOR_TEST);
+        }
         return;
     }
 
@@ -445,6 +549,9 @@ void popshadowmap()
     }
     else
     {
+        if(scissoring>1) glScissor(oldscissor[0], oldscissor[1], oldscissor[2], oldscissor[3]);
+        else if(scissoring) glDisable(GL_SCISSOR_TEST);
+
         glDisable(GL_TEXTURE_GEN_S);
         glDisable(GL_TEXTURE_GEN_T);
         glDisable(GL_TEXTURE_GEN_R);
