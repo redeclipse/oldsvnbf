@@ -251,7 +251,8 @@ void cleanshadowmap()
     shadowmaptex.cleanup(true);
 }
 
-static int scissoring = 0, oldscissor[4];
+static int scissoring = 0;
+static GLint oldscissor[4];
 
 VAR(ffsmscissor, 0, 1, 1);
 
@@ -319,7 +320,7 @@ static int calcscissorbox(int &sx, int &sy, int &sw, int &sh)
     sy2 = min(sy2, 1.0f);
     if(sx1 <= -1 && sy1 <= -1 && sx2 >= 1 && sy2 >= 1) return 0;
 
-    int viewport[4];
+    GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     sx = viewport[0] + int(floor((sx1+1)*0.5f*viewport[2]));
     sy = viewport[1] + int(floor((sy1+1)*0.5f*viewport[3]));
@@ -332,10 +333,10 @@ static int calcscissorbox(int &sx, int &sy, int &sw, int &sh)
         glGetIntegerv(GL_SCISSOR_BOX, oldscissor);
         sw += sx;
         sh += sy;
-        sx = max(sx, oldscissor[0]);
-        sy = max(sy, oldscissor[1]);
-        sw = min(sw, oldscissor[0] + oldscissor[2]) - sx;
-        sh = min(sh, oldscissor[1] + oldscissor[3]) - sy;
+        sx = max(sx, int(oldscissor[0]));
+        sy = max(sy, int(oldscissor[1]));
+        sw = min(sw, int(oldscissor[0] + oldscissor[2])) - sx;
+        sh = min(sh, int(oldscissor[1] + oldscissor[3])) - sy;
         if(sw <= 0 || sh <= 0) return 0;
         scissoring = 2;
     }
