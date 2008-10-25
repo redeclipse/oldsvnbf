@@ -143,10 +143,10 @@ struct weaponstate
 		}
 		else if(gun == GUN_FLAMER)
 		{
-			regular_part_splash(7, rnd(2)+1, 200, o, 0xCC6600, guntype[gun].explode, 5);
+			regular_part_splash(7, rnd(2)+1, 200, o, 0xFF6600, guntype[gun].explode, 5);
 			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), 100, 10);
 		}
-		else
+		else if(gun == GUN_GL)
 		{
 			cl.quakewobble += int(guntype[gun].damage*(1.f-dist/EXPLOSIONSCALE/guntype[gun].explode/10.f));
 			particle_splash(0, 200, 300, o);
