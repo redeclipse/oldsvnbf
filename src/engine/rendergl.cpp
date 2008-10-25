@@ -1702,6 +1702,7 @@ void drawview(int targtype)
 void gl_drawframe(int w, int h)
 {
 	fogmat = lookupmaterial(camera1->o)&MATF_VOLUME;
+	causticspass = 0.f;
 	if(fogmat == MAT_WATER || fogmat == MAT_LAVA)
 	{
 		float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;

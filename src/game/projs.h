@@ -28,7 +28,7 @@ struct projectiles
 				{
 					case GUN_PLASMA:
 					{
-						proj.height = proj.radius = guntype[proj.attr1].size;
+						proj.height = proj.radius = guntype[proj.attr1].offset;
 						proj.aboveeye = guntype[proj.attr1].offset;
 						proj.elasticity = guntype[proj.attr1].elasticity;
 						proj.relativity = guntype[proj.attr1].relativity;
@@ -54,7 +54,7 @@ struct projectiles
 					}
 					case GUN_FLAMER:
 					{
-						proj.height = proj.radius = guntype[proj.attr1].size*0.05f;
+						proj.height = proj.radius = guntype[proj.attr1].offset;
 						proj.aboveeye = guntype[proj.attr1].offset;
 						proj.elasticity = guntype[proj.attr1].elasticity;
 						proj.relativity = guntype[proj.attr1].relativity;
@@ -172,7 +172,6 @@ struct projectiles
 			switch(proj.attr1)
 			{
 				case GUN_FLAMER:
-					proj.radius = proj.height = guntype[proj.attr1].offset;
 				case GUN_PLASMA:
 					found = true; // explode in face then
 				default: break;
@@ -186,7 +185,21 @@ struct projectiles
         proj.resetinterp();
 	}
 
-	void effect(projent &proj)
+	bool radiate(projent &proj, float size)
+	{
+		loopi(cl.numdynents())
+		{
+			gameent *f = (gameent *)cl.iterdynents(i);
+			if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT)
+				continue;
+			vec dir;
+			float dist = cl.ws.middist(f, dir, proj.o);
+			if(dist <= size) return true;
+		}
+		return false;
+	}
+
+	bool effect(projent &proj)
 	{
 		if(proj.projtype == PRJ_SHOT)
 		{
@@ -194,30 +207,33 @@ struct projectiles
 
 			if(guntype[proj.attr1].fsound >= 0 && !issound(proj.schan))
 				playsound(guntype[proj.attr1].fsound, 0, proj.attr1 == GUN_FLAMER ? int(255*life) : 255, proj.o, &proj, &proj.schan);
+
 			if(proj.attr1 == GUN_PLASMA)
 			{
-				float size = guntype[proj.attr1].size*min(life*10.f,1.f);
-				regular_part_splash(7, rnd(2)+1, 25, proj.o, teamtype[proj.owner->team].colour, size, int(proj.radius*3));
+				regular_part_splash(7, rnd(2)+1, 25, proj.o, teamtype[proj.owner->team].colour, guntype[proj.attr1].size*min(life*10.f,1.f), 10);
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
 				float size = guntype[proj.attr1].size*min(life*2.f,1.f);
 				int col = ((int(254*max(1.0f-life,0.1f))<<16)+1)|((int(64*max(1.0f-life,0.05f))+1)<<8),
 					fade = clamp(int(proj.vel.magnitude()*5.f), 15, 150);
-				regular_part_splash(4, rnd(3)+1, fade, proj.o, col, size, int(proj.radius*2));
+				regular_part_splash(4, rnd(3)+1, fade, proj.o, col, size, 5);
+				if(radiate(proj, size)) return false;
 			}
 			else
 				regularshape(5, int(proj.radius), 0x443322, 21, rnd(5)+1, 100, proj.o, 2.f);
 		}
 		else if(proj.projtype == PRJ_GIBS)
-			regular_part_splash(0, 1, 5000, proj.o, 0x60FFFF, proj.radius*0.65f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
+			regular_part_splash(0, 1, 5000, proj.o, 0x66FFFF, proj.radius*0.65f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
+
+		return true;
 	}
 
 	bool move(projent &proj, int qtime)
 	{
 		int mat = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.height)/2));
 
-		if(isdeadly(mat&MATF_VOLUME) || proj.o.z < 0)
+		if(!effect(proj) || isdeadly(mat&MATF_VOLUME) || proj.o.z < 0)
 		{
 			proj.movement = 0;
 			return false; // gets destroyed
@@ -451,7 +467,6 @@ struct projectiles
                         }
 						proj.state = CS_DEAD;
 					}
-					else effect(proj);
 				}
 				else for(int rtime = curtime; proj.state != CS_DEAD && rtime > 0;)
 				{
@@ -463,7 +478,6 @@ struct projectiles
 						proj.state = CS_DEAD;
 						break;
 					}
-					else effect(proj);
 				}
 			}
 
