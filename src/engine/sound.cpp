@@ -25,8 +25,8 @@ VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_S
 VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARP(soundmaxatonce, 0, 32, INT_MAX-1);
-VARP(soundmaxdist, 0, 4096, INT_MAX-1);
+VARP(soundmaxatonce, 0, 128, INT_MAX-1);
+VARP(soundmaxdist, 0, INT_MAX-1, INT_MAX-1);
 
 void initsound()
 {

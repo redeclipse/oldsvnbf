@@ -148,7 +148,7 @@ struct guntypes
 				"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep"
 	},
 	{
-		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURN,	S_FLBURNING,S_ITEMSPAWN,
+		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURNING,-1,			S_ITEMSPAWN,
 		50,		50,		200, 	2000,	15,		100,	0,		3000,	-1,		 1,
 		24,		28,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
 				"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep"
@@ -891,10 +891,10 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
 struct projent : dynent
 {
 	vec from, to;
-	int addtime, lifetime, waittime, spawntime;
-	float movement, roll;
-	bool local, beenused;
-	int projtype;
+	int addtime, lifetime, lifemillis, waittime, spawntime;
+	float movement, roll, lifespan, lifesize;
+	bool local, beenused, radial, extinguish;
+	int projtype, geomcollide, playercollide;
 	float elasticity, relativity, waterfric;
 	int ent, attr1, attr2, attr3, attr4, attr5;
 	int schan, id;
@@ -916,11 +916,12 @@ struct projent : dynent
 		physent::reset();
 		type = ENT_BOUNCE;
 		state = CS_ALIVE;
-		addtime = lifetime = waittime = spawntime = 0;
+		addtime = lifetime = lifemillis = waittime = spawntime = 0;
 		ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
 		schan = id = -1;
-		movement = roll = 0.f;
-		beenused = false;
+		movement = roll = lifespan = lifesize = 0.f;
+		beenused = radial = extinguish = false;
+		geomcollide = playercollide = 1; // 0 = don't, 1 = bounce, 2 = explode
 	}
 
 	bool ready()
