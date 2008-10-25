@@ -218,7 +218,7 @@ extern void save_world(char *mname, bool nolms = false);
 extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr,  float hi, float lo);
 extern bool rectcollide(physent *d, const vec &dir, const vec &o, float xr, float yr,  float hi, float lo, uchar visible = 0xFF, bool collideonly = true, float cutoff = 0);
 extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0.0f, bool playercol = true);
-extern bool plcollide(physent *d, const vec &dir);
+extern bool plcollide(physent *d, const vec &dir = vec(0, 0, 0));
 extern void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m);
 extern void vectoyawpitch(const vec &v, float &yaw, float &pitch);
 extern bool intersect(physent *d, vec &from, vec &to);

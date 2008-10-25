@@ -28,12 +28,13 @@ struct projectiles
 				{
 					case GUN_PLASMA:
 					{
-						proj.height = proj.radius = guntype[proj.attr1].offset;
-						proj.aboveeye = guntype[proj.attr1].offset;
+						proj.aboveeye = proj.height = proj.radius = guntype[proj.attr1].offset;
 						proj.elasticity = guntype[proj.attr1].elasticity;
 						proj.relativity = guntype[proj.attr1].relativity;
 						proj.waterfric = guntype[proj.attr1].waterfric;
 						proj.weight = guntype[proj.attr1].weight;
+						proj.geomcollide = proj.playercollide = 2; // explode
+						proj.radial = true;
 						vec v(rnd(11)-5, rnd(11)-5, rnd(11)-5);
 						if(v.magnitude()>5) v.div(5);
 						v.z /= 5.f;
@@ -43,23 +44,28 @@ struct projectiles
 					case GUN_GL:
 					{
 						proj.mdl = "projectiles/grenade";
-						proj.aboveeye = guntype[proj.attr1].offset;
+						proj.aboveeye = proj.height = proj.radius = guntype[proj.attr1].offset;
 						proj.elasticity = guntype[proj.attr1].elasticity;
 						proj.relativity = guntype[proj.attr1].relativity;
 						proj.waterfric = guntype[proj.attr1].waterfric;
 						proj.weight = guntype[proj.attr1].weight;
+						proj.geomcollide = proj.playercollide = 1; // bounce
 						float dist = proj.o.dist(proj.to);
 						proj.to.z += dist/8;
 						break;
 					}
 					case GUN_FLAMER:
 					{
-						proj.height = proj.radius = guntype[proj.attr1].offset;
+						proj.aboveeye = proj.height = proj.radius = guntype[proj.attr1].offset;
 						proj.aboveeye = guntype[proj.attr1].offset;
 						proj.elasticity = guntype[proj.attr1].elasticity;
 						proj.relativity = guntype[proj.attr1].relativity;
 						proj.waterfric = guntype[proj.attr1].waterfric;
 						proj.weight = guntype[proj.attr1].weight;
+						proj.radial = true;
+						proj.extinguish = true;
+						proj.geomcollide = 1; // bounce
+						proj.playercollide = 2; // explode
 						vec v(rnd(81)-40, rnd(81)-40, rnd(81)-50);
 						if(v.magnitude()>40) v.div(40);
 						v.z /= 2.f;
@@ -72,11 +78,13 @@ struct projectiles
 					case GUN_RIFLE:
 					default:
 					{
-						proj.aboveeye = guntype[proj.attr1].offset;
+						proj.aboveeye = proj.height = proj.radius = guntype[proj.attr1].offset;
 						proj.elasticity = guntype[proj.attr1].elasticity;
 						proj.relativity = guntype[proj.attr1].relativity;
 						proj.waterfric = guntype[proj.attr1].waterfric;
 						proj.weight = guntype[proj.attr1].weight;
+						proj.geomcollide = 2; // explode
+						proj.playercollide = 0; // don't
 						break;
 					}
 				}
@@ -90,6 +98,7 @@ struct projectiles
 				proj.relativity = 1.0f;
 				proj.waterfric = 2.0f;
 				proj.weight = 100.f;
+				proj.geomcollide = proj.playercollide = 1; // bounce
 				break;
 			}
 			case PRJ_DEBRIS:
@@ -106,6 +115,7 @@ struct projectiles
 				proj.relativity = 1.0f;
 				proj.waterfric = 1.75f;
 				proj.weight = 150.f;
+				proj.geomcollide = proj.playercollide = 1; // bounce
 				break;
 			}
 			case PRJ_ENT:
@@ -116,6 +126,7 @@ struct projectiles
 				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
 				proj.weight = 90.f;
+				proj.geomcollide = proj.playercollide = 0; // don't
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
 				vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
 				if(v.magnitude()>50) v.div(50);
@@ -139,45 +150,36 @@ struct projectiles
 		vec rel = dir;
 		if(proj.relativity) rel.add(vec(proj.owner->vel).mul(proj.relativity));
 		proj.vel = vec(rel).add(vec(dir).mul(proj.maxspeed));
-		proj.o.add(vec(dir).mul(proj.owner->radius+proj.radius));
 		proj.spawntime = lastmillis;
+
+		if(proj.projtype == PRJ_SHOT && proj.radial)
+			proj.height = proj.radius = guntype[proj.attr1].size;
+
+		for(hitplayer = NULL; !plcollide(&proj) && hitplayer == proj.owner; hitplayer = NULL)
+			proj.o.add(vec(dir).mul(0.1f)); // get out of the player
+
+		if(proj.projtype == PRJ_SHOT && proj.radial)
+			proj.height = proj.radius = guntype[proj.attr1].offset;
 
 		vec orig = proj.o;
 		bool found = false;
-		loopi(10)
+		loopi(100)
 		{
-			if(!collide(&proj) || inside || (proj.projtype != PRJ_ENT && hitplayer))
+			if(!collide(&proj) || inside || (hitplayer && proj.playercollide == 1))
 			{
-				if(!hitplayer || hitplayer != proj.owner)
-				{
-					proj.o = orig;
-					vec pos;
-					if(hitplayer)
-						pos = vec(vec(proj.o).sub(hitplayer->o)).neg().normalize();
-					else pos = wall;
-					float amt = proj.elasticity > 0.f ? proj.elasticity : 1.f;
-					proj.vel.apply(pos, amt);
-					if(hitplayer) proj.vel.apply(hitplayer->vel, amt);
-				}
-				else proj.o.add(dir);
+				vec pos;
+				if(hitplayer) pos = vec(vec(hitplayer->o).sub(proj.o)).normalize();
+				else pos = wall;
+
+				float amt = proj.elasticity > 0.f ? proj.elasticity : 1.f;
+				proj.vel.apply(pos, amt);
+				if(hitplayer) proj.vel.apply(hitplayer->vel, amt);
+				proj.o = vec(orig).add(vec(proj.vel).mul(0.1f));
 			}
-			else
-			{
-				found = true;
-				break;
-			}
+			found = true;
+			break;
 		}
-		if(!found && proj.projtype == PRJ_SHOT)
-		{
-			switch(proj.attr1)
-			{
-				case GUN_FLAMER:
-				case GUN_PLASMA:
-					found = true; // explode in face then
-				default: break;
-			}
-		}
-		if(!found)
+		if(!found && proj.projtype != PRJ_SHOT)
 		{
 			proj.o = orig;
 			cl.ph.entinmap(&proj, false); // failsafe
@@ -199,41 +201,46 @@ struct projectiles
 		return false;
 	}
 
-	bool effect(projent &proj)
+	void effect(projent &proj)
 	{
+		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.f, 1.f);
+
 		if(proj.projtype == PRJ_SHOT)
 		{
-			float life = clamp((guntype[proj.attr1].time-proj.lifetime)/float(guntype[proj.attr1].time), 0.05f, 1.0f);
-
 			if(guntype[proj.attr1].fsound >= 0 && !issound(proj.schan))
-				playsound(guntype[proj.attr1].fsound, 0, proj.attr1 == GUN_FLAMER ? int(255*life) : 255, proj.o, &proj, &proj.schan);
+				playsound(guntype[proj.attr1].fsound, 0, proj.attr1 == GUN_FLAMER ? int(255*proj.lifespan) : 255, proj.o, &proj, &proj.schan);
 
 			if(proj.attr1 == GUN_PLASMA)
 			{
-				regular_part_splash(7, rnd(2)+1, 25, proj.o, teamtype[proj.owner->team].colour, guntype[proj.attr1].size*min(life*10.f,1.f), 10);
+				proj.lifesize = guntype[proj.attr1].size;
+				if(proj.lifemillis-proj.lifetime <= 500)
+					proj.lifesize *= clamp((proj.lifemillis-proj.lifetime)/500.f, 0.1f, 1.f);
+				regular_part_splash(7, rnd(2)+1, 25, proj.o, teamtype[proj.owner->team].colour, proj.lifesize, int(proj.radius*2));
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
-				float size = guntype[proj.attr1].size*min(life*2.f,1.f);
-				int col = ((int(254*max(1.0f-life,0.1f))<<16)+1)|((int(64*max(1.0f-life,0.05f))+1)<<8),
-					fade = clamp(int(proj.vel.magnitude()*5.f), 15, 150);
-				regular_part_splash(4, rnd(3)+1, fade, proj.o, col, size, 5);
-				if(radiate(proj, size)) return false;
+				proj.lifesize = guntype[proj.attr1].size*clamp(proj.lifespan*2.f, 0.1f, 1.f);
+				int col = ((int(254*max(1.0f-proj.lifespan,0.1f))<<16)+1)|((int(64*max(1.0f-proj.lifespan,0.05f))+1)<<8),
+					fade = clamp(int(proj.vel.magnitude()*5.f), 20, 100);
+				regular_part_splash(4, rnd(3)+1, fade, proj.o, col, proj.lifesize, int(proj.radius*4));
 			}
 			else
+			{
+				proj.lifesize = guntype[proj.attr1].size*clamp(proj.lifespan, 0.1f, 1.f);
 				regularshape(5, int(proj.radius), 0x443322, 21, rnd(5)+1, 100, proj.o, 2.f);
+			}
 		}
 		else if(proj.projtype == PRJ_GIBS)
+		{
 			regular_part_splash(0, 1, 5000, proj.o, 0x66FFFF, proj.radius*0.65f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
-
-		return true;
+		}
 	}
 
 	bool move(projent &proj, int qtime)
 	{
 		int mat = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.height)/2));
 
-		if(!effect(proj) || isdeadly(mat&MATF_VOLUME) || proj.o.z < 0)
+		if(isdeadly(mat&MATF_VOLUME) || proj.o.z < 0 || (proj.radial && radiate(proj, proj.lifesize)))
 		{
 			proj.movement = 0;
 			return false; // gets destroyed
@@ -242,13 +249,13 @@ struct projectiles
 		bool water = isliquid(mat&MATF_VOLUME);
 		float secs = float(qtime) / 1000.0f;
 		vec old(proj.o);
+
 		if(proj.weight > 0.f)
 			proj.vel.z -=  cl.ph.gravityforce(&proj)*secs;
 		vec dir(proj.vel);
-
 		if(water)
 		{
-			if(proj.projtype == PRJ_SHOT && proj.attr1 == GUN_FLAMER)
+			if(proj.extinguish)
 			{
 				proj.movement = 0;
 				return false; // gets "put out"
@@ -258,48 +265,49 @@ struct projectiles
 		dir.mul(secs);
 		proj.o.add(dir);
 
-		bool playercol = proj.projtype != PRJ_ENT;
-		if(!collide(&proj, dir, 0.f, playercol) || inside || (playercol && hitplayer))
+		if(!collide(&proj, dir, 0.f, proj.playercollide > 0) || inside || (proj.playercollide && hitplayer))
 		{
 			proj.o = old;
 			vec pos;
-			if(playercol && hitplayer)
+			if(proj.playercollide && hitplayer)
 				pos = vec(vec(hitplayer->o).sub(proj.o)).normalize();
 			else pos = wall;
 
-			if(proj.projtype == PRJ_GIBS || proj.projtype == PRJ_DEBRIS || proj.projtype == PRJ_ENT ||
-				(proj.projtype == PRJ_SHOT && (proj.attr1 == GUN_GL || (proj.attr1 == GUN_FLAMER && !hitplayer))))
+			if((!hitplayer && proj.geomcollide == 1) || (hitplayer && proj.playercollide == 1))
 			{
 				if(proj.movement > 2.f)
 				{
 					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 1, 255);
 
 					if(proj.projtype == PRJ_GIBS)
+					{
 						part_splash(0, 1, 10000, proj.o, 0x60FFFF, proj.radius);
+					}
 					else if(!hitplayer && proj.projtype == PRJ_SHOT && proj.attr1 == GUN_FLAMER)
-						adddecal(DECAL_SCORCH, proj.o, wall, guntype[proj.attr1].explode);
+					{
+						adddecal(DECAL_SCORCH, proj.o, wall, proj.lifesize);
+						adddecal(DECAL_ENERGY, proj.o, wall, proj.lifesize*0.5f, bvec(92, 24, 8));
+					}
 
 					if(vol)
 					{
 						if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].rsound >= 0)
 							playsound(guntype[proj.attr1].rsound, 0, vol, proj.o, &proj);
-						else if(proj.projtype == PRJ_GIBS)
-							playsound(S_SPLAT, 0, vol, proj.o, &proj);
-						else if(proj.projtype == PRJ_DEBRIS)
-							playsound(S_DEBRIS, 0, vol, proj.o, &proj);
+						else if(proj.projtype == PRJ_GIBS) playsound(S_SPLAT, 0, vol, proj.o, &proj);
+						else if(proj.projtype == PRJ_DEBRIS) playsound(S_DEBRIS, 0, vol, proj.o, &proj);
 					}
 				}
 				if(proj.elasticity > 0.f)
 				{
 					proj.vel.apply(pos, proj.elasticity);
-					if(playercol && hitplayer)
+					if(hitplayer)
 						proj.vel.apply(hitplayer->vel, proj.elasticity*proj.relativity*0.1f);
 				}
 				else proj.vel = vec(0, 0, 0);
 				proj.movement = 0;
 				return true; // stay alive until timeout
 			}
-			proj.vel = vec(pos).mul(-proj.radius);
+			proj.vel = vec(pos).mul(proj.radius).neg();
 			proj.movement = 0;
 			return false; // die on impact
 		}
@@ -359,7 +367,7 @@ struct projectiles
 		proj.local = local;
 		proj.projtype = type;
 		proj.addtime = lastmillis;
-		proj.lifetime = lifetime;
+		proj.lifetime = proj.lifemillis = lifetime;
 		proj.waittime = waittime;
 		proj.ent = ent;
 		proj.attr1 = attr1;
@@ -445,6 +453,9 @@ struct projectiles
 					}
 					else continue;
 				}
+
+				effect(proj);
+
 				if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_ENT)
 				{
                     if(!move(proj))
@@ -550,10 +561,8 @@ struct projectiles
 				}
 				case GUN_FLAMER:
 				{
-					float life = clamp((guntype[proj.attr1].time-proj.lifetime)/float(guntype[proj.attr1].time), 0.05f, 1.0f),
-							size = guntype[proj.attr1].size*min(life*2.f,1.f)*1.15f;
-					vec col(1.1f*max(1.0f-life,0.1f), 0.25f*max(1.0f-life,0.05f), 0.00f);
-					adddynlight(proj.o, size, col);
+					vec col(1.1f*max(1.0f-proj.lifespan,0.1f), 0.25f*max(1.0f-proj.lifespan,0.05f), 0.00f);
+					adddynlight(proj.o, proj.lifesize, col);
 					break;
 				}
 				default:
