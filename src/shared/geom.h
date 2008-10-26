@@ -784,7 +784,7 @@ struct glmatrixf
         vec r2(v[1], v[5], v[9]);
         v[1] = r2.dot(c1);
         v[5] = r2.dot(c2);
-        v[9] = r1.dot(c3);
+        v[9] = r2.dot(c3);
 
         vec r3(v[2], v[6], v[10]);
         v[2] = r3.dot(c1);
