@@ -781,7 +781,9 @@ struct animmodel : model
                     glMatrixMode(GL_MODELVIEW);
                 }
             }
+
             meshes->render(as, pitch, axis, this);
+
             if(!(anim&ANIM_NORENDER))
             {
                 glPopMatrix();
@@ -1202,7 +1204,7 @@ struct animmodel : model
     static GLuint lastebuf, lastenvmaptex, closestenvmaptex;
     static Texture *lasttex, *lastmasks, *lastnormalmap;
     static int envmaptmu, fogtmu, matrixpos;
-    static glmatrixf matrixstack[32];
+    static glmatrixf matrixstack[64];
 
     void startrender()
     {
@@ -1340,5 +1342,5 @@ void *animmodel::lastvbuf = NULL, *animmodel::lasttcbuf = NULL, *animmodel::last
 GLuint animmodel::lastebuf = 0, animmodel::lastenvmaptex = 0, animmodel::closestenvmaptex = 0;
 Texture *animmodel::lasttex = NULL, *animmodel::lastmasks = NULL, *animmodel::lastnormalmap = NULL;
 int animmodel::envmaptmu = -1, animmodel::fogtmu = -1, animmodel::matrixpos = 0;
-glmatrixf animmodel::matrixstack[32];
+glmatrixf animmodel::matrixstack[64];
 
