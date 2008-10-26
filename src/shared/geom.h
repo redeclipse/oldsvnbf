@@ -770,6 +770,34 @@ struct glmatrixf
 
     #undef ROTVEC
 
+    void rotate(float c, float s, const vec &d)
+    {
+        vec c1(d.x*d.x*(1-c)+c, d.y*d.x*(1-c)+d.z*s, d.x*d.z*(1-c)-d.y*s),
+            c2(d.x*d.y*(1-c)-d.z*s, d.y*d.y*(1-c)+c, d.y*d.z*(1-c)+d.x*s),
+            c3(d.x*d.z*(1-c)+d.y*s, d.y*d.z*(1-c)-d.x*s, d.z*d.z*(1-c)+c);
+
+        vec r1(v[0], v[4], v[8]);
+        v[0] = r1.dot(c1);
+        v[4] = r1.dot(c2);
+        v[8] = r1.dot(c3);
+    
+        vec r2(v[1], v[5], v[9]);
+        v[1] = r2.dot(c1);
+        v[5] = r2.dot(c2);
+        v[9] = r1.dot(c3);
+
+        vec r3(v[2], v[6], v[10]);
+        v[2] = r3.dot(c1);
+        v[6] = r3.dot(c2);
+        v[10] = r3.dot(c3);
+    }
+
+    void rotate(float angle, const vec &d)
+    {
+        float c = cosf(angle), s = sinf(angle);
+        rotate(c, s, d);
+    }
+             
     #define MULMAT(row, col) \
        v[col + row] = x[row]*y[col] + x[row + 4]*y[col + 1] + x[row + 8]*y[col + 2] + x[row + 12]*y[col + 3];
 
@@ -887,6 +915,11 @@ struct glmatrixf
         out.y = transformy(in);
         out.z = transformz(in);
         out.w = transformw(in);
+    }
+
+    vec gettranslation() const
+    {
+        return vec(v[12], v[13], v[14]);
     }
 
     float determinant() const;

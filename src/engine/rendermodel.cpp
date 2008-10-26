@@ -716,7 +716,6 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 	if(a) for(int i = 0; a[i].tag; i++)
 	{
 		if(a[i].name) a[i].m = loadmodel(a[i].name);
-        if(a[i].pos) anim |= ANIM_LOOKUP;
 		//if(a[i].m && a[i].m->type()!=m->type()) a[i].m = NULL;
 	}
 
