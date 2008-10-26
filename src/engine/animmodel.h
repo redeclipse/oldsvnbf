@@ -787,12 +787,6 @@ struct animmodel : model
             if(!(anim&ANIM_NORENDER))
             {
                 glPopMatrix();
-                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
-                {
-                    glMatrixMode(GL_TEXTURE);
-                    glPopMatrix();
-                    glMatrixMode(GL_MODELVIEW);
-                }
             }
 
             if(!(anim&ANIM_REUSE))
