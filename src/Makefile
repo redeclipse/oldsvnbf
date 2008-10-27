@@ -2,7 +2,7 @@ CXXOPTFLAGS= -O2 -fsigned-char -finline-functions -fomit-frame-pointer -fno-stri
 INCLUDES= -Ishared -Iengine -Igame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
 CXXFLAGS= -Wall -DINTERFACE -DIRC $(CXXOPTFLAGS) $(INCLUDES)
 
-CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lpng -lz -lGL -lGLU
+CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lpng -lz -lGL
 ifeq ($(shell uname -s),Linux)
 CLIENT_LIBS+= -lrt
 endif

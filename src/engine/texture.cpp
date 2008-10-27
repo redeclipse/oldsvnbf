@@ -3,6 +3,64 @@
 #include "pch.h"
 #include "engine.h"
 
+#define FUNCNAME(name) name##1
+#define DEFPIXEL uint OP(r, 0);
+#define PIXELOP OP(r, 0);
+#define BPP 1
+#include "scale.h"
+
+#define FUNCNAME(name) name##2
+#define DEFPIXEL uint OP(r, 0), OP(g, 1);
+#define PIXELOP OP(r, 0); OP(g, 1);
+#define BPP 2
+#include "scale.h"
+
+#define FUNCNAME(name) name##3
+#define DEFPIXEL uint OP(r, 0), OP(g, 1), OP(b, 2);
+#define PIXELOP OP(r, 0); OP(g, 1); OP(b, 2);
+#define BPP 3
+#include "scale.h"
+
+#define FUNCNAME(name) name##4
+#define DEFPIXEL uint OP(r, 0), OP(g, 1), OP(b, 2), OP(a, 3);
+#define PIXELOP OP(r, 0); OP(g, 1); OP(b, 2); OP(a, 3);
+#define BPP 4
+#include "scale.h"
+
+static void scaletexture(uchar *src, uint sw, uint sh, uint bpp, uchar *dst, uint dw, uint dh)
+{
+    if(sw == dw*2 && sh == dh*2)
+    {
+        switch(bpp)
+        {
+            case 1: return halvetexture1(src, sw, sh, dst);
+            case 2: return halvetexture2(src, sw, sh, dst);
+            case 3: return halvetexture3(src, sw, sh, dst);
+            case 4: return halvetexture4(src, sw, sh, dst);
+        }
+    }
+    else if(sw < dw || sh < dh || sw&(sw-1) || sh&(sh-1))
+    {
+        switch(bpp)
+        {
+            case 1: return scaletexture1(src, sw, sh, dst, dw, dh);
+            case 2: return scaletexture2(src, sw, sh, dst, dw, dh);
+            case 3: return scaletexture3(src, sw, sh, dst, dw, dh);
+            case 4: return scaletexture4(src, sw, sh, dst, dw, dh);
+        }
+    }
+    else
+    {
+        switch(bpp)
+        {
+            case 1: return shifttexture1(src, sw, sh, dst, dw, dh);
+            case 2: return shifttexture2(src, sw, sh, dst, dw, dh);
+            case 3: return shifttexture3(src, sw, sh, dst, dw, dh);
+            case 4: return shifttexture4(src, sw, sh, dst, dw, dh);
+        }
+    }
+}
+
 static inline void reorienttexture(uchar *src, int sw, int sh, int bpp, uchar *dst, bool flipx, bool flipy, bool swapxy, bool normals = false)
 {
     int stridex = bpp, stridey = bpp;
@@ -225,7 +283,52 @@ int formatsize(GLenum format)
 
 VARFP(hwmipmap, 0, 0, 1, initwarning("texture filtering", INIT_LOAD));
 
-void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, GLenum component, GLenum subtarget, bool compress, bool filter)
+void resizetexture(int w, int h, bool mipmap, GLenum target, int &tw, int &th)
+{
+    int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? hwcubetexsize : hwtexsize,
+        sizelimit = mipmap && maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
+    w = min(w, sizelimit);
+    h = min(h, sizelimit);
+    if(mipmap || (!hasNP2 && target!=GL_TEXTURE_RECTANGLE_ARB && (w&(w-1) || h&(h-1))))
+    {
+        tw = th = 1;
+        while(tw < w) tw *= 2;
+        while(th < h) th *= 2;
+        if(w < tw - tw/2) tw /= 2;
+        if(h < th - th/2) th /= 2;
+    }
+    else
+    {
+        tw = w;
+        th = h;
+    }
+}
+
+void uploadtexture(GLenum target, GLenum internal, int tw, int th, GLenum format, GLenum type, void *pixels, int pw, int ph, bool mipmap)
+{
+    int bpp = formatsize(format);
+    uchar *buf = NULL;
+    if(pw!=tw || ph!=th)
+    {
+        buf = new uchar[tw*th*bpp];
+        scaletexture((uchar *)pixels, pw, ph, bpp, buf, tw, th);
+    }
+    for(int level = 0;; level++)
+    {
+        uchar *src = buf ? buf : (uchar *)pixels;
+        if(target==GL_TEXTURE_1D) glTexImage1D(target, level, internal, tw, 0, format, type, src);
+        else glTexImage2D(target, level, internal, tw, th, 0, format, type, src);
+        if(!mipmap || (hasGM && hwmipmap) || max(tw, th) <= 1) break;
+        int srcw = tw, srch = th;
+        if(tw > 1) tw /= 2;
+        if(th > 1) th /= 2;
+        if(!buf) buf = new uchar[tw*th*bpp];
+        scaletexture(src, srcw, srch, bpp, buf, tw, th);
+    }
+    if(buf) delete[] buf;
+}
+
+void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, GLenum component, GLenum subtarget, bool compress, bool filter, int pw, int ph)
 {
 	GLenum target = subtarget;
 	switch(subtarget)
@@ -290,37 +393,16 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
             format = GL_RGBA;
             break;
 	}
-	uchar *scaled = NULL;
-    int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? hwcubetexsize : hwtexsize,
-        sizelimit = mipit && maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
-    if(pixels && max(w, h) > sizelimit && (!mipit || sizelimit < hwlimit))
-	{
-		int oldw = w, oldh = h;
-		while(w > sizelimit || h > sizelimit) { w /= 2; h /= 2; }
-		scaled = new uchar[w*h*formatsize(format)];
-		gluScaleImage(format, oldw, oldh, type, pixels, w, h, type, scaled);
-		pixels = scaled;
-	}
-	if(mipit && pixels)
-	{
-        GLenum compressed = compressedformat(component, w, h, compress);
-        if(target==GL_TEXTURE_1D)
-        {
-            if(hasGM && hwmipmap) glTexImage1D(subtarget, 0, compressed, w, 0, format, type, pixels);
-            else if(gluBuild1DMipmaps(subtarget, compressed, w, format, type, pixels))
-            {
-                if(compressed==component || gluBuild1DMipmaps(subtarget, component, w, format, type, pixels)) conoutf("\frcould not build mipmaps");
-            }
-        }
-        else if(hasGM && hwmipmap) glTexImage2D(subtarget, 0, compressed, w, h, 0, format, type, pixels);
-        else if(gluBuild2DMipmaps(subtarget, compressed, w, h, format, type, pixels))
-		{
-			if(compressed==component || gluBuild2DMipmaps(subtarget, component, w, h, format, type, pixels)) conoutf("\frcould not build mipmaps");
-		}
-	}
-    else if(target==GL_TEXTURE_1D) glTexImage1D(subtarget, 0, component, w, 0, format, type, pixels);
-	else glTexImage2D(subtarget, 0, component, w, h, 0, format, type, pixels);
-	if(scaled) delete[] scaled;
+    if(!pw) pw = w;
+    if(!ph) ph = h;
+    int tw, th;
+    resizetexture(w, h, mipit, target, tw, th);
+    if(mipit && pixels)
+    {
+        GLenum compressed = compressedformat(component, tw, th, compress);
+        uploadtexture(subtarget, compressed, tw, th, format, type, pixels, pw, ph, true);
+    }
+    else uploadtexture(subtarget, component, tw, th, format, type, pixels, pw, ph, false);
 }
 
 hashtable<char *, Texture> textures;
@@ -433,29 +515,6 @@ static GLenum texformat(int bpp)
 	}
 }
 
-static void resizetexture(int &w, int &h, bool mipit = true, GLenum format = GL_RGB, GLenum target = GL_TEXTURE_2D)
-{
-    if(mipit) return;
-    int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? hwcubetexsize : hwtexsize,
-        sizelimit = mipit && maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
-	int w2 = w, h2 = h;
-	if(!hasNP2 && (w&(w-1) || h&(h-1)))
-	{
-		w2 = h2 = 1;
-		while(w2 < w) w2 *= 2;
-		while(h2 < h) h2 *= 2;
-		if(w2 > sizelimit || (w - w2)/2 < (w2 - w)/2) w2 /= 2;
-		if(h2 > sizelimit || (h - h2)/2 < (h2 - h)/2) h2 /= 2;
-	}
-	while(w2 > sizelimit || h2 > sizelimit)
-	{
-		w2 /= 2;
-		h2 /= 2;
-	}
-	w = w2;
-	h = h2;
-}
-
 Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp, bool mipit, bool canreduce, bool transient, bool compress, bool clear, TextureAnim *anim)
 {
     if(!t)
@@ -491,7 +550,6 @@ Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp, bo
 	}
 
 	GLenum format = texformat(t->bpp);
-	resizetexture(t->w, t->h, mipit, format);
 
 	loopi(hasanim ? anim->count : 1)
 	{
@@ -505,21 +563,12 @@ Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp, bo
 			int sx = (i%anim->x)*anim->w, sy = (((i-(i%anim->x))/anim->x)%anim->y)*anim->h;
 			f = texcrop(s, sx, sy, anim->w, anim->h, false);
 		}
-		uchar *pixels = (uchar *)f->pixels;
 
-		if(t->w != f->w || t->h != f->h)
-		{
-			uchar *scaled = new uchar[formatsize(format)*t->w*t->h];
-			gluScaleImage(format, t->xs, t->ys, GL_UNSIGNED_BYTE, pixels, t->w, t->h, GL_UNSIGNED_BYTE, scaled);
-			pixels = scaled;
-		}
-
-		createtexture(t->frames[i], t->w, t->h, pixels, clamp, mipit, format, GL_TEXTURE_2D, compress);
+		createtexture(t->frames[i], t->w, t->h, (uchar *)f->pixels, clamp, mipit, format, GL_TEXTURE_2D, compress, true, f->w, f->h);
 
 		if(verbose >= 3)
 			conoutf("\fwadding frame: %s (%d) [%d,%d:%d,%d]", t->name, i+1, t->w, t->h, f->w, f->h);
 
-		if(pixels != f->pixels) delete[] pixels;
 		if(s != f) SDL_FreeSurface(f);
 	}
     if(clear) SDL_FreeSurface(s);
@@ -552,7 +601,7 @@ SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear)
 {
     SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, os->format->BitsPerPixel, os->format->Rmask, os->format->Gmask, os->format->Bmask, os->format->Amask);
     if(!ns) fatal("scalesurface");
-    gluScaleImage(texformat(os->format->BitsPerPixel), os->w, os->h, GL_UNSIGNED_BYTE, os->pixels, w, h, GL_UNSIGNED_BYTE, ns->pixels);
+    scaletexture((uchar *)os->pixels, os->w, os->h, os->format->BytesPerPixel, (uchar *)ns->pixels, w, h);
     if(clear) SDL_FreeSurface(os);
     return ns;
 }
@@ -652,6 +701,12 @@ SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *comp
 				anim->count = anim->x*anim->y;
         	}
         }
+    }
+    if((anim && anim->count ? max(anim->w, anim->h) : max(s->w, s->h)) > (1<<12))
+    {
+        SDL_FreeSurface(s); 
+        conoutf("\frtexture size exceeded %dx%d: %s", 1<<12, 1<<12, file); 
+        return NULL;
     }
     return s;
 }
@@ -1123,11 +1178,11 @@ GLuint cubemapfromsky(int size)
         tsize = max(tsize, (int)max(tw[i], th[i]));
     }
     cmw = cmh = min(tsize, size);
-    resizetexture(cmw, cmh, true, GL_RGB5, GL_TEXTURE_CUBE_MAP_ARB);
+    resizetexture(cmw, cmh, true, GL_TEXTURE_CUBE_MAP_ARB, cmw, cmh);
 
 	GLuint tex;
 	glGenTextures(1, &tex);
-    int bufsize = 3*max(cmw, tsize)*max(cmh, tsize);
+    int bufsize = 3*tsize*tsize;
     uchar *pixels = new uchar[2*bufsize],
           *rpixels = &pixels[bufsize];
     loopi(6)
@@ -1135,10 +1190,10 @@ GLuint cubemapfromsky(int size)
         glBindTexture(GL_TEXTURE_2D, sky[i]->id);
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-        if(tw[i]!=cmw || th[i]!=cmh) gluScaleImage(GL_RGB, tw[i], th[i], GL_UNSIGNED_BYTE, pixels, cmw, cmh, GL_UNSIGNED_BYTE, pixels);
         cubemapside &side = cubemapsides[i];
-        reorienttexture(pixels, cmw, cmh, 3, rpixels, side.flipx, side.flipy, side.swapxy);
-        createtexture(!i ? tex : 0, cmw, cmh, rpixels, 3, true, GL_RGB5, side.target);
+        reorienttexture(pixels, tw[i], th[i], 3, rpixels, side.flipx, side.flipy, side.swapxy);
+        if(side.swapxy) swap(tw[i], th[i]);
+        createtexture(!i ? tex : 0, cmw, cmh, rpixels, 3, true, GL_RGB5, side.target, false, true, tw[i], th[i]);
     }
     delete[] pixels;
 	return tex;
@@ -1199,23 +1254,15 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg)
     t->h = t->ys = tsize;
     if(!t->frames.inrange(0)) t->frames.add(0);
     t->frame = t->delay = 0;
-
-    resizetexture(t->w, t->h, mipit, format, GL_TEXTURE_CUBE_MAP_ARB);
+    resizetexture(t->w, t->h, mipit, GL_TEXTURE_CUBE_MAP_ARB, t->w, t->h);
     glGenTextures(1, &t->frames[0]);
-    uchar *pixels = NULL;
     loopi(6)
     {
         cubemapside &side = cubemapsides[i];
         SDL_Surface *s = texreorient(surface[i], side.flipx, side.flipy, side.swapxy);
-        if(s->w != t->w || s->h != t->h)
-        {
-            if(!pixels) pixels = new uchar[formatsize(format)*t->w*t->h];
-            gluScaleImage(format, s->w, s->h, GL_UNSIGNED_BYTE, s->pixels, t->w, t->h, GL_UNSIGNED_BYTE, pixels);
-        }
-        createtexture(!i ? t->frames[0] : 0, t->w, t->h, s->w != t->w || s->h != t->h ? pixels : s->pixels, 3, mipit, format, side.target, compress);
+        createtexture(!i ? t->frames[0] : 0, t->w, t->h, s->pixels, 3, mipit, format, side.target, compress, true, side.swapxy ? s->w : s->h, side.swapxy ? s->w : s->h);
         SDL_FreeSurface(s);
     }
-    if(pixels) delete[] pixels;
 	return t;
 }
 
@@ -1293,8 +1340,7 @@ GLuint genenvmap(const vec &o, int envmapsize)
         glFrontFace((side.flipx==side.flipy)!=side.swapxy ? GL_CCW : GL_CW);
         drawcubemap(rendersize, 0, o, yaw, pitch, !side.flipx, !side.flipy, side.swapxy);
 		glReadPixels(0, 0, rendersize, rendersize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-		if(texsize<rendersize) gluScaleImage(GL_RGB, rendersize, rendersize, GL_UNSIGNED_BYTE, pixels, texsize, texsize, GL_UNSIGNED_BYTE, pixels);
-		createtexture(tex, texsize, texsize, pixels, 3, true, GL_RGB5, side.target);
+        createtexture(tex, texsize, texsize, pixels, 3, true, GL_RGB5, side.target, false, true, rendersize, rendersize);
 	}
     glFrontFace(GL_CCW);
     delete[] pixels;
