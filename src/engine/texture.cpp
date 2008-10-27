@@ -395,8 +395,8 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, 
 	}
     if(!pw) pw = w;
     if(!ph) ph = h;
-    int tw, th;
-    resizetexture(w, h, mipit, target, tw, th);
+    int tw = w, th = h;
+    if(pixels) resizetexture(w, h, mipit, target, tw, th);
     if(mipit && pixels)
     {
         GLenum compressed = compressedformat(component, tw, th, compress);
