@@ -327,11 +327,11 @@ struct teamtypes
 {
 	int	type,		colour;	const char *name,	*tpmdl,			*fpmdl,				*flag,			*icon,			*chat;
 } teamtype[] = {
-	{ TEAM_NEUTRAL,	0x666666,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
-	{ TEAM_ALPHA,	0x6666FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
-	{ TEAM_BETA,	0xFF6666,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
-	{ TEAM_DELTA,	0xFFFF66,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0x66FF66,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
+	{ TEAM_NEUTRAL,	0x444444,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
+	{ TEAM_ALPHA,	0x4444FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
+	{ TEAM_BETA,	0xFF4444,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
+	{ TEAM_DELTA,	0xFFFF44,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
+	{ TEAM_GAMMA,	0x44FF44,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
 	{ TEAM_ENEMY,	0xFFFFFF,	"enemy",		"player",		"player/vwep",		"flag",			"team",			"\fa" }
 };
 
@@ -427,14 +427,14 @@ enum { AI_NONE = 0, AI_BOT, AI_BSOLDIER, AI_RSOLDIER, AI_YSOLDIER, AI_GSOLDIER, 
 
 struct aitypes
 {
-	int type,			colour; const char *name,	*mdl;
+	int type;	const char *name,	*mdl;
 } aitype[] = {
-	{ AI_NONE,		0xFFFFFF,	"",				"" },
-	{ AI_BOT,		0x666666,	"bot",			"player" },
-	{ AI_BSOLDIER,	0x6666FF,	"alpha",		"player/alpha" },
-	{ AI_RSOLDIER,	0xFF6666,	"beta",			"player/beta" },
-	{ AI_YSOLDIER,	0xFFFF66,	"delta",		"player/delta" },
-	{ AI_GSOLDIER,	0x66FF66,	"gamma",		"player/gamma" },
+	{ AI_NONE,		"",				"" },
+	{ AI_BOT,		"bot",			"player" },
+	{ AI_BSOLDIER,	"alpha",		"player/alpha" },
+	{ AI_RSOLDIER,	"beta",			"player/beta" },
+	{ AI_YSOLDIER,	"delta",		"player/delta" },
+	{ AI_GSOLDIER,	"gamma",		"player/gamma" },
 };
 
 // inherited by gameent and server clients
