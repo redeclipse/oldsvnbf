@@ -561,6 +561,7 @@ void Shader::cleanup(bool invalid)
         loopi(MAXVARIANTROWS) variants[i].setsizenodelete(0);
         DELETEA(vsstr);
         DELETEA(psstr);
+        DELETEA(defer);
         defaultparams.setsizenodelete(0);
         altshader = NULL;
         reusevs = reuseps = NULL;
@@ -575,6 +576,7 @@ Shader *newshader(int type, const char *name, const char *vs, const char *ps, Sh
     s.name = rname;
     s.vsstr = newstring(vs);
     s.psstr = newstring(ps);
+    DELETEA(s.defer);
     s.type = type;
     s.variantshader = variant;
     s.standard = standardshader;
@@ -1035,6 +1037,43 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
     if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vssm.getbuf(), pssm.getbuf(), row);
 }
 
+VAR(defershaders, 0, 1, 1);
+
+void defershader(const char *name, const char *contents)
+{
+    if(lookupshaderbyname(name)) return;
+    if(!defershaders) { execute(contents); return; }
+    Shader *exists = shaders.access(name);
+    char *rname = exists ? exists->name : newstring(name);
+    Shader &s = shaders[rname];
+    s.name = rname;
+    DELETEA(s.defer);
+    s.defer = newstring(contents);
+    s.type = SHADER_INVALID;
+}
+
+void useshader(Shader &s)
+{
+    if(s.type==SHADER_INVALID && s.defer)
+    {
+        char *defer = s.defer;
+        s.defer = NULL;
+        persistidents = false;
+        execute(defer);
+        persistidents = true;
+        delete[] defer;
+    }
+}
+
+Shader *useshaderbyname(const char *name)
+{
+    Shader *s = shaders.access(name);
+    if(!s) return NULL;
+    useshader(*s);
+    if(s->type==SHADER_INVALID) return NULL;
+    return s->altshader ? s->altshader : s;
+}
+
 void shader(int *type, char *name, char *vs, char *ps)
 {
     if(lookupshaderbyname(name)) return;
@@ -1088,7 +1127,7 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
 
     if(renderpath==R_FIXEDFUNCTION && standardshader) return;
 
-    Shader *s = lookupshaderbyname(name);
+    Shader *s = useshaderbyname(name);
     if(!s) return;
 
     s_sprintfd(varname)("<variant:%d,%d>%s", s->variants[*row].length(), *row, name);
@@ -1115,17 +1154,17 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
 
 void setshader(char *name)
 {
-	Shader *s = lookupshaderbyname(name);
+    loopv(curparams)
+    {
+        if(curparams[i].name) delete[] curparams[i].name;
+    }
+    curparams.setsize(0);
+    Shader *s = useshaderbyname(name);
 	if(!s)
 	{
 		if(renderpath!=R_FIXEDFUNCTION) conoutf("\frno such shader: %s", name);
 	}
 	else curshader = s;
-	loopv(curparams)
-	{
-		if(curparams[i].name) delete[] curparams[i].name;
-	}
-	curparams.setsize(0);
 }
 
 ShaderParam *findshaderparam(Slot &s, const char *name, int type, int index)
@@ -1198,9 +1237,9 @@ VAR(nativeshaders, 0, 1, 1);
 
 void altshader(char *origname, char *altname)
 {
-	Shader *alt = lookupshaderbyname(altname);
-	if(!alt) return;
-    Shader *orig = lookupshaderbyname(origname);
+    Shader *alt = useshaderbyname(altname);
+    if(!alt) return;
+    Shader *orig = useshaderbyname(origname);
     if(orig)
     {
         if(nativeshaders && !orig->native) orig->altshader = alt;
@@ -1209,17 +1248,19 @@ void altshader(char *origname, char *altname)
     Shader *exists = shaders.access(origname);
     char *rname = exists ? exists->name : newstring(origname);
     Shader &s = shaders[rname];
-	s.name = rname;
-	s.altshader = alt;
+    s.name = rname;
+    s.altshader = alt;
 }
 
 void fastshader(char *nice, char *fast, int *detail)
 {
-	Shader *ns = shaders.access(nice);
-    if(!ns || ns->type==SHADER_INVALID || ns->altshader) return;
-	Shader *fs = lookupshaderbyname(fast);
-	if(!fs) return;
-	loopi(min(*detail+1, MAXSHADERDETAIL)) ns->fastshader[i] = fs;
+    Shader *ns = shaders.access(nice);
+    if(!ns) return;
+    useshader(*ns);
+    if(ns->type==SHADER_INVALID || ns->altshader) return;
+    Shader *fs = useshaderbyname(fast);
+    if(!fs) return;
+    loopi(min(*detail+1, MAXSHADERDETAIL)) ns->fastshader[i] = fs;
 }
 
 COMMAND(shader, "isss");
@@ -1227,6 +1268,8 @@ COMMAND(variantshader, "isiss");
 COMMAND(setshader, "s");
 COMMAND(altshader, "ss");
 COMMAND(fastshader, "ssi");
+COMMAND(defershader, "ss");
+ICOMMAND(useshader, "s", (const char *name), useshaderbyname(name));
 
 void isshaderdefined(char *name)
 {
@@ -1692,7 +1735,10 @@ void reloadshaders()
     persistidents = false;
     loadshaders();
     persistidents = true;
-    if(renderpath!=R_FIXEDFUNCTION) enumerate(shaders, Shader, s,
+    extern vector<Slot> slots;
+    loopv(slots) useshader(*slots[i].shader);
+    if(renderpath==R_FIXEDFUNCTION) return;
+    enumerate(shaders, Shader, s,
         if(!s.standard && s.type!=SHADER_INVALID && !s.variantshader)
         {
             s_sprintfd(info)("shader %s", s.name);
@@ -1714,8 +1760,9 @@ void setupblurkernel(int radius, float sigma, float *weights, float *offsets)
 {
     if(radius<1 || radius>MAXBLURRADIUS) return;
     sigma *= 2*radius;
-    float total = 1.0f/sigma, lastoffset = 0;
-    weights[0] = 1.0f/sigma;
+    float total = 1.0f/sigma;
+    weights[0] = total;
+    offsets[0] = 0;
     // rely on bilinear filtering to sample 2 pixels at once
     // transforms a*X + b*Y into (u+v)*[X*u/(u+v) + Y*(1 - u/(u+v))]
     loopi(radius)
@@ -1725,8 +1772,7 @@ void setupblurkernel(int radius, float sigma, float *weights, float *offsets)
               scale = weight1 + weight2,
               offset = 2*i+1 + weight2 / scale;
         weights[i+1] = scale;
-        offsets[i+1] = offset - lastoffset;
-        lastoffset = offset;
+        offsets[i+1] = offset;
         total += 2*scale;
     }
     loopi(radius+1) weights[i] /= total;
@@ -1747,15 +1793,18 @@ void setblurshader(int pass, int size, int radius, float *weights, float *offset
     s->set();
     setlocalparamfv("weights", SHPARAM_PIXEL, 0, weights);
     setlocalparamfv("weights2", SHPARAM_PIXEL, 2, &weights[4]);
-    setlocalparamf("offsets", SHPARAM_PIXEL, 1,
+    setlocalparamf("offsets", SHPARAM_VERTEX, 1,
         pass==0 ? offsets[1]/size : offsets[0]/size,
         pass==1 ? offsets[1]/size : offsets[0]/size,
-        offsets[2]/size,
-        offsets[3]/size);
-    setlocalparamf("offsets2", SHPARAM_PIXEL, 3,
-        offsets[4]/size,
-        offsets[5]/size,
-        offsets[6]/size,
-        offsets[7]/size);
+        (offsets[2] - offsets[1])/size,
+        (offsets[3] - offsets[2])/size);
+    loopk(4)
+    {
+        static const char *names[4] = { "offset4", "offset5", "offset6", "offset7" };
+        setlocalparamf(names[k], SHPARAM_PIXEL, 3+k,
+            pass==0 ? offsets[4+k]/size : offsets[0]/size,
+            pass==1 ? offsets[4+k]/size : offsets[0]/size,
+            0, 0);
+    }
 }
 

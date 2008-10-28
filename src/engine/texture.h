@@ -107,7 +107,7 @@ struct Shader
 {
 	static Shader *lastshader;
 
-    char *name, *vsstr, *psstr;
+    char *name, *vsstr, *psstr, *defer;
     int type;
     GLuint vs, ps;
     GLhandleARB program, vsobj, psobj;
@@ -121,7 +121,7 @@ struct Shader
     uchar *extvertparams, *extpixparams;
 
 
-    Shader() : name(NULL), vsstr(NULL), psstr(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), variantshader(NULL), altshader(NULL), standard(false), used(false), native(true), reusevs(NULL), reuseps(NULL), numextparams(0), extparams(NULL), extvertparams(NULL), extpixparams(NULL)
+    Shader() : name(NULL), vsstr(NULL), psstr(NULL), defer(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), variantshader(NULL), altshader(NULL), standard(false), used(false), native(true), reusevs(NULL), reuseps(NULL), numextparams(0), extparams(NULL), extvertparams(NULL), extpixparams(NULL)
     {}
 
     ~Shader()
@@ -129,6 +129,7 @@ struct Shader
         DELETEA(name);
         DELETEA(vsstr);
         DELETEA(psstr);
+        DELETEA(defer);
         DELETEA(extparams);
         DELETEA(extvertparams);
         extpixparams = NULL;
@@ -344,6 +345,7 @@ extern Shader *defaultshader, *rectshader, *notextureshader, *nocolorshader, *fo
 extern int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams;
 
 extern Shader *lookupshaderbyname(const char *name);
+extern Shader *useshaderbyname(const char *name);
 extern Texture *loadthumbnail(Slot &slot);
 extern void setslotshader(Slot &s);
 extern void setenvparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
