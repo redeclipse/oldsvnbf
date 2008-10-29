@@ -386,6 +386,13 @@ struct gameclient : igameclient
 			if(d->state != CS_ALIVE || (d->gunstate[i] != GUNSTATE_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
 				d->setgunstate(i, GUNSTATE_IDLE, 0, lastmillis);
 		}
+
+		if(d->reqswitch > 0 && lastmillis-d->reqswitch > GUNSWITCHDELAY*2)
+			d->reqswitch = -1;
+		if(d->reqreload > 0 && lastmillis-d->reqreload > guntype[d->gunselect].rdelay*2)
+			d->reqreload = -1;
+		if(d->requse > 0 && lastmillis-d->requse > GUNSWITCHDELAY*2)
+			d->requse = -1;
 	}
 
 

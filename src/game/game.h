@@ -775,8 +775,8 @@ struct aiinfo
 		state.setsize(0);
 		route.setsize(0);
 		addstate(AI_S_WAIT);
-		gunpref = rnd(GUN_MAX-1)+1;
-		while(!guntype[gunpref].carry) if((gunpref -= 1) < 0) gunpref += GUN_MAX;
+		gunpref = rnd(GUN_MAX-1);
+		while(!guntype[gunpref].carry) if((gunpref += 1) >= GUN_MAX) gunpref -= GUN_MAX;
 		spot = target = vec(0, 0, 0);
 		enemy = NULL;
 	}
