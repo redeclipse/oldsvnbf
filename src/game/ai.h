@@ -941,9 +941,7 @@ struct aiclient
 
 	bool request(gameent *d, int busy)
 	{
-		if(d->reqswitch >= 0 || d->reqreload >= 0 || d->requse >= 0) return false;
-
-		if(!busy)
+		if(!busy && d->reqswitch < 0)
 		{
 			int gun = -1;
 			if(d->hasgun(d->ai->gunpref)) gun = d->ai->gunpref; // could be any gun
@@ -956,14 +954,14 @@ struct aiclient
 			}
 		}
 
-		if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis))
+		if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis) && d->reqreload < 0)
 		{
 			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			d->reqreload = lastmillis;
 			return true;
 		}
 
-		if(busy <= 1 && !d->hasgun(d->ai->gunpref) && !d->useaction)
+		if(busy <= 1 && !d->hasgun(d->ai->gunpref) && !d->useaction && d->requse < 0)
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -1010,7 +1008,7 @@ struct aiclient
 							if(d->gunselect != GUN_PLASMA && e.attr1 != d->ai->gunpref)
 								break;
 							d->useaction = true;
-							d->usetime = d->requse = lastmillis;
+							d->usetime = lastmillis;
 							return true;
 							break;
 						}
@@ -1020,7 +1018,7 @@ struct aiclient
 			}
 		}
 
-		if(!busy && d->canreload(d->gunselect, lastmillis))
+		if(!busy && d->canreload(d->gunselect, lastmillis) && d->reqreload < 0)
 		{
 			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			d->reqreload = lastmillis;
