@@ -9,7 +9,7 @@ joints {
 }
 
 mesh {
-	// meshes: Circle01
+	// meshes: mesh
 	shader "01 - Default"
 
 	numverts 110

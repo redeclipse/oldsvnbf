@@ -41,7 +41,7 @@ struct gameserver : igameserver
 	{
 		int type;
         int millis, id;
-		int gun;
+		int gun, radial;
 	};
 
 	struct hitevent
@@ -102,6 +102,12 @@ struct gameserver : igameserver
                 projs.remove(i);
                 return true;
             }
+            return false;
+        }
+
+        bool find(int val)
+        {
+            loopv(projs) if(projs[i]==val) return true;
             return false;
         }
     };
@@ -1243,6 +1249,7 @@ struct gameserver : igameserver
 					exp.explode.id = getint(p);
 					if(havecn) seteventmillis(exp.explode, true);
 					exp.explode.gun = getint(p);
+					exp.explode.radial = getint(p);
 					exp.explode.id = getint(p);
 					int hits = getint(p);
 					loopk(hits)
@@ -2091,30 +2098,40 @@ struct gameserver : igameserver
 				gs.dropped.remove(e.id); return;
 				break;
 			case GUN_PLASMA:
-                if(!gs.plasma.remove(e.id)) return;
+                if(!gs.plasma.find(e.id) < 0) return;
+                if(!e.radial)
+                {
+                	gs.plasma.remove(e.id);
+					e.radial = guntype[e.gun].explode;
+                }
 				break;
 			case GUN_GL:
                 if(!gs.grenades.remove(e.id)) return;
+				e.radial = guntype[e.gun].explode;
 				break;
 
 			case GUN_FLAMER:
-                if(!gs.flames.remove(e.id)) return;
+                if(!gs.flames.find(e.id) < 0) return;
+                if(!e.radial)
+                {
+                	gs.flames.remove(e.id);
+					e.radial = guntype[e.gun].explode;
+                }
 				break;
 
-			default:
-				return;
+			default: return;
 		}
 		for(int i = 1; i<ci->events.length() && ci->events[i].type==GE_HIT; i++)
 		{
 			hitevent &h = ci->events[i].hit;
 			clientinfo *target = (clientinfo *)getinfo(h.target);
-            if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.dist<0 || h.dist>guntype[e.gun].explode) continue;
+            if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.dist<0 || h.dist>e.radial) continue;
 
 			int j = 1;
 			for(j = 1; j<i; j++) if(ci->events[j].hit.target==h.target) break;
 			if(j<i) continue;
 
-			int damage = int(guntype[e.gun].damage*(1.f-h.dist/EXPLOSIONSCALE/guntype[e.gun].explode));
+			int damage = int(guntype[e.gun].damage*(1.f-h.dist/EXPLOSIONSCALE/e.radial));
 			dodamage(target, ci, damage, e.gun, h.flags, h.dir);
 		}
 	}

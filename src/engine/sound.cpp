@@ -248,7 +248,7 @@ void updatesounds()
 	if(music && !Mix_PlayingMusic()) musicdone(true);
 }
 
-int playsound(int n, int flags, int vol, vec &pos, physent *d, int *hook, int ends, int maxrad, int minrad)
+int playsound(int n, vec &pos, physent *d, int flags, int vol, int maxrad, int minrad, int *hook, int ends)
 {
 	if(nosound || !soundvol) return -1;
 
@@ -338,7 +338,7 @@ int playsound(int n, int flags, int vol, vec &pos, physent *d, int *hook, int en
 
 void sound(int *n, int *vol)
 {
-	intret(playsound(*n, 0, *vol ? *vol : 255, camera1->o, camera1));
+	intret(playsound(*n, camera1->o, camera1, SND_FORCED, *vol ? *vol : -1));
 }
 COMMAND(sound, "ii");
 
