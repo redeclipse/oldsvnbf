@@ -251,16 +251,10 @@ void cleanshadowmap()
     shadowmaptex.cleanup(true);
 }
 
-static int scissoring = 0;
-static GLint oldscissor[4];
-
 VAR(ffsmscissor, 0, 1, 1);
 
-static int calcscissorbox(int &sx, int &sy, int &sw, int &sh)
+static void calcscissorbox()
 {
-    scissoring = 0;
-    if(!ffsmscissor) return 0;
-
     int smx, smy, smw, smh;
     shadowmaptex.scissorblur(smx, smy, smw, smh);
 
@@ -295,7 +289,7 @@ static int calcscissorbox(int &sx, int &sy, int &sw, int &sh)
             sy2 = max(sy2, y);
         }
     }
-    if(sx1 >= sx2 || sy1 >= sy2) return 0;
+    if(sx1 >= sx2 || sy1 >= sy2) return;
     loopi(8)
     {
         const vec4 &p = v[i];
@@ -314,35 +308,7 @@ static int calcscissorbox(int &sx, int &sy, int &sw, int &sh)
             sy2 = max(sy2, y);
         }
     }
-    sx1 = max(sx1, -1.0f);
-    sy1 = max(sy1, -1.0f);
-    sx2 = min(sx2, 1.0f);
-    sy2 = min(sy2, 1.0f);
-    if(sx1 <= -1 && sy1 <= -1 && sx2 >= 1 && sy2 >= 1) return 0;
-
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    sx = viewport[0] + int(floor((sx1+1)*0.5f*viewport[2]));
-    sy = viewport[1] + int(floor((sy1+1)*0.5f*viewport[3]));
-    sw = viewport[0] + int(ceil((sx2+1)*0.5f*viewport[2])) - sx;
-    sh = viewport[1] + int(ceil((sy2+1)*0.5f*viewport[3])) - sy;
-    if(sw <= 0 || sh <= 0) return 0;
-
-    if(glIsEnabled(GL_SCISSOR_TEST))
-    {
-        glGetIntegerv(GL_SCISSOR_BOX, oldscissor);
-        sw += sx;
-        sh += sy;
-        sx = max(sx, int(oldscissor[0]));
-        sy = max(sy, int(oldscissor[1]));
-        sw = min(sw, int(oldscissor[0] + oldscissor[2])) - sx;
-        sh = min(sh, int(oldscissor[1] + oldscissor[3])) - sy;
-        if(sw <= 0 || sh <= 0) return 0;
-        scissoring = 2;
-    }
-    else scissoring = 1;
-
-    return scissoring;
+    pushscissor(sx1, sy1, sx2, sy2);
 }
 
 void calcshadowmapbb(const vec &o, float xyrad, float zrad, float &x1, float &y1, float &x2, float &y2)
@@ -471,12 +437,7 @@ void pushshadowmap()
 
         glColor3f(shadowmapintensity/100.0f, shadowmapintensity/100.0f, shadowmapintensity/100.0f);
 
-        int sx, sy, sw, sh;
-        if(calcscissorbox(sx, sy, sw, sh))
-        {
-            glScissor(sx, sy, sw, sh);
-            if(scissoring<=1) glEnable(GL_SCISSOR_TEST);
-        }
+        if(ffsmscissor) calcscissorbox();
         return;
     }
 
@@ -550,8 +511,7 @@ void popshadowmap()
     }
     else
     {
-        if(scissoring>1) glScissor(oldscissor[0], oldscissor[1], oldscissor[2], oldscissor[3]);
-        else if(scissoring) glDisable(GL_SCISSOR_TEST);
+        popscissor();
 
         glDisable(GL_TEXTURE_GEN_S);
         glDisable(GL_TEXTURE_GEN_T);

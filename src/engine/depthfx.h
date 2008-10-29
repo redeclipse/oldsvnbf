@@ -53,40 +53,9 @@ static struct depthfxtexture : rendertarget
 
     bool addscissorbox(const vec &center, float size)
     {
-        extern float fovy, aspect;
-        vec e(mvmatrix.transformx(center),
-              mvmatrix.transformy(center),
-              mvmatrix.transformz(center));
-        float zz = e.z*e.z, xx = e.x*e.x, yy = e.y*e.y, rr = size*size,
-              dx = zz*(xx + zz) - rr*zz, dy = zz*(yy + zz) - rr*zz,
-              focaldist = 1.0f/tan(fovy*0.5f*RAD),
-              left = -1, right = 1, bottom = -1, top = 1;
-        #define CHECKPLANE(c, dir, focaldist, low, high) \
-        do { \
-            float nc = (size*e.c dir drt)/(c##c + zz), \
-                  nz = (size - nc*e.c)/e.z, \
-                  pz = (c##c + zz - rr)/(e.z - nz/nc*e.c); \
-            if(pz < 0) \
-            { \
-                float c = nz*(focaldist)/nc, \
-                      pc = -pz*nz/nc; \
-                if(pc < e.c) low = c; \
-                else if(pc > e.c) high = c; \
-            } \
-        } while(0)
-        if(dx > 0)
-        {
-            float drt = sqrt(dx);
-            CHECKPLANE(x, -, focaldist/aspect, left, right);
-            CHECKPLANE(x, +, focaldist/aspect, left, right);
-        }
-        if(dy > 0)
-        {
-            float drt = sqrt(dy);
-            CHECKPLANE(y, -, focaldist, bottom, top);
-            CHECKPLANE(y, +, focaldist, bottom, top);
-        }
-        return addblurtiles(left, bottom, right, top);
+        float sx1, sy1, sx2, sy2;
+        calcspherescissor(center, size, sx1, sy1, sx2, sy2);
+        return addblurtiles(sx1, sy1, sx2, sy2);
     }
 
     bool addscissorbox(const vec &bbmin, const vec &bbmax)

@@ -187,7 +187,7 @@ static inline bool pvsoccluded(const ivec &bborigin, int size)
 }
 
 // rendergl
-extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF;
+extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasBC, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF;
 extern int hasstencil;
 
 extern bool envmapping, renderedgame;
@@ -223,6 +223,9 @@ extern void invalidatepostfx();
 extern void gl_drawframe(int w, int h);
 extern void enablepolygonoffset(GLenum type);
 extern void disablepolygonoffset(GLenum type);
+extern void calcspherescissor(const vec &center, float size, float &sx1, float &sy1, float &sx2, float &sy2);
+extern int pushscissor(float sx1, float sy1, float sx2, float sy2);
+extern void popscissor();
 extern void setfogplane(const plane &p, bool flush = false);
 extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
 extern void setcolormask(bool r = true, bool g = true, bool b = true);
@@ -363,6 +366,7 @@ extern void updatedynlights();
 extern int finddynlights();
 extern void calcdynlightmask(vtxarray *va);
 extern int setdynlights(vtxarray *va, const ivec &vaorigin);
+extern bool getdynlight(int n, vec &o, float &radius, vec &color);
 
 // material
 
