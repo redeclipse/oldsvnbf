@@ -107,7 +107,11 @@ int finddynlights()
         d.dist = camera1->o.dist(d.o) - d.curradius;
         if(d.dist > dynlightdist || isvisiblesphere(d.curradius, d.o) >= VFC_FOGGED || pvsoccluded(d.o, 2*int(d.curradius+1)))
             continue;
-
+        if(reflecting || refracting > 0)
+        {
+            if(d.o.z + d.curradius < reflectz) continue;
+        }   
+        else if(refracting < 0 && d.o.z - d.curradius > reflectz) continue;
         e.o = d.o;
         e.radius = e.height = e.aboveeye = d.curradius;
         if(collide(&e, vec(0, 0, 0), 0, false)) continue;
