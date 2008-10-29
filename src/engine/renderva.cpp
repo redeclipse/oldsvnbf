@@ -2232,6 +2232,7 @@ void rendergeom(float causticspass, bool fogpass)
             glEnable(GL_TEXTURE_1D);
 
             glActiveTexture_(GL_TEXTURE2_ARB);
+            cur.diffusetmu = 2;
             setuptmu(2, "P * T x 4", "= Pa");
             setuptexgen();
             glEnable(GL_TEXTURE_2D);
