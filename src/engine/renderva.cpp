@@ -1656,7 +1656,7 @@ static GLuint createattenxytex(int size)
     }
     GLuint tex = 0;
     glGenTextures(1, &tex);
-    createtexture(tex, size, size, data, 3, false, GL_LUMINANCE);
+    createtexture(tex, size, size, data, 3, false, GL_ALPHA);
     delete[] data;
     return tex;
 }
@@ -1667,12 +1667,12 @@ static GLuint createattenztex(int size)
     loop(z, size)
     {
         float dz = 2*float(z)/(size-1) - 1;
-        float atten = hasBC ? dz*dz : 1.0f - fabs(dz);
+        float atten = dz*dz;
         *dst++ = uchar(atten*255);
     }
     GLuint tex = 0;
     glGenTextures(1, &tex);
-    createtexture(tex, size, 1, data, 3, false, GL_LUMINANCE, GL_TEXTURE_1D);
+    createtexture(tex, size, 1, data, 3, false, GL_ALPHA, GL_TEXTURE_1D);
     delete[] data;
     return tex;
 }
@@ -2215,24 +2215,24 @@ void rendergeom(float causticspass, bool fogpass)
 
         if(renderpath==R_FIXEDFUNCTION && hasdynlights)
         {
-            glBlendFunc(hasBC ? GL_CONSTANT_COLOR_EXT : GL_ONE, dbgffdl ? GL_ZERO : GL_ONE);
+            glBlendFunc(GL_SRC_ALPHA, dbgffdl ? GL_ZERO : GL_ONE);
             glFogfv(GL_FOG_COLOR, zerofog);
 
             if(!attenxytex) attenxytex = createattenxytex(64);
             glBindTexture(GL_TEXTURE_2D, attenxytex);
 
-            setuptmu(0, hasBC ? "= T" : "C * T");
+            setuptmu(0, "= C", "= Ta");
             setuptexgen();
 
             glActiveTexture_(GL_TEXTURE1_ARB);
-            setuptmu(1, hasBC ? "P - T" : "P * T");
+            setuptmu(1, "= P", "Pa - Ta");
             setuptexgen(1);
             if(!attenztex) attenztex = createattenztex(64);
             glBindTexture(GL_TEXTURE_1D, attenztex);
             glEnable(GL_TEXTURE_1D);
 
             glActiveTexture_(GL_TEXTURE2_ARB);
-            setuptmu(2, "P * T x 2");
+            setuptmu(2, "P * T x 2", "= Pa");
             setuptexgen();
             glEnable(GL_TEXTURE_2D);
 
@@ -2247,8 +2247,7 @@ void rendergeom(float causticspass, bool fogpass)
                     if(fog >= 1.0f) continue;
                     lightcolor.mul(1.0f - max(fog, 0.0f));
                 }
-                if(hasBC) glBlendColor_(lightcolor.x, lightcolor.y, lightcolor.z, 1);
-                else glColor3f(lightcolor.x, lightcolor.y, lightcolor.z);
+                glColor3f(lightcolor.x, lightcolor.y, lightcolor.z);
                 if(ffdlscissor)
                 {
                     float sx1, sy1, sx2, sy2;
