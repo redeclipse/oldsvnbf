@@ -2,7 +2,7 @@ struct clientcom : iclientcom
 {
 	gameclient &cl;
 
-	bool c2sinit, senditemstoserver, isready, remote, demoplayback, spectator, needsmap;
+	bool c2sinit, senditemstoserver, isready, remote, demoplayback, needsmap;
 	int lastping;
 
 	IVARP(centerchat, 0, 1, 1);
@@ -12,7 +12,7 @@ struct clientcom : iclientcom
 
 	clientcom(gameclient &_cl) : cl(_cl),
 		c2sinit(false), senditemstoserver(false),
-		isready(false), remote(false), demoplayback(false), spectator(false), needsmap(false),
+		isready(false), remote(false), demoplayback(false), needsmap(false),
 		lastping(0)
 	{
         CCOMMAND(say, "C", (clientcom *self, char *s), self->toserver(SAY_NONE, s));
@@ -114,7 +114,7 @@ struct clientcom : iclientcom
 	void gamedisconnect(int clean)
 	{
 		if(editmode) toggleedit();
-		needsmap = remote = isready = c2sinit = spectator = false;
+		needsmap = remote = isready = c2sinit = false;
 		cl.player1->clientnum = -1;
 		cl.player1->lifesequence = 0;
 		cl.player1->privilege = PRIV_NONE;
@@ -922,9 +922,9 @@ struct clientcom : iclientcom
 					int trg = getint(p), gun = getint(p), amt = getint(p);
 					gameent *target = cl.getclient(trg);
 					if(!target || !isgun(gun)) break;
-					if(target == cl.player1) cl.ws.requestreload = 0;
 					target->setgunstate(gun, GUNSTATE_RELOAD, guntype[gun].rdelay, lastmillis);
 					target->ammo[gun] = amt;
+					target->reqreload = -1;
 					playsound(S_RELOAD, 0, 255, target->o, target);
 					break;
 				}
@@ -971,8 +971,8 @@ struct clientcom : iclientcom
 					int trg = getint(p), gun = getint(p);
 					gameent *target = cl.getclient(trg);
 					if(!target || !isgun(gun)) break;
-					if(target == cl.player1) cl.ws.requestswitch = 0;
 					target->gunswitch(gun, lastmillis);
+					target->reqswitch = -1;
 					playsound(S_SWITCH, 0, 255, target->o, target);
 					break;
 				}
@@ -1018,9 +1018,10 @@ struct clientcom : iclientcom
 				case SV_ITEMACC:
 				{ // uses a specific drop so the client knows what to replace
 					int lcn = getint(p), ent = getint(p), gun = getint(p), drop = getint(p);
-					gameent *f = cl.getclient(lcn);
-					if(!f) break;
-					cl.et.useeffects(f, ent, gun, drop);
+					gameent *target = cl.getclient(lcn);
+					if(!target) break;
+					cl.et.useeffects(target, ent, gun, drop);
+					target->requse = -1;
 					break;
 				}
 
@@ -1207,7 +1208,6 @@ struct clientcom : iclientcom
 					int sn = getint(p), val = getint(p);
 					gameent *s = cl.newclient(sn);
 					if(!s) break;
-					if(s == cl.player1) spectator = val!=0;
 					if(val)
 					{
 						if(s==cl.player1 && editmode) toggleedit();
@@ -1372,7 +1372,7 @@ struct clientcom : iclientcom
 			emptymap(0, true, NULL);
 			needsmap = true;
 		}
-		cl.player1->state = CS_DEAD;
+		if(cl.player1->state != CS_SPECTATOR) cl.player1->state = CS_DEAD;
 		if(editmode) edittoggled(editmode);
 		if(m_stf(gamemode)) cl.stf.setupflags();
         else if(m_ctf(gamemode)) cl.ctf.setupflags();

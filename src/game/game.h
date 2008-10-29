@@ -327,11 +327,11 @@ struct teamtypes
 {
 	int	type,		colour;	const char *name,	*tpmdl,			*fpmdl,				*flag,			*icon,			*chat;
 } teamtype[] = {
-	{ TEAM_NEUTRAL,	0x444444,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
-	{ TEAM_ALPHA,	0x4444FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
-	{ TEAM_BETA,	0xFF4444,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
-	{ TEAM_DELTA,	0xFFFF44,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0x44FF44,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
+	{ TEAM_NEUTRAL,	0x222222,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fa" },
+	{ TEAM_ALPHA,	0x2222FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
+	{ TEAM_BETA,	0xFF2222,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
+	{ TEAM_DELTA,	0xFFFF22,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
+	{ TEAM_GAMMA,	0x22FF22,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
 	{ TEAM_ENEMY,	0xFFFFFF,	"enemy",		"player",		"player/vwep",		"flag",			"team",			"\fa" }
 };
 
@@ -625,14 +625,13 @@ struct gamestate
 enum
 {
 	ST_NONE		= 0,
-	ST_REQS		= 1<<0,
-	ST_CAMERA	= 1<<1,
-	ST_CURSOR	= 1<<2,
-	ST_GAME		= 1<<3,
-	ST_SPAWNS	= 1<<4,
-	ST_DEFAULT	= ST_REQS|ST_CAMERA|ST_CURSOR|ST_GAME,
+	ST_CAMERA	= 1<<0,
+	ST_CURSOR	= 1<<1,
+	ST_GAME		= 1<<2,
+	ST_SPAWNS	= 1<<3,
+	ST_DEFAULT	= ST_CAMERA|ST_CURSOR|ST_GAME,
 	ST_VIEW		= ST_CURSOR|ST_CAMERA,
-	ST_ALL		= ST_REQS|ST_CAMERA|ST_CURSOR|ST_GAME|ST_SPAWNS,
+	ST_ALL		= ST_CAMERA|ST_CURSOR|ST_GAME|ST_SPAWNS,
 };
 
 struct gameentity : extentity
@@ -766,7 +765,7 @@ struct aiinfo
 	vector<aistate> state;
 	vector<int> route;
 	vec target, spot;
-	int enemy, gunpref, lastreq;
+	int enemy, gunpref;
 
 	aiinfo() { reset(); }
 	~aiinfo() { state.setsize(0); route.setsize(0); }
@@ -780,7 +779,6 @@ struct aiinfo
 		while(!guntype[gunpref].carry) if((gunpref -= 1) < 0) gunpref += GUN_MAX;
 		spot = target = vec(0, 0, 0);
 		enemy = NULL;
-		lastreq = 0;
 	}
 
 	aistate &addstate(int t)
@@ -813,30 +811,23 @@ struct aiinfo
 enum { MDIR_FORWARD = 0, MDIR_BACKWARD, MDIR_MAX };
 struct gameent : dynent, gamestate
 {
-	int clientnum, privilege, lastupdate, lastpredict, plag, ping;
-	bool attacking, reloading, useaction, obliterated;
-	int attacktime, reloadtime, usetime;
-	int lasttaunt, lastflag;
-	int frags, deaths, totaldamage, totalshots;
+	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping,
+		attacktime, reloadtime, usetime, lasttaunt, lastflag, frags, deaths, totaldamage,
+			totalshots, smoothmillis, lastnode, respawned, suicided, wschan,
+				reqswitch, reqreload, requse;
 	editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
-    int smoothmillis;
-	int lastnode;
-	int respawned, suicided;
-	int wschan;
 	aiinfo *ai;
     vec muzzle, mdir[MDIR_MAX];
-	bool k_up, k_down, k_left, k_right;
+	bool attacking, reloading, useaction, obliterated, k_up, k_down, k_left, k_right;
 
 	string name, info, obit;
-	int team;
 
-	gameent() : clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), wschan(-1), ai(NULL), muzzle(-1, -1, -1),
+	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), wschan(-1), edit(NULL), ai(NULL), muzzle(-1, -1, -1),
 		k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
-		team = TEAM_NEUTRAL;
 		respawn(-1);
 	}
 	~gameent()
@@ -873,16 +864,15 @@ struct gameent : dynent, gamestate
 		gamestate::respawn(millis);
 		obliterated = false;
 		lasttaunt = 0;
-		lastflag = respawned = suicided = lastnode = -1;
+		lastflag = respawned = suicided = lastnode = reqswitch = reqreload = requse = -1;
 		obit[0] = 0;
 	}
 
 	void resetstate(int millis)
 	{
 		respawn(millis);
-		lastnode = -1;
 		frags = deaths = totaldamage = totalshots = 0;
-		state = CS_DEAD;
+		if(state != CS_SPECTATOR) state = CS_DEAD;
 	}
 };
 
