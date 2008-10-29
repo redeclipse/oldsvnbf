@@ -129,7 +129,7 @@ struct weaponstate
 
 	void radiate(projent &proj)
 	{
-		if(lastmillis-proj.lastradial > 40)
+		if(lastmillis-proj.lastradial > 250) // for the flamer this results in at most 20 damage per second
 		{
 			hits.setsizenodelete(0);
 

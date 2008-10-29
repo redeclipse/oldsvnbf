@@ -132,8 +132,8 @@ struct guntypes
 {
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	S_PLASMA,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
-		30,		30,		200,	600,	5,		200,	0,		10000,	-5,		5,
-		4,		12,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
+		30,		30,		200,	600,	10,		200,	0,		10000,	-5,		5,
+		4,		14,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
 				"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep"
 	},
 	{
