@@ -2239,6 +2239,8 @@ void rendergeom(float causticspass, bool fogpass)
             vec lightcolor;
             for(int n = 0; getdynlight(n, cur.dynlightpos, cur.dynlightradius, lightcolor); n++)
             {
+                float k = max(lightcolor.x, max(lightcolor.y, lightcolor.z));
+                if(k > 1) lightcolor.div(k);
                 if(fogpass && cur.fogtmu>=0)
                 {
                     float fog = (reflectz - cur.dynlightpos.z)/waterfog;
