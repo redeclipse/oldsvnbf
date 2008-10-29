@@ -780,6 +780,8 @@ struct renderstate
     bool mttexgen;
     int visibledynlights;
     uint dynlightmask;
+    vec dynlightpos;
+    float dynlightradius;
 
     renderstate() : colormask(true), depthmask(true), mtglow(false), skippedglow(false), vbuf(0), fogplane(-1), diffusetmu(0), lightmaptmu(1), glowtmu(-1), fogtmu(-1), causticstmu(-1), glowcolor(1, 1, 1), slot(NULL), texgendim(-1), mttexgen(false), visibledynlights(0), dynlightmask(0)
     {
@@ -812,7 +814,8 @@ enum
     RENDERPASS_GLOW,
     RENDERPASS_CAUSTICS,
     RENDERPASS_FOG,
-    RENDERPASS_SHADOWMAP
+    RENDERPASS_SHADOWMAP,
+    RENDERPASS_DYNLIGHT
 };
 
 struct geombatch
@@ -832,10 +835,10 @@ struct geombatch
     {
         if(va->vbuf < b.va->vbuf) return -1;
         if(va->vbuf > b.va->vbuf) return 1;
-        if(va->dynlightmask < b.va->dynlightmask) return -1;
-        if(va->dynlightmask > b.va->dynlightmask) return 1;
         if(renderpath!=R_FIXEDFUNCTION)
         {
+            if(va->dynlightmask < b.va->dynlightmask) return -1;
+            if(va->dynlightmask > b.va->dynlightmask) return 1;
             if(slot.shader < b.slot.shader) return -1;
             if(slot.shader > b.slot.shader) return 1;
             if(slot.params.length() < b.slot.params.length()) return -1;
@@ -972,6 +975,19 @@ static void changefogplane(renderstate &cur, int pass, vtxarray *va)
     }
 }
 
+static void changedynlightpos(renderstate &cur, vtxarray *va)
+{
+    GLfloat tx[4] = { 0.5f/(cur.dynlightradius * (1<<VVEC_FRAC)), 0, 0, 0.5f + 0.5f*(vaorigin.x - cur.dynlightpos.x)/cur.dynlightradius },
+            ty[4] = { 0, 0.5f/(cur.dynlightradius * (1<<VVEC_FRAC)), 0, 0.5f + 0.5f*(vaorigin.y - cur.dynlightpos.y)/cur.dynlightradius },
+            tz[4] = { 0, 0, 0.5f/(cur.dynlightradius * (1<<VVEC_FRAC)), 0.5f + 0.5f*(vaorigin.z - cur.dynlightpos.z)/cur.dynlightradius };
+    glActiveTexture_(GL_TEXTURE0_ARB);
+    glTexGenfv(GL_S, GL_OBJECT_PLANE, tx);
+    glTexGenfv(GL_T, GL_OBJECT_PLANE, ty);
+    glActiveTexture_(GL_TEXTURE1_ARB);
+    glTexGenfv(GL_S, GL_OBJECT_PLANE, tz);
+    glActiveTexture_(GL_TEXTURE2_ARB);
+}
+
 static void changevbuf(renderstate &cur, int pass, vtxarray *va)
 {
     if(setorigin(va, renderpath!=R_FIXEDFUNCTION ? pass==RENDERPASS_LIGHTMAP && !envmapping && !glaring : pass==RENDERPASS_SHADOWMAP))
@@ -1105,7 +1121,7 @@ VAR(blankgeom, 0, 0, 1);
 
 static void changeslottmus(renderstate &cur, int pass, Slot &slot)
 {
-    if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR)
+    if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR || pass==RENDERPASS_DYNLIGHT)
     {
         GLuint diffusetex = blankgeom ? blanktexture->id : (slot.sts.empty() ? notexture->id : slot.sts[0].t->id);
         if(cur.textures[cur.diffusetmu]!=diffusetex)
@@ -1366,7 +1382,8 @@ static void renderbatches(renderstate &cur, int pass)
         if(cur.vbuf != b.va->vbuf)
         {
             changevbuf(cur, pass, b.va);
-            changefogplane(cur, pass, b.va);
+            if(pass == RENDERPASS_DYNLIGHT) changedynlightpos(cur, b.va);
+            else changefogplane(cur, pass, b.va);
         }
         if(pass == RENDERPASS_LIGHTMAP)
         {
@@ -1552,6 +1569,13 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
             else if(!batchgeom && geombatches.length()) renderbatches(cur, pass);
             break;
 
+        case RENDERPASS_DYNLIGHT:
+            if(cur.dynlightpos.dist_to_bb(va->geommin, va->geommax) >= cur.dynlightradius) break;
+            vverts += va->verts;
+            mergetexs(va);
+            if(!batchgeom && geombatches.length()) renderbatches(cur, pass);
+            break;
+
         case RENDERPASS_FOG:
             if(cur.vbuf!=va->vbuf)
             {
@@ -1619,6 +1643,40 @@ void createfogtex()
     createtexture(fogtex, bilinear ? 2 : 256, 1, buf, 3, false, GL_LUMINANCE_ALPHA, GL_TEXTURE_1D);
 }
 
+GLuint attenxytex = 0, attenztex = 0;
+
+static GLuint createattenxytex(int size)
+{
+    uchar *data = new uchar[size*size], *dst = data;
+    loop(y, size) loop(x, size)
+    {
+        float dx = 2*float(x)/(size-1) - 1, dy = 2*float(y)/(size-1) - 1;
+        float atten = max(0.0f, 1.0f - dx*dx - dy*dy);
+        *dst++ = uchar(atten*255);
+    }
+    GLuint tex = 0;
+    glGenTextures(1, &tex);
+    createtexture(tex, size, size, data, 3, false, GL_LUMINANCE);
+    delete[] data;
+    return tex;
+}
+
+static GLuint createattenztex(int size)
+{
+    uchar *data = new uchar[size], *dst = data;
+    loop(z, size)
+    {
+        float dz = 2*float(z)/(size-1) - 1;
+        float atten = hasBC ? dz*dz : 1.0f - fabs(dz);
+        *dst++ = uchar(atten*255);
+    }
+    GLuint tex = 0;
+    glGenTextures(1, &tex);
+    createtexture(tex, size, 1, data, 3, false, GL_LUMINANCE, GL_TEXTURE_1D);
+    delete[] data;
+    return tex;
+}
+
 Texture *caustic = NULL;
 void loadcaustic(const char *name)
 {
@@ -1640,6 +1698,8 @@ void cleanupva()
     vaclearc(worldroot);
     clearqueries();
     if(fogtex) { glDeleteTextures(1, &fogtex); fogtex = 0; }
+    if(attenxytex) { glDeleteTextures(1, &attenxytex); attenxytex = 0; }
+    if(attenztex) { glDeleteTextures(1, &attenztex); attenztex = 0; }
     caustic = NULL;
 }
 
@@ -1834,7 +1894,7 @@ void cleanupTMUs(renderstate &cur)
 #define FIRSTVA (reflecting ? reflectedva : visibleva)
 #define NEXTVA (reflecting ? va->rnext : va->next)
 
-void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
+static void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
 {
     cur.vbuf = 0;
     for(vtxarray *va = FIRSTVA; va; va = NEXTVA)
@@ -1860,6 +1920,8 @@ VAR(oqgeom, 0, 1, 1);
 VAR(oqbatch, 0, 1, 1);
 
 VAR(dbgffsm, 0, 0, 1);
+VAR(dbgffdl, 0, 0, 1);
+VAR(ffdlscissor, 0, 1, 1);
 
 void rendergeom(float causticspass, bool fogpass)
 {
@@ -1882,7 +1944,7 @@ void rendergeom(float causticspass, bool fogpass)
         if(shadowmap && !envmapping && !glaring && renderpath!=R_FIXEDFUNCTION) pushshadowmap();
     }
 
-    finddynlights();
+    int hasdynlights = finddynlights();
 
     glPushMatrix();
 
@@ -2055,7 +2117,7 @@ void rendergeom(float causticspass, bool fogpass)
         if(doOQ) glDepthFunc(GL_LESS);
     }
 
-    if(renderpath==R_FIXEDFUNCTION ? (glowpass && cur.skippedglow) || (causticspass>=1 && cur.causticstmu<0) || (fogpass && cur.fogtmu<0) || (shadowmap && shadowmapcasters) : causticspass)
+    if(renderpath==R_FIXEDFUNCTION ? (glowpass && cur.skippedglow) || (causticspass>=1 && cur.causticstmu<0) || (fogpass && cur.fogtmu<0) || (shadowmap && shadowmapcasters) || hasdynlights : causticspass)
     {
         glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
@@ -2089,7 +2151,7 @@ void rendergeom(float causticspass, bool fogpass)
                 resettmu(0);
                 glActiveTexture_(GL_TEXTURE1_ARB);
                 resettmu(1);
-                disabletexgen();
+                disabletexgen(1);
                 glDisable(GL_TEXTURE_1D);
                 glActiveTexture_(GL_TEXTURE0_ARB);
             }
@@ -2149,6 +2211,66 @@ void rendergeom(float causticspass, bool fogpass)
                 glDisable(GL_TEXTURE_1D);
                 glActiveTexture_(GL_TEXTURE0_ARB);
             }
+        }
+
+        if(renderpath==R_FIXEDFUNCTION && hasdynlights)
+        {
+            glBlendFunc(hasBC ? GL_CONSTANT_COLOR_EXT : GL_ONE, dbgffdl ? GL_ZERO : GL_ONE);
+            glFogfv(GL_FOG_COLOR, zerofog);
+
+            if(!attenxytex) attenxytex = createattenxytex(64);
+            glBindTexture(GL_TEXTURE_2D, attenxytex);
+
+            setuptmu(0, hasBC ? "= T" : "C * T");
+            setuptexgen();
+
+            glActiveTexture_(GL_TEXTURE1_ARB);
+            setuptmu(1, hasBC ? "P - T" : "P * T");
+            setuptexgen(1);
+            if(!attenztex) attenztex = createattenztex(64);
+            glBindTexture(GL_TEXTURE_1D, attenztex);
+            glEnable(GL_TEXTURE_1D);
+
+            glActiveTexture_(GL_TEXTURE2_ARB);
+            setuptmu(2, "P * T x 2");
+            setuptexgen();
+            glEnable(GL_TEXTURE_2D);
+
+            vec lightcolor;
+            for(int n = 0; getdynlight(n, cur.dynlightpos, cur.dynlightradius, lightcolor); n++)
+            {
+                if(fogpass && cur.fogtmu>=0)
+                {
+                    float fog = (reflectz - cur.dynlightpos.z)/waterfog;
+                    if(fog >= 1.0f) continue;
+                    lightcolor.mul(1.0f - max(fog, 0.0f));
+                }
+                if(hasBC) glBlendColor_(lightcolor.x, lightcolor.y, lightcolor.z, 1);
+                else glColor3f(lightcolor.x, lightcolor.y, lightcolor.z);
+                if(ffdlscissor)
+                {
+                    float sx1, sy1, sx2, sy2;
+                    calcspherescissor(cur.dynlightpos, cur.dynlightradius, sx1, sy1, sx2, sy2);
+                    pushscissor(sx1, sy1, sx2, sy2);
+                }
+                resetorigin();
+                rendergeommultipass(cur, RENDERPASS_DYNLIGHT, fogpass);
+                if(ffdlscissor) popscissor();
+            }
+
+            glDisable(GL_TEXTURE_2D);
+            disabletexgen();
+            resettmu(2);
+
+            glActiveTexture_(GL_TEXTURE1_ARB);
+            glDisable(GL_TEXTURE_1D);
+            resettmu(1);
+            disabletexgen(1);
+
+            glActiveTexture_(GL_TEXTURE0_ARB);
+            resettmu(0);
+            disabletexgen();
+            glEnable(GL_BLEND);
         }
 
         if(renderpath==R_FIXEDFUNCTION && fogpass && cur.fogtmu<0)
