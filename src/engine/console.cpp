@@ -160,7 +160,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 	vector<char *> refs;
 	refs.setsizenodelete(0);
 
-	pushfont("console");
+	pushfont("hud");
 
 	if (!g3d_active(true, false) && centerlines)
 	{

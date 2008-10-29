@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			98
+#define GAMEVERSION			99
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -10,9 +10,10 @@
 enum
 {
 	S_JUMP = S_GAMESPECIFIC, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
-	S_SPLASH1, S_SPLASH2, S_UNDERWATER, S_SPLAT, S_DEBRIS, S_WHIZZ, S_WHIRR, S_ENERGY, S_HUM,
+	S_SPLASH1, S_SPLASH2, S_UNDERWATER,
+	S_SPLAT, S_DEBRIS, S_TINK, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING,
 	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_CG,
-	S_GLFIRE, S_GLEXPL, S_GLHIT, S_FLFIRE, S_FLBURNING, S_FLBURN, S_CARBINE, S_RIFLE,
+	S_GLFIRE, S_FLFIRE, S_CARBINE, S_RIFLE,
 	S_ITEMPICKUP, S_ITEMSPAWN, 	S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED,
@@ -131,7 +132,7 @@ struct guntypes
 {
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	S_PLASMA,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
-		30,		30,		150,	500,	10,		200,	0,		10000,	-5,		5,
+		30,		30,		200,	600,	5,		200,	0,		10000,	-5,		5,
 		4,		12,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
 				"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep"
 	},
@@ -148,8 +149,8 @@ struct guntypes
 				"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep"
 	},
 	{
-		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_FLBURN,	S_FLBURNING,-1,			S_ITEMSPAWN,
-		50,		50,		200, 	2000,	15,		100,	0,		3000,	-1,		 1,
+		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_BURN,		S_BURNING,	-1,			S_ITEMSPAWN,
+		50,		50,		200, 	2000,	5,		100,	0,		3000,	-1,		 1,
 		24,		28,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
 				"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep"
 	},
@@ -166,7 +167,7 @@ struct guntypes
 				"rifle",	"\fw",	"weapons/rifle/item",		"weapons/rifle/vwep"
 	},
 	{
-		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_GLEXPL,	S_WHIZZ,	S_GLHIT,	S_ITEMSPAWN,
+		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_EXPLODE,	S_WHIZZ,	S_TINK,		S_ITEMSPAWN,
 		2,		4,		1500,	0,		200,	150,	1000,	3000,	-15,    10,
 		3,		64,				1.0f,	0.33f,		0.45f,		2.0f,		75.f,		false,
 				"grenades",	"\fm",	"weapons/grenades/item",	"weapons/grenades/vwep"
@@ -464,10 +465,11 @@ struct gamestate
 		return false;
 	}
 
-	int bestgun()
+	int bestgun(bool force = true)
 	{
 		int best = -1;
 		loopi(GUN_MAX) if(hasgun(i, 1)) best = i;
+		if(!isgun(best) && force) loopi(GUN_MAX) if(hasgun(i, 0)) best = i;
 		return best;
 	}
 
@@ -881,7 +883,7 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
 struct projent : dynent
 {
 	vec from, to;
-	int addtime, lifetime, lifemillis, waittime, spawntime;
+	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial;
 	float movement, roll, lifespan, lifesize;
 	bool local, beenused, radial, extinguish;
 	int projtype, geomcollide, playercollide;
@@ -906,7 +908,7 @@ struct projent : dynent
 		physent::reset();
 		type = ENT_BOUNCE;
 		state = CS_ALIVE;
-		addtime = lifetime = lifemillis = waittime = spawntime = 0;
+		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = 0;
 		ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
 		schan = id = -1;
 		movement = roll = lifespan = lifesize = 0.f;

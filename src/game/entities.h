@@ -243,7 +243,7 @@ struct entities : icliententities
 				gameentity &e = *(gameentity *)ents[i];
 				if(e.type == ANNOUNCER)
 				{
-					playsound(idx, 0, e.attr3, e.o, NULL, NULL, 0, e.attr1, e.attr2);
+					playsound(idx, e.o, NULL, 0, e.attr3, e.attr1, e.attr2);
 					announcer = true;
 				}
 			}
@@ -268,7 +268,7 @@ struct entities : icliententities
 						case 12:	v = vec(getworldsize(), 0, 0); break;
 						default:	v = vec(0.5f*getworldsize(), 0.5f*getworldsize(), 0.5f*getworldsize()); break;
 					}
-					playsound(idx, 0, 255, v, NULL, NULL, 0, getworldsize()*5/4, 0);
+					playsound(idx, v);
 				}
 			}
 			lastannouncement = lastmillis;
@@ -299,7 +299,7 @@ struct entities : icliententities
 				s_sprintfd(ds)("@%s", item);
 				particle_text(d->abovehead(), ds, 15);
 			}
-			playsound(S_ITEMPICKUP, 0, 255, d->o, d);
+			playsound(S_ITEMPICKUP, d->o, d);
 			if(isgun(g))
 			{
 				d->ammo[g] = d->entid[g] = -1;
@@ -408,7 +408,7 @@ struct entities : icliententities
 					else if(enttype[e.type].usetype == EU_ITEM && d->useaction)
 					{
 						d->useaction = false;
-						playsound(S_DENIED, 0, 255, d->o, d);
+						playsound(S_DENIED, d->o, d);
 					}
 				}
 				actitems.removeunordered(closest);
@@ -533,7 +533,7 @@ struct entities : icliententities
 									if(f.attr5&SND_NOATTEN) flags |= SND_NOATTEN;
 									if(f.attr5&SND_NODELAY) flags |= SND_NODELAY;
 									if(f.attr5&SND_NOCULL) flags |= SND_NOCULL;
-									playsound(f.attr1, flags, f.attr4, both ? f.o : e.o, NULL, &f.schan, 0, f.attr2, f.attr3);
+									playsound(f.attr1, both ? f.o : e.o, NULL, flags, f.attr4, f.attr2, f.attr3, &f.schan);
 									f.lastemit = lastmillis;
 									if(both) e.lastemit = lastmillis;
 								}
@@ -1426,7 +1426,7 @@ struct entities : icliententities
 					if(e.attr5&SND_NOATTEN) flags |= SND_NOATTEN;
 					if(e.attr5&SND_NODELAY) flags |= SND_NODELAY;
 					if(e.attr5&SND_NOCULL) flags |= SND_NOCULL;
-					playsound(e.attr1, flags, e.attr4, e.o, NULL, &e.schan, 0, e.attr2, e.attr3);
+					playsound(e.attr1, e.o, NULL, flags, e.attr4, e.attr2, e.attr3, &e.schan);
 					e.lastemit = lastmillis; // prevent clipping when moving around
 				}
 			}

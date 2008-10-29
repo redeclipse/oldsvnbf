@@ -102,13 +102,13 @@ struct gameclient : igameclient
 
 	IVARP(showcrosshair, 0, 1, 1);
 	IVARP(showdamage, 0, 1, 1);
-	IVARP(showhudinfo, 0, 1, 2);
-	IVARP(showhudammo, 0, 2, 2);
-	IVARP(shownameinfo, 0, 1, 2);
+	IVARP(showtips, 0, 2, 3);
+	IVARP(showguns, 0, 2, 2);
+	IVARP(shownamesabovehead, 0, 1, 2);
 	IVARP(showindicator, 0, 1, 1);
 
 	IVARP(showstats, 0, 0, 1);
-	IVARP(showhudentinfo, 0, 1, 2);
+	IVARP(showenttips, 0, 1, 2);
 	IVARP(showhudents, 0, 10, 100);
 	IVARP(showfps, 0, 2, 2);
 	IVARP(statrate, 0, 200, 1000);
@@ -494,7 +494,7 @@ struct gameclient : igameclient
 				s_sprintfd(ds)("@%d", damage);
 				particle_text(d->abovehead(), ds, 8);
 			}
-			playsound(S_PAIN1+rnd(5), 0, 255, d->o, d);
+			playsound(S_PAIN1+rnd(5), d->o, d);
 		}
 
 		if(d != actor)
@@ -507,7 +507,7 @@ struct gameclient : igameclient
 			else if(damage >= 50) snd = 3;
 			else if(damage >= 25) snd = 2;
 			else if(damage >= 10) snd = 1;
-			playsound(S_DAMAGE1+snd, 0, 255, actor->o, actor);
+			playsound(S_DAMAGE1+snd, actor->o, actor);
 			if(actor == player1) lasthit = lastmillis;
 		}
 
@@ -524,7 +524,7 @@ struct gameclient : igameclient
 		d->deaths++;
 
 		int anc = -1, dth = S_DIE1+rnd(2);
-		if((flags & HIT_MELT) || (flags & HIT_BURN)) dth = S_FLBURN;
+		if((flags & HIT_MELT) || (flags & HIT_BURN)) dth = S_BURN;
 		else if(d->obliterated) dth = S_SPLAT;
 
 		if(d == player1)
@@ -642,7 +642,7 @@ struct gameclient : igameclient
 			}
 		}
 		bool af = (d == player1 || actor == player1);
-		if(dth >= 0) playsound(dth, 0, 255, d->o, d);
+		if(dth >= 0) playsound(dth, d->o, d);
 		s_sprintfd(a)("\fy%s %s", colorname(d), d->obit);
 		et.announce(anc, a, af);
 		s_sprintfd(da)("@%s", a);
@@ -747,7 +747,7 @@ struct gameclient : igameclient
 		if(n < 0 || n >= S_MAX) return;
 		gameent *c = d ? d : player1;
 		if(c == player1 || c->ai) cc.addmsg(SV_SOUND, "i2", c->clientnum, n);
-		playsound(n, 0, 255, c->o, c);
+		playsound(n, c->o, c);
 	}
 
 	int numdynents() { return 1+players.length(); }
@@ -1153,7 +1153,7 @@ struct gameclient : igameclient
 
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
-		pushfont("hud");
+		pushfont("emphasis");
 
 		int secs = maptime ? lastmillis-maptime : 0;
 		float fade = hudblend;
@@ -1214,8 +1214,7 @@ struct gameclient : igameclient
 		loopv(players)
 			if(players[i] && players[i]->state == CS_ALIVE)
 				drawplayerblip(players[i], bx+bo, by+bo, bs-(bo*2));
-
-		popfont();
+		popfont(); // radar
 
 		int tp = by + bs + FONTH/2;
 		if(player1->state == CS_ALIVE)
@@ -1240,7 +1239,7 @@ struct gameclient : igameclient
 				drawslice(0, amt, hx, hy, hs);
 			}
 
-			if(showhudammo())
+			if(showguns())
 			{
 				int ta = int(oy*ammosize()), tb = ta*3, tv = bx + bs - tb,
 					to = ta/16, tr = ta/2, tq = tr - FONTH/2;
@@ -1248,28 +1247,47 @@ struct gameclient : igameclient
 					plasmahudtex(), shotgunhudtex(), chaingunhudtex(),
 					flamerhudtex(), carbinehudtex(), riflehudtex(), grenadeshudtex(),
 				};
-				loopi(GUN_MAX) if(player1->hasgun(i) && (i == player1->gunselect || showhudammo() > 1))
+				loopi(GUN_MAX) if(player1->hasgun(i) && (i == player1->gunselect || showguns() > 1))
 				{
 					float blend = fade * (i == player1->gunselect ? ammoblend() : ammoblendinactive());
 					settexture(hudtexs[i], 0);
 					glColor4f(1.f, 1.f, 1.f, blend);
 					drawtex(float(tv), float(tp), float(tb), float(ta));
                     drawclip(i, tv+to/2, tp+to/2, ta-to, blend);
-					if(i == player1->gunselect) pushfont("emphasis");
+					if(i != player1->gunselect) pushfont("hud");
 					int ts = tv + tr, tt = tp + tq;
 					draw_textx("%s%d", ts, tt, 255, 255, 255, int(255.f*blend), false, AL_CENTER, -1, -1, player1->canshoot(i, lastmillis) ? "\fw" : "\fr", player1->ammo[i]);
-					if(i == player1->gunselect) popfont();
+					if(i != player1->gunselect) popfont();
 					tp += ta;
 				}
 				tp += FONTH/2;
 			}
-			if(showhudinfo())
+			if(showtips())
 			{
-				if(player1->hasgun(player1->gunselect) && player1->canreload(player1->gunselect, lastmillis) && player1->ammo[player1->gunselect] < guntype[player1->gunselect].max)
+				tp = oy-FONTH;
+				if(showtips() > 1)
 				{
-					const char *a = retbindaction("reload", keym::ACTION_DEFAULT, 0);
-					s_sprintfd(actkey)("%s", a && *a ? a : "RELOAD");
-					tp += draw_textx("Press [ \fs\fg%s\fS ] to load ammo", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
+					if(player1->hasgun(player1->gunselect))
+					{
+						const char *a = retbindaction("zoom", keym::ACTION_DEFAULT, 0);
+						s_sprintfd(actkey)("%s", a && *a ? a : "ZOOM");
+						tp -= draw_textx("Press [ \fs\fg%s\fS ] to %s", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey, player1->gunselect == GUN_RIFLE ? "zoom" : "prone");
+					}
+					if(player1->canshoot(player1->gunselect, lastmillis))
+					{
+						const char *a = retbindaction("attack", keym::ACTION_DEFAULT, 0);
+						s_sprintfd(actkey)("%s", a && *a ? a : "ATTACK");
+						tp -= draw_textx("Press [ \fs\fg%s\fS ] to attack", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
+					}
+
+					if(player1->canreload(player1->gunselect, lastmillis))
+					{
+						const char *a = retbindaction("reload", keym::ACTION_DEFAULT, 0);
+						s_sprintfd(actkey)("%s", a && *a ? a : "RELOAD");
+						tp -= draw_textx("Press [ \fs\fg%s\fS ] to load ammo", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
+						if(ws.autoreload() > 1 && lastmillis-player1->gunlast[player1->gunselect] <= 1000)
+							tp -= draw_textx("Autoreload in [ \fs\fg%.01f\fS ] second(s)", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, float(1000-(lastmillis-player1->gunlast[player1->gunselect]))/1000.f);
+					}
 				}
 
 				vector<actitem> actitems;
@@ -1313,7 +1331,6 @@ struct gameclient : igameclient
 							{
 								if(!found)
 								{
-									pushfont("emphasis");
 									int drop = -1;
 									if(e.type == WEAPON && guntype[player1->gunselect].carry &&
 										player1->ammo[e.attr1] < 0 && guntype[e.attr1].carry &&
@@ -1321,77 +1338,64 @@ struct gameclient : igameclient
 									if(isgun(drop))
 									{
 										s_sprintfd(dropgun)("%s", et.entinfo(WEAPON, drop, player1->ammo[drop], 0, 0, 0, true));
-										tp += draw_textx("Press [ \fs\fg%s\fS ] to swap", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
-										tp += draw_textx("[ \fs%s\fS ] for [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1,
-											dropgun, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
+										tp -= draw_textx("Press [ \fs\fg%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey, dropgun, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
 									}
-									else
-									{
-										tp += draw_textx("Press [ \fs\fg%s\fS ] to pickup", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
-										tp += draw_textx("[ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1,
-											et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
-									}
-									popfont();
-									tp += FONTH/2;
-									if(showhudinfo() < 2) break;
+									else tp -= draw_textx("Press [ \fs\fg%s\fS ] to pickup [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
+									if(showtips() < 3) break;
 									else found = true;
 								}
-								else
-									tp += draw_textx("[ \fs\fa%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
+								else tp -= draw_textx("Nearby [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
 							}
 							else if(e.type == TRIGGER && (e.spawned || !e.attr4) && e.attr3 == TA_ACT)
 							{
 								if(!found)
 								{
-									pushfont("emphasis");
-									tp += draw_textx("Press [ \fs\fg%s\fS ] to interact", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
-									tp += draw_textx("with [ \fs\fb%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, enttype[e.type].name);
-									popfont();
-									tp += FONTH/2;
-									if(showhudinfo() < 2) break;
+									tp -= draw_textx("Press [ \fs\fg%s\fS ] to interact with [ \fs\fb%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey, enttype[e.type].name);
+									if(showtips() < 3) break;
 									else found = true;
 								}
 								else
-									tp += draw_textx("[ \fs\fa%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, enttype[e.type].name);
+									tp -= draw_textx("Nearby [ \fs\fg%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, enttype[e.type].name);
 							}
 						}
 						actitems.removeunordered(closest);
 					}
-					popfont();
 				}
 			}
 		}
 		else if(player1->state == CS_DEAD)
 		{
-			pushfont("emphasis");
-			tp += draw_textx("Fragged!", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1);
-			int wait = respawnwait(player1);
-			if(wait)
-				tp += draw_textx("Down for %.01fs", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, float(wait)/1000.f);
-			else
+			if(showtips())
 			{
-				const char *a = retbindaction("attack", keym::ACTION_DEFAULT, 0);
-				s_sprintfd(actkey)("%s", a && *a ? a : "ACTION");
-				tp += draw_textx("Press [ \fs\fg%s\fS ] to respawn", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
+				tp = oy-FONTH;
+				int wait = respawnwait(player1);
+				if(wait)
+					tp -= draw_textx("Fragged! Respawn available in [ \fs\fg%.01f\fS ] second(s)", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, float(wait)/1000.f);
+				else
+				{
+					const char *a = retbindaction("attack", keym::ACTION_DEFAULT, 0);
+					s_sprintfd(actkey)("%s", a && *a ? a : "ACTION");
+					tp -= draw_textx("Fragged! Press [ \fs\fg%s\fS ] to respawn", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
+				}
 			}
-			popfont();
 		}
 		else if(player1->state == CS_EDITING)
 		{
-			if(showhudentinfo()) loopi(clamp(entgroup.length()+1, 0, showhudents()))
+			tp = oy-FONTH;
+			if(showenttips()) loopi(clamp(entgroup.length()+1, 0, showhudents()))
 			{
 				int n = i ? entgroup[i-1] : enthover;
 				if((!i || n != enthover) && et.ents.inrange(n))
 				{
 					gameentity &f = (gameentity &)*et.ents[n];
-					if(showhudentinfo() > 2 || n == enthover) pushfont("emphasis");
-					tp += draw_textx("entity %d, %s", bx+bs, tp,
+					if(showenttips() <= 2 && n != enthover) pushfont("hud");
+					tp -= draw_textx("entity %d, %s", bx+bs, tp,
 						n == enthover ? 255 : 196, 196, 196, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1,
 							n, et.findname(f.type));
-					if(showhudentinfo() > 2 || n == enthover) popfont();
-					if(showhudentinfo() > 1 || n == enthover)
+					if(showenttips() <= 2 && n != enthover) popfont();
+					if(showenttips() > 1 || n == enthover)
 					{
-						tp += draw_textx("%s (%d %d %d %d %d)", bx+bs, tp,
+						tp -= draw_textx("%s (%d %d %d %d %d)", bx+bs, tp,
 							255, 196, 196, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1,
 								et.entinfo(f.type, f.attr1, f.attr2, f.attr3, f.attr4, f.attr5, true),
 									f.attr1, f.attr2, f.attr3, f.attr4, f.attr5);
@@ -1399,9 +1403,9 @@ struct gameclient : igameclient
 				}
 			}
 		}
+		popfont(); // emphasis
 
 		drawcardinalblips(bx+bo, by+bo, bs-(bo*2));
-		popfont();
 	}
 
 	void drawhudelements(int w, int h)
@@ -1874,7 +1878,7 @@ struct gameclient : igameclient
 				case MAT_WATER:
 				{
 					if(!issound(liquidchan))
-						playsound(S_UNDERWATER, SND_LOOP|SND_NOATTEN|SND_NODELAY|SND_NOCULL, 255, camera1->o, camera1, &liquidchan);
+						playsound(S_UNDERWATER, camera1->o, camera1, SND_LOOP|SND_NOATTEN|SND_NODELAY|SND_NOCULL, -1, -1, -1, &liquidchan);
 					break;
 				}
 				default:
@@ -2026,7 +2030,7 @@ struct gameclient : igameclient
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showgun = isgun(gun);
 
-		if(shownameinfo() && third && d != player1 && d->state != CS_SPECTATOR)
+		if(shownamesabovehead() && third && d != player1 && d->state != CS_SPECTATOR)
 		{
 			s_sprintfd(s)("@%s", colorname(d));
 			part_text(d->abovehead(), s, 11, 1, 0xFFFFFF);

@@ -393,7 +393,7 @@ struct physics
 			{
 				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x *= liquidscale(); pl->vel.y *= liquidscale(); }
-				playsound(S_JUMP, 0, 255, pl->o, pl);
+				playsound(S_JUMP, pl->o, pl);
 				pl->jumping = false;
 			}
 		}
@@ -480,12 +480,11 @@ struct physics
 				mf; \
 				int col = (mcol[2] + (mcol[1] << 8) + (mcol[0] << 16)); \
 				regularshape(mz, int(pl->radius), col, 21, 50, mt, v, ms); \
-				if(mw >= 0) playsound(mw, 0, 255, pl->o, pl); \
+				if(mw >= 0) playsound(mw, pl->o, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
 				mattrig(getwatercolour(mcol), 6, 250, 1.f, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-			if(curmat == MAT_LAVA || oldmat == MAT_LAVA)
-				mattrig(getlavacolour(mcol), 4, 1000, 2.f, curmat != MAT_LAVA ? -1 : S_FLBURNING);
+			if(curmat == MAT_LAVA) mattrig(getlavacolour(mcol), 4, 1000, 2.f, S_BURNING);
 
 			if(local)
 			{
@@ -547,7 +546,7 @@ struct physics
 			loopi(moveres) if(!move(pl, d)) { if(pl->type==ENT_CAMERA) return false; if(++collisions<5) i--; } // discrete steps collision detection & sliding
 			if(!pl->timeinair && vel.z <= -64) // if we land after long time must have been a high jump, make thud sound
 			{
-				playsound(S_LAND, 0, 255, pl->o, pl);
+				playsound(S_LAND, pl->o, pl);
 			}
 		}
 

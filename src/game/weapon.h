@@ -7,9 +7,9 @@ struct weaponstate
 	static const int OFFSETMILLIS = 500;
 	vec sg[SGRAYS];
 
-	IVARP(autoreload, 0, 1, 1);// auto reload when empty
-	IVARP(idlereload, 0, 3000, INT_MAX-1); // reload to max when idle this long
-	IVARP(switchgl, 0, 0, 1);
+	IVARP(autoreload, 0, 3, 10);// auto reload when 0:never 1:empty 2+:every(this*rdelay)
+	IVARP(skipplasma, 0, 1, 1); // whether to skip plasma when switching
+	IVARP(skipgrenades, 0, 0, 1); // whether to skip grenades when switching
 
 	weaponstate(gameclient &_cl) : cl(_cl)
 	{
@@ -41,7 +41,7 @@ struct weaponstate
 
 			while(s > GUN_MAX-1) s -= GUN_MAX;
 			while(s < 0) s += GUN_MAX;
-			if(a < 0 && !switchgl() && s == GUN_GL)
+			if(a < 0 && ((skipplasma() && s == GUN_PLASMA) || (skipgrenades() && s == GUN_GL)))
 				continue;
 
 			if(d->canswitch(s, lastmillis))
@@ -52,7 +52,7 @@ struct weaponstate
 			}
 			else if(a >= 0) break;
 		}
-		playsound(S_DENIED, 0, 255, d->o, d);
+		playsound(S_DENIED, d->o, d);
 	}
 
 	void offsetray(vec &from, vec &to, int spread, vec &dest)
@@ -127,13 +127,37 @@ struct weaponstate
 		if(dist < radius) hit(d, dir, flags, int(dist*DMF));
 	}
 
+	void radiate(projent &proj)
+	{
+		if(lastmillis-proj.lastradial > 40)
+		{
+			hits.setsizenodelete(0);
+
+			int radius = int(guntype[proj.attr1].explode*proj.lifesize);
+
+			loopi(cl.numdynents())
+			{
+				gameent *f = (gameent *)cl.iterdynents(i);
+				if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
+				radialeffect(f, proj.o, radius, HIT_BURN);
+			}
+
+			if(hits.length() > 0)
+			{
+				cl.cc.addmsg(SV_EXPLODE, "ri5iv", proj.owner->clientnum, lastmillis-cl.maptime, proj.attr1, proj.id >= 0 ? proj.id-cl.maptime : proj.id,
+						radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+
+				proj.lastradial = lastmillis;
+			}
+		}
+	}
+
 	void explode(gameent *d, vec &o, vec &vel, int id, int gun, bool local)
 	{
 		vec dir;
 		float dist = middist(camera1, dir, o);
 
-		if(guntype[gun].esound >= 0)
-			playsound(guntype[gun].esound, 0, 128, o);
+		if(guntype[gun].esound >= 0) playsound(guntype[gun].esound, o);
 
 		if(gun == GUN_PLASMA)
 		{
@@ -171,8 +195,8 @@ struct weaponstate
 				radialeffect(f, o, guntype[gun].explode, gun == GUN_FLAMER || gun == GUN_PLASMA ? HIT_BURN : HIT_EXPLODE);
 			}
 
-			cl.cc.addmsg(SV_EXPLODE, "ri4iv", d->clientnum, lastmillis-cl.maptime, gun, id >= 0 ? id-cl.maptime : id,
-					hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+			cl.cc.addmsg(SV_EXPLODE, "ri5iv", d->clientnum, lastmillis-cl.maptime, gun, id >= 0 ? id-cl.maptime : id,
+					0, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 		}
 	}
 
@@ -214,9 +238,9 @@ struct weaponstate
 		{
 			int ends = lastmillis+(d->gunwait[gun]*2);
 			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
-			else playsound(guntype[gun].sound, SND_LOOP, 255, d->o, d, &d->wschan, ends);
+			else playsound(guntype[gun].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
 		}
-		else playsound(guntype[gun].sound, 0, 255, d->o, d);
+		else playsound(guntype[gun].sound, d->o, d);
 
 		switch(gun)
 		{
@@ -338,10 +362,9 @@ struct weaponstate
 
 	bool doautoreload(gameent *d)
 	{
-		if(idlereload() && d->ammo[d->gunselect] < guntype[d->gunselect].max &&
-			lastmillis-d->gunlast[d->gunselect] > idlereload())
-				return true;
 		if(autoreload() && !d->ammo[d->gunselect]) return true;
+		if(autoreload() > 1 && lastmillis-d->gunlast[d->gunselect] > guntype[d->gunselect].rdelay*autoreload())
+			return true;
 
 		return false;
 	}
@@ -357,7 +380,7 @@ struct weaponstate
 				d->reqswitch = lastmillis;
 			}
 		}
-		else if((d->reloading || doautoreload(d)) && d->canreload(d->gunselect, lastmillis) && d->reqreload < 0)
+		else if(d->canreload(d->gunselect, lastmillis) && d->reqreload < 0 && (d->reloading || doautoreload(d)))
 		{
 			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
 			d->reqreload = lastmillis;

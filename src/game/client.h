@@ -335,7 +335,7 @@ struct clientcom : iclientcom
 		}
 
 		console("%s", (centerchat() ? CON_CENTER : 0)|CON_NORMAL, s);
-		playsound(S_CHAT, SND_NOCULL, 255, camera1->o, camera1);
+		playsound(S_CHAT, camera1->o, camera1, SND_FORCED);
 	}
 
 	void toserver(int flags, char *text)
@@ -724,7 +724,7 @@ struct clientcom : iclientcom
 					if(snd < 0 || snd >= S_MAX) break;
 					gameent *t = cl.getclient(tcn);
 					if(!t) break;
-					playsound(snd, 0, 255, t->o, t);
+					playsound(snd, t->o, t, SND_FORCED);
 					break;
 				}
 
@@ -855,7 +855,7 @@ struct clientcom : iclientcom
 					f->respawn(lastmillis);
 					parsestate(f, p);
 					f->state = CS_SPAWNING;
-					playsound(S_RESPAWN, 0, 255, f->o, f);
+					playsound(S_RESPAWN, f->o, f);
 					regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 2.f);
 					break;
 				}
@@ -879,7 +879,7 @@ struct clientcom : iclientcom
 						int team = m_mayhem(cl.gamemode, cl.mutators) ? (f->team%numteams(cl.gamemode, cl.mutators))+1 : f->team;
 						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(team) : -1, m_team(cl.gamemode, cl.mutators) ? team : -1);
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
-						playsound(S_RESPAWN, 0, 255, f->o, f);
+						playsound(S_RESPAWN, f->o, f);
 						regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 2.f);
 					}
 					cl.ai.spawned(f);
@@ -925,7 +925,7 @@ struct clientcom : iclientcom
 					target->setgunstate(gun, GUNSTATE_RELOAD, guntype[gun].rdelay, lastmillis);
 					target->ammo[gun] = amt;
 					target->reqreload = -1;
-					playsound(S_RELOAD, 0, 255, target->o, target);
+					playsound(S_RELOAD, target->o, target);
 					break;
 				}
 
@@ -938,7 +938,7 @@ struct clientcom : iclientcom
 					target->lastregen = lastmillis;
 					int left = clamp(MAXHEALTH-max(target->health-REGENHEAL, 0), 1, 100);
 					particle_splash(3, max(left/10, 3), 10000, target->o);
-					playsound(S_REGEN, 0, 255, target->o, target);
+					playsound(S_REGEN, target->o, target);
 					break;
 				}
 
@@ -973,7 +973,7 @@ struct clientcom : iclientcom
 					if(!target || !isgun(gun)) break;
 					target->gunswitch(gun, lastmillis);
 					target->reqswitch = -1;
-					playsound(S_SWITCH, 0, 255, target->o, target);
+					playsound(S_SWITCH, target->o, target);
 					break;
 				}
 
@@ -1004,7 +1004,7 @@ struct clientcom : iclientcom
 					int ent = getint(p);
 					if(!cl.et.ents.inrange(ent)) break;
 					cl.et.setspawn(ent, true);
-					playsound(S_ITEMSPAWN, 0, 255, cl.et.ents[ent]->o);
+					playsound(S_ITEMSPAWN, cl.et.ents[ent]->o);
 					const char *item = cl.et.entinfo(cl.et.ents[ent]->type, cl.et.ents[ent]->attr1, cl.et.ents[ent]->attr2, cl.et.ents[ent]->attr4, cl.et.ents[ent]->attr4, cl.et.ents[ent]->attr5, true);
 					if(item)
 					{

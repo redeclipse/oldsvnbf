@@ -59,7 +59,7 @@ void showgui(const char *name)
     int pos = guistack.find(m);
     if(pos<0) pushgui(m);
     else restoregui(pos);
-	playsound(S_GUIPRESS, SND_FORCED, 255, camera1->o, camera1);
+	playsound(S_GUIPRESS, camera1->o, camera1, SND_FORCED);
 }
 
 int cleargui(int n)
