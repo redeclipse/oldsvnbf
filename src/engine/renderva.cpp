@@ -2270,7 +2270,6 @@ void rendergeom(float causticspass, bool fogpass)
             glActiveTexture_(GL_TEXTURE0_ARB);
             resettmu(0);
             disabletexgen();
-            glEnable(GL_BLEND);
         }
 
         if(renderpath==R_FIXEDFUNCTION && fogpass && cur.fogtmu<0)
