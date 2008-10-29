@@ -2232,15 +2232,14 @@ void rendergeom(float causticspass, bool fogpass)
             glEnable(GL_TEXTURE_1D);
 
             glActiveTexture_(GL_TEXTURE2_ARB);
-            setuptmu(2, "P * T x 2", "= Pa");
+            setuptmu(2, "P * T x 4", "= Pa");
             setuptexgen();
             glEnable(GL_TEXTURE_2D);
 
             vec lightcolor;
             for(int n = 0; getdynlight(n, cur.dynlightpos, cur.dynlightradius, lightcolor); n++)
             {
-                float k = max(lightcolor.x, max(lightcolor.y, lightcolor.z));
-                if(k > 1) lightcolor.div(k);
+                lightcolor.mul(0.5f);
                 if(fogpass && cur.fogtmu>=0)
                 {
                     float fog = (reflectz - cur.dynlightpos.z)/waterfog;
