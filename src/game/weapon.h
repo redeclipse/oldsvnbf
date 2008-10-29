@@ -7,12 +7,11 @@ struct weaponstate
 	static const int OFFSETMILLIS = 500;
 	vec sg[SGRAYS];
 
-	int requestswitch, requestreload;
-
 	IVARP(autoreload, 0, 1, 1);// auto reload when empty
+	IVARP(idlereload, 0, 3000, INT_MAX-1); // reload to max when idle this long
 	IVARP(switchgl, 0, 0, 1);
 
-	weaponstate(gameclient &_cl) : cl(_cl), requestswitch(0), requestreload(0)
+	weaponstate(gameclient &_cl) : cl(_cl)
 	{
         CCOMMAND(weapon, "ss", (weaponstate *self, char *a, char *b),
 		{
@@ -31,7 +30,7 @@ struct weaponstate
 	void weaponswitch(gameent *d, int a = -1, int b = -1)
 	{
 		if(a < -1 || b < -1 || a >= GUN_MAX || b >= GUN_MAX) return;
-		if(lastmillis-requestswitch <= 1000) return;
+		if(d->reqswitch >= 0) return;
 		if (!cl.allowmove(cl.player1) || cl.inzoom()) return;
 		int s = d->gunselect;
 
@@ -48,7 +47,7 @@ struct weaponstate
 			if(d->canswitch(s, lastmillis))
 			{
 				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, s);
-				requestswitch = lastmillis;
+				d->reqswitch = lastmillis;
 				return;
 			}
 			else if(a >= 0) break;
@@ -339,7 +338,12 @@ struct weaponstate
 
 	bool doautoreload(gameent *d)
 	{
-		return autoreload() && d->hasgun(d->gunselect) && !d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis);
+		if(idlereload() && d->ammo[d->gunselect] < guntype[d->gunselect].max &&
+			lastmillis-d->gunlast[d->gunselect] > idlereload())
+				return true;
+		if(autoreload() && !d->ammo[d->gunselect]) return true;
+
+		return false;
 	}
 
 	void reload(gameent *d)
@@ -347,22 +351,16 @@ struct weaponstate
 		if(guntype[d->gunselect].rdelay <= 0)
 		{
 			int bestgun = d->bestgun();
-			if(d->ammo[d->gunselect] <= 0 && d->canswitch(bestgun, lastmillis))
+			if(d->ammo[d->gunselect] <= 0 && d->canswitch(bestgun, lastmillis) && d->reqswitch < 0)
 			{
-				if(lastmillis-requestswitch > 1000)
-				{
-					cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, bestgun);
-					requestswitch = lastmillis;
-				}
+				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, bestgun);
+				d->reqswitch = lastmillis;
 			}
 		}
-		else if((d->reloading || doautoreload(d)) && d->canreload(d->gunselect, lastmillis))
+		else if((d->reloading || doautoreload(d)) && d->canreload(d->gunselect, lastmillis) && d->reqreload < 0)
 		{
-			if(lastmillis-requestreload > 1000)
-			{
-				cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
-				requestreload = lastmillis;
-			}
+			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+			d->reqreload = lastmillis;
 		}
 	}
 

@@ -281,7 +281,7 @@ struct entities : icliententities
 
 	void useeffects(gameent *d, int n, int g, int r)
 	{
-		if(d && ents.inrange(n))
+		if(ents.inrange(n))
 		{
 			gameentity &e = *(gameentity *)ents[n];
 			vec pos = e.o;
@@ -388,10 +388,11 @@ struct entities : icliententities
 					extentity &e = *ents[ent];
 					if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis))
 					{
-						if(enttype[e.type].usetype == EU_ITEM && d->useaction)
+						if(enttype[e.type].usetype == EU_ITEM && d->useaction && d->requse < 0)
 						{
 							cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, ent);
 							d->useaction = false;
+							d->requse = lastmillis;
 						}
 						else if(enttype[e.type].usetype == EU_AUTO)
 						{
@@ -1382,7 +1383,7 @@ struct entities : icliententities
 
 	void adddynlights()
 	{
-		if(editmode && showlighting())
+		if(cl.player1->state == CS_EDITING && showlighting())
 		{
 			loopv(ents)
 			{
@@ -1476,7 +1477,7 @@ struct entities : icliententities
                 renderprimitive(true);
                 loopv(ents)
 			    {
-				    renderfocus(i, renderentshow(e, i, editmode && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
+				    renderfocus(i, renderentshow(e, i, cl.player1->state == CS_EDITING && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
 			    }
                 renderprimitive(false);
             }
@@ -1537,12 +1538,12 @@ struct entities : icliententities
 
 		if(m_edit(cl.gamemode))
 		{
-			if((showentinfo() || editmode) && (!enttype[e.type].noisy || showentnoisy() >= 2 || (showentnoisy() && editmode)))
+			if((showentinfo() || cl.player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy() >= 2 || (showentnoisy() && cl.player1->state == CS_EDITING)))
 			{
 				bool hasent = idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
 				vec off(0, 0, 2.f), pos(o);
 				part_create(3, 1, pos, hasent ? 0xFF6600 : 0xFFFF00, hasent ? 2.0f : 1.5f);
-				if(showentinfo() >= 2 || editmode)
+				if(showentinfo() >= 2 || cl.player1->state == CS_EDITING)
 				{
 					s_sprintf(s)("@%s%s (%d)", hasent ? "\fo" : "\fy", enttype[e.type].name, idx >= 0 ? idx : 0);
 					particle_text(pos.add(off), s, hasent ? 26 : 27, 1);

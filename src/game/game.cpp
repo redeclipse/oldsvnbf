@@ -186,19 +186,19 @@ struct gameclient : igameclient
 	float radarrange()
 	{
 		float dist = float(radardist());
-		if(editmode) dist = float(editradardist());
+		if(player1->state == CS_EDITING) dist = float(editradardist());
 		return dist;
 	}
 
 	bool isthirdperson()
 	{
-		return thirdperson() && !editmode && !cc.spectator;
+		return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
 	}
 
 	int mousestyle()
 	{
-		if(editmode) return editmouse();
-		if(cc.spectator) return specmouse();
+		if(player1->state == CS_EDITING) return editmouse();
+		if(player1->state == CS_SPECTATOR) return specmouse();
 		if(inzoom()) return player1->gunselect == GUN_RIFLE ? snipemouse() : pronemouse();
 		if(isthirdperson()) return thirdpersonmouse();
 		return firstpersonmouse();
@@ -206,8 +206,8 @@ struct gameclient : igameclient
 
 	int deadzone()
 	{
-		if(editmode) return editdeadzone();
-		if(cc.spectator) return specdeadzone();
+		if(player1->state == CS_EDITING) return editdeadzone();
+		if(player1->state == CS_SPECTATOR) return specdeadzone();
 		if(inzoom()) return player1->gunselect == GUN_RIFLE ? snipedeadzone() : pronedeadzone();
 		if(isthirdperson()) return thirdpersondeadzone();
 		return firstpersondeadzone();
@@ -216,16 +216,16 @@ struct gameclient : igameclient
 	int panspeed()
 	{
 		if(inzoom()) return player1->gunselect == GUN_RIFLE ? snipepanspeed() : pronepanspeed();
-		if(editmode) return editpanspeed();
-		if(cc.spectator) return specpanspeed();
+		if(player1->state == CS_EDITING) return editpanspeed();
+		if(player1->state == CS_SPECTATOR) return specpanspeed();
 		if(isthirdperson()) return thirdpersonpanspeed();
 		return firstpersonpanspeed();
 	}
 
 	int fov()
 	{
-		if(editmode) return editfov();
-		if(cc.spectator) return specfov();
+		if(player1->state == CS_EDITING) return editfov();
+		if(player1->state == CS_SPECTATOR) return specfov();
 		if(isthirdperson()) return thirdpersonfov();
 		return firstpersonfov();
 	}
@@ -355,7 +355,6 @@ struct gameclient : igameclient
 
 	void resetstates(int types)
 	{
-		if(types & ST_REQS) ws.requestswitch = ws.requestreload = 0;
 		if(types & ST_CAMERA)
 		{
 			lastcamera = 0;
@@ -945,7 +944,7 @@ struct gameclient : igameclient
 			else return;
 		}
         else if(hidehud || !showcrosshair() || player1->state == CS_DEAD) return;
-        else if(editmode) index = POINTER_EDIT;
+        else if(player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(inzoom() && player1->gunselect == GUN_RIFLE) index = POINTER_SNIPE;
         else if(lastmillis-lasthit <= crosshairhitspeed()) index = POINTER_HIT;
         else if(m_team(gamemode, mutators))
@@ -962,7 +961,7 @@ struct gameclient : igameclient
 		if(index >= POINTER_HAIR)
 		{
 			if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
-			else if(r && g && b && !editmode)
+			else if(r && g && b && player1->state == CS_ALIVE)
 			{
 				if(player1->health<=25) { r = 1; g = b = 0; }
 				else if(player1->health<=50) { r = 1; g = 0.5f; b = 0; }
@@ -1058,11 +1057,11 @@ struct gameclient : igameclient
 
 	void drawentblip(int x, int y, int s, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool spawned, int lastspawn)
 	{
-		if(type > NOTUSED && type < MAXENTTYPES && ((enttype[type].usetype == EU_ITEM && spawned) || editmode))
+		if(type > NOTUSED && type < MAXENTTYPES && ((enttype[type].usetype == EU_ITEM && spawned) || player1->state == CS_EDITING))
 		{
-			bool insel = editmode && et.ents.inrange(n) && (enthover == n || entgroup.find(n) >= 0);
+			bool insel = player1->state == CS_EDITING && et.ents.inrange(n) && (enthover == n || entgroup.find(n) >= 0);
 			float inspawn = spawned && lastspawn && lastmillis-lastspawn <= 1000 ? float(lastmillis-lastspawn)/1000.f : 0.f;
-			if(enttype[type].noisy && (!editmode || !editradarnoisy() || (editradarnoisy() < 2 && !insel)))
+			if(enttype[type].noisy && (player1->state != CS_EDITING || !editradarnoisy() || (editradarnoisy() < 2 && !insel)))
 				return;
 			vec dir(o);
 			dir.sub(camera1->o);
@@ -1078,7 +1077,12 @@ struct gameclient : igameclient
 					range = (inspawn > 0.f ? 2.f-inspawn : 1.f)-(insel ? 1.f : (dist/radarrange())),
 						fade = clamp(range, 0.f, 1.f)*blipblend();
 			settexture(bliptex(), 3);
-			glColor4f(1.f, inspawn > 0.f ? inspawn : (insel ? 0.5f : 1.f), 0.f, fade);
+			if(inspawn > 0.f)
+			{
+				glColor4f(1.f, 1.f, 1.f, fade*(1.f-inspawn));
+				drawsized(cx-(cs*0.5f)-(inspawn*cs), cy-(cs*0.5f)-(inspawn*cs), cs+(inspawn*cs*2.f));
+			}
+			glColor4f(1.f, insel ? 0.5f : 1.f, inspawn > 0.f ? inspawn : 0.f, fade);
 			drawsized(cx-(cs*0.5f), cy-(cs*0.5f), cs);
 		}
 	}
@@ -1254,6 +1258,13 @@ struct gameclient : igameclient
 			}
 			if(showhudinfo())
 			{
+				if(player1->hasgun(player1->gunselect) && player1->canreload(player1->gunselect, lastmillis) && player1->ammo[player1->gunselect] < guntype[player1->gunselect].max)
+				{
+					const char *a = retbindaction("reload", keym::ACTION_DEFAULT, 0);
+					s_sprintfd(actkey)("%s", a && *a ? a : "RELOAD");
+					tp += draw_textx("Press [ \fs\fg%s\fS ] to load ammo", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
+				}
+
 				vector<actitem> actitems;
 				if(et.collateitems(player1, false, actitems))
 				{
@@ -1327,7 +1338,7 @@ struct gameclient : igameclient
 								{
 									pushfont("emphasis");
 									tp += draw_textx("Press [ \fs\fg%s\fS ] to interact", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
-									tp += draw_textx("with [ \fs\fc%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, enttype[e.type].name);
+									tp += draw_textx("with [ \fs\fb%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, enttype[e.type].name);
 									popfont();
 									tp += FONTH/2;
 									if(showhudinfo() < 2) break;
@@ -1444,7 +1455,7 @@ struct gameclient : igameclient
 
 		if(cc.ready() && maptime)
 		{
-			if(editmode)
+			if(player1->state == CS_EDITING)
 			{
 				hoff -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
 						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
