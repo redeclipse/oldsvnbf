@@ -161,10 +161,8 @@ struct weaponstate
 
 		if(gun == GUN_PLASMA)
 		{
-			regular_part_splash(7, rnd(2)+1, 50, o, teamtype[d->team].colour, guntype[gun].explode*0.75f, 5);
-			adddynlight(o, 1.15f*guntype[gun].explode,
-				vec((teamtype[d->team].colour>>16)/255.f, ((teamtype[d->team].colour>>8)&0xFF)/255.f, (teamtype[d->team].colour&0xFF)/255.f),
-					100, 10);
+			regular_part_splash(7, rnd(2)+1, 50, o, 0x00AA99, guntype[gun].explode*0.75f, 5);
+			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.f, 0.7f, 0.6f), 100, 10);
 		}
 		else if(gun == GUN_FLAMER)
 		{
@@ -182,7 +180,7 @@ struct weaponstate
 		}
         adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
         adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*0.5f,
-			gun == GUN_PLASMA ? bvec((teamtype[d->team].colour>>16)/2, ((teamtype[d->team].colour>>8)&0xFF)/2, (teamtype[d->team].colour&0xFF)/2) : bvec(96, 48, 16));
+			gun == GUN_PLASMA ? bvec(0, 95, 75) : bvec(96, 48, 16));
 
 		if(local)
 		{
@@ -276,8 +274,8 @@ struct weaponstate
 				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
 				if(gun == GUN_PLASMA)
 				{
-					adddynlight(from, 25, vec((teamtype[d->team].colour>>16)/255.f, ((teamtype[d->team].colour>>8)&0xFF)/255.f, (teamtype[d->team].colour&0xFF)/255.f), 20, 0, DL_FLASH);
-					part_create(7, 50, from, teamtype[d->team].colour, 1.0f, d);
+					adddynlight(from, 50, vec(0.f, 0.7f, 0.6f), 50, 0, DL_FLASH);
+					part_create(7, 50, from, 0x00AA99, 1.0f, d);
 				}
 				else if(gun == GUN_FLAMER)
 				{
@@ -290,11 +288,11 @@ struct weaponstate
 			case GUN_CARBINE:
 			case GUN_RIFLE:
 			{
-				part_splash(14, gun == GUN_RIFLE ?  50 : 25, gun == GUN_RIFLE ? 250 : 100, to, teamtype[d->team].colour, gun == GUN_RIFLE ? 1.2f : 0.6f);
-				part_trail(14, gun == GUN_RIFLE ? 750 : 500, from, to, teamtype[d->team].colour, gun == GUN_RIFLE ? 1.0f : 0.5f);
+				part_splash(14, gun == GUN_RIFLE ?  50 : 25, gun == GUN_RIFLE ? 250 : 100, to, 0x333333, gun == GUN_RIFLE ? 1.2f : 0.6f);
+				part_trail(14, gun == GUN_RIFLE ? 750 : 500, from, to, 0x333333, gun == GUN_RIFLE ? 1.0f : 0.5f);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
-                adddynlight(from, 50, vec((teamtype[d->team].colour>>16)/255.f, ((teamtype[d->team].colour>>8)&0xFF)/255.f, (teamtype[d->team].colour&0xFF)/255.f), 50, 0, DL_FLASH);
-				part_create(2, 100, from, teamtype[d->team].colour, gun == GUN_RIFLE ? 2.f : 1.2f, d);
+                adddynlight(from, 50, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
+				part_create(2, 100, from, 0x333333, gun == GUN_RIFLE ? 2.f : 1.2f, d);
 				break;
 			}
 		}
