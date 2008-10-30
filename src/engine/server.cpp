@@ -424,9 +424,6 @@ int addclient(int type)
 #ifndef STANDALONE
 void localconnect()
 {
-    abortconnect();
-    disconnect(1);
-
     int cn = addclient(ST_LOCAL);
     client &c = *clients[cn];
     c.peer = NULL;

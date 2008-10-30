@@ -431,6 +431,7 @@ extern void writeservercfg();
 // client
 extern void servertoclient(int chan, uchar *buf, int len);
 extern void localservertoclient(int chan, uchar *buf, int len);
+extern bool connected();
 extern void connects(const char *name = NULL, int port = ENG_SERVER_PORT, int qport = ENG_QUERY_PORT);
 extern void abortconnect();
 extern void clientkeepalive();
