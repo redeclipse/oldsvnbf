@@ -709,9 +709,8 @@ struct gameclient : igameclient
 		if(!d) return;
 		if(d->name[0]) conoutf("\fo%s left the game", colorname(d));
 		pj.remove(d);
-        removetrackedparticles(d);
-		removetrackedsounds(d);
 		DELETEP(players[cn]);
+		players[cn] = NULL;
 		cleardynentcache();
 	}
 

@@ -837,6 +837,8 @@ struct gameent : dynent, gamestate
 	{
 		freeeditinfo(edit);
 		if(ai) delete ai;
+		removetrackedparticles(this);
+		removetrackedsounds(this);
 		if(issound(wschan)) removesound(wschan);
 		wschan = -1;
 	}

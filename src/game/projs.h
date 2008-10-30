@@ -540,7 +540,7 @@ struct projectiles
 
 	void adddynlights()
 	{
-		loopv(projs) if(projs[i]->projtype == PRJ_SHOT)
+		loopv(projs) if(projs[i]->ready() && projs[i]->projtype == PRJ_SHOT)
 		{
 			projent &proj = *projs[i];
 
