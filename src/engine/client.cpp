@@ -36,9 +36,9 @@ void throttle()
 	enet_peer_throttle_configure(curpeer, throttle_interval*1000, throttle_accel, throttle_decel);
 }
 
-bool connected()
+bool connected(bool attempt)
 {
-    return curpeer || connpeer || haslocalclients();
+    return curpeer || (attempt && connpeer) || haslocalclients();
 }
 
 void connectfail(bool msg = true)
@@ -133,8 +133,8 @@ void connects(const char *name, int port, int qport)
 		enet_host_flush(clienthost);
 		connmillis = totalmillis;
 		connattempts = 0;
-		//s_sprintfd(cs)("connecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
-		//computescreen(cs);
+//		s_sprintfd(cs)("connecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
+//		computescreen(cs);
 	}
 	else connectfail();
 }

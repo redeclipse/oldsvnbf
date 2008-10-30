@@ -811,8 +811,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 	clearlights();
 	allchanged();
 
-    if(nocfg) touchvar("skybox");
-    else
+    if(!nocfg)
     {
 	    overrideidents = worldidents = true;
 	    persistidents = false;

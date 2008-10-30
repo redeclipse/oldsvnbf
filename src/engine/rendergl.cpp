@@ -1247,6 +1247,15 @@ void loadbackground(int w, int h)
 	glTexCoord2f(0, 1); glVertex2f(0, h);
 
 	glEnd();
+
+    int x = (w-512)/2, y = 128;
+    settexture("textures/logo", 3);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex2f(x,    y);
+    glTexCoord2f(1, 0); glVertex2f(x+512, y);
+    glTexCoord2f(1, 1); glVertex2f(x+512, y+256);
+    glTexCoord2f(0, 1); glVertex2f(x,    y+256);
+    glEnd();
 }
 
 void computescreen(const char *text, Texture *t, const char *overlaytext)
@@ -1316,15 +1325,6 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 		glScalef(1/3.0f, 1/3.0f, 1);
 		draw_textx("v%.2f (%s)", w*3-FONTH, int(h*2.6f), 255, 255, 255, 255, false, AL_RIGHT, -1, -1, float(ENG_VERSION)/100.f, ENG_RELEASE);
 		glPopMatrix();
-
-		int x = (w-512)/2, y = 128;
-		settexture("textures/logo", 3);
-		glBegin(GL_QUADS);
-		glTexCoord2f(0, 0); glVertex2f(x,	 y);
-		glTexCoord2f(1, 0); glVertex2f(x+512, y);
-		glTexCoord2f(1, 1); glVertex2f(x+512, y+256);
-		glTexCoord2f(0, 1); glVertex2f(x,	 y+256);
-		glEnd();
 
 		SDL_GL_SwapBuffers();
 	}
@@ -1617,6 +1617,39 @@ void viewproject(float zscale)
     }
 }
 
+void drawnoview()
+{
+    xtravertsva = xtraverts = glde = gbatches = 0;
+
+    glDisable(GL_FOG);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    int w = screen->w, h = screen->h;
+    gettextres(w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, w, h, 0, -1, 1);
+
+    glEnable(GL_TEXTURE_2D);
+
+    defaultshader->set();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    loadbackground(w, h);
+    glDisable(GL_BLEND);
+
+    cl->drawhud(w, h);
+
+    glDisable(GL_TEXTURE_2D);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_FOG);
+}
+
 void drawview(int targtype)
 {
     curview = targtype;
@@ -1645,7 +1678,6 @@ void drawview(int targtype)
 	readmatrices();
 
 	glEnable(GL_TEXTURE_2D);
-	glPolygonMode(GL_FRONT_AND_BACK, wireframe && editmode ? GL_LINE : GL_FILL);
 
 	xtravertsva = xtraverts = glde = gbatches = 0;
 
@@ -1665,6 +1697,8 @@ void drawview(int targtype)
 
 	glClearColor(0, 0, 0, 0);
 	glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode && clearview(viewtype, targtype) ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
+
+    if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	if(limitsky()) drawskybox(farplane, true);
 	rendergeom(causticspass);
@@ -1698,6 +1732,8 @@ void drawview(int targtype)
 	    renderavatar(false);
         viewproject();
     }
+
+    if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);
@@ -1792,6 +1828,12 @@ void drawview(int targtype)
 
 void gl_drawframe(int w, int h)
 {
+    if(!cc->ready())
+    {
+        drawnoview();
+        return;
+    }
+
 	fogmat = lookupmaterial(camera1->o)&MATF_VOLUME;
 	causticspass = 0.f;
 	if(fogmat == MAT_WATER || fogmat == MAT_LAVA)

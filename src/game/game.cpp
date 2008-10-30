@@ -950,7 +950,7 @@ struct gameclient : igameclient
 			if(g3d_active()) index = POINTER_GUI;
 			else return;
 		}
-        else if(hidehud || !showcrosshair() || player1->state == CS_DEAD) return;
+        else if(hidehud || !showcrosshair() || player1->state == CS_DEAD || !cc.ready()) return;
         else if(player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(inzoom() && player1->gunselect == GUN_RIFLE) index = POINTER_SNIPE;
         else if(lastmillis-lasthit <= crosshairhitspeed()) index = POINTER_HIT;
