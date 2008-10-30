@@ -531,7 +531,7 @@ void renderdecals(int time)
     decalrenderer::cleanuprenderstate();
 }
 
-VARP(maxdecaldistance, 1, 4096, INT_MAX-1);
+VARA(maxdecaldistance, 128, 4096, INT_MAX-1);
 
 void adddecal(int type, const vec &center, const vec &surface, float radius, const bvec &color, int info)
 {

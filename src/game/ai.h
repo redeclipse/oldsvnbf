@@ -1150,6 +1150,8 @@ struct aiclient
 					if(expired)
 					{
 						frame = aiframetimes[b.type]-d->skill;
+						//extern int autoadjust, autoadjustlevel;
+						//if(autoadjust) frame = frame*102/(autoadjustlevel+2);
 						b.next = lastmillis + frame;
 						b.cycle++;
 					}

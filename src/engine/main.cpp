@@ -572,7 +572,7 @@ int lastautoadjust = 0;
 VARP(autoadjust, 0, 1, 1);				// auto performance adjust
 VARP(autoadjustmin, 0, 0, 100);			// lowest level to go to
 VARP(autoadjustmax, 0, 100, 100);		// highest level to go to
-VARFP(autoadjustfps, 0, 25, 100,		// aim for this fps or higher
+VARFP(autoadjustfps, 0, 20, 100,		// aim for this fps or higher
 	autoadjustfps = min(autoadjustfps, maxfps-1));
 VARP(autoadjustrate, 0, 500, 10000);	// only adjust this often
 VARFP(autoadjustlimit, 0, 10, 100,	// going below this automatically scales to minimum
@@ -580,14 +580,11 @@ VARFP(autoadjustlimit, 0, 10, 100,	// going below this automatically scales to m
 
 void autoadjustset(int level)
 {
-	if(level >= 0 && level <= 100)
-	{
-		enumerate(*idents, ident, i, if(i.type == ID_VAR && (i.flags & IDF_AUTO)) {
-			int n = i.def.i-i.minval > 1 ? int((float(i.def.i-i.minval)/100.f)*float(level))+i.minval : (level ? i.def.i : i.minval);
-			*i.storage.i = clamp(n, i.minval, i.def.i);
-			i.changed();
-		});
-	}
+	enumerate(*idents, ident, i, if(i.type == ID_VAR && (i.flags & IDF_AUTO)) {
+		int n = i.def.i-i.minval > 1 ? int((float(i.def.i-i.minval)/100.f)*float(level))+i.minval : (level ? i.def.i : i.minval);
+		*i.storage.i = clamp(n, i.minval, i.def.i);
+		i.changed();
+	});
 }
 
 VARFP(autoadjustlevel, 0, 100, 100, autoadjustset(autoadjustlevel));

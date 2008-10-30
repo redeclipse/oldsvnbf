@@ -1451,11 +1451,11 @@ struct gameclient : igameclient
 		if(showfps()) switch(showfps())
 		{
 			case 2:
-				if(autoadjust) hoff -= draw_textx("fps:%d (%d/%d) +%d-%d [%d%%]", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], autoadjustfps, maxfps, curstats[9], curstats[10], curstats[11]);
+				if(autoadjust) hoff -= draw_textx("fps:%d (%d/%d) +%d-%d [\fs%s%d%%\fS]", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], autoadjustfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
 				else hoff -= draw_textx("fps:%d (%d) +%d-%d", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], maxfps, curstats[9], curstats[10]);
 				break;
 			case 1:
-				if(autoadjust) hoff -= draw_textx("fps:%d (%d/%d) [%d%%]", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], autoadjustfps, maxfps, curstats[11]);
+				if(autoadjust) hoff -= draw_textx("fps:%d (%d/%d) [\fs%s%d%%\fS]", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], autoadjustfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
 				else hoff -= draw_textx("fps:%d (%d)", FONTH/4, hoff-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], maxfps);
 				break;
 			default: break;

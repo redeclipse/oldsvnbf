@@ -9,8 +9,8 @@ Shader *particleshader = NULL, *particlenotextureshader = NULL;
 #define MAXPARTICLES 40000
 
 VARFP(maxparticles, 10, 4000, MAXPARTICLES, particleinit());
-VARA(maxparticledistance, 256, 1024, 4096);
-VARA(maxtrail, 1, 500, 10000);
+VARA(maxparticledistance, 128, 1024, 4096);
+VARP(maxparticletrail, 1, 256, 8192);
 
 VARP(particletext, 0, 1, 1);
 VARP(outlinemeters, 0, 0, 1);
@@ -992,7 +992,7 @@ void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, floa
     if(shadowmapping || renderedgame) return;
     vec v;
     float d = e.dist(s, v);
-    int steps = clamp(int(d*2), 1, maxtrail);
+    int steps = clamp(int(d*2), 1, maxparticletrail);
     v.div(steps);
     vec p = s;
     loopi(steps)
