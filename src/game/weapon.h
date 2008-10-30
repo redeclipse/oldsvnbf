@@ -181,7 +181,7 @@ struct weaponstate
         if(gun != GUN_PLASMA)
 			adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
         adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*0.5f,
-			gun == GUN_PLASMA ? bvec(16, 64, 96) : bvec(96, 48, 16));
+			gun == GUN_PLASMA ? bvec(112, 196, 224) : bvec(128, 64, 24));
 
 		if(local)
 		{
