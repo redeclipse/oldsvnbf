@@ -420,6 +420,7 @@ VARG(botbalance, 0, 4, 32);
 VARG(botminskill, 0, 60, 100);
 VARG(botmaxskill, 0, 90, 100);
 
+FVARG(damagescale, 1.f);
 FVARG(gravityscale, 1.f);
 FVARG(jumpscale, 1.f);
 FVARG(speedscale, 1.f);
