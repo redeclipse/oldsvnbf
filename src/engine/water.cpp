@@ -987,7 +987,7 @@ void queryreflections()
 	}
 }
 
-VARP(maxreflect, 1, 1, 8);
+VARA(maxreflect, 1, 1, 8);
 
 int refracting = 0;
 bool reflecting = false, fading = false, fogging = false;

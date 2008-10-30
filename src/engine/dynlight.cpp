@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "engine.h"
 
-VARP(ffdynlights, 0, min(5, DYNLIGHTMASK), DYNLIGHTMASK);
-VARP(maxdynlights, 0, min(3, MAXDYNLIGHTS), MAXDYNLIGHTS);
-VARP(dynlightdist, 0, 1024, 10000);
+VARA(ffdynlights, 0, min(5, DYNLIGHTMASK), DYNLIGHTMASK);
+VARA(maxdynlights, 0, min(3, MAXDYNLIGHTS), MAXDYNLIGHTS);
+VARA(dynlightdist, 0, 1024, 10000);
 
 struct dynlight
 {
@@ -110,7 +110,7 @@ int finddynlights()
         if(reflecting || refracting > 0)
         {
             if(d.o.z + d.curradius < reflectz) continue;
-        }   
+        }
         else if(refracting < 0 && d.o.z - d.curradius > reflectz) continue;
         e.o = d.o;
         e.radius = e.height = e.aboveeye = d.curradius;

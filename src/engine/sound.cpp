@@ -25,8 +25,6 @@ VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_S
 VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARP(soundmaxatonce, 0, 128, INT_MAX-1);
-VARP(soundmaxdist, 0, INT_MAX-1, INT_MAX-1);
 
 void initsound()
 {
@@ -180,8 +178,8 @@ void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minra
 		if(camliquid && slotmat == MAT_AIR) svol = int(svol*0.1f);
 		else if(posliquid || camliquid) svol = int(svol*0.25f);
 
-		float mrad = float(maxrad > 0 && maxrad < soundmaxdist ? maxrad : soundmaxdist),
-			nrad = float(minrad < mrad ? minrad : mrad);
+		float mrad = float(maxrad > 0 ? maxrad : dist*1.5f),
+			nrad = float(minrad < mrad ? minrad : mrad/2.f);
 
 		if(dist <= nrad) *curvol = svol;
 		else if(dist <= mrad) *curvol = int(float(svol)*((mrad-nrad-dist)/(mrad-nrad)));
@@ -251,14 +249,6 @@ void updatesounds()
 int playsound(int n, vec &pos, physent *d, int flags, int vol, int maxrad, int minrad, int *hook, int ends)
 {
 	if(nosound || !soundvol) return -1;
-
-	if(!(flags&SND_MAP))
-	{
-		if(lastmillis == lastsoundmillis) soundsatonce++;
-		else soundsatonce = 1;
-		lastsoundmillis = lastmillis;
-		if(soundmaxatonce && soundsatonce > soundmaxatonce) return -1;
-	}
 
 	vector<soundslot> &soundset = flags&SND_MAP ? mapsounds : gamesounds;
 
