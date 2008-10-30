@@ -40,7 +40,7 @@ VARP(verbose, 0, 0, 5);
 #endif
 SVAR(game, "bfa");
 
-VAR(servertype, 0, 1, 3); // 0: none, 1: private, 2: public, 3: dedicated
+VAR(servertype, 0, 1, 3); // 0: local only, 1: private, 2: public, 3: dedicated
 VAR(serveruprate, 0, 0, INT_MAX-1);
 VAR(serverclients, 1, 6, MAXCLIENTS);
 VAR(serverport, 1, ENG_SERVER_PORT, INT_MAX-1);
@@ -615,17 +615,16 @@ uchar *retrieveservers(uchar *buf, int buflen)
 
 void serverslice()	// main server update, called from main loop in sp, or from below in dedicated server
 {
+    nonlocalclients = 0;
+    loopv(clients) switch(clients[i]->type)
+    {
+        case ST_TCPIP: nonlocalclients++; break;
+        default: break;
+    }
+
+    sv->serverupdate();
+
 	if(!serverhost) return;
-
-	nonlocalclients = 0;
-
-	loopv(clients) switch(clients[i]->type)
-	{
-		case ST_TCPIP: nonlocalclients++; break;
-		default: break;
-	}
-
-	sv->serverupdate();
 
 	sendpongs();
 
@@ -720,7 +719,7 @@ void serverloop()
 		#ifdef MASTERSERVER
 		checkmaster();
 		#endif
-		if(servertype) serverslice();
+		serverslice();
 #ifdef IRC
 		ircslice();
 #endif
@@ -739,6 +738,14 @@ void serverloop()
 
 void setupserver()
 {
+    sv->changemap(load && *load ? load : NULL);
+
+    if(!servertype) return;
+
+#ifdef MASTERSERVER
+    if(masterserver) setupmaster();
+#endif
+
 	conoutf("\fminit: server (%s:%d)", *serverip ? serverip : "*", serverport);
 	ENetAddress address = { ENET_HOST_ANY, serverport };
 	if(*serverip)
@@ -772,7 +779,6 @@ void setupserver()
 	{
 		enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 	}
-	sv->changemap(load && *load ? load : NULL);
 
 	if(servertype >= 2 && *servermaster)
 	{
@@ -791,13 +797,7 @@ void initruntime()
 
 	execfile("autoserv.cfg");
 
-	if(servertype)
-	{
-#ifdef MASTERSERVER
-		if(masterserver) setupmaster();
-#endif
-		setupserver();
-	}
+    setupserver();
 }
 
 bool serveroption(char *opt)
