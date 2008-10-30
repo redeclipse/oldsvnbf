@@ -97,7 +97,8 @@ struct physent                                  // base entity type, can be affe
         jumptime = crouchtime = timeinair = lastimpulse = 0;
         strafe = move = 0;
         physstate = PHYS_FALL;
-		o = vel = falling = vec(0, 0, 0);
+        o = vec(-1, -1, -1);
+		vel = falling = vec(0, 0, 0);
     	yaw = pitch = roll = aimyaw = aimpitch = 0.f;
         floor = vec(0, 0, 1);
         resetinterp();
