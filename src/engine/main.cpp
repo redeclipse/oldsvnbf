@@ -875,6 +875,8 @@ int main(int argc, char **argv)
         limitfps(millis, totalmillis);
 
 		curtime = millis-totalmillis;
+        lastmillis += curtime;
+        totalmillis = millis;
 
 		updatefps(frameloops, curtime);
 		checkinput();
@@ -900,9 +902,6 @@ int main(int argc, char **argv)
 			s_sprintfd(cap)("%s - %s", cl->gametitle(), cl->gametext());
 			setcaption(cap);
 		}
-
-		lastmillis += curtime;
-		totalmillis = millis;
 	}
 
 	ASSERT(0);
