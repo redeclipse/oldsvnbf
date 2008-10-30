@@ -708,7 +708,7 @@ bool findoctadir(const char *name)
 	return false;
 }
 
-VARP(autoconnect, 0, 1, 1);
+VARP(autoconnect, 0, 2, 2);
 int main(int argc, char **argv)
 {
 	#ifdef WIN32
@@ -862,7 +862,11 @@ int main(int argc, char **argv)
 	conoutf("\fminit: main");
 	if(initscript) execute(initscript);
 	if(autograbinput) setvar("grabinput", 1, true);
-	if(autoconnect) connects();
+	if(autoconnect) 
+    {
+        if(autoconnect==1) lanconnect();
+        else localconnect();
+    }
 	else if(!guiactive()) showgui("main");
 
 	resetfps();

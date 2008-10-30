@@ -369,7 +369,7 @@ extern void g3d_addgui(g3d_callback *cb);
 extern void g3d_limitscale(float scale);
 
 // client
-enum { ST_EMPTY, ST_TCPIP, ST_REMOTE };
+enum { ST_EMPTY, ST_LOCAL, ST_TCPIP, ST_REMOTE };
 
 struct client					// server side version of "dynent" type
 {

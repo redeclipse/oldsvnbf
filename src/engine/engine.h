@@ -417,10 +417,12 @@ extern void cleanupserver();
 extern void serverslice();
 
 extern uchar *retrieveservers(uchar *buf, int buflen);
-extern void clienttoserver(int chan, ENetPacket *);
-extern void selfconnect();
+extern void localclienttoserver(int chan, ENetPacket *);
 extern void lanconnect();
 extern bool serveroption(char *opt);
+extern void localconnect();
+extern void localdisconnect();
+extern bool haslocalclients();
 
 // serverbrowser
 extern void addserver(const char *name, int port, int qport);
@@ -428,6 +430,7 @@ extern void writeservercfg();
 
 // client
 extern void servertoclient(int chan, uchar *buf, int len);
+extern void localservertoclient(int chan, uchar *buf, int len);
 extern void connects(const char *name = NULL, int port = ENG_SERVER_PORT, int qport = ENG_QUERY_PORT);
 extern void abortconnect();
 extern void clientkeepalive();

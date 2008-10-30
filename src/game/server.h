@@ -2452,20 +2452,23 @@ struct gameserver : igameserver
         loopv(clients) clients[i]->wantsmaster = false;
 	}
 
-	int clientconnect(int n, uint ip)
+	int clientconnect(int n, uint ip, bool local)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
 		ci->clientnum = n;
 		clients.add(ci);
-		loopv(bannedips) if(bannedips[i].ip==ip) return DISC_IPBAN;
-		if(mastermode>=MM_PRIVATE) return DISC_PRIVATE;
-		if(mastermode>=MM_LOCKED) ci->state.state = CS_SPECTATOR;
+        if(!local)
+        {
+		    loopv(bannedips) if(bannedips[i].ip==ip) return DISC_IPBAN;
+		    if(mastermode>=MM_PRIVATE) return DISC_PRIVATE;
+		    if(mastermode>=MM_LOCKED) ci->state.state = CS_SPECTATOR;
+        }
 		if(currentmaster>=0) masterupdate = true;
 		ci->state.lasttimeplayed = lastmillis;
 		return DISC_NONE;
 	}
 
-	void clientdisconnect(int n)
+	void clientdisconnect(int n, bool local)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
 		ai.removeai(ci);
