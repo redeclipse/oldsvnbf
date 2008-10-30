@@ -36,30 +36,30 @@ void throttle()
 	enet_peer_throttle_configure(curpeer, throttle_interval*1000, throttle_accel, throttle_decel);
 }
 
-void connectfail(bool reset = false)
+bool connected()
 {
-	bool again = reset;
-	if(reset) disconnect();
+    return curpeer || connpeer || haslocalclients();
+}
 
+void connectfail(bool msg = true)
+{
+    abortconnect();
 	if(localattempt)
 	{
 		if(localattempt > 1)
 		{
-			conoutf("\frunable to find any server on the local network");
+			if(msg) conoutf("\frunable to find any server on the local network");
 			localattempt = 0;
 		}
 		else
 		{
-			conoutf("\fgunable to find a local server, trying the local network");
-			again = true;
+			if(msg) conoutf("\fgunable to find a local server, trying the local network");
+            connects();
+            return;
 		}
 	}
-	else
-	{
-		conoutf("\frcould not connect to server");
-		again = true;
-	}
-    if(again) connects();
+	else if(msg) conoutf("\frcould not connect to server");
+    if(!connected()) localconnect();
 }
 
 void abortconnect()
@@ -76,7 +76,7 @@ void abortconnect()
 void trydisconnect()
 {
 	if(connpeer) abortconnect();
-    else if(curpeer || haslocalclients())
+    else if(curpeer)
     {
         conoutf("\fwattempting to disconnect...");
         disconnect(0, !discmillis);
@@ -101,18 +101,20 @@ void connects(const char *name, int port, int qport)
 		if(!resolverwait(name, port, &address))
 		{
 			conoutf("\frcould not resolve host %s", name);
+            connectfail(false);
 			return;
 		}
 	}
 	else
 	{
-		if(!localattempt)
+		if(!localattempt++)
 		{
 			address.port = serverport;
 			addserver("localhost", serverport, serverqueryport);
 			if(!resolverwait("localhost", serverport, &address))
 			{
 				conoutf("\frcould not resolve localhost");
+                connectfail();
 				return;
 			}
 		}
@@ -121,7 +123,6 @@ void connects(const char *name, int port, int qport)
 			conoutf("\fwattempting to connect to a local server");
 			address.host = ENET_HOST_BROADCAST;
 		}
-		localattempt++;
 	}
 
 	if(!clienthost) clienthost = enet_host_create(NULL, 2, rate, rate);
@@ -135,7 +136,7 @@ void connects(const char *name, int port, int qport)
 		s_sprintfd(cs)("connecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
 		computescreen(cs);
 	}
-	else connectfail(false);
+	else connectfail();
 }
 
 void lanconnect()
@@ -164,22 +165,17 @@ void disconnect(int onlyclean, int async)
 		conoutf("\fodisconnected");
 		cleanup = true;
 	}
-    if(haslocalclients())
-    {
-        localdisconnect();
-        cleanup = true;
-    }
 	if(!connpeer && clienthost)
 	{
 		enet_host_destroy(clienthost);
 		clienthost = NULL;
 	}
 	if(cleanup) cc->gamedisconnect(onlyclean);
+    if(!onlyclean) localconnect();
 }
 
 ICOMMAND(connect, "sii", (char *n, int *a, int *b), connects(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT));
 COMMAND(lanconnect, "");
-COMMAND(localconnect, "");
 COMMANDN(disconnect, trydisconnect, "");
 
 int lastupdate = -1000;
@@ -240,7 +236,7 @@ void gets2c()			// get updates from the server
 		++connattempts;
 		if(connattempts > 3)
 		{
-			connectfail(false);
+			connectfail();
 			return;
 		}
 	}
@@ -267,7 +263,7 @@ void gets2c()			// get updates from the server
 		case ENET_EVENT_TYPE_DISCONNECT:
             extern const char *disc_reasons[];
 			if(event.data>=DISC_NUM) event.data = DISC_NONE;
-            if(event.peer==connpeer) connectfail(false);
+            if(event.peer==connpeer) connectfail();
             else
             {
                 if(!discmillis || event.data) conoutf("\frserver network error, disconnecting (%s) ...", disc_reasons[event.data]);
