@@ -843,17 +843,11 @@ struct clientcom : iclientcom
 				{
 					int lcn = getint(p);
 					gameent *f = cl.newclient(lcn);
-					if(f->lastdeath && !f->obliterated)
-					{
-						vec pos = cl.feetpos(f), vel(0, 0, 4);
-						int gibs = clamp(((0-f->health)+4)/4, 1, 10);
-						loopi(rnd(gibs)+1) cl.pj.spawn(pos, vel, f, PRJ_GIBS);
-					}
 					f->respawn(lastmillis);
 					parsestate(f, p);
 					f->state = CS_SPAWNING;
 					playsound(S_RESPAWN, f->o, f);
-					regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 2.f);
+					regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 3.f);
 					break;
 				}
 
@@ -861,12 +855,6 @@ struct clientcom : iclientcom
 				{
 					int lcn = getint(p);
 					gameent *f = cl.newclient(lcn);
-					if(f->lastdeath && !f->obliterated)
-					{
-						vec pos = cl.feetpos(f), vel(0, 0, 4);
-						int gibs = clamp(((0-f->health)+4)/4, 1, 10);
-						loopi(rnd(gibs)+1) cl.pj.spawn(pos, vel, f, PRJ_GIBS);
-					}
 					if(f == cl.player1 && editmode) toggleedit();
 					f->respawn(lastmillis);
 					parsestate(f, p);
@@ -877,7 +865,7 @@ struct clientcom : iclientcom
 						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(team) : -1, m_team(cl.gamemode, cl.mutators) ? team : -1);
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
 						playsound(S_RESPAWN, f->o, f);
-						regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 2.f);
+						regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 3.f);
 					}
 					cl.ai.spawned(f);
 					if(f == cl.player1) cl.resetstates(ST_DEFAULT);
@@ -1008,7 +996,7 @@ struct clientcom : iclientcom
 						s_sprintfd(ds)("@%s", item);
 						particle_text(cl.et.ents[ent]->o, ds, 9);
 					}
-					regularshape(7, enttype[cl.et.ents[ent]->type].radius, 0x888822, 53, 50, 250, cl.et.ents[ent]->o, 1.f);
+					regularshape(7, enttype[cl.et.ents[ent]->type].radius, 0x888822, 53, 50, 250, cl.et.ents[ent]->o, 2.f);
 					break;
 				}
 

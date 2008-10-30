@@ -628,13 +628,13 @@ static partrenderer *parts[] =
 {
     new quadrenderer("particles/blood",				PT_PART|PT_MOD|PT_RND4, 2, 1),		// 0 blood spats (note: rgb is inverted)
     new quadrenderer("particles/spark",				PT_PART|PT_GLARE,   2, 0),			// 1 sparks
-    new quadrenderer("particles/smoke",				PT_PART,    -20, 0),				// 2 small slowly rising smoke
+    new quadrenderer("particles/smoke",				PT_PART,    0, 0),					// 2 small smoke
     new quadrenderer("particles/entity",			PT_PART|PT_GLARE,  20, 0),			// 3 edit mode entities
     new softquadrenderer("particles/fireball",		PT_PART|PT_GLARE,  20, 0),			// 4 softened fireball
     new quadrenderer("particles/fireball", 			PT_PART|PT_GLARE,  20, 0),          // 5 fireball
     new quadrenderer("particles/smoke",				PT_PART,          -20, 0),			// 6 big  slowly rising smoke
-    new quadrenderer("particles/plasma",			PT_PART|PT_GLARE,  20, 0),			// 7 fireball2
-	new quadrenderer("particles/electric",			PT_PART|PT_GLARE,  20, 0),			// 8 big fireball3
+    new quadrenderer("particles/plasma",			PT_PART|PT_GLARE,  0, 0),			// 7 fireball2
+	new quadrenderer("particles/electric",			PT_PART|PT_GLARE,  0, 0),			// 8 big fireball3
     &textups,																			// 9 TEXT, floats up
     new taperenderer("particles/flare",				PT_TAPE|PT_GLARE,   0, 0),			// 10 streak
     &texts,																				// 11 TEXT, SMALL, NON-MOVING
@@ -899,16 +899,16 @@ static void regularsplash(int type, int color, int radius, int num, int fade, co
 static struct partmap { int type; int color; float size; } partmaps[] =
 {
     {  1, 0xB49B4B, 0.6f }, // 0 yellow: sparks
-    {  2, 0x888888, 0.6f }, // 1 greyish:   small slowly rising smoke
+    {  2, 0x222222, 0.6f }, // 1 greyish:   small slowly rising smoke
     {  3, 0x3232FF, 0.3f }, // 2 blue:   edit mode entities
     {  0, 0x60FFFF, 3.0f }, // 3 red:    blood spats (note: rgb is inverted)
     {  5, 0xFFC8C8, 4.8f }, // 4 yellow: fireball1
-    {  6, 0x888888, 2.4f }, // 5 greyish:   big  slowly rising smoke
+    {  6, 0x222222, 2.4f }, // 5 greyish:   big  slowly rising smoke
     {  7, 0xFFFFFF, 4.8f }, // 6 blue:   fireball2
     {  8, 0xFFFFFF, 4.8f }, // 7 green:  big fireball3
     {  9, 0xFFFFFF, 3.0f }, // 8 TEXT RED
     {  9, 0xFFFFFF, 4.0f }, // 9 TEXT GREEN
-    { 10, 0xFFC864, 1.0f }, // 10 yellow flare
+    { 10, 0xFFC864, 0.8f }, // 10 yellow flare
     { 11, 0xFFFFFF, 2.0f }, // 11 TEXT DARKGREEN, SMALL, NON-MOVING
     {  8, 0xFFFFFF, 2.0f }, // 12 green small fireball3
     { 11, 0xFFFFFF, 2.0f }, // 13 TEXT RED, SMALL, NON-MOVING
@@ -919,11 +919,11 @@ static struct partmap { int type; int color; float size; } partmaps[] =
     { 12, 0x3219FF, 2.0f }, // 18 METER BLUE, SMALL, NON-MOVING
     { 13, 0xFF1932, 2.0f }, // 19 METER RED vs. BLUE, SMALL, NON-MOVING (note swaps r<->b)
     { 13, 0x3219FF, 2.0f }, // 20 METER BLUE vs. RED, SMALL, NON-MOVING (note swaps r<->b)
-    { 14, 0x888888, 0.6f }, // 21 greyish:   small  slowly sinking smoke trail
-    { 15, 0xFF6666, 4.0f }, // 22 red explosion fireball
-    { 15, 0x888822, 4.0f }, // 23 orange explosion fireball
+    { 14, 0x222222, 0.6f }, // 21 greyish:   small  slowly sinking smoke trail
+    { 15, 0x991100, 4.0f }, // 22 red explosion fireball
+    { 15, 0x884400, 4.0f }, // 23 orange explosion fireball
     { 11, 0xFFFFFF, 1.2f }, // 24 TEXT WHITE, TINY, NON-MOVING
-    { 17, 0x888888, 2.4f }, // 25 greyish:   big  fast rising smoke
+    { 17, 0x222222, 2.4f }, // 25 greyish:   big  fast rising smoke
     { 11, 0xFFFFFF, 2.5f }, // 26 TEXT WHITE, NON-MOVING
     { 11, 0xFFFFFF, 2.0f }, // 27 TEXT WHITE, SMALL, NON-MOVING
     { 16, 0xFFFFFF, 0.6f }, // 28 lightning

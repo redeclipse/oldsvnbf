@@ -1,5 +1,4 @@
-// weapon.h: all shooting and effects code, projectile management
-// weapon.h: all shooting and effects code, projectile management
+// projs.h: projectiles 'n stuff
 
 struct projectiles
 {
@@ -97,7 +96,10 @@ struct projectiles
 				proj.elasticity = 0.15f;
 				proj.relativity = 1.0f;
 				proj.waterfric = 2.0f;
-				proj.weight = 100.f;
+				proj.weight = 50.f;
+				proj.vel.x += rnd(10)+1;
+				proj.vel.y += rnd(10)+1;
+				proj.vel.z += rnd(20)+10;
 				proj.geomcollide = proj.playercollide = 1; // bounce
 				break;
 			}
@@ -111,10 +113,13 @@ struct projectiles
 					case 1: default: proj.mdl = "debris/debris01"; break;
 				}
 				proj.aboveeye = 1.0f;
-				proj.elasticity = 0.66f;
-				proj.relativity = 1.0f;
-				proj.waterfric = 1.75f;
-				proj.weight = 150.f;
+				proj.elasticity = 0.7f;
+				proj.relativity = 0.0f;
+				proj.waterfric = 1.7f;
+				proj.weight = 75.f;
+				proj.vel.x += rnd(20)+10;
+				proj.vel.y += rnd(20)+10;
+				proj.vel.z += rnd(20)+10;
 				proj.geomcollide = proj.playercollide = 1; // bounce
 				break;
 			}
@@ -129,10 +134,6 @@ struct projectiles
 				proj.geomcollide = 1; // bounce
 				proj.playercollide = 0; // don't
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
-				vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
-				if(v.magnitude()>50) v.div(50);
-				v.z /= 2.f;
-				proj.to.add(v);
 				break;
 			}
 			default: break;
@@ -148,19 +149,23 @@ struct projectiles
 
 		vec dir(vec(vec(proj.to).sub(proj.o)).normalize());
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
-		vec rel = dir;
+		vec rel = vec(proj.vel).add(dir);
 		if(proj.relativity) rel.add(vec(proj.owner->vel).mul(proj.relativity));
 		proj.vel = vec(rel).add(vec(dir).mul(proj.maxspeed));
 		proj.spawntime = lastmillis;
+		proj.to = vec(proj.o).add(proj.vel);
 
-		if(proj.projtype == PRJ_SHOT && proj.radial)
-			proj.height = proj.radius = guntype[proj.attr1].explode;
+		if(proj.playercollide)
+		{
+			if(proj.projtype == PRJ_SHOT && proj.radial)
+				proj.height = proj.radius = guntype[proj.attr1].explode;
 
-		for(hitplayer = NULL; !plcollide(&proj) && hitplayer == proj.owner; hitplayer = NULL)
-			proj.o.add(vec(dir).mul(0.1f)); // get out of the player
+			for(hitplayer = NULL; !plcollide(&proj) && hitplayer == proj.owner; hitplayer = NULL)
+				proj.o.add(vec(dir).mul(0.1f)); // get out of the player
 
-		if(proj.projtype == PRJ_SHOT && proj.radial)
-			proj.height = proj.radius = guntype[proj.attr1].offset;
+			if(proj.projtype == PRJ_SHOT && proj.radial)
+				proj.height = proj.radius = guntype[proj.attr1].offset;
+		}
 
 		vec orig = proj.o;
 		bool found = false;
@@ -168,6 +173,8 @@ struct projectiles
 		{
 			if(!collide(&proj) || inside || (hitplayer && proj.playercollide == 1))
 			{
+				if((hitplayer && proj.playercollide == 2)  || (!hitplayer && proj.geomcollide == 2))
+					break; // explode
 				vec pos;
 				if(hitplayer) pos = vec(vec(hitplayer->o).sub(proj.o)).normalize();
 				else pos = wall;
@@ -182,14 +189,11 @@ struct projectiles
 		}
 		if(!found)
 		{
-			if(proj.projtype == PRJ_SHOT && proj.radial)
-				proj.state = CS_DEAD; // explode
-			else
+			proj.o = orig;
+			if(proj.playercollide == 2 || proj.geomcollide == 2 || !cl.ph.entinmap(&proj, false))
 			{
 				proj.o = orig;
-				cl.ph.entinmap(&proj, false); // failsafe
 			}
-
 		}
         proj.resetinterp();
 	}
@@ -206,24 +210,32 @@ struct projectiles
 			if(proj.attr1 == GUN_PLASMA)
 			{
 				proj.lifesize = proj.lifemillis-proj.lifetime <= 500 ? clamp((proj.lifemillis-proj.lifetime)/500.f, 0.1f, 1.f) : 1.f;
-				regular_part_splash(7, rnd(2)+1, 25, proj.o, 0x66AABB, guntype[proj.attr1].size*proj.lifesize, int(proj.radius*2));
+				regular_part_splash(7, 1, int((1.1f-proj.lifesize)*100.f), proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize, int(guntype[proj.attr1].size*proj.lifesize));
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
 				proj.lifesize = clamp(proj.lifespan*2.f, 0.1f, 1.f);
-				int col = ((int(254*max(1.0f-proj.lifespan,0.1f))<<16)+1)|((int(64*max(1.0f-proj.lifespan,0.05f))+1)<<8),
-					fade = clamp(int(proj.vel.magnitude()*5.f), 20, 100);
-				regular_part_splash(4, rnd(3)+1, fade, proj.o, col, guntype[proj.attr1].size*proj.lifesize, int(proj.radius*4));
+				int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(64*max(1.0f-proj.lifespan,0.1f))+1)<<8), deviation = guntype[proj.attr1].size/2;
+				regular_part_splash(4, 1, int((1.1f-proj.lifesize)*200.f), proj.o, col, guntype[proj.attr1].size*proj.lifesize, int(guntype[proj.attr1].size*proj.lifesize));
+				loopi(rnd(4)+1)
+					regular_part_splash(4, 1, int((1.1f-proj.lifesize)*100.f), vec(proj.o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation).mul(proj.lifespan)), col, guntype[proj.attr1].size*proj.lifesize*0.75f, int(guntype[proj.attr1].size*proj.lifesize));
 			}
 			else
 			{
 				proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-				regularshape(5, int(proj.radius), 0x443322, 21, rnd(5)+1, 100, proj.o, 2.f);
+				regularshape(5, int(proj.radius), 0x222222, 21, rnd(3)+1, 100, proj.o, 1.f);
 			}
 		}
 		else if(proj.projtype == PRJ_GIBS)
 		{
+			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 			regular_part_splash(0, 1, 5000, proj.o, 0x66FFFF, proj.radius*0.65f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
+		}
+		else if(proj.projtype == PRJ_DEBRIS)
+		{
+			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+			if(proj.vel.magnitude() > 3.f)
+				part_flare(proj.o, vec(proj.o).sub(vec(proj.vel).mul(0.3f)), int(proj.vel.magnitude())+1, 10, 0xAA9922, 0.3f);
 		}
 	}
 
@@ -426,7 +438,7 @@ struct projectiles
 				{
 					if(!proj.beenused)
 					{
-						regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 1.f);
+						regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 2.f);
 						if(proj.local)
 							cl.cc.addmsg(SV_EXPLODE, "ri6", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0, 0);
 					}
@@ -462,7 +474,7 @@ struct projectiles
                             case PRJ_ENT:
                                 if(!proj.beenused)
                                 {
-                                    regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 1.f);
+                                    regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 2.f);
                                     if(proj.local)
                                         cl.cc.addmsg(SV_EXPLODE, "ri6", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0, 0);
                                 }
@@ -508,14 +520,6 @@ struct projectiles
         projs.setsize(0);
     }
 
-	void spawn(vec &p, vec &vel, gameent *d, int type)
-	{
-		vec to(rnd(100)-50, rnd(100)-50, rnd(100)-50);
-		to.normalize();
-		to.add(p);
-		create(p, to, true, d, type, rnd(2000)+2000, 0, rnd(30)+10, 0, -1);
-	}
-
 	void preload()
 	{
 		const char *mdls[] = {
@@ -548,7 +552,7 @@ struct projectiles
 			{
 				case GUN_PLASMA:
 				{
-					vec col(0.45f*max(1.0f-proj.lifespan,0.1f), 0.7f*max(1.0f-proj.lifespan,0.1f), 0.8f*max(1.0f-proj.lifespan,0.1f));
+					vec col(0.1f*max(1.0f-proj.lifespan,0.1f), 0.4f*max(1.0f-proj.lifespan,0.1f), 0.6f*max(1.0f-proj.lifespan,0.1f));
 					adddynlight(proj.o, guntype[proj.attr1].explode*proj.lifesize, col);
 					break;
 				}
