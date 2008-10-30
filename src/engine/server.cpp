@@ -25,6 +25,7 @@ void conoutf(const char *s, ...)
 #endif
 }
 void servertoclient(int chan, uchar *buf, int len) {}
+void localservertoclient(int chan, uchar *buf, int len) {}
 void fatal(const char *s, ...)
 {
     void cleanupserver();
@@ -289,6 +290,9 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 			bsend += packet->dataLength;
 			break;
 		}
+        case ST_LOCAL:
+            localservertoclient(chan, packet->data, (int)packet->dataLength);
+            break;
 		default: break;
 	}
 }
@@ -381,7 +385,7 @@ void send_welcome(int n)
 	if(packet->referenceCount==0) enet_packet_destroy(packet);
 }
 
-void clienttoserver(int chan, ENetPacket *packet)
+void localclienttoserver(int chan, ENetPacket *packet)
 {
 	process(packet, 0, chan);
 	if(packet->referenceCount==0) enet_packet_destroy(packet);
@@ -415,6 +419,42 @@ int addclient(int type)
 	clients[n]->info = sv->newinfo();
 	clients[n]->type = type;
 	return n;
+}
+
+#ifndef STANDALONE
+void localconnect()
+{
+    abortconnect();
+    disconnect(1);
+
+    int cn = addclient(ST_LOCAL);
+    client &c = *clients[cn];
+    c.peer = NULL;
+    s_strcpy(c.hostname, "<local>");
+    conoutf("\fglocal client %d connected", c.num);
+    cc->gameconnect(false);
+    sv->clientconnect(c.num, 0, true);
+    send_welcome(c.num);
+}
+
+void localdisconnect()
+{
+    loopv(clients) if(clients[i] && clients[i]->type==ST_LOCAL)
+    {
+        client &c = *clients[i];
+        conoutf("\folocal client %d disconnected", i);
+        sv->clientdisconnect(c.num, true);
+        c.type = ST_EMPTY;
+        sv->deleteinfo(c.info);
+        c.info = NULL;
+    }
+}
+#endif
+
+bool haslocalclients()
+{
+    loopv(clients) if(clients[i] && clients[i]->type==ST_LOCAL) return true;
+    return false;
 }
 
 int nonlocalclients = 0;

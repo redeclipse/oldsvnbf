@@ -65,6 +65,7 @@ void connectfail(bool reset = false)
 void abortconnect()
 {
 	if(!connpeer) return;
+    conoutf("\fwaborting connection attempt");
 	if(connpeer->state!=ENET_PEER_STATE_DISCONNECTED) enet_peer_reset(connpeer);
 	connpeer = NULL;
     if(curpeer) return;
@@ -74,24 +75,18 @@ void abortconnect()
 
 void trydisconnect()
 {
-	if(connpeer)
-	{
-		conoutf("\fwaborting connection attempt");
-		abortconnect();
-		return;
-	}
-	if(!curpeer)
-	{
-		conoutf("\frnot connected");
-		return;
-	}
-	conoutf("\fwattempting to disconnect...");
-	disconnect(0, !discmillis);
+	if(connpeer) abortconnect();
+    else if(curpeer || haslocalclients())
+    {
+        conoutf("\fwattempting to disconnect...");
+        disconnect(0, !discmillis);
+    }
+    else conoutf("\frnot connected");
 }
 
 void connects(const char *name, int port, int qport)
 {
-	trydisconnect();
+    abortconnect();
 
 	ENetAddress address;
 	if(!port) port = ENG_SERVER_PORT;
@@ -169,6 +164,11 @@ void disconnect(int onlyclean, int async)
 		conoutf("\fodisconnected");
 		cleanup = true;
 	}
+    if(haslocalclients())
+    {
+        localdisconnect();
+        cleanup = true;
+    }
 	if(!connpeer && clienthost)
 	{
 		enet_host_destroy(clienthost);
@@ -179,6 +179,7 @@ void disconnect(int onlyclean, int async)
 
 ICOMMAND(connect, "sii", (char *n, int *a, int *b), connects(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT));
 COMMAND(lanconnect, "");
+COMMAND(localconnect, "");
 COMMANDN(disconnect, trydisconnect, "");
 
 int lastupdate = -1000;
@@ -186,7 +187,7 @@ int lastupdate = -1000;
 void sendpackettoserv(ENetPacket *packet, int chan)
 {
 	if(curpeer) enet_peer_send(curpeer, chan, packet);
-	else clienttoserver(chan, packet);
+	else localclienttoserver(chan, packet);
 }
 
 void c2sinfo(int rate)					 // send update to the server
@@ -214,6 +215,11 @@ void servertoclient(int chan, uchar *buf, int len)	// processes any updates from
 {
 	ucharbuf p(buf, len);
 	cc->parsepacketclient(chan, p);
+}
+
+void localservertoclient(int chan, uchar *buf, int len)
+{
+    servertoclient(chan, buf, len);
 }
 
 void clientkeepalive()
