@@ -11,7 +11,7 @@ static hashtable<const char *, Shader> shaders;
 static Shader *curshader = NULL;
 static vector<ShaderParam> curparams;
 static ShaderParamState vertexparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS], pixelparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS];
-static bool dirtyenvparams = false, standardshader = false;
+static bool dirtyenvparams = false, standardshader = false, initshaders = false;
 
 VAR(reservevpparams, 1, 16, 0);
 VAR(maxvpenvparams, 1, 0, 0);
@@ -34,9 +34,12 @@ void loadshaders()
         maxfplocalparams = val;
     }
 
+    initshaders = true;
     standardshader = true;
     exec("stdshader.cfg");
     standardshader = false;
+    initshaders = false;
+
     defaultshader = lookupshaderbyname("default");
     stdworldshader = lookupshaderbyname("stdworld");
     if(!defaultshader || !stdworldshader) fatal("cannot find shader definitions");
@@ -88,6 +91,7 @@ static bool compileasmshader(GLenum type, GLuint &idx, const char *def, const ch
 		}
     }
     else if(msg && !native) conoutf("\fr%s:%s EXCEEDED NATIVE LIMITS", tname, name);
+    glBindProgram_(type, 0);
     if(err!=-1 || (!native && nativeonly))
 	{
 		glDeletePrograms_(1, &idx);
@@ -570,6 +574,17 @@ void Shader::cleanup(bool invalid)
 
 Shader *newshader(int type, const char *name, const char *vs, const char *ps, Shader *variant = NULL, int row = 0)
 {
+    if(Shader::lastshader)
+    {
+        if(renderpath!=R_FIXEDFUNCTION)
+        {
+            glBindProgram_(GL_VERTEX_PROGRAM_ARB, 0);
+            glBindProgram_(GL_FRAGMENT_PROGRAM_ARB, 0);
+            if(renderpath==R_GLSLANG) glUseProgramObject_(0);
+        }
+        Shader::lastshader = NULL;
+    }
+
     Shader *exists = shaders.access(name);
     char *rname = exists ? exists->name : newstring(name);
     Shader &s = shaders[rname];
@@ -1050,6 +1065,7 @@ void defershader(const char *name, const char *contents)
     DELETEA(s.defer);
     s.defer = newstring(contents);
     s.type = SHADER_INVALID;
+    s.standard = standardshader;
 }
 
 void useshader(Shader &s)
@@ -1058,9 +1074,12 @@ void useshader(Shader &s)
     {
         char *defer = s.defer;
         s.defer = NULL;
+        bool wasstandard = standardshader;
+        standardshader = s.standard;
         persistidents = false;
         execute(defer);
         persistidents = true;
+        standardshader = wasstandard;
         delete[] defer;
     }
 }
@@ -1095,7 +1114,7 @@ void shader(int *type, char *name, char *vs, char *ps)
     {
         s_sprintfd(info)("shader %s", name);
         renderprogress(0.0, info);
-        if(mesa_program_bug && standardshader)
+        if(mesa_program_bug && initshaders)
         {
             glEnable(GL_VERTEX_PROGRAM_ARB);
             glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -1109,7 +1128,7 @@ void shader(int *type, char *name, char *vs, char *ps)
         if(strstr(vs, "#pragma CUBE2_shadowmap")) genshadowmapvariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(*s, s->name, vs, ps);
     }
-    if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && standardshader)
+    if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && initshaders)
     {
         glDisable(GL_VERTEX_PROGRAM_ARB);
         glDisable(GL_FRAGMENT_PROGRAM_ARB);
@@ -1134,7 +1153,7 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
     //s_sprintfd(info)("shader %s", varname);
     //renderprogress(0.0, info);
     extern int mesa_program_bug;
-    if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && standardshader)
+    if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && initshaders)
     {
         glEnable(GL_VERTEX_PROGRAM_ARB);
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -1145,7 +1164,7 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
         // '#' is a comment in vertex/fragment programs, while '#pragma' allows an escape for GLSL, so can handle both at once
         if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(*s, varname, vs, ps, *row);
     }
-    if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && standardshader)
+    if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && initshaders)
     {
         glDisable(GL_VERTEX_PROGRAM_ARB);
         glDisable(GL_FRAGMENT_PROGRAM_ARB);
