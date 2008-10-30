@@ -572,7 +572,7 @@ struct physics
         d->o = d->newpos;
         d->o.z += d->height;
 
-        int diff = lastphysframe - (lastmillis + curtime);
+        int diff = lastphysframe - lastmillis;
         if(diff <= 0 || !physinterp()) return;
 
         vec deltapos(d->deltapos);
@@ -783,7 +783,7 @@ struct physics
 
 	void update()		  // optimally schedule physics frames inside the graphics frames
 	{
-        int diff = lastmillis + curtime - lastphysframe;
+        int diff = lastmillis - lastphysframe;
         if(diff <= 0) physsteps = 0;
         else
         {

@@ -418,7 +418,7 @@ struct gameclient : igameclient
 		if(!curtime) return;
         if(!maptime)
         {
-        	maptime = lastmillis + curtime;
+        	maptime = lastmillis;
         	return;
         }
 
