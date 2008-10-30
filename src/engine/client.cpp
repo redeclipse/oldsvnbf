@@ -73,13 +73,14 @@ void connects(const char *name, int port, int qport)
 {
     abortconnect();
 
-	ENetAddress address;
 	if(!port) port = ENG_SERVER_PORT;
 	if(!qport) qport = ENG_QUERY_PORT;
 
+    ENetAddress address;
+    address.port = port;
+
 	if(name && *name)
 	{
-		address.port = port;
 		addserver(name, port, qport);
 		conoutf("\fwattempting to connect to %s:[%d]", name, port);
 		if(!resolverwait(name, port, &address))
@@ -140,7 +141,11 @@ void disconnect(int onlyclean, int async)
 		enet_host_destroy(clienthost);
 		clienthost = NULL;
 	}
-	if(cleanup) cc->gamedisconnect(onlyclean);
+	if(cleanup) 
+    {
+        cc->gamedisconnect(onlyclean);
+        localdisconnect();
+    }
     if(!onlyclean) localconnect();
 }
 
