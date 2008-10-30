@@ -161,8 +161,8 @@ struct weaponstate
 
 		if(gun == GUN_PLASMA)
 		{
-			regular_part_splash(7, rnd(2)+1, 50, o, 0x00AA99, guntype[gun].explode*0.75f, 5);
-			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.f, 0.7f, 0.6f), 100, 10);
+			regular_part_splash(7, rnd(2)+1, 50, o, 0x66AABB, guntype[gun].explode*0.75f, 5);
+			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.45f, 0.7f, 0.8f), 100, 10);
 		}
 		else if(gun == GUN_FLAMER)
 		{
@@ -178,9 +178,10 @@ struct weaponstate
 			loopi(rnd(20)+10)
 				cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
 		}
-        adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
+        if(gun != GUN_PLASMA)
+			adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
         adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*0.5f,
-			gun == GUN_PLASMA ? bvec(0, 95, 75) : bvec(96, 48, 16));
+			gun == GUN_PLASMA ? bvec(16, 64, 96) : bvec(96, 48, 16));
 
 		if(local)
 		{
@@ -274,8 +275,8 @@ struct weaponstate
 				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
 				if(gun == GUN_PLASMA)
 				{
-					adddynlight(from, 50, vec(0.f, 0.7f, 0.6f), 50, 0, DL_FLASH);
-					part_create(7, 50, from, 0x00AA99, 1.0f, d);
+					adddynlight(from, 50, vec(0.45f, 0.7f, 0.8f), 50, 0, DL_FLASH);
+					part_create(7, 50, from, 0x66AABB, 1.0f, d);
 				}
 				else if(gun == GUN_FLAMER)
 				{

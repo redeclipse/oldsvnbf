@@ -206,7 +206,7 @@ struct projectiles
 			if(proj.attr1 == GUN_PLASMA)
 			{
 				proj.lifesize = proj.lifemillis-proj.lifetime <= 500 ? clamp((proj.lifemillis-proj.lifetime)/500.f, 0.1f, 1.f) : 1.f;
-				regular_part_splash(7, rnd(2)+1, 25, proj.o, 0x00AA99, guntype[proj.attr1].size*proj.lifesize, int(proj.radius*2));
+				regular_part_splash(7, rnd(2)+1, 25, proj.o, 0x66AABB, guntype[proj.attr1].size*proj.lifesize, int(proj.radius*2));
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
@@ -548,7 +548,7 @@ struct projectiles
 			{
 				case GUN_PLASMA:
 				{
-					vec col(0.f, 0.7f, 0.6f);
+					vec col(0.45f*max(1.0f-proj.lifespan,0.1f), 0.7f*max(1.0f-proj.lifespan,0.1f), 0.8f*max(1.0f-proj.lifespan,0.1f));
 					adddynlight(proj.o, guntype[proj.attr1].explode*proj.lifesize, col);
 					break;
 				}
