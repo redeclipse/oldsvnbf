@@ -161,27 +161,27 @@ struct weaponstate
 
 		if(gun == GUN_PLASMA)
 		{
-			regular_part_splash(7, rnd(2)+1, 50, o, 0x66AABB, guntype[gun].explode*0.75f, 5);
-			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.45f, 0.7f, 0.8f), 100, 10);
+			regular_part_splash(7, 3, 150, o, 0x226688, guntype[gun].explode);
+			regular_part_splash(7, 1, 250, o, 0x226688, guntype[gun].size*0.75f);
+			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.1f, 0.4f, 0.6f), 100, 10);
 		}
-		else if(gun == GUN_FLAMER)
+		if(gun == GUN_FLAMER || gun == GUN_GL)
 		{
-			regular_part_splash(7, rnd(2)+1, 200, o, 0xFF6600, guntype[gun].explode, 5);
+			regular_part_splash(4, 5, gun == GUN_FLAMER ? 1000 : 2000, o, 0x441100, guntype[gun].explode*0.5f, int(guntype[gun].explode));
+			regular_part_splash(6, 10, gun == GUN_FLAMER ? 1000 : 2000, vec(o).add(vec(0, 0, 2)), 0x121212, guntype[gun].explode, int(guntype[gun].explode));
 			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), 100, 10);
 		}
-		else if(gun == GUN_GL)
+		if(gun == GUN_GL)
 		{
 			cl.quakewobble += int(guntype[gun].damage*(1.f-dist/EXPLOSIONSCALE/guntype[gun].explode/10.f));
-			particle_splash(0, 200, 300, o);
-			particle_fireball(o, guntype[gun].explode, gun == GUN_GL ? 23 : 22);
-			adddynlight(o, 1.15f*guntype[gun].explode, vec(2, 1.5f, 1), 1100, 100);
+			particle_fireball(o, guntype[gun].explode, 22);
 			loopi(rnd(20)+10)
-				cl.pj.spawn(vec(o).add(vec(vel)), vel, d, PRJ_DEBRIS);
+				cl.pj.create(o, vec(o).add(vel), true, d, PRJ_DEBRIS, rnd(3000)+2000, 0, rnd(30)+10, 100, -1);
 		}
         if(gun != GUN_PLASMA)
 			adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
-        adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode*0.5f,
-			gun == GUN_PLASMA ? bvec(112, 196, 224) : bvec(128, 64, 24));
+        adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), gun == GUN_PLASMA ? guntype[gun].size : guntype[gun].explode*0.75f,
+			gun == GUN_PLASMA ? bvec(86, 196, 244) : bvec(196, 96, 32));
 
 		if(local)
 		{
@@ -253,7 +253,7 @@ struct weaponstate
 				}
 				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
 				part_create(20, 50, from, 0xFFAA00, 4.f, d);
-				regularshape(6, 2, 0x333333, 21, rnd(20)+1, 25, from, 1.5f);
+				regularshape(6, 2, 0x333333, 21, rnd(20)+1, 25, from, 1.f);
 				break;
 			}
 
@@ -275,8 +275,8 @@ struct weaponstate
 				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
 				if(gun == GUN_PLASMA)
 				{
-					adddynlight(from, 50, vec(0.45f, 0.7f, 0.8f), 50, 0, DL_FLASH);
-					part_create(7, 50, from, 0x66AABB, 1.0f, d);
+					adddynlight(from, 50, vec(0.1f, 0.4f, 0.6f), 50, 0, DL_FLASH);
+					part_create(7, 50, from, 0x226688, 1.0f, d);
 				}
 				else if(gun == GUN_FLAMER)
 				{

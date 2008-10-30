@@ -308,7 +308,7 @@ struct entities : icliententities
 			d->useitem(lastmillis, n, e.type, e.attr1, e.attr2);
 			if(ents.inrange(r) && ents[r]->type == WEAPON && isgun(ents[r]->attr1))
 				cl.pj.drop(d, ents[r]->attr1, r, (d->gunwait[ents[r]->attr1]/2)-50);
-			regularshape(7, enttype[e.type].radius, 0x888822, 21, 50, 250, pos, 1.f);
+			regularshape(7, enttype[e.type].radius, 0x888822, 21, 50, 250, pos, 2.f);
 			e.spawned = false;
 		}
 	}
