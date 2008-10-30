@@ -1,0 +1,17 @@
+Non-definitive todo / wanted feature list, read at own peril.
+
+Hud Icons
+	plasma
+	carbine
+
+Indicators / Clips
+	plasma
+	carbine
+	flamer
+
+Particles / Decals
+	energy
+
+Player
+	pitching causes torso to enter legs
+	tag_ironsight ?
