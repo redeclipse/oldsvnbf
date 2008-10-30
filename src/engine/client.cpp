@@ -107,7 +107,11 @@ void connects(const char *name, int port, int qport)
 //		s_sprintfd(cs)("connecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
 //		computescreen(cs);
 	}
-	else connectfail();
+	else 
+    {
+        conoutf("\frfailed creating client socket");
+        connectfail();
+    }
 }
 
 void lanconnect()
