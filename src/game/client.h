@@ -115,17 +115,14 @@ struct clientcom : iclientcom
 	{
 		if(editmode) toggleedit();
 		needsmap = remote = isready = c2sinit = false;
+		cl.pj.remove(cl.player1);
+        removetrackedparticles(cl.player1);
+		removetrackedsounds(cl.player1);
 		cl.player1->clientnum = -1;
 		cl.player1->lifesequence = 0;
 		cl.player1->privilege = PRIV_NONE;
 		cl.player1->state = CS_DEAD;
-        removetrackedparticles();
-		loopv(cl.players) if(cl.players[i])
-        {
-            removetrackedsounds(cl.players[i]);
-            DELETEP(cl.players[i]);
-        }
-		cleardynentcache();
+		loopv(cl.players) if(cl.players[i]) cl.clientdisconnected(i);
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_GAME && strncmp(id.name, "sv_", 3)) // reset vars
 			{
@@ -1487,7 +1484,7 @@ struct clientcom : iclientcom
 	void parsecommand(gameent *d, char *cmd, char *arg)
 	{
 		ident *id = idents->access(cmd);
-		if(id && id->flags&IDF_GAME)
+		if(id && id->flags&IDF_GAME && strncmp(id->name, "sv_", 3))
 		{
 			string val;
 			val[0] = 0;
