@@ -2007,19 +2007,19 @@ struct gameserver : igameserver
 		if(gamemillis-ts.lastspawn <= REGENWAIT) return;
 		int setdamage = damage, realdamage = damage;
 
-		if(flags&HIT_LEGS) setdamage = damage/4;
-		else if (flags&HIT_TORSO) setdamage = damage/2;
+		if(flags&HIT_LEGS) setdamage = int(damage*0.25f);
+		else if (flags&HIT_TORSO) setdamage = int(damage*0.5f);
 		if(smode && !smode->damage(target, actor, setdamage, gun, flags, hitpush)) { return; }
 		mutate(smuts, if(!mut->damage(target, actor, setdamage, gun, flags, hitpush)) { return; });
 
 		if(!m_fight(gamemode) || (!sv_teamdamage && m_team(gamemode, mutators) && actor->team == target->team))
 			realdamage = 0;
-		else if(m_insta(gamemode, mutators)) realdamage = max(setdamage, ts.health);
-		else realdamage = setdamage;
+		else if(m_insta(gamemode, mutators)) realdamage = int(max(setdamage, ts.health)*sv_damagescale);
+		else realdamage = int(setdamage*sv_damagescale);
 
 		ts.dodamage(realdamage, gamemillis);
         actor->state.damage += realdamage;
-		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, setdamage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
+		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, realdamage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
 
 		if(realdamage && ts.health <= 0)
 		{
