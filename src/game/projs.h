@@ -39,7 +39,7 @@ struct projectiles
 						proj.radial = true;
 						vec v(rnd(11)-5, rnd(11)-5, rnd(11)-5);
 						if(v.magnitude()>5) v.div(5);
-						v.z /= 5.f;
+						v.z /= 6.f;
 						proj.to.add(v);
 						break;
 					}
@@ -66,9 +66,9 @@ struct projectiles
 						proj.radial = true;
 						proj.extinguish = true;
 						proj.geomcollide = proj.playercollide = 1; // bounce
-						vec v(rnd(81)-40, rnd(81)-40, rnd(81)-50);
-						if(v.magnitude()>40) v.div(40);
-						v.z /= 2.f;
+						vec v(rnd(41)-20, rnd(41)-20, rnd(41)-20);
+						if(v.magnitude()>20) v.div(20);
+						v.z /= 4.f;
 						proj.to.add(v);
 						break;
 					}

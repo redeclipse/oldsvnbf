@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			99
+#define GAMEVERSION			100
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -132,7 +132,7 @@ struct guntypes
 {
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	S_PLASMA,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
-		30,		30,		200,	600,	10,		200,	0,		10000,	-5,		5,
+		30,		30,		250,	600,	10,		200,	0,		10000,	-5,		5,
 		4,		14,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
 				"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep"
 	},
@@ -150,8 +150,8 @@ struct guntypes
 	},
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_BURN,		S_BURNING,	-1,			S_ITEMSPAWN,
-		50,		50,		200, 	2000,	5,		100,	0,		3000,	-1,		 1,
-		24,		28,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
+		50,		50,		250, 	2000,	5,		100,	0,		3000,	-1,		 1,
+		28,		32,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
 				"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep"
 	},
 	{
