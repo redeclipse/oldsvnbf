@@ -133,8 +133,8 @@ void connects(const char *name, int port, int qport)
 		enet_host_flush(clienthost);
 		connmillis = totalmillis;
 		connattempts = 0;
-		s_sprintfd(cs)("connecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
-		computescreen(cs);
+		//s_sprintfd(cs)("connecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
+		//computescreen(cs);
 	}
 	else connectfail();
 }
