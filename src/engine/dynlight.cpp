@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "engine.h"
 
-VARA(ffdynlights, 0, min(5, DYNLIGHTMASK), DYNLIGHTMASK);
-VARA(maxdynlights, 0, min(3, MAXDYNLIGHTS), MAXDYNLIGHTS);
-VARA(dynlightdist, 0, 1024, 10000);
+VARP(ffdynlights, 0, min(5, DYNLIGHTMASK), DYNLIGHTMASK);
+VARP(maxdynlights, 0, min(3, MAXDYNLIGHTS), MAXDYNLIGHTS);
+VARA(dynlightdist, 128, 1024, 10000);
 
 struct dynlight
 {
