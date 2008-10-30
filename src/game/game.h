@@ -407,7 +407,8 @@ VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
 VARG(teamdamage, 0, 1, 1);
-VARG(entspawntime, 0, 0, 60);
+VARG(itemdropping, 0, 1, 1);
+VARG(itemspawntime, 1, 30, 3600);
 VARG(timelimit, 0, 15, 60);
 VARG(ctflimit, 0, 20, 100);
 VARG(stflimit, 0, 0, 1);

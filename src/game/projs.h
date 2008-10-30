@@ -59,7 +59,6 @@ struct projectiles
 					case GUN_FLAMER:
 					{
 						proj.aboveeye = proj.height = proj.radius = guntype[proj.attr1].offset;
-						proj.aboveeye = guntype[proj.attr1].offset;
 						proj.elasticity = guntype[proj.attr1].elasticity;
 						proj.relativity = guntype[proj.attr1].relativity;
 						proj.waterfric = guntype[proj.attr1].waterfric;
@@ -127,7 +126,8 @@ struct projectiles
 				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
 				proj.weight = 90.f;
-				proj.geomcollide = proj.playercollide = 0; // don't
+				proj.geomcollide = 1; // bounce
+				proj.playercollide = 0; // don't
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
 				vec v(rnd(101)-50, rnd(101)-50, rnd(101)-50);
 				if(v.magnitude()>50) v.div(50);
@@ -154,7 +154,7 @@ struct projectiles
 		proj.spawntime = lastmillis;
 
 		if(proj.projtype == PRJ_SHOT && proj.radial)
-			proj.height = proj.radius = guntype[proj.attr1].size;
+			proj.height = proj.radius = guntype[proj.attr1].explode;
 
 		for(hitplayer = NULL; !plcollide(&proj) && hitplayer == proj.owner; hitplayer = NULL)
 			proj.o.add(vec(dir).mul(0.1f)); // get out of the player
@@ -180,10 +180,16 @@ struct projectiles
 			found = true;
 			break;
 		}
-		if(!found && proj.projtype != PRJ_SHOT)
+		if(!found)
 		{
-			proj.o = orig;
-			cl.ph.entinmap(&proj, false); // failsafe
+			if(proj.projtype == PRJ_SHOT && proj.radial)
+				proj.state = CS_DEAD; // explode
+			else
+			{
+				proj.o = orig;
+				cl.ph.entinmap(&proj, false); // failsafe
+			}
+
 		}
         proj.resetinterp();
 	}
@@ -377,7 +383,7 @@ struct projectiles
 			if(cl.et.ents.inrange(n) && !m_noitems(cl.gamemode, cl.mutators))
 			{
 				gameentity &e = (gameentity &)*cl.et.ents[n];
-				create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_ENT, 30000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+				create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_ENT, itemspawntime*1000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 			}
 		}
 		else if(g == GUN_GL)

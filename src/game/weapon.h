@@ -8,8 +8,8 @@ struct weaponstate
 	vec sg[SGRAYS];
 
 	IVARP(autoreload, 0, 1, 10);// auto reload when 0:never 1:empty 2+:every(this*rdelay)
-	IVARP(skipplasma, 0, 1, 1); // whether to skip plasma when switching
-	IVARP(skipgrenades, 0, 0, 1); // whether to skip grenades when switching
+	IVARP(skipplasma, 0, 0, 1); // whether to skip plasma when switching
+	IVARP(skipgrenades, 0, 1, 1); // whether to skip grenades when switching
 
 	weaponstate(gameclient &_cl) : cl(_cl)
 	{
