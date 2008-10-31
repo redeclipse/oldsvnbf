@@ -31,7 +31,7 @@ struct gameclient : igameclient
 
 	IVARP(titlecardtime, 0, 2000, 10000);
 	IVARP(titlecardfade, 0, 3000, 10000);
-	IFVARP(titlecardsize, 0.3f);
+	IFVARP(titlecardsize, 0, 0.3f, 1);
 
 	IVARP(invmouse, 0, 0, 1);
 	IVARP(absmouse, 0, 0, 1);
@@ -55,9 +55,9 @@ struct gameclient : igameclient
 	IVARP(firstpersonaim, 0, 0, INT_MAX-1);
 	IVARP(firstpersonsway, 0, 100, INT_MAX-1);
 	IVARP(firstpersontranslucent, 0, 0, 1);
-	IFVARP(firstpersondist, -0.25f);
-	IFVARP(firstpersonshift, 0.25f);
-	IFVARP(firstpersonadjust, 0.f);
+	IFVARP(firstpersondist, -10000, -0.25f, 10000);
+	IFVARP(firstpersonshift, -10000, 0.25f, 10000);
+	IFVARP(firstpersonadjust, -10000, 0.f, 10000);
 
 	IVARP(editmouse, 0, 0, 2);
 	IVARP(editfov, 1, 120, 360);
@@ -69,34 +69,34 @@ struct gameclient : igameclient
 	IVARP(specdeadzone, 0, 10, 100);
 	IVARP(specpanspeed, 1, 20, INT_MAX-1);
 
-	IFVARP(sensitivity, 10.0f);
-	IFVARP(yawsensitivity, 10.0f);
-	IFVARP(pitchsensitivity, 7.5f);
-	IFVARP(mousesensitivity, 1.0f);
-	IFVARP(snipesensitivity, 3.0f);
-	IFVARP(pronesensitivity, 5.0f);
+	IFVARP(sensitivity, 1e-3f, 10.0f, 1000);
+	IFVARP(yawsensitivity, 1e-3f, 10.0f, 1000);
+	IFVARP(pitchsensitivity, 1e-3f, 7.5f, 1000);
+	IFVARP(mousesensitivity, 1e-3f, 1.0f, 1000);
+	IFVARP(snipesensitivity, 1e-3f, 3.0f, 1000);
+	IFVARP(pronesensitivity, 1e-3f, 5.0f, 1000);
 
 	IVARP(crosshairclip, 0, 1, 1);
 	IVARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
-	IFVARP(crosshairsize, 0.05f);
-	IFVARP(cursorsize, 0.05f);
-	IFVARP(cursorblend, 1.f);
+	IFVARP(crosshairsize, 0, 0.05f, 1);
+	IFVARP(cursorsize, 0, 0.05f, 1);
+	IFVARP(cursorblend, 0, 1.f, 1);
 
-	IFVARP(crosshairblend, 1.f);
-	IFVARP(indicatorblend, 0.5f);
-	IFVARP(clipbarblend, 0.5f);
-	IFVARP(radarblend, 0.9f);
-	IFVARP(blipblend, 1.0f);
-	IFVARP(barblend, 1.0f);
-	IFVARP(candinalblend, 1.0f);
-	IFVARP(ammoblend, 1.f);
-	IFVARP(ammoblendinactive, 0.5f);
-	IFVARP(infoblend, 1.f);
+	IFVARP(crosshairblend, 0, 1.f, 1);
+	IFVARP(indicatorblend, 0, 0.5f, 1);
+	IFVARP(clipbarblend, 0, 0.5f, 1);
+	IFVARP(radarblend, 0, 0.9f, 1);
+	IFVARP(blipblend, 0, 1.0f, 1);
+	IFVARP(barblend, 0, 1.0f, 1);
+	IFVARP(candinalblend, 0, 1.0f, 1);
+	IFVARP(ammoblend, 0, 1.f, 1);
+	IFVARP(ammoblendinactive, 0, 0.5f, 1);
+	IFVARP(infoblend, 0, 1.f, 1);
 
 	IVARP(radardist, 0, 512, 512);
 	IVARP(radarnames, 0, 1, 2);
-	IFVARP(radarsize, 0.33f);
-	IFVARP(ammosize, 0.07f);
+	IFVARP(radarsize, 0, 0.33f, 1);
+	IFVARP(ammosize, 0, 0.07f, 1);
 	IVARP(editradardist, 0, 512, INT_MAX-1);
 	IVARP(editradarnoisy, 0, 1, 2);
 
@@ -119,7 +119,7 @@ struct gameclient : igameclient
 	IVARP(snipepanspeed, 1, 10, INT_MAX-1);
 	IVARP(snipefov, 1, 35, 150);
 	IVARP(snipetime, 1, 300, 10000);
-	IFVARP(snipecrosshairsize, 0.5f);
+	IFVARP(snipecrosshairsize, 0, 0.5f, 1);
 
 	IVARP(pronetype, 0, 0, 1);
 	IVARP(pronemouse, 0, 0, 2);

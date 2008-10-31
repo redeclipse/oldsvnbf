@@ -180,10 +180,10 @@ int variable(const char *name, int min, int cur, int max, int *storage, void (*f
     return cur;
 }
 
-float fvariable(const char *name, float cur, float *storage, void (*fun)(), int flags)
+float fvariable(const char *name, float min, float cur, float max, float *storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
-    ident v(ID_FVAR, name, cur, storage, (void *)fun, flags);
+    ident v(ID_FVAR, name, min, cur, max, storage, (void *)fun, flags);
     idents->access(name, v);
     return cur;
 }
@@ -210,9 +210,9 @@ void setvar(const char *name, int i, bool dofunc)
 void setfvar(const char *name, float f, bool dofunc)
 {
     _GETVAR(id, ID_FVAR, name, );
-    *id->storage.f = f;
+    *id->storage.f = clamp(f, id->minvalf, id->maxvalf);
     if(dofunc) id->changed();
-	if(verbose >= 2) conoutf("\fw%s set to %f", id->name, *id->storage.f);
+	if(verbose >= 2) conoutf("\fw%s set to %s", id->name, floatstr(*id->storage.f));
 }
 void setsvar(const char *name, const char *str, bool dofunc)
 {
@@ -368,7 +368,7 @@ char *lookup(char *n)							// find value of ident referenced with $ in exp
     if(id) switch(id->type)
 	{
         case ID_VAR: { s_sprintfd(t)("%d", *id->storage.i); return exchangestr(n, t); }
-        case ID_FVAR: { s_sprintfd(t)("%f", *id->storage.f); return exchangestr(n, t); }
+        case ID_FVAR: return exchangestr(n, floatstr(*id->storage.f));
         case ID_SVAR: return exchangestr(n, *id->storage.s);
         case ID_ALIAS: return exchangestr(n, id->action);
 	}
@@ -591,14 +591,21 @@ char *executeret(const char *p)               // all evaluation happens here, re
                     break;
 
                 case ID_FVAR:
-                    if(numargs <= 1) conoutf("\fw%s = %f", c, *id->storage.f);
+                    if(numargs <= 1) conoutf("\fw%s = %s", c, floatstr(*id->storage.f));
+                    else if(id->minvalf>id->maxvalf) conoutf("\frvariable %s is read-only", id->name);
                     else
                     {
 #ifndef STANDALONE
 						WORLDVAR;
 #endif
                         OVERRIDEVAR(id->overrideval.f = *id->storage.f, );
-                        *id->storage.f = atof(w[1]);
+                        float f1 = atof(w[1]);
+                        if(f1<id->minvalf || f1>id->maxvalf)
+                        {
+                            f1 = f1<id->minvalf ? id->minvalf : id->maxvalf;                // clamp to valid range
+                            conoutf("\frvalid range for %s is %s..%s", id->name, floatstr(id->minvalf), floatstr(id->maxvalf));
+                        }
+                        *id->storage.f = f1;
                         id->changed();
 #ifndef STANDALONE
 						if(cc) cc->editvar(id, interactive);
@@ -689,7 +696,7 @@ void writecfg()
         if(id.flags&IDF_PERSIST) switch(id.type)
 		{
             case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
-            case ID_FVAR: fprintf(f, "%s %f\n", id.name, *id.storage.f); break;
+            case ID_FVAR: fprintf(f, "%s %s\n", id.name, floatstr(*id.storage.f)); break;
             case ID_SVAR: fprintf(f, "%s [%s]\n", id.name, *id.storage.s); break;
 			case ID_ALIAS:
 			{
@@ -712,6 +719,18 @@ COMMAND(writecfg, "");
 // () and [] expressions, any control construct can be defined trivially.
 
 void intret(int v) { s_sprintfd(b)("%d", v); commandret = newstring(b); }
+
+const char *floatstr(float v)
+{
+    static string t;
+    s_sprintf(t)(v==int(v) ? "%.1f" : "%.7g", v);
+    return t;
+}
+
+void floatret(float v)
+{
+    commandret = newstring(floatstr(v));
+}
 
 ICOMMAND(if, "sss", (char *cond, char *t, char *f), commandret = executeret(cond[0]!='0' ? t : f));
 ICOMMAND(loop, "sis", (char *var, int *n, char *body),
@@ -827,14 +846,25 @@ COMMANDN(getalias, getalias_, "s");
 void add  (int *a, int *b) { intret(*a + *b); }		  COMMANDN(+, add, "ii");
 void mul  (int *a, int *b) { intret(*a * *b); }		  COMMANDN(*, mul, "ii");
 void sub  (int *a, int *b) { intret(*a - *b); }		  COMMANDN(-, sub, "ii");
-void divi (int *a, int *b) { intret(*b ? *a / *b : 0); } COMMANDN(div, divi, "ii");
-void mod  (int *a, int *b) { intret(*b ? *a % *b : 0); } COMMAND(mod, "ii");
+void div_ (int *a, int *b) { intret(*b ? *a / *b : 0); } COMMANDN(div, div_, "ii");
+void mod_ (int *a, int *b) { intret(*b ? *a % *b : 0); } COMMANDN(mod, mod_, "ii");
+void addf  (float *a, float *b) { floatret(*a + *b); }          COMMANDN(+f, addf, "ff");
+void mulf  (float *a, float *b) { floatret(*a * *b); }          COMMANDN(*f, mulf, "ff");
+void subf  (float *a, float *b) { floatret(*a - *b); }          COMMANDN(-f, subf, "ff");
+void divf_ (float *a, float *b) { floatret(*b ? *a / *b : 0); } COMMANDN(divf, divf_, "ff");
+void modf_ (float *a, float *b) { floatret(*b ? fmod(*a, *b) : 0); } COMMANDN(modf, modf_, "ff");
 void equal(int *a, int *b) { intret((int)(*a == *b)); }  COMMANDN(=, equal, "ii");
 void nequal(int *a, int *b) { intret((int)(*a != *b)); } COMMANDN(!=, nequal, "ii");
 void lt	(int *a, int *b) { intret((int)(*a < *b)); }	COMMANDN(<, lt, "ii");
 void gt	(int *a, int *b) { intret((int)(*a > *b)); }	COMMANDN(>, gt, "ii");
 void lte	(int *a, int *b) { intret((int)(*a <= *b)); } COMMANDN(<=, lte, "ii");
 void gte	(int *a, int *b) { intret((int)(*a >= *b)); } COMMANDN(>=, gte, "ii");
+void equalf(float *a, float *b) { floatret((float)(*a == *b)); }  COMMANDN(=f, equalf, "ff");
+void nequalf(float *a, float *b) { floatret((float)(*a != *b)); } COMMANDN(!=f, nequalf, "ff");
+void ltf   (float *a, float *b) { floatret((float)(*a < *b)); }   COMMANDN(<f, ltf, "ff");
+void gtf   (float *a, float *b) { floatret((float)(*a > *b)); }   COMMANDN(>f, gtf, "ff");
+void ltef  (float *a, float *b) { floatret((float)(*a <= *b)); } COMMANDN(<=f, ltef, "ff");
+void gtef  (float *a, float *b) { floatret((float)(*a >= *b)); } COMMANDN(>=f, gtef, "ff");
 void xora (int *a, int *b) { intret(*a ^ *b); }		  COMMANDN(^, xora, "ii");
 void nota (int *a)		 { intret(*a == 0); }		  COMMANDN(!, nota, "i");
 void mina (int *a, int *b) { intret(min(*a, *b)); }      COMMANDN(min, mina, "ii");

@@ -420,10 +420,10 @@ VARG(botbalance, 0, 4, 32);
 VARG(botminskill, 0, 60, 100);
 VARG(botmaxskill, 0, 90, 100);
 
-FVARG(damagescale, 1.f);
-FVARG(gravityscale, 1.f);
-FVARG(jumpscale, 1.f);
-FVARG(speedscale, 1.f);
+FVARG(damagescale, 0.1f, 1.f, 10);
+FVARG(gravityscale, 0.1f, 1.f, 10);
+FVARG(jumpscale, 0.1f, 1.f, 10);
+FVARG(speedscale, 0.1f, 1.f, 10);
 
 enum { AI_NONE = 0, AI_BOT, AI_BSOLDIER, AI_RSOLDIER, AI_YSOLDIER, AI_GSOLDIER, AI_MAX };
 #define isaitype(a)	(a >= 0 && a <= AI_MAX-1)

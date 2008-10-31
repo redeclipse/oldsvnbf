@@ -640,9 +640,9 @@ void undoclipmatrix()
 	glMatrixMode(GL_MODELVIEW);
 }
 
-FVAR(polygonoffsetfactor, -3.0f);
-FVAR(polygonoffsetunits, -3.0f);
-FVAR(depthoffset, 0.01f);
+FVAR(polygonoffsetfactor, -1e4f, -3.0f, 1e4f);
+FVAR(polygonoffsetunits, -1e4f, -3.0f, 1e4f);
+FVAR(depthoffset, -1e4f, 0.01f, 1e4f);
 
 void enablepolygonoffset(GLenum type)
 {
@@ -1458,7 +1458,7 @@ void readmatrices()
 }
 
 VARP(hidehud, 0, 0, 1);
-FVARP(hudblend, 0.99f);
+FVARP(hudblend, 0, 0.99f, 1);
 
 float cursorx = 0.5f, cursory = 0.5f, aimx = 0.5f, aimy = 0.5f;
 vec cursordir(0, 0, 0);
@@ -1547,9 +1547,9 @@ framebuffercopy views[VP_MAX];
 
 VARFP(viewtype, VW_NORMAL, VW_NORMAL, VW_MAX, loopi(VP_MAX) views[i].cleanup());
 VARP(stereoblend, 0, 50, 100);
-FVARP(stereodist, 0.5f);
-FVARP(stereoplane, 10.f);
-FVARP(stereonear, 3.f);
+FVARP(stereodist, 0, 0.5f, 10000);
+FVARP(stereoplane, 1e-3f, 10.f, 1000);
+FVARP(stereonear, 0, 3.f, 10000);
 
 int fogmat = MAT_AIR, abovemat = MAT_AIR;
 float fogblend = 1.0f, causticspass = 0.0f;

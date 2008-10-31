@@ -2,26 +2,26 @@ struct physics
 {
 	gameclient &cl;
 
-	IFVARW(crawlspeed,		30.f);	// crawl speed
-	IFVARW(gravity,			40.f);	// gravity
-	IFVARW(jumpvel,			80.f);	// extra velocity to add when jumping
-	IFVARW(movespeed,		50.f);	// speed
+	IFVARW(crawlspeed,		0, 30.f, 1000);	// crawl speed
+	IFVARW(gravity,			0, 40.f, 1000);	// gravity
+	IFVARW(jumpvel,			0, 80.f, 1000);	// extra velocity to add when jumping
+	IFVARW(movespeed,		0, 50.f, 1000);	// speed
 
-	IFVARW(impulsevel,		100.f);	// extra velocity to add when impulsing
-	IFVARW(impulsespeed,	100.f);	// modifier of gravity that determines impulse interval
+	IFVARW(impulsevel,		0, 100.f, 1000);	// extra velocity to add when impulsing
+	IFVARW(impulsespeed,	0, 100.f, 1000);	// modifier of gravity that determines impulse interval
 	IVARW(impulsetime,		-1, 0, INT_MAX-1); // overrides impulsespeed to a specific time interval (-1 = turn off impulse, 0 = use impulsespeed)
 
-	IFVARW(liquidfric,		10.f);
-	IFVARW(liquidscale,		0.9f);
-	IFVARW(sinkfric,		2.f);
-	IFVARW(floorfric,		5.f);
-	IFVARW(airfric,			25.f);
+	IFVARW(liquidfric,		0, 10.f, 100);
+	IFVARW(liquidscale,		0, 0.9f, 100);
+	IFVARW(sinkfric,		0, 2.f, 100);
+	IFVARW(floorfric,		0, 5.f, 100);
+	IFVARW(airfric,			0, 25.f, 100);
 
-	IFVARW(stairheight,		4.1f);
-	IFVARW(floorz,			0.867f);
-	IFVARW(slopez,			0.5f);
-	IFVARW(wallz,			0.2f);
-	IFVARW(stepspeed,		1.0f);
+	IFVARW(stairheight,		0, 4.1f, 100);
+	IFVARW(floorz,			0, 0.867f, 1);
+	IFVARW(slopez,			0, 0.5f, 1);
+	IFVARW(wallz,			0, 0.2f, 1);
+	IFVARW(stepspeed,		0.5f, 1.0f, 2);
 
 	IVARP(floatspeed,		10,			100,		1000);
 	IVARP(physframetime,	5,			5,			20);

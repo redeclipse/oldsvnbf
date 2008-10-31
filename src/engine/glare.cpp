@@ -39,7 +39,7 @@ void drawglaretex()
     glaretex.render(1<<glaresize, 1<<glaresize, blurglare, blurglaresigma/100.0f);
 }
 
-FVARP(glarescale, 1);
+FVARP(glarescale, 0, 1, 8);
 
 void addglare()
 {
