@@ -22,7 +22,8 @@ enum
     DF_ROTATE     = 1<<1,
     DF_INVMOD     = 1<<2,
     DF_OVERBRIGHT = 1<<3,
-    DF_ADD        = 1<<4
+    DF_ADD        = 1<<4,
+    DF_SATURATE   = 1<<5
 };
 
 VARFP(maxdecaltris, 1, 4096, INT_MAX-1, initdecals());
@@ -243,9 +244,7 @@ struct decalrenderer
             if(renderpath!=R_FIXEDFUNCTION)
             {
                 glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-                static Shader *overbrightdecalshader = NULL;
-                if(!overbrightdecalshader) overbrightdecalshader = lookupshaderbyname("overbrightdecal");
-                overbrightdecalshader->set();
+                SETSHADER(overbrightdecal);
             }
             else if(hasTE)
             {
@@ -259,7 +258,13 @@ struct decalrenderer
             if(flags&DF_INVMOD) glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
             else if(flags&DF_ADD) glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
             else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            foggedshader->set();
+           
+            if(flags&DF_SATURATE)
+            {
+                if(renderpath!=R_FIXEDFUNCTION) SETSHADER(saturatedecal);
+                else if(hasTE) setuptmu(0, "C * T x 4");
+            }
+            else foggedshader->set();
         }
 
         glBindTexture(GL_TEXTURE_2D, tex->id);
@@ -278,7 +283,7 @@ struct decalrenderer
         xtravertsva += count;
 
         if(flags&(DF_ADD|DF_INVMOD|DF_OVERBRIGHT)) glFogfv(GL_FOG_COLOR, oldfogc);
-        if(flags&DF_OVERBRIGHT && hasTE) resettmu(0);
+        if(flags&(DF_OVERBRIGHT|DF_ADD) && hasTE) resettmu(0);
     }
 
     decalinfo &newdecal()
@@ -492,7 +497,7 @@ decalrenderer decals[] =
     decalrenderer("particles/scorch", DF_ROTATE, 500, 1000, 5000),
     decalrenderer("particles/blood", DF_RND4|DF_ROTATE|DF_INVMOD, 0, 1000, 5000),
     decalrenderer("<decal>particles/bullet", DF_OVERBRIGHT, 0, 1000, 5000),
-    decalrenderer("particles/energy", DF_ROTATE, 250, 500, 1000)
+    decalrenderer("particles/energy", DF_ROTATE|DF_ADD|DF_SATURATE, 250, 500, 1000)
 };
 
 void initdecals()
