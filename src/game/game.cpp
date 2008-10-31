@@ -2033,7 +2033,7 @@ struct gameclient : igameclient
 		if(shownamesabovehead() && third && d != player1 && d->state != CS_SPECTATOR)
 		{
 			s_sprintfd(s)("@%s", colorname(d));
-			part_text(d->abovehead(), s, 11, 1, 0xFFFFFF);
+			part_text(d->abovehead(), s, PART_TEXT, 1, 0xFFFFFF);
 		}
 
 		if(d->state == CS_DEAD)
