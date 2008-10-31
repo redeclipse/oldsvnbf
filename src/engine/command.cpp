@@ -722,9 +722,11 @@ void intret(int v) { s_sprintfd(b)("%d", v); commandret = newstring(b); }
 
 const char *floatstr(float v)
 {
-    static string t;
-    s_sprintf(t)(v==int(v) ? "%.1f" : "%.7g", v);
-    return t;
+    static int n = 0;
+    static string t[3];
+    n = (n + 1)%3;
+    s_sprintf(t[n])(v==int(v) ? "%.1f" : "%.7g", v);
+    return t[n];
 }
 
 void floatret(float v)
