@@ -161,21 +161,22 @@ struct weaponstate
 
 		if(gun == GUN_PLASMA)
 		{
-			regular_part_splash(7, 3, 150, o, 0x226688, guntype[gun].explode);
+			regular_part_splash(7, 3, 150, o, 0x226688, guntype[gun].explode*0.75f);
 			regular_part_splash(7, 1, 250, o, 0x226688, guntype[gun].size*0.75f);
 			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.1f, 0.4f, 0.6f), 100, 10);
 		}
 		if(gun == GUN_FLAMER || gun == GUN_GL)
 		{
-			regular_part_splash(4, 5, gun == GUN_FLAMER ? 1000 : 2000, o, 0x441100, guntype[gun].explode*0.5f, int(guntype[gun].explode));
-			regular_part_splash(6, 10, gun == GUN_FLAMER ? 1000 : 2000, vec(o).add(vec(0, 0, 2)), 0x121212, guntype[gun].explode, int(guntype[gun].explode));
+			regular_part_splash(4, 5, gun == GUN_FLAMER ? 1000 : 2000, o, 0x441404, guntype[gun].explode*0.5f, int(guntype[gun].explode));
+			regular_part_splash(6, 5, gun == GUN_FLAMER ? 2000 : 4000, vec(o).sub(vec(0, 0, 2)), gun == GUN_FLAMER ? 0x121212 : 0x212121, guntype[gun].explode, int(guntype[gun].explode));
 			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), 100, 10);
 		}
 		if(gun == GUN_GL)
 		{
-			cl.quakewobble += int(guntype[gun].damage*(1.f-dist/EXPLOSIONSCALE/guntype[gun].explode/10.f));
-			particle_fireball(o, guntype[gun].explode, 22);
-			loopi(rnd(20)+10)
+			int explodeforce = max(int(guntype[gun].damage*(1.f-dist/EXPLOSIONSCALE/guntype[gun].explode/10.f)), 0);
+			cl.quakewobble += explodeforce;
+			part_fireball(vec(o).sub(vec(0, 0, 2)), guntype[gun].explode, 15, 1000, 0x664604, 3.f);
+			loopi(rnd(explodeforce+1)+1)
 				cl.pj.create(o, vec(o).add(vel), true, d, PRJ_DEBRIS, rnd(3000)+2000, 0, rnd(30)+10, 100, -1);
 		}
         if(gun != GUN_PLASMA)

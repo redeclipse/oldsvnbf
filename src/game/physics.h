@@ -479,7 +479,7 @@ struct physics
 			{ \
 				mf; \
 				int col = (mcol[2] + (mcol[1] << 8) + (mcol[0] << 16)); \
-				regularshape(mz, int(pl->radius), col, 21, 50, mt, v, ms); \
+				regularshape(mz, int(pl->radius), col, 53, 50, mt, v, ms); \
 				if(mw >= 0) playsound(mw, pl->o, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)

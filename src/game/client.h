@@ -847,7 +847,7 @@ struct clientcom : iclientcom
 					parsestate(f, p);
 					f->state = CS_SPAWNING;
 					playsound(S_RESPAWN, f->o, f);
-					regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 3.f);
+					regularshape(7, int(f->height), teamtype[f->team].colour, 53, 50, 200, f->o, 3.f);
 					break;
 				}
 
@@ -865,7 +865,7 @@ struct clientcom : iclientcom
 						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(team) : -1, m_team(cl.gamemode, cl.mutators) ? team : -1);
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
 						playsound(S_RESPAWN, f->o, f);
-						regularshape(7, int(f->height), teamtype[f->team].colour, 21, 50, 250, f->o, 3.f);
+						regularshape(7, int(f->height), teamtype[f->team].colour, 53, 50, 200, f->o, 3.f);
 					}
 					cl.ai.spawned(f);
 					if(f == cl.player1) cl.resetstates(ST_DEFAULT);
@@ -996,7 +996,7 @@ struct clientcom : iclientcom
 						s_sprintfd(ds)("@%s", item);
 						particle_text(cl.et.ents[ent]->o, ds, 9);
 					}
-					regularshape(7, enttype[cl.et.ents[ent]->type].radius, 0x888822, 53, 50, 250, cl.et.ents[ent]->o, 2.f);
+					regularshape(7, enttype[cl.et.ents[ent]->type].radius, 0x888822, 53, 50, 200, cl.et.ents[ent]->o, 2.f);
 					break;
 				}
 

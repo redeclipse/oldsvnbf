@@ -97,9 +97,9 @@ struct projectiles
 				proj.relativity = 1.0f;
 				proj.waterfric = 2.0f;
 				proj.weight = 50.f;
-				proj.vel.x += rnd(10)+1;
-				proj.vel.y += rnd(10)+1;
-				proj.vel.z += rnd(20)+10;
+				proj.vel.x += rnd(30)-15;
+				proj.vel.y += rnd(30)-15;
+				proj.vel.z += rnd(20)+5;
 				proj.geomcollide = proj.playercollide = 1; // bounce
 				break;
 			}
@@ -116,10 +116,10 @@ struct projectiles
 				proj.elasticity = 0.7f;
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
-				proj.weight = 75.f;
-				proj.vel.x += rnd(20)+10;
-				proj.vel.y += rnd(20)+10;
-				proj.vel.z += rnd(20)+10;
+				proj.weight = 100.f;
+				proj.vel.x += rnd(60)-30;
+				proj.vel.y += rnd(60)-30;
+				proj.vel.z += rnd(20)+5;
 				proj.geomcollide = proj.playercollide = 1; // bounce
 				break;
 			}
@@ -229,7 +229,7 @@ struct projectiles
 		else if(proj.projtype == PRJ_GIBS)
 		{
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-			regular_part_splash(0, 1, 5000, proj.o, 0x66FFFF, proj.radius*0.65f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
+			regular_part_splash(0, 1, 3000, proj.o, 0x66FFFF, 1.2f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
 		}
 		else if(proj.projtype == PRJ_DEBRIS)
 		{
@@ -438,7 +438,7 @@ struct projectiles
 				{
 					if(!proj.beenused)
 					{
-						regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 2.f);
+						regularshape(7, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
 						if(proj.local)
 							cl.cc.addmsg(SV_EXPLODE, "ri6", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0, 0);
 					}
@@ -474,7 +474,7 @@ struct projectiles
                             case PRJ_ENT:
                                 if(!proj.beenused)
                                 {
-                                    regularshape(7, int(proj.radius), 0x888822, 21, 50, 250, proj.o, 2.f);
+                                    regularshape(7, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
                                     if(proj.local)
                                         cl.cc.addmsg(SV_EXPLODE, "ri6", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0, 0);
                                 }
