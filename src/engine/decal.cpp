@@ -262,7 +262,7 @@ struct decalrenderer
             if(flags&DF_SATURATE)
             {
                 if(renderpath!=R_FIXEDFUNCTION) SETSHADER(saturatedecal);
-                else if(hasTE) setuptmu(0, "C * T x 4");
+                else if(hasTE) setuptmu(0, "C * T x 2");
             }
             else foggedshader->set();
         }
