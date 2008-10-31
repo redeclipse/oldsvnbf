@@ -1324,6 +1324,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 		glPushMatrix();
 		glScalef(1/3.0f, 1/3.0f, 1);
 		draw_textx("v%.2f (%s)", w*3-FONTH, int(h*2.6f), 255, 255, 255, 255, false, AL_RIGHT, -1, -1, float(ENG_VERSION)/100.f, ENG_RELEASE);
+		draw_textx("%s", w*3-FONTH, int(h*2.6f)+FONTH, 255, 255, 255, 255, false, AL_RIGHT, -1, -1, ENG_URL);
 		glPopMatrix();
 
 		SDL_GL_SwapBuffers();

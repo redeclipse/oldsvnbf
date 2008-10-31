@@ -97,9 +97,7 @@ struct projectiles
 				proj.relativity = 1.0f;
 				proj.waterfric = 2.0f;
 				proj.weight = 50.f;
-				proj.vel.x += rnd(40)-20;
-				proj.vel.y += rnd(40)-20;
-				proj.vel.z += rnd(10)+5;
+				proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-21));
 				proj.geomcollide = proj.playercollide = 1; // bounce
 				break;
 			}
@@ -117,9 +115,7 @@ struct projectiles
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
 				proj.weight = 125.f;
-				proj.vel.x += rnd(80)-40;
-				proj.vel.y += rnd(80)-40;
-				proj.vel.z += rnd(20)+5;
+				proj.vel.add(vec(rnd(80)-41, rnd(80)-41, rnd(80)-41));
 				proj.geomcollide = proj.playercollide = 1; // bounce
 				break;
 			}
@@ -161,7 +157,7 @@ struct projectiles
 				proj.height = proj.radius = guntype[proj.attr1].explode;
 
 			for(hitplayer = NULL; !plcollide(&proj) && hitplayer == proj.owner; hitplayer = NULL)
-				proj.o.add(vec(dir).mul(0.1f)); // get out of the player
+				proj.o.add(vec(dir).mul(0.01f)); // get out of the player
 
 			if(proj.projtype == PRJ_SHOT && proj.radial)
 				proj.height = proj.radius = guntype[proj.attr1].offset;
@@ -182,7 +178,7 @@ struct projectiles
 				float amt = proj.elasticity > 0.f ? proj.elasticity : 1.f;
 				proj.vel.apply(pos, amt);
 				if(hitplayer) proj.vel.apply(hitplayer->vel, amt);
-				proj.o = vec(orig).add(vec(proj.vel).mul(0.1f));
+				proj.o = vec(orig).add(vec(proj.vel).mul(0.01f));
 			}
 			found = true;
 			break;
@@ -216,26 +212,26 @@ struct projectiles
                     part = PART_PLASMA_SOFT;
                     proj.lifesize = 1.f;
                 }
-				regular_part_splash(part, 1, int((1.1f-proj.lifesize)*50.f), proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.35f, int(guntype[proj.attr1].size*proj.lifesize*0.35f)); // brighter center part
-				regular_part_splash(part, 1, int((1.1f-proj.lifesize)*200.f), proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize, int(guntype[proj.attr1].size*proj.lifesize));
+				regular_part_splash(part, 1, int((1.1f-proj.lifesize)*50.f)+25, proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.35f, int(guntype[proj.attr1].size*proj.lifesize*0.35f)); // brighter center part
+				regular_part_splash(part, 1, int((1.1f-proj.lifesize)*200.f)+100, proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize, int(guntype[proj.attr1].size*proj.lifesize));
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
 				proj.lifesize = clamp(proj.lifespan*2.f, 0.1f, 1.f);
 				int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8),  // a bit more of an orange for the corona
 					deviation = guntype[proj.attr1].size/2;
-				regular_part_splash(PART_PLASMA_SOFT, 1, int((1.1f-proj.lifesize)*100.f), proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.25f, int(guntype[proj.attr1].size*proj.lifesize*0.25f));
+				regular_part_splash(PART_PLASMA_SOFT, 1, int((1.1f-proj.lifesize)*100.f)+50, proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.25f, int(guntype[proj.attr1].size*proj.lifesize*0.25f));
 				col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(64*max(1.0f-proj.lifespan,0.2f))+1)<<8);
 				loopi(rnd(4)+1)
 				{
 					vec to = vec(proj.o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation).mul(proj.lifespan));
-					regular_part_splash(PART_FIREBALL_SOFT, 1, int((1.1f-proj.lifesize)*200.f), to, col, guntype[proj.attr1].size*proj.lifesize*0.5f, int(guntype[proj.attr1].size*proj.lifesize*0.5f));
+					regular_part_splash(PART_FIREBALL_SOFT, 1, int((1.1f-proj.lifesize)*200.f)+100, to, col, guntype[proj.attr1].size*proj.lifesize*0.5f, int(guntype[proj.attr1].size*proj.lifesize*0.5f));
 				}
 			}
 			else
 			{
 				proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-				regularshape(PART_SMOKE_RISE_SLOW, int(proj.radius), 0x242424, 21, rnd(3)+1, int(proj.vel.magnitude()*10.f)+100, proj.o, 1.2f);
+				regularshape(PART_SMOKE_RISE_SLOW, int(proj.radius), 0x242424, 21, rnd(3)+1, int(proj.vel.magnitude()*3.f)+100, proj.o, 1.f);
 			}
 		}
 		else if(proj.projtype == PRJ_GIBS)
@@ -246,8 +242,8 @@ struct projectiles
 		else if(proj.projtype == PRJ_DEBRIS)
 		{
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-			if(proj.vel.magnitude() > 4.f)
-				part_flare(proj.o, vec(proj.o).sub(vec(proj.vel).mul(0.4f)), int(proj.vel.magnitude()*3.f), PART_STREAK, 0x998811, 0.25f);
+			if(proj.vel.magnitude() >= 6.f)
+				part_flare(proj.o, vec(proj.o).sub(vec(proj.vel).mul(0.3f)), int(proj.vel.magnitude())+10, PART_STREAK, 0x998811, 0.25f);
 		}
 	}
 

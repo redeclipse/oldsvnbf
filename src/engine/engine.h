@@ -1,7 +1,9 @@
 // engine defs
-#define ENG_VERSION			77					// version, integer is divided by 100.f
-#define ENG_NAME			"Blood Frontier"	// full name
-#define ENG_RELEASE			"Alpha 2.2"			// edition/release name
+#define ENG_VERSION			78
+#define ENG_NAME			"Blood Frontier"
+#define ENG_RELEASE			"Alpha 2.3"
+#define ENG_URL				"http://bloodfrontier.com/"
+#define ENG_BLURB			"It's bloody fun!"
 
 #define ENG_SERVER_PORT		28795
 #define ENG_QUERY_PORT		28796
