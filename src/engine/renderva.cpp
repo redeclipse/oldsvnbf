@@ -1279,8 +1279,8 @@ static void changetexgen(renderstate &cur, Slot &slot, int dim)
             glTexGenfv(GL_S, GL_OBJECT_PLANE, sgen);
             glTexGenfv(GL_T, GL_OBJECT_PLANE, tgen);
             glActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
-            cur.mttexgen = cur.mtglow;
         }
+        cur.mttexgen = cur.mtglow;
     }
     else
     {
