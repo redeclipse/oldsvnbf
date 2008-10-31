@@ -502,11 +502,11 @@ struct skelmodel : animmodel
             {
                 if(!g->skel->usegpuskel) s->variant(0, 2)->set();
                 else if(g->skel->usematskel) s->variant(min(maxweights, g->vweights), 2)->set();
-                else s->variant(maxweights-1, 3)->set();
+                else s->variant(min(maxweights, g->vweights)-1, 3)->set();
             }
             else if(!g->skel->usegpuskel) s->set();
             else if(g->skel->usematskel) s->variant(min(maxweights, g->vweights)-1, 0)->set();
-            else s->variant(maxweights-1, 1)->set();
+            else s->variant(min(maxweights, g->vweights)-1, 1)->set();
         }
 
         void render(const animstate *as, skin &s, vbocacheentry &vc)
@@ -535,10 +535,10 @@ struct skelmodel : animmodel
 
                 if(s.tangents())
                 {
-                    if(!enabletangents || lastnbuf!=lastvbuf)
+                    if(!enabletangents || lastxbuf!=lastvbuf)
                     {
                         if(!enabletangents) glEnableVertexAttribArray_(1);
-                        if(lastnbuf!=lastvbuf)
+                        if(lastxbuf!=lastvbuf)
                         {
                             if(((skelmeshgroup *)group)->vertsize==sizeof(vvertbumpw))
                             {
@@ -551,7 +551,7 @@ struct skelmodel : animmodel
                                 glVertexAttribPointer_(1, 4, GL_FLOAT, GL_FALSE, ((skelmeshgroup *)group)->vertsize, &vverts->tangent.x);
                             }
                         }
-                        lastnbuf = lastvbuf;
+                        lastxbuf = lastvbuf;
                         enabletangents = true;
                     }
                 }
@@ -1099,7 +1099,7 @@ struct skelmodel : animmodel
 
         void setgpubones(skelcacheentry &sc, int count = 0)
         {
-            if((count ? lastbdata : lastsdata) == (usematskel ? (void *)sc.mdata : (void *)sc.bdata)) return;
+            if((count ? lastbdata : lastsdata) == (usematskel ? (void *)sc.mdata : (void *)sc.bdata)) return; 
             int offset = count ? numgpubones : 0;
             if(!offset) count = numgpubones;
             if(hasPP)
@@ -1342,20 +1342,41 @@ struct skelmodel : animmodel
             if(as->anim&ANIM_NOSKIN)
             {
                 if(enabletc) disabletc();
+                if(enablenormals) disablenormals();
             }
-            else if(!enabletc || lasttcbuf!=lastvbuf)
+            else
             {
                 if(vnorms || vtangents)
                 {
-                    if(!enabletc) glEnableClientState(GL_NORMAL_ARRAY);
-                    if(lasttcbuf!=lastvbuf) glNormalPointer(GL_FLOAT, vertsize, &vverts->norm);
+                    if(!enablenormals) 
+                    {
+                        glEnableClientState(GL_NORMAL_ARRAY);
+                        enablenormals = true;
+                    }
+                    if(lastnbuf!=lastvbuf) 
+                    {
+                        glNormalPointer(GL_FLOAT, vertsize, &vverts->norm);
+                        lastnbuf = lastvbuf;
+                    }
                 }
-                if(!enabletc) glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                if(lasttcbuf!=lastvbuf) glTexCoordPointer(2, GL_FLOAT, vertsize, &vverts->u);
-                lasttcbuf = lastvbuf;
-                enabletc = true;
+                else if(enablenormals) disablenormals();
+
+                if(!enabletc) 
+                {
+                    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                    enabletc = true;
+                }
+                if(lasttcbuf!=lastvbuf) 
+                {
+                    glTexCoordPointer(2, GL_FLOAT, vertsize, &vverts->u);
+                    lasttcbuf = lastnbuf;
+                }
             }
-            if(!sc || !skel->usegpuskel) return;
+            if(!sc || !skel->usegpuskel) 
+            {
+                if(enablebones) disablebones();
+                return;
+            }
             if(!enablebones)
             {
                 glEnableVertexAttribArray_(6);
@@ -1472,8 +1493,6 @@ struct skelmodel : animmodel
             }
             if(hasVBO) { if(ebuf) { glDeleteBuffers_(1, &ebuf); ebuf = 0; } }
             else DELETEA(vdata);
-            lastvbuf = lasttcbuf = lastmtcbuf = lastnbuf = lastbbuf = lastbdata = NULL;
-            lastebuf = 0;
         }
 
         #define SEARCHCACHE(cachesize, cacheentry, cache, reusecheck) \
@@ -1513,8 +1532,8 @@ struct skelmodel : animmodel
                 if(p->skins[i].normals()) norms = true;
                 if(p->skins[i].tangents()) tangents = true;
             }
-            if(skel->shouldcleanup()) skel->cleanup();
-            else if(norms!=vnorms || tangents!=vtangents) cleanup();
+            if(skel->shouldcleanup()) { skel->cleanup(); disablevbo(); }
+            else if(norms!=vnorms || tangents!=vtangents) { cleanup(); disablevbo(); }
 
             if(as->anim&ANIM_NORENDER)
             {

@@ -328,15 +328,15 @@ struct vertmodel : animmodel
 
                 if(s.tangents())
                 {
-                    if(!enabletangents || lastnbuf!=lastvbuf)
+                    if(!enabletangents || lastxbuf!=lastvbuf)
                     {
                         if(!enabletangents) glEnableVertexAttribArray_(1);
-                        if(lastnbuf!=lastvbuf)
+                        if(lastxbuf!=lastvbuf)
                         {
                             vvertbump *vverts = hasVBO ? 0 : (vvertbump *)vc.vdata;
                             glVertexAttribPointer_(1, 4, GL_FLOAT, GL_FALSE, ((vertmeshgroup *)group)->vertsize, &vverts->tangent.x);
                         }
-                        lastnbuf = lastvbuf;
+                        lastxbuf = lastvbuf;
                         enabletangents = true;
                     }
                 }
@@ -571,19 +571,37 @@ struct vertmodel : animmodel
             if(as->anim&ANIM_NOSKIN)
             {
                 if(enabletc) disabletc();
+                if(enablenormals) disablenormals();
             }
-            else if(!enabletc || lasttcbuf!=lastvbuf)
+            else
             {
                 if(vnorms || vtangents)
                 {
-                    if(!enabletc) glEnableClientState(GL_NORMAL_ARRAY);
-                    if(lasttcbuf!=lastvbuf) glNormalPointer(GL_FLOAT, vertsize, &vverts->norm);
+                    if(!enablenormals) 
+                    {
+                        glEnableClientState(GL_NORMAL_ARRAY);
+                        enablenormals = true;
+                    }
+                    if(lastnbuf!=lastvbuf) 
+                    {
+                        glNormalPointer(GL_FLOAT, vertsize, &vverts->norm);
+                        lastnbuf = lastvbuf;
+                    }
                 }
-                if(!enabletc) glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                if(lasttcbuf!=lastvbuf) glTexCoordPointer(2, GL_FLOAT, vertsize, &vverts->u);
-                lasttcbuf = lastvbuf;
-                enabletc = true;
+                else if(enablenormals) disablenormals();
+
+                if(!enabletc) 
+                {
+                    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                    enabletc = true;
+                }
+                if(lasttcbuf!=lastvbuf) 
+                {
+                    glTexCoordPointer(2, GL_FLOAT, vertsize, &vverts->u);
+                    lasttcbuf = lastnbuf;
+                }
             }
+            if(enablebones) disablebones();
         }
 
         void cleanup()
@@ -597,8 +615,6 @@ struct vertmodel : animmodel
             }
             if(hasVBO) { if(ebuf) { glDeleteBuffers_(1, &ebuf); ebuf = 0; } }
             else DELETEA(vdata);
-            lastvbuf = lasttcbuf = lastmtcbuf = lastnbuf = NULL;
-            lastebuf = 0;
         }
 
         void render(const animstate *as, float pitch, const vec &axis, part *p)
@@ -615,7 +631,7 @@ struct vertmodel : animmodel
                 if(p->skins[i].normals()) norms = true;
                 if(p->skins[i].tangents()) tangents = true;
             }
-            if(norms!=vnorms || tangents!=vtangents) cleanup();
+            if(norms!=vnorms || tangents!=vtangents) { cleanup(); disablevbo(); }
             vbocacheentry *vc = NULL;
             if(numframes<=1) vc = vbocache;
             else
