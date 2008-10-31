@@ -161,23 +161,24 @@ struct weaponstate
 
 		if(gun == GUN_PLASMA)
 		{
-			regular_part_splash(7, 3, 150, o, 0x226688, guntype[gun].explode*0.75f);
-			regular_part_splash(7, 1, 250, o, 0x226688, guntype[gun].size*0.75f);
-			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.1f, 0.4f, 0.6f), 100, 10);
+			regular_part_splash(7, 1, 250, o, 0x226688, guntype[gun].size*0.75f); // plasma explosion
+			regular_part_splash(6, 5, 750, o, 0x121212, guntype[gun].explode*0.5f, int(guntype[gun].explode*0.5f)); // smoke
+			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.1f, 0.4f, 0.6f), 200, 10);
 		}
 		if(gun == GUN_FLAMER || gun == GUN_GL)
 		{
-			regular_part_splash(4, 5, gun == GUN_FLAMER ? 1000 : 2000, o, 0x441404, guntype[gun].explode*0.5f, int(guntype[gun].explode));
-			regular_part_splash(6, 5, gun == GUN_FLAMER ? 2000 : 4000, vec(o).sub(vec(0, 0, 2)), gun == GUN_FLAMER ? 0x121212 : 0x212121, guntype[gun].explode, int(guntype[gun].explode));
-			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), 100, 10);
+			regular_part_splash(7, 5, gun == GUN_FLAMER ? 500 : 1500, o, 0x663603, guntype[gun].explode*0.25f, int(guntype[gun].explode*0.5f)); // corona
+			regular_part_splash(4, 5, gun == GUN_FLAMER ? 750 : 1500, o, 0x441404, guntype[gun].explode*0.5f, int(guntype[gun].explode)); // fireball
+			regular_part_splash(6, 5, gun == GUN_FLAMER ? 1500 : 2000, vec(o).sub(vec(0, 0, 2)), gun == GUN_FLAMER ? 0x121212 : 0x242424, guntype[gun].explode, int(guntype[gun].explode)); // smoke
+			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), gun == GUN_FLAMER ? 1000 : 1500, 10);
 		}
 		if(gun == GUN_GL)
 		{
 			int explodeforce = max(int(guntype[gun].damage*(1.f-dist/EXPLOSIONSCALE/guntype[gun].explode/10.f)), 0);
 			cl.quakewobble += explodeforce;
-			part_fireball(vec(o).sub(vec(0, 0, 2)), guntype[gun].explode, 15, 1000, 0x664604, 3.f);
-			loopi(rnd(explodeforce+1)+1)
-				cl.pj.create(o, vec(o).add(vel), true, d, PRJ_DEBRIS, rnd(3000)+2000, 0, rnd(30)+10, 100, -1);
+			part_fireball(vec(o).sub(vec(0, 0, 2)), guntype[gun].explode, 15, 1000, 0x663603, 3.f); // explosion fireball
+			loopi(rnd((explodeforce+1)*2)+1)
+				cl.pj.create(o, vec(o).add(vel), true, d, PRJ_DEBRIS, rnd(2500)+1500, rnd(1000)+1, 70);
 		}
         if(gun != GUN_PLASMA)
 			adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
