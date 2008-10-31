@@ -210,38 +210,38 @@ struct projectiles
 			if(proj.attr1 == GUN_PLASMA)
 			{
 				proj.lifesize = proj.lifemillis-proj.lifetime <= 500 ? clamp((proj.lifemillis-proj.lifetime)/500.f, 0.1f, 1.f) : 1.f;
-				regular_part_splash(7, 1, int((1.1f-proj.lifesize)*50.f), proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.35f, int(guntype[proj.attr1].size*proj.lifesize*0.35f)); // brighter center part
-				regular_part_splash(7, 1, int((1.1f-proj.lifesize)*200.f), proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize, int(guntype[proj.attr1].size*proj.lifesize));
+				regular_part_splash(PART_PLASMA, 1, int((1.1f-proj.lifesize)*50.f), proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.35f, int(guntype[proj.attr1].size*proj.lifesize*0.35f)); // brighter center part
+				regular_part_splash(PART_PLASMA, 1, int((1.1f-proj.lifesize)*200.f), proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize, int(guntype[proj.attr1].size*proj.lifesize));
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
 				proj.lifesize = clamp(proj.lifespan*2.f, 0.1f, 1.f);
 				int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8),  // a bit more of an orange for the corona
 					deviation = guntype[proj.attr1].size/2;
-				regular_part_splash(7, 1, int((1.1f-proj.lifesize)*100.f), proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.25f, int(guntype[proj.attr1].size*proj.lifesize*0.25f));
+				regular_part_splash(PART_PLASMA, 1, int((1.1f-proj.lifesize)*100.f), proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.25f, int(guntype[proj.attr1].size*proj.lifesize*0.25f));
 				col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(64*max(1.0f-proj.lifespan,0.2f))+1)<<8);
 				loopi(rnd(4)+1)
 				{
 					vec to = vec(proj.o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation).mul(proj.lifespan));
-					regular_part_splash(4, 1, int((1.1f-proj.lifesize)*200.f), to, col, guntype[proj.attr1].size*proj.lifesize*0.5f, int(guntype[proj.attr1].size*proj.lifesize*0.5f));
+					regular_part_splash(PART_FIREBALL_SOFT, 1, int((1.1f-proj.lifesize)*200.f), to, col, guntype[proj.attr1].size*proj.lifesize*0.5f, int(guntype[proj.attr1].size*proj.lifesize*0.5f));
 				}
 			}
 			else
 			{
 				proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-				regularshape(6, int(proj.radius), 0x242424, 21, rnd(3)+1, int(proj.vel.magnitude()*10.f)+100, proj.o, 1.2f);
+				regularshape(PART_SMOKE_RISE_SLOW, int(proj.radius), 0x242424, 21, rnd(3)+1, int(proj.vel.magnitude()*10.f)+100, proj.o, 1.2f);
 			}
 		}
 		else if(proj.projtype == PRJ_GIBS)
 		{
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-			regular_part_splash(0, 1, 3000, proj.o, 0x66FFFF, 1.2f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
+			regular_part_splash(PART_BLOOD, 1, 3000, proj.o, 0x66FFFF, 1.2f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
 		}
 		else if(proj.projtype == PRJ_DEBRIS)
 		{
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 			if(proj.vel.magnitude() > 4.f)
-				part_flare(proj.o, vec(proj.o).sub(vec(proj.vel).mul(0.4f)), int(proj.vel.magnitude()*3.f), 10, 0x998811, 0.25f);
+				part_flare(proj.o, vec(proj.o).sub(vec(proj.vel).mul(0.4f)), int(proj.vel.magnitude()*3.f), PART_STREAK, 0x998811, 0.25f);
 		}
 	}
 
@@ -290,7 +290,7 @@ struct projectiles
 
 					if(proj.projtype == PRJ_GIBS)
 					{
-						part_splash(0, 1, 10000, proj.o, 0x60FFFF, proj.radius);
+						part_splash(PART_BLOOD, 1, 10000, proj.o, 0x60FFFF, proj.radius);
 					}
 					else if(!hitplayer && proj.projtype == PRJ_SHOT && proj.attr1 == GUN_FLAMER)
 					{
@@ -444,7 +444,7 @@ struct projectiles
 				{
 					if(!proj.beenused)
 					{
-						regularshape(7, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
+						regularshape(PART_PLASMA, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
 						if(proj.local)
 							cl.cc.addmsg(SV_EXPLODE, "ri6", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0, 0);
 					}
@@ -480,7 +480,7 @@ struct projectiles
                             case PRJ_ENT:
                                 if(!proj.beenused)
                                 {
-                                    regularshape(7, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
+                                    regularshape(PART_PLASMA, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
                                     if(proj.local)
                                         cl.cc.addmsg(SV_EXPLODE, "ri6", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0, 0);
                                 }

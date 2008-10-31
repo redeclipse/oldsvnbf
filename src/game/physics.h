@@ -483,8 +483,8 @@ struct physics
 				if(mw >= 0) playsound(mw, pl->o, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(getwatercolour(mcol), 6, 250, 1.f, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-			if(curmat == MAT_LAVA) mattrig(getlavacolour(mcol), 4, 1000, 2.f, S_BURNING);
+				mattrig(getwatercolour(mcol), PART_SMOKE_RISE_SLOW, 250, 1.f, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+			if(curmat == MAT_LAVA) mattrig(getlavacolour(mcol), PART_FIREBALL, 1000, 2.f, S_BURNING);
 
 			if(local)
 			{

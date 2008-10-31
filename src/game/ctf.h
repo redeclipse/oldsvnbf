@@ -332,7 +332,7 @@ struct ctfclient : ctfstate
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
             above.z += enttype[FLAG].radius;
             s_sprintfd(info)("@%s flag", teamtype[f.team].name);
-			part_text(above, info, 11, 1, teamtype[f.team].colour);
+			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
         }
     }
 
@@ -413,7 +413,7 @@ struct ctfclient : ctfstate
     {
 		flag &f = flags[i];
 		int colour = teamtype[f.team].colour;
-		regularshape(6, enttype[FLAG].radius, colour, 53, 50, 1000, vec(loc).add(vec(0, 0, 4.f)), 4.f);
+		regularshape(PART_SMOKE_RISE_SLOW, enttype[FLAG].radius, colour, 53, 50, 1000, vec(loc).add(vec(0, 0, 4.f)), 4.f);
 		adddynlight(loc, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
     }
 
@@ -430,7 +430,7 @@ struct ctfclient : ctfstate
 		}
 		if(from.x >= 0 && to.x >= 0)
 		{
-			part_trail(7, 250, from, to, teamtype[f.team].colour, 4.8f);
+			part_trail(PART_PLASMA, 250, from, to, teamtype[f.team].colour, 4.8f);
 		}
     }
 
@@ -478,7 +478,7 @@ struct ctfclient : ctfstate
         if(!flags.inrange(i)) return;
 		flag &f = flags[i];
 		int colour = teamtype[d->team].colour;
-		regularshape(6, enttype[FLAG].radius, colour, 53, 50, 1000, vec(f.pos()).add(vec(0, 0, 4.f)), 4.f);
+		regularshape(PART_SMOKE_RISE_SLOW, enttype[FLAG].radius, colour, 53, 50, 1000, vec(f.pos()).add(vec(0, 0, 4.f)), 4.f);
 		adddynlight(f.pos(), enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
 		f.interptime = lastmillis;
 		s_sprintfd(s)("%s %s the \fs%s%s\fS flag", d==cl.player1 ? "you" : cl.colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);

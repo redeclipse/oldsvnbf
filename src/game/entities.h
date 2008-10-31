@@ -308,7 +308,7 @@ struct entities : icliententities
 			d->useitem(lastmillis, n, e.type, e.attr1, e.attr2);
 			if(ents.inrange(r) && ents[r]->type == WEAPON && isgun(ents[r]->attr1))
 				cl.pj.drop(d, ents[r]->attr1, r, (d->gunwait[ents[r]->attr1]/2)-50);
-			regularshape(7, enttype[e.type].radius, 0x888822, 53, 50, 200, pos, 2.f);
+			regularshape(PART_PLASMA, enttype[e.type].radius, 0x888822, 53, 50, 200, pos, 2.f);
 			e.spawned = false;
 		}
 	}
@@ -1297,7 +1297,7 @@ struct entities : icliententities
 #if 0
 				part_flare(vec(e.o).add(vec(0, 0, RENDERPUSHZ)),
 					vec(f.o).add(vec(0, 0, RENDERPUSHZ)),
-						10, 21, both ? 0xF08020 : 0xF02020, 0.2f);
+						10, PART_LINE, both ? 0xF08020 : 0xF02020, 0.2f);
 #else
 				vec fr(vec(e.o).add(vec(0, 0, RENDERPUSHZ))), dr(vec(f.o).add(vec(0, 0, RENDERPUSHZ)));
 				vec col(0.5f, both ? 0.25f : 0.0f, 0.f);
@@ -1542,7 +1542,7 @@ struct entities : icliententities
 			{
 				bool hasent = idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
 				vec off(0, 0, 2.f), pos(o);
-				part_create(3, 1, pos, hasent ? 0xFF6600 : 0xFFFF00, hasent ? 2.0f : 1.5f);
+				part_create(PART_EDIT, 1, pos, hasent ? 0xFF6600 : 0xFFFF00, hasent ? 2.0f : 1.5f);
 				if(showentinfo() >= 2 || cl.player1->state == CS_EDITING)
 				{
 					s_sprintf(s)("@%s%s (%d)", hasent ? "\fo" : "\fy", enttype[e.type].name, idx >= 0 ? idx : 0);

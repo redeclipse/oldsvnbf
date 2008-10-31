@@ -898,43 +898,43 @@ static void regularsplash(int type, int color, int radius, int num, int fade, co
 // @NOTE potentially this and the following public funcs can be tidied up, but lets please defer that for a little bit...
 static struct partmap { int type; int color; float size; } partmaps[] =
 {
-    {  1, 0xB49B4B, 0.6f }, // 0 yellow: sparks
-    {  2, 0x222222, 0.6f }, // 1 greyish:   small slowly rising smoke
-    {  3, 0x3232FF, 0.3f }, // 2 blue:   edit mode entities
-    {  0, 0x60FFFF, 3.0f }, // 3 red:    blood spats (note: rgb is inverted)
-    {  5, 0xFFC8C8, 4.8f }, // 4 yellow: fireball1
-    {  6, 0x222222, 2.4f }, // 5 greyish:   big  slowly rising smoke
-    {  7, 0xFFFFFF, 4.8f }, // 6 blue:   fireball2
-    {  8, 0xFFFFFF, 4.8f }, // 7 green:  big fireball3
-    {  9, 0xFFFFFF, 3.0f }, // 8 TEXT RED
-    {  9, 0xFFFFFF, 4.0f }, // 9 TEXT GREEN
-    { 10, 0xFFC864, 0.8f }, // 10 yellow flare
-    { 11, 0xFFFFFF, 2.0f }, // 11 TEXT DARKGREEN, SMALL, NON-MOVING
-    {  8, 0xFFFFFF, 2.0f }, // 12 green small fireball3
-    { 11, 0xFFFFFF, 2.0f }, // 13 TEXT RED, SMALL, NON-MOVING
-    { 11, 0xFFFFFF, 2.0f }, // 14 TEXT GREY, SMALL, NON-MOVING
-    {  9, 0xFFFFFF, 4.0f }, // 15 TEXT YELLOW
-    { 11, 0xFFFFFF, 2.0f }, // 16 TEXT BLUE, SMALL, NON-MOVING
-    { 12, 0xFF1932, 2.0f }, // 17 METER RED, SMALL, NON-MOVING
-    { 12, 0x3219FF, 2.0f }, // 18 METER BLUE, SMALL, NON-MOVING
-    { 13, 0xFF1932, 2.0f }, // 19 METER RED vs. BLUE, SMALL, NON-MOVING (note swaps r<->b)
-    { 13, 0x3219FF, 2.0f }, // 20 METER BLUE vs. RED, SMALL, NON-MOVING (note swaps r<->b)
-    { 14, 0x222222, 0.6f }, // 21 greyish:   small  slowly sinking smoke trail
-    { 15, 0x993300, 4.0f }, // 22 red explosion fireball
-    { 15, 0x884400, 4.0f }, // 23 orange explosion fireball
-    { 11, 0xFFFFFF, 1.2f }, // 24 TEXT WHITE, TINY, NON-MOVING
-    { 17, 0x222222, 2.4f }, // 25 greyish:   big  fast rising smoke
-    { 11, 0xFFFFFF, 2.5f }, // 26 TEXT WHITE, NON-MOVING
-    { 11, 0xFFFFFF, 2.0f }, // 27 TEXT WHITE, SMALL, NON-MOVING
-    { 16, 0xFFFFFF, 0.6f }, // 28 lightning
-    { 16, 0xFF2222, 0.6f }, // 29 lightning: red
-    { 16, 0x2222FF, 0.6f }, // 30 lightning: blue
-    { 19, 0x802020, 4.8f }, // 31 fireball: red, no glare
-    { 19, 0x2020FF, 4.8f }, // 32 fireball: blue, no glare
-    { 19, 0x208020, 4.8f }, // 33 fireball: green, no glare
-    {  9, 0xFFFFFF, 4.0f }, // 34 TEXT BLUE
-    { 15, 0x802020, 4.8f }, // 35 fireball: red
-    { 15, 0x2020FF, 4.8f }, // 36 fireball: blue
+    { PART_SPARK, 0xB49B4B, 0.6f },              // 0 yellow: sparks
+    { PART_SMOKE_RISE_SLOW, 0x222222, 0.6f },    // 1 greyish:   small slowly rising smoke
+    { PART_EDIT, 0x3232FF, 0.3f },               // 2 blue:   edit mode entities
+    { PART_BLOOD, 0x60FFFF, 3.0f },              // 3 red:    blood spats (note: rgb is inverted)
+    { PART_FIREBALL, 0xFFC8C8, 4.8f },           // 4 yellow: fireball1
+    { PART_SMOKE_RISE_SLOW, 0x222222, 2.4f },    // 5 greyish:   big  slowly rising smoke
+    { PART_PLASMA, 0xFFFFFF, 4.8f },             // 6 blue:   fireball2
+    { PART_ELECTRIC, 0xFFFFFF, 4.8f },           // 7 green:  big fireball3
+    { PART_TEXT_RISE, 0xFFFFFF, 3.0f },          // 8 TEXT RED
+    { PART_TEXT_RISE, 0xFFFFFF, 4.0f },          // 9 TEXT GREEN
+    { PART_STREAK, 0xFFC864, 0.8f },             // 10 yellow flare
+    { PART_TEXT, 0xFFFFFF, 2.0f },               // 11 TEXT DARKGREEN, SMALL, NON-MOVING
+    { PART_ELECTRIC, 0xFFFFFF, 2.0f },           // 12 green small fireball3
+    { PART_TEXT, 0xFFFFFF, 2.0f },               // 13 TEXT RED, SMALL, NON-MOVING
+    { PART_TEXT, 0xFFFFFF, 2.0f },               // 14 TEXT GREY, SMALL, NON-MOVING
+    { PART_TEXT_RISE, 0xFFFFFF, 4.0f },          // 15 TEXT YELLOW
+    { PART_TEXT, 0xFFFFFF, 2.0f },               // 16 TEXT BLUE, SMALL, NON-MOVING
+    { PART_METER, 0xFF1932, 2.0f },              // 17 METER RED, SMALL, NON-MOVING
+    { PART_METER_VS, 0x3219FF, 2.0f },           // 18 METER BLUE, SMALL, NON-MOVING
+    { PART_METER_VS, 0xFF1932, 2.0f },           // 19 METER RED vs. BLUE, SMALL, NON-MOVING (note swaps r<->b)
+    { PART_METER_VS, 0x3219FF, 2.0f },           // 20 METER BLUE vs. RED, SMALL, NON-MOVING (note swaps r<->b)
+    { PART_SMOKE_SINK, 0x222222, 0.6f },         // 21 greyish:   small  slowly sinking smoke trail
+    { PART_EXPLOSION, 0x993300, 4.0f },          // 22 red explosion fireball
+    { PART_EXPLOSION, 0x884400, 4.0f },          // 23 orange explosion fireball
+    { PART_TEXT, 0xFFFFFF, 1.2f },               // 24 TEXT WHITE, TINY, NON-MOVING
+    { PART_SMOKE_RISE_FAST, 0x222222, 2.4f },    // 25 greyish:   big  fast rising smoke
+    { PART_TEXT, 0xFFFFFF, 2.5f },               // 26 TEXT WHITE, NON-MOVING
+    { PART_TEXT, 0xFFFFFF, 2.0f },               // 27 TEXT WHITE, SMALL, NON-MOVING
+    { PART_LIGHTNING, 0xFFFFFF, 0.6f },          // 28 lightning
+    { PART_LIGHTNING, 0xFF2222, 0.6f },          // 29 lightning: red
+    { PART_LIGHTNING, 0x2222FF, 0.6f },          // 30 lightning: blue
+    { PART_EXPLOSION_NO_GLARE, 0x802020, 4.8f }, // 31 fireball: red, no glare
+    { PART_EXPLOSION_NO_GLARE, 0x2020FF, 4.8f }, // 32 fireball: blue, no glare
+    { PART_EXPLOSION_NO_GLARE, 0x208020, 4.8f }, // 33 fireball: green, no glare
+    { PART_TEXT_RISE, 0xFFFFFF, 4.0f },          // 34 TEXT BLUE
+    { PART_EXPLOSION, 0x802020, 4.8f },          // 35 fireball: red
+    { PART_EXPLOSION, 0x2020FF, 4.8f },          // 36 fireball: blue
     // fill the above @UNUSED slots first!
 };
 
@@ -1195,22 +1195,22 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
     switch(attr1)
     {
         case 0: //fire
-            regularsplash(5, 0xFFC8C8, 150, 1, 40, o, 4.8f);
-            regularsplash(6, 0x897661, 50, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, 3);
+            regularsplash(PART_FIREBALL, 0xFFC8C8, 150, 1, 40, o, 4.8f);
+            regularsplash(PART_SMOKE_RISE_SLOW, 0x897661, 50, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, 3);
             break;
         case 1: //smoke vent - <dir>
-            regularsplash(6, 0x897661, 50, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4f);
+            regularsplash(PART_SMOKE_RISE_SLOW, 0x897661, 50, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4f);
             break;
         case 2: //water fountain - <dir>
         {
             uchar col[3];
             getwatercolour(col);
             int color = (col[0]<<16) | (col[1]<<8) | col[2];
-            regularsplash(18, color, 150, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6f);
+            regularsplash(PART_WATER, color, 150, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6f);
             break;
         }
         case 3: //fire ball - <size> <rgb>
-            newparticle(o, vec(0, 0, 1), 1, 15, colorfromattr(attr3), 4.0f)->val = 1+attr2;
+            newparticle(o, vec(0, 0, 1), 1, PART_EXPLOSION, colorfromattr(attr3), 4.0f)->val = 1+attr2;
             break;
         case 4:  //tape - <dir> <length> <rgb>
         case 7:  //lightning
@@ -1228,7 +1228,7 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
         }
         case 5: //meter, metervs - <percent> <rgb>
         case 6:
-            newparticle(o, vec(0, 0, 1), 1, (attr1==5)?12:13, colorfromattr(attr3), 2.0)->val = min(1.0f, float(attr2)/100);
+            newparticle(o, vec(0, 0, 1), 1, attr1==5 ? PART_METER : PART_METER_VS, colorfromattr(attr3), 2.0)->val = min(1.0f, float(attr2)/100);
             break;
         case 32: //lens flares - plain/sparkle/sun/sparklesun <red> <green> <blue>
         case 33:
