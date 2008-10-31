@@ -26,23 +26,23 @@ Texture *loadskyoverlay(const char *basename)
 
 SVARFW(skybox, "skyboxes/black", { if(skybox[0]) loadsky(skybox, sky); });
 VARW(skycolour, 0, 0xFFFFFF, 0xFFFFFF);
-FVARW(spinsky, 0);
+FVARW(spinsky, -720, 0, 720);
 VARW(yawsky, 0, 0, 360);
 
 SVARFW(cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
 VARW(cloudcolour, 0, 0xFFFFFF, 0xFFFFFF);
-FVARW(cloudblend, 1.0f);
-FVARW(spinclouds, 0);
+FVARW(cloudblend, 0, 1.0f, 1);
+FVARW(spinclouds, -720, 0, 720);
 VARW(yawclouds, 0, 0, 360);
-FVARW(cloudclip, 0.5f);
+FVARW(cloudclip, 0, 0.5f, 1);
 SVARFW(cloudlayer, "", { if(cloudlayer[0]) cloudoverlay = loadskyoverlay(cloudlayer); });
-FVARW(cloudscrollx, 0);
-FVARW(cloudscrolly, 0);
-FVARW(cloudscale, 1);
-FVARW(spincloudlayer, 0);
-FVARW(yawcloudlayer, 0);
-FVARW(cloudheight, 0.2f);
-FVARW(cloudfade, 0.2f);
+FVARW(cloudscrollx, -16, 0, 16);
+FVARW(cloudscrolly, -16, 0, 16);
+FVARW(cloudscale, 0, 1, 64);
+FVARW(spincloudlayer, -720, 0, 720);
+VARW(yawcloudlayer, 0, 0, 360);
+FVARW(cloudheight, -1, 0.2f, 1);
+FVARW(cloudfade, 0, 0.2f, 1);
 VARW(cloudsubdiv, 4, 16, 64);
 
 void draw_envbox_face(float s0, float t0, int x0, int y0, int z0,

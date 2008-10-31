@@ -5,10 +5,10 @@
 
 VARP(centertime, 200, 5000, INT_MAX-1);
 VARP(centerlines, 0, 3, 5);
-FVARP(centerblend, 0.99f);
+FVARP(centerblend, 0, 0.99f, 1);
 
 VARP(contime, 200, 20000, INT_MAX-1);
-FVARP(conblend, 0.99f);
+FVARP(conblend, 0, 0.99f, 1);
 
 ICOMMAND(centerprint, "C", (char *s), console("\f6%s", CON_CENTER, s););
 
