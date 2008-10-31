@@ -209,9 +209,15 @@ struct projectiles
 
 			if(proj.attr1 == GUN_PLASMA)
 			{
-				proj.lifesize = proj.lifemillis-proj.lifetime <= 500 ? clamp((proj.lifemillis-proj.lifetime)/500.f, 0.1f, 1.f) : 1.f;
-				regular_part_splash(PART_PLASMA_SOFT, 1, int((1.1f-proj.lifesize)*50.f), proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.35f, int(guntype[proj.attr1].size*proj.lifesize*0.35f)); // brighter center part
-				regular_part_splash(PART_PLASMA_SOFT, 1, int((1.1f-proj.lifesize)*200.f), proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize, int(guntype[proj.attr1].size*proj.lifesize));
+                int part = PART_PLASMA;
+                if(proj.lifemillis-proj.lifetime < 500) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/500.f, 0.1f, 1.f);
+                else
+                {
+                    part = PART_PLASMA_SOFT;
+                    proj.lifesize = 1.f;
+                }
+				regular_part_splash(part, 1, int((1.1f-proj.lifesize)*50.f), proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.35f, int(guntype[proj.attr1].size*proj.lifesize*0.35f)); // brighter center part
+				regular_part_splash(part, 1, int((1.1f-proj.lifesize)*200.f), proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize, int(guntype[proj.attr1].size*proj.lifesize));
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
