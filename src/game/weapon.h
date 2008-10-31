@@ -161,13 +161,13 @@ struct weaponstate
 
 		if(gun == GUN_PLASMA)
 		{
-			regular_part_splash(PART_PLASMA, 1, 250, o, 0x226688, guntype[gun].size*0.75f); // plasma explosion
+			regular_part_splash(PART_PLASMA_SOFT, 1, 250, o, 0x226688, guntype[gun].size*0.75f); // plasma explosion
 			regular_part_splash(PART_SMOKE_RISE_SLOW, 5, 750, o, 0x121212, guntype[gun].explode*0.5f, int(guntype[gun].explode*0.5f)); // smoke
 			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.1f, 0.4f, 0.6f), 200, 10);
 		}
 		if(gun == GUN_FLAMER || gun == GUN_GL)
 		{
-			regular_part_splash(PART_PLASMA, 5, gun == GUN_FLAMER ? 500 : 1500, o, 0x663603, guntype[gun].explode*0.25f, int(guntype[gun].explode*0.5f)); // corona
+			regular_part_splash(PART_PLASMA_SOFT, 5, gun == GUN_FLAMER ? 500 : 1500, o, 0x663603, guntype[gun].explode*0.25f, int(guntype[gun].explode*0.5f)); // corona
 			regular_part_splash(PART_FIREBALL_SOFT, 5, gun == GUN_FLAMER ? 750 : 1500, o, 0x441404, guntype[gun].explode*0.5f, int(guntype[gun].explode)); // fireball
 			regular_part_splash(PART_SMOKE_RISE_SLOW, 5, gun == GUN_FLAMER ? 1500 : 2000, vec(o).sub(vec(0, 0, 2)), gun == GUN_FLAMER ? 0x121212 : 0x242424, guntype[gun].explode, int(guntype[gun].explode)); // smoke
 			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), gun == GUN_FLAMER ? 1000 : 1500, 10);

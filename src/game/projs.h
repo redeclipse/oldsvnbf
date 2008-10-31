@@ -210,15 +210,15 @@ struct projectiles
 			if(proj.attr1 == GUN_PLASMA)
 			{
 				proj.lifesize = proj.lifemillis-proj.lifetime <= 500 ? clamp((proj.lifemillis-proj.lifetime)/500.f, 0.1f, 1.f) : 1.f;
-				regular_part_splash(PART_PLASMA, 1, int((1.1f-proj.lifesize)*50.f), proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.35f, int(guntype[proj.attr1].size*proj.lifesize*0.35f)); // brighter center part
-				regular_part_splash(PART_PLASMA, 1, int((1.1f-proj.lifesize)*200.f), proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize, int(guntype[proj.attr1].size*proj.lifesize));
+				regular_part_splash(PART_PLASMA_SOFT, 1, int((1.1f-proj.lifesize)*50.f), proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.35f, int(guntype[proj.attr1].size*proj.lifesize*0.35f)); // brighter center part
+				regular_part_splash(PART_PLASMA_SOFT, 1, int((1.1f-proj.lifesize)*200.f), proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize, int(guntype[proj.attr1].size*proj.lifesize));
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
 				proj.lifesize = clamp(proj.lifespan*2.f, 0.1f, 1.f);
 				int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8),  // a bit more of an orange for the corona
 					deviation = guntype[proj.attr1].size/2;
-				regular_part_splash(PART_PLASMA, 1, int((1.1f-proj.lifesize)*100.f), proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.25f, int(guntype[proj.attr1].size*proj.lifesize*0.25f));
+				regular_part_splash(PART_PLASMA_SOFT, 1, int((1.1f-proj.lifesize)*100.f), proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.25f, int(guntype[proj.attr1].size*proj.lifesize*0.25f));
 				col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(64*max(1.0f-proj.lifespan,0.2f))+1)<<8);
 				loopi(rnd(4)+1)
 				{
@@ -444,7 +444,7 @@ struct projectiles
 				{
 					if(!proj.beenused)
 					{
-						regularshape(PART_PLASMA, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
+						regularshape(PART_PLASMA_SOFT, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
 						if(proj.local)
 							cl.cc.addmsg(SV_EXPLODE, "ri6", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0, 0);
 					}
@@ -480,7 +480,7 @@ struct projectiles
                             case PRJ_ENT:
                                 if(!proj.beenused)
                                 {
-                                    regularshape(PART_PLASMA, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
+                                    regularshape(PART_PLASMA_SOFT, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
                                     if(proj.local)
                                         cl.cc.addmsg(SV_EXPLODE, "ri6", proj.owner->clientnum, lastmillis-cl.maptime, -1, proj.id, 0, 0);
                                 }

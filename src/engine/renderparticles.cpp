@@ -633,22 +633,23 @@ static partrenderer *parts[] =
     new softquadrenderer("particles/fireball",		PT_PART|PT_GLARE,  20, 0),			// 4 softened fireball
     new quadrenderer("particles/fireball", 			PT_PART|PT_GLARE,  20, 0),          // 5 fireball
     new quadrenderer("particles/smoke",				PT_PART,          -20, 0),			// 6 big  slowly rising smoke
-    new quadrenderer("particles/plasma",			PT_PART|PT_GLARE,  0, 0),			// 7 fireball2
-	new quadrenderer("particles/electric",			PT_PART|PT_GLARE,  0, 0),			// 8 big fireball3
-    &textups,																			// 9 TEXT, floats up
-    new taperenderer("particles/flare",				PT_TAPE|PT_GLARE,   0, 0),			// 10 streak
-    &texts,																				// 11 TEXT, SMALL, NON-MOVING
-    &meters,																			// 12 METER, SMALL, NON-MOVING
-    &metervs,																			// 13 METER vs., SMALL, NON-MOVING
-    new quadrenderer("particles/smoke",				PT_PART,           20, 0),			// 14 small  slowly sinking smoke trail
-    &fireballs,																			// 15 explosion fireball
-    &lightnings,																		// 16 lightning
-    new quadrenderer("particles/smoke",				PT_PART,          -15, 0),			// 17 big  fast rising smoke
-    new trailrenderer("particles/entity",			PT_TRAIL|PT_LERP,   2, 0),			// 18 water, entity
-    &noglarefireballs,																	// 19 explosion fireball no glare
-    new quadrenderer("particles/muzzle",			PT_PART|PT_GLARE,  0, 0),			// 20 muzzle flashes
-    new taperenderer("particles/line",				PT_TAPE|PT_GLARE,   0, 0),			// 21 line
-    &flares // must be done last
+    new softquadrenderer("particles/plasma",        PT_PART|PT_GLARE,  0, 0),           // 7 fireball2
+    new quadrenderer("particles/plasma",			PT_PART|PT_GLARE,  0, 0),			// 8 fireball2
+	new quadrenderer("particles/electric",			PT_PART|PT_GLARE,  0, 0),			// 9 big fireball3
+    &textups,																			// 10 TEXT, floats up
+    new taperenderer("particles/flare",				PT_TAPE|PT_GLARE,   0, 0),			// 11 streak
+    &texts,																				// 12 TEXT, SMALL, NON-MOVING
+    &meters,																			// 13 METER, SMALL, NON-MOVING
+    &metervs,																			// 14 METER vs., SMALL, NON-MOVING
+    new quadrenderer("particles/smoke",				PT_PART,           20, 0),			// 15 small  slowly sinking smoke trail
+    &fireballs,																			// 16 explosion fireball
+    &lightnings,																		// 17 lightning
+    new quadrenderer("particles/smoke",				PT_PART,          -15, 0),			// 18 big  fast rising smoke
+    new trailrenderer("particles/entity",			PT_TRAIL|PT_LERP,   2, 0),			// 19 water, entity
+    &noglarefireballs,																	// 20 explosion fireball no glare
+    new quadrenderer("particles/muzzle",			PT_PART|PT_GLARE,  0, 0),			// 21 muzzle flashes
+    new taperenderer("particles/line",				PT_TAPE|PT_GLARE,   0, 0),			// 22 line
+    &flares                                                                             // 23 lens flares, must be done last
 };
 
 void finddepthfxranges()
