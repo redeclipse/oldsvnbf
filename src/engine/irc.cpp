@@ -283,7 +283,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 							ircprintf(n, g ? w[g+1] : NULL, "\fr%s requests: %s %s", user[0], q, r);
 
 							if(!strcasecmp(q, "VERSION"))
-								ircsend(n, "NOTICE %s :\001VERSION %s v%.2f (%s) IRC interface\001", user[0], ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE);
+								ircsend(n, "NOTICE %s :\001VERSION %s v%.2f (%s) IRC interface, %s %s\001", user[0], ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, ENG_BLURB, ENG_URL);
 							else if(!strcasecmp(q, "PING")) // eh, echo back
 								ircsend(n, "NOTICE %s :\001PING %s\001", user[0], r);
 						}
@@ -506,7 +506,7 @@ void irccleanup()
 	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL)
 	{
 		ircnet *n = &ircnets[i];
-		ircsend(n, "QUIT :Blood Frontier, it's bloody fun! http://bloodfrontier.com/");
+		ircsend(n, "QUIT :%s, %s %s", ENG_NAME, ENG_BLURB, ENG_URL);
 		ircdiscon(n);
 	}
 }
