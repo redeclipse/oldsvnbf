@@ -497,7 +497,7 @@ decalrenderer decals[] =
     decalrenderer("particles/scorch", DF_ROTATE, 500, 1000, 5000),
     decalrenderer("particles/blood", DF_RND4|DF_ROTATE|DF_INVMOD, 0, 1000, 5000),
     decalrenderer("<decal>particles/bullet", DF_OVERBRIGHT, 0, 1000, 5000),
-    decalrenderer("particles/energy", DF_ROTATE|DF_ADD|DF_SATURATE, 250, 500, 1000)
+    decalrenderer("particles/energy", DF_ROTATE|DF_ADD|DF_SATURATE, 150, 500, 1000)
 };
 
 void initdecals()
