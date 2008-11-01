@@ -89,6 +89,7 @@ struct ShaderParamState
 enum
 {
     SHADER_INVALID    = -1,
+    SHADER_DEFERRED   = -2,
 
 	SHADER_DEFAULT	= 0,
 	SHADER_NORMALSLMS = 1<<0,
@@ -112,17 +113,18 @@ struct Shader
     GLuint vs, ps;
     GLhandleARB program, vsobj, psobj;
     vector<LocalShaderParamState> defaultparams;
-    Shader *variantshader, *altshader, *fastshader[MAXSHADERDETAIL];
+    Shader *detailshader, *variantshader, *altshader, *fastshader[MAXSHADERDETAIL];
     vector<Shader *> variants[MAXVARIANTROWS];
-    bool standard, used, native;
+    bool standard, forced, used, native;
     Shader *reusevs, *reuseps;
     int numextparams;
     LocalShaderParamState *extparams;
     uchar *extvertparams, *extpixparams;
 
-
-    Shader() : name(NULL), vsstr(NULL), psstr(NULL), defer(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), variantshader(NULL), altshader(NULL), standard(false), used(false), native(true), reusevs(NULL), reuseps(NULL), numextparams(0), extparams(NULL), extvertparams(NULL), extpixparams(NULL)
-    {}
+    Shader() : name(NULL), vsstr(NULL), psstr(NULL), defer(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), detailshader(NULL), variantshader(NULL), altshader(NULL), standard(false), forced(false), used(false), native(true), reusevs(NULL), reuseps(NULL), numextparams(0), extparams(NULL), extvertparams(NULL), extpixparams(NULL)
+    {
+        loopi(MAXSHADERDETAIL) fastshader[i] = this;
+    }
 
     ~Shader()
     {
@@ -135,36 +137,36 @@ struct Shader
         extpixparams = NULL;
     }
 
-	void allocenvparams(Slot *slot = NULL);
-	void flushenvparams(Slot *slot = NULL);
-	void setslotparams(Slot &slot);
-	void bindprograms();
+    void fixdetailshader(bool force = true, bool recurse = true);
+    void allocenvparams(Slot *slot = NULL);
+    void flushenvparams(Slot *slot = NULL);
+    void setslotparams(Slot &slot);
+    void bindprograms();
 
-    Shader *hasvariant(int col, int row = 0)
+    void setvariant(int col, int row, Slot *slot, Shader *fallbackshader)
     {
-        if(!this || renderpath==R_FIXEDFUNCTION) return NULL;
-        Shader *s = shaderdetail < MAXSHADERDETAIL ? fastshader[shaderdetail] : this;
-        return row>=0 && row<MAXVARIANTROWS && s->variants[row].inrange(col) ? s->variants[row][col] : NULL;
+        if(!this || renderpath==R_FIXEDFUNCTION) return;
+        int len = detailshader->variants[row].length();
+        if(col >= len) col = len-1;
+        Shader *s = fallbackshader;
+        while(col >= 0) if(detailshader->variants[row][col]->type != SHADER_INVALID) { s = detailshader->variants[row][col]; break; }
+        if(lastshader!=s) s->bindprograms();
+        lastshader->flushenvparams(slot);
+        if(slot) lastshader->setslotparams(*slot);
     }
 
-    Shader *variant(int col, int row = 0)
-	{
-		if(!this || renderpath==R_FIXEDFUNCTION) return this;
-		Shader *s = shaderdetail < MAXSHADERDETAIL ? fastshader[shaderdetail] : this;
-        return row>=0 && row<MAXVARIANTROWS && s->variants[row].inrange(col) ? s->variants[row][col] : s;
-	}
+    void setvariant(int col, int row = 0, Slot *slot = NULL)
+    {
+        setvariant(col, row, slot, detailshader);
+    }
 
-	void set(Slot *slot = NULL)
-	{
-		if(!this || renderpath==R_FIXEDFUNCTION) return;
-		if(this!=lastshader)
-		{
-			if(shaderdetail < MAXSHADERDETAIL) fastshader[shaderdetail]->bindprograms();
-			else bindprograms();
-		}
-		lastshader->flushenvparams(slot);
-		if(slot) lastshader->setslotparams(*slot);
-	}
+    void set(Slot *slot = NULL)
+    {
+        if(!this || renderpath==R_FIXEDFUNCTION) return;
+        if(lastshader!=detailshader) detailshader->bindprograms();
+        lastshader->flushenvparams(slot);
+        if(slot) lastshader->setslotparams(*slot);
+    }
 
     bool compile();
     void cleanup(bool invalid = false);
@@ -345,7 +347,7 @@ extern Shader *defaultshader, *rectshader, *notextureshader, *nocolorshader, *fo
 extern int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams;
 
 extern Shader *lookupshaderbyname(const char *name);
-extern Shader *useshaderbyname(const char *name);
+extern Shader *useshaderbyname(const char *name, bool force = true);
 extern Texture *loadthumbnail(Slot &slot);
 extern void setslotshader(Slot &s);
 extern void setenvparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);

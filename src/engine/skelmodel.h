@@ -500,13 +500,13 @@ struct skelmodel : animmodel
             skelmeshgroup *g = (skelmeshgroup *)group;
             if(glaring)
             {
-                if(!g->skel->usegpuskel) s->variant(0, 2)->set();
-                else if(g->skel->usematskel) s->variant(min(maxweights, g->vweights), 2)->set();
-                else s->variant(min(maxweights, g->vweights)-1, 3)->set();
+                if(!g->skel->usegpuskel) s->setvariant(0, 2);
+                else if(g->skel->usematskel) s->setvariant(min(maxweights, g->vweights), 2);
+                else s->setvariant(min(maxweights, g->vweights)-1, 3);
             }
             else if(!g->skel->usegpuskel) s->set();
-            else if(g->skel->usematskel) s->variant(min(maxweights, g->vweights)-1, 0)->set();
-            else s->variant(min(maxweights, g->vweights)-1, 1)->set();
+            else if(g->skel->usematskel) s->setvariant(min(maxweights, g->vweights)-1, 0);
+            else s->setvariant(min(maxweights, g->vweights)-1, 1);
         }
 
         void render(const animstate *as, skin &s, vbocacheentry &vc)

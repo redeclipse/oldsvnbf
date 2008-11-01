@@ -124,11 +124,10 @@ enum
 #define ANIM_NOSKIN      (1<<22)
 #define ANIM_ENVMAP      (1<<23)
 #define ANIM_TRANSLUCENT (1<<24)
-#define ANIM_SHADOW      (1<<25)
-#define ANIM_SETTIME     (1<<26)
-#define ANIM_FULLBRIGHT  (1<<27)
-#define ANIM_REUSE       (1<<28)
-#define ANIM_NORENDER    (1<<29)
+#define ANIM_SETTIME     (1<<25)
+#define ANIM_FULLBRIGHT  (1<<26)
+#define ANIM_REUSE       (1<<27)
+#define ANIM_NORENDER    (1<<28)
 #define ANIM_FLAGS       (0x1FF<<22)
 
 struct animinfo // description of a character's animation

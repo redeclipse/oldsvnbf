@@ -480,6 +480,8 @@ enum
     INIT_LOAD,
     INIT_RESET
 };
+extern int initing;
+
 enum
 {
     CHANGE_GFX   = 1<<0,
@@ -562,6 +564,7 @@ extern model *loadmodel(const char *name, int i = -1, bool msg = false);
 extern mapmodelinfo &getmminfo(int i);
 extern void startmodelquery(occludequery *query);
 extern void endmodelquery();
+extern void preloadmodelshaders();
 
 // renderparticles
 extern void particleinit();

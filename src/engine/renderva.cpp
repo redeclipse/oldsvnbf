@@ -1212,23 +1212,18 @@ static void changeshader(renderstate &cur, Shader *s, Slot &slot, bool shadowed)
 {
     if(glaring)
     {
-        Shader *g = s->hasvariant(min(s->variants[4].length()-1, cur.visibledynlights), 4);
-        if(g) g->set(&slot);
-        else
-        {
-            static Shader *noglareshader = NULL;
-            if(!noglareshader) noglareshader = lookupshaderbyname("noglareworld");
-            noglareshader->set(&slot);
-        }
+        static Shader *noglareshader = NULL;
+        if(!noglareshader) noglareshader = lookupshaderbyname("noglareworld");
+        s->setvariant(cur.visibledynlights, 4, &slot, noglareshader);
     }
     else if(fading)
     {
-        if(shadowed) s->variant(min(s->variants[3].length()-1, cur.visibledynlights), 3)->set(&slot);
-        else s->variant(min(s->variants[2].length()-1, cur.visibledynlights), 2)->set(&slot);
+        if(shadowed) s->setvariant(cur.visibledynlights, 3, &slot);
+        else s->setvariant(cur.visibledynlights, 2, &slot);
     }
-    else if(shadowed) s->variant(min(s->variants[1].length()-1, cur.visibledynlights), 1)->set(&slot);
+    else if(shadowed) s->setvariant(cur.visibledynlights, 1, &slot);
     else if(!cur.visibledynlights) s->set(&slot);
-    else s->variant(min(s->variants[0].length()-1, cur.visibledynlights-1))->set(&slot);
+    else s->setvariant(cur.visibledynlights-1, 0, &slot);
     if(s->type&SHADER_GLSLANG) cur.texgendim = -1;
 }
 

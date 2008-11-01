@@ -33,6 +33,7 @@ struct model
     virtual void setfullbright(float fullbright) {}
     virtual void setcullface(bool cullface) {}
 
+    virtual void preloadshaders() {}
     virtual void cleanup() {}
 
     virtual void startrender() {}
