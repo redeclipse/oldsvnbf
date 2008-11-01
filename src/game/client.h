@@ -328,7 +328,7 @@ struct clientcom : iclientcom
 		if(d->state != CS_DEAD && d->state != CS_SPECTATOR)
 		{
 			s_sprintfd(ds)("@%s", &s);
-			particle_text(d->abovehead(), ds, 9);
+			part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 		}
 
 		console("%s", (centerchat() ? CON_CENTER : 0)|CON_NORMAL, s);
@@ -922,7 +922,7 @@ struct clientcom : iclientcom
 					target->health = amt;
 					target->lastregen = lastmillis;
 					int left = clamp(MAXHEALTH-max(target->health-REGENHEAL, 0), 1, 100);
-					particle_splash(3, max(left/10, 3), 10000, target->o);
+					part_splash(PART_BLOOD, max(left, 3), REGENWAIT, target->o, 0x60FFFF, 3.0f);
 					playsound(S_REGEN, target->o, target);
 					break;
 				}
@@ -994,7 +994,7 @@ struct clientcom : iclientcom
 					if(item)
 					{
 						s_sprintfd(ds)("@%s", item);
-						particle_text(cl.et.ents[ent]->o, ds, 9);
+						part_text(cl.et.ents[ent]->o, ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 					}
 					regularshape(PART_PLASMA, enttype[cl.et.ents[ent]->type].radius, 0x888822, 53, 50, 200, cl.et.ents[ent]->o, 2.f);
 					break;

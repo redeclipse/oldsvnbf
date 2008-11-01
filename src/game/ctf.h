@@ -466,10 +466,10 @@ struct ctfclient : ctfstate
 		ctfstate::returnflag(relay);
 		if(d!=cl.player1)
 		{
-			s_sprintfd(ds)("@%d", score);
-			particle_text(d->abovehead(), ds, 9);
+			s_sprintfd(ds)("@CAPTURED!");
+			part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, teamtype[f.team].colour, 3.f);
 		}
-		s_sprintfd(s)("%s scored for \fs%s%s\fS team", d==cl.player1 ? "you" : cl.colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
+		s_sprintfd(s)("%s scored for \fs%s%s\fS team (score: %d)", d==cl.player1 ? "you" : cl.colorname(d), teamtype[f.team].chat, teamtype[f.team].name, f.score);
 		cl.et.announce(S_V_FLAGSCORE, s, true);
     }
 

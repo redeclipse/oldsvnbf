@@ -212,21 +212,25 @@ struct projectiles
                     part = PART_PLASMA_SOFT;
                     proj.lifesize = 1.f;
                 }
-				regular_part_splash(part, 1, 15, proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize);
-				regular_part_splash(part, 1, 20, proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.5f); // brighter center part
+				regular_part_splash(part, 1, 10, proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize);
+				regular_part_splash(part, 1, 15, proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.5f); // brighter center part
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
 				proj.lifesize = clamp(proj.lifespan*2.f, 0.1f, 1.f);
 				int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8),  // a bit more of an orange for the corona
 					deviation = guntype[proj.attr1].size/2;
-				regular_part_splash(PART_SMOKE_RISE_SLOW, 1, 250, vec(proj.o).sub(vec(0, 0, 1)), 0x121212, guntype[proj.attr1].size*proj.lifesize); // smoke
-				regular_part_splash(PART_PLASMA_SOFT, 1, 20, proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.25f, int(guntype[proj.attr1].size*proj.lifesize*0.25f));
+				if(lastmillis-proj.lasteffect > 250)
+				{
+					regular_part_splash(PART_SMOKE_RISE_SLOW, 1, 250, vec(proj.o).sub(vec(0, 0, 1)), 0x121212, guntype[proj.attr1].size*proj.lifesize); // smoke
+					proj.lasteffect = lastmillis;
+				}
+				regular_part_splash(PART_FIREBALL_SOFT, 1, 10, proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.25f, int(guntype[proj.attr1].size*proj.lifesize*0.25f));
 				col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(64*max(1.0f-proj.lifespan,0.2f))+1)<<8);
 				loopi(rnd(3)+1)
 				{
 					vec to = vec(proj.o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation).mul(proj.lifespan));
-					regular_part_splash(PART_FIREBALL_SOFT, 1, int((1.1f-proj.lifesize)*400.f)+100, to, col, guntype[proj.attr1].size*proj.lifesize*0.5f, int(guntype[proj.attr1].size*proj.lifesize*0.5f));
+					regular_part_splash(PART_FIREBALL, 1, int((1.1f-proj.lifesize)*400.f)+100, to, col, guntype[proj.attr1].size*proj.lifesize*0.5f, int(guntype[proj.attr1].size*proj.lifesize*0.5f));
 				}
 			}
 			else if(proj.attr1 == GUN_GL)
@@ -234,31 +238,44 @@ struct projectiles
 				proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 				int col = ((int(196*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(128*max(1.0f-proj.lifespan,0.2f))+1)<<8);
 				regular_part_splash(PART_PLASMA_SOFT, 1, 50, proj.o, col, proj.radius*2.f*proj.lifesize);
-				regular_part_splash(PART_SMOKE_RISE_SLOW, 1, 200, proj.o, 0x212121, proj.radius*1.5f);
+				if(lastmillis-proj.lasteffect > 300 || proj.movement > 2.f)
+				{
+					regular_part_splash(PART_SMOKE_RISE_SLOW, 1, 300, proj.o, 0x212121, proj.radius*1.5f);
+					proj.lasteffect = lastmillis;
+				}
 			}
 		}
 		else if(proj.projtype == PRJ_GIBS)
 		{
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-			regular_part_splash(PART_BLOOD, 1, 3000, proj.o, 0x66FFFF, 1.2f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
+			if(lastmillis-proj.lasteffect > 300)
+			{
+				regular_part_splash(PART_BLOOD, 1, 3000, proj.o, 0x66FFFF, 1.2f, int((proj.movement < 2.f ? 32 : 4)*proj.radius), proj.movement < 2.f ? 10 : 5);
+				proj.lasteffect = lastmillis;
+			}
 		}
 		else if(proj.projtype == PRJ_DEBRIS)
 		{
 			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // rather, this gets smaller as it gets older
 			int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(78*max(1.0f-proj.lifespan,0.2f))+1)<<8);
-			regular_part_splash(PART_SMOKE_RISE_SLOW, 1, int(50*proj.lifesize)+50, vec(proj.o).sub(vec(0, 0, 1)), 0x242424, proj.radius*2.f*proj.lifesize); // smoke
-			regular_part_splash(PART_FIREBALL_SOFT, 1, 20, proj.o, col, proj.radius*2.f*proj.lifesize);
-			int steps = int(proj.vel.magnitude()*2.f*proj.lifesize);
-			if(steps)
+			regular_part_splash(PART_FIREBALL_SOFT, 1, 10, proj.o, col, proj.radius*2.f*proj.lifesize);
+			if(lastmillis-proj.lasteffect > 250)
 			{
-				vec dir = vec(proj.vel).normalize().neg().div(10), pos = proj.o;
-				loopi(steps)
+				regular_part_splash(PART_SMOKE_RISE_SLOW, 1, int(100*proj.lifesize)+50, vec(proj.o).sub(vec(0, 0, 1)), 0x242424, proj.radius*2.f*proj.lifesize); // smoke
+				int steps = int(proj.vel.magnitude()*4.f*proj.lifesize);
+				if(steps)
 				{
-					float res = float(steps-i)/float(steps);
-					col = ((int(96*max(res,0.3f))<<16)+1)|((int(48*max(res,0.2f))+1)<<8);
-					pos.add(dir);
-					regular_part_splash(PART_PLASMA_SOFT, 1, int(20*res)+5, proj.o, col, proj.radius*0.5f*proj.lifesize*res);
+					vec dir = vec(proj.vel).normalize().neg().div(10.f), pos = proj.o;
+					steps *= 10;
+					loopi(steps)
+					{
+						float res = float(steps-i)/float(steps);
+						col = ((int(96*max(res,0.3f))<<16)+1)|((int(48*max(res,0.2f))+1)<<8);
+						pos.add(dir);
+						regular_part_splash(PART_PLASMA, 1, int(100*res)+10, proj.o, col, proj.radius*0.5f*proj.lifesize*res);
+					}
 				}
+				proj.lasteffect = lastmillis;
 			}
 		}
 	}
@@ -306,24 +323,10 @@ struct projectiles
 				{
 					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 1, 255);
 
-					if(proj.projtype == PRJ_GIBS)
+					if(proj.projtype == PRJ_SHOT && proj.attr1 == GUN_FLAMER && !hitplayer)
 					{
-						part_splash(PART_BLOOD, 1, 10000, proj.o, 0x60FFFF, proj.radius);
-					}
-					else if(proj.projtype == PRJ_SHOT && proj.attr1 == GUN_FLAMER)
-					{
-						int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(64*max(1.0f-proj.lifespan,0.2f))+1)<<8),
-							deviation = guntype[proj.attr1].size/2;
-						loopi(rnd(3)+1)
-						{
-							vec to = vec(proj.o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation).mul(proj.lifespan));
-							regular_part_splash(PART_FIREBALL_SOFT, 1, int((1.1f-proj.lifesize)*250.f)+500, to, col, guntype[proj.attr1].size*proj.lifesize*0.5f, int(guntype[proj.attr1].size*proj.lifesize*0.5f));
-						}
-						if(!hitplayer)
-						{
-							adddecal(DECAL_SCORCH, proj.o, wall, guntype[proj.attr1].size*proj.lifesize);
-							adddecal(DECAL_ENERGY, proj.o, wall, guntype[proj.attr1].size*proj.lifesize*0.5f, bvec(92, 24, 8));
-						}
+						adddecal(DECAL_SCORCH, proj.o, wall, guntype[proj.attr1].size*proj.lifesize);
+						adddecal(DECAL_ENERGY, proj.o, wall, guntype[proj.attr1].size*proj.lifesize*0.5f, bvec(92, 24, 8));
 					}
 
 					if(vol)

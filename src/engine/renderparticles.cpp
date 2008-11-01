@@ -941,12 +941,6 @@ static struct partmap { int type; int color; float size; } partmaps[] =
 
 static inline float partsize(int type) { return partmaps[type].size; }
 
-void regular_particle_create(int type, int fade, const vec &p, physent *pl, int delay)
-{
-    if(shadowmapping) return;
-    regularcreate(partmaps[type].type, partmaps[type].color, fade, p, partsize(type), pl, delay);
-}
-
 void regular_part_create(int type, int fade, const vec &p, int color, float size, physent *pl, int delay)
 {
     if(shadowmapping) return;
@@ -959,18 +953,6 @@ void part_create(int type, int fade, const vec &p, int color, float size, physen
     create(type, color, fade, p, size, pl);
 }
 
-void particle_create(int type, int fade, const vec &p, physent *pl)
-{
-    part_create(partmaps[type].type, fade, p, partmaps[type].color, partsize(type), pl);
-}
-
-void regular_particle_splash(int type, int num, int fade, const vec &p, int delay)
-{
-    if(shadowmapping) return;
-    int radius = (type==5 || type == 25) ? 50 : 150;
-    regularsplash(partmaps[type].type, partmaps[type].color, radius, num, fade, p, partsize(type), delay);
-}
-
 void regular_part_splash(int type, int num, int fade, const vec &p, int color, float size, int radius, int delay)
 {
     if(shadowmapping) return;
@@ -981,11 +963,6 @@ void part_splash(int type, int num, int fade, const vec &p, int color, float siz
 {
     if(shadowmapping || renderedgame) return;
     splash(type, color, 150, num, fade, p, size);
-}
-
-void particle_splash(int type, int num, int fade, const vec &p)
-{
-    part_splash(partmaps[type].type, num, fade, p, partmaps[type].color, partsize(type));
 }
 
 void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, float size)
@@ -1004,11 +981,6 @@ void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, floa
     }
 }
 
-void particle_trail(int type, int fade, const vec &s, const vec &e)
-{
-    part_trail(partmaps[type].type, fade, s, e, partmaps[type].color, partsize(type));
-}
-
 void part_text(const vec &s, const char *t, int type, int fade, int color, float size)
 {
     if(shadowmapping || renderedgame) return;
@@ -1017,31 +989,16 @@ void part_text(const vec &s, const char *t, int type, int fade, int color, float
     newparticle(s, vec(0, 0, 1), fade, type, color, size)->text = t;
 }
 
-void particle_text(const vec &s, const char *t, int type, int fade)
-{
-    part_text(s, t, partmaps[type].type, fade, partmaps[type].color, partmaps[type].size);
-}
-
 void part_meter(const vec &s, float val, int type, int fade, int color, float size)
 {
     if(shadowmapping || renderedgame) return;
     newparticle(s, vec(0, 0, 1), fade, type, color, size)->val = val;
 }
 
-void particle_meter(const vec &s, float val, int type, int fade)
-{
-    part_meter(s, val, partmaps[type].type, fade, partmaps[type].color, partmaps[type].size);
-}
-
 void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, physent *pl)
 {
     if(shadowmapping || renderedgame) return;
     newparticle(p, dest, fade, type, color, size, pl);
-}
-
-void particle_flare(const vec &p, const vec &dest, int fade, int type, physent *pl)
-{
-    part_flare(p, dest, fade, partmaps[type].type, partmaps[type].color, partsize(type), pl);
 }
 
 void part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size)
@@ -1056,11 +1013,6 @@ void regular_part_fireball(const vec &dest, float maxsize, int type, int fade, i
 {
     if(shadowmapping || renderedgame || !emit_particles()) return;
     part_fireball(dest, maxsize, type, fade, color, size);
-}
-
-void particle_fireball(const vec &dest, float maxsize, int type, int fade)
-{
-    part_fireball(dest, maxsize, partmaps[type].type, fade, partmaps[type].color, partsize(type));
 }
 
 void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color, float size)
@@ -1239,7 +1191,7 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
             break;
         default:
             s_sprintfd(ds)("@%d?", attr1);
-            particle_text(o, ds, 16, 1);
+			part_text(o, ds);
             break;
     }
 }
