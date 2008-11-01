@@ -132,7 +132,7 @@ struct guntypes
 {
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	S_PLASMA,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
-		30,		30,		250,	600,	10,		200,	0,		10000,	-5,		5,
+		20,		20,		200,	800,	10,		200,	0,		10000,	-5,		5,
 		5,		12,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
 				"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep"
 	},
@@ -151,12 +151,12 @@ struct guntypes
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_BURN,		S_BURNING,	-1,			S_ITEMSPAWN,
 		50,		50,		250, 	2000,	5,		100,	0,		3000,	-1,		 1,
-		24,		32,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
+		28,		32,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
 				"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep"
 	},
 	{
 		GUN_CARBINE,ANIM_CARBINE,	S_CARBINE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		20,		20,		500,    1000,	50,		0,		0,		0,		-10,	10,
+		10,		10,		500,    1000,	50,		0,		0,		0,		-10,	10,
 		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
 				"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep"
 	},
@@ -779,8 +779,7 @@ struct aiinfo
 		state.setsize(0);
 		route.setsize(0);
 		addstate(AI_S_WAIT);
-		gunpref = rnd(GUN_MAX-1);
-		while(!guntype[gunpref].carry) if((gunpref += 1) >= GUN_MAX) gunpref -= GUN_MAX;
+		gunpref = rnd(GUN_MAX-1)+1;
 		spot = target = vec(0, 0, 0);
 		enemy = NULL;
 	}
