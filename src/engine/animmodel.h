@@ -212,7 +212,7 @@ struct animmodel : model
             }
             setenvparamf("glowscale", SHPARAM_PIXEL, 4, glow, glow, glow);
             setenvparamf("millis", SHPARAM_VERTEX, 5, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);
-            if(as->anim&ANIM_ENVMAP && envmapmax>0) setenvparamf("envmapscale", SHPARAM_VERTEX, 6, envmapmin-envmapmax, envmapmax);
+            if(as->anim&ANIM_ENVMAP && envmapmax>0) setenvparamf("envmapscale", bumpmapped() ? SHPARAM_PIXEL : SHPARAM_VERTEX, 6, envmapmin-envmapmax, envmapmax);
             if(glaring) setenvparamf("glarescale", SHPARAM_PIXEL, 7, 16*specglare, 4*glowglare);
         }
 
