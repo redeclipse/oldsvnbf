@@ -569,7 +569,6 @@ void Shader::cleanup(bool invalid)
         altshader = NULL;
         loopi(MAXSHADERDETAIL) fastshader[i] = this;
         reusevs = reuseps = NULL;
-        if(!invalid) forced = false;
     }
 }
 
@@ -596,7 +595,7 @@ Shader *newshader(int type, const char *name, const char *vs, const char *ps, Sh
     s.type = type;
     s.variantshader = variant;
     s.standard = standardshader;
-    s.forced = forceshaders;
+    if(forceshaders) s.forced = true;
     s.reusevs = s.reuseps = NULL;
     if(variant)
     {
@@ -1798,8 +1797,8 @@ void reloadshaders()
     persistidents = true;
     if(renderpath==R_FIXEDFUNCTION) return;
     preloadworldshaders();
-    preloadmodelshaders();
     enumerate(shaders, Shader, s,
+    {
         if(!s.standard && s.type>=0 && !s.variantshader)
         {
             s_sprintfd(info)("shader %s", s.name);
@@ -1814,7 +1813,8 @@ void reloadshaders()
                     v->cleanup(true);
             }
         }
-    );
+        if(s.forced && !s.detailshader) s.fixdetailshader();
+    });
 }
 
 void setupblurkernel(int radius, float sigma, float *weights, float *offsets)
