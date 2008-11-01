@@ -232,7 +232,7 @@ struct stfclient : stfstate
 			else if(attack) s_sprintf(b.info)("%s", teamtype[attack].name);
 			else b.info[0] = '\0';
 
-			part_text(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)), b.info, PART_TEXT, 1, 0xFFFFDD);
+			part_text(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)), b.info);
 			if(attack)
 			{
 				float occupy = !b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * OCCUPYLIMIT), 0.f, 1.f) : 1.f;

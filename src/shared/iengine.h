@@ -197,29 +197,18 @@ struct particle
 };
 
 extern void render_particles(int time);
-extern void regular_part_create(int type, int fade, const vec &p, int color, float size = 4.8f, physent *pl = NULL, int delay = 0);
-extern void regular_particle_create(int type, int fade, const vec &p, physent *pl = NULL, int delay = 0);
-extern void part_create(int type, int fade, const vec &p, int color, float size = 4.8f, physent *pl = NULL);
-extern void particle_create(int type, int fade, const vec &p, physent *pl = NULL);
-extern void regular_part_splash(int type, int num, int fade, const vec &p, int color, float size = 4.8f, int radius = 150, int delay = 0);
-extern void regular_particle_splash(int type, int num, int fade, const vec &p, int delay = 0);
-extern void part_splash(int type, int num, int fade, const vec &p, int color, float size = 4.8f);
-extern void particle_splash(int type, int num, int fade, const vec &p);
-
-extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, float size = 4.8f);
-extern void particle_trail(int type, int fade, const vec &from, const vec &to);
-extern void part_text(const vec &s, const char *t, int type, int fade, int color, float size = 4.8f);
-extern void particle_text(const vec &s, const char *t, int type, int fade = 2000);
-extern void part_meter(const vec &s, float val, int type, int fade, int color, float size = 4.8f);
-extern void particle_meter(const vec &s, float val, int type, int fade = 1);
-extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size = 4.8f, physent *pl = NULL);
-extern void particle_flare(const vec &p, const vec &dest, int fade, int type = 10, physent *pl = NULL);
-extern void regular_part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size = 4.8f);
-extern void part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size = 4.8f);
-extern void particle_fireball(const vec &dest, float maxsize, int type, int fade = -1);
-
-extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color, float size = 4.8f);
-extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, float size = 4.8f, physent *pl = NULL);
+extern void regular_part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL, int delay = 0);
+extern void part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL);
+extern void regular_part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int radius = 150, int delay = 0);
+extern void part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f);
+extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int color = 0xFFFFFF, float size = .8f);
+extern void part_text(const vec &s, const char *t, int type = PART_TEXT, int fade = 1, int color = 0xFFFF, float size = 2.f);
+extern void part_meter(const vec &s, float val, int type, int fade = 1, int color = 0xFFFFFF, float size = 2.f);
+extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 2.f, physent *pl = NULL);
+extern void regular_part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f);
+extern void part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f);
+extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f);
+extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL);
 
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;

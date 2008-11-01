@@ -1,5 +1,3 @@
-#define AVOIDENEMY(x, y) (!m_team(cl.gamemode, cl.mutators) || (x)->team != (y)->team)
-
 struct avoidset
 {
     struct obstacle
@@ -38,7 +36,7 @@ struct avoidset
             { \
                 avoidset::obstacle &ob = (v).obstacles[i]; \
                 int next = cur + ob.numentities; \
-                if(ob.ent && ob.ent != (d) && (ob.ent->type != ENT_PLAYER || AVOIDENEMY((d), (gameent *)ob.ent))) \
+                if(ob.ent && ob.ent != (d)) \
                 { \
                     for(; cur < next; cur++) \
                     { \
@@ -297,7 +295,7 @@ struct entities : icliententities
 			if(item && (d != cl.player1 || cl.isthirdperson()))
 			{
 				s_sprintfd(ds)("@%s", item);
-				particle_text(d->abovehead(), ds, 15);
+				part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 			}
 			playsound(S_ITEMPICKUP, d->o, d);
 			if(isgun(g))
@@ -860,7 +858,8 @@ struct entities : icliententities
 			linkq *m = queue.removeunordered(q);
 			float prevscore = m->curscore;
 			m->curscore = -1.f;
-			extentity &ent = *ents[m - &nodes[0]];
+			int current = int(m-&nodes[0]);
+			extentity &ent = *ents[current];
 			vector<int> &links = ent.links;
 			loopv(links)
 			{
@@ -1546,17 +1545,17 @@ struct entities : icliententities
 				if(showentinfo() >= 2 || cl.player1->state == CS_EDITING)
 				{
 					s_sprintf(s)("@%s%s (%d)", hasent ? "\fo" : "\fy", enttype[e.type].name, idx >= 0 ? idx : 0);
-					particle_text(pos.add(off), s, hasent ? 26 : 27, 1);
+					part_text(pos.add(off), s);
 
 					if(showentinfo() >= 3 || hasent)
 					{
 						s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fy", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-						particle_text(pos.add(off), s, hasent ? 27 : 24, 1);
+						part_text(pos.add(off), s);
 					}
 					if(showentinfo() >= 4 || hasent)
 					{
 						s_sprintf(s)("@%s%s", hasent ? "\fw" : "\fy", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, showentinfo() >= 5 || hasent));
-						particle_text(pos.add(off), s, hasent ? 27 : 24, 1);
+						part_text(pos.add(off), s);
 					}
 				}
 			}
@@ -1566,7 +1565,7 @@ struct entities : icliententities
 			if(e.type == WEAPON && spawned)
 			{
 				s_sprintf(s)("@%s", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
-				particle_text(vec(o).add(vec(0, 0, 4)), s, 26, 1);
+				part_text(vec(o).add(vec(0, 0, 4)), s);
 			}
 		}
 	}

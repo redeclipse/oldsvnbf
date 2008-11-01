@@ -488,12 +488,9 @@ struct gameclient : igameclient
 		{
 			vec p = headpos(d);
 			p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-			particle_splash(3, min(damage/4, 10), 10000, p);
-			if(d!=player1)
-			{
-				s_sprintfd(ds)("@%d", damage);
-				particle_text(d->abovehead(), ds, 8);
-			}
+			part_splash(PART_BLOOD, max(damage/3, 3), REGENWAIT, p, 0x66FFFF, 3.f);
+			s_sprintfd(ds)("@%d", damage);
+			part_text(vec(d->abovehead()).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 3000, 0xFFFFFF, 3.f);
 			playsound(S_PAIN1+rnd(5), d->o, d);
 		}
 
@@ -597,7 +594,7 @@ struct gameclient : igameclient
 						s_strcat(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
 						s_sprintfd(ds)("@\fgCARNAGE");
-						particle_text(actor->abovehead(), ds, 8);
+						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 10:
@@ -605,7 +602,7 @@ struct gameclient : igameclient
 						s_strcat(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
 						s_sprintfd(ds)("@\fgSLAUGHTER");
-						particle_text(actor->abovehead(), ds, 8);
+						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 25:
@@ -613,7 +610,7 @@ struct gameclient : igameclient
 						s_strcat(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
 						s_sprintfd(ds)("@\fgMASSACRE");
-						particle_text(actor->abovehead(), ds, 8);
+						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 50:
@@ -621,7 +618,7 @@ struct gameclient : igameclient
 						s_strcat(d->obit, " creating a bloodbath!");
 						anc = S_V_SPREE4;
 						s_sprintfd(ds)("@\fgBLOODBATH");
-						particle_text(actor->abovehead(), ds, 8);
+						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						break;
 					}
 					default:
@@ -630,7 +627,7 @@ struct gameclient : igameclient
 						{
 							anc = S_V_HEADSHOT;
 							s_sprintfd(ds)("@\fgHEADSHOT");
-							particle_text(actor->abovehead(), ds, 8);
+							part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						}
 						else if(d->obliterated || lastmillis-d->lastspawn <= REGENWAIT*3)
 						{
@@ -646,7 +643,7 @@ struct gameclient : igameclient
 		s_sprintfd(a)("\fy%s %s", colorname(d), d->obit);
 		et.announce(anc, a, af);
 		s_sprintfd(da)("@%s", a);
-		particle_text(d->abovehead(), da, 8);
+		part_text(vec(d->abovehead()).add(vec(0, 0, 4)), da, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 
 		vec pos = headpos(d);
 		int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
@@ -2033,7 +2030,7 @@ struct gameclient : igameclient
 		if(shownamesabovehead() && third && d != player1 && d->state != CS_SPECTATOR)
 		{
 			s_sprintfd(s)("@%s", colorname(d));
-			part_text(d->abovehead(), s, PART_TEXT, 1, 0xFFFFFF);
+			part_text(d->abovehead(), s);
 		}
 
 		if(d->state == CS_DEAD)

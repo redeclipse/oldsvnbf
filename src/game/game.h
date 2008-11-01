@@ -769,7 +769,7 @@ struct aiinfo
 	vector<aistate> state;
 	vector<int> route;
 	vec target, spot;
-	int enemy, gunpref;
+	int enemy, lastseen, gunpref;
 
 	aiinfo() { reset(); }
 	~aiinfo() { state.setsize(0); route.setsize(0); }
@@ -781,7 +781,7 @@ struct aiinfo
 		addstate(AI_S_WAIT);
 		gunpref = rnd(GUN_MAX-1)+1;
 		spot = target = vec(0, 0, 0);
-		enemy = NULL;
+		enemy = lastseen = -1;
 	}
 
 	aistate &addstate(int t)
@@ -794,7 +794,7 @@ struct aiinfo
 	{
 		if(index < 0 && state.length()) state.pop();
 		else if(state.inrange(index)) state.remove(index);
-		enemy = -1;
+		enemy = lastseen = -1;
 		if(!state.length()) addstate(AI_S_WAIT);
 	}
 
@@ -886,7 +886,7 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
 struct projent : dynent
 {
 	vec from, to;
-	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial;
+	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect;
 	float movement, roll, lifespan, lifesize;
 	bool local, beenused, radial, extinguish;
 	int projtype, geomcollide, playercollide;
@@ -911,7 +911,7 @@ struct projent : dynent
 		physent::reset();
 		type = ENT_BOUNCE;
 		state = CS_ALIVE;
-		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = 0;
+		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = 0;
 		ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
 		schan = id = -1;
 		movement = roll = lifespan = lifesize = 0.f;
