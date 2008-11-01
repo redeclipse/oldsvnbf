@@ -763,6 +763,7 @@ int curtexnum = 0, curmatslot = -1;
 
 void texturereset()
 {
+    resetslotshader();
 	curtexnum = 0;
 	slots.setsize(0);
 }

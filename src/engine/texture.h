@@ -349,6 +349,7 @@ extern int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, ma
 extern Shader *lookupshaderbyname(const char *name);
 extern Shader *useshaderbyname(const char *name, bool force = true);
 extern Texture *loadthumbnail(Slot &slot);
+extern void resetslotshader();
 extern void setslotshader(Slot &s);
 extern void setenvparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
 extern void setenvparamfv(const char *name, int type, int index, const float *v);
