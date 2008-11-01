@@ -167,8 +167,8 @@ struct weaponstate
 		}
 		if(gun == GUN_FLAMER || gun == GUN_GL)
 		{
-			regular_part_splash(PART_PLASMA_SOFT, 5, gun == GUN_FLAMER ? 500 : 1500, o, 0x663603, guntype[gun].explode*0.25f, int(guntype[gun].explode*0.5f)); // corona
-			regular_part_splash(PART_FIREBALL_SOFT, 5, gun == GUN_FLAMER ? 750 : 1500, o, 0x441404, guntype[gun].explode*0.75f, int(guntype[gun].explode)); // fireball
+			regular_part_splash(PART_PLASMA_SOFT, 5, gun == GUN_FLAMER ? 500 : 1500, o, 0x663603, guntype[gun].explode*0.35f); // corona
+			regular_part_splash(PART_FIREBALL_SOFT, 5, gun == GUN_FLAMER ? 750 : 1500, o, 0x441404, guntype[gun].explode*0.9f, int(guntype[gun].explode)); // fireball
 			regular_part_splash(PART_SMOKE_RISE_SLOW, 5, gun == GUN_FLAMER ? 1500 : 2000, vec(o).sub(vec(0, 0, 2)), gun == GUN_FLAMER ? 0x121212 : 0x242424, guntype[gun].explode, int(guntype[gun].explode)); // smoke
 			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), gun == GUN_FLAMER ? 1000 : 1500, 10);
 		}
@@ -176,9 +176,9 @@ struct weaponstate
 		{
 			int explodeforce = max(int(guntype[gun].damage*(1.f-dist/EXPLOSIONSCALE/guntype[gun].explode/10.f)), 0);
 			cl.quakewobble += explodeforce;
-			part_fireball(vec(o).sub(vec(0, 0, 2)), guntype[gun].explode, PART_EXPLOSION, 1000, 0x663603, 3.3f); // explosion fireball
-			loopi(rnd((explodeforce+1)*2)+1)
-				cl.pj.create(o, vec(o).add(vel), true, d, PRJ_DEBRIS, rnd(2500)+1500, rnd(1000)+1, 70);
+			part_fireball(vec(o).sub(vec(0, 0, 2)), guntype[gun].explode, PART_EXPLOSION, 1000, 0x642404, 3.f); // explosion fireball
+			loopi(rnd(30)+20)
+				cl.pj.create(o, vec(o).add(vel), true, d, PRJ_DEBRIS, rnd(1500)+1500, rnd(500)+1, rnd(60)+40);
 		}
         if(gun != GUN_PLASMA)
 			adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
@@ -247,6 +247,7 @@ struct weaponstate
 		{
 			case GUN_SG:
 			{
+				regular_part_splash(PART_SMOKE_RISE_SLOW, 1, 1000, from, 0x121212, 4.f, 4); // smoke
 				loopi(SGRAYS)
 				{
 					particle_splash(0, 20, 250, sg[i]);
@@ -255,18 +256,17 @@ struct weaponstate
 				}
 				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
 				part_create(PART_MUZZLE_FLASH, 50, from, 0xFFAA00, 4.f, d);
-				regularshape(PART_SMOKE_RISE_SLOW, 2, 0x333333, 21, rnd(20)+1, 25, from, 1.f);
 				break;
 			}
 
 			case GUN_CG:
 			{
+				regular_part_splash(PART_SMOKE_RISE_SLOW, 1, 500, from, 0x121212, 1.5f, 2); // smoke
 				particle_splash(0, 200, gun == GUN_CG ? 100 : 200, to);
                 particle_flare(from, to, 250, 10, d);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
                 adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
 				part_create(PART_MUZZLE_FLASH, 50, from, 0xFFAA00, 3.f, d);
-				regularshape(PART_SMOKE_RISE_SLOW, 1, 0x333333, 21, rnd(10)+1, 25, from, 0.5f);
 				break;
 			}
 			case GUN_PLASMA:
@@ -277,11 +277,13 @@ struct weaponstate
 				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
 				if(gun == GUN_PLASMA)
 				{
+					regular_part_splash(PART_SMOKE_RISE_SLOW, 1, 750, from, 0x121212, 1.f, 2); // smoke
 					adddynlight(from, 50, vec(0.1f, 0.4f, 0.6f), 50, 0, DL_FLASH);
 					part_create(PART_PLASMA, 50, from, 0x226688, 1.0f, d);
 				}
 				else if(gun == GUN_FLAMER)
 				{
+					regular_part_splash(PART_SMOKE_RISE_SLOW, 1, 1000, from, 0x121212, 3.f, 3); // smoke
 					adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
 					part_create(PART_FIREBALL, 50, from, 0xFF2200, 1.5f, d);
 				}
@@ -291,6 +293,7 @@ struct weaponstate
 			case GUN_CARBINE:
 			case GUN_RIFLE:
 			{
+				regular_part_splash(PART_SMOKE_RISE_SLOW, 1, gun == GUN_RIFLE ? 1500 : 750, from, 0x333333, gun == GUN_RIFLE ? 3.f : 2.f, 2); // smoke
 				part_splash(PART_SMOKE_SINK, gun == GUN_RIFLE ?  50 : 25, gun == GUN_RIFLE ? 250 : 100, to, 0x333333, gun == GUN_RIFLE ? 1.2f : 0.6f);
 				part_trail(PART_SMOKE_SINK, gun == GUN_RIFLE ? 750 : 500, from, to, 0x333333, gun == GUN_RIFLE ? 1.0f : 0.5f);
                 if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);

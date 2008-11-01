@@ -871,7 +871,7 @@ struct aiclient
 			if(m != 0)
 			{
 				int n = d->ai->route.inrange(m-1) >= 0 ? d->ai->route[m-1] : (retry ? closenode(d) : -1);
-				if(cl.et.ents.inrange(n))
+				if(cl.et.ents.inrange(n) && !obstacles.find(n, d))
 				{
 					gameentity &e = *(gameentity *)cl.et.ents[n];
 					vec pos = cl.feetpos(d);
@@ -1093,7 +1093,7 @@ struct aiclient
 	void avoid()
 	{
 		// guess as to the radius of ai and other critters relying on the avoid set for now
-		float guessradius = cl.player1->radius;
+		float guessradius = cl.player1->radius*1.5f;
 
 		obstacles.clear();
 		loopi(cl.numdynents())
@@ -1101,7 +1101,7 @@ struct aiclient
 			gameent *d = (gameent *)cl.iterdynents(i);
 			if(!d || d->state != CS_ALIVE) continue;
 			vec pos = cl.feetpos(d, 0.f);
-			float limit = guessradius + d->radius;
+			float limit = guessradius + d->radius*2.f;
 			limit *= limit; // square it to avoid expensive square roots
 			loopvk(cl.et.ents)
 			{
@@ -1115,7 +1115,7 @@ struct aiclient
 			projent *p = cl.pj.projs[i];
 			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT)
 			{
-				float limit = guntype[p->attr1].explode + guessradius;
+				float limit = guessradius * guntype[p->attr1].explode*2.f;
 				limit *= limit; // square it to avoid expensive square roots
 				loopvk(cl.et.ents)
 				{

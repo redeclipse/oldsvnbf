@@ -575,7 +575,7 @@ VARP(autoadjustmax, 0, 100, 100);		// highest level to go to
 VARFP(autoadjustfps, 0, 10, 100,		// aim for this fps or higher
 	autoadjustfps = min(autoadjustfps, maxfps-1));
 VARP(autoadjustrate, 0, 500, 10000);	// only adjust this often
-VARFP(autoadjustlimit, 0, 9, 100,	// going below this automatically scales to minimum
+VARFP(autoadjustlimit, 0, 0, 100,		// going below this automatically scales to minimum
 	autoadjustlimit = min(autoadjustlimit, autoadjustfps-1));
 
 void autoadjustset(int level)
