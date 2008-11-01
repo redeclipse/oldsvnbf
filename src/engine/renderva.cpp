@@ -1683,10 +1683,18 @@ void loadcaustic(const char *name)
 	else caustic = notexture;
 }
 SVARFW(caustictex, "<anim:75>textures/caustics", loadcaustic(caustictex));
-void loadcaustics() { loadcaustic(caustictex); }
+
+void loadcaustics(bool force)
+{
+    static bool needcaustics = false;
+    if(force) needcaustics = true;
+    if(!caustics || !needcaustics) return;
+    useshaderbyname("caustic");
+    loadcaustic(caustictex);
+}
 
 VARW(causticscale, 0, 100, 10000);
-VARP(caustics, 0, 1, 1);
+VARFP(caustics, 0, 1, 1, loadcaustics());
 
 void cleanupva()
 {
@@ -1700,8 +1708,6 @@ void cleanupva()
 
 void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
 {
-    if(!caustic) loadcaustics();
-
     GLfloat s[4] = { 0.011f, 0, 0.0066f, 0 };
     GLfloat t[4] = { 0, 0.011f, 0.0066f, 0 };
     loopk(3)

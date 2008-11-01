@@ -511,6 +511,7 @@ struct vacollect : verthash
         {
             va->grasstris = new vector<grasstri>;
             va->grasstris->move(grasstris);
+            useshaderbyname("grass");
         }
 
         if(mapmodels.length()) va->mapmodels = new vector<octaentities *>(mapmodels);
