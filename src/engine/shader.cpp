@@ -1248,6 +1248,16 @@ ShaderParam *findshaderparam(Slot &s, const char *name, int type, int index)
 	return NULL;
 }
 
+void resetslotshader()
+{
+    curshader = NULL;
+    loopv(curparams)
+    {
+        if(curparams[i].name) delete[] curparams[i].name;
+    }
+    curparams.setsize(0);
+}
+
 void setslotshader(Slot &s)
 {
     s.shader = curshader;
