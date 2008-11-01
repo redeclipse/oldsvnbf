@@ -850,7 +850,7 @@ struct aiclient
 		vec pos = cl.feetpos(d, 0.f);
 		int node = -1;
 		float mindist = 1e16f;
-		loopvrev(d->ai->route) if(cl.et.ents.inrange(d->ai->route[i]))
+		loopvrev(d->ai->route) if(cl.et.ents.inrange(d->ai->route[i]) && !obstacles.find(d->ai->route[i], d))
 		{
 			gameentity &e = *(gameentity *)cl.et.ents[d->ai->route[i]];
 			float dist = e.o.squaredist(pos);
@@ -871,7 +871,7 @@ struct aiclient
 			if(m != 0)
 			{
 				int n = d->ai->route.inrange(m-1) >= 0 ? d->ai->route[m-1] : (retry ? closenode(d) : -1);
-				if(cl.et.ents.inrange(n) && !obstacles.find(n, d))
+				if(cl.et.ents.inrange(n) && (retry || !obstacles.find(n, d)))
 				{
 					gameentity &e = *(gameentity *)cl.et.ents[n];
 					vec pos = cl.feetpos(d);
