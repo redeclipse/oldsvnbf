@@ -424,7 +424,6 @@ extern void lanconnect();
 extern bool serveroption(char *opt);
 extern void localconnect();
 extern void localdisconnect();
-extern bool haslocalclients();
 
 // serverbrowser
 extern void addserver(const char *name, int port, int qport);

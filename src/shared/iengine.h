@@ -301,7 +301,6 @@ extern void sendstring(const char *t, ucharbuf &p);
 extern void getstring(char *t, ucharbuf &p, int len = MAXTRANS);
 extern void filtertext(char *dst, const char *src, bool whitespace = true, int len = sizeof(string)-1);
 extern void disconnect_client(int n, int reason);
-extern bool hasnonlocalclients();
 extern void sendqueryreply(ucharbuf &p);
 extern bool resolverwait(const char *name, int port, ENetAddress *address);
 extern int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address);
@@ -406,7 +405,6 @@ struct client					// server side version of "dynent" type
 	void *info;
 };
 extern vector<client *> clients;
-extern int nonlocalclients;
 
 extern void process(ENetPacket *packet, int sender, int chan);
 extern void send_welcome(int n);

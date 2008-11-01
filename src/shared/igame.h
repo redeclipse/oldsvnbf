@@ -101,6 +101,7 @@ struct igameserver
     virtual bool serveroption(char *arg) { return false; }
     virtual void *newinfo() = 0;
     virtual void deleteinfo(void *ci) = 0;
+    virtual int numclients(int exclude = -1, bool nospec = true, bool noai = false) = 0;
     virtual void clientdisconnect(int n, bool local = false) = 0;
     virtual int clientconnect(int n, uint ip, bool local = false) = 0;
     virtual void recordpacket(int chan, void *data, int len) {}
