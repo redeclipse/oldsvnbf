@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "engine.h"
 
-VARFP(waterreflect, 0, 1, 1, cleanreflections());
-VARFP(waterrefract, 0, 1, 1, cleanreflections());
-VARFP(waterenvmap, 0, 1, 1, cleanreflections());
-VARFP(waterfallrefract, 0, 0, 1, cleanreflections());
+VARFP(waterreflect, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
+VARFP(waterrefract, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
+VARFP(waterenvmap, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
+VARFP(waterfallrefract, 0, 0, 1, { cleanreflections(); preloadwatershaders(); });
 VARP(refractfog, 0, 1, 1);
 
 /* vertex water */
@@ -496,7 +496,27 @@ void renderwaterff()
 	glEnable(GL_CULL_FACE);
 }
 
-VARFP(waterfade, 0, 1, 1, cleanreflections());
+VARFP(waterfade, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
+
+void preloadwatershaders(bool force)
+{
+    static bool needwater = false;
+    if(force) needwater = true;
+    if(!needwater) return;
+
+    useshaderbyname("waterglare");
+
+    if(waterenvmap && !waterreflect && hasCM)
+        useshaderbyname(waterrefract ? (waterfade && hasFBO ? "waterenvfade" : "waterenvrefract") : "waterenv");
+    else useshaderbyname(waterrefract ? (waterfade && hasFBO ? "waterfade" : "waterrefract") : (waterreflect ? "waterreflect" : "water"));
+
+    useshaderbyname(waterrefract ? (waterfade && hasFBO ? "underwaterfade" : "underwaterrefract") : "underwater");
+
+    extern int waterfallenv;
+    if(waterfallenv && hasCM)
+        useshaderbyname(waterfallrefract ? "waterfallenvrefract" : "waterfallenv");
+    else if(waterfallrefract) useshaderbyname("waterfallrefract");
+}
 
 void renderwater()
 {

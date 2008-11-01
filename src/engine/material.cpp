@@ -418,11 +418,17 @@ void setupmaterials(int start, int len)
 	}
     if(hasmat&(1<<MAT_WATER))
     {
-        extern void loadcaustics();
-        loadcaustics();
+        loadcaustics(true);
+        preloadwatershaders(true);
         lookuptexture(-MAT_WATER);
     }
-    if(hasmat&(1<<MAT_LAVA)) lookuptexture(-MAT_LAVA);
+    if(hasmat&(1<<MAT_LAVA))
+    {
+        useshaderbyname("lava");
+        useshaderbyname("lavaglare");
+        lookuptexture(-MAT_LAVA);
+    }
+    if(hasmat&(1<<MAT_GLASS)) useshaderbyname("glass");
 }
 
 VARP(showmat, 0, 1, 1);
@@ -546,7 +552,7 @@ void drawglass(int orient, int x, int y, int z, int csize, int rsize, float offs
 	xtraverts += 4;
 }
 
-VARP(waterfallenv, 0, 1, 1);
+VARFP(waterfallenv, 0, 1, 1, preloadwatershaders());
 
 void rendermaterials()
 {
