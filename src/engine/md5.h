@@ -486,6 +486,7 @@ struct md5 : skelmodel
             p->endanimparts();
             p->meshes = p->meshes->scaleverts(scale/4.0f, i ? vec(0, 0, 0) : vec(translate.x, translate.y, translate.z));
         }
+        preloadshaders();
         return loaded = true;
     }
 };

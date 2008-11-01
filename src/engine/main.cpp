@@ -107,7 +107,7 @@ void fatal(const char *s, ...)    // failure exit
     exit(EXIT_FAILURE);
 }
 
-static int initing = NOT_INITING;
+int initing = NOT_INITING;
 static bool restoredinits = false;
 
 bool initwarning(const char *desc, int level, int type)

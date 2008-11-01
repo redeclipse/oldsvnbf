@@ -11,7 +11,7 @@ static hashtable<const char *, Shader> shaders;
 static Shader *curshader = NULL;
 static vector<ShaderParam> curparams;
 static ShaderParamState vertexparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS], pixelparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS];
-static bool dirtyenvparams = false, standardshader = false, initshaders = false;
+static bool dirtyenvparams = false, standardshader = false, initshaders = false, forceshaders = true;
 
 VAR(reservevpparams, 1, 16, 0);
 VAR(maxvpenvparams, 1, 0, 0);
@@ -65,8 +65,7 @@ void loadshaders()
 Shader *lookupshaderbyname(const char *name)
 {
     Shader *s = shaders.access(name);
-    if(!s || s->type==SHADER_INVALID) return NULL;
-    return s->altshader ? s->altshader : s;
+    return s && s->type>=0 ? s : NULL;
 }
 
 static bool compileasmshader(GLenum type, GLuint &idx, const char *def, const char *tname, const char *name, bool msg = true, bool nativeonly = false)
@@ -501,24 +500,23 @@ void Shader::setslotparams(Slot &slot)
 
 void Shader::bindprograms()
 {
-	if(this==lastshader) return;
-	if(type & SHADER_GLSLANG)
-	{
-		glUseProgramObject_(program);
-	}
-	else
-	{
-		if(lastshader && lastshader->type & SHADER_GLSLANG) glUseProgramObject_(0);
+    if(this == lastshader || type < 0) return; 
+    if(type & SHADER_GLSLANG)
+    {
+        glUseProgramObject_(program);
+    }
+    else
+    {
+        if(lastshader && lastshader->type & SHADER_GLSLANG) glUseProgramObject_(0);
 
-		glBindProgram_(GL_VERTEX_PROGRAM_ARB,	vs);
-		glBindProgram_(GL_FRAGMENT_PROGRAM_ARB, ps);
-	}
-	lastshader = this;
+        glBindProgram_(GL_VERTEX_PROGRAM_ARB,   vs);
+        glBindProgram_(GL_FRAGMENT_PROGRAM_ARB, ps);
+    }
+    lastshader = this;
 }
 
 VARFN(shaders, useshaders, -1, -1, 1, initwarning("shaders"));
 VARF(shaderprecision, 0, 0, 2, initwarning("shader quality"));
-VARP(shaderdetail, 0, MAXSHADERDETAIL, MAXSHADERDETAIL);
 
 VAR(dbgshader, 0, 0, 1);
 
@@ -547,6 +545,7 @@ bool Shader::compile()
 
 void Shader::cleanup(bool invalid)
 {
+    detailshader = NULL;
     used = false;
     native = true;
     if(vs) { if(reusevs) glDeletePrograms_(1, &vs); vs = 0; }
@@ -568,7 +567,9 @@ void Shader::cleanup(bool invalid)
         DELETEA(defer);
         defaultparams.setsizenodelete(0);
         altshader = NULL;
+        loopi(MAXSHADERDETAIL) fastshader[i] = this;
         reusevs = reuseps = NULL;
+        if(!invalid) forced = false;
     }
 }
 
@@ -595,6 +596,7 @@ Shader *newshader(int type, const char *name, const char *vs, const char *ps, Sh
     s.type = type;
     s.variantshader = variant;
     s.standard = standardshader;
+    s.forced = forceshaders;
     s.reusevs = s.reuseps = NULL;
     if(variant)
     {
@@ -611,16 +613,16 @@ Shader *newshader(int type, const char *name, const char *vs, const char *ps, Sh
             s.reuseps = !ps[0] ? variant : (variant->variants[row].inrange(col) ? variant->variants[row][col] : NULL);
         }
     }
-    loopi(MAXSHADERDETAIL) s.fastshader[i] = &s;
     if(variant) loopv(variant->defaultparams) s.defaultparams.add(variant->defaultparams[i]);
     else loopv(curparams) s.defaultparams.add(curparams[i]);
     if(renderpath!=R_FIXEDFUNCTION && !s.compile())
     {
-        s.cleanup(!standardshader);
-        if(standardshader) shaders.remove(rname);
+        s.cleanup(true);
+        if(variant) shaders.remove(rname);
         return NULL;
     }
     if(variant) variant->variants[row].add(&s);
+    s.fixdetailshader();
     return &s;
 }
 
@@ -1056,41 +1058,85 @@ VAR(defershaders, 0, 1, 1);
 
 void defershader(const char *name, const char *contents)
 {
-    if(lookupshaderbyname(name)) return;
-    if(!defershaders) { execute(contents); return; }
     Shader *exists = shaders.access(name);
+    if(exists && exists->type!=SHADER_INVALID) return;
+    if(!defershaders) { execute(contents); return; }
     char *rname = exists ? exists->name : newstring(name);
     Shader &s = shaders[rname];
     s.name = rname;
     DELETEA(s.defer);
     s.defer = newstring(contents);
-    s.type = SHADER_INVALID;
+    s.type = SHADER_DEFERRED;
     s.standard = standardshader;
 }
 
-void useshader(Shader &s)
+void useshader(Shader *s)
 {
-    if(s.type==SHADER_INVALID && s.defer)
+    if(s->type!=SHADER_DEFERRED || !s->defer) return;
+
+    char *defer = s->defer;
+    s->defer = NULL;
+    bool wasstandard = standardshader, wasforcing = forceshaders, waspersisting = persistidents;
+    standardshader = s->standard;
+    forceshaders = false;
+    persistidents = false;
+    execute(defer);
+    persistidents = waspersisting;
+    forceshaders = wasforcing;
+    standardshader = wasstandard;
+    delete[] defer;
+
+    if(s->type==SHADER_DEFERRED)
     {
-        char *defer = s.defer;
-        s.defer = NULL;
-        bool wasstandard = standardshader;
-        standardshader = s.standard;
-        persistidents = false;
-        execute(defer);
-        persistidents = true;
-        standardshader = wasstandard;
-        delete[] defer;
+        DELETEA(s->defer);
+        s->type = SHADER_INVALID;
     }
 }
 
-Shader *useshaderbyname(const char *name)
+void preloadworldshaders()
+{
+    extern vector<Slot> slots;
+    loopv(slots) if(!slots[i].shader->detailshader) slots[i].shader->fixdetailshader();
+}
+
+void fixshaderdetail()
+{
+    // must null out separately because fixdetailshader can recursively set it
+    enumerate(shaders, Shader, s, { if(!s.forced) s.detailshader = NULL; });
+    enumerate(shaders, Shader, s, { if(s.forced) s.fixdetailshader(); });
+    preloadworldshaders();
+}
+
+VARF(nativeshaders, 0, 1, 1, fixshaderdetail());
+VARFP(shaderdetail, 0, MAXSHADERDETAIL, MAXSHADERDETAIL, fixshaderdetail());
+
+void Shader::fixdetailshader(bool force, bool recurse)
+{
+    Shader *alt = this;
+    detailshader = NULL;
+    do
+    {
+        Shader *cur = shaderdetail < MAXSHADERDETAIL ? alt->fastshader[shaderdetail] : alt;
+        if(cur->type == SHADER_DEFERRED && force) useshader(cur);
+        if(cur->type!=SHADER_INVALID)
+        {
+            if(cur->type<0) break;
+            detailshader = cur;
+            if(cur->native || !nativeshaders) break;
+        }
+        alt = alt->altshader;
+    } while(alt && alt!=this);
+
+    if(recurse && detailshader) loopi(MAXVARIANTROWS) loopvj(detailshader->variants[i]) detailshader->variants[i][j]->fixdetailshader(force, false);
+}
+
+Shader *useshaderbyname(const char *name, bool force)
 {
     Shader *s = shaders.access(name);
     if(!s) return NULL;
-    useshader(*s);
-    if(s->type==SHADER_INVALID) return NULL;
-    return s->altshader ? s->altshader : s;
+    if(!s->detailshader) s->fixdetailshader();
+    if(force) s->forced = true;
+    return s;
 }
 
 void shader(int *type, char *name, char *vs, char *ps)
@@ -1146,7 +1192,7 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
 
     if(renderpath==R_FIXEDFUNCTION && standardshader) return;
 
-    Shader *s = useshaderbyname(name);
+    Shader *s = lookupshaderbyname(name);
     if(!s) return;
 
     s_sprintfd(varname)("<variant:%d,%d>%s", s->variants[*row].length(), *row, name);
@@ -1178,7 +1224,7 @@ void setshader(char *name)
         if(curparams[i].name) delete[] curparams[i].name;
     }
     curparams.setsize(0);
-    Shader *s = useshaderbyname(name);
+    Shader *s = useshaderbyname(name, false);
 	if(!s)
 	{
 		if(renderpath!=R_FIXEDFUNCTION) conoutf("\frno such shader: %s", name);
@@ -1252,34 +1298,20 @@ void setslotshader(Slot &s)
     }
 }
 
-VAR(nativeshaders, 0, 1, 1);
-
 void altshader(char *origname, char *altname)
 {
-    Shader *alt = useshaderbyname(altname);
-    if(!alt) return;
-    Shader *orig = useshaderbyname(origname);
-    if(orig)
-    {
-        if(nativeshaders && !orig->native) orig->altshader = alt;
-        return;
-    }
-    Shader *exists = shaders.access(origname);
-    char *rname = exists ? exists->name : newstring(origname);
-    Shader &s = shaders[rname];
-    s.name = rname;
-    s.altshader = alt;
+    Shader *orig = shaders.access(origname), *alt = shaders.access(altname);
+    if(!orig || !alt) return;
+    orig->altshader = alt;
+    orig->fixdetailshader(false);
 }
 
 void fastshader(char *nice, char *fast, int *detail)
 {
-    Shader *ns = shaders.access(nice);
-    if(!ns) return;
-    useshader(*ns);
-    if(ns->type==SHADER_INVALID || ns->altshader) return;
-    Shader *fs = useshaderbyname(fast);
-    if(!fs) return;
+    Shader *ns = shaders.access(nice), *fs = shaders.access(fast);
+    if(!ns || !fs) return;
     loopi(min(*detail+1, MAXSHADERDETAIL)) ns->fastshader[i] = fs;
+    ns->fixdetailshader(false);
 }
 
 COMMAND(shader, "isss");
@@ -1288,7 +1320,7 @@ COMMAND(setshader, "s");
 COMMAND(altshader, "ss");
 COMMAND(fastshader, "ssi");
 COMMAND(defershader, "ss");
-ICOMMAND(useshader, "s", (const char *name), useshaderbyname(name));
+ICOMMAND(forceshader, "s", (const char *name), useshaderbyname(name));
 
 void isshaderdefined(char *name)
 {
@@ -1498,7 +1530,7 @@ void renderpostfx()
 static bool addpostfx(const char *name, int outputbind, int outputscale, uint inputs, uint freeinputs, const vec4 &params)
 {
     if(!hasTR || !*name) return false;
-    Shader *s = lookupshaderbyname(name);
+    Shader *s = useshaderbyname(name);
     if(!s)
     {
         conoutf("no such postfx shader: %s", name);
@@ -1754,11 +1786,11 @@ void reloadshaders()
     persistidents = false;
     loadshaders();
     persistidents = true;
-    extern vector<Slot> slots;
-    loopv(slots) useshader(*slots[i].shader);
     if(renderpath==R_FIXEDFUNCTION) return;
+    preloadworldshaders();
+    preloadmodelshaders();
     enumerate(shaders, Shader, s,
-        if(!s.standard && s.type!=SHADER_INVALID && !s.variantshader)
+        if(!s.standard && s.type>=0 && !s.variantshader)
         {
             s_sprintfd(info)("shader %s", s.name);
             renderprogress(0.0, info);

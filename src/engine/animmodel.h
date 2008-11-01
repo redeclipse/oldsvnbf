@@ -1,7 +1,7 @@
-VARP(lightmodels, 0, 1, 1);
-VARP(envmapmodels, 0, 1, 1);
-VARP(glowmodels, 0, 1, 1);
-VARP(bumpmodels, 0, 1, 1);
+VARFP(lightmodels, 0, 1, 1, preloadmodelshaders());
+VARFP(envmapmodels, 0, 1, 1, preloadmodelshaders());
+VARFP(glowmodels, 0, 1, 1, preloadmodelshaders());
+VARFP(bumpmodels, 0, 1, 1, preloadmodelshaders());
 VARP(fullbrightmodels, 0, 0, 200);
 
 struct animmodel : model
@@ -212,43 +212,53 @@ struct animmodel : model
             }
             setenvparamf("glowscale", SHPARAM_PIXEL, 4, glow, glow, glow);
             setenvparamf("millis", SHPARAM_VERTEX, 5, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);
+            if(as->anim&ANIM_ENVMAP && envmapmax>0) setenvparamf("envmapscale", SHPARAM_VERTEX, 6, envmapmin-envmapmax, envmapmax);
             if(glaring) setenvparamf("glarescale", SHPARAM_PIXEL, 7, 16*specglare, 4*glowglare);
+        }
+
+        Shader *loadshader(bool shouldenvmap, bool masked)
+        {
+            #define DOMODELSHADER(name, body) \
+                do { \
+                    static Shader *name##shader = NULL; \
+                    if(!name##shader) name##shader = useshaderbyname(#name); \
+                    body; \
+                } while(0)
+            #define LOADMODELSHADER(name) DOMODELSHADER(name, return name##shader)
+            #define SETMODELSHADER(m, name) DOMODELSHADER(name, (m)->setshader(name##shader))
+            if(shader) return shader;
+            else if(bumpmapped())
+            {
+                if(shouldenvmap)
+                {
+                    if(lightmodels && !fullbright && (masked || spec>=0.01f)) LOADMODELSHADER(bumpenvmapmodel);
+                    else LOADMODELSHADER(bumpenvmapnospecmodel);
+                }
+                else if(masked && lightmodels && !fullbright) LOADMODELSHADER(bumpmasksmodel);
+                else if(masked && glowmodels) LOADMODELSHADER(bumpmasksnospecmodel);
+                else if(spec>=0.01f && lightmodels && !fullbright) LOADMODELSHADER(bumpmodel);
+                else LOADMODELSHADER(bumpnospecmodel);
+            }
+            else if(shouldenvmap)
+            {
+                if(lightmodels && !fullbright && (masked || spec>=0.01f)) LOADMODELSHADER(envmapmodel);
+                else LOADMODELSHADER(envmapnospecmodel);
+            }
+            else if(masked && lightmodels && !fullbright) LOADMODELSHADER(masksmodel);
+            else if(masked && glowmodels) LOADMODELSHADER(masksnospecmodel);
+            else if(spec>=0.01f && lightmodels && !fullbright) LOADMODELSHADER(stdmodel);
+            else LOADMODELSHADER(nospecmodel);
+        }
+
+        void preloadshader()
+        {
+            bool shouldenvmap = envmapped();
+            loadshader(shouldenvmap, masks!=notexture && masks->type!=Texture::STUB && (lightmodels || glowmodels || shouldenvmap));
         }
 
         void setshader(mesh *m, const animstate *as, bool masked)
         {
-            #define SETMODELSHADER(m, name) \
-                do \
-                { \
-                    static Shader *name##shader = NULL; \
-                    if(!name##shader) name##shader = lookupshaderbyname(#name); \
-                    m->setshader(name##shader); \
-                } \
-                while(0)
-            if(shader) m->setshader(shader);
-            else if(bumpmapped())
-            {
-                if(as->anim&ANIM_ENVMAP && envmapmax>0)
-                {
-                    if(lightmodels && !fullbright && (masked || spec>=0.01f)) SETMODELSHADER(m, bumpenvmapmodel);
-                    else SETMODELSHADER(m, bumpenvmapnospecmodel);
-                    setlocalparamf("envmapscale", SHPARAM_PIXEL, 6, envmapmin-envmapmax, envmapmax);
-                }
-                else if(masked && lightmodels && !fullbright) SETMODELSHADER(m, bumpmasksmodel);
-                else if(masked && glowmodels) SETMODELSHADER(m, bumpmasksnospecmodel);
-                else if(spec>=0.01f && lightmodels && !fullbright) SETMODELSHADER(m, bumpmodel);
-                else SETMODELSHADER(m, bumpnospecmodel);
-            }
-            else if(as->anim&ANIM_ENVMAP && envmapmax>0)
-            {
-                if(lightmodels && !fullbright && (masked || spec>=0.01f)) SETMODELSHADER(m, envmapmodel);
-                else SETMODELSHADER(m, envmapnospecmodel);
-                setlocalparamf("envmapscale", SHPARAM_VERTEX, 6, envmapmin-envmapmax, envmapmax);
-            }
-            else if(masked && lightmodels && !fullbright) SETMODELSHADER(m, masksmodel);
-            else if(masked && glowmodels) SETMODELSHADER(m, masksnospecmodel);
-            else if(spec>=0.01f && lightmodels && !fullbright) SETMODELSHADER(m, stdmodel);
-            else SETMODELSHADER(m, nospecmodel);
+            m->setshader(loadshader(as->anim&ANIM_ENVMAP && envmapmax>0, masked));
         }
 
         void bind(mesh *b, const animstate *as)
@@ -259,7 +269,7 @@ struct animmodel : model
             if(as->anim&ANIM_NOSKIN)
             {
                 if(enablealphatest) { glDisable(GL_ALPHA_TEST); enablealphatest = false; }
-                if(!(as->anim&ANIM_SHADOW) && enablealphablend) { glDisable(GL_BLEND); enablealphablend = false; }
+                if(enablealphablend) { glDisable(GL_BLEND); enablealphablend = false; }
                 if(enableglow) disableglow();
                 if(enableenvmap) disableenvmap();
                 if(enablelighting) { glDisable(GL_LIGHTING); enablelighting = false; }
@@ -389,7 +399,7 @@ struct animmodel : model
 
         virtual void setshader(Shader *s)
         {
-            if(glaring) s->variant(0, 2)->set();
+            if(glaring) s->setvariant(0, 2);
             else s->set();
         }
     };
@@ -581,6 +591,11 @@ struct animmodel : model
                 s.tex = tex;
                 s.masks = masks;
             }
+        }
+
+        void preloadshaders()
+        {
+            loopv(skins) skins[i].preloadshader();
         }
 
         virtual void getdefaultanim(animinfo &info, int anim, uint varseed, dynent *d)
@@ -1000,13 +1015,13 @@ struct animmodel : model
             glColorMask(COLORMASK, fading ? GL_FALSE : GL_TRUE);
 
             glDepthFunc(GL_LEQUAL);
-        }
-
-        if(anim&(ANIM_TRANSLUCENT|ANIM_SHADOW) && !enablealphablend)
-        {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            enablealphablend = true;
+        
+            if(!enablealphablend)
+            {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                enablealphablend = true;
+            }
         }
 
         render(anim, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
@@ -1094,6 +1109,11 @@ struct animmodel : model
     virtual bool loaddefaultparts()
     {
         return true;
+    }
+
+    void preloadshaders()
+    {
+        loopv(parts) parts[i]->preloadshaders();
     }
 
     void setshader(Shader *shader)
