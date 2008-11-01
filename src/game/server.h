@@ -810,7 +810,7 @@ struct gameserver : igameserver
 				sendspawn(ci);
 		}
 
-		if(m_timed(gamemode) && hasnonlocalclients())
+		if(m_timed(gamemode) && numclients())
 			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 
 		if(m_demo(gamemode)) setupdemoplayback();
@@ -1816,7 +1816,7 @@ struct gameserver : igameserver
 		}
 		putint(p, gamemode);
 		putint(p, mutators);
-		if(!ci || (m_timed(gamemode) && hasnonlocalclients()))
+		if(!ci || (m_timed(gamemode) && numclients()))
 		{
 			putint(p, SV_TIMEUP);
 			putint(p, minremain);
@@ -2377,7 +2377,7 @@ struct gameserver : igameserver
 			masterupdate = false;
 		}
 
-		if((m_timed(gamemode) && hasnonlocalclients()) &&
+		if((m_timed(gamemode) && numclients()) &&
 			((sv_timelimit != oldtimelimit) ||
 			(gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
 				checkintermission();

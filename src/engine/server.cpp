@@ -448,16 +448,6 @@ void localdisconnect()
 }
 #endif
 
-bool haslocalclients()
-{
-    loopv(clients) if(clients[i] && clients[i]->type==ST_LOCAL) return true;
-    return false;
-}
-
-int nonlocalclients = 0;
-
-bool hasnonlocalclients() { return nonlocalclients!=0; }
-
 static ENetAddress pongaddr;
 
 void sendqueryreply(ucharbuf &p)
@@ -612,13 +602,6 @@ uchar *retrieveservers(uchar *buf, int buflen)
 
 void serverslice()	// main server update, called from main loop in sp, or from below in dedicated server
 {
-    nonlocalclients = 0;
-    loopv(clients) switch(clients[i]->type)
-    {
-        case ST_TCPIP: nonlocalclients++; break;
-        default: break;
-    }
-
     sv->serverupdate();
 
 	if(!serverhost) return;
@@ -638,8 +621,8 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 		if(totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
 		{
 			laststatus = totalmillis;
-			if(nonlocalclients || bsend || brec)
-				conoutf("\fmstatus: %d remote clients, %.1f send, %.1f rec (K/sec)", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
+			if(bsend || brec || sv->numclients())
+				conoutf("\fmstatus: %d clients, %.1f send, %.1f rec (K/sec)", sv->numclients(), bsend/60.0f/1024, brec/60.0f/1024);
 			bsend = brec = 0;
 		}
 	}
@@ -665,11 +648,8 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 				s_strcpy(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
 				conoutf("\fgclient connected (%s)", c.hostname);
 				int reason = DISC_MAXCLIENTS;
-				if(nonlocalclients<serverclients && !(reason = sv->clientconnect(c.num, c.peer->address.host)))
-				{
-					nonlocalclients++;
+				if(sv->numclients(-1, false, true) < serverclients && !(reason = sv->clientconnect(c.num, c.peer->address.host)))
 					send_welcome(c.num);
-				}
 				else disconnect_client(c.num, reason);
 				break;
 			}
@@ -687,7 +667,6 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 				if(!c) break;
 				conoutf("\fodisconnected client (%s)", c->hostname);
 				sv->clientdisconnect(c->num);
-				nonlocalclients--;
 				c->type = ST_EMPTY;
 				event.peer->data = NULL;
 				sv->deleteinfo(c->info);

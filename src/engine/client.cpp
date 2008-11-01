@@ -38,7 +38,7 @@ void throttle()
 
 bool connected(bool attempt)
 {
-    return curpeer || (attempt && connpeer) || haslocalclients();
+    return curpeer || (attempt && connpeer) || cc->ready();
 }
 
 void abortconnect(bool msg)
@@ -104,10 +104,10 @@ void connects(const char *name, int port, int qport)
 		enet_host_flush(clienthost);
 		connmillis = totalmillis;
 		connattempts = 0;
-//		s_sprintfd(cs)("connecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
+		conoutf("\fgconnecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
 //		computescreen(cs);
 	}
-	else 
+	else
     {
         conoutf("\frfailed creating client socket");
         connectfail();
@@ -145,7 +145,7 @@ void disconnect(int onlyclean, int async)
 		enet_host_destroy(clienthost);
 		clienthost = NULL;
 	}
-	if(cleanup) 
+	if(cleanup)
     {
         cc->gamedisconnect(onlyclean);
         localdisconnect();
@@ -242,7 +242,7 @@ void gets2c()			// get updates from the server
 		case ENET_EVENT_TYPE_DISCONNECT:
             extern const char *disc_reasons[];
 			if(event.data>=DISC_NUM) event.data = DISC_NONE;
-            if(event.peer==connpeer) 
+            if(event.peer==connpeer)
             {
                 conoutf("\frcould not connect to server");
                 connectfail();

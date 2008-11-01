@@ -422,7 +422,7 @@ struct gameclient : igameclient
         	return;
         }
 
-        if(cc.ready())
+        if(connected())
         {
             // do shooting/projectile update here before network update for greater accuracy with what the player sees
 
@@ -436,7 +436,7 @@ struct gameclient : igameclient
 
 		gets2c();
 
-		if(cc.ready())
+		if(connected())
 		{
 			otherplayers();
 			if(!allowmove(player1)) player1->stopmoving();
@@ -950,7 +950,7 @@ struct gameclient : igameclient
 			if(g3d_active()) index = POINTER_GUI;
 			else return;
 		}
-        else if(hidehud || !showcrosshair() || player1->state == CS_DEAD || !cc.ready()) return;
+        else if(hidehud || !showcrosshair() || player1->state == CS_DEAD || !connected()) return;
         else if(player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(inzoom() && player1->gunselect == GUN_RIFLE) index = POINTER_SNIPE;
         else if(lastmillis-lasthit <= crosshairhitspeed()) index = POINTER_HIT;
@@ -1464,7 +1464,7 @@ struct gameclient : igameclient
 		if(getcurcommand())
 			hoff -= rendercommand(FONTH/4, hoff-FONTH, w*3-FONTH);
 
-		if(cc.ready() && maptime)
+		if(connected() && maptime)
 		{
 			if(player1->state == CS_EDITING)
 			{
@@ -1487,7 +1487,7 @@ struct gameclient : igameclient
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			if(maptime && cc.ready())
+			if(maptime && connected())
 			{
 				if(lastmillis-maptime < titlecardtime()+titlecardfade())
 					drawtitlecard(w, h);
@@ -1723,7 +1723,7 @@ struct gameclient : igameclient
 			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 1;
 		}
 
-		if(cc.ready() && maptime)
+		if(connected() && maptime)
 		{
 			if(!lastcamera)
 			{
