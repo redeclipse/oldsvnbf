@@ -626,30 +626,25 @@ struct softquadrenderer : quadrenderer
 
 static partrenderer *parts[] =
 {
-    new quadrenderer("particles/blood",				PT_PART|PT_MOD|PT_RND4, 2, 1),		// 0 blood spats (note: rgb is inverted)
-    new quadrenderer("particles/spark",				PT_PART|PT_GLARE,   2, 0),			// 1 sparks
-    new quadrenderer("particles/smoke",				PT_PART,    0, 0),					// 2 small smoke
-    new quadrenderer("particles/entity",			PT_PART|PT_GLARE,  20, 0),			// 3 edit mode entities
-    new softquadrenderer("particles/fireball",		PT_PART|PT_GLARE,  20, 0),			// 4 softened fireball
-    new quadrenderer("particles/fireball", 			PT_PART|PT_GLARE,  20, 0),          // 5 fireball
-    new quadrenderer("particles/smoke",				PT_PART,          -20, 0),			// 6 big  slowly rising smoke
-    new softquadrenderer("particles/plasma",        PT_PART|PT_GLARE,  0, 0),           // 7 fireball2
-    new quadrenderer("particles/plasma",			PT_PART|PT_GLARE,  0, 0),			// 8 fireball2
-	new quadrenderer("particles/electric",			PT_PART|PT_GLARE,  0, 0),			// 9 big fireball3
-    &textups,																			// 10 TEXT, floats up
-    new taperenderer("particles/flare",				PT_TAPE|PT_GLARE,   0, 0),			// 11 streak
-    &texts,																				// 12 TEXT, SMALL, NON-MOVING
-    &meters,																			// 13 METER, SMALL, NON-MOVING
-    &metervs,																			// 14 METER vs., SMALL, NON-MOVING
-    new quadrenderer("particles/smoke",				PT_PART,           20, 0),			// 15 small  slowly sinking smoke trail
-    &fireballs,																			// 16 explosion fireball
-    &lightnings,																		// 17 lightning
-    new quadrenderer("particles/smoke",				PT_PART,          -15, 0),			// 18 big  fast rising smoke
-    new trailrenderer("particles/entity",			PT_TRAIL|PT_LERP,   2, 0),			// 19 water, entity
-    &noglarefireballs,																	// 20 explosion fireball no glare
-    new quadrenderer("particles/muzzle",			PT_PART|PT_GLARE,  0, 0),			// 21 muzzle flashes
-    new taperenderer("particles/line",				PT_TAPE|PT_GLARE,   0, 0),			// 22 line
-    &flares                                                                             // 23 lens flares, must be done last
+    new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 2, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP, 0, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP, -10, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP, -20, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP, 20, 0),
+    new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4, 2, 1),
+    new quadrenderer("particles/entity", PT_PART|PT_GLARE, 20, 0),
+    new quadrenderer("particles/spark", PT_PART|PT_GLARE, 2, 0),
+    new softquadrenderer("particles/fireball", PT_PART|PT_GLARE, -10, 0),
+    new quadrenderer("particles/fireball", PT_PART|PT_GLARE, -10, 0),
+    new softquadrenderer("particles/plasma", PT_PART|PT_GLARE, 0, 0),
+    new quadrenderer("particles/plasma", PT_PART|PT_GLARE, 0, 0),
+	new quadrenderer("particles/electric", PT_PART|PT_GLARE, 0, 0),
+    new taperenderer("particles/flare", PT_TAPE|PT_GLARE, 0, 0),
+    new quadrenderer("particles/muzzle", PT_PART|PT_GLARE, 0, 0),
+    new taperenderer("particles/line", PT_TAPE|PT_GLARE, 0, 0),
+    &texts, &textups, &meters, &metervs,
+    &fireballs, &noglarefireballs, &lightnings,
+    &flares // must be done last!
 };
 
 void finddepthfxranges()
@@ -858,7 +853,7 @@ static void create(int type, int color, int fade, const vec &p, float size, phys
     int fmin = 1;
     int fmax = fade*3;
 	int f = fmin + rnd(fmax); //help deallocater by using fade distribution rather than random
-	newparticle(p, p, f, type, color, size, pl)->val = collidez;
+	newparticle(p, vec(0, 0, 0), f, type, color, size, pl)->val = collidez;
 }
 
 static void regularcreate(int type, int color, int fade, const vec &p, float size, physent *pl, int delay=0)
