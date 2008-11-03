@@ -38,7 +38,11 @@ void clearoverrides()
             switch(i.type)
 			{
 				case ID_ALIAS:
-                    if(i.action[0]) i.action = exchangestr(i.action, "");
+                    if(i.action[0])
+                    {
+                        if(i.action != i.isexecuting) delete[] i.action;
+                        i.action = newstring("");
+                    }
 					break;
 				case ID_VAR:
                     *i.storage.i = i.overrideval.i;
