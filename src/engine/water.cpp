@@ -513,9 +513,8 @@ void preloadwatershaders(bool force)
     useshaderbyname(waterrefract ? (waterfade && hasFBO ? "underwaterfade" : "underwaterrefract") : "underwater");
 
     extern int waterfallenv;
-    if(waterfallenv && hasCM)
-        useshaderbyname(waterfallrefract ? "waterfallenvrefract" : "waterfallenv");
-    else if(waterfallrefract) useshaderbyname("waterfallrefract");
+    if(waterfallenv && hasCM) useshaderbyname("waterfallenv");
+    if(waterfallrefract) useshaderbyname(waterfallenv && hasCM ? "waterfallenvrefract" : "waterfallrefract");
 }
 
 void renderwater()
