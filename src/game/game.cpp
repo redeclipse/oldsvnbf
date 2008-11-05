@@ -737,6 +737,9 @@ struct gameclient : igameclient
         et.mapstart();
 		cc.mapstart();
         resetstates(ST_ALL);
+
+        // prevent the player from being in the middle of nowhere if he doesn't get spawned
+        et.findplayerspawn(player1);
 	}
 
 	void playsoundc(int n, gameent *d = NULL)
