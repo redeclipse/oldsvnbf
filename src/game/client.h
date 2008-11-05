@@ -1417,7 +1417,7 @@ struct clientcom : iclientcom
 		if(remote) addmsg(SV_STOPDEMO, "r");
 		else
 		{
-			loopv(cl.players) if(cl.players[i]) cl.clientdisconnected(i);
+			loopv(cl.players) if(cl.players[i] && !getinfo(i)) cl.clientdisconnected(i);
 
 			extern igameserver *sv;
 			((gameserver *)sv)->enddemoplayback();
