@@ -272,7 +272,7 @@ struct projectiles
 						float res = float(steps-i)/float(steps);
 						col = ((int(96*max(res,0.3f))<<16)+1)|((int(48*max(res,0.2f))+1)<<8);
 						pos.add(dir);
-						regular_part_create(PART_PLASMA, int(250*res)+50, proj.o, col, proj.radius*0.5f*proj.lifesize*res);
+						regular_part_create(PART_PLASMA, int(250*res)+50, pos, col, proj.radius*0.5f*proj.lifesize*res);
 					}
 				}
 				proj.lasteffect = lastmillis;
