@@ -213,7 +213,7 @@ struct projectiles
                     proj.lifesize = 1.f;
                 }
 				part_create(part, 1, proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize);
-				//part_create(part, 15, proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.5f); // brighter center part
+				part_create(part, 1, proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.5f); // brighter center part
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
