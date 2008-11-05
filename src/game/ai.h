@@ -211,13 +211,16 @@ struct aiserv
 		}
 	}
 
+	void clearbots()
+	{
+		loopvrev(sv.clients) if(sv.clients[i]->state.aitype != AI_NONE)
+			deleteai(sv.clients[i]);
+	}
+
 	void checkai()
 	{
 		if(m_demo(sv.gamemode) || m_lobby(sv.gamemode))
-		{
-			loopvrev(sv.clients) if(sv.clients[i]->state.aitype != AI_NONE)
-				deleteai(sv.clients[i]);
-		}
+			clearbots();
 		else if(sv.numclients(-1, false, true))
 		{
 			checkskills();
