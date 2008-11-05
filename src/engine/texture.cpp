@@ -85,6 +85,14 @@ static inline void reorienttexture(uchar *src, int sw, int sh, int bpp, uchar *d
     }
 }
 
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+#define RGBAMASKS 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+#define RGBMASKS  0xff0000, 0x00ff00, 0x0000ff, 0
+#else
+#define RGBAMASKS 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+#define RGBMASKS  0x0000ff, 0x00ff00, 0xff0000, 0
+#endif
+
 SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, int type, bool clear)
 {
     SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, swapxy ? s->h : s->w, swapxy ? s->w : s->h, s->format->BitsPerPixel, s->format->Rmask, s->format->Gmask, s->format->Bmask, s->format->Amask);
@@ -155,8 +163,11 @@ SDL_Surface *texcopy(SDL_Surface *s, bool clear)
 	return d;
 }
 
-void texmad(SDL_Surface *s, const vec &mul, const vec &add)
+SDL_Surface *texmad(SDL_Surface *s, const vec &mul, const vec &add)
 {
+    if(s->format->BytesPerPixel<3 && (mul.x!=mul.y || mul.x!=mul.z || add.x!=add.y || add.x!=add.z))
+        s = creatergbsurface(s);
+
     int maxk = min(int(s->format->BytesPerPixel), 3);
 	uchar *src = (uchar *)s->pixels;
 	loopi(s->h*s->w)
@@ -168,6 +179,7 @@ void texmad(SDL_Surface *s, const vec &mul, const vec &add)
 		}
 		src += s->format->BytesPerPixel;
 	}
+    return s;
 }
 
 static SDL_Surface stubsurface;
@@ -576,22 +588,19 @@ Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp, bo
     return t;
 }
 
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#define RMASK 0xff000000
-#define GMASK 0x00ff0000
-#define BMASK 0x0000ff00
-#define AMASK 0x000000ff
-#else
-#define RMASK 0x000000ff
-#define GMASK 0x0000ff00
-#define BMASK 0x00ff0000
-#define AMASK 0xff000000
-#endif
+SDL_Surface *creatergbsurface(SDL_Surface *os, bool clear)
+{
+    SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 24, RGBMASKS);
+    if(!ns) fatal("creatergbsurface");
+    SDL_BlitSurface(os, NULL, ns, NULL);
+    if(clear) SDL_FreeSurface(os);
+    return ns;
+}
 
 SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear)
 {
-    SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 32, RMASK, GMASK, BMASK, AMASK);
-    if(!ns) fatal("creatergbsurface");
+    SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 32, RGBAMASKS);
+    if(!ns) fatal("creatergbasurface");
     SDL_BlitSurface(os, NULL, ns, NULL);
     if(clear) SDL_FreeSurface(os);
     return ns;
@@ -662,10 +671,10 @@ SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *comp
             if(!arg[i] || arg[i] >= end) arg[i] = "";
             else arg[i]++;
         }
-        if(!strncmp(cmd, "mad", len)) texmad(s, parsevec(arg[0]), parsevec(arg[1]));
+        if(!strncmp(cmd, "mad", len)) s = texmad(s, parsevec(arg[0]), parsevec(arg[1]));
         else if(!strncmp(cmd, "ffcolor", len))
         {
-            if(renderpath==R_FIXEDFUNCTION) texmad(s, parsevec(arg[0]), parsevec(arg[1]));
+            if(renderpath==R_FIXEDFUNCTION) s = texmad(s, parsevec(arg[0]), parsevec(arg[1]));
         }
         else if(!strncmp(cmd, "ffmask", len))
         {
