@@ -213,7 +213,7 @@ struct aiserv
 
 	void checkai()
 	{
-		if(m_lobby(sv.gamemode))
+		if(m_demo(sv.gamemode) || m_lobby(sv.gamemode))
 		{
 			loopvrev(sv.clients) if(sv.clients[i]->state.aitype != AI_NONE)
 				deleteai(sv.clients[i]);
