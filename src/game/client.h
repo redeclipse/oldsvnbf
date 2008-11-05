@@ -922,7 +922,7 @@ struct clientcom : iclientcom
 					target->health = amt;
 					target->lastregen = lastmillis;
 					int left = clamp(MAXHEALTH-max(target->health-REGENHEAL, 0), 1, 100);
-					part_splash(PART_BLOOD, max(left, 3), REGENWAIT, target->o, 0x60FFFF, 3.0f);
+					part_splash(PART_BLOOD, max(left/3, 3), REGENWAIT, target->o, 0x60FFFF, 3.0f);
 					playsound(S_REGEN, target->o, target);
 					break;
 				}

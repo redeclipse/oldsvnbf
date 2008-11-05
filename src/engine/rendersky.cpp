@@ -25,12 +25,10 @@ Texture *loadskyoverlay(const char *basename)
 }
 
 SVARFW(skybox, "skyboxes/black", { if(skybox[0]) loadsky(skybox, sky); });
-VARW(skycolour, 0, 0xFFFFFF, 0xFFFFFF);
 FVARW(spinsky, -720, 0, 720);
 VARW(yawsky, 0, 0, 360);
 
 SVARFW(cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
-VARW(cloudcolour, 0, 0xFFFFFF, 0xFFFFFF);
 FVARW(cloudblend, 0, 1.0f, 1);
 FVARW(spinclouds, -720, 0, 720);
 VARW(yawclouds, 0, 0, 360);
@@ -61,12 +59,12 @@ void draw_envbox_face(float s0, float t0, int x0, int y0, int z0,
 	xtraverts += 4;
 }
 
-void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F, Texture **sky = NULL, float r = 1.f, float g = 1.f, float b = 1.f, float a = 1.f)
+void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F, Texture **sky = NULL, float a = 1.f)
 {
     float vclip = 1-zclip;
     int z = int(ceil(2*w*(vclip-0.5f)));
 
-	glColor4f(r, g, b, a);
+	glColor4f(1.f, 1.f, 1.f, a);
 
     if(faces&0x01)
         draw_envbox_face(0.0f, 0.0f, -w, -w, -w,
@@ -105,11 +103,11 @@ void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F, Texture **sky = NU
                          1.0f, 1.0f, +w, -w, -w, sky[5] ? sky[5]->id : notexture->id);
 }
 
-void draw_env_overlay(int w, Texture *overlay = NULL, float r = 1.f, float g = 1.f, float b = 1.f, float a = 1.f, float tx = 0, float ty = 0)
+void draw_env_overlay(int w, Texture *overlay = NULL, float a = 1.f, float tx = 0, float ty = 0)
 {
     float z = -w*cloudheight, tsz = 0.5f*(1-cloudfade)/cloudscale, psz = w*(1-cloudfade);
     glBindTexture(GL_TEXTURE_2D, overlay ? overlay->id : notexture->id);
-	glColor4f(r, g, b, a);
+	glColor4f(1.f, 1.f, 1.f, a);
     glBegin(GL_POLYGON);
     loopi(cloudsubdiv)
     {
@@ -124,9 +122,9 @@ void draw_env_overlay(int w, Texture *overlay = NULL, float r = 1.f, float g = 1
     {
         vec p(1, 1, 0);
         p.rotate_around_z((-2.0f*M_PI*i)/cloudsubdiv);
-        glColor4f(r, g, b, 1);
+        glColor4f(1.f, 1.f, 1.f, 1);
         glTexCoord2f(tx + p.x*tsz, ty + p.y*tsz); glVertex3f(p.x*psz, p.y*psz, z);
-        glColor4f(r, g, b, 0);
+        glColor4f(1.f, 1.f, 1.f, 0);
         glTexCoord2f(tx + p.x*tsz2, ty + p.y*tsz2); glVertex3f(p.x*w, p.y*w, z);
     }
     glEnd();
@@ -256,7 +254,7 @@ void drawskybox(int farplane, bool limited)
     glRotatef(camera1->yaw+spinsky*lastmillis/1000.0f+yawsky, 0, 1, 0);
     glRotatef(90, 1, 0, 0);
     if(reflecting) glScalef(1, 1, -1);
-    draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : 0, yawskyfaces(renderedskyfaces, yawsky, spinsky), sky, (skycolour>>16)/255.0f, ((skycolour>>8)&255)/255.0f, (skycolour&255)/255.0f);
+    draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : 0, yawskyfaces(renderedskyfaces, yawsky, spinsky), sky);
     glPopMatrix();
 
     if(!glaring && cloudbox[0])
@@ -273,7 +271,7 @@ void drawskybox(int farplane, bool limited)
         glRotatef(camera1->yaw+spinclouds*lastmillis/1000.0f+yawclouds, 0, 1, 0);
         glRotatef(90, 1, 0, 0);
         if(reflecting) glScalef(1, 1, -1);
-        draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : cloudclip, yawskyfaces(renderedskyfaces, yawclouds, spinclouds), clouds, (cloudcolour>>16)/255.0f, ((cloudcolour>>8)&255)/255.0f, (cloudcolour&255)/255.0f, cloudblend);
+        draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : cloudclip, yawskyfaces(renderedskyfaces, yawclouds, spinclouds), clouds, cloudblend);
         glPopMatrix();
 
         glDisable(GL_BLEND);
@@ -295,7 +293,7 @@ void drawskybox(int farplane, bool limited)
         glRotatef(camera1->yaw+spincloudlayer*lastmillis/1000.0f+yawcloudlayer, 0, 1, 0);
         glRotatef(90, 1, 0, 0);
         if(reflecting) glScalef(1, 1, -1);
-        draw_env_overlay(farplane/2, cloudoverlay,(cloudcolour>>16)/255.0f, ((cloudcolour>>8)&255)/255.0f, (cloudcolour&255)/255.0f, cloudblend, cloudscrollx * lastmillis/1000.0f, cloudscrolly * lastmillis/1000.0f);
+        draw_env_overlay(farplane/2, cloudoverlay, cloudblend, cloudscrollx * lastmillis/1000.0f, cloudscrolly * lastmillis/1000.0f);
     	glPopMatrix();
 
         glDisable(GL_BLEND);
