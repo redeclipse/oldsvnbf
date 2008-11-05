@@ -448,6 +448,11 @@ struct gameserver : igameserver
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
         if(!ci || (ci->state.state==CS_SPECTATOR && !haspriv(ci, PRIV_MASTER, true)) || !m_game(reqmode)) return;
+		if(reqmode < G_LOBBY && !ci->local)
+		{
+			srvoutf(ci->clientnum, "\fraccess denied, you must be a local client");
+			return;
+		}
 
 		s_strcpy(ci->mapvote, map);
 		if(!ci->mapvote[0]) return;
@@ -780,6 +785,12 @@ struct gameserver : igameserver
 			}
 		}
 
+		if(m_demo(gamemode))
+		{
+            ai.clearbots();
+            loopv(clients) if(!clients[i]->local) disconnect_client(clients[i]->clientnum, DISC_PRIVATE);
+		}
+	
 		// server modes
 		if(m_stf(gamemode)) smode = &stfmode;
         else if(m_ctf(gamemode)) smode = &ctfmode;
@@ -813,11 +824,7 @@ struct gameserver : igameserver
 		if(m_timed(gamemode) && numclients())
 			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 
-		if(m_demo(gamemode)) 
-        {
-            ai.clearbots();
-            setupdemoplayback();
-        }
+		if(m_demo(gamemode)) setupdemoplayback();
 		else if(demonextmatch)
 		{
 			demonextmatch = false;
@@ -2465,7 +2472,7 @@ struct gameserver : igameserver
         if(!local)
         {
 		    loopv(bannedips) if(bannedips[i].ip==ip) return DISC_IPBAN;
-		    if(mastermode>=MM_PRIVATE) return DISC_PRIVATE;
+		    if(mastermode>=MM_PRIVATE || m_demo(gamemode)) return DISC_PRIVATE;
 		    if(mastermode>=MM_LOCKED) ci->state.state = CS_SPECTATOR;
         }
 		if(currentmaster>=0) masterupdate = true;
@@ -2507,7 +2514,7 @@ struct gameserver : igameserver
 		putint(p, mutators);			// 3
 		putint(p, minremain);			// 4
 		putint(p, serverclients);		// 5
-		putint(p, mastermode);			// 6
+		putint(p, m_demo(gamemode) ? MM_PRIVATE : mastermode); // 6
 		sendstring(smapname, p);
 		sendstring(serverdesc(), p);
 		sendqueryreply(p);
