@@ -187,7 +187,7 @@ struct gameserver : igameserver
 		string name, mapvote;
 		int modevote, mutsvote;
 		int privilege;
-        bool spectator, timesync, wantsmaster;
+        bool local, spectator, timesync, wantsmaster;
         int gameoffset, lastevent;
 		servstate state;
 		vector<gameevent> events;
@@ -218,7 +218,7 @@ struct gameserver : igameserver
 			team = TEAM_NEUTRAL;
 			name[0] = 0;
 			privilege = PRIV_NONE;
-            spectator = wantsmaster = false;
+            local = spectator = wantsmaster = false;
 			position.setsizenodelete(0);
 			messages.setsizenodelete(0);
 			mapchange();
@@ -366,7 +366,7 @@ struct gameserver : igameserver
 	bool haspriv(clientinfo *ci, int flag, bool msg = false)
 	{
 		if(flag <= PRIV_MASTER && !numclients(ci->clientnum, false, true)) return true;
-		else if(ci->privilege >= flag) return true;
+		else if(ci->local || ci->privilege >= flag) return true;
 		else if(msg) srvoutf(ci->clientnum, "\fraccess denied, you need %s", privname(flag));
 		return false;
 	}
@@ -2456,6 +2456,7 @@ struct gameserver : igameserver
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
 		ci->clientnum = n;
+        ci->local = local;
 		clients.add(ci);
         if(!local)
         {
