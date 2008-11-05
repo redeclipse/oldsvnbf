@@ -813,7 +813,11 @@ struct gameserver : igameserver
 		if(m_timed(gamemode) && numclients())
 			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 
-		if(m_demo(gamemode)) setupdemoplayback();
+		if(m_demo(gamemode)) 
+        {
+            ai.clearbots();
+            setupdemoplayback();
+        }
 		else if(demonextmatch)
 		{
 			demonextmatch = false;
