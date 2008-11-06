@@ -948,6 +948,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 		persistidents = true;
 		overrideidents = worldidents = false;
 
+        vector<int> mapmodels;
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
@@ -976,12 +977,20 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			}
 			if(e.type == ET_MAPMODEL && e.attr1 >= 0)
 			{
-				mapmodelinfo &mmi = getmminfo(e.attr1);
-				if(!&mmi) conoutf("\frcould not find map model: %d", e.attr1);
-				else if(!loadmodel(NULL, e.attr1, true))
-					conoutf("\frcould not load model: %s", mmi.name);
-			}
+				if(mapmodels.find(e.attr1) < 0) mapmodels.add(e.attr1);
+            }
+        }
+
+		loopv(mapmodels)
+		{
+			loadprogress = float(i+1)/mapmodels.length();
+			int mmindex = mapmodels[i];
+		    mapmodelinfo &mmi = getmminfo(mmindex);
+			if(!&mmi) conoutf("\frcould not find map model: %d", mmindex);
+			else if(!loadmodel(NULL, mmindex, true))
+				conoutf("\frcould not load model: %s", mmi.name);
 		}
+		loadprogress = 0;
 
 		gzclose(f);
 		conoutf("\fwloaded map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);

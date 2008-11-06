@@ -650,7 +650,7 @@ SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *comp
         if(renderpath==R_FIXEDFUNCTION && !strncmp(cmds, "<noff>", 6)) return &stubsurface;
     }
 
-    if(msg) renderprogress(0, file);
+    if(msg) renderprogress(loadprogress, file);
 
     SDL_Surface *s = loadsurface(file);
     if(!s) { if(msg) conoutf("\frcould not load texture %s", file); return NULL; }
