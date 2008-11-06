@@ -2,7 +2,7 @@
 VARP(depthfxfpscale, 1, 1<<12, 1<<16);
 VARP(depthfxscale, 1, 1<<6, 1<<8);
 VARP(depthfxblend, 1, 16, 64);
-VARP(depthfxpartblend, 1, 4, 64);
+VARP(depthfxpartblend, 1, 8, 64);
 VAR(depthfxmargin, 0, 16, 64);
 VAR(depthfxbias, 0, 1, 64);
 

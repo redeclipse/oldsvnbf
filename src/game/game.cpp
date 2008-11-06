@@ -1418,10 +1418,10 @@ struct gameclient : igameclient
 
 		static int laststats = 0, prevstats[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-		if(lastmillis-laststats >= statrate())
+		if(totalmillis-laststats >= statrate())
 		{
 			memcpy(prevstats, curstats, sizeof(prevstats));
-			laststats = lastmillis-(lastmillis%statrate());
+			laststats = totalmillis-(totalmillis%statrate());
 		}
 
 		int nextstats[12] =

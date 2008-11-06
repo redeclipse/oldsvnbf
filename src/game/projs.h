@@ -225,11 +225,11 @@ struct projectiles
 				loopi(rnd(3)+1)
 				{
 					vec to = vec(proj.o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation).mul(proj.lifespan));
-					regular_part_create(PART_FIREBALL, int((1.1f-proj.lifesize)*400.f)+100, to, col, guntype[proj.attr1].size*proj.lifesize*0.6f);
+					regular_part_create(PART_FIREBALL_SOFT, int((1.1f-proj.lifesize)*400.f)+100, to, col, guntype[proj.attr1].size*proj.lifesize*0.6f);
 				}
 				if(lastmillis-proj.lasteffect > 500)
 				{
-					part_create(PART_SMOKE_RISE_SLOW, 500, vec(proj.o).sub(vec(0, 0, 1)), 0x888888, guntype[proj.attr1].size*proj.lifesize); // smoke
+					part_create(PART_SMOKE_RISE_SLOW_SOFT, 500, vec(proj.o).sub(vec(0, 0, 1)), 0x888888, guntype[proj.attr1].size*proj.lifesize); // smoke
 					proj.lasteffect = lastmillis;
 				}
 			}
