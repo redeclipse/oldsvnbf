@@ -4,6 +4,8 @@ Hud
 	plasma (indicator, icon)
 	carbine (indicator, icon)
 	flamer (indicator)
+	grenades (indicator)
+	powerup indicator
 	spookyback
 
 Player
@@ -12,4 +14,4 @@ Player
 
 Quin **
 	explosive mutator
-	fix the particle spam
+	explosion fixes (screen shakes, etc)
