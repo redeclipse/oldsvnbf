@@ -443,7 +443,7 @@ struct clientcom : iclientcom
 			// pack rest in almost always 1 byte: strafe:2, move:2, crouching: 1, aimyaw/aimpitch: 1
 			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouching ? 1 : 0)<<4) | (d->aimyaw!=d->yaw || d->aimpitch!=d->pitch ? 1<<5 : 0);
 			putuint(q, flags);
-            if(d->aimyaw!=d->yaw || d->aimpitch!=d->pitch)
+            if((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch)
             {
                 putuint(q, (int)d->aimyaw);
                 putint(q, (int)d->aimpitch);
