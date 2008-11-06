@@ -172,8 +172,8 @@ struct weaponstate
 			loopi(rnd(5)+1)
 			{
 				vec to = vec(o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
-				part_splash(PART_FIREBALL, gun == GUN_FLAMER ? 2 : 4, gun == GUN_FLAMER ? 500 : 750, to, 0x441404, guntype[gun].explode*0.9f); // fireball
-				part_splash(PART_SMOKE_RISE_SLOW, gun == GUN_FLAMER ? 2 : 4, gun == GUN_FLAMER ? 1000 : 1500, vec(to).sub(vec(0, 0, 2)), gun == GUN_FLAMER ? 0x444444 : 0x111111, guntype[gun].explode); // smoke
+				part_splash(PART_FIREBALL_SOFT, gun == GUN_FLAMER ? 2 : 4, gun == GUN_FLAMER ? 500 : 750, to, 0x441404, guntype[gun].explode*0.9f); // fireball
+				part_splash(PART_SMOKE_RISE_SLOW_SOFT, gun == GUN_FLAMER ? 2 : 4, gun == GUN_FLAMER ? 1000 : 1500, vec(to).sub(vec(0, 0, 2)), gun == GUN_FLAMER ? 0x444444 : 0x111111, guntype[gun].explode); // smoke
 			}
 			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), gun == GUN_FLAMER ? 1000 : 1500, 10);
 		}

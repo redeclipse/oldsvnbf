@@ -629,6 +629,7 @@ static partrenderer *parts[] =
     new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 2, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP, 0, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP, -10, 0),
+    new softquadrenderer("particles/smoke", PT_PART|PT_LERP, -10, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP, -20, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP, 20, 0),
     new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4, 2, 1),
@@ -724,6 +725,7 @@ void render_particles(int time)
             const char *title = parts[i]->texname ? strrchr(parts[i]->texname, '/')+1 : NULL;
             string info = "";
             if(type&PT_GLARE) s_strcat(info, "g,");
+            if(type&PT_SOFT) s_strcat(info, "s,");
             if(type&PT_LERP) s_strcat(info, "l,");
             if(type&PT_MOD) s_strcat(info, "m,");
             if(type&PT_RND4) s_strcat(info, "r,");
