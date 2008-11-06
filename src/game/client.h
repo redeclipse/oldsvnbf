@@ -427,11 +427,9 @@ struct clientcom : iclientcom
 			putuint(q, (int)(d->o.x*DMF));			  // quantize coordinates to 1/4th of a cube, between 1 and 3 bytes
 			putuint(q, (int)(d->o.y*DMF));
 			putuint(q, (int)((d->o.z - d->height)*DMF));
-			putint(q, (int)d->yaw);
+			putuint(q, (int)d->yaw);
 			putint(q, (int)d->pitch);
 			putint(q, (int)d->roll);
-			putint(q, (int)d->aimyaw);
-			putint(q, (int)d->aimpitch);
 			putint(q, (int)(d->vel.x*DVELF));		  // quantize to itself, almost always 1 byte
 			putint(q, (int)(d->vel.y*DVELF));
 			putint(q, (int)(d->vel.z*DVELF));
@@ -442,9 +440,14 @@ struct clientcom : iclientcom
                 putint(q, (int)(d->falling.y*DVELF));
             }
             if(d->falling.z) putint(q, (int)(d->falling.z*DVELF));
-			// pack rest in almost always 1 byte: strafe:2, move:2, crouching: 1
-			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouching ? 1 : 0)<<4);
+			// pack rest in almost always 1 byte: strafe:2, move:2, crouching: 1, aimyaw/aimpitch: 1
+			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouching ? 1 : 0)<<4) | (d->aimyaw!=d->yaw || d->aimpitch!=d->pitch ? 1<<5 : 0);
 			putuint(q, flags);
+            if(d->aimyaw!=d->yaw || d->aimpitch!=d->pitch)
+            {
+                putuint(q, (int)d->aimyaw);
+                putint(q, (int)d->aimpitch);
+            }
 			enet_packet_resize(packet, q.length());
 			sendpackettoserv(packet, 0);
 		}
@@ -564,11 +567,9 @@ struct clientcom : iclientcom
 				o.x = getuint(p)/DMF;
 				o.y = getuint(p)/DMF;
 				o.z = getuint(p)/DMF;
-				yaw = (float)getint(p);
-				pitch = (float)getint(p);
+				aimyaw = yaw = (float)getuint(p);
+				aimpitch = pitch = (float)getint(p);
 				roll = (float)getint(p);
-				aimyaw = (float)getint(p);
-				aimpitch = (float)getint(p);
 				vel.x = getint(p)/DVELF;
 				vel.y = getint(p)/DVELF;
 				vel.z = getint(p)/DVELF;
@@ -582,6 +583,11 @@ struct clientcom : iclientcom
                 if(physstate&0x10) falling.z = getint(p)/DVELF;
                 int seqcolor = (physstate>>6)&1;
 				f = getuint(p);
+                if(f&0x20)
+                {
+                    aimyaw = (float)getuint(p);
+                    aimpitch = (float)getint(p);
+                }
 				gameent *d = cl.getclient(lcn);
                 if(!d || seqcolor!=(d->lifesequence&1) || d==cl.player1 || d->ai) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;

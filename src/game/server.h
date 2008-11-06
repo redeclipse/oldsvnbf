@@ -1107,11 +1107,13 @@ struct gameserver : igameserver
 						oldpos = cp->state.o;
 						cp->state.o = pos;
 					}
-					loopi(8) getint(p);
+                    getuint(p);
+                    loopi(5) getint(p);
 					int physstate = getuint(p);
 					if(physstate&0x20) loopi(2) getint(p);
 					if(physstate&0x10) getint(p);
-                    getuint(p);
+                    int flags = getuint(p);
+                    if(flags&0x20) { getuint(p); getint(p); }
 					if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
 					{
 						cp->position.setsizenodelete(0);
