@@ -648,9 +648,8 @@ struct clientcom : iclientcom
                     d->deltaaimpitch = oldaimpitch - d->newaimpitch;
 
                     d->smoothmillis = lastmillis;
-                    printf("pos %s: %d\n", d->name, lastmillis);
                 }
-                else { printf("resetting %s: %d\n", d->name, lastmillis); d->smoothmillis = 0; }
+                else d->smoothmillis = 0;
                 if(d->state==CS_LAGGED || d->state==CS_SPAWNING) d->state = CS_ALIVE;
 				break;
 			}
@@ -1168,7 +1167,10 @@ struct clientcom : iclientcom
 				{
 					int on = getint(p);
 					if(on) cl.player1->state = CS_SPECTATOR;
-					else stopdemo();
+					else 
+                    {
+                        loopv(cl.players) if(cl.players[i]) cl.clientdisconnected(i);
+                    }
 					demoplayback = on!=0;
 					break;
 				}
@@ -1424,10 +1426,8 @@ struct clientcom : iclientcom
 		if(remote) addmsg(SV_STOPDEMO, "r");
 		else
 		{
-			loopv(cl.players) if(cl.players[i] && !getinfo(i)) cl.clientdisconnected(i);
-
 			extern igameserver *sv;
-			((gameserver *)sv)->enddemoplayback();
+			((gameserver *)sv)->stopdemo();
 		}
 	}
 
