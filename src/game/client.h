@@ -648,8 +648,9 @@ struct clientcom : iclientcom
                     d->deltaaimpitch = oldaimpitch - d->newaimpitch;
 
                     d->smoothmillis = lastmillis;
+                    printf("pos %s: %d\n", d->name, lastmillis);
                 }
-                else d->smoothmillis = 0;
+                else { printf("resetting %s: %d\n", d->name, lastmillis); d->smoothmillis = 0; }
                 if(d->state==CS_LAGGED || d->state==CS_SPAWNING) d->state = CS_ALIVE;
 				break;
 			}
