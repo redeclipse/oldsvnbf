@@ -441,9 +441,9 @@ struct clientcom : iclientcom
             }
             if(d->falling.z) putint(q, (int)(d->falling.z*DVELF));
 			// pack rest in almost always 1 byte: strafe:2, move:2, crouching: 1, aimyaw/aimpitch: 1
-			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouching ? 1 : 0)<<4) | (d->aimyaw!=d->yaw || d->aimpitch!=d->pitch ? 1<<5 : 0);
+			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouching ? 1 : 0)<<4) | ((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch ? 0x20 : 0);
 			putuint(q, flags);
-            if((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch)
+            if(flags&0x20)
             {
                 putuint(q, (int)d->aimyaw);
                 putint(q, (int)d->aimpitch);
