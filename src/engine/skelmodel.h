@@ -361,7 +361,20 @@ struct skelmodel : animmodel
         {
             voffset = offset;
             eoffset = idxs.length();
-            if(!((skelmeshgroup *)group)->skel->numframes) minvert = 0xFFFF;
+            if(((skelmeshgroup *)group)->skel->numframes)
+            {
+                loopi(numverts)
+                {
+                    vert &v = verts[i];
+                    assignvert(vverts.add(), i, v, ((skelmeshgroup *)group)->blendcombos[v.blend]);
+                }
+                loopi(numtris) loopj(3) idxs.add(voffset + tris[i].vert[j]);
+                elen = idxs.length()-eoffset;
+                minvert = voffset;
+                maxvert = voffset + numverts-1;
+                return numverts;
+            }
+            minvert = 0xFFFF;
             loopi(numtris)
             {
                 tri &t = tris[i];
@@ -369,12 +382,9 @@ struct skelmodel : animmodel
                 {
                     int index = t.vert[j];
                     vert &v = verts[index];
-                    if(!((skelmeshgroup *)group)->skel->numframes) 
+                    loopvk(vverts)
                     {
-                        loopvk(vverts)
-                        {
-                            if(comparevert(vverts[k], index, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
-                        }
+                        if(comparevert(vverts[k], index, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
                     }
                     idxs.add(vverts.length());
                     assignvert(vverts.add(), index, v, ((skelmeshgroup *)group)->blendcombos[v.blend]);
@@ -382,18 +392,9 @@ struct skelmodel : animmodel
                 }
             }
             elen = idxs.length()-eoffset;
-            if(((skelmeshgroup *)group)->skel->numframes)
-            {
-                minvert = voffset;
-                maxvert = voffset + numverts-1;
-                return numverts;
-            }
-            else
-            {
-                minvert = min(minvert, ushort(voffset));
-                maxvert = max(minvert, ushort(vverts.length()-1));
-                return vverts.length()-voffset;
-            }
+            minvert = min(minvert, ushort(voffset));
+            maxvert = max(minvert, ushort(vverts.length()-1));
+            return vverts.length()-voffset;
         }
 
         int genvbo(vector<ushort> &idxs, int offset)
