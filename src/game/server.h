@@ -756,10 +756,15 @@ struct gameserver : igameserver
 		}
 	}
 
+    void stopdemo()
+    {
+        if(m_demo(gamemode)) enddemoplayback();
+        else enddemorecord();
+    }
+
 	void changemap(const char *s, int mode, int muts)
 	{
-		if(m_demo(gamemode)) enddemoplayback();
-		else enddemorecord();
+        stopdemo();
 
 		maprequest = false;
 		gamemode = mode >= 0 ? mode : sv_defaultmode;
