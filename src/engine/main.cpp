@@ -881,6 +881,13 @@ int main(int argc, char **argv)
 		updatefps(frameloops, curtime);
 		checkinput();
 		menuprocess();
+
+        if(frameloops)
+        {
+            RUNWORLD("on_update");
+            cl->updateworld();
+        }
+
 		checksleep(lastmillis);
 		serverslice();
 #ifdef IRC
@@ -888,8 +895,6 @@ int main(int argc, char **argv)
 #endif
 		if(frameloops)
 		{
-			RUNWORLD("on_update");
-			cl->updateworld();
 			cl->recomputecamera(screen->w, screen->h);
 			setviewcell(camera1->o);
 			updatetextures();

@@ -712,7 +712,7 @@ struct physics
 		return false;
 	}
 
-    IVARP(smoothmove, 0, 75, 1000);
+    IVARP(smoothmove, 0, 90, 1000);
     IVARP(smoothdist, 0, 64, 1024);
 
     void predictplayer(gameent *d, bool domove, int res = 0, bool local = false)

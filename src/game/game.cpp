@@ -432,13 +432,14 @@ struct gameclient : igameclient
             ai.update();
 
             if(player1->state == CS_ALIVE) ws.shoot(player1, worldpos);
+
+            otherplayers();
         }
 
 		gets2c();
 
 		if(connected())
 		{
-			otherplayers();
 			if(!allowmove(player1)) player1->stopmoving();
             checkoften(player1);
 
