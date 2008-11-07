@@ -6,12 +6,9 @@ Hud
 	flamer (indicator)
 	grenades (indicator)
 	powerup indicator
+	lighter smoke particle
 	spookyback
 
 Player
 	pitching causes torso to enter legs
 	tag_ironsight ?
-
-Quin **
-	explosive mutator
-	explosion fixes (screen shakes, etc)
