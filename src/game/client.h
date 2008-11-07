@@ -124,7 +124,7 @@ struct clientcom : iclientcom
 		cl.player1->state = CS_DEAD;
 		loopv(cl.players) if(cl.players[i]) cl.clientdisconnected(i);
 		enumerate(*idents, ident, id, {
-			if(id.flags&IDF_GAME && strncmp(id.name, "sv_", 3)) // reset vars
+			if(id.flags&IDF_CLIENT) // reset vars
 			{
 				switch(id.type)
 				{
@@ -1167,7 +1167,7 @@ struct clientcom : iclientcom
 				{
 					int on = getint(p);
 					if(on) cl.player1->state = CS_SPECTATOR;
-					else 
+					else
                     {
                         loopv(cl.players) if(cl.players[i]) cl.clientdisconnected(i);
                     }
@@ -1479,7 +1479,7 @@ struct clientcom : iclientcom
 	void parsecommand(gameent *d, char *cmd, char *arg)
 	{
 		ident *id = idents->access(cmd);
-		if(id && id->flags&IDF_GAME && strncmp(id->name, "sv_", 3))
+		if(id && id->flags&IDF_CLIENT)
 		{
 			string val;
 			val[0] = 0;

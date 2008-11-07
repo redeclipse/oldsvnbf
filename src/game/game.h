@@ -234,10 +234,10 @@ struct gametypes
 	{ G_M_INSTA,		G_M_ALL,		G_M_NONE,		"Instagib" },
 	{ G_M_DUEL,			G_M_DUKE,		G_M_NONE,		"Duel" },
 	{ G_M_PROG,			G_M_ALL,		G_M_NONE,		"Progressive" },
-	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,		"Multi-sided" },
-	{ G_M_DLMS,			G_M_DUKE,		G_M_DUEL,		"Last Man Standing" },
+	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,		"MultiSided" },
+	{ G_M_DLMS,			G_M_DUKE,		G_M_DUEL,		"LastManStanding" },
 	{ G_M_MAYHEM,		G_M_ALL,		G_M_NONE,		"Mayhem" },
-	{ G_M_NOITEMS,		G_M_ALL,		G_M_NONE,		"No Items" },
+	{ G_M_NOITEMS,		G_M_ALL,		G_M_NONE,		"NoItems" },
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)

@@ -475,7 +475,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 		else
 		{
 			ident *id = idents->access(c);
-            if(!id || (id->flags&IDF_GAME && numargs > 1))
+            if(!id || (id->flags&IDF_CLIENT && numargs > 1))
 			{
                 if(!isdigit(*c) && ((*c!='+' && *c!='-' && *c!='.') || !isdigit(c[1])))
                 {
@@ -491,7 +491,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 #endif
 						conoutf("\frunknown command: %s", c);
                 }
-                if(id && id->flags&IDF_GAME)
+                if(id && id->flags&IDF_CLIENT)
                 {
                 	string val; val[0] = 0;
                 	switch(id->type)
