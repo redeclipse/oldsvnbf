@@ -1406,14 +1406,14 @@ struct gameserver : igameserver
 						se.attr3 = getint(p);
 						se.attr4 = getint(p);
 						se.attr5 = getint(p);
+						getint(p); // ignore what the client thinks
 						se.spawned = false;
+						se.millis = gamemillis-(sv_itemspawntime*1000)+(sv_itemspawndelay*1000); // wait a bit then load 'em up
 
 						if(commit && (enttype[se.type].usetype == EU_ITEM || se.type == TRIGGER))
 						{
 							while(sents.length() < n) sents.add(sn);
 							sents.add(se);
-							sents[n].spawned = m_noitems(gamemode, mutators) ? false : true;
-							sents[n].millis = gamemillis;
 						}
 					}
 					if(commit)
@@ -1804,6 +1804,31 @@ struct gameserver : igameserver
 		else srvoutf(ci->clientnum, "\frunknown command: %s", cmd);
 	}
 
+	bool finditem(int i, bool onlyspawned = false)
+	{
+		if(sents[i].spawned) return true;
+		else
+		{
+			int spawntime = sv_itemspawntime*1000;
+			loopvk(clients)
+			{
+				clientinfo *ci = clients[k];
+				if(ci->state.dropped.projs.find(i) >= 0 && gamemillis-sents[i].millis <= spawntime)
+					return true;
+				else
+				{
+					loopj(GUN_MAX)
+					{
+						if(ci->state.entid[j] == i) return !onlyspawned;
+					}
+				}
+			}
+			if(gamemillis-sents[i].millis <= spawntime) return !onlyspawned;
+		}
+		return false;
+	}
+
+
 	int welcomepacket(ucharbuf &p, int n, ENetPacket *packet)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
@@ -1840,7 +1865,7 @@ struct gameserver : igameserver
 			putint(p, minremain);
 		}
 		putint(p, SV_ITEMLIST);
-		loopv(sents) if(sents[i].spawned)
+		loopv(sents)
 		{
 			putint(p, i);
 			putint(p, sents[i].type);
@@ -1849,6 +1874,7 @@ struct gameserver : igameserver
 			putint(p, sents[i].attr3);
 			putint(p, sents[i].attr4);
 			putint(p, sents[i].attr5);
+			putint(p, finditem(i, true) ? 1 : 0);
 		}
 		putint(p, -1);
 
@@ -1994,7 +2020,7 @@ struct gameserver : igameserver
 	void spawnstate(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
-		gs.spawnstate(m_insta(gamemode, mutators) ? sv_instaspawngun : sv_spawngun);
+		gs.spawnstate(m_insta(gamemode, mutators) ? sv_instaspawngun : sv_spawngun, sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1));
 		gs.lifesequence++;
 	}
 
@@ -2018,6 +2044,30 @@ struct gameserver : igameserver
         putint(p, gs.gunselect);
         loopi(GUN_MAX) putint(p, gs.ammo[i]);
     }
+
+	void dropitems(clientinfo *ci)
+	{
+		servstate &ts = ci->state;
+		if(sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1)) switch(sv_itemdropping)
+		{
+			case 2: // kamakze
+				if(ts.gunselect == GUN_GL && ts.ammo[ts.gunselect] > 0)
+				{
+					ts.grenades.add(-1);
+					sendf(-1, 1, "ri4", SV_DROP, ci->clientnum, ts.gunselect, -1);
+				}
+			case 1:
+				loopi(GUN_MAX) if(ts.hasgun(i, 1) && sents.inrange(ts.entid[i]))
+				{
+					ts.dropped.add(ts.entid[i]);
+					sendf(-1, 1, "ri4", SV_DROP, ci->clientnum, i, ts.entid[i]);
+					sents[ts.entid[i]].spawned = false;
+					sents[ts.entid[i]].millis = gamemillis;
+					ts.entid[i] = -1;
+				}
+			default: break;
+		}
+	}
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
 	{
@@ -2053,22 +2103,7 @@ struct gameserver : igameserver
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
                 actor->state.spree++;
 			}
-			if(ts.gunselect == GUN_GL && ts.ammo[ts.gunselect] > 0)
-			{
-				ts.grenades.add(-1);
-				sendf(-1, 1, "ri4", SV_DROP, target->clientnum, ts.gunselect, -1);
-			}
-			if(!m_noitems(gamemode, mutators) && sv_itemdropping)
-			{
-				loopi(GUN_MAX) if(ts.hasgun(i, 1) && sents.inrange(ts.entid[i]))
-				{
-					ts.dropped.add(ts.entid[i]);
-					sendf(-1, 1, "ri4", SV_DROP, target->clientnum, i, ts.entid[i]);
-					sents[ts.entid[i]].spawned = false;
-					sents[ts.entid[i]].millis = gamemillis;
-					ts.entid[i] = -1;
-				}
-			}
+			if(sv_itemdropping) dropitems(target);
 			sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, actor->state.spree, gun, flags, realdamage);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
@@ -2086,22 +2121,7 @@ struct gameserver : igameserver
 		if(gs.state != CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
-		if(gs.gunselect == GUN_GL && gs.ammo[gs.gunselect] > 0)
-		{
-			gs.grenades.add(-1);
-			sendf(-1, 1, "ri4", SV_DROP, ci->clientnum, gs.gunselect, -1);
-		}
-		if(!m_noitems(gamemode, mutators) && sv_itemdropping)
-		{
-			loopi(GUN_MAX) if(gs.hasgun(i, 1) && sents.inrange(gs.entid[i]))
-			{
-				gs.dropped.add(gs.entid[i]);
-				sendf(-1, 1, "ri4", SV_DROP, ci->clientnum, i, gs.entid[i]);
-				sents[gs.entid[i]].spawned = false;
-				sents[gs.entid[i]].millis = gamemillis;
-				gs.entid[i] = -1;
-			}
-		}
+		if(sv_itemdropping) dropitems(ci);
 		sendf(-1, 1, "ri8", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, 0, -1, e.flags, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
@@ -2237,7 +2257,7 @@ struct gameserver : igameserver
 	void processevent(clientinfo *ci, useevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || m_noitems(gamemode, mutators))
+		if(!gs.isalive(gamemillis) || sv_itemsallowed < (m_insta(gamemode, mutators) ? 2 : 1))
 		{
 			//srvoutf(ci->clientnum, "server error: the current game parameters do not allow you to pick up entity %d", e.ent);
 			return;
@@ -2276,7 +2296,7 @@ struct gameserver : igameserver
 		}
 		if(isgun(gun))
 		{
-			if(sv_itemdropping) dropped = gs.entid[gun];
+			if(sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1) && sv_itemdropping) dropped = gs.entid[gun];
 			gs.ammo[gun] = gs.entid[gun] = -1;
 			gs.gunselect = gun;
 		}
@@ -2342,44 +2362,19 @@ struct gameserver : igameserver
 		else if(minremain)
 		{
 			processevents();
-			if(!m_noitems(gamemode, mutators))
+			if(sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1))
             {
-                loopv(sents) if(!sents[i].spawned && enttype[sents[i].type].usetype == EU_ITEM)
-			    {
-					bool found = false;
-					int spawntime = sv_itemspawntime*1000;
-
-			    	if((!sv_itemdropping || (sents[i].type == WEAPON && guntype[sents[i].attr1].rdelay <= 0)) && gamemillis-sents[i].millis <= spawntime)
-						found = true;
-			    	else
-			    	{
-						loopvk(clients)
-						{
-							clientinfo *ci = clients[k];
-							if(ci->state.dropped.projs.find(i) >= 0 && gamemillis-sents[i].millis <= spawntime)
-								found = true;
-							else
-							{
-								loopj(GUN_MAX)
-								{
-									if(ci->state.entid[j] == i)
-										found = true;
-								}
-							}
-						}
-			    	}
-			    	if(!found)
-			    	{
-						loopvk(clients)
-						{
-							clientinfo *ci = clients[k];
-							ci->state.dropped.remove(i);
-						}
-						sents[i].spawned = true;
-						sents[i].millis = gamemillis;
-						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
-			    	}
-                }
+                loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i))
+				{
+					loopvk(clients)
+					{
+						clientinfo *ci = clients[k];
+						ci->state.dropped.remove(i);
+					}
+					sents[i].spawned = true;
+					sents[i].millis = gamemillis;
+					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+				}
 			}
 			if(smode) smode->update();
 			mutate(smuts, mut->update());

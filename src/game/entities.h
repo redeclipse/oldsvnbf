@@ -429,7 +429,8 @@ struct entities : icliententities
 				putint(p, e.attr3);
 				putint(p, e.attr4);
 				putint(p, e.attr5);
-				setspawn(i, m_noitems(cl.gamemode, cl.mutators) ? false : true);
+				putint(p, 0);
+				setspawn(i, false);
 			}
 		}
 	}
@@ -1396,16 +1397,13 @@ struct entities : icliententities
 
     void preload()
     {
-        if(!m_noitems(cl.gamemode, cl.mutators))
+		loopv(ents)
 		{
-			loopv(ents)
-        	{
-        		extentity &e = *ents[i];
-				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-            	if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
-            	if(e.type == WEAPON && isgun(e.attr1)) cl.ws.preload(e.attr1);
-			}
-        }
+			extentity &e = *ents[i];
+			const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+			if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
+			if(e.type == WEAPON && isgun(e.attr1)) cl.ws.preload(e.attr1);
+		}
     }
 
 	ITVAR(portaltex, "textures/portal", 0);

@@ -26,17 +26,12 @@ struct duelservmode : servmode
 
 			if(msg)
 			{
-				if(m_dlms(sv.gamemode, sv.mutators))
-					sv.srvoutf(ci->clientnum, "waiting for next round..");
-				else
-				{
-					const char *r = NULL;
-					if(!(n%3) && n != 13) r = "rd";
-					else if(!(n%2) && n != 12) r = "nd";
-					else if(!(n%1) && n != 11) r = "st";
-					else r = "th";
-					sv.srvoutf(ci->clientnum, "you are %d%s in the duel queue", n, r ? r : "");
-				}
+				const char *r = NULL;
+				if(!(n%3) && n != 13) r = "rd";
+				else if(!(n%2) && n != 12) r = "nd";
+				else if(!(n%1) && n != 11) r = "st";
+				else r = "th";
+				sv.srvoutf(ci->clientnum, "you are %d%s in the duel queue", n, r ? r : "");
 			}
 		}
 	}
@@ -117,7 +112,7 @@ struct duelservmode : servmode
 
 			if(alive.length() >= 2)
 			{
-				loopv(alive) if(m_dlms(sv.gamemode, sv.mutators) || i <= 1)
+				loopv(alive) if(i <= 1)
 				{
 					alive[i]->state.state = CS_ALIVE;
 					alive[i]->state.respawn(sv.gamemillis);
@@ -130,10 +125,13 @@ struct duelservmode : servmode
 				s_sprintfd(fight)("round %d .. fight!", duelround);
 				sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
 
-				loopvj(sv.sents) if(!sv.sents[j].spawned && !m_noitems(sv.gamemode, sv.mutators))
+				if(sv_itemsallowed >= (m_insta(sv.gamemode, sv.mutators) ? 2 : 1))
 				{
-					sv.sents[j].spawned = true;
-					sendf(-1, 1, "ri2", SV_ITEMSPAWN, j);
+					loopvj(sv.sents) if(!sv.sents[j].spawned)
+					{
+						sv.sents[j].spawned = true;
+						sendf(-1, 1, "ri2", SV_ITEMSPAWN, j);
+					}
 				}
 				loopvj(sv.clients)
 				{

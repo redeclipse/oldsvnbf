@@ -36,6 +36,7 @@ struct projectiles
 						proj.weight = guntype[proj.attr1].weight;
 						proj.geomcollide = proj.playercollide = 2; // explode
 						proj.radial = true;
+						proj.extinguish = true;
 						vec v(rnd(11)-5, rnd(11)-5, rnd(11)-5);
 						if(v.magnitude()>5) v.div(5);
 						v.z /= 6.f;
@@ -143,7 +144,7 @@ struct projectiles
 			proj.height += proj.projtype == PRJ_ENT ? 4.f : 1.f;
 		}
 
-		vec dir(vec(vec(proj.to).sub(proj.o)).normalize());
+		vec dir(vec(vec(proj.to).sub(proj.o)).normalize()), orig = proj.o;
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
 		vec rel = vec(proj.vel).add(dir);
 		if(proj.relativity) rel.add(vec(proj.owner->vel).mul(proj.relativity));
@@ -151,45 +152,49 @@ struct projectiles
 		proj.spawntime = lastmillis;
 		proj.to = vec(proj.o).add(proj.vel);
 
-		if(proj.playercollide)
+		if(proj.owner)
 		{
 			if(proj.projtype == PRJ_SHOT && proj.radial)
 				proj.height = proj.radius = guntype[proj.attr1].explode;
 
 			for(hitplayer = NULL; !plcollide(&proj) && hitplayer == proj.owner; hitplayer = NULL)
-				proj.o.add(vec(dir).mul(0.01f)); // get out of the player
+				proj.o.add(vec(proj.vel).mul(0.01f)); // get out of the player
 
 			if(proj.projtype == PRJ_SHOT && proj.radial)
 				proj.height = proj.radius = guntype[proj.attr1].offset;
 		}
 
-		vec orig = proj.o;
 		bool found = false;
 		loopi(100)
 		{
-			if(!collide(&proj) || inside || (hitplayer && proj.playercollide == 1))
+			if(!collide(&proj) || inside || hitplayer)
 			{
-				if((hitplayer && proj.playercollide == 2)  || (!hitplayer && proj.geomcollide == 2))
-					break; // explode
-				vec pos;
-				if(hitplayer) pos = vec(vec(hitplayer->o).sub(proj.o)).normalize();
-				else pos = wall;
-
+				if(hitplayer)
+				{
+					if(proj.playercollide == 2) break;
+					dir = vec(vec(hitplayer->o).sub(proj.o)).normalize();
+				}
+				else
+				{
+					if(proj.geomcollide == 2) break;
+					dir = wall;
+				}
 				float amt = proj.elasticity > 0.f ? proj.elasticity : 1.f;
-				proj.vel.apply(pos, amt);
+				proj.vel.apply(dir, amt);
 				if(hitplayer) proj.vel.apply(hitplayer->vel, amt);
-				proj.o = vec(orig).add(vec(proj.vel).mul(0.01f));
+				proj.o.add(vec(proj.vel).mul(0.01f));
 			}
-			found = true;
-			break;
+			else
+			{
+				found = true;
+				break;
+			}
 		}
 		if(!found)
 		{
 			proj.o = orig;
-			if(proj.playercollide == 2 || proj.geomcollide == 2 || !cl.ph.entinmap(&proj, false))
-			{
-				proj.o = orig;
-			}
+			proj.lifemillis = proj.lifetime = 1;
+			proj.state = CS_DEAD; // aww, poor proj
 		}
         proj.resetinterp();
 	}
@@ -219,18 +224,21 @@ struct projectiles
 			{
 				proj.lifesize = clamp(proj.lifespan*2.f, 0.1f, 1.f);
 				int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8);
-				part_create(PART_FIREBALL_SOFT, 1, proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.3f);
-				int deviation = int(guntype[proj.attr1].size*0.5f);
+				if(lastmillis-proj.lasteffect > 100)
+				{
+					part_create(PART_FIREBALL_SOFT, int(300*proj.lifesize)+100, proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.5f);
+					proj.lasteffect = lastmillis;
+				}
+				else part_create(PART_FIREBALL_SOFT, 1, proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.5f);
 				col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(64*max(1.0f-proj.lifespan,0.2f))+1)<<8);
 				loopi(rnd(3)+1)
 				{
-					vec to = vec(proj.o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation).mul(proj.lifespan));
-					regular_part_create(PART_FIREBALL_SOFT, int((1.1f-proj.lifesize)*400.f)+100, to, col, guntype[proj.attr1].size*proj.lifesize*0.6f);
-				}
-				if(lastmillis-proj.lasteffect > 500)
-				{
-					part_create(PART_SMOKE_RISE_SLOW_SOFT, 500, vec(proj.o).sub(vec(0, 0, 1)), 0x888888, guntype[proj.attr1].size*proj.lifesize); // smoke
-					proj.lasteffect = lastmillis;
+					vec to = vec(proj.o).add(vec(
+							rnd(guntype[proj.attr1].size)-guntype[proj.attr1].size,
+							rnd(guntype[proj.attr1].size)-guntype[proj.attr1].size,
+							rnd(guntype[proj.attr1].size)-guntype[proj.attr1].size
+						).mul(proj.lifesize*0.5f));
+					part_create(PART_FIREBALL_SOFT, 1, to, col, guntype[proj.attr1].size*proj.lifesize*0.5f);
 				}
 			}
 			else if(proj.attr1 == GUN_GL)
@@ -260,21 +268,21 @@ struct projectiles
 			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // rather, this gets smaller as it gets older
 			int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(78*max(1.0f-proj.lifespan,0.2f))+1)<<8);
 			part_create(PART_FIREBALL_SOFT, 1, proj.o, col, proj.radius*proj.lifesize);
-			int steps = int(proj.vel.magnitude()*0.5f*proj.lifesize);
+			int steps = int(proj.vel.magnitude()*0.25f*proj.lifesize);
 			if(steps)
 			{
-				vec dir = vec(proj.vel).normalize().neg(), pos = proj.o;
+				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.45f), pos = proj.o;
 				loopi(steps)
 				{
 					float res = float(steps-i)/float(steps);
 					col = ((int(144*max(res,0.3f))<<16)+1)|((int(86*max(res,0.2f))+1)<<8);
+					part_create(PART_PLASMA, 1, pos, col, proj.radius*0.9f*proj.lifesize*res);
 					pos.add(dir);
-					part_create(PART_PLASMA, 1, pos, col, proj.radius*0.65f*proj.lifesize*res);
 				}
 			}
 			if(lastmillis-proj.lasteffect > 250)
 			{
-				part_create(PART_SMOKE_RISE_SLOW, int(200*proj.lifesize)+100, vec(proj.o).sub(vec(0, 0, 1)), 0x222222, proj.radius*2.f*proj.lifesize); // smoke
+				part_create(PART_SMOKE_RISE_SLOW, 250, vec(proj.o).sub(vec(0, 0, 1)), 0x222222, proj.radius*2.f*proj.lifesize); // smoke
 				proj.lasteffect = lastmillis;
 			}
 		}
@@ -429,7 +437,7 @@ struct projectiles
 	{
 		if(n >= 0)
 		{
-			if(cl.et.ents.inrange(n) && !m_noitems(cl.gamemode, cl.mutators))
+			if(cl.et.ents.inrange(n))
 			{
 				gameentity &e = (gameentity &)*cl.et.ents[n];
 				create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_ENT, itemspawntime*1000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);

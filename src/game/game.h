@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			101
+#define GAMEVERSION			102
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -205,25 +205,20 @@ enum
 	G_M_TEAM	= 1<<0,
 	G_M_INSTA	= 1<<1,
 	G_M_DUEL	= 1<<2,
-	G_M_PROG	= 1<<3,
-	G_M_MULTI	= 1<<4,
-	G_M_DLMS	= 1<<5,
-	G_M_MAYHEM	= 1<<6,
-	G_M_NOITEMS	= 1<<7,
-	G_M_ALL		= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_PROG|G_M_MULTI|G_M_DLMS|G_M_MAYHEM|G_M_NOITEMS,
-	G_M_FIGHT	= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI|G_M_DLMS|G_M_NOITEMS,
-	G_M_DUKE	= G_M_INSTA|G_M_DUEL|G_M_DLMS|G_M_NOITEMS,
-	G_M_STF		= G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM|G_M_NOITEMS,
-	G_M_CTF		= G_M_TEAM|G_M_INSTA|G_M_PROG|G_M_MULTI|G_M_MAYHEM|G_M_NOITEMS,
+	G_M_MULTI	= 1<<3,
+	G_M_ALL		= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI,
+	G_M_FIGHT	= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI,
+	G_M_STF		= G_M_TEAM|G_M_INSTA|G_M_MULTI,
+	G_M_CTF		= G_M_TEAM|G_M_INSTA|G_M_MULTI,
 };
-#define G_M_NUM 8
+#define G_M_NUM 4
 
 struct gametypes
 {
 	int	type,			mutators,		implied;		const char *name;
 } gametype[] = {
 	{ G_DEMO,			G_M_NONE,		G_M_NONE,		"Demo" },
-	{ G_LOBBY,			G_M_NONE,		G_M_NOITEMS,	"Lobby" },
+	{ G_LOBBY,			G_M_NONE,		G_M_NONE,		"Lobby" },
 	{ G_EDITMODE,		G_M_NONE,		G_M_NONE,		"Editing" },
 	{ G_MISSION,		G_M_NONE,		G_M_NONE,		"Mission" },
 	{ G_DEATHMATCH,		G_M_FIGHT,		G_M_NONE,		"Deathmatch" },
@@ -232,12 +227,8 @@ struct gametypes
 }, mutstype[] = {
 	{ G_M_TEAM,			G_M_ALL,		G_M_NONE,		"Team" },
 	{ G_M_INSTA,		G_M_ALL,		G_M_NONE,		"Instagib" },
-	{ G_M_DUEL,			G_M_DUKE,		G_M_NONE,		"Duel" },
-	{ G_M_PROG,			G_M_ALL,		G_M_NONE,		"Progressive" },
+	{ G_M_DUEL,			G_M_INSTA,		G_M_NONE,		"Duel" },
 	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,		"MultiSided" },
-	{ G_M_DLMS,			G_M_DUKE,		G_M_DUEL,		"LastManStanding" },
-	{ G_M_MAYHEM,		G_M_ALL,		G_M_NONE,		"Mayhem" },
-	{ G_M_NOITEMS,		G_M_ALL,		G_M_NONE,		"NoItems" },
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)
@@ -257,11 +248,7 @@ struct gametypes
 #define m_team(a,b)			((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))
 #define m_insta(a,b)		((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
 #define m_duel(a,b)			((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
-#define m_prog(a,b)			((b & G_M_PROG) || (gametype[a].implied & G_M_PROG))
 #define m_multi(a,b)		((b & G_M_MULTI) || (gametype[a].implied & G_M_MULTI))
-#define m_dlms(a,b)			((b & G_M_DLMS) || (gametype[a].implied & G_M_DLMS))
-#define m_mayhem(a,b)		((b & G_M_MAYHEM) || (gametype[a].implied & G_M_MAYHEM))
-#define m_noitems(a,b)		((b & G_M_NOITEMS) || (gametype[a].implied & G_M_NOITEMS))
 
 // network messages codes, c2s, c2c, s2c
 enum
@@ -406,10 +393,13 @@ SVARG(defaultmap, "overseer");
 VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
-VARG(teamdamage, 0, 1, 1);
-VARG(itemdropping, 0, 1, 1);
-VARG(itemspawntime, 1, 30, 3600);
+VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
+VARG(itemdropping, 0, 2, 2); // 0 = never, 1 = yes but not kamakaze, 2 = yes with kamakaze
+VARG(itemspawntime, 1, 30, 3600); // secs when items respawn
+VARG(itemspawndelay, 0, 10, 3600); // secs after map start items first spawn
 VARG(timelimit, 0, 15, 60);
+
+VARG(teamdamage, 0, 1, 1);
 VARG(ctflimit, 0, 20, 100);
 VARG(stflimit, 0, 0, 1);
 
@@ -603,7 +593,7 @@ struct gamestate
 		gunreset(true);
 	}
 
-	void spawnstate(int spawngun)
+	void spawnstate(int spawngun, bool reloadables)
 	{
 		health = MAXHEALTH;
 		lastgun = gunselect = spawngun;
@@ -611,7 +601,7 @@ struct gamestate
 		{
 			gunstate[i] = GUNSTATE_IDLE;
 			gunwait[i] = gunlast[i] = 0;
-			ammo[i] = (i == spawngun || !guntype[i].carry) ? guntype[i].add : -1;
+			ammo[i] = (i == spawngun || (reloadables && guntype[i].rdelay <= 0)) ? guntype[i].add : -1;
 			entid[i] = -1;
 		}
 	}

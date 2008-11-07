@@ -792,9 +792,9 @@ struct clientcom : iclientcom
 					int n;
 					while((n = getint(p))!=-1)
 					{
-						if(mapchanged) cl.et.setspawn(n, true);
 						getint(p); // type
 						loopi(5) getint(p); // attr
+						cl.et.setspawn(n, getint(p));
 					}
 					break;
 				}
@@ -867,8 +867,7 @@ struct clientcom : iclientcom
 					f->state = CS_ALIVE;
 					if(f == cl.player1 || f->ai)
 					{
-						int team = m_mayhem(cl.gamemode, cl.mutators) ? (f->team%numteams(cl.gamemode, cl.mutators))+1 : f->team;
-						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(team) : -1, m_team(cl.gamemode, cl.mutators) ? team : -1);
+						cl.et.findplayerspawn(f, m_stf(cl.gamemode) ? cl.stf.pickspawn(f->team) : -1, m_team(cl.gamemode, cl.mutators) ? f->team : -1);
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
 						playsound(S_RESPAWN, f->o, f);
 						regularshape(PART_PLASMA, int(f->height), teamtype[f->team].colour, 53, 50, 200, f->o, 3.f);

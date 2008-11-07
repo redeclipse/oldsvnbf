@@ -1546,19 +1546,34 @@ struct gameclient : igameclient
 		return false;
 	}
 
-	void heightoffset(physent *d, bool local)
+	void heightoffset(gameent *d, bool local)
 	{
 		d->o.z -= d->height;
-		if(ph.iscrouching(d))
+		if(d->state == CS_ALIVE || d->state == CS_EDITING || d->state == CS_SPECTATOR)
 		{
-			float crouchoff = 1.f-CROUCHHEIGHT;
-			if(d->type == ENT_PLAYER)
+			if(ph.iscrouching(d))
 			{
-				float amt = clamp(float(lastmillis-d->crouchtime)/200.f, 0.f, 1.f);
-				if(!d->crouching) amt = 1.f-amt;
-				crouchoff *= amt;
+				float crouchoff = 1.f-CROUCHHEIGHT;
+				if(d->type == ENT_PLAYER)
+				{
+					float amt = clamp(float(lastmillis-d->crouchtime)/200.f, 0.f, 1.f);
+					if(!d->crouching) amt = 1.f-amt;
+					crouchoff *= amt;
+				}
+				d->height = PLAYERHEIGHT-(PLAYERHEIGHT*crouchoff);
 			}
-			d->height = PLAYERHEIGHT-(PLAYERHEIGHT*crouchoff);
+			else d->height = PLAYERHEIGHT;
+		}
+		else if(d->state == CS_DEAD)
+		{
+			if(d->obliterated) d->height = PLAYERHEIGHT;
+			else
+			{
+				int t = lastmillis-d->lastpain;
+				if(t < 0) d->height = PLAYERHEIGHT;
+				float amt = t > 1000 ? 0.9f : clamp(float(lastmillis-d->crouchtime)/1000.f, 0.f, 0.9f);
+				d->height = PLAYERHEIGHT-(PLAYERHEIGHT*amt);
+			}
 		}
 		else d->height = PLAYERHEIGHT;
 		d->o.z += d->height;
@@ -2031,12 +2046,6 @@ struct gameclient : igameclient
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showgun = isgun(gun);
 
-		if(shownamesabovehead() && third && d != player1 && d->state != CS_SPECTATOR)
-		{
-			s_sprintfd(s)("@%s", colorname(d));
-			part_text(d->abovehead(), s);
-		}
-
 		if(d->state == CS_DEAD)
 		{
 			if(d->obliterated) return; // not shown at all
@@ -2044,8 +2053,8 @@ struct gameclient : igameclient
 			animflags = ANIM_DYING;
 			lastaction = d->lastpain;
 			int t = lastmillis-lastaction;
-			if(t < 0 || t > 20000) return;
-			if(t > 1000) { animflags = ANIM_DEAD|ANIM_LOOP; }
+			if(t < 0) return;
+			if(t > 1000) animflags = ANIM_DEAD|ANIM_LOOP;
         }
 		else if(d->state == CS_EDITING || d->state == CS_SPECTATOR)
 		{
@@ -2060,8 +2069,15 @@ struct gameclient : igameclient
 			lastaction = lastmillis;
 			animflags = ANIM_LOSE|ANIM_LOOP;
 			animdelay = 1000;
-			if(m_team(gamemode, mutators)) loopv(bestteams) { if(bestteams[i] == d->team) { animflags = ANIM_WIN|ANIM_LOOP; break; } }
-			else if(bestplayers.find(d)>=0) animflags = ANIM_WIN|ANIM_LOOP;
+			if(m_team(gamemode, mutators))
+			{
+				loopv(bestteams) if(bestteams[i] == d->team)
+				{
+					animflags = ANIM_WIN|ANIM_LOOP;
+					break;
+				}
+			}
+			else if(bestplayers.find(d) >= 0) animflags = ANIM_WIN|ANIM_LOOP;
 		}
 		else if(d->lasttaunt && lastmillis-d->lasttaunt <= 1000)
 		{
@@ -2127,6 +2143,13 @@ struct gameclient : igameclient
 				}
 			}
 		}
+
+		if(shownamesabovehead() && third && d != player1 && d->state != CS_SPECTATOR)
+		{
+			s_sprintfd(s)("@%s", colorname(d));
+			part_text(d->abovehead(), s);
+		}
+
 
 		if(showgun)
 		{ // we could probably animate the vwep too now..
