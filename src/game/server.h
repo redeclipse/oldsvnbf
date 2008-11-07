@@ -382,7 +382,7 @@ struct gameserver : igameserver
 		if(!init)
 		{
 			enumerate(*idents, ident, id, {
-				if(id.flags&IDF_GAME && !strncmp(id.name, "sv_", 3)) // reset vars
+				if(id.flags&IDF_SERVER) // reset vars
 				{
 					switch(id.type)
 					{
@@ -795,7 +795,7 @@ struct gameserver : igameserver
             ai.clearbots();
             loopv(clients) if(!clients[i]->local) disconnect_client(clients[i]->clientnum, DISC_PRIVATE);
 		}
-	
+
 		// server modes
 		if(m_stf(gamemode)) smode = &stfmode;
         else if(m_ctf(gamemode)) smode = &ctfmode;
@@ -1726,7 +1726,7 @@ struct gameserver : igameserver
 	{
 		s_sprintfd(cmdname)("sv_%s", cmd);
 		ident *id = idents->access(cmdname);
-		if(id && id->flags&IDF_GAME)
+		if(id && id->flags&IDF_SERVER)
 		{
 			if(haspriv(ci, PRIV_MASTER, true))
 			{
@@ -1853,7 +1853,7 @@ struct gameserver : igameserver
 		putint(p, -1);
 
 		enumerate(*idents, ident, id, {
-			if(id.flags&IDF_GAME && !strncmp(id.name, "sv_", 3)) // reset vars
+			if(id.flags&IDF_SERVER) // reset vars
 			{
 				string val; val[0] = 0;
 				s_sprintfd(cmd)("%s", &id.name[3]);
