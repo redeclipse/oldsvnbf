@@ -1385,13 +1385,14 @@ struct entities : icliententities
 	{
 		if(cl.player1->state == CS_EDITING && showlighting())
 		{
-			loopv(ents)
-			{
-				if((entgroup.find(i) >= 0 || enthover == i) && ents[i]->type == LIGHT && ents[i]->attr1 > 0)
-				{
-					renderfocus(i, renderentlight(e));
-				}
-			}
+            loopv(entgroup)
+            {
+                int n = entgroup[i];
+                if(ents.inrange(n) && ents[n]->type == LIGHT && ents[n]->attr1 > 0)
+                    renderfocus(n, renderentlight(e));
+            }
+            if(ents.inrange(enthover) && ents[enthover]->type == LIGHT && ents[enthover]->attr1 > 0)
+                renderfocus(enthover, renderentlight(e)); 
 		}
 	}
 
