@@ -2028,8 +2028,7 @@ struct gameserver : igameserver
 	{
 		servstate &gs = ci->state;
 		spawnstate(ci);
-		int own = ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum;
-		sendf(own, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, GUN_MAX, &gs.ammo[0]);
+		sendf(ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, GUN_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
 	}
 
@@ -2193,7 +2192,7 @@ struct gameserver : igameserver
 		sendf(-1, 1, "ri4i6x", SV_SHOTFX, ci->clientnum, e.gun, e.power,
 				int(e.from[0]*DMF), int(e.from[1]*DMF), int(e.from[2]*DMF),
 				int(e.to[0]*DMF), int(e.to[1]*DMF), int(e.to[2]*DMF),
-				ci->clientnum);
+				ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum);
 		gs.shotdamage += guntype[e.gun].damage*(e.gun==GUN_SG ? SGRAYS : 1);
 		switch(e.gun)
 		{
