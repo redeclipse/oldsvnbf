@@ -1765,7 +1765,6 @@ void render_texture_panel(int w, int h)
 {
 	if((texpaneltimer -= curtime)>0 && editmode)
 	{
-		glDepthMask(GL_FALSE);
 		glLoadIdentity();
 		int width = w*1800/h;
 		glOrtho(0, width, 1800, 0, -1, 1);
@@ -1826,6 +1825,7 @@ void render_texture_panel(int w, int h)
 			}
 			y += s+gap;
 		}
-		glDepthMask(GL_TRUE);
+
+        defaultshader->set();
 	}
 }
