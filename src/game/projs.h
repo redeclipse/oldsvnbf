@@ -62,7 +62,6 @@ struct projectiles
 						proj.radial = true;
 						proj.extinguish = true;
 						proj.geomcollide = proj.playercollide = 1; // bounce
-						proj.vel.add(vec(rnd(20)-11, rnd(20)-11, rnd(20)-11));
 						break;
 					}
 					default: proj.state = CS_DEAD; return; break;
@@ -201,24 +200,14 @@ struct projectiles
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
-				proj.lifesize = clamp(proj.lifespan*2.f, 0.1f, 1.f);
-				int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8);
+				proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+				int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(86*max(1.0f-proj.lifespan,0.15f))+1)<<8);
 				if(lastmillis-proj.lasteffect > 100)
 				{
-					part_create(PART_FIREBALL_SOFT, int(300*proj.lifesize)+100, proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.5f);
+					part_create(PART_FIREBALL_SOFT, 100, proj.o, col, guntype[proj.attr1].size*proj.lifesize);
 					proj.lasteffect = lastmillis;
 				}
-				else part_create(PART_FIREBALL_SOFT, 1, proj.o, col, guntype[proj.attr1].size*proj.lifesize*0.5f);
-				col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(64*max(1.0f-proj.lifespan,0.2f))+1)<<8);
-				loopi(rnd(3)+1)
-				{
-					vec to = vec(proj.o).add(vec(
-							rnd(guntype[proj.attr1].size)-guntype[proj.attr1].size,
-							rnd(guntype[proj.attr1].size)-guntype[proj.attr1].size,
-							rnd(guntype[proj.attr1].size)-guntype[proj.attr1].size
-						).mul(proj.lifesize*0.5f));
-					part_create(PART_FIREBALL_SOFT, 1, to, col, guntype[proj.attr1].size*proj.lifesize*0.5f);
-				}
+				else part_create(PART_FIREBALL_SOFT, 1, proj.o, col, guntype[proj.attr1].size*proj.lifesize);
 			}
 			else if(proj.attr1 == GUN_GL)
 			{

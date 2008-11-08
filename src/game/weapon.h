@@ -168,14 +168,14 @@ struct weaponstate
 		if(gun == GUN_FLAMER || gun == GUN_GL)
 		{
 			part_create(gun == GUN_FLAMER ? PART_FIREBALL_SOFT : PART_PLASMA_SOFT, gun == GUN_FLAMER ? 500 : 750, o, 0x663603, guntype[gun].explode*0.4f); // corona
-			int deviation = int(guntype[gun].explode*0.5f);
-			loopi(rnd(5)+1)
+			int deviation = int(guntype[gun].explode*0.35f);
+			loopi(rnd(3)+1)
 			{
 				vec to = vec(o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
-				part_splash(PART_FIREBALL_SOFT, gun == GUN_FLAMER ? 2 : 4, gun == GUN_FLAMER ? 500 : 750, to, 0x441404, guntype[gun].explode*0.9f); // fireball
-				part_splash(PART_SMOKE_RISE_SLOW_SOFT, gun == GUN_FLAMER ? 2 : 4, gun == GUN_FLAMER ? 1000 : 1500, vec(to).sub(vec(0, 0, 2)), gun == GUN_FLAMER ? 0x444444 : 0x111111, guntype[gun].explode); // smoke
+				part_splash(PART_FIREBALL_SOFT, gun == GUN_FLAMER ? 1 : 2, gun == GUN_FLAMER ? 250 : 750, to, 0x441404, guntype[gun].explode*0.9f); // fireball
+				part_splash(PART_SMOKE_RISE_SLOW_SOFT, gun == GUN_FLAMER ? 1 : 2, gun == GUN_FLAMER ? 500 : 1500, vec(to).sub(vec(0, 0, 2)), gun == GUN_FLAMER ? 0x555555 : 0x111111, guntype[gun].explode); // smoke
 			}
-			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), gun == GUN_FLAMER ? 1000 : 1500, 10);
+			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), gun == GUN_FLAMER ? 250 : 1500, 10);
 		}
 		if(gun == GUN_GL)
 		{
@@ -281,15 +281,15 @@ struct weaponstate
 				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
 				if(gun == GUN_PLASMA)
 				{
-					part_create(PART_SMOKE_RISE_SLOW, 750, from, 0x88AABB, 0.8f); // smoke
+					part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x88AABB, 0.8f); // smoke
 					adddynlight(from, 50, vec(0.1f, 0.4f, 0.6f), 50, 0, DL_FLASH);
 					part_create(PART_PLASMA, 50, from, 0x226688, 1.0f, d);
 				}
 				else if(gun == GUN_FLAMER)
 				{
-					part_create(PART_SMOKE_RISE_SLOW, 1000, from, 0x444444, 2.f); // smoke
+					part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x555555, 2.f); // smoke
 					adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
-					part_create(PART_FIREBALL, 50, from, 0xFF2200, 1.5f, d);
+					part_create(PART_FIREBALL, 50, from, 0xFF2200, 2.f, d);
 				}
 				break;
 			}

@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			102
+#define GAMEVERSION			103
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -150,8 +150,8 @@ struct guntypes
 	},
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_BURN,		S_BURNING,	-1,			S_ITEMSPAWN,
-		50,		50,		250, 	2000,	5,		100,	0,		3000,	-1,		 1,
-		28,		32,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
+		50,		50,		100, 	2000,	5,		100,	0,		3000,	-1,		 1,
+		32,		32,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
 				"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep"
 	},
 	{
