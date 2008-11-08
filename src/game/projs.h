@@ -37,11 +37,6 @@ struct projectiles
 						proj.geomcollide = proj.playercollide = 2; // explode
 						proj.radial = true;
 						proj.extinguish = true;
-                        //causes problems when plasma originates from inside walls
-						//vec v(rnd(11)-5, rnd(11)-5, rnd(11)-5);
-						//if(v.magnitude()>5) v.div(5);
-						//v.z /= 6.f;
-						//proj.to.add(v);
 						break;
 					}
 					case GUN_GL:
@@ -67,10 +62,7 @@ struct projectiles
 						proj.radial = true;
 						proj.extinguish = true;
 						proj.geomcollide = proj.playercollide = 1; // bounce
-						vec v(rnd(41)-20, rnd(41)-20, rnd(41)-20);
-						if(v.magnitude()>20) v.div(20);
-						v.z /= 4.f;
-						proj.to.add(v);
+						proj.vel.add(vec(rnd(20)-11, rnd(20)-11, rnd(20)-11));
 						break;
 					}
 					case GUN_SG:
