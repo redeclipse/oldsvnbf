@@ -59,13 +59,13 @@ struct enttypes
 	int	type, 		links,	radius,	usetype; bool noisy;	const char *name;
 } enttype[] = {
 	{ NOTUSED,		0,		0,		EU_NONE,	true,		"none" },
-	{ LIGHT,		59,		0,		EU_NONE,	true,		"light" },
-	{ MAPMODEL,		58,		0,		EU_NONE,	true,		"mapmodel" },
+	{ LIGHT,		59,		0,		EU_NONE,	false,		"light" },
+	{ MAPMODEL,		58,		0,		EU_NONE,	false,		"mapmodel" },
 	{ PLAYERSTART,	59,		0,		EU_NONE,	false,		"playerstart" },
-	{ ENVMAP,		0,		0,		EU_NONE,	true,		"envmap" },
-	{ PARTICLES,	59,		0,		EU_NONE,	true,		"particles" },
-	{ MAPSOUND,		58,		0,		EU_NONE,	true,		"sound" },
-	{ SPOTLIGHT,	59,		0,		EU_NONE,	true,		"spotlight" },
+	{ ENVMAP,		0,		0,		EU_NONE,	false,		"envmap" },
+	{ PARTICLES,	59,		0,		EU_NONE,	false,		"particles" },
+	{ MAPSOUND,		58,		0,		EU_NONE,	false,		"sound" },
+	{ SPOTLIGHT,	59,		0,		EU_NONE,	false,		"spotlight" },
 	{ WEAPON,		59,		16,		EU_ITEM,	false,		"weapon" },
 	{ TELEPORT,		50,		12,		EU_AUTO,	false,		"teleport" },
 	{ RESERVED,		59,		12,		EU_NONE,	false,		"reserved" },
@@ -76,7 +76,7 @@ struct enttypes
 	{ CAMERA,		48,		0,		EU_NONE,	false,		"camera" },
 	{ WAYPOINT,		1,		8,		EU_NONE,	true,		"waypoint" },
 	{ ANNOUNCER,	64,		0,		EU_NONE,	false,		"announcer" },
-	{ CONNECTION,	70,		0,		EU_NONE,	true,		"connection" },
+	{ CONNECTION,	70,		0,		EU_NONE,	false,		"connection" },
 };
 
 enum

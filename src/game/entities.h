@@ -64,7 +64,7 @@ struct entities : icliententities
 
 	IVARP(showentnames, 0, 1, 2);
 	IVARP(showentinfo, 0, 1, 5);
-	IVARP(showentnoisy, 0, 1, 2);
+	IVARP(showentnoisy, 0, 0, 2);
 	IVARP(showentdir, 0, 1, 3);
 	IVARP(showentradius, 0, 1, 3);
 	IVARP(showentlinks, 0, 1, 3);
@@ -1392,7 +1392,7 @@ struct entities : icliententities
                     renderfocus(n, renderentlight(e));
             }
             if(ents.inrange(enthover) && ents[enthover]->type == LIGHT && ents[enthover]->attr1 > 0)
-                renderfocus(enthover, renderentlight(e)); 
+                renderfocus(enthover, renderentlight(e));
 		}
 	}
 
