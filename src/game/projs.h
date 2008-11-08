@@ -65,21 +65,7 @@ struct projectiles
 						proj.vel.add(vec(rnd(20)-11, rnd(20)-11, rnd(20)-11));
 						break;
 					}
-					case GUN_SG:
-					case GUN_CG:
-					case GUN_CARBINE:
-					case GUN_RIFLE:
-					default:
-					{
-						proj.aboveeye = proj.height = proj.radius = guntype[proj.attr1].offset;
-						proj.elasticity = guntype[proj.attr1].elasticity;
-						proj.relativity = guntype[proj.attr1].relativity;
-						proj.waterfric = guntype[proj.attr1].waterfric;
-						proj.weight = guntype[proj.attr1].weight;
-						proj.geomcollide = 2; // explode
-						proj.playercollide = 0; // don't
-						break;
-					}
+					default: proj.state = CS_DEAD; return; break;
 				}
 				break;
 			}
