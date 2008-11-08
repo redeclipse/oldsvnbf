@@ -983,8 +983,14 @@ struct gameclient : igameclient
 		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 
-		float curx = index < POINTER_EDIT || mousestyle() == 2 ? cursorx : aimx,
-			cury = index < POINTER_EDIT || mousestyle() == 2 ? cursory : aimy;
+		float curx = aimx, cury = aimy;
+		if(index < POINTER_EDIT || mousestyle() == 2)
+		{
+			curx = cursorx;
+			cury = cursory;
+		}
+		else if(isthirdperson() ? thirdpersonaim() : firstpersonaim())
+			curx = cury = 0.5f;
 
 		drawpointer(w, h, index, curx, cury, r, g, b);
 
@@ -1846,7 +1852,7 @@ struct gameclient : igameclient
 					pitch = player1->pitch;
 				}
 			}
-
+/*
 			if(inzoom() && player1->gunselect == GUN_RIFLE)
 			{
 				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
@@ -1854,7 +1860,7 @@ struct gameclient : igameclient
 				vec off(vec(vec(pos).sub(camera1->o)).mul(amt));
 				camera1->o.add(off);
 			}
-
+*/
 			if(allowmove(player1))
 			{
 				if(isthirdperson())
