@@ -128,9 +128,10 @@ struct gameclient : igameclient
 	IVARP(pronefov, 70, 70, 150);
 	IVARP(pronetime, 1, 150, 10000);
 
-	ITVAR(relativecursortex, "textures/relativecursor", 3);
-	ITVAR(guicursortex, "textures/guicursor", 3);
-	ITVAR(editcursortex, "textures/editcursor", 3);
+	ITVAR(relativecursortex, "textures/cursordot", 3);
+	ITVAR(guicursortex, "textures/cursor", 3);
+	ITVAR(editcursortex, "textures/cursordot", 3);
+	ITVAR(speccursortex, "textures/cursordot", 3);
 	ITVAR(crosshairtex, "textures/crosshair", 3);
 	ITVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
 	ITVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
@@ -806,6 +807,7 @@ struct gameclient : igameclient
 		POINTER_RELATIVE,
 		POINTER_GUI,
 		POINTER_EDIT,
+		POINTER_SPEC,
 		POINTER_HAIR,
 		POINTER_TEAM,
 		POINTER_HIT,
@@ -820,6 +822,7 @@ struct gameclient : igameclient
             case POINTER_RELATIVE: default: return relativecursortex(); break;
             case POINTER_GUI: return guicursortex(); break;
             case POINTER_EDIT: return editcursortex(); break;
+            case POINTER_SPEC: return speccursortex(); break;
             case POINTER_HAIR: return crosshairtex(); break;
             case POINTER_TEAM: return teamcrosshairtex(); break;
             case POINTER_HIT: return hitcrosshairtex(); break;
@@ -953,6 +956,7 @@ struct gameclient : igameclient
 		}
         else if(hidehud || !showcrosshair() || player1->state == CS_DEAD || !connected()) return;
         else if(player1->state == CS_EDITING) index = POINTER_EDIT;
+        else if(player1->state == CS_SPECTATOR) index = POINTER_SPEC;
         else if(inzoom() && player1->gunselect == GUN_RIFLE) index = POINTER_SNIPE;
         else if(lastmillis-lasthit <= crosshairhitspeed()) index = POINTER_HIT;
         else if(m_team(gamemode, mutators))
