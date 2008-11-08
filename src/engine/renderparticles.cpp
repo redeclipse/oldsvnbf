@@ -1121,9 +1121,10 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
         case 8:  //fire
         case 9:  //smoke
         case 10: //water
+        case 11: //plasma
         {
-            const int typemap[]   = { PART_STREAK, -1,  -1,  PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_SPARK };
-            const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f };
+            const int typemap[]   = { PART_STREAK, -1,  -1,  PART_LIGHTNING, PART_FIREBALL, PART_SMOKE_RISE_SLOW, PART_WATER, PART_PLASMA };
+            const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f };
             int type = typemap[attr1-4];
             float size = sizemap[attr1-4];
             if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size);
