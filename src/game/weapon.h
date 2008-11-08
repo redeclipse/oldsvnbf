@@ -430,8 +430,20 @@ struct weaponstate
 		kickback.mul(guntype[d->gunselect].kick*(cl.ph.iscrouching(d) ? 0.1f : 1.f));
 		d->vel.add(kickback);
 		if(d == cl.player1) cl.quakewobble += guntype[d->gunselect].wobble;
-		float barrier = raycube(d->o, unitv, dist, RAY_CLIPMAT|RAY_POLY);
-		if(barrier < dist)
+		float barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_POLY);
+        if(barrier <= 1e-3f)
+        {
+            // move along the eye ray towards the gun origin, stopping when something is hit
+            // nudge the target a tiny bit forward in the direction of the camera for stability
+            vec eyedir(from);
+            eyedir.sub(d->o);
+            float eyedist = eyedir.magnitude();
+            eyedir.div(eyedist);
+            eyedist = raycube(d->o, eyedir, eyedist, RAY_CLIPMAT);
+            (from = eyedir).mul(eyedist).add(d->o);
+            (to = camdir).mul(1e-3f).add(from);
+        }
+		else if(barrier < dist)
 		{
 			to = unitv;
 			to.mul(barrier);
