@@ -28,9 +28,9 @@ struct extentity : entity                       // part of the entity that doesn
     uchar spawned, inoctanode, visible;        // the only dynamic state of a map entity
     entitylight light;
 	vector<int> links;
-	int lastemit;
+	int lastemit, extstate; // 0 = off, 1 = on, 2 = auto
 
-    extentity() : visible(false), lastemit(0)
+    extentity() : visible(false), lastemit(0), extstate(0)
     {
     	links.setsize(0);
 	}

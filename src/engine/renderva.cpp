@@ -358,7 +358,7 @@ void findvisiblemms(const vector<extentity *> &ents)
 				loopv(oe->mapmodels)
 				{
 					extentity &e = *ents[oe->mapmodels[i]];
-					if(e.lastemit < 0) continue;
+					if(e.extstate < 0) continue;
                     e.visible = true;
 					++visible;
 				}
@@ -391,10 +391,30 @@ void rendermapmodel(extentity &e)
     if(e.links.length())
     {
     	int millis = lastmillis-e.lastemit, dur = e.attr5 ? e.attr5 : TRIGGERTIME, mid = dur/2;
-        if(millis < mid) { anim = ANIM_TRIGGER; basetime = e.lastemit; }
-        else if(millis == mid) anim = ANIM_TRIGGER|ANIM_END;
-        else if(millis < dur) { anim = ANIM_TRIGGER|ANIM_REVERSE; basetime = e.lastemit+mid; }
-    	else anim = ANIM_TRIGGER|ANIM_START;
+		switch(e.extstate)
+		{
+			case 0:
+			{
+				if(millis < dur) { anim = ANIM_TRIGGER|ANIM_REVERSE; basetime = e.lastemit; }
+				else anim = ANIM_TRIGGER|ANIM_START;
+				break;
+			}
+			case 1:
+			{
+				if(millis < dur) { anim = ANIM_TRIGGER; basetime = e.lastemit; }
+				else anim = ANIM_TRIGGER|ANIM_END;
+				break;
+			}
+			case 2:
+			{
+				if(millis < mid) { anim = ANIM_TRIGGER; basetime = e.lastemit; }
+				else if(millis == mid) anim = ANIM_TRIGGER|ANIM_END;
+				else if(millis < dur) { anim = ANIM_TRIGGER|ANIM_REVERSE; basetime = e.lastemit+mid; }
+				else anim = ANIM_TRIGGER|ANIM_START;
+				break;
+			}
+			default: break;
+		}
     }
 	mapmodelinfo &mmi = getmminfo(e.attr1);
 	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)(e.attr2%360), (float)(e.attr3%360), (float)(e.attr4%360), MDL_CULL_VFC | MDL_CULL_DIST | MDL_DYNLIGHT, NULL, NULL, basetime);
@@ -431,7 +451,7 @@ void renderreflectedmapmodels()
         loopv(oe->mapmodels)
         {
            extentity &e = *ents[oe->mapmodels[i]];
-           if(e.visible || e.lastemit < 0) continue;
+           if(e.visible || e.extstate < 0) continue;
            e.visible = true;
         }
     }

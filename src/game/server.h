@@ -1409,21 +1409,17 @@ struct gameserver : igameserver
 						getint(p); // ignore what the client thinks
 						se.spawned = false;
 						se.millis = gamemillis-(sv_itemspawntime*1000)+(sv_itemspawndelay*1000); // wait a bit then load 'em up
-
 						if(commit && enttype[se.type].usetype == EU_ITEM)
 						{
 							while(sents.length() < n) sents.add(sn);
 							sents.add(se);
 						}
 					}
-					if(commit)
+					if(commit) loopvk(clients)
 					{
-						loopvk(clients)
-						{
-							clientinfo *cp = clients[k];
-							cp->state.dropped.reset();
-							cp->state.gunreset(false);
-						}
+						clientinfo *cp = clients[k];
+						cp->state.dropped.reset();
+						cp->state.gunreset(false);
 					}
 					break;
 				}
@@ -1804,7 +1800,7 @@ struct gameserver : igameserver
 		else srvoutf(ci->clientnum, "\frunknown command: %s", cmd);
 	}
 
-	bool finditem(int i, bool onlyspawned = false)
+	bool finditem(int i, bool spawned = true)
 	{
 		if(sents[i].spawned) return true;
 		else
@@ -1815,15 +1811,9 @@ struct gameserver : igameserver
 				clientinfo *ci = clients[k];
 				if(ci->state.dropped.projs.find(i) >= 0 && gamemillis-sents[i].millis <= spawntime)
 					return true;
-				else
-				{
-					loopj(GUN_MAX)
-					{
-						if(ci->state.entid[j] == i) return !onlyspawned;
-					}
-				}
+				else loopj(GUN_MAX) if(ci->state.entid[j] == i) return spawned;
 			}
-			if(gamemillis-sents[i].millis <= spawntime) return !onlyspawned;
+			if(gamemillis-sents[i].millis <= spawntime) return spawned;
 		}
 		return false;
 	}
@@ -1874,7 +1864,7 @@ struct gameserver : igameserver
 			putint(p, sents[i].attr3);
 			putint(p, sents[i].attr4);
 			putint(p, sents[i].attr5);
-			putint(p, finditem(i, true) ? 1 : 0);
+			putint(p, finditem(i, false) ? 1 : 0);
 		}
 		putint(p, -1);
 
@@ -2363,7 +2353,7 @@ struct gameserver : igameserver
 			processevents();
 			if(sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1))
             {
-                loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i))
+                loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true))
 				{
 					loopvk(clients)
 					{
