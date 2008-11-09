@@ -1084,18 +1084,15 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
         }
 
         if(flare)
-            newparticle(inv?to:from, inv?from:to, rnd(abs(fade)*3)+1, type, color, size);
+            newparticle(inv?to:from, inv?from:to, rnd(fade*3)+1, type, color, size);
         else
         {
             vec d(to);
             d.sub(from);
             d.normalize().mul(inv ? -vel : vel); //velocity
-            float collidez = -1;
-            if (fade < 0)
-            {
-       		collidez = (inv ? to.z : from.z) - raycube((inv ? to : from), (inv ? from : to), COLLIDERADIUS, RAY_CLIPMAT) + COLLIDEERROR;
-       	    } 
-            newparticle(inv?to:from, d, rnd(abs(fade)*3)+1, type, color, size)->val=collidez;
+            particle *np = newparticle(inv?to:from, d, rnd(fade*3)+1, type, color, size);
+            if(parts[type]->collide)
+                np->val = (inv ? to.z : from.z) - raycube(inv ? to : from, vec(0, 0, -1), COLLIDERADIUS, RAY_CLIPMAT) + COLLIDEERROR;
         }
     }
 }
@@ -1136,7 +1133,7 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
             int type = typemap[attr1-4];
             float size = sizemap[attr1-4];
             float vel = velmap[attr1-4];
-            if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, attr5 != 0 ? attr5 : 200, o, size, vel);
+            if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size, vel);
             else newparticle(o, offsetvec(o, attr2, 1+attr3), 1, type, colorfromattr(attr4), size);
             break;
         }
