@@ -404,21 +404,18 @@ struct entities : icliententities
 
 	void putitems(ucharbuf &p)
 	{
-		loopv(ents)
+		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(enttype[e.type].usetype == EU_ITEM)
-			{
-				putint(p, i);
-				putint(p, e.type);
-				putint(p, e.attr1);
-				putint(p, e.attr2);
-				putint(p, e.attr3);
-				putint(p, e.attr4);
-				putint(p, e.attr5);
-				putint(p, 0);
-				setspawn(i, false);
-			}
+			putint(p, i);
+			putint(p, e.type);
+			putint(p, e.attr1);
+			putint(p, e.attr2);
+			putint(p, e.attr3);
+			putint(p, e.attr4);
+			putint(p, e.attr5);
+			putint(p, 0);
+			setspawn(i, false);
 		}
 	}
 
