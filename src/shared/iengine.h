@@ -166,6 +166,7 @@ enum
     PART_STREAK,
     PART_MUZZLE_FLASH,
     PART_LINE,
+    PART_SNOW,
     PART_TEXT, PART_TEXT_RISE,
     PART_METER, PART_METER_VS,
     PART_EXPLOSION, PART_EXPLOSION_NO_GLARE,
@@ -205,14 +206,15 @@ extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, cons
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;
 
-void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size);
+void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, float vel = 200);
 // decal
 enum
 {
     DECAL_SCORCH = 0,
     DECAL_BLOOD,
     DECAL_BULLET,
-    DECAL_ENERGY
+    DECAL_ENERGY,
+    DECAL_STAIN,
 };
 
 extern void adddecal(int type, const vec &center, const vec &surface, float radius, const bvec &color = bvec(0xFF, 0xFF, 0xFF), int info = 0);

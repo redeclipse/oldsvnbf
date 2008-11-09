@@ -632,7 +632,7 @@ static partrenderer *parts[] =
     new softquadrenderer("particles/smoke", PT_PART|PT_LERP, -10, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP, -20, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP, 20, 0),
-    new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4, 2, 1),
+    new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4, 2, DECAL_BLOOD),
     new quadrenderer("particles/entity", PT_PART|PT_GLARE, 20, 0),
     new quadrenderer("particles/spark", PT_PART|PT_GLARE, 2, 0),
     new softquadrenderer("particles/fireball", PT_PART|PT_GLARE, -10, 0),
@@ -643,6 +643,7 @@ static partrenderer *parts[] =
     new taperenderer("particles/flare", PT_TAPE|PT_GLARE, 0, 0),
     new quadrenderer("particles/muzzle", PT_PART|PT_GLARE, 0, 0),
     new taperenderer("particles/line", PT_TAPE|PT_GLARE, 0, 0),
+    new quadrenderer("particles/snow", PT_PART|PT_GLARE, 200, DECAL_STAIN),
     &texts, &textups, &meters, &metervs,
     &fireballs, &noglarefireballs, &lightnings,
     &flares // must be done last!
@@ -1016,7 +1017,7 @@ static inline int colorfromattr(int attr)
  * 21 sphere
  * +32 to inverse direction
  */
-void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size)
+void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, float vel)
 {
     if(!emit_particles()) return;
 
@@ -1083,13 +1084,18 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
         }
 
         if(flare)
-            newparticle(inv?to:from, inv?from:to, rnd(fade*3)+1, type, color, size);
+            newparticle(inv?to:from, inv?from:to, rnd(abs(fade)*3)+1, type, color, size);
         else
         {
             vec d(to);
             d.sub(from);
-            d.normalize().mul(inv ? -200.0f : 200.0f); //velocity
-            newparticle(inv?to:from, d, rnd(fade*3)+1, type, color, size);
+            d.normalize().mul(inv ? -vel : vel); //velocity
+            float collidez = -1;
+            if (fade < 0)
+            {
+       		collidez = (inv ? to.z : from.z) - raycube((inv ? to : from), (inv ? from : to), COLLIDERADIUS, RAY_CLIPMAT) + COLLIDEERROR;
+       	    } 
+            newparticle(inv?to:from, d, rnd(abs(fade)*3)+1, type, color, size)->val=collidez;
         }
     }
 }
@@ -1122,12 +1128,15 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
         case 9:  //smoke
         case 10: //water
         case 11: //plasma
+        case 12: //snow
         {
-            const int typemap[]   = { PART_STREAK, -1,  -1,  PART_LIGHTNING, PART_FIREBALL, PART_SMOKE_RISE_SLOW, PART_WATER, PART_PLASMA };
-            const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f };
+            const int typemap[]   = { PART_STREAK, -1,  -1,  PART_LIGHTNING, PART_FIREBALL, PART_SMOKE_RISE_SLOW, PART_WATER, PART_PLASMA, PART_SNOW };
+            const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f };
+            const float velmap[]  = {  200,   0,   0,  200, 200, 200,  200,   200,  40 };
             int type = typemap[attr1-4];
             float size = sizemap[attr1-4];
-            if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size);
+            float vel = velmap[attr1-4];
+            if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, attr5 != 0 ? attr5 : 200, o, size, vel);
             else newparticle(o, offsetvec(o, attr2, 1+attr3), 1, type, colorfromattr(attr4), size);
             break;
         }
