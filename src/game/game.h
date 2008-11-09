@@ -39,7 +39,7 @@ enum								// entity types
 	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
 	TELEPORT,						// 9  yaw, pitch, push, [radius] [portal]
 	RESERVED,						// 10
-	TRIGGER,						// 11 idx, type, acttype, [radius] [time]
+	TRIGGER,						// 11 idx, type, acttype, [radius]
 	PUSHER,							// 12 zpush, ypush, xpush, [radius]
 	FLAG,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
@@ -51,8 +51,8 @@ enum								// entity types
 };
 
 enum { EU_NONE = 0, EU_ITEM, EU_AUTO, EU_ACT, EU_MAX };
-enum { TR_NONE = 0, TR_LINKS, TR_SCRIPT, TR_MAX };
-enum { TA_NONE = 0, TA_AUTO, TA_ACT, TA_LINK, TA_MAX };
+enum { TR_NONE = 0, TR_LINK, TR_SCRIPT, TR_MAX };
+enum { TA_NONE = 0, TA_AUTO, TA_ACT, TA_MAX };
 
 struct enttypes
 {

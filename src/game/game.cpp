@@ -369,9 +369,7 @@ struct gameclient : igameclient
 		}
 		if(types & ST_SPAWNS)
 		{
-			et.resetspawns();
 			pj.reset();
-
 			// reset perma-state
 			dynent *d;
 			loopi(numdynents()) if((d = iterdynents(i)) && d->type == ENT_PLAYER)

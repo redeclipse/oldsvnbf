@@ -184,7 +184,7 @@ struct entities : icliententities
 			if(full)
 			{
 				const char *trignames[2][4] = {
-						{ "??", "links", "script", "" },
+						{ "toggle", "links", "script", "" },
 						{ "(disabled)", "(proximity)", "(action)" }
 				};
 				int tr = attr2 <= TR_NONE || attr2 >= TR_MAX ? TR_NONE : attr2,
@@ -379,14 +379,11 @@ struct entities : icliententities
 						}
 						else if(enttype[e.type].usetype == EU_AUTO)
 						{
-							if(e.type != TRIGGER || ((e.attr3 == TA_ACT && d->useaction && d->requse < 0) || e.attr3 == TA_AUTO))
+							if(e.type != TRIGGER || ((e.attr3 == TA_ACT && d->useaction && d == cl.player1) || e.attr3 == TA_AUTO))
 							{
 								reaction(t.target, d);
 								if(e.type == TRIGGER && e.attr3 == TA_ACT)
-								{
 									d->useaction = false;
-									d->requse = lastmillis;
-								}
 							}
 						}
 					}
@@ -419,7 +416,6 @@ struct entities : icliententities
 		}
 	}
 
-	void resetspawns() { loopv(ents) ents[i]->spawned = false; }
 	void setspawn(int n, bool on)
 	{
 		loopv(cl.pj.projs)
@@ -514,8 +510,12 @@ struct entities : icliententities
 								commit = true;
 								f.lastemit = lastmillis;
 								if(both) e.lastemit = lastmillis;
-								if(e.type == TRIGGER && f.type == MAPMODEL && local)
-									execlink(d, i, true);
+								if(f.type == MAPMODEL)
+								{
+									bool toggle = m_fight(cl.gamemode) || f.attr2 == TR_LINK;
+									f.extstate = toggle ? 2 : (f.extstate ? 0 : 1);
+									if(local) execlink(d, i, true);
+								}
 							}
 							break;
 						}
@@ -652,10 +652,10 @@ struct entities : icliententities
 			{
 				switch(e.attr2)
 				{
-					case TR_LINKS: execlink(d, n, true); break;
+					case TR_NONE: case TR_LINK: execlink(d, n, true); break;
 					case TR_SCRIPT:
 					{
-						if(lastmillis-e.lastuse >= USETIME)
+						if(d == cl.player1 && lastmillis-e.lastuse >= USETIME)
 						{
 							e.lastuse = lastmillis;
 							s_sprintfd(s)("on_trigger_%d", e.attr1);

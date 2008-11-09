@@ -132,6 +132,18 @@ extern int entselradius;
 float hitentdist;
 int hitent, hitorient;
 
+#define mapmodelskip \
+	{ \
+			if(e.links.length()) \
+			{ \
+				int millis = lastmillis-e.lastemit, dur = e.attr5 ? e.attr5 : TRIGGERTIME; \
+				if(e.extstate == 0 && millis < dur/4) continue; \
+				if(e.extstate == 1 && millis > dur/4) continue; \
+				if(e.extstate == 2 && millis > dur/8 && millis < dur-dur/8) continue; \
+			} \
+	}
+
+
 static float disttoent(octaentities *oc, octaentities *last, const vec &o, const vec &ray, float radius, int mode, extentity *t)
 {
 	vec eo, es;
@@ -159,13 +171,7 @@ static float disttoent(octaentities *oc, octaentities *last, const vec &o, const
 	}
 
 	entintersect(RAY_POLY, mapmodels, {
-		if((mode&RAY_ENTS)!=RAY_ENTS && e.links.length())
-		{
-			int millis = lastmillis-e.lastemit;
-			int dur = e.attr5 ? e.attr5 : TRIGGERTIME;
-			int mid = dur/10;
-			if(millis > mid && millis < dur-mid) continue;
-		}
+		if((mode&RAY_ENTS)!=RAY_ENTS) mapmodelskip;
 		if((mode&RAY_ENTS)==RAY_ENTS && !et->cansee(e)) continue;
 		orient = 0; // FIXME, not set
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
@@ -195,12 +201,8 @@ static float shadowent(octaentities *oc, octaentities *last, const vec &o, const
 	loopv(oc->mapmodels) if(!last || last->mapmodels.find(oc->mapmodels[i])<0)
 	{
 		extentity &e = *ents[oc->mapmodels[i]];
+		mapmodelskip;
 		if(!e.inoctanode || &e==t) continue;
-		if(e.links.length())
-		{
-			int millis = lastmillis-e.lastemit, dur = e.attr5 ? e.attr5 : TRIGGERTIME, mid = dur/10;
-			if(millis > mid && millis < dur-mid) continue;
-		}
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
 		if(f>0 && f<dist) dist = f;
 	}
@@ -602,11 +604,7 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
     loopv(oc.mapmodels)
     {
         extentity &e = *ents[oc.mapmodels[i]];
-		if(e.links.length())
-		{
-			int millis = lastmillis-e.lastemit, dur = e.attr5 ? e.attr5 : TRIGGERTIME, mid = dur/10;
-			if(millis > mid && millis < dur-mid) continue;
-		}
+        mapmodelskip;
         model *m = loadmodel(NULL, e.attr1);
         if(!m || !m->collide) continue;
         vec center, radius;

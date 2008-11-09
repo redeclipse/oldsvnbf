@@ -488,6 +488,11 @@ struct clientcom : iclientcom
 				sendstring(f->name, p);
 				putint(p, f->team);
 			}
+			loopv(cl.et.ents) if(cl.et.ents[i]->extstate == 1)
+			{
+				cl.et.ents[i]->lastemit = lastmillis;
+				cl.et.ents[i]->extstate = 0;
+			}
 		}
 		int i = 0;
 		while(i < messages.length()) // send messages collected during the previous frames
