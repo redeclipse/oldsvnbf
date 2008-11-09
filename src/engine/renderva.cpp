@@ -358,6 +358,7 @@ void findvisiblemms(const vector<extentity *> &ents)
 				loopv(oe->mapmodels)
 				{
 					extentity &e = *ents[oe->mapmodels[i]];
+					if(e.lastemit < 0) continue;
                     e.visible = true;
 					++visible;
 				}
@@ -387,6 +388,14 @@ extern bool getentboundingbox(extentity &e, ivec &o, ivec &r);
 void rendermapmodel(extentity &e)
 {
 	int anim = ANIM_MAPMODEL|ANIM_LOOP, basetime = 0;
+    if(e.links.length())
+    {
+    	int millis = lastmillis-e.lastemit, dur = e.attr5 ? e.attr5 : TRIGGERTIME, mid = dur/2;
+        if(millis < mid) { anim = ANIM_TRIGGER; basetime = e.lastemit; }
+        else if(millis == mid) anim = ANIM_TRIGGER|ANIM_END;
+        else if(millis < dur) { anim = ANIM_TRIGGER|ANIM_REVERSE; basetime = e.lastemit+mid; }
+    	else anim = ANIM_TRIGGER|ANIM_START;
+    }
 	mapmodelinfo &mmi = getmminfo(e.attr1);
 	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)(e.attr2%360), (float)(e.attr3%360), (float)(e.attr4%360), MDL_CULL_VFC | MDL_CULL_DIST | MDL_DYNLIGHT, NULL, NULL, basetime);
 }
@@ -422,7 +431,7 @@ void renderreflectedmapmodels()
         loopv(oe->mapmodels)
         {
            extentity &e = *ents[oe->mapmodels[i]];
-           if(e.visible) continue;
+           if(e.visible || e.lastemit < 0) continue;
            e.visible = true;
         }
     }

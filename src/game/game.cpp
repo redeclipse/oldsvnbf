@@ -1357,7 +1357,7 @@ struct gameclient : igameclient
 								}
 								else tp -= draw_textx("Nearby [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, et.entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true));
 							}
-							else if(e.type == TRIGGER && (e.spawned || !e.attr4) && e.attr3 == TA_ACT)
+							else if(e.type == TRIGGER && e.attr3 == TA_ACT)
 							{
 								if(!found)
 								{
@@ -1559,7 +1559,8 @@ struct gameclient : igameclient
 	void heightoffset(gameent *d, bool local)
 	{
 		d->o.z -= d->height;
-		if(d->state == CS_ALIVE || d->state == CS_EDITING || d->state == CS_SPECTATOR)
+		if(d->state == CS_SPECTATOR) d->height = 0.f;
+		else if(d->state == CS_ALIVE || d->state == CS_EDITING)
 		{
 			if(ph.iscrouching(d))
 			{
@@ -1751,146 +1752,146 @@ struct gameclient : igameclient
 
 		if(connected() && maptime)
 		{
-			if(!lastcamera)
-			{
-				resetcursor();
-				if(mousestyle() == 2)
+				if(!lastcamera)
 				{
-					camera1->yaw = player1->aimyaw = player1->yaw;
-					camera1->pitch = player1->aimpitch = player1->pitch;
-				}
-			}
-
-			vec pos = headpos(player1, 0.f);
-
-			if(mousestyle() <= 1)
-				findorientation(pos, player1->yaw, player1->pitch, worldpos);
-
-			camera1->o = pos;
-
-			if(isthirdperson())
-			{
-				float angle = thirdpersonangle() ? 0-thirdpersonangle() : player1->pitch;
-				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
-				camera1->aimpitch = mousestyle() <= 1 ? angle : player1->aimpitch;
-
-				#define cameramove(d,s) \
-					if(d) \
-					{ \
-						camera1->move = !s ? (d > 0 ? -1 : 1) : 0; \
-						camera1->strafe = s ? (d > 0 ? -1 : 1) : 0; \
-						loopi(10) if(!ph.moveplayer(camera1, 10, true, abs(d))) break; \
-					}
-				cameramove(thirdpersondist(), false);
-				cameramove(thirdpersonshift(), true);
-			}
-			else
-			{
-				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
-				camera1->aimpitch = mousestyle() <= 1 ? player1->pitch : player1->aimpitch;
-			}
-
-			switch(mousestyle())
-			{
-				case 0:
-				case 1:
-				{
-					if(!thirdpersonaim() && isthirdperson() && (!inzoom() || player1->gunselect != GUN_RIFLE))
-					{ // if they don't like it they just suffer a bit of jerking
-						vec dir(worldpos);
-						dir.sub(camera1->o);
-						dir.normalize();
-						vectoyawpitch(dir, camera1->yaw, camera1->pitch);
-						fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
-					}
-					else
+					resetcursor();
+					if(mousestyle() == 2)
 					{
-						camera1->yaw = player1->yaw;
-						camera1->pitch = player1->pitch;
+						camera1->yaw = player1->aimyaw = player1->yaw;
+						camera1->pitch = player1->aimpitch = player1->pitch;
 					}
-					if(mousestyle())
-					{
-						camera1->aimyaw = camera1->yaw;
-						camera1->aimpitch = camera1->pitch;
-					}
-					break;
 				}
-				case 2:
-				{
-					float yaw, pitch;
-					vectoyawpitch(cursordir, yaw, pitch);
-					fixrange(yaw, pitch);
-					findorientation(isthirdperson() && (!inzoom() || player1->gunselect != GUN_RIFLE) ? camera1->o : pos, yaw, pitch, worldpos);
-					if(allowmove(player1))
-					{
-						if(isthirdperson() && (!inzoom() || player1->gunselect != GUN_RIFLE))
-						{
-							vec dir(worldpos);
-							dir.sub(camera1->o);
-							dir.normalize();
-							vectoyawpitch(dir, player1->yaw, player1->pitch);
-						}
-						else
-						{
-							player1->yaw = yaw;
-							player1->pitch = pitch;
-						}
-					}
-					break;
-				}
-			}
 
-			fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
-			fixrange(camera1->aimyaw, camera1->aimpitch);
+				vec pos = headpos(player1, 0.f);
 
-			if(quakewobble > 0)
-				camera1->roll = float(rnd(21)-10)*(float(min(quakewobble, 100))/100.f);
-			else camera1->roll = 0;
+				if(mousestyle() <= 1)
+					findorientation(pos, player1->yaw, player1->pitch, worldpos);
 
-			if(!isthirdperson())
-			{
-				float yaw = camera1->aimyaw, pitch = camera1->aimpitch;
-				if(mousestyle() == 2)
-				{
-					yaw = player1->yaw;
-					pitch = player1->pitch;
-				}
-			}
-/*
-			if(inzoom() && player1->gunselect == GUN_RIFLE)
-			{
-				float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
-				if(!zooming) amt = 1.f-amt;
-				vec off(vec(vec(pos).sub(camera1->o)).mul(amt));
-				camera1->o.add(off);
-			}
-*/
-			if(allowmove(player1))
-			{
+				camera1->o = pos;
+
 				if(isthirdperson())
 				{
-					vec dir(worldpos);
-					dir.sub(pos);
-					dir.normalize();
-					vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
+					float angle = thirdpersonangle() ? 0-thirdpersonangle() : player1->pitch;
+					camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
+					camera1->aimpitch = mousestyle() <= 1 ? angle : player1->aimpitch;
+
+					#define cameramove(d,s) \
+						if(d) \
+						{ \
+							camera1->move = !s ? (d > 0 ? -1 : 1) : 0; \
+							camera1->strafe = s ? (d > 0 ? -1 : 1) : 0; \
+							loopi(10) if(!ph.moveplayer(camera1, 10, true, abs(d))) break; \
+						}
+					cameramove(thirdpersondist(), false);
+					cameramove(thirdpersonshift(), true);
 				}
 				else
 				{
-					player1->aimyaw = camera1->yaw;
-					player1->aimpitch = camera1->pitch;
+					camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
+					camera1->aimpitch = mousestyle() <= 1 ? player1->pitch : player1->aimpitch;
 				}
-				fixrange(player1->aimyaw, player1->aimpitch);
 
-				if(lastcamera && mousestyle() >= 1 && !g3d_active())
+				switch(mousestyle())
 				{
-					physent *d = mousestyle() != 2 ? player1 : camera1;
-					float amt = clamp(float(lastmillis-lastcamera)/100.f, 0.f, 1.f)*panspeed();
-					float zone = float(deadzone())/200.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
-					if(cx > zone || cx < -zone) d->yaw += ((cx > zone ? cx-zone : cx+zone)/(1.f-zone))*amt;
-					if(cy > zone || cy < -zone) d->pitch += ((cy > zone ? cy-zone : cy+zone)/(1.f-zone))*amt;
-					fixfullrange(d->yaw, d->pitch, d->roll, false);
+					case 0:
+					case 1:
+					{
+						if(!thirdpersonaim() && isthirdperson() && (!inzoom() || player1->gunselect != GUN_RIFLE))
+						{ // if they don't like it they just suffer a bit of jerking
+							vec dir(worldpos);
+							dir.sub(camera1->o);
+							dir.normalize();
+							vectoyawpitch(dir, camera1->yaw, camera1->pitch);
+							fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
+						}
+						else
+						{
+							camera1->yaw = player1->yaw;
+							camera1->pitch = player1->pitch;
+						}
+						if(mousestyle())
+						{
+							camera1->aimyaw = camera1->yaw;
+							camera1->aimpitch = camera1->pitch;
+						}
+						break;
+					}
+					case 2:
+					{
+						float yaw, pitch;
+						vectoyawpitch(cursordir, yaw, pitch);
+						fixrange(yaw, pitch);
+						findorientation(isthirdperson() && (!inzoom() || player1->gunselect != GUN_RIFLE) ? camera1->o : pos, yaw, pitch, worldpos);
+						if(allowmove(player1))
+						{
+							if(isthirdperson() && (!inzoom() || player1->gunselect != GUN_RIFLE))
+							{
+								vec dir(worldpos);
+								dir.sub(camera1->o);
+								dir.normalize();
+								vectoyawpitch(dir, player1->yaw, player1->pitch);
+							}
+							else
+							{
+								player1->yaw = yaw;
+								player1->pitch = pitch;
+							}
+						}
+						break;
+					}
 				}
-			}
+
+				fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
+				fixrange(camera1->aimyaw, camera1->aimpitch);
+
+				if(quakewobble > 0)
+					camera1->roll = float(rnd(21)-10)*(float(min(quakewobble, 100))/100.f);
+				else camera1->roll = 0;
+
+				if(!isthirdperson())
+				{
+					float yaw = camera1->aimyaw, pitch = camera1->aimpitch;
+					if(mousestyle() == 2)
+					{
+						yaw = player1->yaw;
+						pitch = player1->pitch;
+					}
+				}
+/*
+				if(inzoom() && player1->gunselect == GUN_RIFLE)
+				{
+					float amt = lastmillis-lastzoom < zoomtime() ? clamp(float(lastmillis-lastzoom)/float(zoomtime()), 0.f, 1.f) : 1.f;
+					if(!zooming) amt = 1.f-amt;
+					vec off(vec(vec(pos).sub(camera1->o)).mul(amt));
+					camera1->o.add(off);
+				}
+*/
+				if(allowmove(player1))
+				{
+					if(isthirdperson())
+					{
+						vec dir(worldpos);
+						dir.sub(pos);
+						dir.normalize();
+						vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
+					}
+					else
+					{
+						player1->aimyaw = camera1->yaw;
+						player1->aimpitch = camera1->pitch;
+					}
+					fixrange(player1->aimyaw, player1->aimpitch);
+
+					if(lastcamera && mousestyle() >= 1 && !g3d_active())
+					{
+						physent *d = mousestyle() != 2 ? player1 : camera1;
+						float amt = clamp(float(lastmillis-lastcamera)/100.f, 0.f, 1.f)*panspeed();
+						float zone = float(deadzone())/200.f, cx = cursorx-0.5f, cy = 0.5f-cursory;
+						if(cx > zone || cx < -zone) d->yaw += ((cx > zone ? cx-zone : cx+zone)/(1.f-zone))*amt;
+						if(cy > zone || cy < -zone) d->pitch += ((cy > zone ? cy-zone : cy+zone)/(1.f-zone))*amt;
+						fixfullrange(d->yaw, d->pitch, d->roll, false);
+					}
+				}
 
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
 			vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
@@ -2056,7 +2057,8 @@ struct gameclient : igameclient
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showgun = isgun(gun);
 
-		if(d->state == CS_DEAD)
+		if(d->state == CS_SPECTATOR) return;
+		else if(d->state == CS_DEAD)
 		{
 			if(d->obliterated) return; // not shown at all
 			showgun = false;
@@ -2066,7 +2068,7 @@ struct gameclient : igameclient
 			if(t < 0) return;
 			if(t > 1000) animflags = ANIM_DEAD|ANIM_LOOP;
         }
-		else if(d->state == CS_EDITING || d->state == CS_SPECTATOR)
+		else if(d->state == CS_EDITING)
 		{
 			animflags = ANIM_EDIT|ANIM_LOOP;
 		}
@@ -2154,7 +2156,7 @@ struct gameclient : igameclient
 			}
 		}
 
-		if(shownamesabovehead() && third && d != player1 && d->state != CS_SPECTATOR)
+		if(shownamesabovehead() && third && d != player1)
 		{
 			s_sprintfd(s)("@%s", colorname(d));
 			part_text(d->abovehead(), s);

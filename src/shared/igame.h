@@ -10,6 +10,7 @@ struct icliententities
 	virtual void initents(gzFile &g, int mtype, int mver, char *gid, int gver) = 0;
     virtual float dropheight(entity &e) = 0;
     virtual void fixentity(extentity &e) = 0;
+    virtual bool cansee(extentity &e) { return true; };
     virtual const char *findname(int type) = 0;
 	virtual int findtype(char *type) = 0;
 	virtual bool maylink(int type, int ver = 0) = 0;

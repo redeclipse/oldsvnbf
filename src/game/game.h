@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			103
+#define GAMEVERSION			104
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -30,7 +30,7 @@ enum								// entity types
 {
 	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
 	LIGHT = ET_LIGHT,				// 1  radius, intensity or red, green, blue
-	MAPMODEL = ET_MAPMODEL,			// 2  idx, yaw, pitch, roll
+	MAPMODEL = ET_MAPMODEL,			// 2  idx, yaw, pitch, roll, time
 	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, team, id
 	ENVMAP = ET_ENVMAP,				// 4  radius
 	PARTICLES = ET_PARTICLES,		// 5  type, [others]
@@ -39,7 +39,7 @@ enum								// entity types
 	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
 	TELEPORT,						// 9  yaw, pitch, push, [radius] [portal]
 	RESERVED,						// 10
-	TRIGGER,						// 11 idx, type, acttype, resettime
+	TRIGGER,						// 11 idx, type, acttype, [radius] [time]
 	PUSHER,							// 12 zpush, ypush, xpush, [radius]
 	FLAG,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
@@ -51,7 +51,7 @@ enum								// entity types
 };
 
 enum { EU_NONE = 0, EU_ITEM, EU_AUTO, EU_ACT, EU_MAX };
-enum { TR_NONE = 0, TR_MMODEL, TR_SCRIPT, TR_MAX };
+enum { TR_NONE = 0, TR_LINKS, TR_SCRIPT, TR_MAX };
 enum { TA_NONE = 0, TA_AUTO, TA_ACT, TA_LINK, TA_MAX };
 
 struct enttypes
@@ -94,6 +94,7 @@ enum
     ANIM_MAX
 };
 
+#define USETIME			1000
 #define SGRAYS			20
 #define SGSPREAD		50
 #define GUNSWITCHDELAY	800
@@ -630,10 +631,10 @@ enum
 
 struct gameentity : extentity
 {
-	int schan, lastuse, lastemit, lastspawn;
+	int schan, lastuse, lastspawn;
 	bool mark;
 
-	gameentity() : schan(-1), lastuse(0), lastemit(0), lastspawn(0), mark(false) {}
+	gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(false) {}
 	~gameentity()
 	{
 		if(issound(schan)) removesound(schan);
@@ -654,7 +655,7 @@ const char *animnames[] =
 {
 	"dead", "dying", "idle",
 	"forward", "backward", "left", "right",
-	"pain", "jump", "sink", "swim", "mapmodel",
+	"pain", "jump", "sink", "swim", "mapmodel", "trigger",
 	"edit", "lag", "switch", "taunt", "win", "lose",
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
 	"plasma", "plasma shoot", "plasma reload",
