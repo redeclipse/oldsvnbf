@@ -82,69 +82,53 @@ struct entities : icliententities
         	entlinks[i].setsize(0);
 			switch(i)
 			{
-				//	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
-				//	LIGHT = ET_LIGHT,				// 1  radius, intensity
 				case LIGHT:
 					entlinks[i].add(SPOTLIGHT);
 					break;
-				//	MAPMODEL = ET_MAPMODEL,			// 2  idx, yaw, pitch, roll
 				case MAPMODEL:
+					entlinks[i].add(MAPSOUND);
+					entlinks[i].add(PARTICLES);
 					entlinks[i].add(TRIGGER);
 					break;
-				//	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, [team]
-				//	ENVMAP = ET_ENVMAP,				// 4  radius
-				//	PARTICLES = ET_PARTICLES,		// 5  type, [others]
 				case PARTICLES:
-				//	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume
 				case MAPSOUND:
+					entlinks[i].add(MAPMODEL);
 					entlinks[i].add(TELEPORT);
 					entlinks[i].add(TRIGGER);
 					entlinks[i].add(PUSHER);
 					break;
-				//	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
-				//	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
-				//	TELEPORT,						// 9  yaw, pitch, push, [portal]
 				case TELEPORT:
 					entlinks[i].add(MAPSOUND);
 					entlinks[i].add(PARTICLES);
 					entlinks[i].add(TELEPORT);
 					break;
-				//	RESERVED,						// 10
 				case RESERVED:
 					break;
-				//	TRIGGER,						// 11
 				case TRIGGER:
+					entlinks[i].add(MAPMODEL);
 					entlinks[i].add(MAPSOUND);
 					entlinks[i].add(PARTICLES);
 					break;
-				//	PUSHER,							// 12 zpush, ypush, xpush
 				case PUSHER:
 					entlinks[i].add(MAPSOUND);
 					entlinks[i].add(PARTICLES);
 					break;
-				//	FLAG,							// 13 idx, team
 				case FLAG:
 					entlinks[i].add(FLAG);
 					break;
-				//	CHECKPOINT,						// 14 idx
 				case CHECKPOINT:
 					entlinks[i].add(CHECKPOINT);
 					break;
-				//	CAMERA,							// 15 type, radius, weight
 				case CAMERA:
 					entlinks[i].add(CAMERA);
 					entlinks[i].add(CONNECTION);
 					break;
-				//	WAYPOINT,						// 16 cmd
 				case WAYPOINT:
 					entlinks[i].add(WAYPOINT);
 					break;
-				//	ANNOUNCER,						// 17 maxrad, minrad, volume
-				//	CONNECTION,						// 18
 				case CONNECTION:
 					entlinks[i].add(CONNECTION);
 					break;
-				//	MAXENTTYPES						// 19
 				default: break;
 			}
         }
@@ -200,12 +184,12 @@ struct entities : icliententities
 			if(full)
 			{
 				const char *trignames[2][4] = {
-						{ "unknown", "mapmodel", "script", "" },
-						{ "unknown", "automatically", "by action", "by link" }
+						{ "??", "links", "script", "" },
+						{ "(disabled)", "(proximity)", "(action)" }
 				};
 				int tr = attr2 <= TR_NONE || attr2 >= TR_MAX ? TR_NONE : attr2,
 					ta = attr3 <= TA_NONE || attr3 >= TA_MAX ? TA_NONE : attr3;
-				s_sprintf(str)("%s activated %s", trignames[0][tr], trignames[1][ta]);
+				s_sprintf(str)("execute %s %s", trignames[0][tr], trignames[1][ta]);
 				addentinfo(str);
 			}
 		}
@@ -233,7 +217,7 @@ struct entities : icliententities
 	void announce(int idx, const char *msg = "", bool force = false)
 	{
 		static int lastannouncement;
-		if(idx > -1 && idx < S_MAX && (force || lastmillis-lastannouncement >= 1000))
+		if(idx > -1 && idx < S_MAX && (force || lastmillis-lastannouncement >= USETIME))
 		{
 			bool announcer = false;
 			loopv(ents)
@@ -324,7 +308,8 @@ struct entities : icliententities
 				continue;
 			if(enttype[e.type].usetype == EU_ITEM && !e.spawned) continue;
 			float radius = (float)enttype[e.type].radius;
-			if((e.type == TELEPORT || e.type == PUSHER) && e.attr4) radius = (float)e.attr4;
+			if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attr4)
+				radius = (float)e.attr4;
 			if(!insidesphere(m, eye, d->radius, e.o, radius, radius))
 				continue;
 			actitem &t = actitems.add();
@@ -394,12 +379,14 @@ struct entities : icliententities
 						}
 						else if(enttype[e.type].usetype == EU_AUTO)
 						{
-							if(e.type != TRIGGER ||
-								((e.spawned || !e.attr4) && ((e.attr3 == TA_ACT && d->useaction) || e.attr3 == TA_AUTO)))
+							if(e.type != TRIGGER || ((e.attr3 == TA_ACT && d->useaction && d->requse < 0) || e.attr3 == TA_AUTO))
 							{
 								reaction(t.target, d);
 								if(e.type == TRIGGER && e.attr3 == TA_ACT)
+								{
 									d->useaction = false;
+									d->requse = lastmillis;
+								}
 							}
 						}
 					}
@@ -420,7 +407,7 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(enttype[e.type].usetype == EU_ITEM || e.type == TRIGGER)
+			if(enttype[e.type].usetype == EU_ITEM)
 			{
 				putint(p, i);
 				putint(p, e.type);
@@ -452,6 +439,11 @@ struct entities : icliententities
 	}
 
 	extentity *newent() { return new gameentity(); }
+
+	bool cansee(extentity &e)
+	{
+		return (showentinfo() || cl.player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy() >= 2 || (showentnoisy() && cl.player1->state == CS_EDITING));
+	}
 
 	void fixentity(extentity &e)
 	{
@@ -505,44 +497,42 @@ struct entities : icliententities
 	{
 		if(d && ents.inrange(index) && maylink(ents[index]->type))
 		{
-			if(local)
-			{
-				cl.cc.addmsg(SV_EXECLINK, "ri2", d->clientnum, index);
-				if(d->ai) return;
-			}
-
 			gameentity &e = *(gameentity *)ents[index];
-
+			bool commit = false;
 			loopv(ents)
 			{
 				gameentity &f = *(gameentity *)ents[i];
 				if(f.links.find(index) >= 0)
 				{
 					bool both = e.links.find(i) >= 0;
-
 					switch(f.type)
 					{
-						case MAPSOUND:
+						case MAPMODEL:
+						case PARTICLES:
 						{
-							if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && mapsounds.inrange(f.attr1))
+							int millis = f.type == MAPMODEL ? (f.attr5 ? f.attr5 : TRIGGERTIME) : USETIME;
+							if(lastmillis-f.lastuse >= millis)
 							{
-								if(!issound(f.schan))
-								{
-									int flags = SND_MAP;
-									if(f.attr5&SND_NOATTEN) flags |= SND_NOATTEN;
-									if(f.attr5&SND_NODELAY) flags |= SND_NODELAY;
-									if(f.attr5&SND_NOCULL) flags |= SND_NOCULL;
-									playsound(f.attr1, both ? f.o : e.o, NULL, flags, f.attr4, f.attr2, f.attr3, &f.schan);
-									f.lastemit = lastmillis;
-									if(both) e.lastemit = lastmillis;
-								}
+								f.lastuse = lastmillis;
+								commit = true;
+								f.lastemit = lastmillis;
+								if(both) e.lastemit = lastmillis;
+								if(e.type == TRIGGER && f.type == MAPMODEL && local)
+									execlink(d, i, true);
 							}
 							break;
 						}
-						case PARTICLES:
+						case MAPSOUND:
 						{
-							if(e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER)
+							if(lastmillis-f.lastuse >= USETIME && mapsounds.inrange(f.attr1) && !issound(f.schan))
 							{
+								f.lastuse = lastmillis;
+								commit = true;
+								int flags = SND_MAP;
+								if(f.attr5&SND_NOATTEN) flags |= SND_NOATTEN;
+								if(f.attr5&SND_NODELAY) flags |= SND_NODELAY;
+								if(f.attr5&SND_NOCULL) flags |= SND_NOCULL;
+								playsound(f.attr1, both ? f.o : e.o, NULL, flags, f.attr4, f.attr2, f.attr3, &f.schan);
 								f.lastemit = lastmillis;
 								if(both) e.lastemit = lastmillis;
 							}
@@ -552,6 +542,7 @@ struct entities : icliententities
 					}
 				}
 			}
+			if(local && commit) cl.cc.addmsg(SV_EXECLINK, "ri2", d->clientnum, index);
 		}
 	}
 
@@ -638,7 +629,7 @@ struct entities : icliententities
 		{
 			case TELEPORT:
 			{
-				if(lastmillis-e.lastuse >= 1000)
+				if(lastmillis-e.lastuse >= USETIME)
 				{
 					e.lastuse = lastmillis;
 					teleport(n, d);
@@ -656,37 +647,26 @@ struct entities : icliententities
 					if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
 						d->vel.v[k] = dir.v[k];
 				}
-				if(lastmillis-e.lastuse >= 1000)
-				{
-					e.lastuse = lastmillis;
-					execlink(d, n, true);
-				}
+				execlink(d, n, true);
 				break;
 			}
 
 			case TRIGGER:
 			{
-				if(lastmillis-e.lastuse >= 1000)
+				switch(e.attr2)
 				{
-					e.lastuse = lastmillis;
-					switch(e.type)
+					case TR_LINKS: execlink(d, n, true); break;
+					case TR_SCRIPT:
 					{
-						case TRIGGER:
+						if(lastmillis-e.lastuse >= USETIME)
 						{
-							switch(e.attr2)
-							{
-								case TR_SCRIPT:
-								{
-									s_sprintfd(s)("on_trigger_%d", e.attr1);
-									RUNWORLD(s);
-									break;
-								}
-								default: break;
-							}
+							e.lastuse = lastmillis;
+							s_sprintfd(s)("on_trigger_%d", e.attr1);
+							RUNWORLD(s);
 						}
-						default: break;
+						break;
 					}
-					execlink(d, n, true);
+					default: break;
 				}
 				break;
 			}
@@ -1029,7 +1009,7 @@ struct entities : icliententities
 				case 22:
 				{
 					f.type = TRIGGER;
-					f.attr1 = f.attr2 = 0;
+					f.attr1 = f.attr2 = f.attr3 = f.attr4 = f.attr5 = 0;
 					break;
 				}
 				// 23	JUMPPAD			12	PUSHER
@@ -1337,7 +1317,8 @@ struct entities : icliententities
 					break;
 				default:
 					float radius = (float)enttype[e.type].radius;
-					if((e.type == TELEPORT || e.type == PUSHER) && e.attr4) radius = (float)e.attr4;
+					if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attr4)
+						radius = (float)e.attr4;
 					if(radius > 0.f) renderradius(e.o, radius, radius, radius, false);
 					break;
 			}
@@ -1416,7 +1397,7 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit >= 1000 && mapsounds.inrange(e.attr1))
+			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit >= USETIME && mapsounds.inrange(e.attr1))
 			{
 				if(!issound(e.schan))
 				{
@@ -1515,14 +1496,14 @@ struct entities : icliententities
 		if(e.type == PARTICLES)
 		{
 			if(idx >= 0 || !e.links.length()) makeparticles((entity &)e);
-			else if(lastmillis-e.lastemit < 500)
+			else if(lastmillis-e.lastemit < USETIME)
 			{
 				bool both = false;
 
 				loopvk(e.links) if(ents.inrange(e.links[k]))
 				{
 					gameentity &f = *(gameentity *)ents[e.links[k]];
-					if(f.links.find(idx) >= 0 && lastmillis-f.lastemit < 500)
+					if(f.links.find(idx) >= 0 && lastmillis-f.lastemit < USETIME)
 					{
 						makeparticle(f.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 						both = true;
@@ -1534,28 +1515,25 @@ struct entities : icliententities
 			}
 		}
 
-		if(m_edit(cl.gamemode))
+		if(m_edit(cl.gamemode) && cansee(e))
 		{
-			if((showentinfo() || cl.player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy() >= 2 || (showentnoisy() && cl.player1->state == CS_EDITING)))
+			bool hasent = idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
+			vec off(0, 0, 2.f), pos(o);
+			part_create(PART_EDIT, 1, pos, hasent ? 0xFF6600 : 0xFFFF00, hasent ? 2.0f : 1.5f);
+			if(showentinfo() >= 2 || cl.player1->state == CS_EDITING)
 			{
-				bool hasent = idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
-				vec off(0, 0, 2.f), pos(o);
-				part_create(PART_EDIT, 1, pos, hasent ? 0xFF6600 : 0xFFFF00, hasent ? 2.0f : 1.5f);
-				if(showentinfo() >= 2 || cl.player1->state == CS_EDITING)
-				{
-					s_sprintf(s)("@%s%s (%d)", hasent ? "\fo" : "\fy", enttype[e.type].name, idx >= 0 ? idx : 0);
-					part_text(pos.add(off), s);
+				s_sprintf(s)("@%s%s (%d)", hasent ? "\fo" : "\fy", enttype[e.type].name, idx >= 0 ? idx : 0);
+				part_text(pos.add(off), s);
 
-					if(showentinfo() >= 3 || hasent)
-					{
-						s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fy", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-						part_text(pos.add(off), s);
-					}
-					if(showentinfo() >= 4 || hasent)
-					{
-						s_sprintf(s)("@%s%s", hasent ? "\fw" : "\fy", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, showentinfo() >= 5 || hasent));
-						part_text(pos.add(off), s);
-					}
+				if(showentinfo() >= 3 || hasent)
+				{
+					s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fy", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+					part_text(pos.add(off), s);
+				}
+				if(showentinfo() >= 4 || hasent)
+				{
+					s_sprintf(s)("@%s%s", hasent ? "\fw" : "\fy", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, showentinfo() >= 5 || hasent));
+					part_text(pos.add(off), s);
 				}
 			}
 		}

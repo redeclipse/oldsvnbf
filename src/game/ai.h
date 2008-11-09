@@ -340,19 +340,6 @@ struct aiclient
 		}
 	}
 
-	bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float fovx, float fovy)
-	{
-		float dist = o.dist(q);
-
-		if(dist <= mdist)
-		{
-			float x = fabs((asin((q.z-o.z)/dist)/RAD)-pitch);
-			float y = fabs((-(float)atan2(q.x-o.x, q.y-o.y)/PI*180+180)-yaw);
-			if(x <= fovx && y <= fovy) return raycubelos(o, q, v);
-		}
-		return false;
-	}
-
 	bool hastarget(gameent *d, aistate &b, vec &pos)
 	{ // add margins of error
 		if(!rnd(d->skill*10)) return true;

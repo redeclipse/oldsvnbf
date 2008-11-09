@@ -21,13 +21,16 @@ struct entitylight
     entitylight() : color(1, 1, 1), dir(0, 0, 1), millis(-1) {}
 };
 
+#define TRIGGERTIME	3000
+
 struct extentity : entity                       // part of the entity that doesn't get saved to disk
 {
     uchar spawned, inoctanode, visible;        // the only dynamic state of a map entity
     entitylight light;
 	vector<int> links;
+	int lastemit;
 
-    extentity() : visible(false)
+    extentity() : visible(false), lastemit(0)
     {
     	links.setsize(0);
 	}
@@ -109,7 +112,7 @@ enum
 {
     ANIM_DEAD = 0, ANIM_DYING, ANIM_IDLE,
     ANIM_FORWARD, ANIM_BACKWARD, ANIM_LEFT, ANIM_RIGHT,
-    ANIM_PAIN, ANIM_JUMP, ANIM_SINK, ANIM_SWIM, ANIM_MAPMODEL,
+    ANIM_PAIN, ANIM_JUMP, ANIM_SINK, ANIM_SWIM, ANIM_MAPMODEL, ANIM_TRIGGER,
     ANIM_GAMESPECIFIC
 };
 

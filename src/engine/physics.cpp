@@ -158,17 +158,27 @@ static float disttoent(octaentities *oc, octaentities *last, const vec &o, const
         } \
 	}
 
-	entintersect(RAY_POLY, mapmodels,
+	entintersect(RAY_POLY, mapmodels, {
+		if((mode&RAY_ENTS)!=RAY_ENTS && e.links.length())
+		{
+			int millis = lastmillis-e.lastemit;
+			int dur = e.attr5 ? e.attr5 : TRIGGERTIME;
+			int mid = dur/10;
+			if(millis > mid && millis < dur-mid) continue;
+		}
+		if((mode&RAY_ENTS)==RAY_ENTS && !et->cansee(e)) continue;
 		orient = 0; // FIXME, not set
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
-	);
+	});
 
 	entintersect(RAY_ENTS, other,
+		if((mode&RAY_ENTS)==RAY_ENTS && !et->cansee(e)) continue;
 		entselectionbox(e, eo, es);
 		if(!rayrectintersect(eo, es, o, ray, f, orient)) continue;
 	);
 
 	entintersect(RAY_ENTS, mapmodels,
+		if((mode&RAY_ENTS)==RAY_ENTS && !et->cansee(e)) continue;
 		entselectionbox(e, eo, es);
 		if(!rayrectintersect(eo, es, o, ray, f, orient)) continue;
 	);
@@ -186,6 +196,11 @@ static float shadowent(octaentities *oc, octaentities *last, const vec &o, const
 	{
 		extentity &e = *ents[oc->mapmodels[i]];
 		if(!e.inoctanode || &e==t) continue;
+		if(e.links.length())
+		{
+			int millis = lastmillis-e.lastemit, dur = e.attr5 ? e.attr5 : TRIGGERTIME, mid = dur/10;
+			if(millis > mid && millis < dur-mid) continue;
+		}
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
 		if(f>0 && f<dist) dist = f;
 	}
@@ -587,6 +602,11 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
     loopv(oc.mapmodels)
     {
         extentity &e = *ents[oc.mapmodels[i]];
+		if(e.links.length())
+		{
+			int millis = lastmillis-e.lastemit, dur = e.attr5 ? e.attr5 : TRIGGERTIME, mid = dur/10;
+			if(millis > mid && millis < dur-mid) continue;
+		}
         model *m = loadmodel(NULL, e.attr1);
         if(!m || !m->collide) continue;
         vec center, radius;
@@ -819,4 +839,17 @@ bool insidesphere(vec &d, float h1, float r1, vec &v, float h2, float r2)
 	return d.x <= v.x+r2+r1 && d.x >= v.x-r2-r1 &&
 	d.y <= v.y+r2+r1 && d.y >= v.y-r2-r1 &&
 	d.z <= v.z+h2+h1 && d.z >= v.z-h2-h1;
+}
+
+bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float fovx, float fovy)
+{
+	float dist = o.dist(q);
+
+	if(dist <= mdist)
+	{
+		float x = fabs((asin((q.z-o.z)/dist)/RAD)-pitch);
+		float y = fabs((-(float)atan2(q.x-o.x, q.y-o.y)/PI*180+180)-yaw);
+		if(x <= fovx && y <= fovy) return raycubelos(o, q, v);
+	}
+	return false;
 }

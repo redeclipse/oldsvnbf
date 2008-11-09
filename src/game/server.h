@@ -1410,7 +1410,7 @@ struct gameserver : igameserver
 						se.spawned = false;
 						se.millis = gamemillis-(sv_itemspawntime*1000)+(sv_itemspawndelay*1000); // wait a bit then load 'em up
 
-						if(commit && (enttype[se.type].usetype == EU_ITEM || se.type == TRIGGER))
+						if(commit && enttype[se.type].usetype == EU_ITEM)
 						{
 							while(sents.length() < n) sents.add(sn);
 							sents.add(se);
