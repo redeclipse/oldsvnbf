@@ -1865,7 +1865,7 @@ struct gameserver : igameserver
 			putint(p, minremain);
 		}
 		putint(p, SV_ITEMLIST);
-		loopv(sents)
+		loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM)
 		{
 			putint(p, i);
 			putint(p, sents[i].type);
