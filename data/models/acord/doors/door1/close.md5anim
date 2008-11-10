@@ -2,12 +2,13 @@ MD5Version 10
 commandline ""
 
 numFrames 11
-numJoints 2
-frameRate 10
+numJoints 3
+frameRate 30
 numAnimatedComponents 2
 
 hierarchy {
 	"Bone01"	-1 4 0	//  ( Tz )
+	"Bone03"	0 0 0	// Bone01
 	"Bone02"	-1 4 1	//  ( Tz )
 }
 
@@ -26,7 +27,8 @@ bounds {
 }
 
 baseframe {
-	( 0.0 0.0 0.0 ) ( -0.000690349 0.707107 -0.000225993 )
+	( 0.0 0.0 0.0 ) ( -0.000121718 0.707107 -0.000278677 )
+	( 20.0 -0.000443949 0.000183886 ) ( -0.490475 -0.509346 0.509347 )
 	( 0.0 -0.000524537 120.0 ) ( 0.707107 -0.00012864 -0.707107 )
 }
 
