@@ -21,7 +21,8 @@ struct entitylight
     entitylight() : color(1, 1, 1), dir(0, 0, 1), millis(-1) {}
 };
 
-#define TRIGGERTIME	3000
+#define TRIGGERDELAY	3000
+#define TRIGGERTIME		1000
 
 struct extentity : entity                       // part of the entity that doesn't get saved to disk
 {
@@ -112,7 +113,8 @@ enum
 {
     ANIM_DEAD = 0, ANIM_DYING, ANIM_IDLE,
     ANIM_FORWARD, ANIM_BACKWARD, ANIM_LEFT, ANIM_RIGHT,
-    ANIM_PAIN, ANIM_JUMP, ANIM_SINK, ANIM_SWIM, ANIM_MAPMODEL, ANIM_TRIGGER,
+    ANIM_PAIN, ANIM_JUMP, ANIM_SINK, ANIM_SWIM,
+    ANIM_MAPMODEL, ANIM_TRIGGER_ON, ANIM_TRIGGER_OFF,
     ANIM_GAMESPECIFIC
 };
 

@@ -189,7 +189,7 @@ struct projectiles
 			if(proj.attr1 == GUN_PLASMA)
 			{
                 int part = PART_PLASMA;
-                if(proj.lifemillis-proj.lifetime < 100) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/100.f, 0.1f, 1.f);
+                if(proj.lifemillis-proj.lifetime < 100) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/100.f, 0.01f, 1.f);
                 else
                 {
                     part = PART_PLASMA_SOFT;
@@ -200,11 +200,12 @@ struct projectiles
 			}
 			else if(proj.attr1 == GUN_FLAMER)
 			{
-				proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+				proj.lifesize = clamp(proj.lifespan, 0.01f, 1.f);
 				int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(86*max(1.0f-proj.lifespan,0.15f))+1)<<8);
-				if(lastmillis-proj.lasteffect > 100)
+				bool moving = (proj.movement > 2.f);
+				if(lastmillis-proj.lasteffect > (moving ? 100 : 250))
 				{
-					part_create(PART_FIREBALL_SOFT, 100, proj.o, col, guntype[proj.attr1].size*proj.lifesize);
+					part_create(PART_FIREBALL_SOFT, moving ? 100 : 250, proj.o, col, guntype[proj.attr1].size*proj.lifesize);
 					proj.lasteffect = lastmillis;
 				}
 				else part_create(PART_FIREBALL_SOFT, 1, proj.o, col, guntype[proj.attr1].size*proj.lifesize);
@@ -215,7 +216,7 @@ struct projectiles
 				int col = ((int(144*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8);
 				part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*2.f*proj.lifesize);
 				bool moving = (proj.movement > 4.f);
-				if(lastmillis-proj.lasteffect > (moving ? 100 : 250))
+				if(lastmillis-proj.lasteffect > (moving ? 250 : 500))
 				{
 					part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x666666, proj.radius*(moving ? 1.f : 2.f));
 					proj.lasteffect = lastmillis;
@@ -234,23 +235,21 @@ struct projectiles
 		else if(proj.projtype == PRJ_DEBRIS)
 		{
 			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // rather, this gets smaller as it gets older
-			int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(78*max(1.0f-proj.lifespan,0.2f))+1)<<8);
-			part_create(PART_FIREBALL_SOFT, 1, proj.o, col, proj.radius*proj.lifesize);
-			int steps = int(proj.vel.magnitude()*0.25f*proj.lifesize);
+			int steps = int(proj.vel.magnitude()*0.5f*proj.lifesize);
 			if(steps)
 			{
-				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.45f), pos = proj.o;
+				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.65f), pos = proj.o;
 				loopi(steps)
 				{
 					float res = float(steps-i)/float(steps);
-					col = ((int(144*max(res,0.3f))<<16)+1)|((int(86*max(res,0.2f))+1)<<8);
-					part_create(PART_PLASMA, 1, pos, col, proj.radius*0.9f*proj.lifesize*res);
+					int col = ((int(144*max(res,0.3f))<<16)+1)|((int(86*max(res,0.2f))+1)<<8);
+					part_create(PART_PLASMA_SOFT, 1, pos, col, proj.radius*proj.lifesize*res);
 					pos.add(dir);
 				}
 			}
-			if(lastmillis-proj.lasteffect > 250)
+			if(lastmillis-proj.lasteffect > 300)
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 250, vec(proj.o).sub(vec(0, 0, 1)), 0x222222, proj.radius*2.f*proj.lifesize); // smoke
+				part_create(PART_SMOKE_RISE_SLOW, 500, vec(proj.o).sub(vec(0, 0, 1)), 0x222222, proj.radius*2.f*proj.lifesize); // smoke
 				proj.lasteffect = lastmillis;
 			}
 		}
@@ -304,6 +303,8 @@ struct projectiles
 						adddecal(DECAL_SCORCH, proj.o, wall, guntype[proj.attr1].size*proj.lifesize);
 						adddecal(DECAL_ENERGY, proj.o, wall, guntype[proj.attr1].size*proj.lifesize*0.5f, bvec(92, 24, 8));
 					}
+					if(proj.projtype == PRJ_GIBS && !hitplayer)
+						adddecal(DECAL_BLOOD, proj.o, wall, proj.radius*proj.vel.magnitude());
 
 					if(vol)
 					{

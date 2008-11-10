@@ -390,27 +390,28 @@ void rendermapmodel(extentity &e)
 	int anim = ANIM_MAPMODEL|ANIM_LOOP, basetime = 0;
     if(e.links.length())
     {
-    	int millis = lastmillis-e.lastemit, dur = e.attr5 ? e.attr5 : TRIGGERTIME, mid = dur/2;
+    	int millis = lastmillis-e.lastemit;
 		switch(e.extstate)
 		{
 			case 0:
 			{
-				if(millis < dur) { anim = ANIM_TRIGGER|ANIM_REVERSE; basetime = e.lastemit; }
-				else anim = ANIM_TRIGGER|ANIM_START;
+				if(millis < 1000) { anim = ANIM_TRIGGER_OFF; basetime = e.lastemit; }
+				else anim = ANIM_TRIGGER_OFF|ANIM_END;
 				break;
 			}
 			case 1:
 			{
-				if(millis < dur) { anim = ANIM_TRIGGER; basetime = e.lastemit; }
-				else anim = ANIM_TRIGGER|ANIM_END;
+				if(millis < 1000) { anim = ANIM_TRIGGER_ON; basetime = e.lastemit; }
+				else anim = ANIM_TRIGGER_ON|ANIM_END;
 				break;
 			}
 			case 2:
 			{
-				if(millis < mid) { anim = ANIM_TRIGGER; basetime = e.lastemit; }
-				else if(millis == mid) anim = ANIM_TRIGGER|ANIM_END;
-				else if(millis < dur) { anim = ANIM_TRIGGER|ANIM_REVERSE; basetime = e.lastemit+mid; }
-				else anim = ANIM_TRIGGER|ANIM_START;
+				int dur = e.attr5 ? e.attr5 : TRIGGERDELAY;
+				if(millis < TRIGGERTIME) { anim = ANIM_TRIGGER_ON; basetime = e.lastemit; }
+				else if(millis < dur+TRIGGERTIME) anim = ANIM_TRIGGER_ON|ANIM_END;
+				else if(millis < dur+TRIGGERTIME*2) { anim = ANIM_TRIGGER_OFF; basetime = e.lastemit+dur+TRIGGERTIME; }
+				else anim = ANIM_TRIGGER_OFF|ANIM_END;
 				break;
 			}
 			default: break;
