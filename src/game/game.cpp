@@ -193,13 +193,13 @@ struct gameclient : igameclient
 
 	bool isthirdperson()
 	{
-		return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR;
+		return thirdperson() && player1->state != CS_EDITING && player1->state != CS_SPECTATOR && player1->state != CS_WAITING;
 	}
 
 	int mousestyle()
 	{
 		if(player1->state == CS_EDITING) return editmouse();
-		if(player1->state == CS_SPECTATOR) return specmouse();
+		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specmouse();
 		if(inzoom()) return player1->gunselect == GUN_RIFLE ? snipemouse() : pronemouse();
 		if(isthirdperson()) return thirdpersonmouse();
 		return firstpersonmouse();
@@ -208,7 +208,7 @@ struct gameclient : igameclient
 	int deadzone()
 	{
 		if(player1->state == CS_EDITING) return editdeadzone();
-		if(player1->state == CS_SPECTATOR) return specdeadzone();
+		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specdeadzone();
 		if(inzoom()) return player1->gunselect == GUN_RIFLE ? snipedeadzone() : pronedeadzone();
 		if(isthirdperson()) return thirdpersondeadzone();
 		return firstpersondeadzone();
@@ -218,7 +218,7 @@ struct gameclient : igameclient
 	{
 		if(inzoom()) return player1->gunselect == GUN_RIFLE ? snipepanspeed() : pronepanspeed();
 		if(player1->state == CS_EDITING) return editpanspeed();
-		if(player1->state == CS_SPECTATOR) return specpanspeed();
+		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specpanspeed();
 		if(isthirdperson()) return thirdpersonpanspeed();
 		return firstpersonpanspeed();
 	}
@@ -226,7 +226,7 @@ struct gameclient : igameclient
 	int fov()
 	{
 		if(player1->state == CS_EDITING) return editfov();
-		if(player1->state == CS_SPECTATOR) return specfov();
+		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specfov();
 		if(isthirdperson()) return thirdpersonfov();
 		return firstpersonfov();
 	}
@@ -954,7 +954,7 @@ struct gameclient : igameclient
 		}
         else if(hidehud || !showcrosshair() || player1->state == CS_DEAD || !connected()) return;
         else if(player1->state == CS_EDITING) index = POINTER_EDIT;
-        else if(player1->state == CS_SPECTATOR) index = POINTER_SPEC;
+        else if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) index = POINTER_SPEC;
         else if(inzoom() && player1->gunselect == GUN_RIFLE) index = POINTER_SNIPE;
         else if(lastmillis-lasthit <= crosshairhitspeed()) index = POINTER_HIT;
         else if(m_team(gamemode, mutators))
@@ -1557,8 +1557,7 @@ struct gameclient : igameclient
 	void heightoffset(gameent *d, bool local)
 	{
 		d->o.z -= d->height;
-		if(d->state == CS_SPECTATOR) d->height = 0.f;
-		else if(d->state == CS_ALIVE || d->state == CS_EDITING)
+		if(d->state == CS_ALIVE)
 		{
 			if(ph.iscrouching(d))
 			{
@@ -2055,7 +2054,7 @@ struct gameclient : igameclient
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showgun = isgun(gun);
 
-		if(d->state == CS_SPECTATOR) return;
+		if(d->state == CS_SPECTATOR || d->state == CS_WAITING) return;
 		else if(d->state == CS_DEAD)
 		{
 			if(d->obliterated) return; // not shown at all
@@ -2208,7 +2207,7 @@ struct gameclient : igameclient
 		gameent *d;
         loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
         {
-			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
+			if(d->state!=CS_SPECTATOR && d->state!=CS_WAITING && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
 				renderplayer(d, true, d->state == CS_LAGGED || (d->state == CS_ALIVE && lastmillis-d->lastspawn <= REGENWAIT));
         }
 
@@ -2226,7 +2225,7 @@ struct gameclient : igameclient
         if(inzoomswitch() && player1->gunselect == GUN_RIFLE) return;
         if(isthirdperson() || !rendernormally)
         {
-            if(player1->state!=CS_SPECTATOR && (player1->state!=CS_DEAD || !player1->obliterated))
+            if(player1->state!=CS_SPECTATOR && player1->state!=CS_WAITING && (player1->state!=CS_DEAD || !player1->obliterated))
                 renderplayer(player1, true, (player1->state == CS_ALIVE && lastmillis-player1->lastspawn <= REGENWAIT) || thirdpersontranslucent(), early);
         }
         else if(player1->state == CS_ALIVE)

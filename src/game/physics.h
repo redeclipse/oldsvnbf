@@ -119,7 +119,7 @@ struct physics
 
 	float maxspeed(physent *d)
 	{
-		if(d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_EDITING)
+		if(d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_WAITING && d->state != CS_EDITING)
 		{
 			return d->maxspeed*(float(iscrouching(d) ? crawlspeed() : movespeed())/100.f)*(float(d->weight)/100.f)*speedscale;
 		}
@@ -128,7 +128,7 @@ struct physics
 
 	bool movepitch(physent *d)
 	{
-		return d->type == ENT_CAMERA || d->state == CS_SPECTATOR || d->state == CS_EDITING;
+		return d->type == ENT_CAMERA || d->state == CS_SPECTATOR || d->state == CS_WAITING || d->state == CS_EDITING;
 	}
 
     void recalcdir(physent *d, const vec &oldvel, vec &dir)
@@ -507,7 +507,7 @@ struct physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-		bool floating = pl->type==ENT_PLAYER && (pl->state==CS_EDITING || pl->state==CS_SPECTATOR);
+		bool floating = pl->type == ENT_PLAYER && (pl->state == CS_EDITING || pl->state == CS_SPECTATOR || pl->state == CS_WAITING);
 		float secs = millis/1000.f;
 
 		if(pl->type!=ENT_CAMERA) updatematerial(pl, local, floating);

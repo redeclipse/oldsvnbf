@@ -304,7 +304,7 @@ struct projectiles
 						adddecal(DECAL_ENERGY, proj.o, wall, guntype[proj.attr1].size*proj.lifesize*0.5f, bvec(92, 24, 8));
 					}
 					if(proj.projtype == PRJ_GIBS && !hitplayer)
-						adddecal(DECAL_BLOOD, proj.o, wall, proj.radius*proj.vel.magnitude());
+						adddecal(DECAL_BLOOD, proj.o, wall, proj.radius*2.f, bvec(100, 255, 255));
 
 					if(vol)
 					{

@@ -100,19 +100,18 @@ struct aiserv
 
 					sendf(-1, 1, "ri5si", SV_INITAI, ci->state.aitype, ci->state.ownernum, ci->state.skill, ci->clientnum, ci->name, ci->team);
 
-					if(ci->state.state != CS_SPECTATOR)
+					int nospawn = 0;
+					if(sv.smode && !sv.smode->canspawn(ci, true)) { nospawn++; }
+					mutate(sv.smuts, if (!mut->canspawn(ci, true)) { nospawn++; });
+					if(nospawn)
 					{
-						int nospawn = 0;
-						if(sv.smode && !sv.smode->canspawn(ci, true)) { nospawn++; }
-						mutate(sv.smuts, if (!mut->canspawn(ci, true)) { nospawn++; });
-
-						if(nospawn)
+						if(ci->state.state != CS_WAITING)
 						{
 							ci->state.state = CS_DEAD;
 							sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
 						}
-						else sv.sendspawn(ci);
 					}
+					else sv.sendspawn(ci);
 					return true;
 				}
 			}
