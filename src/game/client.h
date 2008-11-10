@@ -325,7 +325,7 @@ struct clientcom : iclientcom
 		if(flags&SAY_ACTION) s_sprintf(s)("%s* \fs%s\fS \fs%s\fS", t, m, text);
 		else s_sprintf(s)("%s<\fs\fw%s\fS> \fs\fw%s\fS", t, m, text);
 
-		if(d->state != CS_DEAD && d->state != CS_SPECTATOR)
+		if(d->state != CS_DEAD && d->state != CS_SPECTATOR && d->state != CS_WAITING)
 		{
 			s_sprintfd(ds)("@%s", &s);
 			part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
@@ -545,7 +545,7 @@ struct clientcom : iclientcom
 		const float dz = cl.player1->o.z-d->o.z;
 		const float rz = cl.player1->aboveeye+cl.player1->height;
 		const float fx = (float)fabs(dx), fy = (float)fabs(dy), fz = (float)fabs(dz);
-		if(fx<r && fy<r && fz<rz && cl.player1->state!=CS_SPECTATOR && d->state!=CS_DEAD)
+		if(fx<r && fy<r && fz<rz && cl.player1->state!=CS_SPECTATOR && cl.player1->state!=CS_WAITING && d->state!=CS_DEAD)
 		{
 			if(fx<fy) d->o.y += dy<0 ? r-fy : -(r-fy);  // push aside
 			else	  d->o.x += dx<0 ? r-fx : -(r-fx);
@@ -1220,6 +1220,16 @@ struct clientcom : iclientcom
 					break;
 				}
 
+				case SV_WAITING:
+				{
+					int sn = getint(p);
+					gameent *s = cl.newclient(sn);
+					if(!s) break;
+					if(s==cl.player1 && editmode) toggleedit();
+					s->state = CS_WAITING;
+					break;
+				}
+
 				case SV_SETTEAM:
 				{
 					int wn = getint(p), tn = getint(p);
@@ -1535,7 +1545,7 @@ struct clientcom : iclientcom
 
 	void gotoplayer(const char *arg)
 	{
-		if(cl.player1->state!=CS_SPECTATOR && cl.player1->state!=CS_EDITING) return;
+		if(cl.player1->state!=CS_SPECTATOR && cl.player1->state!=CS_WAITING && cl.player1->state!=CS_EDITING) return;
 		int i = parseplayer(arg);
 		if(i>=0 && i!=cl.player1->clientnum)
 		{

@@ -199,7 +199,7 @@ struct gameserver : igameserver
 		gameevent &addevent()
 		{
 			static gameevent dummy;
-            if(state.state==CS_SPECTATOR || events.length()>100) return dummy;
+            if(state.state==CS_SPECTATOR || state.state==CS_WAITING || events.length()>100) return dummy;
 			return events.add();
 		}
 
@@ -1832,7 +1832,7 @@ struct gameserver : igameserver
 			if(m_edit(gamemode) && numclients(ci->clientnum, true, true))
 			{
 				clientinfo *best = NULL;
-				loopv(clients) if(clients[i]->name[0] && clients[i]->state.aitype == AI_NONE && clients[i]->state.state != CS_SPECTATOR)
+				loopv(clients) if(clients[i]->name[0] && clients[i]->state.aitype == AI_NONE)
 				{
 					clientinfo *cs = clients[i];
 					if(haspriv(cs, PRIV_MASTER)) { best = cs; break; }
