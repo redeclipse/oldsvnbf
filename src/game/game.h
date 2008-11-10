@@ -655,7 +655,8 @@ const char *animnames[] =
 {
 	"dead", "dying", "idle",
 	"forward", "backward", "left", "right",
-	"pain", "jump", "sink", "swim", "mapmodel", "trigger",
+	"pain", "jump", "sink", "swim",
+	"mapmodel", "trigger on", "trigger off",
 	"edit", "lag", "switch", "taunt", "win", "lose",
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
 	"plasma", "plasma shoot", "plasma reload",

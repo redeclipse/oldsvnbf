@@ -501,21 +501,38 @@ struct entities : icliententities
 					switch(f.type)
 					{
 						case MAPMODEL:
+						{
+							if(e.type == TRIGGER)
+							{
+								bool toggle = m_fight(cl.gamemode) || e.attr2 == TR_LINK;
+								int dur = toggle ? (f.attr5 ? f.attr5 : TRIGGERDELAY)+TRIGGERTIME*2 : TRIGGERTIME;
+								if(lastmillis-f.lastuse >= dur)
+								{
+									f.lastuse = lastmillis;
+									if(f.type == MAPMODEL)
+									{
+										f.extstate = toggle ? 2 : (f.extstate ? 0 : 1);
+										f.lastemit = lastmillis;
+										if(local) execlink(d, i, true);
+									}
+									else
+									{
+										f.lastemit = lastmillis;
+										if(both) e.lastemit = lastmillis;
+									}
+									commit = true;
+								}
+							}
+							break;
+						}
 						case PARTICLES:
 						{
-							int millis = f.type == MAPMODEL ? (f.attr5 ? f.attr5 : TRIGGERTIME) : USETIME;
-							if(lastmillis-f.lastuse >= millis)
+							if(lastmillis-f.lastuse >= USETIME)
 							{
 								f.lastuse = lastmillis;
-								commit = true;
 								f.lastemit = lastmillis;
 								if(both) e.lastemit = lastmillis;
-								if(f.type == MAPMODEL)
-								{
-									bool toggle = m_fight(cl.gamemode) || f.attr2 == TR_LINK;
-									f.extstate = toggle ? 2 : (f.extstate ? 0 : 1);
-									if(local) execlink(d, i, true);
-								}
+								commit = true;
 							}
 							break;
 						}
@@ -524,7 +541,6 @@ struct entities : icliententities
 							if(lastmillis-f.lastuse >= USETIME && mapsounds.inrange(f.attr1) && !issound(f.schan))
 							{
 								f.lastuse = lastmillis;
-								commit = true;
 								int flags = SND_MAP;
 								if(f.attr5&SND_NOATTEN) flags |= SND_NOATTEN;
 								if(f.attr5&SND_NODELAY) flags |= SND_NODELAY;
@@ -532,6 +548,7 @@ struct entities : icliententities
 								playsound(f.attr1, both ? f.o : e.o, NULL, flags, f.attr4, f.attr2, f.attr3, &f.schan);
 								f.lastemit = lastmillis;
 								if(both) e.lastemit = lastmillis;
+								commit = true;
 							}
 							break;
 						}

@@ -136,10 +136,11 @@ int hitent, hitorient;
 	{ \
 			if(e.links.length()) \
 			{ \
-				int millis = lastmillis-e.lastemit, dur = e.attr5 ? e.attr5 : TRIGGERTIME; \
-				if(e.extstate == 0 && millis < dur/4) continue; \
-				if(e.extstate == 1 && millis > dur/4) continue; \
-				if(e.extstate == 2 && millis > dur/8 && millis < dur-dur/8) continue; \
+				int millis = lastmillis-e.lastemit; \
+				if(e.extstate == 0 && millis < TRIGGERTIME/2) continue; \
+				if(e.extstate == 1 && millis > TRIGGERTIME/2) continue; \
+				if(e.extstate == 2 && millis > TRIGGERTIME/2 && millis < (e.attr5 ? e.attr5 : TRIGGERDELAY)+TRIGGERTIME+TRIGGERTIME/2) \
+					continue; \
 			} \
 	}
 
