@@ -1,6 +1,6 @@
 struct duelservmode : servmode
 {
-	static const int DUELMILLIS = 5000;
+	static const int DUELMILLIS = 10000;
 
 	int duelround, dueltime;
 	vector<int> duelqueue;
@@ -22,11 +22,12 @@ struct duelservmode : servmode
 			{
 				sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 				ci->state.state = CS_WAITING;
+				loopk(GUN_MAX) ci->state.entid[k] = -1;
 			}
 			if(msg)
 			{
-				if(!dueltime || n > 1)
-					sv.srvoutf(ci->clientnum, "\foyou are \fs\fy#%d\fS in the queue", (dueltime ? n-1 : n+1));
+				if(!dueltime || n > 0)
+					sv.srvoutf(ci->clientnum, "\foyou are \fs\fy#%d\fS in the queue", (dueltime ? n : n+1));
 				else sv.srvoutf(ci->clientnum, "\foyou are \fs\fyNEXT\fS in the queue", n+1);
 			}
 		}
@@ -58,29 +59,31 @@ struct duelservmode : servmode
 	{
 		if(sv_itemsallowed >= (m_insta(sv.gamemode, sv.mutators) ? 2 : 1))
 		{
-			loopvj(sv.sents)
+			loopvj(sv.sents) if(enttype[sv.sents[j].type].usetype == EU_ITEM && !sv.finditem(j, true, 0))
 			{
-				sv.sents[j].millis = sv.gamemillis;
-				if(!sv.sents[j].spawned)
+				loopvk(sv.clients)
 				{
-					sv.sents[j].spawned = true;
-					sendf(-1, 1, "ri2", SV_ITEMSPAWN, j);
+					clientinfo *ci = sv.clients[k];
+					ci->state.dropped.remove(j);
 				}
+				sv.sents[j].millis = sv.gamemillis; // hijack its spawn time
+				sv.sents[j].spawned = true;
+				sendf(-1, 1, "ri2", SV_ITEMSPAWN, j);
 			}
 		}
-		loopvj(sv.clients)
-		{
-			clientinfo *ci = sv.clients[j];
-			loopk(GUN_MAX) ci->state.entid[k] = -1;
-			ci->state.dropped.reset();
-		}
+	}
+
+	void cleanup()
+	{
+		loopvrev(duelqueue)
+			if(!sv.clients.inrange(duelqueue[i]) || !sv.clients[duelqueue[i]]->name[0] || sv.clients[duelqueue[i]]->state.state == CS_SPECTATOR || sv.clients[duelqueue[i]]->state.state == CS_ALIVE)
+				duelqueue.remove(i);
 	}
 
 	void update()
 	{
 		if(sv.interm) return;
-		loopvrev(duelqueue) if(!sv.clients.inrange(duelqueue[i]) || !sv.clients[duelqueue[i]]->name[0] || sv.clients[duelqueue[i]]->state.state == CS_SPECTATOR)
-			duelqueue.remove(i);
+		cleanup();
 
 		vector<clientinfo *> alive;
 		alive.setsize(0);
@@ -91,51 +94,59 @@ struct duelservmode : servmode
 		{
 			if(sv.gamemillis >= dueltime)
 			{
-				loopv(duelqueue) if(sv.clients.inrange(duelqueue[i]))
-					alive.add(sv.clients[duelqueue[i]]);
-				if(alive.length() > 1)
+				if(alive.length() < 2) // while waiting for next round our two guys spawn
+				{
+					loopv(duelqueue)
+					{
+						if(alive.length() >= 2) break;
+						if(sv.clients.inrange(duelqueue[i]))
+						{
+							clientinfo *ci = sv.clients[duelqueue[i]];
+							if(ci->state.state != CS_ALIVE)
+							{
+								ci->state.state = CS_ALIVE;
+								ci->state.respawn(sv.gamemillis);
+								sv.sendspawn(ci);
+								alive.add(ci);
+							}
+						}
+					}
+					cleanup();
+				}
+
+				if(alive.length() > 2) loopvrev(alive)
+				{
+					queue(alive[i], true);
+					alive.remove(i);
+					if(alive.length() <= 2) break;
+				}
+
+				loopvj(sv.clients) if(sv.clients[j]->name[0] && sv.clients[j]->state.state != CS_ALIVE && sv.clients[j]->state.state != CS_SPECTATOR)
+					queue(sv.clients[j], true);
+				if(alive.length() == 2)
 				{
 					clearitems();
-					loopv(alive)
-					{
-						alive[i]->state.state = CS_ALIVE;
-						alive[i]->state.respawn(sv.gamemillis);
-						sv.sendspawn(alive[i]);
-						int n = duelqueue.find(alive[i]->clientnum);
-						if(n >= 0) duelqueue.remove(n);
-						if(i) break;
-					}
 					duelround++;
-
 					s_sprintfd(namea)("%s", sv.colorname(alive[0]));
 					s_sprintfd(nameb)("%s", sv.colorname(alive[1]));
 					s_sprintfd(fight)("%s vs %s, round \fs\fy#%d\fS, FIGHT!", namea, nameb, duelround);
 					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
 					dueltime = 0;
 				}
-				else
-				{
-					loopv(sv.clients) if(sv.clients[i]->name[0] && sv.clients[i]->state.state != CS_SPECTATOR)
-						queue(sv.clients[i]);
-				}
-			}
-			else if(sv.gamemillis >= dueltime-DUELMILLIS/2)
-			{
-				clearitems();
 			}
 		}
 		else if(alive.length() < 2)
 		{
 			if(!alive.empty())
 			{
-				sv.srvoutf(-1, "\fo%s won the duel", sv.colorname(alive[0]));
+				sv.srvoutf(-1, "\fo%s survived the duel", sv.colorname(alive[0]));
 				sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, "you win!");
-				queue(alive[0], false, true);
+				alive[0]->state.health = MAXHEALTH;
+				alive[0]->state.lastregen = sv.gamemillis;
+				sendf(-1, 1, "ri3", SV_REGEN, alive[0]->clientnum, alive[0]->state.health);
 			}
 			else sv.srvoutf(-1, "everyone died!");
 			dueltime = sv.gamemillis + DUELMILLIS;
-			loopv(sv.clients) if(sv.clients[i]->name[0] && sv.clients[i]->state.state != CS_SPECTATOR)
-				queue(sv.clients[i], true);
 		}
 	}
 
@@ -146,5 +157,6 @@ struct duelservmode : servmode
 		duelqueue.setsize(0);
 		loopv(sv.clients) if(sv.clients[i]->name[0] && sv.clients[i]->state.state != CS_SPECTATOR)
 			queue(sv.clients[i], true);
+		clearitems();
 	}
 } duelmutator;

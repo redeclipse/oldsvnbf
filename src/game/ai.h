@@ -105,11 +105,8 @@ struct aiserv
 					mutate(sv.smuts, if (!mut->canspawn(ci, true)) { nospawn++; });
 					if(nospawn)
 					{
-						if(ci->state.state != CS_WAITING)
-						{
-							ci->state.state = CS_DEAD;
-							sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
-						}
+						ci->state.state = CS_DEAD;
+						sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
 					}
 					else sv.sendspawn(ci);
 					return true;
@@ -1047,7 +1044,11 @@ struct aiclient
 			d->strafe = ad.strafe;
 			d->aimyaw -= ad.offset;
 		}
-		else d->stopmoving();
+		else
+		{
+			d->stopmoving();
+			d->move = 1; // walk forward
+		}
 		cl.fixrange(d->aimyaw, d->aimpitch);
 		return aiming;
 	}

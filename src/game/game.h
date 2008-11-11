@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			105
+#define GAMEVERSION			106
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -133,7 +133,7 @@ struct guntypes
 {
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	S_PLASMA,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
-		20,		20,		200,	800,	10,		200,	0,		10000,	-5,		5,
+		20,		20,		200,	800,	20,		200,	0,		10000,	-5,		5,
 		5,		12,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
 				"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep"
 	},
@@ -251,6 +251,8 @@ struct gametypes
 #define m_insta(a,b)		((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
 #define m_duel(a,b)			((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
 #define m_multi(a,b)		((b & G_M_MULTI) || (gametype[a].implied & G_M_MULTI))
+
+#define m_regen(a,b)		(m_fight(a) && !m_insta(a, b) && !m_duel(a, b))
 
 // network messages codes, c2s, c2c, s2c
 enum
