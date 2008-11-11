@@ -91,6 +91,11 @@ struct entities : icliententities
 					entlinks[i].add(TRIGGER);
 					break;
 				case PARTICLES:
+					entlinks[i].add(MAPMODEL);
+					entlinks[i].add(TELEPORT);
+					entlinks[i].add(TRIGGER);
+					entlinks[i].add(PUSHER);
+					break;
 				case MAPSOUND:
 					entlinks[i].add(MAPMODEL);
 					entlinks[i].add(TELEPORT);
@@ -509,16 +514,11 @@ struct entities : icliententities
 								if(lastmillis-f.lastuse >= dur)
 								{
 									f.lastuse = lastmillis;
+									f.lastemit = lastmillis;
 									if(f.type == MAPMODEL)
 									{
 										f.extstate = toggle ? 2 : (f.extstate ? 0 : 1);
-										f.lastemit = lastmillis;
 										if(local) execlink(d, i, true);
-									}
-									else
-									{
-										f.lastemit = lastmillis;
-										if(both) e.lastemit = lastmillis;
 									}
 									commit = true;
 								}
@@ -531,7 +531,6 @@ struct entities : icliententities
 							{
 								f.lastuse = lastmillis;
 								f.lastemit = lastmillis;
-								if(both) e.lastemit = lastmillis;
 								commit = true;
 							}
 							break;
@@ -541,13 +540,12 @@ struct entities : icliententities
 							if(lastmillis-f.lastuse >= USETIME && mapsounds.inrange(f.attr1) && !issound(f.schan))
 							{
 								f.lastuse = lastmillis;
+								f.lastemit = lastmillis;
 								int flags = SND_MAP;
 								if(f.attr5&SND_NOATTEN) flags |= SND_NOATTEN;
 								if(f.attr5&SND_NODELAY) flags |= SND_NODELAY;
 								if(f.attr5&SND_NOCULL) flags |= SND_NOCULL;
 								playsound(f.attr1, both ? f.o : e.o, NULL, flags, f.attr4, f.attr2, f.attr3, &f.schan);
-								f.lastemit = lastmillis;
-								if(both) e.lastemit = lastmillis;
 								commit = true;
 							}
 							break;
@@ -1291,10 +1289,10 @@ struct entities : icliententities
 #if 0
 				part_flare(vec(e.o).add(vec(0, 0, RENDERPUSHZ)),
 					vec(f.o).add(vec(0, 0, RENDERPUSHZ)),
-						10, PART_LINE, both ? 0xF08020 : 0xF02020, 0.2f);
+						10, PART_LINE, both ? 0xFF8822 : 0xFF2222, 0.2f);
 #else
 				vec fr(vec(e.o).add(vec(0, 0, RENDERPUSHZ))), dr(vec(f.o).add(vec(0, 0, RENDERPUSHZ)));
-				vec col(0.5f, both ? 0.25f : 0.0f, 0.f);
+				vec col(0.75f, both ? 0.5f : 0.0f, 0.f);
 				renderline(fr, dr, col.x, col.y, col.z, false);
 				dr.sub(fr);
 				dr.normalize();
@@ -1509,7 +1507,7 @@ struct entities : icliententities
 		string s;
 		if(e.type == PARTICLES)
 		{
-			if(idx >= 0 || !e.links.length()) makeparticles((entity &)e);
+			if(idx < 0 || !e.links.length()) makeparticles((entity &)e);
 			else if(lastmillis-e.lastemit < USETIME)
 			{
 				bool both = false;
@@ -1523,7 +1521,6 @@ struct entities : icliententities
 						both = true;
 					}
 				}
-
 				if(!both) // hasn't got an active reciprocal link (fallback)
 					makeparticle(o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 			}
