@@ -1800,20 +1800,20 @@ struct gameserver : igameserver
 		else srvoutf(ci->clientnum, "\frunknown command: %s", cmd);
 	}
 
-	bool finditem(int i, bool spawned = true)
+	bool finditem(int i, bool spawned = true, int spawntime = 0)
 	{
 		if(sents[i].spawned) return true;
 		else
 		{
-			int spawntime = sv_itemspawntime*1000;
 			loopvk(clients)
 			{
 				clientinfo *ci = clients[k];
-				if(ci->state.dropped.projs.find(i) >= 0 && gamemillis-sents[i].millis <= spawntime)
+				if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (spawntime && gamemillis-sents[i].millis <= spawntime)))
 					return true;
 				else loopj(GUN_MAX) if(ci->state.entid[j] == i) return spawned;
 			}
-			if(gamemillis-sents[i].millis <= spawntime) return spawned;
+			if(spawned && spawntime && gamemillis-sents[i].millis <= spawntime)
+				return true;
 		}
 		return false;
 	}
@@ -1864,7 +1864,7 @@ struct gameserver : igameserver
 			putint(p, sents[i].attr3);
 			putint(p, sents[i].attr4);
 			putint(p, sents[i].attr5);
-			putint(p, finditem(i, false) ? 1 : 0);
+			putint(p, finditem(i, false, 0) ? 1 : 0);
 		}
 		putint(p, -1);
 
@@ -2311,7 +2311,7 @@ struct gameserver : igameserver
 				int lastpain = gamemillis-ci->state.lastpain,
 					lastregen = gamemillis-ci->state.lastregen;
 
-				if (!m_insta(gamemode, mutators) && ci->state.health < MAXHEALTH && lastpain >= REGENWAIT && lastregen >= REGENTIME)
+				if (m_regen(gamemode, mutators) && ci->state.health < MAXHEALTH && lastpain >= REGENWAIT && lastregen >= REGENTIME)
 				{
 					int health = ci->state.health - (ci->state.health % REGENHEAL);
 					ci->state.health = min(health + REGENHEAL, MAXHEALTH);
@@ -2351,9 +2351,9 @@ struct gameserver : igameserver
 		else if(minremain)
 		{
 			processevents();
-			if(sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1))
+			if(!m_duel(gamemode, mutators) && sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1))
             {
-                loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true))
+                loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, sv_itemspawntime*1000))
 				{
 					loopvk(clients)
 					{
