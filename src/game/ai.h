@@ -451,10 +451,10 @@ struct aiclient
 			vec epos(cl.feetpos(e, 0.f));
 			aistate &c = d->ai->addstate(pursue ? AI_S_PURSUE : AI_S_ATTACK);
 			c.targtype = AI_T_PLAYER;
-			c.defers = pursue && b.defers;
+			c.defers = pursue;
 			d->ai->enemy = c.target = e->clientnum;
 			d->ai->lastseen = lastmillis;
-			if(pursue) c.expire = 5000;
+			if(pursue) c.expire = clamp(d->skill*100, 1000, 10000);
 			return true;
 		}
 		return false;
@@ -495,10 +495,9 @@ struct aiclient
 						n.node = cl.et.entitynode(e.o, true);
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
-						n.expire = 10000;
 						n.tolerance = enttype[e.type].radius+d->radius;
 						n.score = pos.squaredist(e.o)/(e.attr1 != d->ai->gunpref ? 1.f : 10.f);
-						n.defers = true;
+						n.defers = (d->gunselect != GUN_PLASMA);
 					}
 					break;
 				}
@@ -522,10 +521,9 @@ struct aiclient
 						n.node = cl.et.entitynode(proj.o, true);
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
-						n.expire = 5000;
 						n.tolerance = enttype[proj.ent].radius+d->radius;
 						n.score = pos.squaredist(proj.o)/(proj.attr1 != d->ai->gunpref ? 1.f : 10.f);
-						n.defers = true;
+						n.defers = (d->gunselect != GUN_PLASMA);
 					}
 					break;
 				}
@@ -758,6 +756,7 @@ struct aiclient
 			{
 				case AI_T_ENTITY:
 				{
+					if(d->hasgun(d->ai->gunpref)) return false;
 					if(cl.et.ents.inrange(b.target))
 					{
 						gameentity &e = *(gameentity *)cl.et.ents[b.target];
@@ -766,10 +765,7 @@ struct aiclient
 						{
 							case WEAPON:
 							{
-								if(d->hasgun(d->ai->gunpref))
-									return false;
-								if(!e.spawned || d->hasgun(e.attr1))
-									return false;
+								if(!e.spawned || d->hasgun(e.attr1)) return false;
 								break;
 							}
 							default: break;
@@ -780,6 +776,7 @@ struct aiclient
 				}
 				case AI_T_DROP:
 				{
+					if(d->hasgun(d->ai->gunpref)) return false;
 					loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ready() && cl.pj.projs[j]->id == b.target)
 					{
 						projent &proj = *cl.pj.projs[j];
@@ -788,10 +785,7 @@ struct aiclient
 						{
 							case WEAPON:
 							{
-								if(d->hasgun(d->ai->gunpref))
-									return false;
-								if(d->hasgun(proj.attr1))
-									return false;
+								if(d->hasgun(proj.attr1)) return false;
 								if(proj.owner == d && d->gunselect != GUN_PLASMA)
 									return false;
 								break;
@@ -1102,13 +1096,13 @@ struct aiclient
 					obstacles.add(d, k);
 			}
 		}
-		#if 0
+		//#if 0
 		loopv(cl.pj.projs)
 		{
 			projent *p = cl.pj.projs[i];
 			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT)
 			{
-				float limit = guessradius * guntype[p->attr1].explode;
+				float limit = guessradius * guntype[p->attr1].explode * p->lifesize;
 				limit *= limit; // square it to avoid expensive square roots
 				loopvk(cl.et.ents)
 				{
@@ -1118,7 +1112,7 @@ struct aiclient
 				}
 			}
 		}
-		#endif
+		//#endif
 	}
 
 	void think(gameent *d, int idx)
@@ -1185,7 +1179,7 @@ struct aiclient
 		const char *bnames[AI_S_MAX] = {
 			"wait", "defend", "pursue", "attack", "interest"
 		}, *btypes[AI_T_MAX+1] = {
-			"none", "node", "player", "entity", "flag"
+			"none", "node", "player", "affinity", "entity", "drop"
 		};
 		s_sprintfd(s)("@%s%s [%d:%d:%d] goal:%d[%d] %s:%d",
 			top ? "\fy" : "\fw",
