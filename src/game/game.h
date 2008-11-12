@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			107
+#define GAMEVERSION			108
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -202,34 +202,34 @@ enum
 enum
 {
 	G_M_NONE	= 0,
-	G_M_TEAM	= 1<<0,
-	G_M_INSTA	= 1<<1,
-	G_M_DUEL	= 1<<2,
-	G_M_MULTI	= 1<<3,
-	G_M_ALL		= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI,
-	G_M_FIGHT	= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_MULTI,
-	G_M_DUKE	= G_M_INSTA|G_M_DUEL,
-	G_M_STF		= G_M_TEAM|G_M_INSTA|G_M_MULTI,
-	G_M_CTF		= G_M_TEAM|G_M_INSTA|G_M_MULTI,
+	G_M_MULTI	= 1<<0,
+	G_M_TEAM	= 1<<1,
+	G_M_INSTA	= 1<<2,
+	G_M_DUEL	= 1<<3,
+	G_M_LMS		= 1<<4,
+	G_M_DM		= G_M_INSTA,
+	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA,
+	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS,
 };
 #define G_M_NUM 4
 
 struct gametypes
 {
-	int	type,			mutators,		implied;		const char *name;
+	int	type,			mutators,				implied;		const char *name;
 } gametype[] = {
-	{ G_DEMO,			G_M_NONE,		G_M_NONE,		"Demo" },
-	{ G_LOBBY,			G_M_NONE,		G_M_NONE,		"Lobby" },
-	{ G_EDITMODE,		G_M_NONE,		G_M_NONE,		"Editing" },
-	{ G_MISSION,		G_M_NONE,		G_M_NONE,		"Mission" },
-	{ G_DEATHMATCH,		G_M_FIGHT,		G_M_NONE,		"Deathmatch" },
-	{ G_STF,			G_M_STF,		G_M_TEAM,		"Secure the Flag" },
-	{ G_CTF,			G_M_CTF,		G_M_TEAM,		"Capture the Flag" },
+	{ G_DEMO,			G_M_NONE,				G_M_NONE,		"Demo" },
+	{ G_LOBBY,			G_M_NONE,				G_M_NONE,		"Lobby" },
+	{ G_EDITMODE,		G_M_NONE,				G_M_NONE,		"Editing" },
+	{ G_MISSION,		G_M_NONE,				G_M_NONE,		"Mission" },
+	{ G_DEATHMATCH,		G_M_ALL,				G_M_NONE,		"Deathmatch" },
+	{ G_STF,			G_M_TEAMS,				G_M_TEAM,		"Secure-the-Flag" },
+	{ G_CTF,			G_M_TEAMS,				G_M_TEAM,		"Capture-the-Flag" },
 }, mutstype[] = {
-	{ G_M_TEAM,			G_M_ALL,		G_M_NONE,		"Team" },
-	{ G_M_INSTA,		G_M_ALL,		G_M_NONE,		"Instagib" },
-	{ G_M_DUEL,			G_M_DUKE,		G_M_NONE,		"Duel" },
-	{ G_M_MULTI,		G_M_ALL,		G_M_TEAM,		"MultiSided" },
+	{ G_M_MULTI,		G_M_ALL,				G_M_TEAM,		"Multi-Sided" },
+	{ G_M_TEAM,			G_M_TEAMS,				G_M_NONE,		"Team" },
+	{ G_M_INSTA,		G_M_ALL,				G_M_NONE,		"Instagib" },
+	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_NONE,		"Duel" },
+	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_NONE,		"Last-Man-Standing" },
 };
 
 #define m_game(a)			(a > -1 && a < G_MAX)
@@ -246,12 +246,14 @@ struct gametypes
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
 #define m_timed(a)			(m_fight(a))
 
+#define m_multi(a,b)		((b & G_M_MULTI) || (gametype[a].implied & G_M_MULTI))
 #define m_team(a,b)			((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))
 #define m_insta(a,b)		((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
 #define m_duel(a,b)			((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
-#define m_multi(a,b)		((b & G_M_MULTI) || (gametype[a].implied & G_M_MULTI))
+#define m_lms(a,b)			((b & G_M_LMS) || (gametype[a].implied & G_M_LMS))
 
-#define m_regen(a,b)		(m_fight(a) && !m_insta(a, b) && !m_duel(a, b))
+#define m_duke(a,b)			(m_fight(a) && (m_duel(a, b) || m_lms(a, b)))
+#define m_regen(a,b)		(m_fight(a) && !m_insta(a, b) && !m_duke(a, b))
 
 // network messages codes, c2s, c2c, s2c
 enum

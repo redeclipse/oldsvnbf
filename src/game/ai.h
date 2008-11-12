@@ -305,7 +305,7 @@ struct aiclient
 		d->skill = sk;
 		d->team = tm;
 
-		if(r[0]) conoutf("\fg* %s %s", cl.colorname(d), r);
+		if(r[0]) conoutf("\fg%s %s", cl.colorname(d), r);
 
 		if(rst) // only if connecting or changing owners
 		{

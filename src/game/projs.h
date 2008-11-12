@@ -171,8 +171,11 @@ struct projectiles
 		if(!found)
 		{
 			proj.o = orig;
-			proj.lifemillis = proj.lifetime = 1;
-			proj.state = CS_DEAD; // aww, poor proj
+			if(proj.playercollide == 2 || proj.geomcollide == 2)
+			{
+				proj.lifemillis = proj.lifetime = 1;
+				proj.state = CS_DEAD; // aww, poor proj
+			}
 		}
         proj.resetinterp();
 	}
@@ -359,14 +362,15 @@ struct projectiles
         proj.o.z += proj.height;
         loopi(cl.ph.physsteps-1)
         {
-            if((proj.lifetime -= cl.ph.physframetime()) <= 0 || !move(proj, cl.ph.physframetime()))
+            if(((proj.lifetime -= cl.ph.physframetime()) <= 0 && proj.lifemillis) || !move(proj, cl.ph.physframetime()))
             {
                 alive = false;
                 break;
             }
         }
         proj.deltapos = proj.o;
-        if(alive && ((proj.lifetime -= cl.ph.physframetime()) <= 0 || !move(proj, cl.ph.physframetime()))) alive = false;
+        if(alive && (((proj.lifetime -= cl.ph.physframetime()) <= 0 && proj.lifemillis) || !move(proj, cl.ph.physframetime())))
+			alive = false;
         proj.newpos = proj.o;
         proj.deltapos.sub(proj.newpos);
         proj.newpos.z -= proj.height;
@@ -376,7 +380,7 @@ struct projectiles
 
 	void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int waittime, int speed, int id = 0, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
 	{
-		if(!d || !lifetime || !speed) return;
+		if(!d || !speed) return;
 
 		projent &proj = *(new projent());
 		proj.o = proj.from = from;
@@ -409,7 +413,7 @@ struct projectiles
 			if(cl.et.ents.inrange(n))
 			{
 				gameentity &e = (gameentity &)*cl.et.ents[n];
-				create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_ENT, itemspawntime*1000, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+				create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_ENT, 0, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 			}
 		}
 		else if(g == GUN_GL)
@@ -502,7 +506,7 @@ struct projectiles
 					int qtime = min(rtime, 30);
 					rtime -= qtime;
 
-					if((proj.lifetime -= qtime) <= 0 || !move(proj, qtime))
+					if(((proj.lifetime -= qtime) <= 0 && proj.lifemillis) || !move(proj, qtime))
 					{
 						proj.state = CS_DEAD;
 						break;
