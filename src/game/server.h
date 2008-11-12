@@ -1296,6 +1296,38 @@ struct gameserver : igameserver
 					break;
 				}
 
+				case SV_TRIGGER:
+				{
+					int lcn = getint(p), ent = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					if(sents.inrange(ent) && sents[ent].type == TRIGGER)
+					{
+						bool commit = false;
+						switch(sents[ent].attr2)
+						{
+							case TR_NONE:
+							{
+								sents[ent].millis = gamemillis;
+								sents[ent].spawned = !sents[ent].spawned;
+								commit = true;
+								break;
+							}
+							case TR_LINK:
+							{
+								sents[ent].millis = gamemillis;
+								if(!sents[ent].spawned)
+								{
+									sents[ent].spawned = true;
+									commit = true;
+								}
+							}
+						}
+						if(commit) sendf(-1, 1, "ri2", SV_TRIGGER, ent);
+					}
+					break;
+				}
+
 				case SV_TEXT:
 				{
 					int lcn = getint(p), flags = getint(p);
@@ -1406,16 +1438,15 @@ struct gameserver : igameserver
 						se.attr3 = getint(p);
 						se.attr4 = getint(p);
 						se.attr5 = getint(p);
-						getint(p); // ignore what the client thinks
 						se.spawned = false;
 						se.millis = gamemillis-(sv_itemspawntime*1000)+(sv_itemspawndelay*1000); // wait a bit then load 'em up
-						if(commit && enttype[se.type].usetype == EU_ITEM)
+						if(commit && (enttype[se.type].usetype == EU_ITEM || se.type == TRIGGER))
 						{
 							while(sents.length() < n) sents.add(sn);
 							sents.add(se);
 						}
 					}
-					if(commit) 
+					if(commit)
 					{
 						loopvk(clients)
 						{
@@ -1858,16 +1889,12 @@ struct gameserver : igameserver
 			putint(p, minremain);
 		}
 		putint(p, SV_ITEMLIST);
-		loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM)
+		loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM || sents[i].type == TRIGGER)
 		{
 			putint(p, i);
-			putint(p, sents[i].type);
-			putint(p, sents[i].attr1);
-			putint(p, sents[i].attr2);
-			putint(p, sents[i].attr3);
-			putint(p, sents[i].attr4);
-			putint(p, sents[i].attr5);
-			putint(p, finditem(i, false, 0) ? 1 : 0);
+			if(enttype[sents[i].type].usetype == EU_ITEM)
+				putint(p, finditem(i, false, 0) ? 1 : 0);
+			else putint(p, sents[i].spawned ? 1 : 0);
 		}
 		putint(p, -1);
 
@@ -2354,18 +2381,36 @@ struct gameserver : igameserver
 		else if(minremain)
 		{
 			processevents();
-			if(!m_duel(gamemode, mutators) && sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1))
-            {
-                loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, sv_itemspawntime*1000))
+			bool allowitems = !m_duel(gamemode, mutators) && sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1);
+			loopv(sents) switch(sents[i].type)
+			{
+				case TRIGGER:
 				{
-					loopvk(clients)
+					if(sents[i].attr2 == TR_LINK && sents[i].spawned && gamemillis-sents[i].millis >= TRIGGERTIME*2)
 					{
-						clientinfo *ci = clients[k];
-						ci->state.dropped.remove(i);
+						sents[i].spawned = false;
+						sents[i].millis = gamemillis;
+						sendf(-1, 1, "ri2", SV_TRIGGER, i);
 					}
-					sents[i].spawned = true;
-					sents[i].millis = gamemillis;
-					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+					break;
+				}
+				default:
+				{
+					if(allowitems && enttype[sents[i].type].usetype == EU_ITEM)
+					{
+						if(!finditem(i, true, sv_itemspawntime*1000))
+						{
+							loopvk(clients)
+							{
+								clientinfo *ci = clients[k];
+								ci->state.dropped.remove(i);
+							}
+							sents[i].spawned = true;
+							sents[i].millis = gamemillis;
+							sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+						}
+					}
+					break;
 				}
 			}
 			if(smode) smode->update();

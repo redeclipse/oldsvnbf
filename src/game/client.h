@@ -488,11 +488,6 @@ struct clientcom : iclientcom
 				sendstring(f->name, p);
 				putint(p, f->team);
 			}
-			loopv(cl.et.ents) if(cl.et.ents[i]->extstate == 1)
-			{
-				cl.et.ents[i]->lastemit = lastmillis;
-				cl.et.ents[i]->extstate = 0;
-			}
 		}
 		int i = 0;
 		while(i < messages.length()) // send messages collected during the previous frames
@@ -795,12 +790,7 @@ struct clientcom : iclientcom
 				case SV_ITEMLIST:
 				{
 					int n;
-					while((n = getint(p))!=-1)
-					{
-						getint(p); // type
-						loopi(5) getint(p); // attr
-						cl.et.setspawn(n, getint(p));
-					}
+					while((n = getint(p))!=-1) cl.et.setspawn(n, getint(p));
 					break;
 				}
 
@@ -1007,6 +997,14 @@ struct clientcom : iclientcom
 						part_text(cl.et.ents[ent]->o, ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 					}
 					regularshape(PART_PLASMA, enttype[cl.et.ents[ent]->type].radius, 0x888822, 53, 50, 200, cl.et.ents[ent]->o, 2.f);
+					break;
+				}
+
+				case SV_TRIGGER:
+				{
+					int ent = getint(p);
+					if(!cl.et.ents.inrange(ent)) break;
+					cl.et.setspawn(ent, !cl.et.ents[ent]->spawned);
 					break;
 				}
 
