@@ -802,7 +802,7 @@ struct gameserver : igameserver
 		else smode = NULL;
 
 		smuts.setsize(0);
-		if(m_duel(gamemode, mutators)) smuts.add(&duelmutator);
+		if(m_duke(gamemode, mutators)) smuts.add(&duelmutator);
 
 		if(smode) smode->reset(false);
 		mutate(smuts, mut->reset(false));
@@ -2381,7 +2381,7 @@ struct gameserver : igameserver
 		else if(minremain)
 		{
 			processevents();
-			bool allowitems = !m_duel(gamemode, mutators) && sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1);
+			bool allowitems = !m_duke(gamemode, mutators) && sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1);
 			loopv(sents) switch(sents[i].type)
 			{
 				case TRIGGER:
