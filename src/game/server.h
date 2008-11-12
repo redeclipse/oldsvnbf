@@ -1415,11 +1415,14 @@ struct gameserver : igameserver
 							sents.add(se);
 						}
 					}
-					if(commit) loopvk(clients)
+					if(commit) 
 					{
-						clientinfo *cp = clients[k];
-						cp->state.dropped.reset();
-						cp->state.gunreset(false);
+						loopvk(clients)
+						{
+							clientinfo *cp = clients[k];
+							cp->state.dropped.reset();
+							cp->state.gunreset(false);
+						}
 					}
 					break;
 				}
