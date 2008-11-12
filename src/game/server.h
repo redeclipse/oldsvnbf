@@ -2193,9 +2193,10 @@ struct gameserver : igameserver
 			loopk(3) s.to[k] = int(e.shots[i].to[k]*DMF);
 			gs.gunshots[e.gun].add(e.id);
 		}
-		sendf(-1, 1, "rixi6iv", SV_SHOTFX, ci->clientnum, ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum,
+		sendf(-1, 1, "ri7ivx", SV_SHOTFX, ci->clientnum,
 			e.gun, e.power, int(e.from[0]*DMF), int(e.from[1]*DMF), int(e.from[2]*DMF),
-					shots.length(), shots.length()*sizeof(shotloc)/sizeof(int), shots.getbuf());
+					shots.length(), shots.length()*sizeof(shotloc)/sizeof(int), shots.getbuf(),
+						ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum);
 		gs.shotdamage += guntype[e.gun].damage*e.gun*e.num;
 	}
 

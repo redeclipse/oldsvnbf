@@ -146,17 +146,17 @@ const char
 	{
 	GUN_SG,		ANIM_SHOTGUN,	-30,    30,
 		S_SG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,	S_ITEMSPAWN,
-		1,		8,		600,	1200,	10,		500,	0,		1000,
+		1,		8,		600,	1200,	10,		1000,	0,		1000,
 		1,		0,			20,		40,		1,		1,				2,
 		false,	false,		true,
-		1.0f,	0.95f,		0.25f,		2.0f,		0.f,
+		0.75f,	0.95f,		0.25f,		2.0f,		0.f,
 		"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
 		"projectiles/bullet"
 	},
 	{
 	GUN_CG,		ANIM_CHAINGUN,	-5,	     5,
 		S_CG,		S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
-		40,		40,		100,    1000,	15,		500,	0,		10000,
+		40,		40,		100,    1000,	15,		1000,	0,		10000,
 		1,		0,			1,		5,		4,		2,				2,
 		false,	false,		true,
 		1.0f,	0.f,		0.05f,		2.0f,		0.f,
@@ -176,7 +176,7 @@ const char
 	{
 	GUN_CARBINE,ANIM_CARBINE,	-10,	10,
 		S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
-		10,		10,		500,    1000,	50,		1000,	0,		10000,
+		10,		10,		500,    1000,	50,		5000,	0,		10000,
 		1,		0,			1,		0,		0,		2,				2,
 		false,	false,		true,
 		1.0f,	0.f,		0.f,		2.0f,		0.f,
@@ -186,7 +186,7 @@ const char
 	{
 	GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
 		S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
-		1,		5,		800,	1600,	100,	1000,	0,		10000,
+		1,		5,		800,	1600,	100,	5000,	0,		10000,
 		1,		0,			1,		0,		0,		2,				2,
 		false,	false,		true,
 		1.0f,	0.f,		 0.f,		2.0f,		0.f,
