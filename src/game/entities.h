@@ -1489,26 +1489,11 @@ struct entities : icliententities
 	void drawparticle(gameentity &e, vec &o, int idx, bool spawned)
 	{
 		if(e.type == NOTUSED || o.dist(camera1->o) > maxparticledistance) return;
-		string s;
 		if(e.type == PARTICLES)
 		{
 			if(idx < 0 || !e.links.length()) makeparticles((entity &)e);
 			else if(lastmillis-e.lastemit < TRIGGERTIME)
-			{
-				bool both = false;
-
-				loopvk(e.links) if(ents.inrange(e.links[k]))
-				{
-					gameentity &f = *(gameentity *)ents[e.links[k]];
-					if(f.links.find(idx) >= 0 && lastmillis-f.lastemit < TRIGGERTIME)
-					{
-						makeparticle(f.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-						both = true;
-					}
-				}
-				if(!both) // hasn't got an active reciprocal link (fallback)
-					makeparticle(o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-			}
+				makeparticle(o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 		}
 
 		if(m_edit(cl.gamemode) && cansee(e))
@@ -1518,7 +1503,7 @@ struct entities : icliententities
 			part_create(PART_EDIT, 1, pos, hasent ? 0xFF6600 : 0xFFFF00, hasent ? 2.0f : 1.5f);
 			if(showentinfo() >= 2 || cl.player1->state == CS_EDITING)
 			{
-				s_sprintf(s)("@%s%s (%d)", hasent ? "\fo" : "\fy", enttype[e.type].name, idx >= 0 ? idx : 0);
+				s_sprintfd(s)("@%s%s (%d)", hasent ? "\fo" : "\fy", enttype[e.type].name, idx >= 0 ? idx : 0);
 				part_text(pos.add(off), s);
 
 				if(showentinfo() >= 3 || hasent)
@@ -1537,7 +1522,7 @@ struct entities : icliententities
 		{
 			if(e.type == WEAPON && spawned)
 			{
-				s_sprintf(s)("@%s", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
+				s_sprintfd(s)("@%s", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
 				part_text(vec(o).add(vec(0, 0, 4)), s);
 			}
 		}
