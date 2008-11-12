@@ -303,8 +303,7 @@ struct md5 : skelmodel
                 else if(sscanf(buf, " frameRate %d", &tmp)==1);
                 else if(sscanf(buf, " numAnimatedComponents %d", &animdatalen)==1)
                 {
-                    if(animdatalen<1) { fclose(f); return NULL; }
-                    animdata = new float[animdatalen];
+                    if(animdatalen>0) animdata = new float[animdatalen];
                 }
                 else if(strstr(buf, "bounds {"))
                 {
@@ -365,9 +364,9 @@ struct md5 : skelmodel
                     {
                         md5hierarchy &h = hierarchy[i];
                         md5joint j = basejoints[i];
-                        float *jdata = &animdata[h.start];
-                        if(h.flags)
+                        if(h.start < animdatalen && h.flags)
                         {
+                            float *jdata = &animdata[h.start];
                             if(h.flags&1) j.pos.x = *jdata++;
                             if(h.flags&2) j.pos.y = -*jdata++;
                             if(h.flags&4) j.pos.z = *jdata++;
