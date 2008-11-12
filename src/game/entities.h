@@ -222,7 +222,7 @@ struct entities : icliententities
 	void announce(int idx, const char *msg = "", bool force = false)
 	{
 		static int lastannouncement;
-		if(idx > -1 && idx < S_MAX && (force || lastmillis-lastannouncement >= USETIME))
+		if(idx > -1 && idx < S_MAX && (force || lastmillis-lastannouncement >= TRIGGERTIME))
 		{
 			bool announcer = false;
 			loopv(ents)
@@ -339,6 +339,117 @@ struct entities : icliententities
 		return !actitems.empty();
 	}
 
+	void execitem(int n, gameent *d)
+	{
+		gameentity &e = *(gameentity *)ents[n];
+		if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis))
+		{
+			if(enttype[e.type].usetype == EU_ITEM && d->useaction && d->requse < 0)
+			{
+				cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, n);
+				d->useaction = false;
+				d->requse = lastmillis;
+			}
+			else if(enttype[e.type].usetype == EU_AUTO)
+			{
+				if(e.type != TRIGGER || ((e.attr3 == TA_ACT && d->useaction && d == cl.player1) || e.attr3 == TA_AUTO))
+				{
+					switch(e.type)
+					{
+						case TELEPORT:
+						{
+							if(lastmillis-e.lastuse >= TRIGGERTIME)
+							{
+								e.lastuse = e.lastemit = lastmillis;
+								static vector<int> teleports;
+								teleports.setsize(0);
+								loopv(e.links)
+									if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == e.type)
+										teleports.add(e.links[i]);
+
+								while(!teleports.empty())
+								{
+									int r = e.type == TELEPORT ? rnd(teleports.length()) : 0, t = teleports[r];
+									gameentity &f = *(gameentity *)ents[t];
+									d->timeinair = 0;
+									d->falling = vec(0, 0, 0);
+									d->o = vec(f.o).sub(vec(0, 0, d->height/2));
+									if(cl.ph.entinmap(d, false))
+									{
+										d->yaw = f.attr1;
+										d->pitch = f.attr2;
+										float mag = max(d->vel.magnitude(), f.attr3 ? float(f.attr3) : 100.f);
+										vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
+										d->vel.mul(mag);
+										cl.fixfullrange(d->yaw, d->pitch, d->roll, true);
+										f.lastuse = f.lastemit = e.lastemit;
+										execlink(d, n, true);
+										execlink(d, t, true);
+										if(d == cl.player1) cl.resetstates(ST_VIEW);
+										break;
+									}
+									teleports.remove(r); // must've really sucked, try another one
+								}
+							}
+							break;
+						}
+
+						case PUSHER:
+						{
+							vec dir((int)(char)e.attr3*10.f, (int)(char)e.attr2*10.f, e.attr1*10.f);
+							d->timeinair = 0;
+							d->falling = vec(0, 0, 0);
+							loopk(3)
+							{
+								if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
+									d->vel.v[k] = dir.v[k];
+							}
+							if(lastmillis-e.lastuse >= TRIGGERTIME)
+							{
+								e.lastuse = e.lastemit = lastmillis;
+								execlink(d, n, true);
+							}
+							break;
+						}
+
+						case TRIGGER:
+						{
+							if(lastmillis-e.lastuse >= TRIGGERTIME)
+							{
+								e.lastuse = lastmillis;
+								switch(e.attr2)
+								{
+									case TR_NONE: case TR_LINK:
+									{ // wait for ack
+										cl.cc.addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
+										break;
+									}
+									case TR_SCRIPT:
+									{
+										if(d == cl.player1)
+										{
+											s_sprintfd(s)("on_trigger_%d", e.attr1);
+											RUNWORLD(s);
+										}
+										break;
+									}
+									default: break;
+								}
+								if(e.attr3 == TA_ACT) d->useaction = false;
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+		else if(enttype[e.type].usetype == EU_ITEM && d->useaction)
+		{
+			d->useaction = false;
+			if(d == cl.player1) playsound(S_DENIED, d->o, d);
+		}
+	}
+
 	void checkitems(gameent *d)
 	{
 		static vector<actitem> actitems;
@@ -371,33 +482,7 @@ struct entities : icliententities
 					}
 					default: break;
 				}
-				if(ents.inrange(ent))
-				{
-					extentity &e = *ents[ent];
-					if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis))
-					{
-						if(enttype[e.type].usetype == EU_ITEM && d->useaction && d->requse < 0)
-						{
-							cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, ent);
-							d->useaction = false;
-							d->requse = lastmillis;
-						}
-						else if(enttype[e.type].usetype == EU_AUTO)
-						{
-							if(e.type != TRIGGER || ((e.attr3 == TA_ACT && d->useaction && d == cl.player1) || e.attr3 == TA_AUTO))
-							{
-								reaction(t.target, d);
-								if(e.type == TRIGGER && e.attr3 == TA_ACT)
-									d->useaction = false;
-							}
-						}
-					}
-					else if(enttype[e.type].usetype == EU_ITEM && d->useaction)
-					{
-						d->useaction = false;
-						playsound(S_DENIED, d->o, d);
-					}
-				}
+				if(ents.inrange(ent)) execitem(ent, d);
 				actitems.removeunordered(closest);
 			}
 		}
@@ -406,7 +491,7 @@ struct entities : icliententities
 
 	void putitems(ucharbuf &p)
 	{
-		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM)
+		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == TRIGGER)
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			putint(p, i);
@@ -416,7 +501,6 @@ struct entities : icliententities
 			putint(p, e.attr3);
 			putint(p, e.attr4);
 			putint(p, e.attr5);
-			putint(p, 0);
 			setspawn(i, false);
 		}
 	}
@@ -432,8 +516,15 @@ struct entities : icliententities
 			proj.state = CS_DEAD;
 		}
 		if(ents.inrange(n))
-			if((ents[n]->spawned = on))
-				((gameentity *)ents[n])->lastspawn = lastmillis;
+		{
+			gameentity &e = *(gameentity *)ents[n];
+			if((e.spawned = on)) e.lastspawn = lastmillis;
+			if(e.type == TRIGGER && (e.attr2 == TR_NONE || e.attr2 == TR_LINK))
+			{
+				e.lastemit = lastmillis;
+				execlink(NULL, n, false);
+			}
+		}
 	}
 
 	extentity *newent() { return new gameentity(); }
@@ -493,7 +584,7 @@ struct entities : icliententities
 	// these functions are called when the client touches the item
 	void execlink(gameent *d, int index, bool local)
 	{
-		if(d && ents.inrange(index) && maylink(ents[index]->type))
+		if(ents.inrange(index) && maylink(ents[index]->type))
 		{
 			gameentity &e = *(gameentity *)ents[index];
 			bool commit = false;
@@ -509,44 +600,29 @@ struct entities : icliententities
 						{
 							if(e.type == TRIGGER)
 							{
-								bool toggle = m_fight(cl.gamemode) || e.attr2 == TR_LINK;
-								int dur = toggle ? (f.attr5 ? f.attr5 : TRIGGERDELAY)+TRIGGERTIME*2 : TRIGGERTIME;
-								if(lastmillis-f.lastuse >= dur)
-								{
-									f.lastuse = lastmillis;
-									f.lastemit = lastmillis;
-									if(f.type == MAPMODEL)
-									{
-										f.extstate = toggle ? 2 : (f.extstate ? 0 : 1);
-										if(local) execlink(d, i, true);
-									}
-									commit = true;
-								}
+								f.spawned = e.spawned;
+								f.lastemit = e.lastemit;
+								commit = false;
 							}
 							break;
 						}
 						case PARTICLES:
 						{
-							if(lastmillis-f.lastuse >= USETIME)
-							{
-								f.lastuse = lastmillis;
-								f.lastemit = lastmillis;
-								commit = true;
-							}
+							f.lastemit = e.lastemit;
+							commit = d && local;
 							break;
 						}
 						case MAPSOUND:
 						{
-							if(lastmillis-f.lastuse >= USETIME && mapsounds.inrange(f.attr1) && !issound(f.schan))
+							if(mapsounds.inrange(f.attr1) && !issound(f.schan))
 							{
-								f.lastuse = lastmillis;
-								f.lastemit = lastmillis;
+								f.lastemit = e.lastemit;
 								int flags = SND_MAP;
 								if(f.attr5&SND_NOATTEN) flags |= SND_NOATTEN;
 								if(f.attr5&SND_NODELAY) flags |= SND_NODELAY;
 								if(f.attr5&SND_NOCULL) flags |= SND_NOCULL;
 								playsound(f.attr1, both ? f.o : e.o, NULL, flags, f.attr4, f.attr2, f.attr3, &f.schan);
-								commit = true;
+								commit = d && local;
 							}
 							break;
 						}
@@ -554,47 +630,7 @@ struct entities : icliententities
 					}
 				}
 			}
-			if(local && commit) cl.cc.addmsg(SV_EXECLINK, "ri2", d->clientnum, index);
-		}
-	}
-
-
-	void teleport(int n, gameent *d)
-	{
-		gameentity &e = *(gameentity *)ents[n];
-		vector<int> teleports;
-		loopv(e.links)
-			if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == e.type)
-				teleports.add(e.links[i]);
-
-		while(!teleports.empty())
-		{
-			int r = e.type == TELEPORT ? rnd(teleports.length()) : 0, t = teleports[r];
-			gameentity &f = *(gameentity *)ents[t];
-			d->timeinair = 0;
-			d->falling = vec(0, 0, 0);
-			d->o = vec(f.o).sub(vec(0, 0, d->height/2));
-			if(cl.ph.entinmap(d, false))
-			{
-				d->yaw = f.attr1;
-				d->pitch = f.attr2;
-				float mag = max(d->vel.magnitude(), f.attr3 ? float(f.attr3) : 100.f);
-				vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
-				d->vel.mul(mag);
-				cl.fixfullrange(d->yaw, d->pitch, d->roll, true);
-				if(e.type == TELEPORT)
-				{
-					execlink(d, n, true);
-					execlink(d, t, true);
-				}
-				if(d == cl.player1)
-				{
-					f.lastuse = lastmillis;
-					cl.resetstates(ST_VIEW);
-				}
-				break;
-			}
-			teleports.remove(r); // must've really sucked, try another one
+			if(d && commit) cl.cc.addmsg(SV_EXECLINK, "ri2", d->clientnum, index);
 		}
 	}
 
@@ -631,57 +667,6 @@ struct entities : icliententities
 		{
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
 			cl.ph.entinmap(d, false);
-		}
-	}
-
-	void reaction(int n, gameent *d)
-	{
-		gameentity &e = *(gameentity *)ents[n];
-		switch(e.type)
-		{
-			case TELEPORT:
-			{
-				if(lastmillis-e.lastuse >= USETIME)
-				{
-					e.lastuse = lastmillis;
-					teleport(n, d);
-				}
-				break;
-			}
-
-			case PUSHER:
-			{
-				vec dir((int)(char)e.attr3*10.f, (int)(char)e.attr2*10.f, e.attr1*10.f);
-				d->timeinair = 0;
-                d->falling = vec(0, 0, 0);
-				loopk(3)
-				{
-					if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
-						d->vel.v[k] = dir.v[k];
-				}
-				execlink(d, n, true);
-				break;
-			}
-
-			case TRIGGER:
-			{
-				switch(e.attr2)
-				{
-					case TR_NONE: case TR_LINK: execlink(d, n, true); break;
-					case TR_SCRIPT:
-					{
-						if(d == cl.player1 && lastmillis-e.lastuse >= USETIME)
-						{
-							e.lastuse = lastmillis;
-							s_sprintfd(s)("on_trigger_%d", e.attr1);
-							RUNWORLD(s);
-						}
-						break;
-					}
-					default: break;
-				}
-				break;
-			}
 		}
 	}
 
@@ -1409,7 +1394,7 @@ struct entities : icliententities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit >= USETIME && mapsounds.inrange(e.attr1))
+			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit >= TRIGGERTIME && mapsounds.inrange(e.attr1))
 			{
 				if(!issound(e.schan))
 				{
@@ -1486,7 +1471,7 @@ struct entities : icliententities
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-			bool active = (enttype[e.type].usetype == EU_ITEM && e.spawned);
+			bool active = enttype[e.type].usetype == EU_ITEM && e.spawned;
 			if(m_edit(cl.gamemode) || active)
 			{
 				const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
@@ -1508,14 +1493,14 @@ struct entities : icliententities
 		if(e.type == PARTICLES)
 		{
 			if(idx < 0 || !e.links.length()) makeparticles((entity &)e);
-			else if(lastmillis-e.lastemit < USETIME)
+			else if(lastmillis-e.lastemit < TRIGGERTIME)
 			{
 				bool both = false;
 
 				loopvk(e.links) if(ents.inrange(e.links[k]))
 				{
 					gameentity &f = *(gameentity *)ents[e.links[k]];
-					if(f.links.find(idx) >= 0 && lastmillis-f.lastemit < USETIME)
+					if(f.links.find(idx) >= 0 && lastmillis-f.lastemit < TRIGGERTIME)
 					{
 						makeparticle(f.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 						both = true;

@@ -1359,12 +1359,12 @@ struct gameclient : igameclient
 							{
 								if(!found)
 								{
-									tp -= draw_textx("Press [ \fs\fg%s\fS ] to interact with [ \fs\fb%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey, enttype[e.type].name);
+									tp -= draw_textx("Press [ \fs\fg%s\fS ] to interact", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, actkey);
 									if(showtips() < 3) break;
 									else found = true;
 								}
 								else
-									tp -= draw_textx("Nearby [ \fs\fg%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1, enttype[e.type].name);
+									tp -= draw_textx("Nearby interactive item", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1);
 							}
 						}
 						actitems.removeunordered(closest);

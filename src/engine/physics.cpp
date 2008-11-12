@@ -134,13 +134,11 @@ int hitent, hitorient;
 
 #define mapmodelskip \
 	{ \
-			if(e.links.length()) \
+			if(e.lastemit) \
 			{ \
 				int millis = lastmillis-e.lastemit; \
-				if(e.extstate == 0 && millis < TRIGGERTIME/2) continue; \
-				if(e.extstate == 1 && millis > TRIGGERTIME/2) continue; \
-				if(e.extstate == 2 && millis > TRIGGERTIME/2 && millis < (e.attr5 ? e.attr5 : TRIGGERDELAY)+TRIGGERTIME+TRIGGERTIME/2) \
-					continue; \
+				if(!e.spawned && millis < TRIGGERTIME/2) continue; \
+				if(e.spawned && millis > TRIGGERTIME/2) continue; \
 			} \
 	}
 
