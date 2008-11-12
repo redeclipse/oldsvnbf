@@ -2,8 +2,11 @@
 #include "engine.h"
 
 extern int outline, blankgeom;
-VARP(showcursorgrid, 0, 0, 1);
-VARP(showselgrid, 0, 0, 1);
+editinfo *localedit = NULL;
+
+VAR(showpastegrid, 0, 1, 1);
+VAR(showcursorgrid, 0, 0, 1);
+VAR(showselgrid, 0, 0, 1);
 
 void boxs(int orient, vec o, const vec &s)
 {
@@ -419,38 +422,37 @@ void cursorupdate()
     enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 
 	#define planargrid(q,r,s) \
+	{ \
 		for (float v = 0.f; v < (hdr.worldsize-s); v += s) \
 		{ \
 			vec a; \
 			a = q; a.x = v; boxs3D(a, r, s); \
 			a = q; a.y = v; boxs3D(a, r, s); \
 			a = q; a.z = v; boxs3D(a, r, s); \
-		}
+		} \
+	}
 
     if(!moving && !hovering && !hidecursor)
 	{
-        if(hmapedit==1)
-            glColor3ub(0, hmapsel ? 255 : 40, 0);
-        else
-		glColor3ub(120,120,120);
-		boxs(orient, lu.tovec(), vec(lusize));
-
-		if (showcursorgrid)
+		bool ishmap = hmapedit==1 && hmapsel;
+		if(showcursorgrid)
 		{
-			glColor3ub(0, 0, 10);
+			glColor3ub(ishmap ? 0 : 30, 30, ishmap ? 0 : 30);
 			planargrid(lu.tovec(), vec(1, 1, 1), gridsize);
 		}
+        glColor3ub(ishmap ? 0 : 255, 255, ishmap ? 0 : 255);
+		boxs(orient, lu.tovec(), vec(lusize));
 	}
 
 	// selections
     if(havesel)
 	{
 		d = dimension(sel.orient);
-		glColor3ub(50,50,50);	// grid
+		glColor3ub(120, 120, 120);	// grid
 		boxsgrid(sel.orient, sel.o.tovec(), sel.s.tovec(), sel.grid);
-		glColor3ub(200,0,0);	// 0 reference
+		glColor3ub(255, 0, 0);	// 0 reference
         boxs3D(sel.o.tovec().sub(0.5f*min(gridsize*0.25f, 2.0f)), vec(min(gridsize*0.25f, 2.0f)), 1);
-		glColor3ub(200,200,200);// 2D selection box
+		glColor3ub(120, 120, 120);// 2D selection box
 		vec co(sel.o.v), cs(sel.s.v);
 		co[R[d]] += 0.5f*(sel.cx*gridsize);
 		co[C[d]] += 0.5f*(sel.cy*gridsize);
@@ -458,17 +460,20 @@ void cursorupdate()
 		cs[C[d]]  = 0.5f*(sel.cys*gridsize);
 		cs[D[d]] *= gridsize;
 		boxs(sel.orient, co, cs);
-        if(hmapedit==1)         // 3D selection box
-            glColor3ub(0,120,0);
-        else
-            glColor3ub(0,0,120);
+        if(hmapedit==1) glColor3ub(0, 120, 0); // 3D selection box
+        else glColor3ub(0, 0, 120);
 		boxs3D(sel.o.tovec(), sel.s.tovec(), sel.grid);
-
-		if (showselgrid)
+		if(showselgrid)
 		{
-			glColor3ub(10, 10, 10);
+			glColor3ub(30, 30, 30);
 			planargrid(sel.o.tovec(), sel.s.tovec(), sel.grid);
 		}
+	}
+
+	if(showpastegrid && localedit && localedit->copy)
+	{
+		glColor3ub(30, 0, 30);
+		boxs3D(havesel ? sel.o.tovec() : lu.tovec(), localedit->copy->s.tovec(), havesel ? sel.grid : gridsize);
 	}
 
     disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
@@ -772,8 +777,6 @@ void swapundo(undolist &a, undolist &b, const char *s)
 void editundo() { swapundo(undos, redos, "undo"); }
 void editredo() { swapundo(redos, undos, "redo"); }
 
-editinfo *localedit = NULL;
-
 void freeeditinfo(editinfo *&e)
 {
 	if(!e) return;
@@ -816,7 +819,14 @@ void copy()
 	mpcopy(localedit, sel, true);
 }
 
-void pastehilite()
+void pasteclear()
+{
+	if(!localedit) return;
+	if(localedit->copy) freeblock(localedit->copy);
+	localedit->copy = NULL;
+}
+
+void pastehilight()
 {
 	if(!localedit) return;
 	sel.s = localedit->copy->s;
@@ -831,7 +841,8 @@ void paste()
 }
 
 COMMAND(copy, "");
-COMMAND(pastehilite, "");
+COMMAND(pasteclear, "");
+COMMAND(pastehilight, "");
 COMMAND(paste, "");
 COMMANDN(undo, editundo, "");
 COMMANDN(redo, editredo, "");
@@ -932,7 +943,7 @@ inline bool ishtexture(int t)
 	return true;
 }
 
-VARP(bypassheightmapcheck, 0, 0, 1);    // temp
+VAR(bypassheightmapcheck, 0, 0, 1);    // temp
 
 inline bool isheightmap(int o, int d, bool empty, cube *c)
 {
