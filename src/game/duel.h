@@ -114,11 +114,14 @@ struct duelservmode : servmode
 					cleanup();
 				}
 
-				if(alive.length() > 2) loopvrev(alive)
+				if(alive.length() > 2) 
 				{
-					queue(alive[i], true);
-					alive.remove(i);
-					if(alive.length() <= 2) break;
+					loopvrev(alive)
+					{
+						queue(alive[i], true);
+						alive.remove(i);
+						if(alive.length() <= 2) break;
+					}
 				}
 
 				loopvj(sv.clients) if(sv.clients[j]->name[0] && sv.clients[j]->state.state != CS_ALIVE && sv.clients[j]->state.state != CS_SPECTATOR)
