@@ -242,7 +242,7 @@ struct weaponstate
 
 		vector<vec> vshots; vshots.setsize(0);
 		vector<ivec> shots; shots.setsize(0);
-		#define addshot(q) { vshots.add(q); shots.add(ivec(int(q.x*DNF), int(q.y*DNF), int(q.z*DNF))); }
+		#define addshot(q) { vshots.add(q); shots.add(ivec(int(q.x*DMF), int(q.y*DMF), int(q.z*DMF))); }
 		loopi(guntype[d->gunselect].rays)
 		{
 			vec dest;
@@ -259,7 +259,7 @@ struct weaponstate
 		shootv(d->gunselect, power, from, vshots, d, true);
 		cl.cc.addmsg(SV_SHOOT, "ri7iv",
 			d->clientnum, lastmillis-cl.maptime, d->gunselect, power,
-				int(from.x*DNF), int(from.y*DNF), int(from.z*DNF),
+				int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
 					shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
 	}
 
