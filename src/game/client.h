@@ -875,14 +875,19 @@ struct clientcom : iclientcom
 				case SV_SHOTFX:
 				{
 					int scn = getint(p), gun = getint(p), power = clamp(getint(p), 0, 100);
-					vec from, to;
+					vec from;
+					vector<vec> locs;
+					locs.setsize(0);
 					loopk(3) from[k] = getint(p)/DMF;
-					loopk(3) to[k] = getint(p)/DMF;
+					loopj(getint(p))
+					{
+						vec to = locs.add();
+						loopk(3) to[k] = getint(p)/DMF;
+					}
 					gameent *s = cl.getclient(scn);
 					if(!s || !isgun(gun)) break;
-					if(gun==GUN_SG) cl.ws.createrays(from, to);
 					s->setgunstate(gun, GUNSTATE_SHOOT, guntype[gun].adelay, lastmillis);
-					cl.ws.shootv(gun, power, from, to, s, false);
+					cl.ws.shootv(gun, power, from, locs, s, false);
 					break;
 				}
 

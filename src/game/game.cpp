@@ -750,6 +750,25 @@ struct gameclient : igameclient
 		playsound(n, c->o, c);
 	}
 
+	gameent *intersectclosest(vec &from, vec &to, gameent *at)
+	{
+		gameent *best = NULL;
+		float bestdist = 1e16f;
+		loopi(numdynents())
+		{
+			gameent *o = (gameent *)iterdynents(i);
+            if(!o || o==at || o->state!=CS_ALIVE || lastmillis-o->lastspawn <= REGENWAIT) continue;
+			if(!intersect(o, from, to)) continue;
+			float dist = at->o.dist(o->o);
+			if(dist<bestdist)
+			{
+				best = o;
+				bestdist = dist;
+			}
+		}
+		return best;
+	}
+
 	int numdynents() { return 1+players.length(); }
 	dynent *iterdynents(int i)
 	{
@@ -960,7 +979,7 @@ struct gameclient : igameclient
         else if(m_team(gamemode, mutators))
         {
             vec pos = headpos(player1, 0.f);
-            dynent *d = ws.intersectclosest(pos, worldpos, player1);
+            dynent *d = intersectclosest(pos, worldpos, player1);
             if(d && d->type == ENT_PLAYER && ((gameent *)d)->team == player1->team)
 				index = POINTER_TEAM;
 			else index = POINTER_HAIR;
