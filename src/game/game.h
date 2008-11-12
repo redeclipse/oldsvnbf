@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			108
+#define GAMEVERSION			109
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -11,7 +11,7 @@ enum
 {
 	S_JUMP = S_GAMESPECIFIC, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER,
-	S_SPLAT, S_DEBRIS, S_TINK, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING,
+	S_SPLAT, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING,
 	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_CG,
 	S_GLFIRE, S_FLFIRE, S_CARBINE, S_RIFLE,
 	S_ITEMPICKUP, S_ITEMSPAWN, 	S_REGEN,
@@ -94,8 +94,6 @@ enum
     ANIM_MAX
 };
 
-#define SGRAYS			20
-#define SGSPREAD		50
 #define GUNSWITCHDELAY	800
 #define PLAYERHEIGHT	15.f
 #define EXPLOSIONSCALE	16.f
@@ -124,53 +122,86 @@ enum
 
 struct guntypes
 {
-	int	info, 		anim,			sound, 		esound, 	fsound,		rsound,		ssound,
-		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,	kick,	wobble,
-		size,	explode; float offset,	elasticity,	relativity,	waterfric,	weight; bool carry;
-	const char *name, *text,		*item,						*vwep;
+int	info, 		anim,			kick,	wobble,
+		sound, 		esound, 	fsound,		rsound,		ssound,
+		add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
+		size,	explode,	rays,	spread,	zdiv,	geomcollide,	playercollide;
+bool	radial,	extinguish,	carry;
+float	offset,	elasticity,	relativity,	waterfric,	weight;
+const char
+		*name, *text,		*item,						*vwep,
+		*proj;
 } guntype[GUN_MAX] =
 {
 	{
-		GUN_PLASMA,	ANIM_PLASMA,	S_PLASMA,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
-		20,		20,		200,	800,	20,		200,	0,		10000,	-5,		5,
-		5,		12,				1.0f,	0.f,		0.05f,		1.0f,		0.f,		false,
-				"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep"
+	GUN_PLASMA,	ANIM_PLASMA,	-5,		5,
+		S_PLASMA,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
+		20,		20,		200,	800,	20,		200,	0,		10000,
+		5,		12,			1,		5,		0,		2,				2,
+		true,	true,		false,
+		1.0f,	0.f,		0.05f,		1.0f,		0.f,
+		"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
+		""
 	},
 	{
-		GUN_SG,		ANIM_SHOTGUN,	S_SG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		1,		8,		600,	1200,	10,		0,		0,		0,		-30,    30,
-		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
-				"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep"
+	GUN_SG,		ANIM_SHOTGUN,	-30,    30,
+		S_SG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,	S_ITEMSPAWN,
+		1,		8,		600,	1200,	10,		500,	0,		1000,
+		1,		0,			20,		40,		1,		1,				2,
+		false,	false,		true,
+		1.0f,	0.95f,		0.25f,		2.0f,		0.f,
+		"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
+		"projectiles/bullet"
 	},
 	{
-		GUN_CG,		ANIM_CHAINGUN,	S_CG,		-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		40,		40,		100,    1000,	15,		0,		0,		0,		-5,	     5,
-		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
-				"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep"
+	GUN_CG,		ANIM_CHAINGUN,	-5,	     5,
+		S_CG,		S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
+		40,		40,		100,    1000,	15,		500,	0,		10000,
+		1,		0,			1,		5,		4,		2,				2,
+		false,	false,		true,
+		1.0f,	0.f,		0.05f,		2.0f,		0.f,
+		"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
+		"projectiles/bullet"
 	},
 	{
-		GUN_FLAMER,	ANIM_FLAMER,	S_FLFIRE,	S_BURN,		S_BURNING,	-1,			S_ITEMSPAWN,
-		50,		50,		100, 	2000,	5,		100,	0,		3000,	-1,		 1,
-		32,		32,				0.5f,	0.1f,		0.25f,		1.5f,		50.f,		true,
-				"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep"
+	GUN_FLAMER,	ANIM_FLAMER,	-1,		 1,
+		S_FLFIRE,	S_BURN,		S_BURNING,	-1,			S_ITEMSPAWN,
+		50,		50,		100, 	2000,	5,		100,	0,		3000,
+		32,		32,			1,		5,		2,		1,				1,
+		true,	true,		true,
+		0.5f,	0.1f,		0.25f,		1.5f,		50.f,
+		"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
+		""
 	},
 	{
-		GUN_CARBINE,ANIM_CARBINE,	S_CARBINE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		10,		10,		500,    1000,	50,		0,		0,		0,		-10,	10,
-		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
-				"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep"
+	GUN_CARBINE,ANIM_CARBINE,	-10,	10,
+		S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
+		10,		10,		500,    1000,	50,		1000,	0,		10000,
+		1,		0,			1,		0,		0,		2,				2,
+		false,	false,		true,
+		1.0f,	0.f,		0.f,		2.0f,		0.f,
+		"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
+		"projectiles/bullet"
 	},
 	{
-		GUN_RIFLE,	ANIM_RIFLE,		S_RIFLE,	-1,			S_WHIRR,	-1,			S_ITEMSPAWN,
-		1,		5,		800,	1600,	100,	0,		0,		0,		-35,  	25,
-		1,		0,				1.0f,	0.33f,		0.35f,		2.0f,		75.f,		true,
-				"rifle",	"\fw",	"weapons/rifle/item",		"weapons/rifle/vwep"
+	GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
+		S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
+		1,		5,		800,	1600,	100,	1000,	0,		10000,
+		1,		0,			1,		0,		0,		2,				2,
+		false,	false,		true,
+		1.0f,	0.f,		 0.f,		2.0f,		0.f,
+		"rifle",	"\fw",	"weapons/rifle/item",		"weapons/rifle/vwep",
+		"projectiles/bullet"
 	},
 	{
-		GUN_GL,		ANIM_GRENADES,	S_GLFIRE,	S_EXPLODE,	S_WHIZZ,	S_TINK,		S_ITEMSPAWN,
-		2,		4,		1500,	0,		200,	150,	1000,	3000,	-15,    10,
-		3,		64,				1.0f,	0.33f,		0.45f,		2.0f,		75.f,		false,
-				"grenades",	"\fm",	"weapons/grenades/item",	"weapons/grenades/vwep"
+	GUN_GL,		ANIM_GRENADES,	-15,    10,
+		S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,		S_ITEMSPAWN,
+		2,		4,		1500,	0,		200,	200,	1000,	3000,
+		3,		64,			1,		0,		0,		1,				1,
+		false,	false,		false,
+		1.0f,	0.33f,		0.45f,		2.0f,		75.f,
+		"grenades",	"\fm",	"weapons/grenades/item",	"weapons/grenades/vwep",
+		"projectiles/grenade"
 	},
 };
 #define isgun(gun)	(gun > -1 && gun < GUN_MAX)
@@ -259,8 +290,7 @@ struct gametypes
 enum
 {
 	SV_INITS2C = 0, SV_INITC2S, SV_POS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_SOUND, SV_CDIS,
-	SV_SHOOT, SV_EXPLODE, SV_SUICIDE,
-	SV_DIED, SV_DAMAGE, SV_SHOTFX,
+	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_DAMAGE, SV_SHOTFX,
 	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN, SV_FORCEDEATH,
 	SV_DROP, SV_GUNSELECT, SV_TAUNT,
 	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMUSE, SV_TRIGGER, SV_EXECLINK,
@@ -284,8 +314,7 @@ char msgsizelookup(int msg)
 	{
 		SV_INITS2C, 3, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_SOUND, 3, SV_CDIS, 2,
-		SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 3,
-		SV_DIED, 8, SV_DAMAGE, 10, SV_SHOTFX, 9,
+		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 13, SV_SPAWN, 4, SV_FORCEDEATH, 2,
 		SV_DROP, 4, SV_GUNSELECT, 0, SV_TAUNT, 2,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_TRIGGER, 0, SV_EXECLINK, 3,
@@ -891,9 +920,10 @@ struct projent : dynent
 	int schan, id;
 	entitylight light;
 	gameent *owner;
+	physent *hit;
 	const char *mdl;
 
-	projent() : projtype(PRJ_SHOT), id(-1), mdl(NULL) { reset(); }
+	projent() : projtype(PRJ_SHOT), id(-1), owner(NULL), hit(NULL), mdl(NULL) { reset(); }
 	~projent()
 	{
 		removetrackedparticles(this);

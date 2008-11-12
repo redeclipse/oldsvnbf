@@ -3,10 +3,6 @@
 struct weaponstate
 {
 	gameclient &cl;
-
-	static const int OFFSETMILLIS = 500;
-	vec sg[SGRAYS];
-
 	IVARP(autoreload, 0, 1, 10);// auto reload when 0:never 1:empty 2+:every(this*rdelay)
 	IVARP(skipplasma, 0, 0, 1); // whether to skip plasma when switching
 	IVARP(skipgrenades, 0, 1, 1); // whether to skip grenades when switching
@@ -55,156 +51,6 @@ struct weaponstate
 		playsound(S_DENIED, d->o, d);
 	}
 
-	void offsetray(vec &from, vec &to, int spread, vec &dest)
-	{
-		float f = to.dist(from)*float(spread)/10000.f;
-		for(;;)
-		{
-			#define RNDD rnd(101)-50
-			vec v(RNDD, RNDD, RNDD);
-			if(v.magnitude()>50) continue;
-			v.mul(f);
-			v.z /= 2;
-			dest = to;
-			dest.add(v);
-			vec dir = dest;
-			dir.sub(from);
-            dir.normalize();
-			raycubepos(from, dir, dest, 0, RAY_CLIPMAT|RAY_POLY);
-			return;
-		}
-	}
-
-	void createrays(vec &from, vec &to)			 // create random spread of rays for the shotgun
-	{
-		loopi(SGRAYS) offsetray(from, to, SGSPREAD, sg[i]);
-	}
-
-	struct hitmsg
-	{
-		int flags, target, lifesequence, info;
-		ivec dir;
-	};
-	vector<hitmsg> hits;
-
-	void hit(gameent *d, vec &vel, int flags = 0, int info = 1)
-	{
-		hitmsg &h = hits.add();
-		h.flags = flags;
-		h.target = d->clientnum;
-		h.lifesequence = d->lifesequence;
-		h.info = info;
-		h.dir = ivec(int(vel.x*DNF), int(vel.y*DNF), int(vel.z*DNF));
-	}
-
-	void hitpush(gameent *d, vec &from, vec &to, int rays = 1)
-	{
-		vec v(to), s(to), pos = cl.headpos(d);
-		v.sub(from);
-		v.normalize();
-		shorten(from, pos, s);
-		int hits = 0;
-		if(s.z < pos.z-d->height*0.75f && s.z >= pos.z-d->height) hits |= HIT_LEGS;
-		else if(s.z < pos.z-d->aboveeye && s.z >= pos.z-d->height*0.75f) hits |= HIT_TORSO;
-		else if(s.z <= pos.z+d->aboveeye && s.z >= pos.z-d->aboveeye) hits |= HIT_HEAD;
-		hit(d, v, hits, rays);
-	}
-
-	float middist(physent *o, vec &dir, vec &v)
-	{
-		vec middle = o->o;
-		middle.z += (o->aboveeye-o->height)/2;
-		float dist = middle.dist(v, dir);
-		dir.div(dist);
-		if(dist < 0) dist = 0;
-		return dist;
-	}
-
-	void radialeffect(gameent *d, vec &o, int radius, int flags)
-	{
-		vec dir;
-		float dist = middist(d, dir, o);
-		if(dist < radius) hit(d, dir, flags, int(dist*DMF));
-	}
-
-	void radiate(projent &proj)
-	{
-		if(lastmillis-proj.lastradial > 250) // for the flamer this results in at most 20 damage per second
-		{
-			hits.setsizenodelete(0);
-
-			int radius = int(guntype[proj.attr1].explode*proj.lifesize);
-
-			loopi(cl.numdynents())
-			{
-				gameent *f = (gameent *)cl.iterdynents(i);
-				if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
-				radialeffect(f, proj.o, radius, HIT_BURN);
-			}
-
-			if(hits.length() > 0)
-			{
-				cl.cc.addmsg(SV_EXPLODE, "ri5iv", proj.owner->clientnum, lastmillis-cl.maptime, proj.attr1, proj.id >= 0 ? proj.id-cl.maptime : proj.id,
-						radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
-
-				proj.lastradial = lastmillis;
-			}
-		}
-	}
-
-	void explode(gameent *d, vec &o, vec &vel, int id, int gun, bool local)
-	{
-		vec dir;
-		float dist = middist(camera1, dir, o);
-
-		if(guntype[gun].esound >= 0) playsound(guntype[gun].esound, o);
-
-		if(gun == GUN_PLASMA)
-		{
-			part_create(PART_PLASMA_SOFT, 200, o, 0x226688, guntype[gun].size*0.8f); // plasma explosion
-			part_create(PART_SMOKE_RISE_SLOW, 500, o, 0x88AABB, guntype[gun].explode*0.4f); // smoke
-			adddynlight(o, 1.15f*guntype[gun].explode, vec(0.1f, 0.4f, 0.6f), 200, 10);
-		}
-		if(gun == GUN_FLAMER || gun == GUN_GL)
-		{
-			part_create(gun == GUN_FLAMER ? PART_FIREBALL_SOFT : PART_PLASMA_SOFT, gun == GUN_FLAMER ? 500 : 750, o, 0x663603, guntype[gun].explode*0.4f); // corona
-			int deviation = int(guntype[gun].explode*0.35f);
-			loopi(rnd(3)+1)
-			{
-				vec to = vec(o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
-				part_splash(PART_FIREBALL_SOFT, gun == GUN_FLAMER ? 1 : 2, gun == GUN_FLAMER ? 250 : 750, to, 0x441404, guntype[gun].explode*0.9f); // fireball
-				part_splash(PART_SMOKE_RISE_SLOW_SOFT, gun == GUN_FLAMER ? 1 : 2, gun == GUN_FLAMER ? 500 : 1500, vec(to).sub(vec(0, 0, 2)), gun == GUN_FLAMER ? 0x555555 : 0x111111, guntype[gun].explode); // smoke
-			}
-			adddynlight(o, 1.15f*guntype[gun].explode, vec(1.1f, 0.22f, 0.02f), gun == GUN_FLAMER ? 250 : 1500, 10);
-		}
-		if(gun == GUN_GL)
-		{
-			cl.quakewobble += max(int(guntype[gun].damage*(1.f-dist/EXPLOSIONSCALE/guntype[gun].explode)), 1);
-			part_fireball(vec(o).sub(vec(0, 0, 2)), guntype[gun].explode*0.75f, PART_EXPLOSION, 1000, 0x642404, 4.f); // explosion fireball
-			loopi(rnd(20)+10)
-				cl.pj.create(o, vec(o).add(vel), true, d, PRJ_DEBRIS, rnd(1500)+1500, rnd(750), rnd(60)+40);
-		}
-        if(gun != GUN_PLASMA)
-			adddecal(DECAL_SCORCH, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), guntype[gun].explode);
-        adddecal(DECAL_ENERGY, o, gun == GUN_GL ? vec(0, 0, 1) : vec(vel).neg().normalize(), gun == GUN_PLASMA ? guntype[gun].size : guntype[gun].explode*0.75f,
-			gun == GUN_PLASMA ? bvec(86, 196, 244) : bvec(196, 96, 32));
-
-		if(local)
-		{
-			hits.setsizenodelete(0);
-
-			loopi(cl.numdynents())
-			{
-				gameent *f = (gameent *)cl.iterdynents(i);
-				if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
-				radialeffect(f, o, guntype[gun].explode, gun == GUN_FLAMER || gun == GUN_PLASMA ? HIT_BURN : HIT_EXPLODE);
-			}
-
-			cl.cc.addmsg(SV_EXPLODE, "ri5iv", d->clientnum, lastmillis-cl.maptime, gun, id >= 0 ? id-cl.maptime : id,
-					0, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
-		}
-	}
-
 	vec gunorigin(const vec &from, const vec &to, gameent *d, bool third)
 	{
 		vec origin;
@@ -235,9 +81,10 @@ struct weaponstate
 		return origin;
 	}
 
-	void shootv(int gun, int power, vec &from, vec &to, gameent *d, bool local)	 // create visual effect from a shot
+	void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local)	 // create visual effect from a shot
 	{
-		int pow = guntype[gun].power ? power : 100;
+		int pow = guntype[gun].power ? power : 100,
+			spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
 
 		if(gun == GUN_FLAMER)
 		{
@@ -252,12 +99,6 @@ struct weaponstate
 			case GUN_SG:
 			{
 				part_create(PART_SMOKE_RISE_SLOW, 1000, from, 0x666666, 4.f); // smoke
-				loopi(SGRAYS)
-				{
-					part_splash(PART_SPARK, 5, 250, sg[i], 0x996622, 0.8f);
-                    part_flare(from, sg[i], 250, PART_STREAK, 0x996622, 1.5f, d);
-                    if(!local) adddecal(DECAL_BULLET, sg[i], vec(from).sub(sg[i]).normalize(), 2.0f);
-				}
 				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
 				part_create(PART_MUZZLE_FLASH, 50, from, 0xFFAA00, 4.f, d);
 				break;
@@ -266,106 +107,35 @@ struct weaponstate
 			case GUN_CG:
 			{
 				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x999999, 1.5f); // smoke
-				part_splash(PART_SPARK, 20, gun == GUN_CG ? 100 : 200, to, 0x996622, 0.6f);
-                part_flare(from, to, 250, PART_STREAK, 0x996622, 1.f, d);
-                if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
                 adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
 				part_create(PART_MUZZLE_FLASH, 50, from, 0xFFAA00, 3.f, d);
 				break;
 			}
 			case GUN_PLASMA:
-			case GUN_FLAMER:
-			case GUN_GL:
 			{
-				int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
-				cl.pj.create(from, to, local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
-				if(gun == GUN_PLASMA)
-				{
-					part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x88AABB, 0.8f); // smoke
-					adddynlight(from, 50, vec(0.1f, 0.4f, 0.6f), 50, 0, DL_FLASH);
-					part_create(PART_PLASMA, 50, from, 0x226688, 1.0f, d);
-				}
-				else if(gun == GUN_FLAMER)
-				{
-					part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x555555, 2.f); // smoke
-					adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
-					part_create(PART_FIREBALL, 50, from, 0xFF2200, 2.f, d);
-				}
+				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x88AABB, 0.8f); // smoke
+				adddynlight(from, 50, vec(0.1f, 0.4f, 0.6f), 50, 0, DL_FLASH);
+				part_create(PART_PLASMA, 50, from, 0x226688, 1.0f, d);
 				break;
 			}
-
+			case GUN_FLAMER:
+			{
+				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x555555, 2.f); // smoke
+				adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
+				part_create(PART_FIREBALL, 50, from, 0xFF2200, 2.f, d);
+				break;
+			}
 			case GUN_CARBINE:
 			case GUN_RIFLE:
 			{
 				part_create(PART_SMOKE_RISE_SLOW, gun == GUN_RIFLE ? 1500 : 750, from, 0xCCCCCC, gun == GUN_RIFLE ? 3.f : 2.f); // smoke
-				part_splash(PART_SMOKE_SINK, gun == GUN_RIFLE ?  20 : 10, gun == GUN_RIFLE ? 250 : 100, to, 0xCCCCCC, gun == GUN_RIFLE ? 1.2f : 0.6f);
-				part_trail(PART_SMOKE_SINK, gun == GUN_RIFLE ? 750 : 500, from, to, 0xFFFFFF, gun == GUN_RIFLE ? 1.0f : 0.5f);
-                if(!local) adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 3.0f);
                 adddynlight(from, 50, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
 				part_create(PART_SMOKE, 100, from, 0xCCCCCC, gun == GUN_RIFLE ? 2.f : 1.2f, d);
 				break;
 			}
 		}
-	}
-
-	gameent *intersectclosest(vec &from, vec &to, gameent *at)
-	{
-		gameent *best = NULL;
-		float bestdist = 1e16f;
-		loopi(cl.numdynents())
-		{
-			gameent *o = (gameent *)cl.iterdynents(i);
-            if(!o || o==at || o->state!=CS_ALIVE || lastmillis-o->lastspawn <= REGENWAIT) continue;
-			if(!intersect(o, from, to)) continue;
-			float dist = at->o.dist(o->o);
-			if(dist<bestdist)
-			{
-				best = o;
-				bestdist = dist;
-			}
-		}
-		return best;
-	}
-
-	void shorten(vec &from, vec &to, vec &target)
-	{
-		target.sub(from).normalize().mul(from.dist(to)).add(from);
-	}
-
-	void raydamage(vec &from, vec &to, gameent *d)
-	{
-		gameent *o, *cl;
-		if(d->gunselect==GUN_SG)
-		{
-			bool done[SGRAYS];
-			loopj(SGRAYS) done[j] = false;
-			for(;;)
-			{
-				bool raysleft = false;
-				int hitrays = 0;
-				o = NULL;
-				loop(r, SGRAYS) if(!done[r] && (cl = intersectclosest(from, sg[r], d)))
-				{
-					if((!o || o==cl) /*&& (damage<cl->health+cl->armour || cl->type!=ENT_AI)*/)
-					{
-						hitrays++;
-						o = cl;
-						done[r] = true;
-						shorten(from, o->o, sg[r]);
-					}
-					else raysleft = true;
-				}
-				if(hitrays) hitpush(o, from, to, hitrays);
-				if(!raysleft) break;
-			}
-            loopj(SGRAYS) if(!done[j]) adddecal(DECAL_BULLET, sg[j], vec(from).sub(sg[j]).normalize(), 2.0f);
-		}
-		else if((o = intersectclosest(from, to, d)))
-		{
-			shorten(from, o->o, to);
-			hitpush(o, from, to);
-		}
-        else adddecal(DECAL_BULLET, to, vec(from).sub(to).normalize(), 2.0f);
+		loopv(locs)
+			cl.pj.create(from, locs[i], local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
 	}
 
 	bool doautoreload(gameent *d)
@@ -395,6 +165,26 @@ struct weaponstate
 		}
 	}
 
+	void offsetray(vec &from, vec &to, int spread, int z, vec &dest)
+	{
+		float f = to.dist(from)*float(spread)/10000.f;
+		for(;;)
+		{
+			#define RNDD rnd(101)-50
+			vec v(RNDD, RNDD, RNDD);
+			if(v.magnitude() > 50) continue;
+			v.mul(f);
+			v.z = z > 0 ? v.z/float(z) : 0;
+			dest = to;
+			dest.add(v);
+			vec dir = dest;
+			dir.sub(from);
+            dir.normalize();
+			raycubepos(from, dir, dest, 0, RAY_CLIPMAT|RAY_POLY);
+			return;
+		}
+	}
+
 	void shoot(gameent *d, vec &targ, int pow = 0)
 	{
 		if(!d->canshoot(d->gunselect, lastmillis)) return;
@@ -421,7 +211,7 @@ struct weaponstate
 
 		if(guntype[d->gunselect].max) d->ammo[d->gunselect] = max(d->ammo[d->gunselect]-1, 0);
 		d->setgunstate(d->gunselect, GUNSTATE_SHOOT, guntype[d->gunselect].adelay, lastmillis);
-		d->totalshots += guntype[d->gunselect].damage*(d->gunselect == GUN_SG ? SGRAYS : 1);
+		d->totalshots += guntype[d->gunselect].damage*guntype[d->gunselect].rays;
 
 		vec to = targ, from = gunorigin(d->o, to, d, d != cl.player1 || cl.isthirdperson()), unitv;
 		float dist = to.dist(from, unitv);
@@ -450,18 +240,27 @@ struct weaponstate
 			to.add(from);
 		}
 
-		if(d->gunselect==GUN_SG) createrays(from, to);
-		else if(d->gunselect==GUN_CG) offsetray(from, to, 5, to);
-
-		hits.setsizenodelete(0);
-		if(!guntype[d->gunselect].speed) raydamage(from, to, d);
-
-		shootv(d->gunselect, power, from, to, d, true);
-
-		cl.cc.addmsg(SV_SHOOT, "ri4i6iv", d->clientnum, lastmillis-cl.maptime, d->gunselect, power,
-						(int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),
-						(int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
-						hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+		vector<vec> vshots; vshots.setsize(0);
+		vector<ivec> shots; shots.setsize(0);
+		#define addshot(q) { vshots.add(q); shots.add(ivec(int(q.x*DNF), int(q.y*DNF), int(q.z*DNF))); }
+		loopi(guntype[d->gunselect].rays)
+		{
+			vec dest;
+			if(guntype[d->gunselect].spread)
+				offsetray(from, to, guntype[d->gunselect].spread, guntype[d->gunselect].zdiv, dest);
+			else dest = to;
+			if(d->gunselect == GUN_GL)
+			{
+				float t = from.dist(dest);
+				dest.z += t/8;
+			}
+			addshot(dest);
+		}
+		shootv(d->gunselect, power, from, vshots, d, true);
+		cl.cc.addmsg(SV_SHOOT, "ri7iv",
+			d->clientnum, lastmillis-cl.maptime, d->gunselect, power,
+				int(from.x*DNF), int(from.y*DNF), int(from.z*DNF),
+					shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
 	}
 
     void preload(int gun = -1)

@@ -1,6 +1,6 @@
 struct duelservmode : servmode
 {
-	static const int DUELMILLIS = 10000;
+	static const int DUELMILLIS = 15000;
 
 	int duelround, dueltime;
 	vector<int> duelqueue;
@@ -26,8 +26,8 @@ struct duelservmode : servmode
 			}
 			if(msg)
 			{
-				if(n > 0) sv.srvoutf(ci->clientnum, "\foyou are \fs\fy#%d\fS in the queue", n+1);
-				else sv.srvoutf(ci->clientnum, "\foyou are \fs\fyNEXT\fS in the queue", n+1);
+				if(n > 0) sv.srvoutf(ci->clientnum, "\fyyou are \fs\fg#%d\fS in the queue", n+1);
+				else sv.srvoutf(ci->clientnum, "\fyyou are \fs\fgNEXT\fS in the queue", n+1);
 			}
 		}
 	}
@@ -133,7 +133,7 @@ struct duelservmode : servmode
 				{
 					s_sprintfd(namea)("%s", sv.colorname(alive[0]));
 					s_sprintfd(nameb)("%s", sv.colorname(alive[1]));
-					s_sprintfd(fight)("Duel [ \fs%s\fS vs \fs%s\fS ] round \fs\fy#%d\fS.. FIGHT!", namea, nameb, duelround);
+					s_sprintfd(fight)("Duel between %s and %s, round \fs\fy#%d\fS.. FIGHT!", namea, nameb, duelround);
 					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
 				}
 				else if(m_lms(sv.gamemode, sv.mutators))
@@ -148,13 +148,13 @@ struct duelservmode : servmode
 		{
 			if(!alive.empty())
 			{
-				sv.srvoutf(-1, "\fo%s survived the duel", sv.colorname(alive[0]));
+				sv.srvoutf(-1, "\fy%s was the last one left alive", sv.colorname(alive[0]));
 				sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, "you win!");
 				alive[0]->state.health = MAXHEALTH;
 				alive[0]->state.lastregen = sv.gamemillis;
 				sendf(-1, 1, "ri3", SV_REGEN, alive[0]->clientnum, alive[0]->state.health);
 			}
-			else sv.srvoutf(-1, "everyone died!");
+			else sv.srvoutf(-1, "\fyeveryone died, fail!");
 			dueltime = sv.gamemillis + DUELMILLIS;
 		}
 	}
