@@ -244,7 +244,6 @@ struct stfclient : stfstate
 					colour = teamtype[b.owner].colour; // fall through colors dynlight too
 					regularshape(PART_SMOKE_RISE_SLOW, enttype[FLAG].radius, colour, 21, rnd(5)+1, 250, vec(b.pos).sub(vec(0, 0, 4.f)), 4.f);
 				}
-				adddynlight(b.pos, enttype[FLAG].radius, vec((colour>>16)/255.f, ((colour>>8)&0xFF)/255.f, (colour&0xFF)/255.f));
 			}
 		}
 	}
