@@ -122,9 +122,7 @@ struct projectiles
 					if(proj.geomcollide == 2) break;
 					dir = wall;
 				}
-				float amt = proj.elasticity > 0.f ? proj.elasticity : 1.f;
-				proj.vel.apply(dir, amt);
-				if(hitplayer) proj.vel.apply(hitplayer->vel, amt);
+				proj.vel.apply(dir, proj.elasticity > 0.f ? proj.elasticity : 1.f);
 				proj.o.add(vec(proj.vel).mul(0.01f));
 			}
 			else
@@ -189,7 +187,7 @@ struct projectiles
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					int col = ((int(144*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8);
 					part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*2.f*proj.lifesize);
-					bool moving = (proj.movement > 4.f);
+					bool moving = (proj.movement > 2.f);
 					if(lastmillis-proj.lasteffect > (moving ? 250 : 500))
 					{
 						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x666666, proj.radius*(moving ? 1.f : 2.f));
@@ -199,13 +197,14 @@ struct projectiles
 				}
 				case GUN_SG: case GUN_CG:
 				{
-					proj.lifesize = proj.attr1 == GUN_SG ? clamp(proj.lifespan, 0.5f, 1.f) : 1.f;
-					float size = proj.attr1 == GUN_SG ? 50.f*proj.lifesize : 20.f;
-					vec from = proj.from;
-					if(proj.lifemillis-proj.lifetime > 200 || proj.o.dist(proj.from) > size)
-						from = vec(proj.o).sub(vec(proj.vel).normalize().mul(size));
-					int col = ((int(254*max(1.0f-proj.lifesize,0.3f))<<16)+1)|((int(196*max(1.0f-proj.lifesize,0.15f))+1)<<8);
-					part_flare(from, proj.o, 1, PART_STREAK, col, proj.radius*(proj.attr1 == GUN_SG ? 1.5f : 0.5f));
+					proj.lifesize = proj.attr1 == GUN_SG ? clamp(proj.lifespan, 0.3f, 1.f) : 1.f;
+					if(proj.movement > 2.f)
+					{
+						float size = clamp(proj.attr1 == GUN_SG ? 30.f*(1.0f-proj.lifesize) : 20.f, 1.f, proj.lifemillis-proj.lifetime > 200 ? 30.f : proj.o.dist(proj.from));
+						vec from = vec(proj.o).sub(vec(proj.vel).normalize().mul(size));
+						int col = ((int(254*max(1.0f-proj.lifesize,0.3f))<<16)+1)|((int(196*max(1.0f-proj.lifesize,0.1f))+1)<<8);
+						part_flare(from, proj.o, 1, PART_STREAK, col, proj.radius*(proj.attr1 == GUN_SG ? 1.0f : 0.5f));
+					}
 					break;
 				}
 				case GUN_CARBINE: case GUN_RIFLE:
@@ -341,11 +340,7 @@ struct projectiles
 					}
 				}
 				if(proj.elasticity > 0.f)
-				{
 					proj.vel.apply(pos, proj.elasticity);
-					if(hitplayer)
-						proj.vel.apply(hitplayer->vel, proj.elasticity*proj.relativity*0.1f);
-				}
 				else proj.vel = vec(0, 0, 0);
 				proj.movement = 0;
 				return true; // stay alive until timeout
