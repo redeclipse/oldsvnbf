@@ -1127,13 +1127,13 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
         case 10: //water
         case 11: //plasma
         case 12: //snow
+        case 13: //sparks
         {
-            const int typemap[]   = { PART_STREAK, -1,  -1,  PART_LIGHTNING, PART_FIREBALL, PART_SMOKE_RISE_SLOW, PART_WATER, PART_PLASMA, PART_SNOW };
-            const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f };
-            const float velmap[]  = {  200,   0,   0,  200, 200, 200,  200,   200,  40 };
+            const int typemap[]   = { PART_STREAK, -1,  -1,  PART_LIGHTNING, PART_FIREBALL, PART_SMOKE_RISE_SLOW, PART_WATER, PART_PLASMA, PART_SNOW, PART_SPARK };
+            const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f };
+            const float velmap[]  = {  200,   0,   0,  200, 200, 200,  200,   200,  40, 200 };
             int type = typemap[attr1-4];
-            float size = sizemap[attr1-4];
-            float vel = velmap[attr1-4];
+            float size = sizemap[attr1-4], vel = velmap[attr1-4];
             if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size, vel);
             else newparticle(o, offsetvec(o, attr2, 1+attr3), 1, type, colorfromattr(attr4), size);
             break;

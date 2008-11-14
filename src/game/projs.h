@@ -17,7 +17,7 @@ struct projectiles
 	{
 	}
 
-	int hitzones(vec &o, vec &pos, float height, float above, int radius = 0)
+	int hitzones(vec &o, vec &pos, float height, float above)
 	{
 		int hits = 0;
 		float zones[3][2] = {
@@ -25,33 +25,38 @@ struct projectiles
 			{ pos.z-above, pos.z-height*0.75f },
 			{ pos.z+above, pos.z-above }
 		};
-		if(o.z <= zones[0][0]+radius && o.z >= zones[0][1]-radius) hits |= HIT_LEGS;
-		if(o.z <= zones[1][0]+radius && o.z >= zones[1][1]-radius) hits |= HIT_TORSO;
-		if(o.z <= zones[2][0]+radius && o.z >= zones[2][1]-radius) hits |= HIT_HEAD;
+		if(o.z <= zones[0][0] && o.z >= zones[0][1]) hits |= HIT_LEGS;
+		if(o.z < zones[1][0] && o.z > zones[1][1]) hits |= HIT_TORSO;
+		if(o.z <= zones[2][0] && o.z >= zones[2][1]) hits |= HIT_HEAD;
 		return hits;
 	}
 
-	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0, int radius = 0)
+	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0)
 	{
 		vec pos = cl.headpos(d);
-		int f = flags|(hitzones(proj.o, pos, d->height, d->aboveeye, radius));
+		int f = flags|(hitzones(proj.o, pos, d->height, d->aboveeye));
 		hitmsg &h = hits.add();
 		h.flags = f;
 		h.target = d->clientnum;
 		h.lifesequence = d->lifesequence;
 		h.info = dist;
-		vec dir = vec(proj.o).sub(vec(pos).sub(vec(0, 0, d->height*0.5f))).normalize().add(vec(proj.vel).normalize()).normalize();
+		vec dir = vec(vec(vec(pos).sub(vec(0, 0, d->height*0.5f))).sub(proj.o)).normalize();
+		pos.add(vec(proj.vel).normalize()).normalize();
 		h.dir = ivec(int(dir.x*DNF), int(dir.y*DNF), int(dir.z*DNF));
 	}
 
-	void radialeffect(gameent *d, projent &proj, int flags, int radius)
+	void radialeffect(gameent *d, projent &proj, int radius)
 	{
 		vec dir, middle = d->o;
 		middle.z += (d->aboveeye-d->height)/2;
 		float dist = middle.dist(proj.o, dir);
 		dir.div(dist);
 		if(dist < 0) dist = 0;
-		if(dist < radius) hitpush(d, proj, flags, int(dist*DMF), radius);
+		if(dist < radius)
+		{
+			int flags = proj.attr1 == GUN_GL ? HIT_EXPLODE : HIT_BURN;
+			hitpush(d, proj, flags, int(dist*DMF));
+		}
 	}
 
 	void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int waittime, int speed, int id = 0, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0)
@@ -230,17 +235,20 @@ struct projectiles
 		{
 			hits.setsizenodelete(0);
 			int radius = int(guntype[proj.attr1].explode*proj.lifesize);
-			loopi(cl.numdynents())
+			if(radius > 0)
 			{
-				gameent *f = (gameent *)cl.iterdynents(i);
-				if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
-				radialeffect(f, proj, HIT_BURN, radius);
-			}
-			if(!hits.empty())
-			{
-				cl.cc.addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-cl.maptime, proj.attr1, proj.id >= 0 ? proj.id-cl.maptime : proj.id,
-						radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
-				proj.lastradial = lastmillis;
+				loopi(cl.numdynents())
+				{
+					gameent *f = (gameent *)cl.iterdynents(i);
+					if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
+					radialeffect(f, proj, radius);
+				}
+				if(!hits.empty())
+				{
+					cl.cc.addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-cl.maptime, proj.attr1, proj.id >= 0 ? proj.id-cl.maptime : proj.id,
+							radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+					proj.lastradial = lastmillis;
+				}
 			}
 		}
 	}
@@ -311,7 +319,7 @@ struct projectiles
 						{
 							gameent *f = (gameent *)cl.iterdynents(i);
 							if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
-							radialeffect(f, proj, proj.attr1 == GUN_GL ? HIT_EXPLODE : HIT_BURN, guntype[proj.attr1].explode);
+							radialeffect(f, proj, guntype[proj.attr1].explode);
 						}
 					}
 					else if(proj.hit && proj.hit->type == ENT_PLAYER)

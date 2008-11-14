@@ -870,9 +870,7 @@ struct gameent : dynent, gamestate
 
 	void hitpush(int damage, const vec &dir)
 	{
-		vec push(dir);
-		push.mul(damage/weight*100.f);
-		vel.add(push);
+		vel.add(vec(dir).mul(damage*100.f/weight));
 	}
 
 	void stopactions()

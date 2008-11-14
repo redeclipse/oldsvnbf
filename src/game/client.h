@@ -901,6 +901,7 @@ struct clientcom : iclientcom
 						health = getint(p);
 					vec dir;
 					loopk(3) dir[k] = getint(p)/DNF;
+					dir.normalize();
 					gameent *target = cl.getclient(tcn), *actor = cl.getclient(acn);
 					if(!target || !actor) break;
 					cl.damaged(gun, flags, damage, health, target, actor, lastmillis, dir);
