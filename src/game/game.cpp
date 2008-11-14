@@ -486,8 +486,8 @@ struct gameclient : igameclient
 		{
 			quakewobble += damage/2;
 			damageresidue += damage*2;
-			d->hitpush(damage, dir);
 		}
+		if(d == player1 || d->ai) d->hitpush(damage, dir);
 
 		if(d->type == ENT_PLAYER)
 		{
@@ -566,7 +566,7 @@ struct gameclient : igameclient
 					"was blown to pieces by",
 				},
 				{
-					"was decapitated with plasma by",
+					"was plasmafied by",
 					"was given scrambled brains cooked up by",
 					"was air conditioned courtesy of",
 					"was char-grilled by",
@@ -585,7 +585,7 @@ struct gameclient : igameclient
 				}
 			};
 
-			int o = (flags & HIT_HEAD) ? 1 : (d->obliterated ? 2 : 0);
+			int o = d->obliterated ? 2 : (flags&HIT_HEAD ? 1 : 0);
 			const char *oname = isgun(gun) ? obitnames[o][gun] : "was killed by";
 			if(m_team(gamemode, mutators) && d->team == actor->team)
 				s_sprintf(d->obit)("%s teammate %s", oname, colorname(actor));

@@ -211,7 +211,7 @@ struct weaponstate
 
 		if(guntype[d->gunselect].max) d->ammo[d->gunselect] = max(d->ammo[d->gunselect]-1, 0);
 		d->setgunstate(d->gunselect, GUNSTATE_SHOOT, guntype[d->gunselect].adelay, lastmillis);
-		d->totalshots += guntype[d->gunselect].damage*guntype[d->gunselect].rays;
+		d->totalshots += int(guntype[d->gunselect].damage*damagescale)*guntype[d->gunselect].rays;
 
 		vec to = targ, from = gunorigin(d->o, to, d, d != cl.player1 || cl.isthirdperson()), unitv;
 		float dist = to.dist(from, unitv);

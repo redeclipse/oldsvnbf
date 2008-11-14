@@ -2078,17 +2078,22 @@ struct gameserver : igameserver
 	{
 		servstate &ts = target->state;
 		if(gamemillis-ts.lastspawn <= REGENWAIT) return;
-		int setdamage = damage, realdamage = damage;
+		int realdamage = 0, nodamage = 0;
+		if(smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { nodamage++; }
+		mutate(smuts, if(!mut->damage(target, actor, damage, gun, flags, hitpush)) { nodamage++; });
 
-		if(flags&HIT_LEGS) setdamage = int(damage*0.25f);
-		else if (flags&HIT_TORSO) setdamage = int(damage*0.5f);
-		if(smode && !smode->damage(target, actor, setdamage, gun, flags, hitpush)) { return; }
-		mutate(smuts, if(!mut->damage(target, actor, setdamage, gun, flags, hitpush)) { return; });
-
-		if(!m_fight(gamemode) || (!sv_teamdamage && m_team(gamemode, mutators) && actor->team == target->team))
-			realdamage = 0;
-		else if(m_insta(gamemode, mutators)) realdamage = int(max(setdamage, ts.health)*sv_damagescale);
-		else realdamage = int(setdamage*sv_damagescale);
+		if(!nodamage && m_fight(gamemode) && (sv_teamdamage || !m_team(gamemode, mutators) || actor->team != target->team))
+		{
+			if(m_insta(gamemode, mutators)) realdamage = max(damage, ts.health);
+			else
+			{
+				if(flags&HIT_HEAD) realdamage = int(damage*sv_damagescale);
+				else if(flags&HIT_TORSO) realdamage = int(damage*0.5f*sv_damagescale);
+				else if(flags&HIT_LEGS) realdamage = int(damage*0.25f*sv_damagescale);
+				else if(flags&HIT_BURN || flags&HIT_EXPLODE || flags&HIT_MELT || flags&HIT_FALL)
+					realdamage = int(damage*sv_damagescale);
+			}
+		}
 
 		ts.dodamage(realdamage, gamemillis);
         actor->state.damage += realdamage;
@@ -2142,10 +2147,10 @@ struct gameserver : igameserver
 		if(isgun(e.gun))
 		{
 			if(!gs.gunshots[e.gun].find(e.id) < 0) return;
-			else if(!e.radial || !guntype[e.gun].explode)
+			else if(!guntype[e.gun].radial || !e.radial) // 0 is destroy
 			{
 				gs.gunshots[e.gun].remove(e.id);
-				e.radial = guntype[e.gun].explode; // full/hit for remove
+				e.radial = guntype[e.gun].explode;
 			}
 			loopv(e.hits)
 			{
