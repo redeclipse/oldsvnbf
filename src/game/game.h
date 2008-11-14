@@ -156,7 +156,7 @@ struct guntypes
 	{
 		GUN_CG,		ANIM_CHAINGUN,	-5,	     5,
 			S_CG,		S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
-			40,		40,		100,    1000,	20,		2000,	0,		10000,
+			40,		40,		100,    1000,	20,		2000,	0,		2000,
 			1,		0,			1,		5,		4,		1,				2,
 			false,	false,		true,
 			1.0f,	0.75f,		25.f,			0.05f,		2.0f,		0.f,
