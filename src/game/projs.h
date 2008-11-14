@@ -222,6 +222,7 @@ struct projectiles
 		{
 			if(!collide(&proj) || inside || hitplayer)
 			{
+				if(proj.elasticity <= 0.f) break;
 				if(hitplayer)
 				{
 					if(proj.playercollide == 2) break;
@@ -232,7 +233,8 @@ struct projectiles
 					if(proj.geomcollide == 2) break;
 					dir = wall;
 				}
-				proj.vel.apply(dir, proj.elasticity > 0.f ? proj.elasticity : 1.f);
+				proj.vel.apply(dir);
+				proj.vel.mul(proj.elasticity);
 				proj.o.add(vec(proj.vel).mul(0.01f));
 			}
 			else
@@ -241,15 +243,7 @@ struct projectiles
 				break;
 			}
 		}
-		if(!found)
-		{
-			proj.o = orig;
-			if(proj.playercollide == 2 || proj.geomcollide == 2)
-			{
-				proj.lifemillis = proj.lifetime = 1;
-				proj.state = CS_DEAD; // aww, poor proj
-			}
-		}
+		if(!found) proj.o = orig; // go home little one
         proj.resetinterp();
 	}
 
@@ -265,7 +259,7 @@ struct projectiles
 				if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
 				radialeffect(f, proj, HIT_BURN, radius);
 			}
-			if(hits.length() > 0)
+			if(!hits.empty())
 			{
 				cl.cc.addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-cl.maptime, proj.attr1, proj.id >= 0 ? proj.id-cl.maptime : proj.id,
 						radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
@@ -334,8 +328,7 @@ struct projectiles
 				if(proj.local)
 				{
 					hits.setsizenodelete(0);
-
-					if(proj.radial)
+					if(guntype[proj.attr1].explode)
 					{
 						loopi(cl.numdynents())
 						{
@@ -568,8 +561,12 @@ struct projectiles
 					}
 				}
 				if(proj.elasticity > 0.f)
-					proj.vel.apply(pos, proj.elasticity);
+				{
+					proj.vel.apply(pos);
+					proj.vel.mul(proj.elasticity);
+				}
 				else proj.vel = vec(0, 0, 0);
+
 				proj.movement = 0;
 				return true; // stay alive until timeout
 			}
@@ -709,7 +706,7 @@ struct projectiles
 				delete &proj;
 				projs.removeunordered(i--);
 			}
-			else if(proj.radial && proj.local && proj.attr1 != GUN_GL) radiate(proj);
+			else if(proj.radial && proj.local) radiate(proj);
 		}
 	}
 

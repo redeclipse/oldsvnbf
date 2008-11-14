@@ -9,8 +9,8 @@ struct vec
     };
 
     vec() {}
-    explicit vec(int a) : x(a), y(a), z(a) {} 
-    explicit vec(float a) : x(a), y(a), z(a) {} 
+    explicit vec(int a) : x(a), y(a), z(a) {}
+    explicit vec(float a) : x(a), y(a), z(a) {}
     vec(float a, float b, float c) : x(a), y(b), z(c) {}
     vec(int v[3]) : x(v[0]), y(v[1]), z(v[2]) {}
     vec(float *v) : x(v[0]), y(v[1]), z(v[2]) {}
@@ -20,7 +20,7 @@ struct vec
 
     float &operator[](int i)       { return v[i]; }
     float  operator[](int i) const { return v[i]; }
-    
+
     vec &set(int i, float f) { v[i] = f; return *this; }
 
     bool operator==(const vec &o) const { return x == o.x && y == o.y && z == o.z; }
@@ -72,18 +72,11 @@ struct vec
         if(mag > 1e-6f) mul(k / mag);
     }
 
-    vec &apply(const vec &o, float elasticity = 1.0f)
+    vec &apply(const vec &o)
     {
-        x = ((o.x > 0.f && x < 0.f) || (o.x < 0.f && x > 0.f) ? fabs(x) * o.x : x) * elasticity;
-        y = ((o.y > 0.f && y < 0.f) || (o.y < 0.f && y > 0.f) ? fabs(y) * o.y : y) * elasticity;
-        z = ((o.z > 0.f && z < 0.f) || (o.z < 0.f && z > 0.f) ? fabs(z) * o.z : z) * elasticity;
-        return *this;
-    }
-    vec &influence(const vec &o, const vec &p, float elasticity = 1.0f)
-    {
-        if ((o.x >= 0.f && p.x > 0.f) || (o.x <= 0.f && p.x < 0.f)) x += p.x * elasticity;
-        if ((o.y >= 0.f && p.y > 0.f) || (o.y <= 0.f && p.y < 0.f)) y += p.y * elasticity;
-        if ((o.z >= 0.f && p.z > 0.f) || (o.z <= 0.f && p.z < 0.f)) z += p.z * elasticity;
+        x = ((o.x > 0.f && x < 0.f) || (o.x < 0.f && x > 0.f) ? fabs(x) * o.x : x);
+        y = ((o.y > 0.f && y < 0.f) || (o.y < 0.f && y > 0.f) ? fabs(y) * o.y : y);
+        z = ((o.z > 0.f && z < 0.f) || (o.z < 0.f && z > 0.f) ? fabs(z) * o.z : z);
         return *this;
     }
 
@@ -106,7 +99,7 @@ struct vec
 
     void orthogonal(const vec &d)
     {
-        int i = fabs(d.x) > fabs(d.y) ? (fabs(d.x) > fabs(d.z) ? 0 : 2) : (fabs(d.y) > fabs(d.z) ? 1 : 2); 
+        int i = fabs(d.x) > fabs(d.y) ? (fabs(d.x) > fabs(d.z) ? 0 : 2) : (fabs(d.y) > fabs(d.z) ? 1 : 2);
         v[i] = d[(i+1)%3];
         v[(i+1)%3] = -d[i];
         v[(i+2)%3] = 0;
@@ -263,7 +256,7 @@ struct dualquat
         dual.w = -0.5f*( p.x*q.x + p.y*q.y + p.z*q.z);
     }
     explicit dualquat(const quat &q) : real(q), dual(0, 0, 0, 0) {}
-    
+
     dualquat &mul(float k) { real.mul(k); dual.mul(k); return *this; }
     dualquat &add(const dualquat &d) { real.add(d.real); dual.add(d.dual); return *this; }
 
@@ -298,7 +291,7 @@ struct dualquat
         else { real = dual = quat(0, 0, 0, 0); }
         return *this;
     }
-   
+
     void mul(const dualquat &p, const dualquat &o)
     {
         real.mul(p.real, o.real);
@@ -306,9 +299,9 @@ struct dualquat
         quat tmp;
         tmp.mul(p.dual, o.real);
         dual.add(tmp);
-    }       
-    void mul(const dualquat &o) { mul(dualquat(*this), o); }    
-    
+    }
+    void mul(const dualquat &o) { mul(dualquat(*this), o); }
+
     void normalize()
     {
         float invlen = 1/real.magnitude();
@@ -337,7 +330,7 @@ struct dualquat
             dual.neg();
         }
     }
-    
+
     void accumulate(const dualquat &d, float k)
     {
         real.add(vec4(d.real).mul(k));
@@ -365,12 +358,12 @@ struct dualquat
 struct matrix3x4
 {
     vec4 X, Y, Z;
-    
+
     matrix3x4() {}
     matrix3x4(const vec4 &x, const vec4 &y, const vec4 &z) : X(x), Y(y), Z(z) {}
     matrix3x4(const dualquat &d)
     {
-        float x = d.real.x, y = d.real.y, z = d.real.z, w = d.real.w, 
+        float x = d.real.x, y = d.real.y, z = d.real.z, w = d.real.w,
               ww = w*w, xx = x*x, yy = y*y, zz = z*z,
               xy = x*y, xz = x*z, yz = y*z,
               wx = w*x, wy = w*y, wz = w*z;
@@ -531,7 +524,7 @@ struct plane : vec
     bool operator!=(const plane &p) const { return x!=p.x || y!=p.y || z!=p.z || offset!=p.offset; }
 
     plane() {}
-    plane(vec &c, float off) : vec(c), offset(off) {} 
+    plane(vec &c, float off) : vec(c), offset(off) {}
     plane(int d, float off)
     {
         x = y = z = 0.0f;
@@ -661,12 +654,12 @@ struct ivec
 static inline bool htcmp(const ivec &x, const ivec &y)
 {
     return x == y;
-}  
+}
 
 static inline uint hthash(const ivec &k)
 {
     return k.x^k.y^k.z;
-}  
+}
 
 struct svec
 {
@@ -780,7 +773,7 @@ struct glmatrixf
         v[0] = r1.dot(c1);
         v[4] = r1.dot(c2);
         v[8] = r1.dot(c3);
-    
+
         vec r2(v[1], v[5], v[9]);
         v[1] = r2.dot(c1);
         v[5] = r2.dot(c2);
@@ -797,7 +790,7 @@ struct glmatrixf
         float c = cosf(angle), s = sinf(angle);
         rotate(c, s, d);
     }
-             
+
     #define MULMAT(row, col) \
        v[col + row] = x[row]*y[col] + x[row + 4]*y[col + 1] + x[row + 8]*y[col + 2] + x[row + 12]*y[col + 3];
 
