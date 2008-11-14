@@ -896,7 +896,7 @@ static void regularsplash(int type, int color, int radius, int num, int fade, co
 
 void regular_part_create(int type, int fade, const vec &p, int color, float size, physent *pl, int delay)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
     regularcreate(type, color, fade, p, size, pl, delay);
 }
 
@@ -908,7 +908,7 @@ void part_create(int type, int fade, const vec &p, int color, float size, physen
 
 void regular_part_splash(int type, int num, int fade, const vec &p, int color, float size, int radius, int delay)
 {
-    if(shadowmapping) return;
+    if(shadowmapping || renderedgame) return;
     regularsplash(type, color, radius, num, fade, p, size, delay);
 }
 
