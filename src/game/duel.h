@@ -121,7 +121,7 @@ struct duelservmode : servmode
 				{
 					loopvrev(alive)
 					{
-						queue(alive[i], true);
+						queue(alive[i], m_duel(sv.gamemode, sv.mutators));
 						alive.remove(i);
 						if(alive.length() <= 2) break;
 					}
@@ -165,7 +165,7 @@ struct duelservmode : servmode
 		dueltime = sv.gamemillis + DUELMILLIS;
 		duelqueue.setsize(0);
 		loopv(sv.clients) if(sv.clients[i]->name[0] && sv.clients[i]->state.state != CS_SPECTATOR)
-			queue(sv.clients[i], true);
+			queue(sv.clients[i], m_duel(sv.gamemode, sv.mutators));
 		clearitems();
 	}
 } duelmutator;
