@@ -17,7 +17,7 @@ struct projectiles
 	{
 	}
 
-	int hitzones(vec &o, vec &pos, float height, float above)
+	int hitzones(vec &o, vec &pos, float height, float above, float radius = 0.f)
 	{
 		int hits = 0;
 		float zones[3][2] = {
@@ -25,16 +25,16 @@ struct projectiles
 			{ pos.z-above, pos.z-height*0.75f },
 			{ pos.z+above, pos.z-above }
 		};
-		if(o.z <= zones[0][0] && o.z >= zones[0][1]) hits |= HIT_LEGS;
-		if(o.z < zones[1][0] && o.z > zones[1][1]) hits |= HIT_TORSO;
-		if(o.z <= zones[2][0] && o.z >= zones[2][1]) hits |= HIT_HEAD;
+		if(o.z <= zones[0][0]+radius && o.z >= zones[0][1]-radius) hits |= HIT_LEGS;
+		if(o.z < zones[1][0]+radius && o.z > zones[1][1]-radius) hits |= HIT_TORSO;
+		if(o.z <= zones[2][0]+radius && o.z >= zones[2][1]-radius) hits |= HIT_HEAD;
 		return hits;
 	}
 
-	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0)
+	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0, float radius = 0.f)
 	{
 		vec pos = cl.headpos(d);
-		int f = flags|(hitzones(proj.o, pos, d->height, d->aboveeye));
+		int f = flags|(hitzones(proj.o, pos, d->height, d->aboveeye, radius));
 		hitmsg &h = hits.add();
 		h.flags = f;
 		h.target = d->clientnum;
@@ -233,10 +233,10 @@ struct projectiles
 	{
 		if(lastmillis-proj.lastradial > 250) // for the flamer this results in at most 20 damage per second
 		{
-			hits.setsizenodelete(0);
 			int radius = int(guntype[proj.attr1].explode*proj.lifesize);
 			if(radius > 0)
 			{
+				hits.setsizenodelete(0);
 				loopi(cl.numdynents())
 				{
 					gameent *f = (gameent *)cl.iterdynents(i);
@@ -399,7 +399,7 @@ struct projectiles
 					proj.lifesize = clamp(proj.lifespan, 0.25f, 1.f);
 					if(proj.movement > 0.f)
 					{
-						float size = clamp(40.f*(1.0f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? 40.f : proj.o.dist(proj.from));
+						float size = clamp(40.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? 40.f : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize(), to = vec(proj.o).add(vec(dir).mul(proj.radius)),
 							from = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(254*max(1.0f-proj.lifesize,0.3f))<<16)+1)|((int(128*max(1.0f-proj.lifesize,0.1f))+1)<<8);
@@ -413,7 +413,7 @@ struct projectiles
 					proj.lifesize = 1.f;
 					if(proj.movement > 0.f)
 					{
-						float size = proj.lifemillis-proj.lifetime > 200 ? 20.f : clamp(proj.o.dist(proj.from), 4.f, 20.f);
+						float size = proj.lifemillis-proj.lifetime > 200 ? 20.f : clamp(proj.o.dist(proj.from), 0.f, 20.f);
 						vec dir = vec(proj.vel).normalize(), to = vec(proj.o).add(vec(dir).mul(proj.radius)),
 							from = vec(proj.o).sub(vec(dir).mul(size));
 						part_flare(from, to, 1, PART_STREAK, 0xFF8822, proj.radius*0.25f);

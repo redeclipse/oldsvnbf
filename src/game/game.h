@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			109
+#define GAMEVERSION			110
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -156,17 +156,17 @@ struct guntypes
 	{
 		GUN_CG,		ANIM_CHAINGUN,	-5,	     5,
 			S_CG,		S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
-			40,		40,		100,    1000,	15,		1000,	0,		10000,
-			1,		0,			1,		5,		4,		2,				2,
+			40,		40,		100,    1000,	20,		2000,	0,		10000,
+			1,		0,			1,		5,		4,		1,				2,
 			false,	false,		true,
-			1.0f,	0.f,		0.f,			0.05f,		2.0f,		0.f,
+			1.0f,	0.75f,		25.f,			0.05f,		2.0f,		0.f,
 			"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
 			""
 	},
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	-1,		 1,
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,			S_ITEMSPAWN,
-			50,		50,		100, 	2000,	5,		100,	0,		3000,
+			50,		50,		100, 	2000,	20,		100,	0,		3000,
 			32,		32,			1,		5,		2,		1,				1,
 			true,	true,		true,
 			0.5f,	0.1f,		0.f,			0.25f,		1.5f,		50.f,
@@ -176,7 +176,7 @@ struct guntypes
 	{
 		GUN_CARBINE,ANIM_CARBINE,	-10,	10,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
-			10,		10,		500,    1000,	50,		5000,	0,		10000,
+			10,		10,		500,    1000,	50,		7500,	0,		10000,
 			1,		0,			1,		0,		0,		2,				2,
 			false,	false,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
@@ -186,7 +186,7 @@ struct guntypes
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
 			S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
-			1,		5,		800,	1600,	100,	5000,	0,		10000,
+			1,		5,		800,	1600,	100,	10000,	0,		10000,
 			1,		0,			1,		0,		0,		2,				2,
 			false,	false,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,

@@ -521,7 +521,10 @@ struct entities : icliententities
 			if((e.spawned = on)) e.lastspawn = lastmillis;
 			if(e.type == TRIGGER && (e.attr2 == TR_NONE || e.attr2 == TR_LINK))
 			{
-				e.lastemit = lastmillis;
+				int millis = lastmillis-e.lastemit;
+				if(e.lastemit && millis < TRIGGERTIME) // skew the animation forward
+					e.lastemit = lastmillis-(TRIGGERTIME-millis);
+				else e.lastemit = lastmillis;
 				execlink(NULL, n, false);
 			}
 		}
