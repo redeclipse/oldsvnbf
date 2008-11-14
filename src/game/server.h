@@ -2249,12 +2249,12 @@ struct gameserver : igameserver
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if (ci->state.state == CS_ALIVE)
+			if(ci->state.state == CS_ALIVE)
 			{
 				int lastpain = gamemillis-ci->state.lastpain,
 					lastregen = gamemillis-ci->state.lastregen;
 
-				if (m_regen(gamemode, mutators) && ci->state.health < MAXHEALTH && lastpain >= REGENWAIT && lastregen >= REGENTIME)
+				if(m_regen(gamemode, mutators) && ci->state.health < MAXHEALTH && lastpain >= REGENWAIT && lastregen >= REGENTIME)
 				{
 					int health = ci->state.health - (ci->state.health % REGENHEAL);
 					ci->state.health = min(health + REGENHEAL, MAXHEALTH);

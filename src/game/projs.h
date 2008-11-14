@@ -40,7 +40,8 @@ struct projectiles
 		h.target = d->clientnum;
 		h.lifesequence = d->lifesequence;
 		h.info = dist;
-		h.dir = ivec(int(proj.vel.x*DNF), int(proj.vel.y*DNF), int(proj.vel.z*DNF));
+		vec dir = vec(proj.o).sub(vec(pos).sub(vec(0, 0, d->height*0.5f))).normalize().add(vec(proj.vel).normalize()).normalize();
+		h.dir = ivec(int(dir.x*DNF), int(dir.y*DNF), int(dir.z*DNF));
 	}
 
 	void radialeffect(gameent *d, projent &proj, int flags, int radius)
@@ -133,6 +134,7 @@ struct projectiles
 			{
 				proj.aboveeye = proj.height = proj.radius = guntype[proj.attr1].offset;
 				proj.elasticity = guntype[proj.attr1].elasticity;
+				proj.reflectivity = guntype[proj.attr1].reflectivity;
 				proj.relativity = guntype[proj.attr1].relativity;
 				proj.waterfric = guntype[proj.attr1].waterfric;
 				proj.weight = guntype[proj.attr1].weight;
@@ -148,6 +150,7 @@ struct projectiles
 				proj.mdl = ((int)(size_t)&proj)&0x40 ? "gibc" : "gibh";
 				proj.aboveeye = 1.0f;
 				proj.elasticity = 0.15f;
+				proj.reflectivity = 0.f;
 				proj.relativity = 1.0f;
 				proj.waterfric = 2.0f;
 				proj.weight = 50.f;
@@ -166,6 +169,7 @@ struct projectiles
 				}
 				proj.aboveeye = 1.0f;
 				proj.elasticity = 0.7f;
+				proj.reflectivity = 0.f;
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
 				proj.weight = 125.f;
@@ -178,6 +182,7 @@ struct projectiles
 				proj.mdl = cl.et.entmdlname(proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5);
 				proj.aboveeye = 1.f;
 				proj.elasticity = 0.35f;
+				proj.reflectivity = 0.f;
 				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
 				proj.weight = 90.f;
@@ -197,53 +202,25 @@ struct projectiles
 			proj.height += proj.projtype == PRJ_ENT ? 4.f : 1.f;
 		}
 
-		vec dir(vec(vec(proj.to).sub(proj.o)).normalize()), orig = proj.o;
+		vec dir(vec(vec(proj.to).sub(proj.o)).normalize());
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
 		vec rel = vec(proj.vel).add(dir);
 		if(proj.relativity) rel.add(vec(proj.owner->vel).mul(proj.relativity));
 		proj.vel = vec(rel).add(vec(dir).mul(proj.maxspeed));
 		proj.spawntime = lastmillis;
 		proj.to = vec(proj.o).add(proj.vel);
+		proj.movement = 1;
 
 		if(proj.owner)
 		{
-			if(proj.projtype == PRJ_SHOT && proj.radial)
+			if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
 				proj.height = proj.radius = guntype[proj.attr1].explode;
-
 			for(hitplayer = NULL; !plcollide(&proj) && hitplayer == proj.owner; hitplayer = NULL)
 				proj.o.add(vec(proj.vel).mul(0.01f)); // get out of the player
-
-			if(proj.projtype == PRJ_SHOT && proj.radial)
+			if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
 				proj.height = proj.radius = guntype[proj.attr1].offset;
 		}
 
-		bool found = false;
-		loopi(100)
-		{
-			if(!collide(&proj) || inside || hitplayer)
-			{
-				if(proj.elasticity <= 0.f) break;
-				if(hitplayer)
-				{
-					if(proj.playercollide == 2) break;
-					dir = vec(vec(hitplayer->o).sub(proj.o)).normalize();
-				}
-				else
-				{
-					if(proj.geomcollide == 2) break;
-					dir = wall;
-				}
-				proj.vel.apply(dir);
-				proj.vel.mul(proj.elasticity);
-				proj.o.add(vec(proj.vel).mul(0.01f));
-			}
-			else
-			{
-				found = true;
-				break;
-			}
-		}
-		if(!found) proj.o = orig; // go home little one
         proj.resetinterp();
 	}
 
@@ -387,7 +364,7 @@ struct projectiles
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.01f, 1.f);
 					int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(86*max(1.0f-proj.lifespan,0.15f))+1)<<8);
-					bool moving = (proj.movement > 2.f);
+					bool moving = proj.movement > 0.f;
 					if(lastmillis-proj.lasteffect > (moving ? 100 : 250))
 					{
 						part_create(PART_FIREBALL_SOFT, moving ? 100 : 250, proj.o, col, guntype[proj.attr1].size*proj.lifesize);
@@ -401,7 +378,7 @@ struct projectiles
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					int col = ((int(144*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8);
 					part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*2.f*proj.lifesize);
-					bool moving = (proj.movement > 2.f);
+					bool moving = proj.movement > 0.f;
 					if(lastmillis-proj.lasteffect > (moving ? 250 : 500))
 					{
 						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x666666, proj.radius*(moving ? 1.f : 2.f));
@@ -412,7 +389,7 @@ struct projectiles
 				case GUN_SG:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.25f, 1.f);
-					if(proj.movement > 2.f)
+					if(proj.movement > 0.f)
 					{
 						float size = clamp(40.f*(1.0f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? 40.f : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize(), to = vec(proj.o).add(vec(dir).mul(proj.radius)),
@@ -426,9 +403,9 @@ struct projectiles
 				case GUN_CG:
 				{
 					proj.lifesize = 1.f;
-					if(proj.movement > 2.f)
+					if(proj.movement > 0.f)
 					{
-						float size = proj.lifemillis-proj.lifetime > 200 ? 20.f : min(20.f, proj.o.dist(proj.from));
+						float size = proj.lifemillis-proj.lifetime > 200 ? 20.f : clamp(proj.o.dist(proj.from), 4.f, 20.f);
 						vec dir = vec(proj.vel).normalize(), to = vec(proj.o).add(vec(dir).mul(proj.radius)),
 							from = vec(proj.o).sub(vec(dir).mul(size));
 						part_flare(from, to, 1, PART_STREAK, 0xFF8822, proj.radius*0.25f);
@@ -476,6 +453,38 @@ struct projectiles
 			}
 		}
 	}
+
+	void reflect(projent &proj, vec &pos)
+    {
+    	if(proj.elasticity > 0.f)
+    	{
+			vec dir[2]; dir[0] = dir[1] = vec(proj.vel).normalize();
+    		float mag = proj.vel.magnitude()*proj.elasticity; // total energy output
+			loopi(3) if((pos[i] > 0.f && dir[1][i] < 0.f) || (pos[i] < 0.f && dir[1][i] > 0.f))
+				dir[1][i] = fabs(dir[1][i])*pos[i];
+			if(proj.reflectivity > 0.f)
+			{ // if the reflection is 180 degrees, give or take this, skew the reflection
+				float aim[2][2] = { { 0.f, 0.f }, { 0.f, 0.f } };
+				loopi(2) vectoyawpitch(dir[i], aim[0][i], aim[1][i]);
+				loopi(2)
+				{
+					float rmax = 180.f+proj.reflectivity, rmin = 180.f-proj.reflectivity,
+						off = aim[i][1]-aim[i][0];
+					if(fabs(off) <= rmax && fabs(off) >= rmin)
+					{
+						if(off > 0.f ? off > 180.f : off < -180.f)
+							aim[i][1] += (rmax)-off;
+						else aim[i][1] -= off-(rmin);
+					}
+					while(aim[i][1] < 0.f) aim[i][1] += 360.f;
+					while(aim[i][1] >= 360.f) aim[i][1] -= 360.f;
+				}
+				vecfromyawpitch(aim[0][1], aim[1][1], 1, 0, dir[1]);
+			}
+			proj.vel = vec(dir[1]).mul(mag);
+    	}
+    	else proj.vel = vec(0, 0, 0);
+    }
 
 	bool move(projent &proj, int qtime)
 	{
@@ -560,13 +569,7 @@ struct projectiles
 						else if(proj.projtype == PRJ_DEBRIS) playsound(S_DEBRIS, proj.o, &proj, 0, vol);
 					}
 				}
-				if(proj.elasticity > 0.f)
-				{
-					proj.vel.apply(pos);
-					proj.vel.mul(proj.elasticity);
-				}
-				else proj.vel = vec(0, 0, 0);
-
+				reflect(proj, pos);
 				proj.movement = 0;
 				return true; // stay alive until timeout
 			}

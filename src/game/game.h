@@ -127,7 +127,7 @@ struct guntypes
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			size,	explode,	rays,	spread,	zdiv,	geomcollide,	playercollide;
 	bool	radial,	extinguish,	carry;
-	float	offset,	elasticity,	relativity,	waterfric,	weight;
+	float	offset,	elasticity,	reflectivity,	relativity,	waterfric,	weight;
 	const char
 			*name, *text,		*item,						*vwep,
 			*proj;
@@ -139,7 +139,7 @@ struct guntypes
 			20,		20,		200,	800,	20,		200,	0,		10000,
 			6,		18,			1,		5,		0,		2,				2,
 			true,	true,		false,
-			1.0f,	0.f,		0.05f,		1.0f,		0.f,
+			1.0f,	0.f,		0.f,			0.05f,		1.0f,		0.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},
@@ -149,9 +149,9 @@ struct guntypes
 			1,		8,		600,	1200,	10,		1000,	0,		1000,
 			1,		0,			20,		40,		1,		1,				2,
 			false,	false,		true,
-			1.0f,	0.3f,		0.05f,		2.0f,		30.f,
+			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
-			"projectiles/bullet"
+			""
 	},
 	{
 		GUN_CG,		ANIM_CHAINGUN,	-5,	     5,
@@ -159,9 +159,9 @@ struct guntypes
 			40,		40,		100,    1000,	15,		1000,	0,		10000,
 			1,		0,			1,		5,		4,		2,				2,
 			false,	false,		true,
-			1.0f,	0.f,		0.05f,		2.0f,		0.f,
+			1.0f,	0.f,		0.f,			0.05f,		2.0f,		0.f,
 			"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
-			"projectiles/bullet"
+			""
 	},
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	-1,		 1,
@@ -169,7 +169,7 @@ struct guntypes
 			50,		50,		100, 	2000,	5,		100,	0,		3000,
 			32,		32,			1,		5,		2,		1,				1,
 			true,	true,		true,
-			0.5f,	0.1f,		0.25f,		1.5f,		50.f,
+			0.5f,	0.1f,		0.f,			0.25f,		1.5f,		50.f,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
 	},
@@ -179,9 +179,9 @@ struct guntypes
 			10,		10,		500,    1000,	50,		5000,	0,		10000,
 			1,		0,			1,		0,		0,		2,				2,
 			false,	false,		true,
-			1.0f,	0.f,		0.f,		2.0f,		0.f,
+			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
-			"projectiles/bullet"
+			""
 	},
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
@@ -189,9 +189,9 @@ struct guntypes
 			1,		5,		800,	1600,	100,	5000,	0,		10000,
 			1,		0,			1,		0,		0,		2,				2,
 			false,	false,		true,
-			1.0f,	0.f,		 0.f,		2.0f,		0.f,
+			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
 			"rifle",	"\fw",	"weapons/rifle/item",		"weapons/rifle/vwep",
-			"projectiles/bullet"
+			""
 	},
 	{
 		GUN_GL,		ANIM_GRENADES,	-15,    10,
@@ -199,7 +199,7 @@ struct guntypes
 			2,		4,		1500,	0,		200,	200,	1000,	3000,
 			3,		64,			1,		0,		0,		1,				1,
 			false,	false,		false,
-			1.0f,	0.33f,		0.45f,		2.0f,		75.f,
+			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		75.f,
 			"grenades",	"\fm",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
 	},
@@ -915,7 +915,7 @@ struct projent : dynent
 	float movement, roll, lifespan, lifesize;
 	bool local, beenused, radial, extinguish;
 	int projtype, geomcollide, playercollide;
-	float elasticity, relativity, waterfric;
+	float elasticity, reflectivity, relativity, waterfric;
 	int ent, attr1, attr2, attr3, attr4, attr5;
 	int schan, id;
 	entitylight light;
