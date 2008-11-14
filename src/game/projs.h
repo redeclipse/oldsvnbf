@@ -266,10 +266,10 @@ struct projectiles
 				{
 					case GUN_PLASMA:
 					{
-						part_create(PART_PLASMA_SOFT, 200, proj.o, 0x226688, guntype[proj.attr1].size*0.8f); // plasma explosion
-						part_create(PART_SMOKE_RISE_SLOW, 500, proj.o, 0x88AABB, guntype[proj.attr1].explode*0.4f); // smoke
+						part_create(PART_PLASMA_SOFT, 200, proj.o, 0x226688, 4.8f); // plasma explosion
+						part_create(PART_SMOKE_RISE_SLOW, 500, proj.o, 0x88AABB, 2.4f); // smoke
 						adddynlight(proj.o, 1.15f*guntype[proj.attr1].explode, vec(0.1f, 0.4f, 0.6f), 200, 10);
-						adddecal(DECAL_ENERGY, proj.o, vec(proj.vel).neg().normalize(), guntype[proj.attr1].size, bvec(86, 196, 244));
+						adddecal(DECAL_ENERGY, proj.o, vec(proj.vel).neg().normalize(), 6.f, bvec(86, 196, 244));
 						break;
 					}
 					case GUN_FLAMER:
@@ -364,8 +364,8 @@ struct projectiles
 						part = PART_PLASMA_SOFT;
 						proj.lifesize = 1.f;
 					}
-					part_create(part, 1, proj.o, 0x226688, guntype[proj.attr1].size*proj.lifesize);
-					part_create(part, 1, proj.o, 0x44AADD, guntype[proj.attr1].size*proj.lifesize*0.5f); // brighter center part
+					part_create(part, 1, proj.o, 0x226688, 6.f*proj.lifesize);
+					part_create(part, 1, proj.o, 0x44AADD, 3.f*proj.lifesize); // brighter center part
 					break;
 				}
 				case GUN_FLAMER:
@@ -375,10 +375,10 @@ struct projectiles
 					bool moving = proj.movement > 0.f;
 					if(lastmillis-proj.lasteffect > (moving ? 100 : 250))
 					{
-						part_create(PART_FIREBALL_SOFT, moving ? 100 : 250, proj.o, col, guntype[proj.attr1].size*proj.lifesize);
+						part_create(PART_FIREBALL_SOFT, moving ? 100 : 250, proj.o, col, 32.f*proj.lifesize);
 						proj.lasteffect = lastmillis;
 					}
-					else part_create(PART_FIREBALL_SOFT, 1, proj.o, col, guntype[proj.attr1].size*proj.lifesize);
+					else part_create(PART_FIREBALL_SOFT, 1, proj.o, col, 32.f*proj.lifesize);
 					break;
 				}
 				case GUN_GL:
@@ -553,8 +553,8 @@ struct projectiles
 									}
 									case GUN_FLAMER:
 									{
-										adddecal(DECAL_SCORCH, proj.o, wall, guntype[proj.attr1].size*proj.lifesize);
-										adddecal(DECAL_ENERGY, proj.o, wall, guntype[proj.attr1].size*proj.lifesize*0.5f, bvec(92, 24, 8));
+										adddecal(DECAL_SCORCH, proj.o, wall, 32.f*proj.lifesize);
+										adddecal(DECAL_ENERGY, proj.o, wall, 12.f*proj.lifesize, bvec(92, 12, 0));
 										break;
 									}
 									default: break;
