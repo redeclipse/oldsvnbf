@@ -396,7 +396,7 @@ struct projectiles
 				}
 				case GUN_SG:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.25f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
 						float size = clamp(40.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? 40.f : proj.o.dist(proj.from));
@@ -410,14 +410,15 @@ struct projectiles
 				}
 				case GUN_CG:
 				{
-					proj.lifesize = 1.f;
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
-						float size = proj.lifemillis-proj.lifetime > 200 ? 20.f : clamp(proj.o.dist(proj.from), 0.f, 20.f);
+						float size = clamp(20.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? 20.f : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize(), to = vec(proj.o).add(vec(dir).mul(proj.radius)),
 							from = vec(proj.o).sub(vec(dir).mul(size));
-						part_flare(from, to, 1, PART_STREAK, 0xFF8822, proj.radius*0.25f);
-						part_flare(from, to, 1, PART_STREAK_LERP, 0xFF6600, proj.radius*0.1f);
+						int col = ((int(254*max(1.0f-proj.lifesize,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifesize,0.1f))+1)<<8);
+						part_flare(from, to, 1, PART_STREAK, col, proj.radius*0.25f);
+						part_flare(from, to, 1, PART_STREAK_LERP, col, proj.radius*0.1f);
 					}
 					break;
 				}
@@ -544,10 +545,10 @@ struct projectiles
 							{
 								switch(proj.attr1)
 								{
-									case GUN_SG:
+									case GUN_SG: case GUN_CG:
 									{
-										part_splash(PART_SPARK, 3, 250, proj.o, 0xFFAA22, proj.radius*0.25f);
-										adddecal(DECAL_BULLET, proj.o, wall, proj.radius*2.f);
+										part_splash(PART_SPARK, 3, 250, proj.o, 0xFFAA22, proj.radius*(proj.attr1 == GUN_SG ? 0.25f : 0.1f));
+										adddecal(DECAL_BULLET, proj.o, wall, proj.radius*(proj.attr1 == GUN_SG ? 2.f : 1.f));
 										break;
 									}
 									case GUN_FLAMER:

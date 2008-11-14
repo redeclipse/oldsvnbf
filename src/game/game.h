@@ -123,7 +123,7 @@ enum
 struct guntypes
 {
 	int	info, 		anim,			kick,	wobble,
-			sound, 		esound, 	fsound,		rsound,		ssound,
+			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			size,	explode,	rays,	spread,	zdiv,	geomcollide,	playercollide;
 	bool	radial,	extinguish,	carry;
@@ -135,7 +135,7 @@ struct guntypes
 {
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	-5,		5,
-			S_PLASMA,	S_ENERGY,	S_HUM,		-1,			S_ITEMSPAWN,
+			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		200,	800,	20,		200,	0,		10000,
 			6,		18,			1,		5,		0,		2,				2,
 			true,	true,		false,
@@ -145,7 +145,7 @@ struct guntypes
 	},
 	{
 		GUN_SG,		ANIM_SHOTGUN,	-30,    30,
-			S_SG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,	S_ITEMSPAWN,
+			S_SG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			1,		8,		600,	1200,	10,		1000,	0,		1000,
 			1,		0,			20,		40,		1,		1,				2,
 			false,	false,		true,
@@ -155,7 +155,7 @@ struct guntypes
 	},
 	{
 		GUN_CG,		ANIM_CHAINGUN,	-5,	     5,
-			S_CG,		S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
+			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			40,		40,		100,    1000,	20,		2000,	0,		2000,
 			1,		0,			1,		5,		4,		1,				2,
 			false,	false,		true,
@@ -165,7 +165,7 @@ struct guntypes
 	},
 	{
 		GUN_FLAMER,	ANIM_FLAMER,	-1,		 1,
-			S_FLFIRE,	S_BURN,		S_BURNING,	-1,			S_ITEMSPAWN,
+			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	20,		100,	0,		3000,
 			32,		32,			1,		5,		2,		1,				1,
 			true,	true,		true,
@@ -175,8 +175,8 @@ struct guntypes
 	},
 	{
 		GUN_CARBINE,ANIM_CARBINE,	-10,	10,
-			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
-			10,		10,		500,    1000,	50,		7500,	0,		10000,
+			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
+			10,		10,		500,    1000,	50,		5000,	0,		10000,
 			1,		0,			1,		0,		0,		2,				2,
 			false,	false,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
@@ -185,8 +185,8 @@ struct guntypes
 	},
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
-			S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,			S_ITEMSPAWN,
-			1,		5,		800,	1600,	100,	10000,	0,		10000,
+			S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,
+			1,		5,		800,	1600,	100,	5000,	0,		10000,
 			1,		0,			1,		0,		0,		2,				2,
 			false,	false,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
@@ -195,7 +195,7 @@ struct guntypes
 	},
 	{
 		GUN_GL,		ANIM_GRENADES,	-15,    10,
-			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,		S_ITEMSPAWN,
+			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			2,		4,		1500,	0,		200,	200,	1000,	3000,
 			3,		64,			1,		0,		0,		1,				1,
 			false,	false,		false,
