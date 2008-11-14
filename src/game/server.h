@@ -19,7 +19,6 @@ struct gameserver : igameserver
 	struct shotdest { float to[3]; };
 	struct shotevent
 	{
-		int type;
         int millis, id;
 		int gun, power, num;
 		float from[3];
@@ -28,21 +27,18 @@ struct gameserver : igameserver
 
 	struct switchevent
 	{
-		int type;
 		int millis, id;
 		int gun;
 	};
 
 	struct reloadevent
 	{
-		int type;
 		int millis, id;
 		int gun;
 	};
 
 	struct hitset
 	{
-		int type;
 		int flags;
 		int target;
 		int lifesequence;
@@ -56,7 +52,6 @@ struct gameserver : igameserver
 
 	struct destroyevent
 	{
-		int type;
         int millis, id;
 		int gun, radial;
 		vector<hitset> hits;
@@ -69,7 +64,6 @@ struct gameserver : igameserver
 
 	struct useevent
 	{
-		int type;
 		int millis, id;
 		int ent;
 	};
@@ -1177,11 +1171,11 @@ struct gameserver : igameserver
 					int lcn = getint(p), id = getint(p), gun = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					gameevent &gunsel = cp->addevent();
-					gunsel.type = GE_SWITCH;
-					gunsel.gunsel.id = id;
-					gunsel.gunsel.gun = gun;
-					seteventmillis(gunsel.gunsel);
+					gameevent &ev = cp->addevent();
+					ev.type = GE_SWITCH;
+					ev.gunsel.id = id;
+					ev.gunsel.gun = gun;
+					seteventmillis(ev.gunsel);
 					break;
 				}
 
@@ -1210,9 +1204,9 @@ struct gameserver : igameserver
 					int lcn = getint(p), flags = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					gameevent &suicide = cp->addevent();
-					suicide.type = GE_SUICIDE;
-					suicide.suicide.flags = flags;
+					gameevent &ev = cp->addevent();
+					ev.type = GE_SUICIDE;
+					ev.suicide.flags = flags;
 					break;
 				}
 
@@ -1221,17 +1215,17 @@ struct gameserver : igameserver
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
-					gameevent &shot = havecn ? cp->addevent() : dummyevent;
-					shot.type = GE_SHOT;
-					shot.shot.id = getint(p);
-					shot.shot.gun = getint(p);
-					shot.shot.power = getint(p);
-					seteventmillis(shot.shot);
-					loopk(3) shot.shot.from[k] = getint(p)/DMF;
-					shot.shot.num = getint(p);
-					loop(q, shot.shot.num)
+					gameevent &ev = havecn ? cp->addevent() : dummyevent;
+					ev.type = GE_SHOT;
+					ev.shot.id = getint(p);
+					ev.shot.gun = getint(p);
+					ev.shot.power = getint(p);
+					seteventmillis(ev.shot);
+					loopk(3) ev.shot.from[k] = getint(p)/DMF;
+					ev.shot.num = getint(p);
+					loop(q, ev.shot.num)
 					{
-						shotdest &dest = shot.shot.shots.add();
+						shotdest &dest = ev.shot.shots.add();
 						loopk(3) dest.to[k] = getint(p)/DMF;
 					}
 					break;
@@ -1243,11 +1237,11 @@ struct gameserver : igameserver
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum != ci->clientnum && cp->state.ownernum != ci->clientnum))
 						break;
-					gameevent &reload = cp->addevent();
-					reload.type = GE_RELOAD;
-					reload.reload.id = id;
-					reload.reload.gun = gun;
-					seteventmillis(reload.reload);
+					gameevent &ev = cp->addevent();
+					ev.type = GE_RELOAD;
+					ev.reload.id = id;
+					ev.reload.gun = gun;
+					seteventmillis(ev.reload);
 					break;
 				}
 
@@ -1256,17 +1250,17 @@ struct gameserver : igameserver
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
-					gameevent &dst = havecn ? cp->addevent() : dummyevent;
-					dst.type = GE_DESTROY;
-					dst.destroy.id = getint(p);
-					dst.destroy.gun = getint(p);
-					dst.destroy.id = getint(p);
-					dst.destroy.radial = getint(p);
-					seteventmillis(dst.destroy);
+					gameevent &ev = havecn ? cp->addevent() : dummyevent;
+					ev.type = GE_DESTROY;
+					ev.destroy.id = getint(p);
+					seteventmillis(ev.destroy); // this is the event millis
+					ev.destroy.gun = getint(p);
+					ev.destroy.id = getint(p); // this is the actual id
+					ev.destroy.radial = getint(p);
 					int hits = getint(p);
 					loopk(hits)
 					{
-						hitset &hit = havecn ? dst.destroy.hits.add() : dummyevent.destroy.hits.add();
+						hitset &hit = havecn ? ev.destroy.hits.add() : dummyevent.destroy.hits.add();
 						hit.flags = getint(p);
 						hit.target = getint(p);
 						hit.lifesequence = getint(p);
@@ -1281,11 +1275,11 @@ struct gameserver : igameserver
 					int lcn = getint(p), id = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					gameevent &use = cp->addevent();
-					use.type = GE_USE;
-					use.use.id = id;
-					use.use.ent = ent;
-					seteventmillis(use.use);
+					gameevent &ev = cp->addevent();
+					ev.type = GE_USE;
+					ev.use.id = id;
+					ev.use.ent = ent;
+					seteventmillis(ev.use);
 					break;
 				}
 
@@ -2145,33 +2139,24 @@ struct gameserver : igameserver
 	void processevent(clientinfo *ci, destroyevent &e)
 	{
 		servstate &gs = ci->state;
-		switch(e.gun)
+		if(isgun(e.gun))
 		{
-			case -1:
-				gs.dropped.remove(e.id); return;
-				break;
-			case GUN_PLASMA:
-			case GUN_FLAMER:
-                if(!gs.gunshots[e.gun].find(e.id) < 0) return;
-                if(!e.radial)
-                {
-                	gs.gunshots[e.gun].remove(e.id);
-					e.radial = guntype[e.gun].explode;
-                }
-				break;
-			default:
-                if(!gs.gunshots[e.gun].remove(e.id)) return;
-				e.radial = guntype[e.gun].explode;
-				break;
+			if(!gs.gunshots[e.gun].find(e.id) < 0) return;
+			else if(!e.radial || !guntype[e.gun].explode)
+			{
+				gs.gunshots[e.gun].remove(e.id);
+				e.radial = guntype[e.gun].explode; // full/hit for remove
+			}
+			loopv(e.hits)
+			{
+				hitset &h = e.hits[i];
+				clientinfo *target = (clientinfo *)getinfo(h.target);
+				if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (e.radial && (h.dist<0 || h.dist>e.radial))) continue;
+				int damage = e.radial ? int(guntype[e.gun].damage*(1.f-h.dist/EXPLOSIONSCALE/e.radial)) : guntype[e.gun].damage;
+				dodamage(target, ci, damage, e.gun, h.flags, h.dir);
+			}
 		}
-		loopv(e.hits)
-		{
-			hitset &h = e.hits[i];
-			clientinfo *target = (clientinfo *)getinfo(h.target);
-            if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (e.radial && (h.dist<0 || h.dist>e.radial))) continue;
-			int damage = e.radial ? int(guntype[e.gun].damage*(1.f-h.dist/EXPLOSIONSCALE/e.radial)) : guntype[e.gun].damage;
-			dodamage(target, ci, damage, e.gun, h.flags, h.dir);
-		}
+		else if(e.gun == -1) gs.dropped.remove(e.id);
 	}
 
 	void processevent(clientinfo *ci, shotevent &e)
@@ -2181,7 +2166,6 @@ struct gameserver : igameserver
 		{
 			if(guntype[e.gun].max && isgun(e.gun))
 				gs.ammo[e.gun] = max(gs.ammo[e.gun]-1, 0); // keep synched!
-			//srvoutf(ci->clientnum, "forbidden to shoot %d [%d/%d]", e.gun, e.millis, gamemillis);
 			return;
 		}
 		if(guntype[e.gun].max) gs.ammo[e.gun] = max(gs.ammo[e.gun]-1, 0); // keep synched!
@@ -2204,10 +2188,7 @@ struct gameserver : igameserver
 	{
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canswitch(e.gun, e.millis))
-		{
-			//srvoutf(ci->clientnum, "forbidden to switch %d [%d/%d]", e.gun, e.millis, gamemillis);
 			return;
-		}
 		gs.gunswitch(e.gun, e.millis);
 		sendf(-1, 1, "ri3", SV_GUNSELECT, ci->clientnum, e.gun);
 	}
@@ -2216,10 +2197,7 @@ struct gameserver : igameserver
 	{
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canreload(e.gun, e.millis))
-		{
-			//srvoutf(ci->clientnum, "forbidden to reload %d [%d/%d]", e.gun, e.millis, gamemillis);
 			return;
-		}
 		gs.setgunstate(e.gun, GUNSTATE_RELOAD, guntype[e.gun].rdelay, e.millis);
 		gs.ammo[e.gun] = clamp(max(gs.ammo[e.gun], 0) + guntype[e.gun].add, guntype[e.gun].add, guntype[e.gun].max);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
@@ -2230,10 +2208,7 @@ struct gameserver : igameserver
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || sv_itemsallowed < (m_insta(gamemode, mutators) ? 2 : 1) || !sents.inrange(e.ent) ||
 			!gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, e.millis))
-		{
-			//srvoutf(ci->clientnum, "forbidden to use %d [%d/%d]", e.ent, e.millis, gamemillis);
-			return;
-		}
+				return;
 		bool found = false;
 		loopv(clients)
 		{
@@ -2290,21 +2265,21 @@ struct gameserver : igameserver
 
 			while(ci->events.length())
 			{
-				gameevent &e = ci->events[0];
+				gameevent &ev = ci->events[0];
 				#define chkevent(q) \
 				{ \
 					if(q.millis < ci->lastevent) break; \
 					ci->lastevent = q.millis; \
 					processevent(ci, q); \
 				}
-				switch(e.type)
+				switch(ev.type)
 				{
-					case GE_SHOT: { chkevent(e.shot); break; }
-					case GE_SWITCH: { chkevent(e.gunsel); break; }
-					case GE_RELOAD: { chkevent(e.reload); break; }
-					case GE_DESTROY: { chkevent(e.destroy); break; }
-					case GE_USE: { chkevent(e.use); break; }
-					case GE_SUICIDE: { processevent(ci, e.suicide); break; }
+					case GE_SHOT: { chkevent(ev.shot); break; }
+					case GE_SWITCH: { chkevent(ev.gunsel); break; }
+					case GE_RELOAD: { chkevent(ev.reload); break; }
+					case GE_DESTROY: { chkevent(ev.destroy); break; }
+					case GE_USE: { chkevent(ev.use); break; }
+					case GE_SUICIDE: { processevent(ci, ev.suicide); break; }
 				}
 				clearevent(ci);
 			}
