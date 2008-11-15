@@ -64,8 +64,8 @@ struct gameclient : igameclient
 	IVARP(editdeadzone, 0, 10, 100);
 	IVARP(editpanspeed, 1, 20, INT_MAX-1);
 
-	IVARP(cameratime, 0, 5000, INT_MAX-1);
-	IVARP(spectype, 0, 1, 1); // 0 = float, 1 = cameras
+	IVARP(spectv, 0, 1, 1); // 0 = float, 1 = tv
+	IVARP(spectvtime, 0, 10000, INT_MAX-1);
 	IVARP(specmouse, 0, 0, 2);
 	IVARP(specfov, 1, 120, 360);
 	IVARP(specdeadzone, 0, 10, 100);
@@ -321,6 +321,11 @@ struct gameclient : igameclient
 			respawnself(d);
 	}
 
+	bool tvmode()
+	{
+		return player1->state == CS_SPECTATOR && spectv();
+	}
+
     bool allowmove(physent *d)
     {
         if(d->type == ENT_PLAYER)
@@ -328,7 +333,7 @@ struct gameclient : igameclient
         	if(d == player1)
         	{
         		if(g3d_active(true, true)) return false;
-				if(d->state == CS_SPECTATOR && spectype()) return false;
+				if(tvmode()) return false;
         	}
 			if(d->state == CS_DEAD) return false;
 			if(intermission) return false;
@@ -1577,8 +1582,25 @@ struct gameclient : igameclient
 		if(!maptime || lastmillis-maptime < titlecardtime())
 		{
 			float fade = maptime ? float(lastmillis-maptime)/float(titlecardtime()) : 0.f;
-			colour = vec(fade, fade, fade);
-			return true;
+			if(fade < 1.f)
+			{
+				colour = vec(fade, fade, fade);
+				return true;
+			}
+		}
+		if(tvmode())
+		{
+			float fade = 1.f;
+			int millis = spectvtime() ? min(spectvtime()/10, 500) : 500, interval = lastmillis-lastspec;
+			if(!lastspec || interval < millis)
+				fade = lastspec ? float(interval)/float(millis) : 0.f;
+			else if(spectvtime() && interval > spectvtime()-millis)
+				fade = float(spectvtime()-interval)/float(millis);
+			if(fade < 1.f)
+			{
+				colour = vec(fade, fade, fade);
+				return true;
+			}
 		}
 		return false;
 	}
@@ -1764,11 +1786,12 @@ struct gameclient : igameclient
 
 	struct camstate
 	{
+		int ent, idx;
 		vec pos, dir;
 		vector<int> cansee;
-		float score;
+		float mindist, maxdist, score;
 
-		camstate() { reset(); }
+		camstate() : idx(-1), mindist(32.f), maxdist(512.f) { reset(); }
 		~camstate() {}
 
 		void reset()
@@ -1817,64 +1840,89 @@ struct gameclient : igameclient
 					camera1->pitch = player1->aimpitch = player1->pitch;
 				}
 			}
-			if(player1->state == CS_SPECTATOR && spectype() == 1)
+			if(tvmode())
 			{
 				if(cameras.empty()) loopk(2)
 				{
+					physent d = *camera1;
 					loopv(et.ents) if(et.ents[i]->type == (k ? LIGHT : CAMERA))
 					{
-						camstate &c = cameras.add();
-						c.pos = et.ents[i]->o;
+						d.o = et.ents[i]->o;
+						if(ph.entinmap(&d, false))
+						{
+							camstate &c = cameras.add();
+							c.pos = et.ents[i]->o;
+							c.ent = i;
+							if(!k)
+							{
+								c.idx = et.ents[i]->attr1;
+								if(et.ents[i]->attr2) c.mindist = et.ents[i]->attr2;
+								if(et.ents[i]->attr3) c.maxdist = et.ents[i]->attr3;
+							}
+						}
 					}
+					lastspec = 0;
 					if(!cameras.empty()) break;
 				}
 				if(!cameras.empty())
 				{
-					camstate *cam = &cameras[0], *oldcam = cam;
+					bool renew = !lastspec || (spectvtime() && lastmillis-lastspec >= spectvtime());
 					loopvj(cameras)
 					{
 						camstate &c = cameras[j];
-						c.reset();
-						gameent *d;
-						loopi(numdynents()) if((d = (gameent *)iterdynents(i)))
+						loopk(2)
 						{
-							vec trg, pos = feetpos(d);
-							if((d->state == CS_ALIVE || d->state == CS_DEAD) && raycubelos(c.pos, pos, trg))
+							vec avg(0, 0, 0);
+							gameent *d;
+							c.reset();
+							loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && (d->state == CS_ALIVE || d->state == CS_DEAD))
 							{
-								c.cansee.add(i);
-								c.dir.add(pos);
+								vec trg, pos = feetpos(d);
+								float dist = c.pos.dist(pos);
+								if((k || dist >= c.mindist) && dist <= c.maxdist && raycubelos(c.pos, pos, trg))
+								{
+									c.cansee.add(i);
+									avg.add(pos);
+								}
 							}
-						}
-						if(c.cansee.length() > 1) c.dir.div(float(c.cansee.length()));
-						float yaw = camera1->yaw, pitch = camera1->pitch;
-						if(&c != cam)
-						{
-							vec dir = vec(c.dir).sub(c.pos).normalize();
-							vectoyawpitch(dir, yaw, pitch);
-						}
-						c.dir = vec(0, 0, 0);
-						loopvrev(c.cansee) if((d = (gameent *)iterdynents(c.cansee[i])))
-						{
-							vec trg, pos = feetpos(d);
-							if(getsight(c.pos, yaw, pitch, pos, trg, 1e16f, curfov, fovy))
+							float yaw = camera1->yaw, pitch = camera1->pitch;
+							#define updatecamorient \
+							{ \
+								if((k || j) && c.cansee.length()) \
+								{ \
+									vec dir = vec(avg).div(c.cansee.length()).sub(c.pos).normalize(); \
+									vectoyawpitch(dir, yaw, pitch); \
+								} \
+							}
+							updatecamorient;
+							loopvrev(c.cansee) if((d = (gameent *)iterdynents(c.cansee[i])))
 							{
-								c.dir.add(pos);
-								c.score += c.pos.dist(pos);
+								vec trg, pos = feetpos(d);
+								if(getsight(c.pos, yaw, pitch, pos, trg, c.maxdist, curfov, fovy))
+								{
+									c.dir.add(pos);
+									c.score += c.pos.dist(pos);
+								}
+								else
+								{
+									avg.sub(pos);
+									c.cansee.removeunordered(i);
+									updatecamorient;
+								}
 							}
-							else
-							{
-								int t = c.cansee[i];
-								c.cansee.remove(t);
-							}
+							if(!j || !c.cansee.empty()) break;
 						}
-						if(c.cansee.length() > 1)
+						if(!c.cansee.empty())
 						{
 							float amt = float(c.cansee.length());
 							c.dir.div(amt);
 							c.score /= amt;
 						}
+						else if(!j) renew = true; // quick scotty, get a new cam
+						if(!renew) break; // only update first camera then
 					}
-					if(!lastspec || lastmillis-lastspec >= cameratime())
+					camstate *cam = &cameras[0], *oldcam = cam;
+					if(renew)
 					{
 						cameras.sort(camerasort);
 						lastspec = lastmillis;

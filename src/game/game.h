@@ -43,7 +43,7 @@ enum								// entity types
 	PUSHER,							// 12 zpush, ypush, xpush, [radius]
 	FLAG,							// 13 idx, team
 	CHECKPOINT,						// 14 idx
-	CAMERA,							// 15
+	CAMERA,							// 15 idx mindist maxdist
 	WAYPOINT,						// 16 cmd
 	ANNOUNCER,						// 17 maxrad, minrad, volume
 	CONNECTION,						// 18
