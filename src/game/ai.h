@@ -66,8 +66,11 @@ struct aiserv
 			loopv(siblings)
 				if(siblings[i] >= 0 && (!siblings.inrange(q) || siblings[i] < siblings[q]))
 					q = i;
-			if(siblings.inrange(q)) return sv.clients[q]->clientnum;
-			else if(siblings.inrange(q)) siblings.remove(q);
+			if(siblings.inrange(q))
+			{
+				if(sv.clients.inrange(q)) return sv.clients[q]->clientnum;
+				else siblings.removeunordered(q);
+			}
 			else break;
 		}
 		return -1;
