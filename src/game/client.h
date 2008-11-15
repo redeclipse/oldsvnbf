@@ -887,7 +887,7 @@ struct clientcom : iclientcom
 					gameent *s = cl.getclient(scn);
 					if(!s || !isgun(gun)) break;
 					s->setgunstate(gun, GUNSTATE_SHOOT, guntype[gun].adelay, lastmillis);
-					cl.ws.shootv(gun, power, from, locs, s, false);
+					cl.pj.shootv(gun, power, from, locs, s, false);
 					break;
 				}
 
