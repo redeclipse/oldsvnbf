@@ -101,6 +101,67 @@ struct projectiles
 			create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_SHOT, 500, 50, 5, -1, WEAPON, d->gunselect);
 	}
 
+	void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local)	 // create visual effect from a shot
+	{
+		int delay = guntype[gun].delay, pow = guntype[gun].power ? power : 100,
+			spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
+
+		if(gun == GUN_FLAMER)
+		{
+			int ends = lastmillis+(d->gunwait[gun]*2);
+			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
+			else playsound(guntype[gun].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
+		}
+		else playsound(guntype[gun].sound, d->o, d);
+
+		switch(gun)
+		{
+			case GUN_SG:
+			{
+				part_create(PART_SMOKE_RISE_SLOW, 1000, from, 0x666666, 4.f); // smoke
+				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
+				part_create(PART_MUZZLE_FLASH, guntype[gun].adelay, from, 0xFFAA00, 4.f, d);
+				break;
+			}
+
+			case GUN_CG:
+			{
+				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x999999, 1.5f); // smoke
+                adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
+				part_create(PART_MUZZLE_FLASH, guntype[gun].adelay, from, 0xFFAA00, 3.f, d);
+				break;
+			}
+			case GUN_PLASMA:
+			{
+				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x88AABB, 0.8f); // smoke
+				adddynlight(from, 50, vec(0.1f, 0.4f, 0.6f), 50, 0, DL_FLASH);
+				part_create(PART_PLASMA, guntype[gun].adelay, from, 0x226688, 1.0f, d);
+				break;
+			}
+			case GUN_FLAMER:
+			{
+				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x444444, 2.f); // smoke
+				adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
+				part_create(PART_FIREBALL, guntype[gun].adelay, from, 0xFF2200, 2.f, d);
+				break;
+			}
+			case GUN_CARBINE:
+			case GUN_RIFLE:
+			{
+				part_create(PART_SMOKE_RISE_SLOW, gun == GUN_RIFLE ? 1500 : 750, from, 0xCCCCCC, gun == GUN_RIFLE ? 3.f : 2.f); // smoke
+                adddynlight(from, 50, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
+				part_create(PART_SMOKE, guntype[gun].adelay, from, 0xCCCCCC, gun == GUN_RIFLE ? 2.f : 1.2f, d);
+				break;
+			}
+		}
+		int millis = delay;
+		loopv(locs)
+		{
+			create(from, locs[i], local, d, PRJ_SHOT, guntype[gun].time, millis, spd, 0, WEAPON, gun);
+			millis += delay;
+		}
+	}
+
 	void remove(gameent *owner)
 	{
 		loopv(projs) if(projs[i]->owner==owner)
@@ -173,12 +234,12 @@ struct projectiles
 					case 1: default: proj.mdl = "debris/debris01"; break;
 				}
 				proj.aboveeye = 1.0f;
-				proj.elasticity = 0.7f;
+				proj.elasticity = 0.9f;
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
-				proj.weight = 125.f;
-				proj.vel.add(vec(rnd(80)-41, rnd(80)-41, rnd(80)-41));
+				proj.weight = 100.f;
+				proj.vel.add(vec(rnd(80)-41, rnd(80)-41, rnd(160)-81));
 				proj.geomcollide = proj.playercollide = 1; // bounce
 				break;
 			}
@@ -190,7 +251,7 @@ struct projectiles
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
-				proj.weight = 90.f;
+				proj.weight = 100.f;
 				proj.geomcollide = 1; // bounce
 				proj.playercollide = 0; // don't
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
@@ -274,25 +335,25 @@ struct projectiles
 					}
 					case GUN_FLAMER:
 					case GUN_GL:
-					{
-						part_create(proj.attr1 == GUN_FLAMER ? PART_FIREBALL_SOFT : PART_PLASMA_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 750, proj.o, 0x663603, guntype[proj.attr1].explode*0.4f); // corona
-						int deviation = int(guntype[proj.attr1].explode*0.35f);
-						loopi(rnd(3)+1)
+					{ // both basically explosions
+						part_create(proj.attr1 == GUN_FLAMER ? PART_FIREBALL_SOFT : PART_PLASMA_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 1000, proj.o, 0x884400, guntype[proj.attr1].explode*0.3f); // corona
+						int deviation = int(guntype[proj.attr1].explode*0.5f);
+						loopi(rnd(5)+5)
 						{
 							vec to = vec(proj.o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
-							part_splash(PART_FIREBALL_SOFT, proj.attr1 == GUN_FLAMER ? 1 : 2, proj.attr1 == GUN_FLAMER ? 250 : 750, to, 0x441404, guntype[proj.attr1].explode*0.9f); // fireball
-							part_splash(PART_SMOKE_RISE_SLOW_SOFT, proj.attr1 == GUN_FLAMER ? 1 : 2, proj.attr1 == GUN_FLAMER ? 500 : 1500, vec(to).sub(vec(0, 0, 2)), proj.attr1 == GUN_FLAMER ? 0x555555 : 0x111111, guntype[proj.attr1].explode); // smoke
+							part_create(PART_FIREBALL_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 1000, to, 0x882200, guntype[proj.attr1].explode);
 						}
+						part_create(PART_SMOKE_RISE_SLOW_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 2000, vec(proj.o).sub(vec(0, 0, guntype[proj.attr1].explode*0.25f)), proj.attr1 == GUN_FLAMER ? 0x444444 : 0x222222, guntype[proj.attr1].explode);
 						adddynlight(proj.o, 1.15f*guntype[proj.attr1].explode, vec(1.1f, 0.22f, 0.02f), proj.attr1 == GUN_FLAMER ? 250 : 1500, 10);
 						if(proj.attr1 == GUN_GL)
 						{
 							cl.quakewobble += max(int(guntype[proj.attr1].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/guntype[proj.attr1].explode)), 1);
-							part_fireball(vec(proj.o).sub(vec(0, 0, 2)), guntype[proj.attr1].explode*0.75f, PART_EXPLOSION, 1000, 0x642404, 4.f); // explosion fireball
+							part_fireball(vec(proj.o).sub(vec(0, 0, 2)), guntype[proj.attr1].explode*0.75f, PART_EXPLOSION, 1000, 0x662200, 4.f); // explosion fireball
 							loopi(rnd(20)+10)
 								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(1500)+1500, rnd(750), rnd(60)+40);
 						}
 						adddecal(DECAL_SCORCH, proj.o, proj.attr1 == GUN_GL ? vec(0, 0, 1) : vec(proj.vel).neg().normalize(), guntype[proj.attr1].explode);
-						adddecal(DECAL_ENERGY, proj.o, proj.attr1 == GUN_GL ? vec(0, 0, 1) : vec(proj.vel).neg().normalize(), guntype[proj.attr1].explode*0.75f, bvec(196, 78, 24));
+						adddecal(DECAL_ENERGY, proj.o, proj.attr1 == GUN_GL ? vec(0, 0, 1) : vec(proj.vel).neg().normalize(), guntype[proj.attr1].explode*0.75f, bvec(196, 24, 0));
 						break;
 					}
 					case GUN_SG: case GUN_CG:
@@ -358,7 +419,7 @@ struct projectiles
 				case GUN_PLASMA:
 				{
 					int part = PART_PLASMA;
-					if(proj.lifemillis-proj.lifetime < 100) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/100.f, 0.01f, 1.f);
+					if(proj.lifemillis-proj.lifetime < 200) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/200.f, 0.01f, 1.f);
 					else
 					{
 						part = PART_PLASMA_SOFT;
@@ -370,26 +431,36 @@ struct projectiles
 				}
 				case GUN_FLAMER:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.01f, 1.f);
-					int col = ((int(254*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(86*max(1.0f-proj.lifespan,0.15f))+1)<<8);
-					bool moving = proj.movement > 0.f;
-					if(lastmillis-proj.lasteffect > (moving ? 100 : 250))
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize *= proj.lifesize; // increase the size exponentially over time
+					int steps = clamp(int(proj.vel.magnitude()*(1.0f-proj.lifespan)), 0, 6);
+					vec dir = vec(proj.vel).normalize().neg().mul(clamp(24.f*proj.lifesize, 1.f, 12.f)),
+						pos = proj.o;
+					if(!steps || (proj.lifemillis-proj.lifetime > 200 && proj.movement <= 2.f))
 					{
-						part_create(PART_FIREBALL_SOFT, moving ? 100 : 250, proj.o, col, 32.f*proj.lifesize);
-						proj.lasteffect = lastmillis;
+						dir = vec(0, 0, clamp(8.f*proj.lifesize, 0.5f, 8.f));
+						steps += 3;
 					}
-					else part_create(PART_FIREBALL_SOFT, 1, proj.o, col, 32.f*proj.lifesize);
+					loopi(steps) // pull some trickery to simulate a stream
+					{
+						float res = float(steps-i)/float(steps), size = clamp(64.f*proj.lifesize*res, 1.5f, 32.f);
+						int col = ((int(254*max((1.0f-proj.lifespan)*res,0.3f))<<16)+1)|((int(86*max((1.0f-proj.lifespan)*res,0.2f))+1)<<8);
+						part_create(PART_FIREBALL_SOFT, 1, pos, col, size);
+						if(pos.dist(proj.from) <= size) break;
+						pos.add(dir);
+						if(proj.movement > 2.f && proj.o.dist(pos) > proj.movement) break;
+					}
 					break;
 				}
 				case GUN_GL:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					int col = ((int(144*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*2.f*proj.lifesize);
+					int col = ((int(196*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8);
+					part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*2.5f*proj.lifesize);
 					bool moving = proj.movement > 0.f;
 					if(lastmillis-proj.lasteffect > (moving ? 250 : 500))
 					{
-						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x666666, proj.radius*(moving ? 1.f : 2.f));
+						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x222222, proj.radius*(moving ? 1.f : 2.f));
 						proj.lasteffect = lastmillis;
 					}
 					break;
@@ -399,7 +470,7 @@ struct projectiles
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
-						float size = clamp(40.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? 40.f : proj.o.dist(proj.from));
+						float size = clamp(40.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? min(40.f, proj.movement) : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize(), to = vec(proj.o).add(vec(dir).mul(proj.radius)),
 							from = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(254*max(1.0f-proj.lifesize,0.3f))<<16)+1)|((int(128*max(1.0f-proj.lifesize,0.1f))+1)<<8);
@@ -413,7 +484,7 @@ struct projectiles
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
-						float size = clamp(20.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? 20.f : proj.o.dist(proj.from));
+						float size = clamp(20.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? min(20.f, proj.movement) : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize(), to = vec(proj.o).add(vec(dir).mul(proj.radius)),
 							from = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(254*max(1.0f-proj.lifesize,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifesize,0.1f))+1)<<8);
@@ -431,7 +502,7 @@ struct projectiles
 				default:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, 0xFF9922, proj.radius*0.5f);
+					part_create(PART_PLASMA_SOFT, 1, proj.o, 0xFFFFFF, proj.radius);
 					break;
 				}
 			}
@@ -447,17 +518,18 @@ struct projectiles
 		}
 		else if(proj.projtype == PRJ_DEBRIS)
 		{
-			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // rather, this gets smaller as it gets older
-			int steps = int(proj.vel.magnitude()*0.5f*proj.lifesize);
-			if(steps)
+			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
+			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize), 0, 10);
+			if(steps && proj.movement > 0.f)
 			{
-				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius), pos = proj.o;
+				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.5f), pos = proj.o;
 				loopi(steps)
 				{
-					float res = float(steps-i)/float(steps);
-					int col = ((int(144*max(res,0.3f))<<16)+1)|((int(64*max(res,0.1f))+1)<<8);
-					part_create(PART_PLASMA_SOFT, 1, pos, col, proj.radius*proj.lifesize*res);
+					float res = float(steps-i)/float(steps), size = clamp(proj.radius*proj.lifesize*res, 0.1f, proj.radius);
+					int col = ((int(144*max(res,0.3f))<<16)+1)|((int(48*max(res,0.1f))+1)<<8);
+					part_create(PART_PLASMA_SOFT, 1, pos, col, size);
 					pos.add(dir);
+					if(proj.o.dist(pos) > proj.movement) break;
 				}
 			}
 		}
@@ -468,11 +540,11 @@ struct projectiles
     	if(proj.elasticity > 0.f)
     	{
 			vec dir[2]; dir[0] = dir[1] = vec(proj.vel).normalize();
-    		float mag = proj.vel.magnitude()*proj.elasticity; // total energy output
+    		float mag = proj.vel.magnitude()*proj.elasticity; // conservation of energy
 			loopi(3) if((pos[i] > 0.f && dir[1][i] < 0.f) || (pos[i] < 0.f && dir[1][i] > 0.f))
 				dir[1][i] = fabs(dir[1][i])*pos[i];
 			if(proj.reflectivity > 0.f)
-			{ // if the reflection is 180 degrees, give or take this, skew the reflection
+			{ // if projectile returns at 180 degrees [+/-]reflectivity, skew the reflection
 				float aim[2][2] = { { 0.f, 0.f }, { 0.f, 0.f } };
 				loopi(2) vectoyawpitch(dir[i], aim[0][i], aim[1][i]);
 				loopi(2)
@@ -537,37 +609,34 @@ struct projectiles
 				if(proj.movement > 2.f)
 				{
 					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 1, 255);
-					if(!hitplayer)
+					if(!hitplayer) switch(proj.projtype)
 					{
-						switch(proj.projtype)
+						case PRJ_SHOT:
 						{
-							case PRJ_SHOT:
+							switch(proj.attr1)
 							{
-								switch(proj.attr1)
+								case GUN_SG: case GUN_CG:
 								{
-									case GUN_SG: case GUN_CG:
-									{
-										part_splash(PART_SPARK, 3, 250, proj.o, 0xFFAA22, proj.radius*(proj.attr1 == GUN_SG ? 0.25f : 0.1f));
-										adddecal(DECAL_BULLET, proj.o, wall, proj.radius*(proj.attr1 == GUN_SG ? 2.f : 1.f));
-										break;
-									}
-									case GUN_FLAMER:
-									{
-										adddecal(DECAL_SCORCH, proj.o, wall, 32.f*proj.lifesize);
-										adddecal(DECAL_ENERGY, proj.o, wall, 12.f*proj.lifesize, bvec(92, 12, 0));
-										break;
-									}
-									default: break;
+									part_splash(PART_SPARK, 3, 250, proj.o, 0xFFAA22, proj.radius*(proj.attr1 == GUN_SG ? 0.25f : 0.1f));
+									adddecal(DECAL_BULLET, proj.o, wall, proj.radius*(proj.attr1 == GUN_SG ? 2.f : 1.f));
+									break;
 								}
-								break;
+								case GUN_FLAMER:
+								{
+									adddecal(DECAL_SCORCH, proj.o, wall, 32.f*proj.lifesize);
+									adddecal(DECAL_ENERGY, proj.o, wall, 12.f*proj.lifesize, bvec(92, 12, 0));
+									break;
+								}
+								default: break;
 							}
-							case PRJ_GIBS:
-							{
-								adddecal(DECAL_BLOOD, proj.o, wall, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
-								break;
-							}
-							default: break;
+							break;
 						}
+						case PRJ_GIBS:
+						{
+							adddecal(DECAL_BLOOD, proj.o, wall, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
+							break;
+						}
+						default: break;
 					}
 
 					if(vol)

@@ -81,63 +81,6 @@ struct weaponstate
 		return origin;
 	}
 
-	void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local)	 // create visual effect from a shot
-	{
-		int pow = guntype[gun].power ? power : 100,
-			spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
-
-		if(gun == GUN_FLAMER)
-		{
-			int ends = lastmillis+(d->gunwait[gun]*2);
-			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
-			else playsound(guntype[gun].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
-		}
-		else playsound(guntype[gun].sound, d->o, d);
-
-		switch(gun)
-		{
-			case GUN_SG:
-			{
-				part_create(PART_SMOKE_RISE_SLOW, 1000, from, 0x666666, 4.f); // smoke
-				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				part_create(PART_MUZZLE_FLASH, 50, from, 0xFFAA00, 4.f, d);
-				break;
-			}
-
-			case GUN_CG:
-			{
-				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x999999, 1.5f); // smoke
-                adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				part_create(PART_MUZZLE_FLASH, 50, from, 0xFFAA00, 3.f, d);
-				break;
-			}
-			case GUN_PLASMA:
-			{
-				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x88AABB, 0.8f); // smoke
-				adddynlight(from, 50, vec(0.1f, 0.4f, 0.6f), 50, 0, DL_FLASH);
-				part_create(PART_PLASMA, 50, from, 0x226688, 1.0f, d);
-				break;
-			}
-			case GUN_FLAMER:
-			{
-				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x555555, 2.f); // smoke
-				adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
-				part_create(PART_FIREBALL, 50, from, 0xFF2200, 2.f, d);
-				break;
-			}
-			case GUN_CARBINE:
-			case GUN_RIFLE:
-			{
-				part_create(PART_SMOKE_RISE_SLOW, gun == GUN_RIFLE ? 1500 : 750, from, 0xCCCCCC, gun == GUN_RIFLE ? 3.f : 2.f); // smoke
-                adddynlight(from, 50, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
-				part_create(PART_SMOKE, 100, from, 0xCCCCCC, gun == GUN_RIFLE ? 2.f : 1.2f, d);
-				break;
-			}
-		}
-		loopv(locs)
-			cl.pj.create(from, locs[i], local, d, PRJ_SHOT, guntype[gun].time, gun != GUN_GL ? 0 : 150, spd, 0, WEAPON, gun);
-	}
-
 	bool doautoreload(gameent *d)
 	{
 		if(autoreload() && !d->ammo[d->gunselect]) return true;
@@ -256,7 +199,7 @@ struct weaponstate
 			}
 			addshot(dest);
 		}
-		shootv(d->gunselect, power, from, vshots, d, true);
+		cl.pj.shootv(d->gunselect, power, from, vshots, d, true);
 		cl.cc.addmsg(SV_SHOOT, "ri7iv",
 			d->clientnum, lastmillis-cl.maptime, d->gunselect, power,
 				int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
