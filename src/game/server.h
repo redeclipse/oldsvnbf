@@ -2087,13 +2087,18 @@ struct gameserver : igameserver
 			if(m_insta(gamemode, mutators)) realdamage = max(damage, ts.health);
 			else
 			{
-				if(flags&HIT_HEAD) realdamage = int(damage*sv_damagescale);
+				if(flags&HIT_HEAD || flags&HIT_MELT || flags&HIT_FALL)
+					realdamage = int(damage*sv_damagescale);
 				else if(flags&HIT_TORSO) realdamage = int(damage*0.5f*sv_damagescale);
 				else if(flags&HIT_LEGS) realdamage = int(damage*0.25f*sv_damagescale);
-				else if(flags&HIT_BURN || flags&HIT_EXPLODE || flags&HIT_MELT || flags&HIT_FALL)
-					realdamage = int(damage*sv_damagescale);
+				else
+				{
+					srvoutf(-1, "ERROR: no damage area from %s in %d [%d]: %d", colorname(actor), damage, gun, flags);
+					realdamage = 0;
+				}
 			}
 		}
+		else realdamage = 0;
 
 		ts.dodamage(realdamage, gamemillis);
         actor->state.damage += realdamage;

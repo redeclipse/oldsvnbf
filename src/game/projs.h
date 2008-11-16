@@ -20,21 +20,16 @@ struct projectiles
 	int hitzones(vec &o, vec &pos, float height, float above, float radius = 0.f)
 	{
 		int hits = 0;
-		float zones[3][2] = {
-			{ pos.z-height*0.75f, pos.z-height },
-			{ pos.z-above, pos.z-height*0.75f },
-			{ pos.z+above, pos.z-above }
-		};
-		if(o.z <= zones[0][0]+radius && o.z >= zones[0][1]-radius) hits |= HIT_LEGS;
-		if(o.z < zones[1][0]+radius && o.z > zones[1][1]-radius) hits |= HIT_TORSO;
-		if(o.z <= zones[2][0]+radius && o.z >= zones[2][1]-radius) hits |= HIT_HEAD;
+		if(o.z <= (pos.z-height*0.75f)+radius) hits |= HIT_LEGS;
+		if(o.z < (pos.z-above)+radius && o.z > (pos.z-height*0.75f)-radius) hits |= HIT_TORSO;
+		if(o.z >= (pos.z-above)-radius) hits |= HIT_HEAD;
 		return hits;
 	}
 
 	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0, float radius = 0.f)
 	{
 		vec pos = cl.headpos(d);
-		int f = flags|(hitzones(proj.o, pos, d->height, d->aboveeye, radius));
+		int z = hitzones(proj.o, pos, d->height, d->aboveeye, radius), f = flags|z;
 		hitmsg &h = hits.add();
 		h.flags = f;
 		h.target = d->clientnum;
@@ -116,41 +111,41 @@ struct projectiles
 
 		switch(gun)
 		{
+			case GUN_PLASMA:
+			{
+				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x88AABB, 0.8f); // smoke
+				part_create(PART_PLASMA, 75, from, 0x226688, 1.0f, d);
+				adddynlight(from, 60, vec(0.1f, 0.4f, 0.6f), 75, 0, DL_FLASH);
+				break;
+			}
 			case GUN_SG:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 1000, from, 0x666666, 4.f); // smoke
-				adddynlight(from, 50, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				part_create(PART_MUZZLE_FLASH, guntype[gun].adelay, from, 0xFFAA00, 4.f, d);
+				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x666666, 4.f); // smoke
+				part_create(PART_MUZZLE_FLASH, 100, from, 0xFFAA00, 4.f, d);
+				adddynlight(from, 60, vec(1.1f, 0.77f, 0.22f), 100, 0, DL_FLASH);
 				break;
 			}
 
 			case GUN_CG:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x999999, 1.5f); // smoke
-                adddynlight(from, 40, vec(1.1f, 0.66f, 0.22f), 50, 0, DL_FLASH);
-				part_create(PART_MUZZLE_FLASH, guntype[gun].adelay, from, 0xFFAA00, 3.f, d);
-				break;
-			}
-			case GUN_PLASMA:
-			{
-				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x88AABB, 0.8f); // smoke
-				adddynlight(from, 50, vec(0.1f, 0.4f, 0.6f), 50, 0, DL_FLASH);
-				part_create(PART_PLASMA, guntype[gun].adelay, from, 0x226688, 1.0f, d);
+				part_create(PART_SMOKE_RISE_SLOW, 100, from, 0x999999, 1.5f); // smoke
+				part_create(PART_MUZZLE_FLASH, 50, from, 0xFFAA00, 3.f, d);
+                adddynlight(from, 40, vec(1.1f, 0.55f, 0.11f), 50, 0, DL_FLASH);
 				break;
 			}
 			case GUN_FLAMER:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x444444, 2.f); // smoke
-				adddynlight(from, 50, vec(1.1f, 0.33f, 0.01f), 50, 0, DL_FLASH);
-				part_create(PART_FIREBALL, guntype[gun].adelay, from, 0xFF2200, 2.f, d);
+				part_create(PART_SMOKE_RISE_SLOW, 200, from, 0x444444, 2.f); // smoke
+				part_create(PART_FIREBALL, 100, from, 0xFF2200, 2.f, d);
+				adddynlight(from, 60, vec(1.1f, 0.33f, 0.01f), 100, 0, DL_FLASH);
 				break;
 			}
 			case GUN_CARBINE:
 			case GUN_RIFLE:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, gun == GUN_RIFLE ? 1500 : 750, from, 0xCCCCCC, gun == GUN_RIFLE ? 3.f : 2.f); // smoke
+				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0xCCCCCC, gun == GUN_RIFLE ? 3.f : 2.f); // smoke
+				part_create(PART_SMOKE, 50, from, 0xCCCCCC, gun == GUN_RIFLE ? 2.f : 1.2f, d);
                 adddynlight(from, 50, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
-				part_create(PART_SMOKE, guntype[gun].adelay, from, 0xCCCCCC, gun == GUN_RIFLE ? 2.f : 1.2f, d);
 				break;
 			}
 		}
@@ -433,13 +428,13 @@ struct projectiles
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					proj.lifesize *= proj.lifesize; // increase the size exponentially over time
-					int steps = clamp(int(proj.vel.magnitude()*(1.0f-proj.lifespan)), 0, 6);
-					vec dir = vec(proj.vel).normalize().neg().mul(clamp(24.f*proj.lifesize, 1.f, 12.f)),
+					int steps = clamp(int(proj.vel.magnitude()*(1.0f-proj.lifespan)), 0, 5);
+					vec dir = vec(proj.vel).normalize().neg().mul(clamp(32.f*proj.lifesize, 1.f, 16.f)),
 						pos = proj.o;
 					if(!steps || (proj.lifemillis-proj.lifetime > 200 && proj.movement <= 2.f))
 					{
-						dir = vec(0, 0, clamp(8.f*proj.lifesize, 0.5f, 8.f));
-						steps += 3;
+						dir = vec(0, 0, clamp(12.f*proj.lifesize, 0.5f, 8.f));
+						steps += 2;
 					}
 					loopi(steps) // pull some trickery to simulate a stream
 					{

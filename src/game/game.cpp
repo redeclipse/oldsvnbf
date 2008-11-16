@@ -531,13 +531,13 @@ struct gameclient : igameclient
 	{
 		if(d->type != ENT_PLAYER) return;
 
-		d->obliterated = (d == actor) || (flags & HIT_EXPLODE) || (flags & HIT_MELT) || (damage > MAXHEALTH);
+		d->obliterated = d == actor || flags&HIT_EXPLODE || flags&HIT_MELT || damage > MAXHEALTH;
         d->lastregen = d->lastpain = lastmillis;
 		d->state = CS_DEAD;
 		d->deaths++;
 
 		int anc = -1, dth = S_DIE1+rnd(2);
-		if((flags & HIT_MELT) || (flags & HIT_BURN)) dth = S_BURN;
+		if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURN;
 		else if(d->obliterated) dth = S_SPLAT;
 
 		if(d == player1)
@@ -558,10 +558,23 @@ struct gameclient : igameclient
 		s_strcpy(d->obit, "rests in pieces");
         if(d == actor)
         {
-        	if(flags & HIT_MELT) s_strcpy(d->obit, "melted");
-        	else if(flags & HIT_FALL) s_strcpy(d->obit, "thought they could fly");
-        	else if(flags & HIT_EXPLODE) s_strcpy(d->obit, "decided to go out kamikaze style");
-        	else if(flags & HIT_BURN) s_strcpy(d->obit, "burned themselves up");
+        	if(flags&HIT_MELT) s_strcpy(d->obit, "melted");
+			else if(flags&HIT_FALL) s_strcpy(d->obit, "thought they could fly");
+        	else if(flags && isgun(gun))
+        	{
+				static const char *suicidenames[GUN_MAX] = {
+					"found out what their plasma tasted like",
+					"discovered buckshot bounces",
+					"got caught up in their own crossfire",
+					"barbequed themselves for dinner",
+					"pulled off a seemingly impossible stunt",
+					"pulled off a seemingly impossible stunt",
+					"decided to kick it, kamakaze style",
+				};
+        		s_strcpy(d->obit, suicidenames[gun]);
+        	}
+        	else if(flags&HIT_EXPLODE) s_strcpy(d->obit, "was obliterated");
+        	else if(flags&HIT_BURN) s_strcpy(d->obit, "burnt up");
         	else s_strcpy(d->obit, "suicided");
         }
 		else
@@ -596,7 +609,7 @@ struct gameclient : igameclient
 				}
 			};
 
-			int o = d->obliterated ? 2 : (flags&HIT_HEAD ? 1 : 0);
+			int o = d->obliterated ? 2 : (flags&HIT_HEAD && !guntype[gun].explode ? 1 : 0);
 			const char *oname = isgun(gun) ? obitnames[o][gun] : "was killed by";
 			if(m_team(gamemode, mutators) && d->team == actor->team)
 				s_sprintf(d->obit)("%s teammate %s", oname, colorname(actor));
@@ -639,7 +652,7 @@ struct gameclient : igameclient
 					}
 					default:
 					{
-						if(flags & HIT_HEAD)
+						if(flags&HIT_HEAD)
 						{
 							anc = S_V_HEADSHOT;
 							s_sprintfd(ds)("@\fgHEADSHOT");
