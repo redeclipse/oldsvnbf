@@ -571,7 +571,7 @@ COMMAND(paintblendmap, "");
 
 void clearblendmapsel()
 {
-    if(!canpaintblendmap(false, true)) return;
+    if(noedit(false)) return;
     extern selinfo sel;
     int x1 = sel.o.x>>BM_SCALE, y1 = sel.o.y>>BM_SCALE,
         x2 = (sel.o.x+sel.s.x*sel.grid+(1<<BM_SCALE)-1)>>BM_SCALE,
@@ -585,7 +585,7 @@ COMMAND(clearblendmapsel, "");
 
 void showblendmap()
 {
-    if(!canpaintblendmap()) return;
+    if(noedit(true)) return;
     previewblends(ivec(0, 0, 0), ivec(hdr.worldsize, hdr.worldsize, hdr.worldsize));
 }
 
@@ -593,7 +593,7 @@ COMMAND(showblendmap, "");
 COMMAND(optimizeblendmap, "");
 ICOMMAND(clearblendmap, "", (),
 {
-    if(!canpaintblendmap()) return;
+    if(noedit(true)) return;
     resetblendmap();
     showblendmap();
 });
