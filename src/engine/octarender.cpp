@@ -512,6 +512,7 @@ struct vacollect : verthash
                     }
                     e.length[l] = curbuf-startbuf;
                 }
+                if(k.layer&LAYER_BLEND) va->tris -= e.length[5]/3;
             }
         }
 
