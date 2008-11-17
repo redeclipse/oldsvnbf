@@ -8,8 +8,8 @@ enum							// hardcoded texture numbers
 	DEFAULT_CEIL
 };
 
-#define OCTAVERSION 27			// diverged at ver 25
-#define MAPVERSION 32			// bump if map format changes, see worldio.cpp
+#define OCTAVERSION 28			// diverged at ver 25
+#define MAPVERSION 33			// bump if map format changes, see worldio.cpp
 
 struct binary
 {
@@ -26,7 +26,7 @@ struct octacompat25 : binary
 	int mapprec, maple, mapllod;
     uchar ambient;
     uchar watercolour[3];
-    uchar mapwlod;
+    uchar blendmap;
     uchar lerpangle, lerpsubdiv, lerpsubdivsize;
     uchar mapbe;
     uchar skylight[3];
@@ -45,7 +45,7 @@ struct octa : binary
 	int mapprec, maple, mapllod;
     uchar ambient;
     uchar watercolour[3];
-    uchar mapwlod;
+    uchar blendmap;
     uchar lerpangle, lerpsubdiv, lerpsubdivsize;
     uchar mapbe;
     uchar skylight[3];
@@ -56,6 +56,13 @@ struct octa : binary
 };
 
 struct bfgz : binary
+{
+    int worldsize, numents, numpvs, lightmaps, blendmap;
+    int gamever, revision;
+    char maptitle[128], gameid[4];
+};
+
+struct bfgzcompat32 : binary
 {
     int worldsize, numents, numpvs, lightmaps;
     int gamever, revision;

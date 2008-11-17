@@ -94,7 +94,8 @@ enum
 	SHADER_DEFAULT	= 0,
 	SHADER_NORMALSLMS = 1<<0,
 	SHADER_ENVMAP	 = 1<<1,
-	SHADER_GLSLANG	= 1<<2
+    SHADER_GLSLANG    = 1<<2,
+    SHADER_OPTION     = 1<<3
 };
 
 #define MAXSHADERDETAIL 3
@@ -142,6 +143,12 @@ struct Shader
     void flushenvparams(Slot *slot = NULL);
     void setslotparams(Slot &slot);
     void bindprograms();
+
+    bool hasoption(int row)
+    {
+        if(detailshader->variants[row].empty()) return false;
+        return (detailshader->variants[row][0]->type&SHADER_OPTION)!=0;
+    }
 
     void setvariant(int col, int row, Slot *slot, Shader *fallbackshader)
     {
@@ -265,6 +272,7 @@ struct Slot
     float scale;
     int rotation, xoffset, yoffset;
     float scrollS, scrollT;
+    int layer;
     vec glowcolor, pulseglowcolor;
     float pulseglowspeed;
     bool mtglowed, loaded;
@@ -282,6 +290,7 @@ struct Slot
         scale = 1;
         rotation = xoffset = yoffset = 0;
         scrollS = scrollT = 0;
+        layer = 0;
         glowcolor = vec(1, 1, 1);
         pulseglowcolor = vec(0, 0, 0);
         pulseglowspeed = 0;

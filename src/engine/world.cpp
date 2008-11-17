@@ -761,6 +761,7 @@ void resetmap()
 	clearoverrides();
 	clearsound();
 	cleanreflections();
+    resetblendmap();
 	resetlightmaps();
     clearpvs();
 	clearparticles();
@@ -796,6 +797,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
     hdr.worldsize = 1<<worldscale;
 	hdr.revision = 0;
     hdr.numpvs = 0;
+    hdr.blendmap = 0;
 	hdr.lightmaps = 0;
 
 	hdr.maptitle[0] = 0;

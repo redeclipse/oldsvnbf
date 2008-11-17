@@ -1753,6 +1753,8 @@ void drawview(int targtype)
 		cursorupdate();
 		glDepthMask(GL_TRUE);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        renderblendbrush();
 	}
 
 	glDisable(GL_DEPTH_TEST);

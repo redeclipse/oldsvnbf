@@ -728,6 +728,31 @@ VAR(reserveshadowmaptc, 1, 0, 0);
 VAR(reservedynlighttc, 1, 0, 0);
 VAR(minimizedynlighttcusage, 1, 0, 0);
 
+static void gengenericvariant(Shader &s, const char *sname, const char *vs, const char *ps, int row)
+{
+    bool vschanged = false, pschanged = false;
+    vector<char> vsv, psv;
+    vsv.put(vs, strlen(vs)+1);
+    psv.put(ps, strlen(ps)+1);
+
+    int len = strlen("#pragma CUBE2_variant");
+    for(char *vspragma = vsv.getbuf();; vschanged = true)
+    {
+        vspragma = strstr(vspragma, "#pragma CUBE2_variant");
+        if(!vspragma) break;
+        memset(vspragma, ' ', len);
+    }
+    for(char *pspragma = psv.getbuf();; pschanged = true)
+    {
+        pspragma = strstr(pspragma, "#pragma CUBE2_variant");
+        if(!pspragma) break;
+        memset(pspragma, ' ', len);
+    }
+    s_sprintfd(varname)("<variant:%d,%d>%s", s.variants[row].length(), row, sname);
+    s_sprintfd(reuse)("%d", row);
+    newshader(s.type, varname, vschanged ? vsv.getbuf() : reuse, pschanged ? psv.getbuf() : reuse, &s, row);
+}
+
 static bool genwatervariant(Shader &s, const char *sname, vector<char> &vs, vector<char> &ps, int row)
 {
     char *vspragma = strstr(vs.getbuf(), "#pragma CUBE2_water");
@@ -1208,6 +1233,7 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
     {
         // '#' is a comment in vertex/fragment programs, while '#pragma' allows an escape for GLSL, so can handle both at once
         if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(*s, varname, vs, ps, *row);
+        if(strstr(vs, "#pragma CUBE2_variant")) gengenericvariant(*s, varname, vs, ps, *row);
     }
     if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && initshaders)
     {
