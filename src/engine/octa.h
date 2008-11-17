@@ -1,8 +1,18 @@
 // 6-directional octree heightfield map format
 
+enum
+{
+    LAYER_TOP = 0,
+    LAYER_BOTTOM,
+
+    LAYER_BLEND = 1<<1
+};
+
 struct elementset
 {
-	ushort texture, lmid, envmap;
+    ushort texture;
+    uchar lmid, layer;
+    ushort envmap;
     ushort length[6];
     ushort minvert[6], maxvert[6];
 };
@@ -35,9 +45,10 @@ struct materialsurface
 
 struct surfaceinfo
 {
-	uchar texcoords[8];
-	uchar w, h;
-	ushort x, y, lmid;
+    uchar texcoords[8];
+    uchar w, h;
+    ushort x, y;
+    uchar lmid, layer;
 };
 
 struct surfacenormals
@@ -132,7 +143,7 @@ struct vtxarray
     ushort minvert, maxvert; // DRE info
     elementset *eslist;      // List of element indices sets (range) per texture
     materialsurface *matbuf; // buffer of material surfaces
-    int verts, tris, texs, texmask, sky, explicitsky, skyfaces, skyclip, matsurfs, distance;
+    int verts, tris, texs, blends, texmask, sky, explicitsky, skyfaces, skyclip, matsurfs, distance;
     double skyarea;
     ivec o;
     int size;                // location and size of cube.

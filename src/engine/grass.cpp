@@ -32,7 +32,7 @@ void gengrasssample(vtxarray *va, const vec &o, float tu, float tv, LightMap *lm
 	{
 		tu = min(tu, LM_PACKW-0.01f);
 		tv = min(tv, LM_PACKH-0.01f);
-		memcpy(g.color, &lm->data[3*(int(tv)*LM_PACKW + int(tu))], 3);
+		memcpy(g.color, &lm->data[lm->bpp*(int(tv)*LM_PACKW + int(tu))], 3);
 	}
 	else loopk(3) g.color[k] = ambient;
 }

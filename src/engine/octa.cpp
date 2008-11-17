@@ -1376,25 +1376,37 @@ int calcmergedsize(int orient, const ivec &co, int size, const mergeinfo &m, con
 	return bits-VVEC_FRAC;
 }
 
-void invalidatemerges(cube &c)
+static void invalidatemerges(cube &c)
 {
-	if(c.ext)
-	{
-		if(c.ext->va)
-		{
-			if(!(c.ext->va->hasmerges&(MERGE_PART | MERGE_ORIGIN))) return;
-			destroyva(c.ext->va);
-			c.ext->va = NULL;
-		}
-		if(c.ext->merged)
-		{
-			brightencube(c);
-			c.ext->merged = 0;
-			if(c.ext->merges) freemergeinfo(c);
-		}
+    if(c.ext)
+    {
+        if(c.ext->va)
+        {
+            if(!(c.ext->va->hasmerges&(MERGE_PART | MERGE_ORIGIN))) return;
+            destroyva(c.ext->va);
+            c.ext->va = NULL;
+        }
+        if(c.ext->merged)
+        {
+            brightencube(c);
+            c.ext->merged = 0;
+            if(c.ext->merges) freemergeinfo(c);
+        }
         if(c.ext->tjoints >= 0) c.ext->tjoints = -1;
-	}
-	if(c.children) loopi(8) invalidatemerges(c.children[i]);
+    }
+    if(c.children) loopi(8) invalidatemerges(c.children[i]);
+}
+
+static int invalidatedmerges = 0;
+
+void invalidatemerges(cube &c, bool msg)
+{
+    if(msg && invalidatedmerges!=totalmillis)
+    {
+        renderprogress(0, "invalidating merged surfaces...");
+        invalidatedmerges = totalmillis;
+    }
+    invalidatemerges(c);
 }
 
 void calcmerges()

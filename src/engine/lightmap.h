@@ -28,30 +28,45 @@ struct PackNode
 	bool insert(ushort &tx, ushort &ty, ushort tw, ushort th);
 };
 
-enum { LM_DIFFUSE = 0, LM_BUMPMAP0, LM_BUMPMAP1 };
+enum
+{
+    LM_DIFFUSE = 0,
+    LM_BUMPMAP0,
+    LM_BUMPMAP1,
+    LM_TYPE = 0x0F,
+
+    LM_ALPHA = 1<<4,
+    LM_FLAGS = 0xF0
+};
 
 struct LightMap
 {
-    int type, tex, offsetx, offsety;
+    int type, bpp, tex, offsetx, offsety;
     PackNode packroot;
     uint lightmaps, lumels;
     int unlitx, unlity;
-    uchar data[3 * LM_PACKW * LM_PACKH];
+    uchar *data;
 
     LightMap()
-     : type(LM_DIFFUSE), tex(-1), offsetx(-1), offsety(-1),
-       lightmaps(0), lumels(0), unlitx(-1), unlity(-1)
-	{
-		memset(data, 0, sizeof(data));
-	}
+     : type(LM_DIFFUSE), bpp(3), tex(-1), offsetx(-1), offsety(-1),
+       lightmaps(0), lumels(0), unlitx(-1), unlity(-1),
+       data(NULL)
+    {
+    }
 
-	void finalize()
-	{
-		packroot.clear();
-		packroot.available = 0;
-	}
+    ~LightMap()
+    {
+        if(data) delete[] data;
+    }
 
-	bool insert(ushort &tx, ushort &ty, uchar *src, ushort tw, ushort th);
+    void finalize()
+    {
+        packroot.clear();
+        packroot.available = 0;
+    }
+
+    void copy(ushort tx, ushort ty, uchar *src, ushort tw, ushort th);
+    bool insert(ushort &tx, ushort &ty, uchar *src, ushort tw, ushort th);
 };
 
 extern vector<LightMap> lightmaps;
@@ -75,9 +90,10 @@ extern void clearlights();
 extern void initlights();
 extern void clearlightcache(int e = -1);
 extern void resetlightmaps();
-extern void newsurfaces(cube &c);
+extern void newsurfaces(cube &c, const surfaceinfo *surfs, int numsurfs);
 extern void freesurfaces(cube &c);
 extern void brightencube(cube &c);
+extern void previewblends(const ivec &bo, const ivec &bs);
 
 struct lerpvert
 {

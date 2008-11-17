@@ -233,13 +233,14 @@ struct verthash
 
 struct sortkey
 {
-	 ushort tex, lmid, envmap;
-	 sortkey() {}
-	 sortkey(ushort tex, ushort lmid, ushort envmap = EMID_NONE)
-	  : tex(tex), lmid(lmid), envmap(envmap)
-	 {}
+     ushort tex, lmid, layer, envmap;
 
-	 bool operator==(const sortkey &o) const { return tex==o.tex && lmid==o.lmid && envmap==o.envmap; }
+     sortkey() {}
+     sortkey(ushort tex, uchar lmid, uchar layer = LAYER_TOP, ushort envmap = EMID_NONE)
+      : tex(tex), lmid(lmid), layer(layer), envmap(envmap)
+     {}
+
+     bool operator==(const sortkey &o) const { return tex==o.tex && lmid==o.lmid && layer==o.layer && envmap==o.envmap; }
 };
 
 struct sortval
@@ -287,15 +288,17 @@ struct vacollect : verthash
 
     void remapunlit(vector<sortkey> &remap)
     {
-        uint lastlmid[2] = { LMID_AMBIENT, LMID_AMBIENT }, firstlmid[2] = { LMID_AMBIENT, LMID_AMBIENT };
-        int firstlit[2] = { -1, -1 };
+        uint lastlmid[4] = { LMID_AMBIENT, LMID_AMBIENT, LMID_AMBIENT, LMID_AMBIENT },
+             firstlmid[4] = { LMID_AMBIENT, LMID_AMBIENT, LMID_AMBIENT, LMID_AMBIENT };
+        int firstlit[4] = { -1, -1, -1, -1 };
         loopv(texs)
         {
             sortkey &k = texs[i];
             if(k.lmid>=LMID_RESERVED)
             {
                 LightMapTexture &lmtex = lightmaptexs[k.lmid];
-                int type = lmtex.type;
+                int type = lmtex.type&LM_TYPE;
+                if(k.layer&LAYER_BLEND) type += 2;
                 lastlmid[type] = lmtex.unlitx>=0 ? k.lmid : LMID_AMBIENT;
                 if(firstlmid[type]==LMID_AMBIENT && lastlmid[type]!=LMID_AMBIENT)
                 {
@@ -308,6 +311,7 @@ struct vacollect : verthash
                 Shader *s = lookuptexture(k.tex, false).shader;
                 if(!s) continue;
                 int type = s->type&SHADER_NORMALSLMS ? LM_BUMPMAP0 : LM_DIFFUSE;
+                if(k.layer&LAYER_BLEND) type += 2;
                 if(lastlmid[type]!=LMID_AMBIENT)
                 {
                     sortval &t = indices[k];
@@ -315,15 +319,21 @@ struct vacollect : verthash
                 }
             }
         }
-        if(firstlmid[0]!=LMID_AMBIENT || firstlmid[1]!=LMID_AMBIENT) loopi(max(firstlit[0], firstlit[1]))
+        loopj(2)
         {
-            sortkey &k = texs[i];
-            if(k.lmid!=LMID_AMBIENT) continue;
-            Shader *s = lookuptexture(k.tex, false).shader;
-            if(!s) continue;
-            int type = s->type&SHADER_NORMALSLMS ? LM_BUMPMAP0 : LM_DIFFUSE;
-            if(firstlmid[type]==LMID_AMBIENT) continue;
-            indices[k].unlit = firstlmid[type];
+            int offset = 2*j;
+            if(firstlmid[offset]==LMID_AMBIENT && firstlmid[offset+1]==LMID_AMBIENT) continue;
+            loopi(max(firstlit[offset], firstlit[offset+1]))
+            {
+                sortkey &k = texs[i];
+                if(j ? !(k.layer&LAYER_BLEND) : k.layer&LAYER_BLEND) continue;
+                if(k.lmid!=LMID_AMBIENT) continue;
+                Shader *s = lookuptexture(k.tex, false).shader;
+                if(!s) continue;
+                int type = offset + (s->type&SHADER_NORMALSLMS ? LM_BUMPMAP0 : LM_DIFFUSE);
+                if(firstlmid[type]==LMID_AMBIENT) continue;
+                indices[k].unlit = firstlmid[type];
+            }
         }
         loopv(remap)
         {
@@ -349,7 +359,7 @@ struct vacollect : verthash
                     t.dims[l][j] = addvert(vv, u, v, n);
                 }
             }
-            sortval *dst = indices.access(sortkey(k.tex, t.unlit, k.envmap));
+            sortval *dst = indices.access(sortkey(k.tex, t.unlit, k.layer, k.envmap));
             if(dst) loopl(6) loopvj(t.dims[l]) dst->dims[l].add(t.dims[l][j]);
         }
     }
@@ -362,7 +372,7 @@ struct vacollect : verthash
             {
                 if(k.lmid>=LMID_RESERVED && lightmaptexs[k.lmid].unlitx>=0)
                 {
-                    sortkey ukey(k.tex, LMID_AMBIENT, k.envmap);
+                    sortkey ukey(k.tex, LMID_AMBIENT, k.layer, k.envmap);
                     sortval *uval = indices.access(ukey);
                     if(uval && uval->unlit<=0)
                     {
@@ -389,6 +399,8 @@ struct vacollect : verthash
 
     static int texsort(const sortkey *x, const sortkey *y)
     {
+        if(x->layer < y->layer) return -1;
+        if(x->layer > y->layer) return 1;
         if(x->tex == y->tex)
         {
             if(x->lmid < y->lmid) return -1;
@@ -461,6 +473,7 @@ struct vacollect : verthash
 
         va->eslist = NULL;
         va->texs = texs.length();
+        va->blends = 0;
         va->ebuf = 0;
         va->edata = 0;
         if(va->texs)
@@ -468,6 +481,7 @@ struct vacollect : verthash
             va->eslist = new elementset[va->texs];
             va->edata += vbosize[VBO_EBUF];
             ushort *edata = (ushort *)addvbo(va, VBO_EBUF, 3*curtris, sizeof(ushort)), *curbuf = edata;
+            while(va->texs && texs[va->texs-1].layer&LAYER_BLEND) { va->texs--; va->blends++; }
             loopv(texs)
             {
                 const sortkey &k = texs[i];
@@ -475,6 +489,7 @@ struct vacollect : verthash
                 elementset &e = va->eslist[i];
                 e.texture = k.tex;
                 e.lmid = t.unlit>0 ? t.unlit : k.lmid;
+                e.layer = k.layer;
                 e.envmap = k.envmap;
                 ushort *startbuf = curbuf;
                 loopl(6)
@@ -501,7 +516,7 @@ struct vacollect : verthash
         }
 
         va->texmask = 0;
-        loopi(va->texs)
+        loopi(va->texs+va->blends)
         {
             Slot &slot = lookuptexture(va->eslist[i].texture, false);
             loopvj(slot.sts) va->texmask |= 1<<slot.sts[j].type;
@@ -583,53 +598,12 @@ struct texcoords
     short u, v;
 };
 
-void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *surface, surfacenormals *normals, int tj = -1, ushort envmap = EMID_NONE)
+void addtris(const sortkey &key, int orient, vvec *vv, surfacenormals *normals, texcoords tc[4], int index[4],  int shadowmask, int tj)
 {
-    int index[4];
-    int shadowmask = texture==DEFAULT_SKY ? 0 : calcshadowmask(vv);
-    LightMap *lm = NULL;
-    LightMapTexture *lmtex = NULL;
-    if(!nolights && surface && lightmaps.inrange(surface->lmid-LMID_RESERVED))
-    {
-        lm = &lightmaps[surface->lmid-LMID_RESERVED];
-        if(lm->type==LM_DIFFUSE ||
-            (lm->type==LM_BUMPMAP0 &&
-                lightmaps.inrange(surface->lmid+1-LMID_RESERVED) &&
-                lightmaps[surface->lmid+1-LMID_RESERVED].type==LM_BUMPMAP1))
-            lmtex = &lightmaptexs[lm->tex];
-        else lm = NULL;
-    }
-    texcoords tc[4];
-    loopk(4)
-    {
-        if(lmtex)
-        {
-            tc[k].u = short(ceilf((lm->offsetx + surface->x + (surface->texcoords[k*2] / 255.0f) * (surface->w - 1) + 0.5f) * SHRT_MAX/lmtex->w));
-            tc[k].v = short(ceilf((lm->offsety + surface->y + (surface->texcoords[k*2 + 1] / 255.0f) * (surface->h - 1) + 0.5f) * SHRT_MAX/lmtex->h));
-        }
-        else tc[k].u = tc[k].v = 0;
-        index[k] = vc.addvert(vv[k], tc[k].u, tc[k].v, renderpath!=R_FIXEDFUNCTION && normals ? normals->normals[k] : bvec(128, 128, 128));
-        if(index[k] < 0) return;
-    }
-
-    if(texture == DEFAULT_SKY)
-    {
-        loopk(4) vc.skyclip = min(vc.skyclip, int(vv[k].z>>VVEC_FRAC));
-        vc.skyfaces |= 0x3F&~(1<<orient);
-    }
-
-    int lmid = LMID_AMBIENT;
-    if(surface)
-    {
-        if(surface->lmid < LMID_RESERVED) lmid = surface->lmid;
-        else if(lm) lmid = lm->tex;
-    }
-
     int dim = dimension(orient);
-    sortkey key(texture, lmid, envmap);
     loopi(2) if(index[0]!=index[i+1] && index[i+1]!=index[i+2] && index[i+2]!=index[0])
     {
-        usvector &idxs = texture==DEFAULT_SKY ? vc.explicitskyindices : vc.indices[key].dims[2*dim + ((shadowmask>>i)&1)];
+        usvector &idxs = key.tex==DEFAULT_SKY ? vc.explicitskyindices : vc.indices[key].dims[2*dim + ((shadowmask>>i)&1)];
         int left = index[2*i], mid = index[2*i + 1], right = index[(2*i + 2)%4];
         loopj(2)
         {
@@ -680,7 +654,7 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
                 idxs.add(right);
                 idxs.add(left);
                 idxs.add(nextindex);
-                if(texture==DEFAULT_SKY) explicitsky++; else vc.curtris++;
+                if(key.tex==DEFAULT_SKY) explicitsky++; else vc.curtris++;
                 tj = t.next;
                 left = nextindex;
             }
@@ -690,8 +664,53 @@ void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *s
         idxs.add(right);
         idxs.add(left);
         idxs.add(mid);
-        if(texture==DEFAULT_SKY) explicitsky++; else vc.curtris++;
+        if(key.tex==DEFAULT_SKY) explicitsky++; else vc.curtris++;
     }
+}
+
+void addcubeverts(int orient, int size, vvec *vv, ushort texture, surfaceinfo *surface, surfacenormals *normals, int tj = -1, ushort envmap = EMID_NONE)
+{
+    int index[4];
+    int shadowmask = texture==DEFAULT_SKY ? 0 : calcshadowmask(vv);
+    LightMap *lm = NULL;
+    LightMapTexture *lmtex = NULL;
+    if(!nolights && surface && lightmaps.inrange(surface->lmid-LMID_RESERVED))
+    {
+        lm = &lightmaps[surface->lmid-LMID_RESERVED];
+        if((lm->type&LM_TYPE)==LM_DIFFUSE ||
+            ((lm->type&LM_TYPE)==LM_BUMPMAP0 &&
+                lightmaps.inrange(surface->lmid+1-LMID_RESERVED) &&
+                (lightmaps[surface->lmid+1-LMID_RESERVED].type&LM_TYPE)==LM_BUMPMAP1))
+            lmtex = &lightmaptexs[lm->tex];
+        else lm = NULL;
+    }
+    texcoords tc[4];
+    loopk(4)
+    {
+        if(lmtex)
+        {
+            tc[k].u = short(ceilf((lm->offsetx + surface->x + (surface->texcoords[k*2] / 255.0f) * (surface->w - 1) + 0.5f) * SHRT_MAX/lmtex->w));
+            tc[k].v = short(ceilf((lm->offsety + surface->y + (surface->texcoords[k*2 + 1] / 255.0f) * (surface->h - 1) + 0.5f) * SHRT_MAX/lmtex->h));
+        }
+        else tc[k].u = tc[k].v = 0;
+        index[k] = vc.addvert(vv[k], tc[k].u, tc[k].v, renderpath!=R_FIXEDFUNCTION && normals ? normals->normals[k] : bvec(128, 128, 128));
+        if(index[k] < 0) return;
+    }
+
+    if(texture == DEFAULT_SKY)
+    {
+        loopk(4) vc.skyclip = min(vc.skyclip, int(vv[k].z>>VVEC_FRAC));
+        vc.skyfaces |= 0x3F&~(1<<orient);
+    }
+    int lmid = LMID_AMBIENT;
+    if(surface)
+    {
+        if(surface->lmid < LMID_RESERVED) lmid = surface->lmid;
+        else if(lm) lmid = lm->tex;
+    }
+
+    sortkey key(texture, lmid, surface ? surface->layer&LAYER_BLEND : LAYER_TOP, envmap);
+    addtris(key, orient, vv, normals, tc, index, shadowmask, tj);
 }
 
 struct edgegroup
@@ -846,7 +865,7 @@ void gencubeverts(cube &c, int x, int y, int z, int size, int csi, uchar &vismas
 {
 	freeclipplanes(c);						  // physics planes based on rendering
 
-    int tj = c.ext ? c.ext->tjoints : -1;
+    int tj = c.ext ? c.ext->tjoints : -1, numblends = 0;
     loopi(6) if(visibleface(c, i, x, y, z, size))
 	{
         if(c.texture[i]!=DEFAULT_SKY) vismask |= 1<<i;
@@ -860,19 +879,38 @@ void gencubeverts(cube &c, int x, int y, int z, int size, int csi, uchar &vismas
             if(c.texture[i]!=DEFAULT_SKY && faceedges(c, i)==F_SOLID) clipmask |= 1<<i;
         }
 
+        if(e.surfaces && e.surfaces[i].layer&LAYER_BLEND) numblends++;
+
 		if(e.merged&(1<<i)) continue;
 
 		vvec vv[4];
 		loopk(4) calcvert(c, x, y, z, size, vv[k], faceverts(c, i, k));
-		ushort envmap = EMID_NONE;
-		Slot &slot = lookuptexture(c.texture[i], false);
-		if(slot.shader && slot.shader->type&SHADER_ENVMAP)
-		{
-			loopv(slot.sts) if(slot.sts[i].type==TEX_ENVMAP) { envmap = EMID_CUSTOM; break; }
-			if(envmap==EMID_NONE) envmap = closestenvmap(i, x, y, z, size);
-		}
+        ushort envmap = EMID_NONE, envmap2 = EMID_NONE;
+        Slot &slot = lookuptexture(c.texture[i], false),
+             *layer = slot.layer ? &lookuptexture(slot.layer, false) : NULL;
+        if(slot.shader && slot.shader->type&SHADER_ENVMAP)
+        {
+            loopv(slot.sts) if(slot.sts[i].type==TEX_ENVMAP) { envmap = EMID_CUSTOM; break; }
+            if(envmap==EMID_NONE) envmap = closestenvmap(i, x, y, z, size);
+        }
+        if(layer && layer->shader && layer->shader->type&SHADER_ENVMAP)
+        {
+            loopv(layer->sts) if(layer->sts[i].type==TEX_ENVMAP) { envmap2 = EMID_CUSTOM; break; }
+            if(envmap2==EMID_NONE) envmap2 = closestenvmap(i, x, y, z, size);
+        }
         while(tj >= 0 && tjoints[tj].edge < i*4) tj = tjoints[tj].next;
-        addcubeverts(i, size, vv, c.texture[i], e.surfaces ? &e.surfaces[i] : NULL, e.normals ? &e.normals[i] : NULL, tj >= 0 && tjoints[tj].edge/4 == i ? tj : -1, envmap);
+        int hastj = tj >= 0 && tjoints[tj].edge/4 == i ? tj : -1;
+        if(e.surfaces && e.surfaces[i].layer&LAYER_BLEND)
+        {
+            addcubeverts(i, size, vv, c.texture[i], &e.surfaces[i], e.normals ? &e.normals[i] : NULL, hastj, envmap);
+            addcubeverts(i, size, vv, slot.layer, &e.surfaces[5+numblends], e.normals ? &e.normals[i] : NULL, hastj, envmap2);
+        }
+        else
+        {
+            ushort tex = c.texture[i];
+            if(e.surfaces && e.surfaces[i].layer==LAYER_BOTTOM) { tex = slot.layer; envmap = envmap2; }
+            addcubeverts(i, size, vv, tex, e.surfaces ? &e.surfaces[i] : NULL, e.normals ? &e.normals[i] : NULL, hastj, envmap);
+        }
 		if(slot.autograss && i!=O_BOTTOM)
 		{
 			grasstri &g = vc.grasstris.add();
@@ -1140,23 +1178,19 @@ static vector<mergedface> vamerges[VVEC_INT];
 void genmergedfaces(cube &c, const ivec &co, int size, int minlevel = -1)
 {
     if(!c.ext || !c.ext->merges || isempty(c)) return;
-    int index = 0, tj = c.ext->tjoints;
-	loopi(6) if(c.ext->mergeorigin & (1<<i))
+    int index = 0, tj = c.ext->tjoints, numblends = 0;
+	loopi(6)
 	{
+        if(c.ext->surfaces && c.ext->surfaces[i].layer&LAYER_BLEND) numblends++;
+        if(!(c.ext->mergeorigin & (1<<i))) continue;
 		mergeinfo &m = c.ext->merges[index++];
 		if(m.u1>=m.u2 || m.v1>=m.v2) continue;
-		mergedface mf;
-		mf.orient = i;
-		mf.tex = c.texture[i];
-		mf.envmap = EMID_NONE;
-		Slot &slot = lookuptexture(mf.tex, false);
-		if(slot.shader && slot.shader->type&SHADER_ENVMAP)
-		{
-			loopv(slot.sts) if(slot.sts[i].type==TEX_ENVMAP) { mf.envmap = EMID_CUSTOM; break; }
-			if(mf.envmap==EMID_NONE) mf.envmap = closestenvmap(i, co.x, co.y, co.z, size);
-		}
-		mf.surface = c.ext->surfaces ? &c.ext->surfaces[i] : NULL;
-		mf.normals = c.ext->normals ? &c.ext->normals[i] : NULL;
+        mergedface mf;
+        mf.orient = i;
+        mf.tex = c.texture[i];
+        mf.envmap = EMID_NONE;
+        mf.surface = c.ext->surfaces ? &c.ext->surfaces[i] : NULL;
+        mf.normals = c.ext->normals ? &c.ext->normals[i] : NULL;
         mf.tjoints = -1;
         genmergedverts(c, i, co, size, m, mf.v);
         int level = calcmergedsize(i, co, size, m, mf.v);
@@ -1164,6 +1198,37 @@ void genmergedfaces(cube &c, const ivec &co, int size, int minlevel = -1)
         {
             while(tj >= 0 && tjoints[tj].edge < i*4) tj = tjoints[tj].next;
             if(tj >= 0 && tjoints[tj].edge/4 == i) mf.tjoints = tj;
+
+            Slot &slot = lookuptexture(mf.tex, false),
+                 *layer = slot.layer ? &lookuptexture(slot.layer, false) : NULL;
+            ushort envmap2 = EMID_NONE;
+            if(slot.shader && slot.shader->type&SHADER_ENVMAP)
+            {
+                loopv(slot.sts) if(slot.sts[i].type==TEX_ENVMAP) { mf.envmap = EMID_CUSTOM; break; }
+                if(mf.envmap==EMID_NONE) mf.envmap = closestenvmap(i, co.x, co.y, co.z, size);
+            }
+            if(layer && layer->shader && layer->shader->type&SHADER_ENVMAP)
+            {
+                loopv(layer->sts) if(layer->sts[i].type==TEX_ENVMAP) { envmap2 = EMID_CUSTOM; break; }
+                if(envmap2==EMID_NONE) envmap2 = closestenvmap(i, co.x, co.y, co.z, size);
+            }
+
+            if(c.ext->surfaces)
+            {
+                if(c.ext->surfaces[i].layer&LAYER_BLEND)
+                {
+                    mergedface mf2 = mf;
+                    mf2.tex = slot.layer;
+                    mf2.envmap = envmap2;
+                    mf2.surface = &c.ext->surfaces[5+numblends];
+                    vamerges[level].add(mf2);
+                }
+                else if(c.ext->surfaces[i].layer==LAYER_BOTTOM)
+                {
+                    mf.tex = slot.layer;
+                    mf.envmap = envmap2;
+                }
+            }
 
 			vamerges[level].add(mf);
 			vamergemax = max(vamergemax, level);

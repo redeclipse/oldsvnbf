@@ -938,6 +938,15 @@ void texrotate_(int *rot)
 }
 COMMANDN(texrotate, texrotate_, "i");
 
+void texlayer(int *layer)
+{
+    if(slots.empty()) return;
+    Slot &s = slots.last();
+    s.layer = *layer < 0 ? max(slots.length()-1+*layer, 0) : *layer;
+
+}
+COMMAND(texlayer, "i");
+
 void texscale(float *scale)
 {
     if(slots.empty()) return;
@@ -1135,12 +1144,16 @@ Texture *loadthumbnail(Slot &slot)
             addname(name, slot, slot.sts[glow], true, prefix);
         }
     }
+    Slot *layer = slot.layer ? &lookuptexture(slot.layer, false) : NULL;
+    if(layer) addname(name, *layer, layer->sts[0], true, "<layer>");
     name.add('\0');
     Texture *t = textures.access(path(name.getbuf()));
     if(t) slot.thumbnail = t;
     else
     {
-        SDL_Surface *s = texturedata(NULL, &slot.sts[0], false), *g = glow >= 0 ? texturedata(NULL, &slot.sts[glow], false) : NULL;
+        SDL_Surface *s = texturedata(NULL, &slot.sts[0], false),
+                    *g = glow >= 0 ? texturedata(NULL, &slot.sts[glow], false) : NULL,
+                    *l = layer ? texturedata(NULL, &layer->sts[0], false) : NULL;
         if(!s) slot.thumbnail = notexture;
         else
         {
@@ -1151,12 +1164,24 @@ Texture *loadthumbnail(Slot &slot)
                 if(g->w != s->w || g->h != s->h) g = scalesurface(g, s->w, s->h);
                 addglow(s, g, slot.glowcolor);
             }
+            if(l)
+            {
+                if(l->w != s->w/2 || l->h != s->h/2) l = scalesurface(l, s->w/2, s->h/2);
+                uchar *src = (uchar *)l->pixels;
+                loop(y, l->h) loop(x, l->w)
+                {
+                    uchar *dst = &((uchar *)s->pixels)[s->format->BytesPerPixel*((y + s->h/2)*s->w + x + s->w/2)];
+                    loopk(3) dst[k] = src[k];
+                    src += l->format->BytesPerPixel;
+                }
+            }
             t = newtexture(NULL, name.getbuf(), s, 0, false, false, true);
             t->xs = xs;
             t->ys = ys;
             slot.thumbnail = t;
         }
         if(g) SDL_FreeSurface(g);
+        if(l) SDL_FreeSurface(l);
     }
     return t;
 }

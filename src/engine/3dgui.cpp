@@ -237,12 +237,12 @@ struct gui : g3d_gui
 		return layout(size+SHADOW, size+SHADOW);
 	}
 
-    int texture(Texture *t, float scale, int rotate, int xoff, int yoff, Texture *glowtex, const vec &glowcolor)
+    int texture(Texture *t, float scale, int rotate, int xoff, int yoff, Texture *glowtex, const vec &glowcolor, Texture *layertex)
     {
         autotab();
         if(scale==0) scale = 1;
         int size = (int)(scale*2*FONTH)-SHADOW;
-        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+SHADOW, size+SHADOW), rotate, xoff, yoff, glowtex, glowcolor);
+        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+SHADOW, size+SHADOW), rotate, xoff, yoff, glowtex, glowcolor, layertex);
         return layout(size+SHADOW, size+SHADOW);
     }
 
@@ -472,7 +472,7 @@ struct gui : g3d_gui
         defaultshader->set();
     }
 
-    void icon_(Texture *t, bool overlaid, bool tiled, int x, int y, int size, bool hit, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1))
+    void icon_(Texture *t, bool overlaid, bool tiled, int x, int y, int size, bool hit, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL)
 	{
 		float xs, ys, xt, yt;
 		if(tiled)
@@ -540,6 +540,18 @@ struct gui : g3d_gui
             glEnd();
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
+        if(layertex)
+        {
+            glBindTexture(GL_TEXTURE_2D, layertex->id);
+            glColor3fv(color.v);
+            glBegin(GL_QUADS);
+            glTexCoord2fv(tc[0]); glVertex2f(x+xs/2, y+ys/2);
+            glTexCoord2fv(tc[1]); glVertex2f(x+xs,   y+ys/2);
+            glTexCoord2fv(tc[2]); glVertex2f(x+xs,   y+ys);
+            glTexCoord2fv(tc[3]); glVertex2f(x+xs/2, y+ys);
+            glEnd();
+        }
+
 		if(tiled) defaultshader->set();
 		if(overlaid)
 		{
