@@ -86,18 +86,14 @@ struct entities : icliententities
 					entlinks[i].add(SPOTLIGHT);
 					break;
 				case MAPMODEL:
-					entlinks[i].add(MAPSOUND);
-					entlinks[i].add(PARTICLES);
 					entlinks[i].add(TRIGGER);
 					break;
 				case PARTICLES:
-					entlinks[i].add(MAPMODEL);
 					entlinks[i].add(TELEPORT);
 					entlinks[i].add(TRIGGER);
 					entlinks[i].add(PUSHER);
 					break;
 				case MAPSOUND:
-					entlinks[i].add(MAPMODEL);
 					entlinks[i].add(TELEPORT);
 					entlinks[i].add(TRIGGER);
 					entlinks[i].add(PUSHER);
@@ -167,21 +163,33 @@ struct entities : icliententities
 		{
 			if(isgun(attr1))
 			{
-				int a = clamp(attr2 > 0 ? attr2 : guntype[attr1].add, 1, guntype[attr1].max);
-				if(full) s_sprintf(str)("\fs%s%s\fS, %d ammo", guntype[attr1].text, guntype[attr1].name, a);
-				else s_sprintf(str)("\fs%s%s\fS", guntype[attr1].text, guntype[attr1].name);
+				s_sprintf(str)("\fs%s%s\fS", guntype[attr1].text, guntype[attr1].name);
 				addentinfo(str);
+				if(full)
+				{
+					if(attr2&GNT_FORCED) addentinfo("forced");
+				}
+			}
+		}
+		if(type == MAPMODEL)
+		{
+			if(mapmodels.inrange(attr1)) addentinfo(mapmodels[attr1].name);
+			if(full)
+			{
+				if(attr5&MMT_HIDE) addentinfo("hide");
+				if(attr5&MMT_NOCLIP) addentinfo("noclip");
+				if(attr5&MMT_NOSHADOW) addentinfo("noshadow");
+				if(attr5&MMT_NODYNSHADOW) addentinfo("nodynshadow");
 			}
 		}
 		if(type == MAPSOUND)
 		{
+			if(mapsounds.inrange(attr1)) addentinfo(mapsounds[attr1].sample->name);
 			if(full)
 			{
-				if(mapsounds.inrange(attr1))
-					addentinfo(mapsounds[attr1].sample->name);
-				if(attr5 & 0x01) addentinfo("noatten");
-				if(attr5 & 0x02) addentinfo("nodelay");
-				if(attr5 & 0x04) addentinfo("nocull");
+				if(attr5&SND_NOATTEN) addentinfo("noatten");
+				if(attr5&SND_NODELAY) addentinfo("nodelay");
+				if(attr5&SND_NOCULL) addentinfo("nocull");
 			}
 		}
 		if(type == TRIGGER)
@@ -266,7 +274,7 @@ struct entities : icliententities
 	// these two functions are called when the server acknowledges that you really
 	// picked up the item (in multiplayer someone may grab it before you).
 
-	void useeffects(gameent *d, int n, int g, int r)
+	void useeffects(gameent *d, int n, bool s, int g, int r)
 	{
 		if(ents.inrange(n))
 		{
@@ -296,7 +304,7 @@ struct entities : icliententities
 			if(ents.inrange(r) && ents[r]->type == WEAPON && isgun(ents[r]->attr1))
 				cl.pj.drop(d, ents[r]->attr1, r, (d->gunwait[ents[r]->attr1]/2)-50);
 			regularshape(PART_PLASMA, enttype[e.type].radius, 0x888822, 53, 50, 200, pos, 2.f);
-			e.spawned = false;
+			e.spawned = s;
 		}
 	}
 
@@ -537,19 +545,34 @@ struct entities : icliententities
 		return (showentinfo() || cl.player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy() >= 2 || (showentnoisy() && cl.player1->state == CS_EDITING));
 	}
 
-	void fixentity(extentity &e)
+	void fixsound(extentity &e)
 	{
 		gameentity &f = (gameentity &)e;
-
 		if(issound(f.schan))
 		{
 			removesound(f.schan);
 			f.schan = -1; // prevent clipping when moving around
 			if(f.type == MAPSOUND) f.lastemit = lastmillis;
 		}
+	}
 
+	void fixentity(extentity &e)
+	{
+		fixsound(e);
 		switch(e.type)
 		{
+			case MAPMODEL:
+			{
+				if(!e.lastemit) loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER)
+				{
+					if(ents[e.links[i]]->lastemit < e.lastemit)
+					{
+						e.lastemit = ents[e.links[i]]->lastemit;
+						e.spawned = ents[e.links[i]]->spawned;
+					}
+				}
+				break;
+			}
 			case WEAPON:
 				while(e.attr1 < 0) e.attr1 += GUN_MAX;
 				while(e.attr1 >= GUN_MAX) e.attr1 -= GUN_MAX;
@@ -566,6 +589,9 @@ struct entities : icliententities
 				while(e.attr1 >= 360) e.attr1 -= 360;
 				while(e.attr2 < 0) e.attr2 += 360;
 				while(e.attr2 >= 360) e.attr2 -= 360;
+				break;
+			case TRIGGER:
+				e.lastemit = lastmillis;
 				break;
 			default:
 				break;
@@ -724,6 +750,7 @@ struct entities : icliententities
 				if(!add || (toggle && (!canlink(node, index) || (h = f.links.find(index)) >= 0)))
 				{
 					e.links.remove(g);
+					fixentity(e); fixentity(f);
 					if(local && m_edit(cl.gamemode))
 						cl.cc.addmsg(SV_EDITLINK, "ri3", 0, index, node);
 
@@ -734,6 +761,7 @@ struct entities : icliententities
 				else if(toggle && canlink(node, index))
 				{
 					f.links.add(index);
+					fixentity(e); fixentity(f);
 					if(local && m_edit(cl.gamemode))
 						cl.cc.addmsg(SV_EDITLINK, "ri3", 1, node, index);
 
@@ -745,6 +773,7 @@ struct entities : icliententities
 			else if(toggle && canlink(node, index) && (g = f.links.find(index)) >= 0)
 			{
 				f.links.remove(g);
+				fixentity(e); fixentity(f);
 				if(local && m_edit(cl.gamemode))
 					cl.cc.addmsg(SV_EDITLINK, "ri3", 0, node, index);
 
@@ -755,6 +784,7 @@ struct entities : icliententities
 			else if(toggle || add)
 			{
 				e.links.add(node);
+				fixentity(e); fixentity(f);
 				if(local && m_edit(cl.gamemode))
 					cl.cc.addmsg(SV_EDITLINK, "ri3", 1, index, node);
 
@@ -1203,6 +1233,7 @@ struct entities : icliententities
 					if(mtype == MAP_BFGZ && gver <= 97 && e.attr1 >= 4)
 						e.attr1++; // add in carbine
 					if(e.attr1 == GUN_PLASMA) e.attr1 = GUN_CARBINE; // plasma is permanent
+					if(mtype != MAP_BFGZ || gver <= 112) e.attr2 = 0;
 					break;
 				}
 				case PUSHER:

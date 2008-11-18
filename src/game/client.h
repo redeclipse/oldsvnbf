@@ -886,7 +886,7 @@ struct clientcom : iclientcom
 					}
 					gameent *s = cl.getclient(scn);
 					if(!s || !isgun(gun)) break;
-					s->setgunstate(gun, GUNSTATE_SHOOT, guntype[gun].adelay, lastmillis);
+					s->setgunstate(gun, GNS_SHOOT, guntype[gun].adelay, lastmillis);
 					cl.pj.shootv(gun, power, from, locs, s, false);
 					break;
 				}
@@ -913,7 +913,7 @@ struct clientcom : iclientcom
 					int trg = getint(p), gun = getint(p), amt = getint(p);
 					gameent *target = cl.getclient(trg);
 					if(!target || !isgun(gun)) break;
-					target->setgunstate(gun, GUNSTATE_RELOAD, guntype[gun].rdelay, lastmillis);
+					target->setgunstate(gun, GNS_RELOAD, guntype[gun].rdelay, lastmillis);
 					target->ammo[gun] = amt;
 					target->reqreload = -1;
 					playsound(S_RELOAD, target->o, target);
@@ -1016,10 +1016,10 @@ struct clientcom : iclientcom
 
 				case SV_ITEMACC:
 				{ // uses a specific drop so the client knows what to replace
-					int lcn = getint(p), ent = getint(p), gun = getint(p), drop = getint(p);
+					int lcn = getint(p), ent = getint(p), spawn = getint(p), gun = getint(p), drop = getint(p);
 					gameent *target = cl.getclient(lcn);
 					if(!target) break;
-					cl.et.useeffects(target, ent, gun, drop);
+					cl.et.useeffects(target, ent, spawn, gun, drop);
 					target->requse = -1;
 					break;
 				}

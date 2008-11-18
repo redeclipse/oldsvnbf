@@ -84,16 +84,18 @@ struct projectiles
 
 	void drop(gameent *d, int g, int n, int delay = 0)
 	{
-		if(n >= 0)
+		if(isgun(g))
 		{
-			if(cl.et.ents.inrange(n))
+			if(n >= 0)
 			{
-				gameentity &e = (gameentity &)*cl.et.ents[n];
-				create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_ENT, 0, delay, 20, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+				if(cl.et.ents.inrange(n) && !(cl.et.ents[n]->attr2&GNT_FORCED))
+					create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_ENT, 0, delay, 20, n,
+						cl.et.ents[n]->type, cl.et.ents[n]->attr1, cl.et.ents[n]->attr2, cl.et.ents[n]->attr3, cl.et.ents[n]->attr4, cl.et.ents[n]->attr5);
 			}
+			else if(g == GUN_GL)
+				create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_SHOT, 500, 50, 5, -1, WEAPON, d->gunselect);
+			d->ammo[g] = d->entid[g] = -1;
 		}
-		else if(g == GUN_GL)
-			create(d->o, d->o, d == cl.player1 || d->ai, d, PRJ_SHOT, 500, 50, 5, -1, WEAPON, d->gunselect);
 	}
 
 	void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local)	 // create visual effect from a shot
@@ -186,8 +188,8 @@ struct projectiles
 
 	void init(projent &proj, bool waited)
 	{
-		if(proj.projtype == PRJ_SHOT)
-			proj.from = proj.o = cl.ws.gunorigin(proj.owner->o, proj.to, proj.owner, proj.owner != cl.player1 || cl.isthirdperson());
+		//if(proj.projtype == PRJ_SHOT)
+		//	proj.from = proj.o = cl.ws.gunorigin(proj.owner->o, proj.to, proj.owner, proj.owner != cl.player1 || cl.isthirdperson());
 
 		switch(proj.projtype)
 		{
@@ -250,6 +252,7 @@ struct projectiles
 				proj.geomcollide = 1; // bounce
 				proj.playercollide = 0; // don't
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
+				proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-11));
 				break;
 			}
 			default: break;
@@ -263,25 +266,33 @@ struct projectiles
 			proj.height += proj.projtype == PRJ_ENT ? 4.f : 1.f;
 		}
 
-		vec dir(vec(vec(proj.to).sub(proj.o)).normalize());
+		vec dir(vec(vec(proj.to).sub(proj.o)).normalize()), orig = proj.o;
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
 		vec rel = vec(proj.vel).add(dir);
 		if(proj.relativity) rel.add(vec(proj.owner->vel).mul(proj.relativity));
 		proj.vel = vec(rel).add(vec(dir).mul(proj.maxspeed));
 		proj.spawntime = lastmillis;
-		proj.to = vec(proj.o).add(proj.vel);
 		proj.movement = 1;
 
-		if(proj.owner)
+		if(proj.projtype == PRJ_SHOT && proj.radial)
+			proj.height = proj.radius = guntype[proj.attr1].explode*0.1f;
+		if(proj.playercollide || proj.geomcollide) loopi(100)
 		{
-			if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
-				proj.height = proj.radius = guntype[proj.attr1].explode;
-			for(hitplayer = NULL; !plcollide(&proj) && hitplayer == proj.owner; hitplayer = NULL)
-				proj.o.add(vec(proj.vel).mul(0.01f)); // get out of the player
-			if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].explode)
-				proj.height = proj.radius = guntype[proj.attr1].offset;
+			proj.hit = NULL;
+			proj.o.add(vec(proj.vel).normalize()); // gets it off to a start even when we bail
+			if(!collide(&proj) || inside || (proj.playercollide && hitplayer))
+			{
+				if((!hitplayer && proj.geomcollide) || (hitplayer && proj.playercollide && hitplayer != proj.owner))
+				{
+					proj.o = orig;
+					proj.state = CS_DEAD;
+					break;
+				}
+			}
+			else break;
 		}
-
+		if(proj.projtype == PRJ_SHOT && proj.radial)
+			proj.height = proj.radius = guntype[proj.attr1].offset;
         proj.resetinterp();
 	}
 
@@ -587,7 +598,7 @@ struct projectiles
 		}
 		dir.mul(secs);
 		proj.o.add(dir);
-
+		proj.hit = NULL;
 		if(!collide(&proj, dir, 0.f, proj.playercollide > 0) || inside || (proj.playercollide && hitplayer))
 		{
 			proj.o = old;

@@ -22,6 +22,14 @@ struct entitylight
 };
 
 #define TRIGGERTIME 1000
+enum
+{
+	MMT_NONE = 0,
+	MMT_HIDE = 1<<0, // hide when triggered (trigger)
+	MMT_NOCLIP = 1<<1, // always not collide
+	MMT_NOSHADOW = 1<<2, // doesn't cast a lightmap shadow
+	MMT_NODYNSHADOW = 1<<3, // doesn't cast a shadow map (trigger)
+};
 
 struct extentity : entity                       // part of the entity that doesn't get saved to disk
 {

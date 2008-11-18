@@ -81,7 +81,7 @@ struct duelservmode : servmode
 
 	void update()
 	{
-		if(sv.interm) return;
+		if(sv.interm || !sv.numclients()) return;
 
 		cleanup();
 
