@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			112
+#define GAMEVERSION			113
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -30,13 +30,13 @@ enum								// entity types
 {
 	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
 	LIGHT = ET_LIGHT,				// 1  radius, intensity or red, green, blue
-	MAPMODEL = ET_MAPMODEL,			// 2  idx, yaw, pitch, roll, time
+	MAPMODEL = ET_MAPMODEL,			// 2  idx, yaw, pitch, roll, flags
 	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, team, id
 	ENVMAP = ET_ENVMAP,				// 4  radius
 	PARTICLES = ET_PARTICLES,		// 5  type, [others]
 	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume, flags
 	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
-	WEAPON = ET_GAMESPECIFIC,		// 8  gun, ammo
+	WEAPON = ET_GAMESPECIFIC,		// 8  gun, flags
 	TELEPORT,						// 9  yaw, pitch, push, [radius] [portal]
 	RESERVED,						// 10
 	TRIGGER,						// 11 idx, type, acttype, [radius]
@@ -112,12 +112,18 @@ enum
 
 enum
 {
-	GUNSTATE_IDLE = 0,
-	GUNSTATE_SHOOT,
-	GUNSTATE_RELOAD,
-	GUNSTATE_POWER,
-	GUNSTATE_SWITCH,
-	GUNSTATE_MAX
+	GNT_NONE = 0,
+	GNT_FORCED = 1<<0, // forced spawned
+};
+
+enum
+{
+	GNS_IDLE = 0,
+	GNS_SHOOT,
+	GNS_RELOAD,
+	GNS_POWER,
+	GNS_SWITCH,
+	GNS_MAX
 };
 
 struct guntypes
@@ -139,7 +145,7 @@ struct guntypes
 			20,		20,		200,	800,	20,		200,	0,		10000,
 			0,		18,			1,		5,		0,		2,				2,
 			false,	true,		false,
-			2.0f,	0.f,		0.f,			0.05f,		1.0f,		0.f,
+			1.0f,	0.f,		0.f,			0.1f,		1.0f,		0.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},
@@ -527,7 +533,7 @@ struct gamestate
 		{
 			if(full)
 			{
-				gunstate[i] = GUNSTATE_IDLE;
+				gunstate[i] = GNS_IDLE;
 				gunwait[i] = gunlast[i] = 0;
 				ammo[i] = -1;
 			}
@@ -549,9 +555,9 @@ struct gamestate
 	void gunswitch(int gun, int millis)
 	{
 		lastgun = gunselect;
-		setgunstate(lastgun, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
+		setgunstate(lastgun, GNS_SWITCH, GUNSWITCHDELAY, millis);
 		gunselect = gun;
-		setgunstate(gun, GUNSTATE_SWITCH, GUNSWITCHDELAY, millis);
+		setgunstate(gun, GNS_SWITCH, GUNSWITCHDELAY, millis);
 	}
 
 	bool gunwaited(int gun, int millis)
@@ -610,7 +616,7 @@ struct gamestate
 			case WEAPON:
 			{
 				gunswitch(attr1, millis);
-				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+(attr2 > 0 ? attr2 : guntype[attr1].add), 1, guntype[attr1].max);
+				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+guntype[attr1].add, 1, guntype[attr1].max);
 				if(guntype[attr1].rdelay > 0) entid[attr1] = id;
 				break;
 			}
@@ -633,7 +639,7 @@ struct gamestate
 		lastgun = gunselect = spawngun;
 		loopi(GUN_MAX)
 		{
-			gunstate[i] = GUNSTATE_IDLE;
+			gunstate[i] = GNS_IDLE;
 			gunwait[i] = gunlast[i] = 0;
 			ammo[i] = (i == spawngun || (reloadables && guntype[i].rdelay <= 0)) ? guntype[i].add : -1;
 			entid[i] = -1;

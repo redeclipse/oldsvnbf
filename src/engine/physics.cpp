@@ -134,11 +134,19 @@ int hitent, hitorient;
 
 #define mapmodelskip \
 	{ \
+			if(e.attr5&MMT_NOCLIP) continue; \
 			if(e.lastemit) \
 			{ \
-				int millis = lastmillis-e.lastemit; \
-				if(!e.spawned && millis < TRIGGERTIME/2) continue; \
-				if(e.spawned && millis > TRIGGERTIME/2) continue; \
+				if(e.attr5&MMT_HIDE) \
+				{ \
+					if(e.spawned) continue; \
+				} \
+				else \
+				{ \
+					int millis = lastmillis-e.lastemit; \
+					if(!e.spawned && millis < TRIGGERTIME/2) continue; \
+					if(e.spawned && millis > TRIGGERTIME/2) continue; \
+				} \
 			} \
 	}
 
@@ -200,8 +208,8 @@ static float shadowent(octaentities *oc, octaentities *last, const vec &o, const
 	loopv(oc->mapmodels) if(!last || last->mapmodels.find(oc->mapmodels[i])<0)
 	{
 		extentity &e = *ents[oc->mapmodels[i]];
-		mapmodelskip;
 		if(!e.inoctanode || &e==t) continue;
+		if(e.lastemit || e.attr5&MMT_NOSHADOW) continue;
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
 		if(f>0 && f<dist) dist = f;
 	}

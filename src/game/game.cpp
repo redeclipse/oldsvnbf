@@ -396,10 +396,10 @@ struct gameclient : igameclient
 	void checkoften(gameent *d)
 	{
 		heightoffset(d, d == player1 || d->ai);
-		loopi(GUN_MAX) if(d->gunstate[i] != GUNSTATE_IDLE)
+		loopi(GUN_MAX) if(d->gunstate[i] != GNS_IDLE)
 		{
-			if(d->state != CS_ALIVE || (d->gunstate[i] != GUNSTATE_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
-				d->setgunstate(i, GUNSTATE_IDLE, 0, lastmillis);
+			if(d->state != CS_ALIVE || (d->gunstate[i] != GNS_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
+				d->setgunstate(i, GNS_IDLE, 0, lastmillis);
 		}
 
 		if(d->reqswitch > 0 && lastmillis-d->reqswitch > GUNSWITCHDELAY*2)
@@ -917,7 +917,7 @@ struct gameclient : igameclient
                           cx, cy, psize/2.0f);
                 break;
         }
-		if(showindicator() && guntype[gun].power && player1->gunselect == gun && player1->gunstate[gun] == GUNSTATE_POWER)
+		if(showindicator() && guntype[gun].power && player1->gunselect == gun && player1->gunstate[gun] == GNS_POWER)
 		{
 			px = x;
 			py = y;
@@ -2309,7 +2309,7 @@ struct gameclient : igameclient
 			secondary = third && allowmove(d);
 			if(showgun)
 			{
-				int gunstate = GUNSTATE_IDLE;
+				int gunstate = GNS_IDLE;
 				if(lastmillis-d->gunlast[gun] <= d->gunwait[gun])
 				{
 					gunstate = d->gunstate[gun];
@@ -2318,7 +2318,7 @@ struct gameclient : igameclient
 				}
 				switch(gunstate)
 				{
-					case GUNSTATE_SWITCH:
+					case GNS_SWITCH:
 					{
 						if(lastmillis-d->gunlast[gun] <= d->gunwait[gun]/2)
 						{
@@ -2328,25 +2328,25 @@ struct gameclient : igameclient
 						animflags = ANIM_SWITCH;
 						break;
 					}
-					case GUNSTATE_POWER:
+					case GNS_POWER:
 					{
-						if(!guntype[gun].power) gunstate = GUNSTATE_SHOOT;
+						if(!guntype[gun].power) gunstate = GNS_SHOOT;
 						animflags = (guntype[gun].anim+gunstate);
 						break;
 					}
-					case GUNSTATE_SHOOT:
-					{
-						if(guntype[gun].power) showgun = false;
-						animflags = (guntype[gun].anim+gunstate);
-						break;
-					}
-					case GUNSTATE_RELOAD:
+					case GNS_SHOOT:
 					{
 						if(guntype[gun].power) showgun = false;
 						animflags = (guntype[gun].anim+gunstate);
 						break;
 					}
-					case GUNSTATE_IDLE:	default:
+					case GNS_RELOAD:
+					{
+						if(guntype[gun].power) showgun = false;
+						animflags = (guntype[gun].anim+gunstate);
+						break;
+					}
+					case GNS_IDLE:	default:
 					{
 						if(!d->hasgun(gun)) showgun = false;
 						else animflags = (guntype[gun].anim+gunstate)|ANIM_LOOP;

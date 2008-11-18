@@ -137,9 +137,9 @@ struct weaponstate
 		{
 			if(!pow)
 			{
-				if(d->gunstate[d->gunselect] != GUNSTATE_POWER) // FIXME: not synched in MP yet!!
+				if(d->gunstate[d->gunselect] != GNS_POWER) // FIXME: not synched in MP yet!!
 				{
-					if(d->attacking) d->setgunstate(d->gunselect, GUNSTATE_POWER, 0, lastmillis);
+					if(d->attacking) d->setgunstate(d->gunselect, GNS_POWER, 0, lastmillis);
 					else return;
 				}
 
@@ -153,7 +153,7 @@ struct weaponstate
 		else if(!d->attacking) return;
 
 		if(guntype[d->gunselect].max) d->ammo[d->gunselect] = max(d->ammo[d->gunselect]-1, 0);
-		d->setgunstate(d->gunselect, GUNSTATE_SHOOT, guntype[d->gunselect].adelay, lastmillis);
+		d->setgunstate(d->gunselect, GNS_SHOOT, guntype[d->gunselect].adelay, lastmillis);
 		d->totalshots += int(guntype[d->gunselect].damage*damagescale)*guntype[d->gunselect].rays;
 
 		vec to = targ, from = gunorigin(d->o, to, d, d != cl.player1 || cl.isthirdperson()), unitv;
