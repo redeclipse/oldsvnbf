@@ -960,7 +960,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 					lm.unlity = readushort(f);
 				}
 			}
-            if(lm.type&LM_ALPHA) lm.bpp = 4;
+            if(lm.type&LM_ALPHA && (lm.type&LM_TYPE)!=LM_BUMPMAP1) lm.bpp = 4;
             lm.data = new uchar[lm.bpp*LM_PACKW*LM_PACKH];
             gzread(f, lm.data, lm.bpp * LM_PACKW * LM_PACKH);
 			lm.finalize();
