@@ -333,11 +333,11 @@ static void blitblendmap(uchar &type, BlendMapNode &node, int bmx, int bmy, int 
                 break;
 
             case 4:
-                loopi(x2 - x1) dst[i] = max(int(dst[i]) - int(src[i]), 0);
+                loopi(x2 - x1) dst[i] = min(dst[i], 0xFF - src[i]);
                 break;
 
             case 5:
-                loopi(x2 - x1) dst[i] = min(int(dst[i]) + int(src[i]), 0xFF);
+                loopi(x2 - x1) dst[i] = max(dst[i], 0xFF - src[i]);
                 break;
         }
         dst += BM_IMAGE_SIZE;
