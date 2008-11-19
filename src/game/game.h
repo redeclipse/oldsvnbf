@@ -915,7 +915,7 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
 struct projent : dynent
 {
 	vec from, to;
-	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect;
+	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect, lastbounce;
 	float movement, roll, lifespan, lifesize;
 	bool local, beenused, radial, extinguish;
 	int projtype, geomcollide, playercollide;
@@ -941,7 +941,7 @@ struct projent : dynent
 		physent::reset();
 		type = ENT_BOUNCE;
 		state = CS_ALIVE;
-		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = 0;
+		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = 0;
 		ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
 		schan = id = -1;
 		movement = roll = lifespan = lifesize = 0.f;

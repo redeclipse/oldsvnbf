@@ -366,7 +366,6 @@ struct projectiles
 					{
 						if(proj.lifetime)
 							part_splash(PART_SPARK, proj.attr1 == GUN_SG ? 5 : 10, 500, proj.o, 0xFFAA22, proj.radius*(proj.attr1 == GUN_SG ? 0.25f : 0.1f));
-						adddecal(DECAL_BULLET, proj.o, vec(proj.vel).neg().normalize(), proj.radius*(proj.attr1 == GUN_SG ? 2.f : 1.f));
 						break;
 					}
 					case GUN_CARBINE: case GUN_RIFLE:
@@ -601,21 +600,21 @@ struct projectiles
 		proj.hit = NULL;
 		if(!collide(&proj, dir, 0.f, proj.playercollide > 0) || inside || (proj.playercollide && hitplayer))
 		{
+			vec norm, pos = proj.o;
 			proj.o = old;
-			vec pos;
-			if(proj.playercollide && hitplayer)
+			if(hitplayer)
 			{
 				proj.hit = hitplayer;
-				pos = vec(vec(hitplayer->o).sub(proj.o)).normalize();
+				norm = vec(hitplayer->o).sub(pos).normalize();
 			}
-			else pos = wall;
+			else norm = wall;
 
 			if((!hitplayer && proj.geomcollide == 1) || (hitplayer && proj.playercollide == 1))
 			{
-				if(proj.movement > 2.f)
+				if(proj.movement > 2.f || !proj.lastbounce)
 				{
-					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 1, 255);
-					if(!hitplayer) switch(proj.projtype)
+					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
+					switch(proj.projtype)
 					{
 						case PRJ_SHOT:
 						{
@@ -623,41 +622,47 @@ struct projectiles
 							{
 								case GUN_SG: case GUN_CG:
 								{
-									part_splash(PART_SPARK, 3, 250, proj.o, 0xFFAA22, proj.radius*(proj.attr1 == GUN_SG ? 0.25f : 0.1f));
-									adddecal(DECAL_BULLET, proj.o, wall, proj.radius*(proj.attr1 == GUN_SG ? 2.f : 1.f));
+									part_splash(PART_SPARK, 3, 250, pos, 0xFFAA22, proj.radius*(proj.attr1 == GUN_SG ? 0.25f : 0.1f));
+									if(!proj.lastbounce)
+										adddecal(DECAL_BULLET, pos, norm, proj.radius*(proj.attr1 == GUN_SG ? 3.f : 1.5f));
 									break;
 								}
 								case GUN_FLAMER:
 								{
-									adddecal(DECAL_SCORCH, proj.o, wall, 32.f*proj.lifesize);
-									adddecal(DECAL_ENERGY, proj.o, wall, 12.f*proj.lifesize, bvec(92, 12, 0));
+									if(!proj.lastbounce)
+									{
+										adddecal(DECAL_SCORCH, pos, norm, 32.f*proj.lifesize);
+										adddecal(DECAL_ENERGY, pos, norm, 12.f*proj.lifesize, bvec(92, 12, 0));
+									}
 									break;
 								}
 								default: break;
 							}
+							if(vol && guntype[proj.attr1].rsound >= 0)
+								playsound(guntype[proj.attr1].rsound, pos, &proj, 0, vol);
 							break;
 						}
 						case PRJ_GIBS:
 						{
-							adddecal(DECAL_BLOOD, proj.o, wall, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
+							if(!proj.lastbounce)
+								adddecal(DECAL_BLOOD, pos, norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
+							if(vol) playsound(S_SPLAT, pos, &proj, 0, vol);
+							break;
+						}
+						case PRJ_DEBRIS:
+						{
+							if(vol) playsound(S_DEBRIS, pos, &proj, 0, vol);
 							break;
 						}
 						default: break;
 					}
-
-					if(vol)
-					{
-						if(proj.projtype == PRJ_SHOT && guntype[proj.attr1].rsound >= 0)
-							playsound(guntype[proj.attr1].rsound, proj.o, &proj, 0, vol);
-						else if(proj.projtype == PRJ_GIBS) playsound(S_SPLAT, proj.o, &proj, 0, vol);
-						else if(proj.projtype == PRJ_DEBRIS) playsound(S_DEBRIS, proj.o, &proj, 0, vol);
-					}
 				}
-				reflect(proj, pos);
+				reflect(proj, norm);
 				proj.movement = 0;
+				proj.lastbounce = lastmillis;
 				return true; // stay alive until timeout
 			}
-			proj.vel = vec(pos).mul(proj.radius).neg();
+			proj.vel = vec(norm).mul(proj.radius).neg();
 			proj.movement = 0;
 			return false; // die on impact
 		}
