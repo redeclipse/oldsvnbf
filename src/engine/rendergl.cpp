@@ -1750,11 +1750,13 @@ void drawview(int targtype)
 	{
         glDepthMask(GL_FALSE);
 
+        // nvidia driver bug - should not be necessary, but nvidia driver seems to slightly alter the modelview matrix when restoring it after an earlier glPopMatrix
+        transplayer();
+        renderblendbrush();
+
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		cursorupdate();
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        renderblendbrush();
 
         glDepthMask(GL_TRUE);
 	}
