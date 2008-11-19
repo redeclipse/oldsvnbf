@@ -654,14 +654,14 @@ void renderblendbrush(GLuint tex, float x, float y, float w, float h)
 
     glPushMatrix();
 
+    glDepthFunc(GL_LEQUAL);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, tex);
     glColor4ub((blendbrushcolor>>16)&0xFF, (blendbrushcolor>>8)&0xFF, blendbrushcolor&0xFF, 0x40);
-
-    enablepolygonoffset(GL_POLYGON_OFFSET_FILL);
 
     GLfloat s[4] = { 0, 0, 0, 0 }, t[4] = { 0, 0, 0, 0 };
     if(renderpath==R_FIXEDFUNCTION) setuptexgen();
@@ -709,10 +709,10 @@ void renderblendbrush(GLuint tex, float x, float y, float w, float h)
 
     if(renderpath==R_FIXEDFUNCTION) disabletexgen();
 
-    disablepolygonoffset(GL_POLYGON_OFFSET_FILL);
-
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
+
+    glDepthFunc(GL_LESS);
 
     glPopMatrix();
 
