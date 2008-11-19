@@ -1748,13 +1748,15 @@ void drawview(int targtype)
 	notextureshader->set();
 	if(editmode && !hidehud)
 	{
+        glDepthMask(GL_FALSE);
+
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDepthMask(GL_FALSE);
 		cursorupdate();
-		glDepthMask(GL_TRUE);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         renderblendbrush();
+
+        glDepthMask(GL_TRUE);
 	}
 
 	glDisable(GL_DEPTH_TEST);
