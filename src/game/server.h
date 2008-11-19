@@ -2225,13 +2225,16 @@ struct gameserver : igameserver
 		if(!sents[e.ent].spawned)
 		{
 			bool found = false;
-			if(!(sents[e.ent].attr2&GNT_FORCED)) loopv(clients)
+			if(!(sents[e.ent].attr2&GNT_FORCED)) 
 			{
-				clientinfo *cp = clients[i];
-				if(cp->state.dropped.projs.find(e.ent) >= 0)
+				loopv(clients)
 				{
-					cp->state.dropped.remove(e.ent);
-					found = true;
+					clientinfo *cp = clients[i];
+					if(cp->state.dropped.projs.find(e.ent) >= 0)
+					{
+						cp->state.dropped.remove(e.ent);
+						found = true;
+					}
 				}
 			}
 			if(!found) return;

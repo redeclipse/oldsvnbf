@@ -563,12 +563,15 @@ struct entities : icliententities
 		{
 			case MAPMODEL:
 			{
-				if(!e.lastemit) loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER)
+				if(!e.lastemit)
 				{
-					if(ents[e.links[i]]->lastemit < e.lastemit)
+					loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER)
 					{
-						e.lastemit = ents[e.links[i]]->lastemit;
-						e.spawned = ents[e.links[i]]->spawned;
+						if(ents[e.links[i]]->lastemit < e.lastemit)
+						{
+							e.lastemit = ents[e.links[i]]->lastemit;
+							e.spawned = ents[e.links[i]]->spawned;
+						}
 					}
 				}
 				break;
