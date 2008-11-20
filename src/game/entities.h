@@ -308,11 +308,17 @@ struct entities : icliententities
 		}
 	}
 
-	bool collateitems(gameent *d, bool use, vector<actitem> &actitems)
+	static int sortitems(const actitem *a, const actitem *b)
+	{
+		if(a->score > b->score) return -1;
+		if(a->score < b->score) return 1;
+		return 0;
+	}
+
+	bool collateitems(gameent *d, vector<actitem> &actitems)
 	{
 		float eye = d->height*0.5f;
-		vec m = d->o;
-		m.z -= eye;
+		vec m = vec(d->o).sub(vec(0, 0, eye));
 
 		loopv(ents)
 		{
@@ -329,7 +335,6 @@ struct entities : icliententities
 			t.type = ITEM_ENT;
 			t.target = i;
 			t.score = m.squaredist(e.o);
-			break;
 		}
 		loopv(cl.pj.projs)
 		{
@@ -344,21 +349,38 @@ struct entities : icliententities
 			t.target = i;
 			t.score = m.squaredist(proj.o);
 		}
-		return !actitems.empty();
+		if(!actitems.empty())
+		{
+			actitems.sort(sortitems); // sort items so last is closest
+			return true;
+		}
+		return false;
 	}
 
 	void execitem(int n, gameent *d)
 	{
 		gameentity &e = *(gameentity *)ents[n];
-		if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis))
+		if(!d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis))
 		{
-			if(enttype[e.type].usetype == EU_ITEM && d->useaction && d->requse < 0)
+			if(enttype[e.type].usetype == EU_ITEM && d->useaction)
 			{
-				cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, n);
 				d->useaction = false;
-				d->requse = lastmillis;
+				if(d == cl.player1) playsound(S_DENIED, d->o, d);
 			}
-			else if(enttype[e.type].usetype == EU_AUTO)
+		}
+		else switch(enttype[e.type].usetype)
+		{
+			case EU_ITEM:
+			{
+				if(d->useaction && d->requse < 0)
+				{
+					cl.cc.addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-cl.maptime, n);
+					d->useaction = false;
+					d->requse = lastmillis;
+				}
+				break;
+			}
+			case EU_AUTO:
 			{
 				if(e.type != TRIGGER || ((e.attr3 == TA_ACT && d->useaction && d == cl.player1) || e.attr3 == TA_AUTO))
 				{
@@ -401,7 +423,6 @@ struct entities : icliententities
 							}
 							break;
 						}
-
 						case PUSHER:
 						{
 							vec dir((int)(char)e.attr3*10.f, (int)(char)e.attr2*10.f, e.attr1*10.f);
@@ -419,7 +440,6 @@ struct entities : icliententities
 							}
 							break;
 						}
-
 						case TRIGGER:
 						{
 							if(lastmillis-e.lastuse >= TRIGGERTIME)
@@ -449,12 +469,8 @@ struct entities : icliententities
 						}
 					}
 				}
+				break;
 			}
-		}
-		else if(enttype[e.type].usetype == EU_ITEM && d->useaction)
-		{
-			d->useaction = false;
-			if(d == cl.player1) playsound(S_DENIED, d->o, d);
 		}
 	}
 
@@ -462,16 +478,11 @@ struct entities : icliententities
 	{
 		static vector<actitem> actitems;
         actitems.setsizenodelete(0);
-		if(collateitems(d, true, actitems))
+		if(collateitems(d, actitems))
 		{
 			while(!actitems.empty())
 			{
-				int closest = actitems.length()-1;
-				loopv(actitems)
-					if(actitems[i].score < actitems[closest].score)
-						closest = i;
-
-				actitem &t = actitems[closest];
+				actitem &t = actitems.last();
 				int ent = -1;
 				switch(t.type)
 				{
@@ -491,7 +502,7 @@ struct entities : icliententities
 					default: break;
 				}
 				if(ents.inrange(ent)) execitem(ent, d);
-				actitems.removeunordered(closest);
+				actitems.pop();
 			}
 		}
 		if(m_ctf(cl.gamemode)) cl.ctf.checkflags(d);
