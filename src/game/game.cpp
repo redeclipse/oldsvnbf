@@ -1017,12 +1017,12 @@ struct gameclient : igameclient
 		float r = 1.f, g = 1.f, b = 1.f;
 		if(index >= POINTER_HAIR)
 		{
-			if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
-			else if(r && g && b && player1->state == CS_ALIVE)
+			if(r && g && b && player1->state == CS_ALIVE)
 			{
 				if(player1->health<=25) { r = 1; g = b = 0; }
 				else if(player1->health<=50) { r = 1; g = 0.5f; b = 0; }
 			}
+            if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
 		}
 
 		glMatrixMode(GL_PROJECTION);
