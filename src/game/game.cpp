@@ -1347,17 +1347,12 @@ struct gameclient : igameclient
 				}
 
 				vector<actitem> actitems;
-				if(et.collateitems(player1, false, actitems))
+				if(et.collateitems(player1, actitems))
 				{
 					bool found = false;
 					while(!actitems.empty())
 					{
-						int closest = actitems.length()-1;
-						loopv(actitems)
-							if(actitems[i].score < actitems[closest].score)
-								closest = i;
-
-						actitem &t = actitems[closest];
+						actitem &t = actitems.last();
 						int ent = -1;
 						switch(t.type)
 						{
@@ -1414,7 +1409,7 @@ struct gameclient : igameclient
 									tp -= draw_textx("Nearby interactive item", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend()), false, AL_RIGHT, -1, -1);
 							}
 						}
-						actitems.removeunordered(closest);
+						actitems.pop();
 					}
 				}
 			}

@@ -947,14 +947,9 @@ struct aiclient
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
-			if(cl.et.collateitems(d, false, actitems))
+			if(cl.et.collateitems(d, actitems))
 			{
-				int closest = actitems.length()-1;
-				loopv(actitems)
-					if(actitems[i].score < actitems[closest].score)
-						closest = i;
-
-				actitem &t = actitems[closest];
+				actitem &t = actitems.last();
 				int ent = -1;
 				switch(t.type)
 				{
