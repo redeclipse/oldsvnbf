@@ -84,20 +84,20 @@ struct gameclient : igameclient
 	IFVARP(cursorsize, 0, 0.05f, 1);
 	IFVARP(cursorblend, 0, 1.f, 1);
 
-	IFVARP(crosshairblend, 0, 1.f, 1);
+	IFVARP(crosshairblend, 0, 0.3f, 1);
 	IFVARP(indicatorblend, 0, 0.5f, 1);
-	IFVARP(clipbarblend, 0, 0.5f, 1);
+	IFVARP(clipbarblend, 0, 0.2f, 1);
 	IFVARP(radarblend, 0, 0.9f, 1);
 	IFVARP(blipblend, 0, 1.0f, 1);
 	IFVARP(barblend, 0, 1.0f, 1);
 	IFVARP(candinalblend, 0, 1.0f, 1);
-	IFVARP(ammoblend, 0, 1.f, 1);
-	IFVARP(ammoblendinactive, 0, 0.5f, 1);
+	IFVARP(ammoblend, 0, 0.8f, 1);
+	IFVARP(ammoblendinactive, 0, 0.3f, 1);
 	IFVARP(infoblend, 0, 1.f, 1);
 
 	IVARP(radardist, 0, 512, 512);
 	IVARP(radarnames, 0, 1, 2);
-	IFVARP(radarsize, 0, 0.33f, 1);
+	IFVARP(radarsize, 0, 0.25f, 1);
 	IFVARP(ammosize, 0, 0.07f, 1);
 	IVARP(editradardist, 0, 512, INT_MAX-1);
 	IVARP(editradarnoisy, 0, 1, 2);
