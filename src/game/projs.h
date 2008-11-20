@@ -562,8 +562,8 @@ struct projectiles
 					if(fabs(off) <= rmax && fabs(off) >= rmin)
 					{
 						if(off > 0.f ? off > 180.f : off < -180.f)
-							aim[i][1] += (rmax)-off;
-						else aim[i][1] -= off-(rmin);
+							aim[i][1] += rmax-off;
+						else aim[i][1] -= off-rmin;
 					}
 					while(aim[i][1] < 0.f) aim[i][1] += 360.f;
 					while(aim[i][1] >= 360.f) aim[i][1] -= 360.f;
