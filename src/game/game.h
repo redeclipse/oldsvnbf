@@ -939,7 +939,7 @@ struct projent : dynent
 	void reset()
 	{
 		physent::reset();
-		type = ENT_BOUNCE;
+		type = ENT_PROJ;
 		state = CS_ALIVE;
 		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = 0;
 		ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
