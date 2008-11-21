@@ -1814,7 +1814,6 @@ void drawview(int targtype)
 	glOrtho(0, w, h, 0, -1, 1);
 
 	vec colour;
-	bool hashudcolour = cl->gethudcolour(colour);
 	if(cl->gethudcolour(colour))
 	{
         glEnable(GL_BLEND);

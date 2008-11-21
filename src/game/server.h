@@ -1295,9 +1295,12 @@ struct gameserver : igameserver
 						{
 							case TR_NONE:
 							{
-								sents[ent].millis = gamemillis;
-								sents[ent].spawned = !sents[ent].spawned;
-								commit = true;
+								if(!sents[ent].spawned || sents[ent].attr3 != TA_AUTO)
+								{
+									sents[ent].millis = gamemillis;
+									sents[ent].spawned = !sents[ent].spawned;
+									commit = true;
+								}
 								break;
 							}
 							case TR_LINK:
@@ -1310,7 +1313,7 @@ struct gameserver : igameserver
 								}
 							}
 						}
-						if(commit) sendf(-1, 1, "ri2", SV_TRIGGER, ent);
+						if(commit) sendf(-1, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 					}
 					break;
 				}
@@ -2225,7 +2228,7 @@ struct gameserver : igameserver
 		if(!sents[e.ent].spawned)
 		{
 			bool found = false;
-			if(!(sents[e.ent].attr2&GNT_FORCED)) 
+			if(!(sents[e.ent].attr2&GNT_FORCED))
 			{
 				loopv(clients)
 				{
@@ -2327,7 +2330,7 @@ struct gameserver : igameserver
 					{
 						sents[i].spawned = false;
 						sents[i].millis = gamemillis;
-						sendf(-1, 1, "ri2", SV_TRIGGER, i);
+						sendf(-1, 1, "ri2", SV_TRIGGER, i, 0);
 					}
 					break;
 				}
