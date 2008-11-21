@@ -442,7 +442,8 @@ struct entities : icliententities
 						}
 						case TRIGGER:
 						{
-							if(lastmillis-e.lastuse >= TRIGGERTIME)
+							if((!e.spawned || e.attr2 != TR_NONE || e.attr3 != TA_AUTO) &&
+								lastmillis-e.lastuse >= TRIGGERTIME)
 							{
 								e.lastuse = lastmillis;
 								switch(e.attr2)

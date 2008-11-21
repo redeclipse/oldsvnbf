@@ -1008,9 +1008,9 @@ struct clientcom : iclientcom
 
 				case SV_TRIGGER:
 				{
-					int ent = getint(p);
+					int ent = getint(p), st = getint(p);
 					if(!cl.et.ents.inrange(ent)) break;
-					cl.et.setspawn(ent, !cl.et.ents[ent]->spawned);
+					cl.et.setspawn(ent, st ? true : false);
 					break;
 				}
 
