@@ -897,6 +897,48 @@ static void blendfogoverlay(int fogmat, float blend, float *overlay)
     }
 }
 
+void drawfogoverlay(int fogmat, float fogblend, int abovemat)
+{
+    glDisable(GL_DEPTH_TEST);
+
+    notextureshader->set();
+    glDisable(GL_TEXTURE_2D);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+    float overlay[3] = { 0, 0, 0 };
+    blendfogoverlay(fogmat, fogblend, overlay);
+    blendfogoverlay(abovemat, 1-fogblend, overlay);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glColor3fv(overlay);
+    glBegin(GL_QUADS);
+    glVertex2f(-1, -1);
+    glVertex2f(1, -1);
+    glVertex2f(1, 1);
+    glVertex2f(-1, 1);
+    glEnd();
+    glDisable(GL_BLEND);
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glEnable(GL_TEXTURE_2D);
+    defaultshader->set();
+
+    glEnable(GL_DEPTH_TEST);
+}
+
 bool renderedgame = false, renderedavatar = false;
 
 void rendergame()
@@ -1742,6 +1784,7 @@ void drawview(int targtype)
 	glDisable(GL_CULL_FACE);
 
 	addglare();
+    if(fogmat==MAT_WATER || fogmat==MAT_LAVA) drawfogoverlay(fogmat, fogblend, abovemat);
 	renderpostfx();
 
 	glDisable(GL_TEXTURE_2D);
@@ -1770,28 +1813,21 @@ void drawview(int targtype)
 	glLoadIdentity();
 	glOrtho(0, w, h, 0, -1, 1);
 
-	glEnable(GL_BLEND);
 	vec colour;
 	bool hashudcolour = cl->gethudcolour(colour);
-	if(hashudcolour || fogmat==MAT_WATER || fogmat==MAT_LAVA)
+	if(cl->gethudcolour(colour))
 	{
+        glEnable(GL_BLEND);
 		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-		if(hashudcolour) glColor3f(colour.x, colour.y, colour.z);
-		else
-		{
-			float overlay[3] = { 0, 0, 0 };
-			blendfogoverlay(fogmat, fogblend, overlay);
-			blendfogoverlay(abovemat, 1-fogblend, overlay);
-			glColor3fv(overlay);
-		}
+		glColor3f(colour.x, colour.y, colour.z);
 		glBegin(GL_QUADS);
 		glVertex2f(0, 0);
 		glVertex2f(w, 0);
 		glVertex2f(w, h);
 		glVertex2f(0, h);
 		glEnd();
+        glDisable(GL_BLEND);
 	}
-	glDisable(GL_BLEND);
 
 	glColor3f(1, 1, 1);
 	extern int debugsm;
