@@ -1,12 +1,6 @@
 Non-definitive todo / wanted feature list, read at own peril.
 
 Hud
-	plasma (indicator, icon)
-	carbine (indicator, icon)
-	flamer (indicator)
-	grenades (indicator)
-	powerup indicator
-	lighter smoke particle
 	spookyback
 
 Player

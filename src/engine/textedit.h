@@ -149,7 +149,7 @@ struct editor
 
     int scrolly; // vertical scroll offset
 
-    bool linewrap, keepsfocus;
+    bool linewrap;
     int pixelwidth; // required for up/down/hit/draw/bounds
     int pixelheight; // -1 for variable sized, i.e. from bounds()
 
@@ -537,8 +537,8 @@ struct editor
             {
                 int width, height;
                 text_bounds(lines[i].text, width, height, maxwidth);
+                if(h + height > pixelheight) { scrolly = i+1; break; }
                 h += height;
-                if(h > pixelheight) { scrolly = i + 1; break; }
             }
         }
 
@@ -647,20 +647,29 @@ static void flusheditors()
     }
 }
 
-static editor *useeditor(const char *name, int mode, bool focus, const char *initval = NULL)
+static editor *useeditor(const char *name, int mode, const char *initval = NULL)
 {
     loopv(editors) if(strcmp(editors[i]->name, name) == 0)
     {
         editor *e = editors[i];
-        if(focus) { editors.add(e); editors.remove(i); } // re-position as last
-        e->active = true;
         return e;
     }
     editor *e = new editor(name, mode, initval);
-    if(focus) editors.add(e); else editors.insert(0, e);
+    editors.insert(0, e);
     return e;
 }
 
+static void focuseditor(editor *e)
+{
+    editors.removeobj(e);
+    editors.add(e);
+}
+
+static void removeeditor(editor *e)
+{
+    editors.removeobj(e);
+    DELETEP(e);
+}
 
 #define TEXTCOMMAND(f, s, d, body) ICOMMAND(f, s, d,\
     editor *top = currentfocus();\
@@ -683,8 +692,15 @@ TEXTCOMMAND(textshow, "", (), // @DEBUG return the start of the buffer
     result(line.text);
     line.clear();
 );
-ICOMMAND(textfocus, "si", (char *name, int *mode), // focus on a (or create a persistent) specific editor, else returns current name
-    if(*name) useeditor(name, *mode<=0 ? EDITORFOREVER : *mode, true);
+ICOMMAND(textfocus, "s", (char *name), // focus on a (or create a persistent) specific editor, else returns current name
+    if(*name)
+    {
+        loopv(editors) if(!strcmp(editors[i]->name, name))
+        {
+            focuseditor(editors[i]);
+            break;
+        }
+    }
     else if(editors.length() > 0) result(editors.last()->name);
 );
 TEXTCOMMAND(textprev, "", (), editors.insert(0, top); editors.pop();); // return to the previous editor
@@ -711,8 +727,8 @@ TEXTCOMMAND(textload, "s", (char *file), // loads into the topmost editor, retur
 
 #define PASTEBUFFER "#pastebuffer"
 
-TEXTCOMMAND(textcopy, "", (), editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false); top->copyselectionto(b););
-TEXTCOMMAND(textpaste, "", (), editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false); top->insertallfrom(b););
+TEXTCOMMAND(textcopy, "", (), editor *b = useeditor(PASTEBUFFER, EDITORFOREVER); top->copyselectionto(b););
+TEXTCOMMAND(textpaste, "", (), editor *b = useeditor(PASTEBUFFER, EDITORFOREVER); top->insertallfrom(b););
 TEXTCOMMAND(textmark, "i", (int *m),  // (1=mark, 2=unmark), return current mark setting if no args
     if(*m) top->mark(*m==1);
     else result(top->region() ? "1" : "2");
