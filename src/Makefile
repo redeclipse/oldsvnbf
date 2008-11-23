@@ -43,6 +43,7 @@ CLIENT_OBJS= \
 	engine/shadowmap.o \
 	engine/sound.o \
 	engine/texture.o \
+	engine/ui.o \
 	engine/water.o \
 	engine/world.o \
 	engine/worldio.o \
