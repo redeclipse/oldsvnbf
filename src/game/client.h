@@ -874,7 +874,7 @@ struct clientcom : iclientcom
 
 				case SV_SHOTFX:
 				{
-					int scn = getint(p), gun = getint(p), power = clamp(getint(p), 0, 100);
+					int scn = getint(p), gun = getint(p), power = clamp(getint(p), 0, 200);
 					vec from;
 					vector<vec> locs;
 					locs.setsize(0);

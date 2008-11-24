@@ -100,16 +100,25 @@ struct projectiles
 
 	void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local)	 // create visual effect from a shot
 	{
-		int delay = guntype[gun].delay, pow = guntype[gun].power ? power : 100,
-			spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
-
+		int delay = guntype[gun].delay, pow = 100;
+		bool kamakaze = false;
+		if(guntype[gun].power)
+		{
+			pow = clamp(power, 0, 100);
+			if(power >= 200)
+			{
+				kamakaze = true;
+				if(gun == GUN_GL) pow = 0;
+			}
+		}
+		int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
 		if(gun == GUN_FLAMER)
 		{
 			int ends = lastmillis+(d->gunwait[gun]*2);
 			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
 			else playsound(guntype[gun].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
 		}
-		else playsound(guntype[gun].sound, d->o, d);
+		else if(!kamakaze) playsound(guntype[gun].sound, d->o, d);
 
 		switch(gun)
 		{
@@ -154,7 +163,7 @@ struct projectiles
 		int millis = delay;
 		loopv(locs)
 		{
-			create(from, locs[i], local, d, PRJ_SHOT, guntype[gun].time, millis, spd, 0, WEAPON, gun);
+			create(from, locs[i], local, d, PRJ_SHOT, kamakaze ? 1 : guntype[gun].time, millis, spd, 0, WEAPON, gun);
 			millis += delay;
 		}
 	}

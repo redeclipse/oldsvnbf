@@ -142,9 +142,9 @@ struct weaponstate
 				}
 
 				int secs = lastmillis-d->gunlast[d->gunselect];
-				if(d->attacking && secs < guntype[d->gunselect].power) return;
+				if(d->attacking && secs < guntype[d->gunselect].power*2) return;
 
-				power = clamp(int(float(secs)/float(guntype[d->gunselect].power)*100.f), 0, 100);
+				power = clamp(int(float(secs)/float(guntype[d->gunselect].power)*100.f), 0, 200);
 			}
 			d->attacking = false;
 		}
