@@ -1,4 +1,3 @@
-
 struct editline
 {
     enum { CHUNKSIZE = 256 };
@@ -629,16 +628,19 @@ struct editor
 };
 
 // a 'stack' where the last is the current focused editor
-static vector <editor*> editors;
+vector <editor*> editors;
 
-static editor *currentfocus() { return (editors.length() > 0)?editors.last():NULL; }
+editor *currentfocus()
+{
+	return (editors.length() > 0)?editors.last():NULL;
+}
 
-static void readyeditors()
+void readyeditors()
 {
     loopv(editors) editors[i]->active = (editors[i]->mode==EDITORFOREVER);
 }
 
-static void flusheditors()
+void flusheditors()
 {
     loopvrev(editors) if(!editors[i]->active)
     {
@@ -647,7 +649,7 @@ static void flusheditors()
     }
 }
 
-static editor *useeditor(const char *name, int mode, const char *initval = NULL)
+editor *useeditor(const char *name, int mode, const char *initval = NULL)
 {
     loopv(editors) if(strcmp(editors[i]->name, name) == 0)
     {
@@ -659,13 +661,13 @@ static editor *useeditor(const char *name, int mode, const char *initval = NULL)
     return e;
 }
 
-static void focuseditor(editor *e)
+void focuseditor(editor *e)
 {
     editors.removeobj(e);
     editors.add(e);
 }
 
-static void removeeditor(editor *e)
+void removeeditor(editor *e)
 {
     editors.removeobj(e);
     DELETEP(e);

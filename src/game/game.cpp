@@ -332,7 +332,7 @@ struct gameclient : igameclient
         {
         	if(d == player1)
         	{
-        		if(g3d_active(true, true)) return false;
+        		if(UI::hascursor()) return false;
 				if(tvmode()) return false;
         	}
 			if(d->state == CS_DEAD) return false;
@@ -995,11 +995,7 @@ struct gameclient : igameclient
 	{
         int index = POINTER_NONE;
 
-		if(g3d_active(true, false))
-		{
-			if(g3d_active()) index = POINTER_GUI;
-			else return;
-		}
+		if(UI::hascursor()) index = POINTER_GUI;
         else if(hidehud || !showcrosshair() || player1->state == CS_DEAD || !connected()) return;
         else if(player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) index = POINTER_SPEC;
@@ -1535,21 +1531,16 @@ struct gameclient : igameclient
 
 	void drawhud(int w, int h)
 	{
-		if(!hidehud)
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		if(maptime && connected())
 		{
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			if(maptime && connected())
-			{
-				if(lastmillis-maptime < titlecardtime()+titlecardfade())
-					drawtitlecard(w, h);
-				else drawgamehud(w, h);
-			}
-			drawhudelements(w, h);
-			glDisable(GL_BLEND);
+			if(lastmillis-maptime < titlecardtime()+titlecardfade())
+				drawtitlecard(w, h);
+			else drawgamehud(w, h);
 		}
-		g3d_render();
-		drawpointers(w, h); // gets done last!
+		drawhudelements(w, h);
+		glDisable(GL_BLEND);
 	}
 
 	void lighteffects(dynent *e, vec &color, vec &dir)
@@ -1576,7 +1567,10 @@ struct gameclient : igameclient
 		cc.addmsg(SV_NEWMAP, "ri", size);
 	}
 
-	void g3d_gamemenus() { sb.show(); }
+	void gamemenus()
+	{
+		sb.show();
+	}
 
 	void loadworld(gzFile &f, int maptype)
 	{
@@ -1708,11 +1702,9 @@ struct gameclient : igameclient
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
-		bool hit = g3d_active();
-
+		bool hascursor = UI::hascursor();
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
-
-		if(hit || mousestyle() >= 1)
+		if(hascursor || mousestyle() >= 1)
 		{
 			if(absmouse()) // absolute positions, unaccelerated
 			{
@@ -1723,7 +1715,7 @@ struct gameclient : igameclient
 			else
 			{
 				cursorx = clamp(cursorx+mousesens(dx, w, mousesensitivity()), 0.f, 1.f);
-				cursory = clamp(cursory+mousesens(dy, h, mousesensitivity()*(!hit && invmouse() ? -1.f : 1.f)), 0.f, 1.f);
+				cursory = clamp(cursory+mousesens(dy, h, mousesensitivity()*(!hascursor && invmouse() ? -1.f : 1.f)), 0.f, 1.f);
 				return true;
 			}
 		}
@@ -1735,7 +1727,7 @@ struct gameclient : igameclient
 						(player1->gunselect == GUN_RIFLE ? snipesensitivity() : pronesensitivity())
 					: sensitivity();
 				player1->yaw += mousesens(dx, w, yawsensitivity()*scale);
-				player1->pitch -= mousesens(dy, h, pitchsensitivity()*scale*(!hit && invmouse() ? -1.f : 1.f));
+				player1->pitch -= mousesens(dy, h, pitchsensitivity()*scale*(!hascursor && invmouse() ? -1.f : 1.f));
 				fixfullrange(player1->yaw, player1->pitch, player1->roll, false);
 			}
 			return true;
@@ -1745,13 +1737,13 @@ struct gameclient : igameclient
 
 	void project(int w, int h)
 	{
-		int style = g3d_active() ? -1 : mousestyle();
+		int style = UI::hascursor() ? -1 : mousestyle();
 		if(style != lastmousetype)
 		{
 			resetcursor();
 			lastmousetype = style;
 		}
-		if(!g3d_active())
+		if(style >= 0)
 		{
 			int aim = isthirdperson() ? thirdpersonaim() : firstpersonaim();
 			if(aim)
@@ -2073,7 +2065,7 @@ struct gameclient : igameclient
 					}
 					fixrange(player1->aimyaw, player1->aimpitch);
 
-					if(lastcamera && mousestyle() >= 1 && !g3d_active())
+					if(lastcamera && mousestyle() >= 1 && !UI::hascursor())
 					{
 						physent *d = mousestyle() != 2 ? player1 : camera1;
 						float amt = clamp(float(lastmillis-lastcamera)/100.f, 0.f, 1.f)*panspeed();

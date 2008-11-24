@@ -831,6 +831,7 @@ int main(int argc, char **argv)
 	computescreen("loading...");
 	inbetweenframes = true;
     loadshaders();
+	UI::setup();
 
 	conoutf("\fminit: world");
 	emptymap(0, true, NULL, true);
@@ -902,6 +903,7 @@ int main(int argc, char **argv)
 			updatetextures();
 			updateparticles();
 			updatesounds();
+			UI::update();
 			inbetweenframes = false;
 			if(frameloops > 2) gl_drawframe(screen->w, screen->h);
 			SDL_GL_SwapBuffers();

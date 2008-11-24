@@ -291,7 +291,7 @@ void cursorupdate()
 		od  = dimension(orient),
 		odc = dimcoord(orient);
 
-    bool hidecursor = g3d_active(true, false), hovering = false;
+    bool hidecursor = UI::hascursor(), hovering = false;
     hmapsel = false;
 
 	if(moving)

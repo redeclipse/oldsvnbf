@@ -162,7 +162,7 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 
 	pushfont("hud");
 
-	if (!g3d_active(true, false) && centerlines)
+	if (!UI::hascursor() && centerlines)
 	{
 		loopv(conlines[CN_CENTER]) if(lastmillis-conlines[CN_CENTER][i].outtime<centertime)
 		{
@@ -593,15 +593,13 @@ void consolekey(int code, bool isdown, int cooked)
     }
 }
 
-extern bool menukey(int code, bool isdown, int cooked);
-
 void keypress(int code, bool isdown, int cooked)
 {
 	char alpha = cooked < 0x80 ? cooked : '?';
     keym *haskey = NULL;
     loopv(keyms) if(keyms[i].code==code) { haskey = &keyms[i]; break; }
     if(haskey && haskey->pressed) execbind(*haskey, isdown); // allow pressed keys to release
-    else if(!menukey(code, isdown, alpha)) // 3D GUI mouse button intercept
+    else if(!UI::keypress(code, isdown, alpha)) // 3D GUI mouse button intercept
     {
         if(saycommandon) consolekey(code, isdown, alpha);
         else if(haskey) execbind(*haskey, isdown);

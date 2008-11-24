@@ -9,7 +9,6 @@ endif
 CLIENT_OBJS= \
 	shared/tools.o \
 	shared/geom.o \
-	engine/3dgui.o \
 	engine/bih.o \
 	engine/blend.o \
 	engine/blob.o \

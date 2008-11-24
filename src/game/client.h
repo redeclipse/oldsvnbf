@@ -2,7 +2,7 @@ struct clientcom : iclientcom
 {
 	gameclient &cl;
 
-	bool c2sinit, senditemstoserver, isready, remote, demoplayback, needsmap;
+	bool c2sinit, sendinfo, isready, remote, demoplayback, needsmap;
 	int lastping;
 
 	IVARP(centerchat, 0, 1, 1);
@@ -11,7 +11,7 @@ struct clientcom : iclientcom
 	ISVARP(serversort, "");
 
 	clientcom(gameclient &_cl) : cl(_cl),
-		c2sinit(false), senditemstoserver(false),
+		c2sinit(false), sendinfo(false),
 		isready(false), remote(false), demoplayback(false), needsmap(false),
 		lastping(0)
 	{
@@ -98,7 +98,7 @@ struct clientcom : iclientcom
 
 	int numchannels() { return 3; }
 
-	void mapstart() { senditemstoserver = true; }
+	void mapstart() { sendinfo = !needsmap; }
 
 	void writeclientinfo(FILE *f)
 	{
@@ -460,15 +460,17 @@ struct clientcom : iclientcom
 			if(cl.players[i] && cl.players[i]->ai)
 				updateposition(cl.players[i]);
 
-		if(senditemstoserver)
+		if(sendinfo)
 		{
 			reliable = true;
-			putint(p, SV_ITEMLIST);
+			putint(p, SV_GAMEINFO);
+			putint(p, getmapversion());
+			putint(p, getmaprevision());
 			cl.et.putitems(p);
 			putint(p, -1);
 			if(m_stf(cl.gamemode)) cl.stf.sendflags(p);
             else if(m_ctf(cl.gamemode)) cl.ctf.sendflags(p);
-			senditemstoserver = false;
+			sendinfo = false;
 		}
 		if(!c2sinit)	// tell other clients who I am
 		{
@@ -787,10 +789,12 @@ struct clientcom : iclientcom
 					break;
 				}
 
-				case SV_ITEMLIST:
+				case SV_GAMEINFO:
 				{
-					int n;
+					int ver = getint(p), rev = getint(p), n;
 					while((n = getint(p))!=-1) cl.et.setspawn(n, getint(p));
+					if(!needsmap && ver >= 0 && rev >= 0 && (ver != getmapversion() || rev != getmaprevision()))
+						getmap();
 					break;
 				}
 
@@ -1318,8 +1322,11 @@ struct clientcom : iclientcom
 
 				case SV_GETMAP:
 				{
-					conoutf("\fmserver has requested we send the map..");
-					sendmap();
+					if(!needsmap)
+					{
+						conoutf("\fmserver has requested we send the map..");
+						sendmap();
+					}
 					break;
 				}
 
@@ -1328,11 +1335,7 @@ struct clientcom : iclientcom
 					int ocn = getint(p);
 					gameent *o = cl.newclient(ocn);
 					conoutf("\fmmap uploaded by %s..", o ? cl.colorname(o) : "server");
-					if(needsmap)
-					{
-						needsmap = false;
-						getmap();
-					}
+					if(needsmap) getmap();
 					break;
 				}
 
@@ -1418,7 +1421,6 @@ struct clientcom : iclientcom
 
 			case SV_SENDMAP:
 			{
-				if(!m_edit(cl.gamemode)) return;
 				extern string mapfile, mapname;
 				const char *file = findfile(mapfile, "wb");
 				FILE *map = fopen(file, "wb");
@@ -1427,6 +1429,7 @@ struct clientcom : iclientcom
 				fwrite(data, 1, len, map);
 				fclose(map);
 				if(!load_world(mapname)) emptymap(0, true, NULL);
+				else needsmap = false;
 				break;
 			}
 		}
@@ -1434,7 +1437,6 @@ struct clientcom : iclientcom
 
 	void getmap()
 	{
-		if(!m_edit(cl.gamemode)) { conoutf("\fr\"getmap\" only works while editing"); return; }
 		conoutf("\fmgetting map...");
 		addmsg(SV_GETMAP, "r");
 	}
@@ -1474,15 +1476,10 @@ struct clientcom : iclientcom
 
 	void sendmap()
 	{
-		if(!m_edit(cl.gamemode))
-		{
-			conoutf("\fr\"sendmap\" only works in coopedit mode");
-			return;
-		}
 		conoutf("\fmsending map...");
 		extern string mapname, mapfile;
 		s_sprintfd(mname)("%s", mapname);
-		save_world(mname, true);
+		save_world(mname, m_edit(cl.gamemode));
 		FILE *map = openfile(mapfile, "rb");
 		if(map)
 		{
