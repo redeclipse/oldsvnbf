@@ -58,13 +58,14 @@ struct igameclient
     virtual void newmap(int size) = 0;
     virtual void startmap(const char *name) = 0;
     virtual void drawhud(int w, int h) = 0;
+    virtual void drawpointers(int w, int h) = 0;
 
     virtual bool allowmove(physent *d) { return true; }
 
     virtual dynent *iterdynents(int i) = 0;
     virtual int numdynents() = 0;
 
-    virtual void g3d_gamemenus() = 0;
+    virtual void gamemenus() = 0;
     virtual void lighteffects(dynent *d, vec &color, vec &dir) {}
     virtual void adddynlights() {}
     virtual void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass) {}

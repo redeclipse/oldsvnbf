@@ -1686,7 +1686,12 @@ void drawnoview()
     loadbackground(w, h);
     glDisable(GL_BLEND);
 
-    cl->drawhud(w, h);
+	if(!hidehud)
+	{
+		cl->drawhud(w, h);
+		UI::render();
+		cl->drawpointers(w, h);
+	}
 
     glDisable(GL_TEXTURE_2D);
 

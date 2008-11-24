@@ -232,13 +232,14 @@ struct gameserver : igameserver
 		uint ip;
 	};
 
-	bool notgotitems, notgotflags;		// true when map has changed and waiting for clients to send item
+	bool notgotinfo, notgotflags;		// true when map has changed and waiting for clients to send item
 	int gamemode, mutators;
 	int gamemillis, gamelimit;
 
 	string smapname;
 	int interm, minremain, oldtimelimit;
 	bool maprequest;
+	int mapver, maprev;
 	enet_uint32 lastsend;
 	int mastermode, mastermask;
 	int currentmaster;
@@ -316,7 +317,7 @@ struct gameserver : igameserver
 	ISVAR(serverpass, "");
 
 	gameserver()
-		: notgotitems(true), notgotflags(false),
+		: notgotinfo(true), notgotflags(false),
 			gamemode(G_LOBBY), mutators(0),
 			interm(0), minremain(10), oldtimelimit(10),
 			maprequest(false), lastsend(0),
@@ -436,7 +437,6 @@ struct gameserver : igameserver
 	void resetitems()
 	{
 		sents.setsize(0);
-		//cps.reset();
 	}
 
 	void vote(char *map, int reqmode, int reqmuts, int sender)
@@ -772,7 +772,8 @@ struct gameserver : igameserver
 		interm = 0;
 		s_strcpy(smapname, s && *s ? s : sv_defaultmap);
 		resetitems();
-		notgotitems = true;
+		notgotinfo = true;
+		mapver = maprev = -1;
 		scores.setsize(0);
 
 		if(m_team(gamemode, mutators))
@@ -1415,10 +1416,9 @@ struct gameserver : igameserver
 					break;
 				}
 
-				case SV_ITEMLIST:
+				case SV_GAMEINFO:
 				{
-					bool commit = notgotitems;
-					int n;
+					int ver = getint(p), rev = getint(p), n;
 					while((n = getint(p))!=-1)
 					{
 						srventity se, sn;
@@ -1430,14 +1430,16 @@ struct gameserver : igameserver
 						se.attr5 = getint(p);
 						se.spawned = false;
 						se.millis = gamemillis-(sv_itemspawntime*1000)+(sv_itemspawndelay*1000); // wait a bit then load 'em up
-						if(commit && (enttype[se.type].usetype == EU_ITEM || se.type == TRIGGER))
+						if(notgotinfo && (enttype[se.type].usetype == EU_ITEM || se.type == TRIGGER))
 						{
 							while(sents.length() < n) sents.add(sn);
 							sents.add(se);
 						}
 					}
-					if(commit)
+					if(notgotinfo)
 					{
+						mapver = ver;
+						maprev = rev;
 						loopvk(clients)
 						{
 							clientinfo *cp = clients[k];
@@ -1667,7 +1669,11 @@ struct gameserver : igameserver
 
 				case SV_GETMAP:
 					if(mapdata) sendfile(sender, 2, mapdata, "ri", SV_SENDMAP);
-					else srvoutf(sender, "no map to send");
+					else
+					{
+						clientinfo *best = choosebestclient(ci);
+						if(best) sendf(best->clientnum, 1, "ri", SV_GETMAP);
+					}
 					break;
 
 				case SV_NEWMAP:
@@ -1678,7 +1684,8 @@ struct gameserver : igameserver
 					{
 						smapname[0] = '\0';
 						resetitems();
-						notgotitems = false;
+						notgotinfo = false;
+						mapver = maprev = 0;
 						if(smode) smode->reset(true);
 						mutate(smuts, mut->reset(true));
 					}
@@ -1842,6 +1849,18 @@ struct gameserver : igameserver
 		return false;
 	}
 
+	clientinfo *choosebestclient(clientinfo *ci = NULL)
+	{
+		clientinfo *best = NULL;
+		loopv(clients) if(clients[i]->name[0] && clients[i]->state.aitype == AI_NONE && (!ci || ci != clients[i]))
+		{
+			clientinfo *cs = clients[i];
+			if(haspriv(cs, PRIV_MASTER)) { best = cs; break; }
+			if(!best || cs->state.timeplayed > best->state.timeplayed)
+				best = cs;
+		}
+		return best;
+	}
 
 	int welcomepacket(ucharbuf &p, int n, ENetPacket *packet)
 	{
@@ -1855,14 +1874,7 @@ struct gameserver : igameserver
 			putint(p, 0);
 			if(m_edit(gamemode) && numclients(ci->clientnum, true, true))
 			{
-				clientinfo *best = NULL;
-				loopv(clients) if(clients[i]->name[0] && clients[i]->state.aitype == AI_NONE)
-				{
-					clientinfo *cs = clients[i];
-					if(haspriv(cs, PRIV_MASTER)) { best = cs; break; }
-					if(!best || cs->state.timeplayed > best->state.timeplayed)
-						best = cs;
-				}
+				clientinfo *best = choosebestclient(ci);
 				if(best) sendf(best->clientnum, 1, "ri", SV_GETMAP);
 			}
 		}
@@ -1878,7 +1890,9 @@ struct gameserver : igameserver
 			putint(p, SV_TIMEUP);
 			putint(p, minremain);
 		}
-		putint(p, SV_ITEMLIST);
+		putint(p, SV_GAMEINFO);
+		putint(p, mapver);
+		putint(p, maprev);
 		loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM || sents[i].type == TRIGGER)
 		{
 			putint(p, i);
@@ -2501,13 +2515,20 @@ struct gameserver : igameserver
 
 	void receivefile(int sender, uchar *data, int len)
 	{
-		if(!m_edit(gamemode) || len > 1024*1024) return;
 		clientinfo *ci = (clientinfo *)getinfo(sender);
-		if(ci->state.state==CS_SPECTATOR && !ci->privilege) return;
-		if(mapdata) { fclose(mapdata); mapdata = NULL; }
+		if(mapdata)
+		{
+			if(ci != choosebestclient()) return;
+			fclose(mapdata);
+			mapdata = NULL;
+		}
 		if(!len) return;
 		mapdata = tmpfile();
-        if(!mapdata) { srvoutf(sender, "failed to open temporary file for map"); return; }
+        if(!mapdata)
+        {
+        	srvoutf(sender, "failed to open temporary file for map");
+        	return;
+		}
 		fwrite(data, 1, len, mapdata);
 		sendf(-1, 1, "ri2", SV_SENDMAP, sender);
 	}
