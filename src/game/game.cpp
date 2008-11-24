@@ -936,12 +936,13 @@ struct gameclient : igameclient
 			cx = px + psize/2.0f;
 			cy = py + psize/2.0f;
 
-			float amt = clamp(float(lastmillis-player1->gunlast[gun])/float(guntype[gun].power), 0.f, 1.f);
+			float amt = clamp(float(lastmillis-player1->gunlast[gun])/float(guntype[gun].power), 0.f, 2.f);
 			glBindTexture(GL_TEXTURE_2D, t->retframe(lastmillis-player1->gunlast[gun], guntype[gun].power));
-			glColor4f(clamp(amt, 0.3f, 1.f), clamp(amt, 0.3f, 1.f), 0.f, indicatorblend());
+			if(amt > 1.f) glColor4f(1.f, clamp(2.f-amt, 0.f, 1.f), 0.f, indicatorblend());
+			else glColor4f(clamp(amt, 0.3f, 1.f), clamp(amt, 0.3f, 1.f), 0.f, indicatorblend());
 
 			if(t->frames.length() > 1) drawtex(px, py, psize, psize);
-			else drawslice(0, amt, cx, cy, psize/2.0f);
+			else drawslice(0, clamp(amt, 0.f, 1.f), cx, cy, psize/2.0f);
 		}
     }
 
