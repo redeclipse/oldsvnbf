@@ -1857,7 +1857,12 @@ void drawview(int targtype)
 
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
-	cl->drawhud(w, h);
+	if(!hidehud)
+	{
+		cl->drawhud(w, h);
+		UI::render();
+		cl->drawpointers(w, h);
+	}
 	glDisable(GL_TEXTURE_2D);
 
 	glEnable(GL_DEPTH_TEST);

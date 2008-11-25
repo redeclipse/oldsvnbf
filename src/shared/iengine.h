@@ -68,7 +68,7 @@ extern void mpremip(bool local);
 // console
 extern void keypress(int code, bool isdown, int cooked);
 extern int rendercommand(int x, int y, int w);
-extern int renderconsole(int w, int h);
+extern int renderconsole(int w, int h, int s);
 extern char *getcurcommand();
 extern void resetcomplete();
 extern void complete(char *s);
