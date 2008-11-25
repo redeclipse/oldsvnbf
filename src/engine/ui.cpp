@@ -963,7 +963,7 @@ void g3d_render()
 
 namespace UI
 {
-	bool hascursor(bool targeting) { return g3d_active(true, true); }
+	bool hascursor(bool targeting) { return g3d_active(true, targeting); }
 	bool keypress(int code, bool isdown, int cooked) { return g3d_keypress(code, isdown, cooked); }
 	void setup() { return; }
 	void update() { return; }

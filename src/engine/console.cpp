@@ -155,12 +155,10 @@ void blendbox(int x1, int y1, int x2, int y2, bool border)
 VARP(consize, 0, 33, 100);
 VARP(fullconsize, 0, 75, 100);
 
-int renderconsole(int w, int h)					// render buffer taking into account time & scrolling
+int renderconsole(int w, int h, int s)
 {
 	vector<char *> refs;
 	refs.setsizenodelete(0);
-
-	pushfont("hud");
 
 	if (!UI::hascursor() && centerlines)
 	{
@@ -190,11 +188,9 @@ int renderconsole(int w, int h)					// render buffer taking into account time & 
 		}
 	}
 
-	int cy = FONTH/3;
+	int cy = s;
 	loopvrev(refs)
-		cy += draw_textx("%s", FONTH/3, cy, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, w-w/4-FONTH, refs[i]);
-
-	popfont();
+		cy += draw_textx("%s", s, cy, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, w-s*2, refs[i]);
 
 	return cy;
 }

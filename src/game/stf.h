@@ -248,35 +248,28 @@ struct stfclient : stfstate
 		}
 	}
 
-	void drawblip(int x, int y, int s, int type, bool skipenemy = false)
+	void drawblip(int w, int h, int s, int type, bool skipenemy = false)
 	{
 		loopv(flags)
 		{
 			flaginfo &f = flags[i];
 			if(skipenemy && f.enemy) continue;
-			switch(type)
-			{
-				case 1: if(!f.owner || f.owner != cl.player1->team) continue; break;
-				case 0: if(f.owner) continue; break;
-				case -1: if(!f.owner || f.owner == cl.player1->team) continue; break;
-				case -2: if(!f.enemy || f.enemy == cl.player1->team) continue; break;
-			}
+			if(type == 0 && (!f.owner || f.owner != cl.player1->team)) continue;
+			if(type == 1 && f.owner) continue;
+			if(type == 2 && (!f.owner || f.owner == cl.player1->team)) continue;
+			if(type == 3 && (!f.enemy || f.enemy == cl.player1->team)) continue;
 			vec dir(f.o);
 			dir.sub(camera1->o);
-			dir.z = 0.0f;
 			float dist = dir.magnitude();
-			if(dist >= cl.radarrange()) dir.mul(cl.radarrange()/dist);
 			dir.rotate_around_z(-camera1->yaw*RAD);
+			dir.normalize();
 			int colour = teamtype[f.owner].colour;
 			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-				fade = cl.blipblend(), size = 0.075f;
-			if(f.owner != cl.player1->team && f.enemy != cl.player1->team)
-				fade = clamp(1.f-(dist/cl.radarrange()), 0.f, 1.f);
-			float cx = x + s*0.5f*(1.0f+dir.x/cl.radarrange()),
-				cy = y + s*0.5f*(1.0f+dir.y/cl.radarrange()), cs = size*s;
-			settexture(cl.flagbliptex(), 3);
+				fade = clamp(1.f-(dist/cl.radarrange()), 0.1f, 1.f)*cl.radarblend();
+			getradardir;
+			settexture(cl.radarflagtex(), 3);
 			glColor4f(r, g, b, fade);
-			cl.drawsized(cx-cs*0.5f, cy-cs*0.5f, cs);
+			cl.drawsized(cx, cy, s);
 		}
 	}
 
@@ -285,13 +278,13 @@ struct stfclient : stfstate
         return max(0, (m_insta(cl.gamemode, cl.mutators) ? RESPAWNSECS/2 : RESPAWNSECS)*1000-(lastmillis-d->lastpain));
     }
 
-	void drawblips(int w, int h, int x, int y, int s)
+	void drawblips(int w, int h, int s)
 	{
 		bool showenemies = lastmillis%1000 >= 500;
-		drawblip(x, y, s, 1, showenemies);
-		drawblip(x, y, s, 0, showenemies);
-		drawblip(x, y, s, -1, showenemies);
-		if(showenemies) drawblip(x, y, s, -2);
+		drawblip(w, h, s, 0, showenemies);
+		drawblip(w, h, s, 1, showenemies);
+		drawblip(w, h, s, 2, showenemies);
+		if(showenemies) drawblip(w, h, s, 3);
 	}
 
 	void setupflags()

@@ -656,6 +656,27 @@ struct gamestate
 };
 
 #ifndef STANDALONE
+struct radardir { bool axis, swap; float up, down; } radardirs[8] =
+{
+	{ true,		false,	 0.5f,	0.5f	},
+	{ false,	true,	 0.f,	0.5f 	},
+	{ false,	true,	 0.5f,	0.5f 	},
+	{ true,		true,	 1.f,	-0.5f	},
+	{ true,		true,	 0.5f,	-0.5f	},
+	{ false,	false,	 1.f,	-0.5f	},
+	{ false,	false,	 0.5f,	-0.5f	},
+	{ true,		false,	 0.f,	0.5f	}
+};
+
+#define getradardir \
+	float cx = s*0.5f, cy = s*0.5f, yaw = 0.f, pitch = 0.f; \
+	vectoyawpitch(dir, yaw, pitch); \
+	int q = (int)floor(yaw/45.0f) & 7; \
+	float skew = (yaw-(q*45.f))/45.f; \
+	const radardir &rd = radardirs[q]; \
+	if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h : w)-s*2.f; \
+	(rd.axis ? cx : cy) += ((rd.axis ? w : h)-s*2.f)*clamp(rd.up+(rd.down*skew), 0.f, 1.f);
+
 enum
 {
 	ST_NONE		= 0,
