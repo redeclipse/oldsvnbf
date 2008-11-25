@@ -328,7 +328,6 @@ namespace UI
 	extern void setteditortext(const char *name, char *text);
 }
 
-#ifndef NEWUI
 enum { G3D_DOWN = 0x0001, G3D_UP = 0x0002, G3D_PRESSED = 0x0004, G3D_ROLLOVER = 0x0008, G3D_DRAGGED = 0x0010, G3D_ALTERNATE = 0x0020 };
 enum { EDITORFOCUSED = 0, EDITORUSED, EDITORFOREVER, EDITORREADONLY };
 struct Texture;
@@ -387,7 +386,6 @@ struct g3d_callback
 extern void g3d_addgui(g3d_callback *cb);
 extern bool g3d_keypress(int code, bool isdown, int cooked);
 extern void g3d_limitscale(float scale);
-#endif
 
 // client
 enum { ST_EMPTY, ST_LOCAL, ST_TCPIP, ST_REMOTE };

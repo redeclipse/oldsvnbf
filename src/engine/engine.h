@@ -606,14 +606,12 @@ extern void drawskybox(int farplane, bool limited);
 extern bool limitsky();
 
 // 3dgui
-#ifndef NEWUI
 extern char *guiskintex, *guioverlaytex, *guislidertex;
 extern void g3d_render();
 extern bool g3d_windowhit(bool on, bool act);
 extern void g3d_mainmenu();
 extern bool g3d_active(bool hit = true, bool pass = true);
 extern void g3d_texturemenu();
-#endif
 
 // grass
 extern void rendergrass();
