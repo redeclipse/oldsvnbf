@@ -5,7 +5,7 @@ Welcome to Blood Frontier, and thanks for your interest!
 
 Blood Frontier is a standalone game based on the Sauerbraten (Cube 2) Engine by Wouter "aardappel" van Oortmerssen and Lee "eihrul" Salzman, to which many thanks go to for making this project possible with their open sourced engine. A special thanks goes to eihrul for his help, guidance, opinions, and overall friendship, it will always be appreciated.
 
-Please note that Blood Frontier is in early alpha stages, and as such, is not yet fully finished, polished, or even playable. It is intended as a multiplayer only demo of what is to come in future versions, meaning that singleplayer and monsters are not implemented yet.
+Please note that Blood Frontier is in early alpha stages, and as such, is not yet fully finished, polished, or even playable. It is intended as a multiplayer only demo of what is to come in future versions, meaning that singleplayer and enemies are not implemented yet. You are however invited to try out the features that have been added that will lead up to these things, such as; bots, online triggers, and much more :)
 
 If you are interested in development, or require technical support please visit the #bloodfrontier IRC channel on freenode at:
 
