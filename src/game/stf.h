@@ -267,9 +267,9 @@ struct stfclient : stfstate
 			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
 				fade = clamp(1.f-(dist/cl.radarrange()), 0.1f, 1.f)*cl.radarblipblend();
 			getradardir;
-			settexture(cl.radarflagtex(), 3);
+			settexture(cl.radartex(), 3);
 			glColor4f(r, g, b, fade);
-			cl.drawsized(cx, cy, s);
+			cl.drawtex(cx, cy, s, s, 0.5f, 0.25f, 0.25f, 0.25f);
 		}
 	}
 

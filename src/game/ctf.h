@@ -285,9 +285,10 @@ struct ctfclient : ctfstate
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
 			fade = clamp(1.f-(dist/cl.radarrange()), 0.1f, 1.f)*cl.radarblipblend();
 		getradardir;
-        settexture(cl.radarflagtex(), 3);
+        settexture(cl.radartex(), 3);
 		glColor4f(r, g, b, fade);
-        cl.drawsized(cx+(blip ? s*0.25f : 0), cy+(blip ? s*0.25f : 0), blip ? s*0.5f : s);
+		float cs = blip ? s*0.5f : s;
+		cl.drawtex(cx+(blip ? s*0.25f : 0), cy+(blip ? s*0.25f : 0), cs, cs, 0.5f, 0.25f, 0.25f, 0.25f);
     }
 
     void drawblips(int w, int h, int s)

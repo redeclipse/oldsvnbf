@@ -67,7 +67,7 @@ struct gameclient : igameclient
 	IVARP(editpanspeed, 1, 20, INT_MAX-1);
 
 	IVARP(spectv, 0, 1, 1); // 0 = float, 1 = tv
-	IVARP(spectvtime, 0, 10000, INT_MAX-1);
+	IVARP(spectvtime, 0, 30000, INT_MAX-1);
 	IVARP(specmouse, 0, 0, 2);
 	IVARP(specfov, 1, 120, 360);
 	IVARP(specdeadzone, 0, 10, 100);
@@ -80,46 +80,28 @@ struct gameclient : igameclient
 	IFVARP(snipesensitivity, 1e-3f, 3.0f, 1000);
 	IFVARP(pronesensitivity, 1e-3f, 5.0f, 1000);
 
-	IVARP(crosshairclip, 0, 1, 1);
-	IVARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
-	IFVARP(crosshairsize, 0, 0.05f, 1);
-	IFVARP(cursorsize, 0, 0.05f, 1);
-	IFVARP(cursorblend, 0, 1.f, 1);
-
-	IFVARP(crosshairblend, 0, 0.3f, 1);
+	IVARP(showdamage, 0, 1, 1);
+	ITVAR(damagetex, "textures/damage", 0);
+	IVARP(showindicator, 0, 1, 1);
+	ITVAR(indicatortex, "textures/indicator", 3);
 	IFVARP(indicatorblend, 0, 0.5f, 1);
-	IFVARP(clipbarblend, 0, 0.2f, 1);
-	IFVARP(candinalblend, 0, 1.0f, 1);
-	//IFVARP(barblend, 0, 1.0f, 1);
-	//IFVARP(infoblend, 0, 1.f, 1);
-
-	//IFVARP(ammosize, 0, 0.07f, 1);
-	//IFVARP(ammoblend, 0, 0.8f, 1);
-	//IFVARP(ammoblendinactive, 0, 0.3f, 1);
-
-	ITVAR(radartex, "textures/radar", 3);
-	ITVAR(radardottex, "textures/radardot", 3);
-	ITVAR(radarflagtex, "textures/radarflag", 3);
-	IFVARP(radarsize, 0, 0.02f, 1);
-	IVARP(radardist, 0, 512, 512);
-	IVARP(radarnames, 0, 1, 1);
-	IFVARP(radarblend, 0, 0.2f, 1);
-	IFVARP(radarblipblend, 0, 1.f, 1);
-	IVARP(editradardist, 0, 512, INT_MAX-1);
-	IVARP(editradarnoisy, 0, 1, 2);
+	ITVAR(snipetex, "textures/snipe", 0);
 
 	IVARP(showcrosshair, 0, 1, 1);
-	IVARP(showdamage, 0, 1, 1);
-	//IVARP(showtips, 0, 2, 3);
-	//IVARP(showguns, 0, 2, 2);
-	IVARP(shownamesabovehead, 0, 1, 2);
-	IVARP(showindicator, 0, 1, 1);
+	ITVAR(relativecursortex, "textures/cursordot", 3);
+	ITVAR(guicursortex, "textures/cursor", 3);
+	ITVAR(editcursortex, "textures/cursordot", 3);
+	ITVAR(speccursortex, "textures/cursordot", 3);
+	ITVAR(crosshairtex, "textures/crosshair", 3);
+	ITVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
+	ITVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
+	ITVAR(snipecrosshairtex, "textures/snipecrosshair", 3);
+	IFVARP(crosshairsize, 0, 0.05f, 1);
+	IVARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
+	IFVARP(crosshairblend, 0, 0.3f, 1);
 
-	IVARP(showstats, 0, 0, 1);
-	//IVARP(showenttips, 0, 1, 2);
-	//IVARP(showhudents, 0, 10, 100);
-	IVARP(showfps, 0, 2, 2);
-	IVARP(statrate, 0, 200, 1000);
+	IFVARP(cursorsize, 0, 0.05f, 1);
+	IFVARP(cursorblend, 0, 1.f, 1);
 
 	IVARP(snipetype, 0, 0, 1);
 	IVARP(snipemouse, 0, 0, 2);
@@ -136,25 +118,8 @@ struct gameclient : igameclient
 	IVARP(pronefov, 70, 70, 150);
 	IVARP(pronetime, 1, 150, 10000);
 
-	ITVAR(relativecursortex, "textures/cursordot", 3);
-	ITVAR(guicursortex, "textures/cursor", 3);
-	ITVAR(editcursortex, "textures/cursordot", 3);
-	ITVAR(speccursortex, "textures/cursordot", 3);
-	ITVAR(crosshairtex, "textures/crosshair", 3);
-	ITVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
-	ITVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
-	ITVAR(snipecrosshairtex, "textures/snipecrosshair", 3);
-	ITVAR(indicatortex, "textures/indicator", 3);
-
-	//ITVAR(healthbartex, "textures/healthbar", 0);
-
-	/*ITVAR(plasmatex, "textures/plasma", 0);
-	ITVAR(shotguntex, "textures/shotgun", 0);
-	ITVAR(chainguntex, "textures/chaingun", 0);
-	ITVAR(grenadestex, "textures/grenades", 0);
-	ITVAR(flamertex, "textures/flamer", 0);
-	ITVAR(carbinetex, "textures/carbine", 0);
-	ITVAR(rifletex, "textures/rifle", 0);*/
+	IVARP(showclip, 0, 1, 1);
+	IFVARP(clipblend, 0, 0.2f, 1);
 	ITVAR(plasmacliptex, "textures/plasmaclip", 3);
 	ITVAR(shotguncliptex, "textures/shotgunclip", 3);
 	ITVAR(chainguncliptex, "textures/chaingunclip", 3);
@@ -162,8 +127,42 @@ struct gameclient : igameclient
 	ITVAR(flamercliptex, "textures/flamerclip", 3);
 	ITVAR(carbinecliptex, "textures/carbineclip", 3);
 	ITVAR(riflecliptex, "textures/rifleclip", 3);
-	ITVAR(damagetex, "textures/damage", 0);
-	ITVAR(snipetex, "textures/snipe", 0);
+
+	//IFVARP(barblend, 0, 1.0f, 1);
+	//IFVARP(infoblend, 0, 1.f, 1);
+	//IFVARP(ammosize, 0, 0.07f, 1);
+	//IFVARP(ammoblend, 0, 0.8f, 1);
+	//IFVARP(ammoblendinactive, 0, 0.3f, 1);
+
+	IVARP(showradar, 0, 1, 1);
+	ITVAR(radartex, "textures/radar", 3);
+	IFVARP(radarsize, 0, 0.02f, 1);
+	IVARP(radardist, 0, 512, 512);
+	IVARP(radarnames, 0, 1, 1);
+	IFVARP(radarblend, 0, 0.3f, 1);
+	IFVARP(radarblipblend, 0, 0.5f, 1);
+	IFVARP(radarcardblend, 0, 0.3f, 1);
+	IVARP(editradardist, 0, 512, INT_MAX-1);
+	IVARP(editradarnoisy, 0, 1, 2);
+
+	//IVARP(showtips, 0, 2, 3);
+	//IVARP(showguns, 0, 2, 2);
+	//IVARP(showenttips, 0, 1, 2);
+	//IVARP(showhudents, 0, 10, 100);
+
+	IVARP(showstats, 0, 0, 1);
+	IVARP(statrate, 0, 200, 1000);
+	IVARP(showfps, 0, 2, 2);
+	IVARP(shownamesabovehead, 0, 1, 2);
+
+	//ITVAR(healthbartex, "textures/healthbar", 0);
+	//ITVAR(plasmatex, "textures/plasma", 0);
+	//ITVAR(shotguntex, "textures/shotgun", 0);
+	//ITVAR(chainguntex, "textures/chaingun", 0);
+	//ITVAR(grenadestex, "textures/grenades", 0);
+	//ITVAR(flamertex, "textures/flamer", 0);
+	//ITVAR(carbinetex, "textures/carbine", 0);
+	//ITVAR(rifletex, "textures/rifle", 0);
 
 	gameclient()
 		: ph(*this), pj(*this), ws(*this), sb(*this), et(*this), cc(*this), ai(*this), stf(*this), ctf(*this),
@@ -986,10 +985,10 @@ struct gameclient : igameclient
 			glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + chsize);
 			glEnd();
 
-			if(index > POINTER_GUI && player1->state == CS_ALIVE && isgun(player1->gunselect) && player1->hasgun(player1->gunselect) && crosshairclip())
+			if(index > POINTER_GUI && player1->state == CS_ALIVE && isgun(player1->gunselect) && player1->hasgun(player1->gunselect) && showclip())
 			{
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				drawclip(player1->gunselect, ox, oy, chsize, clipbarblend(), pointer);
+				drawclip(player1->gunselect, ox, oy, chsize, clipblend(), pointer);
 			}
 		}
 	}
@@ -1090,9 +1089,9 @@ struct gameclient : igameclient
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
 
 			getradardir;
-			settexture(radardottex(), 3);
+			settexture(radartex(), 3);
 			glColor4f(r/255.f, g/255.f, b/255.f, fade);
-			drawsized(cx, cy, s);
+			drawtex(cx, cy, s, s, 0.25f, 0.25f, 0.25f, 0.25f);
 			if(radarnames())
 			{
 				pushfont("radar");
@@ -1132,7 +1131,7 @@ struct gameclient : igameclient
 			if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h-FONTH : w-FONTW);
 			(rd.axis ? cx : cy) += (rd.axis ? w-FONTW : h-FONTH)*clamp(rd.up+(rd.down*skew), 0.f, 1.f);
 
-			draw_textx("%s", int(cx), int(cy), 255, 255, 255, int(255*candinalblend()), true, AL_LEFT, -1, -1, card);
+			draw_textx("%s", int(cx), int(cy), 255, 255, 255, int(255*radarcardblend()), true, AL_LEFT, -1, -1, card);
 		}
 		popfont();
 	}
@@ -1159,14 +1158,15 @@ struct gameclient : igameclient
 					fade = clamp(range, 0.1f, 1.f)*radarblipblend();
 
 			getradardir;
-			settexture(radardottex(), 3);
+			settexture(radartex(), 3);
 			if(inspawn > 0.f)
 			{
 				glColor4f(1.f, 0.5f+(inspawn*0.5f), 0.f, fade*(1.f-inspawn));
 				drawsized(cx-(inspawn*s), cy-(inspawn*s), s+(inspawn*s*2.f));
 			}
 			glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
-			drawsized(cx-(insel ? s : 0), cy-(insel ? s : 0), s+(insel ? s*2 : 0));
+			float cs = s+(insel ? s*2 : 0);
+			drawtex(cx-(insel ? s : 0), cy-(insel ? s : 0), cs, cs, 0.25f, 0.25f, 0.25f, 0.25f);
 		}
 	}
 
@@ -1260,27 +1260,30 @@ struct gameclient : igameclient
 			drawtex(0, 0, ox, oy);
 		}
 
-		int os = int(oy*radarsize()), qs = os/2, colour = teamtype[player1->team].colour,
-			r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);;
+		if(showradar())
+		{
+			int os = int(oy*radarsize()), qs = os/2, colour = teamtype[player1->team].colour,
+				r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);;
 
-		glColor4f((r/255.f), (g/255.f), (b/255.f), fade*radarblend());
-		settexture(radartex(), 3);
-		drawtex(os, os, os, os,					0.f, 0.f, 0.25f, 0.25f);		// TL
-		drawtex(ox-(os*2), os, os, os,			0.75f, 0.f, 0.25f, 0.25f);		// TR
-		drawtex(os, oy-(os*2), os, os,			0.f, 0.75f, 0.25f, 0.25f);		// BL
-		drawtex(ox-(os*2), oy-(os*2), os, os,	0.75f, 0.75f, 0.25f, 0.25f);	// BR
-		drawtex(os*2, os, ox-(os*4), os,		0.25f, 0.f, 0.5f, 0.25f);		// T
-		drawtex(os*2, oy-(os*2), ox-(os*4), os,	0.25f, 0.75f, 0.5f, 0.25f);		// B
-		drawtex(os, os*2, os, oy-(os*4),		0.f, 0.25f, 0.25f, 0.5f);		// L
-		drawtex(ox-(os*2), os*2, os, oy-(os*4),	0.75f, 0.25f, 0.25f, 0.5f);		// R
+			glColor4f((r/255.f), (g/255.f), (b/255.f), fade*radarblend());
+			settexture(radartex(), 3);
+			drawtex(os, os, os, os,					0.f, 0.f, 0.25f, 0.25f);		// TL
+			drawtex(ox-(os*2), os, os, os,			0.75f, 0.f, 0.25f, 0.25f);		// TR
+			drawtex(os, oy-(os*2), os, os,			0.f, 0.75f, 0.25f, 0.25f);		// BL
+			drawtex(ox-(os*2), oy-(os*2), os, os,	0.75f, 0.75f, 0.25f, 0.25f);	// BR
+			drawtex(os*2, os, ox-(os*4), os,		0.25f, 0.f, 0.5f, 0.25f);		// T
+			drawtex(os*2, oy-(os*2), ox-(os*4), os,	0.25f, 0.75f, 0.5f, 0.25f);		// B
+			drawtex(os, os*2, os, oy-(os*4),		0.f, 0.25f, 0.25f, 0.5f);		// L
+			drawtex(ox-(os*2), os*2, os, oy-(os*4),	0.75f, 0.25f, 0.25f, 0.5f);		// R
 
-		drawentblips(ox, oy, qs);
-		loopv(players)
-			if(players[i] && players[i]->state == CS_ALIVE)
-				drawplayerblip(players[i], ox, oy, qs);
-
-		if(m_stf(gamemode)) stf.drawblips(ox, oy, qs);
-		else if(m_ctf(gamemode)) ctf.drawblips(ox, oy, qs);
+			drawentblips(ox, oy, qs);
+			loopv(players)
+				if(players[i] && players[i]->state == CS_ALIVE)
+					drawplayerblip(players[i], ox, oy, qs);
+			if(m_stf(gamemode)) stf.drawblips(ox, oy, qs);
+			else if(m_ctf(gamemode)) ctf.drawblips(ox, oy, qs);
+			drawcardinalblips(ox, oy, qs);
+		}
 #if 0
 		int tp = by + bs + FONTH/2;
 		pushfont("emphasis");
@@ -1467,12 +1470,11 @@ struct gameclient : igameclient
 		}
 		popfont(); // emphasis
 #endif
-		drawcardinalblips(ox, oy, qs);
 	}
 
 	void drawhudelements(int w, int h)
 	{
-		int ox = hudwidth, oy = hudsize(), bx = int(oy*radarsize()), by = oy-bx-FONTH/4;
+		int ox = hudwidth, oy = hudsize(), bx = showradar() ? int(oy*radarsize()) : 0, by = oy-bx-FONTH/4;
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 
