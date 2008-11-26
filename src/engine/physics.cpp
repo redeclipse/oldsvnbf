@@ -157,7 +157,7 @@ static float disttoent(octaentities *oc, octaentities *last, const vec &o, const
 	int orient;
 	float dist = 1e16f, f = 0.0f;
 	if(oc == last || oc == NULL) return dist;
-	const vector<extentity *> &ents = et->getents();
+	const vector<extentity *> &ents = entities::getents();
 
 	#define entintersect(mask, type, func) {\
 		if((mode&(mask))==(mask)) \
@@ -179,19 +179,19 @@ static float disttoent(octaentities *oc, octaentities *last, const vec &o, const
 
 	entintersect(RAY_POLY, mapmodels, {
 		if((mode&RAY_ENTS)!=RAY_ENTS) mapmodelskip;
-		if((mode&RAY_ENTS)==RAY_ENTS && !et->cansee(e)) continue;
+		if((mode&RAY_ENTS)==RAY_ENTS && !entities::cansee(e)) continue;
 		orient = 0; // FIXME, not set
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
 	});
 
 	entintersect(RAY_ENTS, other,
-		if((mode&RAY_ENTS)==RAY_ENTS && !et->cansee(e)) continue;
+		if((mode&RAY_ENTS)==RAY_ENTS && !entities::cansee(e)) continue;
 		entselectionbox(e, eo, es);
 		if(!rayrectintersect(eo, es, o, ray, f, orient)) continue;
 	);
 
 	entintersect(RAY_ENTS, mapmodels,
-		if((mode&RAY_ENTS)==RAY_ENTS && !et->cansee(e)) continue;
+		if((mode&RAY_ENTS)==RAY_ENTS && !entities::cansee(e)) continue;
 		entselectionbox(e, eo, es);
 		if(!rayrectintersect(eo, es, o, ray, f, orient)) continue;
 	);
@@ -204,7 +204,7 @@ static float shadowent(octaentities *oc, octaentities *last, const vec &o, const
 {
 	float dist = 1e16f, f = 0.0f;
 	if(oc == last || oc == NULL) return dist;
-	const vector<extentity *> &ents = et->getents();
+	const vector<extentity *> &ents = entities::getents();
 	loopv(oc->mapmodels) if(!last || last->mapmodels.find(oc->mapmodels[i])<0)
 	{
 		extentity &e = *ents[oc->mapmodels[i]];
@@ -504,10 +504,10 @@ const vector<physent *> &checkdynentcache(int x, int y)
 	dec.y = y;
 	dec.frame = dynentframe;
 	dec.dynents.setsize(0);
-	int numdyns = cl->numdynents(), dsize = 1<<dynentsize, dx = x<<dynentsize, dy = y<<dynentsize;
+	int numdyns = world::numdynents(), dsize = 1<<dynentsize, dx = x<<dynentsize, dy = y<<dynentsize;
 	loopi(numdyns)
 	{
-		dynent *d = cl->iterdynents(i);
+		dynent *d = world::iterdynents(i);
 		if(!d || d->state != CS_ALIVE ||
 			d->o.x+d->radius <= dx || d->o.x-d->radius >= dx+dsize ||
 			d->o.y+d->radius <= dy || d->o.y-d->radius >= dy+dsize)
@@ -607,7 +607,7 @@ void rotatebb(vec &center, vec &radius, int yaw)
 
 bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // collide with a mapmodel
 {
-    const vector<extentity *> &ents = et->getents();
+    const vector<extentity *> &ents = entities::getents();
     loopv(oc.mapmodels)
     {
         extentity &e = *ents[oc.mapmodels[i]];

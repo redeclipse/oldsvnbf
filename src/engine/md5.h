@@ -675,7 +675,7 @@ void md5anim(char *anim, char *animfile, float *speed, int *priority)
     if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("\frnot loading an md5"); return; }
 
     vector<int> anims;
-    cl->findanims(anim, anims);
+    world::findanims(anim, anims);
     if(anims.empty()) conoutf("\frcould not find animation %s in %s", anim, loadingmd5->loadname);
     else
     {

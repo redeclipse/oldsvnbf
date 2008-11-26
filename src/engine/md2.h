@@ -291,7 +291,7 @@ void md2anim(char *anim, int *frame, int *range, float *speed, int *priority)
 {
     if(!loadingmd2 || loadingmd2->parts.empty()) { conoutf("\frnot loading an md2"); return; }
     vector<int> anims;
-    cl->findanims(anim, anims);
+    world::findanims(anim, anims);
     if(anims.empty()) conoutf("\frcould not find animation %s in %s", anim, loadingmd2->loadname);
     else loopv(anims)
     {

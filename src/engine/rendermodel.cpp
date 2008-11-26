@@ -697,7 +697,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
             {
                 lightreaching(d->o, light->color, light->dir);
                 dynlightreaching(o, light->color, light->dir);
-                cl->lighteffects(d, light->color, light->dir);
+                world::lighteffects(d, light->color, light->dir);
                 light->millis = lastmillis;
             }
         }

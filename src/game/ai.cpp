@@ -1,62 +1,19 @@
-#ifdef AISERV
-struct aiserv
+#ifdef GAMESERVER
+namespace ai
 {
-	gameserver &sv;
-	aiserv(gameserver &_sv) : sv(_sv) {}
-
-	void reqadd(clientinfo *ci, int skill)
-	{
-		if(sv.haspriv(ci, PRIV_MASTER, true))
-		{
-			if(m_lobby(sv.gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(m_play(sv.gamemode) && sv_botbalance)
-			{
-				if(sv_botbalance < 32)
-				{
-					setvar("sv_botbalance", sv_botbalance+1, true);
-					s_sprintfd(val)("%d", sv_botbalance);
-					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
-				}
-				else sv.srvoutf(ci->clientnum, "botbalance is at its highest");
-			}
-			else if(!addai(AI_BOT, skill))
-				sv.srvoutf(ci->clientnum, "failed to create or assign bot");
-		}
-	}
-
-	void reqdel(clientinfo *ci)
-	{
-		if(sv.haspriv(ci, PRIV_MASTER, true))
-		{
-			if(m_lobby(sv.gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(m_play(sv.gamemode) && sv_botbalance)
-			{
-				if(sv_botbalance > 0)
-				{
-					setvar("sv_botbalance", sv_botbalance-1, true);
-					s_sprintfd(val)("%d", sv_botbalance);
-					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
-				}
-				else sv.srvoutf(ci->clientnum, "botbalance is at its lowest");
-			}
-			else if(!delai(AI_BOT))
-				sv.srvoutf(ci->clientnum, "failed to remove any bots");
-		}
-	}
-
-	int findaiclient(int exclude = -1)
+	int findaiclient(int exclude)
 	{
 		vector<int> siblings;
-		while(siblings.length() < sv.clients.length()) siblings.add(-1);
-		loopv(sv.clients)
+		while(siblings.length() < clients.length()) siblings.add(-1);
+		loopv(clients)
 		{
-			clientinfo *ci = sv.clients[i];
+			clientinfo *ci = clients[i];
 			if(ci->state.aitype != AI_NONE || !ci->name[0] || ci->clientnum == exclude)
 				siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
-				loopvj(sv.clients) if(sv.clients[j]->state.aitype != AI_NONE && sv.clients[j]->state.ownernum == ci->clientnum)
+				loopvj(clients) if(clients[j]->state.aitype != AI_NONE && clients[j]->state.ownernum == ci->clientnum)
 					siblings[i]++;
 			}
 		}
@@ -68,7 +25,7 @@ struct aiserv
 					q = i;
 			if(siblings.inrange(q))
 			{
-				if(sv.clients.inrange(q)) return sv.clients[q]->clientnum;
+				if(clients.inrange(q)) return clients[q]->clientnum;
 				else siblings.removeunordered(q);
 			}
 			else break;
@@ -94,24 +51,24 @@ struct aiserv
 					if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
 					ci->state.skill = clamp(s, 1, 100);
 					ci->state.state = CS_DEAD;
-					sv.clients.add(ci);
+					clients.add(ci);
 					ci->state.lasttimeplayed = lastmillis;
 					s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
 
-					if(m_team(sv.gamemode, sv.mutators)) ci->team = sv.chooseworstteam(ci);
+					if(m_team(gamemode, mutators)) ci->team = chooseworstteam(ci);
 					else ci->team = TEAM_NEUTRAL;
 
 					sendf(-1, 1, "ri5si", SV_INITAI, ci->state.aitype, ci->state.ownernum, ci->state.skill, ci->clientnum, ci->name, ci->team);
 
 					int nospawn = 0;
-					if(sv.smode && !sv.smode->canspawn(ci, true)) { nospawn++; }
-					mutate(sv.smuts, if (!mut->canspawn(ci, true)) { nospawn++; });
+					if(smode && !smode->canspawn(ci, true)) { nospawn++; }
+					mutate(smuts, if (!mut->canspawn(ci, true)) { nospawn++; });
 					if(nospawn)
 					{
 						ci->state.state = CS_DEAD;
 						sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
 					}
-					else sv.sendspawn(ci);
+					else sendspawn(ci);
 					return true;
 				}
 			}
@@ -123,20 +80,20 @@ struct aiserv
 	void deleteai(clientinfo *ci)
 	{
 		int cn = ci->clientnum;
-		if(sv.smode) sv.smode->leavegame(ci, true);
-		mutate(sv.smuts, mut->leavegame(ci));
+		if(smode) smode->leavegame(ci, true);
+		mutate(smuts, mut->leavegame(ci));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-		sv.savescore(ci);
+		savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, cn);
-		sv.clients.removeobj(ci);
+		clients.removeobj(ci);
 		delclient(cn);
 	}
 
 	bool delai(int type)
 	{
-		loopvrev(sv.clients) if(sv.clients[i]->state.aitype == type && sv.clients[i]->state.ownernum >= 0)
+		loopvrev(clients) if(clients[i]->state.aitype == type && clients[i]->state.ownernum >= 0)
 		{
-			deleteai(sv.clients[i]);
+			deleteai(clients[i]);
 			return true;
 		}
 		return false;
@@ -144,10 +101,10 @@ struct aiserv
 
 	void removeai(clientinfo *ci)
 	{
-		bool remove = !sv.numclients(ci->clientnum, false, true);
-		loopvrev(sv.clients) if(sv.clients[i]->state.ownernum == ci->clientnum)
+		bool remove = !numclients(ci->clientnum, false, true);
+		loopvrev(clients) if(clients[i]->state.ownernum == ci->clientnum)
 		{
-			clientinfo *cp = sv.clients[i];
+			clientinfo *cp = clients[i];
 			if(remove) deleteai(cp);
 			else // try to reassign the ai to someone else
 			{
@@ -159,20 +116,20 @@ struct aiserv
 		}
 	}
 
-	bool reassignai(int exclude = -1)
+	bool reassignai(int exclude)
 	{
 		vector<int> siblings;
-		while(siblings.length() < sv.clients.length()) siblings.add(-1);
+		while(siblings.length() < clients.length()) siblings.add(-1);
 		int hi = -1, lo = -1;
-		loopv(sv.clients)
+		loopv(clients)
 		{
-			clientinfo *ci = sv.clients[i];
+			clientinfo *ci = clients[i];
 			if(ci->state.aitype != AI_NONE || !ci->name[0] || ci->clientnum == exclude)
 				siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
-				loopvj(sv.clients) if(sv.clients[j]->state.aitype != AI_NONE && sv.clients[j]->state.ownernum == ci->clientnum)
+				loopvj(clients) if(clients[j]->state.aitype != AI_NONE && clients[j]->state.ownernum == ci->clientnum)
 					siblings[i]++;
 				if(!siblings.inrange(hi) || siblings[i] > siblings[hi])
 					hi = i;
@@ -182,11 +139,11 @@ struct aiserv
 		}
 		if(siblings.inrange(hi) && siblings.inrange(lo) && (siblings[hi]-siblings[lo]) > 1)
 		{
-			clientinfo *ci = sv.clients[hi];
-			loopvrev(sv.clients) if(sv.clients[i]->state.aitype != AI_NONE && sv.clients[i]->state.ownernum == ci->clientnum)
+			clientinfo *ci = clients[hi];
+			loopvrev(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
 			{
-				clientinfo *cp = sv.clients[i];
-				cp->state.ownernum = sv.clients[lo]->clientnum;
+				clientinfo *cp = clients[i];
+				cp->state.ownernum = clients[lo]->clientnum;
 				if(cp->state.ownernum >= 0)
 				{
 					sendf(-1, 1, "ri5si", SV_INITAI, cp->state.aitype, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
@@ -202,9 +159,9 @@ struct aiserv
 	{
 		int m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
 			n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
-		loopv(sv.clients) if(sv.clients[i]->state.aitype == AI_BOT && (sv.clients[i]->state.skill > m || sv.clients[i]->state.skill < n))
+		loopv(clients) if(clients[i]->state.aitype == AI_BOT && (clients[i]->state.skill > m || clients[i]->state.skill < n))
 		{
-			clientinfo *cp = sv.clients[i];
+			clientinfo *cp = clients[i];
 			cp->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
 			sendf(-1, 1, "ri5si", SV_INITAI, cp->state.aitype, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
 		}
@@ -212,62 +169,80 @@ struct aiserv
 
 	void clearbots()
 	{
-		loopvrev(sv.clients) if(sv.clients[i]->state.aitype != AI_NONE)
-			deleteai(sv.clients[i]);
+		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE)
+			deleteai(clients[i]);
 	}
 
 	void checkai()
 	{
-		if(m_demo(sv.gamemode) || m_lobby(sv.gamemode))
+		if(m_demo(gamemode) || m_lobby(gamemode))
 			clearbots();
-		else if(sv.numclients(-1, false, true))
+		else if(numclients(-1, false, true))
 		{
 			checkskills();
-			if(m_play(sv.gamemode) && sv_botbalance)
+			if(m_play(gamemode) && sv_botbalance)
 			{
-				int balance = clamp(sv_botbalance * (m_team(sv.gamemode, sv.mutators) ? numteams(sv.gamemode, sv.mutators) : 1), 0, 128);
-				while(sv.numclients(-1, true, false) < balance && addai(AI_BOT, -1)) ;
-				while(sv.numclients(-1, true, false) > balance && delai(AI_BOT)) ;
+				int balance = clamp(sv_botbalance * (m_team(gamemode, mutators) ? numteams(gamemode, mutators) : 1), 0, 128);
+				while(numclients(-1, true, false) < balance && addai(AI_BOT, -1)) ;
+				while(numclients(-1, true, false) > balance && delai(AI_BOT)) ;
 			}
 			while(reassignai()) ;
 		}
 	}
-} ai;
-#else
-struct aiclient
-{
-	gameclient &cl;
-    avoidset obstacles;
-    int avoidmillis, currentai;
 
-	static const float AIISNEAR			= 64.f;			// is near
-	static const float AIISFAR			= 128.f;		// too far
-	static const float AIJUMPHEIGHT		= 6.f;			// decides to jump
-	static const float AIJUMPIMPULSE	= 16.f;			// impulse to jump
-	static const float AILOSMIN			= 64.f;			// minimum line of sight
-	static const float AILOSMAX			= 4096.f;		// maximum line of sight
-	static const float AIFOVMIN			= 90.f;			// minimum field of view
-	static const float AIFOVMAX			= 130.f;		// maximum field of view
-
-	IVAR(aidebug, 0, 0, 5);
-
-	#define AILOSDIST(x)			clamp((AILOSMIN+(AILOSMAX-AILOSMIN))/100.f*float(x), float(AILOSMIN), float(getvar("fog")+AILOSMIN))
-	#define AIFOVX(x)				clamp((AIFOVMIN+(AIFOVMAX-AIFOVMIN))/100.f*float(x), float(AIFOVMIN), float(AIFOVMAX))
-	#define AIFOVY(x)				AIFOVX(x)*3.f/4.f
-    #define AIMAYTARG(y)           (y->state == CS_ALIVE && lastmillis-y->lastspawn > REGENWAIT)
-	#define AITARG(x,y,z)			(y != x && AIMAYTARG(y) && (!z || !m_team(cl.gamemode, cl.mutators) || (x)->team != (y)->team))
-	#define AICANSEE(x,y,z)			getsight(x, z->yaw, z->pitch, y, targ, AILOSDIST(z->skill), AIFOVX(z->skill), AIFOVY(z->skill))
-
-	aiclient(gameclient &_cl) : cl(_cl), obstacles(_cl), avoidmillis(0), currentai(0)
+	void reqadd(clientinfo *ci, int skill)
 	{
-		CCOMMAND(addbot, "s", (aiclient *self, char *s),
-			self->addbot(*s ? clamp(atoi(s), 1, 100) : -1)
-		);
-		CCOMMAND(delbot, "", (aiclient *self), self->delbot());
+		if(haspriv(ci, PRIV_MASTER, true))
+		{
+			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
+			else if(m_play(gamemode) && sv_botbalance)
+			{
+				if(sv_botbalance < 32)
+				{
+					setvar("sv_botbalance", sv_botbalance+1, true);
+					s_sprintfd(val)("%d", sv_botbalance);
+					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
+				}
+				else srvoutf(ci->clientnum, "botbalance is at its highest");
+			}
+			else if(!addai(AI_BOT, skill))
+				srvoutf(ci->clientnum, "failed to create or assign bot");
+		}
 	}
 
-	void addbot(int s) { cl.cc.addmsg(SV_ADDBOT, "ri", s); }
-	void delbot() { cl.cc.addmsg(SV_DELBOT, "r"); }
+	void reqdel(clientinfo *ci)
+	{
+		if(haspriv(ci, PRIV_MASTER, true))
+		{
+			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
+			else if(m_play(gamemode) && sv_botbalance)
+			{
+				if(sv_botbalance > 0)
+				{
+					setvar("sv_botbalance", sv_botbalance-1, true);
+					s_sprintfd(val)("%d", sv_botbalance);
+					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
+				}
+				else srvoutf(ci->clientnum, "botbalance is at its lowest");
+			}
+			else if(!delai(AI_BOT))
+				srvoutf(ci->clientnum, "failed to remove any bots");
+		}
+	}
+}
+#else
+#include "pch.h"
+#include "engine.h"
+#include "game.h"
+namespace ai
+{
+	entities::avoidset obstacles;
+    int avoidmillis = 0, currentai = 0;
+
+	VAR(aidebug, 0, 0, 5);
+
+	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 100) : -1));
+	ICOMMAND(delbot, "", (), client::addmsg(SV_DELBOT, "r"));
 
 	void create(gameent *d)
 	{
@@ -283,8 +258,8 @@ struct aiclient
 	void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm)
 	{
 		bool rst = false;
-		gameent *o = cl.getclient(on);
-		s_sprintfd(m)("%s", o ? cl.colorname(o) : "unknown");
+		gameent *o = world::getclient(on);
+		s_sprintfd(m)("%s", o ? world::colorname(o) : "unknown");
 		string r; r[0] = 0;
 
 		if(!d->name[0])
@@ -308,11 +283,11 @@ struct aiclient
 		d->skill = sk;
 		d->team = tm;
 
-		if(r[0]) conoutf("\fg%s %s", cl.colorname(d), r);
+		if(r[0]) conoutf("\fg%s %s", world::colorname(d), r);
 
 		if(rst) // only if connecting or changing owners
 		{
-			if(cl.player1->clientnum == d->ownernum) create(d);
+			if(world::player1->clientnum == d->ownernum) create(d);
 			else if(d->ai) destroy(d);
 		}
 	}
@@ -320,7 +295,7 @@ struct aiclient
 	void update()
 	{
 		int numai = 0;
-		loopv(cl.players) if(cl.players[i] && cl.players[i]->ai)
+		loopv(world::players) if(world::players[i] && world::players[i]->ai)
 			numai++;
 		if(numai)
 		{
@@ -331,9 +306,9 @@ struct aiclient
 			}
 			int idx = 0;
 			if(currentai >= numai || currentai < 0) currentai = 0;
-			loopv(cl.players) if(cl.players[i] && cl.players[i]->ai)
+			loopv(world::players) if(world::players[i] && world::players[i]->ai)
 			{
-				think(cl.players[i], idx);
+				think(world::players[i], idx);
 				idx++;
 			}
 		}
@@ -344,7 +319,7 @@ struct aiclient
 		if(!rnd(d->skill*10)) return true;
 		else
 		{
-			vec dir = cl.feetpos(d, 0.f);
+			vec dir = world::feetpos(d, 0.f);
 			dir.sub(pos);
 			dir.normalize();
 			float targyaw, targpitch;
@@ -358,14 +333,14 @@ struct aiclient
 		return false;
 	}
 
-	bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false)
+	bool checkothers(vector<int> &targets, gameent *d, int state, int targtype, int target, bool teams)
 	{ // checks the states of other ai for a match
 		targets.setsize(0);
 		gameent *e = NULL;
-		loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && e != d && e->ai && e->state == CS_ALIVE)
+		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && e->ai && e->state == CS_ALIVE)
 		{
 			if(targets.find(e->clientnum) >= 0) continue;
-			if(teams && m_team(cl.gamemode, cl.mutators) && d && d->team != e->team) continue;
+			if(teams && m_team(world::gamemode, world::mutators) && d && d->team != e->team) continue;
 
 			aistate &b = e->ai->getstate();
 			if(state >= 0 && b.type != state) continue;
@@ -376,9 +351,9 @@ struct aiclient
 		return !targets.empty();
 	}
 
-	bool makeroute(gameent *d, aistate &b, int node, float tolerance = AIISNEAR, bool retry = false)
+	bool makeroute(gameent *d, aistate &b, int node, float tolerance, bool retry)
 	{
-		if(cl.et.route(d, d->lastnode, node, d->ai->route, obstacles, tolerance, retry))
+		if(entities::route(d, d->lastnode, node, d->ai->route, obstacles, tolerance, retry))
 		{
 			b.override = false;
 			return true;
@@ -388,23 +363,23 @@ struct aiclient
 		return false;
 	}
 
-	bool makeroute(gameent *d, aistate &b, vec &pos, float tolerance = AIISNEAR, bool dist = false)
+	bool makeroute(gameent *d, aistate &b, vec &pos, float tolerance, bool dist)
 	{
-		int node = cl.et.entitynode(pos, dist);
+		int node = entities::entitynode(pos, dist);
 		return makeroute(d, b, node, tolerance);
 	}
 
-	bool randomnode(gameent *d, aistate &b, vec &from, vec &to, float radius = AIISNEAR, float wander = AIISFAR)
+	bool randomnode(gameent *d, aistate &b, vec &from, vec &to, float radius, float wander)
 	{
 		static vector<int> entities;
 		entities.setsizenodelete(0);
 		float r = radius*radius, w = wander*wander;
-		loopvj(cl.et.ents) if(cl.et.ents[j]->type == WAYPOINT && j != d->lastnode && !obstacles.find(j, d))
+		loopvj(entities::ents) if(entities::ents[j]->type == WAYPOINT && j != d->lastnode && !obstacles.find(j, d))
 		{
-			float fdist = cl.et.ents[j]->o.squaredist(from);
+			float fdist = entities::ents[j]->o.squaredist(from);
 			if(fdist <= w)
 			{
-				float tdist = cl.et.ents[j]->o.squaredist(to);
+				float tdist = entities::ents[j]->o.squaredist(to);
 				if(tdist > r && fdist > r) entities.add(j);
 			}
 		}
@@ -417,15 +392,15 @@ struct aiclient
 		return false;
 	}
 
-	bool randomnode(gameent *d, aistate &b, float radius = AIISNEAR, float wander = AIISFAR)
+	bool randomnode(gameent *d, aistate &b, float radius, float wander)
 	{
-		vec feet = cl.feetpos(d, 0.f);
+		vec feet = world::feetpos(d, 0.f);
 		return randomnode(d, b, feet, feet, radius, wander);
 	}
 
-	bool patrol(gameent *d, aistate &b, vec &pos, float radius = AIISNEAR, float wander = AIISFAR, bool retry = false)
+	bool patrol(gameent *d, aistate &b, vec &pos, float radius, float wander, bool retry)
 	{
-		vec feet = cl.feetpos(d, 0.f);
+		vec feet = world::feetpos(d, 0.f);
 		if(feet.squaredist(pos) <= radius*radius || !makeroute(d, b, pos, radius, wander))
 		{ // run away and back to keep ourselves busy
 			if(!b.override && randomnode(d, b, feet, pos, radius, wander))
@@ -444,11 +419,11 @@ struct aiclient
 		return true;
 	}
 
-	bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false)
+	bool violence(gameent *d, aistate &b, gameent *e, bool pursue)
 	{
 		if(AITARG(d, e, true))
 		{
-			vec epos(cl.feetpos(e, 0.f));
+			vec epos(world::feetpos(e, 0.f));
 			aistate &c = d->ai->addstate(pursue ? AI_S_PURSUE : AI_S_ATTACK);
 			c.targtype = AI_T_PLAYER;
 			c.defers = pursue;
@@ -460,13 +435,13 @@ struct aiclient
 		return false;
 	}
 
-	bool defer(gameent *d, aistate &b, bool pursue = false)
+	bool defer(gameent *d, aistate &b, bool pursue)
 	{
 		gameent *t = NULL, *e = NULL;
-		vec targ, dp = cl.headpos(d), tp = vec(0, 0, 0);
-		loopi(cl.numdynents()) if((e = (gameent *)cl.iterdynents(i)) && e != d && AITARG(d, e, true))
+		vec targ, dp = world::headpos(d), tp = vec(0, 0, 0);
+		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && AITARG(d, e, true))
 		{
-			vec ep = cl.headpos(e);
+			vec ep = world::headpos(e);
 			if((!t || ep.squaredist(d->o) < tp.squaredist(d->o)) && (pursue || AICANSEE(dp, ep, d)))
 			{
 				t = e;
@@ -479,10 +454,10 @@ struct aiclient
 
 	void gunfind(gameent *d, aistate &b, vector<interest> &interests)
 	{
-		vec pos = cl.headpos(d);
-		loopvj(cl.et.ents)
+		vec pos = world::headpos(d);
+		loopvj(entities::ents)
 		{
-			gameentity &e = *(gameentity *)cl.et.ents[j];
+			gameentity &e = *(gameentity *)entities::ents[j];
 			if(enttype[e.type].usetype != EU_ITEM) continue;
 			switch(e.type)
 			{
@@ -492,7 +467,7 @@ struct aiclient
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
-						n.node = cl.et.entitynode(e.o, true);
+						n.node = entities::entitynode(e.o, true);
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
 						n.tolerance = enttype[e.type].radius+d->radius;
@@ -505,10 +480,10 @@ struct aiclient
 			}
 		}
 
-		loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ready())
+		loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready())
 		{
-			projent &proj = *cl.pj.projs[j];
-			if(enttype[proj.ent].usetype != EU_ITEM || !cl.et.ents.inrange(proj.id)) continue;
+			projent &proj = *projs::projs[j];
+			if(enttype[proj.ent].usetype != EU_ITEM || !entities::ents.inrange(proj.id)) continue;
 			switch(proj.ent)
 			{
 				case WEAPON:
@@ -518,7 +493,7 @@ struct aiclient
 						if(proj.owner == d && d->gunselect != GUN_PLASMA) break;
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
-						n.node = cl.et.entitynode(proj.o, true);
+						n.node = entities::entitynode(proj.o, true);
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
 						n.tolerance = enttype[proj.ent].radius+d->radius;
@@ -537,7 +512,7 @@ struct aiclient
 		static vector<interest> interests;
 		interests.setsizenodelete(0);
 
-		if(m_ctf(cl.gamemode)) cl.ctf.aifind(d, b, interests);
+		if(m_ctf(world::gamemode)) ctf::aifind(d, b, interests);
 		if(!d->hasgun(d->ai->gunpref)) gunfind(d, b, interests);
 		while(!interests.empty())
 		{
@@ -616,7 +591,7 @@ struct aiclient
 		if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
 		{
 			gameent *t;
-			loopv(targets) if((t = cl.getclient(targets[i])) && t->ai && AITARG(t, e, true))
+			loopv(targets) if((t = world::getclient(targets[i])) && t->ai && AITARG(t, e, true))
 			{
 				aistate &c = t->ai->getstate();
 				violence(t, c, e, false);
@@ -638,27 +613,27 @@ struct aiclient
 	{
 		if(d->state == CS_DEAD)
 		{
-			if(d->respawned != d->lifesequence && !cl.respawnwait(d))
-				cl.respawnself(d);
+			if(d->respawned != d->lifesequence && !world::respawnwait(d))
+				world::respawnself(d);
 			return true;
 		}
 		else if(d->state == CS_ALIVE)
 		{
-			if(d->timeinair && cl.et.ents.inrange(d->lastnode))
+			if(d->timeinair && entities::ents.inrange(d->lastnode))
 			{ // we need to make a quick decision to find a landing spot
 				int closest = -1;
-				gameentity &e = *(gameentity *)cl.et.ents[d->lastnode];
+				gameentity &e = *(gameentity *)entities::ents[d->lastnode];
 				if(!e.links.empty())
 				{
-					loopv(e.links) if(cl.et.ents.inrange(e.links[i]))
+					loopv(e.links) if(entities::ents.inrange(e.links[i]))
 					{
-						gameentity &f = *(gameentity *)cl.et.ents[e.links[i]];
-						if(!cl.et.ents.inrange(closest) ||
-							f.o.squaredist(d->o) < cl.et.ents[closest]->o.squaredist(d->o))
+						gameentity &f = *(gameentity *)entities::ents[e.links[i]];
+						if(!entities::ents.inrange(closest) ||
+							f.o.squaredist(d->o) < entities::ents[closest]->o.squaredist(d->o))
 								closest = e.links[i];
 					}
 				}
-				if(cl.et.ents.inrange(closest))
+				if(entities::ents.inrange(closest))
 				{
 					aistate &c = d->ai->setstate(AI_S_INTEREST);
 					c.targtype = AI_T_NODE;
@@ -668,7 +643,7 @@ struct aiclient
 					return true;
 				}
 			}
-			if(m_ctf(cl.gamemode) && cl.ctf.aicheck(d, b)) return true;
+			if(m_ctf(world::gamemode) && ctf::aicheck(d, b)) return true;
 			if(find(d, b, true)) return true;
 			if(defer(d, b, true)) return true;
 			if(randomnode(d, b, AIISFAR, 1e16f))
@@ -682,7 +657,7 @@ struct aiclient
 			}
 			if(b.cycle >= 10)
 			{
-				cl.suicide(d, 0); // bail
+				world::suicide(d, 0); // bail
 				return true; // recycle and start from beginning
 			}
 		}
@@ -697,15 +672,15 @@ struct aiclient
 			{
 				case AI_T_AFFINITY:
 				{
-					if(m_ctf(cl.gamemode)) return cl.ctf.aidefend(d, b);
+					if(m_ctf(world::gamemode)) return ctf::aidefend(d, b);
 					break;
 				}
 				case AI_T_PLAYER:
 				{
-					gameent *e = cl.getclient(b.target);
+					gameent *e = world::getclient(b.target);
 					if(e && e->state == CS_ALIVE)
 					{
-						vec epos(cl.feetpos(e, 0.f));
+						vec epos(world::feetpos(e, 0.f));
 						return patrol(d, b, epos);
 					}
 					break;
@@ -720,11 +695,11 @@ struct aiclient
 	{
 		if(d->state == CS_ALIVE)
 		{
-			vec targ, pos = cl.headpos(d);
-			gameent *e = cl.getclient(b.target);
+			vec targ, pos = world::headpos(d);
+			gameent *e = world::getclient(b.target);
 			if(e && e->state == CS_ALIVE && AITARG(d, e, true))
 			{
-				vec ep = cl.headpos(e);
+				vec ep = world::headpos(e);
 				bool cansee = AICANSEE(pos, ep, d);
 				if(cansee || (d->ai->lastseen >= 0 && lastmillis-d->ai->lastseen > d->skill*25))
 				{
@@ -738,7 +713,7 @@ struct aiclient
 					}
 					if(b.defers || d->ai->route.empty())
 					{
-						vec epos(cl.feetpos(e, 0.f));
+						vec epos(world::feetpos(e, 0.f));
 						return patrol(d, b, epos);
 					}
 					return true;
@@ -757,9 +732,9 @@ struct aiclient
 				case AI_T_ENTITY:
 				{
 					if(d->hasgun(d->ai->gunpref)) return false;
-					if(cl.et.ents.inrange(b.target))
+					if(entities::ents.inrange(b.target))
 					{
-						gameentity &e = *(gameentity *)cl.et.ents[b.target];
+						gameentity &e = *(gameentity *)entities::ents[b.target];
 						if(enttype[e.type].usetype != EU_ITEM) return false;
 						switch(e.type)
 						{
@@ -777,10 +752,10 @@ struct aiclient
 				case AI_T_DROP:
 				{
 					if(d->hasgun(d->ai->gunpref)) return false;
-					loopvj(cl.pj.projs) if(cl.pj.projs[j]->projtype == PRJ_ENT && cl.pj.projs[j]->ready() && cl.pj.projs[j]->id == b.target)
+					loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready() && projs::projs[j]->id == b.target)
 					{
-						projent &proj = *cl.pj.projs[j];
-						if(enttype[proj.ent].usetype != EU_ITEM || !cl.et.ents.inrange(proj.id)) return false;
+						projent &proj = *projs::projs[j];
+						if(enttype[proj.ent].usetype != EU_ITEM || !entities::ents.inrange(proj.id)) return false;
 						switch(proj.ent)
 						{
 							case WEAPON:
@@ -811,16 +786,16 @@ struct aiclient
 			{
 				case AI_T_AFFINITY:
 				{
-					if(m_ctf(cl.gamemode)) return cl.ctf.aipursue(d, b);
+					if(m_ctf(world::gamemode)) return ctf::aipursue(d, b);
 					break;
 				}
 
 				case AI_T_PLAYER:
 				{
-					gameent *e = cl.getclient(b.target);
+					gameent *e = world::getclient(b.target);
 					if(e && e->state == CS_ALIVE)
 					{
-						vec epos(cl.feetpos(e, 0.f));
+						vec epos(world::feetpos(e, 0.f));
 						return patrol(d, b, epos);
 					}
 					break;
@@ -833,12 +808,12 @@ struct aiclient
 
 	int closenode(gameent *d)
 	{
-		vec pos = cl.feetpos(d, 0.f);
+		vec pos = world::feetpos(d, 0.f);
 		int node = -1;
 		float mindist = 1e16f;
-		loopvrev(d->ai->route) if(cl.et.ents.inrange(d->ai->route[i]) && !obstacles.find(d->ai->route[i], d))
+		loopvrev(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && !obstacles.find(d->ai->route[i], d))
 		{
-			gameentity &e = *(gameentity *)cl.et.ents[d->ai->route[i]];
+			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
 			float dist = e.o.squaredist(pos);
 			if(dist <= mindist)
 			{
@@ -854,13 +829,13 @@ struct aiclient
 		if(!d->ai->route.empty())
 		{
 			int n = retry ? closenode(d) : d->ai->route.find(d->lastnode);
-			if(n > 0 && cl.et.ents.inrange(d->ai->route[n-1]) && !obstacles.find(d->ai->route[n-1], d))
+			if(n > 0 && entities::ents.inrange(d->ai->route[n-1]) && !obstacles.find(d->ai->route[n-1], d))
 			{
-				gameentity &e = *(gameentity *)cl.et.ents[d->ai->route[n-1]];
-				vec pos = cl.feetpos(d);
+				gameentity &e = *(gameentity *)entities::ents[d->ai->route[n-1]];
+				vec pos = world::feetpos(d);
 				d->ai->spot = e.o;
 				if((!d->timeinair && d->ai->spot.z-pos.z > AIJUMPHEIGHT) ||
-					(d->timeinair && d->vel.z <= 4.f && cl.ph.canimpulse(d))) // try to impulse at height of a jump
+					(d->timeinair && d->vel.z <= 4.f && physics::canimpulse(d))) // try to impulse at height of a jump
 				{
 					d->jumping = true;
 					d->jumptime = lastmillis;
@@ -881,7 +856,7 @@ struct aiclient
 
 	void aim(gameent *d, vec &pos, float &yaw, float &pitch, int skew = 0)
 	{
-		vec dp = cl.headpos(d);
+		vec dp = world::headpos(d);
 		float targyaw = -(float)atan2(pos.x-dp.x, pos.y-dp.y)/PI*180+180;
 		if(yaw < targyaw-180.0f) yaw += 360.0f;
 		if(yaw > targyaw+180.0f) yaw -= 360.0f;
@@ -912,7 +887,7 @@ struct aiclient
 				pitch -= offpitch;
 				if(targpitch > pitch) pitch = targpitch;
 			}
-			cl.fixrange(yaw, pitch);
+			world::fixrange(yaw, pitch);
 		}
 		else
 		{
@@ -930,7 +905,7 @@ struct aiclient
 			else loopi(GUN_MAX) if(d->hasgun(i, 1)) gun = i; // only choose carriables here
 			if(gun != d->gunselect && d->canswitch(gun, lastmillis))
 			{
-				cl.cc.addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-cl.maptime, gun);
+				client::addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-world::maptime, gun);
 				d->reqswitch = lastmillis;
 				return true;
 			}
@@ -938,7 +913,7 @@ struct aiclient
 
 		if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis) && d->reqreload < 0)
 		{
-			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->gunselect);
 			d->reqreload = lastmillis;
 			return true;
 		}
@@ -947,7 +922,7 @@ struct aiclient
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
-			if(cl.et.collateitems(d, actitems))
+			if(entities::collateitems(d, actitems))
 			{
 				actitem &t = actitems.last();
 				int ent = -1;
@@ -955,18 +930,18 @@ struct aiclient
 				{
 					case ITEM_ENT:
 					{
-						if(!cl.et.ents.inrange(t.target)) break;
-						extentity &e = *cl.et.ents[t.target];
+						if(!entities::ents.inrange(t.target)) break;
+						extentity &e = *entities::ents[t.target];
 						if(enttype[e.type].usetype != EU_ITEM) break;
 						ent = t.target;
 						break;
 					}
 					case ITEM_PROJ:
 					{
-						if(!cl.pj.projs.inrange(t.target)) break;
-						projent &proj = *cl.pj.projs[t.target];
-						if(!cl.et.ents.inrange(proj.id)) break;
-						extentity &e = *cl.et.ents[proj.id];
+						if(!projs::projs.inrange(t.target)) break;
+						projent &proj = *projs::projs[t.target];
+						if(!entities::ents.inrange(proj.id)) break;
+						extentity &e = *entities::ents[proj.id];
 						if(enttype[e.type].usetype != EU_ITEM) break;
 						if(proj.owner == d && d->gunselect != GUN_PLASMA) break;
 						ent = proj.id;
@@ -974,9 +949,9 @@ struct aiclient
 					}
 					default: break;
 				}
-				if(cl.et.ents.inrange(ent))
+				if(entities::ents.inrange(ent))
 				{
-					extentity &e = *cl.et.ents[ent];
+					extentity &e = *entities::ents[ent];
 					if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis)) switch(e.type)
 					{
 						case WEAPON:
@@ -997,7 +972,7 @@ struct aiclient
 
 		if(!busy && d->canreload(d->gunselect, lastmillis) && d->reqreload < 0)
 		{
-			cl.cc.addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-cl.maptime, d->gunselect);
+			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->gunselect);
 			d->reqreload = lastmillis;
 			return true;
 		}
@@ -1008,10 +983,10 @@ struct aiclient
 	bool process(gameent *d)
 	{
 		bool aiming = false;
-		gameent *e = cl.getclient(d->ai->enemy);
+		gameent *e = world::getclient(d->ai->enemy);
 		if(e && e->state == CS_ALIVE)
 		{
-			vec targ, dp = cl.headpos(d), ep = cl.headpos(e);
+			vec targ, dp = world::headpos(d), ep = world::headpos(e);
 			bool cansee = AICANSEE(dp, ep, d);
 			if(cansee || (d->ai->lastseen >= 0 && lastmillis-d->ai->lastseen > d->skill*25))
 			{
@@ -1047,16 +1022,16 @@ struct aiclient
 			d->stopmoving();
 			d->move = 1; // walk forward
 		}
-		cl.fixrange(d->aimyaw, d->aimpitch);
+		world::fixrange(d->aimyaw, d->aimpitch);
 		return aiming;
 	}
 
 	void check(gameent *d)
 	{
-		vec pos = cl.headpos(d);
+		vec pos = world::headpos(d);
 		findorientation(pos, d->yaw, d->pitch, d->ai->target);
 
-		if(cl.allowmove(d) && d->state == CS_ALIVE)
+		if(world::allowmove(d) && d->state == CS_ALIVE)
 		{
 			bool r = false, p = false;
 			int busy = process(d) ? 1 : 0;
@@ -1066,46 +1041,46 @@ struct aiclient
 				aistate &b = d->ai->getstate();
 				defer(d, b, false);
 			}
-			cl.et.checkitems(d);
-			cl.ws.shoot(d, d->ai->target, 100); // always use full power
+			entities::checkitems(d);
+			weapons::shoot(d, d->ai->target, 100); // always use full power
 		}
 		else d->stopmoving();
 
-		cl.ph.move(d, 10, true);
+		physics::move(d, 10, true);
 		d->attacking = d->jumping = d->reloading = d->useaction = false;
 	}
 
 	void avoid()
 	{
 		// guess as to the radius of ai and other critters relying on the avoid set for now
-		float guessradius = cl.player1->radius;
+		float guessradius = world::player1->radius;
 
 		obstacles.clear();
-		loopi(cl.numdynents())
+		loopi(world::numdynents())
 		{
-			gameent *d = (gameent *)cl.iterdynents(i);
+			gameent *d = (gameent *)world::iterdynents(i);
 			if(!d || d->state != CS_ALIVE) continue;
-			vec pos = cl.feetpos(d, 0.f);
+			vec pos = world::feetpos(d, 0.f);
 			float limit = guessradius + d->radius;
 			limit *= limit; // square it to avoid expensive square roots
-			loopvk(cl.et.ents)
+			loopvk(entities::ents)
 			{
-				gameentity &e = *(gameentity *)cl.et.ents[k];
+				gameentity &e = *(gameentity *)entities::ents[k];
 				if(e.type == WAYPOINT && e.o.squaredist(pos) <= limit)
 					obstacles.add(d, k);
 			}
 		}
 		//#if 0
-		loopv(cl.pj.projs)
+		loopv(projs::projs)
 		{
-			projent *p = cl.pj.projs[i];
+			projent *p = projs::projs[i];
 			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT)
 			{
 				float limit = guessradius * guntype[p->attr1].explode * p->lifesize;
 				limit *= limit; // square it to avoid expensive square roots
-				loopvk(cl.et.ents)
+				loopvk(entities::ents)
 				{
-					gameentity &e = *(gameentity *)cl.et.ents[k];
+					gameentity &e = *(gameentity *)entities::ents[k];
 					if(e.type == WAYPOINT && e.o.squaredist(p->o) <= limit)
 						obstacles.add(p, k);
 				}
@@ -1123,7 +1098,7 @@ struct aiclient
 		// from the stack and executes it or pops the stack and goes back along the history
 		// until it finds a suitable command to execute.
 
-		if(!cl.intermission)
+		if(!world::intermission)
 		{
 			aistate &b = d->ai->getstate();
 			if(idx == currentai)
@@ -1202,10 +1177,10 @@ struct aiclient
 			if(d->ai->route.inrange(last))
 			{
 				int index = d->ai->route[i], prev = d->ai->route[last];
-				if(cl.et.ents.inrange(index) && cl.et.ents.inrange(prev))
+				if(entities::ents.inrange(index) && entities::ents.inrange(prev))
 				{
-					gameentity &e = *(gameentity *)cl.et.ents[index],
-						&f = *(gameentity *)cl.et.ents[prev];
+					gameentity &e = *(gameentity *)entities::ents[index],
+						&f = *(gameentity *)entities::ents[prev];
 					vec fr(vec(f.o).add(vec(0, 0, 4.f*amt))),
 						dr(vec(e.o).add(vec(0, 0, 4.f*amt)));
 					renderline(fr, dr, cr, cg, cb, false);
@@ -1220,10 +1195,9 @@ struct aiclient
 			}
 			last = i;
 		}
-		if(aidebug() > 3)
+		if(aidebug > 3)
 		{
-			vec fr(cl.ws.gunorigin(d->o, d->ai->target, d, true)),
-				dr(d->ai->target), pos = cl.headpos(d);
+			vec fr(d->muzzle), dr(d->ai->target), pos = world::headpos(d);
 			if(dr.dist(pos) > AILOSDIST(d->skill))
 			{
 				dr.sub(fr);
@@ -1233,17 +1207,17 @@ struct aiclient
 			renderline(fr, dr, cr, cg, cb, false);
 			rendertris(dr, d->yaw, d->pitch, 2.f, cr, cg, cb, true, false);
 		}
-		if(aidebug() > 4)
+		if(aidebug > 4)
 		{
-			vec pos = cl.feetpos(d, 0.f);
+			vec pos = world::feetpos(d, 0.f);
 			if(d->ai->spot != vec(0, 0, 0))
 			{
 				vec spot = vec(d->ai->spot).sub(vec(0, 0, d->height));
 				renderline(pos, spot, 1.f, 1.f, 0.f, false);
 			}
-			if(cl.et.ents.inrange(d->lastnode))
+			if(entities::ents.inrange(d->lastnode))
 			{
-				renderline(pos, cl.et.ents[d->lastnode]->o, 0.f, 1.f, 0.f, false);
+				renderline(pos, entities::ents[d->lastnode]->o, 0.f, 1.f, 0.f, false);
 			}
 		}
 		renderprimitive(false);
@@ -1251,13 +1225,13 @@ struct aiclient
 
 	void render()
 	{
-		if(aidebug())
+		if(aidebug)
 		{
 			int amt[2] = { 0, 0 };
-			loopv(cl.players) if(cl.players[i] && cl.players[i]->ai) amt[0]++;
-			loopv(cl.players) if(cl.players[i] && cl.players[i]->state == CS_ALIVE && cl.players[i]->ai)
+			loopv(world::players) if(world::players[i] && world::players[i]->ai) amt[0]++;
+			loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE && world::players[i]->ai)
 			{
-				gameent *d = cl.players[i];
+				gameent *d = world::players[i];
 				bool top = true;
 				int above = 0;
 				amt[1]++;
@@ -1265,16 +1239,16 @@ struct aiclient
 				{
 					aistate &b = d->ai->state[i];
 					drawstate(d, b, top, above += 2);
-					if(aidebug() > 2 && top && rendernormally && b.type != AI_S_WAIT)
+					if(aidebug > 2 && top && rendernormally && b.type != AI_S_WAIT)
 						drawroute(d, b, float(amt[1])/float(amt[0]));
 					if(top)
 					{
-						if(aidebug() > 1) top = false;
+						if(aidebug > 1) top = false;
 						else break;
 					}
 				}
 			}
 		}
 	}
-} ai;
+}
 #endif

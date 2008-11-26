@@ -127,10 +127,10 @@ void cancelsel()
 
 void toggleedit()
 {
-	if (!cc->allowedittoggle(editmode)) return;
+	if (!client::allowedittoggle(editmode)) return;
 	editmode = !editmode;
 	editing = entediting = (editmode ? 1 : 0);
-	cc->edittoggled(editmode);
+	client::edittoggled(editmode);
 	cancelsel();
 	efocus = enthover = -1;
 	//keyrepeat(editmode);
@@ -251,7 +251,7 @@ void editmoveplane(const vec &o, const vec &ray, int d, float off, vec &handle, 
 	plane pl(d, off);
 	float dist = 0.0f;
 
-	physent *player = (physent *)cl->iterdynents(0);
+	physent *player = (physent *)world::iterdynents(0);
 	if(!player) player = camera1;
 	if(pl.rayintersect(player->o, ray, dist))
 	{
@@ -284,7 +284,7 @@ void cursorupdate()
 	if(!insideworld(target)) loopi(3)
         target[i] = max(min(target[i], float(hdr.worldsize)), 0.0f);
 	vec ray(target);
-	physent *player = (physent *)cl->iterdynents(0);
+	physent *player = (physent *)world::iterdynents(0);
 	if(!player) player = camera1;
 	ray.sub(player->o).normalize();
 	int d	= dimension(sel.orient),
@@ -781,7 +781,7 @@ void freeeditinfo(editinfo *&e)
 
 void mpcopy(editinfo *&e, selinfo &sel, bool local)
 {
-	if(cc && local) cc->edittrigger(sel, EDIT_COPY);
+	if(local) client::edittrigger(sel, EDIT_COPY);
 	if(e==NULL) e = new editinfo;
 	if(e->copy) freeblock(e->copy);
 	e->copy = NULL;
@@ -792,7 +792,7 @@ void mpcopy(editinfo *&e, selinfo &sel, bool local)
 void mppaste(editinfo *&e, selinfo &sel, bool local)
 {
 	if(e==NULL) return;
-	if(cc && local) cc->edittrigger(sel, EDIT_PASTE);
+	if(local) client::edittrigger(sel, EDIT_PASTE);
 	if(e->copy)
 	{
 		sel.s = e->copy->s;
@@ -1288,8 +1288,8 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
 	int dc = dimcoord(sel.orient);
 	int seldir = dc ? -dir : dir;
 
-	if(cc && local)
-		cc->edittrigger(sel, EDIT_FACE, dir, mode);
+	if(local)
+		client::edittrigger(sel, EDIT_FACE, dir, mode);
 
 	if(mode==1)
 	{
@@ -1379,7 +1379,7 @@ void pushsel(int *dir)
 	sel.o[d] += s*sel.grid;
 	if(selectionsurf==1)
 	{
-		physent *player = (physent *)cl->iterdynents(0);
+		physent *player = (physent *)world::iterdynents(0);
 		if(!player) player = camera1;
 		player->o[d] += s*sel.grid;
 	}
@@ -1387,7 +1387,7 @@ void pushsel(int *dir)
 
 void mpdelcube(selinfo &sel, bool local)
 {
-	if(cc && local) cc->edittrigger(sel, EDIT_DELCUBE);
+	if(local) client::edittrigger(sel, EDIT_DELCUBE);
 	loopselxyz(discardchildren(c); emptyfaces(c));
 }
 
@@ -1443,7 +1443,7 @@ void mpedittex(int tex, int allfaces, selinfo &sel, bool local)
 {
 	if(local)
 	{
-		if(cc) cc->edittrigger(sel, EDIT_TEX, tex, allfaces);
+		client::edittrigger(sel, EDIT_TEX, tex, allfaces);
 		if(allfaces || !(repsel == sel)) reptex = -1;
 		repsel = sel;
 	}
@@ -1528,7 +1528,7 @@ void replacetexcube(cube &c, int oldtex, int newtex)
 
 void mpreplacetex(int oldtex, int newtex, selinfo &sel, bool local)
 {
-	if(cc && local) cc->edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
+	if(local) client::edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
 	loopi(8) replacetexcube(worldroot[i], oldtex, newtex);
 	allchanged();
 }
@@ -1597,7 +1597,7 @@ void rotatecube(cube &c, int d)	// rotates cube clockwise. see pics in cvs for h
 
 void mpflip(selinfo &sel, bool local)
 {
-	if(cc && local) cc->edittrigger(sel, EDIT_FLIP);
+	if(local) client::edittrigger(sel, EDIT_FLIP);
 	int zs = sel.s[dimension(sel.orient)];
 	makeundo();
 	loopxy(sel)
@@ -1621,7 +1621,7 @@ void flip()
 
 void mprotate(int cw, selinfo &sel, bool local)
 {
-	if(cc && local) cc->edittrigger(sel, EDIT_ROTATE, cw);
+	if(local) client::edittrigger(sel, EDIT_ROTATE, cw);
 	int d = dimension(sel.orient);
 	if(!dimcoord(sel.orient)) cw = -cw;
     int m = sel.s[C[d]] < sel.s[R[d]] ? C[d] : R[d];
@@ -1665,7 +1665,7 @@ void setmat(cube &c, uchar mat, uchar matmask)
 
 void mpeditmat(int matid, selinfo &sel, bool local)
 {
-	if(cc && local) cc->edittrigger(sel, EDIT_MAT, matid);
+	if(local) client::edittrigger(sel, EDIT_MAT, matid);
 
     uchar matmask = matid&MATF_VOLUME ? 0 : (matid&MATF_CLIP ? ~MATF_CLIP : 0xFF);
     if(isclipped(matid&MATF_VOLUME)) matid |= MAT_CLIP;

@@ -410,7 +410,7 @@ void checkpings()
 	}
 }
 
-int sicompare(serverinfo **a, serverinfo **b) { return cc->servercompare(*a, *b); }
+int sicompare(serverinfo **a, serverinfo **b) { return client::servercompare(*a, *b); }
 
 VARP(serverupdateinterval, 0, 5, 60);
 
@@ -430,7 +430,7 @@ int showservers(g3d_gui *cgui)
 {
 	refreshservers();
     servers.sort(sicompare);
-	return cc->serverbrowser(cgui);
+	return client::serverbrowser(cgui);
 }
 
 void clearservers()

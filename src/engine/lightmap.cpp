@@ -343,7 +343,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 		if(light.links.length())
 		{
 			int slight = -1;
-			const vector<extentity *> &ents = et->getents();
+			const vector<extentity *> &ents = entities::getents();
 			loopvk(light.links)
 			{
 				if(ents.inrange(light.links[k]) && ents[light.links[k]]->type == ET_SPOTLIGHT)
@@ -697,8 +697,8 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
                     if(ray->iszero()) n = bvec(128, 128, 255);
                     else
                     {
-                        // bias the normals towards the amount of ambient/skylight in the lumel 
-                        // this is necessary to prevent the light values in shaders from dropping too far below the skylight (to the ambient) if N.L is small 
+                        // bias the normals towards the amount of ambient/skylight in the lumel
+                        // this is necessary to prevent the light values in shaders from dropping too far below the skylight (to the ambient) if N.L is small
                         ray->normalize();
                         int l = max(r, max(g, b)), a = max(ar, max(ag, ab));
                         ray->mul(max(l-a, 0));
@@ -806,7 +806,7 @@ VARF(lightcachesize, 4, 6, 12, clearlightcache());
 
 void clearlightcache(int e)
 {
-	if(e < 0 || !et->getents()[e]->attr1)
+	if(e < 0 || !entities::getents()[e]->attr1)
 	{
 		for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
 		{
@@ -816,7 +816,7 @@ void clearlightcache(int e)
 	}
 	else
 	{
-		const extentity &light = *et->getents()[e];
+		const extentity &light = *entities::getents()[e];
 		int radius = light.attr1;
         for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
         for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
@@ -838,7 +838,7 @@ const vector<int> &checklightcache(int x, int y)
 
 	lce.lights.setsize(0);
 	int csize = 1<<lightcachesize, cx = x<<lightcachesize, cy = y<<lightcachesize;
-	const vector<extentity *> &ents = et->getents();
+	const vector<extentity *> &ents = entities::getents();
 	loopv(ents)
 	{
 		const extentity &light = *ents[i];
@@ -925,7 +925,7 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
 {
     lights1.setsize(0);
     lights2.setsize(0);
-    const vector<extentity *> &ents = et->getents();
+    const vector<extentity *> &ents = entities::getents();
     if(size <= 1<<lightcachesize)
     {
         const vector<int> &lights = checklightcache(cx, cy);
@@ -1875,7 +1875,7 @@ bool brightengeom = false;
 void clearlights()
 {
 	clearlightcache();
-	const vector<extentity *> &ents = et->getents();
+	const vector<extentity *> &ents = entities::getents();
 	loopv(ents)
 	{
 		extentity &e = *ents[i];
@@ -1905,7 +1905,7 @@ void lightent(extentity &e, float height)
 
 void updateentlighting()
 {
-	const vector<extentity *> &ents = et->getents();
+	const vector<extentity *> &ents = entities::getents();
 	loopv(ents) lightent(*ents[i]);
 }
 
@@ -1934,7 +1934,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 	}
 
 	color = dir = vec(0, 0, 0);
-	const vector<extentity *> &ents = et->getents();
+	const vector<extentity *> &ents = entities::getents();
 	const vector<int> &lights = checklightcache(int(target.x), int(target.y));
 	loopv(lights)
 	{
@@ -1958,7 +1958,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 		if(e.links.length())
 		{
 			int slight = -1;
-			const vector<extentity *> &ents = et->getents();
+			const vector<extentity *> &ents = entities::getents();
 			loopvk(e.links)
 			{
 				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_SPOTLIGHT)
@@ -2004,7 +2004,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 
 entity *brightestlight(const vec &target, const vec &dir)
 {
-	const vector<extentity *> &ents = et->getents();
+	const vector<extentity *> &ents = entities::getents();
 	const vector<int> &lights = checklightcache(int(target.x), int(target.y));
 	extentity *brightest = NULL;
 	float bintensity = 0;
@@ -2030,7 +2030,7 @@ entity *brightestlight(const vec &target, const vec &dir)
 		if(e.links.length())
 		{
 			int slight = -1;
-			const vector<extentity *> &ents = et->getents();
+			const vector<extentity *> &ents = entities::getents();
 			loopvk(e.links)
 			{
 				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_SPOTLIGHT)

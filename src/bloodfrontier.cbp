@@ -52,6 +52,7 @@
 					<Add library="ws2_32" />
 					<Add library="winmm" />
 					<Add directory="lib\mingw" />
+					<Add directory="lib" />
 				</Linker>
 			</Target>
 			<Target title="client-dbg">
@@ -93,6 +94,7 @@
 					<Add library="ws2_32" />
 					<Add library="winmm" />
 					<Add directory="lib\mingw" />
+					<Add directory="lib" />
 				</Linker>
 			</Target>
 			<Target title="daemon">
@@ -130,6 +132,7 @@
 					<Add library="winmm" />
 					<Add library="z" />
 					<Add directory="lib\mingw" />
+					<Add directory="lib" />
 				</Linker>
 			</Target>
 			<Target title="daemon-dbg">
@@ -162,6 +165,7 @@
 					<Add library="winmm" />
 					<Add library="z" />
 					<Add directory="lib\mingw" />
+					<Add directory="lib" />
 				</Linker>
 			</Target>
 			<Target title="server">
@@ -199,6 +203,7 @@
 					<Add library="winmm" />
 					<Add library="z" />
 					<Add directory="lib\mingw" />
+					<Add directory="lib" />
 				</Linker>
 			</Target>
 			<Target title="profile">
@@ -243,6 +248,7 @@
 					<Add library="ws2_32" />
 					<Add library="winmm" />
 					<Add directory="lib\mingw" />
+					<Add directory="lib" />
 				</Linker>
 			</Target>
 			<Target title="data">
@@ -693,97 +699,108 @@
 			<Option target="profile" />
 			<Option target="data" />
 		</Unit>
-		<Unit filename="game\ai.h">
+		<Unit filename="game\ai.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
-			<Option target="server" />
 			<Option target="profile" />
 		</Unit>
-		<Unit filename="game\client.h">
+		<Unit filename="game\client.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
-			<Option target="server" />
+		</Unit>
+		<Unit filename="game\ctf.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="profile" />
 		</Unit>
 		<Unit filename="game\ctf.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="game\duel.h">
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
+		<Unit filename="game\duel.cpp">
+			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="game\entities.h">
+		<Unit filename="game\entities.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
-			<Option target="server" />
 		</Unit>
 		<Unit filename="game\extinfo.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
-		</Unit>
-		<Unit filename="game\game.cpp">
-			<Option target="client" />
-			<Option target="client-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
 		</Unit>
 		<Unit filename="game\game.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="game\physics.h">
+		<Unit filename="game\physics.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
-			<Option target="server" />
 		</Unit>
-		<Unit filename="game\projs.h">
+		<Unit filename="game\projs.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
-			<Option target="server" />
 		</Unit>
 		<Unit filename="game\scoreboard.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
 			<Option target="profile" />
-			<Option target="server" />
 		</Unit>
-		<Unit filename="game\server.h">
+		<Unit filename="game\server.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+		</Unit>
+		<Unit filename="game\stf.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
-			<Option target="server" />
 		</Unit>
 		<Unit filename="game\stf.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
+			<Option target="profile" />
+			<Option target="server" />
 		</Unit>
-		<Unit filename="game\weapon.h">
+		<Unit filename="game\vars.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="profile" />
+			<Option target="server" />
+		</Unit>
+		<Unit filename="game\weapons.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
-			<Option target="server" />
+		</Unit>
+		<Unit filename="game\world.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="profile" />
 		</Unit>
 		<Unit filename="include\GL\glext.h">
 			<Option target="client" />

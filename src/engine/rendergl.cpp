@@ -943,13 +943,13 @@ bool renderedgame = false, renderedavatar = false;
 
 void rendergame()
 {
-    cl->render();
+    world::render();
     if(!shadowmapping) renderedgame = true;
 }
 
 void renderavatar(bool early)
 {
-    cl->renderavatar(early);
+    world::renderavatar(early);
 }
 
 extern void viewproject(float zscale = 1);
@@ -984,7 +984,7 @@ void drawglare()
     rendermaterials();
     render_particles(0);
 
-    if(cl->isthirdperson()) renderavatar(false);
+    if(world::isthirdperson()) renderavatar(false);
     else
     {
         viewproject(0.5f);
@@ -1688,9 +1688,9 @@ void drawnoview()
 
 	if(!hidehud)
 	{
-		cl->drawhud(w, h);
+		world::drawhud(w, h);
 		UI::render();
-		cl->drawpointers(w, h);
+		world::drawpointers(w, h);
 	}
 
     glDisable(GL_TEXTURE_2D);
@@ -1775,7 +1775,7 @@ void drawview(int targtype)
 	rendermaterials();
 	render_particles(curtime);
 
-    if(cl->isthirdperson()) renderavatar(false);
+    if(world::isthirdperson()) renderavatar(false);
     else
     {
         viewproject(0.5f);
@@ -1819,7 +1819,7 @@ void drawview(int targtype)
 	glOrtho(0, w, h, 0, -1, 1);
 
 	vec colour;
-	if(cl->gethudcolour(colour))
+	if(world::gethudcolour(colour))
 	{
         glEnable(GL_BLEND);
 		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
@@ -1859,9 +1859,9 @@ void drawview(int targtype)
 	defaultshader->set();
 	if(!hidehud)
 	{
-		cl->drawhud(w, h);
+		world::drawhud(w, h);
 		UI::render();
-		cl->drawpointers(w, h);
+		world::drawpointers(w, h);
 	}
 	glDisable(GL_TEXTURE_2D);
 
@@ -1908,7 +1908,7 @@ void gl_drawframe(int w, int h)
 	project(fovy, aspect, farplane);
 	transplayer();
 	readmatrices();
-	cl->project(w, h);
+	world::project(w, h);
 
 	int copies = 0, oldcurtime = curtime;
 	loopi(VP_MAX) if(needsview(viewtype, i))
