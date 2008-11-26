@@ -1271,7 +1271,7 @@ struct gameclient : igameclient
 		settexture("textures/radarline", 3);
 		drawquad(os, 0, ox-(os*2), os, 0, 0, 1, 1);
 		drawquad(os, oy-os, ox-(os*2), os, 0, 1, 1, 0);
-		settexture("<rotate:1>textures/radarline", 3);
+		settexture("<rotate:3>textures/radarline", 3);
 		drawquad(0, os, os, oy-(os*2), 0, 0, 1, 1);
 		drawquad(ox-os, os, os, oy-(os*2), 1, 0, 0, 1);
 

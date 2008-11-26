@@ -1,0 +1,11 @@
+= Blood Frontier HOWTO =
+
+Playing Blood Frontier is not unlike many First Person Shooters, the name of the genre explains it all, you shoot. There are, however, a few things in this game that are a little different to most. The first is health regeneration, and the second is unlimited ammo and reloading.
+
+== Health Regeneration ==
+
+You start out with 100 health, and whatever armour you started out with. You don't need to pick up armour, it's just always there, you don't need to even think about it. Through the various ways you can be damaged, you will lose health, when you reach zero you will be dead.
+
+In deathmatch, whoever delivered the final blow will score a "frag", which is a point for eradicating you from the playing field. Conversely, if you fall in lava, out of the playing field, or commit suicide you will lose a "frag".
+
+If after an onslaught (3 secs) you haven't been killed and manage to get away, you will slowly regenerate your your health (10 health every 1 sec) until your life is restored. BEWARE though, this does not make you invincible; if you get damaged again the regeneration will stop and you will have to wait the full time (3 secs) before you start regenerating again!
