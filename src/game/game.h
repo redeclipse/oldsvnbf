@@ -279,9 +279,9 @@ struct gametypes
 #define m_stf(a)			(a == G_STF)
 #define m_ctf(a)			(a == G_CTF)
 
-#define m_fight(a)			(a >= G_DEATHMATCH)
+#define m_play(a)			(a >= G_MISSION)
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
-#define m_timed(a)			(m_fight(a))
+#define m_timed(a)			(a >= G_DEATHMATCH)
 
 #define m_multi(a,b)		((b & G_M_MULTI) || (gametype[a].implied & G_M_MULTI))
 #define m_team(a,b)			((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))
@@ -289,8 +289,8 @@ struct gametypes
 #define m_duel(a,b)			((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
 #define m_lms(a,b)			((b & G_M_LMS) || (gametype[a].implied & G_M_LMS))
 
-#define m_duke(a,b)			(m_fight(a) && (m_duel(a, b) || m_lms(a, b)))
-#define m_regen(a,b)		(m_fight(a) && !m_insta(a, b) && !m_duke(a, b))
+#define m_duke(a,b)			(a >= G_DEATHMATCH && (m_duel(a, b) || m_lms(a, b)))
+#define m_regen(a,b)		(a >= G_DEATHMATCH && !m_insta(a, b) && !m_duke(a, b))
 
 // network messages codes, c2s, c2c, s2c
 enum

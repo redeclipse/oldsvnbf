@@ -188,9 +188,9 @@ int renderconsole(int w, int h, int s)
 		}
 	}
 
-	int cy = s;
+	int cy = s+FONTH/4;
 	loopvrev(refs)
-		cy += draw_textx("%s", s, cy, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, w-s*2, refs[i]);
+		cy += draw_textx("%s", s+FONTW/2, cy, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, w-FONTW-s*2, refs[i]);
 
 	return cy;
 }

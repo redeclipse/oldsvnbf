@@ -2102,7 +2102,7 @@ struct gameserver : igameserver
 		if(smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, damage, gun, flags, hitpush)) { nodamage++; });
 
-		if(!nodamage && m_fight(gamemode) && (sv_teamdamage || !m_team(gamemode, mutators) || actor->team != target->team))
+		if(!nodamage && m_play(gamemode) && (sv_teamdamage || !m_team(gamemode, mutators) || actor->team != target->team))
 		{
 			if(m_insta(gamemode, mutators)) realdamage = max(damage, ts.health);
 			else
