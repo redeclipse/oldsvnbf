@@ -911,7 +911,7 @@ void g3d_render()
 	// call all places in the engine that may want to render a gui from here, they call g3d_addgui()
 	g3d_texturemenu();
 	g3d_mainmenu();
-	cl->gamemenus();
+	world::gamemenus();
 
 	readyeditors();
     bool wasfocused = (fieldmode!=FIELDSHOW);

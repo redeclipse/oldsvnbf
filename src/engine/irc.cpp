@@ -249,7 +249,7 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 		n->lines.add(newstring(str));
 	}
 	if(n->type == IRCT_RELAY)
-		sv->srvmsgf(-1, "%s %s", s, str);
+		server::srvmsgf(-1, "%s %s", s, str);
 	console("%s %s", 0, s, str); // console is not used to relay
 }
 

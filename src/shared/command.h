@@ -140,8 +140,8 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARNP(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
 #define VARNR(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
 #define VARNW(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_WORLD|IDF_COMPLETE)
-#ifndef STANDALONE
-#define VARNG(name, global, min, cur, max) _VAR(sv_##name, sv_##global, min, cur, max, IDF_SERVER);_VAR(name, global, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
+#ifndef GAMESERVER
+#define VARNG(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
 #else
 #define VARNG(name, global, min, cur, max) _VAR(sv_##name, sv_##global, min, cur, max, IDF_SERVER)
 #endif
@@ -150,8 +150,8 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARP(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
 #define VARR(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
 #define VARW(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_WORLD|IDF_COMPLETE)
-#ifndef STANDALONE
-#define VARG(name, min, cur, max) _VAR(sv_##name, sv_##name, min, cur, max, IDF_SERVER);_VAR(name, name, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
+#ifndef GAMESERVER
+#define VARG(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
 #else
 #define VARG(name, min, cur, max) _VAR(sv_##name, sv_##name, min, cur, max, IDF_SERVER)
 #endif
@@ -162,8 +162,8 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARFP(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_PERSIST|IDF_COMPLETE)
 #define VARFR(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_OVERRIDE|IDF_COMPLETE)
 #define VARFW(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_WORLD|IDF_COMPLETE)
-#ifndef STANDALONE
-#define VARFG(name, min, cur, max, svbody, ccbody) _VARF(sv_##name, sv_##name, min, cur, max, svbody, IDF_SERVER);_VARF(name, name, min, cur, max, ccbody, IDF_CLIENT|IDF_COMPLETE)
+#ifndef GAMESERVER
+#define VARFG(name, min, cur, max, svbody, ccbody) _VARF(name, name, min, cur, max, ccbody, IDF_CLIENT|IDF_COMPLETE)
 #else
 #define VARFG(name, min, cur, max, svbody, ccbody) _VARF(sv_##name, sv_##name, min, cur, max, svbody, IDF_SERVER)
 #endif
@@ -174,8 +174,8 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define FVARNP(name, global, min, cur, max) _FVAR(name, global, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
 #define FVARNR(name, global, min, cur, max) _FVAR(name, global, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
 #define FVARNW(name, global, min, cur, max) _FVAR(name, global, min, cur, max, IDF_WORLD|IDF_COMPLETE)
-#ifndef STANDALONE
-#define FVARNG(name, global, min, cur, max) _FVAR(sv_##name, sv_##global, min, cur, max, IDF_SERVER);_FVAR(name, global, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
+#ifndef GAMESERVER
+#define FVARNG(name, global, min, cur, max) _FVAR(name, global, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
 #else
 #define FVARNG(name, global, min, cur, max) _FVAR(sv_##name, sv_##global, min, cur, max, IDF_SERVER)
 #endif
@@ -183,8 +183,8 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define FVARP(name, min, cur, max) _FVAR(name, name, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
 #define FVARR(name, min, cur, max) _FVAR(name, name, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
 #define FVARW(name, min, cur, max) _FVAR(name, name, min, cur, max, IDF_WORLD|IDF_COMPLETE)
-#ifndef STANDALONE
-#define FVARG(name, min, cur, max) _FVAR(sv_##name, sv_##name, min, cur, max, IDF_SERVER);_FVAR(name, name, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
+#ifndef GAMESERVER
+#define FVARG(name, min, cur, max) _FVAR(name, name, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
 #else
 #define FVARG(name, min, cur, max) _FVAR(sv_##name, sv_##name, min, cur, max, IDF_SERVER)
 #endif
@@ -194,8 +194,8 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define FVARFP(name, min, cur, max, body) _FVARF(name, name, min, cur, max, body, IDF_PERSIST|IDF_COMPLETE)
 #define FVARFR(name, min, cur, max, body) _FVARF(name, name, min, cur, max, body, IDF_OVERRIDE|IDF_COMPLETE)
 #define FVARFW(name, min, cur, max, body) _FVARF(name, name, min, cur, max, body, IDF_WORLD|IDF_COMPLETE)
-#ifndef STANDALONE
-#define FVARFG(name, min, cur, max, svbody, ccbody) _FVARF(sv_##name, sv_##name, min, cur, max, svbody, IDF_SERVER);_FVARF(name, name, min, cur, max, ccbody, IDF_CLIENT|IDF_COMPLETE)
+#ifndef GAMESERVER
+#define FVARFG(name, min, cur, max, svbody, ccbody) _FVARF(name, name, min, cur, max, ccbody, IDF_CLIENT|IDF_COMPLETE)
 #else
 #define FVARFG(name, min, cur, max, svbody, ccbody) _FVARF(sv_##name, sv_##name, min, cur, max, svbody, IDF_SERVER)
 #endif
@@ -205,8 +205,8 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define SVARNP(name, global, cur) _SVAR(name, global, cur, IDF_PERSIST|IDF_COMPLETE)
 #define SVARNR(name, global, cur) _SVAR(name, global, cur, IDF_OVERRIDE|IDF_COMPLETE)
 #define SVARNW(name, global, cur) _SVAR(name, global, cur, IDF_WORLD|IDF_COMPLETE)
-#ifndef STANDALONE
-#define SVARNG(name, global, cur) _SVAR(sv_##name, sv_##global, cur, IDF_SERVER);_SVAR(name, global, cur, IDF_CLIENT|IDF_COMPLETE)
+#ifndef GAMESERVER
+#define SVARNG(name, global, cur) _SVAR(name, global, cur, IDF_CLIENT|IDF_COMPLETE)
 #else
 #define SVARNG(name, global, cur) _SVAR(sv_##name, sv_##global, cur, IDF_SERVER)
 #endif
@@ -214,8 +214,8 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define SVARP(name, cur) _SVAR(name, name, cur, IDF_PERSIST|IDF_COMPLETE)
 #define SVARR(name, cur) _SVAR(name, name, cur, IDF_OVERRIDE|IDF_COMPLETE)
 #define SVARW(name, cur) _SVAR(name, name, cur, IDF_WORLD|IDF_COMPLETE)
-#ifndef STANDALONE
-#define SVARG(name, cur) _SVAR(sv_##name, sv_##name, cur, IDF_SERVER);_SVAR(name, name, cur, IDF_CLIENT|IDF_COMPLETE)
+#ifndef GAMESERVER
+#define SVARG(name, cur) _SVAR(name, name, cur, IDF_CLIENT|IDF_COMPLETE)
 #else
 #define SVARG(name, cur) _SVAR(sv_##name, sv_##name, cur, IDF_SERVER)
 #endif
@@ -225,8 +225,8 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define SVARFP(name, cur, body) _SVARF(name, name, cur, body, IDF_PERSIST|IDF_COMPLETE)
 #define SVARFR(name, cur, body) _SVARF(name, name, cur, body, IDF_OVERRIDE|IDF_COMPLETE)
 #define SVARFW(name, cur, body) _SVARF(name, name, cur, body, IDF_WORLD|IDF_COMPLETE)
-#ifndef STANDALONE
-#define SVARFG(name, cur, svbody, ccbody) _SVARF(sv_##name, sv_##name, cur, svbody, IDF_SERVER);_SVARF(name, name, cur, ccbody, IDF_CLIENT|IDF_COMPLETE)
+#ifndef GAMESERVER
+#define SVARFG(name, cur, svbody, ccbody) _SVARF(name, name, cur, ccbody, IDF_CLIENT|IDF_COMPLETE)
 #else
 #define SVARFG(name, cur, svbody, ccbody) _SVARF(sv_##name, sv_##name, cur, svbody, IDF_SERVER)
 #endif

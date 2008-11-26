@@ -57,7 +57,9 @@ enum { TA_NONE = 0, TA_AUTO, TA_ACT, TA_MAX };
 struct enttypes
 {
 	int	type, 		links,	radius,	usetype; bool noisy;	const char *name;
-} enttype[] = {
+};
+#ifdef GAMESERVER
+enttypes enttype[] = {
 	{ NOTUSED,		0,		0,		EU_NONE,	true,		"none" },
 	{ LIGHT,		59,		0,		EU_NONE,	false,		"light" },
 	{ MAPMODEL,		58,		0,		EU_NONE,	false,		"mapmodel" },
@@ -78,6 +80,9 @@ struct enttypes
 	{ ANNOUNCER,	64,		0,		EU_NONE,	false,		"announcer" },
 	{ CONNECTION,	70,		0,		EU_NONE,	false,		"connection" },
 };
+#else
+extern enttypes enttype[];
+#endif
 
 enum
 {
@@ -137,7 +142,9 @@ struct guntypes
 	const char
 			*name, *text,		*item,						*vwep,
 			*proj;
-} guntype[GUN_MAX] =
+};
+#ifdef GAMESERVER
+guntypes guntype[GUN_MAX] =
 {
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	-5,		5,
@@ -210,6 +217,10 @@ struct guntypes
 			"projectiles/grenade"
 	},
 };
+#else
+extern guntypes guntype[];
+#endif
+
 #define isgun(gun)	(gun > -1 && gun < GUN_MAX)
 
 enum
@@ -253,7 +264,9 @@ enum
 struct gametypes
 {
 	int	type,			mutators,				implied;		const char *name;
-} gametype[] = {
+};
+#ifdef GAMESERVER
+gametypes gametype[] = {
 	{ G_DEMO,			G_M_NONE,				G_M_NONE,		"Demo" },
 	{ G_LOBBY,			G_M_NONE,				G_M_NONE,		"Lobby" },
 	{ G_EDITMODE,		G_M_NONE,				G_M_NONE,		"Editing" },
@@ -268,6 +281,9 @@ struct gametypes
 	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_NONE,		"Duel" },
 	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_NONE,		"Last-Man-Standing" },
 };
+#else
+extern gametypes gametype[], mutstype[];
+#endif
 
 #define m_game(a)			(a > -1 && a < G_MAX)
 
@@ -314,6 +330,7 @@ enum
 	SV_ADDBOT, SV_DELBOT, SV_INITAI
 };
 
+#ifdef GAMESERVER
 char msgsizelookup(int msg)
 {
 	char msgsizesl[] =				// size inclusive message token, 0 for variable or not-checked sizes
@@ -341,6 +358,9 @@ char msgsizelookup(int msg)
 	for(char *p = msgsizesl; *p>=0; p += 2) if(*p==msg) return p[1];
 	return -1;
 }
+#else
+extern char msgsizelookup(int msg);
+#endif
 
 #define DEMO_MAGIC "BFDZ"
 
@@ -354,7 +374,9 @@ enum { TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_ENE
 struct teamtypes
 {
 	int	type,		colour;	const char *name,	*tpmdl,			*fpmdl,				*flag,			*icon,			*chat;
-} teamtype[] = {
+};
+#ifdef GAMESERVER
+teamtypes teamtype[] = {
 	{ TEAM_NEUTRAL,	0xFFFFFF,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fw" },
 	{ TEAM_ALPHA,	0x6666FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
 	{ TEAM_BETA,	0xFF6666,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
@@ -362,6 +384,9 @@ struct teamtypes
 	{ TEAM_GAMMA,	0x66FF66,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
 	{ TEAM_ENEMY,	0xFFFFFF,	"enemy",		"player",		"player/vwep",		"flag",			"team",			"\fa" }
 };
+#else
+extern teamtypes teamtype[];
+#endif
 
 #define MAXNAMELEN		16
 #define MAXHEALTH		100
@@ -429,39 +454,15 @@ enum
 	SSTAT_MAX
 };
 
-SVARG(defaultmap, "overseer");
-VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
-VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
-
-VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
-VARG(itemdropping, 0, 2, 2); // 0 = never, 1 = yes but not kamakaze, 2 = yes with kamakaze
-VARG(itemspawntime, 1, 30, 3600); // secs when items respawn
-VARG(itemspawndelay, 0, 10, 3600); // secs after map start items first spawn
-VARG(timelimit, 0, 15, 60);
-
-VARG(teamdamage, 0, 1, 1);
-VARG(ctflimit, 0, 20, 100);
-VARG(stflimit, 0, 0, 1);
-
-VARG(spawngun, 0, GUN_PLASMA, GUN_MAX-1);
-VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
-
-VARG(botbalance, 0, 4, 32);
-VARG(botminskill, 0, 60, 100);
-VARG(botmaxskill, 0, 90, 100);
-
-FVARG(damagescale, 0.1f, 1.f, 10);
-FVARG(gravityscale, 0.1f, 1.f, 10);
-FVARG(jumpscale, 0.1f, 1.f, 10);
-FVARG(speedscale, 0.1f, 1.f, 10);
-
 enum { AI_NONE = 0, AI_BOT, AI_BSOLDIER, AI_RSOLDIER, AI_YSOLDIER, AI_GSOLDIER, AI_MAX };
 #define isaitype(a)	(a >= 0 && a <= AI_MAX-1)
 
 struct aitypes
 {
 	int type;	const char *name,	*mdl;
-} aitype[] = {
+};
+#ifdef GAMESERVER
+aitypes aitype[] = {
 	{ AI_NONE,		"",				"" },
 	{ AI_BOT,		"bot",			"player" },
 	{ AI_BSOLDIER,	"alpha",		"player/alpha" },
@@ -469,6 +470,9 @@ struct aitypes
 	{ AI_YSOLDIER,	"delta",		"player/delta" },
 	{ AI_GSOLDIER,	"gamma",		"player/gamma" },
 };
+#else
+extern aitypes aitype[];
+#endif
 
 // inherited by gameent and server clients
 struct gamestate
@@ -655,8 +659,24 @@ struct gamestate
 	}
 };
 
-#ifndef STANDALONE
-struct radardir { bool axis, swap; float up, down; } radardirs[8] =
+#if !defined(GAMESERVER) && !defined(STANDALONE)
+struct gameentity : extentity
+{
+	int schan;
+	int lastuse, lastspawn;
+	bool mark;
+
+	gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(false) {}
+	~gameentity()
+	{
+		if(issound(schan)) removesound(schan);
+		schan = -1;
+	}
+};
+
+struct radardir { bool axis, swap; float up, down; };
+#ifdef GAMEWORLD
+radardir radardirs[8] =
 {
 	{ true,		false,	 0.5f,	0.5f	},
 	{ false,	true,	 0.f,	0.5f 	},
@@ -667,6 +687,9 @@ struct radardir { bool axis, swap; float up, down; } radardirs[8] =
 	{ false,	false,	 0.5f,	-0.5f	},
 	{ true,		false,	 0.f,	0.5f	}
 };
+#else
+extern radardir radardirs[8];
+#endif
 
 #define getradardir \
 	float cx = s*0.5f, cy = s*0.5f, yaw = 0.f, pitch = 0.f; \
@@ -689,18 +712,6 @@ enum
 	ST_ALL		= ST_CAMERA|ST_CURSOR|ST_GAME|ST_SPAWNS,
 };
 
-struct gameentity : extentity
-{
-	int schan, lastuse, lastspawn;
-	bool mark;
-
-	gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(false) {}
-	~gameentity()
-	{
-		if(issound(schan)) removesound(schan);
-		schan = -1;
-	}
-};
 enum { ITEM_ENT = 0, ITEM_PROJ, ITEM_MAX };
 struct actitem
 {
@@ -710,7 +721,7 @@ struct actitem
 	actitem() : type(ITEM_ENT), target(-1), score(0.f) {}
 	~actitem() {}
 };
-
+#ifdef GAMEWORLD
 const char *animnames[] =
 {
 	"dead", "dying", "idle",
@@ -729,29 +740,28 @@ const char *animnames[] =
 	"vwep", "shield", "powerup",
 	""
 };
-
-const char *serverinfotypes[] = {
-	"",
-	"host",
-	"desc",
-	"ping",
-	"pl",
-	"max",
-	"game",
-	"map",
-	"time"
-};
-
+#else
+extern const char *animnames[];
+#endif
 struct serverstatuses
 {
 	int type,				colour;		const char *icon;
-} serverstatus[] = {
+};
+#ifdef GAMEWORLD
+serverstatuses serverstatus[] = {
 	{ SSTAT_OPEN,			0xFFFFFF,	"server" },
 	{ SSTAT_LOCKED,			0xFF8800,	"serverlock" },
 	{ SSTAT_PRIVATE,		0x8888FF,	"serverpriv" },
 	{ SSTAT_FULL,			0xFF8888,	"serverfull" },
 	{ SSTAT_UNKNOWN,		0x888888,	"serverunk" }
 };
+const char *serverinfotypes[] = {
+	"",	"host", "desc", "ping", "pl", "max", "game", "map", "time"
+};
+#else
+extern serverstatuses serverstatus[];
+extern const char *serverinfotypes[];
+#endif
 
 // ai state information for the owner client
 enum
@@ -796,7 +806,7 @@ struct aistate
 	int type, millis, expire, next, targtype, target, cycle;
 	bool override, defers;
 
-	aistate(int _type, int _millis) : type(_type), millis(_millis)
+	aistate(int t, int m) : type(t), millis(m)
 	{
 		reset();
 	}
@@ -977,4 +987,210 @@ struct projent : dynent
 		return false;
 	}
 };
+
+namespace entities
+{
+	extern vector<extentity *> ents;
+
+	struct avoidset
+	{
+		struct obstacle
+		{
+			dynent *ent;
+			int numentities;
+			bool avoid;
+
+			obstacle(dynent *ent) : ent(ent), numentities(0) {}
+		};
+
+		vector<obstacle> obstacles;
+		vector<int> entities;
+
+		void clear()
+		{
+			obstacles.setsizenodelete(0);
+			entities.setsizenodelete(0);
+		}
+
+		void add(dynent *ent, int entity)
+		{
+			if(obstacles.empty() || ent!=obstacles.last().ent) obstacles.add(obstacle(ent));
+			obstacles.last().numentities++;
+			entities.add(entity);
+		}
+
+		#define loopavoid(v, d, body) \
+			if(!(v).obstacles.empty()) \
+			{ \
+				int cur = 0; \
+				loopv((v).obstacles) \
+				{ \
+					entities::avoidset::obstacle &ob = (v).obstacles[i]; \
+					int next = cur + ob.numentities; \
+					if(ob.ent && ob.ent != (d)) \
+					{ \
+						for(; cur < next; cur++) \
+						{ \
+							int ent = (v).entities[cur]; \
+							body; \
+						} \
+					} \
+					cur = next; \
+				} \
+			}
+
+		bool find(int entity, gameent *d)
+		{
+			loopavoid(*this, d, { if(ent == entity) return true; });
+			return false;
+		}
+	};
+
+	extern bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, bool retry = false, float *score = NULL);
+	extern int entitynode(const vec &v, bool dist = true, int type = WAYPOINT);
+	extern bool collateitems(gameent *d, vector<actitem> &actitems);
+	extern void checkitems(gameent *d);
+	extern void putitems(ucharbuf &p);
+	extern void announce(int idx, const char *msg = "", bool force = false);
+	extern void execlink(gameent *d, int index, bool local);
+	extern void setspawn(int n, bool on);
+	extern void findplayerspawn(dynent *d, int forceent = -1, int tag = -1, int retries = 0);
+	extern const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false);
+	extern void useeffects(gameent *d, int n, bool s, int g, int r);
+	extern const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
+	extern void preload();
+	extern void mapstart();
+	extern const char *findname(int type);
+	extern void adddynlights();
+	extern void render();
+	extern void start();
+	extern void update();
+}
+
+namespace server
+{
+	extern void stopdemo();
+}
+
+namespace client
+{
+	extern bool demoplayback;
+	extern void addmsg(int type, const char *fmt = NULL, ...);
+	extern void mapstart();
+}
+
+namespace physics
+{
+	extern int fixspawn, spawncycle, physsteps, physframetime, smoothmove, smoothdist;
+	extern bool canimpulse(physent *d);
+	extern bool move(physent *d, vec &dir);
+	extern void move(physent *d, int moveres = 10, bool local = true);
+	extern bool entinmap(physent *d, bool avoidplayers);
+	extern void updatephysstate(physent *d);
+	extern bool droptofloor(vec &o, float radius, float height);
+	extern float maxspeed(physent *d);
+	extern void smoothplayer(gameent *d, int res, bool local);
+	extern void update();
+	extern bool iscrouching(physent *d);
+	extern bool moveplayer(physent *pl, int moveres, bool local, int millis);
+	extern float gravityforce(physent *d);
+	extern void interppos(physent *d);
+}
+
+namespace projs
+{
+	extern vector<projent *> projs;
+
+	extern void reset();
+	extern void update();
+	extern void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int waittime, int speed, int id = 0, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
+	extern void preload();
+	extern void remove(gameent *owner);
+	extern void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local);
+	extern void drop(gameent *d, int g, int n, int delay = 0);
+	extern void adddynlights();
+	extern void render();
+}
+
+namespace weapons
+{
+	extern int autoreload;
+	extern void reload(gameent *d);
+	extern void shoot(gameent *d, vec &targ, int pow = 0);
+	extern bool doautoreload(gameent *d);
+	extern void preload(int gun = -1);
+}
+
+namespace ai
+{
+	const float AIISNEAR			= 64.f;			// is near
+	const float AIISFAR				= 128.f;		// too far
+	const float AIJUMPHEIGHT		= 6.f;			// decides to jump
+	const float AIJUMPIMPULSE		= 16.f;			// impulse to jump
+	const float AILOSMIN			= 64.f;			// minimum line of sight
+	const float AILOSMAX			= 4096.f;		// maximum line of sight
+	const float AIFOVMIN			= 90.f;			// minimum field of view
+	const float AIFOVMAX			= 130.f;		// maximum field of view
+
+	#define AILOSDIST(x)			clamp((AILOSMIN+(AILOSMAX-AILOSMIN))/100.f*float(x), float(AILOSMIN), float(getvar("fog")+AILOSMIN))
+	#define AIFOVX(x)				clamp((AIFOVMIN+(AIFOVMAX-AIFOVMIN))/100.f*float(x), float(AIFOVMIN), float(AIFOVMAX))
+	#define AIFOVY(x)				AIFOVX(x)*3.f/4.f
+    #define AIMAYTARG(y)           (y->state == CS_ALIVE && lastmillis-y->lastspawn > REGENWAIT)
+	#define AITARG(x,y,z)			(y != x && AIMAYTARG(y) && (!z || !m_team(world::gamemode, world::mutators) || (x)->team != (y)->team))
+	#define AICANSEE(x,y,z)			getsight(x, z->yaw, z->pitch, y, targ, AILOSDIST(z->skill), AIFOVX(z->skill), AIFOVY(z->skill))
+
+	extern void spawned(gameent *d);
+	extern void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm);
+	extern bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false);
+	extern bool makeroute(gameent *d, aistate &b, int node, float tolerance = AIISNEAR, bool retry = false);
+	extern bool makeroute(gameent *d, aistate &b, vec &pos, float tolerance = AIISNEAR, bool dist = false);
+	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
+	extern bool patrol(gameent *d, aistate &b, vec &pos, float radius = AIISNEAR, float wander = AIISFAR, bool retry = false);
+	extern bool randomnode(gameent *d, aistate &b, vec &from, vec &to, float radius = AIISNEAR, float wander = AIISFAR);
+	extern bool randomnode(gameent *d, aistate &b, float radius = AIISNEAR, float wander = AIISFAR);
+	extern bool defer(gameent *d, aistate &b, bool pursue = false);
+	extern void update();
+	extern void avoid();
+	extern void think(gameent *d, int idx);
+	extern void damaged(gameent *d, gameent *e, int gun, int flags, int damage, int health, int millis, vec &dir);
+	extern void killed(gameent *d, gameent *e, int gun, int flags, int damage);
+	extern void render();
+}
+
+namespace world
+{
+	extern int gamemode, mutators, nextmode, nextmuts, minremain, maptime, quakewobble, damageresidue;
+	extern bool intermission;
+	extern float radarblipblend;
+	extern char *radartex;
+	extern gameent *player1;
+	extern vector<gameent *> players;
+
+	extern gameent *newclient(int cn);
+	extern gameent *getclient(int cn);
+	extern void clientdisconnected(int cn);
+	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
+	extern int respawnwait(gameent *d);
+	extern void respawn(gameent *d);
+	extern void respawnself(gameent *d);
+	extern void suicide(gameent *d, int flags);
+	extern void fixrange(float &yaw, float &pitch);
+	extern void fixfullrange(float &yaw, float &pitch, float &roll, bool full);
+	extern bool allowmove(physent *d);
+	extern bool inzoom();
+	extern void resetstates(int types);
+	extern void damaged(int gun, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
+	extern void killed(int gun, int flags, int damage, gameent *d, gameent *actor);
+	extern void timeupdate(int timeremain);
+	extern float radarrange();
+	extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
+	extern void drawtex(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
+	extern void drawsized(float x, float y, float s);
+}
+#endif
+#include "ctf.h"
+#include "stf.h"
+#include "vars.h"
+#ifndef GAMESERVER
+#include "scoreboard.h"
 #endif

@@ -460,7 +460,7 @@ void checkinput()
 						break;
 					}
 
-					if(cl->mousemove(event.motion.xrel, event.motion.yrel,
+					if(world::mousemove(event.motion.xrel, event.motion.yrel,
 							event.motion.x, event.motion.y, screen->w, screen->h))
 					{
 						resetcursor(true, false); // game controls engine cursor
@@ -782,8 +782,8 @@ int main(int argc, char **argv)
 	conoutf("\fminit: enet");
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 
-	conoutf("\fminit: runtime");
-	initruntime();
+	conoutf("\fminit: game");
+	initgame();
 
 	conoutf("\fminit: sdl");
     int par = 0;
@@ -888,7 +888,7 @@ int main(int argc, char **argv)
         if(frameloops)
         {
             RUNWORLD("on_update");
-            cl->updateworld();
+            world::updateworld();
         }
 
 		checksleep(lastmillis);
@@ -898,7 +898,7 @@ int main(int argc, char **argv)
 #endif
 		if(frameloops)
 		{
-			cl->recomputecamera(screen->w, screen->h);
+			world::recomputecamera(screen->w, screen->h);
 			setviewcell(camera1->o);
 			updatetextures();
 			updateparticles();
@@ -908,7 +908,7 @@ int main(int argc, char **argv)
 			if(frameloops > 2) gl_drawframe(screen->w, screen->h);
 			SDL_GL_SwapBuffers();
 			inbetweenframes = true;
-			s_sprintfd(cap)("%s - %s", cl->gametitle(), cl->gametext());
+			s_sprintfd(cap)("%s - %s", world::gametitle(), world::gametext());
 			setcaption(cap);
 		}
 	}

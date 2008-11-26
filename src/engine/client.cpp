@@ -10,7 +10,7 @@ int connmillis = 0, connattempts = 0, discmillis = 0;
 bool multiplayer(bool msg)
 {
 	// check if we're playing alone
-	int n = cc->otherclients();
+	int n = client::otherclients();
 	if (n && msg) conoutf("\froperation not available with other clients");
 	return n > 0;
 }
@@ -38,7 +38,7 @@ void throttle()
 
 bool connected(bool attempt)
 {
-    return curpeer || (attempt && connpeer) || cc->ready();
+    return curpeer || (attempt && connpeer) || client::ready();
 }
 
 void abortconnect(bool msg)
@@ -100,7 +100,7 @@ void connects(const char *name, int port, int qport)
 
 	if(clienthost)
 	{
-		connpeer = enet_host_connect(clienthost, &address, cc->numchannels());
+		connpeer = enet_host_connect(clienthost, &address, client::numchannels());
 		enet_host_flush(clienthost);
 		connmillis = totalmillis;
 		connattempts = 0;
@@ -147,7 +147,7 @@ void disconnect(int onlyclean, int async)
 	}
 	if(cleanup)
     {
-        cc->gamedisconnect(onlyclean);
+        client::gamedisconnect(onlyclean);
         localdisconnect();
     }
     if(!onlyclean) localconnect();
@@ -172,7 +172,7 @@ void c2sinfo(int rate)					 // send update to the server
 	ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, 0);
 	ucharbuf p(packet->data, packet->dataLength);
 	bool reliable = false;
-	int chan = cc->sendpacketclient(p, reliable);
+	int chan = client::sendpacketclient(p, reliable);
 	if(!p.length()) { enet_packet_destroy(packet); return; }
 	if(reliable) packet->flags = ENET_PACKET_FLAG_RELIABLE;
 	enet_packet_resize(packet, p.length());
@@ -189,7 +189,7 @@ void neterr(const char *s)
 void servertoclient(int chan, uchar *buf, int len)	// processes any updates from the server
 {
 	ucharbuf p(buf, len);
-	cc->parsepacketclient(chan, p);
+	client::parsepacketclient(chan, p);
 }
 
 void localservertoclient(int chan, uchar *buf, int len)
@@ -230,7 +230,7 @@ void gets2c()			// get updates from the server
 			conoutf("\fgconnected to server");
 			throttle();
 			if(rate) setrate(rate);
-			cc->gameconnect(true);
+			client::gameconnect(true);
 			break;
 
 		case ENET_EVENT_TYPE_RECEIVE:

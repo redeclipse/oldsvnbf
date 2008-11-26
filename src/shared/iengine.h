@@ -88,15 +88,10 @@ extern int getmapversion();
 
 // main
 struct igame;
-
 extern void keyrepeat(bool on);
-extern void registergame(const char *name, igame *ig);
-
-#define REGISTERGAME(n, c, s) struct game : igame { game() { registergame(n, this); } igameclient *newclient() { return c; } igameserver *newserver() { return s; } } reg_game
 
 // rendertext
-extern char *savecolour, *restorecolour, *green, *blue, *yellow, *red, *gray,
-	*magenta, *orange, *white, *black, *cyan;
+extern char *savecolour, *restorecolour, *green, *blue, *yellow, *red, *gray, *magenta, *orange, *white, *black, *cyan;
 
 enum
 {
@@ -390,7 +385,7 @@ extern void g3d_limitscale(float scale);
 // client
 enum { ST_EMPTY, ST_LOCAL, ST_TCPIP, ST_REMOTE };
 
-struct client					// server side version of "dynent" type
+struct clientdata
 {
 	int type;
 	int num;
@@ -398,7 +393,6 @@ struct client					// server side version of "dynent" type
 	string hostname;
 	void *info;
 };
-extern vector<client *> clients;
 
 extern void process(ENetPacket *packet, int sender, int chan);
 extern void send_welcome(int n);

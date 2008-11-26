@@ -13,11 +13,6 @@
 #include "cube.h"
 #include "iengine.h"
 #include "igame.h"
-
-extern igameclient *cl;
-extern igameserver *sv;
-extern iclientcom *cc;
-extern icliententities *et;
 #ifdef IRC
 #include "irc.h"
 #endif
@@ -323,6 +318,7 @@ extern void cancelsel();
 extern void render_texture_panel(int w, int h);
 extern void addundo(undoblock *u);
 extern void commitchanges(bool force = false);
+extern editinfo *localedit;
 
 // octarender
 extern void octarender();
@@ -418,7 +414,7 @@ extern void drawdepthfxtex();
 
 // server
 extern vector<char *> gameargs;
-extern void initruntime();
+extern void initgame();
 extern void cleanupserver();
 extern void serverslice();
 

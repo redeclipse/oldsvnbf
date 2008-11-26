@@ -46,7 +46,16 @@ CLIENT_OBJS= \
 	engine/water.o \
 	engine/world.o \
 	engine/worldio.o \
-	game/game.o 
+	game/ai.cpp \
+	game/client.cpp \
+	game/ctf.cpp \
+	game/entities.cpp \
+	game/physics.cpp \
+	game/projs.cpp \
+	game/server.cpp \
+	game/stf.cpp \
+	game/weapons.cpp \
+	game/world.cpp
 
 SINCLUDES= -Ishared -Iengine -Igame -Ienet/include
 SCXXFLAGS= -Wall -DSTANDALONE -DIRC $(CXXOPTFLAGS) $(SINCLUDES)
@@ -57,7 +66,7 @@ SERVER_OBJS= \
 	engine/command-standalone.o \
 	engine/irc-standalone.o	\
 	engine/server-standalone.o \
-	game/game-standalone.o
+	game/server-standalone.o
 
 DINCLUDES= -Ishared -Iengine -Igame -Ienet/include
 DCXXFLAGS= -Wall -DSTANDALONE -DMASTERSERVER -DIRC $(CXXOPTFLAGS) $(DINCLUDES)
@@ -69,7 +78,7 @@ DAEMON_OBJS= \
 	engine/irc-daemon.o	\
 	engine/master-daemon.o \
 	engine/server-daemon.o \
-	game/game-daemon.o
+	game/server-daemon.o
 
 default: all
 

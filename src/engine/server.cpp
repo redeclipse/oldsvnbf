@@ -51,49 +51,7 @@ SVAR(serverip, "");
 
 int curtime = 0, totalmillis = 0, lastmillis = 0;
 const char *load = NULL;
-
-igameclient *cl = NULL;
-igameserver *sv = NULL;
-iclientcom *cc = NULL;
-icliententities *et = NULL;
-
-hashtable<const char *, igame *> *gamereg = NULL;
-
 vector<char *> gameargs;
-
-void registergame(const char *name, igame *ig)
-{
-    if(!gamereg) gamereg = new hashtable<const char *, igame *>;
-	(*gamereg)[name] = ig;
-}
-
-void initgame(const char *type)
-{
-	igame **ig = gamereg->access(type);
-	if(!ig) fatal("cannot start game module: %s", type);
-
-	sv = (*ig)->newserver();
-	if(sv)
-	{
-		cl = (*ig)->newclient();
-
-		if(cl)
-		{
-			cc = cl->getcom();
-			et = cl->getents();
-		}
-
-		loopv(gameargs)
-		{
-			if(!cl || !cl->clientoption(gameargs[i]))
-			{
-				if(!sv->serveroption(gameargs[i]))
-					conoutf("\frunknown command-line option: %s", gameargs[i]);
-			}
-		}
-	}
-	else fatal("cannot start %s module server", type);
-}
 
 // all network traffic is in 32bit ints, which are then compressed using the following simple scheme (assumes that most values are small).
 
@@ -200,7 +158,7 @@ void filtertext(char *dst, const char *src, bool whitespace, int len)
 	*dst = '\0';
 }
 
-vector<client *> clients;
+vector<clientdata *> clients;
 
 ENetHost *serverhost = NULL;
 size_t bsend = 0, brec = 0;
@@ -278,7 +236,7 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 {
 	if(n<0)
 	{
-		sv->recordpacket(chan, packet->data, packet->dataLength);
+		server::recordpacket(chan, packet->data, packet->dataLength);
 		loopv(clients) if(i!=exclude) sendpacket(i, chan, packet);
 		return;
 	}
@@ -358,20 +316,20 @@ void disconnect_client(int n, int reason)
 {
 	if(clients[n]->type!=ST_TCPIP) return;
 	enet_peer_disconnect(clients[n]->peer, reason);
-	sv->clientdisconnect(n);
+	server::clientdisconnect(n);
 	clients[n]->type = ST_EMPTY;
 	clients[n]->peer->data = NULL;
-	sv->deleteinfo(clients[n]->info);
+	server::deleteinfo(clients[n]->info);
 	clients[n]->info = NULL;
 	s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
 	conoutf("\fr%s", s);
-	sv->srvoutf(-1, "%s", s);
+	server::srvoutf(-1, "%s", s);
 }
 
 void process(ENetPacket *packet, int sender, int chan)	// sender may be -1
 {
 	ucharbuf p(packet->data, (int)packet->dataLength);
-	sv->parsepacket(sender, chan, (packet->flags&ENET_PACKET_FLAG_RELIABLE)!=0, p);
+	server::parsepacket(sender, chan, (packet->flags&ENET_PACKET_FLAG_RELIABLE)!=0, p);
 	if(p.overread()) { disconnect_client(sender, DISC_EOP); return; }
 }
 
@@ -379,7 +337,7 @@ void send_welcome(int n)
 {
 	ENetPacket *packet = enet_packet_create (NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
 	ucharbuf p(packet->data, packet->dataLength);
-	int chan = sv->welcomepacket(p, n, packet);
+	int chan = server::welcomepacket(p, n, packet);
 	enet_packet_resize(packet, p.length());
 	sendpacket(n, chan, packet);
 	if(packet->referenceCount==0) enet_packet_destroy(packet);
@@ -397,7 +355,7 @@ void delclient(int n)
 	{
 		if(clients[n]->type==ST_TCPIP) clients[n]->peer->data = NULL;
 		clients[n]->type = ST_EMPTY;
-		sv->deleteinfo(clients[n]->info);
+		server::deleteinfo(clients[n]->info);
 		clients[n]->info = NULL;
 	}
 }
@@ -412,11 +370,11 @@ int addclient(int type)
 	}
 	if(!clients.inrange(n))
 	{
-		client *c = new client;
+		clientdata *c = new clientdata;
 		n = c->num = clients.length();
 		clients.add(c);
 	}
-	clients[n]->info = sv->newinfo();
+	clients[n]->info = server::newinfo();
 	clients[n]->type = type;
 	return n;
 }
@@ -425,12 +383,12 @@ int addclient(int type)
 void localconnect()
 {
     int cn = addclient(ST_LOCAL);
-    client &c = *clients[cn];
+    clientdata &c = *clients[cn];
     c.peer = NULL;
     s_strcpy(c.hostname, "<local>");
     conoutf("\fglocal client %d connected", c.num);
-    cc->gameconnect(false);
-    sv->clientconnect(c.num, 0, true);
+    client::gameconnect(false);
+    server::clientconnect(c.num, 0, true);
     send_welcome(c.num);
 }
 
@@ -438,11 +396,11 @@ void localdisconnect()
 {
     loopv(clients) if(clients[i] && clients[i]->type==ST_LOCAL)
     {
-        client &c = *clients[i];
+        clientdata &c = *clients[i];
         conoutf("\folocal client %d disconnected", i);
-        sv->clientdisconnect(c.num, true);
+        server::clientdisconnect(c.num, true);
         c.type = ST_EMPTY;
-        sv->deleteinfo(c.info);
+        server::deleteinfo(c.info);
         c.info = NULL;
     }
 }
@@ -472,7 +430,7 @@ void sendpongs()		// reply all server info requests
 		if(len < 0) return;
         ucharbuf req(pong, len), p(pong, sizeof(pong));
         p.len += len;
-        sv->queryreply(req, p);
+        server::queryreply(req, p);
 	}
 }
 
@@ -602,7 +560,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 
 void serverslice()	// main server update, called from main loop in sp, or from below in dedicated server
 {
-    sv->serverupdate();
+    server::serverupdate();
 
 	if(!serverhost) return;
 
@@ -621,8 +579,8 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 		if(totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
 		{
 			laststatus = totalmillis;
-			if(bsend || brec || sv->numclients())
-				conoutf("\fmstatus: %d clients, %.1f send, %.1f rec (K/sec)", sv->numclients(), bsend/60.0f/1024, brec/60.0f/1024);
+			if(bsend || brec || server::numclients())
+				conoutf("\fmstatus: %d clients, %.1f send, %.1f rec (K/sec)", server::numclients(), bsend/60.0f/1024, brec/60.0f/1024);
 			bsend = brec = 0;
 		}
 	}
@@ -641,14 +599,14 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 			case ENET_EVENT_TYPE_CONNECT:
 			{
 				int cn = addclient(ST_TCPIP);
-				client &c = *clients[cn];
+				clientdata &c = *clients[cn];
 				c.peer = event.peer;
 				c.peer->data = &c;
 				char hn[1024];
 				s_strcpy(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
 				conoutf("\fgclient connected (%s)", c.hostname);
 				int reason = DISC_MAXCLIENTS;
-				if(sv->numclients(-1, false, true) < serverclients && !(reason = sv->clientconnect(c.num, c.peer->address.host)))
+				if(server::numclients(-1, false, true) < serverclients && !(reason = server::clientconnect(c.num, c.peer->address.host)))
 					send_welcome(c.num);
 				else disconnect_client(c.num, reason);
 				break;
@@ -656,20 +614,20 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 			case ENET_EVENT_TYPE_RECEIVE:
 			{
 				brec += event.packet->dataLength;
-				client *c = (client *)event.peer->data;
+				clientdata *c = (clientdata *)event.peer->data;
 				if(c) process(event.packet, c->num, event.channelID);
 				if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
 				break;
 			}
 			case ENET_EVENT_TYPE_DISCONNECT:
 			{
-				client *c = (client *)event.peer->data;
+				clientdata *c = (clientdata *)event.peer->data;
 				if(!c) break;
 				conoutf("\fodisconnected client (%s)", c->hostname);
-				sv->clientdisconnect(c->num);
+				server::clientdisconnect(c->num);
 				c->type = ST_EMPTY;
 				event.peer->data = NULL;
-				sv->deleteinfo(c->info);
+				server::deleteinfo(c->info);
 				c->info = NULL;
 				break;
 			}
@@ -677,7 +635,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 				break;
 		}
     }
-	if(sv->sendpackets()) enet_host_flush(serverhost);
+	if(server::sendpackets()) enet_host_flush(serverhost);
 }
 
 void serverloop()
@@ -714,7 +672,7 @@ void serverloop()
 
 void setupserver()
 {
-    sv->changemap(load && *load ? load : NULL);
+    server::changemap(load && *load ? load : NULL);
 
     if(!servertype) return;
 
@@ -767,12 +725,21 @@ void setupserver()
 #endif
 }
 
-void initruntime()
+void initgame()
 {
-	initgame(game);
-
+	server::start();
+#ifndef STANDALONE
+	world::start();
+#endif
+	loopv(gameargs)
+	{
+#ifndef STANDALONE
+		if(world::clientoption(gameargs[i])) continue;
+#endif
+		if(server::serveroption(gameargs[i])) continue;
+		conoutf("\frunknown command-line option: %s", gameargs[i]);
+	}
 	execfile("autoserv.cfg");
-
     setupserver();
 }
 
@@ -826,7 +793,7 @@ int main(int argc, char* argv[])
 	atexit(enet_deinitialize);
 	atexit(cleanupserver);
 	enet_time_set(0);
-	initruntime();
+	initgame();
 	serverloop();
 	return 0;
 }

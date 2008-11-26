@@ -397,7 +397,7 @@ struct hline
             execute(action);
         }
         else if(buf[0]=='/') execute(buf+1);
-        else cc->toserver(0, buf);
+        else client::toserver(0, buf);
     }
 };
 vector<hline *> history;
@@ -453,7 +453,7 @@ void execbind(keym &k, bool isdown)
     }
     if(isdown)
     {
-        int state = editmode ? keym::ACTION_EDITING : (cc->state() == CS_SPECTATOR || cc->state() == CS_WAITING ? keym::ACTION_SPECTATOR : keym::ACTION_DEFAULT);
+        int state = editmode ? keym::ACTION_EDITING : (client::state() == CS_SPECTATOR || client::state() == CS_WAITING ? keym::ACTION_SPECTATOR : keym::ACTION_DEFAULT);
         char *&action = k.actions[state][0] ? k.actions[state] : k.actions[keym::ACTION_DEFAULT];
         keyaction = action;
         keypressed = &k;

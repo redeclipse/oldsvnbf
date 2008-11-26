@@ -407,7 +407,7 @@ vtxarray *reflectedva;
 
 void renderreflectedmapmodels()
 {
-    const vector<extentity *> &ents = et->getents();
+    const vector<extentity *> &ents = entities::getents();
 
     octaentities *mms = visiblemms;
     if(reflecting)
@@ -455,7 +455,7 @@ void renderreflectedmapmodels()
 
 void rendermapmodels()
 {
-	const vector<extentity *> &ents = et->getents();
+	const vector<extentity *> &ents = entities::getents();
 
 	visiblemms = NULL;
 	lastvisiblemms = &visiblemms;

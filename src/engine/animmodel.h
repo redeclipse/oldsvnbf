@@ -556,7 +556,7 @@ struct animmodel : model
         bool link(part *p, const char *tag, int anim = -1, int basetime = 0, vec *pos = NULL)
         {
             int i = meshes->findtag(tag);
-            if(i<0) 
+            if(i<0)
             {
                 loopv(links) if(links[i].p && links[i].p->link(p, tag, anim, basetime, pos)) return true;
                 return false;
@@ -854,7 +854,7 @@ struct animmodel : model
                 conoutf("invalid frame %d, range %d in model %s", frame, range, model->loadname);
                 return;
             }
-            if(!anims[animpart]) anims[animpart] = new vector<animspec>[cl->numanims()];
+            if(!anims[animpart]) anims[animpart] = new vector<animspec>[world::numanims()];
             animspec &spec = anims[animpart][num].add();
             spec.frame = frame;
             spec.range = range;
@@ -885,7 +885,7 @@ struct animmodel : model
                 numtags++;
 
                 animmodel *m = (animmodel *)a[i].m;
-                if(!m || !m->loaded) 
+                if(!m || !m->loaded)
                 {
                     if(a[i].pos) link(NULL, a[i].tag, 0, 0, a[i].pos);
                     continue;
@@ -914,7 +914,7 @@ struct animmodel : model
         if(a) for(int i = numtags-1; i >= 0; i--)
         {
             animmodel *m = (animmodel *)a[i].m;
-            if(!m || !m->loaded) 
+            if(!m || !m->loaded)
             {
                 if(a[i].pos) unlink(NULL);
                 continue;
@@ -1015,7 +1015,7 @@ struct animmodel : model
             glColorMask(COLORMASK, fading ? GL_FALSE : GL_TRUE);
 
             glDepthFunc(GL_LEQUAL);
-        
+
             if(!enablealphablend)
             {
                 glEnable(GL_BLEND);
@@ -1275,7 +1275,7 @@ struct animmodel : model
         glDisableClientState(GL_NORMAL_ARRAY);
         enablenormals = false;
     }
- 
+
     static void disablevbo()
     {
         if(hasVBO)

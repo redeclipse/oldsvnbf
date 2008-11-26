@@ -407,12 +407,12 @@ void save_world(char *mname, bool nolms)
 	strncpy(hdr.head, "BFGZ", 4);
 	hdr.version = MAPVERSION;
 	hdr.headersize = sizeof(bfgz);
-	hdr.gamever = sv->gamever();
+	hdr.gamever = server::gamever();
 	hdr.numents = 0;
 	hdr.revision++;
-	strncpy(hdr.gameid, sv->gameid(), 4);
+	strncpy(hdr.gameid, server::gameid(), 4);
 
-	const vector<extentity *> &ents = et->getents();
+	const vector<extentity *> &ents = entities::getents();
 	loopv(ents)
 	{
 		if(ents[i]->type!=ET_EMPTY)
@@ -477,9 +477,9 @@ void save_world(char *mname, bool nolms)
 			endianswap(&tmp.o, sizeof(int), 3);
 			endianswap(&tmp.attr1, sizeof(short), 5);
 			gzwrite(f, &tmp, sizeof(entity));
-			et->writeent(f, i, *ents[i]);
+			entities::writeent(f, i, *ents[i]);
 			extentity &e = (extentity &)*ents[i];
-			if(et->maylink(e.type))
+			if(entities::maylink(e.type))
 			{
 				vector<int> links;
 				int n = 0;
@@ -490,7 +490,7 @@ void save_world(char *mname, bool nolms)
 
 					if(f.type != ET_EMPTY)
 					{
-						if(et->maylink(f.type) && e.links.find(k) >= 0)
+						if(entities::maylink(f.type) && e.links.find(k) >= 0)
 							links.add(n); // align to indices
 
 						n++;
@@ -499,7 +499,7 @@ void save_world(char *mname, bool nolms)
 
 				gzputint(f, links.length());
 				loopv(links) gzputint(f, links[i]); // aligned index
-				if(verbose >= 2) conoutf("\fwentity %s (%d) saved %d links", et->findname(e.type), i, links.length());
+				if(verbose >= 2) conoutf("\fwentity %s (%d) saved %d links", entities::findname(e.type), i, links.length());
 			}
 			count++;
 		}
@@ -528,7 +528,7 @@ void save_world(char *mname, bool nolms)
             savepvs(f);
             if(verbose) conoutf("\fwsaved %d PVS view cells", getnumviewcells());
         }
-        if(shouldsaveblendmap()) 
+        if(shouldsaveblendmap())
         {
             if(verbose) renderprogress(0, "saving blendmap...");
             saveblendmap(f);
@@ -537,7 +537,7 @@ void save_world(char *mname, bool nolms)
     }
 
 	renderprogress(0, "saving world...");
-	cl->saveworld(f);
+	world::saveworld(f);
 	gzclose(f);
 
 	conoutf("\fwsaved map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-savingstart)/1000.0f);
@@ -724,9 +724,9 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 				if(verbose) conoutf("\fwloaded %d variables", vars);
 			}
 
-			if(!sv->canload(hdr.gameid))
+			if(!server::canload(hdr.gameid))
 			{
-				conoutf("\frWARNING: loading map from %s game type in %s, ignoring game specific data", hdr.gameid, sv->gameid());
+				conoutf("\frWARNING: loading map from %s game type in %s, ignoring game specific data", hdr.gameid, server::gameid());
 				samegame = false;
 			}
 		}
@@ -815,7 +815,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 			else s_strcpy(gameid, "fps");
 			strncpy(hdr.gameid, gameid, 4);
 
-			if(!sv->canload(hdr.gameid))
+			if(!server::canload(hdr.gameid))
 			{
 				conoutf("\frWARNING: loading OCTA v%d map from %s game, ignoring game specific data", hdr.version, hdr.gameid);
 				samegame = false;
@@ -858,11 +858,11 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 
 		renderprogress(0, "loading entities...");
 
-		vector<extentity *> &ents = et->getents();
+		vector<extentity *> &ents = entities::getents();
 		loopi(hdr.numents)
 		{
 			if(verbose) renderprogress(float(i)/float(hdr.numents), "loading entities...");
-			extentity &e = *et->newent();
+			extentity &e = *entities::newent();
 			ents.add(&e);
 			gzread(f, &e, sizeof(entity));
 			endianswap(&e.o, sizeof(int), 3);
@@ -893,8 +893,8 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 				ents.pop();
 				continue;
 			}
-			et->readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
-			if(maptype == MAP_BFGZ && et->maylink(hdr.gamever <= 49 && e.type >= 10 ? e.type-1 : e.type, hdr.gamever))
+			entities::readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
+			if(maptype == MAP_BFGZ && entities::maylink(hdr.gamever <= 49 && e.type >= 10 ? e.type-1 : e.type, hdr.gamever))
 			{
 				int links = gzgetint(f);
 				loopk(links)
@@ -902,13 +902,13 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 					int ln = gzgetint(f);
 					e.links.add(ln);
 				}
-				if(verbose >= 2) conoutf("\fwentity %s (%d) loaded %d link(s)", et->findname(e.type), i, links);
+				if(verbose >= 2) conoutf("\fwentity %s (%d) loaded %d link(s)", entities::findname(e.type), i, links);
 			}
 			if(!insideworld(e.o))
 			{
 				if(e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
 				{
-					conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", et->findname(e.type), i, e.o.x, e.o.y, e.o.z);
+					conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
 				}
 			}
 			if(hdr.version <= 14 && e.type == ET_MAPMODEL)
@@ -925,7 +925,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 				e.attr3 = e.attr4 = e.attr5 = 0;
 			}
 		}
-		et->initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
+		entities::initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
 		if(verbose) conoutf("\fwloaded %d entities", hdr.numents);
 
 		renderprogress(0, "loading octree...");
@@ -972,7 +972,7 @@ bool load_world(char *mname)		// still supports all map formats that have existe
 		if(verbose) conoutf("\fwloaded %d lightmaps", hdr.lightmaps);
 
 		renderprogress(0, "loading world...");
-		cl->loadworld(f, maptype);
+		world::loadworld(f, maptype);
 
 		overrideidents = worldidents = true;
 		persistidents = false;

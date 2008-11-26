@@ -80,7 +80,7 @@ struct partrenderer
     {
         o = p->o;
         d = p->d;
-        cl->particletrack(p, type, ts, o, d, lastpass); //type&PT_TRACK &&
+        world::particletrack(p, type, ts, o, d, lastpass); //type&PT_TRACK &&
         if(p->fade <= 5)
         {
             ts = 1;
@@ -1170,6 +1170,6 @@ void updateparticles()
     else emit = false;
 
     flares.makelightflares();
-	et->drawparticles();
+	entities::drawparticles();
 }
 

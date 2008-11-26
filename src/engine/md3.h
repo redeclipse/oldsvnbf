@@ -368,7 +368,7 @@ void md3anim(char *anim, int *frame, int *range, float *speed, int *priority)
 {
     if(!loadingmd3 || loadingmd3->parts.empty()) { conoutf("\frnot loading an md3"); return; }
     vector<int> anims;
-    cl->findanims(anim, anims);
+    world::findanims(anim, anims);
     if(anims.empty()) conoutf("\frcould not find animation %s in %s", anim, loadingmd3->loadname);
     else loopv(anims)
     {

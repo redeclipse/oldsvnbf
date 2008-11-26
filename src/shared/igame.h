@@ -1,130 +1,103 @@
 // the interface the engine uses to run the gameplay module
 
-struct icliententities
+namespace entities
 {
-    virtual ~icliententities() {}
+	extern void editent(int i);
+	extern void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e);
+	extern void writeent(gzFile &g, int id, entity &e);
+	extern void initents(gzFile &g, int mtype, int mver, char *gid, int gver);
+	extern float dropheight(entity &e);
+	extern void fixentity(extentity &e);
+	extern bool cansee(extentity &e);;
+	extern const char *findname(int type);
+	extern int findtype(char *type);
+	extern bool maylink(int type, int ver = 0);
+	extern bool canlink(int index, int node, bool msg = false);
+	extern bool linkents(int index, int node, bool add, bool local, bool toggle);
+	extern extentity *newent();
+	extern vector<extentity *> &getents();
+	extern void drawparticles();
+}
 
-    virtual void editent(int i) = 0;
-	virtual void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e) { return; }
-	virtual void writeent(gzFile &g, int id, entity &e) { return; }
-	virtual void initents(gzFile &g, int mtype, int mver, char *gid, int gver) = 0;
-    virtual float dropheight(entity &e) = 0;
-    virtual void fixentity(extentity &e) = 0;
-    virtual bool cansee(extentity &e) { return true; };
-    virtual const char *findname(int type) = 0;
-	virtual int findtype(char *type) = 0;
-	virtual bool maylink(int type, int ver = 0) = 0;
-	virtual bool canlink(int index, int node, bool msg = false) = 0;
-	virtual bool linkents(int index, int node, bool add, bool local, bool toggle) = 0;
-    virtual extentity *newent() = 0;
-    virtual vector<extentity *> &getents() = 0;
-    virtual void drawparticles() = 0;
-};
-
-struct iclientcom
+namespace client
 {
-    virtual ~iclientcom() {}
+	extern void gamedisconnect(int clean);
+	extern void parsepacketclient(int chan, ucharbuf &p);
+	extern int sendpacketclient(ucharbuf &p, bool &reliable);
+	extern void gameconnect(bool _remote);
+	extern bool allowedittoggle(bool edit);
+	extern void edittoggled(bool edit);
+	extern void writeclientinfo(FILE *f);
+	extern void toserver(int flags, char *text);
+	extern bool sendcmd(int nargs, char *cmd, char *arg);
+	extern void editvar(ident *id, bool local);
+	extern void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0);
+	extern void changemap(const char *name);
+	extern bool ready();
+	extern int state();
+	extern int otherclients();
+	extern int numchannels();
+	extern int servercompare(serverinfo *a, serverinfo *b);
+	extern int serverbrowser(g3d_gui *g);
+}
 
-    virtual void gamedisconnect(int clean) = 0;
-    virtual void parsepacketclient(int chan, ucharbuf &p) = 0;
-    virtual int sendpacketclient(ucharbuf &p, bool &reliable) = 0;
-    virtual void gameconnect(bool _remote) = 0;
-    virtual bool allowedittoggle(bool edit) = 0;
-    virtual void edittoggled(bool edit) {}
-    virtual void writeclientinfo(FILE *f) = 0;
-    virtual void toserver(int flags, char *text) = 0;
-	virtual bool sendcmd(int nargs, char *cmd, char *arg) = 0;
-    virtual void editvar(ident *id, bool local) = 0;
-    virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
-    virtual void changemap(const char *name) = 0;
-	virtual bool ready() { return true; }
-	virtual int state() { return CS_ALIVE; }
-	virtual int otherclients() { return 0; }
-    virtual int numchannels() { return 1; }
-	virtual int servercompare(serverinfo *a, serverinfo *b) { return strcmp(a->name, b->name); }
-    virtual int serverbrowser(g3d_gui *g) { return -1; }
-};
-
-struct igameclient
+namespace world
 {
-    virtual ~igameclient() {}
+	extern bool clientoption(char *arg);
+	extern void updateworld();
+	extern void newmap(int size);
+	extern void startmap(const char *name);
+	extern void drawhud(int w, int h);
+	extern void drawpointers(int w, int h);
+	extern bool allowmove(physent *d);
+	extern dynent *iterdynents(int i);
+	extern int numdynents();
+	extern void gamemenus();
+	extern void lighteffects(dynent *d, vec &color, vec &dir);
+	extern void adddynlights();
+	extern void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass);
+	extern bool gethudcolour(vec &colour);
+	extern vec headpos(physent *d, float off = 0.f);
+	extern vec feetpos(physent *d, float off = 0.f);
+	extern bool mousemove(int dx, int dy, int x, int y, int w, int h);
+	extern void project(int w, int h);
+	extern void recomputecamera(int w, int h);
+	extern void loadworld(gzFile &f, int maptype);
+	extern void saveworld(gzFile &f);
+	extern int localplayers();
+	extern bool gui3d();
+	extern char *gametitle();
+	extern char *gametext();
+	extern int numanims();
+	extern void findanims(const char *pattern, vector<int> &anims);
+	extern void render();
+	extern void renderavatar(bool early);
+	extern bool isthirdperson();
+	extern void start();
+}
 
-    virtual icliententities *getents() = 0;
-    virtual iclientcom *getcom() = 0;
-
-    virtual bool clientoption(char *arg) { return false; }
-    virtual void updateworld() = 0;
-
-    virtual void newmap(int size) = 0;
-    virtual void startmap(const char *name) = 0;
-    virtual void drawhud(int w, int h) = 0;
-    virtual void drawpointers(int w, int h) = 0;
-
-    virtual bool allowmove(physent *d) { return true; }
-
-    virtual dynent *iterdynents(int i) = 0;
-    virtual int numdynents() = 0;
-
-    virtual void gamemenus() = 0;
-    virtual void lighteffects(dynent *d, vec &color, vec &dir) {}
-    virtual void adddynlights() {}
-    virtual void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass) {}
-
-	virtual bool gethudcolour(vec &colour) { return false; }
-
-	virtual vec headpos(physent *d, float off) = 0;
-	virtual vec feetpos(physent *d, float off) = 0;
-	virtual bool mousemove(int dx, int dy, int x, int y, int w, int h) = 0;
-	virtual void project(int w, int h) = 0;
-	virtual void recomputecamera(int w, int h) = 0;
-
-	virtual void loadworld(gzFile &f, int maptype) { return; }
-	virtual void saveworld(gzFile &f) { return; }
-
-	virtual int localplayers() { return 1; }
-	virtual bool gui3d() { return true; }
-
-	virtual char *gametitle() = 0;
-	virtual char *gametext() = 0;
-
-	virtual int numanims() = 0;
-	virtual void findanims(const char *pattern, vector<int> &anims) = 0;
-    virtual void render() = 0;
-    virtual void renderavatar(bool early) = 0;
-    virtual bool isthirdperson() = 0;
-};
-
-struct igameserver
+namespace server
 {
-    virtual ~igameserver() {}
-
-	virtual void srvmsgf(int cn, const char *s, ...) = 0;
-	virtual void srvoutf(int cn, const char *s, ...) = 0;
-    virtual bool serveroption(char *arg) { return false; }
-    virtual void *newinfo() = 0;
-    virtual void deleteinfo(void *ci) = 0;
-    virtual int numclients(int exclude = -1, bool nospec = true, bool noai = false) = 0;
-    virtual void clientdisconnect(int n, bool local = false) = 0;
-    virtual int clientconnect(int n, uint ip, bool local = false) = 0;
-    virtual void recordpacket(int chan, void *data, int len) {}
-    virtual void parsepacket(int sender, int chan, bool reliable, ucharbuf &p) = 0;
-    virtual bool sendpackets() = 0;
-    virtual int welcomepacket(ucharbuf &p, int n, ENetPacket *packet) = 0;
-    virtual void queryreply(ucharbuf &req, ucharbuf &p) = 0;
-    virtual void serverupdate() = 0;
-    virtual void changemap(const char *s, int mode = -1, int muts = -1) { return; }
-    virtual const char *gameid() = 0;
-	virtual char *gamename(int mode, int muts) = 0;
-	virtual void modecheck(int *mode, int *muts) = 0;
-	virtual int gamever() = 0;
-    virtual const char *choosemap(const char *suggest) = 0;
-    virtual bool canload(char *type) = 0;
-};
-
-struct igame
-{
-    virtual ~igame() {}
-
-    virtual igameclient *newclient() = 0;
-    virtual igameserver *newserver() = 0;
-};
+	extern void srvmsgf(int cn, const char *s, ...);
+	extern void srvoutf(int cn, const char *s, ...);
+	extern bool serveroption(char *arg);
+	extern void *newinfo();
+	extern void deleteinfo(void *ci);
+	extern int numclients(int exclude = -1, bool nospec = true, bool noai = false);
+	extern void clientdisconnect(int n, bool local = false);
+	extern int clientconnect(int n, uint ip, bool local = false);
+	extern void recordpacket(int chan, void *data, int len);
+	extern void parsepacket(int sender, int chan, bool reliable, ucharbuf &p);
+	extern bool sendpackets();
+	extern int welcomepacket(ucharbuf &p, int n, ENetPacket *packet);
+	extern void queryreply(ucharbuf &req, ucharbuf &p);
+	extern void serverupdate();
+	extern void changemap(const char *s, int mode = -1, int muts = -1);
+	extern const char *gameid();
+	extern char *gamename(int mode, int muts);
+	extern void modecheck(int *mode, int *muts);
+	extern int gamever();
+	extern const char *choosemap(const char *suggest);
+	extern bool canload(char *type);
+	extern void start();
+}

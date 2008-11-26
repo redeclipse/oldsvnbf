@@ -129,7 +129,7 @@ void aliasa(const char *name, char *action)
 		idents->access(d.name, d);
 #else
 		ident &c = idents->access(d.name, d);
-		if(cc) cc->editvar(&c, interactive);
+		client::editvar(&c, interactive);
 #endif
 	}
     else if(b->type != ID_ALIAS)
@@ -154,7 +154,7 @@ void aliasa(const char *name, char *action)
 				b->flags |= IDF_WORLD;
 
 #ifndef STANDALONE
-			if(cc) cc->editvar(b, interactive);
+			client::editvar(b, interactive);
 #endif
 		}
 	}
@@ -487,7 +487,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
 						if(k) s_strcat(arg, " ");
 						s_strcat(arg, w[k+1]);
 					}
-					if(!cc || !cc->sendcmd(numargs, c, arg))
+					if(!client::sendcmd(numargs, c, arg))
 #endif
 						conoutf("\frunknown command: %s", c);
                 }
@@ -589,7 +589,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         *id->storage.i = i1;
                         id->changed();                                             // call trigger function if available
 #ifndef STANDALONE
-						if(cc) cc->editvar(id, interactive);
+						client::editvar(id, interactive);
 #endif
 					}
                     break;
@@ -612,7 +612,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         *id->storage.f = f1;
                         id->changed();
 #ifndef STANDALONE
-						if(cc) cc->editvar(id, interactive);
+						client::editvar(id, interactive);
 #endif
                     }
                     break;
@@ -628,7 +628,7 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         *id->storage.s = newstring(w[1]);
                         id->changed();
 #ifndef STANDALONE
-						if(cc) cc->editvar(id, interactive);
+						client::editvar(id, interactive);
 #endif
 					}
 					break;
@@ -694,8 +694,8 @@ void writecfg()
 #ifndef STANDALONE
 	FILE *f = openfile("config.cfg", "w");
 	if(!f) return;
-	cc->writeclientinfo(f);
-	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n", ENG_VERSION, sv->gamever());
+	client::writeclientinfo(f);
+	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n", ENG_VERSION, server::gamever());
 	enumerate(*idents, ident, id,
         if(id.flags&IDF_PERSIST) switch(id.type)
 		{

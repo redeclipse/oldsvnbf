@@ -719,8 +719,8 @@ SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *comp
     }
     if((anim && anim->count ? max(anim->w, anim->h) : max(s->w, s->h)) > (1<<12))
     {
-        SDL_FreeSurface(s); 
-        conoutf("\frtexture size exceeded %dx%d: %s", 1<<12, 1<<12, file); 
+        SDL_FreeSurface(s);
+        conoutf("\frtexture size exceeded %dx%d: %s", 1<<12, 1<<12, file);
         return NULL;
     }
     return s;
@@ -854,7 +854,7 @@ void texturedel(int i, bool local)
 	loopj(curtexnum-i)
 	{
 		int oldtex = i+j, newtex = max(i+j-1, 0);
-		if(cc && local) cc->edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
+		if(local) client::edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
 		loopk(8) replacetexcube(worldroot[k], oldtex, newtex);
 	}
 	slots[i].reset();
@@ -1394,7 +1394,7 @@ void initenvmaps()
 	if(!hasCM) return;
 	clearenvmaps();
 	skyenvmap = cubemapfromsky(1<<envmapsize);
-	const vector<extentity *> &ents = et->getents();
+	const vector<extentity *> &ents = entities::getents();
 	loopv(ents)
 	{
 		const extentity &ent = *ents[i];
