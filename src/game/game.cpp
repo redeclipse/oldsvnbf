@@ -1083,13 +1083,7 @@ struct gameclient : igameclient
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
 
-			int r = 255, g = 255, b = 255;
-			if(m_team(gamemode, mutators))
-			{
-				r = teamtype[d->team].colour>>16;
-				g = (teamtype[d->team].colour>>8)&0xFF;
-				b = teamtype[d->team].colour&0xFF;
-			}
+			int colour = teamtype[d->team].colour, r = colour>>16, g = (colour>>8)&0xFF, b = colour&0xFF;
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*radarblend();
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
@@ -1167,10 +1161,10 @@ struct gameclient : igameclient
 			settexture(radardottex(), 3);
 			if(inspawn > 0.f)
 			{
-				glColor4f(1.f, 1.f, 1.f, fade*(1.f-inspawn));
+				glColor4f(1.f, 0.5f+(inspawn*0.5f), 0.f, fade*(1.f-inspawn));
 				drawsized(cx-(inspawn*s), cy-(inspawn*s), s+(inspawn*s*2.f));
 			}
-			glColor4f(1.f, insel ? 0.5f : 1.f, inspawn > 0.f ? inspawn : 0.f, fade);
+			glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
 			drawsized(cx-(insel ? s : 0), cy-(insel ? s : 0), s+(insel ? s*2 : 0));
 		}
 	}
@@ -1265,9 +1259,9 @@ struct gameclient : igameclient
 			drawtex(0, 0, ox, oy);
 		}
 
-		int os = int(oy*radarsize()), qs = os/2;
-#if 0
-		colour = teamtype[player1->team].colour, r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);
+		int os = int(oy*radarsize()), qs = os/2, colour = teamtype[player1->team].colour,
+			r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);;
+
 		glColor4f((r/255.f), (g/255.f), (b/255.f), fade*radarblend());
 		settexture("textures/radarcorner", 3);
 		drawquad(0, 0, os, os, 0, 0, 1, 1);
@@ -1280,7 +1274,6 @@ struct gameclient : igameclient
 		settexture("<rotate:1>textures/radarline", 3);
 		drawquad(0, os, os, oy-(os*2), 0, 0, 1, 1);
 		drawquad(ox-os, os, os, oy-(os*2), 1, 0, 0, 1);
-#endif
 
 		drawentblips(ox, oy, qs);
 		loopv(players)
