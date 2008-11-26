@@ -927,7 +927,7 @@ struct entities : icliententities
 
 	bool entitydrop()
 	{
-		return (m_fight(cl.gamemode) && autodropentities) || dropentities();
+		return (m_play(cl.gamemode) && autodropentities) || dropentities();
 	}
 
 	int entitynode(const vec &v, bool dist = true, int type = WAYPOINT)
@@ -965,7 +965,7 @@ struct entities : icliententities
 		{
 			vec v(cl.feetpos(d, 0.f));
 			int curnode = entitynode(v);
-			if(entitydrop() && ((m_fight(cl.gamemode) && d->aitype == AI_NONE) || d == cl.player1))
+			if(entitydrop() && ((m_play(cl.gamemode) && d->aitype == AI_NONE) || d == cl.player1))
 			{
 				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= d->radius+enttype[WAYPOINT].radius)
 					curnode = d->lastnode;
@@ -1267,7 +1267,7 @@ struct entities : icliententities
 				default: break;
 			}
 		}
-		autodropentities = m_fight(cl.gamemode) && !entities;
+		autodropentities = m_play(cl.gamemode) && !entities;
 	}
 
 	void mapstart()
@@ -1496,7 +1496,7 @@ struct entities : icliententities
 	{
 		if(rendernormally) // important, don't render lines and stuff otherwise!
 		{
-			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || (dropentities() && !m_fight(cl.gamemode))) ? 3 : 0));
+			int level = (m_edit(cl.gamemode) ? 2 : ((showentdir()==3 || showentradius()==3 || showentlinks()==3 || (dropentities() && !m_play(cl.gamemode))) ? 3 : 0));
 			if(level)
             {
                 renderprimitive(true);

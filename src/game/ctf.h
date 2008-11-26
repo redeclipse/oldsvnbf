@@ -283,7 +283,7 @@ struct ctfclient : ctfstate
 		dir.normalize();
 		int colour = teamtype[f.team].colour;
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-			fade = clamp(1.f-(dist/cl.radarrange()), 0.1f, 1.f)*cl.radarblend();
+			fade = clamp(1.f-(dist/cl.radarrange()), 0.1f, 1.f)*cl.radarblipblend();
 		getradardir;
         settexture(cl.radarflagtex(), 3);
 		glColor4f(r, g, b, fade);

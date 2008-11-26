@@ -89,31 +89,35 @@ struct gameclient : igameclient
 	IFVARP(crosshairblend, 0, 0.3f, 1);
 	IFVARP(indicatorblend, 0, 0.5f, 1);
 	IFVARP(clipbarblend, 0, 0.2f, 1);
-	IFVARP(barblend, 0, 1.0f, 1);
 	IFVARP(candinalblend, 0, 1.0f, 1);
-	IFVARP(ammoblend, 0, 0.8f, 1);
-	IFVARP(ammoblendinactive, 0, 0.3f, 1);
-	IFVARP(infoblend, 0, 1.f, 1);
+	//IFVARP(barblend, 0, 1.0f, 1);
+	//IFVARP(infoblend, 0, 1.f, 1);
 
-	IFVARP(radarsize, 0, 0.025f, 1);
+	//IFVARP(ammosize, 0, 0.07f, 1);
+	//IFVARP(ammoblend, 0, 0.8f, 1);
+	//IFVARP(ammoblendinactive, 0, 0.3f, 1);
+
+	ITVAR(radartex, "textures/radar", 3);
+	ITVAR(radardottex, "textures/radardot", 3);
+	ITVAR(radarflagtex, "textures/radarflag", 3);
+	IFVARP(radarsize, 0, 0.02f, 1);
 	IVARP(radardist, 0, 512, 512);
 	IVARP(radarnames, 0, 1, 1);
-	IFVARP(radarblend, 0, 1.f, 1);
+	IFVARP(radarblend, 0, 0.2f, 1);
+	IFVARP(radarblipblend, 0, 1.f, 1);
 	IVARP(editradardist, 0, 512, INT_MAX-1);
 	IVARP(editradarnoisy, 0, 1, 2);
 
-	IFVARP(ammosize, 0, 0.07f, 1);
-
 	IVARP(showcrosshair, 0, 1, 1);
 	IVARP(showdamage, 0, 1, 1);
-	IVARP(showtips, 0, 2, 3);
-	IVARP(showguns, 0, 2, 2);
+	//IVARP(showtips, 0, 2, 3);
+	//IVARP(showguns, 0, 2, 2);
 	IVARP(shownamesabovehead, 0, 1, 2);
 	IVARP(showindicator, 0, 1, 1);
 
 	IVARP(showstats, 0, 0, 1);
-	IVARP(showenttips, 0, 1, 2);
-	IVARP(showhudents, 0, 10, 100);
+	//IVARP(showenttips, 0, 1, 2);
+	//IVARP(showhudents, 0, 10, 100);
 	IVARP(showfps, 0, 2, 2);
 	IVARP(statrate, 0, 200, 1000);
 
@@ -140,20 +144,17 @@ struct gameclient : igameclient
 	ITVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
 	ITVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
 	ITVAR(snipecrosshairtex, "textures/snipecrosshair", 3);
-
-	ITVAR(radardottex, "textures/radardot", 3);
-	ITVAR(radarflagtex, "textures/radarflag", 3);
-	ITVAR(radartex, "textures/radar", 0);
-	ITVAR(healthbartex, "textures/healthbar", 0);
-
 	ITVAR(indicatortex, "textures/indicator", 3);
-	ITVAR(plasmatex, "textures/plasma", 0);
+
+	//ITVAR(healthbartex, "textures/healthbar", 0);
+
+	/*ITVAR(plasmatex, "textures/plasma", 0);
 	ITVAR(shotguntex, "textures/shotgun", 0);
 	ITVAR(chainguntex, "textures/chaingun", 0);
 	ITVAR(grenadestex, "textures/grenades", 0);
 	ITVAR(flamertex, "textures/flamer", 0);
 	ITVAR(carbinetex, "textures/carbine", 0);
-	ITVAR(rifletex, "textures/rifle", 0);
+	ITVAR(rifletex, "textures/rifle", 0);*/
 	ITVAR(plasmacliptex, "textures/plasmaclip", 3);
 	ITVAR(shotguncliptex, "textures/shotgunclip", 3);
 	ITVAR(chainguncliptex, "textures/chaingunclip", 3);
@@ -1084,7 +1085,7 @@ struct gameclient : igameclient
 			dir.normalize();
 
 			int colour = teamtype[d->team].colour, r = colour>>16, g = (colour>>8)&0xFF, b = colour&0xFF;
-			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*radarblend();
+			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*radarblipblend();
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
 
@@ -1155,7 +1156,7 @@ struct gameclient : igameclient
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
 			float range = (inspawn > 0.f ? 2.f-inspawn : 1.f)-(insel ? 1.f : (dist/radarrange())),
-					fade = clamp(range, 0.1f, 1.f)*radarblend();
+					fade = clamp(range, 0.1f, 1.f)*radarblipblend();
 
 			getradardir;
 			settexture(radardottex(), 3);
@@ -1263,17 +1264,15 @@ struct gameclient : igameclient
 			r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);;
 
 		glColor4f((r/255.f), (g/255.f), (b/255.f), fade*radarblend());
-		settexture("textures/radarcorner", 3);
-		drawquad(0, 0, os, os, 0, 0, 1, 1);
-		drawquad(ox-os, 0, os, os, 1, 0, 0, 1);
-		drawquad(0, oy-os, os, os, 0, 1, 1, 0);
-		drawquad(ox-os, oy-os, os, os, 1, 1, 0, 0);
-		settexture("textures/radarline", 3);
-		drawquad(os, 0, ox-(os*2), os, 0, 0, 1, 1);
-		drawquad(os, oy-os, ox-(os*2), os, 0, 1, 1, 0);
-		settexture("<rotate:3>textures/radarline", 3);
-		drawquad(0, os, os, oy-(os*2), 0, 0, 1, 1);
-		drawquad(ox-os, os, os, oy-(os*2), 1, 0, 0, 1);
+		settexture(radartex(), 3);
+		drawtex(os, os, os, os,					0.f, 0.f, 0.25f, 0.25f);		// TL
+		drawtex(ox-(os*2), os, os, os,			0.75f, 0.f, 0.25f, 0.25f);		// TR
+		drawtex(os, oy-(os*2), os, os,			0.f, 0.75f, 0.25f, 0.25f);		// BL
+		drawtex(ox-(os*2), oy-(os*2), os, os,	0.75f, 0.75f, 0.25f, 0.25f);	// BR
+		drawtex(os*2, os, ox-(os*4), os,		0.25f, 0.f, 0.5f, 0.25f);		// T
+		drawtex(os*2, oy-(os*2), ox-(os*4), os,	0.25f, 0.75f, 0.5f, 0.25f);		// B
+		drawtex(os, os*2, os, oy-(os*4),		0.f, 0.25f, 0.25f, 0.5f);		// L
+		drawtex(ox-(os*2), os*2, os, oy-(os*4),	0.75f, 0.25f, 0.25f, 0.5f);		// R
 
 		drawentblips(ox, oy, qs);
 		loopv(players)
@@ -1473,7 +1472,7 @@ struct gameclient : igameclient
 
 	void drawhudelements(int w, int h)
 	{
-		int ox = hudwidth, oy = hudsize(), bx = int(oy*radarsize()), by = oy-bx;
+		int ox = hudwidth, oy = hudsize(), bx = int(oy*radarsize()), by = oy-bx-FONTH/4;
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 
@@ -1508,36 +1507,36 @@ struct gameclient : igameclient
 
 		if(showstats())
 		{
-			by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", bx, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
-			by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
+			by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", bx+FONTW/2, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
+			by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx+FONTW/2, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
 		}
 
 		if(showfps()) switch(showfps())
 		{
 			case 2:
-				if(autoadjust) by -= draw_textx("fps:%d (%d/%d) +%d-%d [\fs%s%d%%\fS]", bx, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], autoadjustfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-				else by -= draw_textx("fps:%d (%d) +%d-%d", bx, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], maxfps, curstats[9], curstats[10]);
+				if(autoadjust) by -= draw_textx("fps:%d (%d/%d) +%d-%d [\fs%s%d%%\fS]", bx+FONTW/2, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], autoadjustfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+				else by -= draw_textx("fps:%d (%d) +%d-%d", bx+FONTW/2, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], maxfps, curstats[9], curstats[10]);
 				break;
 			case 1:
-				if(autoadjust) by -= draw_textx("fps:%d (%d/%d) [\fs%s%d%%\fS]", bx, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], autoadjustfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-				else by -= draw_textx("fps:%d (%d)", bx, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], maxfps);
+				if(autoadjust) by -= draw_textx("fps:%d (%d/%d) [\fs%s%d%%\fS]", bx+FONTW/2, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], autoadjustfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+				else by -= draw_textx("fps:%d (%d)", bx+FONTW/2, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1, curstats[8], maxfps);
 				break;
 			default: break;
 		}
 
 		if(getcurcommand())
-			by -= rendercommand(bx, by-FONTH, hudwidth-FONTH);
+			by -= rendercommand(bx+FONTW/2, by-FONTH, hudwidth-FONTW-bx*2);
 
 		if(connected() && maptime)
 		{
 			if(player1->state == CS_EDITING)
 			{
-				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
+				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx+FONTW/2, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
 						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
 							sel.cx, sel.cxs, sel.cy, sel.cys);
-				by -= draw_textx("corner:%d orient:%d grid:%d", bx, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
+				by -= draw_textx("corner:%d orient:%d grid:%d", bx+FONTW/2, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
 								sel.corner, sel.orient, sel.grid);
-				by -= draw_textx("cube:%s%d ents:%d", bx, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
+				by -= draw_textx("cube:%s%d ents:%d", bx+FONTW/2, by-FONTH, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, -1,
 					selchildcount<0 ? "1/" : "", abs(selchildcount), entgroup.length());
 			}
 

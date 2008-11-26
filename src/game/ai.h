@@ -9,7 +9,7 @@ struct aiserv
 		if(sv.haspriv(ci, PRIV_MASTER, true))
 		{
 			if(m_lobby(sv.gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(m_fight(sv.gamemode) && sv_botbalance)
+			else if(m_play(sv.gamemode) && sv_botbalance)
 			{
 				if(sv_botbalance < 32)
 				{
@@ -29,7 +29,7 @@ struct aiserv
 		if(sv.haspriv(ci, PRIV_MASTER, true))
 		{
 			if(m_lobby(sv.gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(m_fight(sv.gamemode) && sv_botbalance)
+			else if(m_play(sv.gamemode) && sv_botbalance)
 			{
 				if(sv_botbalance > 0)
 				{
@@ -223,7 +223,7 @@ struct aiserv
 		else if(sv.numclients(-1, false, true))
 		{
 			checkskills();
-			if(m_fight(sv.gamemode) && sv_botbalance)
+			if(m_play(sv.gamemode) && sv_botbalance)
 			{
 				int balance = clamp(sv_botbalance * (m_team(sv.gamemode, sv.mutators) ? numteams(sv.gamemode, sv.mutators) : 1), 0, 128);
 				while(sv.numclients(-1, true, false) < balance && addai(AI_BOT, -1)) ;
@@ -730,7 +730,7 @@ struct aiclient
 				{
 					d->ai->enemy = e->clientnum;
 					d->ai->lastseen = lastmillis;
-					if(m_fight(cl.gamemode) && d->canshoot(d->gunselect, lastmillis) && hastarget(d, b, ep))
+					if(d->canshoot(d->gunselect, lastmillis) && hastarget(d, b, ep))
 					{
 						d->attacking = true;
 						d->attacktime = lastmillis;
