@@ -1123,13 +1123,13 @@ struct gameclient : igameclient
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
 
-			float cx = s*0.5f, cy = s*0.5f, yaw = 0.f, pitch = 0.f;
+			float cx = 0.f, cy = 0.f, yaw = 0.f, pitch = 0.f;
 			vectoyawpitch(dir, yaw, pitch);
 			int q = (int)floor(yaw/45.0f) & 7;
 			float skew = (yaw-(q*45.f))/45.f;
 			const radardir &rd = radardirs[q];
-			if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h-FONTH : w-FONTW)-s;
-			(rd.axis ? cx : cy) += ((rd.axis ? w-FONTW : h-FONTH)-s)*clamp(rd.up+(rd.down*skew), 0.f, 1.f);
+			if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h-FONTH : w-FONTW);
+			(rd.axis ? cx : cy) += (rd.axis ? w-FONTW : h-FONTH)*clamp(rd.up+(rd.down*skew), 0.f, 1.f);
 
 			draw_textx("%s", int(cx), int(cy), 255, 255, 255, int(255*candinalblend()), true, AL_LEFT, -1, -1, card);
 		}
