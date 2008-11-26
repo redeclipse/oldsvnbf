@@ -147,13 +147,13 @@ struct gameclient : igameclient
 	ITVAR(healthbartex, "textures/healthbar", 0);
 
 	ITVAR(indicatortex, "textures/indicator", 3);
-	ITVAR(plasmahudtex, "textures/plasmahud", 0);
-	ITVAR(shotgunhudtex, "textures/shotgunhud", 0);
-	ITVAR(chaingunhudtex, "textures/chaingunhud", 0);
-	ITVAR(grenadeshudtex, "textures/grenadeshud", 0);
-	ITVAR(flamerhudtex, "textures/flamerhud", 0);
-	ITVAR(carbinehudtex, "textures/carbinehud", 0);
-	ITVAR(riflehudtex, "textures/riflehud", 0);
+	ITVAR(plasmatex, "textures/plasma", 0);
+	ITVAR(shotguntex, "textures/shotgun", 0);
+	ITVAR(chainguntex, "textures/chaingun", 0);
+	ITVAR(grenadestex, "textures/grenades", 0);
+	ITVAR(flamertex, "textures/flamer", 0);
+	ITVAR(carbinetex, "textures/carbine", 0);
+	ITVAR(rifletex, "textures/rifle", 0);
 	ITVAR(plasmacliptex, "textures/plasmaclip", 3);
 	ITVAR(shotguncliptex, "textures/shotgunclip", 3);
 	ITVAR(chainguncliptex, "textures/chaingunclip", 3);
@@ -1312,8 +1312,8 @@ struct gameclient : igameclient
 				int ta = int(oy*ammosize()), tb = ta*3, tv = bx + bs - tb,
 					to = ta/16, tr = ta/2, tq = tr - FONTH/2;
 				const char *hudtexs[GUN_MAX] = {
-					plasmahudtex(), shotgunhudtex(), chaingunhudtex(),
-					flamerhudtex(), carbinehudtex(), riflehudtex(), grenadeshudtex(),
+					plasmatex(), shotguntex(), chainguntex(),
+					flamertex(), carbinetex(), rifletex(), grenadestex(),
 				};
 				loopi(GUN_MAX) if(player1->hasgun(i) && (i == player1->gunselect || showguns() > 1))
 				{
