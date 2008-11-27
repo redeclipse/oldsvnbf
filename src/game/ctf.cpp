@@ -163,7 +163,7 @@ namespace ctf
         loopi(TEAM_MAX) loadmodel(teamtype[i].flag, -1, true);
     }
 
-    void drawblip(int w, int h, int s, int i, bool blip)
+    void drawblip(int w, int h, int s, float blend, int i, bool blip)
     {
 		ctfstate::flag &f = st.flags[i];
 		vec dir;
@@ -175,38 +175,38 @@ namespace ctf
 		dir.normalize();
 		int colour = teamtype[f.team].colour;
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-			fade = clamp(1.f-(dist/world::radarrange()), 0.1f, 1.f)*world::radarblipblend;
-		getradardir;
+			fade = clamp(1.f-(dist/world::radarrange()), 0.1f, 1.f)*world::radarblipblend*blend;
+		getradardir(s/2, s/2, s*2, s*2);
         settexture(world::radartex, 3);
 		glColor4f(r, g, b, fade);
-		float cs = blip ? s*0.5f : s;
-		world::drawtex(cx+(blip ? s*0.25f : 0), cy+(blip ? s*0.25f : 0), cs, cs, 0.5f, 0.25f, 0.25f, 0.25f);
+		world::drawtex(cx+(blip?s/4:0), cy+(blip?s/4:0), blip?s/2:s, blip?s/2:s, 0.5f, 0.25f, 0.25f, 0.25f);
     }
 
-    void drawblips(int w, int h, int s)
+    void drawblips(int w, int h, int s, float blend)
     {
-#if 0
-        if(world::player1->state == CS_ALIVE)
-        {
-            loopv(st.flags) if(st.flags[i].owner == world::player1)
-            {
-                world::drawicon(320, 0, 1820, 1650);
-                break;
-            }
-        }
-#endif
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
             if(!f.team || !f.ent) continue;
-            drawblip(w, h, s, i, false);
+            drawblip(w, h, s, blend, i, false);
             if(f.owner)
             {
                 if(lastmillis%1000 >= 500) continue;
             }
             else if(f.droptime && lastmillis%300 >= 150) continue;
-            drawblip(w, h, s, i, true);
+            drawblip(w, h, s, blend, i, true);
         }
+    }
+
+    int drawinventory(int x, int y, int s, float blend)
+    {
+        if(world::player1->state == CS_ALIVE)
+        {
+            loopv(st.flags) if(st.flags[i].owner == world::player1)
+            {
+            }
+        }
+        return y;
     }
 
 

@@ -282,7 +282,7 @@ namespace stf
 		}
 	}
 
-	void drawblip(int w, int h, int s, int type, bool skipenemy = false)
+	void drawblip(int w, int h, int s, float blend, int type, bool skipenemy = false)
 	{
 		loopv(st.flags)
 		{
@@ -299,8 +299,8 @@ namespace stf
 			dir.normalize();
 			int colour = teamtype[f.owner].colour;
 			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-				fade = clamp(1.f-(dist/world::radarrange()), 0.1f, 1.f)*world::radarblipblend;
-			getradardir;
+				fade = clamp(1.f-(dist/world::radarrange()), 0.1f, 1.f)*world::radarblipblend*blend;
+			getradardir(s/2, s/2, s*2, s*2);
 			settexture(world::radartex, 3);
 			glColor4f(r, g, b, fade);
 			world::drawtex(cx, cy, s, s, 0.5f, 0.25f, 0.25f, 0.25f);
@@ -312,13 +312,13 @@ namespace stf
         return max(0, (m_insta(world::gamemode, world::mutators) ? st.RESPAWNSECS/2 : st.RESPAWNSECS)*1000-(lastmillis-d->lastpain));
     }
 
-	void drawblips(int w, int h, int s)
+	void drawblips(int w, int h, int s, float blend)
 	{
 		bool showenemies = lastmillis%1000 >= 500;
-		drawblip(w, h, s, 0, showenemies);
-		drawblip(w, h, s, 1, showenemies);
-		drawblip(w, h, s, 2, showenemies);
-		if(showenemies) drawblip(w, h, s, 3);
+		drawblip(w, h, s, blend, 0, showenemies);
+		drawblip(w, h, s, blend, 1, showenemies);
+		drawblip(w, h, s, blend, 2, showenemies);
+		if(showenemies) drawblip(w, h, s, blend, 3);
 	}
 
 	void setupflags()
