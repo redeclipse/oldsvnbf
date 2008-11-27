@@ -80,7 +80,7 @@ struct partrenderer
     {
         o = p->o;
         d = p->d;
-        world::particletrack(p, type, ts, o, d, lastpass); //type&PT_TRACK &&
+        world::particletrack(p, type, ts, o, d, lastpass);
         if(p->fade <= 5)
         {
             ts = 1;
@@ -157,7 +157,6 @@ struct listrenderer : partrenderer
 
     void resettracked(physent *pl)
     {
-        //if(!(type&PT_TRACK)) return;
         for(listparticle **prev = &list, *cur = list; cur; cur = *prev)
         {
             if(cur->owner == pl)
@@ -456,7 +455,6 @@ struct varenderer : partrenderer
 
     void resettracked(physent *pl)
     {
-        //if(!(type&PT_TRACK)) return;
         loopi(numparts)
         {
             particle *p = parts+i;
@@ -509,30 +507,30 @@ struct varenderer : partrenderer
         if(regen)
         {
             p->flags &= ~0x80;
-
-            int orient = p->flags&3;
+            #define FLIP(a) (!rnd(2) ? a : 0x00)
+            int orient = p->flags&3, flip = type&PT_FLIP ? FLIP(0x01)|FLIP(0x02) : 0;
             #define SETTEXCOORDS(u1, u2, v1, v2) \
-            do { \
-                vs[orient].u       = u1; \
-                vs[orient].v       = v2; \
-                vs[(orient+1)&3].u = u2; \
-                vs[(orient+1)&3].v = v2; \
-                vs[(orient+2)&3].u = u2; \
-                vs[(orient+2)&3].v = v1; \
-                vs[(orient+3)&3].u = u1; \
-                vs[(orient+3)&3].v = v1; \
-            } while(0)
+            { \
+                vs[orient].u       = flip&0x01 ? u2 : u1; \
+                vs[orient].v       = flip&0x02 ? v1 : v2; \
+                vs[(orient+1)&3].u = flip&0x01 ? u1 : u2; \
+                vs[(orient+1)&3].v = flip&0x02 ? v1 : v2; \
+                vs[(orient+2)&3].u = flip&0x01 ? u1 : u2; \
+                vs[(orient+2)&3].v = flip&0x02 ? v2 : v1; \
+                vs[(orient+3)&3].u = flip&0x01 ? u2 : u1; \
+                vs[(orient+3)&3].v = flip&0x02 ? v2 : v1; \
+            }
             float piece = 1.f, off = 0.f;
             if(frames > 1)
             {
-				piece = 1.f / float(frames);
+				piece = 1.f/float(frames);
 				off = p->frame * piece;
             }
             if(type&PT_RND4)
             {
-                float tx = off + (0.5f * ((p->flags>>2)&1) * piece);
-                float ty = 0.5f * ((p->flags>>3)&1);
-                SETTEXCOORDS(tx, tx + (piece * 0.5f), ty, ty + 0.5f);
+                float tx = off+(0.5f*((p->flags>>2)&1)*piece);
+                float ty = 0.5f*((p->flags>>3)&1);
+                SETTEXCOORDS(tx, tx+(piece*0.5f), ty, ty+0.5f);
             }
             else SETTEXCOORDS(off, off + piece, 0, 1);
 
@@ -628,23 +626,23 @@ static partrenderer *parts[] =
 {
     new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 2, 0),
     new taperenderer("particles/flare", PT_TAPE|PT_LERP, 0, 0),
-    new quadrenderer("particles/smoke", PT_PART|PT_LERP, 0, 0),
-    new quadrenderer("particles/smoke", PT_PART|PT_LERP, -10, 0),
-    new softquadrenderer("particles/smoke", PT_PART|PT_LERP, -10, 0),
-    new quadrenderer("particles/smoke", PT_PART|PT_LERP, -20, 0),
-    new quadrenderer("particles/smoke", PT_PART|PT_LERP, 20, 0),
-    new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4, 2, DECAL_BLOOD),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 0, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -10, 0),
+    new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -10, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -20, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 20, 0),
+    new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP, 2, DECAL_BLOOD),
     new quadrenderer("particles/entity", PT_PART|PT_GLARE, 20, 0),
-    new quadrenderer("particles/spark", PT_PART|PT_GLARE, 2, 0),
-    new softquadrenderer("particles/fireball", PT_PART|PT_GLARE, -10, 0),
-    new quadrenderer("particles/fireball", PT_PART|PT_GLARE, -10, 0),
-    new softquadrenderer("particles/plasma", PT_PART|PT_GLARE, 0, 0),
-    new quadrenderer("particles/plasma", PT_PART|PT_GLARE, 0, 0),
+    new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP, 2, 0),
+    new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -10, 0),
+    new quadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -10, 0),
+    new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
+    new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
 	new quadrenderer("particles/electric", PT_PART|PT_GLARE, 0, 0),
     new taperenderer("particles/flare", PT_TAPE|PT_GLARE, 0, 0),
-    new quadrenderer("particles/muzzle", PT_PART|PT_GLARE, 0, 0),
+    new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
     new taperenderer("particles/line", PT_TAPE|PT_GLARE, 0, 0),
-    new quadrenderer("particles/snow", PT_PART|PT_GLARE, 200, DECAL_STAIN),
+    new quadrenderer("particles/snow", PT_PART|PT_GLARE|PT_FLIP, 200, DECAL_STAIN),
     &texts, &textups, &meters, &metervs,
     &fireballs, &noglarefireballs, &lightnings,
     &flares // must be done last!
@@ -730,8 +728,8 @@ void render_particles(int time)
             if(type&PT_SOFT) s_strcat(info, "s,");
             if(type&PT_LERP) s_strcat(info, "l,");
             if(type&PT_MOD) s_strcat(info, "m,");
+            if(type&PT_FLIP) s_strcat(info, "f,");
             if(type&PT_RND4) s_strcat(info, "r,");
-            //if(type&PT_TRACK) s_strcat(info, "t,");
             if(parts[i]->collide) s_strcat(info, "c,");
             s_sprintfd(ds)("%d\t%s(%s%d) %s", parts[i]->count(), partnames[type&0xFF], info, parts[i]->grav, (title?title:""));
             draw_text(ds, FONTH, (i+n/2)*FONTH);

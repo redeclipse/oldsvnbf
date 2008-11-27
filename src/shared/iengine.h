@@ -140,12 +140,12 @@ enum
     PT_LIGHTNING,
     PT_FLARE,
 
-    PT_MOD   = 1<<8,
-    PT_RND4  = 1<<9,
-    PT_LERP  = 1<<10, // use very sparingly - order of blending issues
-    PT_TRACK = 1<<11,
-    PT_GLARE = 1<<12,
-    PT_SOFT  = 1<<13
+    PT_MOD		= 1<<8,
+    PT_RND4		= 1<<9,		// uses random image quarters
+    PT_FLIP		= 1<<10,	// uses random flipping
+    PT_LERP		= 1<<11,	// use very sparingly - order of blending issues
+    PT_GLARE	= 1<<12,
+    PT_SOFT		= 1<<13
 };
 
 enum
