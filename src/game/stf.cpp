@@ -299,11 +299,9 @@ namespace stf
 			dir.normalize();
 			int colour = teamtype[f.owner].colour;
 			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-				fade = clamp(1.f-(dist/world::radarrange()), 0.1f, 1.f)*world::radarblipblend*blend;
-			getradardir(s/2, s/2, s*2, s*2);
-			settexture(world::radartex, 3);
-			glColor4f(r, g, b, fade);
-			world::drawtex(cx, cy, s, s, 0.5f, 0.25f, 0.25f, 0.25f);
+				fade = clamp(1.f-(dist/world::radarrange()), 0.1f, 1.f)*blend;
+			bool blip = f.owner != world::player1->team && f.enemy != world::player1->team;
+			world::drawblip(w, h, s, fade*(blip?0.5f:1.f), 3, dir, r, g, b);
 		}
 	}
 
