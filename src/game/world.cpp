@@ -47,14 +47,14 @@ namespace world
 	FVARP(firstpersonadjust, -10000, 0.f, 10000);
 
 	VARP(editmouse, 0, 0, 2);
-	VARP(editfov, 1, 120, 360);
+	VARP(editfov, 1, 120, 179);
 	VARP(editdeadzone, 0, 10, 100);
 	VARP(editpanspeed, 1, 20, INT_MAX-1);
 
 	VARP(spectv, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(spectvtime, 0, 30000, INT_MAX-1);
 	VARP(specmouse, 0, 0, 2);
-	VARP(specfov, 1, 120, 360);
+	VARP(specfov, 1, 120, 179);
 	VARP(specdeadzone, 0, 10, 100);
 	VARP(specpanspeed, 1, 20, INT_MAX-1);
 
@@ -1138,12 +1138,10 @@ namespace world
 			dir.normalize();
 
 			float cx = 0.f, cy = 0.f, yaw = 0.f, pitch = 0.f;
-			vectoyawpitch(dir, yaw, pitch);
-			int q = (int)floor(yaw/45.0f) & 7;
-			float skew = (yaw-(q*45.f))/45.f;
-			const radardir &rd = radardirs[q];
+			findradardir;
+			float cu = rd.axis ? fovsx : fovsy, cv = (fovsx*rd.x)+(fovsy*rd.y), ct = cv-cu, cw = (yaw-ct)/cu;
 			if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h-FONTH : w-FONTW);
-			(rd.axis ? cx : cy) += (rd.axis ? w-FONTW : h-FONTH)*clamp(rd.up+(rd.down*skew), 0.f, 1.f);
+			(rd.axis ? cx : cy) += (rd.axis ? w-FONTW : h-FONTH)*clamp(rd.up+(rd.down*cw), 0.f, 1.f);
 
 			draw_textx("%s", int(cx), int(cy), 255, 255, 255, int(255*radarcardblend), true, AL_LEFT, -1, -1, card);
 		}
@@ -1176,11 +1174,10 @@ namespace world
 			if(inspawn > 0.f)
 			{
 				glColor4f(1.f, 0.5f+(inspawn*0.5f), 0.f, fade*(1.f-inspawn));
-				drawsized(cx-(inspawn*s), cy-(inspawn*s), s+(inspawn*s*2.f));
+				drawtex(cx-(inspawn*s), cy-(inspawn*s), s+(inspawn*s*2.f), s+(inspawn*s*2.f), 0.25f, 0.25f, 0.25f, 0.25f);
 			}
 			glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
-			float cs = s+(insel ? s*2 : 0);
-			drawtex(cx-(insel ? s : 0), cy-(insel ? s : 0), cs, cs, 0.25f, 0.25f, 0.25f, 0.25f);
+			drawtex(cx-(insel ? s : 0), cy-(insel ? s : 0), s+(insel ? s*2 : 0), s+(insel ? s*2 : 0), 0.25f, 0.5f, 0.25f, 0.25f);
 		}
 	}
 
