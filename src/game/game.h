@@ -674,31 +674,40 @@ struct gameentity : extentity
 	}
 };
 
-struct radardir { bool axis, swap; float up, down; };
+struct radardir { bool axis, swap; float x, y, up, down; };
 #ifdef GAMEWORLD
 radardir radardirs[8] =
 {
-	{ true,		false,	 0.5f,	0.5f	},
-	{ false,	true,	 0.f,	0.5f 	},
-	{ false,	true,	 0.5f,	0.5f 	},
-	{ true,		true,	 1.f,	-0.5f	},
-	{ true,		true,	 0.5f,	-0.5f	},
-	{ false,	false,	 1.f,	-0.5f	},
-	{ false,	false,	 0.5f,	-0.5f	},
-	{ true,		false,	 0.f,	0.5f	}
+	{ true,		false,	 1.f,	0.f,	0.5f,	0.5f	},
+	{ false,	true,	 1.f,	1.f,	0.f,	0.5f 	},
+	{ false,	true,	 1.f,	2.f,	0.5f,	0.5f 	},
+	{ true,		true,	 2.f,	2.f,	1.f,	-0.5f	},
+	{ true,		true,	 3.f,	2.f,	0.5f,	-0.5f	},
+	{ false,	false,	 3.f,	3.f,	1.f,	-0.5f	},
+	{ false,	false,	 3.f,	4.f,	0.5f,	-0.5f	},
+	{ true,		false,	 4.f,	4.f,	0.f,	0.5f	}
 };
 #else
 extern radardir radardirs[8];
 #endif
 
+#define findradardir \
+	vectoyawpitch(dir, yaw, pitch); \
+	float fovsx = curfov*0.5f, fovsy = (360.f-(curfov*2.f))*0.25f; \
+	int cq = 7; \
+	for(int cr = 0; cr < 8; cr++) if(yaw < (fovsx*radardirs[cr].x)+(fovsy*radardirs[cr].y)) \
+	{ \
+		cq = cr; \
+		break; \
+	} \
+	const radardir &rd = radardirs[cq];
+
 #define getradardir \
 	float cx = s*0.5f, cy = s*0.5f, yaw = 0.f, pitch = 0.f; \
-	vectoyawpitch(dir, yaw, pitch); \
-	int q = (int)floor(yaw/45.0f) & 7; \
-	float skew = (yaw-(q*45.f))/45.f; \
-	const radardir &rd = radardirs[q]; \
+	findradardir; \
+	float cu = rd.axis ? fovsx : fovsy, cv = (fovsx*rd.x)+(fovsy*rd.y), ct = cv-cu, cw = (yaw-ct)/cu; \
 	if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h : w)-s*2.f; \
-	(rd.axis ? cx : cy) += ((rd.axis ? w : h)-s*2.f)*clamp(rd.up+(rd.down*skew), 0.f, 1.f);
+	(rd.axis ? cx : cy) += ((rd.axis ? w : h)-s*2.f)*clamp(rd.up+(rd.down*cw), 0.f, 1.f);
 
 enum
 {
