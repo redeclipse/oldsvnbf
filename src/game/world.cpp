@@ -904,119 +904,65 @@ namespace world
         return NULL;
     }
 
-    void drawclip(int gun, float x, float y, float size, float blend, Texture *pointer = NULL)
+	void drawindicator(int gun, float x, float y, float s)
+	{
+		Texture *t = textureload(indicatortex, 3);
+		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		else glBlendFunc(GL_ONE, GL_ONE);
+		float amt = clamp(float(lastmillis-player1->gunlast[gun])/float(guntype[gun].power), 0.f, 2.f),
+			r = 1.f, g = amt < 1.f ? 1.f : clamp(2.f-amt, 0.f, 1.f), b = amt < 1.f ? clamp(1.f-amt, 0.f, 1.f) : 0.f;
+		glColor4f(r, g, b, indicatorblend);
+		glBindTexture(GL_TEXTURE_2D, t->retframe(lastmillis-player1->gunlast[gun], guntype[gun].power));
+		float cx = x*hudwidth, cy = y*hudsize;
+		if(t->frames.length() > 1) drawsized(cx-s/2.f, cy-s/2.f, s);
+		else drawslice(0, clamp(amt, 0.f, 1.f), cx, cy, s);
+	}
+
+    void drawclip(int gun, float x, float y, float s, float fade)
     {
         const char *cliptexs[GUN_MAX] = {
             plasmacliptex, shotguncliptex, chainguncliptex,
             flamercliptex, carbinecliptex, riflecliptex, grenadescliptex,
         };
-        float px = x, py = y, psize = size;
         Texture *t = textureload(cliptexs[gun], 3);
-        if(pointer)
-        {
-            psize *= t->w/float(pointer->w);
-            px -= psize/2.0f;
-            py -= psize/2.0f;
-        }
         int ammo = player1->ammo[gun], maxammo = guntype[gun].max;
-        glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
-        glColor4f(1.f, 1.f, 1.f, blend);
-        float cx = px + psize/2.0f, cy = py + psize/2.0f;
+		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		else glBlendFunc(GL_ONE, GL_ONE);
+        glColor4f(1.f, 1.f, 1.f, fade);
 
-        if(t->frames.length()>1) drawtex(px, py, psize, psize);
+        glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
+		float cx = x*hudwidth, cy = y*hudsize;
+        if(t->frames.length() > 1) drawsized(x-s/2.f, cy-s/2.f, s);
         else switch(gun)
         {
             case GUN_FLAMER:
-                drawslice(0,
-                          max(ammo-min(maxammo - ammo, 2), 0)/float(maxammo),
-                          cx, cy, psize/2.0f);
-                if(player1->ammo[gun] < guntype[gun].max)
-                {
-                    drawfadedslice(max(ammo-min(maxammo - ammo, 2), 0)/float(maxammo),
-                                   min(min(maxammo - ammo, ammo), 2) /float(maxammo),
-                                   cx, cy, psize/2.0f,
-                                   blend);
-                }
+				drawslice(0, max(ammo-min(maxammo-ammo, 2), 0)/float(maxammo), cx, cy, s);
+				if(player1->ammo[gun] < guntype[gun].max)
+					drawfadedslice(max(ammo-min(maxammo-ammo, 2), 0)/float(maxammo),
+						min(min(maxammo-ammo, ammo), 2) /float(maxammo),
+							cx-s/8.f, cy-s/8.f, s, fade);
                 break;
 
             default:
-                drawslice(0.5f/maxammo,
-                          ammo/float(maxammo),
-                          cx, cy, psize/2.0f);
+                drawslice(0.5f/maxammo, ammo/float(maxammo), cx, cy, s);
                 break;
         }
-		if(showindicator && guntype[gun].power && player1->gunselect == gun && player1->gunstate[gun] == GNS_POWER)
-		{
-			px = x;
-			py = y;
-			psize = size;
-			t = textureload(indicatortex, 3);
-			if(pointer)
-			{
-				psize *= t->w/float(pointer->w);
-				px -= psize/2.0f;
-				py -= psize/2.0f;
-			}
-
-			if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			else glBlendFunc(GL_ONE, GL_ONE);
-
-			cx = px + psize/2.0f;
-			cy = py + psize/2.0f;
-
-			float amt = clamp(float(lastmillis-player1->gunlast[gun])/float(guntype[gun].power), 0.f, 2.f);
-			glBindTexture(GL_TEXTURE_2D, t->retframe(lastmillis-player1->gunlast[gun], guntype[gun].power));
-			if(amt > 1.f) glColor4f(1.f, clamp(2.f-amt, 0.f, 1.f), 0.f, indicatorblend);
-			else glColor4f(clamp(amt, 0.3f, 1.f), clamp(amt, 0.3f, 1.f), 0.f, indicatorblend);
-
-			if(t->frames.length() > 1) drawtex(px, py, psize, psize);
-			else drawslice(0, clamp(amt, 0.f, 1.f), cx, cy, psize/2.0f);
-		}
     }
 
-	void drawpointer(int index, float x, float y, float r, float g, float b)
+	void drawpointer(int index, float x, float y, float s, float r, float g, float b, float fade)
 	{
-		Texture *pointer = textureload(getpointer(index), 3, true);
-		if(pointer)
+		Texture *t = textureload(getpointer(index), 3, true);
+		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		else glBlendFunc(GL_ONE, GL_ONE);
+		glColor4f(r, g, b, fade);
+		float cx = x*hudwidth, cy = y*hudsize;
+		if(index != POINTER_GUI)
 		{
-			float chsize = crosshairsize*hudsize, blend = crosshairblend;
-			if(index == POINTER_GUI)
-			{
-				chsize = cursorsize*hudsize;
-				blend = cursorblend;
-			}
-			else if(index == POINTER_SNIPE)
-			{
-				chsize = snipecrosshairsize*hudsize;
-				if(inzoom() && player1->gunselect == GUN_RIFLE)
-				{
-					int frame = lastmillis-lastzoom;
-					float amt = frame < zoomtime() ? clamp(float(frame)/float(zoomtime()), 0.f, 1.f) : 1.f;
-					if(!zooming) amt = 1.f-amt;
-					chsize *= amt;
-				}
-			}
-
-			if(pointer->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			else glBlendFunc(GL_ONE, GL_ONE);
-			glColor4f(r, g, b, blend);
-
-			float ox = x*hudwidth, oy = y*hudsize, os = index != POINTER_GUI ? chsize/2.0f : 0,
-				cx = ox-os, cy = oy-os;
-			glBindTexture(GL_TEXTURE_2D, pointer->id);
-			glBegin(GL_QUADS);
-			glTexCoord2f(0.0f, 0.0f); glVertex2f(cx, cy);
-			glTexCoord2f(1.0f, 0.0f); glVertex2f(cx + chsize, cy);
-			glTexCoord2f(1.0f, 1.0f); glVertex2f(cx + chsize, cy + chsize);
-			glTexCoord2f(0.0f, 1.0f); glVertex2f(cx, cy + chsize);
-			glEnd();
-
-			if(index > POINTER_GUI && player1->state == CS_ALIVE && isgun(player1->gunselect) && player1->hasgun(player1->gunselect) && showclip)
-			{
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				drawclip(player1->gunselect, ox, oy, chsize, clipblend, pointer);
-			}
+			cx -= s/2.0f;
+			cy -= s/2.0f;
 		}
+		glBindTexture(GL_TEXTURE_2D, t->id);
+		drawsized(cx, cy, s);
 	}
 
 	void drawpointers(int w, int h)
@@ -1041,16 +987,38 @@ namespace world
 
         if(index > POINTER_NONE)
         {
-			float r = 1.f, g = 1.f, b = 1.f;
-			if(index >= POINTER_HAIR)
-			{
-				if(r && g && b && player1->state == CS_ALIVE)
+        	bool guicursor = index == POINTER_GUI;
+			float s = (guicursor ? cursorsize : crosshairsize)*hudsize,
+				r = 1.f, g = 1.f, b = 1.f, fade = guicursor ? cursorblend : crosshairblend;
+
+        	if(player1->state == CS_ALIVE && index >= POINTER_HAIR)
+        	{
+				if(index == POINTER_SNIPE)
 				{
-					if(player1->health<=25) { r = 1; g = b = 0; }
-					else if(player1->health<=50) { r = 1; g = 0.5f; b = 0; }
+					s = snipecrosshairsize*hudsize;
+					if(inzoom() && player1->gunselect == GUN_RIFLE)
+					{
+						int frame = lastmillis-lastzoom;
+						float amt = frame < zoomtime() ? clamp(float(frame)/float(zoomtime()), 0.f, 1.f) : 1.f;
+						if(!zooming) amt = 1.f-amt;
+						s *= amt;
+					}
 				}
-				if(!player1->canshoot(player1->gunselect, lastmillis)) { r *= 0.5f; g *= 0.5f; b *= 0.5f; }
-			}
+				if(player1->health < MAXHEALTH/2)
+				{
+					r = 1.f;
+					g = clamp(float(player1->health)/float(MAXHEALTH/2), 0.f, 1.f);
+					b = 0.f;
+				}
+				else if(player1->health < MAXHEALTH)
+				{
+					r = 1.f;
+					g = 1.f;
+					b = clamp(float(player1->health-MAXHEALTH/2)/float(MAXHEALTH/2), 0.f, 1.f);
+				}
+				if(lastmillis-player1->lastregen < 500)
+					fade *= clamp((lastmillis-player1->lastregen)/500.f, 0.1f, 1.f);
+        	}
 
 			glMatrixMode(GL_PROJECTION);
 			glLoadIdentity();
@@ -1059,23 +1027,38 @@ namespace world
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
 
-			float curx = aimx, cury = aimy;
+			float x = aimx, y = aimy;
 			if(index < POINTER_EDIT || mousestyle() == 2)
 			{
-				curx = cursorx;
-				cury = cursory;
+				x = cursorx;
+				y = cursory;
 			}
 			else if(isthirdperson() ? thirdpersonaim : firstpersonaim)
-				curx = cury = 0.5f;
+				x = y = 0.5f;
 
-			drawpointer(index, curx, cury, r, g, b);
+			drawpointer(index, x, y, s, r, g, b, fade);
 
-			if(index > POINTER_GUI && mousestyle() >= 1)
+			if(index > POINTER_GUI)
 			{
-				curx = mousestyle() == 1 ? cursorx : 0.5f;
-				cury = mousestyle() == 1 ? cursory : 0.5f;
-				drawpointer(POINTER_RELATIVE, curx, cury, r, g, b);
+				if(player1->state == CS_ALIVE && player1->hasgun(player1->gunselect))
+				{
+					int gun = player1->gunselect;
+					if(showclip)
+					{
+						float blend = clipblend;
+						if(!player1->canshoot(gun, lastmillis) && player1->ammo[gun] > 0)
+							blend *= clamp(float(lastmillis-player1->gunlast[gun])/float(player1->gunwait[gun]), 0.f, 1.f);
+
+						drawclip(gun, x, y, s, blend);
+					}
+					if(showindicator && guntype[gun].power && player1->gunstate[gun] == GNS_POWER)
+						drawindicator(gun, x, y, s);
+				}
+
+				if(mousestyle() >= 1)
+					drawpointer(POINTER_RELATIVE, mousestyle()==1 ? cursorx : 0.5f, mousestyle()==1 ? cursory : 0.5f, s, r, g, b, fade);
 			}
+
 			glDisable(GL_BLEND);
 			glEnable(GL_DEPTH_TEST);
         }
@@ -1312,26 +1295,6 @@ namespace world
 		pushfont("emphasis");
 		if(player1->state == CS_ALIVE)
 		{
-			t = textureload(healthbartex);
-			float amt = max(player1->health, 0)/float(MAXHEALTH),
-				glow = 1.f, pulse = fade, cr = 1.f*amt, cg = 0.3f*amt, cb = 0.f;
-
-			if(lastmillis-player1->lastregen < 500)
-			{
-				float regen = clamp((lastmillis-player1->lastregen)/500.f, 0.f, 1.f);
-				pulse = clamp(pulse*regen, 0.3f, max(fade, 0.33f))*barblend;
-				glow = clamp(glow*regen, 0.3f, 1.f);
-			}
-
-			glBindTexture(GL_TEXTURE_2D, t->retframe(player1->health, MAXHEALTH));
-			glColor4f(clamp(cr, 0.5f, 1.f)*glow, clamp(cg, 0.f, 1.f)*glow, clamp(cb, 0.f, 1.f)*glow, pulse);
-			if(t->frames.length() > 1) drawsized(float(bx), float(by), float(bs));
-			else
-			{
-				float hs = float(bs)/2.0f, hx = float(bx)+hs, hy = float(by)+hs;
-				drawslice(0, amt, hx, hy, hs);
-			}
-
 			if(showguns)
 			{
 				int ta = int(oy*ammosize), tb = ta*3, tv = bx + bs - tb,
