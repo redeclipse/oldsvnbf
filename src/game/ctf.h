@@ -121,7 +121,8 @@ namespace ctf
 	extern void resetflag(int i);
 	extern void setupflags();
 	extern void checkflags(gameent *d);
-	extern void drawblips(int w, int h, int s);
+	extern void drawblips(int w, int h, int s, float blend);
+	extern int drawinventory(int x, int y, int s, float blend);
 	extern int respawnwait(gameent *d);
 	extern void preload();
 	extern void render();

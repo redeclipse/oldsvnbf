@@ -155,7 +155,7 @@ void blendbox(int x1, int y1, int x2, int y2, bool border)
 VARP(consize, 0, 33, 100);
 VARP(fullconsize, 0, 75, 100);
 
-int renderconsole(int w, int h, int s)
+int renderconsole(int w, int h, int x, int s)
 {
 	vector<char *> refs;
 	refs.setsizenodelete(0);
@@ -167,9 +167,9 @@ int renderconsole(int w, int h, int s)
 			refs.add(conlines[CN_CENTER][i].cref);
 			if(refs.length() >= centerlines) break;
 		}
-		int cy = ((h/4)*3)-FONTH*2;
+		int y = ((h/4)*3)-FONTH*2;
 		loopv(refs)
-			cy += draw_textx("%s", w/2, cy, 255, 255, 255, int(255*centerblend), false, AL_CENTER, -1, -1, refs[i]);
+			y += draw_textx("%s", w/2, y, 255, 255, 255, int(255*centerblend), false, AL_CENTER, -1, s/2, refs[i]);
 	}
 
 	int numl = min(h*(fullconsole ? fullconsize : consize)/100, h-FONTH/3*2)/FONTH;
@@ -188,11 +188,11 @@ int renderconsole(int w, int h, int s)
 		}
 	}
 
-	int cy = s+FONTH/4;
+	int y = x;
 	loopvrev(refs)
-		cy += draw_textx("%s", s+FONTW/2, cy, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, w-FONTW-s*2, refs[i]);
+		y += draw_textx("%s", x, y, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, s, refs[i]);
 
-	return cy;
+	return y;
 }
 
 // keymap is defined externally in keymap.cfg

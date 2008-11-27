@@ -128,6 +128,7 @@ enum
 	GNS_RELOAD,
 	GNS_POWER,
 	GNS_SWITCH,
+	GNS_PICKUP,
 	GNS_MAX
 };
 
@@ -556,12 +557,12 @@ struct gamestate
 		}
 	}
 
-	void gunswitch(int gun, int millis)
+	void gunswitch(int gun, int millis, int state = GNS_SWITCH)
 	{
 		lastgun = gunselect;
 		setgunstate(lastgun, GNS_SWITCH, GUNSWITCHDELAY, millis);
 		gunselect = gun;
-		setgunstate(gun, GNS_SWITCH, GUNSWITCHDELAY, millis);
+		setgunstate(gun, state, GUNSWITCHDELAY, millis);
 	}
 
 	bool gunwaited(int gun, int millis)
@@ -619,7 +620,7 @@ struct gamestate
 			case TRIGGER: break;
 			case WEAPON:
 			{
-				gunswitch(attr1, millis);
+				gunswitch(attr1, millis, hasgun(attr1) ? GNS_RELOAD : GNS_PICKUP);
 				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+guntype[attr1].add, 1, guntype[attr1].max);
 				if(guntype[attr1].rdelay > 0) entid[attr1] = id;
 				break;
@@ -691,7 +692,9 @@ radardir radardirs[8] =
 extern radardir radardirs[8];
 #endif
 
-#define findradardir \
+#define getradardir(a,b,c,d) \
+	int cx = a, cy = b; \
+	float yaw = 0.f, pitch = 0.f; \
 	vectoyawpitch(dir, yaw, pitch); \
 	float fovsx = curfov*0.5f, fovsy = (360.f-(curfov*2.f))*0.25f; \
 	int cq = 7; \
@@ -700,14 +703,10 @@ extern radardir radardirs[8];
 		cq = cr; \
 		break; \
 	} \
-	const radardir &rd = radardirs[cq];
-
-#define getradardir \
-	float cx = s*0.5f, cy = s*0.5f, yaw = 0.f, pitch = 0.f; \
-	findradardir; \
-	float cu = rd.axis ? fovsx : fovsy, cv = (fovsx*rd.x)+(fovsy*rd.y), ct = cv-cu, cw = (yaw-ct)/cu; \
-	if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h : w)-s*2.f; \
-	(rd.axis ? cx : cy) += ((rd.axis ? w : h)-s*2.f)*clamp(rd.up+(rd.down*cw), 0.f, 1.f);
+	const radardir &rd = radardirs[cq]; \
+	float range = rd.axis ? fovsx : fovsy, skew = (yaw-(((fovsx*rd.x)+(fovsy*rd.y))-range))/range; \
+	if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h-d : w-c); \
+	(rd.axis ? cx : cy) += int((rd.axis ? w-c : h-d)*clamp(rd.up+(rd.down*skew), 0.f, 1.f));
 
 enum
 {
@@ -1170,7 +1169,7 @@ namespace world
 {
 	extern int gamemode, mutators, nextmode, nextmuts, minremain, maptime, quakewobble, damageresidue;
 	extern bool intermission;
-	extern float radarblipblend;
+	extern float radarblipblend, inventoryblend;
 	extern char *radartex;
 	extern gameent *player1;
 	extern vector<gameent *> players;
@@ -1192,9 +1191,9 @@ namespace world
 	extern void killed(int gun, int flags, int damage, gameent *d, gameent *actor);
 	extern void timeupdate(int timeremain);
 	extern float radarrange();
-	extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
-	extern void drawtex(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
-	extern void drawsized(float x, float y, float s);
+	extern void drawquad(int x, int y, int w, int h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
+	extern void drawtex(int x, int y, int w, int h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
+	extern void drawsized(int x, int y, int s);
 }
 #endif
 #include "ctf.h"
