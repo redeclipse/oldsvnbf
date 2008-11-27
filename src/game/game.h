@@ -675,39 +675,6 @@ struct gameentity : extentity
 	}
 };
 
-struct radardir { bool axis, swap; float x, y, up, down; };
-#ifdef GAMEWORLD
-radardir radardirs[8] =
-{
-	{ true,		false,	 1.f,	0.f,	0.5f,	0.5f	},
-	{ false,	true,	 1.f,	1.f,	0.f,	0.5f 	},
-	{ false,	true,	 1.f,	2.f,	0.5f,	0.5f 	},
-	{ true,		true,	 2.f,	2.f,	1.f,	-0.5f	},
-	{ true,		true,	 3.f,	2.f,	0.5f,	-0.5f	},
-	{ false,	false,	 3.f,	3.f,	1.f,	-0.5f	},
-	{ false,	false,	 3.f,	4.f,	0.5f,	-0.5f	},
-	{ true,		false,	 4.f,	4.f,	0.f,	0.5f	}
-};
-#else
-extern radardir radardirs[8];
-#endif
-
-#define getradardir(a,b,c,d) \
-	int cx = a, cy = b; \
-	float yaw = 0.f, pitch = 0.f; \
-	vectoyawpitch(dir, yaw, pitch); \
-	float fovsx = curfov*0.5f, fovsy = (360.f-(curfov*2.f))*0.25f; \
-	int cq = 7; \
-	for(int cr = 0; cr < 8; cr++) if(yaw < (fovsx*radardirs[cr].x)+(fovsy*radardirs[cr].y)) \
-	{ \
-		cq = cr; \
-		break; \
-	} \
-	const radardir &rd = radardirs[cq]; \
-	float range = rd.axis ? fovsx : fovsy, skew = (yaw-(((fovsx*rd.x)+(fovsy*rd.y))-range))/range; \
-	if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h-d : w-c); \
-	(rd.axis ? cx : cy) += int((rd.axis ? w-c : h-d)*clamp(rd.up+(rd.down*skew), 0.f, 1.f));
-
 enum
 {
 	ST_NONE		= 0,
@@ -1167,10 +1134,9 @@ namespace ai
 
 namespace world
 {
-	extern int gamemode, mutators, nextmode, nextmuts, minremain, maptime, quakewobble, damageresidue;
+	extern int gamemode, mutators, nextmode, nextmuts,
+		minremain, maptime, quakewobble, damageresidue;
 	extern bool intermission;
-	extern float radarblipblend, inventoryblend;
-	extern char *radartex;
 	extern gameent *player1;
 	extern vector<gameent *> players;
 
@@ -1194,6 +1160,7 @@ namespace world
 	extern void drawquad(int x, int y, int w, int h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
 	extern void drawtex(int x, int y, int w, int h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
 	extern void drawsized(int x, int y, int s);
+	extern void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *text = NULL, const char *font = "radar");
 }
 #endif
 #include "ctf.h"

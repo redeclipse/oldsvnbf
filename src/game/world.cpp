@@ -73,7 +73,7 @@ namespace world
 	TVAR(snipetex, "textures/snipe", 0);
 
 	VARP(showcrosshair, 0, 1, 1);
-	FVARP(crosshairsize, 0, 0.06f, 1);
+	FVARP(crosshairsize, 0, 0.065f, 1);
 	VARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.5f, 1);
 	TVAR(relativecursortex, "textures/cursordot", 3);
@@ -126,12 +126,12 @@ namespace world
 
 	VARP(showradar, 0, 1, 1);
 	TVAR(radartex, "textures/radar", 3);
-	FVARP(radarsize, 0, 0.02f, 1);
+	FVARP(radarsize, 0, 0.025f, 1);
 	VARP(radardist, 0, 512, 512);
 	VARP(radarnames, 0, 1, 1);
 	FVARP(radarblend, 0, 0.3f, 1);
 	FVARP(radarblipblend, 0, 0.5f, 1);
-	FVARP(radarcardblend, 0, 0.3f, 1);
+	FVARP(radarcardblend, 0, 0.5f, 1);
 	VARP(editradardist, 0, 512, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
 
@@ -1074,6 +1074,52 @@ namespace world
 		drawtex(x, y, s, s);
 	}
 
+	void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r, float g, float b, const char *text, const char *font)
+	{
+		const struct radardir { bool axis, swap; float x, y, up, down; } radardirs[8] =
+		{
+			{ true,		false,	 1.f,	0.f,	0.5f,	0.5f	},
+			{ false,	true,	 1.f,	1.f,	0.f,	0.5f 	},
+			{ false,	true,	 1.f,	2.f,	0.5f,	0.5f 	},
+			{ true,		true,	 2.f,	2.f,	1.f,	-0.5f	},
+			{ true,		true,	 3.f,	2.f,	0.5f,	-0.5f	},
+			{ false,	false,	 3.f,	3.f,	1.f,	-0.5f	},
+			{ false,	false,	 3.f,	4.f,	0.5f,	-0.5f	},
+			{ true,		false,	 4.f,	4.f,	0.f,	0.5f	}
+		};
+
+		int cx = s/2, cy = s/2;
+		float yaw = 0.f, pitch = 0.f;
+		vectoyawpitch(dir, yaw, pitch);
+		float fovsx = curfov*0.5f, fovsy = (360.f-(curfov*2.f))*0.25f;
+		int cq = 7;
+		for(int cr = 0; cr < 8; cr++) if(yaw < (fovsx*radardirs[cr].x)+(fovsy*radardirs[cr].y))
+		{
+			cq = cr;
+			break;
+		}
+		const radardir &rd = radardirs[cq];
+		float range = rd.axis ? fovsx : fovsy, skew = (yaw-(((fovsx*rd.x)+(fovsy*rd.y))-range))/range;
+		if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h : w)-s*2;
+		(rd.axis ? cx : cy) += int(((rd.axis ? w : h)-s*2)*clamp(rd.up+(rd.down*skew), 0.f, 1.f));
+
+		settexture(radartex, 3);
+		glColor4f(r, g, b, blend*radarblipblend);
+		const float radarpatch[4][2] = { // blip dark darker flag
+			 { 0.25f, 0.25f }, { 0.25f, 0.5f }, { 0.5f, 0.5f }, { 0.5f, 0.25f }
+		};
+		drawtex(cx, cy, s, s, radarpatch[idx][0], radarpatch[idx][1], 0.25f, 0.25f);
+		if(text)
+		{
+			if(font) pushfont(font);
+			int tx = rd.axis ? int(cx+s*0.5f) : (rd.swap ? int(cx-s) : int(cx+s*2.f)),
+				ty = rd.axis ? (rd.swap ? int(cy-s-FONTH) : int(cy+s*2.f)) : int(cy+s*0.5f-FONTH*0.5f),
+				ta = rd.axis ? AL_CENTER : (rd.swap ? AL_RIGHT : AL_LEFT);
+			draw_textx("%s", tx, ty, int(r*255.f), int(g*255.f), int(b*255.f), int(blend*255.f), false, ta, -1, -1, text);
+			if(font) popfont();
+		}
+	}
+
 	void drawplayerblip(gameent *d, int w, int h, int s, float blend)
 	{
 		vec dir = headpos(d);
@@ -1083,31 +1129,18 @@ namespace world
 		{
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-
-			int colour = teamtype[d->team].colour, r = colour>>16, g = (colour>>8)&0xFF, b = colour&0xFF;
-			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend;
+			int colour = teamtype[d->team].colour;
+			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend,
+				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
-
-			getradardir(s/2, s/2, s*2, s*2);
-			settexture(radartex, 3);
-			glColor4f(r/255.f, g/255.f, b/255.f, fade*radarblipblend);
-			drawtex(cx, cy, s, s, 0.25f, 0.25f, 0.25f, 0.25f);
-			if(radarnames)
-			{
-				pushfont("radar");
-				int tx = rd.axis ? int(cx+s*0.5f) : (rd.swap ? int(cx-s) : int(cx+s*2.f)),
-					ty = rd.axis ? (rd.swap ? int(cy-s-FONTH) : int(cy+s*2.f)) : int(cy+s*0.5f-FONTH*0.5f),
-					ta = rd.axis ? AL_CENTER : (rd.swap ? AL_RIGHT : AL_LEFT);
-				draw_textx("%s", tx, ty, r, g, b, int(fade*255.f), false, ta, -1, -1, colorname(d, NULL, "", false));
-				popfont();
-			}
+			const char *text = radarnames ? colorname(d, NULL, "", false) : NULL;
+			drawblip(w, h, s, fade, 0, dir, r, g, b, text, "radar");
 		}
 	}
 
 	void drawcardinalblips(int w, int h, int s, float blend)
 	{
-		pushfont("emphasis");
 		loopi(4)
 		{
 			const char *card = "";
@@ -1123,10 +1156,8 @@ namespace world
 			dir.sub(camera1->o);
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			getradardir(0, 0, FONTH, FONTW);
-			draw_textx("%s", int(cx), int(cy), 255, 255, 255, int(255*radarcardblend*blend), true, AL_LEFT, -1, -1, card);
+			drawblip(w, h, s, radarcardblend*blend, 2, dir, 1.f, 1.f, 1.f, card, "hud");
 		}
-		popfont();
 	}
 
 	void drawentblip(int w, int h, int s, float blend, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool spawned, int lastspawn)
@@ -1147,18 +1178,23 @@ namespace world
 			}
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			float jitter = (inspawn > 0.f ? 2.f-inspawn : 1.f)-(insel ? 1.f : (dist/radarrange())),
-					fade = clamp(jitter, 0.1f, 1.f)*radarblipblend*blend;
-
-			getradardir(s/2, s/2, s*2, s*2);
-			settexture(radartex, 3);
-			if(inspawn > 0.f)
+			int cp = 1;
+			float r = 1.f, g = 1.f, b = 0.f,
+				fade = clamp(dist/radarrange(), 0.1f, 1.f)*blend;
+			if(insel)
 			{
-				glColor4f(1.f, 0.5f+(inspawn*0.5f), 0.f, fade*(1.f-inspawn));
-				drawtex(cx-int(inspawn*s), cy-int(inspawn*s), s+int(inspawn*s*2), s+int(inspawn*s*2), 0.25f, 0.25f, 0.25f, 0.25f);
+				cp = 0;
+				fade = 1.f;
 			}
-			glColor4f(1.f, insel ? 0.5f : 1.f, 0.f, fade);
-			drawtex(cx-(insel?s:0), cy-(insel?s:0), s+(insel?s*2:0), s+(insel?s*2:0), 0.25f, 0.5f, 0.25f, 0.25f);
+			else if(inspawn > 0.f)
+			{
+				cp = 0;
+				r = 1.f;
+				g = 0.5f+(inspawn*0.5f);
+				b = 0.f;
+				fade = 1.f;
+			}
+			drawblip(w, h, s, fade, cp, dir, r, g, b);
 		}
 	}
 
@@ -1180,13 +1216,12 @@ namespace world
 
 	void drawtitlecard(int w, int h)
 	{
-		int ox = hudwidth, oy = hudsize;
-
+		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*1.5f) : 0;
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 		pushfont("emphasis");
 
-		int bs = int(oy*titlecardsize), bp = int(oy*0.01f), bx = ox-bs-bp, by = bp,
+		int bs = int(oy*titlecardsize), bp = int(oy*0.01f), bx = ox-bs-bp-os, by = bp+os,
 			secs = maptime ? lastmillis-maptime : 0;
 		float fade = hudblend, amt = 1.f;
 
