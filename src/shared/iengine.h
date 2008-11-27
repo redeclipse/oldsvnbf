@@ -216,9 +216,9 @@ enum
 extern void adddecal(int type, const vec &center, const vec &surface, float radius, const bvec &color = bvec(0xFF, 0xFF, 0xFF), int info = 0);
 
 // worldio
-extern void setnames(char *fname, int type);
-extern bool load_world(char *mname);
-extern void save_world(char *mname, bool nolms = false);
+extern void setnames(const char *fname, int type);
+extern bool load_world(const char *mname);
+extern void save_world(const char *mname, bool nolms = false);
 
 // physics
 extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr,  float hi, float lo);

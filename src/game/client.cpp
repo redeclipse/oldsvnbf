@@ -375,7 +375,7 @@ namespace client
 
 			case SV_SENDMAP:
 			{
-				char *mapname = getmapname();
+				const char *mapname = getmapname();
 				if(!mapname || !*mapname) mapname = "maps/untitled";
 				const char *file = findfile(mapname, "wb");
 				FILE *map = fopen(file, "wb");
@@ -442,7 +442,7 @@ namespace client
 	void sendmap()
 	{
 		conoutf("\fmsending map...");
-		char *mapname = getmapname();
+		const char *mapname = getmapname();
 		if(!mapname || !*mapname) mapname = "maps/untitled";
 		save_world(mapname, m_edit(world::gamemode));
 		FILE *map = openfile(mapname, "rb");
