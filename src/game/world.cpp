@@ -409,9 +409,21 @@ namespace world
 		d->o.z += d->height;
 	}
 
-	void checkoften(gameent *d)
+	void checkoften(gameent *d, bool local)
 	{
-		heightoffset(d, d == player1 || d->ai);
+		heightoffset(d, local);
+
+        if(d->muzzle == vec(-1, -1, -1))
+        { // ensure valid projection "position"
+        	vec dir, right;
+        	vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
+        	vecfromyawpitch(d->yaw, d->pitch, 0, -1, right);
+        	dir.mul(d->radius*1.25f);
+        	right.mul(d->radius);
+        	dir.z -= d->height*0.1f;
+			d->muzzle = vec(d->o).add(dir).add(right);
+        }
+
 		loopi(GUN_MAX) if(d->gunstate[i] != GNS_IDLE)
 		{
 			if(d->state != CS_ALIVE || (d->gunstate[i] != GNS_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
@@ -433,7 +445,6 @@ namespace world
 		{
             gameent *d = players[i];
             const int lagtime = lastmillis-d->lastupdate;
-            checkoften(d);
             if(d->ai || !lagtime || intermission) continue;
             else if(lagtime>1000 && d->state==CS_ALIVE)
 			{
@@ -456,6 +467,11 @@ namespace world
         if(connected())
         {
             // do shooting/projectile update here before network update for greater accuracy with what the player sees
+			if(!allowmove(player1)) player1->stopmoving();
+
+            gameent *d = NULL;
+            loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && d->type == ENT_PLAYER)
+				checkoften(d, d == player1 || d->ai);
 
             physics::update();
             projs::update();
@@ -471,9 +487,6 @@ namespace world
 
 		if(connected())
 		{
-			if(!allowmove(player1)) player1->stopmoving();
-            checkoften(player1);
-
 			#define adjustscaled(t,n) \
 				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/100.f)); if(n <= 0) n = (t)0; }
 
@@ -491,7 +504,6 @@ namespace world
 				physics::move(player1, 10, true);
 				addsway(player1);
 				entities::checkitems(player1);
-				//weapons::shoot(player1, worldpos);
 				weapons::reload(player1);
 			}
 			else physics::move(player1, 10, true);

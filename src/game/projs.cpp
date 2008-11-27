@@ -79,9 +79,6 @@ namespace projs
 
 	void init(projent &proj, bool waited)
 	{
-		//if(proj.projtype == PRJ_SHOT)
-		//	proj.from = proj.o = gproj.owner->muzzle;
-
 		switch(proj.projtype)
 		{
 			case PRJ_SHOT:
@@ -238,11 +235,11 @@ namespace projs
 		bool kamakaze = false;
 		if(guntype[gun].power)
 		{
-			pow = clamp(power, 0, 100);
+			pow = clamp(power, 1, 100);
 			if(power >= 200)
 			{
 				kamakaze = true;
-				if(gun == GUN_GL) pow = 0;
+				if(gun == GUN_GL) pow = 1;
 			}
 		}
 		int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
