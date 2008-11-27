@@ -16,7 +16,7 @@ sometype mapdirs[] = {
 string mapfile, mapname;
 VAR(maptype, 1, -1, -1);
 
-void setnames(char *fname, int type)
+void setnames(const char *fname, int type)
 {
 	maptype = type >= 0 || type <= MAP_MAX-1 ? type : MAP_BFGZ;
 
@@ -391,7 +391,7 @@ ICOMMAND(savemapshot, "s", (char *mname), save_mapshot(*mname ? mname : mapname)
 VARP(autosaveconfig, 0, 1, 1);
 VARP(autosavemapshot, 0, 1, 1);
 
-void save_world(char *mname, bool nolms)
+void save_world(const char *mname, bool nolms)
 {
 	int savingstart = SDL_GetTicks();
 
@@ -572,7 +572,7 @@ static void fixoversizedcubes(cube *c, int size)
     }
 }
 
-bool load_world(char *mname)		// still supports all map formats that have existed since the earliest cube betas!
+bool load_world(const char *mname)		// still supports all map formats that have existed since the earliest cube betas!
 {
 	int loadingstart = SDL_GetTicks();
 
