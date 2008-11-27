@@ -156,7 +156,6 @@ namespace world
 	//TVAR(rifletex, "textures/rifle", 0);
 
 	ICOMMAND(kill, "",  (), { suicide(player1, 0); });
-	ICOMMAND(mode, "ii", (int *val, int *mut), { setmode(*val, *mut); });
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
 
@@ -347,11 +346,12 @@ namespace world
 		return NULL;
 	}
 
-	void setmode(int mode, int muts)
+	void setmode(int nmode, int nmuts)
 	{
-		nextmode = mode; nextmuts = muts;
+		nextmode = nmode; nextmuts = nmuts;
 		server::modecheck(&nextmode, &nextmuts);
 	}
+	ICOMMAND(mode, "ii", (int *val, int *mut), setmode(*val, *mut));
 
 	void resetstates(int types)
 	{
