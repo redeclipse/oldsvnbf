@@ -46,16 +46,16 @@ CLIENT_OBJS= \
 	engine/water.o \
 	engine/world.o \
 	engine/worldio.o \
-	game/ai.cpp \
-	game/client.cpp \
-	game/ctf.cpp \
-	game/entities.cpp \
-	game/physics.cpp \
-	game/projs.cpp \
-	game/server.cpp \
-	game/stf.cpp \
-	game/weapons.cpp \
-	game/world.cpp
+	game/ai.o \
+	game/client.o \
+	game/ctf.o \
+	game/entities.o \
+	game/physics.o \
+	game/projs.o \
+	game/server.o \
+	game/stf.o \
+	game/weapons.o \
+	game/world.o
 
 SINCLUDES= -Ishared -Iengine -Igame -Ienet/include
 SCXXFLAGS= -Wall -DSTANDALONE -DIRC $(CXXOPTFLAGS) $(SINCLUDES)
