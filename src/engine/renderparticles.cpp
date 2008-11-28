@@ -89,16 +89,18 @@ struct partrenderer
         else
         {
             ts = lastmillis-p->millis;
+			if(ts > p->fade) ts = p->fade;
+			float secs = ts/1000.f;
+			vec v(d);
             blend = max(255 - (ts<<8)/p->fade, 0);
-            if(!p->owner && grav)
+            if(grav)
             {
-                if(ts > p->fade) ts = p->fade;
-                float t = (float)(ts);
-                vec v = d;
-                v.mul(t/5000.0f);
-                o.add(v);
-                o.z -= t*t/(2.0f * 5000.0f * grav);
+            	physent dummy;
+            	dummy.weight = grav;
+				v.z -= physics::gravityforce(&dummy)*secs;
             }
+            v.mul(secs);
+			o.add(v);
             if(collide && o.z < p->val && lastpass)
             {
                 vec surface;
@@ -624,25 +626,25 @@ struct softquadrenderer : quadrenderer
 
 static partrenderer *parts[] =
 {
-    new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 2, 0),
+    new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 1, 0),
     new taperenderer("particles/flare", PT_TAPE|PT_LERP, 0, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 0, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -5, 0),
+    new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -5, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -10, 0),
-    new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -10, 0),
-    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -20, 0),
-    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 20, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 5, 0),
     new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP, 2, DECAL_BLOOD),
     new quadrenderer("particles/entity", PT_PART|PT_GLARE, 20, 0),
-    new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP, 2, 0),
-    new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -10, 0),
-    new quadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -10, 0),
+    new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP, 1, 0),
+    new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -5, 0),
+    new quadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -5, 0),
     new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
     new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
-	new quadrenderer("particles/electric", PT_PART|PT_GLARE, 0, 0),
+	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP, 0, 0),
     new taperenderer("particles/flare", PT_TAPE|PT_GLARE, 0, 0),
     new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
     new taperenderer("particles/line", PT_TAPE|PT_GLARE, 0, 0),
-    new quadrenderer("particles/snow", PT_PART|PT_GLARE|PT_FLIP, 200, DECAL_STAIN),
+    new quadrenderer("particles/snow", PT_PART|PT_GLARE|PT_FLIP, 100, DECAL_STAIN),
     &texts, &textups, &meters, &metervs,
     &fireballs, &noglarefireballs, &lightnings,
     &flares // must be done last!

@@ -175,8 +175,8 @@ namespace ctf
 		dir.normalize();
 		int colour = teamtype[f.team].colour;
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-			fade = clamp(1.f-(dist/world::radarrange()), 0.1f, 1.f)*blend;
-		world::drawblip(w, h, s, fade*(blip?0.5f:1.f), 3, dir, r, g, b);
+			fade = clamp(1.f-(dist/hud::radarrange()), 0.1f, 1.f)*blend;
+		hud::drawblip(w, h, s, fade*(blip?1.f:2.f)*hud::radarblipblend, 3, dir, r, g, b);
     }
 
     void drawblips(int w, int h, int s, float blend)
@@ -298,9 +298,7 @@ namespace ctf
     void flagexplosion(int i, const vec &loc)
     {
 		ctfstate::flag &f = st.flags[i];
-		int colour = teamtype[f.team].colour;
-		regularshape(PART_SMOKE_RISE_SLOW, enttype[FLAG].radius, colour, 53, 50, 1000, vec(loc).add(vec(0, 0, 4.f)), 4.f);
-		adddynlight(loc, enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
+		world::spawneffect(vec(loc).add(vec(0, 0, enttype[FLAG].radius)), teamtype[f.team].colour, enttype[FLAG].radius);
     }
 
     void flageffect(int i, const vec &from, const vec &to)
@@ -363,9 +361,7 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		int colour = teamtype[d->team].colour;
-		regularshape(PART_SMOKE_RISE_SLOW, enttype[FLAG].radius, colour, 53, 50, 1000, vec(f.pos()).add(vec(0, 0, 4.f)), 4.f);
-		adddynlight(f.pos(), enttype[FLAG].radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 900, 100);
+		world::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius)), teamtype[f.team].colour, enttype[FLAG].radius);
 		f.interptime = lastmillis;
 		s_sprintfd(s)("%s %s the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		st.takeflag(i, d);

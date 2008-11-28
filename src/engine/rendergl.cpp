@@ -1688,9 +1688,10 @@ void drawnoview()
 
 	if(!hidehud)
 	{
-		world::drawhud(w, h);
+		hud::drawhud(w, h);
+		render_texture_panel(w, h);
 		UI::render();
-		world::drawpointers(w, h);
+		hud::drawpointers(w, h);
 	}
 
     glDisable(GL_TEXTURE_2D);
@@ -1817,7 +1818,7 @@ void drawview(int targtype)
 	glOrtho(0, w, h, 0, -1, 1);
 
 	vec colour;
-	if(world::gethudcolour(colour))
+	if(hud::getcolour(colour))
 	{
         glEnable(GL_BLEND);
 		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
@@ -1857,9 +1858,10 @@ void drawview(int targtype)
 	defaultshader->set();
 	if(!hidehud)
 	{
-		world::drawhud(w, h);
+		hud::drawhud(w, h);
+		render_texture_panel(w, h);
 		UI::render();
-		world::drawpointers(w, h);
+		hud::drawpointers(w, h);
 	}
 	glDisable(GL_TEXTURE_2D);
 

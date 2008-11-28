@@ -24,7 +24,7 @@ namespace physics
 	FVARW(wallz,			0, 0.2f, 1);
 	FVARW(stepspeed,		0.5f, 1.0f, 2);
 
-	VARP(floatspeed,		10,			100,		1000);
+	FVARP(floatspeed,		1.f,	100.f,		1000.f);
 	VARP(physframetime,	5,			5,			20);
 	VARP(physinterp,       0,          1,          1);
 
@@ -461,16 +461,16 @@ namespace physics
 		if(!floating && curmat != oldmat)
 		{
 			uchar mcol[3] = { 255, 255, 255 };
-			#define mattrig(mf,mz,mt,ms,mw) \
+			#define mattrig(mo,mf,mz,ms,mt,mw) \
 			{ \
 				mf; \
 				int col = (mcol[2] + (mcol[1] << 8) + (mcol[0] << 16)); \
-				regularshape(mz, int(pl->radius), col, 53, 50, mt, v, ms); \
-				if(mw >= 0) playsound(mw, pl->o, pl); \
+				world::spawneffect(mo, col, mt, ms); \
+				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(getwatercolour(mcol), PART_SMOKE_RISE_SLOW, 250, 1.f, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-			if(curmat == MAT_LAVA) mattrig(getlavacolour(mcol), PART_FIREBALL, 1000, 2.f, S_BURNING);
+				mattrig(v, getwatercolour(mcol), PART_WATER, 2.f, 4, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+			if(curmat == MAT_LAVA) mattrig(vec(pl->o).sub(vec(0, 0, pl->height/2.f)), getlavacolour(mcol), PART_FIREBALL, 2.f, int(pl->height/2.f), S_BURNING);
 
 			if(local)
 			{

@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			115
+#define GAMEVERSION			116
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -150,7 +150,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	-5,		5,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		200,	800,	20,		200,	0,		10000,
+			20,		20,		200,	800,	20,		250,	0,		10000,
 			0,		18,			1,		5,		0,		2,				2,
 			false,	true,		false,
 			1.0f,	0.f,		0.f,			0.1f,		1.0f,		0.f,
@@ -190,7 +190,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_CARBINE,ANIM_CARBINE,	-10,	10,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
-			10,		10,		500,    1000,	50,		5000,	0,		10000,
+			10,		10,		500,    1000,	50,		2000,	0,		10000,
 			0,		0,			1,		0,		0,		2,				2,
 			false,	false,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
@@ -200,7 +200,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
 			S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,
-			1,		5,		800,	1600,	100,	5000,	0,		10000,
+			1,		5,		800,	1600,	100,	2000,	0,		10000,
 			0,		0,			1,		0,		0,		2,				2,
 			false,	false,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
@@ -214,7 +214,7 @@ guntypes guntype[GUN_MAX] =
 			150,	64,			1,		0,		0,		1,				1,
 			false,	false,		false,
 			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		75.f,
-			"grenades",	"\fm",	"weapons/grenades/item",	"weapons/grenades/vwep",
+			"grenades",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
 	},
 };
@@ -379,10 +379,10 @@ struct teamtypes
 #ifdef GAMESERVER
 teamtypes teamtype[] = {
 	{ TEAM_NEUTRAL,	0xFFFFFF,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fw" },
-	{ TEAM_ALPHA,	0x6666FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
-	{ TEAM_BETA,	0xFF6666,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
-	{ TEAM_DELTA,	0xFFFF66,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0x66FF66,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
+	{ TEAM_ALPHA,	0x8888FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
+	{ TEAM_BETA,	0xFF8888,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
+	{ TEAM_DELTA,	0xFFFF88,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
+	{ TEAM_GAMMA,	0x88FF88,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
 	{ TEAM_ENEMY,	0xFFFFFF,	"enemy",		"player",		"player/vwep",		"flag",			"team",			"\fa" }
 };
 #else
@@ -620,7 +620,7 @@ struct gamestate
 			case TRIGGER: break;
 			case WEAPON:
 			{
-				gunswitch(attr1, millis, hasgun(attr1) ? GNS_RELOAD : GNS_PICKUP);
+				gunswitch(attr1, millis, hasgun(attr1) ? GNS_SWITCH : GNS_PICKUP);
 				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+guntype[attr1].add, 1, guntype[attr1].max);
 				if(guntype[attr1].rdelay > 0) entid[attr1] = id;
 				break;
@@ -1056,20 +1056,10 @@ namespace client
 
 namespace physics
 {
-	extern int fixspawn, spawncycle, physsteps, physframetime, smoothmove, smoothdist;
+	extern int smoothmove, smoothdist;
 	extern bool canimpulse(physent *d);
-	extern bool move(physent *d, vec &dir);
-	extern void move(physent *d, int moveres = 10, bool local = true);
-	extern bool entinmap(physent *d, bool avoidplayers);
-	extern void updatephysstate(physent *d);
-	extern bool droptofloor(vec &o, float radius, float height);
-	extern float maxspeed(physent *d);
 	extern void smoothplayer(gameent *d, int res, bool local);
 	extern void update();
-	extern bool iscrouching(physent *d);
-	extern bool moveplayer(physent *pl, int moveres, bool local, int millis);
-	extern float gravityforce(physent *d);
-	extern void interppos(physent *d);
 }
 
 namespace projs
@@ -1132,35 +1122,50 @@ namespace ai
 	extern void render();
 }
 
+namespace hud
+{
+	extern int hudwidth, hudsize;
+	extern float radarblipblend;
+	extern void drawquad(int x, int y, int w, int h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
+	extern void drawtex(int x, int y, int w, int h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
+	extern void drawsized(int x, int y, int s);
+	extern void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *text = NULL, const char *font = "radar", float fade = -1.f);
+	extern float radarrange();
+}
+
 namespace world
 {
-	extern int gamemode, mutators, nextmode, nextmuts,
-		minremain, maptime, quakewobble, damageresidue;
-	extern bool intermission;
+	extern int gamemode, mutators, nextmode, nextmuts, minremain, maptime,
+		quakewobble, damageresidue, lasthit, lastzoom, lastspec, spectvtime,
+			thirdpersonaim, firstpersonaim;
+	extern bool intermission, zooming;
 	extern gameent *player1;
 	extern vector<gameent *> players;
 
 	extern gameent *newclient(int cn);
 	extern gameent *getclient(int cn);
+	extern gameent *intersectclosest(vec &from, vec &to, gameent *at);
 	extern void clientdisconnected(int cn);
 	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
 	extern int respawnwait(gameent *d);
 	extern void respawn(gameent *d);
 	extern void respawnself(gameent *d);
+	extern void spawneffect(const vec &o, int colour = 0xFFFFFF, int radius = 4, float size = 2.f, int num = 100, int fade = 250, float vel = 10.f);
 	extern void suicide(gameent *d, int flags);
 	extern void fixrange(float &yaw, float &pitch);
 	extern void fixfullrange(float &yaw, float &pitch, float &roll, bool full);
 	extern bool allowmove(physent *d);
+	extern int mousestyle();
+	extern int deadzone();
+	extern int panspeed();
 	extern bool inzoom();
+	extern bool inzoomswitch();
+	extern int zoomtime();
+	extern bool tvmode();
 	extern void resetstates(int types);
 	extern void damaged(int gun, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
 	extern void killed(int gun, int flags, int damage, gameent *d, gameent *actor);
 	extern void timeupdate(int timeremain);
-	extern float radarrange();
-	extern void drawquad(int x, int y, int w, int h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
-	extern void drawtex(int x, int y, int w, int h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
-	extern void drawsized(int x, int y, int s);
-	extern void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *text = NULL, const char *font = "radar");
 }
 #endif
 #include "ctf.h"

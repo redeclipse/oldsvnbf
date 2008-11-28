@@ -247,7 +247,7 @@ namespace entities
 			d->useitem(lastmillis, n, e.type, e.attr1, e.attr2);
 			if(ents.inrange(r) && ents[r]->type == WEAPON && isgun(ents[r]->attr1))
 				projs::drop(d, ents[r]->attr1, r, (d->gunwait[ents[r]->attr1]/2)-50);
-			regularshape(PART_PLASMA, enttype[e.type].radius, 0x888822, 53, 50, 200, pos, 2.f);
+			world::spawneffect(pos, 0x221188, enttype[e.type].radius);
 			e.spawned = s;
 		}
 	}
@@ -1493,20 +1493,20 @@ namespace entities
 		{
 			bool hasent = idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
 			vec off(0, 0, 2.f), pos(o);
-			part_create(PART_EDIT, 1, pos, hasent ? 0xFF6600 : 0xFFFF00, hasent ? 2.0f : 1.5f);
+			part_create(PART_EDIT, 1, pos, hasent ? 0x888888 : 0x221188, hasent ? 2.0f : 1.5f);
 			if(showentinfo >= 2 || world::player1->state == CS_EDITING)
 			{
-				s_sprintfd(s)("@%s%s (%d)", hasent ? "\fo" : "\fy", enttype[e.type].name, idx >= 0 ? idx : 0);
+				s_sprintfd(s)("@%s%s (%d)", hasent ? "\fw" : "\fb", enttype[e.type].name, idx >= 0 ? idx : 0);
 				part_text(pos.add(off), s);
 
 				if(showentinfo >= 3 || hasent)
 				{
-					s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fy", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+					s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fa", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 					part_text(pos.add(off), s);
 				}
 				if(showentinfo >= 4 || hasent)
 				{
-					s_sprintf(s)("@%s%s", hasent ? "\fw" : "\fy", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, showentinfo >= 5 || hasent));
+					s_sprintf(s)("@%s%s", hasent ? "\fw" : "\fa", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, showentinfo >= 5 || hasent));
 					part_text(pos.add(off), s);
 				}
 			}
