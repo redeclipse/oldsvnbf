@@ -1,4 +1,4 @@
-namespace world
+namespace hud
 {
 	struct scoreboard : g3d_callback
 	{

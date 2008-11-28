@@ -162,26 +162,27 @@ namespace projs
 		proj.spawntime = lastmillis;
 		proj.movement = 1;
 
-		if(proj.projtype == PRJ_SHOT && proj.radial)
-			proj.height = proj.radius = guntype[proj.attr1].explode*0.1f;
-		if(proj.playercollide || proj.geomcollide) loopi(100)
+		if(proj.projtype == PRJ_SHOT)
 		{
-			proj.hit = NULL;
-			proj.o.add(vec(proj.vel).normalize()); // gets it off to a start even when we bail
-			if(!collide(&proj) || inside || (proj.playercollide && hitplayer))
+			if(proj.radial) proj.height = proj.radius = guntype[proj.attr1].explode*0.1f;
+			if(proj.playercollide || proj.geomcollide) loopi(100)
 			{
-				if((!hitplayer && proj.geomcollide) || (hitplayer && proj.playercollide && hitplayer != proj.owner))
+				proj.hit = NULL;
+				proj.o.add(vec(proj.vel).normalize()); // gets it off to a start even when we bail
+				if(!collide(&proj) || inside || (proj.playercollide && hitplayer))
 				{
-					if(hitplayer) proj.hit = hitplayer;
-					else proj.o = orig;
-					proj.state = CS_DEAD;
-					break;
+					if((!hitplayer && proj.geomcollide) || (hitplayer && proj.playercollide && hitplayer != proj.owner))
+					{
+						if(hitplayer) proj.hit = hitplayer;
+						else proj.o = orig;
+						proj.state = CS_DEAD;
+						break;
+					}
 				}
+				else break;
 			}
-			else break;
+			if(proj.radial) proj.height = proj.radius = guntype[proj.attr1].offset;
 		}
-		if(proj.projtype == PRJ_SHOT && proj.radial)
-			proj.height = proj.radius = guntype[proj.attr1].offset;
         proj.resetinterp();
 	}
 
@@ -226,6 +227,7 @@ namespace projs
 			else if(g == GUN_GL)
 				create(d->o, d->o, d == world::player1 || d->ai, d, PRJ_SHOT, 500, 50, 5, -1, WEAPON, d->gunselect);
 			d->ammo[g] = d->entid[g] = -1;
+			d->setgunstate(g, GNS_PICKUP, GUNSWITCHDELAY, lastmillis);
 		}
 	}
 
@@ -375,7 +377,7 @@ namespace projs
 					case GUN_CARBINE: case GUN_RIFLE:
 					{
 						part_create(PART_SMOKE_RISE_SLOW, 500, proj.o, 0xFFFFFF, proj.radius*(proj.attr1 == GUN_CARBINE ? 2.f : 3.f));
-						part_trail(PART_SMOKE_SINK, 500, proj.o, proj.from, 0xFFFFFF, proj.radius*(proj.attr1 == GUN_CARBINE ? 0.1f : 0.25f));
+						part_trail(PART_SMOKE_SINK, proj.attr1 == GUN_CARBINE ? 100 : 200, proj.o, proj.from, 0xFFFFFF, proj.radius*(proj.attr1 == GUN_CARBINE ? 0.1f : 0.25f));
 						adddecal(DECAL_BULLET, proj.o, vec(proj.vel).neg().normalize(), proj.radius*(proj.attr1 == GUN_CARBINE ? 2.f : 3.f));
 						break;
 					}
@@ -404,7 +406,7 @@ namespace projs
 			{
 				if(!proj.beenused)
 				{
-					regularshape(PART_PLASMA_SOFT, int(proj.radius), 0x888822, 53, 50, 200, proj.o, 2.f);
+					world::spawneffect(proj.o, 0x221188, int(proj.radius), int(proj.radius));
 					if(proj.local)
 						client::addmsg(SV_DESTROY, "ri6", proj.owner->clientnum, lastmillis-world::maptime, -1, proj.id, 0, 0);
 				}
@@ -814,16 +816,17 @@ namespace projs
 							barrier = raycubepos(old, dir, dest, dist, RAY_CLIPMAT|RAY_POLY);
 						if(barrier < dist)
 						{
-							proj.o = dest;
+							proj.o = vec(dest).add(vec(dir).mul(0.1f));
 							switch(bounce(proj, dir))
 							{
-								case 2: break;
-								case 1: default: proj.o = pos; break;
-								case 0: destroy(proj); break;
+								case 2: proj.o = dest; break;
+								case 1: default: break; // hmm?
+								case 0: proj.o = dest; destroy(proj); break;
 							}
 						}
 					}
-					if(proj.radial && proj.local) radiate(proj);
+					if(proj.radial && proj.local && proj.state != CS_DEAD)
+						radiate(proj);
 				}
 			}
 			if(proj.state == CS_DEAD)

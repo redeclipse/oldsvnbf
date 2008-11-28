@@ -155,7 +155,7 @@ void blendbox(int x1, int y1, int x2, int y2, bool border)
 VARP(consize, 0, 33, 100);
 VARP(fullconsize, 0, 75, 100);
 
-int renderconsole(int w, int h, int x, int s)
+int renderconsole(int w, int h, int x, int y, int s)
 {
 	vector<char *> refs;
 	refs.setsizenodelete(0);
@@ -167,9 +167,9 @@ int renderconsole(int w, int h, int x, int s)
 			refs.add(conlines[CN_CENTER][i].cref);
 			if(refs.length() >= centerlines) break;
 		}
-		int y = ((h/4)*3)-FONTH*2;
+		int z = ((h/4)*3)-FONTH*2;
 		loopv(refs)
-			y += draw_textx("%s", w/2, y, 255, 255, 255, int(255*centerblend), false, AL_CENTER, -1, s/2, refs[i]);
+			z += draw_textx("%s", w/2, z, 255, 255, 255, int(255*centerblend), false, AL_CENTER, -1, s/2, refs[i]);
 	}
 
 	int numl = min(h*(fullconsole ? fullconsize : consize)/100, h-FONTH/3*2)/FONTH;
@@ -188,9 +188,9 @@ int renderconsole(int w, int h, int x, int s)
 		}
 	}
 
-	int y = x;
+	int z = y;
 	loopvrev(refs)
-		y += draw_textx("%s", x, y, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, s, refs[i]);
+		z += draw_textx("%s", x, z, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, s, refs[i]);
 
 	return y;
 }

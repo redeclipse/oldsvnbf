@@ -1,5 +1,5 @@
 // the interface the engine uses to run the gameplay module
-
+#ifndef STANDALONE
 namespace entities
 {
 	extern void editent(int i);
@@ -41,22 +41,44 @@ namespace client
 	extern int serverbrowser(g3d_gui *g);
 }
 
+namespace hud
+{
+	extern void drawhud(int w, int h);
+	extern void drawpointers(int w, int h);
+	extern bool getcolour(vec &colour);
+	extern void gamemenus();
+}
+
+namespace physics
+{
+	extern int fixspawn, spawncycle, physsteps, physframetime, physinterp;
+	extern float gravity, jumpvel, movespeed, floatspeed,
+		stairheight, floorz, slopez, wallz, stepspeed,
+			liquidfric, liquidscale, sinkfric, floorfric, airfric;
+	extern bool move(physent *d, vec &dir);
+	extern void move(physent *d, int moveres = 10, bool local = true);
+	extern bool entinmap(physent *d, bool avoidplayers);
+	extern void updatephysstate(physent *d);
+	extern bool droptofloor(vec &o, float radius, float height);
+	extern float maxspeed(physent *d);
+	extern bool iscrouching(physent *d);
+	extern bool moveplayer(physent *pl, int moveres, bool local, int millis);
+	extern float gravityforce(physent *d);
+	extern void interppos(physent *d);
+}
+
 namespace world
 {
 	extern bool clientoption(char *arg);
 	extern void updateworld();
 	extern void newmap(int size);
 	extern void startmap(const char *name);
-	extern void drawhud(int w, int h);
-	extern void drawpointers(int w, int h);
 	extern bool allowmove(physent *d);
 	extern dynent *iterdynents(int i);
 	extern int numdynents();
-	extern void gamemenus();
 	extern void lighteffects(dynent *d, vec &color, vec &dir);
 	extern void adddynlights();
 	extern void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass);
-	extern bool gethudcolour(vec &colour);
 	extern vec headpos(physent *d, float off = 0.f);
 	extern vec feetpos(physent *d, float off = 0.f);
 	extern bool mousemove(int dx, int dy, int x, int y, int w, int h);
@@ -65,7 +87,6 @@ namespace world
 	extern void loadworld(gzFile &f, int maptype);
 	extern void saveworld(gzFile &f);
 	extern int localplayers();
-	extern bool gui3d();
 	extern char *gametitle();
 	extern char *gametext();
 	extern int numanims();
@@ -75,7 +96,7 @@ namespace world
 	extern bool isthirdperson();
 	extern void start();
 }
-
+#endif
 namespace server
 {
 	extern void srvmsgf(int cn, const char *s, ...);

@@ -212,30 +212,10 @@ struct stfservmode : stfstate, servmode
 namespace stf
 {
 	stfstate st;
-	VARP(securetether, 0, 1, 1);
 
     bool insideflag(const stfstate::flaginfo &b, gameent *d)
     {
         return st.insideflag(b, world::feetpos(d));
-    }
-
-    void rendertether(gameent *d)
-    {
-        //int oldflag = d->lastflag;
-        d->lastflag = -1;
-        if(d->state==CS_ALIVE)
-        {
-            loopv(st.flags)
-            {
-                stfstate::flaginfo &b = st.flags[i];
-                if(insideflag(b, d) && ((b.owner == d->team && b.enemy) || b.enemy == d->team))
-                {
-					part_trail(PART_PLASMA, 1, world::feetpos(d, 1.f), vec(b.pos).sub(vec(0, 0, 4.f)), teamtype[d->team].colour, 4.8f);
-					regularshape(PART_PLASMA, (int)d->height, teamtype[d->team].colour, 53, 3, 50, world::feetpos(d, 1.f), 4.f);
-					d->lastflag = i;
-                }
-            }
-        }
     }
 
     void preload()
@@ -245,16 +225,6 @@ namespace stf
 
 	void render()
 	{
-        if(securetether && !shadowmapping)
-        {
-            loopv(world::players)
-            {
-                gameent *d = world::players[i];
-                if(d) rendertether(d);
-            }
-            rendertether(world::player1);
-        }
-
 		loopv(st.flags)
 		{
 			stfstate::flaginfo &b = st.flags[i];
@@ -272,11 +242,13 @@ namespace stf
 				float occupy = !b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
 				int colour = teamtype[attack].colour;
 				part_meter(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius+6.f)), occupy, PART_METER, 1, colour);
-				regularshape(PART_SMOKE_RISE_SLOW, enttype[FLAG].radius, colour, 21, rnd(5)+1, 250, vec(b.pos).sub(vec(0, 0, 4.f)), 4.f);
+				world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)),
+					colour, enttype[FLAG].radius, enttype[FLAG].radius);
 				if(b.enemy && b.owner)
 				{
 					colour = teamtype[b.owner].colour; // fall through colors dynlight too
-					regularshape(PART_SMOKE_RISE_SLOW, enttype[FLAG].radius, colour, 21, rnd(5)+1, 250, vec(b.pos).sub(vec(0, 0, 4.f)), 4.f);
+					world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)),
+						colour, enttype[FLAG].radius, enttype[FLAG].radius);
 				}
 			}
 		}
@@ -299,9 +271,9 @@ namespace stf
 			dir.normalize();
 			int colour = teamtype[f.owner].colour;
 			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-				fade = clamp(1.f-(dist/world::radarrange()), 0.1f, 1.f)*blend;
+				fade = clamp(1.f-(dist/hud::radarrange()), 0.1f, 1.f)*blend;
 			bool blip = f.owner != world::player1->team && f.enemy != world::player1->team;
-			world::drawblip(w, h, s, fade*(blip?0.5f:1.f), 3, dir, r, g, b);
+			hud::drawblip(w, h, s, fade*(blip?1.f:2.f)*hud::radarblipblend, 3, dir, r, g, b);
 		}
 	}
 
@@ -371,10 +343,8 @@ namespace stf
 			entities::announce(S_V_FLAGOVERTHROWN, s, true);
 		}
         if(b.owner != owner)
-        {
-        	int colour = teamtype[owner].colour;
-			regularshape(PART_SMOKE_RISE_SLOW, enttype[FLAG].radius, colour, 53, 50, 1000, vec(b.pos).add(vec(0, 0, 4.f)), 4.f);
-        }
+			world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)),
+				teamtype[owner].colour, enttype[FLAG].radius, enttype[FLAG].radius);
 		b.owner = owner;
 		b.enemy = enemy;
 		b.converted = converted;

@@ -68,7 +68,7 @@ extern void mpremip(bool local);
 // console
 extern void keypress(int code, bool isdown, int cooked);
 extern int rendercommand(int x, int y, int w);
-extern int renderconsole(int w, int h, int x, int s);
+extern int renderconsole(int w, int h, int x, int y, int s);
 extern char *getcurcommand();
 extern void resetcomplete();
 extern void complete(char *s);
@@ -202,7 +202,7 @@ extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, cons
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;
 
-void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, float vel = 200);
+void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, float vel = 10);
 // decal
 enum
 {

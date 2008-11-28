@@ -950,7 +950,7 @@ namespace client
 					if(f==world::player1)
 					{
 						if(editmode) toggleedit();
-						world::sb.showscores(true);
+						hud::sb.showscores(true);
 					}
                     else f->resetinterp();
 					f->state = CS_DEAD;
@@ -968,7 +968,7 @@ namespace client
 
 				case SV_NEWGAME: // server requests next game
 				{
-					world::sb.showscores(false);
+					hud::sb.showscores(false);
 					if(!guiactive()) showgui("game");
 					break;
 				}
@@ -1019,7 +1019,7 @@ namespace client
 					parsestate(f, p);
 					f->state = CS_SPAWNING;
 					playsound(S_RESPAWN, f->o, f);
-					regularshape(PART_PLASMA, int(f->height), teamtype[f->team].colour, 53, 50, 200, f->o, 3.f);
+					world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
 					break;
 				}
 
@@ -1036,7 +1036,7 @@ namespace client
 						entities::findplayerspawn(f, m_stf(world::gamemode) ? stf::pickspawn(f->team) : -1, m_team(world::gamemode, world::mutators) ? f->team : -1);
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
 						playsound(S_RESPAWN, f->o, f);
-						regularshape(PART_PLASMA, int(f->height), teamtype[f->team].colour, 53, 50, 200, f->o, 3.f);
+						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
 					}
 					ai::spawned(f);
 					if(f == world::player1) world::resetstates(ST_DEFAULT);
@@ -1167,13 +1167,13 @@ namespace client
 					if(!entities::ents.inrange(ent)) break;
 					entities::setspawn(ent, true);
 					playsound(S_ITEMSPAWN, entities::ents[ent]->o);
-					const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attr1, entities::ents[ent]->attr2, entities::ents[ent]->attr4, entities::ents[ent]->attr4, entities::ents[ent]->attr5, true);
+					const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attr1, entities::ents[ent]->attr2, entities::ents[ent]->attr4, entities::ents[ent]->attr4, entities::ents[ent]->attr5, false);
 					if(item)
 					{
 						s_sprintfd(ds)("@%s", item);
 						part_text(entities::ents[ent]->o, ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 					}
-					regularshape(PART_PLASMA, enttype[entities::ents[ent]->type].radius, 0x888822, 53, 50, 200, entities::ents[ent]->o, 2.f);
+					world::spawneffect(entities::ents[ent]->o, 0x221188, enttype[entities::ents[ent]->type].radius);
 					break;
 				}
 
@@ -1389,7 +1389,7 @@ namespace client
 					else if(s->state==CS_SPECTATOR)
 					{
 						s->state = CS_DEAD;
-						if(s==world::player1) world::sb.showscores(true);
+						if(s==world::player1) hud::sb.showscores(true);
                         else s->resetinterp();
 					}
 					break;

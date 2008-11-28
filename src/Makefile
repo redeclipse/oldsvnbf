@@ -50,6 +50,7 @@ CLIENT_OBJS= \
 	game/client.o \
 	game/ctf.o \
 	game/entities.o \
+	game/hud.o \
 	game/physics.o \
 	game/projs.o \
 	game/server.o \
