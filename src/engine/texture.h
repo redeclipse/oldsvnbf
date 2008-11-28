@@ -88,14 +88,13 @@ struct ShaderParamState
 
 enum
 {
-    SHADER_INVALID    = -1,
-    SHADER_DEFERRED   = -2,
-
-	SHADER_DEFAULT	= 0,
+	SHADER_DEFAULT    = 0,
 	SHADER_NORMALSLMS = 1<<0,
-	SHADER_ENVMAP	 = 1<<1,
+	SHADER_ENVMAP     = 1<<1,
     SHADER_GLSLANG    = 1<<2,
-    SHADER_OPTION     = 1<<3
+    SHADER_OPTION     = 1<<3,
+    SHADER_INVALID    = 1<<4,
+    SHADER_DEFERRED   = 1<<5
 };
 
 #define MAXSHADERDETAIL 3
@@ -146,17 +145,17 @@ struct Shader
 
     bool hasoption(int row)
     {
-        if(detailshader->variants[row].empty()) return false;
+        if(!detailshader || detailshader->variants[row].empty()) return false;
         return (detailshader->variants[row][0]->type&SHADER_OPTION)!=0;
     }
 
     void setvariant(int col, int row, Slot *slot, Shader *fallbackshader)
     {
-        if(!this || renderpath==R_FIXEDFUNCTION) return;
+        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
         int len = detailshader->variants[row].length();
         if(col >= len) col = len-1;
         Shader *s = fallbackshader;
-        while(col >= 0) if(detailshader->variants[row][col]->type != SHADER_INVALID) { s = detailshader->variants[row][col]; break; }
+        while(col >= 0) if(!(detailshader->variants[row][col]->type&SHADER_INVALID)) { s = detailshader->variants[row][col]; break; }
         if(lastshader!=s) s->bindprograms();
         lastshader->flushenvparams(slot);
         if(slot) lastshader->setslotparams(*slot);
@@ -169,7 +168,7 @@ struct Shader
 
     void set(Slot *slot = NULL)
     {
-        if(!this || renderpath==R_FIXEDFUNCTION) return;
+        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
         if(lastshader!=detailshader) detailshader->bindprograms();
         lastshader->flushenvparams(slot);
         if(slot) lastshader->setslotparams(*slot);
@@ -337,7 +336,7 @@ extern void materialreset();
 extern void texturereset();
 extern void autograss(char *name);
 extern void setshader(char *name);
-extern void setshaderparam(char *name, int type, int n, float x, float y, float z, float w);
+extern void setshaderparam(const char *name, int type, int n, float x, float y, float z, float w);
 extern int findtexturetype(char *name, bool tryint = false);
 extern const char *findtexturename(int type);
 extern void texture(char *type, char *name, int *rot, int *xoffet, int *yoffset, float *scale);
@@ -357,10 +356,12 @@ extern Shader *defaultshader, *rectshader, *notextureshader, *nocolorshader, *fo
 extern int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams;
 
 extern Shader *lookupshaderbyname(const char *name);
-extern Shader *useshaderbyname(const char *name, bool force = true);
+extern Shader *useshaderbyname(const char *name);
 extern Texture *loadthumbnail(Slot &slot);
 extern void resetslotshader();
 extern void setslotshader(Slot &s);
+extern void linkslotshader(Slot &s);
+extern void linkslotshaders();
 extern void setenvparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
 extern void setenvparamfv(const char *name, int type, int index, const float *v);
 extern void flushenvparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
