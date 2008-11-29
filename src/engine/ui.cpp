@@ -753,13 +753,11 @@ struct gui : g3d_gui
 
 			if(!windowhit && !passthrough)
 			{
-				int intersects = INTERSECT_MIDDLE;
-
 				hitx = (cursorx - origin.x)/scale.x;
 				hity = (cursory - origin.y)/scale.y;
 
                 if((mousebuttons & G3D_PRESSED) && (fabs(hitx-firstx) > 2 || fabs(hity - firsty) > 2)) mousebuttons |= G3D_DRAGGED;
-				if(intersects>=INTERSECT_MIDDLE && hitx>=-xsize/2 && hitx<=xsize/2 && hity<=0)
+				if(hitx>=-xsize/2 && hitx<=xsize/2 && hity<=0)
 				{
 					if(hity>=-ysize || (tcurrent && hity>=-ysize-(FONTH-2*INSERT)-((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE && hitx<=tx-xsize/2))
 						windowhit = this;
