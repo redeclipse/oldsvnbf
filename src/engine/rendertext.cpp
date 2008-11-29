@@ -97,6 +97,8 @@ SVARP(orange, "\fo");
 SVARP(white, "\fw");
 SVARP(black, "\fk");
 SVARP(cyan, "\fc");
+SVARP(violet, "\fv");
+SVARP(purple, "\fp");
 
 static void text_color(char c, char *stack, int size, int &sp, bvec color, int a)
 {
@@ -121,6 +123,8 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
             case 'w': case '7': color = bvec(255, 255, 255); break;	// white
             case 'k': case '8': color = bvec(0,     0,   0); break;	// black
             case 'c': case '9': color = bvec(64,  255, 255); break;	// cyan
+            case 'v': case 'A': color = bvec(64,  32, 196); break;	// violet
+            case 'p': case 'B': color = bvec(128,  32, 255); break;	// purple
 			default: break; // everything else
         }
         glColor4ub(color.x, color.y, color.z, a);
