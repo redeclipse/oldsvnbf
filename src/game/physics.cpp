@@ -279,7 +279,6 @@ namespace physics
         }
         else if(d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f)
         {
-            d->o.z -= d->radius;
             if(!collide(d, vec(d->floor).neg(), 0.95f) || !collide(d, vec(0, 0, -1)))
             {
                 floor = wall;
@@ -325,15 +324,13 @@ namespace physics
 
             d->o = old;
             if(d->type == ENT_CAMERA) return false;
-            float stepdist = (d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f ? d->radius+0.1f : stairheight);
-            d->o.z -= stepdist;
-            d->zmargin = -stepdist;
+            d->o.z -= stairheight;
+            d->zmargin = -stairheight;
             if(d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR || (!collide(d, vec(0, 0, -1), slopez) && (d->physstate==PHYS_STEP_UP || wall.z>=floorz)))
             {
                 d->o = old;
                 d->zmargin = 0;
-                float fz = (d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR ? d->floor.z : wall.z);
-                if(trystepup(d, dir, fz < 1.0f ? d->radius+0.1f : stairheight)) return true;
+                if(trystepup(d, dir, stairheight)) return true;
             }
             else
             {
