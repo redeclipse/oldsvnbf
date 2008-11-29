@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			117
+#define GAMEVERSION			118
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -190,7 +190,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_CARBINE,ANIM_CARBINE,	-10,	10,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
-			10,		10,		500,    1000,	50,		2500,	0,		10000,
+			10,		10,		500,    1000,	50,		2000,	0,		10000,
 			0,		0,			1,		0,		0,		2,				2,
 			false,	false,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
@@ -1151,7 +1151,7 @@ namespace world
 	extern int respawnwait(gameent *d);
 	extern void respawn(gameent *d);
 	extern void respawnself(gameent *d);
-	extern void spawneffect(const vec &o, int colour = 0xFFFFFF, int radius = 4, float size = 2.f, int num = 100, int fade = 250, float vel = 10.f);
+	extern void spawneffect(const vec &o, int colour = 0xFFFFFF, int radius = 4, float size = 2.f, int num = 100, int fade = 250, float vel = 15.f);
 	extern void suicide(gameent *d, int flags);
 	extern void fixrange(float &yaw, float &pitch);
 	extern void fixfullrange(float &yaw, float &pitch, float &roll, bool full);

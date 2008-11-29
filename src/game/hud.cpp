@@ -29,7 +29,7 @@ namespace hud
 	FVARP(cursorsize, 0, 0.05f, 1);
 	FVARP(cursorblend, 0, 1.f, 1);
 
-	VARP(showinventory, 0, 1, 1);
+	VARP(showinventory, 0, 2, 2);
 	FVARP(inventorysize, 0, 0.075f, 1);
 	FVARP(inventoryblend, 0, 0.75f, 1);
 	TVAR(plasmatex, "textures/plasma", 0);
@@ -115,14 +115,14 @@ namespace hud
 		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 		float amt = clamp(float(lastmillis-world::player1->gunlast[gun])/float(guntype[gun].power), 0.f, 2.f),
-			r = 1.f, g = amt < 1.f ? 0.75f : clamp(2.f-amt, 0.f, 1.f)*0.75f, b = amt < 1.f ? clamp(1.f-amt, 0.f, 1.f)*0.75f : 0.f;
+			r = 1.f, g = amt < 1.f ? 1.f : clamp(2.f-amt, 0.f, 1.f), b = amt < 1.f ? clamp(1.f-amt, 0.f, 1.f) : 0.f;
 		glColor4f(r, g, b, indicatorblend);
 		glBindTexture(GL_TEXTURE_2D, t->retframe(lastmillis-world::player1->gunlast[gun], guntype[gun].power));
 		if(t->frames.length() > 1) drawsized(x-s/2, y-s/2, s);
 		else drawslice(0, clamp(amt, 0.f, 1.f), x, y, s);
 	}
 
-    void drawclip(int gun, int x, int y, int s, float fade)
+    void drawclip(int gun, int x, int y, int s)
     {
         const char *cliptexs[GUN_MAX] = {
             plasmacliptex, shotguncliptex, chainguncliptex,
@@ -132,6 +132,17 @@ namespace hud
         int ammo = world::player1->ammo[gun], maxammo = guntype[gun].max;
 		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
+
+		float fade = clipblend;
+		if(lastmillis-world::player1->gunlast[gun] < world::player1->gunwait[gun]) switch(world::player1->gunstate[gun])
+		{
+			case GNS_RELOAD: case GNS_PICKUP: case GNS_SWITCH:
+			{
+				fade *= clamp(float(lastmillis-world::player1->gunlast[gun])/float(world::player1->gunwait[gun]), 0.f, 1.f);
+				break;
+			}
+			default: break;
+		}
         glColor4f(1.f, 1.f, 1.f, fade);
 
         glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
@@ -202,27 +213,35 @@ namespace hud
 						cs = int(cs*amt);
 					}
 				}
-				float iter = 1.f;
-				if(lastmillis-world::player1->lastregen < 500)
+
+				if(lastmillis-world::player1->lastregen < REGENTIME)
 				{
-					iter = clamp((lastmillis-world::player1->lastregen)/500.f, 0.f, 1.f);
-					fade += (1.f-fade)*(1.f-iter);
-					iter *= 0.5f;
-					iter += 0.5f;
+					float skew = clamp((lastmillis-world::player1->lastregen)/float(REGENTIME), 0.f, 1.f);
+					if(skew > 0.5f) skew = 1.f-skew;
+					fade += (1.f-fade)*skew;
+					cs += int(cs*0.5f*skew);
 				}
 
-				if(world::player1->health < MAXHEALTH/2)
+				if(world::player1->health < MAXHEALTH)
 				{
-					r = iter;
-					g = clamp(float(world::player1->health)/float(MAXHEALTH/2), 0.f, 1.f)*(iter/3.f);
-					b = iter/3.f;
+					float skew = clamp(float(world::player1->health)/float(MAXHEALTH), 0.f, 1.f);
+					if(skew > 0.75f)
+					{ // fade to orange
+						skew = (skew-0.75f)*4.f;
+						g *= 0.5f+(skew*0.5f);
+						b *= skew;
+					}
+					else if(skew > 0.25f)
+					{ // fade to red
+						g *= skew-0.25f;
+						b = 0.f;
+					}
+					else
+					{ // fade out
+						r *= 0.5f+(skew*2.f);
+						g = b = 0.f;
+					}
 				}
-				else if(world::player1->health < MAXHEALTH)
-				{
-					r = g = iter;
-					b = clamp(float(world::player1->health-MAXHEALTH/2)/float(MAXHEALTH/2), 0.f, 1.f)*(iter/3.f);
-				}
-				else r = g = b = iter;
         	}
 
 			glMatrixMode(GL_PROJECTION);
@@ -251,28 +270,14 @@ namespace hud
 				{
 					if(world::player1->hasgun(world::player1->gunselect))
 					{
-						int gun = world::player1->gunselect;
-						if(showclip)
-						{
-							float blend = clipblend;
-							if(lastmillis-world::player1->gunlast[gun] < world::player1->gunwait[gun]) switch(world::player1->gunstate[gun])
-							{
-								case GNS_RELOAD: case GNS_PICKUP: case GNS_SWITCH:
-								{
-									blend *= clamp(float(lastmillis-world::player1->gunlast[gun])/float(world::player1->gunwait[gun]), 0.f, 1.f);
-									break;
-								}
-								default: break;
-							}
-							drawclip(gun, cx, cy, int(crosshairsize*hudsize), blend);
-						}
-						if(showindicator && guntype[gun].power && world::player1->gunstate[gun] == GNS_POWER)
-							drawindicator(gun, cx, cy, int(crosshairsize*hudsize));
+						if(showclip) drawclip(world::player1->gunselect, cx, cy, int(crosshairsize*hudsize));
+						if(showindicator && guntype[world::player1->gunselect].power && world::player1->gunstate[world::player1->gunselect] == GNS_POWER)
+							drawindicator(world::player1->gunselect, cx, cy, int(crosshairsize*hudsize));
 					}
 				}
 
-				if(world::mousestyle() >= 1)
-					drawpointer(POINTER_RELATIVE, int(hudwidth*(world::mousestyle()==1?cursorx:0.5f)), int(hudsize*(world::mousestyle()==1?cursory:0.5f)), cs, r, g, b, fade);
+				if(world::mousestyle() >= 1) // renders differently
+					drawpointer(POINTER_RELATIVE, int(hudwidth*(world::mousestyle()==1?cursorx:0.5f)), int(hudsize*(world::mousestyle()==1?cursory:0.5f)), int(crosshairsize*hudsize), 1.f, 1.f, 1.f, crosshairblend);
 			}
 
 			glDisable(GL_BLEND);
@@ -429,7 +434,11 @@ namespace hud
 				b = 1.f-(inspawn*0.3f);
 				fade = clamp(fade+((1.f-fade)*(1.f-inspawn)), 0.f, 1.f);
 			}
-			const char *text = radaritems > 1 ? entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false) : NULL;
+			string text;
+			if(m_edit(world::gamemode))
+				s_sprintf(text)("%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+			else if(radaritems > 1)
+				s_sprintf(text)("%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
 			drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, text, "radar", fade*radaritemblend);
 		}
 	}
@@ -495,26 +504,28 @@ namespace hud
 		loopi(GUN_MAX) if(world::player1->hasgun(i) || lastmillis-world::player1->gunlast[i] < world::player1->gunwait[i])
 		{
 			settexture(hudtexs[i], 0);
-			float fade = inventoryblend*blend, size = cs;
+			float fade = inventoryblend*blend, size = cs, skew = 1.f;
 			if(world::player1->gunstate[i] == GNS_SWITCH || world::player1->gunstate[i] == GNS_PICKUP)
 			{
-				float amt = clamp(float(lastmillis-world::player1->gunlast[i])/float(world::player1->gunwait[i]), 0.f, 1.f),
-					skew = i != world::player1->gunselect ? (
-							world::player1->hasgun(i) ? 1.f-(amt*0.5f) : 1.f-amt
-						) : (
-							world::player1->gunstate[i] == GNS_PICKUP ? amt : 0.5f+(amt*0.5f)
-						);
-				fade *= skew;
-				size *= skew;
+				float amt = clamp(float(lastmillis-world::player1->gunlast[i])/float(world::player1->gunwait[i]), 0.f, 1.f);
+				skew = i != world::player1->gunselect ? (
+						world::player1->hasgun(i) ? 1.f-(amt*0.5f) : 1.f-amt
+					) : (
+						world::player1->gunstate[i] == GNS_PICKUP ? amt : 0.5f+(amt*0.5f)
+					);
 			}
-			else if(i != world::player1->gunselect)
-			{
-				fade *= 0.5f;
-				size *= 0.5f;
-			}
+			else if(i != world::player1->gunselect) skew = 0.5f;
+			fade *= skew;
+			size *= skew;
 			cy -= int(size);
 			glColor4f(fade, fade, fade, fade);
 			drawsized(cx-int(size), cy, int(size));
+			if(showinventory > 1)
+			{
+				pushfont("emphasis");
+				draw_textx("%d", cx-int(size), cy+int(size/2)-FONTH/2, int(255.f*skew), int(255.f*skew), int(255.f*skew), int(255.f*fade), false, AL_RIGHT, -1, -1, world::player1->ammo[i]);
+				popfont();
+			}
 		}
 		//if(m_ctf(world::gamemode)) cy -= ctf::drawinventory(cx, cy, cs, blend);
 	}
