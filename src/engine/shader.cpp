@@ -1334,7 +1334,7 @@ void linkslotshader(Slot &s, bool load)
             if(pulseparam) loopk(3) s.pulseglowcolor[k] = pulseparam->val[k];
             else s.pulseglowcolor = vec(0, 0, 0);
             if(speedparam) s.pulseglowspeed = speedparam->val[0]/1000.0f;
-            else s.pulseglowspeed = 0;
+            else s.pulseglowspeed = 1;
         }
     }
     else if(!strcmp(sh->name, "colorworld"))
