@@ -1250,17 +1250,17 @@ void setshader(char *name)
 
 ShaderParam *findshaderparam(Slot &s, const char *name, int type, int index)
 {
-	if(!s.shader) return NULL;
 	loopv(s.params)
 	{
 		ShaderParam &param = s.params[i];
 		if((name && param.name && !strcmp(name, param.name)) || (param.type==type && param.index==index)) return &param;
 	}
-	loopv(s.shader->defaultparams)
-	{
-		ShaderParam &param = s.shader->defaultparams[i];
-		if((name && param.name && !strcmp(name, param.name)) || (param.type==type && param.index==index)) return &param;
-	}
+    if(!s.shader->detailshader) return NULL;
+    loopv(s.shader->detailshader->defaultparams)
+    {
+        ShaderParam &param = s.shader->detailshader->defaultparams[i];
+        if((name && param.name && !strcmp(name, param.name)) || (param.type==type && param.index==index)) return &param;
+    }
 	return NULL;
 }
 
@@ -1281,15 +1281,19 @@ void setslotshader(Slot &s)
     loopv(curparams) s.params.add(curparams[i]);
 }
 
-void linkslotshader(Slot &s)
+void linkslotshader(Slot &s, bool load)
 {
-    if(!s.shader->detailshader) s.shader->fixdetailshader();
+    if(load && !s.shader->detailshader) s.shader->fixdetailshader();
 
     Shader *sh = s.shader->detailshader;
     if(!sh)
     {
-        loopv(s.params) s.params[i].loc = -1;
-        return;
+        if(load)
+        {
+            loopv(s.params) s.params[i].loc = -1;
+            return;
+        }
+        sh = s.shader;
     }
 
     loopv(s.params)
