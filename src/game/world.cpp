@@ -97,6 +97,7 @@ namespace world
 		if(player1->state == CS_EDITING) return false;
 		if(player1->state == CS_SPECTATOR) return false;
 		if(player1->state == CS_WAITING) return false;
+		if(inzoom()) return false;
 		return true;
 	}
 
@@ -1147,13 +1148,9 @@ namespace world
 			}
 			else
 			{
-				vec pos = headpos(player1, 0.f);
-
+				camera1->o = headpos(player1, 0.f);
 				if(mousestyle() <= 1)
-					findorientation(pos, player1->yaw, player1->pitch, worldpos);
-
-				camera1->o = pos;
-
+					findorientation(camera1->o, player1->yaw, player1->pitch, worldpos);
 				if(isthirdperson())
 				{
 					float angle = thirdpersonangle ? 0-thirdpersonangle : player1->pitch;
@@ -1181,6 +1178,7 @@ namespace world
 					case 0:
 					case 1:
 					{
+						/*
 						if(!thirdpersonaim && isthirdperson())
 						{
 							vec dir(worldpos);
@@ -1191,9 +1189,10 @@ namespace world
 						}
 						else
 						{
+						*/
 							camera1->yaw = player1->yaw;
 							camera1->pitch = player1->pitch;
-						}
+						//}
 						if(mousestyle())
 						{
 							camera1->aimyaw = camera1->yaw;
@@ -1206,7 +1205,7 @@ namespace world
 						float yaw, pitch;
 						vectoyawpitch(cursordir, yaw, pitch);
 						fixrange(yaw, pitch);
-						findorientation(isthirdperson() ? camera1->o : pos, yaw, pitch, worldpos);
+						findorientation(camera1->o, yaw, pitch, worldpos);
 						if(allowmove(player1))
 						{
 							if(isthirdperson())
@@ -1234,7 +1233,7 @@ namespace world
 					if(isthirdperson())
 					{
 						vec dir(worldpos);
-						dir.sub(pos);
+						dir.sub(camera1->o);
 						dir.normalize();
 						vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
 					}
@@ -1594,7 +1593,7 @@ namespace world
 
     void renderavatar(bool early)
     {
-        if(inzoomswitch() && player1->gunselect == GUN_RIFLE) return;
+        //if(inzoomswitch() && player1->gunselect == GUN_RIFLE) return;
         if(isthirdperson() || !rendernormally)
         {
             if(player1->state!=CS_SPECTATOR && player1->state!=CS_WAITING && (player1->state!=CS_DEAD || !player1->obliterated))

@@ -325,9 +325,149 @@ namespace projs
 		}
 	}
 
+	void effect(projent &proj, bool end = false)
+	{
+		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.f, 1.f);
+		if(proj.projtype == PRJ_SHOT)
+		{
+			if(proj.owner) proj.from = proj.owner->muzzle;
+
+			if(guntype[proj.attr1].fsound >= 0 && !issound(proj.schan))
+				playsound(guntype[proj.attr1].fsound, proj.o, &proj, 0, proj.attr1 == GUN_FLAMER ? int(255*proj.lifespan) : -1, -1, -1, &proj.schan);
+			switch(proj.attr1)
+			{
+				case GUN_PLASMA:
+				{
+					int part = PART_PLASMA;
+					if(proj.lifemillis-proj.lifetime < 200) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/200.f, 0.01f, 1.f);
+					else
+					{
+						part = PART_PLASMA_SOFT;
+						proj.lifesize = 1.f;
+					}
+					part_create(part, end ? 200 : 1, proj.o, 0x226688, 6.f*proj.lifesize);
+					part_create(part, end ? 100 : 1, proj.o, 0x44AADD, 3.f*proj.lifesize); // brighter center part
+					break;
+				}
+				case GUN_FLAMER:
+				{
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize *= proj.lifesize; // increase the size exponentially over time
+					int steps = clamp(int(proj.vel.magnitude()*(1.0f-proj.lifespan)), 0, 5);
+					vec dir = vec(proj.vel).normalize().neg().mul(clamp(32.f*proj.lifesize, 1.f, 16.f)),
+						pos = proj.o;
+					if(!steps || (proj.lifemillis-proj.lifetime > 200 && proj.movement <= 2.f))
+					{
+						dir = vec(0, 0, clamp(12.f*proj.lifesize, 0.5f, 8.f));
+						steps += 2;
+					}
+					loopi(steps) // pull some trickery to simulate a stream
+					{
+						float res = float(steps-i)/float(steps), size = clamp(64.f*proj.lifesize*res, 1.5f, 32.f);
+						int col = ((int(254*max((1.0f-proj.lifespan)*res,0.3f))<<16)+1)|((int(86*max((1.0f-proj.lifespan)*res,0.2f))+1)<<8);
+						part_create(PART_FIREBALL_SOFT, end ? 200 : 1, pos, col, size);
+						if(pos.dist(proj.from) <= size) break;
+						pos.add(dir);
+						if((proj.movement > 2.f || end) && proj.o.dist(pos) > proj.movement) break;
+					}
+					break;
+				}
+				case GUN_GL:
+				{
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					int col = ((int(196*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8);
+					part_create(PART_PLASMA_SOFT, end ? 100 : 1, proj.o, col, proj.radius*2.5f*proj.lifesize);
+					bool moving = proj.movement > 0.f;
+					if(lastmillis-proj.lasteffect > (moving ? 250 : 500))
+					{
+						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x222222, proj.radius*(moving ? 1.f : 2.f));
+						proj.lasteffect = lastmillis;
+					}
+					break;
+				}
+				case GUN_SG:
+				{
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					if(proj.movement > 0.f || end)
+					{
+						float size = clamp(48.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? min(48.f, proj.movement) : proj.o.dist(proj.from));
+						vec dir = vec(proj.vel).normalize(), from = vec(proj.o).add(vec(dir).mul(proj.radius));
+						proj.to = vec(proj.o).sub(vec(dir).mul(size));
+						int col = ((int(254*max(1.0f-proj.lifesize,0.3f))<<16)+1)|((int(128*max(1.0f-proj.lifesize,0.1f))+1)<<8);
+						part_flare(proj.to, from, end ? 200 : 1, PART_STREAK, col, proj.radius*0.3f);
+						part_flare(proj.to, from, end ? 100 : 1, PART_STREAK_LERP, col, proj.radius*0.1f);
+					}
+					break;
+				}
+				case GUN_CG:
+				{
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					if(proj.movement > 0.f || end)
+					{
+						float size = clamp(24.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? min(24.f, proj.movement) : proj.o.dist(proj.from));
+						vec dir = vec(proj.vel).normalize(), from = vec(proj.o).add(vec(dir).mul(proj.radius));
+						proj.to = vec(proj.o).sub(vec(dir).mul(size));
+						int col = ((int(254*max(1.0f-proj.lifesize,0.3f))<<16))|((int(96*max(1.0f-proj.lifesize,0.1f)))<<8);
+						part_flare(proj.to, from, end ? 200 : 1, PART_STREAK, col, proj.radius*0.25f);
+						part_flare(proj.to, from, end ? 100 : 1, PART_STREAK_LERP, col, proj.radius*0.075f);
+					}
+					break;
+				}
+				case GUN_CARBINE: case GUN_RIFLE:
+				{
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					if(proj.movement > 0.f || end)
+					{
+						float adjust = proj.attr1 == GUN_CARBINE ? 256.f : 512.f,
+							size = clamp(adjust*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? min(adjust, proj.movement) : proj.o.dist(proj.from));
+						vec dir = vec(proj.vel).normalize(), from = vec(proj.o).add(vec(dir).mul(proj.radius));
+						proj.to = vec(proj.o).sub(vec(dir).mul(size));
+						int c = int(196*max(1.0f-proj.lifesize,0.3f)), col = ((c<<16))|(c<<8)|c;
+						part_trail(PART_SMOKE_SINK, end ? (proj.attr1 == GUN_CARBINE ? 100 : 200) : 1, proj.to, from, col, proj.radius*(proj.attr1 == GUN_CARBINE ? 0.25f : 0.5f));
+					}
+					break;
+				}
+				default:
+				{
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					part_create(PART_PLASMA_SOFT, end ? 100 : 1, proj.o, 0xFFFFFF, proj.radius);
+					break;
+				}
+			}
+		}
+		else if(proj.projtype == PRJ_GIBS)
+		{
+			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+			if(lastmillis-proj.lasteffect > 500)
+			{
+				part_create(PART_BLOOD, 3000, proj.o, 0x66FFFF, 1.2f);
+				proj.lasteffect = lastmillis;
+			}
+		}
+		else if(proj.projtype == PRJ_DEBRIS)
+		{
+			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
+			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize), 0, 10);
+			if(steps && (proj.movement > 0.f || end))
+			{
+				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.5f), pos = proj.o;
+				loopi(steps)
+				{
+					float res = float(steps-i)/float(steps), size = clamp(proj.radius*proj.lifesize*res, 0.1f, proj.radius);
+					int col = ((int(144*max(res,0.3f))<<16)+1)|((int(48*max(res,0.1f))+1)<<8);
+					part_create(PART_PLASMA_SOFT, end ? : 1, pos, col, size);
+					pos.add(dir);
+					if(proj.o.dist(pos) > proj.movement) break;
+				}
+			}
+		}
+	}
+
 	void destroy(projent &proj)
 	{
 		proj.state = CS_DEAD;
+		if(proj.lifetime <= 0) proj.lifetime = 0;
+		effect(proj, true);
 		switch(proj.projtype)
 		{
 			case PRJ_SHOT:
@@ -339,10 +479,9 @@ namespace projs
 				{
 					case GUN_PLASMA:
 					{
-						part_create(PART_PLASMA_SOFT, 200, proj.o, 0x226688, 4.8f); // plasma explosion
 						part_create(PART_SMOKE_RISE_SLOW, 500, proj.o, 0x88AABB, 2.4f); // smoke
 						adddynlight(proj.o, 1.15f*guntype[proj.attr1].explode, vec(0.1f, 0.4f, 0.6f), 200, 10);
-						adddecal(DECAL_ENERGY, proj.o, vec(proj.vel).neg().normalize(), 6.f, bvec(86, 196, 244));
+						adddecal(DECAL_ENERGY, proj.o, proj.norm, 6.f, bvec(86, 196, 244));
 						break;
 					}
 					case GUN_FLAMER:
@@ -350,7 +489,7 @@ namespace projs
 					{ // both basically explosions
 						part_create(proj.attr1 == GUN_FLAMER ? PART_FIREBALL_SOFT : PART_PLASMA_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 1000, proj.o, 0x884400, guntype[proj.attr1].explode*0.3f); // corona
 						int deviation = int(guntype[proj.attr1].explode*0.5f);
-						loopi(rnd(5)+5)
+						loopi(rnd(3)+2)
 						{
 							vec to = vec(proj.o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
 							part_create(PART_FIREBALL_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 1000, to, 0x882200, guntype[proj.attr1].explode);
@@ -364,8 +503,8 @@ namespace projs
 							loopi(rnd(20)+10)
 								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(1500)+1500, rnd(750), rnd(60)+40);
 						}
-						adddecal(DECAL_SCORCH, proj.o, proj.attr1 == GUN_GL ? vec(0, 0, 1) : vec(proj.vel).neg().normalize(), guntype[proj.attr1].explode);
-						adddecal(DECAL_ENERGY, proj.o, proj.attr1 == GUN_GL ? vec(0, 0, 1) : vec(proj.vel).neg().normalize(), guntype[proj.attr1].explode*0.75f, bvec(196, 24, 0));
+						adddecal(DECAL_SCORCH, proj.o, proj.norm, guntype[proj.attr1].explode);
+						adddecal(DECAL_ENERGY, proj.o, proj.norm, guntype[proj.attr1].explode*0.75f, bvec(196, 24, 0));
 						break;
 					}
 					case GUN_SG: case GUN_CG:
@@ -376,9 +515,9 @@ namespace projs
 					}
 					case GUN_CARBINE: case GUN_RIFLE:
 					{
+						proj.from = vec(proj.o).sub(proj.vel);
 						part_create(PART_SMOKE_RISE_SLOW, 500, proj.o, 0xFFFFFF, proj.radius*(proj.attr1 == GUN_CARBINE ? 2.f : 3.f));
-						part_trail(PART_SMOKE_SINK, proj.attr1 == GUN_CARBINE ? 100 : 200, proj.o, proj.from, 0xFFFFFF, proj.radius*(proj.attr1 == GUN_CARBINE ? 0.1f : 0.25f));
-						adddecal(DECAL_BULLET, proj.o, vec(proj.vel).neg().normalize(), proj.radius*(proj.attr1 == GUN_CARBINE ? 2.f : 3.f));
+						adddecal(DECAL_BULLET, proj.o, proj.norm, proj.radius*(proj.attr1 == GUN_CARBINE ? 2.f : 3.f));
 						break;
 					}
 				}
@@ -413,137 +552,6 @@ namespace projs
 				break;
 			}
 			default: break;
-		}
-	}
-
-	void effect(projent &proj)
-	{
-		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.f, 1.f);
-		if(proj.projtype == PRJ_SHOT)
-		{
-			if(proj.owner)
-				proj.from = proj.owner->muzzle;
-
-			if(guntype[proj.attr1].fsound >= 0 && !issound(proj.schan))
-				playsound(guntype[proj.attr1].fsound, proj.o, &proj, 0, proj.attr1 == GUN_FLAMER ? int(255*proj.lifespan) : -1, -1, -1, &proj.schan);
-			switch(proj.attr1)
-			{
-				case GUN_PLASMA:
-				{
-					int part = PART_PLASMA;
-					if(proj.lifemillis-proj.lifetime < 200) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/200.f, 0.01f, 1.f);
-					else
-					{
-						part = PART_PLASMA_SOFT;
-						proj.lifesize = 1.f;
-					}
-					part_create(part, 1, proj.o, 0x226688, 6.f*proj.lifesize);
-					part_create(part, 1, proj.o, 0x44AADD, 3.f*proj.lifesize); // brighter center part
-					break;
-				}
-				case GUN_FLAMER:
-				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					proj.lifesize *= proj.lifesize; // increase the size exponentially over time
-					int steps = clamp(int(proj.vel.magnitude()*(1.0f-proj.lifespan)), 0, 5);
-					vec dir = vec(proj.vel).normalize().neg().mul(clamp(32.f*proj.lifesize, 1.f, 16.f)),
-						pos = proj.o;
-					if(!steps || (proj.lifemillis-proj.lifetime > 200 && proj.movement <= 2.f))
-					{
-						dir = vec(0, 0, clamp(12.f*proj.lifesize, 0.5f, 8.f));
-						steps += 2;
-					}
-					loopi(steps) // pull some trickery to simulate a stream
-					{
-						float res = float(steps-i)/float(steps), size = clamp(64.f*proj.lifesize*res, 1.5f, 32.f);
-						int col = ((int(254*max((1.0f-proj.lifespan)*res,0.3f))<<16)+1)|((int(86*max((1.0f-proj.lifespan)*res,0.2f))+1)<<8);
-						part_create(PART_FIREBALL_SOFT, 1, pos, col, size);
-						if(pos.dist(proj.from) <= size) break;
-						pos.add(dir);
-						if(proj.movement > 2.f && proj.o.dist(pos) > proj.movement) break;
-					}
-					break;
-				}
-				case GUN_GL:
-				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					int col = ((int(196*max(1.0f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifespan,0.2f))+1)<<8);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*2.5f*proj.lifesize);
-					bool moving = proj.movement > 0.f;
-					if(lastmillis-proj.lasteffect > (moving ? 250 : 500))
-					{
-						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x222222, proj.radius*(moving ? 1.f : 2.f));
-						proj.lasteffect = lastmillis;
-					}
-					break;
-				}
-				case GUN_SG:
-				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					if(proj.movement > 0.f)
-					{
-						float size = clamp(40.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? min(40.f, proj.movement) : proj.o.dist(proj.from));
-						vec dir = vec(proj.vel).normalize(), to = vec(proj.o).add(vec(dir).mul(proj.radius)),
-							from = vec(proj.o).sub(vec(dir).mul(size));
-						int col = ((int(254*max(1.0f-proj.lifesize,0.3f))<<16)+1)|((int(128*max(1.0f-proj.lifesize,0.1f))+1)<<8);
-						part_flare(from, to, 1, PART_STREAK, col, proj.radius*0.3f);
-						part_flare(from, to, 1, PART_STREAK_LERP, col, proj.radius*0.1f);
-					}
-					break;
-				}
-				case GUN_CG:
-				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					if(proj.movement > 0.f)
-					{
-						float size = clamp(20.f*(1.0f-proj.lifesize), 0.f, proj.lifemillis-proj.lifetime > 200 ? min(20.f, proj.movement) : proj.o.dist(proj.from));
-						vec dir = vec(proj.vel).normalize(), to = vec(proj.o).add(vec(dir).mul(proj.radius)),
-							from = vec(proj.o).sub(vec(dir).mul(size));
-						int col = ((int(254*max(1.0f-proj.lifesize,0.3f))<<16)+1)|((int(96*max(1.0f-proj.lifesize,0.1f))+1)<<8);
-						part_flare(from, to, 1, PART_STREAK, col, proj.radius*0.25f);
-						part_flare(from, to, 1, PART_STREAK_LERP, col, proj.radius*0.1f);
-					}
-					break;
-				}
-				case GUN_CARBINE: case GUN_RIFLE:
-				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					part_trail(PART_SMOKE_SINK, 1, proj.o, proj.from, 0xFFFFFF, proj.radius*(proj.attr1 == GUN_CARBINE ? 0.25f : 0.5f));
-					break;
-				}
-				default:
-				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, 0xFFFFFF, proj.radius);
-					break;
-				}
-			}
-		}
-		else if(proj.projtype == PRJ_GIBS)
-		{
-			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-			if(lastmillis-proj.lasteffect > 500)
-			{
-				part_create(PART_BLOOD, 3000, proj.o, 0x66FFFF, 1.2f);
-				proj.lasteffect = lastmillis;
-			}
-		}
-		else if(proj.projtype == PRJ_DEBRIS)
-		{
-			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
-			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize), 0, 10);
-			if(steps && proj.movement > 0.f)
-			{
-				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.5f), pos = proj.o;
-				loopi(steps)
-				{
-					float res = float(steps-i)/float(steps), size = clamp(proj.radius*proj.lifesize*res, 0.1f, proj.radius);
-					int col = ((int(144*max(res,0.3f))<<16)+1)|((int(48*max(res,0.1f))+1)<<8);
-					part_create(PART_PLASMA_SOFT, 1, pos, col, size);
-					pos.add(dir);
-					if(proj.o.dist(pos) > proj.movement) break;
-				}
-			}
 		}
 	}
 
@@ -584,13 +592,13 @@ namespace projs
 		proj.hit = NULL;
 		if(!collide(&proj, dir, 0.f, proj.playercollide > 0) || inside || (proj.playercollide && hitplayer))
 		{
-			vec norm(0, 0, 0);
+			proj.norm = vec(0, 0, 1);
 			if(hitplayer)
 			{
 				proj.hit = hitplayer;
-				norm = vec(hitplayer->o).sub(proj.o).normalize();
+				proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
 			}
-			else norm = wall;
+			else proj.norm = wall;
 
 			if((!hitplayer && proj.geomcollide == 1) || (hitplayer && proj.playercollide == 1))
 			{
@@ -607,15 +615,15 @@ namespace projs
 								{
 									part_splash(PART_SPARK, 3, 250, proj.o, 0xFFAA22, proj.radius*(proj.attr1 == GUN_SG ? 0.25f : 0.1f));
 									if(!proj.lastbounce)
-										adddecal(DECAL_BULLET, proj.o, norm, proj.radius*(proj.attr1 == GUN_SG ? 3.f : 1.5f));
+										adddecal(DECAL_BULLET, proj.o, proj.norm, proj.radius*(proj.attr1 == GUN_SG ? 3.f : 1.5f));
 									break;
 								}
 								case GUN_FLAMER:
 								{
 									if(!proj.lastbounce)
 									{
-										adddecal(DECAL_SCORCH, proj.o, norm, 32.f*proj.lifesize);
-										adddecal(DECAL_ENERGY, proj.o, norm, 12.f*proj.lifesize, bvec(92, 12, 0));
+										adddecal(DECAL_SCORCH, proj.o, proj.norm, 32.f*proj.lifesize);
+										adddecal(DECAL_ENERGY, proj.o, proj.norm, 12.f*proj.lifesize, bvec(92, 12, 0));
 									}
 									break;
 								}
@@ -628,7 +636,7 @@ namespace projs
 						case PRJ_GIBS:
 						{
 							if(!proj.lastbounce)
-								adddecal(DECAL_BLOOD, proj.o, norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
+								adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
 							if(vol) playsound(S_SPLAT, proj.o, &proj, 0, vol);
 							break;
 						}
@@ -640,14 +648,13 @@ namespace projs
 						default: break;
 					}
 				}
-				reflect(proj, norm);
+				reflect(proj, proj.norm);
 				proj.movement = 0;
 				proj.lastbounce = lastmillis;
 				return 2;
 			}
 			else
 			{
-				proj.vel = vec(norm).neg();
 				proj.movement = 0;
 				return 0; // die on impact
 			}
