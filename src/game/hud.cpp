@@ -246,13 +246,19 @@ namespace hud
 					if(showclip)
 					{
 						float blend = clipblend;
-						if(!world::player1->canshoot(gun, lastmillis) && world::player1->ammo[gun] > 0)
-							blend *= clamp(float(lastmillis-world::player1->gunlast[gun])/float(world::player1->gunwait[gun]), 0.f, 1.f);
-
-						drawclip(gun, cx, cy, cs, blend);
+						if(!world::player1->canshoot(gun, lastmillis) && world::player1->ammo[gun] > 0) switch(world::player1->gunstate[gun])
+						{
+							case GNS_RELOAD: case GNS_PICKUP: case GNS_SWITCH:
+							{
+								blend *= clamp(float(lastmillis-world::player1->gunlast[gun])/float(world::player1->gunwait[gun]), 0.f, 1.f);
+								break;
+							}
+							default: break;
+						}
+						drawclip(gun, cx, cy, int(crosshairsize*hudsize), blend);
 					}
 					if(showindicator && guntype[gun].power && world::player1->gunstate[gun] == GNS_POWER)
-						drawindicator(gun, cx, cy, cs);
+						drawindicator(gun, cx, cy, int(crosshairsize*hudsize));
 				}
 
 				if(world::mousestyle() >= 1)
