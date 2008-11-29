@@ -204,7 +204,12 @@ namespace hud
 				}
 				float iter = 1.f;
 				if(lastmillis-world::player1->lastregen < 500)
-					iter = 0.25f+(clamp((lastmillis-world::player1->lastregen)/500.f, 0.f, 1.f)*0.75f);
+				{
+					iter = clamp((lastmillis-world::player1->lastregen)/500.f, 0.f, 1.f);
+					fade += (1.f-fade)*(1.f-iter);
+					iter *= 0.5f;
+					iter += 0.5f;
+				}
 
 				if(world::player1->health < MAXHEALTH/2)
 				{
