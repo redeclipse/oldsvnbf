@@ -240,25 +240,28 @@ namespace hud
 
 			if(index > POINTER_GUI)
 			{
-				if(world::player1->state == CS_ALIVE && world::player1->hasgun(world::player1->gunselect))
+				if(world::player1->state == CS_ALIVE)
 				{
-					int gun = world::player1->gunselect;
-					if(showclip)
+					if(world::player1->hasgun(world::player1->gunselect))
 					{
-						float blend = clipblend;
-						if(!world::player1->canshoot(gun, lastmillis) && world::player1->ammo[gun] > 0) switch(world::player1->gunstate[gun])
+						int gun = world::player1->gunselect;
+						if(showclip)
 						{
-							case GNS_RELOAD: case GNS_PICKUP: case GNS_SWITCH:
+							float blend = clipblend;
+							if(lastmillis-world::player1->gunlast[gun] < world::player1->gunwait[gun]) switch(world::player1->gunstate[gun])
 							{
-								blend *= clamp(float(lastmillis-world::player1->gunlast[gun])/float(world::player1->gunwait[gun]), 0.f, 1.f);
-								break;
+								case GNS_RELOAD: case GNS_PICKUP: case GNS_SWITCH:
+								{
+									blend *= clamp(float(lastmillis-world::player1->gunlast[gun])/float(world::player1->gunwait[gun]), 0.f, 1.f);
+									break;
+								}
+								default: break;
 							}
-							default: break;
+							drawclip(gun, cx, cy, int(crosshairsize*hudsize), blend);
 						}
-						drawclip(gun, cx, cy, int(crosshairsize*hudsize), blend);
+						if(showindicator && guntype[gun].power && world::player1->gunstate[gun] == GNS_POWER)
+							drawindicator(gun, cx, cy, int(crosshairsize*hudsize));
 					}
-					if(showindicator && guntype[gun].power && world::player1->gunstate[gun] == GNS_POWER)
-						drawindicator(gun, cx, cy, int(crosshairsize*hudsize));
 				}
 
 				if(world::mousestyle() >= 1)
