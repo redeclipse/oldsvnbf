@@ -1510,10 +1510,10 @@ namespace entities
 		{
 			bool hasent = idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
 			vec off(0, 0, 2.f), pos(o);
-			part_create(PART_EDIT, 1, pos, hasent ? 0x888888 : 0x221188, hasent ? 2.0f : 1.5f);
+			part_create(PART_EDIT, 1, pos, hasent ? 0x6611DD : 0x221188, hasent ? 2.0f : 1.5f);
 			if(showentinfo >= 2 || world::player1->state == CS_EDITING)
 			{
-				s_sprintfd(s)("@%s%s (%d)", hasent ? "\fw" : "\fb", enttype[e.type].name, idx >= 0 ? idx : 0);
+				s_sprintfd(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
 				part_text(pos.add(off), s);
 
 				if(showentinfo >= 3 || hasent)
