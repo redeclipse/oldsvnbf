@@ -15,7 +15,7 @@ namespace hud
 
 	VARP(showcrosshair, 0, 1, 1);
 	FVARP(crosshairsize, 0, 0.065f, 1);
-	VARP(crosshairhitspeed, 0, 1000, INT_MAX-1);
+	VARP(crosshairhitspeed, 0, 450, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.5f, 1);
 	TVAR(relativecursortex, "textures/cursordot", 3);
 	TVAR(guicursortex, "textures/cursor", 3);
@@ -115,7 +115,7 @@ namespace hud
 		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 		float amt = clamp(float(lastmillis-world::player1->gunlast[gun])/float(guntype[gun].power), 0.f, 2.f),
-			r = 1.f, g = amt < 1.f ? 1.f : clamp(2.f-amt, 0.f, 1.f), b = amt < 1.f ? clamp(1.f-amt, 0.f, 1.f) : 0.f;
+			r = 1.f, g = amt < 1.f ? 0.75f : clamp(2.f-amt, 0.f, 1.f)*0.75f, b = amt < 1.f ? clamp(1.f-amt, 0.f, 1.f)*0.75f : 0.f;
 		glColor4f(r, g, b, indicatorblend);
 		glBindTexture(GL_TEXTURE_2D, t->retframe(lastmillis-world::player1->gunlast[gun], guntype[gun].power));
 		if(t->frames.length() > 1) drawsized(x-s/2, y-s/2, s);
@@ -202,20 +202,22 @@ namespace hud
 						cs = int(cs*amt);
 					}
 				}
+				float iter = 1.f;
+				if(lastmillis-world::player1->lastregen < 500)
+					iter = 0.25f+(clamp((lastmillis-world::player1->lastregen)/500.f, 0.f, 1.f)*0.75f);
+
 				if(world::player1->health < MAXHEALTH/2)
 				{
-					r = 1.f;
-					g = clamp(float(world::player1->health)/float(MAXHEALTH/2), 0.f, 1.f);
-					b = 0.f;
+					r = iter;
+					g = clamp(float(world::player1->health)/float(MAXHEALTH/2), 0.f, 1.f)*(iter/3.f);
+					b = iter/3.f;
 				}
 				else if(world::player1->health < MAXHEALTH)
 				{
-					r = 1.f;
-					g = 1.f;
-					b = clamp(float(world::player1->health-MAXHEALTH/2)/float(MAXHEALTH/2), 0.f, 1.f);
+					r = g = iter;
+					b = clamp(float(world::player1->health-MAXHEALTH/2)/float(MAXHEALTH/2), 0.f, 1.f)*(iter/3.f);
 				}
-				if(lastmillis-world::player1->lastregen < 500)
-					fade *= clamp((lastmillis-world::player1->lastregen)/500.f, 0.1f, 1.f);
+				else r = g = b = iter;
         	}
 
 			glMatrixMode(GL_PROJECTION);
