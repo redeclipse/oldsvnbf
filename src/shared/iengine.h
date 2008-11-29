@@ -202,7 +202,7 @@ extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, cons
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;
 
-void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, float vel = 10);
+void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size = 2.f, float vel = 1.f);
 // decal
 enum
 {

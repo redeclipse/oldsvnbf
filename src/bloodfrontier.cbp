@@ -746,6 +746,11 @@
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
+		<Unit filename="game\hud.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="profile" />
+		</Unit>
 		<Unit filename="game\physics.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
