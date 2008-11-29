@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			116
+#define GAMEVERSION			117
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -210,7 +210,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_GL,		ANIM_GRENADES,	-15,    10,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
-			2,		4,		1500,	0,		200,	200,	1000,	3000,
+			2,		4,		1500,	0,		1000,	200,	1000,	3000,
 			150,	64,			1,		0,		0,		1,				1,
 			false,	false,		false,
 			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		75.f,

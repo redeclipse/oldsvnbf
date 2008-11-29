@@ -78,6 +78,7 @@ namespace world
 	VARP(pronetime, 1, 150, 10000);
 
 	VARP(shownamesabovehead, 0, 1, 2);
+	VARP(showdamageabovehead, 0, 0, 1);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
@@ -452,8 +453,11 @@ namespace world
 			vec p = headpos(d);
 			p.z += 0.6f*(d->height + d->aboveeye) - d->height;
 			part_splash(PART_BLOOD, max(damage/3, 3), REGENWAIT, p, 0x66FFFF, 3.f);
-			s_sprintfd(ds)("@%d", damage);
-			part_text(vec(d->abovehead()).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 3000, 0xFFFFFF, 3.f);
+			if(showdamageabovehead)
+			{
+				s_sprintfd(ds)("@%d", damage);
+				part_text(vec(d->abovehead()).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 3000, 0xFFFFFF, 3.f);
+			}
 			playsound(S_PAIN1+rnd(5), d->o, d);
 		}
 
@@ -618,8 +622,8 @@ namespace world
 		if(dth >= 0) playsound(dth, d->o, d);
 		s_sprintfd(a)("\fy%s %s", colorname(d), d->obit);
 		entities::announce(anc, a, af);
-		s_sprintfd(da)("@%s", a);
-		part_text(vec(d->abovehead()).add(vec(0, 0, 4)), da, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
+		//s_sprintfd(da)("@%s", a);
+		//part_text(vec(d->abovehead()).add(vec(0, 0, 4)), da, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 
 		vec pos = headpos(d);
 		int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
@@ -1526,8 +1530,8 @@ namespace world
 
 		if(shownamesabovehead && third && d != player1)
 		{
-			s_sprintfd(s)("@%s", colorname(d));
-			part_text(d->abovehead(), s);
+			s_sprintfd(s)("@\fw%s", colorname(d));
+			part_text(d->abovehead(), s, PART_TEXT, 1, 0xFFFFFF, 2.f);
 		}
 
 
