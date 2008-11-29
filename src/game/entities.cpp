@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "pch.h"
 #include "engine.h"
 #include "game.h"
 namespace entities
@@ -518,16 +519,17 @@ namespace entities
 		switch(e.type)
 		{
 			case MAPMODEL:
+			case PARTICLES:
+			case MAPSOUND:
 			{
-				if(!e.lastemit)
+				e.lastemit = 0; // reset and start over
+				e.spawned = false;
+				loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER)
 				{
-					loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER)
+					if(ents[e.links[i]]->lastemit < e.lastemit)
 					{
-						if(ents[e.links[i]]->lastemit < e.lastemit)
-						{
-							e.lastemit = ents[e.links[i]]->lastemit;
-							e.spawned = ents[e.links[i]]->spawned;
-						}
+						e.lastemit = ents[e.links[i]]->lastemit;
+						e.spawned = ents[e.links[i]]->spawned;
 					}
 				}
 				break;
@@ -1182,6 +1184,20 @@ namespace entities
 
 			switch(e.type)
 			{
+				case MAPMODEL:
+				case PARTICLES:
+				case MAPSOUND:
+				{
+					e.lastemit = 0;
+					e.spawned = false;
+					break;
+				}
+				case TRIGGER:
+				{
+					e.lastemit = lastmillis;
+					e.spawned = false;
+					break;
+				}
 				case WEAPON:
 				{
 					if(mtype == MAP_BFGZ && gver <= 90)
@@ -1211,6 +1227,7 @@ namespace entities
 				default: break;
 			}
 		}
+		loopvj(ents) fixentity(*ents[j]);
 		autodropentities = m_play(world::gamemode) && !entities;
 	}
 

@@ -869,6 +869,7 @@ bool load_world(const char *mname)		// still supports all map formats that have 
 			endianswap(&e.attr1, sizeof(short), 5);
 			e.links.setsize(0);
 			e.spawned = false;
+			e.lastemit = 0;
 			e.inoctanode = false;
 			if(maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 31))
 				e.attr5 = 0; // init ever-present attr5
