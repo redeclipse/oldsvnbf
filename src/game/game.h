@@ -190,7 +190,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_CARBINE,ANIM_CARBINE,	-10,	10,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
-			10,		10,		500,    1000,	50,		2000,	0,		10000,
+			10,		10,		500,    1000,	50,		2500,	0,		10000,
 			0,		0,			1,		0,		0,		2,				2,
 			false,	false,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
@@ -920,7 +920,7 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
 
 struct projent : dynent
 {
-	vec from, to;
+	vec from, to, norm;
 	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect, lastbounce;
 	float movement, roll, lifespan, lifesize;
 	bool local, beenused, radial, extinguish;
@@ -933,7 +933,7 @@ struct projent : dynent
 	physent *hit;
 	const char *mdl;
 
-	projent() : projtype(PRJ_SHOT), id(-1), owner(NULL), hit(NULL), mdl(NULL) { reset(); }
+	projent() : norm(0, 0, 1), projtype(PRJ_SHOT), id(-1), owner(NULL), hit(NULL), mdl(NULL) { reset(); }
 	~projent()
 	{
 		removetrackedparticles(this);
@@ -947,6 +947,7 @@ struct projent : dynent
 		physent::reset();
 		type = ENT_PROJ;
 		state = CS_ALIVE;
+		norm = vec(0, 0, 1);
 		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = 0;
 		ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
 		schan = id = -1;
