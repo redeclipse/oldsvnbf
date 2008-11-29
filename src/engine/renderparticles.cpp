@@ -626,18 +626,18 @@ struct softquadrenderer : quadrenderer
 
 static partrenderer *parts[] =
 {
-    new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 1, 0),
+    new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 0, 0),
     new taperenderer("particles/flare", PT_TAPE|PT_LERP, 0, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 0, 0),
-    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -5, 0),
-    new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -5, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -10, 0),
-    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 5, 0),
-    new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP, 2, DECAL_BLOOD),
-    new quadrenderer("particles/entity", PT_PART|PT_GLARE, 20, 0),
-    new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP, 1, 0),
-    new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -5, 0),
-    new quadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -5, 0),
+    new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -10, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -20, 0),
+    new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 10, 0),
+    new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP, 50, DECAL_BLOOD),
+    new quadrenderer("particles/entity", PT_PART|PT_GLARE, 0, 0),
+    new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP, 10, 0),
+    new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -10, 0),
+    new quadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -10, 0),
     new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
     new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
 	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP, 0, 0),
@@ -874,15 +874,7 @@ static void splash(int type, int color, int radius, int num, int fade, const vec
     int fmax = fade*3;
     loopi(num)
     {
-        int x, y, z;
-        do
-        {
-            x = rnd(max(radius*2,1))-radius;
-            y = rnd(max(radius*2,1))-radius;
-            z = rnd(max(radius*2,1))-radius;
-        }
-        while(x*x+y*y+z*z>radius*radius);
-    	vec tmp = vec((float)x, (float)y, (float)z);
+    	vec tmp(rnd(max(radius*2,1))-radius, rnd(max(radius*2,1))-radius, rnd(max(radius*2,1))-radius);
         int f = (num < 10) ? (fmin + rnd(fmax)) : (fmax - (i*(fmax-fmin))/(num-1)); //help deallocater by using fade distribution rather than random
         newparticle(p, tmp, f, type, color, size)->val = collidez;
     }
@@ -912,10 +904,10 @@ void regular_part_splash(int type, int num, int fade, const vec &p, int color, f
     regularsplash(type, color, radius, num, fade, p, size, delay);
 }
 
-void part_splash(int type, int num, int fade, const vec &p, int color, float size)
+void part_splash(int type, int num, int fade, const vec &p, int color, float size, int radius)
 {
     if(shadowmapping || renderedgame) return;
-    splash(type, color, 150, num, fade, p, size);
+    splash(type, color, radius, num, fade, p, size);
 }
 
 void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, float size)
@@ -975,7 +967,7 @@ void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fa
     {
         vec w(rnd(int(v.x*2))-int(v.x), rnd(int(v.y*2))-int(v.y), rnd(int(v.z*2))-int(v.z)+z);
         w.add(o);
-        part_splash(type, 1, fade, w, color, size);
+        part_splash(type, 1, fade, w, color, size, 1);
     }
 }
 
@@ -1103,18 +1095,18 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
     switch(attr1)
     {
         case 0: //fire
-            regularsplash(PART_FIREBALL, 0xFFC8C8, 150, 1, 40, o, 4.8f);
-            regularsplash(PART_SMOKE_RISE_SLOW, 0x897661, 50, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, 3);
+            regularsplash(PART_FIREBALL, 0xFFC8C8, 10, 1, 40, o, 4.8f);
+            regularsplash(PART_SMOKE_RISE_SLOW, 0x897661, 2, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, 3);
             break;
         case 1: //smoke vent - <dir>
-            regularsplash(PART_SMOKE_RISE_SLOW, 0x897661, 50, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4f);
+            regularsplash(PART_SMOKE_RISE_SLOW, 0x897661, 2, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4f);
             break;
         case 2: //water fountain - <dir>
         {
             uchar col[3];
             getwatercolour(col);
             int color = (col[0]<<16) | (col[1]<<8) | col[2];
-            regularsplash(PART_WATER, color, 150, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6f);
+            regularsplash(PART_WATER, color, 10, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6f);
             break;
         }
         case 3: //fire ball - <size> <rgb>

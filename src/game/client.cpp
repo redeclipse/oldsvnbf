@@ -1099,7 +1099,9 @@ namespace client
 					target->health = amt;
 					target->lastregen = lastmillis;
 					int left = clamp(MAXHEALTH-max(target->health-REGENHEAL, 0), 1, 100);
-					part_splash(PART_BLOOD, max(left/3, 3), REGENWAIT, target->o, 0x60FFFF, 3.0f);
+					vec pos = world::headpos(target);
+					pos.z += 0.6f*(target->height + target->aboveeye)-target->height;
+					part_splash(PART_BLOOD, max(left/3, 3), REGENWAIT, pos, 0x60FFFF, 3.0f, 4);
 					playsound(S_REGEN, target->o, target);
 					break;
 				}

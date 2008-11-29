@@ -251,7 +251,7 @@ namespace world
 	void spawneffect(const vec &o, int colour, int radius, float size, int num, int fade, float vel)
 	{
 		regularshape(PART_ELECTRIC, radius*2, colour, 21, num, fade, o, size, vel);
-		adddynlight(o, radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), fade, fade/2);
+		adddynlight(o, radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), fade, fade/3);
 	}
 
 	gameent *pointatplayer()
@@ -452,7 +452,7 @@ namespace world
 		{
 			vec p = headpos(d);
 			p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-			part_splash(PART_BLOOD, max(damage/3, 3), REGENWAIT, p, 0x66FFFF, 3.f);
+			part_splash(PART_BLOOD, max(damage/3, 3), REGENWAIT, p, 0x66FFFF, 3.f, 4);
 			if(showdamageabovehead)
 			{
 				s_sprintfd(ds)("@%d", damage);
