@@ -174,6 +174,28 @@ namespace physics
 				return false;
 			}
 		}
+
+       /* try stepping up half as much as forward */
+        d->o = old;
+        vec smoothdir(dir.x, dir.y, 0);
+        if(fabs(smoothdir.x) > 1e-9f || fabs(smoothdir.y) > 1e-9f) smoothdir.normalize();
+        smoothdir.z = 0.5f;
+        smoothdir.mul(dir.magnitude()*stepspeed/smoothdir.magnitude());
+        d->o.add(smoothdir);
+        d->o.z += maxstep + 0.1f;
+        if(collide(d, smoothdir))
+        {
+            d->o.z -= maxstep + 0.1f;
+            if(d->physstate == PHYS_FALL)
+            {
+                d->timeinair = 0;
+                d->floor = vec(0, 0, 1);
+                switchfloor(d, dir, d->floor);
+            }
+            d->physstate = PHYS_STEP_UP;
+            return true;
+        }
+
 		/* try stepping up */
 		d->o = old;
 		d->o.z += dir.magnitude()*stepspeed;
@@ -341,6 +363,16 @@ namespace physics
 			/* can't step over the obstacle, so just slide against it */
 			collided = true;
 		}
+        else if(d->physstate == PHYS_STEP_UP)
+        {
+            if(!collide(d, vec(0, 0, -1), slopez))
+            {
+                d->o = old;
+                if(trystepup(d, dir, stairheight)) return true;
+                d->o.add(dir);
+            }
+        }
+
 		vec floor(0, 0, 0);
 		bool slide = collided,
 			 found = findfloor(d, collided, obstacle, slide, floor);
