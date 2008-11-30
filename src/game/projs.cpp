@@ -636,8 +636,8 @@ namespace projs
 								{
 									if(!proj.lastbounce)
 									{
-										adddecal(DECAL_SCORCH, proj.o, proj.norm, 32.f*proj.lifesize);
-										adddecal(DECAL_ENERGY, proj.o, proj.norm, 12.f*proj.lifesize, bvec(92, 12, 0));
+										adddecal(DECAL_SCORCH, proj.o, proj.norm, 96.f*proj.lifesize);
+										adddecal(DECAL_ENERGY, proj.o, proj.norm, 256.f*proj.lifesize, bvec(184, 88, 0));
 									}
 									break;
 								}
