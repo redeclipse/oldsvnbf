@@ -80,6 +80,26 @@ namespace hud
 	VARP(statrate, 0, 200, 1000);
 	VARP(showfps, 0, 2, 2);
 
+	void colourskew(float &r, float &g, float &b, float skew)
+	{
+		if(skew > 0.75f)
+		{ // fade to orange
+			float off = (skew-0.75f)*4.f;
+			g *= 0.5f+(off*0.5f);
+			b *= off;
+		}
+		else if(skew > 0.25f)
+		{ // fade to red
+			g *= skew-0.25f;
+			b = 0.f;
+		}
+		else
+		{ // fade out
+			r *= 0.5f+(skew*2.f);
+			g = b = 0.f;
+		}
+	}
+
 	enum
 	{
 		POINTER_NONE = 0,
@@ -115,10 +135,34 @@ namespace hud
 		Texture *t = textureload(indicatortex, 3);
 		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
-		float amt = clamp(float(lastmillis-world::player1->gunlast[gun])/float(guntype[gun].power), 0.f, 2.f),
-			r = 1.f, g = amt < 1.f ? 1.f : clamp(2.f-amt, 0.f, 1.f), b = amt < 1.f ? clamp(1.f-amt, 0.f, 1.f) : 0.f;
+		int millis = lastmillis-world::player1->gunlast[gun];
+		float r = 1.f, g = 1.f, b = 1.f, amt = 0.f;
+		switch(world::player1->gunstate[gun])
+		{
+			case GNS_POWER:
+			{
+				if(millis > guntype[gun].power)
+				{
+					float skew = clamp(float(millis-guntype[gun].power)/float(guntype[gun].time), 0.f, 1.f);
+					glBindTexture(GL_TEXTURE_2D, t->getframe(skew));
+					glColor4f(r, g, b, indicatorblend);
+					if(t->frames.length() > 1) drawsized(x-s*3/4, y-s*3/4, s*3/2);
+					else drawslice(0, clamp(skew, 0.f, 1.f), x, y, s*3/2);
+					colourskew(r, g, b, 1.f-skew);
+					amt = 1.f;
+				}
+				else amt = clamp(float(millis)/float(guntype[gun].power), 0.f, 1.f);
+				break;
+			}
+			default:
+			{
+				float skew = clamp(float(millis)/float(world::player1->gunwait[gun]), 0.f, 1.f);
+				amt *= skew;
+				break;
+			}
+		}
+		glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
 		glColor4f(r, g, b, indicatorblend);
-		glBindTexture(GL_TEXTURE_2D, t->retframe(lastmillis-world::player1->gunlast[gun], guntype[gun].power));
 		if(t->frames.length() > 1) drawsized(x-s/2, y-s/2, s);
 		else drawslice(0, clamp(amt, 0.f, 1.f), x, y, s);
 	}
@@ -145,7 +189,6 @@ namespace hud
 			default: break;
 		}
         glColor4f(1.f, 1.f, 1.f, fade);
-
         glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
         if(t->frames.length() > 1) drawsized(x-s/2, y-s/2, s);
         else switch(gun)
@@ -224,25 +267,7 @@ namespace hud
 				}
 
 				if(world::player1->health < MAXHEALTH)
-				{
-					float skew = clamp(float(world::player1->health)/float(MAXHEALTH), 0.f, 1.f);
-					if(skew > 0.75f)
-					{ // fade to orange
-						skew = (skew-0.75f)*4.f;
-						g *= 0.5f+(skew*0.5f);
-						b *= skew;
-					}
-					else if(skew > 0.25f)
-					{ // fade to red
-						g *= skew-0.25f;
-						b = 0.f;
-					}
-					else
-					{ // fade out
-						r *= 0.5f+(skew*2.f);
-						g = b = 0.f;
-					}
-				}
+					colourskew(r, g, b, clamp(float(world::player1->health)/float(MAXHEALTH), 0.f, 1.f));
         	}
 
 			glMatrixMode(GL_PROJECTION);
@@ -315,7 +340,7 @@ namespace hud
 
 	void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r, float g, float b, const char *text, const char *font, float fade)
 	{
-		const struct radardir { bool axis, swap; float x, y, up, down; } radardirs[8] =
+		const struct rddir { bool axis, swap; float x, y, up, down; } rddirs[8] =
 		{
 			{ true,		false,	 1.f,	0.f,	0.5f,	0.5f	},
 			{ false,	true,	 1.f,	1.f,	0.f,	0.5f 	},
@@ -332,22 +357,22 @@ namespace hud
 		vectoyawpitch(dir, yaw, pitch);
 		float fovsx = curfov*0.5f, fovsy = (360.f-(curfov*2.f))*0.25f;
 		int cq = 7;
-		for(int cr = 0; cr < 8; cr++) if(yaw < (fovsx*radardirs[cr].x)+(fovsy*radardirs[cr].y))
+		for(int cr = 0; cr < 8; cr++) if(yaw < (fovsx*rddirs[cr].x)+(fovsy*rddirs[cr].y))
 		{
 			cq = cr;
 			break;
 		}
-		const radardir &rd = radardirs[cq];
+		const rddir &rd = rddirs[cq];
 		float range = rd.axis ? fovsx : fovsy, skew = (yaw-(((fovsx*rd.x)+(fovsy*rd.y))-range))/range;
 		if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h : w)-s*2;
 		(rd.axis ? cx : cy) += int(((rd.axis ? w : h)-s*2)*clamp(rd.up+(rd.down*skew), 0.f, 1.f));
 
 		settexture(radartex, 3);
 		glColor4f(r, g, b, blend);
-		const float radarpatch[4][2] = { // blip dark darker flag
+		const float rdblip[4][2] = { // blip dark darker flag
 			 { 0.25f, 0.25f }, { 0.25f, 0.5f }, { 0.5f, 0.5f }, { 0.5f, 0.25f }
 		};
-		drawtex(cx, cy, s, s, radarpatch[idx][0], radarpatch[idx][1], 0.25f, 0.25f);
+		drawtex(cx, cy, s, s, rdblip[idx][0], rdblip[idx][1], 0.25f, 0.25f);
 		if(text && *text)
 		{
 			if(font && *font) pushfont(font);
@@ -495,6 +520,46 @@ namespace hud
 		popfont();
 	}
 
+	void drawradar(int w, int h, int s, float blend)
+	{
+		const struct rdpat {
+			int xw, xs, yh, ys, ww, ws, hh, hs; float tx, ty, tw, th;
+		} rdpats[8] =
+		{
+			{	0,	1,	0,	1,	0,	1,	0,	1,	0.f,	0.f,	0.25f,	0.25f	},
+			{	1,	-2,	0,	1,	0,	1,	0,	1,	0.75f,	0.f,	0.25f,	0.25f	},
+			{	0,	1,	1,	-2,	0,	1,	0,	1,	0.f,	0.75f,	0.25f,	0.25f	},
+			{	1,	-2,	1,	-2,	0,	1,	0,	1,	0.75f,	0.75f,	0.25f,	0.25f	},
+			{	0,	2,	0,	1,	1,	-4,	0,	1,	0.25f,	0.f,	0.5f,	0.25f	},
+			{	0,	2,	1,	-2,	1,	-4,	0,	1,	0.25f,	0.75f,	0.5f,	0.25f	},
+			{	0,	1,	0,	2,	0,	1,	1,	-4,	0.f,	0.25f,	0.25f,	0.5f	},
+			{	1,	-2,	0,	2,	0,	1,	1,	-4,	0.75f,	0.25f,	0.25f,	0.5f	}
+		};
+
+		int colour = teamtype[world::player1->team].colour;
+		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
+			fade = radarblend*blend;
+		glColor4f(r, g, b, fade);
+		settexture(radartex, 3);
+
+		loopi(8)
+		{
+			const rdpat &rd = rdpats[i];
+			drawtex(
+				(rd.xw*w)+(rd.xs*s), (rd.yh*h)+(rd.ys*s),
+				(rd.ww*w)+(rd.ws*s), (rd.hh*h)+(rd.hs*s),
+				rd.tx, rd.ty, rd.tw, rd.th
+			);
+		}
+
+		if(m_edit(world::gamemode) || radaritems) drawentblips(w, h, s/2, fade);
+		loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE)
+			drawplayerblip(world::players[i], w, h, s/2, fade);
+		if(m_stf(world::gamemode)) stf::drawblips(w, h, s/2, fade);
+		else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, s/2, fade);
+		if(radarcard) drawcardinalblips(w, h, s/2, fade);
+	}
+
 	void drawinventory(int w, int h, int edge, float blend)
 	{
 		int cx = int(w-edge*1.5f), cy = int(h-edge*1.5f), cs = int(inventorysize*w);
@@ -527,7 +592,7 @@ namespace hud
 				glScalef(off, off, 1);
 				int tx = int((cx-FONTW/4)*(1.f/off)), ty = int((cy-size+FONTW/4)*(1.f/off));
 				pushfont("emphasis");
-				draw_textx("%d", tx, ty, int(255.f*skew), int(255.f*skew), int(255.f*skew), int(255.f*inventoryammoblend), false, AL_RIGHT, -1, -1, world::player1->ammo[i]);
+				draw_textx("%d", tx, ty, int(255.f*skew), int(255.f*skew), int(255.f*skew), int(255.f*inventoryammoblend*blend), false, AL_RIGHT, -1, -1, world::player1->ammo[i]);
 				popfont();
 				glPopMatrix();
 			}
@@ -573,31 +638,7 @@ namespace hud
 			drawtex(0, 0, ox, oy);
 		}
 
-		if(showradar)
-		{
-			int qs = os/2, colour = teamtype[world::player1->team].colour,
-				r = (colour>>16), g = ((colour>>8)&0xFF), b = (colour&0xFF);;
-
-			glColor4f((r/255.f), (g/255.f), (b/255.f), radarblend*fade);
-			settexture(radartex, 3);
-			drawtex(os, os, os, os,					0.f, 0.f, 0.25f, 0.25f);		// TL
-			drawtex(ox-(os*2), os, os, os,			0.75f, 0.f, 0.25f, 0.25f);		// TR
-			drawtex(os, oy-(os*2), os, os,			0.f, 0.75f, 0.25f, 0.25f);		// BL
-			drawtex(ox-(os*2), oy-(os*2), os, os,	0.75f, 0.75f, 0.25f, 0.25f);	// BR
-			drawtex(os*2, os, ox-(os*4), os,		0.25f, 0.f, 0.5f, 0.25f);		// T
-			drawtex(os*2, oy-(os*2), ox-(os*4), os,	0.25f, 0.75f, 0.5f, 0.25f);		// B
-			drawtex(os, os*2, os, oy-(os*4),		0.f, 0.25f, 0.25f, 0.5f);		// L
-			drawtex(ox-(os*2), os*2, os, oy-(os*4),	0.75f, 0.25f, 0.25f, 0.5f);		// R
-
-			if(m_edit(world::gamemode) || radaritems)
-				drawentblips(ox, oy, qs, fade);
-			loopv(world::players)
-				if(world::players[i] && world::players[i]->state == CS_ALIVE)
-					drawplayerblip(world::players[i], ox, oy, qs, fade);
-			if(m_stf(world::gamemode)) stf::drawblips(ox, oy, qs, fade);
-			else if(m_ctf(world::gamemode)) ctf::drawblips(ox, oy, qs, fade);
-			if(radarcard) drawcardinalblips(ox, oy, qs, fade);
-		}
+		if(showradar) drawradar(ox, oy, os, fade);
 		if(world::player1->state == CS_ALIVE && showinventory)
 			drawinventory(ox, oy, os, fade);
 #if 0

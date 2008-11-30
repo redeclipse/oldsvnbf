@@ -1042,7 +1042,7 @@ namespace ai
 				defer(d, b, false);
 			}
 			entities::checkitems(d);
-			weapons::shoot(d, d->ai->target, 100); // always use full power
+			weapons::shoot(d, d->ai->target, guntype[d->gunselect].power); // always use full power
 		}
 		else d->stopmoving();
 
