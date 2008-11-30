@@ -195,7 +195,7 @@ guntypes guntype[GUN_MAX] =
 			false,	false,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
-			""
+			"projectiles/bullet"
 	},
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
@@ -205,7 +205,7 @@ guntypes guntype[GUN_MAX] =
 			false,	false,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
 			"rifle",	"\fw",	"weapons/rifle/item",		"weapons/rifle/vwep",
-			""
+			"projectiles/bullet"
 	},
 	{
 		GUN_GL,		ANIM_GRENADES,	-15,    10,
