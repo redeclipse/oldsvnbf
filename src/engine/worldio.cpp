@@ -871,7 +871,7 @@ bool load_world(const char *mname)		// still supports all map formats that have 
 			e.spawned = false;
 			e.lastemit = 0;
 			e.inoctanode = false;
-			if(maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 31))
+			if((maptype == MAP_OCTA && hdr.version <= 27) || (maptype == MAP_BFGZ && hdr.version <= 31))
 				e.attr5 = 0; // init ever-present attr5
 			if(maptype == MAP_OCTA)
 			{

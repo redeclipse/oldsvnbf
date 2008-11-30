@@ -89,14 +89,14 @@ namespace weapons
 		}
 	}
 
-	void shoot(gameent *d, vec &targ, int pow)
+	void shoot(gameent *d, vec &targ, int force)
 	{
 		if(!d->canshoot(d->gunselect, lastmillis)) return;
 
-		int power = pow ? pow : 100;
+		int power = force;
 		if(guntype[d->gunselect].power)
 		{
-			if(!pow)
+			if(!power)
 			{
 				if(d->gunstate[d->gunselect] != GNS_POWER) // FIXME: not synched in MP yet!!
 				{
@@ -104,10 +104,9 @@ namespace weapons
 					else return;
 				}
 
-				int secs = lastmillis-d->gunlast[d->gunselect];
-				if(d->attacking && secs < guntype[d->gunselect].power*2) return;
-
-				power = clamp(int(float(secs)/float(guntype[d->gunselect].power)*100.f), 0, 200);
+				power = lastmillis-d->gunlast[d->gunselect];
+				if(d->attacking && power < guntype[d->gunselect].power+guntype[d->gunselect].time)
+					return;
 			}
 			d->attacking = false;
 		}

@@ -165,7 +165,7 @@ namespace projs
 		if(proj.projtype == PRJ_SHOT)
 		{
 			if(proj.radial) proj.height = proj.radius = guntype[proj.attr1].explode*0.1f;
-			if(proj.playercollide || proj.geomcollide) 
+			if(proj.playercollide || proj.geomcollide)
 			{
 				vec ray(proj.vel);
 				ray.normalize();
@@ -248,27 +248,18 @@ namespace projs
 
 	void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local)
 	{
-		int delay = guntype[gun].delay, force = 100, cooked = 0, millis = delay, life = guntype[gun].time,
-			spd = clamp(int(float(guntype[gun].speed)/100.f*force), 1, guntype[gun].speed);
+		int delay = guntype[gun].delay, millis = delay,
+			life = guntype[gun].time, speed = guntype[gun].speed;
 
 		if(guntype[gun].power)
 		{
-			force = clamp(power, 1, 100);
-			if(power > 100)
+			speed = int(speed*clamp(float(clamp(power, 0, guntype[gun].power))/float(guntype[gun].power), 0.f, 1.f));
+			if(power > guntype[gun].power)
 			{
-				cooked = power-force;
-				if(gun == GUN_GL && cooked >= 100)
-				{
-					force = 1;
-					delay = 0;
-				}
+				float skew = 1.f-clamp(float(power-guntype[gun].power)/float(guntype[gun].time), 0.f, 1.f);
+				life = int(life*skew);
+				if(!life) speed = millis = delay = 1;
 			}
-		}
-
-		if(cooked)
-		{
-			float skew = 1.f-(float(cooked)/100.f);
-			life = int(life*skew);
 		}
 
 		if(gun == GUN_FLAMER)
@@ -277,7 +268,7 @@ namespace projs
 			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
 			else playsound(guntype[gun].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
 		}
-		else if(!cooked) playsound(guntype[gun].sound, d->o, d);
+		else if(!guntype[gun].time || life) playsound(guntype[gun].sound, d->o, d);
 
 		switch(gun)
 		{
@@ -321,7 +312,7 @@ namespace projs
 		}
 		loopv(locs)
 		{
-			create(from, locs[i], local, d, PRJ_SHOT, life, millis, spd, 0, WEAPON, gun);
+			create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, millis, speed, 0, WEAPON, gun);
 			millis += delay;
 		}
 	}
@@ -703,7 +694,7 @@ namespace projs
             vec ray(dir);
             ray.mul(1/stepdist);
             float barrier = raycube(proj.o, ray, stepdist, RAY_CLIPMAT|RAY_POLY);
-            if(barrier < stepdist) 
+            if(barrier < stepdist)
             {
                 proj.o.add(ray.mul(barrier-0.1f));
                 switch(bounce(proj, ray))
@@ -713,9 +704,9 @@ namespace projs
                     case 0: return false;
                 }
             }
-        } 
-                    
-		if(!blocked) 
+        }
+
+		if(!blocked)
         {
             proj.o.add(dir);
             switch(bounce(proj, dir))

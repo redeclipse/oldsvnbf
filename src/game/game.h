@@ -1083,7 +1083,7 @@ namespace weapons
 {
 	extern int autoreload;
 	extern void reload(gameent *d);
-	extern void shoot(gameent *d, vec &targ, int pow = 0);
+	extern void shoot(gameent *d, vec &targ, int force = 0);
 	extern bool doautoreload(gameent *d);
 	extern void preload(int gun = -1);
 }
