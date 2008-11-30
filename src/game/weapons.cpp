@@ -144,8 +144,8 @@ namespace weapons
 			to.add(from);
 		}
 
-		vector<vec> vshots; vshots.setsize(0);
-		vector<ivec> shots; shots.setsize(0);
+		vector<vec> vshots;
+		vector<ivec> shots;
 		#define addshot(q) { vshots.add(q); shots.add(ivec(int(q.x*DMF), int(q.y*DMF), int(q.z*DMF))); }
 		loopi(guntype[d->gunselect].rays)
 		{
