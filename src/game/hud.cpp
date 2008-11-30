@@ -32,6 +32,7 @@ namespace hud
 	VARP(showinventory, 0, 2, 2);
 	FVARP(inventorysize, 0, 0.075f, 1);
 	FVARP(inventoryblend, 0, 0.75f, 1);
+	FVARP(inventoryammoblend, 0, 1.f, 1);
 	TVAR(plasmatex, "textures/plasma", 0);
 	TVAR(shotguntex, "textures/shotgun", 0);
 	TVAR(chainguntex, "textures/chaingun", 0);
@@ -521,9 +522,14 @@ namespace hud
 			drawsized(cx-int(size), cy-int(size), int(size));
 			if(showinventory > 1)
 			{
+				float off = skew+(skew*0.25f);
+				glPushMatrix();
+				glScalef(off, off, 1);
+				int tx = int((cx-FONTW/4)*(1.f/off)), ty = int((cy-size+FONTW/4)*(1.f/off));
 				pushfont("emphasis");
-				draw_textx("%d", cx, cy-FONTH, int(255.f*skew), int(255.f*skew), int(255.f*skew), int(255.f*fade), false, AL_RIGHT, -1, -1, world::player1->ammo[i]);
+				draw_textx("%d", tx, ty, int(255.f*skew), int(255.f*skew), int(255.f*skew), int(255.f*inventoryammoblend), false, AL_RIGHT, -1, -1, world::player1->ammo[i]);
 				popfont();
+				glPopMatrix();
 			}
 			cy -= int(size);
 		}
