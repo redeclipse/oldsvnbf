@@ -165,21 +165,36 @@ namespace projs
 		if(proj.projtype == PRJ_SHOT)
 		{
 			if(proj.radial) proj.height = proj.radius = guntype[proj.attr1].explode*0.1f;
-			if(proj.playercollide || proj.geomcollide) loopi(100)
+			if(proj.playercollide || proj.geomcollide) 
 			{
-				proj.hit = NULL;
-				proj.o.add(vec(proj.vel).normalize()); // gets it off to a start even when we bail
-				if(!collide(&proj) || inside || (proj.playercollide && hitplayer))
+				vec ray(proj.vel);
+				ray.normalize();
+				int maxsteps = 25;
+				float step = 4,
+					  barrier = raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|RAY_POLY)-0.1f,
+					  dist = 0;
+				loopi(maxsteps)
 				{
-					if((!hitplayer && proj.geomcollide) || (hitplayer && proj.playercollide && hitplayer != proj.owner))
+					proj.hit = NULL;
+					if(dist < barrier && dist + step > barrier) dist = barrier;
+					else dist += step;
+					proj.o = vec(ray).mul(dist).add(orig);
+					if(!collide(&proj) || inside || (proj.playercollide && hitplayer))
 					{
-						if(hitplayer) proj.hit = hitplayer;
-						else proj.o = orig;
-						proj.state = CS_DEAD;
-						break;
+						if((!hitplayer && proj.geomcollide) || (hitplayer && proj.playercollide && hitplayer != proj.owner))
+						{
+            				if(hitplayer)
+            				{
+                				proj.hit = hitplayer;
+                				proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
+            				}
+            				else proj.norm = wall;
+							proj.state = CS_DEAD;
+							break;
+						}
 					}
+					else break;
 				}
-				else break;
 			}
 			if(proj.radial) proj.height = proj.radius = guntype[proj.attr1].offset;
 		}
@@ -190,7 +205,7 @@ namespace projs
 	{
 		if(!d || !speed) return;
 
-		projent &proj = *(new projent());
+		projent &proj = *new projent;
 		proj.o = proj.from = from;
 		proj.to = to;
 		proj.local = local;
@@ -600,7 +615,6 @@ namespace projs
 		proj.hit = NULL;
 		if(!collide(&proj, dir, 0.f, proj.playercollide > 0) || inside || (proj.playercollide && hitplayer))
 		{
-			proj.norm = vec(0, 0, 1);
 			if(hitplayer)
 			{
 				proj.hit = hitplayer;
@@ -681,14 +695,36 @@ namespace projs
 			dir.div(proj.waterfric);
 		}
 		dir.mul(secs);
-		proj.o.add(dir);
 
-		switch(bounce(proj, dir))
-		{
-			case 2: proj.o = pos; break;
-			case 1: default: break;
-			case 0: proj.o = pos; return false; break;
-		}
+        bool blocked = false;
+        if(proj.projtype == PRJ_SHOT)
+        {
+			float stepdist = dir.magnitude();
+            vec ray(dir);
+            ray.mul(1/stepdist);
+            float barrier = raycube(proj.o, ray, stepdist, RAY_CLIPMAT|RAY_POLY);
+            if(barrier < stepdist) 
+            {
+                proj.o.add(ray.mul(barrier-0.1f));
+                switch(bounce(proj, ray))
+                {
+                    case 2: blocked = true; break;
+                    case 1: proj.o = pos; break;
+                    case 0: return false;
+                }
+            }
+        } 
+                    
+		if(!blocked) 
+        {
+            proj.o.add(dir);
+            switch(bounce(proj, dir))
+		    {
+			    case 2: proj.o = pos; break;
+			    case 1: default: break;
+			    case 0: if(proj.projtype != PRJ_SHOT) proj.o = pos; return false;
+		    }
+        }
 
 		float dist = proj.o.dist(pos), diff = dist/(4*RAD);
 		#define adddiff(q) { q += diff; if(q >= 360) q = fmod(q, 360.0f); }
