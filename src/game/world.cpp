@@ -436,7 +436,8 @@ namespace world
 	{
 		if(d->state != CS_ALIVE || intermission) return;
 
-        d->lastregen = d->lastpain = lastmillis;
+        d->lastregen = 0;
+        d->lastpain = lastmillis;
         d->health = health;
 
 		if(actor->type == ENT_PLAYER) actor->totaldamage += damage;
@@ -483,7 +484,8 @@ namespace world
 		if(d->type != ENT_PLAYER) return;
 
 		d->obliterated = d == actor || flags&HIT_EXPLODE || flags&HIT_MELT || damage > MAXHEALTH;
-        d->lastregen = d->lastpain = lastmillis;
+        d->lastregen = 0;
+        d->lastpain = lastmillis;
 		d->state = CS_DEAD;
 		d->deaths++;
 

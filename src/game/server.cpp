@@ -1561,12 +1561,15 @@ namespace server
 				int lastpain = gamemillis-ci->state.lastpain,
 					lastregen = gamemillis-ci->state.lastregen;
 
-				if(m_regen(gamemode, mutators) && ci->state.health < MAXHEALTH && lastpain >= REGENWAIT && lastregen >= REGENTIME)
+				if(m_regen(gamemode, mutators) && ci->state.health < MAXHEALTH)
 				{
-					int health = ci->state.health - (ci->state.health % REGENHEAL);
-					ci->state.health = min(health + REGENHEAL, MAXHEALTH);
-					ci->state.lastregen = gamemillis;
-					sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
+					if((!ci->state.lastregen && lastpain >= REGENWAIT) || (ci->state.lastregen && lastregen >= REGENTIME))
+					{
+						int health = ci->state.health - (ci->state.health % REGENHEAL);
+						ci->state.health = min(health + REGENHEAL, MAXHEALTH);
+						ci->state.lastregen = gamemillis;
+						sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
+					}
 				}
 			}
 
