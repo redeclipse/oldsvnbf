@@ -1061,7 +1061,7 @@ namespace ai
 			gameent *d = (gameent *)world::iterdynents(i);
 			if(!d || d->state != CS_ALIVE) continue;
 			vec pos = world::feetpos(d, 0.f);
-			float limit = guessradius + d->radius;
+			float limit = guessradius+d->radius;
 			limit *= limit; // square it to avoid expensive square roots
 			loopvk(entities::ents)
 			{
@@ -1070,13 +1070,12 @@ namespace ai
 					obstacles.add(d, k);
 			}
 		}
-		//#if 0
 		loopv(projs::projs)
 		{
 			projent *p = projs::projs[i];
-			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT)
+			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && guntype[p->attr1].explode)
 			{
-				float limit = guessradius * guntype[p->attr1].explode * p->lifesize;
+				float limit = guessradius+(guntype[p->attr1].explode*p->lifesize);
 				limit *= limit; // square it to avoid expensive square roots
 				loopvk(entities::ents)
 				{
@@ -1086,7 +1085,6 @@ namespace ai
 				}
 			}
 		}
-		//#endif
 	}
 
 	void think(gameent *d, int idx)
