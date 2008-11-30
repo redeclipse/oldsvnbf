@@ -517,15 +517,15 @@ namespace hud
 			else if(i != world::player1->gunselect) skew = 0.5f;
 			fade *= skew;
 			size *= skew;
-			cy -= int(size);
 			glColor4f(fade, fade, fade, fade);
-			drawsized(cx-int(size), cy, int(size));
+			drawsized(cx-int(size), cy-int(size), int(size));
 			if(showinventory > 1)
 			{
 				pushfont("emphasis");
-				draw_textx("%d", cx-int(size), cy+int(size/2)-FONTH/2, int(255.f*skew), int(255.f*skew), int(255.f*skew), int(255.f*fade), false, AL_RIGHT, -1, -1, world::player1->ammo[i]);
+				draw_textx("%d", cx, cy-FONTH, int(255.f*skew), int(255.f*skew), int(255.f*skew), int(255.f*fade), false, AL_RIGHT, -1, -1, world::player1->ammo[i]);
 				popfont();
 			}
+			cy -= int(size);
 		}
 		//if(m_ctf(world::gamemode)) cy -= ctf::drawinventory(cx, cy, cs, blend);
 	}
