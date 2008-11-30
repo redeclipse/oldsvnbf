@@ -1464,13 +1464,13 @@ namespace world
 			}
 			else if(bestplayers.find(d) >= 0) animflags = ANIM_WIN|ANIM_LOOP;
 		}
-		else if(d->lasttaunt && lastmillis-d->lasttaunt <= 1000)
+		else if(third && d->lasttaunt && lastmillis-d->lasttaunt <= 1000)
 		{
 			lastaction = d->lasttaunt;
 			animflags = ANIM_TAUNT;
 			animdelay = 1000;
 		}
-		else if(lastmillis-d->lastpain <= 300)
+		else if(third && lastmillis-d->lastpain <= 300)
 		{
 			secondary = third && allowmove(d);
 			lastaction = d->lastpain;
