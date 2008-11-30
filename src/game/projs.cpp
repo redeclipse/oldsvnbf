@@ -818,7 +818,7 @@ namespace projs
 					}
 					else continue;
 				}
-				vec old(proj.o);
+				effect(proj);
 				if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_ENT)
 				{
                     if(!move(proj)) destroy(proj);
@@ -834,30 +834,7 @@ namespace projs
  						break;
 					}
 				}
-				if(proj.state != CS_DEAD)
-				{
-					if(proj.geomcollide || proj.playercollide)
-					{
-						vec pos(proj.o), dir = vec(pos).sub(old).normalize(), dest;
-						float dist = old.dist(proj.o),
-							barrier = raycubepos(old, dir, dest, dist, RAY_CLIPMAT|RAY_POLY);
-						if(barrier < dist)
-						{
-							proj.o = vec(dest).add(vec(dir).mul(0.1f));
-							switch(bounce(proj, dir))
-							{
-								case 2: proj.o = dest; break;
-								case 1: default: break; // hmm?
-								case 0: proj.o = dest; destroy(proj); break;
-							}
-						}
-					}
-				}
-				if(proj.state != CS_DEAD)
-				{
-					effect(proj);
-					if(proj.radial && proj.local) radiate(proj);
-				}
+				if(proj.state != CS_DEAD && proj.radial && proj.local) radiate(proj);
 			}
 			if(proj.state == CS_DEAD)
 			{
