@@ -712,7 +712,7 @@ namespace projs
             proj.o.add(dir);
             switch(bounce(proj, dir))
 		    {
-			    case 2: proj.o = pos; break;
+			    case 2: if(proj.projtype == PRJ_SHOT) blocked = true; else proj.o = pos; break;
 			    case 1: default: break;
 			    case 0: if(proj.projtype != PRJ_SHOT) proj.o = pos; return false;
 		    }
@@ -720,7 +720,7 @@ namespace projs
 
 		float dist = proj.o.dist(pos), diff = dist/(4*RAD);
 		#define adddiff(q) { q += diff; if(q >= 360) q = fmod(q, 360.0f); }
-		proj.movement += dist;
+		if(!blocked) proj.movement += dist;
 		if(proj.projtype == PRJ_SHOT)
 		{
 			switch(proj.attr1)
