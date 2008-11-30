@@ -654,7 +654,8 @@ struct gamestate
 	// just subtract damage here, can set death, etc. later in code calling this
 	int dodamage(int damage, int millis)
 	{
-		lastpain = lastregen = millis;
+		lastregen = 0;
+		lastpain = millis;
 		health -= damage;
 		return damage;
 	}

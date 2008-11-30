@@ -233,25 +233,36 @@ namespace projs
 
 	void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local)
 	{
-		int delay = guntype[gun].delay, pow = 100;
-		bool kamakaze = false;
+		int delay = guntype[gun].delay, force = 100, cooked = 0, millis = delay, life = guntype[gun].time,
+			spd = clamp(int(float(guntype[gun].speed)/100.f*force), 1, guntype[gun].speed);
+
 		if(guntype[gun].power)
 		{
-			pow = clamp(power, 1, 100);
-			if(power >= 200)
+			force = clamp(power, 1, 100);
+			if(power > 100)
 			{
-				kamakaze = true;
-				if(gun == GUN_GL) pow = 1;
+				cooked = power-force;
+				if(gun == GUN_GL && cooked >= 100)
+				{
+					force = 1;
+					delay = 0;
+				}
 			}
 		}
-		int spd = clamp(int(float(guntype[gun].speed)/100.f*pow), 1, guntype[gun].speed);
+
+		if(cooked)
+		{
+			float skew = 1.f-(float(cooked)/100.f);
+			life = int(life*skew);
+		}
+
 		if(gun == GUN_FLAMER)
 		{
 			int ends = lastmillis+(d->gunwait[gun]*2);
 			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
 			else playsound(guntype[gun].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
 		}
-		else if(!kamakaze) playsound(guntype[gun].sound, d->o, d);
+		else if(!cooked) playsound(guntype[gun].sound, d->o, d);
 
 		switch(gun)
 		{
@@ -293,10 +304,9 @@ namespace projs
 				break;
 			}
 		}
-		int millis = delay;
 		loopv(locs)
 		{
-			create(from, locs[i], local, d, PRJ_SHOT, kamakaze ? 1 : guntype[gun].time, millis, spd, 0, WEAPON, gun);
+			create(from, locs[i], local, d, PRJ_SHOT, life, millis, spd, 0, WEAPON, gun);
 			millis += delay;
 		}
 	}

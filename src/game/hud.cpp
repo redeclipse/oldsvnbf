@@ -215,7 +215,7 @@ namespace hud
 					}
 				}
 
-				if(lastmillis-world::player1->lastregen < REGENTIME)
+				if(world::player1->lastregen && lastmillis-world::player1->lastregen < REGENTIME)
 				{
 					float skew = clamp((lastmillis-world::player1->lastregen)/float(REGENTIME), 0.f, 1.f);
 					if(skew > 0.5f) skew = 1.f-skew;
