@@ -305,6 +305,7 @@ namespace projs
 			case GUN_RIFLE:
 			{
 				part_create(PART_SMOKE_RISE_SLOW, 200, from, 0xAAAAAA, gun == GUN_RIFLE ? 2.f : 1.f); // smoke
+				part_create(PART_MUZZLE_FLASH, 100, from, 0xFFCC22, gun == GUN_RIFLE ? 3.f : 2.f, d);
                 adddynlight(from, 50, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
 				break;
 			}
@@ -432,12 +433,13 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
-						float adjust = proj.radius*(proj.attr1 == GUN_CARBINE ? 2.f : 4.f),
+						float adjust = proj.radius*(proj.attr1 == GUN_CARBINE ? 3.f : 6.f),
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? min(adjust, proj.movement) : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize(), from = vec(proj.o).add(vec(dir).mul(proj.radius));
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
-						int c = int(200*max(1.f-proj.lifesize,0.3f)), col = ((c<<16))|(c<<8)|c;
-						part_trail(PART_SMOKE, 1, proj.to, from, col, proj.radius*(proj.attr1 == GUN_CARBINE ? 0.125f : 0.25f));
+						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(160*max(1.f-proj.lifesize,0.2f)))<<8);
+						part_flare(proj.to, from, 1, PART_STREAK, col, proj.radius*0.125f);
+						part_flare(proj.to, from, 1, PART_STREAK_LERP, col, proj.radius*0.05f);
 					}
 					break;
 				}
