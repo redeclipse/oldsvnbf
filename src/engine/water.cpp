@@ -519,7 +519,7 @@ void preloadwatershaders(bool force)
 
 void renderwater()
 {
-	if(editmode && showmat && rendernormally) return;
+	if(editmode && showmat) return;
 	if(!rplanes) return;
 
 	if(renderpath==R_FIXEDFUNCTION) { renderwaterff(); return; }
@@ -981,7 +981,7 @@ void queryreflections()
 
 	lastquery = totalmillis;
 
-    if((editmode && showmat && rendernormally) || !hasOQ || !oqfrags || !oqwater || nowater) return;
+    if((editmode && showmat) || !hasOQ || !oqfrags || !oqwater || nowater) return;
 
 	int refs = 0;
     if(waterreflect || waterrefract) loopi(MAXREFLECTIONS)
@@ -1131,7 +1131,7 @@ static bool calcscissorbox(Reflection &ref, int size, float &minyaw, float &maxy
 
 void drawreflections()
 {
-    if((editmode && showmat && rendernormally) || nowater) return;
+    if((editmode && showmat) || nowater) return;
 
     extern int nvidia_scissor_bug;
 

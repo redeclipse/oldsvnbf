@@ -1455,7 +1455,7 @@ namespace entities
 
 	void render()
 	{
-		if(rendernormally) // important, don't render lines and stuff otherwise!
+		if(rendermainview) // important, don't render lines and stuff otherwise!
 		{
 			int level = (m_edit(world::gamemode) ? 2 : ((showentdir==3 || showentradius==3 || showentlinks==3 || (dropentities && !m_play(world::gamemode))) ? 3 : 0));
 			if(level)

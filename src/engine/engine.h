@@ -687,7 +687,9 @@ extern void renderdir(vec &o, float yaw, float pitch, bool nf = true);
 extern void renderradius(vec &o, float xradius, float yradius, float zradius, bool nf = true);
 
 extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 120);
-#define rendernormally ((!shadowmapping && !envmapping && !reflecting && !refracting) || glaring)
+#define rendermainview (!shadowmapping && !envmapping && !reflecting && !refracting) 
+#define renderatopview (glaring)
+#define rendernormally (rendermainview || renderatopview)
 
 extern void drawslice(float start, float length, float x, float y, float size);
 extern void drawfadedslice(float start, float length, float x, float y, float size, float alpha, float minsize = 0.25f);
