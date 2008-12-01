@@ -301,13 +301,28 @@ namespace world
 		d->o.z -= d->height;
 		if(d->state == CS_ALIVE)
 		{
+			bool crouching = d->crouching;
+			if(!crouching)
+			{
+				d->height = 1.f; // some physics relies on the feet being in the ground..
+				d->o.z += PLAYERHEIGHT;
+				if(!collide(d, vec(0, 0, 0), 0.f, false) || inside)
+				{
+					crouching = true;
+					if(d->crouchtime >= 0) d->crouchtime = -lastmillis;
+				}
+				else if(d->crouchtime < 0) d->crouchtime = lastmillis;
+				d->o.z -= PLAYERHEIGHT;
+			}
+
 			if(physics::iscrouching(d))
 			{
 				float crouchoff = 1.f-CROUCHHEIGHT;
 				if(d->type == ENT_PLAYER)
 				{
-					float amt = clamp(float(lastmillis-d->crouchtime)/200.f, 0.f, 1.f);
-					if(!d->crouching) amt = 1.f-amt;
+					float amt = d->crouchtime >= 0 && lastmillis-d->crouchtime < 200 ?
+						clamp(float(lastmillis-d->crouchtime)/200.f, 0.f, 1.f) : 1.f;
+					if(!crouching) amt = 1.f-amt;
 					crouchoff *= amt;
 				}
 				d->height = PLAYERHEIGHT-(PLAYERHEIGHT*crouchoff);
@@ -321,7 +336,7 @@ namespace world
 			{
 				int t = lastmillis-d->lastpain;
 				if(t < 0) d->height = PLAYERHEIGHT;
-				float amt = t > 1000 ? 0.9f : clamp(float(lastmillis-d->crouchtime)/1000.f, 0.f, 0.9f);
+				float amt = t > 900 ? 0.9f : clamp(float(t)/1000.f, 0.f, 0.9f);
 				d->height = PLAYERHEIGHT-(PLAYERHEIGHT*amt);
 			}
 		}
