@@ -620,7 +620,7 @@ struct gamestate
 			case TRIGGER: break;
 			case WEAPON:
 			{
-				gunswitch(attr1, millis, hasgun(attr1) ? GNS_RELOAD : GNS_PICKUP);
+				gunswitch(attr1, millis, hasgun(attr1) ? (gunselect != attr1 ? GNS_SWITCH : GNS_RELOAD) : GNS_PICKUP);
 				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+guntype[attr1].add, 1, guntype[attr1].max);
 				if(guntype[attr1].rdelay > 0) entid[attr1] = id;
 				break;
