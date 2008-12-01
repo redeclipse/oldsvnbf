@@ -17,6 +17,8 @@ namespace hud
 	FVARP(crosshairsize, 0, 0.065f, 1);
 	VARP(crosshairhitspeed, 0, 450, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.5f, 1);
+	VARP(crosshairhealth, 0, 1, 1);
+	FVARP(crosshairskew, -1, 0.5f, 1);
 	TVAR(relativecursortex, "textures/cursordot", 3);
 	TVAR(guicursortex, "textures/cursor", 3);
 	TVAR(editcursortex, "textures/cursordot", 3);
@@ -32,6 +34,7 @@ namespace hud
 	VARP(showinventory, 0, 2, 2);
 	FVARP(inventorysize, 0, 0.075f, 1);
 	FVARP(inventoryblend, 0, 0.75f, 1);
+	FVARP(inventoryskew, 0, 0.6f, 1);
 	FVARP(inventoryammoblend, 0, 1.f, 1);
 	TVAR(plasmatex, "textures/plasma", 0);
 	TVAR(shotguntex, "textures/shotgun", 0);
@@ -54,16 +57,18 @@ namespace hud
 	VARP(showradar, 0, 1, 1);
 	TVAR(radartex, "textures/radar", 3);
 	FVARP(radarblend, 0, 0.3f, 1);
-	FVARP(radarcardblend, 0, 0.5f, 1);
-	FVARP(radaritemblend, 0, 0.5f, 1);
-	FVARP(radarnameblend, 0, 0.75f, 1);
-	FVARP(radarblipblend, 0, 0.75f, 1);
+	FVARP(radarcardblend, 0, 0.7f, 1);
+	FVARP(radaritemblend, 0, 0.7f, 1);
+	FVARP(radarnameblend, 0, 0.9f, 1);
+	FVARP(radarblipblend, 0, 0.9f, 1);
 	FVARP(radarsize, 0, 0.025f, 1);
-	VARP(radardist, 0, 512, 512);
+	VARP(radardist, 0, 64, 512);
 	VARP(radarcard, 0, 1, 1);
 	VARP(radaritems, 0, 2, 2);
 	VARP(radarnames, 0, 1, 1);
-	VARP(editradardist, 0, 512, INT_MAX-1);
+	VARP(radarhealth, 0, 1, 1);
+	FVARP(radarskew, -1, -0.25f, 1);
+	VARP(editradardist, 0, 64, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
 
 	//VARP(showtips, 0, 2, 3);
@@ -98,6 +103,20 @@ namespace hud
 			r *= 0.5f+(skew*2.f);
 			g = b = 0.f;
 		}
+	}
+
+	void healthskew(int &s, float &r, float &g, float &b, float &fade, float ss)
+	{
+		if(world::player1->lastregen && lastmillis-world::player1->lastregen < REGENTIME)
+		{
+			float skew = clamp((lastmillis-world::player1->lastregen)/float(REGENTIME), 0.f, 1.f);
+			if(skew > 0.5f) skew = 1.f-skew;
+			fade += (1.f-fade)*skew;
+			s += int(s*ss*skew);
+		}
+
+		if(world::player1->health < MAXHEALTH)
+			colourskew(r, g, b, clamp(float(world::player1->health)/float(MAXHEALTH), 0.f, 1.f));
 	}
 
 	enum
@@ -257,17 +276,7 @@ namespace hud
 						cs = int(cs*amt);
 					}
 				}
-
-				if(world::player1->lastregen && lastmillis-world::player1->lastregen < REGENTIME)
-				{
-					float skew = clamp((lastmillis-world::player1->lastregen)/float(REGENTIME), 0.f, 1.f);
-					if(skew > 0.5f) skew = 1.f-skew;
-					fade += (1.f-fade)*skew;
-					cs += int(cs*0.5f*skew);
-				}
-
-				if(world::player1->health < MAXHEALTH)
-					colourskew(r, g, b, clamp(float(world::player1->health)/float(MAXHEALTH), 0.f, 1.f));
+				if(crosshairhealth) healthskew(cs, r, g, b, fade, crosshairskew);
         	}
 
 			glMatrixMode(GL_PROJECTION);
@@ -536,28 +545,27 @@ namespace hud
 			{	1,	-2,	0,	2,	0,	1,	1,	-4,	0.8f,	0.2f,	0.2f,	0.6f	}
 		};
 
-		int colour = teamtype[world::player1->team].colour;
-		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-			fade = radarblend*blend;
+		int cs = s;
+		float r = 1.f, g = 1.f, b = 1.f, fade = radarblend*blend;
+		if(radarhealth) healthskew(cs, r, g, b, fade, radarskew);
 		glColor4f(r, g, b, fade);
 		settexture(radartex, 3);
-
 		loopi(8)
 		{
 			const rdpat &rd = rdpats[i];
 			drawtex(
-				(rd.xw*w)+(rd.xs*s), (rd.yh*h)+(rd.ys*s),
-				(rd.ww*w)+(rd.ws*s), (rd.hh*h)+(rd.hs*s),
+				(rd.xw*w)+(rd.xs*cs), (rd.yh*h)+(rd.ys*cs),
+				(rd.ww*w)+(rd.ws*cs), (rd.hh*h)+(rd.hs*cs),
 				rd.tx, rd.ty, rd.tw, rd.th
 			);
 		}
 
-		if(m_edit(world::gamemode) || radaritems) drawentblips(w, h, s/2, fade);
+		if(m_edit(world::gamemode) || radaritems) drawentblips(w, h, cs/2, fade);
 		loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE)
-			drawplayerblip(world::players[i], w, h, s/2, fade);
-		if(m_stf(world::gamemode)) stf::drawblips(w, h, s/2, fade);
-		else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, s/2, fade);
-		if(radarcard) drawcardinalblips(w, h, s/2, fade);
+			drawplayerblip(world::players[i], w, h, cs/2, fade);
+		if(m_stf(world::gamemode)) stf::drawblips(w, h, cs/2, fade);
+		else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, cs/2, fade);
+		if(radarcard) drawcardinalblips(w, h, cs/2, fade);
 	}
 
 	void drawinventory(int w, int h, int edge, float blend)
@@ -574,13 +582,15 @@ namespace hud
 			if(world::player1->gunstate[i] == GNS_SWITCH || world::player1->gunstate[i] == GNS_PICKUP)
 			{
 				float amt = clamp(float(lastmillis-world::player1->gunlast[i])/float(world::player1->gunwait[i]), 0.f, 1.f);
-				skew = i != world::player1->gunselect ? (
-						world::player1->hasgun(i) ? 1.f-(amt*0.5f) : 1.f-amt
+				skew = (i != world::player1->gunselect ?
+					(
+						world::player1->hasgun(i) ? 1.f-(amt*(1.f-inventoryskew)) : 1.f-amt
 					) : (
-						world::player1->gunstate[i] == GNS_PICKUP ? amt : 0.5f+(amt*0.5f)
-					);
+						world::player1->gunstate[i] == GNS_PICKUP ? amt : inventoryskew+(amt*(1.f-inventoryskew))
+					)
+				);
 			}
-			else if(i != world::player1->gunselect) skew = 0.5f;
+			else if(i != world::player1->gunselect) skew = inventoryskew;
 			fade *= skew;
 			size *= skew;
 			glColor4f(fade, fade, fade, fade);
