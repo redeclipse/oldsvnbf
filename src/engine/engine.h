@@ -1,7 +1,7 @@
 // engine defs
-#define ENG_VERSION			78
+#define ENG_VERSION			79
 #define ENG_NAME			"Blood Frontier"
-#define ENG_RELEASE			"Alpha 2.3"
+#define ENG_RELEASE			"Alpha 2.9 SVN"
 #define ENG_URL				"http://bloodfrontier.com/"
 #define ENG_BLURB			"It's bloody fun!"
 

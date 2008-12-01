@@ -9,16 +9,17 @@ namespace hud
 	VARP(showdamage, 0, 1, 1);
 	TVAR(damagetex, "textures/damage", 0);
 	VARP(showindicator, 0, 1, 1);
+	FVARP(indicatorsize, 0, 0.08f, 1);
 	FVARP(indicatorblend, 0, 0.5f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(snipetex, "textures/snipe", 0);
 
 	VARP(showcrosshair, 0, 1, 1);
-	FVARP(crosshairsize, 0, 0.065f, 1);
+	FVARP(crosshairsize, 0, 0.07f, 1);
 	VARP(crosshairhitspeed, 0, 450, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.5f, 1);
 	VARP(crosshairhealth, 0, 1, 1);
-	FVARP(crosshairskew, -1, 0.5f, 1);
+	FVARP(crosshairskew, -1, 0.4f, 1);
 	TVAR(relativecursortex, "textures/cursordot", 3);
 	TVAR(guicursortex, "textures/cursor", 3);
 	TVAR(editcursortex, "textures/cursordot", 3);
@@ -46,6 +47,7 @@ namespace hud
 	TVAR(rifletex, "textures/rifle", 0);
 
 	VARP(showclip, 0, 1, 1);
+	FVARP(clipsize, 0, 0.06f, 1);
 	FVARP(clipblend, 0, 0.25f, 1);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
@@ -59,16 +61,16 @@ namespace hud
 	TVAR(radartex, "textures/radar", 3);
 	FVARP(radarblend, 0, 0.25f, 1);
 	FVARP(radarcardblend, 0, 0.75f, 1);
-	FVARP(radaritemblend, 0, 0.5f, 1);
-	FVARP(radarnameblend, 0, 0.75f, 1);
-	FVARP(radarblipblend, 0, 0.75f, 1);
+	FVARP(radaritemblend, 0, 0.95f, 1);
+	FVARP(radarnameblend, 0, 1.f, 1);
+	FVARP(radarblipblend, 0, 1.f, 1);
 	FVARP(radarsize, 0, 0.025f, 1);
 	VARP(radardist, 0, 128, INT_MAX-1);
 	VARP(radarcard, 0, 1, 1);
 	VARP(radaritems, 0, 2, 2);
 	VARP(radarnames, 0, 1, 1);
 	VARP(radarhealth, 0, 1, 1);
-	FVARP(radarskew, -1, -0.25f, 1);
+	FVARP(radarskew, -1, -0.3f, 1);
 	VARP(editradardist, 0, 64, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
 
@@ -306,9 +308,9 @@ namespace hud
 				{
 					if(world::player1->hasgun(world::player1->gunselect))
 					{
-						if(showclip) drawclip(world::player1->gunselect, cx, cy, int(crosshairsize*hudsize));
+						if(showclip) drawclip(world::player1->gunselect, cx, cy, int(clipsize*hudsize));
 						if(showindicator && guntype[world::player1->gunselect].power && world::player1->gunstate[world::player1->gunselect] == GNS_POWER)
-							drawindicator(world::player1->gunselect, cx, cy, int(crosshairsize*hudsize));
+							drawindicator(world::player1->gunselect, cx, cy, int(indicatorsize*hudsize));
 					}
 				}
 
@@ -538,22 +540,28 @@ namespace hud
 			{	0,	1,	0,	2,	0,	1,	1,	-4,	0.f,	0.2f,	0.2f,	0.6f	},
 			{	1,	-2,	0,	2,	0,	1,	1,	-4,	0.8f,	0.2f,	0.2f,	0.6f	}
 		};
-
 		int cs = s;
-		float r = 1.f, g = 1.f, b = 1.f, fade = radarblend*blend;
-		if(radarhealth) healthskew(cs, r, g, b, fade, radarskew);
-		glColor4f(r, g, b, fade);
-		settexture(radartex, 3);
-		loopi(8)
+		if(world::player1->state != CS_DEAD) // damage overlay goes full in this case
 		{
-			const rdpat &rd = rdpats[i];
-			drawtex(
-				(rd.xw*w)+(rd.xs*cs), (rd.yh*h)+(rd.ys*cs),
-				(rd.ww*w)+(rd.ws*cs), (rd.hh*h)+(rd.hs*cs),
-				rd.tx, rd.ty, rd.tw, rd.th
-			);
+			float r = 1.f, g = 1.f, b = 1.f, fade = radarblend*blend;
+			if(radarhealth) switch(world::player1->state)
+			{
+				case CS_ALIVE: healthskew(cs, r, g, b, fade, radarskew); break;
+				case CS_SPECTATOR: case CS_WAITING: r = g = b = 0.5f; break;
+				default: break;
+			}
+			glColor4f(r, g, b, fade);
+			settexture(radartex, 3);
+			loopi(8)
+			{
+				const rdpat &rd = rdpats[i];
+				drawtex(
+					(rd.xw*w)+(rd.xs*cs), (rd.yh*h)+(rd.ys*cs),
+					(rd.ww*w)+(rd.ws*cs), (rd.hh*h)+(rd.hs*cs),
+					rd.tx, rd.ty, rd.tw, rd.th
+				);
+			}
 		}
-
 		if(m_edit(world::gamemode) || radaritems) drawentblips(w, h, cs/2, blend);
 		loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE)
 			drawplayerblip(world::players[i], w, h, cs/2, blend);
