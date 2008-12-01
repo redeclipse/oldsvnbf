@@ -247,7 +247,7 @@ namespace entities
 			}
 			d->useitem(lastmillis, n, e.type, e.attr1, e.attr2);
 			if(ents.inrange(r) && ents[r]->type == WEAPON && isgun(ents[r]->attr1))
-				projs::drop(d, ents[r]->attr1, r, (d->gunwait[ents[r]->attr1]/2)-50);
+				projs::drop(d, ents[r]->attr1, r, d == world::player1 || d->ai);
 			world::spawneffect(pos, 0x221188, enttype[e.type].radius);
 			e.spawned = s;
 		}

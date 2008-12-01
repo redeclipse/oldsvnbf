@@ -189,7 +189,8 @@ namespace projs
                 				proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
             				}
             				else proj.norm = wall;
-							proj.state = CS_DEAD;
+							if(proj.lifemillis) proj.lifetime = 1; // let it effect then die
+							//proj.state = CS_DEAD;
 							break;
 						}
 					}
@@ -201,7 +202,7 @@ namespace projs
         proj.resetinterp();
 	}
 
-	void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int waittime, int speed, int id, int ent, int attr1, int attr2, int attr3, int attr4, int attr5)
+	void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id, int ent, int attr1, int attr2, int attr3, int attr4, int attr5)
 	{
 		if(!d || !speed) return;
 
@@ -211,7 +212,9 @@ namespace projs
 		proj.local = local;
 		proj.projtype = type;
 		proj.addtime = lastmillis;
-		proj.lifetime = proj.lifemillis = lifetime;
+		proj.lifetime = lifetime;
+		if(lifemillis) proj.lifemillis = lifemillis;
+		else proj.lifemillis = proj.lifetime;
 		proj.waittime = waittime;
 		proj.ent = ent;
 		proj.attr1 = attr1;
@@ -229,18 +232,21 @@ namespace projs
 		projs.add(&proj);
 	}
 
-	void drop(gameent *d, int g, int n, int delay)
+	void drop(gameent *d, int g, int n, bool local)
 	{
 		if(isgun(g))
 		{
+			vec from(d->o), to(d->muzzle);
 			if(n >= 0)
 			{
 				if(entities::ents.inrange(n) && !(entities::ents[n]->attr2&GNT_FORCED))
-					create(d->o, d->o, d == world::player1 || d->ai, d, PRJ_ENT, 0, delay, 20, n,
-						entities::ents[n]->type, entities::ents[n]->attr1, entities::ents[n]->attr2, entities::ents[n]->attr3, entities::ents[n]->attr4, entities::ents[n]->attr5);
+				{
+					gameentity &e = *(gameentity *)entities::ents[n];
+					create(from, to, local, d, PRJ_ENT, 0, 0, 1, 1, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+				}
 			}
 			else if(g == GUN_GL)
-				create(d->o, d->o, d == world::player1 || d->ai, d, PRJ_SHOT, 500, 50, 5, -1, WEAPON, d->gunselect);
+				create(from, to, local, d, PRJ_SHOT, 1, guntype[g].time, 1, 1, -1, WEAPON, g);
 			d->ammo[g] = d->entid[g] = -1;
 			d->setgunstate(g, GNS_PICKUP, GUNSWITCHDELAY, lastmillis);
 		}
@@ -312,7 +318,7 @@ namespace projs
 		}
 		loopv(locs)
 		{
-			create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, millis, speed, 0, WEAPON, gun);
+			create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, guntype[gun].time, millis, speed, 0, WEAPON, gun);
 			millis += delay;
 		}
 	}
@@ -516,7 +522,7 @@ namespace projs
 							world::quakewobble += max(int(guntype[proj.attr1].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/guntype[proj.attr1].explode)), 1);
 							part_fireball(vec(proj.o).sub(vec(0, 0, 2)), guntype[proj.attr1].explode*0.75f, PART_EXPLOSION, 1000, 0x662200, 4.f); // explosion fireball
 							loopi(rnd(20)+10)
-								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(1500)+1500, rnd(750), rnd(60)+40);
+								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(1500)+1500, 0, rnd(750), rnd(60)+40);
 						}
 						adddecal(DECAL_SCORCH, proj.o, proj.norm, guntype[proj.attr1].explode);
 						adddecal(DECAL_ENERGY, proj.o, proj.norm, guntype[proj.attr1].explode*0.75f, bvec(196, 24, 0));
@@ -700,7 +706,7 @@ namespace projs
                 proj.o.add(ray.mul(barrier-0.1f));
                 switch(bounce(proj, ray))
                 {
-                    case 2: blocked = true; break;
+                    case 2: proj.o = pos; blocked = true; break;
                     case 1: proj.o = pos; break;
                     case 0: return false;
                 }
@@ -712,7 +718,7 @@ namespace projs
             proj.o.add(dir);
             switch(bounce(proj, dir))
 		    {
-			    case 2: if(proj.projtype == PRJ_SHOT) blocked = true; else proj.o = pos; break;
+			    case 2: proj.o = pos; if(proj.projtype == PRJ_SHOT) blocked = true; break;
 			    case 1: default: break;
 			    case 0: if(proj.projtype != PRJ_SHOT) proj.o = pos; return false;
 		    }

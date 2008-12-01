@@ -630,7 +630,7 @@ namespace world
 		vec pos = headpos(d);
 		int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
 		loopi(rnd(gibs)+1)
-			projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, rnd(2000)+1000, rnd(100)+1, 50);
+			projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, rnd(2000)+1000, 0, rnd(100)+1, 50);
 
 		ai::killed(d, actor, gun, flags, damage);
 	}

@@ -1050,7 +1050,8 @@ namespace client
 					vector<vec> locs;
 					locs.setsize(0);
 					loopk(3) from[k] = getint(p)/DMF;
-					loopj(getint(p))
+					int ls = getint(p);
+					if(ls) loopj(ls)
 					{
 						vec to = locs.add();
 						loopk(3) to[k] = getint(p)/DMF;
@@ -1123,10 +1124,14 @@ namespace client
 
 				case SV_DROP:
 				{
-					int trg = getint(p), gs = getint(p), drop = getint(p);
+					int trg = getint(p), ds = getint(p);
 					gameent *target = world::getclient(trg);
-					if(!target) break;
-					projs::drop(target, gs, drop);
+					bool local = target && (target == world::player1 || target->ai);
+					if(ds) loopj(ds)
+					{
+						int gs = getint(p), drop = getint(p);
+						if(target) projs::drop(target, gs, drop, local);
+					}
 					break;
 				}
 

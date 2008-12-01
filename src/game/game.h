@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			118
+#define GAMEVERSION			120
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -620,7 +620,7 @@ struct gamestate
 			case TRIGGER: break;
 			case WEAPON:
 			{
-				gunswitch(attr1, millis, hasgun(attr1) ? GNS_SWITCH : GNS_PICKUP);
+				gunswitch(attr1, millis, hasgun(attr1) ? GNS_RELOAD : GNS_PICKUP);
 				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+guntype[attr1].add, 1, guntype[attr1].max);
 				if(guntype[attr1].rdelay > 0) entid[attr1] = id;
 				break;
@@ -1070,11 +1070,11 @@ namespace projs
 
 	extern void reset();
 	extern void update();
-	extern void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int waittime, int speed, int id = 0, int ent = 0, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
+	extern void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id = 0, int ent = -1, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
 	extern void preload();
 	extern void remove(gameent *owner);
 	extern void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local);
-	extern void drop(gameent *d, int g, int n, int delay = 0);
+	extern void drop(gameent *d, int g, int n, bool local = true);
 	extern void adddynlights();
 	extern void render();
 }

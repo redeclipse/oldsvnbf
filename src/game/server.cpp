@@ -1332,16 +1332,20 @@ namespace server
 		ci->events.remove(0, n);
 	}
 
+	struct droplist { int gun, ent; };
 	void dropitems(clientinfo *ci)
 	{
 		servstate &ts = ci->state;
+		vector<droplist> drop;
 		if(sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1)) switch(sv_itemdropping)
 		{
 			case 2: // kamakze
-				if(ts.gunselect == GUN_GL && ts.ammo[ts.gunselect] > 0)
+				if(ts.gunselect == GUN_GL && ts.ammo[GUN_GL] > 0)
 				{
 					ts.gunshots[GUN_GL].add(-1);
-					sendf(-1, 1, "ri4", SV_DROP, ci->clientnum, ts.gunselect, -1);
+					droplist &d = drop.add();
+					d.gun = GUN_GL;
+					d.ent = -1;
 				}
 			case 1:
 				loopi(GUN_MAX) if(ts.hasgun(i, 1) && sents.inrange(ts.entid[i]))
@@ -1349,14 +1353,19 @@ namespace server
 					if(!(sents[ts.entid[i]].attr2&GNT_FORCED))
 					{
 						ts.dropped.add(ts.entid[i]);
-						sendf(-1, 1, "ri4", SV_DROP, ci->clientnum, i, ts.entid[i]);
+						droplist &d = drop.add();
+						d.gun = i;
+						d.ent = ts.entid[i];
 						sents[ts.entid[i]].spawned = false;
 						sents[ts.entid[i]].millis = gamemillis;
 					}
 					ts.entid[i] = -1;
 				}
+				break;
 			default: break;
 		}
+		if(!drop.empty())
+			sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 	}
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
@@ -2126,7 +2135,7 @@ namespace server
 					ev.destroy.id = getint(p); // this is the actual id
 					ev.destroy.radial = getint(p);
 					int hits = getint(p);
-					loopk(hits)
+					if(hits) loopj(hits)
 					{
 						hitset &hit = havecn ? ev.destroy.hits.add() : dummyevent.destroy.hits.add();
 						hit.flags = getint(p);
