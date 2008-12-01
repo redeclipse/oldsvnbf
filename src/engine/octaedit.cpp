@@ -321,7 +321,7 @@ void cursorupdate()
 		float sdist = 0, wdist = 0, t;
 		int entorient = 0, ent = -1;
 
-		wdist = rayent(player->o, ray, v, 0, (editmode && showmat && rendernormally ? RAY_EDITMAT : 0)	// select cubes first
+		wdist = rayent(player->o, ray, v, 0, (editmode && showmat ? RAY_EDITMAT : 0)	// select cubes first
 											| (!dragging && entediting ? RAY_ENTS : 0)
 											| RAY_SKIPFIRST
 											| (passthroughcube==1 ? RAY_PASS : 0), gridsize, entorient, ent);
