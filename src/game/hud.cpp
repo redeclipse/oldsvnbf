@@ -35,7 +35,8 @@ namespace hud
 	FVARP(inventorysize, 0, 0.075f, 1);
 	FVARP(inventoryblend, 0, 0.75f, 1);
 	FVARP(inventoryskew, 0, 0.6f, 1);
-	FVARP(inventoryammoblend, 0, 1.f, 1);
+	FVARP(inventorytextscale, 0, 1.25f, 1);
+	FVARP(inventorytextblend, 0, 1.f, 1);
 	TVAR(plasmatex, "textures/plasma", 0);
 	TVAR(shotguntex, "textures/shotgun", 0);
 	TVAR(chainguntex, "textures/chaingun", 0);
@@ -56,13 +57,13 @@ namespace hud
 
 	VARP(showradar, 0, 1, 1);
 	TVAR(radartex, "textures/radar", 3);
-	FVARP(radarblend, 0, 0.3f, 1);
-	FVARP(radarcardblend, 0, 0.7f, 1);
-	FVARP(radaritemblend, 0, 0.7f, 1);
-	FVARP(radarnameblend, 0, 0.9f, 1);
-	FVARP(radarblipblend, 0, 0.9f, 1);
+	FVARP(radarblend, 0, 0.25f, 1);
+	FVARP(radarcardblend, 0, 0.75f, 1);
+	FVARP(radaritemblend, 0, 0.5f, 1);
+	FVARP(radarnameblend, 0, 0.75f, 1);
+	FVARP(radarblipblend, 0, 0.75f, 1);
 	FVARP(radarsize, 0, 0.025f, 1);
-	VARP(radardist, 0, 64, 512);
+	VARP(radardist, 0, 128, INT_MAX-1);
 	VARP(radarcard, 0, 1, 1);
 	VARP(radaritems, 0, 2, 2);
 	VARP(radarnames, 0, 1, 1);
@@ -453,14 +454,7 @@ namespace hud
 			dir.normalize();
 			int cp = 1;
 			float r = 0.2f, g = 0.1f, b = 0.7f, fade = clamp(1.f-(dist/radarrange()), 0.1f, 1.f)*blend;
-			if(insel)
-			{
-				cp = 0;
-				fade = 1.f;
-				r = 0.6f;
-				g = 0.4f;
-				b = 1.f;
-			}
+			if(insel) { cp = 0; fade = 1.f; r = 0.6f; g = 0.4f; b = 1.f; }
 			else if(inspawn > 0.f)
 			{
 				cp = 0;
@@ -471,7 +465,7 @@ namespace hud
 			}
 			string text;
 			if(m_edit(world::gamemode))
-				s_sprintf(text)("%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+				s_sprintf(text)("%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
 			else if(radaritems > 1)
 				s_sprintf(text)("%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
 			drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, text, "radar", fade*radaritemblend);
@@ -560,12 +554,12 @@ namespace hud
 			);
 		}
 
-		if(m_edit(world::gamemode) || radaritems) drawentblips(w, h, cs/2, fade);
+		if(m_edit(world::gamemode) || radaritems) drawentblips(w, h, cs/2, blend);
 		loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE)
-			drawplayerblip(world::players[i], w, h, cs/2, fade);
-		if(m_stf(world::gamemode)) stf::drawblips(w, h, cs/2, fade);
-		else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, cs/2, fade);
-		if(radarcard) drawcardinalblips(w, h, cs/2, fade);
+			drawplayerblip(world::players[i], w, h, cs/2, blend);
+		if(m_stf(world::gamemode)) stf::drawblips(w, h, cs/2, blend);
+		else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, cs/2, blend);
+		if(radarcard) drawcardinalblips(w, h, cs/2, blend);
 	}
 
 	void drawinventory(int w, int h, int edge, float blend)
@@ -597,12 +591,12 @@ namespace hud
 			drawsized(cx-int(size), cy-int(size), int(size));
 			if(showinventory > 1)
 			{
-				float off = skew+(skew*0.25f);
+				float off = skew*inventorytextscale;
 				glPushMatrix();
 				glScalef(off, off, 1);
 				int tx = int((cx-FONTW/4)*(1.f/off)), ty = int((cy-size+FONTW/4)*(1.f/off));
 				pushfont("emphasis");
-				draw_textx("%d", tx, ty, int(255.f*skew), int(255.f*skew), int(255.f*skew), int(255.f*inventoryammoblend*blend), false, AL_RIGHT, -1, -1, world::player1->ammo[i]);
+				draw_textx("%d", tx, ty, int(255.f*skew), int(255.f*skew), int(255.f*skew), int(255.f*inventorytextblend*blend), false, AL_RIGHT, -1, -1, world::player1->ammo[i]);
 				popfont();
 				glPopMatrix();
 			}
