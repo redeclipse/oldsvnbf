@@ -413,7 +413,7 @@ float walldistance;
 bool ellipserectcollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo)
 {
     float below = (o.z+center.z-lo) - (d->o.z+d->aboveeye),
-          above = (d->o.z-d->eyeheight) - (o.z+center.z+hi);
+          above = (d->o.z-d->height) - (o.z+center.z+hi);
     if(below>=0 || above>=0) return true;
 
     vec yo(d->o);
@@ -451,13 +451,13 @@ bool ellipserectcollide(physent *d, const vec &dir, const vec &o, const vec &cen
         }
         if(yo.z < 0)
         {
-            if(dir.iszero() || (dir.z > 0 && (d->type!=ENT_PLAYER || below >= d->zmargin-(d->eyeheight+d->aboveeye)/4.0f)))
+            if(dir.iszero() || (dir.z > 0 && (d->type>=ENT_INANIMATE || below >= d->zmargin-(d->height+d->aboveeye)/4.0f)))
             {
                 wall = vec(0, 0, -1);
                 return false;
             }
         }
-        else if(dir.iszero() || (dir.z < 0 && (d->type!=ENT_PLAYER || above >= d->zmargin-(d->eyeheight+d->aboveeye)/3.0f)))
+        else if(dir.iszero() || (dir.z < 0 && (d->type>=ENT_INANIMATE || above >= d->zmargin-(d->height+d->aboveeye)/3.0f)))
         {
             wall = vec(0, 0, 1);
             return false;
@@ -470,7 +470,7 @@ bool ellipserectcollide(physent *d, const vec &dir, const vec &o, const vec &cen
 bool ellipsecollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo)
 {
     float below = (o.z+center.z-lo) - (d->o.z+d->aboveeye),
-          above = (d->o.z-d->eyeheight) - (o.z+center.z+hi);
+          above = (d->o.z-d->height) - (o.z+center.z+hi);
 	if(below>=0 || above>=0) return true;
     vec yo(center);
     yo.rotate_around_z(yaw*RAD);
@@ -624,7 +624,7 @@ bool plcollide(physent *d, const vec &dir)	// collide with player or monster
                     return false;
                 }
             }
-            else if(!ellipsecollide(d, dir, o->o, vec(0, 0, 0), o->yaw, o->xradius, o->yradius, o->aboveeye, o->eyeheight))
+            else if(!ellipsecollide(d, dir, o->o, vec(0, 0, 0), o->yaw, o->xradius, o->yradius, o->aboveeye, o->height))
 			{
 				hitplayer = o;
                 if((d->type==ENT_AI || d->type==ENT_INANIMATE) && wall.z>0) d->onplayer = o;
