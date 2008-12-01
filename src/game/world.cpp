@@ -1263,7 +1263,7 @@ namespace world
 			}
 
 			if(quakewobble > 0)
-				camera1->roll = float(rnd(21)-10)*(float(min(quakewobble, 100))/100.f);
+				camera1->roll = float(rnd(15)-7)*(float(min(quakewobble, 100))/100.f);
 			else camera1->roll = 0;
 
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
