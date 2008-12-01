@@ -843,7 +843,7 @@ namespace ai
 				if(((e.attr1 & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime > 250))
 				{
 					d->crouching = !d->crouching;
-					d->jumptime = lastmillis;
+					d->crouchtime = lastmillis;
 				}
 				d->ai->spot.z += d->height;
 				return true;

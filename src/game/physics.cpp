@@ -47,22 +47,22 @@ namespace physics
 	#define iput(x,y,t,z,a,q) \
 		void do##x(bool down) \
 		{ \
-			if(!q) \
-			{ \
-				world::player1->y = false; \
-				if(z && down) world::respawn(world::player1); \
-			} \
-			else \
+			if(q) \
 			{ \
 				if((a && world::player1->y != down) || (!a && down)) \
 					world::player1->t = lastmillis; \
 				world::player1->y = down; \
 			} \
+			else \
+			{ \
+				world::player1->y = false; \
+				if(z && down) world::respawn(world::player1); \
+			} \
 		} \
-		ICOMMAND(x, "D", (int *down), { do##x(*down!=0); });
+		ICOMMAND(x, "D", (int *n), { do##x(*n!=0); });
 
-	iput(crouch,	crouching,	crouchtime,	false,	true,	world::allowmove(world::player1));
-	iput(jump,		jumping,	jumptime,	false,	false,	world::allowmove(world::player1));
+	iput(crouch,	crouching,	crouchtime,	false,	true,	world::player1->crouchtime >= 0 && world::allowmove(world::player1));
+	iput(jump,		jumping,	jumptime,	true,	false,	world::allowmove(world::player1));
 	iput(attack,	attacking,	attacktime,	true,	false,	world::allowmove(world::player1));
 	iput(reload,	reloading,	reloadtime,	true,	false,	world::allowmove(world::player1));
 	iput(action,	useaction,	usetime,	true,	false,	world::allowmove(world::player1));
@@ -78,7 +78,7 @@ namespace physics
 
 	bool iscrouching(physent *d)
 	{
-		return d->crouching || lastmillis-d->crouchtime <= 200;
+		return d->crouching || d->crouchtime < 0 || lastmillis-d->crouchtime <= 200;
 	}
 
 	float jumpvelocity(physent *d)
