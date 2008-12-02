@@ -13,19 +13,22 @@ namespace projs
 
 	VARA(maxprojectiles, 0, 200, INT_MAX-1);
 
-	int hitzones(vec &o, vec &pos, float height, float above, float radius = 0.f)
+	int hitzones(vec &o, vec &pos, float height, float above, int radius = 0)
 	{
 		int hits = 0;
-		if(o.z <= (pos.z-height*0.75f)+radius) hits |= HIT_LEGS;
-		if(o.z < (pos.z-above)+radius && o.z > (pos.z-height*0.75f)-radius) hits |= HIT_TORSO;
-		if(o.z >= (pos.z-above)-radius) hits |= HIT_HEAD;
+		if(o.z <= (pos.z-height*0.75f)+float(radius)) hits |= HIT_LEGS;
+		if(o.z < (pos.z-above)+float(radius) && o.z > (pos.z-height*0.75f)-float(radius))
+			hits |= HIT_TORSO;
+		if(o.z >= (pos.z-above)-float(radius)) hits |= HIT_HEAD;
 		return hits;
 	}
 
-	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0, float radius = 0.f)
+	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0, int radius = 0)
 	{
 		vec pos = world::headpos(d);
-		int z = hitzones(proj.o, pos, d->height, d->aboveeye, radius), f = flags|z;
+		int f = flags;
+		if(!(f&HIT_PUSH))
+			f |= hitzones(proj.o, pos, d->height, d->aboveeye, radius);
 		hitmsg &h = hits.add();
 		h.flags = f;
 		h.target = d->clientnum;
@@ -36,7 +39,7 @@ namespace projs
 		h.dir = ivec(int(dir.x*DNF), int(dir.y*DNF), int(dir.z*DNF));
 	}
 
-	void radialeffect(gameent *d, projent &proj, int radius)
+	void radialeffect(gameent *d, projent &proj, bool explode, int radius)
 	{
 		vec dir, middle = d->o;
 		middle.z += (d->aboveeye-d->height)/2;
@@ -44,10 +47,9 @@ namespace projs
 		dir.div(dist);
 		if(dist < 0) dist = 0;
 		if(dist < radius)
-		{
-			int flags = proj.attr1 == GUN_GL ? HIT_EXPLODE : HIT_BURN;
-			hitpush(d, proj, flags, int(dist*DMF));
-		}
+			hitpush(d, proj, explode ? HIT_EXPLODE : HIT_BURN, int(dist*DMF), radius);
+		else if(explode && dist < radius*2)
+			hitpush(d, proj, HIT_PUSH, int(dist*DMF), radius);
 	}
 
 	void remove(gameent *owner)
@@ -335,7 +337,7 @@ namespace projs
 				{
 					gameent *f = (gameent *)world::iterdynents(i);
 					if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
-					radialeffect(f, proj, radius);
+					radialeffect(f, proj, false, radius);
 				}
 				if(!hits.empty())
 				{
@@ -551,7 +553,7 @@ namespace projs
 						{
 							gameent *f = (gameent *)world::iterdynents(i);
 							if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
-							radialeffect(f, proj, guntype[proj.attr1].explode);
+							radialeffect(f, proj, proj.attr1 == GUN_GL, guntype[proj.attr1].explode);
 						}
 					}
 					else if(proj.hit && proj.hit->type == ENT_PLAYER)
@@ -877,7 +879,7 @@ namespace projs
 				case GUN_FLAMER:
 				{
 					vec col(1.1f*max(1.f-proj.lifespan,0.1f), 0.25f*max(1.f-proj.lifespan,0.05f), 0.00f);
-					adddynlight(proj.o, guntype[proj.attr1].explode*proj.lifesize, col);
+					adddynlight(proj.o, guntype[proj.attr1].explode*proj.lifespan, col);
 					break;
 				}
 				default:

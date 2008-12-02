@@ -450,48 +450,50 @@ namespace world
 	void damaged(int gun, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
 	{
 		if(d->state != CS_ALIVE || intermission) return;
-
-        d->lastregen = 0;
-        d->lastpain = lastmillis;
-        d->health = health;
-
-		if(actor->type == ENT_PLAYER) actor->totaldamage += damage;
-
-		if(d == player1)
-		{
-			quakewobble += damage/2;
-			damageresidue += damage*2;
-		}
 		if(d == player1 || d->ai) d->hitpush(damage, dir);
-
-		if(d->type == ENT_PLAYER)
+		if(!(flags&HIT_PUSH)) // otherwise it's just a push
 		{
-			vec p = headpos(d);
-			p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-			part_splash(PART_BLOOD, max(damage/3, 3), REGENWAIT, p, 0x66FFFF, 3.f, 4);
-			if(showdamageabovehead)
+			d->lastregen = 0;
+			d->lastpain = lastmillis;
+			d->health = health;
+
+			if(actor->type == ENT_PLAYER) actor->totaldamage += damage;
+
+			if(d == player1)
 			{
-				s_sprintfd(ds)("@%d", damage);
-				part_text(vec(d->abovehead()).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 3000, 0xFFFFFF, 3.f);
+				quakewobble += damage/2;
+				damageresidue += damage*2;
 			}
-			playsound(S_PAIN1+rnd(5), d->o, d);
-		}
 
-		if(d != actor)
-		{
-			int snd = 0;
-			if(damage >= 200) snd = 7;
-			else if(damage >= 150) snd = 6;
-			else if(damage >= 100) snd = 5;
-			else if(damage >= 75) snd = 4;
-			else if(damage >= 50) snd = 3;
-			else if(damage >= 25) snd = 2;
-			else if(damage >= 10) snd = 1;
-			playsound(S_DAMAGE1+snd, actor->o, actor);
-			if(actor == player1) lasthit = lastmillis;
-		}
+			if(d->type == ENT_PLAYER)
+			{
+				vec p = headpos(d);
+				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
+				part_splash(PART_BLOOD, max(damage/3, 3), REGENWAIT, p, 0x66FFFF, 3.f, 4);
+				if(showdamageabovehead)
+				{
+					s_sprintfd(ds)("@%d", damage);
+					part_text(vec(d->abovehead()).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 3000, 0xFFFFFF, 3.f);
+				}
+				playsound(S_PAIN1+rnd(5), d->o, d);
+			}
 
-		ai::damaged(d, actor, gun, flags, damage, health, millis, dir);
+			if(d != actor)
+			{
+				int snd = 0;
+				if(damage >= 200) snd = 7;
+				else if(damage >= 150) snd = 6;
+				else if(damage >= 100) snd = 5;
+				else if(damage >= 75) snd = 4;
+				else if(damage >= 50) snd = 3;
+				else if(damage >= 25) snd = 2;
+				else if(damage >= 10) snd = 1;
+				playsound(S_DAMAGE1+snd, actor->o, actor);
+				if(actor == player1) lasthit = lastmillis;
+			}
+
+			ai::damaged(d, actor, gun, flags, damage, health, millis, dir);
+		}
 	}
 
 	void killed(int gun, int flags, int damage, gameent *d, gameent *actor)

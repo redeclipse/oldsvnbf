@@ -1381,7 +1381,7 @@ namespace server
 			if(m_insta(gamemode, mutators)) realdamage = max(damage, ts.health);
 			else
 			{
-				if(flags&HIT_HEAD || flags&HIT_MELT || flags&HIT_FALL)
+				if(flags&HIT_HEAD || flags&HIT_MELT || flags&HIT_FALL || flags&HIT_PUSH)
 					realdamage = int(damage*sv_damagescale);
 				else if(flags&HIT_TORSO) realdamage = int(damage*0.5f*sv_damagescale);
 				else if(flags&HIT_LEGS) realdamage = int(damage*0.25f*sv_damagescale);
@@ -1394,11 +1394,14 @@ namespace server
 		}
 		else realdamage = 0;
 
-		ts.dodamage(realdamage, gamemillis);
-        actor->state.damage += realdamage;
+		if(!(flags&HIT_PUSH))
+		{
+			ts.dodamage(realdamage, gamemillis);
+			actor->state.damage += realdamage;
+		}
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, realdamage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
 
-		if(realdamage && ts.health <= 0)
+		if(!(flags&HIT_PUSH) && realdamage && ts.health <= 0)
 		{
             target->state.deaths++;
             if(actor!=target && m_team(gamemode, mutators) && actor->team == target->team) actor->state.teamkills++;
@@ -1451,12 +1454,13 @@ namespace server
 				gs.gunshots[e.gun].remove(e.id);
 				e.radial = guntype[e.gun].explode;
 			}
-			loopv(e.hits)
+			if(!e.hits.empty()) loopv(e.hits)
 			{
 				hitset &h = e.hits[i];
+				int size = e.radial ? (h.flags&HIT_PUSH ? e.radial*2 : e.radial) : 0;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
-				if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (e.radial && (h.dist<0 || h.dist>e.radial))) continue;
-				int damage = e.radial ? int(guntype[e.gun].damage*(1.f-h.dist/EXPLOSIONSCALE/e.radial)) : guntype[e.gun].damage;
+				if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (size && (h.dist<0 || h.dist>size))) continue;
+				int damage = size ? int(guntype[e.gun].damage*(1.f-h.dist/EXPLOSIONSCALE/size)) : guntype[e.gun].damage;
 				dodamage(target, ci, damage, e.gun, h.flags, h.dir);
 			}
 		}
@@ -1474,7 +1478,7 @@ namespace server
 		}
 		if(guntype[e.gun].max) gs.ammo[e.gun] = max(gs.ammo[e.gun]-1, 0); // keep synched!
 		gs.setgunstate(e.gun, GNS_SHOOT, guntype[e.gun].adelay, e.millis);
-		vector<shotloc> shots; shots.setsize(0);
+		vector<shotloc> shots;
 		loopv(e.shots)
 		{
 			shotloc &s = shots.add();
