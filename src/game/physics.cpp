@@ -409,7 +409,7 @@ namespace physics
 				pl->jumping = false;
 			}
 		}
-        else if((pl->physstate >= PHYS_SLOPE && pl->floor.z >= slopez) || pl->inliquid)
+        else if(pl->physstate >= PHYS_SLOPE || pl->inliquid)
 		{
 			pl->lastimpulse = 0;
 			if(pl->jumping)
@@ -438,14 +438,13 @@ namespace physics
 		{
 			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
 
-            if(!floating && (pl->physstate >= PHYS_SLOPE && pl->floor.z >= slopez))
+            if(!floating && pl->physstate >= PHYS_SLOPE)
 			{
 				/* move up or down slopes in air
 				 * but only move up slopes in liquid
 				 */
 				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
-				if(pl->inliquid) m.z = max(m.z, dz);
-				else if(pl->floor.z >= wallz) m.z = dz;
+                m.z = pl->inliquid ? max(m.z, dz) : dz;
 			}
 
 			m.normalize();
@@ -458,7 +457,7 @@ namespace physics
 		    if(floating) { if(local) d.mul(floatspeed/100.0f); }
 		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
         }
-		float friction = pl->inliquid && !floating ? liquidfric : ((pl->physstate >= PHYS_SLOPE && pl->floor.z >= slopez) || floating ? floorfric : airfric);
+		float friction = pl->inliquid && !floating ? liquidfric : (pl->physstate >= PHYS_SLOPE || floating ? floorfric : airfric);
 		float fpsfric = max(friction/millis*20.0f, 1.0f);
 
         pl->vel.mul(fpsfric-1);
@@ -480,7 +479,7 @@ namespace physics
         }
         if(!pl->inliquid || (!pl->move && !pl->strafe)) pl->falling.add(g);
 
-        if(pl->inliquid || (pl->physstate >= PHYS_SLOPE && pl->floor.z >= slopez))
+        if(pl->inliquid || pl->physstate >= PHYS_SLOPE)
         {
             float friction = pl->inliquid ? sinkfric : floorfric,
                   fpsfric = friction/curtime*20.0f,
