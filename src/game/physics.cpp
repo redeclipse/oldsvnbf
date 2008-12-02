@@ -160,7 +160,7 @@ namespace physics
         recalcdir(d, oldvel, dir);
     }
 
-	bool trystepup(physent *d, vec &dir, float maxstep)
+	bool trystepup(physent *d, vec &dir, float maxstep, const vec &floor)
 	{
 		vec old(d->o);
 		/* check if there is space atop the stair to move to */
@@ -193,10 +193,10 @@ namespace physics
             if(collide(d, smoothdir))
             {
                 d->o.z -= maxstep + 0.1f;
-                if(d->physstate == PHYS_FALL)
+                if(d->physstate == PHYS_FALL || d->floor != floor)
                 {
                     d->timeinair = 0;
-                    d->floor = vec(0, 0, 1);
+                    d->floor = floor;
                     switchfloor(d, dir, d->floor);
                 }
                 d->physstate = PHYS_STEP_UP;
@@ -209,12 +209,12 @@ namespace physics
 		d->o.z += dir.magnitude()*stepspeed;
 		if(collide(d, vec(0, 0, 1)))
 		{
-			if(d->physstate == PHYS_FALL)
-			{
-				d->timeinair = 0;
-				d->floor = vec(0, 0, 1);
-				switchfloor(d, dir, d->floor);
-			}
+            if(d->physstate == PHYS_FALL || d->floor != floor)
+            {
+                d->timeinair = 0;
+                d->floor = floor;
+                switchfloor(d, dir, d->floor);
+            }
 			d->physstate = PHYS_STEP_UP;
 			return true;
 		}
@@ -360,7 +360,7 @@ namespace physics
             {
                 d->o = old;
                 d->zmargin = 0;
-                if(trystepup(d, dir, stairheight)) return true;
+                if(trystepup(d, dir, stairheight, d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR ? d->floor : vec(wall))) return true;
             }
             else
             {
@@ -376,7 +376,7 @@ namespace physics
             if(!collide(d, vec(0, 0, -1), slopez))
             {
                 d->o = old;
-                if(trystepup(d, dir, stairheight)) return true;
+                if(trystepup(d, dir, stairheight, vec(wall))) return true;
                 d->o.add(dir);
             }
         }
