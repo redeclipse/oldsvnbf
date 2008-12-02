@@ -306,12 +306,12 @@ namespace world
 			{
                 vec pos(d->o), dir(d->vel);
                 float speed = dir.magnitude();
-                if(speed > 0.1f) dir.mul(0.1f/speed);
-                else if(allowmove(d) && (d->move || d->strafe))
+                if(allowmove(d) && (d->move || d->strafe))
                 {
                     vecfromyawpitch(d->aimyaw, 0, d->move, d->strafe, dir);
-                    dir.mul(0.1f);
+                    dir.mul(0.5f);
                 }
+                else if(speed > 0.5f) dir.mul(0.5f/speed);
                 d->o.add(dir);
                 d->o.z += PLAYERHEIGHT;
 				if(!collide(d, vec(0, 0, 1), 0.f, false))
@@ -1403,7 +1403,7 @@ namespace world
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
 				else if(d->timeinair > 1000)
 					anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
-				else if(d->crouching)
+				else if(d->crouching || d->crouchtime<0)
 				{
 					if(d->move>0)		anim |= (ANIM_CRAWL_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 					else if(d->strafe)	anim |= ((d->strafe>0 ? ANIM_CRAWL_LEFT : ANIM_CRAWL_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
