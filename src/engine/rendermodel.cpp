@@ -322,6 +322,7 @@ void clearmodel(char *name)
 {
     model **m = mdllookup.access(name);
     if(!m) { conoutf("\frmodel %s is not loaded", name); return; }
+    loopv(mapmodels) if(mapmodels[i].m==*m) mapmodels[i].m = NULL;
     mdllookup.remove(name);
     (*m)->cleanup();
     delete *m;
