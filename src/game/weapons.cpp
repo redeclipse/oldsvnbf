@@ -93,7 +93,7 @@ namespace weapons
 	{
 		if(!d->canshoot(d->gunselect, lastmillis)) return;
 
-		int power = force;
+		int power = force, powertime = guntype[d->gunselect].power+guntype[d->gunselect].time;
 		if(guntype[d->gunselect].power)
 		{
 			if(!power)
@@ -105,7 +105,7 @@ namespace weapons
 				}
 
 				power = lastmillis-d->gunlast[d->gunselect];
-				if(d->attacking && power < guntype[d->gunselect].power+guntype[d->gunselect].time)
+				if(d->attacking && power < powertime)
 					return;
 			}
 			d->attacking = false;
@@ -152,11 +152,8 @@ namespace weapons
 			if(guntype[d->gunselect].spread)
 				offsetray(from, to, guntype[d->gunselect].spread, guntype[d->gunselect].zdiv, dest);
 			else dest = to;
-			if(d->gunselect == GUN_GL)
-			{
-				float t = from.dist(dest);
-				dest.z += t/8;
-			}
+			if(d->gunselect == GUN_GL && power < powertime)
+				dest.z += from.dist(dest)/8;
 			addshot(dest);
 		}
 		projs::shootv(d->gunselect, power, from, vshots, d, true);
