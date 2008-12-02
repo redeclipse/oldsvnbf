@@ -304,15 +304,27 @@ namespace world
 			bool crouching = d->crouching;
 			if(!crouching)
 			{
-				d->height = 1.f; // some physics relies on the feet being in the ground..
-				d->o.z += PLAYERHEIGHT;
-				if(!collide(d, vec(0, 0, 0), 0.f, false) || inside)
+                vec pos(d->o), dir(d->vel);
+                float speed = dir.magnitude();
+                if(speed > 0.1f) dir.mul(0.1f/speed);
+                else if(allowmove(d) && (d->move || d->strafe))
+                {
+                    vecfromyawpitch(d->aimyaw, 0, d->move, d->strafe, dir);
+                    dir.mul(0.1f);
+                }
+                d->o.add(dir);
+                d->o.z += PLAYERHEIGHT;
+				if(!collide(d, vec(0, 0, 1), 0.f, false))
 				{
-					crouching = true;
-					if(d->crouchtime >= 0) d->crouchtime = -lastmillis;
-				}
-				else if(d->crouchtime < 0) d->crouchtime = lastmillis;
-				d->o.z -= PLAYERHEIGHT;
+                    d->o.z -= PLAYERHEIGHT*CROUCHHEIGHT;
+                    if(collide(d, vec(0, 0, 1), 0.f, false))
+                    {
+                        crouching = true;
+                        if(d->crouchtime >= 0) d->crouchtime = -lastmillis;
+                    }
+                }
+                if(!crouching && d->crouchtime < 0) d->crouchtime = lastmillis - max(200 - (lastmillis + d->crouchtime), 0);
+                d->o = pos;
 			}
 
 			if(physics::iscrouching(d))
@@ -320,8 +332,9 @@ namespace world
 				float crouchoff = 1.f-CROUCHHEIGHT;
 				if(d->type == ENT_PLAYER)
 				{
-					float amt = d->crouchtime >= 0 && lastmillis-d->crouchtime < 200 ?
-						clamp(float(lastmillis-d->crouchtime)/200.f, 0.f, 1.f) : 1.f;
+                    int crouchtime = abs(d->crouchtime);
+					float amt = lastmillis-crouchtime < 200 ?
+						clamp(float(lastmillis-crouchtime)/200.f, 0.f, 1.f) : 1.f;
 					if(!crouching) amt = 1.f-amt;
 					crouchoff *= amt;
 				}
