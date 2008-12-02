@@ -1454,7 +1454,7 @@ namespace server
 				gs.gunshots[e.gun].remove(e.id);
 				e.radial = guntype[e.gun].explode;
 			}
-			if(!e.hits.empty()) loopv(e.hits)
+			loopv(e.hits)
 			{
 				hitset &h = e.hits[i];
 				int size = e.radial ? (h.flags&HIT_PUSH ? e.radial*2 : e.radial) : 0;
