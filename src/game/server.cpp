@@ -269,7 +269,7 @@ namespace server
 	enet_uint32 lastsend = 0;
 	int mastermode = MM_OPEN, mastermask = MM_DEFAULT, currentmaster = -1;
 	bool masterupdate = false;
-	FILE *mapdata = NULL;
+	FILE *mapdata[3] = { NULL, NULL, NULL };
 
 	vector<ban> bannedips;
 	vector<clientinfo *> clients;
@@ -331,6 +331,11 @@ namespace server
 
 	void cleanup(bool init)
 	{
+		loopi(3) if(mapdata[i])
+		{
+			fclose(mapdata[i]);
+			mapdata[i] = NULL;
+		}
 		gamemode = sv_defaultmode;
 		mutators = sv_defaultmuts;
 		modecheck(&gamemode, &mutators);
@@ -1027,6 +1032,11 @@ namespace server
 
 	void changemap(const char *s, int mode, int muts)
 	{
+		loopi(3) if(mapdata[i])
+		{
+			fclose(mapdata[i]);
+			mapdata[i] = NULL;
+		}
         stopdemo();
 
 		maprequest = false;
@@ -1203,19 +1213,24 @@ namespace server
 		putint(p, n);
 		putint(p, GAMEVERSION);
 		putint(p, SV_MAPCHANGE);
-		if(!smapname[0])
-		{
-			putint(p, 0);
-			if(m_edit(gamemode) && numclients(ci->clientnum, true, true))
-			{
-				clientinfo *best = choosebestclient(ci);
-				if(best) sendf(best->clientnum, 1, "ri", SV_GETMAP);
-			}
-		}
+		if(!smapname[0]) putint(p, 0);
 		else
 		{
 			putint(p, 1);
 			sendstring(smapname, p);
+		}
+		if(mapdata[2] && m_edit(gamemode) && numclients(ci->clientnum, true, true))
+		{
+			clientinfo *best = choosebestclient(ci);
+			if(best)
+			{
+				loopi(3) if(mapdata[i])
+				{
+					fclose(mapdata[i]);
+					mapdata[i] = NULL;
+				}
+				sendf(best->clientnum, 1, "ri", SV_GETMAP);
+			}
 		}
 		putint(p, gamemode);
 		putint(p, mutators);
@@ -1778,24 +1793,43 @@ namespace server
 		sendqueryreply(p);
 	}
 
-	void receivefile(int sender, uchar *data, int len)
+	bool receivefile(int sender, uchar *data, int len)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
-		if(mapdata)
+		ucharbuf p(data, len);
+		int type = getint(p), n = 0;
+		data += p.length();
+		len -= p.length();
+		switch(type)
 		{
-			if(ci != choosebestclient()) return;
-			fclose(mapdata);
-			mapdata = NULL;
+			case SV_SENDMAPFILE: case SV_SENDMAPSHOT: case SV_SENDMAPCONFIG:
+				n = type-SV_SENDMAPFILE;
+				break;
+			default: srvoutf(sender, "bad map file type %d"); return false;
 		}
-		if(!len) return;
-		mapdata = tmpfile();
-        if(!mapdata)
+		if(mapdata[n])
+		{
+			if(ci != choosebestclient())
+			{
+				srvoutf(sender, "sorry, the map isn't needed from you");
+				return false;
+			}
+			fclose(mapdata[n]);
+			mapdata[n] = NULL;
+		}
+		if(!len)
+		{
+			srvoutf(sender, "you sent a zero length packet for map data!");
+			return false;
+		}
+		mapdata[n] = tmpfile();
+        if(!mapdata[n])
         {
         	srvoutf(sender, "failed to open temporary file for map");
-        	return;
+        	return false;
 		}
-		fwrite(data, 1, len, mapdata);
-		sendf(-1, 1, "ri2", SV_SENDMAP, sender);
+		fwrite(data, 1, len, mapdata[n]);
+		return n == 2;
 	}
 
 	int checktype(int type, clientinfo *ci)
@@ -1811,9 +1845,9 @@ namespace server
 		}
 #endif
 		// only allow edit messages in coop-edit mode
-		if(type >= SV_EDITENT && type <= SV_GETMAP && !m_edit(gamemode)) return -1;
+		if(type >= SV_EDITENT && type <= SV_NEWMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
+		static int servtypes[] = { SV_INITS2C, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -1927,7 +1961,7 @@ namespace server
 		if(sender<0) return;
 		if(chan==2)
 		{
-			receivefile(sender, p.buf, p.maxlen);
+			if(receivefile(sender, p.buf, p.maxlen)) sendf(-1, 1, "ri", SV_SENDMAP);
 			return;
 		}
 		if(reliable) reliablemessages = true;
@@ -1961,8 +1995,9 @@ namespace server
 		int curmsg;
         while((curmsg = p.length()) < p.maxlen)
 		{
+			int curtype = getint(p);
 			prevtype = type;
-			switch(type = checktype(getint(p), ci))
+			switch(type = checktype(curtype, ci))
 			{
 				case SV_POS:
 				{
@@ -2323,6 +2358,7 @@ namespace server
 							cp->state.dropped.reset();
 							cp->state.gunreset(false);
 						}
+						notgotinfo = false;
 					}
 					break;
 				}
@@ -2545,11 +2581,23 @@ namespace server
 				}
 
 				case SV_GETMAP:
-					if(mapdata) sendfile(sender, 2, mapdata, "ri", SV_SENDMAP);
-					else
+					if(mapdata[2])
+					{
+						loopk(3) if(mapdata[k])
+							sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
+					}
+					else if(!m_edit(gamemode))
 					{
 						clientinfo *best = choosebestclient(ci);
-						if(best) sendf(best->clientnum, 1, "ri", SV_GETMAP);
+						if(best)
+						{
+							loopk(3) if(mapdata[k])
+							{
+								fclose(mapdata[k]);
+								mapdata[k] = NULL;
+							}
+							sendf(best->clientnum, 1, "ri", SV_GETMAP);
+						}
 					}
 					break;
 
@@ -2616,13 +2664,18 @@ namespace server
 				default:
 				{
 					int size = msgsizelookup(type);
-					if(size==-1) { disconnect_client(sender, DISC_TAGT); return; }
+					if(size==-1)
+					{
+						conoutf("\fy[tag error] from: %d, cur: %d, msg: %d, prev: %d", sender, curtype, type, prevtype);
+						disconnect_client(sender, DISC_TAGT);
+						return;
+					}
 					if(size>0) loopi(size-1) getint(p);
 					if(ci) QUEUE_MSG;
 					break;
 				}
 			}
-			//conoutf("\fy[server] msg: %d, prev: %d", type, prevtype);
+			//conoutf("\fy[server] from: %d, cur: %d, msg: %d, prev: %d", sender, curtype, type, prevtype);
 		}
 	}
 
