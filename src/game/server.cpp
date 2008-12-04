@@ -1372,36 +1372,33 @@ namespace server
 	{
 		servstate &ts = target->state;
 		if(gamemillis-ts.lastspawn <= REGENWAIT) return;
-		int realdamage = 0, nodamage = 0;
-		if(smode && !smode->damage(target, actor, damage, gun, flags, hitpush)) { nodamage++; }
-		mutate(smuts, if(!mut->damage(target, actor, damage, gun, flags, hitpush)) { nodamage++; });
 
-		if(!nodamage && m_play(gamemode) && (sv_teamdamage || !m_team(gamemode, mutators) || actor->team != target->team))
-		{
-			if(m_insta(gamemode, mutators)) realdamage = max(damage, ts.health);
-			else
-			{
-				if(flags&HIT_HEAD || flags&HIT_MELT || flags&HIT_FALL || flags&HIT_PUSH)
-					realdamage = int(damage*sv_damagescale);
-				else if(flags&HIT_TORSO) realdamage = int(damage*0.5f*sv_damagescale);
-				else if(flags&HIT_LEGS) realdamage = int(damage*0.25f*sv_damagescale);
-				else
-				{
-					srvoutf(-1, "ERROR: no damage area from %s in %d [%d]: %d", colorname(actor), damage, gun, flags);
-					realdamage = 0;
-				}
-			}
-		}
-		else realdamage = 0;
+		int realdamage = damage, realflags = flags, nodamage = 0;
+		if(smode && !smode->damage(target, actor, realdamage, gun, realflags, hitpush)) { nodamage++; }
+		mutate(smuts, if(!mut->damage(target, actor, realdamage, gun, realflags, hitpush)) { nodamage++; });
+		if(!m_play(gamemode) || (sv_teamdamage && m_team(gamemode, mutators) && actor->team == target->team))
+			nodamage++;
 
-		if(!(flags&HIT_PUSH))
+		if(nodamage || !hithurts(realflags)) realflags = HIT_PUSH; // so it impacts, but not hurts
+
+		if(hithurts(realflags))
 		{
+			if(realflags&HIT_HEAD || realflags&HIT_MELT || realflags&HIT_FALL)
+				realdamage = int(realdamage*sv_damagescale);
+			else if(realflags&HIT_TORSO)
+				realdamage = int(realdamage*0.5f*sv_damagescale);
+			else if(realflags&HIT_LEGS)
+				realdamage = int(realdamage*0.25f*sv_damagescale);
+			else realdamage = int(realdamage*sv_damagescale);
+
+			if(realdamage && m_insta(gamemode, mutators))
+				realdamage = max(realdamage, ts.health);
 			ts.dodamage(realdamage, gamemillis);
 			actor->state.damage += realdamage;
 		}
-		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, flags, realdamage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
+		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, realflags, realdamage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
 
-		if(!(flags&HIT_PUSH) && realdamage && ts.health <= 0)
+		if(hithurts(realflags) && realdamage && ts.health <= 0)
 		{
             target->state.deaths++;
             if(actor!=target && m_team(gamemode, mutators) && actor->team == target->team) actor->state.teamkills++;
@@ -1416,7 +1413,7 @@ namespace server
                 actor->state.spree++;
 			}
 			if(sv_itemdropping) dropitems(target);
-			sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, actor->state.spree, gun, flags, realdamage);
+			sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, actor->state.spree, gun, realflags, realdamage);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
 			mutate(smuts, mut->died(target, actor));
@@ -1457,7 +1454,7 @@ namespace server
 			loopv(e.hits)
 			{
 				hitset &h = e.hits[i];
-				int size = e.radial ? (h.flags&HIT_PUSH ? e.radial*2 : e.radial) : 0;
+				int size = e.radial ? (h.flags&HIT_WAVE ? e.radial*4 : e.radial) : 0;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
 				if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (size && (h.dist<0 || h.dist>size))) continue;
 				int damage = size ? int(guntype[e.gun].damage*(1.f-h.dist/EXPLOSIONSCALE/size)) : guntype[e.gun].damage;

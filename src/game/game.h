@@ -227,15 +227,19 @@ extern guntypes guntype[];
 enum
 {
 	HIT_NONE 	= 0,
-	HIT_LEGS	= 1<<0,
-	HIT_TORSO	= 1<<1,
-	HIT_HEAD	= 1<<2,
-	HIT_BURN	= 1<<3,
-	HIT_EXPLODE	= 1<<4,
-	HIT_MELT	= 1<<5,
-	HIT_FALL	= 1<<6,
-	HIT_PUSH	= 1<<7
+	HIT_PROJ	= 1<<0,
+	HIT_EXPLODE	= 1<<1,
+	HIT_BURN	= 1<<2,
+	HIT_MELT	= 1<<3,
+	HIT_FALL	= 1<<4,
+	HIT_WAVE	= 1<<5,
+	HIT_PUSH	= 1<<6,
+	HIT_LEGS	= 1<<7,
+	HIT_TORSO	= 1<<8,
+	HIT_HEAD	= 1<<9,
 };
+
+#define hithurts(x) (x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_FALL)
 
 enum
 {
@@ -882,8 +886,10 @@ struct gameent : dynent, gamestate
 		wschan = -1;
 	}
 
-	void hitpush(int damage, const vec &dir)
+	void hitpush(int damage, int flags, const vec &dir)
 	{
+		int force = damage;
+		if(flags&HIT_WAVE || !hithurts(flags)) force /= 2;
 		vel.add(vec(dir).mul(damage*100.f/weight));
 	}
 

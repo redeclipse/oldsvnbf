@@ -1099,11 +1099,7 @@ namespace client
 					if(!target) break;
 					target->health = amt;
 					target->lastregen = lastmillis;
-					int left = clamp(MAXHEALTH-max(target->health-REGENHEAL, 0), 1, 100);
-					vec pos = world::headpos(target);
-					pos.z += 0.6f*(target->height + target->aboveeye)-target->height;
-					part_splash(PART_BLOOD, max(left/3, 3), REGENWAIT, pos, 0x60FFFF, 3.0f, 4);
-					playsound(S_REGEN, target->o, target);
+					playsound(S_REGEN, target->o, target); // maybe only player1?
 					break;
 				}
 
