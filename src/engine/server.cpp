@@ -183,10 +183,9 @@ void sendfile(int cn, int chan, FILE *file, const char *format, ...)
 {
 	if(cn < 0)
 	{
-#ifndef STANDALONE
-		if(!clienthost || clienthost->peers[0].state != ENET_PEER_STATE_CONNECTED)
-#endif
+#ifdef STANDALONE
 			return;
+#endif
 	}
 	else if(cn >= clients.length() || clients[cn]->type != ST_TCPIP) return;
 
@@ -219,7 +218,7 @@ void sendfile(int cn, int chan, FILE *file, const char *format, ...)
 
 	if(cn >= 0) enet_peer_send(clients[cn]->peer, chan, packet);
 #ifndef STANDALONE
-	else enet_peer_send(&clienthost->peers[0], chan, packet);
+	else sendpackettoserv(packet, chan);
 #endif
 
 	if(!packet->referenceCount) enet_packet_destroy(packet);
@@ -397,7 +396,7 @@ void localdisconnect()
     loopv(clients) if(clients[i] && clients[i]->type==ST_LOCAL)
     {
         clientdata &c = *clients[i];
-        conoutf("\folocal client %d disconnected", i);
+        conoutf("\folocal client %d disconnected", c.num);
         server::clientdisconnect(c.num, true);
         c.type = ST_EMPTY;
         server::deleteinfo(c.info);

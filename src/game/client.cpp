@@ -7,6 +7,9 @@ namespace client
 		demoplayback = false, needsmap = false;
 	int lastping = 0;
 
+	// collect c2s messages conveniently
+	vector<uchar> messages;
+
 	VARP(centerchat, 0, 1, 1);
 	VARP(colourchat, 0, 1, 1);
 
@@ -70,7 +73,7 @@ namespace client
 
 	int numchannels() { return 3; }
 
-	void mapstart() { sendinfo = !needsmap; }
+	void mapstart() { sendinfo = true; }
 
 	void writeclientinfo(FILE *f)
 	{
@@ -87,6 +90,7 @@ namespace client
 	{
 		if(editmode) toggleedit();
 		needsmap = remote = isready = c2sinit = false;
+		messages.setsize(0);
 		projs::remove(world::player1);
         removetrackedparticles(world::player1);
 		removetrackedsounds(world::player1);
@@ -228,9 +232,6 @@ namespace client
 	}
 	ICOMMAND(spectator, "is", (int *val, char *who), togglespectator(*val, who));
 
-	// collect c2s messages conveniently
-	vector<uchar> messages;
-
 	void addmsg(int type, const char *fmt, ...)
 	{
 		/*
@@ -346,15 +347,17 @@ namespace client
 		if(!name || !load_world(name))
 		{
 			emptymap(0, true, NULL);
+			setnames(name, MAP_BFGZ);
 			needsmap = true;
 		}
+		else needsmap = m_edit(world::gamemode);
 		if(world::player1->state != CS_SPECTATOR) world::player1->state = CS_DEAD;
 		if(editmode) edittoggled(editmode);
 		if(m_stf(gamemode)) stf::setupflags();
         else if(m_ctf(gamemode)) ctf::setupflags();
 	}
 
-	void receivefile(uchar *data, int len)
+	bool receivefile(uchar *data, int len)
 	{
 		ucharbuf p(data, len);
 		int type = getint(p);
@@ -366,28 +369,43 @@ namespace client
 			{
 				s_sprintfd(fname)("%d.dmo", lastmillis);
 				FILE *demo = openfile(fname, "wb");
-				if(!demo) return;
+				if(!demo) return false;
 				conoutf("\fmreceived demo \"%s\"", fname);
 				fwrite(data, 1, len, demo);
 				fclose(demo);
 				break;
 			}
 
-			case SV_SENDMAP:
+			case SV_SENDMAPCONFIG:
+			case SV_SENDMAPSHOT:
+			case SV_SENDMAPFILE:
 			{
-				const char *mapname = getmapname();
+				const char *mapname = getmapname(), *mapext = "xxx";
+				if(type == SV_SENDMAPCONFIG) mapext = "cfg";
+				else if(type == SV_SENDMAPSHOT) mapext = "png";
+				else if(type == SV_SENDMAPFILE) mapext = "bgz";
 				if(!mapname || !*mapname) mapname = "maps/untitled";
-				const char *file = findfile(mapname, "wb");
-				FILE *map = fopen(file, "wb");
-				if(!map) return;
-				conoutf("\fmreceived map");
-				fwrite(data, 1, len, map);
-				fclose(map);
-				if(!load_world(mapname)) emptymap(0, true, NULL);
-				else needsmap = false;
+				s_sprintfd(mapfile)("temp/%s", mapname);
+				s_sprintfd(mapfext)("%s.%s", mapfile, mapext);
+				FILE *f = openfile(mapfext, "wb");
+				if(!f)
+				{
+					conoutf("\frfailed to open map file: %s", mapfext);
+					return false;
+				}
+				fwrite(data, 1, len, f);
+				fclose(f);
+				if(type == SV_SENDMAPCONFIG)
+				{
+					if(m_edit(world::gamemode)) changemapserv(mapfile, world::gamemode, world::mutators);
+					else reconnect(); // need new welcomepacket, etc.
+					needsmap = false;
+					return true;
+				}
 				break;
 			}
 		}
+		return false;
 	}
 
 	void getmap()
@@ -444,15 +462,33 @@ namespace client
 		conoutf("\fmsending map...");
 		const char *mapname = getmapname();
 		if(!mapname || !*mapname) mapname = "maps/untitled";
-		save_world(mapname, m_edit(world::gamemode));
-		FILE *map = openfile(mapname, "rb");
-		if(map)
+		s_sprintfd(mapfile)("%s%s", m_edit(world::gamemode) ? "temp/" : "", mapname);
+		loopi(3)
 		{
-			fseek(map, 0, SEEK_END);
-			sendfile(-1, 2, map);
-			fclose(map);
+			string mapfext;
+			switch(i)
+			{
+				case 2: s_sprintf(mapfext)("%s.cfg", mapfile); break;
+				case 1: s_sprintf(mapfext)("%s.png", mapfile); break;
+				case 0: default:
+					s_sprintf(mapfext)("%s.bgz", mapfile);
+					if(m_edit(world::gamemode))
+					{
+						save_world(mapfile, true);
+						setnames(mapname, MAP_BFGZ);
+					}
+					break;
+			}
+			FILE *f = openfile(mapfext, "rb");
+			if(f)
+			{
+				conoutf("\fgtransmitting file: %s", mapfext);
+				fseek(f, 0, SEEK_END);
+				sendfile(-1, 2, f, "ri", SV_SENDMAPFILE+i);
+				fclose(f);
+			}
+			else conoutf("\frfailed to open map file: %s", mapfext);
 		}
-		else conoutf("\frcould not read map: %s", mapname);
 	}
 	ICOMMAND(sendmap, "", (), sendmap());
 
@@ -646,7 +682,7 @@ namespace client
 			if(world::players[i] && world::players[i]->ai)
 				updateposition(world::players[i]);
 
-		if(sendinfo)
+		if(sendinfo && !needsmap)
 		{
 			reliable = true;
 			putint(p, SV_GAMEINFO);
@@ -939,6 +975,11 @@ namespace client
 					int mode = getint(p), muts = getint(p);
 					changemapserv(hasmap ? text : NULL, mode, muts);
 					mapchanged = true;
+					if(needsmap && !m_edit(world::gamemode))
+					{
+						conoutf("map changed and we don't have the map, asking for it");
+						getmap();
+					}
 					break;
 				}
 
@@ -960,9 +1001,14 @@ namespace client
 				case SV_GAMEINFO:
 				{
 					int ver = getint(p), rev = getint(p), n;
-					while((n = getint(p))!=-1) entities::setspawn(n, getint(p));
-					if(!needsmap && ver >= 0 && rev >= 0 && (ver != getmapversion() || rev != getmaprevision()))
+					while((n = getint(p)) != -1) entities::setspawn(n, getint(p));
+					if(!needsmap && !m_edit(world::gamemode) && ver >= 0 && rev >= 0 &&
+						(ver != getmapversion() || rev != getmaprevision()))
+					{
+						conoutf("map v%d:r%d does not match v%d:r%d, asking for it", getmapversion(), getmaprevision(), ver, rev);
+						needsmap = true;
 						getmap();
+					}
 					break;
 				}
 
@@ -1039,7 +1085,10 @@ namespace client
 						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
 					}
 					ai::spawned(f);
-					if(f == world::player1) world::resetstates(ST_DEFAULT);
+					if(f == world::player1)
+					{
+						world::resetstates(ST_DEFAULT);
+					}
 					break;
 				}
 
@@ -1492,20 +1541,24 @@ namespace client
 
 				case SV_GETMAP:
 				{
-					if(!needsmap)
+					conoutf("\fmserver has requested we send the map..");
+					if(!needsmap) sendmap();
+					else
 					{
-						conoutf("\fmserver has requested we send the map..");
-						sendmap();
+						conoutf("asking for it instead");
+						getmap();
 					}
 					break;
 				}
 
 				case SV_SENDMAP:
 				{
-					int ocn = getint(p);
-					gameent *o = world::newclient(ocn);
-					conoutf("\fmmap uploaded by %s..", o ? world::colorname(o) : "server");
-					if(needsmap) getmap();
+					conoutf("\fmmap has been uploaded");
+					if(needsmap)
+					{
+						conoutf("map was uploaded and we want it, asking for it");
+						getmap();
+					}
 					break;
 				}
 
@@ -1514,6 +1567,7 @@ namespace client
 					int size = getint(p);
 					if(size>=0) emptymap(size, true);
 					else enlargemap(true);
+					needsmap = false;
 					if(d && d!=world::player1)
 					{
 						int newsize = 0;
@@ -1704,7 +1758,7 @@ namespace client
 				break;
 
 			case 2:
-				receivefile(p.buf, p.maxlen);
+				if(receivefile(p.buf, p.maxlen)) return;
 				break;
 		}
 	}

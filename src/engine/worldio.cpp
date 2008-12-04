@@ -397,8 +397,8 @@ void save_world(const char *mname, bool nolms)
 
 	setnames(mname, MAP_BFGZ);
 
-	if(autosavemapshot) save_mapshot(mapname);
-	if(autosaveconfig) save_config(mapname);
+	if(autosavemapshot || nolms) save_mapshot(mapname);
+	if(autosaveconfig || nolms) save_config(mapname);
 
 	backup(mapname, mapexts[MAP_BFGZ].name, hdr.revision); // x10 so we can do this more
 	gzFile f = opengzfile(mapfile, "wb9");
@@ -576,9 +576,14 @@ bool load_world(const char *mname)		// still supports all map formats that have 
 {
 	int loadingstart = SDL_GetTicks();
 
-	loop(format, MAP_MAX)
+	loop(tempfile, 2) loop(format, MAP_MAX)
 	{
 		setnames(mname, format);
+		if(tempfile) loopk(2)
+		{
+			s_sprintfd(s)("temp/%s", k ? mapfile : mapname);
+			s_strcpy(k ? mapfile : mapname, s);
+		}
 
 		gzFile f = opengzfile(mapfile, "rb9");
 		if(!f) continue;
@@ -1050,7 +1055,7 @@ bool load_world(const char *mname)		// still supports all map formats that have 
 		RUNWORLD("on_start");
 		return true;
 	}
-	conoutf("\frunable to load %s", mapname);
+	conoutf("\frunable to load %s", mname);
 	return false;
 }
 

@@ -433,6 +433,7 @@ extern void servertoclient(int chan, uchar *buf, int len);
 extern void localservertoclient(int chan, uchar *buf, int len);
 extern bool connected(bool attempt = true);
 extern void connects(const char *name = NULL, int port = ENG_SERVER_PORT, int qport = ENG_QUERY_PORT);
+extern void reconnect(), lanconnect();
 extern void abortconnect(bool msg = true);
 extern void clientkeepalive();
 extern ENetHost *clienthost;
@@ -687,7 +688,7 @@ extern void renderdir(vec &o, float yaw, float pitch, bool nf = true);
 extern void renderradius(vec &o, float xradius, float yradius, float zradius, bool nf = true);
 
 extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 120);
-#define rendermainview (!shadowmapping && !envmapping && !reflecting && !refracting) 
+#define rendermainview (!shadowmapping && !envmapping && !reflecting && !refracting)
 #define renderatopview (glaring)
 #define rendernormally (rendermainview || renderatopview)
 

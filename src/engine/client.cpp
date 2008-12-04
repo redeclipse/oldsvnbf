@@ -69,6 +69,7 @@ void trydisconnect()
     else conoutf("\frnot connected");
 }
 
+char *lastaddress = NULL;
 void connects(const char *name, int port, int qport)
 {
     abortconnect();
@@ -78,6 +79,9 @@ void connects(const char *name, int port, int qport)
 
     ENetAddress address;
     address.port = port;
+
+	if(lastaddress) delete[] lastaddress;
+	lastaddress = NULL;
 
 	if(name && *name)
 	{
@@ -89,6 +93,7 @@ void connects(const char *name, int port, int qport)
             connectfail();
 			return;
 		}
+		lastaddress = newstring(name);
 	}
 	else
 	{
@@ -112,11 +117,6 @@ void connects(const char *name, int port, int qport)
         conoutf("\frfailed creating client socket");
         connectfail();
     }
-}
-
-void lanconnect()
-{
-	connects();
 }
 
 void disconnect(int onlyclean, int async)
@@ -154,8 +154,17 @@ void disconnect(int onlyclean, int async)
 }
 
 ICOMMAND(connect, "sii", (char *n, int *a, int *b), connects(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT));
-COMMAND(lanconnect, "");
 COMMANDN(disconnect, trydisconnect, "");
+
+void lanconnect() { connects(); }
+COMMAND(lanconnect, "");
+
+void reconnect()
+{
+	disconnect(1);
+	connects(lastaddress && *lastaddress ? lastaddress : NULL);
+}
+COMMAND(reconnect, "");
 
 int lastupdate = -1000;
 
