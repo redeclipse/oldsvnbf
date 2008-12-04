@@ -197,13 +197,17 @@ namespace ctf
 
     int drawinventory(int x, int y, int s, float blend)
     {
-        if(world::player1->state == CS_ALIVE)
-        {
-            loopv(st.flags) if(st.flags[i].owner == world::player1)
-            {
-            }
-        }
-        return y;
+		int sy = 0;
+		loopv(st.flags) if(st.flags[i].owner == world::player1)
+		{
+			ctfstate::flag &f = st.flags[i];
+			const char *tex = hud::flagtex(f.team);
+			float skew = lastmillis-f.interptime < 500 ? float(lastmillis-f.interptime)/500.f : 1.f,
+				fade = hud::inventoryblend*blend*skew;
+			int size = int(s*skew*0.5f);
+			sy += hud::drawitem(tex, x, y-sy, size, fade, skew);
+		}
+        return sy;
     }
 
 
