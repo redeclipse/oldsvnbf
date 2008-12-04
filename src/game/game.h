@@ -1134,11 +1134,13 @@ namespace ai
 namespace hud
 {
 	extern int hudwidth, hudsize;
-	extern float radarblipblend;
+	extern float radarblipblend, inventoryblend;
 	extern void drawquad(int x, int y, int w, int h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
 	extern void drawtex(int x, int y, int w, int h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
 	extern void drawsized(int x, int y, int s);
-	extern void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *text = NULL, const char *font = "radar", float fade = -1.f);
+	extern void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *font = "radar", float fade = -1.f, const char *text = NULL, ...);
+	extern int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
+	extern const char *flagtex(int team = TEAM_NEUTRAL);
 	extern float radarrange();
 }
 

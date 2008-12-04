@@ -235,21 +235,11 @@ namespace stf
 				s_sprintf(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
 			else if(attack) s_sprintf(b.info)("%s", teamtype[attack].name);
 			else b.info[0] = '\0';
-
 			part_text(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)), b.info);
 			if(attack)
 			{
 				float occupy = !b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
-				int colour = teamtype[attack].colour;
-				part_meter(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius+6.f)), occupy, PART_METER, 1, colour);
-				world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)),
-					colour, enttype[FLAG].radius, enttype[FLAG].radius);
-				if(b.enemy && b.owner)
-				{
-					colour = teamtype[b.owner].colour; // fall through colors dynlight too
-					world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)),
-						colour, enttype[FLAG].radius, enttype[FLAG].radius);
-				}
+				part_meter(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius+6.f)), occupy, PART_METER, 1, teamtype[attack].colour);
 			}
 		}
 	}
@@ -290,6 +280,29 @@ namespace stf
 		drawblip(w, h, s, blend, 2, showenemies);
 		if(showenemies) drawblip(w, h, s, blend, 3);
 	}
+
+    int drawinventory(int x, int y, int s, float blend)
+    {
+		int sy = 0;
+		loopv(st.flags)
+		{
+			stfstate::flaginfo &f = st.flags[i];
+			float skew = f.owner ? 1.f : 0.f, fade = hud::inventoryblend*blend, occupy = skew;
+			int size = int(s*0.5f), team = f.owner;
+			if(f.enemy)
+			{
+				skew = occupy = clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f);
+				if(lastmillis%1000 < int(occupy*1000)) team = f.enemy;
+			}
+			skew = 0.5f+(skew*0.5f);
+			fade *= skew;
+			size = int(size*skew);
+
+			const char *tex = hud::flagtex(team);
+			sy += hud::drawitem(tex, x, y-sy, size, fade, skew, "hud", blend, "%d%%", int(occupy*100));
+		}
+        return sy;
+    }
 
 	void setupflags()
 	{
@@ -335,16 +348,17 @@ namespace stf
 			{
 				s_sprintfd(s)("%s secured %s", teamtype[owner].name, b.name);
 				entities::announce(S_V_FLAGSECURED, s, true);
+				world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)),
+					teamtype[owner].colour, enttype[FLAG].radius, enttype[FLAG].radius);
 			}
 		}
 		else if(b.owner)
 		{
 			s_sprintfd(s)("%s overthrew %s", teamtype[b.owner].name, b.name);
 			entities::announce(S_V_FLAGOVERTHROWN, s, true);
-		}
-        if(b.owner != owner)
 			world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)),
-				teamtype[owner].colour, enttype[FLAG].radius, enttype[FLAG].radius);
+				teamtype[b.owner].colour, enttype[FLAG].radius, enttype[FLAG].radius);
+		}
 		b.owner = owner;
 		b.enemy = enemy;
 		b.converted = converted;

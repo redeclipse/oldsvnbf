@@ -32,7 +32,7 @@ namespace hud
 	FVARP(cursorsize, 0, 0.05f, 1);
 	FVARP(cursorblend, 0, 1.f, 1);
 
-	VARP(showinventory, 0, 2, 2);
+	VARP(showinventory, 0, 1, 1);
 	FVARP(inventorysize, 0, 0.075f, 1);
 	FVARP(inventoryblend, 0, 0.75f, 1);
 	FVARP(inventoryskew, 0, 0.6f, 1);
@@ -45,6 +45,11 @@ namespace hud
 	TVAR(flamertex, "textures/flamer", 0);
 	TVAR(carbinetex, "textures/carbine", 0);
 	TVAR(rifletex, "textures/rifle", 0);
+	TVAR(neutralflagtex, "textures/team", 0);
+	TVAR(alphaflagtex, "textures/teamalpha", 0);
+	TVAR(betaflagtex, "textures/teambeta", 0);
+	TVAR(deltaflagtex, "textures/teamdelta", 0);
+	TVAR(gammaflagtex, "textures/teamgamma", 0);
 
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.06f, 1);
@@ -350,7 +355,7 @@ namespace hud
 		return dist;
 	}
 
-	void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r, float g, float b, const char *text, const char *font, float fade)
+	void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r, float g, float b, const char *font, float fade, const char *text, ...)
 	{
 		const struct rddir { bool axis, swap; float x, y, up, down; } rddirs[8] =
 		{
@@ -390,8 +395,11 @@ namespace hud
 			if(font && *font) pushfont(font);
 			int tx = rd.axis ? int(cx+s*0.5f) : (rd.swap ? int(cx-s) : int(cx+s*2.f)),
 				ty = rd.axis ? (rd.swap ? int(cy-s-FONTH) : int(cy+s*2.f)) : int(cy+s*0.5f-FONTH*0.5f),
-				ta = rd.axis ? AL_CENTER : (rd.swap ? AL_RIGHT : AL_LEFT);
-			draw_textx("%s", tx, ty, int(r*255.f), int(g*255.f), int(b*255.f), int((fade >= 0.f ? fade : blend)*255.f), false, ta, -1, -1, text);
+				ta = rd.axis ? AL_CENTER : (rd.swap ? AL_RIGHT : AL_LEFT),
+				tr = int(r*255.f), tg = int(g*255.f), tb = int(b*255.f),
+				tf = int((fade >= 0.f ? fade : blend)*255.f);
+			s_sprintfdlv(str, text, text);
+			draw_textx("%s", tx, ty, tr, tg, tb, tf, false, ta, -1, -1, str);
 			if(font && *font) popfont();
 		}
 	}
@@ -411,7 +419,7 @@ namespace hud
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
 			const char *text = radarnames ? world::colorname(d, NULL, "", false) : NULL;
-			drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, text, "radar", fade*radarnameblend);
+			drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "radar", fade*radarnameblend, text);
 		}
 	}
 
@@ -432,7 +440,7 @@ namespace hud
 			dir.sub(camera1->o);
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			drawblip(w, h, s, blend*radarblipblend, 2, dir, 1.f, 1.f, 1.f, card, "hud", blend*radarcardblend);
+			drawblip(w, h, s, blend*radarblipblend, 2, dir, 1.f, 1.f, 1.f, "hud", blend*radarcardblend, "%s", card);
 		}
 	}
 
@@ -470,7 +478,7 @@ namespace hud
 				s_sprintf(text)("%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
 			else if(radaritems > 1)
 				s_sprintf(text)("%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
-			drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, text, "radar", fade*radaritemblend);
+			drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend, "%s", text);
 		}
 	}
 
@@ -570,17 +578,45 @@ namespace hud
 		if(radarcard) drawcardinalblips(w, h, cs/2, blend);
 	}
 
-	void drawinventory(int w, int h, int edge, float blend)
+	int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font, float blend, const char *text, ...)
 	{
-		int cx = int(w-edge*1.5f), cy = int(h-edge*1.5f), cs = int(inventorysize*w);
-		const char *hudtexs[GUN_MAX] = {
-			plasmatex, shotguntex, chainguntex,
-			flamertex, carbinetex, rifletex, grenadestex,
+		float f = fade*skew, s = size*skew;
+		settexture(tex, 0);
+		glColor4f(f, f, f, f);
+		drawsized(x-int(s), y-int(s), int(s));
+		if(text && *text)
+		{
+			float off = skew*inventorytextscale;
+			glPushMatrix();
+			glScalef(off, off, 1);
+			int tx = int((x-FONTW/4)*(1.f/off)), ty = int((y-s+FONTW/4)*(1.f/off)),
+				tc = int(255.f*skew), ti = int(255.f*inventorytextblend*blend);
+			if(font && *font) pushfont(font);
+			s_sprintfdlv(str, text, text);
+			draw_textx("%s", tx, ty, tc, tc, tc, ti, false, AL_RIGHT, -1, -1, str);
+			if(font && *font) popfont();
+			glPopMatrix();
+		}
+		return int(s);
+	}
+
+	const char *flagtex(int team)
+	{
+		const char *flagtexs[TEAM_MAX] = {
+			neutralflagtex, alphaflagtex, betaflagtex, deltaflagtex, gammaflagtex
 		};
+		return flagtexs[team];
+	}
+
+	int drawweapons(int x, int y, int s, float blend)
+	{
+		const char *hudtexs[GUN_MAX] = {
+			plasmatex, shotguntex, chainguntex, flamertex, carbinetex, rifletex, grenadestex
+		};
+		int sy = 0;
 		loopi(GUN_MAX) if(world::player1->hasgun(i) || lastmillis-world::player1->gunlast[i] < world::player1->gunwait[i])
 		{
-			settexture(hudtexs[i], 0);
-			float fade = inventoryblend*blend, size = cs, skew = 1.f;
+			float fade = inventoryblend*blend, size = s, skew = 1.f;
 			if(world::player1->gunstate[i] == GNS_SWITCH || world::player1->gunstate[i] == GNS_PICKUP)
 			{
 				float amt = clamp(float(lastmillis-world::player1->gunlast[i])/float(world::player1->gunwait[i]), 0.f, 1.f);
@@ -593,24 +629,21 @@ namespace hud
 				);
 			}
 			else if(i != world::player1->gunselect) skew = inventoryskew;
-			fade *= skew;
-			size *= skew;
-			glColor4f(fade, fade, fade, fade);
-			drawsized(cx-int(size), cy-int(size), int(size));
-			if(showinventory > 1)
-			{
-				float off = skew*inventorytextscale;
-				glPushMatrix();
-				glScalef(off, off, 1);
-				int tx = int((cx-FONTW/4)*(1.f/off)), ty = int((cy-size+FONTW/4)*(1.f/off));
-				pushfont("emphasis");
-				draw_textx("%d", tx, ty, int(255.f*skew), int(255.f*skew), int(255.f*skew), int(255.f*inventorytextblend*blend), false, AL_RIGHT, -1, -1, world::player1->ammo[i]);
-				popfont();
-				glPopMatrix();
-			}
-			cy -= int(size);
+			sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "emphasis", blend, "%d", world::player1->ammo[i]);
 		}
-		//if(m_ctf(world::gamemode)) cy -= ctf::drawinventory(cx, cy, cs, blend);
+		return sy;
+	}
+
+	void drawinventory(int w, int h, int edge, float blend)
+	{
+		int cx = int(w-edge*1.5f), cy = int(h-edge*1.5f), cs = int(inventorysize*w),
+			cr = cs/4, cc = 0;
+		if((cc = drawweapons(cx, cy, cs, blend)) > 0)
+			cy -= cc+cr;
+		if(m_ctf(world::gamemode) && ((cc = ctf::drawinventory(cx, cy, cs, blend)) > 0))
+			cy -= cc+cr;
+		if(m_stf(world::gamemode) && ((cc = stf::drawinventory(cx, cy, cs, blend)) > 0))
+			cy -= cc+cr;
 	}
 
 	void drawgamehud(int w, int h)
