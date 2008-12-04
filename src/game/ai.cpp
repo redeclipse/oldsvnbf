@@ -574,8 +574,6 @@ namespace ai
 	{
 		if(d->ai)
 		{
-			d->hitpush(damage, dir);
-
 			if(AITARG(d, e, true)) // see if this ai is interested in a grudge
 			{
 				bool r = false, p = false;

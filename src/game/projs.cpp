@@ -25,18 +25,22 @@ namespace projs
 
 	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0, int radius = 0)
 	{
-		vec pos = world::headpos(d);
-		int f = flags;
-		if(!(f&HIT_PUSH))
-			f |= hitzones(proj.o, pos, d->height, d->aboveeye, radius);
 		hitmsg &h = hits.add();
-		h.flags = f;
+		h.flags = flags;
 		h.target = d->clientnum;
 		h.lifesequence = d->lifesequence;
 		h.info = dist;
-		vec dir = vec(vec(vec(pos).sub(vec(0, 0, d->height*0.5f))).sub(proj.o)).normalize();
-		pos.add(vec(proj.vel).normalize()).normalize();
+		vec dir, middle = d->o;
+		middle.z += (d->aboveeye-d->height)/2;
+		dir = vec(middle).sub(proj.o).normalize();
+		dir.add(vec(proj.vel).normalize()).normalize();
 		h.dir = ivec(int(dir.x*DNF), int(dir.y*DNF), int(dir.z*DNF));
+	}
+
+	void hitproj(gameent *d, projent &proj)
+	{
+		int flags = HIT_PROJ|HIT_PUSH|hitzones(proj.o, d->o, d->height, d->aboveeye);
+		hitpush(d, proj, flags);
 	}
 
 	void radialeffect(gameent *d, projent &proj, bool explode, int radius)
@@ -47,9 +51,12 @@ namespace projs
 		dir.div(dist);
 		if(dist < 0) dist = 0;
 		if(dist < radius)
-			hitpush(d, proj, explode ? HIT_EXPLODE : HIT_BURN, int(dist*DMF), radius);
-		else if(explode && dist < radius*2)
-			hitpush(d, proj, HIT_PUSH, int(dist*DMF), radius);
+		{
+			int flags = (explode ? HIT_EXPLODE|HIT_PUSH : HIT_BURN)|hitzones(proj.o, d->o, d->height, d->aboveeye, radius);
+			hitpush(d, proj, flags, int(dist*DMF), radius);
+		}
+		else if(explode && dist < radius*4)
+			hitpush(d, proj, HIT_PUSH|HIT_WAVE, int(dist*DMF), radius);
 	}
 
 	void remove(gameent *owner)
@@ -464,7 +471,7 @@ namespace projs
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 			if(lastmillis-proj.lasteffect > 500)
 			{
-				part_create(PART_BLOOD, 3000, proj.o, 0x66FFFF, 1.2f);
+				part_create(PART_BLOOD, 5000, proj.o, 0x66FFFF, 2.f);
 				proj.lasteffect = lastmillis;
 			}
 		}
@@ -522,7 +529,7 @@ namespace projs
 						if(proj.attr1 == GUN_GL)
 						{
 							world::quakewobble += max(int(guntype[proj.attr1].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/guntype[proj.attr1].explode)), 1);
-							part_fireball(vec(proj.o).sub(vec(0, 0, 2)), guntype[proj.attr1].explode*0.75f, PART_EXPLOSION, 1000, 0x662200, 4.f); // explosion fireball
+							part_fireball(vec(proj.o).sub(vec(0, 0, 2)), float(guntype[proj.attr1].explode), PART_EXPLOSION, 500, 0x883300, 1.f);
 							loopi(rnd(20)+10)
 								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(1500)+1500, 0, rnd(750), rnd(60)+40);
 						}
@@ -557,7 +564,7 @@ namespace projs
 						}
 					}
 					else if(proj.hit && proj.hit->type == ENT_PLAYER)
-						hitpush((gameent *)proj.hit, proj);
+						hitproj((gameent *)proj.hit, proj);
 
 					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-world::maptime, proj.attr1, proj.id >= 0 ? proj.id-world::maptime : proj.id,
 							0, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());

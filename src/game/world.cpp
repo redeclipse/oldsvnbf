@@ -79,6 +79,7 @@ namespace world
 
 	VARP(shownamesabovehead, 0, 1, 2);
 	VARP(showdamageabovehead, 0, 0, 1);
+	VARP(playdamagetones, 0, 2, 2);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
@@ -463,8 +464,9 @@ namespace world
 	void damaged(int gun, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
 	{
 		if(d->state != CS_ALIVE || intermission) return;
-		if(d == player1 || d->ai) d->hitpush(damage, dir);
-		if(!(flags&HIT_PUSH)) // otherwise it's just a push
+		if(flags&HIT_PUSH && (d == player1 || d->ai))
+			d->hitpush(damage, flags, dir);
+		if(hithurts(flags))
 		{
 			d->lastregen = 0;
 			d->lastpain = lastmillis;
@@ -482,7 +484,7 @@ namespace world
 			{
 				vec p = headpos(d);
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-				part_splash(PART_BLOOD, max(damage/3, 3), REGENWAIT, p, 0x66FFFF, 3.f, 4);
+				part_splash(PART_BLOOD, max(damage/2, 2), 5000, p, 0x66FFFF, 2.f, int(d->radius));
 				if(showdamageabovehead)
 				{
 					s_sprintfd(ds)("@%d", damage);
@@ -493,15 +495,18 @@ namespace world
 
 			if(d != actor)
 			{
-				int snd = 0;
-				if(damage >= 200) snd = 7;
-				else if(damage >= 150) snd = 6;
-				else if(damage >= 100) snd = 5;
-				else if(damage >= 75) snd = 4;
-				else if(damage >= 50) snd = 3;
-				else if(damage >= 25) snd = 2;
-				else if(damage >= 10) snd = 1;
-				playsound(S_DAMAGE1+snd, actor->o, actor);
+				if(playdamagetones >= (d == player1 || actor == player1 ? 1 : 2))
+				{
+					int snd = 0;
+					if(damage >= 200) snd = 7;
+					else if(damage >= 150) snd = 6;
+					else if(damage >= 100) snd = 5;
+					else if(damage >= 75) snd = 4;
+					else if(damage >= 50) snd = 3;
+					else if(damage >= 25) snd = 2;
+					else if(damage >= 10) snd = 1;
+					playsound(S_DAMAGE1+snd, actor->o, actor);
+				}
 				if(actor == player1) lasthit = lastmillis;
 			}
 
