@@ -1309,9 +1309,11 @@ namespace entities
 			switch(e.type)
 			{
 				case MAPSOUND:
+				{
 					renderradius(e.o, e.attr2, e.attr2, e.attr2, false);
 					renderradius(e.o, e.attr3, e.attr3, e.attr3, false);
 					break;
+				}
 				case LIGHT:
 				{
 					int s = e.attr1 ? e.attr1 : hdr.worldsize;
@@ -1319,15 +1321,27 @@ namespace entities
 					break;
 				}
 				case ANNOUNCER:
+				{
 					renderradius(e.o, e.attr1, e.attr1, e.attr1, false);
 					renderradius(e.o, e.attr2, e.attr2, e.attr2, false);
 					break;
+				}
+				case FLAG:
+				{
+					float radius = (float)enttype[e.type].radius;
+					renderradius(e.o, radius, radius, radius, false);
+					radius *= 0.5f;
+					renderradius(e.o, radius, radius, radius, false);
+					break;
+				}
 				default:
+				{
 					float radius = (float)enttype[e.type].radius;
 					if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attr4)
 						radius = (float)e.attr4;
 					if(radius > 0.f) renderradius(e.o, radius, radius, radius, false);
 					break;
+				}
 			}
 		}
 

@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			120
+#define GAMEVERSION			121
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -73,7 +73,7 @@ enttypes enttype[] = {
 	{ RESERVED,		59,		12,		EU_NONE,	false,		"reserved" },
 	{ TRIGGER,		58,		16,		EU_AUTO,	false,		"trigger" },
 	{ PUSHER,		58,		12,		EU_AUTO,	false,		"pusher" },
-	{ FLAG,			48,		16,		EU_NONE,	false,		"flag" },
+	{ FLAG,			48,		32,		EU_NONE,	false,		"flag" },
 	{ CHECKPOINT,	48,		16,		EU_NONE,	false,		"checkpoint" }, // FIXME
 	{ CAMERA,		48,		0,		EU_NONE,	false,		"camera" },
 	{ WAYPOINT,		1,		8,		EU_NONE,	true,		"waypoint" },

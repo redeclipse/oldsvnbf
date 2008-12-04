@@ -513,6 +513,7 @@ namespace ai
 		interests.setsizenodelete(0);
 
 		if(m_ctf(world::gamemode)) ctf::aifind(d, b, interests);
+		if(m_stf(world::gamemode)) stf::aifind(d, b, interests);
 		if(!d->hasgun(d->ai->gunpref)) gunfind(d, b, interests);
 		while(!interests.empty())
 		{
@@ -642,6 +643,7 @@ namespace ai
 				}
 			}
 			if(m_ctf(world::gamemode) && ctf::aicheck(d, b)) return true;
+			if(m_stf(world::gamemode) && stf::aicheck(d, b)) return true;
 			if(find(d, b, true)) return true;
 			if(defer(d, b, true)) return true;
 			if(randomnode(d, b, AIISFAR, 1e16f))
@@ -671,6 +673,7 @@ namespace ai
 				case AI_T_AFFINITY:
 				{
 					if(m_ctf(world::gamemode)) return ctf::aidefend(d, b);
+					if(m_stf(world::gamemode)) return stf::aidefend(d, b);
 					break;
 				}
 				case AI_T_PLAYER:
@@ -785,6 +788,7 @@ namespace ai
 				case AI_T_AFFINITY:
 				{
 					if(m_ctf(world::gamemode)) return ctf::aipursue(d, b);
+					if(m_stf(world::gamemode)) return stf::aipursue(d, b);
 					break;
 				}
 
