@@ -108,10 +108,6 @@ struct ctfstate
 namespace ctf
 {
 	extern ctfstate st;
-	extern void aifind(gameent *d, aistate &b, vector<interest> &interests);
-	extern bool aicheck(gameent *d, aistate &b);
-	extern bool aidefend(gameent *d, aistate &b);
-	extern bool aipursue(gameent *d, aistate &b);
 	extern void sendflags(ucharbuf &p);
 	extern void parseflags(ucharbuf &p, bool commit);
 	extern void dropflag(gameent *d, int i, const vec &droploc);
@@ -126,5 +122,9 @@ namespace ctf
 	extern int respawnwait(gameent *d);
 	extern void preload();
 	extern void render();
+	extern void aifind(gameent *d, aistate &b, vector<interest> &interests);
+	extern bool aicheck(gameent *d, aistate &b);
+	extern bool aidefend(gameent *d, aistate &b);
+	extern bool aipursue(gameent *d, aistate &b);
 }
 #endif

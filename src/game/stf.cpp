@@ -235,11 +235,11 @@ namespace stf
 				s_sprintf(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
 			else if(attack) s_sprintf(b.info)("%s", teamtype[attack].name);
 			else b.info[0] = '\0';
-			part_text(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)), b.info);
+			part_text(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2+4.f)), b.info);
 			if(attack)
 			{
 				float occupy = !b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
-				part_meter(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius+6.f)), occupy, PART_METER, 1, teamtype[attack].colour);
+				part_meter(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2+6.f)), occupy, PART_METER, 1, teamtype[attack].colour);
 			}
 		}
 	}
@@ -346,18 +346,16 @@ namespace stf
 		{
 			if(b.owner != owner)
 			{
-				s_sprintfd(s)("%s secured %s", teamtype[owner].name, b.name);
+				s_sprintfd(s)("team \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
 				entities::announce(S_V_FLAGSECURED, s, true);
-				world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)),
-					teamtype[owner].colour, enttype[FLAG].radius, enttype[FLAG].radius);
+				world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius/2);
 			}
 		}
 		else if(b.owner)
 		{
-			s_sprintfd(s)("%s overthrew %s", teamtype[b.owner].name, b.name);
+			s_sprintfd(s)("team \fs%s%s\fS overthrew %s", teamtype[b.owner].chat, teamtype[b.owner].name, b.name);
 			entities::announce(S_V_FLAGOVERTHROWN, s, true);
-			world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius)),
-				teamtype[b.owner].colour, enttype[FLAG].radius, enttype[FLAG].radius);
+			world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[b.owner].colour, enttype[FLAG].radius/2);
 		}
 		b.owner = owner;
 		b.enemy = enemy;
@@ -423,6 +421,84 @@ namespace stf
             }
 		}
         return rnd(2) ? best : alt;
+	}
+
+	bool aicheck(gameent *d, aistate &b)
+	{
+		return false;
+	}
+
+	void aifind(gameent *d, aistate &b, vector<interest> &interests)
+	{
+		vec pos = world::headpos(d);
+		loopvj(st.flags)
+		{
+			stfstate::flaginfo &f = st.flags[j];
+
+			vector<int> targets; // build a list of others who are interested in this
+			ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
+
+			gameent *e = NULL;
+			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
+			{ // try to guess what non ai are doing
+				vec ep = world::headpos(e);
+				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.pos) <= ((enttype[FLAG].radius*enttype[FLAG].radius)*2.f))
+					targets.add(e->clientnum);
+			}
+
+			if(f.owner != d->team || f.enemy)
+			{
+				bool guard = false;
+				if(targets.empty()) guard = true;
+				else if(d->gunselect != GUN_PLASMA)
+				{ // see if we can relieve someone who only has a plasma
+					gameent *t;
+					loopvk(targets) if((t = world::getclient(targets[k])) && t->gunselect == GUN_PLASMA)
+					{
+						guard = true;
+						break;
+					}
+				}
+
+				if(guard)
+				{ // defend the flag
+					interest &n = interests.add();
+					n.state = AI_S_DEFEND;
+					n.node = entities::entitynode(f.pos, false);
+					n.target = j;
+					n.targtype = AI_T_AFFINITY;
+					n.expire = 10000;
+					n.tolerance = enttype[FLAG].radius*2.f;
+					n.score = pos.squaredist(f.pos)/(d->gunselect != GUN_PLASMA ? 100.f : 1.f);
+					n.defers = false;
+				}
+			}
+		}
+	}
+
+	bool aidefend(gameent *d, aistate &b)
+	{
+		if(st.flags.inrange(b.target))
+		{
+			stfstate::flaginfo &f = st.flags[b.target];
+			float radius = 1, wander = enttype[FLAG].radius;
+			if(f.owner == d->team && !f.enemy)
+			{
+				radius = enttype[FLAG].radius*2.f;
+				wander = enttype[FLAG].radius*8.f;
+			}
+			if(ai::patrol(d, b, f.pos, 1, enttype[FLAG].radius))
+			{
+				ai::defer(d, b, false);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool aipursue(gameent *d, aistate &b)
+	{
+		return aidefend(d, b);
 	}
 }
 #endif

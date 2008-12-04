@@ -18,7 +18,7 @@ struct ctfservmode : ctfstate, servmode
         if(notgotflags) return;
         loopv(flags) if(flags[i].owner == ci->clientnum)
         {
-			ivec p(vec(ci->state.o.dist(o) > enttype[FLAG].radius+12.f ? ci->state.o : o).mul(DMF));
+			ivec p(vec(ci->state.o.dist(o) > enttype[FLAG].radius ? ci->state.o : o).mul(DMF));
             sendf(-1, 1, "ri6", SV_DROPFLAG, ci->clientnum, i, p.x, p.y, p.z);
             ctfstate::dropflag(i, p.tovec().div(DMF), lastmillis);
         }
@@ -57,7 +57,7 @@ struct ctfservmode : ctfstate, servmode
             {
 				flag &goal = flags[k];
 
-				if(goal.owner<0 && !goal.droptime && newpos.dist(goal.spawnloc) < enttype[FLAG].radius)
+				if(goal.owner<0 && !goal.droptime && newpos.dist(goal.spawnloc) < enttype[FLAG].radius/2)
 				{
 					returnflag(i);
 					goal.score++;
@@ -152,7 +152,7 @@ namespace ctf
 	{
 		vec dir;
 		vecfromyawpitch(world::player1->aimyaw, world::player1->aimpitch, -world::player1->move, -world::player1->strafe, dir);
-		dir.mul((world::player1->radius*2.f)+enttype[FLAG].radius+1.f);
+		dir.mul((world::player1->radius*2.f)+enttype[FLAG].radius/2+1.f);
 		vec o(vec(world::player1->o).add(dir).mul(DMF));
 		client::addmsg(SV_DROPFLAG, "ri4", world::player1->clientnum, o.x, o.y, o.z);
 	}
@@ -220,7 +220,7 @@ namespace ctf
             const char *flagname = teamtype[f.team].flag;
             vec above(f.pos());
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
-            above.z += enttype[FLAG].radius;
+            above.z += enttype[FLAG].radius/2;
             s_sprintfd(info)("@%s flag", teamtype[f.team].name);
 			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
         }
@@ -302,7 +302,7 @@ namespace ctf
     void flagexplosion(int i, const vec &loc)
     {
 		ctfstate::flag &f = st.flags[i];
-		world::spawneffect(vec(loc).add(vec(0, 0, enttype[FLAG].radius)), teamtype[f.team].colour, enttype[FLAG].radius);
+		world::spawneffect(vec(loc).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[f.team].colour, enttype[FLAG].radius/2);
     }
 
     void flageffect(int i, const vec &from, const vec &to)
@@ -365,7 +365,7 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		world::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius)), teamtype[f.team].colour, enttype[FLAG].radius);
+		world::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[f.team].colour, enttype[FLAG].radius/2);
 		f.interptime = lastmillis;
 		s_sprintfd(s)("%s %s the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		st.takeflag(i, d);
@@ -379,7 +379,7 @@ namespace ctf
         {
             ctfstate::flag &f = st.flags[i];
             if(!f.team || !f.ent || f.owner || (f.droptime ? f.droploc.x<0 : f.team==d->team)) continue;
-            if(o.dist(f.pos()) < enttype[FLAG].radius)
+            if(o.dist(f.pos()) < enttype[FLAG].radius/2)
             {
                 if(f.pickup) continue;
                 client::addmsg(SV_TAKEFLAG, "ri2", d->clientnum, i);
@@ -410,7 +410,7 @@ namespace ctf
 				}
 			}
 
-			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].pos(), enttype[FLAG].radius))
+			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].pos(), enttype[FLAG].radius/2))
 			{
 				aistate &c = d->ai->setstate(AI_S_PURSUE); // replaces current state!
 				c.targtype = AI_T_AFFINITY;
@@ -454,7 +454,7 @@ namespace ctf
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
 				vec ep = world::headpos(e);
-				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= ((enttype[FLAG].radius*enttype[FLAG].radius)*2.f) || f.owner == e))
+				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius) || f.owner == e))
 					targets.add(e->clientnum);
 			}
 
@@ -480,7 +480,7 @@ namespace ctf
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
 					n.expire = 10000;
-					n.tolerance = enttype[FLAG].radius*2.f;
+					n.tolerance = enttype[FLAG].radius;
 					n.score = pos.squaredist(f.pos())/(d->gunselect != GUN_PLASMA ? 100.f : 1.f);
 					n.defers = false;
 				}
@@ -495,7 +495,7 @@ namespace ctf
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
 					n.expire = 10000;
-					n.tolerance = enttype[FLAG].radius*2.f;
+					n.tolerance = enttype[FLAG].radius;
 					n.score = pos.squaredist(f.pos());
 					n.defers = false;
 				}
@@ -526,7 +526,8 @@ namespace ctf
 		{
 			ctfstate::flag &f = st.flags[b.target];
 			if(f.owner && ai::violence(d, b, f.owner, true)) return true;
-			if(ai::patrol(d, b, f.pos(), enttype[FLAG].radius, enttype[FLAG].radius*4.f))
+			float radius = enttype[FLAG].radius, wander = enttype[FLAG].radius*4.f;
+			if(ai::patrol(d, b, f.pos(), radius, wander))
 			{
 				ai::defer(d, b, false);
 				return true;
@@ -554,7 +555,7 @@ namespace ctf
 				if(hasflags.empty())
 					return false; // otherwise why are we pursuing home?
 
-				if(ai::makeroute(d, b, f.pos(), enttype[FLAG].radius))
+				if(ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2))
 				{
 					ai::defer(d, b, false);
 					return true;
@@ -563,7 +564,7 @@ namespace ctf
 			else
 			{
 				if(f.owner == d) return aihomerun(d, b);
-				if(ai::makeroute(d, b, f.pos(), enttype[FLAG].radius))
+				if(ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2))
 				{
 					ai::defer(d, b, false);
 					return true;

@@ -575,7 +575,8 @@ namespace projs
 			{
 				if(!proj.beenused)
 				{
-					world::spawneffect(proj.o, 0x221188, int(proj.radius), int(proj.radius));
+					if(entities::ents.inrange(proj.ent))
+						world::spawneffect(proj.o, 0x221188, enttype[entities::ents[proj.ent]->type].radius);
 					if(proj.local)
 						client::addmsg(SV_DESTROY, "ri6", proj.owner->clientnum, lastmillis-world::maptime, -1, proj.id, 0, 0);
 				}
