@@ -70,13 +70,13 @@ namespace hud
 	FVARP(radarnameblend, 0, 1.f, 1);
 	FVARP(radarblipblend, 0, 1.f, 1);
 	FVARP(radarsize, 0, 0.025f, 1);
-	VARP(radardist, 0, 128, INT_MAX-1);
+	VARP(radardist, 0, 256, INT_MAX-1);
 	VARP(radarcard, 0, 1, 1);
 	VARP(radaritems, 0, 2, 2);
 	VARP(radarnames, 0, 1, 1);
 	VARP(radarhealth, 0, 1, 1);
 	FVARP(radarskew, -1, -0.3f, 1);
-	VARP(editradardist, 0, 64, INT_MAX-1);
+	VARP(editradardist, 0, 128, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
 
 	//VARP(showtips, 0, 2, 3);
