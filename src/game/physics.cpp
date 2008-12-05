@@ -132,7 +132,7 @@ namespace physics
     void slideagainst(physent *d, vec &dir, const vec &obstacle, bool foundfloor)
     {
         vec wall(obstacle);
-        if(foundfloor && wall.z)
+        if(foundfloor && wall.z > 0)
         {
             wall.z = 0;
             if(!wall.iszero()) wall.normalize();
@@ -160,7 +160,7 @@ namespace physics
         recalcdir(d, oldvel, dir);
     }
 
-	bool trystepup(physent *d, vec &dir, float maxstep, const vec &floor)
+    bool trystepup(physent *d, vec &dir, const vec &obstacle, float maxstep, const vec &floor)
 	{
 		vec old(d->o);
 		/* check if there is space atop the stair to move to */
@@ -174,6 +174,20 @@ namespace physics
 				return false;
 			}
 		}
+
+        d->o = old;
+        vec stairdir = (obstacle.z >= 0 && obstacle.z < slopez ? vec(-obstacle.x, -obstacle.y, 0) : vec(dir.x, dir.y, 0)).normalize();
+        stairdir.z += 1;
+        stairdir.mul(maxstep);
+        d->o.add(stairdir);
+        if(!collide(d, stairdir))
+        {
+            if(collide(d, vec(0, 0, -1), slopez))
+            {
+                d->o = old;
+                return false;
+            }
+        }
 
         /* try stepping up half as much as forward */
         d->o = old;
@@ -360,7 +374,7 @@ namespace physics
             {
                 d->o = old;
                 d->zmargin = 0;
-                if(trystepup(d, dir, stairheight, d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR ? d->floor : vec(wall))) return true;
+                if(trystepup(d, dir, obstacle, stairheight, d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR ? d->floor : vec(wall))) return true;
             }
             else
             {
@@ -376,7 +390,7 @@ namespace physics
             if(!collide(d, vec(0, 0, -1), slopez))
             {
                 d->o = old;
-                if(trystepup(d, dir, stairheight, vec(wall))) return true;
+                if(trystepup(d, dir, vec(0, 0, 1), stairheight, vec(wall))) return true;
                 d->o.add(dir);
             }
         }
