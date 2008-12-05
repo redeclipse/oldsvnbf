@@ -1607,11 +1607,11 @@ struct skelmodel : animmodel
 
     struct skelpart : part
     {
-        static animpartmask *buildingpartmask;
+        animpartmask *buildingpartmask;
 
         uchar *partmask;
 
-        skelpart() : partmask(NULL)
+        skelpart() : buildingpartmask(NULL), partmask(NULL)
         {
         }
 
@@ -1681,6 +1681,4 @@ struct skelmodel : animmodel
                 LINK_TAG;
     }
 };
-
-skelmodel::animpartmask *skelmodel::skelpart::buildingpartmask = NULL;
 
