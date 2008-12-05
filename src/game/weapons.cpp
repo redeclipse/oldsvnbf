@@ -11,8 +11,7 @@ namespace weapons
 	ICOMMAND(ammo, "s", (char *a),
 	{
 		int n = a[0] ? atoi(a) : world::player1->gunselect;
-		if(n <= -1 || n >= GUN_MAX) return;
-		intret(world::player1->ammo[n]);
+		intret(isgun(n) ? world::player1->ammo[n] : -1);
 	});
 
 	void weaponswitch(gameent *d, int a = -1, int b = -1)

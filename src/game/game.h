@@ -385,12 +385,12 @@ struct teamtypes
 };
 #ifdef GAMESERVER
 teamtypes teamtype[] = {
-	{ TEAM_NEUTRAL,	0xFFFFFF,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fw" },
-	{ TEAM_ALPHA,	0x8888FF,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
-	{ TEAM_BETA,	0xFF8888,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
-	{ TEAM_DELTA,	0xFFFF88,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0x88FF88,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
-	{ TEAM_ENEMY,	0xFFFFFF,	"enemy",		"player",		"player/vwep",		"flag",			"team",			"\fa" }
+	{ TEAM_NEUTRAL,	0xAAAAAA,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fw" },
+	{ TEAM_ALPHA,	0x2222AA,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
+	{ TEAM_BETA,	0xAA2222,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
+	{ TEAM_DELTA,	0xAAAA22,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
+	{ TEAM_GAMMA,	0x22AA22,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
+	{ TEAM_ENEMY,	0xAAAAAA,	"enemy",		"player",		"player/vwep",		"flag",			"team",			"\fa" }
 };
 #else
 extern teamtypes teamtype[];

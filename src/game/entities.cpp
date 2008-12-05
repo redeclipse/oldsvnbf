@@ -1378,8 +1378,7 @@ namespace entities
 
 	void renderentlight(gameentity &e)
 	{
-		vec colour(e.attr2, e.attr3, e.attr4);
-		colour.div(255.f);
+		vec colour = vec(e.attr2, e.attr3, e.attr4).div(255.f);
 		adddynlight(vec(e.o), float(e.attr1 ? e.attr1 : hdr.worldsize), colour);
 	}
 
@@ -1387,13 +1386,14 @@ namespace entities
 	{
 		if(world::player1->state == CS_EDITING && showlighting)
 		{
+			#define islightable(q) ((q)->type == LIGHT && (q)->attr1 > 0)
             loopv(entgroup)
             {
                 int n = entgroup[i];
-                if(ents.inrange(n) && ents[n]->type == LIGHT && ents[n]->attr1 > 0)
+                if(ents.inrange(n) && islightable(ents[n]) && n != enthover)
                     renderfocus(n, renderentlight(e));
             }
-            if(ents.inrange(enthover) && ents[enthover]->type == LIGHT && ents[enthover]->attr1 > 0)
+            if(ents.inrange(enthover) && islightable(ents[enthover]))
                 renderfocus(enthover, renderentlight(e));
 		}
 	}
