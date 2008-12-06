@@ -1407,6 +1407,7 @@ namespace server
 			ts.dodamage(realdamage, gamemillis);
 			actor->state.damage += realdamage;
 		}
+		else realdamage = int(realdamage*0.5f*sv_damagescale);
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, realflags, realdamage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
 
 		if(hithurts(realflags) && realdamage && ts.health <= 0)
@@ -1465,7 +1466,7 @@ namespace server
 			loopv(e.hits)
 			{
 				hitset &h = e.hits[i];
-				int size = e.radial ? (h.flags&HIT_WAVE ? e.radial*4 : e.radial) : 0;
+				int size = e.radial ? (h.flags&HIT_WAVE ? e.radial*2 : e.radial) : 0;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
 				if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (size && (h.dist<0 || h.dist>size))) continue;
 				int damage = size ? int(guntype[e.gun].damage*(1.f-h.dist/EXPLOSIONSCALE/size)) : guntype[e.gun].damage;
@@ -2129,7 +2130,7 @@ namespace server
 					ev.shot.id = getint(p);
 					ev.shot.gun = getint(p);
 					ev.shot.power = getint(p);
-					seteventmillis(ev.shot);
+					if(cp) seteventmillis(ev.shot);
 					loopk(3) ev.shot.from[k] = getint(p)/DMF;
 					ev.shot.num = getint(p);
 					loop(q, ev.shot.num)
@@ -2162,7 +2163,7 @@ namespace server
 					gameevent &ev = havecn ? cp->addevent() : dummyevent;
 					ev.type = GE_DESTROY;
 					ev.destroy.id = getint(p);
-					seteventmillis(ev.destroy); // this is the event millis
+					if(cp) seteventmillis(ev.destroy); // this is the event millis
 					ev.destroy.gun = getint(p);
 					ev.destroy.id = getint(p); // this is the actual id
 					ev.destroy.radial = getint(p);

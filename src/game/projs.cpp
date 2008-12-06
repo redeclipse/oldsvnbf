@@ -55,7 +55,7 @@ namespace projs
 			int flags = (explode ? HIT_EXPLODE|HIT_PUSH : HIT_BURN)|hitzones(proj.o, d->o, d->height, d->aboveeye, radius);
 			hitpush(d, proj, flags, int(dist*DMF), radius);
 		}
-		else if(explode && dist < radius*4)
+		else if(explode && dist < radius*2)
 			hitpush(d, proj, HIT_PUSH|HIT_WAVE, int(dist*DMF), radius);
 	}
 
