@@ -203,10 +203,10 @@ namespace ai
 					s_sprintfd(val)("%d", sv_botbalance);
 					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
 				}
-				else srvoutf(ci->clientnum, "botbalance is at its highest");
+				else srvmsgf(ci->clientnum, "botbalance is at its highest");
 			}
 			else if(!addai(AI_BOT, skill))
-				srvoutf(ci->clientnum, "failed to create or assign bot");
+				srvmsgf(ci->clientnum, "failed to create or assign bot");
 		}
 	}
 
@@ -223,10 +223,10 @@ namespace ai
 					s_sprintfd(val)("%d", sv_botbalance);
 					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
 				}
-				else srvoutf(ci->clientnum, "botbalance is at its lowest");
+				else srvmsgf(ci->clientnum, "botbalance is at its lowest");
 			}
 			else if(!delai(AI_BOT))
-				srvoutf(ci->clientnum, "failed to remove any bots");
+				srvmsgf(ci->clientnum, "failed to remove any bots");
 		}
 	}
 }

@@ -408,7 +408,7 @@ namespace server
 	{
 		if(flag <= PRIV_MASTER && !numclients(ci->clientnum, false, true)) return true;
 		else if(ci->local || ci->privilege >= flag) return true;
-		else if(msg) srvoutf(ci->clientnum, "\fraccess denied, you need %s", privname(flag));
+		else if(msg) srvmsgf(ci->clientnum, "\fraccess denied, you need %s", privname(flag));
 		return false;
 	}
 
@@ -603,12 +603,12 @@ namespace server
         loopi(GUN_MAX) putint(p, gs.ammo[i]);
     }
 
-	void relayf(const char *s, ...)
+	void relayf(int r, const char *s, ...)
 	{
 		s_sprintfdlv(str, s, s);
 		string st;
 		filtertext(st, str);
-		ircoutf("%s", st);
+		ircoutf(r, "%s", st);
 	}
 
 	void srvmsgf(int cn, const char *s, ...)
@@ -617,11 +617,11 @@ namespace server
 		sendf(cn, 1, "ris", SV_SERVMSG, str);
 	}
 
-	void srvoutf(int cn, const char *s, ...)
+	void srvoutf(const char *s, ...)
 	{
 		s_sprintfdlv(str, s, s);
-		srvmsgf(cn, "%s", str);
-		if(cn < 0) relayf("%s", str);
+		srvmsgf(-1, "%s", str);
+		relayf(1, "%s", str);
 	}
 
 	void writedemo(int chan, void *data, int len)
@@ -657,13 +657,13 @@ namespace server
 		{
 			loopv(demos) delete[] demos[i].data;
 			demos.setsize(0);
-			srvoutf(-1, "cleared all demos");
+			srvoutf("cleared all demos");
 		}
 		else if(demos.inrange(n-1))
 		{
 			delete[] demos[n-1].data;
 			demos.remove(n-1);
-			srvoutf(-1, "cleared demo %d", n);
+			srvoutf("cleared demo %d", n);
 		}
 	}
 
@@ -683,7 +683,7 @@ namespace server
 
 		sendf(-1, 1, "rii", SV_DEMOPLAYBACK, 0);
 
-		srvoutf(-1, "demo playback finished");
+		srvoutf("demo playback finished");
 
 		loopv(clients)
 		{
@@ -716,11 +716,11 @@ namespace server
 		if(msg[0])
 		{
 			if(demoplayback) { gzclose(demoplayback); demoplayback = NULL; }
-			srvoutf(-1, "%s", msg);
+			srvoutf("%s", msg);
 			return;
 		}
 
-		srvoutf(-1, "playing demo \"%s\"", file);
+		srvoutf("playing demo \"%s\"", file);
 
 		sendf(-1, 1, "rii", SV_DEMOPLAYBACK, 1);
 
@@ -789,7 +789,7 @@ namespace server
 		char *timestr = ctime(&t), *trim = timestr + strlen(timestr);
 		while(trim>timestr && isspace(*--trim)) *trim = '\0';
 		s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, gamename(gamemode, mutators), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
-		srvoutf(-1, "demo \"%s\" recorded", d.info);
+		srvoutf("demo \"%s\" recorded", d.info);
 		d.data = new uchar[len];
 		d.len = len;
 		fread(d.data, 1, len, demotmp);
@@ -818,7 +818,7 @@ namespace server
 		}
 #endif
 
-        srvoutf(-1, "recording demo");
+        srvoutf("recording demo");
 
         demorecord = f;
 
@@ -885,7 +885,7 @@ namespace server
 		if(force || (best && best->count >= reqvotes))
 		{
 			if(demorecord) enddemorecord();
-			srvoutf(-1, "%s", force ? "vote passed by default" : "vote passed by majority");
+			srvoutf("%s", force ? "vote passed by default" : "vote passed by majority");
 			if(best && best->count >= reqvotes)
 			{
 				sendf(-1, 1, "ri2si2", SV_MAPCHANGE, 1, best->map, best->mode, best->muts);
@@ -906,7 +906,7 @@ namespace server
         if(!ci || (ci->state.state==CS_SPECTATOR && !haspriv(ci, PRIV_MASTER, true)) || !m_game(reqmode)) return;
 		if(reqmode < G_LOBBY && !ci->local)
 		{
-			srvoutf(ci->clientnum, "\fraccess denied, you must be a local client");
+			srvmsgf(ci->clientnum, "\fraccess denied, you must be a local client");
 			return;
 		}
 
@@ -919,13 +919,13 @@ namespace server
 		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, true, true)))
 		{
 			if(demorecord) enddemorecord();
-			srvoutf(-1, "%s [%s] forced %s on map %s", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf("%s [%s] forced %s on map %s", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
 			sendf(-1, 1, "ri2si2", SV_MAPCHANGE, 1, ci->mapvote, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 		}
 		else
 		{
-			srvoutf(-1, "%s suggests %s on map %s", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf("%s suggests %s on map %s", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
 			checkvotes();
 		}
 	}
@@ -1127,7 +1127,7 @@ namespace server
 						char *ret = executeret(s);
 						if(ret)
 						{
-							srvoutf(-1, "\fm%s: %s returned %s", colorname(ci), cmd, ret);
+							srvoutf("\fm%s: %s returned %s", colorname(ci), cmd, ret);
 							delete[] ret;
 						}
 						return;
@@ -1136,18 +1136,18 @@ namespace server
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvoutf(ci->clientnum, "\fm%s = %d", cmd, *id->storage.i);
+							srvmsgf(ci->clientnum, "\fm%s = %d", cmd, *id->storage.i);
 							return;
 						}
 						if(id->maxval < id->minval)
 						{
-							srvoutf(ci->clientnum, "\frcannot override variable: %s", cmd);
+							srvmsgf(ci->clientnum, "\frcannot override variable: %s", cmd);
 							return;
 						}
 						int ret = atoi(arg);
 						if(ret < id->minval || ret > id->maxval)
 						{
-							srvoutf(ci->clientnum, "\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
+							srvmsgf(ci->clientnum, "\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
 							return;
 						}
                         *id->storage.i = ret;
@@ -1159,7 +1159,7 @@ namespace server
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvoutf(ci->clientnum, "\fm%s = %f", cmd, *id->storage.f);
+							srvmsgf(ci->clientnum, "\fm%s = %f", cmd, *id->storage.f);
 							return;
 						}
 						float ret = atof(arg);
@@ -1172,7 +1172,7 @@ namespace server
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvoutf(ci->clientnum, strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", cmd, *id->storage.s);
+							srvmsgf(ci->clientnum, strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", cmd, *id->storage.s);
 							return;
 						}
 						delete[] *id->storage.s;
@@ -1186,7 +1186,7 @@ namespace server
 				sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, cmd, val);
 			}
 		}
-		else srvoutf(ci->clientnum, "\frunknown command: %s", cmd);
+		else srvmsgf(ci->clientnum, "\frunknown command: %s", cmd);
 	}
 
 	clientinfo *choosebestclient(clientinfo *ci = NULL)
@@ -1706,7 +1706,8 @@ namespace server
             else if(!approved && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
             {
                 ci->wantsmaster = true;
-                srvoutf(-1, "%s wants master. Type \"/approve %d\" to approve.", colorname(ci), ci->clientnum);
+                srvoutf("%s wants master, but they need to be approved.", colorname(ci), ci->clientnum);
+                srvmsgf(-1, "Type \"/approve %d\" to approve.");
                 return;
             }
 			else ci->privilege = PRIV_MASTER;
@@ -1719,7 +1720,7 @@ namespace server
 			ci->privilege = 0;
 		}
 		mastermode = MM_OPEN;
-        srvoutf(-1, "%s %s %s", colorname(ci), val ? (approved ? "approved for" : "claimed") : "relinquished", name);
+        srvoutf("%s %s %s", colorname(ci), val ? (approved ? "approved for" : "claimed") : "relinquished", name);
 		currentmaster = val ? ci->clientnum : -1;
 		masterupdate = true;
         loopv(clients) clients[i]->wantsmaster = false;
@@ -1752,7 +1753,7 @@ namespace server
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, n);
-		relayf("\fo%s has left the game", colorname(ci));
+		relayf(1, "\fo%s has left the game", colorname(ci));
 		clients.removeobj(ci);
 		if(clients.empty()) cleanup(false);
 		else checkvotes();
@@ -1794,13 +1795,13 @@ namespace server
 			case SV_SENDMAPFILE: case SV_SENDMAPSHOT: case SV_SENDMAPCONFIG:
 				n = type-SV_SENDMAPFILE;
 				break;
-			default: srvoutf(sender, "bad map file type %d"); return false;
+			default: srvmsgf(sender, "bad map file type %d"); return false;
 		}
 		if(mapdata[n])
 		{
 			if(ci != choosebestclient())
 			{
-				srvoutf(sender, "sorry, the map isn't needed from you");
+				srvmsgf(sender, "sorry, the map isn't needed from you");
 				return false;
 			}
 			fclose(mapdata[n]);
@@ -1808,13 +1809,13 @@ namespace server
 		}
 		if(!len)
 		{
-			srvoutf(sender, "you sent a zero length packet for map data!");
+			srvmsgf(sender, "you sent a zero length packet for map data!");
 			return false;
 		}
 		mapdata[n] = tmpfile();
         if(!mapdata[n])
         {
-        	srvoutf(sender, "failed to open temporary file for map");
+        	srvmsgf(sender, "failed to open temporary file for map");
         	return false;
 		}
 		fwrite(data, 1, len, mapdata[n]);
@@ -2233,8 +2234,8 @@ namespace server
 						if(t == cp || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && cp->team != t->team)) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
-					if(flags&SAY_ACTION) relayf("* %s %s", colorname(cp, NULL, flags&SAY_TEAM), text);
-					else relayf("<%s> %s", colorname(cp, NULL, flags&SAY_TEAM), text);
+					if(flags&SAY_ACTION) relayf(1, "* %s %s", colorname(cp, NULL, flags&SAY_TEAM), text);
+					else relayf(1, "<%s> %s", colorname(cp, NULL, flags&SAY_TEAM), text);
 					break;
 				}
 
@@ -2269,7 +2270,7 @@ namespace server
 								gs.lifesequence, gs.health,
 								gs.gunselect, GUN_MAX, &gs.ammo[0], -1);
 						}
-						relayf("\fg%s has joined the game", colorname(ci, text));
+						relayf(1, "\fg%s has joined the game", colorname(ci, text));
 					}
 					else
 					{
@@ -2278,7 +2279,7 @@ namespace server
 							string oldname, newname;
 							s_strcpy(oldname, colorname(ci));
 							s_strcpy(newname, colorname(ci, text));
-							relayf("\fm%s is now known as %s", oldname, newname);
+							relayf(1, "\fm%s is now known as %s", oldname, newname);
 						}
 					}
 					QUEUE_STR(text);
@@ -2411,11 +2412,11 @@ namespace server
 						if(haspriv(ci, PRIV_ADMIN) || (mastermask&(1<<mm)))
 						{
 							mastermode = mm;
-							srvoutf(-1, "mastermode is now %d", mastermode);
+							srvoutf("mastermode is now %d", mastermode);
 						}
 						else
 						{
-							srvoutf(sender, "mastermode %d is disabled on this server", mm);
+							srvmsgf(sender, "mastermode %d is disabled on this server", mm);
 						}
 					}
 					break;
@@ -2426,7 +2427,7 @@ namespace server
 					if(haspriv(ci, PRIV_MASTER, true))
 					{
 						bannedips.setsize(0);
-						srvoutf(-1, "cleared all bans");
+						srvoutf("cleared all bans");
 					}
 					break;
 				}
@@ -2503,7 +2504,7 @@ namespace server
 					int val = getint(p);
 					if(!haspriv(ci, PRIV_ADMIN, true)) break;
 					demonextmatch = val!=0;
-					srvoutf(-1, "demo recording is %s for next match", demonextmatch ? "enabled" : "disabled");
+					srvoutf("demo recording is %s for next match", demonextmatch ? "enabled" : "disabled");
 					break;
 				}
 

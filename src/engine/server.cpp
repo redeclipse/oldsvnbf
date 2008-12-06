@@ -21,7 +21,7 @@ void conoutf(const char *s, ...)
 #ifdef IRC
 	string st;
 	filtertext(st, str);
-	ircoutf("%s", st);
+	ircoutf(2, "%s", st);
 #endif
 }
 void servertoclient(int chan, uchar *buf, int len) {}
@@ -322,7 +322,7 @@ void disconnect_client(int n, int reason)
 	clients[n]->info = NULL;
 	s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
 	conoutf("\fr%s", s);
-	server::srvoutf(-1, "%s", s);
+	server::srvmsgf(-1, "%s", s);
 }
 
 void process(ENetPacket *packet, int sender, int chan)	// sender may be -1

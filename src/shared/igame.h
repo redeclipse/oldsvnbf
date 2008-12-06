@@ -100,7 +100,7 @@ namespace world
 namespace server
 {
 	extern void srvmsgf(int cn, const char *s, ...);
-	extern void srvoutf(int cn, const char *s, ...);
+	extern void srvoutf(const char *s, ...);
 	extern bool serveroption(char *arg);
 	extern void *newinfo();
 	extern void deleteinfo(void *ci);

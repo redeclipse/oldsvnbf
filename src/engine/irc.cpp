@@ -51,14 +51,14 @@ void ircsend(ircnet *n, const char *msg, ...)
 	enet_socket_send(n->sock, NULL, &buf, 1);
 }
 
-void ircoutf(const char *msg, ...)
+void ircoutf(int relay, const char *msg, ...)
 {
 	s_sprintfdlv(str, msg, msg);
 	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL && ircnets[i].type == IRCT_RELAY && ircnets[i].state == IRC_ONLINE)
 	{
 		ircnet *n = &ircnets[i];
 		string s; s[0] = 0;
-		loopvj(n->channels) if(n->channels[j].state == IRCC_JOINED)
+		loopvj(n->channels) if(n->channels[j].state == IRCC_JOINED && n->channels[j].relay >= relay)
 		{
 			ircchan *c = &n->channels[j];
 			if(s[0]) s_strcat(s, ",");
@@ -177,7 +177,7 @@ bool ircjoinchan(ircnet *n, const char *name)
 	return ircjoin(n, c);
 }
 
-bool ircaddchan(int type, const char *name, const char *channel, const char *passkey)
+bool ircaddchan(int type, const char *name, const char *channel, const char *passkey, int relay)
 {
 	ircnet *n = ircfind(name);
 	if(!n)
@@ -194,6 +194,7 @@ bool ircaddchan(int type, const char *name, const char *channel, const char *pas
 	ircchan &d = n->channels.add();
 	d.state = IRCC_NONE;
 	d.type = type;
+	d.relay = clamp(relay, 0, 2);
 	d.lastjoin = 0;
 	s_strcpy(d.name, channel);
 	s_strcpy(d.passkey, passkey);
@@ -202,11 +203,11 @@ bool ircaddchan(int type, const char *name, const char *channel, const char *pas
 	return true;
 }
 
-ICOMMAND(addircchan, "sss", (const char *n, const char *c, const char *z), {
-	ircaddchan(IRCCT_AUTO, n, c, z);
+ICOMMAND(addircchan, "sssi", (const char *n, const char *c, const char *z, int *r), {
+	ircaddchan(IRCCT_AUTO, n, c, z, *r);
 });
-ICOMMAND(joinircchan, "sss", (const char *n, const char *c, const char *z), {
-	ircaddchan(IRCCT_NONE, n, c, z);
+ICOMMAND(joinircchan, "sssi", (const char *n, const char *c, const char *z, int *r), {
+	ircaddchan(IRCCT_NONE, n, c, z, *r);
 });
 
 void ircprintf(ircnet *n, const char *target, const char *msg, ...)
