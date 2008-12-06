@@ -265,7 +265,6 @@ namespace server
 	string smapname;
 	int interm = 0, minremain = 15, oldtimelimit = 15;
 	bool maprequest = false;
-	int mapver = -1, maprev = -1;
 	enet_uint32 lastsend = 0;
 	int mastermode = MM_OPEN, mastermask = MM_DEFAULT, currentmaster = -1;
 	bool masterupdate = false;
@@ -1051,7 +1050,6 @@ namespace server
 		s_strcpy(smapname, s && *s ? s : sv_defaultmap);
 		sents.setsize(0);
 		notgotinfo = true;
-		mapver = maprev = -1;
 		scores.setsize(0);
 
 		if(m_team(gamemode, mutators))
@@ -1240,8 +1238,6 @@ namespace server
 			putint(p, minremain);
 		}
 		putint(p, SV_GAMEINFO);
-		putint(p, mapver);
-		putint(p, maprev);
 		loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM || sents[i].type == TRIGGER)
 		{
 			putint(p, i);
@@ -2330,7 +2326,7 @@ namespace server
 
 				case SV_GAMEINFO:
 				{
-					int ver = getint(p), rev = getint(p), n;
+					int n;
 					while((n = getint(p))!=-1)
 					{
 						srventity se, sn;
@@ -2350,8 +2346,6 @@ namespace server
 					}
 					if(notgotinfo)
 					{
-						mapver = ver;
-						maprev = rev;
 						loopvk(clients)
 						{
 							clientinfo *cp = clients[k];
@@ -2610,7 +2604,6 @@ namespace server
 						smapname[0] = '\0';
 						sents.setsize(0);
 						notgotinfo = false;
-						mapver = maprev = 0;
 						if(smode) smode->reset(true);
 						mutate(smuts, mut->reset(true));
 					}
