@@ -35,7 +35,7 @@ namespace hud
 	VARP(showinventory, 0, 1, 1);
 	FVARP(inventorysize, 0, 0.075f, 1);
 	FVARP(inventoryblend, 0, 0.75f, 1);
-	FVARP(inventoryskew, 0, 0.6f, 1);
+	FVARP(inventoryskew, 0, 0.7f, 1);
 	FVARP(inventorytextscale, 0, 1.25f, 1);
 	FVARP(inventorytextblend, 0, 1.f, 1);
 	TVAR(plasmatex, "textures/plasma", 0);

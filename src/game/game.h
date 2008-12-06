@@ -1136,7 +1136,7 @@ namespace ai
 namespace hud
 {
 	extern int hudwidth, hudsize;
-	extern float radarblipblend, inventoryblend;
+	extern float radarblipblend, inventoryblend, inventoryskew;
 	extern void drawquad(int x, int y, int w, int h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
 	extern void drawtex(int x, int y, int w, int h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
 	extern void drawsized(int x, int y, int s);

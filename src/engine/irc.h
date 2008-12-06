@@ -18,7 +18,7 @@ enum { IRC_DISC = 0, IRC_ATTEMPT, IRC_CONN, IRC_ONLINE, IRC_MAX };
 struct ircnet
 {
 	int type, state, port, lastattempt;
-	string name, serv, nick, passkey;
+	string name, serv, nick, ip, passkey;
 	ENetAddress address;
 	ENetSocket sock;
 	vector<ircchan> channels;
@@ -42,7 +42,7 @@ extern void ircsend(ircnet *n, const char *msg, ...);
 extern void ircoutf(int relay, const char *msg, ...);
 extern int ircrecv(ircnet *n, int timeout = 0);
 extern char *ircread(ircnet *n);
-extern void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *passkey = "");
+extern void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *ip = "", const char *passkey = "");
 extern ircchan *ircfindchan(ircnet *n, const char *name);
 extern bool ircjoin(ircnet *n, ircchan *c);
 extern bool ircjoinchan(ircnet *n, const char *name);
