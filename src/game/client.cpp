@@ -686,8 +686,6 @@ namespace client
 		{
 			reliable = true;
 			putint(p, SV_GAMEINFO);
-			putint(p, getmapversion());
-			putint(p, getmaprevision());
 			entities::putitems(p);
 			putint(p, -1);
 			if(m_stf(world::gamemode)) stf::sendflags(p);
@@ -1000,8 +998,9 @@ namespace client
 
 				case SV_GAMEINFO:
 				{
-					int ver = getint(p), rev = getint(p), n;
+					int n;
 					while((n = getint(p)) != -1) entities::setspawn(n, getint(p));
+					#if 0
 					if(!needsmap && !m_edit(world::gamemode) && ver >= 0 && rev >= 0 &&
 						(ver != getmapversion() || rev != getmaprevision()))
 					{
@@ -1009,6 +1008,7 @@ namespace client
 						needsmap = true;
 						getmap();
 					}
+					#endif
 					break;
 				}
 
