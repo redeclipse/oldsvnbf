@@ -396,10 +396,9 @@ namespace hud
 			int tx = rd.axis ? int(cx+s*0.5f) : (rd.swap ? int(cx-s) : int(cx+s*2.f)),
 				ty = rd.axis ? (rd.swap ? int(cy-s-FONTH) : int(cy+s*2.f)) : int(cy+s*0.5f-FONTH*0.5f),
 				ta = rd.axis ? AL_CENTER : (rd.swap ? AL_RIGHT : AL_LEFT),
-				tr = int(r*255.f), tg = int(g*255.f), tb = int(b*255.f),
 				tf = int((fade >= 0.f ? fade : blend)*255.f);
 			s_sprintfdlv(str, text, text);
-			draw_textx("%s", tx, ty, tr, tg, tb, tf, false, ta, -1, -1, str);
+			draw_textx("%s", tx, ty, 255, 255, 255, tf, false, ta, -1, -1, str);
 			if(font && *font) popfont();
 		}
 	}
@@ -419,7 +418,7 @@ namespace hud
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
 			const char *text = radarnames ? world::colorname(d, NULL, "", false) : NULL;
-			drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "radar", fade*radarnameblend, text);
+			drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "radar", fade*radarnameblend, "%s", text);
 		}
 	}
 

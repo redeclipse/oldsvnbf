@@ -263,7 +263,7 @@ namespace stf
 			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
 				fade = clamp(1.f-(dist/hud::radarrange()), 0.1f, 1.f)*blend;
 			bool blip = f.owner != world::player1->team && f.enemy != world::player1->team;
-			hud::drawblip(w, h, s, fade*(blip?1.f:2.f)*hud::radarblipblend, 3, dir, r, g, b);
+			hud::drawblip(w, h, s, blip ? fade*hud::radarblipblend : 1.f, 3, dir, r, g, b);
 		}
 	}
 
