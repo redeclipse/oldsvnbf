@@ -167,16 +167,25 @@ namespace ctf
     {
 		ctfstate::flag &f = st.flags[i];
 		vec dir;
-        if(blip) dir = f.pos();
+		float fade = 1.f;
+        if(blip)
+        {
+            if(f.owner) { if(lastmillis%1000 >= 500) fade = 0.5f; }
+            else if(f.droptime) { if(lastmillis%300 >= 150) fade = 0.5f; }
+            else return;
+        	dir = f.pos();
+        }
         else dir = f.spawnloc;
 		dir.sub(camera1->o);
         float dist = dir.magnitude();
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		dir.normalize();
 		int colour = teamtype[f.team].colour;
-		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-			fade = clamp(1.f-(dist/hud::radarrange()), 0.1f, 1.f)*blend;
-		hud::drawblip(w, h, s, fade*(blip?1.f:2.f)*hud::radarblipblend, 3, dir, r, g, b);
+		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
+		fade *= clamp(1.f-(dist/hud::radarrange()), 0.1f, 1.f)*blend;
+		hud::drawblip(w, h, s, blip ? fade*hud::radarblipblend : 1.f, 3, dir, r, g, b,
+			"hud", fade*hud::radarnameblend, "%s%s %s",
+				teamtype[f.team].chat, teamtype[f.team].name, blip ? "flag" : "base");
     }
 
     void drawblips(int w, int h, int s, float blend)
@@ -186,11 +195,6 @@ namespace ctf
             ctfstate::flag &f = st.flags[i];
             if(!f.team || !f.ent) continue;
             drawblip(w, h, s, blend, i, false);
-            if(f.owner)
-            {
-                if(lastmillis%1000 >= 500) continue;
-            }
-            else if(f.droptime && lastmillis%300 >= 150) continue;
             drawblip(w, h, s, blend, i, true);
         }
     }
