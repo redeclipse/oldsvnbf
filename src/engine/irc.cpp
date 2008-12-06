@@ -57,6 +57,7 @@ void ircoutf(int relay, const char *msg, ...)
 	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL && ircnets[i].type == IRCT_RELAY && ircnets[i].state == IRC_ONLINE)
 	{
 		ircnet *n = &ircnets[i];
+#if 0 // workaround for freenode's crappy dropping all but the first target of multi-target messages even though they don't state MAXTARGETS=1 in 005 string..
 		string s; s[0] = 0;
 		loopvj(n->channels) if(n->channels[j].state == IRCC_JOINED && n->channels[j].relay >= relay)
 		{
@@ -65,6 +66,10 @@ void ircoutf(int relay, const char *msg, ...)
 			s_strcat(s, c->name);
 		}
 		if(s[0]) ircsend(n, "PRIVMSG %s :%s", s, str);
+#else
+		loopvj(n->channels) if(n->channels[j].state == IRCC_JOINED && n->channels[j].relay >= relay)
+			ircsend(n, "PRIVMSG %s :%s", n->channels[j].name, str);
+#endif
 	}
 }
 
