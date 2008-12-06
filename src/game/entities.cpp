@@ -481,7 +481,6 @@ namespace entities
 				proj.beenused = true;
 				proj.state = CS_DEAD;
 			}
-			conoutf("setspawn %s %s (was %s)", enttype[e.type].name, on ? "on" : "off", e.spawned ? "on" : "off");
 			if((e.spawned = on) != false) e.lastspawn = lastmillis;
 			if(e.type == TRIGGER && (e.attr2 == TR_NONE || e.attr2 == TR_LINK))
 			{
