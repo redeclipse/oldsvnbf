@@ -999,7 +999,8 @@ namespace client
 				case SV_GAMEINFO:
 				{
 					int n;
-					while((n = getint(p)) != -1) entities::setspawn(n, getint(p));
+					while((n = getint(p)) != -1)
+						entities::setspawn(n, getint(p) ? true : false);
 					#if 0
 					if(!needsmap && !m_edit(world::gamemode) && ver >= 0 && rev >= 0 &&
 						(ver != getmapversion() || rev != getmaprevision()))
@@ -1094,15 +1095,14 @@ namespace client
 
 				case SV_SHOTFX:
 				{
-					int scn = getint(p), gun = getint(p), power = clamp(getint(p), 0, 200);
+					int scn = getint(p), gun = getint(p), power = getint(p);
 					vec from;
-					vector<vec> locs;
-					locs.setsize(0);
 					loopk(3) from[k] = getint(p)/DMF;
 					int ls = getint(p);
-					if(ls) loopj(ls)
+					vector<vec> locs;
+					loopj(ls)
 					{
-						vec to = locs.add();
+						vec &to = locs.add();
 						loopk(3) to[k] = getint(p)/DMF;
 					}
 					gameent *s = world::getclient(scn);

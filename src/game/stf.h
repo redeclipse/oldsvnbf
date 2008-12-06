@@ -14,6 +14,8 @@ struct stfstate
         vec pos;
 		string name, info;
 		extentity *ent;
+		bool hasflag;
+		int lasthad;
 #endif
 		int owners, enemies, converted, securetime;
 
@@ -32,6 +34,10 @@ struct stfstate
 			owner = TEAM_NEUTRAL;
 			securetime = -1;
             owners = 0;
+#ifndef GAMESERVER
+			hasflag = false;
+			lasthad = 0;
+#endif
 		}
 
 		bool enter(int team)

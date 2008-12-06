@@ -19,14 +19,12 @@ namespace server
 
 	enum { GE_NONE = 0, GE_SHOT, GE_SWITCH, GE_RELOAD, GE_DESTROY, GE_USE, GE_SUICIDE };
 
-	struct shotloc { int to[3]; };
-	struct shotdest { float to[3]; };
 	struct shotevent
 	{
         int millis, id;
 		int gun, power, num;
-		float from[3];
-		vector<shotdest> shots;
+		ivec from;
+		vector<ivec> shots;
 	};
 
 	struct switchevent
@@ -49,9 +47,9 @@ namespace server
 		union
 		{
 			int rays;
-			float dist;
+			int dist;
 		};
-		float dir[3];
+		ivec dir;
 	};
 
 	struct destroyevent
@@ -312,7 +310,7 @@ namespace server
 		virtual void update() {}
 		virtual void reset(bool empty) {}
 		virtual void intermission() {}
-		virtual bool damage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0)) { return true; }
+		virtual bool damage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const ivec &hitpush = ivec(0, 0, 0)) { return true; }
 	};
 
 	vector<srventity> sents;
@@ -1242,7 +1240,7 @@ namespace server
 		{
 			putint(p, i);
 			if(enttype[sents[i].type].usetype == EU_ITEM)
-				putint(p, finditem(i, false, 0) ? 1 : 0);
+				putint(p, finditem(i, false) ? 1 : 0);
 			else putint(p, sents[i].spawned ? 1 : 0);
 		}
 		putint(p, -1);
@@ -1379,7 +1377,7 @@ namespace server
 			sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 	}
 
-	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const vec &hitpush = vec(0, 0, 0))
+	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		servstate &ts = target->state;
 		if(gamemillis-ts.lastspawn <= REGENWAIT) return;
@@ -1387,7 +1385,7 @@ namespace server
 		int realdamage = damage, realflags = flags, nodamage = 0;
 		if(smode && !smode->damage(target, actor, realdamage, gun, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, gun, realflags, hitpush)) { nodamage++; });
-		if(!m_play(gamemode) || (sv_teamdamage && m_team(gamemode, mutators) && actor->team == target->team))
+		if(!m_play(gamemode) || (!sv_teamdamage && m_team(gamemode, mutators) && actor->team == target->team))
 			nodamage++;
 
 		if(nodamage || !hithurts(realflags)) realflags = HIT_PUSH; // so it impacts, but not hurts
@@ -1408,7 +1406,7 @@ namespace server
 			actor->state.damage += realdamage;
 		}
 		else realdamage = int(realdamage*0.5f*sv_damagescale);
-		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, realflags, realdamage, ts.health, int(hitpush.x*DNF), int(hitpush.y*DNF), int(hitpush.z*DNF));
+		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
 
 		if(hithurts(realflags) && realdamage && ts.health <= 0)
 		{
@@ -1466,10 +1464,11 @@ namespace server
 			loopv(e.hits)
 			{
 				hitset &h = e.hits[i];
-				int size = e.radial ? (h.flags&HIT_WAVE ? e.radial*2 : e.radial) : 0;
+				float size = e.radial ? (h.flags&HIT_WAVE ? e.radial*2 : e.radial) : 0.f,
+					dist = float(h.dist)/DMF;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
-				if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (size && (h.dist<0 || h.dist>size))) continue;
-				int damage = size ? int(guntype[e.gun].damage*(1.f-h.dist/EXPLOSIONSCALE/size)) : guntype[e.gun].damage;
+				if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (size && (dist<0 || dist>size))) continue;
+				int damage = e.radial  ? int(guntype[e.gun].damage*(1.f-dist/EXPLOSIONSCALE/size)) : guntype[e.gun].damage;
 				dodamage(target, ci, damage, e.gun, h.flags, h.dir);
 			}
 		}
@@ -1487,16 +1486,9 @@ namespace server
 		}
 		if(guntype[e.gun].max) gs.ammo[e.gun] = max(gs.ammo[e.gun]-1, 0); // keep synched!
 		gs.setgunstate(e.gun, GNS_SHOOT, guntype[e.gun].adelay, e.millis);
-		vector<shotloc> shots;
-		loopv(e.shots)
-		{
-			shotloc &s = shots.add();
-			loopk(3) s.to[k] = int(e.shots[i].to[k]*DMF);
-			gs.gunshots[e.gun].add(e.id);
-		}
 		sendf(-1, 1, "ri7ivx", SV_SHOTFX, ci->clientnum,
-			e.gun, e.power, int(e.from[0]*DMF), int(e.from[1]*DMF), int(e.from[2]*DMF),
-					shots.length(), shots.length()*sizeof(shotloc)/sizeof(int), shots.getbuf(),
+			e.gun, e.power, e.from[0], e.from[1], e.from[2],
+					e.shots.length(), e.shots.length()*sizeof(ivec)/sizeof(int), e.shots.getbuf(),
 						ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum);
 		gs.shotdamage += guntype[e.gun].damage*e.gun*e.num;
 	}
@@ -2131,12 +2123,12 @@ namespace server
 					ev.shot.gun = getint(p);
 					ev.shot.power = getint(p);
 					if(cp) seteventmillis(ev.shot);
-					loopk(3) ev.shot.from[k] = getint(p)/DMF;
+					loopk(3) ev.shot.from[k] = getint(p);
 					ev.shot.num = getint(p);
-					loop(q, ev.shot.num)
+					loopj(ev.shot.num)
 					{
-						shotdest &dest = ev.shot.shots.add();
-						loopk(3) dest.to[k] = getint(p)/DMF;
+						ivec &dest = ev.shot.shots.add();
+						loopk(3) dest[k] = getint(p);
 					}
 					break;
 				}
@@ -2168,14 +2160,14 @@ namespace server
 					ev.destroy.id = getint(p); // this is the actual id
 					ev.destroy.radial = getint(p);
 					int hits = getint(p);
-					if(hits) loopj(hits)
+					loopj(hits)
 					{
 						hitset &hit = havecn ? ev.destroy.hits.add() : dummyevent.destroy.hits.add();
 						hit.flags = getint(p);
 						hit.target = getint(p);
 						hit.lifesequence = getint(p);
-						hit.dist = getint(p)/DMF;
-						loopk(3) hit.dir[k] = getint(p)/DNF;
+						hit.dist = getint(p);
+						loopk(3) hit.dir[k] = getint(p);
 					}
 					break;
 				}
@@ -2328,21 +2320,21 @@ namespace server
 				case SV_GAMEINFO:
 				{
 					int n;
-					while((n = getint(p))!=-1)
+					while((n = getint(p)) != -1)
 					{
-						srventity se, sn;
-						se.type = getint(p);
-						se.attr1 = getint(p);
-						se.attr2 = getint(p);
-						se.attr3 = getint(p);
-						se.attr4 = getint(p);
-						se.attr5 = getint(p);
-						se.spawned = false;
-						se.millis = gamemillis-(sv_itemspawntime*1000)+(sv_itemspawndelay*1000); // wait a bit then load 'em up
-						if(notgotinfo && (enttype[se.type].usetype == EU_ITEM || se.type == TRIGGER))
+						int type = getint(p), attr1 = getint(p), attr2 = getint(p),
+							attr3 = getint(p), attr4 = getint(p), attr5 = getint(p);
+						if(notgotinfo && (enttype[type].usetype == EU_ITEM || type == TRIGGER))
 						{
-							while(sents.length() < n) sents.add(sn);
-							sents.add(se);
+							while(sents.length() <= n) sents.add();
+							sents[n].type = type;
+							sents[n].attr1 = attr1;
+							sents[n].attr2 = attr2;
+							sents[n].attr3 = attr3;
+							sents[n].attr4 = attr4;
+							sents[n].attr5 = attr5;
+							sents[n].spawned = false;
+							sents[n].millis = gamemillis-(sv_itemspawntime*1000)+(sv_itemspawndelay*1000); // wait a bit then load 'em up
 						}
 					}
 					if(notgotinfo)

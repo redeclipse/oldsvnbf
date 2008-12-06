@@ -197,17 +197,39 @@ namespace ctf
 
     int drawinventory(int x, int y, int s, float blend)
     {
-		int sy = 0;
-		loopv(st.flags) if(st.flags[i].owner == world::player1)
+		int sy = 0, home = -1;
+		float bestdist = 1e16f;
+		if(world::player1->state == CS_ALIVE)
+		{
+			loopv(st.flags) if(st.flags[i].team == world::player1->team)
+			{
+				ctfstate::flag &f = st.flags[i];
+				float dist = world::player1->o.dist(f.spawnloc);
+				if(!st.flags.inrange(home) || dist < bestdist)
+				{
+					home = i;
+					bestdist = dist;
+				}
+			}
+		}
+		loopv(st.flags)
 		{
 			ctfstate::flag &f = st.flags[i];
-			const char *tex = hud::flagtex(f.team);
-			float skew = lastmillis-f.interptime < 500 ? float(lastmillis-f.interptime)/500.f : 1.f,
-				fade = hud::inventoryblend*blend*skew;
-			int size = int(s*skew*0.5f);
-			sy += hud::drawitem(tex, x, y-sy, size, fade, skew);
+			float skew = 0.f, fade = hud::inventoryblend*blend;
+			int millis = lastmillis-f.interptime;
+			if(f.owner == world::player1)
+				skew = millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f) : 1.f;
+			else if(f.wasowner == world::player1)
+				skew = millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f) : 0.f;
+
+			if(skew > 0.f)
+			{
+				string str; str[0] = 0;
+				if(st.flags.inrange(home)) s_sprintf(str)("%.2f", bestdist/4.f);
+				sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, fade, skew, "hud", blend, "%s", str);
+			}
 		}
-        return sy;
+		return sy;
     }
 
 

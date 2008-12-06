@@ -144,7 +144,7 @@ namespace weapons
 
 		vector<vec> vshots;
 		vector<ivec> shots;
-		#define addshot(q) { vshots.add(q); shots.add(ivec(int(q.x*DMF), int(q.y*DMF), int(q.z*DMF))); }
+		#define addshot { vshots.add(dest); shots.add(ivec(int(dest.x*DMF), int(dest.y*DMF), int(dest.z*DMF))); }
 		loopi(guntype[d->gunselect].rays)
 		{
 			vec dest;
@@ -153,7 +153,7 @@ namespace weapons
 			else dest = to;
 			if(d->gunselect == GUN_GL && power < powertime)
 				dest.z += from.dist(dest)/8;
-			addshot(dest);
+			addshot;
 		}
 		projs::shootv(d->gunselect, power, from, vshots, d, true);
 		client::addmsg(SV_SHOOT, "ri7iv",

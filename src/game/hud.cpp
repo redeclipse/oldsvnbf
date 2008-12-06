@@ -638,12 +638,9 @@ namespace hud
 	{
 		int cx = int(w-edge*1.5f), cy = int(h-edge*1.5f), cs = int(inventorysize*w),
 			cr = cs/4, cc = 0;
-		if((cc = drawweapons(cx, cy, cs, blend)) > 0)
-			cy -= cc+cr;
-		if(m_ctf(world::gamemode) && ((cc = ctf::drawinventory(cx, cy, cs, blend)) > 0))
-			cy -= cc+cr;
-		if(m_stf(world::gamemode) && ((cc = stf::drawinventory(cx, cy, cs, blend)) > 0))
-			cy -= cc+cr;
+		if(world::player1->state == CS_ALIVE && (cc = drawweapons(cx, cy, cs, blend)) > 0) cy -= cc+cr;
+		if(m_ctf(world::gamemode) && ((cc = ctf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
+		if(m_stf(world::gamemode) && ((cc = stf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
 	}
 
 	void drawgamehud(int w, int h)
@@ -684,8 +681,7 @@ namespace hud
 		}
 
 		if(showradar) drawradar(ox, oy, os, fade);
-		if(world::player1->state == CS_ALIVE && showinventory)
-			drawinventory(ox, oy, os, fade);
+		if(showinventory) drawinventory(ox, oy, os, fade);
 #if 0
 		int tp = by + bs + FONTH/2;
 		pushfont("emphasis");
