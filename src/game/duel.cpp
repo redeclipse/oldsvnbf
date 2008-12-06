@@ -27,8 +27,8 @@ struct duelservmode : servmode
 			}
 			if(msg)
 			{
-				if(n > 0) srvoutf(ci->clientnum, "\fyyou are \fs\fg#%d\fS in the queue", n+1);
-				else srvoutf(ci->clientnum, "\fyyou are \fs\fgNEXT\fS in the queue", n+1);
+				if(n > 0) srvmsgf(ci->clientnum, "\fyyou are \fs\fg#%d\fS in the queue", n+1);
+				else srvmsgf(ci->clientnum, "\fyyou are \fs\fgNEXT\fS in the queue", n+1);
 			}
 		}
 	}
@@ -149,13 +149,13 @@ struct duelservmode : servmode
 		{
 			if(!alive.empty())
 			{
-				srvoutf(-1, "\fy%s was the last one left alive", colorname(alive[0]));
+				srvmsgf(-1, "\fy%s was the last one left alive", colorname(alive[0]));
 				sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, "you win!");
 				alive[0]->state.health = MAXHEALTH;
 				alive[0]->state.lastregen = gamemillis;
 				sendf(-1, 1, "ri3", SV_REGEN, alive[0]->clientnum, alive[0]->state.health);
 			}
-			else srvoutf(-1, "\fyeveryone died, fail!");
+			else srvmsgf(-1, "\fyeveryone died, fail!");
 			dueltime = gamemillis + DUELMILLIS;
 		}
 	}
