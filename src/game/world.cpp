@@ -324,7 +324,8 @@ namespace world
                         if(d->crouchtime >= 0) d->crouchtime = -lastmillis;
                     }
                 }
-                if(!crouching && d->crouchtime < 0) d->crouchtime = lastmillis - max(200 - (lastmillis + d->crouchtime), 0);
+                if(!crouching && d->crouchtime < 0)
+					d->crouchtime = lastmillis-max(200-(lastmillis+d->crouchtime), 0);
                 d->o = pos;
 			}
 

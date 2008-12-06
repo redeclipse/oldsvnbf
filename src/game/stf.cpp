@@ -287,19 +287,21 @@ namespace stf
 		loopv(st.flags)
 		{
 			stfstate::flaginfo &f = st.flags[i];
-			float skew = f.owner ? 1.f : 0.f, fade = hud::inventoryblend*blend, occupy = skew;
-			int size = int(s*0.5f), team = f.owner;
-			if(f.enemy)
+			bool hasflag = world::player1->state == CS_ALIVE &&
+				insideflag(f, world::player1) && (f.owner == world::player1->team || f.enemy == world::player1->team);
+			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(500-(lastmillis-f.lasthad), 0); }
+			float skew = f.hasflag ? 1.f : 0.5f, fade = hud::inventoryblend*blend,
+				occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f);
+			int size = s, millis = lastmillis-f.lasthad;
+			if(millis < 500)
 			{
-				skew = occupy = clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f);
-				if(lastmillis%1000 < int(occupy*1000)) team = f.enemy;
+				float off = clamp(float(millis)/500.f, 0.f, 1.f);
+				if(f.hasflag) skew = 0.5f+(off*0.5f);
+				else skew = 1.f-(off*0.5f);
 			}
-			skew = 0.5f+(skew*0.5f);
-			fade *= skew;
-			size = int(size*skew);
-
-			const char *tex = hud::flagtex(team);
-			sy += hud::drawitem(tex, x, y-sy, size, fade, skew, "hud", blend, "%d%%", int(occupy*100));
+			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, fade, skew, "hud", blend, "%d%%", int(occupy*100));
+			if(f.enemy)
+				hud::drawitem(hud::flagtex(f.enemy), x+size, (y-sy)+size, int(s*0.5f), fade, skew);
 		}
         return sy;
     }

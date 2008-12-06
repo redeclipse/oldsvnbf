@@ -460,30 +460,29 @@ namespace entities
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			putint(p, i);
-			putint(p, e.type);
-			putint(p, e.attr1);
-			putint(p, e.attr2);
-			putint(p, e.attr3);
-			putint(p, e.attr4);
-			putint(p, e.attr5);
-			setspawn(i, false);
+			putint(p, int(e.type));
+			putint(p, int(e.attr1));
+			putint(p, int(e.attr2));
+			putint(p, int(e.attr3));
+			putint(p, int(e.attr4));
+			putint(p, int(e.attr5));
 		}
 	}
 
 	void setspawn(int n, bool on)
 	{
-		loopv(projs::projs)
-		{
-			projent &proj = *projs::projs[i];
-			if(proj.projtype != PRJ_ENT || proj.id != n)
-				continue;
-			proj.beenused = true;
-			proj.state = CS_DEAD;
-		}
 		if(ents.inrange(n))
 		{
 			gameentity &e = *(gameentity *)ents[n];
-			if((e.spawned = on)) e.lastspawn = lastmillis;
+			loopv(projs::projs)
+			{
+				projent &proj = *projs::projs[i];
+				if(proj.projtype != PRJ_ENT || proj.id != n) continue;
+				proj.beenused = true;
+				proj.state = CS_DEAD;
+			}
+			conoutf("setspawn %s %s (was %s)", enttype[e.type].name, on ? "on" : "off", e.spawned ? "on" : "off");
+			if((e.spawned = on) != false) e.lastspawn = lastmillis;
 			if(e.type == TRIGGER && (e.attr2 == TR_NONE || e.attr2 == TR_LINK))
 			{
 				int millis = lastmillis-e.lastemit;
@@ -1227,7 +1226,12 @@ namespace entities
 				default: break;
 			}
 		}
-		loopvj(ents) fixentity(*ents[j]);
+		loopvj(ents)
+		{
+			fixentity(*ents[j]);
+			if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
+				setspawn(j, false);
+		}
 		autodropentities = m_play(world::gamemode) && !entities;
 	}
 
