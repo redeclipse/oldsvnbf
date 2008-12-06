@@ -166,6 +166,16 @@ void guibar()
 	if(cgui) cgui->separator();
 }
 
+void guistrut(int *strut, int *alt)
+{
+	if(cgui)
+	{
+		if(!*alt) cgui->pushlist();
+		cgui->strut(*strut);
+		if(!*alt) cgui->poplist();
+	}
+}
+
 static void updateval(char *var, int val, char *onchange)
 {
 	ident *id = getident(var);
@@ -348,6 +358,7 @@ COMMAND(guinoautotab, "s");
 COMMAND(guilist, "s");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");
+COMMAND(guistrut,"ii");
 COMMAND(guiimage,"ssfiss");
 COMMAND(guislider,"siis");
 COMMAND(guilistslider, "sss");

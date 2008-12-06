@@ -20,7 +20,7 @@ VARG(stflimit, 0, 0, 1);
 VARG(spawngun, 0, GUN_PLASMA, GUN_MAX-1);
 VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
-VARG(botbalance, 0, 6, 32);
+VARG(botbalance, 0, 4, 32);
 VARG(botminskill, 0, 60, 100);
 VARG(botmaxskill, 0, 90, 100);
 
