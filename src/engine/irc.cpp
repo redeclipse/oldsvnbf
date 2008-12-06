@@ -27,7 +27,12 @@ void ircconnect(ircnet *n)
 			return;
 		}
 	}
+
+	ENetAddress address = { ENET_HOST_ANY,  n->port };
+	if(*n->ip && enet_address_set_host(&address, n->ip) < 0) conoutf("failed to bind address: %s", n->ip);
 	n->sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
+	if(*n->ip && n->sock != ENET_SOCKET_NULL && enet_socket_bind(n->sock, &address) < 0)
+		conoutf("failed to bind connection socket", n->ip);
 	if(n->sock == ENET_SOCKET_NULL || connectwithtimeout(n->sock, n->serv, n->address)<0)
 	{
 		conoutf(n->sock == ENET_SOCKET_NULL ? "could not open socket to %s:[%d]" : "could not connect to %s:[%d]", n->serv, n->port);
@@ -98,7 +103,7 @@ int ircrecv(ircnet *n, int timeout)
 	return 0;
 }
 
-void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *passkey)
+void ircaddnet(int type, const char *name, const char *serv, int port, const char *nick, const char *ip, const char *passkey)
 {
 	if(!serv || !port || !nick) return;
 	ircnet *m = ircfind(name);
@@ -117,6 +122,7 @@ void ircaddnet(int type, const char *name, const char *serv, int port, const cha
 	s_strcpy(n.name, name);
 	s_strcpy(n.serv, serv);
 	s_strcpy(n.nick, nick);
+	s_strcpy(n.ip, ip);
 	s_strcpy(n.passkey, passkey);
 	n.address.host = ENET_HOST_ANY;
 	n.address.port = n.port;
