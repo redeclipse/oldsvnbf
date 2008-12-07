@@ -339,6 +339,7 @@ namespace server
 		s_strcpy(smapname, choosemap(NULL));
 		sents.setsize(0);
 		bannedips.setsize(0);
+		notgotinfo = true;
 		if(!init)
 		{
 			enumerate(*idents, ident, id, {
@@ -1236,15 +1237,18 @@ namespace server
 			putint(p, SV_TIMEUP);
 			putint(p, minremain);
 		}
-		putint(p, SV_GAMEINFO);
-		loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM || sents[i].type == TRIGGER)
+		if(!notgotinfo)
 		{
-			putint(p, i);
-			if(enttype[sents[i].type].usetype == EU_ITEM)
-				putint(p, finditem(i, false) ? 1 : 0);
-			else putint(p, sents[i].spawned ? 1 : 0);
+			putint(p, SV_GAMEINFO);
+			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM || sents[i].type == TRIGGER)
+			{
+				putint(p, i);
+				if(enttype[sents[i].type].usetype == EU_ITEM)
+					putint(p, finditem(i, false) ? 1 : 0);
+				else putint(p, sents[i].spawned ? 1 : 0);
+			}
+			putint(p, -1);
 		}
-		putint(p, -1);
 
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_SERVER) // reset vars
