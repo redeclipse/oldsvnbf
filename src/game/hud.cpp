@@ -9,13 +9,13 @@ namespace hud
 	VARP(showdamage, 0, 1, 1);
 	TVAR(damagetex, "textures/damage", 0);
 	VARP(showindicator, 0, 1, 1);
-	FVARP(indicatorsize, 0, 0.08f, 1);
+	FVARP(indicatorsize, 0, 0.08f, 1000);
 	FVARP(indicatorblend, 0, 0.5f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(snipetex, "textures/snipe", 0);
 
 	VARP(showcrosshair, 0, 1, 1);
-	FVARP(crosshairsize, 0, 0.07f, 1);
+	FVARP(crosshairsize, 0, 0.07f, 1000);
 	VARP(crosshairhitspeed, 0, 450, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.5f, 1);
 	VARP(crosshairhealth, 0, 1, 1);
@@ -28,15 +28,15 @@ namespace hud
 	TVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
 	TVAR(snipecrosshairtex, "textures/snipecrosshair", 3);
-	FVARP(snipecrosshairsize, 0, 0.5f, 1);
-	FVARP(cursorsize, 0, 0.05f, 1);
+	FVARP(snipecrosshairsize, 0, 0.5f, 1000);
+	FVARP(cursorsize, 0, 0.05f, 1000);
 	FVARP(cursorblend, 0, 1.f, 1);
 
 	VARP(showinventory, 0, 1, 1);
-	FVARP(inventorysize, 0, 0.075f, 1);
+	FVARP(inventorysize, 0, 0.075f, 1000);
 	FVARP(inventoryblend, 0, 0.75f, 1);
 	FVARP(inventoryskew, 0, 0.65f, 1);
-	FVARP(inventorytextscale, 0, 1.25f, 1);
+	FVARP(inventorytextscale, 0, 1.25f, 1000);
 	FVARP(inventorytextblend, 0, 1.f, 1);
 	TVAR(plasmatex, "textures/plasma", 0);
 	TVAR(shotguntex, "textures/shotgun", 0);
@@ -52,8 +52,8 @@ namespace hud
 	TVAR(gammaflagtex, "textures/teamgamma", 0);
 
 	VARP(showclip, 0, 1, 1);
-	FVARP(clipsize, 0, 0.06f, 1);
-	FVARP(clipblend, 0, 0.25f, 1);
+	FVARP(clipsize, 0, 0.06f, 1000);
+	FVARP(clipblend, 0, 0.25f, 1000);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
 	TVAR(chainguncliptex, "textures/chaingunclip", 3);
@@ -69,7 +69,7 @@ namespace hud
 	FVARP(radaritemblend, 0, 0.95f, 1);
 	FVARP(radarnameblend, 0, 1.f, 1);
 	FVARP(radarblipblend, 0, 1.f, 1);
-	FVARP(radarsize, 0, 0.025f, 1);
+	FVARP(radarsize, 0, 0.025f, 1000);
 	VARP(radardist, 0, 256, INT_MAX-1);
 	VARP(radarcard, 0, 1, 1);
 	VARP(radaritems, 0, 2, 2);
@@ -87,7 +87,7 @@ namespace hud
 
 	VARP(titlecardtime, 0, 2000, 10000);
 	VARP(titlecardfade, 0, 3000, 10000);
-	FVARP(titlecardsize, 0, 0.3f, 1);
+	FVARP(titlecardsize, 0, 0.3f, 1000);
 
 	VARP(showstats, 0, 0, 1);
 	VARP(statrate, 0, 200, 1000);
