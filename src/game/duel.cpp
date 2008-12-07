@@ -59,16 +59,18 @@ struct duelservmode : servmode
 	{
 		if(sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1))
 		{
-			loopvj(sents) if(enttype[sents[j].type].usetype == EU_ITEM && !finditem(j, true, 0))
+			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, 0))
 			{
 				loopvk(clients)
 				{
 					clientinfo *ci = clients[k];
-					ci->state.dropped.remove(j);
+					ci->state.dropped.remove(i);
+					loopj(GUN_MAX) if(ci->state.entid[j] == i)
+						ci->state.entid[j] = -1;
 				}
-				sents[j].millis = gamemillis; // hijack its spawn time
-				sents[j].spawned = true;
-				sendf(-1, 1, "ri2", SV_ITEMSPAWN, j);
+				sents[i].millis = gamemillis; // hijack its spawn time
+				sents[i].spawned = true;
+				sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
 			}
 		}
 	}

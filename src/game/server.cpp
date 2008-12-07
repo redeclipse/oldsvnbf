@@ -192,7 +192,7 @@ namespace server
 		string name, mapvote;
 		int modevote, mutsvote;
 		int privilege;
-        bool local, spectator, timesync, wantsmaster;
+        bool local, spectator, timesync, wantsmaster, online;
         int gameoffset, lastevent;
 		servstate state;
 		vector<gameevent> events;
@@ -223,7 +223,7 @@ namespace server
 			team = TEAM_NEUTRAL;
 			name[0] = 0;
 			privilege = PRIV_NONE;
-            local = spectator = wantsmaster = false;
+            local = spectator = wantsmaster = online = false;
 			position.setsizenodelete(0);
 			messages.setsizenodelete(0);
 			mapchange();
@@ -891,7 +891,7 @@ namespace server
 			else
 			{
 				const char *map = choosemap(smapname);
-				sendf(-1, 1, "ri2si2", SV_MAPCHANGE, 1, map, gamemode, mutators);
+				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, gamemode, mutators);
 				changemap(map, gamemode, mutators);
 			}
 		}
@@ -917,7 +917,7 @@ namespace server
 		{
 			if(demorecord) enddemorecord();
 			srvoutf("%s [%s] forced %s on map %s", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
-			sendf(-1, 1, "ri2si2", SV_MAPCHANGE, 1, ci->mapvote, ci->modevote, ci->mutsvote);
+			sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, ci->mapvote, 0, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 		}
 		else
@@ -1212,7 +1212,7 @@ namespace server
 			putint(p, 1);
 			sendstring(smapname, p);
 		}
-		if(mapdata[2] && m_edit(gamemode) && numclients(ci->clientnum, true, true))
+		if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, true, true))
 		{
 			clientinfo *best = choosebestclient(ci);
 			if(best)
@@ -1223,8 +1223,12 @@ namespace server
 					mapdata[i] = NULL;
 				}
 				sendf(best->clientnum, 1, "ri", SV_GETMAP);
+				putint(p, 1);
 			}
+			else putint(p, 0);
 		}
+		else if(ci->online) putint(p, 2); // we got a temp map eh?
+		else putint(p, 0);
 		putint(p, gamemode);
 		putint(p, mutators);
 		if(!ci || (m_timed(gamemode) && numclients()))
@@ -1328,7 +1332,7 @@ namespace server
 
 		if(smode) smode->initclient(ci, p, true);
 		mutate(smuts, mut->initclient(ci, p, true));
-
+		ci->online = true;
 		return 1;
 	}
 
@@ -1528,6 +1532,8 @@ namespace server
 						cp->state.dropped.remove(e.ent);
 						found = true;
 					}
+					loopj(GUN_MAX) if(cp->state.entid[j] == e.ent)
+						cp->state.entid[j] = -1;
 				}
 			}
 			if(!found) return;
@@ -1637,6 +1643,8 @@ namespace server
 							{
 								clientinfo *ci = clients[k];
 								ci->state.dropped.remove(i);
+								loopj(GUN_MAX) if(ci->state.entid[j] == i)
+									ci->state.entid[j] = -1;
 							}
 							sents[i].spawned = true;
 							sents[i].millis = gamemillis;
@@ -2338,8 +2346,11 @@ namespace server
 							sents[n].attr3 = attr3;
 							sents[n].attr4 = attr4;
 							sents[n].attr5 = attr5;
-							sents[n].spawned = false;
-							sents[n].millis = gamemillis-(sv_itemspawntime*1000)+(sv_itemspawndelay*1000); // wait a bit then load 'em up
+							sents[n].spawned = false; // wait a bit then load 'em up
+							sents[n].millis = gamemillis;
+							if(enttype[sents[n].type].usetype == EU_ITEM)
+								sents[n].millis -= (sv_itemspawntime*1000)+(sv_itemspawndelay*1000);
+							else if(sents[n].type == TRIGGER) sents[n].millis -= TRIGGERTIME*2;
 						}
 					}
 					if(notgotinfo)
@@ -2541,6 +2552,36 @@ namespace server
 					break;
 				}
 
+				case SV_EDITENT:
+				{
+					int n = getint(p);
+					loopk(3) getint(p);
+					while(sents.length() <= n) sents.add();
+					sents[n].type = getint(p);
+					sents[n].attr1 = getint(p);
+					sents[n].attr2 = getint(p);
+					sents[n].attr3 = getint(p);
+					sents[n].attr4 = getint(p);
+					sents[n].attr5 = getint(p);
+					QUEUE_MSG;
+					loopvk(clients)
+					{
+						clientinfo *cq = clients[k];
+						cq->state.dropped.remove(n);
+						loopj(GUN_MAX) if(cq->state.entid[j] == n)
+							cq->state.entid[j] = -1;
+					}
+					if(enttype[sents[n].type].usetype == EU_ITEM || sents[n].type == TRIGGER)
+					{
+						sents[n].spawned = false; // wait a bit then load 'em up
+						sents[n].millis = gamemillis;
+						if(enttype[sents[n].type].usetype == EU_ITEM)
+							sents[n].millis -= (sv_itemspawntime*1000)+(sv_itemspawndelay*1000);
+						else if(sents[n].type == TRIGGER) sents[n].millis -= TRIGGERTIME*2;
+					}
+					break;
+				}
+
 				case SV_EDITVAR:
 				{
 					QUEUE_INT(SV_EDITVAR);
@@ -2577,6 +2618,7 @@ namespace server
 					{
 						loopk(3) if(mapdata[k])
 							sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
+						send_welcome(sender);
 					}
 					else if(!m_edit(gamemode))
 					{

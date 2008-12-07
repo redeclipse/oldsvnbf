@@ -347,20 +347,20 @@ namespace client
 		world::minremain = -1;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
-		if(!name || !load_world(name))
+		needsmap = false;
+		if(!name || !*name || !load_world(name))
 		{
 			emptymap(0, true, NULL);
 			setnames(name, MAP_BFGZ);
-			needsmap = true;
+			needsmap = name || m_edit(world::gamemode);
 		}
-		else needsmap = m_edit(world::gamemode);
 		if(world::player1->state != CS_SPECTATOR) world::player1->state = CS_DEAD;
 		if(editmode) edittoggled(editmode);
 		if(m_stf(gamemode)) stf::setupflags();
         else if(m_ctf(gamemode)) ctf::setupflags();
 	}
 
-	bool receivefile(uchar *data, int len)
+	void receivefile(uchar *data, int len)
 	{
 		ucharbuf p(data, len);
 		int type = getint(p);
@@ -372,7 +372,7 @@ namespace client
 			{
 				s_sprintfd(fname)("%d.dmo", lastmillis);
 				FILE *demo = openfile(fname, "wb");
-				if(!demo) return false;
+				if(!demo) return;
 				conoutf("\fmreceived demo \"%s\"", fname);
 				fwrite(data, 1, len, demo);
 				fclose(demo);
@@ -394,21 +394,15 @@ namespace client
 				if(!f)
 				{
 					conoutf("\frfailed to open map file: %s", mapfext);
-					return false;
+					return;
 				}
 				fwrite(data, 1, len, f);
 				fclose(f);
-				if(type == SV_SENDMAPCONFIG)
-				{
-					if(m_edit(world::gamemode)) changemapserv(mapfile, world::gamemode, world::mutators);
-					else reconnect(); // need new welcomepacket, etc.
-					needsmap = false;
-					return true;
-				}
+				needsmap = false;
 				break;
 			}
 		}
-		return false;
+		return;
 	}
 
 	void getmap()
@@ -973,14 +967,12 @@ namespace client
 				{
 					int hasmap = getint(p);
 					if(hasmap) getstring(text, p);
-					int mode = getint(p), muts = getint(p);
-					changemapserv(hasmap ? text : NULL, mode, muts);
+					int getit = getint(p), mode = getint(p), muts = getint(p);
+					needsmap = false;
+					s_sprintfd(mapfile)("%s%s", getit == 2 ? "temp/" : "", text);
+					changemapserv(hasmap && getit != 1 ? mapfile : NULL, mode, muts);
 					mapchanged = true;
-					if(needsmap && !m_edit(world::gamemode))
-					{
-						conoutf("map changed and we don't have the map, asking for it");
-						getmap();
-					}
+					if(needsmap && !getit) getmap();
 					break;
 				}
 
@@ -1355,8 +1347,8 @@ namespace client
 					float x = getint(p)/DMF, y = getint(p)/DMF, z = getint(p)/DMF;
 					int type = getint(p);
 					int attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p), attr5 = getint(p);
-
 					mpeditent(i, vec(x, y, z), type, attr1, attr2, attr3, attr4, attr5, false);
+					entities::setspawn(i, false);
 					break;
 				}
 
@@ -1757,7 +1749,7 @@ namespace client
 				break;
 
 			case 2:
-				if(receivefile(p.buf, p.maxlen)) return;
+				receivefile(p.buf, p.maxlen);
 				break;
 		}
 	}

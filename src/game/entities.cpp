@@ -685,7 +685,7 @@ namespace entities
 		extentity &e = *ents[i];
 		if(e.type == NOTUSED) linkclear(i);
 		fixentity(e);
-		if(multiplayer(false) && m_edit(world::gamemode))
+		if(m_edit(world::gamemode))
 			client::addmsg(SV_EDITENT, "ri9i", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5); // FIXME
 	}
 
