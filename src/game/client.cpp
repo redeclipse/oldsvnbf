@@ -1758,7 +1758,7 @@ namespace client
 		string text;
 
 		if(i) { s_sprintf(text)("%s ", serverinfotypes[i]); }
-		else { s_sprintf(text)("v%d", GAMEVERSION); }
+		else { s_sprintf(text)("v%d ", GAMEVERSION); }
 
 		if(g->buttonf("%s", GUI_BUTTON_COLOR, NULL, text) & G3D_UP)
 		{
