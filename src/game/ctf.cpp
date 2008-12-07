@@ -221,15 +221,25 @@ namespace ctf
 			ctfstate::flag &f = st.flags[i];
 			float skew = 0.f, fade = hud::inventoryblend*blend;
 			int millis = lastmillis-f.interptime;
+			bool hasflag = false;
 			if(f.owner == world::player1)
+			{
 				skew = millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f) : 1.f;
+				hasflag = true;
+			}
 			else if(f.wasowner == world::player1)
-				skew = millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f) : 0.f;
-
-			if(skew > 0.f)
+			{
+				if(millis < 500)
+				{
+					skew = clamp(float(millis)/500.f, 0.f, 1.f);
+					hasflag = true;
+				}
+				else f.wasowner = NULL;
+			}
+			if(hasflag)
 			{
 				string str; str[0] = 0;
-				if(st.flags.inrange(home)) s_sprintf(str)("%.2f", bestdist/4.f);
+				if(st.flags.inrange(home)) s_sprintf(str)("%.2f", bestdist/16.f);
 				sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, fade, skew, "hud", blend, "%s", str);
 			}
 		}
