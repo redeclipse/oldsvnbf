@@ -572,488 +572,490 @@ static void fixoversizedcubes(cube *c, int size)
     }
 }
 
-bool load_world(const char *mname)		// still supports all map formats that have existed since the earliest cube betas!
+bool load_world(const char *mname, bool temp)		// still supports all map formats that have existed since the earliest cube betas!
 {
 	int loadingstart = SDL_GetTicks();
-
-	loop(tempfile, 2) loop(format, MAP_MAX)
+	loop(tempfile, 2) if(!temp || tempfile)
 	{
-		setnames(mname, format);
-		if(tempfile) loopk(2)
+		loop(format, MAP_MAX)
 		{
-			s_sprintfd(s)("temp/%s", k ? mapfile : mapname);
-			s_strcpy(k ? mapfile : mapname, s);
-		}
-
-		gzFile f = opengzfile(mapfile, "rb9");
-		if(!f) continue;
-
-        Texture *mapshot = notexture;
-        bool samegame = true;
-        int eif = 0;
-
-		bfgz newhdr;
-		if(gzread(f, &newhdr, sizeof(binary))!=(int)sizeof(binary))
-        {
-            conoutf("\frerror loading %s: malformatted header", mapname);
-            gzclose(f);
-            return false;
-        }
-		endianswap(&newhdr.version, sizeof(int), 2);
-
-		if(strncmp(newhdr.head, "BFGZ", 4) == 0)
-		{
-            #define BFGZCOMPAT(ver) \
-                bfgzcompat##ver chdr; \
-                memcpy(&chdr, &newhdr, sizeof(binary)); \
-                if(gzread(f, &chdr.worldsize, newhdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary)) \
-                { \
-                    conoutf("\frerror loading %s: malformatted header", mapname); \
-                    gzclose(f); \
-                    return false; \
-                }
-			if(newhdr.version <= 25)
+			setnames(mname, format);
+			if(tempfile) loopk(2)
 			{
-                BFGZCOMPAT(25);
-				endianswap(&chdr.worldsize, sizeof(int), 5);
-				memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*2);
-				newhdr.numpvs = 0;
-                newhdr.lightmaps = chdr.lightmaps;
-                newhdr.blendmap = 0;
-				memcpy(&newhdr.gamever, &chdr.gamever, newhdr.headersize-sizeof(binary)-sizeof(int)*2);
-			}
-            else if(newhdr.version <= 32)
-            {
-                BFGZCOMPAT(32);
-                endianswap(&chdr.worldsize, sizeof(int), 6);
-                memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*4);
-                newhdr.blendmap = 0;
-                memcpy(&newhdr.gamever, &chdr.gamever, newhdr.headersize-sizeof(binary)-sizeof(int)*4);
-            }
-			else
-			{
-				if(gzread(f, &newhdr.worldsize, newhdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary))
-                {
-                    conoutf("\frerror loading %s: malformatted header", mapname);
-                    gzclose(f);
-                    return false;
-                }
-				endianswap(&newhdr.worldsize, sizeof(int), 7);
+				s_sprintfd(s)("temp/%s", k ? mapfile : mapname);
+				s_strcpy(k ? mapfile : mapname, s);
 			}
 
-			if(newhdr.version > MAPVERSION)
+			gzFile f = opengzfile(mapfile, "rb9");
+			if(!f) continue;
+
+			Texture *mapshot = notexture;
+			bool samegame = true;
+			int eif = 0;
+
+			bfgz newhdr;
+			if(gzread(f, &newhdr, sizeof(binary))!=(int)sizeof(binary))
 			{
-				conoutf("\frerror loading %s: requires a newer version of Blood Frontier", mapname);
+				conoutf("\frerror loading %s: malformatted header", mapname);
 				gzclose(f);
 				return false;
 			}
+			endianswap(&newhdr.version, sizeof(int), 2);
 
-            hdr = newhdr;
-
-            mapshot = textureload(mapname, 0, true, false);
-            computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
-            resetmap();
-
-			maptype = MAP_BFGZ;
-
-			if(hdr.version <= 24) s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
-
-			if(verbose) conoutf("\fwloading v%d map from %s game v%d", hdr.version, hdr.gameid, hdr.gamever);
-
-			if(hdr.version >= 25 || (hdr.version == 24 && hdr.gamever >= 44))
+			if(strncmp(newhdr.head, "BFGZ", 4) == 0)
 			{
-				int numvars = hdr.version >= 25 ? gzgetint(f) : gzgetc(f), vars = 0;
-				renderprogress(0, "loading variables...");
-				loopi (numvars)
-				{
-					vars++;
-					if(verbose) renderprogress(float(i)/float(vars), "loading variables...");
-					int len = hdr.version >= 25 ? gzgetint(f) : gzgetc(f);
-					if(len)
-					{
-						string vname;
-						gzread(f, vname, len+1);
-						ident *id = idents->access(vname);
-						bool proceed = true;
-						int type = hdr.version >= 28 ? gzgetint(f)+(hdr.version >= 29 ? 0 : 1) : (id ? id->type : ID_VAR);
-						if(!id || type != id->type)
-						{
-							if(id && hdr.version <= 28 && id->type == ID_FVAR && type == ID_VAR)
-								type = ID_FVAR;
-							else proceed = false;
-						}
-						if(!id || !(id->flags&IDF_WORLD)) proceed = false;
-
-						switch(type)
-						{
-							case ID_VAR:
-							{
-								int val = hdr.version >= 25 ? gzgetint(f) : gzgetc(f);
-								if(proceed)
-								{
-									if(val > id->maxval) val = id->maxval;
-									else if(val < id->minval) val = id->minval;
-									setvar(vname, val, true);
-								}
-								break;
-							}
-							case ID_FVAR:
-							{
-								float val = hdr.version >= 29 ? gzgetfloat(f) : float(gzgetint(f))/100.f;
-								if(proceed) setfvar(vname, val, true);
-								break;
-							}
-							case ID_SVAR:
-							{
-								int slen = gzgetint(f);
-								string val;
-								gzread(f, val, slen+1);
-								if(proceed && slen) setsvar(vname, val, true);
-								break;
-							}
-							default:
-							{
-								if(hdr.version <= 27)
-								{
-									if(hdr.version >= 25) gzgetint(f);
-									else gzgetc(f);
-								}
-								proceed = false;
-								break;
-							}
-						}
-						if(!proceed && verbose)
-							conoutf("\frWARNING: ignoring variable %s stored in map", vname);
+				#define BFGZCOMPAT(ver) \
+					bfgzcompat##ver chdr; \
+					memcpy(&chdr, &newhdr, sizeof(binary)); \
+					if(gzread(f, &chdr.worldsize, newhdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary)) \
+					{ \
+						conoutf("\frerror loading %s: malformatted header", mapname); \
+						gzclose(f); \
+						return false; \
 					}
+				if(newhdr.version <= 25)
+				{
+					BFGZCOMPAT(25);
+					endianswap(&chdr.worldsize, sizeof(int), 5);
+					memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*2);
+					newhdr.numpvs = 0;
+					newhdr.lightmaps = chdr.lightmaps;
+					newhdr.blendmap = 0;
+					memcpy(&newhdr.gamever, &chdr.gamever, newhdr.headersize-sizeof(binary)-sizeof(int)*2);
 				}
-				if(verbose) conoutf("\fwloaded %d variables", vars);
-			}
+				else if(newhdr.version <= 32)
+				{
+					BFGZCOMPAT(32);
+					endianswap(&chdr.worldsize, sizeof(int), 6);
+					memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*4);
+					newhdr.blendmap = 0;
+					memcpy(&newhdr.gamever, &chdr.gamever, newhdr.headersize-sizeof(binary)-sizeof(int)*4);
+				}
+				else
+				{
+					if(gzread(f, &newhdr.worldsize, newhdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary))
+					{
+						conoutf("\frerror loading %s: malformatted header", mapname);
+						gzclose(f);
+						return false;
+					}
+					endianswap(&newhdr.worldsize, sizeof(int), 7);
+				}
 
-			if(!server::canload(hdr.gameid))
-			{
-				conoutf("\frWARNING: loading map from %s game type in %s, ignoring game specific data", hdr.gameid, server::gameid());
-				samegame = false;
-			}
-		}
-		else if(strncmp(newhdr.head, "OCTA", 4) == 0)
-		{
-			octa ohdr;
-			memcpy(&ohdr, &newhdr, sizeof(binary));
+				if(newhdr.version > MAPVERSION)
+				{
+					conoutf("\frerror loading %s: requires a newer version of Blood Frontier", mapname);
+					gzclose(f);
+					return false;
+				}
 
-			if(ohdr.version <= 25)
+				hdr = newhdr;
+
+				mapshot = textureload(mapname, 0, true, false);
+				computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
+				resetmap();
+
+				maptype = MAP_BFGZ;
+
+				if(hdr.version <= 24) s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
+
+				if(verbose) conoutf("\fwloading v%d map from %s game v%d", hdr.version, hdr.gameid, hdr.gamever);
+
+				if(hdr.version >= 25 || (hdr.version == 24 && hdr.gamever >= 44))
+				{
+					int numvars = hdr.version >= 25 ? gzgetint(f) : gzgetc(f), vars = 0;
+					renderprogress(0, "loading variables...");
+					loopi (numvars)
+					{
+						vars++;
+						if(verbose) renderprogress(float(i)/float(vars), "loading variables...");
+						int len = hdr.version >= 25 ? gzgetint(f) : gzgetc(f);
+						if(len)
+						{
+							string vname;
+							gzread(f, vname, len+1);
+							ident *id = idents->access(vname);
+							bool proceed = true;
+							int type = hdr.version >= 28 ? gzgetint(f)+(hdr.version >= 29 ? 0 : 1) : (id ? id->type : ID_VAR);
+							if(!id || type != id->type)
+							{
+								if(id && hdr.version <= 28 && id->type == ID_FVAR && type == ID_VAR)
+									type = ID_FVAR;
+								else proceed = false;
+							}
+							if(!id || !(id->flags&IDF_WORLD)) proceed = false;
+
+							switch(type)
+							{
+								case ID_VAR:
+								{
+									int val = hdr.version >= 25 ? gzgetint(f) : gzgetc(f);
+									if(proceed)
+									{
+										if(val > id->maxval) val = id->maxval;
+										else if(val < id->minval) val = id->minval;
+										setvar(vname, val, true);
+									}
+									break;
+								}
+								case ID_FVAR:
+								{
+									float val = hdr.version >= 29 ? gzgetfloat(f) : float(gzgetint(f))/100.f;
+									if(proceed) setfvar(vname, val, true);
+									break;
+								}
+								case ID_SVAR:
+								{
+									int slen = gzgetint(f);
+									string val;
+									gzread(f, val, slen+1);
+									if(proceed && slen) setsvar(vname, val, true);
+									break;
+								}
+								default:
+								{
+									if(hdr.version <= 27)
+									{
+										if(hdr.version >= 25) gzgetint(f);
+										else gzgetc(f);
+									}
+									proceed = false;
+									break;
+								}
+							}
+							if(!proceed && verbose)
+								conoutf("\frWARNING: ignoring variable %s stored in map", vname);
+						}
+					}
+					if(verbose) conoutf("\fwloaded %d variables", vars);
+				}
+
+				if(!server::canload(hdr.gameid))
+				{
+					conoutf("\frWARNING: loading map from %s game type in %s, ignoring game specific data", hdr.gameid, server::gameid());
+					samegame = false;
+				}
+			}
+			else if(strncmp(newhdr.head, "OCTA", 4) == 0)
 			{
-				octacompat25 chdr;
-				memcpy(&chdr, &ohdr, sizeof(binary));
-				if(gzread(f, &chdr.worldsize, sizeof(octacompat25)-sizeof(binary))!=sizeof(octacompat25)-(int)sizeof(binary))
-                {
-                    conoutf("\frerror loading %s: malformatted header", mapname);
-                    gzclose(f);
-                    return false;
-                }
-				endianswap(&chdr.worldsize, sizeof(int), 7);
-				memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*2);
-				ohdr.numpvs = 0;
-				memcpy(&ohdr.lightmaps, &chdr.lightmaps, sizeof(octacompat25)-sizeof(binary)-sizeof(int)*2);
+				octa ohdr;
+				memcpy(&ohdr, &newhdr, sizeof(binary));
+
+				if(ohdr.version <= 25)
+				{
+					octacompat25 chdr;
+					memcpy(&chdr, &ohdr, sizeof(binary));
+					if(gzread(f, &chdr.worldsize, sizeof(octacompat25)-sizeof(binary))!=sizeof(octacompat25)-(int)sizeof(binary))
+					{
+						conoutf("\frerror loading %s: malformatted header", mapname);
+						gzclose(f);
+						return false;
+					}
+					endianswap(&chdr.worldsize, sizeof(int), 7);
+					memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*2);
+					ohdr.numpvs = 0;
+					memcpy(&ohdr.lightmaps, &chdr.lightmaps, sizeof(octacompat25)-sizeof(binary)-sizeof(int)*2);
+				}
+				else
+				{
+					if(gzread(f, &ohdr.worldsize, sizeof(octa)-sizeof(binary))!=sizeof(octa)-(int)sizeof(binary))
+					{
+						conoutf("\frerror loading %s: malformatted header", mapname);
+						gzclose(f);
+						return false;
+					}
+					endianswap(&ohdr.worldsize, sizeof(int), 7);
+				}
+
+				if(ohdr.version > OCTAVERSION)
+				{
+					conoutf("\frerror loading %s: requires a newer version of Cube 2 support", mapname);
+					gzclose(f);
+					return false;
+				}
+
+				hdr = newhdr;
+
+				mapshot = textureload(mapname, 0, true, false);
+				computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
+				resetmap();
+
+				maptype = MAP_OCTA;
+
+				strncpy(hdr.head, ohdr.head, 4);
+				hdr.gamever = 0; // sauer has no gamever
+				hdr.worldsize = ohdr.worldsize;
+				if(hdr.worldsize > 1<<18) hdr.worldsize = 1<<18;
+				hdr.numents = ohdr.numents;
+				hdr.numpvs = ohdr.numpvs;
+				hdr.lightmaps = ohdr.lightmaps;
+				hdr.revision = 1;
+				strncpy(hdr.maptitle, ohdr.maptitle, 128);
+
+				if(ohdr.version<=20) conoutf("\frloading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
+				if(!ohdr.ambient) ohdr.ambient = 25;
+				if(!ohdr.lerpsubdivsize)
+				{
+					if(!ohdr.lerpangle) ohdr.lerpangle = 44;
+					ohdr.lerpsubdiv = 2;
+					ohdr.lerpsubdivsize = 4;
+				}
+				setvar("lightprecision", ohdr.mapprec ? ohdr.mapprec : 32);
+				setvar("lighterror", ohdr.maple ? ohdr.maple : 8);
+				setvar("bumperror", ohdr.mapbe ? ohdr.mapbe : 3);
+				setvar("lightlod", ohdr.mapllod);
+				setvar("ambient", ohdr.ambient);
+				setvar("fullbright", 0, false);
+				setvar("fullbrightlevel", 128, false);
+				setvar("lerpangle", ohdr.lerpangle);
+				setvar("lerpsubdiv", ohdr.lerpsubdiv);
+				setvar("lerpsubdivsize", ohdr.lerpsubdivsize);
+
+				string gameid;
+				s_strcpy(gameid, "???");
+				if(hdr.version >= 16)
+				{
+					int len = gzgetc(f);
+					gzread(f, gameid, len+1);
+				}
+				else s_strcpy(gameid, "fps");
+				strncpy(hdr.gameid, gameid, 4);
+
+				if(!server::canload(hdr.gameid))
+				{
+					conoutf("\frWARNING: loading OCTA v%d map from %s game, ignoring game specific data", hdr.version, hdr.gameid);
+					samegame = false;
+				}
+				else if(verbose) conoutf("\fwloading OCTA v%d map from %s game", hdr.version, hdr.gameid);
+
+				if(hdr.version>=16)
+				{
+					eif = readushort(f);
+					int extrasize = readushort(f);
+					loopj(extrasize) gzgetc(f);
+				}
+
+				if(hdr.version<25) hdr.numpvs = 0;
+				if(hdr.version<28) hdr.blendmap = 0;
 			}
 			else
 			{
-				if(gzread(f, &ohdr.worldsize, sizeof(octa)-sizeof(binary))!=sizeof(octa)-(int)sizeof(binary))
-                {
-                    conoutf("\frerror loading %s: malformatted header", mapname);
-                    gzclose(f);
-                    return false;
-                }
-				endianswap(&ohdr.worldsize, sizeof(int), 7);
-			}
-
-			if(ohdr.version > OCTAVERSION)
-			{
-				conoutf("\frerror loading %s: requires a newer version of Cube 2 support", mapname);
 				gzclose(f);
-				return false;
-			}
-
-            hdr = newhdr;
-
-            mapshot = textureload(mapname, 0, true, false);
-            computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
-            resetmap();
-
-			maptype = MAP_OCTA;
-
-			strncpy(hdr.head, ohdr.head, 4);
-			hdr.gamever = 0; // sauer has no gamever
-			hdr.worldsize = ohdr.worldsize;
-			if(hdr.worldsize > 1<<18) hdr.worldsize = 1<<18;
-			hdr.numents = ohdr.numents;
-			hdr.numpvs = ohdr.numpvs;
-			hdr.lightmaps = ohdr.lightmaps;
-			hdr.revision = 1;
-			strncpy(hdr.maptitle, ohdr.maptitle, 128);
-
-			if(ohdr.version<=20) conoutf("\frloading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
-			if(!ohdr.ambient) ohdr.ambient = 25;
-			if(!ohdr.lerpsubdivsize)
-			{
-				if(!ohdr.lerpangle) ohdr.lerpangle = 44;
-				ohdr.lerpsubdiv = 2;
-				ohdr.lerpsubdivsize = 4;
-			}
-			setvar("lightprecision", ohdr.mapprec ? ohdr.mapprec : 32);
-			setvar("lighterror", ohdr.maple ? ohdr.maple : 8);
-			setvar("bumperror", ohdr.mapbe ? ohdr.mapbe : 3);
-			setvar("lightlod", ohdr.mapllod);
-			setvar("ambient", ohdr.ambient);
-			setvar("fullbright", 0, false);
-			setvar("fullbrightlevel", 128, false);
-			setvar("lerpangle", ohdr.lerpangle);
-			setvar("lerpsubdiv", ohdr.lerpsubdiv);
-			setvar("lerpsubdivsize", ohdr.lerpsubdivsize);
-
-			string gameid;
-			s_strcpy(gameid, "???");
-			if(hdr.version >= 16)
-			{
-				int len = gzgetc(f);
-				gzread(f, gameid, len+1);
-			}
-			else s_strcpy(gameid, "fps");
-			strncpy(hdr.gameid, gameid, 4);
-
-			if(!server::canload(hdr.gameid))
-			{
-				conoutf("\frWARNING: loading OCTA v%d map from %s game, ignoring game specific data", hdr.version, hdr.gameid);
-				samegame = false;
-			}
-			else if(verbose) conoutf("\fwloading OCTA v%d map from %s game", hdr.version, hdr.gameid);
-
-			if(hdr.version>=16)
-			{
-				eif = readushort(f);
-				int extrasize = readushort(f);
-				loopj(extrasize) gzgetc(f);
-			}
-
-			if(hdr.version<25) hdr.numpvs = 0;
-            if(hdr.version<28) hdr.blendmap = 0;
-		}
-		else
-        {
-            gzclose(f);
-            continue;
-        }
-
-		renderprogress(0, "clearing world...");
-
-		texmru.setsize(0);
-		if(hdr.version<14)
-		{
-			uchar oldtl[256];
-			gzread(f, oldtl, sizeof(oldtl));
-			loopi(256) texmru.add(oldtl[i]);
-		}
-		else
-		{
-			ushort nummru = readushort(f);
-			loopi(nummru) texmru.add(readushort(f));
-		}
-
-		freeocta(worldroot);
-		worldroot = NULL;
-
-		renderprogress(0, "loading entities...");
-
-		vector<extentity *> &ents = entities::getents();
-		loopi(hdr.numents)
-		{
-			if(verbose) renderprogress(float(i)/float(hdr.numents), "loading entities...");
-			extentity &e = *entities::newent();
-			ents.add(&e);
-			gzread(f, &e, sizeof(entity));
-			endianswap(&e.o, sizeof(int), 3);
-			endianswap(&e.attr1, sizeof(short), 5);
-			e.links.setsize(0);
-			e.spawned = false;
-			e.lastemit = 0;
-			e.inoctanode = false;
-			if((maptype == MAP_OCTA && hdr.version <= 27) || (maptype == MAP_BFGZ && hdr.version <= 31))
-				e.attr5 = 0; // init ever-present attr5
-			if(maptype == MAP_OCTA)
-			{
-				loopj(eif) gzgetc(f);
-			}
-			// sauerbraten version increments
-			if(hdr.version <= 10 && e.type >= 7) e.type++;
-			if(hdr.version <= 12 && e.type >= 8) e.type++;
-			if(hdr.version <= 14 && e.type >= ET_MAPMODEL && e.type <= 16)
-			{
-				if(e.type == 16) e.type = ET_MAPMODEL;
-				else e.type++;
-			}
-			if(hdr.version <= 20 && e.type >= ET_ENVMAP) e.type++;
-			if(hdr.version <= 21 && e.type >= ET_PARTICLES) e.type++;
-			if(hdr.version <= 22 && e.type >= ET_SOUND) e.type++;
-			if(hdr.version <= 23 && e.type >= ET_SPOTLIGHT) e.type++;
-			if(!samegame && (e.type>=ET_GAMESPECIFIC || hdr.version<=14))
-			{
-				ents.pop();
 				continue;
 			}
-			entities::readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
-			if(maptype == MAP_BFGZ && entities::maylink(hdr.gamever <= 49 && e.type >= 10 ? e.type-1 : e.type, hdr.gamever))
+
+			renderprogress(0, "clearing world...");
+
+			texmru.setsize(0);
+			if(hdr.version<14)
 			{
-				int links = gzgetint(f);
-				loopk(links)
+				uchar oldtl[256];
+				gzread(f, oldtl, sizeof(oldtl));
+				loopi(256) texmru.add(oldtl[i]);
+			}
+			else
+			{
+				ushort nummru = readushort(f);
+				loopi(nummru) texmru.add(readushort(f));
+			}
+
+			freeocta(worldroot);
+			worldroot = NULL;
+
+			renderprogress(0, "loading entities...");
+
+			vector<extentity *> &ents = entities::getents();
+			loopi(hdr.numents)
+			{
+				if(verbose) renderprogress(float(i)/float(hdr.numents), "loading entities...");
+				extentity &e = *entities::newent();
+				ents.add(&e);
+				gzread(f, &e, sizeof(entity));
+				endianswap(&e.o, sizeof(int), 3);
+				endianswap(&e.attr1, sizeof(short), 5);
+				e.links.setsize(0);
+				e.spawned = false;
+				e.lastemit = 0;
+				e.inoctanode = false;
+				if((maptype == MAP_OCTA && hdr.version <= 27) || (maptype == MAP_BFGZ && hdr.version <= 31))
+					e.attr5 = 0; // init ever-present attr5
+				if(maptype == MAP_OCTA)
 				{
-					int ln = gzgetint(f);
-					e.links.add(ln);
+					loopj(eif) gzgetc(f);
 				}
-				if(verbose >= 2) conoutf("\fwentity %s (%d) loaded %d link(s)", entities::findname(e.type), i, links);
-			}
-			if(!insideworld(e.o))
-			{
-				if(e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
+				// sauerbraten version increments
+				if(hdr.version <= 10 && e.type >= 7) e.type++;
+				if(hdr.version <= 12 && e.type >= 8) e.type++;
+				if(hdr.version <= 14 && e.type >= ET_MAPMODEL && e.type <= 16)
 				{
-					conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
+					if(e.type == 16) e.type = ET_MAPMODEL;
+					else e.type++;
 				}
-			}
-			if(hdr.version <= 14 && e.type == ET_MAPMODEL)
-			{
-				e.o.z += e.attr3;
-				if(e.attr4) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attr4);
-				e.attr3 = e.attr4 = 0;
-			}
-			if(hdr.version <= 31 && e.type == ET_MAPMODEL)
-			{
-				int angle = e.attr1;
-				e.attr1 = e.attr2;
-				e.attr2 = angle;
-				e.attr3 = e.attr4 = e.attr5 = 0;
-			}
-		}
-		entities::initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
-		if(verbose) conoutf("\fwloaded %d entities", hdr.numents);
-
-		renderprogress(0, "loading octree...");
-		worldroot = loadchildren(f);
-
-		if(hdr.version <= 11)
-			swapXZ(worldroot);
-
-		if(hdr.version <= 8)
-			converttovectorworld();
-
-		if(hdr.worldsize > VVEC_INT_MASK+1 && hdr.version <= 25)
-			fixoversizedcubes(worldroot, hdr.worldsize>>1);
-
-		renderprogress(0, "validating...");
-		validatec(worldroot, hdr.worldsize>>1);
-
-		worldscale = 0;
-		while(1<<worldscale < hdr.worldsize) worldscale++;
-
-		if(hdr.version >= 7) loopi(hdr.lightmaps)
-		{
-			if(verbose) renderprogress(i/(float)hdr.lightmaps, "loading lightmaps...");
-			LightMap &lm = lightmaps.add();
-			if(hdr.version >= 17)
-			{
-				int type = gzgetc(f);
-				lm.type = type&0x7F;
-				if(hdr.version >= 20 && type&0x80)
+				if(hdr.version <= 20 && e.type >= ET_ENVMAP) e.type++;
+				if(hdr.version <= 21 && e.type >= ET_PARTICLES) e.type++;
+				if(hdr.version <= 22 && e.type >= ET_SOUND) e.type++;
+				if(hdr.version <= 23 && e.type >= ET_SPOTLIGHT) e.type++;
+				if(!samegame && (e.type>=ET_GAMESPECIFIC || hdr.version<=14))
 				{
-					lm.unlitx = readushort(f);
-					lm.unlity = readushort(f);
+					ents.pop();
+					continue;
 				}
-			}
-            if(lm.type&LM_ALPHA && (lm.type&LM_TYPE)!=LM_BUMPMAP1) lm.bpp = 4;
-            lm.data = new uchar[lm.bpp*LM_PACKW*LM_PACKH];
-            gzread(f, lm.data, lm.bpp * LM_PACKW * LM_PACKH);
-			lm.finalize();
-		}
-
-		if(hdr.numpvs > 0) loadpvs(f);
-        if(hdr.blendmap) loadblendmap(f);
-
-		if(verbose) conoutf("\fwloaded %d lightmaps", hdr.lightmaps);
-
-		renderprogress(0, "loading world...");
-		world::loadworld(f, maptype);
-
-		overrideidents = worldidents = true;
-		persistidents = false;
-		s_sprintfd(cfgname)("%s.cfg", mapname);
-		if(maptype == MAP_OCTA)
-		{
-			exec("octa.cfg"); // for use with -pSAUER_DIR
-			exec(cfgname);
-		}
-		else if(!execfile(cfgname)) exec("map.cfg");
-		persistidents = true;
-		overrideidents = worldidents = false;
-
-        vector<int> mapmodels;
-		loopv(ents)
-		{
-			extentity &e = *ents[i];
-
-			if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 29)) &&
-				ents[i]->type == ET_SPOTLIGHT)
-			{
-				int closest = -1;
-				float closedist = 1e10f;
-				loopvk(ents) if(ents[k]->type == ET_LIGHT)
+				entities::readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
+				if(maptype == MAP_BFGZ && entities::maylink(hdr.gamever <= 49 && e.type >= 10 ? e.type-1 : e.type, hdr.gamever))
 				{
-					extentity &a = *ents[k];
-					float dist = e.o.dist(a.o);
-					if(dist < closedist)
+					int links = gzgetint(f);
+					loopk(links)
 					{
-						closest = i;
-						closedist = dist;
+						int ln = gzgetint(f);
+						e.links.add(ln);
+					}
+					if(verbose >= 2) conoutf("\fwentity %s (%d) loaded %d link(s)", entities::findname(e.type), i, links);
+				}
+				if(!insideworld(e.o))
+				{
+					if(e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
+					{
+						conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
 					}
 				}
-				if(ents.inrange(closest) && closedist <= 100)
+				if(hdr.version <= 14 && e.type == ET_MAPMODEL)
 				{
-					extentity &a = *ents[closest];
-					a.links.add(i);
-					conoutf("\frWARNING: auto import linked spotlight %d to light %d", i, closest);
+					e.o.z += e.attr3;
+					if(e.attr4) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attr4);
+					e.attr3 = e.attr4 = 0;
+				}
+				if(hdr.version <= 31 && e.type == ET_MAPMODEL)
+				{
+					int angle = e.attr1;
+					e.attr1 = e.attr2;
+					e.attr2 = angle;
+					e.attr3 = e.attr4 = e.attr5 = 0;
 				}
 			}
-			if(e.type == ET_MAPMODEL && e.attr1 >= 0)
+			entities::initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
+			if(verbose) conoutf("\fwloaded %d entities", hdr.numents);
+
+			renderprogress(0, "loading octree...");
+			worldroot = loadchildren(f);
+
+			if(hdr.version <= 11)
+				swapXZ(worldroot);
+
+			if(hdr.version <= 8)
+				converttovectorworld();
+
+			if(hdr.worldsize > VVEC_INT_MASK+1 && hdr.version <= 25)
+				fixoversizedcubes(worldroot, hdr.worldsize>>1);
+
+			renderprogress(0, "validating...");
+			validatec(worldroot, hdr.worldsize>>1);
+
+			worldscale = 0;
+			while(1<<worldscale < hdr.worldsize) worldscale++;
+
+			if(hdr.version >= 7) loopi(hdr.lightmaps)
 			{
-				if(mapmodels.find(e.attr1) < 0) mapmodels.add(e.attr1);
-            }
-        }
+				if(verbose) renderprogress(i/(float)hdr.lightmaps, "loading lightmaps...");
+				LightMap &lm = lightmaps.add();
+				if(hdr.version >= 17)
+				{
+					int type = gzgetc(f);
+					lm.type = type&0x7F;
+					if(hdr.version >= 20 && type&0x80)
+					{
+						lm.unlitx = readushort(f);
+						lm.unlity = readushort(f);
+					}
+				}
+				if(lm.type&LM_ALPHA && (lm.type&LM_TYPE)!=LM_BUMPMAP1) lm.bpp = 4;
+				lm.data = new uchar[lm.bpp*LM_PACKW*LM_PACKH];
+				gzread(f, lm.data, lm.bpp * LM_PACKW * LM_PACKH);
+				lm.finalize();
+			}
 
-		loopv(mapmodels)
-		{
-			loadprogress = float(i+1)/mapmodels.length();
-			int mmindex = mapmodels[i];
-		    mapmodelinfo &mmi = getmminfo(mmindex);
-			if(!&mmi) conoutf("\frcould not find map model: %d", mmindex);
-			else if(!loadmodel(NULL, mmindex, true))
-				conoutf("\frcould not load model: %s", mmi.name);
+			if(hdr.numpvs > 0) loadpvs(f);
+			if(hdr.blendmap) loadblendmap(f);
+
+			if(verbose) conoutf("\fwloaded %d lightmaps", hdr.lightmaps);
+
+			renderprogress(0, "loading world...");
+			world::loadworld(f, maptype);
+
+			overrideidents = worldidents = true;
+			persistidents = false;
+			s_sprintfd(cfgname)("%s.cfg", mapname);
+			if(maptype == MAP_OCTA)
+			{
+				exec("octa.cfg"); // for use with -pSAUER_DIR
+				exec(cfgname);
+			}
+			else if(!execfile(cfgname)) exec("map.cfg");
+			persistidents = true;
+			overrideidents = worldidents = false;
+
+			vector<int> mapmodels;
+			loopv(ents)
+			{
+				extentity &e = *ents[i];
+
+				if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 29)) &&
+					ents[i]->type == ET_SPOTLIGHT)
+				{
+					int closest = -1;
+					float closedist = 1e10f;
+					loopvk(ents) if(ents[k]->type == ET_LIGHT)
+					{
+						extentity &a = *ents[k];
+						float dist = e.o.dist(a.o);
+						if(dist < closedist)
+						{
+							closest = i;
+							closedist = dist;
+						}
+					}
+					if(ents.inrange(closest) && closedist <= 100)
+					{
+						extentity &a = *ents[closest];
+						a.links.add(i);
+						conoutf("\frWARNING: auto import linked spotlight %d to light %d", i, closest);
+					}
+				}
+				if(e.type == ET_MAPMODEL && e.attr1 >= 0)
+				{
+					if(mapmodels.find(e.attr1) < 0) mapmodels.add(e.attr1);
+				}
+			}
+
+			loopv(mapmodels)
+			{
+				loadprogress = float(i+1)/mapmodels.length();
+				int mmindex = mapmodels[i];
+				mapmodelinfo &mmi = getmminfo(mmindex);
+				if(!&mmi) conoutf("\frcould not find map model: %d", mmindex);
+				else if(!loadmodel(NULL, mmindex, true))
+					conoutf("\frcould not load model: %s", mmi.name);
+			}
+			loadprogress = 0;
+
+			gzclose(f);
+			conoutf("\fwloaded map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
+
+			//if((maptype == MAP_OCTA && hdr.version <= 26) || (maptype == MAP_BFGZ && hdr.version <= 28))
+			//	mpremip(true);
+
+			if((maptype == MAP_OCTA && hdr.version <= 25) || (maptype == MAP_BFGZ && hdr.version <= 26))
+				fixlightmapnormals();
+
+			entitiesinoctanodes();
+			initlights();
+			allchanged(true);
+
+			computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
+			renderprogress(0, "starting world...");
+			startmap(mapname);
+			RUNWORLD("on_start");
+			return true;
 		}
-		loadprogress = 0;
-
-		gzclose(f);
-		conoutf("\fwloaded map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
-
-		//if((maptype == MAP_OCTA && hdr.version <= 26) || (maptype == MAP_BFGZ && hdr.version <= 28))
-		//	mpremip(true);
-
-		if((maptype == MAP_OCTA && hdr.version <= 25) || (maptype == MAP_BFGZ && hdr.version <= 26))
-			fixlightmapnormals();
-
-        entitiesinoctanodes();
-		initlights();
-		allchanged(true);
-
-		computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
-		renderprogress(0, "starting world...");
-		startmap(mapname);
-		RUNWORLD("on_start");
-		return true;
 	}
 	conoutf("\frunable to load %s", mname);
 	return false;
