@@ -214,7 +214,9 @@ void updatesound(int chan)
 		if(!waiting)
 		{
 			Mix_Volume(chan, s.curvol);
+            SDL_LockAudio(); // workaround for race condition in inside Mix_SetPanning
 			Mix_SetPanning(chan, 255-s.curpan, s.curpan);
+            SDL_UnlockAudio();
 		}
 	}
 	else
