@@ -2041,7 +2041,7 @@ namespace server
 				case SV_EDITMODE:
 				{
 					int val = getint(p);
-					if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || !m_edit(gamemode)) break;
+					if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || (gamemode!=1)) break;
 					if(smode)
 					{
 						if(val) smode->leavegame(ci);
@@ -2352,8 +2352,7 @@ namespace server
 							sents[n].spawned = false; // wait a bit then load 'em up
 							sents[n].millis = gamemillis;
 							if(enttype[sents[n].type].usetype == EU_ITEM)
-								sents[n].millis -= (sv_itemspawntime*1000)+(sv_itemspawndelay*1000);
-							else if(sents[n].type == TRIGGER) sents[n].millis -= TRIGGERTIME*2;
+								sents[n].millis -= sv_itemspawntime*1000;
 						}
 					}
 					if(notgotinfo)
@@ -2579,8 +2578,7 @@ namespace server
 						sents[n].spawned = false; // wait a bit then load 'em up
 						sents[n].millis = gamemillis;
 						if(enttype[sents[n].type].usetype == EU_ITEM)
-							sents[n].millis -= (sv_itemspawntime*1000)+(sv_itemspawndelay*1000);
-						else if(sents[n].type == TRIGGER) sents[n].millis -= TRIGGERTIME*2;
+							sents[n].millis -= (sv_itemspawntime*1000)-2000;
 					}
 					break;
 				}

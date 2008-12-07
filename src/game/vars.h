@@ -10,7 +10,6 @@ VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 2, 2); // 0 = never, 1 = yes but not kamakaze, 2 = yes with kamakaze
 VARG(itemspawntime, 1, 30, 3600); // secs when items respawn
-VARG(itemspawndelay, 0, 10, 3600); // secs after map start items first spawn
 VARG(timelimit, 0, 15, 60);
 
 VARG(teamdamage, 0, 1, 1);
