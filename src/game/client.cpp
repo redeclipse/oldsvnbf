@@ -296,13 +296,16 @@ namespace client
 	void saytext(gameent *d, int flags, char *text)
 	{
 		if(!colourchat) filtertext(text, text);
-
-		string s, t, m;
-		s_sprintf(t)("%s", m_team(world::gamemode, world::mutators) && (flags & SAY_TEAM) ? teamtype[d->team].chat : teamtype[TEAM_NEUTRAL].chat);
-		s_sprintf(m)("%s", world::colorname(d, NULL, "", m_team(world::gamemode, world::mutators) && (flags & SAY_TEAM) ? false : true));
-
-		if(flags&SAY_ACTION) s_sprintf(s)("%s* \fs%s\fS \fs%s\fS", t, m, text);
-		else s_sprintf(s)("%s<\fs\fw%s\fS> \fs\fw%s\fS", t, m, text);
+		string s;
+		bool team = m_team(world::gamemode, world::mutators) && flags&SAY_TEAM;
+		s_sprintfd(m)("%s", world::colorname(d));
+		if(team)
+		{
+			s_sprintfd(t)(" (\fs%s%s\fS)", teamtype[d->team].chat, teamtype[team].name);
+			s_strcat(m, t);
+		}
+		if(flags&SAY_ACTION) s_sprintf(s)("\fm* \fs%s\fS \fs\fm%s\fS", m, text);
+		else s_sprintf(s)("\fa<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
 
 		if(d->state != CS_DEAD && d->state != CS_SPECTATOR && d->state != CS_WAITING)
 		{
@@ -1632,12 +1635,8 @@ namespace client
 	{
 		int ac = 0, bc = 0;
 
-		if(a->address.host != ENET_HOST_ANY && a->ping < 999 &&
-			a->attr.length() && a->attr[0] == GAMEVERSION) ac = 1;
-
-		if(b->address.host != ENET_HOST_ANY && b->ping < 999 &&
-			b->attr.length() && b->attr[0] == GAMEVERSION) bc = 1;
-
+		if(a->address.host != ENET_HOST_ANY && a->ping < 999 && a->attr.length()) ac = 1;
+		if(b->address.host != ENET_HOST_ANY && b->ping < 999 && b->attr.length()) bc = 1;
 		if(ac > bc) return -1;
 		if(ac < bc) return 1;
 
@@ -1766,8 +1765,12 @@ namespace client
     void serverstartcolumn(g3d_gui *g, int i)
     {
 		g->pushlist();
+		string text;
 
-		if(g->buttonf("%s ", GUI_BUTTON_COLOR, NULL, serverinfotypes[i]) & G3D_UP)
+		if(i) { s_sprintfd(text)("%s ", serverinfotypes[i]); }
+		else { s_sprintfd(text)("v%d", GAMEVERSION); }
+
+		if(g->buttonf("%s", GUI_BUTTON_COLOR, NULL, text) & G3D_UP)
 		{
 			string st; st[0] = 0;
 			bool invert = false;
@@ -1801,12 +1804,13 @@ namespace client
     bool serverentry(g3d_gui *g, int i, serverinfo *si)
     {
 		string text; text[0] = 0;
-		int colour = serverstatus[serverstat(si)].colour;
+		bool diff = si->attr[0] != GAMEVERSION;
+		int status = diff ? SSTAT_UNKNOWN : serverstat(si), colour = serverstatus[status].colour;
 		switch(i)
 		{
 			case SINFO_STATUS:
 			{
-				if(g->button("", colour, serverstatus[serverstat(si)].icon) & G3D_UP)
+				if(g->button("", colour, serverstatus[status].icon) & G3D_UP)
 					return true;
 				break;
 			}
@@ -1817,24 +1821,28 @@ namespace client
 			}
 			case SINFO_DESC:
 			{
-				s_strncpy(text, si->sdesc, 18);
+				if(diff) s_sprintf(text)("(v%d != v%d)", si->attr[0], GAMEVERSION);
+				else s_strncpy(text, si->sdesc, 20);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_PING:
 			{
+				if(diff) break;
 				s_sprintf(text)("%d", si->ping);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_PLAYERS:
 			{
+				if(diff) break;
 				s_sprintf(text)("%d", si->numplayers);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_MAXCLIENTS:
 			{
+				if(diff) break;
 				if(si->attr.length() > 4 && si->attr[5] >= 0)
 					s_sprintf(text)("%d", si->attr[5]);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
@@ -1842,6 +1850,7 @@ namespace client
 			}
 			case SINFO_GAME:
 			{
+				if(diff) break;
 				if(si->attr.length() > 1)
 					s_sprintf(text)("%s", server::gamename(si->attr[1], si->attr[2]));
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
@@ -1849,12 +1858,14 @@ namespace client
 			}
 			case SINFO_MAP:
 			{
+				if(diff) break;
 				s_strncpy(text, si->map, 18);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_TIME:
 			{
+				if(diff) break;
 				if(si->attr.length() > 3 && si->attr[4] >= 0)
 					s_sprintf(text)("%d %s", si->attr[4], si->attr[4] == 1 ? "min" : "mins");
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
@@ -1888,7 +1899,7 @@ namespace client
 				{
 					if(!i && g->shouldtab()) { end = j; break; }
 					serverinfo *si = servers[j];
-					if(si->ping >= 0 && si->attr.length() && si->attr[0]==GAMEVERSION)
+					if(si->ping >= 0 && si->attr.length())
 					{
 						if(serverentry(g, i, si)) n = j;
 					}
