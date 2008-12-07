@@ -231,7 +231,7 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 		ircchan *c = ircfindchan(n, target);
 		if(c)
 		{
-			s_sprintf(s)("[%s]:%s", n->name, c->name);
+			s_sprintf(s)("\fs\fa[%s]:%s\fS", n->name, c->name);
 			while(c->lines.length() >= 1000)
 			{
 				char *s = c->lines.remove(0);
@@ -241,7 +241,7 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 		}
 		else
 		{
-			s_sprintf(s)("[%s]:%s", n->name, target);
+			s_sprintf(s)("\fs\fa[%s]:%s\fS", n->name, target);
 			while(n->lines.length() >= 1000)
 			{
 				char *s = n->lines.remove(0);
@@ -252,7 +252,7 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 	}
 	else
 	{
-		s_sprintf(s)("[%s]", n->name);
+		s_sprintf(s)("\fs\fa[%s]\fS", n->name);
 		while(n->lines.length() >= 1000)
 		{
 			char *s = n->lines.remove(0);
@@ -304,7 +304,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 					DELETEA(q); DELETEA(r);
 				}
 			}
-			else if(ismsg) ircprintf(n, g ? w[g+1] : NULL, "\fa<%s> %s", user[0], w[g+2]);
+			else if(ismsg) ircprintf(n, g ? w[g+1] : NULL, "\fw<%s> %s", user[0], w[g+2]);
 			else ircprintf(n, g ? w[g+1] : NULL, "\fo-%s- %s", user[0], w[g+2]);
 		}
 	}
@@ -629,7 +629,7 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 	else if(c)
 	{
 		ircsend(n, "PRIVMSG %s :%s", c->name, p);
-		ircprintf(n, c->name, "\fa<%s> %s", n->nick, p);
+		ircprintf(n, c->name, "\fw<%s> %s", n->nick, p);
 	}
 	else
 	{

@@ -381,16 +381,35 @@ struct demoheader
 enum { TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_ENEMY, TEAM_MAX };
 struct teamtypes
 {
-	int	type,		colour;	const char *name,	*tpmdl,			*fpmdl,				*flag,			*icon,			*chat;
+	int	type,		colour;	const char *name,	*tpmdl,					*fpmdl,
+		*flag,			*icon,			*chat;
 };
 #ifdef GAMESERVER
 teamtypes teamtype[] = {
-	{ TEAM_NEUTRAL,	0xAAAAAA,	"neutral",		"player",		"player/vwep",		"flag",			"team",			"\fw" },
-	{ TEAM_ALPHA,	0x2222AA,	"alpha",		"player/alpha",	"player/alpha/vwep","flag/alpha",	"teamalpha",	"\fb" },
-	{ TEAM_BETA,	0xAA2222,	"beta",			"player/beta",	"player/beta/vwep",	"flag/beta",	"teambeta",		"\fr" },
-	{ TEAM_DELTA,	0xAAAA22,	"delta",		"player/delta",	"player/delta/vwep","flag/delta",	"teamdelta",	"\fy" },
-	{ TEAM_GAMMA,	0x22AA22,	"gamma",		"player/gamma",	"player/gamma/vwep","flag/gamma",	"teamgamma",	"\fg" },
-	{ TEAM_ENEMY,	0xAAAAAA,	"enemy",		"player",		"player/vwep",		"flag",			"team",			"\fa" }
+	{
+		TEAM_NEUTRAL,	0xAAAAAA,	"neutral",	"actors/player",		"actors/player/vwep",
+		"flag",			"team",			"\fw"
+	},
+	{
+		TEAM_ALPHA,	0x2222AA,	"alpha",		"actors/player/alpha",	"actors/player/alpha/vwep",
+		"flag/alpha",	"teamalpha",	"\fb"
+	},
+	{
+		TEAM_BETA,	0xAA2222,	"beta",			"actors/player/beta",	"actors/player/beta/vwep",
+		"flag/beta",	"teambeta",		"\fr"
+	},
+	{
+		TEAM_DELTA,	0xAAAA22,	"delta",		"actors/player/delta",	"actors/player/delta/vwep",
+		"flag/delta",	"teamdelta",	"\fy"
+	},
+	{
+		TEAM_GAMMA,	0x22AA22,	"gamma",		"actors/player/gamma",	"actors/player/gamma/vwep",
+		"flag/gamma",	"teamgamma",	"\fg"
+	},
+	{
+		TEAM_ENEMY,	0xAAAAAA,	"enemy",		"actors/player",		"actors/player/vwep",
+		"flag",			"team",			"\fa"
+	}
 };
 #else
 extern teamtypes teamtype[];
@@ -472,11 +491,11 @@ struct aitypes
 #ifdef GAMESERVER
 aitypes aitype[] = {
 	{ AI_NONE,		"",				"" },
-	{ AI_BOT,		"bot",			"player" },
-	{ AI_BSOLDIER,	"alpha",		"player/alpha" },
-	{ AI_RSOLDIER,	"beta",			"player/beta" },
-	{ AI_YSOLDIER,	"delta",		"player/delta" },
-	{ AI_GSOLDIER,	"gamma",		"player/gamma" },
+	{ AI_BOT,		"bot",			"actors/player" },
+	{ AI_BSOLDIER,	"alpha",		"actors/player/alpha" },
+	{ AI_RSOLDIER,	"beta",			"actors/player/beta" },
+	{ AI_YSOLDIER,	"delta",		"actors/player/delta" },
+	{ AI_GSOLDIER,	"gamma",		"actors/player/gamma" },
 };
 #else
 extern aitypes aitype[];
