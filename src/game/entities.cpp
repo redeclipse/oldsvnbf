@@ -520,14 +520,25 @@ namespace entities
 			case PARTICLES:
 			case MAPSOUND:
 			{
-				e.lastemit = 0; // reset and start over
-				e.spawned = false;
 				loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER)
 				{
 					if(ents[e.links[i]]->lastemit < e.lastemit)
 					{
 						e.lastemit = ents[e.links[i]]->lastemit;
 						e.spawned = ents[e.links[i]]->spawned;
+					}
+				}
+				break;
+			}
+			case TRIGGER:
+			{
+				loopv(e.links) if(ents.inrange(e.links[i]) &&
+					(ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND))
+				{
+					if(e.lastemit < ents[e.links[i]]->lastemit)
+					{
+						ents[e.links[i]]->lastemit = e.lastemit;
+						ents[e.links[i]]->spawned = e.spawned;
 					}
 				}
 				break;
@@ -548,9 +559,6 @@ namespace entities
 				while(e.attr1 >= 360) e.attr1 -= 360;
 				while(e.attr2 < 0) e.attr2 += 360;
 				while(e.attr2 >= 360) e.attr2 -= 360;
-				break;
-			case TRIGGER:
-				e.lastemit = lastmillis;
 				break;
 			default:
 				break;
@@ -1182,20 +1190,6 @@ namespace entities
 
 			switch(e.type)
 			{
-				case MAPMODEL:
-				case PARTICLES:
-				case MAPSOUND:
-				{
-					e.lastemit = 0;
-					e.spawned = false;
-					break;
-				}
-				case TRIGGER:
-				{
-					e.lastemit = lastmillis;
-					e.spawned = false;
-					break;
-				}
 				case WEAPON:
 				{
 					if(mtype == MAP_BFGZ && gver <= 90)
@@ -1224,13 +1218,11 @@ namespace entities
 				}
 				default: break;
 			}
+			fixentity(e);
 		}
-		loopvj(ents)
-		{
-			fixentity(*ents[j]);
-			if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
-				setspawn(j, false);
-		}
+		loopvj(ents) if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
+			setspawn(j, false);
+		loopvj(ents) fixentity(*ents[j]);
 		autodropentities = m_play(world::gamemode) && !entities;
 	}
 
