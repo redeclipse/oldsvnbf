@@ -1757,12 +1757,12 @@ namespace client
 		g->pushlist();
 		string text;
 
-		if(i) { s_sprintfd(text)("%s ", serverinfotypes[i]); }
-		else { s_sprintfd(text)("v%d", GAMEVERSION); }
+		if(i) { s_sprintf(text)("%s ", serverinfotypes[i]); }
+		else { s_sprintf(text)("v%d ", GAMEVERSION); }
 
 		if(g->buttonf("%s", GUI_BUTTON_COLOR, NULL, text) & G3D_UP)
 		{
-			string st; st[0] = 0;
+			string st = "";
 			bool invert = false;
 			int len = execute("listlen $serversort");
 			loopk(len)
