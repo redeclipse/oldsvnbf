@@ -885,7 +885,7 @@ namespace server
 			srvoutf("%s", force ? "vote passed by default" : "vote passed by majority");
 			if(best && best->count >= reqvotes)
 			{
-				sendf(-1, 1, "ri2si2", SV_MAPCHANGE, 1, best->map, best->mode, best->muts);
+				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, best->map, 0, best->mode, best->muts);
 				changemap(best->map, best->mode, best->muts);
 			}
 			else
