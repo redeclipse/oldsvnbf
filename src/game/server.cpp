@@ -398,9 +398,8 @@ namespace server
 	{
 		int n = 0;
 		loopv(clients)
-			if(clients[i]->clientnum != exclude &&
-				(!nospec || clients[i]->state.state != CS_SPECTATOR) &&
-				(!noai || clients[i]->state.aitype == AI_NONE))
+			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->clientnum != exclude &&
+				(!nospec || clients[i]->state.state != CS_SPECTATOR) && (!noai || clients[i]->state.aitype == AI_NONE))
 				n++;
 		return n;
 	}
@@ -1692,7 +1691,7 @@ namespace server
 				checkvotes(true);
 			}
 		}
-		ai::checkai();
+		else ai::checkai();
 	}
 
     void setmaster(clientinfo *ci, bool val, const char *pass = "", bool approved = false)
@@ -1755,7 +1754,6 @@ namespace server
 	void clientdisconnect(int n, bool local)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
-		ai::removeai(ci);
 		if(ci->privilege) setmaster(ci, false);
 		if(smode) smode->leavegame(ci, true);
 		mutate(smuts, mut->leavegame(ci));
@@ -1763,6 +1761,7 @@ namespace server
 		savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, n);
 		if(ci->name[0]) relayf(1, "\fo%s has left the game", colorname(ci));
+		ai::removeai(ci);
 		clients.removeobj(ci);
 		if(clients.empty()) cleanup(false);
 		else checkvotes();

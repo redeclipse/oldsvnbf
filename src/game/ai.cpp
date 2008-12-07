@@ -8,7 +8,7 @@ namespace ai
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->state.aitype != AI_NONE || !ci->name[0] || ci->clientnum == exclude)
+			if(ci->clientnum < 0 || ci->state.aitype != AI_NONE || !ci->name[0] || ci->clientnum == exclude)
 				siblings[i] = -1;
 			else
 			{
@@ -124,7 +124,7 @@ namespace ai
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->state.aitype != AI_NONE || !ci->name[0] || ci->clientnum == exclude)
+			if(ci->clientnum < 0 || ci->state.aitype != AI_NONE || !ci->name[0] || ci->clientnum == exclude)
 				siblings[i] = -1;
 			else
 			{

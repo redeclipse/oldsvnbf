@@ -1758,11 +1758,11 @@ namespace client
 		string text;
 
 		if(i) { s_sprintf(text)("%s ", serverinfotypes[i]); }
-		else { s_sprintf(text)("v%d ", GAMEVERSION); }
+		else { s_sprintf(text)("v%d", GAMEVERSION); }
 
 		if(g->buttonf("%s", GUI_BUTTON_COLOR, NULL, text) & G3D_UP)
 		{
-			string st = "";
+			string st; st[0] = 0;
 			bool invert = false;
 			int len = execute("listlen $serversort");
 			loopk(len)
@@ -1818,21 +1818,21 @@ namespace client
 			}
 			case SINFO_PING:
 			{
-				if(diff) break;
+				if(diff) { g->button("", colour); break; }
 				s_sprintf(text)("%d", si->ping);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_PLAYERS:
 			{
-				if(diff) break;
+				if(diff) { g->button("", colour); break; }
 				s_sprintf(text)("%d", si->numplayers);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_MAXCLIENTS:
 			{
-				if(diff) break;
+				if(diff) { g->button("", colour); break; }
 				if(si->attr.length() > 4 && si->attr[5] >= 0)
 					s_sprintf(text)("%d", si->attr[5]);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
@@ -1840,7 +1840,7 @@ namespace client
 			}
 			case SINFO_GAME:
 			{
-				if(diff) break;
+				if(diff) { g->button("", colour); break; }
 				if(si->attr.length() > 1)
 					s_sprintf(text)("%s", server::gamename(si->attr[1], si->attr[2]));
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
@@ -1848,14 +1848,14 @@ namespace client
 			}
 			case SINFO_MAP:
 			{
-				if(diff) break;
+				if(diff) { g->button("", colour); break; }
 				s_strncpy(text, si->map, 18);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_TIME:
 			{
-				if(diff) break;
+				if(diff) { g->button("", colour); break; }
 				if(si->attr.length() > 3 && si->attr[4] >= 0)
 					s_sprintf(text)("%d %s", si->attr[4], si->attr[4] == 1 ? "min" : "mins");
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
