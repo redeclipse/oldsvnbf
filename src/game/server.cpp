@@ -1758,7 +1758,7 @@ namespace server
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
 		sendf(-1, 1, "ri2", SV_CDIS, n);
-		relayf(1, "\fo%s has left the game", colorname(ci));
+		if(ci->name[0]) relayf(1, "\fo%s has left the game", colorname(ci));
 		clients.removeobj(ci);
 		if(clients.empty()) cleanup(false);
 		else checkvotes();
