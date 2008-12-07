@@ -337,8 +337,7 @@ namespace client
 		return false;
 	}
 
-
-	void changemapserv(char *name, int gamemode, int mutators)
+	void changemapserv(char *name, int gamemode, int mutators, bool temp)
 	{
 		if(editmode) toggleedit();
 		world::gamemode = gamemode; world::mutators = mutators;
@@ -347,13 +346,13 @@ namespace client
 		world::minremain = -1;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
-		needsmap = false;
-		if(!name || !*name || !load_world(name))
+		if(!name || !*name || !load_world(name, temp))
 		{
 			emptymap(0, true, NULL);
 			setnames(name, MAP_BFGZ);
-			needsmap = name || m_edit(world::gamemode);
+			needsmap = true;
 		}
+		else needsmap = false;
 		if(world::player1->state != CS_SPECTATOR) world::player1->state = CS_DEAD;
 		if(editmode) edittoggled(editmode);
 		if(m_stf(gamemode)) stf::setupflags();
@@ -969,10 +968,9 @@ namespace client
 					if(hasmap) getstring(text, p);
 					int getit = getint(p), mode = getint(p), muts = getint(p);
 					needsmap = false;
-					s_sprintfd(mapfile)("%s%s", getit == 2 ? "temp/" : "", text);
-					changemapserv(hasmap && getit != 1 ? mapfile : NULL, mode, muts);
+					changemapserv(hasmap && getit != 1 ? text : NULL, mode, muts, getit == 2);
 					mapchanged = true;
-					if(needsmap && !getit) getmap();
+					if(needsmap && getit != 1) getmap();
 					break;
 				}
 
