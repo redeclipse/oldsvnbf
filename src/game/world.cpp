@@ -660,8 +660,6 @@ namespace world
 		if(dth >= 0) playsound(dth, d->o, d);
 		s_sprintfd(a)("\fy%s %s", colorname(d), d->obit);
 		entities::announce(anc, a, af);
-		//s_sprintfd(da)("@%s", a);
-		//part_text(vec(d->abovehead()).add(vec(0, 0, 4)), da, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 
 		vec pos = headpos(d);
 		int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
@@ -808,17 +806,14 @@ namespace world
 	{
 		if(!name) name = d->name;
 		static string cname;
-		s_sprintf(cname)("%s\fs%s\fS", *prefix ? prefix : "", name);
+		const char *chat = team && m_team(gamemode, mutators) ? teamtype[d->team].chat : teamtype[TEAM_NEUTRAL].chat;
+		s_sprintf(cname)("%s\fs%s%s", *prefix ? prefix : "", chat, name);
 		if(!name[0] || d->aitype != AI_NONE || (dupname && duplicatename(d, name)))
 		{
 			s_sprintfd(s)(" [\fs%s%d\fS]", d->aitype != AI_NONE ? "\fc" : "\fm", d->clientnum);
 			s_strcat(cname, s);
 		}
-		if(team && m_team(gamemode, mutators))
-		{
-			s_sprintfd(s)(" (\fs%s%s\fS)", teamtype[d->team].chat, teamtype[d->team].name);
-			s_strcat(cname, s);
-		}
+		s_strcat(cname, "\fS");
 		return cname;
 	}
 
@@ -1567,11 +1562,7 @@ namespace world
 		}
 
 		if(shownamesabovehead && third && d != player1)
-		{
-			s_sprintfd(s)("@\fw%s", colorname(d));
-			part_text(d->abovehead(), s, PART_TEXT, 1, 0xFFFFFF, 2.f);
-		}
-
+			part_text(d->abovehead(), colorname(d, NULL, "@"));
 
 		if(showgun)
 		{ // we could probably animate the vwep too now..

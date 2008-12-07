@@ -67,6 +67,7 @@ struct ctfstate
 		f.owner = owner;
 		f.droptime = 0;
 #ifndef GAMESERVER
+		f.wasowner = f.owner;
 		f.pickup = false;
 #endif
     }

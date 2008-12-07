@@ -423,17 +423,14 @@ namespace server
 	{
 		if(!name) name = ci->name;
 		static string cname;
-		s_sprintf(cname)("\fs%s\fS", name);
+		const char *chat = team && m_team(gamemode, mutators) ? teamtype[ci->team].chat : teamtype[TEAM_NEUTRAL].chat;
+		s_sprintf(cname)("\fs%s%s", chat, name);
 		if(!name[0] || ci->state.aitype != AI_NONE || (dupname && duplicatename(ci, name)))
 		{
 			s_sprintfd(s)(" [\fs%s%d\fS]", ci->state.aitype != AI_NONE ? "\fc" : "\fm", ci->clientnum);
 			s_strcat(cname, s);
 		}
-		if(team && m_team(gamemode, mutators))
-		{
-			s_sprintfd(s)(" (\fs%s%s\fS)", teamtype[ci->team].chat, teamtype[ci->team].name);
-			s_strcat(cname, s);
-		}
+		s_strcat(cname, "\fS");
 		return cname;
 	}
 
@@ -2234,8 +2231,15 @@ namespace server
 						if(t == cp || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && cp->team != t->team)) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
-					if(flags&SAY_ACTION) relayf(1, "* %s %s", colorname(cp, NULL, flags&SAY_TEAM), text);
-					else relayf(1, "<%s> %s", colorname(cp, NULL, flags&SAY_TEAM), text);
+					bool team = m_team(gamemode, mutators) && flags&SAY_TEAM;
+					s_sprintfd(m)("%s", colorname(cp));
+					if(team)
+					{
+						s_sprintfd(t)(" (\fs%s%s\fS)", teamtype[cp->team].chat, teamtype[cp->team].name);
+						s_strcat(m ,t);
+					}
+					if(flags&SAY_ACTION) relayf(1, "\fm* \fs%s\fS \fs\fm%s\fS", m, text);
+					else relayf(1, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
 					break;
 				}
 

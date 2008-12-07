@@ -162,6 +162,7 @@ COMMAND(lanconnect, "");
 void reconnect()
 {
 	disconnect(1);
+	SDL_Delay(1000);
 	connects(lastaddress && *lastaddress ? lastaddress : NULL);
 }
 COMMAND(reconnect, "");

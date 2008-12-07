@@ -235,12 +235,11 @@ namespace stf
 				s_sprintf(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
 			else if(attack) s_sprintf(b.info)("%s", teamtype[attack].name);
 			else b.info[0] = '\0';
-			part_text(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2+4.f)), b.info);
-			if(attack)
-			{
-				float occupy = !b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
-				part_meter(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2+6.f)), occupy, PART_METER, 1, teamtype[attack].colour);
-			}
+			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f) : 0.f;
+			vec p = vec(b.pos).add(vec(0, 0, enttype[FLAG].radius*0.75f));
+			part_meter(p, occupy, PART_METER, 1, teamtype[attack].colour); p.z += 2.f;
+			part_text(p, b.info); p.z += 2.f;
+			s_sprintfd(str)("@%d%%", int(occupy*100.f)); part_text(p, str); p.z += 2.f;
 		}
 	}
 
@@ -254,16 +253,21 @@ namespace stf
 			if(type == 1 && f.owner) continue;
 			if(type == 2 && (!f.owner || f.owner == world::player1->team)) continue;
 			if(type == 3 && (!f.enemy || f.enemy == world::player1->team)) continue;
+			bool blip = f.owner != world::player1->team && f.enemy != world::player1->team;
 			vec dir(f.o);
 			dir.sub(camera1->o);
-			float dist = dir.magnitude();
-			dir.rotate_around_z(-camera1->yaw*RAD);
-			dir.normalize();
 			int colour = teamtype[f.owner].colour;
 			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-				fade = clamp(1.f-(dist/hud::radarrange()), 0.1f, 1.f)*blend;
-			bool blip = f.owner != world::player1->team && f.enemy != world::player1->team;
-			hud::drawblip(w, h, s, blip ? fade*hud::radarblipblend : 1.f, 3, dir, r, g, b);
+				fade = hud::radarblipblend*blend;
+			if(blip)
+			{
+				float dist = dir.magnitude(),
+					diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
+				fade *= 0.5f+(diff*0.5f);
+			}
+			dir.rotate_around_z(-camera1->yaw*RAD);
+			dir.normalize();
+			hud::drawblip(w, h, blip ? s : s*2, fade, 3, dir, r, g, b);
 		}
 	}
 
@@ -290,18 +294,17 @@ namespace stf
 			bool hasflag = world::player1->state == CS_ALIVE &&
 				insideflag(f, world::player1) && (f.owner == world::player1->team || f.enemy == world::player1->team);
 			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(500-(lastmillis-f.lasthad), 0); }
-			float skew = f.hasflag ? 1.f : 0.5f, fade = hud::inventoryblend*blend,
+			float skew = f.hasflag ? 1.f : hud::inventoryskew, fade = hud::inventoryblend*blend,
 				occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f);
-			int size = s, millis = lastmillis-f.lasthad;
+			int size = s, millis = lastmillis-f.lasthad, prevsy = sy;
 			if(millis < 500)
 			{
 				float amt = clamp(float(millis)/500.f, 0.f, 1.f);
 				if(f.hasflag) skew = hud::inventoryskew+(amt*(1.f-hud::inventoryskew));
 				else skew = 1.f-(amt*(1.f-hud::inventoryskew));
 			}
-			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, fade, skew, "hud", blend, "%d%%", int(occupy*100));
-			if(f.enemy)
-				hud::drawitem(hud::flagtex(f.enemy), x+size/2, (y-sy)+size/2, size/2, fade, skew);
+			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, fade, skew, "emphasis", blend, "%d%%", int(occupy*100.f));
+			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), fade, skew);
 		}
         return sy;
     }

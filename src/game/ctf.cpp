@@ -167,23 +167,27 @@ namespace ctf
     {
 		ctfstate::flag &f = st.flags[i];
 		vec dir;
-		float fade = 1.f;
+		int colour = teamtype[f.team].colour;
+		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
+			fade = blip ? hud::radarblipblend*blend : 1.f;
         if(blip)
         {
-            if(f.owner) { if(lastmillis%1000 >= 500) fade = 0.5f; }
-            else if(f.droptime) { if(lastmillis%300 >= 150) fade = 0.5f; }
+            if(f.owner) { if(lastmillis%1000 >= 500) fade *= 0.5f; }
+            else if(f.droptime) { if(lastmillis%300 >= 150) fade *= 0.5f; }
             else return;
         	dir = f.pos();
         }
         else dir = f.spawnloc;
 		dir.sub(camera1->o);
-        float dist = dir.magnitude();
+		if(blip)
+		{
+			float dist = dir.magnitude(),
+				diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
+			fade *= 0.5f+(diff*0.5f);
+		}
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		dir.normalize();
-		int colour = teamtype[f.team].colour;
-		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-		fade *= clamp(1.f-(dist/hud::radarrange()), 0.1f, 1.f)*blend;
-		hud::drawblip(w, h, s, blip ? fade*hud::radarblipblend : 1.f, 3, dir, r, g, b,
+		hud::drawblip(w, h, blip ? s : s*2, fade, 3, dir, r, g, b,
 			"hud", fade*hud::radarnameblend, "%s%s %s",
 				teamtype[f.team].chat, teamtype[f.team].name, blip ? "flag" : "base");
     }
@@ -238,9 +242,10 @@ namespace ctf
 			}
 			if(hasflag)
 			{
-				string str; str[0] = 0;
-				if(st.flags.inrange(home)) s_sprintf(str)("%.2f", bestdist/16.f);
-				sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, fade, skew, "hud", blend, "%s", str);
+				float dist = world::player1->o.dist(f.spawnloc);
+				sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, fade, skew, "hud", blend,
+					"\fs%s+\fS%.1f\n\fs%s-\fS%.1f", teamtype[f.team].chat, dist/16.f,
+						teamtype[world::player1->team].chat, bestdist/16.f);
 			}
 		}
 		return sy;
@@ -257,7 +262,7 @@ namespace ctf
             vec above(f.pos());
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
             above.z += enttype[FLAG].radius/2;
-            s_sprintfd(info)("@%s flag", teamtype[f.team].name);
+            s_sprintfd(info)("@%s base", teamtype[f.team].name);
 			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
         }
     }
