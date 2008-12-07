@@ -676,7 +676,7 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
         m->collisionbox(0, center, radius);
         if(d->collidetype==COLLIDE_ELLIPSE)
         {
-            float yaw = 180 + float((e.attr1+7)-(e.attr1+7)%15);
+            float yaw = 180 + float((e.attr2+7)-(e.attr2+7)%15);
             if(m->ellipsecollide)
             {
                 if(!ellipsecollide(d, dir, e.o, center, yaw, radius.x, radius.y, radius.z, radius.z)) return false;
@@ -685,7 +685,7 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
         }
         else
         {
-            rotatebb(center, radius, e.attr1);
+            rotatebb(center, radius, e.attr2);
             if(!rectcollide(d, dir, center.add(e.o), radius.x, radius.y, radius.z, radius.z)) return false;
         }
     }
