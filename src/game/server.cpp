@@ -2041,7 +2041,7 @@ namespace server
 				case SV_EDITMODE:
 				{
 					int val = getint(p);
-					if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || (gamemode!=1)) break;
+					if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || !m_edit(gamemode)) break;
 					if(smode)
 					{
 						if(val) smode->leavegame(ci);
