@@ -387,7 +387,7 @@ namespace client
 				else if(type == SV_SENDMAPSHOT) mapext = "png";
 				else if(type == SV_SENDMAPFILE) mapext = "bgz";
 				if(!mapname || !*mapname) mapname = "maps/untitled";
-				s_sprintfd(mapfile)(strstr(mapname, "temp/")==mapname ? "%s" : "temp/%s", mapname);
+				s_sprintfd(mapfile)(strstr(mapname, "temp/")==mapname || strstr(mapname, "temp\\")==mapname ? "%s" : "temp/%s", mapname);
 				s_sprintfd(mapfext)("%s.%s", mapfile, mapext);
 				FILE *f = openfile(mapfext, "wb");
 				if(!f)
