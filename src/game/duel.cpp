@@ -57,7 +57,7 @@ struct duelservmode : servmode
 
 	void clearitems()
 	{
-		if(sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1))
+		if(!m_noitems(gamemode, mutators))
 		{
 			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, 0))
 			{

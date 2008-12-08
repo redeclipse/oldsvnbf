@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			125
+#define GAMEVERSION			126
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -149,7 +149,7 @@ struct guntypes
 			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
-	bool	radial,	extinguish,	carry;
+	bool	radial,	extinguish,	reloads;
 	float	offset,	elasticity,	reflectivity,	relativity,	waterfric,	weight;
 	const char
 			*name, *text,		*item,						*vwep,
@@ -163,7 +163,7 @@ guntypes guntype[GUN_MAX] =
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		200,	800,	20,		250,	0,		10000,
 			0,		18,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
-			false,	true,		false,
+			false,	true,		true,
 			1.0f,	0.f,		0.f,			0.1f,		1.0f,		0.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
@@ -221,7 +221,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_GL,		ANIM_GRENADES,	-15,    10,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
-			2,		4,		1500,	0,		200,	200,	1000,	3000,
+			2,		4,		1500,	3000,	200,	200,	1000,	3000,
 			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			false,	false,		false,
 			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		75.f,
@@ -233,7 +233,10 @@ guntypes guntype[GUN_MAX] =
 extern guntypes guntype[];
 #endif
 
-#define isgun(gun)	(gun > -1 && gun < GUN_MAX)
+#define isgun(a)		(a > -1 && a < GUN_MAX)
+#define gunloads(a,b)	(a == b || guntype[a].reloads)
+#define guncarry(a,b)	(a != b && guntype[a].reloads)
+#define gunattr(a,b)	(b != GUN_PLASMA && a == b ? GUN_PLASMA : a)
 
 enum
 {
@@ -324,6 +327,14 @@ extern gametypes gametype[], mutstype[];
 
 #define m_duke(a,b)			(a >= G_DEATHMATCH && (m_duel(a, b) || m_lms(a, b)))
 #define m_regen(a,b)		(a >= G_DEATHMATCH && !m_insta(a, b) && !m_duke(a, b))
+
+#ifdef GAMESERVER
+#define m_spawngun(a,b)		(m_insta(a,b) ? sv_instaspawngun : sv_spawngun)
+#define m_noitems(a,b)		(sv_itemsallowed < (m_insta(a,b) ? 2 : 1))
+#else
+#define m_spawngun(a,b)		(m_insta(a,b) ? instaspawngun : spawngun)
+#define m_noitems(a,b)		(itemsallowed < (m_insta(a,b) ? 2 : 1))
+#endif
 
 // network messages codes, c2s, c2c, s2c
 enum
@@ -523,44 +534,44 @@ struct gamestate
 	gamestate() : lifesequence(0), aitype(AI_NONE), ownernum(-1), skill(0), spree(0) {}
 	~gamestate() {}
 
-	int hasgun(int gun, int level = 0, int exclude = -1)
+	int hasgun(int gun, int sgun, int level = 0, int exclude = -1)
 	{
 		if(isgun(gun) && gun != exclude)
 		{
-			if(ammo[gun] > 0 || (guntype[gun].rdelay > 0 && !ammo[gun])) switch(level)
+			if(ammo[gun] > 0 || (gunloads(gun, sgun) && !ammo[gun])) switch(level)
 			{
 				case 0: default: return true; break; // has gun at all
-				case 1: if(guntype[gun].carry) return true; break; // only carriable
+				case 1: if(guncarry(gun, sgun)) return true; break; // only carriable
 				case 2: if(ammo[gun] > 0) return true; break; // only with actual ammo
-				case 3: if(ammo[gun] > 0 && guntype[gun].rdelay > 0) return true; break; // only reloadable with actual ammo
-				case 4: if(ammo[gun] >= (guntype[gun].rdelay > 0 ? 0 : guntype[gun].max)) return true; break; // only reloadable or those with < max
+				case 3: if(ammo[gun] > 0 && gunloads(gun, sgun)) return true; break; // only reloadable with actual ammo
+				case 4: if(ammo[gun] >= (gunloads(gun, sgun) ? 0 : guntype[gun].max)) return true; break; // only reloadable or those with < max
 			}
 		}
 		return false;
 	}
 
-	int bestgun(bool force = true)
+	int bestgun(int sgun, bool force = true)
 	{
 		int best = -1;
-		loopi(GUN_MAX) if(hasgun(i, 1)) best = i;
-		if(!isgun(best) && force) loopi(GUN_MAX) if(hasgun(i, 0)) best = i;
+		loopi(GUN_MAX) if(hasgun(i, sgun, 1)) best = i;
+		if(!isgun(best) && force) loopi(GUN_MAX) if(hasgun(i, sgun, 0)) best = i;
 		return best;
 	}
 
-	int carry()
+	int carry(int sgun)
 	{
 		int carry = 0;
-		loopi(GUN_MAX) if(hasgun(i, 1)) carry++;
+		loopi(GUN_MAX) if(hasgun(i, sgun, 1)) carry++;
 		return carry;
 	}
 
-	int drop(int exclude = -1)
+	int drop(int sgun, int exclude = -1)
 	{
 		int gun = -1;
-		if(hasgun(gunselect, 1, exclude)) gun = gunselect;
+		if(hasgun(gunselect, sgun, 1, exclude)) gun = gunselect;
 		else
 		{
-			loopi(GUN_MAX) if(hasgun(i, 1, exclude))
+			loopi(GUN_MAX) if(hasgun(i, sgun, 1, exclude))
 			{
 				gun = i;
 				break;
@@ -607,28 +618,28 @@ struct gamestate
 		return !isgun(gun) || millis-gunlast[gun] >= gunwait[gun];
 	}
 
-	bool canswitch(int gun, int millis)
+	bool canswitch(int gun, int sgun, int millis)
 	{
-		if(gun != gunselect && gunwaited(gunselect, millis) && hasgun(gun) && gunwaited(gun, millis))
+		if(gun != gunselect && gunwaited(gunselect, millis) && hasgun(gun, sgun) && gunwaited(gun, millis))
 			return true;
 		return false;
 	}
 
-	bool canshoot(int gun, int millis)
+	bool canshoot(int gun, int sgun, int millis)
 	{
-		if(hasgun(gun) && ammo[gun] > 0 && gunwaited(gun, millis))
+		if(hasgun(gun, sgun) && ammo[gun] > 0 && gunwaited(gun, millis))
 			return true;
 		return false;
 	}
 
-	bool canreload(int gun, int millis)
+	bool canreload(int gun, int sgun, int millis)
 	{
-		if(gunwaited(gunselect, millis) && guntype[gun].rdelay > 0 && hasgun(gun) && ammo[gun] < guntype[gun].max && gunwaited(gun, millis))
+		if(gunwaited(gunselect, millis) && gunloads(gun, sgun) && hasgun(gun, sgun) && ammo[gun] < guntype[gun].max && gunwaited(gun, millis))
 			return true;
 		return false;
 	}
 
-	bool canuse(int type, int attr1, int attr2, int attr3, int attr4, int attr5, int millis)
+	bool canuse(int type, int attr1, int attr2, int attr3, int attr4, int attr5, int sgun, int millis)
 	{
 		if((type != TRIGGER || attr3 == TA_AUTO) && enttype[type].usetype == EU_AUTO)
 			return true;
@@ -641,7 +652,7 @@ struct gamestate
 			}
 			case WEAPON:
 			{ // can't use when reloading or firing
-				if(isgun(attr1) && !hasgun(attr1, 4) && gunwaited(attr1, millis))
+				if(isgun(attr1) && !hasgun(attr1, sgun, 4) && gunwaited(attr1, millis))
 					return true;
 				break;
 			}
@@ -650,16 +661,16 @@ struct gamestate
 		return false;
 	}
 
-	void useitem(int millis, int id, int type, int attr1, int attr2)
+	void useitem(int id, int type, int attr1, int attr2, int sgun, int millis)
 	{
 		switch(type)
 		{
 			case TRIGGER: break;
 			case WEAPON:
 			{
-				gunswitch(attr1, millis, hasgun(attr1) ? (gunselect != attr1 ? GNS_SWITCH : GNS_RELOAD) : GNS_PICKUP);
+				gunswitch(attr1, millis, hasgun(attr1, sgun) ? (gunselect != attr1 ? GNS_SWITCH : GNS_RELOAD) : GNS_PICKUP);
 				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+guntype[attr1].add, 1, guntype[attr1].max);
-				if(guntype[attr1].rdelay > 0) entid[attr1] = id;
+				entid[attr1] = id;
 				break;
 			}
 			default: break;
@@ -675,15 +686,15 @@ struct gamestate
 		gunreset(true);
 	}
 
-	void spawnstate(int spawngun, bool reloadables)
+	void spawnstate(int sgun, bool others)
 	{
 		health = MAXHEALTH;
-		lastgun = gunselect = spawngun;
+		lastgun = gunselect = sgun;
 		loopi(GUN_MAX)
 		{
 			gunstate[i] = GNS_IDLE;
 			gunwait[i] = gunlast[i] = 0;
-			ammo[i] = (i == spawngun || (reloadables && guntype[i].rdelay <= 0)) ? guntype[i].add : -1;
+			ammo[i] = (i == sgun || (others && !guntype[i].reloads)) ? guntype[i].add : -1;
 			entid[i] = -1;
 		}
 	}

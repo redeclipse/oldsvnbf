@@ -91,7 +91,7 @@ struct partrenderer
             ts = lastmillis-p->millis;
 			if(ts > p->fade) ts = p->fade;
 			float secs = ts/1000.f;
-			vec v(d);
+			vec v = vec(d).mul(secs);
             blend = max(255 - (ts<<8)/p->fade, 0);
             if(grav)
             {
@@ -293,7 +293,7 @@ struct meterrenderer : listrenderer
             glEnd();
         }
 
-        if(basetype==PT_METERVS) glColor3ub(color[2], color[1], color[0]); //swap r<->b                    
+        if(basetype==PT_METERVS) glColor3ub(color[2], color[1], color[0]); //swap r<->b
         else glColor3f(0, 0, 0);
         glBegin(GL_TRIANGLE_STRIP);
         loopk(10)
