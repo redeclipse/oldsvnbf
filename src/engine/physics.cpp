@@ -314,7 +314,18 @@ float raycube(const vec &o, const vec &ray, float radius, int mode, int size, ex
 			isentirelysolid(c) ||
             dent < dist))
 		{
-            if(closest >= 0 && dist < dent) { hitsurface = vec(0, 0, 0); hitsurface[closest] = ray[closest]>0 ? -1 : 1; }
+            if(dist < dent)
+            {
+                if(closest < 0)
+                {
+                    float dx = ((x&(~0<<lshift))+(invray.x>0 ? 0 : 1<<lshift)-v.x)*invray.x,
+                          dy = ((y&(~0<<lshift))+(invray.y>0 ? 0 : 1<<lshift)-v.y)*invray.y,
+                          dz = ((z&(~0<<lshift))+(invray.z>0 ? 0 : 1<<lshift)-v.z)*invray.z;
+                    closest = dx > dy ? (dx > dz ? 0 : 2) : (dy > dz ? 1 : 2);
+                }
+                hitsurface = vec(0, 0, 0);
+                hitsurface[closest] = ray[closest]>0 ? -1 : 1;
+            }
 			return min(dent, dist);
 		}
 

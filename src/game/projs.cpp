@@ -177,7 +177,7 @@ namespace projs
 				ray.normalize();
 				int maxsteps = 25;
 				float step = 4,
-					  barrier = raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|RAY_POLY)-0.1f,
+					  barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f),
 					  dist = 0;
 				loopi(maxsteps)
 				{
@@ -190,7 +190,7 @@ namespace projs
                         proj.o = vec(ray).mul(olddist).add(orig);
                         float cdist = tracecollide(proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
                         proj.o.add(vec(ray).mul(dist - olddist));
-                        if(cdist < 0) break;
+                        if(cdist < 0 || dist >= barrier) break; 
                     }
                     else
                     {
@@ -706,7 +706,7 @@ namespace projs
         if(maxdist <= 0) return 1; // not moving anywhere, so assume still alive since it was already alive
         ray.mul(1/maxdist);
         float dist = tracecollide(proj.o, ray, maxdist, RAY_CLIPMAT | RAY_ALPHAPOLY, proj.projcollide&COLLIDE_PLAYER);
-        proj.o.add(vec(ray).mul(dist >= 0 ? max(dist-0.1f, 0.0f) : maxdist));
+        proj.o.add(vec(ray).mul(dist >= 0 ? dist : maxdist));
         if(dist >= 0)
         {
             if(hitplayer)
@@ -720,6 +720,7 @@ namespace projs
             {
                 bounceeffect(proj);
                 reflect(proj, proj.norm);
+                proj.o.add(vec(proj.norm).mul(0.1f)); // offset from surface slightly to avoid initial collision
                 proj.movement = 0;
                 proj.lastbounce = lastmillis;
                 return 2; // bounce
