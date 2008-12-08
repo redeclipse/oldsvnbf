@@ -58,7 +58,7 @@ namespace ai
 					if(m_team(gamemode, mutators)) ci->team = chooseworstteam(ci);
 					else ci->team = TEAM_NEUTRAL;
 
-					sendf(-1, 1, "ri5si", SV_INITAI, ci->state.aitype, ci->state.ownernum, ci->state.skill, ci->clientnum, ci->name, ci->team);
+					sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
 
 					int nospawn = 0;
 					if(smode && !smode->canspawn(ci, true)) { nospawn++; }
@@ -110,7 +110,7 @@ namespace ai
 			{
 				cp->state.ownernum = findaiclient(ci->clientnum);
 				if(cp->state.ownernum >= 0)
-					sendf(-1, 1, "ri5si", SV_INITAI, cp->state.aitype, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
+					sendf(-1, 1, "ri5si", SV_INITAI, cp->clientnum, cp->state.ownernum, cp->state.aitype, cp->state.skill, cp->name, cp->team);
 				else deleteai(cp);
 			}
 		}
@@ -146,7 +146,7 @@ namespace ai
 				cp->state.ownernum = clients[lo]->clientnum;
 				if(cp->state.ownernum >= 0)
 				{
-					sendf(-1, 1, "ri5si", SV_INITAI, cp->state.aitype, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
+					sendf(-1, 1, "ri5si", SV_INITAI, cp->clientnum, cp->state.ownernum, cp->state.aitype, cp->state.skill, cp->name, cp->team);
 					return true;
 				}
 				else deleteai(cp);
@@ -163,7 +163,7 @@ namespace ai
 		{
 			clientinfo *cp = clients[i];
 			cp->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
-			sendf(-1, 1, "ri5si", SV_INITAI, cp->state.aitype, cp->state.ownernum, cp->state.skill, cp->clientnum, cp->name, cp->team);
+			sendf(-1, 1, "ri5si", SV_INITAI, cp->clientnum, cp->state.ownernum, cp->state.aitype, cp->state.skill, cp->name, cp->team);
 		}
 	}
 
@@ -259,8 +259,9 @@ namespace ai
 	{
 		bool rst = false;
 		gameent *o = world::getclient(on);
-		s_sprintfd(m)("%s", o ? world::colorname(o) : "unknown");
-		string r; r[0] = 0;
+		string m, r; r[0] = 0;
+		if(o) s_strcpy(m, world::colorname(o));
+		else s_sprintf(m)("client %d", on);
 
 		if(!d->name[0])
 		{
