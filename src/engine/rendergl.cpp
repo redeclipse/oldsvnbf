@@ -1099,7 +1099,7 @@ void drawreflection(float z, bool refract, bool clear)
     rendermaterials();
     render_particles(0);
 
-    renderavatar(false);
+    if(world::isthirdperson() || reflecting) renderavatar(false);
 
     if(fading) glColorMask(COLORMASK, GL_TRUE);
 
