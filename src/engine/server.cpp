@@ -216,12 +216,14 @@ void sendfile(int cn, int chan, FILE *file, const char *format, ...)
 	fread(&packet->data[p.length()], 1, len, file);
 	enet_packet_resize(packet, p.length()+len);
 
-	if(cn >= 0) enet_peer_send(clients[cn]->peer, chan, packet);
+	if(cn >= 0) 
+    {
+        enet_peer_send(clients[cn]->peer, chan, packet);
+        if(!packet->referenceCount) enet_packet_destroy(packet);
+    }
 #ifndef STANDALONE
 	else sendpackettoserv(packet, chan);
 #endif
-
-	if(!packet->referenceCount) enet_packet_destroy(packet);
 }
 
 void process(ENetPacket *packet, int sender, int chan);
@@ -345,7 +347,6 @@ void send_welcome(int n)
 void localclienttoserver(int chan, ENetPacket *packet)
 {
 	process(packet, 0, chan);
-	if(packet->referenceCount==0) enet_packet_destroy(packet);
 }
 
 void delclient(int n)

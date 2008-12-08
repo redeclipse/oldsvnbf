@@ -173,6 +173,7 @@ void sendpackettoserv(ENetPacket *packet, int chan)
 {
 	if(curpeer) enet_peer_send(curpeer, chan, packet);
 	else localclienttoserver(chan, packet);
+    if(!packet->referenceCount) enet_packet_destroy(packet);
 }
 
 void c2sinfo(int rate)					 // send update to the server

@@ -779,6 +779,23 @@ namespace server
 		demotmp = NULL;
 	}
 
+    int buildinitc2s(clientinfo *ci, uchar *buf, int bufsize)
+    {
+        ucharbuf q(&buf[16], bufsize-16);
+        putint(q, SV_INITC2S);
+        sendstring(ci->name, q);
+        putint(q, ci->team);
+
+        ucharbuf h(buf, 16);
+        putint(h, SV_CLIENT);
+        putint(h, ci->clientnum);
+        putuint(h, q.len);
+
+        memmove(&buf[h.len], q.buf, q.len);
+
+        return h.len + q.len;
+    }
+        
 	void setupdemorecord()
 	{
 		if(m_demo(gamemode) || m_edit(gamemode)) return;
@@ -818,24 +835,11 @@ namespace server
         writedemo(1, p.buf, p.len);
         enet_packet_destroy(packet);
 
-		uchar buf[MAXTRANS];
+        uchar buf[MAXTRANS];
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			uchar header[16];
-			ucharbuf q(&buf[sizeof(header)], sizeof(buf)-sizeof(header));
-			putint(q, SV_INITC2S);
-			sendstring(ci->name, q);
-			putint(q, ci->team);
-
-			ucharbuf h(header, sizeof(header));
-			putint(h, SV_CLIENT);
-			putint(h, ci->clientnum);
-			putuint(h, q.len);
-
-			memcpy(&buf[sizeof(header)-h.len], header, h.len);
-
-			writedemo(1, &buf[sizeof(header)-h.len], h.len+q.len);
+			writedemo(1, buf, buildinitc2s(ci, buf, sizeof(buf)));
 		}
 	}
 
@@ -1196,7 +1200,8 @@ namespace server
 			putint(p, 1);
 			sendstring(smapname, p);
 		}
-		if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, true, true))
+        if(!ci) putint(p, 0);
+		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, true, true))
 		{
 			clientinfo *best = choosebestclient(ci);
 			if(best)
@@ -2025,7 +2030,7 @@ namespace server
 				case SV_EDITMODE:
 				{
 					int val = getint(p);
-					if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || (gamemode!=1)) break;
+					if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || !m_edit(gamemode)) break;
 					if(smode)
 					{
 						if(val) smode->leavegame(ci);
@@ -2252,7 +2257,6 @@ namespace server
 
 				case SV_INITC2S:
 				{
-					QUEUE_MSG;
 					bool connected = !ci->name[0];
 
 					getstring(text, p);
@@ -2281,7 +2285,6 @@ namespace server
 							relayf(1, "\fm%s is now known as %s", oldname, newname);
 						}
 					}
-					QUEUE_STR(text);
 					s_strncpy(ci->name, text, MAXNAMELEN+1);
 
 					int team = getint(p);
@@ -2294,7 +2297,6 @@ namespace server
 						else team = TEAM_NEUTRAL;
 						sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
 					}
-					QUEUE_INT(team);
 
 					if(team != ci->team)
 					{
@@ -2304,7 +2306,10 @@ namespace server
 					}
 					ci->team = team;
 
-					QUEUE_MSG;
+                    ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
+                    enet_packet_resize(packet, buildinitc2s(ci, packet->data, packet->dataLength));
+                    sendpacket(-1, 1, packet, ci->clientnum);
+                    if(!packet->referenceCount) enet_packet_destroy(packet);
 					break;
 				}
 
