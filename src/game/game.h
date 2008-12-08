@@ -192,7 +192,7 @@ guntypes guntype[GUN_MAX] =
 		GUN_FLAMER,	ANIM_FLAMER,	-1,		 1,
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	25,		100,	0,		3000,
-			0,		32,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER,
+			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			true,	true,		true,
 			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
