@@ -706,7 +706,7 @@ namespace projs
         if(maxdist <= 0) return 1; // not moving anywhere, so assume still alive since it was already alive
         ray.mul(1/maxdist);
         float dist = tracecollide(proj.o, ray, maxdist, RAY_CLIPMAT | RAY_ALPHAPOLY, proj.projcollide&COLLIDE_PLAYER);
-        proj.o.add(vec(ray).mul(dist >= 0 ? max(dist-0.1f, 0.0f) : maxdist));
+        proj.o.add(vec(ray).mul(dist >= 0 ? dist : maxdist));
         if(dist >= 0)
         {
             if(hitplayer)
@@ -720,6 +720,7 @@ namespace projs
             {
                 bounceeffect(proj);
                 reflect(proj, proj.norm);
+                proj.o.add(vec(proj.norm).mul(0.1f)); // offset from surface slightly to avoid initial collision
                 proj.movement = 0;
                 proj.lastbounce = lastmillis;
                 return 2; // bounce
