@@ -15,7 +15,7 @@
 string homedir = "";
 vector<char *> packagedirs;
 
-char *makefile(const char *s, const char *e, int revision, int start)
+char *makefile(const char *s, const char *e, int revision, int start, bool skip)
 {
 	static string o;
 	s_strcpy(o, s);
@@ -38,7 +38,7 @@ char *makefile(const char *s, const char *e, int revision, int start)
 	while(true)
 	{
 		s_sprintf(m)("%s%s", f, *e ? e : "");
-		if(fileexists(findfile(m, "w"), "r"))
+		if(skip || fileexists(findfile(m, "w"), "r"))
 		{
 			if(revision)
 			{
@@ -390,11 +390,11 @@ void savepng(SDL_Surface *s, const char *fname, int compress)
 
 const char *ifmtexts[IFMT_MAX] = { "", ".bmp", ".png" };
 
-void savesurface(SDL_Surface *s, char *fname, int format, int compress)
+void savesurface(SDL_Surface *s, char *fname, int format, int compress, bool skip)
 {
 	if(!s) return;
 	int f = format > IFMT_NONE && format < IFMT_MAX ? format : IFMT_PNG;
-	const char *filename = makefile(fname, ifmtexts[f]);
+	const char *filename = makefile(fname, ifmtexts[f], 0, 1, skip);
 	switch(f)
 	{
 		case IFMT_PNG: savepng(s, filename, compress); break;

@@ -2106,7 +2106,7 @@ void dumplms()
                         break;
                 }
 			}
-			s_sprintfd(fname)("%s_lm_%d", getmapname(), i);
+			s_sprintfd(fname)("%s.lm%.4d", getmapname(), i);
 			savesurface(temp, fname, imageformat, compresslevel);
 		}
 		SDL_FreeSurface(temp);
