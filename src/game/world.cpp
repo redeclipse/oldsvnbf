@@ -920,7 +920,7 @@ namespace world
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
-		bool hascursor = UI::hascursor();
+		bool hascursor = UI::hascursor(true);
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
 		if(hascursor || mousestyle() >= 1)
 		{

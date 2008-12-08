@@ -22,6 +22,8 @@ static bool fieldsactive = false;
 VARP(guiautotab, 6, 16, 40);
 VARP(guiclicktab, 0, 0, 1);
 
+static bool needsinput = false;
+
 struct gui : g3d_gui
 {
 	struct list
@@ -714,6 +716,7 @@ struct gui : g3d_gui
 		initscale *= 0.025f;
 		basescale = initscale;
         if(layoutpass) scale.x = scale.y = scale.z = min(basescale*(totalmillis-starttime)/300.0f, basescale);
+        if(allowinput) needsinput = true;
         passthrough = !allowinput;
 		curdepth = -1;
 		curlist = -1;
@@ -870,7 +873,7 @@ bool g3d_keypress(int code, bool isdown, int cooked)
 
 bool g3d_active(bool hit, bool pass)
 {
-	return (gui2ds.length() && (!pass || !gui::passthrough)) || (hit && windowhit);
+	return (gui2ds.length() && (!pass || needsinput)) || (hit && windowhit);
 }
 
 void g3d_addgui(g3d_callback *cb)
@@ -914,6 +917,8 @@ void g3d_render()
 	readyeditors();
     bool wasfocused = (fieldmode!=FIELDSHOW);
     fieldsactive = false;
+
+    needsinput = false;
 
 	layoutpass = true;
 	loopv(gui2ds) gui2ds[i].cb->gui(gui2ds[i], true);
