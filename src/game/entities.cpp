@@ -252,7 +252,7 @@ namespace entities
 				d->gunselect = g;
 			}
 			int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(e.attr1, sgun);
-			d->useitem(n, e.type, e.attr1, attr, sgun, lastmillis);
+			d->useitem(n, e.type, attr, e.attr2, e.attr3, e.attr4, e.attr5, sgun, lastmillis);
 			if(ents.inrange(r) && ents[r]->type == WEAPON)
 			{
 				gameentity &f = *(gameentity *)ents[r];
