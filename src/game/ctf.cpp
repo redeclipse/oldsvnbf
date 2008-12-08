@@ -169,15 +169,19 @@ namespace ctf
 		vec dir;
 		int colour = teamtype[f.team].colour;
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f,
-			fade = blip ? hud::radarblipblend*blend : 1.f;
+			fade = hud::radarblipblend*blend;
         if(blip)
         {
-            if(f.owner) { if(lastmillis%1000 >= 500) fade *= 0.5f; }
-            else if(f.droptime) { if(lastmillis%300 >= 150) fade *= 0.5f; }
+            if(f.owner) { if(lastmillis%500 >= 250) fade = 1.f; }
+            else if(f.droptime) { if(lastmillis%500 >= 250) fade = 1.f; }
             else return;
         	dir = f.pos();
         }
-        else dir = f.spawnloc;
+        else
+        {
+        	dir = f.spawnloc;
+        	r *= 0.5f; g *= 0.5f; b *= 0.5f;
+        }
 		dir.sub(camera1->o);
 		if(blip)
 		{
@@ -187,7 +191,7 @@ namespace ctf
 		}
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		dir.normalize();
-		hud::drawblip(w, h, blip ? s : s*2, fade, 3, dir, r, g, b,
+		hud::drawblip(w, h, s, fade, 3, dir, r, g, b,
 			"hud", fade*hud::radarnameblend, "%s%s %s",
 				teamtype[f.team].chat, teamtype[f.team].name, blip ? "flag" : "base");
     }
