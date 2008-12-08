@@ -96,7 +96,7 @@ bool shadowcubeintersect(const cube &c, const vec &o, const vec &ray, float &dis
 
 vec hitsurface;
 
-bool raycubeintersect(const cube &c, const vec &o, const vec &ray, float &dist)
+bool raycubeintersect(const cube &c, const vec &o, const vec &ray, float maxdist, float &dist)
 {
     int entry = -1, bbentry = -1;
     INTERSECTPLANES(entry = i);
@@ -122,8 +122,11 @@ bool raycubeintersect(const cube &c, const vec &o, const vec &ray, float &dist)
     }
     if(exitdist < 0) return false;
     dist = max(enterdist+0.1f, 0.0f);
-    if(bbentry>=0) { hitsurface = vec(0, 0, 0); hitsurface[bbentry] = ray[bbentry]>0 ? -1 : 1; }
-    else hitsurface = p.p[entry];
+    if(dist < maxdist)
+    {
+        if(bbentry>=0) { hitsurface = vec(0, 0, 0); hitsurface[bbentry] = ray[bbentry]>0 ? -1 : 1; }
+        else hitsurface = p.p[entry];
+    }
     return true;
 }
 
@@ -311,7 +314,7 @@ float raycube(const vec &o, const vec &ray, float radius, int mode, int size, ex
 			isentirelysolid(c) ||
             dent < dist))
 		{
-            if(closest >= 0) { hitsurface = vec(0, 0, 0); hitsurface[closest] = ray[closest]>0 ? -1 : 1; }
+            if(closest >= 0 && dist < dent) { hitsurface = vec(0, 0, 0); hitsurface[closest] = ray[closest]>0 ? -1 : 1; }
 			return min(dent, dist);
 		}
 
@@ -321,7 +324,7 @@ float raycube(const vec &o, const vec &ray, float radius, int mode, int size, ex
 		{
 			float f = 0;
 			setcubeclip(c, lo.x, lo.y, lo.z, lsize);
-			if(raycubeintersect(c, v, ray, f) && (dist+f>0 || !(mode&RAY_SKIPFIRST)))
+			if(raycubeintersect(c, v, ray, dent-dist, f) && (dist+f>0 || !(mode&RAY_SKIPFIRST)))
 				return min(dent, dist+f);
 		}
 
@@ -575,9 +578,12 @@ const vector<physent *> &checkdynentcache(int x, int y)
 	return dec.dynents;
 }
 
+#define loopdynentcachebb(curx, cury, x1, y1, x2, y2) \
+    for(int curx = max(int(x1), 0)>>dynentsize, endx = min(int(x2), hdr.worldsize-1)>>dynentsize; curx <= endx; curx++) \
+    for(int cury = max(int(y1), 0)>>dynentsize, endy = min(int(y2), hdr.worldsize-1)>>dynentsize; cury <= endy; cury++)
+
 #define loopdynentcache(curx, cury, o, radius) \
-    for(int curx = max(int(o.x-radius), 0)>>dynentsize, endx = min(int(o.x+radius), hdr.worldsize-1)>>dynentsize; curx <= endx; curx++) \
-    for(int cury = max(int(o.y-radius), 0)>>dynentsize, endy = min(int(o.y+radius), hdr.worldsize-1)>>dynentsize; cury <= endy; cury++)
+    loopdynentcachebb(curx, cury, o.x-radius, o.y-radius, o.x+radius, o.y+radius)
 
 void updatedynentcache(physent *d)
 {
@@ -837,6 +843,43 @@ bool collide(physent *d, const vec &dir, float cutoff, bool playercol)
     return !playercol || plcollide(d, dir);
 }
 
+float pltracecollide(const vec &from, const vec &ray, float maxdist)
+{
+    vec to = vec(ray).mul(maxdist).add(from);
+    float x1 = floor(min(from.x, to.x)), y1 = floor(min(from.y, to.y)),
+          x2 = ceil(max(from.x, to.x)), y2 = ceil(max(from.y, to.y));
+    float bestdist = 1e16f;
+    loopdynentcachebb(x, y, x1, y1, x2, y2)
+    {
+        const vector<physent *> &dynents = checkdynentcache(x, y);
+        loopv(dynents)
+        {
+            physent *o = dynents[i];
+            if(o->o.x-o->radius < x1 || o->o.y-o->radius < y1 || o->o.x+o->radius > x2 || o->o.y+o->radius > y2) continue;
+            float dist;
+            if(intersect(o, from, to, dist) && dist < bestdist)
+            {
+                bestdist = dist;
+                if(dist <= maxdist) hitplayer = o;
+            }
+        }
+    }
+    return bestdist <= maxdist ? bestdist : -1;
+}
+
+float tracecollide(const vec &o, const vec &ray, float maxdist, int mode, bool playercol)
+{
+    hitsurface = vec(0, 0, 0);
+    hitplayer = NULL;
+    float dist = raycube(o, ray, maxdist+1e-3f, mode);
+    if(playercol)
+    {
+        float pldist = pltracecollide(o, ray, min(dist, maxdist));
+        if(pldist >= 0 && pldist < dist) dist = pldist;
+    }
+    return dist <= maxdist ? dist : -1;
+}
+
 void phystest()
 {
 	static const char *states[] = {"float", "fall", "slide", "slope", "floor", "step up", "step down", "bounce"};
@@ -876,9 +919,8 @@ void vectoyawpitch(const vec &v, float &yaw, float &pitch)
 	pitch = asin(v.z/v.magnitude())/RAD;
 }
 
-bool intersect(physent *d, const vec &from, const vec &to)   // if lineseg hits entity bounding box
+bool intersect(physent *d, const vec &from, const vec &to, float &dist)   // if lineseg hits entity bounding box
 {
-    float dist;
     vec bottom(d->o), top(d->o);
     bottom.z -= d->height;
     top.z += d->aboveeye;

@@ -132,12 +132,23 @@ enum
 	GNS_MAX
 };
 
+enum
+{
+	IMPACT_GEOM    = 1<<0,
+	BOUNCE_GEOM    = 1<<1,
+	COLLIDE_GEOM   = IMPACT_GEOM | BOUNCE_GEOM,
+	IMPACT_PLAYER  = 1<<2,
+	BOUNCE_PLAYER  = 1<<3,
+	COLLIDE_PLAYER = IMPACT_PLAYER | BOUNCE_PLAYER,
+	COLLIDE_TRACE  = 1<<4
+};
+
 struct guntypes
 {
 	int	info, 		anim,			kick,	wobble,
 			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
-			delay,	explode,	rays,	spread,	zdiv,	geomcollide,	playercollide;
+			delay,	explode,	rays,	spread,	zdiv,	collide;
 	bool	radial,	extinguish,	carry;
 	float	offset,	elasticity,	reflectivity,	relativity,	waterfric,	weight;
 	const char
@@ -151,7 +162,7 @@ guntypes guntype[GUN_MAX] =
 		GUN_PLASMA,	ANIM_PLASMA,	-5,		5,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		200,	800,	20,		250,	0,		10000,
-			0,		18,			1,		5,		0,		2,				2,
+			0,		18,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		false,
 			1.0f,	0.f,		0.f,			0.1f,		1.0f,		0.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
@@ -161,7 +172,7 @@ guntypes guntype[GUN_MAX] =
 		GUN_SG,		ANIM_SHOTGUN,	-30,    30,
 			S_SG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			1,		8,		600,	1200,	10,		1000,	0,		1000,
-			0,		0,			20,		40,		1,		1,				2,
+			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,
 			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
@@ -171,7 +182,7 @@ guntypes guntype[GUN_MAX] =
 		GUN_CG,		ANIM_CHAINGUN,	-5,	     5,
 			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			40,		40,		100,    1000,	20,		1500,	0,		2000,
-			0,		0,			1,		5,		4,		1,				2,
+			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,
 			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
 			"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
@@ -181,7 +192,7 @@ guntypes guntype[GUN_MAX] =
 		GUN_FLAMER,	ANIM_FLAMER,	-1,		 1,
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	25,		100,	0,		3000,
-			0,		32,			1,		5,		2,		1,				1,
+			0,		32,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER,
 			true,	true,		true,
 			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
@@ -191,7 +202,7 @@ guntypes guntype[GUN_MAX] =
 		GUN_CARBINE,ANIM_CARBINE,	-10,	10,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
 			10,		10,		500,    1000,	50,		2000,	0,		10000,
-			0,		0,			1,		0,		0,		2,				2,
+			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
@@ -201,7 +212,7 @@ guntypes guntype[GUN_MAX] =
 		GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
 			S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,
 			1,		5,		800,	1600,	100,	2000,	0,		10000,
-			0,		0,			1,		0,		0,		2,				2,
+			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
 			"rifle",	"\fw",	"weapons/rifle/item",		"weapons/rifle/vwep",
@@ -211,7 +222,7 @@ guntypes guntype[GUN_MAX] =
 		GUN_GL,		ANIM_GRENADES,	-15,    10,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			2,		4,		1500,	0,		200,	200,	1000,	3000,
-			150,	64,			1,		0,		0,		1,				1,
+			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			false,	false,		false,
 			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		75.f,
 			"grenades",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
@@ -953,7 +964,7 @@ struct projent : dynent
 	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect, lastbounce;
 	float movement, roll, lifespan, lifesize;
 	bool local, beenused, radial, extinguish;
-	int projtype, geomcollide, playercollide;
+	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
 	int ent, attr1, attr2, attr3, attr4, attr5;
 	int schan, id;
@@ -982,7 +993,7 @@ struct projent : dynent
 		schan = id = -1;
 		movement = roll = lifespan = lifesize = 0.f;
 		beenused = radial = extinguish = false;
-		geomcollide = playercollide = 1; // 0 = don't, 1 = bounce, 2 = explode
+		projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 	}
 
 	bool ready()
