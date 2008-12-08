@@ -699,10 +699,10 @@ namespace client
 			{
 				gameent *f = world::players[i];
 				putint(p, SV_INITAI);
-				putint(p, f->aitype);
-				putint(p, f->ownernum);
-				putint(p, f->skill);
 				putint(p, f->clientnum);
+				putint(p, f->ownernum);
+				putint(p, f->aitype);
+				putint(p, f->skill);
 				sendstring(f->name, p);
 				putint(p, f->team);
 			}
@@ -1572,7 +1572,7 @@ namespace client
 
 				case SV_INITAI:
 				{
-					int at = getint(p), on = getint(p), sk = clamp(getint(p), 1, 100), bn = getint(p);
+					int bn = getint(p), on = getint(p), at = getint(p), sk = clamp(getint(p), 1, 100);
 					getstring(text, p);
 					int tm = getint(p);
 					gameent *b = world::newclient(bn);
@@ -1755,12 +1755,7 @@ namespace client
     void serverstartcolumn(g3d_gui *g, int i)
     {
 		g->pushlist();
-		string text;
-
-		if(i) { s_sprintf(text)("%s ", serverinfotypes[i]); }
-		else { s_sprintf(text)("v%d ", GAMEVERSION); }
-
-		if(g->buttonf("%s", GUI_BUTTON_COLOR, NULL, text) & G3D_UP)
+		if(g->buttonf("%s ", GUI_BUTTON_COLOR, NULL, i ? serverinfotypes[i] : "") & G3D_UP)
 		{
 			string st; st[0] = 0;
 			bool invert = false;

@@ -11,6 +11,7 @@ VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 2, 2); // 0 = never, 1 = yes but not kamakaze, 2 = yes with kamakaze
 VARG(itemspawntime, 1, 30, 3600); // secs when items respawn
 VARG(timelimit, 0, 15, 60);
+VARG(votelimit, 0, 30, 120); // secs before vote passes by default
 
 VARG(teamdamage, 0, 1, 1);
 VARG(ctflimit, 0, 20, 100);

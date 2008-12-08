@@ -326,60 +326,45 @@ namespace server
 	ICOMMAND(gameid, "", (), result(gameid()));
 	ICOMMAND(gamever, "", (), intret(gamever()));
 
-	void cleanup(bool init)
+	void cleanup()
 	{
-		loopi(3) if(mapdata[i])
-		{
-			fclose(mapdata[i]);
-			mapdata[i] = NULL;
-		}
-		gamemode = sv_defaultmode;
-		mutators = sv_defaultmuts;
-		modecheck(&gamemode, &mutators);
-		s_strcpy(smapname, choosemap(NULL));
-		sents.setsize(0);
+		interm = gamemillis = 0;
+		oldtimelimit = sv_timelimit;
 		bannedips.setsize(0);
-		notgotinfo = true;
-		if(!init)
-		{
-			enumerate(*idents, ident, id, {
-				if(id.flags&IDF_SERVER) // reset vars
+		enumerate(*idents, ident, id, {
+			if(id.flags&IDF_SERVER) // reset vars
+			{
+				switch(id.type)
 				{
-					switch(id.type)
+					case ID_VAR:
 					{
-						case ID_VAR:
-						{
-							setvar(id.name, id.def.i, true);
-							break;
-						}
-						case ID_FVAR:
-						{
-							setfvar(id.name, id.def.f, true);
-							break;
-						}
-						case ID_SVAR:
-						{
-							setsvar(id.name, *id.def.s ? id.def.s : "", true);
-							break;
-						}
-						case ID_ALIAS:
-						{
-							worldalias(id.name, "");
-							break;
-						}
-						default: break;
+						setvar(id.name, id.def.i, true);
+						break;
 					}
+					case ID_FVAR:
+					{
+						setfvar(id.name, id.def.f, true);
+						break;
+					}
+					case ID_SVAR:
+					{
+						setsvar(id.name, *id.def.s ? id.def.s : "", true);
+						break;
+					}
+					case ID_ALIAS:
+					{
+						worldalias(id.name, "");
+						break;
+					}
+					default: break;
 				}
-			});
-			execfile("servexec.cfg");
-		}
+			}
+		});
+		execfile("servexec.cfg");
+		changemap(sv_defaultmap, sv_defaultmode, sv_defaultmuts);
 	}
 
-	void start()
-	{
-		smuts.setsize(0);
-		cleanup(true);
-	}
+	void start() { cleanup(); }
 
 	void *newinfo() { return new clientinfo; }
 	void deleteinfo(void *ci) { delete (clientinfo *)ci; }
@@ -1032,7 +1017,6 @@ namespace server
 			mapdata[i] = NULL;
 		}
         stopdemo();
-
 		maprequest = false;
 		gamemode = mode >= 0 ? mode : sv_defaultmode;
 		mutators = muts >= 0 ? muts : sv_defaultmuts;
@@ -1683,7 +1667,7 @@ namespace server
 				if(demorecord) enddemorecord();
 				sendf(-1, 1, "ri", SV_NEWGAME);
 				maprequest = true;
-				interm = gamemillis+20000;
+				interm = gamemillis+(sv_votelimit*1000);
 			}
 			else
 			{
@@ -1763,7 +1747,7 @@ namespace server
 		if(ci->name[0]) relayf(1, "\fo%s has left the game", colorname(ci));
 		ai::removeai(ci);
 		clients.removeobj(ci);
-		if(clients.empty()) cleanup(false);
+		if(clients.empty()) cleanup();
 		else checkvotes();
 	}
 
@@ -2685,12 +2669,12 @@ namespace server
 
 				case SV_INITAI:
 				{
-                    getint(p);
-                    getint(p);
-                    getint(p);
-                    getint(p);
+					int lcn = getint(p);
+					loopk(3) getint(p);
                     getstring(text, p);
                     getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
                     QUEUE_MSG;
 					break;
 				}
