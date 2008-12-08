@@ -98,8 +98,7 @@ namespace projs
 				proj.relativity = guntype[proj.attr1].relativity;
 				proj.waterfric = guntype[proj.attr1].waterfric;
 				proj.weight = guntype[proj.attr1].weight;
-				proj.geomcollide = guntype[proj.attr1].geomcollide;
-				proj.playercollide = guntype[proj.attr1].playercollide;
+				proj.projcollide = guntype[proj.attr1].collide;
 				proj.radial = guntype[proj.attr1].radial;
 				proj.extinguish = guntype[proj.attr1].extinguish;
 				proj.mdl = guntype[proj.attr1].proj;
@@ -115,7 +114,7 @@ namespace projs
 				proj.waterfric = 2.0f;
 				proj.weight = 50.f;
 				proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-21));
-				proj.geomcollide = proj.playercollide = 1; // bounce
+				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 				break;
 			}
 			case PRJ_DEBRIS:
@@ -134,7 +133,7 @@ namespace projs
 				proj.waterfric = 1.7f;
 				proj.weight = 100.f;
 				proj.vel.add(vec(rnd(80)-41, rnd(80)-41, rnd(160)-81));
-				proj.geomcollide = proj.playercollide = 1; // bounce
+				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 				break;
 			}
 			case PRJ_ENT:
@@ -146,8 +145,7 @@ namespace projs
 				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
 				proj.weight = 100.f;
-				proj.geomcollide = 1; // bounce
-				proj.playercollide = 0; // don't
+				proj.projcollide = BOUNCE_GEOM;
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
 				proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-11));
 				break;
@@ -174,7 +172,7 @@ namespace projs
 		if(proj.projtype == PRJ_SHOT)
 		{
 			if(proj.radial) proj.height = proj.radius = guntype[proj.attr1].explode*0.1f;
-			if(proj.playercollide || proj.geomcollide)
+			if(proj.projcollide)
 			{
 				vec ray(proj.vel);
 				ray.normalize();
@@ -185,25 +183,33 @@ namespace projs
 				loopi(maxsteps)
 				{
 					proj.hit = NULL;
+                    float olddist = dist;
 					if(dist < barrier && dist + step > barrier) dist = barrier;
 					else dist += step;
-					proj.o = vec(ray).mul(dist).add(orig);
-					if(!collide(&proj) || inside || (proj.playercollide && hitplayer))
+                    if(proj.projcollide&COLLIDE_TRACE)
+                    {
+                        proj.o = vec(ray).mul(olddist).add(orig);
+                        float cdist = tracecollide(proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY); 
+                        proj.o.add(vec(ray).mul(dist - olddist));
+                        if(cdist < 0) break; 
+                    }
+                    else
+                    {
+					    proj.o = vec(ray).mul(dist).add(orig);
+					    if(collide(&proj) && !inside) break;
+                    }
+                    if(hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
 					{
-						if((!hitplayer && proj.geomcollide) || (hitplayer && proj.playercollide && hitplayer != proj.owner))
-						{
-            				if(hitplayer)
-            				{
-                				proj.hit = hitplayer;
-                				proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
-            				}
-            				else proj.norm = wall;
-							if(proj.lifemillis) proj.lifetime = 1; // let it effect then die
-							//proj.state = CS_DEAD;
-							break;
-						}
+            			if(hitplayer)
+            			{
+                			proj.hit = hitplayer;
+                			proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
+            			}
+            			else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
+						if(proj.lifemillis) proj.lifetime = 1; // let it effect then die
+						//proj.state = CS_DEAD;
+						break;
 					}
-					else break;
 				}
 			}
 			if(proj.radial) proj.height = proj.radius = guntype[proj.attr1].offset;
@@ -618,10 +624,58 @@ namespace projs
     	else proj.vel = vec(0, 0, 0);
     }
 
+    void bounceeffect(projent &proj)
+    {
+        if(proj.movement < 2.f && proj.lastbounce) return; 
+        int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
+        switch(proj.projtype)
+        {
+            case PRJ_SHOT:
+            {
+                switch(proj.attr1)
+                {
+                    case GUN_SG: case GUN_CG:
+                    {
+                        part_splash(PART_SPARK, 5, 250, proj.o, 0xFFAA22, proj.radius*(proj.attr1 == GUN_SG ? 0.25f : 0.1f), 8);
+                        if(!proj.lastbounce)
+                            adddecal(DECAL_BULLET, proj.o, proj.norm, proj.radius*(proj.attr1 == GUN_SG ? 3.f : 1.5f));
+                        break;
+                    }
+                    case GUN_FLAMER:
+                    {
+                        if(!proj.lastbounce)
+                        {
+                            adddecal(DECAL_SCORCH, proj.o, proj.norm, 96.f*proj.lifesize);
+                            adddecal(DECAL_ENERGY, proj.o, proj.norm, 256.f*proj.lifesize, bvec(184, 88, 0));
+                        }
+                        break;
+                    }
+                    default: break;
+                }
+                if(vol && guntype[proj.attr1].rsound >= 0)
+                    playsound(guntype[proj.attr1].rsound, proj.o, &proj, 0, vol);
+                break;
+            }
+            case PRJ_GIBS:
+            {
+                if(!proj.lastbounce)
+                    adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
+                if(vol) playsound(S_SPLAT, proj.o, &proj, 0, vol);
+                break;
+            }
+            case PRJ_DEBRIS:
+            {
+                if(vol) playsound(S_DEBRIS, proj.o, &proj, 0, vol);
+                break;
+            }
+            default: break;
+        }
+    }
+ 
 	int bounce(projent &proj, const vec &dir)
 	{
 		proj.hit = NULL;
-		if(!collide(&proj, dir, 0.f, proj.playercollide > 0) || inside || (proj.playercollide && hitplayer))
+		if(!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside)
 		{
 			if(hitplayer)
 			{
@@ -630,54 +684,9 @@ namespace projs
 			}
 			else proj.norm = wall;
 
-			if((!hitplayer && proj.geomcollide == 1) || (hitplayer && proj.playercollide == 1))
+            if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
 			{
-				if(proj.movement > 2.f || !proj.lastbounce)
-				{
-					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
-					switch(proj.projtype)
-					{
-						case PRJ_SHOT:
-						{
-							switch(proj.attr1)
-							{
-								case GUN_SG: case GUN_CG:
-								{
-									part_splash(PART_SPARK, 5, 250, proj.o, 0xFFAA22, proj.radius*(proj.attr1 == GUN_SG ? 0.25f : 0.1f), 8);
-									if(!proj.lastbounce)
-										adddecal(DECAL_BULLET, proj.o, proj.norm, proj.radius*(proj.attr1 == GUN_SG ? 3.f : 1.5f));
-									break;
-								}
-								case GUN_FLAMER:
-								{
-									if(!proj.lastbounce)
-									{
-										adddecal(DECAL_SCORCH, proj.o, proj.norm, 96.f*proj.lifesize);
-										adddecal(DECAL_ENERGY, proj.o, proj.norm, 256.f*proj.lifesize, bvec(184, 88, 0));
-									}
-									break;
-								}
-								default: break;
-							}
-							if(vol && guntype[proj.attr1].rsound >= 0)
-								playsound(guntype[proj.attr1].rsound, proj.o, &proj, 0, vol);
-							break;
-						}
-						case PRJ_GIBS:
-						{
-							if(!proj.lastbounce)
-								adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
-							if(vol) playsound(S_SPLAT, proj.o, &proj, 0, vol);
-							break;
-						}
-						case PRJ_DEBRIS:
-						{
-							if(vol) playsound(S_DEBRIS, proj.o, &proj, 0, vol);
-							break;
-						}
-						default: break;
-					}
-				}
+                bounceeffect(proj);
 				reflect(proj, proj.norm);
 				proj.movement = 0;
 				proj.lastbounce = lastmillis;
@@ -687,6 +696,38 @@ namespace projs
 		}
 		return 1; // live!
 	}
+
+    int trace(projent &proj, const vec &dir)
+    {
+        proj.hit = NULL;
+        vec to(proj.o), ray = dir;
+        to.add(dir);
+        float maxdist = ray.magnitude();
+        if(maxdist <= 0) return 1; // not moving anywhere, so assume still alive since it was already alive
+        ray.mul(1/maxdist);
+        float dist = tracecollide(proj.o, ray, maxdist, RAY_CLIPMAT | RAY_ALPHAPOLY, proj.projcollide&COLLIDE_PLAYER);
+        proj.o.add(vec(ray).mul(dist >= 0 ? max(dist-0.1f, 0.0f) : maxdist));
+        if(dist >= 0)
+        {
+            if(hitplayer)
+            {
+                proj.hit = hitplayer;
+                proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
+            }
+            else proj.norm = hitsurface;
+
+            if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
+            {
+                bounceeffect(proj);
+                reflect(proj, proj.norm);
+                proj.movement = 0;
+                proj.lastbounce = lastmillis;
+                return 2; // bounce
+            }
+            return 0; // die on impact
+        }
+        return 1; // live!
+    }
 
 	bool move(projent &proj, int qtime)
 	{
@@ -705,33 +746,44 @@ namespace projs
 		dir.mul(secs);
 
         bool blocked = false;
-        if(proj.projtype == PRJ_SHOT)
+        if(proj.projcollide&COLLIDE_TRACE)
         {
-			float stepdist = dir.magnitude();
-            vec ray(dir);
-            ray.mul(1/stepdist);
-            float barrier = raycube(proj.o, ray, stepdist, RAY_CLIPMAT|RAY_POLY);
-            if(barrier < stepdist)
+            switch(trace(proj, dir))
             {
-                proj.o.add(ray.mul(barrier-0.1f));
-                switch(bounce(proj, ray))
-                {
-                    case 2: proj.o = pos; blocked = true; break;
-                    case 1: proj.o = pos; break;
-                    case 0: return false;
-                }
+                case 2: blocked = true; break;
+                case 1: break;
+                case 0: return false;
             }
         }
-
-		if(!blocked)
+        else
         {
-            proj.o.add(dir);
-            switch(bounce(proj, dir))
-		    {
-			    case 2: proj.o = pos; if(proj.projtype == PRJ_SHOT) blocked = true; break;
-			    case 1: default: break;
-			    case 0: if(proj.projtype != PRJ_SHOT) proj.o = pos; return false;
-		    }
+            if(proj.projtype == PRJ_SHOT)
+            {
+			    float stepdist = dir.magnitude();
+                vec ray(dir);
+                ray.mul(1/stepdist);
+                float barrier = raycube(proj.o, ray, stepdist, RAY_CLIPMAT|RAY_POLY);
+                if(barrier < stepdist)
+                {
+                    proj.o.add(ray.mul(barrier-0.1f));
+                    switch(bounce(proj, ray))
+                    {
+                        case 2: proj.o = pos; blocked = true; break;
+                        case 1: proj.o = pos; break;
+                        case 0: return false;
+                    }
+                }
+            }
+		    if(!blocked)
+            {
+                proj.o.add(dir);
+                switch(bounce(proj, dir))
+		        {
+			        case 2: proj.o = pos; if(proj.projtype == PRJ_SHOT) blocked = true; break;
+			        case 1: default: break;
+			        case 0: if(proj.projtype != PRJ_SHOT) proj.o = pos; return false;
+		        }
+            }
         }
 
 		float dist = proj.o.dist(pos), diff = dist/(4*RAD);

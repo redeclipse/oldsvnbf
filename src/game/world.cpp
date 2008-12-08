@@ -262,7 +262,8 @@ namespace world
 			gameent *o = players[i];
 			if(!o) continue;
 			vec pos = headpos(player1, 0.f);
-			if(intersect(o, pos, worldpos)) return o;
+            float dist;
+			if(intersect(o, pos, worldpos, dist)) return o;
 		}
 		return NULL;
 	}
@@ -773,9 +774,8 @@ namespace world
 		loopi(numdynents()) if((o = (gameent *)iterdynents(i)))
 		{
             if(!o || o==at || o->state!=CS_ALIVE || lastmillis-o->lastspawn <= REGENWAIT) continue;
-			if(!intersect(o, from, to)) continue;
-			float dist = at->o.dist(o->o);
-			if(dist<bestdist)
+            float dist;
+			if(intersect(o, from, to, dist) && dist < bestdist)
 			{
 				best = o;
 				bestdist = dist;

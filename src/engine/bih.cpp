@@ -29,6 +29,12 @@ bool BIH::triintersect(tri &t, const vec &o, const vec &ray, float maxdist, floa
             ti = clamp(int(t.tex->ys * (t.tc[1] + u*(t.tc[3] - t.tc[1]) + v*(t.tc[5] - t.tc[1]))), 0, t.tex->ys-1);
         if(!(t.tex->alphamask[ti*((t.tex->xs+7)/8) + si/8] & (1<<(si%8)))) return false;
     }
+    if(!(mode&RAY_SHADOW))
+    {
+        extern vec hitsurface;
+        hitsurface.cross(t.b, t.c).normalize();
+        if(hitsurface.dot(ray) > 0) hitsurface.neg();
+    }
     dist = f;
     return true;
 }
