@@ -1539,7 +1539,7 @@ namespace server
 			gs.ammo[gun] = gs.entid[gun] = -1;
 			gs.gunselect = gun;
 		}
-		gs.useitem(e.ent, sents[e.ent].type, attr, sents[e.ent].attr2, sgun, e.millis);
+		gs.useitem(e.ent, sents[e.ent].type, attr, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, sgun, e.millis);
 		if(sents.inrange(dropped))
 		{
 			gs.dropped.add(dropped);

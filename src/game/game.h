@@ -661,7 +661,7 @@ struct gamestate
 		return false;
 	}
 
-	void useitem(int id, int type, int attr1, int attr2, int sgun, int millis)
+	void useitem(int id, int type, int attr1, int attr2, int attr3, int attr4, int attr5, int sgun, int millis)
 	{
 		switch(type)
 		{
