@@ -1529,38 +1529,30 @@ namespace entities
 				makeparticle(o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 		}
 
-		if(m_edit(world::gamemode))
+		bool hasent = false, edit = m_edit(world::gamemode) && cansee(e);
+		vec off(0, 0, 2.f), pos(o);
+		if(enttype[e.type].usetype == EU_ITEM) pos.add(off);
+		if(edit)
 		{
-			if(cansee(e))
+			hasent = world::player1->state == CS_EDITING && idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
+			part_create(PART_EDIT, 1, o, hasent ? 0x6611DD : 0x221188, hasent ? 3.0f : 1.5f);
+			if(showentinfo >= 2 || world::player1->state == CS_EDITING)
 			{
-				bool hasent = idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
-				vec off(0, 0, 2.f), pos(o);
-				part_create(PART_EDIT, 1, pos, hasent ? 0x6611DD : 0x221188, hasent ? 3.0f : 1.5f);
-				if(showentinfo >= 2 || world::player1->state == CS_EDITING)
+				s_sprintfd(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
+				part_text(pos.add(off), s);
+				if(showentinfo >= 3 || hasent)
 				{
-					s_sprintfd(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
+					s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fa", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 					part_text(pos.add(off), s);
-
-					if(showentinfo >= 3 || hasent)
-					{
-						s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fa", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-						part_text(pos.add(off), s);
-					}
-					if(showentinfo >= 4 || hasent)
-					{
-						s_sprintf(s)("@%s%s", hasent ? "\fw" : "\fa", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, showentinfo >= 5 || hasent));
-						part_text(pos.add(off), s);
-					}
 				}
 			}
 		}
-		else if(showentnames)
+		bool item = showentnames && enttype[e.type].usetype == EU_ITEM && spawned,
+			notitem = (edit && (showentinfo >= 4 || hasent));
+		if(item || notitem)
 		{
-			if(enttype[e.type].usetype == EU_ITEM && spawned)
-			{
-				s_sprintfd(s)("@%s", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
-				part_text(vec(o).add(vec(0, 0, 4)), s);
-			}
+			s_sprintfd(s)("@%s%s", notitem ? (hasent ? "\fw" : "\fa") : "", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, notitem && (showentinfo >= 5 || hasent)));
+			part_text(pos.add(off), s);
 		}
 	}
 

@@ -646,7 +646,7 @@ inline void __cdecl operator delete(void *p, const char *fn, int l) { ::operator
 #endif
 
 extern char *makerelpath(const char *dir, const char *file, const char *prefix = NULL);
-extern char *makefile(const char *s, const char *e = "", int revision = 0, int start = 1);
+extern char *makefile(const char *s, const char *e = "", int revision = 0, int start = 1, bool skip = false);
 extern char *path(char *s);
 extern char *path(const char *s, bool copy);
 extern const char *parentdir(const char *directory);
@@ -679,7 +679,7 @@ enum
 extern const char *ifmtexts[IFMT_MAX];
 extern int imageformat;
 extern void savepng(SDL_Surface *s, const char *fname, int compress = Z_BEST_SPEED);
-extern void savesurface(SDL_Surface *s, char *name, int format = IFMT_NONE, int compress = Z_BEST_SPEED);
+extern void savesurface(SDL_Surface *s, char *name, int format = IFMT_NONE, int compress = Z_BEST_SPEED, bool skip = false);
 extern SDL_Surface *loadsurface(const char *name);
 #endif
 

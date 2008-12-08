@@ -173,7 +173,7 @@ void screenshot(char *sname)
 		}
 		delete[] tmp;
 		s_sprintfd(fname)("%s", *sname ? sname : getmapname());
-		savesurface(image, fname, imageformat, compresslevel);
+		savesurface(image, fname, imageformat, compresslevel, true);
 		SDL_FreeSurface(image);
 	}
 }

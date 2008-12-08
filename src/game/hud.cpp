@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "pch.h"
 #include "engine.h"
 #include "game.h"
 namespace hud
@@ -71,7 +72,7 @@ namespace hud
 	FVARP(radarblipblend, 0, 1.f, 1);
 	FVARP(radarsize, 0, 0.025f, 1000);
 	VARP(radardist, 0, 256, INT_MAX-1);
-	VARP(radarcard, 0, 1, 1);
+	VARP(radarcard, 0, 2, 2); // 0 = none, 1 = cardinals, 2 = editmode degrees too
 	VARP(radaritems, 0, 2, 2);
 	VARP(radarnames, 0, 1, 1);
 	VARP(radarhealth, 0, 1, 1);
@@ -253,7 +254,7 @@ namespace hud
         else if(hidehud || !showcrosshair || world::player1->state == CS_DEAD || !connected()) index = POINTER_NONE;
         else if(world::player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(world::player1->state == CS_SPECTATOR || world::player1->state == CS_WAITING) index = POINTER_SPEC;
-        else if(world::inzoom() && world::player1->gunselect == GUN_RIFLE) index = POINTER_SNIPE;
+        else if(world::inzoom() && guntype[world::player1->gunselect].snipes) index = POINTER_SNIPE;
         else if(lastmillis-world::lasthit <= crosshairhitspeed) index = POINTER_HIT;
         else if(m_team(world::gamemode, world::mutators))
         {
@@ -276,7 +277,7 @@ namespace hud
 				if(index == POINTER_SNIPE)
 				{
 					cs = int(snipecrosshairsize*hudsize);
-					if(world::inzoom() && world::player1->gunselect == GUN_RIFLE)
+					if(world::inzoom() && guntype[world::player1->gunselect].snipes)
 					{
 						int frame = lastmillis-world::lastzoom;
 						float amt = frame < world::zoomtime() ? clamp(float(frame)/float(world::zoomtime()), 0.f, 1.f) : 1.f;
@@ -424,16 +425,17 @@ namespace hud
 
 	void drawcardinalblips(int w, int h, int s, float blend)
 	{
+		bool altcard = m_edit(world::gamemode) && radarcard == 2;
 		loopi(4)
 		{
 			const char *card = "";
 			vec dir(camera1->o);
 			switch(i)
 			{
-				case 0: dir.sub(vec(0, 1, 0)); card = "N"; break;
-				case 1: dir.add(vec(1, 0, 0)); card = "E"; break;
-				case 2: dir.add(vec(0, 1, 0)); card = "S"; break;
-				case 3: dir.sub(vec(1, 0, 0)); card = "W"; break;
+				case 0: dir.sub(vec(0, 1, 0)); card = altcard ? "0'" : "N"; break;
+				case 1: dir.add(vec(1, 0, 0)); card = altcard ? "90'" : "E"; break;
+				case 2: dir.add(vec(0, 1, 0)); card = altcard ? "180'" : "S"; break;
+				case 3: dir.sub(vec(1, 0, 0)); card = altcard ? "270'" : "W"; break;
 				default: break;
 			}
 			dir.sub(camera1->o);
@@ -443,11 +445,10 @@ namespace hud
 		}
 	}
 
-	void drawentblip(int w, int h, int s, float blend, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool spawned, int lastspawn)
+	void drawentblip(int w, int h, int s, float blend, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool spawned, int lastspawn, bool insel)
 	{
 		if(type > NOTUSED && type < MAXENTTYPES && ((enttype[type].usetype == EU_ITEM && spawned) || world::player1->state == CS_EDITING))
 		{
-			bool insel = world::player1->state == CS_EDITING && entities::ents.inrange(n) && (enthover == n || entgroup.find(n) >= 0);
 			float inspawn = spawned && lastspawn && lastmillis-lastspawn <= 1000 ? float(lastmillis-lastspawn)/1000.f : 0.f;
 			if(enttype[type].noisy && (world::player1->state != CS_EDITING || !editradarnoisy || (editradarnoisy < 2 && !insel)))
 				return;
@@ -483,17 +484,32 @@ namespace hud
 
 	void drawentblips(int w, int h, int s, float blend)
 	{
-		loopv(entities::ents)
+		if(m_edit(world::gamemode) && world::player1->state == CS_EDITING && (entities::ents.inrange(enthover) || !entgroup.empty()))
 		{
-			gameentity &e = *(gameentity *)entities::ents[i];
-			drawentblip(w, h, s, blend, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned, e.lastspawn);
+			loopv(entgroup) if(entities::ents.inrange(entgroup[i]) && entgroup[i] != enthover)
+			{
+				gameentity &e = *(gameentity *)entities::ents[entgroup[i]];
+				drawentblip(w, h, s, blend, entgroup[i], e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned, e.lastspawn, true);
+			}
+			if(entities::ents.inrange(enthover))
+			{
+				gameentity &e = *(gameentity *)entities::ents[enthover];
+				drawentblip(w, h, s, blend, enthover, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned, e.lastspawn, true);
+			}
 		}
-
-		loopv(projs::projs) if(projs::projs[i]->projtype == PRJ_ENT && projs::projs[i]->ready())
+		else
 		{
-			projent &proj = *projs::projs[i];
-			if(entities::ents.inrange(proj.id))
-				drawentblip(w, h, s, blend, -1, proj.o, proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5, true, proj.spawntime);
+			loopv(entities::ents)
+			{
+				gameentity &e = *(gameentity *)entities::ents[i];
+				drawentblip(w, h, s, blend, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned, e.lastspawn, false);
+			}
+			loopv(projs::projs) if(projs::projs[i]->projtype == PRJ_ENT && projs::projs[i]->ready())
+			{
+				projent &proj = *projs::projs[i];
+				if(entities::ents.inrange(proj.id))
+					drawentblip(w, h, s, blend, -1, proj.o, proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5, true, proj.spawntime, false);
+			}
 		}
 	}
 
@@ -661,7 +677,7 @@ namespace hud
 			fade *= amt;
 		}
 
-		if(world::player1->state == CS_ALIVE && world::inzoom() && world::player1->gunselect == GUN_RIFLE)
+		if(world::player1->state == CS_ALIVE && world::inzoom() && guntype[world::player1->gunselect].snipes)
 		{
 			t = textureload(snipetex);
 			int frame = lastmillis-world::lastzoom;
@@ -698,7 +714,7 @@ namespace hud
 					{
 						const char *a = retbindaction("zoom", keym::ACTION_DEFAULT, 0);
 						s_sprintfd(actkey)("%s", a && *a ? a : "ZOOM");
-						tp -= draw_textx("Press [ \fs\fg%s\fS ] to %s", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey, world::player1->gunselect == GUN_RIFLE ? "zoom" : "prone");
+						tp -= draw_textx("Press [ \fs\fg%s\fS ] to %s", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey, guntype[world::player1->gunselect].snipes ? "zoom" : "prone");
 					}
 					if(world::player1->canshoot(world::player1->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis))
 					{

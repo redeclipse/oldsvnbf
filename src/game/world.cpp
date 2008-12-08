@@ -67,7 +67,8 @@ namespace world
 	VARP(snipemouse, 0, 0, 2);
 	VARP(snipedeadzone, 0, 25, 100);
 	VARP(snipepanspeed, 1, 10, INT_MAX-1);
-	VARP(snipefov, 1, 35, 150);
+	VARP(snipecarbinefov, 45, 45, 150);
+	VARP(sniperiflefov, 20, 20, 150);
 	VARP(snipetime, 1, 300, 10000);
 
 	VARP(pronetype, 0, 0, 1);
@@ -107,7 +108,7 @@ namespace world
 	{
 		if(player1->state == CS_EDITING) return editmouse;
 		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specmouse;
-		if(inzoom()) return player1->gunselect == GUN_RIFLE ? snipemouse : pronemouse;
+		if(inzoom()) return guntype[player1->gunselect].snipes ? snipemouse : pronemouse;
 		if(isthirdperson()) return thirdpersonmouse;
 		return firstpersonmouse;
 	}
@@ -116,14 +117,14 @@ namespace world
 	{
 		if(player1->state == CS_EDITING) return editdeadzone;
 		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specdeadzone;
-		if(inzoom()) return player1->gunselect == GUN_RIFLE ? snipedeadzone : pronedeadzone;
+		if(inzoom()) return guntype[player1->gunselect].snipes ? snipedeadzone : pronedeadzone;
 		if(isthirdperson()) return thirdpersondeadzone;
 		return firstpersondeadzone;
 	}
 
 	int panspeed()
 	{
-		if(inzoom()) return player1->gunselect == GUN_RIFLE ? snipepanspeed : pronepanspeed;
+		if(inzoom()) return guntype[player1->gunselect].snipes ? snipepanspeed : pronepanspeed;
 		if(player1->state == CS_EDITING) return editpanspeed;
 		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specpanspeed;
 		if(isthirdperson()) return thirdpersonpanspeed;
@@ -155,7 +156,7 @@ namespace world
 		zoomset(false, 0);
 		return false;
 	}
-	int zoomtime() { return player1->gunselect == GUN_RIFLE ? snipetime : pronetime; }
+	int zoomtime() { return guntype[player1->gunselect].snipes ? snipetime : pronetime; }
 
 	bool inzoom()
 	{
@@ -176,7 +177,7 @@ namespace world
 		if(zoomallow())
 		{
 			bool on = false;
-			switch(player1->gunselect == GUN_RIFLE ? snipetype : pronetype)
+			switch(guntype[player1->gunselect].snipes ? snipetype : pronetype)
 			{
 				case 1: on = down; break;
 				case 0: default:
@@ -904,9 +905,14 @@ namespace world
 
 		if(inzoom())
 		{
-			int frame = lastmillis-lastzoom,
-				t = player1->gunselect == GUN_RIFLE ? snipetime : pronetime,
-				f = player1->gunselect == GUN_RIFLE ? snipefov : pronefov;
+			int frame = lastmillis-lastzoom, f = pronefov,
+				t = guntype[player1->gunselect].snipes ? snipetime : pronetime;
+			if(guntype[player1->gunselect].snipes) switch(player1->gunselect)
+			{
+				case GUN_CARBINE: f = snipecarbinefov; break;
+				case GUN_RIFLE: f = sniperiflefov; break;
+				default: break;
+			}
 			float diff = float(fov()-f),
 				amt = frame < t ? clamp(float(frame)/float(t), 0.f, 1.f) : 1.f;
 			if(!zooming) amt = 1.f-amt;
@@ -942,7 +948,7 @@ namespace world
 			if(allowmove(player1))
 			{
 				float scale = inzoom() ?
-						(player1->gunselect == GUN_RIFLE ? snipesensitivity : pronesensitivity)
+						(guntype[player1->gunselect].snipes? snipesensitivity : pronesensitivity)
 					: sensitivity;
 				player1->yaw += mousesens(dx, w, yawsensitivity*scale);
 				player1->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && invmouse ? -1.f : 1.f));
@@ -1626,7 +1632,6 @@ namespace world
 
     void renderavatar(bool early)
     {
-        //if(inzoomswitch() && player1->gunselect == GUN_RIFLE) return;
         if(isthirdperson() || !rendernormally)
         {
             if(player1->state!=CS_SPECTATOR && player1->state!=CS_WAITING && (player1->state!=CS_DEAD || !player1->obliterated))

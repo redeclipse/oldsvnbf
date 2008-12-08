@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			126
+#define GAMEVERSION			127
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -149,7 +149,7 @@ struct guntypes
 			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
-	bool	radial,	extinguish,	reloads;
+	bool	radial,	extinguish,	reloads,	snipes;
 	float	offset,	elasticity,	reflectivity,	relativity,	waterfric,	weight;
 	const char
 			*name, *text,		*item,						*vwep,
@@ -163,7 +163,7 @@ guntypes guntype[GUN_MAX] =
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		200,	800,	20,		250,	0,		10000,
 			0,		18,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
-			false,	true,		true,
+			false,	true,		true,		false,
 			1.0f,	0.f,		0.f,			0.1f,		1.0f,		0.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
@@ -173,7 +173,7 @@ guntypes guntype[GUN_MAX] =
 			S_SG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			1,		8,		600,	1200,	10,		1000,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,		true,
+			false,	false,		true,		false,
 			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
 			""
@@ -183,7 +183,7 @@ guntypes guntype[GUN_MAX] =
 			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			40,		40,		100,    1000,	20,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,		true,
+			false,	false,		true,		false,
 			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
 			"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
 			""
@@ -193,7 +193,7 @@ guntypes guntype[GUN_MAX] =
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	25,		100,	0,		3000,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER,
-			true,	true,		true,
+			true,	true,		true,		false,
 			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
@@ -201,9 +201,9 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_CARBINE,ANIM_CARBINE,	-10,	10,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
-			10,		10,		500,    1000,	50,		2000,	0,		10000,
+			10,		10,		500,    1000,	50,		3000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,		true,
+			false,	false,		true,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			"projectiles/bullet"
@@ -211,9 +211,9 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
 			S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,
-			1,		5,		800,	1600,	100,	2000,	0,		10000,
+			1,		5,		800,	1600,	100,	5000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,		true,
+			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
 			"rifle",	"\fw",	"weapons/rifle/item",		"weapons/rifle/vwep",
 			"projectiles/bullet"
@@ -223,7 +223,7 @@ guntypes guntype[GUN_MAX] =
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			2,		4,		1500,	3000,	200,	200,	1000,	3000,
 			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
-			false,	false,		false,
+			false,	false,		false,		false,
 			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		75.f,
 			"grenades",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
