@@ -274,6 +274,7 @@ void save_config(char *mname)
 	if(verbose >= 2) conoutf("\fwsaved %d aliases", aliases);
 
 	// texture slots
+	int savedtextures = 0;
 	#define saveslot(s,b) \
 		if(b) \
 		{ \
@@ -297,9 +298,10 @@ void save_config(char *mname)
 			else if(!j) fprintf(h, " %s", findmaterialname(i)); \
 			else fprintf(h, " 1"); \
 			fprintf(h, " \"%s\"", s.sts[j].lname); \
-			if(!j) fprintf(h, " %d %d %d %f\n", \
+			if(!j) fprintf(h, " %d %d %d %f", \
 				s.rotation, s.xoffset, s.yoffset, s.scale); \
-            else fprintf(h, "\n"); \
+                        if(b) fprintf(h, " // %i \n", savedtextures); \
+                        else fprintf(h, "\n"); \
 		} \
 		if(b) \
 		{ \
@@ -326,6 +328,7 @@ void save_config(char *mname)
 	{
 		if(verbose) renderprogress(float(i)/float(slots.length()), "saving texture slots...");
 		saveslot(slots[i], true);
+		savedtextures++;
 	}
 	if(verbose) conoutf("\fwsaved %d texture slots", slots.length());
 
