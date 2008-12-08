@@ -19,8 +19,7 @@ namespace weapons
 		if(a < -1 || b < -1 || a >= GUN_MAX || b >= GUN_MAX) return;
 		if(d->reqswitch >= 0) return;
 		if (!world::allowmove(world::player1) || world::inzoom()) return;
-		int s = d->gunselect;
-
+		int s = d->gunselect, sgun = m_spawngun(world::gamemode, world::mutators);
 		loopi(GUN_MAX) // only loop the amount of times we have guns for
 		{
 			if(a >= 0) s = a;
@@ -31,7 +30,7 @@ namespace weapons
 			if(a < 0 && ((skipplasma && s == GUN_PLASMA) || (skipgrenades && s == GUN_GL)))
 				continue;
 
-			if(d->canswitch(s, lastmillis))
+			if(d->canswitch(s, sgun, lastmillis))
 			{
 				client::addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-world::maptime, s);
 				d->reqswitch = lastmillis;
@@ -54,16 +53,17 @@ namespace weapons
 
 	void reload(gameent *d)
 	{
-		if(guntype[d->gunselect].rdelay <= 0)
+		int sgun = m_spawngun(world::gamemode, world::mutators);
+		if(!gunloads(d->gunselect, sgun))
 		{
-			int bestgun = d->bestgun();
-			if(d->ammo[d->gunselect] <= 0 && d->canswitch(bestgun, lastmillis) && d->reqswitch < 0)
+			int bestgun = d->bestgun(sgun);
+			if(d->ammo[d->gunselect] <= 0 && d->canswitch(bestgun, sgun, lastmillis) && d->reqswitch < 0)
 			{
 				client::addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-world::maptime, bestgun);
 				d->reqswitch = lastmillis;
 			}
 		}
-		else if(d->canreload(d->gunselect, lastmillis) && d->reqreload < 0 && (d->reloading || doautoreload(d)))
+		else if(d->canreload(d->gunselect, sgun, lastmillis) && d->reqreload < 0 && (d->reloading || doautoreload(d)))
 		{
 			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->gunselect);
 			d->reqreload = lastmillis;
@@ -90,7 +90,8 @@ namespace weapons
 
 	void shoot(gameent *d, vec &targ, int force)
 	{
-		if(!d->canshoot(d->gunselect, lastmillis)) return;
+		if(!d->canshoot(d->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis))
+			return;
 
 		int power = force, powertime = guntype[d->gunselect].power+guntype[d->gunselect].time;
 		if(guntype[d->gunselect].power)
@@ -164,7 +165,7 @@ namespace weapons
 
     void preload(int gun)
     {
-    	int g = gun < 0 ? (m_insta(world::gamemode, world::mutators) ? instaspawngun : spawngun) : gun;
+    	int g = gun < 0 ? m_spawngun(world::gamemode, world::mutators) : gun;
     	if(isgun(g))
         {
         	string mdl;

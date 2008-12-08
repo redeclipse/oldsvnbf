@@ -331,8 +331,7 @@ namespace ai
 			dir.normalize();
 			float targyaw, targpitch;
 			vectoyawpitch(dir, targyaw, targpitch);
-			int rdelay = guntype[d->gunselect].rdelay > 0 ? guntype[d->gunselect].rdelay : guntype[d->gunselect].adelay*100;
-			float rtime = d->skill*rdelay/1000.f, atime = d->skill*guntype[d->gunselect].adelay/100.f,
+			float rtime = d->skill*guntype[d->gunselect].rdelay/1000.f, atime = d->skill*guntype[d->gunselect].adelay/100.f,
 					skew = float(lastmillis-b.millis)/(rtime+atime), cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 			if(cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew)
 				return true;
@@ -466,11 +465,12 @@ namespace ai
 		{
 			gameentity &e = *(gameentity *)entities::ents[j];
 			if(enttype[e.type].usetype != EU_ITEM) continue;
+			int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(e.attr1, sgun);
 			switch(e.type)
 			{
 				case WEAPON:
 				{
-					if(e.spawned && isgun(e.attr1) && !d->hasgun(e.attr1))
+					if(e.spawned && isgun(attr) && !d->hasgun(attr, sgun))
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
@@ -478,7 +478,7 @@ namespace ai
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
 						n.tolerance = enttype[e.type].radius+d->radius;
-						n.score = pos.squaredist(e.o)/(e.attr1 != d->ai->gunpref ? 1.f : 10.f);
+						n.score = pos.squaredist(e.o)/(attr != d->ai->gunpref ? 1.f : 10.f);
 						n.defers = (d->gunselect != GUN_PLASMA);
 					}
 					break;
@@ -491,11 +491,12 @@ namespace ai
 		{
 			projent &proj = *projs::projs[j];
 			if(enttype[proj.ent].usetype != EU_ITEM || !entities::ents.inrange(proj.id)) continue;
+			int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(proj.attr1, sgun);
 			switch(proj.ent)
 			{
 				case WEAPON:
 				{
-					if(isgun(proj.attr1) && !d->hasgun(proj.attr1))
+					if(isgun(attr) && !d->hasgun(attr, sgun))
 					{ // go get a weapon upgrade
 						if(proj.owner == d && d->gunselect != GUN_PLASMA) break;
 						interest &n = interests.add();
@@ -504,7 +505,7 @@ namespace ai
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
 						n.tolerance = enttype[proj.ent].radius+d->radius;
-						n.score = pos.squaredist(proj.o)/(proj.attr1 != d->ai->gunpref ? 1.f : 10.f);
+						n.score = pos.squaredist(proj.o)/(attr != d->ai->gunpref ? 1.f : 10.f);
 						n.defers = (d->gunselect != GUN_PLASMA);
 					}
 					break;
@@ -521,7 +522,7 @@ namespace ai
 
 		if(m_ctf(world::gamemode)) ctf::aifind(d, b, interests);
 		if(m_stf(world::gamemode)) stf::aifind(d, b, interests);
-		if(!d->hasgun(d->ai->gunpref)) gunfind(d, b, interests);
+		if(!d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators))) gunfind(d, b, interests);
 		while(!interests.empty())
 		{
 			int q = interests.length()-1;
@@ -713,7 +714,7 @@ namespace ai
 				{
 					d->ai->enemy = e->clientnum;
 					d->ai->lastseen = lastmillis;
-					if(d->canshoot(d->gunselect, lastmillis) && hastarget(d, b, ep))
+					if(d->canshoot(d->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, ep))
 					{
 						d->attacking = true;
 						d->attacktime = lastmillis;
@@ -735,20 +736,22 @@ namespace ai
 	{
 		if(d->state == CS_ALIVE)
 		{
+			int sgun = m_spawngun(world::gamemode, world::mutators);
 			switch(b.targtype)
 			{
 				case AI_T_ENTITY:
 				{
-					if(d->hasgun(d->ai->gunpref)) return false;
+					if(d->hasgun(d->ai->gunpref, sgun)) return false;
 					if(entities::ents.inrange(b.target))
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
 						if(enttype[e.type].usetype != EU_ITEM) return false;
+						int attr = gunattr(e.attr1, sgun);
 						switch(e.type)
 						{
 							case WEAPON:
 							{
-								if(!e.spawned || d->hasgun(e.attr1)) return false;
+								if(!e.spawned || d->hasgun(attr, sgun)) return false;
 								break;
 							}
 							default: break;
@@ -759,16 +762,17 @@ namespace ai
 				}
 				case AI_T_DROP:
 				{
-					if(d->hasgun(d->ai->gunpref)) return false;
+					if(d->hasgun(d->ai->gunpref, sgun)) return false;
 					loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready() && projs::projs[j]->id == b.target)
 					{
 						projent &proj = *projs::projs[j];
 						if(enttype[proj.ent].usetype != EU_ITEM || !entities::ents.inrange(proj.id)) return false;
+						int attr = gunattr(proj.attr1, sgun);
 						switch(proj.ent)
 						{
 							case WEAPON:
 							{
-								if(d->hasgun(proj.attr1)) return false;
+								if(d->hasgun(attr, sgun)) return false;
 								if(proj.owner == d && d->gunselect != GUN_PLASMA)
 									return false;
 								break;
@@ -907,12 +911,13 @@ namespace ai
 
 	bool request(gameent *d, int busy)
 	{
+		int sgun = m_spawngun(world::gamemode, world::mutators);
 		if(!busy && d->reqswitch < 0)
 		{
 			int gun = -1;
-			if(d->hasgun(d->ai->gunpref)) gun = d->ai->gunpref; // could be any gun
-			else loopi(GUN_MAX) if(d->hasgun(i, 1)) gun = i; // only choose carriables here
-			if(gun != d->gunselect && d->canswitch(gun, lastmillis))
+			if(d->hasgun(d->ai->gunpref, sgun)) gun = d->ai->gunpref; // could be any gun
+			else loopi(GUN_MAX) if(d->hasgun(i, sgun, 1)) gun = i; // only choose carriables here
+			if(gun != d->gunselect && d->canswitch(gun, sgun, lastmillis))
 			{
 				client::addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-world::maptime, gun);
 				d->reqswitch = lastmillis;
@@ -920,14 +925,14 @@ namespace ai
 			}
 		}
 
-		if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, lastmillis) && d->reqreload < 0)
+		if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, sgun, lastmillis) && d->reqreload < 0)
 		{
 			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->gunselect);
 			d->reqreload = lastmillis;
 			return true;
 		}
 
-		if(busy <= 1 && !d->hasgun(d->ai->gunpref) && !d->useaction && d->requse < 0)
+		if(busy <= 1 && !d->hasgun(d->ai->gunpref, sgun) && !d->useaction && d->requse < 0)
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -961,12 +966,13 @@ namespace ai
 				if(entities::ents.inrange(ent))
 				{
 					extentity &e = *entities::ents[ent];
-					if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis)) switch(e.type)
+					if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, sgun, lastmillis)) switch(e.type)
 					{
 						case WEAPON:
 						{
-							if(d->hasgun(e.attr1)) break;
-							if(d->gunselect != GUN_PLASMA && e.attr1 != d->ai->gunpref)
+							int attr = gunattr(e.attr1, sgun);
+							if(d->hasgun(attr, sgun)) break;
+							if(d->gunselect != GUN_PLASMA && attr != d->ai->gunpref)
 								break;
 							d->useaction = true;
 							d->usetime = lastmillis;
@@ -979,7 +985,7 @@ namespace ai
 			}
 		}
 
-		if(!busy && d->canreload(d->gunselect, lastmillis) && d->reqreload < 0)
+		if(!busy && d->canreload(d->gunselect, sgun, lastmillis) && d->reqreload < 0)
 		{
 			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->gunselect);
 			d->reqreload = lastmillis;

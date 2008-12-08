@@ -311,7 +311,7 @@ namespace hud
 			{
 				if(world::player1->state == CS_ALIVE)
 				{
-					if(world::player1->hasgun(world::player1->gunselect))
+					if(world::player1->hasgun(world::player1->gunselect, m_spawngun(world::gamemode, world::mutators)))
 					{
 						if(showclip) drawclip(world::player1->gunselect, cx, cy, int(clipsize*hudsize));
 						if(showindicator && guntype[world::player1->gunselect].power && world::player1->gunstate[world::player1->gunselect] == GNS_POWER)
@@ -612,8 +612,8 @@ namespace hud
 		const char *hudtexs[GUN_MAX] = {
 			plasmatex, shotguntex, chainguntex, flamertex, carbinetex, rifletex, grenadestex
 		};
-		int sy = 0;
-		loopi(GUN_MAX) if(world::player1->hasgun(i) || lastmillis-world::player1->gunlast[i] < world::player1->gunwait[i])
+		int sy = 0, sgun = m_spawngun(world::gamemode, world::mutators);
+		loopi(GUN_MAX) if(world::player1->hasgun(i, sgun) || lastmillis-world::player1->gunlast[i] < world::player1->gunwait[i])
 		{
 			float fade = inventoryblend*blend, size = s, skew = 1.f;
 			if(world::player1->gunstate[i] == GNS_SWITCH || world::player1->gunstate[i] == GNS_PICKUP)
@@ -621,14 +621,17 @@ namespace hud
 				float amt = clamp(float(lastmillis-world::player1->gunlast[i])/float(world::player1->gunwait[i]), 0.f, 1.f);
 				skew = (i != world::player1->gunselect ?
 					(
-						world::player1->hasgun(i) ? 1.f-(amt*(1.f-inventoryskew)) : 1.f-amt
+						world::player1->hasgun(i, sgun) ? 1.f-(amt*(1.f-inventoryskew)) : 1.f-amt
 					) : (
 						world::player1->gunstate[i] == GNS_PICKUP ? amt : inventoryskew+(amt*(1.f-inventoryskew))
 					)
 				);
 			}
 			else if(i != world::player1->gunselect) skew = inventoryskew;
-			sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "emphasis", blend, "%d", world::player1->ammo[i]);
+
+			if(i == world::player1->gunselect || world::player1->gunstate[i] != GNS_PICKUP)
+				sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "emphasis", blend, "%d", world::player1->ammo[i]);
+			else sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew);
 		}
 		return sy;
 	}
@@ -691,20 +694,20 @@ namespace hud
 				tp = oy-FONTH;
 				if(showtips > 1)
 				{
-					if(world::player1->hasgun(world::player1->gunselect))
+					if(world::player1->hasgun(world::player1->gunselect, m_spawngun(world::gamemode, world::mutators)))
 					{
 						const char *a = retbindaction("zoom", keym::ACTION_DEFAULT, 0);
 						s_sprintfd(actkey)("%s", a && *a ? a : "ZOOM");
 						tp -= draw_textx("Press [ \fs\fg%s\fS ] to %s", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey, world::player1->gunselect == GUN_RIFLE ? "zoom" : "prone");
 					}
-					if(world::player1->canshoot(world::player1->gunselect, lastmillis))
+					if(world::player1->canshoot(world::player1->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis))
 					{
 						const char *a = retbindaction("attack", keym::ACTION_DEFAULT, 0);
 						s_sprintfd(actkey)("%s", a && *a ? a : "ATTACK");
 						tp -= draw_textx("Press [ \fs\fg%s\fS ] to attack", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey);
 					}
 
-					if(world::player1->canreload(world::player1->gunselect, lastmillis))
+					if(world::player1->canreload(world::player1->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis))
 					{
 						const char *a = retbindaction("reload", keym::ACTION_DEFAULT, 0);
 						s_sprintfd(actkey)("%s", a && *a ? a : "RELOAD");
@@ -750,6 +753,7 @@ namespace hud
 							{
 								if(!found)
 								{
+									/*
 									int drop = -1;
 									if(e.type == WEAPON && guntype[world::player1->gunselect].carry &&
 										world::player1->ammo[e.attr1] < 0 && guntype[e.attr1].carry &&
@@ -759,7 +763,9 @@ namespace hud
 										s_sprintfd(dropgun)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));
 										tp -= draw_textx("Press [ \fs\fg%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey, dropgun, entities::entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
 									}
-									else tp -= draw_textx("Press [ \fs\fg%s\fS ] to pickup [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey, entities::entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
+									else
+									*/
+									tp -= draw_textx("Press [ \fs\fg%s\fS ] to pickup [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey, entities::entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
 									if(showtips < 3) break;
 									else found = true;
 								}

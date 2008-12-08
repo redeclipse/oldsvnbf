@@ -106,9 +106,11 @@ namespace entities
 		}
 		if(type == WEAPON)
 		{
-			if(isgun(attr1))
+			int sgun = m_spawngun(world::gamemode, world::mutators),
+				attr = m_edit(world::gamemode) ? attr1 : gunattr(attr1, sgun);
+			if(isgun(attr))
 			{
-				s_sprintf(str)("\fs%s%s\fS", guntype[attr1].text, guntype[attr1].name);
+				s_sprintf(str)("\fs%s%s\fS", guntype[attr].text, guntype[attr].name);
 				addentinfo(str);
 				if(full)
 				{
@@ -165,7 +167,11 @@ namespace entities
 	{
 		switch(type)
 		{
-			case WEAPON: return guntype[attr1].item;
+			case WEAPON:
+			{
+				int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(attr1, sgun);
+				return guntype[attr].item;
+			}
 			case FLAG: return teamtype[attr2].flag;
 			default: break;
 		}
@@ -245,9 +251,14 @@ namespace entities
 				d->ammo[g] = d->entid[g] = -1;
 				d->gunselect = g;
 			}
-			d->useitem(lastmillis, n, e.type, e.attr1, e.attr2);
-			if(ents.inrange(r) && ents[r]->type == WEAPON && isgun(ents[r]->attr1))
-				projs::drop(d, ents[r]->attr1, r, d == world::player1 || d->ai);
+			int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(e.attr1, sgun);
+			d->useitem(n, e.type, e.attr1, attr, sgun, lastmillis);
+			if(ents.inrange(r) && ents[r]->type == WEAPON)
+			{
+				gameentity &f = *(gameentity *)ents[r];
+				attr = gunattr(f.attr1, sgun);
+				if(isgun(attr)) projs::drop(d, attr, r, d == world::player1 || d->ai);
+			}
 			world::spawneffect(pos, 0x221188, enttype[e.type].radius);
 			e.spawned = s;
 		}
@@ -305,7 +316,8 @@ namespace entities
 	void execitem(int n, gameent *d)
 	{
 		gameentity &e = *(gameentity *)ents[n];
-		if(!d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, lastmillis))
+		int sgun = m_spawngun(world::gamemode, world::mutators), attr = e.type == WEAPON ? gunattr(e.attr1, sgun) : e.attr1;
+		if(!d->canuse(e.type, attr, e.attr2, e.attr3, e.attr4, e.attr5, sgun, lastmillis))
 		{
 			if(enttype[e.type].usetype == EU_ITEM && d->useaction)
 			{
@@ -544,7 +556,7 @@ namespace entities
 				break;
 			}
 			case WEAPON:
-				while(e.attr1 < 0) e.attr1 += GUN_MAX;
+				while(e.attr1 <= GUN_PLASMA) e.attr1 += GUN_MAX-1;
 				while(e.attr1 >= GUN_MAX) e.attr1 -= GUN_MAX;
 				break;
 			case PLAYERSTART:
@@ -1103,7 +1115,6 @@ namespace entities
 					loopvj(ents) // find linked teleport(s)
 					{
 						gameentity &f = *(gameentity *)ents[j];
-
 						if(f.type == TELEPORT && !f.mark && f.attr1 == e.attr2)
 						{
 							if(verbose) conoutf("\frimported teleports %d and %d linked automatically", dest, j);
@@ -1400,7 +1411,11 @@ namespace entities
 			extentity &e = *ents[i];
 			const char *mdlname = entmdlname(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 			if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
-			if(e.type == WEAPON && isgun(e.attr1)) weapons::preload(e.attr1);
+			if(e.type == WEAPON)
+			{
+				int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(e.attr1, sgun);
+				if(isgun(attr)) weapons::preload(attr);
+			}
 		}
     }
 
@@ -1498,7 +1513,6 @@ namespace entities
 				{
 					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
 					if(!active) flags |= MDL_TRANSLUCENT;
-
 					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, e.o, 0.f, 0.f, 0.f, flags);
 				}
 			}
@@ -1515,31 +1529,34 @@ namespace entities
 				makeparticle(o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 		}
 
-		if(m_edit(world::gamemode) && cansee(e))
+		if(m_edit(world::gamemode))
 		{
-			bool hasent = idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
-			vec off(0, 0, 2.f), pos(o);
-			part_create(PART_EDIT, 1, pos, hasent ? 0x6611DD : 0x221188, hasent ? 2.0f : 1.5f);
-			if(showentinfo >= 2 || world::player1->state == CS_EDITING)
+			if(cansee(e))
 			{
-				s_sprintfd(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
-				part_text(pos.add(off), s);
+				bool hasent = idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
+				vec off(0, 0, 2.f), pos(o);
+				part_create(PART_EDIT, 1, pos, hasent ? 0x6611DD : 0x221188, hasent ? 3.0f : 1.5f);
+				if(showentinfo >= 2 || world::player1->state == CS_EDITING)
+				{
+					s_sprintfd(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
+					part_text(pos.add(off), s);
 
-				if(showentinfo >= 3 || hasent)
-				{
-					s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fa", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-					part_text(pos.add(off), s);
-				}
-				if(showentinfo >= 4 || hasent)
-				{
-					s_sprintf(s)("@%s%s", hasent ? "\fw" : "\fa", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, showentinfo >= 5 || hasent));
-					part_text(pos.add(off), s);
+					if(showentinfo >= 3 || hasent)
+					{
+						s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fa", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+						part_text(pos.add(off), s);
+					}
+					if(showentinfo >= 4 || hasent)
+					{
+						s_sprintf(s)("@%s%s", hasent ? "\fw" : "\fa", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, showentinfo >= 5 || hasent));
+						part_text(pos.add(off), s);
+					}
 				}
 			}
 		}
 		else if(showentnames)
 		{
-			if(e.type == WEAPON && spawned)
+			if(enttype[e.type].usetype == EU_ITEM && spawned)
 			{
 				s_sprintfd(s)("@%s", entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
 				part_text(vec(o).add(vec(0, 0, 4)), s);

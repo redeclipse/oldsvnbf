@@ -561,7 +561,7 @@ namespace server
 	void spawnstate(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
-		gs.spawnstate(m_insta(gamemode, mutators) ? sv_instaspawngun : sv_spawngun, sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1));
+		gs.spawnstate(m_spawngun(gamemode, mutators), !m_noitems(gamemode, mutators));
 		gs.lifesequence++;
 	}
 
@@ -795,7 +795,7 @@ namespace server
 
         return h.len + q.len;
     }
-        
+
 	void setupdemorecord()
 	{
 		if(m_demo(gamemode) || m_edit(gamemode)) return;
@@ -1339,33 +1339,30 @@ namespace server
 	{
 		servstate &ts = ci->state;
 		vector<droplist> drop;
-		if(sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1)) switch(sv_itemdropping)
+		int sgun = m_spawngun(gamemode, mutators);
+		if(sv_kamakaze && (sv_kamakaze > 2 || (ts.hasgun(GUN_GL, sgun) && (sv_kamakaze > 1 || ts.gunselect == GUN_GL))))
 		{
-			case 2: // kamakze
-				if(ts.gunselect == GUN_GL && ts.ammo[GUN_GL] > 0)
-				{
-					ts.gunshots[GUN_GL].add(-1);
-					droplist &d = drop.add();
-					d.gun = GUN_GL;
-					d.ent = -1;
-				}
-			case 1:
-				loopi(GUN_MAX) if(ts.hasgun(i, 1) && sents.inrange(ts.entid[i]))
-				{
-					if(!(sents[ts.entid[i]].attr2&GNT_FORCED))
-					{
-						ts.dropped.add(ts.entid[i]);
-						droplist &d = drop.add();
-						d.gun = i;
-						d.ent = ts.entid[i];
-						sents[ts.entid[i]].spawned = false;
-						sents[ts.entid[i]].millis = gamemillis;
-					}
-					ts.entid[i] = -1;
-				}
-				break;
-			default: break;
+			ts.gunshots[GUN_GL].add(-1);
+			droplist &d = drop.add();
+			d.gun = GUN_GL;
+			d.ent = -1;
 		}
+		if(!m_noitems(gamemode, mutators) && sv_itemdropping)
+		{
+			loopi(GUN_MAX) if(ts.hasgun(i, sgun, 1) && sents.inrange(ts.entid[i]))
+			{
+				if(!(sents[ts.entid[i]].attr2&GNT_FORCED))
+				{
+					ts.dropped.add(ts.entid[i]);
+					droplist &d = drop.add();
+					d.gun = i;
+					d.ent = ts.entid[i];
+					sents[ts.entid[i]].spawned = false;
+					sents[ts.entid[i]].millis = gamemillis;
+				}
+			}
+		}
+		loopi(GUN_MAX) ts.entid[i] = ts.ammo[i] = -1;
 		if(!drop.empty())
 			sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 	}
@@ -1415,7 +1412,7 @@ namespace server
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
                 actor->state.spree++;
 			}
-			if(sv_itemdropping) dropitems(target);
+			dropitems(target);
 			sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, actor->state.spree, gun, realflags, realdamage);
             target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
@@ -1433,7 +1430,7 @@ namespace server
 		if(gs.state != CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
-		if(sv_itemdropping) dropitems(ci);
+		dropitems(ci);
 		sendf(-1, 1, "ri8", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, 0, -1, e.flags, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
@@ -1471,7 +1468,7 @@ namespace server
 	void processevent(clientinfo *ci, shotevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canshoot(e.gun, e.millis))
+		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canshoot(e.gun, m_spawngun(gamemode, mutators), e.millis))
 		{
 			if(guntype[e.gun].max && isgun(e.gun))
 				gs.ammo[e.gun] = max(gs.ammo[e.gun]-1, 0); // keep synched!
@@ -1489,7 +1486,7 @@ namespace server
 	void processevent(clientinfo *ci, switchevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canswitch(e.gun, e.millis))
+		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canswitch(e.gun, m_spawngun(gamemode, mutators), e.millis))
 			return;
 		gs.gunswitch(e.gun, e.millis);
 		sendf(-1, 1, "ri3", SV_GUNSELECT, ci->clientnum, e.gun);
@@ -1498,7 +1495,7 @@ namespace server
 	void processevent(clientinfo *ci, reloadevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canreload(e.gun, e.millis))
+		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canreload(e.gun, m_spawngun(gamemode, mutators), e.millis))
 			return;
 		gs.setgunstate(e.gun, GNS_RELOAD, guntype[e.gun].rdelay, e.millis);
 		gs.ammo[e.gun] = clamp(max(gs.ammo[e.gun], 0) + guntype[e.gun].add, guntype[e.gun].add, guntype[e.gun].max);
@@ -1508,9 +1505,11 @@ namespace server
 	void processevent(clientinfo *ci, useevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || sv_itemsallowed < (m_insta(gamemode, mutators) ? 2 : 1) || !sents.inrange(e.ent) ||
-			!gs.canuse(sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, e.millis))
-				return;
+		if(!gs.isalive(gamemillis) || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
+			return;
+		int sgun = m_spawngun(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? gunattr(sents[e.ent].attr1, sgun) : sents[e.ent].attr1;
+		if(!gs.canuse(sents[e.ent].type, attr, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, sgun, e.millis))
+			return;
 		if(!sents[e.ent].spawned)
 		{
 			bool found = false;
@@ -1532,17 +1531,15 @@ namespace server
 		}
 
 		int gun = -1, dropped = -1;
-		if(sents[e.ent].type == WEAPON && gs.ammo[sents[e.ent].attr1] < 0)
-		{
-			if(gs.carry() >= MAXCARRY) gun = gs.drop(sents[e.ent].attr1);
-		}
+		if(sents[e.ent].type == WEAPON && gs.ammo[attr] < 0 && gs.carry(sgun) >= MAXCARRY)
+			gun = gs.drop(attr, sgun);
 		if(isgun(gun))
 		{
-			if(sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1) && sv_itemdropping) dropped = gs.entid[gun];
+			dropped = gs.entid[gun];
 			gs.ammo[gun] = gs.entid[gun] = -1;
 			gs.gunselect = gun;
 		}
-		gs.useitem(e.millis, e.ent, sents[e.ent].type, sents[e.ent].attr1, sents[e.ent].attr2);
+		gs.useitem(e.ent, sents[e.ent].type, attr, sents[e.ent].attr2, sgun, e.millis);
 		if(sents.inrange(dropped))
 		{
 			gs.dropped.add(dropped);
@@ -1612,7 +1609,7 @@ namespace server
 		else if(minremain)
 		{
 			processevents();
-			bool allowitems = !m_duke(gamemode, mutators) && sv_itemsallowed >= (m_insta(gamemode, mutators) ? 2 : 1);
+			bool allowitems = !m_duke(gamemode, mutators) && !m_noitems(gamemode, mutators);
 			loopv(sents) switch(sents[i].type)
 			{
 				case TRIGGER:

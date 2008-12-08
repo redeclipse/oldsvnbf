@@ -1527,7 +1527,7 @@ namespace world
 					{
 						if(lastmillis-d->gunlast[gun] <= d->gunwait[gun]/2)
 						{
-							if(d->hasgun(d->lastgun)) gun = d->lastgun;
+							if(d->hasgun(d->lastgun, m_spawngun(gamemode, mutators))) gun = d->lastgun;
 							else showgun = false;
 						}
 						animflags = ANIM_SWITCH;
@@ -1553,7 +1553,7 @@ namespace world
 					}
 					case GNS_IDLE:	default:
 					{
-						if(!d->hasgun(gun)) showgun = false;
+						if(!d->hasgun(gun, m_spawngun(gamemode, mutators))) showgun = false;
 						else animflags = (guntype[gun].anim+gunstate)|ANIM_LOOP;
 						break;
 					}

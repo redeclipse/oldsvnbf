@@ -138,7 +138,6 @@ namespace projs
 			}
 			case PRJ_ENT:
 			{
-				proj.mdl = entities::entmdlname(proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5);
 				proj.aboveeye = 1.f;
 				proj.elasticity = 0.35f;
 				proj.reflectivity = 0.f;
@@ -189,9 +188,9 @@ namespace projs
                     if(proj.projcollide&COLLIDE_TRACE)
                     {
                         proj.o = vec(ray).mul(olddist).add(orig);
-                        float cdist = tracecollide(proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY); 
+                        float cdist = tracecollide(proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
                         proj.o.add(vec(ray).mul(dist - olddist));
-                        if(cdist < 0) break; 
+                        if(cdist < 0) break;
                     }
                     else
                     {
@@ -254,7 +253,8 @@ namespace projs
 			vec from(d->o), to(d->muzzle);
 			if(n >= 0)
 			{
-				if(entities::ents.inrange(n) && !(entities::ents[n]->attr2&GNT_FORCED))
+				if(!m_noitems(world::gamemode, world::mutators) && itemdropping &&
+					entities::ents.inrange(n) && !(entities::ents[n]->attr2&GNT_FORCED))
 				{
 					gameentity &e = *(gameentity *)entities::ents[n];
 					create(from, to, local, d, PRJ_ENT, 0, 0, 1, 1, n, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
@@ -626,7 +626,7 @@ namespace projs
 
     void bounceeffect(projent &proj)
     {
-        if(proj.movement < 2.f && proj.lastbounce) return; 
+        if(proj.movement < 2.f && proj.lastbounce) return;
         int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
         switch(proj.projtype)
         {
@@ -671,7 +671,7 @@ namespace projs
             default: break;
         }
     }
- 
+
 	int bounce(projent &proj, const vec &dir)
 	{
 		proj.hit = NULL;
@@ -706,7 +706,7 @@ namespace projs
         if(maxdist <= 0) return 1; // not moving anywhere, so assume still alive since it was already alive
         ray.mul(1/maxdist);
         float dist = tracecollide(proj.o, ray, maxdist, RAY_CLIPMAT | RAY_ALPHAPOLY, proj.projcollide&COLLIDE_PLAYER);
-        proj.o.add(vec(ray).mul(dist >= 0 ? dist : maxdist));
+        proj.o.add(vec(ray).mul(dist >= 0 ? max(dist-0.1f, 0.0f) : maxdist));
         if(dist >= 0)
         {
             if(hitplayer)
@@ -720,7 +720,6 @@ namespace projs
             {
                 bounceeffect(proj);
                 reflect(proj, proj.norm);
-                proj.o.add(vec(proj.norm).mul(0.1f)); // offset from surface slightly to avoid initial collision
                 proj.movement = 0;
                 proj.lastbounce = lastmillis;
                 return 2; // bounce
@@ -879,6 +878,9 @@ namespace projs
 			if(!proj.owner || proj.state == CS_DEAD) destroy(proj);
 			else
 			{
+				if(proj.projtype == PRJ_ENT && proj.ent == WEAPON) // in case spawngun changes
+					proj.mdl = entities::entmdlname(proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5);
+
 				if(proj.waittime > 0)
 				{
 					if((proj.waittime -= curtime) <= 0)
