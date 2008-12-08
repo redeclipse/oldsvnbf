@@ -2490,7 +2490,7 @@ namespace server
 					if(!wi || !m_team(gamemode, mutators) || team < TEAM_ALPHA || team > numteams(gamemode, mutators)) break;
 					if(wi->team != team)
 					{
-						if (smode) smode->changeteam(wi, wi->team, team);
+						if(smode) smode->changeteam(wi, wi->team, team);
 						mutate(smuts, mut->changeteam(wi, wi->team, team));
 					}
 					wi->team = team;

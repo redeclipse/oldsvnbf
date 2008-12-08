@@ -69,6 +69,8 @@ namespace ai
 						sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
 					}
 					else sendspawn(ci);
+
+					ci->online = true;
 					return true;
 				}
 			}
@@ -99,20 +101,33 @@ namespace ai
 		return false;
 	}
 
+	void reinitai(clientinfo *ci, int cn = -1, bool init = false)
+	{
+		if(cn >= 0) ci->state.ownernum = findaiclient(cn);
+		if(ci->state.ownernum >= 0)
+		{
+			if(init)
+			{
+				if(smode) smode->leavegame(ci);
+				mutate(smuts, mut->leavegame(ci));
+			}
+			sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
+			if(init)
+			{
+				if(smode) smode->entergame(ci);
+				mutate(smuts, mut->entergame(ci));
+			}
+		}
+		else deleteai(ci);
+	}
+
 	void removeai(clientinfo *ci)
 	{
 		bool remove = !numclients(ci->clientnum, false, true);
 		loopvrev(clients) if(clients[i]->state.ownernum == ci->clientnum)
 		{
-			clientinfo *cp = clients[i];
-			if(remove) deleteai(cp);
-			else // try to reassign the ai to someone else
-			{
-				cp->state.ownernum = findaiclient(ci->clientnum);
-				if(cp->state.ownernum >= 0)
-					sendf(-1, 1, "ri5si", SV_INITAI, cp->clientnum, cp->state.ownernum, cp->state.aitype, cp->state.skill, cp->name, cp->team);
-				else deleteai(cp);
-			}
+			if(remove) deleteai(clients[i]);
+			else reinitai(clients[i], ci->clientnum, true); // try to reassign the ai to someone else
 		}
 	}
 
@@ -141,16 +156,7 @@ namespace ai
 		{
 			clientinfo *ci = clients[hi];
 			loopvrev(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
-			{
-				clientinfo *cp = clients[i];
-				cp->state.ownernum = clients[lo]->clientnum;
-				if(cp->state.ownernum >= 0)
-				{
-					sendf(-1, 1, "ri5si", SV_INITAI, cp->clientnum, cp->state.ownernum, cp->state.aitype, cp->state.skill, cp->name, cp->team);
-					return true;
-				}
-				else deleteai(cp);
-			}
+				reinitai(clients[i], clients[lo]->clientnum, true);
 		}
 		return false;
 	}
@@ -163,7 +169,7 @@ namespace ai
 		{
 			clientinfo *cp = clients[i];
 			cp->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
-			sendf(-1, 1, "ri5si", SV_INITAI, cp->clientnum, cp->state.ownernum, cp->state.aitype, cp->state.skill, cp->name, cp->team);
+			reinitai(cp);
 		}
 	}
 
