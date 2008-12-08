@@ -519,7 +519,7 @@ namespace world
 	{
 		if(d->type != ENT_PLAYER) return;
 
-		d->obliterated = d == actor || flags&HIT_EXPLODE || flags&HIT_MELT || damage > MAXHEALTH;
+		d->obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > MAXHEALTH;
         d->lastregen = 0;
         d->lastpain = lastmillis;
 		d->state = CS_DEAD;
@@ -641,7 +641,7 @@ namespace world
 					}
 					default:
 					{
-						if(flags&HIT_HEAD)
+						if((flags&HIT_PROJ) && (flags&HIT_HEAD))
 						{
 							anc = S_V_HEADSHOT;
 							s_sprintfd(ds)("@\fgHEADSHOT");

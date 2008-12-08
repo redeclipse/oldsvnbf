@@ -267,7 +267,7 @@ namespace stf
 			}
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			hud::drawblip(w, h, blip ? s : s*2, fade, 3, dir, r, g, b);
+			hud::drawblip(w, h, s, fade, 3, dir, r, g, b);
 		}
 	}
 
