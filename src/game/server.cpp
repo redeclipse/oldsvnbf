@@ -2685,13 +2685,13 @@ namespace server
 
 				case SV_INITAI:
 				{
-					QUEUE_MSG;
-					QUEUE_INT(getint(p));
-					QUEUE_INT(getint(p));
-					QUEUE_INT(getint(p));
-					getstring(text, p);
-					QUEUE_STR(text);
-					QUEUE_INT(getint(p));
+                    getint(p);
+                    getint(p);
+                    getint(p);
+                    getint(p);
+                    getstring(text, p);
+                    getint(p);
+                    QUEUE_MSG;
 					break;
 				}
 
