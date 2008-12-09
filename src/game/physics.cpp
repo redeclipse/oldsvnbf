@@ -292,7 +292,7 @@ namespace physics
         switchfloor(d, dir, floor);
         d->timeinair = 0;
         if(d->physstate!=PHYS_STEP_UP || !collided)
-            d->physstate = floor.z >= FLOORZ ? PHYS_FLOOR : PHYS_SLOPE;
+            d->physstate = floor.z >= floorz ? PHYS_FLOOR : PHYS_SLOPE;
 		d->floor = floor;
 	}
 
