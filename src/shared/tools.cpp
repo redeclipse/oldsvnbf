@@ -38,7 +38,7 @@ char *makefile(const char *s, const char *e, int revision, int start, bool skip)
 	while(true)
 	{
 		s_sprintf(m)("%s%s", f, *e ? e : "");
-		if(skip || fileexists(findfile(m, "w"), "r"))
+		if(!skip && fileexists(findfile(m, "w"), "r"))
 		{
 			if(revision)
 			{
