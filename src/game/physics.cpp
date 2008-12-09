@@ -280,7 +280,7 @@ namespace physics
 		else d->physstate = PHYS_FALL;
 	}
 
-    void landing(physent *d, vec &dir, const vec &floor)
+    void landing(physent *d, vec &dir, const vec &floor, bool collided)
 	{
     #if 0
         if(d->physstate == PHYS_FALL)
@@ -291,9 +291,8 @@ namespace physics
     #endif
         switchfloor(d, dir, floor);
         d->timeinair = 0;
-
-		if(floor.z >= floorz) d->physstate = PHYS_FLOOR;
-		else d->physstate = PHYS_SLOPE;
+        if(d->physstate!=PHYS_STEP_UP || !collided)
+            d->physstate = floor.z >= FLOORZ ? PHYS_FLOOR : PHYS_SLOPE;
 		d->floor = floor;
 	}
 
@@ -406,7 +405,7 @@ namespace physics
 		if(found)
 		{
 			if(d->type == ENT_CAMERA) return false;
-			landing(d, dir, floor);
+			landing(d, dir, floor, collided);
 		}
 		else falling(d, dir, floor);
 		return !collided;
