@@ -351,11 +351,6 @@ namespace server
 						setsvar(id.name, *id.def.s ? id.def.s : "", true);
 						break;
 					}
-					case ID_ALIAS:
-					{
-						worldalias(id.name, "");
-						break;
-					}
 					default: break;
 				}
 			}
