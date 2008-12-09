@@ -449,7 +449,9 @@ namespace client
 	{
         int nextmode = world::nextmode, nextmuts = world::nextmuts; // in case stopdemo clobbers these
         if(!remote) stopdemo();
-        addmsg(SV_MAPVOTE, "rsi2", name, nextmode, nextmuts);
+        string mapfile;
+		s_strcpy(mapfile, !strncasecmp(name, "temp/", 5) || !strncasecmp(name, "temp\\", 5) ? name+5 : name);
+        addmsg(SV_MAPVOTE, "rsi2", mapfile, nextmode, nextmuts);
 	}
 	ICOMMAND(map, "s", (char *s), changemap(s));
 
