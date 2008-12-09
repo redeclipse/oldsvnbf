@@ -34,11 +34,10 @@ char *makefile(const char *s, const char *e, int revision, int start, bool skip)
 	else { s_strcpy(o, m); }
 	s_strcpy(f, o);
 
-	bool tryrev = false;
-	while(true)
+	for(bool tryrev = false;; skip = false)
 	{
 		s_sprintf(m)("%s%s", f, *e ? e : "");
-		if(!skip && fileexists(findfile(m, "w"), "r"))
+		if(skip || fileexists(findfile(m, "w"), "r"))
 		{
 			if(revision)
 			{
