@@ -156,7 +156,10 @@ namespace ai
 		{
 			clientinfo *ci = clients[hi];
 			loopvrev(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
+			{
 				reinitai(clients[i], clients[lo]->clientnum, true);
+				return true;
+			}
 		}
 		return false;
 	}
