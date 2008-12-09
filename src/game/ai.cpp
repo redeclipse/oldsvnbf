@@ -103,7 +103,7 @@ namespace ai
 
 	void reinitai(clientinfo *ci, int cn = -1, bool init = false)
 	{
-		if(cn >= 0) ci->state.ownernum = findaiclient(cn);
+		if(cn >= 0) ci->state.ownernum = cn;
 		if(ci->state.ownernum >= 0)
 		{
 			if(init)
@@ -127,7 +127,7 @@ namespace ai
 		loopvrev(clients) if(clients[i]->state.ownernum == ci->clientnum)
 		{
 			if(remove) deleteai(clients[i]);
-			else reinitai(clients[i], ci->clientnum, true); // try to reassign the ai to someone else
+			else reinitai(clients[i], findaiclient(ci->clientnum), true); // try to reassign the ai to someone else
 		}
 	}
 

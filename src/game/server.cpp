@@ -265,7 +265,7 @@ namespace server
 	bool maprequest = false;
 	enet_uint32 lastsend = 0;
 	int mastermode = MM_OPEN, mastermask = MM_DEFAULT, currentmaster = -1;
-	bool masterupdate = false;
+	bool masterupdate = false, mapsending = false;
 	FILE *mapdata[3] = { NULL, NULL, NULL };
 
 	vector<ban> bannedips;
@@ -956,11 +956,12 @@ namespace server
 		loopi(numteams(gamemode, mutators))
 		{
 			teamscore &ts = teamscores[i];
-			if(who->state.aitype != AI_NONE || m_stf(gamemode) || m_ctf(gamemode))
+			//who->state.aitype != AI_NONE
+			if(m_stf(gamemode) || m_ctf(gamemode))
 			{
 				if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.rank < worst->rank)) worst = &ts;
 			}
-			else if(ts.rank < worst->rank || (ts.rank == worst->rank && ts.clients < worst->clients)) worst = &ts;
+			//else if(ts.rank < worst->rank || (ts.rank == worst->rank && ts.clients < worst->clients)) worst = &ts;
 		}
 		return worst->team;
 	}
@@ -1020,6 +1021,7 @@ namespace server
 			fclose(mapdata[i]);
 			mapdata[i] = NULL;
 		}
+		mapsending = false;
         stopdemo();
 		maprequest = false;
 		gamemode = mode >= 0 ? mode : sv_defaultmode;
@@ -1211,6 +1213,7 @@ namespace server
 					fclose(mapdata[i]);
 					mapdata[i] = NULL;
 				}
+				mapsending = false;
 				sendf(best->clientnum, 1, "ri", SV_GETMAP);
 				putint(p, 1);
 			}
@@ -1812,6 +1815,7 @@ namespace server
         	srvmsgf(sender, "failed to open temporary file for map");
         	return false;
 		}
+		mapsending = true;
 		fwrite(data, 1, len, mapdata[n]);
 		return n == 2;
 	}
@@ -1945,7 +1949,11 @@ namespace server
 		if(sender<0) return;
 		if(chan==2)
 		{
-			if(receivefile(sender, p.buf, p.maxlen)) sendf(-1, 1, "ri", SV_SENDMAP);
+			if(receivefile(sender, p.buf, p.maxlen))
+			{
+				mapsending = false;
+				sendf(-1, 1, "ri", SV_SENDMAP);
+			}
 			return;
 		}
 		if(reliable) reliablemessages = true;
@@ -2601,11 +2609,17 @@ namespace server
 				}
 
 				case SV_GETMAP:
+				{
+					ci->state.timeplayed = 0;
+					ci->state.lasttimeplayed = lastmillis;
 					if(mapdata[2])
 					{
-						loopk(3) if(mapdata[k])
-							sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
-						send_welcome(sender);
+						if(!mapsending)
+						{
+							loopk(3) if(mapdata[k])
+								sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
+							send_welcome(sender);
+						}
 					}
 					else if(!m_edit(gamemode))
 					{
@@ -2617,10 +2631,12 @@ namespace server
 								fclose(mapdata[k]);
 								mapdata[k] = NULL;
 							}
+							mapsending = false;
 							sendf(best->clientnum, 1, "ri", SV_GETMAP);
 						}
 					}
 					break;
+				}
 
 				case SV_NEWMAP:
 				{

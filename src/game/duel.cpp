@@ -52,7 +52,10 @@ struct duelservmode : servmode
 		return false; // you spawn when we want you to buddy
 	}
 
-	void died(clientinfo *ci, clientinfo *at) {}
+	void died(clientinfo *ci, clientinfo *at)
+	{
+		queue(ci, m_duel(gamemode, mutators));
+	}
 	void changeteam(clientinfo *ci, int oldteam, int newteam) {}
 
 	void clearitems()

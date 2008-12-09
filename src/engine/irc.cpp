@@ -374,11 +374,12 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 	{
 		int numeric = *w[g] && *w[g] >= '0' && *w[g] <= '9' ? atoi(w[g]) : 0, off = 0;
 		string s; s[0] = 0;
-		char *targ = numargs > g+1 ? w[g+1] : NULL;
+		#define irctarget(a) (!strcasecmp(n->nick, a) || *a == '#' || ircfindchan(n, a))
+		char *targ = numargs > g+1 && irctarget(w[g+1]) ? w[g+1] : NULL;
 		if(numeric)
 		{
 			off = numeric == 353 ? 2 : 1;
-			if(numargs > g+off+1 && ircfindchan(n, w[g+off+1]))
+			if(numargs > g+off+1 && irctarget(w[g+off+1]))
 			{
 				targ = w[g+off+1];
 				off++;
