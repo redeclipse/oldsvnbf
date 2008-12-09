@@ -928,16 +928,15 @@ namespace server
 		~teamscore() {}
 	};
 
-	int chooseworstteam(clientinfo *who)
+	int chooseworstteam(clientinfo *who, bool exclude = true)
 	{
 		teamscore teamscores[MAXTEAMS] = { teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_DELTA), teamscore(TEAM_GAMMA) };
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(!ci->team) continue;
+			if(!ci->team || (exclude && who == ci)) continue;
 			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 			ci->state.lasttimeplayed = lastmillis;
-
 			loopj(numteams(gamemode, mutators)) if(ci->team == teamscores[j].team)
 			{
 				teamscore &ts = teamscores[j];

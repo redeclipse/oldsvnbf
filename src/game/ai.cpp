@@ -111,7 +111,11 @@ namespace ai
 				if(smode) smode->leavegame(ci);
 				mutate(smuts, mut->leavegame(ci));
 			}
+
+			if(m_team(gamemode, mutators)) ci->team = chooseworstteam(ci);
+			else ci->team = TEAM_NEUTRAL;
 			sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
+
 			if(init)
 			{
 				if(smode) smode->entergame(ci);
@@ -164,15 +168,20 @@ namespace ai
 		return false;
 	}
 
-	void checkskills()
+	void checksetup()
 	{
 		int m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
 			n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
-		loopv(clients) if(clients[i]->state.aitype == AI_BOT && (clients[i]->state.skill > m || clients[i]->state.skill < n))
+		loopv(clients) if(clients[i]->state.aitype == AI_BOT)
 		{
 			clientinfo *cp = clients[i];
-			cp->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
-			reinitai(cp);
+			bool reinit = false;
+			if(cp->state.skill > m || cp->state.skill < n)
+			{
+				cp->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
+				reinit = true;
+			}
+			if(reinit) reinitai(cp);
 		}
 	}
 
@@ -184,11 +193,9 @@ namespace ai
 
 	void checkai()
 	{
-		if(m_demo(gamemode) || m_lobby(gamemode))
-			clearbots();
+		if(m_demo(gamemode) || m_lobby(gamemode)) clearbots();
 		else if(numclients(-1, false, true))
 		{
-			checkskills();
 			if(m_play(gamemode) && sv_botbalance)
 			{
 				int balance = clamp(sv_botbalance * (m_team(gamemode, mutators) ? numteams(gamemode, mutators) : 1), 0, 128);
@@ -196,6 +203,7 @@ namespace ai
 				while(numclients(-1, true, false) > balance && delai(AI_BOT)) ;
 			}
 			while(reassignai()) ;
+			checksetup();
 		}
 	}
 
