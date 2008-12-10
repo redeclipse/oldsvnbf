@@ -3,7 +3,7 @@ struct ctfstate
     struct flag
     {
         vec droploc, spawnloc;
-        int team, score, droptime;
+        int team, droptime, base; // 0 is normal flag, 1 is neutral base, 2 is pickup
 #ifdef GAMESERVER
         int owner;
 #else
@@ -18,6 +18,7 @@ struct ctfstate
         void reset()
         {
             droploc = spawnloc = vec(0, 0, 0);
+            base = -1;
 #ifdef GAMESERVER
             owner = -1;
 #else
@@ -26,7 +27,6 @@ struct ctfstate
             interptime = 0;
 #endif
             team = TEAM_NEUTRAL;
-            score = 0;
             droptime = 0;
         }
 
@@ -41,12 +41,20 @@ struct ctfstate
     };
     vector<flag> flags;
 
+	struct score
+	{
+		int team, total;
+	};
+
+	vector<score> scores;
+
     void reset()
     {
         flags.setsize(0);
+		scores.setsize(0);
     }
 
-    int addflag(const vec &o, int team, int i = -1)
+    int addflag(const vec &o, int team, int base = -1, int i = -1)
     {
     	int x = i < 0 ? flags.length() : i;
     	while(!flags.inrange(x)) flags.add();
@@ -54,6 +62,7 @@ struct ctfstate
 		f.reset();
 		f.team = team;
 		f.spawnloc = o;
+		f.base = base;
 		return x;
     }
 
@@ -99,12 +108,18 @@ struct ctfstate
 #endif
     }
 
-    int findscore(int team)
-    {
-        int score = 0;
-        loopv(flags) if(flags[i].team==team) score += flags[i].score;
-        return score;
-    }
+	score &findscore(int team)
+	{
+		loopv(scores)
+		{
+			score &cs = scores[i];
+			if(cs.team == team) return cs;
+		}
+		score &cs = scores.add();
+		cs.team = team;
+		cs.total = 0;
+		return cs;
+	}
 };
 
 #ifndef GAMESERVER
@@ -119,6 +134,7 @@ namespace ctf
 	extern void takeflag(gameent *d, int i);
 	extern void resetflag(int i);
 	extern void setupflags();
+	extern void setscore(int team, int total);
 	extern void checkflags(gameent *d);
 	extern void drawblips(int w, int h, int s, float blend);
 	extern int drawinventory(int x, int y, int s, float blend);
@@ -131,3 +147,5 @@ namespace ctf
 	extern bool aipursue(gameent *d, aistate &b);
 }
 #endif
+
+#define isctf(a,b)	((!a.base && a.team == b) || a.base == 1)

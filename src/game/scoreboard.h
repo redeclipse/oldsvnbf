@@ -99,8 +99,7 @@ namespace hud
 			}
 			else if(m_ctf(world::gamemode))
 			{
-				loopi(numteams(world::gamemode, world::mutators))
-					teamscores.add(teamscore(i+TEAM_ALPHA, ctf::st.findscore(i+TEAM_ALPHA)));
+				loopv(ctf::st.scores) teamscores.add(teamscore(ctf::st.scores[i].team, ctf::st.scores[i].total));
 			}
 			loopi(world::numdynents())
 			{
@@ -163,7 +162,7 @@ namespace hud
 				g.team = team;
 				if(!team) g.score = 0;
 				else if(m_stf(world::gamemode)) g.score = stf::st.findscore(o->team).total;
-				else if(m_ctf(world::gamemode)) g.score = ctf::st.findscore(o->team);
+				else if(m_ctf(world::gamemode)) g.score = ctf::st.findscore(o->team).total;
 				else g.score = o->frags;
 
 				g.players.setsize(0);
@@ -283,7 +282,7 @@ namespace hud
 				{
 					g.pushlist(); // vertical
 
-					if(m_stf(world::gamemode) && sg.score>=10000) g.textf("%s: WIN", fgcolor, NULL, teamtype[sg.team].name);
+					if(m_stf(world::gamemode) && sg.score>=stflimit) g.textf("%s: WIN", fgcolor, NULL, teamtype[sg.team].name);
 					else g.textf("%s: %d", fgcolor, NULL, teamtype[sg.team].name, sg.score);
 
 					g.pushlist(); // horizontal
