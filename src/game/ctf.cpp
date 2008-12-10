@@ -571,8 +571,7 @@ namespace ctf
 		{
 			ctfstate::flag &f = st.flags[b.target];
 			if(f.owner && ai::violence(d, b, f.owner, true)) return true;
-			float radius = enttype[FLAG].radius, wander = enttype[FLAG].radius*4.f;
-			if(ai::patrol(d, b, f.pos(), radius, wander))
+			if(ai::defend(d, b, f.pos(), float(enttype[FLAG].radius/2)))
 			{
 				ai::defer(d, b, false);
 				return true;

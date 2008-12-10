@@ -365,19 +365,19 @@ struct gametypes
 };
 #ifdef GAMESERVER
 gametypes gametype[] = {
-	{ G_DEMO,			G_M_NONE,				G_M_NONE,		"Demo" },
-	{ G_LOBBY,			G_M_NONE,				G_M_NONE,		"Lobby" },
-	{ G_EDITMODE,		G_M_NONE,				G_M_NONE,		"Editing" },
-	{ G_MISSION,		G_M_NONE,				G_M_NONE,		"Mission" },
-	{ G_DEATHMATCH,		G_M_ALL,				G_M_NONE,		"Deathmatch" },
-	{ G_STF,			G_M_TEAMS,				G_M_TEAM,		"Secure-the-Flag" },
-	{ G_CTF,			G_M_TEAMS,				G_M_TEAM,		"Capture-the-Flag" },
+	{ G_DEMO,			G_M_NONE,				G_M_NONE,				"Demo" },
+	{ G_LOBBY,			G_M_NONE,				G_M_NONE,				"Lobby" },
+	{ G_EDITMODE,		G_M_NONE,				G_M_NONE,				"Editing" },
+	{ G_MISSION,		G_M_NONE,				G_M_NONE,				"Mission" },
+	{ G_DEATHMATCH,		G_M_ALL,				G_M_NONE,				"Deathmatch" },
+	{ G_STF,			G_M_TEAMS,				G_M_TEAM,				"Secure-the-Flag" },
+	{ G_CTF,			G_M_TEAMS,				G_M_TEAM,				"Capture-the-Flag" },
 }, mutstype[] = {
-	{ G_M_MULTI,		G_M_ALL,				G_M_TEAM,		"Multi-Sided" },
-	{ G_M_TEAM,			G_M_TEAMS,				G_M_NONE,		"Team" },
-	{ G_M_INSTA,		G_M_ALL,				G_M_NONE,		"Instagib" },
-	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_NONE,		"Duel" },
-	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_NONE,		"Last-Man-Standing" },
+	{ G_M_MULTI,		G_M_ALL,				G_M_TEAM|G_M_MULTI,		"Multi-Sided" },
+	{ G_M_TEAM,			G_M_TEAMS,				G_M_TEAM,				"Team" },
+	{ G_M_INSTA,		G_M_ALL,				G_M_INSTA,				"Instagib" },
+	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_DUEL,				"Duel" },
+	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_LMS,				"Last-Man-Standing" },
 };
 #else
 extern gametypes gametype[], mutstype[];
@@ -905,8 +905,8 @@ struct interest
 
 struct aistate
 {
-	int type, millis, expire, next, targtype, target, cycle;
-	bool override, defers;
+	int type, millis, expire, next, targtype, target, cycle, stuck;
+	bool override, defers, idle, wasidle;
 
 	aistate(int t, int m) : type(t), millis(m)
 	{
@@ -918,12 +918,12 @@ struct aistate
 
 	void reset()
 	{
-		expire = cycle = 0;
+		expire = cycle = stuck = 0;
 		next = millis;
 		if(type == AI_S_WAIT)
 			next += rnd(1500) + 1500;
 		targtype = target = -1;
-		override = false;
+		idle = wasidle = override = false;
 		defers = true;
 	}
 };
@@ -934,6 +934,7 @@ struct aiinfo
 	vector<int> route;
 	vec target, spot;
 	int enemy, lastseen, gunpref;
+	float targyaw, targpitch;
 
 	aiinfo() { reset(); }
 	~aiinfo() { state.setsize(0); route.setsize(0); }
@@ -946,6 +947,7 @@ struct aiinfo
 		gunpref = rnd(GUN_MAX-1)+1;
 		spot = target = vec(0, 0, 0);
 		enemy = lastseen = -1;
+		targyaw = targpitch = 0.f;
 	}
 
 	aistate &addstate(int t)
@@ -1239,13 +1241,14 @@ namespace ai
 	extern bool makeroute(gameent *d, aistate &b, int node, float tolerance = AIISNEAR, bool retry = false);
 	extern bool makeroute(gameent *d, aistate &b, vec &pos, float tolerance = AIISNEAR, bool dist = false);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
+	extern bool defend(gameent *d, aistate &b, vec &pos, float tolerance = AIISNEAR, bool retry = false);
 	extern bool patrol(gameent *d, aistate &b, vec &pos, float radius = AIISNEAR, float wander = AIISFAR, bool retry = false);
 	extern bool randomnode(gameent *d, aistate &b, vec &from, vec &to, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool randomnode(gameent *d, aistate &b, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool defer(gameent *d, aistate &b, bool pursue = false);
 	extern void update();
 	extern void avoid();
-	extern void think(gameent *d, int idx);
+	extern void think(gameent *d, bool run);
 	extern void damaged(gameent *d, gameent *e, int gun, int flags, int damage, int health, int millis, vec &dir);
 	extern void killed(gameent *d, gameent *e, int gun, int flags, int damage);
 	extern void render();
