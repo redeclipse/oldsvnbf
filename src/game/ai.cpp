@@ -282,9 +282,9 @@ namespace ai
 		if(o) s_strcpy(m, world::colorname(o));
 		else s_sprintf(m)("\fs\fwunknown [\fs\fr%d\fS]\fS", on);
 
-		if(!d->name[0]) conoutf("\fg%s assigned to %s at skill %d", world::colorname(d), m, sk);
-		else if(d->ownernum != on) conoutf("\fg%s reassigned to %s", world::colorname(d), m);
-		else if(d->skill != sk) conoutf("\fg%s changed skill to %d", world::colorname(d), sk);
+		if(!d->name[0]) conoutf("\fg%s assigned to %s at skill %d", world::colorname(d, name), m, sk);
+		else if(d->ownernum != on) conoutf("\fg%s reassigned to %s", world::colorname(d, name), m);
+		else if(d->skill != sk) conoutf("\fg%s changed skill to %d", world::colorname(d, name), sk);
 
 		s_strncpy(d->name, name, MAXNAMELEN);
 		d->aitype = at;
