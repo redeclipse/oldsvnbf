@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			127
+#define GAMEVERSION			128
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -38,7 +38,7 @@ enum								// entity types
 	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
 	WEAPON = ET_GAMESPECIFIC,		// 8  gun, flags
 	TELEPORT,						// 9  yaw, pitch, push, [radius] [portal]
-	RESERVED,						// 10
+	ACTOR,							// 10
 	TRIGGER,						// 11 idx, type, acttype, [radius]
 	PUSHER,							// 12 zpush, ypush, xpush, [radius]
 	FLAG,							// 13 idx, team
@@ -56,29 +56,107 @@ enum { TA_NONE = 0, TA_AUTO, TA_ACT, TA_MAX };
 
 struct enttypes
 {
-	int	type, 		links,	radius,	usetype; bool noisy;	const char *name;
+	int	type,			links,	radius,	usetype,
+			canlink;
+	bool	noisy;	const char *name;
 };
 #ifdef GAMESERVER
 enttypes enttype[] = {
-	{ NOTUSED,		0,		0,		EU_NONE,	true,		"none" },
-	{ LIGHT,		59,		0,		EU_NONE,	false,		"light" },
-	{ MAPMODEL,		58,		0,		EU_NONE,	false,		"mapmodel" },
-	{ PLAYERSTART,	59,		0,		EU_NONE,	false,		"playerstart" },
-	{ ENVMAP,		0,		0,		EU_NONE,	false,		"envmap" },
-	{ PARTICLES,	59,		0,		EU_NONE,	false,		"particles" },
-	{ MAPSOUND,		58,		0,		EU_NONE,	false,		"sound" },
-	{ SPOTLIGHT,	59,		0,		EU_NONE,	false,		"spotlight" },
-	{ WEAPON,		59,		16,		EU_ITEM,	false,		"weapon" },
-	{ TELEPORT,		50,		12,		EU_AUTO,	false,		"teleport" },
-	{ RESERVED,		59,		12,		EU_NONE,	false,		"reserved" },
-	{ TRIGGER,		58,		16,		EU_AUTO,	false,		"trigger" },
-	{ PUSHER,		58,		12,		EU_AUTO,	false,		"pusher" },
-	{ FLAG,			48,		32,		EU_NONE,	false,		"flag" },
-	{ CHECKPOINT,	48,		16,		EU_NONE,	false,		"checkpoint" }, // FIXME
-	{ CAMERA,		48,		0,		EU_NONE,	false,		"camera" },
-	{ WAYPOINT,		1,		8,		EU_NONE,	true,		"waypoint" },
-	{ ANNOUNCER,	64,		0,		EU_NONE,	false,		"announcer" },
-	{ CONNECTION,	70,		0,		EU_NONE,	false,		"connection" },
+	{
+		NOTUSED,		0,		0,		EU_NONE,
+			0,
+			true,				"none"
+	},
+	{
+		LIGHT,			59,		0,		EU_NONE,
+			itox(SPOTLIGHT),
+			false,				"light"
+	},
+	{
+		MAPMODEL,		58,		0,		EU_NONE,
+			itox(TRIGGER),
+			false,				"mapmodel"
+	},
+	{
+		PLAYERSTART,	59,		0,		EU_NONE,
+			0,
+			false,				"playerstart"
+	},
+	{
+		ENVMAP,			0,		0,		EU_NONE,
+			0,
+			false,				"envmap"
+	},
+	{
+		PARTICLES,		59,		0,		EU_NONE,
+			itox(TELEPORT)|itox(TRIGGER)|itox(PUSHER),
+			false,				"particles"
+	},
+	{
+		MAPSOUND,		58,		0,		EU_NONE,
+			itox(TELEPORT)|itox(TRIGGER)|itox(PUSHER),
+			false,				"sound"
+	},
+	{
+		SPOTLIGHT,		59,		0,		EU_NONE,
+			0,
+			false,				"spotlight"
+	},
+	{
+		WEAPON,			59,		16,		EU_ITEM,
+			0,
+			false,				"weapon"
+	},
+	{
+		TELEPORT,		50,		12,		EU_AUTO,
+			itox(MAPSOUND)|itox(PARTICLES)|itox(TELEPORT),
+			false,				"teleport"
+	},
+	{
+		ACTOR,			59,		12,		EU_NONE,
+			0,
+			false,				"actor"
+	},
+	{
+		TRIGGER,		58,		16,		EU_AUTO,
+			itox(MAPMODEL)|itox(MAPSOUND)|itox(PARTICLES),
+			false,				"trigger"
+	},
+	{
+		PUSHER,			58,		12,		EU_AUTO,
+			itox(MAPSOUND)|itox(PARTICLES),
+			false,				"pusher"
+	},
+	{
+		FLAG,			48,		32,		EU_NONE,
+			itox(FLAG),
+			false,				"flag"
+	},
+	{
+		CHECKPOINT,		48,		16,		EU_NONE,
+			itox(CHECKPOINT),
+			false,				"checkpoint"
+	},
+	{
+		CAMERA,			48,		0,		EU_NONE,
+			itox(CAMERA),
+			false,				"camera"
+	},
+	{
+		WAYPOINT,		1,		8,		EU_NONE,
+			itox(WAYPOINT),
+			true,				"waypoint"
+	},
+	{
+		ANNOUNCER,		64,		0,		EU_NONE,
+			0,
+			false,				"announcer"
+	},
+	{
+		CONNECTION,		70,		0,		EU_NONE,
+			itox(CONNECTION),
+			false,				"connection"
+	},
 };
 #else
 extern enttypes enttype[];
@@ -352,7 +430,7 @@ enum
 	SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_WAITING, SV_SETMASTER, SV_SETTEAM, SV_APPROVEMASTER,
 	SV_FLAGS, SV_FLAGINFO,
     SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS,
-	SV_TEAMSCORE, SV_FORCEINTERMISSION,
+	SV_TEAMSCORE,
 	SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
 	SV_CLIENT, SV_RELOAD, SV_REGEN,
@@ -378,7 +456,7 @@ char msgsizelookup(int msg)
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_WAITING, 2, SV_SETMASTER, 0, SV_SETTEAM, 0, SV_APPROVEMASTER, 2,
 		SV_FLAGS, 0, SV_FLAGINFO, 0,
         SV_DROPFLAG, 0, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 3, SV_RESETFLAG, 2, SV_INITFLAGS, 0,
-		SV_TEAMSCORE, 0, SV_FORCEINTERMISSION, 1,
+		SV_TEAMSCORE, 0,
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 2, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
 		SV_CLIENT, 0, SV_RELOAD, 0, SV_REGEN, 0,
@@ -1090,7 +1168,6 @@ namespace entities
 	extern const char *findname(int type);
 	extern void adddynlights();
 	extern void render();
-	extern void start();
 	extern void update();
 }
 

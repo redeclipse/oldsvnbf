@@ -88,7 +88,6 @@ namespace world
 	void start()
 	{
 		s_strcpy(player1->name, "unnamed");
-		entities::start();
 	}
 
 	char *gametitle() { return server::gamename(gamemode, mutators); }

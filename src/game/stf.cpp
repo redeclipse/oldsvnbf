@@ -60,7 +60,7 @@ struct stfservmode : stfstate, servmode
 	void update()
 	{
 		if(minremain<0) return;
-		if(sv_stflimit) endcheck();
+		endcheck();
 		int t = gamemillis/1000 - (gamemillis-curtime)/1000;
 		if(t<1) return;
 		loopv(flags)
@@ -120,31 +120,53 @@ struct stfservmode : stfstate, servmode
 		putint(p, -1);
 	}
 
+	void winner(int team, int score)
+	{
+		sendf(-1, 1, "ri3", SV_TEAMSCORE, team, score);
+		startintermission();
+	}
+
 	void endcheck()
 	{
-		int lastteam = TEAM_NEUTRAL;
-		loopv(flags)
+		int maxscore = sv_stflimit ? sv_stflimit : INT_MAX-1;
+		loopi(numteams(gamemode, mutators))
 		{
-			flaginfo &b = flags[i];
-			if(b.owner)
+			int lastteam = i+TEAM_ALPHA;
+			if(findscore(lastteam).total >= maxscore)
 			{
-				if(!lastteam) lastteam = b.owner;
-				else if(lastteam != b.owner)
+				findscore(lastteam).total = maxscore;
+				winner(lastteam, maxscore);
+				return;
+			}
+		}
+		if(sv_stffinish)
+		{
+			int lastteam = TEAM_NEUTRAL;
+			loopv(flags)
+			{
+				flaginfo &b = flags[i];
+				if(b.owner)
+				{
+					if(!lastteam) lastteam = b.owner;
+					else if(lastteam != b.owner)
+					{
+						lastteam = TEAM_NEUTRAL;
+						break;
+					}
+				}
+				else
 				{
 					lastteam = TEAM_NEUTRAL;
 					break;
 				}
 			}
-			else
+			if(lastteam)
 			{
-				lastteam = TEAM_NEUTRAL;
-				break;
+				findscore(lastteam).total = maxscore;
+				winner(lastteam, maxscore);
+				return;
 			}
 		}
-		if(!lastteam) return;
-		findscore(lastteam).total = 10000;
-		sendf(-1, 1, "ri3", SV_TEAMSCORE, lastteam, 10000);
-		startintermission();
 	}
 
 	void entergame(clientinfo *ci)

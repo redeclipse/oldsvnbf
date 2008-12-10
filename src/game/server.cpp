@@ -522,7 +522,7 @@ namespace server
 			if(!minremain && !interm)
 			{
 				maprequest = false;
-				interm = gamemillis+10000;
+				interm = gamemillis+(sv_votewait*1000);
 			}
 		}
 	}
@@ -2499,10 +2499,6 @@ namespace server
 					QUEUE_INT(team);
 					break;
 				}
-
-				case SV_FORCEINTERMISSION:
-					if(m_mission(gamemode)) startintermission();
-					break;
 
 				case SV_RECORDDEMO:
 				{
