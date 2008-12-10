@@ -122,8 +122,7 @@ struct stfservmode : stfstate, servmode
 
 	void endcheck()
 	{
-		int lastteam = NULL;
-
+		int lastteam = TEAM_NEUTRAL;
 		loopv(flags)
 		{
 			flaginfo &b = flags[i];
@@ -142,7 +141,6 @@ struct stfservmode : stfstate, servmode
 				break;
 			}
 		}
-
 		if(!lastteam) return;
 		findscore(lastteam).total = 10000;
 		sendf(-1, 1, "ri3", SV_TEAMSCORE, lastteam, 10000);
