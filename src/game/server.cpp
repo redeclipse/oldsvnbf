@@ -328,8 +328,6 @@ namespace server
 
 	void cleanup()
 	{
-		interm = gamemillis = 0;
-		oldtimelimit = sv_timelimit;
 		bannedips.setsize(0);
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_SERVER) // reset vars
@@ -527,7 +525,7 @@ namespace server
 
 	void checkintermission()
 	{
-		if(clients.length())
+		if(numclients())
 		{
 			if(minremain)
 			{
@@ -561,10 +559,13 @@ namespace server
 
 	void startintermission()
 	{
-		minremain = 0;
-		gamelimit = min(gamelimit, gamemillis);
-		sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-		checkintermission();
+		if(numclients())
+		{
+			minremain = 0;
+			gamelimit = min(gamelimit, gamemillis);
+			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+			checkintermission();
+		}
 	}
 
 	bool finditem(int i, bool spawned = true, int spawntime = 0)
@@ -1635,6 +1636,7 @@ namespace server
 
 	void serverupdate()
 	{
+		if(!numclients()) return;
 		gamemillis += curtime;
 		if(m_demo(gamemode)) readdemo();
 		else if(minremain)

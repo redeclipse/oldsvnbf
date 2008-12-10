@@ -76,6 +76,13 @@ struct duelservmode : servmode
 		}
 	}
 
+	void clearqueue(bool init = false)
+	{
+		duelqueue.setsize(0);
+		loopv(clients) if(clients[i]->name[0] && clients[i]->state.state != CS_SPECTATOR)
+			queue(clients[i], !init && m_duel(gamemode, mutators), true);
+	}
+
 	void cleanup()
 	{
 		loopvrev(duelqueue)
@@ -85,8 +92,13 @@ struct duelservmode : servmode
 
 	void update()
 	{
-		if(interm || !numclients()) return;
-
+		if(interm || !numclients() || notgotinfo) return;
+		if(dueltime < 0)
+		{
+			dueltime = gamemillis+5000;
+			clearqueue();
+			clearitems();
+		}
 		cleanup();
 
 		vector<clientinfo *> alive;
@@ -166,11 +178,8 @@ struct duelservmode : servmode
 	void reset(bool empty)
 	{
 		duelround = 0;
-		dueltime = gamemillis+15000;
-		duelqueue.setsize(0);
-		loopv(clients) if(clients[i]->name[0] && clients[i]->state.state != CS_SPECTATOR)
-			queue(clients[i], m_duel(gamemode, mutators), true);
-		clearitems();
+		dueltime = -1;
+		clearqueue(true);
 	}
 } duelmutator;
 #endif
