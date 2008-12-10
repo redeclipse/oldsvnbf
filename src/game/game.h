@@ -357,7 +357,7 @@ enum
 	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA,
 	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS,
 };
-#define G_M_NUM 4
+#define G_M_NUM 5
 
 struct gametypes
 {

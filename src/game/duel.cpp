@@ -131,7 +131,6 @@ struct duelservmode : servmode
 					}
 				}
 
-				clearitems();
 				duelround++;
 				if(m_duel(gamemode, mutators))
 				{
@@ -155,27 +154,22 @@ struct duelservmode : servmode
 			if(!alive.empty())
 			{
 				srvmsgf(-1, "\fy%s was the last one left alive", colorname(alive[0]));
-				sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, "you win!");
-#if 0
-				alive[0]->state.health = MAXHEALTH;
-				alive[0]->state.lastregen = gamemillis;
-				sendf(-1, 1, "ri3", SV_REGEN, alive[0]->clientnum, alive[0]->state.health);
-#else
+				sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, "you survived!");
 				queue(alive[0], false, true); // stick at top of queue
-#endif
 			}
 			else srvmsgf(-1, "\fyeveryone died, fail!");
 			dueltime = gamemillis+5000;
+			clearitems();
 		}
 	}
 
 	void reset(bool empty)
 	{
 		duelround = 0;
-		dueltime = gamemillis+10000;
+		dueltime = gamemillis+15000;
 		duelqueue.setsize(0);
 		loopv(clients) if(clients[i]->name[0] && clients[i]->state.state != CS_SPECTATOR)
-			queue(clients[i], m_duel(gamemode, mutators));
+			queue(clients[i], m_duel(gamemode, mutators), true);
 		clearitems();
 	}
 } duelmutator;

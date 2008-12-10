@@ -334,8 +334,8 @@ namespace hud
 				loopscoregroup(o,
 				{
 					int status = 0xFFFFDD;
-					if(o->privilege) status = o->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;
-					else if(o->state==CS_DEAD) status = 0x606060;
+					if(o->state==CS_DEAD || o->state==CS_WAITING) status = 0x606060;
+					else if(o->privilege) status = o->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;
 					g.text(world::colorname(o, NULL, "", false), status);
 				});
 				g.poplist();
