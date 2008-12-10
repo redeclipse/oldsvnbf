@@ -506,13 +506,7 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flaginfo &f = st.flags[b.target];
-			float radius = 1, wander = enttype[FLAG].radius;
-			if(f.owner == d->team && !f.enemy)
-			{
-				radius = enttype[FLAG].radius*2.f;
-				wander = enttype[FLAG].radius*8.f;
-			}
-			if(ai::patrol(d, b, f.pos, 1, enttype[FLAG].radius))
+			if(ai::defend(d, b, f.pos, float(enttype[FLAG].radius/2)))
 			{
 				ai::defer(d, b, false);
 				return true;

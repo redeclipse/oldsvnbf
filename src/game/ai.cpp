@@ -263,8 +263,11 @@ namespace ai
 
 	void create(gameent *d)
 	{
-		if(!d->ai && ((d->ai = new aiinfo()) == NULL))
-			fatal("could not create ai");
+		if(!d->ai)
+		{
+			if((d->ai = new aiinfo()) == NULL)
+				fatal("could not create ai");
+		}
 	}
 
 	void destroy(gameent *d)
@@ -274,26 +277,14 @@ namespace ai
 
 	void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm)
 	{
-		bool rst = false;
 		gameent *o = world::getclient(on);
-		string m, r; r[0] = 0;
+		string m;
 		if(o) s_strcpy(m, world::colorname(o));
-		else s_sprintf(m)("client %d", on);
+		else s_sprintf(m)("\fs\fwunknown [\fs\fr%d\fS]\fS", on);
 
-		if(!d->name[0])
-		{
-			s_sprintf(r)("assigned to %s at skill %d", m, sk);
-			rst = true;
-		}
-		else if(d->ownernum != on)
-		{
-			s_sprintf(r)("reassigned to %s", m);
-			rst = true;
-		}
-		else if(d->skill != sk)
-		{
-			s_sprintf(r)("changed skill to %d", sk);
-		}
+		if(!d->name[0]) conoutf("\fg%s assigned to %s at skill %d", world::colorname(d), m, sk);
+		else if(d->ownernum != on) conoutf("\fg%s reassigned to %s", world::colorname(d), m);
+		else if(d->skill != sk) conoutf("\fg%s changed skill to %d", world::colorname(d), sk);
 
 		s_strncpy(d->name, name, MAXNAMELEN);
 		d->aitype = at;
@@ -301,34 +292,30 @@ namespace ai
 		d->skill = sk;
 		d->team = tm;
 
-		if(r[0]) conoutf("\fg%s %s", world::colorname(d), r);
-
-		if(rst) // only if connecting or changing owners
-		{
-			if(world::player1->clientnum == d->ownernum) create(d);
-			else if(d->ai) destroy(d);
-		}
+		if(world::player1->clientnum == d->ownernum) create(d);
+		else if(d->ai) destroy(d);
 	}
 
 	void update()
 	{
 		int numai = 0;
-		loopv(world::players) if(world::players[i] && world::players[i]->ai)
-			numai++;
+		loopv(world::players) if(world::players[i] && world::players[i]->aitype != AI_NONE)
+		{
+			gameent *d = world::players[i];
+			if(world::player1->clientnum == d->ownernum && !d->ai) create(d);
+			if(d->ai) numai++;
+		}
 		if(numai)
 		{
-			if(lastmillis-avoidmillis > 100)
-			{
-				avoid();
-				avoidmillis = lastmillis;
-			}
+			if(lastmillis-avoidmillis > 250) avoid();
 			int idx = 0;
 			if(currentai >= numai || currentai < 0) currentai = 0;
 			loopv(world::players) if(world::players[i] && world::players[i]->ai)
 			{
-				think(world::players[i], idx);
+				think(world::players[i], idx == currentai);
 				idx++;
 			}
+			currentai++;
 		}
 	}
 
@@ -413,6 +400,28 @@ namespace ai
 	{
 		vec feet = world::feetpos(d, 0.f);
 		return randomnode(d, b, feet, feet, radius, wander);
+	}
+
+	bool defend(gameent *d, aistate &b, vec &pos, float tolerance, bool retry)
+	{
+		vec feet = world::feetpos(d, 0.f);
+		if(feet.squaredist(pos) <= tolerance*tolerance) b.idle = true;
+		else if(!makeroute(d, b, pos, 1, tolerance))
+		{ // run away and back to keep ourselves busy
+			if(!b.override && randomnode(d, b, feet, pos, 1, tolerance))
+			{
+				b.override = true;
+				return true;
+			}
+			else if(!d->ai->route.empty()) return true;
+			else if(!retry)
+			{
+				b.override = false;
+				return defend(d, b, pos, tolerance, true);
+			}
+			return false;
+		}
+		return true;
 	}
 
 	bool patrol(gameent *d, aistate &b, vec &pos, float radius, float wander, bool retry)
@@ -701,7 +710,7 @@ namespace ai
 					if(e && e->state == CS_ALIVE)
 					{
 						vec epos(world::feetpos(e, 0.f));
-						return patrol(d, b, epos);
+						return defend(d, b, epos);
 					}
 					break;
 				}
@@ -878,13 +887,10 @@ namespace ai
 		return false;
 	}
 
-	void aim(gameent *d, vec &pos, float &yaw, float &pitch, int skew = 0)
+	void aim(gameent *d, float &yaw, float &pitch, float targyaw, float targpitch, int skew = 0)
 	{
-		vec dp = world::headpos(d);
-		float targyaw = -(float)atan2(pos.x-dp.x, pos.y-dp.y)/PI*180+180;
 		if(yaw < targyaw-180.0f) yaw += 360.0f;
 		if(yaw > targyaw+180.0f) yaw -= 360.0f;
-		float dist = dp.dist(pos), targpitch = asin((pos.z-dp.z)/dist)/RAD;
 		if(skew)
 		{
 			float amt = float(lastmillis-d->lastupdate)/float((111-d->skill)*(skew+rnd(skew))),
@@ -918,6 +924,13 @@ namespace ai
 			yaw = targyaw;
 			pitch = targpitch;
 		}
+	}
+
+	void getyawpitch(vec &from, vec &pos, float &yaw, float &pitch)
+	{
+		float dist = from.dist(pos);
+		yaw = -(float)atan2(pos.x-from.x, pos.y-from.y)/PI*180+180;
+		pitch = asin((pos.z-from.z)/dist)/RAD;
 	}
 
 	bool request(gameent *d, int busy)
@@ -1006,27 +1019,51 @@ namespace ai
 		return false;
 	}
 
-	bool process(gameent *d)
+	bool process(gameent *d, aistate &b)
 	{
 		bool aiming = false;
 		gameent *e = world::getclient(d->ai->enemy);
+		vec dp = world::headpos(d);
 		if(e && e->state == CS_ALIVE)
 		{
-			vec targ, dp = world::headpos(d), ep = world::headpos(e);
+			vec targ, ep = world::headpos(e);
 			bool cansee = AICANSEE(dp, ep, d);
 			if(cansee || (d->ai->lastseen >= 0 && lastmillis-d->ai->lastseen > d->skill*25))
 			{
 				if(cansee) d->ai->lastseen = lastmillis;
-				aim(d, ep, d->yaw, d->pitch, 5);
+				getyawpitch(dp, ep, d->ai->targyaw, d->ai->targpitch);
+				world::fixrange(d->ai->targyaw, d->ai->targpitch);
+				aim(d, d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, 5);
 				aiming = true;
 			}
 		}
 
-		if(hunt(d))
+		if(b.idle)
 		{
-			if(!aiming) aim(d, d->ai->spot, d->yaw, d->pitch, 10);
-			aim(d, d->ai->spot, d->aimyaw, d->aimpitch);
-
+			if(!b.wasidle)
+			{
+				d->ai->targyaw += 180.f;
+				d->ai->targpitch = 0.f;
+			}
+			d->stopmoving();
+			b.stuck = 0;
+		}
+		else if(hunt(d))
+		{
+			getyawpitch(dp, d->ai->spot, d->ai->targyaw, d->ai->targpitch);
+			b.stuck = 0;
+		}
+		else if(lastmillis-b.stuck > 5000)
+		{
+			d->ai->targyaw += float(90+rnd(180));
+			d->ai->targpitch = 0.f;
+			b.stuck = lastmillis;
+		}
+		world::fixrange(d->ai->targyaw, d->ai->targpitch);
+		aim(d, d->aimyaw, d->aimpitch, d->ai->targyaw, d->ai->targpitch);
+		if(!aiming) aim(d, d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, 10);
+		if(!b.idle)
+		{
 			const struct aimdir { int move, strafe, offset; } aimdirs[8] =
 			{
 				{  1,  0,   0 },
@@ -1043,16 +1080,12 @@ namespace ai
 			d->strafe = ad.strafe;
 			d->aimyaw -= ad.offset;
 		}
-		else
-		{
-			d->stopmoving();
-			d->move = 1; // walk forward
-		}
+
 		world::fixrange(d->aimyaw, d->aimpitch);
 		return aiming;
 	}
 
-	void check(gameent *d)
+	void check(gameent *d, aistate &b)
 	{
 		vec pos = world::headpos(d);
 		findorientation(pos, d->yaw, d->pitch, d->ai->target);
@@ -1060,13 +1093,9 @@ namespace ai
 		if(world::allowmove(d) && d->state == CS_ALIVE)
 		{
 			bool r = false, p = false;
-			int busy = process(d) ? 1 : 0;
+			int busy = process(d, b) ? 1 : 0;
 			if(!decision(d, &r, &p, false) || !r) busy = 2;
-			if(!request(d, busy) && !busy)
-			{
-				aistate &b = d->ai->getstate();
-				defer(d, b, false);
-			}
+			if(!request(d, busy) && !busy) defer(d, b, false);
 			entities::checkitems(d);
 			weapons::shoot(d, d->ai->target, guntype[d->gunselect].power); // always use full power
 		}
@@ -1111,9 +1140,10 @@ namespace ai
 				}
 			}
 		}
+		avoidmillis = lastmillis;
 	}
 
-	void think(gameent *d, int idx)
+	void think(gameent *d, bool run)
 	{
 		if(d->ai->state.empty()) d->ai->reset();
 
@@ -1125,7 +1155,8 @@ namespace ai
 		if(!world::intermission)
 		{
 			aistate &b = d->ai->getstate();
-			if(idx == currentai)
+			b.wasidle = b.idle;
+			if(run)
 			{
 				bool override = d->state == CS_ALIVE && d->ai->route.empty(),
 					expired = lastmillis >= b.next;
@@ -1142,6 +1173,7 @@ namespace ai
 						b.cycle++;
 					}
 					if(override) b.override = false;
+					b.idle = false;
 					switch(b.type)
 					{
 						case AI_S_WAIT:			result = dowait(d, b);		break;
@@ -1164,9 +1196,8 @@ namespace ai
 						b.cycle = 0; // recycle the root of the command tree
 					}
 				}
-				currentai++;
 			}
-			check(d);
+			check(d, b);
 		}
 		else d->stopmoving();
 		d->lastupdate = lastmillis;
