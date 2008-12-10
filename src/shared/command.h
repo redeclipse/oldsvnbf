@@ -124,6 +124,8 @@ extern bool overrideidents, persistidents, worldidents, interactive;
 
 extern char *parseword(char *&p);
 extern void explodelist(const char *s, vector<char *> &elems);
+extern int indexlistlen(const char *s);
+extern char *indexlist(const char *s, int pos);
 
 extern void clearoverrides();
 extern void writecfg();

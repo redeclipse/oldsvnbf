@@ -7,13 +7,19 @@ VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
 #endif
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
+SVARG(lobbymaps, "overseer");
+SVARG(missionmaps, "mpspbf1");
+SVARG(mainmaps, "warground warehouse tower refuge citadel eight rivals exoticbase storage siege");
+SVARG(ctfmaps, "warground warehouse rivals refuge citadel eight storage siege");
+SVARG(stfmaps, "warground warehouse tower refuge citadel rivals exoticbase storage siege");
+
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 VARG(itemspawntime, 1, 30, 3600); // secs when items respawn
 VARG(kamakaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenades, 3 = always
 
 VARG(timelimit, 0, 15, 60);
-VARG(votewait, 0, 10, 120); // secs before vote menu comes up
+VARG(intermlimit, 0, 10, 120); // secs before vote menu comes up
 VARG(votelimit, 0, 20, 120); // secs before vote passes by default
 
 VARG(teamdamage, 0, 1, 1); // damage team mates

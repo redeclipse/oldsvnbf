@@ -815,12 +815,17 @@ char *indexlist(const char *s, int pos)
     return newstring(e, s-e);
 }
 
-void listlen(char *s)
+int indexlistlen(const char *s)
 {
 	int n = 0;
 	whitespaceskip;
 	for(; *s; n++) elementskip, whitespaceskip;
-	intret(n);
+	return n;
+}
+
+void listlen(char *s)
+{
+	intret(indexlistlen(s));
 }
 
 void at(char *s, int *pos)

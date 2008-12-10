@@ -483,7 +483,39 @@ namespace server
 
 	const char *choosemap(const char *suggest)
 	{
-		return suggest && *suggest ? suggest : sv_defaultmap;
+		static string mapchosen;
+		const char *maplist = sv_mainmaps;
+		if(suggest && *suggest) s_strcpy(mapchosen, suggest);
+		else *mapchosen = 0;
+		if(m_lobby(gamemode)) maplist = sv_lobbymaps;
+		else if(m_mission(gamemode)) maplist = sv_missionmaps;
+		else if(m_stf(gamemode)) maplist = sv_stfmaps;
+		else if(m_ctf(gamemode)) maplist = sv_ctfmaps;
+		if(maplist && *maplist)
+		{
+			int n = indexlistlen(maplist), c = -1;
+			loopi(n)
+			{
+				char *maptxt = indexlist(maplist, i);
+				if(maptxt)
+				{
+					string maploc;
+					if(strpbrk(maptxt, "/\\")) s_strcpy(maploc, maptxt);
+					else s_sprintf(maploc)("maps/%s", maptxt);
+					if(*mapchosen && (!strcmp(mapchosen, maptxt) || !strcmp(mapchosen, maploc)))
+						c = i;
+					DELETEP(maptxt);
+				}
+				if(c >= 0) break;
+			}
+			char *mapidx = indexlist(maplist, c >= 0 && c < n-1 ? c+1 : 0);
+			if(mapidx)
+			{
+				s_strcpy(mapchosen, mapidx);
+				DELETEP(mapidx);
+			}
+		}
+		return *mapchosen ? mapchosen : sv_defaultmap;
 	}
 
 	bool canload(char *type)
@@ -522,7 +554,7 @@ namespace server
 			if(!minremain && !interm)
 			{
 				maprequest = false;
-				interm = gamemillis+(sv_votewait*1000);
+				interm = gamemillis+(sv_intermlimit*1000);
 			}
 		}
 	}
@@ -863,18 +895,20 @@ namespace server
 		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
 
 		int reqvotes = max(maxvotes / 2, force ? 1 : 2);
-		if(force || (best && best->count >= reqvotes))
+		bool gotvotes = best && best->count >= reqvotes;
+		if(force || gotvotes)
 		{
 			if(demorecord) enddemorecord();
-			srvoutf("%s", force ? "vote passed by default" : "vote passed by majority");
-			if(best && best->count >= reqvotes)
+			if(gotvotes)
 			{
+				srvoutf("vote passed by majority: %s on map %s", gamename(best->mode, best->muts), best->map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, best->map, 0, best->mode, best->muts);
 				changemap(best->map, best->mode, best->muts);
 			}
 			else
 			{
 				const char *map = choosemap(smapname);
+				srvoutf("vote defaulted, server chooses: %s on map %s", gamename(gamemode, mutators), map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, gamemode, mutators);
 				changemap(map, gamemode, mutators);
 			}
@@ -1661,7 +1695,7 @@ namespace server
 
 		if(interm && gamemillis >= interm) // wait then call for next map
 		{
-			if(!maprequest)
+			if(sv_votelimit && !maprequest)
 			{
 				if(demorecord) enddemorecord();
 				sendf(-1, 1, "ri", SV_NEWGAME);
