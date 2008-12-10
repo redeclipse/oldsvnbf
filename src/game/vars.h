@@ -9,9 +9,9 @@ VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
 SVARG(lobbymaps, "overseer");
 SVARG(missionmaps, "mpspbf1"); // remember, for these the rotation starts at defaultmap
-SVARG(mainmaps, "eight warground warehouse tower rivals refuge citadel");
-SVARG(ctfmaps, "eight warground warehouse tower rivals refuge citadel");
-SVARG(stfmaps, "eight warground warehouse tower rivals refuge citadel storage siege");
+SVARG(mainmaps, "overseer eight warground warehouse tower rivals refuge citadel storage siege");
+SVARG(ctfmaps, "overseer eight warground warehouse tower rivals refuge citadel storage siege");
+SVARG(stfmaps, "overseer eight warground warehouse tower rivals refuge citadel storage siege");
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
