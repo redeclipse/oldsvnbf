@@ -5,7 +5,6 @@
 namespace entities
 {
 	vector<extentity *> ents;
-	vector<int> entlinks[MAXENTTYPES];
 
 	VARP(showentnames, 0, 1, 2);
 	VARP(showentinfo, 0, 1, 5);
@@ -15,70 +14,10 @@ namespace entities
 	VARP(showentlinks, 0, 1, 3);
 	VARP(showlighting, 0, 1, 1);
 
-	VAR(dropentities, 0, 0, 1); // drop entities during play
-	bool autodropentities = false;
+	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
+	bool autodropwaypoints = false;
 
 	ICOMMAND(announce, "i", (int *idx), announce(*idx));
-
-	void start()
-	{
-        loopi(MAXENTTYPES)
-        {
-        	entlinks[i].setsize(0);
-			switch(i)
-			{
-				case LIGHT:
-					entlinks[i].add(SPOTLIGHT);
-					break;
-				case MAPMODEL:
-					entlinks[i].add(TRIGGER);
-					break;
-				case PARTICLES:
-					entlinks[i].add(TELEPORT);
-					entlinks[i].add(TRIGGER);
-					entlinks[i].add(PUSHER);
-					break;
-				case MAPSOUND:
-					entlinks[i].add(TELEPORT);
-					entlinks[i].add(TRIGGER);
-					entlinks[i].add(PUSHER);
-					break;
-				case TELEPORT:
-					entlinks[i].add(MAPSOUND);
-					entlinks[i].add(PARTICLES);
-					entlinks[i].add(TELEPORT);
-					break;
-				case RESERVED:
-					break;
-				case TRIGGER:
-					entlinks[i].add(MAPMODEL);
-					entlinks[i].add(MAPSOUND);
-					entlinks[i].add(PARTICLES);
-					break;
-				case PUSHER:
-					entlinks[i].add(MAPSOUND);
-					entlinks[i].add(PARTICLES);
-					break;
-				case FLAG:
-					entlinks[i].add(FLAG);
-					break;
-				case CHECKPOINT:
-					entlinks[i].add(CHECKPOINT);
-					break;
-				case CAMERA:
-					entlinks[i].add(CAMERA);
-					entlinks[i].add(CONNECTION);
-					break;
-				case WAYPOINT:
-					entlinks[i].add(WAYPOINT);
-					break;
-				case CONNECTION:
-					entlinks[i].add(CONNECTION);
-					break;
-				default: break;
-			}
-        }
-	}
 
 	vector<extentity *> &getents() { return ents; }
 
@@ -719,7 +658,7 @@ namespace entities
 		if(ents.inrange(index) && ents.inrange(node))
 		{
 			if(index != node && maylink(ents[index]->type) && maylink(ents[node]->type) &&
-					entlinks[ents[index]->type].find(ents[node]->type) >= 0)
+					(enttype[ents[index]->type].canlink&itox(ents[node]->type)))
 						return true;
 			if(msg)
 				conoutf("\frentity %s (%d) and %s (%d) are not linkable", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
@@ -891,12 +830,12 @@ namespace entities
 
 	bool entitydrop()
 	{
-		return (m_play(world::gamemode) && autodropentities) || dropentities;
+		return (m_play(world::gamemode) && autodropwaypoints) || dropwaypoints;
 	}
 
 	int entitynode(const vec &v, bool dist, int type)
 	{
-		int w = -1, t = entlinks[WAYPOINT].find(type) >= 0 ? type : WAYPOINT;
+		int w = -1, t = type >= 0 ? type : WAYPOINT;
         float mindist = dist ? enttype[t].radius * enttype[t].radius : 1e16f; // avoid square roots
         loopv(ents) if(ents[i]->type == t)
         {
@@ -1163,7 +1102,7 @@ namespace entities
 						e.attr1 = teleyaw[i]; // grab what we stored earlier
 						e.attr2 = e.attr4 = 0; // not set in octa
 						e.attr3 = 100; // give a push
-						e.attr5 = 0x11A; // give it a pretty blueish portal like sauer's
+						e.attr5 = 0x11A; // give it a pretty blueish teleport like sauer's
 						e.o.z += world::player1->height/2; // teleport in BF is at middle
 						e.mark = false;
 						break;
@@ -1234,12 +1173,12 @@ namespace entities
 		loopvj(ents) if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
 			setspawn(j, false);
 		loopvj(ents) fixentity(*ents[j]);
-		autodropentities = m_play(world::gamemode) && !entities;
+		autodropwaypoints = m_play(world::gamemode) && !entities;
 	}
 
 	void mapstart()
 	{
-		if(autodropentities)
+		if(autodropwaypoints)
 		{
 			loopv(ents)
 			{
@@ -1378,7 +1317,7 @@ namespace entities
 		}
 
 		if(enttype[e.type].links)
-			if(!level || showentlinks >= level || (e.type == WAYPOINT && dropentities))
+			if(!level || showentlinks >= level || (e.type == WAYPOINT && dropwaypoints))
 				renderlinked(e, idx);
 	}
 
@@ -1419,7 +1358,7 @@ namespace entities
 		}
     }
 
-	TVAR(portaltex, "textures/portal", 0);
+	TVAR(teleporttex, "textures/teleport", 0);
 
  	void update()
 	{
@@ -1481,19 +1420,17 @@ namespace entities
 	{
 		if(rendermainview) // important, don't render lines and stuff otherwise!
 		{
-			int level = (m_edit(world::gamemode) ? 2 : ((showentdir==3 || showentradius==3 || showentlinks==3 || (dropentities && !m_play(world::gamemode))) ? 3 : 0));
+			int level = (m_edit(world::gamemode) ? 2 : ((showentdir==3 || showentradius==3 || showentlinks==3 || (dropwaypoints && !m_play(world::gamemode))) ? 3 : 0));
 			if(level)
             {
+            	bool editing = world::player1->state == CS_EDITING;
                 renderprimitive(true);
-                loopv(ents)
-			    {
-				    renderfocus(i, renderentshow(e, i, world::player1->state == CS_EDITING && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
-			    }
+                loopv(ents) renderfocus(i, renderentshow(e, i, editing && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
                 renderprimitive(false);
             }
 		}
 
-		Texture *t = textureload(portaltex, 0, true);
+		Texture *t = textureload(teleporttex, 0, true);
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
