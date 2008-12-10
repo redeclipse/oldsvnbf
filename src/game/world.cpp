@@ -80,6 +80,7 @@ namespace world
 
 	VARP(shownamesabovehead, 0, 1, 2);
 	VARP(showdamageabovehead, 0, 0, 1);
+	VARP(showobituaries, 0, 2, 4); // 0 = off, 1 = only me, 2 = me & announcements, 3 = all but bots, 4 = all
 	VARP(playdamagetones, 0, 2, 2);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
@@ -657,11 +658,23 @@ namespace world
 				}
 			}
 		}
-		bool af = (d == player1 || actor == player1);
 		if(dth >= 0) playsound(dth, d->o, d);
-		s_sprintfd(a)("\fy%s %s", colorname(d), d->obit);
-		entities::announce(anc, a, af);
-
+		if(showobituaries)
+		{
+			bool isme = (d == player1 || actor == player1), show = false;
+			switch(showobituaries)
+			{
+				case 1: if(isme) show = true; break;
+				case 2: if(isme || anc >= 0) show = true; break;
+				case 3: if(d->aitype != AI_NONE || anc >= 0) show = true; break;
+				case 4: default: show = true; break;
+			}
+			if(show)
+			{
+				s_sprintfd(a)("\fy%s %s", colorname(d), d->obit);
+				entities::announce(anc, a, isme);
+			}
+		}
 		vec pos = headpos(d);
 		int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
 		loopi(rnd(gibs)+1)
