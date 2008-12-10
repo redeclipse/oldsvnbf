@@ -6,7 +6,7 @@ struct stfstate
 	static const int SCORESECS = 10;
 	static const int RESPAWNSECS = 3;
 
-	struct flaginfo
+	struct flag
 	{
 		vec o;
 		int owner, enemy;
@@ -19,7 +19,7 @@ struct stfstate
 #endif
 		int owners, enemies, converted, securetime;
 
-		flaginfo() { reset(); }
+		flag() { reset(); }
 
 		void noenemy()
 		{
@@ -94,7 +94,7 @@ struct stfstate
         }
 	};
 
-	vector<flaginfo> flags;
+	vector<flag> flags;
 
 	struct score
 	{
@@ -129,14 +129,14 @@ struct stfstate
 
 	void addflag(const vec &o)
 	{
-		flaginfo &b = flags.add();
+		flag &b = flags.add();
 		b.o = o;
 	}
 
 	void initflag(int i, int owner, int enemy, int converted)
 	{
 		if(!flags.inrange(i)) return;
-		flaginfo &b = flags[i];
+		flag &b = flags[i];
 		b.owner = owner;
 		b.enemy = enemy;
 		b.converted = converted;
@@ -146,25 +146,25 @@ struct stfstate
 	{
 		loopv(flags)
 		{
-			flaginfo &b = flags[i];
+			flag &b = flags[i];
 			if(b.owner && b.owner == team) return true;
 		}
 		return false;
 	}
 
-	float disttoenemy(flaginfo &b)
+	float disttoenemy(flag &b)
 	{
 		float dist = 1e10f;
 		loopv(flags)
 		{
-			flaginfo &e = flags[i];
+			flag &e = flags[i];
 			if(e.owner && b.owner != e.owner)
 				dist = min(dist, b.o.dist(e.o));
 		}
 		return dist;
 	}
 
-	bool insideflag(const flaginfo &b, const vec &o)
+	bool insideflag(const flag &b, const vec &o)
 	{
 		float dx = (b.o.x-o.x), dy = (b.o.y-o.y), dz = (b.o.z-o.z);
 		return dx*dx + dy*dy <= enttype[FLAG].radius*enttype[FLAG].radius && fabs(dz) <= enttype[FLAG].radius;

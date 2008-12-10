@@ -15,14 +15,14 @@ struct stfservmode : stfstate, servmode
 
 	void stealflag(int n, int team)
 	{
-		flaginfo &b = flags[n];
+		flag &b = flags[n];
 		loopv(clients)
 		{
 			server::clientinfo *ci = clients[i];
 			if(!ci->spectator && ci->state.state==CS_ALIVE && ci->team && ci->team == team && insideflag(b, ci->state.o))
 				b.enter(ci->team);
 		}
-		sendflaginfo(n);
+		sendflag(n);
 	}
 
 	void moveflags(int team, const vec &oldpos, const vec &newpos)
@@ -30,11 +30,11 @@ struct stfservmode : stfstate, servmode
 		if(!team || minremain<0) return;
 		loopv(flags)
 		{
-			flaginfo &b = flags[i];
+			flag &b = flags[i];
 			bool leave = insideflag(b, oldpos),
 				 enter = insideflag(b, newpos);
-			if(leave && !enter && b.leave(team)) sendflaginfo(i);
-			else if(enter && !leave && b.enter(team)) sendflaginfo(i);
+			if(leave && !enter && b.leave(team)) sendflag(i);
+			else if(enter && !leave && b.enter(team)) sendflag(i);
 			else if(leave && enter && b.steal(team)) stealflag(i, team);
 		}
 	}
@@ -65,25 +65,25 @@ struct stfservmode : stfstate, servmode
 		if(t<1) return;
 		loopv(flags)
 		{
-			flaginfo &b = flags[i];
+			flag &b = flags[i];
 			if(b.enemy)
 			{
                 if((!b.owners || !b.enemies) && b.occupy(b.enemy, (m_insta(gamemode, mutators) ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*(b.enemies ? b.enemies : -(1+b.owners))*t)==1) addscore(b.owner, SECURESCORE);
-				sendflaginfo(i);
+				sendflag(i);
 			}
 			else if(b.owner)
 			{
 				b.securetime += t;
 				int score = b.securetime/SCORESECS - (b.securetime-t)/SCORESECS;
 				if(score) addscore(b.owner, score);
-				sendflaginfo(i);
+				sendflag(i);
 			}
 		}
 	}
 
-	void sendflaginfo(int i)
+	void sendflag(int i)
 	{
-		flaginfo &b = flags[i];
+		flag &b = flags[i];
 		sendf(-1, 1, "ri5", SV_FLAGINFO, i, b.enemy ? b.converted : 0, b.owner, b.enemy);
 	}
 
@@ -112,7 +112,7 @@ struct stfservmode : stfstate, servmode
 		putint(p, SV_FLAGS);
 		loopv(flags)
 		{
-			flaginfo &b = flags[i];
+			flag &b = flags[i];
 			putint(p, b.converted);
 			putint(p, b.owner);
 			putint(p, b.enemy);
@@ -144,7 +144,7 @@ struct stfservmode : stfstate, servmode
 			int lastteam = TEAM_NEUTRAL;
 			loopv(flags)
 			{
-				flaginfo &b = flags[i];
+				flag &b = flags[i];
 				if(b.owner)
 				{
 					if(!lastteam) lastteam = b.owner;
@@ -233,7 +233,7 @@ namespace stf
 {
 	stfstate st;
 
-    bool insideflag(const stfstate::flaginfo &b, gameent *d)
+    bool insideflag(const stfstate::flag &b, gameent *d)
     {
         return st.insideflag(b, world::feetpos(d));
     }
@@ -247,7 +247,7 @@ namespace stf
 	{
 		loopv(st.flags)
 		{
-			stfstate::flaginfo &b = st.flags[i];
+			stfstate::flag &b = st.flags[i];
 			const char *flagname = teamtype[b.owner].flag;
             rendermodel(&b.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, 0, 0, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
 			int attack = b.enemy ? b.enemy : b.owner;
@@ -267,7 +267,7 @@ namespace stf
 	{
 		loopv(st.flags)
 		{
-			stfstate::flaginfo &f = st.flags[i];
+			stfstate::flag &f = st.flags[i];
 			if(skipenemy && f.enemy) continue;
 			if(type == 0 && (!f.owner || f.owner != world::player1->team)) continue;
 			if(type == 1 && f.owner) continue;
@@ -310,7 +310,7 @@ namespace stf
 		int sy = 0;
 		loopv(st.flags)
 		{
-			stfstate::flaginfo &f = st.flags[i];
+			stfstate::flag &f = st.flags[i];
 			bool hasflag = world::player1->state == CS_ALIVE &&
 				insideflag(f, world::player1) && (f.owner == world::player1->team || f.enemy == world::player1->team);
 			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(500-(lastmillis-f.lasthad), 0); }
@@ -336,7 +336,7 @@ namespace stf
 		{
 			extentity *e = entities::ents[i];
 			if(e->type!=FLAG) continue;
-			stfstate::flaginfo &b = st.flags.add();
+			stfstate::flag &b = st.flags.add();
 			b.o = e->o;
             b.pos = b.o;
 			s_sprintfd(alias)("flag_%d", e->attr1);
@@ -355,7 +355,7 @@ namespace stf
 		putint(p, SV_FLAGS);
 		loopv(st.flags)
 		{
-			stfstate::flaginfo &b = st.flags[i];
+			stfstate::flag &b = st.flags[i];
 			putint(p, int(b.o.x*DMF));
 			putint(p, int(b.o.y*DMF));
 			putint(p, int(b.o.z*DMF));
@@ -366,7 +366,7 @@ namespace stf
 	void updateflag(int i, int owner, int enemy, int converted)
 	{
 		if(!st.flags.inrange(i)) return;
-		stfstate::flaginfo &b = st.flags[i];
+		stfstate::flag &b = st.flags[i];
 		if(owner)
 		{
 			if(b.owner != owner)
@@ -399,7 +399,7 @@ namespace stf
 		int attackers = INT_MAX, attacked = -1;
 		loopv(st.flags)
 		{
-			stfstate::flaginfo &b = st.flags[i];
+			stfstate::flag &b = st.flags[i];
 			if(!b.owner || b.owner != team) continue;
 			if(noattacked && b.enemy) continue;
 			float dist = st.disttoenemy(b);
@@ -423,7 +423,7 @@ namespace stf
 		int closest = closesttoenemy(team, true);
 		if(closest < 0) closest = closesttoenemy(team, false);
 		if(closest < 0) return -1;
-		stfstate::flaginfo &b = st.flags[closest];
+		stfstate::flag &b = st.flags[closest];
 
         float bestdist = 1e10f, altdist = 1e10f;
         int best = -1, alt = -1;
@@ -458,7 +458,7 @@ namespace stf
 		vec pos = world::headpos(d);
 		loopvj(st.flags)
 		{
-			stfstate::flaginfo &f = st.flags[j];
+			stfstate::flag &f = st.flags[j];
 
 			vector<int> targets; // build a list of others who are interested in this
 			ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
@@ -505,7 +505,7 @@ namespace stf
 	{
 		if(st.flags.inrange(b.target))
 		{
-			stfstate::flaginfo &f = st.flags[b.target];
+			stfstate::flag &f = st.flags[b.target];
 			if(ai::defend(d, b, f.pos, float(enttype[FLAG].radius/2)))
 			{
 				ai::defer(d, b, false);

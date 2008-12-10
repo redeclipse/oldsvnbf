@@ -72,13 +72,12 @@
         }
         else if(m_ctf(gamemode))
         {
-            loopv(ctfmode.flags)
+            loopv(ctfmode.scores) scores.add(teamscore(ctfmode.scores[i].team, ctfmode.scores[i].total));
+            loopv(clients) if(clients[i]->team) //check all teams available, since ctfmode.scores contains only teams with scores
             {
-                if(!ctfmode.flags[i].team) continue;
                 teamscore *ts = NULL;
-                loopvj(scores) if(scores[j].team == ctfmode.flags[i].team) { ts = &scores[j]; break; }
-                if(!ts) scores.add(teamscore(ctfmode.flags[i].team, ctfmode.flags[i].score));
-                else ts->score += ctfmode.flags[i].score;
+                loopvj(scores) if(scores[j].team == clients[i]->team) { ts = &scores[j]; break; }
+                if(!ts) scores.add(teamscore(clients[i]->team, 0));
             }
         }
         else

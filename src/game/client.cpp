@@ -1483,6 +1483,7 @@ namespace client
 				case SV_TEAMSCORE:
 				{
 					int team = getint(p), total = getint(p);
+					if(m_ctf(world::gamemode)) ctf::setscore(team, total);
 					if(m_stf(world::gamemode)) stf::setscore(team, total);
 					break;
 				}
