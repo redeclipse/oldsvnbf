@@ -303,7 +303,11 @@ namespace ai
 		{
 			gameent *d = world::players[i];
 			if(world::player1->clientnum == d->ownernum && !d->ai) create(d);
-			if(d->ai) numai++;
+			else if(d->ai)
+			{
+				if(world::player1->clientnum != d->ownernum) destroy(d);
+				else numai++;
+			}
 		}
 		if(numai)
 		{
