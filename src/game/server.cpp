@@ -1069,11 +1069,14 @@ namespace server
 		notgotinfo = true;
 		scores.setsize(0);
 
-		if(m_team(gamemode, mutators)) loopv(clients)
+		if(m_team(gamemode, mutators)) 
 		{
-			clientinfo *ci = clients[i];
-			ci->team = TEAM_NEUTRAL; // to be reset below
-			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
+			loopv(clients)
+			{
+				clientinfo *ci = clients[i];
+				ci->team = TEAM_NEUTRAL; // to be reset below
+				ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
+			}
 		}
 
 		if(m_demo(gamemode))
