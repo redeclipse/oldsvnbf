@@ -321,8 +321,6 @@ namespace UI
 	extern void setup();
 	extern void update();
 	extern void render();
-	extern char* geteditortext(const char* name);
-	extern void setteditortext(const char *name, char *text);
 }
 
 enum { G3D_DOWN = 0x0001, G3D_UP = 0x0002, G3D_PRESSED = 0x0004, G3D_ROLLOVER = 0x0008, G3D_DRAGGED = 0x0010, G3D_ALTERNATE = 0x0020 };
