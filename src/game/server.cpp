@@ -117,7 +117,7 @@ namespace server
 		int state;
         projectilestate dropped, gunshots[GUN_MAX];
 		int frags, deaths, teamkills, shotdamage, damage;
-		int lasttimeplayed, timeplayed;
+		int lasttimeplayed, timeplayed, aireinit;
 		float effectiveness;
 
 		servstate() : state(CS_DEAD) {}
@@ -134,7 +134,7 @@ namespace server
 			dropped.reset();
             loopi(GUN_MAX) gunshots[i].reset();
 
-			timeplayed = 0;
+			aireinit = timeplayed = 0;
 			effectiveness = 0;
             frags = deaths = teamkills = shotdamage = damage = 0;
 
@@ -965,7 +965,9 @@ namespace server
 
 	int chooseworstteam(clientinfo *who, bool exclude = true)
 	{
-		teamscore teamscores[MAXTEAMS] = { teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_DELTA), teamscore(TEAM_GAMMA) };
+		teamscore teamscores[MAXTEAMS] = {
+			teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_DELTA), teamscore(TEAM_GAMMA)
+		};
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
@@ -985,12 +987,13 @@ namespace server
 		loopi(numteams(gamemode, mutators))
 		{
 			teamscore &ts = teamscores[i];
-			//who->state.aitype != AI_NONE
 			if(m_stf(gamemode) || m_ctf(gamemode))
 			{
-				if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.rank < worst->rank)) worst = &ts;
+				if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.rank < worst->rank))
+					worst = &ts;
 			}
-			//else if(ts.rank < worst->rank || (ts.rank == worst->rank && ts.clients < worst->clients)) worst = &ts;
+			else if(ts.rank < worst->rank || (ts.rank == worst->rank && ts.clients < worst->clients))
+				worst = &ts;
 		}
 		return worst->team;
 	}
@@ -1066,14 +1069,11 @@ namespace server
 		notgotinfo = true;
 		scores.setsize(0);
 
-		if(m_team(gamemode, mutators))
+		if(m_team(gamemode, mutators)) loopv(clients)
 		{
-			loopv(clients)
-			{
-				clientinfo *ci = clients[i];
-				ci->team = TEAM_NEUTRAL; // to be reset below
-	            ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-			}
+			clientinfo *ci = clients[i];
+			ci->team = TEAM_NEUTRAL; // to be reset below
+			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		}
 
 		if(m_demo(gamemode))
