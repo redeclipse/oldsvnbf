@@ -971,6 +971,4 @@ namespace UI
 	void setup() { return; }
 	void update() { return; }
 	void render() { g3d_render(); }
-	char *geteditortext(const char* name) { return NULL; }
-	void setteditortext(const char *name, char *text) { return; }
 };
