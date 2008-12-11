@@ -51,6 +51,7 @@ namespace ai
 					if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
 					ci->state.skill = clamp(s, 1, 100);
 					ci->state.state = CS_DEAD;
+					ci->state.aireinit = 0;
 					clients.add(ci);
 					ci->state.lasttimeplayed = lastmillis;
 					s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
@@ -93,7 +94,7 @@ namespace ai
 
 	bool delai(int type)
 	{
-		loopvrev(clients) if(clients[i]->state.aitype == type && clients[i]->state.ownernum >= 0)
+		loopvrev(clients) if(clients[i]->state.aitype == type)
 		{
 			deleteai(clients[i]);
 			return true;
@@ -101,38 +102,43 @@ namespace ai
 		return false;
 	}
 
-	void reinitai(clientinfo *ci, int cn = -1, bool init = false)
+	void reinitai(clientinfo *ci)
 	{
-		if(cn >= 0) ci->state.ownernum = cn;
-		if(ci->state.ownernum >= 0)
+		if(ci->state.aireinit < 0 || ci->state.ownernum < 0) deleteai(ci);
+		else if(ci->state.aireinit >= 1)
 		{
-			if(init)
+			if(ci->state.aireinit >= 2)
 			{
 				if(smode) smode->leavegame(ci);
 				mutate(smuts, mut->leavegame(ci));
+				if(m_team(gamemode, mutators)) ci->team = chooseworstteam(ci);
+				else ci->team = TEAM_NEUTRAL;
 			}
-
-			if(m_team(gamemode, mutators)) ci->team = chooseworstteam(ci);
-			else ci->team = TEAM_NEUTRAL;
 			sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
-
-			if(init)
+			if(ci->state.aireinit >= 2)
 			{
 				if(smode) smode->entergame(ci);
 				mutate(smuts, mut->entergame(ci));
 			}
 		}
-		else deleteai(ci);
 	}
+
+	void shiftai(clientinfo *ci, int reinit = 1, int cn = -1)
+	{
+		if(cn < 0) ci->state.ownernum = ci->state.aireinit = -1;
+		else
+		{
+			ci->state.ownernum = cn;
+			ci->state.aireinit = reinit;
+		}
+	}
+
 
 	void removeai(clientinfo *ci)
 	{
 		bool remove = !numclients(ci->clientnum, false, true);
-		loopvrev(clients) if(clients[i]->state.ownernum == ci->clientnum)
-		{
-			if(remove) deleteai(clients[i]);
-			else reinitai(clients[i], findaiclient(ci->clientnum), true); // try to reassign the ai to someone else
-		}
+		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
+			shiftai(clients[i], 2, remove ? -1 : findaiclient(ci->clientnum));
 	}
 
 	bool reassignai(int exclude)
@@ -159,9 +165,9 @@ namespace ai
 		if(siblings.inrange(hi) && siblings.inrange(lo) && (siblings[hi]-siblings[lo]) > 1)
 		{
 			clientinfo *ci = clients[hi];
-			loopvrev(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
+			loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
 			{
-				reinitai(clients[i], clients[lo]->clientnum, true);
+				shiftai(clients[i], 1, clients[lo]->clientnum);
 				return true;
 			}
 		}
@@ -172,17 +178,19 @@ namespace ai
 	{
 		int m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
 			n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
-		loopv(clients) if(clients[i]->state.aitype == AI_BOT)
+		loopv(clients) if(clients[i]->state.aitype != AI_NONE)
 		{
-			clientinfo *cp = clients[i];
+			clientinfo *ci = clients[i];
 			bool reinit = false;
-			if(cp->state.skill > m || cp->state.skill < n)
+			if(ci->state.skill > m || ci->state.skill < n)
 			{
-				cp->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
+				ci->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
 				reinit = true;
 			}
-			if(reinit) reinitai(cp);
+			if(reinit) ci->state.aireinit = 1;
 		}
+		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE)
+			reinitai(clients[i]);
 	}
 
 	void clearbots()
