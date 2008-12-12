@@ -369,7 +369,7 @@ namespace server
 		{
 			case PRIV_ADMIN: return "admin";
 			case PRIV_MASTER: return "master";
-			default: return "unknown";
+			default: return "alone";
 		}
 	}
 
@@ -927,7 +927,7 @@ namespace server
 		ci->modevote = reqmode; ci->mutsvote = reqmuts;
 		modecheck(&ci->modevote, &ci->mutsvote);
 
-		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, true, true)))
+		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, true)))
 		{
 			if(demorecord) enddemorecord();
 			srvoutf("%s [%s] forced %s on map %s", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
@@ -960,7 +960,7 @@ namespace server
 
 	int chooseworstteam(clientinfo *who, bool exclude = true)
 	{
-		teamscore teamscores[MAXTEAMS] = {
+		teamscore teamscores[TEAM_NUM] = {
 			teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_DELTA), teamscore(TEAM_GAMMA)
 		};
 		loopv(clients)
@@ -1111,7 +1111,6 @@ namespace server
 		}
 
 		if(m_timed(gamemode) && numclients(-1, false, true)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-
 		if(m_demo(gamemode)) setupdemoplayback();
 		else if(demonextmatch)
 		{
@@ -1229,7 +1228,7 @@ namespace server
 			sendstring(smapname, p);
 		}
         if(!ci) putint(p, 0);
-		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, true, true))
+		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, false, true))
 		{
 			clientinfo *best = choosebestclient(ci);
 			if(best)
@@ -1778,7 +1777,7 @@ namespace server
 		if(ci->name[0]) relayf(1, "\fo%s has left the game", colorname(ci));
 		ai::removeai(ci);
 		clients.removeobj(ci);
-		if(numclients(-1, false, true)) cleanup();
+		if(!numclients(-1, false, true)) cleanup();
 		else checkvotes();
 	}
 
@@ -2319,10 +2318,7 @@ namespace server
 					s_strncpy(ci->name, text, MAXNAMELEN+1);
 
 					int team = getint(p);
-					bool badteam = m_team(gamemode, mutators) ?
-						(team < TEAM_ALPHA || team > numteams(gamemode, mutators)) :
-							team != TEAM_NEUTRAL;
-					if(connected || badteam)
+					if(connected || !isteam(gamemode, mutators, team, TEAM_FIRST))
 					{
 						if(m_team(gamemode, mutators)) team = chooseworstteam(ci);
 						else team = TEAM_NEUTRAL;
@@ -2518,7 +2514,7 @@ namespace server
 					int who = getint(p), team = getint(p);
 					if(who<0 || who>=getnumclients() || !haspriv(ci, PRIV_MASTER, true)) break;
 					clientinfo *wi = (clientinfo *)getinfo(who);
-					if(!wi || !m_team(gamemode, mutators) || team < TEAM_ALPHA || team > numteams(gamemode, mutators)) break;
+					if(!wi || !m_team(gamemode, mutators) || !isteam(gamemode, mutators, team, TEAM_FIRST)) break;
 					if(wi->team != team)
 					{
 						if(smode) smode->changeteam(wi, wi->team, team);

@@ -1,9 +1,12 @@
+#define isctfhome(a,b)	((a.base&BASE_HOME) && (a.team == b || a.team == TEAM_NEUTRAL))
+#define isctfflag(a,b)	((a.base&BASE_FLAG) && (a.team == b || a.team == TEAM_NEUTRAL))
+
 struct ctfstate
 {
     struct flag
     {
         vec droploc, spawnloc;
-        int team, droptime, base; // 0 is normal flag, 1 is neutral base, 2 is pickup
+        int team, droptime, base;
 #ifdef GAMESERVER
         int owner;
 #else
@@ -18,7 +21,7 @@ struct ctfstate
         void reset()
         {
             droploc = spawnloc = vec(0, 0, 0);
-            base = -1;
+            base = BASE_NONE;
 #ifdef GAMESERVER
             owner = -1;
 #else
@@ -54,7 +57,7 @@ struct ctfstate
 		scores.setsize(0);
     }
 
-    int addflag(const vec &o, int team, int base = -1, int i = -1)
+    int addflag(const vec &o, int team, int base = BASE_NONE, int i = -1)
     {
     	int x = i < 0 ? flags.length() : i;
     	while(!flags.inrange(x)) flags.add();
@@ -147,5 +150,3 @@ namespace ctf
 	extern bool aipursue(gameent *d, aistate &b);
 }
 #endif
-
-#define isctf(a,b)	((!a.base && a.team == b) || a.base == 1)
