@@ -193,7 +193,7 @@ namespace ai
 			reinitai(clients[i]);
 	}
 
-	void clearbots()
+	void clearai()
 	{
 		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE)
 			deleteai(clients[i]);
@@ -201,8 +201,7 @@ namespace ai
 
 	void checkai()
 	{
-		if(m_demo(gamemode) || m_lobby(gamemode)) clearbots();
-		else if(numclients(-1, false, true))
+		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
 			if(m_play(gamemode) && sv_botbalance)
 			{
@@ -213,6 +212,7 @@ namespace ai
 			while(reassignai()) ;
 			checksetup();
 		}
+		else clearai();
 	}
 
 	void reqadd(clientinfo *ci, int skill)

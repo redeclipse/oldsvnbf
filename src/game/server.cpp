@@ -250,7 +250,7 @@ namespace server
 		extern void removeai(clientinfo *ci);
 		extern bool reassignai(int exclude = -1);
 		extern void checkskills();
-		extern void clearbots();
+		extern void clearai();
 		extern void checkai();
 		extern void reqadd(clientinfo *ci, int skill);
 		extern void reqdel(clientinfo *ci);
@@ -329,6 +329,7 @@ namespace server
 	void cleanup()
 	{
 		bannedips.setsize(0);
+		ai::clearai();
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_SERVER) // reset vars
 			{
@@ -525,47 +526,41 @@ namespace server
 
 	void checkintermission()
 	{
-		if(numclients())
+		if(minremain)
 		{
-			if(minremain)
+			if(sv_timelimit != oldtimelimit)
 			{
-				if(sv_timelimit != oldtimelimit)
-				{
-					if(sv_timelimit) gamelimit += (sv_timelimit-oldtimelimit)*60000;
-					oldtimelimit = sv_timelimit;
-				}
-				if(sv_timelimit)
-				{
-					if(gamemillis >= gamelimit) minremain = 0;
-					else minremain = (gamelimit-gamemillis+60000-1)/60000;
-				}
-				else minremain = -1;
-				sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-				if(!minremain)
-				{
-					if(smode) smode->intermission();
-					mutate(smuts, mut->intermission());
-				}
-				else if(minremain == 1)
-					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, "only one minute left of play!");
+				if(sv_timelimit) gamelimit += (sv_timelimit-oldtimelimit)*60000;
+				oldtimelimit = sv_timelimit;
 			}
-			if(!minremain && !interm)
+			if(sv_timelimit)
 			{
-				maprequest = false;
-				interm = gamemillis+(sv_intermlimit*1000);
+				if(gamemillis >= gamelimit) minremain = 0;
+				else minremain = (gamelimit-gamemillis+60000-1)/60000;
 			}
+			else minremain = -1;
+			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+			if(!minremain)
+			{
+				if(smode) smode->intermission();
+				mutate(smuts, mut->intermission());
+			}
+			else if(minremain == 1)
+				sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, "only one minute left of play!");
+		}
+		if(!minremain && !interm)
+		{
+			maprequest = false;
+			interm = gamemillis+(sv_intermlimit*1000);
 		}
 	}
 
 	void startintermission()
 	{
-		if(numclients())
-		{
-			minremain = 0;
-			gamelimit = min(gamelimit, gamemillis);
-			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-			checkintermission();
-		}
+		minremain = 0;
+		gamelimit = min(gamelimit, gamemillis);
+		sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+		checkintermission();
 	}
 
 	bool finditem(int i, bool spawned = true, int spawntime = 0)
@@ -1069,7 +1064,7 @@ namespace server
 		notgotinfo = true;
 		scores.setsize(0);
 
-		if(m_team(gamemode, mutators)) 
+		if(m_team(gamemode, mutators))
 		{
 			loopv(clients)
 			{
@@ -1081,7 +1076,7 @@ namespace server
 
 		if(m_demo(gamemode))
 		{
-            ai::clearbots();
+            ai::clearai();
             loopv(clients) if(!clients[i]->local) disconnect_client(clients[i]->clientnum, DISC_PRIVATE);
 		}
 
@@ -1115,8 +1110,7 @@ namespace server
 				sendspawn(ci);
 		}
 
-		if(m_timed(gamemode) && numclients())
-			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+		if(m_timed(gamemode) && numclients(-1, false, true)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 
 		if(m_demo(gamemode)) setupdemoplayback();
 		else if(demonextmatch)
@@ -1255,7 +1249,7 @@ namespace server
 		else putint(p, 0);
 		putint(p, gamemode);
 		putint(p, mutators);
-		if(!ci || (m_timed(gamemode) && numclients()))
+		if(!ci || (m_timed(gamemode) && numclients(-1, false, true)))
 		{
 			putint(p, SV_TIMEUP);
 			putint(p, minremain);
@@ -1639,7 +1633,7 @@ namespace server
 
 	void serverupdate()
 	{
-		if(!numclients()) return;
+		if(!numclients(-1, false, true)) return;
 		gamemillis += curtime;
 		if(m_demo(gamemode)) readdemo();
 		else if(minremain)
@@ -1693,9 +1687,8 @@ namespace server
 			masterupdate = false;
 		}
 
-		if((m_timed(gamemode) && numclients()) &&
-			((sv_timelimit != oldtimelimit) ||
-			(gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
+		if((m_timed(gamemode) && numclients(-1, false, true)) &&
+			((sv_timelimit != oldtimelimit) || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
 				checkintermission();
 
 		if(interm && gamemillis >= interm) // wait then call for next map
@@ -1785,7 +1778,7 @@ namespace server
 		if(ci->name[0]) relayf(1, "\fo%s has left the game", colorname(ci));
 		ai::removeai(ci);
 		clients.removeobj(ci);
-		if(clients.empty()) cleanup();
+		if(numclients(-1, false, true)) cleanup();
 		else checkvotes();
 	}
 
