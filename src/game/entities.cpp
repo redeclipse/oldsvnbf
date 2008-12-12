@@ -32,12 +32,12 @@ namespace entities
 		}
 		if(type == PLAYERSTART || type == FLAG)
 		{
-			if(isteam(attr2, TEAM_ALPHA))
+			if(valteam(attr2, TEAM_FIRST))
 			{
 				s_sprintf(str)("team %s", teamtype[attr2].name);
 				addentinfo(str);
 			}
-			else if(attr2 == TEAM_NEUTRAL || attr2 == TEAM_ENEMY)
+			else if(attr2 < TEAM_MAX)
 			{
 				s_sprintf(str)("%s", teamtype[attr2].name);
 				addentinfo(str);
@@ -1016,7 +1016,7 @@ namespace entities
 	{
 		if(gver <= 49 || mtype == MAP_OCTA)
 		{
-			int flag = 0, teams[TEAM_MAX-TEAM_ALPHA] = { 0, 0, 0, 0 };
+			int flag = 0, teams[TEAM_NUM] = { 0, 0, 0, 0 };
 			vector<short> teleyaw;
 			loopv(ents) teleyaw.add(0);
 
@@ -1064,7 +1064,7 @@ namespace entities
 
 				if(e.type == FLAG) // replace bases/neutral flags near team flags
 				{
-					if(isteam(e.attr2, TEAM_ALPHA)) teams[e.attr2-TEAM_ALPHA]++;
+					if(valteam(e.attr2, TEAM_FIRST)) teams[e.attr2-TEAM_FIRST]++;
 					else if(e.attr2 == TEAM_NEUTRAL)
 					{
 						int dest = -1;
@@ -1115,13 +1115,13 @@ namespace entities
 					case FLAG:
 					{
 						if(!e.attr1) e.attr1 = ++flag; // assign a sane idx
-						if(!isteam(e.attr2, TEAM_NEUTRAL)) // assign a team
+						if(!valteam(e.attr2, TEAM_NEUTRAL)) // assign a team
 						{
 							int lowest = -1;
-							loopk(TEAM_MAX-TEAM_ALPHA)
+							loopk(TEAM_NUM)
 								if(lowest<0 || teams[k] < teams[lowest])
 									lowest = i;
-							e.attr2 = lowest+TEAM_ALPHA;
+							e.attr2 = lowest+TEAM_FIRST;
 							teams[lowest]++;
 						}
 						break;

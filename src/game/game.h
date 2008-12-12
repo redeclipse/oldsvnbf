@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			130
+#define GAMEVERSION			131
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -365,19 +365,19 @@ struct gametypes
 };
 #ifdef GAMESERVER
 gametypes gametype[] = {
-	{ G_DEMO,			G_M_NONE,				G_M_NONE,				"Demo" },
-	{ G_LOBBY,			G_M_NONE,				G_M_NONE,				"Lobby" },
-	{ G_EDITMODE,		G_M_NONE,				G_M_NONE,				"Editing" },
-	{ G_MISSION,		G_M_NONE,				G_M_NONE,				"Mission" },
-	{ G_DEATHMATCH,		G_M_ALL,				G_M_NONE,				"Deathmatch" },
-	{ G_STF,			G_M_TEAMS,				G_M_TEAM,				"Secure-the-Flag" },
-	{ G_CTF,			G_M_TEAMS,				G_M_TEAM,				"Capture-the-Flag" },
+	{ G_DEMO,			G_M_NONE,				G_M_NONE,				"demo" },
+	{ G_LOBBY,			G_M_NONE,				G_M_NONE,				"lobby" },
+	{ G_EDITMODE,		G_M_NONE,				G_M_NONE,				"editing" },
+	{ G_MISSION,		G_M_NONE,				G_M_NONE,				"mission" },
+	{ G_DEATHMATCH,		G_M_ALL,				G_M_NONE,				"deathmatch" },
+	{ G_STF,			G_M_TEAMS,				G_M_TEAM,				"secure-the-flag" },
+	{ G_CTF,			G_M_TEAMS,				G_M_TEAM,				"capture-the-flag" },
 }, mutstype[] = {
-	{ G_M_MULTI,		G_M_ALL,				G_M_TEAM|G_M_MULTI,		"Multi-Sided" },
-	{ G_M_TEAM,			G_M_TEAMS,				G_M_TEAM,				"Team" },
-	{ G_M_INSTA,		G_M_ALL,				G_M_INSTA,				"Instagib" },
-	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_DUEL,				"Duel" },
-	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_LMS,				"Last-Man-Standing" },
+	{ G_M_MULTI,		G_M_ALL,				G_M_TEAM|G_M_MULTI,		"multi-sided" },
+	{ G_M_TEAM,			G_M_TEAMS,				G_M_TEAM,				"team" },
+	{ G_M_INSTA,		G_M_ALL,				G_M_INSTA,				"instagib" },
+	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_DUEL,				"duel" },
+	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_LMS,				"last-man-standing" },
 };
 #else
 extern gametypes gametype[], mutstype[];
@@ -476,49 +476,68 @@ struct demoheader
 	int version, gamever;
 };
 
-enum { TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_ENEMY, TEAM_MAX };
+enum
+{
+	TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_ENEMY, TEAM_MAX,
+	TEAM_FIRST = TEAM_ALPHA, TEAM_LAST = TEAM_GAMMA, TEAM_NUM = TEAM_LAST-(TEAM_FIRST-1)
+};
 struct teamtypes
 {
-	int	type,		colour;	const char *name,	*tpmdl,					*fpmdl,
-		*flag,			*icon,			*chat;
+	int	type,			colour;	const char	*name,
+		*tpmdl,								*fpmdl,
+		*flag,			*icon,				*chat;
 };
 #ifdef GAMESERVER
 teamtypes teamtype[] = {
 	{
-		TEAM_NEUTRAL,	0xAAAAAA,	"neutral",	"actors/player",		"actors/player/vwep",
-		"flag",			"team",			"\fw"
+		TEAM_NEUTRAL,	0xAAAAAA,			"neutral",
+		"actors/player",					"actors/player/vwep",
+		"flag",			"team",				"\fw"
 	},
 	{
-		TEAM_ALPHA,	0x2222AA,	"alpha",		"actors/player/alpha",	"actors/player/alpha/vwep",
-		"flag/alpha",	"teamalpha",	"\fb"
+		TEAM_ALPHA,		0x2222AA,			"alpha",
+		"actors/player/alpha",				"actors/player/alpha/vwep",
+		"flag/alpha",	"teamalpha",		"\fb"
 	},
 	{
-		TEAM_BETA,	0xAA2222,	"beta",			"actors/player/beta",	"actors/player/beta/vwep",
-		"flag/beta",	"teambeta",		"\fr"
+		TEAM_BETA,		0xAA2222,			"beta",
+		"actors/player/beta",				"actors/player/beta/vwep",
+		"flag/beta",	"teambeta",			"\fr"
 	},
 	{
-		TEAM_DELTA,	0xAAAA22,	"delta",		"actors/player/delta",	"actors/player/delta/vwep",
-		"flag/delta",	"teamdelta",	"\fy"
+		TEAM_DELTA,		0xAAAA22,			"delta",
+		"actors/player/delta",				"actors/player/delta/vwep",
+		"flag/delta",	"teamdelta",		"\fy"
 	},
 	{
-		TEAM_GAMMA,	0x22AA22,	"gamma",		"actors/player/gamma",	"actors/player/gamma/vwep",
-		"flag/gamma",	"teamgamma",	"\fg"
+		TEAM_GAMMA,		0x22AA22,			"gamma",
+		"actors/player/gamma",				"actors/player/gamma/vwep",
+		"flag/gamma",	"teamgamma",		"\fg"
 	},
 	{
-		TEAM_ENEMY,	0xAAAAAA,	"enemy",		"actors/player",		"actors/player/vwep",
-		"flag",			"team",			"\fa"
+		TEAM_ENEMY,		0xAAAAAA,			"enemy",
+		"actors/player",					"actors/player/vwep",
+		"flag",			"team",				"\fa"
 	}
 };
 #else
 extern teamtypes teamtype[];
 #endif
+enum
+{
+	BASE_NONE = 0,
+	BASE_HOME = 1<<0,
+	BASE_FLAG = 1<<1,
+	BASE_BOTH = BASE_HOME|BASE_FLAG
+};
+
+#define numteams(a,b)	(m_multi(a,b) ? TEAM_NUM : TEAM_NUM/2)
+#define isteam(a,b,c,d)	(m_team(a,b) ? (c >= d && c <= numteams(a,b)+(TEAM_FIRST-1)) : c == TEAM_NEUTRAL)
+#define valteam(a,b)	(a >= b && a <= TEAM_NUM)
 
 #define MAXNAMELEN		16
 #define MAXHEALTH		100
 #define MAXCARRY		2
-#define MAXTEAMS		TEAM_GAMMA
-#define numteams(a,b)	(m_multi(a, b) ? MAXTEAMS : MAXTEAMS/2)
-#define isteam(a,b)		(a >= b && a <= MAXTEAMS)
 
 #define REGENWAIT		3000
 #define REGENTIME		1000

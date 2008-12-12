@@ -41,13 +41,13 @@ namespace client
 
 				loopi(numteams(world::gamemode, world::mutators))
 				{
-					if((t && t == i+TEAM_ALPHA) || !strcasecmp(teamtype[i+TEAM_ALPHA].name, team))
+					if((t && t == i+TEAM_FIRST) || !strcasecmp(teamtype[i+TEAM_FIRST].name, team))
 					{
-						return i+TEAM_ALPHA;
+						return i+TEAM_FIRST;
 					}
 				}
 			}
-			return TEAM_ALPHA;
+			return TEAM_FIRST;
 		}
 		return TEAM_NEUTRAL;
 	}

@@ -205,11 +205,11 @@ namespace ai
 		{
 			if(m_play(gamemode) && sv_botbalance)
 			{
-				int balance = clamp(sv_botbalance * (m_team(gamemode, mutators) ? numteams(gamemode, mutators) : 1), 0, 128);
-				while(numclients(-1, true, false) < balance && addai(AI_BOT, -1)) ;
-				while(numclients(-1, true, false) > balance && delai(AI_BOT)) ;
+				int balance = clamp(sv_botbalance*(m_team(gamemode, mutators) ? numteams(gamemode, mutators) : 1), 0, 240);
+				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
+				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
 			}
-			while(reassignai()) ;
+			while(true) if(!reassignai()) break;
 			checksetup();
 		}
 		else clearai();
@@ -220,9 +220,9 @@ namespace ai
 		if(haspriv(ci, PRIV_MASTER, true))
 		{
 			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(m_play(gamemode) && sv_botbalance)
+			else if(m_play(gamemode))
 			{
-				if(sv_botbalance < 32)
+				if(sv_botbalance < 60)
 				{
 					setvar("sv_botbalance", sv_botbalance+1, true);
 					s_sprintfd(val)("%d", sv_botbalance);
@@ -240,7 +240,7 @@ namespace ai
 		if(haspriv(ci, PRIV_MASTER, true))
 		{
 			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(m_play(gamemode) && sv_botbalance)
+			else if(m_play(gamemode))
 			{
 				if(sv_botbalance > 0)
 				{

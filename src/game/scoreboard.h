@@ -282,7 +282,7 @@ namespace hud
 				{
 					g.pushlist(); // vertical
 
-					if(m_stf(world::gamemode) && sg.score>=stflimit) g.textf("%s: WIN", fgcolor, NULL, teamtype[sg.team].name);
+					if(m_stf(world::gamemode) && stflimit && sg.score >= stflimit) g.textf("%s: WIN", fgcolor, NULL, teamtype[sg.team].name);
 					else g.textf("%s: %d", fgcolor, NULL, teamtype[sg.team].name, sg.score);
 
 					g.pushlist(); // horizontal

@@ -59,16 +59,17 @@ struct stfservmode : stfstate, servmode
 
 	void update()
 	{
-		if(minremain<0) return;
+		if(minremain < 0) return;
 		endcheck();
-		int t = gamemillis/1000 - (gamemillis-curtime)/1000;
-		if(t<1) return;
+		int t = (gamemillis/1000)-((gamemillis-curtime)/1000);
+		if(t < 1) return;
 		loopv(flags)
 		{
 			flag &b = flags[i];
 			if(b.enemy)
 			{
-                if((!b.owners || !b.enemies) && b.occupy(b.enemy, (m_insta(gamemode, mutators) ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*(b.enemies ? b.enemies : -(1+b.owners))*t)==1) addscore(b.owner, SECURESCORE);
+                if((!b.owners || !b.enemies) && b.occupy(b.enemy, (m_insta(gamemode, mutators) ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*(b.enemies ? b.enemies : -(1+b.owners))*t)==1)
+					addscore(b.owner, SECURESCORE);
 				sendflag(i);
 			}
 			else if(b.owner)
@@ -131,7 +132,7 @@ struct stfservmode : stfstate, servmode
 		int maxscore = sv_stflimit ? sv_stflimit : INT_MAX-1;
 		loopi(numteams(gamemode, mutators))
 		{
-			int lastteam = i+TEAM_ALPHA;
+			int lastteam = i+TEAM_FIRST;
 			if(findscore(lastteam).total >= maxscore)
 			{
 				findscore(lastteam).total = maxscore;
