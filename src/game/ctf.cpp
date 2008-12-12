@@ -387,34 +387,24 @@ namespace ctf
 		entities::announce(S_V_FLAGDROP, s, true);
     }
 
-    void flagexplosion(int i, const vec &loc)
+    void flagexplosion(int i, int team, const vec &loc)
     {
-		ctfstate::flag &f = st.flags[i];
-		world::spawneffect(vec(loc).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[f.team].colour, enttype[FLAG].radius/2);
+		world::spawneffect(vec(loc).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius/2);
     }
 
-    void flageffect(int i, const vec &from, const vec &to)
+    void flageffect(int i, int team, const vec &from, const vec &to)
     {
-		ctfstate::flag &f = st.flags[i];
-		if(from.x >= 0)
-		{
-			flagexplosion(i, from);
-		}
-		if(to.x >= 0)
-		{
-			flagexplosion(i, to);
-		}
+		if(from.x >= 0) flagexplosion(i, team, from);
+		if(to.x >= 0) flagexplosion(i, team, to);
 		if(from.x >= 0 && to.x >= 0)
-		{
-			part_trail(PART_PLASMA, 250, from, to, teamtype[f.team].colour, 4.8f);
-		}
+			part_trail(PART_PLASMA, 250, from, to, teamtype[team].colour, 4.8f);
     }
 
     void returnflag(gameent *d, int i)
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		flageffect(i, f.droploc, f.spawnloc);
+		flageffect(i, d->team, f.droploc, f.spawnloc);
 		f.interptime = 0;
 		st.returnflag(i);
 		s_sprintfd(s)("%s returned the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
@@ -425,7 +415,7 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		flageffect(i, f.droploc, f.spawnloc);
+		flageffect(i, TEAM_NEUTRAL, f.droploc, f.spawnloc);
 		f.interptime = 0;
 		st.returnflag(i);
 		s_sprintfd(s)("the \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
@@ -436,16 +426,16 @@ namespace ctf
     {
         if(!st.flags.inrange(goal) || !st.flags.inrange(relay)) return;
 		ctfstate::flag &f = st.flags[goal];
-		flageffect(goal, st.flags[goal].spawnloc, st.flags[relay].spawnloc);
+		flageffect(goal, d->team, st.flags[goal].spawnloc, st.flags[relay].spawnloc);
 		(st.findscore(d->team)).total = score;
 		f.interptime = 0;
 		st.returnflag(relay);
 		if(d!=world::player1)
 		{
 			s_sprintfd(ds)("@CAPTURED!");
-			part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, teamtype[f.team].colour, 3.f);
+			part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, teamtype[d->team].colour, 3.f);
 		}
-		s_sprintfd(s)("%s scored for \fs%s%s\fS team (score: %d)", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, score);
+		s_sprintfd(s)("%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: %d)", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score);
 		entities::announce(S_V_FLAGSCORE, s, true);
     }
 
@@ -453,7 +443,7 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		world::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[f.team].colour, enttype[FLAG].radius/2);
+		world::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[d->team].colour, enttype[FLAG].radius/2);
 		f.interptime = lastmillis;
 		s_sprintfd(s)("%s %s the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		st.takeflag(i, d);
