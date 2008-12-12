@@ -433,12 +433,6 @@
 			<Option target="profile" />
 			<Option target="data" />
 		</Unit>
-		<Unit filename="engine\hash.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-		</Unit>
 		<Unit filename="engine\irc.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -652,12 +646,6 @@
 			<Option target="data" />
 		</Unit>
 		<Unit filename="engine\texture.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-		</Unit>
-		<Unit filename="engine\tristrip.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
