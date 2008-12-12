@@ -163,14 +163,14 @@ namespace projs
 		vec dir(vec(vec(proj.to).sub(proj.o)).normalize()), orig = proj.o;
 		vectoyawpitch(dir, proj.yaw, proj.pitch);
 		vec rel = vec(proj.vel).add(dir);
-		if(proj.relativity) rel.add(vec(proj.owner->vel).mul(proj.relativity));
+		if(proj.owner && proj.relativity) rel.add(vec(vec(proj.owner->vel).add(proj.owner->falling)).mul(proj.relativity));
 		proj.vel = vec(rel).add(vec(dir).mul(proj.maxspeed));
 		proj.spawntime = lastmillis;
 		proj.movement = 1;
 
 		if(proj.projtype == PRJ_SHOT)
 		{
-			if(proj.radial) proj.height = proj.radius = guntype[proj.attr1].explode*0.1f;
+			if(proj.radial) proj.height = proj.radius = guntype[proj.attr1].explode*0.01f;
 			if(proj.projcollide)
 			{
 				vec ray(proj.vel);
@@ -190,7 +190,7 @@ namespace projs
                         proj.o = vec(ray).mul(olddist).add(orig);
                         float cdist = tracecollide(proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
                         proj.o.add(vec(ray).mul(dist - olddist));
-                        if(cdist < 0 || dist >= barrier) break; 
+                        if(cdist < 0 || dist >= barrier) break;
                     }
                     else
                     {
