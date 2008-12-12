@@ -1081,20 +1081,32 @@ namespace world
 			{
 				if(cameras.empty()) loopk(2)
 				{
-					physent d = *camera1;
-					loopv(entities::ents) if(entities::ents[i]->type == (k ? LIGHT : CAMERA))
+					physent d = *player1;
+					d.radius = d.height = 1;
+					loopv(entities::ents) if((k && !enttype[entities::ents[i]->type].noisy) || entities::ents[i]->type == CAMERA)
 					{
-						d.o = entities::ents[i]->o;
+						gameentity &e = *(gameentity *)entities::ents[i];
+						vec pos(e.o);
+						if(e.type == MAPMODEL)
+						{
+							mapmodelinfo &mmi = getmminfo(e.attr1);
+							vec center, radius;
+							mmi.m->collisionbox(0, center, radius);
+							if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(e.attr2));
+							pos.z += ((center.z-radius.z)+radius.z*2*mmi.m->height)+0.5f;
+						}
+						if(enttype[e.type].radius) pos.z += enttype[e.type].radius;
+						d.o = pos;
 						if(physics::entinmap(&d, false))
 						{
 							camstate &c = cameras.add();
-							c.pos = entities::ents[i]->o;
+							c.pos = pos;
 							c.ent = i;
 							if(!k)
 							{
-								c.idx = entities::ents[i]->attr1;
-								if(entities::ents[i]->attr2) c.mindist = entities::ents[i]->attr2;
-								if(entities::ents[i]->attr3) c.maxdist = entities::ents[i]->attr3;
+								c.idx = e.attr1;
+								if(e.attr2) c.mindist = e.attr2;
+								if(e.attr3) c.maxdist = e.attr3;
 							}
 						}
 					}

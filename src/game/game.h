@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			131
+#define GAMEVERSION			132
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -113,7 +113,7 @@ enttypes enttype[] = {
 			false,				"teleport"
 	},
 	{
-		ACTOR,			59,		12,		EU_NONE,
+		ACTOR,			59,		0,		EU_NONE,
 			0,
 			false,				"actor"
 	},
@@ -239,10 +239,10 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	-5,		5,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		200,	800,	20,		250,	0,		10000,
+			20,		20,		200,	800,	20,		500,	0,		10000,
 			0,		18,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		true,		false,
-			1.0f,	0.f,		0.f,			0.1f,		1.0f,		0.f,
+			1.0f,	0.f,		0.f,			0.25f,		1.0f,		0.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},

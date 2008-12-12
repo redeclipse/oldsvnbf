@@ -183,7 +183,7 @@ namespace ctf
 			fade = hud::radarblipblend*blend;
         if(blip)
         {
-            if(!(f.base&BASE_FLAG)) return;
+            if(!(f.base&BASE_FLAG) || f.owner == world::player1) return;
 			else if(f.owner) { if(lastmillis%500 >= 250) fade = 1.f; }
             else if(f.droptime) { if(lastmillis%500 >= 250) fade = 1.f; }
             else return;
