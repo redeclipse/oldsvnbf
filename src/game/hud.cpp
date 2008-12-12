@@ -10,13 +10,13 @@ namespace hud
 	VARP(showdamage, 0, 1, 1);
 	TVAR(damagetex, "textures/damage", 0);
 	VARP(showindicator, 0, 1, 1);
-	FVARP(indicatorsize, 0, 0.08f, 1000);
-	FVARP(indicatorblend, 0, 0.5f, 1);
+	FVARP(indicatorsize, 0, 0.04f, 1000);
+	FVARP(indicatorblend, 0, 1.f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(snipetex, "textures/snipe", 0);
 
 	VARP(showcrosshair, 0, 1, 1);
-	FVARP(crosshairsize, 0, 0.07f, 1000);
+	FVARP(crosshairsize, 0, 0.05f, 1000);
 	VARP(crosshairhitspeed, 0, 450, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.5f, 1);
 	VARP(crosshairhealth, 0, 1, 1);
@@ -29,14 +29,14 @@ namespace hud
 	TVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
 	TVAR(snipecrosshairtex, "textures/snipecrosshair", 3);
-	FVARP(snipecrosshairsize, 0, 0.5f, 1000);
-	FVARP(cursorsize, 0, 0.05f, 1000);
+	FVARP(snipecrosshairsize, 0, 0.6f, 1000);
+	FVARP(cursorsize, 0, 0.04f, 1000);
 	FVARP(cursorblend, 0, 1.f, 1);
 
 	VARP(showinventory, 0, 1, 1);
-	FVARP(inventorysize, 0, 0.075f, 1000);
+	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.75f, 1);
-	FVARP(inventoryskew, 0, 0.65f, 1);
+	FVARP(inventoryskew, 0, 0.7f, 1);
 	FVARP(inventorytextscale, 0, 1.25f, 1000);
 	FVARP(inventorytextblend, 0, 1.f, 1);
 	TVAR(plasmatex, "textures/plasma", 0);
@@ -53,7 +53,7 @@ namespace hud
 	TVAR(gammaflagtex, "textures/teamgamma", 0);
 
 	VARP(showclip, 0, 1, 1);
-	FVARP(clipsize, 0, 0.06f, 1000);
+	FVARP(clipsize, 0, 0.04f, 1000);
 	FVARP(clipblend, 0, 0.25f, 1000);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
@@ -84,7 +84,7 @@ namespace hud
 	//VARP(showenttips, 0, 1, 2);
 	//VARP(showhudents, 0, 10, 100);
 
-	VARP(hudsize, 0, 2000, INT_MAX-1);
+	VARP(hudsize, 0, 2400, INT_MAX-1);
 
 	VARP(titlecardtime, 0, 2000, 10000);
 	VARP(titlecardfade, 0, 3000, 10000);
