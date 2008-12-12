@@ -12,7 +12,7 @@ struct editline
         set(init);
     }
 
-    bool empty() { return len <= 1; }
+    bool empty() { return len <= 0; }
 
     void clear()
     {
