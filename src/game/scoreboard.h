@@ -188,15 +188,9 @@ namespace hud
 				{
 					s_sprintfd(cstr)(", %d %s remain", world::minremain, world::minremain==1 ? "minute" : "minutes");
 					s_strcat(modemapstr, cstr);
-					//if(m_ctf(world::gamemode) && ctflimit)
-					//{
-					//	int captures = clamp(groups[0]->score-ctflimit, 0, ctflimit);
-					//	s_sprintf(cstr)(", %d %s to go", captures, captures==1 ? "capture" : "captures");
-					//	s_strcat(modemapstr, cstr);
-					//}
 				}
 			}
-			g.text(modemapstr, 0xFFFF80, "server");
+			g.text(modemapstr, 0xFFFFFF, "server");
 
 			if(!world::minremain || scoresinfo())
 			{
@@ -244,7 +238,7 @@ namespace hud
 				scoregroup &sg = *groups[k];
 				const char *icon = sg.team && m_team(world::gamemode, world::mutators) ? teamtype[sg.team].icon : "player";
 				int bgcolor = sg.team && m_team(world::gamemode, world::mutators) ? teamtype[sg.team].colour : 0,
-					fgcolor = 0xFFFF80;
+					fgcolor = 0xFFFFFF;
 
 				g.pushlist(); // vertical
 				g.pushlist(); // horizontal
@@ -264,17 +258,25 @@ namespace hud
 					g.strut(1);
 					g.poplist();
 				}
+				g.pushlist();
+				g.background(0xFFFFFF, numgroups>1 ? 3 : 5);
 				g.text("", 0, "server");
+				g.poplist();
 				loopscoregroup(o,
 				{
-					if(o==world::player1 && highlightscore() && client::demoplayback)
+					g.pushlist();
+					bool highlight = o==world::player1 && highlightscore();
+					int status = highlight ? 0xDDDDDD : 0xAAAAAA;
+					if(o->state==CS_DEAD || o->state==CS_WAITING) status = highlight ? 0x888888 : 0x666666;
+					else if(o->privilege)
 					{
-						g.pushlist();
-						g.background(0x808080, numgroups>1 ? 3 : 5);
+						if(o->privilege >= PRIV_ADMIN) status = highlight ? 0xFF8800 : 0xAA6600;
+						else status = highlight ? 0x44FF88 : 0x33AA66;
 					}
+					if(status) g.background(status, numgroups>1 ? 3 : 5);
 					const char *oicon = icon;
 					g.text("", 0, oicon);
-					if(o==world::player1 && highlightscore() && client::demoplayback) g.poplist();
+					g.poplist();
 				});
 				g.poplist();
 
@@ -293,7 +295,7 @@ namespace hud
 					g.pushlist();
 					g.strut(7);
 					g.text("frags", fgcolor);
-					loopscoregroup(o, g.textf("%d", 0xFFFFDD, NULL, o->frags));
+					loopscoregroup(o, g.textf("%d", 0xFFFFFF, NULL, o->frags));
 					g.poplist();
 				}
 
@@ -304,9 +306,9 @@ namespace hud
 					g.text("pj", fgcolor);
 					loopscoregroup(o,
 					{
-						if(o->aitype != AI_NONE) g.textf("\fs%s%d\fS", 0xFF9955, NULL, o->ownernum == world::player1->clientnum ? "\fg" : "\fc", o->skill);
-						else if(o->state==CS_LAGGED) g.text("LAG", 0xFFFFDD);
-						else g.textf("%d", 0xFFFFDD, NULL, o->plag);
+						if(o->aitype != AI_NONE) g.textf("\fs%s%d\fS", 0xFFFFFF, NULL, o->ownernum == world::player1->clientnum ? "\fg" : "\fc", o->skill);
+						else if(o->state==CS_LAGGED) g.text("LAG", 0xFFFFFF);
+						else g.textf("%d", 0xFFFFFF, NULL, o->plag);
 					});
 					g.poplist();
 				}
@@ -321,22 +323,16 @@ namespace hud
 						if(o->aitype != AI_NONE)
 						{
 							gameent *od = world::getclient(o->ownernum);
-							g.textf("\fs%s%d\fS", 0xFF9955, NULL, o->ownernum == world::player1->clientnum ? "\fg" : "\fc", od ? od->ping : 0);
+							g.textf("\fs%s%d\fS", 0xFFFFFF, NULL, o->ownernum == world::player1->clientnum ? "\fg" : "\fc", od ? od->ping : 0);
 						}
-						else g.textf("%d", 0xFFFFDD, NULL, o->ping);
+						else g.textf("%d", 0xFFFFFF, NULL, o->ping);
 					});
 					g.poplist();
 				}
 
 				g.pushlist();
 				g.text("name", fgcolor);
-				loopscoregroup(o,
-				{
-					int status = 0xFFFFDD;
-					if(o->state==CS_DEAD || o->state==CS_WAITING) status = 0x606060;
-					else if(o->privilege) status = o->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;
-					g.text(world::colorname(o, NULL, "", false), status);
-				});
+				loopscoregroup(o, { g.text(world::colorname(o, NULL, "", false), 0xFFFFFF); });
 				g.poplist();
 
 				if(showclientnum() || world::player1->privilege>=PRIV_MASTER)
@@ -347,8 +343,8 @@ namespace hud
 					loopscoregroup(o,
 					{
 						if(o->aitype != AI_NONE)
-							g.textf("\fw%d [\fs%s%d\fS]", 0xFF9955, NULL, o->clientnum, o->ownernum == world::player1->clientnum ? "\fg" : "\fc", o->ownernum);
-						else g.textf("%d", 0xFFFFDD, NULL, o->clientnum);
+							g.textf("\fw%d [\fs%s%d\fS]", 0xFFFFFF, NULL, o->clientnum, o->ownernum == world::player1->clientnum ? "\fg" : "\fc", o->ownernum);
+						else g.textf("%d", 0xFFFFFF, NULL, o->clientnum);
 					});
 					g.poplist();
 				}
@@ -371,56 +367,60 @@ namespace hud
 				if(showclientnum() || world::player1->privilege>=PRIV_MASTER)
 				{
 					g.pushlist();
-
 					g.pushlist();
-					g.text("spectator", 0xFFFF80, "server");
+					g.text("spectator", 0xFFFFFF, "server");
 					loopv(spectators)
 					{
 						gameent *o = spectators[i];
-						if(o==world::player1 && highlightscore())
+						g.pushlist();
+						bool highlight = o==world::player1 && highlightscore();
+						int status = highlight ? 0xDDDDDD : 0xAAAAAA;
+						if(o->state==CS_DEAD || o->state==CS_WAITING) status = highlight ? 0x888888 : 0x666666;
+						else if(o->privilege)
 						{
-							g.pushlist();
-							g.background(0x808080, 3);
+							if(o->privilege >= PRIV_ADMIN) status = highlight ? 0xFF8800 : 0xAA6600;
+							else status = highlight ? 0x44FF88 : 0x33AA66;
 						}
-						g.text(world::colorname(o, NULL, "", false), 0xFFFFDD, "player");
-						if(o==world::player1 && highlightscore()) g.poplist();
+						if(status) g.background(status, 3);
+						g.textf("%s", 0xFFFFFF, "player", world::colorname(o, NULL, "", false));
+						g.poplist();
 					}
 					g.poplist();
-
 					g.space(1);
 					g.pushlist();
-					g.text("cn", 0xFFFF80);
-					loopv(spectators) g.textf("%d", 0xFFFFDD, NULL, spectators[i]->clientnum);
+					g.text("cn", 0xFFFFFF);
+					loopv(spectators)
+					{
+						gameent *o = spectators[i];
+						g.textf("%d", 0xFFFFFF, NULL, o->clientnum);
+					}
 					g.poplist();
-
 					g.poplist();
 				}
 				else
 				{
-					g.textf("%d spectator%s", 0xFFFF80, "server", spectators.length(), spectators.length()!=1 ? "s" : "");
+					g.textf("%d spectator%s", 0xFFFFFF, "server", spectators.length(), spectators.length()!=1 ? "s" : "");
 					loopv(spectators)
 					{
-						if((i%3)==0)
-						{
-							g.pushlist();
-							g.text("", 0xFFFFDD, "player");
-						}
+						if((i%3)==0) g.pushlist();
 						gameent *o = spectators[i];
-						int status = 0xFFFFDD;
-						if(o->privilege) status = o->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;
-						if(o==world::player1 && highlightscore())
+						g.pushlist();
+						bool highlight = o==world::player1 && highlightscore();
+						int status = highlight ? 0xDDDDDD : 0xAAAAAA;
+						if(o->state==CS_DEAD || o->state==CS_WAITING) status = highlight ? 0x888888 : 0x666666;
+						else if(o->privilege)
 						{
-							g.pushlist();
-							g.background(0x808080);
+							if(o->privilege >= PRIV_ADMIN) status = highlight ? 0xFF8800 : 0xAA6600;
+							else status = highlight ? 0x44FF88 : 0x33AA66;
 						}
-						g.text(world::colorname(o, NULL, "", false), status);
-						if(o==world::player1 && highlightscore()) g.poplist();
+						if(status) g.background(status);
+						g.textf("%s", 0xFFFFFF, (i%3)==0 ? "player" : NULL, world::colorname(o, NULL, "", false));
+						g.poplist();
 						if(i+1<spectators.length() && (i+1)%3) g.space(1);
 						else g.poplist();
 					}
 				}
 			}
-
 			g.end();
 		}
 
