@@ -363,6 +363,7 @@ struct g3d_gui
 	virtual void strut(int size) = 0;
     virtual void space(int size) = 0;
     virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = 0) = 0;
+    virtual char *keyfield(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = 0) = 0;
     virtual void fieldline(const char *name, const char *str) = 0;
     virtual void fieldclear(const char *name, const char *init = "") = 0;
     virtual int fieldedit(const char *name) = 0;

@@ -8,7 +8,7 @@ static struct gui *windowhit = NULL;
 
 static float firstx, firsty;
 
-enum {FIELDCOMMIT, FIELDABORT, FIELDEDIT, FIELDSHOW};
+enum {FIELDCOMMIT, FIELDABORT, FIELDEDIT, FIELDSHOW, FIELDKEY};
 static int fieldmode = FIELDSHOW;
 static bool fieldsactive = false;
 
@@ -288,6 +288,16 @@ struct gui : g3d_gui
 	}
 
     char *field(const char *name, int color, int length, int height, const char *initval, int initmode)
+    {
+        return field_(name, color, length, height, initval, initmode, FIELDEDIT);
+    }
+
+    char *keyfield(const char *name, int color, int length, int height, const char *initval, int initmode)
+    {
+        return field_(name, color, length, height, initval, initmode, FIELDKEY);
+    }
+
+    char *field_(const char *name, int color, int length, int height, const char *initval, int initmode, int fieldtype = FIELDEDIT)
 	{
         editor *e = useeditor(name, initmode, false, initval); // generate a new editor if necessary
         if(layoutpass)
@@ -322,13 +332,14 @@ struct gui : g3d_gui
             {
                 if(mousebuttons&G3D_DOWN) //mouse request focus
 				{
+                    if(fieldtype==FIELDKEY) e->clear();
                     useeditor(e->name, initmode, true);
                     e->mark(false);
-                    fieldmode = FIELDEDIT;
+                    fieldmode = fieldtype;
                 }
 			}
             bool editing = (fieldmode != FIELDSHOW) && (e==currentfocus());
-            if(hit && editing && (mousebuttons&G3D_PRESSED)!=0) e->hit(int(floor(hitx-(curx+FONTW/2))), int(floor(hity-cury)), (mousebuttons&G3D_DRAGGED)!=0); //mouse request position
+            if(hit && editing && (mousebuttons&G3D_PRESSED)!=0 && fieldtype==FIELDEDIT) e->hit(int(floor(hitx-(curx+FONTW/2))), int(floor(hity-cury)), (mousebuttons&G3D_DRAGGED)!=0); //mouse request position
             if(editing && ((fieldmode==FIELDCOMMIT) || (fieldmode==FIELDABORT) || !hit)) // commit field if user pressed enter or wandered out of focus
             {
                 if(fieldmode==FIELDCOMMIT || (fieldmode!=FIELDABORT && !hit)) result = e->currentline().text;
@@ -834,11 +845,28 @@ static vector<gui> gui2ds;
 
 bool g3d_keypress(int code, bool isdown, int cooked)
 {
+    editor *e = currentfocus();
+    if(fieldmode == FIELDKEY)
+    {
+        switch(code)
+        {
+            case SDLK_ESCAPE:
+                if(isdown) fieldmode = FIELDCOMMIT;
+                return true;
+        }
+        const char *keyname = getkeyname(code);
+        if(keyname && isdown)
+        {
+            if(e->lines.length()!=1 || !e->lines[0].empty()) e->insert(" ");
+            e->insert(keyname);
+        }
+        return true;
+    }
+
     if((code==-1 || code == -2) && g3d_windowhit(isdown, true)) return true;
     else if(code==-3 && g3d_windowhit(isdown, false)) return true;
 
-    editor *e = currentfocus();
-    if((fieldmode == FIELDSHOW) || !e) return false;
+    if(fieldmode == FIELDSHOW || !e) return false;
     switch(code)
     {
         case SDLK_ESCAPE: //cancel editing without commit
