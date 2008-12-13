@@ -396,10 +396,10 @@ namespace hud
 			if(font && *font) pushfont(font);
 			int tx = rd.axis ? int(cx+s*0.5f) : (rd.swap ? int(cx-s) : int(cx+s*2.f)),
 				ty = rd.axis ? (rd.swap ? int(cy-s-FONTH) : int(cy+s*2.f)) : int(cy+s*0.5f-FONTH*0.5f),
-				ta = rd.axis ? AL_CENTER : (rd.swap ? AL_RIGHT : AL_LEFT),
+				ta = rd.axis ? TEXT_CENTERED : (rd.swap ? TEXT_RIGHT_JUSTIFY : TEXT_LEFT_JUSTIFY),
 				tf = int((fade >= 0.f ? fade : blend)*255.f);
 			s_sprintfdlv(str, text, text);
-			draw_textx("%s", tx, ty, 255, 255, 255, tf, false, ta, -1, -1, str);
+			draw_textx("%s", tx, ty, 255, 255, 255, tf, ta, -1, -1, str);
 			if(font && *font) popfont();
 		}
 	}
@@ -543,8 +543,8 @@ namespace hud
 		rendericon(guioverlaytex, rx, ry, rs, rs);
 
 		int tx = bx + bs, ty = by + bs + FONTH/2, ts = int(tx*(1.f-amt));
-		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, server::gamename(world::gamemode, world::mutators));
-		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), false, AL_RIGHT, -1, tx-FONTH, title);
+		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), TEXT_RIGHT_JUSTIFY, -1, tx-FONTH, server::gamename(world::gamemode, world::mutators));
+		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), TEXT_RIGHT_JUSTIFY, -1, tx-FONTH, title);
 		popfont();
 	}
 
@@ -608,7 +608,7 @@ namespace hud
 				tc = int(255.f*skew), ti = int(255.f*inventorytextblend*blend);
 			if(font && *font) pushfont(font);
 			s_sprintfdlv(str, text, text);
-			draw_textx("%s", tx, ty, tc, tc, tc, ti, false, AL_RIGHT, -1, -1, str);
+			draw_textx("%s", tx, ty, tc, tc, tc, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
 			if(font && *font) popfont();
 			glPopMatrix();
 		}
@@ -714,22 +714,22 @@ namespace hud
 					{
 						const char *a = retbindaction("zoom", keym::ACTION_DEFAULT, 0);
 						s_sprintfd(actkey)("%s", a && *a ? a : "ZOOM");
-						tp -= draw_textx("Press [ \fs\fg%s\fS ] to %s", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey, guntype[world::player1->gunselect].snipes ? "zoom" : "prone");
+						tp -= draw_textx("Press [ \fs\fg%s\fS ] to %s", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1, actkey, guntype[world::player1->gunselect].snipes ? "zoom" : "prone");
 					}
 					if(world::player1->canshoot(world::player1->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis))
 					{
 						const char *a = retbindaction("attack", keym::ACTION_DEFAULT, 0);
 						s_sprintfd(actkey)("%s", a && *a ? a : "ATTACK");
-						tp -= draw_textx("Press [ \fs\fg%s\fS ] to attack", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey);
+						tp -= draw_textx("Press [ \fs\fg%s\fS ] to attack", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 					}
 
 					if(world::player1->canreload(world::player1->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis))
 					{
 						const char *a = retbindaction("reload", keym::ACTION_DEFAULT, 0);
 						s_sprintfd(actkey)("%s", a && *a ? a : "RELOAD");
-						tp -= draw_textx("Press [ \fs\fg%s\fS ] to load ammo", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey);
+						tp -= draw_textx("Press [ \fs\fg%s\fS ] to load ammo", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 						if(weapons::autoreload > 1 && lastmillis-world::player1->gunlast[world::player1->gunselect] <= 1000)
-							tp -= draw_textx("Autoreload in [ \fs\fg%.01f\fS ] second(s)", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, float(1000-(lastmillis-world::player1->gunlast[world::player1->gunselect]))/1000.f);
+							tp -= draw_textx("Autoreload in [ \fs\fg%.01f\fS ] second(s)", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1, float(1000-(lastmillis-world::player1->gunlast[world::player1->gunselect]))/1000.f);
 					}
 				}
 
@@ -777,26 +777,26 @@ namespace hud
 									if(isgun(drop))
 									{
 										s_sprintfd(dropgun)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));
-										tp -= draw_textx("Press [ \fs\fg%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey, dropgun, entities::entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
+										tp -= draw_textx("Press [ \fs\fg%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1, actkey, dropgun, entities::entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
 									}
 									else
 									*/
-									tp -= draw_textx("Press [ \fs\fg%s\fS ] to pickup [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey, entities::entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
+									tp -= draw_textx("Press [ \fs\fg%s\fS ] to pickup [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1, actkey, entities::entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
 									if(showtips < 3) break;
 									else found = true;
 								}
-								else tp -= draw_textx("Nearby [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, entities::entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
+								else tp -= draw_textx("Nearby [ \fs%s\fS ]", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1, entities::entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, false));
 							}
 							else if(e.type == TRIGGER && e.attr3 == TA_ACT)
 							{
 								if(!found)
 								{
-									tp -= draw_textx("Press [ \fs\fg%s\fS ] to interact", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey);
+									tp -= draw_textx("Press [ \fs\fg%s\fS ] to interact", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 									if(showtips < 3) break;
 									else found = true;
 								}
 								else
-									tp -= draw_textx("Nearby interactive item", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1);
+									tp -= draw_textx("Nearby interactive item", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1);
 							}
 						}
 						actitems.pop();
@@ -811,12 +811,12 @@ namespace hud
 				tp = oy-FONTH;
 				int wait = respawnwait(world::player1);
 				if(wait)
-					tp -= draw_textx("Fragged! Respawn available in [ \fs\fg%.01f\fS ] second(s)", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, float(wait)/1000.f);
+					tp -= draw_textx("Fragged! Respawn available in [ \fs\fg%.01f\fS ] second(s)", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1, float(wait)/1000.f);
 				else
 				{
 					const char *a = retbindaction("attack", keym::ACTION_DEFAULT, 0);
 					s_sprintfd(actkey)("%s", a && *a ? a : "ACTION");
-					tp -= draw_textx("Fragged! Press [ \fs\fg%s\fS ] to respawn", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1, actkey);
+					tp -= draw_textx("Fragged! Press [ \fs\fg%s\fS ] to respawn", bx+bs, tp, 255, 255, 255, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 				}
 			}
 		}
@@ -831,13 +831,13 @@ namespace hud
 					gameentity &f = (gameentity &)*entities::ents[n];
 					if(showenttips <= 2 && n != enthover) pushfont("hud");
 					tp -= draw_textx("entity %d, %s", bx+bs, tp,
-						n == enthover ? 255 : 196, 196, 196, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1,
+						n == enthover ? 255 : 196, 196, 196, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1,
 							n, entities::findname(f.type));
 					if(showenttips <= 2 && n != enthover) popfont();
 					if(showenttips > 1 || n == enthover)
 					{
 						tp -= draw_textx("%s (%d %d %d %d %d)", bx+bs, tp,
-							255, 196, 196, int(255.f*fade*infoblend), false, AL_RIGHT, -1, -1,
+							255, 196, 196, int(255.f*fade*infoblend), TEXT_RIGHT_JUSTIFY, -1, -1,
 								entities::entinfo(f.type, f.attr1, f.attr2, f.attr3, f.attr4, f.attr5, true),
 									f.attr1, f.attr2, f.attr3, f.attr4, f.attr5);
 					}
@@ -883,19 +883,19 @@ namespace hud
 		loopi(12) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
 		if(showstats)
 		{
-			by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", bx, by, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, bs, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
-			by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, bs, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
+			by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
+			by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
 		}
 
 		if(showfps) switch(showfps)
 		{
 			case 2:
-				if(autoadjust) by -= draw_textx("fps:%d (%d/%d) +%d-%d [\fs%s%d%%\fS]", bx, by, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, bs, curstats[8], autoadjustfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-				else by -= draw_textx("fps:%d (%d) +%d-%d", bx, by, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, bs, curstats[8], maxfps, curstats[9], curstats[10]);
+				if(autoadjust) by -= draw_textx("fps:%d (%d/%d) +%d-%d [\fs%s%d%%\fS]", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs, curstats[8], autoadjustfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+				else by -= draw_textx("fps:%d (%d) +%d-%d", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs, curstats[8], maxfps, curstats[9], curstats[10]);
 				break;
 			case 1:
-				if(autoadjust) by -= draw_textx("fps:%d (%d/%d) [\fs%s%d%%\fS]", bx, by, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, bs, curstats[8], autoadjustfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-				else by -= draw_textx("fps:%d (%d)", bx, by, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, bs, curstats[8], maxfps);
+				if(autoadjust) by -= draw_textx("fps:%d (%d/%d) [\fs%s%d%%\fS]", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs, curstats[8], autoadjustfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+				else by -= draw_textx("fps:%d (%d)", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs, curstats[8], maxfps);
 				break;
 			default: break;
 		}
@@ -904,12 +904,12 @@ namespace hud
 		{
 			if(world::player1->state == CS_EDITING)
 			{
-				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, bs,
+				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
 						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
 							sel.cx, sel.cxs, sel.cy, sel.cys);
-				by -= draw_textx("corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, bs,
+				by -= draw_textx("corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
 								sel.corner, sel.orient, sel.grid);
-				by -= draw_textx("cube:%s%d ents:%d", bx, by, 255, 255, 255, int(255*hudblend), false, AL_LEFT, -1, bs,
+				by -= draw_textx("cube:%s%d ents:%d", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
 					selchildcount<0 ? "1/" : "", abs(selchildcount), entgroup.length());
 			}
 		}

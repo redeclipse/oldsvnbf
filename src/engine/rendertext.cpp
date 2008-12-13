@@ -55,9 +55,9 @@ bool setfont(const char *name)
 	return true;
 }
 
-int text_width(const char *str) { //@TODO deprecate in favour of text_bounds(..)
+int text_width(const char *str, int flags) { //@TODO deprecate in favour of text_bounds(..)
     int width, height;
-    text_bounds(str, width, height);
+    text_bounds(str, width, height, -1, flags);
     return width;
 }
 
@@ -176,7 +176,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
                     if(w + cw >= maxwidth) break;\
                     w += cw;\
                 }\
-                if(x + w >= maxwidth && j!=0) { TEXTLINE(j-1) x = PIXELTAB; y += FONTH; }\
+                if(x + w >= maxwidth && j!=0) { TEXTLINE(j-1) x = flags&TEXT_NO_INDENT ? 0 : PIXELTAB; y += FONTH; }\
                 TEXTWORD\
             }\
             else\
@@ -194,7 +194,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
                     else { TEXTCHAR(j) }\
                 }
 
-int text_visible(const char *str, int hitx, int hity, int maxwidth)
+int text_visible(const char *str, int hitx, int hity, int maxwidth, int flags)
 {
     #define TEXTINDEX(idx)
     #define TEXTWHITE(idx) if(y+FONTH > hity && x >= hitx) return idx;
@@ -213,7 +213,7 @@ int text_visible(const char *str, int hitx, int hity, int maxwidth)
 }
 
 //inverse of text_visible
-void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth)
+void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth, int flags)
 {
     #define TEXTINDEX(idx) if(idx == cursor) { cx = x; cy = y; break; }
     #define TEXTWHITE(idx)
@@ -233,7 +233,7 @@ void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth)
     #undef TEXTWORD
 }
 
-void text_bounds(const char *str, int &width, int &height, int maxwidth)
+void text_bounds(const char *str, int &width, int &height, int maxwidth, int flags)
 {
     #define TEXTINDEX(idx)
     #define TEXTWHITE(idx)
@@ -253,7 +253,7 @@ void text_bounds(const char *str, int &width, int &height, int maxwidth)
     #undef TEXTWORD
 }
 
-int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, bool s, int cursor, int maxwidth)
+int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, int flags, int cursor, int maxwidth)
 {
     #define TEXTINDEX(idx) if(idx == cursor) { cx = x; cy = y; }
     #define TEXTWHITE(idx)
@@ -269,9 +269,9 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindTexture(GL_TEXTURE_2D, curfont->tex->id);
     glBegin(GL_QUADS);
-	loopk(s ? 2 : 1)
+	loopk(flags&TEXT_SHADOW ? 2 : 1)
 	{
-		if (s && !k)
+		if(flags&TEXT_SHADOW && !k)
 		{
 			glColor4ub(0, 0, 0, a);
 			left = rleft+2;
@@ -310,24 +310,21 @@ void reloadfonts()
 }
 
 
-int draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, bool s, int align, int cursor, int maxwidth, ...)
+int draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, int flags, int cursor, int maxwidth, ...)
 {
 	s_sprintfdlv(str, maxwidth, fstr);
 
-	int x = left, y = top, width = text_width(str);
+    if(flags&TEXT_ALIGN)
+    {
+        int width = text_width(str, flags);
+        switch(flags&TEXT_ALIGN)
+        {
+            case TEXT_CENTERED: left -= width/2; break;
+            case TEXT_RIGHT_JUSTIFY: left -= width; break;
+        }
+    }
 
-	switch (align)
-	{
-		case AL_CENTER:
-			x -= width/2;
-			break;
-		case AL_RIGHT:
-			x -= width;
-			break;
-		default:
-			break;
-	}
-	return draw_text(str, x, y, r, g, b, a, s, cursor, maxwidth);
+	return draw_text(str, left, top, r, g, b, a, flags, cursor, maxwidth);
 }
 
 vector<const char *> fontstack;

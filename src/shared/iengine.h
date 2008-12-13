@@ -95,6 +95,17 @@ extern char *savecolour, *restorecolour, *green, *blue, *yellow, *red, *gray, *m
 
 enum
 {
+    TEXT_SHADOW    = 1<<0,
+    TEXT_NO_INDENT = 1<<1,
+
+    TEXT_ALIGN         = 3<<8,
+    TEXT_LEFT_JUSTIFY  = 0<<8,
+    TEXT_CENTERED      = 1<<8,
+    TEXT_RIGHT_JUSTIFY = 2<<8, 
+};
+
+enum
+{
 	AL_LEFT = 0,
 	AL_CENTER,
 	AL_RIGHT
@@ -102,13 +113,13 @@ enum
 extern bool setfont(const char *name);
 extern bool pushfont(const char *name);
 extern bool popfont(int num = 1);
-extern int draw_text(const char *str, int rleft, int rtop, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int cursor = -1, int maxwidth = -1);
-extern int draw_textx(const char *fstr, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, bool s = true, int align = AL_LEFT, int cursor = -1, int maxwidth = -1, ...);
+extern int draw_text(const char *str, int rleft, int rtop, int r = 255, int g = 255, int b = 255, int a = 255, int flags = TEXT_SHADOW, int cursor = -1, int maxwidth = -1);
+extern int draw_textx(const char *fstr, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, int flags = TEXT_SHADOW, int cursor = -1, int maxwidth = -1, ...);
 extern int draw_textf(const char *fstr, int left, int top, ...);
-extern int text_width(const char *str);
-extern void text_bounds(const char *str, int &width, int &height, int maxwidth = -1);
-extern int text_visible(const char *str, int hitx, int hity, int maxwidth = -1);
-extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth);
+extern int text_width(const char *str, int flags = 0);
+extern void text_bounds(const char *str, int &width, int &height, int maxwidth = -1, int flags = 0);
+extern int text_visible(const char *str, int hitx, int hity, int maxwidth = -1, int flags = 0);
+extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth, int flags = 0);
 
 // renderva
 enum
