@@ -280,7 +280,7 @@ guntypes guntype[GUN_MAX] =
 		GUN_CARBINE,ANIM_CARBINE,	-10,	10,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
 			10,		10,		200,    1250,	24,		2000,	0,		10000,
-			0,		0,			1,		3,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
