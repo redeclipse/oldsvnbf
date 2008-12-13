@@ -239,7 +239,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	-5,		5,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		250,	1000,	10,		500,	0,		10000,
+			20,		20,		250,	1000,	16,		500,	0,		10000,
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		true,		false,
 			1.0f,	0.f,		0.f,			0.25f,		1.0f,		0.f,
@@ -259,7 +259,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_CG,		ANIM_CHAINGUN,	-5,	     5,
 			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
-			40,		40,		100,    1000,	20,		1500,	0,		2000,
+			40,		40,		90,    1000,	16,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		false,
 			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
@@ -279,8 +279,8 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_CARBINE,ANIM_CARBINE,	-10,	10,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
-			10,		10,		500,    1000,	20,		2000,	0,		10000,
-			0,		0,			5,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+			10,		10,		200,    1250,	24,		2000,	0,		10000,
+			0,		0,			1,		3,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
@@ -289,7 +289,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
 			S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,
-			1,		5,		750,	1500,	100,	5000,	0,		10000,
+			1,		5,		750,	1300,	100,	5000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
