@@ -378,6 +378,11 @@ struct editor
         }
     }
 
+    void insert(const char *s)
+    {
+        while(*s) insert(*s++);
+    }
+
     void insertallfrom(editor *b)
     {
         if(b==this) return;

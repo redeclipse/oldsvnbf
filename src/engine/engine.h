@@ -440,36 +440,10 @@ extern ENetHost *clienthost;
 extern ENetPeer *curpeer, *connpeer;
 
 // console
-struct keym
-{
-    enum
-    {
-        ACTION_DEFAULT = 0,
-        ACTION_SPECTATOR,
-        ACTION_EDITING,
-        NUMACTIONS
-    };
-
-    int code;
-    char *name;
-    char *actions[NUMACTIONS];
-    bool pressed;
-
-    keym() : code(-1), name(NULL), pressed(false) { memset(actions, 0, sizeof(actions)); }
-    ~keym() { DELETEA(name); loopi(NUMACTIONS) DELETEA(actions[i]); }
-};
-extern vector<keym> keyms;
-
-extern keym *keypressed;
-extern char *keyaction;
-extern keym *findbind(const char *key);
-extern int findactionkey(const char *action, int which, int num);
-
-extern const char *retbind(const char *key, int which);
-extern const char *retbindaction(const char *action, int which, int num);
 extern void writebinds(FILE *f);
 extern void writecompletions(FILE *f);
 extern const char *addreleaseaction(const char *s);
+extern const char *getkeyname(int code);
 
 extern bool saycommandon;
 

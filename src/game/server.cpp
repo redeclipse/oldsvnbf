@@ -492,7 +492,7 @@ namespace server
 		else if(m_ctf(gamemode)) maplist = sv_ctfmaps;
 		if(maplist && *maplist)
 		{
-			int n = indexlistlen(maplist), c = -1;
+			int n = listlen(maplist), c = -1;
 			loopi(n)
 			{
 				char *maptxt = indexlist(maplist, i);

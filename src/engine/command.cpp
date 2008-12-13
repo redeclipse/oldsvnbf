@@ -815,7 +815,7 @@ char *indexlist(const char *s, int pos)
     return newstring(e, s-e);
 }
 
-int indexlistlen(const char *s)
+int listlen(const char *s)
 {
 	int n = 0;
 	whitespaceskip;
@@ -823,9 +823,29 @@ int indexlistlen(const char *s)
 	return n;
 }
 
-void listlen(char *s)
+void prettylist(const char *s, const char *conj)
 {
-	intret(indexlistlen(s));
+    vector<char> p;
+    whitespaceskip;
+    for(int len = listlen(s), n = 0; *s; n++)
+    {
+        const char *elem = s;
+        elementskip;
+        p.put(elem, s - elem);
+        if(n+1 < len)
+        {
+            if(len > 2 || !conj[0]) p.add(',');
+            if(n+2 == len && conj[0]) 
+            {
+                p.add(' ');
+                p.put(conj, strlen(conj));
+            }
+            p.add(' ');
+        }
+        whitespaceskip;
+    }
+    p.add('\0');
+    result(p.getbuf());
 }
 
 void at(char *s, int *pos)
@@ -851,7 +871,8 @@ COMMAND(concatword, "V");
 COMMAND(format, "V");
 COMMAND(at, "si");
 COMMAND(substr, "sii");
-COMMAND(listlen, "s");
+ICOMMAND(listlen, "s", (char *s), intret(listlen(s)));
+COMMAND(prettylist, "ss");
 COMMANDN(getalias, getalias_, "s");
 
 void add  (int *a, int *b) { intret(*a + *b); }		  COMMANDN(+, add, "ii");
