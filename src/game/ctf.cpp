@@ -294,32 +294,40 @@ namespace ctf
 			if(st.flags.inrange(index)) st.flags[index].ent = a; \
 			else continue; \
         }
-		#define setupchkflag(a) \
+		#define setupchkflag(a,b) \
 		{ \
 			if(a->type != FLAG || !isteam(world::gamemode, world::mutators, a->attr2, TEAM_NEUTRAL)) continue; \
 			else \
 			{ \
-				bool getout = false; \
+				int already = -1; \
 				loopvk(st.flags) if(st.flags[k].ent == a) \
 				{ \
-					getout = true; \
+					already = k; \
 					break; \
 				} \
-				if(getout) continue; \
+				if(st.flags.inrange(already)) b; \
 			} \
 		}
+		#define setuphomeflag if(!added) { setupaddflag(e, BASE_HOME); added = true; }
 		int index = -1;
         loopv(entities::ents)
         {
             extentity *e = entities::ents[i];
-            setupchkflag(e);
+            setupchkflag(e, { continue; });
 			bool added = false; // check for a linked flag to see if we should use a seperate flag/home assignment
 			loopvj(e->links) if(entities::ents.inrange(e->links[j]))
 			{
-				extentity *f = entities::ents[e->links[j]];
-				setupchkflag(f);
-				if(!added) { setupaddflag(e, BASE_HOME); added = true; } // add parent as base
-				setupaddflag(f, BASE_FLAG); // add link as flag
+				extentity *g = entities::ents[e->links[j]];
+				setupchkflag(g,
+				{
+					ctfstate::flag &f = st.flags[already];
+					if((f.base&BASE_FLAG) && (f.base&BASE_HOME)) // got found earlier, but it is linked!
+						f.base &= ~BASE_HOME;
+					setuphomeflag;
+					continue;
+				});
+				setupaddflag(g, BASE_FLAG); // add link as flag
+				setuphomeflag;
 			}
             if(!added && isteam(world::gamemode, world::mutators, e->attr2, TEAM_FIRST)) // not linked and is a team flag
 				setupaddflag(e, BASE_BOTH); // add as both
