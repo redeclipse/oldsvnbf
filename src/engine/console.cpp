@@ -116,7 +116,7 @@ int rendercommand(int x, int y, int w)
     int width, height;
     text_bounds(s, width, height, w);
     y -= height - FONTH;
-    return draw_text(s, x, y, 0xFF, 0xFF, 0xFF, 0xFF, true, (commandpos>=0) ? (commandpos+1+(commandprompt?strlen(commandprompt):1)) : strlen(s), w);
+    return draw_text(s, x, y, 0xFF, 0xFF, 0xFF, 0xFF, TEXT_SHADOW, (commandpos>=0) ? (commandpos+1+(commandprompt?strlen(commandprompt):1)) : strlen(s), w);
 }
 
 void blendbox(int x1, int y1, int x2, int y2, bool border)
@@ -169,7 +169,7 @@ int renderconsole(int w, int h, int x, int y, int s)
 		}
 		int z = ((h/4)*3)-FONTH*2;
 		loopv(refs)
-			z += draw_textx("%s", w/2, z, 255, 255, 255, int(255*centerblend), false, AL_CENTER, -1, s/2, refs[i]);
+			z += draw_textx("%s", w/2, z, 255, 255, 255, int(255*centerblend), TEXT_CENTERED, -1, s/2, refs[i]);
 	}
 
 	int numl = min(h*(fullconsole ? fullconsize : consize)/100, h-FONTH/3*2)/FONTH;
@@ -190,7 +190,7 @@ int renderconsole(int w, int h, int x, int y, int s)
 
 	int z = y;
 	loopvrev(refs)
-		z += draw_textx("%s", x, z, 255, 255, 255, int(255*conblend), false, AL_LEFT, -1, s, refs[i]);
+		z += draw_textx("%s", x, z, 255, 255, 255, int(255*conblend), TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
 
 	return y;
 }
