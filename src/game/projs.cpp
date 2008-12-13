@@ -295,8 +295,8 @@ namespace projs
 		{
 			case GUN_PLASMA:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x88AABB, 0.8f); // smoke
-				part_create(PART_PLASMA, 75, from, 0x226688, 1.0f, d);
+				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x88AABB, 0.6f); // smoke
+				part_create(PART_PLASMA, 75, from, 0x226688, 1.2f, d);
 				adddynlight(from, 60, vec(0.1f, 0.4f, 0.6f), 75, 0, DL_FLASH);
 				break;
 			}
@@ -375,14 +375,14 @@ namespace projs
 				case GUN_PLASMA:
 				{
 					int part = PART_PLASMA;
-					if(proj.lifemillis-proj.lifetime < 200) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/200.f, 0.01f, 1.f);
+					if(proj.lifemillis-proj.lifetime < 250) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/250.f, 0.1f, 1.f);
 					else
 					{
 						part = PART_PLASMA_SOFT;
 						proj.lifesize = 1.f;
 					}
-					part_create(part, 1, proj.o, 0x226688, 5.f*proj.lifesize);
-					part_create(part, 1, proj.o, 0x44AADD, 2.5f*proj.lifesize); // brighter center part
+					part_create(part, 1, proj.o, 0x226688, 4.75f*proj.lifesize);
+					part_create(part, 1, proj.o, 0x44AADD, 2.25f*proj.lifesize); // brighter center part
 					break;
 				}
 				case GUN_FLAMER:
@@ -390,16 +390,16 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					proj.lifesize *= proj.lifesize; // increase the size exponentially over time
 					int steps = clamp(int(proj.vel.magnitude()*(1.f-proj.lifespan)), 0, 5);
-					vec dir = vec(proj.vel).normalize().neg().mul(clamp(32.f*proj.lifesize, 1.f, 16.f)),
+					vec dir = vec(proj.vel).normalize().neg().mul(clamp(28.f*proj.lifesize, 1.f, 15.f)),
 						pos = proj.o;
 					if(!steps || (proj.lifemillis-proj.lifetime > 200 && proj.movement <= 2.f))
 					{
-						dir = vec(0, 0, clamp(12.f*proj.lifesize, 0.5f, 8.f));
-						steps += 2;
+						dir = vec(0, 0, clamp(10.f*proj.lifesize, 0.5f, 5.f));
+						steps += 4;
 					}
 					loopi(steps) // pull some trickery to simulate a stream
 					{
-						float res = float(steps-i)/float(steps), size = clamp(64.f*proj.lifesize*res, 1.5f, 32.f);
+						float res = float(steps-i)/float(steps), size = clamp(56.f*proj.lifesize*res, 1.5f, 30.f);
 						int col = ((int(200*max((1.f-proj.lifespan)*res,0.3f))<<16)+1)|((int(80*max((1.f-proj.lifespan)*res,0.2f))+1)<<8);
 						part_create(PART_FIREBALL_SOFT, 1, pos, col, size);
 						if(pos.dist(proj.from) <= size) break;
@@ -454,11 +454,11 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
-						float adjust = proj.radius*(proj.attr1 == GUN_CARBINE ? 3.f : 6.f),
+						float adjust = proj.radius*(proj.attr1 == GUN_CARBINE ? 12.f : 6.f),
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? min(adjust, proj.movement) : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize(), from = vec(proj.o).add(vec(dir).mul(proj.radius));
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
-						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(160*max(1.f-proj.lifesize,0.2f)))<<8);
+						int col = ((int(220*max(1.f-proj.lifesize,0.3f))<<16))|((int(160*max(1.f-proj.lifesize,0.2f)))<<8);
 						part_flare(proj.to, from, 1, PART_STREAK, col, proj.radius*0.125f);
 						part_flare(proj.to, from, 1, PART_STREAK_LERP, col, proj.radius*0.05f);
 					}
@@ -513,8 +513,8 @@ namespace projs
 				{
 					case GUN_PLASMA:
 					{
-						part_create(PART_PLASMA_SOFT, 1, proj.o, 0x226688, 5.f*proj.lifesize);
-						part_create(PART_PLASMA_SOFT, 1, proj.o, 0x44AADD, 2.5f*proj.lifesize); // brighter center part
+						part_create(PART_PLASMA_SOFT, 1, proj.o, 0x226688, 4.75f*proj.lifesize);
+						part_create(PART_PLASMA_SOFT, 1, proj.o, 0x44AADD, 2.25f*proj.lifesize); // brighter center part
 						part_create(PART_SMOKE_RISE_SLOW, 500, proj.o, 0x88AABB, 2.4f); // smoke
 						adddynlight(proj.o, 1.15f*guntype[proj.attr1].explode, vec(0.1f, 0.4f, 0.6f), 200, 10);
 						adddecal(DECAL_ENERGY, proj.o, proj.norm, 6.f, bvec(86, 196, 244));
@@ -523,19 +523,19 @@ namespace projs
 					case GUN_FLAMER:
 					case GUN_GL:
 					{ // both basically explosions
-						part_create(proj.attr1 == GUN_FLAMER ? PART_FIREBALL_SOFT : PART_PLASMA_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 1000, proj.o, 0x884400, guntype[proj.attr1].explode*0.3f); // corona
+						part_create(proj.attr1 == GUN_FLAMER ? PART_FIREBALL_SOFT : PART_PLASMA_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 1000, vec(proj.o).sub(vec(0, 0, guntype[proj.attr1].explode*0.15f)), 0xBB4400, guntype[proj.attr1].explode*0.3f); // corona
 						int deviation = int(guntype[proj.attr1].explode*0.5f);
 						loopi(rnd(3)+2)
 						{
-							vec to = vec(proj.o).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
-							part_create(PART_FIREBALL_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 1000, to, 0x882200, guntype[proj.attr1].explode);
+							vec to = vec(vec(proj.o).sub(vec(0, 0, guntype[proj.attr1].explode*0.25f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
+							part_create(PART_FIREBALL_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 1000, to, 0x992200, guntype[proj.attr1].explode);
 						}
 						part_create(PART_SMOKE_RISE_SLOW_SOFT, proj.attr1 == GUN_FLAMER ? 500 : 2000, vec(proj.o).sub(vec(0, 0, guntype[proj.attr1].explode*0.25f)), proj.attr1 == GUN_FLAMER ? 0x444444 : 0x222222, guntype[proj.attr1].explode);
 						adddynlight(proj.o, 1.15f*guntype[proj.attr1].explode, vec(1.1f, 0.22f, 0.02f), proj.attr1 == GUN_FLAMER ? 250 : 1500, 10);
 						if(proj.attr1 == GUN_GL)
 						{
 							world::quakewobble += max(int(guntype[proj.attr1].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/guntype[proj.attr1].explode)), 1);
-							part_fireball(vec(proj.o).sub(vec(0, 0, 2)), float(guntype[proj.attr1].explode), PART_EXPLOSION, 500, 0x883300, 1.f);
+							part_fireball(vec(proj.o).sub(vec(0, 0, guntype[proj.attr1].explode*0.25f)), float(guntype[proj.attr1].explode*1.15f), PART_EXPLOSION, 500, 0xAA3300, 1.f);
 							loopi(rnd(20)+10)
 								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(1500)+1500, 0, rnd(750), rnd(60)+40);
 						}

@@ -247,7 +247,7 @@ namespace server
 		extern bool addai(int type, int skill);
 		extern void deleteai(clientinfo *ci);
 		extern bool delai(int type);
-		extern void removeai(clientinfo *ci);
+		extern void removeai(clientinfo *ci, bool complete = false);
 		extern bool reassignai(int exclude = -1);
 		extern void checkskills();
 		extern void clearai();
@@ -1036,6 +1036,45 @@ namespace server
 		if(&sc) sc.save(ci->state);
 	}
 
+	struct droplist { int gun, ent; };
+	void dropitems(clientinfo *ci, bool discon = false)
+	{
+		servstate &ts = ci->state;
+		vector<droplist> drop;
+		int sgun = m_spawngun(gamemode, mutators);
+		if(!discon && sv_kamakaze && (sv_kamakaze > 2 || (ts.hasgun(GUN_GL, sgun) && (sv_kamakaze > 1 || ts.gunselect == GUN_GL))))
+		{
+			ts.gunshots[GUN_GL].add(-1);
+			droplist &d = drop.add();
+			d.gun = GUN_GL;
+			d.ent = -1;
+		}
+		if(!m_noitems(gamemode, mutators) && (discon || sv_itemdropping))
+		{
+			loopi(GUN_MAX) if(ts.hasgun(i, sgun, 1) && sents.inrange(ts.entid[i]))
+			{
+				if(!(sents[ts.entid[i]].attr2&GNT_FORCED))
+				{
+					if(!discon)
+					{
+						ts.dropped.add(ts.entid[i]);
+						droplist &d = drop.add();
+						d.gun = i;
+						d.ent = ts.entid[i];
+					}
+					sents[ts.entid[i]].spawned = false;
+					sents[ts.entid[i]].millis = discon ? gamemillis-(sv_itemspawntime*1000) : gamemillis;
+				}
+			}
+		}
+		if(!discon)
+		{
+			loopi(GUN_MAX) ts.entid[i] = ts.ammo[i] = -1;
+			if(!drop.empty())
+				sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
+		}
+	}
+
 	#include "stf.cpp"
     #include "ctf.cpp"
 	#include "duel.cpp"
@@ -1360,39 +1399,6 @@ namespace server
 	{
 		int n = 1;
 		ci->events.remove(0, n);
-	}
-
-	struct droplist { int gun, ent; };
-	void dropitems(clientinfo *ci)
-	{
-		servstate &ts = ci->state;
-		vector<droplist> drop;
-		int sgun = m_spawngun(gamemode, mutators);
-		if(sv_kamakaze && (sv_kamakaze > 2 || (ts.hasgun(GUN_GL, sgun) && (sv_kamakaze > 1 || ts.gunselect == GUN_GL))))
-		{
-			ts.gunshots[GUN_GL].add(-1);
-			droplist &d = drop.add();
-			d.gun = GUN_GL;
-			d.ent = -1;
-		}
-		if(!m_noitems(gamemode, mutators) && sv_itemdropping)
-		{
-			loopi(GUN_MAX) if(ts.hasgun(i, sgun, 1) && sents.inrange(ts.entid[i]))
-			{
-				if(!(sents[ts.entid[i]].attr2&GNT_FORCED))
-				{
-					ts.dropped.add(ts.entid[i]);
-					droplist &d = drop.add();
-					d.gun = i;
-					d.ent = ts.entid[i];
-					sents[ts.entid[i]].spawned = false;
-					sents[ts.entid[i]].millis = gamemillis;
-				}
-			}
-		}
-		loopi(GUN_MAX) ts.entid[i] = ts.ammo[i] = -1;
-		if(!drop.empty())
-			sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 	}
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const ivec &hitpush = ivec(0, 0, 0))
@@ -1768,16 +1774,18 @@ namespace server
 	void clientdisconnect(int n, bool local)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
+		bool complete = !numclients(n, false, true);
 		if(ci->privilege) setmaster(ci, false);
 		if(smode) smode->leavegame(ci, true);
 		mutate(smuts, mut->leavegame(ci));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
+		dropitems(ci, true);
 		sendf(-1, 1, "ri2", SV_CDIS, n);
 		if(ci->name[0]) relayf(1, "\fo%s has left the game", colorname(ci));
-		ai::removeai(ci);
+		ai::removeai(ci, complete);
 		clients.removeobj(ci);
-		if(!numclients(-1, false, true)) cleanup();
+		if(complete) cleanup();
 		else checkvotes();
 	}
 

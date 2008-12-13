@@ -87,6 +87,7 @@ namespace ai
 		mutate(smuts, mut->leavegame(ci));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
+		dropitems(ci, true);
 		sendf(-1, 1, "ri2", SV_CDIS, cn);
 		clients.removeobj(ci);
 		delclient(cn);
@@ -134,11 +135,10 @@ namespace ai
 	}
 
 
-	void removeai(clientinfo *ci)
+	void removeai(clientinfo *ci, bool complete)
 	{
-		bool remove = !numclients(ci->clientnum, false, true);
 		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
-			shiftai(clients[i], 2, remove ? -1 : findaiclient(ci->clientnum));
+			shiftai(clients[i], 2, complete ? -1 : findaiclient(ci->clientnum));
 	}
 
 	bool reassignai(int exclude)
