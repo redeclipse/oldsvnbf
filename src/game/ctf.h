@@ -1,6 +1,9 @@
 #define isctfhome(a,b)	((a.base&BASE_HOME) && (a.team == b || a.team == TEAM_NEUTRAL))
 #define isctfflag(a,b)	((a.base&BASE_FLAG) && (a.team == b || a.team == TEAM_NEUTRAL))
 
+#ifdef GAMESERVER
+#define ctfstate ctfservstate
+#endif
 struct ctfstate
 {
     struct flag
@@ -16,7 +19,11 @@ struct ctfstate
         int interptime;
 #endif
 
-        flag() { reset(); }
+        flag() 
+#ifndef GAMESERVER
+          : ent(NULL) 
+#endif
+        { reset(); }
 
         void reset()
         {

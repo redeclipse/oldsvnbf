@@ -1,3 +1,6 @@
+#ifdef GAMESERVER
+#define stfstate stfservstate
+#endif
 struct stfstate
 {
 	static const int OCCUPYPOINTS = 15;
@@ -19,7 +22,11 @@ struct stfstate
 #endif
 		int owners, enemies, converted, securetime;
 
-		flag() { reset(); }
+		flag() 
+#ifndef GAMESERVER
+          : ent(NULL) 
+#endif
+        { reset(); }
 
 		void noenemy()
 		{
