@@ -69,12 +69,12 @@ enttypes enttype[] = {
 	},
 	{
 		LIGHT,			59,		0,		EU_NONE,
-			itox(SPOTLIGHT),
+			inttobit(SPOTLIGHT),
 			false,				"light"
 	},
 	{
 		MAPMODEL,		58,		0,		EU_NONE,
-			itox(TRIGGER),
+			inttobit(TRIGGER),
 			false,				"mapmodel"
 	},
 	{
@@ -89,12 +89,12 @@ enttypes enttype[] = {
 	},
 	{
 		PARTICLES,		59,		0,		EU_NONE,
-			itox(TELEPORT)|itox(TRIGGER)|itox(PUSHER),
+			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"particles"
 	},
 	{
 		MAPSOUND,		58,		0,		EU_NONE,
-			itox(TELEPORT)|itox(TRIGGER)|itox(PUSHER),
+			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"sound"
 	},
 	{
@@ -109,7 +109,7 @@ enttypes enttype[] = {
 	},
 	{
 		TELEPORT,		50,		12,		EU_AUTO,
-			itox(MAPSOUND)|itox(PARTICLES)|itox(TELEPORT),
+			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(TELEPORT),
 			false,				"teleport"
 	},
 	{
@@ -119,32 +119,32 @@ enttypes enttype[] = {
 	},
 	{
 		TRIGGER,		58,		16,		EU_AUTO,
-			itox(MAPMODEL)|itox(MAPSOUND)|itox(PARTICLES),
+			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES),
 			false,				"trigger"
 	},
 	{
 		PUSHER,			58,		12,		EU_AUTO,
-			itox(MAPSOUND)|itox(PARTICLES),
+			inttobit(MAPSOUND)|inttobit(PARTICLES),
 			false,				"pusher"
 	},
 	{
 		FLAG,			48,		32,		EU_NONE,
-			itox(FLAG),
+			inttobit(FLAG),
 			false,				"flag"
 	},
 	{
 		CHECKPOINT,		48,		16,		EU_NONE,
-			itox(CHECKPOINT),
+			inttobit(CHECKPOINT),
 			false,				"checkpoint"
 	},
 	{
 		CAMERA,			48,		0,		EU_NONE,
-			itox(CAMERA),
+			inttobit(CAMERA),
 			false,				"camera"
 	},
 	{
 		WAYPOINT,		1,		8,		EU_NONE,
-			itox(WAYPOINT),
+			inttobit(WAYPOINT),
 			true,				"waypoint"
 	},
 	{
@@ -154,7 +154,7 @@ enttypes enttype[] = {
 	},
 	{
 		CONNECTION,		70,		0,		EU_NONE,
-			itox(CONNECTION),
+			inttobit(CONNECTION),
 			false,				"connection"
 	},
 };

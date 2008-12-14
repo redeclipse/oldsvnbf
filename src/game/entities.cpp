@@ -658,7 +658,7 @@ namespace entities
 		if(ents.inrange(index) && ents.inrange(node))
 		{
 			if(index != node && maylink(ents[index]->type) && maylink(ents[node]->type) &&
-					(enttype[ents[index]->type].canlink&itox(ents[node]->type)))
+					(enttype[ents[index]->type].canlink&inttobit(ents[node]->type)))
 						return true;
 			if(msg)
 				conoutf("\frentity %s (%d) and %s (%d) are not linkable", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
