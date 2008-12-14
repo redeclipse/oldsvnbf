@@ -121,6 +121,7 @@ namespace ai
 				if(smode) smode->entergame(ci);
 				mutate(smuts, mut->entergame(ci));
 			}
+			ci->state.aireinit = 0;
 		}
 	}
 
