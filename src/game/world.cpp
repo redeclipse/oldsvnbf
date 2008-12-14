@@ -487,7 +487,7 @@ namespace world
 			{
 				vec p = headpos(d);
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-				part_splash(PART_BLOOD, max(damage/2, 2), 5000, p, 0x66FFFF, 2.f, int(d->radius));
+				part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x66FFFF, 2.f, int(d->radius));
 				if(showdamageabovehead)
 				{
 					s_sprintfd(ds)("@%d", damage);
