@@ -283,7 +283,7 @@ struct decalrenderer
         xtravertsva += count;
 
         if(flags&(DF_ADD|DF_INVMOD|DF_OVERBRIGHT)) glFogfv(GL_FOG_COLOR, oldfogc);
-        if(flags&(DF_OVERBRIGHT|DF_ADD) && hasTE) resettmu(0);
+        if(flags&(DF_OVERBRIGHT|DF_SATURATE) && hasTE) resettmu(0);
     }
 
     decalinfo &newdecal()
