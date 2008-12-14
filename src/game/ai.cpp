@@ -765,12 +765,20 @@ namespace ai
 					{
 						d->attacking = true;
 						d->attacktime = lastmillis;
-						return !b.override && !d->ai->route.empty();
+						return !b.override && !b.stuck && !d->ai->route.empty();
 					}
-					if(b.defers && d->ai->route.empty())
+					if(b.stuck || d->ai->route.empty())
 					{
-						vec epos(world::feetpos(e, 0.f));
-						if(patrol(d, b, epos)) b.override = true;
+						if(b.defers)
+						{
+							vec epos(world::feetpos(e, 0.f));
+							if(patrol(d, b, epos))
+							{
+								b.override = true;
+								return true;
+							}
+						}
+						return false;
 					}
 					return true;
 				}
@@ -1183,7 +1191,7 @@ namespace ai
 			aistate &b = d->ai->getstate();
 			if(run)
 			{
-				bool override = d->state == CS_ALIVE && d->ai->route.empty(),
+				bool override = d->state == CS_ALIVE && (b.stuck || d->ai->route.empty()),
 					expired = lastmillis >= b.next;
 				if(override || expired)
 				{
