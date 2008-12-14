@@ -2262,11 +2262,10 @@ namespace server
 					getstring(text, p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(cp->state.state == CS_SPECTATOR || (flags&SAY_TEAM && !cp->team)) break;
 					loopv(clients)
 					{
 						clientinfo *t = clients[i];
-						if(t == cp || t->state.state == CS_SPECTATOR || (flags&SAY_TEAM && cp->team != t->team)) continue;
+						if(t == cp || (flags&SAY_TEAM && cp->team != t->team)) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
 					bool team = m_team(gamemode, mutators) && flags&SAY_TEAM;
