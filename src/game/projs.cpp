@@ -767,7 +767,7 @@ namespace projs
                 float barrier = raycube(proj.o, ray, stepdist, RAY_CLIPMAT|RAY_POLY);
                 if(barrier < stepdist)
                 {
-                    proj.o.add(ray.mul(barrier-0.1f));
+                    proj.o.add(ray.mul(barrier-0.15f));
                     switch(bounce(proj, ray))
                     {
                         case 2: proj.o = pos; blocked = true; break;
@@ -783,7 +783,7 @@ namespace projs
 		        {
 			        case 2: proj.o = pos; if(proj.projtype == PRJ_SHOT) blocked = true; break;
 			        case 1: default: break;
-			        case 0: if(proj.projtype != PRJ_SHOT) proj.o = pos; return false;
+			        case 0: proj.o = pos; if(proj.projtype == PRJ_SHOT) { dir.rescale(max(dir.magnitude()-0.15f, 0.0f)); proj.o.add(dir); } return false;
 		        }
             }
         }
@@ -845,7 +845,7 @@ namespace projs
         proj.newpos = proj.o;
         proj.deltapos.sub(proj.newpos);
         proj.newpos.z -= proj.height;
-        physics::interppos(&proj);
+        if(alive) physics::interppos(&proj);
         return alive;
     }
 
