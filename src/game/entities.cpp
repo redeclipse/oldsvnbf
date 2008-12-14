@@ -407,7 +407,7 @@ namespace entities
 
 	void putitems(ucharbuf &p)
 	{
-		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == TRIGGER)
+		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == PLAYERSTART || ents[i]->type == TRIGGER)
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			putint(p, i);

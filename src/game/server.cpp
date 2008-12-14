@@ -483,35 +483,39 @@ namespace server
 	const char *choosemap(const char *suggest)
 	{
 		static string mapchosen;
-		const char *maplist = sv_mainmaps;
 		if(suggest && *suggest) s_strcpy(mapchosen, suggest);
 		else *mapchosen = 0;
-		if(m_lobby(gamemode)) maplist = sv_lobbymaps;
-		else if(m_mission(gamemode)) maplist = sv_missionmaps;
-		else if(m_stf(gamemode)) maplist = sv_stfmaps;
-		else if(m_ctf(gamemode)) maplist = sv_ctfmaps;
-		if(maplist && *maplist)
+		if(sv_maprotate)
 		{
-			int n = listlen(maplist), c = -1;
-			loopi(n)
+			const char *maplist = sv_mainmaps;
+			if(m_lobby(gamemode)) maplist = sv_lobbymaps;
+			else if(m_mission(gamemode)) maplist = sv_missionmaps;
+			else if(m_stf(gamemode)) maplist = sv_stfmaps;
+			else if(m_ctf(gamemode)) maplist = sv_ctfmaps;
+			if(maplist && *maplist)
 			{
-				char *maptxt = indexlist(maplist, i);
-				if(maptxt)
+				int n = listlen(maplist), c = -1;
+				if(sv_maprotate > 1) c = n ? rnd(n) : 0;
+				else loopi(n)
 				{
-					string maploc;
-					if(strpbrk(maptxt, "/\\")) s_strcpy(maploc, maptxt);
-					else s_sprintf(maploc)("maps/%s", maptxt);
-					if(*mapchosen && (!strcmp(mapchosen, maptxt) || !strcmp(mapchosen, maploc)))
-						c = i;
-					DELETEP(maptxt);
+					char *maptxt = indexlist(maplist, i);
+					if(maptxt)
+					{
+						string maploc;
+						if(strpbrk(maptxt, "/\\")) s_strcpy(maploc, maptxt);
+						else s_sprintf(maploc)("maps/%s", maptxt);
+						if(*mapchosen && (!strcmp(mapchosen, maptxt) || !strcmp(mapchosen, maploc)))
+							c = i >= 0 && i < n-1 ? i+1 : 0;
+						DELETEP(maptxt);
+					}
+					if(c >= 0) break;
 				}
-				if(c >= 0) break;
-			}
-			char *mapidx = indexlist(maplist, c >= 0 && c < n-1 ? c+1 : 0);
-			if(mapidx)
-			{
-				s_strcpy(mapchosen, mapidx);
-				DELETEP(mapidx);
+				char *mapidx = c >= 0 ? indexlist(maplist, c) : NULL;
+				if(mapidx)
+				{
+					s_strcpy(mapchosen, mapidx);
+					DELETEP(mapidx);
+				}
 			}
 		}
 		return *mapchosen ? mapchosen : sv_defaultmap;
@@ -1097,7 +1101,7 @@ namespace server
 		oldtimelimit = sv_timelimit;
 		minremain = sv_timelimit ? sv_timelimit : -1;
 		gamelimit = sv_timelimit ? minremain*60000 : 0;
-		interm = 0;
+		interm = ai::aibotbalance = 0;
 		s_strcpy(smapname, s && *s ? s : sv_defaultmap);
 		sents.setsize(0);
 		notgotinfo = true;
@@ -2364,7 +2368,7 @@ namespace server
 					{
 						int type = getint(p), attr1 = getint(p), attr2 = getint(p),
 							attr3 = getint(p), attr4 = getint(p), attr5 = getint(p);
-						if(notgotinfo && (enttype[type].usetype == EU_ITEM || type == TRIGGER))
+						if(notgotinfo && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == TRIGGER))
 						{
 							while(sents.length() <= n) sents.add();
 							sents[n].type = type;
@@ -2387,6 +2391,7 @@ namespace server
 							cp->state.dropped.reset();
 							cp->state.gunreset(false);
 						}
+						ai::setupbotbalance();
 						notgotinfo = false;
 					}
 					break;

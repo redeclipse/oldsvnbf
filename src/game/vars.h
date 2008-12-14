@@ -8,10 +8,11 @@ VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
 SVARG(lobbymaps, "overseer");
-SVARG(missionmaps, "mpspbf1"); // remember, for these the rotation starts at defaultmap
-SVARG(mainmaps, "overseer eight warground warehouse tower rivals refuge citadel storage siege");
-SVARG(ctfmaps, "overseer eight warground warehouse tower rivals refuge citadel storage siege");
-SVARG(stfmaps, "overseer eight warground warehouse tower rivals refuge citadel storage siege");
+SVARG(missionmaps, "mpspbf1 mpspbf2"); // remember, for these the rotation starts at defaultmap
+SVARG(mainmaps, "eight warground warehouse tower rivals refuge citadel storage");
+SVARG(ctfmaps, "eight warground warehouse tower rivals refuge citadel storage siege");
+SVARG(stfmaps, "eight warground warehouse tower rivals refuge citadel storage siege");
+VARG(maprotate, 0, 1, 2); // 0 = off, 1 = sequence, 2 = random
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
@@ -30,9 +31,12 @@ VARG(stffinish, 0, 0, 1); // finish when all bases captured
 VARG(spawngun, 0, GUN_PLASMA, GUN_MAX-1);
 VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
-VARG(botbalance, 0, 4, 32);
-VARG(botminskill, 0, 60, 100);
-VARG(botmaxskill, 0, 90, 100);
+VARG(botbalance, 0, 1, 1);
+VARG(botratio, 0, 2, 10);
+VARG(botminamt, 0, 2, MAXCLIENTS-1);
+VARG(botmaxamt, 0, 12, MAXCLIENTS-1);
+VARG(botminskill, 0, 80, 100);
+VARG(botmaxskill, 0, 100, 100);
 
 FVARG(damagescale, 0.1f, 1.f, 10);
 FVARG(gravityscale, 0.1f, 1.f, 10);
