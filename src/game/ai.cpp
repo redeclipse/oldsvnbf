@@ -1,6 +1,18 @@
 #ifdef GAMESERVER
 namespace ai
 {
+	int aibotbalance = 0;
+	void setupbotbalance()
+	{
+		aibotbalance = 0;
+		loopk(2)
+		{
+			loopv(sents) if(sents[i].type == PLAYERSTART && (k || isteam(gamemode, mutators, sents[i].attr2, TEAM_NEUTRAL)))
+				aibotbalance++;
+			if(aibotbalance) break;
+		}
+	}
+
 	int findaiclient(int exclude)
 	{
 		vector<int> siblings;
@@ -178,7 +190,7 @@ namespace ai
 	void checksetup()
 	{
 		int m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
-			n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
+			n = sv_botmaxskill < sv_botminskill ? sv_botmaxskill : sv_botminskill;
 		loopv(clients) if(clients[i]->state.aitype != AI_NONE)
 		{
 			clientinfo *ci = clients[i];
@@ -204,9 +216,11 @@ namespace ai
 	{
 		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			if(m_play(gamemode) && sv_botbalance)
+			if(m_play(gamemode) && sv_botbalance && aibotbalance)
 			{
-				int balance = clamp(sv_botbalance*(m_team(gamemode, mutators) ? numteams(gamemode, mutators) : 1), 0, 128);
+				int balance = clamp(aibotbalance/max(sv_botratio, 1),
+						sv_botminamt > sv_botmaxamt ? sv_botmaxamt : sv_botminamt,
+							sv_botminamt < sv_botmaxamt ? sv_botmaxamt : sv_botminamt);
 				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
 				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
 			}
@@ -221,18 +235,17 @@ namespace ai
 		if(haspriv(ci, PRIV_MASTER, true))
 		{
 			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(m_play(gamemode))
+			else
 			{
-				if(sv_botbalance < 32)
+				if(sv_botbalance)
 				{
-					setvar("sv_botbalance", sv_botbalance+1, true);
-					s_sprintfd(val)("%d", sv_botbalance);
+					setvar("sv_botbalance", 0, true);
+					s_sprintfd(val)("%d", 0);
 					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
 				}
-				else srvmsgf(ci->clientnum, "botbalance is at its highest");
+				if(!addai(AI_BOT, skill))
+					srvmsgf(ci->clientnum, "failed to create or assign bot");
 			}
-			else if(!addai(AI_BOT, skill))
-				srvmsgf(ci->clientnum, "failed to create or assign bot");
 		}
 	}
 
@@ -241,18 +254,17 @@ namespace ai
 		if(haspriv(ci, PRIV_MASTER, true))
 		{
 			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(m_play(gamemode))
+			else
 			{
-				if(sv_botbalance > 0)
+				if(sv_botbalance)
 				{
-					setvar("sv_botbalance", sv_botbalance-1, true);
-					s_sprintfd(val)("%d", sv_botbalance);
+					setvar("sv_botbalance", 0, true);
+					s_sprintfd(val)("%d", 0);
 					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
 				}
-				else srvmsgf(ci->clientnum, "botbalance is at its lowest");
+				if(!delai(AI_BOT))
+					srvmsgf(ci->clientnum, "failed to remove any bots");
 			}
-			else if(!delai(AI_BOT))
-				srvmsgf(ci->clientnum, "failed to remove any bots");
 		}
 	}
 }
@@ -332,19 +344,18 @@ namespace ai
 		}
 	}
 
-	bool hastarget(gameent *d, aistate &b, vec &pos)
+	bool hastarget(gameent *d, aistate &b, vec &from, vec &to)
 	{ // add margins of error
 		if(!rnd(d->skill*10)) return true;
 		else
 		{
-			vec dir = world::feetpos(d, 0.f);
-			dir.sub(pos);
-			dir.normalize();
-			float targyaw, targpitch;
+			vec dir = vec(from).sub(to).normalize();
+			float targyaw, targpitch, mindist = d->radius*4.f, dist = from.squaredist(to);
+			if(guntype[d->gunselect].explode) mindist = guntype[d->gunselect].explode*4.f;
 			vectoyawpitch(dir, targyaw, targpitch);
 			float rtime = d->skill*guntype[d->gunselect].rdelay/1000.f, atime = d->skill*guntype[d->gunselect].adelay/100.f,
-					skew = float(lastmillis-b.millis)/(rtime+atime), cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
-			if(cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew)
+					skew = float(lastmillis-b.millis)/float(rtime+atime), cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
+			if(dist >= mindist*(1.f-skew) && cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew)
 				return true;
 		}
 		return false;
@@ -419,20 +430,23 @@ namespace ai
 	{
 		vec feet = world::feetpos(d, 0.f);
 		if(feet.squaredist(pos) <= tolerance*tolerance) b.idle = true;
-		else if(!makeroute(d, b, pos, 1, tolerance))
-		{ // run away and back to keep ourselves busy
-			if(!b.override && randomnode(d, b, feet, pos, 1, tolerance))
-			{
-				b.override = true;
-				return true;
+		else
+		{
+			if(!makeroute(d, b, pos, 1, tolerance))
+			{ // run away and back to keep ourselves busy
+				if(!b.override && randomnode(d, b, feet, pos, 1, tolerance))
+				{
+					b.override = true;
+					return true;
+				}
+				else if(!d->ai->route.empty()) return true;
+				else if(!retry)
+				{
+					b.override = false;
+					return defend(d, b, pos, tolerance, true);
+				}
+				return false;
 			}
-			else if(!d->ai->route.empty()) return true;
-			else if(!retry)
-			{
-				b.override = false;
-				return defend(d, b, pos, tolerance, true);
-			}
-			return false;
 		}
 		return true;
 	}
@@ -583,14 +597,14 @@ namespace ai
 			case AI_S_PURSUE:
 			{
 				*result = true;
-				*pursue = false;
+				*pursue = b.defers;
 				return true;
 			}
 			case AI_S_WAIT:
 			case AI_S_INTEREST:
 			{
 				*result = true;
-				*pursue = true;
+				*pursue = b.defers;
 				return true;
 			}
 			case AI_S_DEFEND:
@@ -603,7 +617,7 @@ namespace ai
 				else
 				{
 					*result = true;
-					*pursue = true;
+					*pursue = b.defers;
 				}
 				return true;
 			}
@@ -743,20 +757,20 @@ namespace ai
 			{
 				vec ep = world::headpos(e);
 				bool cansee = AICANSEE(pos, ep, d);
-				if(cansee || (d->ai->lastseen >= 0 && lastmillis-d->ai->lastseen > d->skill*25))
+				if(cansee || (d->ai->lastseen >= 0 && lastmillis-d->ai->lastseen > d->skill*100))
 				{
 					d->ai->enemy = e->clientnum;
 					d->ai->lastseen = lastmillis;
-					if(d->canshoot(d->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, ep))
+					if(d->canshoot(d->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, pos, ep))
 					{
 						d->attacking = true;
 						d->attacktime = lastmillis;
 						return !b.override && !d->ai->route.empty();
 					}
-					if(b.defers || d->ai->route.empty())
+					if(b.defers && d->ai->route.empty())
 					{
 						vec epos(world::feetpos(e, 0.f));
-						return patrol(d, b, epos);
+						if(patrol(d, b, epos)) b.override = true;
 					}
 					return true;
 				}
@@ -1036,7 +1050,7 @@ namespace ai
 		{
 			vec targ, ep = world::headpos(e);
 			bool cansee = AICANSEE(dp, ep, d);
-			if(cansee || (d->ai->lastseen >= 0 && lastmillis-d->ai->lastseen > d->skill*25))
+			if(cansee || (d->ai->lastseen >= 0 && lastmillis-d->ai->lastseen > d->skill*100))
 			{
 				if(cansee) d->ai->lastseen = lastmillis;
 				getyawpitch(dp, ep, d->ai->targyaw, d->ai->targpitch);
@@ -1050,22 +1064,27 @@ namespace ai
 		{
 			if(!b.wasidle)
 			{
-				d->ai->targyaw += 180.f;
+				d->ai->targyaw -= 180.f;
 				d->ai->targpitch = 0.f;
+				b.wasidle = true;
 			}
 			d->stopmoving();
 			b.stuck = 0;
 		}
-		else if(hunt(d))
+		else
 		{
-			getyawpitch(dp, d->ai->spot, d->ai->targyaw, d->ai->targpitch);
-			b.stuck = 0;
-		}
-		else if(lastmillis-b.stuck > 5000)
-		{
-			d->ai->targyaw += float(90+rnd(180));
-			d->ai->targpitch = 0.f;
-			b.stuck = lastmillis;
+			b.wasidle = false;
+			if(hunt(d))
+			{
+				getyawpitch(dp, d->ai->spot, d->ai->targyaw, d->ai->targpitch);
+				b.stuck = 0;
+			}
+			else if(lastmillis-b.stuck > 5000)
+			{
+				d->ai->targyaw += float(90+rnd(180));
+				d->ai->targpitch = 0.f;
+				b.stuck = lastmillis;
+			}
 		}
 		world::fixrange(d->ai->targyaw, d->ai->targpitch);
 		aim(d, d->aimyaw, d->aimpitch, d->ai->targyaw, d->ai->targpitch);
@@ -1088,7 +1107,6 @@ namespace ai
 			d->strafe = ad.strafe;
 			d->aimyaw -= ad.offset;
 		}
-
 		world::fixrange(d->aimyaw, d->aimpitch);
 		return aiming;
 	}
@@ -1163,7 +1181,6 @@ namespace ai
 		if(!world::intermission)
 		{
 			aistate &b = d->ai->getstate();
-			b.wasidle = b.idle;
 			if(run)
 			{
 				bool override = d->state == CS_ALIVE && d->ai->route.empty(),
