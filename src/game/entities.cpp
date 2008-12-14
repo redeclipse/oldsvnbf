@@ -1419,7 +1419,7 @@ namespace entities
 	{
 		if(rendermainview) // important, don't render lines and stuff otherwise!
 		{
-			int level = (m_edit(world::gamemode) ? 2 : ((showentdir==3 || showentradius==3 || showentlinks==3 || (dropwaypoints && !m_play(world::gamemode))) ? 3 : 0));
+			int level = (m_edit(world::gamemode) ? 2 : ((showentdir==3 || showentradius==3 || showentlinks==3) ? 3 : 0));
 			if(level)
             {
             	bool editing = world::player1->state == CS_EDITING;
