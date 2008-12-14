@@ -192,6 +192,11 @@ struct particle
     {
         const char *text;         // will call delete[] on this only if it starts with an @
         float val;
+        struct
+        {
+            uchar color2[3];
+            uchar progress;
+        };
     };
 	physent *owner;
 };
@@ -203,7 +208,7 @@ extern void regular_part_splash(int type, int num, int fade, const vec &p, int c
 extern void part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int radius = 4);
 extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int color = 0xFFFFFF, float size = .8f);
 extern void part_text(const vec &s, const char *t, int type = PART_TEXT, int fade = 1, int color = 0xFFFFFF, float size = 2.f);
-extern void part_meter(const vec &s, float val, int type, int fade = 1, int color = 0xFFFFFF, float size = 2.f);
+extern void part_meter(const vec &s, float val, int type, int fade = 1, int color = 0xFFFFFF, int color2 = 0xFFFFFF, float size = 2.f);
 extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 2.f, physent *pl = NULL);
 extern void regular_part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f);
 extern void part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f);

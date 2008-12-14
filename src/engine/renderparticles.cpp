@@ -277,7 +277,7 @@ struct meterrenderer : listrenderer
         float scale = p->size/80.0f;
         glScalef(-scale, scale, -scale);
 
-        float right = 8*FONTH, left = p->val*right;
+        float right = 8*FONTH, left = p->progress/100.0f*right;
         glTranslatef(-right/2.0f, 0, 0);
 
         if(outlinemeters)
@@ -293,7 +293,7 @@ struct meterrenderer : listrenderer
             glEnd();
         }
 
-        if(basetype==PT_METERVS) glColor3ub(color[2], color[1], color[0]); //swap r<->b
+        if(basetype==PT_METERVS) glColor3ubv(p->color2);
         else glColor3f(0, 0, 0);
         glBegin(GL_TRIANGLE_STRIP);
         loopk(10)
@@ -936,10 +936,14 @@ void part_text(const vec &s, const char *t, int type, int fade, int color, float
     newparticle(s, vec(0, 0, 1), fade, type, color, size)->text = t;
 }
 
-void part_meter(const vec &s, float val, int type, int fade, int color, float size)
+void part_meter(const vec &s, float val, int type, int fade, int color, int color2, float size)
 {
     if(shadowmapping || renderedgame) return;
-    newparticle(s, vec(0, 0, 1), fade, type, color, size)->val = val;
+    particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size);
+    p->color2[0] = color2>>16;
+    p->color2[1] = (color2>>8)&0xFF;
+    p->color2[2] = color2&0xFF;
+    p->progress = clamp(int(val*100), 0, 100);
 }
 
 void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, physent *pl)
@@ -1132,10 +1136,17 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
             else newparticle(o, offsetvec(o, attr2, 1+attr3), 1, type, colorfromattr(attr4), size);
             break;
         }
-        case 5: //meter, metervs - <percent> <rgb>
+        case 5: //meter, metervs - <percent> <rgb> <rgb2>
         case 6:
-            newparticle(o, vec(0, 0, 1), 1, attr1==5 ? PART_METER : PART_METER_VS, colorfromattr(attr3), 2.0)->val = min(1.0f, float(attr2)/100);
+        {
+            particle *p = newparticle(o, vec(0, 0, 1), 1, attr1==5 ? PART_METER : PART_METER_VS, colorfromattr(attr3), 2.0);
+            int color2 = colorfromattr(attr4);
+            p->color2[0] = color2>>16;
+            p->color2[1] = (color2>>8)&0xFF;
+            p->color2[2] = color2&0xFF;
+            p->progress = clamp(attr2, 0, 100);
             break;
+        }
         case 32: //lens flares - plain/sparkle/sun/sparklesun <red> <green> <blue>
         case 33:
         case 34:
