@@ -249,6 +249,7 @@ namespace stf
 		loopv(st.flags)
 		{
 			stfstate::flag &b = st.flags[i];
+            if(!b.ent) continue;
 			const char *flagname = teamtype[b.owner].flag;
             rendermodel(&b.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, 0, 0, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
 			int attack = b.enemy ? b.enemy : b.owner;
@@ -338,6 +339,7 @@ namespace stf
 			extentity *e = entities::ents[i];
 			if(e->type!=FLAG) continue;
 			stfstate::flag &b = st.flags.add();
+            stfstate::flag *foo = st.flags.buf;
 			b.o = e->o;
             b.pos = b.o;
 			s_sprintfd(alias)("flag_%d", e->attr1);
