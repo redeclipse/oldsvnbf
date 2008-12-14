@@ -46,17 +46,14 @@ void keyrepeat(bool on)
 void inputgrab(bool on)
 {
 #ifndef WIN32
-	if(screen->flags & SDL_FULLSCREEN)
-	{
+    if(!(screen->flags & SDL_FULLSCREEN)) SDL_WM_GrabInput(SDL_GRAB_OFF);
+    else
 #endif
-		SDL_WM_GrabInput(on ? SDL_GRAB_ON : SDL_GRAB_OFF);
-		showcursor(on != true);
-#ifndef WIN32
-	}
-#endif
+    SDL_WM_GrabInput(on ? SDL_GRAB_ON : SDL_GRAB_OFF);
+    showcursor(!on);
 }
 
-VARF(grabinput, 0, 0, 1, inputgrab(grabinput ? true : false));
+VARF(grabinput, 0, 0, 1, inputgrab(grabinput!=0));
 VARP(autograbinput, 0, 1, 1);
 
 void cleanup()
@@ -187,7 +184,11 @@ void setfullscreen(bool enable)
 #if defined(WIN32) || defined(__APPLE__)
     initwarning(enable ? "fullscreen" : "windowed");
 #else
-    if(enable == !(screen->flags&SDL_FULLSCREEN)) SDL_WM_ToggleFullScreen(screen);
+    if(enable == !(screen->flags&SDL_FULLSCREEN)) 
+    {
+        SDL_WM_ToggleFullScreen(screen);
+        inputgrab(grabinput!=0);
+    }
 #endif
 }
 
