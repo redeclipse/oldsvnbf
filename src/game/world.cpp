@@ -1661,7 +1661,7 @@ namespace world
             if(player1->state!=CS_SPECTATOR && player1->state!=CS_WAITING && (player1->state!=CS_DEAD || !player1->obliterated))
                 renderplayer(player1, true, (player1->state == CS_ALIVE && lastmillis-player1->lastspawn <= REGENWAIT) || thirdpersontranslucent, early);
         }
-        else if(player1->state == CS_ALIVE)
+        else if(player1->state == CS_ALIVE && !thirdperson)
         {
             renderplayer(player1, false, (lastmillis-player1->lastspawn <= REGENWAIT) || firstpersontranslucent, early);
         }
