@@ -339,7 +339,6 @@ namespace stf
 			extentity *e = entities::ents[i];
 			if(e->type!=FLAG) continue;
 			stfstate::flag &b = st.flags.add();
-            stfstate::flag *foo = st.flags.buf;
 			b.o = e->o;
             b.pos = b.o;
 			s_sprintfd(alias)("flag_%d", e->attr1);
