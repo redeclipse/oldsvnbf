@@ -160,10 +160,21 @@ namespace projs
 			proj.height += proj.projtype == PRJ_ENT ? 4.f : 1.f;
 		}
 
-		vec dir(vec(vec(proj.to).sub(proj.o)).normalize()), orig = proj.o;
-		vectoyawpitch(dir, proj.yaw, proj.pitch);
+		vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
+        float maxdist = dir.magnitude();
+        if(maxdist > 1e-3f) 
+        {
+            dir.mul(1/maxdist);
+		    vectoyawpitch(dir, proj.yaw, proj.pitch);
+        }
+        else if(proj.owner)
+        {
+            proj.yaw = proj.owner->yaw;
+            proj.pitch = proj.owner->pitch;
+            vecfromyawpitch(proj.yaw, proj.pitch, 1, 0, dir);
+        } 
 		vec rel = vec(proj.vel).add(dir);
-		if(proj.owner && proj.relativity) rel.add(vec(vec(proj.owner->vel).add(proj.owner->falling)).mul(proj.relativity));
+		if(proj.owner && proj.relativity) rel.add(vec(proj.owner->vel).add(proj.owner->falling).mul(proj.relativity));
 		proj.vel = vec(rel).add(vec(dir).mul(proj.maxspeed));
 		proj.spawntime = lastmillis;
 		proj.movement = 1;
