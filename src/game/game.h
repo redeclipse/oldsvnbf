@@ -937,8 +937,6 @@ struct aistate
 	{
 		expire = cycle = stuck = 0;
 		next = millis;
-		if(type == AI_S_WAIT)
-			next += rnd(1500) + 1500;
 		targtype = target = -1;
 		idle = wasidle = override = false;
 		defers = true;
@@ -950,21 +948,25 @@ struct aiinfo
 	vector<aistate> state;
 	vector<int> route;
 	vec target, spot;
-	int enemy, lastseen, gunpref;
+	int enemy, lastseen, gunpref, lastnode, timeinnode;
 	float targyaw, targpitch;
+	bool dontmove, tryreset;
 
 	aiinfo() { reset(); }
 	~aiinfo() { state.setsize(0); route.setsize(0); }
 
-	void reset()
+	void reset(bool tryit = false)
 	{
 		state.setsize(0);
 		route.setsize(0);
 		addstate(AI_S_WAIT);
 		gunpref = rnd(GUN_MAX-1)+1;
 		spot = target = vec(0, 0, 0);
-		enemy = lastseen = -1;
+		enemy = lastseen = lastnode = -1;
+		timeinnode = 0;
 		targyaw = targpitch = 0.f;
+		dontmove = false;
+		tryreset = tryit;
 	}
 
 	aistate &addstate(int t)
@@ -1236,10 +1238,9 @@ namespace weapons
 
 namespace ai
 {
-	const float AIISNEAR			= 64.f;			// is near
-	const float AIISFAR				= 128.f;		// too far
-	const float AIJUMPHEIGHT		= 6.f;			// decides to jump
-	const float AIJUMPIMPULSE		= 16.f;			// impulse to jump
+	const float AIISNEAR			= 48.f;			// is near
+	const float AIISFAR				= 256.f;		// too far
+	const float AIJUMPHEIGHT		= 4.f;			// decides to jump
 	const float AILOSMIN			= 64.f;			// minimum line of sight
 	const float AILOSMAX			= 4096.f;		// maximum line of sight
 	const float AIFOVMIN			= 90.f;			// minimum field of view

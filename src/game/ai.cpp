@@ -350,12 +350,12 @@ namespace ai
 		else
 		{
 			vec dir = vec(from).sub(to).normalize();
-			float targyaw, targpitch, mindist = d->radius*4.f, dist = from.squaredist(to);
-			if(guntype[d->gunselect].explode) mindist = guntype[d->gunselect].explode*4.f;
+			float targyaw, targpitch, mindist = (d->radius*d->radius)*2.f, dist = from.squaredist(to);
+			if(guntype[d->gunselect].explode) mindist = (guntype[d->gunselect].explode*guntype[d->gunselect].explode)*2.f;
 			vectoyawpitch(dir, targyaw, targpitch);
-			float rtime = d->skill*guntype[d->gunselect].rdelay/1000.f, atime = d->skill*guntype[d->gunselect].adelay/100.f,
-					skew = float(lastmillis-b.millis)/float(rtime+atime), cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
-			if(dist >= mindist*(1.f-skew) && cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew)
+			float rtime = (d->skill*guntype[d->gunselect].rdelay/2000.f)+(d->skill*guntype[d->gunselect].adelay/200.f),
+					skew = float(lastmillis-b.millis)/float(rtime), cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
+			if(mindist <= dist*skew && cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew)
 				return true;
 		}
 		return false;
@@ -479,7 +479,7 @@ namespace ai
 			vec epos(world::feetpos(e, 0.f));
 			aistate &c = d->ai->addstate(pursue ? AI_S_PURSUE : AI_S_ATTACK);
 			c.targtype = AI_T_PLAYER;
-			c.defers = pursue;
+			c.defers = false;
 			d->ai->enemy = c.target = e->clientnum;
 			d->ai->lastseen = lastmillis;
 			if(pursue) c.expire = clamp(d->skill*100, 1000, 10000);
@@ -526,7 +526,7 @@ namespace ai
 						n.targtype = AI_T_ENTITY;
 						n.tolerance = enttype[e.type].radius+d->radius;
 						n.score = pos.squaredist(e.o)/(attr != d->ai->gunpref ? 1.f : 10.f);
-						n.defers = d->gunselect != d->ai->gunpref;
+						n.defers = d->gunselect == d->ai->gunpref;
 					}
 					break;
 				}
@@ -553,7 +553,7 @@ namespace ai
 						n.targtype = AI_T_DROP;
 						n.tolerance = enttype[proj.ent].radius+d->radius;
 						n.score = pos.squaredist(proj.o)/(attr != d->ai->gunpref ? 1.f : 10.f);
-						n.defers = d->gunselect != d->ai->gunpref;
+						n.defers = d->gunselect == d->ai->gunpref;
 					}
 					break;
 				}
@@ -621,7 +621,13 @@ namespace ai
 				}
 				return true;
 			}
-			case AI_S_ATTACK: default: break;
+			case AI_S_ATTACK:
+			{
+				*result = false;
+				*pursue = false;
+				return true;
+			}
+			default: break;
 		}
 		return false;
 	}
@@ -693,7 +699,7 @@ namespace ai
 					c.targtype = AI_T_NODE;
 					c.target = closest;
 					c.expire = 1000;
-					c.defers = false;
+					c.defers = true;
 					return true;
 				}
 			}
@@ -765,21 +771,8 @@ namespace ai
 					{
 						d->attacking = true;
 						d->attacktime = lastmillis;
-						return !b.override && !b.stuck && !d->ai->route.empty();
 					}
-					if(b.stuck || d->ai->route.empty())
-					{
-						if(b.defers)
-						{
-							vec epos(world::feetpos(e, 0.f));
-							if(patrol(d, b, epos))
-							{
-								b.override = true;
-								return true;
-							}
-						}
-						return false;
-					}
+					if(b.stuck || d->ai->route.empty()) return false;
 					return true;
 				}
 			}
@@ -876,8 +869,8 @@ namespace ai
 	{
 		vec pos = world::feetpos(d, 0.f);
 		int node = -1;
-		float mindist = 1e16f;
-		loopvrev(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && !obstacles.find(d->ai->route[i], d))
+		float mindist = 1e16f; //(d->radius+enttype[WAYPOINT].radius);
+		loopv(d->ai->route) if(d->ai->route[i] != d->lastnode && entities::ents.inrange(d->ai->route[i]) && !obstacles.find(d->ai->route[i], d))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
 			float dist = e.o.squaredist(pos);
@@ -898,20 +891,20 @@ namespace ai
 			if(n > 0 && entities::ents.inrange(d->ai->route[n-1]) && !obstacles.find(d->ai->route[n-1], d))
 			{
 				gameentity &e = *(gameentity *)entities::ents[d->ai->route[n-1]];
-				vec pos = world::feetpos(d);
 				d->ai->spot = e.o;
-				if((!d->timeinair && d->ai->spot.z-pos.z > AIJUMPHEIGHT) ||
-					(d->timeinair && d->vel.z <= 4.f && physics::canimpulse(d))) // try to impulse at height of a jump
+				vec pos = world::feetpos(d), off = vec(d->ai->spot).sub(pos);
+				if(off.z >= AIJUMPHEIGHT && (!d->timeinair || (d->timeinair && d->vel.z <= 4.f && physics::canimpulse(d))))
 				{
 					d->jumping = true;
 					d->jumptime = lastmillis;
+					vec dir(off.x, off.y, 0);
+					if(dir.magnitude() <= AIJUMPHEIGHT) d->ai->dontmove = true; // going up
 				}
-				if(((e.attr1 & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime > 250))
+				if(((e.attr1 & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
 				{
 					d->crouching = !d->crouching;
 					d->crouchtime = lastmillis;
 				}
-				d->ai->spot.z += d->height;
 				return true;
 			}
 			if(n != 0 && !retry) return hunt(d, true);
@@ -920,13 +913,13 @@ namespace ai
 		return false;
 	}
 
-	void aim(gameent *d, float &yaw, float &pitch, float targyaw, float targpitch, int skew = 0)
+	void aim(gameent *d, float &yaw, float &pitch, float targyaw, float targpitch, bool skew = false)
 	{
 		if(yaw < targyaw-180.0f) yaw += 360.0f;
 		if(yaw > targyaw+180.0f) yaw -= 360.0f;
 		if(skew)
 		{
-			float amt = float(lastmillis-d->lastupdate)/float((111-d->skill)*(skew+rnd(skew))),
+			float amt = float(lastmillis-d->lastupdate)/float((111-d->skill)*(10+rnd(10))),
 				offyaw = fabs(targyaw-yaw)*amt, offpitch = fabs(targpitch-pitch)*amt*0.25f;
 
 			if(targyaw > yaw) // slowly turn ai towards target
@@ -1061,9 +1054,10 @@ namespace ai
 			if(cansee || (d->ai->lastseen >= 0 && lastmillis-d->ai->lastseen > d->skill*100))
 			{
 				if(cansee) d->ai->lastseen = lastmillis;
-				getyawpitch(dp, ep, d->ai->targyaw, d->ai->targpitch);
-				world::fixrange(d->ai->targyaw, d->ai->targpitch);
-				aim(d, d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, 5);
+				float yaw, pitch;
+				getyawpitch(dp, ep, yaw, pitch);
+				world::fixrange(yaw, pitch);
+				aim(d, d->yaw, d->pitch, yaw, pitch, true);
 				aiming = true;
 			}
 		}
@@ -1072,11 +1066,10 @@ namespace ai
 		{
 			if(!b.wasidle)
 			{
-				d->ai->targyaw -= 180.f;
+				d->ai->targyaw += 180.f;
 				d->ai->targpitch = 0.f;
-				b.wasidle = true;
 			}
-			d->stopmoving();
+			b.wasidle = true;
 			b.stuck = 0;
 		}
 		else
@@ -1084,20 +1077,24 @@ namespace ai
 			b.wasidle = false;
 			if(hunt(d))
 			{
-				getyawpitch(dp, d->ai->spot, d->ai->targyaw, d->ai->targpitch);
+				vec spot = vec(d->ai->spot).add(vec(0, 0, d->height));
+				getyawpitch(dp, spot, d->ai->targyaw, d->ai->targpitch);
 				b.stuck = 0;
 			}
-			else if(lastmillis-b.stuck > 5000)
+			else if(lastmillis-b.stuck >= 5000)
 			{
-				d->ai->targyaw += float(90+rnd(180));
-				d->ai->targpitch = 0.f;
+				if(b.stuck)
+				{
+					d->ai->targyaw += float(90+rnd(180));
+					d->ai->targpitch = 0.f;
+				}
 				b.stuck = lastmillis;
 			}
 		}
 		world::fixrange(d->ai->targyaw, d->ai->targpitch);
 		aim(d, d->aimyaw, d->aimpitch, d->ai->targyaw, d->ai->targpitch);
-		if(!aiming) aim(d, d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, 10);
-		if(!b.idle)
+		if(!aiming) aim(d, d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, true);
+		if(!b.idle && !d->ai->dontmove)
 		{
 			const struct aimdir { int move, strafe, offset; } aimdirs[8] =
 			{
@@ -1115,6 +1112,8 @@ namespace ai
 			d->strafe = ad.strafe;
 			d->aimyaw -= ad.offset;
 		}
+		else d->move = d->strafe = 0;
+		d->ai->dontmove = false;
 		world::fixrange(d->aimyaw, d->aimpitch);
 		return aiming;
 	}
@@ -1132,6 +1131,14 @@ namespace ai
 			if(!request(d, busy) && !busy) defer(d, b, false);
 			entities::checkitems(d);
 			weapons::shoot(d, d->ai->target, guntype[d->gunselect].power); // always use full power
+			if(!b.idle && (b.stuck || d->lastnode == d->ai->lastnode))
+			{
+				d->ai->timeinnode += curtime;
+				if(d->ai->timeinnode >= 10000 && !d->ai->tryreset) d->ai->reset(true);
+				else if(d->ai->timeinnode >= 20000) world::suicide(d, 0); // bail
+			}
+			else d->ai->timeinnode = 0;
+			d->ai->lastnode = d->lastnode;
 		}
 		else d->stopmoving();
 

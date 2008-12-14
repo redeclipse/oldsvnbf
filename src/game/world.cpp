@@ -1093,7 +1093,7 @@ namespace world
 							vec center, radius;
 							mmi.m->collisionbox(0, center, radius);
 							if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(e.attr2));
-							pos.z += ((center.z-radius.z)+radius.z*2*mmi.m->height)+0.5f;
+							pos.z += ((center.z-radius.z)+radius.z*2*mmi.m->height)*2.f;
 						}
 						if(enttype[e.type].radius) pos.z += enttype[e.type].radius;
 						d.o = pos;
