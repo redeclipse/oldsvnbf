@@ -552,10 +552,10 @@ namespace ctf
 			{
 				bool guard = false;
 				if(f.owner || targets.empty()) guard = true;
-				else if(d->gunselect != GUN_PLASMA)
+				else if(d->gunselect == d->ai->gunpref)
 				{ // see if we can relieve someone who only has a plasma
 					gameent *t;
-					loopvk(targets) if((t = world::getclient(targets[k])) && t->gunselect == GUN_PLASMA)
+					loopvk(targets) if((t = world::getclient(targets[k])) && t->ai && t->gunselect != t->ai->gunpref)
 					{
 						guard = true;
 						break;
@@ -571,7 +571,7 @@ namespace ctf
 					n.targtype = AI_T_AFFINITY;
 					n.expire = 10000;
 					n.tolerance = enttype[FLAG].radius;
-					n.score = pos.squaredist(f.pos())/(d->gunselect != GUN_PLASMA ? 100.f : 1.f);
+					n.score = pos.squaredist(f.pos())/(d->gunselect != d->ai->gunpref ? 10.f : 100.f);
 					n.defers = false;
 				}
 			}

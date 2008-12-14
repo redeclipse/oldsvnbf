@@ -495,7 +495,7 @@ namespace entities
 				break;
 			}
 			case WEAPON:
-				while(e.attr1 <= GUN_PLASMA) e.attr1 += GUN_MAX-1;
+				while(e.attr1 < 0) e.attr1 += GUN_MAX;
 				while(e.attr1 >= GUN_MAX) e.attr1 -= GUN_MAX;
 				break;
 			case PLAYERSTART:
@@ -1149,7 +1149,6 @@ namespace entities
 					}
 					if(mtype == MAP_BFGZ && gver <= 97 && e.attr1 >= 4)
 						e.attr1++; // add in carbine
-					if(e.attr1 == GUN_PLASMA) e.attr1 = GUN_CARBINE; // plasma is permanent
 					if(mtype != MAP_BFGZ || gver <= 112) e.attr2 = 0;
 					break;
 				}

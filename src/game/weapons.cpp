@@ -4,7 +4,7 @@
 namespace weapons
 {
 	VARP(autoreload, 0, 1, 10);// auto reload when 0:never 1:empty 2+:every(this*rdelay)
-	VARP(skipplasma, 0, 0, 1); // whether to skip plasma when switching
+	VARP(skipspawngun, 0, 0, 1); // whether to skip spawngun when switching
 	VARP(skipgrenades, 0, 1, 1); // whether to skip grenades when switching
 
 	ICOMMAND(gunselect, "", (), intret(world::player1->gunselect));
@@ -27,7 +27,7 @@ namespace weapons
 
 			while(s > GUN_MAX-1) s -= GUN_MAX;
 			while(s < 0) s += GUN_MAX;
-			if(a < 0 && ((skipplasma && s == GUN_PLASMA) || (skipgrenades && s == GUN_GL)))
+			if(a < 0 && ((skipspawngun && s == m_spawngun(world::gamemode, world::mutators)) || (skipgrenades && s == GUN_GL)))
 				continue;
 
 			if(d->canswitch(s, sgun, lastmillis))

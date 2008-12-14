@@ -239,7 +239,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_PLASMA,	ANIM_PLASMA,	-5,		5,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		250,	1000,	16,		500,	0,		10000,
+			20,		20,		250,	1000,	15,		500,	0,		10000,
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		true,		false,
 			1.0f,	0.f,		0.f,			0.25f,		1.0f,		0.f,
@@ -259,7 +259,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_CG,		ANIM_CHAINGUN,	-5,	     5,
 			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
-			40,		40,		90,    1000,	16,		1500,	0,		2000,
+			40,		40,		75,    1000,	15,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		false,
 			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
@@ -289,7 +289,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
 			S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,
-			1,		5,		750,	1300,	100,	5000,	0,		10000,
+			1,		5,		750,	1250,	100,	5000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
@@ -314,7 +314,7 @@ extern guntypes guntype[];
 #define isgun(a)		(a > -1 && a < GUN_MAX)
 #define gunloads(a,b)	(a == b || guntype[a].reloads)
 #define guncarry(a,b)	(a != b && guntype[a].reloads)
-#define gunattr(a,b)	(b != GUN_PLASMA && a == b ? GUN_PLASMA : a)
+#define gunattr(a,b)	(a != b ? a : (b != GUN_GL ? GUN_GL : GUN_PLASMA))
 
 enum
 {

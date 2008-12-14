@@ -511,7 +511,7 @@ namespace ai
 						n.targtype = AI_T_ENTITY;
 						n.tolerance = enttype[e.type].radius+d->radius;
 						n.score = pos.squaredist(e.o)/(attr != d->ai->gunpref ? 1.f : 10.f);
-						n.defers = (d->gunselect != GUN_PLASMA);
+						n.defers = d->gunselect != d->ai->gunpref;
 					}
 					break;
 				}
@@ -530,7 +530,7 @@ namespace ai
 				{
 					if(isgun(attr) && !d->hasgun(attr, sgun))
 					{ // go get a weapon upgrade
-						if(proj.owner == d && d->gunselect != GUN_PLASMA) break;
+						if(proj.owner == d) break;
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
 						n.node = entities::entitynode(proj.o, true);
@@ -538,7 +538,7 @@ namespace ai
 						n.targtype = AI_T_DROP;
 						n.tolerance = enttype[proj.ent].radius+d->radius;
 						n.score = pos.squaredist(proj.o)/(attr != d->ai->gunpref ? 1.f : 10.f);
-						n.defers = (d->gunselect != GUN_PLASMA);
+						n.defers = d->gunselect != d->ai->gunpref;
 					}
 					break;
 				}
@@ -804,9 +804,7 @@ namespace ai
 						{
 							case WEAPON:
 							{
-								if(d->hasgun(attr, sgun)) return false;
-								if(proj.owner == d && d->gunselect != GUN_PLASMA)
-									return false;
+								if(d->hasgun(attr, sgun) || proj.owner == d) return false;
 								break;
 							}
 							default: break;
@@ -992,8 +990,7 @@ namespace ai
 						projent &proj = *projs::projs[t.target];
 						if(!entities::ents.inrange(proj.id)) break;
 						extentity &e = *entities::ents[proj.id];
-						if(enttype[e.type].usetype != EU_ITEM) break;
-						if(proj.owner == d && d->gunselect != GUN_PLASMA) break;
+						if(enttype[e.type].usetype != EU_ITEM || proj.owner == d) break;
 						ent = proj.id;
 						break;
 					}
@@ -1007,9 +1004,7 @@ namespace ai
 						case WEAPON:
 						{
 							int attr = gunattr(e.attr1, sgun);
-							if(d->hasgun(attr, sgun)) break;
-							if(d->gunselect != GUN_PLASMA && attr != d->ai->gunpref)
-								break;
+							if(d->hasgun(attr, sgun) || attr != d->ai->gunpref) break;
 							d->useaction = true;
 							d->usetime = lastmillis;
 							return true;
