@@ -9,9 +9,9 @@ VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
 SVARG(lobbymaps, "overseer");
 SVARG(missionmaps, "mpspbf1 mpspbf2"); // remember, for these the rotation starts at defaultmap
-SVARG(mainmaps, "eight warground warehouse tower rivals refuge citadel storage");
-SVARG(ctfmaps, "eight warground warehouse tower rivals refuge citadel storage siege");
-SVARG(stfmaps, "eight warground warehouse tower rivals refuge citadel storage siege");
+SVARG(mainmaps, "eight warground warehouse tower rivals refuge citadel");
+SVARG(ctfmaps, "eight warground warehouse tower rivals refuge citadel");
+SVARG(stfmaps, "eight warground warehouse tower rivals refuge citadel");
 VARG(maprotate, 0, 1, 2); // 0 = off, 1 = sequence, 2 = random
 VARG(spawnrotate, 0, 1, 2); // 0 = let client decide, 1 = sequence, 2 = random
 
