@@ -948,7 +948,7 @@ struct aiinfo
 	vector<aistate> state;
 	vector<int> route;
 	vec target, spot;
-	int enemy, lastseen, gunpref, lastnode, timeinnode;
+	int enemy, lastseen, gunpref, lastnode, prevnode, timeinnode;
 	float targyaw, targpitch;
 	bool dontmove, tryreset;
 
@@ -962,7 +962,7 @@ struct aiinfo
 		addstate(AI_S_WAIT);
 		gunpref = rnd(GUN_MAX-1)+1;
 		spot = target = vec(0, 0, 0);
-		enemy = lastseen = lastnode = -1;
+		enemy = lastseen = lastnode = prevnode = -1;
 		timeinnode = 0;
 		targyaw = targpitch = 0.f;
 		dontmove = false;
@@ -979,7 +979,6 @@ struct aiinfo
 	{
 		if(index < 0 && state.length()) state.pop();
 		else if(state.inrange(index)) state.remove(index);
-		enemy = lastseen = -1;
 		if(!state.length()) addstate(AI_S_WAIT);
 	}
 
@@ -1238,7 +1237,7 @@ namespace weapons
 
 namespace ai
 {
-	const float AIISNEAR			= 48.f;			// is near
+	const float AIISNEAR			= 64.f;			// is near
 	const float AIISFAR				= 256.f;		// too far
 	const float AIJUMPHEIGHT		= 4.f;			// decides to jump
 	const float AILOSMIN			= 64.f;			// minimum line of sight
@@ -1257,11 +1256,11 @@ namespace ai
 	extern void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm);
 	extern bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false);
 	extern bool makeroute(gameent *d, aistate &b, int node, float tolerance = AIISNEAR, bool retry = false);
-	extern bool makeroute(gameent *d, aistate &b, vec &pos, float tolerance = AIISNEAR, bool dist = false);
+	extern bool makeroute(gameent *d, aistate &b, const vec &pos, float tolerance = AIISNEAR, bool dist = false);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
-	extern bool defend(gameent *d, aistate &b, vec &pos, float tolerance = AIISNEAR, bool retry = false);
-	extern bool patrol(gameent *d, aistate &b, vec &pos, float radius = AIISNEAR, float wander = AIISFAR, bool retry = false);
-	extern bool randomnode(gameent *d, aistate &b, vec &from, vec &to, float radius = AIISNEAR, float wander = AIISFAR);
+	extern bool defend(gameent *d, aistate &b, const vec &pos, float tolerance = AIISNEAR, bool retry = false);
+	extern bool patrol(gameent *d, aistate &b, const vec &pos, float radius = AIISNEAR, float wander = AIISFAR, bool retry = false);
+	extern bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool randomnode(gameent *d, aistate &b, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool defer(gameent *d, aistate &b, bool pursue = false);
 	extern void update();
