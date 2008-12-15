@@ -405,10 +405,8 @@ namespace stf
 		loopvj(st.flags)
 		{
 			stfstate::flag &f = st.flags[j];
-
 			vector<int> targets; // build a list of others who are interested in this
 			ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
-
 			gameent *e = NULL;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
@@ -417,32 +415,16 @@ namespace stf
 					targets.add(e->clientnum);
 			}
 
-			if(f.owner != d->team || f.enemy)
+			if(targets.empty() && (f.owner != d->team || f.enemy))
 			{
-				bool guard = false;
-				if(targets.empty()) guard = true;
-				else if(d->gunselect == d->ai->gunpref)
-				{ // see if we can relieve someone who only has a plasma
-					gameent *t;
-					loopvk(targets) if((t = world::getclient(targets[k])) && t->ai && t->gunselect != t->ai->gunpref)
-					{
-						guard = true;
-						break;
-					}
-				}
-
-				if(guard)
-				{ // defend the flag
-					interest &n = interests.add();
-					n.state = AI_S_DEFEND;
-					n.node = entities::entitynode(f.pos, false);
-					n.target = j;
-					n.targtype = AI_T_AFFINITY;
-					n.expire = 10000;
-					n.tolerance = enttype[FLAG].radius*2.f;
-					n.score = pos.squaredist(f.pos)/(d->gunselect != d->ai->gunpref ? 10.f : 100.f);
-					n.defers = false;
-				}
+				interest &n = interests.add();
+				n.state = AI_S_DEFEND;
+				n.node = entities::entitynode(f.pos, false);
+				n.target = j;
+				n.targtype = AI_T_AFFINITY;
+				n.tolerance = enttype[FLAG].radius*2.f;
+				n.score = pos.squaredist(f.pos)/(d->gunselect != d->ai->gunpref ? 10.f : 100.f);
+				n.defers = false;
 			}
 		}
 	}
@@ -452,11 +434,7 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			if(ai::defend(d, b, f.pos, float(enttype[FLAG].radius/2)))
-			{
-				ai::defer(d, b, false);
-				return true;
-			}
+			return ai::defend(d, b, f.pos, float(enttype[FLAG].radius/2));
 		}
 		return false;
 	}

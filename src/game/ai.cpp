@@ -487,8 +487,8 @@ namespace ai
 			c.defers = false;
 			d->ai->enemy = c.target = e->clientnum;
 			d->ai->lastseen = lastmillis;
-			if(pursue) c.expire = clamp(d->skill*100, 1000, 10000);
-			else c.expire = clamp(d->skill*50, 500, 5000);
+			if(pursue) c.expire = clamp(d->skill*200, 2000, 20000);
+			else c.expire = clamp(d->skill*100, 1000, 10000);
 			return true;
 		}
 		return false;
@@ -511,7 +511,7 @@ namespace ai
 		return false;
 	}
 
-	void gunfind(gameent *d, aistate &b, vector<interest> &interests)
+	void items(gameent *d, aistate &b, vector<interest> &interests, bool force = false)
 	{
 		vec pos = world::headpos(d);
 		loopvj(entities::ents)
@@ -531,7 +531,7 @@ namespace ai
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
 						n.tolerance = enttype[e.type].radius+d->radius;
-						n.score = pos.squaredist(e.o)/(attr != d->ai->gunpref ? 1.f : 10.f);
+						n.score = pos.squaredist(e.o)/(force || attr != d->ai->gunpref ? 1.f : 10.f);
 						n.defers = d->gunselect == d->ai->gunpref;
 					}
 					break;
@@ -558,7 +558,7 @@ namespace ai
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
 						n.tolerance = enttype[proj.ent].radius+d->radius;
-						n.score = pos.squaredist(proj.o)/(attr != d->ai->gunpref ? 1.f : 10.f);
+						n.score = pos.squaredist(proj.o)/(force || attr != d->ai->gunpref ? 1.f : 10.f);
 						n.defers = d->gunselect == d->ai->gunpref;
 					}
 					break;
@@ -572,10 +572,10 @@ namespace ai
 	{
 		static vector<interest> interests;
 		interests.setsizenodelete(0);
-
 		if(m_ctf(world::gamemode)) ctf::aifind(d, b, interests);
 		if(m_stf(world::gamemode)) stf::aifind(d, b, interests);
-		if(!d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators))) gunfind(d, b, interests);
+		if(!d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators)))
+			items(d, b, interests, false);
 		while(!interests.empty())
 		{
 			int q = interests.length()-1;
@@ -721,22 +721,37 @@ namespace ai
 	{
 		if(d->state == CS_ALIVE)
 		{
+			bool gotit = false;
 			switch(b.targtype)
 			{
+				case AI_T_NODE:
+				case AI_T_ENTITY:
+				{
+					if(entities::ents.inrange(b.target))
+					{
+						gameentity &e = *(gameentity *)entities::ents[b.target];
+						gotit = defend(d, b, e.o, float(enttype[e.type].radius));
+					}
+					break;
+				}
 				case AI_T_AFFINITY:
 				{
-					if(m_ctf(world::gamemode)) return ctf::aidefend(d, b);
-					if(m_stf(world::gamemode)) return stf::aidefend(d, b);
+					if(m_ctf(world::gamemode)) gotit = ctf::aidefend(d, b);
+					if(m_stf(world::gamemode)) gotit = stf::aidefend(d, b);
 					break;
 				}
 				case AI_T_PLAYER:
 				{
 					gameent *e = world::getclient(b.target);
-					if(e && e->state == CS_ALIVE)
-						return defend(d, b, world::feetpos(e));
+					if(e && e->state == CS_ALIVE) gotit = defend(d, b, world::feetpos(e));
 					break;
 				}
 				default: break;
+			}
+			if(gotit)
+			{
+				ai::defer(d, b, false);
+				return true;
 			}
 		}
 		return false;
