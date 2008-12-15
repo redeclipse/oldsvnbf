@@ -76,6 +76,7 @@ namespace hud
 	VARP(radaritems, 0, 2, 2);
 	VARP(radarnames, 0, 1, 1);
 	VARP(radarhealth, 0, 1, 1);
+    VARP(radarborder, 0, 1, 1);
 	FVARP(radarskew, -1, -0.3f, 1);
 	VARP(editradardist, 0, 128, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
@@ -564,7 +565,7 @@ namespace hud
 			{	1,	-2,	0,	2,	0,	1,	1,	-4,	0.8f,	0.2f,	0.2f,	0.6f	}
 		};
 		int cs = s;
-		if(world::player1->state != CS_DEAD) // damage overlay goes full in this case
+		if(radarborder && world::player1->state != CS_DEAD) // damage overlay goes full in this case
 		{
 			float r = 1.f, g = 1.f, b = 1.f, fade = radarblend*blend;
 			if(radarhealth) switch(world::player1->state)
