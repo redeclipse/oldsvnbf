@@ -629,7 +629,7 @@ namespace entities
 		if(ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr1))) return true;
 		if(recover)
 		{
-			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, float(ents[ent]->attr1))) return true;
+			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, float(ents[i]->attr1))) return true;
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
 			if(physics::entinmap(d, false)) return true;
 		}
