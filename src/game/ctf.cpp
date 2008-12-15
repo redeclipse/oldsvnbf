@@ -569,7 +569,6 @@ namespace ctf
 					n.node = entities::entitynode(f.pos(), false);
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
-					n.expire = 10000;
 					n.tolerance = enttype[FLAG].radius;
 					n.score = pos.squaredist(f.pos())/(d->gunselect != d->ai->gunpref ? 10.f : 100.f);
 					n.defers = false;
@@ -584,7 +583,6 @@ namespace ctf
 					n.node = entities::entitynode(f.pos(), false);
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
-					n.expire = 10000;
 					n.tolerance = enttype[FLAG].radius;
 					n.score = pos.squaredist(f.pos());
 					n.defers = false;
@@ -600,7 +598,6 @@ namespace ctf
 						n.node = t->lastnode;
 						n.target = t->clientnum;
 						n.targtype = AI_T_PLAYER;
-						n.expire = 5000;
 						n.tolerance = t->radius*2.f;
 						n.score = pos.squaredist(tp);
 						n.defers = false;
@@ -616,11 +613,7 @@ namespace ctf
 		{
 			ctfstate::flag &f = st.flags[b.target];
 			if(f.owner && ai::violence(d, b, f.owner, true)) return true;
-			if(ai::defend(d, b, f.pos(), float(enttype[FLAG].radius/2)))
-			{
-				ai::defer(d, b, false);
-				return true;
-			}
+			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius/2));
 		}
 		return false;
 	}
