@@ -21,7 +21,7 @@ namespace hud
 
 		IVARP(scoresinfo, 0, 1, 1);
 		IVARP(showclientnum, 0, 1, 1);
-		IVARP(showpj, 0, 1, 1);
+		IVARP(showpj, 0, 0, 1);
 		IVARP(showping, 0, 1, 1);
 		IVARP(showspectators, 0, 1, 1);
 		IVARP(highlightscore, 0, 1, 1);
