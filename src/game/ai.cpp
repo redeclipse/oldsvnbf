@@ -35,40 +35,43 @@ namespace ai
 
 	bool addai(int type, int skill)
 	{
+		loopv(clients) if(clients[i]->state.aitype == type && (clients[i]->state.ownernum < 0 || clients[i]->state.aireinit < 0))
+		{ // reuse a slot that was going to removed
+			clients[i]->state.ownernum = findaiclient();
+			clients[i]->state.aireinit = 1;
+			return true;
+		}
 		int cn = addclient(ST_REMOTE);
-		if(cn >= 0 && isaitype(type))
+		if(cn >= 0)
 		{
-			clientinfo *ci = (clientinfo *)getinfo(cn), *cp = NULL;
+			clientinfo *ci = (clientinfo *)getinfo(cn);
 			if(ci)
 			{
+				int s = skill, m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
+					n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
+				if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
 				ci->clientnum = cn;
 				ci->state.aitype = type;
 				ci->state.ownernum = findaiclient();
-				if(ci->state.ownernum >= 0 && ((cp = (clientinfo *)getinfo(ci->state.ownernum))))
+				ci->state.skill = clamp(s, 1, 100);
+				ci->state.state = CS_DEAD;
+				ci->state.aireinit = 0;
+				clients.add(ci);
+				ci->state.lasttimeplayed = lastmillis;
+				s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
+				ci->team = chooseteam(ci);
+				sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
+				int nospawn = 0;
+				if(smode && !smode->canspawn(ci, true)) { nospawn++; }
+				mutate(smuts, if(!mut->canspawn(ci, true)) { nospawn++; });
+				if(nospawn)
 				{
-					int s = skill, m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
-						n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
-					if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
-					ci->state.skill = clamp(s, 1, 100);
 					ci->state.state = CS_DEAD;
-					ci->state.aireinit = 0;
-					clients.add(ci);
-					ci->state.lasttimeplayed = lastmillis;
-					s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
-					ci->team = chooseteam(ci);
-					sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
-					int nospawn = 0;
-					if(smode && !smode->canspawn(ci, true)) { nospawn++; }
-					mutate(smuts, if (!mut->canspawn(ci, true)) { nospawn++; });
-					if(nospawn)
-					{
-						ci->state.state = CS_DEAD;
-						sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
-					}
-					else sendspawn(ci);
-					ci->online = true;
-					return true;
+					sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
 				}
+				else sendspawn(ci);
+				ci->online = true;
+				return true;
 			}
 			delclient(cn);
 		}
