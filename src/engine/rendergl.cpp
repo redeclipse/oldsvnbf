@@ -1873,7 +1873,7 @@ void drawview(int targtype)
 
 void gl_drawframe(int w, int h)
 {
-    if(!connected())
+    if(!connected(false))
     {
         drawnoview();
         return;
