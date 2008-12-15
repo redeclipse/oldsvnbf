@@ -80,7 +80,7 @@ namespace ai
 		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.aireinit >= 0)
 		{
 			clientinfo *ci = clients[i];
-			int team = chooseteam(ci);
+			int team = chooseteam(ci, ci->team);
 			if(ci->team != team)
 			{
 				ci->team = team;

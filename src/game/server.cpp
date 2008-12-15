@@ -1050,7 +1050,7 @@ namespace server
 		~teamscore() {}
 	};
 
-	int chooseteam(clientinfo *who, int suggest = -1, int exclude = -1)
+	int chooseteam(clientinfo *who, int suggest = -1)
 	{
 		if(m_team(gamemode, mutators))
 		{
@@ -1063,7 +1063,7 @@ namespace server
 				loopv(clients)
 				{
 					clientinfo *ci = clients[i];
-					if(!ci->team || ci->clientnum == exclude) continue;
+					if(!ci->team || ci == who) continue;
 					ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 					ci->state.lasttimeplayed = lastmillis;
 					loopj(numteams(gamemode, mutators)) if(ci->team == teamscores[j].team)
