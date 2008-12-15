@@ -55,12 +55,8 @@ namespace ai
 					clients.add(ci);
 					ci->state.lasttimeplayed = lastmillis;
 					s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
-
-					if(m_team(gamemode, mutators)) ci->team = chooseworstteam(ci);
-					else ci->team = TEAM_NEUTRAL;
-
+					ci->team = chooseteam(ci);
 					sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
-
 					int nospawn = 0;
 					if(smode && !smode->canspawn(ci, true)) { nospawn++; }
 					mutate(smuts, if (!mut->canspawn(ci, true)) { nospawn++; });
@@ -70,7 +66,6 @@ namespace ai
 						sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
 					}
 					else sendspawn(ci);
-
 					ci->online = true;
 					return true;
 				}
@@ -85,7 +80,7 @@ namespace ai
 		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.aireinit >= 0)
 		{
 			clientinfo *ci = clients[i];
-			int team = m_team(gamemode, mutators) ? chooseworstteam(ci) : TEAM_NEUTRAL;
+			int team = chooseteam(ci);
 			if(ci->team != team)
 			{
 				ci->team = team;
@@ -305,6 +300,7 @@ namespace ai
 		if(!d->name[0]) conoutf("\fg%s assigned to %s at skill %d", world::colorname(d, name), m, sk);
 		else if(d->ownernum != on) conoutf("\fg%s reassigned to %s", world::colorname(d, name), m);
 		else if(d->skill != sk) conoutf("\fg%s changed skill to %d", world::colorname(d, name), sk);
+		else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", world::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
 
 		s_strncpy(d->name, name, MAXNAMELEN);
 		d->aitype = at;
