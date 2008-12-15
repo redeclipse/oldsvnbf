@@ -482,6 +482,7 @@ namespace ai
 			d->ai->enemy = c.target = e->clientnum;
 			d->ai->lastseen = lastmillis;
 			if(pursue) c.expire = clamp(d->skill*100, 1000, 10000);
+			else c.expire = clamp(d->skill*50, 500, 5000);
 			return true;
 		}
 		return false;
@@ -753,6 +754,7 @@ namespace ai
 					{
 						d->attacking = true;
 						d->attacktime = lastmillis;
+						if(cansee) b.next = lastmillis; // keep shooting!
 					}
 					return true;
 				}
@@ -1072,12 +1074,14 @@ namespace ai
 				getyawpitch(dp, spot, d->ai->targyaw, d->ai->targpitch);
 				b.stuck = 0;
 			}
-			else if(lastmillis-b.stuck >= 5000)
+			else if(lastmillis-b.stuck >= 3000)
 			{
 				if(b.stuck) // random walk, when all else fails
 				{
 					d->ai->targyaw += float(90+rnd(180));
 					d->ai->targpitch = 0.f;
+					d->jumping = true;
+					d->jumptime = lastmillis;
 				}
 				b.stuck = lastmillis;
 			}
