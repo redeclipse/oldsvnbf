@@ -15,7 +15,6 @@ namespace entities
 	VARP(showlighting, 0, 1, 1);
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
-	bool autodropwaypoints = false;
 
 	ICOMMAND(announce, "i", (int *idx), announce(*idx));
 
@@ -828,11 +827,6 @@ namespace entities
 		return !route.empty();
 	}
 
-	bool entitydrop()
-	{
-		return (m_play(world::gamemode) && autodropwaypoints) || dropwaypoints;
-	}
-
 	int entitynode(const vec &v, bool dist, int type)
 	{
 		int w = -1, t = type >= 0 ? type : WAYPOINT;
@@ -868,7 +862,7 @@ namespace entities
 		{
 			vec v(world::feetpos(d, 0.f));
 			int curnode = entitynode(v);
-			if(entitydrop() && ((m_play(world::gamemode) && d->aitype == AI_NONE) || d == world::player1))
+			if((m_play(world::gamemode) || dropwaypoints) && ((m_play(world::gamemode) && d->aitype == AI_NONE) || d == world::player1))
 			{
 				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= d->radius+enttype[WAYPOINT].radius)
 					curnode = d->lastnode;
@@ -1172,31 +1166,10 @@ namespace entities
 		loopvj(ents) if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
 			setspawn(j, false);
 		loopvj(ents) fixentity(*ents[j]);
-		autodropwaypoints = m_play(world::gamemode) && !entities;
 	}
 
 	void mapstart()
 	{
-		if(autodropwaypoints)
-		{
-			loopv(ents)
-			{
-				gameentity &e = *(gameentity *)ents[i];
-				vec v(e.o);
-				v.z -= dropheight(e);
-				switch(e.type)
-				{
-					case PLAYERSTART:
-					case WEAPON:
-					case FLAG:
-					{
-						newentity(v, WAYPOINT, 0, 0, 0, 0, 0);
-						break;
-					}
-					default: break;
-				}
-			}
-		}
 	}
 
 	#define renderfocus(i,f) { gameentity &e = *(gameentity *)ents[i]; f; }
