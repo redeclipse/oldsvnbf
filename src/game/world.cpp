@@ -287,6 +287,7 @@ namespace world
 		if(types & ST_GAME)
 		{
 			hud::sb.showscores(false);
+			cleargui();
 			lasthit = 0;
 		}
 		if(types & ST_SPAWNS)
@@ -551,13 +552,15 @@ namespace world
         {
         	if(flags&HIT_MELT) s_strcpy(d->obit, "melted");
 			else if(flags&HIT_FALL) s_strcpy(d->obit, "thought they could fly");
+			else if(flags&HIT_SPAWN) s_strcpy(d->obit, "tried to spawn inside solid matter");
+			else if(flags&HIT_LOST) s_strcpy(d->obit, "got very, very lost");
         	else if(flags && isgun(gun))
         	{
 				static const char *suicidenames[GUN_MAX] = {
 					"found out what their plasma tasted like",
 					"discovered buckshot bounces",
 					"got caught up in their own crossfire",
-					"barbequed themselves for dinner",
+					"barbequed themself for dinner",
 					"pulled off a seemingly impossible stunt",
 					"pulled off a seemingly impossible stunt",
 					"decided to kick it, kamakaze style",
@@ -767,9 +770,8 @@ namespace world
         entities::mapstart();
 		client::mapstart();
         resetstates(ST_ALL);
-
         // prevent the player from being in the middle of nowhere if he doesn't get spawned
-        entities::findplayerspawn(player1);
+        entities::spawnplayer(player1, -1, true);
 	}
 
 	void playsoundc(int n, gameent *d = NULL)

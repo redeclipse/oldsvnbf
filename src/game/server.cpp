@@ -249,6 +249,7 @@ namespace server
 		extern bool delai(int type);
 		extern void removeai(clientinfo *ci, bool complete = false);
 		extern bool reassignai(int exclude = -1);
+		extern void refreshai();
 		extern void checkskills();
 		extern void clearai();
 		extern void checkai();
@@ -585,6 +586,54 @@ namespace server
 		return false;
 	}
 
+	int spawncycle[TEAM_LAST], numspawns[TEAM_LAST], totalspawns;
+	void setupspawns(bool update)
+	{
+		totalspawns = 0;
+		loopi(TEAM_LAST) spawncycle[i] = numspawns[i] = 0;
+		if(update)
+		{
+			loopv(sents) if(sents[i].type == PLAYERSTART && isteam(gamemode, mutators, sents[i].attr2, TEAM_NEUTRAL))
+			{
+				numspawns[sents[i].attr2]++;
+				totalspawns++;
+			}
+			loopi(TEAM_LAST) if(numspawns[i]) spawncycle[i] = rnd(numspawns[i]); // mix it up a little
+		}
+	}
+
+	int pickspawn(clientinfo *ci)
+	{
+		if(totalspawns && sv_spawnrotate)
+		{
+			int team = m_team(gamemode, mutators) && numspawns[ci->team] ? ci->team : TEAM_NEUTRAL;
+			if(numspawns[team])
+			{
+				int index = 0;
+				if(spawncycle[team] >= numspawns[team]) spawncycle[team] = 0;
+				loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr2 == team)
+				{
+					if(index != spawncycle[team]) index++;
+					else
+					{
+						switch(sv_spawnrotate)
+						{
+							case 1: default: spawncycle[team]++; break;
+							case 2:
+							{
+								int r = rnd(numspawns[team]);
+								spawncycle[team] = r != spawncycle[team] ? r : r + 1;
+								break;
+							}
+						}
+						return i;
+					}
+				}
+			}
+		}
+		return -1;
+	}
+
 	void spawnstate(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
@@ -596,14 +645,17 @@ namespace server
 	{
 		servstate &gs = ci->state;
 		spawnstate(ci);
-		sendf(ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, GUN_MAX, &gs.ammo[0]);
+		int spawn = pickspawn(ci);
+		sendf(ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum, 1, "ri8v",
+			SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, GUN_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
 	}
 
-    void sendstate(clientinfo *ci, ucharbuf &p)
+    void sendstate(clientinfo *ci, ucharbuf &p, int spawn = -2)
     {
 		servstate &gs = ci->state;
         putint(p, ci->clientnum);
+        if(spawn >= -1) putint(p, spawn);
         putint(p, gs.state);
         putint(p, gs.frags);
         putint(p, gs.lifesequence);
@@ -1101,9 +1153,10 @@ namespace server
 		oldtimelimit = sv_timelimit;
 		minremain = sv_timelimit ? sv_timelimit : -1;
 		gamelimit = sv_timelimit ? minremain*60000 : 0;
-		interm = ai::aibotbalance = 0;
+		interm = 0;
 		s_strcpy(smapname, s && *s ? s : sv_defaultmap);
 		sents.setsize(0);
+		setupspawns(false);
 		notgotinfo = true;
 		scores.setsize(0);
 
@@ -1359,7 +1412,7 @@ namespace server
 			{
 				spawnstate(ci);
 				putint(p, SV_SPAWNSTATE);
-				sendstate(ci, p);
+				sendstate(ci, p, pickspawn(ci));
 				ci->state.lastrespawn = ci->state.lastspawn = gamemillis;
 			}
 		}
@@ -1378,7 +1431,7 @@ namespace server
 			{
 				clientinfo *oi = clients[i];
 				if(oi->clientnum == n) continue;
-				sendstate(oi, p);
+				sendstate(oi, p, -2);
 			}
 			putint(p, -1);
 		}
@@ -1791,6 +1844,7 @@ namespace server
 		clients.removeobj(ci);
 		if(complete) cleanup();
 		else checkvotes();
+		ai::refreshai();
 	}
 
 	#include "extinfo.h"
@@ -2136,7 +2190,7 @@ namespace server
 					QUEUE_BUF(100,
 					{
 						putint(buf, SV_SPAWN);
-						sendstate(cp, buf);
+						sendstate(cp, buf, -2);
 					});
 					break;
 				}
@@ -2300,7 +2354,6 @@ namespace server
 				case SV_INITC2S:
 				{
 					bool connected = !ci->name[0];
-
 					getstring(text, p);
 					if(!text[0]) s_strcpy(text, "unnamed");
 					if(connected)
@@ -2328,7 +2381,6 @@ namespace server
 						}
 					}
 					s_strncpy(ci->name, text, MAXNAMELEN+1);
-
 					int team = getint(p);
 					if(connected || !isteam(gamemode, mutators, team, TEAM_FIRST))
 					{
@@ -2336,15 +2388,13 @@ namespace server
 						else team = TEAM_NEUTRAL;
 						sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
 					}
-
 					if(team != ci->team)
 					{
 						if(smode) smode->changeteam(ci, ci->team, team);
 						mutate(smuts, mut->changeteam(ci, ci->team, team));
-						connected = true;
+						ci->team = team;
+						ai::refreshai();
 					}
-					ci->team = team;
-
                     ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
                     enet_packet_resize(packet, buildinitc2s(ci, packet->data, packet->dataLength));
                     sendpacket(-1, 1, packet, ci->clientnum);
@@ -2391,7 +2441,7 @@ namespace server
 							cp->state.dropped.reset();
 							cp->state.gunreset(false);
 						}
-						ai::setupbotbalance();
+						setupspawns(true);
 						notgotinfo = false;
 					}
 					break;
@@ -2506,6 +2556,7 @@ namespace server
 						mutate(smuts, mut->leavegame(spinfo));
 						spinfo->state.state = CS_SPECTATOR;
                     	spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
+                    	ai::refreshai();
 					}
 					else if(spinfo->state.state==CS_SPECTATOR && !val)
 					{
@@ -2518,6 +2569,7 @@ namespace server
 						});
 						if (!nospawn) sendspawn(spinfo);
 	                    spinfo->state.lasttimeplayed = lastmillis;
+						ai::refreshai();
 					}
 					break;
 				}
@@ -2532,8 +2584,9 @@ namespace server
 					{
 						if(smode) smode->changeteam(wi, wi->team, team);
 						mutate(smuts, mut->changeteam(wi, wi->team, team));
+						wi->team = team;
+						ai::refreshai();
 					}
-					wi->team = team;
 					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
 					QUEUE_INT(SV_SETTEAM);
 					QUEUE_INT(who);

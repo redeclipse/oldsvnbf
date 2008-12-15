@@ -22,9 +22,9 @@ struct stfstate
 #endif
 		int owners, enemies, converted, securetime;
 
-		flag() 
+		flag()
 #ifndef GAMESERVER
-          : ent(NULL) 
+          : ent(NULL)
 #endif
         { reset(); }
 
@@ -183,7 +183,6 @@ namespace stf
 {
 	extern stfstate st;
 	extern void sendflags(ucharbuf &p);
-	extern int pickspawn(int team);
 	extern void updateflag(int i, int owner, int enemy, int converted);
 	extern void setscore(int team, int total);
 	extern void setupflags();

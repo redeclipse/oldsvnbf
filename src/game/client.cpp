@@ -919,7 +919,7 @@ namespace client
 				{
 					int snd = getint(p);
 					getstring(text, p);
-					entities::announce(snd, text, false);
+					entities::announce(snd, text, true);
 					break;
 				}
 
@@ -1067,7 +1067,7 @@ namespace client
 
 				case SV_SPAWNSTATE:
 				{
-					int lcn = getint(p);
+					int lcn = getint(p), ent = getint(p);
 					gameent *f = world::newclient(lcn);
 					if(f == world::player1 && editmode) toggleedit();
 					f->respawn(lastmillis);
@@ -1075,16 +1075,13 @@ namespace client
 					f->state = CS_ALIVE;
 					if(f == world::player1 || f->ai)
 					{
-						entities::findplayerspawn(f, m_stf(world::gamemode) ? stf::pickspawn(f->team) : -1, m_team(world::gamemode, world::mutators) ? f->team : -1);
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
+						entities::spawnplayer(f, ent, ent < 0);
 						playsound(S_RESPAWN, f->o, f);
 						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
 					}
 					ai::spawned(f);
-					if(f == world::player1)
-					{
-						world::resetstates(ST_DEFAULT);
-					}
+					if(f == world::player1) world::resetstates(ST_DEFAULT);
 					break;
 				}
 
