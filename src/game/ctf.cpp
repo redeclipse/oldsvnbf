@@ -632,24 +632,13 @@ namespace ctf
 					ctfstate::flag &g = st.flags[i];
 					if(g.owner == d) hasflags.add(i);
 				}
-
-				if(hasflags.empty())
-					return false; // otherwise why are we pursuing home?
-
-				if(ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2))
-				{
-					ai::defer(d, b, false);
-					return true;
-				}
+				if(hasflags.empty()) return false; // otherwise why are we pursuing home?
+				return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
 			}
 			else
 			{
 				if(f.owner == d) return aihomerun(d, b);
-				if(ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2))
-				{
-					ai::defer(d, b, false);
-					return true;
-				}
+				return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
 			}
 		}
 		return false;
