@@ -1242,34 +1242,33 @@ namespace ai
 	const float AIISNEAR			= 64.f;			// is near
 	const float AIISFAR				= 256.f;		// too far
 	const float AIJUMPHEIGHT		= 4.f;			// decides to jump
-	const float AILOSMIN			= 64.f;			// minimum line of sight
+	const float AILOSMIN			= 128.f;		// minimum line of sight
 	const float AILOSMAX			= 4096.f;		// maximum line of sight
-	const float AIFOVMIN			= 90.f;			// minimum field of view
-	const float AIFOVMAX			= 130.f;		// maximum field of view
+	const float AIFOVMIN			= 85.f;			// minimum field of view
+	const float AIFOVMAX			= 135.f;		// maximum field of view
 
 	#define AILOSDIST(x)			clamp((AILOSMIN+(AILOSMAX-AILOSMIN))/100.f*float(x), float(AILOSMIN), float(getvar("fog")+AILOSMIN))
 	#define AIFOVX(x)				clamp((AIFOVMIN+(AIFOVMAX-AIFOVMIN))/100.f*float(x), float(AIFOVMIN), float(AIFOVMAX))
 	#define AIFOVY(x)				AIFOVX(x)*3.f/4.f
-    #define AIMAYTARG(y)           (y->state == CS_ALIVE && lastmillis-y->lastspawn > REGENWAIT)
+    #define AIMAYTARG(y)			(y->state == CS_ALIVE && lastmillis-y->lastspawn > REGENWAIT)
 	#define AITARG(x,y,z)			(y != x && AIMAYTARG(y) && (!z || !m_team(world::gamemode, world::mutators) || (x)->team != (y)->team))
 	#define AICANSEE(x,y,z)			getsight(x, z->yaw, z->pitch, y, targ, AILOSDIST(z->skill), AIFOVX(z->skill), AIFOVY(z->skill))
 
-	extern void spawned(gameent *d);
 	extern void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm);
 	extern bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false);
 	extern bool makeroute(gameent *d, aistate &b, int node, float tolerance = AIISNEAR, bool retry = false);
 	extern bool makeroute(gameent *d, aistate &b, const vec &pos, float tolerance = AIISNEAR, bool dist = false);
+	extern bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float radius = AIISNEAR, float wander = AIISFAR);
+	extern bool randomnode(gameent *d, aistate &b, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
 	extern bool defend(gameent *d, aistate &b, const vec &pos, float tolerance = AIISNEAR, bool retry = false);
 	extern bool patrol(gameent *d, aistate &b, const vec &pos, float radius = AIISNEAR, float wander = AIISFAR, bool retry = false);
-	extern bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float radius = AIISNEAR, float wander = AIISFAR);
-	extern bool randomnode(gameent *d, aistate &b, float radius = AIISNEAR, float wander = AIISFAR);
-	extern bool defer(gameent *d, aistate &b, bool pursue = false);
+	extern void spawned(gameent *d);
+	extern void damaged(gameent *d, gameent *e, int gun, int flags, int damage, int health, int millis, vec &dir);
+	extern void killed(gameent *d, gameent *e, int gun, int flags, int damage);
 	extern void update();
 	extern void avoid();
 	extern void think(gameent *d, bool run);
-	extern void damaged(gameent *d, gameent *e, int gun, int flags, int damage, int health, int millis, vec &dir);
-	extern void killed(gameent *d, gameent *e, int gun, int flags, int damage);
 	extern void render();
 }
 

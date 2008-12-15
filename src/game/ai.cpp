@@ -724,7 +724,6 @@ namespace ai
 	{
 		if(d->state == CS_ALIVE)
 		{
-			bool gotit = false;
 			switch(b.targtype)
 			{
 				case AI_T_NODE:
@@ -733,28 +732,23 @@ namespace ai
 					if(entities::ents.inrange(b.target))
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
-						gotit = defend(d, b, e.o, float(enttype[e.type].radius));
+						return defend(d, b, e.o, float(enttype[e.type].radius));
 					}
 					break;
 				}
 				case AI_T_AFFINITY:
 				{
-					if(m_ctf(world::gamemode)) gotit = ctf::aidefend(d, b);
-					if(m_stf(world::gamemode)) gotit = stf::aidefend(d, b);
+					if(m_ctf(world::gamemode)) return ctf::aidefend(d, b);
+					if(m_stf(world::gamemode)) return stf::aidefend(d, b);
 					break;
 				}
 				case AI_T_PLAYER:
 				{
 					gameent *e = world::getclient(b.target);
-					if(e && e->state == CS_ALIVE) gotit = defend(d, b, world::feetpos(e));
+					if(e && e->state == CS_ALIVE) return defend(d, b, world::feetpos(e));
 					break;
 				}
 				default: break;
-			}
-			if(gotit)
-			{
-				ai::defer(d, b, false);
-				return true;
 			}
 		}
 		return false;
