@@ -83,8 +83,10 @@ namespace ai
 			int team = chooseteam(ci, ci->team);
 			if(ci->team != team)
 			{
+				if(smode) smode->changeteam(ci, ci->team, team);
+				mutate(smuts, mut->changeteam(ci, ci->team, team));
 				ci->team = team;
-				ci->state.aireinit = 2;
+				ci->state.aireinit = 1;
 			}
 		}
 	}
@@ -118,11 +120,6 @@ namespace ai
 		if(ci->state.aireinit < 0 || ci->state.ownernum < 0) deleteai(ci);
 		else if(ci->state.aireinit >= 1)
 		{
-			if(ci->state.aireinit >= 2)
-			{
-				if(smode) smode->leavegame(ci);
-				mutate(smuts, mut->leavegame(ci));
-			}
 			sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
 			if(ci->state.aireinit >= 2)
 			{
@@ -138,8 +135,16 @@ namespace ai
 		if(cn < 0 || reinit < 0 || ci->state.aireinit < 0) ci->state.ownernum = ci->state.aireinit = -1;
 		else
 		{
+			if(ci->state.aireinit < reinit)
+			{
+				if(reinit >= 2)
+				{
+					if(smode) smode->leavegame(ci);
+					mutate(smuts, mut->leavegame(ci));
+				}
+				ci->state.aireinit = reinit;
+			}
 			ci->state.ownernum = cn;
-			if(ci->state.aireinit < reinit) ci->state.aireinit = reinit;
 		}
 	}
 
