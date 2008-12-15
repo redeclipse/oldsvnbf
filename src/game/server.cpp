@@ -586,19 +586,63 @@ namespace server
 		return false;
 	}
 
-	int spawncycle[TEAM_LAST], numspawns[TEAM_LAST], totalspawns;
+	struct spawn
+	{
+		int spawncycle;
+		vector<int> ents;
+
+		spawn() { reset(); }
+		~spawn() {}
+
+		void reset()
+		{
+			spawncycle = 0;
+			ents.setsize(0);
+		}
+		void add(int n)
+		{
+			ents.add(n);
+			spawncycle = rnd(ents.length());
+		}
+	} spawns[TEAM_LAST];
+	int totalspawns;
+
 	void setupspawns(bool update)
 	{
 		totalspawns = 0;
-		loopi(TEAM_LAST) spawncycle[i] = numspawns[i] = 0;
+		loopi(TEAM_LAST) spawns[i].reset();
 		if(update)
 		{
-			loopv(sents) if(sents[i].type == PLAYERSTART && isteam(gamemode, mutators, sents[i].attr2, TEAM_NEUTRAL))
+			loopv(sents) if(sents[i].type == PLAYERSTART && isteam(gamemode, mutators, sents[i].attr2, TEAM_FIRST))
 			{
-				numspawns[sents[i].attr2]++;
+				spawns[sents[i].attr2].add(i);
 				totalspawns++;
 			}
-			loopi(TEAM_LAST) if(numspawns[i]) spawncycle[i] = rnd(numspawns[i]); // mix it up a little
+			if(totalspawns && m_team(gamemode, mutators))
+			{
+				loopi(numteams(gamemode, mutators)) if(spawns[i+TEAM_FIRST].ents.empty())
+				{
+					loopj(TEAM_LAST) spawns[j].reset();
+					totalspawns = 0;
+					break;
+				}
+			}
+			if(!totalspawns)
+			{
+				loopv(sents) if(sents[i].type == PLAYERSTART)
+				{
+					spawns[TEAM_NEUTRAL].add(i);
+					totalspawns++;
+				}
+			}
+			if(!totalspawns) // we can cheat and use weapons for spawns
+			{
+				loopv(sents) if(sents[i].type == WEAPON)
+				{
+					spawns[TEAM_NEUTRAL].add(i);
+					totalspawns++;
+				}
+			}
 		}
 	}
 
@@ -606,29 +650,21 @@ namespace server
 	{
 		if(totalspawns && sv_spawnrotate)
 		{
-			int team = m_team(gamemode, mutators) && numspawns[ci->team] ? ci->team : TEAM_NEUTRAL;
-			if(numspawns[team])
+			int team = m_team(gamemode, mutators) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
+			if(!spawns[team].ents.empty())
 			{
-				int index = 0;
-				if(spawncycle[team] >= numspawns[team]) spawncycle[team] = 0;
-				loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr2 == team)
+				switch(sv_spawnrotate)
 				{
-					if(index != spawncycle[team]) index++;
-					else
+					case 1: default: spawns[team].spawncycle++; break;
+					case 2:
 					{
-						switch(sv_spawnrotate)
-						{
-							case 1: default: spawncycle[team]++; break;
-							case 2:
-							{
-								int r = rnd(numspawns[team]);
-								spawncycle[team] = r != spawncycle[team] ? r : r + 1;
-								break;
-							}
-						}
-						return i;
+						int r = rnd(spawns[team].ents.length());
+						spawns[team].spawncycle = r != spawns[team].spawncycle ? r : r + 1;
+						break;
 					}
 				}
+				if(spawns[team].spawncycle >= spawns[team].ents.length()) spawns[team].spawncycle = 0;
+				return spawns[team].ents[spawns[team].spawncycle];
 			}
 		}
 		return -1;
@@ -1014,39 +1050,56 @@ namespace server
 		~teamscore() {}
 	};
 
-	int chooseworstteam(clientinfo *who, bool exclude = true)
+	int chooseteam(clientinfo *who, int suggest = -1, int exclude = -1)
 	{
-		teamscore teamscores[TEAM_NUM] = {
-			teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_DELTA), teamscore(TEAM_GAMMA)
-		};
-		loopv(clients)
+		if(m_team(gamemode, mutators))
 		{
-			clientinfo *ci = clients[i];
-			if(!ci->team || (exclude && who == ci)) continue;
-			ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-			ci->state.lasttimeplayed = lastmillis;
-			loopj(numteams(gamemode, mutators)) if(ci->team == teamscores[j].team)
+			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1;
+			if(sv_teambalance || team < 0)
 			{
-				teamscore &ts = teamscores[j];
-				float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
-				ts.rank += rank;
-				ts.clients++;
-				break;
+				teamscore teamscores[TEAM_NUM] = {
+					teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_DELTA), teamscore(TEAM_GAMMA)
+				};
+				loopv(clients)
+				{
+					clientinfo *ci = clients[i];
+					if(!ci->team || ci->clientnum == exclude) continue;
+					ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
+					ci->state.lasttimeplayed = lastmillis;
+					loopj(numteams(gamemode, mutators)) if(ci->team == teamscores[j].team)
+					{
+						teamscore &ts = teamscores[j];
+						float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
+						ts.rank += rank;
+						ts.clients++;
+						break;
+					}
+				}
+				teamscore *worst = &teamscores[0];
+				loopi(numteams(gamemode, mutators))
+				{
+					teamscore &ts = teamscores[i];
+					switch(sv_teambalance)
+					{
+						case 1: default:
+						{
+							if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.rank < worst->rank))
+								worst = &ts;
+							break;
+						}
+						case 2:
+						{
+							if(ts.rank < worst->rank || (ts.rank == worst->rank && ts.clients < worst->clients))
+								worst = &ts;
+							break;
+						}
+					}
+				}
+				team = worst->team;
 			}
+			return team;
 		}
-		teamscore *worst = &teamscores[0];
-		loopi(numteams(gamemode, mutators))
-		{
-			teamscore &ts = teamscores[i];
-			if(m_stf(gamemode) || m_ctf(gamemode))
-			{
-				if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.rank < worst->rank))
-					worst = &ts;
-			}
-			else if(ts.rank < worst->rank || (ts.rank == worst->rank && ts.clients < worst->clients))
-				worst = &ts;
-		}
-		return worst->team;
+		return TEAM_NEUTRAL;
 	}
 
     void stopdemo()
@@ -1190,16 +1243,11 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-
-			int team = TEAM_NEUTRAL;
-			if(m_team(gamemode, mutators)) team = chooseworstteam(ci);
+			int team = chooseteam(ci, ci->team);
 			sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, team);
-
 			if(smode) smode->changeteam(ci, ci->team, team);
 			mutate(smuts, mut->changeteam(ci, ci->team, team));
-
 			ci->team = team;
-
 			ci->mapchange();
             ci->state.lasttimeplayed = lastmillis;
             if(ci->state.state != CS_SPECTATOR)
@@ -2384,8 +2432,7 @@ namespace server
 					int team = getint(p);
 					if(connected || !isteam(gamemode, mutators, team, TEAM_FIRST))
 					{
-						if(m_team(gamemode, mutators)) team = chooseworstteam(ci);
-						else team = TEAM_NEUTRAL;
+						team = chooseteam(ci, team);
 						sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
 					}
 					if(team != ci->team)

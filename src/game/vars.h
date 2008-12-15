@@ -25,6 +25,7 @@ VARG(intermlimit, 0, 10, 120); // secs before vote menu comes up
 VARG(votelimit, 0, 20, 120); // secs before vote passes by default
 
 VARG(teamdamage, 0, 1, 1); // damage team mates
+VARG(teambalance, 0, 1, 2); // 0 = off, 1 = by number, 2 = by effectiveness
 VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stffinish, 0, 0, 1); // finish when all bases captured
