@@ -394,62 +394,6 @@ namespace stf
 		st.findscore(team).total = total;
 	}
 
-    int closesttoenemy(int team, bool noattacked = false, bool farthest = false)
-	{
-        float bestdist = farthest ? -1e10f : 1e10f;
-		int best = -1;
-		int attackers = INT_MAX, attacked = -1;
-		loopv(st.flags)
-		{
-			stfstate::flag &b = st.flags[i];
-			if(!b.owner || b.owner != team) continue;
-			if(noattacked && b.enemy) continue;
-			float dist = st.disttoenemy(b);
-            if(farthest ? dist > bestdist : dist < bestdist)
-			{
-				best = i;
-				bestdist = dist;
-			}
-			else if(b.enemy && b.enemies < attackers)
-			{
-				attacked = i;
-				attackers = b.enemies;
-			}
-		}
-		if(best < 0) return attacked;
-		return best;
-	}
-
-	int pickspawn(int team)
-	{
-		int closest = closesttoenemy(team, true);
-		if(closest < 0) closest = closesttoenemy(team, false);
-		if(closest < 0) return -1;
-		stfstate::flag &b = st.flags[closest];
-
-        float bestdist = 1e10f, altdist = 1e10f;
-        int best = -1, alt = -1;
-		loopv(entities::ents)
-		{
-			extentity *e = entities::ents[i];
-			if(e->type!=PLAYERSTART) continue;
-			float dist = e->o.dist(b.o);
-			if(dist < bestdist)
-			{
-                alt = best;
-                altdist = bestdist;
-				best = i;
-				bestdist = dist;
-			}
-            else if(dist < altdist)
-            {
-                alt = i;
-                altdist = dist;
-            }
-		}
-        return rnd(2) ? best : alt;
-	}
-
 	bool aicheck(gameent *d, aistate &b)
 	{
 		return false;

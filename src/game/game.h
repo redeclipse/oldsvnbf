@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			135
+#define GAMEVERSION			136
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -329,6 +329,8 @@ enum
 	HIT_LEGS	= 1<<7,
 	HIT_TORSO	= 1<<8,
 	HIT_HEAD	= 1<<9,
+	HIT_SPAWN	= 1<<10,
+	HIT_LOST	= 1<<11,
 };
 
 #define hithurts(x) (x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_FALL)
@@ -444,7 +446,7 @@ char msgsizelookup(int msg)
 		SV_INITS2C, 3, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_SOUND, 3, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_DAMAGE, 10, SV_SHOTFX, 9,
-		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 13, SV_SPAWN, 4, SV_FORCEDEATH, 2,
+		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 14, SV_SPAWN, 4, SV_FORCEDEATH, 2,
 		SV_DROP, 4, SV_GUNSELECT, 0, SV_TAUNT, 2,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_TRIGGER, 0, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
@@ -1179,7 +1181,7 @@ namespace entities
 	extern void announce(int idx, const char *msg = "", bool force = false);
 	extern void execlink(gameent *d, int index, bool local);
 	extern void setspawn(int n, bool on);
-	extern void findplayerspawn(dynent *d, int forceent = -1, int tag = -1, int retries = 0);
+	extern bool spawnplayer(gameent *d, int ent = -1, bool recover = false);
 	extern const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false);
 	extern void useeffects(gameent *d, int n, bool s, int g, int r);
 	extern const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);

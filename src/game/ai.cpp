@@ -1,18 +1,6 @@
 #ifdef GAMESERVER
 namespace ai
 {
-	int aibotbalance = 0;
-	void setupbotbalance()
-	{
-		aibotbalance = 0;
-		loopk(2)
-		{
-			loopv(sents) if(sents[i].type == PLAYERSTART && (k || isteam(gamemode, mutators, sents[i].attr2, TEAM_NEUTRAL)))
-				aibotbalance++;
-			if(aibotbalance) break;
-		}
-	}
-
 	int findaiclient(int exclude)
 	{
 		vector<int> siblings;
@@ -92,6 +80,20 @@ namespace ai
 		return false;
 	}
 
+	void refreshai()
+	{
+		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.aireinit >= 0)
+		{
+			clientinfo *ci = clients[i];
+			int team = m_team(gamemode, mutators) ? chooseworstteam(ci) : TEAM_NEUTRAL;
+			if(ci->team != team)
+			{
+				ci->team = team;
+				ci->state.aireinit = 2;
+			}
+		}
+	}
+
 	void deleteai(clientinfo *ci)
 	{
 		int cn = ci->clientnum;
@@ -103,6 +105,7 @@ namespace ai
 		sendf(-1, 1, "ri2", SV_CDIS, cn);
 		clients.removeobj(ci);
 		delclient(cn);
+		refreshai();
 	}
 
 	bool delai(int type)
@@ -124,8 +127,6 @@ namespace ai
 			{
 				if(smode) smode->leavegame(ci);
 				mutate(smuts, mut->leavegame(ci));
-				if(m_team(gamemode, mutators)) ci->team = chooseworstteam(ci);
-				else ci->team = TEAM_NEUTRAL;
 			}
 			sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
 			if(ci->state.aireinit >= 2)
@@ -139,14 +140,13 @@ namespace ai
 
 	void shiftai(clientinfo *ci, int reinit = 1, int cn = -1)
 	{
-		if(cn < 0) ci->state.ownernum = ci->state.aireinit = -1;
+		if(cn < 0 || reinit < 0 || ci->state.aireinit < 0) ci->state.ownernum = ci->state.aireinit = -1;
 		else
 		{
 			ci->state.ownernum = cn;
-			ci->state.aireinit = reinit;
+			if(ci->state.aireinit < reinit) ci->state.aireinit = reinit;
 		}
 	}
-
 
 	void removeai(clientinfo *ci, bool complete)
 	{
@@ -194,13 +194,12 @@ namespace ai
 		loopv(clients) if(clients[i]->state.aitype != AI_NONE)
 		{
 			clientinfo *ci = clients[i];
-			bool reinit = false;
 			if(ci->state.skill > m || ci->state.skill < n)
 			{
 				ci->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
-				reinit = true;
+				if(ci->state.aireinit <= 1 && ci->state.aireinit >= 0)
+					ci->state.aireinit = 1;
 			}
-			if(reinit) ci->state.aireinit = 1;
 		}
 		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE)
 			reinitai(clients[i]);
@@ -216,9 +215,9 @@ namespace ai
 	{
 		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			if(m_play(gamemode) && sv_botbalance && aibotbalance)
+			if(m_play(gamemode) && sv_botbalance > 0.f && totalspawns)
 			{
-				int balance = clamp(aibotbalance/max(sv_botratio, 1),
+				int balance = clamp(int(totalspawns*sv_botbalance),
 						sv_botminamt > sv_botmaxamt ? sv_botmaxamt : sv_botminamt,
 							sv_botminamt < sv_botmaxamt ? sv_botmaxamt : sv_botminamt);
 				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
@@ -237,10 +236,10 @@ namespace ai
 			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
 			else
 			{
-				if(sv_botbalance)
+				if(sv_botbalance > 0.f)
 				{
-					setvar("sv_botbalance", 0, true);
-					s_sprintfd(val)("%d", 0);
+					setfvar("sv_botbalance", 0.f, true);
+					s_sprintfd(val)("%.f", 0.f);
 					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
 				}
 				if(!addai(AI_BOT, skill))
@@ -256,10 +255,10 @@ namespace ai
 			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
 			else
 			{
-				if(sv_botbalance)
+				if(sv_botbalance > 0.f)
 				{
-					setvar("sv_botbalance", 0, true);
-					s_sprintfd(val)("%d", 0);
+					setfvar("sv_botbalance", 0.f, true);
+					s_sprintfd(val)("%.f", 0.f);
 					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
 				}
 				if(!delai(AI_BOT))
@@ -704,7 +703,7 @@ namespace ai
 			}
 			if(b.cycle >= 10)
 			{
-				world::suicide(d, 0); // bail
+				world::suicide(d, HIT_LOST); // bail
 				return true; // recycle and start from beginning
 			}
 		}
@@ -1129,7 +1128,7 @@ namespace ai
 			{
 				d->ai->timeinnode += curtime;
 				if(d->ai->timeinnode >= 10000 && !d->ai->tryreset) d->ai->reset(true); // maybe we've gone insane, wipe our brain
-				else if(d->ai->timeinnode >= 20000) world::suicide(d, 0); // fine, we're better off doing something than nothing
+				else if(d->ai->timeinnode >= 20000) world::suicide(d, HIT_LOST); // fine, we're better off doing something than nothing
 			}
 			else
 			{

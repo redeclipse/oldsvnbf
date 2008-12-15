@@ -121,15 +121,45 @@ namespace entities
 		static int lastannouncement;
 		if(idx > -1 && idx < S_MAX && (force || lastmillis-lastannouncement >= TRIGGERTIME))
 		{
-			bool announcer = false;
-			loopv(ents)
+			#if 0
+			int announcer = 0;
+			loopk(3)
 			{
-				gameentity &e = *(gameentity *)ents[i];
-				if(e.type == ANNOUNCER)
+				loopv(ents)
 				{
-					playsound(idx, e.o, NULL, 0, e.attr3, e.attr1, e.attr2);
-					announcer = true;
+					gameentity &e = *(gameentity *)ents[i];
+					switch(k)
+					{
+						case 0: default:
+						{
+							if(e.type == ANNOUNCER)
+							{
+								if(playsound(idx, e.o, NULL, 0, e.attr3, e.attr1, e.attr2) >= 0)
+									announcer++;
+							}
+							break;
+						}
+						case 1:
+						{
+							if(e.type == WEAPON)
+							{
+								if(playsound(idx, e.o, NULL, 0, 255, enttype[e.type].radius*10, enttype[e.type].radius) >= 0)
+									announcer++;
+							}
+							break;
+						}
+						case 2:
+						{
+							if(e.type == LIGHT && e.attr1)
+							{
+								if(playsound(idx, e.o, NULL, 0, 255, e.attr1*10, e.attr1) >= 0)
+									announcer++;
+							}
+							break;
+						}
+					}
 				}
+				if(announcer) break;
 			}
 			if(!announcer)
 			{ // if there's no announcer entities, just encompass the level
@@ -138,23 +168,26 @@ namespace entities
 					vec v;
 					switch(i)
 					{
-						case 1:		v = vec(0, 0, getworldsize()); break;
-						case 2:		v = vec(0, getworldsize(), getworldsize()); break;
-						case 3:		v = vec(getworldsize(), getworldsize(), getworldsize()); break;
-						case 4:		v = vec(getworldsize(), 0, getworldsize()); break;
-						case 5:		v = vec(0, 0, getworldsize()); break;
-						case 6:		v = vec(0, getworldsize(), getworldsize()); break;
-						case 7:		v = vec(getworldsize(), getworldsize(), getworldsize()); break;
-						case 8:		v = vec(getworldsize(), 0, getworldsize()); break;
-						case 9:		v = vec(0, 0, getworldsize()); break;
-						case 10:	v = vec(0, getworldsize(), 0); break;
-						case 11:	v = vec(getworldsize(), getworldsize(), 0); break;
-						case 12:	v = vec(getworldsize(), 0, 0); break;
-						default:	v = vec(getworldsize(), getworldsize(), getworldsize()); break;
+						case 1:		v = vec(0, 0, getworldsize()*2.f); break;
+						case 2:		v = vec(0, getworldsize()*2.f, getworldsize()*2.f); break;
+						case 3:		v = vec(getworldsize()*2.f, getworldsize()*2.f, getworldsize()*2.f); break;
+						case 4:		v = vec(getworldsize()*2.f, 0, getworldsize()*2.f); break;
+						case 5:		v = vec(0, 0, getworldsize()*2.f); break;
+						case 6:		v = vec(0, getworldsize()*2.f, getworldsize()*2.f); break;
+						case 7:		v = vec(getworldsize()*2.f, getworldsize()*2.f, getworldsize()*2.f); break;
+						case 8:		v = vec(getworldsize()*2.f, 0, getworldsize()*2.f); break;
+						case 9:		v = vec(0, 0, getworldsize()*2.f); break;
+						case 10:	v = vec(0, getworldsize()*2.f, 0); break;
+						case 11:	v = vec(getworldsize()*2.f, getworldsize()*2.f, 0); break;
+						case 12:	v = vec(getworldsize()*2.f, 0, 0); break;
+						default:	v = vec(getworldsize()*2.f, getworldsize()*2.f, getworldsize()*2.f); break;
 					}
-					playsound(idx, v);
+					if(playsound(idx, v) >= 0) announcer++;
 				}
 			}
+			if(!announcer && force)
+			#endif
+			playsound(idx, camera1->o, camera1, SND_FORCED);
 			lastannouncement = lastmillis;
 		}
 		if(*msg) console("\fg%s", (force ? CON_CENTER : 0)|CON_NORMAL, msg);
@@ -291,7 +324,7 @@ namespace entities
 								loopv(e.links)
 									if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == e.type)
 										teleports.add(e.links[i]);
-
+								bool teleported = false;
 								while(!teleports.empty())
 								{
 									int r = e.type == TELEPORT ? rnd(teleports.length()) : 0, t = teleports[r];
@@ -311,10 +344,12 @@ namespace entities
 										execlink(d, n, true);
 										execlink(d, t, true);
 										if(d == world::player1) world::resetstates(ST_VIEW);
+										teleported = true;
 										break;
 									}
 									teleports.remove(r); // must've really sucked, try another one
 								}
+								if(!teleported) world::suicide(d, HIT_SPAWN);
 							}
 							break;
 						}
@@ -580,40 +615,26 @@ namespace entities
 		}
 	}
 
-	void findplayerspawn(dynent *d, int forceent, int tag, int retries)   // place at random spawn. also used by monsters!
+	bool tryspawn(dynent *d, const vec &o, float yaw = 0.f)
 	{
-		int pick = forceent;
-		if(pick<0)
+		d->yaw = yaw;
+		d->pitch = d->roll = 0;
+		d->o = o;
+		world::fixrange(d->yaw, d->pitch);
+		return physics::entinmap(d, true);
+	}
+
+	bool spawnplayer(gameent *d, int ent, bool recover)
+	{
+		if(ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr1))) return true;
+		if(recover)
 		{
-			int r = physics::fixspawn-->0 ? 7 : rnd(10)+1;
-			loopi(r) physics::spawncycle = findentity(PLAYERSTART, physics::spawncycle+1, -1, tag);
-			pick = physics::spawncycle;
-		}
-		if(pick!=-1)
-		{
-			d->pitch = 0;
-			d->roll = 0;
-			for(int attempt = pick;;)
-			{
-				d->o = ents[attempt]->o;
-				d->yaw = ents[attempt]->attr1;
-				if(physics::entinmap(d, true)) break;
-				attempt = findentity(PLAYERSTART, attempt+1, -1, tag);
-				if(attempt<0 || attempt==pick)
-				{
-					d->o = ents[attempt]->o;
-					d->yaw = ents[attempt]->attr1;
-					physics::entinmap(d, false);
-					break;
-				}
-			}
-		}
-		else if(retries < 2) findplayerspawn(d, -1, retries < 1 ? tag : -1, retries+1);
-		else
-		{
+			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, float(ents[ent]->attr1))) return true;
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
-			physics::entinmap(d, false);
+			if(physics::entinmap(d, false)) return true;
 		}
+		world::suicide(d, HIT_SPAWN);
+		return false;
 	}
 
 	void linkclear(int n)
