@@ -1,11 +1,12 @@
 #ifdef STANDALONE
-SVARG(defaultmap, "eight");
-VARG(defaultmode, G_LOBBY, G_DEATHMATCH, G_MAX-1);
+SVARG(defaultmap, "warground");
+VARG(defaultmode, G_LOBBY, G_CTF, G_MAX-1);
+VARG(defaultmuts, G_M_NONE, G_M_TEAM, G_M_ALL);
 #else
 SVARG(defaultmap, "overseer");
 VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
-#endif
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
+#endif
 
 SVARG(lobbymaps, "overseer");
 SVARG(missionmaps, "mpspbf1 mpspbf2"); // remember, for these the rotation starts at defaultmap
