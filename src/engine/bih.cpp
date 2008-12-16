@@ -18,13 +18,8 @@ bool BIH::triintersect(tri &t, const vec &o, const vec &ray, float maxdist, floa
     float f = t.c.dot(q) / det;
     if(f < 0 || f > maxdist) return false;
     if(!(mode&RAY_SHADOW) && &t >= noclip) return false;
-    if(t.tex && (mode&RAY_ALPHAPOLY)==RAY_ALPHAPOLY)
+    if(t.tex && (mode&RAY_ALPHAPOLY)==RAY_ALPHAPOLY && (t.tex->alphamask || (loadalphamask(t.tex), t.tex->alphamask)))
     {
-        if(!t.tex->alphamask)
-        {
-            loadalphamask(t.tex);
-            if(!t.tex->alphamask) { dist = f; return true; }
-        }
         int si = clamp(int(t.tex->xs * (t.tc[0] + u*(t.tc[2] - t.tc[0]) + v*(t.tc[4] - t.tc[0]))), 0, t.tex->xs-1),
             ti = clamp(int(t.tex->ys * (t.tc[1] + u*(t.tc[3] - t.tc[1]) + v*(t.tc[5] - t.tc[1]))), 0, t.tex->ys-1);
         if(!(t.tex->alphamask[ti*((t.tex->xs+7)/8) + si/8] & (1<<(si%8)))) return false;
@@ -68,6 +63,7 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
 
     ivec order(ray.x>0 ? 0 : 1, ray.y>0 ? 0 : 1, ray.z>0 ? 0 : 1);
     BIHNode *curnode = &nodes[0];
+    bool hit = false;
     for(;;)
     {
         int axis = curnode->axis();
@@ -85,12 +81,20 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
                     tmin = max(tmin, farsplit);
                     continue;
                 }
-                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, dist, mode, noclip)) return true;
+                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, maxdist, mode, noclip))
+                {
+                    if(mode&RAY_SHADOW) { dist = maxdist; return true; }
+                    hit = true;
+                }
             }
         }
         else if(curnode->isleaf(nearidx))
         {
-            if(triintersect(tris[curnode->childindex(nearidx)], o, ray, maxdist, dist, mode, noclip)) return true;
+            if(triintersect(tris[curnode->childindex(nearidx)], o, ray, maxdist, maxdist, mode, noclip))
+            {
+                if(mode&RAY_SHADOW) { dist = maxdist; return true; }
+                hit = true;
+            }
             if(farsplit < tmax)
             {
                 if(!curnode->isleaf(faridx))
@@ -99,7 +103,11 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
                     tmin = max(tmin, farsplit);
                     continue;
                 }
-                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, dist, mode, noclip)) return true;
+                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, maxdist, mode, noclip))
+                {
+                    if(mode&RAY_SHADOW) { dist = maxdist; return true; }
+                    hit = true;
+                }
             }
         }
         else
@@ -113,13 +121,17 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
                     save.tmin = max(tmin, farsplit);
                     save.tmax = tmax;
                 }
-                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, dist, mode, noclip)) return true;
+                else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, maxdist, mode, noclip))
+                {
+                    if(mode&RAY_SHADOW) { dist = maxdist; return true; }
+                    hit = true;
+                }
             }
             curnode = &nodes[curnode->childindex(nearidx)];
             tmax = min(tmax, nearsplit);
             continue;
         }
-        if(stack.empty()) return false;
+        if(stack.empty()) { if(hit) { dist = maxdist; return true; } return false; }
         BIHStack &restore = stack.pop();
         curnode = restore.node;
         tmin = restore.tmin;
@@ -277,11 +289,11 @@ static inline void yawray(vec &o, vec &ray, float angle)
     angle *= RAD;
     float c = cosf(angle), s = sinf(angle),
           ox = o.x, oy = o.y,
-          rx = ox+ray.x, ry = oy+ray.y;
+          rx = ray.x, ry = ray.y;
     o.x = ox*c - oy*s;
     o.y = oy*c + ox*s;
-    ray.x = rx*c - ry*s - o.x;
-    ray.y = ry*c + rx*s - o.y;
+    ray.x = rx*c - ry*s;
+    ray.y = ry*c + rx*s;
     ray.normalize();
 }
 
@@ -301,6 +313,11 @@ bool mmintersect(const extentity &e, const vec &o, const vec &ray, float maxdist
     float yaw = -180.0f-(float)(e.attr2%360);
     vec yray(ray);
     if(yaw != 0) yawray(yo, yray, yaw);
-    return m->bih->traverse(yo, yray, maxdist, dist, mode);
+    if(m->bih->traverse(yo, yray, maxdist, dist, mode))
+    {
+        if(!(mode&RAY_SHADOW) && yaw != 0) hitsurface.rotate_around_z(-yaw*RAD);
+        return true;
+    }
+    return false;
 }
 
