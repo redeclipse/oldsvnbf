@@ -146,6 +146,11 @@ namespace server
 			gamestate::respawn(millis);
 			o = vec(-1e10f, -1e10f, -1e10f);
 		}
+
+		bool isai(int type = -1, bool all = true)
+		{
+			return (type < 0 ? aitype != AI_NONE : aitype == type) && (all || aireinit >= 0 && ownernum >= 0);
+		}
 	};
 
 	struct savedscore
@@ -379,8 +384,8 @@ namespace server
 		int n = 0;
 		loopv(clients)
 			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->clientnum != exclude &&
-				(!nospec || clients[i]->state.state != CS_SPECTATOR) && (!noai || clients[i]->state.aitype == AI_NONE))
-				n++;
+				(!nospec || clients[i]->state.state != CS_SPECTATOR) && (!noai || !clients[i]->state.isai(-1, false)))
+					n++;
 		return n;
 	}
 
@@ -405,9 +410,9 @@ namespace server
 		static string cname;
 		const char *chat = team && m_team(gamemode, mutators) ? teamtype[ci->team].chat : teamtype[TEAM_NEUTRAL].chat;
 		s_sprintf(cname)("\fs%s%s", chat, name);
-		if(!name[0] || ci->state.aitype != AI_NONE || (dupname && duplicatename(ci, name)))
+		if(!name[0] || ci->state.isai() || (dupname && duplicatename(ci, name)))
 		{
-			s_sprintfd(s)(" [\fs%s%d\fS]", ci->state.aitype != AI_NONE ? "\fc" : "\fm", ci->clientnum);
+			s_sprintfd(s)(" [\fs%s%d\fS]", ci->state.isai() ? "\fc" : "\fm", ci->clientnum);
 			s_strcat(cname, s);
 		}
 		s_strcat(cname, "\fS");
@@ -682,7 +687,7 @@ namespace server
 		servstate &gs = ci->state;
 		spawnstate(ci);
 		int spawn = pickspawn(ci);
-		sendf(ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum, 1, "ri8v",
+		sendf(ci->state.isai() ? ci->state.ownernum : ci->clientnum, 1, "ri8v",
 			SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, GUN_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
 	}
@@ -965,8 +970,7 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *oi = clients[i];
-			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.aitype != AI_NONE)
-				continue;
+			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.isai()) continue;
 			maxvotes++;
 			if(!oi->mapvote[0]) continue;
 			votecount *vc = NULL;
@@ -1196,9 +1200,9 @@ namespace server
 			fclose(mapdata[i]);
 			mapdata[i] = NULL;
 		}
-		mapsending = false;
+		maprequest = mapsending = false;
         stopdemo();
-		maprequest = false;
+		ai::clearai();
 		gamemode = mode >= 0 ? mode : sv_defaultmode;
 		mutators = muts >= 0 ? muts : sv_defaultmuts;
 		modecheck(&gamemode, &mutators);
@@ -1225,7 +1229,6 @@ namespace server
 
 		if(m_demo(gamemode))
 		{
-            ai::clearai();
             loopv(clients) if(!clients[i]->local) disconnect_client(clients[i]->clientnum, DISC_PRIVATE);
 		}
 
@@ -1348,7 +1351,7 @@ namespace server
 	clientinfo *choosebestclient(clientinfo *ci = NULL)
 	{
 		clientinfo *best = NULL;
-		loopv(clients) if(clients[i]->name[0] && clients[i]->state.aitype == AI_NONE && (!ci || ci != clients[i]))
+		loopv(clients) if(clients[i]->name[0] && !clients[i]->state.isai() && (!ci || ci != clients[i]))
 		{
 			clientinfo *cs = clients[i];
 			if(haspriv(cs, PRIV_MASTER)) { best = cs; break; }
@@ -1618,7 +1621,7 @@ namespace server
 		sendf(-1, 1, "ri7ivx", SV_SHOTFX, ci->clientnum,
 			e.gun, e.power, e.from[0], e.from[1], e.from[2],
 					e.shots.length(), e.shots.length()*sizeof(ivec)/sizeof(int), e.shots.getbuf(),
-						ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum);
+						ci->state.isai() ? ci->state.ownernum : ci->clientnum);
 		gs.shotdamage += guntype[e.gun].damage*e.gun*e.num;
 	}
 
@@ -1905,7 +1908,7 @@ namespace server
         }
 
 		int numplayers = 0;
-		loopv(clients) if(clients[i] && clients[i]->state.aitype == AI_NONE) numplayers++;
+		loopv(clients) if(clients[i] && !clients[i]->state.isai()) numplayers++;
 		putint(p, numplayers);
 		putint(p, 6);					// number of attrs following
 		putint(p, GAMEVERSION);			// 1
