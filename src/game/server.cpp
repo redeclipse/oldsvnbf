@@ -610,11 +610,11 @@ namespace server
 			spawncycle = rnd(ents.length());
 		}
 	} spawns[TEAM_LAST];
-	int totalspawns;
+	int numplayers, totalspawns;
 
-	void setupspawns(bool update)
+	void setupspawns(bool update, int players = 0)
 	{
-		totalspawns = 0;
+		numplayers = totalspawns = 0;
 		loopi(TEAM_LAST) spawns[i].reset();
 		if(update)
 		{
@@ -648,6 +648,7 @@ namespace server
 					totalspawns++;
 				}
 			}
+			numplayers = players;
 		}
 	}
 
@@ -1906,10 +1907,7 @@ namespace server
             extqueryreply(req, p);
             return;
         }
-
-		int numplayers = 0;
-		loopv(clients) if(clients[i] && !clients[i]->state.isai()) numplayers++;
-		putint(p, numplayers);
+		putint(p, numclients(-1, false, true));
 		putint(p, 6);					// number of attrs following
 		putint(p, GAMEVERSION);			// 1
 		putint(p, gamemode);			// 2
@@ -2463,7 +2461,7 @@ namespace server
 
 				case SV_GAMEINFO:
 				{
-					int n;
+					int n, np = getint(p);
 					while((n = getint(p)) != -1)
 					{
 						int type = getint(p), attr1 = getint(p), attr2 = getint(p),
@@ -2491,7 +2489,7 @@ namespace server
 							cp->state.dropped.reset();
 							cp->state.gunreset(false);
 						}
-						setupspawns(true);
+						setupspawns(true, np);
 						notgotinfo = false;
 					}
 					break;

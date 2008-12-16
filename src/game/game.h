@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			136
+#define GAMEVERSION			137
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -1287,9 +1287,10 @@ namespace hud
 
 namespace world
 {
-	extern int gamemode, mutators, nextmode, nextmuts, minremain, maptime,
-		quakewobble, damageresidue, lasthit, lastzoom, lastspec, spectvtime,
-			thirdpersonaim, firstpersonaim;
+	extern int numplayers, numteamplayers,
+		gamemode, mutators, nextmode, nextmuts, minremain, maptime,
+			quakewobble, damageresidue, lasthit, lastzoom, lastspec, spectvtime,
+				thirdpersonaim, firstpersonaim;
 	extern bool intermission, zooming;
 	extern gameent *player1;
 	extern vector<gameent *> players;

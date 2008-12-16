@@ -214,17 +214,12 @@ namespace ai
 	{
 		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			if(m_play(gamemode) && sv_botbalance > 0.f && totalspawns)
+			if(m_play(gamemode) && sv_botbalance > 0.f && numplayers)
 			{
 				int minbal = sv_botminamt > sv_botmaxamt ? sv_botmaxamt : sv_botminamt,
 					maxbal = sv_botminamt < sv_botmaxamt ? sv_botmaxamt : sv_botminamt,
-					balance = clamp(int(totalspawns*sv_botbalance), minbal, maxbal);
-				if(m_team(gamemode, mutators))
-				{
-					int teams = numteams(gamemode, mutators), count = balance%teams, teambal = minbal*teams;
-					if(count) balance += teams-count; // try to even out the player count for all teams
-					if(balance < teambal) balance = teambal; // just ensure we've got minbal on each team
-				}
+					balance = clamp(int(numplayers*sv_botbalance), minbal, maxbal);
+				if(m_team(gamemode, mutators)) balance *= numteams(gamemode, mutators);
 				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
 				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
 			}

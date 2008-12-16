@@ -101,7 +101,7 @@ enum
     TEXT_ALIGN         = 3<<8,
     TEXT_LEFT_JUSTIFY  = 0<<8,
     TEXT_CENTERED      = 1<<8,
-    TEXT_RIGHT_JUSTIFY = 2<<8, 
+    TEXT_RIGHT_JUSTIFY = 2<<8,
 };
 
 enum
