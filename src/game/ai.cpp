@@ -8,12 +8,12 @@ namespace ai
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->clientnum < 0 || ci->state.aitype != AI_NONE || !ci->name[0] || ci->clientnum == exclude)
+			if(ci->clientnum < 0 || ci->state.isai() || !ci->name[0] || ci->clientnum == exclude)
 				siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
-				loopvj(clients) if(clients[j]->state.aitype != AI_NONE && clients[j]->state.ownernum == ci->clientnum)
+				loopvj(clients) if(clients[j]->state.isai(-1, false) && clients[j]->state.ownernum == ci->clientnum)
 					siblings[i]++;
 			}
 		}
@@ -80,7 +80,7 @@ namespace ai
 
 	void refreshai()
 	{
-		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.aireinit >= 0)
+		loopv(clients) if(clients[i]->state.isai(-1, false))
 		{
 			clientinfo *ci = clients[i];
 			int team = chooseteam(ci, ci->team);
@@ -110,7 +110,7 @@ namespace ai
 
 	bool delai(int type)
 	{
-		loopvrev(clients) if(clients[i]->state.aitype == type)
+		loopvrev(clients) if(clients[i]->state.isai(type, false))
 		{
 			deleteai(clients[i]);
 			return true;
@@ -152,8 +152,8 @@ namespace ai
 	}
 
 	void removeai(clientinfo *ci, bool complete)
-	{
-		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
+	{ // either schedules a removal, or someone else to assign to
+		loopv(clients) if(clients[i]->state.isai() && clients[i]->state.ownernum == ci->clientnum)
 			shiftai(clients[i], 2, complete ? -1 : findaiclient(ci->clientnum));
 	}
 
@@ -165,23 +165,21 @@ namespace ai
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->clientnum < 0 || ci->state.aitype != AI_NONE || !ci->name[0] || ci->clientnum == exclude)
+			if(ci->clientnum < 0 || ci->state.isai() || !ci->name[0] || ci->clientnum == exclude)
 				siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
-				loopvj(clients) if(clients[j]->state.aitype != AI_NONE && clients[j]->state.ownernum == ci->clientnum)
+				loopvj(clients) if(clients[j]->state.isai(-1, false) && clients[j]->state.ownernum == ci->clientnum)
 					siblings[i]++;
-				if(!siblings.inrange(hi) || siblings[i] > siblings[hi])
-					hi = i;
-				if(!siblings.inrange(lo) || siblings[i] < siblings[lo])
-					lo = i;
+				if(!siblings.inrange(hi) || siblings[i] > siblings[hi]) hi = i;
+				if(!siblings.inrange(lo) || siblings[i] < siblings[lo]) lo = i;
 			}
 		}
 		if(siblings.inrange(hi) && siblings.inrange(lo) && (siblings[hi]-siblings[lo]) > 1)
 		{
 			clientinfo *ci = clients[hi];
-			loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
+			loopv(clients) if(clients[i]->state.isai(-1, false) && clients[i]->state.ownernum == ci->clientnum)
 			{
 				shiftai(clients[i], 1, clients[lo]->clientnum);
 				return true;
@@ -194,24 +192,22 @@ namespace ai
 	{
 		int m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
 			n = sv_botmaxskill < sv_botminskill ? sv_botmaxskill : sv_botminskill;
-		loopv(clients) if(clients[i]->state.aitype != AI_NONE)
+		loopv(clients) if(clients[i]->state.isai(-1, false))
 		{
 			clientinfo *ci = clients[i];
 			if(ci->state.skill > m || ci->state.skill < n)
-			{
+			{ // needs re-skilling
 				ci->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
 				if(ci->state.aireinit <= 1 && ci->state.aireinit >= 0)
 					ci->state.aireinit = 1;
 			}
 		}
-		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE)
-			reinitai(clients[i]);
+		loopvrev(clients) if(clients[i]->state.isai()) reinitai(clients[i]);
 	}
 
 	void clearai()
-	{
-		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE)
-			deleteai(clients[i]);
+	{ // clear and remove all ai immediately
+		loopvrev(clients) if(clients[i]->state.isai()) deleteai(clients[i]);
 	}
 
 	void checkai()
@@ -226,8 +222,8 @@ namespace ai
 				if(m_team(gamemode, mutators))
 				{
 					int teams = numteams(gamemode, mutators), count = balance%teams, teambal = minbal*teams;
-					if(count) balance += teams-count;
-					if(balance < teambal) balance += teambal-balance;
+					if(count) balance += teams-count; // try to even out the player count for all teams
+					if(balance < teambal) balance = teambal; // just ensure we've got minbal on each team
 				}
 				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
 				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
