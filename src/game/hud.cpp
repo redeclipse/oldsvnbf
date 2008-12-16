@@ -76,7 +76,7 @@ namespace hud
 	VARP(radaritems, 0, 2, 2);
 	VARP(radarnames, 0, 1, 1);
 	VARP(radarhealth, 0, 1, 1);
-    VARP(radarborder, 0, 1, 1);
+    VARP(radarborder, 0, 0, 1);
 	FVARP(radarskew, -1, -0.3f, 1);
 	VARP(editradardist, 0, 128, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);

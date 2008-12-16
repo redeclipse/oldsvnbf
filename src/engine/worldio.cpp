@@ -1002,8 +1002,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			{
 				extentity &e = *ents[i];
 
-				if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 29)) &&
-					ents[i]->type == ET_SPOTLIGHT)
+				if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 29)) && ents[i]->type == ET_SPOTLIGHT)
 				{
 					int closest = -1;
 					float closedist = 1e10f;

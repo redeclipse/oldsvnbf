@@ -18,6 +18,9 @@ namespace world
 	gameent lastplayerstate;
 	dynent fpsmodel;
 
+	VARW(numplayers, 0, 4, MAXCLIENTS/2);
+	VARW(numteamplayers, 0, 4, MAXCLIENTS/2);
+
 	VARP(invmouse, 0, 0, 1);
 	VARP(absmouse, 0, 0, 1);
 

@@ -34,7 +34,7 @@ VARG(stffinish, 0, 0, 1); // finish when all bases captured
 VARG(spawngun, 0, GUN_PLASMA, GUN_MAX-1);
 VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
 
-FVARG(botbalance, 0, 0.7f, 10.f);
+FVARG(botbalance, 0, 1.f, 10.f);
 VARG(botminamt, 0, 2, MAXCLIENTS-1);
 VARG(botmaxamt, 0, 32, MAXCLIENTS-1);
 VARG(botminskill, 0, 80, 100);

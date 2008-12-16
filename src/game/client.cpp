@@ -684,6 +684,7 @@ namespace client
 		{
 			reliable = true;
 			putint(p, SV_GAMEINFO);
+			putint(p, m_team(world::gamemode, world::mutators) && world::numteamplayers ? world::numteamplayers : world::numplayers);
 			entities::putitems(p);
 			putint(p, -1);
 			if(m_stf(world::gamemode)) stf::sendflags(p);
@@ -994,8 +995,7 @@ namespace client
 				case SV_GAMEINFO:
 				{
 					int n;
-					while((n = getint(p)) != -1)
-						entities::setspawn(n, getint(p) ? true : false);
+					while((n = getint(p)) != -1) entities::setspawn(n, getint(p) ? true : false);
 					#if 0
 					if(!needsmap && !m_edit(world::gamemode) && ver >= 0 && rev >= 0 &&
 						(ver != getmapversion() || rev != getmaprevision()))
