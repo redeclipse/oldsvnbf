@@ -149,7 +149,7 @@ namespace server
 
 		bool isai(int type = -1, bool all = true)
 		{
-			return (type < 0 ? aitype != AI_NONE : aitype == type) && (all || aireinit >= 0 && ownernum >= 0);
+			return (type < 0 ? aitype != AI_NONE : aitype == type) && (all || (aireinit >= 0 && ownernum >= 0));
 		}
 	};
 
