@@ -350,13 +350,16 @@ namespace ai
 		else
 		{
 			vec dir = vec(from).sub(to).normalize();
-			float targyaw, targpitch, mindist = (d->radius*d->radius)*2.f, dist = from.squaredist(to);
-			if(guntype[d->gunselect].explode) mindist = (guntype[d->gunselect].explode*guntype[d->gunselect].explode)*2.f;
-			vectoyawpitch(dir, targyaw, targpitch);
-			float rtime = (d->skill*guntype[d->gunselect].rdelay/2000.f)+(d->skill*guntype[d->gunselect].adelay/200.f),
-					skew = float(lastmillis-b.millis)/float(rtime), cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
-			if(mindist <= dist*skew && cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew)
-				return true;
+			float targyaw, targpitch, mindist = d->radius*d->radius, dist = from.squaredist(to);
+			if(guntype[d->gunselect].explode) mindist = guntype[d->gunselect].explode*guntype[d->gunselect].explode;
+			if(mindist <= dist)
+			{
+				vectoyawpitch(dir, targyaw, targpitch);
+				float rtime = (d->skill*guntype[d->gunselect].rdelay/2000.f)+(d->skill*guntype[d->gunselect].adelay/200.f),
+						skew = clamp(float(lastmillis-b.millis)/float(rtime), 0.f, d->gunselect == GUN_GL ? 1.f : 1e16f),
+							cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
+				if(cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew) return true;
+			}
 		}
 		return false;
 	}
@@ -369,7 +372,6 @@ namespace ai
 		{
 			if(targets.find(e->clientnum) >= 0) continue;
 			if(teams && m_team(world::gamemode, world::mutators) && d && d->team != e->team) continue;
-
 			aistate &b = e->ai->getstate();
 			if(state >= 0 && b.type != state) continue;
 			if(target >= 0 && b.target != target) continue;
@@ -393,7 +395,7 @@ namespace ai
 
 	bool makeroute(gameent *d, aistate &b, const vec &pos, float tolerance, bool dist)
 	{
-		int node = entities::entitynode(pos, dist);
+		int node = entities::entitynode(pos);
 		return makeroute(d, b, node, tolerance);
 	}
 
@@ -426,35 +428,44 @@ namespace ai
 		return randomnode(d, b, feet, feet, radius, wander);
 	}
 
-	bool defend(gameent *d, aistate &b, const vec &pos, float tolerance, bool retry)
+	bool enemy(gameent *d, aistate &b, const vec &pos, float radius)
 	{
-		vec feet = world::feetpos(d);
-		if(feet.squaredist(pos) <= tolerance*tolerance) b.idle = true;
-		else
+		if(d->ai->enemy < 0)
 		{
-			if(!makeroute(d, b, pos, 1, tolerance))
-			{ // run away and back to keep ourselves busy
-				if(!b.override && randomnode(d, b, feet, pos, 1, tolerance))
+			gameent *t = NULL, *e = NULL;
+			vec targ, dp = world::headpos(d), tp = vec(0, 0, 0);
+			bool cansee = false;
+			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && AITARG(d, e, true))
+			{
+				vec ep = world::headpos(e), ef = world::feetpos(e);
+				if(ef.squaredist(pos) <= radius*radius && (!t || ep.squaredist(dp) < tp.squaredist(dp)))
 				{
-					b.override = true;
-					return true;
+					bool see = AICANSEE(dp, ep, d);
+					if(!cansee || see)
+					{
+						t = e;
+						tp = ep;
+						cansee = see;
+					}
 				}
-				else if(!d->ai->route.empty()) return true;
-				else if(!retry)
+			}
+			if(t)
+			{
+				if(cansee) return violence(d, b, t, false);
+				else
 				{
-					b.override = false;
-					return defend(d, b, pos, tolerance, true);
+					d->ai->enemy = t->clientnum;
+					d->ai->lastseen = lastmillis;
 				}
-				return false;
 			}
 		}
-		return true;
+		return false;
 	}
 
-	bool patrol(gameent *d, aistate &b, const vec &pos, float radius, float wander, bool retry)
+	bool patrol(gameent *d, aistate &b, const vec &pos, float radius, float wander, bool walk, bool retry)
 	{
 		vec feet = world::feetpos(d);
-		if(feet.squaredist(pos) <= radius*radius || !makeroute(d, b, pos, radius, wander))
+		if(walk || feet.squaredist(pos) <= radius*radius || !makeroute(d, b, pos, radius, wander))
 		{ // run away and back to keep ourselves busy
 			if(!b.override && randomnode(d, b, feet, pos, radius, wander))
 			{
@@ -469,7 +480,20 @@ namespace ai
 			}
 			return false;
 		}
+		b.override = false;
 		return true;
+	}
+
+	bool defend(gameent *d, aistate &b, const vec &pos, float radius, float guard, bool walk)
+	{
+		bool gowalk = enemy(d, b, pos, guard) || walk;
+		vec feet = world::feetpos(d);
+		if(!gowalk && feet.squaredist(pos) <= radius*radius)
+		{
+			b.idle = true;
+			return true;
+		}
+		return patrol(d, b, pos, radius, guard, gowalk);
 	}
 
 	bool violence(gameent *d, aistate &b, gameent *e, bool pursue)
@@ -488,14 +512,14 @@ namespace ai
 		return false;
 	}
 
-	bool defer(gameent *d, aistate &b, bool pursue)
+	bool target(gameent *d, aistate &b, bool pursue = false, bool force = false)
 	{
 		gameent *t = NULL, *e = NULL;
 		vec targ, dp = world::headpos(d), tp = vec(0, 0, 0);
 		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && AITARG(d, e, true))
 		{
 			vec ep = world::headpos(e);
-			if((!t || ep.squaredist(d->o) < tp.squaredist(d->o)) && (pursue || AICANSEE(dp, ep, d)))
+			if((!t || ep.squaredist(dp) < tp.squaredist(dp)) && (force || AICANSEE(dp, ep, d)))
 			{
 				t = e;
 				tp = ep;
@@ -503,6 +527,24 @@ namespace ai
 		}
 		if(t) return violence(d, b, t, pursue);
 		return false;
+	}
+
+	void assist(gameent *d, aistate &b, vector<interest> &interests, bool all = false, bool force = false)
+	{
+		gameent *e = NULL;
+		vec dp = world::headpos(d);
+		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && (all || e->aitype == AI_NONE) && d->team == e->team)
+		{
+			vec ep = world::headpos(e);
+			interest &n = interests.add();
+			n.state = AI_S_DEFEND;
+			n.node = e->lastnode;
+			n.target = e->clientnum;
+			n.targtype = AI_T_PLAYER;
+			n.tolerance = e->radius*2.f;
+			n.score = ep.squaredist(dp)/(force || d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators)) ? 10.f : 1.f);
+			n.defers = false;
+		}
 	}
 
 	void items(gameent *d, aistate &b, vector<interest> &interests, bool force = false)
@@ -521,12 +563,12 @@ namespace ai
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
-						n.node = entities::entitynode(e.o, true);
+						n.node = entities::entitynode(e.o);
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
 						n.tolerance = enttype[e.type].radius+d->radius;
-						n.score = pos.squaredist(e.o)/(force || attr != d->ai->gunpref ? 1.f : 10.f);
-						n.defers = d->gunselect == d->ai->gunpref;
+						n.score = pos.squaredist(e.o)/(force || attr == d->ai->gunpref ? 10.f : 1.f);
+						n.defers = d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators));
 					}
 					break;
 				}
@@ -548,12 +590,12 @@ namespace ai
 						if(proj.owner == d) break;
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
-						n.node = entities::entitynode(proj.o, true);
+						n.node = entities::entitynode(proj.o);
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
 						n.tolerance = enttype[proj.ent].radius+d->radius;
-						n.score = pos.squaredist(proj.o)/(force || attr != d->ai->gunpref ? 1.f : 10.f);
-						n.defers = d->gunselect == d->ai->gunpref;
+						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->gunpref ? 10.f : 1.f);
+						n.defers = d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators));
 					}
 					break;
 				}
@@ -568,6 +610,7 @@ namespace ai
 		interests.setsizenodelete(0);
 		if(m_ctf(world::gamemode)) ctf::aifind(d, b, interests);
 		if(m_stf(world::gamemode)) stf::aifind(d, b, interests);
+		if(m_team(world::gamemode, world::mutators)) assist(d, b, interests);
 		if(!d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators)))
 			items(d, b, interests, false);
 		while(!interests.empty())
@@ -588,29 +631,22 @@ namespace ai
 		return false;
 	}
 
-	bool decision(gameent *d, bool *result, bool *pursue, bool defend = true)
+	bool decision(gameent *d, bool *pursue)
 	{
 		if(d->attacking) return false;
 		aistate &b = d->ai->getstate();
 		switch(b.type)
 		{
-			case AI_S_PURSUE:
-			{
-				*result = true;
-				*pursue = b.defers;
-				return true;
-			}
 			case AI_S_WAIT:
 			case AI_S_INTEREST:
+			case AI_S_PURSUE:
 			{
-				*result = true;
 				*pursue = b.defers;
 				return true;
 			}
 			case AI_S_DEFEND:
 			{
-				*result = true;
-				*pursue = !defend && b.defers;
+				*pursue = b.defers;
 				return true;
 			}
 			case AI_S_ATTACK: default: break;
@@ -624,8 +660,8 @@ namespace ai
 		{
 			if(AITARG(d, e, true)) // see if this ai is interested in a grudge
 			{
-				bool r = false, p = false;
-				if(decision(d, &r, &p, true) && r)
+				bool p = false;
+				if(decision(d, &p))
 				{
 					aistate &b = d->ai->getstate();
 					violence(d, b, e, p);
@@ -668,6 +704,7 @@ namespace ai
 			if(d->timeinair && entities::ents.inrange(d->lastnode))
 			{ // we need to make a quick decision to find a landing spot
 				int closest = -1;
+				vec dp = world::feetpos(d);
 				gameentity &e = *(gameentity *)entities::ents[d->lastnode];
 				if(!e.links.empty())
 				{
@@ -675,7 +712,7 @@ namespace ai
 					{
 						gameentity &f = *(gameentity *)entities::ents[e.links[i]];
 						if(!entities::ents.inrange(closest) ||
-							f.o.squaredist(d->o) < entities::ents[closest]->o.squaredist(d->o))
+							f.o.squaredist(dp) < entities::ents[closest]->o.squaredist(dp))
 								closest = e.links[i];
 					}
 				}
@@ -692,7 +729,7 @@ namespace ai
 			if(m_ctf(world::gamemode) && ctf::aicheck(d, b)) return true;
 			if(m_stf(world::gamemode) && stf::aicheck(d, b)) return true;
 			if(find(d, b, true)) return true;
-			if(defer(d, b, true)) return true;
+			if(target(d, b, true, true)) return true;
 			if(randomnode(d, b, AIISFAR, 1e16f))
 			{
 				aistate &c = d->ai->setstate(AI_S_INTEREST);
@@ -759,11 +796,14 @@ namespace ai
 				{
 					d->ai->enemy = e->clientnum;
 					d->ai->lastseen = lastmillis;
-					if(d->canshoot(d->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, pos, ep))
+					if(d->canshoot(d->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis))
 					{
-						d->attacking = true;
-						d->attacktime = lastmillis;
-						if(cansee) b.next = lastmillis; // keep shooting!
+						if(hastarget(d, b, pos, ep))
+						{
+							d->attacking = true;
+							d->attacktime = lastmillis;
+						}
+						if(cansee) b.next = lastmillis; // keep going!
 					}
 					return true;
 				}
@@ -961,7 +1001,7 @@ namespace ai
 		pitch = asin((pos.z-from.z)/dist)/RAD;
 	}
 
-	bool request(gameent *d, int busy)
+	bool request(gameent *d, aistate &b, int busy)
 	{
 		int sgun = m_spawngun(world::gamemode, world::mutators);
 		if(!busy && d->reqswitch < 0)
@@ -984,7 +1024,12 @@ namespace ai
 			return true;
 		}
 
-		if(busy <= 1 && !d->hasgun(d->ai->gunpref, sgun) && !d->useaction && d->requse < 0)
+		int gunpref = d->ai->gunpref;
+		if(b.type == AI_S_INTEREST && b.targtype == AI_T_ENTITY &&
+			entities::ents.inrange(b.target) && entities::ents[b.target]->type == WEAPON)
+				gunpref = entities::ents[b.target]->attr1;
+
+		if(busy <= 1 && !d->hasgun(gunpref, sgun) && !d->useaction && d->requse < 0)
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -1022,7 +1067,7 @@ namespace ai
 						case WEAPON:
 						{
 							int attr = gunattr(e.attr1, sgun);
-							if(d->hasgun(attr, sgun) || attr != d->ai->gunpref) break;
+							if(d->hasgun(attr, sgun) || attr != gunpref) break;
 							d->useaction = true;
 							d->usetime = lastmillis;
 							return true;
@@ -1062,6 +1107,7 @@ namespace ai
 				aim(d, d->yaw, d->pitch, yaw, pitch, true);
 				aiming = true;
 			}
+			else d->ai->enemy = -1;
 		}
 
 		if(b.idle)
@@ -1128,10 +1174,10 @@ namespace ai
 		findorientation(pos, d->yaw, d->pitch, d->ai->target);
 		if(world::allowmove(d) && d->state == CS_ALIVE)
 		{
-			bool r = false, p = false;
+			bool p = false;
 			int busy = process(d, b) ? 1 : 0;
-			if(!decision(d, &r, &p, false) || !r) busy = 2;
-			if(!request(d, busy) && !busy) defer(d, b, false);
+			if(!decision(d, &p)) busy = 2;
+			if(!request(d, b, busy) && !busy) target(d, b);
 			entities::checkitems(d);
 			weapons::shoot(d, d->ai->target, guntype[d->gunselect].power); // always use full power
 			if(!b.idle && d->lastnode == d->ai->lastnode)
@@ -1192,15 +1238,13 @@ namespace ai
 	void think(gameent *d, bool run)
 	{
 		if(d->ai->state.empty()) d->ai->reset();
-
-		// the state stack works like a chain of commands, certain commands simply replace
-		// each other, others spawn new commands to the stack the ai reads the top command
-		// from the stack and executes it or pops the stack and goes back along the history
-		// until it finds a suitable command to execute.
-
 		if(!world::intermission)
 		{
-			aistate &b = d->ai->getstate();
+			// the state stack works like a chain of commands, certain commands simply replace
+			// each other, others spawn new commands to the stack the ai reads the top command
+			// from the stack and executes it or pops the stack and goes back along the history
+			// until it finds a suitable command to execute, attack states are treated outside
+			// this context, allowing the ai to multitask attacking with another interest
 			loopvrev(d->ai->state)
 			{
 				aistate &c = d->ai->state[i];
@@ -1219,11 +1263,11 @@ namespace ai
 						c.idle = false;
 						switch(c.type)
 						{
-							case AI_S_WAIT: result = dowait(d, b) ? 1 : 0; break;
-							case AI_S_DEFEND: result = dodefend(d, b) ? 1 : 0; break;
-							case AI_S_PURSUE: result = dopursue(d, b) ? 1 : 0; break;
-							case AI_S_ATTACK: result = doattack(d, b) ? -1 : 0; break;
-							case AI_S_INTEREST: result = dointerest(d, b) ? 1 : 0; break;
+							case AI_S_WAIT: result = dowait(d, c) ? 1 : 0; break;
+							case AI_S_DEFEND: result = dodefend(d, c) ? 1 : 0; break;
+							case AI_S_PURSUE: result = dopursue(d, c) ? 1 : 0; break;
+							case AI_S_ATTACK: result = doattack(d, c) ? -1 : 0; break;
+							case AI_S_INTEREST: result = dointerest(d, c) ? 1 : 0; break;
 							default: result = 0; break;
 						}
 						if(c.type != AI_S_WAIT)
@@ -1240,6 +1284,7 @@ namespace ai
 							c.cycle = 0; // recycle the root of the command tree
 						}
 					}
+					else if(c.type == AI_S_ATTACK) continue; // non-interference
 				}
 				check(d, c, run);
 				break;

@@ -414,12 +414,11 @@ namespace stf
 				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.pos) <= ((enttype[FLAG].radius*enttype[FLAG].radius)*2.f))
 					targets.add(e->clientnum);
 			}
-
 			if(targets.empty() && (f.owner != d->team || f.enemy))
 			{
 				interest &n = interests.add();
 				n.state = AI_S_DEFEND;
-				n.node = entities::entitynode(f.pos, false);
+				n.node = entities::entitynode(f.pos);
 				n.target = j;
 				n.targtype = AI_T_AFFINITY;
 				n.tolerance = enttype[FLAG].radius*2.f;

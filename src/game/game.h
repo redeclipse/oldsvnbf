@@ -143,7 +143,7 @@ enttypes enttype[] = {
 			false,				"camera"
 	},
 	{
-		WAYPOINT,		1,		8,		EU_NONE,
+		WAYPOINT,		1,		16,		EU_NONE,
 			inttobit(WAYPOINT),
 			true,				"waypoint"
 	},
@@ -962,7 +962,7 @@ struct aiinfo
 		state.setsize(0);
 		route.setsize(0);
 		addstate(AI_S_WAIT);
-		gunpref = rnd(GUN_MAX-1)+1;
+		while((gunpref = rnd(GUN_MAX)) == GUN_GL) if(!rnd(3)) break;
 		spot = target = vec(0, 0, 0);
 		enemy = lastseen = lastnode = prevnode = -1;
 		timeinnode = 0;
@@ -993,6 +993,7 @@ struct aiinfo
 	aistate &getstate(int idx = -1)
 	{
 		if(state.inrange(idx)) return state[idx];
+		else loopvrev(state) if(state[i].type != AI_S_ATTACK) return state[i];
 		return state.last();
 	}
 };
@@ -1174,7 +1175,7 @@ namespace entities
 	};
 
 	extern bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, bool retry = false, float *score = NULL);
-	extern int entitynode(const vec &v, bool dist = true, int type = WAYPOINT);
+	extern int entitynode(const vec &v, float dist = -1.f);
 	extern bool collateitems(gameent *d, vector<actitem> &actitems);
 	extern void checkitems(gameent *d);
 	extern void putitems(ucharbuf &p);
@@ -1239,6 +1240,7 @@ namespace weapons
 
 namespace ai
 {
+	const float AIISCLOSE			= 16.f;			// is close
 	const float AIISNEAR			= 64.f;			// is near
 	const float AIISFAR				= 256.f;		// too far
 	const float AIJUMPHEIGHT		= 4.f;			// decides to jump
@@ -1261,8 +1263,8 @@ namespace ai
 	extern bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool randomnode(gameent *d, aistate &b, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
-	extern bool defend(gameent *d, aistate &b, const vec &pos, float tolerance = AIISNEAR, bool retry = false);
-	extern bool patrol(gameent *d, aistate &b, const vec &pos, float radius = AIISNEAR, float wander = AIISFAR, bool retry = false);
+	extern bool patrol(gameent *d, aistate &b, const vec &pos, float radius = AIISNEAR, float wander = AIISFAR, bool walk = false, bool retry = false);
+	extern bool defend(gameent *d, aistate &b, const vec &pos, float radius = AIISCLOSE, float guard = AIISNEAR, bool walk = false);
 	extern void spawned(gameent *d);
 	extern void damaged(gameent *d, gameent *e, int gun, int flags, int damage, int health, int millis, vec &dir);
 	extern void killed(gameent *d, gameent *e, int gun, int flags, int damage);

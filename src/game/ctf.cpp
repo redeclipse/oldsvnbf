@@ -522,13 +522,9 @@ namespace ctf
 			ctfstate::flag &g = st.flags[i];
 			if(g.owner == d) hasflags.add(i);
 		}
-
-		if(!hasflags.empty() && aihomerun(d, b))
-			return true;
-
+		if(!hasflags.empty() && aihomerun(d, b)) return true;
 		return false;
 	}
-
 
 	void aifind(gameent *d, aistate &b, vector<interest> &interests)
 	{
@@ -536,10 +532,8 @@ namespace ctf
 		loopvj(st.flags)
 		{
 			ctfstate::flag &f = st.flags[j];
-
 			vector<int> targets; // build a list of others who are interested in this
 			ai::checkothers(targets, d, isctfhome(f, d->team) ? AI_S_DEFEND : AI_S_PURSUE, AI_T_AFFINITY, j, true);
-
 			gameent *e = NULL;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
@@ -547,7 +541,6 @@ namespace ctf
 				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius) || f.owner == e))
 					targets.add(e->clientnum);
 			}
-
 			if(isctfhome(f, d->team))
 			{
 				bool guard = false;
@@ -561,12 +554,11 @@ namespace ctf
 						break;
 					}
 				}
-
 				if(guard)
 				{ // defend the flag
 					interest &n = interests.add();
 					n.state = AI_S_DEFEND;
-					n.node = entities::entitynode(f.pos(), false);
+					n.node = entities::entitynode(f.pos());
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
 					n.tolerance = enttype[FLAG].radius;
@@ -580,7 +572,7 @@ namespace ctf
 				{ // attack the flag
 					interest &n = interests.add();
 					n.state = AI_S_PURSUE;
-					n.node = entities::entitynode(f.pos(), false);
+					n.node = entities::entitynode(f.pos());
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
 					n.tolerance = enttype[FLAG].radius;
@@ -613,7 +605,21 @@ namespace ctf
 		{
 			ctfstate::flag &f = st.flags[b.target];
 			if(f.owner && ai::violence(d, b, f.owner, true)) return true;
-			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius/2));
+			bool walk = false;
+			loopv(st.flags)
+			{
+				ctfstate::flag &g = st.flags[i];
+				if(g.owner && g.owner->team == d->team)
+				{
+					vec gp = world::feetpos(g.owner);
+					if(gp.squaredist(f.pos()) <= ai::AIISNEAR*ai::AIISNEAR)
+					{
+						walk = true;
+						break;
+					}
+				}
+			}
+			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius), ai::AIISNEAR, walk);
 		}
 		return false;
 	}
