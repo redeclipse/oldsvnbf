@@ -629,7 +629,13 @@ namespace entities
 		if(ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr1))) return true;
 		if(recover)
 		{
+			if(m_team(world::gamemode, world::mutators))
+			{
+				loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr2 == d->team && tryspawn(d, ents[i]->o, float(ents[i]->attr1)))
+					return true;
+			}
 			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, float(ents[i]->attr1))) return true;
+			loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o)) return true;
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
 			if(physics::entinmap(d, false)) return true;
 		}
@@ -848,20 +854,20 @@ namespace entities
 		return !route.empty();
 	}
 
-	int entitynode(const vec &v, bool dist, int type)
+	int entitynode(const vec &v, float dist)
 	{
-		int w = -1, t = type >= 0 ? type : WAYPOINT;
-        float mindist = dist ? enttype[t].radius * enttype[t].radius : 1e16f; // avoid square roots
-        loopv(ents) if(ents[i]->type == t)
+        int n = -1;
+        float mindist = dist >= 0.f ? dist*dist : 1e16f; // avoid square roots
+        loopv(ents) if(ents[i]->type == WAYPOINT)
         {
             float u = ents[i]->o.squaredist(v);
             if(u <= mindist)
             {
-                w = i;
+                n = i;
                 mindist = u;
             }
         }
-		return w;
+		return n;
 	}
 
 	void entitylink(int index, int node, bool both = true)
@@ -869,11 +875,8 @@ namespace entities
 		if(ents.inrange(index) && ents.inrange(node))
 		{
 			gameentity &e = *(gameentity *)ents[index], &f = *(gameentity *)ents[node];
-
-			if(e.links.find(node) < 0)
-				linkents(index, node, true, true, false);
-			if(both && f.links.find(index) < 0)
-				linkents(node, index, true, true, false);
+			if(e.links.find(node) < 0) linkents(index, node, true, true, false);
+			if(both && f.links.find(index) < 0) linkents(node, index, true, true, false);
 		}
 	}
 
@@ -882,12 +885,9 @@ namespace entities
 		if(d->state == CS_ALIVE)
 		{
 			vec v(world::feetpos(d, 0.f));
-			int curnode = entitynode(v);
 			if((m_play(world::gamemode) || dropwaypoints) && ((m_play(world::gamemode) && d->aitype == AI_NONE) || d == world::player1))
 			{
-				if(!ents.inrange(curnode) && ents.inrange(d->lastnode) && ents[d->lastnode]->o.dist(v) <= d->radius+enttype[WAYPOINT].radius)
-					curnode = d->lastnode;
-
+				int curnode = entitynode(v, float(enttype[WAYPOINT].radius));
 				if(!ents.inrange(curnode))
 				{
 					int cmds = WP_NONE;
@@ -897,12 +897,11 @@ namespace entities
 				}
 				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
 					entitylink(d->lastnode, curnode, !d->timeinair);
-
 				d->lastnode = curnode;
 			}
 			else
 			{
-				if(!ents.inrange(curnode)) curnode = entitynode(v, false);
+				int curnode = entitynode(v);
 				if(ents.inrange(curnode)) d->lastnode = curnode;
 				else d->lastnode = -1;
 			}
@@ -913,9 +912,7 @@ namespace entities
 	void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e)
 	{
 		gameentity &f = (gameentity &)e;
-
 		f.mark = false;
-
 		if(mtype == MAP_OCTA)
 		{
 			// translate into our format

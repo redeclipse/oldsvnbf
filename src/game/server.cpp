@@ -1068,7 +1068,7 @@ namespace server
 				loopv(clients)
 				{
 					clientinfo *ci = clients[i];
-					if(!ci->team || ci == who) continue;
+					if(!ci->team || ci == who || ci->state.state == CS_SPECTATOR) continue;
 					ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 					ci->state.lasttimeplayed = lastmillis;
 					loopj(numteams(gamemode, mutators)) if(ci->team == teamscores[j].team)
