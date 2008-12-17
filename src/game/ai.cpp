@@ -475,10 +475,8 @@ namespace ai
 			else if(!d->ai->route.empty()) return true;
 			else if(!retry)
 			{
-				b.override = false;
-				//FIXME oh quin! the bots are broken, I commented the original line for you
-				//return patrol(d, b, pos, radius, wander, true);
-				return patrol(d, b, pos, radius, wander, true, true);
+                b.override = false;
+				return patrol(d, b, pos, radius, wander, walk, true);
 			}
 			return false;
 		}
