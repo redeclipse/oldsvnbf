@@ -311,7 +311,7 @@ void sendf(int cn, int chan, const char *format, ...)
 	if(packet->referenceCount==0) enet_packet_destroy(packet);
 }
 
-const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned", "tag type", "ip is banned", "server is in private mode", "server is full" };
+const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned", "tag type", "ip is banned", "server is in private mode", "server is full", "connection timed out" };
 
 void disconnect_client(int n, int reason)
 {
@@ -322,12 +322,14 @@ void disconnect_client(int n, int reason)
 	clients[n]->peer->data = NULL;
 	server::deleteinfo(clients[n]->info);
 	clients[n]->info = NULL;
-    if(reason)
-    {
-	    s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
-	    conoutf("\fr%s", s);
-	    server::srvmsgf(-1, "%s", s);
-    }
+	s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
+	conoutf("\fr%s", s);
+	server::srvmsgf(-1, "%s", s);
+}
+
+void kicknonlocalclients(int reason)
+{
+    loopv(clients) if(clients[i]->type==ST_TCPIP) disconnect_client(i, reason);
 }
 
 void process(ENetPacket *packet, int sender, int chan)	// sender may be -1
