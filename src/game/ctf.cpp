@@ -507,6 +507,7 @@ namespace ctf
 				c.targtype = AI_T_AFFINITY;
 				c.target = goal;
 				c.defers = false;
+				c.expire = 0; // doesn't until we get it home!
 				return true;
 			}
 		}
@@ -515,12 +516,15 @@ namespace ctf
 
 	bool aicheck(gameent *d, aistate &b)
 	{
-		static vector<int> hasflags;
-		hasflags.setsizenodelete(0);
+		vector<int> hasflags, targets;
 		loopv(st.flags)
 		{
 			ctfstate::flag &g = st.flags[i];
-			if(g.owner == d) hasflags.add(i);
+			if(g.owner)
+			{
+				if(g.owner == d) hasflags.add(i);
+				else if(g.owner->team == d->team) targets.add(i);
+			}
 		}
 		if(!hasflags.empty() && aihomerun(d, b)) return true;
 		return false;
@@ -564,6 +568,7 @@ namespace ctf
 					n.tolerance = enttype[FLAG].radius;
 					n.score = pos.squaredist(f.pos())/(d->gunselect != d->ai->gunpref ? 10.f : 100.f);
 					n.defers = false;
+					n.expire = 10000;
 				}
 			}
 			else
@@ -578,6 +583,7 @@ namespace ctf
 					n.tolerance = enttype[FLAG].radius;
 					n.score = pos.squaredist(f.pos());
 					n.defers = false;
+					n.expire = 10000;
 				}
 				else
 				{ // help by defending the attacker
@@ -593,6 +599,7 @@ namespace ctf
 						n.tolerance = t->radius*2.f;
 						n.score = pos.squaredist(tp);
 						n.defers = false;
+						n.expire = 10000;
 					}
 				}
 			}

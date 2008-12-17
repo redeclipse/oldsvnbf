@@ -544,6 +544,7 @@ namespace ai
 			n.tolerance = e->radius*2.f;
 			n.score = ep.squaredist(dp)/(force || d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators)) ? 10.f : 1.f);
 			n.defers = false;
+			n.expire = 5000;
 		}
 	}
 
@@ -569,6 +570,7 @@ namespace ai
 						n.tolerance = enttype[e.type].radius+d->radius;
 						n.score = pos.squaredist(e.o)/(force || attr == d->ai->gunpref ? 10.f : 1.f);
 						n.defers = d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators));
+						n.expire = 10000;
 					}
 					break;
 				}
@@ -596,6 +598,7 @@ namespace ai
 						n.tolerance = enttype[proj.ent].radius+d->radius;
 						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->gunpref ? 10.f : 1.f);
 						n.defers = d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators));
+						n.expire = 10000;
 					}
 					break;
 				}
@@ -618,13 +621,22 @@ namespace ai
 			int q = interests.length()-1;
 			loopi(interests.length()-1) if(interests[i].score < interests[q].score) q = i;
 			interest n = interests.removeunordered(q);
-			if(makeroute(d, b, n.node, n.tolerance))
+			bool proceed = true;
+			vector<int> targets;
+			switch(n.state)
+			{
+				case AI_S_DEFEND: // don't get into herds
+					proceed = !checkothers(targets, d, n.state, n.targtype, n.target, true);
+					break;
+				default: break;
+			}
+			if(proceed && makeroute(d, b, n.node, n.tolerance))
 			{
 				aistate &c = override ? d->ai->setstate(n.state) : d->ai->addstate(n.state);
 				c.targtype = n.targtype;
 				c.target = n.target;
-				c.expire = n.expire;
 				c.defers = n.defers;
+				c.expire = n.expire;
 				return true;
 			}
 		}
@@ -668,7 +680,6 @@ namespace ai
 				}
 			}
 		}
-
 		vector<int> targets; // check if one of our ai is defending them
 		if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
 		{
@@ -721,8 +732,8 @@ namespace ai
 					aistate &c = d->ai->setstate(AI_S_INTEREST);
 					c.targtype = AI_T_NODE;
 					c.target = closest;
-					c.expire = 1000;
 					c.defers = true;
+					c.expire = 1000;
 					return true;
 				}
 			}
@@ -735,8 +746,8 @@ namespace ai
 				aistate &c = d->ai->setstate(AI_S_INTEREST);
 				c.targtype = AI_T_NODE;
 				c.target = d->ai->route[0];
-				c.expire = 10000;
 				c.defers = true;
+				c.expire = 5000;
 				return true;
 			}
 			if(b.cycle >= 10)
