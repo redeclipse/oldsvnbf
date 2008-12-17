@@ -516,7 +516,7 @@ namespace hud
 
 	void drawtitlecard(int w, int h)
 	{
-		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*1.5f) : 0;
+		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*(radarborder ? 1 : 0.5f)*1.5f) : 0;
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 		pushfont("emphasis");
@@ -564,7 +564,7 @@ namespace hud
 			{	0,	1,	0,	2,	0,	1,	1,	-4,	0.f,	0.2f,	0.2f,	0.6f	},
 			{	1,	-2,	0,	2,	0,	1,	1,	-4,	0.8f,	0.2f,	0.2f,	0.6f	}
 		};
-		int cs = s;
+		int cs = s*(radarborder ? 1 : 2);
 		if(radarborder && world::player1->state != CS_DEAD) // damage overlay goes full in this case
 		{
 			float r = 1.f, g = 1.f, b = 1.f, fade = radarblend*blend;
@@ -665,7 +665,7 @@ namespace hud
 	void drawgamehud(int w, int h)
 	{
 		Texture *t;
-		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize) : 0,
+		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*(radarborder ? 1 : 0.5f)) : 0,
 			secs = world::maptime ? lastmillis-world::maptime : 0;
 		float fade = hudblend;
 
@@ -851,7 +851,7 @@ namespace hud
 
 	void drawhudelements(int w, int h)
 	{
-		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*1.5f) : 0,
+		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*(radarborder ? 1 : 0.5f)*1.5f) : 0,
 			is = showinventory ? int(oy*inventorysize) : 0, bx = os+FONTW/4, by = oy-os-(FONTH/3)*2, bs = ox-bx*2-is;
 
 		glLoadIdentity();
