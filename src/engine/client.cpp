@@ -44,6 +44,7 @@ bool connected(bool attempt)
 void abortconnect(bool msg)
 {
 	if(!connpeer) return;
+    client::connectfail();
     if(msg) conoutf("\fwaborting connection attempt");
 	if(connpeer->state!=ENET_PEER_STATE_DISCONNECTED) enet_peer_reset(connpeer);
 	connpeer = NULL;
@@ -70,7 +71,7 @@ void trydisconnect()
 }
 
 char *lastaddress = NULL;
-void connects(const char *name, int port, int qport)
+void connects(const char *name, int port, int qport, const char *password)
 {
     abortconnect();
 
@@ -109,6 +110,7 @@ void connects(const char *name, int port, int qport)
 		enet_host_flush(clienthost);
 		connmillis = totalmillis;
 		connattempts = 0;
+        client::connectattempt(name ? name : "", port, qport, password ? password : "", address);
 		conoutf("\fgconnecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
 //		computescreen(cs);
 	}
@@ -153,7 +155,7 @@ void disconnect(int onlyclean, int async)
     if(!onlyclean) localconnect();
 }
 
-ICOMMAND(connect, "sii", (char *n, int *a, int *b), connects(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT));
+ICOMMAND(connect, "siis", (char *n, int *a, int *b, char *pwd), connects(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT, pwd));
 COMMANDN(disconnect, trydisconnect, "");
 
 void lanconnect() { connects(); }

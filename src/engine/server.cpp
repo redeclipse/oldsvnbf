@@ -238,7 +238,7 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 	if(n<0)
 	{
 		server::recordpacket(chan, packet->data, packet->dataLength);
-		loopv(clients) if(i!=exclude) sendpacket(i, chan, packet);
+		loopv(clients) if(i!=exclude && server::allowbroadcast(i)) sendpacket(i, chan, packet);
 		return;
 	}
 	switch(clients[n]->type)
@@ -322,9 +322,12 @@ void disconnect_client(int n, int reason)
 	clients[n]->peer->data = NULL;
 	server::deleteinfo(clients[n]->info);
 	clients[n]->info = NULL;
-	s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
-	conoutf("\fr%s", s);
-	server::srvmsgf(-1, "%s", s);
+    if(reason)
+    {
+	    s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
+	    conoutf("\fr%s", s);
+	    server::srvmsgf(-1, "%s", s);
+    }
 }
 
 void process(ENetPacket *packet, int sender, int chan)	// sender may be -1
@@ -332,16 +335,6 @@ void process(ENetPacket *packet, int sender, int chan)	// sender may be -1
 	ucharbuf p(packet->data, (int)packet->dataLength);
 	server::parsepacket(sender, chan, (packet->flags&ENET_PACKET_FLAG_RELIABLE)!=0, p);
 	if(p.overread()) { disconnect_client(sender, DISC_EOP); return; }
-}
-
-void send_welcome(int n)
-{
-	ENetPacket *packet = enet_packet_create (NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
-	ucharbuf p(packet->data, packet->dataLength);
-	int chan = server::welcomepacket(p, n, packet);
-	enet_packet_resize(packet, p.length());
-	sendpacket(n, chan, packet);
-	if(packet->referenceCount==0) enet_packet_destroy(packet);
 }
 
 void localclienttoserver(int chan, ENetPacket *packet)
@@ -389,7 +382,6 @@ void localconnect()
     conoutf("\fglocal client %d connected", c.num);
     client::gameconnect(false);
     server::clientconnect(c.num, 0, true);
-    send_welcome(c.num);
 }
 
 void localdisconnect()
@@ -605,10 +597,8 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 				char hn[1024];
 				s_strcpy(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
 				conoutf("\fgclient connected (%s)", c.hostname);
-				int reason = DISC_MAXCLIENTS;
-				if(server::numclients(-1, false, true) < serverclients && !(reason = server::clientconnect(c.num, c.peer->address.host)))
-					send_welcome(c.num);
-				else disconnect_client(c.num, reason);
+				int reason = server::clientconnect(c.num, c.peer->address.host);
+				if(reason) disconnect_client(c.num, reason);
 				break;
 			}
 			case ENET_EVENT_TYPE_RECEIVE:
@@ -688,7 +678,7 @@ void setupserver()
 			conoutf("\frWARNING: server address not resolved");
 		else msaddress.host = address.host;
 	}
-	serverhost = enet_host_create(&address, serverclients+1, 0, serveruprate);
+	serverhost = enet_host_create(&address, serverclients + server::reserveclients(), 0, serveruprate);
 	if(!serverhost)
 	{
 		conoutf("\frcould not create server socket");
