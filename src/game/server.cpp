@@ -1943,10 +1943,10 @@ namespace server
             return DISC_NONE;
         }
         if(adminpass[0] && checkpassword(ci, adminpass, pwd)) return DISC_NONE;
-        if(clients.length()>=serverclients) return DISC_MAXCLIENTS;
+        if(numclients(-1, false, true) >= serverclients) return DISC_MAXCLIENTS;
         uint ip = getclientip(ci->clientnum);
-        loopv(bannedips) if(bannedips[i].ip==ip) return DISC_IPBAN;
-        if(mastermode>=MM_PRIVATE && allowedips.find(ip)<0) return DISC_PRIVATE;
+        loopv(bannedips) if(bannedips[i].ip == ip) return DISC_IPBAN;
+        if(mastermode >= MM_PRIVATE && allowedips.find(ip) < 0) return DISC_PRIVATE;
         return DISC_NONE;
     }
 
