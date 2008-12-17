@@ -476,7 +476,9 @@ namespace ai
 			else if(!retry)
 			{
 				b.override = false;
-				return patrol(d, b, pos, radius, wander, true);
+				//FIXME oh quin! the bots are broken, I commented the original line for you
+				//return patrol(d, b, pos, radius, wander, true);
+				return patrol(d, b, pos, radius, wander, true, true);
 			}
 			return false;
 		}
