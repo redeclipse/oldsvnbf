@@ -2393,6 +2393,7 @@ namespace server
 					ev.shot.num = getint(p);
 					loopj(ev.shot.num)
 					{
+                        if(p.overread() || !isgun(ev.shot.gun) || j >= guntype[ev.shot.gun].rays) return;
 						ivec &dest = ev.shot.shots.add();
 						loopk(3) dest[k] = getint(p);
 					}
@@ -2428,7 +2429,7 @@ namespace server
 					int hits = getint(p);
 					loopj(hits)
 					{
-						hitset &hit = havecn ? ev.destroy.hits.add() : dummyevent.destroy.hits.add();
+						hitset &hit = havecn && j < MAXCLIENTS ? ev.destroy.hits.add() : dummyevent.destroy.hits.add();
 						hit.flags = getint(p);
 						hit.target = getint(p);
 						hit.lifesequence = getint(p);
