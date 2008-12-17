@@ -424,6 +424,7 @@ namespace stf
 				n.tolerance = enttype[FLAG].radius*2.f;
 				n.score = pos.squaredist(f.pos)/(d->gunselect != d->ai->gunpref ? 10.f : 100.f);
 				n.defers = false;
+				n.expire = 10000;
 			}
 		}
 	}
