@@ -53,7 +53,7 @@ namespace hud
 	TVAR(gammaflagtex, "textures/teamgamma", 0);
 
 	VARP(showclip, 0, 1, 1);
-	FVARP(clipsize, 0, 0.04f, 1000);
+	FVARP(clipsize, 0, 0.05f, 1000);
 	FVARP(clipblend, 0, 0.25f, 1000);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
@@ -196,7 +196,7 @@ namespace hud
 		else drawslice(0, clamp(amt, 0.f, 1.f), x, y, s);
 	}
 
-    void drawclip(int gun, int x, int y, int s)
+    void drawclip(int gun, int x, int y, float s)
     {
         const char *cliptexs[GUN_MAX] = {
             plasmacliptex, shotguncliptex, chainguncliptex,
@@ -217,6 +217,10 @@ namespace hud
 			}
 			default: break;
 		}
+        switch(gun)
+        {
+            case GUN_PLASMA: case GUN_FLAMER: case GUN_CG: s *= 0.8f; break;
+        }
         glColor4f(1.f, 1.f, 1.f, fade);
         glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
         if(t->frames.length() > 1) drawsized(x-s/2, y-s/2, s);
@@ -315,7 +319,7 @@ namespace hud
 				{
 					if(world::player1->hasgun(world::player1->gunselect, m_spawngun(world::gamemode, world::mutators)))
 					{
-						if(showclip) drawclip(world::player1->gunselect, cx, cy, int(clipsize*hudsize));
+						if(showclip) drawclip(world::player1->gunselect, cx, cy, clipsize*hudsize);
 						if(showindicator && guntype[world::player1->gunselect].power && world::player1->gunstate[world::player1->gunselect] == GNS_POWER)
 							drawindicator(world::player1->gunselect, cx, cy, int(indicatorsize*hudsize));
 					}
@@ -330,7 +334,7 @@ namespace hud
         }
 	}
 
-	void drawquad(int x, int y, int w, int h, float tx1, float ty1, float tx2, float ty2)
+	void drawquad(float x, float y, float w, float h, float tx1, float ty1, float tx2, float ty2)
 	{
 		glBegin(GL_QUADS);
 		glTexCoord2f(tx1, ty1); glVertex2f(x, y);
@@ -340,12 +344,12 @@ namespace hud
 		glEnd();
 	}
 
-	void drawtex(int x, int y, int w, int h, float tx, float ty, float tw, float th)
+	void drawtex(float x, float y, float w, float h, float tx, float ty, float tw, float th)
 	{
 		drawquad(x, y, w, h, tx, ty, tx+tw, ty+th);
 	}
 
-	void drawsized(int x, int y, int s)
+	void drawsized(float x, float y, float s)
 	{
 		drawtex(x, y, s, s);
 	}
