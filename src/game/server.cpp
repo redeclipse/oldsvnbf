@@ -2950,7 +2950,8 @@ namespace server
 		if(arg[0]=='-' && arg[1]=='s') switch(arg[2])
 		{
 			case 'd': setsvar("serverdesc", &arg[3]); return true;
-			case 'P': setsvar("serverpass", &arg[3]); return true;
+			case 'P': setsvar("adminpass", &arg[3]); return true;
+            case 'k': setsvar("serverpass", &arg[3]); return true;
 			case 'o': if(atoi(&arg[3])) mastermask = (1<<MM_OPEN) | (1<<MM_VETO); return true;
 			case 'M': setsvar("servermotd", &arg[3]); return true;
 			default: break;
