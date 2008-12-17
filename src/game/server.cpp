@@ -1229,6 +1229,7 @@ namespace server
 		if(m_demo(gamemode))
 		{
             loopv(clients) if(!clients[i]->local) disconnect_client(clients[i]->clientnum, DISC_PRIVATE);
+            loopv(connects) if(!connects[i]->local) disconnect_client(connects[i]->clientnum, DISC_PRIVATE);
 		}
 
 		// server modes
@@ -1937,6 +1938,7 @@ namespace server
     int allowconnect(clientinfo *ci, const char *pwd)
     {
         if(ci->local) return DISC_NONE;
+        if(m_demo(gamemode)) return DISC_PRIVATE;
         if(serverpass[0])
         {
             if(!checkpassword(ci, serverpass, pwd)) return DISC_PRIVATE;
