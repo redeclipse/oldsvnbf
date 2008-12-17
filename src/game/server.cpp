@@ -2208,7 +2208,7 @@ namespace server
                 sendwelcome(ci);
                 sendresume(ci);
                 sendinitc2s(ci, ci->clientnum);
-                relayf(1, "\fg%s has joined the game", colorname(ci, text));
+                relayf(1, "\fg%s has joined the game", colorname(ci));
 
                 ai::refreshai();
             }
