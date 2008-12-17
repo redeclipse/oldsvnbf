@@ -5,7 +5,8 @@ namespace client
 {
 	bool c2sinit = false, sendinfo = false, isready = false, remote = false,
 		demoplayback = false, needsmap = false;
-	int lastping = 0;
+	int lastping = 0, sessionid = 0;
+    string connectpass = "";
 
 	// collect c2s messages conveniently
 	vector<uchar> messages;
@@ -80,6 +81,16 @@ namespace client
 		fprintf(f, "name \"%s\"\n\n", world::player1->name);
 	}
 
+    void connectattempt(const char *name, int port, int qport, const char *password, const ENetAddress &address)
+    {
+        s_strcpy(connectpass, password);
+    }
+
+    void connectfail()
+    {
+        memset(connectpass, 0, sizeof(connectpass));
+    }
+
 	void gameconnect(bool _remote)
 	{
 		remote = _remote;
@@ -89,7 +100,8 @@ namespace client
 	void gamedisconnect(int clean)
 	{
 		if(editmode) toggleedit();
-		needsmap = remote = isready = c2sinit = false;
+		needsmap = remote = isready = false;
+        sessionid = 0;
 		messages.setsize(0);
 		projs::remove(world::player1);
         removetrackedparticles(world::player1);
@@ -206,16 +218,25 @@ namespace client
 	}
 	ICOMMAND(setteam, "ss", (char *who, char *team), setteam(who, team));
 
-	void setmaster(const char *arg)
-	{
-		if(!remote || !arg[0]) return;
-		int val = 1;
-		const char *passwd = "";
-		if(!arg[1] && isdigit(arg[0])) val = atoi(arg);
-		else passwd = arg;
-		addmsg(SV_SETMASTER, "ris", val, passwd);
-	}
-	ICOMMAND(setmaster, "s", (char *s), setmaster(s));
+    void hashpwd(const char *pwd)
+    {
+        if(!remote || world::player1->clientnum<0) return;
+        string hash;
+        server::hashpassword(world::player1->clientnum, sessionid, pwd, hash);
+        result(hash);
+    }
+    COMMAND(hashpwd, "s");
+
+    void setmaster(const char *arg)
+    {
+        if(!remote || !arg[0]) return;
+        int val = 1;
+        string hash = "";
+        if(!arg[1] && isdigit(arg[0])) val = atoi(arg); 
+        else server::hashpassword(world::player1->clientnum, sessionid, arg, hash);
+        addmsg(SV_SETMASTER, "ris", val, hash);
+    }
+	COMMAND(setmaster, "s");
 
     void approvemaster(const char *who)
     {
@@ -635,6 +656,23 @@ namespace client
 		}
 	}
 
+    void sendintro()
+    {
+        ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
+        ucharbuf p(packet->data, packet->dataLength);
+        putint(p, SV_CONNECT);
+        sendstring(world::player1->name, p);
+        string hash = "";
+        if(connectpass[0]) 
+        {
+            server::hashpassword(world::player1->clientnum, sessionid, connectpass, hash);
+            memset(connectpass, 0, sizeof(connectpass));
+        }
+        sendstring(hash, p);
+        enet_packet_resize(packet, p.length());
+        sendpackettoserv(packet, 1);
+    }
+
 	void updateposition(gameent *d)
 	{
         if(d->state==CS_ALIVE || d->state==CS_EDITING)
@@ -903,11 +941,17 @@ namespace client
 						disconnect();
 						return;
 					}
+                    sessionid = getint(p);
 					world::player1->clientnum = mycn;	  // we are now fully ready
+                    if(getint(p)) conoutf("\frthis server is password protected");
+                    sendintro();
 					isready = true;
 					break;
 				}
 
+                case SV_WELCOME:
+                    break;
+            
 				case SV_CLIENT:
 				{
 					int lcn = getint(p), len = getuint(p);
@@ -1395,6 +1439,7 @@ namespace client
                         loopv(world::players) if(world::players[i]) world::clientdisconnected(i);
                     }
 					demoplayback = on!=0;
+                    world::player1->clientnum = getint(p);
 					break;
 				}
 

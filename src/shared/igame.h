@@ -34,6 +34,8 @@ namespace client
 	extern void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0);
 	extern void changemap(const char *name);
 	extern bool ready();
+    extern void connectattempt(const char *name, int port, int qport, const char *password, const ENetAddress &address);
+    extern void connectfail();
 	extern int state();
 	extern int otherclients();
 	extern int numchannels();
@@ -105,12 +107,13 @@ namespace server
 	extern void *newinfo();
 	extern void deleteinfo(void *ci);
 	extern int numclients(int exclude = -1, bool nospec = true, bool noai = false);
+    extern int reserveclients();
 	extern void clientdisconnect(int n, bool local = false);
 	extern int clientconnect(int n, uint ip, bool local = false);
+    extern bool allowbroadcast(int n);
 	extern void recordpacket(int chan, void *data, int len);
 	extern void parsepacket(int sender, int chan, bool reliable, ucharbuf &p);
 	extern bool sendpackets();
-	extern int welcomepacket(ucharbuf &p, int n, ENetPacket *packet);
 	extern void queryreply(ucharbuf &req, ucharbuf &p);
 	extern void serverupdate();
 	extern void changemap(const char *s, int mode = -1, int muts = -1);
