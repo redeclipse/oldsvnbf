@@ -1226,11 +1226,7 @@ namespace server
 			}
 		}
 
-		if(m_demo(gamemode))
-		{
-            loopv(clients) if(!clients[i]->local) disconnect_client(clients[i]->clientnum, DISC_PRIVATE);
-            loopv(connects) if(!connects[i]->local) disconnect_client(connects[i]->clientnum, DISC_PRIVATE);
-		}
+		if(m_demo(gamemode)) kicknonlocalclients(DISC_PRIVATE);
 
 		// server modes
 		if(m_stf(gamemode)) smode = &stfmode;
@@ -1832,6 +1828,8 @@ namespace server
 
 		while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000)
 			bannedips.remove(0);
+        loopv(connects) if(totalmillis-connects[i]->connectmillis>15000) 
+            disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
 
 		if(masterupdate)
 		{
