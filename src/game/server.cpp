@@ -1480,6 +1480,12 @@ namespace server
 			}
 		});
 
+        if(ci)
+        {
+            putint(p, SV_SETTEAM);
+            putint(p, ci->clientnum);
+            putint(p, ci->team);
+        }
 		if(ci && ci->state.state!=CS_SPECTATOR)
 		{
 			int nospawn = 0;
@@ -2197,10 +2203,14 @@ namespace server
                 if(currentmaster>=0) masterupdate = true;
                 ci->state.lasttimeplayed = lastmillis;
 
+                ci->team = chooseteam(ci);
+
                 sendwelcome(ci);
                 sendresume(ci);
                 sendinitc2s(ci, ci->clientnum);
                 relayf(1, "\fg%s has joined the game", colorname(ci, text));
+
+                ai::refreshai();
             }
         }
 		else if(chan==2)
