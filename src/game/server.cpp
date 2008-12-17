@@ -1942,7 +1942,7 @@ namespace server
             if(!checkpassword(ci, serverpass, pwd)) return DISC_PRIVATE;
             return DISC_NONE;
         }
-        if(adminpass[0] && checkpassword(ci, adminpass, pwd)) return DISC_NONE; 
+        if(adminpass[0] && checkpassword(ci, adminpass, pwd)) return DISC_NONE;
         if(clients.length()>=serverclients) return DISC_MAXCLIENTS;
         uint ip = getclientip(ci->clientnum);
         loopv(bannedips) if(bannedips[i].ip==ip) return DISC_IPBAN;
