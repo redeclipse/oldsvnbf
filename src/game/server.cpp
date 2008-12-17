@@ -1379,11 +1379,11 @@ namespace server
         }
     }
 
-    void sendinitc2s(clientinfo *ci, int cn)
+    void sendinitc2s(clientinfo *ci)
     {
         ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
         enet_packet_resize(packet, buildinitc2s(ci, packet->data, packet->dataLength));
-        sendpacket(cn, 1, packet, ci->clientnum);
+        sendpacket(-1, 1, packet, ci->clientnum);
         if(!packet->referenceCount) enet_packet_destroy(packet);
     }
 
@@ -2207,7 +2207,7 @@ namespace server
 
                 sendwelcome(ci);
                 sendresume(ci);
-                sendinitc2s(ci, ci->clientnum);
+                sendinitc2s(ci);
                 relayf(1, "\fg%s has joined the game", colorname(ci));
 
                 ai::refreshai();
@@ -2549,7 +2549,7 @@ namespace server
 						ci->team = team;
 						ai::refreshai();
 					}
-                    sendinitc2s(ci, -1);
+                    sendinitc2s(ci);
 					break;
 				}
 
