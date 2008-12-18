@@ -769,7 +769,7 @@ void resetmap()
 	clearsleep();
 	cancelsel();
 	pruneundos();
-	entities::getents().deletecontentsp();
+    entities::clearents();
 	clearworldvars();
 }
 
