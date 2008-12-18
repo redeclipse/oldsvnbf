@@ -1205,7 +1205,7 @@ namespace ai
 			d->ai->lastnode = d->lastnode;
 		}
 		else d->stopmoving();
-		physics::move(d, 10, true);
+		physics::move(d, 1, true);
 		d->attacking = d->jumping = d->reloading = d->useaction = false;
 	}
 
