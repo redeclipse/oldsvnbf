@@ -246,7 +246,7 @@ extern float tracecollide(const vec &o, const vec &ray, float maxdist, int mode 
 extern void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m);
 extern void vectoyawpitch(const vec &v, float &yaw, float &pitch);
 extern bool intersect(physent *d, const vec &from, const vec &to, float &dist);
-extern bool insidesphere(vec &d, float h1, float r1, vec &v, float h2, float r2);
+extern bool overlapsbox(const vec &d, float h1, float r1, const vec &v, float h2, float r2);
 extern const vector<physent *> &checkdynentcache(int x, int y);
 extern void updatedynentcache(physent *d);
 extern void cleardynentcache();

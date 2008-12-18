@@ -914,7 +914,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				if(hdr.version <= 23 && e.type >= ET_SPOTLIGHT) e.type++;
 				if(!samegame && (e.type>=ET_GAMESPECIFIC || hdr.version<=14))
 				{
-					ents.pop();
+					entities::deleteent(ents.pop());
 					continue;
 				}
 				entities::readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);

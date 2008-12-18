@@ -15,6 +15,8 @@ namespace entities
 	extern bool canlink(int index, int node, bool msg = false);
 	extern bool linkents(int index, int node, bool add, bool local, bool toggle);
 	extern extentity *newent();
+    extern void deleteent(extentity *e);
+    extern void clearents();
 	extern vector<extentity *> &getents();
 	extern void drawparticles();
 }

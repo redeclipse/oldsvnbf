@@ -575,7 +575,7 @@ const vector<physent *> &checkdynentcache(int x, int y)
 	dec.x = x;
 	dec.y = y;
 	dec.frame = dynentframe;
-	dec.dynents.setsize(0);
+	dec.dynents.setsizenodelete(0);
 	int numdyns = world::numdynents(), dsize = 1<<dynentsize, dx = x<<dynentsize, dy = y<<dynentsize;
 	loopi(numdyns)
 	{
@@ -938,7 +938,7 @@ bool intersect(physent *d, const vec &from, const vec &to, float &dist)   // if 
     return linecylinderintersect(from, to, bottom, top, d->radius, dist);
 }
 
-bool insidesphere(vec &d, float h1, float r1, vec &v, float h2, float r2)
+bool overlapsbox(const vec &d, float h1, float r1, const vec &v, float h2, float r2)
 {
 	return d.x <= v.x+r2+r1 && d.x >= v.x-r2-r1 &&
 	d.y <= v.y+r2+r1 && d.y >= v.y-r2-r1 &&
