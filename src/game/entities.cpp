@@ -1090,15 +1090,10 @@ namespace entities
 		return !route.empty();
 	}
 
-    extern int enmisses, enhits;
-    VARF(enmisses, 0, 0, 1, { enmisses = enhits = 0; });
-    VARF(enhits, 0, 0, 1, { enmisses = enhits = 0; });
-    
 	int entitynode(const vec &v, float dist)
 	{
         int n = closestent(WAYPOINT, v, dist >= 0.f ? dist : 64);
-        if(n >= 0 || dist >= 0.f) { if(dist < 0.f) enhits++; return n; }
-        enmisses++;
+        if(n >= 0 || dist >= 0.f) return n;
         float mindist = 1e16f;
         loopv(ents) if(ents[i]->type == WAYPOINT)
         {
