@@ -59,7 +59,7 @@ CLIENT_OBJS= \
 	game/world.o
 
 SINCLUDES= -Ishared -Iengine -Igame -Ienet/include
-SCXXFLAGS= -Wall -DSTANDALONE -DIRC $(CXXOPTFLAGS) $(SINCLUDES)
+SCXXFLAGS= -Wall -fsigned-char -DSTANDALONE -DIRC $(CXXOPTFLAGS) $(SINCLUDES)
 
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
@@ -70,7 +70,7 @@ SERVER_OBJS= \
 	game/server-standalone.o
 
 DINCLUDES= -Ishared -Iengine -Igame -Ienet/include
-DCXXFLAGS= -Wall -DSTANDALONE -DMASTERSERVER -DIRC $(CXXOPTFLAGS) $(DINCLUDES)
+DCXXFLAGS= -Wall -fsigned-char -DSTANDALONE -DMASTERSERVER -DIRC $(CXXOPTFLAGS) $(DINCLUDES)
 
 DAEMON_LIBS=-Lenet -lenet -lz
 DAEMON_OBJS= \
