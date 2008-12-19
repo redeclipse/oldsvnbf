@@ -19,7 +19,7 @@ namespace hud
 	FVARP(crosshairsize, 0, 0.05f, 1000);
 	VARP(crosshairhitspeed, 0, 450, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.5f, 1);
-	VARP(crosshairhealth, 0, 1, 1);
+	VARP(crosshairhealth, 0, 1, 2);
 	FVARP(crosshairskew, -1, 0.4f, 1);
 	TVAR(relativecursortex, "textures/cursordot", 3);
 	TVAR(guicursortex, "textures/cursor", 3);
@@ -72,10 +72,11 @@ namespace hud
 	FVARP(radarblipblend, 0, 1.f, 1);
 	FVARP(radarsize, 0, 0.025f, 1000);
 	VARP(radardist, 0, 256, INT_MAX-1);
-	VARP(radarcard, 0, 2, 2); // 0 = none, 1 = cardinals, 2 = editmode degrees too
-	VARP(radaritems, 0, 2, 2);
-	VARP(radarnames, 0, 1, 1);
-	VARP(radarhealth, 0, 1, 1);
+	VARP(radarcard, 0, 0, 2); // 0 = none, 1 = cardinals, 2 = editmode degrees too
+	VARP(radaritems, 0, 1, 2);
+	VARP(radarplayers, 0, 1, 2);
+	VARP(radarhealth, 0, 1, 2);
+	VARP(radarflags, 0, 2, 2);
     VARP(radarborder, 0, 0, 1);
 	FVARP(radarskew, -1, -0.3f, 1);
 	VARP(editradardist, 0, 128, INT_MAX-1);
@@ -115,9 +116,9 @@ namespace hud
 		}
 	}
 
-	void healthskew(int &s, float &r, float &g, float &b, float &fade, float ss)
+	void healthskew(int &s, float &r, float &g, float &b, float &fade, float ss, bool throb)
 	{
-		if(world::player1->lastregen && lastmillis-world::player1->lastregen < REGENTIME)
+		if(throb && world::player1->lastregen && lastmillis-world::player1->lastregen < REGENTIME)
 		{
 			float skew = clamp((lastmillis-world::player1->lastregen)/float(REGENTIME), 0.f, 1.f);
 			if(skew > 0.5f) skew = 1.f-skew;
@@ -290,7 +291,7 @@ namespace hud
 						cs = int(cs*amt);
 					}
 				}
-				if(crosshairhealth) healthskew(cs, r, g, b, fade, crosshairskew);
+				if(crosshairhealth) healthskew(cs, r, g, b, fade, crosshairskew, crosshairhealth > 1);
         	}
 
 			glMatrixMode(GL_PROJECTION);
@@ -423,14 +424,13 @@ namespace hud
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
-			const char *text = radarnames ? world::colorname(d, NULL, "", false) : NULL;
+			const char *text = radarplayers > 1 ? world::colorname(d, NULL, "", false) : NULL;
 			drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "radar", fade*radarnameblend, "%s", text);
 		}
 	}
 
-	void drawcardinalblips(int w, int h, int s, float blend)
+	void drawcardinalblips(int w, int h, int s, float blend, bool altcard)
 	{
-		bool altcard = m_edit(world::gamemode) && radarcard == 2;
 		loopi(4)
 		{
 			const char *card = "";
@@ -478,12 +478,10 @@ namespace hud
 				b = 1.f-(inspawn*0.3f);
 				fade = clamp(fade+((1.f-fade)*(1.f-inspawn)), 0.f, 1.f);
 			}
-			string text;
-			if(m_edit(world::gamemode))
-				s_sprintf(text)("%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
-			else if(radaritems > 1)
-				s_sprintf(text)("%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
-			drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend, "%s", text);
+			string text; text[0] = 0;
+			if(insel) s_sprintf(text)("%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
+			else if(radaritems > 1) s_sprintf(text)("%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+			drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend, "%s", *text ? text : "");
 		}
 	}
 
@@ -574,7 +572,7 @@ namespace hud
 			float r = 1.f, g = 1.f, b = 1.f, fade = radarblend*blend;
 			if(radarhealth) switch(world::player1->state)
 			{
-				case CS_ALIVE: healthskew(cs, r, g, b, fade, radarskew); break;
+				case CS_ALIVE: healthskew(cs, r, g, b, fade, radarskew, radarhealth > 1); break;
 				case CS_SPECTATOR: case CS_WAITING: r = g = b = 0.5f; break;
 				default: break;
 			}
@@ -591,11 +589,17 @@ namespace hud
 			}
 		}
 		if(m_edit(world::gamemode) || radaritems) drawentblips(w, h, cs/2, blend);
-		loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE)
-			drawplayerblip(world::players[i], w, h, cs/2, blend);
-		if(m_stf(world::gamemode)) stf::drawblips(w, h, cs/2, blend);
-		else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, cs/2, blend);
-		if(radarcard) drawcardinalblips(w, h, cs/2, blend);
+		if(radarplayers)
+		{
+			loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE)
+				drawplayerblip(world::players[i], w, h, cs/2, blend);
+		}
+		if(radarflags)
+		{
+			if(m_stf(world::gamemode)) stf::drawblips(w, h, cs/2, blend);
+			else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, cs/2, blend);
+		}
+		if(radarcard) drawcardinalblips(w, h, cs/2, blend, m_edit(world::gamemode) && radarcard > 1);
 	}
 
 	int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font, float blend, const char *text, ...)
