@@ -516,7 +516,7 @@ struct plane : vec
     bool operator!=(const plane &p) const { return x!=p.x || y!=p.y || z!=p.z || offset!=p.offset; }
 
     plane() {}
-    plane(vec &c, float off) : vec(c), offset(off) {}
+    plane(const vec &c, float off) : vec(c), offset(off) {}
     plane(int d, float off)
     {
         x = y = z = 0.0f;

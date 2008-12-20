@@ -284,7 +284,7 @@ struct vacollect : verthash
         explicitskyindices.setsizenodelete(0);
         matsurfs.setsizenodelete(0);
         mapmodels.setsizenodelete(0);
-        grasstris.setsizenodelete();
+        grasstris.setsizenodelete(0);
         texs.setsizenodelete(0);
     }
 
