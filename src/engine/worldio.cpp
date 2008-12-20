@@ -324,6 +324,7 @@ void save_config(char *mname)
 				fprintf(h, "texscroll %f %f\n", s.scrollS, s.scrollT); \
             if(s.layer != 0) \
                 fprintf(h, "texlayer %d\n", s.layer); \
+			if(s.autograss) fprintf(h, "autograss \"%s\"\n", s.autograss); \
 		} \
 		fprintf(h, "\n");
 

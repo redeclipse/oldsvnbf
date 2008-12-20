@@ -1094,6 +1094,7 @@ void drawreflection(float z, bool refract, bool clear)
     rendergame();
 
     if(renderpath!=R_FIXEDFUNCTION && fogging) setfogplane(1, z);
+    if(refracting) rendergrass();
     renderdecals(0);
     rendermaterials();
     render_particles(0);
@@ -1204,6 +1205,8 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
 	if(level) queryreflections();
 
+    if(level >= 2) generategrass();
+
     if(!limitsky()) drawskybox(farplane, false);
 
 	rendermapmodels();
@@ -1221,6 +1224,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
 		renderdecals(0);
 	    renderwater();
+        rendergrass();
 
 		rendermaterials();
 		render_particles(0);
@@ -1741,10 +1745,15 @@ void drawview(int targtype)
     if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	if(limitsky()) drawskybox(farplane, true);
+
 	rendergeom(causticspass);
 	extern int outline, blankgeom;
 	if(!wireframe && editmode && (outline || (fullbright && blankgeom))) renderoutline();
+
 	queryreflections();
+
+    generategrass();
+
 	if(!limitsky()) drawskybox(farplane, false);
 
 	rendermapmodels();
@@ -1760,6 +1769,7 @@ void drawview(int targtype)
 
 	renderdecals(curtime);
 	renderwater();
+    rendergrass();
 
 	rendermaterials();
 	render_particles(curtime);

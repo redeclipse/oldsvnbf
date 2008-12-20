@@ -666,6 +666,10 @@ extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 12
 extern void drawslice(float start, float length, float x, float y, float size);
 extern void drawfadedslice(float start, float length, float x, float y, float size, float alpha, float minsize = 0.25f);
 
+// grass
+extern void generategrass();
+extern void rendergrass();
+
 // blendmap
 extern bool setblendmaporigin(const ivec &o, int size);
 extern bool hasblendmap();
