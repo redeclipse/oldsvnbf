@@ -909,6 +909,15 @@ ICOMMAND(texturecull, "", (void), {
 	else conoutf("\frnot enough texture slots");
 });
 
+void autograss(char *name)
+{
+	Slot &s = slots.last();
+	DELETEA(s.autograss);
+	s_sprintfd(pname)("%s", name);
+	s.autograss = newstring(name[0] ? pname : "textures/grass");
+}
+COMMAND(autograss, "s");
+
 void texscroll(float *scrollS, float *scrollT)
 {
     if(slots.empty()) return;
