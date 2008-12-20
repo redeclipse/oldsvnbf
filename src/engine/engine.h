@@ -583,9 +583,6 @@ extern void g3d_mainmenu();
 extern bool g3d_active(bool hit = true, bool pass = true);
 extern void g3d_texturemenu();
 
-// grass
-extern void rendergrass();
-
 // 3dgui
 extern int cleargui(int n = 0);
 

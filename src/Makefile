@@ -18,7 +18,6 @@ CLIENT_OBJS= \
 	engine/decal.o \
 	engine/dynlight.o \
 	engine/glare.o \
-	engine/grass.o \
 	engine/irc.o	\
 	engine/lightmap.o \
 	engine/main.o \
@@ -187,11 +186,6 @@ engine/glare.o: shared/command.h shared/geom.h shared/attrs.h shared/ents.h
 engine/glare.o: shared/iengine.h shared/igame.h engine/sound.h engine/world.h
 engine/glare.o: engine/octa.h engine/lightmap.h engine/bih.h engine/texture.h
 engine/glare.o: engine/model.h engine/rendertarget.h
-engine/grass.o: shared/pch.h engine/engine.h shared/cube.h shared/tools.h
-engine/grass.o: shared/command.h shared/geom.h shared/attrs.h shared/ents.h
-engine/grass.o: shared/iengine.h shared/igame.h engine/sound.h engine/world.h
-engine/grass.o: engine/octa.h engine/lightmap.h engine/bih.h engine/texture.h
-engine/grass.o: engine/model.h
 engine/lightmap.o: shared/pch.h engine/engine.h shared/cube.h shared/tools.h
 engine/lightmap.o: shared/command.h shared/geom.h shared/attrs.h
 engine/lightmap.o: shared/ents.h shared/iengine.h shared/igame.h
