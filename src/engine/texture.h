@@ -276,10 +276,9 @@ struct Slot
     float pulseglowspeed;
     bool mtglowed, loaded;
     uint texmask;
-	char *autograss;
-	Texture *grasstex, *thumbnail;
+	Texture *thumbnail;
 
-    Slot() : autograss(NULL) { reset(); }
+    Slot() { reset(); }
 
 	void reset()
 	{
@@ -295,15 +294,12 @@ struct Slot
         pulseglowspeed = 0;
 		loaded = false;
         texmask = 0;
-		DELETEA(autograss);
-		grasstex = NULL;
 		thumbnail = NULL;
 	}
 
     void cleanup()
     {
         loaded = false;
-        grasstex = NULL;
         thumbnail = NULL;
         loopv(sts)
         {
@@ -334,7 +330,6 @@ extern Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bo
 
 extern void materialreset();
 extern void texturereset();
-extern void autograss(char *name);
 extern void setshader(char *name);
 extern void setshaderparam(const char *name, int type, int n, float x, float y, float z, float w);
 extern int findtexturetype(char *name, bool tryint = false);

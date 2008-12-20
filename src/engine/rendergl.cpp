@@ -1094,7 +1094,6 @@ void drawreflection(float z, bool refract, bool clear)
     rendergame();
 
     if(renderpath!=R_FIXEDFUNCTION && fogging) setfogplane(1, z);
-    if(refracting) rendergrass();
     renderdecals(0);
     rendermaterials();
     render_particles(0);
@@ -1222,7 +1221,6 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
 		renderdecals(0);
 	    renderwater();
-		rendergrass();
 
 		rendermaterials();
 		render_particles(0);
@@ -1762,7 +1760,6 @@ void drawview(int targtype)
 
 	renderdecals(curtime);
 	renderwater();
-	rendergrass();
 
 	rendermaterials();
 	render_particles(curtime);
