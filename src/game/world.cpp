@@ -1439,10 +1439,8 @@ namespace world
 			{
 				if(d->inliquid && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
-#if 0
 				else if(d->timeinair && d->lastimpulse && lastmillis-d->lastimpulse <= 1000) anim |= (ANIM_IMPULSE|ANIM_LOOP)<<ANIM_SECONDARY;
 				else if(d->timeinair && d->jumptime && lastmillis-d->jumptime <= 1000) anim |= (ANIM_JUMP|ANIM_LOOP)<<ANIM_SECONDARY;
-#endif
 				else if(d->timeinair > 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
 				else if(d->crouching || d->crouchtime<0)
 				{
@@ -1461,7 +1459,7 @@ namespace world
 				case ANIM_IDLE: case ANIM_PLASMA: case ANIM_SHOTGUN: case ANIM_CHAINGUN:
 				case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_CARBINE: case ANIM_RIFLE:
 				{
-					anim >>= ANIM_SECONDARY;
+                    anim = (anim>>ANIM_SECONDARY) | ((anim&((1<<ANIM_SECONDARY)-1))<<ANIM_SECONDARY);
 					break;
 				}
 				default: break;
