@@ -244,6 +244,7 @@ namespace projs
 		proj.maxspeed = speed;
 		if(id) proj.id = id;
 		else proj.id = lastmillis;
+        proj.gun = gun;
 		proj.lastradial = lastmillis;
 		proj.movement = 0;
 		proj.owner = d;
