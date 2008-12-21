@@ -10,7 +10,7 @@ VARP(grassheight, 1, 4, 64);
 
 #define NUMGRASSWEDGES 8
 
-struct grasswedge
+static struct grasswedge
 {
     vec dir, edge1, edge2;
     plane bound1, bound2;
@@ -31,7 +31,7 @@ struct grassvert
     float u, v, lmu, lmv;
 };
 
-vector<grassvert> grassverts;
+static vector<grassvert> grassverts;
 
 struct grassgroup
 {
@@ -40,7 +40,7 @@ struct grassgroup
     int tex, lmtex, offset, numquads;
 };
 
-vector<grassgroup> grassgroups;
+static vector<grassgroup> grassgroups;
 
 #define NUMGRASSOFFSETS 256
 
@@ -140,7 +140,7 @@ static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstr
     }
 }             
 
-void gengrassquads(vtxarray *va)
+static void gengrassquads(vtxarray *va)
 {
     loopv(*va->grasstris)
     {
@@ -148,14 +148,14 @@ void gengrassquads(vtxarray *va)
         if(isvisiblesphere(g.radius, g.center) >= VFC_FOGGED) continue;
         float dist = g.center.dist(camera1->o);
         if(dist - g.radius > grassdist) continue;
-
+            
         Slot &s = lookuptexture(g.texture, false);
         if(!s.grasstex) s.grasstex = textureload(s.autograss, 2);
 
         grassgroup *group = NULL;
         loopi(NUMGRASSWEDGES)
         {
-            grasswedge &w = grasswedges[i];
+            grasswedge &w = grasswedges[i];    
             if(w.bound1.dist(g.center) > g.radius || w.bound2.dist(g.center) > g.radius) continue;
             gengrassquads(group, w, g, s.grasstex);
         }
@@ -236,8 +236,8 @@ void rendergrass()
         grassgroup &g = grassgroups[i];
 
         if(reflecting || refracting>0 ? 
-            max(g.tri->numv>3 ? max(g.tri->v[0].z, g.tri->v[3].z) : g.tri->v[0].z, max(g.tri->v[1].z, g.tri->v[2].z)) + grassheight < reflectz :
-            min(g.tri->numv>3 ? min(g.tri->v[0].z, g.tri->v[3].z) : g.tri->v[0].z, min(g.tri->v[1].z, g.tri->v[2].z)) > reflectz)
+            max(g.tri->numv>3 ? max(g.tri->v[0].z, g.tri->v[3].z) : g.tri->v[0].z, max(g.tri->v[1].z, g.tri->v[2].z)) + grassheight < reflectz : 
+            min(g.tri->numv>3 ? min(g.tri->v[0].z, g.tri->v[3].z) : g.tri->v[0].z, min(g.tri->v[1].z, g.tri->v[2].z)) > reflectz) 
             continue;
         if(reflecting && isvisiblesphere(g.tri->radius, g.tri->center) >= VFC_FOGGED) continue;
 
