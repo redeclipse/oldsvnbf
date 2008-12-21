@@ -208,6 +208,14 @@ namespace world
 		else swaydir = vec(0, 0, 0);
 	}
 
+	void announce(int idx, const char *msg, ...)
+	{
+		s_sprintfdlv(text, msg, msg);
+		console("%s", CON_CENTER|CON_NORMAL, text);
+		playsound(idx, camera1->o, camera1, SND_FORCED);
+	}
+	ICOMMAND(announce, "is", (int *idx, char *s), announce(*idx, "\fw%s", s));
+
 	int respawnwait(gameent *d)
 	{
 		int wait = 0;
@@ -386,12 +394,9 @@ namespace world
 				d->setgunstate(i, GNS_IDLE, 0, lastmillis);
 		}
 
-		if(d->reqswitch > 0 && lastmillis-d->reqswitch > GUNSWITCHDELAY*2)
-			d->reqswitch = -1;
-		if(d->reqreload > 0 && lastmillis-d->reqreload > guntype[d->gunselect].rdelay*2)
-			d->reqreload = -1;
-		if(d->requse > 0 && lastmillis-d->requse > GUNSWITCHDELAY*2)
-			d->requse = -1;
+		if(d->reqswitch > 0 && lastmillis-d->reqswitch > GUNSWITCHDELAY*2) d->reqswitch = -1;
+		if(d->reqreload > 0 && lastmillis-d->reqreload > guntype[d->gunselect].rdelay*2) d->reqreload = -1;
+		if(d->requse > 0 && lastmillis-d->requse > GUNSWITCHDELAY*2) d->requse = -1;
 	}
 
 
@@ -655,10 +660,7 @@ namespace world
 							s_sprintfd(ds)("@\fgHEADSHOT");
 							part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						}
-						else if(d->obliterated || lastmillis-d->lastspawn <= REGENWAIT*3)
-						{
-							anc = S_V_OWNED;
-						}
+						else if(d->obliterated || lastmillis-d->lastspawn <= REGENWAIT*3) anc = S_V_OWNED;
 						break;
 					}
 				}
@@ -677,8 +679,8 @@ namespace world
 			}
 			if(show)
 			{
-				s_sprintfd(a)("\fy%s %s", colorname(d), d->obit);
-				entities::announce(anc, a, isme);
+				if(isme) announce(anc, "\fw%s %s", colorname(d), d->obit);
+				else conoutf("\fw%s %s", colorname(d), d->obit);
 			}
 		}
 		vec pos = headpos(d);
@@ -1436,9 +1438,10 @@ namespace world
 			if(secondary)
 			{
 				if(d->inliquid && d->physstate <= PHYS_FALL)
-					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
-				else if(d->timeinair > 1000)
-					anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
+					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
+				else if(d->timeinair && d->lastimpulse && lastmillis-d->lastimpulse <= 1000) anim |= (ANIM_IMPULSE|ANIM_LOOP)<<ANIM_SECONDARY;
+				else if(d->timeinair && d->jumptime && lastmillis-d->jumptime <= 1000) anim |= (ANIM_JUMP|ANIM_LOOP)<<ANIM_SECONDARY;
+				else if(d->timeinair > 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
 				else if(d->crouching || d->crouchtime<0)
 				{
 					if(d->move>0)		anim |= (ANIM_CRAWL_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
@@ -1510,11 +1513,9 @@ namespace world
 		else if(d->state == CS_EDITING)
 		{
 			animflags = ANIM_EDIT|ANIM_LOOP;
+			showgun = false;
 		}
-		else if(d->state == CS_LAGGED)
-		{
-			animflags = ANIM_LAG|ANIM_LOOP;
-		}
+		else if(d->state == CS_LAGGED) animflags = ANIM_LAG|ANIM_LOOP;
 		else if(intermission)
 		{
 			lastaction = lastmillis;

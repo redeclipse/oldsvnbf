@@ -511,7 +511,7 @@ namespace hud
 			{
 				projent &proj = *projs::projs[i];
 				if(entities::ents.inrange(proj.id))
-					drawentblip(w, h, s, blend, -1, proj.o, proj.ent, proj.attr1, proj.attr2, proj.attr3, proj.attr4, proj.attr5, true, proj.spawntime, false);
+					drawentblip(w, h, s, blend, -1, proj.o, entities::ents[proj.id]->type, entities::ents[proj.id]->attr1, entities::ents[proj.id]->attr2, entities::ents[proj.id]->attr3, entities::ents[proj.id]->attr4, entities::ents[proj.id]->attr5, true, proj.spawntime, false);
 			}
 		}
 	}
