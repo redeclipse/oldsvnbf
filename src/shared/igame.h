@@ -55,7 +55,7 @@ namespace hud
 
 namespace physics
 {
-	extern int fixspawn, spawncycle, physsteps, physframetime, physinterp;
+	extern int physsteps, physframetime, physinterp;
 	extern float gravity, jumpvel, movespeed, floatspeed,
 		stairheight, floorz, slopez, wallz, stepspeed,
 			liquidfric, liquidscale, sinkfric, floorfric, airfric;

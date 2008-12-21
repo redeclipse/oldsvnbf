@@ -581,9 +581,9 @@ namespace ai
 		loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready())
 		{
 			projent &proj = *projs::projs[j];
-			if(enttype[proj.ent].usetype != EU_ITEM || !entities::ents.inrange(proj.id)) continue;
-			int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(proj.attr1, sgun);
-			switch(proj.ent)
+			if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) continue;
+			int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(entities::ents[proj.id]->attr1, sgun);
+			switch(entities::ents[proj.id]->type)
 			{
 				case WEAPON:
 				{
@@ -595,7 +595,7 @@ namespace ai
 						n.node = entities::entitynode(proj.o);
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
-						n.tolerance = enttype[proj.ent].radius+d->radius;
+						n.tolerance = enttype[WEAPON].radius+d->radius;
 						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->gunpref ? 10.f : 1.f);
 						n.defers = d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators));
 						n.expire = 10000;
@@ -857,9 +857,9 @@ namespace ai
 					loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready() && projs::projs[j]->id == b.target)
 					{
 						projent &proj = *projs::projs[j];
-						if(enttype[proj.ent].usetype != EU_ITEM || !entities::ents.inrange(proj.id)) return false;
-						int attr = gunattr(proj.attr1, sgun);
-						switch(proj.ent)
+						if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) return false;
+						int attr = gunattr(entities::ents[proj.id]->attr1, sgun);
+						switch(entities::ents[proj.id]->type)
 						{
 							case WEAPON:
 							{
@@ -868,7 +868,7 @@ namespace ai
 							}
 							default: break;
 						}
-						return makeroute(d, b, proj.o, enttype[proj.ent].radius);
+						return makeroute(d, b, proj.o, enttype[entities::ents[proj.id]->type].radius);
 						break;
 					}
 					break;
@@ -1231,9 +1231,9 @@ namespace ai
 		loopv(projs::projs)
 		{
 			projent *p = projs::projs[i];
-			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && guntype[p->attr1].explode)
+			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && guntype[p->gun].explode)
 			{
-				float limit = guessradius+(guntype[p->attr1].explode*p->lifesize);
+				float limit = guessradius+(guntype[p->gun].explode*p->lifesize);
 				limit *= limit; // square it to avoid expensive square roots
 				loopvk(entities::ents)
 				{

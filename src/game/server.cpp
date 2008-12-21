@@ -1828,7 +1828,7 @@ namespace server
 
 		while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000)
 			bannedips.remove(0);
-        loopv(connects) if(totalmillis-connects[i]->connectmillis>15000) 
+        loopv(connects) if(totalmillis-connects[i]->connectmillis>15000)
             disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
 
 		if(masterupdate)
@@ -2292,6 +2292,16 @@ namespace server
 						if(smode) smode->moved(cp, oldpos, cp->state.o);
 						mutate(smuts, mut->moved(cp, oldpos, cp->state.o));
 					}
+					break;
+				}
+
+				case SV_PHYS:
+				{
+					int lcn = getint(p);
+					getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					QUEUE_MSG;
 					break;
 				}
 

@@ -70,11 +70,10 @@ struct physent                                  // base entity type, can be affe
     vec floor;                                  // the normal of floor the dynent is on
 
 	int inmaterial;
-    bool inliquid;
+    bool inliquid, blocked, moving;
+    physent *onplayer;
     bool jumping, crouching;
     int jumptime, crouchtime, lastimpulse;
-    bool blocked, moving;                       // used by physics to signal ai
-    physent *onplayer;
     int lastmove, lastmoveattempt, collisions, stacks;
 
     char move, strafe;
@@ -103,9 +102,8 @@ struct physent                                  // base entity type, can be affe
 
     void reset()
     {
-    	inmaterial = 0;
-    	inliquid = jumping = crouching  = false;
-        jumptime = crouchtime = timeinair = lastimpulse = 0;
+    	inmaterial = timeinair = jumptime = crouchtime = lastimpulse = 0;
+    	inliquid = jumping = crouching = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
         o = vec(-1, -1, -1);
@@ -118,9 +116,7 @@ struct physent                                  // base entity type, can be affe
 
 enum
 {
-    ANIM_DEAD = 0, ANIM_DYING, ANIM_IDLE,
-    ANIM_FORWARD, ANIM_BACKWARD, ANIM_LEFT, ANIM_RIGHT,
-    ANIM_PAIN, ANIM_JUMP, ANIM_SINK, ANIM_SWIM,
+    ANIM_IDLE = 0, ANIM_FORWARD, ANIM_BACKWARD, ANIM_LEFT, ANIM_RIGHT, ANIM_DEAD, ANIM_DYING, ANIM_SWIM,
     ANIM_MAPMODEL, ANIM_TRIGGER_ON, ANIM_TRIGGER_OFF,
     ANIM_GAMESPECIFIC
 };

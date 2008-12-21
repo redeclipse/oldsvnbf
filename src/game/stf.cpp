@@ -373,15 +373,13 @@ namespace stf
 		{
 			if(b.owner != owner)
 			{
-				s_sprintfd(s)("team \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
-				entities::announce(S_V_FLAGSECURED, s, true);
+				world::announce(S_V_FLAGSECURED, "\foteam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
 				world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius/2);
 			}
 		}
 		else if(b.owner)
 		{
-			s_sprintfd(s)("team \fs%s%s\fS overthrew %s", teamtype[b.owner].chat, teamtype[b.owner].name, b.name);
-			entities::announce(S_V_FLAGOVERTHROWN, s, true);
+			world::announce(S_V_FLAGOVERTHROWN, "\foteam \fs%s%s\fS overthrew %s", teamtype[b.owner].chat, teamtype[b.owner].name, b.name);
 			world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[b.owner].colour, enttype[FLAG].radius/2);
 		}
 		b.owner = owner;

@@ -100,13 +100,16 @@ namespace weapons
 			{
 				if(d->gunstate[d->gunselect] != GNS_POWER) // FIXME: not synched in MP yet!!
 				{
-					if(d->attacking) d->setgunstate(d->gunselect, GNS_POWER, 0, lastmillis);
+					if(d->attacking)
+					{
+						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_POWER);
+						d->setgunstate(d->gunselect, GNS_POWER, 0, lastmillis);
+					}
 					else return;
 				}
 
 				power = lastmillis-d->gunlast[d->gunselect];
-				if(d->attacking && power < powertime)
-					return;
+				if(d->attacking && power < powertime) return;
 			}
 			d->attacking = false;
 		}

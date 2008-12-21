@@ -28,7 +28,7 @@ namespace physics
 	VARP(physframetime,	5,			5,			20);
 	VARP(physinterp,       0,          1,          1);
 
-	int spawncycle = -1, fixspawn = 4, physsteps = 0, lastphysframe = 0;
+	int physsteps = 0, lastphysframe = 0;
 
 	#define imov(name,v,d,s,os) \
 		void do##name(bool down) \
@@ -415,22 +415,22 @@ namespace physics
 	{
 		if(floating)
 		{
-			pl->lastimpulse = 0;
 			if(pl->jumping)
 			{
 				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				pl->jumping = false;
+				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 			}
 		}
         else if(pl->physstate >= PHYS_SLOPE || pl->inliquid)
 		{
-			pl->lastimpulse = 0;
 			if(pl->jumping)
 			{
 				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x *= liquidscale; pl->vel.y *= liquidscale; }
 				playsound(S_JUMP, pl->o, pl);
 				pl->jumping = false;
+				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 			}
 		}
 		else if(pl->jumping && canimpulse(pl))
@@ -442,8 +442,10 @@ namespace physics
 			pl->vel.add(dir);
 			pl->lastimpulse = lastmillis;
 			pl->jumping = false;
+			if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 		}
         if(pl->physstate == PHYS_FALL) pl->timeinair += curtime;
+        else pl->jumptime = pl->lastimpulse = 0;
 
 		vec m(0.0f, 0.0f, 0.0f);
         bool wantsmove = world::allowmove(pl) && (pl->move || pl->strafe);

@@ -16,8 +16,6 @@ namespace entities
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 
-	ICOMMAND(announce, "i", (int *idx), announce(*idx));
-
 	vector<extentity *> &getents() { return ents; }
 
 	const char *entinfo(int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool full)
@@ -114,83 +112,6 @@ namespace entities
 			default: break;
 		}
 		return "";
-	}
-
-	void announce(int idx, const char *msg, bool force)
-	{
-		static int lastannouncement;
-		if(idx > -1 && idx < S_MAX && (force || lastmillis-lastannouncement >= TRIGGERTIME))
-		{
-			#if 0
-			int announcer = 0;
-			loopk(3)
-			{
-				loopv(ents)
-				{
-					gameentity &e = *(gameentity *)ents[i];
-					switch(k)
-					{
-						case 0: default:
-						{
-							if(e.type == ANNOUNCER)
-							{
-								if(playsound(idx, e.o, NULL, 0, e.attr3, e.attr1, e.attr2) >= 0)
-									announcer++;
-							}
-							break;
-						}
-						case 1:
-						{
-							if(e.type == WEAPON)
-							{
-								if(playsound(idx, e.o, NULL, 0, 255, enttype[e.type].radius*10, enttype[e.type].radius) >= 0)
-									announcer++;
-							}
-							break;
-						}
-						case 2:
-						{
-							if(e.type == LIGHT && e.attr1)
-							{
-								if(playsound(idx, e.o, NULL, 0, 255, e.attr1*10, e.attr1) >= 0)
-									announcer++;
-							}
-							break;
-						}
-					}
-				}
-				if(announcer) break;
-			}
-			if(!announcer)
-			{ // if there's no announcer entities, just encompass the level
-				loopi(13)
-				{
-					vec v;
-					switch(i)
-					{
-						case 1:		v = vec(0, 0, getworldsize()*2.f); break;
-						case 2:		v = vec(0, getworldsize()*2.f, getworldsize()*2.f); break;
-						case 3:		v = vec(getworldsize()*2.f, getworldsize()*2.f, getworldsize()*2.f); break;
-						case 4:		v = vec(getworldsize()*2.f, 0, getworldsize()*2.f); break;
-						case 5:		v = vec(0, 0, getworldsize()*2.f); break;
-						case 6:		v = vec(0, getworldsize()*2.f, getworldsize()*2.f); break;
-						case 7:		v = vec(getworldsize()*2.f, getworldsize()*2.f, getworldsize()*2.f); break;
-						case 8:		v = vec(getworldsize()*2.f, 0, getworldsize()*2.f); break;
-						case 9:		v = vec(0, 0, getworldsize()*2.f); break;
-						case 10:	v = vec(0, getworldsize()*2.f, 0); break;
-						case 11:	v = vec(getworldsize()*2.f, getworldsize()*2.f, 0); break;
-						case 12:	v = vec(getworldsize()*2.f, 0, 0); break;
-						default:	v = vec(getworldsize()*2.f, getworldsize()*2.f, getworldsize()*2.f); break;
-					}
-					if(playsound(idx, v) >= 0) announcer++;
-				}
-			}
-			if(!announcer && force)
-			#endif
-			playsound(idx, camera1->o, camera1, SND_FORCED);
-			lastannouncement = lastmillis;
-		}
-		if(*msg) console("\fg%s", (force ? CON_CENTER : 0)|CON_NORMAL, msg);
 	}
 
 	// these two functions are called when the server acknowledges that you really
@@ -304,10 +225,10 @@ namespace entities
             }
         }
 
-        if(!left || right==numindices) 
-        { 
-            left = numindices/2; 
-            right = numindices - left; 
+        if(!left || right==numindices)
+        {
+            left = numindices/2;
+            right = numindices - left;
             splitleft = -1e16f;
             splitright = 1e16f;
             loopi(numindices)
@@ -357,7 +278,7 @@ namespace entities
         }
         buildentcache(indices.getbuf(), indices.length());
     }
-    
+
     struct entcachestack
     {
         entcachenode *node;
@@ -403,7 +324,7 @@ namespace entities
                     if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
                     CHECKCLOSEST(1);
                 }
-            }     
+            }
             else
             {
                 if(dist2 < mindist)
@@ -494,9 +415,8 @@ namespace entities
 		{
 			projent &proj = *projs::projs[i];
 			if(proj.projtype != PRJ_ENT || !proj.ready()) continue;
-			if(enttype[proj.ent].usetype != EU_ITEM || !ents.inrange(proj.id))
-				continue;
-			if(!overlapsbox(m, eye, d->radius, proj.o, enttype[proj.ent].radius, enttype[proj.ent].radius))
+			if(!ents.inrange(proj.id) || enttype[ents[proj.id]->type].usetype != EU_ITEM) continue;
+			if(!overlapsbox(m, eye, d->radius, proj.o, enttype[ents[proj.id]->type].radius, enttype[ents[proj.id]->type].radius))
 				continue;
 			actitem &t = actitems.add();
 			t.type = ITEM_PROJ;
@@ -689,7 +609,8 @@ namespace entities
 			loopv(projs::projs)
 			{
 				projent &proj = *projs::projs[i];
-				if(proj.projtype != PRJ_ENT || proj.id != n) continue;
+				if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
+				world::spawneffect(proj.o, 0x221188, enttype[ents[proj.id]->type].radius);
 				proj.beenused = true;
 				proj.state = CS_DEAD;
 			}
@@ -1492,12 +1413,6 @@ namespace entities
 					renderradius(e.o, s, s, s, false);
 					break;
 				}
-				case ANNOUNCER:
-				{
-					renderradius(e.o, e.attr1, e.attr1, e.attr1, false);
-					renderradius(e.o, e.attr2, e.attr2, e.attr2, false);
-					break;
-				}
 				case FLAG:
 				{
 					float radius = (float)enttype[e.type].radius;
@@ -1730,8 +1645,7 @@ namespace entities
 		loopv(projs::projs)
 		{
 			projent &proj = *projs::projs[i];
-			if(proj.projtype != PRJ_ENT || !ents.inrange(proj.id))
-				continue;
+			if(proj.projtype != PRJ_ENT || !ents.inrange(proj.id)) continue;
 			gameentity &e = *(gameentity *)ents[proj.id];
 			drawparticle(e, proj.o, -1, proj.ready());
 		}

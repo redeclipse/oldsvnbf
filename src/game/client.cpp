@@ -232,7 +232,7 @@ namespace client
         if(!remote || !arg[0]) return;
         int val = 1;
         string hash = "";
-        if(!arg[1] && isdigit(arg[0])) val = atoi(arg); 
+        if(!arg[1] && isdigit(arg[0])) val = atoi(arg);
         else server::hashpassword(world::player1->clientnum, sessionid, arg, hash);
         addmsg(SV_SETMASTER, "ris", val, hash);
     }
@@ -663,7 +663,7 @@ namespace client
         putint(p, SV_CONNECT);
         sendstring(world::player1->name, p);
         string hash = "";
-        if(connectpass[0]) 
+        if(connectpass[0])
         {
             server::hashpassword(world::player1->clientnum, sessionid, connectpass, hash);
             memset(connectpass, 0, sizeof(connectpass));
@@ -951,7 +951,7 @@ namespace client
 
                 case SV_WELCOME:
                     break;
-            
+
 				case SV_CLIENT:
 				{
 					int lcn = getint(p), len = getuint(p);
@@ -960,11 +960,29 @@ namespace client
 					break;
 				}
 
+				case SV_PHYS: // simple phys events
+				{
+					int lcn = getint(p), st = getint(p);
+					gameent *t = world::getclient(lcn);
+					if(t != world::player1 && !t->ai) switch(st)
+					{
+						case SPHY_JUMP: t->jumptime = lastmillis; break;
+						case SPHY_IMPULSE: t->lastimpulse = lastmillis; break;
+						case SPHY_POWER:
+						{
+							if(t->gunstate[t->gunselect] != GNS_POWER) t->setgunstate(t->gunselect, GNS_POWER, 0, lastmillis);
+							break;
+						}
+						default: break;
+					}
+					break;
+				}
+
 				case SV_ANNOUNCE:
 				{
 					int snd = getint(p);
 					getstring(text, p);
-					entities::announce(snd, text, true);
+					world::announce(snd, "%s", text);
 					break;
 				}
 

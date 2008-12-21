@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			137
+#define GAMEVERSION			138
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -11,10 +11,9 @@ enum
 {
 	S_JUMP = S_GAMESPECIFIC, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER,
-	S_SPLAT, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING,
-	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_CG,
-	S_GLFIRE, S_FLFIRE, S_CARBINE, S_RIFLE,
-	S_ITEMPICKUP, S_ITEMSPAWN, 	S_REGEN,
+	S_SPLAT, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BZAP, S_BZZT,
+	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_CG, S_GLFIRE, S_FLFIRE, S_CARBINE, S_RIFLE,
+	S_ITEMPICKUP, S_ITEMSPAWN, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED,
 	S_V_FLAGSECURED, S_V_FLAGOVERTHROWN,
@@ -45,8 +44,6 @@ enum								// entity types
 	CHECKPOINT,						// 14 idx
 	CAMERA,							// 15 idx mindist maxdist
 	WAYPOINT,						// 16 cmd
-	ANNOUNCER,						// 17 maxrad, minrad, volume
-	CONNECTION,						// 18
 	MAXENTTYPES						// 19
 };
 
@@ -146,17 +143,7 @@ enttypes enttype[] = {
 		WAYPOINT,		1,		16,		EU_NONE,
 			inttobit(WAYPOINT),
 			true,				"waypoint"
-	},
-	{
-		ANNOUNCER,		64,		0,		EU_NONE,
-			0,
-			false,				"announcer"
-	},
-	{
-		CONNECTION,		70,		0,		EU_NONE,
-			inttobit(CONNECTION),
-			false,				"connection"
-	},
+	}
 };
 #else
 extern enttypes enttype[];
@@ -164,7 +151,8 @@ extern enttypes enttype[];
 
 enum
 {
-	ANIM_EDIT = ANIM_GAMESPECIFIC, ANIM_LAG, ANIM_SWITCH, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
+	ANIM_PAIN= ANIM_GAMESPECIFIC, ANIM_JUMP, ANIM_IMPULSE, ANIM_SINK,
+	ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
     ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
     ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
@@ -230,7 +218,7 @@ struct guntypes
 	bool	radial,	extinguish,	reloads,	snipes;
 	float	offset,	elasticity,	reflectivity,	relativity,	waterfric,	weight;
 	const char
-			*name, *text,		*item,						*vwep,
+			*name, 		*text,	*item,						*vwep,
 			*proj;
 };
 #ifdef GAMESERVER
@@ -277,7 +265,7 @@ guntypes guntype[GUN_MAX] =
 			""
 	},
 	{
-		GUN_CARBINE,ANIM_CARBINE,	-10,	10,
+		GUN_CARBINE,ANIM_CARBINE,	-15,	15,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
 			10,		10,		200,    1250,	28,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -287,23 +275,23 @@ guntypes guntype[GUN_MAX] =
 			""
 	},
 	{
-		GUN_RIFLE,	ANIM_RIFLE,		-35,  	25,
-			S_RIFLE,	S_RICOCHET,	S_WHIZZ,	-1,
+		GUN_RIFLE,	ANIM_RIFLE,		-20,  	20,
+			S_RIFLE,	S_BZAP,		S_BZZT,	-1,
 			1,		5,		750,	1250,	100,	5000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
-			"rifle",	"\fw",	"weapons/rifle/item",		"weapons/rifle/vwep",
+			"rifle",	"\fr",	"weapons/rifle/item",		"weapons/rifle/vwep",
 			""
 	},
 	{
-		GUN_GL,		ANIM_GRENADES,	-15,    10,
+		GUN_GL,		ANIM_GRENADES,	-5,    5,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		4,		1500,	3000,	200,	200,	1000,	3000,
 			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			false,	false,		false,		false,
 			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		75.f,
-			"grenades",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
+			"hand grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
 	},
 };
@@ -419,7 +407,7 @@ extern gametypes gametype[], mutstype[];
 // network messages codes, c2s, c2c, s2c
 enum
 {
-	SV_CONNECT = 0, SV_INITS2C, SV_WELCOME, SV_INITC2S, SV_POS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_SOUND, SV_CDIS,
+	SV_CONNECT = 0, SV_INITS2C, SV_WELCOME, SV_INITC2S, SV_POS, SV_PHYS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_SOUND, SV_CDIS,
 	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_DAMAGE, SV_SHOTFX,
 	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN, SV_FORCEDEATH,
 	SV_DROP, SV_GUNSELECT, SV_TAUNT,
@@ -443,7 +431,7 @@ char msgsizelookup(int msg)
 {
 	char msgsizesl[] =				// size inclusive message token, 0 for variable or not-checked sizes
 	{
-		SV_CONNECT, 0, SV_INITS2C, 5, SV_WELCOME, 1, SV_INITC2S, 0, SV_POS, 0, SV_TEXT, 0, SV_COMMAND, 0,
+		SV_CONNECT, 0, SV_INITS2C, 5, SV_WELCOME, 1, SV_INITC2S, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_SOUND, 3, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 14, SV_SPAWN, 4, SV_FORCEDEATH, 2,
@@ -470,8 +458,9 @@ char msgsizelookup(int msg)
 extern char msgsizelookup(int msg);
 #endif
 
-#define DEMO_MAGIC "BFDZ"
+enum { SPHY_NONE = 0, SPHY_JUMP, SPHY_IMPULSE, SPHY_POWER, SPHY_MAX };
 
+#define DEMO_MAGIC "BFDZ"
 struct demoheader
 {
 	char magic[16];
@@ -845,10 +834,9 @@ struct actitem
 #ifdef GAMEWORLD
 const char *animnames[] =
 {
-	"dead", "dying", "idle",
-	"forward", "backward", "left", "right",
-	"pain", "jump", "sink", "swim",
+	"idle", "forward", "backward", "left", "right", "dead", "dying", "swim",
 	"mapmodel", "trigger on", "trigger off",
+	"pain", "jump", "impulse", "sink",
 	"edit", "lag", "switch", "taunt", "win", "lose",
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
 	"plasma", "plasma shoot", "plasma reload",
@@ -1011,7 +999,6 @@ struct gameent : dynent, gamestate
 	aiinfo *ai;
     vec muzzle, mdir[MDIR_MAX];
 	bool attacking, reloading, useaction, obliterated, k_up, k_down, k_left, k_right;
-
 	string name, info, obit;
 
 	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), wschan(-1), edit(NULL), ai(NULL), muzzle(-1, -1, -1),
@@ -1055,7 +1042,7 @@ struct gameent : dynent, gamestate
 		dynent::reset();
 		gamestate::respawn(millis);
 		obliterated = false;
-		lasttaunt = 0;
+        lasttaunt = 0;
 		lastflag = respawned = suicided = lastnode = reqswitch = reqreload = requse = -1;
 		obit[0] = 0;
 	}
@@ -1064,7 +1051,7 @@ struct gameent : dynent, gamestate
 	{
 		respawn(millis);
 		frags = deaths = totaldamage = totalshots = 0;
-		if(state != CS_SPECTATOR) state = CS_DEAD;
+		//if(state != CS_SPECTATOR) state = CS_DEAD;
 	}
 };
 
@@ -1078,8 +1065,7 @@ struct projent : dynent
 	bool local, beenused, radial, extinguish;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
-	int ent, attr1, attr2, attr3, attr4, attr5;
-	int schan, id;
+	int schan, id, gun;
 	entitylight light;
 	gameent *owner;
 	physent *hit;
@@ -1101,7 +1087,6 @@ struct projent : dynent
 		state = CS_ALIVE;
 		norm = vec(0, 0, 1);
 		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = 0;
-		ent = attr1 = attr2 = attr3 = attr4 = attr5 = 0;
 		schan = id = -1;
 		movement = roll = lifespan = lifesize = 0.f;
 		beenused = radial = extinguish = false;
@@ -1179,7 +1164,6 @@ namespace entities
 	extern bool collateitems(gameent *d, vector<actitem> &actitems);
 	extern void checkitems(gameent *d);
 	extern void putitems(ucharbuf &p);
-	extern void announce(int idx, const char *msg = "", bool force = false);
 	extern void execlink(gameent *d, int index, bool local);
 	extern void setspawn(int n, bool on);
 	extern bool spawnplayer(gameent *d, int ent = -1, bool recover = false);
@@ -1221,7 +1205,7 @@ namespace projs
 
 	extern void reset();
 	extern void update();
-	extern void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id = 0, int ent = -1, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
+	extern void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id = 0, int gun = -1);
 	extern void preload();
 	extern void remove(gameent *owner);
 	extern void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local);
@@ -1303,6 +1287,7 @@ namespace world
 	extern gameent *intersectclosest(vec &from, vec &to, gameent *at);
 	extern void clientdisconnected(int cn);
 	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
+	extern void announce(int idx, const char *msg, ...);
 	extern int respawnwait(gameent *d);
 	extern void respawn(gameent *d);
 	extern void respawnself(gameent *d);

@@ -38,8 +38,7 @@ namespace hud
 			scoreson = on;
 			if(interm)
 			{
-				if(m_mission(world::gamemode))
-					entities::announce(S_V_MCOMPLETE, "mission complete!", true);
+				if(m_mission(world::gamemode)) world::announce(S_V_MCOMPLETE, "\fcmission complete!");
 				else
 				{
 					if(!groupplayers()) return;
@@ -47,14 +46,12 @@ namespace hud
 					if(m_team(world::gamemode, world::mutators))
 					{
 						bool win = sg.players.find(world::player1) >= 0;
-						s_sprintfd(s)("%s team \fs%s%s\fS won the match with a total score of %d", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
-						entities::announce(win ? S_V_YOUWIN : S_V_YOULOSE, s, true);
+						world::announce(win ? S_V_YOUWIN : S_V_YOULOSE, "\fc%s team \fs%s%s\fS won the match with a total score of %d", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
 					}
 					else
 					{
 						bool win = sg.players[0] == world::player1;
-						s_sprintfd(s)("%s won the match with a total score of %d", win ? "you" : world::colorname(sg.players[0]), sg.players[0]->frags);
-						entities::announce(win ? S_V_YOUWIN : S_V_YOULOSE, s, true);
+						world::announce(win ? S_V_YOUWIN : S_V_YOULOSE, "\fc%s won the match with a total score of %d", win ? "you" : world::colorname(sg.players[0]), sg.players[0]->frags);
 					}
 				}
 			}
