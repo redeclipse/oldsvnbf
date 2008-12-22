@@ -583,7 +583,7 @@ namespace projs
 					{
 						proj.from = vec(proj.o).sub(proj.vel);
 						part_create(PART_SMOKE_RISE_SLOW, 100, proj.o, 0x444444, proj.radius*1.f);
-						adddynlight(proj.o, proj.radius*4.f, vec(0.4f, 0.1f, 0.1f), 100, 10);
+						adddynlight(proj.o, proj.radius*6.f, vec(0.4f, 0.1f, 0.1f), 200, 10);
 						adddecal(DECAL_SCORCH, proj.o, proj.norm, proj.radius*3.f);
                         adddecal(DECAL_ENERGY, proj.o, proj.norm, proj.radius*3.f, bvec(165, 30, 30));
 						break;
