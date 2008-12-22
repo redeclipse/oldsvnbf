@@ -332,8 +332,8 @@ namespace projs
 			}
 			case GUN_RIFLE:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 100, from, 0x444444, 0.8f); // smoke
-				part_create(PART_PLASMA, 100, from, 0x882222, 1.f, d);
+				part_create(PART_SMOKE_RISE_FAST, 200, from, 0x444444, 0.8f); // smoke
+				part_create(PART_PLASMA, 75, from, 0x882222, 1.f, d);
                 adddynlight(from, 50, vec(0.4f, 0.1f, 0.1f), 75, 0, DL_FLASH);
 				break;
 			}
