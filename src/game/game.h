@@ -261,7 +261,7 @@ guntypes guntype[GUN_MAX] =
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			true,	true,		true,		false,
 			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,
-			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
+			"flamer",	"\fn",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
 	},
 	{
