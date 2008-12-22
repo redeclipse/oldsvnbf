@@ -332,7 +332,7 @@ namespace projs
 			}
 			case GUN_RIFLE:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 100, from, 0x882222, 0.8f); // smoke
+				part_create(PART_SMOKE_RISE_SLOW, 100, from, 0x444444, 0.8f); // smoke
 				part_create(PART_PLASMA, 100, from, 0x882222, 1.f, d);
                 adddynlight(from, 50, vec(0.4f, 0.1f, 0.1f), 75, 0, DL_FLASH);
 				break;
@@ -582,9 +582,10 @@ namespace projs
 					case GUN_RIFLE:
 					{
 						proj.from = vec(proj.o).sub(proj.vel);
-						part_create(PART_SMOKE_RISE_SLOW, 100, proj.o, 0x661111, proj.radius*1.f);
+						part_create(PART_SMOKE_RISE_SLOW, 100, proj.o, 0x444444, proj.radius*1.f);
 						adddynlight(proj.o, proj.radius*4.f, vec(0.4f, 0.1f, 0.1f), 100, 10);
 						adddecal(DECAL_SCORCH, proj.o, proj.norm, proj.radius*3.f);
+                        adddecal(DECAL_ENERGY, proj.o, proj.norm, proj.radius*3.f, bvec(165, 30, 30));
 						break;
 					}
 				}
