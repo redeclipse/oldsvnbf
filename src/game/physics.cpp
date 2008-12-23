@@ -415,6 +415,7 @@ namespace physics
 	{
 		if(floating)
 		{
+			pl->lastimpulse = 0;
 			if(pl->jumping)
 			{
 				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
@@ -424,6 +425,7 @@ namespace physics
 		}
         else if(pl->physstate >= PHYS_SLOPE || pl->inliquid)
 		{
+			pl->lastimpulse = 0;
 			if(pl->jumping)
 			{
 				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
@@ -445,7 +447,6 @@ namespace physics
 			if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 		}
         if(pl->physstate == PHYS_FALL) pl->timeinair += curtime;
-        else pl->jumptime = pl->lastimpulse = 0;
 
 		vec m(0.0f, 0.0f, 0.0f);
         bool wantsmove = world::allowmove(pl) && (pl->move || pl->strafe);
