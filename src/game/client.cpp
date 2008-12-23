@@ -968,11 +968,7 @@ namespace client
 					{
 						case SPHY_JUMP: t->jumptime = lastmillis; break;
 						case SPHY_IMPULSE: t->lastimpulse = lastmillis; break;
-						case SPHY_POWER:
-						{
-							if(t->gunstate[t->gunselect] != GNS_POWER) t->setgunstate(t->gunselect, GNS_POWER, 0, lastmillis);
-							break;
-						}
+						case SPHY_POWER: t->setgunstate(t->gunselect, GNS_POWER, 0, lastmillis); break;
 						default: break;
 					}
 					break;
