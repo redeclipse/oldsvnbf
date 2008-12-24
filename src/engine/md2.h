@@ -200,31 +200,6 @@ struct md2 : vertmodel
         }
     };
 
-    struct md2part : part
-    {
-        void getdefaultanim(animinfo &info, int anim, uint varseed, dynent *d)
-        {
-            //                      0              3              6   7   8   9   10   11  12  13   14  15  16  17
-            //                      D    D    D    D    D    D    A   P   I   R,  E    J   T   W    FO  SA  GS  GI
-            static int _frame[] = { 178, 184, 190, 183, 189, 197, 46, 54, 0,  40, 162, 67, 95, 112, 72, 84, 7,  6 };
-            static int _range[] = { 6,   6,   8,   1,   1,   1,   8,  4,  40, 6,  1,   1,  17, 11,  12, 11, 18, 1 };
-            //                      DE DY I  F  B  L  R  PU SH PA J   SI SW ED  LA  T   WI  LO  GS  GI
-            static int animfr[] = { 5, 2, 8, 9, 9, 9, 9, 6, 6, 7, 11, 8, 9, 10, 14, 12, 13, 15, 16, 17 };
-
-            anim &= ANIM_INDEX;
-            if((size_t)anim >= sizeof(animfr)/sizeof(animfr[0]))
-            {
-                info.frame = 0;
-                info.range = 1;
-                return;
-            }
-            int n = animfr[anim];
-            if(anim==ANIM_DYING || anim==ANIM_DEAD) n -= varseed%3;
-            info.frame = _frame[n];
-            info.range = _range[n];
-        }
-    };
-
     meshgroup *loadmeshes(char *name, va_list args)
     {
         md2meshgroup *group = new md2meshgroup;
@@ -235,7 +210,7 @@ struct md2 : vertmodel
     bool load()
     {
         if(loaded) return true;
-        part &mdl = *new md2part;
+        part &mdl = *new part;
         parts.add(&mdl);
         mdl.model = this;
         mdl.index = 0;
