@@ -612,13 +612,13 @@ namespace server
 			ents.add(n);
 			spawncycle = rnd(ents.length());
 		}
-	} spawns[TEAM_LAST];
+	} spawns[TEAM_LAST+1];
 	int numplayers, totalspawns;
 
 	void setupspawns(bool update, int players = 0)
 	{
 		numplayers = totalspawns = 0;
-		loopi(TEAM_LAST) spawns[i].reset();
+		loopi(TEAM_LAST+1) spawns[i].reset();
 		if(update)
 		{
 			loopv(sents) if(sents[i].type == PLAYERSTART && isteam(gamemode, mutators, sents[i].attr2, TEAM_FIRST))
@@ -630,7 +630,7 @@ namespace server
 			{
 				loopi(numteams(gamemode, mutators)) if(spawns[i+TEAM_FIRST].ents.empty())
 				{
-					loopj(TEAM_LAST) spawns[j].reset();
+					loopj(TEAM_LAST+1) spawns[j].reset();
 					totalspawns = 0;
 					break;
 				}
