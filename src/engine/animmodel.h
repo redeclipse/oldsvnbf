@@ -635,6 +635,16 @@ struct animmodel : model
                             }
                         }
                     }
+                    if(!spec)
+                    {
+                        vector<animspec> &fallback = anims[animpart][ANIM_IDLE];
+                        if(fallback.length()) 
+                        {
+                            spec = &fallback[uint(varseed)%fallback.length()];
+                            info.anim = ANIM_IDLE|ANIM_LOOP;
+                            info.basetime = 0;
+                        }
+                    }
                 }
                 if(spec)
                 {
