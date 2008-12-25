@@ -50,10 +50,7 @@ struct duelservmode : servmode
 		return false; // you spawn when we want you to buddy
 	}
 
-	void died(clientinfo *ci, clientinfo *at)
-	{
-		queue(ci, m_duel(gamemode, mutators));
-	}
+	void died(clientinfo *ci, clientinfo *at) {}
 	void changeteam(clientinfo *ci, int oldteam, int newteam) {}
 
 	void clearitems()
@@ -95,83 +92,59 @@ struct duelservmode : servmode
 		if(interm || !numclients() || notgotinfo) return;
 		if(dueltime < 0)
 		{
-			dueltime = gamemillis+5000;
-			clearqueue();
+			dueltime = gamemillis+(sv_duellimit*1000);
+			clearqueue(true);
 			clearitems();
 		}
 		cleanup();
-
-		vector<clientinfo *> alive;
-		alive.setsize(0);
-		loopv(clients) if(clients[i]->name[0] && clients[i]->state.state == CS_ALIVE)
-			alive.add(clients[i]);
-
 		if(dueltime)
 		{
 			if(gamemillis >= dueltime)
 			{
-				loopvj(clients) if(clients[j]->name[0] && clients[j]->state.state != CS_ALIVE && clients[j]->state.state != CS_SPECTATOR)
-					queue(clients[j], m_duel(gamemode, mutators));
-
-				if(m_lms(gamemode, mutators) || alive.length() < 2) // while waiting for next round our two guys spawn
+				loopv(clients) if(clients[i]->name[0] && clients[i]->state.state == CS_ALIVE) queue(clients[i], false, true);
+				clearitems();
+				vector<clientinfo *> alive;
+				loopv(duelqueue)
 				{
-					loopv(duelqueue)
+					if(m_duel(gamemode, mutators) && alive.length() >= 2) break;
+					if(clients.inrange(duelqueue[i]))
 					{
-						if(m_duel(gamemode, mutators) && alive.length() >= 2) break;
-						if(clients.inrange(duelqueue[i]))
-						{
-							clientinfo *ci = clients[duelqueue[i]];
-							if(ci->state.state != CS_ALIVE)
-							{
-								ci->state.state = CS_ALIVE;
-								ci->state.respawn(gamemillis);
-								sendspawn(ci);
-								alive.add(ci);
-							}
-						}
-					}
-					cleanup();
-				}
-
-				if(m_duel(gamemode, mutators) && alive.length() > 2)
-				{
-					loopvrev(alive)
-					{
-						queue(alive[i], m_duel(gamemode, mutators));
-						alive.remove(i);
-						if(alive.length() <= 2) break;
+						clientinfo *ci = clients[duelqueue[i]];
+						ci->state.state = CS_ALIVE;
+						ci->state.respawn(gamemillis);
+						sendspawn(ci);
+						alive.add(ci);
 					}
 				}
+				cleanup();
 
 				duelround++;
 				if(m_duel(gamemode, mutators))
 				{
 					s_sprintfd(namea)("%s", colorname(alive[0]));
 					s_sprintfd(nameb)("%s", colorname(alive[1]));
-					s_sprintfd(fight)("Duel between %s and %s, round \fs\fy#%d\fS.. FIGHT!", namea, nameb, duelround);
+					s_sprintfd(fight)("\faduel between %s and %s, round \fs\fy#%d\fS.. FIGHT!", namea, nameb, duelround);
 					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
 				}
 				else if(m_lms(gamemode, mutators))
 				{
-					s_sprintfd(fight)("Last one left alive wins, round \fs\fy#%d\fS.. FIGHT!", duelround);
+					s_sprintfd(fight)("\falast one left alive wins, round \fs\fy#%d\fS.. FIGHT!", duelround);
 					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
 				}
 				dueltime = 0;
 			}
-			else loopvj(alive)
-				queue(alive[j], m_duel(gamemode, mutators), true); // stick at top of queue
 		}
-		else if(alive.length() < 2)
+		else
 		{
-			if(!alive.empty())
+			vector<clientinfo *> alive;
+			loopv(clients) if(clients[i]->name[0] && clients[i]->state.state == CS_ALIVE) alive.add(clients[i]);
+			if(alive.empty()) srvmsgf(-1, "\fyeveryone died, fail!");
+			else
 			{
 				srvmsgf(-1, "\fy%s was the last one left alive", colorname(alive[0]));
-				sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, "you survived!");
-				queue(alive[0], false, true); // stick at top of queue
+				sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, "\fayou survived!");
 			}
-			else srvmsgf(-1, "\fyeveryone died, fail!");
-			dueltime = gamemillis+5000;
-			clearitems();
+			dueltime = gamemillis+(sv_duellimit*1000);
 		}
 	}
 
@@ -179,7 +152,7 @@ struct duelservmode : servmode
 	{
 		duelround = 0;
 		dueltime = -1;
-		clearqueue(true);
+		cleanup();
 	}
 } duelmutator;
 #endif
