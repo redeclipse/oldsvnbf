@@ -291,7 +291,7 @@ guntypes guntype[GUN_MAX] =
 			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			false,	false,		false,		false,
 			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		75.f,
-			"hand grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
+			"grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
 	},
 };
