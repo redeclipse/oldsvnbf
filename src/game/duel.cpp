@@ -138,13 +138,23 @@ struct duelservmode : servmode
 		{
 			vector<clientinfo *> alive;
 			loopv(clients) if(clients[i]->name[0] && clients[i]->state.state == CS_ALIVE) alive.add(clients[i]);
-			if(alive.empty()) srvmsgf(-1, "\fyeveryone died, fail!");
-			else
+			switch(alive.length())
 			{
-				srvmsgf(-1, "\fy%s was the last one left alive", colorname(alive[0]));
-				sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, "\fayou survived!");
+				case 0:
+				{
+					srvmsgf(-1, "\fyeveryone died, fail!");
+					dueltime = gamemillis+(sv_duellimit*1000);
+					break;
+				}
+				case 1:
+				{
+					srvmsgf(-1, "\fy%s was the last one left alive", colorname(alive[0]));
+					sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, "\fayou survived!");
+					dueltime = gamemillis+(sv_duellimit*1000);
+					break;
+				}
+				default: break;
 			}
-			dueltime = gamemillis+(sv_duellimit*1000);
 		}
 	}
 
