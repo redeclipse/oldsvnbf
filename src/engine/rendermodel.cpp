@@ -384,8 +384,8 @@ struct batchedmodel
 {
 	vec pos, color, dir;
 	int anim;
-	float yaw, pitch, roll, speed;
-	int basetime, flags;
+	float yaw, pitch, roll;
+	int basetime, basetime2, flags;
 	dynent *d;
 	int attached;
 	occludequery *query;
@@ -445,7 +445,7 @@ void renderbatchedmodel(model *m, batchedmodel &b)
         if(b.flags&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
     }
 
-	m->render(anim, b.speed, b.basetime, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir);
+	m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir);
 }
 
 struct translucentmodel
@@ -603,7 +603,7 @@ void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
 
 extern int oqfrags;
 
-void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw, float pitch, float roll, int flags, dynent *d, modelattach *a, int basetime, float speed)
+void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw, float pitch, float roll, int flags, dynent *d, modelattach *a, int basetime, int basetime2)
 {
     if(shadowmapping && !(flags&(MDL_SHADOW|MDL_DYNSHADOW))) return;
 	model *m = loadmodel(mdl);
@@ -740,8 +740,8 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 		b.yaw = yaw;
 		b.pitch = pitch;
 		b.roll = roll;
-		b.speed = speed;
 		b.basetime = basetime;
+        b.basetime2 = basetime2;
         b.flags = flags & ~(MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
         if(!shadow || reflecting || refracting>0)
         {
@@ -785,7 +785,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
         if(d->query) startquery(d->query);
     }
 
-	m->render(anim, speed, basetime, o, yaw, pitch, roll, d, a, lightcolor, lightdir);
+	m->render(anim, basetime, basetime2, o, yaw, pitch, roll, d, a, lightcolor, lightdir);
 
     if(doOQ && d->query) endquery(d->query);
 
