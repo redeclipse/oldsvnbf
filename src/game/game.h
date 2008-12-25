@@ -277,7 +277,7 @@ guntypes guntype[GUN_MAX] =
 	{
 		GUN_RIFLE,	ANIM_RIFLE,		-20,  	20,
 			S_RIFLE,	S_BZAP,		S_BZZT,	-1,
-			1,		5,		750,	1250,	100,	5000,	0,		10000,
+			1,		5,		750,	1250,	100,	3000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,

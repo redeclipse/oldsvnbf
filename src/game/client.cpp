@@ -1503,7 +1503,11 @@ namespace client
 					int sn = getint(p);
 					gameent *s = world::newclient(sn);
 					if(!s) break;
-					if(s==world::player1 && editmode) toggleedit();
+					if(s==world::player1)
+					{
+						if(editmode) toggleedit();
+						hud::sb.showscores(false);
+					}
 					s->state = CS_WAITING;
 					break;
 				}
