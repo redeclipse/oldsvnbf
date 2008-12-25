@@ -1382,7 +1382,7 @@ namespace world
 				anims.add(i);
 	}
 
-	void renderclient(gameent *d, bool third, bool trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, float speed, bool early)
+	void renderclient(gameent *d, bool third, bool trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, bool early)
 	{
 		string mdl;
 		if(third) s_strcpy(mdl, teamtype[team].tpmdl);
@@ -1427,7 +1427,7 @@ namespace world
 			}
 		}
 
-		int anim = animflags, basetime = lastaction;
+		int anim = animflags, basetime = lastaction, basetime2 = 0;
 		if(animoverride)
 		{
 			anim = (animoverride<0 ? ANIM_ALL : animoverride)|ANIM_LOOP;
@@ -1439,8 +1439,8 @@ namespace world
 			{
 				if(d->inliquid && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
-				else if(d->timeinair && d->lastimpulse && lastmillis-d->lastimpulse <= 1000) anim |= (ANIM_IMPULSE|ANIM_LOOP)<<ANIM_SECONDARY;
-				else if(d->timeinair && d->jumptime && lastmillis-d->jumptime <= 1000) anim |= (ANIM_JUMP|ANIM_LOOP)<<ANIM_SECONDARY;
+				else if(d->timeinair && d->lastimpulse && lastmillis-d->lastimpulse <= 1000) { anim |= ANIM_IMPULSE<<ANIM_SECONDARY; basetime2 = d->lastimpulse; }
+				else if(d->timeinair && d->jumptime && lastmillis-d->jumptime <= 1000) { anim |= ANIM_JUMP<<ANIM_SECONDARY; basetime2 = d->jumptime; }
 				else if(d->timeinair > 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
 				else if(d->crouching || d->crouchtime<0)
 				{
@@ -1460,6 +1460,7 @@ namespace world
 				case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_CARBINE: case ANIM_RIFLE:
 				{
                     anim = (anim>>ANIM_SECONDARY) | ((anim&((1<<ANIM_SECONDARY)-1))<<ANIM_SECONDARY);
+                    swap(basetime, basetime2);
 					break;
 				}
 				default: break;
@@ -1472,6 +1473,7 @@ namespace world
 			case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_CARBINE: case ANIM_RIFLE:
 			{
 				anim |= ((anim&ANIM_INDEX)|ANIM_LOOP)<<ANIM_SECONDARY;
+                basetime2 = basetime;
 				break;
 			}
 			default:
@@ -1488,14 +1490,14 @@ namespace world
 		else if(trans) flags |= MDL_TRANSLUCENT;
 		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
 		dynent *e = third ? (dynent *)d : (dynent *)&fpsmodel;
-		rendermodel(NULL, mdl, anim, o, !third && testanims && d == player1 ? 0 : yaw+90, pitch, roll, flags, e, attachments, basetime, speed);
+		rendermodel(NULL, mdl, anim, o, !third && testanims && d == player1 ? 0 : yaw+90, pitch, roll, flags, e, attachments, basetime, basetime2);
 	}
 
 	void renderplayer(gameent *d, bool third, bool trans, bool early = false)
 	{
         modelattach a[4];
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
-			gun = d->gunselect, lastaction = lastmillis,
+			gun = d->gunselect, lastaction = 0,
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showgun = isgun(gun);
 
@@ -1631,7 +1633,7 @@ namespace world
             ai++;
         }
 
-        renderclient(d, third, trans, team, a[0].name ? a : NULL, secondary, animflags, animdelay, lastaction, 0.f, early);
+        renderclient(d, third, trans, team, a[0].name ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
 
 	void render()

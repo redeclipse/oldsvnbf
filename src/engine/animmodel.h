@@ -596,36 +596,19 @@ struct animmodel : model
             loopv(skins) skins[i].preloadshader();
         }
 
-        virtual void getdefaultanim(animinfo &info, int anim, uint varseed, dynent *d)
+        virtual void getdefaultanim(animinfo &info, int anim, int basetime, int basetime2, uint varseed, dynent *d)
         {
             info.frame = 0;
             info.range = 1;
         }
 
-        void getanimspeed(animinfo &info, dynent *d)
+        bool calcanim(int animpart, int anim, int basetime, int basetime2, dynent *d, int interp, animinfo &info)
         {
-            switch(info.anim&ANIM_INDEX)
-            {
-                case ANIM_FORWARD:
-                case ANIM_BACKWARD:
-                case ANIM_LEFT:
-                case ANIM_RIGHT:
-                case ANIM_SWIM:
-                    info.speed = 5500.0f/d->maxspeed;
-                    break;
-
-                default:
-                    info.speed = 100.0f;
-                    break;
-            }
-        }
-
-        bool calcanim(int animpart, int anim, float speed, int basetime, dynent *d, int interp, animinfo &info)
-        {
-            uint varseed = uint(basetime + (int)(size_t)d);
+            uint varseed = uint((int)(size_t)d);
             info.anim = anim;
+            info.basetime = basetime;
             info.varseed = varseed;
-            info.speed = speed;
+            info.speed = 100.0f;
             if((anim&ANIM_INDEX)==ANIM_ALL)
             {
                 info.frame = 0;
@@ -637,17 +620,18 @@ struct animmodel : model
                 if(anims[animpart])
                 {
                     vector<animspec> &primary = anims[animpart][anim&ANIM_INDEX];
-                    if(primary.length()) spec = &primary[varseed%primary.length()];
+                    if(primary.length()) spec = &primary[uint(varseed + basetime)%primary.length()];
                     if((anim>>ANIM_SECONDARY)&ANIM_INDEX)
                     {
                         vector<animspec> &secondary = anims[animpart][(anim>>ANIM_SECONDARY)&ANIM_INDEX];
                         if(secondary.length())
                         {
-                            animspec &spec2 = secondary[varseed%secondary.length()];
+                            animspec &spec2 = secondary[uint(varseed + basetime2)%secondary.length()];
                             if(!spec || spec2.priority > spec->priority)
                             {
                                 spec = &spec2;
                                 info.anim >>= ANIM_SECONDARY;
+                                info.basetime = basetime2;
                             }
                         }
                     }
@@ -658,17 +642,15 @@ struct animmodel : model
                     info.range = spec->range;
                     if(spec->speed>0) info.speed = 1000.0f/spec->speed;
                 }
-                else getdefaultanim(info, anim, varseed, d);
+                else getdefaultanim(info, anim, basetime, basetime2, varseed, d);
             }
-            if(info.speed<=0) getanimspeed(info, d);
 
             info.anim &= (1<<ANIM_SECONDARY)-1;
             info.anim |= anim&ANIM_FLAGS;
-            info.basetime = basetime;
-            if(info.anim&(ANIM_LOOP|ANIM_START|ANIM_END) && (anim>>ANIM_SECONDARY)&ANIM_INDEX)
+            if(info.anim&(ANIM_LOOP|ANIM_START|ANIM_END))
             {
                 info.anim &= ~ANIM_SETTIME;
-                info.basetime = -((int)(size_t)d&0xFFF);
+                if(!info.basetime) info.basetime = -((int)(size_t)d&0xFFF);
             }
             if(info.anim&(ANIM_START|ANIM_END))
             {
@@ -721,19 +703,19 @@ struct animmodel : model
             return angle;
         }
 
-        void render(int anim, float speed, int basetime, float pitch, const vec &axis, dynent *d, const vec &dir, const vec &campos, const plane &fogplane)
+        void render(int anim, int basetime, int basetime2, float pitch, const vec &axis, dynent *d, const vec &dir, const vec &campos, const plane &fogplane)
         {
             animstate as[MAXANIMPARTS];
-            render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane, as);
+            render(anim, basetime, basetime2, pitch, axis, d, dir, campos, fogplane, as);
         }
 
-        void render(int anim, float speed, int basetime, float pitch, const vec &axis, dynent *d, const vec &dir, const vec &campos, const plane &fogplane, animstate *as)
+        void render(int anim, int basetime, int basetime2, float pitch, const vec &axis, dynent *d, const vec &dir, const vec &campos, const plane &fogplane, animstate *as)
         {
             if(!(anim&ANIM_REUSE)) loopi(numanimparts)
             {
                 animinfo info;
                 int interp = d && index+numanimparts<=MAXANIMPARTS ? index+i : -1;
-                if(!calcanim(i, anim, speed, basetime, d, interp, info)) return;
+                if(!calcanim(i, anim, basetime, basetime2, d, interp, info)) return;
                 animstate &p = as[i];
                 p.owner = this;
                 p.anim = info.anim;
@@ -829,13 +811,14 @@ struct animmodel : model
                         link.matrix.invertplane(nfogplane);
                     }
 
-                    int nanim = anim, nbasetime = basetime;
+                    int nanim = anim, nbasetime = basetime, nbasetime2 = basetime2;
                     if(link.anim>=0)
                     {
                         nanim = link.anim | (anim&ANIM_FLAGS);
                         nbasetime = link.basetime;
+                        nbasetime2 = 0;
                     }
-                    link.p->render(nanim, speed, nbasetime, pitch, naxis, d, ndir, ncampos, nfogplane);
+                    link.p->render(nanim, nbasetime, nbasetime2, pitch, naxis, d, ndir, ncampos, nfogplane);
 
                     matrixpos--;
                 }
@@ -870,7 +853,7 @@ struct animmodel : model
 
     virtual int linktype(animmodel *m) const { return LINK_TAG; }
 
-    void render(int anim, float speed, int basetime, float pitch, const vec &axis, dynent *d, modelattach *a, const vec &dir, const vec &campos, const plane &fogplane)
+    void render(int anim, int basetime, int basetime2, float pitch, const vec &axis, dynent *d, modelattach *a, const vec &dir, const vec &campos, const plane &fogplane)
     {
         if(!loaded) return;
 
@@ -907,7 +890,7 @@ struct animmodel : model
         }
 
         animstate as[MAXANIMPARTS];
-        parts[0]->render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane, as);
+        parts[0]->render(anim, basetime, basetime2, pitch, axis, d, dir, campos, fogplane, as);
 
         if(a) for(int i = numtags-1; i >= 0; i--)
         {
@@ -926,18 +909,18 @@ struct animmodel : model
                     break;
 
                 case LINK_COOP:
-                    p->render(anim, speed, basetime, pitch, axis, d, dir, campos, fogplane);
+                    p->render(anim, basetime, basetime2, pitch, axis, d, dir, campos, fogplane);
                     p->index = 0;
                     break;
 
                 case LINK_REUSE:
-                    p->render(anim | ANIM_REUSE, speed, basetime, pitch, axis, d, dir, campos, fogplane, as);
+                    p->render(anim | ANIM_REUSE, basetime, basetime2, pitch, axis, d, dir, campos, fogplane, as);
                     break;
             }
         }
     }
 
-    void render(int anim, float speed, int basetime, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a, const vec &color, const vec &dir)
+    void render(int anim, int basetime, int basetime2, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a, const vec &color, const vec &dir)
     {
         if(!loaded) return;
 
@@ -956,7 +939,7 @@ struct animmodel : model
 
         if(anim&ANIM_NORENDER)
         {
-            render(anim, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
+            render(anim, basetime, basetime2, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
             if(d) d->lastrendered = lastmillis;
             return;
         }
@@ -1009,7 +992,7 @@ struct animmodel : model
         if(anim&ANIM_TRANSLUCENT)
         {
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-            render(anim|ANIM_NOSKIN, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
+            render(anim|ANIM_NOSKIN, basetime, basetime2, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
             glColorMask(COLORMASK, fading ? GL_FALSE : GL_TRUE);
 
             glDepthFunc(GL_LEQUAL);
@@ -1022,7 +1005,7 @@ struct animmodel : model
             }
         }
 
-        render(anim, speed, basetime, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
+        render(anim, basetime, basetime2, pitch, vec(0, -1, 0), d, a, rdir, campos, fogplane);
 
         if(anim&ANIM_ENVMAP)
         {
