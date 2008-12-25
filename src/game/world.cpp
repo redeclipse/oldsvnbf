@@ -1467,21 +1467,7 @@ namespace world
 			}
 		}
 
-		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) switch(anim&ANIM_INDEX)
-		{
-			case ANIM_IDLE: case ANIM_PLASMA: case ANIM_SHOTGUN: case ANIM_CHAINGUN:
-			case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_CARBINE: case ANIM_RIFLE:
-			{
-				anim |= ((anim&ANIM_INDEX)|ANIM_LOOP)<<ANIM_SECONDARY;
-                basetime2 = basetime;
-				break;
-			}
-			default:
-			{
-				anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
-				break;
-			}
-		}
+		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
 
 		int flags = MDL_LIGHT;
 		if(d != player1) flags |= MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;

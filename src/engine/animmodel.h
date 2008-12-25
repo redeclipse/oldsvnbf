@@ -621,7 +621,7 @@ struct animmodel : model
                 {
                     vector<animspec> &primary = anims[animpart][anim&ANIM_INDEX];
                     if(primary.length()) spec = &primary[uint(varseed + basetime)%primary.length()];
-                    if((anim>>ANIM_SECONDARY)&ANIM_INDEX)
+                    if((anim>>ANIM_SECONDARY)&(ANIM_INDEX|ANIM_DIR))
                     {
                         vector<animspec> &secondary = anims[animpart][(anim>>ANIM_SECONDARY)&ANIM_INDEX];
                         if(secondary.length())
@@ -633,16 +633,6 @@ struct animmodel : model
                                 info.anim >>= ANIM_SECONDARY;
                                 info.basetime = basetime2;
                             }
-                        }
-                    }
-                    if(!spec)
-                    {
-                        vector<animspec> &fallback = anims[animpart][ANIM_IDLE];
-                        if(fallback.length()) 
-                        {
-                            spec = &fallback[uint(varseed)%fallback.length()];
-                            info.anim = ANIM_IDLE|ANIM_LOOP;
-                            info.basetime = 0;
                         }
                     }
                 }
