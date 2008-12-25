@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			139
+#define GAMEVERSION			140
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -338,23 +338,16 @@ enum
 enum
 {
 	G_M_NONE	= 0,
-#ifdef MULTISIDED
 	G_M_MULTI	= 1<<0,
-#endif
 	G_M_TEAM	= 1<<1,
 	G_M_INSTA	= 1<<2,
 	G_M_DUEL	= 1<<3,
 	G_M_LMS		= 1<<4,
 	G_M_DM		= G_M_INSTA,
-#ifdef MULTISIDED
 	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA,
 	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS,
-#else
-	G_M_TEAMS	= G_M_TEAM|G_M_INSTA,
-	G_M_ALL		= G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS,
-#endif
 };
-#define G_M_NUM 4
+#define G_M_NUM 5
 
 struct gametypes
 {
@@ -370,9 +363,7 @@ gametypes gametype[] = {
 	{ G_STF,			G_M_TEAMS,				G_M_TEAM,				"secure-the-flag" },
 	{ G_CTF,			G_M_TEAMS,				G_M_TEAM,				"capture-the-flag" },
 }, mutstype[] = {
-#ifdef MULTISIDED
 	{ G_M_MULTI,		G_M_ALL,				G_M_TEAM|G_M_MULTI,		"multi-sided" },
-#endif
 	{ G_M_TEAM,			G_M_TEAMS,				G_M_TEAM,				"team" },
 	{ G_M_INSTA,		G_M_ALL,				G_M_INSTA,				"instagib" },
 	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_DUEL,				"duel" },
@@ -396,9 +387,7 @@ extern gametypes gametype[], mutstype[];
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
 #define m_timed(a)			(a >= G_DEATHMATCH)
 
-#ifdef MULTISIDED
 #define m_multi(a,b)		((b & G_M_MULTI) || (gametype[a].implied & G_M_MULTI))
-#endif
 #define m_team(a,b)			((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))
 #define m_insta(a,b)		((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
 #define m_duel(a,b)			((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
@@ -533,15 +522,9 @@ enum
 	BASE_BOTH = BASE_HOME|BASE_FLAG
 };
 
-#ifdef MULTISIDED
 #define numteams(a,b)	(m_multi(a,b) ? TEAM_NUM : TEAM_NUM/2)
 #define isteam(a,b,c,d)	(m_team(a,b) ? (c >= d && c <= numteams(a,b)+(TEAM_FIRST-1)) : c == TEAM_NEUTRAL)
 #define valteam(a,b)	(a >= b && a <= TEAM_NUM)
-#else
-#define numteams(a,b)	TEAM_NUM/2
-#define isteam(a,b,c,d)	(m_team(a,b) ? (c >= d && c <= numteams(a,b)+(TEAM_FIRST-1)) : c == TEAM_NEUTRAL)
-#define valteam(a,b)	(a >= b && a <= TEAM_NUM/2)
-#endif
 
 #define MAXNAMELEN		16
 #define MAXHEALTH		100
