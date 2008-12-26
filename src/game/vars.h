@@ -19,7 +19,7 @@ VARG(spawnrotate, 0, 1, 2); // 0 = let client decide, 1 = sequence, 2 = random
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 VARG(itemspawntime, 1, 30, 3600); // secs when items respawn
-VARG(kamakaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenades, 3 = always
+VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenades, 3 = always
 
 VARG(timelimit, 0, 15, 60);
 VARG(intermlimit, 0, 10, 120); // secs before vote menu comes up

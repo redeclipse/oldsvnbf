@@ -571,7 +571,7 @@ namespace world
 					"barbequed themself for dinner",
 					"pulled off a seemingly impossible stunt",
 					"pulled off a seemingly impossible stunt",
-					"decided to kick it, kamakaze style",
+					"decided to kick it, kamikaze style",
 				};
         		s_strcpy(d->obit, suicidenames[gun]);
         	}
