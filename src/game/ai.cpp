@@ -929,7 +929,7 @@ namespace ai
 			gameentity &e = *(gameentity *)entities::ents[n];
 			d->ai->spot = e.o;
 			vec pos = world::feetpos(d), off = vec(d->ai->spot).sub(pos);
-			if(off.z >= AIJUMPHEIGHT && (!d->timeinair || (d->timeinair && d->vel.z <= 4.f && physics::canimpulse(d))))
+			if(off.z >= AIJUMPHEIGHT && (d->timeinair ? d->vel.z <= 4.f && physics::canimpulse(d) : lastmillis - d->jumptime >= 300))
 			{
 				d->jumping = true;
 				d->jumptime = lastmillis;
@@ -1146,8 +1146,11 @@ namespace ai
 				{
 					d->ai->targyaw += float(90+rnd(180));
 					d->ai->targpitch = 0.f;
-					d->jumping = true;
-					d->jumptime = lastmillis;
+                    if(lastmillis - d->jumptime >= 300)
+                    {
+					    d->jumping = true;
+					    d->jumptime = lastmillis;
+                    }
 				}
 				b.stuck = lastmillis;
 			}
