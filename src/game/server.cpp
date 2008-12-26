@@ -1154,7 +1154,7 @@ namespace server
 		servstate &ts = ci->state;
 		vector<droplist> drop;
 		int sgun = m_spawngun(gamemode, mutators);
-		if(!discon && sv_kamakaze && (sv_kamakaze > 2 || (ts.hasgun(GUN_GL, sgun) && (sv_kamakaze > 1 || ts.gunselect == GUN_GL))))
+		if(!discon && sv_kamikaze && (sv_kamikaze > 2 || (ts.hasgun(GUN_GL, sgun) && (sv_kamikaze > 1 || ts.gunselect == GUN_GL))))
 		{
 			ts.gunshots[GUN_GL].add(-1);
 			droplist &d = drop.add();
