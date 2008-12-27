@@ -272,7 +272,7 @@ void sendfile(int cn, int chan, FILE *file, const char *format, ...)
             return;
 #endif
     }
-    else if(cn >= clients.length() || clients[cn]->type != ST_TCPIP) return;
+    else if(!clients.inrange(cn)) return;
 
     fseek(file, 0, SEEK_END);
     int len = ftell(file);
