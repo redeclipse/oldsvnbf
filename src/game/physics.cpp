@@ -162,7 +162,7 @@ namespace physics
 
     bool trystepup(physent *d, vec &dir, const vec &obstacle, float maxstep, const vec &floor)
 	{
-		vec old(d->o), stairdir = (obstacle.z >= 0 && obstacle.z < SLOPEZ ? vec(-obstacle.x, -obstacle.y, 0) : vec(dir.x, dir.y, 0)).normalize();
+		vec old(d->o), stairdir = (obstacle.z >= 0 && obstacle.z < slopez ? vec(-obstacle.x, -obstacle.y, 0) : vec(dir.x, dir.y, 0)).normalize();
 		/* check if there is space atop the stair to move to */
 		if(d->physstate != PHYS_STEP_UP)
 		{
