@@ -399,17 +399,11 @@ namespace ctf
 		world::announce(S_V_FLAGDROP, "\fo%s dropped the the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
     }
 
-    void flagexplosion(int i, int team, const vec &loc)
-    {
-		world::spawneffect(vec(loc).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius/2);
-    }
-
     void flageffect(int i, int team, const vec &from, const vec &to)
     {
-		if(from.x >= 0) flagexplosion(i, team, from);
-		if(to.x >= 0) flagexplosion(i, team, to);
-		if(from.x >= 0 && to.x >= 0)
-			part_trail(PART_PLASMA, 250, from, to, teamtype[team].colour, 4.8f);
+		if(from.x >= 0) world::spawneffect(vec(from).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius/2);
+		if(to.x >= 0) world::spawneffect(vec(to).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius/2);
+		if(from.x >= 0 && to.x >= 0) part_trail(PART_ELECTRIC, 250, from, to, teamtype[team].colour, 2.f);
     }
 
     void returnflag(gameent *d, int i)

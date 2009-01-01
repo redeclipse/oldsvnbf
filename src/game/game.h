@@ -678,7 +678,7 @@ struct gamestate
 			}
 			entid[i] = -1;
 		}
-		lastgun = gunselect = -1;
+		if(full) lastgun = gunselect = -1;
 	}
 
 	void setgunstate(int gun, int state, int delay, int millis)

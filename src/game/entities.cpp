@@ -447,11 +447,15 @@ namespace entities
 		{
 			case EU_ITEM:
 			{
-				if(d->useaction && d->requse < 0)
+				if(d->useaction)
 				{
-					client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-world::maptime, n);
-					d->useaction = false;
-					d->requse = lastmillis;
+					if(d->requse < 0)
+					{
+						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-world::maptime, n);
+						d->useaction = false;
+						d->requse = lastmillis;
+					}
+					else if(d == world::player1) playsound(S_DENIED, d->o, d);
 				}
 				break;
 			}
@@ -519,8 +523,7 @@ namespace entities
 						}
 						case TRIGGER:
 						{
-							if((!e.spawned || e.attr2 != TR_NONE || e.attr3 != TA_AUTO) &&
-								lastmillis-e.lastuse >= TRIGGERTIME)
+							if((!e.spawned || e.attr2 != TR_NONE || e.attr3 != TA_AUTO) && lastmillis-e.lastuse >= TRIGGERTIME)
 							{
 								e.lastuse = lastmillis;
 								switch(e.attr2)
@@ -1339,9 +1342,9 @@ namespace entities
 			}
 			fixentity(e);
 		}
+		loopvj(ents) fixentity(*ents[j]);
 		loopvj(ents) if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
 			setspawn(j, false);
-		loopvj(ents) fixentity(*ents[j]);
 	}
 
 	void mapstart()
