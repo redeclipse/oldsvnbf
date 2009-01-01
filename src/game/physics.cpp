@@ -169,7 +169,7 @@ namespace physics
         {
             vec checkdir = stairdir;
             checkdir.mul(0.1f);
-            checkdir.z += maxstep;
+            checkdir.z += maxstep + 0.1f;
             d->o.add(checkdir);
             if(!collide(d))
             {
