@@ -1436,8 +1436,7 @@ namespace server
 			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM || sents[i].type == TRIGGER)
 			{
 				putint(p, i);
-				if(enttype[sents[i].type].usetype == EU_ITEM)
-					putint(p, finditem(i, false) ? 1 : 0);
+				if(enttype[sents[i].type].usetype == EU_ITEM) putint(p, finditem(i, false) ? 1 : 0);
 				else putint(p, sents[i].spawned ? 1 : 0);
 			}
 			putint(p, -1);
@@ -1688,21 +1687,16 @@ namespace server
 		int sgun = m_spawngun(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? gunattr(sents[e.ent].attr1, sgun) : sents[e.ent].attr1;
 		if(!gs.canuse(sents[e.ent].type, attr, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, sgun, e.millis))
 			return;
-		if(!sents[e.ent].spawned)
+		if(!sents[e.ent].spawned && !(sents[e.ent].attr2&GNT_FORCED))
 		{
 			bool found = false;
-			if(!(sents[e.ent].attr2&GNT_FORCED))
+			loopv(clients)
 			{
-				loopv(clients)
+				clientinfo *cp = clients[i];
+				if(cp->state.dropped.projs.find(e.ent) >= 0)
 				{
-					clientinfo *cp = clients[i];
-					if(cp->state.dropped.projs.find(e.ent) >= 0)
-					{
-						cp->state.dropped.remove(e.ent);
-						found = true;
-					}
-					loopj(GUN_MAX) if(cp->state.entid[j] == e.ent)
-						cp->state.entid[j] = -1;
+					cp->state.dropped.remove(e.ent);
+					found = true;
 				}
 			}
 			if(!found) return;
@@ -2591,7 +2585,7 @@ namespace server
 							sents[n].spawned = false; // wait a bit then load 'em up
 							sents[n].millis = gamemillis;
 							if(enttype[sents[n].type].usetype == EU_ITEM)
-								sents[n].millis -= sv_itemspawntime*1000;
+								sents[n].millis -= (sv_itemspawntime*1000)-1;
 						}
 					}
 					if(notgotinfo)
