@@ -161,82 +161,87 @@ namespace physics
     }
 
     bool trystepup(physent *d, vec &dir, const vec &obstacle, float maxstep, const vec &floor)
-	{
-		vec old(d->o), stairdir = (obstacle.z >= 0 && obstacle.z < slopez ? vec(-obstacle.x, -obstacle.y, 0) : vec(dir.x, dir.y, 0)).normalize();
-		/* check if there is space atop the stair to move to */
-		if(d->physstate != PHYS_STEP_UP)
-		{
-			vec checkdir = stairdir;
-			checkdir.mul(0.1f);
-			checkdir.z += 2*maxstep;
-			d->o.add(checkdir);
-			if(!collide(d))
-			{
-				d->o = old;
-				return false;
-			}
-		}
-
-		d->o = old;
-		vec checkdir = stairdir;
-		checkdir.z += 1;
-		checkdir.mul(maxstep);
-		d->o.add(checkdir);
-		if(!collide(d, checkdir))
-		{
-			if(collide(d, vec(0, 0, -1), slopez))
-			{
-				d->o = old;
-				return false;
-			}
-		}
-
-		/* try stepping up half as much as forward */
-		d->o = old;
-		vec smoothdir(dir.x, dir.y, 0);
-		float magxy = smoothdir.magnitude();
-		if(magxy > 1e-9f)
-		{
-			if(magxy > 2*dir.z)
+    {
+        vec old(d->o), stairdir = (obstacle.z >= 0 && obstacle.z < slopez ? vec(-obstacle.x, -obstacle.y, 0) : vec(dir.x, dir.y, 0)).normalize();
+        bool cansmooth = true;
+        /* check if there is space atop the stair to move to */
+        if(d->physstate != PHYS_STEP_UP)
+        {
+            vec checkdir = stairdir;
+            checkdir.mul(0.1f);
+            checkdir.z += maxstep;
+            d->o.add(checkdir);
+            if(!collide(d))
             {
-                smoothdir.mul(1/magxy);
-                smoothdir.z = 0.5f;
-                smoothdir.mul(dir.magnitude()*stepspeed/smoothdir.magnitude());
-            }
-            else smoothdir.z = dir.z;
-            d->o.add(smoothdir);
-            d->o.z += maxstep + 0.1f;
-            if(collide(d, smoothdir))
-            {
-                d->o.z -= maxstep + 0.1f;
-                if(d->physstate == PHYS_FALL || d->floor != floor)
-                {
-                    d->timeinair = 0;
-                    d->floor = floor;
-                    switchfloor(d, dir, d->floor);
-                }
-                d->physstate = PHYS_STEP_UP;
-                return true;
+                d->o = old;
+                if(collide(d, vec(0, 0, -1), slopez)) return false;
+                cansmooth = false;
             }
         }
 
-		/* try stepping up */
-		d->o = old;
-		d->o.z += dir.magnitude()*stepspeed;
-		if(collide(d, vec(0, 0, 1)))
-		{
+        if(cansmooth)
+        {
+            d->o = old;
+            vec checkdir = stairdir;
+            checkdir.z += 1;
+            checkdir.mul(maxstep);
+            d->o.add(checkdir);
+            if(!collide(d, checkdir))
+            {
+                if(collide(d, vec(0, 0, -1), slopez))
+                {
+                    d->o = old;
+                    return false;
+                }
+            }
+
+            /* try stepping up half as much as forward */
+            d->o = old;
+            vec smoothdir(dir.x, dir.y, 0);
+            float magxy = smoothdir.magnitude();
+            if(magxy > 1e-9f)
+            {
+                if(magxy > 2*dir.z)
+                {
+                    smoothdir.mul(1/magxy);
+                    smoothdir.z = 0.5f;
+                    smoothdir.mul(dir.magnitude()*stepspeed/smoothdir.magnitude());
+                }
+                else smoothdir.z = dir.z;
+                d->o.add(smoothdir);
+                d->o.z += maxstep + 0.1f;
+                if(collide(d, smoothdir))
+                {
+                    d->o.z -= maxstep + 0.1f;
+                    if(d->physstate == PHYS_FALL || d->floor != floor)
+                    {
+                        d->timeinair = 0;
+                        d->floor = floor;
+                        switchfloor(d, dir, d->floor);
+                    }
+                    d->physstate = PHYS_STEP_UP;
+                    return true;
+                }
+            }
+        }
+
+        /* try stepping up */
+        d->o = old;
+        d->o.z += dir.magnitude()*stepspeed;
+        if(collide(d, vec(0, 0, 1)))
+        {
             if(d->physstate == PHYS_FALL || d->floor != floor)
             {
                 d->timeinair = 0;
                 d->floor = floor;
                 switchfloor(d, dir, d->floor);
             }
-			d->physstate = PHYS_STEP_UP;
-			return true;
-		}
-		d->o = old;
-		return false;
-	}
+            if(cansmooth) d->physstate = PHYS_STEP_UP;
+            return true;
+        }
+        d->o = old;
+        return false;
+    }
 
 	#if 0
 	bool trystepdown(physent *d, vec &dir, float step, float a, float b)
