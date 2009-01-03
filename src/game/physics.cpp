@@ -44,28 +44,36 @@ namespace physics
 	imov(right,    strafe, -1, k_right, k_left);
 
 	// inputs
-	#define iput(x,y,t,z,a,q) \
+	#define iput(x,y,t,z,a) \
 		void do##x(bool down) \
 		{ \
-			if(q) \
+			if(world::allowmove(world::player1)) \
 			{ \
-				if((a && world::player1->y != down) || (!a && down)) \
-					world::player1->t = lastmillis; \
+				if(a) \
+				{ \
+					if(world::player1->y != down) \
+					{ \
+						if(world::player1->t >= 0) world::player1->t = lastmillis-max(a-(lastmillis-world::player1->t), 0); \
+						else if(down) world::player1->t = -world::player1->t; \
+					} \
+				} \
+				else if(down) world::player1->t = lastmillis; \
 				world::player1->y = down; \
 			} \
 			else \
 			{ \
+				if(a && world::player1->y && world::player1->t >= 0) world::player1->t = lastmillis-max(a-(lastmillis-world::player1->t), 0); \
 				world::player1->y = false; \
 				if(z && down) world::respawn(world::player1); \
 			} \
 		} \
 		ICOMMAND(x, "D", (int *n), { do##x(*n!=0); });
 
-	iput(crouch,	crouching,	crouchtime,	false,	true,	world::player1->crouchtime >= 0 && world::allowmove(world::player1));
-	iput(jump,		jumping,	jumptime,	true,	false,	world::allowmove(world::player1));
-	iput(attack,	attacking,	attacktime,	true,	false,	world::allowmove(world::player1));
-	iput(reload,	reloading,	reloadtime,	true,	false,	world::allowmove(world::player1));
-	iput(action,	useaction,	usetime,	true,	false,	world::allowmove(world::player1));
+	iput(crouch,	crouching,	crouchtime,	false,	CROUCHTIME);
+	iput(jump,		jumping,	jumptime,	true,	0);
+	iput(attack,	attacking,	attacktime,	true,	0);
+	iput(reload,	reloading,	reloadtime,	true,	0);
+	iput(action,	useaction,	usetime,	true,	0);
 
 	void taunt(gameent *d)
 	{
