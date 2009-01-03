@@ -316,41 +316,29 @@ namespace world
 		d->o.z -= d->height;
 		if(d->state == CS_ALIVE)
 		{
-			bool crouching = d->crouching;
-			if(!crouching)
-			{
-                vec pos(d->o), dir(d->vel);
-                float speed = dir.magnitude();
-                if(allowmove(d) && (d->move || d->strafe))
-                {
-                    vecfromyawpitch(d->aimyaw, 0, d->move, d->strafe, dir);
-                    dir.mul(0.5f);
-                }
-                else if(speed > 0.5f) dir.mul(0.5f/speed);
-                d->o.add(dir);
-                d->o.z += PLAYERHEIGHT;
-				if(!collide(d, vec(0, 0, 1), 0.f, false))
-				{
-                    d->o.z -= PLAYERHEIGHT*CROUCHHEIGHT;
-                    if(collide(d, vec(0, 0, 1), 0.f, false))
-                    {
-                        crouching = true;
-                        if(d->crouchtime >= 0) d->crouchtime = -lastmillis;
-                    }
-                }
-                if(!crouching && d->crouchtime < 0)
-					d->crouchtime = lastmillis-max(200-(lastmillis+d->crouchtime), 0);
-                d->o = pos;
-			}
-
 			if(physics::iscrouching(d))
 			{
+				bool crouching = d->crouching;
+				if(!crouching)
+				{
+					vec pos(d->o);
+					d->o.z += PLAYERHEIGHT;
+					if(!collide(d, vec(0, 0, 1), 0.f, false))
+					{
+						crouching = true;
+						if(d->crouchtime >= 0) d->crouchtime = max(CROUCHTIME-(lastmillis-d->crouchtime), 0)-lastmillis;
+					}
+					else if(d->crouchtime < 0)
+						d->crouchtime = lastmillis-max(CROUCHTIME-(lastmillis+d->crouchtime), 0);
+					d->o = pos;
+				}
+
 				float crouchoff = 1.f-CROUCHHEIGHT;
 				if(d->type == ENT_PLAYER)
 				{
-                    int crouchtime = abs(d->crouchtime);
-					float amt = lastmillis-crouchtime < 200 ?
-						clamp(float(lastmillis-crouchtime)/200.f, 0.f, 1.f) : 1.f;
+					int crouchtime = abs(d->crouchtime);
+					float amt = lastmillis-crouchtime < CROUCHTIME ?
+						clamp(float(lastmillis-crouchtime)/CROUCHTIME, 0.f, 1.f) : 1.f;
 					if(!crouching) amt = 1.f-amt;
 					crouchoff *= amt;
 				}
