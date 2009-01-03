@@ -168,6 +168,7 @@ ENetSocket pongsock = ENET_SOCKET_NULL;
 void cleanupserver()
 {
 	if(serverhost) enet_host_destroy(serverhost);
+    serverhost = NULL;
 #ifdef MASTERSERVER
 	cleanupmaster();
 #endif
