@@ -782,6 +782,8 @@ int main(int argc, char **argv)
 
 	conoutf("\fminit: enet");
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
+    atexit(enet_deinitialize);
+    enet_time_set(0);
 
 	conoutf("\fminit: game");
 	initgame();
