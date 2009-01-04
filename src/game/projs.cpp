@@ -333,7 +333,7 @@ namespace projs
 			case GUN_RIFLE:
 			{
 				part_create(PART_SMOKE_RISE_FAST, 200, from, 0x444444, 0.8f); // smoke
-				part_create(PART_PLASMA, 75, from, 0x882222, 1.f, d);
+				part_create(PART_PLASMA, 75, from, 0xFF2222, 1.f, d);
                 adddynlight(from, 50, vec(0.4f, 0.1f, 0.1f), 75, 0, DL_FLASH);
 				break;
 			}
@@ -481,9 +481,9 @@ namespace projs
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? min(adjust, proj.movement) : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
-						int col = ((int(220*max(1.f-proj.lifesize,0.3f))<<16))|((int(40*max(1.f-proj.lifesize,0.2f)))<<8)|(int(40*max(1.f-proj.lifesize,0.2f)));
-						part_flare(proj.to, proj.o, 1, PART_STREAK, col, proj.radius*0.15f);
-						part_flare(proj.to, proj.o, 1, PART_STREAK_LERP, col, proj.radius*0.1f);
+						int col = ((int(254*max(1.f-proj.lifesize,0.3f))<<16))|((int(32*max(1.f-proj.lifesize,0.2f)))<<8)|(int(32*max(1.f-proj.lifesize,0.2f)));
+						part_flare(proj.to, proj.o, 1, PART_STREAK, col, proj.radius*0.35f);
+						part_flare(proj.to, proj.o, 1, PART_STREAK_LERP, col, proj.radius*0.2f);
 					}
 					break;
 				}
@@ -583,9 +583,9 @@ namespace projs
 					{
 						proj.from = vec(proj.o).sub(proj.vel);
 						part_create(PART_SMOKE_RISE_SLOW, 100, proj.o, 0x444444, proj.radius*1.f);
-						adddynlight(proj.o, proj.radius*6.f, vec(0.4f, 0.1f, 0.1f), 200, 10);
+						adddynlight(proj.o, proj.radius*6.f, vec(0.9f, 0.1f, 0.1f), 200, 10);
 						adddecal(DECAL_SCORCH, proj.o, proj.norm, proj.radius*3.f);
-                        adddecal(DECAL_ENERGY, proj.o, proj.norm, proj.radius*3.f, bvec(165, 30, 30));
+                        adddecal(DECAL_ENERGY, proj.o, proj.norm, proj.radius*3.f, bvec(254, 32, 32));
 						break;
 					}
 				}
@@ -978,7 +978,7 @@ namespace projs
 				}
 				case GUN_RIFLE:
 				{
-					vec col(0.4f, 0.1f, 0.1f), pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(proj.radius*2.5f));
+					vec col(0.9f, 0.1f, 0.1f), pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(proj.radius*2.5f));
 					adddynlight(proj.o, proj.radius*3.f, col);
 					break;
 				}

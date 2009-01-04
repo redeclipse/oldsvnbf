@@ -523,7 +523,7 @@ namespace entities
 						}
 						case TRIGGER:
 						{
-							if((!e.spawned || e.attr2 != TR_NONE || e.attr3 != TA_AUTO) && lastmillis-e.lastuse >= TRIGGERTIME)
+							if((!e.spawned || e.attr2 != TR_NONE || e.attr3 != TA_AUTO) && lastmillis-e.lastuse >= TRIGGERTIME/2)
 							{
 								e.lastuse = lastmillis;
 								switch(e.attr2)
@@ -618,7 +618,16 @@ namespace entities
 				proj.state = CS_DEAD;
 			}
 			if((e.spawned = on) != false) e.lastspawn = lastmillis;
-			if(e.type == TRIGGER && (e.attr2 == TR_NONE || e.attr2 == TR_LINK))
+		}
+	}
+
+	void settrigger(int n, bool on)
+	{
+		if(ents.inrange(n) && ents[n]->type == TRIGGER)
+		{
+			gameentity &e = *(gameentity *)ents[n];
+			if((e.spawned = on) != false) e.lastspawn = lastmillis;
+			if(e.attr2 == TR_NONE || e.attr2 == TR_LINK)
 			{
 				int millis = lastmillis-e.lastemit;
 				if(e.lastemit && millis < TRIGGERTIME) // skew the animation forward
