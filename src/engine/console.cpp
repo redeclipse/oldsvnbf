@@ -319,11 +319,8 @@ void inputcommand(char *init, char *action, char *prompt)
     if(prompt[0]) commandprompt = newstring(prompt);
 }
 
-void mapmsg(char *s) { s_strncpy(hdr.maptitle, s, 128); }
-
 COMMAND(saycommand, "C");
 COMMAND(inputcommand, "sss");
-COMMAND(mapmsg, "s");
 
 #if !defined(WIN32) && !defined(__APPLE__)
 #include <X11/Xlib.h>

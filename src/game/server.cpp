@@ -1327,7 +1327,7 @@ namespace server
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvmsgf(ci->clientnum, strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", cmd, *id->storage.s);
+							srvmsgf(ci->clientnum, strchr(*id->storage.s, '"') ? "\fm%s = [%s]" : "\fm%s = \"%s\"", cmd, *id->storage.s);
 							return;
 						}
 						delete[] *id->storage.s;
@@ -1339,6 +1339,7 @@ namespace server
 					default: return;
 				}
 				sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, cmd, val);
+				relayf(1, "\fm%s set %s to %s", colorname(ci), cmd, val);
 			}
 		}
 		else srvmsgf(ci->clientnum, "\frunknown command: %s", cmd);
@@ -2833,19 +2834,25 @@ namespace server
 					{
 						case ID_VAR:
 						{
-							QUEUE_INT(getint(p));
+							int val = getint(p);
+							relayf(1, "\fm%s set worldvar %s to %d", colorname(ci), text, val);
+							QUEUE_INT(val);
 							break;
 						}
 						case ID_FVAR:
 						{
-							QUEUE_FLT(getfloat(p));
+							float val = getfloat(p);
+							relayf(1, "\fm%s set worldvar %s to %f", colorname(ci), text, val);
+							QUEUE_FLT(val);
 							break;
 						}
 						case ID_SVAR:
 						case ID_ALIAS:
 						{
-							getstring(text, p);
-							QUEUE_STR(text);
+							string val;
+							getstring(val, p);
+							relayf(1, "\fm%s set world%s %s to %s", colorname(ci), t == ID_ALIAS ? "alias" : "var", text, val);
+							QUEUE_STR(val);
 							break;
 						}
 						default: break;

@@ -1283,7 +1283,7 @@ namespace client
 				{
 					int ent = getint(p), st = getint(p);
 					if(!entities::ents.inrange(ent)) break;
-					entities::setspawn(ent, st ? true : false);
+					entities::settrigger(ent, st ? true : false);
 					break;
 				}
 
@@ -1314,7 +1314,7 @@ namespace client
 								if(id->minval > id->maxval || val < id->minval || val > id->maxval)
 									commit = false;
 								setvar(text, val, true);
-								conoutf("\fm%s set variable %s to %d", world::colorname(d), id->name, *id->storage.i);
+								conoutf("\fm%s set worldvar %s to %d", world::colorname(d), id->name, *id->storage.i);
 							}
 							break;
 						}
@@ -1324,7 +1324,7 @@ namespace client
 							if(commit)
 							{
 								setfvar(text, val, true);
-								conoutf("\fm%s set float variable %s to %f", world::colorname(d), id->name, *id->storage.f);
+								conoutf("\fm%s set worldvar %s to %f", world::colorname(d), id->name, *id->storage.f);
 							}
 							break;
 						}
@@ -1335,7 +1335,7 @@ namespace client
 							if(commit)
 							{
 								setsvar(text, val, true);
-								conoutf("\fm%s set string variable %s to %s", world::colorname(d), id->name, *id->storage.s);
+								conoutf("\fm%s set worldvar %s to %s", world::colorname(d), id->name, *id->storage.s);
 							}
 							break;
 						}
@@ -1346,7 +1346,7 @@ namespace client
 							if(commit || !id) // set aliases anyway
 							{
 								worldalias(text, val);
-								conoutf("\fm%s set world alias %s to %s", world::colorname(d), text, val);
+								conoutf("\fm%s set worldalias %s to %s", world::colorname(d), text, val);
 							}
 							break;
 						}

@@ -800,7 +800,6 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
     hdr.blendmap = 0;
 	hdr.lightmaps = 0;
 
-	hdr.maptitle[0] = 0;
 	s_strncpy(hdr.gameid, server::gameid(), 4);
 
 	texmru.setsize(0);
