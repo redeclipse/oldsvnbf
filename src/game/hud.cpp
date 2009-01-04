@@ -7,7 +7,7 @@ namespace hud
 	int hudwidth = 0;
 	scoreboard sb;
 
-	VARP(showdamage, 0, 1, 1);
+	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 0);
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.04f, 1000);
@@ -697,14 +697,26 @@ namespace hud
 			drawtex(0, 0, ox, oy);
 		}
 
-		if(showdamage && ((world::player1->state == CS_ALIVE && world::damageresidue > 0) || world::player1->state == CS_DEAD))
+		if(showdamage)
 		{
-			t = textureload(damagetex);
-			int dam = world::player1->state == CS_DEAD ? 100 : min(world::damageresidue, 100);
-			float pc = float(dam)/100.f;
-			glBindTexture(GL_TEXTURE_2D, t->id);
-			glColor4f(1.f, 1.f, 1.f, pc*fade);
-			drawtex(0, 0, ox, oy);
+			float pc = 0.f;
+			if((world::player1->state == CS_ALIVE && world::damageresidue > 0) || world::player1->state == CS_DEAD)
+				pc = float(world::player1->state == CS_DEAD ? 100 : min(world::damageresidue, 100))/100.f;
+
+			if(showdamage > 1 && world::player1->state == CS_ALIVE && world::player1->lastregen && lastmillis-world::player1->lastregen < REGENTIME)
+			{
+				float skew = clamp((lastmillis-world::player1->lastregen)/float(REGENTIME), 0.f, 1.f);
+				if(skew > 0.5f) skew = 1.f-skew;
+				pc += (1.f-pc)*skew;
+			}
+
+			if(pc > 0.f)
+			{
+				t = textureload(damagetex);
+				glBindTexture(GL_TEXTURE_2D, t->id);
+				glColor4f(1.f, 1.f, 1.f, pc*fade);
+				drawtex(0, 0, ox, oy);
+			}
 		}
 
 		if(showradar) drawradar(ox, oy, os, fade);
