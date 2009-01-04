@@ -189,17 +189,19 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define SVARFW(name, cur, body) _SVARF(name, name, cur, body, IDF_WORLD|IDF_COMPLETE)
 
 // new style macros, have the body inline, and allow binds to happen anywhere, even inside class constructors, and access the surrounding class
-#define _COMMAND(idtype, tv, n, g, proto, b) \
-    struct cmd_##n : ident \
+#define _COMMAND(idtype, tv, n, m, g, proto, b) \
+    struct cmd_##m : ident \
     { \
-        cmd_##n(void *self = NULL) : ident(idtype, #n, g, (void *)run, self) \
+        cmd_##m(void *self = NULL) : ident(idtype, #n, g, (void *)run, self) \
         { \
             addident(name, this); \
         } \
         static void run proto { b; } \
-    } icom_##n tv
-#define ICOMMAND(n, g, proto, b) _COMMAND(ID_COMMAND, , n, g, proto, b)
-#define CCOMMAND(n, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, g, proto, b)
+    } icom_##m tv
+#define ICOMMAND(n, g, proto, b) _COMMAND(ID_COMMAND, , n, n, g, proto, b)
+#define ICOMMANDN(n, name, g, proto, b) _COMMAND(ID_COMMAND, , n, name, g, proto, b)
+#define CCOMMAND(n, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, n, g, proto, b)
+#define CCOMMANDN(n, name, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, name, g, proto, b)
 
 #define _IVAR(n, m, c, x, b, p) \
 	struct var_##n : ident \

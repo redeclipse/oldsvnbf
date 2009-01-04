@@ -15,6 +15,8 @@ namespace entities
 	VARP(showlighting, 0, 1, 1);
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
+	VAR(autodropwaypoints, 0, 180, INT_MAX-1); // secs after map start we start and keep dropping waypoints
+	int autodroptime = 0;
 
 	vector<extentity *> &getents() { return ents; }
 
@@ -1055,7 +1057,7 @@ namespace entities
 		if(d->state == CS_ALIVE)
 		{
 			vec v(world::feetpos(d, 0.f));
-			if((m_play(world::gamemode) || dropwaypoints) && ((m_play(world::gamemode) && d->aitype == AI_NONE) || d == world::player1))
+			if((dropwaypoints || (autodroptime && lastmillis-autodroptime < autodropwaypoints*1000)) && ((m_play(world::gamemode) && d->aitype == AI_NONE) || d == world::player1))
 			{
 				int curnode = entitynode(v, float(enttype[WAYPOINT].radius));
 				if(!ents.inrange(curnode))
@@ -1358,6 +1360,7 @@ namespace entities
 
 	void mapstart()
 	{
+		autodroptime = autodropwaypoints && m_play(world::gamemode) ? lastmillis : 0;
 	}
 
 	#define renderfocus(i,f) { gameentity &e = *(gameentity *)ents[i]; f; }

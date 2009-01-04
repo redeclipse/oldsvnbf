@@ -500,7 +500,7 @@ namespace server
 			if(m_lobby(gamemode)) maplist = sv_lobbymaps;
 			else if(m_mission(gamemode)) maplist = sv_missionmaps;
 			else if(m_stf(gamemode)) maplist = sv_stfmaps;
-			else if(m_ctf(gamemode)) maplist = sv_ctfmaps;
+			else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? sv_mctfmaps : sv_ctfmaps;
 			if(maplist && *maplist)
 			{
 				int n = listlen(maplist), c = -1;
@@ -1704,8 +1704,7 @@ namespace server
 		}
 
 		int gun = -1, dropped = -1;
-		if(sents[e.ent].type == WEAPON && gs.ammo[attr] < 0 && gs.carry(sgun) >= MAXCARRY)
-			gun = gs.drop(attr, sgun);
+		if(sents[e.ent].type == WEAPON && gs.ammo[attr] < 0 && gs.carry(sgun) >= MAXCARRY) gun = gs.drop(attr, sgun);
 		if(isgun(gun))
 		{
 			dropped = gs.entid[gun];

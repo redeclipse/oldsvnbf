@@ -12,19 +12,20 @@ SVARG(lobbymaps, "overseer");
 SVARG(missionmaps, "mpspbf1 mpspbf2"); // remember, for these the rotation starts at defaultmap
 SVARG(mainmaps, "eight warground warehouse tower rivals refuge citadel");
 SVARG(ctfmaps, "eight warground warehouse tower rivals refuge citadel");
+SVARG(mctfmaps, "tower refuge");
 SVARG(stfmaps, "eight warground warehouse tower rivals refuge citadel");
 VARG(maprotate, 0, 1, 2); // 0 = off, 1 = sequence, 2 = random
 VARG(spawnrotate, 0, 1, 2); // 0 = let client decide, 1 = sequence, 2 = random
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
-VARG(itemspawntime, 1, 30, 3600); // secs when items respawn
+VARG(itemspawntime, 1, 30, INT_MAX-1); // secs when items respawn
 VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenades, 3 = always
 
-VARG(timelimit, 0, 15, 60);
-VARG(intermlimit, 0, 10, 120); // secs before vote menu comes up
-VARG(votelimit, 0, 20, 120); // secs before vote passes by default
-VARG(duellimit, 0, 3, 120); // secs before duel goes to next round
+VARG(timelimit, 0, 20, INT_MAX-1);
+VARG(intermlimit, 0, 10, INT_MAX-1); // secs before vote menu comes up
+VARG(votelimit, 0, 20, INT_MAX-1); // secs before vote passes by default
+VARG(duellimit, 0, 3, INT_MAX-1); // secs before duel goes to next round
 
 VARG(teamdamage, 0, 1, 1); // damage team mates
 VARG(teambalance, 0, 1, 2); // 0 = off, 1 = by number, 2 = by effectiveness
