@@ -169,6 +169,7 @@ namespace entities
     };
 
     vector<entcachenode> entcache;
+    int entcachedepth = -1;
     vec entcachemin(1e16f, 1e16f, 1e16f), entcachemax(-1e16f, -1e16f, -1e16f);
 
     float calcentcacheradius(extentity &e)
@@ -184,10 +185,8 @@ namespace entities
         }
     }
 
-    void buildentcache(int *indices, int numindices, int depth = 1)
+    static void buildentcache(int *indices, int numindices, int depth = 1)
     {
-        if(depth>1 && !numindices) return;
-
         vec vmin(1e16f, 1e16f, 1e16f), vmax(-1e16f, -1e16f, -1e16f);
         loopi(numindices)
         {
@@ -251,20 +250,23 @@ namespace entities
         else
         {
             entcache[node].child[0] = (axis<<30) | entcache.length();
-            buildentcache(indices, left, depth+1);
+            if(left) buildentcache(indices, left, depth+1);
         }
 
         if(numindices-right==1) entcache[node].child[1] = (1<<31) | (left==1 ? 1<<30 : 0) | indices[right];
         else
         {
             entcache[node].child[1] = (left==1 ? 1<<30 : 0) | entcache.length();
-            buildentcache(&indices[right], numindices-right, depth+1);
+            if(numindices-right) buildentcache(&indices[right], numindices-right, depth+1);
         }
+
+        entcachedepth = max(entcachedepth, depth);
     }
 
     void clearentcache()
     {
         entcache.setsizenodelete(0);
+        entcachedepth = -1;
         entcachemin = vec(1e16f, 1e16f, 1e16f);
         entcachemax = vec(-1e16f, -1e16f, -1e16f);
     }
@@ -291,7 +293,7 @@ namespace entities
 
     int closestent(int type, const vec &pos, float mindist)
     {
-        if(entcache.empty()) buildentcache();
+        if(entcachedepth<0) buildentcache();
 
         entcachestack.setsizenodelete(0);
 
@@ -344,7 +346,7 @@ namespace entities
 
     void collateents(const vec &pos, float xyrad, float zrad, vector<actitem> &actitems)
     {
-        if(entcache.empty()) buildentcache();
+        if(entcachedepth<0) buildentcache();
 
         entcachestack.setsizenodelete(0);
 
