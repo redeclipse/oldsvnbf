@@ -1157,6 +1157,7 @@ namespace client
 					}
 					gameent *s = world::getclient(scn);
 					if(!s || !isgun(gun)) break;
+					if(s->muzzle != vec(-1, -1, -1)) from = s->muzzle;
 					s->setgunstate(gun, GNS_SHOOT, guntype[gun].adelay, lastmillis);
 					projs::shootv(gun, power, from, locs, s, false);
 					break;
