@@ -1,4 +1,4 @@
-CXXOPTFLAGS= -ggdb3
+CXXOPTFLAGS= -O2 -fno-schedule-insns2 -fno-schedule-insns -ggdb3
 INCLUDES= -Ishared -Iengine -Igame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
 CXXFLAGS= -Wall -fsigned-char -DINTERFACE -DIRC $(CXXOPTFLAGS) $(INCLUDES)
 
