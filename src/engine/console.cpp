@@ -152,8 +152,8 @@ void blendbox(int x1, int y1, int x2, int y2, bool border)
 	defaultshader->set();
 }
 
-VARP(consize, 0, 33, 100);
-VARP(fullconsize, 0, 75, 100);
+VARP(consize, 0, 20, 100);
+VARP(fullconsize, 0, 60, 100);
 
 int renderconsole(int w, int h, int x, int y, int s)
 {
@@ -169,7 +169,7 @@ int renderconsole(int w, int h, int x, int y, int s)
 		}
 		int z = ((h/4)*3)-FONTH*2;
 		loopv(refs)
-			z += draw_textx("%s", w/2, z, 255, 255, 255, int(255*centerblend), TEXT_CENTERED, -1, s/2, refs[i]);
+			z += draw_textx("%s", w/2, z, 255, 255, 255, int(255*centerblend), TEXT_CENTERED|TEXT_NO_INDENT, -1, s/2, refs[i]);
 	}
 
 	int numl = min(h*(fullconsole ? fullconsize : consize)/100, h-FONTH/3*2)/FONTH;
